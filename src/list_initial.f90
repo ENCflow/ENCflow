@@ -1,0 +1,70 @@
+module list_initial
+  use m_sysparam, only : t_sysparam
+  implicit none
+  private
+
+  public t_list_initial
+  public list_initial_read
+
+  type t_list_initial
+    integer :: f_user_routine_id = 0   ! ユーザールーチンID
+    integer :: f_htype = 0             ! 初期水深タイプ (0: 固定値)
+    integer :: f_uvtype = 0            ! 初期流速タイプ (0: 固定値)
+    integer :: f_fill_depres = 0       ! 窪地を満水にする (0:無効, 1:有効)
+    real :: h0 = 0                     ! 初期水深固定値 (m)
+    real :: u0 = 0                     ! 初期x方向流速 (m/s)
+    real :: v0 = 0                     ! 初期y方向流速 (m/s)
+  end type
+
+
+contains
+
+!======================================================================
+!========================== PUBLIC ROUTINES ===========================
+!======================================================================
+
+!----------------------------------------------------------------------
+! 初期条件設定ファイルを読み込む
+!----------------------------------------------------------------------
+subroutine list_initial_read(p, list)
+  type(t_sysparam), intent(in) :: p
+  type(t_list_initial), intent(inout) :: list
+  integer :: f_user_routine_id   ! ユーザールーチンID
+  integer :: f_htype             ! 初期水深タイプ (0: 固定値, 1:テキストファイル)
+  integer :: f_uvtype            ! 初期流速タイプ (0: 固定値)
+  integer :: f_fill_depres       ! 窪地を満水にする (0:無効, 1:有効)
+  real :: h0                     ! 初期水深固定値 (m)
+  real :: u0                     ! 初期x方向流速 (m/s)
+  real :: v0                     ! 初期y方向流速 (m/s)
+  integer :: un
+  namelist /list_initial/ f_user_routine_id, f_htype, f_uvtype, f_fill_depres, h0, u0, v0
+
+  ! ネームリストにありながらファイルに記述のなかった変数は、
+  ! 事前に保存されていた値がそのまま保持される
+  f_user_routine_id = list%f_user_routine_id 
+  f_htype = list%f_htype 
+  f_uvtype = list%f_uvtype 
+  f_fill_depres = list%f_fill_depres 
+  h0 = list%h0 
+  u0 = list%u0 
+  v0 = list%v0 
+
+  print *, "reading list_initial in ", trim(p%fn_initial)
+  open(newunit=un, file=trim(p%fn_initial), status='old')
+  read(un, list_initial)
+  close(un)
+
+  list%f_user_routine_id = f_user_routine_id
+  list%f_htype = f_htype
+  list%f_uvtype = f_uvtype
+  list%f_fill_depres = f_fill_depres
+  list%h0 = h0
+  list%u0 = u0
+  list%v0 = v0
+
+end subroutine
+
+!======================================================================
+!========================== PRIVATE ROUTINES ==========================
+!======================================================================
+end module

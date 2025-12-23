@@ -1,0 +1,41 @@
+set yrange[0:4]
+set grid
+set xlabel '時間 (分)'
+set ylabel '流量 (m^3/s)'
+plot 'result_s020010Stg/flux01.txt' us 1:2 w l lw 1.0                  lc 'red'        title 'Sv=0.02, Ss=0.01', \
+     'result_s020020Stg/flux01.txt' us 1:2 w l lw 1.2 dt (50,15)       lc 'dark-green' title 'Sv=0.02, Ss=0.02', \
+     'result_s020030Stg/flux01.txt' us 1:2 w l lw 1.2 dt (40,15,15,15) lc 'web-blue'   title 'Sv=0.02, Ss=0.03', \
+     'result_s020040Stg/flux01.txt' us 1:2 w l lw 1.2 dt (30,10)       lc 'blue'       title 'Sv=0.02, Ss=0.04'
+pause -1
+
+#set term pngcairo fontscale 2.5 linewidth 2.5 size 1280,960
+set term pngcairo fontscale 2.5 linewidth 2.5 size 2000,640
+set grid linewidth 1.5 lc 'dark-gray'
+set output 'graph1.png'
+replot
+unset term
+unset xlabel
+unset ylabel
+unset grid
+
+
+set yrange[0:4]
+set grid
+set xlabel '時間 (分)'
+set ylabel '流量 (m^3/s)'
+plot 'result_s020010Edc/flux01.txt' us 1:2 w l lw 1.0                  lc 'red'        title 'Sv=0.02, Ss=0.01', \
+     'result_s020020Edc/flux01.txt' us 1:2 w l lw 1.2 dt (50,15)       lc 'dark-green' title 'Sv=0.02, Ss=0.02', \
+     'result_s020030Edc/flux01.txt' us 1:2 w l lw 1.2 dt (40,15,15,15) lc 'web-blue'   title 'Sv=0.02, Ss=0.03', \
+     'result_s020040Edc/flux01.txt' us 1:2 w l lw 1.2 dt (30,10)       lc 'blue'       title 'Sv=0.02, Ss=0.04'
+pause -1
+
+#set term pngcairo fontscale 2.5 linewidth 2.5 size 1280,960
+set term pngcairo fontscale 2.5 linewidth 2.5 size 2000,640
+set grid linewidth 1.5 lc 'dark-gray'
+set output 'graph2.png'
+replot
+unset term
+unset xlabel
+unset ylabel
+unset grid
+

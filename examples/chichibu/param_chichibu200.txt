@@ -1,0 +1,89 @@
+&list_sysparam
+  f_gridsystem = 0        ! 格子システム(0:ENC, 1:STG)
+  f_govequation = 1       ! 基礎方程式(0:DynWE, 1:DifWE, 2:KinWE)
+  !dt = 1.0                ! 時間刻み (s)
+  !dt = 2.0                ! 時間刻み (s)
+  !dt = 5.0                ! 時間刻み (s)
+  dt = 6.0                ! 時間刻み (s)
+  !dt = 10.0                ! 時間刻み (s)
+
+  t0 = 0                  ! 計算開始時刻 (s)
+  !tt = 129600              ! 計算終了時刻 (s)         [36 hour]
+  !tt = 64800              ! 計算終了時刻 (s)         [18 hour]
+  tt = 21600              ! 計算終了時刻 (s)         [6 hour]
+  dt_disp = 600           ! 画面表示時間刻み (s)     [10 min]
+  dt_file = 600           ! ファイル出力時間刻み (s) [10 min]
+  dt_recrd = 60           ! プローブ出力時間刻み (s) [1 min]
+
+  fn_geoinfo  = 'param_chichibu200.txt'
+  fn_record   = 'param_chichibu200.txt'
+  fn_initial  = 'list_chichibu.txt'
+  fn_precip   = 'list_chichibu.txt'
+  fn_boundary = 'list_chichibu.txt'
+  fn_enc      = 'list_chichibu.txt'
+
+  dir_data   = 'data_chichibu'
+  dir_result = 'result'
+
+  !dd = 0.001
+  !dv = 0.001
+  !vv = 0.001
+
+  !dd = 0.0
+  !dv = 0.0
+  !vv = 0.0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+
+  f_check_cfl = 1         ! CFL条件のチェック
+
+  f_input_mode = 1
+  f_output_mode = 1
+/
+
+!======================================================================
+! 地理情報設定
+!======================================================================
+&list_geoinfo
+  nx = 280
+  ny = 150
+  dx = 200.0
+  dy = 200.0
+  f_ztype = 1     ! 地盤高タイプ (0:デフォルト固定値, 1:ファイル)
+  f_lusetype = 1  ! 土地利用データの有無 (0:なし, 1:ファイル)
+  f_rntype = 2    ! 粗度係数タイプ (0:デフォルト固定値, 1:ファイル, 2:土地利用から)
+  f_masktype = 1  ! 領域マスクの有無 (0:なし, 1:流域マスク)
+  z0 = 0.0        ! デフォルト地盤高(m)
+  rn0 = 0.02      ! デフォルト粗度係数
+
+  fn_z = 'Chichibu_200m_filled2.txt'
+  fn_luse = 'Chichibu_200m_river.txt'
+  fn_mask = 'Chichibu_200m_basin.txt'
+
+  !lu2rn(:,1) = 0, 0.15
+  !lu2rn(:,2) = 1, 0.02
+  lu2rn(:,1) = 0, 0.05
+  lu2rn(:,2) = 1, 0.02
+
+/
+
+
+!======================================================================
+! 記録設定
+!======================================================================
+&list_record
+  ! プローブの位置のタイプ (0:セル番号, 1:実座標(m))
+  ! プローブの位置 (x座標, y座標)
+  pbxytype = 0
+
+  ! フラックス測線の座標のタイプ (0:セル番号, 1:実座標(m))
+  ! フラックス測線の始点終点 (始点x, 始点y, 終点x, 終点y)
+  flxytype = 0
+  flxy(:,1) =  82, 106,   82, 103
+  flxy(:,2) = 107, 103,  107, 100
+  flxy(:,3) = 147, 105,  147, 102
+  flxy(:,4) = 216,  43,  216,  37
+
+/
+

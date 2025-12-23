@@ -1,0 +1,27 @@
+# --- build outputs (Fortran等) ---
+*.o
+*.mod
+*.smod
+*.obj
+a.out
+rerecord
+rmdepress_river
+
+# --- backup / memo ---
+backup/
+fortran_test
+Backup
+
+# --- run outputs / generated results ---
+result/
+result_*/
+*.png
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# --- logs ---
+*.log
