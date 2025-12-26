@@ -7,6 +7,9 @@ a.out
 rerecord
 rmdepress_river
 
+# --- large data ---
+data/
+
 # --- backup / memo ---
 backup/
 fortran_test
