@@ -10,6 +10,8 @@ module m_fileio
   public :: fileio_write_matrix_int
   public :: fileio_read_matrix_real
   public :: fileio_write_matrix_real
+  public :: fileio_open_un
+  public :: fileio_read_matrix_real_un
 
   ! enumerator
   integer, parameter, public :: e_fmt_txt = 1    ! Don't change. Defined in sysparam
@@ -126,6 +128,46 @@ subroutine fileio_write_matrix_real(fname, nx, ny, a, e_fmt, compress)
   end if
 
 end subroutine
+
+!----------------------------------------------------------------------
+!----------------------------------------------------------------------
+function fileio_open_un(fname, e_fmt) result(un)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: e_fmt
+  integer :: un
+
+  select case (e_fmt)
+    case (e_fmt_txt)
+      open(newunit=un, file=fname, status='old')
+    case (e_fmt_bil)
+      open(newunit=un,file=fname, form='unformatted', status='old', access='stream')
+    case default
+      open(newunit=un, file=fname, status='old')
+  end select
+
+end function
+
+
+!----------------------------------------------------------------------
+!----------------------------------------------------------------------
+subroutine fileio_read_matrix_real_un(un, nx, ny, a, e_fmt)
+  integer, intent(in) :: un
+  integer, intent(in) :: nx, ny
+  real, intent(inout) :: a(1:nx,1:ny)
+  integer, intent(in) :: e_fmt
+
+  select case (e_fmt)
+    case (e_fmt_txt)
+      call read_textmatrix_real(un, nx, ny, a)
+    case (e_fmt_bil)
+      call read_bil_real(un, nx, ny, a)
+    case default
+      call read_textmatrix_real(un, nx, ny, a)
+  end select
+
+end subroutine
+
+
 
 !======================================================================
 !======================================================================
