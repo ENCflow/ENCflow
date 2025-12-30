@@ -1,5 +1,6 @@
-#FRT	= ifx
+FRT	= ifx
 #FFLAGS	= -g -fast -warn all -fpe0
+FFLAGS	= -g -O2 -warn all -fpe0
 #FFLAGS	= -g -O0 -traceback -check all -warn all -fpe0
 #LDFLAGS	
 
@@ -8,9 +9,9 @@
 #FFLAGS	= -g -O0 -traceback -check all -warn all -fpe0
 #LDFLAGS	=
 
-FRT	= gfortran
+#FRT	= gfortran
 #FFLAGS	= -g -Ofast -Wall -ffpe-trap=invalid,zero,overflow
-FFLAGS	= -g -Og -fcheck=all -Wall -ffpe-trap=invalid,zero,overflow -Wno-conversion
+#FFLAGS	= -g -Og -fcheck=all -Wall -ffpe-trap=invalid,zero,overflow -Wno-conversion
 #LDFLAGS	=
 
 #FRT	= nvfortran
@@ -24,14 +25,24 @@ FFLAGS	= -g -Og -fcheck=all -Wall -ffpe-trap=invalid,zero,overflow -Wno-conversi
 #LDFLAGS	=
 
 
-OBJS	= calc_catchmentarea.o
+#OBJS	= mkdowndir.o chkdowndir.o calcarea.o pickuparea.o
 
-all: a.out
+all: mkdowndir chkdowndir calcarea pickuparea
 
-a.out: $(OBJS)
-	$(FRT) -o $@ $(FFLAGS) $(LDFLAGS) $(OBJS)
+mkdowndir: mkdowndir.o
+	$(FRT) -o $@ $(FFLAGS) $(LDFLAGS) mkdowndir.o
 
-modify_river.o:
+chkdowndir: chkdowndir.o
+	$(FRT) -o $@ $(FFLAGS) $(LDFLAGS) chkdowndir.o
+
+calcarea: calcarea.o
+	$(FRT) -o $@ $(FFLAGS) $(LDFLAGS) calcarea.o
+
+pickuparea: pickuparea.o
+	$(FRT) -o $@ $(FFLAGS) $(LDFLAGS) pickuparea.o
+
+#a.out: $(OBJS)
+#	$(FRT) -o $@ $(FFLAGS) $(LDFLAGS) $(OBJS)
 
 
 .SUFFIXES:
@@ -41,4 +52,4 @@ modify_river.o:
 
 
 clean:
-	rm -f *.o *.mod *.smod a.out gmon.out *__genmod.*
+	rm -f *.o *.mod *.smod a.out gmon.out *__genmod.* mkdowndir chkdowndir calcarea pickuparea

@@ -1,5 +1,6 @@
+!=======================================================================
 !
-! 流向データから集水面積を計算する
+! [1] 流向データから落水方向データを作成する
 !
 !   入力データ
 !     Ddd9998.bil: 卓越流向 (2~256)
@@ -8,11 +9,17 @@
 !     SeaLand.bil: 海域マスク
 !
 !   出力データ
-!     Dd0000.bil: 流向 (1~8)
-!     Ca0000.bil: 集水面積 (セル数)
+!     Dd9998.bil: 落水方向 (1~8)
+!
+!-----------------------------------------------------------------------
+!
+! [1] mkdowndir:  卓越流下方向データから落水方向データを作成
+! [2] chkdowndir: 落水方向データの連続性を確認・修正
+! [3] calcarea:   落水方向データから集水面積と累積雨量を計算
+! [4] pickuparea: 測線リストから観測点の集水面積と累積雨量を計算
 !
 !=======================================================================
-module mod_calc_catchmentarea
+module mod_mkdowndir
   implicit none
   private
   public :: do_main
@@ -30,7 +37,6 @@ subroutine do_main
   integer, allocatable :: ddx(:,:)    ! 流下方向(卓越流向より)(1~8)
   integer, allocatable :: ddy(:,:)    ! 流下方向(水位より)(1~8)
   integer, allocatable :: ddz(:,:)    ! 流下方向(標高より)(1~8)
-  integer, allocatable :: ca(:,:)     ! 集水面積(セル数)
   integer, allocatable :: sw(:,:)     ! 海域マスク
   real, allocatable :: h(:,:)         ! 水深
   real, allocatable :: z(:,:)         ! 標高
@@ -41,7 +47,6 @@ subroutine do_main
   allocate(ddx(1:nx,1:ny), source = -1)
   allocate(ddy(1:nx,1:ny), source = -1)
   allocate(ddz(1:nx,1:ny), source = -1)
-  allocate(ca(1:nx,1:ny), source = 0)
   allocate(sw(1:nx,1:ny), source = 0)
   allocate(h(1:nx,1:ny), source = 0.0)
   allocate(z(1:nx,1:ny), source = 0.0)
@@ -49,62 +54,67 @@ subroutine do_main
   allocate(e0(1:nx,1:ny), source = 0.0)
 
   ! 卓越流向ファイルの読み込み
+  print *, "Reading Ddd"
   open(1, file="data/Ddd9998.bil", form='unformatted', status='old', access='stream')
   read(1) ddd
   close(1)
 
   ! 水深の読み込み
+  print *, "Reading H"
   open(1, file="data/H9998.bil", form='unformatted', status='old', access='stream')
   read(1) h
   close(1)
 
   ! 標高の読み込み
+  print *, "Reading Elev"
   open(1, file="data/Elev_250_down100carved_20251127.bil", form='unformatted', status='old', access='stream')
   read(1) z
   close(1)
 
   ! 海域マスクの読み込み
+  print *, "Reading SeaLand"
   open(1, file="data/SeaLand250_20251127.bil", form='unformatted', status='old', access='stream')
   read(1) sw
   close(1)
 
-  e(:,:) = z(:,:) + h(:,:)
-  call mk_ma(e, sw, e0)
+  ! 流下方向を計算
+  call mk_ddx(ddd, sw, ddx)    ! 卓越流下方向から落水方向を計算
 
-  call mk_ddx(ddd, sw, ddx)
-  call mk_ddy(e, e0, sw, ddy)
-  !call mk_ddy0(h, z, sw, ddy)
-  call mk_ddz(z, sw, ddz)
+  ! 以下は不採用
+  e(:,:) = z(:,:) + h(:,:)     ! 水位を計算
+  call mk_e0(e, sw, e0)        ! 水位の移動平均を計算
+  call mk_ddy(e, e0, sw, ddy)  ! 水位から落水方向を計算
+  call mk_ddz(z, sw, ddz)      ! 標高から落水方向を計算
 
 
-
+  ! 結果出力ディレクトリを作成
+  call execute_command_line("mkdir -p result")
 
   ! 流下方向の書き込み
-  open(1, file="Ddx0002.bil", form='unformatted', status='replace', access='stream')
+  print *, "Writing Dd"
+  open(1, file="result/Dd9998.bil", form='unformatted', status='replace', access='stream')
   write(1) ddx
   close(1)
-  open(1, file="Ddy0002.bil", form='unformatted', status='replace', access='stream')
-  write(1) ddy
-  close(1)
-  open(1, file="Ddz0001.bil", form='unformatted', status='replace', access='stream')
-  write(1) ddz
-  close(1)
-  open(1, file="E0002.bil", form='unformatted', status='replace', access='stream')
-  write(1) e(:,:)
-  close(1)
-  open(1, file="Ea0002.bil", form='unformatted', status='replace', access='stream')
-  write(1) e0(:,:)
-  close(1)
 
-  ! 集水面積の書き込み
-  !open(1, file="Ca0000.bil", form='unformatted', status='replace', access='stream')
-  !write(1) ca
+  !---- 以下は不採用 ----
+  !open(1, file="Ddy0002.bil", form='unformatted', status='replace', access='stream')
+  !write(1) ddy
   !close(1)
+  !open(1, file="Ddz0001.bil", form='unformatted', status='replace', access='stream')
+  !write(1) ddz
+  !close(1)
+  !open(1, file="E0002.bil", form='unformatted', status='replace', access='stream')
+  !write(1) e(:,:)
+  !close(1)
+  !open(1, file="Ea0002.bil", form='unformatted', status='replace', access='stream')
+  !write(1) e0(:,:)
+  !close(1)
+
 end subroutine
 
 
 !-----------------------------------------------------------------------
-! 卓越流下方向データ(2~256)を流下方向(1~8)に変換する
+! 卓越流下方向データ(2~256)を落水方向(1~8)に変換する
 !-----------------------------------------------------------------------
 subroutine mk_ddx(ddd, sw, dd)
   integer, intent(in) :: ddd(1:nx,1:ny)
@@ -126,7 +136,7 @@ end subroutine
 
 
 !-----------------------------------------------------------------------
-! 水位から流下方向を計算する
+! 水位から落水方向を計算する
 !-----------------------------------------------------------------------
 subroutine mk_ddy(e, e0, sw, dd)
   real, intent(in) :: e(1:nx,1:ny)
@@ -188,9 +198,9 @@ end subroutine
 
 
 !-----------------------------------------------------------------------
-! 移動平均
+! 水位の移動平均
 !-----------------------------------------------------------------------
-subroutine mk_ma(a, sw, a0)
+subroutine mk_e0(a, sw, a0)
   real, intent(in) :: a(1:nx,1:ny)
   integer, intent(in) :: sw(1:nx,1:ny)
   real, intent(out) :: a0(1:nx,1:ny)
@@ -218,7 +228,7 @@ subroutine mk_ma(a, sw, a0)
 end subroutine
 
 !-----------------------------------------------------------------------
-! 標高から流下方向を計算する
+! 標高から落水方向を計算する
 !-----------------------------------------------------------------------
 subroutine mk_ddz(z, sw, dd)
   real, intent(in) :: z(1:nx,1:ny)
@@ -261,7 +271,7 @@ end module
 
 !=======================================================================
 !=======================================================================
-program calc_catchmentarea
-  use mod_calc_catchmentarea
+program mkdowndir
+  use mod_mkdowndir
   call do_main
 end program
