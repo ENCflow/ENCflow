@@ -15,6 +15,7 @@ data/
 backup/
 fortran_test
 Backup
+*.xlsx
 
 # --- run outputs / generated results ---
 result/
