@@ -1,1 +1,0 @@
-  call m_geoinfo_init(g, p)               ! geoinfo を初期化

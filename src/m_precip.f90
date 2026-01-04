@@ -133,7 +133,8 @@ subroutine set_maplist
 
   ! 分布リストの行数をカウント
   fname = trim(p%dir_data)//"/"//trim(list%fn_maplist)
-  open(newunit=un, file=fname, status='old')
+  print *, " reading precipitation map list ", trim(fname)
+  open(newunit=un, file=trim(fname), status='old')
   n = 0
   do 
     read(un, *, end=99)
@@ -145,8 +146,9 @@ subroutine set_maplist
 
   ! 分布ファイルを全てオープン
   do i = 1, n
-    read(un, *) mapname
+    read(un, '(a256)') mapname
     fname_map = trim(p%dir_data)//"/"//trim(mapname)
+    print *, " checking precipitaiton map ", trim(fname_map)
     pr%un_maplist(i) = fileio_open_un(fname_map, p%f_input_mode)
   end do
   close(un)
@@ -162,7 +164,7 @@ subroutine m_precip_makepre(pr, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  real :: precip     ! 降水強度(mm/h)
+  real :: prval     ! 降水強度(mm/h)
   real :: f
   integer :: i, j
   integer :: un
@@ -174,26 +176,26 @@ subroutine m_precip_makepre(pr, p, g, s)
 
   !---- 降雨強度時系列から一様分布データを作成 ----
   if (pr%prtype == 1) then
-    call get_precip(s%t, precip)   ! 現在時間ステップでの降水強度を計算
+    call get_prval(s%t, prval)   ! 現在時間ステップでの降水強度を計算
     f = 1. / 1000. / 3600.         ! 単位を(mm/h)から(m/s)に換算
     !$omp parallel do
     do j = g%wy(1), g%wy(2)
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
-        s%pre(i,j) = precip * f                  ! (m/s)
+        s%pre(i,j) = prval * f                  ! (m/s)
         s%prh(i,j) = s%pre(i,j) * 3600 * 1000    ! (mm/h)
       end do
     end do
     !$omp end parallel do
   !---- 時系列倍率から分布データを作成 ----
   else if (pr%prtype == 2) then
-    call get_precip(s%t, precip)   ! 現在時間ステップでの倍率を計算
+    call get_prval(s%t, prval)   ! 現在時間ステップでの倍率を計算
     f = 1. / 1000. / 3600. / 24.   ! 単位を(mm/day)から(m/s)に換算
     !$omp parallel do
     do j = g%wy(1), g%wy(2)
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
-        s%pre(i,j) = pr%prmap(i,j) * precip * f  ! (m/s)
+        s%pre(i,j) = pr%prmap(i,j) * prval * f  ! (m/s)
         s%prh(i,j) = s%pre(i,j) * 3600 * 1000    ! (mm/h)
       end do
     end do
@@ -201,7 +203,7 @@ subroutine m_precip_makepre(pr, p, g, s)
   !---- 降雨分布ファイルから作成 ----
   else if (pr%prtype == 3) then
     if (mod(s%it, pr%idt_maplist) == 0) then
-      i = s%it / pr%idt_maplist
+      i = s%it / pr%idt_maplist + 1
       if (i <= size(pr%un_maplist)) then
         un = pr%un_maplist(i)
         call fileio_read_matrix_real_un(un, p%nx, p%ny, s%prh, p%f_input_mode)
@@ -215,24 +217,24 @@ subroutine m_precip_makepre(pr, p, g, s)
 contains
  !----------------------------------------------------
  ! 時刻tでの降水強度または倍率を計算
- subroutine get_precip(t, precip)
+ subroutine get_prval(t, val)
   real, intent(in) :: t
-  real, intent(out) :: precip
+  real, intent(out) :: val
   real :: t0, t1, pre0, pre1
-  integer :: i
-  precip = 0
+  integer :: k
+  val = 0
   if (t <= pr%prval(1,1)) then
-    precip = pr%prval(2,1)
+    val = pr%prval(2,1)
   else if (t > pr%prval(1,pr%npr)) then
-    precip = pr%prval(2,pr%npr)
+    val = pr%prval(2,pr%npr)
   else
-    do i = 2, pr%npr
-      t1 = pr%prval(1,i)
+    do k = 2, pr%npr
+      t1 = pr%prval(1,k)
       if (t < t1) then
-        t0 = pr%prval(1,i-1)
-        pre0 = pr%prval(2,i-1)
-        pre1 = pr%prval(2,i)
-        precip = pre0 + (t - t0) / (t1 - t0) * (pre1 - pre0)
+        t0 = pr%prval(1,k-1)
+        pre0 = pr%prval(2,k-1)
+        pre1 = pr%prval(2,k)
+        val = pre0 + (t - t0) / (t1 - t0) * (pre1 - pre0)
         exit
       end if
     end do
