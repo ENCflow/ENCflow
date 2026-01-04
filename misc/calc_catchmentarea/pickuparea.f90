@@ -4,12 +4,15 @@
 !     降水分布データと合わせて累積流量を計算する
 !
 !   入力データ
-!     Dd0000.bil: 流向 (1~8)
-!     Exprecip.bil: 降水量 (mm)
+!     result/Dd0000.bil: 流向 (1~8)
+!     result/Ca0000.bil: 集水面積 (cell)
+!     result/Cq0000.bil: 累積流量 (m*cell)
+!     data/Exprecip.bil: 降水量 (mm)
+!     data/RiverMask.bil: 河道マスク (0~1)
+!     data/flux.csv: 測線リストファイル
 !
 !   出力データ
-!     Ca0000.bil: 集水面積 (cell)
-!     Cq0000.bil: 累積流量 (m*cell)
+!     result/CatchmentArea.csv: 測線ごとの集水面積
 !
 !-----------------------------------------------------------------------
 !
