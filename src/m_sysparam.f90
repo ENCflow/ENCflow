@@ -15,10 +15,14 @@ module m_sysparam
     real :: dt_disp                            ! 画面表示時間刻み (s)
     real :: dt_file                            ! ファイル出力時間刻み (s)
     real :: dt_recrd                           ! プローブ出力時間刻み (s)
+    real :: st_file                            ! ファイル出力開始時間 (s)
+    real :: st_recrd                           ! プローブ出力開始時間 (s)
     integer :: nt                              ! 総時間ステップ数
     integer :: idt_disp                        ! 画面表示時間刻みの時間ステップ数
     integer :: idt_file                        ! ファイル出力時間刻みの時間ステップ数
     integer :: idt_recd                        ! プローブ出力時間刻みの時間ステップ数
+    integer :: ist_file                        ! ファイル出力開始時間の時間ステップ数
+    integer :: ist_recd                        ! プローブ出力開始時間の時間ステップ数
     real :: dt                                 ! 時間ステップ (s)
     integer :: nx                              ! x方向セル数
     integer :: ny                              ! y方向セル数
@@ -159,6 +163,8 @@ subroutine m_sysparam_init(p, fn_sysparam)
   if (len(trim(list%dt_disp_c)) > 0) p%dt_disp = util_str2sec(list%dt_disp_c, "bad dt_disp_c in &list_sysparam")
   if (len(trim(list%dt_file_c)) > 0) p%dt_file = util_str2sec(list%dt_file_c, "bad dt_file_c in &list_sysparam")
   if (len(trim(list%dt_recrd_c)) > 0) p%dt_recrd = util_str2sec(list%dt_recrd_c, "bad dt_recrd_c in &list_sysparam")
+  if (len(trim(list%st_file_c)) > 0) p%st_file = util_str2sec(list%st_file_c, "bad st_file_c in &list_sysparam")
+  if (len(trim(list%st_recrd_c)) > 0) p%st_recrd = util_str2sec(list%st_recrd_c, "bad st_recrd_c in &list_sysparam")
 
   if (p%dt == 0.0) then
     print *, 'error: dt = 0.0'
@@ -168,7 +174,9 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%nt = ceiling((p%tt - p%t0) / p%dt)         ! 総時間ステップ数
   p%idt_disp = max(nint(p%dt_disp / p%dt), 1)  ! 画面表示時間刻みの時間ステップ数
   p%idt_file = max(nint(p%dt_file / p%dt), 1)  ! ファイル出力時間刻みの時間ステップ数
-  p%idt_recd = max(nint(p%dt_recrd / p%dt), 1) ! プローブ出力d時間刻みの時間ステップ数
+  p%idt_recd = max(nint(p%dt_recrd / p%dt), 1) ! プローブ出力時間刻みの時間ステップ数
+  p%ist_file = max(nint(p%st_file / p%dt), 1)  ! ファイル出力開始時間の時間ステップ数
+  p%ist_recd = max(nint(p%st_recrd / p%dt), 1) ! プローブ出力開始時間の時間ステップ数
 
   p%num_threads = get_numthreads()             ! スレッド数を取得
   p%real_precision = precision(p%dt)           ! 実数変数の有効桁数を取得

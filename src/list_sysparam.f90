@@ -15,12 +15,16 @@ module list_sysparam
     real :: dt_disp = 60                          ! 画面表示時間刻み (s)
     real :: dt_file = 3600                        ! ファイル出力時間刻み (s)
     real :: dt_recrd = 60                         ! プローブ出力時間刻み (s)
+    real :: st_file = 0                           ! ファイル出力開始時間 (s)
+    real :: st_recrd = 0                          ! プローブ出力開始時間 (s)
     character(len=80) :: t0_c = ""                ! 計算開始時刻 (d, h, m, s)
     character(len=80) :: tt_c = ""                ! 計算終了時刻 (d, h, m, s)
     character(len=80) :: dt_c = ""                ! 時間ステップ (d, h, m, s)
     character(len=80) :: dt_disp_c = ""           ! 画面表示時間刻み (s)
     character(len=80) :: dt_file_c = ""           ! ファイル出力時間刻み (s)
     character(len=80) :: dt_recrd_c = ""          ! プローブ出力時間刻み (s)
+    character(len=80) :: st_file_c = ""           ! ファイル出力開始時間 (s)
+    character(len=80) :: st_recrd_c = ""          ! プローブ出力開始時間 (s)
 
     real :: dd = 0.001                            ! この水深以上なら水の移動を計算する(限界水深)
     real :: dv = 0.001                            ! これ以下なら強制的にこの水深にする(仮想水深)
@@ -93,12 +97,16 @@ subroutine list_sysparam_read(list, fn_sysparam)
   real :: dt_disp                            ! 画面表示時間刻み (s)
   real :: dt_file                            ! ファイル出力時間刻み (s)
   real :: dt_recrd                           ! プローブ出力時間刻み (s)
+  real :: st_file                            ! ファイル出力開始時間 (s)
+  real :: st_recrd                           ! プローブ出力開始時間 (s)
   character(:), allocatable :: t0_c          ! 計算開始時刻 (d, h, m, s)
   character(:), allocatable :: tt_c          ! 計算終了時刻 (d, h, m, s)
   character(:), allocatable :: dt_c          ! 時間ステップ (d, h, m, s)
   character(:), allocatable :: dt_disp_c     ! 画面表示時間刻み (d, h, m, s)
   character(:), allocatable :: dt_file_c     ! ファイル出力時間刻み (d, h, m, s)
   character(:), allocatable :: dt_recrd_c    ! プローブ出力時間刻み (d, h, m, s)
+  character(:), allocatable :: st_file_c     ! ファイル出力開始時間 (d, h, m, s)
+  character(:), allocatable :: st_recrd_c    ! プローブ出力開始時間 (d, h, m, s)
   real :: dd                                 ! この水深以上なら水の移動を計算する(限界水深)
   real :: dv                                 ! これ以下なら強制的にこの水深にする(仮想水深)
   real :: vv                                 ! これ以下なら摩擦項計算時の流速をこの流速に
@@ -148,7 +156,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: dir_result    ! 結果出力ディレクトリ
   character(:), allocatable :: outfn_suffix  ! 出力ファイル名のサフィックス
   integer :: un
-  namelist /list_sysparam/ t0, tt, dt, dt_disp, dt_file, dt_recrd, &
+  namelist /list_sysparam/ t0, tt, dt, dt_disp, dt_file, dt_recrd, st_file, st_recrd, &
                         t0_c, tt_c, dt_c, dt_disp_c, dt_file_c, dt_recrd_c, &
                         dd, dv, vv, gg, cm, cd, kk, &
                         f_gridsystem, f_govequation, f_check_cfl, f_state_save, &
@@ -168,12 +176,16 @@ subroutine list_sysparam_read(list, fn_sysparam)
   dt_disp = list%dt_disp
   dt_file = list%dt_file
   dt_recrd = list%dt_recrd
+  st_file = list%st_file
+  st_recrd = list%st_recrd
   t0_c = list%t0_c
   tt_c = list%tt_c
   dt_c = list%dt_c
   dt_disp_c = list%dt_disp_c
   dt_file_c = list%dt_file_c
   dt_recrd_c = list%dt_recrd_c
+  st_file_c = list%st_file_c
+  st_recrd_c = list%st_recrd_c
   dd = list%dd
   dv = list%dv
   vv = list%vv
@@ -234,12 +246,16 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%dt_disp = dt_disp
   list%dt_file = dt_file
   list%dt_recrd = dt_recrd
+  list%st_file = st_file
+  list%st_recrd = st_recrd
   list%t0_c = t0_c
   list%tt_c = tt_c
   list%dt_c = dt_c
   list%dt_disp_c = dt_disp_c
   list%dt_file_c = dt_file_c
   list%dt_recrd_c = dt_recrd_c
+  list%st_file_c = st_file_c
+  list%st_recrd_c = st_recrd_c
   list%dd = dd
   list%dv = dv
   list%vv = vv
