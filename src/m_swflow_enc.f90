@@ -74,15 +74,6 @@ module m_swflow_enc
   real :: mn2dh(1:8)             ! k軸の単位幅流量から中心セルの水深減少量への変換係数
 
 
-  !interface
-  !  module subroutine advection_sub(p, g, s, sx)
-  !    type(t_sysparam), intent(in) :: p
-  !    type(t_geoinfo), intent(in) :: g
-  !    type(t_state), intent(in) :: s
-  !    type(t_enc_status), intent(inout) :: sx
-  !  end subroutine
-  !end interface
-
 contains
  
 !======================================================================
