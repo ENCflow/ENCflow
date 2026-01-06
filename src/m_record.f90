@@ -496,6 +496,7 @@ subroutine m_record_probe(r, p, s)
     write(un, afmt, advance='no') s%vv(ix,iy)
     write(un, '(a)', advance='no') ","
     write(un, afmt, advance='no') s%qq(ix,iy)
+    write(un, *)
     if (s%qq(ix,iy) > r%probe(ipb)%qmax) then
       r%probe(ipb)%tp = s%t / 60.
       r%probe(ipb)%qmax = s%qq(ix,iy)
