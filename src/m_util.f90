@@ -71,28 +71,27 @@ function util_str2sec(str, message) result(t)
     print *, "Error, ", message
     stop
   end if
-
-contains
-  function isnumber(s) result(r)
-    character(len=*), intent(in) :: s
-    logical :: r
-    integer :: i, l
-    character :: c
-    r = .false.
-    l = len(trim(s))
-    if (l < 1) return
-    do i = 1, l
-      c = s(i:i)
-      if ((c >= "0" .and. c <= "9") .or. c == "." .or. c == " ") then
-        r = .true.
-      else
-        r = .false.
-        return
-      end if
-    end do
-  end function
 end function
 
+
+function isnumber(str) result(r)
+  character(len=*), intent(in) :: str
+  logical :: r
+  integer :: i, l
+  character :: c
+  r = .false.
+  l = len(trim(str))
+  if (l < 1) return
+  do i = 1, l
+    c = str(i:i)
+    if ((c >= "0" .and. c <= "9") .or. c == "." .or. c == " ") then
+      r = .true.
+    else
+      r = .false.
+      return
+    end if
+  end do
+end function
 
 end module
 

@@ -61,20 +61,19 @@ module subroutine advection_sub(p, g, s, sx)
 !end subroutine
 contains
   ! 風上差分用のウェイトを計算
-  function get_ww(u, v, vv) result(ww)
+  function get_ww(u, v, vv) result(ww_upw)
     real, intent(in) :: u, v
     real, intent(in) :: vv
-    real :: ww(1:8)
+    real :: ww_upw(1:8)
     real :: wk
-    integer :: k
     if (p_adv_upwind_index > 0 .and. vv > 0) then
       do k = 1, 8
         wk = -(u * n8x(k) + v * n8y(k)) / vv                    ! -1~1
         wk = max(1 - (1 - wk) * p_adv_upwind_index / 2, 0.0)    ! 0～1
-        ww(k) = wk
+        ww_upw(k) = wk
       end do
     else
-      ww(:) = 1
+      ww_upw(:) = 1
     end if
   end function
 end subroutine

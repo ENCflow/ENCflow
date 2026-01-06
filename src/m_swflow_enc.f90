@@ -30,7 +30,7 @@ module m_swflow_enc
   integer :: f_friction_fastmath != 0        ! 摩擦項計算の高速化
   integer :: f_advection_tvd != 9            ! 移流項にTVDスキームを使用　
   integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
-  real :: p_diagratio = 2 / (2 + sqrt(2.))  ! ratio of diagonal component
+  real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
   real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
   real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
 
@@ -41,7 +41,7 @@ module m_swflow_enc
     real, allocatable :: h1(:,:)     ! セル中心での計算済み水深
     real, allocatable :: taxy(:,:,:) ! セル中心での移流項(第1添字は1~4，それぞれ風上差分と中心差分のx,y成分)
   end type
-  type(t_enc_status) :: sx
+  type(t_enc_status) :: sx_actual
 
 
   !--------------------------------------------------------------------
@@ -131,7 +131,7 @@ subroutine m_swflow_enc_init(p, g, s)
   call init_weights(p)
 
   ! 初期条件を設定する
-  call init_enc_status(p, g, s, sx)
+  call init_enc_status(p, g, s, sx_actual)
 
   ! 高速摩擦計算ルーチンを初期化する
   call m_ffactor_init(f_friction_fastmath, p%dd, 30.0, 'UV')
@@ -147,11 +147,11 @@ subroutine m_swflow_enc_calc(p, g, s, ierror)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
-  call prepare(p, g, s, sx)
-  call advection(p, g, s, sx)
-  call momentum(p, g, s, sx, ierror)
-  call continuous(p, g, s, sx)
-  call complete(p, g, s, sx)
+  call prepare(p, g, s, sx_actual)
+  call advection(p, g, s, sx_actual)
+  call momentum(p, g, s, sx_actual, ierror)
+  call continuous(p, g, s, sx_actual)
+  call complete(p, g, s, sx_actual)
 end subroutine
 
 
@@ -160,8 +160,8 @@ end subroutine
 !----------------------------------------------------------------------
 subroutine m_swflow_enc_dispose(p)
   type(t_sysparam), intent(in) :: p
-  if (p%f_state_save > 0) call save_state(p, sx)
-  call del_enc_status(sx)
+  if (p%f_state_save > 0) call save_state(p, sx_actual)
+  call del_enc_status(sx_actual)
   call m_ffactor_dispose
 end subroutine
 
@@ -434,7 +434,8 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
 
   ! セル境界の移流項をセットする
   if (f_advection_term > 0) then
-    call calc_kth_advection(tae)
+    !call calc_kth_advection(tae)
+    tae = calc_kth_advection()
   else
     tae = 0
   end if
@@ -490,8 +491,8 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
 contains
   !--------------------------------------------------------------------
   ! 移流項を計算する
-  subroutine calc_kth_advection(tae)
-    real, intent(out) :: tae
+  function calc_kth_advection() result(ta)
+    real :: ta
     real :: taxe, taye
     real :: taxe2, taye2, tae2
     integer :: inn, jnn, ino, jno
@@ -500,8 +501,8 @@ contains
     ! 風上差分による移流項
     taxe = (sx%taxy(1,i,j) + sx%taxy(1,in,jn)) / 2  ! 移流項(x方向, 符合は座標軸方向が正)
     taye = (sx%taxy(2,i,j) + sx%taxy(2,in,jn)) / 2  ! 移流項(y方向, 符合は座標軸方向が正)
-    tae = taxe * n8x(k) + taye * n8y(k)             ! 移流項(符合は中心セルから近傍セルに向かい正)
-    tae = tae * 1.5
+    ta = taxe * n8x(k) + taye * n8y(k)             ! 移流項(符合は中心セルから近傍セルに向かい正)
+    ta = ta * 1.5
     ! TVD(風上差分と中心差分の混合)
     if (f_advection_tvd > 0) then
       ! 中心差分による移流項
@@ -541,10 +542,10 @@ contains
       !end if
 
       ! 風上差分と中心差分の混合
-      tae = tae + phi * (tae2 - tae)
-      !tae = (tae + tae2) / 2
+      ta = ta + phi * (tae2 - ta)
+      !ta = (ta + tae2) / 2
     end if
-  end subroutine
+  end function
   !--------------------------------------------------------------------
   ! 河口から海への段落ち強制
   subroutine rivermouth_drop
@@ -610,7 +611,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
 
   ! セル境界での有効重力加速度を計算
   ge = p%gg                                 ! 重力加速度
-  if (f_gravity_correction > 0) call adjust_ge(ge)
+  if (f_gravity_correction > 0) ge = correct_ge()
 
   ! セル境界での底面勾配項(符合は中心セルから近傍セルに向かい正)
   tg0e = -ge * (g%z(in,jn) - g%z(i,j)) / w8dr(k) * gve
@@ -638,7 +639,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
     he = (hc + hn) / 2
 
     ! セル境界での水深が上流側水深よりも深くならない様に調整
-    if (f_hcap_upwind > 0) call adjust_he(he)
+    if (f_hcap_upwind > 0) he = correct_he()
 
     ! 摩擦項で使用する水深
     !   水深が浅い場合に摩擦が過大となることを防ぐために水深の最小値を制限
@@ -708,25 +709,29 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
 contains
   !--------------------------------------------------------------------
   ! セル境界水深が上流側水深よりも深くならないよう調整
-  subroutine adjust_he(he)
-    real, intent(inout) :: he
+  function correct_he() result(he_corr)
+    real :: he_corr
     if (uve0 > 0) then      ! 中心セルが上流側
-      he = min(he, hc)      !   中心セルの水深より深くならないように
+      he_corr = min(he, hc)      !   中心セルの水深より深くならないように
     else if (uve0 < 0) then ! 近傍セルが上流側
-      he = min(he, hn)      !   近傍セルの水深より深くならないように
+      he_corr = min(he, hn)      !   近傍セルの水深より深くならないように
+    else
+      he_corr = he
     end if
-  end subroutine
+  end function
   !--------------------------------------------------------------------
   ! 重力加速度を急勾配地形に合わせて調整
   !   Ni, Y., Cao, Z., & Liu, Q. (2019). 
   !     Mathematical modeling of shallow-water flows on steep slopes.
   !     Journal of Hydrology and Hydromechanics, 67(3), 252–259. DOI:10.2478/johh-2019-0012
-  subroutine adjust_ge(ge)
-    real, intent(inout) :: ge
+  function correct_ge() result(ge_corr)
+    real :: ge_corr
     if (vve > 0) then
-      ge = ge * w8dr2(k) / (w8dr2(k) + (g%z(in,jn) - g%z(i,j))**2)
+      ge_corr = ge * w8dr2(k) / (w8dr2(k) + (g%z(in,jn) - g%z(i,j))**2)
+    else
+      ge_corr = ge
     end if
-  end subroutine
+  end function
 
 end subroutine
 
@@ -886,20 +891,19 @@ subroutine advection(p, g, s, sx)
 !end subroutine
 contains
   ! 風上差分用のウェイトを計算
-  function get_ww(u, v, vv) result(ww)
+  function get_ww(u, v, vv) result(ww_upw)
     real, intent(in) :: u, v
     real, intent(in) :: vv
-    real :: ww(1:8)
+    real :: ww_upw(1:8)
     real :: wk
-    integer :: k
     if (p_adv_upwind_index > 0 .and. vv > 0) then
       do k = 1, 8
         wk = -(u * n8x(k) + v * n8y(k)) / vv                    ! -1~1
         wk = max(1 - (1 - wk) * p_adv_upwind_index / 2, 0.0)    ! 0～1
-        ww(k) = wk
+        ww_upw(k) = wk
       end do
     else
-      ww(:) = 1
+      ww_upw(:) = 1
     end if
   end function
 end subroutine

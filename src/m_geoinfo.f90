@@ -491,17 +491,17 @@ subroutine read_rn(p, g, list)
 
 
 contains
-  function get_rn(lu2rn, nluse, lu) result(rn)
+  function get_rn(lu2rn, nlu, lu) result(rn)
     real :: rn
     !real, intent(in) :: lu2rn(1:2,1:maxnluse)
     real, intent(in) :: lu2rn(:,:)
-    integer, intent(in) :: nluse
+    integer, intent(in) :: nlu
     integer, intent(in) :: lu
-    integer :: i
+    integer :: ilu
     rn = -1
-    do i = 1, nluse
-      if (nint(lu2rn(1,i)) == lu) then
-        rn = lu2rn(2,i)
+    do ilu = 1, nlu
+      if (nint(lu2rn(1,ilu)) == lu) then
+        rn = lu2rn(2,ilu)
         exit
       end if
     end do
