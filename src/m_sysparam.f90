@@ -17,12 +17,16 @@ module m_sysparam
     real :: dt_recrd                           ! プローブ出力時間刻み (s)
     real :: st_file                            ! ファイル出力開始時間 (s)
     real :: st_recrd                           ! プローブ出力開始時間 (s)
+    real :: et_file                            ! ファイル出力終了時間 (s)
+    real :: et_recrd                           ! プローブ出力終了時間 (s)
     integer :: nt                              ! 総時間ステップ数
     integer :: idt_disp                        ! 画面表示時間刻みの時間ステップ数
     integer :: idt_file                        ! ファイル出力時間刻みの時間ステップ数
     integer :: idt_recd                        ! プローブ出力時間刻みの時間ステップ数
     integer :: ist_file                        ! ファイル出力開始時間の時間ステップ数
     integer :: ist_recd                        ! プローブ出力開始時間の時間ステップ数
+    integer :: iet_file                        ! ファイル出力終了時間の時間ステップ数
+    integer :: iet_recd                        ! プローブ出力終了時間の時間ステップ数
     real :: dt                                 ! 時間ステップ (s)
     integer :: nx                              ! x方向セル数
     integer :: ny                              ! y方向セル数
@@ -107,6 +111,10 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%dt_disp = list%dt_disp                     ! 画面表示時間刻み (s)
   p%dt_file = list%dt_file                     ! ファイル出力時間刻み (s)
   p%dt_recrd = list%dt_recrd                   ! プローブ出力時間刻み (s)
+  p%st_file = list%st_file                     ! ファイル出力開始時間 (s)
+  p%st_recrd = list%st_recrd                   ! プローブ出力開始時間 (s)
+  p%et_file = list%et_file                     ! ファイル出力終了時間 (s)
+  p%et_recrd = list%et_recrd                   ! プローブ出力終了時間 (s)
   p%dt = list%dt                               ! 時間ステップ (s)
   p%dd = list%dd                               ! この水深以上なら移流項を計算する(限界水深)
   p%dv = list%dv                               ! これ以下なら強制的にこの水深にする(仮想水深)
@@ -165,11 +173,16 @@ subroutine m_sysparam_init(p, fn_sysparam)
   if (len(trim(list%dt_recrd_c)) > 0) p%dt_recrd = util_str2sec(list%dt_recrd_c, "bad dt_recrd_c in &list_sysparam")
   if (len(trim(list%st_file_c)) > 0) p%st_file = util_str2sec(list%st_file_c, "bad st_file_c in &list_sysparam")
   if (len(trim(list%st_recrd_c)) > 0) p%st_recrd = util_str2sec(list%st_recrd_c, "bad st_recrd_c in &list_sysparam")
+  if (len(trim(list%et_file_c)) > 0) p%et_file = util_str2sec(list%et_file_c, "bad et_file_c in &list_sysparam")
+  if (len(trim(list%et_recrd_c)) > 0) p%et_recrd = util_str2sec(list%et_recrd_c, "bad et_recrd_c in &list_sysparam")
 
   if (p%dt == 0.0) then
     print *, 'error: dt = 0.0'
     stop
   end if
+
+  if (p%et_file < 0) p%et_file = p%tt
+  if (p%et_recrd < 0) p%et_recrd = p%tt
 
   p%nt = ceiling((p%tt - p%t0) / p%dt)         ! 総時間ステップ数
   p%idt_disp = max(nint(p%dt_disp / p%dt), 1)  ! 画面表示時間刻みの時間ステップ数
@@ -177,6 +190,8 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%idt_recd = max(nint(p%dt_recrd / p%dt), 1) ! プローブ出力時間刻みの時間ステップ数
   p%ist_file = max(nint(p%st_file / p%dt), 1)  ! ファイル出力開始時間の時間ステップ数
   p%ist_recd = max(nint(p%st_recrd / p%dt), 1) ! プローブ出力開始時間の時間ステップ数
+  p%iet_file = max(nint(p%et_file / p%dt), 1)  ! ファイル出力終了時間の時間ステップ数
+  p%iet_recd = max(nint(p%et_recrd / p%dt), 1) ! プローブ出力終了時間の時間ステップ数
 
   p%num_threads = get_numthreads()             ! スレッド数を取得
   p%real_precision = precision(p%dt)           ! 実数変数の有効桁数を取得

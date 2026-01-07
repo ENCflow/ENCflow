@@ -1,5 +1,5 @@
-#FRT	= ifx
-#FFLAGS	= -g -fopenmp -warn all -fpe0 -O3 -ipo -fp-model fast -r8
+FRT	= ifx
+FFLAGS	= -g -fopenmp -warn all -fpe0 -O3 -ipo -fp-model fast -r8
 #FFLAGS	= -g -fopenmp -fast -warn all -fpe0 -parallel -r8
 #FFLAGS	= -g -fast -warn all -fpe0 -r8
 #FFLAGS	= -pg -O3 -warn all -fpe0 -r8
@@ -11,8 +11,8 @@
 #FFLAGS	= -g -O0 -traceback -check all -warn all -fpe0 -r8
 #LDFLAGS	=
 
-FRT	= gfortran
-FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -fdefault-real-8
+#FRT	= gfortran
+#FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -fdefault-real-8
 #FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8
 #FFLAGS	= -g -Ofast -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8
 #FFLAGS	= -pg -Ofast -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8

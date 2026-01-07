@@ -17,6 +17,8 @@ module list_sysparam
     real :: dt_recrd = 60                         ! プローブ出力時間刻み (s)
     real :: st_file = 0                           ! ファイル出力開始時間 (s)
     real :: st_recrd = 0                          ! プローブ出力開始時間 (s)
+    real :: et_file = -1                          ! ファイル出力終了時間 (s)
+    real :: et_recrd = -1                         ! プローブ出力終了時間 (s)
     character(len=80) :: t0_c = ""                ! 計算開始時刻 (d, h, m, s)
     character(len=80) :: tt_c = ""                ! 計算終了時刻 (d, h, m, s)
     character(len=80) :: dt_c = ""                ! 時間ステップ (d, h, m, s)
@@ -25,6 +27,8 @@ module list_sysparam
     character(len=80) :: dt_recrd_c = ""          ! プローブ出力時間刻み (s)
     character(len=80) :: st_file_c = ""           ! ファイル出力開始時間 (s)
     character(len=80) :: st_recrd_c = ""          ! プローブ出力開始時間 (s)
+    character(len=80) :: et_file_c = ""           ! ファイル出力終了時間 (s)
+    character(len=80) :: et_recrd_c = ""          ! プローブ出力終了時間 (s)
 
     real :: dd = 0.001                            ! この水深以上なら水の移動を計算する(限界水深)
     real :: dv = 0.001                            ! これ以下なら強制的にこの水深にする(仮想水深)
@@ -99,6 +103,8 @@ subroutine list_sysparam_read(list, fn_sysparam)
   real :: dt_recrd                           ! プローブ出力時間刻み (s)
   real :: st_file                            ! ファイル出力開始時間 (s)
   real :: st_recrd                           ! プローブ出力開始時間 (s)
+  real :: et_file                            ! ファイル出力終了時間 (s)
+  real :: et_recrd                           ! プローブ出力終了時間 (s)
   character(:), allocatable :: t0_c          ! 計算開始時刻 (d, h, m, s)
   character(:), allocatable :: tt_c          ! 計算終了時刻 (d, h, m, s)
   character(:), allocatable :: dt_c          ! 時間ステップ (d, h, m, s)
@@ -107,6 +113,8 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: dt_recrd_c    ! プローブ出力時間刻み (d, h, m, s)
   character(:), allocatable :: st_file_c     ! ファイル出力開始時間 (d, h, m, s)
   character(:), allocatable :: st_recrd_c    ! プローブ出力開始時間 (d, h, m, s)
+  character(:), allocatable :: et_file_c     ! ファイル出力終了時間 (d, h, m, s)
+  character(:), allocatable :: et_recrd_c    ! プローブ出力終了時間 (d, h, m, s)
   real :: dd                                 ! この水深以上なら水の移動を計算する(限界水深)
   real :: dv                                 ! これ以下なら強制的にこの水深にする(仮想水深)
   real :: vv                                 ! これ以下なら摩擦項計算時の流速をこの流速に
@@ -156,8 +164,10 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: dir_result    ! 結果出力ディレクトリ
   character(:), allocatable :: outfn_suffix  ! 出力ファイル名のサフィックス
   integer :: un
-  namelist /list_sysparam/ t0, tt, dt, dt_disp, dt_file, dt_recrd, st_file, st_recrd, &
+  namelist /list_sysparam/ t0, tt, dt, dt_disp, dt_file, dt_recrd, &
+                        st_file, st_recrd, et_file, et_recrd, &
                         t0_c, tt_c, dt_c, dt_disp_c, dt_file_c, dt_recrd_c, &
+                        st_file_c, st_recrd_c, et_file_c, et_recrd_c, &
                         dd, dv, vv, gg, cm, cd, kk, &
                         f_gridsystem, f_govequation, f_check_cfl, f_state_save, &
                         f_state_restore, f_input_mode, f_output_mode, f_output_compress, &
@@ -178,6 +188,8 @@ subroutine list_sysparam_read(list, fn_sysparam)
   dt_recrd = list%dt_recrd
   st_file = list%st_file
   st_recrd = list%st_recrd
+  et_file = list%et_file
+  et_recrd = list%et_recrd
   t0_c = list%t0_c
   tt_c = list%tt_c
   dt_c = list%dt_c
@@ -186,6 +198,8 @@ subroutine list_sysparam_read(list, fn_sysparam)
   dt_recrd_c = list%dt_recrd_c
   st_file_c = list%st_file_c
   st_recrd_c = list%st_recrd_c
+  et_file_c = list%et_file_c
+  et_recrd_c = list%et_recrd_c
   dd = list%dd
   dv = list%dv
   vv = list%vv
@@ -248,6 +262,8 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%dt_recrd = dt_recrd
   list%st_file = st_file
   list%st_recrd = st_recrd
+  list%et_file = et_file
+  list%et_recrd = et_recrd
   list%t0_c = t0_c
   list%tt_c = tt_c
   list%dt_c = dt_c
@@ -256,6 +272,8 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%dt_recrd_c = dt_recrd_c
   list%st_file_c = st_file_c
   list%st_recrd_c = st_recrd_c
+  list%et_file_c = et_file_c
+  list%et_recrd_c = et_recrd_c
   list%dd = dd
   list%dv = dv
   list%vv = vv

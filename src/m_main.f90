@@ -15,6 +15,8 @@ module m_main
 
   public :: m_main_all
 
+  integer :: un_fnolist    ! 出力ファイル番号リスト用ファイルの装置番号
+
 contains
 
 !======================================================================
@@ -85,12 +87,14 @@ subroutine run_main(p, g, pr, s, r, sw)
   print *, "number of threads :", p%num_threads
   print *, "number of valid cells :", s%n_valcells
 
+
   it = 0
   ifn = 0
   call m_state_updatetime(s, p, it)       ! 時刻情報を初期化
   call m_precip_makepre(pr, p, g, s)      ! 初期降水分布を作成　
   call m_state_calcstat(s, p, g)          ! 統計情報を計算
   call m_state_printstate(p, s)           ! 途中経過を画面に出力
+  call open_fnolist(p)                    ! ファイル番号リストをオープン　
   call output(p, g, s, ifn)               ! 初期状態をファイル出力
   call m_record_probe(r, p, s)            ! プローブの値を出力
   call m_record_flux(r, p, s)             ! フラックスの値を出力
@@ -128,13 +132,13 @@ subroutine run_main(p, g, pr, s, r, sw)
     endif
 
     ! dt_file 間隔で計算結果をファイルに出力 
-    if (mod(it, p%idt_file) == 0) then
-      ifn = it / p%idt_file
+    if (it >= p%ist_file .and. it <= p%iet_file .and. mod(it, p%idt_file) == 0) then
+      ifn = ifn + 1
       call output(p, g, s, ifn)
     endif
 
     ! dt_record 間隔でプローブとフラックスの値を出力
-    if (mod(it, p%idt_recd) == 0) then
+    if (it >= p%ist_recd .and. it <= p%iet_recd .and. mod(it, p%idt_recd) == 0) then
      call m_record_probe(r, p, s)
      call m_record_flux(r, p, s)
     endif
@@ -180,6 +184,18 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 計算結果ファイルの番号リスト用ファイルを開く
+!----------------------------------------------------------------------
+subroutine open_fnolist(p)
+  type(t_sysparam), intent(in) :: p
+  character(len=256) :: fname
+  fname = trim(p%dir_result)//"/FILENUMBER.csv"
+  open(newunit=un_fnolist, file=trim(fname), status='replace')
+  write(un_fnolist, '(a)') "# No., time, t(s), it"
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 計算結果の配列をファイルに出力
 !----------------------------------------------------------------------
 subroutine output(p, g, s, k)
@@ -203,6 +219,7 @@ subroutine output(p, g, s, k)
   if (p%f_out_pre > 0) call output_matrix_real(p, "P", s%prh, k)      ! 降雨強度
   if (p%f_out_fr > 0) call output_matrix_real(p, "Fr", s%fr, k)       ! フルード数
   if (p%f_out_cn > 0) call output_matrix_real(p, "Cn", s%cn, k)       ! クーラン数
+  write(un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it
 end subroutine
 
 
@@ -219,6 +236,7 @@ subroutine output_summary(p, s, k)
   if (p%f_out_qqmax > 0) call output_matrix_real(p, "Q", s%qqmax, k)    ! 最大流量
   if (p%f_out_qqmaxt > 0) call output_matrix_real(p, "Qt", s%qqt, k)    ! 最大流量の時刻
   if (p%f_out_qqmaxd > 0) call output_matrix_real(p, "Qd", s%qqdir, k)  ! 最大流量の流向
+  write(un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it
 end subroutine
 
 
