@@ -138,7 +138,7 @@ subroutine m_swflow_enc_calc(p, g, s, ierror)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
-  call prepare(p, g, s, sx_actual)
+  !call prepare(p, g, s, sx_actual)
   call advection(p, g, s, sx_actual)
   call momentum(p, g, s, sx_actual, ierror)
   call continuous(p, g, s, sx_actual)
@@ -311,7 +311,7 @@ subroutine prepare(p, g, s, sx)
       ! 新時間ステップでの水深を初期化して降雨を加える
       ! 降雨は現時間ステップでの計算には反映されない
       ! したがって運動方程式の計算後に加算しても問題ない
-      sx%h1(i,j) = s%h(i,j) + s%pre(i,j) * p%dt / g%gv(i,j)
+      !sx%h1(i,j) = s%h(i,j) + s%pre(i,j) * p%dt / g%gv(i,j)
     end do
   end do
   !!$omp end parallel do
@@ -754,7 +754,7 @@ subroutine continuous(p, g, s, sx)
       s%m(i,j) = 0
       s%n(i,j) = 0
       mnmax = 0
-      ! sx%h1(i,j) = s%h(i,j) + s%pre(i,j) * p%dt / g%gv(i,j) ! <--- この行を生かしてprepareを殺すとエラー
+       sx%h1(i,j) = s%h(i,j) + s%pre(i,j) * p%dt / g%gv(i,j) ! <--- この行を生かしてprepareを殺すとエラー
       ! 対象セルi,jの8近傍全ての水の流出入を計算し平均流量・流速と水位を更新する
       s%ddir1(i,j) = 0
       s%ddir8(i,j) = 0

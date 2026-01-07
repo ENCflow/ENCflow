@@ -3,7 +3,7 @@
 *.mod
 *.smod
 *.obj
-a.out
+a.out*
 rerecord
 rmdepress_river
 tada
