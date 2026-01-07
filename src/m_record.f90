@@ -226,18 +226,18 @@ subroutine set_flux(p)
       iy1 = int(y1 / p%dy) + 1
     end if
     if (ix0 < 1 .or. ix0 > p%nx .or. iy0 < 1 .or. iy0 > p%ny) then
-      write(0, '("error: point A of flux ",i0," is out of area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
+      write(0, '("error: point R of flux ",i0," is out of area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
       stop
     end if
     if (ix1 < 1 .or. ix1 > p%nx .or. iy1 < 1 .or. iy1 > p%ny) then
-      write(0, '("error: point B flux ",i0," is out of area.",2f15.2,2i7)') i, x1, y1, ix1, iy1
+      write(0, '("error: point L flux ",i0," is out of area.",2f15.2,2i7)') i, x1, y1, ix1, iy1
       stop
     end if
     if (g%x(ix0,iy0) < 1) then
-      write(0, '("warning: point A of flux ",i0," is not in valid area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
+      write(0, '("warning: point R of flux ",i0," is not in valid area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
     end if
     if (g%x(ix1,iy1) < 1) then
-      write(0, '("warning: point B flux ",i0," is not in valid area.",2f15.2,2i7)') i, x1, y1, ix1, iy1
+      write(0, '("warning: point L flux ",i0," is not in valid area.",2f15.2,2i7)') i, x1, y1, ix1, iy1
     end if
 
 
@@ -395,8 +395,8 @@ subroutine set_flux(p)
     fn_fl = trim(p%dir_result)//"/fluxes/"//"flux"//cun//trim(p%outfn_suffix)//".csv"
     open(newunit=un, file=trim(fn_fl))
     write(un, '("# flux transect number =,",i3)') i
-    write(un, '("# xA, yA, xB, yB(m) =,",f14.3,",",f14.3,",",f14.3,",",f14.3)') r%flux(i)%xy0(1:4)
-    write(un, '("# ixA, iyA, ixB, iyB =,",i7,",",i7,",",i7,",",i7)') r%flux(i)%ixy0(1:4)
+    write(un, '("# xR, yR, xL, yL(m) =,",f14.3,",",f14.3,",",f14.3,",",f14.3)') r%flux(i)%xy0(1:4)
+    write(un, '("# ixR, iyR, ixL, iyL =,",i7,",",i7,",",i7,",",i7)') r%flux(i)%ixy0(1:4)
     write(un, '("# length of transect(m) =,",f14.3)') r%flux(i)%trlen
     write(un, '("# t(hour), t(min), Q(m3/s), Hmax(m), Vmax(m/s), B(m)(=Q/Hmax/Vmax)")')
     r%flux(i)%un = un
@@ -580,7 +580,7 @@ subroutine m_record_summary(r, p)
 
   fn_smry = trim(p%dir_result)//"/"//"summary"//trim(p%outfn_suffix)//".csv"
   open(newunit=un, file=trim(fn_smry))
-  write(un, '("# type, No., t(hour), t(min), Qmax(m3/s), Hmax(m), ixA, iyA, ixB, iyB")')
+  write(un, '("# type, No., t(hour), t(min), Qmax(m3/s), Hmax(m), ixR, iyR, ixL, iyL")')
   do i = 1, r%npb
     write(un, '(a,i5,a,f11.5,a,f14.5,a,f14.5,a,f12.5,a,i7,a,i7)') &
             "probe,", i, ",", r%probe(i)%tp / 60.0, ",", r%probe(i)%tp, ",", &
