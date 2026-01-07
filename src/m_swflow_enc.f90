@@ -543,12 +543,12 @@ contains
     real :: h
     if (g%rw(i,j) > 0 .and. g%sw(in,jn) > 0) then
       ! 中心から近傍に段落ち
-      h = s%h(i,j)      ! 中心セルの水深
+      h = max(s%h(i,j), 0.0)      ! 中心セルの水深
       uve1 = ((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)
       mne1 = uve1 * h
     else if (g%rw(in,jn) > 0 .and. g%sw(i,j) > 0) then
       ! 近傍から中心に段落ち
-      h = s%h(in,jn)    ! 近傍セルの水深
+      h = max(s%h(in,jn), 0.0)    ! 近傍セルの水深
       uve1 = -((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)
       mne1 = uve1 * h
     end if
