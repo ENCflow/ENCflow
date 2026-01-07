@@ -292,34 +292,6 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-!----------------------------------------------------------------------
-subroutine prepare(p, g, s, sx)
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(inout) :: s
-  type(t_enc_status), intent(inout) :: sx
-
-  integer :: i, j
-  if (p%initialized) continue
-
-  !$omp parallel do private(i, j)
-  !do j = 1, p%ny  ! <--- OpenMPでこの行を生かすとifxのみ原因不明の浮動小数点エラー
-  do j = g%wy(1), g%wy(2)
-    !do i = 1, p%nx   ! <--- この行は大丈夫
-    do i = g%wx(1,j), g%wx(2,j)
-      if (g%x(i,j) <= 0) cycle
-      ! 新時間ステップでの水深を初期化して降雨を加える
-      ! 降雨は現時間ステップでの計算には反映されない
-      ! したがって運動方程式の計算後に加算しても問題ない
-      !sx%h1(i,j) = s%h(i,j) + s%pre(i,j) * p%dt / g%gv(i,j)
-    end do
-  end do
-  !!$omp end parallel do
-
-end subroutine
-
-
-!----------------------------------------------------------------------
 ! 
 !----------------------------------------------------------------------
 subroutine momentum(p, g, s, sx, ierror)
@@ -754,7 +726,8 @@ subroutine continuous(p, g, s, sx)
       s%m(i,j) = 0
       s%n(i,j) = 0
       mnmax = 0
-       sx%h1(i,j) = s%h(i,j) + s%pre(i,j) * p%dt / g%gv(i,j) ! <--- この行を生かしてprepareを殺すとエラー
+      ! 降雨を加えて次ステップの水深を初期化
+       sx%h1(i,j) = s%h(i,j) + s%pre(i,j) * p%dt / g%gv(i,j)
       ! 対象セルi,jの8近傍全ての水の流出入を計算し平均流量・流速と水位を更新する
       s%ddir1(i,j) = 0
       s%ddir8(i,j) = 0
