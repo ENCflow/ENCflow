@@ -50,6 +50,8 @@ subroutine m_precip_init(pr, p)
     prval = list%prval
   else
     prtype = 0
+    pr%idt_prupdate = p%nt + 1     ! 降雨分布の更新間隔を全時間ステップ以上に
+    return
   end if
 
   if (prtype == 1 .or. prtype == 2) then
