@@ -8,7 +8,7 @@ module list_record
   public :: list_record_read
 
   integer, parameter :: npbmax = 1000
-  integer, parameter :: nflmax = 3000
+  integer, parameter :: nflmax = 1000
 
 
   type t_list_record

@@ -15,7 +15,7 @@ module m_record
   public :: m_record_summary
 
   integer, parameter :: ncellmax = 1000
-  integer, parameter :: nflmax = 3000
+  integer, parameter :: nflmax = 1000
 
 
   type t_probe
