@@ -621,7 +621,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
 
     ! セル境界での抗力項
     !   摩擦項と一緒に半陰解法で計算するため、次元が他の項と異なる(値は常に正)
-    tfe = tfe - p%kk * p%cd / bbe * (1 - gve) * vve / 2
+    tfe = tfe - p%kk * p%cd * hhe / bbe * (1 - gve) * vve / 2
 
     ! l段目の時間刻み
     dtl = p%dt / a(l) / lme
