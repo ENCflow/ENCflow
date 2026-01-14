@@ -465,7 +465,7 @@ contains
     taxe = (sx%taxy(1,i,j) + sx%taxy(1,in,jn)) / 2  ! 移流項(x方向, 符合は座標軸方向が正)
     taye = (sx%taxy(2,i,j) + sx%taxy(2,in,jn)) / 2  ! 移流項(y方向, 符合は座標軸方向が正)
     ta = taxe * n8x(k) + taye * n8y(k)             ! 移流項(符合は中心セルから近傍セルに向かい正)
-    ta = ta * 1.5
+    !ta = ta * 1.5
     ! TVD(風上差分と中心差分の混合)
     if (f_advection_tvd > 0) then
       ! 中心差分による移流項
