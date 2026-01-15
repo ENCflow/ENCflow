@@ -105,7 +105,7 @@ subroutine set_prmap
   ! 降水分布の読み込み
   allocate(pr%prmap(1:p%nx,1:p%ny))
   fname = trim(p%dir_data)//"/"//trim(list%fn_prmap)
-  call fileio_read_matrix_real(fname, p%nx, p%ny, pr%prmap, p%f_input_mode)
+  call fileio_read_matrix(fname, p%nx, p%ny, pr%prmap, p%f_input_mode)
 
   ! データにNaNが含まれている場合はゼロに修正
   have_nan = 0
@@ -151,7 +151,7 @@ subroutine set_maplist
     read(un, '(a256)') mapname
     fname_map = trim(p%dir_data)//"/"//trim(mapname)
     print *, " checking precipitaiton map ", trim(fname_map)
-    pr%un_maplist(i) = fileio_open_un(fname_map, p%f_input_mode)
+    pr%un_maplist(i) = fileio_un_open(fname_map, p%f_input_mode)
   end do
   close(un)
 end subroutine
@@ -208,7 +208,7 @@ subroutine m_precip_makepre(pr, p, g, s)
       i = s%it / pr%idt_maplist + 1
       if (i <= size(pr%un_maplist)) then
         un = pr%un_maplist(i)
-        call fileio_read_matrix_real_un(un, p%nx, p%ny, s%prh, p%f_input_mode)
+        call fileio_un_read_matrix(un, p%nx, p%ny, s%prh, p%f_input_mode)
       else
         s%prh(:,:) = 0.0                         ! (mm/h)
       end if

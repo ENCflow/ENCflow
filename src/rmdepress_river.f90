@@ -150,16 +150,16 @@ subroutine do_all(p, g, fn_ddir)
   real :: dz(1:p%nx,1:p%ny)          ! carved depth
 
 
-  call fileio_read_matrix_int(fn_ddir, p%nx, p%ny, ddir, e_fmt_bil)
+  call fileio_read_matrix(fn_ddir, p%nx, p%ny, ddir, e_fmt_bil)
   call check_rivermouth(p, g, irm)
   call carve(p, g, irm, ddir, icv, ism, z)
   call smooth(p, g, irm, icv, ism, z)
   call smooth2(p, g, irm, ddir, z)
   dz(:,:) = g%z(:,:) - z(:,:)
 
-  !call fileio_write_matrix_int("RM.bil", g%nx, g%ny, irm, 2, 0)
-  call fileio_write_matrix_real("Z0000.bil", g%nx, g%ny, z, e_fmt_bil, e_cmp_off)
-  call fileio_write_matrix_real("Zd0000.bil", g%nx, g%ny, dz, e_fmt_bil, e_cmp_off)
+  !call fileio_write_matrix("RM.bil", g%nx, g%ny, irm, 2, 0)
+  call fileio_write_matrix("Z0000.bil", g%nx, g%ny, z, e_fmt_bil, e_cmp_off)
+  call fileio_write_matrix("Zd0000.bil", g%nx, g%ny, dz, e_fmt_bil, e_cmp_off)
   
 end subroutine
 

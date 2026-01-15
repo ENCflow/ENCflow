@@ -71,9 +71,9 @@ subroutine m_rerecord_all(fn_sysparam, fn_qqdir, fn_qq)
 
   ! データの読み込み
   print *, "reading discharge direction from ", trim(fn_qqdir)
-  call fileio_read_matrix_real(fn_qqdir, p%nx, p%ny, s%qqdir, e_fmt_bil)
+  call fileio_read_matrix(fn_qqdir, p%nx, p%ny, s%qqdir, e_fmt_bil)
   print *, "reading discharge from ", trim(fn_qq)
-  call fileio_read_matrix_real(fn_qq, p%nx, p%ny, s%qq, e_fmt_bil)
+  call fileio_read_matrix(fn_qq, p%nx, p%ny, s%qq, e_fmt_bil)
 
   ! 流量の計算
   block

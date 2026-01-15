@@ -15,6 +15,12 @@ module m_main
 
   public :: m_main_all
 
+
+  interface output_matrix
+    procedure :: output_matrix_int
+    procedure :: output_matrix_real
+  end interface
+
   integer :: un_fnolist    ! 出力ファイル番号リスト用ファイルの装置番号
 
 contains
@@ -101,12 +107,12 @@ subroutine run_main(p, g, pr, s, r, sw)
   ierror = 0
 
   ! デバッグ用データ出力
-  !call fileio_write_matrix_int("xxxx.txt", g%nx, g%ny, g%x(1:g%nx,1:g%ny), e_fmt_txt, e_cmp_off)
-  !call fileio_write_matrix_int("xxxx.bil", g%nx, g%ny, g%x(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
-  !call fileio_write_matrix_int("ssss.bil", g%nx, g%ny, g%sw(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
-  !call fileio_write_matrix_int("rrrr.bil", g%nx, g%ny, g%rw(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
-  !call fileio_write_matrix_int("ssss.txt", g%nx, g%ny, g%sw(1:g%nx,1:g%ny), e_fmt_txt, e_cmp_off)
-  !call fileio_write_matrix_real("zzzz.bil", g%nx, g%ny, g%z(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
+  !call fileio_write_matrix("xxxx.txt", g%nx, g%ny, g%x(1:g%nx,1:g%ny), e_fmt_txt, e_cmp_off)
+  !call fileio_write_matrix("xxxx.bil", g%nx, g%ny, g%x(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
+  !call fileio_write_matrix("ssss.bil", g%nx, g%ny, g%sw(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
+  !call fileio_write_matrix("rrrr.bil", g%nx, g%ny, g%rw(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
+  !call fileio_write_matrix("ssss.txt", g%nx, g%ny, g%sw(1:g%nx,1:g%ny), e_fmt_txt, e_cmp_off)
+  !call fileio_write_matrix("zzzz.bil", g%nx, g%ny, g%z(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
 
 
   !------ 時間ステップのループここから ------
@@ -203,22 +209,22 @@ subroutine output(p, g, s, k)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   integer, intent(in) :: k
-  if (p%f_out_z > 0 .or. k == 0) call output_matrix_real(p, "Z", g%z, k)  ! 地盤高
-  if (p%f_out_h > 0) call output_matrix_real(p, "H", s%h, k)          ! 水深
-  if (p%f_out_e > 0) call output_matrix_real(p, "E", s%e, k)          ! 水位
-  if (p%f_out_u > 0) call output_matrix_real(p, "u", s%u, k)          ! x方向流速
-  if (p%f_out_v > 0) call output_matrix_real(p, "v", s%v, k)          ! y方向流速
-  if (p%f_out_m > 0) call output_matrix_real(p, "m", s%m, k)          ! x方向線流量
-  if (p%f_out_n > 0) call output_matrix_real(p, "n", s%n, k)          ! y方向線流量
-  if (p%f_out_vv > 0) call output_matrix_real(p, "V", s%vv, k)        ! 流速の絶対値
-  if (p%f_out_qq > 0) call output_matrix_real(p, "Q", s%qq, k)        ! 線流量の絶対値
-  if (p%f_out_qc > 0) call output_matrix_real(p, "Qc", s%qcum, k)     ! 積算線流量
-  if (p%f_out_qd > 0) call output_matrix_real(p, "Qd", s%qdir, k)     ! 流向
-  if (p%f_out_ddd > 0) call output_matrix_int(p, "Ddd", s%ddir1, k)   ! 卓越流下方向フラグ
-  if (p%f_out_dda > 0) call output_matrix_int(p, "Dda", s%ddir8, k)   ! 全流下方向フラグ
-  if (p%f_out_pre > 0) call output_matrix_real(p, "P", s%prh, k)      ! 降雨強度
-  if (p%f_out_fr > 0) call output_matrix_real(p, "Fr", s%fr, k)       ! フルード数
-  if (p%f_out_cn > 0) call output_matrix_real(p, "Cn", s%cn, k)       ! クーラン数
+  if (p%f_out_z > 0 .or. k == 0) call output_matrix(p, "Z", g%z, k)  ! 地盤高
+  if (p%f_out_h > 0) call output_matrix(p, "H", s%h, k)          ! 水深
+  if (p%f_out_e > 0) call output_matrix(p, "E", s%e, k)          ! 水位
+  if (p%f_out_u > 0) call output_matrix(p, "u", s%u, k)          ! x方向流速
+  if (p%f_out_v > 0) call output_matrix(p, "v", s%v, k)          ! y方向流速
+  if (p%f_out_m > 0) call output_matrix(p, "m", s%m, k)          ! x方向線流量
+  if (p%f_out_n > 0) call output_matrix(p, "n", s%n, k)          ! y方向線流量
+  if (p%f_out_vv > 0) call output_matrix(p, "V", s%vv, k)        ! 流速の絶対値
+  if (p%f_out_qq > 0) call output_matrix(p, "Q", s%qq, k)        ! 線流量の絶対値
+  if (p%f_out_qc > 0) call output_matrix(p, "Qc", s%qcum, k)     ! 積算線流量
+  if (p%f_out_qd > 0) call output_matrix(p, "Qd", s%qdir, k)     ! 流向
+  if (p%f_out_ddd > 0) call output_matrix(p, "Ddd", s%ddir1, k)  ! 卓越流下方向フラグ
+  if (p%f_out_dda > 0) call output_matrix(p, "Dda", s%ddir8, k)  ! 全流下方向フラグ
+  if (p%f_out_pre > 0) call output_matrix(p, "P", s%prh, k)      ! 降雨強度
+  if (p%f_out_fr > 0) call output_matrix(p, "Fr", s%fr, k)       ! フルード数
+  if (p%f_out_cn > 0) call output_matrix(p, "Cn", s%cn, k)       ! クーラン数
   write(un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it
 end subroutine
 
@@ -230,12 +236,12 @@ subroutine output_summary(p, s, k)
   type(t_sysparam), intent(in) :: p
   type(t_state), intent(in) :: s
   integer, intent(in) :: k
-  if (p%f_out_hmax > 0)  call output_matrix_real(p, "H", s%hmax, k)     ! 最大水深
-  if (p%f_out_hmaxt > 0) call output_matrix_real(p, "Ht", s%hmaxt, k)   ! 最大水深の時刻
-  if (p%f_out_vvmax > 0) call output_matrix_real(p, "V", s%vvmax, k)    ! 最大流速
-  if (p%f_out_qqmax > 0) call output_matrix_real(p, "Q", s%qqmax, k)    ! 最大流量
-  if (p%f_out_qqmaxt > 0) call output_matrix_real(p, "Qt", s%qqt, k)    ! 最大流量の時刻
-  if (p%f_out_qqmaxd > 0) call output_matrix_real(p, "Qd", s%qqdir, k)  ! 最大流量の流向
+  if (p%f_out_hmax > 0)  call output_matrix(p, "H", s%hmax, k)     ! 最大水深
+  if (p%f_out_hmaxt > 0) call output_matrix(p, "Ht", s%hmaxt, k)   ! 最大水深の時刻
+  if (p%f_out_vvmax > 0) call output_matrix(p, "V", s%vvmax, k)    ! 最大流速
+  if (p%f_out_qqmax > 0) call output_matrix(p, "Q", s%qqmax, k)    ! 最大流量
+  if (p%f_out_qqmaxt > 0) call output_matrix(p, "Qt", s%qqt, k)    ! 最大流量の時刻
+  if (p%f_out_qqmaxd > 0) call output_matrix(p, "Qd", s%qqdir, k)  ! 最大流量の流向
   write(un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it
 end subroutine
 
@@ -255,10 +261,10 @@ subroutine output_matrix_real(p, prefix, a, k)
   fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
 
   if (p%f_output_mode == 1 .or. p%f_output_mode == 3) then
-    call fileio_write_matrix_real(fn//".txt", p%nx, p%ny, a, e_fmt_txt, p%f_output_compress)
+    call fileio_write_matrix(fn//".txt", p%nx, p%ny, a, e_fmt_txt, p%f_output_compress)
   end if
   if (p%f_output_mode == 2 .or. p%f_output_mode == 3) then
-    call fileio_write_matrix_real(fn//".bil", p%nx, p%ny, a, e_fmt_bil, p%f_output_compress)
+    call fileio_write_matrix(fn//".bil", p%nx, p%ny, a, e_fmt_bil, p%f_output_compress)
   end if
 
 end subroutine
@@ -279,10 +285,10 @@ subroutine output_matrix_int(p, prefix, a, k)
   fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
 
   if (p%f_output_mode == 1 .or. p%f_output_mode == 3) then
-    call fileio_write_matrix_int(fn//".txt", p%nx, p%ny, a, e_fmt_txt, p%f_output_compress)
+    call fileio_write_matrix(fn//".txt", p%nx, p%ny, a, e_fmt_txt, p%f_output_compress)
   end if
   if (p%f_output_mode == 2 .or. p%f_output_mode == 3) then
-    call fileio_write_matrix_int(fn//".bil", p%nx, p%ny, a, e_fmt_bil, p%f_output_compress)
+    call fileio_write_matrix(fn//".bil", p%nx, p%ny, a, e_fmt_bil, p%f_output_compress)
   end if
 end subroutine
 
