@@ -25,6 +25,7 @@ module m_geoinfo
     real, allocatable :: rn(:,:)                      ! 粗度係数
     real, allocatable :: gv(:,:)                      ! 家屋の空隙率
     real, allocatable :: bb(:,:)                      ! 家屋の平均寸法
+    real, allocatable :: lm(:,:)                      ! 有効慣性係数
     integer, allocatable :: x(:,:)                    ! 対象領域判別マスク
     integer, allocatable :: sw(:,:)                   ! 海域マスク
     integer, allocatable :: rw(:,:)                   ! 河道マスク
@@ -121,6 +122,7 @@ subroutine m_geoinfo_dispose(g)
   if (allocated(g%lu)) deallocate(g%lu)
   if (allocated(g%gv)) deallocate(g%gv)
   if (allocated(g%bb)) deallocate(g%bb)
+  if (allocated(g%lm)) deallocate(g%lm)
   if (allocated(g%x)) deallocate(g%x)
   if (allocated(g%sw)) deallocate(g%sw)
   if (allocated(g%rw)) deallocate(g%rw)
@@ -166,6 +168,7 @@ subroutine allocate_arrays(g)
   allocate(g%rn(1:g%nx,1:g%ny), source = 0.0)
   allocate(g%gv(1:g%nx,1:g%ny), source = 1.0)    ! 空隙率は1.0で初期化
   allocate(g%bb(1:g%nx,1:g%ny), source = 1.e10)  ! 家屋サイズは大きな値で初期化
+  allocate(g%lm(1:g%nx,1:g%ny), source = 1.0)    ! 有効慣性係数は1.0で初期化
   allocate(g%x(0:g%nx+1,0:g%ny+1), source = 0)   ! 領域マスクは全て領域外で初期化
   allocate(g%sw(1:g%nx,1:g%ny), source = 0)
   allocate(g%rw(1:g%nx,1:g%ny), source = 0)
@@ -339,19 +342,6 @@ subroutine read_z(p, g, list)
     end do
   end do
 
-  ! 鳴瀬川の河口を加工
-  !g%z(4214,3656) = g%z(4214,3656) + 100.
-  !g%z(4216,3658) = g%z(4216,3658) + 100.
-  !g%z(4215,3655) = g%z(4215,3655) + 100.
-  !g%z(4213,3655) = g%z(4213,3655) + 100.
-  !g%z(4214,3654) = g%z(4214,3654) + 100.
-  !g%z(4214,3653) = g%z(4214,3653) + 100.
-  !g%z(4211,3653) = g%z(4211,3653) + 100.
-  !g%z(4211,3652) = g%z(4211,3652) + 100.
-  !g%z(4212,3650) = g%z(4212,3650) + 100.
-  !g%z(4211,3649) = g%z(4211,3649) + 100.
-  !g%z(4209,3649) = g%z(4209,3649) - 100.
-
 end subroutine
 
 
@@ -371,20 +361,6 @@ subroutine read_lu(p, g, list)
     print *, "reading ", fname
     call fileio_read_matrix(fname, g%nx, g%ny, g%lu, p%f_input_mode)
   end if
-
-!  ! 秩父の河道を掘り下げる
-!  block
-!  integer :: i, j
-!  do j = 1, g%ny
-!    do i = 1, g%nx
-!      ! 河道を掘り下げる
-!      if (g%lu(i,j) > 0) g%z(i,j) = g%z(i,j) - 100
-!      ! 河道を閉塞させる
-!      if (i == 296 .and. j >= 205 .and. j <= 207 .and. g%lu(i,j) > 0)  g%z(i,j) = g%z(i,j) + 100
-!      if (i == 147 .and. j >= 102 .and. j <= 105 .and. g%lu(i,j) > 0)  g%z(i,j) = g%z(i,j) + 100
-!    end do
-!  end do
-!  end block
 
 end subroutine
 
@@ -431,6 +407,7 @@ subroutine read_gvbb(p, g, list)
     do i = 1, g%nx
       g%gv(i,j) = max(g%gv(i,j), g%min_gv)
       g%bb(i,j) = max(g%bb(i,j), g%min_bb)
+      g%lm(i,j) = g%gv(i,j) + (1 - g%gv(i,j)) * p%cm
     end do
   end do
 

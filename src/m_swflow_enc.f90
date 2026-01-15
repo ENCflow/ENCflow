@@ -812,19 +812,17 @@ subroutine advection(p, g, s, sx)
   real :: dux, duy, dvx, dvy
   real :: ww(1:8), wwx(1:8), wwy(1:8)
   real :: ulm(1:p%nx,1:p%ny), vlm(1:p%nx,1:p%ny)
-  real :: lm
 
   if (f_advection_term == 0) return
 
-  !$omp parallel do private(i, j, lm)
+  !$omp parallel do private(i, j)
   do j = g%wy(1), g%wy(2)
     do i = g%wx(1,j)+1, g%wx(2,j)-1
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%h(i,j) < p%dd) cycle
-      lm = g%gv(i,j) + (1 - g%gv(i,j)) * p%cm
-      ulm(i,j) = s%u(i,j) * lm
-      vlm(i,j) = s%v(i,j) * lm
+      ulm(i,j) = s%u(i,j) * g%lm(i,j)
+      vlm(i,j) = s%v(i,j) * g%lm(i,j)
     end do
   end do
   !$omp end parallel do
