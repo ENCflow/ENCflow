@@ -564,8 +564,8 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
   rne = (g%rn(i,j) + g%rn(in,jn)) / 2       ! 粗度係数
   gve = (g%gv(i,j) + g%gv(in,jn)) / 2       ! 家屋の空隙率
   bbe = (g%bb(i,j) + g%bb(in,jn)) / 2       ! 家屋の平均サイズ
+  lme = (g%lm(i,j) + g%lm(in,jn)) / 2       ! 有効慣性係数
   if (gve == 1) bbe = 1.e10                 ! 家屋なしの場合は家屋サイズは大きな値
-  lme = gve + (1 - gve) * p%cm              ! 付加質量力補正係数
 
   ! 摩擦項で使用する流速
   !   静止からの流動開始直後に流速が小さいために摩擦が過小となることを防ぐために
