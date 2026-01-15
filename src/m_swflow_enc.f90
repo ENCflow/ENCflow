@@ -817,7 +817,7 @@ subroutine advection(p, g, s, sx)
 
   !$omp parallel do private(i, j)
   do j = g%wy(1), g%wy(2)
-    do i = g%wx(1,j)+1, g%wx(2,j)-1
+    do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%h(i,j) < p%dd) cycle
