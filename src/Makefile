@@ -34,6 +34,7 @@ FFLAGS	= -g -fopenmp -warn all -fpe0 -O3 -ipo -fp-model fast -r8
 
 OBJS	= main.o m_main.o m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o \
 	  m_state.o  m_record.o m_swflow.o m_swflow_enc.o m_swflow_stg.o \
+	  m_swflow_enc0.o \
 	  list_sysparam.o list_geoinfo.o list_precip.o \
 	  list_initial.o list_record.o list_tide.o list_boundary.o list_enc.o \
 	  m_ffactor.o user_geoinfo.o user_initial.o sysdep_util.o m_fileio.o m_util.o
@@ -69,8 +70,9 @@ m_tide.o: m_sysparam.o list_tide.o m_geoinfo.o
 m_boundary.o: m_sysparam.o m_geoinfo.o
 m_state.o: m_sysparam.o m_geoinfo.o list_initial.o
 m_record.o: m_sysparam.o list_record.o m_geoinfo.o m_state.o
-m_swflow.o: m_sysparam.o m_geoinfo.o m_state.o m_swflow_enc.o m_swflow_stg.o
+m_swflow.o: m_sysparam.o m_geoinfo.o m_state.o m_swflow_enc.o m_swflow_stg.o m_swflow_enc0.o
 m_swflow_enc.o: m_sysparam.o list_enc.o m_geoinfo.o m_precip.o m_state.o m_ffactor.o
+m_swflow_enc0.o: m_sysparam.o list_enc.o m_geoinfo.o m_precip.o m_state.o m_ffactor.o
 m_swflow_stg.o: m_sysparam.o m_geoinfo.o m_precip.o m_state.o
 list_sysparam.o:
 list_geoinfo.o: m_sysparam.o
