@@ -813,6 +813,13 @@ subroutine advection(p, g, s, sx)
   real :: ww(1:8), wwx(1:8), wwy(1:8)
   real :: ulm(1:p%nx,1:p%ny), vlm(1:p%nx,1:p%ny)
 
+  real :: uu(1:3,1:3), vv(1:3,1:3), hh(1:3,1:3)
+  integer :: xx(0:4,0:4)
+  real :: u1, u2, u3, u4, u5, u6, u7, u8, u0
+  real :: v1, v2, v3, v4, v5, v6, v7, v8, v0
+  !real :: u(0:8), v(0:8)
+  integer :: ii, jj
+
   if (f_advection_term == 0) return
 
   !$omp parallel do private(i, j)
@@ -837,15 +844,83 @@ subroutine advection(p, g, s, sx)
       ww(:) = get_ww(s%u(i,j), s%v(i,j), s%vv(i,j))
       forall(k=1:8) wwx(k) = w8x(k) * ww(k)
       forall(k=1:8) wwy(k) = w8y(k) * ww(k)
-      call get_diff(ulm, vlm, s%h, p%dd, wwx, wwy, g%x, i, j, p%nx, p%ny, dux, duy, dvx, dvy)
+
+      ii = i + die(1)
+      jj = j + dje(1)
+      u1 = (sx%uv(1, ii,jj) / n8x(1) + sx%uv(3, ii,jj) / n8x(3)) / 2
+      v1 = (sx%uv(1, ii,jj) / n8y(1) + sx%uv(3, ii,jj) / n8y(3)) / 2
+
+      ii = i + die(3)
+      jj = j + dje(3)
+      u3 = (sx%uv(3, ii,jj) / n8x(3) + sx%uv(1, ii,jj) / n8x(1)) / 2
+      v3 = (sx%uv(3, ii,jj) / n8y(3) + sx%uv(1, ii,jj) / n8y(1)) / 2
+
+      ii = i + die(6)
+      jj = j + dje(6)
+      u6 = (sx%uv(3, ii,jj) / n8x(3) + sx%uv(1, ii,jj) / n8x(1)) / 2
+      v6 = (sx%uv(3, ii,jj) / n8y(3) + sx%uv(1, ii,jj) / n8y(1)) / 2
+
+      ii = i + die(8)
+      jj = j + dje(8)
+      u8 = (sx%uv(1, ii,jj) / n8x(1) + sx%uv(3, ii,jj) / n8x(3)) / 2
+      v8 = (sx%uv(1, ii,jj) / n8y(1) + sx%uv(3, ii,jj) / n8y(3)) / 2
+
+      ii = i + die(2)
+      jj = j + dje(2)
+      u2 = (u1 + u3) / 2
+      v2 = -sx%uv(2, ii,jj) !/ n8y(2)
+
+      ii = i + die(4)
+      jj = j + dje(4)
+      u4 = -sx%uv(4, ii,jj) !/ n8x(4)
+      v4 = (v1 + v6) / 2
+
+      ii = i + die(5)
+      jj = j + dje(5)
+      u5 = -sx%uv(4, ii,jj) !/ n8x(4)
+      v5 = (v3 + v8) / 2
+
+      ii = i + die(7)
+      jj = j + dje(7)
+      u7 = (u6 + u8) / 2
+      v7 = -sx%uv(2, ii,jj) !/ n8y(2)
+
+      u0 = s%u(i,j)
+      v0 = s%v(i,j)
+
+      uu(1,1) = u1
+      uu(2,1) = u2
+      uu(3,1) = u3
+      uu(1,2) = u4
+      uu(2,2) = u0
+      uu(3,2) = u5
+      uu(1,3) = u6
+      uu(2,3) = u7
+      uu(3,3) = u8
+      vv(1,1) = v1
+      vv(2,1) = v2
+      vv(3,1) = v3
+      vv(1,2) = v4
+      vv(2,2) = v0
+      vv(3,2) = v5
+      vv(1,3) = v6
+      vv(2,3) = v7
+      vv(3,3) = v8
+      hh(1:3,1:3) = s%h(i-1:i+1,j-1:j+1)
+      xx(0:4,0:4) = g%x(i-2:i+2,j-2:j+2)
+      call get_diff(uu, vv, hh, p%dd, wwx, wwy, xx, 2, 2, 3, 3, dux, duy, dvx, dvy)
+
+
+
+      !call get_diff(ulm, vlm, s%h, p%dd, wwx, wwy, g%x, i, j, p%nx, p%ny, dux, duy, dvx, dvy)
       sx%taxy(1,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
       sx%taxy(2,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)
-      if (f_advection_tvd > 0) then
-        ! 中心差分による移流項の計算
-        call get_diff(ulm, vlm, s%h, p%dd, w8x, w8y, g%x, i, j, p%nx, p%ny, dux, duy, dvx, dvy)
-        sx%taxy(3,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
-        sx%taxy(4,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)
-      end if
+!      if (f_advection_tvd > 0) then
+!        ! 中心差分による移流項の計算
+!        call get_diff(ulm, vlm, s%h, p%dd, w8x, w8y, g%x, i, j, p%nx, p%ny, dux, duy, dvx, dvy)
+!        sx%taxy(3,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
+!        sx%taxy(4,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)
+!      end if
     end do
   end do
   !$omp end parallel do
