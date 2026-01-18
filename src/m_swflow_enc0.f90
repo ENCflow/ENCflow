@@ -36,8 +36,8 @@ module m_swflow_enc0
 
   ! 状態変数の構造体の宣言と定義
   type t_enc_status
-    real, allocatable :: uv(:,:,:)   ! セル境界での流速(符合は中心セルから近傍セルに向かい正)
-    real, allocatable :: mn(:,:,:)   ! セル境界での流量
+    real, allocatable :: uk(:,:,:)   ! セル境界での流速(符合は中心セルから近傍セルに向かい正)
+    real, allocatable :: qk(:,:,:)   ! セル境界での流量
     real, allocatable :: h1(:,:)     ! セル中心での計算済み水深
     real, allocatable :: taxy(:,:,:) ! セル中心での移流項(第1添字は1~4，それぞれ風上差分と中心差分のx,y成分)
   end type
@@ -241,9 +241,9 @@ subroutine init_enc_status(p, g, s, sx)
   integer :: i, j, k, in, jn, ie, je
 
   ! メモリを確保する
-  allocate(sx%uv(1:4,0:p%nx,0:p%ny), source = 0.0)
+  allocate(sx%uk(1:4,0:p%nx,0:p%ny), source = 0.0)
   allocate(sx%h1(1:p%nx,1:p%ny), source = 0.0)
-  allocate(sx%mn(1:4,0:p%nx,0:p%ny), source = 0.0)
+  allocate(sx%qk(1:4,0:p%nx,0:p%ny), source = 0.0)
   if (f_advection_tvd > 0) then
     allocate(sx%taxy(1:4,1:p%nx,1:p%ny), source = 0.0)
   else
@@ -268,7 +268,7 @@ subroutine init_enc_status(p, g, s, sx)
         ue = (s%u(i,j) + s%u(in,jn)) / 2
         ve = (s%v(i,j) + s%v(in,jn)) / 2
         ! セル境界流速の境界法線方向成分を計算する(中心から近傍方向が正)
-        sx%uv(k,ie,je) = ue * n8x(k) + ve * n8y(k)
+        sx%uk(k,ie,je) = ue * n8x(k) + ve * n8y(k)
       end do
     end do
   end do
@@ -284,8 +284,8 @@ end subroutine
 !----------------------------------------------------------------------
 subroutine del_enc_status(sx)
   type(t_enc_status), intent(inout) :: sx
-  if (allocated(sx%uv)) deallocate(sx%uv)
-  if (allocated(sx%mn)) deallocate(sx%mn)
+  if (allocated(sx%uk)) deallocate(sx%uk)
+  if (allocated(sx%qk)) deallocate(sx%qk)
   if (allocated(sx%h1)) deallocate(sx%h1)
   if (allocated(sx%taxy)) deallocate(sx%taxy)
 end subroutine
@@ -386,14 +386,14 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
 
   ! 移動限界水深未満の場合は流量ゼロ(ddを大きくすると過大流出が増える)
   if (s%h(i,j) < p%dd .and. s%h(in,jn) < p%dd) then
-    sx%uv(k,ie,je) = 0
-    sx%mn(k,ie,je) = 0
+    sx%uk(k,ie,je) = 0
+    sx%qk(k,ie,je) = 0
     return
   end if
 
   ! セル境界の流速をセットする
-  uve = sx%uv(k,ie,je)
-  mne = sx%mn(k,ie,je)
+  uve = sx%uk(k,ie,je)
+  mne = sx%qk(k,ie,je)
 
   ! セル境界の移流項をセットする
   tae = calc_kth_advection()
@@ -441,10 +441,10 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   end if
 
   ! セル境界の流速を更新する
-  sx%uv(k,ie,je) = uve1
+  sx%uk(k,ie,je) = uve1
 
   ! セル境界の流量を更新する
-  sx%mn(k,ie,je) = mne1
+  sx%qk(k,ie,je) = mne1
 
 contains
   !--------------------------------------------------------------------
@@ -622,8 +622,8 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
         !   sx%mnは計算しながら次々と上書されていくため
         !   すでに更新済みの流量も混在しており、このルンゲクッタはあくまで概算となるが
         !   経験的・結果的に更新前の流量"のみ"を使うよりも安定する
-        mnec = sign_e(kk) * sx%mn(ke(kk),i+die(kk),j+dje(kk))   ! 中心セルからそのkk近傍への流量
-        mnen = sign_e(kk) * sx%mn(ke(kk),in+die(kk),jn+dje(kk)) ! 近傍セルからそのkk近傍への流量
+        mnec = sign_e(kk) * sx%qk(ke(kk),i+die(kk),j+dje(kk))   ! 中心セルからそのkk近傍への流量
+        mnen = sign_e(kk) * sx%qk(ke(kk),in+die(kk),jn+dje(kk)) ! 近傍セルからそのkk近傍への流量
         ! 方位k(近傍セルでは方位9-k)は今回更新された流量
         if (kk == k) mnec = mne1
         if (kk == 9 - k) mnen = -mne1     ! 近傍セルの流出量は中心セルの流出量の逆符号
@@ -712,8 +712,8 @@ subroutine continuous(p, g, s, sx)
         je = j + dje(k)
         ! 境界での流速と流量を求める(中心から近傍に向かい正)
         !   近傍5~8は隣接するセルから見た(9-k)近傍に相当する(向きは逆)
-        uv1 = sign_e(k) * sx%uv(ke(k),ie,je)
-        mn1 = sign_e(k) * sx%mn(ke(k),ie,je)
+        uv1 = sign_e(k) * sx%uk(ke(k),ie,je)
+        mn1 = sign_e(k) * sx%qk(ke(k),ie,je)
         ! 水深の減少量(m)に換算
         !   家屋占有率が0.0で無い場合はここで補正係数を乗じる
         dh = mn1 * mn2dh(k) / g%gv(i,j)
@@ -821,21 +821,21 @@ subroutine advection(p, g, s, sx)
           select case(k)
             case (1, 3, 6, 8)
               ! 頂点の流速はU1とU3を軸方向に変換して平均化
-              u(k) = (sx%uv(1, ii(k),jj(k)) / n8x(1) + sx%uv(3, ii(k),jj(k)) / n8x(3)) / 2
-              v(k) = (sx%uv(1, ii(k),jj(k)) / n8y(1) + sx%uv(3, ii(k),jj(k)) / n8y(3)) / 2
+              u(k) = (sx%uk(1, ii(k),jj(k)) / n8x(1) + sx%uk(3, ii(k),jj(k)) / n8x(3)) / 2
+              v(k) = (sx%uk(1, ii(k),jj(k)) / n8y(1) + sx%uk(3, ii(k),jj(k)) / n8y(3)) / 2
             case default
               ! 2,4,5,7は後で計算するのでここでは何もしない
           end select
         end do
         ! セル界面上(辺の中点)の流速
         u(2) = (u(1) + u(3)) / 2               ! 辺の左右端から補間
-        v(2) = -sx%uv(2, ii(2),jj(2))          ! yの正の方向に変換
-        u(4) = -sx%uv(4, ii(4),jj(4))          ! xの正の方向に変換
+        v(2) = -sx%uk(2, ii(2),jj(2))          ! yの正の方向に変換
+        u(4) = -sx%uk(4, ii(4),jj(4))          ! xの正の方向に変換
         v(4) = (v(1) + v(6)) / 2               ! 辺の上限端から補間
-        u(5) = -sx%uv(4, ii(5),jj(5))          ! 右のセルのu5をxの正方向に変換
+        u(5) = -sx%uk(4, ii(5),jj(5))          ! 右のセルのu5をxの正方向に変換
         v(5) = (v(3) + v(8)) / 2               ! 辺の上下端から補間
         u(7) = (u(6) + u(8)) / 2               ! 辺の左右端から補間
-        v(7) = -sx%uv(2, ii(7),jj(7))          ! 上のセルのv2をyの正方向に変換
+        v(7) = -sx%uk(2, ii(7),jj(7))          ! 上のセルのv2をyの正方向に変換
       end if
 
       if (.true.) then   ! 非保存形 tada
@@ -1068,7 +1068,7 @@ subroutine save_state(p, sx)
   integer :: un
   if (p%initialized) continue
   open(newunit=un, file=trim(p%dir_result)//'/save_enc.dat', form='unformatted')
-  write(un) sx%uv
+  write(un) sx%uk
   close(un)
 end subroutine
 
@@ -1082,7 +1082,7 @@ subroutine restore_state(p, sx)
   integer :: un
   if (p%initialized) continue
   open(newunit=un, file=trim(p%dir_result)//'/save_enc.dat', form='unformatted')
-  read(un) sx%uv
+  read(un) sx%uk
   close(un)
 end subroutine
 
