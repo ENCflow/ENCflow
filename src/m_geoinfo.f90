@@ -85,6 +85,7 @@ subroutine m_geoinfo_init(g, p)
   call read_rw(p, g, list)
   call read_rn(p, g, list)
   call read_gvbb(p, g, list)
+  call adjust_rw(p, g, list)
 
   select case (list%f_user_routine_id)
     case (0)
@@ -487,6 +488,27 @@ contains
 
 end subroutine
 
+
+!----------------------------------------------------------------------
+! 河道マスク部を掘り込む
+!----------------------------------------------------------------------
+subroutine adjust_rw(p, g, list)
+  type(t_sysparam), intent(in) :: p             ! システムパラメータ構造体
+  type(t_geoinfo), intent(inout) :: g
+  type(t_list_geoinfo), intent(in) :: list
+  integer :: i, j
+  if (p%initialized) continue
+  if (len(list%fn_rw) <= 0) return
+  if (list%depth_rw == 0.0) return
+  do j = 1, g%ny
+    do i = 1, g%nx
+      if (g%x(i,j) > 0 .and. g%rw(i,j) > 0) then
+        g%z(i,j) = g%z(i,j) - list%depth_rw
+        if (list%rn0_rw > 0.0) g%rn(i,j) = list%rn0_rw
+      end if
+    end do
+  end do
+end subroutine
 
 !----------------------------------------------------------------------
 ! 行ごとの計算対象範囲を求める

@@ -378,6 +378,8 @@ subroutine set_h(p, g, s, list)
   integer :: i, j
   forall(i=1:p%nx, j=1:p%ny, g%x(i,j) > 0) s%h(i,j) = list%h0
   if (list%f_fill_depres > 0)  call fill_depression(p, g, s, list)
+  if (list%h0_rw > 0.0) call adjust_h0rw(p, g, s, list)
+
 end subroutine
 
 !----------------------------------------------------------------------
@@ -471,6 +473,26 @@ subroutine fill_depression(p, g, s, list)
   write(6, *)
   
 end subroutine
+
+!----------------------------------------------------------------------
+! 河道部の初期水深を増やす
+!----------------------------------------------------------------------
+subroutine adjust_h0rw(p, g, s, list)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  type(t_list_initial), intent(in) :: list
+  integer :: i, j
+  if (p%initialized) continue
+  do j = g%wy(1), g%wy(2)
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) > 0 .and. g%rw(i,j) > 0) then
+        s%h(i,j) = s%h(i,j) + list%h0_rw
+      end if
+    end do
+  end do
+end subroutine
+
 
 !----------------------------------------------------------------------
 ! 初期流速をセット

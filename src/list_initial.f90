@@ -14,6 +14,7 @@ module list_initial
     real :: h0 = 0                     ! 初期水深固定値 (m)
     real :: u0 = 0                     ! 初期x方向流速 (m/s)
     real :: v0 = 0                     ! 初期y方向流速 (m/s)
+    real :: h0_rw = 0                  ! 河道マスク部の初期水深増分(m)
   end type
 
 
@@ -36,8 +37,10 @@ subroutine list_initial_read(p, list)
   real :: h0                     ! 初期水深固定値 (m)
   real :: u0                     ! 初期x方向流速 (m/s)
   real :: v0                     ! 初期y方向流速 (m/s)
+  real :: h0_rw                  ! 河道マスク部の初期水深増分 (m)
   integer :: un
-  namelist /list_initial/ f_user_routine_id, f_htype, f_uvtype, f_fill_depres, h0, u0, v0
+  namelist /list_initial/ f_user_routine_id, f_htype, f_uvtype, f_fill_depres, &
+                                h0, u0, v0, h0_rw
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -48,6 +51,7 @@ subroutine list_initial_read(p, list)
   h0 = list%h0 
   u0 = list%u0 
   v0 = list%v0 
+  h0_rw = list%h0_rw 
 
   print *, "reading list_initial in ", trim(p%fn_initial)
   open(newunit=un, file=trim(p%fn_initial), status='old')
@@ -61,6 +65,7 @@ subroutine list_initial_read(p, list)
   list%h0 = h0
   list%u0 = u0
   list%v0 = v0
+  list%h0_rw = h0_rw
 
 end subroutine
 
