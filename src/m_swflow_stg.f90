@@ -1,6 +1,7 @@
 module m_swflow_stg
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
+  use m_boundary, only : t_boundary
   use m_state, only : t_state
   implicit none
   private
@@ -170,9 +171,10 @@ END SUBROUTINE
 
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
-SUBROUTINE m_swflow_stg_calc(p, g, s, ierror)
+SUBROUTINE m_swflow_stg_calc(p, g, b, s, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
 
@@ -190,6 +192,7 @@ SUBROUTINE m_swflow_stg_calc(p, g, s, ierror)
   INTEGER:: ITER
   REAL:: Mm,Nm,QF
   if (p%initialized) continue
+  if (b%initialized) continue
 
   s%n_runge = s%n_valcells * 4
   ierror = 0

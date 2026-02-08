@@ -58,7 +58,7 @@ subroutine m_main_all(fn_sysparam)
   call m_swflow_init(sw, p, g, s)         ! swflow を初期化
 
   ! 計算実行
-  call run_main(p, g, pr, s, r, sw)       ! 計算本体
+  call run_main(p, g, b, pr, s, r, sw)    ! 計算本体
 
   ! モジュールを破棄
   call m_swflow_dispose(sw, p)
@@ -79,9 +79,10 @@ end subroutine
 !----------------------------------------------------------------------
 ! 計算本体
 !----------------------------------------------------------------------
-subroutine run_main(p, g, pr, s, r, sw)
+subroutine run_main(p, g, b, pr, s, r, sw)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
   type(t_precip), intent(in) :: pr
   type(t_state), intent(inout) :: s
   type(t_record), intent(inout) :: r
@@ -127,7 +128,7 @@ subroutine run_main(p, g, pr, s, r, sw)
     endif
 
     ! 地表水を計算
-    call m_swflow_calc(sw, p, g, s, ierror)
+    call m_swflow_calc(sw, p, g, b, s, ierror)
 
     ! 統計情報を計算
     call m_state_calcstat(s, p, g)

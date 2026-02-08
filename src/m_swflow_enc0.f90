@@ -1,6 +1,7 @@
 module m_swflow_enc0
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
+  use m_boundary, only : t_boundary
   use m_state, only : t_state
   use m_ffactor, only : m_ffactor_init, m_ffactor_calc, m_ffactor_dispose
   use list_enc, only : t_list_enc, list_enc_read
@@ -40,6 +41,8 @@ module m_swflow_enc0
     real, allocatable :: qk(:,:,:)   ! セル境界での流量
     real, allocatable :: h1(:,:)     ! セル中心での計算済み水深
     real, allocatable :: taxy(:,:,:) ! セル中心での移流項(第1添字は1~4，それぞれ風上差分と中心差分のx,y成分)
+    real, allocatable :: uv(:,:,:)   ! セル頂点での流速(添字は(1:2,0:nx,0:ny))
+    real, allocatable :: tak(:,:,:)  ! セル境界での移流項(添字は(1:4,1:nx,1:ny))
   end type
   type(t_enc_status) :: sx_actual
 
@@ -133,11 +136,13 @@ end subroutine
 !----------------------------------------------------------------------
 ! ENCの計算
 !----------------------------------------------------------------------
-subroutine m_swflow_enc0_calc(p, g, s, ierror)
+subroutine m_swflow_enc0_calc(p, g, b, s, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
+  if (b%initialized) continue
   !call prepare(p, g, s, sx_actual)
   call advection(p, g, s, sx_actual)
   call momentum(p, g, s, sx_actual, ierror)
@@ -242,13 +247,11 @@ subroutine init_enc_status(p, g, s, sx)
 
   ! メモリを確保する
   allocate(sx%uk(1:4,0:p%nx,0:p%ny), source = 0.0)
-  allocate(sx%h1(1:p%nx,1:p%ny), source = 0.0)
   allocate(sx%qk(1:4,0:p%nx,0:p%ny), source = 0.0)
-  if (f_advection_tvd > 0) then
-    allocate(sx%taxy(1:4,1:p%nx,1:p%ny), source = 0.0)
-  else
-    allocate(sx%taxy(1:2,1:p%nx,1:p%ny), source = 0.0)
-  end if
+  allocate(sx%h1(1:p%nx,1:p%ny), source = 0.0)
+  allocate(sx%taxy(1:2,1:p%nx,1:p%ny), source = 0.0)
+  allocate(sx%uv(1:2,1:p%nx,1:p%ny), source = 0.0)
+  allocate(sx%tak(1:4,0:p%nx,0:p%ny), source = 0.0)
 
   ! 流速の初期条件を設定する
   !$omp parallel do private(i, j, k, in, jn, ie, je, ue, ve)

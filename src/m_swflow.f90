@@ -1,6 +1,7 @@
 module m_swflow
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
+  use m_boundary, only : t_boundary
   use m_state, only : t_state
   use m_swflow_enc
   use m_swflow_stg
@@ -38,12 +39,14 @@ module m_swflow
       type(t_state), intent(in) :: s
     end subroutine
 
-    subroutine procedure_swflow_calc(p, g, s, ierror)
+    subroutine procedure_swflow_calc(p, g, b, s, ierror)
       use m_sysparam
       use m_geoinfo
+      use m_boundary
       use m_state
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
+      type(t_boundary), intent(in) :: b
       type(t_state), intent(inout) :: s
       integer, intent(inout) :: ierror
     end subroutine
@@ -96,14 +99,15 @@ end subroutine
 !----------------------------------------------------------------------
 ! 
 !----------------------------------------------------------------------
-subroutine m_swflow_calc(sw, p, g, s, ierror)
+subroutine m_swflow_calc(sw, p, g, b, s, ierror)
   type(t_swflow), intent(in) :: sw
   type(t_sysparam), intent(in) :: p
-  type(t_geoinfo) :: g
-  type(t_state) :: s
+  type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
+  type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
   if (sw%initialized) continue
-  call swflow_calc(p, g, s, ierror)
+  call swflow_calc(p, g, b, s, ierror)
 end subroutine
 
 

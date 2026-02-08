@@ -1,6 +1,7 @@
 module m_swflow_enc
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
+  use m_boundary, only : t_boundary
   use m_state, only : t_state
   use m_ffactor, only : m_ffactor_init, m_ffactor_calc, m_ffactor_dispose
   use list_enc, only : t_list_enc, list_enc_read
@@ -133,11 +134,13 @@ end subroutine
 !----------------------------------------------------------------------
 ! ENCの計算
 !----------------------------------------------------------------------
-subroutine m_swflow_enc_calc(p, g, s, ierror)
+subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
+  if (b%initialized) continue
   !call prepare(p, g, s, sx_actual)
   call advection(p, g, s, sx_actual)
   call momentum(p, g, s, sx_actual, ierror)
