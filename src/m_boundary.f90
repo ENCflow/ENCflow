@@ -69,9 +69,30 @@ subroutine m_boundary_init(b, p, g)
   !end if
 
 
-  !--- 湧出しセル指定ファイル名が存在する場合 ---
-  !if (len(trim()) > 0) then
-  !else
+  !--- 湧出し流量時系列ファイル名が存在する場合 ---
+  if (len(trim(list%fn_srcval)) > 0) then
+    block
+      character(:), allocatable :: fname
+      integer :: un, n, i
+      real :: t, val
+      fname = trim(p%dir_data)//"/"//trim(list%fn_srcval)
+      open(newunit=un, file=trim(fname), status='old')
+      n = 0
+      do
+        read(un, *, end=99)
+        n = n + 1
+      end do
+      99 continue
+      rewind(un)
+      allocate(b%srcval(1:2,1:n))
+      do i = 1, n
+        read(un, *) t, val
+        b%srcval(1,i) = t * 60
+        b%srcval(2,i) = val
+                                     print *, i, b%srcval(:,i)
+      end do
+    end block
+  else
     block
       integer :: i
       integer :: n = 0
@@ -84,7 +105,9 @@ subroutine m_boundary_init(b, p, g)
       b%srcval(2,1:n) = list%srcval(2,1:n)
       b%nsrcv = n
     end block
-  !end if
+  end if
+
+  if (b%nsrcv == 0) b%nsrc = 0
 
   !print *, b%nsrcv
   !print *, b%srcval(1:2,1)
