@@ -82,7 +82,7 @@ end subroutine
 subroutine run_main(p, g, b, pr, s, r, sw)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
-  type(t_boundary), intent(in) :: b
+  type(t_boundary), intent(inout) :: b
   type(t_precip), intent(in) :: pr
   type(t_state), intent(inout) :: s
   type(t_record), intent(inout) :: r
@@ -126,6 +126,9 @@ subroutine run_main(p, g, b, pr, s, r, sw)
     if (mod(it, pr%idt_prupdate) == 0) then
       call m_precip_makepre(pr, p, g, s)
     endif
+
+    ! 境界条件を準備
+    call m_boundary_makebdc(b, p, s)
 
     ! 地表水を計算
     call m_swflow_calc(sw, p, g, b, s, ierror)

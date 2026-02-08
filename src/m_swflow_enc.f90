@@ -144,6 +144,7 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   !call prepare(p, g, s, sx_actual)
   call advection(p, g, s, sx_actual)
   call momentum(p, g, s, sx_actual, ierror)
+  call boundary(p, g, b, s, sx_actual)
   call continuous(p, g, s, sx_actual)
   call complete(p, g, s, sx_actual)
 end subroutine
@@ -163,6 +164,36 @@ end subroutine
 !======================================================================
 !========================== PRIVATE ROUTINES ==========================
 !======================================================================
+
+!----------------------------------------------------------------------
+!----------------------------------------------------------------------
+subroutine boundary(p, g, b, s, sx)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(inout) :: sx
+  integer :: i, j, k
+
+  !$omp parallel do private(i, j)
+  do j = g%wy(1), g%wy(2)
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%sw(i,j) > 0) cycle
+      if (g%x(i,j) <= 0) cycle
+      ! 降雨を加えて次ステップの水深を初期化
+      sx%h1(i,j) = s%h(i,j) + s%pre(i,j) * p%dt / g%gv(i,j)
+    end do
+  end do
+  !$omp end parallel do
+
+  ! 湧出しを加える
+  do k = 1, b%nsrcc
+    i = b%srccell(1,k)
+    j = b%srccell(2,k)
+    sx%h1(i,j) = sx%h1(i,j) + b%srcq
+  end do
+
+end subroutine
 
 !----------------------------------------------------------------------
 ! 重み係数の初期化
@@ -729,8 +760,8 @@ subroutine continuous(p, g, s, sx)
       s%m(i,j) = 0
       s%n(i,j) = 0
       mnmax = 0
-      ! 降雨を加えて次ステップの水深を初期化
-       sx%h1(i,j) = s%h(i,j) + s%pre(i,j) * p%dt / g%gv(i,j)
+                 ! 降雨を加えて次ステップの水深を初期化
+                 !sx%h1(i,j) = s%h(i,j) + s%pre(i,j) * p%dt / g%gv(i,j)
       ! 対象セルi,jの8近傍全ての水の流出入を計算し平均流量・流速と水位を更新する
       s%ddir1(i,j) = 0
       s%ddir8(i,j) = 0
