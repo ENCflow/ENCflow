@@ -16,6 +16,9 @@ module list_precip
     real :: prval(1:2,1:nprmax) = -9999            ! 降水量時系列 (無意味な値で初期化しておく)
     character(len=maxpathlen) :: fn_prmap = ""     ! 降雨分布ファイル名
     real :: dt_maplist = 60                        ! 降雨分布ファイル時間間隔 (min)
+    real :: dt_mapunit = 0                         ! 降雨分布ファイルの積算時間単位 (min) (0なら=dt_maplist)
+    character(len=80) :: dt_maplist_c = ""         ! 降雨分布ファイル時間間隔 (h, m, s)
+    character(len=80) :: dt_mapunit_c = ""         ! 降雨分布ファイルの積算時間単位 (h, m, s)
     character(len=maxpathlen) :: fn_maplist = ""   ! 降雨分布ファイル名リスト名
   end type
 
@@ -36,9 +39,13 @@ subroutine list_precip_read(p, list)
   real :: prval(1:2,1:nprmax)
   character(:), allocatable :: fn_prmap
   real :: dt_maplist
+  real :: dt_mapunit
+  character(:), allocatable :: dt_maplist_c
+  character(:), allocatable :: dt_mapunit_c
   character(:), allocatable :: fn_maplist
   integer :: un
-  namelist /list_precip/ prtype, dt_prupdate, prval, fn_prmap, dt_maplist, fn_maplist
+  namelist /list_precip/ prtype, dt_prupdate, prval, fn_prmap, &
+          dt_maplist, dt_maplist_c, fn_maplist, dt_mapunit, dt_mapunit_c
 
 
   fn_prmap = list%fn_prmap
@@ -47,6 +54,9 @@ subroutine list_precip_read(p, list)
   prval = list%prval
   fn_prmap = list%fn_prmap
   dt_maplist = list%dt_maplist
+  dt_mapunit = list%dt_mapunit
+  dt_maplist_c = list%dt_maplist_c
+  dt_mapunit_c = list%dt_mapunit_c
   fn_maplist = list%fn_maplist
 
   !---- 設定ファイルを読み込む ----
@@ -60,6 +70,9 @@ subroutine list_precip_read(p, list)
   list%prval = prval
   list%fn_prmap = fn_prmap
   list%dt_maplist = dt_maplist
+  list%dt_mapunit = dt_mapunit
+  list%dt_maplist_c = dt_maplist_c
+  list%dt_mapunit_c = dt_mapunit_c
   list%fn_maplist = fn_maplist
 
 

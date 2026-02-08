@@ -3,6 +3,7 @@ module m_precip
   use m_sysparam, only : t_sysparam
   use m_state, only : t_state
   use m_geoinfo, only : t_geoinfo
+  use m_util, only : util_str2sec
   use m_fileio
   use list_precip, only : t_list_precip, list_precip_read
   implicit none
@@ -21,6 +22,7 @@ module m_precip
     real, allocatable :: prval(:,:)     ! 降雨時系列 (時刻(s), 降水強度(mm/h)または倍率)
     real, allocatable :: prmap(:,:)     ! 降雨分布 (mm/day)
     real :: dt_maplist                  ! 降雨分布ファイル時間間隔 (min)
+    real :: dt_mapunit                  ! 降雨分布ファイルの積算時間単位 (min)
     integer :: idt_maplist              ! 降雨分布ファイル更新時間ステップ数
     integer, allocatable :: un_maplist(:)  ! 降雨分布ファイル装置番号
     logical :: initialized = .false.
@@ -69,6 +71,21 @@ subroutine m_precip_init(pr, p)
   pr%idt_prupdate = max(nint(pr%dt_prupdate * 60 / p%dt), 1)
   pr%dt_maplist = list%dt_maplist
   pr%idt_maplist = max(nint(pr%dt_maplist * 60 / p%dt), 1)
+
+  if (len(trim(list%dt_maplist_c)) > 0) pr%dt_maplist = &
+                                util_str2sec(list%dt_maplist_c, "bad dt_maplist_c in &list_precip")
+  if (len(trim(list%dt_mapunit_c)) > 0) pr%dt_mapunit = &
+                                util_str2sec(list%dt_mapunit_c, "bad dt_mapunit_c in &list_precip")
+
+  if (list%dt_mapunit > 0.0) then
+    pr%dt_mapunit = list%dt_mapunit
+  else
+    if (prtype == 2) then
+      pr%dt_mapunit = 24 * 3600      ! 分布×倍率の場合はデフォルトは(mm/day)
+    else
+      pr%dt_mapunit = pr%dt_maplist  ! 解析雨量の場合はデフォルトはファイルの間隔
+    end if
+  end if
 
   pr%initialized = .true.
 
@@ -192,7 +209,8 @@ subroutine m_precip_makepre(pr, p, g, s)
   !---- 時系列倍率から分布データを作成 ----
   else if (pr%prtype == 2) then
     call get_prval(s%t, prval)   ! 現在時間ステップでの倍率を計算
-    f = 1. / 1000. / 3600. / 24.   ! 単位を(mm/day)から(m/s)に換算
+    !f = 1. / 1000. / 3600. / 24.   ! 単位を(mm/day)から(m/s)に換算
+    f = 1. / 1000. / pr%dt_mapunit   ! 単位を(m/s)に換算
     !$omp parallel do
     do j = g%wy(1), g%wy(2)
       do i = g%wx(1,j), g%wx(2,j)
@@ -212,7 +230,8 @@ subroutine m_precip_makepre(pr, p, g, s)
       else
         s%prh(:,:) = 0.0                         ! (mm/h)
       end if
-      s%pre(:,:) = s%prh(:,:) / 3600. / 1000.    ! (m/s)
+      !s%pre(:,:) = s%prh(:,:) / 3600. / 1000.    ! (m/s)
+      s%pre(:,:) = s%prh(:,:) / pr%dt_mapunit / 1000.    ! (m/s)
     end if
   end if
 

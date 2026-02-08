@@ -1,5 +1,5 @@
-#FRT	= ifx
-#FFLAGS	= -g -fopenmp -warn all -fpe0 -O3 -ipo -fp-model fast -r8
+FRT	= ifx
+FFLAGS	= -g -fopenmp -warn all -fpe0 -O3 -ipo -fp-model fast -r8
 #FFLAGS	= -g -fopenmp -fast -warn all -fpe0 -parallel -r8
 #FFLAGS	= -g -fast -warn all -fpe0 -r8
 #FFLAGS	= -pg -O3 -warn all -fpe0 -r8
@@ -11,12 +11,12 @@
 #FFLAGS	= -g -O0 -traceback -check all -warn all -fpe0 -r8
 #LDFLAGS	=
 
-FRT	= gfortran
+#FRT	= gfortran
 #FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -fdefault-real-8
 #FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8
 #FFLAGS	= -g -Ofast -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8
 #FFLAGS	= -pg -Ofast -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8
-FFLAGS	= -g -Og -fcheck=all -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8 -Wno-conversion
+#FFLAGS	= -g -Og -fcheck=all -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8 -Wno-conversion
 #LDFLAGS	=
 
 #FRT	= nvfortran
@@ -65,7 +65,7 @@ m_main.o: m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o m_state.o \
 	m_record.o m_swflow.o m_fileio.o sysdep_util.o
 m_sysparam.o: list_sysparam.o m_util.o
 m_geoinfo.o: m_sysparam.o list_geoinfo.o m_fileio.o
-m_precip.o: m_sysparam.o list_precip.o m_state.o m_geoinfo.o m_fileio.o
+m_precip.o: m_sysparam.o list_precip.o m_state.o m_geoinfo.o m_util.o m_fileio.o
 m_tide.o: m_sysparam.o list_tide.o m_geoinfo.o
 m_boundary.o: m_sysparam.o m_geoinfo.o
 m_state.o: m_sysparam.o m_geoinfo.o list_initial.o
