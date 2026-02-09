@@ -89,8 +89,10 @@ subroutine m_boundary_init(b, p, g)
         read(un, *) t, val
         b%srcval(1,i) = t * 60
         b%srcval(2,i) = val
-                                     print *, i, b%srcval(:,i)
       end do
+      close(1)
+      !n = 4
+      b%nsrcv = n
     end block
   else
     block
@@ -106,6 +108,13 @@ subroutine m_boundary_init(b, p, g)
       b%nsrcv = n
     end block
   end if
+
+    block
+      integer :: i
+      do i = 1, b%nsrcv
+        print *, i, b%srcval(:,i), b%nsrcv
+      end do
+    end block
 
   if (b%nsrcv == 0) b%nsrc = 0
 
@@ -158,6 +167,7 @@ contains
           q0 = b%srcval(2,k-1)
           q1 = b%srcval(2,k)
           val = q0 + (t - t0) / (t1 - t0) * (q1 - q0)
+          exit
         end if
       end do
     end if
