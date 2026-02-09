@@ -81,9 +81,9 @@ subroutine m_precip_init(pr, p)
     pr%dt_mapunit = list%dt_mapunit
   else
     if (prtype == 2) then
-      pr%dt_mapunit = 24 * 3600      ! 分布×倍率の場合はデフォルトは(mm/day)
+      pr%dt_mapunit = 24 * 3600          ! 分布×倍率の場合はデフォルトは(mm/day)
     else
-      pr%dt_mapunit = pr%dt_maplist  ! 解析雨量の場合はデフォルトはファイルの間隔
+      pr%dt_mapunit = pr%dt_maplist * 60 ! 解析雨量の場合はデフォルトはファイルの間隔 (min->sec)
     end if
   end if
 
