@@ -25,6 +25,7 @@ module m_precip
     real :: dt_mapunit                  ! 降雨分布ファイルの積算時間単位 (min)
     integer :: idt_maplist              ! 降雨分布ファイル更新時間ステップ数
     integer, allocatable :: un_maplist(:)  ! 降雨分布ファイル装置番号
+    real :: runoff_rate                 ! 流出率
     logical :: initialized = .false.
   end type
 
@@ -71,6 +72,7 @@ subroutine m_precip_init(pr, p)
   pr%idt_prupdate = max(nint(pr%dt_prupdate * 60 / p%dt), 1)
   pr%dt_maplist = list%dt_maplist
   pr%idt_maplist = max(nint(pr%dt_maplist * 60 / p%dt), 1)
+  pr%runoff_rate = max(list%runoff_rate, 0.0)
 
   if (len(trim(list%dt_maplist_c)) > 0) pr%dt_maplist = &
                                 util_str2sec(list%dt_maplist_c, "bad dt_maplist_c in &list_precip")
@@ -203,6 +205,7 @@ subroutine m_precip_makepre(pr, p, g, s)
         if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
         s%pre(i,j) = prval * f                  ! (m/s)
         s%prh(i,j) = s%pre(i,j) * 3600 * 1000    ! (mm/h)
+        s%prh(i,j) = s%prh(i,j) * pr%runoff_rate
       end do
     end do
     !$omp end parallel do
@@ -217,6 +220,7 @@ subroutine m_precip_makepre(pr, p, g, s)
         if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
         s%pre(i,j) = pr%prmap(i,j) * prval * f  ! (m/s)
         s%prh(i,j) = s%pre(i,j) * 3600 * 1000    ! (mm/h)
+        s%prh(i,j) = s%prh(i,j) * pr%runoff_rate
       end do
     end do
     !$omp end parallel do
@@ -231,7 +235,7 @@ subroutine m_precip_makepre(pr, p, g, s)
         s%prh(:,:) = 0.0                         ! (mm/h)
       end if
       !s%pre(:,:) = s%prh(:,:) / 3600. / 1000.    ! (m/s)
-      s%pre(:,:) = s%prh(:,:) / pr%dt_mapunit / 1000.    ! (m/s)
+      s%pre(:,:) = s%prh(:,:) / pr%dt_mapunit / 1000. * pr%runoff_rate   ! (m/s)
     end if
   end if
 
