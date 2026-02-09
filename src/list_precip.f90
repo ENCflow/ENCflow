@@ -20,6 +20,7 @@ module list_precip
     character(len=80) :: dt_maplist_c = ""         ! 降雨分布ファイル時間間隔 (h, m, s)
     character(len=80) :: dt_mapunit_c = ""         ! 降雨分布ファイルの積算時間単位 (h, m, s)
     character(len=maxpathlen) :: fn_maplist = ""   ! 降雨分布ファイル名リスト名
+    real :: runoff_rate = 1.0                      ! 流出率
   end type
 
 contains
@@ -43,9 +44,11 @@ subroutine list_precip_read(p, list)
   character(:), allocatable :: dt_maplist_c
   character(:), allocatable :: dt_mapunit_c
   character(:), allocatable :: fn_maplist
+  real :: runoff_rate
   integer :: un
   namelist /list_precip/ prtype, dt_prupdate, prval, fn_prmap, &
-          dt_maplist, dt_maplist_c, fn_maplist, dt_mapunit, dt_mapunit_c
+          dt_maplist, dt_maplist_c, fn_maplist, dt_mapunit, dt_mapunit_c, &
+          runoff_rate
 
 
   fn_prmap = list%fn_prmap
@@ -58,6 +61,7 @@ subroutine list_precip_read(p, list)
   dt_maplist_c = list%dt_maplist_c
   dt_mapunit_c = list%dt_mapunit_c
   fn_maplist = list%fn_maplist
+  runoff_rate = list%runoff_rate
 
   !---- 設定ファイルを読み込む ----
   print *, "reading list_precip in ", trim(p%fn_precip)
@@ -74,6 +78,7 @@ subroutine list_precip_read(p, list)
   list%dt_maplist_c = dt_maplist_c
   list%dt_mapunit_c = dt_mapunit_c
   list%fn_maplist = fn_maplist
+  list%runoff_rate = runoff_rate
 
 
 end subroutine
