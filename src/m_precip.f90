@@ -147,6 +147,7 @@ subroutine set_maplist
   character(len=256) :: mapname
   integer :: un
   integer :: i, n
+  integer :: ios
   if (len_trim(list%fn_maplist) == 0) then
     print *, "Error, prtype=3 but fn_maplist is not set" 
     stop
@@ -158,10 +159,10 @@ subroutine set_maplist
   open(newunit=un, file=trim(fname), status='old')
   n = 0
   do 
-    read(un, *, end=99)
+    read(un, *, iostat=ios)
+    if (ios < 0) exit
     n = n + 1
   end do
-  99 continue
   allocate(pr%un_maplist(n))
   rewind(un)
 

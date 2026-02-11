@@ -74,15 +74,16 @@ subroutine m_boundary_init(b, p, g)
     block
       character(:), allocatable :: fname
       integer :: un, n, i
+      integer :: ios
       real :: t, val
       fname = trim(p%dir_data)//"/"//trim(list%fn_srcval)
       open(newunit=un, file=trim(fname), status='old')
       n = 0
       do
-        read(un, *, end=99)
+        read(un, *, iostat=ios)
+        if (ios < 0) exit
         n = n + 1
       end do
-      99 continue
       rewind(un)
       allocate(b%srcval(1:2,1:n))
       do i = 1, n

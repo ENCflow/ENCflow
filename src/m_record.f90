@@ -415,16 +415,17 @@ subroutine read_flxy(p, fn_flxy, flxy)
   character(:), allocatable :: fname
   integer :: un
   integer :: i, n
+  integer :: ios
 
   fname = trim(p%dir_data)//"/"//trim(fn_flxy)
   open(newunit=un, file=fname, status='old')
 
   n = 0
   do
-    read(un, * , end=99)
+    read(un, * , iostat=ios)
+    if (ios < 0) exit
     n = n + 1
   end do
-  99 continue
   rewind(un)
 
   if (n > nflmax) then
