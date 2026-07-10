@@ -1,52 +1,32 @@
-FRT	= ifx
-#FFLAGS	= -g -fopenmp -warn all -fpe0 -O3 -ipo -fp-model fast -r8
-#FFLAGS	= -g -fopenmp -fast -warn all -fpe0 -parallel -r8
-#FFLAGS	= -g -fast -warn all -fpe0 -r8
-#FFLAGS	= -pg -O3 -warn all -fpe0 -r8
-FFLAGS	= -g -O0 -traceback -check all -warn all -fpe0
-#LDFLAGS	
+# ENCflow/misc/calc_catchmentarea/Makefile
+#   src のモジュールを使わない独立ユーティリティ群。
+#   コンパイラは make.inc で一元管理し、フラグは FFLAGS_UTIL
+#   (-r8 なし)を使う。
+TOPDIR	= ../..
+include $(TOPDIR)/make.inc
 
-#FRT	= ifort
-#FFLAGS  = -g -warn all -xHOST -O3 -ipo -no-prec-div -qopenmp -parallel -fpe0 -r8
-#FFLAGS	= -g -O0 -traceback -check all -warn all -fpe0 -r8
-#LDFLAGS	=
+BINDIR	= $(TOPDIR)/bin
 
-#FRT	= gfortran
-#FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -fdefault-real-8
-#FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8
-#FFLAGS	= -g -Ofast -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8
-#FFLAGS	= -pg -Ofast -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8
-#FFLAGS	= -g -Og -fcheck=all -Wall -ffpe-trap=invalid,zero,overflow -Wno-conversion
-#LDFLAGS	=
+PROGS	= modify_elevation
 
-#FRT	= nvfortran
-#FFLAGS	= -g -mp=multicore -Ofast -Minform=inform -Ktrap=fp -Mr8
-#FFLAGS	= -g -Ofast -Minform=inform -Ktrap=fp -Mr8
-#FFLAGS	= -pg -Ofast -Minform=inform -Ktrap=fp -Mr8
-#FFLAGS	= -g -O0 -Mbounds -Mchkptr -Mchkstk -Minform=inform -Ktrap=fp -Mr8
-#LDFLAGS	=
+all: $(PROGS)
 
-#FRT	= flang-20
-#FRT	= flang-new-20
-#FFLAGS	= -g -O3 -ffast-math -Werror -fdefault-real-8
-#LDFLAGS	=
-
-
-OBJS	= modify_elevation.o
-
-all: a.out
-
-a.out: $(OBJS)
-	$(FRT) -o $@ $(FFLAGS) $(LDFLAGS) $(OBJS)
-
-modify_elevation.o:
+modify_elevation: modify_elevation.o
+	$(FRT) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) modify_elevation.o
 
 
 .SUFFIXES:
 .SUFFIXES: .o .f90
 .f90.o:
-	$(FRT) -c $(FFLAGS) $<
+	$(FRT) -c $(FFLAGS_UTIL) $<
 
 
 clean:
-	rm -f *.o *.mod *.smod a.out gmon.out *__genmod.*
+	rm -f *.o *.mod *.smod gmon.out *__genmod.* $(PROGS)
+
+install: $(PROGS)
+	mkdir -p $(BINDIR)
+	cp -f $(PROGS) $(BINDIR)
+
+
+.PHONY: all clean install

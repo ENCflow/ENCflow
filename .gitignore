@@ -4,9 +4,10 @@
 *.smod
 *.obj
 a.out*
-rerecord
-rmdepress_river
 tada
+
+# --- executable binaries ---
+bin/
 
 # --- large data ---
 data/
