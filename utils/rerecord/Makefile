@@ -1,4 +1,4 @@
-# ENCflow/misc/rerecord/Makefile
+# ENCflow/utils/rerecord/Makefile
 #   src のモジュール(libencflow.a と .mod)を利用するユーティリティ
 TOPDIR	= ../..
 include $(TOPDIR)/make.inc

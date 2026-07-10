@@ -1,4 +1,4 @@
-# ENCflow/misc/calc_catchmentarea/Makefile
+# ENCflow/utils/modify_elevation/Makefile
 #   src のモジュールを使わない独立ユーティリティ群。
 #   コンパイラは make.inc で一元管理し、フラグは FFLAGS_UTIL
 #   (-r8 なし)を使う。
@@ -7,18 +7,18 @@ include $(TOPDIR)/make.inc
 
 BINDIR	= $(TOPDIR)/bin
 
-PROGS	= modify_river
+PROGS	= modify_elevation
 
 all: $(PROGS)
 
-modify_river: modify_river.o
-	$(FRT) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) modify_river.o
+modify_elevation: modify_elevation.o
+	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) modify_elevation.o
 
 
 .SUFFIXES:
 .SUFFIXES: .o .f90
 .f90.o:
-	$(FRT) -c $(FFLAGS_UTIL) $<
+	$(FRT_UTIL) -c $(FFLAGS_UTIL) $<
 
 
 clean:

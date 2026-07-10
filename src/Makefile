@@ -4,7 +4,7 @@ include ../make.inc
 
 # ---------------------------------------------------------------
 # main.o 以外の全オブジェクト → libencflow.a に格納
-# (misc/ 以下のユーティリティはこのライブラリをリンクする)
+# (utils/ 以下のユーティリティはこのライブラリをリンクする)
 # ---------------------------------------------------------------
 LIBOBJS	= m_main.o m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o \
 	  m_state.o m_record.o m_swflow.o m_swflow_enc.o m_swflow_stg.o \

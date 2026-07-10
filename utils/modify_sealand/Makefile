@@ -1,4 +1,4 @@
-# ENCflow/misc/calc_catchmentarea/Makefile
+# ENCflow/utils/modify_sealand/Makefile
 #   src のモジュールを使わない独立ユーティリティ群。
 #   コンパイラは make.inc で一元管理し、フラグは FFLAGS_UTIL
 #   (-r8 なし)を使う。
@@ -12,13 +12,13 @@ PROGS	= modify_sealand
 all: $(PROGS)
 
 modify_sealand: modify_sealand.o
-	$(FRT) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) modify_sealand.o
+	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) modify_sealand.o
 
 
 .SUFFIXES:
 .SUFFIXES: .o .f90
 .f90.o:
-	$(FRT) -c $(FFLAGS_UTIL) $<
+	$(FRT_UTIL) -c $(FFLAGS_UTIL) $<
 
 
 clean:

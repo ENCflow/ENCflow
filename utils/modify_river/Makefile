@@ -1,4 +1,4 @@
-# ENCflow/misc/calc_catchmentarea/Makefile
+# ENCflow/utils/modify_river/Makefile
 #   src のモジュールを使わない独立ユーティリティ群。
 #   コンパイラは make.inc で一元管理し、フラグは FFLAGS_UTIL
 #   (-r8 なし)を使う。
@@ -7,27 +7,18 @@ include $(TOPDIR)/make.inc
 
 BINDIR	= $(TOPDIR)/bin
 
-PROGS	= mkdowndir chkdowndir calcarea pickuparea
+PROGS	= modify_river
 
 all: $(PROGS)
 
-mkdowndir: mkdowndir.o
-	$(FRT) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) mkdowndir.o
-
-chkdowndir: chkdowndir.o
-	$(FRT) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) chkdowndir.o
-
-calcarea: calcarea.o
-	$(FRT) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) calcarea.o
-
-pickuparea: pickuparea.o
-	$(FRT) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) pickuparea.o
+modify_river: modify_river.o
+	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) modify_river.o
 
 
 .SUFFIXES:
 .SUFFIXES: .o .f90
 .f90.o:
-	$(FRT) -c $(FFLAGS_UTIL) $<
+	$(FRT_UTIL) -c $(FFLAGS_UTIL) $<
 
 
 clean:

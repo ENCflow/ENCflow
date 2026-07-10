@@ -1,4 +1,4 @@
-# ENCflow/misc/rmdepress_river/Makefile
+# ENCflow/utils/rmdepress_river/Makefile
 #   src のモジュール(libencflow.a と .mod)を利用するユーティリティ
 TOPDIR	= ../..
 include $(TOPDIR)/make.inc

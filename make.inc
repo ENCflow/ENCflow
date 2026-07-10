@@ -2,14 +2,15 @@
 # ENCflow 共通コンパイラ設定
 #   src/ と misc/ 以下の各 Makefile から include する。
 #
-#   FFLAGS      : メインプログラムおよび src のモジュールを使う
+#   FRT, FFLAGS : メインプログラムおよび src のモジュールを使う
 #                 ユーティリティ用(-r8 必須。.mod 互換のため
 #                 src と misc/rerecord 等で必ず同一にすること)
-#   FFLAGS_UTIL : src のモジュールを使わない独立ユーティリティ用
+#   FRT_UTIL, FFLAGS_UTIL : src のモジュールを使わない独立ユーティリティ用
 #                 (calc_catchmentarea, modify_* など。-r8 なし)
 # =====================================================================
 
 FRT	= ifx
+FRT_UTIL	= ifx
 FFLAGS	= -g -fopenmp -warn all -fpe0 -O3 -ipo -fp-model fast -r8
 FFLAGS_UTIL	= -g -O2 -warn all -fpe0
 #FFLAGS	= -g -O0 -traceback -check all -warn all -fpe0 -r8
@@ -17,6 +18,7 @@ FFLAGS_UTIL	= -g -O2 -warn all -fpe0
 #LDFLAGS =
 
 #FRT	= gfortran
+#FRT_UTIL	= gfortran
 #FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -fdefault-real-8
 #FFLAGS_UTIL	= -g -O2 -Wall -ffpe-trap=invalid,zero,overflow
 #FFLAGS	= -g -Og -fcheck=all -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8 -Wno-conversion
@@ -24,11 +26,13 @@ FFLAGS_UTIL	= -g -O2 -warn all -fpe0
 #LDFLAGS =
 
 #FRT	= nvfortran
+#FRT_UTIL	= nvfortran
 #FFLAGS	= -g -mp=multicore -Ofast -Minform=inform -Ktrap=fp -Mr8
 #FFLAGS_UTIL	= -g -O2 -Minform=inform -Ktrap=fp
 #LDFLAGS =
 
 #FRT	= flang-20
+#FRT_UTIL	= flang-20
 #FFLAGS	= -g -O3 -ffast-math -Werror -fdefault-real-8
 #FFLAGS_UTIL	= -g -O2 -Werror
 #LDFLAGS =
