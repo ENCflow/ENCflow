@@ -5,7 +5,7 @@ module m_swflow
   use m_state, only : t_state
   use m_swflow_enc
   use m_swflow_stg
-  use m_swflow_enc0
+  use m_swflow_dev
   implicit none
   private
 
@@ -84,9 +84,9 @@ subroutine m_swflow_init(sw, p, g, s)
     swflow_calc => m_swflow_stg_calc
     swflow_dispose => m_swflow_stg_dispose
   else if (p%f_gridsystem == 2) then
-    swflow_init => m_swflow_enc0_init
-    swflow_calc => m_swflow_enc0_calc
-    swflow_dispose => m_swflow_enc0_dispose
+    swflow_init => m_swflow_dev_init
+    swflow_calc => m_swflow_dev_calc
+    swflow_dispose => m_swflow_dev_dispose
   else
     print *, "invalid gridsystem"
     stop
