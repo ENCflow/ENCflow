@@ -1,4 +1,5 @@
 module m_main
+  use m_parallel
   use m_sysparam
   use m_geoinfo
   use m_precip
@@ -43,6 +44,9 @@ subroutine m_main_all(fn_sysparam)
   type(t_record) :: r
   type(t_swflow) :: sw
 
+  ! MPIを初期化
+  call par_init()
+
   ! システムを初期化
   call m_sysparam_init(p, fn_sysparam)    ! sysparam を初期化
   call sysdep_create_resultdir(p)         ! 結果を保存するディレクトリを作成
@@ -69,6 +73,10 @@ subroutine m_main_all(fn_sysparam)
   call m_boundary_dispose(b)
   call m_geoinfo_dispose(g)
   call m_sysparam_dispose(p)
+
+  ! MPIを終了
+  call par_finalize()
+
 end subroutine
 
 
