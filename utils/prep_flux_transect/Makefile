@@ -12,7 +12,7 @@ PROGS	= prep_transect
 all: $(PROGS)
 
 prep_transect: prep_transect.o
-	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) prep_transect.o
+	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) prep_transect.o $(LDFLAGS)
 
 
 .SUFFIXES:

@@ -12,7 +12,7 @@ PROGS	= modify_river
 all: $(PROGS)
 
 modify_river: modify_river.o
-	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) modify_river.o
+	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) modify_river.o $(LDFLAGS)
 
 
 .SUFFIXES:

@@ -12,7 +12,7 @@ PROGS	= modify_sealand
 all: $(PROGS)
 
 modify_sealand: modify_sealand.o
-	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) modify_sealand.o
+	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) modify_sealand.o $(LDFLAGS)
 
 
 .SUFFIXES:

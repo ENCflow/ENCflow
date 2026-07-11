@@ -22,7 +22,7 @@ BINDIR	= ../bin
 all: a.out $(LIB)
 
 a.out: $(OBJS)
-	$(FRT) -o $@ $(FFLAGS) $(LDFLAGS) $(OBJS)
+	$(FRT) -o $@ $(FFLAGS) $(OBJS) $(LDFLAGS)
 
 $(LIB): $(LIBOBJS)
 	$(AR) $(ARFLAGS) $@ $(LIBOBJS)

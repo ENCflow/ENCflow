@@ -12,7 +12,7 @@ PROGS	= modify_elevation
 all: $(PROGS)
 
 modify_elevation: modify_elevation.o
-	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) modify_elevation.o
+	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) modify_elevation.o $(LDFLAGS)
 
 
 .SUFFIXES:

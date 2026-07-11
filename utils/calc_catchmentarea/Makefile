@@ -12,16 +12,16 @@ PROGS	= mkdowndir chkdowndir calcarea pickuparea
 all: $(PROGS)
 
 mkdowndir: mkdowndir.o
-	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) mkdowndir.o
+	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) mkdowndir.o $(LDFLAGS)
 
 chkdowndir: chkdowndir.o
-	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) chkdowndir.o
+	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) chkdowndir.o $(LDFLAGS)
 
 calcarea: calcarea.o
-	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) calcarea.o
+	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) calcarea.o $(LDFLAGS)
 
 pickuparea: pickuparea.o
-	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) $(LDFLAGS) pickuparea.o
+	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) pickuparea.o $(LDFLAGS)
 
 
 .SUFFIXES:

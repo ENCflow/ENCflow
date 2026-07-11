@@ -11,7 +11,7 @@ LIB	= $(SRCDIR)/libencflow.a
 all: rmdepress_river
 
 rmdepress_river: rmdepress_river.o $(LIB)
-	$(FRT) -o $@ $(FFLAGS) $(LDFLAGS) rmdepress_river.o $(LIB)
+	$(FRT) -o $@ $(FFLAGS) rmdepress_river.o $(LIB) $(LDFLAGS)
 
 rmdepress_river.o: rmdepress_river.f90 $(LIB)
 	$(FRT) -c $(FFLAGS) -I$(SRCDIR) rmdepress_river.f90

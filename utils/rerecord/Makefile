@@ -13,7 +13,7 @@ all: rerecord
 # ライブラリ形式なので必要な .o はリンカが自動抽出する
 # (旧 Makefile の OBJS_rerec のような手動列挙は不要)
 rerecord: rerecord.o $(LIB)
-	$(FRT) -o $@ $(FFLAGS) $(LDFLAGS) rerecord.o $(LIB)
+	$(FRT) -o $@ $(FFLAGS) rerecord.o $(LIB) $(LDFLAGS)
 
 # .mod ファイルは src 側にあるので -I で参照
 rerecord.o: rerecord.f90 $(LIB)
