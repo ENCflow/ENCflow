@@ -24,15 +24,16 @@ MODE	= mpi
 # コンパイラ本体(FC)と MPI ラッパー(FC_MPI)
 #   使う組をコメント切り替え。FRT は MODE に応じて自動決定される。
 # ---------------------------------------------------------------
-FC	= ifx
-FC_MPI	= mpiifx
-FFLAGS	= -g -fopenmp -warn all -fpe0 -O3 -ipo -fp-model fast -r8
+#FC	= ifx
+#FC_MPI	= mpiifx
+#FFLAGS	= -g -fopenmp -warn all -fpe0 -O3 -ipo -fp-model fast -r8
 #FFLAGS	= -g -O0 -traceback -check all -warn all -fpe0 -r8
 #LDFLAGS =
 
-#FC	= gfortran
-#FC_MPI	= mpifort
-#FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -fdefault-real-8 -fdefault-double-8
+FC	= gfortran
+FC_MPI	= mpifort.mpich
+#FC_MPI	= mpifort.openmpi
+FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -fdefault-real-8 -fdefault-double-8
 #FFLAGS	= -g -Og -fcheck=all -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8 -fdefault-double-8 -Wno-conversion
 #LDFLAGS =
 
