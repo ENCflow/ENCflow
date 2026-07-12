@@ -27,5 +27,5 @@ if [ "$bin" -ot "$stamp" ]; then
     exit 1
 fi
 
-#time ./a.out param.txt
-time /usr/bin/time -v time ./a.out param.txt |& tee  Log.txt
+#time /usr/bin/time -v time ./a.out param.txt |& tee  Log.txt
+/usr/bin/time -p ./a.out param.txt |& tee  Log.txt
