@@ -24,7 +24,7 @@ $(BIN):
 	$(MAKE) -C $(SRCDIR) install
 
 clean:
-	rm -f a.out
 	rm -rf result
+	rm -f a.out Log.txt
 
 .PHONY: all clean

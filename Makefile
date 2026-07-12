@@ -23,6 +23,7 @@ SUBDIRS	= src \
 	  utils/rerecord \
 	  utils/rmdepress_river
 
+
 # install 対象(install ターゲットを持つディレクトリのみ列挙)
 #   他の utils ユーティリティにも install を追加したらここに足す
 #INSTALLDIRS	= src \
@@ -33,6 +34,17 @@ INSTALLDIRS	= $(SUBDIRS)
 # 実行ファイルのインストール先
 BINDIR	= bin
 
+# テスト用ディレクトリ
+TESTDIRS	= test/chichibu test/wave
+
+# サンプルデータディレクトリ
+SMPLDIRS	= \
+		  examples/abukuma \
+		  examples/benchmark/h-plane \
+		  examples/benchmark/v-shaped \
+		  examples/benchmark/v-valley \
+		  examples/chichibu \
+		  examples/wave
 
 all: $(SUBDIRS)
 
@@ -56,5 +68,11 @@ clean:
 		$(MAKE) -C $$d clean || exit 1; \
 	done
 	rm -rf $(BINDIR)
+	@for d in $(TESTDIRS); do \
+		$(MAKE) -C $$d clean || exit 1; \
+	done
+	@for d in $(SMPLDIRS); do \
+		$(MAKE) -C $$d clean || exit 1; \
+	done
 
 .PHONY: all install clean $(SUBDIRS)

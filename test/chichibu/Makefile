@@ -23,8 +23,7 @@ $(BIN):
 	$(MAKE) -C $(SRCDIR) install
 
 clean:
-	rm -f a.out
 	rm -rf result
-	rm -f *.png
+	rm -f a.out Log.txt *.png
 
 .PHONY: all clean
