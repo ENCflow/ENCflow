@@ -161,12 +161,19 @@ subroutine run_main(p, g, b, pr, s, r, sw)
      call m_record_flux(r, p, s)
     endif
 
+    ! サブルーチンからのエラーをチェック
+    if (ierror > 0) then
+      call m_state_printstate(p, s)
+      exit
+    end if
+
     ! CFL条件のチェック
     if (p%f_check_cfl > 0 .and. s%cnmax > 1.) then
       print *, "********************************************"
       print *, "******** Courant number exceeds 1.0 ********"
       print *, "********************************************"
       call m_state_printstate(p, s)
+      ierror = ierror + 1
       exit
     end if
 
@@ -176,12 +183,7 @@ subroutine run_main(p, g, b, pr, s, r, sw)
       print *, "******** Unrealistic calculation (Courant number exceeds 100) ********"
       print *, "**********************************************************************"
       call m_state_printstate(p, s)
-      exit
-    end if
-
-    ! サブルーチンからのエラーをチェック
-    if (ierror > 0) then
-      call m_state_printstate(p, s)
+      ierror = ierror + 1
       exit
     end if
 
@@ -197,6 +199,11 @@ subroutine run_main(p, g, b, pr, s, r, sw)
 
   ! 最大流量の一覧を出力
   call m_record_summary(r, p)
+
+  ! エラーがあった場合は異常終了コードを返す
+  if (ierror > 0) then
+    error stop 1
+  end if
 
 end subroutine
 
