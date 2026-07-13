@@ -16,6 +16,7 @@
 #   戻り値: 0=PASS または reference 作成/更新, 1=FAIL, 2=比較不能
 # =====================================================================
 refdir=reference
+resdir=result
 param=param.txt
 
 update=0
@@ -33,7 +34,7 @@ fi
 if [ $update -eq 1 ]; then
     rm -rf "$refdir"
     mkdir -p "$refdir"
-    cp -p "$param" "$@" "$refdir"/
+    cp -p "$param" "$resdir"/"$@" "$refdir"/
     echo "=== REFERENCE UPDATED: 今回の結果を新しい基準として保存しました ==="
     echo "    (結果の妥当性をプロット等で確認してから信頼してください)"
     exit 0
@@ -42,7 +43,7 @@ fi
 # --- 初回: reference 作成 ---
 if [ ! -d "$refdir" ]; then
     mkdir -p "$refdir"
-    cp -p "$param" "$@" "$refdir"/
+    cp -p "$param" "$resdir"/"$@" "$refdir"/
     echo "=== REFERENCE CREATED: 比較対象がないため今回の結果を基準として保存しました ==="
     echo "    (初回のため比較は行っていません。結果の妥当性を必ず確認してください)"
     exit 0
@@ -68,7 +69,7 @@ for f in "$@"; do
         continue
     fi
 
-    if cmp -s "$f" "$refdir/$f"; then
+    if cmp -s "$resdir/$f" "$refdir/$f"; then
         echo "PASS: $f (完全一致)"
         continue
     fi
@@ -127,7 +128,7 @@ for f in "$@"; do
             }
             exit 0
         }
-    ' "$refdir/$f" "$f"
+    ' "$refdir/$f" "$resdir/$f"
 
     if [ $? -eq 0 ]; then
         echo "PASS: $f (許容誤差内: RTOL=${RTOL:-0} ATOL=${ATOL:-0})"
