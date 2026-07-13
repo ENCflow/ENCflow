@@ -70,6 +70,7 @@ clean:
 	rm -rf $(BINDIR)
 	@for d in $(TESTDIRS); do \
 		$(MAKE) -C $$d clean || exit 1; \
+		$(MAKE) -C $$d cleanref || exit 1; \
 	done
 	@for d in $(SMPLDIRS); do \
 		$(MAKE) -C $$d clean || exit 1; \

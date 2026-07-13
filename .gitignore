@@ -22,6 +22,7 @@ Backup
 result/
 result_*/
 *.png
+reference/
 
 # --- OS / editor ---
 .DS_Store

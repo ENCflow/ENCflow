@@ -4,27 +4,26 @@
 &list_sysparam
   f_gridsystem = 0        ! 格子システム(0:ENC, 1:STG)
   f_govequation = 0       ! 基礎方程式(0:DynWE, 1:DifWE, 2:KinWE)
-  !dt = 0.5                ! 時間刻み (s)
-  !dt = 1.0                ! 時間刻み (s)
-  !dt = 2.0                ! 時間刻み (s)
-    dt = 2.5                ! 時間刻み (s)
-  !dt = 3.0                ! 時間刻み (s)
-  !dt = 5.0                ! 時間刻み (s)
-  t0 = 0                  ! 計算開始時刻 (s)
-  tt = 21600              ! 計算終了時刻 (s)         [6 hour]
-  !tt = 86400              ! 計算終了時刻 (s)         [6 hour]
-  dt_disp = 600           ! 画面表示時間刻み (s)     [10 min]
-  dt_file = 600           ! ファイル出力時間刻み (s) [10 min]
-  dt_recrd = 60           ! プローブ出力時間刻み (s) [1 min]
+  !dt_c = "0.5 sec"            ! 時間刻み (h,m,s)
+  !dt_c = "1.0 sec"            ! 時間刻み (h,m,s)
+  !dt_c = "2.0 sec"            ! 時間刻み (h,m,s)
+  dt_c = "2.5 sec"            ! 時間刻み (h,m,s)
+  !dt_c = "3.0 sec"            ! 時間刻み (h,m,s)
+  !dt_c = "5.0 sec"            ! 時間刻み (h,m,s)
+  t0_c = "0 sec"              ! 計算開始時刻 (h,m,s)
+  tt_c = "6 hour"             ! 計算終了時刻 (h,m,s)         [6 hour]
+  dt_disp_c = "10 min"        ! 画面表示時間刻み (h,m,s)     [10 min]
+  dt_file_c = "10 min"        ! ファイル出力時間刻み (h,m,s) [10 min]
+  dt_recrd_c = "1 min"        ! プローブ出力時間刻み (h,m,s) [1 min]
 
-  fn_geoinfo  = '-'
-  fn_record   = '-'
-  fn_initial  = '-'
-  fn_precip   = '-'
-  fn_enc      = '-'
+  fn_geoinfo  = "-"
+  fn_record   = "-"
+  fn_initial  = "-"
+  fn_precip   = "-"
+  fn_enc      = "-"
 
-  dir_data   = 'data_chichibu'
-  dir_result = 'result'
+  dir_data   = "data_chichibu"
+  dir_result = "result"
 
   !dd = 0.001
   !dv = 0.001

@@ -27,4 +27,7 @@ clean:
 	rm -rf result
 	rm -f a.out Log.txt
 
+cleanref:
+	rm -rf reference
+
 .PHONY: all clean
