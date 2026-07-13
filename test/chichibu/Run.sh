@@ -27,5 +27,14 @@ if [ "$bin" -ot "$stamp" ]; then
     exit 1
 fi
 
-#time /usr/bin/time -v time ./a.out param.txt |& tee  Log.txt
-/usr/bin/time -p ./a.out param.txt |& tee  Log.txt
+#export OMP_NUM_THREADS=48
+
+#export OMP_SCHEDULE="static"
+#export OMP_SCHEDULE="dynamic,10"
+
+#export OMP_PROC_BIND=spread
+#export OMP_PROC_BIND=close
+#export OMP_PLACES=cores
+
+#/usr/bin/time -v ./a.out param.txt | tee  Log.txt
+time ./a.out param.txt | tee  Log.txt

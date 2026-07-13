@@ -28,5 +28,5 @@ if [ "$bin" -ot "$stamp" ]; then
 fi
 
 NP=${1:-2}    # ランク数(引数で変更可: ./Run_MPI.sh 4)
-#time mpirun -np $NP /usr/bin/time -v ./a.out param.txt |& tee Log.txt
-/usr/bin/time -p mpirun -np $NP ./a.out param.txt |& tee Log.txt
+#time mpirun -np $NP /usr/bin/time -v ./a.out param.txt | tee Log.txt
+time mpirun -np $NP ./a.out param.txt | tee Log.txt
