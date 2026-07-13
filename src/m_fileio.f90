@@ -1,5 +1,5 @@
 module m_fileio
-  use, intrinsic :: iso_fortran_env
+  use, intrinsic :: iso_fortran_env, only: real32
   use m_sysparam
   use sysdep_util
 
