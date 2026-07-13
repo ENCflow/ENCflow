@@ -11,10 +11,10 @@
   !dt_c = "3.0 sec"            ! 時間刻み (h,m,s)
   !dt_c = "5.0 sec"            ! 時間刻み (h,m,s)
   t0_c = "0 sec"              ! 計算開始時刻 (h,m,s)
-  tt_c = "6 hour"             ! 計算終了時刻 (h,m,s)         [6 hour]
-  dt_disp_c = "10 min"        ! 画面表示時間刻み (h,m,s)     [10 min]
-  dt_file_c = "10 min"        ! ファイル出力時間刻み (h,m,s) [10 min]
-  dt_recrd_c = "1 min"        ! プローブ出力時間刻み (h,m,s) [1 min]
+  tt_c = "6 hour"             ! 計算終了時刻 (h,m,s)
+  dt_disp_c = "10 min"        ! 画面表示時間刻み (h,m,s)
+  dt_file_c = "10 min"        ! ファイル出力時間刻み (h,m,s)
+  dt_recrd_c = "1 min"        ! プローブ出力時間刻み (h,m,s)
 
   fn_geoinfo  = "-"
   fn_record   = "-"
