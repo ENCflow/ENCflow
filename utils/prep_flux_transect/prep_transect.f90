@@ -73,8 +73,8 @@ subroutine set_xy(t)
   type(t_transect), intent(inout) :: t
   integer :: x, y
   ! 両端点の中心を基準点とする
-  x = aint((real(t%x0) + real(t%x1)) / 2)       ! 四捨五入
-  y = aint((real(t%y0) + real(t%y1)) / 2)       ! 四捨五入
+  x = int(aint((real(t%x0) + real(t%x1)) / 2))       ! 四捨五入
+  y = int(aint((real(t%y0) + real(t%y1)) / 2))       ! 四捨五入
   if (rw(x,y) < 1) then
     x = ceiling((real(t%x0) + real(t%x1)) / 2)  ! 切り上げ
     y = ceiling((real(t%y0) + real(t%y1)) / 2)  ! 切り上げ
@@ -197,10 +197,12 @@ end subroutine
 subroutine mk_ft(tt, fname)
   type(t_transect), intent(inout) :: tt(:)
   character(len=*), intent(in) :: fname
-  integer :: ft(1:nx,1:ny)
+  integer, allocatable :: ft(:,:)
   integer :: it
   integer :: i, j, n, nr
   integer :: x0, y0, x1, y1
+
+  allocate(ft(1:nx,1:ny))
 
   ft(:,:) = 0
 
@@ -238,6 +240,8 @@ subroutine mk_ft(tt, fname)
   open(1,file=fname, form='unformatted', status='replace', access='stream')
   write(1) ft
   close(1)
+
+  deallocate(ft)
 
 end subroutine
 
