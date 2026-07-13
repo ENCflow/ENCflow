@@ -3,9 +3,9 @@
 #   src と utils 以下を一括で make / make install / make clean する。
 #
 #   使い方(ENCflow 直下で):
-#     make            全ディレクトリをビルド
+#     make            srcとutilsディレクトリをビルド
 #     make install    実行ファイルを $(BINDIR) にコピー
-#     make clean      全ディレクトリの生成物を削除
+#     make clean      全ディレクトリの生成物を削除(回帰テスト用結果も削除)
 #     make src        特定ディレクトリだけビルドすることも可能
 #     make utils/rerecord
 # =====================================================================
