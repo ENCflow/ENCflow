@@ -13,13 +13,13 @@ module m_boundary
 
 
   type t_boundary
-    integer :: nsrc                                ! 湧出しの数
-    integer :: nsrcc                               ! 湧出しセル数
+    integer :: nsrc = 0                            ! 湧出しの数
+    integer :: nsrcc = 0                           ! 湧出しセル数
     integer, allocatable :: srccell(:,:)           ! 湧出しセルの座標　
-    integer :: nsrcv                               ! 湧出し時系列のデータ数
+    integer :: nsrcv = 0                           ! 湧出し時系列のデータ数
     real, allocatable :: srcval(:,:)               ! 湧出し時系列値 (min, m3/s)
     logical :: initialized = .false.               ! 初期化済みフラグ
-    real :: srcq                                   ! 現時刻の湧出し流量
+    real :: srcq = 0.0                             ! 現時刻の湧出し流量
   end type
 
 
@@ -57,7 +57,8 @@ subroutine m_boundary_init(b, p, g)
   !else
     block
       integer :: i
-      integer :: n = 0
+      integer :: n
+      n = 0
       do i = 1, ubound(list%srccell, 2)
         if (list%srccell(1,i) < 0) exit   ! 有効なデータが無い場合は終了
         n = n + 1
@@ -91,14 +92,15 @@ subroutine m_boundary_init(b, p, g)
         b%srcval(1,i) = t * 60
         b%srcval(2,i) = val
       end do
-      close(1)
+      close(un)
       !n = 4
       b%nsrcv = n
     end block
   else
     block
       integer :: i
-      integer :: n = 0
+      integer :: n
+      n = 0
       do i = 1, ubound(list%srcval, 2)
         if (list%srcval(1,i) < 0) exit   ! 有効なデータが無い場合は終了
         n = n + 1
@@ -110,12 +112,12 @@ subroutine m_boundary_init(b, p, g)
     end block
   end if
 
-    block
-      integer :: i
-      do i = 1, b%nsrcv
-        print *, i, b%srcval(:,i), b%nsrcv
-      end do
-    end block
+   ! block
+   !   integer :: i
+   !   do i = 1, b%nsrcv
+   !     print *, i, b%srcval(:,i), b%nsrcv
+   !   end do
+   ! end block
 
   if (b%nsrcv == 0) b%nsrc = 0
 
