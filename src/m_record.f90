@@ -159,13 +159,12 @@ subroutine set_probe(p)
   end do
 
   !---- プローブ出力ファイルを初期化 ----
-  !un = 101
   do i = 1, r%npb
     ix = r%probe(i)%ixy(1)
     iy = r%probe(i)%ixy(2)
     write(cun, '(i4.4)') i
     fn_pb = trim(p%dir_result)//"/probes/"//"probe"//cun//trim(p%outfn_suffix)//".csv"
-    open(newunit=un, file=trim(fn_pb))
+    open(newunit=un, file=trim(fn_pb), status='replace')
     write(un, '("# probe number =,",i3)') i
     write(un, '("# x(m) =,",f14.3)') r%probe(i)%xy(1)
     write(un, '("# y(m) =,",f14.3)') r%probe(i)%xy(2)
@@ -174,7 +173,6 @@ subroutine set_probe(p)
     write(un, '("# iy =,",i7)') r%probe(i)%ixy(2)
     write(un, '("# t(hour), t(min), z(m), h(m), u(m/s), v(m/s), |V|(m/s), q(m2/s)")')
     r%probe(i)%un = un
-    !un = un + 1
   end do
 end subroutine
 
@@ -396,7 +394,7 @@ subroutine set_flux(p)
   do i = 1, r%nfl
     write(cun, '(i4.4)') i
     fn_fl = trim(p%dir_result)//"/fluxes/"//"flux"//cun//trim(p%outfn_suffix)//".csv"
-    open(newunit=un, file=trim(fn_fl))
+    open(newunit=un, file=trim(fn_fl), status='replace')
     write(un, '("# flux transect number =,",i3)') i
     write(un, '("# xR, yR, xL, yL(m) =,",f14.3,",",f14.3,",",f14.3,",",f14.3)') r%flux(i)%xy0(1:4)
     write(un, '("# ixR, iyR, ixL, iyL =,",i7,",",i7,",",i7,",",i7)') r%flux(i)%ixy0(1:4)
@@ -589,7 +587,7 @@ subroutine m_record_summary(r, p)
   if (r%npb <= 0 .and. r%nfl <= 0) return
 
   fn_smry = trim(p%dir_result)//"/"//"summary"//trim(p%outfn_suffix)//".csv"
-  open(newunit=un, file=trim(fn_smry))
+  open(newunit=un, file=trim(fn_smry), status='replace')
   write(un, '("# type, No., t(hour), t(min), Qmax(m3/s), Hmax(m), ixR, iyR, ixL, iyL")')
   do i = 1, r%npb
     write(un, '(a,i5,a,f11.5,a,f14.5,a,f14.5,a,f12.5,a,i7,a,i7)') &

@@ -532,7 +532,7 @@ subroutine save_state(p, s)
   integer :: un
   if (p%initialized) continue
   if (s%initialized) continue
-  open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted')
+  open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted', status='replace')
   write(un) s%h, s%u, s%v
   close(un)
 end subroutine
@@ -547,7 +547,7 @@ subroutine restore_state(p, s)
   integer :: un
   if (p%initialized) continue
   if (s%initialized) continue
-  open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted')
+  open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted', status='old')
   read(un) s%h, s%u, s%v
   close(un)
 end subroutine

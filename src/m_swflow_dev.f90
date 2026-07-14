@@ -966,7 +966,7 @@ subroutine save_state(p, sx)
   type(t_enc_status), intent(in) :: sx
   integer :: un
   if (p%initialized) continue
-  open(newunit=un, file=trim(p%dir_result)//'/save_enc.dat', form='unformatted')
+  open(newunit=un, file=trim(p%dir_result)//'/save_enc.dat', form='unformatted', status='replace')
   write(un) sx%uv
   close(un)
 end subroutine
@@ -980,7 +980,7 @@ subroutine restore_state(p, sx)
   type(t_enc_status), intent(inout) :: sx
   integer :: un
   if (p%initialized) continue
-  open(newunit=un, file=trim(p%dir_result)//'/save_enc.dat', form='unformatted')
+  open(newunit=un, file=trim(p%dir_result)//'/save_enc.dat', form='unformatted', status='old')
   read(un) sx%uv
   close(un)
 end subroutine
