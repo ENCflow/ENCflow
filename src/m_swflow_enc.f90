@@ -188,11 +188,13 @@ subroutine boundary(p, g, b, s, sx)
   !$omp end parallel do
 
   ! 湧出しを加える
-  do k = 1, b%nsrcc
-    i = b%srccell(1,k)
-    j = b%srccell(2,k)
-    sx%h1(i,j) = sx%h1(i,j) + b%srcq
-  end do
+  if (b%nsrc > 0) then
+    do k = 1, b%nsrcc
+      i = b%srccell(1,k)
+      j = b%srccell(2,k)
+      sx%h1(i,j) = sx%h1(i,j) + b%srcq
+    end do
+  end if
 
 end subroutine
 
