@@ -30,4 +30,4 @@ clean:
 cleanref:
 	rm -rf reference
 
-.PHONY: all clean
+.PHONY: all clean cleanref
