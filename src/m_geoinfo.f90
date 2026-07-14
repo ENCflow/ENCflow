@@ -3,7 +3,7 @@ module m_geoinfo
   use m_sysparam, only : t_sysparam
   use list_geoinfo, only : t_list_geoinfo, list_geoinfo_read
   use m_fileio
-  use m_parallel, only : par_info
+  use m_parallel, only : par_info, par_stop
   implicit none
   private
 
@@ -73,6 +73,7 @@ subroutine m_geoinfo_init(g, p)
   type(t_sysparam), intent(inout) :: p             ! システムパラメータ構造体
   type(t_geoinfo), intent(out) :: g             ! 地理情報構造体
   type(t_list_geoinfo) :: list                     ! パラメータファイル中の変数
+  character(len=256) :: msg
 
 
   call list_geoinfo_read(p, list)
@@ -102,8 +103,8 @@ subroutine m_geoinfo_init(g, p)
     case (5)
       call init_geoinfo_user_5(p, g)
     case default
-      print *, "error: undefined f_user_routine_id in list_geoinfo", list%f_user_routine_id
-      stop
+      write(msg,'(a,i0)') "error: undefined f_user_routine_id in list_geoinfo", list%f_user_routine_id
+      call par_stop(msg)
   end select
 
 
@@ -205,6 +206,7 @@ subroutine read_mask(p, g, list)
   type(t_list_geoinfo), intent(in) :: list
   character(:), allocatable :: fname
   integer :: a(1:g%nx,1:g%ny)
+  character(len=256) :: msg
 
   if (list%f_masktype == 0) then
     ! マスク無しを指定の場合
@@ -221,7 +223,8 @@ subroutine read_mask(p, g, list)
         do j = 1, g%ny
           do i = 1, g%nx
             if (a(i,j) /= 0 .and. a(i,j) /= 1) then
-              print *, "list_geoinfo: invalid data in mask data", i, j, a(i,j)
+              write(msg,'(a,i0,i0,i0)') "list_geoinfo: invalid data in mask data", i, j, a(i,j)
+              call par_stop(msg)
             end if
           end do
         end do
@@ -231,14 +234,13 @@ subroutine read_mask(p, g, list)
   else if (list%f_masktype == 2) then
     ! 海域マスクから生成を指定の場合
     if (len_trim(list%fn_sw) == 0) then
-      print *, 'list_geoinfo: f_mastype=2 but fn_sw=""'
-      stop
+      call par_stop('list_geoinfo: f_mastype=2 but fn_sw=""')
     end if
     call do_sw2x
   else
     ! 不正なマスクタイプ
-    print *, "list_geoinfo: unknown mask type", list%f_masktype
-    stop
+    write(msg,'(a,i0)') "list_geoinfo: unknown mask type", list%f_masktype
+    call par_stop(msg)
   end if
 
 
@@ -426,6 +428,7 @@ subroutine read_rn(p, g, list)
   integer :: nluse
   integer :: i, j
   character(:), allocatable :: fname
+  character(len=256) :: msg
 
   if (list%f_rntype == 0) then
     g%lu = 0
@@ -442,16 +445,16 @@ subroutine read_rn(p, g, list)
       nluse = nluse + 1
     end do
     if (nluse < 1) then
-      print *, "error in geoimfo: need lu2rn(:,:) for f_rntype=2"
-      stop
+      call par_stop("error in geoimfo: need lu2rn(:,:) for f_rntype=2")
     end if
     do j = 1, g%ny
       do i = 1, g%nx
         if (g%x(i,j) == 0) cycle
         g%rn(i,j) = get_rn(list%lu2rn, nluse, g%lu(i,j))
         if (g%rn(i,j) < 0) then
-          print *, "error in geoinfo: landuse categoly", g%lu(i,j), " at", i, j, " not found in lu2rn"
-          stop
+          write(msg,'(a,i0,a,i0,i0,a)') &
+                "error in geoinfo: landuse categoly", g%lu(i,j), " at", i, j, " not found in lu2rn"
+          call par_stop(msg)
         end if
       end do
     end do

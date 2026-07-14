@@ -57,13 +57,16 @@ m_main.o: m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o m_state.o \
 m_sysparam.o: list_sysparam.o m_util.o $(PAR_OBJ)
 m_geoinfo.o: m_sysparam.o list_geoinfo.o m_fileio.o $(PAR_OBJ)
 m_precip.o: m_sysparam.o list_precip.o m_state.o m_geoinfo.o m_util.o m_fileio.o $(PAR_OBJ)
-m_tide.o: m_sysparam.o list_tide.o m_geoinfo.o
-m_boundary.o: m_sysparam.o m_geoinfo.o m_state.o list_boundary.o
+m_tide.o: m_sysparam.o list_tide.o m_geoinfo.o $(PAR_OBJ)
+m_boundary.o: m_sysparam.o m_geoinfo.o m_state.o list_boundary.o $(PAR_OBJ)
 m_state.o: m_sysparam.o m_geoinfo.o list_initial.o
 m_record.o: m_sysparam.o list_record.o m_geoinfo.o m_state.o $(PAR_OBJ)
-m_swflow.o: m_sysparam.o m_geoinfo.o m_boundary.o m_state.o m_swflow_enc.o m_swflow_stg.o m_swflow_dev.o
-m_swflow_enc.o: m_sysparam.o list_enc.o m_geoinfo.o m_boundary.o m_precip.o m_state.o m_ffactor.o
-m_swflow_dev.o: m_sysparam.o list_enc.o m_geoinfo.o m_boundary.o m_precip.o m_state.o m_ffactor.o
+m_swflow.o: m_sysparam.o m_geoinfo.o m_boundary.o m_state.o \
+	m_swflow_enc.o m_swflow_stg.o m_swflow_dev.o $(PAR_OBJ)
+m_swflow_enc.o: m_sysparam.o list_enc.o m_geoinfo.o m_boundary.o \
+	m_precip.o m_state.o m_ffactor.o $(PAR_OBJ)
+m_swflow_dev.o: m_sysparam.o list_enc.o m_geoinfo.o m_boundary.o \
+	m_precip.o m_state.o m_ffactor.o $(PAR_OBJ)
 m_swflow_stg.o: m_sysparam.o m_geoinfo.o m_precip.o m_boundary.o m_state.o
 list_sysparam.o: $(PAR_OBJ)
 list_geoinfo.o: m_sysparam.o $(PAR_OBJ)

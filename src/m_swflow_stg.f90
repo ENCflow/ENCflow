@@ -141,7 +141,7 @@ subroutine m_swflow_stg_init(p, g, s)
       !$omp end parallel
 
       !DO J=J1,J2
-      !print *, I1(J), I2(J)
+      !PRINT *, I1(J), I2(J)
       !ENDDO
       !pause
 

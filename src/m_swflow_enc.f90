@@ -5,6 +5,7 @@ module m_swflow_enc
   use m_state, only : t_state
   use m_ffactor, only : m_ffactor_init, m_ffactor_calc, m_ffactor_dispose
   use list_enc, only : t_list_enc, list_enc_read
+  use m_parallel, only : par_info
   implicit none
   private
 
@@ -370,9 +371,9 @@ subroutine momentum(p, g, s, sx, ierror)
   s%n_runge = n_runge
 
   if (n_error > 0) then
-    print *, "**********************************************************************"
-    print *, "********* Unrealistic calculation (Velocity exceeds 250 m/s) *********"
-    print *, "**********************************************************************"
+    call par_info("**********************************************************************")
+    call par_info("********* Unrealistic calculation (Velocity exceeds 250 m/s) *********")
+    call par_info("**********************************************************************")
     ierror = ierror + n_error
   end if
 

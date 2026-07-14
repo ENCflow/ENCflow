@@ -6,6 +6,7 @@ module m_swflow
   use m_swflow_enc
   use m_swflow_stg
   use m_swflow_dev
+  use m_parallel, only : par_stop
   implicit none
   private
 
@@ -88,8 +89,7 @@ subroutine m_swflow_init(sw, p, g, s)
     swflow_calc => m_swflow_dev_calc
     swflow_dispose => m_swflow_dev_dispose
   else
-    print *, "invalid gridsystem"
-    stop
+    call par_stop("invalid gridsystem")
   end if
   sw%initialized = .true.
 

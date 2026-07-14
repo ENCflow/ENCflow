@@ -6,7 +6,7 @@ module m_precip
   use m_util, only : util_str2sec
   use m_fileio
   use list_precip, only : t_list_precip, list_precip_read
-  use m_parallel, only : par_info
+  use m_parallel, only : par_info, par_stop
   implicit none
   private
 
@@ -45,6 +45,7 @@ subroutine m_precip_init(pr, p)
   type(t_list_precip) :: list
   integer :: prtype
   real, allocatable :: prval(:,:)
+  character(len=256) :: msg
 
   !--- システムパラメータファイル内で設定ファイルが指定されている場合 ---
   if (len_trim(p%fn_precip) > 0) then
@@ -64,8 +65,8 @@ subroutine m_precip_init(pr, p)
   else if (prtype == 3) then
     call set_maplist
   else
-    print *, "Error, Unknown prtype in list_precip", prtype
-    stop
+    write(msg,'(a,i0)') "Error, Unknown prtype in list_precip", prtype
+    call par_stop(msg)
   end if
 
   pr%prtype = prtype
@@ -117,9 +118,9 @@ end subroutine
 subroutine set_prmap
   character(:), allocatable :: fname
   integer :: i, j, have_nan
+  character(len=256) :: msg
   if (len_trim(list%fn_prmap) == 0) then
-    print *, "Error, prtype=2 but fn_prmap is not set" 
-    stop
+    call par_stop("Error, prtype=2 but fn_prmap is not set" )
   end if
 
   ! 降水分布の読み込み
@@ -138,7 +139,8 @@ subroutine set_prmap
     end do
   end do
   if (have_nan > 0) then
-    print *, "warning: precipitation map has NaN in", have_nan, " cells"
+    write(msg,'(a,i0,a)') "warning: precipitation map has NaN in", have_nan, " cells"
+    call par_info(msg)
   end if
 end subroutine
 
@@ -150,8 +152,7 @@ subroutine set_maplist
   integer :: i, n
   integer :: ios
   if (len_trim(list%fn_maplist) == 0) then
-    print *, "Error, prtype=3 but fn_maplist is not set" 
-    stop
+    call par_stop("Error, prtype=3 but fn_maplist is not set" )
   end if
 
   ! 分布リストの行数をカウント

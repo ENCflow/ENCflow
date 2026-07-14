@@ -1,7 +1,7 @@
 !======================================================================
 module list_geoinfo
   use m_sysparam, only : t_sysparam
-  use m_parallel, only : par_info
+  use m_parallel, only : par_info, par_stop
   implicit none
   private
 
@@ -125,11 +125,11 @@ subroutine list_geoinfo_read(p, list)
 
   if (dx == 0) then
     if (nx == 0) then
-      print *, "error in list_geoinfo: nx == 0"
+      call par_info("error in list_geoinfo: nx == 0")
       error = error + 1
     end if
     if (lx == 0) then
-      print *, "error in list_geoinfo: dx == 0 and lx == 0"
+      call par_info("error in list_geoinfo: dx == 0 and lx == 0")
       error = error + 1
     end if
     if (nx > 0) dx = lx / nx
@@ -137,11 +137,11 @@ subroutine list_geoinfo_read(p, list)
 
   if (dy == 0) then
     if (ny == 0) then
-      print *, "error in list_geoinfo: ny == 0"
+      call par_info("error in list_geoinfo: ny == 0")
       error = error + 1
     end if
     if (ly == 0) then
-      print *, "error in list_geoinfo: dy == 0 and ly == 0"
+      call par_info("error in list_geoinfo: dy == 0 and ly == 0")
       error = error + 1
     end if
     if (ny > 0) dy = ly / ny
@@ -155,7 +155,7 @@ subroutine list_geoinfo_read(p, list)
     ly = ny * dy
   end if
 
-  if (error > 0) stop
+  if (error > 0) call par_stop("")
 
   list%nx = nx
   list%ny = ny

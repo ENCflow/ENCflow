@@ -16,4 +16,5 @@
 #export OMP_NUM_THREADS=6
 #export MPIRUN_OPTS="--map-by l3cache:pe=$OMP_NUM_THREADS --bind-to core"
 
+
 exec ../Scripts/Run_case.sh mpi "$@"

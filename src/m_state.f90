@@ -2,6 +2,7 @@ module m_state
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use list_initial, only : t_list_initial, list_initial_read
+  use m_parallel, only : is_root, par_stop
   implicit none
   private
 
@@ -101,6 +102,7 @@ subroutine m_state_init(s, p, g)
   type(t_geoinfo), intent(inout) :: g
   type(t_list_initial) :: list
   integer :: i, j
+  character(len=256) :: msg
 
   ! メモリ確保
   allocate(s%h(1:p%nx,1:p%ny), source = 0.0)
@@ -154,7 +156,8 @@ subroutine m_state_init(s, p, g)
     case (4)
       call init_state_user_4(p, g, s)
     case default
-      print *, "error: undefined f_user_routine_id in list_initial", list%f_user_routine_id
+      write(msg,'(a,i0)') "error: undefined f_user_routine_id in list_initial", list%f_user_routine_id
+      call par_stop(msg)
   end select
 
   ! 初期水位をセット
@@ -168,8 +171,7 @@ subroutine m_state_init(s, p, g)
     end do
   end do
   if (s%n_valcells <= 0) then
-    print *, "No valid cell in the entire domain"
-    stop
+    call par_stop("No valid cell in the entire domain")
   end if
 
   ! 画面表示用の変数を初期化
@@ -182,7 +184,8 @@ subroutine m_state_init(s, p, g)
   sp%count_disp = 0
 
   ! 状態ログファイルをオープン
-  s%un_log = open_logfile()
+  !   ログファイルを出力するのはランクゼロのみ
+  if (is_root) s%un_log = open_logfile()
 
   s%initialized = .true.
 
@@ -296,10 +299,13 @@ subroutine m_state_printstate(p, s)
   integer :: digi1, digi2, digi3
   real :: hmean
 
+  if (.not. is_root) return
+
   ! 凡例を表示
   if (mod(sp%count_disp, 36) == 0) then
     print *, "t, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
     write(s%un_log, *) "t, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
+    flush(s%un_log)
   end if
 
   progress = (s%it) / real(p%nt) * 100
@@ -312,6 +318,7 @@ subroutine m_state_printstate(p, s)
   fmt = '(a," ",f5.1,"%",' //trim(fmt0)// '," ",f5.1,"%",i7,*(f10.4))'
   print fmt, s%ctime, progress, hmean, sp%runger, sp%n_exf, sp%h, sp%vv, sp%qq, sp%cn
   write(s%un_log, fmt) s%ctime, progress, hmean, sp%runger, sp%n_exf, sp%h, sp%vv, sp%qq, sp%cn
+  flush(s%un_log)
 
   ! 画面出力用の最大値のリセット
   sp%h = 0
@@ -400,9 +407,10 @@ subroutine fill_depression(p, g, s, list)
 
   if (p%initialized) continue
 
-  !print *, "filling depressions"
-  write(6, '(a)', advance='no') " filling depressions "
-  flush(6)
+  if (is_root) then
+    write(6, '(a)', advance='no') " filling depressions "
+    flush(6)
+  end if
 
   ! 対象セルに初期水深を与える
   do j = g%wy(1), g%wy(2)
@@ -451,8 +459,6 @@ subroutine fill_depression(p, g, s, list)
 
       end do
     end do
-    !if (mod(l, 100)) print *, l, nadj
-    !print *, l, nadj
     if (nadj == 0) exit
   end do
 
