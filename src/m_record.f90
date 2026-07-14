@@ -3,6 +3,7 @@ module m_record
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
+  use m_parallel, only : is_root
   use list_record, only : t_list_record, list_record_read
   implicit none
   private
@@ -43,7 +44,7 @@ module m_record
   end type
 
   type t_record
-    logical :: initialized
+    logical :: initialized = .false.
     real :: ss0                            ! 領域内の水の総量の初期値
     real :: ss                             ! 領域内の水の総量
     integer :: npb                         ! プローブ計測の測点の数
@@ -72,6 +73,8 @@ subroutine m_record_init(r, p, g)
   integer :: flxyfile
   integer :: flxytype
   real :: flxy(1:4,1:nflmax) = -9999
+
+  if (.not. is_root) return
 
   if (len_trim(p%fn_record) > 0) then
     !---- 設定ファイルを読み込む ----
@@ -472,6 +475,8 @@ subroutine m_record_probe(r, p, s)
   character(len=80) :: afmt
   if (p%initialized) continue
 
+  if (.not. r%initialized) return
+
   do ipb = 1, r%npb
     un = r%probe(ipb)%un
     ix = r%probe(ipb)%ixy(1)
@@ -522,6 +527,8 @@ subroutine m_record_flux(r, p, s)
   character(len=80) :: afmt
   type(t_flux) :: flx
   if (p%initialized) continue
+
+  if (.not. r%initialized) return
 
   do ifl = 1, r%nfl
     flx = r%flux(ifl)
@@ -576,6 +583,8 @@ subroutine m_record_summary(r, p)
   integer :: un
   integer :: i
   character(len=80) :: fn_smry
+
+  if (.not. r%initialized) return
 
   if (r%npb <= 0 .and. r%nfl <= 0) return
 

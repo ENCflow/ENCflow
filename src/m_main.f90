@@ -43,14 +43,17 @@ subroutine m_main_all(fn_sysparam)
   type(t_state) :: s
   type(t_record) :: r
   type(t_swflow) :: sw
+  integer :: ierror
 
   ! MPIを初期化
   call par_init()
 
   ! システムを初期化
   call m_sysparam_init(p, fn_sysparam)    ! sysparam を初期化
-  call sysdep_create_resultdir(p)         ! 結果を保存するディレクトリを作成
-  call sysdep_save_paramfile(p)           ! パラメータファイルを保存
+  if (is_root) then
+    call sysdep_create_resultdir(p)         ! 結果を保存するディレクトリを作成
+    call sysdep_save_paramfile(p)           ! パラメータファイルを保存
+  end if
 
   ! モジュールを初期化
   call m_geoinfo_init(g, p)               ! geoinfo を初期化
@@ -62,7 +65,7 @@ subroutine m_main_all(fn_sysparam)
   call m_swflow_init(sw, p, g, s)         ! swflow を初期化
 
   ! 計算実行
-  call run_main(p, g, b, pr, s, r, sw)    ! 計算本体
+  call run_main(p, g, b, pr, s, r, sw, ierror)  ! 計算本体
 
   ! モジュールを破棄
   call m_swflow_dispose(sw, p)
@@ -77,6 +80,12 @@ subroutine m_main_all(fn_sysparam)
   ! MPIを終了
   call par_finalize()
 
+  ! エラーがあった場合は異常終了コードを返して停止
+  ! (error stop でなく、dispose と par_finalize を通してから stop する)
+  if (ierror > 0) then
+    stop 1
+  end if
+
 end subroutine
 
 
@@ -87,7 +96,7 @@ end subroutine
 !----------------------------------------------------------------------
 ! 計算本体
 !----------------------------------------------------------------------
-subroutine run_main(p, g, b, pr, s, r, sw)
+subroutine run_main(p, g, b, pr, s, r, sw, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
@@ -95,12 +104,15 @@ subroutine run_main(p, g, b, pr, s, r, sw)
   type(t_state), intent(inout) :: s
   type(t_record), intent(inout) :: r
   type(t_swflow), intent(in) :: sw
-  integer :: ierror
+  integer, intent(out) :: ierror
   integer :: it            ! 時間ループのカウント
   integer :: ifn           ! 出力ファイル番号
 
-  print *, "number of threads :", p%num_threads
-  print *, "number of valid cells :", s%n_valcells
+  if (is_root) then
+    print *, "number of processes :", nproc
+    print *, "number of threads :", p%num_threads
+    print *, "number of valid cells :", s%n_valcells
+  end if
 
 
   it = 0
@@ -108,11 +120,15 @@ subroutine run_main(p, g, b, pr, s, r, sw)
   call m_state_updatetime(s, p, it)       ! 時刻情報を初期化
   call m_precip_makepre(pr, p, g, s)      ! 初期降水分布を作成　
   call m_state_calcstat(s, p, g)          ! 統計情報を計算
-  call m_state_printstate(p, s)           ! 途中経過を画面に出力
-  call open_fnolist(p)                    ! ファイル番号リストをオープン　
-  call output(p, g, s, ifn)               ! 初期状態をファイル出力
-  call m_record_probe(r, p, s)            ! プローブの値を出力
-  call m_record_flux(r, p, s)             ! フラックスの値を出力
+
+  ! 初期状態の出力(ファイルへの書き込みはランク0のみ)
+  if (is_root) then
+    call m_state_printstate(p, s)         ! 途中経過を画面に出力
+    call open_fnolist(p)                  ! ファイル番号リストをオープン　
+    call output(p, g, s, ifn)             ! 初期状態をファイル出力
+    call m_record_probe(r, p, s)          ! プローブの値を出力
+    call m_record_flux(r, p, s)           ! フラックスの値を出力
+  end if
   ierror = 0
 
   ! デバッグ用データ出力
@@ -144,6 +160,10 @@ subroutine run_main(p, g, b, pr, s, r, sw)
     ! 統計情報を計算
     call m_state_calcstat(s, p, g)
 
+
+    ! --- 途中経過とファイルへの出力(ランク0のみ) ---
+    if (is_root) then
+
     ! dt_disp 間隔で途中経過を画面に出力
     if (mod(it, p%idt_disp) == 0) then
       call m_state_printstate(p, s)
@@ -161,32 +181,47 @@ subroutine run_main(p, g, b, pr, s, r, sw)
      call m_record_flux(r, p, s)
     endif
 
+    end if ! (is_root)
+
+
+    ! --- エラー判定(全ランクで同一の判定を行い、同時にループを抜ける) ---
+    ! 注意: 判定は必ず全ランクで実行すること。ランク0だけが exit すると
+    !       他ランクが回り続け、par_finalize で整合しなくなる。
+    ! TODO: 領域分割後は s%cnmax と ierror が局所値になるため、
+    !       この直前に全ランク最大値の allreduce を入れること。
+
     ! CFL条件のチェック
     if (p%f_check_cfl > 0 .and. s%cnmax > 1.) then
-      print *, "********************************************"
-      print *, "******** Courant number exceeds 1.0 ********"
-      print *, "********************************************"
-      call m_state_printstate(p, s)
+      if (is_root) then
+        print *, "********************************************"
+        print *, "******** Courant number exceeds 1.0 ********"
+        print *, "********************************************"
+        call m_state_printstate(p, s)
+      end if
       ierror = ierror + 1
     end if
 
     ! オーバーフローを回避するためにチェック
     if (s%cnmax > 100.) then
-      print *, "**********************************************************************"
-      print *, "******** Unrealistic calculation (Courant number exceeds 100) ********"
-      print *, "**********************************************************************"
+      if (is_root) then
+        print *, "**********************************************************************"
+        print *, "******** Unrealistic calculation (Courant number exceeds 100) ********"
+        print *, "**********************************************************************"
+      end if
       ierror = ierror + 1
     end if
 
     ! サブルーチンからのエラーも含めてエラーがあれば終了
     if (ierror > 0) then
-      call m_state_printstate(p, s)
+      if (is_root) call m_state_printstate(p, s)
       exit
     end if
 
   end do
   !------ 時間ステップのループここまで ------
 
+
+  if (is_root) then
 
   ! 最終状態を出力
   call output(p, g, s, 9998)
@@ -197,10 +232,10 @@ subroutine run_main(p, g, b, pr, s, r, sw)
   ! 最大流量の一覧を出力
   call m_record_summary(r, p)
 
-  ! エラーがあった場合は異常終了コードを返して停止
-  if (ierror > 0) then
-    error stop 1
-  end if
+  end if ! (is_root)
+
+  ! エラー処理は m_main_all 側で行う(dispose と par_finalize を通すため
+  ! ここでは error stop しない。ierror を返すのみ)
 
 end subroutine
 
