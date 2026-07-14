@@ -17,8 +17,8 @@
 #       make MODE=mpi
 #   でも上書きできる(トップレベル Makefile 経由でも全体に伝播する)
 # ---------------------------------------------------------------
-#MODE	= serial
-MODE	= mpi
+MODE	= serial
+#MODE	= mpi
 
 # ---------------------------------------------------------------
 # コンパイラ本体(FC)と MPI ラッパー(FC_MPI)
@@ -35,7 +35,7 @@ FFLAGS	= -g -fopenmp -warn all -fpe0 -O3 -ipo -fp-model fast -r8
 #FC_MPI	= mpifort.mpich
 #FC_MPI	= mpifort.openmpi
 #FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -fdefault-real-8 -fdefault-double-8
-#FFLAGS	= -g -Og -fcheck=all -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8 -fdefault-double-8 -Wno-conversion
+#FFLAGS	= -g -Og -fcheck=all -fbacktrace -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8 -fdefault-double-8 -Wno-conversion -finit-real=snan -finit-integer=-88888888
 #LDFLAGS =
 
 #FC	= nvfortran
