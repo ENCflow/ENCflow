@@ -4,7 +4,7 @@
 !
 !**********************************************************************
 module m_ffactor
-  !use iso_fortran_env
+  use m_parallel, only : par_stop
   implicit none
   private
 
@@ -51,28 +51,29 @@ subroutine m_ffactor_init(level, hmin, hmax, mode)
   integer, intent(in) :: level
   real, intent(in) :: hmin, hmax
   character(len=2), intent(in) :: mode
+  character(len=256) :: msg
 
   if (mode == 'uv' .or. mode == 'UV') then
     powf = 4. / 3.
   else if (mode == 'mn' .or. mode == 'MN') then
     powf = 7. / 3.
   else
-    print *, "ffactor_init: unknown mode", mode
-    stop
+    write(msg,'(a,i0)') "ffactor_init: unknown mode", mode
+    call par_stop(msg)
   end if
 
   if (hmin <= 0) then
-    print *, "ffactor_init: hmin is out of range", hmin
-    stop
+    write(msg,'(a,i0)') "ffactor_init: hmin is out of range", hmin
+    call par_stop(msg)
   end if
   if (hmax <= hmin) then
-    print *, "ffactor_init: hmax is out of range", hmax
-    stop
+    write(msg,'(a,i0)') "ffactor_init: hmax is out of range", hmax
+    call par_stop(msg)
   end if
 
   if (level < 0 .or. level > 5) then
-    print *, "ffactor_init: level is out of range", level
-    stop
+    write(msg,'(a,i0)') "ffactor_init: level is out of range", level
+    call par_stop(msg)
   end if
 
   if (level > 0) then
@@ -207,7 +208,7 @@ function ffactor_uninitialized(h) result(f)
   real, intent(in) :: h
   real :: f
   f = 1 / h**(powf)
-  print *, "ffactor: uninitialized"
+  call par_stop("ffactor: uninitialized")
   stop
 end function
 

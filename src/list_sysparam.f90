@@ -1,4 +1,5 @@
 module list_sysparam
+  use m_parallel, only : par_info
   implicit none
   private
 
@@ -249,7 +250,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   dir_result = list%dir_result
   outfn_suffix = list%outfn_suffix
 
-  print *, "reading list_sysparam in ", trim(fn_sysparam)
+  call par_info("reading list_sysparam in "//trim(fn_sysparam))
   open(newunit=un, file=trim(fn_sysparam), status='old')
   read(un, list_sysparam)
   close(un)

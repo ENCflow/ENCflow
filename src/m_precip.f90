@@ -6,6 +6,7 @@ module m_precip
   use m_util, only : util_str2sec
   use m_fileio
   use list_precip, only : t_list_precip, list_precip_read
+  use m_parallel, only : par_info
   implicit none
   private
 
@@ -155,7 +156,7 @@ subroutine set_maplist
 
   ! 分布リストの行数をカウント
   fname = trim(p%dir_data)//"/"//trim(list%fn_maplist)
-  print *, " reading precipitation map list ", trim(fname)
+  call par_info(" reading precipitation map list "//trim(fname))
   open(newunit=un, file=trim(fname), status='old')
   n = 0
   do 
@@ -170,7 +171,7 @@ subroutine set_maplist
   do i = 1, n
     read(un, '(a256)') mapname
     fname_map = trim(p%dir_data)//"/"//trim(mapname)
-    print *, " checking precipitaiton map ", trim(fname_map)
+    call par_info(" checking precipitaiton map "//trim(fname_map))
     pr%un_maplist(i) = fileio_un_open(fname_map, p%f_input_mode)
   end do
   close(un)

@@ -1,5 +1,6 @@
 module list_tide
   use m_sysparam, only : t_sysparam
+  use m_parallel, only : par_info
   implicit none
   private
 
@@ -40,7 +41,7 @@ subroutine list_tide_read(p, list)
   tival = list%tival
 
   !---- 設定ファイルを読み込む ----
-  print *, "reading list_tide in ", trim(p%fn_tide)
+  call par_info("reading list_tide in "//trim(p%fn_tide))
   open(newunit=un, file=trim(p%fn_tide), status='old')
   read(un, list_tide)
   close(un)

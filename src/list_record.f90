@@ -1,6 +1,7 @@
 !======================================================================
 module list_record
   use m_sysparam, only : t_sysparam
+  use m_parallel, only : par_info
   implicit none
   private
 
@@ -64,7 +65,7 @@ subroutine list_record_read(p, list)
   flxy = list%flxy
 
   !---- 設定ファイルを読み込む ----
-  print *, "reading list_record in ", trim(p%fn_record)
+  call par_info("reading list_record in "//trim(p%fn_record))
   open(newunit=un, file=trim(p%fn_record), status='old')
   read(un, list_record)
   close(un)

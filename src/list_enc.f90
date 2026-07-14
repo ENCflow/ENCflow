@@ -1,5 +1,6 @@
 module list_enc
   use m_sysparam, only : t_sysparam
+  use m_parallel, only : par_info
   implicit none
   private
 
@@ -63,7 +64,7 @@ subroutine list_enc_read(p, list)
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
-  print *, "reading list_enc in ", trim(p%fn_enc)
+  call par_info("reading list_enc in "//trim(p%fn_enc))
   open(newunit=un, file=trim(p%fn_enc), status='old')
   read(un, list_enc)
   close(un)

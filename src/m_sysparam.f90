@@ -1,6 +1,7 @@
 module m_sysparam
   use list_sysparam, only : t_list_sysparam, list_sysparam_read
   use m_util, only : util_str2sec
+  use m_parallel, only : par_stop
   implicit none
   private
 
@@ -177,7 +178,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   if (len(trim(list%et_recrd_c)) > 0) p%et_recrd = util_str2sec(list%et_recrd_c, "bad et_recrd_c in &list_sysparam")
 
   if (p%dt == 0.0) then
-    print *, 'error: dt = 0.0'
+    call par_stop("error: dt = 0.0")
     stop
   end if
 

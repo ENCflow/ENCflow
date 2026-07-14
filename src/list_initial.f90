@@ -1,5 +1,6 @@
 module list_initial
   use m_sysparam, only : t_sysparam
+  use m_parallel, only : par_info
   implicit none
   private
 
@@ -53,7 +54,7 @@ subroutine list_initial_read(p, list)
   v0 = list%v0 
   h0_rw = list%h0_rw 
 
-  print *, "reading list_initial in ", trim(p%fn_initial)
+  call par_info("reading list_initial in "//trim(p%fn_initial))
   open(newunit=un, file=trim(p%fn_initial), status='old')
   read(un, list_initial)
   close(un)

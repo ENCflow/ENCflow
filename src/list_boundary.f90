@@ -1,5 +1,6 @@
 module list_boundary
   use m_sysparam, only : t_sysparam
+  use m_parallel, only : par_info
   implicit none
   private
 
@@ -49,7 +50,7 @@ subroutine list_boundary_read(p, list)
   fn_srcval = list%fn_srcval
 
   !---- 設定ファイルを読み込む ----
-  print *, "reading list_boundary in ", trim(p%fn_boundary)
+  call par_info("reading list_boundary in "//trim(p%fn_boundary))
   open(newunit=un, file=trim(p%fn_boundary), status='old')
   read(un, list_boundary)
   close(un)

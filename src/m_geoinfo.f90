@@ -3,6 +3,7 @@ module m_geoinfo
   use m_sysparam, only : t_sysparam
   use list_geoinfo, only : t_list_geoinfo, list_geoinfo_read
   use m_fileio
+  use m_parallel, only : par_info
   implicit none
   private
 
@@ -189,7 +190,7 @@ subroutine read_sw(p, g, list)
 
   if (len_trim(list%fn_sw) > 0) then
     fname = trim(p%dir_data) // "/" // trim(list%fn_sw)
-    print *, "reading ", fname
+    call par_info(" reading "//fname)
     call fileio_read_matrix(fname, g%nx, g%ny, g%sw, p%f_input_mode)
   end if
 
@@ -213,7 +214,7 @@ subroutine read_mask(p, g, list)
     ! 流域マスクを指定の場合
     ! ファイルから読み込む
     fname = trim(p%dir_data) // "/" // trim(list%fn_mask)
-    print *, "reading ", fname
+    call par_info(" reading "//fname)
     call fileio_read_matrix(fname, g%nx, g%ny, a, p%f_input_mode)
         block
         integer :: i, j
@@ -331,7 +332,7 @@ subroutine read_z(p, g, list)
     g%z = list%z0 * list%mag_z
   else
     fname = trim(p%dir_data) // "/" // trim(list%fn_z)
-    print *, "reading ", fname
+    call par_info(" reading "//fname)
     call fileio_read_matrix(fname, g%nx, g%ny, g%z, p%f_input_mode)
     g%z(:,:) = g%z(:,:) * list%mag_z
   end if
@@ -359,7 +360,7 @@ subroutine read_lu(p, g, list)
     g%lu = 0
   else
     fname = trim(p%dir_data) // "/" // trim(list%fn_luse)
-    print *, "reading ", fname
+    call par_info(" reading "//fname)
     call fileio_read_matrix(fname, g%nx, g%ny, g%lu, p%f_input_mode)
   end if
 
@@ -376,7 +377,7 @@ subroutine read_rw(p, g, list)
 
   if (len_trim(list%fn_rw) > 0) then
     fname = trim(p%dir_data) // "/" // trim(list%fn_rw)
-    print *, "reading ", fname
+    call par_info(" reading "//fname)
     call fileio_read_matrix(fname, g%nx, g%ny, g%rw, p%f_input_mode)
   end if
 
@@ -394,13 +395,13 @@ subroutine read_gvbb(p, g, list)
 
   if (len_trim(list%fn_gv) > 0) then
     fname = trim(p%dir_data) // "/" // trim(list%fn_gv)
-    print *, "reading ", fname
+    call par_info(" reading "//fname)
     call fileio_read_matrix(fname, g%nx, g%ny, g%gv, p%f_input_mode)
   end if
 
   if (len_trim(list%fn_bb) > 0) then
     fname = trim(p%dir_data) // "/" // trim(list%fn_bb)
-    print *, "reading ", fname
+    call par_info(" reading "//fname)
     call fileio_read_matrix(fname, g%nx, g%ny, g%bb, p%f_input_mode)
   end if
 
@@ -431,7 +432,7 @@ subroutine read_rn(p, g, list)
     g%rn = list%rn0
   else if (list%f_rntype == 1) then
     fname = trim(p%dir_data) // "/" // trim(list%fn_rn)
-    print *, "reading ", fname
+    call par_info(" reading "//fname)
     call fileio_read_matrix(fname, g%nx, g%ny, g%rn, p%f_input_mode)
   else
     ! 土地利用と粗度係数の関係の数をカウントする

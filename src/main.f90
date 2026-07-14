@@ -27,7 +27,6 @@ subroutine get_fn_param(fn_param)
   !--- コマンドライン引数取得の準備 ---
   argc = command_argument_count()            ! 引数の数を取得
   allocate(arg(0:argc))                      ! 構造体のメモリを確保
-  !print *, argc
 
   !--- コマンドライン引数を取得 ---
   get_arguments: block
@@ -36,7 +35,6 @@ subroutine get_fn_param(fn_param)
       call get_command_argument(number=i, length=l)         ! i番目の引数の長さを取得
       allocate(character(l) :: arg(i)%v)                    ! 構造体中の文字列用メモリを確保
       call get_command_argument(number=i, value=arg(i)%v)   ! 引数の文字列を取得
-      !print *, i, arg(i)%v
     end do
   end block get_arguments
 

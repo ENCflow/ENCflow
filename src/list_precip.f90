@@ -1,5 +1,6 @@
 module list_precip
   use m_sysparam, only : t_sysparam
+  use m_parallel, only : par_info
   implicit none
   private
 
@@ -64,7 +65,7 @@ subroutine list_precip_read(p, list)
   runoff_rate = list%runoff_rate
 
   !---- 設定ファイルを読み込む ----
-  print *, "reading list_precip in ", trim(p%fn_precip)
+  call par_info("reading list_precip in "//trim(p%fn_precip))
   open(newunit=un, file=trim(p%fn_precip), status='old')
   read(un, list_precip)
   close(un)

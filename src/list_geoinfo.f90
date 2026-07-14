@@ -1,6 +1,7 @@
 !======================================================================
 module list_geoinfo
   use m_sysparam, only : t_sysparam
+  use m_parallel, only : par_info
   implicit none
   private
 
@@ -117,7 +118,7 @@ subroutine list_geoinfo_read(p, list)
   fn_bb = list%fn_bb
   lu2rn = list%lu2rn
 
-  print *, "reading list_geoinfo in ", trim(p%fn_geoinfo)
+  call par_info("reading list_geoinfo in "//trim(p%fn_geoinfo))
   open(newunit=un, file=trim(p%fn_geoinfo), status='old')
   read(un, list_geoinfo)
   close(un)

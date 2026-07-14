@@ -1,4 +1,5 @@
 module m_util
+  use m_parallel, only : par_stop
   implicit none
   private
 
@@ -60,16 +61,14 @@ function util_str2sec(str, message) result(t)
   end if
 
   if (ierr > 0) then
-    print *, "Error, ", message
-    stop
+    call par_stop("Error, "//message)
   end if
 
   if (isnumber(s(1:ll))) then
     read(s(1:ll), *) t
     t = t * c
   else
-    print *, "Error, ", message
-    stop
+    call par_stop("Error, "//message)
   end if
 end function
 
@@ -94,61 +93,3 @@ function isnumber(str) result(r)
 end function
 
 end module
-
-!=======================================================================
-!=======================================================================
-!
-!program tadada
-!  use m_datetime
-!  real :: t
-!  character(len=256) :: str
-!
-!  call get_arg(str)
-!  t = str2sec(str, "Wwwwwww")
-!  print *, t
-!
-!
-!contains
-!!----------------------------------------------------------------------
-!! コマンドライン引数から文字列を取得
-!!----------------------------------------------------------------------
-!subroutine get_arg(str)
-!  character(len=*) :: str
-!
-!  ! コマンドライン引数の文字列を保存する構造体の宣言
-!  !  可変長文字列の配列が直接作れないため構造体の配列を利用
-!  type :: arguments
-!    character(:), allocatable :: v           ! 無指定文字長（可変長）文字列変数vを要素に持つ
-!  end type
-!
-!  ! コマンドライン引数の数と文字列
-!  integer :: argc
-!  type(arguments), allocatable :: arg(:)
-!
-!  
-!  !--- コマンドライン引数取得の準備 ---
-!  argc = command_argument_count()            ! 引数の数を取得
-!  allocate(arg(0:argc))                      ! 構造体のメモリを確保
-!  !print *, argc
-!
-!  !--- コマンドライン引数を取得 ---
-!  get_arguments: block
-!    integer :: i, l
-!    do i = 0, argc
-!      call get_command_argument(number=i, length=l)         ! i番目の引数の長さを取得
-!      allocate(character(l) :: arg(i)%v)                    ! 構造体中の文字列用メモリを確保
-!      call get_command_argument(number=i, value=arg(i)%v)   ! 引数の文字列を取得
-!      !print *, i, arg(i)%v
-!    end do
-!  end block get_arguments
-!
-!  if (argc >= 1) then
-!    str = arg(1)%v
-!    !print *, "get_str: str = ", str
-!  else
-!    print ('(a, a, a)'), "usage: ", arg(0)%v, " strings"
-!    stop
-!  end if
-!end subroutine
-!
-!end program
