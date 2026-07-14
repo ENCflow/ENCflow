@@ -455,6 +455,9 @@ end subroutine
 subroutine m_record_dispose(r)
   type(t_record), intent(inout) :: r
   integer :: i
+
+  if (.not. r%initialized) return
+
   do i = 1, r%npb
     close(r%probe(i)%un)
   end do
