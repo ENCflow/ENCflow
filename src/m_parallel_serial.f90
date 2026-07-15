@@ -37,18 +37,21 @@ contains
       ! 進捗・情報メッセージ: 標準出力に表示
       character(*), intent(in) :: msg
       write(output_unit,'(a)') trim(msg)
+      flush(output_unit)
    end subroutine par_info
 
    subroutine par_warn(msg)
       ! 局所的な警告: 標準エラーに表示(停止しない)
       character(*), intent(in) :: msg
       write(error_unit,'(2a)') 'WARNING: ', trim(msg)
+      flush(error_unit)
    end subroutine par_warn
 
    subroutine par_stop(msg)
       ! 決定的エラー用: 表示して終了コード1で停止
       character(*), intent(in) :: msg
       write(error_unit,'(2a)') 'ERROR: ', trim(msg)
+      flush(error_unit)
       stop 1
    end subroutine par_stop
 
@@ -56,6 +59,7 @@ contains
       ! 局所エラー用: 表示して即時停止
       character(*), intent(in) :: msg
       write(error_unit,'(2a)') 'ABORT: ', trim(msg)
+      flush(error_unit)
       error stop
    end subroutine par_abort
 

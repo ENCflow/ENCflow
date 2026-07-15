@@ -49,6 +49,7 @@ contains
       if (iprov < MPI_THREAD_FUNNELED) then
          write(error_unit,'(a,i0)') &
             'ERROR: MPI thread support insufficient: ', iprov
+         flush(error_unit)
          call MPI_Abort(MPI_COMM_WORLD, 1)
       end if
       call MPI_Comm_rank(MPI_COMM_WORLD, nrank)
@@ -63,13 +64,17 @@ contains
    subroutine par_info(msg)
       ! 進捗・情報メッセージ: ランク0のみ標準出力に表示
       character(*), intent(in) :: msg
-      if (is_root) write(output_unit,'(a)') trim(msg)
+      if (is_root) then
+         write(output_unit,'(a)') trim(msg)
+         flush(output_unit)
+      end if
    end subroutine par_info
 
    subroutine par_warn(msg)
       ! 局所的な警告: 検出したランクがランク番号付きで表示(停止しない)
       character(*), intent(in) :: msg
       write(error_unit,'(a,i0,2a)') 'WARNING (rank ', nrank, '): ', trim(msg)
+      flush(error_unit)
    end subroutine par_warn
 
    subroutine par_stop(msg)
@@ -77,7 +82,10 @@ contains
       ! 必ず全ランクが揃って呼ぶこと(collective)。
       ! ランク0が表示し、finalize を通して終了コード1で停止する。
       character(*), intent(in) :: msg
-      if (is_root) write(error_unit,'(2a)') 'ERROR: ', trim(msg)
+      if (is_root) then
+         write(error_unit,'(2a)') 'ERROR: ', trim(msg)
+         flush(error_unit)
+      end if
       call MPI_Barrier(MPI_COMM_WORLD)
       call MPI_Finalize()
       stop 1
@@ -88,6 +96,7 @@ contains
       ! ランク番号付きで表示して全ランクを即時強制終了する。
       character(*), intent(in) :: msg
       write(error_unit,'(a,i0,2a)') 'ABORT (rank ', nrank, '): ', trim(msg)
+      flush(error_unit)
       call MPI_Abort(MPI_COMM_WORLD, 1)
    end subroutine par_abort
 
