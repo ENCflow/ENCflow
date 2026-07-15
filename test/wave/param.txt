@@ -4,9 +4,9 @@
 &list_sysparam
   f_gridsystem = 0          ! 格子システム(0:ENC, 1:STG)
   f_govequation = 0         ! 基礎方程式(0:DynWE, 1:DifWE, 2:KinWE)
-  dt = 0.01                 ! 時間刻み (s)
-  !dt = 0.05                 ! 時間刻み (s)
-  !dt = 0.1                 ! 時間刻み (s)
+  !dt = 0.01                 ! 時間刻み (s)
+  dt = 0.05                 ! 時間刻み (s)
+  !dt = 0.1                  ! 時間刻み (s)
   t0 = 0                    ! 計算開始時刻 (s)
   tt = 8                    ! 計算終了時刻 (s)
   dt_disp = 0.5             ! 画面表示時間刻み (s)
@@ -32,7 +32,7 @@
   f_advection_tvd = 0              ! 移流項のTVD化 (0:無効, 1:有効)
   p_adv_upwind_index = 1.0         ! 風上差分の割合 (0.0 ~ 1.0)
   p_diagratio = 0.578              ! 斜め方向成分の割合 (0.0 ~ 1.0)
-  f_adaptive_runge = 0             ! 適応的ルンゲクッタ(0:無効, 1:有効)
+  f_adaptive_runge = 1             ! 適応的ルンゲクッタ(0:無効, 1:有効)
   p_adprunge_thresh = 1.2          ! 適応的ルンゲクッタの閾値 (1.1 ~)
 /
 
