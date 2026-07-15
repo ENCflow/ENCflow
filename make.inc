@@ -34,15 +34,15 @@ FFLAGS	= -g -fopenmp -warn all -fpe0 -O3 -ipo -fp-model fast -r8
 #FC_MPI	= mpifort
 #FC_MPI	= mpifort.mpich
 #FC_MPI	= mpifort.openmpi
-#FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -fdefault-real-8 -fdefault-double-8 -fcheck=all -fbacktrace
 #FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -fdefault-real-8 -fdefault-double-8
+#FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -fdefault-real-8 -fdefault-double-8 -fcheck=all -fbacktrace
 #FFLAGS	= -g -Og -fcheck=all -fbacktrace -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8 -fdefault-double-8 -Wno-conversion -finit-real=snan -finit-integer=-88888888
 #LDFLAGS =
 
 #FC	= nvfortran
 #FC_MPI	= mpif90
-#FFLAGS	= -mp=multicore -Ofast -Minform=inform -Ktrap=divz,ovf -Mr8
-#FFLAGS	= -gopt -mp=multicore -Ofast -Mbounds -Mchkptr -Mchkstk -Minform=inform -Ktrap=divz,ovf -Mr8
+#FFLAGS	= -gopt -mp=multicore -Ofast -Minform=inform -Ktrap=divz,ovf -Mr8
+#FFLAGS	= -gopt -mp=multicore -Ofast -Minform=inform -Ktrap=divz,ovf -Mr8 -Mbounds -Mchkptr -Mchkstk 
 #LDFLAGS =
 
 #FC	= flang-20
