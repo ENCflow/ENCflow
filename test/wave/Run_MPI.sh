@@ -10,7 +10,7 @@
 # --- ケース固有の設定(必要に応じて) ---
 #export PARAM=param.txt
 #export FILES="Log.txt"
-export ULP=1      # 印字の誤差の許容桁数
+export ULP=1      # 印字の最終桁を単位とした許容誤差
 #export MPIRUN_OPTS="--oversubscribe"
 
 #export OMP_NUM_THREADS=6
