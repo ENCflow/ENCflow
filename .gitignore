@@ -21,6 +21,7 @@ Backup
 # --- run outputs / generated results ---
 result/
 result_*/
+Screen.log
 *.png
 
 # --- OS / editor ---
