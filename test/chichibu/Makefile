@@ -24,7 +24,7 @@ $(BIN):
 
 clean:
 	rm -rf result
-	rm -f a.out Log.txt *.png
+	rm -f a.out Screen.log *.png
 
 cleanref:
 	rm -rf reference

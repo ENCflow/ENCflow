@@ -25,7 +25,7 @@ $(BIN):
 
 clean:
 	rm -rf result
-	rm -f a.out Log.txt
+	rm -f a.out Screen.log
 
 cleanref:
 	rm -rf reference
