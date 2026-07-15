@@ -340,12 +340,18 @@ end subroutine
 subroutine prepare(p, g, s, sx)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(inout) :: s
+  type(t_state), intent(in) :: s
   type(t_enc_status), intent(inout) :: sx
+  integer :: i, j
   if (p%initialized) continue
-  if (g%initialized) continue
   if (s%initialized) continue
-  sx%mn0(:,:,:) = sx%mn(:,:,:)
+  !$omp parallel do private(i, j)
+  do j = g%wy(1), g%wy(2)
+    do i = g%wx(1,j), g%wx(2,j)
+      sx%mn0(1:4,i,j) = sx%mn(1:4,i,j)
+    end do
+  end do
+  !$omp end parallel do
 end subroutine
 
 
@@ -840,8 +846,6 @@ subroutine complete(p, g, s, sx)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   type(t_enc_status), intent(in) :: sx
-  !real a, b
-
   integer :: i, j 
   if (p%initialized) continue
 
