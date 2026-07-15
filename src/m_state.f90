@@ -296,7 +296,7 @@ subroutine m_state_printstate(p, s)
   type(t_sysparam), intent(in) :: p
   type(t_state), intent(inout) :: s
   real :: progress      ! 進行割合(%)
-  character(len=80) :: fmt, fmt0
+  character(len=256) :: fmt, fmt0
   character(len=256) :: msg
   integer :: digi1, digi2, digi3
   real :: hmean
@@ -305,8 +305,8 @@ subroutine m_state_printstate(p, s)
 
   ! 凡例を表示
   if (mod(sp%count_disp, 36) == 0) then
-    call par_info("t, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max")
-    write(s%un_log, '(a)') "t, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
+    call par_info("time, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max")
+    write(s%un_log, '(a)') "time, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
     flush(s%un_log)
   end if
 
