@@ -73,7 +73,7 @@ subroutine m_geoinfo_init(g, p)
   type(t_sysparam), intent(inout) :: p             ! システムパラメータ構造体
   type(t_geoinfo), intent(out) :: g             ! 地理情報構造体
   type(t_list_geoinfo) :: list                     ! パラメータファイル中の変数
-  character(len=256) :: msg
+  character(len=1024) :: msg
 
 
   call list_geoinfo_read(p, list)
@@ -104,7 +104,7 @@ subroutine m_geoinfo_init(g, p)
       call init_geoinfo_user_5(p, g)
     case default
       write(msg,'(a,i0)') "error: undefined f_user_routine_id in list_geoinfo", list%f_user_routine_id
-      call par_stop(msg)
+      call par_stop(trim(msg))
   end select
 
 
@@ -206,7 +206,7 @@ subroutine read_mask(p, g, list)
   type(t_list_geoinfo), intent(in) :: list
   character(:), allocatable :: fname
   integer :: a(1:g%nx,1:g%ny)
-  character(len=256) :: msg
+  character(len=1024) :: msg
 
   if (list%f_masktype == 0) then
     ! マスク無しを指定の場合
@@ -224,7 +224,7 @@ subroutine read_mask(p, g, list)
           do i = 1, g%nx
             if (a(i,j) /= 0 .and. a(i,j) /= 1) then
               write(msg,'(a,3i7)') "list_geoinfo: invalid data in mask data", i, j, a(i,j)
-              call par_stop(msg)
+              call par_stop(trim(msg))
             end if
           end do
         end do
@@ -240,7 +240,7 @@ subroutine read_mask(p, g, list)
   else
     ! 不正なマスクタイプ
     write(msg,'(a,i0)') "list_geoinfo: unknown mask type", list%f_masktype
-    call par_stop(msg)
+    call par_stop(trim(msg))
   end if
 
 
@@ -428,7 +428,7 @@ subroutine read_rn(p, g, list)
   integer :: nluse
   integer :: i, j
   character(:), allocatable :: fname
-  character(len=256) :: msg
+  character(len=1024) :: msg
 
   if (list%f_rntype == 0) then
     g%lu = 0
@@ -454,7 +454,7 @@ subroutine read_rn(p, g, list)
         if (g%rn(i,j) < 0) then
           write(msg,'(a,i3,a,i0,a,i0,a)') &
                 "error in geoinfo: landuse categoly", g%lu(i,j), " at", i, ",", j, " not found in lu2rn"
-          call par_stop(msg)
+          call par_stop(trim(msg))
         end if
       end do
     end do

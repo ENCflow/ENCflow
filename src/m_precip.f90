@@ -45,7 +45,7 @@ subroutine m_precip_init(pr, p)
   type(t_list_precip) :: list
   integer :: prtype
   real, allocatable :: prval(:,:)
-  character(len=256) :: msg
+  character(len=1024) :: msg
 
   !--- システムパラメータファイル内で設定ファイルが指定されている場合 ---
   if (len_trim(p%fn_precip) > 0) then
@@ -66,7 +66,7 @@ subroutine m_precip_init(pr, p)
     call set_maplist
   else
     write(msg,'(a,i0)') "Error, Unknown prtype in list_precip", prtype
-    call par_stop(msg)
+    call par_stop(trim(msg))
   end if
 
   pr%prtype = prtype
@@ -118,7 +118,7 @@ end subroutine
 subroutine set_prmap
   character(:), allocatable :: fname
   integer :: i, j, have_nan
-  character(len=256) :: msg
+  character(len=1024) :: msg
   if (len_trim(list%fn_prmap) == 0) then
     call par_stop("Error, prtype=2 but fn_prmap is not set" )
   end if
@@ -140,7 +140,7 @@ subroutine set_prmap
   end do
   if (have_nan > 0) then
     write(msg,'(a,i0,a)') "warning: precipitation map has NaN in", have_nan, " cells"
-    call par_info(msg)
+    call par_info(trim(msg))
   end if
 end subroutine
 

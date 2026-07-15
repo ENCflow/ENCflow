@@ -115,7 +115,7 @@ subroutine set_probe(p)
   real :: x, y
   character(len=80) :: fn_pb
   character(len=4) :: cun
-  character(len=256) :: msg
+  character(len=1024) :: msg
 
   !---- プローブ数をカウント ----
   npb = 0
@@ -145,11 +145,11 @@ subroutine set_probe(p)
     end if
     if (ix < 1 .or. ix > p%nx .or. iy < 1 .or. iy > p%ny) then
       write(msg, '("error: probe ",i0," is out of area.",2f15.2,2i7)') i, x, y, ix, iy
-      call par_stop(msg)
+      call par_stop(trim(msg))
     end if
     if (g%x(ix,iy) < 1) then
       write(msg, '("error: probe ",i0," is not in valid area.",2f15.2,2i7)') i, x, y, ix, iy
-      call par_stop(msg)
+      call par_stop(trim(msg))
     end if
     r%probe(i)%xy(1) = x
     r%probe(i)%xy(2) = y
@@ -193,7 +193,7 @@ subroutine set_flux(p)
   real :: wa, wb, ww
   character(len=80) :: fn_fl
   character(len=4) :: cun
-  character(len=256) :: msg
+  character(len=1024) :: msg
   integer :: j
 
   !---- フラックス計測の測線数をカウント ----
@@ -231,19 +231,19 @@ subroutine set_flux(p)
     end if
     if (ix0 < 1 .or. ix0 > p%nx .or. iy0 < 1 .or. iy0 > p%ny) then
       write(msg, '("error: point R of flux ",i0," is out of area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
-      call par_stop(msg)
+      call par_stop(trim(msg))
     end if
     if (ix1 < 1 .or. ix1 > p%nx .or. iy1 < 1 .or. iy1 > p%ny) then
       write(msg, '("error: point L flux ",i0," is out of area.",2f15.2,2i7)') i, x1, y1, ix1, iy1
-      call par_stop(msg)
+      call par_stop(trim(msg))
     end if
     if (g%x(ix0,iy0) < 1) then
       write(msg, '("warning: point R of flux ",i0," is not in valid area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
-      call par_info(msg)
+      call par_info(trim(msg))
     end if
     if (g%x(ix1,iy1) < 1) then
       write(msg, '("warning: point L flux ",i0," is not in valid area.",2f15.2,2i7)') i, x1, y1, ix1, iy1
-      call par_info(msg)
+      call par_info(trim(msg))
     end if
 
 
@@ -256,7 +256,7 @@ subroutine set_flux(p)
     nva = sqrt(nvx**2 + nvy**2)
     if (nva <= 0.0) then
       write(msg,'(a,i0)') "warning: point A == point B then IGNORE, flux No.", i
-      call par_info(msg)
+      call par_info(trim(msg))
       r%flux(i)%xy0(1) = x0
       r%flux(i)%xy0(2) = y0
       r%flux(i)%xy0(3) = x1
@@ -421,7 +421,7 @@ subroutine read_flxy(p, fn_flxy, flxy)
   integer :: un
   integer :: i, n
   integer :: ios
-  character(len=256) :: msg
+  character(len=1024) :: msg
 
   fname = trim(p%dir_data)//"/"//trim(fn_flxy)
   open(newunit=un, file=fname, status='old')
@@ -436,7 +436,7 @@ subroutine read_flxy(p, fn_flxy, flxy)
 
   if (n > nflmax) then
     write(msg,'(a,i0)') "Error: too many flux transect", n
-    call par_stop(msg)
+    call par_stop(trim(msg))
   end if
 
   flxy(:,:) = -9999           ! パラメータファイルの情報を上書きして初期化する

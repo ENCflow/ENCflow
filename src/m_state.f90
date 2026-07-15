@@ -103,7 +103,7 @@ subroutine m_state_init(s, p, g)
   type(t_geoinfo), intent(inout) :: g
   type(t_list_initial) :: list
   integer :: i, j
-  character(len=256) :: msg
+  character(len=1024) :: msg
 
   ! メモリ確保
   allocate(s%h(1:p%nx,1:p%ny), source = 0.0)
@@ -158,7 +158,7 @@ subroutine m_state_init(s, p, g)
       call init_state_user_4(p, g, s)
     case default
       write(msg,'(a,i0)') "error: undefined f_user_routine_id in list_initial", list%f_user_routine_id
-      call par_stop(msg)
+      call par_stop(trim(msg))
   end select
 
   ! 初期水位をセット
@@ -297,7 +297,7 @@ subroutine m_state_printstate(p, s)
   type(t_state), intent(inout) :: s
   real :: progress      ! 進行割合(%)
   character(len=256) :: fmt, fmt0
-  character(len=256) :: msg
+  character(len=1024) :: msg
   integer :: digi1, digi2, digi3
   real :: hmean
 
@@ -319,7 +319,7 @@ subroutine m_state_printstate(p, s)
   write(fmt0, '("f",i2,".",i0)') digi1, digi3
   fmt = '(a," ",f5.1,"%",' //trim(fmt0)// '," ",f5.1,"%",i7,*(f10.4))'
   write(msg, fmt) s%ctime, progress, hmean, sp%runger, sp%n_exf, sp%h, sp%vv, sp%qq, sp%cn
-  call par_info(msg)
+  call par_info(trim(msg))
   write(s%un_log, fmt) s%ctime, progress, hmean, sp%runger, sp%n_exf, sp%h, sp%vv, sp%qq, sp%cn
   flush(s%un_log)
 

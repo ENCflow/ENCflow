@@ -108,14 +108,14 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
   integer, intent(out) :: ierror
   integer :: it            ! 時間ループのカウント
   integer :: ifn           ! 出力ファイル番号
-  character(len=256) :: msg1, msg2, msg3
+  character(len=1024) :: msg1, msg2, msg3
 
   write(msg1,'(a,i0)') "number of processes :", nproc
   write(msg2,'(a,i0)') "number of threads :", p%num_threads
   write(msg3,'(a,i0)') "number of valid cells :", s%n_valcells
-  call par_info(msg1)
-  call par_info(msg2)
-  call par_info(msg3)
+  call par_info(trim(msg1))
+  call par_info(trim(msg2))
+  call par_info(trim(msg3))
 
 
   it = 0
