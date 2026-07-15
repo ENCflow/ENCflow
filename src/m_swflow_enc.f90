@@ -40,8 +40,11 @@ module m_swflow_enc
   type t_enc_status
     real, allocatable :: uv(:,:,:)   ! セル境界での流速(符合は中心セルから近傍セルに向かい正)
     real, allocatable :: mn(:,:,:)   ! セル境界での流量
+    real, allocatable :: mn0(:,:,:)  ! セル境界での更新前流量
     real, allocatable :: h1(:,:)     ! セル中心での計算済み水深
     real, allocatable :: taxy(:,:,:) ! セル中心での移流項(第1添字は1~4，それぞれ風上差分と中心差分のx,y成分)
+    real, allocatable :: ulm(:,:)    ! セル中心でのu*lm (移流項計算用)
+    real, allocatable :: vlm(:,:)    ! セル中心でのv*lm (移流項計算用)
   end type
   type(t_enc_status) :: sx_actual
 
@@ -142,7 +145,7 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
   if (b%initialized) continue
-  !call prepare(p, g, s, sx_actual)
+  call prepare(p, g, s, sx_actual)
   call advection(p, g, s, sx_actual)
   call momentum(p, g, s, sx_actual, ierror)
   call boundary(p, g, b, s, sx_actual)
@@ -281,11 +284,14 @@ subroutine init_enc_status(p, g, s, sx)
   allocate(sx%uv(1:4,0:p%nx,0:p%ny), source = 0.0)
   allocate(sx%h1(1:p%nx,1:p%ny), source = 0.0)
   allocate(sx%mn(1:4,0:p%nx,0:p%ny), source = 0.0)
+  allocate(sx%mn0(1:4,0:p%nx,0:p%ny), source = 0.0)
   if (f_advection_tvd > 0) then
     allocate(sx%taxy(1:4,1:p%nx,1:p%ny), source = 0.0)
   else
     allocate(sx%taxy(1:2,1:p%nx,1:p%ny), source = 0.0)
   end if
+  allocate(sx%ulm(1:p%nx,1:p%ny), source = 0.0)
+  allocate(sx%vlm(1:p%nx,1:p%ny), source = 0.0)
 
   ! 流速の初期条件を設定する
   !$omp parallel do private(i, j, k, in, jn, ie, je, ue, ve)
@@ -325,6 +331,21 @@ subroutine del_enc_status(sx)
   if (allocated(sx%mn)) deallocate(sx%mn)
   if (allocated(sx%h1)) deallocate(sx%h1)
   if (allocated(sx%taxy)) deallocate(sx%taxy)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 
+!----------------------------------------------------------------------
+subroutine prepare(p, g, s, sx)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  type(t_enc_status), intent(inout) :: sx
+  if (p%initialized) continue
+  if (g%initialized) continue
+  if (s%initialized) continue
+  sx%mn0(:,:,:) = sx%mn(:,:,:)
 end subroutine
 
 
@@ -404,7 +425,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   real :: dh
   real :: dhc, dhn
   real :: cor
-  real :: maglim
+  real :: maglim, maglim_inv
 
   ! この文はこの場所になければならない
   have_exflux = .false.
@@ -446,9 +467,10 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   ! 適応的ルンゲクッタ
   !   流速または流量がmaglim倍以上、1/maglim以下、逆方向に変化した場合はルンゲクッタで再計算
   maglim = p_adprunge_thresh
+  maglim_inv = 1.0 / maglim
   if (f_adaptive_runge > 0) then
-    if ((mne >= 0 .and. (mne1 > mne * maglim .or. mne1 < mne / maglim)) .or. &
-        (mne < 0  .and. (mne1 < mne * maglim .or. mne1 > mne / maglim))) then
+    if ((mne >= 0 .and. (mne1 > mne * maglim .or. mne1 < mne * maglim_inv)) .or. &
+        (mne < 0  .and. (mne1 < mne * maglim .or. mne1 > mne * maglim_inv))) then
       have_runge = .true.
       call calc_kth_flux(p, g, s, sx, uve, tae, i, j, k, in, jn, 1, uve1, mne1)
     end if
@@ -688,11 +710,13 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
       hn = hn0       ! 近傍セルの水深
       do kk = 1, 8
         ! 中心セルと近傍セルの方位kkにおける流量
-        !   sx%mnは計算しながら次々と上書されていくため
-        !   すでに更新済みの流量も混在しており、このルンゲクッタはあくまで概算となるが
-        !   経験的・結果的に更新前の流量"のみ"を使うよりも安定する
-        mnec = sign_e(kk) * sx%mn(ke(kk),i+die(kk),j+dje(kk))   ! 中心セルからそのkk近傍への流量
-        mnen = sign_e(kk) * sx%mn(ke(kk),in+die(kk),jn+dje(kk)) ! 近傍セルからそのkk近傍への流量
+        !     > sx%mnは計算しながら次々と上書されていくため
+        !     > すでに更新済みの流量も混在しており、このルンゲクッタはあくまで概算となるが
+        !     > 経験的・結果的に更新前の流量"のみ"を使うよりも安定する
+        !   更新中のmnをここで参照すると、並列化したときにメモリ競合が発生する
+        !   そのため、更新中のmnではなく更新前のmn0を参照する必要がある
+        mnec = sign_e(kk) * sx%mn0(ke(kk),i+die(kk),j+dje(kk))   ! 中心セルからそのkk近傍への流量
+        mnen = sign_e(kk) * sx%mn0(ke(kk),in+die(kk),jn+dje(kk)) ! 近傍セルからそのkk近傍への流量
         ! 方位k(近傍セルでは方位9-k)は今回更新された流量
         if (kk == k) mnec = mne1
         if (kk == 9 - k) mnen = -mne1     ! 近傍セルの流出量は中心セルの流出量の逆符号
@@ -848,7 +872,7 @@ subroutine advection(p, g, s, sx)
   integer :: i, j, k
   real :: dux, duy, dvx, dvy
   real :: ww(1:8), wwx(1:8), wwy(1:8)
-  real :: ulm(1:p%nx,1:p%ny), vlm(1:p%nx,1:p%ny)
+  !real :: ulm(1:p%nx,1:p%ny), vlm(1:p%nx,1:p%ny)
 
   if (f_advection_term == 0) return
 
@@ -856,10 +880,10 @@ subroutine advection(p, g, s, sx)
   do j = g%wy(1), g%wy(2)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
-      if (g%sw(i,j) > 0) cycle
+      if (g%sw(i,j) > 0) cycle   ! get_diffで陸から1セル外側まで参照することに注意
       if (s%h(i,j) < p%dd) cycle
-      ulm(i,j) = s%u(i,j) * g%lm(i,j)
-      vlm(i,j) = s%v(i,j) * g%lm(i,j)
+      sx%ulm(i,j) = s%u(i,j) * g%lm(i,j)
+      sx%vlm(i,j) = s%v(i,j) * g%lm(i,j)
     end do
   end do
   !$omp end parallel do
@@ -874,12 +898,12 @@ subroutine advection(p, g, s, sx)
       ww(:) = get_ww(s%u(i,j), s%v(i,j), s%vv(i,j))
       forall(k=1:8) wwx(k) = w8x(k) * ww(k)
       forall(k=1:8) wwy(k) = w8y(k) * ww(k)
-      call get_diff(ulm, vlm, s%h, p%dd, wwx, wwy, g%x, i, j, p%nx, p%ny, dux, duy, dvx, dvy)
+      call get_diff(sx%ulm, sx%vlm, s%h, p%dd, wwx, wwy, g%x, i, j, p%nx, p%ny, dux, duy, dvx, dvy)
       sx%taxy(1,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
       sx%taxy(2,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)
       if (f_advection_tvd > 0) then
         ! 中心差分による移流項の計算
-        call get_diff(ulm, vlm, s%h, p%dd, w8x, w8y, g%x, i, j, p%nx, p%ny, dux, duy, dvx, dvy)
+        call get_diff(sx%ulm, sx%vlm, s%h, p%dd, w8x, w8y, g%x, i, j, p%nx, p%ny, dux, duy, dvx, dvy)
         sx%taxy(3,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
         sx%taxy(4,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)
       end if
