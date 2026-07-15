@@ -893,6 +893,7 @@ contains
   function get_ww(u, v, vv) result(ww_upw)
     real, intent(in) :: u, v
     real, intent(in) :: vv
+    integer :: k
     real :: ww_upw(1:8)
     real :: wk
     if (p_adv_upwind_index > 0 .and. vv > 0) then
