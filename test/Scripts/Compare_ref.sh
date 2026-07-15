@@ -76,11 +76,6 @@ make_reference() {
 # --- 更新モード ---
 if [ $update -eq 1 ]; then
     rm -rf "$refdir"
-    #mkdir -p "$refdir"
-    #cp -p "$param" "$refdir"/
-    #for f in "$@"; do
-    #    cp -p "$resdir/$f" "$refdir"/
-    #done
     make_reference "$@"
     echo "=== REFERENCE UPDATED: 今回の結果を新しい基準として保存しました ==="
     echo "    (結果の妥当性をプロット等で確認してから信頼してください)"
@@ -89,11 +84,6 @@ fi
 
 # --- 初回: reference 作成 ---
 if [ ! -d "$refdir" ]; then
-    mkdir -p "$refdir"
-    #cp -p "$param" "$refdir"/
-    #for f in "$@"; do
-    #    cp -p "$resdir/$f" "$refdir"/
-    #done
     make_reference "$@"
     echo "=== REFERENCE CREATED: 比較対象がないため今回の結果を基準として保存しました ==="
     echo "    (初回のため比較は行っていません。結果の妥当性を必ず確認してください)"
