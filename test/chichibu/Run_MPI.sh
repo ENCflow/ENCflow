@@ -11,6 +11,7 @@
 #export PARAM=param.txt
 #export FILES="Log.txt"
 #export RTOL=1e-8
+export ULP=1      # 印字の誤差の許容桁数
 #export MPIRUN_OPTS="--oversubscribe"
 
 #export OMP_NUM_THREADS=6

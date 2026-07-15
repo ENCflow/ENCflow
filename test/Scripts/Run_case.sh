@@ -12,7 +12,10 @@
 #   引数:  [serial|mpi] [ランク数] [-u]   (順不同、すべて省略可)
 #   環境変数(ラッパーや実行時に上書き可):
 #     PARAM  : パラメータファイル (既定 param.txt)
-#     FILES  : reference と比較するファイル (既定 Log.txt)
+#     FILES  : reference と比較するファイル。RESDIR 内のベース名で
+#              指定する (既定 Log.txt = result/Log.txt を比較)
+#     RESDIR : 計算結果ディレクトリ (既定 result)
+#              画面出力の保存先は Screen.log(比較には使わない)
 #     NP     : MPI ランク数の既定値 (既定 2)
 #     RTOL   : 相対許容誤差 (既定 serial:0, mpi:1e-5)
 #     MPIRUN_OPTS : mpirun 追加オプション (--oversubscribe 等)
@@ -57,9 +60,9 @@ FILES=${FILES:-Log.txt}
 # --- 実行(pipefail: tee でなく計算本体の終了コードを拾う) ---
 set -o pipefail
 if [ "$mode" = mpi ]; then
-    time mpirun -np "$NP" $MPIRUN_OPTS ./a.out "$PARAM" | tee Log.txt
+    time mpirun -np "$NP" $MPIRUN_OPTS ./a.out "$PARAM" | tee Screen.log
 else
-    time ./a.out "$PARAM" | tee Log.txt
+    time ./a.out "$PARAM" | tee Screen.log
 fi
 rc=$?
 set +o pipefail
@@ -71,10 +74,13 @@ fi
 echo ""
 
 # --- 回帰テスト ---
-# MPI は逐次と丸め順序が異なるため既定で許容誤差付き比較にする
+# MPI は逐次と丸め順序が異なるため、既定で「最終表示桁1つ分」の差を
+# 許容する(ULP=1。それ以上の差は FAIL)。逐次は完全一致を要求。
 if [ "$mode" = mpi ]; then
-    export RTOL=${RTOL:-1e-5}
+    export ULP=${ULP:-1}
+    export RTOL=${RTOL:-0}
 else
+    export ULP=${ULP:-0}
     export RTOL=${RTOL:-0}
 fi
 

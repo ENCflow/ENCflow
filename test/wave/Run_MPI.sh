@@ -1,5 +1,5 @@
 #!/bin/bash
-# chichibu: MPI 実行 + 回帰テスト
+# wave: MPI 実行 + 回帰テスト
 #   ./Run_MPI.sh [ランク数] [-u]
 #   
 # 使い方:  ./Run_MPI.sh            2ランクで実行して reference と比較
@@ -10,7 +10,7 @@
 # --- ケース固有の設定(必要に応じて) ---
 #export PARAM=param.txt
 #export FILES="Log.txt"
-#export RTOL=1e-8
+export ULP=1      # 印字の誤差の許容桁数
 #export MPIRUN_OPTS="--oversubscribe"
 
 #export OMP_NUM_THREADS=6

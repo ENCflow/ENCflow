@@ -1,22 +1,31 @@
 #!/bin/bash
 # =====================================================================
 # 回帰テスト: reference の作成・比較
-#   使い方(各テストディレクトリの Run スクリプトから、実行成功後に):
-#     ../Compare_ref.sh Log.txt              比較(なければ作成)
-#     ../Compare_ref.sh -u Log.txt           reference を今回の結果で更新
-#     RTOL=1e-8 ../Compare_ref.sh Log.txt    許容誤差付き比較(MPI版など)
+#   計算結果ディレクトリ($resdir)内のファイルを ./reference と比較する。
 #
-#   カレントディレクトリの param.txt と指定ファイル群を ./reference と
-#   比較する。param.txt が不一致なら比較不能として報告する。
+#   使い方(各テストディレクトリの Run スクリプトから、実行成功後に):
+#     ../Scripts/Compare_ref.sh Log.txt        result/Log.txt を比較(なければ作成)
+#     ../Scripts/Compare_ref.sh -u Log.txt     reference を今回の結果で更新
+#     ULP=1 ../Scripts/Compare_ref.sh Log.txt  最終表示桁1つ分まで許容
+#
+#   ファイル名はベース名で指定する(resdir 内のパスとして解釈される)。
+#   カレントディレクトリの param.txt が reference と不一致の場合は
+#   比較不能として報告する。
 #
 #   環境変数:
-#     RTOL : 数値の相対許容誤差 (既定 0 = 完全一致を要求)
-#     ATOL : 数値の絶対許容誤差 (既定 0)
+#     RESDIR : 計算結果ディレクトリ (既定 result。param の dir_result に合わせる)
+#     許容誤差 = ATOL + RTOL*max(|a|,|b|) + ULP*量子
+#     RTOL : 相対許容誤差 (既定 0)
+#     ATOL : 絶対許容誤差 (既定 0)
+#     ULP  : 印字の最終桁を単位とした許容誤差 (既定 0)
+#            量子は各数値の表示形式から自動決定する
+#            (例: 12.1298 → 1e-4, 0.0050462962963 → 1e-13, 98.6 → 0.1)
+#            並列数・コンパイラ・マシン間の比較では ULP=1 を推奨
 #
 #   戻り値: 0=PASS または reference 作成/更新, 1=FAIL, 2=比較不能
 # =====================================================================
 refdir=reference
-resdir=result
+resdir=${RESDIR:-result}
 param=param.txt
 
 update=0
@@ -30,11 +39,22 @@ if [ $# -lt 1 ]; then
     exit 2
 fi
 
+# --- 対象ファイルの存在確認 ---
+for f in "$@"; do
+    if [ ! -e "$resdir/$f" ]; then
+        echo "ERROR: $resdir/$f がありません(dir_result と RESDIR は一致していますか)" >&2
+        exit 2
+    fi
+done
+
 # --- 更新モード ---
 if [ $update -eq 1 ]; then
     rm -rf "$refdir"
     mkdir -p "$refdir"
-    cp -p "$param" "$resdir"/"$@" "$refdir"/
+    cp -p "$param" "$refdir"/
+    for f in "$@"; do
+        cp -p "$resdir/$f" "$refdir"/
+    done
     echo "=== REFERENCE UPDATED: 今回の結果を新しい基準として保存しました ==="
     echo "    (結果の妥当性をプロット等で確認してから信頼してください)"
     exit 0
@@ -43,7 +63,10 @@ fi
 # --- 初回: reference 作成 ---
 if [ ! -d "$refdir" ]; then
     mkdir -p "$refdir"
-    cp -p "$param" "$resdir"/"$@" "$refdir"/
+    cp -p "$param" "$refdir"/
+    for f in "$@"; do
+        cp -p "$resdir/$f" "$refdir"/
+    done
     echo "=== REFERENCE CREATED: 比較対象がないため今回の結果を基準として保存しました ==="
     echo "    (初回のため比較は行っていません。結果の妥当性を必ず確認してください)"
     exit 0
@@ -63,22 +86,40 @@ fi
 # --- ファイルごとの比較 ---
 status=0
 for f in "$@"; do
-    if [ ! -e "$refdir/$f" ]; then
+    cf=$resdir/$f
+    rf=$refdir/$(basename "$f")
+    if [ ! -e "$rf" ]; then
         echo "FAIL: $f (reference 内に存在しません)"
         status=1
         continue
     fi
 
-    if cmp -s "$resdir/$f" "$refdir/$f"; then
-        echo "PASS: $f (完全一致)"
+    if cmp -s "$cf" "$rf"; then
+        echo "PASS: $cf (完全一致)"
         continue
     fi
 
     # 完全一致でない場合: トークン単位の数値比較(許容誤差付き)
-    awk -v rtol="${RTOL:-0}" -v atol="${ATOL:-0}" '
+    awk -v rtol="${RTOL:-0}" -v atol="${ATOL:-0}" -v ulp="${ULP:-0}" '
         function abs(x) { return x < 0 ? -x : x }
         function isnum(s) {
             return (s ~ /^[+-]?([0-9]+\.?[0-9]*|\.[0-9]+)([eEdD][+-]?[0-9]+)?$/)
+        }
+        # 印字表現から「最終表示桁1つ分」の大きさ(量子)を求める
+        #   12.1298 → 1e-4,  148225 → 1,  1.23e-05 → 1e-07(小数2桁+指数-5)
+        function tokquantum(s,   t, epos, mant, ex, d) {
+            t = s
+            gsub(/[dD]/, "e", t)
+            epos = index(t, "e")
+            ex = 0
+            mant = t
+            if (epos > 0) {
+                ex = substr(t, epos + 1) + 0
+                mant = substr(t, 1, epos - 1)
+            }
+            d = 0
+            if (index(mant, ".") > 0) d = length(mant) - index(mant, ".")
+            return 10^(ex - d)
         }
         NR == FNR {
             nref_tok[FNR] = split($0, t)
@@ -99,17 +140,21 @@ for f in "$@"; do
                 ga = a; gb = b
                 sub(/%$/, "", ga); sub(/%$/, "", gb)
                 if (isnum(ga) && isnum(gb)) {
+                    q = tokquantum(ga)
                     gsub(/[dD]/, "e", ga); gsub(/[dD]/, "e", gb)
                     x = ga + 0; y = gb + 0
                     d = abs(x - y)
                     s = (abs(x) > abs(y) ? abs(x) : abs(y))
-                    if (d > atol + rtol * s) {
+                    tol = atol + rtol * s + ulp * q * 1.0001
+                    if (d > tol) {
                         nbad++
                         rd = (s > 0 ? d / s : 0)
                         if (rd >= maxrd) {
                             maxrd = rd
                             msg = "行 " FNR " 列 " i ": " a " vs " b
                         }
+                    } else if (d > 0) {
+                        nflip++    # 許容内の微小差(最終桁ズレ等)を数える
                     }
                 } else if (a != b) {
                     nbad++
@@ -124,16 +169,18 @@ for f in "$@"; do
             }
             if (nbad > 0) {
                 printf("      不一致 %d 箇所, 最大相対差 %.3e (%s)\n", nbad, maxrd, msg)
+                if (nflip > 0) printf("      (ほかに許容内の微小差 %d 箇所)\n", nflip)
                 exit 1
             }
+            if (nflip > 0) printf("      許容内の微小差 %d 箇所 (ULP=%s RTOL=%s ATOL=%s)\n", nflip, ulp, rtol, atol)
             exit 0
         }
-    ' "$refdir/$f" "$resdir/$f"
+    ' "$rf" "$cf"
 
     if [ $? -eq 0 ]; then
-        echo "PASS: $f (許容誤差内: RTOL=${RTOL:-0} ATOL=${ATOL:-0})"
+        echo "PASS: $cf (許容誤差内)"
     else
-        echo "FAIL: $f"
+        echo "FAIL: $cf"
         status=1
     fi
 done
