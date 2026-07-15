@@ -212,13 +212,14 @@ subroutine m_state_calcstat(s, p, g)
   real :: qqmax
   real :: cnmax
   real :: hsum
+  real :: hsum_j(1:p%ny)
   real :: qcumf
   real :: cosdir
   real :: cc
   integer :: i, j
-  !real, parameter :: pi = atan(1.) * 4
 
   hsum = 0
+  hsum_j(:) = 0.0
   hmax = 0
   vvmax = 0
   qqmax = 0
@@ -252,7 +253,7 @@ subroutine m_state_calcstat(s, p, g)
       else
         s%cn(i,j) = (s%vv(i,j) + cc) * p%dtpdx                 ! クーラン数(波速を考慮)
       end if
-      hsum = hsum + s%h(i,j)
+      hsum_j(j) = hsum_j(j) + s%h(i,j)
       hmax = max(hmax, s%h(i,j))
       vvmax = max(vvmax, s%vv(i,j))
       qqmax = max(qqmax, s%qq(i,j))
@@ -262,6 +263,7 @@ subroutine m_state_calcstat(s, p, g)
   end do
   !$omp end parallel do
 
+  hsum = sum(hsum_j(:))                                        ! 並列化時の実行順依存誤差対策
   s%hmean = hsum / s%n_valcells                                ! 領域平均貯留高(m)
   s%cnmax = cnmax                                              ! 領域最大クーラン数
 
