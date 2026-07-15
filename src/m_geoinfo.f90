@@ -223,7 +223,7 @@ subroutine read_mask(p, g, list)
         do j = 1, g%ny
           do i = 1, g%nx
             if (a(i,j) /= 0 .and. a(i,j) /= 1) then
-              write(msg,'(a,i0,i0,i0)') "list_geoinfo: invalid data in mask data", i, j, a(i,j)
+              write(msg,'(a,3i7)') "list_geoinfo: invalid data in mask data", i, j, a(i,j)
               call par_stop(msg)
             end if
           end do
@@ -452,8 +452,8 @@ subroutine read_rn(p, g, list)
         if (g%x(i,j) == 0) cycle
         g%rn(i,j) = get_rn(list%lu2rn, nluse, g%lu(i,j))
         if (g%rn(i,j) < 0) then
-          write(msg,'(a,i0,a,i0,i0,a)') &
-                "error in geoinfo: landuse categoly", g%lu(i,j), " at", i, j, " not found in lu2rn"
+          write(msg,'(a,i3,a,i0,a,i0,a)') &
+                "error in geoinfo: landuse categoly", g%lu(i,j), " at", i, ",", j, " not found in lu2rn"
           call par_stop(msg)
         end if
       end do
