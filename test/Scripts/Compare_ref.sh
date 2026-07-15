@@ -21,6 +21,10 @@
 #            量子は各数値の表示形式から自動決定する
 #            (例: 12.1298 → 1e-4, 0.0050462962963 → 1e-13, 98.6 → 0.1)
 #            並列数・コンパイラ・マシン間の比較では ULP=1 を推奨
+#     SKIPCOLS : 比較から除外する列番号(空白区切りトークンの番号)。
+#            カンマ区切りで複数指定可 (例: SKIPCOLS=4 → Runge列を除外)。
+#            事象カウント系など閾値に敏感な列を外し、他の列の
+#            チェック精度(ULP=0等)を保つために使う
 #
 #   戻り値: 0=PASS または reference 作成/更新, 1=FAIL, 2=比較不能
 # =====================================================================
@@ -102,6 +106,9 @@ if ! diff <(norm_param "$param") <(norm_param "$refdir/$param") > /dev/null 2>&1
 fi
 
 # --- ファイルごとの比較 ---
+if [ -n "$SKIPCOLS" ]; then
+    echo "      (列 $SKIPCOLS は比較から除外)"
+fi
 status=0
 for f in "$@"; do
     cf=$resdir/$f
@@ -118,7 +125,15 @@ for f in "$@"; do
     fi
 
     # 完全一致でない場合: トークン単位の数値比較(許容誤差付き)
-    awk -v rtol="${RTOL:-0}" -v atol="${ATOL:-0}" -v ulp="${ULP:-0}" '
+    awk -v rtol="${RTOL:-0}" -v atol="${ATOL:-0}" -v ulp="${ULP:-0}" \
+        -v skipcols="${SKIPCOLS:-}" '
+        BEGIN {
+            nsk = split(skipcols, sk, ",")
+            for (m = 1; m <= nsk; m++) {
+                c = sk[m] + 0
+                if (c > 0) skipset[c] = 1
+            }
+        }
         function abs(x) { return x < 0 ? -x : x }
         function isnum(s) {
             return (s ~ /^[+-]?([0-9]+\.?[0-9]*|\.[0-9]+)([eEdD][+-]?[0-9]+)?$/)
@@ -154,6 +169,7 @@ for f in "$@"; do
                 next
             }
             for (i = 1; i <= n; i++) {
+                if (i in skipset) continue
                 a = ref[FNR, i]; b = t[i]
                 ga = a; gb = b
                 sub(/%$/, "", ga); sub(/%$/, "", gb)

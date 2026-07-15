@@ -16,5 +16,6 @@ export ULP=1      # 印字の最終桁を単位とした許容誤差
 #export OMP_NUM_THREADS=6
 #export MPIRUN_OPTS="--map-by l3cache:pe=$OMP_NUM_THREADS --bind-to core"
 
+export SKIPCOLS=4      # 検査対象外とする列番号
 
 exec ../Scripts/Run_case.sh mpi "$@"
