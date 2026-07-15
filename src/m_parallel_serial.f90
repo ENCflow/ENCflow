@@ -60,7 +60,7 @@ contains
       character(*), intent(in) :: msg
       write(error_unit,'(2a)') 'ABORT: ', trim(msg)
       flush(error_unit)
-      error stop
+      error stop 1
    end subroutine par_abort
 
    subroutine par_barrier()
