@@ -3,6 +3,7 @@ module m_state
   use m_geoinfo, only : t_geoinfo
   use list_initial, only : t_list_initial, list_initial_read
   use m_parallel, only : is_root, par_info, par_stop
+  use iso_fortran_env, only : output_unit
   implicit none
   private
 
@@ -410,8 +411,8 @@ subroutine fill_depression(p, g, s, list)
   if (p%initialized) continue
 
   if (is_root) then
-    write(6, '(a)', advance='no') " filling depressions "
-    flush(6)
+    write(output_unit, '(a)', advance='no') " filling depressions "
+    flush(output_unit)
   end if
 
   ! 対象セルに初期水深を与える
@@ -427,8 +428,10 @@ subroutine fill_depression(p, g, s, list)
 
   do l = 1, 3000
     if (mod(l, 100) == 0) then
-      write(6, '(a)', advance='no') ">"
-      flush(6)
+      if (is_root) then
+        write(output_unit, '(a)', advance='no') ">"
+        flush(output_unit)
+      end if
     end if
     nadj = 0
     do j = g%wy(1), g%wy(2)
@@ -465,7 +468,10 @@ subroutine fill_depression(p, g, s, list)
   end do
 
   if (list%f_fill_depres >= 3) then
-    write(6, '(a)', advance='no') " lifting riverbed"
+    if (is_root) then
+      write(output_unit, '(a)', advance='no') " lifting riverbed"
+      flush(output_unit)
+    end if
     do j = g%wy(1), g%wy(2)
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) < 1) cycle        ! 領域外は除外
@@ -478,7 +484,10 @@ subroutine fill_depression(p, g, s, list)
       end do
     end do
   end if
-  write(6, *)
+  if (is_root) then
+    write(output_unit, *)
+    flush(output_unit)
+  end if
   
 end subroutine
 
