@@ -319,7 +319,7 @@ subroutine m_state_printstate(p, s)
   digi3 = p%real_precision - digi2 - 0                  ! 小数点以下の表示桁数
   digi3 = max(digi3, 1)
   write(fmt0, '("f",i2,".",i0)') digi1, digi3
-  fmt = '(a," ",f5.1,"%",' //trim(fmt0)// '," ",f5.1,"%",i7,*(f10.4))'
+  fmt = '(RN,a," ",f5.1,"%",' //trim(fmt0)// '," ",f5.1,"%",i7,*(f10.4))'     ! RNはround='nearest'に相当
   write(msg, fmt) s%ctime, progress, hmean, sp%runger, sp%n_exf, sp%h, sp%vv, sp%qq, sp%cn
   call par_info(trim(msg))
   write(s%un_log, fmt) s%ctime, progress, hmean, sp%runger, sp%n_exf, sp%h, sp%vv, sp%qq, sp%cn
