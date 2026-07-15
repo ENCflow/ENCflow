@@ -47,14 +47,41 @@ for f in "$@"; do
     fi
 done
 
-# --- 更新モード ---
-if [ $update -eq 1 ]; then
-    rm -rf "$refdir"
+# --- reference の作成(作成・更新の共通処理) ---
+make_reference() {
     mkdir -p "$refdir"
     cp -p "$param" "$refdir"/
     for f in "$@"; do
         cp -p "$resdir/$f" "$refdir"/
     done
+
+    # 環境記録(比較対象ではないので env/ に分離)
+    local envdir=$refdir/env
+    mkdir -p "$envdir"
+    cp -p ./Screen.log "$envdir"/ 2>/dev/null
+    cp -p ../../make.inc "$envdir"/ 2>/dev/null
+    {
+        echo "date      : $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "host      : $(hostname)"
+        echo "user      : $USER"
+        echo "pwd       : $PWD"
+        echo "a.out     : $(readlink -f ./a.out 2>/dev/null)"
+        echo "mode      : $(ls ../../src/.mode_* 2>/dev/null | sed 's/.*\.mode_//')"
+        echo "modules   : ${LOADEDMODULES:-（module未使用）}"
+        ldd "$(readlink -f ./a.out)" 2>/dev/null | grep -iE 'mpi|gfortran|ifcore|nvf' \
+            | sed 's/^/lib       : /'
+    } > "$envdir/BUILDINFO.txt"
+}
+
+# --- 更新モード ---
+if [ $update -eq 1 ]; then
+    rm -rf "$refdir"
+    #mkdir -p "$refdir"
+    #cp -p "$param" "$refdir"/
+    #for f in "$@"; do
+    #    cp -p "$resdir/$f" "$refdir"/
+    #done
+    make_reference "$@"
     echo "=== REFERENCE UPDATED: 今回の結果を新しい基準として保存しました ==="
     echo "    (結果の妥当性をプロット等で確認してから信頼してください)"
     exit 0
@@ -63,10 +90,11 @@ fi
 # --- 初回: reference 作成 ---
 if [ ! -d "$refdir" ]; then
     mkdir -p "$refdir"
-    cp -p "$param" "$refdir"/
-    for f in "$@"; do
-        cp -p "$resdir/$f" "$refdir"/
-    done
+    #cp -p "$param" "$refdir"/
+    #for f in "$@"; do
+    #    cp -p "$resdir/$f" "$refdir"/
+    #done
+    make_reference "$@"
     echo "=== REFERENCE CREATED: 比較対象がないため今回の結果を基準として保存しました ==="
     echo "    (初回のため比較は行っていません。結果の妥当性を必ず確認してください)"
     exit 0
