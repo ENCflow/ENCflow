@@ -58,21 +58,21 @@ subroutine m_ffactor_init(level, hmin, hmax, mode)
   else if (mode == 'mn' .or. mode == 'MN') then
     powf = 7. / 3.
   else
-    write(msg,'(a,i0)') "ffactor_init: unknown mode", mode
+    write(msg,'(a,i0)') "ffactor_init: unknown mode ", mode
     call par_stop(trim(msg))
   end if
 
   if (hmin <= 0) then
-    write(msg,'(a,i0)') "ffactor_init: hmin is out of range", hmin
+    write(msg,'(a,f0.5)') "ffactor_init: hmin is out of range ", hmin
     call par_stop(trim(msg))
   end if
   if (hmax <= hmin) then
-    write(msg,'(a,i0)') "ffactor_init: hmax is out of range", hmax
+    write(msg,'(a,f0.5)') "ffactor_init: hmax is out of range ", hmax
     call par_stop(trim(msg))
   end if
 
   if (level < 0 .or. level > 5) then
-    write(msg,'(a,i0)') "ffactor_init: level is out of range", level
+    write(msg,'(a,f0.5)') "ffactor_init: level is out of range ", level
     call par_stop(trim(msg))
   end if
 
