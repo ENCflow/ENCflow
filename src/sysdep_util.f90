@@ -1,5 +1,6 @@
 module sysdep_util
   use m_sysparam, only : t_sysparam
+  use m_parallel, only : is_root
   implicit none
   private
 
@@ -20,6 +21,8 @@ subroutine sysdep_create_resultdir(p)
   type(t_sysparam), intent(in) :: p
   character(len=256) :: command
   integer :: i
+
+  if (.not. is_root) return
 
   command = "mkdir -p "//trim(p%dir_result)
   call execute_command_line(trim(command), exitstat=i)
@@ -47,6 +50,8 @@ end subroutine
 subroutine sysdep_save_paramfile(p)
   type(t_sysparam), intent(in) :: p
   character(len=256) :: command
+
+  if (.not. is_root) return
 
   call savefile(p%fn_sysparam, p%dir_result)
   call savefile(p%fn_geoinfo, p%dir_result)

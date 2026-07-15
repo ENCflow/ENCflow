@@ -5,7 +5,7 @@ module m_record
   use m_state, only : t_state
   use m_parallel, only : is_root
   use list_record, only : t_list_record, list_record_read
-  use m_parallel, only : par_info, par_stop
+  use m_parallel, only : is_root, par_info, par_stop
   implicit none
   private
 
@@ -456,7 +456,7 @@ subroutine m_record_dispose(r)
   type(t_record), intent(inout) :: r
   integer :: i
 
-  if (.not. r%initialized) return
+  if (.not. is_root) return
 
   do i = 1, r%npb
     close(r%probe(i)%un)
@@ -481,7 +481,7 @@ subroutine m_record_probe(r, p, s)
   character(len=80) :: afmt
   if (p%initialized) continue
 
-  if (.not. r%initialized) return
+  if (.not. is_root) return
 
   do ipb = 1, r%npb
     un = r%probe(ipb)%un
@@ -534,7 +534,7 @@ subroutine m_record_flux(r, p, s)
   type(t_flux) :: flx
   if (p%initialized) continue
 
-  if (.not. r%initialized) return
+  if (.not. is_root) return
 
   do ifl = 1, r%nfl
     flx = r%flux(ifl)
@@ -590,7 +590,7 @@ subroutine m_record_summary(r, p)
   integer :: i
   character(len=80) :: fn_smry
 
-  if (.not. r%initialized) return
+  if (.not. is_root) return
 
   if (r%npb <= 0 .and. r%nfl <= 0) return
 

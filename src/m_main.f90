@@ -53,10 +53,8 @@ subroutine m_main_all()
 
   ! システムを初期化
   call m_sysparam_init(p, fn_sysparam)    ! sysparam を初期化
-  if (is_root) then
-    call sysdep_create_resultdir(p)         ! 結果を保存するディレクトリを作成
-    call sysdep_save_paramfile(p)           ! パラメータファイルを保存
-  end if
+  call sysdep_create_resultdir(p)         ! 結果を保存するディレクトリを作成
+  call sysdep_save_paramfile(p)           ! パラメータファイルを保存
 
   ! モジュールを初期化
   call m_geoinfo_init(g, p)               ! geoinfo を初期化
@@ -112,14 +110,12 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
   integer :: ifn           ! 出力ファイル番号
   character(len=256) :: msg1, msg2, msg3
 
-  if (is_root) then
-    write(msg1,'(a,i0)') "number of processes :", nproc
-    write(msg2,'(a,i0)') "number of threads :", p%num_threads
-    write(msg3,'(a,i0)') "number of valid cells :", s%n_valcells
-    call par_info(msg1)
-    call par_info(msg2)
-    call par_info(msg3)
-  end if
+  write(msg1,'(a,i0)') "number of processes :", nproc
+  write(msg2,'(a,i0)') "number of threads :", p%num_threads
+  write(msg3,'(a,i0)') "number of valid cells :", s%n_valcells
+  call par_info(msg1)
+  call par_info(msg2)
+  call par_info(msg3)
 
 
   it = 0
@@ -129,13 +125,11 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
   call m_state_calcstat(s, p, g)          ! 統計情報を計算
 
   ! 初期状態の出力(ファイルへの書き込みはランク0のみ)
-  if (is_root) then
-    call m_state_printstate(p, s)         ! 途中経過を画面に出力
-    call open_fnolist(p)                  ! ファイル番号リストをオープン　
-    call output(p, g, s, ifn)             ! 初期状態をファイル出力
-    call m_record_probe(r, p, s)          ! プローブの値を出力
-    call m_record_flux(r, p, s)           ! フラックスの値を出力
-  end if
+  call m_state_printstate(p, s)         ! 途中経過を画面に出力
+  call open_fnolist(p)                  ! ファイル番号リストをオープン　
+  call output(p, g, s, ifn)             ! 初期状態をファイル出力
+  call m_record_probe(r, p, s)          ! プローブの値を出力
+  call m_record_flux(r, p, s)           ! フラックスの値を出力
   ierror = 0
 
   ! デバッグ用データ出力
@@ -156,7 +150,7 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
     ! dt_prupdate 間隔で降水分布を更新
     if (mod(it, pr%idt_prupdate) == 0) then
       call m_precip_makepre(pr, p, g, s)
-    endif
+    end if
 
     ! 境界条件を準備
     call m_boundary_makebdc(b, p, s)
@@ -168,27 +162,22 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
     call m_state_calcstat(s, p, g)
 
 
-    ! --- 途中経過とファイルへの出力(ランク0のみ) ---
-    if (is_root) then
-
     ! dt_disp 間隔で途中経過を画面に出力
     if (mod(it, p%idt_disp) == 0) then
       call m_state_printstate(p, s)
-    endif
+    end if
 
     ! dt_file 間隔で計算結果をファイルに出力 
     if (it >= p%ist_file .and. it <= p%iet_file .and. mod(it, p%idt_file) == 0) then
       ifn = ifn + 1
       call output(p, g, s, ifn)
-    endif
+    end if
 
     ! dt_record 間隔でプローブとフラックスの値を出力
     if (it >= p%ist_recd .and. it <= p%iet_recd .and. mod(it, p%idt_recd) == 0) then
      call m_record_probe(r, p, s)
      call m_record_flux(r, p, s)
-    endif
-
-    end if ! (is_root)
+    end if
 
 
     ! --- エラー判定(全ランクで同一の判定を行い、同時にループを抜ける) ---
@@ -199,36 +188,30 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
 
     ! CFL条件のチェック
     if (p%f_check_cfl > 0 .and. s%cnmax > 1.) then
-      if (is_root) then
-        call par_info("********************************************")
-        call par_info("******** Courant number exceeds 1.0 ********")
-        call par_info("********************************************")
-        call m_state_printstate(p, s)
-      end if
+      call par_info("********************************************")
+      call par_info("******** Courant number exceeds 1.0 ********")
+      call par_info("********************************************")
+      call m_state_printstate(p, s)
       ierror = ierror + 1
     end if
 
     ! オーバーフローを回避するためにチェック
     if (s%cnmax > 100.) then
-      if (is_root) then
-        call par_info("**********************************************************************")
-        call par_info("******** Unrealistic calculation (Courant number exceeds 100) ********")
-        call par_info("**********************************************************************")
-      end if
+      call par_info("**********************************************************************")
+      call par_info("******** Unrealistic calculation (Courant number exceeds 100) ********")
+      call par_info("**********************************************************************")
       ierror = ierror + 1
     end if
 
     ! サブルーチンからのエラーも含めてエラーがあれば終了
     if (ierror > 0) then
-      if (is_root) call m_state_printstate(p, s)
+      call m_state_printstate(p, s)
       exit
     end if
 
   end do
   !------ 時間ステップのループここまで ------
 
-
-  if (is_root) then
 
   ! 最終状態を出力
   call output(p, g, s, 9998)
@@ -238,8 +221,6 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
 
   ! 最大流量の一覧を出力
   call m_record_summary(r, p)
-
-  end if ! (is_root)
 
   ! エラー処理は m_main_all 側で行う(dispose と par_finalize を通すため
   ! ここでは error stop しない。ierror を返すのみ)
@@ -253,6 +234,7 @@ end subroutine
 subroutine open_fnolist(p)
   type(t_sysparam), intent(in) :: p
   character(len=256) :: fname
+  if (.not. is_root) return
   fname = trim(p%dir_result)//"/FILENUMBER.csv"
   open(newunit=un_fnolist, file=trim(fname), status='replace')
   write(un_fnolist, '(a)') "# No., time, t(s), it"
@@ -267,6 +249,7 @@ subroutine output(p, g, s, k)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   integer, intent(in) :: k
+  if (.not. is_root) return
   if (p%f_out_z > 0 .or. k == 0) call output_matrix(p, "Z", g%z, k)  ! 地盤高
   if (p%f_out_h > 0) call output_matrix(p, "H", s%h, k)          ! 水深
   if (p%f_out_e > 0) call output_matrix(p, "E", s%e, k)          ! 水位
@@ -294,6 +277,7 @@ subroutine output_summary(p, s, k)
   type(t_sysparam), intent(in) :: p
   type(t_state), intent(in) :: s
   integer, intent(in) :: k
+  if (.not. is_root) return
   if (p%f_out_hmax > 0)  call output_matrix(p, "H", s%hmax, k)     ! 最大水深
   if (p%f_out_hmaxt > 0) call output_matrix(p, "Ht", s%hmaxt, k)   ! 最大水深の時刻
   if (p%f_out_vvmax > 0) call output_matrix(p, "V", s%vvmax, k)    ! 最大流速
