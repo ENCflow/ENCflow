@@ -2,7 +2,7 @@ module m_state
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use list_initial, only : t_list_initial, list_initial_read
-  use m_parallel, only : is_root, par_stop
+  use m_parallel, only : is_root, par_info, par_stop
   implicit none
   private
 
@@ -296,6 +296,7 @@ subroutine m_state_printstate(p, s)
   type(t_state), intent(inout) :: s
   real :: progress      ! 進行割合(%)
   character(len=80) :: fmt, fmt0
+  character(len=256) :: msg
   integer :: digi1, digi2, digi3
   real :: hmean
 
@@ -303,8 +304,8 @@ subroutine m_state_printstate(p, s)
 
   ! 凡例を表示
   if (mod(sp%count_disp, 36) == 0) then
-    print *, "t, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
-    write(s%un_log, *) "t, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
+    call par_info("t, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max")
+    write(s%un_log, '(a)') "t, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
     flush(s%un_log)
   end if
 
@@ -316,7 +317,8 @@ subroutine m_state_printstate(p, s)
   digi3 = max(digi3, 1)
   write(fmt0, '("f",i2,".",i0)') digi1, digi3
   fmt = '(a," ",f5.1,"%",' //trim(fmt0)// '," ",f5.1,"%",i7,*(f10.4))'
-  print fmt, s%ctime, progress, hmean, sp%runger, sp%n_exf, sp%h, sp%vv, sp%qq, sp%cn
+  write(msg, fmt) s%ctime, progress, hmean, sp%runger, sp%n_exf, sp%h, sp%vv, sp%qq, sp%cn
+  call par_info(msg)
   write(s%un_log, fmt) s%ctime, progress, hmean, sp%runger, sp%n_exf, sp%h, sp%vv, sp%qq, sp%cn
   flush(s%un_log)
 

@@ -110,11 +110,15 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
   integer, intent(out) :: ierror
   integer :: it            ! 時間ループのカウント
   integer :: ifn           ! 出力ファイル番号
+  character(len=256) :: msg1, msg2, msg3
 
   if (is_root) then
-    print *, "number of processes :", nproc
-    print *, "number of threads :", p%num_threads
-    print *, "number of valid cells :", s%n_valcells
+    write(msg1,'(a,i0)') "number of processes :", nproc
+    write(msg2,'(a,i0)') "number of threads :", p%num_threads
+    write(msg3,'(a,i0)') "number of valid cells :", s%n_valcells
+    call par_info(msg1)
+    call par_info(msg2)
+    call par_info(msg3)
   end if
 
 
@@ -196,9 +200,9 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
     ! CFL条件のチェック
     if (p%f_check_cfl > 0 .and. s%cnmax > 1.) then
       if (is_root) then
-        print *, "********************************************"
-        print *, "******** Courant number exceeds 1.0 ********"
-        print *, "********************************************"
+        call par_info("********************************************")
+        call par_info("******** Courant number exceeds 1.0 ********")
+        call par_info("********************************************")
         call m_state_printstate(p, s)
       end if
       ierror = ierror + 1
@@ -207,9 +211,9 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
     ! オーバーフローを回避するためにチェック
     if (s%cnmax > 100.) then
       if (is_root) then
-        print *, "**********************************************************************"
-        print *, "******** Unrealistic calculation (Courant number exceeds 100) ********"
-        print *, "**********************************************************************"
+        call par_info("**********************************************************************")
+        call par_info("******** Unrealistic calculation (Courant number exceeds 100) ********")
+        call par_info("**********************************************************************")
       end if
       ierror = ierror + 1
     end if
