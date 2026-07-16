@@ -23,19 +23,18 @@ SUBDIRS	= src \
 	  utils/rerecord \
 	  utils/rmdepress_river
 
+# テスト用ディレクトリ
+TESTDIRS	= test/chichibu test/wave
 
 # install 対象(install ターゲットを持つディレクトリのみ列挙)
 #   他の utils ユーティリティにも install を追加したらここに足す
 #INSTALLDIRS	= src \
 #	  utils/rerecord \
 #	  utils/rmdepress_river
-INSTALLDIRS	= $(SUBDIRS)
+INSTALLDIRS	= $(SUBDIRS) $(TESTDIRS)
 
 # 実行ファイルのインストール先
 BINDIR	= bin
-
-# テスト用ディレクトリ
-TESTDIRS	= test/chichibu test/wave
 
 # サンプルデータディレクトリ
 SMPLDIRS	= \

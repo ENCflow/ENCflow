@@ -22,6 +22,8 @@ a.out: $(BIN)
 $(BIN):
 	$(MAKE) -C $(SRCDIR) install
 
+install: all
+
 clean:
 	rm -rf result
 	rm -f a.out Screen.log *.png
