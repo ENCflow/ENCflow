@@ -529,6 +529,10 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
   real :: hc, hn
   real :: dtl
   integer :: l
+      integer :: kk
+      real :: mnec, mnen
+      integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
+      real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
   ! セル境界での物理量を求める
   vve = (s%vv(i,j) + s%vv(in,jn)) / 2       ! 速度の絶対値
@@ -608,11 +612,6 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
 
     ! ルンゲクッタの次段のために流速の絶対値と水深を更新
     !   移流項はルンゲクッタのループに含まれないため精度は陽的オイラーのまま
-    block
-      integer :: kk
-      real :: mnec, mnen
-      integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
-      real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
       ! セル境界での流速の絶対値を更新
       vve = sqrt(uve1**2 + vue2)
 
@@ -634,7 +633,6 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
         hc = hc - mnec * mn2dh(kk) / g%gv(i,j) / a(l)
         hn = hn - mnen * mn2dh(kk) / g%gv(in,jn) / a(l)
       end do
-    end block
 
     ! 段数を更新して次の段へ
     l = l + 1
@@ -786,6 +784,8 @@ subroutine advection(p, g, s, sx)
   integer :: xx(0:4,0:4)
   real :: u(0:8), v(0:8)
   integer :: ii(1:8), jj(1:8)
+        real :: dux, duy, dvx, dvy
+        real :: duux, dvvy, duvx, duvy
 
   if (f_advection_term == 0) return
 
@@ -844,8 +844,6 @@ subroutine advection(p, g, s, sx)
       if (.true.) then   ! 非保存形 tada
       !if (.false.) then  ! 保存形
         ! 非保存形
-        block
-        real :: dux, duy, dvx, dvy
         ! uとvを並べてuuとvvの形に整形して代入
         uu = reshape([ u(1), u(2), u(3), u(4), u(0), u(5), u(6), u(7), u(8) ], shape(uu))
         vv = reshape([ v(1), v(2), v(3), v(4), v(0), v(5), v(6), v(7), v(8) ], shape(vv))
@@ -854,11 +852,8 @@ subroutine advection(p, g, s, sx)
         ! 移流項を計算
         sx%taxy(1,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy) * g%lm(i,j)
         sx%taxy(2,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy) * g%lm(i,j)
-        end block
       else
         ! 保存形
-        block
-        real :: duux, dvvy, duvx, duvy
         ! uとvを並べてuu,vv,uvの形に整形して代入
         uu = reshape([ u(1)**2, u(2)**2, u(3)**2, &
                        u(4)**2, u(0)**2, u(5)**2, &
@@ -874,7 +869,6 @@ subroutine advection(p, g, s, sx)
         ! 移流項を計算
         sx%taxy(1,i,j) = -(duux + duvy) * g%lm(i,j)
         sx%taxy(2,i,j) = -(duvx + dvvy) * g%lm(i,j)
-        end block
       end if
 
     end do
