@@ -24,27 +24,36 @@ MODE	= serial
 # コンパイラ本体(FC)と MPI ラッパー(FC_MPI)
 #   使う組をコメント切り替え。FRT は MODE に応じて自動決定される。
 # ---------------------------------------------------------------
+# Intel oneAPI
 FC	= ifx
 FC_MPI	= mpiifx
 FFLAGS	= -g -fopenmp -warn all -fpe0 -O3 -ipo -fp-model fast -r8
 #FFLAGS	= -g -O0 -traceback -check all -warn all -fpe0 -r8
 #LDFLAGS =
 
+# GNU Fortran (with MIPCH or OpenMPI)
 #FC	= gfortran
 #FC_MPI	= mpifort
-#FC_MPI	= mpifort.mpich
-#FC_MPI	= mpifort.openmpi
 #FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -fdefault-real-8 -fdefault-double-8
 #FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -fdefault-real-8 -fdefault-double-8 -fcheck=all -fbacktrace
 #FFLAGS	= -g -Og -fcheck=all -fbacktrace -Wall -ffpe-trap=invalid,zero,overflow -fdefault-real-8 -fdefault-double-8 -Wno-conversion -finit-real=snan -finit-integer=-88888888
 #LDFLAGS =
 
+# NVIDIA HPC SDK
 #FC	= nvfortran
 #FC_MPI	= mpif90
 #FFLAGS	= -gopt -mp=multicore -Ofast -Minform=inform -Ktrap=divz,ovf -Mr8
 #FFLAGS	= -gopt -mp=multicore -Ofast -Minform=inform -Ktrap=divz,ovf -Mr8 -Mbounds -Mchkptr -Mchkstk 
 #LDFLAGS =
 
+# AMD AOCC (with MPI compiled by AOCC)
+#FC	= flang
+#FC_MPI	= mpifort
+#FFLAGS	= -g -fopenmp -Ofast -march=native -Wall -r8 -ffast-math -Mcache_align
+#LDFLAGS =
+
+
+# LLVM Flang
 #FC	= flang-20
 #FC_MPI	= mpifort
 #FFLAGS	= -g -O3 -ffast-math -Werror -fdefault-real-8
