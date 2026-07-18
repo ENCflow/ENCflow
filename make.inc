@@ -25,9 +25,9 @@ MODE	= serial
 #   使う組をコメント切り替え。FRT は MODE に応じて自動決定される。
 # ---------------------------------------------------------------
 # Intel oneAPI
-#FC	= ifx
-#FC_MPI	= mpiifx
-#FFLAGS	= -g -fopenmp -warn all -fpe0 -Ofast -xHost -ipo -r8
+FC	= ifx
+FC_MPI	= mpiifx
+FFLAGS	= -g -fopenmp -warn all -fpe0 -Ofast -xHost -ipo -r8
 #FFLAGS	= -g -O0 -traceback -check all -warn all -fpe0 -r8
 #LDFLAGS =
 
@@ -47,9 +47,9 @@ MODE	= serial
 #LDFLAGS =
 
 # AMD AOCC (with MPI build by AOCC)
-FC	= flang
-FC_MPI	= mpifort
-FFLAGS	= -g -fopenmp -Ofast -march=native -Wall -r8 -ffast-math -Mcache_align
+#FC	= flang
+#FC_MPI	= mpifort
+#FFLAGS	= -g -fopenmp -Ofast -march=native -Wall -r8 -ffast-math -Mcache_align
 #LDFLAGS =
 
 
