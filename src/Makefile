@@ -42,7 +42,7 @@ $(LIB): $(LIBOBJS)
 # ---------------------------------------------------------------
 MODESTAMP	= .mode_$(MODE)
 
-$(OBJS): $(MODESTAMP)
+$(OBJS): $(MODESTAMP) ../make.inc
 
 $(MODESTAMP):
 	@rm -f *.o *.mod *.smod .mode_*
