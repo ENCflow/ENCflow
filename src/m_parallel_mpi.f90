@@ -14,6 +14,14 @@ module m_parallel
 !   par_abort(msg) 局所的な致命的エラー。検出したランクだけが呼んで
 !                  よい。ランク番号付きで表示して即時に全体強制終了
 !
+! 領域分割情報 dcp:
+!   - par_decomp_init(nx, ny) で設定する(格子サイズ確定後、
+!     m_geoinfo_init の直後に呼ぶこと)
+!   - 各モジュールは use m_parallel, only: dcp で直接参照してよい
+!     (protected 属性により変更は本モジュール内に限定される)
+!   - 計算カーネルには dcp を見せず、範囲(js, je 等)を引数で渡す
+!     (dcp の直接参照はフェーズの入口まで)
+!
 ! 注意:
 !   - 本プロジェクトは -r8 等で既定 real を8バイトに昇格している
 !     ため、MPI データ型は MPI_REAL でなく必ず MPI_REAL8 を使う。
@@ -28,15 +36,32 @@ module m_parallel
    implicit none
    private
    public :: par_init, par_finalize
+   public :: par_decomp_init
    public :: par_info, par_warn, par_stop, par_abort
    public :: par_barrier
    public :: par_allreduce_min
    public :: nrank, nproc, is_root
+   public :: t_decomp, dcp
    public :: MPI_WP
 
-   integer, save :: nrank  = 0
-   integer, save :: nproc  = 1
-   logical, save :: is_root = .true.
+   integer, protected, save :: nrank  = 0
+   integer, protected, save :: nproc  = 1
+   logical, protected, save :: is_root = .true.
+
+   ! 領域分割情報(j方向分割。ブロック分割に拡張する場合は
+   ! i方向成分を追加し、serial 版と同時に改定すること)
+   type :: t_decomp
+      integer :: nx_g = 0        ! 全領域サイズ x(参考保持)
+      integer :: ny_g = 0        ! 全領域サイズ y(参考保持)
+      integer :: js = 1          ! 自ランク担当範囲の開始 j
+      integer :: je = 0          ! 自ランク担当範囲の終了 j
+      integer :: jsh = 1         ! ハロ込み範囲の開始 j
+      integer :: jeh = 0         ! ハロ込み範囲の終了 j
+      integer :: rank_n = -1     ! j+側の隣接ランク(なければ負)
+      integer :: rank_s = -1     ! j-側の隣接ランク(なければ負)
+   end type t_decomp
+
+   type(t_decomp), protected, save :: dcp
 
    ! 実数通信用データ型(既定 real = 8バイト前提)
    type(MPI_Datatype), parameter :: MPI_WP = MPI_REAL8
@@ -56,6 +81,24 @@ contains
       call MPI_Comm_size(MPI_COMM_WORLD, nproc)
       is_root = (nrank == 0)
    end subroutine par_init
+
+   subroutine par_decomp_init(nx, ny)
+      ! 領域分割の決定。格子サイズ確定後(m_geoinfo_init の直後)に
+      ! 全ランクが揃って呼ぶこと(collective)。
+      !
+      ! 現段階(冗長計算)は全ランクが全域を担当する。
+      ! TODO: 分割実装時にここで j 方向の範囲・ハロ・隣接ランクを
+      !       計算する(ランク数不変のビット一致検証を回帰テストで)。
+      integer, intent(in) :: nx, ny
+      dcp%nx_g = nx
+      dcp%ny_g = ny
+      dcp%js  = 1
+      dcp%je  = ny
+      dcp%jsh = 1
+      dcp%jeh = ny
+      dcp%rank_n = -1
+      dcp%rank_s = -1
+   end subroutine par_decomp_init
 
    subroutine par_finalize()
       call MPI_Finalize()

@@ -9,25 +9,61 @@ module m_parallel
 !   par_warn(msg)  局所的な警告。標準エラーに表示(停止しない)
 !   par_stop(msg)  決定的エラー(設定不正など)。表示して停止
 !   par_abort(msg) 局所的な致命的エラー。表示して即時停止
+!
+! 領域分割情報 dcp(MPI 版と共通のルール):
+!   - par_decomp_init(nx, ny) で設定する(格子サイズ確定後、
+!     m_geoinfo_init の直後に呼ぶこと)。逐次では常に全域を担当する。
+!   - 各モジュールは use m_parallel, only: dcp で直接参照してよい
+!     (protected 属性により変更は本モジュール内に限定される)
+!   - 計算カーネルには dcp を見せず、範囲(js, je 等)を引数で渡す
 !=====================================================================
    use, intrinsic :: iso_fortran_env, only: output_unit, error_unit
    implicit none
    private
    public :: par_init, par_finalize
+   public :: par_decomp_init
    public :: par_info, par_warn, par_stop, par_abort
    public :: par_barrier
    public :: par_allreduce_min
    public :: nrank, nproc, is_root
+   public :: t_decomp, dcp
 
-   integer, save :: nrank  = 0        ! 自ランク番号(逐次では常に0)
-   integer, save :: nproc  = 1        ! 総ランク数(逐次では常に1)
-   logical, save :: is_root = .true.  ! 入出力担当ランクか
+   integer, protected, save :: nrank  = 0        ! 自ランク番号(逐次では常に0)
+   integer, protected, save :: nproc  = 1        ! 総ランク数(逐次では常に1)
+   logical, protected, save :: is_root = .true.  ! 入出力担当ランクか
+
+   ! 領域分割情報(逐次では常に全域。型定義は MPI 版と一致させること)
+   type :: t_decomp
+      integer :: nx_g = 0        ! 全領域サイズ x(参考保持)
+      integer :: ny_g = 0        ! 全領域サイズ y(参考保持)
+      integer :: js = 1          ! 自ランク担当範囲の開始 j
+      integer :: je = 0          ! 自ランク担当範囲の終了 j
+      integer :: jsh = 1         ! ハロ込み範囲の開始 j
+      integer :: jeh = 0         ! ハロ込み範囲の終了 j
+      integer :: rank_n = -1     ! j+側の隣接ランク(なければ負)
+      integer :: rank_s = -1     ! j-側の隣接ランク(なければ負)
+   end type t_decomp
+
+   type(t_decomp), protected, save :: dcp
 
 contains
 
    subroutine par_init()
       ! 何もしない
    end subroutine par_init
+
+   subroutine par_decomp_init(nx, ny)
+      ! 領域分割の決定。逐次では全域を担当範囲とする。
+      integer, intent(in) :: nx, ny
+      dcp%nx_g = nx
+      dcp%ny_g = ny
+      dcp%js  = 1
+      dcp%je  = ny
+      dcp%jsh = 1
+      dcp%jeh = ny
+      dcp%rank_n = -1
+      dcp%rank_s = -1
+   end subroutine par_decomp_init
 
    subroutine par_finalize()
       ! 何もしない
