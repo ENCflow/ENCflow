@@ -94,8 +94,10 @@ subroutine m_record_init(r, p, g)
     end if
 
     !---- 設定ファイルの情報を構造体に保存 ----
-    call set_probe(p)
-    call set_flux(p)
+    call set_probe
+    call set_flux
+    !call set_probe(p)
+    !call set_flux(p)
   else
     r%npb = 0
     r%nfl = 0
@@ -109,8 +111,9 @@ subroutine m_record_init(r, p, g)
 
 contains
 !---------------------------------------------------------------------
-subroutine set_probe(p)
-  type(t_sysparam), intent(in) :: p
+subroutine set_probe
+!subroutine set_probe(p)
+!  type(t_sysparam), intent(in) :: p
   integer :: npb, un
   integer :: i, ix, iy
   real :: x, y
@@ -182,8 +185,9 @@ end subroutine
 !---------------------------------------------------------------------
 !
 !---------------------------------------------------------------------
-subroutine set_flux(p)
-  type(t_sysparam), intent(in) :: p
+subroutine set_flux
+!subroutine set_flux(p)
+!  type(t_sysparam), intent(in) :: p
   integer :: nfl, un
   integer :: i, ix0, iy0, ix1, iy1
   real :: x0, y0, x1, y1
