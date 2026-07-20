@@ -947,56 +947,6 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 移流項の計算(基本型・非保存形)
-!----------------------------------------------------------------------
-subroutine advection0(p, g, s, sx)
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(in) :: s
-  type(t_enc_status), intent(inout) :: sx
-
-  integer :: i, j, k
-  real :: dux, duy, dvx, dvy
-  real :: ww(1:8), wwx(1:8), wwy(1:8)
-  !real :: ulm(1:g%nx,1:g%ny), vlm(1:g%nx,1:g%ny)
-
-  if (f_advection_term == 0) return
-
-  !$omp parallel do private(i, j)
-  do j = g%wy(1), g%wy(2)
-    do i = g%wx(1,j), g%wx(2,j)
-      if (g%x(i,j) <= 0) cycle
-      if (g%sw(i,j) > 0) cycle   ! get_diffで陸から1セル外側まで参照することに注意
-      if (s%h(i,j) < p%dd) cycle
-      sx%ulm(i,j) = s%u(i,j) * g%lm(i,j)
-      sx%vlm(i,j) = s%v(i,j) * g%lm(i,j)
-    end do
-  end do
-  !$omp end parallel do
-
-  !$omp parallel do private(i, j, k, ww, wwx, wwy, dux, duy, dvx, dvy)
-  do j = g%wy(1)+1, g%wy(2)-1
-    do i = g%wx(1,j)+1, g%wx(2,j)-1
-      if (g%x(i,j) <= 0) cycle
-      if (g%sw(i,j) > 0) cycle
-      if (s%h(i,j) < p%dd) cycle
-      ! 風上差分による重みの計算
-      ww(:) = get_ww_upw(s%u(i,j), s%v(i,j), s%vv(i,j))
-      forall(k=1:8) wwx(k) = w8x(k) * ww(k)
-      forall(k=1:8) wwy(k) = w8y(k) * ww(k)
-      ! 勾配を計算
-      call get_diff(sx%ulm, sx%vlm, s%h, p%dd, wwx, wwy, g%x, i, j, g%nx, g%ny, dux, duy, dvx, dvy)
-      ! 移流項を計算
-      sx%taxy(1,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
-      sx%taxy(2,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)
-    end do
-  end do
-  !$omp end parallel do
-
-end subroutine
-
-
-!----------------------------------------------------------------------
 ! 風上差分用のウェイトを計算
 !----------------------------------------------------------------------
 function get_ww_upw(u, v, vv) result(ww_upw)
