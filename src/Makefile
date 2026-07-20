@@ -42,10 +42,17 @@ $(LIB): $(LIBOBJS)
 #   (serial/mpi の .o、m_parallel.mod、異なる MPI の mpi.mod の
 #    混在リンクを防ぐ)
 #   MPIID: MPI ラッパーの -show 出力(実装ごとに異なる)のハッシュ。
-#          非ラッパー(ifx, gfortran 単体)では -show が失敗し
-#          空 = 一定値になるため、serial モードでは実質無効。
+#          MPI モードでのみ計算する。serial ではスタンプにハッシュを
+#          付けない — 非ラッパーの -show は「失敗して空」とは限らず、
+#          nvfortran は -show を認識し、出力に一時ファイル名を含む
+#          (毎回変化)ため、serial でハッシュを取ると呼び出しごとに
+#          スタンプ名が変わり全再ビルドが繰り返される。
 # ---------------------------------------------------------------
-MPIID	:= $(shell $(FRT) -show 2>/dev/null | md5sum | cut -c1-8)
+ifeq ($(MODE),mpi)
+MPIID	:= _$(shell $(FRT) -show 2>/dev/null | md5sum | cut -c1-8)
+else
+MPIID	:=
+endif
 MODESTAMP	= .mode_$(MODE)_$(MPIID)
 
 $(OBJS): $(MODESTAMP) ../make.inc
@@ -103,7 +110,7 @@ $(PAR_OBJ):
 clean:
 	rm -f *.o *.mod *.smod a.out $(LIB) gmon.out *__genmod.* .mode_*
 
-install: a.out
+install: all
 	mkdir -p $(BINDIR)
 	cp -f a.out $(BINDIR)
 
