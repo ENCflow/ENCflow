@@ -10,11 +10,12 @@ module subroutine init_geoinfo_user_1(p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   integer :: k, ix, iy
+  if (p%initialized) continue
 
-  do k = 1, int(p%nx / 4. * 3.)
+  do k = 1, int(g%nx / 4. * 3.)
     ix = k;
-    iy = k + p%ny / 4
-    iy = min(iy, p%ny)
+    iy = k + g%ny / 4
+    iy = min(iy, g%ny)
     g%z(ix,iy) = 1.5
     g%x(ix,iy) = 0
     g%z(ix+1,iy) = 1.5
@@ -30,11 +31,12 @@ module subroutine init_geoinfo_user_2(p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   integer :: k, ix, iy
+  if (p%initialized) continue
 
-  do k = 1, int(p%nx / 4. * 3.)
+  do k = 1, int(g%nx / 4. * 3.)
     ix = k;
-    iy = k + p%ny / 4
-    iy = min(iy, p%ny)
+    iy = k + g%ny / 4
+    iy = min(iy, g%ny)
     g%z(ix,iy) = 1.5
     g%x(ix,iy) = 0
   end do
@@ -48,9 +50,10 @@ module subroutine init_geoinfo_user_3(p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   integer :: i, j
+  if (p%initialized) continue
   
-  do j = 1, p%ny
-    do i = 1, p%nx
+  do j = 1, g%ny
+    do i = 1, g%nx
 
       if (g%z(i,j) <= -2000) then
         g%z(i,j) = 1000
