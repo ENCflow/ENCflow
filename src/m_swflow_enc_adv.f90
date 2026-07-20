@@ -1,48 +1,156 @@
 submodule(m_swflow_enc) m_swflow_enc_adv
   use m_state, only : t_state
   implicit none
+
+  type t_enc_adv
+    real, allocatable :: taxy(:,:,:) ! セル中心での移流項(第1添字は1~4，それぞれ風上差分と中心差分のx,y成分)
+    real, allocatable :: ulm(:,:)    ! セル中心でのu*lm (移流項計算用)
+    real, allocatable :: vlm(:,:)    ! セル中心でのv*lm (移流項計算用)
+  end type
+  type(t_enc_adv) :: tx_mod
+
 contains
 !----------------------------------------------------------------------
-! 移流項を計算する
+! 移流項の内部場の確保
 !----------------------------------------------------------------------
-module function calc_kth_advection(s, sx, i, j, k, in, jn, uve) result(ta)
-  type(t_state), intent(inout) :: s
-  type(t_enc_status), intent(in) :: sx
-  integer, intent(in) :: i, j, k, in, jn
-  real, intent(in) :: uve
-  real :: ta
+module subroutine adv_init(p, g)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  if (p%initialized) continue
+  if (f_advection_tvd > 0) then
+    allocate(tx_mod%taxy(1:4,1:g%nx,1:g%ny), source = 0.0)
+  else
+    allocate(tx_mod%taxy(1:2,1:g%nx,1:g%ny), source = 0.0)
+  end if
+  allocate(tx_mod%ulm(1:g%nx,1:g%ny), source = 0.0)
+  allocate(tx_mod%vlm(1:g%nx,1:g%ny), source = 0.0)
+end subroutine
 
-  ta = calc_kth_advection_v1(s, sx, i, j, k, in, jn, uve)
-  !ta = calc_kth_advection_v2(s, sx, i, j, k, in, jn, uve)
-
-end function
 
 !----------------------------------------------------------------------
-! 移流項の計算
+! 移流項の内部場を計算
 !----------------------------------------------------------------------
-module subroutine advection(p, g, s, sx)
+module subroutine adv_prepare(p, g, s, sx)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  type(t_enc_status), intent(inout) :: sx
+  type(t_enc_status), intent(in) :: sx
 
-  call  advection_v1(p, g, s, sx)
-  !call  advection_v2(p, g, s, sx)
+  call  adv_prepare_v1(p, g, s, sx, tx_mod)
+  !call  adv_prepare_v2(p, g, s, sx, tx_mod)
 
 end subroutine
 
 
+!----------------------------------------------------------------------
+! k番目の境界上の移流項を計算
+!----------------------------------------------------------------------
+module function adv_edge(s, sx, i, j, k, in, jn, ie, je) result(ta)
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(in) :: sx
+  integer, intent(in) :: i, j, k, in, jn, ie, je
+  real :: ta
+
+  ta = adv_edge_v1(s, sx, tx_mod, i, j, k, in, jn, ie, je)
+  !ta = adv_edge_v2(s, sx, tx_mod, i, j, k, in, jn, ie, je)
+
+end function
+
+
+!----------------------------------------------------------------------
+! 移流項用の内部場の破棄
+!----------------------------------------------------------------------
+module subroutine adv_dispose()
+  if (allocated(tx_mod%taxy)) deallocate(tx_mod%taxy)
+  if (allocated(tx_mod%ulm)) deallocate(tx_mod%ulm)
+  if (allocated(tx_mod%vlm)) deallocate(tx_mod%vlm)
+end subroutine
+
 
 !======================================================================
 !======================================================================
 !----------------------------------------------------------------------
+! 移流項の計算
+!----------------------------------------------------------------------
+subroutine adv_prepare_v1(p, g, s, sx, tx)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(in) :: sx
+  type(t_enc_adv), intent(inout) :: tx
+
+  integer :: i, j, k
+  real :: dux, duy, dvx, dvy
+  real :: ww(1:8), wwx(1:8), wwy(1:8)
+  if (sx%initialized) continue
+
+  if (f_advection_term == 0) return
+
+  !$omp parallel do private(i, j)
+  do j = g%wy(1), g%wy(2)
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle   ! get_diffで陸から1セル外側まで参照することに注意
+      if (s%h(i,j) < p%dd) cycle
+      tx%ulm(i,j) = s%u(i,j) * g%lm(i,j)
+      tx%vlm(i,j) = s%v(i,j) * g%lm(i,j)
+    end do
+  end do
+  !$omp end parallel do
+
+  !$omp parallel do private(i, j, k, ww, wwx, wwy, dux, duy, dvx, dvy)
+  do j = g%wy(1)+1, g%wy(2)-1
+    do i = g%wx(1,j)+1, g%wx(2,j)-1
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      if (s%h(i,j) < p%dd) cycle
+      ! 風上差分による移流項の計算
+      ww(:) = get_ww(s%u(i,j), s%v(i,j), s%vv(i,j))
+      forall(k=1:8) wwx(k) = w8x(k) * ww(k)
+      forall(k=1:8) wwy(k) = w8y(k) * ww(k)
+      call get_diff_v1(tx%ulm, tx%vlm, s%h, p%dd, wwx, wwy, g%x, i, j, g%nx, g%ny, dux, duy, dvx, dvy)
+      tx%taxy(1,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
+      tx%taxy(2,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)
+      if (f_advection_tvd > 0) then
+        ! 中心差分による移流項の計算
+        call get_diff_v1(tx%ulm, tx%vlm, s%h, p%dd, w8x, w8y, g%x, i, j, g%nx, g%ny, dux, duy, dvx, dvy)
+        tx%taxy(3,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
+        tx%taxy(4,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)
+      end if
+    end do
+  end do
+  !$omp end parallel do
+
+!end subroutine
+contains
+  ! 風上差分用のウェイトを計算
+  function get_ww(u, v, vv) result(ww_upw)
+    real, intent(in) :: u, v
+    real, intent(in) :: vv
+    integer :: k
+    real :: ww_upw(1:8)
+    real :: wk
+    if (p_adv_upwind_index > 0 .and. vv > 0) then
+      do k = 1, 8
+        wk = -(u * n8x(k) + v * n8y(k)) / vv                    ! -1~1
+        wk = max(1 - (1 - wk) * p_adv_upwind_index / 2, 0.0)    ! 0～1
+        ww_upw(k) = wk
+      end do
+    else
+      ww_upw(:) = 1
+    end if
+  end function
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 移流項を計算する
 !----------------------------------------------------------------------
-function calc_kth_advection_v1(s, sx, i, j, k, in, jn, uve) result(ta)
-  type(t_state), intent(inout) :: s
+function adv_edge_v1(s, sx, tx, i, j, k, in, jn, ie, je) result(ta)
+  type(t_state), intent(in) :: s
   type(t_enc_status), intent(in) :: sx
-  integer, intent(in) :: i, j, k, in, jn
-  real, intent(in) :: uve
+  type(t_enc_adv), intent(in) :: tx
+  integer, intent(in) :: i, j, k, in, jn, ie, je
   real :: ta
 
   real :: taxe, taye
@@ -50,17 +158,20 @@ function calc_kth_advection_v1(s, sx, i, j, k, in, jn, uve) result(ta)
   integer :: inn, jnn, ino, jno
   real :: duvc, duvr, duvl, duv0
   real :: rr, rl, phir, phil, phi
+  real :: uve
+
+  uve = sx%uv(k,ie,je)
   if (uve > 0.0) continue
   ! 風上差分による移流項
-  taxe = (sx%taxy(1,i,j) + sx%taxy(1,in,jn)) / 2  ! 移流項(x方向, 符合は座標軸方向が正)
-  taye = (sx%taxy(2,i,j) + sx%taxy(2,in,jn)) / 2  ! 移流項(y方向, 符合は座標軸方向が正)
+  taxe = (tx%taxy(1,i,j) + tx%taxy(1,in,jn)) / 2  ! 移流項(x方向, 符合は座標軸方向が正)
+  taye = (tx%taxy(2,i,j) + tx%taxy(2,in,jn)) / 2  ! 移流項(y方向, 符合は座標軸方向が正)
   ta = taxe * n8x(k) + taye * n8y(k)             ! 移流項(符合は中心セルから近傍セルに向かい正)
   !ta = ta * 1.5
   ! TVD(風上差分と中心差分の混合)
   if (f_advection_tvd > 0) then
     ! 中心差分による移流項
-    taxe2 = (sx%taxy(3,i,j) + sx%taxy(3,in,jn)) / 2
-    taye2 = (sx%taxy(4,i,j) + sx%taxy(4,in,jn)) / 2
+    taxe2 = (tx%taxy(3,i,j) + tx%taxy(3,in,jn)) / 2
+    taye2 = (tx%taxy(4,i,j) + tx%taxy(4,in,jn)) / 2
     tae2 = taxe2 * n8x(k) + taye2 * n8y(k)
     tae2 = tae2 * 1.5
     inn = in + din(k)  ! k近傍のさらに外側のセル
@@ -99,79 +210,6 @@ function calc_kth_advection_v1(s, sx, i, j, k, in, jn, uve) result(ta)
     !ta = (ta + tae2) / 2
   end if
 end function
-
-
-!----------------------------------------------------------------------
-! 移流項の計算
-!----------------------------------------------------------------------
-subroutine advection_v1(p, g, s, sx)
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(in) :: s
-  type(t_enc_status), intent(inout) :: sx
-
-  integer :: i, j, k
-  real :: dux, duy, dvx, dvy
-  real :: ww(1:8), wwx(1:8), wwy(1:8)
-  !real :: ulm(1:g%nx,1:g%ny), vlm(1:g%nx,1:g%ny)
-
-  if (f_advection_term == 0) return
-
-  !$omp parallel do private(i, j)
-  do j = g%wy(1), g%wy(2)
-    do i = g%wx(1,j), g%wx(2,j)
-      if (g%x(i,j) <= 0) cycle
-      if (g%sw(i,j) > 0) cycle   ! get_diffで陸から1セル外側まで参照することに注意
-      if (s%h(i,j) < p%dd) cycle
-      sx%ulm(i,j) = s%u(i,j) * g%lm(i,j)
-      sx%vlm(i,j) = s%v(i,j) * g%lm(i,j)
-    end do
-  end do
-  !$omp end parallel do
-
-  !$omp parallel do private(i, j, k, ww, wwx, wwy, dux, duy, dvx, dvy)
-  do j = g%wy(1)+1, g%wy(2)-1
-    do i = g%wx(1,j)+1, g%wx(2,j)-1
-      if (g%x(i,j) <= 0) cycle
-      if (g%sw(i,j) > 0) cycle
-      if (s%h(i,j) < p%dd) cycle
-      ! 風上差分による移流項の計算
-      ww(:) = get_ww(s%u(i,j), s%v(i,j), s%vv(i,j))
-      forall(k=1:8) wwx(k) = w8x(k) * ww(k)
-      forall(k=1:8) wwy(k) = w8y(k) * ww(k)
-      call get_diff_v1(sx%ulm, sx%vlm, s%h, p%dd, wwx, wwy, g%x, i, j, g%nx, g%ny, dux, duy, dvx, dvy)
-      sx%taxy(1,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
-      sx%taxy(2,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)
-      if (f_advection_tvd > 0) then
-        ! 中心差分による移流項の計算
-        call get_diff_v1(sx%ulm, sx%vlm, s%h, p%dd, w8x, w8y, g%x, i, j, g%nx, g%ny, dux, duy, dvx, dvy)
-        sx%taxy(3,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
-        sx%taxy(4,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)
-      end if
-    end do
-  end do
-  !$omp end parallel do
-
-!end subroutine
-contains
-  ! 風上差分用のウェイトを計算
-  function get_ww(u, v, vv) result(ww_upw)
-    real, intent(in) :: u, v
-    real, intent(in) :: vv
-    integer :: k
-    real :: ww_upw(1:8)
-    real :: wk
-    if (p_adv_upwind_index > 0 .and. vv > 0) then
-      do k = 1, 8
-        wk = -(u * n8x(k) + v * n8y(k)) / vv                    ! -1~1
-        wk = max(1 - (1 - wk) * p_adv_upwind_index / 2, 0.0)    ! 0～1
-        ww_upw(k) = wk
-      end do
-    else
-      ww_upw(:) = 1
-    end if
-  end function
-end subroutine
 
 
 !----------------------------------------------------------------------
@@ -230,51 +268,14 @@ end subroutine
 !======================================================================
 !======================================================================
 !----------------------------------------------------------------------
-! 移流項を計算する
-!----------------------------------------------------------------------
-function calc_kth_advection_v2(s, sx, i, j, k, in, jn, uve) result(ta)
-  type(t_state), intent(in) :: s
-  type(t_enc_status), intent(in) :: sx
-  integer, intent(in) :: i, j, k, in, jn
-  real, intent(in) :: uve
-  real :: ta
-  real :: taxe, taye
-  if (s%initialized) continue
-  if (f_advection_term <= 0) then
-    ta = 0
-    return
-  end if
-  if (.true.) then    ! 両側セル平均  tada
-  !if (.false.) then   ! 風上セル
-    ! 境界の両側セルの平均移流項を用いる
-    taxe = (sx%taxy(1,i,j) + sx%taxy(1,in,jn)) / 2
-    taye = (sx%taxy(2,i,j) + sx%taxy(2,in,jn)) / 2
-  else
-    ! 境界から見て風上側のセルの移流項を用いる
-    if (uve > 0) then
-      taxe = sx%taxy(1,i,j)
-      taye = sx%taxy(2,i,j)
-    else if (uve < 0) then
-      taxe = sx%taxy(1,in,jn)
-      taye = sx%taxy(2,in,jn)
-    else
-      taxe = 0
-      taye = 0
-    endif
-  end if
-  ta = taxe * n8x(k) + taye * n8y(k)             ! 移流項(符合は中心セルから近傍セルに向かい正)
-  !ta = ta * 1.5
-end function
-
-
-!----------------------------------------------------------------------
 ! 移流項の計算(局所型)
 !----------------------------------------------------------------------
-subroutine advection_v2(p, g, s, sx)
+subroutine adv_prepare_v2(p, g, s, sx, tx)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  type(t_enc_status), intent(inout) :: sx
+  type(t_enc_status), intent(in) :: sx
+  type(t_enc_adv), intent(inout) :: tx
 
   integer :: i, j, k
   real :: ww(1:8), wwx(1:8), wwy(1:8)
@@ -349,8 +350,8 @@ subroutine advection_v2(p, g, s, sx)
         ! 勾配を計算
         call get_diff_v2(uu, vv, hh, p%dd, wwx, wwy, xx, 2, 2, 3, 3, dux, duy, dvx, dvy)
         ! 移流項を計算
-        sx%taxy(1,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy) * g%lm(i,j)
-        sx%taxy(2,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy) * g%lm(i,j)
+        tx%taxy(1,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy) * g%lm(i,j)
+        tx%taxy(2,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy) * g%lm(i,j)
       else
         ! 保存形
         ! uとvを並べてuu,vv,uvの形に整形して代入
@@ -366,8 +367,8 @@ subroutine advection_v2(p, g, s, sx)
         ! 勾配を計算
         call get_diff2_v2(uu, vv, uv, hh, p%dd, wwx, wwy, xx, duux, dvvy, duvx, duvy)
         ! 移流項を計算
-        sx%taxy(1,i,j) = -(duux + duvy) * g%lm(i,j)
-        sx%taxy(2,i,j) = -(duvx + dvvy) * g%lm(i,j)
+        tx%taxy(1,i,j) = -(duux + duvy) * g%lm(i,j)
+        tx%taxy(2,i,j) = -(duvx + dvvy) * g%lm(i,j)
       end if
 
     end do
@@ -375,6 +376,46 @@ subroutine advection_v2(p, g, s, sx)
   !$omp end parallel do
 
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 移流項を計算する
+!----------------------------------------------------------------------
+function adv_edge_v2(s, sx, tx, i, j, k, in, jn, ie, je) result(ta)
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(in) :: sx
+  type(t_enc_adv), intent(in) :: tx
+  integer, intent(in) :: i, j, k, in, jn, ie, je
+  real :: ta
+  real :: taxe, taye
+  real :: uve
+  if (s%initialized) continue
+  if (f_advection_term <= 0) then
+    ta = 0
+    return
+  end if
+  if (.true.) then    ! 両側セル平均  tada
+  !if (.false.) then   ! 風上セル
+    ! 境界の両側セルの平均移流項を用いる
+    taxe = (tx%taxy(1,i,j) + tx%taxy(1,in,jn)) / 2
+    taye = (tx%taxy(2,i,j) + tx%taxy(2,in,jn)) / 2
+  else
+    ! 境界から見て風上側のセルの移流項を用いる
+    uve = sx%uv(k,ie,je)
+    if (uve > 0) then
+      taxe = tx%taxy(1,i,j)
+      taye = tx%taxy(2,i,j)
+    else if (uve < 0) then
+      taxe = tx%taxy(1,in,jn)
+      taye = tx%taxy(2,in,jn)
+    else
+      taxe = 0
+      taye = 0
+    endif
+  end if
+  ta = taxe * n8x(k) + taye * n8y(k)             ! 移流項(符合は中心セルから近傍セルに向かい正)
+  !ta = ta * 1.5
+end function
 
 
 !----------------------------------------------------------------------

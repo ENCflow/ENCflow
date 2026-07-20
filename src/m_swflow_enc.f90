@@ -17,6 +17,7 @@ module m_swflow_enc
   public :: m_swflow_enc_dispose
 
   ! nvfortran の submodule バグ回避(TPR #27323 系)。修正され次第 private に戻す
+  public :: f_advection_tvd
   public :: p_adv_upwind_index
   public :: n8x, n8y
 
@@ -45,9 +46,7 @@ module m_swflow_enc
     real, allocatable :: mn(:,:,:)   ! セル境界での流量
     real, allocatable :: mn0(:,:,:)  ! セル境界での更新前流量
     real, allocatable :: h1(:,:)     ! セル中心での計算済み水深
-    real, allocatable :: taxy(:,:,:) ! セル中心での移流項(第1添字は1~4，それぞれ風上差分と中心差分のx,y成分)
-    real, allocatable :: ulm(:,:)    ! セル中心でのu*lm (移流項計算用)
-    real, allocatable :: vlm(:,:)    ! セル中心でのv*lm (移流項計算用)
+    logical :: initialized = .false.
   end type
   type(t_enc_status) :: sx_mod
 
@@ -83,18 +82,23 @@ module m_swflow_enc
 
 
   interface
-    module function calc_kth_advection(s, sx, i, j, k, in, jn, uve) result(ta)
-      type(t_state), intent(inout) :: s
-      type(t_enc_status), intent(in) :: sx
-      integer, intent(in) :: i, j, k, in, jn
-      real, intent(in) :: uve
-      real :: ta
-    end function
-    module subroutine advection(p, g, s, sx)
+    module subroutine adv_init(p, g)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+    end subroutine
+    module subroutine adv_prepare(p, g, s, sx)
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(in) :: s
-      type(t_enc_status), intent(inout) :: sx
+      type(t_enc_status), intent(in) :: sx
+    end subroutine
+    module function adv_edge(s, sx, i, j, k, in, jn, ie, je) result(ta)
+      type(t_state), intent(in) :: s
+      type(t_enc_status), intent(in) :: sx
+      integer, intent(in) :: i, j, k, in, jn, ie, je
+      real :: ta
+    end function
+    module subroutine adv_dispose()
     end subroutine
   end interface
 
@@ -148,6 +152,9 @@ subroutine m_swflow_enc_init(p, g, s)
   ! 初期条件を設定する
   call init_enc_status(p, g, s, sx_mod)
 
+  ! 移流項計算サブモジュールを初期化する
+  call adv_init(p, g)
+
   ! 高速摩擦計算ルーチンを初期化する
   call m_ffactor_init(f_friction_fastmath, p%dd, 30.0, 'UV')
 
@@ -165,7 +172,7 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   integer, intent(inout) :: ierror
   if (b%initialized) continue
   call prepare(p, g, s, sx_mod)
-  call advection(p, g, s, sx_mod)
+  call adv_prepare(p, g, s, sx_mod)
   call momentum(p, g, s, sx_mod, ierror)
   call boundary(p, g, b, s, sx_mod)
   call continuous(p, g, s, sx_mod)
@@ -181,6 +188,7 @@ subroutine m_swflow_enc_dispose(p)
   if (p%f_state_save > 0) call save_state(p, sx_mod)
   call del_enc_status(sx_mod)
   call m_ffactor_dispose
+  call adv_dispose
 end subroutine
 
 
@@ -308,13 +316,6 @@ subroutine init_enc_status(p, g, s, sx)
   allocate(sx%h1(1:g%nx,1:g%ny), source = 0.0)
   allocate(sx%mn(1:4,0:g%nx,0:g%ny), source = 0.0)
   allocate(sx%mn0(1:4,0:g%nx,0:g%ny), source = 0.0)
-  if (f_advection_tvd > 0) then
-    allocate(sx%taxy(1:4,1:g%nx,1:g%ny), source = 0.0)
-  else
-    allocate(sx%taxy(1:2,1:g%nx,1:g%ny), source = 0.0)
-  end if
-  allocate(sx%ulm(1:g%nx,1:g%ny), source = 0.0)
-  allocate(sx%vlm(1:g%nx,1:g%ny), source = 0.0)
 
   ! 流速の初期条件を設定する
   !$omp parallel do private(i, j, k, in, jn, ie, je, ue, ve)
@@ -342,6 +343,8 @@ subroutine init_enc_status(p, g, s, sx)
 
   if (p%f_state_restore > 0) call restore_state(p, sx)
 
+  sx%initialized = .true.
+
 end subroutine
 
 
@@ -353,7 +356,6 @@ subroutine del_enc_status(sx)
   if (allocated(sx%uv)) deallocate(sx%uv)
   if (allocated(sx%mn)) deallocate(sx%mn)
   if (allocated(sx%h1)) deallocate(sx%h1)
-  if (allocated(sx%taxy)) deallocate(sx%taxy)
 end subroutine
 
 
@@ -484,7 +486,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
 
   ! セル境界の移流項をセットする
   if (f_advection_term > 0) then
-    tae = calc_kth_advection(s, sx, i, j, k, in, jn, uve)
+    tae = adv_edge(s, sx, i, j, k, in, jn, ie, je)
   else
     tae = 0
   end if
