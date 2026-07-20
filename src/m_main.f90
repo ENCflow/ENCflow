@@ -156,7 +156,7 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
     end if
 
     ! 境界条件を準備
-    call m_boundary_makebdc(b, p, s)
+    call m_boundary_makebdc(b, p, g, s)
 
     ! 地表水を計算
     call m_swflow_calc(sw, p, g, b, s, ierror)

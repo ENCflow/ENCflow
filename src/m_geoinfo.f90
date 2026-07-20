@@ -168,9 +168,6 @@ subroutine set_params(p, g, list)
     end if
   end if
 
-  p%dx = g%dx
-  p%dy = g%dy
-  p%dr = g%dr
   p%dtpdx = p%dt / min(g%dx, g%dy)
 
 end subroutine

@@ -135,14 +135,14 @@ subroutine set_probe(p)
       ! 設定ファイルでセルの座標を指定
       ix = nint(pbxy(1,i))
       iy = nint(pbxy(2,i))
-      x = (ix - 0.5) * p%dx 
-      y = (iy - 0.5) * p%dy
+      x = (ix - 0.5) * g%dx 
+      y = (iy - 0.5) * g%dy
     else
       ! 設定ファイルで実座標を指定
       x = pbxy(1,i)
       y = pbxy(2,i)
-      ix = int(x / p%dx) + 1
-      iy = int(y / p%dy) + 1
+      ix = int(x / g%dx) + 1
+      iy = int(y / g%dy) + 1
     end if
     if (ix < 1 .or. ix > g%nx .or. iy < 1 .or. iy > g%ny) then
       write(msg, '("error: probe ",i0," is out of area.",2f15.2,2i7)') i, x, y, ix, iy
@@ -215,20 +215,20 @@ subroutine set_flux(p)
       iy0 = nint(flxy(2,i))
       ix1 = nint(flxy(3,i))
       iy1 = nint(flxy(4,i))
-      x0 = (ix0 - 0.5) * p%dx 
-      y0 = (iy0 - 0.5) * p%dy
-      x1 = (ix1 - 0.5) * p%dx 
-      y1 = (iy1 - 0.5) * p%dy
+      x0 = (ix0 - 0.5) * g%dx 
+      y0 = (iy0 - 0.5) * g%dy
+      x1 = (ix1 - 0.5) * g%dx 
+      y1 = (iy1 - 0.5) * g%dy
     else
       ! 設定ファイルで実座標を指定
       x0 = flxy(1,i)
       y0 = flxy(2,i)
       x1 = flxy(3,i)
       y1 = flxy(4,i)
-      ix0 = int(x0 / p%dx) + 1
-      iy0 = int(y0 / p%dy) + 1
-      ix1 = int(x1 / p%dx) + 1
-      iy1 = int(y1 / p%dy) + 1
+      ix0 = int(x0 / g%dx) + 1
+      iy0 = int(y0 / g%dy) + 1
+      ix1 = int(x1 / g%dx) + 1
+      iy1 = int(y1 / g%dy) + 1
     end if
     if (ix0 < 1 .or. ix0 > g%nx .or. iy0 < 1 .or. iy0 > g%ny) then
       write(msg, '("error: point R of flux ",i0," is out of area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
@@ -287,11 +287,11 @@ subroutine set_flux(p)
       !   *** その場合のウェイトが現状では正しくない ***
       if (flxytype == 0) then
         if (x0 < x1) then
-          x0 = (ix0 - 1) * p%dx
-          x1 = ix1 * p%dx
+          x0 = (ix0 - 1) * g%dx
+          x1 = ix1 * g%dx
         else
-          x1 = (ix1 - 1) * p%dx
-          x0 = ix0 * p%dx
+          x1 = (ix1 - 1) * g%dx
+          x0 = ix0 * g%dx
         end if
         y0 = -a / b * x0 - c / b
         y1 = -a / b * x1 - c / b
@@ -300,19 +300,19 @@ subroutine set_flux(p)
       ! x方向に刻みながら処理
       do ix = ix0, ix1, sign(1, ix1 - ix0)
         ncell = ncell + 1
-        xa = (ix - 1) * p%dx           ! セルの左端のx座標
-        xb = ix * p%dx                 ! セルの右端のx座標
+        xa = (ix - 1) * g%dx           ! セルの左端のx座標
+        xb = ix * g%dx                 ! セルの右端のx座標
         ya = -a / b * xa - c / b       ! セルの左端での測線のy座標
         yb = -a / b * xb - c / b       ! セルの右端での測線のy座標
-        iya = int(ya / p%dy) + 1       ! セルの右端での測線のy方向セル番号
-        iyb = int(yb / p%dy) + 1       ! セルの左端での測線のy方向セル番号
+        iya = int(ya / g%dy) + 1       ! セルの右端での測線のy方向セル番号
+        iyb = int(yb / g%dy) + 1       ! セルの左端での測線のy方向セル番号
         r%flux(i)%ixy(1,ncell) = ix
         r%flux(i)%ixy(2,ncell) = iya
         if (iya /= iyb) then           ! 測線がセル境界を跨ぐ
           ncell = ncell + 1
           r%flux(i)%ixy(1,ncell) = ix
           r%flux(i)%ixy(2,ncell) = iyb
-          yc = ((iya + iyb) / 2. - 0.5) * p%dy  ! セル境界のy座標
+          yc = ((iya + iyb) / 2. - 0.5) * g%dy  ! セル境界のy座標
           wa = abs(ya - yc)
           wb = abs(yb - yc)
           ww = wa + wb
@@ -328,36 +328,36 @@ subroutine set_flux(p)
       !   *** その場合のウェイトが現状では正しくない ***
       if (flxytype == 0) then
         if (y0 < y1) then
-          y0 = (iy0 - 1) * p%dy
-          y1 = iy1 * p%dy
+          y0 = (iy0 - 1) * g%dy
+          y1 = iy1 * g%dy
         else
-          y1 = (iy1 - 1) * p%dy
-          y0 = iy0 * p%dy
+          y1 = (iy1 - 1) * g%dy
+          y0 = iy0 * g%dy
         end if
-                             xa = (ix0 - 1) * p%dx           ! セルの左端のx座標
-                             xb = ix0 * p%dx                 ! セルの右端のx座標
+                             xa = (ix0 - 1) * g%dx           ! セルの左端のx座標
+                             xb = ix0 * g%dx                 ! セルの右端のx座標
         x0 = -b / a * y0 - c / a
         x1 = -b / a * y1 - c / a
-        iya = int(xa / p%dx) + 1
-        iyb = int(xb / p%dx) + 1
+        iya = int(xa / g%dx) + 1
+        iyb = int(xb / g%dx) + 1
       end if
       ncell = 0
       ! y方向に刻みながら処理
       do iy = iy0, iy1, sign(1, iy1 - iy0)
         ncell = ncell + 1
-        ya = (iy - 1) * p%dy           ! セルの下端のy座標
-        yb = iy * p%dy                 ! セルの上端のy座標
+        ya = (iy - 1) * g%dy           ! セルの下端のy座標
+        yb = iy * g%dy                 ! セルの上端のy座標
         xa = -b / a * ya - c / a       ! セルの下端での測線のx座標
         xb = -b / a * yb - c / a       ! セルの上端での測線のx座標
-        ixa = int(xa / p%dx) + 1       ! セルの下端での測線のx方向セル番号
-        ixb = int(xb / p%dx) + 1       ! セルの上端での測線のx方向セル番号
+        ixa = int(xa / g%dx) + 1       ! セルの下端での測線のx方向セル番号
+        ixb = int(xb / g%dx) + 1       ! セルの上端での測線のx方向セル番号
         r%flux(i)%ixy(1,ncell) = ixa
         r%flux(i)%ixy(2,ncell) = iy
         if (ixa /= ixb) then           ! 測線がセル境界を跨ぐ
           ncell = ncell + 1
           r%flux(i)%ixy(1,ncell) = ixb
           r%flux(i)%ixy(2,ncell) = iy
-          xc = ((ixa + ixb) / 2. - 0.5) * p%dx  ! セル境界のx座標
+          xc = ((ixa + ixb) / 2. - 0.5) * g%dx  ! セル境界のx座標
           wa = abs(xa - xc)
           wb = abs(xb - xc)
           ww = wa + wb

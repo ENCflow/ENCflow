@@ -124,7 +124,7 @@ subroutine m_swflow_dev_init(p, g, s)
   end select
 
   ! 重み係数をセットする
-  call init_weights(p)
+  call init_weights(p, g)
 
   ! 初期条件を設定する
   call init_enc_status(p, g, s, sx_mod)
@@ -204,39 +204,43 @@ end subroutine
 !----------------------------------------------------------------------
 ! 重み係数の初期化
 !----------------------------------------------------------------------
-subroutine init_weights(p)
+subroutine init_weights(p, g)
   type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
 
   integer :: k
   real :: lpx, lpy, ldx, ldy
+  real :: dr
+
+  dr = sqrt(g%dx**2 + g%ny**2)
 
   forall(k=1:8) din2(k) = din(k)**2
   forall(k=1:8) djn2(k) = djn(k)**2
-  forall(k=1:8) r8x(k) = real(din(k)) / p%dx
-  forall(k=1:8) r8y(k) = real(djn(k)) / p%dy
+  forall(k=1:8) r8x(k) = real(din(k)) / g%dx
+  forall(k=1:8) r8y(k) = real(djn(k)) / g%dy
 
-  w8dr(1:8) = [ p%dr, p%dy, p%dr, p%dx, p%dx, p%dr, p%dy, p%dr ]
+  w8dr(1:8) = [ dr, g%dy, dr, g%dx, g%dx, dr, g%dy, dr ]
   forall(k=1:8) w8dr2(k) = w8dr(k)**2
 
   ! k軸の単位ベクトルのx, y方向成分
-  n8x(1:8) = [ -p%dx/p%dr,  0.0,  p%dx/p%dr, -1.0, 1.0, -p%dx/p%dr, 0.0, p%dx/p%dr ]
-  n8y(1:8) = [ -p%dy/p%dr, -1.0, -p%dy/p%dr,  0.0, 0.0,  p%dy/p%dr, 1.0, p%dy/p%dr ]
+  n8x(1:8) = [ -g%dx/dr,  0.0,  g%dx/dr, -1.0, 1.0, -g%dx/dr, 0.0, g%dx/dr ]
+  n8y(1:8) = [ -g%dy/dr, -1.0, -g%dy/dr,  0.0, 0.0,  g%dy/dr, 1.0, g%dy/dr ]
 
   ! フラックスの通過幅の割合
   !   lpy, ldyはy軸に投影したLの長さのΔyに対する割合(x方向フラックスが通過)
   !   lpx, ldxはx軸に投影したLの長さのΔxに対する割合(y方向フラックスが通過)
   !   lpy, lpxは斜め方向、ldy, ldxは軸方向
   !   ここで lpx + (ldx * 2) = 1, lpy + (ldy * 2) = 1 である
-  if (p%dy > p%dx) then
-    lpy = 1 - (p%dx / p%dy)**2 * p_diagratio
-    ldy = p_diagratio / 2 * (p%dx / p%dy)**2
+  if (g%dy > g%dx) then
+    lpy = 1 - (g%dx / g%dy)**2 * p_diagratio
+    ldy = p_diagratio / 2 * (g%dx / g%dy)**2
     lpx = 1 - p_diagratio
     ldx = p_diagratio / 2
   else
     lpy = 1 - p_diagratio
     ldy = p_diagratio / 2
-    lpx = 1 - (p%dy / p%dx)**2 * p_diagratio
-    ldx = p_diagratio / 2 * (p%dy / p%dx)**2
+    lpx = 1 - (g%dy / g%dx)**2 * p_diagratio
+    ldx = p_diagratio / 2 * (g%dy / g%dx)**2
   end if
 
   ! k軸方向フラックスの通過幅の割合
@@ -251,7 +255,7 @@ subroutine init_weights(p)
 
 
   ! k軸方向フラックスの通過幅
-  forall(k=1:8) l8(k) = sqrt((l8y(k) * p%dy)**2 + (l8x(k) * p%dx)**2)
+  forall(k=1:8) l8(k) = sqrt((l8y(k) * g%dy)**2 + (l8x(k) * g%dx)**2)
 
   ! セル境界の流速・流量からセル中心の平均流速・平均流量の増分を計算するための係数
   !   セル中心から近傍に向かうフラックスuvをn8x, n8yで除して投影前のxとyの正の方向成分に戻す
@@ -263,7 +267,7 @@ subroutine init_weights(p)
   forall(k=1:8) w8my(k) = w8my(k) * l8x(k) / 2
 
   ! セル境界での単位幅流量から中心セルの1時間ステップでの水位減少量を計算するための係数
-  forall(k=1:8) mn2dh(k) = (l8(k) / (p%dx * p%dy)) * p%dt
+  forall(k=1:8) mn2dh(k) = (l8(k) / (g%dx * g%dy)) * p%dt
   
 end subroutine
 

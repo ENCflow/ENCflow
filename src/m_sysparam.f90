@@ -29,10 +29,7 @@ module m_sysparam
     integer :: iet_file                        ! ファイル出力終了時間の時間ステップ数
     integer :: iet_recd                        ! プローブ出力終了時間の時間ステップ数
     real :: dt                                 ! 時間ステップ (s)
-    real :: dx                                 ! 計算格子の大きさ (m)
-    real :: dy                                 ! 計算格子の大きさ (m)
-    real :: dr                                 ! 計算格子の対角線の長さ (m)
-    real :: dtpdx                              ! dt / mean(dx, dy) 
+    real :: dtpdx                              ! dt / min(dx, dy) 
     real :: dd                                 ! この水深以上なら水の移動を計算する(限界水深)
     real :: dv                                 ! これ以下なら強制的にこの水深にする(仮想水深)
     real :: vv                                 ! これ以下なら摩擦項計算時の流速をこの流速に

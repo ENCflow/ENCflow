@@ -216,7 +216,7 @@ subroutine m_state_calcstat(s, p, g)
   vvmax = 0
   qqmax = 0
   cnmax = 0
-  qcumf = p%dt / p%dx / p%dy / s%n_valcells * 1000
+  qcumf = p%dt / g%dx / g%dy / s%n_valcells * 1000
 
   !$omp parallel do private(i, j, cosdir, cc), & 
   !$omp reduction(+: hsum), reduction(max: hmax, vvmax, qqmax, cnmax)
@@ -250,7 +250,7 @@ subroutine m_state_calcstat(s, p, g)
       vvmax = max(vvmax, s%vv(i,j))
       qqmax = max(qqmax, s%qq(i,j))
       cnmax = max(cnmax, s%cn(i,j))
-      s%qcum(i,j) = s%qcum(i,j) + (abs(s%m(i,j)) * p%dy + abs(s%n(i,j)) * p%dx) * qcumf
+      s%qcum(i,j) = s%qcum(i,j) + (abs(s%m(i,j)) * g%dy + abs(s%n(i,j)) * g%dx) * qcumf
     end do
   end do
   !$omp end parallel do

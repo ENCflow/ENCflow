@@ -131,9 +131,10 @@ end subroutine
 !----------------------------------------------------------------------
 ! 時刻tでの湧出し流量を計算
 !----------------------------------------------------------------------
-subroutine m_boundary_makebdc(b, p, s)
+subroutine m_boundary_makebdc(b, p, g, s)
   type(t_boundary), intent(inout) :: b
   type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   if (b%initialized) continue
   if (p%initialized) continue
@@ -146,7 +147,7 @@ subroutine m_boundary_makebdc(b, p, s)
   call get_srcval(s%t, b%srcq)
 
   !--- セル1個・dtあたりに換算 ---
-  b%srcq = b%srcq / (b%nsrcc * p%dx * p%dy) * p%dt
+  b%srcq = b%srcq / (b%nsrcc * g%dx * g%dy) * p%dt
   !print *, s%t, b%srcq
   
 contains
