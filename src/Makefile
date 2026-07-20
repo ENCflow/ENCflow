@@ -36,11 +36,17 @@ $(LIB): $(LIBOBJS)
 	$(AR) $(ARFLAGS) $@ $(LIBOBJS)
 
 # ---------------------------------------------------------------
-# MODE 切り替え時の安全装置
-#   前回ビルドと MODE が変わっていたら全オブジェクトを作り直す。
-#   (serial/mpi の .o や m_parallel.mod の混在リンクを防ぐ)
+# MODE / MPI 実装切り替え時の安全装置
+#   前回ビルドと MODE または MPI 実装(module 環境)が変わっていたら
+#   全オブジェクトを作り直す。
+#   (serial/mpi の .o、m_parallel.mod、異なる MPI の mpi.mod の
+#    混在リンクを防ぐ)
+#   MPIID: MPI ラッパーの -show 出力(実装ごとに異なる)のハッシュ。
+#          非ラッパー(ifx, gfortran 単体)では -show が失敗し
+#          空 = 一定値になるため、serial モードでは実質無効。
 # ---------------------------------------------------------------
-MODESTAMP	= .mode_$(MODE)
+MPIID	:= $(shell $(FRT) -show 2>/dev/null | md5sum | cut -c1-8)
+MODESTAMP	= .mode_$(MODE)_$(MPIID)
 
 $(OBJS): $(MODESTAMP) ../make.inc
 
@@ -101,4 +107,9 @@ install: a.out
 	mkdir -p $(BINDIR)
 	cp -f a.out $(BINDIR)
 
-.PHONY: all clean install
+# Check_mode.sh から「現環境での期待スタンプ名」を問い合わせるための
+# ターゲット(make -s print-stamp MODE=... で使う)
+print-stamp:
+	@echo $(MODESTAMP)
+
+.PHONY: all clean install print-stamp
