@@ -121,27 +121,27 @@ subroutine adv_prepare_v1(p, g, s, sx, tx)
   end do
   !$omp end parallel do
 
-!end subroutine
-contains
-  ! 風上差分用のウェイトを計算
-  function get_ww(u, v, vv) result(ww_upw)
-    real, intent(in) :: u, v
-    real, intent(in) :: vv
-    integer :: k
-    real :: ww_upw(1:8)
-    real :: wk
-    if (p_adv_upwind_index > 0 .and. vv > 0) then
-      do k = 1, 8
-        wk = -(u * n8x(k) + v * n8y(k)) / vv                    ! -1~1
-        wk = max(1 - (1 - wk) * p_adv_upwind_index / 2, 0.0)    ! 0～1
-        ww_upw(k) = wk
-      end do
-    else
-      ww_upw(:) = 1
-    end if
-  end function
 end subroutine
 
+!----------------------------------------------------------------------
+! 風上差分用のウェイトを計算
+!----------------------------------------------------------------------
+function get_ww(u, v, vv) result(ww_upw)
+  real, intent(in) :: u, v
+  real, intent(in) :: vv
+  integer :: k
+  real :: ww_upw(1:8)
+  real :: wk
+  if (p_adv_upwind_index > 0 .and. vv > 0) then
+    do k = 1, 8
+      wk = -(u * n8x(k) + v * n8y(k)) / vv                    ! -1~1
+      wk = max(1 - (1 - wk) * p_adv_upwind_index / 2, 0.0)    ! 0～1
+      ww_upw(k) = wk
+    end do
+  else
+    ww_upw(:) = 1
+  end if
+end function
 
 !----------------------------------------------------------------------
 ! 移流項を計算する
