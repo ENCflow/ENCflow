@@ -6,7 +6,7 @@ module m_record
   use m_parallel, only : is_root
   use m_util, only : itoa
   use list_record, only : t_list_record, list_record_read
-  use m_parallel, only : is_root, par_info, par_stop
+  use m_parallel, only : is_root, par_info, par_abort
   implicit none
   private
 
@@ -146,11 +146,11 @@ subroutine set_probe(p)
     end if
     if (ix < 1 .or. ix > g%nx .or. iy < 1 .or. iy > g%ny) then
       write(msg, '("error: probe ",i0," is out of area.",2f15.2,2i7)') i, x, y, ix, iy
-      call par_stop(trim(msg))
+      call par_abort(trim(msg))
     end if
     if (g%x(ix,iy) < 1) then
       write(msg, '("error: probe ",i0," is not in valid area.",2f15.2,2i7)') i, x, y, ix, iy
-      call par_stop(trim(msg))
+      call par_abort(trim(msg))
     end if
     r%probe(i)%xy(1) = x
     r%probe(i)%xy(2) = y
@@ -232,11 +232,11 @@ subroutine set_flux(p)
     end if
     if (ix0 < 1 .or. ix0 > g%nx .or. iy0 < 1 .or. iy0 > g%ny) then
       write(msg, '("error: point R of flux ",i0," is out of area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
-      call par_stop(trim(msg))
+      call par_abort(trim(msg))
     end if
     if (ix1 < 1 .or. ix1 > g%nx .or. iy1 < 1 .or. iy1 > g%ny) then
       write(msg, '("error: point L flux ",i0," is out of area.",2f15.2,2i7)') i, x1, y1, ix1, iy1
-      call par_stop(trim(msg))
+      call par_abort(trim(msg))
     end if
     if (g%x(ix0,iy0) < 1) then
       write(msg, '("warning: point R of flux ",i0," is not in valid area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
@@ -434,7 +434,7 @@ subroutine read_flxy(p, fn_flxy, flxy)
   rewind(un)
 
   if (n > nflmax) then
-    call par_stop("Error: too many flux transect"//itoa(n))
+    call par_abort("Error: too many flux transect"//itoa(n))
   end if
 
   flxy(:,:) = -9999           ! パラメータファイルの情報を上書きして初期化する
