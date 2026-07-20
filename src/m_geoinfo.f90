@@ -152,12 +152,29 @@ subroutine set_params(p, g, list)
   g%min_gv = list%min_gv
   g%min_bb = list%min_bb
 
-  p%nx = list%nx
-  p%ny = list%ny
-  p%dx = list%dx
-  p%dy = list%dy
-  p%dr = sqrt(g%dx**2 + g%dy**2)
+  if (g%dx <= 0.0) then
+    if (g%lx > 0.0 .and. g%nx > 0) then
+      g%dx = g%lx / g%nx
+    else
+      call par_stop("conflict nx, lx and dx")
+    end if
+  end if
+
+  if (g%dy <= 0.0) then
+    if (g%ly > 0.0 .and. g%ny > 0) then
+      g%dy = g%ly / g%ny
+    else
+      call par_stop("conflict ny, ly and dy")
+    end if
+  end if
+
+  p%nx = g%nx
+  p%ny = g%ny
+  p%dx = g%dx
+  p%dy = g%dy
+  p%dr = g%dr
   p%dtpdx = p%dt / min(g%dx, g%dy)
+
 end subroutine
 
 !----------------------------------------------------------------------

@@ -18,17 +18,18 @@ module subroutine init_state_user_1(p, g, s)
   real :: xx, yy, rr, dx, dy, eta
   real :: lx, ly
   real :: pi = acos(-1.0)
+  if (p%initialized) continue
 
   lx = g%lx
   ly = g%ly
 
-  dx = lx / p%nx
-  dy = ly / p%ny
+  dx = g%dx
+  dy = g%dy
 
   !s%h = 1.0
 
-  do j = 1, p%ny
-    do i = 1, p%nx
+  do j = 1, g%ny
+    do i = 1, g%nx
       xx = (i - 0.5) * dx - lx / 2
       yy = (j - 0.5) * dy - lx / 2
       rr = sqrt(xx**2 + yy**2)
