@@ -46,7 +46,7 @@ module m_swflow_dev
     real, allocatable :: ulm(:,:)    ! セル中心でのu*lm (移流項計算用)
     real, allocatable :: vlm(:,:)    ! セル中心でのv*lm (移流項計算用)
   end type
-  type(t_enc_status) :: sx_actual
+  type(t_enc_status) :: sx_mod
 
 
   !--------------------------------------------------------------------
@@ -127,7 +127,7 @@ subroutine m_swflow_dev_init(p, g, s)
   call init_weights(p)
 
   ! 初期条件を設定する
-  call init_enc_status(p, g, s, sx_actual)
+  call init_enc_status(p, g, s, sx_mod)
 
   ! 高速摩擦計算ルーチンを初期化する
   call m_ffactor_init(f_friction_fastmath, p%dd, 30.0, 'UV')
@@ -145,12 +145,12 @@ subroutine m_swflow_dev_calc(p, g, b, s, ierror)
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
   if (b%initialized) continue
-  call prepare(p, g, s, sx_actual)
-  call advection(p, g, s, sx_actual)
-  call momentum(p, g, s, sx_actual, ierror)
-  call boundary(p, g, b, s, sx_actual)
-  call continuous(p, g, s, sx_actual)
-  call complete(p, g, s, sx_actual)
+  call prepare(p, g, s, sx_mod)
+  call advection(p, g, s, sx_mod)
+  call momentum(p, g, s, sx_mod, ierror)
+  call boundary(p, g, b, s, sx_mod)
+  call continuous(p, g, s, sx_mod)
+  call complete(p, g, s, sx_mod)
 end subroutine
 
 
@@ -159,8 +159,8 @@ end subroutine
 !----------------------------------------------------------------------
 subroutine m_swflow_dev_dispose(p)
   type(t_sysparam), intent(in) :: p
-  if (p%f_state_save > 0) call save_state(p, sx_actual)
-  call del_enc_status(sx_actual)
+  if (p%f_state_save > 0) call save_state(p, sx_mod)
+  call del_enc_status(sx_mod)
   call m_ffactor_dispose
 end subroutine
 
