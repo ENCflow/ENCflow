@@ -82,6 +82,8 @@ subroutine list_geoinfo_read(p, list)
   character(:), allocatable :: fn_bb     ! 家屋の平均寸法ファイル名
   real :: lu2rn(1:2,1:maxnluse)          ! 土地利用と粗度係数の対応
   integer :: un
+  integer :: ios
+  character(len=1024) :: iom
   namelist /list_geoinfo/ nx, ny, dx, dy, lx, ly, z0, rn0, mag_z, min_gv, min_bb, depth_rw, rn0_rw, &
                           f_user_routine_id, f_ztype, f_lusetype, f_rntype, f_masktype, f_edge_sw, &
                           fn_z, fn_mask, fn_sw, fn_rw, fn_rn, fn_luse, fn_gv, fn_bb, lu2rn
@@ -120,7 +122,8 @@ subroutine list_geoinfo_read(p, list)
 
   call par_info("reading list_geoinfo in "//trim(p%fn_geoinfo))
   open(newunit=un, file=trim(p%fn_geoinfo), status='old')
-  read(un, list_geoinfo)
+  read(un, nml=list_geoinfo, iostat=ios, iomsg=iom)
+  if (ios /= 0) call par_stop("list_geoinfo 読込失敗: "//trim(iom))
   close(un)
 
   if (dx == 0) then

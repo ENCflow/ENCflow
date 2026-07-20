@@ -1,6 +1,6 @@
 module list_precip
   use m_sysparam, only : t_sysparam
-  use m_parallel, only : par_info
+  use m_parallel, only : par_info, par_stop
   implicit none
   private
 
@@ -47,6 +47,8 @@ subroutine list_precip_read(p, list)
   character(:), allocatable :: fn_maplist
   real :: runoff_rate
   integer :: un
+  integer :: ios
+  character(len=1024) :: iom
   namelist /list_precip/ prtype, dt_prupdate, prval, fn_prmap, &
           dt_maplist, dt_maplist_c, fn_maplist, dt_mapunit, dt_mapunit_c, &
           runoff_rate
@@ -67,7 +69,8 @@ subroutine list_precip_read(p, list)
   !---- 設定ファイルを読み込む ----
   call par_info("reading list_precip in "//trim(p%fn_precip))
   open(newunit=un, file=trim(p%fn_precip), status='old')
-  read(un, list_precip)
+  read(un, nml=list_precip, iostat=ios, iomsg=iom)
+  if (ios /= 0) call par_stop("list_precip 読込失敗: "//trim(iom))
   close(un)
 
   list%prtype = prtype

@@ -1,6 +1,6 @@
 module list_initial
   use m_sysparam, only : t_sysparam
-  use m_parallel, only : par_info
+  use m_parallel, only : par_info, par_stop
   implicit none
   private
 
@@ -40,6 +40,8 @@ subroutine list_initial_read(p, list)
   real :: v0                     ! 初期y方向流速 (m/s)
   real :: h0_rw                  ! 河道マスク部の初期水深増分 (m)
   integer :: un
+  integer :: ios
+  character(len=1024) :: iom
   namelist /list_initial/ f_user_routine_id, f_htype, f_uvtype, f_fill_depres, &
                                 h0, u0, v0, h0_rw
 
@@ -56,7 +58,8 @@ subroutine list_initial_read(p, list)
 
   call par_info("reading list_initial in "//trim(p%fn_initial))
   open(newunit=un, file=trim(p%fn_initial), status='old')
-  read(un, list_initial)
+  read(un, nml=list_initial, iostat=ios, iomsg=iom)
+  if (ios /= 0) call par_stop("list_initial 読込失敗: "//trim(iom))
   close(un)
 
   list%f_user_routine_id = f_user_routine_id

@@ -1,6 +1,6 @@
 module list_enc
   use m_sysparam, only : t_sysparam
-  use m_parallel, only : par_info
+  use m_parallel, only : par_info, par_stop
   implicit none
   private
 
@@ -45,6 +45,8 @@ subroutine list_enc_read(p, list)
   real :: p_adv_upwind_index            ! upwind index of advection term
   real :: p_adprunge_thresh             ! threshold of adaptive Runge-Kutta (1.1~)
   integer :: un
+  integer :: ios
+  character(len=1024) :: iom
 
   namelist /list_enc/ f_gravity_correction, f_exflux_reduction, f_hcap_upwind, &
                       f_friction_fastmath, f_advection_tvd, f_rivermouth_drop, &
@@ -66,7 +68,8 @@ subroutine list_enc_read(p, list)
   ! 事前に保存されていた値がそのまま保持される
   call par_info("reading list_enc in "//trim(p%fn_enc))
   open(newunit=un, file=trim(p%fn_enc), status='old')
-  read(un, list_enc)
+  read(un, nml=list_enc, iostat=ios, iomsg=iom)
+  if (ios /= 0) call par_stop("list_enc 読込失敗: "//trim(iom))
   close(un)
 
   list%f_gravity_correction = f_gravity_correction 

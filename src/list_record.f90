@@ -1,7 +1,7 @@
 !======================================================================
 module list_record
   use m_sysparam, only : t_sysparam
-  use m_parallel, only : par_info
+  use m_parallel, only : par_info, par_stop
   implicit none
   private
 
@@ -55,6 +55,8 @@ subroutine list_record_read(p, list)
   integer :: flxytype
   real :: flxy(1:4,1:nflmax)
   integer :: un
+  integer :: ios
+  character(len=1024) :: iom
   namelist /list_record/ pbxytype, pbxy, flxyfile, fn_flxy, flxytype, flxy
 
   pbxytype = list%pbxytype
@@ -67,7 +69,8 @@ subroutine list_record_read(p, list)
   !---- 設定ファイルを読み込む ----
   call par_info("reading list_record in "//trim(p%fn_record))
   open(newunit=un, file=trim(p%fn_record), status='old')
-  read(un, list_record)
+  read(un, nml=list_record, iostat=ios, iomsg=iom)
+  if (ios /= 0) call par_stop("list_record 読込失敗: "//trim(iom))
   close(un)
 
   list%pbxytype = pbxytype

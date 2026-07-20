@@ -1,6 +1,6 @@
 module list_tide
   use m_sysparam, only : t_sysparam
-  use m_parallel, only : par_info
+  use m_parallel, only : par_info, par_stop
   implicit none
   private
 
@@ -33,6 +33,8 @@ subroutine list_tide_read(p, list)
   real :: tival(1:2,1:ntimax)
   !character(:), allocatable :: fn_timap
   integer :: un
+  integer :: ios
+  character(len=1024) :: iom
   namelist /list_tide/ titype, tival !, fn_timap
 
 
@@ -43,7 +45,8 @@ subroutine list_tide_read(p, list)
   !---- 設定ファイルを読み込む ----
   call par_info("reading list_tide in "//trim(p%fn_tide))
   open(newunit=un, file=trim(p%fn_tide), status='old')
-  read(un, list_tide)
+  read(un, nml=list_tide, iostat=ios, iomsg=iom)
+  if (ios /= 0) call par_stop("list_tide 読込失敗: "//trim(iom))
   close(un)
 
   list%titype = titype

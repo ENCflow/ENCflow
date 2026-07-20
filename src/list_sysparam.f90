@@ -1,5 +1,5 @@
 module list_sysparam
-  use m_parallel, only : par_info
+  use m_parallel, only : par_info, par_stop
   implicit none
   private
 
@@ -165,6 +165,8 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: dir_result    ! 結果出力ディレクトリ
   character(:), allocatable :: outfn_suffix  ! 出力ファイル名のサフィックス
   integer :: un
+  integer :: ios
+  character(len=1024) :: iom
   namelist /list_sysparam/ t0, tt, dt, dt_disp, dt_file, dt_recrd, &
                         st_file, st_recrd, et_file, et_recrd, &
                         t0_c, tt_c, dt_c, dt_disp_c, dt_file_c, dt_recrd_c, &
@@ -252,7 +254,8 @@ subroutine list_sysparam_read(list, fn_sysparam)
 
   call par_info("reading list_sysparam in "//trim(fn_sysparam))
   open(newunit=un, file=trim(fn_sysparam), status='old')
-  read(un, list_sysparam)
+  read(un, nml=list_sysparam, iostat=ios, iomsg=iom)
+  if (ios /= 0) call par_stop("list_sysparam 読込失敗: "//trim(iom))
   close(un)
 
   list%t0 = t0
