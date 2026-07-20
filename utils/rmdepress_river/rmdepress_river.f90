@@ -142,15 +142,15 @@ subroutine do_all(p, g, fn_ddir)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: fn_ddir
-  integer :: ddir(1:p%nx,1:p%ny)     ! douwstream direction (1~8)
-  integer :: irm(1:p%nx,1:p%ny)      ! river mouth mask
-  integer :: icv(1:p%nx,1:p%ny)      ! carved mark
-  integer :: ism(1:p%nx,1:p%ny)      ! smoothing target
-  real :: z(1:p%nx,1:p%ny)           ! modified elevation
-  real :: dz(1:p%nx,1:p%ny)          ! carved depth
+  integer :: ddir(1:g%nx,1:g%ny)     ! douwstream direction (1~8)
+  integer :: irm(1:g%nx,1:g%ny)      ! river mouth mask
+  integer :: icv(1:g%nx,1:g%ny)      ! carved mark
+  integer :: ism(1:g%nx,1:g%ny)      ! smoothing target
+  real :: z(1:g%nx,1:g%ny)           ! modified elevation
+  real :: dz(1:g%nx,1:g%ny)          ! carved depth
 
 
-  call fileio_read_matrix(fn_ddir, p%nx, p%ny, ddir, e_fmt_bil)
+  call fileio_read_matrix(fn_ddir, g%nx, g%ny, ddir, e_fmt_bil)
   call check_rivermouth(p, g, irm)
   call carve(p, g, irm, ddir, icv, ism, z)
   call smooth(p, g, irm, icv, ism, z)
@@ -169,19 +169,20 @@ end subroutine
 subroutine carve(p, g, irm, ddir, icv, ism, z)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
-  integer, intent(in) :: irm(1:p%nx,1:p%ny)
-  integer, intent(in) :: ddir(1:p%nx,1:p%ny)
-  integer, intent(inout) :: icv(1:p%nx,1:p%ny)
-  integer, intent(inout) :: ism(1:p%nx,1:p%ny)
-  real, intent(inout) :: z(1:p%nx,1:p%ny)
+  integer, intent(in) :: irm(1:g%nx,1:g%ny)
+  integer, intent(in) :: ddir(1:g%nx,1:g%ny)
+  integer, intent(inout) :: icv(1:g%nx,1:g%ny)
+  integer, intent(inout) :: ism(1:g%nx,1:g%ny)
+  real, intent(inout) :: z(1:g%nx,1:g%ny)
   integer :: i, j, k, l
   integer :: in, jn
   integer :: nc
   real :: dr(0:8)
   real, parameter :: rdz(0:8) = [ 0., sqrt(2.), 1., sqrt(2.), 1., 1., sqrt(2.), 1., sqrt(2.)]
+  if (p%initialized) continue
 
   do k = 1, 8
-    dr(k) = sqrt((p%dx * din(k)**2)**2 + (p%dy * djn(k)**2)**2)
+    dr(k) = sqrt((g%dx * din(k)**2)**2 + (g%dy * djn(k)**2)**2)
   end do
 
   z(:,:) = g%z(:,:)
@@ -226,18 +227,19 @@ end subroutine
 subroutine smooth(p, g, irm, icv, ism, z)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
-  integer, intent(in) :: irm(1:p%nx,1:p%ny)
-  integer, intent(in) :: icv(1:p%nx,1:p%ny)
-  integer, intent(in) :: ism(1:p%nx,1:p%ny)
-  real, intent(inout) :: z(1:p%nx,1:p%ny)
-  real :: z0(1:p%nx,1:p%ny)
-  real :: z1(1:p%nx,1:p%ny)
+  integer, intent(in) :: irm(1:g%nx,1:g%ny)
+  integer, intent(in) :: icv(1:g%nx,1:g%ny)
+  integer, intent(in) :: ism(1:g%nx,1:g%ny)
+  real, intent(inout) :: z(1:g%nx,1:g%ny)
+  real :: z0(1:g%nx,1:g%ny)
+  real :: z1(1:g%nx,1:g%ny)
   integer :: i, j, k, l
   integer :: in, jn
   integer :: n
   integer :: ns
   real :: zz, sz
   real, parameter :: eps = 1.e-3
+  if (p%initialized) continue
 
   z0(:,:) = z(:,:)
   z1(:,:) = z(:,:)
@@ -283,19 +285,20 @@ end subroutine
 subroutine smooth2(p, g, irm, ddir, z)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
-  integer, intent(in) :: irm(1:p%nx,1:p%ny)
-  integer, intent(in) :: ddir(1:p%nx,1:p%ny)
-  real, intent(inout) :: z(1:p%nx,1:p%ny)
-  real :: z1(1:p%nx,1:p%ny)
+  integer, intent(in) :: irm(1:g%nx,1:g%ny)
+  integer, intent(in) :: ddir(1:g%nx,1:g%ny)
+  real, intent(inout) :: z(1:g%nx,1:g%ny)
+  real :: z1(1:g%nx,1:g%ny)
   integer :: i, j, k
   integer :: in, jn
   integer :: n
   real :: sum
+  if (p%initialized) continue
 
   z1(:,:) = z(:,:)
 
-  do j = 2, p%ny-1
-    do i = 2, p%nx-1
+  do j = 2, g%ny-1
+    do i = 2, g%nx-1
       if (g%x(i,j) < 1) cycle               ! 領域外は無視
       if (g%rw(i,j) < 1) cycle              ! 河道以外は無視
       if (irm(i,j) > 0) cycle               ! 河口は無視
@@ -326,21 +329,22 @@ end subroutine
 subroutine check_rivermouth(p, g, irm)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
-  integer, intent(inout) :: irm(1:p%nx,1:p%ny)
+  integer, intent(inout) :: irm(1:g%nx,1:g%ny)
   integer :: i, j, k, ii, jj
   integer :: nvc   ! number of valid cells
   integer :: nrc   ! number of river cells
   integer :: nrm   ! number of river mouth cells
   integer, parameter :: din(1:8) = [ -1,  0,  1, -1,  1, -1,  0,  1]
   integer, parameter :: djn(1:8) = [ -1, -1, -1,  0,  0,  1,  1,  1]
+  if (p%initialized) continue
 
   irm(:,:) = 0
   nvc = 0
   nrc = 0
   nrm = 0
 
-  do j = 2, p%ny - 1
-    do i = 2, p%nx - 1
+  do j = 2, g%ny - 1
+    do i = 2, g%nx - 1
       if (g%x(i,j) <= 0) cycle
       nvc = nvc + 1
       if (g%rw(i,j) <= 0) cycle

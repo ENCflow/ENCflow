@@ -63,23 +63,23 @@ subroutine m_rerecord_all(fn_sysparam, fn_qqdir, fn_qq)
   s%initialized = .true.
 
   ! 条件を画面表示
-  print *, "nx =", p%nx
-  print *, "ny =", p%ny
+  print *, "nx =", g%nx
+  print *, "ny =", g%ny
 
   ! モジュールの初期化
   call m_record_init(r, p, g)
 
   ! データの読み込み
   print *, "reading discharge direction from ", trim(fn_qqdir)
-  call fileio_read_matrix(fn_qqdir, p%nx, p%ny, s%qqdir, e_fmt_bil)
+  call fileio_read_matrix(fn_qqdir, g%nx, g%ny, s%qqdir, e_fmt_bil)
   print *, "reading discharge from ", trim(fn_qq)
-  call fileio_read_matrix(fn_qq, p%nx, p%ny, s%qq, e_fmt_bil)
+  call fileio_read_matrix(fn_qq, g%nx, g%ny, s%qq, e_fmt_bil)
 
   ! 流量の計算
   block
   integer :: i, j
-  do j = 1, p%ny
-    do i = 1, p%nx
+  do j = 1, g%ny
+    do i = 1, g%nx
       s%m(i,j) = s%qq(i,j) * cos(s%qqdir(i,j))
       s%n(i,j) = s%qq(i,j) * sin(s%qqdir(i,j))
     end do
