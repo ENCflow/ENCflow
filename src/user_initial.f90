@@ -17,6 +17,7 @@ module subroutine init_state_user_1(p, g, s)
   real, parameter :: ll = 30., hh = 0.5
   real :: xx, yy, rr, dx, dy, eta
   real :: lx, ly
+  real :: pi = acos(-1.0)
 
   lx = g%lx
   ly = g%ly
@@ -33,7 +34,7 @@ module subroutine init_state_user_1(p, g, s)
       rr = sqrt(xx**2 + yy**2)
       !rr = abs(xx)
       if (rr < ll / 2) then
-        eta = hh * cos(rr / ll * 2 * 3.1415927) + hh
+        eta = hh * cos(rr / ll * 2 * pi) + hh
       else
         eta = 0.0
       end if
