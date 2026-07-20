@@ -39,9 +39,10 @@ contains
 !----------------------------------------------------------------------
 ! 降水構造体を初期化
 !----------------------------------------------------------------------
-subroutine m_precip_init(pr, p)
+subroutine m_precip_init(pr, p, g)
   type(t_precip), intent(out) :: pr
   type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
   type(t_list_precip) :: list
   integer :: prtype
   real, allocatable :: prval(:,:)
@@ -121,14 +122,14 @@ subroutine set_prmap
   end if
 
   ! 降水分布の読み込み
-  allocate(pr%prmap(1:p%nx,1:p%ny))
+  allocate(pr%prmap(1:g%nx,1:g%ny))
   fname = trim(p%dir_data)//"/"//trim(list%fn_prmap)
-  call fileio_read_matrix(fname, p%nx, p%ny, pr%prmap, p%f_input_mode)
+  call fileio_read_matrix(fname, g%nx, g%ny, pr%prmap, p%f_input_mode)
 
   ! データにNaNが含まれている場合はゼロに修正
   have_nan = 0
-  do j = 1, p%ny
-    do i = 1, p%nx
+  do j = 1, g%ny
+    do i = 1, g%nx
       if (ieee_is_nan(pr%prmap(i,j))) then
         pr%prmap(i,j) = 0
         have_nan = have_nan + 1
@@ -229,7 +230,7 @@ subroutine m_precip_makepre(pr, p, g, s)
       i = s%it / pr%idt_maplist + 1
       if (i <= size(pr%un_maplist)) then
         un = pr%un_maplist(i)
-        call fileio_un_read_matrix(un, p%nx, p%ny, s%prh, p%f_input_mode)
+        call fileio_un_read_matrix(un, g%nx, g%ny, s%prh, p%f_input_mode)
       else
         s%prh(:,:) = 0.0                         ! (mm/h)
       end if

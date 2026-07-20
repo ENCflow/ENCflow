@@ -68,7 +68,7 @@ subroutine m_main_all()
   call m_boundary_init(b, p, g)           ! boundary を初期化(geoinfoより後に)
   call m_state_init(s, p, g)              ! state を初期化(geoinfo, boundaryより後に)
   call m_record_init(r, p, g)             ! record を初期化(create_resultdirより後)
-  call m_precip_init(pr, p)               ! precip を初期化
+  call m_precip_init(pr, p, g)            ! precip を初期化
   call m_tide_init(ti, p, g)              ! tide を初期化
   call m_swflow_init(sw, p, g, s)         ! swflow を初期化
 
@@ -220,7 +220,7 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
   call output(p, g, s, 9998)
 
   ! 統計量を出力
-  call output_summary(p, s, 9999)
+  call output_summary(p, g, s, 9999)
 
   ! 最大流量の一覧を出力
   call m_record_summary(r, p)
@@ -253,22 +253,22 @@ subroutine output(p, g, s, k)
   type(t_state), intent(in) :: s
   integer, intent(in) :: k
   if (.not. is_root) return
-  if (p%f_out_z > 0 .or. k == 0) call output_matrix(p, "Z", g%z, k)  ! 地盤高
-  if (p%f_out_h > 0) call output_matrix(p, "H", s%h, k)          ! 水深
-  if (p%f_out_e > 0) call output_matrix(p, "E", s%e, k)          ! 水位
-  if (p%f_out_u > 0) call output_matrix(p, "u", s%u, k)          ! x方向流速
-  if (p%f_out_v > 0) call output_matrix(p, "v", s%v, k)          ! y方向流速
-  if (p%f_out_m > 0) call output_matrix(p, "m", s%m, k)          ! x方向線流量
-  if (p%f_out_n > 0) call output_matrix(p, "n", s%n, k)          ! y方向線流量
-  if (p%f_out_vv > 0) call output_matrix(p, "V", s%vv, k)        ! 流速の絶対値
-  if (p%f_out_qq > 0) call output_matrix(p, "Q", s%qq, k)        ! 線流量の絶対値
-  if (p%f_out_qc > 0) call output_matrix(p, "Qc", s%qcum, k)     ! 積算線流量
-  if (p%f_out_qd > 0) call output_matrix(p, "Qd", s%qdir, k)     ! 流向
-  if (p%f_out_ddd > 0) call output_matrix(p, "Ddd", s%ddir1, k)  ! 卓越流下方向フラグ
-  if (p%f_out_dda > 0) call output_matrix(p, "Dda", s%ddir8, k)  ! 全流下方向フラグ
-  if (p%f_out_pre > 0) call output_matrix(p, "Pr", s%prh, k)     ! 降雨強度
-  if (p%f_out_fr > 0) call output_matrix(p, "Fr", s%fr, k)       ! フルード数
-  if (p%f_out_cn > 0) call output_matrix(p, "Cn", s%cn, k)       ! クーラン数
+  if (p%f_out_z > 0 .or. k == 0) call output_matrix(p, g, "Z", g%z, k)  ! 地盤高
+  if (p%f_out_h > 0) call output_matrix(p, g, "H", s%h, k)          ! 水深
+  if (p%f_out_e > 0) call output_matrix(p, g, "E", s%e, k)          ! 水位
+  if (p%f_out_u > 0) call output_matrix(p, g, "u", s%u, k)          ! x方向流速
+  if (p%f_out_v > 0) call output_matrix(p, g, "v", s%v, k)          ! y方向流速
+  if (p%f_out_m > 0) call output_matrix(p, g, "m", s%m, k)          ! x方向線流量
+  if (p%f_out_n > 0) call output_matrix(p, g, "n", s%n, k)          ! y方向線流量
+  if (p%f_out_vv > 0) call output_matrix(p, g, "V", s%vv, k)        ! 流速の絶対値
+  if (p%f_out_qq > 0) call output_matrix(p, g, "Q", s%qq, k)        ! 線流量の絶対値
+  if (p%f_out_qc > 0) call output_matrix(p, g, "Qc", s%qcum, k)     ! 積算線流量
+  if (p%f_out_qd > 0) call output_matrix(p, g, "Qd", s%qdir, k)     ! 流向
+  if (p%f_out_ddd > 0) call output_matrix(p, g, "Ddd", s%ddir1, k)  ! 卓越流下方向フラグ
+  if (p%f_out_dda > 0) call output_matrix(p, g, "Dda", s%ddir8, k)  ! 全流下方向フラグ
+  if (p%f_out_pre > 0) call output_matrix(p, g, "Pr", s%prh, k)     ! 降雨強度
+  if (p%f_out_fr > 0) call output_matrix(p, g, "Fr", s%fr, k)       ! フルード数
+  if (p%f_out_cn > 0) call output_matrix(p, g, "Cn", s%cn, k)       ! クーラン数
   write(un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it
 end subroutine
 
@@ -276,17 +276,18 @@ end subroutine
 !----------------------------------------------------------------------
 ! 統計量の配列をファイルに出力
 !----------------------------------------------------------------------
-subroutine output_summary(p, s, k)
+subroutine output_summary(p, g, s, k)
   type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   integer, intent(in) :: k
   if (.not. is_root) return
-  if (p%f_out_hmax > 0)  call output_matrix(p, "H", s%hmax, k)     ! 最大水深
-  if (p%f_out_hmaxt > 0) call output_matrix(p, "Ht", s%hmaxt, k)   ! 最大水深の時刻
-  if (p%f_out_vvmax > 0) call output_matrix(p, "V", s%vvmax, k)    ! 最大流速
-  if (p%f_out_qqmax > 0) call output_matrix(p, "Q", s%qqmax, k)    ! 最大流量
-  if (p%f_out_qqmaxt > 0) call output_matrix(p, "Qt", s%qqt, k)    ! 最大流量の時刻
-  if (p%f_out_qqmaxd > 0) call output_matrix(p, "Qd", s%qqdir, k)  ! 最大流量の流向
+  if (p%f_out_hmax > 0)  call output_matrix(p, g, "H", s%hmax, k)     ! 最大水深
+  if (p%f_out_hmaxt > 0) call output_matrix(p, g, "Ht", s%hmaxt, k)   ! 最大水深の時刻
+  if (p%f_out_vvmax > 0) call output_matrix(p, g, "V", s%vvmax, k)    ! 最大流速
+  if (p%f_out_qqmax > 0) call output_matrix(p, g, "Q", s%qqmax, k)    ! 最大流量
+  if (p%f_out_qqmaxt > 0) call output_matrix(p, g, "Qt", s%qqt, k)    ! 最大流量の時刻
+  if (p%f_out_qqmaxd > 0) call output_matrix(p, g, "Qd", s%qqdir, k)  ! 最大流量の流向
   write(un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it
 end subroutine
 
@@ -294,11 +295,12 @@ end subroutine
 !----------------------------------------------------------------------
 ! 計算結果の配列をファイルに出力(real)
 !----------------------------------------------------------------------
-subroutine output_matrix_real(p, prefix, a, k)
+subroutine output_matrix_real(p, g, prefix, a, k)
   type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: prefix
   integer, intent(in) :: k
-  real, intent(in) :: a(1:p%nx,1:p%ny)
+  real, intent(in) :: a(1:g%nx,1:g%ny)
   character(len=4) :: snum
   character(:), allocatable :: fn
 
@@ -306,10 +308,10 @@ subroutine output_matrix_real(p, prefix, a, k)
   fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
 
   if (p%f_output_mode == 1 .or. p%f_output_mode == 3) then
-    call fileio_write_matrix(fn//".txt", p%nx, p%ny, a, e_fmt_txt, p%f_output_compress)
+    call fileio_write_matrix(fn//".txt", g%nx, g%ny, a, e_fmt_txt, p%f_output_compress)
   end if
   if (p%f_output_mode == 2 .or. p%f_output_mode == 3) then
-    call fileio_write_matrix(fn//".bil", p%nx, p%ny, a, e_fmt_bil, p%f_output_compress)
+    call fileio_write_matrix(fn//".bil", g%nx, g%ny, a, e_fmt_bil, p%f_output_compress)
   end if
 
 end subroutine
@@ -318,11 +320,12 @@ end subroutine
 !----------------------------------------------------------------------
 ! 計算結果の配列をファイルに出力(int)
 !----------------------------------------------------------------------
-subroutine output_matrix_int(p, prefix, a, k)
+subroutine output_matrix_int(p, g, prefix, a, k)
   type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: prefix
   integer, intent(in) :: k
-  integer, intent(in) :: a(1:p%nx,1:p%ny)
+  integer, intent(in) :: a(1:g%nx,1:g%ny)
   character(len=4) :: snum
   character(:), allocatable :: fn
 
@@ -330,10 +333,10 @@ subroutine output_matrix_int(p, prefix, a, k)
   fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
 
   if (p%f_output_mode == 1 .or. p%f_output_mode == 3) then
-    call fileio_write_matrix(fn//".txt", p%nx, p%ny, a, e_fmt_txt, p%f_output_compress)
+    call fileio_write_matrix(fn//".txt", g%nx, g%ny, a, e_fmt_txt, p%f_output_compress)
   end if
   if (p%f_output_mode == 2 .or. p%f_output_mode == 3) then
-    call fileio_write_matrix(fn//".bil", p%nx, p%ny, a, e_fmt_bil, p%f_output_compress)
+    call fileio_write_matrix(fn//".bil", g%nx, g%ny, a, e_fmt_bil, p%f_output_compress)
   end if
 end subroutine
 

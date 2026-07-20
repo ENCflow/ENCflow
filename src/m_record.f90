@@ -144,7 +144,7 @@ subroutine set_probe(p)
       ix = int(x / p%dx) + 1
       iy = int(y / p%dy) + 1
     end if
-    if (ix < 1 .or. ix > p%nx .or. iy < 1 .or. iy > p%ny) then
+    if (ix < 1 .or. ix > g%nx .or. iy < 1 .or. iy > g%ny) then
       write(msg, '("error: probe ",i0," is out of area.",2f15.2,2i7)') i, x, y, ix, iy
       call par_stop(trim(msg))
     end if
@@ -230,11 +230,11 @@ subroutine set_flux(p)
       ix1 = int(x1 / p%dx) + 1
       iy1 = int(y1 / p%dy) + 1
     end if
-    if (ix0 < 1 .or. ix0 > p%nx .or. iy0 < 1 .or. iy0 > p%ny) then
+    if (ix0 < 1 .or. ix0 > g%nx .or. iy0 < 1 .or. iy0 > g%ny) then
       write(msg, '("error: point R of flux ",i0," is out of area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
       call par_stop(trim(msg))
     end if
-    if (ix1 < 1 .or. ix1 > p%nx .or. iy1 < 1 .or. iy1 > p%ny) then
+    if (ix1 < 1 .or. ix1 > g%nx .or. iy1 < 1 .or. iy1 > g%ny) then
       write(msg, '("error: point L flux ",i0," is out of area.",2f15.2,2i7)') i, x1, y1, ix1, iy1
       call par_stop(trim(msg))
     end if

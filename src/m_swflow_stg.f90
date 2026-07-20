@@ -69,11 +69,11 @@ subroutine m_swflow_stg_init(p, g, s)
       f_pressure_term = .false.
   end select
 
-  DX = p%dx
-  DY = p%dy
+  DX = g%dx
+  DY = g%dy
   DT = p%dt
-  IG = p%nx
-  JG = p%ny
+  IG = g%nx
+  JG = g%ny
   ALLOCATE(D(1:IG,1:JG),SOURCE=0.0)
   ALLOCATE(M(0:IG,1:JG),SOURCE=0.0)
   ALLOCATE(M0(0:IG,1:JG),SOURCE=0.0)

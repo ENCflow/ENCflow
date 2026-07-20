@@ -168,8 +168,6 @@ subroutine set_params(p, g, list)
     end if
   end if
 
-  p%nx = g%nx
-  p%ny = g%ny
   p%dx = g%dx
   p%dy = g%dy
   p%dr = g%dr
@@ -535,15 +533,16 @@ subroutine calc_wxy(p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   integer :: i, j, s
+  if (p%initialized) continue
 
   g%wy(1) = 1
-  g%wy(2) = p%ny
+  g%wy(2) = g%ny
 
-  g%wx(1,:) = p%nx + 1
+  g%wx(1,:) = g%nx + 1
   g%wx(2,:) = 0
 
-  do j = 1, p%ny
-    do i = 1, p%nx
+  do j = 1, g%ny
+    do i = 1, g%nx
       s = g%x(i,j) + g%x(i+1,j-1) + g%x(i+1,j) + g%x(i+1,j+1)
       if (s > 0) then
         g%wx(1,j) = i
@@ -552,8 +551,8 @@ subroutine calc_wxy(p, g)
     end do
   end do
 
-  do j = 1, p%ny
-    do i = p%nx, 1, -1
+  do j = 1, g%ny
+    do i = g%nx, 1, -1
       s = g%x(i,j) + g%x(i-1,j-1) + g%x(i-1,j) + g%x(i-1,j+1)
       if (s > 0) then
         g%wx(2,j) = i

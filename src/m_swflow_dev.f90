@@ -281,21 +281,21 @@ subroutine init_enc_status(p, g, s, sx)
   integer :: i, j, k, in, jn, ie, je
 
   ! メモリを確保する
-  allocate(sx%uv(1:4,0:p%nx,0:p%ny), source = 0.0)
-  allocate(sx%h1(1:p%nx,1:p%ny), source = 0.0)
-  allocate(sx%mn(1:4,0:p%nx,0:p%ny), source = 0.0)
-  allocate(sx%mn0(1:4,0:p%nx,0:p%ny), source = 0.0)
+  allocate(sx%uv(1:4,0:g%nx,0:g%ny), source = 0.0)
+  allocate(sx%h1(1:g%nx,1:g%ny), source = 0.0)
+  allocate(sx%mn(1:4,0:g%nx,0:g%ny), source = 0.0)
+  allocate(sx%mn0(1:4,0:g%nx,0:g%ny), source = 0.0)
   if (f_advection_tvd > 0) then
-    allocate(sx%taxy(1:4,1:p%nx,1:p%ny), source = 0.0)
+    allocate(sx%taxy(1:4,1:g%nx,1:g%ny), source = 0.0)
   else
-    allocate(sx%taxy(1:2,1:p%nx,1:p%ny), source = 0.0)
+    allocate(sx%taxy(1:2,1:g%nx,1:g%ny), source = 0.0)
   end if
-  allocate(sx%ulm(1:p%nx,1:p%ny), source = 0.0)
-  allocate(sx%vlm(1:p%nx,1:p%ny), source = 0.0)
+  allocate(sx%ulm(1:g%nx,1:g%ny), source = 0.0)
+  allocate(sx%vlm(1:g%nx,1:g%ny), source = 0.0)
 
   ! 流速の初期条件を設定する
   !$omp parallel do private(i, j, k, in, jn, ie, je, ue, ve)
-  !do j = 1, p%ny
+  !do j = 1, g%ny
   do j = g%wy(1), g%wy(2)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -442,7 +442,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   in = i + din(k)
   jn = j + djn(k)
   if (g%x(in,jn) <= 0) return
-  if (in <= 1 .or. in >= p%nx .or. jn <= 1 .or. jn >= p%ny) return
+  if (in <= 1 .or. in >= g%nx .or. jn <= 1 .or. jn >= g%ny) return
 
   ! k近傍セルとの境界フラックスのインデックスを計算する
   ie = i + die(k)
@@ -770,7 +770,7 @@ subroutine continuous(p, g, s, sx)
         in = i + din(k)
         jn = j + djn(k)
         if (g%x(in,jn) <= 0) cycle
-        if (in <= 1 .or. in >= p%nx .or. jn <= 1 .or. jn >= p%ny) cycle
+        if (in <= 1 .or. in >= g%nx .or. jn <= 1 .or. jn >= g%ny) cycle
         ! ここでddと比較するのは前時間ステップでの値hでなければならない
         ! そのためこのループ内でhを直接更新してはいけない
         if (s%h(i,j) < p%dd .and. s%h(in,jn) < p%dd) cycle
@@ -954,7 +954,7 @@ subroutine advection0(p, g, s, sx)
   integer :: i, j, k
   real :: dux, duy, dvx, dvy
   real :: ww(1:8), wwx(1:8), wwy(1:8)
-  !real :: ulm(1:p%nx,1:p%ny), vlm(1:p%nx,1:p%ny)
+  !real :: ulm(1:g%nx,1:g%ny), vlm(1:g%nx,1:g%ny)
 
   if (f_advection_term == 0) return
 
@@ -981,7 +981,7 @@ subroutine advection0(p, g, s, sx)
       forall(k=1:8) wwx(k) = w8x(k) * ww(k)
       forall(k=1:8) wwy(k) = w8y(k) * ww(k)
       ! 勾配を計算
-      call get_diff(sx%ulm, sx%vlm, s%h, p%dd, wwx, wwy, g%x, i, j, p%nx, p%ny, dux, duy, dvx, dvy)
+      call get_diff(sx%ulm, sx%vlm, s%h, p%dd, wwx, wwy, g%x, i, j, g%nx, g%ny, dux, duy, dvx, dvy)
       ! 移流項を計算
       sx%taxy(1,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
       sx%taxy(2,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)

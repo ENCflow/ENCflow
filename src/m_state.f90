@@ -108,29 +108,29 @@ subroutine m_state_init(s, p, g)
   integer :: i, j
 
   ! メモリ確保
-  allocate(s%h(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%u(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%v(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%m(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%n(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%qq(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%vv(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%e(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%pre(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%prh(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%tide(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%hmax(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%hmaxt(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%vvmax(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%qqmax(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%qqdir(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%qdir(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%qqt(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%qcum(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%fr(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%cn(1:p%nx,1:p%ny), source = 0.0)
-  allocate(s%ddir1(1:p%nx,1:p%ny), source = 0)
-  allocate(s%ddir8(1:p%nx,1:p%ny), source = 0)
+  allocate(s%h(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%u(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%v(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%m(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%n(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%qq(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%vv(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%e(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%pre(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%prh(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%tide(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%hmax(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%hmaxt(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%vvmax(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%qqmax(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%qqdir(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%qdir(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%qqt(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%qcum(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%fr(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%cn(1:g%nx,1:g%ny), source = 0.0)
+  allocate(s%ddir1(1:g%nx,1:g%ny), source = 0)
+  allocate(s%ddir8(1:g%nx,1:g%ny), source = 0)
 
   ! 初期条件設定ファイル読み込み
   call list_initial_read(p, list)
@@ -167,8 +167,8 @@ subroutine m_state_init(s, p, g)
 
   ! 計算対称セルの数をセット(海域は除く)
   s%n_valcells = 0
-  do j = 1, p%ny
-    do i = 1, p%nx
+  do j = 1, g%ny
+    do i = 1, g%nx
       if (g%x(i,j) > 0 .and. g%sw(i,j) == 0) s%n_valcells = s%n_valcells + 1
     end do
   end do
@@ -204,7 +204,7 @@ subroutine m_state_calcstat(s, p, g)
   real :: qqmax
   real :: cnmax
   real :: hsum
-  real :: hsum_j(1:p%ny)
+  real :: hsum_j(1:g%ny)
   real :: qcumf
   real :: cosdir
   real :: cc
@@ -220,7 +220,7 @@ subroutine m_state_calcstat(s, p, g)
 
   !$omp parallel do private(i, j, cosdir, cc), & 
   !$omp reduction(+: hsum), reduction(max: hmax, vvmax, qqmax, cnmax)
-  do j = 1, p%ny
+  do j = 1, g%ny
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) == 0) cycle
       if (s%h(i,j) <= 0) cycle
@@ -380,7 +380,7 @@ subroutine set_h(p, g, s, list)
   type(t_state), intent(inout) :: s
   type(t_list_initial), intent(in) :: list
   integer :: i, j
-  forall(i=1:p%nx, j=1:p%ny, g%x(i,j) > 0) s%h(i,j) = list%h0
+  forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%h(i,j) = list%h0
   if (list%f_fill_depres > 0)  call fill_depression(p, g, s, list)
   if (list%h0_rw > 0.0) call adjust_h0rw(p, g, s, list)
 
@@ -514,8 +514,9 @@ subroutine set_uv(p, g, s, list)
   type(t_state), intent(inout) :: s
   type(t_list_initial), intent(in) :: list
   integer :: i, j
-  forall(i=1:p%nx, j=1:p%ny, g%x(i,j) > 0) s%u(i,j) = list%u0
-  forall(i=1:p%nx, j=1:p%ny, g%x(i,j) > 0) s%v(i,j) = list%v0
+  if (p%initialized) continue
+  forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%u(i,j) = list%u0
+  forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%v(i,j) = list%v0
 end subroutine
 
 

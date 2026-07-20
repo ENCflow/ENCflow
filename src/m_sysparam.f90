@@ -29,8 +29,6 @@ module m_sysparam
     integer :: iet_file                        ! ファイル出力終了時間の時間ステップ数
     integer :: iet_recd                        ! プローブ出力終了時間の時間ステップ数
     real :: dt                                 ! 時間ステップ (s)
-    integer :: nx                              ! x方向セル数
-    integer :: ny                              ! y方向セル数
     real :: dx                                 ! 計算格子の大きさ (m)
     real :: dy                                 ! 計算格子の大きさ (m)
     real :: dr                                 ! 計算格子の対角線の長さ (m)
