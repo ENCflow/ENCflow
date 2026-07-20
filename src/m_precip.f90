@@ -3,7 +3,7 @@ module m_precip
   use m_sysparam, only : t_sysparam
   use m_state, only : t_state
   use m_geoinfo, only : t_geoinfo
-  use m_util, only : util_str2sec
+  use m_util, only : str2sec
   use m_fileio
   use list_precip, only : t_list_precip, list_precip_read
   use m_parallel, only : par_info, par_stop
@@ -77,9 +77,9 @@ subroutine m_precip_init(pr, p)
   pr%runoff_rate = max(list%runoff_rate, 0.0)
 
   if (len(trim(list%dt_maplist_c)) > 0) pr%dt_maplist = &
-                                util_str2sec(list%dt_maplist_c, "bad dt_maplist_c in &list_precip")
+                                str2sec(list%dt_maplist_c, "bad dt_maplist_c in &list_precip")
   if (len(trim(list%dt_mapunit_c)) > 0) pr%dt_mapunit = &
-                                util_str2sec(list%dt_mapunit_c, "bad dt_mapunit_c in &list_precip")
+                                str2sec(list%dt_mapunit_c, "bad dt_mapunit_c in &list_precip")
 
   if (list%dt_mapunit > 0.0) then
     pr%dt_mapunit = list%dt_mapunit

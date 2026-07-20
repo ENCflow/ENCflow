@@ -1,6 +1,6 @@
 module m_sysparam
   use list_sysparam, only : t_list_sysparam, list_sysparam_read
-  use m_util, only : util_str2sec
+  use m_util, only : str2sec
   use m_parallel, only : par_stop
   implicit none
   private
@@ -166,16 +166,16 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%dir_result = list%dir_result               ! 結果出力ディレクトリ
   p%outfn_suffix = list%outfn_suffix           ! 出力ファイル名のサフィックス
 
-  if (len(trim(list%t0_c)) > 0) p%t0 = util_str2sec(list%t0_c, "bad t0_c in &list_sysparam")
-  if (len(trim(list%tt_c)) > 0) p%tt = util_str2sec(list%tt_c, "bad tt_c in &list_sysparam")
-  if (len(trim(list%dt_c)) > 0) p%dt = util_str2sec(list%dt_c, "bad dt_c in &list_sysparam")
-  if (len(trim(list%dt_disp_c)) > 0) p%dt_disp = util_str2sec(list%dt_disp_c, "bad dt_disp_c in &list_sysparam")
-  if (len(trim(list%dt_file_c)) > 0) p%dt_file = util_str2sec(list%dt_file_c, "bad dt_file_c in &list_sysparam")
-  if (len(trim(list%dt_recrd_c)) > 0) p%dt_recrd = util_str2sec(list%dt_recrd_c, "bad dt_recrd_c in &list_sysparam")
-  if (len(trim(list%st_file_c)) > 0) p%st_file = util_str2sec(list%st_file_c, "bad st_file_c in &list_sysparam")
-  if (len(trim(list%st_recrd_c)) > 0) p%st_recrd = util_str2sec(list%st_recrd_c, "bad st_recrd_c in &list_sysparam")
-  if (len(trim(list%et_file_c)) > 0) p%et_file = util_str2sec(list%et_file_c, "bad et_file_c in &list_sysparam")
-  if (len(trim(list%et_recrd_c)) > 0) p%et_recrd = util_str2sec(list%et_recrd_c, "bad et_recrd_c in &list_sysparam")
+  if (len(trim(list%t0_c)) > 0) p%t0 = str2sec(list%t0_c, "bad t0_c in &list_sysparam")
+  if (len(trim(list%tt_c)) > 0) p%tt = str2sec(list%tt_c, "bad tt_c in &list_sysparam")
+  if (len(trim(list%dt_c)) > 0) p%dt = str2sec(list%dt_c, "bad dt_c in &list_sysparam")
+  if (len(trim(list%dt_disp_c)) > 0) p%dt_disp = str2sec(list%dt_disp_c, "bad dt_disp_c in &list_sysparam")
+  if (len(trim(list%dt_file_c)) > 0) p%dt_file = str2sec(list%dt_file_c, "bad dt_file_c in &list_sysparam")
+  if (len(trim(list%dt_recrd_c)) > 0) p%dt_recrd = str2sec(list%dt_recrd_c, "bad dt_recrd_c in &list_sysparam")
+  if (len(trim(list%st_file_c)) > 0) p%st_file = str2sec(list%st_file_c, "bad st_file_c in &list_sysparam")
+  if (len(trim(list%st_recrd_c)) > 0) p%st_recrd = str2sec(list%st_recrd_c, "bad st_recrd_c in &list_sysparam")
+  if (len(trim(list%et_file_c)) > 0) p%et_file = str2sec(list%et_file_c, "bad et_file_c in &list_sysparam")
+  if (len(trim(list%et_recrd_c)) > 0) p%et_recrd = str2sec(list%et_recrd_c, "bad et_recrd_c in &list_sysparam")
 
   if (p%dt == 0.0) then
     call par_stop("error: dt = 0.0")

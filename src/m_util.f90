@@ -3,12 +3,12 @@ module m_util
   implicit none
   private
 
-  public :: util_str2sec
+  public :: str2sec
 
 contains
 !=======================================================================
 !=======================================================================
-function util_str2sec(str, message) result(t)
+function str2sec(str, message) result(t)
   character(len=*), intent(in) :: str        ! NNN.N[d day h hour m min s sec]
   character(len=*), intent(in) :: message    ! error message
   real :: t                                  ! second
