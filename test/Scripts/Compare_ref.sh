@@ -20,7 +20,10 @@
 #     ULP  : 印字の最終桁を単位とした許容誤差 (既定 0)
 #            量子は各数値の表示形式から自動決定する
 #            (例: 12.1298 → 1e-4, 0.0050462962963 → 1e-13, 98.6 → 0.1)
+#            差を量子の整数個に丸めて比較し、「ULP 個以内(ちょうど
+#            ULP 個を含む)は一致、超えたら不一致」と判定する。
 #            並列数・コンパイラ・マシン間の比較では ULP=1 を推奨
+#            (判定式: d <= ATOL + RTOL*max(|a|,|b|) または 量子数 <= ULP)
 #     SKIPCOLS : 比較から除外する列番号(空白区切りトークンの番号)。
 #            カンマ区切りで複数指定可 (例: SKIPCOLS=4 → Runge列を除外)。
 #            事象カウント系など閾値に敏感な列を外し、他の列の
@@ -174,18 +177,23 @@ for f in "$@"; do
                 ga = a; gb = b
                 sub(/%$/, "", ga); sub(/%$/, "", gb)
                 if (isnum(ga) && isnum(gb)) {
-                    q = tokquantum(ga)
+                    qa = tokquantum(ga); qb = tokquantum(gb)
+                    q = (qa < qb ? qa : qb)   # 表示桁数が違えば細かい方を採用
                     gsub(/[dD]/, "e", ga); gsub(/[dD]/, "e", gb)
                     x = ga + 0; y = gb + 0
                     d = abs(x - y)
                     s = (abs(x) > abs(y) ? abs(x) : abs(y))
-                    tol = atol + rtol * s + ulp * q * 1.0001
-                    if (d > tol) {
+                    # 差を「最終表示桁いくつ分か」の整数 nq に量子化する。
+                    # 印字値どうしの差は量子の整数倍なので、丸めによって
+                    # 二進化誤差が排除され、nq == ULP の境界をちょうどで
+                    # 判定できる(nq <= ULP は一致、超えたら不一致)
+                    nq = int(d / q + 0.5)
+                    if (d > atol + rtol * s && nq > ulp) {
                         nbad++
                         rd = (s > 0 ? d / s : 0)
                         if (rd >= maxrd) {
                             maxrd = rd
-                            msg = "行 " FNR " 列 " i ": " a " vs " b
+                            msg = "行 " FNR " 列 " i ": " a " vs " b " (差 " nq " 量子)"
                         }
                     } else if (d > 0) {
                         nflip++    # 許容内の微小差(最終桁ズレ等)を数える
