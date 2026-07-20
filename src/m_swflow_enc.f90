@@ -16,6 +16,9 @@ module m_swflow_enc
   public :: m_swflow_enc_calc
   public :: m_swflow_enc_dispose
 
+  ! nvfortran の submodule バグ回避(TPR #27323 系)。修正され次第 private に戻す
+  public :: p_adv_upwind_index
+  public :: n8x, n8y
 
   !--------------------------------------------------------------------
   ! モジュール内で共有される構造体と変数の宣言
