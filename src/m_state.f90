@@ -206,6 +206,7 @@ subroutine m_state_calcstat(s, p, g)
   real :: hsum
   real :: hsum_j(1:g%ny)
   real :: qcumf
+  real :: dtpdx     ! dt / min(dx, dy)
   real :: cosdir
   real :: cc
   integer :: i, j
@@ -217,6 +218,7 @@ subroutine m_state_calcstat(s, p, g)
   qqmax = 0
   cnmax = 0
   qcumf = p%dt / g%dx / g%dy / s%n_valcells * 1000
+  dtpdx = p%dt / min(g%dx, g%dy)
 
   !$omp parallel do private(i, j, cosdir, cc), & 
   !$omp reduction(+: hsum), reduction(max: hmax, vvmax, qqmax, cnmax)
@@ -241,9 +243,9 @@ subroutine m_state_calcstat(s, p, g)
       cc = sqrt(p%gg * s%h(i,j))                               ! 長波の波速
       s%fr(i,j) = s%vv(i,j) / cc                               ! フルード数
       if (p%f_check_cfl >= 2) then
-        s%cn(i,j) = s%vv(i,j) * p%dtpdx                        ! クーラン数(波速を無視)
+        s%cn(i,j) = s%vv(i,j) * dtpdx                          ! クーラン数(波速を無視)
       else
-        s%cn(i,j) = (s%vv(i,j) + cc) * p%dtpdx                 ! クーラン数(波速を考慮)
+        s%cn(i,j) = (s%vv(i,j) + cc) * dtpdx                   ! クーラン数(波速を考慮)
       end if
       hsum_j(j) = hsum_j(j) + s%h(i,j)
       hmax = max(hmax, s%h(i,j))

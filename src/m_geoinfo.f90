@@ -141,6 +141,7 @@ subroutine set_params(p, g, list)
   type(t_sysparam), intent(inout) :: p
   type(t_geoinfo), intent(inout) :: g
   type(t_list_geoinfo), intent(in) :: list
+  if (p%initialized) continue
 
   g%nx = list%nx
   g%ny = list%ny
@@ -167,8 +168,6 @@ subroutine set_params(p, g, list)
       call par_stop("conflict ny, ly and dy")
     end if
   end if
-
-  p%dtpdx = p%dt / min(g%dx, g%dy)
 
 end subroutine
 
