@@ -1,4 +1,5 @@
 module m_main
+  use, intrinsic :: iso_fortran_env, only: real64
   use m_sysparam
   use m_geoinfo
   use m_precip
@@ -47,6 +48,11 @@ subroutine m_main_all()
 
   ! MPIを初期化
   call par_init()
+
+  ! コンパイル時にrealを倍精度として指定しているかチェック
+  if (kind(1.0) /= real64) then
+    call par_stop("compile with -r8 / -fdefault-real-8")
+  end if
 
   ! システムパラメータファイル名を取得
   call get_fn_param(fn_sysparam)
