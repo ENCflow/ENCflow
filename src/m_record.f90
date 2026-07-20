@@ -4,6 +4,7 @@ module m_record
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
   use m_parallel, only : is_root
+  use m_util, only : itoa
   use list_record, only : t_list_record, list_record_read
   use m_parallel, only : is_root, par_info, par_stop
   implicit none
@@ -255,8 +256,7 @@ subroutine set_flux(p)
     nvy = dx
     nva = sqrt(nvx**2 + nvy**2)
     if (nva <= 0.0) then
-      write(msg,'(a,i0)') "warning: point A == point B then IGNORE, flux No.", i
-      call par_info(trim(msg))
+      call par_info("warning: point A == point B then IGNORE, flux No."//itoa(i))
       r%flux(i)%xy0(1) = x0
       r%flux(i)%xy0(2) = y0
       r%flux(i)%xy0(3) = x1
@@ -421,7 +421,6 @@ subroutine read_flxy(p, fn_flxy, flxy)
   integer :: un
   integer :: i, n
   integer :: ios
-  character(len=1024) :: msg
 
   fname = trim(p%dir_data)//"/"//trim(fn_flxy)
   open(newunit=un, file=fname, status='old')
@@ -435,8 +434,7 @@ subroutine read_flxy(p, fn_flxy, flxy)
   rewind(un)
 
   if (n > nflmax) then
-    write(msg,'(a,i0)') "Error: too many flux transect", n
-    call par_stop(trim(msg))
+    call par_stop("Error: too many flux transect"//itoa(n))
   end if
 
   flxy(:,:) = -9999           ! パラメータファイルの情報を上書きして初期化する

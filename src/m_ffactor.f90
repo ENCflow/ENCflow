@@ -5,6 +5,7 @@
 !**********************************************************************
 module m_ffactor
   use m_parallel, only : par_stop
+  use m_util, only : itoa, rtoa
   implicit none
   private
 
@@ -51,29 +52,24 @@ subroutine m_ffactor_init(level, hmin, hmax, mode)
   integer, intent(in) :: level
   real, intent(in) :: hmin, hmax
   character(len=2), intent(in) :: mode
-  character(len=1024) :: msg
 
   if (mode == 'uv' .or. mode == 'UV') then
     powf = 4. / 3.
   else if (mode == 'mn' .or. mode == 'MN') then
     powf = 7. / 3.
   else
-    write(msg,'(a,i0)') "ffactor_init: unknown mode ", mode
-    call par_stop(trim(msg))
+    call par_stop("ffactor_init: unknown mode "//mode)
   end if
 
   if (hmin <= 0) then
-    write(msg,'(a,f0.5)') "ffactor_init: hmin is out of range ", hmin
-    call par_stop(trim(msg))
+    call par_stop("ffactor_init: hmin is out of range "//rtoa(hmin))
   end if
   if (hmax <= hmin) then
-    write(msg,'(a,f0.5)') "ffactor_init: hmax is out of range ", hmax
-    call par_stop(trim(msg))
+    call par_stop("ffactor_init: hmax is out of range "//rtoa(hmax))
   end if
 
   if (level < 0 .or. level > 5) then
-    write(msg,'(a,f0.5)') "ffactor_init: level is out of range ", level
-    call par_stop(trim(msg))
+    call par_stop("ffactor_init: level is out of range "//itoa(level))
   end if
 
   if (level > 0) then

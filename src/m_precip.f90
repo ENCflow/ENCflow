@@ -3,7 +3,7 @@ module m_precip
   use m_sysparam, only : t_sysparam
   use m_state, only : t_state
   use m_geoinfo, only : t_geoinfo
-  use m_util, only : str2sec
+  use m_util, only : str2sec, itoa
   use m_fileio
   use list_precip, only : t_list_precip, list_precip_read
   use m_parallel, only : par_info, par_stop
@@ -45,7 +45,6 @@ subroutine m_precip_init(pr, p)
   type(t_list_precip) :: list
   integer :: prtype
   real, allocatable :: prval(:,:)
-  character(len=1024) :: msg
 
   !--- システムパラメータファイル内で設定ファイルが指定されている場合 ---
   if (len_trim(p%fn_precip) > 0) then
@@ -65,8 +64,7 @@ subroutine m_precip_init(pr, p)
   else if (prtype == 3) then
     call set_maplist
   else
-    write(msg,'(a,i0)') "Error, Unknown prtype in list_precip", prtype
-    call par_stop(trim(msg))
+    call par_stop("Error, Unknown prtype in list_precip"//itoa(prtype))
   end if
 
   pr%prtype = prtype
@@ -118,7 +116,6 @@ end subroutine
 subroutine set_prmap
   character(:), allocatable :: fname
   integer :: i, j, have_nan
-  character(len=1024) :: msg
   if (len_trim(list%fn_prmap) == 0) then
     call par_stop("Error, prtype=2 but fn_prmap is not set" )
   end if
@@ -139,8 +136,7 @@ subroutine set_prmap
     end do
   end do
   if (have_nan > 0) then
-    write(msg,'(a,i0,a)') "warning: precipitation map has NaN in", have_nan, " cells"
-    call par_info(trim(msg))
+    call par_info("warning: precipitation map has NaN in"//itoa(have_nan)//" cells")
   end if
 end subroutine
 

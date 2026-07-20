@@ -4,6 +4,8 @@ module m_util
   private
 
   public :: str2sec
+  public :: itoa
+  public :: rtoa
 
 contains
 !=======================================================================
@@ -70,9 +72,11 @@ function str2sec(str, message) result(t)
   else
     call par_stop("Error, "//message)
   end if
-end function
+end function str2sec
 
 
+!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 function isnumber(str) result(r)
   character(len=*), intent(in) :: str
   logical :: r
@@ -90,6 +94,29 @@ function isnumber(str) result(r)
       return
     end if
   end do
-end function
+end function isnumber
+
+
+!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+pure function itoa(i) result(s)
+  integer, intent(in) :: i
+  character(:), allocatable :: s
+  character(len=32) :: buf
+  write(buf,'(i0)') i
+  s = trim(buf)
+end function itoa
+
+
+!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+pure function rtoa(r) result(s)
+  real, intent(in) :: r
+  character(:), allocatable :: s
+  character(len=32) :: buf
+  write(buf,'(f0.5)') r
+  s = trim(buf)
+end function rtoa
+
 
 end module

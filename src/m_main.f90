@@ -9,6 +9,7 @@ module m_main
   use m_record
   use m_swflow
   use m_fileio
+  use m_util, only : itoa
   use sysdep_util
   use m_parallel
 
@@ -114,14 +115,10 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
   integer, intent(out) :: ierror
   integer :: it            ! 時間ループのカウント
   integer :: ifn           ! 出力ファイル番号
-  character(len=1024) :: msg1, msg2, msg3
 
-  write(msg1,'(a,i0)') "number of processes :", nproc
-  write(msg2,'(a,i0)') "number of threads :", p%num_threads
-  write(msg3,'(a,i0)') "number of valid cells :", s%n_valcells
-  call par_info(trim(msg1))
-  call par_info(trim(msg2))
-  call par_info(trim(msg3))
+  call par_info("number of processes : "//itoa(nproc))
+  call par_info("number of threads : "//itoa(p%num_threads))
+  call par_info("number of valid cells : "//itoa(s%n_valcells))
 
 
   it = 0

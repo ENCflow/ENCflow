@@ -3,6 +3,7 @@ module m_state
   use m_geoinfo, only : t_geoinfo
   use list_initial, only : t_list_initial, list_initial_read
   use m_parallel, only : is_root, par_info, par_stop
+  use m_util, only : itoa
   use iso_fortran_env, only : output_unit
   implicit none
   private
@@ -103,7 +104,6 @@ subroutine m_state_init(s, p, g)
   type(t_geoinfo), intent(inout) :: g
   type(t_list_initial) :: list
   integer :: i, j
-  character(len=1024) :: msg
 
   ! メモリ確保
   allocate(s%h(1:p%nx,1:p%ny), source = 0.0)
@@ -157,8 +157,7 @@ subroutine m_state_init(s, p, g)
     case (4)
       call init_state_user_4(p, g, s)
     case default
-      write(msg,'(a,i0)') "error: undefined f_user_routine_id in list_initial", list%f_user_routine_id
-      call par_stop(trim(msg))
+      call par_stop("undefined f_user_routine_id in list_initial"//itoa(list%f_user_routine_id))
   end select
 
   ! 初期水位をセット
@@ -172,7 +171,7 @@ subroutine m_state_init(s, p, g)
     end do
   end do
   if (s%n_valcells <= 0) then
-    call par_stop("No valid cell in the entire domain")
+    call par_stop("no valid cell in the entire domain")
   end if
 
   ! 画面表示用の変数を初期化

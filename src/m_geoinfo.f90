@@ -3,6 +3,7 @@ module m_geoinfo
   use m_sysparam, only : t_sysparam
   use list_geoinfo, only : t_list_geoinfo, list_geoinfo_read
   use m_fileio
+  use m_util, only : itoa
   use m_parallel, only : par_info, par_stop
   implicit none
   private
@@ -73,8 +74,6 @@ subroutine m_geoinfo_init(g, p)
   type(t_sysparam), intent(inout) :: p             ! システムパラメータ構造体
   type(t_geoinfo), intent(out) :: g             ! 地理情報構造体
   type(t_list_geoinfo) :: list                     ! パラメータファイル中の変数
-  character(len=1024) :: msg
-
 
   call list_geoinfo_read(p, list)
   call set_params(p, g, list)
@@ -103,8 +102,7 @@ subroutine m_geoinfo_init(g, p)
     case (5)
       call init_geoinfo_user_5(p, g)
     case default
-      write(msg,'(a,i0)') "error: undefined f_user_routine_id in list_geoinfo", list%f_user_routine_id
-      call par_stop(trim(msg))
+      call par_stop("undefined f_user_routine_id in list_geoinfo"//itoa(list%f_user_routine_id))
   end select
 
 
@@ -239,8 +237,7 @@ subroutine read_mask(p, g, list)
     call do_sw2x
   else
     ! 不正なマスクタイプ
-    write(msg,'(a,i0)') "list_geoinfo: unknown mask type", list%f_masktype
-    call par_stop(trim(msg))
+    call par_stop("list_geoinfo: unknown mask type"//itoa(list%f_masktype))
   end if
 
 
