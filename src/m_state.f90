@@ -16,6 +16,18 @@ module m_state
   public :: m_state_printstate
 
 
+  ! 画面出力用変数
+  type t_state4prt
+    real :: h = 0.0
+    real :: vv = 0.0
+    real :: qq = 0.0
+    real :: cn = 0.0
+    real :: runger = 0.0
+    integer :: n_exf = 0
+    integer :: count_disp = 0
+  end type
+
+
   type t_state
     real :: t                           ! 現在時刻 (s)
     integer :: it                       ! 時刻カウンタ
@@ -49,20 +61,10 @@ module m_state
     integer :: n_exfluxes               ! number of excessive fluxes
     integer :: n_runge                  ! number of Runge-Kutta flux calculations
     integer :: un_log                   ! ログファイルの装置番号
+    type(t_state4prt) :: sp             ! 画面出力用
     logical :: initialized = .false.
   end type
 
-
-  type t_state4prt
-    real :: h
-    real :: vv
-    real :: qq
-    real :: cn
-    real :: runger
-    integer :: n_exf
-    integer :: count_disp
-  end type
-  type(t_state4prt) :: sp
 
 
   interface
@@ -174,15 +176,6 @@ subroutine m_state_init(s, p, g)
     call par_stop("no valid cell in the entire domain")
   end if
 
-  ! 画面表示用の変数を初期化
-  sp%h = 0
-  sp%vv = 0
-  sp%qq = 0
-  sp%cn = 0
-  sp%runger = 0
-  sp%n_exf = 0
-  sp%count_disp = 0
-
   ! 状態ログファイルをオープン
   !   ログファイルを出力するのはランクゼロのみ
   if (is_root) s%un_log = open_logfile()
@@ -267,12 +260,12 @@ subroutine m_state_calcstat(s, p, g)
   s%cnmax = cnmax                                              ! 領域最大クーラン数
 
   ! 画面出力ステップ内での最大値(画面出力時にリセットされる)
-  sp%h = max(sp%h, hmax)
-  sp%vv = max(sp%vv, vvmax)
-  sp%qq = max(sp%qq, qqmax)
-  sp%cn = max(sp%cn, cnmax)
-  sp%n_exf = max(sp%n_exf, s%n_exfluxes)
-  sp%runger = max(sp%runger, s%n_runge / (real(s%n_valcells) * 4) * 100)
+  s%sp%h = max(s%sp%h, hmax)
+  s%sp%vv = max(s%sp%vv, vvmax)
+  s%sp%qq = max(s%sp%qq, qqmax)
+  s%sp%cn = max(s%sp%cn, cnmax)
+  s%sp%n_exf = max(s%sp%n_exf, s%n_exfluxes)
+  s%sp%runger = max(s%sp%runger, s%n_runge / (real(s%n_valcells) * 4) * 100)
 
 end subroutine
 
@@ -305,7 +298,7 @@ subroutine m_state_printstate(p, s)
   if (.not. is_root) return
 
   ! 凡例を表示
-  if (mod(sp%count_disp, 36) == 0) then
+  if (mod(s%sp%count_disp, 36) == 0) then
     call par_info("time, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max")
     write(s%un_log, '(a)') "time, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
     flush(s%un_log)
@@ -319,21 +312,21 @@ subroutine m_state_printstate(p, s)
   digi3 = max(digi3, 1)
   write(fmt0, '("f",i2,".",i0)') digi1, digi3
   fmt = '(RN,a," ",f5.1,"%",' //trim(fmt0)// '," ",f5.1,"%",i7,*(f10.4))'     ! RNはround='nearest'に相当
-  write(msg, fmt) s%ctime, progress, hmean, sp%runger, sp%n_exf, sp%h, sp%vv, sp%qq, sp%cn
+  write(msg, fmt) s%ctime, progress, hmean, s%sp%runger, s%sp%n_exf, s%sp%h, s%sp%vv, s%sp%qq, s%sp%cn
   call par_info(trim(msg))
-  write(s%un_log, fmt) s%ctime, progress, hmean, sp%runger, sp%n_exf, sp%h, sp%vv, sp%qq, sp%cn
+  write(s%un_log, fmt) s%ctime, progress, hmean, s%sp%runger, s%sp%n_exf, s%sp%h, s%sp%vv, s%sp%qq, s%sp%cn
   flush(s%un_log)
 
   ! 画面出力用の最大値のリセット
-  sp%h = 0
-  sp%vv = 0
-  sp%qq = 0
-  sp%cn = 0
-  sp%n_exf = 0
-  sp%runger = 0
+  s%sp%h = 0
+  s%sp%vv = 0
+  s%sp%qq = 0
+  s%sp%cn = 0
+  s%sp%n_exf = 0
+  s%sp%runger = 0
 
   ! 凡例表示のカウンタを更新
-  sp%count_disp = sp%count_disp + 1
+  s%sp%count_disp = s%sp%count_disp + 1
 end subroutine
 
 
