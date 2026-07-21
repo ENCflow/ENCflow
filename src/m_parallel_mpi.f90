@@ -15,12 +15,17 @@ module m_parallel
 !                  よい。ランク番号付きで表示して即時に全体強制終了
 !
 ! 領域分割情報 dcp:
-!   - par_decomp_init(nx, ny) で設定する(格子サイズ確定後、
+!   - par_decomp_init(nx, ny, jw1, jw2) で設定する(格子サイズ確定後、
 !     m_geoinfo_init の直後に呼ぶこと)
 !   - 各モジュールは use m_parallel, only: dcp で直接参照してよい
 !     (protected 属性により変更は本モジュール内に限定される)
 !   - 計算カーネルには dcp を見せず、範囲(js, je 等)を引数で渡す
 !     (dcp の直接参照はフェーズの入口まで)
+!   - js/je は「計算範囲(全域窓∩自ランク担当帯)」、jsh/jeh は
+!     「配列確保範囲(担当帯+ハロ。現段階は全域 1..ny)」、jw1/jw2 は
+!     全域の有効窓。全域窓の端で1行縮めるループは
+!       do j = max(dcp%js, dcp%jw1+1), min(dcp%je, dcp%jw2-1)
+!     と書くこと(dcp%js+1 と書くと分割後にランク境界まで縮んでしまう)
 !
 ! 注意:
 !   - 本プロジェクトは -r8 等で既定 real を8バイトに昇格している
@@ -53,10 +58,12 @@ module m_parallel
    type :: t_decomp
       integer :: nx_g = 0        ! 全領域サイズ x(参考保持)
       integer :: ny_g = 0        ! 全領域サイズ y(参考保持)
-      integer :: js = 1          ! 自ランク担当範囲の開始 j
-      integer :: je = 0          ! 自ランク担当範囲の終了 j
-      integer :: jsh = 1         ! ハロ込み範囲の開始 j
-      integer :: jeh = 0         ! ハロ込み範囲の終了 j
+      integer :: jw1 = 1         ! 全域の有効窓の開始 j(= g%wy(1))
+      integer :: jw2 = 0         ! 全域の有効窓の終了 j(= g%wy(2))
+      integer :: js = 1          ! 自ランク計算範囲の開始 j(全域窓∩担当帯)
+      integer :: je = 0          ! 自ランク計算範囲の終了 j
+      integer :: jsh = 1         ! 配列確保範囲の開始 j(担当帯+ハロ。現段階は全域)
+      integer :: jeh = 0         ! 配列確保範囲の終了 j
       integer :: rank_n = -1     ! j+側の隣接ランク(なければ負)
       integer :: rank_s = -1     ! j-側の隣接ランク(なければ負)
    end type t_decomp
@@ -82,18 +89,24 @@ contains
       is_root = (nrank == 0)
    end subroutine par_init
 
-   subroutine par_decomp_init(nx, ny)
-      ! 領域分割の決定。格子サイズ確定後(m_geoinfo_init の直後)に
-      ! 全ランクが揃って呼ぶこと(collective)。
+   subroutine par_decomp_init(nx, ny, jw1, jw2)
+      ! 領域分割の決定。格子サイズと有効窓の確定後
+      ! (m_geoinfo_init の直後)に全ランクが揃って呼ぶこと(collective)。
       !
-      ! 現段階(冗長計算)は全ランクが全域を担当する。
-      ! TODO: 分割実装時にここで j 方向の範囲・ハロ・隣接ランクを
-      !       計算する(ランク数不変のビット一致検証を回帰テストで)。
+      ! 現段階(冗長計算)は全ランクが全域窓を計算し、配列は全域確保。
+      ! TODO: 分割実装時:
+      !   js/je   = [jw1, jw2] をランク数で分割した自ランク帯
+      !   jsh/jeh = js-ハロ幅 .. je+ハロ幅(全域端 1..ny でクリップ)
+      !   rank_n/rank_s = 隣接ランク(端は -1)
+      !   ランク数不変のビット一致検証を回帰テストで行うこと。
       integer, intent(in) :: nx, ny
+      integer, intent(in) :: jw1, jw2   ! 全域の有効窓(= g%wy(1:2))
       dcp%nx_g = nx
       dcp%ny_g = ny
-      dcp%js  = 1
-      dcp%je  = ny
+      dcp%jw1 = jw1
+      dcp%jw2 = jw2
+      dcp%js  = jw1
+      dcp%je  = jw2
       dcp%jsh = 1
       dcp%jeh = ny
       dcp%rank_n = -1

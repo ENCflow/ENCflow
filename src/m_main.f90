@@ -65,6 +65,7 @@ subroutine m_main_all()
 
   ! モジュールを初期化
   call m_geoinfo_init(g, p)               ! geoinfo を初期化
+  call par_decomp_init(g%nx, g%ny, g%wy(1), g%wy(2))  ! 領域分割を決定(現段階は全域窓)
   call m_boundary_init(b, p, g)           ! boundary を初期化(geoinfoより後に)
   call m_state_init(s, p, g)              ! state を初期化(geoinfo, boundaryより後に)
   call m_record_init(r, p, g)             ! record を初期化(create_resultdirより後)

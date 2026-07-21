@@ -1,5 +1,6 @@
 submodule(m_swflow_enc) m_swflow_enc_adv
   use m_state, only : t_state
+  use m_parallel, only : dcp   ! 親経由のホスト結合は nvfortran バグ回避のため直接 use
   implicit none
 
   type t_enc_adv
@@ -18,12 +19,13 @@ module subroutine adv_init(p, g)
   type(t_geoinfo), intent(in) :: g
   if (p%initialized) continue
   if (f_advection_tvd > 0) then
-    allocate(tx_mod%taxy(1:4,1:g%nx,1:g%ny), source = 0.0)
+    allocate(tx_mod%taxy(1:4,1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   else
-    allocate(tx_mod%taxy(1:2,1:g%nx,1:g%ny), source = 0.0)
+    allocate(tx_mod%taxy(1:2,1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   end if
-  allocate(tx_mod%ulm(1:g%nx,1:g%ny), source = 0.0)
-  allocate(tx_mod%vlm(1:g%nx,1:g%ny), source = 0.0)
+  ! TODO(分割時): ulm/vlm/taxy はハロ行でも計算が必要(ステンシル幅2の源。developer.md §11)
+  allocate(tx_mod%ulm(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(tx_mod%vlm(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
 end subroutine
 
 
@@ -87,7 +89,7 @@ subroutine adv_prepare_v1(p, g, s, sx, tx)
   if (f_advection_term == 0) return
 
   !$omp parallel do private(i, j)
-  do j = g%wy(1), g%wy(2)
+  do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle   ! get_diffで陸から1セル外側まで参照することに注意
@@ -99,7 +101,8 @@ subroutine adv_prepare_v1(p, g, s, sx, tx)
   !$omp end parallel do
 
   !$omp parallel do private(i, j, k, ww, wwx, wwy, dux, duy, dvx, dvy)
-  do j = g%wy(1)+1, g%wy(2)-1
+  ! 全域窓の端でのみ1行縮める(dcp%js+1 とはしないこと)
+  do j = max(dcp%js, dcp%jw1+1), min(dcp%je, dcp%jw2-1)
     do i = g%wx(1,j)+1, g%wx(2,j)-1
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
@@ -290,7 +293,8 @@ subroutine adv_prepare_v2(p, g, s, sx, tx)
   if (f_advection_term == 0) return
 
   !$omp parallel do private(i, j, k, ww, wwx, wwy, ii, jj, u, v, uu, vv, uv, hh, xx, dux, duy, dvx, dvy, duux, dvvy, duvx, duvy)
-  do j = g%wy(1)+1, g%wy(2)-1
+  ! 全域窓の端でのみ1行縮める(dcp%js+1 とはしないこと)
+  do j = max(dcp%js, dcp%jw1+1), min(dcp%je, dcp%jw2-1)
     do i = g%wx(1,j)+1, g%wx(2,j)-1
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle

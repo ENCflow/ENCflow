@@ -6,7 +6,7 @@ module m_precip
   use m_util, only : str2sec, itoa
   use m_fileio
   use list_precip, only : t_list_precip, list_precip_read
-  use m_parallel, only : par_info, par_stop
+  use m_parallel, only : par_info, par_stop, dcp
   implicit none
   private
 
@@ -122,6 +122,7 @@ subroutine set_prmap
   end if
 
   ! 降水分布の読み込み
+  ! 入力データ配列は全域確保のまま(全ランク冗長読み込み。developer.md §11)
   allocate(pr%prmap(1:g%nx,1:g%ny))
   fname = trim(p%dir_data)//"/"//trim(list%fn_prmap)
   call fileio_read_matrix(fname, g%nx, g%ny, pr%prmap, p%f_input_mode)
@@ -200,7 +201,7 @@ subroutine m_precip_makepre(pr, p, g, s)
     call get_prval(s%t, prval)   ! 現在時間ステップでの降水強度を計算
     f = 1. / 1000. / 3600.         ! 単位を(mm/h)から(m/s)に換算
     !$omp parallel do
-    do j = g%wy(1), g%wy(2)
+    do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
         s%pre(i,j) = prval * f                  ! (m/s)
@@ -215,7 +216,7 @@ subroutine m_precip_makepre(pr, p, g, s)
     !f = 1. / 1000. / 3600. / 24.   ! 単位を(mm/day)から(m/s)に換算
     f = 1. / 1000. / pr%dt_mapunit   ! 単位を(m/s)に換算
     !$omp parallel do
-    do j = g%wy(1), g%wy(2)
+    do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
         s%pre(i,j) = pr%prmap(i,j) * prval * f  ! (m/s)
@@ -230,6 +231,8 @@ subroutine m_precip_makepre(pr, p, g, s)
       i = s%it / pr%idt_maplist + 1
       if (i <= size(pr%un_maplist)) then
         un = pr%un_maplist(i)
+        ! TODO(分割時): s%prh は担当帯のみになるため、全域一時配列に
+        !               読んで担当分を切り出す方式に変更する
         call fileio_un_read_matrix(un, g%nx, g%ny, s%prh, p%f_input_mode)
       else
         s%prh(:,:) = 0.0                         ! (mm/h)

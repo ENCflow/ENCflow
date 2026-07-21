@@ -5,7 +5,7 @@ module m_swflow_enc
   use m_state, only : t_state
   use m_ffactor, only : m_ffactor_init, m_ffactor_calc, m_ffactor_dispose
   use list_enc, only : t_list_enc, list_enc_read
-  use m_parallel, only : par_info
+  use m_parallel, only : par_info, dcp
   implicit none
   private
 
@@ -207,7 +207,7 @@ subroutine boundary(p, g, b, s, sx)
   integer :: i, j, k
 
   !$omp parallel do private(i, j)
-  do j = g%wy(1), g%wy(2)
+  do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
       if (g%x(i,j) <= 0) cycle
@@ -219,6 +219,8 @@ subroutine boundary(p, g, b, s, sx)
 
   ! 湧出しを加える
   if (b%nsrc > 0) then
+    ! TODO(分割時): 所有ランクのみ適用する(if (dcp%js <= j .and. j <= dcp%je))
+    !               湧き出しリストは全ランクが保持している(developer.md §11)
     do k = 1, b%nsrcc
       i = b%srccell(1,k)
       j = b%srccell(2,k)
@@ -312,15 +314,16 @@ subroutine init_enc_status(p, g, s, sx)
   integer :: i, j, k, in, jn, ie, je
 
   ! メモリを確保する
-  allocate(sx%uv(1:4,0:g%nx,0:g%ny), source = 0.0)
-  allocate(sx%h1(1:g%nx,1:g%ny), source = 0.0)
-  allocate(sx%mn(1:4,0:g%nx,0:g%ny), source = 0.0)
-  allocate(sx%mn0(1:4,0:g%nx,0:g%ny), source = 0.0)
+  ! エッジ配列の j 範囲: セル j を挟むエッジは j-1 と j なので下限は jsh-1
+  allocate(sx%uv(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(sx%h1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(sx%mn(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(sx%mn0(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
 
   ! 流速の初期条件を設定する
   !$omp parallel do private(i, j, k, in, jn, ie, je, ue, ve)
   !do j = 1, g%ny
-  do j = g%wy(1), g%wy(2)
+  do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       do k = 1, 4
@@ -371,7 +374,7 @@ subroutine prepare(p, g, s, sx)
   if (p%initialized) continue
   if (s%initialized) continue
   !$omp parallel do private(i, j)
-  do j = g%wy(1), g%wy(2)
+  do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       sx%mn0(1:4,i,j) = sx%mn(1:4,i,j)
     end do
@@ -407,7 +410,7 @@ subroutine momentum(p, g, s, sx, ierror)
   !$omp parallel do private(i, j, k, have_exflux, have_runge, have_error) &
   !$omp reduction(+:n_exfluxes), reduction(+:n_runge), reduction(+:n_error)
   ! This loop should be an independ "omp parallel do"
-  do j = g%wy(1), g%wy(2)
+  do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       do k = 1, 4
@@ -750,7 +753,7 @@ subroutine continuous(p, g, s, sx)
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
   !$omp parallel do private(i, j, k, in, jn, ie, je, uv1, mn1, dh, mnmax)
-  do j = g%wy(1), g%wy(2)
+  do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
       if (g%x(i,j) <= 0) cycle
@@ -816,7 +819,7 @@ subroutine complete(p, g, s, sx)
   if (p%initialized) continue
 
   !$omp parallel do private(i, j)
-  do j = g%wy(1), g%wy(2)
+  do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       s%h(i,j) = sx%h1(i,j)

@@ -3,6 +3,7 @@ module m_swflow_stg
   use m_geoinfo, only : t_geoinfo
   use m_boundary, only : t_boundary
   use m_state, only : t_state
+  use m_parallel, only : dcp
   implicit none
   private
 
@@ -74,15 +75,18 @@ subroutine m_swflow_stg_init(p, g, s)
   DT = p%dt
   IG = g%nx
   JG = g%ny
-  ALLOCATE(D(1:IG,1:JG),SOURCE=0.0)
-  ALLOCATE(M(0:IG,1:JG),SOURCE=0.0)
-  ALLOCATE(M0(0:IG,1:JG),SOURCE=0.0)
-  ALLOCATE(M1(0:IG,1:JG),SOURCE=0.0)
-  ALLOCATE(N(1:IG,0:JG),SOURCE=0.0)
-  ALLOCATE(N0(1:IG,0:JG),SOURCE=0.0)
-  ALLOCATE(N1(1:IG,0:JG),SOURCE=0.0)
+  ! 動的状態: セル量は jsh:jeh、y面フラックス(N系)は
+  ! 「セル j を挟む面は j-1 と j」の規約により jsh-1:jeh
+  ALLOCATE(D(1:IG,dcp%jsh:dcp%jeh),SOURCE=0.0)
+  ALLOCATE(M(0:IG,dcp%jsh:dcp%jeh),SOURCE=0.0)
+  ALLOCATE(M0(0:IG,dcp%jsh:dcp%jeh),SOURCE=0.0)
+  ALLOCATE(M1(0:IG,dcp%jsh:dcp%jeh),SOURCE=0.0)
+  ALLOCATE(N(1:IG,dcp%jsh-1:dcp%jeh),SOURCE=0.0)
+  ALLOCATE(N0(1:IG,dcp%jsh-1:dcp%jeh),SOURCE=0.0)
+  ALLOCATE(N1(1:IG,dcp%jsh-1:dcp%jeh),SOURCE=0.0)
+  ! 静的コピー(H/GV/DN/BB/X/R)と行別窓 I1/I2 は全域保持のまま
   ALLOCATE(H(1:IG,1:JG),SOURCE=0.0)
-  ALLOCATE(HQ(1:IG,1:JG),SOURCE=0.0)
+  ALLOCATE(HQ(1:IG,dcp%jsh:dcp%jeh),SOURCE=0.0)
   ALLOCATE(GV(1:IG,1:JG),SOURCE=0.0)
   ALLOCATE(DN(1:IG,1:JG),SOURCE=0.0)
   ALLOCATE(BB(1:IG,1:JG),SOURCE=1.e10)
@@ -118,8 +122,10 @@ subroutine m_swflow_stg_init(p, g, s)
 ! 計算範囲を決める  都道府県番号で判別
       I1(:)=2
       I2(:)=2
-      J1=2
-      J2=JG-1
+      ! 全域の格子端で1行縮めた範囲と自ランク担当帯の交差。
+      ! 全計算ループは J1/J2 を参照するため、分割の注入点はここだけ
+      J1=max(dcp%js, 2)
+      J2=min(dcp%je, JG-1)
       !$omp parallel
       !$omp do
       DO J=J1,J2
@@ -187,7 +193,7 @@ SUBROUTINE m_swflow_stg_calc(p, g, b, s, ierror)
   REAL:: D1,D2,D3
   REAL:: GV1,GV2,GV3,GVC,LM1,LM2,LM3,LMC,BBC
   REAL:: OUTMN,OUTD !,V,QF  !QF:単位幅流量（スカラー）　rev0827
-  REAL:: OUTD_(IG,JG)
+  REAL:: OUTD_(IG,dcp%jsh:dcp%jeh)
   INTEGER:: I,J,L
   INTEGER:: ITER
   REAL:: Mm,Nm,QF
