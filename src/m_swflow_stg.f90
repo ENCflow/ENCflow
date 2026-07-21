@@ -521,7 +521,7 @@ SUBROUTINE m_swflow_stg_calc(p, g, b, s, ierror)
             &      -DT/DY*(N(I,J)-N(I,J-1))/GV(I,J) &
             &      +s%pre(I,J)*DT/GV(I,J)
             Mm=(M(I,J)+M(I-1,J))/2.0
-            Nm=(N(I,J)+N(I-1,J))/2.0
+            Nm=(N(I,J)+N(I,J-1))/2.0
             QF=SQRT(Mm**2.0+Nm**2.0)    ! 単位幅流量[m^2/s] !rev082
             s%m(i,j) = Mm
             s%n(i,j) = Nm
