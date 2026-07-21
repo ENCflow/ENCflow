@@ -2,7 +2,9 @@ module m_state
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use list_initial, only : t_list_initial, list_initial_read
-  use m_parallel, only : is_root, par_info, par_stop, dcp
+  use m_parallel, only : is_root, par_info, par_stop, dcp, &
+                       par_sum_rows, par_allreduce_max, par_allreduce_sumi, &
+                       par_gather_cell, par_bcast_cell
   use m_util, only : itoa
   use iso_fortran_env, only : output_unit
   implicit none
@@ -211,6 +213,8 @@ subroutine m_state_calcstat(s, p, g)
   real :: dtpdx     ! dt / min(dx, dy)
   real :: cosdir
   real :: cc
+  real :: rmax(4)      ! 全ランク集約用 [hmax, vvmax, qqmax, cnmax]
+  integer :: nglob(2)  ! 全ランク集約用 [n_exfluxes, n_runge]
   integer :: i, j
 
   hsum = 0
@@ -259,20 +263,30 @@ subroutine m_state_calcstat(s, p, g)
   end do
   !$omp end parallel do
 
-  hsum = sum(hsum_j(:))                                        ! 並列化時の実行順依存誤差対策
-  s%hmean = hsum / s%n_valcells                                ! 領域平均貯留高(m)
-  s%cnmax = cnmax                                              ! 領域最大クーラン数
+  ! --- 全ランク集約 ---
+  ! 総和は「全域窓の行部分和を j 昇順に並べて一括総和」で決定化
+  ! (ランク数に依存しない)。max は順序不変な厳密演算なので allreduce。
+  ! 事象カウント(ランク局所)は全ランク合計に集約してから使う。
+  call par_sum_rows(hsum_j, hsum)
+  rmax = [hmax, vvmax, qqmax, cnmax]
+  call par_allreduce_max(rmax)
+  hmax  = rmax(1)
+  vvmax = rmax(2)
+  qqmax = rmax(3)
+  cnmax = rmax(4)
+  nglob = [s%n_exfluxes, s%n_runge]
+  call par_allreduce_sumi(nglob)
 
-  ! TODO(分割時): hmean(部分和), cnmax および下の sp 成分は局所値になる。
-  !               printstate/エラー判定の前に allreduce が必要(developer.md §4)
+  s%hmean = hsum / s%n_valcells                                ! 領域平均貯留高(m)
+  s%cnmax = cnmax                                              ! 領域最大クーラン数(全域値)
 
   ! 画面出力ステップ内での最大値(画面出力時にリセットされる)
   s%sp%h = max(s%sp%h, hmax)
   s%sp%vv = max(s%sp%vv, vvmax)
   s%sp%qq = max(s%sp%qq, qqmax)
   s%sp%cn = max(s%sp%cn, cnmax)
-  s%sp%n_exf = max(s%sp%n_exf, s%n_exfluxes)
-  s%sp%runger = max(s%sp%runger, s%n_runge / (real(s%n_valcells) * 4) * 100)
+  s%sp%n_exf = max(s%sp%n_exf, nglob(1))
+  s%sp%runger = max(s%sp%runger, nglob(2) / (real(s%n_valcells) * 4) * 100)
 
 end subroutine
 
@@ -552,11 +566,15 @@ end subroutine
 !----------------------------------------------------------------------
 subroutine save_state(p, s)
   type(t_sysparam), intent(in) :: p
-  type(t_state), intent(in) :: s
+  type(t_state), intent(inout) :: s
   integer :: un
   if (p%initialized) continue
   if (s%initialized) continue
-  ! TODO(分割時): 配列が担当帯のみになるため rank0 に gather してから書く
+  ! rank0 に集約してから rank0 のみが書く
+  call par_gather_cell(s%h)
+  call par_gather_cell(s%u)
+  call par_gather_cell(s%v)
+  if (.not. is_root) return
   open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted', status='replace')
   write(un) s%h, s%u, s%v
   close(un)
@@ -572,10 +590,15 @@ subroutine restore_state(p, s)
   integer :: un
   if (p%initialized) continue
   if (s%initialized) continue
-  ! TODO(分割時): rank0 が読んで各ランクへ scatter する
-  open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted', status='old')
-  read(un) s%h, s%u, s%v
-  close(un)
+  ! rank0 が読み、全ランクへ配布する(全域確保のため全体 Bcast で足りる)
+  if (is_root) then
+    open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted', status='old')
+    read(un) s%h, s%u, s%v
+    close(un)
+  end if
+  call par_bcast_cell(s%h)
+  call par_bcast_cell(s%u)
+  call par_bcast_cell(s%v)
 end subroutine
 
 end module

@@ -5,8 +5,9 @@ module m_swflow_enc
   use m_state, only : t_state
   use m_ffactor, only : m_ffactor_init, m_ffactor_calc, m_ffactor_dispose
   use list_enc, only : t_list_enc, list_enc_read
-  use m_parallel, only : par_info, dcp, &
-                       par_halo_cell, par_halo_edge, par_edge_merge
+  use m_parallel, only : par_info, dcp, is_root, &
+                       par_halo_cell, par_halo_edge, par_edge_merge, &
+                       par_gather_edge, par_bcast_edge
   implicit none
   private
 
@@ -855,9 +856,13 @@ end subroutine
 !----------------------------------------------------------------------
 subroutine save_state(p, sx)
   type(t_sysparam), intent(in) :: p
-  type(t_enc_status), intent(in) :: sx
+  type(t_enc_status), intent(inout) :: sx
   integer :: un
   if (p%initialized) continue
+  ! rank0 に集約してから rank0 のみが書く
+  call par_gather_edge(sx%uv)
+  call par_gather_edge(sx%mn)
+  if (.not. is_root) return
   open(newunit=un, file=trim(p%dir_result)//'/save_enc.dat', form='unformatted', status='replace')
   write(un) sx%uv, sx%mn
   close(un)
@@ -872,9 +877,15 @@ subroutine restore_state(p, sx)
   type(t_enc_status), intent(inout) :: sx
   integer :: un
   if (p%initialized) continue
-  open(newunit=un, file=trim(p%dir_result)//'/save_enc.dat', form='unformatted', status='old')
-  read(un) sx%uv, sx%mn
-  close(un)
+  ! rank0 が読み、全ランクへ配布する(全域確保のため全体 Bcast で足りる)
+  if (is_root) then
+    open(newunit=un, file=trim(p%dir_result)//'/save_enc.dat', form='unformatted', status='old')
+    read(un) sx%uv, sx%mn
+    close(un)
+  end if
+  call par_bcast_edge(sx%uv)
+  call par_bcast_edge(sx%mn)
+  sx%mn1(:,:,:) = sx%mn(:,:,:)   ! 書き込みバッファも正準状態で初期化する
 end subroutine
 
 

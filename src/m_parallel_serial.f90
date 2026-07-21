@@ -31,6 +31,10 @@ module m_parallel
    public :: par_barrier
    public :: par_allreduce_min
    public :: par_halo_cell, par_halo_edge, par_edge_merge
+   public :: par_allreduce_max, par_allreduce_sumi, par_allreduce_maxi
+   public :: par_sum_rows
+   public :: par_gather_cell, par_gather_cell_i, par_gather_edge
+   public :: par_bcast_cell, par_bcast_edge
    public :: nrank, nproc, is_root
    public :: t_decomp, dcp
 
@@ -98,6 +102,62 @@ contains
       logical, intent(in) :: take_n(:)
       if (size(a) > 0 .and. size(take_s) > 0 .and. size(take_n) > 0) continue
    end subroutine par_edge_merge
+
+   subroutine par_allreduce_max(vals)
+      ! 全ランク最大値。逐次では何もしない。
+      real, intent(inout) :: vals(:)
+      if (size(vals) > 0) continue
+   end subroutine par_allreduce_max
+
+   subroutine par_allreduce_sumi(ivals)
+      ! 全ランク合計。逐次では何もしない。
+      integer, intent(inout) :: ivals(:)
+      if (size(ivals) > 0) continue
+   end subroutine par_allreduce_sumi
+
+   subroutine par_allreduce_maxi(ival)
+      ! 全ランク最大値。逐次では何もしない。
+      integer, intent(inout) :: ival
+      if (ival == 0) continue
+   end subroutine par_allreduce_maxi
+
+   subroutine par_sum_rows(rowsum, total)
+      ! 行部分和の総和。逐次では従来どおり一括総和する
+      ! (MPI 版も rank0 が同じ「全窓行の一括総和」を行う)。
+      real, intent(in) :: rowsum(dcp%js:)
+      real, intent(out) :: total
+      total = sum(rowsum)
+   end subroutine par_sum_rows
+
+   subroutine par_gather_cell(a)
+      ! rank0 への集約。逐次では何もしない。
+      real, intent(inout) :: a(1:, dcp%jsh:)
+      if (size(a) > 0) continue
+   end subroutine par_gather_cell
+
+   subroutine par_gather_cell_i(a)
+      ! rank0 への集約(整数版)。逐次では何もしない。
+      integer, intent(inout) :: a(1:, dcp%jsh:)
+      if (size(a) > 0) continue
+   end subroutine par_gather_cell_i
+
+   subroutine par_gather_edge(a)
+      ! エッジ配列の rank0 集約。逐次では何もしない。
+      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      if (size(a) > 0) continue
+   end subroutine par_gather_edge
+
+   subroutine par_bcast_cell(a)
+      ! rank0 からの配布。逐次では何もしない。
+      real, intent(inout) :: a(1:, dcp%jsh:)
+      if (size(a) > 0) continue
+   end subroutine par_bcast_cell
+
+   subroutine par_bcast_edge(a)
+      ! rank0 からの配布。逐次では何もしない。
+      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      if (size(a) > 0) continue
+   end subroutine par_bcast_edge
 
    subroutine par_finalize()
       ! 何もしない

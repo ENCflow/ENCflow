@@ -116,6 +116,8 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
   integer, intent(out) :: ierror
   integer :: it            ! 時間ループのカウント
   integer :: ifn           ! 出力ファイル番号
+  logical :: do_file       ! このステップでファイル出力するか
+  logical :: do_recd       ! このステップでプローブ・フラックス出力するか
 
   call par_info("number of processes : "//itoa(nproc))
   call par_info("number of threads : "//itoa(p%num_threads))
@@ -131,6 +133,7 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
   ! 初期状態の出力(ファイルへの書き込みはランク0のみ)
   call m_state_printstate(p, s)         ! 途中経過を画面に出力
   call open_fnolist(p)                  ! ファイル番号リストをオープン　
+  call gather_fields(s)                 ! 出力・計測対象を rank0 に集約
   call output(p, g, s, ifn)             ! 初期状態をファイル出力
   call m_record_probe(r, p, s)          ! プローブの値を出力
   call m_record_flux(r, p, s)           ! フラックスの値を出力
@@ -162,6 +165,9 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
     ! 地表水を計算
     call m_swflow_calc(sw, p, g, b, s, ierror)
 
+    ! 発散検出はランク局所のため、判定に先立ち全ランク最大へ集約する
+    call par_allreduce_maxi(ierror)
+
     ! 統計情報を計算
     call m_state_calcstat(s, p, g)
 
@@ -171,14 +177,20 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
       call m_state_printstate(p, s)
     end if
 
-    ! dt_file 間隔で計算結果をファイルに出力 
-    if (it >= p%ist_file .and. it <= p%iet_file .and. mod(it, p%idt_file) == 0) then
+    ! dt_file / dt_record の出力に先立ち、対象の場を rank0 に集約する。
+    ! 集約は collective なので、実行判定は全ランクで同一に行うこと
+    do_file = (it >= p%ist_file .and. it <= p%iet_file .and. mod(it, p%idt_file) == 0)
+    do_recd = (it >= p%ist_recd .and. it <= p%iet_recd .and. mod(it, p%idt_recd) == 0)
+    if (do_file .or. do_recd) call gather_fields(s)
+
+    ! dt_file 間隔で計算結果をファイルに出力
+    if (do_file) then
       ifn = ifn + 1
       call output(p, g, s, ifn)
     end if
 
     ! dt_record 間隔でプローブとフラックスの値を出力
-    if (it >= p%ist_recd .and. it <= p%iet_recd .and. mod(it, p%idt_recd) == 0) then
+    if (do_recd) then
      call m_record_probe(r, p, s)
      call m_record_flux(r, p, s)
     end if
@@ -187,8 +199,8 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
     ! --- エラー判定(全ランクで同一の判定を行い、同時にループを抜ける) ---
     ! 注意: 判定は必ず全ランクで実行すること。ランク0だけが exit すると
     !       他ランクが回り続け、par_finalize で整合しなくなる。
-    ! TODO: 領域分割後は s%cnmax と ierror が局所値になるため、
-    !       この直前に全ランク最大値の allreduce を入れること。
+    !       ierror は swflow_calc 直後に、cnmax は calcstat 内で全ランク
+    !       集約済みなので、以下の判定は全ランクで同一になる。
 
     ! CFL条件のチェック
     if (p%f_check_cfl > 0 .and. s%cnmax > 1.) then
@@ -218,9 +230,11 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
 
 
   ! 最終状態を出力
+  call gather_fields(s)
   call output(p, g, s, 9998)
 
   ! 統計量を出力
+  call gather_summary(s)
   call output_summary(p, g, s, 9999)
 
   ! 最大流量の一覧を出力
@@ -242,6 +256,44 @@ subroutine open_fnolist(p)
   fname = trim(p%dir_result)//"/FILENUMBER.csv"
   open(newunit=un_fnolist, file=trim(fname), status='replace')
   write(un_fnolist, '(a)') "# No., time, t(s), it"
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 出力・計測対象の場を rank0 に集約する(dt_file / dt_recrd 間隔のみ。
+! collective なので全ランクが揃って呼ぶこと)
+!----------------------------------------------------------------------
+subroutine gather_fields(s)
+  type(t_state), intent(inout) :: s
+  call par_gather_cell(s%h)
+  call par_gather_cell(s%e)
+  call par_gather_cell(s%u)
+  call par_gather_cell(s%v)
+  call par_gather_cell(s%m)
+  call par_gather_cell(s%n)
+  call par_gather_cell(s%vv)
+  call par_gather_cell(s%qq)
+  call par_gather_cell(s%qcum)
+  call par_gather_cell(s%qdir)
+  call par_gather_cell(s%prh)
+  call par_gather_cell(s%fr)
+  call par_gather_cell(s%cn)
+  call par_gather_cell_i(s%ddir1)
+  call par_gather_cell_i(s%ddir8)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 統計量の場を rank0 に集約する(最終出力時のみ)
+!----------------------------------------------------------------------
+subroutine gather_summary(s)
+  type(t_state), intent(inout) :: s
+  call par_gather_cell(s%hmax)
+  call par_gather_cell(s%hmaxt)
+  call par_gather_cell(s%vvmax)
+  call par_gather_cell(s%qqmax)
+  call par_gather_cell(s%qqt)
+  call par_gather_cell(s%qqdir)
 end subroutine
 
 
