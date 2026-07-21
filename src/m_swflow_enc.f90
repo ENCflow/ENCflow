@@ -43,8 +43,8 @@ module m_swflow_enc
   ! 状態変数の構造体の宣言と定義
   type t_enc_status
     real, allocatable :: uv(:,:,:)   ! セル境界での流速(符合は中心セルから近傍セルに向かい正)
-    real, allocatable :: mn(:,:,:)   ! セル境界での流量
-    real, allocatable :: mn0(:,:,:)  ! セル境界での更新前流量
+    real, allocatable :: mn(:,:,:)   ! セル境界での流量(時刻n。ステップ中は読み取り専用)
+    real, allocatable :: mn1(:,:,:)  ! セル境界での流量の書き込み先(時刻n+1。completeでmnへコミット)
     real, allocatable :: h1(:,:)     ! セル中心での計算済み水深
     logical :: initialized = .false.
   end type
@@ -171,7 +171,6 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
   if (b%initialized) continue
-  call prepare(p, g, s, sx_mod)
   call adv_prepare(p, g, s, sx_mod)
   call momentum(p, g, s, sx_mod, ierror)
   call boundary(p, g, b, s, sx_mod)
@@ -317,8 +316,8 @@ subroutine init_enc_status(p, g, s, sx)
   ! エッジ配列の j 範囲: セル j を挟むエッジは j-1 と j なので下限は jsh-1
   allocate(sx%uv(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
   allocate(sx%h1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(sx%mn1(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
   allocate(sx%mn(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
-  allocate(sx%mn0(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
 
   ! 流速の初期条件を設定する
   !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, ue, ve)
@@ -358,6 +357,7 @@ subroutine del_enc_status(sx)
   type(t_enc_status), intent(inout) :: sx
   if (allocated(sx%uv)) deallocate(sx%uv)
   if (allocated(sx%mn)) deallocate(sx%mn)
+  if (allocated(sx%mn1)) deallocate(sx%mn1)
   if (allocated(sx%h1)) deallocate(sx%h1)
 end subroutine
 
@@ -365,22 +365,8 @@ end subroutine
 !----------------------------------------------------------------------
 ! 
 !----------------------------------------------------------------------
-subroutine prepare(p, g, s, sx)
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(in) :: s
-  type(t_enc_status), intent(inout) :: sx
-  integer :: i, j
-  if (p%initialized) continue
-  if (s%initialized) continue
-  !$omp parallel do schedule(dynamic) private(i, j)
-  do j = dcp%js, dcp%je
-    do i = g%wx(1,j), g%wx(2,j)
-      sx%mn0(1:4,i,j) = sx%mn(1:4,i,j)
-    end do
-  end do
-  !$omp end parallel do
-end subroutine
+! (旧 prepare: mn0=mn の繰り越しコピーは mn1 方式への移行で不要になった。
+!  時刻n+1の値のコミットは complete で行う)
 
 
 !----------------------------------------------------------------------
@@ -479,11 +465,11 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   ! 移動限界水深未満の場合は流量ゼロ(ddを大きくすると過大流出が増える)
   if (s%h(i,j) < p%dd .and. s%h(in,jn) < p%dd) then
     sx%uv(k,ie,je) = 0
-    sx%mn(k,ie,je) = 0
+    sx%mn1(k,ie,je) = 0
     return
   end if
 
-  ! セル境界の流速をセットする
+  ! セル境界の流速をセットする(前ステップ値=無印から読む)
   uve = sx%uv(k,ie,je)
   mne = sx%mn(k,ie,je)
 
@@ -538,10 +524,11 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   end if
 
   ! セル境界の流速を更新する
+  !   uvは単一バッファ(自エッジread-then-writeのみ。developer.md §7の例外)
   sx%uv(k,ie,je) = uve1
 
-  ! セル境界の流量を更新する
-  sx%mn(k,ie,je) = mne1
+  ! セル境界の流量を更新する(書き込みは時刻n+1バッファへ)
+  sx%mn1(k,ie,je) = mne1
 
 contains
   !--------------------------------------------------------------------
@@ -685,13 +672,10 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
       hn = hn0       ! 近傍セルの水深
       do kk = 1, 8
         ! 中心セルと近傍セルの方位kkにおける流量
-        !     > sx%mnは計算しながら次々と上書されていくため
-        !     > すでに更新済みの流量も混在しており、このルンゲクッタはあくまで概算となるが
-        !     > 経験的・結果的に更新前の流量"のみ"を使うよりも安定する
-        !   更新中のmnをここで参照すると、並列化したときにメモリ競合が発生する
-        !   そのため、更新中のmnではなく更新前のmn0を参照する必要がある
-        mnec = sign_e(kk) * sx%mn0(ke(kk),i+die(kk),j+dje(kk))   ! 中心セルからそのkk近傍への流量
-        mnen = sign_e(kk) * sx%mn0(ke(kk),in+die(kk),jn+dje(kk)) ! 近傍セルからそのkk近傍への流量
+        !   前ステップ確定値(無印mn)を参照する。更新中のmn1を読むと
+        !   スレッドタイミング依存のデータ競合になる(developer.md §8)
+        mnec = sign_e(kk) * sx%mn(ke(kk),i+die(kk),j+dje(kk))   ! 中心セルからそのkk近傍への流量
+        mnen = sign_e(kk) * sx%mn(ke(kk),in+die(kk),jn+dje(kk)) ! 近傍セルからそのkk近傍への流量
         ! 方位k(近傍セルでは方位9-k)は今回更新された流量
         if (kk == k) mnec = mne1
         if (kk == 9 - k) mnen = -mne1     ! 近傍セルの流出量は中心セルの流出量の逆符号
@@ -746,13 +730,13 @@ subroutine continuous(p, g, s, sx)
 
   integer :: i, j, k
   integer :: in, jn, ie, je
-  real :: uv1, mn1
+  real :: uve, mne
   real :: dh
   real :: mnmax
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
-  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, uv1, mn1, dh, mnmax)
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, uve, mne, dh, mnmax)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
@@ -780,23 +764,23 @@ subroutine continuous(p, g, s, sx)
         je = j + dje(k)
         ! 境界での流速と流量を求める(中心から近傍に向かい正)
         !   近傍5~8は隣接するセルから見た(9-k)近傍に相当する(向きは逆)
-        uv1 = sign_e(k) * sx%uv(ke(k),ie,je)
-        mn1 = sign_e(k) * sx%mn(ke(k),ie,je)
+        uve = sign_e(k) * sx%uv(ke(k),ie,je)
+        mne = sign_e(k) * sx%mn1(ke(k),ie,je)
         ! 水深の減少量(m)に換算
         !   家屋占有率が0.0で無い場合はここで補正係数を乗じる
-        dh = mn1 * mn2dh(k) / g%gv(i,j)
+        dh = mne * mn2dh(k) / g%gv(i,j)
         ! 水深を更新
         sx%h1(i,j) = sx%h1(i,j) - dh
         ! セル中心の平均流速・流量への寄与分を加算
-        s%u(i,j) = s%u(i,j) + uv1 * w8mx(k)
-        s%v(i,j) = s%v(i,j) + uv1 * w8my(k)
-        s%m(i,j) = s%m(i,j) + mn1 * w8mx(k)
-        s%n(i,j) = s%n(i,j) + mn1 * w8my(k)
+        s%u(i,j) = s%u(i,j) + uve * w8mx(k)
+        s%v(i,j) = s%v(i,j) + uve * w8my(k)
+        s%m(i,j) = s%m(i,j) + mne * w8mx(k)
+        s%n(i,j) = s%n(i,j) + mne * w8my(k)
         ! 流下方向を判定
-        !if (mn1 > mnmax) s%ddir1(i,j) = 2**k             ! 最大流出方向
-        if (mn1 > mnmax) then
+        !if (mne > mnmax) s%ddir1(i,j) = 2**k             ! 最大流出方向
+        if (mne > mnmax) then
           s%ddir1(i,j) = 2**k             ! 最大流出方向
-          mnmax = mn1
+          mnmax = mne
         end if
         if (dh > 0) s%ddir8(i,j) = s%ddir8(i,j) + 2**k   ! 全ての流出方向
       end do
@@ -814,9 +798,18 @@ subroutine complete(p, g, s, sx)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  type(t_enc_status), intent(in) :: sx
+  type(t_enc_status), intent(inout) :: sx
   integer :: i, j 
   if (p%initialized) continue
+
+  ! 流量のコミット: 時刻n+1の値を正準状態へ(セルの h1→h と対をなす)
+  !   エッジの書き込み集合はセル窓より i,j とも1つ外側(die/dje=-1)に
+  !   張り出すため、セルループに畳み込まず、行範囲 js-1..je で行う。
+  !$omp parallel do schedule(static)
+  do j = dcp%js - 1, dcp%je
+    sx%mn(:,:,j) = sx%mn1(:,:,j)
+  end do
+  !$omp end parallel do
 
   !$omp parallel do schedule(dynamic) private(i, j)
   do j = dcp%js, dcp%je
