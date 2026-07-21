@@ -5,7 +5,8 @@ module m_swflow_enc
   use m_state, only : t_state
   use m_ffactor, only : m_ffactor_init, m_ffactor_calc, m_ffactor_dispose
   use list_enc, only : t_list_enc, list_enc_read
-  use m_parallel, only : par_info, dcp
+  use m_parallel, only : par_info, dcp, &
+                       par_halo_cell, par_halo_edge, par_edge_merge
   implicit none
   private
 
@@ -61,6 +62,13 @@ module m_swflow_enc
   ! 中心セルから見たk近傍の境界フラックスのインデックス
   integer, parameter :: die(1:8) = [ -1,  0,  0, -1,  0, -1,  0,  0]
   integer, parameter :: dje(1:8) = [ -1, -1, -1,  0,  0,  0,  0,  0]
+
+  ! 界面エッジ行の成分補完マスク(dje(1:4) = [-1,-1,-1,0] に対応)
+  !   行 js-1: 南隣セル(j=js-1, dje=0)が書く成分 → k=4 を南から取る
+  !   行 je  : 北隣セル(j=je+1, dje=-1)が書く成分 → k=1,2,3 を北から取る
+  !   dje を変更する場合はここも必ず更新すること
+  logical, parameter :: esync_s(1:4) = [.false., .false., .false., .true. ]
+  logical, parameter :: esync_n(1:4) = [.true.,  .true.,  .true.,  .false.]
 
   ! 重み係数
   integer :: din2(1:8)           ! din(:)**2
@@ -171,8 +179,24 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
   if (b%initialized) continue
+
+  ! ステップ頭: 前ステップ確定状態のハロ交換
+  !   h/u/v/vv は幅2(移流項のハロ再計算=案Aの依存)、mn は幅1。
+  !   交換対象と幅の根拠は developer.md §11 のステンシル解析を参照
+  call par_halo_cell(s%h)
+  call par_halo_cell(s%u)
+  call par_halo_cell(s%v)
+  call par_halo_cell(s%vv)
+  call par_halo_edge(sx_mod%mn)
+
   call adv_prepare(p, g, s, sx_mod)
   call momentum(p, g, s, sx_mod, ierror)
+
+  ! 界面エッジ行(js-1, je)の所有成分を南北で補完し合う
+  ! (同一エッジのフラックスを共有 → 質量保存がビット厳密になる)
+  call par_edge_merge(sx_mod%uv,  esync_s, esync_n)
+  call par_edge_merge(sx_mod%mn1, esync_s, esync_n)
+
   call boundary(p, g, b, s, sx_mod)
   call continuous(p, g, s, sx_mod)
   call complete(p, g, s, sx_mod)
@@ -218,11 +242,11 @@ subroutine boundary(p, g, b, s, sx)
 
   ! 湧出しを加える
   if (b%nsrc > 0) then
-    ! TODO(分割時): 所有ランクのみ適用する(if (dcp%js <= j .and. j <= dcp%je))
-    !               湧き出しリストは全ランクが保持している(developer.md §11)
+    ! 湧き出しは所有ランクのみ適用する(リストは全ランクが保持。developer.md §11)
     do k = 1, b%nsrcc
       i = b%srccell(1,k)
       j = b%srccell(2,k)
+      if (j < dcp%js .or. j > dcp%je) cycle
       sx%h1(i,j) = sx%h1(i,j) + b%srcq
     end do
   end if

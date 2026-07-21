@@ -30,6 +30,7 @@ module m_parallel
    public :: par_info, par_warn, par_stop, par_abort
    public :: par_barrier
    public :: par_allreduce_min
+   public :: par_halo_cell, par_halo_edge, par_edge_merge
    public :: nrank, nproc, is_root
    public :: t_decomp, dcp
 
@@ -49,6 +50,7 @@ module m_parallel
       integer :: jeh = 0         ! 配列確保範囲の終了 j
       integer :: rank_n = -1     ! j+側の隣接ランク(なければ負)
       integer :: rank_s = -1     ! j-側の隣接ランク(なければ負)
+      integer :: nhalo = 2       ! ハロ幅(セル行。移流項のステンシル幅2による)
    end type t_decomp
 
    type(t_decomp), protected, save :: dcp
@@ -76,6 +78,26 @@ contains
       dcp%rank_n = -1
       dcp%rank_s = -1
    end subroutine par_decomp_init
+
+   subroutine par_halo_cell(a)
+      ! セル配列の行ハロ交換。逐次では何もしない。
+      real, intent(inout) :: a(1:, dcp%jsh:)
+      if (size(a) > 0) continue
+   end subroutine par_halo_cell
+
+   subroutine par_halo_edge(a)
+      ! エッジ配列の行ハロ交換。逐次では何もしない。
+      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      if (size(a) > 0) continue
+   end subroutine par_halo_edge
+
+   subroutine par_edge_merge(a, take_s, take_n)
+      ! 界面エッジ行の成分補完。逐次では何もしない。
+      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      logical, intent(in) :: take_s(:)
+      logical, intent(in) :: take_n(:)
+      if (size(a) > 0 .and. size(take_s) > 0 .and. size(take_n) > 0) continue
+   end subroutine par_edge_merge
 
    subroutine par_finalize()
       ! 何もしない

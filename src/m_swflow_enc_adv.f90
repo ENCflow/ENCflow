@@ -89,7 +89,8 @@ subroutine adv_prepare_v1(p, g, s, sx, tx)
   if (f_advection_term == 0) return
 
   !$omp parallel do schedule(dynamic) private(i, j)
-  do j = dcp%js, dcp%je
+  ! ハロ行の ulm/vlm も構築する(taxy のハロ再計算=案Aに必要。幅2)
+  do j = max(dcp%jw1, dcp%js - 2), min(dcp%jw2, dcp%je + 2)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle   ! get_diffで陸から1セル外側まで参照することに注意
@@ -101,8 +102,9 @@ subroutine adv_prepare_v1(p, g, s, sx, tx)
   !$omp end parallel do
 
   !$omp parallel do schedule(dynamic) private(i, j, k, ww, wwx, wwy, dux, duy, dvx, dvy)
-  ! 全域窓の端でのみ1行縮める(dcp%js+1 とはしないこと)
-  do j = max(dcp%js, dcp%jw1+1), min(dcp%je, dcp%jw2-1)
+  ! 全域窓の端でのみ1行縮める(dcp%js+1 とはしないこと)。
+  ! taxy はハロ行 js-1/je+1 でも再計算する(案A: u,v の交換で賄う)
+  do j = max(dcp%js - 1, dcp%jw1 + 1), min(dcp%je + 1, dcp%jw2 - 1)
     do i = g%wx(1,j)+1, g%wx(2,j)-1
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
@@ -294,8 +296,9 @@ subroutine adv_prepare_v2(p, g, s, sx, tx)
 
   !$omp parallel do schedule(dynamic) &
   !$omp private(i, j, k, ww, wwx, wwy, ii, jj, u, v, uu, vv, uv, hh, xx, dux, duy, dvx, dvy, duux, dvvy, duvx, duvy)
-  ! 全域窓の端でのみ1行縮める(dcp%js+1 とはしないこと)
-  do j = max(dcp%js, dcp%jw1+1), min(dcp%je, dcp%jw2-1)
+  ! 全域窓の端でのみ1行縮める(dcp%js+1 とはしないこと)。
+  ! taxy はハロ行 js-1/je+1 でも再計算する(案A: u,v の交換で賄う)
+  do j = max(dcp%js - 1, dcp%jw1 + 1), min(dcp%je + 1, dcp%jw2 - 1)
     do i = g%wx(1,j)+1, g%wx(2,j)-1
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle

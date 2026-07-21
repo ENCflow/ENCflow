@@ -45,6 +45,7 @@ module m_parallel
    public :: par_info, par_warn, par_stop, par_abort
    public :: par_barrier
    public :: par_allreduce_min
+   public :: par_halo_cell, par_halo_edge, par_edge_merge
    public :: nrank, nproc, is_root
    public :: t_decomp, dcp
    public :: MPI_WP
@@ -66,6 +67,7 @@ module m_parallel
       integer :: jeh = 0         ! 配列確保範囲の終了 j
       integer :: rank_n = -1     ! j+側の隣接ランク(なければ負)
       integer :: rank_s = -1     ! j-側の隣接ランク(なければ負)
+      integer :: nhalo = 2       ! ハロ幅(セル行。移流項のステンシル幅2による)
    end type t_decomp
 
    type(t_decomp), protected, save :: dcp
@@ -92,26 +94,107 @@ contains
    subroutine par_decomp_init(nx, ny, jw1, jw2)
       ! 領域分割の決定。格子サイズと有効窓の確定後
       ! (m_geoinfo_init の直後)に全ランクが揃って呼ぶこと(collective)。
-      !
-      ! 現段階(冗長計算)は全ランクが全域窓を計算し、配列は全域確保。
-      ! TODO: 分割実装時:
-      !   js/je   = [jw1, jw2] をランク数で分割した自ランク帯
-      !   jsh/jeh = js-ハロ幅 .. je+ハロ幅(全域端 1..ny でクリップ)
-      !   rank_n/rank_s = 隣接ランク(端は -1)
-      !   ランク数不変のビット一致検証を回帰テストで行うこと。
+      ! 全域窓 [jw1, jw2] をランク数で行分割し、自ランクの帯を決める。
+      ! 第一段: 配列は全域確保のまま(jsh/jeh は 1..ny。第二段で
+      !         js-nhalo..je+nhalo へ縮小する)
       integer, intent(in) :: nx, ny
       integer, intent(in) :: jw1, jw2   ! 全域の有効窓(= g%wy(1:2))
+      integer :: nrows, base, rem
+      character(len=1024) :: buf
       dcp%nx_g = nx
       dcp%ny_g = ny
       dcp%jw1 = jw1
       dcp%jw2 = jw2
-      dcp%js  = jw1
-      dcp%je  = jw2
+      nrows = jw2 - jw1 + 1
+      ! 各帯は最低2行必要(ハロ交換が隣の隣を参照しない前提のため)
+      if (nrows < 2 * nproc) then
+         write(buf,'(a,i0,a,i0,a)') 'domain too small for ', nproc, &
+            ' ranks: window has ', nrows, ' rows (need >= 2 rows per rank)'
+         call par_stop(trim(buf))       ! 全ランク同一の判定なので collective 安全
+      end if
+      base = nrows / nproc
+      rem  = mod(nrows, nproc)
+      dcp%js = jw1 + nrank * base + min(nrank, rem)
+      dcp%je = dcp%js + base - 1
+      if (nrank < rem) dcp%je = dcp%je + 1
       dcp%jsh = 1
       dcp%jeh = ny
-      dcp%rank_n = -1
-      dcp%rank_s = -1
+      dcp%rank_s = nrank - 1                            ! nrank=0 では -1(隣なし)
+      dcp%rank_n = merge(nrank + 1, -1, nrank < nproc - 1)
    end subroutine par_decomp_init
+
+   subroutine par_halo_cell(a)
+      ! セル配列の行ハロ交換(幅 dcp%nhalo)。
+      ! 自帯 js..je の値を正とし、js-w..js-1 を南から、je+1..je+w を
+      ! 北から受け取る。ステップ頭に、前ステップ確定状態(h, u, v, vv)
+      ! に対して呼ぶ。
+      real, intent(inout) :: a(1:, dcp%jsh:)
+      integer :: w, n1
+      w  = dcp%nhalo
+      n1 = size(a, 1)
+      if (dcp%rank_s >= 0) then
+         call MPI_Sendrecv(a(:, dcp%js:dcp%js+w-1),  n1*w, MPI_WP, dcp%rank_s, 11, &
+                           a(:, dcp%js-w:dcp%js-1),  n1*w, MPI_WP, dcp%rank_s, 12, &
+                           MPI_COMM_WORLD, MPI_STATUS_IGNORE)
+      end if
+      if (dcp%rank_n >= 0) then
+         call MPI_Sendrecv(a(:, dcp%je-w+1:dcp%je),  n1*w, MPI_WP, dcp%rank_n, 12, &
+                           a(:, dcp%je+1:dcp%je+w),  n1*w, MPI_WP, dcp%rank_n, 11, &
+                           MPI_COMM_WORLD, MPI_STATUS_IGNORE)
+      end if
+   end subroutine par_halo_cell
+
+   subroutine par_halo_edge(a)
+      ! エッジ配列の行ハロ交換(幅1)。
+      ! コミット済みの有効エッジ行は js-1..je(共有行 js-1 と je は
+      ! 界面補完により南北で同値)。RK の参照のために js-2 を南から、
+      ! je+1 を北から受け取る。送りは相手にとっての同位置
+      ! (南へ js、北へ je-1)。
+      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      integer :: n
+      n = size(a, 1) * size(a, 2)
+      if (dcp%rank_s >= 0) then
+         call MPI_Sendrecv(a(:, :, dcp%js),   n, MPI_WP, dcp%rank_s, 13, &
+                           a(:, :, dcp%js-2), n, MPI_WP, dcp%rank_s, 14, &
+                           MPI_COMM_WORLD, MPI_STATUS_IGNORE)
+      end if
+      if (dcp%rank_n >= 0) then
+         call MPI_Sendrecv(a(:, :, dcp%je-1), n, MPI_WP, dcp%rank_n, 14, &
+                           a(:, :, dcp%je+1), n, MPI_WP, dcp%rank_n, 13, &
+                           MPI_COMM_WORLD, MPI_STATUS_IGNORE)
+      end if
+   end subroutine par_halo_edge
+
+   subroutine par_edge_merge(a, take_s, take_n)
+      ! momentum 後の界面エッジ行の成分補完。
+      ! 行 js-1 には自セル js が書いた成分と南隣セル js-1 が書いた成分が
+      ! 同居するため、南の所有成分(take_s が真の k)を南の値で上書きする。
+      ! 行 je も北と対称。同一エッジのフラックスを南北で共有することで
+      ! 質量保存がビットレベルで厳密になる(developer.md §11)。
+      ! マスクは格子実装側がエッジ格納規約(dje)から与える。
+      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      logical, intent(in) :: take_s(:)
+      logical, intent(in) :: take_n(:)
+      real :: buf(size(a, 1), size(a, 2))
+      integer :: n, k
+      n = size(a, 1) * size(a, 2)
+      if (dcp%rank_s >= 0) then
+         call MPI_Sendrecv(a(:, :, dcp%js-1), n, MPI_WP, dcp%rank_s, 15, &
+                           buf,               n, MPI_WP, dcp%rank_s, 16, &
+                           MPI_COMM_WORLD, MPI_STATUS_IGNORE)
+         do k = 1, size(a, 1)
+            if (take_s(k)) a(k, :, dcp%js-1) = buf(k, :)
+         end do
+      end if
+      if (dcp%rank_n >= 0) then
+         call MPI_Sendrecv(a(:, :, dcp%je),   n, MPI_WP, dcp%rank_n, 16, &
+                           buf,               n, MPI_WP, dcp%rank_n, 15, &
+                           MPI_COMM_WORLD, MPI_STATUS_IGNORE)
+         do k = 1, size(a, 1)
+            if (take_n(k)) a(k, :, dcp%je) = buf(k, :)
+         end do
+      end if
+   end subroutine par_edge_merge
 
    subroutine par_finalize()
       call MPI_Finalize()
