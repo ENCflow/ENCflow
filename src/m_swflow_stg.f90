@@ -201,7 +201,7 @@ SUBROUTINE m_swflow_stg_calc(p, g, b, s, ierror)
   if (b%initialized) continue
 
   s%n_runge = s%n_valcells * 4
-  ierror = 0
+  ierror = ierror + 0
 
         !$omp parallel
 !===== 流量の計算(運動方程式) ==========================================
