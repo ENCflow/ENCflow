@@ -206,7 +206,7 @@ subroutine boundary(p, g, b, s, sx)
   type(t_enc_status), intent(inout) :: sx
   integer :: i, j, k
 
-  !$omp parallel do private(i, j)
+  !$omp parallel do schedule(dynamic) private(i, j)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
@@ -321,7 +321,7 @@ subroutine init_enc_status(p, g, s, sx)
   allocate(sx%mn0(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
 
   ! 流速の初期条件を設定する
-  !$omp parallel do private(i, j, k, in, jn, ie, je, ue, ve)
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, ue, ve)
   !do j = 1, g%ny
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
@@ -373,7 +373,7 @@ subroutine prepare(p, g, s, sx)
   integer :: i, j
   if (p%initialized) continue
   if (s%initialized) continue
-  !$omp parallel do private(i, j)
+  !$omp parallel do schedule(dynamic) private(i, j)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       sx%mn0(1:4,i,j) = sx%mn(1:4,i,j)
@@ -407,7 +407,7 @@ subroutine momentum(p, g, s, sx, ierror)
   n_exfluxes = 0
   n_runge = 0
   n_error = 0
-  !$omp parallel do private(i, j, k, have_exflux, have_runge, have_error) &
+  !$omp parallel do schedule(dynamic) private(i, j, k, have_exflux, have_runge, have_error) &
   !$omp reduction(+:n_exfluxes), reduction(+:n_runge), reduction(+:n_error)
   ! This loop should be an independ "omp parallel do"
   do j = dcp%js, dcp%je
@@ -752,7 +752,7 @@ subroutine continuous(p, g, s, sx)
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
-  !$omp parallel do private(i, j, k, in, jn, ie, je, uv1, mn1, dh, mnmax)
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, uv1, mn1, dh, mnmax)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
@@ -818,7 +818,7 @@ subroutine complete(p, g, s, sx)
   integer :: i, j 
   if (p%initialized) continue
 
-  !$omp parallel do private(i, j)
+  !$omp parallel do schedule(dynamic) private(i, j)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle

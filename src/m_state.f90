@@ -222,7 +222,7 @@ subroutine m_state_calcstat(s, p, g)
   qcumf = p%dt / g%dx / g%dy / s%n_valcells * 1000
   dtpdx = p%dt / min(g%dx, g%dy)
 
-  !$omp parallel do private(i, j, cosdir, cc), & 
+  !$omp parallel do schedule(dynamic) private(i, j, cosdir, cc), & 
   !$omp reduction(+: hsum), reduction(max: hmax, vvmax, qqmax, cnmax)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
