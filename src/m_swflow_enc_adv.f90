@@ -292,7 +292,8 @@ subroutine adv_prepare_v2(p, g, s, sx, tx)
 
   if (f_advection_term == 0) return
 
-  !$omp parallel do schedule(dynamic) private(i, j, k, ww, wwx, wwy, ii, jj, u, v, uu, vv, uv, hh, xx, dux, duy, dvx, dvy, duux, dvvy, duvx, duvy)
+  !$omp parallel do schedule(dynamic) &
+  !$omp private(i, j, k, ww, wwx, wwy, ii, jj, u, v, uu, vv, uv, hh, xx, dux, duy, dvx, dvy, duux, dvvy, duvx, duvy)
   ! 全域窓の端でのみ1行縮める(dcp%js+1 とはしないこと)
   do j = max(dcp%js, dcp%jw1+1), min(dcp%je, dcp%jw2-1)
     do i = g%wx(1,j)+1, g%wx(2,j)-1
