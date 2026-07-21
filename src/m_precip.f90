@@ -16,17 +16,17 @@ module m_precip
   public :: m_precip_makepre
 
   type t_precip
-    integer :: prtype                   ! 0:降雨なし, 1:一様時系列, 2:分布×割合時系列, 3:分布時系列ファイル
-    real :: dt_prupdate                 ! 降雨分布更新時間間隔 (min)
-    integer :: idt_prupdate             ! 降雨分布更新時間ステップ数
-    integer :: npr                      ! 時系列データの個数
+    integer :: prtype = 0               ! 0:降雨なし, 1:一様時系列, 2:分布×割合時系列, 3:分布時系列ファイル
+    real :: dt_prupdate = 0.0           ! 降雨分布更新時間間隔 (min)
+    integer :: idt_prupdate = 0         ! 降雨分布更新時間ステップ数
+    integer :: npr = 0                  ! 時系列データの個数
     real, allocatable :: prval(:,:)     ! 降雨時系列 (時刻(s), 降水強度(mm/h)または倍率)
     real, allocatable :: prmap(:,:)     ! 降雨分布 (mm/day)
-    real :: dt_maplist                  ! 降雨分布ファイル時間間隔 (min)
-    real :: dt_mapunit                  ! 降雨分布ファイルの積算時間単位 (min)
-    integer :: idt_maplist              ! 降雨分布ファイル更新時間ステップ数
+    real :: dt_maplist = 0.0            ! 降雨分布ファイル時間間隔 (min)
+    real :: dt_mapunit = 0.0            ! 降雨分布ファイルの積算時間単位 (min)
+    integer :: idt_maplist = 0          ! 降雨分布ファイル更新時間ステップ数
     integer, allocatable :: un_maplist(:)  ! 降雨分布ファイル装置番号
-    real :: runoff_rate                 ! 流出率
+    real :: runoff_rate = 0.0           ! 流出率
     logical :: initialized = .false.
   end type
 
@@ -110,6 +110,8 @@ subroutine set_precip
   pr%prval(1,1:npr) = prval(1,1:npr) * 60    ! 分を秒に換算
   pr%prval(2,1:npr) = prval(2,1:npr)
   pr%npr = npr
+
+  if (npr <= 0) call par_stop("list_precip: prtype requires prval time series (no valid entries)")
 
 end subroutine
 
