@@ -1,12 +1,26 @@
 !======================================================================
 module m_record
+  ! ================= MPI 化の方針(改良時に読むこと) =================
+  ! 計測ロジック(整形・総和・最大値更新・出力)はすべて rank0 上の
+  ! 逐次コードのまま維持している。MPI 対応は「セル値の取得」だけを
+  ! 点集約バッファ経由に差し替える方式:
+  !   (1) 全ランクが所有セル(dcp%js <= iy <= dcp%je)の値をバッファに
+  !       格納する(他ランクの要素は 0 のまま)
+  !   (2) par_reduce_points で rank0 に総和集約する。各要素の所有者は
+  !       ちょうど1ランクなので「総和=所有値」でビット厳密
+  !   (3) rank0 が従来ロジックでバッファから読んで整形・出力する
+  ! 計測に新しい量を足す手順: 格納ループに1行(wk(k,i) = s%新量(ix,iy))、
+  ! バッファの第1次元を +1、読み出し側で wk(k,i) を参照する。この3点だけ。
+  ! 注意: (1)(2) は collective なので is_root ガードより前に置くこと。
+  !       所有判定に halo 行(jsh..js-1 等)を含めると二重計上になる。
+  ! ====================================================================
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
   use m_parallel, only : is_root
   use m_util, only : itoa
   use list_record, only : t_list_record, list_record_read
-  use m_parallel, only : is_root, par_info, par_abort
+  use m_parallel, only : is_root, par_info, par_abort, dcp, par_reduce_points
   implicit none
   private
 
@@ -76,7 +90,9 @@ subroutine m_record_init(r, p, g)
   integer :: flxytype
   real :: flxy(1:4,1:nflmax) = -9999
 
-  if (.not. is_root) return
+  ! リスト構築・検証は全ランクが冗長に実行する(全ランクが所有セルを
+  ! 判定できるようにするため。§11 の「静的データは全ランク保持」)。
+  ! ファイルの open とヘッダ出力だけ rank0 に限定する(set_probe/set_flux 内)
 
   if (len_trim(p%fn_record) > 0) then
     !---- 設定ファイルを読み込む ----
@@ -164,7 +180,8 @@ subroutine set_probe
     r%probe(i)%qmax = -1.
   end do
 
-  !---- プローブ出力ファイルを初期化 ----
+  !---- プローブ出力ファイルを初期化(rank0 のみ)----
+  if (.not. is_root) return
   do i = 1, r%npb
     ix = r%probe(i)%ixy(1)
     iy = r%probe(i)%ixy(2)
@@ -398,7 +415,8 @@ subroutine set_flux
     r%flux(i)%qmax = -1.
   end do
 
-  !---- フラックス計測出力ファイルを初期化 ----
+  !---- フラックス計測出力ファイルを初期化(rank0 のみ)----
+  if (.not. is_root) return
   do i = 1, r%nfl
     write(cun, '(i4.4)') i
     fn_fl = trim(p%dir_result)//"/fluxes/"//"flux"//cun//trim(p%outfn_suffix)//".csv"
@@ -458,14 +476,15 @@ subroutine m_record_dispose(r)
   type(t_record), intent(inout) :: r
   integer :: i
 
-  if (.not. is_root) return
-
-  do i = 1, r%npb
-    close(r%probe(i)%un)
-  end do
-  do i = 1, r%nfl
-    close(r%flux(i)%un)
-  end do
+  ! ファイルを開いているのは rank0 のみ。リストは全ランクが保持している
+  if (is_root) then
+    do i = 1, r%npb
+      close(r%probe(i)%un)
+    end do
+    do i = 1, r%nfl
+      close(r%flux(i)%un)
+    end do
+  end if
   if (allocated(r%probe)) deallocate(r%probe)
   if (allocated(r%flux)) deallocate(r%flux)
 end subroutine
@@ -479,16 +498,33 @@ subroutine m_record_probe(r, p, s)
   type(t_state), intent(in) :: s
   integer :: ipb, un
   integer :: ix, iy
+  real :: wk(5, r%npb)     ! 点集約バッファ: h, u, v, |V|, q
   character(len=10) :: ffmt
   character(len=80) :: afmt
   if (p%initialized) continue
 
+  if (r%npb <= 0) return
+
+  ! --- 全ランク: 所有セルの値を詰めて rank0 に点集約(collective) ---
+  wk = 0.0
+  do ipb = 1, r%npb
+    ix = r%probe(ipb)%ixy(1)
+    iy = r%probe(ipb)%ixy(2)
+    if (dcp%js <= iy .and. iy <= dcp%je) then
+      wk(1,ipb) = s%h(ix,iy)
+      wk(2,ipb) = s%u(ix,iy)
+      wk(3,ipb) = s%v(ix,iy)
+      wk(4,ipb) = s%vv(ix,iy)
+      wk(5,ipb) = s%qq(ix,iy)
+    end if
+  end do
+  call par_reduce_points(wk)
+
+  ! --- 以下は従来の逐次ロジック(セル値の参照だけ wk 経由) ---
   if (.not. is_root) return
 
   do ipb = 1, r%npb
     un = r%probe(ipb)%un
-    ix = r%probe(ipb)%ixy(1)
-    iy = r%probe(ipb)%ixy(2)
     !if (p%dble_precision) then
     !  ffmt = 'f22.16'
     !else
@@ -501,20 +537,20 @@ subroutine m_record_probe(r, p, s)
     write(un, '(a)', advance='no') ","
     write(un, afmt, advance='no') r%probe(ipb)%z
     write(un, '(a)', advance='no') ","
-    write(un, afmt, advance='no') s%h(ix,iy)
+    write(un, afmt, advance='no') wk(1,ipb)
     write(un, '(a)', advance='no') ","
-    write(un, afmt, advance='no') s%u(ix,iy)
+    write(un, afmt, advance='no') wk(2,ipb)
     write(un, '(a)', advance='no') ","
-    write(un, afmt, advance='no') s%v(ix,iy)
+    write(un, afmt, advance='no') wk(3,ipb)
     write(un, '(a)', advance='no') ","
-    write(un, afmt, advance='no') s%vv(ix,iy)
+    write(un, afmt, advance='no') wk(4,ipb)
     write(un, '(a)', advance='no') ","
-    write(un, afmt, advance='no') s%qq(ix,iy)
+    write(un, afmt, advance='no') wk(5,ipb)
     write(un, *)
-    if (s%qq(ix,iy) > r%probe(ipb)%qmax) then
+    if (wk(5,ipb) > r%probe(ipb)%qmax) then
       r%probe(ipb)%tp = s%t / 60.
-      r%probe(ipb)%qmax = s%qq(ix,iy)
-      r%probe(ipb)%hmax = s%h(ix,iy)
+      r%probe(ipb)%qmax = wk(5,ipb)
+      r%probe(ipb)%hmax = wk(1,ipb)
     end if
   end do
 end subroutine
@@ -531,30 +567,51 @@ subroutine m_record_flux(r, p, s)
   real :: vn, qi, qm, q
   real :: hmax, vmax, b
   real, parameter :: eps = 1.0e-5
+  real, allocatable :: wk(:,:)   ! 点集約バッファ: (4, ncell) = m, n, h, |V|
   character(len=10) :: ffmt
   character(len=80) :: afmt
   type(t_flux) :: flx
   if (p%initialized) continue
 
-  if (.not. is_root) return
+  if (r%nfl <= 0) return
 
   do ifl = 1, r%nfl
     flx = r%flux(ifl)
     un = flx%un
     ncell = flx%ncell
+
+    ! --- 全ランク: 測線上の所有セルの値を詰めて rank0 に点集約(collective) ---
+    allocate(wk(4, ncell), source = 0.0)
+    do i = 1, ncell
+      ix = flx%ixy(1,i)
+      iy = flx%ixy(2,i)
+      if (dcp%js <= iy .and. iy <= dcp%je) then
+        wk(1,i) = s%m(ix,iy)
+        wk(2,i) = s%n(ix,iy)
+        wk(3,i) = s%h(ix,iy)
+        wk(4,i) = s%vv(ix,iy)
+      end if
+    end do
+    call par_reduce_points(wk)
+
+    ! --- 以下は従来の逐次ロジック(セル値の参照だけ wk 経由) ---
+    if (.not. is_root) then
+      deallocate(wk)
+      cycle
+    end if
+
     qm = 0.0
     hmax = 0.0
     vmax = 0.0
     b = 0.
     do i = 1, ncell
-      ix = flx%ixy(1,i)
-      iy = flx%ixy(2,i)
-      vn = s%m(ix,iy) * flx%trnvec(1) + s%n(ix,iy) * flx%trnvec(2)   ! 測線の法線方向線流量
+      vn = wk(1,i) * flx%trnvec(1) + wk(2,i) * flx%trnvec(2)   ! 測線の法線方向線流量
       qi = vn
       qm = qm + qi * flx%w(i)
-      hmax = max(s%h(ix,iy), hmax)
-      vmax = max(s%vv(ix,iy), vmax)
+      hmax = max(wk(3,i), hmax)
+      vmax = max(wk(4,i), vmax)
     end do
+    deallocate(wk)
     q = qm * flx%trlen
     if (hmax * vmax > 0.0) b = abs(q / hmax / vmax)
 

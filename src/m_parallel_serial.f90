@@ -34,6 +34,7 @@ module m_parallel
    public :: par_allreduce_max, par_allreduce_sumi, par_allreduce_maxi
    public :: par_sum_rows
    public :: par_gather_to, par_gather_to_i, par_gather_edge_to
+   public :: par_reduce_points
    public :: par_bcast_cell, par_bcast_edge
    public :: nrank, nproc, is_root
    public :: t_decomp, dcp
@@ -149,6 +150,14 @@ contains
       real, intent(in) :: a(1:, 0:, dcp%jsh-1:)
       buf(:, :, dcp%js-1:dcp%je) = a(:, :, dcp%js-1:dcp%je)
    end subroutine par_gather_edge_to
+
+   subroutine par_reduce_points(vals)
+      ! 点計測値の rank0 集約。逐次では何もしない
+      ! (所有判定 js<=iy<=je は逐次で常に真なので、vals には全点の値が
+      !  そのまま入っている)。
+      real, intent(inout) :: vals(:, :)
+      if (size(vals) > 0) continue
+   end subroutine par_reduce_points
 
    subroutine par_bcast_cell(a)
       ! rank0 からの配布。逐次では何もしない。

@@ -49,6 +49,7 @@ module m_parallel
    public :: par_allreduce_max, par_allreduce_sumi, par_allreduce_maxi
    public :: par_sum_rows
    public :: par_gather_to, par_gather_to_i, par_gather_edge_to
+   public :: par_reduce_points
    public :: par_bcast_cell, par_bcast_edge
    public :: nrank, nproc, is_root
    public :: t_decomp, dcp
@@ -329,6 +330,22 @@ contains
                        buf, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
       if (is_root) buf(:, :, dcp%js-1) = a(:, :, dcp%js-1)
    end subroutine par_gather_edge_to
+
+   subroutine par_reduce_points(vals)
+      ! 点計測値の rank0 集約(m_record 用)。
+      ! 各要素は「所有ランクがちょうど1つだけ値を格納し、他ランクは 0」の
+      ! 規約で使う。総和 = 所有値 + 0 = 所有値そのもの(x+0 は IEEE で
+      ! ビット厳密)なので、rank0 は逐次版と同一の値を同一の順で読める。
+      real, intent(inout) :: vals(:, :)
+      real :: dum(1, 1)
+      if (is_root) then
+         call MPI_Reduce(MPI_IN_PLACE, vals, size(vals), MPI_WP, MPI_SUM, &
+                         0, MPI_COMM_WORLD)
+      else
+         call MPI_Reduce(vals, dum, size(vals), MPI_WP, MPI_SUM, &
+                         0, MPI_COMM_WORLD)
+      end if
+   end subroutine par_reduce_points
 
    subroutine par_bcast_cell(a)
       ! rank0 の配列を全ランクへ配布(リスタート復元用)。
