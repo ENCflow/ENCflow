@@ -149,23 +149,60 @@ subroutine set_params(p, g, list)
   g%dy = list%dy
   g%lx = list%lx
   g%ly = list%ly
+
+  ! 領域指定の判別・補完・検証(dr の計算より前に行うこと)
+  call resolve_geometry(g)
+
   g%dr = sqrt(g%dx**2 + g%dy**2)
   g%min_gv = list%min_gv
   g%min_bb = list%min_bb
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 領域指定の判別・補完・検証(幾何の正本はここで確定する)
+!   指定方法A: lx, ly と nx, ny を与える → dx, dy を導出
+!   指定方法B: dx, dy と nx, ny を与える → lx, ly を導出
+!   過剰指定(lx と dx の両方あり): 整合を検査し、矛盾なら par_stop
+!   未指定は 0 が番兵(list_geoinfo は生の値を運ぶだけ)
+!   注意: 導出式(lx/nx, nx*dx)の式形を変えないこと。既存 reference との
+!         ビット同値の条件になっている(developer.md §12)
+!----------------------------------------------------------------------
+subroutine resolve_geometry(g)
+  type(t_geoinfo), intent(inout) :: g
+  real, parameter :: rtol = 1.0e-6   ! 過剰指定の整合判定の相対許容差
+
+  ! セル数はどちらの指定方法でも必須
+  if (g%nx <= 0) call par_stop("list_geoinfo: nx が未指定か不正です")
+  if (g%ny <= 0) call par_stop("list_geoinfo: ny が未指定か不正です")
+
+  ! x 方向
   if (g%dx <= 0.0) then
-    if (g%lx > 0.0 .and. g%nx > 0) then
-      g%dx = g%lx / g%nx
-    else
-      call par_stop("conflict nx, lx and dx")
+    if (g%lx <= 0.0) then
+      call par_stop("list_geoinfo: dx か lx のどちらかを指定してください")
+    end if
+    g%dx = g%lx / g%nx                     ! 指定方法A
+  else if (g%lx <= 0.0) then
+    g%lx = g%nx * g%dx                     ! 指定方法B
+  else
+    ! 過剰指定: 無言でどちらかを優先せず、整合を検査する
+    if (abs(g%nx * g%dx - g%lx) > rtol * g%lx) then
+      call par_stop("list_geoinfo: lx と nx*dx が矛盾しています。どちらか一方の指定にしてください")
     end if
   end if
 
+  ! y 方向(x 方向と対称)
   if (g%dy <= 0.0) then
-    if (g%ly > 0.0 .and. g%ny > 0) then
-      g%dy = g%ly / g%ny
-    else
-      call par_stop("conflict ny, ly and dy")
+    if (g%ly <= 0.0) then
+      call par_stop("list_geoinfo: dy か ly のどちらかを指定してください")
+    end if
+    g%dy = g%ly / g%ny                     ! 指定方法A
+  else if (g%ly <= 0.0) then
+    g%ly = g%ny * g%dy                     ! 指定方法B
+  else
+    if (abs(g%ny * g%dy - g%ly) > rtol * g%ly) then
+      call par_stop("list_geoinfo: ly と ny*dy が矛盾しています。どちらか一方の指定にしてください")
     end if
   end if
 

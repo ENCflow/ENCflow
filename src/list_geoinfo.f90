@@ -1,7 +1,7 @@
 !======================================================================
 module list_geoinfo
   use m_sysparam, only : t_sysparam
-  use m_parallel, only : par_info, par_warn, par_stop
+  use m_parallel, only : par_info, par_stop
   implicit none
   private
 
@@ -71,7 +71,6 @@ subroutine list_geoinfo_read(p, list)
   integer :: f_rntype           ! 粗度係数タイプ (0:固定値, 1:土地利用ファイル)
   integer :: f_masktype         ! 粗度係数タイプ (0:なし, 1:テキストファイル)
   integer :: f_edge_sw          ! 領域単部を海に設定
-  integer :: error
   character(:), allocatable :: fn_z      ! 地盤高ファイル名
   character(:), allocatable :: fn_rn     ! 粗度係数ファイル名
   character(:), allocatable :: fn_mask   ! 領域マスクファイル名
@@ -87,8 +86,6 @@ subroutine list_geoinfo_read(p, list)
   namelist /list_geoinfo/ nx, ny, dx, dy, lx, ly, z0, rn0, mag_z, min_gv, min_bb, depth_rw, rn0_rw, &
                           f_user_routine_id, f_ztype, f_lusetype, f_rntype, f_masktype, f_edge_sw, &
                           fn_z, fn_mask, fn_sw, fn_rw, fn_rn, fn_luse, fn_gv, fn_bb, lu2rn
-  error = 0
-
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
   nx = list%nx
@@ -126,39 +123,8 @@ subroutine list_geoinfo_read(p, list)
   if (ios /= 0) call par_stop("list_geoinfo 読込失敗: "//trim(iom))
   close(un)
 
-  if (dx == 0) then
-    if (nx == 0) then
-      call par_warn("error in list_geoinfo: nx == 0")
-      error = error + 1
-    end if
-    if (lx == 0) then
-      call par_warn("error in list_geoinfo: dx == 0 and lx == 0")
-      error = error + 1
-    end if
-    if (nx > 0) dx = lx / nx
-  end if
-
-  if (dy == 0) then
-    if (ny == 0) then
-      call par_warn("error in list_geoinfo: ny == 0")
-      error = error + 1
-    end if
-    if (ly == 0) then
-      call par_warn("error in list_geoinfo: dy == 0 and ly == 0")
-      error = error + 1
-    end if
-    if (ny > 0) dy = ly / ny
-  end if
-
-  if (lx == 0) then
-    lx = nx * dx
-  end if
-
-  if (ly == 0) then
-    ly = ny * dy
-  end if
-
-  if (error > 0) call par_stop("")
+  ! 領域指定の判別・補完・検証は m_geoinfo(resolve_geometry)が行う。
+  ! この層は生の値(未指定 = 0 の番兵)を運ぶだけ(list_* 層の共通契約)
 
   list%nx = nx
   list%ny = ny
