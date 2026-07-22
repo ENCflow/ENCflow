@@ -233,9 +233,14 @@ subroutine m_precip_makepre(pr, p, g, s)
       i = s%it / pr%idt_maplist + 1
       if (i <= size(pr%un_maplist)) then
         un = pr%un_maplist(i)
-        ! TODO(分割時): s%prh は担当帯のみになるため、全域一時配列に
-        !               読んで担当分を切り出す方式に変更する
-        call fileio_un_read_matrix(un, g%nx, g%ny, s%prh, p%f_input_mode)
+        ! 全域一時配列に読み、担当帯(+ハロ)を切り出す
+        ! (降雨分布ファイルは全ランクが冗長に読む。developer.md §11)
+        block
+          real, allocatable :: wk(:,:)
+          allocate(wk(1:g%nx, 1:g%ny))
+          call fileio_un_read_matrix(un, g%nx, g%ny, wk, p%f_input_mode)
+          s%prh(:,:) = wk(1:g%nx, dcp%jsh:dcp%jeh)
+        end block
       else
         s%prh(:,:) = 0.0                         ! (mm/h)
       end if

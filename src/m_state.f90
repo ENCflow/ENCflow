@@ -4,7 +4,7 @@ module m_state
   use list_initial, only : t_list_initial, list_initial_read
   use m_parallel, only : is_root, par_info, par_stop, dcp, &
                        par_sum_rows, par_allreduce_max, par_allreduce_sumi, &
-                       par_gather_cell, par_bcast_cell
+                       par_gather_to, par_bcast_cell
   use m_util, only : itoa
   use iso_fortran_env, only : output_unit
   implicit none
@@ -107,6 +107,10 @@ subroutine m_state_init(s, p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   type(t_list_initial) :: list
+  type(t_state) :: ts    ! 初期化用の全域一時状態(h, u, v のみ確保。
+                         ! 全ランクが全域で冗長に初期化し、最後に帯を切り出す。
+                         ! user フックと fill_depression の「全域添字」契約を
+                         ! 帯確保の下でも保つための方式。developer.md §11)
   integer :: i, j
 
   ! メモリ確保
@@ -137,32 +141,41 @@ subroutine m_state_init(s, p, g)
   ! 初期条件設定ファイル読み込み
   call list_initial_read(p, list)
 
-  ! 初期条件をセット
+  ! --- 初期条件は全域一時状態 ts 上で全ランク冗長に構築する ---
+  allocate(ts%h(1:g%nx,1:g%ny), source = 0.0)
+  allocate(ts%u(1:g%nx,1:g%ny), source = 0.0)
+  allocate(ts%v(1:g%nx,1:g%ny), source = 0.0)
+
   call m_state_updatetime(s, p, 0)
-  call set_h(p, g, s, list)
-  call set_uv(p, g, s, list)
+  call set_h(p, g, ts, list)
+  call set_uv(p, g, ts, list)
 
   s%n_valcells = 0           ! number of valid cells
   s%n_exfluxes = 0           ! number of excessive fluxes
   s%n_runge = 0              ! number of Runge-Kutta flux calculations
 
-  if (p%f_state_restore > 0) call restore_state(p, s)
+  if (p%f_state_restore > 0) call restore_state(p, ts)
 
-  ! ユーザールーチンによる初期条件をセット
+  ! ユーザールーチンによる初期条件をセット(全域添字契約: ts に書く)
   select case (list%f_user_routine_id)
     case (0)
       continue
     case (1)
-      call init_state_user_1(p, g, s)
+      call init_state_user_1(p, g, ts)
     case (2)
-      call init_state_user_2(p, g, s)
+      call init_state_user_2(p, g, ts)
     case (3)
-      call init_state_user_3(p, g, s)
+      call init_state_user_3(p, g, ts)
     case (4)
-      call init_state_user_4(p, g, s)
+      call init_state_user_4(p, g, ts)
     case default
       call par_stop("undefined f_user_routine_id in list_initial"//itoa(list%f_user_routine_id))
   end select
+
+  ! --- 担当帯(+ハロ)を切り出す。ts はスコープ終了で自動解放 ---
+  s%h(:,:) = ts%h(1:g%nx, dcp%jsh:dcp%jeh)
+  s%u(:,:) = ts%u(1:g%nx, dcp%jsh:dcp%jeh)
+  s%v(:,:) = ts%v(1:g%nx, dcp%jsh:dcp%jeh)
 
   ! 初期水位をセット
   ! 静的(全域確保)×動的(担当帯確保)の混在演算は g 側をセクション明示する
@@ -401,7 +414,7 @@ subroutine set_h(p, g, s, list)
   type(t_state), intent(inout) :: s
   type(t_list_initial), intent(in) :: list
   integer :: i, j
-  forall(i=1:g%nx, j=dcp%jsh:dcp%jeh, g%x(i,j) > 0) s%h(i,j) = list%h0
+  forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%h(i,j) = list%h0
   if (list%f_fill_depres > 0)  call fill_depression(p, g, s, list)
   if (list%h0_rw > 0.0) call adjust_h0rw(p, g, s, list)
 
@@ -425,10 +438,10 @@ subroutine fill_depression(p, g, s, list)
 
   if (p%initialized) continue
 
-  ! 注意: 本ルーチンは意図的に全域窓(g%wy)のまま冗長実行する。
+  ! 注意: 本ルーチンは全域窓(g%wy)で全ランク冗長実行する。
   !       近傍セルへの書き込みを含む緩和反復のため行分割できない。
-  !       分割段階では「全域一時配列で実行して担当分を切り出す」方式に
-  !       変更予定(user_initial と同方針。developer.md §11)。
+  !       受け取る s は全域一時状態 ts(m_state_init 参照)なので、
+  !       帯確保の下でも全域添字で安全に動く。
 
   if (is_root) then
     write(output_unit, '(a)', advance='no') " filling depressions "
@@ -521,7 +534,7 @@ subroutine adjust_h0rw(p, g, s, list)
   type(t_list_initial), intent(in) :: list
   integer :: i, j
   if (p%initialized) continue
-  do j = dcp%js, dcp%je
+  do j = g%wy(1), g%wy(2)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) > 0 .and. g%rw(i,j) > 0) then
         s%h(i,j) = s%h(i,j) + list%h0_rw
@@ -541,8 +554,8 @@ subroutine set_uv(p, g, s, list)
   type(t_list_initial), intent(in) :: list
   integer :: i, j
   if (p%initialized) continue
-  forall(i=1:g%nx, j=dcp%jsh:dcp%jeh, g%x(i,j) > 0) s%u(i,j) = list%u0
-  forall(i=1:g%nx, j=dcp%jsh:dcp%jeh, g%x(i,j) > 0) s%v(i,j) = list%v0
+  forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%u(i,j) = list%u0
+  forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%v(i,j) = list%v0
 end subroutine
 
 
@@ -566,17 +579,24 @@ end subroutine
 !----------------------------------------------------------------------
 subroutine save_state(p, s)
   type(t_sysparam), intent(in) :: p
-  type(t_state), intent(inout) :: s
+  type(t_state), intent(in) :: s
   integer :: un
+  real, allocatable :: wk(:,:,:)
   if (p%initialized) continue
   if (s%initialized) continue
-  ! rank0 に集約してから rank0 のみが書く
-  call par_gather_cell(s%h)
-  call par_gather_cell(s%u)
-  call par_gather_cell(s%v)
+  ! 全域バッファに集約してから rank0 のみが書く。
+  ! write(un) wk のレコードは h, u, v の連結 = 旧形式とバイト互換
+  if (is_root) then
+    allocate(wk(1:dcp%nx_g, 1:dcp%ny_g, 3), source = 0.0)
+  else
+    allocate(wk(1, 1, 3))          ! 参照されないダミー
+  end if
+  call par_gather_to(wk(:,:,1), s%h)
+  call par_gather_to(wk(:,:,2), s%u)
+  call par_gather_to(wk(:,:,3), s%v)
   if (.not. is_root) return
   open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted', status='replace')
-  write(un) s%h, s%u, s%v
+  write(un) wk
   close(un)
 end subroutine
 
@@ -590,7 +610,8 @@ subroutine restore_state(p, s)
   integer :: un
   if (p%initialized) continue
   if (s%initialized) continue
-  ! rank0 が読み、全ランクへ配布する(全域確保のため全体 Bcast で足りる)
+  ! rank0 が読み、全ランクへ配布する。受け取る s は全域一時状態 ts
+  ! (全ランク同形)なので Bcast が成立する。帯への切り出しは呼び出し側
   if (is_root) then
     open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted', status='old')
     read(un) s%h, s%u, s%v

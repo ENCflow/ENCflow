@@ -33,7 +33,7 @@ module m_parallel
    public :: par_halo_cell, par_halo_edge, par_edge_merge
    public :: par_allreduce_max, par_allreduce_sumi, par_allreduce_maxi
    public :: par_sum_rows
-   public :: par_gather_cell, par_gather_cell_i, par_gather_edge
+   public :: par_gather_to, par_gather_to_i, par_gather_edge_to
    public :: par_bcast_cell, par_bcast_edge
    public :: nrank, nproc, is_root
    public :: t_decomp, dcp
@@ -129,33 +129,38 @@ contains
       total = sum(rowsum)
    end subroutine par_sum_rows
 
-   subroutine par_gather_cell(a)
-      ! rank0 への集約。逐次では何もしない。
-      real, intent(inout) :: a(1:, dcp%jsh:)
-      if (size(a) > 0) continue
-   end subroutine par_gather_cell
+   subroutine par_gather_to(buf, a)
+      ! 全域バッファへの集約。逐次では帯(=全域窓)の行を複写する。
+      real, intent(inout) :: buf(1:, 1:)
+      real, intent(in) :: a(1:, dcp%jsh:)
+      buf(:, dcp%js:dcp%je) = a(:, dcp%js:dcp%je)
+   end subroutine par_gather_to
 
-   subroutine par_gather_cell_i(a)
-      ! rank0 への集約(整数版)。逐次では何もしない。
-      integer, intent(inout) :: a(1:, dcp%jsh:)
-      if (size(a) > 0) continue
-   end subroutine par_gather_cell_i
+   subroutine par_gather_to_i(buf, a)
+      ! 全域バッファへの集約(整数版)
+      integer, intent(inout) :: buf(1:, 1:)
+      integer, intent(in) :: a(1:, dcp%jsh:)
+      buf(:, dcp%js:dcp%je) = a(:, dcp%js:dcp%je)
+   end subroutine par_gather_to_i
 
-   subroutine par_gather_edge(a)
-      ! エッジ配列の rank0 集約。逐次では何もしない。
-      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
-      if (size(a) > 0) continue
-   end subroutine par_gather_edge
+   subroutine par_gather_edge_to(buf, a)
+      ! エッジ配列の全域バッファへの集約(js-1 行を含めて複写)
+      real, intent(inout) :: buf(1:, 0:, 0:)
+      real, intent(in) :: a(1:, 0:, dcp%jsh-1:)
+      buf(:, :, dcp%js-1:dcp%je) = a(:, :, dcp%js-1:dcp%je)
+   end subroutine par_gather_edge_to
 
    subroutine par_bcast_cell(a)
       ! rank0 からの配布。逐次では何もしない。
-      real, intent(inout) :: a(1:, dcp%jsh:)
+      ! (全ランク同形の全域一時配列にのみ使うこと)
+      real, intent(inout) :: a(1:, 1:)
       if (size(a) > 0) continue
    end subroutine par_bcast_cell
 
    subroutine par_bcast_edge(a)
       ! rank0 からの配布。逐次では何もしない。
-      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      ! (全ランク同形の全域一時配列にのみ使うこと)
+      real, intent(inout) :: a(1:, 0:, 0:)
       if (size(a) > 0) continue
    end subroutine par_bcast_edge
 

@@ -7,7 +7,7 @@ module m_swflow_enc
   use list_enc, only : t_list_enc, list_enc_read
   use m_parallel, only : par_info, dcp, is_root, &
                        par_halo_cell, par_halo_edge, par_edge_merge, &
-                       par_gather_edge, par_bcast_edge
+                       par_gather_edge_to, par_bcast_edge
   implicit none
   private
 
@@ -856,15 +856,24 @@ end subroutine
 !----------------------------------------------------------------------
 subroutine save_state(p, sx)
   type(t_sysparam), intent(in) :: p
-  type(t_enc_status), intent(inout) :: sx
+  type(t_enc_status), intent(in) :: sx
   integer :: un
+  real, allocatable :: wuv(:,:,:), wmn(:,:,:)
   if (p%initialized) continue
-  ! rank0 に集約してから rank0 のみが書く
-  call par_gather_edge(sx%uv)
-  call par_gather_edge(sx%mn)
+  ! 全域バッファに集約してから rank0 のみが書く。
+  ! バッファ形状・帯外ゼロとも旧形式(全域確保時)とバイト互換
+  if (is_root) then
+    allocate(wuv(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
+    allocate(wmn(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
+  else
+    allocate(wuv(1, 1, 1), source = 0.0)   ! 参照されないダミー
+    allocate(wmn(1, 1, 1), source = 0.0)
+  end if
+  call par_gather_edge_to(wuv, sx%uv)
+  call par_gather_edge_to(wmn, sx%mn)
   if (.not. is_root) return
   open(newunit=un, file=trim(p%dir_result)//'/save_enc.dat', form='unformatted', status='replace')
-  write(un) sx%uv, sx%mn
+  write(un) wuv, wmn
   close(un)
 end subroutine
 
@@ -876,15 +885,21 @@ subroutine restore_state(p, sx)
   type(t_sysparam), intent(in) :: p
   type(t_enc_status), intent(inout) :: sx
   integer :: un
+  real, allocatable :: wuv(:,:,:), wmn(:,:,:)
   if (p%initialized) continue
-  ! rank0 が読み、全ランクへ配布する(全域確保のため全体 Bcast で足りる)
+  ! rank0 が全域一時配列に読み、Bcast(全ランク同形)してから帯を切り出す。
+  ! 一時配列2本ぶんの全域メモリが復元時のみ一過性に必要になる点に注意
+  allocate(wuv(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
+  allocate(wmn(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
   if (is_root) then
     open(newunit=un, file=trim(p%dir_result)//'/save_enc.dat', form='unformatted', status='old')
-    read(un) sx%uv, sx%mn
+    read(un) wuv, wmn
     close(un)
   end if
-  call par_bcast_edge(sx%uv)
-  call par_bcast_edge(sx%mn)
+  call par_bcast_edge(wuv)
+  call par_bcast_edge(wmn)
+  sx%uv(:,:,:) = wuv(1:4, 0:dcp%nx_g, dcp%jsh-1:dcp%jeh)
+  sx%mn(:,:,:) = wmn(1:4, 0:dcp%nx_g, dcp%jsh-1:dcp%jeh)
   sx%mn1(:,:,:) = sx%mn(:,:,:)   ! 書き込みバッファも正準状態で初期化する
 end subroutine
 

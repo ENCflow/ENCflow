@@ -48,7 +48,7 @@ module m_parallel
    public :: par_halo_cell, par_halo_edge, par_edge_merge
    public :: par_allreduce_max, par_allreduce_sumi, par_allreduce_maxi
    public :: par_sum_rows
-   public :: par_gather_cell, par_gather_cell_i, par_gather_edge
+   public :: par_gather_to, par_gather_to_i, par_gather_edge_to
    public :: par_bcast_cell, par_bcast_edge
    public :: nrank, nproc, is_root
    public :: t_decomp, dcp
@@ -139,8 +139,9 @@ contains
          call par_stop(trim(buf))       ! 全ランク同一の判定なので collective 安全
       end if
       call band_range(nrank, dcp%js, dcp%je)
-      dcp%jsh = 1
-      dcp%jeh = ny
+      ! 第二段: 配列確保範囲 = 担当帯 ± ハロ幅(全域端でクリップ)
+      dcp%jsh = max(1,  dcp%js - dcp%nhalo)
+      dcp%jeh = min(ny, dcp%je + dcp%nhalo)
       dcp%rank_s = nrank - 1                            ! nrank=0 では -1(隣なし)
       dcp%rank_n = merge(nrank + 1, -1, nrank < nproc - 1)
    end subroutine par_decomp_init
@@ -275,78 +276,72 @@ contains
       call MPI_Bcast(total, 1, MPI_WP, 0, MPI_COMM_WORLD)
    end subroutine par_sum_rows
 
-   subroutine par_gather_cell(a)
-      ! 各ランクの担当帯 js..je を rank0 の全域配列へ集約する。
-      ! 出力・計測の直前に呼ぶ(rank0 以外の配列は変化しない)。
-      real, intent(inout) :: a(1:, dcp%jsh:)
+   subroutine par_gather_to(buf, a)
+      ! 各ランクの担当帯 js..je を rank0 の全域バッファ buf(1:nx,1:ny) へ
+      ! 集約する(第二段: 帯確保の配列を出力するための経路)。
+      ! buf の帯外の行は変更しない(呼び出し側でゼロ初期化しておくこと)。
+      ! rank0 以外の buf は参照されないためサイズ1のダミーでよい。
+      real, intent(inout) :: buf(1:, 1:)
+      real, intent(in) :: a(1:, dcp%jsh:)
       integer :: counts(0:nproc-1), displs(0:nproc-1)
       integer :: r, js_r, je_r, n1
       n1 = size(a, 1)
       do r = 0, nproc - 1
          call band_range(r, js_r, je_r)
          counts(r) = n1 * (je_r - js_r + 1)
-         displs(r) = n1 * (js_r - dcp%jsh)
+         displs(r) = n1 * (js_r - 1)
       end do
-      if (is_root) then
-         call MPI_Gatherv(MPI_IN_PLACE, 0, MPI_WP, &
-                          a, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
-      else
-         call MPI_Gatherv(a(:, dcp%js:dcp%je), counts(nrank), MPI_WP, &
-                          a, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
-      end if
-   end subroutine par_gather_cell
+      call MPI_Gatherv(a(:, dcp%js:dcp%je), counts(nrank), MPI_WP, &
+                       buf, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
+   end subroutine par_gather_to
 
-   subroutine par_gather_cell_i(a)
-      ! par_gather_cell の整数版(流下方向フラグ等)
-      integer, intent(inout) :: a(1:, dcp%jsh:)
+   subroutine par_gather_to_i(buf, a)
+      ! par_gather_to の整数版(流下方向フラグ等)
+      integer, intent(inout) :: buf(1:, 1:)
+      integer, intent(in) :: a(1:, dcp%jsh:)
       integer :: counts(0:nproc-1), displs(0:nproc-1)
       integer :: r, js_r, je_r, n1
       n1 = size(a, 1)
       do r = 0, nproc - 1
          call band_range(r, js_r, je_r)
          counts(r) = n1 * (je_r - js_r + 1)
-         displs(r) = n1 * (js_r - dcp%jsh)
+         displs(r) = n1 * (js_r - 1)
       end do
-      if (is_root) then
-         call MPI_Gatherv(MPI_IN_PLACE, 0, MPI_INTEGER, &
-                          a, counts, displs, MPI_INTEGER, 0, MPI_COMM_WORLD)
-      else
-         call MPI_Gatherv(a(:, dcp%js:dcp%je), counts(nrank), MPI_INTEGER, &
-                          a, counts, displs, MPI_INTEGER, 0, MPI_COMM_WORLD)
-      end if
-   end subroutine par_gather_cell_i
+      call MPI_Gatherv(a(:, dcp%js:dcp%je), counts(nrank), MPI_INTEGER, &
+                       buf, counts, displs, MPI_INTEGER, 0, MPI_COMM_WORLD)
+   end subroutine par_gather_to_i
 
-   subroutine par_gather_edge(a)
-      ! エッジ配列の rank0 集約。エッジ行 js..je を各ランクが送る。
-      ! 行 jw1-1 は rank0 自身が保持済み、共有行は南北同値なので
-      ! この帯割りで全域が揃う。
-      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+   subroutine par_gather_edge_to(buf, a)
+      ! エッジ配列の rank0 集約(save 用)。エッジ行 js..je を各ランクが送り、
+      ! 行 jw1-1 は rank0 が自前の値で埋める(共有行は南北同値)。
+      ! buf は rank0 のみ全域 (1:4, 0:nx, 0:ny)。帯外は変更しない。
+      real, intent(inout) :: buf(1:, 0:, 0:)
+      real, intent(in) :: a(1:, 0:, dcp%jsh-1:)
       integer :: counts(0:nproc-1), displs(0:nproc-1)
       integer :: r, js_r, je_r, n12
       n12 = size(a, 1) * size(a, 2)
       do r = 0, nproc - 1
          call band_range(r, js_r, je_r)
          counts(r) = n12 * (je_r - js_r + 1)
-         displs(r) = n12 * (js_r - (dcp%jsh - 1))
+         displs(r) = n12 * js_r
       end do
-      if (is_root) then
-         call MPI_Gatherv(MPI_IN_PLACE, 0, MPI_WP, &
-                          a, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
-      else
-         call MPI_Gatherv(a(:, :, dcp%js:dcp%je), counts(nrank), MPI_WP, &
-                          a, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
-      end if
-   end subroutine par_gather_edge
+      call MPI_Gatherv(a(:, :, dcp%js:dcp%je), counts(nrank), MPI_WP, &
+                       buf, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
+      if (is_root) buf(:, :, dcp%js-1) = a(:, :, dcp%js-1)
+   end subroutine par_gather_edge_to
 
    subroutine par_bcast_cell(a)
-      ! rank0 の全域配列を全ランクへ配布(リスタート復元用)
-      real, intent(inout) :: a(1:, dcp%jsh:)
+      ! rank0 の配列を全ランクへ配布(リスタート復元用)。
+      ! 注意: 全ランク同形の配列(全域一時配列)にのみ使うこと。
+      ! 帯確保の配列に使うとランク毎にサイズが異なり Bcast が破綻する。
+      real, intent(inout) :: a(1:, 1:)
       call MPI_Bcast(a, size(a), MPI_WP, 0, MPI_COMM_WORLD)
    end subroutine par_bcast_cell
 
    subroutine par_bcast_edge(a)
-      ! rank0 の全域エッジ配列を全ランクへ配布(リスタート復元用)
-      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      ! rank0 のエッジ配列を全ランクへ配布(リスタート復元用)。
+      ! 注意: 全ランク同形の配列(全域一時配列)にのみ使うこと。
+      real, intent(inout) :: a(1:, 0:, 0:)
       call MPI_Bcast(a, size(a), MPI_WP, 0, MPI_COMM_WORLD)
    end subroutine par_bcast_edge
 

@@ -113,12 +113,12 @@ subroutine adv_prepare_v1(p, g, s, sx, tx)
       ww(:) = get_ww(s%u(i,j), s%v(i,j), s%vv(i,j))
       forall(k=1:8) wwx(k) = w8x(k) * ww(k)
       forall(k=1:8) wwy(k) = w8y(k) * ww(k)
-      call get_diff_v1(tx%ulm, tx%vlm, s%h, p%dd, wwx, wwy, g%x, i, j, g%nx, g%ny, dux, duy, dvx, dvy)
+      call get_diff_v1(tx%ulm, tx%vlm, s%h, p%dd, wwx, wwy, g%x, i, j, dux, duy, dvx, dvy)
       tx%taxy(1,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
       tx%taxy(2,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)
       if (f_advection_tvd > 0) then
         ! 中心差分による移流項の計算
-        call get_diff_v1(tx%ulm, tx%vlm, s%h, p%dd, w8x, w8y, g%x, i, j, g%nx, g%ny, dux, duy, dvx, dvy)
+        call get_diff_v1(tx%ulm, tx%vlm, s%h, p%dd, w8x, w8y, g%x, i, j, dux, duy, dvx, dvy)
         tx%taxy(3,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
         tx%taxy(4,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)
       end if
@@ -220,14 +220,18 @@ end function
 !----------------------------------------------------------------------
 ! 変数u, vの微分
 !----------------------------------------------------------------------
-subroutine get_diff_v1(u, v, h, dd, wx, wy, x, i, j, nx, ny, dux, duy, dvx, dvy)
-  real, intent(in) :: u(1:nx,1:ny)
-  real, intent(in) :: v(1:nx,1:ny)
-  real, intent(in) :: h(1:nx,1:ny)
+subroutine get_diff_v1(u, v, h, dd, wx, wy, x, i, j, dux, duy, dvx, dvy)
+  ! u, v, h は帯確保(第2次元下限 dcp%jsh)の配列を大域添字のまま受ける。
+  ! 明示形状 (1:nx,1:ny) で受けると、帯確保の実引数が並び結合で再解釈され
+  ! 行が jsh-1 だけずれて読まれる(第二段で実発生した実バグ)。
+  ! 帯確保の配列を渡す手続きのダミーは必ず assumed-shape + 下限指定にすること
+  real, intent(in) :: u(1:, dcp%jsh:)
+  real, intent(in) :: v(1:, dcp%jsh:)
+  real, intent(in) :: h(1:, dcp%jsh:)
   real, intent(in) :: dd
   real, intent(in) :: wx(1:8), wy(1:8)
-  integer, intent(in) :: x(0:nx+1,0:ny+1)
-  integer, intent(in) :: i, j, nx, ny
+  integer, intent(in) :: x(0:, 0:)
+  integer, intent(in) :: i, j
   real, intent(out) :: dux, duy
   real, intent(out) :: dvx, dvy
 
