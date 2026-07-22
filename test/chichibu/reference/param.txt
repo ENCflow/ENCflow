@@ -17,7 +17,7 @@
   dt_recrd_c = "1 min"        ! プローブ出力時間刻み (h,m,s)
 
   fn_geoinfo  = "-"
-  fn_record   = "-"
+  !fn_record   = "-"
   fn_initial  = "-"
   fn_precip   = "-"
   fn_enc      = "-"
