@@ -93,6 +93,28 @@ contains
       call MPI_Comm_rank(MPI_COMM_WORLD, nrank)
       call MPI_Comm_size(MPI_COMM_WORLD, nproc)
       is_root = (nrank == 0)
+
+      ! 起動側との整合検証: Run スクリプトが期待ランク数を環境変数で渡す。
+      ! PMI 不整合によるシングルトン化(全プロセスが nproc=1 で独立起動し、
+      ! 結果は壊れないまま並列だけが静かに死ぬ事故。ビルドと異なる MPI の
+      ! mpirun 使用や、Ubuntu 24.04 の mpich パッケージバグ(hydra が PMIx
+      ! 非対応。Debian #1066735)で実発生)を起動直後に検出する。
+      ! 環境変数が未設定なら検査しない(手動実行に影響なし)。
+      check_np: block
+         character(len=32) :: env
+         integer :: np_expect, istat
+         call get_environment_variable("ENCFLOW_EXPECT_NP", env, status=istat)
+         if (istat == 0) then
+            read(env, *, iostat=istat) np_expect
+            if (istat == 0 .and. np_expect /= nproc) then
+               write(error_unit,'(a,i0,a,i0,a)') &
+                  'ERROR: expected ', np_expect, ' ranks but MPI initialized with ', &
+                  nproc, ' (PMI mismatch / singleton launch?)'
+               flush(error_unit)
+               call MPI_Abort(MPI_COMM_WORLD, 1)
+            end if
+         end if
+      end block check_np
    end subroutine par_init
 
    subroutine par_decomp_init(nx, ny, jw1, jw2)

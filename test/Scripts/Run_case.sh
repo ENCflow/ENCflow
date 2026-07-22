@@ -62,6 +62,9 @@ FILES=${FILES:-Log.txt}
 # --- 実行(pipefail: tee でなく計算本体の終了コードを拾う) ---
 set -o pipefail
 if [ "$mode" = mpi ]; then
+    # 期待ランク数をバイナリに伝え、シングルトン化(PMI 不整合で全プロセス
+    # が nproc=1 で独立起動する事故)を par_init で検出させる
+    export ENCFLOW_EXPECT_NP="$NP"
     time mpirun -np "$NP" $MPIRUN_OPTS ./a.out "$PARAM" | tee Screen.log
 else
     time ./a.out "$PARAM" | tee Screen.log
