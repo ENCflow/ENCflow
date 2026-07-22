@@ -1,10 +1,10 @@
-date      : 2026-07-22 11:55:29
+date      : 2026-07-22 17:31:29
 host      : cvwec02
 user      : tada
 pwd       : /home/tada/ENC/ENCflow/test/chichibu
 a.out     : /home/tada/ENC/ENCflow/bin/a.out
 mode      : serial_
-modules   : tbb/latest:compiler-rt/latest:umf/latest:tcm/latest:compiler/latest
-lib       : 	libimf.so => /opt/intel/oneapi/compiler/2026.1/lib/libimf.so (0x00007f3e15a00000)
-lib       : 	libiomp5.so => /opt/intel/oneapi/compiler/2026.1/lib/libiomp5.so (0x00007f3e15400000)
-lib       : 	libintlc.so.5 => /opt/intel/oneapi/compiler/2026.1/lib/libintlc.so.5 (0x00007f3e15e74000)
+modules   : tbb/latest:compiler-rt/latest:umf/latest:tcm/latest:compiler/latest:nvhpc/26.5
+lib       : 	libimf.so => /opt/intel/oneapi/compiler/2026.1/lib/libimf.so (0x00007b4f88e00000)
+lib       : 	libiomp5.so => /opt/intel/oneapi/compiler/2026.1/lib/libiomp5.so (0x00007b4f88800000)
+lib       : 	libintlc.so.5 => /opt/intel/oneapi/compiler/2026.1/lib/libintlc.so.5 (0x00007b4f8879d000)
