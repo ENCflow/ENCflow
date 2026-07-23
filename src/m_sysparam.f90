@@ -72,6 +72,7 @@ module m_sysparam
     character(:), allocatable :: fn_geoinfo    ! 地形条件設定ファイル
     character(:), allocatable :: fn_initial    ! 初期条件設定ファイル
     character(:), allocatable :: fn_precip     ! 降水条件設定ファイル
+    character(:), allocatable :: fn_reservoir  ! ため池条件設定ファイル
     character(:), allocatable :: fn_tide       ! 潮位条件設定ファイル
     character(:), allocatable :: fn_boundary   ! 境界条件設定ファイル
     character(:), allocatable :: fn_record     ! 記録設定ファイル
@@ -151,6 +152,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%fn_geoinfo = list%fn_geoinfo               ! 地形条件設定ファイル
   p%fn_initial = list%fn_initial               ! 初期条件設定ファイル
   p%fn_precip = list%fn_precip                 ! 降水条件設定ファイル
+  p%fn_reservoir = list%fn_reservoir           ! ため池条件設定ファイル
   p%fn_tide = list%fn_tide                     ! 潮位条件設定ファイル
   p%fn_boundary = list%fn_boundary             ! 境界条件設定ファイル
   p%fn_record = list%fn_record                 ! 記録設定ファイル

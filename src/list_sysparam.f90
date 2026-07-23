@@ -76,6 +76,7 @@ module list_sysparam
     character(len=maxpathlen) :: fn_geoinfo = "-"        ! 地形条件設定ファイル(必須)
     character(len=maxpathlen) :: fn_initial = ""         ! 初期条件設定ファイル
     character(len=maxpathlen) :: fn_precip = ""          ! 降水条件設定ファイル
+    character(len=maxpathlen) :: fn_reservoir = ""       ! ため池条件設定ファイル
     character(len=maxpathlen) :: fn_tide = ""            ! 潮位条件設定ファイル
     character(len=maxpathlen) :: fn_boundary = ""        ! 境界条件設定ファイル
     character(len=maxpathlen) :: fn_record = ""          ! 記録設定ファイル
@@ -156,6 +157,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: fn_geoinfo    ! 地形条件設定ファイル
   character(:), allocatable :: fn_initial    ! 初期条件設定ファイル
   character(:), allocatable :: fn_precip     ! 降水条件設定ファイル
+  character(:), allocatable :: fn_reservoir  ! ため池条件設定ファイル
   character(:), allocatable :: fn_tide       ! 潮位条件設定ファイル
   character(:), allocatable :: fn_boundary   ! 境界条件設定ファイル
   character(:), allocatable :: fn_record     ! 記録設定ファイル
@@ -178,7 +180,8 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_vv, f_out_qq, f_out_qc, f_out_qd, &
                         f_out_hmax, f_out_hmaxt, f_out_vvmax, f_out_qqmax, f_out_qqmaxt, f_out_qqmaxd, &
                         f_out_ddd, f_out_dda, f_out_pre, f_out_fr, f_out_cn, &
-                        fn_geoinfo, fn_initial, fn_precip, fn_tide, fn_boundary, fn_record, fn_enc, &
+                        fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
+                        fn_record, fn_enc, &
                         fn_log, dir_data, dir_result, outfn_suffix
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
@@ -243,6 +246,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   fn_geoinfo = list%fn_geoinfo
   fn_initial = list%fn_initial
   fn_precip = list%fn_precip
+  fn_reservoir = list%fn_reservoir
   fn_tide = list%fn_tide
   fn_boundary = list%fn_boundary
   fn_record = list%fn_record
@@ -318,6 +322,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%fn_geoinfo = fn_geoinfo
   list%fn_initial = fn_initial
   list%fn_precip = fn_precip
+  list%fn_reservoir = fn_reservoir
   list%fn_tide = fn_tide
   list%fn_boundary = fn_boundary
   list%fn_record = fn_record
@@ -330,6 +335,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   if (trim(list%fn_geoinfo) == "-") list%fn_geoinfo = trim(fn_sysparam)
   if (trim(list%fn_initial) == "-") list%fn_initial = trim(fn_sysparam)
   if (trim(list%fn_precip) == "-") list%fn_precip = trim(fn_sysparam)
+  if (trim(list%fn_reservoir) == "-") list%fn_reservoir = trim(fn_sysparam)
   if (trim(list%fn_tide) == "-") list%fn_tide = trim(fn_sysparam)
   if (trim(list%fn_boundary) == "-") list%fn_boundary = trim(fn_sysparam)
   if (trim(list%fn_record) == "-") list%fn_record = trim(fn_sysparam)
