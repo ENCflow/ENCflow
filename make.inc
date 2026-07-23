@@ -20,8 +20,8 @@
 #       make MODE=mpi
 #   でも上書きできる(トップレベル Makefile 経由でも全体に伝播する)
 # ---------------------------------------------------------------
-MODE	= serial
-#MODE	= mpi
+#MODE	= serial
+MODE	= mpi
 
 # ---------------------------------------------------------------
 # コンパイラ本体(FC)と MPI ラッパー(FC_MPI)
@@ -64,6 +64,26 @@ FFLAGS	= -g -fopenmp -warn all -fpe0 -Ofast -xHost -ipo -r8
 #FFLAGS	= -g -O3 -ffast-math -Werror -fdefault-real-8
 #LDFLAGS =
 
+# NEC SDK (SX-Aurora TSUBASA, Vector Engine 向けクロスコンパイル)
+#   MPI ラッパーは NEC MPI の mpinfort。-flto/-ipo 相当なし(AR は素の ar)。
+#   注意(他コンパイラとの流儀の違い):
+#   - -ffast-math と -fassociative-math は nfort では既定で有効。
+#     他コンパイラの -Ofast 相当が最初から入っている(§9 のコンパイラ間
+#     ULP=1 の枠内。無効化して確認したいときは -fno-associative-math)
+#   - FPE トラップはコンパイルオプションでなく実行時環境変数:
+#       export VE_FPE_ENABLE=DIV,FOF,INV   (ゼロ除算, オーバーフロー, 無効演算)
+#       export VE_TRACEBACK=VERBOSE        (-traceback でビルドした場合)
+#     ジョブスクリプトか modulefile に入れておくこと
+#   - -proginf は既定で有効(実行後に性能サマリが出る)。関数別の計測は
+#     -ftrace を付けて ftrace コマンドで解析
+#   - ベクトル化診断は -report-all(.L ファイルに整形リストが出る)
+#FC	= nfort
+#FC_MPI	= mpinfort
+#FFLAGS	= -g -fopenmp -O3 -finline-functions -Wall -traceback -fdefault-real=8
+#FFLAGS	= -g -fopenmp -O3 -finline-functions -Wall -traceback -report-all -fdefault-real=8
+#FFLAGS	= -g -O0 -fopenmp -fcheck=all -traceback=verbose -Wall -fdefault-real=8
+#LDFLAGS =
+
 # MODE に応じて実際に使うコンパイラを決定
 ifeq ($(MODE),mpi)
 FRT	= $(FC_MPI)
@@ -94,6 +114,11 @@ FFLAGS_UTIL	= -g -O2 -Wall -ffpe-trap=invalid,zero,overflow
 #FRT_UTIL	= flang-20
 #FFLAGS_UTIL	= -g -O2 -Werror
 
+# NEC SDK: ユーティリティは VH(x86 側)で動かすなら gfortran のままが楽。
+# VE で動かす場合のみ nfort を使う
+#FRT_UTIL	= nfort
+#FFLAGS_UTIL	= -g -O2 -Wall -traceback
+
 # ---------------------------------------------------------------
 # 静的ライブラリ作成コマンド(コンパイラと LTO の有無で自動選択)
 #
@@ -106,6 +131,7 @@ FFLAGS_UTIL	= -g -O2 -Wall -ffpe-trap=invalid,zero,overflow
 #     flang 系 + -flto   → llvm-ar (AOCC なら module load で PATH に入る)
 #     それ以外           → ar
 #   mpiifx/mpifort 等のラッパー使用時も判定は FC 側で行う。
+#   nfort は LTO 相当が無いため素の ar(既定分岐)でよい。
 # ---------------------------------------------------------------
 ifneq (,$(findstring ifx,$(FC)))
 IFXBIN	:= $(dir $(shell which ifx))
