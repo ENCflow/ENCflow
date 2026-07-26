@@ -39,6 +39,7 @@ module list_geoinfo
     character(len=maxpathlen) :: fn_luse = "" ! 土地利用ファイル名
     character(len=maxpathlen) :: fn_gv = ""   ! 家屋の空隙率ファイル名
     character(len=maxpathlen) :: fn_bb = ""   ! 家屋の平均寸法ファイル名
+    character(len=maxpathlen) :: fn_rs = ""   ! ため池の深さファイル名
     real :: lu2rn(1:2,1:maxnluse) = -999      ! 土地利用と粗度係数の対応
   end type
 
@@ -79,13 +80,14 @@ subroutine list_geoinfo_read(p, list)
   character(:), allocatable :: fn_luse   ! 土地利用ファイル名
   character(:), allocatable :: fn_gv     ! 家屋の空隙率ファイル名
   character(:), allocatable :: fn_bb     ! 家屋の平均寸法ファイル名
+  character(:), allocatable :: fn_rs     ! ため池の深さファイル名
   real :: lu2rn(1:2,1:maxnluse)          ! 土地利用と粗度係数の対応
   integer :: un
   integer :: ios
   character(len=1024) :: iom
   namelist /list_geoinfo/ nx, ny, dx, dy, lx, ly, z0, rn0, mag_z, min_gv, min_bb, depth_rw, rn0_rw, &
                           f_user_routine_id, f_ztype, f_lusetype, f_rntype, f_masktype, f_edge_sw, &
-                          fn_z, fn_mask, fn_sw, fn_rw, fn_rn, fn_luse, fn_gv, fn_bb, lu2rn
+                          fn_z, fn_mask, fn_sw, fn_rw, fn_rn, fn_luse, fn_gv, fn_bb, fn_rs, lu2rn
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
   nx = list%nx
@@ -115,6 +117,7 @@ subroutine list_geoinfo_read(p, list)
   fn_luse = list%fn_luse
   fn_gv = list%fn_gv
   fn_bb = list%fn_bb
+  fn_rs = list%fn_rs
   lu2rn = list%lu2rn
 
   call par_info("reading list_geoinfo in "//trim(p%fn_geoinfo))
@@ -153,6 +156,7 @@ subroutine list_geoinfo_read(p, list)
   list%fn_luse = fn_luse
   list%fn_gv = fn_gv
   list%fn_bb = fn_bb
+  list%fn_rs = fn_rs
   list%lu2rn = lu2rn
 
 end subroutine
