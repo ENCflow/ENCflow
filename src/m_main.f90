@@ -295,6 +295,7 @@ subroutine output(p, g, s, k)
   if (p%f_out_ddd > 0) call output_matrix(p, g, "Ddd", s%ddir1, k)  ! 卓越流下方向フラグ
   if (p%f_out_dda > 0) call output_matrix(p, g, "Dda", s%ddir8, k)  ! 全流下方向フラグ
   if (p%f_out_pre > 0) call output_matrix(p, g, "Pr", s%prh, k)     ! 降雨強度
+  if (p%f_out_rsh > 0) call output_matrix(p, g, "Rsh", s%rsh, k)    ! ため池水深
   if (p%f_out_fr > 0) call output_matrix(p, g, "Fr", s%fr, k)       ! フルード数
   if (p%f_out_cn > 0) call output_matrix(p, g, "Cn", s%cn, k)       ! クーラン数
   if (is_root) write(un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it
