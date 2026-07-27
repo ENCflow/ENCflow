@@ -38,7 +38,7 @@ module m_swflow
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_boundary), intent(in) :: b
-      type(t_state), intent(in) :: s
+      type(t_state), intent(inout) :: s
     end subroutine
 
     subroutine procedure_swflow_calc(p, g, b, s, ierror)
@@ -73,9 +73,9 @@ contains
 subroutine m_swflow_init(sw, p, g, b, s)
   type(t_swflow), intent(inout) :: sw
   type(t_sysparam), intent(in) :: p
-  type(t_geoinfo) :: g
-  type(t_boundary) :: b
-  type(t_state) :: s
+  type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
+  type(t_state), intent(inout) :: s
 
   ! 地表水計算ルーチンのポインタをセット
   if (p%f_gridsystem == 0) then

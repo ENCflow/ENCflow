@@ -55,7 +55,7 @@ subroutine m_swflow_stg_init(p, g, b, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(in) :: b
-  type(t_state), intent(in) :: s
+  type(t_state), intent(inout) :: s
   INTEGER :: I,J
   if (s%initialized) continue
   if (b%initialized) continue

@@ -124,7 +124,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(in) :: b
-  type(t_state), intent(in) :: s
+  type(t_state), intent(inout) :: s
   type(t_list_enc) :: list
 
 
@@ -170,6 +170,9 @@ subroutine m_swflow_enc_init(p, g, b, s)
 
   ! 水深の境界条件をセットする
   call boundary_h(p, g, b, s, sx_mod)
+
+  ! 変数を更新して次のタイムステップの準備をする
+  call complete(p, g, s, sx_mod)
 
 end subroutine
 
@@ -232,12 +235,17 @@ end subroutine
 !======================================================================
 
 !----------------------------------------------------------------------
+! 水深の境界条件をセットする
+!   このルーチンより前に実行されるcontinuous/init_enc_statusにおいて
+!   水深はs%hからsx%h1に更新されているので、ここではsx%h1を更新する　
+!     s%h：前ステップの水深
+!     sx%h1：現ステップの連続式適用後の水深
 !----------------------------------------------------------------------
 subroutine boundary_h(p, g, b, s, sx)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(in) :: b
-  type(t_state), intent(in) :: s
+  type(t_state), intent(inout) :: s
   type(t_enc_status), intent(inout) :: sx
   integer :: i, j, k
 
@@ -246,8 +254,21 @@ subroutine boundary_h(p, g, b, s, sx)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
       if (g%x(i,j) <= 0) cycle
+
+      ! ため池の処理
+      if (g%rs(i,j) > 0.0 .and. g%rs(i,j) > s%rsh(i,j)) then  ! ため池に余力がある
+        if (sx%h1(i,j) > (g%rs(i,j) - s%rsh(i,j))) then       !   ため池があふれる
+          sx%h1(i,j) = sx%h1(i,j) - (g%rs(i,j) - s%rsh(i,j))  !     場の水深がため池の余力分だけ減る
+          s%rsh(i,j) = g%rs(i,j)                              !     ため池が満水になる
+        else                                                  !   ため池があふれない
+          s%rsh(i,j) = s%rsh(i,j) + sx%h1(i,j)                !     ため池の水深が増加する
+          sx%h1(i,j) = 0.0                                    !     場の水深がゼロになる
+        end if
+      end if
+
       ! 降雨を加えて次ステップの水深を初期化
-      sx%h1(i,j) = s%h(i,j) + s%pre(i,j) * p%dt / g%gv(i,j)
+      sx%h1(i,j) = sx%h1(i,j) + s%pre(i,j) * p%dt / g%gv(i,j)
+
     end do
   end do
   !$omp end parallel do
@@ -357,7 +378,6 @@ subroutine init_enc_status(p, g, s, sx)
 
   ! 流速の初期条件を設定する
   !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, ue, ve)
-  !do j = 1, g%ny
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -375,6 +395,16 @@ subroutine init_enc_status(p, g, s, sx)
         ! セル境界流速の境界法線方向成分を計算する(中心から近傍方向が正)
         sx%uv(k,ie,je) = ue * n8x(k) + ve * n8y(k)
       end do
+    end do
+  end do
+  !$omp end parallel do
+
+  ! 水深の初期条件を設定する
+  !$omp parallel do schedule(dynamic) private(i, j)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      sx%h1(i,j) = s%h(i,j)
     end do
   end do
   !$omp end parallel do
@@ -781,9 +811,8 @@ subroutine continuous(p, g, s, sx)
       s%v(i,j) = 0
       s%m(i,j) = 0
       s%n(i,j) = 0
+      sx%h1(i,j) = s%h(i,j)
       mnmax = 0
-                 ! 降雨を加えて次ステップの水深を初期化
-                 !sx%h1(i,j) = s%h(i,j) + s%pre(i,j) * p%dt / g%gv(i,j)
       ! 対象セルi,jの8近傍全ての水の流出入を計算し平均流量・流速と水位を更新する
       s%ddir1(i,j) = 0
       s%ddir8(i,j) = 0
@@ -841,6 +870,7 @@ subroutine complete(p, g, s, sx)
   ! 流量のコミット: 時刻n+1の値を正準状態へ(セルの h1→h と対をなす)
   !   エッジの書き込み集合はセル窓より i,j とも1つ外側(die/dje=-1)に
   !   張り出すため、セルループに畳み込まず、行範囲 js-1..je で行う。
+  !   ここでは行丸ごとメモリ転送するのでschedule(static)でよい
   !$omp parallel do schedule(static)
   do j = dcp%js - 1, dcp%je
     sx%mn(:,:,j) = sx%mn1(:,:,j)
