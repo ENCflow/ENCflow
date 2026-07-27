@@ -75,7 +75,7 @@ subroutine m_main_all()
   call m_record_init(r, p, g)             ! record を初期化(create_resultdirより後)
   call m_precip_init(pr, p, g)            ! precip を初期化
   call m_tide_init(ti, p, g)              ! tide を初期化
-  call m_swflow_init(sw, p, g, s)         ! swflow を初期化
+  call m_swflow_init(sw, p, g, b, s)      ! swflow を初期化
 
   ! 計算実行
   call run_main(p, g, b, pr, s, r, sw, ierror)  ! 計算本体

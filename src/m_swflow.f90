@@ -30,12 +30,14 @@ module m_swflow
   ! 地表水計算ルーチンのインターフェース
   !-------------------------------------------
   interface
-    subroutine procedure_swflow_init(p, g, s)
+    subroutine procedure_swflow_init(p, g, b, s)
       use m_sysparam
       use m_geoinfo
+      use m_boundary
       use m_state
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
+      type(t_boundary), intent(in) :: b
       type(t_state), intent(in) :: s
     end subroutine
 
@@ -68,10 +70,11 @@ contains
 !----------------------------------------------------------------------
 ! 
 !----------------------------------------------------------------------
-subroutine m_swflow_init(sw, p, g, s)
+subroutine m_swflow_init(sw, p, g, b, s)
   type(t_swflow), intent(inout) :: sw
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo) :: g
+  type(t_boundary) :: b
   type(t_state) :: s
 
   ! 地表水計算ルーチンのポインタをセット
@@ -88,7 +91,7 @@ subroutine m_swflow_init(sw, p, g, s)
   end if
   sw%initialized = .true.
 
-  call swflow_init(p, g, s)
+  call swflow_init(p, g, b, s)
 end subroutine
 
 !----------------------------------------------------------------------

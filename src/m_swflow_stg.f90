@@ -51,12 +51,14 @@ module m_swflow_stg
 contains
 !======================================================================
 !======================================================================
-subroutine m_swflow_stg_init(p, g, s)
+subroutine m_swflow_stg_init(p, g, b, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
   type(t_state), intent(in) :: s
   INTEGER :: I,J
   if (s%initialized) continue
+  if (b%initialized) continue
 
   select case (p%f_govequation)
     case (0)      ! DynWE

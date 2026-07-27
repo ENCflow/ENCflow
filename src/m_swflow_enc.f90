@@ -120,9 +120,10 @@ contains
 !----------------------------------------------------------------------
 ! ENCの初期化
 !----------------------------------------------------------------------
-subroutine m_swflow_enc_init(p, g, s)
+subroutine m_swflow_enc_init(p, g, b, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
   type(t_state), intent(in) :: s
   type(t_list_enc) :: list
 
@@ -167,6 +168,9 @@ subroutine m_swflow_enc_init(p, g, s)
   ! 高速摩擦計算ルーチンを初期化する
   call m_ffactor_init(f_friction_fastmath, p%dd, 30.0, 'UV')
 
+  ! 水深の境界条件をセットする
+  call boundary_h(p, g, b, s, sx_mod)
+
 end subroutine
 
 
@@ -179,7 +183,6 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   type(t_boundary), intent(in) :: b
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
-  if (b%initialized) continue
 
   ! ステップ頭: 前ステップ確定状態のハロ交換
   !   h/u/v/vv は幅2(移流項のハロ再計算=案Aの依存)、mn は幅1。
@@ -190,7 +193,10 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   call par_halo_cell(s%vv)
   call par_halo_edge(sx_mod%mn)
 
+  ! 移流項を計算する
   call adv_prepare(p, g, s, sx_mod)
+
+  ! 運動方程式を解いて流速を計算する
   call momentum(p, g, s, sx_mod, ierror)
 
   ! 界面エッジ行(js-1, je)の所有成分を南北で補完し合う
@@ -198,8 +204,13 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   call par_edge_merge(sx_mod%uv,  esync_s, esync_n)
   call par_edge_merge(sx_mod%mn1, esync_s, esync_n)
 
-  call boundary(p, g, b, s, sx_mod)
+  ! 連続式を解いて水深を更新する
   call continuous(p, g, s, sx_mod)
+
+  ! 水深の境界条件をセットする
+  call boundary_h(p, g, b, s, sx_mod)
+
+  ! 変数を更新して次のタイムステップの準備をする
   call complete(p, g, s, sx_mod)
 end subroutine
 
@@ -222,7 +233,7 @@ end subroutine
 
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
-subroutine boundary(p, g, b, s, sx)
+subroutine boundary_h(p, g, b, s, sx)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(in) :: b
