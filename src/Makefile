@@ -94,7 +94,7 @@ user_initial.o: m_sysparam.o m_state.o m_geoinfo.o
 m_fileio.o: sysdep_util.o
 m_ffactor.o: m_util.o $(PAR_OBJ)
 m_util.o: $(PAR_OBJ)
-sysdep_util.o: m_sysparam.o $(PAR_OBJ)
+sysdep_util.o: $(PAR_OBJ)
 
 # 並列層は今のところ他モジュールに依存しない
 #   通信を使うモジュールが増えたら「m_xxx.o: ... $(PAR_OBJ)」を追記すること

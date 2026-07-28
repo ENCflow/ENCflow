@@ -10,7 +10,7 @@ module m_main
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc
   use m_fileio, only : fileio_write_matrix, e_fmt_txt, e_fmt_bil
   use m_util, only : itoa
-  use sysdep_util, only : sysdep_create_resultdir, sysdep_save_paramfile
+  use sysdep_util, only : sysdep_mkdir, sysdep_copy_to_dir
   use m_parallel
 
   implicit none
@@ -64,8 +64,7 @@ subroutine m_main_all()
 
   ! システムを初期化
   call m_sysparam_init(p, fn_sysparam)    ! sysparam を初期化
-  call sysdep_create_resultdir(p)         ! 結果を保存するディレクトリを作成
-  call sysdep_save_paramfile(p)           ! パラメータファイルを保存
+  call init_resultdir(p)                  ! 結果を保存するディレクトリを作成してパラメータファイルを保存
 
   ! モジュールを初期化
   ! ==== 初期化ゾーン1: 全ての静的データが全域(フック・前処理はここ) ====
@@ -261,6 +260,25 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
   ! エラー処理は m_main_all 側で行う(dispose と par_finalize を通すため
   ! ここでは error stop しない。ierror を返すのみ)
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 計算結果保存ディレクトリを作成してパラメータファイルを保存する
+!----------------------------------------------------------------------
+subroutine init_resultdir(p)
+  type(t_sysparam), intent(in) :: p
+  call sysdep_mkdir(p%dir_result)                       ! 結果を保存するディレクトリを作成
+  call sysdep_mkdir(trim(p%dir_result)//"/fluxes")
+  call sysdep_mkdir(trim(p%dir_result)//"/probes")
+  call sysdep_copy_to_dir(p%fn_sysparam, p%dir_result)  ! パラメータファイルを保存
+  call sysdep_copy_to_dir(p%fn_geoinfo, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_initial, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_precip, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_tide, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_boundary, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_record, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_enc, p%dir_result)
 end subroutine
 
 
