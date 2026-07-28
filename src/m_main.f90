@@ -8,7 +8,7 @@ module m_main
   use m_state, only : t_state, m_state_init, m_state_dispose, m_state_updatetime, m_state_calcstat, m_state_printstate
   use m_record, only : t_record, m_record_init, m_record_dispose, m_record_probe, m_record_flux, m_record_summary
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc
-  use m_fileio, only : fileio_write_matrix, e_fmt_txt, e_fmt_bil
+  use m_fileio, only : fileio_write_matrix, e_fmt_txt, e_fmt_bil, e_fmt_both
   use m_util, only : itoa
   use sysdep_util, only : sysdep_mkdir, sysdep_copy_to_dir
   use m_parallel
@@ -366,10 +366,10 @@ subroutine output_matrix_real(p, g, prefix, a, k)
   write(snum, '(i4.4)') k
   fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
 
-  if (p%f_output_mode == 1 .or. p%f_output_mode == 3) then
+  if (p%f_output_mode == e_fmt_txt .or. p%f_output_mode == e_fmt_both) then
     call fileio_write_matrix(fn//".txt", g%nx, g%ny, wk_out, e_fmt_txt, p%f_output_compress)
   end if
-  if (p%f_output_mode == 2 .or. p%f_output_mode == 3) then
+  if (p%f_output_mode == e_fmt_bil .or. p%f_output_mode == e_fmt_both) then
     call fileio_write_matrix(fn//".bil", g%nx, g%ny, wk_out, e_fmt_bil, p%f_output_compress)
   end if
 
@@ -392,10 +392,10 @@ subroutine output_matrix_full(p, g, prefix, a, k)
   write(snum, '(i4.4)') k
   fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
 
-  if (p%f_output_mode == 1 .or. p%f_output_mode == 3) then
+  if (p%f_output_mode == e_fmt_txt .or. p%f_output_mode == e_fmt_both) then
     call fileio_write_matrix(fn//".txt", g%nx, g%ny, a, e_fmt_txt, p%f_output_compress)
   end if
-  if (p%f_output_mode == 2 .or. p%f_output_mode == 3) then
+  if (p%f_output_mode == e_fmt_bil .or. p%f_output_mode == e_fmt_both) then
     call fileio_write_matrix(fn//".bil", g%nx, g%ny, a, e_fmt_bil, p%f_output_compress)
   end if
 
@@ -421,10 +421,10 @@ subroutine output_matrix_int(p, g, prefix, a, k)
   write(snum, '(i4.4)') k
   fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
 
-  if (p%f_output_mode == 1 .or. p%f_output_mode == 3) then
+  if (p%f_output_mode == e_fmt_txt .or. p%f_output_mode == e_fmt_both) then
     call fileio_write_matrix(fn//".txt", g%nx, g%ny, wk_out_i, e_fmt_txt, p%f_output_compress)
   end if
-  if (p%f_output_mode == 2 .or. p%f_output_mode == 3) then
+  if (p%f_output_mode == e_fmt_bil .or. p%f_output_mode == e_fmt_both) then
     call fileio_write_matrix(fn//".bil", g%nx, g%ny, wk_out_i, e_fmt_bil, p%f_output_compress)
   end if
 end subroutine

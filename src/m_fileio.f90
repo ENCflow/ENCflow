@@ -26,6 +26,7 @@ module m_fileio
   ! enumerator
   integer, parameter, public :: e_fmt_txt = 1
   integer, parameter, public :: e_fmt_bil = 2
+  integer, parameter, public :: e_fmt_both = 3
   integer, parameter, public :: e_cmp_off = 0
   integer, parameter, public :: e_cmp_on = 1
 
@@ -176,7 +177,7 @@ subroutine fileio_write_matrix_real(fname, nx, ny, a, e_fmt, compress)
   end select
   close(un)
 
-  if (compress > 0) then
+  if (compress == e_cmp_on) then
     call sysdep_compress(fname)
   end if
 
