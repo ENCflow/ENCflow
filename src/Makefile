@@ -91,7 +91,7 @@ list_boundary.o: m_sysparam.o $(PAR_OBJ)
 list_enc.o: m_sysparam.o $(PAR_OBJ)
 user_geoinfo.o: m_sysparam.o m_geoinfo.o
 user_initial.o: m_sysparam.o m_state.o m_geoinfo.o
-m_fileio.o: m_sysparam.o sysdep_util.o
+m_fileio.o: sysdep_util.o
 m_ffactor.o: m_util.o $(PAR_OBJ)
 m_util.o: $(PAR_OBJ)
 sysdep_util.o: m_sysparam.o $(PAR_OBJ)

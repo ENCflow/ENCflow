@@ -2,7 +2,7 @@
 module m_geoinfo
   use m_sysparam, only : t_sysparam
   use list_geoinfo, only : t_list_geoinfo, list_geoinfo_read
-  use m_fileio
+  use m_fileio, only : fileio_read_matrix
   use m_util, only : itoa
   use m_parallel, only : par_info, par_stop, dcp, is_root
   implicit none

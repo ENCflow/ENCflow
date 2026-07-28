@@ -3,8 +3,8 @@ module m_swflow
   use m_geoinfo, only : t_geoinfo
   use m_boundary, only : t_boundary
   use m_state, only : t_state
-  use m_swflow_enc
-  use m_swflow_stg
+  use m_swflow_enc, only : m_swflow_enc_init, m_swflow_enc_calc, m_swflow_enc_dispose
+  use m_swflow_stg, only : m_swflow_stg_init, m_swflow_stg_calc, m_swflow_stg_dispose
   use m_parallel, only : par_stop
   implicit none
   private
@@ -31,10 +31,10 @@ module m_swflow
   !-------------------------------------------
   interface
     subroutine procedure_swflow_init(p, g, b, s)
-      use m_sysparam
-      use m_geoinfo
-      use m_boundary
-      use m_state
+      use m_sysparam, only : t_sysparam
+      use m_geoinfo, only : t_geoinfo
+      use m_boundary, only : t_boundary
+      use m_state, only : t_state
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_boundary), intent(in) :: b
@@ -42,10 +42,10 @@ module m_swflow
     end subroutine
 
     subroutine procedure_swflow_calc(p, g, b, s, ierror)
-      use m_sysparam
-      use m_geoinfo
-      use m_boundary
-      use m_state
+      use m_sysparam, only : t_sysparam
+      use m_geoinfo, only : t_geoinfo
+      use m_boundary, only : t_boundary
+      use m_state, only : t_state
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_boundary), intent(in) :: b
@@ -54,7 +54,7 @@ module m_swflow
     end subroutine
 
     subroutine procedure_swflow_dispose(p)
-      use m_sysparam
+      use m_sysparam, only : t_sysparam
       type(t_sysparam), intent(in) :: p
     end subroutine
   end interface

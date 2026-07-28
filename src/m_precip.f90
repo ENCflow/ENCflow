@@ -4,7 +4,7 @@ module m_precip
   use m_state, only : t_state
   use m_geoinfo, only : t_geoinfo
   use m_util, only : str2sec, itoa
-  use m_fileio
+  use m_fileio, only : fileio_un_open, fileio_un_read_matrix, fileio_read_matrix
   use list_precip, only : t_list_precip, list_precip_read
   use m_parallel, only : par_info, par_stop, dcp
   implicit none

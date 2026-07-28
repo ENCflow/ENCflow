@@ -1,16 +1,16 @@
 module m_main
   use, intrinsic :: iso_fortran_env, only: real64
-  use m_sysparam
-  use m_geoinfo
-  use m_precip
-  use m_tide
-  use m_boundary
-  use m_state
-  use m_record
-  use m_swflow
-  use m_fileio
+  use m_sysparam, only : t_sysparam, m_sysparam_init, m_sysparam_dispose
+  use m_geoinfo, only : t_geoinfo, m_geoinfo_init, m_geoinfo_dispose, m_geoinfo_shrink_coeffs, m_geoinfo_band_shrink
+  use m_precip, only : t_precip, m_precip_init, m_precip_dispose, m_precip_makepre
+  use m_tide, only : t_tide, m_tide_init, m_tide_dispose
+  use m_boundary, only : t_boundary, m_boundary_init, m_boundary_dispose, m_boundary_makebdc
+  use m_state, only : t_state, m_state_init, m_state_dispose, m_state_updatetime, m_state_calcstat, m_state_printstate
+  use m_record, only : t_record, m_record_init, m_record_dispose, m_record_probe, m_record_flux, m_record_summary
+  use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc
+  use m_fileio, only : fileio_write_matrix, e_fmt_txt, e_fmt_bil
   use m_util, only : itoa
-  use sysdep_util
+  use sysdep_util, only : sysdep_create_resultdir, sysdep_save_paramfile
   use m_parallel
 
   implicit none
