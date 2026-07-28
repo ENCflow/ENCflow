@@ -133,7 +133,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   else
     call par_stop("list_sysparam: unknown f_input_mode "//itoa(list%f_input_mode))
   end if
-  if (list%f_output_mode == 1) then            ! matrix出力形式(1:text, 2:bil)
+  if (list%f_output_mode == 1) then            ! matrix出力形式(1:text, 2:bil, 3:text+bil)
     p%f_output_mode = e_fmt_txt
   else if (list%f_output_mode == 2) then
     p%f_output_mode = e_fmt_bil
