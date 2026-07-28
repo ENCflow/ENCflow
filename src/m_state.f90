@@ -582,15 +582,16 @@ subroutine save_state(p, s)
   if (p%initialized) continue
   if (s%initialized) continue
   ! 全域バッファに集約してから rank0 のみが書く。
-  ! write(un) wk のレコードは h, u, v の連結 = 旧形式とバイト互換
+  ! write(un) wk のレコードは h, u, v rsh の連結
   if (is_root) then
-    allocate(wk(1:dcp%nx_g, 1:dcp%ny_g, 3), source = 0.0)
+    allocate(wk(1:dcp%nx_g, 1:dcp%ny_g, 4), source = 0.0)
   else
-    allocate(wk(1, 1, 3))          ! 参照されないダミー
+    allocate(wk(1, 1, 4))          ! 参照されないダミー
   end if
   call par_gather_to(wk(:,:,1), s%h)
   call par_gather_to(wk(:,:,2), s%u)
   call par_gather_to(wk(:,:,3), s%v)
+  call par_gather_to(wk(:,:,4), s%rsh)
   if (.not. is_root) return
   open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted', status='replace')
   write(un) wk
@@ -611,12 +612,13 @@ subroutine restore_state(p, s)
   ! (全ランク同形)なので Bcast が成立する。帯への切り出しは呼び出し側
   if (is_root) then
     open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted', status='old')
-    read(un) s%h, s%u, s%v
+    read(un) s%h, s%u, s%v, s%rsh
     close(un)
   end if
   call par_bcast_cell(s%h)
   call par_bcast_cell(s%u)
   call par_bcast_cell(s%v)
+  call par_bcast_cell(s%rsh)
 end subroutine
 
 end module
