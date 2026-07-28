@@ -420,13 +420,13 @@ subroutine get_fn_param(fn_param)
 
   ! コマンドライン引数の文字列を保存する構造体の宣言
   !  可変長文字列の配列が直接作れないため構造体の配列を利用
-  type :: arguments
+  type :: t_arguments
     character(:), allocatable :: v           ! 無指定文字長（可変長）文字列変数vを要素に持つ
   end type
 
   ! コマンドライン引数の数と文字列
   integer :: argc
-  type(arguments), allocatable :: arg(:)
+  type(t_arguments), allocatable :: arg(:)
 
   
   !--- コマンドライン引数取得の準備 ---
