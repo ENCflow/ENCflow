@@ -1,6 +1,7 @@
 module m_sysparam
   use list_sysparam, only : t_list_sysparam, list_sysparam_read
   use m_util, only : str2sec
+  use m_fileio, only : e_fmt_txt, e_fmt_bil, e_cmp_on, e_cmp_off
   use m_parallel, only : par_stop
   implicit none
   private
@@ -125,9 +126,25 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%f_check_cfl =  list%f_check_cfl            ! CFL条件による実行停止
   p%f_state_save =  list%f_state_save          ! 状態保存ファイルの出力
   p%f_state_restore =  list%f_state_restore    ! 状態保存ファイルからの初期条件設定
-  p%f_input_mode = list%f_input_mode           ! matrix入力形式(1:text, 2:bil)
-  p%f_output_mode = list%f_output_mode         ! matrix出力形式(1:text, 2:bil, 3:txt+bil)
-  p%f_output_compress = list%f_output_compress ! 出力ファイルの圧縮(0:なし, 2:gzip)
+  if (list%f_input_mode == 1) then             ! matrix入力形式(1:text, 2:bil)
+    p%f_input_mode = e_fmt_txt
+  else if (list%f_input_mode == 2) then
+    p%f_input_mode = e_fmt_bil
+  else
+    p%f_input_mode = e_fmt_txt
+  end if
+  if (list%f_output_mode == 1) then            ! matrix出力形式(1:text, 2:bil)
+    p%f_output_mode = e_fmt_txt
+  else if (list%f_output_mode == 2) then
+    p%f_output_mode = e_fmt_bil
+  else
+    p%f_output_mode = e_fmt_txt
+  end if
+  if (list%f_output_mode == 1) then            ! 出力ファイルの圧縮(0:なし, 1:gzip)
+    p%f_output_compress = e_cmp_on
+  else
+    p%f_output_compress = e_cmp_off
+  end if
   p%f_out_z = list%f_out_z                     ! ファイル出力(地盤高Z0001)
   p%f_out_h = list%f_out_h                     ! ファイル出力(水深H0001)
   p%f_out_e = list%f_out_e                     ! ファイル出力(水位E0001)

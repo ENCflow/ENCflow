@@ -46,7 +46,7 @@ module list_sysparam
     integer :: f_state_restore = 0                ! 状態保存ファイルからの初期条件の設定
     integer :: f_input_mode = 1                   ! matrix入力形式(1:text, 2:bil)
     integer :: f_output_mode = 1                  ! matrix出力形式(1:text, 2:bil, 3:txt+bil)
-    integer :: f_output_compress = 0              ! 出力ファイルの圧縮(1:なし, 2:gzip)
+    integer :: f_output_compress = 0              ! 出力ファイルの圧縮(0:なし, 1:gzip)
 
     integer :: f_out_z = 0                        ! ファイル出力(地盤高Z0001, offでもt=0は常に出力)
     integer :: f_out_h = 1                        ! ファイル出力(水深H0001)
@@ -132,7 +132,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   integer :: f_state_restore                 ! 状態保存ファイルからの初期条件の設定
   integer :: f_input_mode                    ! matrix入力形式(1:text, 2:bil)
   integer :: f_output_mode                   ! matrix出力形式(1:text, 2:bil, 3:txt+bil)
-  integer :: f_output_compress               ! 出力ファイルの圧縮(1:なし, 2:gzip)
+  integer :: f_output_compress               ! 出力ファイルの圧縮(0:なし, 1:gzip)
   integer :: f_out_z                         ! ファイル出力(地盤高Z0001)
   integer :: f_out_h                         ! ファイル出力(水深H0001)
   integer :: f_out_e                         ! ファイル出力(水位E0001)
