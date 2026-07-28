@@ -269,8 +269,6 @@ end subroutine
 subroutine init_resultdir(p)
   type(t_sysparam), intent(in) :: p
   call sysdep_mkdir(p%dir_result)                       ! 結果を保存するディレクトリを作成
-  call sysdep_mkdir(trim(p%dir_result)//"/fluxes")
-  call sysdep_mkdir(trim(p%dir_result)//"/probes")
   call sysdep_copy_to_dir(p%fn_sysparam, p%dir_result)  ! パラメータファイルを保存
   call sysdep_copy_to_dir(p%fn_geoinfo, p%dir_result)
   call sysdep_copy_to_dir(p%fn_initial, p%dir_result)

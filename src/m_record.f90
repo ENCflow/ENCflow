@@ -19,6 +19,7 @@ module m_record
   use m_state, only : t_state
   use m_parallel, only : is_root
   use m_util, only : itoa
+  use sysdep_util, only : sysdep_mkdir
   use list_record, only : t_list_record, list_record_read
   use m_parallel, only : is_root, par_info, par_abort, dcp, par_reduce_points
   implicit none
@@ -182,6 +183,7 @@ subroutine set_probe
 
   !---- プローブ出力ファイルを初期化(rank0 のみ)----
   if (.not. is_root) return
+  call sysdep_mkdir(trim(p%dir_result)//"/probes")
   do i = 1, r%npb
     ix = r%probe(i)%ixy(1)
     iy = r%probe(i)%ixy(2)
@@ -417,6 +419,7 @@ subroutine set_flux
 
   !---- フラックス計測出力ファイルを初期化(rank0 のみ)----
   if (.not. is_root) return
+  call sysdep_mkdir(trim(p%dir_result)//"/fluxes")
   do i = 1, r%nfl
     write(cun, '(i4.4)') i
     fn_fl = trim(p%dir_result)//"/fluxes/"//"flux"//cun//trim(p%outfn_suffix)//".csv"
