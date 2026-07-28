@@ -9,6 +9,7 @@ module m_main
   use m_record, only : t_record, m_record_init, m_record_dispose, m_record_probe, m_record_flux, m_record_summary
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc
   use m_fileio, only : fileio_write_matrix, e_fmt_txt, e_fmt_bil, e_fmt_both
+  use m_output, only : output_init, output_chk_geoinfo, output_open_fnolist, output_state, output_summary
   use m_util, only : itoa
   use sysdep_util, only : sysdep_mkdir, sysdep_copy_to_dir
   use m_parallel
@@ -17,18 +18,6 @@ module m_main
   private
 
   public :: m_main_all
-
-
-  interface output_matrix
-    procedure :: output_matrix_int
-    procedure :: output_matrix_real
-  end interface
-
-  integer :: un_fnolist    ! 出力ファイル番号リスト用ファイルの装置番号
-
-  ! 出力集約用の全域バッファ(rank0 のみ実サイズ。run_main で確保)
-  real, allocatable :: wk_out(:,:)
-  integer, allocatable :: wk_out_i(:,:)
 
 contains
 
@@ -81,7 +70,7 @@ subroutine m_main_all()
   call m_tide_init(ti, p, g)              ! tide を初期化
   call m_swflow_init(sw, p, g, b, s)      ! swflow を初期化
 
-  ! 計算実行
+  ! 地理情報を各ランクに合わせて縮小
   call m_geoinfo_band_shrink(g)           ! マスク類(x,sw,rw)と z(rank0以外)を帯に縮小
 
   ! ==== 時間ループ: すべて帯確保(z のみ rank0 が全域を保持) ====
@@ -135,37 +124,26 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
   call par_info("number of valid cells : "//itoa(s%n_valcells))
 
 
-  ! 出力集約バッファの確保(rank0 のみ全域。帯外行はゼロで不変に保たれ、
-  ! 逐次出力(帯外=ゼロ)とバイト一致する)
-  if (is_root) then
-    allocate(wk_out(1:g%nx, 1:g%ny), source = 0.0)
-    allocate(wk_out_i(1:g%nx, 1:g%ny), source = 0)
-  else
-    allocate(wk_out(1, 1), source = 0.0)
-    allocate(wk_out_i(1, 1), source = 0)
-  end if
+  ! ファイル出力の準備
+  call output_init(g)
 
-  it = 0
-  ifn = 0
+  ! 諸情報を初期化
+  it = 0                                  ! 時間ループのカウントを初期化
+  ifn = 0                                 ! 出力ファイルのカウントを初期化
   call m_state_updatetime(s, p, it)       ! 時刻情報を初期化
   call m_precip_makepre(pr, p, g, s)      ! 初期降水分布を作成　
   call m_state_calcstat(s, p, g)          ! 統計情報を計算
 
   ! 初期状態の出力(ファイルへの書き込みはランク0のみ)
   call m_state_printstate(p, s)         ! 途中経過を画面に出力
-  call open_fnolist(p)                  ! ファイル番号リストをオープン　
-  call output(p, g, s, ifn)             ! 初期状態をファイル出力(集約は output_matrix 内)
+  call output_open_fnolist(p)           ! ファイル番号リストをオープン　
+  call output_state(p, g, s, ifn)       ! 初期状態をファイル出力(集約は output_matrix 内)
   call m_record_probe(r, p, s)          ! プローブの値を出力
   call m_record_flux(r, p, s)           ! フラックスの値を出力
-  ierror = 0
+  ierror = 0                            ! エラー数をリセット
 
-  ! デバッグ用データ出力
-  !call fileio_write_matrix("xxxx.txt", g%nx, g%ny, g%x(1:g%nx,1:g%ny), e_fmt_txt, e_cmp_off)
-  !call fileio_write_matrix("xxxx.bil", g%nx, g%ny, g%x(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
-  !call fileio_write_matrix("ssss.bil", g%nx, g%ny, g%sw(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
-  !call fileio_write_matrix("rrrr.bil", g%nx, g%ny, g%rw(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
-  !call fileio_write_matrix("ssss.txt", g%nx, g%ny, g%sw(1:g%nx,1:g%ny), e_fmt_txt, e_cmp_off)
-  !call fileio_write_matrix("zzzz.bil", g%nx, g%ny, g%z(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
+  ! デバッグ用データを出力
+  call output_chk_geoinfo(g)
 
 
   !------ 時間ステップのループここから ------
@@ -205,7 +183,7 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
     ! dt_file 間隔で計算結果をファイルに出力
     if (do_file) then
       ifn = ifn + 1
-      call output(p, g, s, ifn)
+      call output_state(p, g, s, ifn)
     end if
 
     ! dt_record 間隔でプローブとフラックスの値を出力
@@ -249,7 +227,7 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
 
 
   ! 最終状態を出力
-  call output(p, g, s, 9998)
+  call output_state(p, g, s, 9998)
 
   ! 統計量を出力
   call output_summary(p, g, s, 9999)
@@ -277,154 +255,6 @@ subroutine init_resultdir(p)
   call sysdep_copy_to_dir(p%fn_boundary, p%dir_result)
   call sysdep_copy_to_dir(p%fn_record, p%dir_result)
   call sysdep_copy_to_dir(p%fn_enc, p%dir_result)
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 計算結果ファイルの番号リスト用ファイルを開く
-!----------------------------------------------------------------------
-subroutine open_fnolist(p)
-  type(t_sysparam), intent(in) :: p
-  character(len=256) :: fname
-  if (.not. is_root) return
-  fname = trim(p%dir_result)//"/FILENUMBER.csv"
-  open(newunit=un_fnolist, file=trim(fname), status='replace')
-  write(un_fnolist, '(a)') "# No., time, t(s), it"
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 出力・計測対象の場を rank0 に集約する(dt_file / dt_recrd 間隔のみ。
-! collective なので全ランクが揃って呼ぶこと)
-!----------------------------------------------------------------------
-! 計算結果の配列をファイルに出力
-!----------------------------------------------------------------------
-subroutine output(p, g, s, k)
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(in) :: s
-  integer, intent(in) :: k
-  ! output_matrix は collective(内部で gather)。ガードしないこと
-  if (p%f_out_z > 0 .or. k == 0) call output_matrix_full(p, g, "Z", g%z, k)  ! 地盤高(静的・全域保持)
-  if (p%f_out_h > 0) call output_matrix(p, g, "H", s%h, k)          ! 水深
-  if (p%f_out_e > 0) call output_matrix(p, g, "E", s%e, k)          ! 水位
-  if (p%f_out_u > 0) call output_matrix(p, g, "u", s%u, k)          ! x方向流速
-  if (p%f_out_v > 0) call output_matrix(p, g, "v", s%v, k)          ! y方向流速
-  if (p%f_out_m > 0) call output_matrix(p, g, "m", s%m, k)          ! x方向線流量
-  if (p%f_out_n > 0) call output_matrix(p, g, "n", s%n, k)          ! y方向線流量
-  if (p%f_out_vv > 0) call output_matrix(p, g, "V", s%vv, k)        ! 流速の絶対値
-  if (p%f_out_qq > 0) call output_matrix(p, g, "Q", s%qq, k)        ! 線流量の絶対値
-  if (p%f_out_qc > 0) call output_matrix(p, g, "Qc", s%qcum, k)     ! 積算線流量
-  if (p%f_out_qd > 0) call output_matrix(p, g, "Qd", s%qdir, k)     ! 流向
-  if (p%f_out_ddd > 0) call output_matrix(p, g, "Ddd", s%ddir1, k)  ! 卓越流下方向フラグ
-  if (p%f_out_dda > 0) call output_matrix(p, g, "Dda", s%ddir8, k)  ! 全流下方向フラグ
-  if (p%f_out_pre > 0) call output_matrix(p, g, "Pr", s%prh, k)     ! 降雨強度
-  if (p%f_out_rsh > 0) call output_matrix(p, g, "Rsh", s%rsh, k)    ! ため池水深
-  if (p%f_out_fr > 0) call output_matrix(p, g, "Fr", s%fr, k)       ! フルード数
-  if (p%f_out_cn > 0) call output_matrix(p, g, "Cn", s%cn, k)       ! クーラン数
-  if (is_root) write(un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 統計量の配列をファイルに出力
-!----------------------------------------------------------------------
-subroutine output_summary(p, g, s, k)
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(in) :: s
-  integer, intent(in) :: k
-  ! output_matrix は collective(内部で gather)。ガードしないこと
-  if (p%f_out_hmax > 0)  call output_matrix(p, g, "H", s%hmax, k)     ! 最大水深
-  if (p%f_out_hmaxt > 0) call output_matrix(p, g, "Ht", s%hmaxt, k)   ! 最大水深の時刻
-  if (p%f_out_vvmax > 0) call output_matrix(p, g, "V", s%vvmax, k)    ! 最大流速
-  if (p%f_out_qqmax > 0) call output_matrix(p, g, "Q", s%qqmax, k)    ! 最大流量
-  if (p%f_out_qqmaxt > 0) call output_matrix(p, g, "Qt", s%qqt, k)    ! 最大流量の時刻
-  if (p%f_out_qqmaxd > 0) call output_matrix(p, g, "Qd", s%qqdir, k)  ! 最大流量の流向
-  if (is_root) write(un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 計算結果の配列をファイルに出力(real)
-!----------------------------------------------------------------------
-subroutine output_matrix_real(p, g, prefix, a, k)
-  ! 帯確保の配列を全域バッファへ集約して rank0 が書く(collective)
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  character(len=*), intent(in) :: prefix
-  integer, intent(in) :: k
-  real, intent(in) :: a(1:, dcp%jsh:)
-  character(len=4) :: snum
-  character(:), allocatable :: fn
-
-  call par_gather_to(wk_out, a)
-  if (.not. is_root) return
-
-  write(snum, '(i4.4)') k
-  fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
-
-  if (p%f_output_mode == e_fmt_txt .or. p%f_output_mode == e_fmt_both) then
-    call fileio_write_matrix(fn//".txt", g%nx, g%ny, wk_out, e_fmt_txt, p%f_output_compress)
-  end if
-  if (p%f_output_mode == e_fmt_bil .or. p%f_output_mode == e_fmt_both) then
-    call fileio_write_matrix(fn//".bil", g%nx, g%ny, wk_out, e_fmt_bil, p%f_output_compress)
-  end if
-
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 全域保持の静的配列をファイルに出力(g%z 等。rank0 が直接書く)
-!----------------------------------------------------------------------
-subroutine output_matrix_full(p, g, prefix, a, k)
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  character(len=*), intent(in) :: prefix
-  integer, intent(in) :: k
-  real, intent(in) :: a(1:g%nx,1:g%ny)
-  character(len=4) :: snum
-  character(:), allocatable :: fn
-
-  if (.not. is_root) return
-  write(snum, '(i4.4)') k
-  fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
-
-  if (p%f_output_mode == e_fmt_txt .or. p%f_output_mode == e_fmt_both) then
-    call fileio_write_matrix(fn//".txt", g%nx, g%ny, a, e_fmt_txt, p%f_output_compress)
-  end if
-  if (p%f_output_mode == e_fmt_bil .or. p%f_output_mode == e_fmt_both) then
-    call fileio_write_matrix(fn//".bil", g%nx, g%ny, a, e_fmt_bil, p%f_output_compress)
-  end if
-
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 計算結果の配列をファイルに出力(int)
-!----------------------------------------------------------------------
-subroutine output_matrix_int(p, g, prefix, a, k)
-  ! 帯確保の整数配列を全域バッファへ集約して rank0 が書く(collective)
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  character(len=*), intent(in) :: prefix
-  integer, intent(in) :: k
-  integer, intent(in) :: a(1:, dcp%jsh:)
-  character(len=4) :: snum
-  character(:), allocatable :: fn
-
-  call par_gather_to_i(wk_out_i, a)
-  if (.not. is_root) return
-
-  write(snum, '(i4.4)') k
-  fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
-
-  if (p%f_output_mode == e_fmt_txt .or. p%f_output_mode == e_fmt_both) then
-    call fileio_write_matrix(fn//".txt", g%nx, g%ny, wk_out_i, e_fmt_txt, p%f_output_compress)
-  end if
-  if (p%f_output_mode == e_fmt_bil .or. p%f_output_mode == e_fmt_both) then
-    call fileio_write_matrix(fn//".bil", g%nx, g%ny, wk_out_i, e_fmt_bil, p%f_output_compress)
-  end if
 end subroutine
 
 
