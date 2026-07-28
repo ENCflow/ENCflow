@@ -112,7 +112,7 @@ subroutine m_state_init(s, p, g)
                          ! 全ランクが全域で冗長に初期化し、最後に帯を切り出す。
                          ! user フックと fill_depression の「全域添字」契約を
                          ! 帯確保の下でも保つための方式。developer.md §11)
-  integer :: i, j
+  !integer :: i, j
 
   ! メモリ確保
   allocate(s%h(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
@@ -183,17 +183,11 @@ subroutine m_state_init(s, p, g)
   ! 静的(全域確保)×動的(担当帯確保)の混在演算は g 側をセクション明示する
   s%e(:,:) = g%z(1:g%nx, dcp%jsh:dcp%jeh) + s%h(:,:)
 
-  ! 計算対称セルの数をセット(海域は除く)
-  s%n_valcells = 0
-  ! 大域値: 全域の静的データから全ランク同一に計算する(dcp 化しない)
-  do j = 1, g%ny
-    do i = 1, g%nx
-      if (g%x(i,j) > 0 .and. g%sw(i,j) == 0) s%n_valcells = s%n_valcells + 1
-    end do
-  end do
-  if (s%n_valcells <= 0) then
-    call par_stop("no valid cell in the entire domain")
-  end if
+  ! 計算対象セルの数をセット(海域は除く)
+  ! カウント自体は m_geoinfo_init 内(sw が全域のゾーン1)で実施済み。
+  ! ここ(ゾーン2)で sw を全域添字で読んではならない(帯縮小済みのため。
+  ! 実際に np=2 で1セル誤除外し S がずれた実バグ)
+  s%n_valcells = g%n_valcells
 
   ! 状態ログファイルをオープン
   !   ログファイルを出力するのはランクゼロのみ

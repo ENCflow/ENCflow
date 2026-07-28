@@ -68,8 +68,13 @@ subroutine m_main_all()
   call sysdep_save_paramfile(p)           ! パラメータファイルを保存
 
   ! モジュールを初期化
+  ! ==== 初期化ゾーン1: 全ての静的データが全域(フック・前処理はここ) ====
   call m_geoinfo_init(g, p)               ! geoinfo を初期化
-  call par_decomp_init(g%nx, g%ny, g%wy(1), g%wy(2))  ! 領域分割を決定(現段階は全域窓)
+  call par_decomp_init(g%nx, g%ny, g%wy(1), g%wy(2))  ! 全域窓を帯分割
+  call m_geoinfo_shrink_coeffs(g)         ! 物性係数(rn,gv,bb,lm,rsh,lu)を帯に縮小
+
+  ! ==== 初期化ゾーン2: 地形とマスク類(z, x, sw, rw)のみ全域
+  !      (fill_depression, user_initial, record/boundary の検証はこの範囲) ====
   call m_boundary_init(b, p, g)           ! boundary を初期化(geoinfoより後に)
   call m_state_init(s, p, g)              ! state を初期化(geoinfo, boundaryより後に)
   call m_record_init(r, p, g)             ! record を初期化(create_resultdirより後)
@@ -78,6 +83,9 @@ subroutine m_main_all()
   call m_swflow_init(sw, p, g, b, s)      ! swflow を初期化
 
   ! 計算実行
+  call m_geoinfo_band_shrink(g)           ! マスク類(x,sw,rw)と z(rank0以外)を帯に縮小
+
+  ! ==== 時間ループ: すべて帯確保(z のみ rank0 が全域を保持) ====
   call run_main(p, g, b, pr, s, r, sw, ierror)  ! 計算本体
 
   ! モジュールを破棄

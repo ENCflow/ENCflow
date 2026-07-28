@@ -4,12 +4,14 @@ module m_geoinfo
   use list_geoinfo, only : t_list_geoinfo, list_geoinfo_read
   use m_fileio
   use m_util, only : itoa
-  use m_parallel, only : par_info, par_stop
+  use m_parallel, only : par_info, par_stop, dcp, is_root
   implicit none
   private
 
   public :: t_geoinfo
   public :: m_geoinfo_init
+  public :: m_geoinfo_shrink_coeffs
+  public :: m_geoinfo_band_shrink
   public :: m_geoinfo_dispose
 
 
@@ -34,6 +36,7 @@ module m_geoinfo
     integer, allocatable :: rw(:,:)                   ! 河道マスク
     integer, allocatable :: lu(:,:)                   ! 土地利用
     integer, allocatable :: wx(:,:)                   ! 行ごとの計算対象範囲
+    integer :: n_valcells = 0                         ! 計算対象セル数(海域除く)
     integer :: wy(1:2)                                ! 行の計算対象範囲
     logical :: initialized = .false.
   end type
@@ -109,12 +112,103 @@ subroutine m_geoinfo_init(g, p)
 
 
   call calc_wxy(p, g)
+  call count_valcells(p, g)
 
 
 
   g%initialized = .true.
 
 end subroutine
+
+!----------------------------------------------------------------------
+! 計算対象セル数を数える(海域は除く)
+!   sw を全域添字で読むため、係数類の縮小(shrink_coeffs)より前=
+!   m_geoinfo_init 内で実行すること。結果は t_geoinfo が保持し、
+!   m_state など後段はコピーして使う(大域値は全ランク同一)
+!----------------------------------------------------------------------
+subroutine count_valcells(p, g)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(inout) :: g
+  integer :: i, j
+  if (p%initialized) continue
+  g%n_valcells = 0
+  do j = 1, g%ny
+    do i = 1, g%nx
+      if (g%x(i,j) > 0 .and. g%sw(i,j) == 0) g%n_valcells = g%n_valcells + 1
+    end do
+  end do
+  if (g%n_valcells <= 0) then
+    call par_stop("no valid cell in the entire domain")
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 静的配列の帯縮小(第2次元を jlo:jhi に切り詰める)
+!   逐次では確保範囲が変わらないため自然に何もしない。
+!   x 方向(第1次元)は lbound/ubound を保つので、通常境界 (1:nx) にも
+!   番兵付き境界 (0:nx+1) にもそのまま使える
+!----------------------------------------------------------------------
+subroutine shrink_band_r(a, jlo, jhi)
+  real, allocatable, intent(inout) :: a(:,:)
+  integer, intent(in) :: jlo, jhi
+  real, allocatable :: t(:,:)
+  if (lbound(a,2) == jlo .and. ubound(a,2) == jhi) return
+  allocate(t(lbound(a,1):ubound(a,1), jlo:jhi))
+  t(:,:) = a(:, jlo:jhi)
+  call move_alloc(t, a)
+end subroutine
+
+
+subroutine shrink_band_i(a, jlo, jhi)
+  integer, allocatable, intent(inout) :: a(:,:)
+  integer, intent(in) :: jlo, jhi
+  integer, allocatable :: t(:,:)
+  if (lbound(a,2) == jlo .and. ubound(a,2) == jhi) return
+  allocate(t(lbound(a,1):ubound(a,1), jlo:jhi))
+  t(:,:) = a(:, jlo:jhi)
+  call move_alloc(t, a)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 物性係数の静的配列を担当帯+ハロに縮小する
+!   m_main で par_decomp_init の直後に呼ぶ。これ以降、係数類への
+!   全域添字アクセスは不可(帯内の大域添字はそのまま有効)。
+!   係数を使う全域前処理は m_geoinfo_init 内(=この呼び出しより前)に
+!   書くこと。
+!   注意: マスク類(x, sw, rw)と z はここで縮小しない。fill_depression
+!   (海域 sw・河道 rw を全域窓で参照)など、ゾーン2の全域処理が
+!   使うため band_shrink まで全域を保つ(n_valcells の教訓)。
+!   行メタデータ wx, wy は微小なので恒久的に全域のまま保持する。
+!----------------------------------------------------------------------
+subroutine m_geoinfo_shrink_coeffs(g)
+  type(t_geoinfo), intent(inout) :: g
+  call shrink_band_r(g%rn,  dcp%jsh, dcp%jeh)
+  call shrink_band_r(g%gv,  dcp%jsh, dcp%jeh)
+  call shrink_band_r(g%bb,  dcp%jsh, dcp%jeh)
+  call shrink_band_r(g%lm,  dcp%jsh, dcp%jeh)
+  call shrink_band_r(g%rsh, dcp%jsh, dcp%jeh)
+  call shrink_band_i(g%lu,  dcp%jsh, dcp%jeh)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 地形とマスク類を縮小する(全モジュールの初期化完了後、run_main の
+! 直前に呼ぶ)。x は番兵境界ごと帯へ、sw / rw は通常の帯へ。
+! z は Z ファイル出力(output_matrix_full)のため rank0 のみ全域を
+! 保持し続ける(将来の浸食計算では「初期地形の正本」にもなる)。
+! 時間ループでの sw/rw/gv の近傍参照(momentum, rivermouth の ±1)は
+! ハロ幅2の帯確保で全て範囲内に収まることを監査済み
+!----------------------------------------------------------------------
+subroutine m_geoinfo_band_shrink(g)
+  type(t_geoinfo), intent(inout) :: g
+  call shrink_band_i(g%x,  dcp%jsh - 1, dcp%jeh + 1)
+  call shrink_band_i(g%sw, dcp%jsh, dcp%jeh)
+  call shrink_band_i(g%rw, dcp%jsh, dcp%jeh)
+  if (.not. is_root) call shrink_band_r(g%z, dcp%jsh, dcp%jeh)
+end subroutine
+
 
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
