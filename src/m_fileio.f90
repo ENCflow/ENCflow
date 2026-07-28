@@ -24,8 +24,8 @@ module m_fileio
 
 
   ! enumerator
-  integer, parameter, public :: e_fmt_txt = 1    ! Don't change. Defined in sysparam
-  integer, parameter, public :: e_fmt_bil = 2    ! Don't change. Defined in sysparam
+  integer, parameter, public :: e_fmt_txt = 1
+  integer, parameter, public :: e_fmt_bil = 2
   integer, parameter, public :: e_cmp_off = 0
   integer, parameter, public :: e_cmp_on = 1
 
