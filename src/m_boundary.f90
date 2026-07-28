@@ -36,8 +36,7 @@ subroutine m_boundary_init(b, p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_list_boundary) :: list
-  if (p%initialized) continue
-  if (g%initialized) continue
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
   b%initialized = .true.
 
   !--- 境界条件パラメータ自体が設定されていない場合 ---
@@ -136,9 +135,6 @@ subroutine m_boundary_makebdc(b, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  if (b%initialized) continue
-  if (p%initialized) continue
-  if (s%initialized) continue
 
   !--- 湧出しが無い場合は何もしない ---
   if (b%nsrc <= 0) return
@@ -184,7 +180,7 @@ end subroutine
 !----------------------------------------------------------------------
 subroutine m_boundary_dispose(b)
   type(t_boundary), intent(inout) :: b
-  if (b%initialized) continue
+  b%initialized = .false.
 end subroutine
 
 !======================================================================

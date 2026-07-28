@@ -192,7 +192,6 @@ subroutine m_precip_makepre(pr, p, g, s)
   real :: f
   integer :: i, j
   integer :: un
-  if (p%initialized) continue
 
   !---- 降水無しの場合は何もしない ----
   if (pr%prtype == 0) return

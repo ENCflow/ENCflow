@@ -10,7 +10,7 @@ module subroutine init_geoinfo_user_1(p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   integer :: k, ix, iy
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   do k = 1, int(g%nx / 4. * 3.)
     ix = k;
@@ -31,7 +31,7 @@ module subroutine init_geoinfo_user_2(p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   integer :: k, ix, iy
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   do k = 1, int(g%nx / 4. * 3.)
     ix = k;
@@ -50,7 +50,7 @@ module subroutine init_geoinfo_user_3(p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   integer :: i, j
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
   
   do j = 1, g%ny
     do i = 1, g%nx
@@ -77,8 +77,8 @@ end subroutine
 module subroutine init_geoinfo_user_4(p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
-  if (p%initialized) continue
-  if (g%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
 end subroutine
 
 
@@ -87,8 +87,8 @@ end subroutine
 module subroutine init_geoinfo_user_5(p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
-  if (p%initialized) continue
-  if (g%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
 end subroutine
 
 

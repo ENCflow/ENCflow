@@ -130,7 +130,7 @@ subroutine count_valcells(p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   integer :: i, j
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
   g%n_valcells = 0
   do j = 1, g%ny
     do i = 1, g%nx
@@ -238,7 +238,7 @@ subroutine set_params(p, g, list)
   type(t_sysparam), intent(inout) :: p
   type(t_geoinfo), intent(inout) :: g
   type(t_list_geoinfo), intent(in) :: list
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   g%nx = list%nx
   g%ny = list%ny
@@ -662,7 +662,7 @@ subroutine adjust_rw(p, g, list)
   type(t_geoinfo), intent(inout) :: g
   type(t_list_geoinfo), intent(in) :: list
   integer :: i, j
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (len(list%fn_rw) <= 0) return
   if (list%depth_rw == 0.0) return
   do j = 1, g%ny
@@ -682,7 +682,7 @@ subroutine calc_wxy(p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   integer :: i, j, s
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   g%wy(1) = 1
   g%wy(2) = g%ny

@@ -104,7 +104,7 @@ subroutine m_swflow_calc(sw, p, g, b, s, ierror)
   type(t_boundary), intent(in) :: b
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
-  if (sw%initialized) continue
+  if (sw%initialized) continue  ! 引数未使用の警告を抑制
   call swflow_calc(p, g, b, s, ierror)
 end subroutine
 

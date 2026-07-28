@@ -18,7 +18,7 @@ module subroutine init_state_user_1(p, g, s)
   real :: xx, yy, rr, dx, dy, eta
   real :: lx, ly
   real :: pi = acos(-1.0)
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   lx = g%lx
   ly = g%ly
@@ -56,9 +56,9 @@ module subroutine init_state_user_2(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  if (p%initialized) continue
-  if (g%initialized) continue
-  if (s%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
+  if (s%initialized) continue  ! 引数未使用の警告を抑制
 end subroutine
 
 
@@ -68,9 +68,9 @@ module subroutine init_state_user_3(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  if (p%initialized) continue
-  if (g%initialized) continue
-  if (s%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
+  if (s%initialized) continue  ! 引数未使用の警告を抑制
 end subroutine
 
 
@@ -80,9 +80,9 @@ module subroutine init_state_user_4(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  if (p%initialized) continue
-  if (g%initialized) continue
-  if (s%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
+  if (s%initialized) continue  ! 引数未使用の警告を抑制
 end subroutine
 
 end submodule

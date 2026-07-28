@@ -501,7 +501,7 @@ subroutine m_record_probe(r, p, s)
   real :: wk(5, r%npb)     ! 点集約バッファ: h, u, v, |V|, q
   character(len=10) :: ffmt
   character(len=80) :: afmt
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   if (r%npb <= 0) return
 
@@ -571,7 +571,7 @@ subroutine m_record_flux(r, p, s)
   character(len=10) :: ffmt
   character(len=80) :: afmt
   type(t_flux) :: flx
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   if (r%nfl <= 0) return
 

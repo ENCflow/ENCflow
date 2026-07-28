@@ -28,8 +28,7 @@ subroutine m_tide_init(ti, p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_list_tide) :: list
-  if (p%initialized) continue
-  if (g%initialized) continue
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
 
   if (len_trim(p%fn_tide) > 0) then
     !---- 設定ファイルを読み込む ----
@@ -48,7 +47,7 @@ end subroutine
 !----------------------------------------------------------------------
 subroutine m_tide_dispose(ti)
   type(t_tide), intent(inout) :: ti
-  if (ti%initialized) continue
+  ti%initialized = .false.
 end subroutine
 
 !======================================================================

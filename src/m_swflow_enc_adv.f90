@@ -17,7 +17,7 @@ contains
 module subroutine adv_init(p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (f_advection_tvd > 0) then
     allocate(tx_mod%taxy(1:4,1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   else
@@ -84,7 +84,7 @@ subroutine adv_prepare_v1(p, g, s, sx, tx)
   integer :: i, j, k
   real :: dux, duy, dvx, dvy
   real :: ww(1:8), wwx(1:8), wwy(1:8)
-  if (sx%initialized) continue
+  if (sx%initialized) continue  ! 引数未使用の警告を抑制
 
   if (f_advection_term == 0) return
 
@@ -402,7 +402,7 @@ function adv_edge_v2(s, sx, tx, i, j, k, in, jn, ie, je) result(ta)
   real :: ta
   real :: taxe, taye
   real :: uve
-  if (s%initialized) continue
+  if (s%initialized) continue  ! 引数未使用の警告を抑制
   if (f_advection_term <= 0) then
     ta = 0
     return

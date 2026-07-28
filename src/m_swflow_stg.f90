@@ -57,8 +57,7 @@ subroutine m_swflow_stg_init(p, g, b, s)
   type(t_boundary), intent(in) :: b
   type(t_state), intent(inout) :: s
   INTEGER :: I,J
-  if (s%initialized) continue
-  if (b%initialized) continue
+  if (b%initialized) continue  ! 引数未使用の警告を抑制
 
   select case (p%f_govequation)
     case (0)      ! DynWE
@@ -159,7 +158,7 @@ END SUBROUTINE
 !----------------------------------------------------------------------
 SUBROUTINE m_swflow_stg_dispose(p)
   type(t_sysparam), intent(in) :: p
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
   DEALLOCATE(D)
   DEALLOCATE(M)
   DEALLOCATE(M0)
@@ -199,8 +198,8 @@ SUBROUTINE m_swflow_stg_calc(p, g, b, s, ierror)
   INTEGER:: I,J,L
   INTEGER:: ITER
   REAL:: Mm,Nm,QF
-  if (p%initialized) continue
-  if (b%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  if (b%initialized) continue  ! 引数未使用の警告を抑制
 
   s%n_runge = s%n_valcells * 4
   ierror = ierror + 0

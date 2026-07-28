@@ -865,7 +865,7 @@ subroutine complete(p, g, s, sx)
   type(t_state), intent(inout) :: s
   type(t_enc_status), intent(inout) :: sx
   integer :: i, j 
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   ! 流量のコミット: 時刻n+1の値を正準状態へ(セルの h1→h と対をなす)
   !   エッジの書き込み集合はセル窓より i,j とも1つ外側(die/dje=-1)に
@@ -900,7 +900,6 @@ subroutine save_state(p, sx)
   type(t_enc_status), intent(in) :: sx
   integer :: un
   real, allocatable :: wuv(:,:,:), wmn(:,:,:)
-  if (p%initialized) continue
   ! 全域バッファに集約してから rank0 のみが書く。
   ! バッファ形状・帯外ゼロとも旧形式(全域確保時)とバイト互換
   if (is_root) then
@@ -927,7 +926,6 @@ subroutine restore_state(p, sx)
   type(t_enc_status), intent(inout) :: sx
   integer :: un
   real, allocatable :: wuv(:,:,:), wmn(:,:,:)
-  if (p%initialized) continue
   ! rank0 が全域一時配列に読み、Bcast(全ランク同形)してから帯を切り出す。
   ! 一時配列2本ぶんの全域メモリが復元時のみ一過性に必要になる点に注意
   allocate(wuv(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)

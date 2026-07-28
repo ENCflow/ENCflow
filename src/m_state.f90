@@ -433,7 +433,7 @@ subroutine fill_depression(p, g, s, list)
   integer, parameter :: din(1:8) = [ -1,  0,  1, -1,  1, -1,  0,  1]
   integer, parameter :: djn(1:8) = [ -1, -1, -1,  0,  0,  1,  1,  1]
 
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   ! 注意: 本ルーチンは全域窓(g%wy)で全ランク冗長実行する。
   !       近傍セルへの書き込みを含む緩和反復のため行分割できない。
@@ -530,7 +530,7 @@ subroutine adjust_h0rw(p, g, s, list)
   type(t_state), intent(inout) :: s
   type(t_list_initial), intent(in) :: list
   integer :: i, j
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
   do j = g%wy(1), g%wy(2)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) > 0 .and. g%rw(i,j) > 0) then
@@ -550,7 +550,7 @@ subroutine set_uv(p, g, s, list)
   type(t_state), intent(inout) :: s
   type(t_list_initial), intent(in) :: list
   integer :: i, j
-  if (p%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
   forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%u(i,j) = list%u0
   forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%v(i,j) = list%v0
 end subroutine
@@ -579,8 +579,6 @@ subroutine save_state(p, s)
   type(t_state), intent(in) :: s
   integer :: un
   real, allocatable :: wk(:,:,:)
-  if (p%initialized) continue
-  if (s%initialized) continue
   ! 全域バッファに集約してから rank0 のみが書く。
   ! write(un) wk のレコードは h, u, v rsh の連結
   if (is_root) then
@@ -606,8 +604,8 @@ subroutine restore_state(p, s)
   type(t_sysparam), intent(in) :: p
   type(t_state), intent(inout) :: s
   integer :: un
-  if (p%initialized) continue
-  if (s%initialized) continue
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  if (s%initialized) continue  ! 引数未使用の警告を抑制
   ! rank0 が読み、全ランクへ配布する。受け取る s は全域一時状態 ts
   ! (全ランク同形)なので Bcast が成立する。帯への切り出しは呼び出し側
   if (is_root) then
