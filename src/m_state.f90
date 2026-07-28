@@ -44,7 +44,7 @@ module m_state
     real, allocatable :: e(:,:)         ! 水位(m)
     real, allocatable :: pre(:,:)       ! precipitation (m/s)
     real, allocatable :: prh(:,:)       ! precipitation (mm/h)
-    real, allocatable :: rsh(:,:)       ! water depth of reservoir (mm/h)
+    real, allocatable :: rsh(:,:)       ! water depth of reservoir (m)
     real, allocatable :: tide(:,:)      ! tidal level (m)
     real, allocatable :: hmax(:,:)      ! maximum depth (m)
     real, allocatable :: hmaxt(:,:)     ! maximum depth time (min)

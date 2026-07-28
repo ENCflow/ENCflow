@@ -30,7 +30,7 @@ module m_geoinfo
     real, allocatable :: gv(:,:)                      ! 家屋の空隙率
     real, allocatable :: bb(:,:)                      ! 家屋の平均寸法
     real, allocatable :: lm(:,:)                      ! 有効慣性係数
-    real, allocatable :: rsh(:,:)                     ! ため池の限界貯留高(m)
+    real, allocatable :: rscap(:,:)                   ! ため池の限界貯留高(m)
     integer, allocatable :: x(:,:)                    ! 対象領域判別マスク
     integer, allocatable :: sw(:,:)                   ! 海域マスク
     integer, allocatable :: rw(:,:)                   ! 河道マスク
@@ -90,7 +90,7 @@ subroutine m_geoinfo_init(g, p)
   call read_rw(p, g, list)
   call read_rn(p, g, list)
   call read_gvbb(p, g, list)
-  call read_rsh(p, g, list)
+  call read_rscap(p, g, list)
   call adjust_rw(p, g, list)
 
   select case (list%f_user_routine_id)
@@ -188,7 +188,7 @@ subroutine m_geoinfo_shrink_coeffs(g)
   call shrink_band_r(g%gv,  dcp%jsh, dcp%jeh)
   call shrink_band_r(g%bb,  dcp%jsh, dcp%jeh)
   call shrink_band_r(g%lm,  dcp%jsh, dcp%jeh)
-  call shrink_band_r(g%rsh, dcp%jsh, dcp%jeh)
+  call shrink_band_r(g%rscap, dcp%jsh, dcp%jeh)
   call shrink_band_i(g%lu,  dcp%jsh, dcp%jeh)
 end subroutine
 
@@ -220,7 +220,7 @@ subroutine m_geoinfo_dispose(g)
   if (allocated(g%gv)) deallocate(g%gv)
   if (allocated(g%bb)) deallocate(g%bb)
   if (allocated(g%lm)) deallocate(g%lm)
-  if (allocated(g%rsh)) deallocate(g%rsh)
+  if (allocated(g%rscap)) deallocate(g%rscap)
   if (allocated(g%x)) deallocate(g%x)
   if (allocated(g%sw)) deallocate(g%sw)
   if (allocated(g%rw)) deallocate(g%rw)
@@ -315,7 +315,7 @@ subroutine allocate_arrays(g)
   allocate(g%gv(1:g%nx,1:g%ny), source = 1.0)    ! 空隙率は1.0で初期化
   allocate(g%bb(1:g%nx,1:g%ny), source = 1.e10)  ! 家屋サイズは大きな値で初期化
   allocate(g%lm(1:g%nx,1:g%ny), source = 1.0)    ! 有効慣性係数は1.0で初期化
-  allocate(g%rsh(1:g%nx,1:g%ny), source = 0.0)    ! ため池の深さは0.0で初期化
+  allocate(g%rscap(1:g%nx,1:g%ny), source = 0.0) ! ため池の深さは0.0で初期化
   allocate(g%x(0:g%nx+1,0:g%ny+1), source = 0)   ! 領域マスクは全て領域外で初期化
   allocate(g%sw(1:g%nx,1:g%ny), source = 0)
   allocate(g%rw(1:g%nx,1:g%ny), source = 0)
@@ -564,16 +564,16 @@ end subroutine
 !----------------------------------------------------------------------
 ! ため池の限界貯留高を読み込む
 !----------------------------------------------------------------------
-subroutine read_rsh(p, g, list)
+subroutine read_rscap(p, g, list)
   type(t_sysparam), intent(in) :: p             ! システムパラメータ構造体
   type(t_geoinfo), intent(inout) :: g
   type(t_list_geoinfo), intent(in) :: list
   character(:), allocatable :: fname
 
-  if (len_trim(list%fn_rsh) > 0) then
-    fname = trim(p%dir_data) // "/" // trim(list%fn_rsh)
+  if (len_trim(list%fn_rscap) > 0) then
+    fname = trim(p%dir_data) // "/" // trim(list%fn_rscap)
     call par_info(" reading "//fname)
-    call fileio_read_matrix(fname, g%nx, g%ny, g%rsh, p%f_input_mode)
+    call fileio_read_matrix(fname, g%nx, g%ny, g%rscap, p%f_input_mode)
   end if
 
 end subroutine

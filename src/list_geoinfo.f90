@@ -18,29 +18,29 @@ module list_geoinfo
     real :: dy = 0
     real :: lx = 0
     real :: ly = 0
-    real :: z0 = 0                            ! 地盤高固定値
-    real :: rn0 = 0.015                       ! 粗度係数固定値
-    real :: mag_z = 1                         ! 地盤高倍率
-    real :: min_gv = 0.001                    ! 家屋の空隙率の最小値
-    real :: min_bb = 0.001                    ! 家屋の平均サイズの最小値
-    real :: depth_rw = 0.0                    ! 河道マスク部の掘り込み深さ(河道マスク有りの場合のみ有効)
-    real :: rn0_rw = -1.0                     ! 河道マスク部の固定粗度係数(負値の場合は設定せず)
-    integer :: f_user_routine_id = 0          ! ユーザールーチンID
-    integer :: f_ztype = 0                    ! 地盤高タイプ (0:固定値, 1:ファイル)
-    integer :: f_lusetype = 0                 ! 土地利用データの有無 (0:なし, 1:ファイル)
-    integer :: f_rntype = 0                   ! 粗度係数タイプ (0:固定値, 1:ファイル, 2:土地利用から計算)
-    integer :: f_masktype = 0                 ! 領域マスクのタイプ (0:なし, 1:ファイル, 2:自動)
-    integer :: f_edge_sw = 0                  ! 領域端部を海に設定
-    character(len=maxpathlen) :: fn_z = ""    ! 地盤高ファイル名
-    character(len=maxpathlen) :: fn_mask = "" ! 領域マスクファイル名
-    character(len=maxpathlen) :: fn_sw = ""   ! 海域マスクファイル名
-    character(len=maxpathlen) :: fn_rw = ""   ! 河道マスクファイル名
-    character(len=maxpathlen) :: fn_rn = ""   ! 地盤高ファイル名
-    character(len=maxpathlen) :: fn_luse = "" ! 土地利用ファイル名
-    character(len=maxpathlen) :: fn_gv = ""   ! 家屋の空隙率ファイル名
-    character(len=maxpathlen) :: fn_bb = ""   ! 家屋の平均寸法ファイル名
-    character(len=maxpathlen) :: fn_rsh = ""  ! ため池の限界貯留高ファイル名
-    real :: lu2rn(1:2,1:maxnluse) = -999      ! 土地利用と粗度係数の対応
+    real :: z0 = 0                             ! 地盤高固定値
+    real :: rn0 = 0.015                        ! 粗度係数固定値
+    real :: mag_z = 1                          ! 地盤高倍率
+    real :: min_gv = 0.001                     ! 家屋の空隙率の最小値
+    real :: min_bb = 0.001                     ! 家屋の平均サイズの最小値
+    real :: depth_rw = 0.0                     ! 河道マスク部の掘り込み深さ(河道マスク有りの場合のみ有効)
+    real :: rn0_rw = -1.0                      ! 河道マスク部の固定粗度係数(負値の場合は設定せず)
+    integer :: f_user_routine_id = 0           ! ユーザールーチンID
+    integer :: f_ztype = 0                     ! 地盤高タイプ (0:固定値, 1:ファイル)
+    integer :: f_lusetype = 0                  ! 土地利用データの有無 (0:なし, 1:ファイル)
+    integer :: f_rntype = 0                    ! 粗度係数タイプ (0:固定値, 1:ファイル, 2:土地利用から計算)
+    integer :: f_masktype = 0                  ! 領域マスクのタイプ (0:なし, 1:ファイル, 2:自動)
+    integer :: f_edge_sw = 0                   ! 領域端部を海に設定
+    character(len=maxpathlen) :: fn_z = ""     ! 地盤高ファイル名
+    character(len=maxpathlen) :: fn_mask = ""  ! 領域マスクファイル名
+    character(len=maxpathlen) :: fn_sw = ""    ! 海域マスクファイル名
+    character(len=maxpathlen) :: fn_rw = ""    ! 河道マスクファイル名
+    character(len=maxpathlen) :: fn_rn = ""    ! 地盤高ファイル名
+    character(len=maxpathlen) :: fn_luse = ""  ! 土地利用ファイル名
+    character(len=maxpathlen) :: fn_gv = ""    ! 家屋の空隙率ファイル名
+    character(len=maxpathlen) :: fn_bb = ""    ! 家屋の平均寸法ファイル名
+    character(len=maxpathlen) :: fn_rscap = "" ! ため池の限界貯留高ファイル名
+    real :: lu2rn(1:2,1:maxnluse) = -999       ! 土地利用と粗度係数の対応
   end type
 
 
@@ -80,14 +80,14 @@ subroutine list_geoinfo_read(p, list)
   character(:), allocatable :: fn_luse   ! 土地利用ファイル名
   character(:), allocatable :: fn_gv     ! 家屋の空隙率ファイル名
   character(:), allocatable :: fn_bb     ! 家屋の平均寸法ファイル名
-  character(:), allocatable :: fn_rsh    ! ため池の限界貯留高ファイル名
+  character(:), allocatable :: fn_rscap  ! ため池の限界貯留高ファイル名
   real :: lu2rn(1:2,1:maxnluse)          ! 土地利用と粗度係数の対応
   integer :: un
   integer :: ios
   character(len=1024) :: iom
   namelist /list_geoinfo/ nx, ny, dx, dy, lx, ly, z0, rn0, mag_z, min_gv, min_bb, depth_rw, rn0_rw, &
                           f_user_routine_id, f_ztype, f_lusetype, f_rntype, f_masktype, f_edge_sw, &
-                          fn_z, fn_mask, fn_sw, fn_rw, fn_rn, fn_luse, fn_gv, fn_bb, fn_rsh, lu2rn
+                          fn_z, fn_mask, fn_sw, fn_rw, fn_rn, fn_luse, fn_gv, fn_bb, fn_rscap, lu2rn
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
   nx = list%nx
@@ -117,7 +117,7 @@ subroutine list_geoinfo_read(p, list)
   fn_luse = list%fn_luse
   fn_gv = list%fn_gv
   fn_bb = list%fn_bb
-  fn_rsh = list%fn_rsh
+  fn_rscap = list%fn_rscap
   lu2rn = list%lu2rn
 
   call par_info("reading list_geoinfo in "//trim(p%fn_geoinfo))
@@ -156,7 +156,7 @@ subroutine list_geoinfo_read(p, list)
   list%fn_luse = fn_luse
   list%fn_gv = fn_gv
   list%fn_bb = fn_bb
-  list%fn_rsh = fn_rsh
+  list%fn_rscap = fn_rscap
   list%lu2rn = lu2rn
 
 end subroutine
