@@ -1,3 +1,5 @@
+! このモジュールは旧プログラムとの互換性を確認するために存在している
+! そのため古い書式をできるだけ変更しないよう維持している
 module m_swflow_stg
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
