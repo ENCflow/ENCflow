@@ -51,7 +51,7 @@ FFLAGS	= -g -fopenmp -warn all -fpe0 -Ofast -xHost -ipo -r8
 #FFLAGS	= -gopt -mp=multicore -Ofast -Minform=inform -Ktrap=divz,ovf -Mr8 -Mbounds -Mchkptr -Mchkstk 
 #LDFLAGS =
 
-# AMD AOCC (with MPI build by AOCC)
+# AMD AOCC (with Open MPI build by AOCC)
 #   -flto: リンク時最適化(-ipo 相当)。アーカイバは AOCC 同梱の llvm-ar
 #FC	= flang
 #FC_MPI	= mpifort
