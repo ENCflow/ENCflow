@@ -501,7 +501,7 @@ subroutine m_record_probe(r, p, s)
   type(t_state), intent(in) :: s
   integer :: ipb, un
   integer :: ix, iy
-  real :: wk(5, r%npb)     ! 点集約バッファ: h, u, v, |V|, q
+  real :: wk(6, r%npb)     ! 点集約バッファ: z, h, u, v, |V|, q
   character(len=10) :: ffmt
   character(len=80) :: afmt
   if (p%initialized) continue  ! 引数未使用の警告を抑制
@@ -514,11 +514,12 @@ subroutine m_record_probe(r, p, s)
     ix = r%probe(ipb)%ixy(1)
     iy = r%probe(ipb)%ixy(2)
     if (dcp%js <= iy .and. iy <= dcp%je) then
-      wk(1,ipb) = s%h(ix,iy)
-      wk(2,ipb) = s%u(ix,iy)
-      wk(3,ipb) = s%v(ix,iy)
-      wk(4,ipb) = s%vv(ix,iy)
-      wk(5,ipb) = s%qq(ix,iy)
+      wk(1,ipb) = s%z(ix,iy)
+      wk(2,ipb) = s%h(ix,iy)
+      wk(3,ipb) = s%u(ix,iy)
+      wk(4,ipb) = s%v(ix,iy)
+      wk(5,ipb) = s%vv(ix,iy)
+      wk(6,ipb) = s%qq(ix,iy)
     end if
   end do
   call par_reduce_points(wk)
@@ -538,8 +539,6 @@ subroutine m_record_probe(r, p, s)
     write(un, '(a)', advance='no') ","
     write(un, afmt, advance='no') s%t / 60
     write(un, '(a)', advance='no') ","
-    write(un, afmt, advance='no') r%probe(ipb)%z
-    write(un, '(a)', advance='no') ","
     write(un, afmt, advance='no') wk(1,ipb)
     write(un, '(a)', advance='no') ","
     write(un, afmt, advance='no') wk(2,ipb)
@@ -549,11 +548,13 @@ subroutine m_record_probe(r, p, s)
     write(un, afmt, advance='no') wk(4,ipb)
     write(un, '(a)', advance='no') ","
     write(un, afmt, advance='no') wk(5,ipb)
+    write(un, '(a)', advance='no') ","
+    write(un, afmt, advance='no') wk(6,ipb)
     write(un, *)
-    if (wk(5,ipb) > r%probe(ipb)%qmax) then
+    if (wk(6,ipb) > r%probe(ipb)%qmax) then
       r%probe(ipb)%tp = s%t / 60.
       r%probe(ipb)%qmax = wk(5,ipb)
-      r%probe(ipb)%hmax = wk(1,ipb)
+      r%probe(ipb)%hmax = wk(2,ipb)
     end if
   end do
 end subroutine
