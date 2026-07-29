@@ -111,8 +111,8 @@ FFLAGS_UTIL	= -g -O2 -Wall -ffpe-trap=invalid,zero,overflow
 #FRT_UTIL	= flang
 #FFLAGS_UTIL	= -g -O2 -march=native
 
-#FRT_UTIL	= flang-20
-#FFLAGS_UTIL	= -g -O2 -Werror
+#FRT_UTIL	= flang-22
+#FFLAGS_UTIL	= -g -O2
 
 # NEC SDK: ユーティリティは VH(x86 側)で動かすなら gfortran のままが楽。
 # VE で動かす場合のみ nfort を使う
