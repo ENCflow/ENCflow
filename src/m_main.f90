@@ -10,7 +10,7 @@ module m_main
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc
   use m_output, only : output_init, output_dispose, output_chk_geoinfo, output_state, output_summary
   use m_util, only : itoa
-  use sysdep_util, only : sysdep_mkdir, sysdep_copy_to_dir
+  use m_sysdep_util, only : sysdep_mkdir, sysdep_copy_to_dir
   use m_parallel
 
   implicit none

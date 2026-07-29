@@ -1,4 +1,4 @@
-module sysdep_util
+module m_sysdep_util
   use m_parallel, only : is_root
   implicit none
   private

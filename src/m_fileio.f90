@@ -1,6 +1,6 @@
 module m_fileio
   use, intrinsic :: iso_fortran_env, only: real32
-  use sysdep_util, only : sysdep_compress
+  use m_sysdep_util, only : sysdep_compress
 
   implicit none
   private

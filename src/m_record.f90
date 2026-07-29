@@ -19,7 +19,7 @@ module m_record
   use m_state, only : t_state
   use m_parallel, only : is_root
   use m_util, only : itoa
-  use sysdep_util, only : sysdep_mkdir
+  use m_sysdep_util, only : sysdep_mkdir
   use list_record, only : t_list_record, list_record_read
   use m_parallel, only : is_root, par_info, par_abort, dcp, par_reduce_points
   implicit none
