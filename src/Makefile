@@ -20,7 +20,7 @@ LIBOBJS	= m_main.o m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o \
 	  $(PAR_OBJ) \
 	  list_sysparam.o list_geoinfo.o list_precip.o \
 	  list_initial.o list_record.o list_tide.o list_boundary.o list_enc.o \
-	  m_ffactor.o user_geoinfo.o user_initial.o sysdep_util.o m_fileio.o m_util.o
+	  m_ffactor.o user_geoinfo.o user_initial.o m_sysdep_util.o m_fileio.o m_util.o
 
 OBJS	= main.o $(LIBOBJS)
 
@@ -67,14 +67,14 @@ $(MODESTAMP):
 # ---------------------------------------------------------------
 main.o: m_main.o
 m_main.o: m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o m_state.o \
-	m_record.o m_swflow.o m_output.o m_fileio.o sysdep_util.o $(PAR_OBJ)
+	m_record.o m_swflow.o m_output.o m_fileio.o m_sysdep_util.o $(PAR_OBJ)
 m_sysparam.o: list_sysparam.o m_fileio.o m_util.o $(PAR_OBJ)
 m_geoinfo.o: m_sysparam.o list_geoinfo.o m_fileio.o m_util.o $(PAR_OBJ)
 m_precip.o: m_sysparam.o list_precip.o m_state.o m_geoinfo.o m_util.o m_fileio.o $(PAR_OBJ)
 m_tide.o: m_sysparam.o list_tide.o m_geoinfo.o $(PAR_OBJ)
 m_boundary.o: m_sysparam.o m_geoinfo.o m_state.o list_boundary.o $(PAR_OBJ)
 m_state.o: m_sysparam.o m_geoinfo.o list_initial.o m_util.o
-m_record.o: m_sysparam.o list_record.o m_geoinfo.o m_state.o m_util.o sysdep_util.o $(PAR_OBJ)
+m_record.o: m_sysparam.o list_record.o m_geoinfo.o m_state.o m_util.o m_sysdep_util.o $(PAR_OBJ)
 m_swflow.o: m_sysparam.o m_geoinfo.o m_boundary.o m_state.o \
 	m_swflow_enc.o m_swflow_stg.o $(PAR_OBJ)
 m_swflow_enc.o: m_sysparam.o list_enc.o m_geoinfo.o m_boundary.o \
@@ -92,10 +92,10 @@ list_enc.o: m_sysparam.o $(PAR_OBJ)
 user_geoinfo.o: m_sysparam.o m_geoinfo.o
 user_initial.o: m_sysparam.o m_state.o m_geoinfo.o
 m_output.o: m_sysparam.o m_geoinfo.o m_state.o m_fileio.o $(PAR_OBJ)
-m_fileio.o: sysdep_util.o
+m_fileio.o: m_sysdep_util.o
 m_ffactor.o: m_util.o $(PAR_OBJ)
 m_util.o: $(PAR_OBJ)
-sysdep_util.o: $(PAR_OBJ)
+m_sysdep_util.o: $(PAR_OBJ)
 
 # 並列層は今のところ他モジュールに依存しない
 #   通信を使うモジュールが増えたら「m_xxx.o: ... $(PAR_OBJ)」を追記すること
