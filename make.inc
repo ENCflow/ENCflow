@@ -61,7 +61,7 @@ FFLAGS	= -g -fopenmp -warn all -fpe0 -Ofast -xHost -ipo -r8
 # LLVM flang-22 + libomp-22-dev
 #FC	= flang-22
 #FC_MPI	= mpifort
-#FFLAGS	= -g -O3 -fopenmp -ffast-math -Wall -fdefault-real-8
+#FFLAGS	= -g -O3 -fopenmp -ffast-math -fdefault-real-8
 #LDFLAGS =
 
 # NEC SDK (SX-Aurora TSUBASA, Vector Engine 向けクロスコンパイル)
