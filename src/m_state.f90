@@ -149,6 +149,7 @@ subroutine m_state_init(s, p, g)
   allocate(ts%u(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%v(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%z(1:g%nx,1:g%ny), source = 0.0)
+  allocate(ts%rsh(1:g%nx,1:g%ny), source = 0.0)
 
   call m_state_updatetime(s, p, 0)
   call set_z(p, g, ts, list)
@@ -182,6 +183,7 @@ subroutine m_state_init(s, p, g)
   s%u(:,:) = ts%u(1:g%nx, dcp%jsh:dcp%jeh)
   s%v(:,:) = ts%v(1:g%nx, dcp%jsh:dcp%jeh)
   s%z(:,:) = ts%z(1:g%nx, dcp%jsh:dcp%jeh)
+  s%rsh(:,:) = ts%rsh(1:g%nx, dcp%jsh:dcp%jeh)
 
   ! 初期水位をセット
   s%e(:,:) = s%z(:,:) + s%h(:,:)
@@ -597,7 +599,7 @@ subroutine save_state(p, s)
   integer :: un
   real, allocatable :: wk(:,:,:)
   ! 全域バッファに集約してから rank0 のみが書く。
-  ! write(un) wk のレコードは h, u, v rsh の連結
+  ! write(un) wk のレコードは h, u, v, z, rsh の連結
   if (is_root) then
     allocate(wk(1:dcp%nx_g, 1:dcp%ny_g, 5), source = 0.0)
   else
@@ -628,7 +630,9 @@ subroutine restore_state(p, s)
   ! (全ランク同形)なので Bcast が成立する。帯への切り出しは呼び出し側
   if (is_root) then
     open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted', status='old')
-    read(un) s%h, s%u, s%v, s%rsh
+    ! 読み並びは save_state の write(un) wk の連結順(h, u, v, z, rsh)と
+    ! 一致させること。成分を足すときは save と restore を必ず同時に更新する
+    read(un) s%h, s%u, s%v, s%z, s%rsh
     close(un)
   end if
   call par_bcast_cell(s%h)
