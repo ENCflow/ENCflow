@@ -58,11 +58,11 @@ FFLAGS	= -g -fopenmp -warn all -fpe0 -Ofast -xHost -ipo -r8
 #FFLAGS	= -g -fopenmp -Ofast -march=native -flto -Wall -r8 -ffast-math -Mcache_align
 #LDFLAGS =
 
-# LLVM Flang
+# LLVM Flang + libomp_dev (libomp-18-dev)
 #FC	= flang-20
 #FC_MPI	= mpifort
-#FFLAGS	= -g -O3 -ffast-math -Werror -fdefault-real-8
-#LDFLAGS =
+#FFLAGS	= -g -O3 -fopenmp -ffast-math -Wall -fdefault-real-8
+#LDFLAGS = -L/usr/lib/llvm-18/lib
 
 # NEC SDK (SX-Aurora TSUBASA, Vector Engine 向けクロスコンパイル)
 #   MPI ラッパーは NEC MPI の mpinfort。-flto/-ipo 相当なし(AR は素の ar)。
