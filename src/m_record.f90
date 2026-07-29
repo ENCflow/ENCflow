@@ -504,6 +504,7 @@ subroutine m_record_probe(r, p, s)
   real :: wk(6, r%npb)     ! 点集約バッファ: z, h, u, v, |V|, q
   character(len=10) :: ffmt
   character(len=80) :: afmt
+  integer, parameter :: iw_z = 1, iw_h = 2, iw_u = 3, iw_v = 4, iw_vv = 5, iw_qq = 6
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   if (r%npb <= 0) return
@@ -514,12 +515,12 @@ subroutine m_record_probe(r, p, s)
     ix = r%probe(ipb)%ixy(1)
     iy = r%probe(ipb)%ixy(2)
     if (dcp%js <= iy .and. iy <= dcp%je) then
-      wk(1,ipb) = s%z(ix,iy)
-      wk(2,ipb) = s%h(ix,iy)
-      wk(3,ipb) = s%u(ix,iy)
-      wk(4,ipb) = s%v(ix,iy)
-      wk(5,ipb) = s%vv(ix,iy)
-      wk(6,ipb) = s%qq(ix,iy)
+      wk(iw_z,ipb) = s%z(ix,iy)
+      wk(iw_h,ipb) = s%h(ix,iy)
+      wk(iw_u,ipb) = s%u(ix,iy)
+      wk(iw_v,ipb) = s%v(ix,iy)
+      wk(iw_vv,ipb) = s%vv(ix,iy)
+      wk(iw_qq,ipb) = s%qq(ix,iy)
     end if
   end do
   call par_reduce_points(wk)
@@ -539,22 +540,22 @@ subroutine m_record_probe(r, p, s)
     write(un, '(a)', advance='no') ","
     write(un, afmt, advance='no') s%t / 60
     write(un, '(a)', advance='no') ","
-    write(un, afmt, advance='no') wk(1,ipb)
+    write(un, afmt, advance='no') wk(iw_z,ipb)
     write(un, '(a)', advance='no') ","
-    write(un, afmt, advance='no') wk(2,ipb)
+    write(un, afmt, advance='no') wk(iw_h,ipb)
     write(un, '(a)', advance='no') ","
-    write(un, afmt, advance='no') wk(3,ipb)
+    write(un, afmt, advance='no') wk(iw_u,ipb)
     write(un, '(a)', advance='no') ","
-    write(un, afmt, advance='no') wk(4,ipb)
+    write(un, afmt, advance='no') wk(iw_v,ipb)
     write(un, '(a)', advance='no') ","
-    write(un, afmt, advance='no') wk(5,ipb)
+    write(un, afmt, advance='no') wk(iw_vv,ipb)
     write(un, '(a)', advance='no') ","
-    write(un, afmt, advance='no') wk(6,ipb)
+    write(un, afmt, advance='no') wk(iw_qq,ipb)
     write(un, *)
-    if (wk(6,ipb) > r%probe(ipb)%qmax) then
+    if (wk(iw_qq,ipb) > r%probe(ipb)%qmax) then
       r%probe(ipb)%tp = s%t / 60.
-      r%probe(ipb)%qmax = wk(5,ipb)
-      r%probe(ipb)%hmax = wk(2,ipb)
+      r%probe(ipb)%qmax = wk(iw_qq,ipb)
+      r%probe(ipb)%hmax = wk(iw_h,ipb)
     end if
   end do
 end subroutine

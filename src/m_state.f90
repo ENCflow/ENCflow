@@ -598,12 +598,13 @@ subroutine save_state(p, s)
   type(t_state), intent(in) :: s
   integer :: un
   real, allocatable :: wk(:,:,:)
+  integer, parameter :: n_wk = 5
   ! 全域バッファに集約してから rank0 のみが書く。
   ! write(un) wk のレコードは h, u, v, z, rsh の連結
   if (is_root) then
-    allocate(wk(1:dcp%nx_g, 1:dcp%ny_g, 5), source = 0.0)
+    allocate(wk(1:dcp%nx_g, 1:dcp%ny_g, n_wk), source = 0.0)
   else
-    allocate(wk(1, 1, 4))          ! 参照されないダミー
+    allocate(wk(1, 1, n_wk))          ! 参照されないダミー
   end if
   call par_gather_to(wk(:,:,1), s%h)
   call par_gather_to(wk(:,:,2), s%u)
