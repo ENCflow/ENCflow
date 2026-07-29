@@ -98,7 +98,7 @@ subroutine output_state(p, g, s, k)
   type(t_state), intent(in) :: s
   integer, intent(in) :: k
   ! output_matrix は collective(内部で gather)。ガードしないこと
-  if (p%f_out_z > 0 .or. k == 0) call output_matrix_full(p, g, "Z", g%z, k)  ! 地盤高(静的・全域保持)
+  if (p%f_out_z > 0 .or. k == 0) call output_matrix(p, g, "Z", s%z, k)  ! 地盤高
   if (p%f_out_h > 0) call output_matrix(p, g, "H", s%h, k)          ! 水深
   if (p%f_out_e > 0) call output_matrix(p, g, "E", s%e, k)          ! 水位
   if (p%f_out_u > 0) call output_matrix(p, g, "u", s%u, k)          ! x方向流速

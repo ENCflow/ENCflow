@@ -42,6 +42,7 @@ module m_state
     real, allocatable :: qq(:,:)        ! 線流量の絶対値(m^2/s)
     real, allocatable :: vv(:,:)        ! 流速の絶対値(m/s)
     real, allocatable :: e(:,:)         ! 水位(m)
+    real, allocatable :: z(:,:)         ! 標高(m)
     real, allocatable :: pre(:,:)       ! precipitation (m/s)
     real, allocatable :: prh(:,:)       ! precipitation (mm/h)
     real, allocatable :: rsh(:,:)       ! water depth of reservoir (m)
@@ -108,11 +109,10 @@ subroutine m_state_init(s, p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   type(t_list_initial) :: list
-  type(t_state) :: ts    ! 初期化用の全域一時状態(h, u, v のみ確保。
+  type(t_state) :: ts    ! 初期化用の全域一時状態(h, u, v, z のみ確保。
                          ! 全ランクが全域で冗長に初期化し、最後に帯を切り出す。
                          ! user フックと fill_depression の「全域添字」契約を
                          ! 帯確保の下でも保つための方式。developer.md §11)
-  !integer :: i, j
 
   ! メモリ確保
   allocate(s%h(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
@@ -123,6 +123,7 @@ subroutine m_state_init(s, p, g)
   allocate(s%qq(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%vv(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%e(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%z(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%pre(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%prh(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%rsh(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
@@ -147,9 +148,11 @@ subroutine m_state_init(s, p, g)
   allocate(ts%h(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%u(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%v(1:g%nx,1:g%ny), source = 0.0)
+  allocate(ts%z(1:g%nx,1:g%ny), source = 0.0)
 
   call m_state_updatetime(s, p, 0)
-  call set_h(p, g, ts, list)
+  call set_z(p, g, ts, list)
+  call set_h(p, g, ts, list)     ! set_z()よりも後に実行
   call set_uv(p, g, ts, list)
 
   s%n_valcells = 0           ! number of valid cells
@@ -178,10 +181,10 @@ subroutine m_state_init(s, p, g)
   s%h(:,:) = ts%h(1:g%nx, dcp%jsh:dcp%jeh)
   s%u(:,:) = ts%u(1:g%nx, dcp%jsh:dcp%jeh)
   s%v(:,:) = ts%v(1:g%nx, dcp%jsh:dcp%jeh)
+  s%z(:,:) = ts%z(1:g%nx, dcp%jsh:dcp%jeh)
 
   ! 初期水位をセット
-  ! 静的(全域確保)×動的(担当帯確保)の混在演算は g 側をセクション明示する
-  s%e(:,:) = g%z(1:g%nx, dcp%jsh:dcp%jeh) + s%h(:,:)
+  s%e(:,:) = s%z(:,:) + s%h(:,:)
 
   ! 計算対象セルの数をセット(海域は除く)
   ! カウント自体は m_geoinfo_init 内(sw が全域のゾーン1)で実施済み。
@@ -422,7 +425,7 @@ end subroutine
 !----------------------------------------------------------------------
 subroutine fill_depression(p, g, s, list)
   type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(inout) :: g
+  type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   type(t_list_initial), intent(in) :: list
   integer :: i, j, k
@@ -508,7 +511,7 @@ subroutine fill_depression(p, g, s, list)
         if (g%sw(i,j) > 0) cycle       ! 海は除外
         if (g%rw(i,j) < 1) cycle       ! 河道以外は除外
         if (s%h(i,j) > 0) then
-          g%z(i,j) = g%z(i,j) + s%h(i,j)
+          s%z(i,j) = s%z(i,j) + s%h(i,j)
           s%h(i,j) = 0
         end if
       end do
@@ -557,6 +560,20 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 初期標高をセット
+!----------------------------------------------------------------------
+subroutine set_z(p, g, s, list)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  type(t_list_initial), intent(in) :: list
+  if (p%initialized) continue      ! 引数未使用の警告を抑制
+  if (list%f_htype == 0) continue  ! 引数未使用の警告を抑制
+  s%z(:,:) = g%z(:,:)
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 時刻を文字列に変換
 !----------------------------------------------------------------------
 subroutine t2ctime(t, ctime)
@@ -582,14 +599,15 @@ subroutine save_state(p, s)
   ! 全域バッファに集約してから rank0 のみが書く。
   ! write(un) wk のレコードは h, u, v rsh の連結
   if (is_root) then
-    allocate(wk(1:dcp%nx_g, 1:dcp%ny_g, 4), source = 0.0)
+    allocate(wk(1:dcp%nx_g, 1:dcp%ny_g, 5), source = 0.0)
   else
     allocate(wk(1, 1, 4))          ! 参照されないダミー
   end if
   call par_gather_to(wk(:,:,1), s%h)
   call par_gather_to(wk(:,:,2), s%u)
   call par_gather_to(wk(:,:,3), s%v)
-  call par_gather_to(wk(:,:,4), s%rsh)
+  call par_gather_to(wk(:,:,4), s%z)
+  call par_gather_to(wk(:,:,5), s%rsh)
   if (.not. is_root) return
   open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted', status='replace')
   write(un) wk
@@ -616,6 +634,7 @@ subroutine restore_state(p, s)
   call par_bcast_cell(s%h)
   call par_bcast_cell(s%u)
   call par_bcast_cell(s%v)
+  call par_bcast_cell(s%z)
   call par_bcast_cell(s%rsh)
 end subroutine
 

@@ -193,6 +193,7 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   call par_halo_cell(s%h)
   call par_halo_cell(s%u)
   call par_halo_cell(s%v)
+  call par_halo_cell(s%z)
   call par_halo_cell(s%vv)
   call par_halo_edge(sx_mod%mn)
 
@@ -664,7 +665,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
   if (f_gravity_correction > 0) ge = correct_ge()
 
   ! セル境界での底面勾配項(符合は中心セルから近傍セルに向かい正)
-  tg0e = -ge * (g%z(in,jn) - g%z(i,j)) / w8dr(k) * gve
+  tg0e = -ge * (s%z(in,jn) - s%z(i,j)) / w8dr(k) * gve
 
   ! セル境界でのuveと直交する流速成分の二乗を計算
   !   ルンゲクッタで流速の絶対値を更新する際に使用する
@@ -776,7 +777,7 @@ contains
   function correct_ge() result(ge_corr)
     real :: ge_corr
     if (vve > 0) then
-      ge_corr = ge * w8dr2(k) / (w8dr2(k) + (g%z(in,jn) - g%z(i,j))**2)
+      ge_corr = ge * w8dr2(k) / (w8dr2(k) + (s%z(in,jn) - s%z(i,j))**2)
     else
       ge_corr = ge
     end if
@@ -882,7 +883,7 @@ subroutine complete(p, g, s, sx)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       s%h(i,j) = sx%h1(i,j)
-      s%e(i,j) = s%h(i,j) + g%z(i,j)
+      s%e(i,j) = s%h(i,j) + s%z(i,j)
       s%vv(i,j) = sqrt(s%u(i,j)**2 + s%v(i,j)**2)
       s%qq(i,j) = sqrt(s%m(i,j)**2 + s%n(i,j)**2)
     end do

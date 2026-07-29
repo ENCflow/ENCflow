@@ -1,5 +1,8 @@
 ! このモジュールは旧プログラムとの互換性を確認するために存在している
 ! そのため古い書式をできるだけ変更しないよう維持している
+!
+! stgは浸食に非対応
+!
 module m_swflow_stg
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
@@ -88,11 +91,14 @@ subroutine m_swflow_stg_init(p, g, b, s)
   ALLOCATE(N0(1:IG,dcp%jsh-1:dcp%jeh),SOURCE=0.0)
   ALLOCATE(N1(1:IG,dcp%jsh-1:dcp%jeh),SOURCE=0.0)
   ! 静的コピー(H/GV/DN/BB/X/R)と行別窓 I1/I2 は全域保持のまま
-  ALLOCATE(H(1:IG,1:JG),SOURCE=0.0)
+  ! H/GV/DN/BB のコピー元(s%z, g%gv, g%rn, g%bb)は帯確保のため
+  ! 同じ帯で確保する(全域のままだと全配列代入が形状不一致で np>=2 で破綻)。
+  ! X/R のコピー元(g%sw, g%rw)は init 時点(ゾーン2)では全域なので全域のまま
+  ALLOCATE(H(1:IG,dcp%jsh:dcp%jeh),SOURCE=0.0)
   ALLOCATE(HQ(1:IG,dcp%jsh:dcp%jeh),SOURCE=0.0)
-  ALLOCATE(GV(1:IG,1:JG),SOURCE=0.0)
-  ALLOCATE(DN(1:IG,1:JG),SOURCE=0.0)
-  ALLOCATE(BB(1:IG,1:JG),SOURCE=1.e10)
+  ALLOCATE(GV(1:IG,dcp%jsh:dcp%jeh),SOURCE=0.0)
+  ALLOCATE(DN(1:IG,dcp%jsh:dcp%jeh),SOURCE=0.0)
+  ALLOCATE(BB(1:IG,dcp%jsh:dcp%jeh),SOURCE=1.e10)
   ALLOCATE(X(1:IG,1:JG),SOURCE=0)
   ALLOCATE(R(1:IG,1:JG),SOURCE=0)
   allocate(I1(1:JG))
@@ -113,7 +119,7 @@ subroutine m_swflow_stg_init(p, g, b, s)
   CD=p%cd             ! 家屋の効力係数
   KK=p%kk             ! 抗力項補正係数
 
-  H(:,:)=g%z(:,:)     ! H:標高
+  H(:,:)=s%z(:,:)     ! H:標高
   GV(:,:)=g%gv(:,:)   ! GV:1-家屋占有率
   BB(:,:)=g%bb(:,:)   ! BB:家屋の平均寸法
   DN(:,:)=g%rn(:,:)   ! DN:土地利用の合成粗度
@@ -201,6 +207,7 @@ SUBROUTINE m_swflow_stg_calc(p, g, b, s, ierror)
   INTEGER:: ITER
   REAL:: Mm,Nm,QF
   if (p%initialized) continue  ! 引数未使用の警告を抑制
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
   if (b%initialized) continue  ! 引数未使用の警告を抑制
 
   s%n_runge = s%n_valcells * 4
@@ -539,7 +546,7 @@ SUBROUTINE m_swflow_stg_calc(p, g, b, s, ierror)
               s%vv(i,j) = 0.0
             ENDIF
             s%h(i,j) = D(i,j)
-            s%e(i,j) = g%z(i,j) + D(i,j)
+            s%e(i,j) = s%z(i,j) + D(i,j)
           ELSE
             D(I,J)=0.0 ! 海であればD=0
           ENDIF
