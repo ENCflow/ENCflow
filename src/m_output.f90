@@ -9,8 +9,8 @@ module m_output
   private
 
   public :: output_init
+  public :: output_dispose
   public :: output_chk_geoinfo
-  public :: output_open_fnolist
   public :: output_state
   public :: output_summary
 
@@ -35,8 +35,11 @@ contains
 !----------------------------------------------------------------------
 ! 
 !----------------------------------------------------------------------
-subroutine output_init(g)
+subroutine output_init(p, g)
+  type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
+  character(len=256) :: fname
+
   ! 出力集約バッファの確保(rank0 のみ全域。帯外行はゼロで不変に保たれ、
   ! 逐次出力(帯外=ゼロ)とバイト一致する)
   if (is_root) then
@@ -46,6 +49,23 @@ subroutine output_init(g)
     allocate(wk_out(1, 1), source = 0.0)
     allocate(wk_out_i(1, 1), source = 0)
   end if
+
+  ! 計算結果ファイルの番号リスト用ファイルを開く
+  if (is_root) then
+    fname = trim(p%dir_result)//"/FILENUMBER.csv"
+    open(newunit=un_fnolist, file=trim(fname), status='replace')
+    write(un_fnolist, '(a)') "# No., time, t(s), it"
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 
+!----------------------------------------------------------------------
+subroutine output_dispose()
+  if (allocated(wk_out)) deallocate(wk_out)
+  if (allocated(wk_out_i)) deallocate(wk_out_i)
+  if (is_root) close(un_fnolist)
 end subroutine
 
 
@@ -63,19 +83,6 @@ subroutine output_chk_geoinfo(g)
   !call fileio_write_matrix("rrrr.bil", g%nx, g%ny, g%rw(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
   !call fileio_write_matrix("ssss.txt", g%nx, g%ny, g%sw(1:g%nx,1:g%ny), e_fmt_txt, e_cmp_off)
   !call fileio_write_matrix("zzzz.bil", g%nx, g%ny, g%z(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 計算結果ファイルの番号リスト用ファイルを開く
-!----------------------------------------------------------------------
-subroutine output_open_fnolist(p)
-  type(t_sysparam), intent(in) :: p
-  character(len=256) :: fname
-  if (.not. is_root) return
-  fname = trim(p%dir_result)//"/FILENUMBER.csv"
-  open(newunit=un_fnolist, file=trim(fname), status='replace')
-  write(un_fnolist, '(a)') "# No., time, t(s), it"
 end subroutine
 
 

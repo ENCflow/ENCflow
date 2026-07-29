@@ -8,8 +8,7 @@ module m_main
   use m_state, only : t_state, m_state_init, m_state_dispose, m_state_updatetime, m_state_calcstat, m_state_printstate
   use m_record, only : t_record, m_record_init, m_record_dispose, m_record_probe, m_record_flux, m_record_summary
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc
-  use m_fileio, only : fileio_write_matrix, e_fmt_txt, e_fmt_bil, e_fmt_both
-  use m_output, only : output_init, output_chk_geoinfo, output_open_fnolist, output_state, output_summary
+  use m_output, only : output_init, output_dispose, output_chk_geoinfo, output_state, output_summary
   use m_util, only : itoa
   use sysdep_util, only : sysdep_mkdir, sysdep_copy_to_dir
   use m_parallel
@@ -69,6 +68,7 @@ subroutine m_main_all()
   call m_precip_init(pr, p, g)            ! precip を初期化
   call m_tide_init(ti, p, g)              ! tide を初期化
   call m_swflow_init(sw, p, g, b, s)      ! swflow を初期化
+  call output_init(p, g)                  ! ファイル出力の準備(geoinfoより後に)
 
   ! 地理情報を各ランクに合わせて縮小
   call m_geoinfo_band_shrink(g)           ! マスク類(x,sw,rw)と z(rank0以外)を帯に縮小
@@ -77,6 +77,7 @@ subroutine m_main_all()
   call run_main(p, g, b, pr, s, r, sw, ierror)  ! 計算本体
 
   ! モジュールを破棄
+  call output_dispose()
   call m_swflow_dispose(sw, p)
   call m_tide_dispose(ti)
   call m_precip_dispose(pr)
@@ -123,10 +124,6 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
   call par_info("number of threads : "//itoa(p%num_threads))
   call par_info("number of valid cells : "//itoa(s%n_valcells))
 
-
-  ! ファイル出力の準備
-  call output_init(g)
-
   ! 諸情報を初期化
   it = 0                                  ! 時間ループのカウントを初期化
   ifn = 0                                 ! 出力ファイルのカウントを初期化
@@ -136,7 +133,6 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
 
   ! 初期状態の出力(ファイルへの書き込みはランク0のみ)
   call m_state_printstate(p, s)         ! 途中経過を画面に出力
-  call output_open_fnolist(p)           ! ファイル番号リストをオープン　
   call output_state(p, g, s, ifn)       ! 初期状態をファイル出力(集約は output_matrix 内)
   call m_record_probe(r, p, s)          ! プローブの値を出力
   call m_record_flux(r, p, s)           ! フラックスの値を出力
@@ -234,6 +230,7 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
 
   ! 最大流量の一覧を出力
   call m_record_summary(r, p)
+
 
   ! エラー処理は m_main_all 側で行う(dispose と par_finalize を通すため
   ! ここでは error stop しない。ierror を返すのみ)
