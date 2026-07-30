@@ -475,6 +475,11 @@ subroutine fill_depression(p, g, s, list)
   integer :: l
   integer :: iadj, nadj
   real :: ec, en, ec1, en1
+  ! 水位比較の許容差 (m)。これ未満の水位差は平衡とみなす。
+  ! 許容差なしの大小比較は収束条件が水位 z+h のビット一致要求になり、
+  ! 単精度では丸め(ulp ~ 0.1mm 級)により収束しない。
+  ! 入力地形の不確実性から 1mm 未満の水位差は物理的に無意味(§9)。
+  real, parameter :: tol = 1.0e-3
   integer, parameter :: din(1:8) = [ -1,  0,  1, -1,  1, -1,  0,  1]
   integer, parameter :: djn(1:8) = [ -1, -1, -1,  0,  0,  1,  1,  1]
 
@@ -521,15 +526,17 @@ subroutine fill_depression(p, g, s, list)
           jn = j + djn(k)
           if (g%sw(in,jn) > 0) then                             ! 海に隣接する場合は
             s%h(i,j) = 0                                        ! 自セルの水深をゼロに
+            ec = g%z(i,j)                                       ! 水位も更新(古い水位のまま後続の近傍比較で復水させない)
           else
             if (list%f_fill_depres >= 2 .and. g%rw(in,jn) < 1) cycle   ! 近傍セルが河道以外は除外
             en = g%z(in,jn) + s%h(in,jn)      ! 近傍セルの水位
-            if (ec > en) then                 ! 自セルの方が水位が高い場合は自セルの水位を下げる
+            if (ec > en + tol) then           ! 自セルの方が水位が高い場合は自セルの水位を下げる
               ec1 = max(en, g%z(i,j))         ! 自セルの水位は自セルの標高以下にはならない
               s%h(i,j) = ec1 - g%z(i,j)       ! 水深は水位から標高を減じる
+              ec = g%z(i,j) + s%h(i,j)        ! 下げた水位を以降の近傍比較に使う
               iadj = 1
-            else if (en > ec .and. s%h(in,jn) > 0) then   ! 近傍セルに水が有りかつ水位が高い
-              en1 = max(en, g%z(in,jn))         ! 近傍セルの水位は近傍セルの標高以下にはならない
+            else if (en > ec + tol .and. s%h(in,jn) > 0) then   ! 近傍セルに水が有りかつ水位が高い
+              en1 = max(ec, g%z(in,jn))         ! 近傍セルを自セルの水位まで下げる(近傍セルの標高以下にはならない)
               s%h(in,jn) = en1 - g%z(in,jn)     ! 水深は水位から標高を減じる
               iadj = 1
             end if
