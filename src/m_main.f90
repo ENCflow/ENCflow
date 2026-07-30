@@ -1,5 +1,4 @@
 module m_main
-  use, intrinsic :: iso_fortran_env, only: real64
   use m_sysparam, only : t_sysparam, m_sysparam_init, m_sysparam_dispose
   use m_geoinfo, only : t_geoinfo, m_geoinfo_init, m_geoinfo_dispose, m_geoinfo_shrink_coeffs, m_geoinfo_band_shrink
   use m_precip, only : t_precip, m_precip_init, m_precip_dispose, m_precip_makepre
@@ -45,11 +44,6 @@ subroutine m_main_all()
 
   ! MPIを初期化
   call par_init()
-
-  ! コンパイル時にrealを倍精度として指定しているかチェック
-  if (kind(1.0) /= real64) then
-    call par_stop("compile with -r8 / -fdefault-real-8")
-  end if
 
   ! システムパラメータファイル名を取得
   call get_fn_param(fn_sysparam)
@@ -132,6 +126,7 @@ subroutine run_main(p, g, b, pr, s, r, sw, gm, gw, ierror)
 
   call par_info("number of processes : "//itoa(nproc))
   call par_info("number of threads : "//itoa(p%num_threads))
+  call par_info("real precision : "//itoa(storage_size(1.0))//" bit")
   call par_info("number of valid cells : "//itoa(s%n_valcells))
 
   ! 諸情報を初期化

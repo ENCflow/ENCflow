@@ -7,16 +7,27 @@
 
 ## 1. 実数精度の方針
 
-- **倍精度はソースでなくコンパイルフラグで指定する**(ifx `-r8` / gfortran
+- **精度はソースでなくコンパイルフラグで指定する**(ifx `-r8` / gfortran
   `-fdefault-real-8 -fdefault-double-8` / nvfortran `-Mr8` / flang `-r8`)。
   理由: リテラル定数の精度落ち(`x = 0.1` が単精度になる罠)をクラスごと根絶
   できる。kind 方式では `_wp` の付け忘れが残る。
-- 代償: `.mod`/ABI 互換のため、src と utils/rerecord 等は**必ず同一の FFLAGS**
-  でビルドする(make.inc に一元化済み)。
+- **精度は make.inc の `PREC = double|single` で切り替える**(MODE と同じ流儀)。
+  各コンパイラブロックが倍精度化フラグを `R8` に定義し、FFLAGS は `$(RFLAG)`
+  を参照する(コンパイラ固有知識をブロック内に閉じる)。既定は double。
+  single はメモリ半減のための選択肢: 主用途(河川工学・水文学)では入力
+  データの不確実性が大きく、数値安定性の問題を除けば結果に倍精度は不要。
+- **単精度の結果は倍精度 reference と比較できない**(累積丸めが印字桁に出る。
+  ULP=1 でも不整合)。単精度の検証は解析解ベンチマーク+同一バイナリの
+  ビット再現で行う。単精度で収束判定が破綻するパターンは §13
+  (「和を作ってから比較する」)を参照。
+- 代償: `.mod`/ABI 互換のため、src と utils/rerecord 等は**PREC を含めて必ず
+  同一の FFLAGS** でビルドする(make.inc に一元化済み。スタンプ
+  `.mode_<MODE>_<MPIID>_<PREC>` が不整合を検出する)。
 - gfortran は `-fdefault-real-8` 単独だと double precision が16バイトに昇格する。
   **`-fdefault-double-8` を必ず併用**すること。
-- フラグなしビルドは黙って単精度の結果を出す。README に前提を明記し、
-  実行時アサーション(`kind(1.0) /= real64` なら error stop)で防御する。
+- 実行時の精度は停止・警告でなく**報告・宣言**とする: run_main がプロセス数・
+  スレッド数と並べて `real precision : NN bit` を par_info で表示する
+  (stdout 行なので回帰比較対象の result/Log.txt には入らない)。
 
 ## 2. 単一ソース MPI 方式
 
@@ -27,8 +38,10 @@
   MPI_WP のような MPI 版固有の公開は例外的に許す(通信コードは MPI 版にしか
   書かれないため)。
 - 通信の実数データ型は `MPI_REAL` でも `MPI_DOUBLE_PRECISION` でもなく
-  **必ず `MPI_WP`(= MPI_REAL8)を使う**。-r8 昇格と MPI ライブラリの解釈の
-  不整合は、エラーにならず値が化ける最悪の壊れ方をする。
+  **必ず `MPI_WP` を使う**。MPI_WP は par_init が `storage_size(1.0)` から
+  実行時に確定する(PREC=double なら MPI_REAL8、single なら MPI_REAL4)。
+  固定値や MPI_REAL 直書きは、-r8 昇格や PREC と MPI ライブラリの解釈の
+  不整合により、エラーにならず値が化ける最悪の壊れ方をする。
 - OpenMP 併用のため `MPI_Init_thread(MPI_THREAD_FUNNELED)`。MPI 呼び出しは
   マスタースレッドのみが前提。
 - 実行コンテキスト(nrank, nproc, is_root, 領域分割情報 dcp)は m_parallel が
@@ -39,8 +52,9 @@
 
 ## 3. ビルドシステム
 
-- `.mode_$(MODE)_$(MPIID)` スタンプ: MODE 切替と MPI 実装切替(ラッパーの
-  -show 出力のハッシュ)を検出し、混成オブジェクトを防ぐため全再ビルドする。
+- `.mode_$(MODE)_$(MPIID)_$(PREC)` スタンプ: MODE 切替・MPI 実装切替
+  (ラッパーの -show 出力のハッシュ)・実数精度(PREC)切替を検出し、
+  混成オブジェクトを防ぐため全再ビルドする。
 - `$(OBJS): ../make.inc` の依存により、**make.inc の編集は自動で全再ビルド**
   される(-flto の付け外し等も手動 clean 不要)。
 - **残る手動 clean は「serial モードでのコンパイラ本体切替(ifx⇄gfortran 等)」
@@ -49,8 +63,9 @@
   (毎回変化)を含むため、serial でハッシュを取ると make のたびにスタンプ名が
   変わり全再ビルドが繰り返される(実発生)。
 - Run スクリプトは実行前に `make -s print-stamp MODE=...` で期待スタンプ名を
-  問い合わせ、**モードと MPI 実装がビルド時と一致しているかを検証する**
-  (Check_mode.sh。ハッシュのロジックは Makefile 側に一元化)。
+  問い合わせ、**モード・MPI 実装・精度(PREC)がビルド時と一致しているかを
+  検証する**(Check_mode.sh。ロジックは Makefile 側に一元化。PREC は
+  make.inc の現行値で照合されるため、Run スクリプト側の変更は不要)。
   「module を切り替えたのに再ビルドし忘れ」を実行前に堰き止める。
 - ビルドと実行の実装一致は `ldd a.out` でも事後確認できる(不一致だと
   MPICH バイナリ + mpirun.openmpi = 全ランクがシングルトン化し

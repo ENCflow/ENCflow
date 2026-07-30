@@ -28,9 +28,11 @@ module m_parallel
 !     と書くこと(dcp%js+1 と書くと分割後にランク境界まで縮んでしまう)
 !
 ! 注意:
-!   - 本プロジェクトは -r8 等で既定 real を8バイトに昇格している
-!     ため、MPI データ型は MPI_REAL でなく必ず MPI_REAL8 を使う。
-!     (通信を書くときは下の MPI_WP を使うこと)
+!   - 既定 real のサイズはビルド時の PREC(make.inc)で変わるため、
+!     MPI データ型は MPI_REAL/MPI_REAL8 を直接書かず必ず MPI_WP を使う。
+!     MPI_WP は par_init が storage_size(1.0) から実行時に確定する
+!     (MPI_REAL は MPI ライブラリの構成次第で -r8 昇格と食い違い、
+!      エラーにならず値が化けるため使用禁止)
 !   - OpenMP 併用のため MPI_Init_thread で FUNNELED を要求する。
 !     (MPI 呼び出しはマスタースレッドのみ、が前提)
 !   - エラー・警告を error_unit に出すのは意図的(tee で作る
@@ -77,8 +79,8 @@ module m_parallel
 
    type(t_decomp), protected, save :: dcp
 
-   ! 実数通信用データ型(既定 real = 8バイト前提)
-   type(MPI_Datatype), parameter :: MPI_WP = MPI_REAL8
+   ! 実数通信用データ型(par_init が既定 real の実サイズから確定する)
+   type(MPI_Datatype), protected, save :: MPI_WP = MPI_DATATYPE_NULL
 
 contains
 
@@ -94,6 +96,13 @@ contains
       call MPI_Comm_rank(MPI_COMM_WORLD, nrank)
       call MPI_Comm_size(MPI_COMM_WORLD, nproc)
       is_root = (nrank == 0)
+
+      ! 実数通信用データ型を既定 real の実サイズ(PREC 依存)から確定する
+      if (storage_size(1.0) == 64) then
+         MPI_WP = MPI_REAL8
+      else
+         MPI_WP = MPI_REAL4
+      end if
 
       ! 起動側との整合検証: Run スクリプトが期待ランク数を環境変数で渡す。
       ! PMI 不整合によるシングルトン化(全プロセスが nproc=1 で独立起動し、

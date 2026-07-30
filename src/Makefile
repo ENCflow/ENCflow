@@ -38,11 +38,11 @@ $(LIB): $(LIBOBJS)
 	$(AR) $(ARFLAGS) $@ $(LIBOBJS)
 
 # ---------------------------------------------------------------
-# MODE / MPI 実装切り替え時の安全装置
-#   前回ビルドと MODE または MPI 実装(module 環境)が変わっていたら
-#   全オブジェクトを作り直す。
-#   (serial/mpi の .o、m_parallel.mod、異なる MPI の mpi.mod の
-#    混在リンクを防ぐ)
+# MODE / MPI 実装 / 実数精度(PREC)切り替え時の安全装置
+#   前回ビルドと MODE・MPI 実装(module 環境)・PREC のいずれかが
+#   変わっていたら全オブジェクトを作り直す。
+#   (serial/mpi の .o、m_parallel.mod、異なる MPI の mpi.mod、
+#    異なる実数サイズの .o/.mod の混在リンクを防ぐ)
 #   MPIID: MPI ラッパーの -show 出力(実装ごとに異なる)のハッシュ。
 #          MPI モードでのみ計算する。serial ではスタンプにハッシュを
 #          付けない — 非ラッパーの -show は「失敗して空」とは限らず、
@@ -55,7 +55,7 @@ MPIID	:= _$(shell $(FRT) -show 2>/dev/null | md5sum | cut -c1-8)
 else
 MPIID	:=
 endif
-MODESTAMP	= .mode_$(MODE)_$(MPIID)
+MODESTAMP	= .mode_$(MODE)_$(MPIID)_$(PREC)
 
 $(OBJS): $(MODESTAMP) ../make.inc
 
