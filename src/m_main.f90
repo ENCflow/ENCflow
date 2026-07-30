@@ -7,6 +7,7 @@ module m_main
   use m_boundary, only : t_boundary, m_boundary_init, m_boundary_dispose, m_boundary_makebdc
   use m_state, only : t_state, m_state_init, m_state_dispose, m_state_updatetime, m_state_calcstat, m_state_printstate
   use m_record, only : t_record, m_record_init, m_record_dispose, m_record_probe, m_record_flux, m_record_summary
+  use m_geomorph, only : t_geomorph, m_geomorph_init, m_geomorph_calc, m_geomorph_dispose
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc
   use m_output, only : output_init, output_dispose, output_chk_geoinfo, output_state, output_summary
   use m_util, only : itoa
@@ -35,6 +36,7 @@ subroutine m_main_all()
   type(t_boundary) :: b
   type(t_state) :: s
   type(t_record) :: r
+  type(t_geomorph) :: gm
   type(t_swflow) :: sw
   character(len=256) :: fn_sysparam
   integer :: ierror
@@ -66,6 +68,7 @@ subroutine m_main_all()
   call m_state_init(s, p, g)              ! state を初期化(geoinfo, boundaryより後に)
   call m_record_init(r, p, g)             ! record を初期化(create_resultdirより後)
   call m_precip_init(pr, p, g)            ! precip を初期化
+  call m_geomorph_init(gm, p, g)          ! geomorph を初期化(fn_geomorph 指定時のみ有効)
   call m_tide_init(ti, p, g)              ! tide を初期化
   call m_swflow_init(sw, p, g, b, s)      ! swflow を初期化
   call output_init(p, g)                  ! ファイル出力の準備(geoinfoより後に)
@@ -74,13 +77,14 @@ subroutine m_main_all()
   call m_geoinfo_band_shrink(g)           ! マスク類(x,sw,rw)と z(rank0以外)を帯に縮小
 
   ! ==== 時間ループ: すべて帯確保(z のみ rank0 が全域を保持) ====
-  call run_main(p, g, b, pr, s, r, sw, ierror)  ! 計算本体
+  call run_main(p, g, b, pr, s, r, sw, gm, ierror)  ! 計算本体
 
   ! モジュールを破棄
   call output_dispose()
   call m_swflow_dispose(sw, p)
   call m_tide_dispose(ti)
   call m_precip_dispose(pr)
+  call m_geomorph_dispose(gm)
   call m_record_dispose(r)
   call m_state_dispose(s, p)
   call m_boundary_dispose(b)
@@ -106,13 +110,14 @@ end subroutine
 !----------------------------------------------------------------------
 ! 計算本体
 !----------------------------------------------------------------------
-subroutine run_main(p, g, b, pr, s, r, sw, ierror)
+subroutine run_main(p, g, b, pr, s, r, sw, gm, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
   type(t_precip), intent(in) :: pr
   type(t_state), intent(inout) :: s
   type(t_record), intent(inout) :: r
+  type(t_geomorph), intent(in) :: gm
   type(t_swflow), intent(in) :: sw
   integer, intent(out) :: ierror
   integer :: it            ! 時間ループのカウント
@@ -161,6 +166,10 @@ subroutine run_main(p, g, b, pr, s, r, sw, ierror)
 
     ! 発散検出はランク局所のため、判定に先立ち全ランク最大へ集約する
     call par_allreduce_maxi(ierror)
+
+    ! 地形変化を計算(fn_geomorph 未指定なら no-op。s%z と s%e を更新し、
+    ! 末尾で s%z のハロ交換まで済ませる)
+    call m_geomorph_calc(gm, p, g, s, it)
 
     ! 統計情報を計算
     call m_state_calcstat(s, p, g)

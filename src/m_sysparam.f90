@@ -78,6 +78,7 @@ module m_sysparam
     character(:), allocatable :: fn_tide       ! 潮位条件設定ファイル
     character(:), allocatable :: fn_boundary   ! 境界条件設定ファイル
     character(:), allocatable :: fn_record     ! 記録設定ファイル
+    character(:), allocatable :: fn_geomorph   ! 地形変化条件設定ファイル
     character(:), allocatable :: fn_enc        ! ENC設定ファイル
     character(:), allocatable :: fn_log        ! 状態ログファイル
     character(:), allocatable :: dir_data      ! 入力データディレクトリ
@@ -179,6 +180,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%fn_tide = list%fn_tide                     ! 潮位条件設定ファイル
   p%fn_boundary = list%fn_boundary             ! 境界条件設定ファイル
   p%fn_record = list%fn_record                 ! 記録設定ファイル
+  p%fn_geomorph = list%fn_geomorph             ! 地形変化条件設定ファイル
   p%fn_enc = list%fn_enc                       ! ENC設定ファイル
   p%fn_log = list%fn_log                       ! 状態ログファイル
   p%dir_data = list%dir_data                   ! 入力データディレクトリ
