@@ -12,10 +12,12 @@ module m_gwflow_bucket
   !      呼ぶこと。本モデルは鉛直のみなのでハロ交換は一切不要
   !  (4) 内部表現が層別水分など複雑な場合も、毎ステップ柱状換算値を
   !      s%hg に反映すること(質量台帳・出力・計測が共通で動く契約)
-  !  (5) モデル固有の内部状態を持つ場合、リスタート保存はモデル私有の
-  !      ファイルで行う(init で復元、dispose で保存。enc の save_enc と
-  !      同じ流儀)。本モデルは内部状態を持たないため save/restore 不要
-  !      (s%hg 自体は m_state の save_state が面倒を見る)
+  !  (5) モデル固有の内部状態を持つ場合、リスタート保存は p%dir_save 下の
+  !      モデル私有ファイル(gwflow_<モデル名>.dat)で行う(init で復元、
+  !      dispose で保存。m_swflow_enc と同じ流儀)。restore では自ファイルの
+  !      有無のみ確認し、無ければ par_stop(版・格子・精度の検証は m_state が
+  !      済ませている。developer.md §7)。本モデルは内部状態を持たないため
+  !      save/restore 不要(s%hg 自体は m_state の save_state が面倒を見る)
   ! ==============================================================
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo

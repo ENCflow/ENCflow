@@ -23,6 +23,12 @@
    - 切替器 vs 重ね合わせの使い分け原則、s%hg 柱状換算契約、S 台帳、
      モデル実装5箇条(m_gwflow_bucket ヘッダが正本)
 3. developer.md の日付プレースホルダ(2026-xx)の実日付化(残があれば)
+4. **save/restore 再編(dir_save + save_info.txt)の検証(直近の宿題)**
+   - 保存→復元の往復で状態がビット一致(逐次・np=1,2,4)
+   - save_info.txt の版・格子・精度・成分数の不一致で par_stop すること
+     (旧 save_state.dat 形式は読めなくなった=版エラーで停止が正)
+   - swflow_enc.dat 欠如時に par_stop すること
+   - PREC=single での保存→single 復元、および double 保存→single 復元の停止確認
 
 ## 中期の道標(着手順は実測次第)
 

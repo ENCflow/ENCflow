@@ -79,12 +79,12 @@ m_gwflow_bucket.o: m_sysparam.o m_state.o m_geoinfo.o $(PAR_OBJ)
 list_gwflow.o: m_sysparam.o $(PAR_OBJ)
 m_tide.o: m_sysparam.o list_tide.o m_geoinfo.o $(PAR_OBJ)
 m_boundary.o: m_sysparam.o m_geoinfo.o m_state.o list_boundary.o $(PAR_OBJ)
-m_state.o: m_sysparam.o m_geoinfo.o list_initial.o m_util.o
+m_state.o: m_sysparam.o m_geoinfo.o list_initial.o m_util.o m_sysdep_util.o
 m_record.o: m_sysparam.o list_record.o m_geoinfo.o m_state.o m_util.o m_sysdep_util.o $(PAR_OBJ)
 m_swflow.o: m_sysparam.o m_geoinfo.o m_boundary.o m_state.o \
 	m_swflow_enc.o m_swflow_stg.o $(PAR_OBJ)
 m_swflow_enc.o: m_sysparam.o list_enc.o m_geoinfo.o m_boundary.o \
-	m_precip.o m_state.o m_ffactor.o $(PAR_OBJ)
+	m_precip.o m_state.o m_ffactor.o m_sysdep_util.o $(PAR_OBJ)
 m_swflow_stg.o: m_sysparam.o m_geoinfo.o m_precip.o m_boundary.o m_state.o
 m_swflow_enc_adv.o: m_swflow_enc.o m_state.o
 list_sysparam.o: $(PAR_OBJ)

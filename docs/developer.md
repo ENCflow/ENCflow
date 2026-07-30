@@ -153,11 +153,28 @@
   セル窓より i, j とも1行外(die/dje=-1)に張り出すため、**エッジのコミット・
   交換をセルループに畳み込んではならない**(縁の格納位置が漏れる)。
   移行時に旧 mn0 コピーの「窓縁エッジの取りこぼし」も修正された。
-- リスタート(save_state/restore_state)の保存対象は **s%h, u, v と
-  sx%uv, mn(エッジ状態)**。エッジ状態を含むため力学状態は厳密に復元される。
-  最大値統計(hmax 系)・qcum・sp(表示区間統計)は対象外で、リスタート後
-  ゼロから再集計される(意図的な仕様)。保存形式を変更する場合は既存
-  save_state.dat との互換に注意。
+- リスタートの保存先は **p%dir_save(既定 "save"。dir_result から独立)**。
+  読込元=保存先なので、リスタート連鎖(保存→復元→保存)がパラメータ
+  編集なしで回る。ファイル構成:
+  - `save_info.txt` — メタデータ(namelist &save_info)。**書き手は m_state
+    ただ一人**(m_state_dispose は dispose 列の最後の saver。全ファイル完成後
+    に書くので完成マーカーを兼ねる)。内容: save_version(**仕様変更日の
+    日付文字列**。形式を変えたら m_state の save_version_cur を更新)、
+    nx, ny, precision_bits, n_state, t, it。
+  - `state.dat` — m_state の6成分(h, u, v, z, rsh, hg の連結)。
+  - `swflow_enc.dat` — sx%uv, mn(エッジ状態。力学状態は厳密に復元される)。
+  - `gwflow_<モデル名>.dat` — 内部状態を持つ地下水モデルの私有ファイル。
+- **restore の門番は m_state(check_save_info)**: 全ランクが save_info.txt を
+  冗長に読み、版・格子・精度・成分数を検証して不一致は par_stop(判定は
+  全ランク同一 → collective 安全)。後段のモジュール(swflow_enc、内部状態を
+  持つ gwflow モデル)は**自ファイルの有無のみ確認し、無ければ par_stop**
+  (黙ってスキップしない。内部状態を持たないモデルはファイル無しが正常)。
+  m_state_init が swflow/gwflow の init より先に走る初期化順序が門番の前提。
+- 時刻(t, it)はメタデータに**記録するが継続しない**(復元は「保存状態を
+  初期条件に使う」意味論。開始時刻は param の t0)。時刻継続は別の検討事項。
+- 最大値統計(hmax 系)・qcum・sp(表示区間統計)は対象外で、リスタート後
+  ゼロから再集計される(意図的な仕様)。精度不一致の restore は停止
+  (変換復元が必要になったらメタデータ駆動で追加できる)。
 
 ## 8. OpenMP の決定性
 

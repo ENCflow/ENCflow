@@ -5,7 +5,8 @@ module m_state
   use m_parallel, only : is_root, par_info, par_stop, dcp, &
                        par_sum_rows, par_allreduce_max, par_allreduce_sumi, &
                        par_gather_to, par_bcast_cell
-  use m_util, only : itoa
+  use m_util, only : itoa, rtoa
+  use m_sysdep_util, only : sysdep_mkdir
   use iso_fortran_env, only : output_unit
   implicit none
   private
@@ -97,6 +98,13 @@ module m_state
       type(t_state), intent(inout) :: s
     end subroutine
   end interface
+
+
+  ! ---- save/restore 形式の版 ----
+  !   仕様変更日の日付文字列。save の並び・成分・メタデータを変更したら
+  !   必ずこの日付を更新する(restore 時の照合に使う。developer.md §7)
+  character(len=*), parameter :: save_version_cur = "2026-07-30"
+  integer, parameter :: n_state_save = 6     ! state.dat の成分数(h,u,v,z,rsh,hg)
 
 
 contains
@@ -645,13 +653,13 @@ subroutine save_state(p, s)
   type(t_state), intent(in) :: s
   integer :: un
   real, allocatable :: wk(:,:,:)
-  integer, parameter :: n_wk = 6
   ! 全域バッファに集約してから rank0 のみが書く。
   ! write(un) wk のレコードは h, u, v, z, rsh, hg の連結
+  call sysdep_mkdir(p%dir_save)
   if (is_root) then
-    allocate(wk(1:dcp%nx_g, 1:dcp%ny_g, n_wk), source = 0.0)
+    allocate(wk(1:dcp%nx_g, 1:dcp%ny_g, n_state_save), source = 0.0)
   else
-    allocate(wk(1, 1, n_wk))          ! 参照されないダミー
+    allocate(wk(1, 1, n_state_save))          ! 参照されないダミー
   end if
   call par_gather_to(wk(:,:,1), s%h)
   call par_gather_to(wk(:,:,2), s%u)
@@ -660,9 +668,13 @@ subroutine save_state(p, s)
   call par_gather_to(wk(:,:,5), s%rsh)
   call par_gather_to(wk(:,:,6), s%hg)
   if (.not. is_root) return
-  open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted', status='replace')
+  open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', status='replace')
   write(un) wk
   close(un)
+
+  ! メタデータは最後に書く(save 一式の完成マーカーを兼ねる。
+  ! m_state_dispose は dispose 列の最後の saver — この順序を崩さない)
+  call write_save_info(p, s)
 end subroutine
 
 
@@ -675,10 +687,13 @@ subroutine restore_state(p, s)
   integer :: un
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (s%initialized) continue  ! 引数未使用の警告を抑制
+  ! 門番: メタデータを検証してから読む(不一致は par_stop)
+  call check_save_info(p)
+
   ! rank0 が読み、全ランクへ配布する。受け取る s は全域一時状態 ts
   ! (全ランク同形)なので Bcast が成立する。帯への切り出しは呼び出し側
   if (is_root) then
-    open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted', status='old')
+    open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', status='old')
     ! 読み並びは save_state の write(un) wk の連結順(h, u, v, z, rsh)と
     ! 一致させること。成分を足すときは save と restore を必ず同時に更新する
     read(un) s%h, s%u, s%v, s%z, s%rsh, s%hg
@@ -690,6 +705,88 @@ subroutine restore_state(p, s)
   call par_bcast_cell(s%z)
   call par_bcast_cell(s%rsh)
   call par_bcast_cell(s%hg)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! save メタデータ(save_info.txt)を namelist 形式で書く(rank0 のみ)
+!   全ファイルの書き込み完了後に呼ぶ(save 一式の完成マーカーを兼ねる)
+!----------------------------------------------------------------------
+subroutine write_save_info(p, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_state), intent(in) :: s
+  integer :: un
+  character(len=8) :: d
+  character(len=10) :: tod
+  character(len=16) :: save_version
+  integer :: nx, ny, precision_bits, n_state, it
+  real :: t
+  namelist /save_info/ save_version, nx, ny, precision_bits, n_state, t, it
+
+  if (.not. is_root) return
+  save_version = save_version_cur
+  nx = dcp%nx_g
+  ny = dcp%ny_g
+  precision_bits = storage_size(1.0)
+  n_state = n_state_save
+  t = s%t
+  it = s%it
+  call date_and_time(date=d, time=tod)
+  open(newunit=un, file=trim(p%dir_save)//'/save_info.txt', status='replace')
+  write(un, '(11a)') "! ENCflow restart save (", d(1:4), "-", d(5:6), "-", d(7:8), &
+                     " ", tod(1:2), ":", tod(3:4), ")"
+  write(un, nml=save_info)
+  close(un)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! save メタデータを検証する(restore の門番。全ランクが冗長に読む)
+!   版・格子サイズ・実数精度・成分数の不一致は par_stop。
+!   検証は全ランク同一 → par_stop の collective 条件を満たす。
+!   後段のモジュール(swflow_enc、内部状態を持つ gwflow モデル等)は
+!   ここで検証済みとして自ファイルの有無だけを確認すればよい(§7)
+!----------------------------------------------------------------------
+subroutine check_save_info(p)
+  type(t_sysparam), intent(in) :: p
+  integer :: un, ios
+  character(:), allocatable :: fname
+  character(len=16) :: save_version
+  integer :: nx, ny, precision_bits, n_state, it
+  real :: t
+  namelist /save_info/ save_version, nx, ny, precision_bits, n_state, t, it
+
+  fname = trim(p%dir_save)//'/save_info.txt'
+  save_version = ""
+  nx = -1; ny = -1; precision_bits = -1; n_state = -1
+  t = 0.0; it = 0
+
+  open(newunit=un, file=fname, status='old', action='read', iostat=ios)
+  if (ios /= 0) then
+    call par_stop("save_info.txt がありません(save が存在しないか不完全です): "//fname)
+  end if
+  read(un, nml=save_info, iostat=ios)
+  close(un)
+  if (ios /= 0) call par_stop("save_info.txt を読めません: "//fname)
+
+  if (trim(save_version) /= save_version_cur) then
+    call par_stop("save は "//trim(save_version)//" 版の形式で保存されていますが、" &
+                  //"この実行形式が読めるのは "//save_version_cur//" 版です: "//fname)
+  end if
+  if (nx /= dcp%nx_g .or. ny /= dcp%ny_g) then
+    call par_stop("save の格子("//itoa(nx)//" x "//itoa(ny)//")が" &
+                  //"現在の格子("//itoa(dcp%nx_g)//" x "//itoa(dcp%ny_g)//")と一致しません")
+  end if
+  if (precision_bits /= storage_size(1.0)) then
+    call par_stop("save の実数精度("//itoa(precision_bits)//" bit)が" &
+                  //"実行時の精度("//itoa(storage_size(1.0))//" bit)と一致しません")
+  end if
+  if (n_state /= n_state_save) then
+    call par_stop("save の状態成分数("//itoa(n_state)//")が想定(" &
+                  //itoa(n_state_save)//")と一致しません")
+  end if
+
+  call par_info("restore: t="//rtoa(t)//" s (it="//itoa(it)//") の保存状態を初期条件に読み込みます")
 end subroutine
 
 end module

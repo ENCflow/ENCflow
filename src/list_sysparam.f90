@@ -89,6 +89,7 @@ module list_sysparam
     character(len=maxpathlen) :: fn_log = "Log.txt"      ! 状態ログファイル
     character(len=maxpathlen) :: dir_data = "."          ! 入力データディレクトリ
     character(len=maxpathlen) :: dir_result = "result"   ! 結果出力ディレクトリ
+    character(len=maxpathlen) :: dir_save = "save"       ! 状態保存(save/restore)ディレクトリ
     character(len=maxpathlen) :: outfn_suffix = ""       ! 出力ファイル名のサフィックス
   end type
 
@@ -173,6 +174,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: fn_log        ! 状態ログファイル
   character(:), allocatable :: dir_data      ! 入力データディレクトリ
   character(:), allocatable :: dir_result    ! 結果出力ディレクトリ
+  character(:), allocatable :: dir_save      ! 状態保存(save/restore)ディレクトリ
   character(:), allocatable :: outfn_suffix  ! 出力ファイル名のサフィックス
   integer :: un
   integer :: ios
@@ -190,7 +192,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_ddd, f_out_dda, f_out_pre, f_out_rsh, f_out_fr, f_out_cn, f_out_hg, &
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
                         fn_record, fn_geomorph, fn_gwflow, fn_enc, &
-                        fn_log, dir_data, dir_result, outfn_suffix
+                        fn_log, dir_data, dir_result, dir_save, outfn_suffix
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -266,6 +268,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   fn_log = list%fn_log
   dir_data = list%dir_data
   dir_result = list%dir_result
+  dir_save = list%dir_save
   outfn_suffix = list%outfn_suffix
 
   call par_info("reading list_sysparam in "//trim(fn_sysparam))
@@ -346,6 +349,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%fn_log = fn_log
   list%dir_data = dir_data
   list%dir_result = dir_result
+  list%dir_save = dir_save
   list%outfn_suffix = outfn_suffix
 
   if (trim(list%fn_geoinfo) == "-") list%fn_geoinfo = trim(fn_sysparam)

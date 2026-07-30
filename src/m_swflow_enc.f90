@@ -5,9 +5,10 @@ module m_swflow_enc
   use m_state, only : t_state
   use m_ffactor, only : m_ffactor_init, m_ffactor_calc, m_ffactor_dispose
   use list_enc, only : t_list_enc, list_enc_read
-  use m_parallel, only : par_info, dcp, is_root, &
+  use m_parallel, only : par_info, par_stop, dcp, is_root, &
                        par_halo_cell, par_halo_edge, par_edge_merge, &
                        par_gather_edge_to, par_bcast_edge
+  use m_sysdep_util, only : sysdep_mkdir
   implicit none
   private
 
@@ -913,7 +914,10 @@ subroutine save_state(p, sx)
   call par_gather_edge_to(wuv, sx%uv)
   call par_gather_edge_to(wmn, sx%mn)
   if (.not. is_root) return
-  open(newunit=un, file=trim(p%dir_result)//'/save_enc.dat', form='unformatted', status='replace')
+  ! swflow の dispose は m_state より先に走るため、save ディレクトリは
+  ! ここでも作る(sysdep_mkdir は冪等・rank0 限定)
+  call sysdep_mkdir(p%dir_save)
+  open(newunit=un, file=trim(p%dir_save)//'/swflow_enc.dat', form='unformatted', status='replace')
   write(un) wuv, wmn
   close(un)
 end subroutine
@@ -927,12 +931,24 @@ subroutine restore_state(p, sx)
   type(t_enc_status), intent(inout) :: sx
   integer :: un
   real, allocatable :: wuv(:,:,:), wmn(:,:,:)
+  character(:), allocatable :: fname
+  logical :: found
+
+  ! 版・格子・精度の検証は m_state(check_save_info)が済ませている。
+  ! ここでは自ファイルの有無のみ確認する(developer.md §7)。
+  ! 無い場合は黙ってスキップせず停止(保存時の格子系が ENC でない疑い)
+  fname = trim(p%dir_save)//'/swflow_enc.dat'
+  inquire(file=fname, exist=found)
+  if (.not. found) then
+    call par_stop("swflow_enc の保存ファイルがありません(保存時の格子系は ENC でしたか): "//fname)
+  end if
+
   ! rank0 が全域一時配列に読み、Bcast(全ランク同形)してから帯を切り出す。
   ! 一時配列2本ぶんの全域メモリが復元時のみ一過性に必要になる点に注意
   allocate(wuv(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
   allocate(wmn(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
   if (is_root) then
-    open(newunit=un, file=trim(p%dir_result)//'/save_enc.dat', form='unformatted', status='old')
+    open(newunit=un, file=fname, form='unformatted', status='old')
     read(un) wuv, wmn
     close(un)
   end if

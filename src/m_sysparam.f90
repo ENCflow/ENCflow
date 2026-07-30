@@ -85,6 +85,7 @@ module m_sysparam
     character(:), allocatable :: fn_log        ! 状態ログファイル
     character(:), allocatable :: dir_data      ! 入力データディレクトリ
     character(:), allocatable :: dir_result    ! 結果出力ディレクトリ
+    character(:), allocatable :: dir_save      ! 状態保存(save/restore)ディレクトリ
     character(:), allocatable :: outfn_suffix  ! 出力ファイル名のサフィックス
     logical :: initialized = .false.           ! 初期化済みフラグ
   end type
@@ -189,6 +190,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%fn_log = list%fn_log                       ! 状態ログファイル
   p%dir_data = list%dir_data                   ! 入力データディレクトリ
   p%dir_result = list%dir_result               ! 結果出力ディレクトリ
+  p%dir_save = list%dir_save                   ! 状態保存(save/restore)ディレクトリ
   p%outfn_suffix = list%outfn_suffix           ! 出力ファイル名のサフィックス
 
   if (len(trim(list%t0_c)) > 0) p%t0 = str2sec(list%t0_c, "bad t0_c in &list_sysparam")
