@@ -64,6 +64,7 @@ module m_sysparam
     integer :: f_out_rsh                       ! ファイル出力(ため池水深Rsh0001)
     integer :: f_out_fr                        ! ファイル出力(フルード数Fr0001)
     integer :: f_out_cn                        ! ファイル出力(クーラン数Cn0001)
+    integer :: f_out_hg                        ! ファイル出力(地下貯留水深Hg0001)
     integer :: f_out_hmax                      ! ファイル出力(最大水深H9999)
     integer :: f_out_hmaxt                     ! ファイル出力(最大水深発生時刻Ht9999)
     integer :: f_out_vvmax                     ! ファイル出力(最大流速V9999)
@@ -79,6 +80,7 @@ module m_sysparam
     character(:), allocatable :: fn_boundary   ! 境界条件設定ファイル
     character(:), allocatable :: fn_record     ! 記録設定ファイル
     character(:), allocatable :: fn_geomorph   ! 地形変化条件設定ファイル
+    character(:), allocatable :: fn_gwflow     ! 地下水条件設定ファイル
     character(:), allocatable :: fn_enc        ! ENC設定ファイル
     character(:), allocatable :: fn_log        ! 状態ログファイル
     character(:), allocatable :: dir_data      ! 入力データディレクトリ
@@ -167,6 +169,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%f_out_rsh = list%f_out_rsh                 ! ファイル出力(ため池水深Rsh0001)
   p%f_out_fr = list%f_out_fr                   ! ファイル出力(フルード数Fr0001)
   p%f_out_cn = list%f_out_cn                   ! ファイル出力(クーラン数Cn0001)
+  p%f_out_hg = list%f_out_hg                   ! ファイル出力(地下貯留水深Hg0001)
   p%f_out_hmax = list%f_out_hmax               ! ファイル出力(最大水深H9999)
   p%f_out_hmaxt = list%f_out_hmaxt             ! ファイル出力(最大水深発生時刻Ht9999)
   p%f_out_vvmax = list%f_out_vvmax             ! ファイル出力(最大流速V9999)
@@ -181,6 +184,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%fn_boundary = list%fn_boundary             ! 境界条件設定ファイル
   p%fn_record = list%fn_record                 ! 記録設定ファイル
   p%fn_geomorph = list%fn_geomorph             ! 地形変化条件設定ファイル
+  p%fn_gwflow = list%fn_gwflow                 ! 地下水条件設定ファイル
   p%fn_enc = list%fn_enc                       ! ENC設定ファイル
   p%fn_log = list%fn_log                       ! 状態ログファイル
   p%dir_data = list%dir_data                   ! 入力データディレクトリ

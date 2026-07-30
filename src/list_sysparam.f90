@@ -65,6 +65,7 @@ module list_sysparam
     integer :: f_out_rsh = 0                      ! ファイル出力(ため池水深Rsh0001)
     integer :: f_out_fr = 0                       ! ファイル出力(フルード数Fr0001)
     integer :: f_out_cn = 0                       ! ファイル出力(クーラン数Cn0001)
+    integer :: f_out_hg = 0                       ! ファイル出力(地下貯留水深Hg0001)
     integer :: f_out_hmax = 1                     ! ファイル出力(最大水深H9999)
     integer :: f_out_hmaxt = 0                    ! ファイル出力(最大水深発生時刻Ht9999)
     integer :: f_out_vvmax = 1                    ! ファイル出力(最大流速V9999)
@@ -82,6 +83,7 @@ module list_sysparam
     character(len=maxpathlen) :: fn_boundary = ""        ! 境界条件設定ファイル
     character(len=maxpathlen) :: fn_record = ""          ! 記録設定ファイル
     character(len=maxpathlen) :: fn_geomorph = ""        ! 地形変化条件設定ファイル
+    character(len=maxpathlen) :: fn_gwflow = ""          ! 地下水条件設定ファイル
     character(len=maxpathlen) :: fn_enc = ""             ! ENC設定ファイル
 
     character(len=maxpathlen) :: fn_log = "Log.txt"      ! 状態ログファイル
@@ -151,6 +153,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   integer :: f_out_rsh                       ! ファイル出力(ため池水深Rsh0001)
   integer :: f_out_fr                        ! ファイル出力(フルード数Fr0001)
   integer :: f_out_cn                        ! ファイル出力(クーラン数Cn0001)
+  integer :: f_out_hg                        ! ファイル出力(地下貯留水深Hg0001)
   integer :: f_out_hmax                      ! ファイル出力(最大水深H9999)
   integer :: f_out_hmaxt                     ! ファイル出力(最大水深発生時刻Ht9999)
   integer :: f_out_vvmax                     ! ファイル出力(最大流速V9999)
@@ -165,6 +168,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: fn_boundary   ! 境界条件設定ファイル
   character(:), allocatable :: fn_record     ! 記録設定ファイル
   character(:), allocatable :: fn_geomorph   ! 地形変化条件設定ファイル
+  character(:), allocatable :: fn_gwflow     ! 地下水条件設定ファイル
   character(:), allocatable :: fn_enc        ! ENC設定ファイル
   character(:), allocatable :: fn_log        ! 状態ログファイル
   character(:), allocatable :: dir_data      ! 入力データディレクトリ
@@ -183,9 +187,9 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_z, f_out_h, f_out_e, f_out_u, f_out_v, f_out_m, f_out_n, &
                         f_out_vv, f_out_qq, f_out_qc, f_out_qd, &
                         f_out_hmax, f_out_hmaxt, f_out_vvmax, f_out_qqmax, f_out_qqmaxt, f_out_qqmaxd, &
-                        f_out_ddd, f_out_dda, f_out_pre, f_out_rsh, f_out_fr, f_out_cn, &
+                        f_out_ddd, f_out_dda, f_out_pre, f_out_rsh, f_out_fr, f_out_cn, f_out_hg, &
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
-                        fn_record, fn_geomorph, fn_enc, &
+                        fn_record, fn_geomorph, fn_gwflow, fn_enc, &
                         fn_log, dir_data, dir_result, outfn_suffix
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
@@ -241,6 +245,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   f_out_pre = list%f_out_pre
   f_out_rsh = list%f_out_rsh
   f_out_cn = list%f_out_cn
+  f_out_hg = list%f_out_hg
   f_out_fr = list%f_out_fr
   f_out_hmax = list%f_out_hmax
   f_out_hmaxt = list%f_out_hmaxt
@@ -256,6 +261,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   fn_boundary = list%fn_boundary
   fn_record = list%fn_record
   fn_geomorph = list%fn_geomorph
+  fn_gwflow = list%fn_gwflow
   fn_enc = list%fn_enc
   fn_log = list%fn_log
   dir_data = list%dir_data
@@ -320,6 +326,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%f_out_rsh = f_out_rsh
   list%f_out_fr = f_out_fr
   list%f_out_cn = f_out_cn
+  list%f_out_hg = f_out_hg
   list%f_out_hmax = f_out_hmax
   list%f_out_hmaxt = f_out_hmaxt
   list%f_out_vvmax = f_out_vvmax
@@ -334,6 +341,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%fn_boundary = fn_boundary
   list%fn_record = fn_record
   list%fn_geomorph = fn_geomorph
+  list%fn_gwflow = fn_gwflow
   list%fn_enc = fn_enc
   list%fn_log = fn_log
   list%dir_data = dir_data
@@ -348,6 +356,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   if (trim(list%fn_boundary) == "-") list%fn_boundary = trim(fn_sysparam)
   if (trim(list%fn_record) == "-") list%fn_record = trim(fn_sysparam)
   if (trim(list%fn_geomorph) == "-") list%fn_geomorph = trim(fn_sysparam)
+  if (trim(list%fn_gwflow) == "-") list%fn_gwflow = trim(fn_sysparam)
   if (trim(list%fn_enc) == "-") list%fn_enc = trim(fn_sysparam)
 
 end subroutine

@@ -46,6 +46,8 @@ module m_state
     real, allocatable :: pre(:,:)       ! precipitation (m/s)
     real, allocatable :: prh(:,:)       ! precipitation (mm/h)
     real, allocatable :: rsh(:,:)       ! water depth of reservoir (m)
+    real, allocatable :: hg(:,:)        ! 地下貯留水深(柱状換算)(m)。どの地下水
+                                        ! モデルも毎ステップここに反映する契約
     real, allocatable :: tide(:,:)      ! tidal level (m)
     real, allocatable :: hmax(:,:)      ! maximum depth (m)
     real, allocatable :: hmaxt(:,:)     ! maximum depth time (min)
@@ -59,6 +61,8 @@ module m_state
     real, allocatable :: cn(:,:)        ! Courant number
     integer, allocatable :: ddir1(:,:)  ! dominant down stream direction flag (2**(1~8))
     integer, allocatable :: ddir8(:,:)  ! all down stream direction flag (sum(2**(1~8)))
+    real :: hgmean = 0.0     ! 領域平均の地下貯留高(m)。gw_active 時のみ更新
+    logical :: gw_active = .false.  ! 地下水モデルの有効化(m_gwflow_init が設定)
     real :: hmean
     real :: cnmax
     integer :: n_valcells               ! number of valid cells
@@ -127,6 +131,7 @@ subroutine m_state_init(s, p, g)
   allocate(s%pre(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%prh(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%rsh(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%hg(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%tide(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hmax(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hmaxt(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
@@ -150,6 +155,7 @@ subroutine m_state_init(s, p, g)
   allocate(ts%v(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%z(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%rsh(1:g%nx,1:g%ny), source = 0.0)
+  allocate(ts%hg(1:g%nx,1:g%ny), source = 0.0)
 
   call m_state_updatetime(s, p, 0)
   call set_z(p, g, ts, list)
@@ -184,6 +190,7 @@ subroutine m_state_init(s, p, g)
   s%v(:,:) = ts%v(1:g%nx, dcp%jsh:dcp%jeh)
   s%z(:,:) = ts%z(1:g%nx, dcp%jsh:dcp%jeh)
   s%rsh(:,:) = ts%rsh(1:g%nx, dcp%jsh:dcp%jeh)
+  s%hg(:,:) = ts%hg(1:g%nx, dcp%jsh:dcp%jeh)
 
   ! 初期水位をセット
   s%e(:,:) = s%z(:,:) + s%h(:,:)
@@ -223,6 +230,8 @@ subroutine m_state_calcstat(s, p, g)
   real :: cnmax
   real :: hsum
   real :: hsum_j(dcp%js:dcp%je)
+  real :: hgsum
+  real :: hgsum_j(dcp%js:dcp%je)
   real :: qcumf
   real :: dtpdx     ! dt / min(dx, dy)
   real :: cosdir
@@ -233,6 +242,8 @@ subroutine m_state_calcstat(s, p, g)
 
   hsum = 0
   hsum_j(:) = 0.0
+  hgsum = 0
+  hgsum_j(:) = 0.0
   hmax = 0
   vvmax = 0
   qqmax = 0
@@ -268,6 +279,7 @@ subroutine m_state_calcstat(s, p, g)
         s%cn(i,j) = (s%vv(i,j) + cc) * dtpdx                   ! クーラン数(波速を考慮)
       end if
       hsum_j(j) = hsum_j(j) + s%h(i,j)
+      if (s%gw_active) hgsum_j(j) = hgsum_j(j) + s%hg(i,j)
       hmax = max(hmax, s%h(i,j))
       vvmax = max(vvmax, s%vv(i,j))
       qqmax = max(qqmax, s%qq(i,j))
@@ -282,6 +294,11 @@ subroutine m_state_calcstat(s, p, g)
   ! (ランク数に依存しない)。max は順序不変な厳密演算なので allreduce。
   ! 事象カウント(ランク局所)は全ランク合計に集約してから使う。
   call par_sum_rows(hsum_j, hsum)
+  ! 地下貯留の総和(collective なので判定 gw_active は全ランク同一)
+  if (s%gw_active) then
+    call par_sum_rows(hgsum_j, hgsum)
+    s%hgmean = hgsum / s%n_valcells
+  end if
   rmax = [hmax, vvmax, qqmax, cnmax]
   call par_allreduce_max(rmax)
   hmax  = rmax(1)
@@ -334,22 +351,43 @@ subroutine m_state_printstate(p, s)
 
   ! 凡例を表示
   if (mod(s%sp%count_disp, 36) == 0) then
-    call par_info("time, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max")
-    write(s%un_log, '(a)') "time, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
+    if (s%gw_active) then
+      call par_info("time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max")
+      write(s%un_log, '(a)') "time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
+    else
+      call par_info("time, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max")
+      write(s%un_log, '(a)') "time, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
+    end if
     flush(s%un_log)
   end if
 
   progress = (s%it) / real(p%nt) * 100
   hmean = s%hmean
-  digi1 = p%real_precision + 5                          ! 全体の表示桁数
-  digi2 =  max(1, int(log10(max(hmean, 1e-6))) + 1)     ! 整数部の桁数(1未満の場合も1桁)
-  digi3 = p%real_precision - digi2 - 0                  ! 小数点以下の表示桁数
-  digi3 = max(digi3, 1)
-  write(fmt0, '("f",i2,".",i0)') digi1, digi3
-  fmt = '(RN,a," ",f5.1,"%",' //trim(fmt0)// '," ",f5.1,"%",i7,*(f10.4))'     ! RNはround='nearest'に相当
-  write(msg, fmt) s%ctime, progress, hmean, s%sp%runger, s%sp%n_exf, s%sp%h, s%sp%vv, s%sp%qq, s%sp%cn
-  call par_info(trim(msg))
-  write(s%un_log, fmt) s%ctime, progress, hmean, s%sp%runger, s%sp%n_exf, s%sp%h, s%sp%vv, s%sp%qq, s%sp%cn
+  if (s%gw_active) then
+    ! 地下水有効時: S を S_surf / S_grnd / S_total の3列に拡張。
+    ! 桁数は最大の量(S_total)に合わせる。閉じた系では S_total が保存監視列
+    digi1 = p%real_precision + 5
+    digi2 =  max(1, int(log10(max(hmean + s%hgmean, 1e-6))) + 1)
+    digi3 = p%real_precision - digi2 - 0
+    digi3 = max(digi3, 1)
+    write(fmt0, '("f",i2,".",i0)') digi1, digi3
+    fmt = '(RN,a," ",f5.1,"%",3(' //trim(fmt0)// ',1x)," ",f5.1,"%",i7,*(f10.4))'
+    write(msg, fmt) s%ctime, progress, hmean, s%hgmean, hmean + s%hgmean, &
+                    s%sp%runger, s%sp%n_exf, s%sp%h, s%sp%vv, s%sp%qq, s%sp%cn
+    call par_info(trim(msg))
+    write(s%un_log, fmt) s%ctime, progress, hmean, s%hgmean, hmean + s%hgmean, &
+                    s%sp%runger, s%sp%n_exf, s%sp%h, s%sp%vv, s%sp%qq, s%sp%cn
+  else
+    digi1 = p%real_precision + 5                          ! 全体の表示桁数
+    digi2 =  max(1, int(log10(max(hmean, 1e-6))) + 1)     ! 整数部の桁数(1未満の場合も1桁)
+    digi3 = p%real_precision - digi2 - 0                  ! 小数点以下の表示桁数
+    digi3 = max(digi3, 1)
+    write(fmt0, '("f",i2,".",i0)') digi1, digi3
+    fmt = '(RN,a," ",f5.1,"%",' //trim(fmt0)// '," ",f5.1,"%",i7,*(f10.4))'     ! RNはround='nearest'に相当
+    write(msg, fmt) s%ctime, progress, hmean, s%sp%runger, s%sp%n_exf, s%sp%h, s%sp%vv, s%sp%qq, s%sp%cn
+    call par_info(trim(msg))
+    write(s%un_log, fmt) s%ctime, progress, hmean, s%sp%runger, s%sp%n_exf, s%sp%h, s%sp%vv, s%sp%qq, s%sp%cn
+  end if
   flush(s%un_log)
 
   ! 画面出力用の最大値のリセット
@@ -388,6 +426,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%pre)) deallocate(s%pre)
   if (allocated(s%prh)) deallocate(s%prh)
   if (allocated(s%rsh)) deallocate(s%rsh)
+  if (allocated(s%hg)) deallocate(s%hg)
   if (allocated(s%tide)) deallocate(s%tide)
   if (allocated(s%hmax)) deallocate(s%hmax)
   if (allocated(s%hmaxt)) deallocate(s%hmaxt)
@@ -599,9 +638,9 @@ subroutine save_state(p, s)
   type(t_state), intent(in) :: s
   integer :: un
   real, allocatable :: wk(:,:,:)
-  integer, parameter :: n_wk = 5
+  integer, parameter :: n_wk = 6
   ! 全域バッファに集約してから rank0 のみが書く。
-  ! write(un) wk のレコードは h, u, v, z, rsh の連結
+  ! write(un) wk のレコードは h, u, v, z, rsh, hg の連結
   if (is_root) then
     allocate(wk(1:dcp%nx_g, 1:dcp%ny_g, n_wk), source = 0.0)
   else
@@ -612,6 +651,7 @@ subroutine save_state(p, s)
   call par_gather_to(wk(:,:,3), s%v)
   call par_gather_to(wk(:,:,4), s%z)
   call par_gather_to(wk(:,:,5), s%rsh)
+  call par_gather_to(wk(:,:,6), s%hg)
   if (.not. is_root) return
   open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted', status='replace')
   write(un) wk
@@ -634,7 +674,7 @@ subroutine restore_state(p, s)
     open(newunit=un, file=trim(p%dir_result)//'/save_state.dat', form='unformatted', status='old')
     ! 読み並びは save_state の write(un) wk の連結順(h, u, v, z, rsh)と
     ! 一致させること。成分を足すときは save と restore を必ず同時に更新する
-    read(un) s%h, s%u, s%v, s%z, s%rsh
+    read(un) s%h, s%u, s%v, s%z, s%rsh, s%hg
     close(un)
   end if
   call par_bcast_cell(s%h)
@@ -642,6 +682,7 @@ subroutine restore_state(p, s)
   call par_bcast_cell(s%v)
   call par_bcast_cell(s%z)
   call par_bcast_cell(s%rsh)
+  call par_bcast_cell(s%hg)
 end subroutine
 
 end module
