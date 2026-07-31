@@ -103,8 +103,8 @@ module m_state
   ! ---- save/restore 形式の版 ----
   !   仕様変更日の日付文字列。save の並び・成分・メタデータを変更したら
   !   必ずこの日付を更新する(restore 時の照合に使う。developer.md §7)
-  character(len=*), parameter :: save_version_cur = "2026-07-30"
-  integer, parameter :: n_state_save = 6     ! state.dat の成分数(h,u,v,z,rsh,hg)
+  character(len=*), parameter :: save_version_cur = "2026-07-31"
+  integer, parameter :: n_state_save = 4     ! state.dat の成分数(h,z,rsh,hg)
 
 
 contains
@@ -654,7 +654,9 @@ subroutine save_state(p, s)
   integer :: un
   real, allocatable :: wk(:,:,:)
   ! 全域バッファに集約してから rank0 のみが書く。
-  ! write(un) wk のレコードは h, u, v, z, rsh, hg の連結
+  ! write(un) wk のレコードは h, z, rsh, hg の連結。
+  ! 運動量表現(uv/mn 等)はスキーム私有の保存(swflow_enc.dat)、
+  ! u,v,m,n,vv,qq,e は復元時に再導出される導出量(§7 の線引き)
   call sysdep_mkdir(p%dir_save)
   if (is_root) then
     allocate(wk(1:dcp%nx_g, 1:dcp%ny_g, n_state_save), source = 0.0)
@@ -662,11 +664,9 @@ subroutine save_state(p, s)
     allocate(wk(1, 1, n_state_save))          ! 参照されないダミー
   end if
   call par_gather_to(wk(:,:,1), s%h)
-  call par_gather_to(wk(:,:,2), s%u)
-  call par_gather_to(wk(:,:,3), s%v)
-  call par_gather_to(wk(:,:,4), s%z)
-  call par_gather_to(wk(:,:,5), s%rsh)
-  call par_gather_to(wk(:,:,6), s%hg)
+  call par_gather_to(wk(:,:,2), s%z)
+  call par_gather_to(wk(:,:,3), s%rsh)
+  call par_gather_to(wk(:,:,4), s%hg)
   if (.not. is_root) return
   open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', status='replace')
   write(un) wk
@@ -694,14 +694,12 @@ subroutine restore_state(p, s)
   ! (全ランク同形)なので Bcast が成立する。帯への切り出しは呼び出し側
   if (is_root) then
     open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', status='old')
-    ! 読み並びは save_state の write(un) wk の連結順(h, u, v, z, rsh)と
+    ! 読み並びは save_state の write(un) wk の連結順(h, z, rsh, hg)と
     ! 一致させること。成分を足すときは save と restore を必ず同時に更新する
-    read(un) s%h, s%u, s%v, s%z, s%rsh, s%hg
+    read(un) s%h, s%z, s%rsh, s%hg
     close(un)
   end if
   call par_bcast_cell(s%h)
-  call par_bcast_cell(s%u)
-  call par_bcast_cell(s%v)
   call par_bcast_cell(s%z)
   call par_bcast_cell(s%rsh)
   call par_bcast_cell(s%hg)

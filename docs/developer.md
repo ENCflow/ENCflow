@@ -161,9 +161,20 @@
     に書くので完成マーカーを兼ねる)。内容: save_version(**仕様変更日の
     日付文字列**。形式を変えたら m_state の save_version_cur を更新)、
     nx, ny, precision_bits, n_state, t, it。
-  - `state.dat` — m_state の6成分(h, u, v, z, rsh, hg の連結)。
+  - `state.dat` — m_state の4成分(h, z, rsh, hg の連結)。
   - `swflow_enc.dat` — sx%uv, mn(エッジ状態。力学状態は厳密に復元される)。
   - `gwflow_<モデル名>.dat` — 内部状態を持つ地下水モデルの私有ファイル。
+- **保存対象の線引き: 質量はスキーム非依存の共有状態として m_state が保存し、
+  運動量表現はスキーム私有として m_swflow_XX が保存する**(ENC: uv/mn、
+  STG なら M/N)。u, v, m, n, vv, qq, e は純粋な導出量として保存せず、
+  復元時に再導出する(実行中も complete が毎ステップ導出しており、
+  保存系と実行系で同じ原則になる)。gwflow の契約(柱状換算 s%hg は
+  m_state、モデル内部状態はモデル私有)と同じ構図。
+- **STG は restart 非対応**(運動量 M/N を保存していない)。
+  f_state_restore>0 で STG を選ぶと init が par_stop する。STG での
+  f_state_save は止めないが、生成される save は STG では復元できず、
+  ENC での復元も swflow_enc.dat 欠如で門番に止められる(黙って不完全な
+  復元にはならない)。
 - **restore の門番は m_state(check_save_info)**: 全ランクが save_info.txt を
   冗長に読み、版・格子・精度・成分数を検証して不一致は par_stop(判定は
   全ランク同一 → collective 安全)。後段のモジュール(swflow_enc、内部状態を

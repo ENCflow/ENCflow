@@ -8,7 +8,7 @@ module m_swflow_stg
   use m_geoinfo, only : t_geoinfo
   use m_boundary, only : t_boundary
   use m_state, only : t_state
-  use m_parallel, only : dcp
+  use m_parallel, only : dcp, par_stop
   implicit none
   private
 
@@ -63,6 +63,11 @@ subroutine m_swflow_stg_init(p, g, b, s)
   type(t_state), intent(inout) :: s
   INTEGER :: I,J
   if (b%initialized) continue  ! 引数未使用の警告を抑制
+
+  ! STG は運動量(M,N)を保存しないため restart 非対応(developer.md §7)
+  if (p%f_state_restore > 0) then
+    call par_stop("STG(f_gridsystem=1)は restart(f_state_restore)非対応です")
+  end if
 
   select case (p%f_govequation)
     case (0)      ! DynWE
