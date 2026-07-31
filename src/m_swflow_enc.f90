@@ -898,7 +898,13 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! restoreしたsx%uv,sx%mnからs%u,s%v,s%m,s%n,s%vv,s%mm,s%eを復元する
+! restoreしたsx%uv,sx%mnからs%u,s%v,s%m,s%n,s%vv,s%qq,s%eを復元する
+!   (vv は摩擦項が complete より前に読む、qq は t=0 の出力・計測が読む)
+!   セルループの範囲・スキップ・重み・総和順は continuous と完全に
+!   一致させること(復元値が保存時の値とビット一致する条件)。
+!   continuous にある乾燥エッジ条件(h<dd 両セル)の複製は不要:
+!   momentum が同条件のエッジの uv/mn1 を 0 に零化しているため、
+!   無条件に総和しても寄与が 0 でスキップと同値になる
 !----------------------------------------------------------------------
 subroutine restore_uvmn(p, g, s, sx)
   type(t_sysparam), intent(in) :: p
@@ -915,6 +921,7 @@ subroutine restore_uvmn(p, g, s, sx)
   !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, uve, mne)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
+      if (g%sw(i,j) > 0) cycle   ! 海セルは continuous 同様に除外(u,v,m,n,vv,qq は 0 のまま)
       if (g%x(i,j) <= 0) cycle
       s%u(i,j) = 0.0
       s%v(i,j) = 0.0
