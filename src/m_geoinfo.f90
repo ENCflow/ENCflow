@@ -4,13 +4,15 @@ module m_geoinfo
   use list_geoinfo, only : t_list_geoinfo, list_geoinfo_read
   use m_fileio, only : fileio_read_matrix
   use m_util, only : itoa
-  use m_parallel, only : par_info, par_stop, dcp, is_root
+  use m_parallel, only : par_info, par_stop, par_abort, dcp, is_root, nproc, &
+                       par_scatter_cell, par_scatter_cell_i, &
+                       par_bcast_cell, par_bcast_cell_i
   implicit none
   private
 
   public :: t_geoinfo
   public :: m_geoinfo_init
-  public :: m_geoinfo_shrink_coeffs
+  public :: m_geoinfo_scatter_coeffs
   public :: m_geoinfo_band_shrink
   public :: m_geoinfo_dispose
 
@@ -82,33 +84,53 @@ subroutine m_geoinfo_init(g, p)
   call list_geoinfo_read(p, list)
   call set_params(p, g, list)
 
+  ! 方式2(rank0 読み込み+帯配布): 物性係数(rn, gv, bb, lm, rscap, lu)は
+  ! rank0 のみが全域を確保・構築し、par_decomp_init 後に
+  ! m_geoinfo_scatter_coeffs で各ランクの帯+ハロへ配布する。
+  ! 地形・マスク類(z, x, sw, rw)はゾーン2の冗長処理が使うため、
+  ! 従来どおり全ランクが全域を構築する(ゾーン2の rank0 化は第2段。handoff 参照)
   call allocate_arrays(g)
   call read_sw(p, g, list)     ! read_maskよりも先に実行する
   call read_mask(p, g, list)
   call read_z(p, g, list)
-  call read_lu(p, g, list)
+  if (is_root) call read_lu(p, g, list)
   call read_rw(p, g, list)
-  call read_rn(p, g, list)
-  call read_gvbb(p, g, list)
-  call read_rscap(p, g, list)
+  if (is_root) then
+    call read_rn(p, g, list)
+    call read_gvbb(p, g, list)
+    call read_rscap(p, g, list)
+  end if
   call adjust_rw(p, g, list)
 
-  select case (list%f_user_routine_id)
-    case (0)
-      continue
-    case (1)
-      call init_geoinfo_user_1(p, g)
-    case (2)
-      call init_geoinfo_user_2(p, g)
-    case (3)
-      call init_geoinfo_user_3(p, g)
-    case (4)
-      call init_geoinfo_user_4(p, g)
-    case (5)
-      call init_geoinfo_user_5(p, g)
-    case default
-      call par_stop("undefined f_user_routine_id in list_geoinfo"//itoa(list%f_user_routine_id))
-  end select
+  ! user フック: ID の検証は全ランク(par_stop は collective)。実行は
+  ! 係数を含む全配列を持つ rank0 のみで、「全域添字で書く」契約は無変更。
+  ! フックが地形・マスク類を変更した可能性があるため、実行後に rank0 から
+  ! 再配布する(フック無指定なら通信なし)。
+  ! 注意: フック内から par_stop を呼んではならない(rank0 のみで実行される
+  ! ため collective が成立しない。エラーは par_abort を使うこと)
+  if (list%f_user_routine_id < 0 .or. list%f_user_routine_id > 5) then
+    call par_stop("undefined f_user_routine_id in list_geoinfo"//itoa(list%f_user_routine_id))
+  end if
+  if (list%f_user_routine_id > 0) then
+    if (is_root) then
+      select case (list%f_user_routine_id)
+        case (1)
+          call init_geoinfo_user_1(p, g)
+        case (2)
+          call init_geoinfo_user_2(p, g)
+        case (3)
+          call init_geoinfo_user_3(p, g)
+        case (4)
+          call init_geoinfo_user_4(p, g)
+        case (5)
+          call init_geoinfo_user_5(p, g)
+      end select
+    end if
+    call par_bcast_cell(g%z)
+    call par_bcast_cell_i(g%x)
+    call par_bcast_cell_i(g%sw)
+    call par_bcast_cell_i(g%rw)
+  end if
 
 
   call calc_wxy(p, g)
@@ -122,7 +144,7 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 計算対象セル数を数える(海域は除く)
-!   sw を全域添字で読むため、係数類の縮小(shrink_coeffs)より前=
+!   sw を全域添字で読むため、係数類の帯配布(scatter_coeffs)より前=
 !   m_geoinfo_init 内で実行すること。結果は t_geoinfo が保持し、
 !   m_state など後段はコピーして使う(大域値は全ランク同一)
 !----------------------------------------------------------------------
@@ -172,24 +194,67 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 物性係数の静的配列を担当帯+ハロに縮小する
-!   m_main で par_decomp_init の直後に呼ぶ。これ以降、係数類への
-!   全域添字アクセスは不可(帯内の大域添字はそのまま有効)。
-!   係数を使う全域前処理は m_geoinfo_init 内(=この呼び出しより前)に
-!   書くこと。
-!   注意: マスク類(x, sw, rw)と z はここで縮小しない。fill_depression
+! 物性係数を rank0 の全域配列から各ランクの帯+ハロへ配布する(方式2)。
+!   m_main で par_decomp_init の直後に全ランクが揃って呼ぶ(collective)。
+!   rank0 は配布後に自身も帯へ縮小し、非 root はここで初めて係数の
+!   帯配列を確保する。これ以降、係数類への全域添字アクセスは不可
+!   (帯内の大域添字はそのまま有効。旧 shrink_coeffs と同じ規約)。
+!   係数を使う全域前処理は m_geoinfo_init 内(=この呼び出しより前)の
+!   rank0 実行部に書くこと。
+!   注意: マスク類(x, sw, rw)と z はここで配布しない。fill_depression
 !   (海域 sw・河道 rw を全域窓で参照)など、ゾーン2の全域処理が
-!   使うため band_shrink まで全域を保つ(n_valcells の教訓)。
+!   使うため band_shrink まで全ランクが全域を保つ(n_valcells の教訓)。
 !   行メタデータ wx, wy は微小なので恒久的に全域のまま保持する。
 !----------------------------------------------------------------------
-subroutine m_geoinfo_shrink_coeffs(g)
+subroutine m_geoinfo_scatter_coeffs(g)
   type(t_geoinfo), intent(inout) :: g
-  call shrink_band_r(g%rn,  dcp%jsh, dcp%jeh)
-  call shrink_band_r(g%gv,  dcp%jsh, dcp%jeh)
-  call shrink_band_r(g%bb,  dcp%jsh, dcp%jeh)
-  call shrink_band_r(g%lm,  dcp%jsh, dcp%jeh)
-  call shrink_band_r(g%rscap, dcp%jsh, dcp%jeh)
-  call shrink_band_i(g%lu,  dcp%jsh, dcp%jeh)
+  call scatter_band_r(g%rn)
+  call scatter_band_r(g%gv)
+  call scatter_band_r(g%bb)
+  call scatter_band_r(g%lm)
+  call scatter_band_r(g%rscap)
+  call scatter_band_i(g%lu)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! rank0 の全域配列(1:nx, 1:ny)を自ランクの帯+ハロ(jsh:jeh)に
+! 置き換える。rank0 は配布してから縮小(move_alloc)、非 root は帯を
+! 確保して受信する(非 root の a は未確保で渡されてよい)。
+! 逐次・np=1 で確保範囲が全域と一致する場合は何もしない
+! (従来の shrink_band と同じ no-op 特性を保つ)
+!----------------------------------------------------------------------
+subroutine scatter_band_r(a)
+  real, allocatable, intent(inout) :: a(:,:)
+  real, allocatable :: t(:,:)
+  real :: dum(1,1)
+  if (nproc == 1) then
+    if (lbound(a,2) == dcp%jsh .and. ubound(a,2) == dcp%jeh) return
+  end if
+  allocate(t(1:dcp%nx_g, dcp%jsh:dcp%jeh))
+  if (is_root) then
+    call par_scatter_cell(a, t)
+  else
+    call par_scatter_cell(dum, t)
+  end if
+  call move_alloc(t, a)
+end subroutine
+
+
+subroutine scatter_band_i(a)
+  integer, allocatable, intent(inout) :: a(:,:)
+  integer, allocatable :: t(:,:)
+  integer :: dum(1,1)
+  if (nproc == 1) then
+    if (lbound(a,2) == dcp%jsh .and. ubound(a,2) == dcp%jeh) return
+  end if
+  allocate(t(1:dcp%nx_g, dcp%jsh:dcp%jeh))
+  if (is_root) then
+    call par_scatter_cell_i(a, t)
+  else
+    call par_scatter_cell_i(dum, t)
+  end if
+  call move_alloc(t, a)
 end subroutine
 
 
@@ -310,17 +375,22 @@ end subroutine
 !----------------------------------------------------------------------
 subroutine allocate_arrays(g)
   type(t_geoinfo), intent(inout) :: g
+  ! 地形・マスク類: 全ランクが全域を確保(ゾーン2の冗長処理が使う)
   allocate(g%z(1:g%nx,1:g%ny), source = 0.0)
+  allocate(g%x(0:g%nx+1,0:g%ny+1), source = 0)   ! 領域マスクは全て領域外で初期化
+  allocate(g%sw(1:g%nx,1:g%ny), source = 0)
+  allocate(g%rw(1:g%nx,1:g%ny), source = 0)
+  allocate(g%wx(1:2,1:g%ny))
+  ! 物性係数: rank0 のみ全域を確保(方式2)。非 root は scatter_coeffs で
+  ! 帯確保するため、それまで係数に触れてはならない。
+  ! ファイル無指定時の既定値はこの source 値が正本(rank0 の値が配布される)
+  if (.not. is_root) return
   allocate(g%rn(1:g%nx,1:g%ny), source = 0.0)
   allocate(g%gv(1:g%nx,1:g%ny), source = 1.0)    ! 空隙率は1.0で初期化
   allocate(g%bb(1:g%nx,1:g%ny), source = 1.e10)  ! 家屋サイズは大きな値で初期化
   allocate(g%lm(1:g%nx,1:g%ny), source = 1.0)    ! 有効慣性係数は1.0で初期化
   allocate(g%rscap(1:g%nx,1:g%ny), source = 0.0) ! ため池の深さは0.0で初期化
-  allocate(g%x(0:g%nx+1,0:g%ny+1), source = 0)   ! 領域マスクは全て領域外で初期化
-  allocate(g%sw(1:g%nx,1:g%ny), source = 0)
-  allocate(g%rw(1:g%nx,1:g%ny), source = 0)
   allocate(g%lu(1:g%nx,1:g%ny), source = 0)
-  allocate(g%wx(1:2,1:g%ny))
 end subroutine
 
 
@@ -606,7 +676,8 @@ subroutine read_rn(p, g, list)
       nluse = nluse + 1
     end do
     if (nluse < 1) then
-      call par_stop("error in geoimfo: need lu2rn(:,:) for f_rntype=2")
+      ! read_rn は rank0 のみで実行されるため par_stop(collective)は不可
+      call par_abort("error in geoimfo: need lu2rn(:,:) for f_rntype=2")
     end if
     do j = 1, g%ny
       do i = 1, g%nx
@@ -615,7 +686,7 @@ subroutine read_rn(p, g, list)
         if (g%rn(i,j) < 0) then
           write(msg,'(a,i3,a,i0,a,i0,a)') &
                 "error in geoinfo: landuse categoly", g%lu(i,j), " at", i, ",", j, " not found in lu2rn"
-          call par_stop(trim(msg))
+          call par_abort(trim(msg))   ! rank0 のみで実行(par_stop 不可)
         end if
       end do
     end do
@@ -662,14 +733,18 @@ subroutine adjust_rw(p, g, list)
   type(t_geoinfo), intent(inout) :: g
   type(t_list_geoinfo), intent(in) :: list
   integer :: i, j
+  logical :: set_rn
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (len(list%fn_rw) <= 0) return
   if (list%depth_rw == 0.0) return
+  ! z の掘り込みは全ランク(z は全ランクが全域保持)、
+  ! rn の書き換えは rank0 のみ(rn は rank0 のみ保持。方式2)
+  set_rn = is_root .and. list%rn0_rw > 0.0
   do j = 1, g%ny
     do i = 1, g%nx
       if (g%x(i,j) > 0 .and. g%rw(i,j) > 0) then
         g%z(i,j) = g%z(i,j) - list%depth_rw
-        if (list%rn0_rw > 0.0) g%rn(i,j) = list%rn0_rw
+        if (set_rn) g%rn(i,j) = list%rn0_rw
       end if
     end do
   end do

@@ -39,6 +39,15 @@
      real64=既定 real なので等価のはず)
    - PREC=single は Log のモニタ値(貯留高 S 等)のみ改善方向に変化しうる
      (single の reference は無いので同一バイナリのビット再現のみ確認)
+6. **初期化の方式2・第1段(係数の rank0 化+scatter)の検証**
+   - **確保に触れる変更なので -fcheck=all の np>=2 を最適化ビルドより先に**
+     (静的データを使う chichibu で。規律3)
+   - 逐次で既存 reference とビット一致(scatter_band は逐次 no-op 経路)
+   - np=1, 2, 4 が逐次 reference に ULP=0(chichibu: 実地形+粗度+河道)
+   - user フックありのケース(wave 系の f_user_routine_id>0)で np=1,2,4
+     ビット一致(フックの rank0 実行+マスク再 bcast 経路の検証)
+   - f_rntype=2(lu2rn 変換)のケースがあれば併せて確認(read_rn の
+     rank0 経路)
 
 ## 中期の道標(着手順は実測次第)
 
@@ -48,15 +57,25 @@
   浸食有効化時は par_halo_cell(s%z) をステップ頭へ(§11 の TODO 参照)
 - gwflow: RRI 型・鉛直浸透重視型の追加(m_gwflow_bucket を複製して契約に従う)
 - NEC SDK 実機検証(mpinfort -show の可否確認 → スタンプ機構の対応判断)
-- 初期化の一過性メモリピーク対策(単一ノード全国初期化が OOM したら)
+- **初期化メモリピーク対策・第2段(ゾーン2の rank0 化)**。第1段
+  (物性係数の rank0 化+scatter。2026-07-31 実装)で非 root の一過性
+  ピークから係数6配列を削減済み。残るのは z, x, sw, rw(全ランク全域)と
+  ts(m_state の全域一時)。第2段の候補:
+  (a) m_state の全域初期化(set_h / fill_depression / user_initial)を
+      rank0 実行にして ts を rank0 のみ確保 → par_scatter_cell で帯配布
+  (b) record / boundary の位置検証を「帯所有ランクが検証+allreduce」方式に
+  (c) precip prtype3 の冗長読みを rank0 読み+scatter に
+  (d) 最後に band_shrink を scatter 化して非 root の全域確保をゼロに
+  (b) は §11「冗長計算=配布機構」原則の改定を伴うため実装前に議論する。
 - **save/restore のメモリスケーラビリティ**(全国 100m 級への障壁)。
-  現行: save は rank0 に全域 gather(state 4成分 + uv/mn)、restore は
-  全ランクが全域一時配列(m_swflow_enc の wuv/wmn 等)を確保して
-  bcast 後に帯切り出し。250m 倍精度でランクあたり数 GB 上乗せ、
-  100m ではエッジ1配列が 10GB 級になり bcast 方式は破綻する。
-  方向性: bcast → 帯 scatter(rank0 が読んで各ランクに担当帯だけ送る)、
-  その先は MPI-IO。初期化ゾーン1の「全域」設計と同根なので、
-  上の初期化ピーク対策と併せて検討する。250m までは現行で問題ない。
+  save は rank0 に全域 gather(state 4成分 + uv/mn)、restore は
+  全ランクが全域一時配列を確保して bcast 後に帯切り出し。250m 倍精度で
+  ランクあたり数 GB 上乗せ、100m ではエッジ1配列が 10GB 級になり
+  bcast 方式は破綻する。restore のセル成分は par_scatter_cell(方式2で
+  実装済み)への置き換えで「全域一時は rank0 のみ」にできる(エッジ版
+  par_scatter_edge の追加が必要)。その先は MPI-IO だが、RLE 圧縮
+  ストリームはシーク不能で相性が悪く、形式ごとの再設計になる。
+  250m までは現行で問題ない。
 
 ## 作業の流儀(新チャットでも同じ)
 

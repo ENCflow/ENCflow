@@ -1,6 +1,6 @@
 module m_main
   use m_sysparam, only : t_sysparam, m_sysparam_init, m_sysparam_dispose
-  use m_geoinfo, only : t_geoinfo, m_geoinfo_init, m_geoinfo_dispose, m_geoinfo_shrink_coeffs, m_geoinfo_band_shrink
+  use m_geoinfo, only : t_geoinfo, m_geoinfo_init, m_geoinfo_dispose, m_geoinfo_scatter_coeffs, m_geoinfo_band_shrink
   use m_precip, only : t_precip, m_precip_init, m_precip_dispose, m_precip_makepre
   use m_tide, only : t_tide, m_tide_init, m_tide_dispose
   use m_boundary, only : t_boundary, m_boundary_init, m_boundary_dispose, m_boundary_makebdc
@@ -53,10 +53,12 @@ subroutine m_main_all()
   call init_resultdir(p)                  ! 結果を保存するディレクトリを作成してパラメータファイルを保存
 
   ! モジュールを初期化
-  ! ==== 初期化ゾーン1: 全ての静的データが全域(フック・前処理はここ) ====
+  ! ==== 初期化ゾーン1: 地形・マスク類(z,x,sw,rw)は全ランク全域、
+  !      物性係数(rn,gv,bb,lm,rscap,lu)は rank0 のみ全域(方式2)。
+  !      係数を使うフック・前処理は rank0 実行(m_geoinfo_init 内) ====
   call m_geoinfo_init(g, p)               ! geoinfo を初期化
   call par_decomp_init(g%nx, g%ny, g%wy(1), g%wy(2))  ! 全域窓を帯分割
-  call m_geoinfo_shrink_coeffs(g)         ! 物性係数(rn,gv,bb,lm,rsh,lu)を帯に縮小
+  call m_geoinfo_scatter_coeffs(g)        ! 物性係数を rank0 から帯+ハロへ配布
 
   ! ==== 初期化ゾーン2: 地形とマスク類(z, x, sw, rw)のみ全域
   !      (fill_depression, user_initial, record/boundary の検証はこの範囲) ====

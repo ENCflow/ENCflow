@@ -53,8 +53,9 @@ module m_parallel
    public :: par_allreduce_max, par_allreduce_sumi, par_allreduce_maxi
    public :: par_sum_rows
    public :: par_gather_to, par_gather_to_i, par_gather_edge_to
+   public :: par_scatter_cell, par_scatter_cell_i
    public :: par_reduce_points
-   public :: par_bcast_cell, par_bcast_edge
+   public :: par_bcast_cell, par_bcast_cell_i, par_bcast_edge
    public :: nrank, nproc, is_root
    public :: t_decomp, dcp
    public :: MPI_WP
@@ -152,8 +153,7 @@ contains
       end if
       call band_range(nrank, dcp%js, dcp%je)
       ! 第二段: 配列確保範囲 = 担当帯 ± ハロ幅(全域端でクリップ)
-      dcp%jsh = max(1,  dcp%js - dcp%nhalo)
-      dcp%jeh = min(ny, dcp%je + dcp%nhalo)
+      call band_range_h(nrank, dcp%jsh, dcp%jeh)
       dcp%rank_s = nrank - 1                            ! nrank=0 では -1(隣なし)
       dcp%rank_n = merge(nrank + 1, -1, nrank < nproc - 1)
    end subroutine par_decomp_init
@@ -244,6 +244,18 @@ contains
       je_r = js_r + base - 1
       if (r < rem) je_r = je_r + 1
    end subroutine band_range
+
+   subroutine band_range_h(r, jsh_r, jeh_r)
+      ! ランク r の配列確保範囲(担当帯±ハロ。全域端でクリップ)。
+      ! par_decomp_init の jsh/jeh と scatter の送信範囲はここから導く
+      ! (確保範囲の規則の正本)
+      integer, intent(in) :: r
+      integer, intent(out) :: jsh_r, jeh_r
+      integer :: js_r, je_r
+      call band_range(r, js_r, je_r)
+      jsh_r = max(1, js_r - dcp%nhalo)
+      jeh_r = min(dcp%ny_g, je_r + dcp%nhalo)
+   end subroutine band_range_h
 
    subroutine par_allreduce_max(vals)
       ! 実数ベクトルの全ランク最大値。max は結合順に依存しない厳密演算
@@ -345,6 +357,49 @@ contains
       if (is_root) buf(:, :, dcp%js-1) = a(:, :, dcp%js-1)
    end subroutine par_gather_edge_to
 
+   subroutine par_scatter_cell(buf, a)
+      ! rank0 の全域バッファ buf(1:nx, 1:ny) を各ランクの帯+ハロ
+      ! a(:, jsh:jeh) へ配布する(gather の逆向き。初期化・復元用)。
+      ! 帯+ハロは隣接ランクと重なるため Scatterv は使えず、rank0 からの
+      ! 個別送信で配る(初期化の1回きりで性能は問題にならない)。
+      ! rank0 以外の buf は参照されないためサイズ1のダミーでよい。
+      ! 受信側 a は確保範囲(jsh:jeh)ちょうどで確保しておくこと。
+      real, intent(in) :: buf(1:, 1:)
+      real, intent(inout) :: a(1:, dcp%jsh:)
+      integer :: r, jsh_r, jeh_r, n1
+      n1 = size(a, 1)
+      if (is_root) then
+         do r = 1, nproc - 1
+            call band_range_h(r, jsh_r, jeh_r)
+            call MPI_Send(buf(:, jsh_r:jeh_r), n1 * (jeh_r - jsh_r + 1), &
+                          MPI_WP, r, 21, MPI_COMM_WORLD)
+         end do
+         a(:, dcp%jsh:dcp%jeh) = buf(:, dcp%jsh:dcp%jeh)
+      else
+         call MPI_Recv(a, size(a), MPI_WP, 0, 21, MPI_COMM_WORLD, &
+                       MPI_STATUS_IGNORE)
+      end if
+   end subroutine par_scatter_cell
+
+   subroutine par_scatter_cell_i(buf, a)
+      ! par_scatter_cell の整数版(マスク・土地利用等)
+      integer, intent(in) :: buf(1:, 1:)
+      integer, intent(inout) :: a(1:, dcp%jsh:)
+      integer :: r, jsh_r, jeh_r, n1
+      n1 = size(a, 1)
+      if (is_root) then
+         do r = 1, nproc - 1
+            call band_range_h(r, jsh_r, jeh_r)
+            call MPI_Send(buf(:, jsh_r:jeh_r), n1 * (jeh_r - jsh_r + 1), &
+                          MPI_INTEGER, r, 22, MPI_COMM_WORLD)
+         end do
+         a(:, dcp%jsh:dcp%jeh) = buf(:, dcp%jsh:dcp%jeh)
+      else
+         call MPI_Recv(a, size(a), MPI_INTEGER, 0, 22, MPI_COMM_WORLD, &
+                       MPI_STATUS_IGNORE)
+      end if
+   end subroutine par_scatter_cell_i
+
    subroutine par_reduce_points(vals)
       ! 点計測値の rank0 集約(m_record 用)。
       ! 各要素は「所有ランクがちょうど1つだけ値を格納し、他ランクは 0」の
@@ -368,6 +423,13 @@ contains
       real, intent(inout) :: a(1:, 1:)
       call MPI_Bcast(a, size(a), MPI_WP, 0, MPI_COMM_WORLD)
    end subroutine par_bcast_cell
+
+   subroutine par_bcast_cell_i(a)
+      ! par_bcast_cell の整数版(user フック後のマスク類の再配布用)。
+      ! 全ランク同形の配列にのみ使うこと。
+      integer, intent(inout) :: a(1:, 1:)
+      call MPI_Bcast(a, size(a), MPI_INTEGER, 0, MPI_COMM_WORLD)
+   end subroutine par_bcast_cell_i
 
    subroutine par_bcast_edge(a)
       ! rank0 のエッジ配列を全ランクへ配布(リスタート復元用)。

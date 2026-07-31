@@ -34,8 +34,9 @@ module m_parallel
    public :: par_allreduce_max, par_allreduce_sumi, par_allreduce_maxi
    public :: par_sum_rows
    public :: par_gather_to, par_gather_to_i, par_gather_edge_to
+   public :: par_scatter_cell, par_scatter_cell_i
    public :: par_reduce_points
-   public :: par_bcast_cell, par_bcast_edge
+   public :: par_bcast_cell, par_bcast_cell_i, par_bcast_edge
    public :: nrank, nproc, is_root
    public :: t_decomp, dcp
 
@@ -153,6 +154,21 @@ contains
       buf(:, :, dcp%js-1:dcp%je) = a(:, :, dcp%js-1:dcp%je)
    end subroutine par_gather_edge_to
 
+   subroutine par_scatter_cell(buf, a)
+      ! rank0 全域バッファからの帯配布(gather の逆向き)。
+      ! 逐次では確保範囲(=全域)を複写する。
+      real, intent(in) :: buf(1:, 1:)
+      real, intent(inout) :: a(1:, dcp%jsh:)
+      a(:, dcp%jsh:dcp%jeh) = buf(:, dcp%jsh:dcp%jeh)
+   end subroutine par_scatter_cell
+
+   subroutine par_scatter_cell_i(buf, a)
+      ! par_scatter_cell の整数版
+      integer, intent(in) :: buf(1:, 1:)
+      integer, intent(inout) :: a(1:, dcp%jsh:)
+      a(:, dcp%jsh:dcp%jeh) = buf(:, dcp%jsh:dcp%jeh)
+   end subroutine par_scatter_cell_i
+
    subroutine par_reduce_points(vals)
       ! 点計測値の rank0 集約。逐次では何もしない
       ! (所有判定 js<=iy<=je は逐次で常に真なので、vals には全点の値が
@@ -167,6 +183,12 @@ contains
       real, intent(inout) :: a(1:, 1:)
       if (size(a) > 0) continue
    end subroutine par_bcast_cell
+
+   subroutine par_bcast_cell_i(a)
+      ! rank0 からの配布(整数版)。逐次では何もしない。
+      integer, intent(inout) :: a(1:, 1:)
+      if (size(a) > 0) continue
+   end subroutine par_bcast_cell_i
 
    subroutine par_bcast_edge(a)
       ! rank0 からの配布。逐次では何もしない。

@@ -44,6 +44,7 @@ ENC 配置格子(独自スキーム)が主実装、STG は旧互換の比較用�
 - collective(gather/reduce/halo)の実行判定は全ランクで同一に。
   is_root ガードの内側に collective を置かない(§5)。
 - 静的データは3ゾーンのライフサイクル(初期化=全域、時間ループ=帯)。
+  物性係数の全域は rank0 のみが構築し scatter で帯配布(方式2)。
   全域前処理は m_geoinfo_init 内へ。ゾーン2で全域なのは z, x, sw, rw のみ(§11)。
 - list_* は namelist を読むだけ。解釈・検証・導出は各 m_* の init(§12)。
 - save の write 並びと restore の read 並びは必ず同時に更新し、
