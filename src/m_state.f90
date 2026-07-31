@@ -262,7 +262,7 @@ subroutine m_state_calcstat(s, p, g)
   dtpdx = p%dt / min(g%dx, g%dy)
 
   !$omp parallel do schedule(dynamic) private(i, j, cosdir, cc), & 
-  !$omp reduction(+: hsum), reduction(max: hmax, vvmax, qqmax, cnmax)
+  !$omp reduction(max: hmax, vvmax, qqmax, cnmax)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) == 0) cycle
