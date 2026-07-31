@@ -8,6 +8,7 @@ module m_main
   use m_record, only : t_record, m_record_init, m_record_dispose, m_record_probe, m_record_flux, m_record_summary
   use m_geomorph, only : t_geomorph, m_geomorph_init, m_geomorph_calc, m_geomorph_dispose
   use m_gwflow, only : t_gwflow, m_gwflow_init, m_gwflow_calc, m_gwflow_dispose
+  use m_intercept, only : t_intercept, m_intercept_init, m_intercept_calc, m_intercept_dispose
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc
   use m_output, only : output_init, output_dispose, output_chk_geoinfo, output_state, output_summary
   use m_util, only : itoa
@@ -38,6 +39,7 @@ subroutine m_main_all()
   type(t_record) :: r
   type(t_geomorph) :: gm
   type(t_gwflow) :: gw
+  type(t_intercept) :: ic
   type(t_swflow) :: sw
   character(len=256) :: fn_sysparam
   integer :: ierror
@@ -66,6 +68,7 @@ subroutine m_main_all()
   call m_state_init(s, p, g)              ! state を初期化(geoinfo, boundaryより後に)
   call m_record_init(r, p, g)             ! record を初期化(create_resultdirより後)
   call m_precip_init(pr, p, g)            ! precip を初期化
+  call m_intercept_init(ic, p, g)         ! intercept を初期化(fn_intercept 指定時のみ有効)
   call m_geomorph_init(gm, p, g)          ! geomorph を初期化(fn_geomorph 指定時のみ有効)
   call m_gwflow_init(gw, p, g, s)         ! gwflow を初期化(fn_gwflow 指定時のみ有効)
   call m_tide_init(ti, p, g)              ! tide を初期化
@@ -76,13 +79,14 @@ subroutine m_main_all()
   call m_geoinfo_band_shrink(g)           ! マスク類(x,sw,rw)と z(rank0以外)を帯に縮小
 
   ! ==== 時間ループ: すべて帯確保(z のみ rank0 が全域を保持) ====
-  call run_main(p, g, b, pr, s, r, sw, gm, gw, ierror)  ! 計算本体
+  call run_main(p, g, b, pr, ic, s, r, sw, gm, gw, ierror)  ! 計算本体
 
   ! モジュールを破棄
   call output_dispose()
   call m_swflow_dispose(sw, p)
   call m_tide_dispose(ti)
   call m_precip_dispose(pr)
+  call m_intercept_dispose(ic, p)
   call m_geomorph_dispose(gm)
   call m_gwflow_dispose(gw, p)
   call m_record_dispose(r)
@@ -110,11 +114,12 @@ end subroutine
 !----------------------------------------------------------------------
 ! 計算本体
 !----------------------------------------------------------------------
-subroutine run_main(p, g, b, pr, s, r, sw, gm, gw, ierror)
+subroutine run_main(p, g, b, pr, ic, s, r, sw, gm, gw, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
   type(t_precip), intent(in) :: pr
+  type(t_intercept), intent(in) :: ic
   type(t_state), intent(inout) :: s
   type(t_record), intent(inout) :: r
   type(t_geomorph), intent(in) :: gm
@@ -125,6 +130,7 @@ subroutine run_main(p, g, b, pr, s, r, sw, gm, gw, ierror)
   integer :: ifn           ! 出力ファイル番号
   logical :: do_file       ! このステップでファイル出力するか
   logical :: do_recd       ! このステップでプローブ・フラックス出力するか
+  logical :: pr_updated    ! このコールで降雨分布が実際に更新されたか
 
   call par_info("number of processes : "//itoa(nproc))
   call par_info("number of threads : "//itoa(p%num_threads))
@@ -135,7 +141,8 @@ subroutine run_main(p, g, b, pr, s, r, sw, gm, gw, ierror)
   it = 0                                  ! 時間ループのカウントを初期化
   ifn = 0                                 ! 出力ファイルのカウントを初期化
   call m_state_updatetime(s, p, it)       ! 時刻情報を初期化
-  call m_precip_makepre(pr, p, g, s)      ! 初期降水分布を作成　
+  call m_precip_makepre(pr, p, g, s, pr_updated)  ! 初期降水分布を作成　
+  if (pr_updated) call m_intercept_calc(ic, p, g, s, 0)  ! 遮断による有効雨量化(fn_intercept 未指定なら no-op)
   call m_state_calcstat(s, p, g)          ! 統計情報を計算
 
   ! 初期状態の出力(ファイルへの書き込みはランク0のみ)
@@ -155,9 +162,12 @@ subroutine run_main(p, g, b, pr, s, r, sw, gm, gw, ierror)
     ! 時刻情報を更新
     call m_state_updatetime(s, p, it)
 
-    ! dt_prupdate 間隔で降水分布を更新
+    ! dt_prupdate 間隔で降水分布を更新し、更新時のみ遮断を適用する
+    ! (prtype=3 は makepre が呼ばれても分布を更新しないステップがあり、
+    !  そこで遮断を再適用すると二重減衰になる。updated が正本)
     if (mod(it, pr%idt_prupdate) == 0) then
-      call m_precip_makepre(pr, p, g, s)
+      call m_precip_makepre(pr, p, g, s, pr_updated)
+      if (pr_updated) call m_intercept_calc(ic, p, g, s, it)
     end if
 
     ! 境界条件を準備

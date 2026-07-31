@@ -182,16 +182,23 @@ end subroutine m_precip_init
 
 !----------------------------------------------------------------------
 ! 時刻tでの降水分布を作成
+!   updated: このコールで s%pre / s%prh を実際に更新したか。
+!   m_intercept_calc(遮断)の呼び出しガードに使う(prtype=3 は呼ばれても
+!   更新しないステップがあり、そこで遮断を再適用すると二重減衰になる)。
+!   判定は全ランクで同一(s%it は全ランク共通)
 !----------------------------------------------------------------------
-subroutine m_precip_makepre(pr, p, g, s)
+subroutine m_precip_makepre(pr, p, g, s, updated)
   type(t_precip), intent(in) :: pr
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
+  logical, intent(out) :: updated
   real :: prval     ! 降水強度(mm/h)
   real :: f
   integer :: i, j
   integer :: un
+
+  updated = .false.
 
   !---- 降水無しの場合は何もしない ----
   if (pr%prtype == 0) return
@@ -199,6 +206,7 @@ subroutine m_precip_makepre(pr, p, g, s)
 
   !---- 降雨強度時系列から一様分布データを作成 ----
   if (pr%prtype == 1) then
+    updated = .true.
     call get_prval(s%t, prval)   ! 現在時間ステップでの降水強度を計算
     f = 1. / 1000. / 3600.         ! 単位を(mm/h)から(m/s)に換算
     !$omp parallel do
@@ -213,6 +221,7 @@ subroutine m_precip_makepre(pr, p, g, s)
     !$omp end parallel do
   !---- 時系列倍率から分布データを作成 ----
   else if (pr%prtype == 2) then
+    updated = .true.
     call get_prval(s%t, prval)   ! 現在時間ステップでの倍率を計算
     !f = 1. / 1000. / 3600. / 24.   ! 単位を(mm/day)から(m/s)に換算
     f = 1. / 1000. / pr%dt_mapunit   ! 単位を(m/s)に換算
@@ -229,6 +238,7 @@ subroutine m_precip_makepre(pr, p, g, s)
   !---- 降雨分布ファイルから作成 ----
   else if (pr%prtype == 3) then
     if (mod(s%it, pr%idt_maplist) == 0) then
+      updated = .true.
       i = s%it / pr%idt_maplist + 1
       if (i <= size(pr%un_maplist)) then
         un = pr%un_maplist(i)

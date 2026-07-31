@@ -39,7 +39,15 @@
      real64=既定 real なので等価のはず)
    - PREC=single は Log のモニタ値(貯留高 S 等)のみ改善方向に変化しうる
      (single の reference は無いので同一バイナリのビット再現のみ確認)
-6. **初期化の方式2・第1段(係数の rank0 化+scatter)の検証**
+6. **降雨遮断モジュール(m_intercept / 固定遮断率モデル)の検証**
+   - fn_intercept 未指定で全ケース既存 reference とビット一致
+     (機能追加の合否判定。makepre の updated 引数追加も無効時等価)
+   - 疎通: wave 系 + f_icmodel=1, ic_alpha=0.3 で総降雨(S への入力)が
+     ちょうど (1-α) 倍になること。np=1, 2, 4 で ULP=0
+   - prtype=3 かつ dt_prupdate < dt_maplist の設定で二重減衰しないこと
+     (updated ガードの検証。Pr 出力が分布更新のたびに一定率か目視)
+   - developer.md への追記(gwflow/geomorph の項と併せて。上記2参照)
+7. **初期化の方式2・第1段(係数の rank0 化+scatter)の検証**
    - **確保に触れる変更なので -fcheck=all の np>=2 を最適化ビルドより先に**
      (静的データを使う chichibu で。規律3)
    - 逐次で既存 reference とビット一致(scatter_band は逐次 no-op 経路)
@@ -56,6 +64,13 @@
 - geomorph: calc_creep 実装(ガウス丘の解析解ベンチマークを先に作る)。
   浸食有効化時は par_halo_cell(s%z) をステップ頭へ(§11 の TODO 参照)
 - gwflow: RRI 型・鉛直浸透重視型の追加(m_gwflow_bucket を複製して契約に従う)
+- intercept: 貯留型モデル(初期損失・キャノピー貯留・Gash)の追加。
+  固定率と違い貯留状態が毎ステップ発展するため、(1) makepre 直後の
+  適用口に加えて毎ステップの更新口を切替器に追加、(2) 原雨量のモデル私有
+  保管(適用が破壊的なため)、(3) 内部状態の save/restore
+  (intercept_<モデル名>.dat。m_gwflow_bucket 契約5)が必要。
+  遮断率・貯留容量の分布ファイル/土地利用からの構築(lu2rn 同型)は
+  固定率モデルの init 拡張でも可(m_intercept_fixed ヘッダ契約5)
 - NEC SDK 実機検証(mpinfort -show の可否確認 → スタンプ機構の対応判断)
 - **初期化メモリピーク対策・第2段(ゾーン2の rank0 化)**。第1段
   (物性係数の rank0 化+scatter。2026-07-31 実装)で非 root の一過性
