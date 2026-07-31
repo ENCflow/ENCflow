@@ -31,6 +31,9 @@
    - PREC=single での保存→single 復元、および double 保存→single 復元の停止確認
    - state.dat 4成分化(u,v除外・2026-07-31版)後の往復ビット一致の再確認
    - STG(f_gridsystem=1)+ f_state_restore で par_stop すること
+   - RLE 圧縮(2026-07-31b 版)後の往復ビット一致(海域・乾燥域を含む chichibu で)
+   - RLE の両極端: ゼロなし成分(z)と全ゼロ成分(rsh 未使用時)が正しく往復すること
+   - 単精度(PREC=single)ビルドでの RLE 往復(ビット判定の int32 経路)
 
 ## 中期の道標(着手順は実測次第)
 

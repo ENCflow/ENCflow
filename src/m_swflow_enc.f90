@@ -9,6 +9,7 @@ module m_swflow_enc
                        par_halo_cell, par_halo_edge, par_edge_merge, &
                        par_gather_edge_to, par_bcast_edge
   use m_sysdep_util, only : sysdep_mkdir
+  use m_fileio, only : fileio_write_rle, fileio_read_rle
   implicit none
   private
 
@@ -980,7 +981,9 @@ subroutine save_state(p, sx)
   ! ここでも作る(sysdep_mkdir は冪等・rank0 限定)
   call sysdep_mkdir(p%dir_save)
   open(newunit=un, file=trim(p%dir_save)//'/swflow_enc.dat', form='unformatted', status='replace')
-  write(un) wuv, wmn
+  ! ゼロ抑制 RLE で書く(乾燥エッジ・海域エッジのゼロを圧縮。§7)
+  call fileio_write_rle(un, wuv)
+  call fileio_write_rle(un, wmn)
   close(un)
 end subroutine
 
@@ -1011,7 +1014,8 @@ subroutine restore_state(p, sx)
   allocate(wmn(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
   if (is_root) then
     open(newunit=un, file=fname, form='unformatted', status='old')
-    read(un) wuv, wmn
+    call fileio_read_rle(un, wuv)
+    call fileio_read_rle(un, wmn)
     close(un)
   end if
   call par_bcast_edge(wuv)

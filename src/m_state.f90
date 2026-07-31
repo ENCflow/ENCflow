@@ -7,6 +7,7 @@ module m_state
                        par_gather_to, par_bcast_cell
   use m_util, only : itoa, rtoa
   use m_sysdep_util, only : sysdep_mkdir
+  use m_fileio, only : fileio_write_rle, fileio_read_rle
   use iso_fortran_env, only : output_unit
   implicit none
   private
@@ -101,9 +102,10 @@ module m_state
 
 
   ! ---- save/restore 形式の版 ----
-  !   仕様変更日の日付文字列。save の並び・成分・メタデータを変更したら
-  !   必ずこの日付を更新する(restore 時の照合に使う。developer.md §7)
-  character(len=*), parameter :: save_version_cur = "2026-07-31"
+  !   仕様変更日の日付文字列。save の並び・成分・メタデータ・圧縮形式を
+  !   変更したら必ずこの日付を更新する(restore 時の照合に使う。§7)。
+  !   同日に複数回変更した場合は英字サフィックスで区別する
+  character(len=*), parameter :: save_version_cur = "2026-07-31b"
   integer, parameter :: n_state_save = 4     ! state.dat の成分数(h,z,rsh,hg)
 
 
@@ -669,7 +671,11 @@ subroutine save_state(p, s)
   call par_gather_to(wk(:,:,4), s%hg)
   if (.not. is_root) return
   open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', status='replace')
-  write(un) wk
+  ! 成分ごとにゼロ抑制 RLE で書く(海域・乾燥域のゼロを圧縮。§7)
+  call fileio_write_rle(un, wk(:,:,1))   ! h
+  call fileio_write_rle(un, wk(:,:,2))   ! z
+  call fileio_write_rle(un, wk(:,:,3))   ! rsh
+  call fileio_write_rle(un, wk(:,:,4))   ! hg
   close(un)
 
   ! メタデータは最後に書く(save 一式の完成マーカーを兼ねる。
@@ -694,9 +700,12 @@ subroutine restore_state(p, s)
   ! (全ランク同形)なので Bcast が成立する。帯への切り出しは呼び出し側
   if (is_root) then
     open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', status='old')
-    ! 読み並びは save_state の write(un) wk の連結順(h, z, rsh, hg)と
-    ! 一致させること。成分を足すときは save と restore を必ず同時に更新する
-    read(un) s%h, s%z, s%rsh, s%hg
+    ! 読み並びは save_state の書き込み順(h, z, rsh, hg)と一致させること。
+    ! 成分を足すときは save と restore を必ず同時に更新する
+    call fileio_read_rle(un, s%h)
+    call fileio_read_rle(un, s%z)
+    call fileio_read_rle(un, s%rsh)
+    call fileio_read_rle(un, s%hg)
     close(un)
   end if
   call par_bcast_cell(s%h)
