@@ -365,7 +365,7 @@ end subroutine
 subroutine init_enc_status(p, g, s, sx)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(in) :: s
+  type(t_state), intent(inout) :: s
   type(t_enc_status), intent(out) :: sx
 
   real :: ue, ve
@@ -411,7 +411,10 @@ subroutine init_enc_status(p, g, s, sx)
   end do
   !$omp end parallel do
 
-  if (p%f_state_restore > 0) call restore_state(p, sx)
+  if (p%f_state_restore > 0) then
+    call restore_state(p, sx)
+    call restore_uvmn(p, g, s, sx)
+  end if
 
   sx%initialized = .true.
 
@@ -884,6 +887,58 @@ subroutine complete(p, g, s, sx)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       s%h(i,j) = sx%h1(i,j)
+      s%e(i,j) = s%h(i,j) + s%z(i,j)
+      s%vv(i,j) = sqrt(s%u(i,j)**2 + s%v(i,j)**2)
+      s%qq(i,j) = sqrt(s%m(i,j)**2 + s%n(i,j)**2)
+    end do
+  end do
+  !$omp end parallel do
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! restoreしたsx%uv,sx%mnからs%u,s%v,s%m,s%n,s%vv,s%mm,s%eを復元する
+!----------------------------------------------------------------------
+subroutine restore_uvmn(p, g, s, sx)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  type(t_enc_status), intent(inout) :: sx
+  integer :: i, j, k
+  integer :: in, jn, ie, je
+  real :: uve, mne
+  integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
+  real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, uve, mne)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      s%u(i,j) = 0.0
+      s%v(i,j) = 0.0
+      s%m(i,j) = 0.0
+      s%n(i,j) = 0.0
+      do k = 1, 8
+        ! 中心セルi,jから見たk近傍セルのインデックス
+        in = i + din(k)
+        jn = j + djn(k)
+        if (g%x(in,jn) <= 0) cycle
+        if (in <= 1 .or. in >= g%nx .or. jn <= 1 .or. jn >= g%ny) cycle
+        ! 中心セルi,jから見たk近傍の境界フラックスのインデックス
+        ie = i + die(k)
+        je = j + dje(k)
+        ! 境界での流速と流量を求める(中心から近傍に向かい正)
+        !   近傍5~8は隣接するセルから見た(9-k)近傍に相当する(向きは逆)
+        uve = sign_e(k) * sx%uv(ke(k),ie,je)
+        mne = sign_e(k) * sx%mn1(ke(k),ie,je)
+        ! セル中心の平均流速・流量への寄与分を加算
+        s%u(i,j) = s%u(i,j) + uve * w8mx(k)
+        s%v(i,j) = s%v(i,j) + uve * w8my(k)
+        s%m(i,j) = s%m(i,j) + mne * w8mx(k)
+        s%n(i,j) = s%n(i,j) + mne * w8my(k)
+      end do
       s%e(i,j) = s%h(i,j) + s%z(i,j)
       s%vv(i,j) = sqrt(s%u(i,j)**2 + s%v(i,j)**2)
       s%qq(i,j) = sqrt(s%m(i,j)**2 + s%n(i,j)**2)
