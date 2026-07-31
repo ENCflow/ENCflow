@@ -34,6 +34,11 @@
    - RLE 圧縮(2026-07-31b 版)後の往復ビット一致(海域・乾燥域を含む chichibu で)
    - RLE の両極端: ゼロなし成分(z)と全ゼロ成分(rsh 未使用時)が正しく往復すること
    - 単精度(PREC=single)ビルドでの RLE 往復(ビット判定の int32 経路)
+5. **診断集約の real64 固定化(hsum 系・par_sum_rows)の検証**
+   - PREC=double で全ケース既存 reference とビット一致(逐次・np=1,2,4。
+     real64=既定 real なので等価のはず)
+   - PREC=single は Log のモニタ値(貯留高 S 等)のみ改善方向に変化しうる
+     (single の reference は無いので同一バイナリのビット再現のみ確認)
 
 ## 中期の道標(着手順は実測次第)
 

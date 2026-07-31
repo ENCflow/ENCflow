@@ -22,7 +22,7 @@ module m_parallel
 !       do j = max(dcp%js, dcp%jw1+1), min(dcp%je, dcp%jw2-1)
 !     と書くこと(dcp%js+1 と書くと分割後にランク境界まで縮んでしまう)
 !=====================================================================
-   use, intrinsic :: iso_fortran_env, only: output_unit, error_unit
+   use, intrinsic :: iso_fortran_env, only: output_unit, error_unit, real64
    implicit none
    private
    public :: par_init, par_finalize
@@ -125,8 +125,10 @@ contains
    subroutine par_sum_rows(rowsum, total)
       ! 行部分和の総和。逐次では従来どおり一括総和する
       ! (MPI 版も rank0 が同じ「全窓行の一括総和」を行う)。
-      real, intent(in) :: rowsum(dcp%js:)
-      real, intent(out) :: total
+      ! 引数は PREC によらず real64 固定(診断集約の桁落ち防止。
+      ! 倍精度ビルドでは real64=既定 real なので単一実装で済む。§1)
+      real(real64), intent(in) :: rowsum(dcp%js:)
+      real(real64), intent(out) :: total
       total = sum(rowsum)
    end subroutine par_sum_rows
 

@@ -32,14 +32,16 @@ module m_parallel
 !     MPI データ型は MPI_REAL/MPI_REAL8 を直接書かず必ず MPI_WP を使う。
 !     MPI_WP は par_init が storage_size(1.0) から実行時に確定する
 !     (MPI_REAL は MPI ライブラリの構成次第で -r8 昇格と食い違い、
-!      エラーにならず値が化けるため使用禁止)
+!      エラーにならず値が化けるため使用禁止)。
+!     例外: バッファが real(real64) 明示の手続き(par_sum_rows)は
+!     MPI_REAL8 固定でよい(バッファ型と常に一致するため)。
 !   - OpenMP 併用のため MPI_Init_thread で FUNNELED を要求する。
 !     (MPI 呼び出しはマスタースレッドのみ、が前提)
 !   - エラー・警告を error_unit に出すのは意図的(tee で作る
 !     Log.txt =回帰テストの比較対象= に混入させないため)
 !=====================================================================
    use mpi_f08
-   use, intrinsic :: iso_fortran_env, only: output_unit, error_unit
+   use, intrinsic :: iso_fortran_env, only: output_unit, error_unit, real64
    implicit none
    private
    public :: par_init, par_finalize
@@ -269,9 +271,12 @@ contains
       ! 行部分和のランク横断・決定的総和。
       ! rank0 が全域窓の行並び(j 昇順)に組み立ててから一括総和するため、
       ! 結果はランク数に依存しない(逐次版と同じ「全窓行の一括総和」)。
-      real, intent(in) :: rowsum(dcp%js:)
-      real, intent(out) :: total
-      real :: buf(dcp%jw1:dcp%jw2)
+      ! 引数は PREC によらず real64 固定(診断集約の桁落ち防止。
+      ! 倍精度ビルドでは real64=既定 real なので単一実装で済む。§1)。
+      ! 通信型も MPI_WP でなく MPI_REAL8 固定。
+      real(real64), intent(in) :: rowsum(dcp%js:)
+      real(real64), intent(out) :: total
+      real(real64) :: buf(dcp%jw1:dcp%jw2)
       integer :: counts(0:nproc-1), displs(0:nproc-1)
       integer :: r, js_r, je_r
       do r = 0, nproc - 1
@@ -279,11 +284,11 @@ contains
          counts(r) = je_r - js_r + 1
          displs(r) = js_r - dcp%jw1
       end do
-      call MPI_Gatherv(rowsum, dcp%je - dcp%js + 1, MPI_WP, &
-                       buf, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
+      call MPI_Gatherv(rowsum, dcp%je - dcp%js + 1, MPI_REAL8, &
+                       buf, counts, displs, MPI_REAL8, 0, MPI_COMM_WORLD)
       total = 0.0
       if (is_root) total = sum(buf)
-      call MPI_Bcast(total, 1, MPI_WP, 0, MPI_COMM_WORLD)
+      call MPI_Bcast(total, 1, MPI_REAL8, 0, MPI_COMM_WORLD)
    end subroutine par_sum_rows
 
    subroutine par_gather_to(buf, a)

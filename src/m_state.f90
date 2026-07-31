@@ -8,7 +8,7 @@ module m_state
   use m_util, only : itoa, rtoa
   use m_sysdep_util, only : sysdep_mkdir
   use m_fileio, only : fileio_write_rle, fileio_read_rle
-  use iso_fortran_env, only : output_unit
+  use iso_fortran_env, only : output_unit, real64
   implicit none
   private
 
@@ -238,10 +238,12 @@ subroutine m_state_calcstat(s, p, g)
   real :: vvmax
   real :: qqmax
   real :: cnmax
-  real :: hsum
-  real :: hsum_j(dcp%js:dcp%je)
-  real :: hgsum
-  real :: hgsum_j(dcp%js:dcp%je)
+  ! 診断集約の総和は PREC によらず real64 で行う(単精度ビルドでの
+  ! 桁落ち防止。倍精度ビルドでは real64=既定 real で従来と同一。§1)
+  real(real64) :: hsum
+  real(real64) :: hsum_j(dcp%js:dcp%je)
+  real(real64) :: hgsum
+  real(real64) :: hgsum_j(dcp%js:dcp%je)
   real :: qcumf
   real :: dtpdx     ! dt / min(dx, dy)
   real :: cosdir
