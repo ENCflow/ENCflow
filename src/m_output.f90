@@ -181,36 +181,6 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 全域保持の静的配列をファイルに出力(g%z 等。rank0 が直接書く)
-!----------------------------------------------------------------------
-subroutine output_matrix_full(p, g, prefix, a, k)
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  character(len=*), intent(in) :: prefix
-  integer, intent(in) :: k
-  real, intent(in) :: a(1:g%nx,1:g%ny)
-  character(len=4) :: snum
-  character(:), allocatable :: fn
-
-  if (.not. is_root) return
-  write(snum, '(i4.4)') k
-  fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
-
-  if (iand(p%f_output_mode, e_fmt_txt) /= 0) then
-    call fileio_write_matrix(fn//".txt", g%nx, g%ny, a, e_fmt_txt, p%f_output_compress)
-  end if
-  if (iand(p%f_output_mode, e_fmt_bil) /= 0) then
-    call fileio_write_matrix(fn//".bil", g%nx, g%ny, a, e_fmt_bil, p%f_output_compress)
-    if (g%gr%active) call georef_write_hdr(fn//".hdr", g%gr, g%nx, g%ny, e_pix_float)
-  end if
-  if (iand(p%f_output_mode, e_fmt_gtif) /= 0) then
-    call fileio_write_matrix(fn//".tif", g%nx, g%ny, a, e_fmt_gtif, e_cmp_off, g%gr)
-  end if
-
-end subroutine
-
-
-!----------------------------------------------------------------------
 ! 計算結果の配列をファイルに出力(int)
 !----------------------------------------------------------------------
 subroutine output_matrix_int(p, g, prefix, a, k)
