@@ -68,6 +68,8 @@ d4326_f32 系の tif と全画素ビット一致(`src/D4326.txt` は 3 桁丸め
 | d4326_i8_arc_lzw | D4326_i8_ArcLZW | i8 LZW tile(再アップロードで追加) |
 | d4326_i16_qgis_std / qgis_deflate | D4326_i16_QGIS標準/高圧縮 | i16 strip(高圧縮は Deflate+pred2) |
 | d4326_i8_qgis_std | D4326_i8_QGIS標準 | i8(符号付き 8bit) |
+| d4326_i8_qgis_deflate | D4326_i8_QGIS高圧縮 | i8 Deflate+pred2(第3便で追加) |
+| d2451_i8_qgis_std / qgis_deflate | D2451_i8_QGIS標準/高圧縮 | i8(第3便で追加。高圧縮は Deflate+pred2) |
 
 よく使う CRS は JGD2000 平面直角 9 系(EPSG:2451)とのこと。
 書き込み(Phase 3)の GeoKey 検証はこれを主対象にする。
