@@ -92,8 +92,10 @@
      GeoKey 併記(4612+2451)、QGIS の実数文字列 nodata、i8 型を実物で
      検証。QGIS 高圧縮(Deflate+pred2)も Phase 2 で読解済み。
      よく使う CRS は JGD2000 平面直角 9 系(EPSG:2451)
-   - 残: ENCflow が書いた .tif を QGIS / ArcGIS で開いて位置・値の目視確認
-     (gdalinfo では確認済み。test/gtif/wrk_*.tif か実行結果の H*.tif で)
+   - QGIS での目視確認済み(2026-08-01): wrk_*.tif の見た目 OK、
+     実データ往復の wrk_d2451_real / wrk_d4326_real は位置も OK
+     (便宜座標の wrk_* が架空位置に出るのは仕様。README 参照)。
+     ArcGIS でも開けるかの確認は任意で残
 
 ## 中期の道標(着手順は実測次第)
 
