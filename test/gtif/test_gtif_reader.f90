@@ -74,6 +74,9 @@ program test_gtif_reader
   ! ---- 書き込み(Phase 3)の往復検査 ----
   call t_write_roundtrip()
 
+  ! ---- 実データの往復(QGIS/ArcGIS 目視確認用の wrk_*_real.tif を生成) ----
+  call t_write_realdata()
+
   print '(a,i0,a,i0,a)', "---- ", ntest - nfail, " / ", ntest, " PASS"
   if (nfail > 0) then
     print '(a)', "=== GeoTIFF リーダーテスト FAIL ==="
@@ -346,6 +349,48 @@ subroutine t_write_roundtrip()
   end if
   call report("write wrk_f32_nogeo.tif", ok, msg)
 
+end subroutine
+
+!----------------------------------------------------------------------
+! 実データの往復: data_user の実出力を読み、その位置情報のまま書き戻す。
+!   wrk_f32_prj 等の便宜座標と違い、wrk_*_real.tif は元ファイルと同じ
+!   実在座標を持つので、QGIS / ArcGIS で元 tif に重ねると位置・値とも
+!   完全に一致するはず(目視確認はこのファイルで行うこと)
+!----------------------------------------------------------------------
+subroutine t_write_realdata()
+  call realdata_one("data_user/d2451_f32_arc_none.tif", "wrk_d2451_real.tif", 56, 37)
+  call realdata_one("data_user/d4326_f32_qgis_std.tif", "wrk_d4326_real.tif", 56, 30)
+end subroutine
+
+subroutine realdata_one(src, dst, nx, ny)
+  character(len=*), intent(in) :: src, dst
+  integer, intent(in) :: nx, ny
+  real :: a(nx,ny), b(nx,ny)
+  type(t_gtif_info) :: w, r
+  integer :: stat
+  character(len=512) :: msg
+  logical :: ok
+
+  a = 0.0
+  call gtif_read(src, nx, ny, a, stat, msg, info=w)
+  ok = (stat == 0)
+  if (ok) then
+    call gtif_write(dst, nx, ny, a, w, stat, msg)
+    ok = (stat == 0)
+  end if
+  if (ok) then
+    b = 0.0
+    call gtif_read(dst, nx, ny, b, stat, msg, info=r)
+    ok = (stat == 0)
+    if (ok) then
+      ok = all(a == b) .and. r%has_georef &
+           .and. r%xul == w%xul .and. r%yul == w%yul &
+           .and. r%csx == w%csx .and. r%csy == w%csy &
+           .and. r%epsg == w%epsg .and. (r%is_geog .eqv. w%is_geog)
+      msg = "実データ往復(値または位置情報)が一致しません"
+    end if
+  end if
+  call report("write "//dst//" (= "//src//")", ok, msg)
 end subroutine
 
 end program

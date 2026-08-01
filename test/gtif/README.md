@@ -50,6 +50,14 @@ test_gtif_reader が data_gtif/ と data_user/ の全変種を読み、期待値
 (write → read で値ビット一致+メタ往復)を検査する。テストが出力する
 wrk_*.tif は使い捨て(.gitignore 対象)。
 
+**注意: wrk_f32_prj / wrk_f32_geo / wrk_i32_prj / wrk_f32_nogeo の座標は
+テスト用の便宜値**(原点 -12345 等)なので、QGIS 上では実在しない位置に
+表示される(nogeo はピクセル座標表示になる)。それで正常。
+**QGIS / ArcGIS での目視確認には wrk_d2451_real.tif / wrk_d4326_real.tif を
+使うこと**。これらは data_user の実出力を読んで同じ位置情報のまま書き
+戻したもので、元の tif に重ねると位置・値とも完全に一致するはず
+(gdalinfo での位置・領域・画素の一致は確認済み)。
+
 ## data_user/(QGIS / ArcGIS Pro の実出力。2026-08-01 受領)
 
 ユーザー提供の実データ(約 1000m 格子の標高)。期待値は expected_user/ に
