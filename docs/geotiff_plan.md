@@ -275,7 +275,8 @@ CRS は namelist の `epsg`(導入済み。既定 0=不明)で与える。
   座標管理(§10)の t_georef から取る。決定事項:
   - f_output_mode は**ビット和**に変更(1:text, 2:bil, 4:geotiff。
     従来の 3=text+bil はそのまま互換)。ユーザー提案による。
-  - nodata タグは書かない。tif は gzip 圧縮(f_output_compress)の対象外。
+  - nodata タグは書かない(f_output_compress による gzip 圧縮機能は
+    その後 2026-08-01 に撤去。実運用実績がなく geotiff で不要になったため)。
   - 座標未管理で geotiff 出力を指定した場合は初期化時に par_stop(§10 条件1)。
   検証: 往復 4 テスト(投影/経緯度/整数/座標なし)を含む 47 テスト PASS
   (単精度含む)、gdalinfo が EPSG:2451/6668/6677 を正しく解決、

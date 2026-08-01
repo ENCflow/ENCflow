@@ -1,7 +1,7 @@
 module m_sysparam
   use list_sysparam, only : t_list_sysparam, list_sysparam_read
   use m_util, only : str2sec, itoa
-  use m_fileio, only : e_fmt_txt, e_fmt_bil, e_fmt_gtif, e_cmp_on, e_cmp_off
+  use m_fileio, only : e_fmt_txt, e_fmt_bil, e_fmt_gtif
   use m_parallel, only : par_stop
   implicit none
   private
@@ -44,7 +44,6 @@ module m_sysparam
     integer :: f_state_restore                 ! 状態保存ファイルからの初期条件設定
     integer :: f_input_mode                    ! matrix入力形式(1:text, 2:bil, 4:geotiff)
     integer :: f_output_mode                   ! matrix出力形式のビット和(1:text, 2:bil, 4:geotiff)
-    integer :: f_output_compress               ! 出力ファイルの圧縮(0:なし, 1:gzip)
     integer :: num_threads                     ! スレッド数
     integer :: real_precision                  ! 実数変数の有効数字桁数
     integer :: f_out_z                         ! ファイル出力(地盤高Z0001)
@@ -151,13 +150,6 @@ subroutine m_sysparam_init(p, fn_sysparam)
   else
     call par_stop("list_sysparam: f_output_mode は 1〜7 のビット和" &
                   //"(1:text, 2:bil, 4:geotiff)です: "//itoa(list%f_output_mode))
-  end if
-  if (list%f_output_compress == 0) then        ! 出力ファイルの圧縮(0:なし, 1:gzip)
-    p%f_output_compress = e_cmp_off
-  else if (list%f_output_compress == 1) then
-    p%f_output_compress = e_cmp_on
-  else
-    call par_stop("list_sysparam: invalid f_output_compress "//itoa(list%f_output_compress))
   end if
   p%f_out_z = list%f_out_z                     ! ファイル出力(地盤高Z0001)
   p%f_out_h = list%f_out_h                     ! ファイル出力(水深H0001)

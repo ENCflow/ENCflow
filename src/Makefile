@@ -103,7 +103,7 @@ list_enc.o: m_sysparam.o $(PAR_OBJ)
 user_geoinfo.o: m_sysparam.o m_geoinfo.o
 user_initial.o: m_sysparam.o m_state.o m_geoinfo.o
 m_output.o: m_sysparam.o m_geoinfo.o m_state.o m_fileio.o m_georef.o $(PAR_OBJ)
-m_fileio.o: m_sysdep_util.o m_geotiff.o m_georef.o $(PAR_OBJ)
+m_fileio.o: m_geotiff.o m_georef.o $(PAR_OBJ)
 m_georef.o: m_util.o $(PAR_OBJ)
 m_geotiff.o: m_geotiff_codec.o m_geotiff_inflate.o
 m_ffactor.o: m_util.o $(PAR_OBJ)

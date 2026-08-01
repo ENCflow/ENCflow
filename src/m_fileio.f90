@@ -1,6 +1,5 @@
 module m_fileio
   use, intrinsic :: iso_fortran_env, only: real32, int32, int64
-  use m_sysdep_util, only : sysdep_compress
   use m_geotiff, only : gtif_read, gtif_write, t_gtif_info
   use m_georef, only : t_georef
   use m_parallel, only : par_abort
@@ -46,8 +45,6 @@ module m_fileio
   integer, parameter, public :: e_fmt_txt = 1
   integer, parameter, public :: e_fmt_bil = 2
   integer, parameter, public :: e_fmt_gtif = 4
-  integer, parameter, public :: e_cmp_off = 0
-  integer, parameter, public :: e_cmp_on = 1
 
 contains
 
@@ -128,12 +125,11 @@ end subroutine
 
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
-subroutine fileio_write_matrix_int(fname, nx, ny, a, e_fmt, compress, gr)
+subroutine fileio_write_matrix_int(fname, nx, ny, a, e_fmt, gr)
   character(len=*), intent(in) :: fname
   integer, intent(in) :: nx, ny
   integer, intent(in) :: a(1:nx,1:ny)
   integer, intent(in) :: e_fmt
-  integer, intent(in) :: compress
   type(t_georef), intent(in), optional :: gr   ! e_fmt_gtif で必須(座標管理)
   integer :: un
 
@@ -148,16 +144,11 @@ subroutine fileio_write_matrix_int(fname, nx, ny, a, e_fmt, compress, gr)
       close(un)
     case (e_fmt_gtif)
       call write_gtif_int(fname, nx, ny, a, gr)
-      return                               ! tif は gzip 圧縮の対象外
     case default
       open(newunit=un, file=fname, status='replace')
       call write_textmatrix_int(un, nx, ny, a)
       close(un)
   end select
-
-  if (compress == e_cmp_on) then
-    call sysdep_compress(fname)
-  end if
 
 end subroutine
 
@@ -192,12 +183,11 @@ end subroutine
 
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
-subroutine fileio_write_matrix_real(fname, nx, ny, a, e_fmt, compress, gr)
+subroutine fileio_write_matrix_real(fname, nx, ny, a, e_fmt, gr)
   character(len=*), intent(in) :: fname
   integer, intent(in) :: nx, ny
   real, intent(in) :: a(1:nx,1:ny)
   integer, intent(in) :: e_fmt
-  integer, intent(in) :: compress
   type(t_georef), intent(in), optional :: gr   ! e_fmt_gtif で必須(座標管理)
   integer :: un
 
@@ -212,16 +202,11 @@ subroutine fileio_write_matrix_real(fname, nx, ny, a, e_fmt, compress, gr)
       close(un)
     case (e_fmt_gtif)
       call write_gtif_real(fname, nx, ny, a, gr)
-      return                               ! tif は gzip 圧縮の対象外
     case default
       open(newunit=un, file=fname, status='replace')
       call write_textmatrix_real(un, nx, ny, a)
       close(un)
   end select
-
-  if (compress == e_cmp_on) then
-    call sysdep_compress(fname)
-  end if
 
 end subroutine
 
