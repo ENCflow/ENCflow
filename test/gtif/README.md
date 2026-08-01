@@ -42,10 +42,10 @@ Phase 1 で追加するリーダーの回帰テストが、ここの `data_gtif/
 
     ./Run.sh        # ../../make.inc の設定でビルドして実行(逐次)
 
-test_gtif_reader が data_gtif/ の全変種を読み、expected/ とのビット一致・
-未対応形式のエラー停止・メタ情報(位置・CRS・nodata)を検査する。
-Deflate 系(u16_deflate_tile 等)は Phase 2 まで「エラーになること」を
-検査し、対応後に値比較へ切り替える。
+test_gtif_reader が data_gtif/ と data_user/ の全変種を読み、期待値との
+ビット一致・未対応形式のエラー停止・メタ情報(位置・CRS・nodata)を
+検査する。Deflate は Phase 2 で対応済み(値比較)。BigTIFF のみ
+「エラーになること」の検査(Phase 4 で対応予定)。
 
 ## data_user/(QGIS / ArcGIS Pro の実出力。2026-08-01 受領)
 
@@ -60,7 +60,7 @@ d4326_f32 系の tif と全画素ビット一致(`src/D4326.txt` は 3 桁丸め
 | d2451_f32_arc_none | D2451_f32_Arcなし | f32 無圧縮 tile。GeoKey に 4612+2451 併記(ArcGIS 固有) |
 | d2451_f32_arc_lzw | D2451_f32_ArcLZW | f32 LZW tile |
 | d2451_f32_qgis_std | D2451_f32_QGIS標準 | f32 無圧縮 strip |
-| d2451_f32_qgis_deflate | D4326_f32_QGIS高圧縮 | **中身は 2451 格子**のため改名。Deflate+pred2(Phase 2 で値比較へ) |
+| d2451_f32_qgis_deflate | D4326_f32_QGIS高圧縮 | **中身は 2451 格子**のため改名。Deflate+pred2 |
 | d2451_i16_qgis_std | D2451_i16_QGIS標準 | i16。nodata が実数文字列(-3.4e38) |
 | d4326_f32_arc_none / arc_lzw | D4326_f32_Arcなし/ArcLZW | f32 tile(EPSG:4326) |
 | d4326_f32_qgis_std | D4326_f32_QGIS標準 | f32 無圧縮 strip |
@@ -72,8 +72,7 @@ d4326_f32 系の tif と全画素ビット一致(`src/D4326.txt` は 3 桁丸め
 よく使う CRS は JGD2000 平面直角 9 系(EPSG:2451)とのこと。
 書き込み(Phase 3)の GeoKey 検証はこれを主対象にする。
 
-## 未整備(Phase 2 以降で追加)
+## 未整備
 
-- Deflate 対応後、`*_deflate*` のテストを「エラー検査」から値比較へ切り替える。
 - スパースタイル(タイルオフセット 0)、値が 2^31 を超える UInt32 の
   エラー経路、JPEG 等の対象外圧縮の停止メッセージ検査。

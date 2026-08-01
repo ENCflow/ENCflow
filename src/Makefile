@@ -23,7 +23,7 @@ LIBOBJS	= m_main.o m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o \
 	  list_intercept.o \
 	  list_initial.o list_record.o list_tide.o list_boundary.o list_enc.o \
 	  m_ffactor.o user_geoinfo.o user_initial.o m_sysdep_util.o m_fileio.o m_georef.o \
-	  m_geotiff.o m_geotiff_codec.o m_util.o
+	  m_geotiff.o m_geotiff_codec.o m_geotiff_inflate.o m_util.o
 
 OBJS	= main.o $(LIBOBJS)
 
@@ -105,7 +105,7 @@ user_initial.o: m_sysparam.o m_state.o m_geoinfo.o
 m_output.o: m_sysparam.o m_geoinfo.o m_state.o m_fileio.o m_georef.o $(PAR_OBJ)
 m_fileio.o: m_sysdep_util.o m_geotiff.o $(PAR_OBJ)
 m_georef.o: m_util.o $(PAR_OBJ)
-m_geotiff.o: m_geotiff_codec.o
+m_geotiff.o: m_geotiff_codec.o m_geotiff_inflate.o
 m_ffactor.o: m_util.o $(PAR_OBJ)
 m_util.o: $(PAR_OBJ)
 m_sysdep_util.o: $(PAR_OBJ)

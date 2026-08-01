@@ -170,7 +170,7 @@ src/m_geotiff.f90          公開 API。ヘッダ/IFD の解析・検査、strip
                            走査、型変換、GeoKey 解釈(実装済み)。
                            書き込み(GeoKey 生成含む)は Phase 3 で追加
 src/m_geotiff_codec.f90    PackBits・LZW の復号、predictor 復元(実装済み)
-src/m_geotiff_inflate.f90  Deflate(zlib/raw)の復号のみ(Phase 2)
+src/m_geotiff_inflate.f90  Deflate(zlib)の復号のみ(実装済み)
 ```
 
 - **ENCflow 本体のどのモジュールにも依存しない**(m_parallel にも
@@ -258,9 +258,13 @@ CRS は namelist の `epsg`(導入済み。既定 0=不明)で与える。
   検証: test/gtif の 23 テスト(単精度ビルド含む)PASS、既存 txt ケースの
   無効時ビット一致、chichibu の GeoTIFF 入力実行が bil+hdr 入力と全出力
   ビット一致(格子情報は tif タグから取得)。
-- **Phase 2: Deflate**。m_geotiff_inflate を追加(predictor は実装済み)。
-  これで ArcGIS Pro 既定(LZ77)と QGIS 高圧縮プロファイルをカバーし、
-  読み要件が完成。u16_deflate_tile のテストもここで有効化。
+- **Phase 2: Deflate — 完了(2026-08-01)**。m_geotiff_inflate(zlib/RFC1951
+  の逐次復号、固定・動的ハフマン、stored ブロック)を追加。これで
+  ArcGIS Pro 既定(LZ77)と QGIS 高圧縮プロファイルをカバーし、
+  **読み要件が完成**(残る読みの拡張は Phase 4 の BigTIFF のみ)。
+  検証: Deflate 系テストを値比較に切り替えて 40 テスト PASS(単精度含む)、
+  txt ケース無効時ビット一致、chichibu の Deflate+pred3 入力実行が
+  既存結果と全出力ビット一致。
 - **Phase 3: 書き(無圧縮 strip、Float32/Int32、GeoKey+nodata)**。
   位置情報と EPSG は座標管理(§10)の t_georef から取る。
   検証は (a) 自前 reader での往復一致、

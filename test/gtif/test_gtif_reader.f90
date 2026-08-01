@@ -37,11 +37,13 @@ program test_gtif_reader
   call t_real("data_gtif/i32_none_strip.tif", "expected/i32.txt", 60, 48)
   call t_real("data_gtif/u8_none_strip.tif", "expected/u8.txt", 60, 48)
 
+  ! Deflate(Phase 2 で対応)
+  call t_real("data_gtif/f32_deflate_strip.tif", "expected/f32.txt", 60, 48)
+  call t_real("data_gtif/f32_deflate_pred3_tile.tif", "expected/f32.txt", 60, 48)
+  call t_int("data_gtif/u16_deflate_tile.tif", "expected/u16.txt", 60, 48)
+
   ! 未対応・不整合はエラーになること
-  call t_err_real("data_gtif/f32_deflate_strip.tif", 60, 48)
-  call t_err_real("data_gtif/f32_deflate_pred3_tile.tif", 60, 48)
   call t_err_real("data_gtif/f32_deflate_bigtiff.tif", 60, 48)
-  call t_err_int("data_gtif/u16_deflate_tile.tif", 60, 48)
   call t_err_int("data_gtif/f32_none_strip.tif", 60, 48)  ! 実数型を整数入力に使うのは誤り
 
   ! ---- QGIS / ArcGIS Pro の実出力(2451: 56x37, 4326: 56x30) ----
@@ -58,9 +60,9 @@ program test_gtif_reader
   call t_int("data_user/d4326_i8_qgis_std.tif", "expected_user/d4326_i8.txt", 56, 30)
   call t_int("data_user/d4326_i8_arc_lzw.tif", "expected_user/d4326_i8.txt", 56, 30)
 
-  ! QGIS 高圧縮(Deflate)は Phase 2 まではエラー停止を検査
-  call t_err_real("data_user/d2451_f32_qgis_deflate.tif", 56, 37)
-  call t_err_int("data_user/d4326_i16_qgis_deflate.tif", 56, 30)
+  ! QGIS 高圧縮(Deflate + predictor 2。f32 への pred2 も実物で検査)
+  call t_real("data_user/d2451_f32_qgis_deflate.tif", "expected_user/d2451_f32.txt", 56, 37)
+  call t_int("data_user/d4326_i16_qgis_deflate.tif", "expected_user/d4326_i16.txt", 56, 30)
 
   ! ---- メタ情報(位置情報・CRS・nodata) ----
   call t_meta_gdal()

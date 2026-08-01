@@ -3,7 +3,7 @@
 !   対応範囲(docs/geotiff_plan.md §2, §8。QGIS/ArcGIS 産の1バンドを想定):
 !   - classic TIFF(BigTIFF は Phase 4)。両バイト順(II/MM)
 !   - 画素型: u8 / i16 / u16 / i32 / u32 / f32 / f64(1 バンドのみ)
-!   - 圧縮: 無圧縮 / PackBits / LZW(Deflate は Phase 2)
+!   - 圧縮: 無圧縮 / PackBits / LZW / Deflate(zlib)
 !   - predictor: 1 / 2(水平差分)/ 3(浮動小数点)
 !   - 配置: strip / tile(端数タイルは有効域のみ取り込む)
 !   - 位置情報: ModelPixelScale + ModelTiepoint、GeoKey の EPSG、
@@ -20,6 +20,7 @@ module m_geotiff
   use, intrinsic :: iso_fortran_env, only : int8, int16, int32, int64, real32, real64
   use m_geotiff_codec, only : gtc_packbits_decode, gtc_lzw_decode, &
                               gtc_undo_predictor2, gtc_undo_predictor3
+  use m_geotiff_inflate, only : gtc_inflate_zlib
   implicit none
   private
 
@@ -465,10 +466,7 @@ subroutine decode_blocks(t, want_real, ar, ai, fname, stat, msg)
 
   ! 圧縮方式の対応可否(メタ取得は許すが、画素読みはここで検査)
   select case (t%comp)
-    case (1, 5, 32773)                     ! 無圧縮 / LZW / PackBits
-    case (8, 32946)
-      call set_err(stat, msg, "Deflate 圧縮は未対応です(Phase 2 で対応予定): "//trim(fname))
-      return
+    case (1, 5, 32773, 8, 32946)           ! 無圧縮 / LZW / PackBits / Deflate
     case (6, 7)
       call set_err(stat, msg, "JPEG 系圧縮は対象外です: "//trim(fname))
       return
@@ -526,8 +524,10 @@ subroutine decode_blocks(t, want_real, ar, ai, fname, stat, msg)
         end if
         if (t%comp == 5) then
           call gtc_lzw_decode(cbuf, ubuf(1:need), stat)
-        else
+        else if (t%comp == 32773) then
           call gtc_packbits_decode(cbuf, ubuf(1:need), stat)
+        else
+          call gtc_inflate_zlib(cbuf, ubuf(1:need), stat)
         end if
         if (stat /= 0) then
           call set_err(stat, msg, "ブロック"//itoa(ib)//"の復号に失敗しました(圧縮データ破損): " &
