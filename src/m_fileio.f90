@@ -339,7 +339,8 @@ subroutine gr2info(gr, info)
     call par_abort("GeoTIFF 出力には座標管理(georef)が必要です")
   end if
   if (.not. gr%active) then
-    call par_abort("GeoTIFF 出力には座標管理が必要です(bil+hdr 入力か GeoTIFF 入力で位置情報を与えてください)")
+    call par_abort("GeoTIFF 出力には座標管理が必要です" &
+                   //"(bil+hdr 入力か GeoTIFF 入力で位置情報を与えてください)")
   end if
   info%has_georef = .true.
   info%xul = gr%xul
