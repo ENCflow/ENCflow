@@ -56,6 +56,7 @@ program test_gtif_reader
   call t_int("data_user/d4326_i16_arc_lzw.tif", "expected_user/d4326_i16.txt", 56, 30)
   call t_int("data_user/d4326_i16_qgis_std.tif", "expected_user/d4326_i16.txt", 56, 30)
   call t_int("data_user/d4326_i8_qgis_std.tif", "expected_user/d4326_i8.txt", 56, 30)
+  call t_int("data_user/d4326_i8_arc_lzw.tif", "expected_user/d4326_i8.txt", 56, 30)
 
   ! QGIS 高圧縮(Deflate)は Phase 2 まではエラー停止を検査
   call t_err_real("data_user/d2451_f32_qgis_deflate.tif", 56, 37)

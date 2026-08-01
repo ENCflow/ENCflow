@@ -64,7 +64,8 @@ d4326_f32 系の tif と全画素ビット一致(`src/D4326.txt` は 3 桁丸め
 | d2451_i16_qgis_std | D2451_i16_QGIS標準 | i16。nodata が実数文字列(-3.4e38) |
 | d4326_f32_arc_none / arc_lzw | D4326_f32_Arcなし/ArcLZW | f32 tile(EPSG:4326) |
 | d4326_f32_qgis_std | D4326_f32_QGIS標準 | f32 無圧縮 strip |
-| d4326_i16_arc_none / arc_lzw | D4326_i16_Arcなし/ArcLZW | i16 tile(ArcLZW は実際は無圧縮) |
+| d4326_i16_arc_none / arc_lzw | D4326_i16_Arcなし/ArcLZW | i16 tile(arc_lzw は再アップロード版=LZW) |
+| d4326_i8_arc_lzw | D4326_i8_ArcLZW | i8 LZW tile(再アップロードで追加) |
 | d4326_i16_qgis_std / qgis_deflate | D4326_i16_QGIS標準/高圧縮 | i16 strip(高圧縮は Deflate+pred2) |
 | d4326_i8_qgis_std | D4326_i8_QGIS標準 | i8(符号付き 8bit) |
 
