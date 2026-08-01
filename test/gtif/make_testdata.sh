@@ -2,7 +2,7 @@
 # =====================================================================
 # GeoTIFF リーダー用テスト資産の生成(docs/geotiff_plan.md Phase 0)
 #
-#   data/     読みテスト対象の .tif 一式(型×圧縮×配置×エンディアン等)
+#   data_gtif/     読みテスト対象の .tif 一式(型×圧縮×配置×エンディアン等)
 #   expected/ 期待値行列(ENCflow のテキスト行列と同じ「1行=1格子行」形式。
 #             実数は f32/f64 の正確な往復桁数で印字)
 #
@@ -23,8 +23,8 @@ COL0=240
 NX=60
 NY=48
 
-rm -rf data expected work
-mkdir -p data expected work
+rm -rf data_gtif expected work
+mkdir -p data_gtif expected work
 
 # --- ソース行列の切り出しと AAIGrid 化(gdal_translate の入力) -------
 python3 - "$SRC" $ROW0 $COL0 $NX $NY <<'EOF'
@@ -58,32 +58,32 @@ PRJ="-a_srs EPSG:6677 work/f_prj.asc"
 PRJI="-a_srs EPSG:6677 work/i_prj.asc"
 
 # Float32(投影 100m 格子)
-$T -ot Float32 $PRJ data/f32_none_strip.tif
-$T -ot Float32 $PRJ -co TILED=YES -co BLOCKXSIZE=32 -co BLOCKYSIZE=32 data/f32_none_tile.tif
-$T -ot Float32 $PRJ -co COMPRESS=LZW data/f32_lzw_strip.tif
-$T -ot Float32 $PRJ -co COMPRESS=LZW -co PREDICTOR=3 data/f32_lzw_pred3_strip.tif
-$T -ot Float32 $PRJ -co COMPRESS=DEFLATE data/f32_deflate_strip.tif
+$T -ot Float32 $PRJ data_gtif/f32_none_strip.tif
+$T -ot Float32 $PRJ -co TILED=YES -co BLOCKXSIZE=32 -co BLOCKYSIZE=32 data_gtif/f32_none_tile.tif
+$T -ot Float32 $PRJ -co COMPRESS=LZW data_gtif/f32_lzw_strip.tif
+$T -ot Float32 $PRJ -co COMPRESS=LZW -co PREDICTOR=3 data_gtif/f32_lzw_pred3_strip.tif
+$T -ot Float32 $PRJ -co COMPRESS=DEFLATE data_gtif/f32_deflate_strip.tif
 $T -ot Float32 $PRJ -co COMPRESS=DEFLATE -co PREDICTOR=3 \
-   -co TILED=YES -co BLOCKXSIZE=32 -co BLOCKYSIZE=32 data/f32_deflate_pred3_tile.tif
-$T -ot Float32 $PRJ -co COMPRESS=PACKBITS data/f32_packbits_strip.tif
-$T -ot Float32 $PRJ -co BIGTIFF=YES -co COMPRESS=DEFLATE data/f32_deflate_bigtiff.tif
+   -co TILED=YES -co BLOCKXSIZE=32 -co BLOCKYSIZE=32 data_gtif/f32_deflate_pred3_tile.tif
+$T -ot Float32 $PRJ -co COMPRESS=PACKBITS data_gtif/f32_packbits_strip.tif
+$T -ot Float32 $PRJ -co BIGTIFF=YES -co COMPRESS=DEFLATE data_gtif/f32_deflate_bigtiff.tif
 gdal_translate -q -of GTiff -ot Float32 $PRJ --config GDAL_TIFF_ENDIANNESS BIG \
-   data/f32_none_strip_be.tif
+   data_gtif/f32_none_strip_be.tif
 
 # Float32(経緯度 4 秒格子、nodata タグ付き。画素値は投影版と同一)
-$T -ot Float32 -a_srs EPSG:6668 -a_nodata -9999 work/f_geo.asc data/f32_none_strip_geo.tif
+$T -ot Float32 -a_srs EPSG:6668 -a_nodata -9999 work/f_geo.asc data_gtif/f32_none_strip_geo.tif
 
 # Float64
-$T -ot Float64 $PRJ data/f64_none_strip.tif
+$T -ot Float64 $PRJ data_gtif/f64_none_strip.tif
 
 # 整数系(投影 100m 格子)
-$T -ot Byte   -a_srs EPSG:6677 work/u8_prj.asc  data/u8_none_strip.tif
-$T -ot Int16  $PRJI -co COMPRESS=LZW -co PREDICTOR=2 data/i16_lzw_pred2_strip.tif
-$T -ot Int16  $PRJI --config GDAL_TIFF_ENDIANNESS BIG data/i16_none_strip_be.tif
+$T -ot Byte   -a_srs EPSG:6677 work/u8_prj.asc  data_gtif/u8_none_strip.tif
+$T -ot Int16  $PRJI -co COMPRESS=LZW -co PREDICTOR=2 data_gtif/i16_lzw_pred2_strip.tif
+$T -ot Int16  $PRJI --config GDAL_TIFF_ENDIANNESS BIG data_gtif/i16_none_strip_be.tif
 $T -ot UInt16 -a_srs EPSG:6677 work/u16_prj.asc -co COMPRESS=DEFLATE \
-   -co TILED=YES -co BLOCKXSIZE=32 -co BLOCKYSIZE=32 data/u16_deflate_tile.tif
-$T -ot Int32  $PRJI data/i32_none_strip.tif
-$T -ot UInt32 $PRJI -co COMPRESS=LZW data/u32_lzw_strip.tif
+   -co TILED=YES -co BLOCKXSIZE=32 -co BLOCKYSIZE=32 data_gtif/u16_deflate_tile.tif
+$T -ot Int32  $PRJI data_gtif/i32_none_strip.tif
+$T -ot UInt32 $PRJI -co COMPRESS=LZW data_gtif/u32_lzw_strip.tif
 
 # --- 期待値行列の生成と全変種の自己検証 -------------------------------
 python3 - <<'EOF'
@@ -102,10 +102,10 @@ def dump(fn, a, fmt):
 ref = {}
 for name, fmt in [("f32", "%.17g"), ("f64", "%.17g"), ("u8", "%d"),
                   ("i16", "%d"), ("u16", "%d"), ("i32", "%d"), ("u32", "%d")]:
-    src = {"f32": "data/f32_none_strip.tif", "f64": "data/f64_none_strip.tif",
-           "u8": "data/u8_none_strip.tif", "i16": "data/i16_lzw_pred2_strip.tif",
-           "u16": "data/u16_deflate_tile.tif", "i32": "data/i32_none_strip.tif",
-           "u32": "data/u32_lzw_strip.tif"}[name]
+    src = {"f32": "data_gtif/f32_none_strip.tif", "f64": "data_gtif/f64_none_strip.tif",
+           "u8": "data_gtif/u8_none_strip.tif", "i16": "data_gtif/i16_lzw_pred2_strip.tif",
+           "u16": "data_gtif/u16_deflate_tile.tif", "i32": "data_gtif/i32_none_strip.tif",
+           "u32": "data_gtif/u32_lzw_strip.tif"}[name]
     a = tifffile.imread(src)
     ref[name] = a
     dump(f"expected/{name}.txt", a.astype(np.float64) if name in ("f32", "f64") else a, fmt)
@@ -113,7 +113,7 @@ for name, fmt in [("f32", "%.17g"), ("f64", "%.17g"), ("u8", "%d"),
 # 全変種が dtype ごとの参照と値一致することを確認(生成ミスの検出)
 kind = {"f32": "f32", "f64": "f64", "u8": "u8", "i16": "i16",
         "u16": "u16", "i32": "i32", "u32": "u32"}
-for fn in sorted(glob.glob("data/*.tif")):
+for fn in sorted(glob.glob("data_gtif/*.tif")):
     name = fn.split("/")[1].split("_")[0]
     a = tifffile.imread(fn)
     assert a.shape == (48, 60), (fn, a.shape)
@@ -128,4 +128,4 @@ print("self-check OK")
 EOF
 
 rm -rf work
-echo "done: $(ls data | wc -l) tif files, $(ls expected | wc -l) expected files"
+echo "done: $(ls data_gtif | wc -l) tif files, $(ls expected | wc -l) expected files"
