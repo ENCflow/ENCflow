@@ -167,9 +167,10 @@ C で書く(または miniz 等の実装をベンダリングする)利点は De
 
 ```
 src/m_geotiff.f90          公開 API。ヘッダ/IFD の解析・検査、strip/tile
-                           走査、型変換、書き込み(GeoKey 生成含む)
-src/m_geotiff_codec.f90    PackBits・LZW の復号、predictor 復元
-src/m_geotiff_inflate.f90  Deflate(zlib/raw)の復号のみ
+                           走査、型変換、GeoKey 解釈(実装済み)。
+                           書き込み(GeoKey 生成含む)は Phase 3 で追加
+src/m_geotiff_codec.f90    PackBits・LZW の復号、predictor 復元(実装済み)
+src/m_geotiff_inflate.f90  Deflate(zlib/raw)の復号のみ(Phase 2)
 ```
 
 - **ENCflow 本体のどのモジュールにも依存しない**(m_parallel にも
@@ -188,40 +189,44 @@ SampleFormat(339), ModelPixelScaleTag(33550), ModelTiepointTag(33922),
 GeoKeyDirectoryTag(34735), GeoDoubleParams(34736), GeoAsciiParams(34737),
 GDAL_NODATA(42113)。未知タグは無視、既知タグの未対応値はエラー。
 
-### 6.3 公開 API 案
+### 6.3 公開 API(読みは実装済み。書きは Phase 3)
 
 ```fortran
 type :: t_gtif_info                  ! 読み取りメタ情報
   integer :: nx, ny
   logical :: is_real                 ! 実数系か整数系か
   logical :: has_nodata
-  real    :: nodata
+  real(real64) :: nodata
   logical :: has_georef
-  real(real64) :: x0, y0, csx, csy   ! 北西隅セル外縁と セル寸法
-  integer :: epsg                    ! 0 = 不明/未記載
+  real(real64) :: xul, yul, csx, csy ! 北西隅セル外縁とセル寸法(m_georef と同表現)
+  integer :: epsg                    ! 0 = 不明/ユーザー定義
+  logical :: is_geog                 ! 経緯度か(GeoKey から。無ければ推測)
 end type
 
-! 検査+メタ取得(読み込み前の格子整合チェック用)
+! 検査+メタ取得(m_geoinfo の probe が使う。未対応圧縮でも成功する)
 subroutine gtif_inquire(fname, info, stat, msg)
-! 全域読み(a は既定 real / 既定 integer の総称)
+! 全域読み(a は既定 real / 既定 integer の総称。整数 tif の実数読みは可、
+! 実数 tif の整数読みと既定 integer 範囲外の値はエラー)
 subroutine gtif_read(fname, nx, ny, a, stat, msg [, info])
-! 全域書き(実数は Float32、整数は Int32 で格納)
+! 全域書き(実数は Float32、整数は Int32 で格納。Phase 3)
 subroutine gtif_write(fname, nx, ny, a, georef, nodata, stat, msg)
 ```
 
 ### 6.4 m_fileio / m_sysparam への組み込み
 
-- m_fileio に `e_fmt_gtif` を追加し、fileio_read_matrix /
-  fileio_write_matrix の select case に分岐を足す(既存シグネチャ不変。
-  gtif_read のエラーはここで par_abort に変換)。
-- m_sysparam の f_input_mode / f_output_mode の namelist 文字列に
-  "gtif" を追加。出力は e_fmt_both 同様の組合せ指定も検討
-  (txt+gtif 等が要るかは運用で判断)。
-- 読み時は info%nx, ny を namelist の nx, ny と突き合わせ、不一致は
-  エラーにする(txt/bil には無かった自己記述性の利点)。
-- fileio_un_open / fileio_un_read_matrix(precip の逐次読み)は
-  当面 gtif 対象外とし、指定されたらエラー(§8 Phase 4 で multi-IFD
-  読みとして拡張可能)。
+実装済み(2026-08-01):
+- m_fileio に `e_fmt_gtif`(=4)を追加。fileio_read_matrix の分岐を開通
+  (既存シグネチャ不変。gtif_read のエラーは par_abort に変換)。
+  fileio_write_matrix の gtif は「Phase 3 未実装」の明示エラー。
+- m_sysparam の f_input_mode に 3(geotiff)を追加。f_output_mode への
+  追加は Phase 3(組合せ仕様は §9 の未決事項)。
+- 格子数はすべての入力ファイルで tif 側と突き合わせ、不一致はエラー
+  (txt/bil には無かった自己記述性の利点)。fn_z の位置情報・CRS・nodata
+  は m_geoinfo の probe_georef が取得し、hdr と同じ補完・検査を行う
+  (経緯度格子の dx, dy 必須+概算検査も同じ。EPSG は namelist と
+  ファイルの両方にあれば一致検査)。
+- fileio_un_open(precip の逐次読み)は gtif 指定でエラー
+  (§8 Phase 4 で multi-IFD 読みとして拡張可能)。
 
 ## 7. 地理参照情報の追加(書き込みの前提)
 
@@ -245,12 +250,17 @@ CRS は namelist の `epsg`(導入済み。既定 0=不明)で与える。
   期待値行列、生成スクリプト(make_testdata.sh)をコミット。
   内訳と期待値の桁の規約は test/gtif/README.md。QGIS/ArcGIS の実出力
   サンプルはユーザー提供待ち(届き次第 data_qgis/, data_arcgis/ に追加)。
-- **Phase 1: 読み(無圧縮+PackBits+LZW、strip/tile、全画素型、
-  両エンディアン、classic TIFF)**。m_geotiff + m_geotiff_codec を追加し、
-  e_fmt_gtif の入力側を開通。
-- **Phase 2: Deflate と predictor 2/3**。m_geotiff_inflate を追加。
+- **Phase 1: 読み — 完了(2026-08-01)**。m_geotiff + m_geotiff_codec を
+  追加し、f_input_mode=3(geotiff)の入力側を開通。無圧縮+PackBits+LZW、
+  strip/tile、全画素型(u8/i16/u16/i32/u32/f32/f64)、両エンディアン、
+  classic TIFF、GDAL_NODATA、GeoKey(EPSG・PixelIsPoint 換算)に対応。
+  predictor 2/3 は LZW と組で使われるため計画を繰り上げてここで実装した。
+  検証: test/gtif の 23 テスト(単精度ビルド含む)PASS、既存 txt ケースの
+  無効時ビット一致、chichibu の GeoTIFF 入力実行が bil+hdr 入力と全出力
+  ビット一致(格子情報は tif タグから取得)。
+- **Phase 2: Deflate**。m_geotiff_inflate を追加(predictor は実装済み)。
   これで ArcGIS Pro 既定(LZ77)と QGIS 高圧縮プロファイルをカバーし、
-  読み要件が完成。
+  読み要件が完成。u16_deflate_tile のテストもここで有効化。
 - **Phase 3: 書き(無圧縮 strip、Float32/Int32、GeoKey+nodata)**。
   位置情報と EPSG は座標管理(§10)の t_georef から取る。
   検証は (a) 自前 reader での往復一致、

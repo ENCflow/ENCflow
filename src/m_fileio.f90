@@ -1,6 +1,7 @@
 module m_fileio
   use, intrinsic :: iso_fortran_env, only: real32, int32, int64
   use m_sysdep_util, only : sysdep_compress
+  use m_geotiff, only : gtif_read
   use m_parallel, only : par_abort
 
   implicit none
@@ -44,6 +45,7 @@ module m_fileio
   integer, parameter, public :: e_fmt_txt = 1
   integer, parameter, public :: e_fmt_bil = 2
   integer, parameter, public :: e_fmt_both = 3
+  integer, parameter, public :: e_fmt_gtif = 4
   integer, parameter, public :: e_cmp_off = 0
   integer, parameter, public :: e_cmp_on = 1
 
@@ -61,6 +63,9 @@ function fileio_un_open(fname, e_fmt) result(un)
       open(newunit=un, file=fname, status='old')
     case (e_fmt_bil)
       open(newunit=un,file=fname, form='unformatted', status='old', access='stream')
+    case (e_fmt_gtif)
+      un = -1
+      call par_abort("GeoTIFF は逐次読み(precip の maplist)に使えません。txt か bil を指定してください")
     case default
       open(newunit=un, file=fname, status='old')
   end select
@@ -105,14 +110,18 @@ subroutine fileio_read_matrix_int(fname, nx, ny, a, e_fmt)
     case (e_fmt_txt)
       open(newunit=un, file=fname, status='old')
       call read_textmatrix_int(un, nx, ny, a)
+      close(un)
     case (e_fmt_bil)
       open(newunit=un,file=fname, form='unformatted', status='old', access='stream')
       call read_bil_int(un, nx, ny, a)
+      close(un)
+    case (e_fmt_gtif)
+      call read_gtif_int(fname, nx, ny, a)
     case default
       open(newunit=un, file=fname, status='old')
       call read_textmatrix_int(un, nx, ny, a)
+      close(un)
   end select
-  close(un)
 
 end subroutine
 
@@ -131,14 +140,18 @@ subroutine fileio_write_matrix_int(fname, nx, ny, a, e_fmt, compress)
     case (e_fmt_txt)
       open(newunit=un, file=fname, status='replace')
       call write_textmatrix_int(un, nx, ny, a)
+      close(un)
     case (e_fmt_bil)
       open(newunit=un,file=fname, form='unformatted', status='replace', access='stream')
       call write_bil_int(un, nx, ny, a)
+      close(un)
+    case (e_fmt_gtif)
+      call par_abort("GeoTIFF 出力は未実装です(Phase 3 で対応予定)")
     case default
       open(newunit=un, file=fname, status='replace')
       call write_textmatrix_int(un, nx, ny, a)
+      close(un)
   end select
-  close(un)
 
   if (compress == e_cmp_on) then
     call sysdep_compress(fname)
@@ -159,14 +172,18 @@ subroutine fileio_read_matrix_real(fname, nx, ny, a, e_fmt)
     case (e_fmt_txt)
       open(newunit=un, file=fname, status='old')
       call read_textmatrix_real(un, nx, ny, a)
+      close(un)
     case (e_fmt_bil)
       open(newunit=un,file=fname, form='unformatted', status='old', access='stream')
       call read_bil_real(un, nx, ny, a)
+      close(un)
+    case (e_fmt_gtif)
+      call read_gtif_real(fname, nx, ny, a)
     case default
       open(newunit=un, file=fname, status='old')
       call read_textmatrix_real(un, nx, ny, a)
+      close(un)
   end select
-  close(un)
 
 end subroutine
 
@@ -185,14 +202,18 @@ subroutine fileio_write_matrix_real(fname, nx, ny, a, e_fmt, compress)
     case (e_fmt_txt)
       open(newunit=un, file=fname, status='replace')
       call write_textmatrix_real(un, nx, ny, a)
+      close(un)
     case (e_fmt_bil)
       open(newunit=un,file=fname, form='unformatted', status='replace', access='stream')
       call write_bil_real(un, nx, ny, a)
+      close(un)
+    case (e_fmt_gtif)
+      call par_abort("GeoTIFF 出力は未実装です(Phase 3 で対応予定)")
     case default
       open(newunit=un, file=fname, status='replace')
       call write_textmatrix_real(un, nx, ny, a)
+      close(un)
   end select
-  close(un)
 
   if (compress == e_cmp_on) then
     call sysdep_compress(fname)
@@ -249,6 +270,32 @@ subroutine write_textmatrix_real(un, nx, ny, a)
     write(un,'(*(f12.4))') a(1:nx,j)
   enddo
 end subroutine
+
+!----------------------------------------------------------------------
+! GeoTIFF 読み(m_geotiff の stat 返しをエラー停止に変換する層)
+!   読みは全ランク冗長の場合と rank0 のみの場合があるため、
+!   collective でない par_abort を使う(m_fileio の他のエラーと同じ)
+!----------------------------------------------------------------------
+subroutine read_gtif_real(fname, nx, ny, a)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny
+  real, intent(inout) :: a(1:nx,1:ny)
+  integer :: stat
+  character(len=512) :: msg
+  call gtif_read(fname, nx, ny, a, stat, msg)
+  if (stat /= 0) call par_abort("GeoTIFF 読込失敗: "//trim(msg))
+end subroutine
+
+subroutine read_gtif_int(fname, nx, ny, a)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny
+  integer, intent(inout) :: a(1:nx,1:ny)
+  integer :: stat
+  character(len=512) :: msg
+  call gtif_read(fname, nx, ny, a, stat, msg)
+  if (stat /= 0) call par_abort("GeoTIFF 読込失敗: "//trim(msg))
+end subroutine
+
 
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------

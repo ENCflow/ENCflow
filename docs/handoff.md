@@ -72,13 +72,19 @@
    - 残: 出力 .hdr+.bil を QGIS / ArcGIS で開いて位置・値の目視確認
      (GDAL EHdr 互換キーで書いている。gdalinfo でも可)
    - 残: examples の param サンプルへの epsg / hdr 運用の説明追記
-9. **GeoTIFF Phase 0(テスト資産)完了・Phase 1(リーダー)着手待ち**
-   - test/gtif/ に GDAL 生成の 17 変種+期待値+生成スクリプトをコミット済み
+9. **GeoTIFF Phase 1(リーダー)完了・Phase 2(Deflate)着手待ち**
+   - m_geotiff + m_geotiff_codec を追加し f_input_mode=3 を開通
+     (対応範囲は geotiff_plan.md §8 Phase 1 の項)
+   - gfortran で検証済み: test/gtif の 23 テスト PASS(PREC=single でも
+     PASS)、txt ケースの無効時ビット一致(wave/chichibu)、chichibu の
+     GeoTIFF 入力が bil+hdr 入力と全出力ビット一致、epsg 不一致の par_stop
+   - 残: ifx ビルド・np=1,2,4 の無効時ビット一致(collective は増やして
+     いないが確認する)。test/gtif の Run.sh は逐次専用
    - ユーザー提供待ち: QGIS / ArcGIS Pro の実出力サンプル(実運用データの
      小さい切り出しで可。既定設定のまま出力したもの+元の値が分かるもの)
-     と、よく使う EPSG コードの一覧
-   - 実装前に要決定(geotiff_plan.md §9): 出力画素型(実数=Float32 固定で
-     よいか)、f_output_mode の組合せ仕様、入力 nodata の内部規約
+     と、よく使う EPSG コードの一覧 → 届いたら読み検証に追加
+   - Phase 3 実装前に要決定(geotiff_plan.md §9): 出力画素型(実数=Float32
+     固定でよいか)、f_output_mode の組合せ仕様、入力 nodata の内部規約
 
 ## 中期の道標(着手順は実測次第)
 

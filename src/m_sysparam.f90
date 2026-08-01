@@ -1,7 +1,7 @@
 module m_sysparam
   use list_sysparam, only : t_list_sysparam, list_sysparam_read
   use m_util, only : str2sec, itoa
-  use m_fileio, only : e_fmt_txt, e_fmt_bil, e_fmt_both, e_cmp_on, e_cmp_off
+  use m_fileio, only : e_fmt_txt, e_fmt_bil, e_fmt_both, e_fmt_gtif, e_cmp_on, e_cmp_off
   use m_parallel, only : par_stop
   implicit none
   private
@@ -42,7 +42,7 @@ module m_sysparam
     integer :: f_check_cfl                     ! CFL条件による実行停止
     integer :: f_state_save                    ! 状態保存ファイルの出力
     integer :: f_state_restore                 ! 状態保存ファイルからの初期条件設定
-    integer :: f_input_mode                    ! matrix入力形式(1:text, 2:bil)
+    integer :: f_input_mode                    ! matrix入力形式(1:text, 2:bil, 3:geotiff)
     integer :: f_output_mode                   ! matrix出力形式(1:text, 2:bil, 3:txt+bil)
     integer :: f_output_compress               ! 出力ファイルの圧縮(0:なし, 1:gzip)
     integer :: num_threads                     ! スレッド数
@@ -131,10 +131,12 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%f_check_cfl =  list%f_check_cfl            ! CFL条件による実行停止
   p%f_state_save =  list%f_state_save          ! 状態保存ファイルの出力
   p%f_state_restore =  list%f_state_restore    ! 状態保存ファイルからの初期条件設定
-  if (list%f_input_mode == 1) then             ! matrix入力形式(1:text, 2:bil)
+  if (list%f_input_mode == 1) then             ! matrix入力形式(1:text, 2:bil, 3:geotiff)
     p%f_input_mode = e_fmt_txt
   else if (list%f_input_mode == 2) then
     p%f_input_mode = e_fmt_bil
+  else if (list%f_input_mode == 3) then
+    p%f_input_mode = e_fmt_gtif
   else
     call par_stop("list_sysparam: unknown f_input_mode "//itoa(list%f_input_mode))
   end if
