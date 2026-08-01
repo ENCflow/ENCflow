@@ -365,7 +365,8 @@ subroutine m_state_printstate(p, s)
   if (mod(s%sp%count_disp, 36) == 0) then
     if (s%gw_active) then
       call par_info("time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max")
-      write(s%un_log, '(a)') "time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
+      write(s%un_log, '(a)') "time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, " &
+                             //"ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
     else
       call par_info("time, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max")
       write(s%un_log, '(a)') "time, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
@@ -538,7 +539,8 @@ subroutine fill_depression(p, g, s, list)
           jn = j + djn(k)
           if (g%sw(in,jn) > 0) then                             ! 海に隣接する場合は
             s%h(i,j) = 0                                        ! 自セルの水深をゼロに
-            ec = g%z(i,j)                                       ! 水位も更新(古い水位のまま後続の近傍比較で復水させない)
+            ! 水位も更新(古い水位のまま後続の近傍比較で復水させない)
+            ec = g%z(i,j)
           else
             if (list%f_fill_depres >= 2 .and. g%rw(in,jn) < 1) cycle   ! 近傍セルが河道以外は除外
             en = g%z(in,jn) + s%h(in,jn)      ! 近傍セルの水位
@@ -548,7 +550,8 @@ subroutine fill_depression(p, g, s, list)
               ec = g%z(i,j) + s%h(i,j)        ! 下げた水位を以降の近傍比較に使う
               iadj = 1
             else if (en > ec + tol .and. s%h(in,jn) > 0) then   ! 近傍セルに水が有りかつ水位が高い
-              en1 = max(ec, g%z(in,jn))         ! 近傍セルを自セルの水位まで下げる(近傍セルの標高以下にはならない)
+              ! 近傍セルを自セルの水位まで下げる(近傍セルの標高以下にはならない)
+              en1 = max(ec, g%z(in,jn))
               s%h(in,jn) = en1 - g%z(in,jn)     ! 水深は水位から標高を減じる
               iadj = 1
             end if

@@ -16,7 +16,8 @@ module m_precip
   public :: m_precip_makepre
 
   type t_precip
-    integer :: prtype = 0               ! 0:降雨なし, 1:一様時系列, 2:分布×割合時系列, 3:分布時系列ファイル
+    ! 降雨タイプ(0:降雨なし, 1:一様時系列, 2:分布×割合時系列, 3:分布時系列ファイル)
+    integer :: prtype = 0
     real :: dt_prupdate = 0.0           ! 降雨分布更新時間間隔 (min)
     integer :: idt_prupdate = 0         ! 降雨分布更新時間ステップ数
     integer :: npr = 0                  ! 時系列データの個数

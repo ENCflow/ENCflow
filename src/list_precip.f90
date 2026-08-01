@@ -12,7 +12,8 @@ module list_precip
 
 
   type t_list_precip
-    integer :: prtype = 0              ! 0:降雨なし, 1:一様時系列, 2:分布×割合時系列, 3:分布時ファイルリスト
+    ! 降雨タイプ(0:降雨なし, 1:一様時系列, 2:分布×割合時系列, 3:分布時ファイルリスト)
+    integer :: prtype = 0
     real :: dt_prupdate = 1                        ! 降雨分布更新時間間隔 (min)
     real :: prval(1:2,1:nprmax) = -9999            ! 降水量時系列 (無意味な値で初期化しておく)
     character(len=maxpathlen) :: fn_prmap = ""     ! 降雨分布ファイル名

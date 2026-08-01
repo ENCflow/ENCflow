@@ -52,7 +52,8 @@ subroutine m_main_all()
 
   ! システムを初期化
   call m_sysparam_init(p, fn_sysparam)    ! sysparam を初期化
-  call init_resultdir(p)                  ! 結果を保存するディレクトリを作成してパラメータファイルを保存
+  ! 結果を保存するディレクトリを作成してパラメータファイルを保存
+  call init_resultdir(p)
 
   ! モジュールを初期化
   ! ==== 初期化ゾーン1: 地形・マスク類(z,x,sw,rw)は全ランク全域、

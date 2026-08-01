@@ -4,7 +4,8 @@ submodule(m_swflow_enc) m_swflow_enc_adv
   implicit none
 
   type t_enc_adv
-    real, allocatable :: taxy(:,:,:) ! セル中心での移流項(第1添字は1~4，それぞれ風上差分と中心差分のx,y成分)
+    ! セル中心での移流項(第1添字は1~4，それぞれ風上差分と中心差分のx,y成分)
+    real, allocatable :: taxy(:,:,:)
     real, allocatable :: ulm(:,:)    ! セル中心でのu*lm (移流項計算用)
     real, allocatable :: vlm(:,:)    ! セル中心でのv*lm (移流項計算用)
   end type
