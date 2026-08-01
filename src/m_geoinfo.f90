@@ -1,9 +1,10 @@
 !======================================================================
 module m_geoinfo
+  use, intrinsic :: iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use list_geoinfo, only : t_list_geoinfo, list_geoinfo_read
   use m_fileio, only : fileio_read_matrix, e_fmt_bil
-  use m_georef, only : t_georef, georef_hdr_name, georef_read_hdr
+  use m_georef, only : t_georef, georef_hdr_name, georef_read_hdr, georef_est_cellsize_m
   use m_util, only : itoa
   use m_parallel, only : par_info, par_stop, par_abort, dcp, is_root, nproc, &
                        par_scatter_cell, par_scatter_cell_i, &
@@ -377,18 +378,58 @@ subroutine probe_georef(p, g, list)
                   //itoa(nrows)//") と一致しません")
   end if
 
-  ! dx, dy: 未指定なら補完、指定済みなら整合検査(相対許容差 rtol)
-  if (g%dx <= 0.0) then
-    g%dx = real(g%gr%csx)
-  else if (abs(g%dx - g%gr%csx) > rtol * g%gr%csx) then
-    call par_stop("list_geoinfo: dx が hdr の XDIM と矛盾しています。" &
-                  //"どちらか一方の指定にしてください")
+  if (.not. g%gr%is_geog) then
+    ! 投影座標系(メートル)の格子: XDIM/YDIM をそのまま dx, dy に使える。
+    ! 未指定なら補完、指定済みなら整合検査(相対許容差 rtol)
+    if (g%dx <= 0.0) then
+      g%dx = real(g%gr%csx)
+    else if (abs(g%dx - g%gr%csx) > rtol * g%gr%csx) then
+      call par_stop("list_geoinfo: dx が hdr の XDIM と矛盾しています。" &
+                    //"どちらか一方の指定にしてください")
+    end if
+    if (g%dy <= 0.0) then
+      g%dy = real(g%gr%csy)
+    else if (abs(g%dy - g%gr%csy) > rtol * g%gr%csy) then
+      call par_stop("list_geoinfo: dy が hdr の YDIM と矛盾しています。" &
+                    //"どちらか一方の指定にしてください")
+    end if
+  else
+    ! 経緯度(度単位)の格子: XDIM/YDIM は度なので dx, dy(m)には使えない
+    call check_geog_cellsize(g)
   end if
-  if (g%dy <= 0.0) then
-    g%dy = real(g%gr%csy)
-  else if (abs(g%dy - g%gr%csy) > rtol * g%gr%csy) then
-    call par_stop("list_geoinfo: dy が hdr の YDIM と矛盾しています。" &
-                  //"どちらか一方の指定にしてください")
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 経緯度グリッドのセル寸法検査(docs/geotiff_plan.md §10)
+!   国土数値情報・基盤地図情報由来の経緯度格子を「dx=dy=100m, 250m」等の
+!   慣習的近似で使う運用を想定する。namelist の dx, dy(m)を必須とし、
+!   経緯度からの概算メートル寸法と両方を表示したうえで、相対差が
+!   rtol_geog を超える場合は格子の取り違えとみなして停止する
+!   (慣習的近似の差は日本周辺で高々 20% 程度、格子の取り違えは倍半分)
+!----------------------------------------------------------------------
+subroutine check_geog_cellsize(g)
+  type(t_geoinfo), intent(inout) :: g
+  real, parameter :: rtol_geog = 0.3   ! 停止判定の相対許容差
+  real(real64) :: dxm, dym
+  character(len=256) :: msg
+
+  if (g%dx <= 0.0 .or. g%dy <= 0.0) then
+    call par_stop("list_geoinfo: 経緯度グリッド(hdr が度単位)では " &
+                  //"dx, dy(m)の明示指定が必須です")
+  end if
+  call georef_est_cellsize_m(g%gr, g%ny, dxm, dym)
+  write(msg, '(a,f0.2,a,f0.2)') &
+    " georef: 経緯度グリッド。namelist の dx, dy(m) = ", g%dx, ", ", g%dy
+  call par_info(trim(msg))
+  write(msg, '(a,f0.2,a,f0.2)') &
+    " georef: 経緯度からの概算   dx, dy(m) = ", dxm, ", ", dym
+  call par_info(trim(msg))
+  if (abs(g%dx - dxm) > rtol_geog * dxm .or. &
+      abs(g%dy - dym) > rtol_geog * dym) then
+    call par_stop("list_geoinfo: dx, dy が経緯度からの概算と大きく食い違います" &
+                  //"(上記表示)。格子とセル寸法の対応を確認してください")
   end if
 
 end subroutine

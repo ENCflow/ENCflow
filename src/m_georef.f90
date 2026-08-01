@@ -28,6 +28,7 @@ module m_georef
   public :: georef_hdr_name
   public :: georef_read_hdr
   public :: georef_write_hdr
+  public :: georef_est_cellsize_m
 
   ! 出力 hdr の PIXELTYPE 指定
   integer, parameter, public :: e_pix_float = 1
@@ -43,6 +44,7 @@ module m_georef
     logical :: has_nodata = .false.      ! 入力 hdr に NODATA 指定があったか
     real(real64) :: nodata = 0.0_real64  ! その値(現状は保持のみ。GeoTIFF で使用予定)
     integer :: epsg = 0                  ! EPSG コード(0 = 不明。namelist 由来)
+    logical :: is_geog = .false.         ! 経緯度(度単位)グリッドと推測されるか
   end type
 
 contains
@@ -173,6 +175,37 @@ subroutine georef_read_hdr(fname, gr, ncols, nrows)
   gr%csy = ydim
   gr%active = .true.
 
+  ! 経緯度(度単位)グリッドの推測。hdr は CRS を持たないため、
+  ! セル寸法が 0.1 度未満かつ原点が経緯度の値域内、で判定する
+  ! (投影座標系のメートル格子でこれを満たすのは、CRS 原点至近を
+  ! 10cm 未満のセルで切った場合のみで、実用上は起こらない)。
+  ! 将来の GeoTIFF では CRS タグから確定的に判定する
+  gr%is_geog = (xdim < 0.1_real64 .and. ydim < 0.1_real64 .and. &
+                abs(ulymap) <= 90.0_real64 .and. abs(ulxmap) <= 360.0_real64)
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 経緯度グリッドのセル寸法(度)を、領域中央緯度でのメートル寸法に概算する
+!   WGS84 の「緯度1度あたりの子午線弧長」「経度1度あたりの平行圏弧長」の
+!   標準近似式による。dx, dy の妥当性検査と画面表示用の概算であり、
+!   測地計算の厳密さは要求しない
+!----------------------------------------------------------------------
+subroutine georef_est_cellsize_m(gr, ny, dxm, dym)
+  type(t_georef), intent(in) :: gr
+  integer, intent(in) :: ny                ! 行数(領域中央緯度の算出用)
+  real(real64), intent(out) :: dxm, dym    ! 概算セル寸法(m)
+  real(real64), parameter :: d2r = 3.14159265358979324_real64 / 180.0_real64
+  real(real64) :: phi, mlat, mlon
+
+  phi = (gr%yul - 0.5_real64 * ny * gr%csy) * d2r    ! 領域中央の緯度
+  mlat = 111132.92_real64 - 559.82_real64 * cos(2*phi) &
+         + 1.175_real64 * cos(4*phi) - 0.0023_real64 * cos(6*phi)
+  mlon = 111412.84_real64 * cos(phi) - 93.5_real64 * cos(3*phi) &
+         + 0.118_real64 * cos(5*phi)
+  dxm = gr%csx * mlon
+  dym = gr%csy * mlat
 end subroutine
 
 
@@ -206,11 +239,13 @@ subroutine georef_write_hdr(fname, gr, nx, ny, e_pix)
       ! 書き込みは rank0 のみが呼ぶため collective な par_stop は使えない(§5)
       call par_abort("georef_write_hdr: 不正な e_pix "//itoa(e_pix))
   end select
-  ! 外縁 → セル中心(ULXMAP/ULYMAP)に戻して書く
-  write(un, '(a,1x,g0.15)') "ULXMAP        ", gr%xul + 0.5_real64 * gr%csx
-  write(un, '(a,1x,g0.15)') "ULYMAP        ", gr%yul - 0.5_real64 * gr%csy
-  write(un, '(a,1x,g0.15)') "XDIM          ", gr%csx
-  write(un, '(a,1x,g0.15)') "YDIM          ", gr%csy
+  ! 外縁 → セル中心(ULXMAP/ULYMAP)に戻して書く。
+  ! 指数表記を解さない読み手を考慮して固定小数で書く(小数 12 桁は
+  ! 経緯度で 1e-7 m 級、メートル座標で 1e-9 m 級の桁を保持する)
+  write(un, '(a,1x,a)') "ULXMAP        ", ftoa(gr%xul + 0.5_real64 * gr%csx)
+  write(un, '(a,1x,a)') "ULYMAP        ", ftoa(gr%yul - 0.5_real64 * gr%csy)
+  write(un, '(a,1x,a)') "XDIM          ", ftoa(gr%csx)
+  write(un, '(a,1x,a)') "YDIM          ", ftoa(gr%csy)
   close(un)
 
 end subroutine
@@ -263,6 +298,25 @@ function to_int(fname, key, val) result(iv)
   read(val, *, iostat=ios) iv
   if (ios /= 0) call par_stop("georef: "//key//" の値 '"//val// &
                               "' を整数として読めません: "//trim(fname))
+end function
+
+
+!----------------------------------------------------------------------
+! 座標値の固定小数文字列化(小数 12 桁)
+!   f0 編集は 1 未満の値で先頭のゼロを省く(.001 等)処理系があるため、
+!   "0." 始まりをここで保証する
+!----------------------------------------------------------------------
+function ftoa(v) result(s)
+  real(real64), intent(in) :: v
+  character(:), allocatable :: s
+  character(len=40) :: buf
+  write(buf, '(f0.12)') v
+  s = trim(adjustl(buf))
+  if (s(1:1) == ".") then
+    s = "0"//s
+  else if (len(s) >= 2) then
+    if (s(1:2) == "-.") s = "-0"//s(2:)
+  end if
 end function
 
 

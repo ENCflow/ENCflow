@@ -62,6 +62,10 @@
    - gfortran 逐次では検証済み: wave/chichibu(txt 入力)がベースラインと
      全出力ビット一致、bil+hdr 入力が bil 単独入力と全出力ビット一致
      (hdr から nx,ny,dx,dy 補完)、矛盾指定の par_stop、出力 hdr の往復。
+   - 経緯度格子(実データの hdr)も gfortran 逐次で検証済み: dx,dy 未指定の
+     par_stop、概算との大差(100m 格子に 250m 指定)の par_stop、
+     慣習的近似(100m 指定 vs 概算 100.2/123.3m)の受理と両値表示、
+     度単位のままの出力 hdr 往復。
    - 残: ifx での全ケース既存 reference ビット一致(逐次・np=1,2,4。
      collective は追加していないが確認はする)
    - 残: PREC=single ビルドの通し(座標は real64 固定の設計確認)
