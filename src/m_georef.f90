@@ -269,6 +269,11 @@ subroutine split_keyval(line, key, val)
   key = ""
   val = ""
   s = trim(adjustl(line))
+  ! Windows で作られた hdr(CRLF)対策: 行末の CR を除去
+  ! (フォーマット読みが CR を落とすかは処理系依存のため明示的に行う)
+  if (len(s) > 0) then
+    if (s(len(s):len(s)) == achar(13)) s = trim(s(1:len(s)-1))
+  end if
   if (len(s) == 0) return
   if (s(1:1) == "#" .or. s(1:1) == ";") return
   ! 最初の空白・タブでキーと値に分ける
