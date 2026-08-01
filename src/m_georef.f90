@@ -62,7 +62,9 @@ function georef_hdr_name(fname) result(hname)
   character(len=*), intent(in) :: fname
   character(:), allocatable :: hname
   integer :: idot, isep
-  isep = max(index(fname, "/", back=.true.), index(fname, "\", back=.true.))
+  ! 区切りは / と \(achar(92))。バックスラッシュをリテラルで書くと
+  ! nvfortran が既定で C 風エスケープと解釈するため文字コードで書く
+  isep = max(index(fname, "/", back=.true.), index(fname, achar(92), back=.true.))
   idot = index(fname, ".", back=.true.)
   if (idot > isep + 1) then
     hname = fname(1:idot) // "hdr"
