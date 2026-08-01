@@ -239,10 +239,12 @@ CRS は namelist の `epsg`(導入済み。既定 0=不明)で与える。
 (CLAUDE.md 規律2)。gtif は入出力の末端のみで計算経路に一切触れない
 ため、無効時等価は構造的に自明に保てる。
 
-- **Phase 0: テスト資産の整備**。gdal_translate で test/wave の地形等から
-  小さな reference tiff 一式(型×圧縮×strip/tile×エンディアンの代表
-  組合せ、数 KB×十数個)を生成してコミット。読みの回帰テストは
-  「tiff を読んで既存 txt reference と一致」で機械判定できる。
+- **Phase 0: テスト資産の整備 — 完了(2026-08-01)**。test/gtif/ に
+  gdal_translate 生成の 17 ファイル(型 7 種×圧縮 4 種×strip/tile×
+  両エンディアン×classic/BigTIFF×投影/経緯度 の代表組合せ)と型ごとの
+  期待値行列、生成スクリプト(make_testdata.sh)をコミット。
+  内訳と期待値の桁の規約は test/gtif/README.md。QGIS/ArcGIS の実出力
+  サンプルはユーザー提供待ち(届き次第 data_qgis/, data_arcgis/ に追加)。
 - **Phase 1: 読み(無圧縮+PackBits+LZW、strip/tile、全画素型、
   両エンディアン、classic TIFF)**。m_geotiff + m_geotiff_codec を追加し、
   e_fmt_gtif の入力側を開通。
@@ -264,7 +266,7 @@ CRS は namelist の `epsg`(導入済み。既定 0=不明)で与える。
 2. 出力の画素型固定(実数=Float32)でよいか。倍精度のまま出したい
    量があるなら Float64 書きのオプションを Phase 3 に含めるか。
 3. f_output_mode の組合せ仕様("gtif" 単独か、txt/bil との併用形か)。
-4. Phase 0 のテスト tiff を test/ 下のどこに置くか(test/gtif/ 新設案)。
+4. ~~Phase 0 のテスト tiff の置き場~~ → test/gtif/ 新設で確定(実施済み)。
 5. nodata の値の規約(入力 nodata をどの内部表現に落とすか。現状の
    txt/bil 入力には nodata 概念がなく、sw マスク等で代替している)。
 

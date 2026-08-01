@@ -72,6 +72,13 @@
    - 残: 出力 .hdr+.bil を QGIS / ArcGIS で開いて位置・値の目視確認
      (GDAL EHdr 互換キーで書いている。gdalinfo でも可)
    - 残: examples の param サンプルへの epsg / hdr 運用の説明追記
+9. **GeoTIFF Phase 0(テスト資産)完了・Phase 1(リーダー)着手待ち**
+   - test/gtif/ に GDAL 生成の 17 変種+期待値+生成スクリプトをコミット済み
+   - ユーザー提供待ち: QGIS / ArcGIS Pro の実出力サンプル(実運用データの
+     小さい切り出しで可。既定設定のまま出力したもの+元の値が分かるもの)
+     と、よく使う EPSG コードの一覧
+   - 実装前に要決定(geotiff_plan.md §9): 出力画素型(実数=Float32 固定で
+     よいか)、f_output_mode の組合せ仕様、入力 nodata の内部規約
 
 ## 中期の道標(着手順は実測次第)
 
