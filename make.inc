@@ -50,12 +50,16 @@ FFLAGS	= -g -fopenmp -warn all -fpe0 -Ofast -xHost -ipo $(RFLAG)
 # GNU Fortran (with MPICH or OpenMPI)
 #   -flto=auto: リンク時最適化(-ipo 相当)。auto で LTO 処理を並列化。
 #   アーカイバは gcc-ar(LTO プラグイン対応。llvm-ar は不可)
+#   -ffree-line-length-none: gfortran は行長 132 桁をバイト数で数えるため、
+#     日本語コメントを含む行が誤って弾かれるのを防ぐ(生成コードに影響なし)。
+#     ただし行長の検査役もなくなるので、他コンパイラ(nfort 等)のために
+#     1 行 132 バイト以内を目安に保つこと
 #FC	= gfortran
 #FC_MPI	= mpifort
 #R8	= -fdefault-real-8 -fdefault-double-8
-#FFLAGS	= -g -fopenmp -Ofast -march=native -flto=auto -Wall -ffpe-trap=zero,overflow $(RFLAG)
-#FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow $(RFLAG) -fcheck=all -fbacktrace
-#FFLAGS	= -g -Og -fcheck=all -fbacktrace -Wall -ffpe-trap=invalid,zero,overflow $(RFLAG) -Wno-conversion -finit-real=snan -finit-integer=-88888888
+#FFLAGS	= -g -fopenmp -Ofast -march=native -flto=auto -Wall -ffpe-trap=zero,overflow -ffree-line-length-none $(RFLAG)
+#FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -ffree-line-length-none $(RFLAG) -fcheck=all -fbacktrace
+#FFLAGS	= -g -Og -fcheck=all -fbacktrace -Wall -ffpe-trap=invalid,zero,overflow -ffree-line-length-none $(RFLAG) -Wno-conversion -finit-real=snan -finit-integer=-88888888
 #LDFLAGS =
 
 # NVIDIA HPC SDK (-ipo/-flto 相当なし: -Mipa は 23.3 で無効化済み)
@@ -129,8 +133,8 @@ endif
 #FFLAGS_UTIL	= -g -O0 -traceback -check all -warn all -fpe0
 
 FRT_UTIL	= gfortran
-FFLAGS_UTIL	= -g -O2 -Wall -ffpe-trap=invalid,zero,overflow
-#FFLAGS_UTIL	= -g -Og -fcheck=all -Wall -ffpe-trap=invalid,zero,overflow -Wno-conversion
+FFLAGS_UTIL	= -g -O2 -Wall -ffpe-trap=invalid,zero,overflow -ffree-line-length-none
+#FFLAGS_UTIL	= -g -Og -fcheck=all -Wall -ffpe-trap=invalid,zero,overflow -ffree-line-length-none -Wno-conversion
 
 #FRT_UTIL	= nvfortran
 #FFLAGS_UTIL	= -g -O2 -Minform=inform -Ktrap=fp
