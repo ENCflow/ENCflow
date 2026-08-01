@@ -80,9 +80,11 @@
      GeoTIFF 入力が bil+hdr 入力と全出力ビット一致、epsg 不一致の par_stop
    - 残: ifx ビルド・np=1,2,4 の無効時ビット一致(collective は増やして
      いないが確認する)。test/gtif の Run.sh は逐次専用
-   - ユーザー提供待ち: QGIS / ArcGIS Pro の実出力サンプル(実運用データの
-     小さい切り出しで可。既定設定のまま出力したもの+元の値が分かるもの)
-     と、よく使う EPSG コードの一覧 → 届いたら読み検証に追加
+   - QGIS / ArcGIS Pro の実出力サンプル受領・組み込み済み(2026-08-01。
+     test/gtif/data_user、16 テスト追加で計 39 PASS)。ArcGIS のタイル+
+     GeoKey 併記(4612+2451)、QGIS の実数文字列 nodata、i8 型を実物で
+     検証。残る実データの未読は QGIS 高圧縮(Deflate+pred2)のみ →
+     Phase 2 で解消。よく使う CRS は JGD2000 平面直角 9 系(EPSG:2451)
    - Phase 3 実装前に要決定(geotiff_plan.md §9): 出力画素型(実数=Float32
      固定でよいか)、f_output_mode の組合せ仕様、入力 nodata の内部規約
 
