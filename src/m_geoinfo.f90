@@ -137,6 +137,13 @@ subroutine m_geoinfo_init(g, p)
   end if
 
 
+  ! GeoTIFF 出力には座標参照が必須(geotiff_plan.md §10 条件1)。
+  ! 位置の分からない tif を黙って書かず、ここで止める
+  if (iand(p%f_output_mode, e_fmt_gtif) /= 0 .and. .not. g%gr%active) then
+    call par_stop("f_output_mode: GeoTIFF 出力には座標管理が必要です" &
+                  //"(bil+hdr 入力か GeoTIFF 入力で位置情報を与えてください)")
+  end if
+
   call calc_wxy(p, g)
   call count_valcells(p, g)
 

@@ -8,6 +8,7 @@
 a.out*
 tada
 test/gtif/test_gtif_reader
+test/gtif/wrk_*.tif
 
 # --- executable binaries ---
 bin/

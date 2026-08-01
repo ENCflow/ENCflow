@@ -27,6 +27,7 @@ module m_geotiff
   public :: t_gtif_info
   public :: gtif_inquire
   public :: gtif_read
+  public :: gtif_write
 
   ! 読み取りメタ情報(gtif_inquire / gtif_read が返す)
   type t_gtif_info
@@ -47,6 +48,11 @@ module m_geotiff
   interface gtif_read
     procedure :: gtif_read_real
     procedure :: gtif_read_int
+  end interface
+
+  interface gtif_write
+    procedure :: gtif_write_real
+    procedure :: gtif_write_int
   end interface
 
   ! IFD エントリ(値/オフセット部は生 4 バイトで保持し、必要時に解釈)
@@ -145,6 +151,67 @@ subroutine gtif_read_int(fname, nx, ny, a, stat, msg, info)
   if (stat == 0) call decode_blocks(t, .false., rdum, a, fname, stat, msg)
   if (present(info)) info = t%info
   if (t%un >= 0) close(t%un)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 全域書き(docs/geotiff_plan.md §2.3, §8 Phase 3)
+!   classic TIFF・リトルエンディアン・無圧縮・単一 strip・1 バンド。
+!   実数は Float32、整数は Int32 で格納する(bil 出力と同じ精度)。
+!   位置情報は info の has_georef が真のとき ModelPixelScale +
+!   ModelTiepoint を書き、さらに epsg /= 0 なら GeoKey(ModelType,
+!   RasterType=PixelIsArea, EPSG)を書く。nodata タグは書かない(決定済み。
+!   info の nodata 成分は無視する)。
+!   ホストがリトルエンディアンである前提(既存の bil 出力と同じ)。
+!   4 GiB 超になる格子はエラー(BigTIFF 書きは Phase 4 以降)
+!----------------------------------------------------------------------
+subroutine gtif_write_real(fname, nx, ny, a, info, stat, msg)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny
+  real, intent(in) :: a(1:nx,1:ny)
+  type(t_gtif_info), intent(in) :: info
+  integer, intent(out) :: stat
+  character(len=*), intent(out) :: msg
+
+  integer :: un, j, ios
+  real(real32) :: row(nx)
+
+  call write_meta(fname, nx, ny, 3, info, un, stat, msg)
+  if (stat /= 0) return
+  do j = 1, ny
+    row(:) = real(a(1:nx,j), real32)
+    write(un, iostat=ios) row
+    if (ios /= 0) then
+      call set_err(stat, msg, "GeoTIFF の画素データを書けません: "//trim(fname))
+      close(un)
+      return
+    end if
+  end do
+  close(un)
+end subroutine
+
+
+subroutine gtif_write_int(fname, nx, ny, a, info, stat, msg)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny
+  integer, intent(in) :: a(1:nx,1:ny)
+  type(t_gtif_info), intent(in) :: info
+  integer, intent(out) :: stat
+  character(len=*), intent(out) :: msg
+
+  integer :: un, j, ios
+
+  call write_meta(fname, nx, ny, 2, info, un, stat, msg)
+  if (stat /= 0) return
+  do j = 1, ny
+    write(un, iostat=ios) a(1:nx,j)
+    if (ios /= 0) then
+      call set_err(stat, msg, "GeoTIFF の画素データを書けません: "//trim(fname))
+      close(un)
+      return
+    end if
+  end do
+  close(un)
 end subroutine
 
 
@@ -800,6 +867,197 @@ subroutine tag_ascii(un, ents, tag, be, s, stat)
     s(k:k) = achar(iand(int(b(k), int32), 255))
   end do
   stat = 0
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 書き込み用: ヘッダ・IFD・GeoTIFF タグ群を組み立ててファイル先頭に書く
+!   成功時はファイルを開いたまま返し(un)、続けて画素データを
+!   逐次 write すればちょうど StripOffsets の位置から始まる。
+!   sf: SampleFormat(2=整数 Int32, 3=実数 Float32)
+!----------------------------------------------------------------------
+subroutine write_meta(fname, nx, ny, sf, info, un, stat, msg)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny
+  integer, intent(in) :: sf
+  type(t_gtif_info), intent(in) :: info
+  integer, intent(out) :: un
+  integer, intent(out) :: stat
+  character(len=*), intent(out) :: msg
+
+  integer, parameter :: nkey = 3           ! GeoKey: ModelType, RasterType, EPSG
+  integer :: nent, ios, ient
+  integer(int64) :: o_ps, o_tp, o_gk, o_data, databytes
+  integer(int8), allocatable :: buf(:)
+  logical :: with_geo, with_key
+
+  stat = 0
+  msg = ""
+  un = -1
+  if (nx <= 0 .or. ny <= 0) then
+    call set_err(stat, msg, "格子数が不正です: "//trim(fname))
+    return
+  end if
+
+  with_geo = info%has_georef
+  with_key = with_geo .and. (info%epsg /= 0)
+
+  ! レイアウト: ヘッダ(8) → IFD → [PixelScale(24) → Tiepoint(48) →
+  ! GeoKeyDirectory] → 画素データ(単一 strip)
+  nent = 11
+  if (with_geo) nent = nent + 2
+  if (with_key) nent = nent + 1
+  o_ps = 8 + 2 + 12*nent + 4               ! IFD 直後(0 始まりオフセット)
+  o_tp = o_ps + 24
+  o_gk = o_tp + 48
+  if (with_key) then
+    o_data = o_gk + 2*4*(nkey+1)
+  else if (with_geo) then
+    o_data = o_gk
+  else
+    o_data = o_ps
+  end if
+  databytes = int(nx, int64) * ny * 4
+  if (o_data + databytes >= 4294967296_int64) then
+    call set_err(stat, msg, "4GiB を超えるため書けません(BigTIFF 書きは未対応): "//trim(fname))
+    return
+  end if
+
+  allocate(buf(o_data))
+  buf(:) = 0
+
+  ! ヘッダ(リトルエンディアン固定)
+  buf(1) = int(iachar("I"), int8)
+  buf(2) = int(iachar("I"), int8)
+  call put_u16(buf, 3_int64, 42)
+  call put_u32(buf, 5_int64, 8_int64)
+
+  ! IFD(タグ番号昇順)
+  call put_u16(buf, 9_int64, nent)
+  ient = 0
+  call put_ent(256, 4, 1_int64, int(nx, int64))            ! ImageWidth
+  call put_ent(257, 4, 1_int64, int(ny, int64))            ! ImageLength
+  call put_ent(258, 3, 1_int64, 32_int64)                  ! BitsPerSample
+  call put_ent(259, 3, 1_int64, 1_int64)                   ! Compression = none
+  call put_ent(262, 3, 1_int64, 1_int64)                   ! Photometric = 灰(黒=0)
+  call put_ent(273, 4, 1_int64, o_data)                    ! StripOffsets
+  call put_ent(277, 3, 1_int64, 1_int64)                   ! SamplesPerPixel
+  call put_ent(278, 4, 1_int64, int(ny, int64))            ! RowsPerStrip(単一 strip)
+  call put_ent(279, 4, 1_int64, databytes)                 ! StripByteCounts
+  call put_ent(284, 3, 1_int64, 1_int64)                   ! PlanarConfig
+  call put_ent(339, 3, 1_int64, int(sf, int64))            ! SampleFormat
+  if (with_geo) call put_ent(33550, 12, 3_int64, o_ps)     ! ModelPixelScale
+  if (with_geo) call put_ent(33922, 12, 6_int64, o_tp)     ! ModelTiepoint
+  if (with_key) call put_ent(34735, 3, int(4*(nkey+1), int64), o_gk)
+  ! 次 IFD なし(put_ent が詰めた直後の 4 バイトは 0 のまま)
+
+  ! タグ本体
+  if (with_geo) then
+    call put_dbl(buf, o_ps + 1, info%csx)
+    call put_dbl(buf, o_ps + 9, info%csy)
+    call put_dbl(buf, o_ps + 17, 0.0_real64)
+    call put_dbl(buf, o_tp + 1, 0.0_real64)                ! ラスタ点 (0,0,0) =
+    call put_dbl(buf, o_tp + 9, 0.0_real64)                ! 北西隅セル外縁
+    call put_dbl(buf, o_tp + 17, 0.0_real64)
+    call put_dbl(buf, o_tp + 25, info%xul)
+    call put_dbl(buf, o_tp + 33, info%yul)
+    call put_dbl(buf, o_tp + 41, 0.0_real64)
+  end if
+  if (with_key) then
+    call put_u16(buf, o_gk + 1, 1)                         ! KeyDirectoryVersion
+    call put_u16(buf, o_gk + 3, 1)                         ! KeyRevision
+    call put_u16(buf, o_gk + 5, 0)
+    call put_u16(buf, o_gk + 7, nkey)
+    call put_key(1, 1024, merge(2, 1, info%is_geog))       ! GTModelType
+    call put_key(2, 1025, 1)                               ! GTRasterType = PixelIsArea
+    if (info%is_geog) then
+      call put_key(3, 2048, info%epsg)                     ! GeographicType
+    else
+      call put_key(3, 3072, info%epsg)                     ! ProjectedCSType
+    end if
+  end if
+
+  open(newunit=un, file=fname, form='unformatted', access='stream', &
+       status='replace', iostat=ios)
+  if (ios /= 0) then
+    un = -1
+    call set_err(stat, msg, "GeoTIFF を作成できません: "//trim(fname))
+    return
+  end if
+  write(un, iostat=ios) buf
+  if (ios /= 0) then
+    call set_err(stat, msg, "GeoTIFF ヘッダを書けません: "//trim(fname))
+    close(un)
+    un = -1
+    return
+  end if
+
+contains
+
+  ! IFD エントリ 1 個を詰める(値は SHORT/LONG のインライン格納)
+  subroutine put_ent(tag, typ, cnt, val)
+    integer, intent(in) :: tag, typ
+    integer(int64), intent(in) :: cnt, val
+    integer(int64) :: p
+    p = 8 + 2 + 12*ient + 1                ! このエントリの先頭(1 始まり)
+    call put_u16(buf, p, tag)
+    call put_u16(buf, p + 2, typ)
+    call put_u32(buf, p + 4, cnt)
+    if (typ == 3) then                     ! SHORT はインライン先頭 2 バイト
+      call put_u16(buf, p + 8, int(val))
+    else
+      call put_u32(buf, p + 8, val)
+    end if
+    ient = ient + 1
+  end subroutine
+
+  ! GeoKey 1 個(loc=0 の直値キー)を詰める
+  subroutine put_key(k, keyid, val)
+    integer, intent(in) :: k, keyid, val
+    integer(int64) :: p
+    p = o_gk + 8*k + 1
+    call put_u16(buf, p, keyid)
+    call put_u16(buf, p + 2, 0)
+    call put_u16(buf, p + 4, 1)
+    call put_u16(buf, p + 6, val)
+  end subroutine
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! リトルエンディアンでのバイト詰め(書き込み用)
+!----------------------------------------------------------------------
+subroutine put_u16(buf, pos, v)
+  integer(int8), intent(inout) :: buf(:)
+  integer(int64), intent(in) :: pos        ! 1 始まり
+  integer, intent(in) :: v
+  buf(pos) = int(ibits(v, 0, 8) - merge(256, 0, ibits(v, 0, 8) > 127), int8)
+  buf(pos+1) = int(ibits(v, 8, 8) - merge(256, 0, ibits(v, 8, 8) > 127), int8)
+end subroutine
+
+subroutine put_u32(buf, pos, v)
+  integer(int8), intent(inout) :: buf(:)
+  integer(int64), intent(in) :: pos
+  integer(int64), intent(in) :: v
+  integer :: k, b
+  do k = 0, 3
+    b = int(ibits(v, 8*k, 8))
+    buf(pos+k) = int(b - merge(256, 0, b > 127), int8)
+  end do
+end subroutine
+
+subroutine put_dbl(buf, pos, v)
+  integer(int8), intent(inout) :: buf(:)
+  integer(int64), intent(in) :: pos
+  real(real64), intent(in) :: v
+  integer(int64) :: u
+  integer :: k, b
+  u = transfer(v, 0_int64)
+  do k = 0, 7
+    b = int(ibits(u, 8*k, 8))
+    buf(pos+k) = int(b - merge(256, 0, b > 127), int8)
+  end do
 end subroutine
 
 

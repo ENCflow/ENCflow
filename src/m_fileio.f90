@@ -1,7 +1,8 @@
 module m_fileio
   use, intrinsic :: iso_fortran_env, only: real32, int32, int64
   use m_sysdep_util, only : sysdep_compress
-  use m_geotiff, only : gtif_read
+  use m_geotiff, only : gtif_read, gtif_write, t_gtif_info
+  use m_georef, only : t_georef
   use m_parallel, only : par_abort
 
   implicit none
@@ -41,10 +42,9 @@ module m_fileio
   integer, parameter :: rle_ik = merge(int64, int32, storage_size(0.0) == 64)
 
 
-  ! enumerator
+  ! enumerator(値はビットフラグを兼ねる。f_output_mode はこのビット和)
   integer, parameter, public :: e_fmt_txt = 1
   integer, parameter, public :: e_fmt_bil = 2
-  integer, parameter, public :: e_fmt_both = 3
   integer, parameter, public :: e_fmt_gtif = 4
   integer, parameter, public :: e_cmp_off = 0
   integer, parameter, public :: e_cmp_on = 1
@@ -128,12 +128,13 @@ end subroutine
 
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
-subroutine fileio_write_matrix_int(fname, nx, ny, a, e_fmt, compress)
+subroutine fileio_write_matrix_int(fname, nx, ny, a, e_fmt, compress, gr)
   character(len=*), intent(in) :: fname
   integer, intent(in) :: nx, ny
   integer, intent(in) :: a(1:nx,1:ny)
   integer, intent(in) :: e_fmt
   integer, intent(in) :: compress
+  type(t_georef), intent(in), optional :: gr   ! e_fmt_gtif で必須(座標管理)
   integer :: un
 
   select case (e_fmt)
@@ -146,7 +147,8 @@ subroutine fileio_write_matrix_int(fname, nx, ny, a, e_fmt, compress)
       call write_bil_int(un, nx, ny, a)
       close(un)
     case (e_fmt_gtif)
-      call par_abort("GeoTIFF 出力は未実装です(Phase 3 で対応予定)")
+      call write_gtif_int(fname, nx, ny, a, gr)
+      return                               ! tif は gzip 圧縮の対象外
     case default
       open(newunit=un, file=fname, status='replace')
       call write_textmatrix_int(un, nx, ny, a)
@@ -190,12 +192,13 @@ end subroutine
 
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
-subroutine fileio_write_matrix_real(fname, nx, ny, a, e_fmt, compress)
+subroutine fileio_write_matrix_real(fname, nx, ny, a, e_fmt, compress, gr)
   character(len=*), intent(in) :: fname
   integer, intent(in) :: nx, ny
   real, intent(in) :: a(1:nx,1:ny)
   integer, intent(in) :: e_fmt
   integer, intent(in) :: compress
+  type(t_georef), intent(in), optional :: gr   ! e_fmt_gtif で必須(座標管理)
   integer :: un
 
   select case (e_fmt)
@@ -208,7 +211,8 @@ subroutine fileio_write_matrix_real(fname, nx, ny, a, e_fmt, compress)
       call write_bil_real(un, nx, ny, a)
       close(un)
     case (e_fmt_gtif)
-      call par_abort("GeoTIFF 出力は未実装です(Phase 3 で対応予定)")
+      call write_gtif_real(fname, nx, ny, a, gr)
+      return                               ! tif は gzip 圧縮の対象外
     case default
       open(newunit=un, file=fname, status='replace')
       call write_textmatrix_real(un, nx, ny, a)
@@ -272,9 +276,9 @@ subroutine write_textmatrix_real(un, nx, ny, a)
 end subroutine
 
 !----------------------------------------------------------------------
-! GeoTIFF 読み(m_geotiff の stat 返しをエラー停止に変換する層)
-!   読みは全ランク冗長の場合と rank0 のみの場合があるため、
-!   collective でない par_abort を使う(m_fileio の他のエラーと同じ)
+! GeoTIFF 読み書き(m_geotiff の stat 返しをエラー停止に変換する層)
+!   読みは全ランク冗長の場合と rank0 のみの場合があり、書きは rank0 のみ
+!   なので、collective でない par_abort を使う(m_fileio の他のエラーと同じ)
 !----------------------------------------------------------------------
 subroutine read_gtif_real(fname, nx, ny, a)
   character(len=*), intent(in) :: fname
@@ -294,6 +298,56 @@ subroutine read_gtif_int(fname, nx, ny, a)
   character(len=512) :: msg
   call gtif_read(fname, nx, ny, a, stat, msg)
   if (stat /= 0) call par_abort("GeoTIFF 読込失敗: "//trim(msg))
+end subroutine
+
+
+!----------------------------------------------------------------------
+! t_georef(座標管理)を m_geotiff のメタ情報に写して書く。
+! 座標未管理での GeoTIFF 出力は初期化時に par_stop 済みのはずだが、
+! 直接呼び出しに備えてここでも検査する
+!----------------------------------------------------------------------
+subroutine write_gtif_real(fname, nx, ny, a, gr)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny
+  real, intent(in) :: a(1:nx,1:ny)
+  type(t_georef), intent(in), optional :: gr
+  type(t_gtif_info) :: info
+  integer :: stat
+  character(len=512) :: msg
+  call gr2info(gr, info)
+  call gtif_write(fname, nx, ny, a, info, stat, msg)
+  if (stat /= 0) call par_abort("GeoTIFF 出力失敗: "//trim(msg))
+end subroutine
+
+subroutine write_gtif_int(fname, nx, ny, a, gr)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny
+  integer, intent(in) :: a(1:nx,1:ny)
+  type(t_georef), intent(in), optional :: gr
+  type(t_gtif_info) :: info
+  integer :: stat
+  character(len=512) :: msg
+  call gr2info(gr, info)
+  call gtif_write(fname, nx, ny, a, info, stat, msg)
+  if (stat /= 0) call par_abort("GeoTIFF 出力失敗: "//trim(msg))
+end subroutine
+
+subroutine gr2info(gr, info)
+  type(t_georef), intent(in), optional :: gr
+  type(t_gtif_info), intent(out) :: info
+  if (.not. present(gr)) then
+    call par_abort("GeoTIFF 出力には座標管理(georef)が必要です")
+  end if
+  if (.not. gr%active) then
+    call par_abort("GeoTIFF 出力には座標管理が必要です(bil+hdr 入力か GeoTIFF 入力で位置情報を与えてください)")
+  end if
+  info%has_georef = .true.
+  info%xul = gr%xul
+  info%yul = gr%yul
+  info%csx = gr%csx
+  info%csy = gr%csy
+  info%epsg = gr%epsg
+  info%is_geog = gr%is_geog
 end subroutine
 
 

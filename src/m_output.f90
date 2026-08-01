@@ -2,7 +2,7 @@ module m_output
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
-  use m_fileio, only : fileio_write_matrix, e_fmt_txt, e_fmt_bil, e_fmt_both
+  use m_fileio, only : fileio_write_matrix, e_fmt_txt, e_fmt_bil, e_fmt_gtif, e_cmp_off
   use m_georef, only : georef_write_hdr, e_pix_float, e_pix_int
   use m_parallel
 
@@ -163,13 +163,18 @@ subroutine output_matrix_real(p, g, prefix, a, k)
   write(snum, '(i4.4)') k
   fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
 
-  if (p%f_output_mode == e_fmt_txt .or. p%f_output_mode == e_fmt_both) then
+  ! f_output_mode はビット和(1:txt, 2:bil, 4:geotiff)。組合せ出力可
+  if (iand(p%f_output_mode, e_fmt_txt) /= 0) then
     call fileio_write_matrix(fn//".txt", g%nx, g%ny, wk_out, e_fmt_txt, p%f_output_compress)
   end if
-  if (p%f_output_mode == e_fmt_bil .or. p%f_output_mode == e_fmt_both) then
+  if (iand(p%f_output_mode, e_fmt_bil) /= 0) then
     call fileio_write_matrix(fn//".bil", g%nx, g%ny, wk_out, e_fmt_bil, p%f_output_compress)
     ! 地理座標を管理している場合のみ hdr を併記(圧縮対象外)
     if (g%gr%active) call georef_write_hdr(fn//".hdr", g%gr, g%nx, g%ny, e_pix_float)
+  end if
+  if (iand(p%f_output_mode, e_fmt_gtif) /= 0) then
+    ! tif は gzip 圧縮の対象外(QGIS/ArcGIS が直接読めなくなるため)
+    call fileio_write_matrix(fn//".tif", g%nx, g%ny, wk_out, e_fmt_gtif, e_cmp_off, g%gr)
   end if
 
 end subroutine
@@ -191,12 +196,15 @@ subroutine output_matrix_full(p, g, prefix, a, k)
   write(snum, '(i4.4)') k
   fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
 
-  if (p%f_output_mode == e_fmt_txt .or. p%f_output_mode == e_fmt_both) then
+  if (iand(p%f_output_mode, e_fmt_txt) /= 0) then
     call fileio_write_matrix(fn//".txt", g%nx, g%ny, a, e_fmt_txt, p%f_output_compress)
   end if
-  if (p%f_output_mode == e_fmt_bil .or. p%f_output_mode == e_fmt_both) then
+  if (iand(p%f_output_mode, e_fmt_bil) /= 0) then
     call fileio_write_matrix(fn//".bil", g%nx, g%ny, a, e_fmt_bil, p%f_output_compress)
     if (g%gr%active) call georef_write_hdr(fn//".hdr", g%gr, g%nx, g%ny, e_pix_float)
+  end if
+  if (iand(p%f_output_mode, e_fmt_gtif) /= 0) then
+    call fileio_write_matrix(fn//".tif", g%nx, g%ny, a, e_fmt_gtif, e_cmp_off, g%gr)
   end if
 
 end subroutine
@@ -221,12 +229,15 @@ subroutine output_matrix_int(p, g, prefix, a, k)
   write(snum, '(i4.4)') k
   fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
 
-  if (p%f_output_mode == e_fmt_txt .or. p%f_output_mode == e_fmt_both) then
+  if (iand(p%f_output_mode, e_fmt_txt) /= 0) then
     call fileio_write_matrix(fn//".txt", g%nx, g%ny, wk_out_i, e_fmt_txt, p%f_output_compress)
   end if
-  if (p%f_output_mode == e_fmt_bil .or. p%f_output_mode == e_fmt_both) then
+  if (iand(p%f_output_mode, e_fmt_bil) /= 0) then
     call fileio_write_matrix(fn//".bil", g%nx, g%ny, wk_out_i, e_fmt_bil, p%f_output_compress)
     if (g%gr%active) call georef_write_hdr(fn//".hdr", g%gr, g%nx, g%ny, e_pix_int)
+  end if
+  if (iand(p%f_output_mode, e_fmt_gtif) /= 0) then
+    call fileio_write_matrix(fn//".tif", g%nx, g%ny, wk_out_i, e_fmt_gtif, e_cmp_off, g%gr)
   end if
 end subroutine
 

@@ -1,7 +1,7 @@
 module m_sysparam
   use list_sysparam, only : t_list_sysparam, list_sysparam_read
   use m_util, only : str2sec, itoa
-  use m_fileio, only : e_fmt_txt, e_fmt_bil, e_fmt_both, e_fmt_gtif, e_cmp_on, e_cmp_off
+  use m_fileio, only : e_fmt_txt, e_fmt_bil, e_fmt_gtif, e_cmp_on, e_cmp_off
   use m_parallel, only : par_stop
   implicit none
   private
@@ -43,7 +43,7 @@ module m_sysparam
     integer :: f_state_save                    ! 状態保存ファイルの出力
     integer :: f_state_restore                 ! 状態保存ファイルからの初期条件設定
     integer :: f_input_mode                    ! matrix入力形式(1:text, 2:bil, 3:geotiff)
-    integer :: f_output_mode                   ! matrix出力形式(1:text, 2:bil, 3:txt+bil)
+    integer :: f_output_mode                   ! matrix出力形式のビット和(1:text, 2:bil, 4:geotiff)
     integer :: f_output_compress               ! 出力ファイルの圧縮(0:なし, 1:gzip)
     integer :: num_threads                     ! スレッド数
     integer :: real_precision                  ! 実数変数の有効数字桁数
@@ -140,14 +140,12 @@ subroutine m_sysparam_init(p, fn_sysparam)
   else
     call par_stop("list_sysparam: unknown f_input_mode "//itoa(list%f_input_mode))
   end if
-  if (list%f_output_mode == 1) then            ! matrix出力形式(1:text, 2:bil, 3:text+bil)
-    p%f_output_mode = e_fmt_txt
-  else if (list%f_output_mode == 2) then
-    p%f_output_mode = e_fmt_bil
-  else if (list%f_output_mode == 3) then
-    p%f_output_mode = e_fmt_both
+  ! matrix出力形式はビット和(1:text, 2:bil, 4:geotiff。3=text+bil は従来互換)
+  if (list%f_output_mode >= 1 .and. list%f_output_mode <= 7) then
+    p%f_output_mode = list%f_output_mode
   else
-    call par_stop("list_sysparam: unknown f_output_mode "//itoa(list%f_output_mode))
+    call par_stop("list_sysparam: f_output_mode は 1〜7 のビット和" &
+                  //"(1:text, 2:bil, 4:geotiff)です: "//itoa(list%f_output_mode))
   end if
   if (list%f_output_compress == 0) then        ! 出力ファイルの圧縮(0:なし, 1:gzip)
     p%f_output_compress = e_cmp_off

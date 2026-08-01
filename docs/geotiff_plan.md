@@ -1,8 +1,9 @@
 # GeoTIFF 対応の検討(自作ライブラリの実現可能性と実装形態)
 
-status: GeoTIFF 本体は検討段階(実装未着手)。前提となる座標管理は
-先行導入済み(§10)。合意後、決定事項は developer.md に転記し、
-本文書は実装計画として消し込んでいく。
+status: Phase 0〜3 実装済み(読み書きとも実用範囲は完成。2026-08-01)。
+座標管理は §10、フェーズごとの実績と決定事項は §8・§9。
+残るのは Phase 4(BigTIFF 等。必要になってから)と、検証残
+(handoff.md 項9)。決定事項の developer.md への転記は検証完了後。
 
 ## 0. 結論(要約)
 
@@ -166,9 +167,9 @@ C で書く(または miniz 等の実装をベンダリングする)利点は De
 ### 6.1 ファイル構成(3 ファイル、相互依存は一方向)
 
 ```
-src/m_geotiff.f90          公開 API。ヘッダ/IFD の解析・検査、strip/tile
-                           走査、型変換、GeoKey 解釈(実装済み)。
-                           書き込み(GeoKey 生成含む)は Phase 3 で追加
+src/m_geotiff.f90          公開 API。読み(ヘッダ/IFD 解析・検査、strip/tile
+                           走査、型変換、GeoKey 解釈)と書き(IFD・GeoKey
+                           生成、無圧縮単一 strip)。実装済み
 src/m_geotiff_codec.f90    PackBits・LZW の復号、predictor 復元(実装済み)
 src/m_geotiff_inflate.f90  Deflate(zlib)の復号のみ(実装済み)
 ```
@@ -189,7 +190,7 @@ SampleFormat(339), ModelPixelScaleTag(33550), ModelTiepointTag(33922),
 GeoKeyDirectoryTag(34735), GeoDoubleParams(34736), GeoAsciiParams(34737),
 GDAL_NODATA(42113)。未知タグは無視、既知タグの未対応値はエラー。
 
-### 6.3 公開 API(読みは実装済み。書きは Phase 3)
+### 6.3 公開 API(読み書きとも実装済み)
 
 ```fortran
 type :: t_gtif_info                  ! 読み取りメタ情報
@@ -208,8 +209,8 @@ subroutine gtif_inquire(fname, info, stat, msg)
 ! 全域読み(a は既定 real / 既定 integer の総称。整数 tif の実数読みは可、
 ! 実数 tif の整数読みと既定 integer 範囲外の値はエラー)
 subroutine gtif_read(fname, nx, ny, a, stat, msg [, info])
-! 全域書き(実数は Float32、整数は Int32 で格納。Phase 3)
-subroutine gtif_write(fname, nx, ny, a, georef, nodata, stat, msg)
+! 全域書き(実数は Float32、整数は Int32。位置情報と EPSG は info で渡す)
+subroutine gtif_write(fname, nx, ny, a, info, stat, msg)
 ```
 
 ### 6.4 m_fileio / m_sysparam への組み込み
@@ -217,9 +218,10 @@ subroutine gtif_write(fname, nx, ny, a, georef, nodata, stat, msg)
 実装済み(2026-08-01):
 - m_fileio に `e_fmt_gtif`(=4)を追加。fileio_read_matrix の分岐を開通
   (既存シグネチャ不変。gtif_read のエラーは par_abort に変換)。
-  fileio_write_matrix の gtif は「Phase 3 未実装」の明示エラー。
-- m_sysparam の f_input_mode に 3(geotiff)を追加。f_output_mode への
-  追加は Phase 3(組合せ仕様は §9 の未決事項)。
+  fileio_write_matrix は e_fmt_gtif+省略可能引数 gr(t_georef)で
+  GeoTIFF を書く(gr 未指定・座標未管理は par_abort)。
+- m_sysparam の f_input_mode に 3(geotiff)を追加。f_output_mode は
+  ビット和(1:text, 2:bil, 4:geotiff。3=従来互換)に変更(Phase 3)。
 - 格子数はすべての入力ファイルで tif 側と突き合わせ、不一致はエラー
   (txt/bil には無かった自己記述性の利点)。fn_z の位置情報・CRS・nodata
   は m_geoinfo の probe_georef が取得し、hdr と同じ補完・検査を行う
@@ -265,11 +267,19 @@ CRS は namelist の `epsg`(導入済み。既定 0=不明)で与える。
   検証: Deflate 系テストを値比較に切り替えて 40 テスト PASS(単精度含む)、
   txt ケース無効時ビット一致、chichibu の Deflate+pred3 入力実行が
   既存結果と全出力ビット一致。
-- **Phase 3: 書き(無圧縮 strip、Float32/Int32、GeoKey+nodata)**。
-  位置情報と EPSG は座標管理(§10)の t_georef から取る。
-  検証は (a) 自前 reader での往復一致、
-  (b) gdalinfo/QGIS/ArcGIS での目視確認(位置・値・nodata)を一度、
-  以後は (a) を回帰テスト化。
+- **Phase 3: 書き — 完了(2026-08-01)**。gtif_write(classic TIFF・
+  リトルエンディアン・無圧縮・単一 strip・実数 Float32 / 整数 Int32、
+  ModelPixelScale+Tiepoint、epsg 指定時のみ GeoKey)。位置情報と EPSG は
+  座標管理(§10)の t_georef から取る。決定事項:
+  - f_output_mode は**ビット和**に変更(1:text, 2:bil, 4:geotiff。
+    従来の 3=text+bil はそのまま互換)。ユーザー提案による。
+  - nodata タグは書かない。tif は gzip 圧縮(f_output_compress)の対象外。
+  - 座標未管理で geotiff 出力を指定した場合は初期化時に par_stop(§10 条件1)。
+  検証: 往復 4 テスト(投影/経緯度/整数/座標なし)を含む 47 テスト PASS
+  (単精度含む)、gdalinfo が EPSG:2451/6668/6677 を正しく解決、
+  出力 tif の画素が bil と全ファイルビット一致(chichibu 118 ファイル)、
+  txt ケース無効時ビット一致、mode=3 の従来互換。
+  QGIS / ArcGIS での目視確認のみ残(handoff 参照)。
 - **Phase 4(必要になってから)**: BigTIFF 読み(全国 100m 級で必須化
   する見込み)、precip 逐次読みの multi-IFD 対応、Deflate/LZW 書き、
   BigTIFF 書き。
@@ -277,12 +287,14 @@ CRS は namelist の `epsg`(導入済み。既定 0=不明)で与える。
 ## 9. 実装前に合意が必要な点(未決事項)
 
 1. ~~namelist 項目名と省略時挙動(§7)~~ → 座標管理の先行導入で解決(§10)。
-2. 出力の画素型固定(実数=Float32)でよいか。倍精度のまま出したい
-   量があるなら Float64 書きのオプションを Phase 3 に含めるか。
-3. f_output_mode の組合せ仕様("gtif" 単独か、txt/bil との併用形か)。
+2. ~~出力の画素型~~ → 実数=Float32・整数=Int32 固定で確定(2026-08-01。
+   Float64 書きは必要になったらオプション追加)。
+3. ~~f_output_mode の組合せ仕様~~ → ビット和(1:text, 2:bil, 4:geotiff)で
+   確定(2026-08-01。3=text+bil は従来互換)。
 4. ~~Phase 0 のテスト tiff の置き場~~ → test/gtif/ 新設で確定(実施済み)。
-5. nodata の値の規約(入力 nodata をどの内部表現に落とすか。現状の
-   txt/bil 入力には nodata 概念がなく、sw マスク等で代替している)。
+5. nodata の値の規約(入力 nodata をどの内部表現に落とすか。現状は
+   読み取って保持のみ。出力タグは書かない決定済み。計算への反映
+   (sw マスク連携等)は将来の検討事項)。
 
 ## 10. 座標管理の先行導入(実装済み・2026-08-01)
 
@@ -290,8 +302,8 @@ GeoTIFF 実装に先立ち、ESRI hdr ベースの座標管理を導入した(m_
 仕様と決定事項:
 
 1. **テキスト入力では地理座標を管理しない**(従来動作のまま。出力で bil を
-   指定しても hdr は出さない)。将来 GeoTIFF 出力を指定した場合は座標
-   未管理なら警告して停止する(GeoTIFF 実装時に組み込む)。
+   指定しても hdr は出さない)。GeoTIFF 出力を指定した場合、座標未管理なら
+   初期化時に par_stop する(Phase 3 で実装済み)。
 2. **bil 入力では、地盤高(fn_z)の bil と同じ場所に .hdr があれば読んで
    座標管理を有効化**する。無ければテキスト入力と同じ扱い。
    hdr の正本は地盤高のもののみで、他の入力 bil の hdr は読まない。

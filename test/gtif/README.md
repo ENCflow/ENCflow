@@ -46,6 +46,9 @@ test_gtif_reader が data_gtif/ と data_user/ の全変種を読み、期待値
 ビット一致・未対応形式のエラー停止・メタ情報(位置・CRS・nodata)を
 検査する。Deflate は Phase 2 で対応済み(値比較)。BigTIFF のみ
 「エラーになること」の検査(Phase 4 で対応予定)。
+書き込み(Phase 3)は投影/経緯度/整数/座標なしの 4 通りの往復
+(write → read で値ビット一致+メタ往復)を検査する。テストが出力する
+wrk_*.tif は使い捨て(.gitignore 対象)。
 
 ## data_user/(QGIS / ArcGIS Pro の実出力。2026-08-01 受領)
 

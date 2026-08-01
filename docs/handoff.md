@@ -72,14 +72,19 @@
    - 残: 出力 .hdr+.bil を QGIS / ArcGIS で開いて位置・値の目視確認
      (GDAL EHdr 互換キーで書いている。gdalinfo でも可)
    - 残: examples の param サンプルへの epsg / hdr 運用の説明追記
-9. **GeoTIFF Phase 1+2(リーダー)完了 → 読み要件は完成。次は Phase 3(書き)**
-   - m_geotiff + m_geotiff_codec + m_geotiff_inflate を追加し
-     f_input_mode=3 を開通(対応範囲は geotiff_plan.md §8 Phase 1/2 の項。
-     残る読みの拡張は Phase 4 の BigTIFF のみ)
-   - gfortran で検証済み: test/gtif の 40 テスト PASS(PREC=single でも
-     PASS)、txt ケースの無効時ビット一致(wave/chichibu)、chichibu の
-     GeoTIFF 入力(LZW / Deflate+pred3)が bil+hdr 入力と全出力ビット一致、
-     epsg 不一致の par_stop
+9. **GeoTIFF Phase 1〜3 完了(読み書きとも実用範囲は完成)**
+   - 読み: m_geotiff + m_geotiff_codec + m_geotiff_inflate、f_input_mode=3。
+     書き: gtif_write(無圧縮単一 strip・Float32/Int32・GeoKey)、
+     f_output_mode をビット和(1:text, 2:bil, 4:geotiff。3=従来互換)に変更。
+     座標未管理で geotiff 出力指定は初期化時 par_stop。
+     残るのは Phase 4(BigTIFF 読み・precip の multi-IFD・圧縮書き等、
+     必要になってから)
+   - gfortran で検証済み: test/gtif の 47 テスト PASS(往復 4 テスト含む。
+     PREC=single でも PASS)、txt ケースの無効時ビット一致(wave/chichibu)、
+     chichibu の GeoTIFF 入力(LZW / Deflate+pred3)が bil+hdr 入力と全出力
+     ビット一致、mode=7 の tif 出力 118 ファイルが bil と画素ビット一致、
+     gdalinfo が EPSG:2451/6668/6677 を正しく解決、mode=3 従来互換、
+     epsg 不一致・座標未管理 gtif 出力の par_stop
    - 残: ifx ビルド・np=1,2,4 の無効時ビット一致(collective は増やして
      いないが確認する)。test/gtif の Run.sh は逐次専用
    - QGIS / ArcGIS Pro の実出力サンプル受領・組み込み済み(2026-08-01。
@@ -87,8 +92,8 @@
      GeoKey 併記(4612+2451)、QGIS の実数文字列 nodata、i8 型を実物で
      検証。QGIS 高圧縮(Deflate+pred2)も Phase 2 で読解済み。
      よく使う CRS は JGD2000 平面直角 9 系(EPSG:2451)
-   - Phase 3 実装前に要決定(geotiff_plan.md §9): 出力画素型(実数=Float32
-     固定でよいか)、f_output_mode の組合せ仕様、入力 nodata の内部規約
+   - 残: ENCflow が書いた .tif を QGIS / ArcGIS で開いて位置・値の目視確認
+     (gdalinfo では確認済み。test/gtif/wrk_*.tif か実行結果の H*.tif で)
 
 ## 中期の道標(着手順は実測次第)
 

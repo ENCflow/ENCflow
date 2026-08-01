@@ -9,7 +9,7 @@
 !======================================================================
 program test_gtif_reader
   use, intrinsic :: iso_fortran_env, only : real64
-  use m_geotiff, only : t_gtif_info, gtif_inquire, gtif_read
+  use m_geotiff, only : t_gtif_info, gtif_inquire, gtif_read, gtif_write
   implicit none
 
   integer :: nfail = 0
@@ -70,6 +70,9 @@ program test_gtif_reader
   ! ---- メタ情報(位置情報・CRS・nodata) ----
   call t_meta_gdal()
   call t_meta_user()
+
+  ! ---- 書き込み(Phase 3)の往復検査 ----
+  call t_write_roundtrip()
 
   print '(a,i0,a,i0,a)', "---- ", ntest - nfail, " / ", ntest, " PASS"
   if (nfail > 0) then
@@ -239,6 +242,110 @@ subroutine t_meta_user()
     msg = "メタ情報(実数 nodata)が期待と一致しません"
   end if
   call report("meta data_user/d2451_i16_qgis_std.tif", ok, msg)
+end subroutine
+
+!----------------------------------------------------------------------
+! 書き込みの往復検査(wrk_*.tif は使い捨て。.gitignore 対象)
+!   - 実数(投影 EPSG:2451)・実数(経緯度 EPSG:6668)・整数・
+!     座標参照なし の 4 通りを書いて読み戻し、値のビット一致と
+!     メタ情報の往復を確認する
+!----------------------------------------------------------------------
+subroutine t_write_roundtrip()
+  integer, parameter :: nx = 60, ny = 48
+  real :: e(nx,ny), a(nx,ny)
+  integer :: ei(nx,ny), ai(nx,ny)
+  type(t_gtif_info) :: w, r
+  integer :: stat, j
+  character(len=512) :: msg
+  logical :: ok
+
+  ! 実数・投影(2451)
+  call load_expected("expected/f32.txt", nx, ny, e)
+  w = t_gtif_info()
+  w%has_georef = .true.
+  w%xul = -12345.0_real64
+  w%yul = 67890.0_real64
+  w%csx = 100.0_real64
+  w%csy = 100.0_real64
+  w%epsg = 2451
+  w%is_geog = .false.
+  call gtif_write("wrk_f32_prj.tif", nx, ny, e, w, stat, msg)
+  ok = (stat == 0)
+  if (ok) then
+    a = 0.0
+    call gtif_read("wrk_f32_prj.tif", nx, ny, a, stat, msg, info=r)
+    ok = (stat == 0)
+    if (ok) then
+      ok = all(a == e) .and. r%has_georef .and. (.not. r%is_geog) &
+           .and. r%epsg == 2451 .and. r%is_real &
+           .and. r%xul == w%xul .and. r%yul == w%yul &
+           .and. r%csx == w%csx .and. r%csy == w%csy .and. (.not. r%has_nodata)
+      msg = "書き込み往復(実数・投影)が一致しません"
+    end if
+  end if
+  call report("write wrk_f32_prj.tif", ok, msg)
+
+  ! 実数・経緯度(6668)
+  w%xul = 138.625_real64
+  w%yul = 36.1661_real64
+  w%csx = 1.0_real64 / 900.0_real64
+  w%csy = 1.0_real64 / 900.0_real64
+  w%epsg = 6668
+  w%is_geog = .true.
+  call gtif_write("wrk_f32_geo.tif", nx, ny, e, w, stat, msg)
+  ok = (stat == 0)
+  if (ok) then
+    a = 0.0
+    call gtif_read("wrk_f32_geo.tif", nx, ny, a, stat, msg, info=r)
+    ok = (stat == 0)
+    if (ok) then
+      ok = all(a == e) .and. r%has_georef .and. r%is_geog .and. r%epsg == 6668 &
+           .and. r%xul == w%xul .and. r%yul == w%yul .and. r%csx == w%csx
+      msg = "書き込み往復(実数・経緯度)が一致しません"
+    end if
+  end if
+  call report("write wrk_f32_geo.tif", ok, msg)
+
+  ! 整数(Int32)
+  call load_expected("expected/i32.txt", nx, ny, e)
+  do j = 1, ny
+    ei(:,j) = nint(e(:,j))
+  end do
+  w%epsg = 2451
+  w%is_geog = .false.
+  w%xul = 0.0_real64
+  w%yul = 4800.0_real64
+  w%csx = 100.0_real64
+  w%csy = 100.0_real64
+  call gtif_write("wrk_i32_prj.tif", nx, ny, ei, w, stat, msg)
+  ok = (stat == 0)
+  if (ok) then
+    ai = 0
+    call gtif_read("wrk_i32_prj.tif", nx, ny, ai, stat, msg, info=r)
+    ok = (stat == 0)
+    if (ok) then
+      ok = all(ai == ei) .and. (.not. r%is_real) .and. r%epsg == 2451
+      msg = "書き込み往復(整数)が一致しません"
+    end if
+  end if
+  call report("write wrk_i32_prj.tif", ok, msg)
+
+  ! 座標参照なし(タグを書かない)
+  call load_expected("expected/f32.txt", nx, ny, e)
+  w = t_gtif_info()                        ! 既定 = has_georef 偽
+  call gtif_write("wrk_f32_nogeo.tif", nx, ny, e, w, stat, msg)
+  ok = (stat == 0)
+  if (ok) then
+    a = 0.0
+    call gtif_read("wrk_f32_nogeo.tif", nx, ny, a, stat, msg, info=r)
+    ok = (stat == 0)
+    if (ok) then
+      ok = all(a == e) .and. (.not. r%has_georef) .and. r%epsg == 0
+      msg = "書き込み往復(座標参照なし)が一致しません"
+    end if
+  end if
+  call report("write wrk_f32_nogeo.tif", ok, msg)
+
 end subroutine
 
 end program
