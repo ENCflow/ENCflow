@@ -3,8 +3,11 @@
 *.mod
 *.smod
 *.obj
+*.a
+.mode_*
 a.out*
 tada
+test/gtif/test_gtif_reader
 
 # --- executable binaries ---
 bin/
