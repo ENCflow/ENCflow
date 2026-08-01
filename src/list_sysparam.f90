@@ -44,7 +44,7 @@ module list_sysparam
     integer :: f_check_cfl = 0                    ! CFL条件による実行停止
     integer :: f_state_save = 0                   ! 状態保存ファイルの出力
     integer :: f_state_restore = 0                ! 状態保存ファイルからの初期条件の設定
-    integer :: f_input_mode = 1                   ! matrix入力形式(1:text, 2:bil, 3:geotiff)
+    integer :: f_input_mode = 1                   ! matrix入力形式(1:text, 2:bil, 4:geotiff。出力のビット値と共通)
     integer :: f_output_mode = 1                  ! matrix出力形式のビット和(1:text, 2:bil, 4:geotiff)
     integer :: f_output_compress = 0              ! 出力ファイルの圧縮(0:なし, 1:gzip)
 
@@ -135,7 +135,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   integer :: f_check_cfl                     ! CFL条件による実行停止
   integer :: f_state_save                    ! 状態保存ファイルの出力
   integer :: f_state_restore                 ! 状態保存ファイルからの初期条件の設定
-  integer :: f_input_mode                    ! matrix入力形式(1:text, 2:bil, 3:geotiff)
+  integer :: f_input_mode                    ! matrix入力形式(1:text, 2:bil, 4:geotiff。出力のビット値と共通)
   integer :: f_output_mode                   ! matrix出力形式のビット和(1:text, 2:bil, 4:geotiff)
   integer :: f_output_compress               ! 出力ファイルの圧縮(0:なし, 1:gzip)
   integer :: f_out_z                         ! ファイル出力(地盤高Z0001)

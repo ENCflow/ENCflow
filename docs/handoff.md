@@ -73,7 +73,8 @@
      (GDAL EHdr 互換キーで書いている。gdalinfo でも可)
    - 残: examples の param サンプルへの epsg / hdr 運用の説明追記
 9. **GeoTIFF Phase 1〜3 完了(読み書きとも実用範囲は完成)**
-   - 読み: m_geotiff + m_geotiff_codec + m_geotiff_inflate、f_input_mode=3。
+   - 読み: m_geotiff + m_geotiff_codec + m_geotiff_inflate、f_input_mode=4
+     (形式番号は出力のビット値と共通。3 は専用メッセージで停止)。
      書き: gtif_write(無圧縮単一 strip・Float32/Int32・GeoKey)、
      f_output_mode をビット和(1:text, 2:bil, 4:geotiff。3=従来互換)に変更。
      座標未管理で geotiff 出力指定は初期化時 par_stop。

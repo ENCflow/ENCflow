@@ -220,8 +220,10 @@ subroutine gtif_write(fname, nx, ny, a, info, stat, msg)
   (既存シグネチャ不変。gtif_read のエラーは par_abort に変換)。
   fileio_write_matrix は e_fmt_gtif+省略可能引数 gr(t_georef)で
   GeoTIFF を書く(gr 未指定・座標未管理は par_abort)。
-- m_sysparam の f_input_mode に 3(geotiff)を追加。f_output_mode は
+- m_sysparam の f_input_mode に 4(geotiff)を追加。f_output_mode は
   ビット和(1:text, 2:bil, 4:geotiff。3=従来互換)に変更(Phase 3)。
+  **形式番号は入出力で共通**(同じ番号=同じ形式。入力は単一形式のみで、
+  3 を指定した場合は出力の text+bil との混同を疑う専用メッセージで停止)。
 - 格子数はすべての入力ファイルで tif 側と突き合わせ、不一致はエラー
   (txt/bil には無かった自己記述性の利点)。fn_z の位置情報・CRS・nodata
   は m_geoinfo の probe_georef が取得し、hdr と同じ補完・検査を行う
