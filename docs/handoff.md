@@ -57,6 +57,18 @@
    - f_rntype=2(lu2rn 変換)のケースがあれば併せて確認(read_rn の
      rank0 経路)
 
+8. **座標管理(m_georef / ESRI hdr)導入コミットの検証**
+   (仕様と決定事項は docs/geotiff_plan.md §10)
+   - gfortran 逐次では検証済み: wave/chichibu(txt 入力)がベースラインと
+     全出力ビット一致、bil+hdr 入力が bil 単独入力と全出力ビット一致
+     (hdr から nx,ny,dx,dy 補完)、矛盾指定の par_stop、出力 hdr の往復。
+   - 残: ifx での全ケース既存 reference ビット一致(逐次・np=1,2,4。
+     collective は追加していないが確認はする)
+   - 残: PREC=single ビルドの通し(座標は real64 固定の設計確認)
+   - 残: 出力 .hdr+.bil を QGIS / ArcGIS で開いて位置・値の目視確認
+     (GDAL EHdr 互換キーで書いている。gdalinfo でも可)
+   - 残: examples の param サンプルへの epsg / hdr 運用の説明追記
+
 ## 中期の道標(着手順は実測次第)
 
 - 全国データでの実測(メモリ RES、ランク別時間)→ セル数均等分割の要否判断

@@ -1,6 +1,7 @@
 # GeoTIFF 対応の検討(自作ライブラリの実現可能性と実装形態)
 
-status: 検討段階(実装未着手)。合意後、決定事項は developer.md に転記し、
+status: GeoTIFF 本体は検討段階(実装未着手)。前提となる座標管理は
+先行導入済み(§10)。合意後、決定事項は developer.md に転記し、
 本文書は実装計画として消し込んでいく。
 
 ## 0. 結論(要約)
@@ -19,8 +20,8 @@ status: 検討段階(実装未着手)。合意後、決定事項は developer.md
   libencflow.a に組み込む」を推奨**(案A)。別ディレクトリ+独立
   Makefile(案B)は PREC/ABI 整合とスタンプ機構を二重化することになり
   不利(§5)。
-- 書き込みには格子原点座標と EPSG コードが必要だが、**現状の ENCflow は
-  dx, dy しか持っていない**。list_geoinfo への項目追加が必要(§7)。
+- 書き込みには格子原点座標と EPSG コードが必要。→ ESRI hdr ベースの
+  座標管理を先行導入して解決済み(§7, §10)。
 
 ## 1. 要件の確定
 
@@ -224,19 +225,12 @@ subroutine gtif_write(fname, nx, ny, a, georef, nodata, stat, msg)
 
 ## 7. 地理参照情報の追加(書き込みの前提)
 
-現状 list_geoinfo は nx, ny, dx, dy のみで、**原点座標と CRS を持たない**。
-正しい位置に載る GeoTIFF を書くには次が必要:
-
-- list_geoinfo に追加: `xll, yll`(格子南西隅の外縁座標。ESRI の
-  xllcorner/yllcorner と同義)と `epsg`(整数。省略時 0=CRS なし)。
-- 入力が GeoTIFF の場合は、ファイルの位置情報から取得して namelist の
-  dx, dy と突き合わせ、xll/yll/epsg の namelist 省略を許す
-  (両方あれば namelist 優先か一致検査かは実装時に決める)。
-- 保持場所は t_geoinfo(g)に成分追加。読み書きとも rank0 のみが
-  ファイルに触れる現行構造(方式2)のままで、帯分配への影響はない。
-
-この項は namelist 仕様の変更を含むため、**項目名・既定値・省略時挙動は
-実装前に合意を取る**(examples の List_samples 更新も同じ作業に含める)。
+**→ §10 の座標管理の先行導入で解決済み。** 原点座標は入力(ESRI hdr、
+将来は GeoTIFF タグ)から取得して t_geoinfo%gr(t_georef)が保持し、
+CRS は namelist の `epsg`(導入済み。既定 0=不明)で与える。
+座標未管理のまま GeoTIFF 出力を指定した場合は警告して停止する仕様
+(§10 条件1)。テキスト入力に namelist で原点座標(xll/yll 等)を
+与える口は現状なし。必要になった時点で追加を検討する。
 
 ## 8. 段階的実装計画と検証
 
@@ -256,7 +250,8 @@ subroutine gtif_write(fname, nx, ny, a, georef, nodata, stat, msg)
   これで ArcGIS Pro 既定(LZ77)と QGIS 高圧縮プロファイルをカバーし、
   読み要件が完成。
 - **Phase 3: 書き(無圧縮 strip、Float32/Int32、GeoKey+nodata)**。
-  §7 の namelist 拡張を含む。検証は (a) 自前 reader での往復一致、
+  位置情報と EPSG は座標管理(§10)の t_georef から取る。
+  検証は (a) 自前 reader での往復一致、
   (b) gdalinfo/QGIS/ArcGIS での目視確認(位置・値・nodata)を一度、
   以後は (a) を回帰テスト化。
 - **Phase 4(必要になってから)**: BigTIFF 読み(全国 100m 級で必須化
@@ -265,12 +260,49 @@ subroutine gtif_write(fname, nx, ny, a, georef, nodata, stat, msg)
 
 ## 9. 実装前に合意が必要な点(未決事項)
 
-1. namelist 項目名と省略時挙動(§7)。
+1. ~~namelist 項目名と省略時挙動(§7)~~ → 座標管理の先行導入で解決(§10)。
 2. 出力の画素型固定(実数=Float32)でよいか。倍精度のまま出したい
    量があるなら Float64 書きのオプションを Phase 3 に含めるか。
 3. f_output_mode の組合せ仕様("gtif" 単独か、txt/bil との併用形か)。
 4. Phase 0 のテスト tiff を test/ 下のどこに置くか(test/gtif/ 新設案)。
 5. nodata の値の規約(入力 nodata をどの内部表現に落とすか。現状の
    txt/bil 入力には nodata 概念がなく、sw マスク等で代替している)。
+
+## 10. 座標管理の先行導入(実装済み・2026-08-01)
+
+GeoTIFF 実装に先立ち、ESRI hdr ベースの座標管理を導入した(m_georef.f90)。
+仕様と決定事項:
+
+1. **テキスト入力では地理座標を管理しない**(従来動作のまま。出力で bil を
+   指定しても hdr は出さない)。将来 GeoTIFF 出力を指定した場合は座標
+   未管理なら警告して停止する(GeoTIFF 実装時に組み込む)。
+2. **bil 入力では、地盤高(fn_z)の bil と同じ場所に .hdr があれば読んで
+   座標管理を有効化**する。無ければテキスト入力と同じ扱い。
+   hdr の正本は地盤高のもののみで、他の入力 bil の hdr は読まない。
+3. **hdr がある場合、nx, ny, dx, dy は namelist 省略可**。namelist にも
+   指定がある場合は無言でどちらかを優先せず整合を検査し、矛盾なら停止
+   (resolve_geometry の過剰指定と同じ流儀)。一致する場合は namelist の
+   値を保持する(既存設定に hdr を後付けしても計算はビット同値)。
+4. **出力で bil を指定し座標管理が有効なら、各 .bil に GDAL EHdr 互換の
+   .hdr を併記**する(real は PIXELTYPE FLOAT、integer は SIGNEDINT。
+   いずれも 32bit。hdr は圧縮対象外)。
+5. **CRS は namelist の epsg(整数。既定 0 = 不明)で導入済み**。hdr には
+   CRS が無いため常に namelist 由来。現状は保持のみで、GeoTIFF の
+   GeoKey 出力(および将来 .prj 出力)で使う。
+6. 座標値は PREC に依存させず **real64 固定**で保持する(単精度ビルドでも
+   投影座標・経緯度の精度を落とさない)。内部の正本は「北西隅セルの外縁」
+   (ESRI hdr の ULXMAP/ULYMAP=セル中心とは読み書き時に相互変換)。
+   GeoTIFF の ModelTiepoint と同じ表現。
+7. 対応する hdr は 1 バンド・32bit・LAYOUT=BIL・BYTEORDER=I のみ。
+   範囲外(NBITS≠32 等)は黙って誤読せず明確なメッセージで停止する。
+   NODATA キーは読み取って保持する(現状は未使用。GeoTIFF で使用予定)。
+8. **経緯度(度単位)の bil は対象外**。XDIM/YDIM がそのまま dx, dy
+   (物理式中のメートル距離)になるため、投影座標系(メートル)の
+   データを前提とする。GeoTIFF 導入後も同じ前提とする。
+
+実装箇所: m_georef.f90(新規)、m_geoinfo(t_geoinfo%gr 成分と probe)、
+m_output(bil 書き出し 3 箇所に hdr 併記)、list_geoinfo(epsg)。
+hdr の探索・読み込みは全ランクが冗長に読む(他の入力読みと同じ方式)ため
+collective の追加はない。
 
 以上。

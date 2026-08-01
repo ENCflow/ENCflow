@@ -3,6 +3,7 @@ module m_output
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
   use m_fileio, only : fileio_write_matrix, e_fmt_txt, e_fmt_bil, e_fmt_both
+  use m_georef, only : georef_write_hdr, e_pix_float, e_pix_int
   use m_parallel
 
   implicit none
@@ -167,6 +168,8 @@ subroutine output_matrix_real(p, g, prefix, a, k)
   end if
   if (p%f_output_mode == e_fmt_bil .or. p%f_output_mode == e_fmt_both) then
     call fileio_write_matrix(fn//".bil", g%nx, g%ny, wk_out, e_fmt_bil, p%f_output_compress)
+    ! 地理座標を管理している場合のみ hdr を併記(圧縮対象外)
+    if (g%gr%active) call georef_write_hdr(fn//".hdr", g%gr, g%nx, g%ny, e_pix_float)
   end if
 
 end subroutine
@@ -193,6 +196,7 @@ subroutine output_matrix_full(p, g, prefix, a, k)
   end if
   if (p%f_output_mode == e_fmt_bil .or. p%f_output_mode == e_fmt_both) then
     call fileio_write_matrix(fn//".bil", g%nx, g%ny, a, e_fmt_bil, p%f_output_compress)
+    if (g%gr%active) call georef_write_hdr(fn//".hdr", g%gr, g%nx, g%ny, e_pix_float)
   end if
 
 end subroutine
@@ -222,6 +226,7 @@ subroutine output_matrix_int(p, g, prefix, a, k)
   end if
   if (p%f_output_mode == e_fmt_bil .or. p%f_output_mode == e_fmt_both) then
     call fileio_write_matrix(fn//".bil", g%nx, g%ny, wk_out_i, e_fmt_bil, p%f_output_compress)
+    if (g%gr%active) call georef_write_hdr(fn//".hdr", g%gr, g%nx, g%ny, e_pix_int)
   end if
 end subroutine
 
