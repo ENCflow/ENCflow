@@ -63,6 +63,9 @@ FFLAGS	= -g -fopenmp -warn all -fpe0 -Ofast -xHost -ipo $(RFLAG)
 #LDFLAGS =
 
 # NVIDIA HPC SDK (-ipo/-flto 相当なし: -Mipa は 23.3 で無効化済み)
+#   行長: gfortran の -ffree-line-length-none に相当するオプションは無いが、
+#   既定で 132 桁を超える自由形式行を受け付けるため不要(-Mextend は
+#   固定形式専用)。行長で弾かれる報告があれば要再確認
 #FC	= nvfortran
 #FC_MPI	= mpif90
 #R8	= -Mr8
