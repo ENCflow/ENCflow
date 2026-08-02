@@ -13,6 +13,7 @@ module m_state
   private
 
   public :: t_state
+  public :: t_initial
   public :: m_state_init
   public :: m_state_dispose
   public :: m_state_updatetime
@@ -21,6 +22,20 @@ module m_state
 
 
   ! 画面出力用変数
+  ! 解釈済みの初期条件(list_initial から m_state_init が構築)。
+  ! t_state の成分(s%ini)として保持され、set_z/set_h/set_uv・
+  ! user フック・他モジュール(放射境界の基準水位導出等)が参照する。
+  ! init に早期 return 経路がある型は全成分デフォルト初期化必須(§13)
+  type t_initial
+    integer :: f_htype = 0        ! 初期水深タイプ
+    integer :: f_uvtype = 0       ! 初期流速タイプ
+    integer :: f_fill_depres = 0  ! 窪地を満水にする (0:無効, 1:有効, ...)
+    real :: h0 = 0.0              ! 初期水深固定値 (m)
+    real :: u0 = 0.0              ! 初期x方向流速 (m/s)
+    real :: v0 = 0.0              ! 初期y方向流速 (m/s)
+    real :: h0_rw = 0.0           ! 河道マスク部の初期水深増分 (m)
+  end type
+
   type t_state4prt
     real :: h = 0.0
     real :: vv = 0.0
@@ -71,6 +86,7 @@ module m_state
     integer :: n_exfluxes               ! number of excessive fluxes
     integer :: n_runge                  ! number of Runge-Kutta flux calculations
     integer :: un_log                   ! ログファイルの装置番号
+    type(t_initial) :: ini              ! 解釈済み初期条件
     type(t_state4prt) :: sp             ! 画面出力用
     logical :: initialized = .false.
   end type
@@ -159,6 +175,15 @@ subroutine m_state_init(s, p, g)
   ! 初期条件設定ファイル読み込み
   call list_initial_read(p, list)
 
+  ! 解釈済み初期条件を構築する(層契約: list は生値のまま、解釈はここ)
+  ts%ini%f_htype = list%f_htype
+  ts%ini%f_uvtype = list%f_uvtype
+  ts%ini%f_fill_depres = list%f_fill_depres
+  ts%ini%h0 = list%h0
+  ts%ini%u0 = list%u0
+  ts%ini%v0 = list%v0
+  ts%ini%h0_rw = list%h0_rw
+
   ! --- 初期条件は全域一時状態 ts 上で全ランク冗長に構築する ---
   allocate(ts%h(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%u(1:g%nx,1:g%ny), source = 0.0)
@@ -168,9 +193,9 @@ subroutine m_state_init(s, p, g)
   allocate(ts%hg(1:g%nx,1:g%ny), source = 0.0)
 
   call m_state_updatetime(s, p, 0)
-  call set_z(p, g, ts, list)
-  call set_h(p, g, ts, list)     ! set_z()よりも後に実行
-  call set_uv(p, g, ts, list)
+  call set_z(p, g, ts)
+  call set_h(p, g, ts)     ! set_z()よりも後に実行
+  call set_uv(p, g, ts)
 
   s%n_valcells = 0           ! number of valid cells
   s%n_exfluxes = 0           ! number of excessive fluxes
@@ -201,6 +226,7 @@ subroutine m_state_init(s, p, g)
   s%z(:,:) = ts%z(1:g%nx, dcp%jsh:dcp%jeh)
   s%rsh(:,:) = ts%rsh(1:g%nx, dcp%jsh:dcp%jeh)
   s%hg(:,:) = ts%hg(1:g%nx, dcp%jsh:dcp%jeh)
+  s%ini = ts%ini
 
   ! 初期水位をセット
   s%e(:,:) = s%z(:,:) + s%h(:,:)
@@ -463,26 +489,24 @@ end subroutine
 !----------------------------------------------------------------------
 ! 初期水深をセット
 !----------------------------------------------------------------------
-subroutine set_h(p, g, s, list)
+subroutine set_h(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   type(t_state), intent(inout) :: s
-  type(t_list_initial), intent(in) :: list
   integer :: i, j
-  forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%h(i,j) = list%h0
-  if (list%f_fill_depres > 0)  call fill_depression(p, g, s, list)
-  if (list%h0_rw > 0.0) call adjust_h0rw(p, g, s, list)
+  forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%h(i,j) = s%ini%h0
+  if (s%ini%f_fill_depres > 0)  call fill_depression(p, g, s)
+  if (s%ini%h0_rw > 0.0) call adjust_h0rw(p, g, s)
 
 end subroutine
 
 !----------------------------------------------------------------------
 ! 窪地を水で埋める
 !----------------------------------------------------------------------
-subroutine fill_depression(p, g, s, list)
+subroutine fill_depression(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  type(t_list_initial), intent(in) :: list
   integer :: i, j, k
   integer :: in, jn
   integer :: l
@@ -513,7 +537,7 @@ subroutine fill_depression(p, g, s, list)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) < 1) cycle        ! 領域外は除外
       if (g%sw(i,j) > 0) cycle       ! 海は除外
-      if (list%f_fill_depres >= 2 .and. g%rw(i,j) < 1) cycle   ! 河道以外は除外
+      if (s%ini%f_fill_depres >= 2 .and. g%rw(i,j) < 1) cycle   ! 河道以外は除外
       s%h(i,j) = 1000
     end do
   end do
@@ -530,7 +554,7 @@ subroutine fill_depression(p, g, s, list)
     do j = g%wy(1), g%wy(2)
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) < 1) cycle                                 ! 領域外は除外
-        if (list%f_fill_depres >= 2 .and. g%rw(i,j) < 1) cycle  ! 河道以外は除外
+        if (s%ini%f_fill_depres >= 2 .and. g%rw(i,j) < 1) cycle  ! 河道以外は除外
         if (s%h(i,j) <= 0) cycle                                ! 既に水が無いセルは除外
         ec = g%z(i,j) + s%h(i,j)                                ! 自セルの水位
         iadj = 0
@@ -542,7 +566,7 @@ subroutine fill_depression(p, g, s, list)
             ! 水位も更新(古い水位のまま後続の近傍比較で復水させない)
             ec = g%z(i,j)
           else
-            if (list%f_fill_depres >= 2 .and. g%rw(in,jn) < 1) cycle   ! 近傍セルが河道以外は除外
+            if (s%ini%f_fill_depres >= 2 .and. g%rw(in,jn) < 1) cycle   ! 近傍セルが河道以外は除外
             en = g%z(in,jn) + s%h(in,jn)      ! 近傍セルの水位
             if (ec > en + tol) then           ! 自セルの方が水位が高い場合は自セルの水位を下げる
               ec1 = max(en, g%z(i,j))         ! 自セルの水位は自セルの標高以下にはならない
@@ -564,7 +588,7 @@ subroutine fill_depression(p, g, s, list)
     if (nadj == 0) exit
   end do
 
-  if (list%f_fill_depres >= 3) then
+  if (s%ini%f_fill_depres >= 3) then
     if (is_root) then
       write(output_unit, '(a)', advance='no') " lifting riverbed"
       flush(output_unit)
@@ -591,17 +615,16 @@ end subroutine
 !----------------------------------------------------------------------
 ! 河道部の初期水深を増やす
 !----------------------------------------------------------------------
-subroutine adjust_h0rw(p, g, s, list)
+subroutine adjust_h0rw(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  type(t_list_initial), intent(in) :: list
   integer :: i, j
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   do j = g%wy(1), g%wy(2)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) > 0 .and. g%rw(i,j) > 0) then
-        s%h(i,j) = s%h(i,j) + list%h0_rw
+        s%h(i,j) = s%h(i,j) + s%ini%h0_rw
       end if
     end do
   end do
@@ -611,28 +634,25 @@ end subroutine
 !----------------------------------------------------------------------
 ! 初期流速をセット
 !----------------------------------------------------------------------
-subroutine set_uv(p, g, s, list)
+subroutine set_uv(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  type(t_list_initial), intent(in) :: list
   integer :: i, j
   if (p%initialized) continue  ! 引数未使用の警告を抑制
-  forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%u(i,j) = list%u0
-  forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%v(i,j) = list%v0
+  forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%u(i,j) = s%ini%u0
+  forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%v(i,j) = s%ini%v0
 end subroutine
 
 
 !----------------------------------------------------------------------
 ! 初期標高をセット
 !----------------------------------------------------------------------
-subroutine set_z(p, g, s, list)
+subroutine set_z(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  type(t_list_initial), intent(in) :: list
   if (p%initialized) continue      ! 引数未使用の警告を抑制
-  if (list%f_htype == 0) continue  ! 引数未使用の警告を抑制
   s%z(:,:) = g%z(:,:)
 end subroutine
 
