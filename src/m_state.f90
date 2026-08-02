@@ -7,7 +7,7 @@ module m_state
                        par_gather_to, par_bcast_cell
   use m_util, only : itoa, rtoa
   use m_sysdep_util, only : sysdep_mkdir
-  use m_fileio, only : fileio_write_rle, fileio_read_rle
+  use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
   use iso_fortran_env, only : output_unit, real64
   implicit none
   private
@@ -27,13 +27,16 @@ module m_state
   ! user フック・他モジュール(放射境界の基準水位導出等)が参照する。
   ! init に早期 return 経路がある型は全成分デフォルト初期化必須(§13)
   type t_initial
-    integer :: f_htype = 0        ! 初期水深タイプ
+    integer :: f_htype = 0        ! 初期水深タイプ (0:水深固定, 1:水深ファイル,
+                                  !                 2:水位固定, 3:水位ファイル)
     integer :: f_uvtype = 0       ! 初期流速タイプ
     integer :: f_fill_depres = 0  ! 窪地を満水にする (0:無効, 1:有効, ...)
     real :: h0 = 0.0              ! 初期水深固定値 (m)
+    real :: e0 = 0.0              ! 初期水位固定値 (m。z と同じ基準)
     real :: u0 = 0.0              ! 初期x方向流速 (m/s)
     real :: v0 = 0.0              ! 初期y方向流速 (m/s)
     real :: h0_rw = 0.0           ! 河道マスク部の初期水深増分 (m)
+    character(len=256) :: fn_hinit = ""  ! 初期水深/水位の分布ファイル名
   end type
 
   type t_state4prt
@@ -180,9 +183,11 @@ subroutine m_state_init(s, p, g)
   ts%ini%f_uvtype = list%f_uvtype
   ts%ini%f_fill_depres = list%f_fill_depres
   ts%ini%h0 = list%h0
+  ts%ini%e0 = list%e0
   ts%ini%u0 = list%u0
   ts%ini%v0 = list%v0
   ts%ini%h0_rw = list%h0_rw
+  ts%ini%fn_hinit = list%fn_hinit
 
   ! --- 初期条件は全域一時状態 ts 上で全ランク冗長に構築する ---
   allocate(ts%h(1:g%nx,1:g%ny), source = 0.0)
@@ -490,14 +495,51 @@ end subroutine
 ! 初期水深をセット
 !----------------------------------------------------------------------
 subroutine set_h(p, g, s)
+  ! f_htype 0: 水深固定 h0 / 1: 水深ファイル / 2: 水位固定 e0 /
+  ! 3: 水位ファイル。水位指定は h = max(η − z, 0)(z は set_z 済みの s%z)。
+  ! 分布ファイルは全ランク冗長の全域読み(ゾーン2。prtype3 と同じ流儀)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   type(t_state), intent(inout) :: s
+  real, allocatable :: wk(:,:)
   integer :: i, j
-  forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%h(i,j) = s%ini%h0
+
+  select case (s%ini%f_htype)
+    case (0)      ! 水深固定値
+      forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%h(i,j) = s%ini%h0
+    case (1)      ! 水深ファイル
+      call read_hinit(p, g, s%ini, wk)
+      forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%h(i,j) = max(wk(i,j), 0.0)
+    case (2)      ! 水位固定値
+      forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%h(i,j) = max(s%ini%e0 - s%z(i,j), 0.0)
+    case (3)      ! 水位ファイル
+      call read_hinit(p, g, s%ini, wk)
+      forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%h(i,j) = max(wk(i,j) - s%z(i,j), 0.0)
+    case default
+      call par_stop("list_initial: f_htype は 0(水深固定)・1(水深ファイル)・" &
+                    //"2(水位固定)・3(水位ファイル)です: "//itoa(s%ini%f_htype))
+  end select
   if (s%ini%f_fill_depres > 0)  call fill_depression(p, g, s)
   if (s%ini%h0_rw > 0.0) call adjust_h0rw(p, g, s)
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 初期水深/水位の分布ファイルを読む(全ランク冗長。ゾーン2)
+!----------------------------------------------------------------------
+subroutine read_hinit(p, g, ini, wk)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_initial), intent(in) :: ini
+  real, allocatable, intent(out) :: wk(:,:)
+  if (len_trim(ini%fn_hinit) <= 0) then
+    call par_stop("list_initial: f_htype="//itoa(ini%f_htype) &
+                  //" には fn_hinit の指定が必要です")
+  end if
+  allocate(wk(1:g%nx,1:g%ny), source = 0.0)
+  call fileio_read_matrix(trim(p%dir_data)//"/"//trim(ini%fn_hinit), &
+                          g%nx, g%ny, wk, p%f_input_mode)
 end subroutine
 
 !----------------------------------------------------------------------
