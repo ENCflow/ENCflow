@@ -188,13 +188,13 @@ subroutine m_swflow_enc_init(p, g, b, s)
   !   する場合はここを要再検討(developer.md §15)
   call boundary_h(p, g, b, s, sx_mod)
 
-  ! 開いた外縁辺の境界面流量を初期水深から初期化する(complete が
+  ! エッジの強制条件(境界面流量)を初期水深から初期化する(complete が
   ! mn1→mn にコミットするので、初回ステップの RK が読む「前ステップの
   ! 境界流量」が内部エッジ(init_enc_status で初期化)と同格になる)。
   ! リスタート時は呼ばない: 保存された uv/mn に境界面の値が含まれており、
   ! 復元後の h(保存時の連続式適用後)から再計算すると保存時の値
   ! (適用前の h 起源)と食い違い、厳密復元が破れる
-  if (have_open_bc .and. p%f_state_restore <= 0) then
+  if (p%f_state_restore <= 0) then
     call boundary_uvmn(p, g, s, sx_mod)
   end if
 
@@ -235,9 +235,9 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   call par_edge_merge(sx_mod%uv,  esync_s, esync_n)
   call par_edge_merge(sx_mod%mn1, esync_s, esync_n)
 
-  ! 開いた外縁辺の境界面に流出フラックスをセットする
-  ! (界面補完の後に呼ぶ。共有行の扱いは boundary_uvmn のヘッダ参照)
-  if (have_open_bc) call boundary_uvmn(p, g, s, sx_mod)
+  ! エッジの流速・流量への強制条件をセットする(辺境界の流出など。
+  ! 各条件の有効判定は boundary_uvmn 内の節ごとに行う)
+  call boundary_uvmn(p, g, s, sx_mod)
 
   ! 連続式を解いて水深を更新する
   call continuous(p, g, s, sx_mod)
@@ -322,9 +322,15 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 開いた外縁辺の境界面に簡易流出(段落ち)の流速・流量をセットする
-!   momentum(内部面)と continuous(h1 更新)の間、par_edge_merge の
-!   後に呼ぶ。continuous / restore_uvmn 側は bc_open_face が真の面を
+! エッジの流速・流量(uv/mn1)への強制条件の適用点
+!   momentum(内部面の計算)と continuous(h1 更新)の間、
+!   par_edge_merge の後に毎ステップ無条件に呼ばれる。強制条件の族を
+!   追加する場合はこのルーチンに節を足し、有効判定は節の内側で行う
+!   (将来の候補: 区間流入・区間流出、カルバート出入り口等)。
+!   現在の節は「外縁4辺の辺境界(簡易流出)」のみ。
+!
+! 辺境界の節: 開いた辺の境界面に段落ち式の流速・流量をセットする。
+!   continuous / restore_uvmn 側は bc_open_face が真の面を
 !   取り込むことで、流出が h1 と u,v,m,n に乗る。
 !   - 境界面の書き手はこのルーチンだけ(momentum は x 番兵で触れない)。
 !     開いた辺の面は乾燥時も 0 を毎ステップ書く(前ステップ値の残留防止)
@@ -355,30 +361,35 @@ subroutine boundary_uvmn(p, g, s, sx)
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
-  ! 西辺・東辺(全ランクが自帯+共有行のセル js-1..je+1 を走査。
-  ! ハロ行のセルは共有行スロットの冗長計算のため。put 側のスロット行
-  ! フィルタが書き込み範囲を js-1..je に制限する)
-  if (f_bc_side(e_side_w) == e_bc_outflow) then
-    do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
-      call put_outflow_faces(1, j, kfw)
-    end do
-  end if
-  if (f_bc_side(e_side_e) == e_bc_outflow) then
-    do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
-      call put_outflow_faces(dcp%nx_g, j, kfe)
-    end do
-  end if
+  ! ==== 節1: 外縁4辺の辺境界(簡易流出) ====
+  if (have_open_bc) then
 
-  ! 北辺・南辺(行の所有ランクのみ。判定は全ランクが同一コードで実行)
-  if (f_bc_side(e_side_n) == e_bc_outflow .and. dcp%js <= 1 .and. 1 <= dcp%je) then
-    do i = g%wx(1,1), g%wx(2,1)
-      call put_outflow_faces(i, 1, kfn)
-    end do
-  end if
-  if (f_bc_side(e_side_s) == e_bc_outflow .and. dcp%js <= dcp%ny_g .and. dcp%ny_g <= dcp%je) then
-    do i = g%wx(1,dcp%ny_g), g%wx(2,dcp%ny_g)
-      call put_outflow_faces(i, dcp%ny_g, kfs)
-    end do
+    ! 西辺・東辺(全ランクが自帯+共有行のセル js-1..je+1 を走査。
+    ! ハロ行のセルは共有行スロットの冗長計算のため。put 側のスロット行
+    ! フィルタが書き込み範囲を js-1..je に制限する)
+    if (f_bc_side(e_side_w) == e_bc_outflow) then
+      do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
+        call put_outflow_faces(1, j, kfw)
+      end do
+    end if
+    if (f_bc_side(e_side_e) == e_bc_outflow) then
+      do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
+        call put_outflow_faces(dcp%nx_g, j, kfe)
+      end do
+    end if
+
+    ! 北辺・南辺(行の所有ランクのみ。判定は全ランクが同一コードで実行)
+    if (f_bc_side(e_side_n) == e_bc_outflow .and. dcp%js <= 1 .and. 1 <= dcp%je) then
+      do i = g%wx(1,1), g%wx(2,1)
+        call put_outflow_faces(i, 1, kfn)
+      end do
+    end if
+    if (f_bc_side(e_side_s) == e_bc_outflow .and. dcp%js <= dcp%ny_g .and. dcp%ny_g <= dcp%je) then
+      do i = g%wx(1,dcp%ny_g), g%wx(2,dcp%ny_g)
+        call put_outflow_faces(i, dcp%ny_g, kfs)
+      end do
+    end if
+
   end if
 
 contains
