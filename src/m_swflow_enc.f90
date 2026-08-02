@@ -181,6 +181,16 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 水深の境界条件をセットする
   call boundary_h(p, g, b, s, sx_mod)
 
+  ! 開いた外縁辺の境界面流量を初期水深から初期化する(complete が
+  ! mn1→mn にコミットするので、初回ステップの RK が読む「前ステップの
+  ! 境界流量」が内部エッジ(init_enc_status で初期化)と同格になる)。
+  ! リスタート時は呼ばない: 保存された uv/mn に境界面の値が含まれており、
+  ! 復元後の h(保存時の連続式適用後)から再計算すると保存時の値
+  ! (適用前の h 起源)と食い違い、厳密復元が破れる
+  if (have_open_bc .and. p%f_state_restore <= 0) then
+    call boundary_uvmn(p, g, s, sx_mod)
+  end if
+
   ! 変数を更新して次のタイムステップの準備をする
   call complete(p, g, s, sx_mod)
 

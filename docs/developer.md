@@ -585,7 +585,12 @@
   &list_bound_inflow / &list_bound_outflow)。**グループ不在=その族なし**
   (iostat<0 で判別)。旧形式 &list_boundary は検出して par_stop。
 - **辺境界の ENC 適用点は boundary_uvmn ただ1箇所**(momentum →
-  par_edge_merge → boundary_uvmn → continuous)。契約:
+  par_edge_merge → boundary_uvmn → continuous。さらに **init でも
+  cold start 時に1回呼ぶ**: complete の mn1→mn コミットに乗せ、初回
+  ステップの RK が読む「前ステップの境界流量」を内部エッジの初期化
+  (init_enc_status)と同格にする。**restore 時は呼ばない** — 保存
+  された uv/mn に境界面の値が含まれており、復元後の h から再計算すると
+  保存時の値と食い違って厳密復元が破れる)。契約:
   - 境界面スロット(枠上セルの外向き面。既存エッジ配列内に存在)の
     **書き手は boundary_uvmn のみ**。開いた辺の面は乾燥時も 0 を
     毎ステップ書く(前ステップ値の残留防止)。壁辺の面には触れない
