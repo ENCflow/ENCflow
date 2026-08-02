@@ -179,6 +179,13 @@ subroutine m_swflow_enc_init(p, g, b, s)
   call m_ffactor_init(f_friction_fastmath, p%dd, 30.0, 'UV')
 
   ! 水深の境界条件をセットする
+  !   init 時点で実効なのはため池の初期吸収だけ: 降雨は s%pre=0
+  !   (makepre は run_main が初期化後に呼ぶ)、ソースは q=0
+  !   (makebdc 未実行)で、どちらも構造的に +0 となる。
+  !   restore 時も安全: 保存状態は最終ステップの boundary_h 適用後
+  !   なので、ため池転送は冪等(保存 h>0 はため池満杯時のみ)。
+  !   この前提を崩す変更(makepre の前倒し、pre の初期条件化等)を
+  !   する場合はここを要再検討(developer.md §15)
   call boundary_h(p, g, b, s, sx_mod)
 
   ! 開いた外縁辺の境界面流量を初期水深から初期化する(complete が
