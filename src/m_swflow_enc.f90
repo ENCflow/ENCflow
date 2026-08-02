@@ -290,7 +290,7 @@ subroutine boundary_h(p, g, b, s, sx)
   type(t_boundary), intent(in) :: b
   type(t_state), intent(inout) :: s
   type(t_enc_status), intent(inout) :: sx
-  integer :: i, j, k, isrc
+  integer :: i, j, k, isrc, istage
 
   !$omp parallel do schedule(dynamic) private(i, j)
   do j = dcp%js, dcp%je
@@ -326,6 +326,20 @@ subroutine boundary_h(p, g, b, s, sx)
       sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q
       ! 吸い込み(負の流量)でセルを負水深にしない(不足分は汲めない)
       if (sx%h1(i,j) < 0) sx%h1(i,j) = 0
+    end do
+  end do
+
+  ! 水位規定セル群(流域出口の流出境界、背水・感潮域等)
+  !   指定水位 η に強制する(最後に適用=同一セルでは最優先)。
+  !   周囲との面フラックスは momentum が通常計算するため、規定水位が
+  !   作る勾配が流出入を駆動し、u,v,m,n・record にも自然に乗る。
+  !   η が河床より低ければセルは常に空=完全排水口になる
+  do istage = 1, b%nstage
+    do k = 1, b%stage(istage)%ncell
+      i = b%stage(istage)%cell(1,k)
+      j = b%stage(istage)%cell(2,k)
+      if (j < dcp%js .or. j > dcp%je) cycle
+      sx%h1(i,j) = max(b%stage(istage)%eta - s%z(i,j), 0.0)
     end do
   end do
 

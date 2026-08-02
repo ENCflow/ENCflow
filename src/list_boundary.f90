@@ -39,6 +39,13 @@ module list_boundary
     real :: src_val(1:2,1:nsrcvmax,1:nbsrcmax) = -9999      ! 時系列 (min, m3/s)
     character(len=maxpathlen) :: fn_src_cell(1:nbsrcmax) = ""  ! セル一覧ファイル名
     character(len=maxpathlen) :: fn_src_val(1:nbsrcmax) = ""   ! 時系列ファイル名
+    ! ---- &list_bound_stage ----
+    logical :: present_stage = .false.             ! グループが存在したか
+    integer :: stage_cell(1:2,1:nsrccmax,1:nbsrcmax) = -9999  ! セル座標 (i, j)
+    real :: stage_eta(1:nbsrcmax) = -9999          ! 規定水位の固定値 (m)
+    real :: stage_val(1:2,1:nsrcvmax,1:nbsrcmax) = -9999      ! 時系列 (min, m)
+    character(len=maxpathlen) :: fn_stage_cell(1:nbsrcmax) = ""  ! セル一覧ファイル名
+    character(len=maxpathlen) :: fn_stage_val(1:nbsrcmax) = ""   ! 時系列ファイル名
   end type
 
 contains
@@ -63,6 +70,7 @@ subroutine list_boundary_read(p, list)
   if (ios /= 0) call par_stop("cannot open file: "//trim(p%fn_boundary))
   call read_edge(un, list)
   call read_source(un, list)
+  call read_stage(un, list)
   close(un)
 
 end subroutine
@@ -141,6 +149,43 @@ subroutine read_source(un, list)
   list%src_val = src_val
   list%fn_src_cell = fn_src_cell
   list%fn_src_val = fn_src_val
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! &list_bound_stage を読む(不在なら present_stage を偽のまま返す)
+!----------------------------------------------------------------------
+subroutine read_stage(un, list)
+  integer, intent(in) :: un
+  type(t_list_boundary), intent(inout) :: list
+  integer :: stage_cell(1:2,1:nsrccmax,1:nbsrcmax)
+  real :: stage_eta(1:nbsrcmax)
+  real :: stage_val(1:2,1:nsrcvmax,1:nbsrcmax)
+  character(len=maxpathlen) :: fn_stage_cell(1:nbsrcmax)
+  character(len=maxpathlen) :: fn_stage_val(1:nbsrcmax)
+  integer :: ios
+  character(len=1024) :: iom
+  namelist /list_bound_stage/ stage_cell, stage_eta, stage_val, &
+                              fn_stage_cell, fn_stage_val
+
+  stage_cell = list%stage_cell
+  stage_eta = list%stage_eta
+  stage_val = list%stage_val
+  fn_stage_cell = list%fn_stage_cell
+  fn_stage_val = list%fn_stage_val
+
+  rewind(un)
+  read(un, nml=list_bound_stage, iostat=ios, iomsg=iom)
+  if (ios > 0) call par_stop("list_bound_stage 読込失敗: "//trim(iom))
+  if (ios < 0) return              ! グループ不在(この族なし)
+  list%present_stage = .true.
+
+  list%stage_cell = stage_cell
+  list%stage_eta = stage_eta
+  list%stage_val = stage_val
+  list%fn_stage_cell = fn_stage_cell
+  list%fn_stage_val = fn_stage_val
 
 end subroutine
 

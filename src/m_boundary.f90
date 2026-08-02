@@ -8,8 +8,12 @@ module m_boundary
   !     流量時系列 Q(t)、負値=吸い込み)。makebdc が現時刻の
   !     セルあたり水深増分 q を毎ステップ用意し、適用は
   !     m_swflow_enc の boundary_h。
-  ! 将来の族(辺上区間の流入・流出境界)も本モジュールへ足し、
-  ! 肥大したら族別モジュールに分割する(boundary_plan.md §4.1)
+  !   - 水位規定セル群(stage): セル集合の水位を η(t) に強制する
+  !     (流域出口の流出境界、背水・感潮域等。複数)。makebdc が
+  !     現時刻の η を用意し、適用は boundary_h の最後
+  !     (h = max(η − z, 0) のクランプ。最優先)。周囲との面フラックス
+  !     は momentum が通常計算するため u,v,m,n・record に自然に乗る。
+  ! 族が肥大したら族別モジュールに分割する(boundary_plan.md §4.1)
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
@@ -55,10 +59,21 @@ module m_boundary
     real :: q = 0.0                        ! 現時刻のセルあたり水深増分 (m)
   end type
 
+  type t_bound_stage                       ! 水位規定セル群1個
+    integer :: ncell = 0                   ! セル数
+    integer, allocatable :: cell(:,:)      ! セル座標 (1:2, 1:ncell)
+    integer :: nval = 0                    ! 時系列データ数
+    real, allocatable :: val(:,:)          ! 時系列 (1:2, 1:nval) (s, m)。
+                                           !   固定値指定は1点時系列に退化
+    real :: eta = 0.0                      ! 現時刻の規定水位 (m)
+  end type
+
   type t_boundary
     type(t_bound_edge) :: edge             ! 辺境界
     integer :: nsrc = 0                    ! ソース数
     type(t_bound_src), allocatable :: src(:)  ! 湧き出し・吸い込み
+    integer :: nstage = 0                  ! 水位規定セル群の数
+    type(t_bound_stage), allocatable :: stage(:)  ! 水位規定セル群
     logical :: initialized = .false.
   end type
 
@@ -92,6 +107,9 @@ subroutine m_boundary_init(b, p, g)
   !--- 内部ソース(湧き出し・吸い込み) ---
   call init_source(b, p, g, list)
 
+  !--- 水位規定セル群 ---
+  call init_stage(b, p, g, list)
+
 end subroutine
 
 
@@ -103,16 +121,18 @@ subroutine m_boundary_makebdc(b, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  integer :: isrc
+  integer :: isrc, istage
   real :: q
-
-  !--- ソースが無い場合は何もしない ---
-  if (b%nsrc <= 0) return
 
   !--- 各ソースの現時刻の流量をセル1個・1ステップあたりの水深増分に換算 ---
   do isrc = 1, b%nsrc
     q = interp_series(b%src(isrc)%val, b%src(isrc)%nval, s%t)
     b%src(isrc)%q = q / (b%src(isrc)%ncell * g%dx * g%dy) * p%dt
+  end do
+
+  !--- 各水位規定セル群の現時刻の規定水位を補間 ---
+  do istage = 1, b%nstage
+    b%stage(istage)%eta = interp_series(b%stage(istage)%val, b%stage(istage)%nval, s%t)
   end do
 
 end subroutine
@@ -184,8 +204,10 @@ end subroutine
 subroutine m_boundary_dispose(b)
   type(t_boundary), intent(inout) :: b
   if (allocated(b%src)) deallocate(b%src)
+  if (allocated(b%stage)) deallocate(b%stage)
   if (allocated(b%edge%eta_cell)) deallocate(b%edge%eta_cell)
   b%nsrc = 0
+  b%nstage = 0
   b%initialized = .false.
 end subroutine
 
@@ -312,6 +334,109 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 水位規定セル群の解釈・検証・格納
+!   セル集合は namelist 配列(番兵 -9999 終端)またはファイル。
+!   規定水位は固定値(stage_eta)か時系列(stage_val / fn_stage_val)。
+!   固定値は1点時系列に退化させ、実行時は単一経路にする
+!----------------------------------------------------------------------
+subroutine init_stage(b, p, g, list)
+  type(t_boundary), intent(inout) :: b
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_list_boundary), intent(in) :: list
+  logical :: active(1:nbsrcmax)
+  integer :: istage, n, k, i, j
+
+  if (.not. list%present_stage) return
+
+  !--- 有効な群(セルか水位かファイル指定がある)を数える ---
+  do istage = 1, nbsrcmax
+    active(istage) = (list%stage_cell(1,1,istage) > -9999) &
+                     .or. (list%stage_eta(istage) > -9998.0) &
+                     .or. (list%stage_val(1,1,istage) > -9999) &
+                     .or. (len_trim(list%fn_stage_cell(istage)) > 0) &
+                     .or. (len_trim(list%fn_stage_val(istage)) > 0)
+  end do
+  b%nstage = count(active)
+  if (b%nstage <= 0) return
+  if (.not. all(active(1:b%nstage))) then
+    call par_stop("list_bound_stage: 群番号は 1 から連続で指定してください")
+  end if
+
+  allocate(b%stage(1:b%nstage))
+
+  do istage = 1, b%nstage
+
+    !--- セル集合(ファイル指定が優先) ---
+    if (len_trim(list%fn_stage_cell(istage)) > 0) then
+      call read_cell_file2(trim(p%dir_data)//"/"//trim(list%fn_stage_cell(istage)), &
+                           b%stage(istage)%ncell, b%stage(istage)%cell)
+    else
+      n = 0
+      do k = 1, nsrccmax
+        if (list%stage_cell(1,k,istage) <= -9999) exit   ! 番兵で終端
+        n = n + 1
+      end do
+      allocate(b%stage(istage)%cell(1:2,1:max(n,1)))
+      b%stage(istage)%cell(1:2,1:n) = list%stage_cell(1:2,1:n,istage)
+      b%stage(istage)%ncell = n
+    end if
+
+    !--- 規定水位(時系列ファイル > namelist 時系列 > 固定値の優先順) ---
+    if (len_trim(list%fn_stage_val(istage)) > 0) then
+      call read_val_file2(trim(p%dir_data)//"/"//trim(list%fn_stage_val(istage)), &
+                          b%stage(istage)%nval, b%stage(istage)%val)
+    else if (list%stage_val(1,1,istage) > -9999) then
+      n = 0
+      do k = 1, nsrcvmax
+        if (list%stage_val(1,k,istage) <= -9999) exit    ! 番兵で終端
+        n = n + 1
+      end do
+      allocate(b%stage(istage)%val(1:2,1:max(n,1)))
+      b%stage(istage)%val(1,1:n) = list%stage_val(1,1:n,istage) * 60   ! 分を秒に換算
+      b%stage(istage)%val(2,1:n) = list%stage_val(2,1:n,istage)
+      b%stage(istage)%nval = n
+    else if (list%stage_eta(istage) > -9998.0) then
+      ! 固定値は1点時系列に退化(補間は常に固定値を返す)
+      allocate(b%stage(istage)%val(1:2,1:1))
+      b%stage(istage)%val(1,1) = 0.0
+      b%stage(istage)%val(2,1) = list%stage_eta(istage)
+      b%stage(istage)%nval = 1
+    end if
+
+    !--- 検証 ---
+    if (b%stage(istage)%ncell <= 0) then
+      call par_stop("list_bound_stage: 群 "//itoa(istage)//" にセルがありません")
+    end if
+    if (b%stage(istage)%nval <= 0) then
+      call par_stop("list_bound_stage: 群 "//itoa(istage) &
+                    //" に規定水位(stage_eta か時系列)がありません")
+    end if
+    do k = 1, b%stage(istage)%ncell
+      i = b%stage(istage)%cell(1,k)
+      j = b%stage(istage)%cell(2,k)
+      if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
+        call par_stop("list_bound_stage: 群 "//itoa(istage)//" のセル (" &
+                      //itoa(i)//","//itoa(j)//") が領域外です")
+      end if
+      if (g%x(i,j) <= 0) then
+        call par_stop("list_bound_stage: 群 "//itoa(istage)//" のセル (" &
+                      //itoa(i)//","//itoa(j)//") が無効セル(x=0)です")
+      end if
+    end do
+
+    !--- 計算開始時刻の規定水位を初期化する ---
+    !   swflow の init は boundary_h(クランプ適用)を呼ぶが、その時点で
+    !   makebdc は未実行。ここで初期化しないと型既定値 0 で初期クランプ
+    !   され、規定セルが t=0 に不正に排水される(実際に踏んだバグ)
+    b%stage(istage)%eta = interp_series(b%stage(istage)%val, b%stage(istage)%nval, p%t0)
+
+  end do
+
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! セル一覧ファイルを読む(各行 "i j")
 !----------------------------------------------------------------------
 subroutine read_cell_file(fname, src)
@@ -364,6 +489,65 @@ subroutine read_val_file(fname, src)
   end do
   close(un)
   src%nval = n
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! セル一覧ファイルを読む(各行 "i j"。汎用版)
+!----------------------------------------------------------------------
+subroutine read_cell_file2(fname, ncell, cell)
+  character(len=*), intent(in) :: fname
+  integer, intent(out) :: ncell
+  integer, allocatable, intent(out) :: cell(:,:)
+  integer :: un, n, k, ios
+
+  open(newunit=un, file=fname, status='old', action='read', iostat=ios)
+  if (ios /= 0) call par_stop("cannot open file: "//fname)
+  n = 0
+  do
+    read(un, *, iostat=ios)
+    if (ios < 0) exit
+    n = n + 1
+  end do
+  rewind(un)
+  allocate(cell(1:2,1:max(n,1)))
+  do k = 1, n
+    read(un, *) cell(1,k), cell(2,k)
+  end do
+  close(un)
+  ncell = n
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 時系列ファイルを読む(各行 "時刻(min) 値"。時刻は秒に換算。汎用版)
+!----------------------------------------------------------------------
+subroutine read_val_file2(fname, nval, val)
+  character(len=*), intent(in) :: fname
+  integer, intent(out) :: nval
+  real, allocatable, intent(out) :: val(:,:)
+  integer :: un, n, k, ios
+  real :: t, v
+
+  open(newunit=un, file=fname, status='old', action='read', iostat=ios)
+  if (ios /= 0) call par_stop("cannot open file: "//fname)
+  n = 0
+  do
+    read(un, *, iostat=ios)
+    if (ios < 0) exit
+    n = n + 1
+  end do
+  rewind(un)
+  allocate(val(1:2,1:max(n,1)))
+  do k = 1, n
+    read(un, *) t, v
+    val(1,k) = t * 60
+    val(2,k) = v
+  end do
+  close(un)
+  nval = n
 
 end subroutine
 
