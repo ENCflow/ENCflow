@@ -525,10 +525,12 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   have_error = .false.
 
   ! k近傍セルのインデックスを計算する
+  !   領域外との遮断は x 番兵(x=0。確保 0:nx+1)が一手に担う。
+  !   エッジ配列は (0:nx) 確保のため枠上セルのエッジ添字も範囲内で、
+  !   枠の添字ガードは不要(境界面の定義は docs/boundary_plan.md §4.3)
   in = i + din(k)
   jn = j + djn(k)
   if (g%x(in,jn) <= 0) return
-  if (in <= 1 .or. in >= g%nx .or. jn <= 1 .or. jn >= g%ny) return
 
   ! k近傍セルとの境界フラックスのインデックスを計算する
   ie = i + die(k)
@@ -826,7 +828,6 @@ subroutine continuous(p, g, s, sx)
         in = i + din(k)
         jn = j + djn(k)
         if (g%x(in,jn) <= 0) cycle
-        if (in <= 1 .or. in >= g%nx .or. jn <= 1 .or. jn >= g%ny) cycle
         ! ここでddと比較するのは前時間ステップでの値hでなければならない
         ! そのためこのループ内でhを直接更新してはいけない
         if (s%h(i,j) < p%dd .and. s%h(in,jn) < p%dd) cycle
@@ -933,7 +934,6 @@ subroutine restore_uvmn(p, g, s, sx)
         in = i + din(k)
         jn = j + djn(k)
         if (g%x(in,jn) <= 0) cycle
-        if (in <= 1 .or. in >= g%nx .or. jn <= 1 .or. jn >= g%ny) cycle
         ! 中心セルi,jから見たk近傍の境界フラックスのインデックス
         ie = i + die(k)
         je = j + dje(k)
