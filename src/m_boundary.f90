@@ -1,6 +1,6 @@
 module m_boundary
   ! 境界条件のデータ供給層(スキーム非依存。docs/boundary_plan.md)。
-  !   - 辺境界(edge): 計算領域外縁4辺の境界条件型(不透過/簡易流出)。
+  !   - 辺境界(edge): 計算領域外縁4辺の境界条件型(不透過/自由流出/長波放射)。
   !     適用(離散化)は m_swflow_XX 側(ENC は boundary_uvmn)。
   !     方角と添字の正本: 西= i=1、東= i=nx、北= j=1(ラスタ上端)、
   !     南= j=ny(m_georef の北西隅原点・行順に一致)
@@ -24,12 +24,13 @@ module m_boundary
   public :: m_boundary_init
   public :: m_boundary_dispose
   public :: m_boundary_makebdc
-  public :: e_bc_wall, e_bc_outflow
+  public :: e_bc_wall, e_bc_outflow, e_bc_radiation
   public :: e_side_w, e_side_e, e_side_n, e_side_s
 
   ! 辺境界の型コード
   integer, parameter :: e_bc_wall = 0      ! 不透過(既定)
-  integer, parameter :: e_bc_outflow = 1   ! 簡易流出(段落ち)
+  integer, parameter :: e_bc_outflow = 1   ! 自由流出(洪水向け: 通過流+段落ち)
+  integer, parameter :: e_bc_radiation = 2 ! 長波放射(津波向け: 水位偏差を透過)
 
   ! 辺番号(btype の添字)
   integer, parameter :: e_side_w = 1       ! 西 (i=1)
@@ -40,6 +41,7 @@ module m_boundary
   ! init に早期 return 経路があるため全成分デフォルト初期化必須(§13)
   type t_bound_edge
     integer :: btype(1:4) = e_bc_wall      ! 4辺の境界条件型 (W, E, N, S)
+    real :: eta_ref(1:4) = 0.0             ! 放射境界の基準水位 (m。z と同じ基準)
   end type
 
   type t_bound_src                         ! 湧き出し・吸い込み1個
@@ -144,12 +146,16 @@ subroutine init_edge(b, list)
   bt(e_side_n) = list%f_bc_n
   bt(e_side_s) = list%f_bc_s
   do sd = 1, 4
-    if (bt(sd) < e_bc_wall .or. bt(sd) > e_bc_outflow) then
+    if (bt(sd) < e_bc_wall .or. bt(sd) > e_bc_radiation) then
       call par_stop("list_bound_edge: f_bc_"//side_name(sd) &
-                    //" は 0(不透過) か 1(流出) を指定してください: "//itoa(bt(sd)))
+                    //" は 0(不透過)・1(自由流出)・2(放射) を指定してください: "//itoa(bt(sd)))
     end if
   end do
   b%edge%btype = bt
+  b%edge%eta_ref(e_side_w) = list%bc_eta_w
+  b%edge%eta_ref(e_side_e) = list%bc_eta_e
+  b%edge%eta_ref(e_side_n) = list%bc_eta_n
+  b%edge%eta_ref(e_side_s) = list%bc_eta_s
 
 end subroutine
 

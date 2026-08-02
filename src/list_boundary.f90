@@ -25,10 +25,14 @@ module list_boundary
   type t_list_boundary
     ! ---- &list_bound_edge ----
     logical :: present_edge = .false.              ! グループが存在したか
-    integer :: f_bc_w = 0                          ! 西辺 (i=1)  0:不透過 1:流出
+    integer :: f_bc_w = 0                          ! 西辺 (i=1)  0:不透過 1:自由流出 2:放射
     integer :: f_bc_e = 0                          ! 東辺 (i=nx)
     integer :: f_bc_n = 0                          ! 北辺 (j=1: ラスタ上端)
     integer :: f_bc_s = 0                          ! 南辺 (j=ny)
+    real :: bc_eta_w = 0.0                         ! 放射境界の基準水位 (m)
+    real :: bc_eta_e = 0.0
+    real :: bc_eta_n = 0.0
+    real :: bc_eta_s = 0.0
     ! ---- &list_bound_source ----
     logical :: present_source = .false.            ! グループが存在したか
     integer :: src_cell(1:2,1:nsrccmax,1:nbsrcmax) = -9999  ! セル座標 (i, j)
@@ -75,14 +79,20 @@ subroutine read_edge(un, list)
   integer, intent(in) :: un
   type(t_list_boundary), intent(inout) :: list
   integer :: f_bc_w, f_bc_e, f_bc_n, f_bc_s
+  real :: bc_eta_w, bc_eta_e, bc_eta_n, bc_eta_s
   integer :: ios
   character(len=1024) :: iom
-  namelist /list_bound_edge/ f_bc_w, f_bc_e, f_bc_n, f_bc_s
+  namelist /list_bound_edge/ f_bc_w, f_bc_e, f_bc_n, f_bc_s, &
+                             bc_eta_w, bc_eta_e, bc_eta_n, bc_eta_s
 
   f_bc_w = list%f_bc_w
   f_bc_e = list%f_bc_e
   f_bc_n = list%f_bc_n
   f_bc_s = list%f_bc_s
+  bc_eta_w = list%bc_eta_w
+  bc_eta_e = list%bc_eta_e
+  bc_eta_n = list%bc_eta_n
+  bc_eta_s = list%bc_eta_s
 
   rewind(un)
   read(un, nml=list_bound_edge, iostat=ios, iomsg=iom)
@@ -94,6 +104,10 @@ subroutine read_edge(un, list)
   list%f_bc_e = f_bc_e
   list%f_bc_n = f_bc_n
   list%f_bc_s = f_bc_s
+  list%bc_eta_w = bc_eta_w
+  list%bc_eta_e = bc_eta_e
+  list%bc_eta_n = bc_eta_n
+  list%bc_eta_s = bc_eta_s
 
 end subroutine
 
