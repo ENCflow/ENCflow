@@ -1,7 +1,8 @@
 module m_swflow_enc
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
-  use m_boundary, only : t_boundary
+  use m_boundary, only : t_boundary, e_bc_wall, e_bc_outflow, &
+                         e_side_w, e_side_e, e_side_n, e_side_s
   use m_state, only : t_state
   use m_ffactor, only : m_ffactor_init, m_ffactor_calc, m_ffactor_dispose
   use list_enc, only : t_list_enc, list_enc_read
@@ -43,6 +44,9 @@ module m_swflow_enc
   real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
   real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
   real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
+  ! ---- 境界条件(t_boundary)からセットする ---
+  integer :: f_bc_side(1:4) = e_bc_wall     ! 外縁4辺の境界条件型(W,E,N,S)
+  logical :: have_open_bc = .false.         ! 開いた(不透過でない)辺があるか
 
   ! 状態変数の構造体の宣言と定義
   type t_enc_status
@@ -145,6 +149,10 @@ subroutine m_swflow_enc_init(p, g, b, s)
   p_adv_upwind_index = list%p_adv_upwind_index 
   p_adprunge_thresh = list%p_adprunge_thresh 
 
+  ! 辺境界条件をモジュール変数へ写す(ホットループでの間接参照回避)
+  f_bc_side = b%edge%btype
+  have_open_bc = any(f_bc_side /= e_bc_wall)
+
   ! システムパラメータから継承するENCパラメータをセットする
   select case (p%f_govequation)
     case (0)      ! DynWE
@@ -209,6 +217,10 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! (同一エッジのフラックスを共有 → 質量保存がビット厳密になる)
   call par_edge_merge(sx_mod%uv,  esync_s, esync_n)
   call par_edge_merge(sx_mod%mn1, esync_s, esync_n)
+
+  ! 開いた外縁辺の境界面に流出フラックスをセットする
+  ! (界面補完の後に呼ぶ。共有行の扱いは boundary_uvmn のヘッダ参照)
+  if (have_open_bc) call boundary_uvmn(p, g, s, sx_mod)
 
   ! 連続式を解いて水深を更新する
   call continuous(p, g, s, sx_mod)
@@ -290,6 +302,129 @@ subroutine boundary_h(p, g, b, s, sx)
   end do
 
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 開いた外縁辺の境界面に簡易流出(段落ち)の流速・流量をセットする
+!   momentum(内部面)と continuous(h1 更新)の間、par_edge_merge の
+!   後に呼ぶ。continuous / restore_uvmn 側は bc_open_face が真の面を
+!   取り込むことで、流出が h1 と u,v,m,n に乗る。
+!   - 境界面の書き手はこのルーチンだけ(momentum は x 番兵で触れない)。
+!     開いた辺の面は乾燥時も 0 を毎ステップ書く(前ステップ値の残留防止)
+!   - 面集合は辺を横切る法線+斜めの3方位(開口の合計=辺全長。
+!     boundary_plan.md 案D)。角セルの斜め面は bc_open_face が
+!     「両辺 open」を要求するため壁の水密性が保たれる
+!   - 符号: スロットの正準向きは k=1..4 所有者基準なので、sign_e(k) を
+!     乗じて格納する(continuous が読むと外向き正になる)
+!   - MPI: 東西辺はスロット行 js-1..je を書く(mn コミット範囲と同一)。
+!     共有行 js-1 / je のスロットは隣接する両ランクが同じ h(ハロ)から
+!     冗長に計算して同値になる。界面補完(par_edge_merge)は境界面
+!     スロットを運ばないため、この冗長書きが RK の他セル面参照の
+!     ランク数不変性の条件になる。南北辺の面はスロット行 0 / ny で
+!     端ランクの単独所有(冗長書き不要)
+!----------------------------------------------------------------------
+subroutine boundary_uvmn(p, g, s, sx)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(inout) :: sx
+
+  integer :: i, j
+  ! 各辺を横切る面の方位(1番目が法線、2・3番目が斜め)
+  integer, parameter :: kfw(1:3) = [4, 1, 6]   ! 西辺(セル (1,j))
+  integer, parameter :: kfe(1:3) = [5, 3, 8]   ! 東辺(セル (nx,j))
+  integer, parameter :: kfn(1:3) = [2, 1, 3]   ! 北辺(セル (i,1))
+  integer, parameter :: kfs(1:3) = [7, 6, 8]   ! 南辺(セル (i,ny))
+  integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
+  real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
+
+  ! 西辺・東辺(全ランクが自帯+共有行のセル js-1..je+1 を走査。
+  ! ハロ行のセルは共有行スロットの冗長計算のため。put 側のスロット行
+  ! フィルタが書き込み範囲を js-1..je に制限する)
+  if (f_bc_side(e_side_w) == e_bc_outflow) then
+    do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
+      call put_outflow_faces(1, j, kfw)
+    end do
+  end if
+  if (f_bc_side(e_side_e) == e_bc_outflow) then
+    do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
+      call put_outflow_faces(dcp%nx_g, j, kfe)
+    end do
+  end if
+
+  ! 北辺・南辺(行の所有ランクのみ。判定は全ランクが同一コードで実行)
+  if (f_bc_side(e_side_n) == e_bc_outflow .and. dcp%js <= 1 .and. 1 <= dcp%je) then
+    do i = g%wx(1,1), g%wx(2,1)
+      call put_outflow_faces(i, 1, kfn)
+    end do
+  end if
+  if (f_bc_side(e_side_s) == e_bc_outflow .and. dcp%js <= dcp%ny_g .and. dcp%ny_g <= dcp%je) then
+    do i = g%wx(1,dcp%ny_g), g%wx(2,dcp%ny_g)
+      call put_outflow_faces(i, dcp%ny_g, kfs)
+    end do
+  end if
+
+contains
+  !--------------------------------------------------------------------
+  ! セル (i,j) の、辺を横切る面 kf(1:3) に流出値を書く
+  subroutine put_outflow_faces(i, j, kf)
+    integer, intent(in) :: i, j
+    integer, intent(in) :: kf(1:3)
+    integer :: m, k, in, jn, ie, je
+    real :: h, uve1, mne1, dh, cor
+
+    if (g%x(i,j) <= 0) return
+    if (g%sw(i,j) > 0) return    ! 海セルは continuous が更新しないため対象外
+    h = s%h(i,j)
+    do m = 1, 3
+      k = kf(m)
+      in = i + din(k)
+      jn = j + djn(k)
+      if (.not. bc_open_face(in, jn)) cycle  ! 角の斜め面は両辺 open が条件
+      ie = i + die(k)
+      je = j + dje(k)
+      ! スロット行が自ランクの書き込み範囲(js-1..je)外ならスキップ
+      if (je < dcp%js - 1 .or. je > dcp%je) cycle
+      if (h < p%dd) then
+        uve1 = 0
+        mne1 = 0
+      else
+        ! 段落ち(自由越流。rivermouth_drop と同式)。エッジ水深は
+        ! 外縁内側セルの水深 h をそのまま使う
+        uve1 = ((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)
+        mne1 = uve1 * h
+        ! 過大流出の抑制(momentum の抑制と同型。境界面は無条件に適用)
+        dh = mne1 * mn2dh(k) / g%gv(i,j)
+        if (h - dh <= 0) then
+          cor = max(h - p%dd, 0.0) / dh
+          uve1 = uve1 * cor
+          mne1 = mne1 * cor
+        end if
+      end if
+      sx%uv(ke(k), ie, je) = sign_e(k) * uve1
+      sx%mn1(ke(k), ie, je) = sign_e(k) * mne1
+    end do
+  end subroutine
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 近傍 (in,jn) が格子枠外で、その面が横切る辺が全て開いているか。
+! 角セルの斜め面は2辺を同時に横切るため両辺 open が条件(壁の水密性)。
+! 枠内の x=0(無効セル)への面は常に閉(偽を返す)
+!----------------------------------------------------------------------
+function bc_open_face(in, jn) result(op)
+  integer, intent(in) :: in, jn
+  logical :: op
+  op = (in < 1 .or. in > dcp%nx_g .or. jn < 1 .or. jn > dcp%ny_g)
+  if (.not. op) return
+  if (in < 1        .and. f_bc_side(e_side_w) == e_bc_wall) op = .false.
+  if (in > dcp%nx_g .and. f_bc_side(e_side_e) == e_bc_wall) op = .false.
+  if (jn < 1        .and. f_bc_side(e_side_n) == e_bc_wall) op = .false.
+  if (jn > dcp%ny_g .and. f_bc_side(e_side_s) == e_bc_wall) op = .false.
+end function
+
 
 !----------------------------------------------------------------------
 ! 重み係数の初期化
@@ -829,10 +964,17 @@ subroutine continuous(p, g, s, sx)
       do k = 1, 8
         in = i + din(k)
         jn = j + djn(k)
-        if (g%x(in,jn) <= 0) cycle
-        ! ここでddと比較するのは前時間ステップでの値hでなければならない
-        ! そのためこのループ内でhを直接更新してはいけない
-        if (s%h(i,j) < p%dd .and. s%h(in,jn) < p%dd) cycle
+        if (g%x(in,jn) > 0) then
+          ! ここでddと比較するのは前時間ステップでの値hでなければならない
+          ! そのためこのループ内でhを直接更新してはいけない
+          if (s%h(i,j) < p%dd .and. s%h(in,jn) < p%dd) cycle
+        else
+          ! 開いた辺の境界面は取り込む(流出が h1 と u,v,m,n に乗る)。
+          ! 枠外近傍の s%h は確保範囲外のため dd 判定はしない
+          ! (乾燥時は boundary_uvmn が 0 を書いており寄与も 0)
+          if (.not. have_open_bc) cycle
+          if (.not. bc_open_face(in, jn)) cycle
+        end if
         ! 中心セルi,jから見たk近傍の境界フラックスのインデックス
         ie = i + die(k)
         je = j + dje(k)
@@ -935,7 +1077,12 @@ subroutine restore_uvmn(p, g, s, sx)
         ! 中心セルi,jから見たk近傍セルのインデックス
         in = i + din(k)
         jn = j + djn(k)
-        if (g%x(in,jn) <= 0) cycle
+        if (g%x(in,jn) <= 0) then
+          ! 開いた辺の境界面は continuous と同様に取り込む
+          ! (取り込み条件は continuous と常に同時に更新すること)
+          if (.not. have_open_bc) cycle
+          if (.not. bc_open_face(in, jn)) cycle
+        end if
         ! 中心セルi,jから見たk近傍の境界フラックスのインデックス
         ie = i + die(k)
         je = j + dje(k)
