@@ -250,7 +250,7 @@ subroutine boundary_h(p, g, b, s, sx)
   type(t_boundary), intent(in) :: b
   type(t_state), intent(inout) :: s
   type(t_enc_status), intent(inout) :: sx
-  integer :: i, j, k
+  integer :: i, j, k, isrc
 
   !$omp parallel do schedule(dynamic) private(i, j)
   do j = dcp%js, dcp%je
@@ -276,16 +276,18 @@ subroutine boundary_h(p, g, b, s, sx)
   end do
   !$omp end parallel do
 
-  ! 湧出しを加える
-  if (b%nsrc > 0) then
-    ! 湧き出しは所有ランクのみ適用する(リストは全ランクが保持。developer.md §11)
-    do k = 1, b%nsrcc
-      i = b%srccell(1,k)
-      j = b%srccell(2,k)
+  ! 湧き出し・吸い込みを加える
+  !   所有ランクのみ適用する(リストは全ランクが保持。developer.md §11)
+  do isrc = 1, b%nsrc
+    do k = 1, b%src(isrc)%ncell
+      i = b%src(isrc)%cell(1,k)
+      j = b%src(isrc)%cell(2,k)
       if (j < dcp%js .or. j > dcp%je) cycle
-      sx%h1(i,j) = sx%h1(i,j) + b%srcq
+      sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q
+      ! 吸い込み(負の流量)でセルを負水深にしない(不足分は汲めない)
+      if (sx%h1(i,j) < 0) sx%h1(i,j) = 0
     end do
-  end if
+  end do
 
 end subroutine
 

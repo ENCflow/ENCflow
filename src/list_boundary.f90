@@ -1,4 +1,13 @@
 module list_boundary
+  ! 境界条件設定ファイル(fn_boundary)の読み込み専任(層契約 §12)。
+  ! 族別の namelist グループを生の値のまま t_list_boundary に運ぶ。
+  ! 解釈・検証・導出は m_boundary_init が行う。
+  !   &list_bound_edge   : 外縁4辺の境界条件型
+  !   &list_bound_source : 内部の湧き出し・吸い込み(複数)
+  ! グループ不在は正常(その族なし。present_* が偽のまま)。
+  ! 構文エラー(iostat>0)は par_stop。
+  ! 旧形式の単一グループ &list_boundary は検出して par_stop で
+  ! 書式移行を案内する(黙って無視しない)
   use m_sysparam, only : t_sysparam
   use m_parallel, only : par_info, par_stop
   implicit none
@@ -6,18 +15,26 @@ module list_boundary
 
   public :: t_list_boundary
   public :: list_boundary_read
+  public :: nbsrcmax, nsrccmax, nsrcvmax
 
   integer, parameter :: maxpathlen = 256
-  integer, parameter :: nsrccmax = 999
-  integer, parameter :: nsrcvmax = 999
+  integer, parameter :: nbsrcmax = 50    ! 湧き出し・吸い込みの最大数
+  integer, parameter :: nsrccmax = 999   ! 1ソースあたりの最大セル数
+  integer, parameter :: nsrcvmax = 999   ! 1ソースあたりの時系列最大データ数
 
   type t_list_boundary
-    integer :: nsrcc = 0                           ! 湧出しセル数
-    integer :: srccell(1:2,1:nsrccmax) = -9999     ! 湧出しセルの座標　
-    character(len=maxpathlen) :: fn_srccell = ""   ! 湧出しセルファイル名
-    integer :: nsrcv = 0                           ! 湧出し時系列のデータ数 
-    real :: srcval(1:2,1:nsrcvmax) = -9999         ! 湧出し時系列値 (min, m3/s)
-    character(len=maxpathlen) :: fn_srcval = ""    ! 湧出し時系列ファイル名
+    ! ---- &list_bound_edge ----
+    logical :: present_edge = .false.              ! グループが存在したか
+    integer :: f_bc_w = 0                          ! 西辺 (i=1)  0:不透過 1:流出
+    integer :: f_bc_e = 0                          ! 東辺 (i=nx)
+    integer :: f_bc_n = 0                          ! 北辺 (j=1: ラスタ上端)
+    integer :: f_bc_s = 0                          ! 南辺 (j=ny)
+    ! ---- &list_bound_source ----
+    logical :: present_source = .false.            ! グループが存在したか
+    integer :: src_cell(1:2,1:nsrccmax,1:nbsrcmax) = -9999  ! セル座標 (i, j)
+    real :: src_val(1:2,1:nsrcvmax,1:nbsrcmax) = -9999      ! 時系列 (min, m3/s)
+    character(len=maxpathlen) :: fn_src_cell(1:nbsrcmax) = ""  ! セル一覧ファイル名
+    character(len=maxpathlen) :: fn_src_val(1:nbsrcmax) = ""   ! 時系列ファイル名
   end type
 
 contains
@@ -27,44 +44,22 @@ contains
 !======================================================================
 
 !----------------------------------------------------------------------
-! 降水設定ファイルを読み込む
+! 境界条件設定ファイルの全グループを読み込む
 !----------------------------------------------------------------------
 subroutine list_boundary_read(p, list)
   type(t_sysparam), intent(in) :: p
   type(t_list_boundary), intent(inout) :: list
-  integer :: nsrcc                               ! 湧出しセル数
-  integer :: srccell(1:2,1:nsrccmax)             ! 湧出しセルの座標　
-  integer :: nsrcv                               ! 湧出し時系列のデータ数 
-  real :: srcval(1:2,1:nsrcvmax)                 ! 湧出し時系列値
-  character(:), allocatable :: fn_srccell                     ! 湧出しセルファイル名
-  character(:), allocatable :: fn_srcval                      ! 湧出し時系列ファイル名
   integer :: un
   integer :: ios
-  character(len=1024) :: iom
-  namelist /list_boundary/ nsrcc, srccell, nsrcv, srcval, fn_srccell, fn_srcval
 
+  call par_info("reading boundary lists in "//trim(p%fn_boundary))
+  call check_old_format(p)
 
-  nsrcc = list%nsrcc
-  srccell = list%srccell
-  nsrcv = list%nsrcv
-  srcval = list%srcval
-  fn_srccell = list%fn_srccell
-  fn_srcval = list%fn_srcval
-
-  !---- 設定ファイルを読み込む ----
-  call par_info("reading list_boundary in "//trim(p%fn_boundary))
-  open(newunit=un, file=trim(p%fn_boundary), status='old')
-  read(un, nml=list_boundary, iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("list_boundary 読込失敗: "//trim(iom))
+  open(newunit=un, file=trim(p%fn_boundary), status='old', action='read', iostat=ios)
+  if (ios /= 0) call par_stop("cannot open file: "//trim(p%fn_boundary))
+  call read_edge(un, list)
+  call read_source(un, list)
   close(un)
-
-  list%nsrcc = nsrcc
-  list%srccell = srccell
-  list%nsrcv = nsrcv
-  list%srcval = srcval
-  list%fn_srccell = fn_srccell
-  list%fn_srcval = fn_srcval
-
 
 end subroutine
 
@@ -72,5 +67,126 @@ end subroutine
 !======================================================================
 !========================== PRIVATE ROUTINES ==========================
 !======================================================================
+
+!----------------------------------------------------------------------
+! &list_bound_edge を読む(不在なら present_edge を偽のまま返す)
+!----------------------------------------------------------------------
+subroutine read_edge(un, list)
+  integer, intent(in) :: un
+  type(t_list_boundary), intent(inout) :: list
+  integer :: f_bc_w, f_bc_e, f_bc_n, f_bc_s
+  integer :: ios
+  character(len=1024) :: iom
+  namelist /list_bound_edge/ f_bc_w, f_bc_e, f_bc_n, f_bc_s
+
+  f_bc_w = list%f_bc_w
+  f_bc_e = list%f_bc_e
+  f_bc_n = list%f_bc_n
+  f_bc_s = list%f_bc_s
+
+  rewind(un)
+  read(un, nml=list_bound_edge, iostat=ios, iomsg=iom)
+  if (ios > 0) call par_stop("list_bound_edge 読込失敗: "//trim(iom))
+  if (ios < 0) return              ! グループ不在(この族なし)
+  list%present_edge = .true.
+
+  list%f_bc_w = f_bc_w
+  list%f_bc_e = f_bc_e
+  list%f_bc_n = f_bc_n
+  list%f_bc_s = f_bc_s
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! &list_bound_source を読む(不在なら present_source を偽のまま返す)
+!----------------------------------------------------------------------
+subroutine read_source(un, list)
+  integer, intent(in) :: un
+  type(t_list_boundary), intent(inout) :: list
+  integer :: src_cell(1:2,1:nsrccmax,1:nbsrcmax)
+  real :: src_val(1:2,1:nsrcvmax,1:nbsrcmax)
+  character(len=maxpathlen) :: fn_src_cell(1:nbsrcmax)
+  character(len=maxpathlen) :: fn_src_val(1:nbsrcmax)
+  integer :: ios
+  character(len=1024) :: iom
+  namelist /list_bound_source/ src_cell, src_val, fn_src_cell, fn_src_val
+
+  src_cell = list%src_cell
+  src_val = list%src_val
+  fn_src_cell = list%fn_src_cell
+  fn_src_val = list%fn_src_val
+
+  rewind(un)
+  read(un, nml=list_bound_source, iostat=ios, iomsg=iom)
+  if (ios > 0) call par_stop("list_bound_source 読込失敗: "//trim(iom))
+  if (ios < 0) return              ! グループ不在(この族なし)
+  list%present_source = .true.
+
+  list%src_cell = src_cell
+  list%src_val = src_val
+  list%fn_src_cell = fn_src_cell
+  list%fn_src_val = fn_src_val
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 旧形式(単一グループ &list_boundary)の検出。
+! namelist の探索は「不在」と区別できないため、行頭トークンの
+! 文字列比較で行う(大文字小文字は同一視)
+!----------------------------------------------------------------------
+subroutine check_old_format(p)
+  type(t_sysparam), intent(in) :: p
+  integer :: un, ios
+  character(len=1024) :: line
+  character(len=14) :: tok
+  character(len=1) :: c
+
+  open(newunit=un, file=trim(p%fn_boundary), status='old', action='read', iostat=ios)
+  if (ios /= 0) call par_stop("cannot open file: "//trim(p%fn_boundary))
+  do
+    read(un, '(a)', iostat=ios) line
+    if (ios /= 0) exit
+    line = adjustl(line)
+    if (len_trim(line) < 14) cycle
+    tok = to_lower(line(1:14))
+    if (tok /= "&list_boundary") cycle
+    c = line(15:15)                ! 次の文字が名前文字なら別グループ
+    if (is_name_char(c)) cycle
+    close(un)
+    call par_stop("list_boundary: 旧形式の &list_boundary グループを検出しました。" &
+                  //"&list_bound_edge / &list_bound_source の新形式へ移行してください" &
+                  //"(examples/List_samples/list_boundary.txt 参照): "//trim(p%fn_boundary))
+  end do
+  close(un)
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 英大文字を小文字化した文字列を返す
+!----------------------------------------------------------------------
+function to_lower(str) result(low)
+  character(len=*), intent(in) :: str
+  character(len=len(str)) :: low
+  integer :: i, ic
+  low = str
+  do i = 1, len(str)
+    ic = iachar(str(i:i))
+    if (ic >= iachar('A') .and. ic <= iachar('Z')) low(i:i) = achar(ic + 32)
+  end do
+end function
+
+
+!----------------------------------------------------------------------
+! namelist グループ名に使える文字(英数字・アンダースコア)か
+!----------------------------------------------------------------------
+function is_name_char(c) result(yes)
+  character(len=1), intent(in) :: c
+  logical :: yes
+  yes = (c >= 'a' .and. c <= 'z') .or. (c >= 'A' .and. c <= 'Z') &
+        .or. (c >= '0' .and. c <= '9') .or. c == '_'
+end function
 
 end module
