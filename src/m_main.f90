@@ -3,7 +3,7 @@ module m_main
   use m_geoinfo, only : t_geoinfo, m_geoinfo_init, m_geoinfo_dispose, m_geoinfo_scatter_coeffs, m_geoinfo_band_shrink
   use m_precip, only : t_precip, m_precip_init, m_precip_dispose, m_precip_makepre
   use m_tide, only : t_tide, m_tide_init, m_tide_dispose
-  use m_boundary, only : t_boundary, m_boundary_init, m_boundary_dispose, m_boundary_makebdc
+  use m_boundary, only : t_boundary, m_boundary_init, m_boundary_set_etaref, m_boundary_dispose, m_boundary_makebdc
   use m_state, only : t_state, m_state_init, m_state_dispose, m_state_updatetime, m_state_calcstat, m_state_printstate
   use m_record, only : t_record, m_record_init, m_record_dispose, m_record_probe, m_record_flux, m_record_summary
   use m_geomorph, only : t_geomorph, m_geomorph_init, m_geomorph_calc, m_geomorph_dispose
@@ -67,6 +67,7 @@ subroutine m_main_all()
   !      (fill_depression, user_initial, record/boundary の検証はこの範囲) ====
   call m_boundary_init(b, p, g)           ! boundary を初期化(geoinfoより後に)
   call m_state_init(s, p, g)              ! state を初期化(geoinfo, boundaryより後に)
+  call m_boundary_set_etaref(b, p, g, s)  ! 放射境界の基準水位を確定(stateより後に)
   call m_record_init(r, p, g)             ! record を初期化(create_resultdirより後)
   call m_precip_init(pr, p, g)            ! precip を初期化
   call m_intercept_init(ic, p, g)         ! intercept を初期化(fn_intercept 指定時のみ有効)

@@ -46,7 +46,8 @@ module m_swflow_enc
   real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
   ! ---- 境界条件(t_boundary)からセットする ---
   integer :: f_bc_side(1:4) = e_bc_wall     ! 外縁4辺の境界条件型(W,E,N,S)
-  real :: bc_eta_side(1:4) = 0.0            ! 放射境界の基準水位(W,E,N,S)
+  real, allocatable :: bc_eta_cell(:,:)     ! 放射境界の基準水位(セル別。
+                                            !   (j, W/E)・(i, N/S))
   logical :: have_open_bc = .false.         ! 開いた(不透過でない)辺があるか
 
   ! 状態変数の構造体の宣言と定義
@@ -152,8 +153,15 @@ subroutine m_swflow_enc_init(p, g, b, s)
 
   ! 辺境界条件をモジュール変数へ写す(ホットループでの間接参照回避)
   f_bc_side = b%edge%btype
-  bc_eta_side = b%edge%eta_ref
   have_open_bc = any(f_bc_side /= e_bc_wall)
+  if (any(f_bc_side == e_bc_radiation)) then
+    ! 基準水位は m_boundary_set_etaref(m_state_init 直後)が確定済み
+    if (.not. allocated(b%edge%eta_cell)) then
+      call par_stop("m_swflow_enc_init: 放射境界の基準水位が未設定です" &
+                    //"(m_boundary_set_etaref の配線を確認)")
+    end if
+    bc_eta_cell = b%edge%eta_cell
+  end if
 
   ! システムパラメータから継承するENCパラメータをセットする
   select case (p%f_govequation)
@@ -258,6 +266,7 @@ end subroutine
 subroutine m_swflow_enc_dispose(p)
   type(t_sysparam), intent(in) :: p
   if (p%f_state_save > 0) call save_state(p, sx_mod)
+  if (allocated(bc_eta_cell)) deallocate(bc_eta_cell)
   call del_enc_status(sx_mod)
   call m_ffactor_dispose
   call adv_dispose
@@ -406,7 +415,7 @@ contains
     integer, intent(in) :: kf(1:3)
     integer, intent(in) :: sd
     integer :: m, k, in, jn, ie, je
-    real :: h, un, uc, uve1, mne1, dh, cor
+    real :: h, un, uc, eta_r, uve1, mne1, dh, cor
 
     if (g%x(i,j) <= 0) return
     if (g%sw(i,j) > 0) return    ! 海セルは continuous が更新しないため対象外
@@ -437,8 +446,14 @@ contains
         case default   ! e_bc_radiation
           ! 長波放射(津波向け): 静水(η=η_ref)ではフラックスゼロ、
           ! 水位偏差に比例して透過。負値=流入(引き波)も許す。
-          ! 乾いたセルは上の h<dd 分岐でゼロ(境界からの再湿潤はしない)
-          uve1 = sqrt(p%gg / max(h, p%dv)) * (s%z(i,j) + h - bc_eta_side(sd))
+          ! 乾いたセルは上の h<dd 分岐でゼロ(境界からの再湿潤はしない)。
+          ! 基準水位は境界セルごと(W/E は j、N/S は i で引く)
+          if (sd == e_side_w .or. sd == e_side_e) then
+            eta_r = bc_eta_cell(j, sd)
+          else
+            eta_r = bc_eta_cell(i, sd)
+          end if
+          uve1 = sqrt(p%gg / max(h, p%dv)) * (s%z(i,j) + h - eta_r)
           mne1 = uve1 * h
         end select
         ! 過大な流出の抑制(流出方向のみ。momentum の抑制と同型で、

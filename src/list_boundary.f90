@@ -29,10 +29,10 @@ module list_boundary
     integer :: f_bc_e = 0                          ! 東辺 (i=nx)
     integer :: f_bc_n = 0                          ! 北辺 (j=1: ラスタ上端)
     integer :: f_bc_s = 0                          ! 南辺 (j=ny)
-    real :: bc_eta_w = 0.0                         ! 放射境界の基準水位 (m)
-    real :: bc_eta_e = 0.0
-    real :: bc_eta_n = 0.0
-    real :: bc_eta_s = 0.0
+    real :: bc_eta_w = -9999.0                     ! 放射境界の基準水位 (m)。
+    real :: bc_eta_e = -9999.0                     !   -9999(未指定)なら初期条件
+    real :: bc_eta_n = -9999.0                     !   から自動導出(m_boundary_
+    real :: bc_eta_s = -9999.0                     !   set_etaref)
     ! ---- &list_bound_source ----
     logical :: present_source = .false.            ! グループが存在したか
     integer :: src_cell(1:2,1:nsrccmax,1:nbsrcmax) = -9999  ! セル座標 (i, j)

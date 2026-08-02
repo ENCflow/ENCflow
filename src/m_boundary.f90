@@ -13,7 +13,7 @@ module m_boundary
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
-  use m_parallel, only : par_stop
+  use m_parallel, only : par_stop, dcp
   use m_util, only : itoa
   use list_boundary, only : t_list_boundary, list_boundary_read, &
                             nbsrcmax, nsrccmax, nsrcvmax
@@ -22,6 +22,7 @@ module m_boundary
 
   public :: t_boundary
   public :: m_boundary_init
+  public :: m_boundary_set_etaref
   public :: m_boundary_dispose
   public :: m_boundary_makebdc
   public :: e_bc_wall, e_bc_outflow, e_bc_radiation
@@ -41,7 +42,9 @@ module m_boundary
   ! init に早期 return 経路があるため全成分デフォルト初期化必須(§13)
   type t_bound_edge
     integer :: btype(1:4) = e_bc_wall      ! 4辺の境界条件型 (W, E, N, S)
-    real :: eta_ref(1:4) = 0.0             ! 放射境界の基準水位 (m。z と同じ基準)
+    real :: eta_man(1:4) = -9999.0         ! 基準水位の明示指定値 (-9999=未指定)
+    real, allocatable :: eta_cell(:,:)     ! 確定した基準水位(セル別。
+                                           !   (j,W/E)・(i,N/S)。set_etaref が構築)
   end type
 
   type t_bound_src                         ! 湧き出し・吸い込み1個
@@ -116,10 +119,72 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 放射境界の基準水位を確定する(m_state_init の直後に呼ぶ)
+!   優先順位:
+!     (1) bc_eta_* の明示指定(一様値)
+!     (2) 初期条件が水位固定(f_htype=2)なら一様 e0(乾いた境界セルも
+!         海面基準で排水される)
+!     (3) それ以外は境界セルの初期水位 s%e(セルごと)
+!   (3) は初期条件と厳密に整合し、t=0 の放射フラックスが全境界セルで
+!   厳密にゼロになる。restore 時は復元状態から再導出する(「保存状態を
+!   初期条件に使う」restore の意味論と整合。復元時に波が境界を通過中だと
+!   基準がずれる点は既知の制約)。
+!   MPI: 各ランクは自分が参照しうる行(帯+ハロ)だけを埋める。共有行は
+!   隣接ランクが同じ s%e(帯切り出しで同値)から冗長に導出する(通信不要)
+!----------------------------------------------------------------------
+subroutine m_boundary_set_etaref(b, p, g, s)
+  type(t_boundary), intent(inout) :: b
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer :: sd, i, j
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+
+  if (.not. any(b%edge%btype == e_bc_radiation)) return
+  allocate(b%edge%eta_cell(1:max(g%nx, g%ny), 1:4), source = 0.0)
+
+  do sd = 1, 4
+    if (b%edge%btype(sd) /= e_bc_radiation) cycle
+    if (b%edge%eta_man(sd) > -9998.0) then
+      b%edge%eta_cell(:,sd) = b%edge%eta_man(sd)       ! 明示指定(一様)
+    else if (s%ini%f_htype == 2) then
+      b%edge%eta_cell(:,sd) = s%ini%e0                 ! 水位固定の初期条件と同値
+    else
+      ! 境界セルの初期水位から導出
+      select case (sd)
+        case (e_side_w)
+          do j = dcp%jsh, dcp%jeh
+            b%edge%eta_cell(j,sd) = s%e(1,j)
+          end do
+        case (e_side_e)
+          do j = dcp%jsh, dcp%jeh
+            b%edge%eta_cell(j,sd) = s%e(g%nx,j)
+          end do
+        case (e_side_n)
+          if (dcp%jsh <= 1 .and. 1 <= dcp%jeh) then
+            do i = 1, g%nx
+              b%edge%eta_cell(i,sd) = s%e(i,1)
+            end do
+          end if
+        case (e_side_s)
+          if (dcp%jsh <= g%ny .and. g%ny <= dcp%jeh) then
+            do i = 1, g%nx
+              b%edge%eta_cell(i,sd) = s%e(i,g%ny)
+            end do
+          end if
+      end select
+    end if
+  end do
+
+end subroutine
+
+
+!----------------------------------------------------------------------
 !----------------------------------------------------------------------
 subroutine m_boundary_dispose(b)
   type(t_boundary), intent(inout) :: b
   if (allocated(b%src)) deallocate(b%src)
+  if (allocated(b%edge%eta_cell)) deallocate(b%edge%eta_cell)
   b%nsrc = 0
   b%initialized = .false.
 end subroutine
@@ -152,10 +217,10 @@ subroutine init_edge(b, list)
     end if
   end do
   b%edge%btype = bt
-  b%edge%eta_ref(e_side_w) = list%bc_eta_w
-  b%edge%eta_ref(e_side_e) = list%bc_eta_e
-  b%edge%eta_ref(e_side_n) = list%bc_eta_n
-  b%edge%eta_ref(e_side_s) = list%bc_eta_s
+  b%edge%eta_man(e_side_w) = list%bc_eta_w
+  b%edge%eta_man(e_side_e) = list%bc_eta_e
+  b%edge%eta_man(e_side_n) = list%bc_eta_n
+  b%edge%eta_man(e_side_s) = list%bc_eta_s
 
 end subroutine
 
