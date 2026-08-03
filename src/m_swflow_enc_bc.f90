@@ -23,6 +23,9 @@ submodule(m_swflow_enc) m_swflow_enc_bc
   real, allocatable :: infl_wseg(:)         ! 各流入区間の開口幅の合計 (m)
   ! 辺の法線方向の方位(W, E, N, S)
   integer, parameter :: kn_side(1:4) = [4, 5, 2, 7]
+  ! エッジ格納スロットの k 成分と符号(親の continuous と同じ写像)
+  integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
+  real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
 contains
 
@@ -194,13 +197,13 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
   type(t_enc_status), intent(inout) :: sx
 
   integer :: i, j
+  integer :: ifl, m, k, sd, ie, je
+  real :: qw, h, hc, he, uve1, mne1
   ! 各辺を横切る面の方位(1番目が法線、2・3番目が斜め)
   integer, parameter :: kfw(1:3) = [4, 1, 6]   ! 西辺(セル (1,j))
   integer, parameter :: kfe(1:3) = [5, 3, 8]   ! 東辺(セル (nx,j))
   integer, parameter :: kfn(1:3) = [2, 1, 3]   ! 北辺(セル (i,1))
   integer, parameter :: kfs(1:3) = [7, 6, 8]   ! 南辺(セル (i,ny))
-  integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
-  real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
   ! ==== 節1: 外縁4辺の辺境界(簡易流出) ====
   if (have_open_bc) then
@@ -210,12 +213,12 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
     ! フィルタが書き込み範囲を js-1..je に制限する)
     if (f_bc_side(e_side_w) /= e_bc_wall) then
       do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
-        call put_bc_faces(1, j, kfw, e_side_w)
+        call put_bc_faces(p, g, s, sx, 1, j, kfw, e_side_w)
       end do
     end if
     if (f_bc_side(e_side_e) /= e_bc_wall) then
       do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
-        call put_bc_faces(dcp%nx_g, j, kfe, e_side_e)
+        call put_bc_faces(p, g, s, sx, dcp%nx_g, j, kfe, e_side_e)
       end do
     end if
 
@@ -224,12 +227,12 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
     ! 同値。異なる場合は後に処理される N/S 辺の式が有効になる)
     if (f_bc_side(e_side_n) /= e_bc_wall .and. dcp%js <= 1 .and. 1 <= dcp%je) then
       do i = g%wx(1,1), g%wx(2,1)
-        call put_bc_faces(i, 1, kfn, e_side_n)
+        call put_bc_faces(p, g, s, sx, i, 1, kfn, e_side_n)
       end do
     end if
     if (f_bc_side(e_side_s) /= e_bc_wall .and. dcp%js <= dcp%ny_g .and. dcp%ny_g <= dcp%je) then
       do i = g%wx(1,dcp%ny_g), g%wx(2,dcp%ny_g)
-        call put_bc_faces(i, dcp%ny_g, kfs, e_side_s)
+        call put_bc_faces(p, g, s, sx, i, dcp%ny_g, kfs, e_side_s)
       end do
     end if
 
@@ -241,107 +244,110 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
   !   面の取り込みは bt_cell(e_bc_inflow)経由で bc_open_face が開く。
   !   MPI: 東西辺のスロット行=セル行なので、共有行 js-1 はハロの h から
   !   冗長計算する(節1と同じ規則)。南北辺は行の所有ランクのみ
-  block
-    integer :: ifl, m, k, sd, ie, je
-    real :: qw, h, hc, he, uve1, mne1
-    do ifl = 1, b%ninflow
-      if (b%inflow(ifl)%q <= 0.0) then
-        qw = 0.0
-      else
-        qw = b%inflow(ifl)%q / infl_wseg(ifl)     ! 単位幅流量 (m2/s)
-      end if
-      do m = 1, b%inflow(ifl)%ncell
-        i = b%inflow(ifl)%cell(1,m)
-        j = b%inflow(ifl)%cell(2,m)
-        sd = b%inflow(ifl)%side(m)
-        select case (sd)
-          case (e_side_w, e_side_e)
-            if (j < dcp%js - 1 .or. j > dcp%je) cycle   ! スロット行=セル行
-          case default
-            if (j < dcp%js .or. j > dcp%je) cycle       ! 行の所有ランクのみ
-        end select
-        k = kn_side(sd)
-        ie = i + die(k)
-        je = j + dje(k)
-        ! エッジ水深: 内側セルの水深に限界水深の床を敷く(乾床への流入で
-        ! uv1 = q/he が発散しないように。ネスティングが水深も渡す事情の
-        ! 簡易代替。boundary_plan.md)
-        h = s%h(i,j)
-        hc = (qw**2 / p%gg)**(1.0 / 3.0)
-        he = max(h, hc, p%dv)
-        uve1 = -qw / he            ! 外向き正の負値=流入
-        mne1 = -qw
-        sx%uv(ke(k), ie, je) = sign_e(k) * uve1
-        sx%mn1(ke(k), ie, je) = sign_e(k) * mne1
-      end do
-    end do
-  end block
-
-contains
-  !--------------------------------------------------------------------
-  ! セル (i,j) の、辺 sd を横切る面 kf(1:3) に辺境界の値を書く。
-  ! エッジ水深は外縁内側セルの水深 h をそのまま使う(質量は mn1 だけで
-  ! 決まり厳密。uv は診断・移流参照用の同階層近似)
-  subroutine put_bc_faces(i, j, kf, sd)
-    integer, intent(in) :: i, j
-    integer, intent(in) :: kf(1:3)
-    integer, intent(in) :: sd
-    integer :: m, k, in, jn, ie, je
-    real :: h, un, uc, eta_r, uve1, mne1, dh, cor
-
-    if (g%x(i,j) <= 0) return
-    if (g%sw(i,j) > 0) return    ! 海セルは continuous が更新しないため対象外
-    h = s%h(i,j)
-    do m = 1, 3
-      k = kf(m)
-      in = i + din(k)
-      jn = j + djn(k)
-      if (.not. bc_open_face(in, jn)) cycle  ! 角の斜め面は両辺 open が条件
+  do ifl = 1, b%ninflow
+    if (b%inflow(ifl)%q <= 0.0) then
+      qw = 0.0
+    else
+      qw = b%inflow(ifl)%q / infl_wseg(ifl)     ! 単位幅流量 (m2/s)
+    end if
+    do m = 1, b%inflow(ifl)%ncell
+      i = b%inflow(ifl)%cell(1,m)
+      j = b%inflow(ifl)%cell(2,m)
+      sd = b%inflow(ifl)%side(m)
+      select case (sd)
+        case (e_side_w, e_side_e)
+          if (j < dcp%js - 1 .or. j > dcp%je) cycle   ! スロット行=セル行
+        case default
+          if (j < dcp%js .or. j > dcp%je) cycle       ! 行の所有ランクのみ
+      end select
+      k = kn_side(sd)
       ie = i + die(k)
       je = j + dje(k)
-      ! スロット行が自ランクの書き込み範囲(js-1..je)外ならスキップ
-      if (je < dcp%js - 1 .or. je > dcp%je) cycle
-      if (h < p%dd) then
-        uve1 = 0
-        mne1 = 0
-      else
-        select case (f_bc_side(sd))
-        case (e_bc_outflow)
-          ! 自由流出(洪水向け): 前進してきた流れは自速度のまま通過させ
-          ! (段落ち式が射流を絞って堰き止めるのを防ぐ)、滞留水は
-          ! 段落ち(自由越流。rivermouth_drop と同式)で抜く。
-          ! max により流入は起きない(uc > 0)
-          un = s%u(i,j) * n8x(k) + s%v(i,j) * n8y(k)   ! セル流速の面法線成分
-          uc = ((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)  ! 段落ち速度
-          uve1 = max(un, uc)
-          mne1 = uve1 * h
-        case default   ! e_bc_radiation
-          ! 長波放射(津波向け): 静水(η=η_ref)ではフラックスゼロ、
-          ! 水位偏差に比例して透過。負値=流入(引き波)も許す。
-          ! 乾いたセルは上の h<dd 分岐でゼロ(境界からの再湿潤はしない)。
-          ! 基準水位は境界セルごと(W/E は j、N/S は i で引く)
-          if (sd == e_side_w .or. sd == e_side_e) then
-            eta_r = bc_eta_cell(j, sd)
-          else
-            eta_r = bc_eta_cell(i, sd)
-          end if
-          uve1 = sqrt(p%gg / max(h, p%dv)) * (s%z(i,j) + h - eta_r)
-          mne1 = uve1 * h
-        end select
-        ! 過大な流出の抑制(流出方向のみ。momentum の抑制と同型で、
-        ! 境界面ではフラグによらず適用)
-        dh = mne1 * mn2dh(k) / g%gv(i,j)
-        if (dh > 0 .and. h - dh <= 0) then
-          cor = max(h - p%dd, 0.0) / dh
-          uve1 = uve1 * cor
-          mne1 = mne1 * cor
-        end if
-      end if
+      ! エッジ水深: 内側セルの水深に限界水深の床を敷く(乾床への流入で
+      ! uv1 = q/he が発散しないように。ネスティングが水深も渡す事情の
+      ! 簡易代替。boundary_plan.md)
+      h = s%h(i,j)
+      hc = (qw**2 / p%gg)**(1.0 / 3.0)
+      he = max(h, hc, p%dv)
+      uve1 = -qw / he            ! 外向き正の負値=流入
+      mne1 = -qw
       sx%uv(ke(k), ie, je) = sign_e(k) * uve1
       sx%mn1(ke(k), ie, je) = sign_e(k) * mne1
     end do
-  end subroutine
+  end do
 
+end subroutine
+!----------------------------------------------------------------------
+! セル (i,j) の、辺 sd を横切る面 kf(1:3) に辺境界の値を書く。
+! エッジ水深は外縁内側セルの水深 h をそのまま使う(質量は mn1 だけで
+! 決まり厳密。uv は診断・移流参照用の同階層近似)。
+! boundary_uvmn の contained にせず引数渡しの submodule 手続きとする:
+! nvfortran は module 手続きの contained 内側への親 private の
+! 二段ホスト結合を解決できない(TPR #27323 系。din 等が未宣言エラーに
+! なる実発生)。単段のホスト結合(adv と同形)は解決できる
+!----------------------------------------------------------------------
+subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(inout) :: sx
+  integer, intent(in) :: i, j
+  integer, intent(in) :: kf(1:3)
+  integer, intent(in) :: sd
+  integer :: m, k, in, jn, ie, je
+  real :: h, un, uc, eta_r, uve1, mne1, dh, cor
+
+  if (g%x(i,j) <= 0) return
+  if (g%sw(i,j) > 0) return    ! 海セルは continuous が更新しないため対象外
+  h = s%h(i,j)
+  do m = 1, 3
+    k = kf(m)
+    in = i + din(k)
+    jn = j + djn(k)
+    if (.not. bc_open_face(in, jn)) cycle  ! 角の斜め面は両辺 open が条件
+    ie = i + die(k)
+    je = j + dje(k)
+    ! スロット行が自ランクの書き込み範囲(js-1..je)外ならスキップ
+    if (je < dcp%js - 1 .or. je > dcp%je) cycle
+    if (h < p%dd) then
+      uve1 = 0
+      mne1 = 0
+    else
+      select case (f_bc_side(sd))
+      case (e_bc_outflow)
+        ! 自由流出(洪水向け): 前進してきた流れは自速度のまま通過させ
+        ! (段落ち式が射流を絞って堰き止めるのを防ぐ)、滞留水は
+        ! 段落ち(自由越流。rivermouth_drop と同式)で抜く。
+        ! max により流入は起きない(uc > 0)
+        un = s%u(i,j) * n8x(k) + s%v(i,j) * n8y(k)   ! セル流速の面法線成分
+        uc = ((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)  ! 段落ち速度
+        uve1 = max(un, uc)
+        mne1 = uve1 * h
+      case default   ! e_bc_radiation
+        ! 長波放射(津波向け): 静水(η=η_ref)ではフラックスゼロ、
+        ! 水位偏差に比例して透過。負値=流入(引き波)も許す。
+        ! 乾いたセルは上の h<dd 分岐でゼロ(境界からの再湿潤はしない)。
+        ! 基準水位は境界セルごと(W/E は j、N/S は i で引く)
+        if (sd == e_side_w .or. sd == e_side_e) then
+          eta_r = bc_eta_cell(j, sd)
+        else
+          eta_r = bc_eta_cell(i, sd)
+        end if
+        uve1 = sqrt(p%gg / max(h, p%dv)) * (s%z(i,j) + h - eta_r)
+        mne1 = uve1 * h
+      end select
+      ! 過大な流出の抑制(流出方向のみ。momentum の抑制と同型で、
+      ! 境界面ではフラグによらず適用)
+      dh = mne1 * mn2dh(k) / g%gv(i,j)
+      if (dh > 0 .and. h - dh <= 0) then
+        cor = max(h - p%dd, 0.0) / dh
+        uve1 = uve1 * cor
+        mne1 = mne1 * cor
+      end if
+    end if
+    sx%uv(ke(k), ie, je) = sign_e(k) * uve1
+    sx%mn1(ke(k), ie, je) = sign_e(k) * mne1
+  end do
 end subroutine
 
 

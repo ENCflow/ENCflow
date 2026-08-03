@@ -514,9 +514,14 @@
   同型のバグが2度実発生した一般則。-finit-* は成分に効かず、症状は
   最適化レベル・MPI 実装・ビルドでランダムに変わる。
 - **nvfortran は submodule から親モジュールの private 実体へのホスト結合に
-  不具合がある**(TPR #27323 系。規格上は見えるべき)。共有定数は定数
-  モジュールに切り出して両者が use する。submodule が use 経由の名前
-  (dcp 等)を親から継承するのも避け、submodule 側で直接 use する。
+  不具合がある**(TPR #27323 系。規格上は見えるべき)。実発生は
+  **module 手続きの contained 内側からの二段ホスト結合**(din 等が
+  「未宣言」エラー)で、手続き本体レベルの単段参照(adv と同形)は
+  解決できる。対処: submodule 内では contained を使わず、補助手続きは
+  引数渡しの submodule レベル手続きに昇格させる(§12 の「プライベート
+  ルーチンは引数で受け取る」とも整合)。共有定数は定数モジュールに
+  切り出して両者が use する。submodule が use 経由の名前(dcp 等)を
+  親から継承するのも避け、submodule 側で直接 use する。
 - fortls は .mod を読めないため mpi_f08 を "not found" と警告する。
   対処は使用範囲だけの interface スタブを ext_source_dirs に置く
   (コンパイル対象には絶対に入れない)。
@@ -589,8 +594,9 @@
   m_swflow_enc_adv と同じ「親の私有状態(重み・エッジ状態・方位定数)
   へのホスト結合を活かしたコード分割」で、§12 の排他切替イディオムとは
   別用途。親に残るのはホットパスが読む have_open_bc(bc_init が設定)
-  のみ。nvfortran の TPR #27323(親 private へのホスト結合)が発現した
-  場合は adv と同じ public 化で回避する。
+  のみ。nvfortran の TPR #27323 は contained 内側からの二段ホスト結合
+  で実発生した(§13)。submodule 内の補助手続きは contained にせず
+  引数渡しの submodule レベル手続きにする。
 - **boundary_uvmn = エッジの uv/mn1 への強制条件の汎用適用点**
   (momentum → par_edge_merge → boundary_uvmn → continuous の位置で
   毎ステップ無条件に呼ぶ。強制条件の族を追加するときはルーチン内に
