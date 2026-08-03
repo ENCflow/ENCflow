@@ -54,6 +54,7 @@ module list_boundary
     logical :: present_inflow = .false.            ! グループが存在したか
     integer, allocatable :: inflow_cell(:,:,:)     ! セル座標 (i, j)
     real, allocatable :: inflow_val(:,:,:)         ! 時系列 (min, m3/s)
+    integer :: inflow_dist(1:nbsrcmax) = 0         ! 配分モード(0:均等 1:水深 2:通水能)
     character(len=maxpathlen) :: fn_inflow_cell(1:nbsrcmax) = ""  ! セル一覧ファイル名
     character(len=maxpathlen) :: fn_inflow_val(1:nbsrcmax) = ""   ! 時系列ファイル名
   end type
@@ -212,15 +213,17 @@ end subroutine
 subroutine read_inflow(un, list)
   integer, intent(in) :: un
   type(t_list_boundary), intent(inout) :: list
+  integer :: inflow_dist(1:nbsrcmax)
   character(len=maxpathlen) :: fn_inflow_cell(1:nbsrcmax)
   character(len=maxpathlen) :: fn_inflow_val(1:nbsrcmax)
   integer :: ios
   character(len=1024) :: iom
-  namelist /list_bound_inflow/ inflow_cell, inflow_val, &
+  namelist /list_bound_inflow/ inflow_cell, inflow_val, inflow_dist, &
                                fn_inflow_cell, fn_inflow_val
 
   inflow_cell = -9999
   inflow_val = -9999
+  inflow_dist = list%inflow_dist
   fn_inflow_cell = list%fn_inflow_cell
   fn_inflow_val = list%fn_inflow_val
 
@@ -232,6 +235,7 @@ subroutine read_inflow(un, list)
 
   list%inflow_cell = inflow_cell
   list%inflow_val = inflow_val
+  list%inflow_dist = inflow_dist
   list%fn_inflow_cell = fn_inflow_cell
   list%fn_inflow_val = fn_inflow_val
 

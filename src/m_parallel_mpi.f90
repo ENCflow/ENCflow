@@ -51,6 +51,7 @@ module m_parallel
    public :: par_allreduce_min
    public :: par_halo_cell, par_halo_edge, par_edge_merge
    public :: par_allreduce_max, par_allreduce_sumi, par_allreduce_maxi
+   public :: par_allreduce_sumr
    public :: par_sum_rows
    public :: par_gather_to, par_gather_to_i, par_gather_edge_to
    public :: par_scatter_cell, par_scatter_cell_i
@@ -278,6 +279,17 @@ contains
       call MPI_Allreduce(MPI_IN_PLACE, ival, 1, MPI_INTEGER, MPI_MAX, &
                          MPI_COMM_WORLD)
    end subroutine par_allreduce_maxi
+
+   subroutine par_allreduce_sumr(vals)
+      ! 実数ベクトルの全ランク合計。実数和の決定性規律(§11)があるため、
+      ! 「各要素の寄与ランクがちょうど1つ(他ランクは 0)」の使い方に
+      ! 限ること。x+0=x は浮動小数でも厳密なので、この使い方なら加算順に
+      ! 依存せず、ランク数によらずビット同一になる(帯所有ランクだけが
+      ! 埋めるゼロ初期化ベクトルの全ランク共有=allgather の代用)
+      real, intent(inout) :: vals(:)
+      call MPI_Allreduce(MPI_IN_PLACE, vals, size(vals), MPI_WP, MPI_SUM, &
+                         MPI_COMM_WORLD)
+   end subroutine par_allreduce_sumr
 
    subroutine par_sum_rows(rowsum, total)
       ! 行部分和のランク横断・決定的総和。

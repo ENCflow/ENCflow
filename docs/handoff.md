@@ -101,10 +101,10 @@
 9. **境界条件 Phase 0/1(境界正規化・辺境界・ソース再編)の残検証**
    (実装・gfortran/OpenMPI 検証済み 2026-08-02。記録は boundary_plan.md
    §8/§9、設計正本は developer.md §15)
-   - ifx での無効時ビット一致(逐次・np=1,2,4。collective は増やして
-     いない)
+   - ifx での無効時ビット一致(逐次・np=1,2,4。inflow_dist で
+     par_allreduce_sumr の collective が増えた点に注意)
    - 開辺ケースの恒常テスト化(放射境界ベンチマーク新設時に合流)
-   - PREC=single ビルドの通し確認
+   - PREC=single ビルドの通し確認(inflow_dist の重み共有を含む)
 
 10. **乾床薄膜先端の「質量微増」— 原因特定済み(2026-08-03)。対処は要議論**
    - 結論: 質量は作られていない。全セルの Σh(負値込み)は注入量と

@@ -81,6 +81,9 @@ module m_boundary
     integer :: nval = 0                    ! 時系列データ数
     real, allocatable :: val(:,:)          ! 時系列 (1:2, 1:nval) (s, m3/s)
     real :: q = 0.0                        ! 現時刻の流量 (m3/s)
+    integer :: dist = 0                    ! 区間内の配分モード(0:開口幅で均等、
+                                           !   1:水深按分=流入流速一様、
+                                           !   2:通水能按分=重み h^{5/3})
   end type
 
   type t_boundary
@@ -633,6 +636,13 @@ subroutine init_inflow(b, p, g, list)
     end do
     b%inflow(ifl)%ncell = m
     deallocate(cell)
+
+    !--- 配分モード ---
+    b%inflow(ifl)%dist = list%inflow_dist(ifl)
+    if (b%inflow(ifl)%dist < 0 .or. b%inflow(ifl)%dist > 2) then
+      call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" の inflow_dist は" &
+                    //" 0(均等)/1(水深按分)/2(通水能按分)で指定してください")
+    end if
 
     !--- 計算開始時刻の流量を初期化する(stage と同じ理由。swflow init の
     !    boundary_uvmn が makebdc より先に走る) ---
