@@ -73,6 +73,12 @@ subroutine m_swflow_stg_init(p, g, b, s)
   if (any(b%edge%btype /= e_bc_wall)) then
     call par_stop("STG(f_gridsystem=1)は辺境界条件(list_bound_edge)非対応です")
   end if
+  if (b%nstage > 0) then
+    call par_stop("STG(f_gridsystem=1)は水位規定セル群(list_bound_stage)非対応です")
+  end if
+  if (b%ninflow > 0) then
+    call par_stop("STG(f_gridsystem=1)は区間流入(list_bound_inflow)非対応です")
+  end if
 
   select case (p%f_govequation)
     case (0)      ! DynWE

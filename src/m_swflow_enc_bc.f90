@@ -1,0 +1,382 @@
+submodule(m_swflow_enc) m_swflow_enc_bc
+  ! 境界条件の適用層(m_swflow_enc_adv と同じ「親の私有状態への
+  ! ホスト結合を活かしたコード分割」の submodule)。
+  !   - bc_init      : 辺型・セル別面型 bt_cell・放射基準水位・流入区間の
+  !                    開口幅を t_boundary から構築(init_weights の後に呼ぶ)
+  !   - boundary_h   : 水深側の境界処理(ため池・降雨・湧き出し・水位規定)
+  !   - boundary_uvmn: エッジ uv/mn1 への強制条件(辺境界・区間流入)
+  !   - bc_open_face : continuous / restore_uvmn の枠外面の取り込み判定
+  ! 設計の正本は developer.md §15。親の have_open_bc は bc_init が設定する。
+  ! 親の重み(l8, mn2dh, n8x/y)・方位定数(din/dje 等)・t_enc_status は
+  ! ホスト結合で参照する。dcp 等の use 経由の名前は nvfortran バグ回避の
+  ! ため submodule 側で直接 use する(§13)
+  use m_boundary, only : t_boundary, e_bc_wall, e_bc_outflow, e_bc_radiation, &
+                         e_bc_inflow, e_side_w, e_side_e, e_side_n, e_side_s
+  use m_parallel, only : dcp, par_stop
+  implicit none
+
+  ! 境界条件の私有状態(bc_init が構築)
+  integer :: f_bc_side(1:4) = e_bc_wall     ! 外縁4辺の境界条件型(W,E,N,S)
+  integer, allocatable :: bt_cell(:,:)      ! 外縁面の型(セル別。(j,W/E)・(i,N/S)。
+                                            !   辺の型を初期値とし流入区間が上書き)
+  real, allocatable :: bc_eta_cell(:,:)     ! 放射境界の基準水位(セル別)
+  real, allocatable :: infl_wseg(:)         ! 各流入区間の開口幅の合計 (m)
+  ! 辺の法線方向の方位(W, E, N, S)
+  integer, parameter :: kn_side(1:4) = [4, 5, 2, 7]
+
+contains
+
+!----------------------------------------------------------------------
+! 境界条件の適用層の初期化(t_boundary からモジュール状態を構築)
+!   開口幅の計算が親の l8 を使うため init_weights より後に呼ぶこと
+!----------------------------------------------------------------------
+module subroutine bc_init(p, g, b)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
+  integer :: ifl, m
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+
+  ! 辺境界条件を写す(ホットループでの間接参照回避)
+  f_bc_side = b%edge%btype
+  have_open_bc = any(f_bc_side /= e_bc_wall) .or. (b%ninflow > 0)
+  if (any(f_bc_side == e_bc_radiation)) then
+    ! 基準水位は m_boundary_set_etaref(m_state_init 直後)が確定済み
+    if (.not. allocated(b%edge%eta_cell)) then
+      call par_stop("bc_init: 放射境界の基準水位が未設定です" &
+                    //"(m_boundary_set_etaref の配線を確認)")
+    end if
+    bc_eta_cell = b%edge%eta_cell
+  end if
+
+  ! 外縁面の型をセル別に構築する(辺の型を初期値とし、流入区間の
+  ! 法線面を e_bc_inflow で上書き。bc_open_face が参照する)
+  allocate(bt_cell(1:max(g%nx, g%ny), 1:4))
+  bt_cell(:,e_side_w) = f_bc_side(e_side_w)
+  bt_cell(:,e_side_e) = f_bc_side(e_side_e)
+  bt_cell(:,e_side_n) = f_bc_side(e_side_n)
+  bt_cell(:,e_side_s) = f_bc_side(e_side_s)
+  do ifl = 1, b%ninflow
+    do m = 1, b%inflow(ifl)%ncell
+      select case (b%inflow(ifl)%side(m))
+        case (e_side_w, e_side_e)
+          bt_cell(b%inflow(ifl)%cell(2,m), b%inflow(ifl)%side(m)) = e_bc_inflow
+        case default
+          bt_cell(b%inflow(ifl)%cell(1,m), b%inflow(ifl)%side(m)) = e_bc_inflow
+      end select
+    end do
+  end do
+
+  ! 各流入区間の開口幅(法線面の l8 の合計)を計算する
+  ! (規定流量はこの幅で按分するため、総流入量は開口率によらず厳密)
+  if (b%ninflow > 0) then
+    allocate(infl_wseg(1:b%ninflow), source = 0.0)
+    do ifl = 1, b%ninflow
+      do m = 1, b%inflow(ifl)%ncell
+        infl_wseg(ifl) = infl_wseg(ifl) + l8(kn_side(b%inflow(ifl)%side(m)))
+      end do
+    end do
+  end if
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 境界条件の適用層の破棄
+!----------------------------------------------------------------------
+module subroutine bc_dispose()
+  if (allocated(bc_eta_cell)) deallocate(bc_eta_cell)
+  if (allocated(bt_cell)) deallocate(bt_cell)
+  if (allocated(infl_wseg)) deallocate(infl_wseg)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 水深の境界条件をセットする
+!   このルーチンより前に実行されるcontinuous/init_enc_statusにおいて
+!   水深はs%hからsx%h1に更新されているので、ここではsx%h1を更新する　
+!     s%h：前ステップの水深
+!     sx%h1：現ステップの連続式適用後の水深
+!----------------------------------------------------------------------
+module subroutine boundary_h(p, g, b, s, sx)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
+  type(t_state), intent(inout) :: s
+  type(t_enc_status), intent(inout) :: sx
+  integer :: i, j, k, isrc, istage
+
+  !$omp parallel do schedule(dynamic) private(i, j)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%sw(i,j) > 0) cycle
+      if (g%x(i,j) <= 0) cycle
+
+      ! ため池の処理
+      if (g%rscap(i,j) > 0.0 .and. g%rscap(i,j) > s%rsh(i,j)) then ! ため池に余力がある
+        if (sx%h1(i,j) > (g%rscap(i,j) - s%rsh(i,j))) then         !   ため池があふれる
+          sx%h1(i,j) = sx%h1(i,j) - (g%rscap(i,j) - s%rsh(i,j))    !     場の水深がため池の余力分だけ減る
+          s%rsh(i,j) = g%rscap(i,j)                                !     ため池が満水になる
+        else                                                       !   ため池があふれない
+          s%rsh(i,j) = s%rsh(i,j) + sx%h1(i,j)                     !     ため池の水深が増加する
+          sx%h1(i,j) = 0.0                                         !     場の水深がゼロになる
+        end if
+      end if
+
+      ! 降雨を加えて次ステップの水深を初期化
+      sx%h1(i,j) = sx%h1(i,j) + s%pre(i,j) * p%dt / g%gv(i,j)
+
+    end do
+  end do
+  !$omp end parallel do
+
+  ! 湧き出し・吸い込みを加える
+  !   所有ランクのみ適用する(リストは全ランクが保持。developer.md §11)
+  do isrc = 1, b%nsrc
+    do k = 1, b%src(isrc)%ncell
+      i = b%src(isrc)%cell(1,k)
+      j = b%src(isrc)%cell(2,k)
+      if (j < dcp%js .or. j > dcp%je) cycle
+      sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q
+      ! 吸い込み(負の流量)でセルを負水深にしない(不足分は汲めない)
+      if (sx%h1(i,j) < 0) sx%h1(i,j) = 0
+    end do
+  end do
+
+  ! 水位規定セル群(流域出口の流出境界、背水・感潮域等)
+  !   指定水位 η に強制する(最後に適用=同一セルでは最優先)。
+  !   周囲との面フラックスは momentum が通常計算するため、規定水位が
+  !   作る勾配が流出入を駆動し、u,v,m,n・record にも自然に乗る。
+  !   η が河床より低ければセルは常に空=完全排水口になる
+  do istage = 1, b%nstage
+    do k = 1, b%stage(istage)%ncell
+      i = b%stage(istage)%cell(1,k)
+      j = b%stage(istage)%cell(2,k)
+      if (j < dcp%js .or. j > dcp%je) cycle
+      sx%h1(i,j) = max(b%stage(istage)%eta - s%z(i,j), 0.0)
+    end do
+  end do
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! エッジの流速・流量(uv/mn1)への強制条件の適用点
+!   momentum(内部面の計算)と continuous(h1 更新)の間、
+!   par_edge_merge の後に毎ステップ無条件に呼ばれる。強制条件の族を
+!   追加する場合はこのルーチンに節を足し、有効判定は節の内側で行う
+!   (将来の候補: カルバート出入り口等)。
+!   現在の節: 節1=外縁4辺の辺境界(自由流出/長波放射)、
+!   節2=区間流入(外縁法線面の流量規定)。
+!
+! 辺境界の節: 開いた辺の境界面に段落ち式の流速・流量をセットする。
+!   continuous / restore_uvmn 側は bc_open_face が真の面を
+!   取り込むことで、流出が h1 と u,v,m,n に乗る。
+!   - 境界面の書き手はこのルーチンだけ(momentum は x 番兵で触れない)。
+!     開いた辺の面は乾燥時も 0 を毎ステップ書く(前ステップ値の残留防止)
+!   - 面集合は辺を横切る法線+斜めの3方位(開口の合計=辺全長。
+!     boundary_plan.md 案D)。角セルの斜め面は bc_open_face が
+!     「両辺 open」を要求するため壁の水密性が保たれる
+!   - 符号: スロットの正準向きは k=1..4 所有者基準なので、sign_e(k) を
+!     乗じて格納する(continuous が読むと外向き正になる)
+!   - MPI: 東西辺はスロット行 js-1..je を書く(mn コミット範囲と同一)。
+!     共有行 js-1 / je のスロットは隣接する両ランクが同じ h(ハロ)から
+!     冗長に計算して同値になる。界面補完(par_edge_merge)は境界面
+!     スロットを運ばないため、この冗長書きが RK の他セル面参照の
+!     ランク数不変性の条件になる。南北辺の面はスロット行 0 / ny で
+!     端ランクの単独所有(冗長書き不要)
+!----------------------------------------------------------------------
+module subroutine boundary_uvmn(p, g, b, s, sx)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(inout) :: sx
+
+  integer :: i, j
+  ! 各辺を横切る面の方位(1番目が法線、2・3番目が斜め)
+  integer, parameter :: kfw(1:3) = [4, 1, 6]   ! 西辺(セル (1,j))
+  integer, parameter :: kfe(1:3) = [5, 3, 8]   ! 東辺(セル (nx,j))
+  integer, parameter :: kfn(1:3) = [2, 1, 3]   ! 北辺(セル (i,1))
+  integer, parameter :: kfs(1:3) = [7, 6, 8]   ! 南辺(セル (i,ny))
+  integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
+  real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
+
+  ! ==== 節1: 外縁4辺の辺境界(簡易流出) ====
+  if (have_open_bc) then
+
+    ! 西辺・東辺(全ランクが自帯+共有行のセル js-1..je+1 を走査。
+    ! ハロ行のセルは共有行スロットの冗長計算のため。put 側のスロット行
+    ! フィルタが書き込み範囲を js-1..je に制限する)
+    if (f_bc_side(e_side_w) /= e_bc_wall) then
+      do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
+        call put_bc_faces(1, j, kfw, e_side_w)
+      end do
+    end if
+    if (f_bc_side(e_side_e) /= e_bc_wall) then
+      do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
+        call put_bc_faces(dcp%nx_g, j, kfe, e_side_e)
+      end do
+    end if
+
+    ! 北辺・南辺(行の所有ランクのみ。判定は全ランクが同一コードで実行)
+    ! 角の斜め面は複数辺のループが書く(idempotent: 辺の条件が同型なら
+    ! 同値。異なる場合は後に処理される N/S 辺の式が有効になる)
+    if (f_bc_side(e_side_n) /= e_bc_wall .and. dcp%js <= 1 .and. 1 <= dcp%je) then
+      do i = g%wx(1,1), g%wx(2,1)
+        call put_bc_faces(i, 1, kfn, e_side_n)
+      end do
+    end if
+    if (f_bc_side(e_side_s) /= e_bc_wall .and. dcp%js <= dcp%ny_g .and. dcp%ny_g <= dcp%je) then
+      do i = g%wx(1,dcp%ny_g), g%wx(2,dcp%ny_g)
+        call put_bc_faces(i, dcp%ny_g, kfs, e_side_s)
+      end do
+    end if
+
+  end if
+
+  ! ==== 節2: 区間流入(外縁の法線面に流量を規定) ====
+  !   規定流量は区間の開口幅で按分するため総量は厳密(開口率に非依存)。
+  !   節1の後に適用し、開いた辺上の流入区間では辺の式を上書きする。
+  !   面の取り込みは bt_cell(e_bc_inflow)経由で bc_open_face が開く。
+  !   MPI: 東西辺のスロット行=セル行なので、共有行 js-1 はハロの h から
+  !   冗長計算する(節1と同じ規則)。南北辺は行の所有ランクのみ
+  block
+    integer :: ifl, m, k, sd, ie, je
+    real :: qw, h, hc, he, uve1, mne1
+    do ifl = 1, b%ninflow
+      if (b%inflow(ifl)%q <= 0.0) then
+        qw = 0.0
+      else
+        qw = b%inflow(ifl)%q / infl_wseg(ifl)     ! 単位幅流量 (m2/s)
+      end if
+      do m = 1, b%inflow(ifl)%ncell
+        i = b%inflow(ifl)%cell(1,m)
+        j = b%inflow(ifl)%cell(2,m)
+        sd = b%inflow(ifl)%side(m)
+        select case (sd)
+          case (e_side_w, e_side_e)
+            if (j < dcp%js - 1 .or. j > dcp%je) cycle   ! スロット行=セル行
+          case default
+            if (j < dcp%js .or. j > dcp%je) cycle       ! 行の所有ランクのみ
+        end select
+        k = kn_side(sd)
+        ie = i + die(k)
+        je = j + dje(k)
+        ! エッジ水深: 内側セルの水深に限界水深の床を敷く(乾床への流入で
+        ! uv1 = q/he が発散しないように。ネスティングが水深も渡す事情の
+        ! 簡易代替。boundary_plan.md)
+        h = s%h(i,j)
+        hc = (qw**2 / p%gg)**(1.0 / 3.0)
+        he = max(h, hc, p%dv)
+        uve1 = -qw / he            ! 外向き正の負値=流入
+        mne1 = -qw
+        sx%uv(ke(k), ie, je) = sign_e(k) * uve1
+        sx%mn1(ke(k), ie, je) = sign_e(k) * mne1
+      end do
+    end do
+  end block
+
+contains
+  !--------------------------------------------------------------------
+  ! セル (i,j) の、辺 sd を横切る面 kf(1:3) に辺境界の値を書く。
+  ! エッジ水深は外縁内側セルの水深 h をそのまま使う(質量は mn1 だけで
+  ! 決まり厳密。uv は診断・移流参照用の同階層近似)
+  subroutine put_bc_faces(i, j, kf, sd)
+    integer, intent(in) :: i, j
+    integer, intent(in) :: kf(1:3)
+    integer, intent(in) :: sd
+    integer :: m, k, in, jn, ie, je
+    real :: h, un, uc, eta_r, uve1, mne1, dh, cor
+
+    if (g%x(i,j) <= 0) return
+    if (g%sw(i,j) > 0) return    ! 海セルは continuous が更新しないため対象外
+    h = s%h(i,j)
+    do m = 1, 3
+      k = kf(m)
+      in = i + din(k)
+      jn = j + djn(k)
+      if (.not. bc_open_face(in, jn)) cycle  ! 角の斜め面は両辺 open が条件
+      ie = i + die(k)
+      je = j + dje(k)
+      ! スロット行が自ランクの書き込み範囲(js-1..je)外ならスキップ
+      if (je < dcp%js - 1 .or. je > dcp%je) cycle
+      if (h < p%dd) then
+        uve1 = 0
+        mne1 = 0
+      else
+        select case (f_bc_side(sd))
+        case (e_bc_outflow)
+          ! 自由流出(洪水向け): 前進してきた流れは自速度のまま通過させ
+          ! (段落ち式が射流を絞って堰き止めるのを防ぐ)、滞留水は
+          ! 段落ち(自由越流。rivermouth_drop と同式)で抜く。
+          ! max により流入は起きない(uc > 0)
+          un = s%u(i,j) * n8x(k) + s%v(i,j) * n8y(k)   ! セル流速の面法線成分
+          uc = ((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)  ! 段落ち速度
+          uve1 = max(un, uc)
+          mne1 = uve1 * h
+        case default   ! e_bc_radiation
+          ! 長波放射(津波向け): 静水(η=η_ref)ではフラックスゼロ、
+          ! 水位偏差に比例して透過。負値=流入(引き波)も許す。
+          ! 乾いたセルは上の h<dd 分岐でゼロ(境界からの再湿潤はしない)。
+          ! 基準水位は境界セルごと(W/E は j、N/S は i で引く)
+          if (sd == e_side_w .or. sd == e_side_e) then
+            eta_r = bc_eta_cell(j, sd)
+          else
+            eta_r = bc_eta_cell(i, sd)
+          end if
+          uve1 = sqrt(p%gg / max(h, p%dv)) * (s%z(i,j) + h - eta_r)
+          mne1 = uve1 * h
+        end select
+        ! 過大な流出の抑制(流出方向のみ。momentum の抑制と同型で、
+        ! 境界面ではフラグによらず適用)
+        dh = mne1 * mn2dh(k) / g%gv(i,j)
+        if (dh > 0 .and. h - dh <= 0) then
+          cor = max(h - p%dd, 0.0) / dh
+          uve1 = uve1 * cor
+          mne1 = mne1 * cor
+        end if
+      end if
+      sx%uv(ke(k), ie, je) = sign_e(k) * uve1
+      sx%mn1(ke(k), ie, je) = sign_e(k) * mne1
+    end do
+  end subroutine
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 近傍 (in,jn) が格子枠外で、その面が横切る辺が全て開いているか。
+! 型はセル別(bt_cell)で引く: 法線面のゴースト(枠外座標が1軸のみ)は
+! 対応するセルの面型を参照し、流入区間の上書き(e_bc_inflow)が効く。
+! 角の斜め面はゴースト座標が両軸とも枠外になり、添字が範囲外の辺は
+! 辺の型(f_bc_side)に落ちる=従来どおり両辺 open が条件(壁の水密性)。
+! 枠内の x=0(無効セル)への面は常に閉(偽を返す)
+!----------------------------------------------------------------------
+module function bc_open_face(in, jn) result(op)
+  integer, intent(in) :: in, jn
+  logical :: op
+  op = (in < 1 .or. in > dcp%nx_g .or. jn < 1 .or. jn > dcp%ny_g)
+  if (.not. op) return
+  if (in < 1        .and. bc_face_type(e_side_w, jn) == e_bc_wall) op = .false.
+  if (in > dcp%nx_g .and. bc_face_type(e_side_e, jn) == e_bc_wall) op = .false.
+  if (jn < 1        .and. bc_face_type(e_side_n, in) == e_bc_wall) op = .false.
+  if (jn > dcp%ny_g .and. bc_face_type(e_side_s, in) == e_bc_wall) op = .false.
+end function
+
+
+!----------------------------------------------------------------------
+! 辺 sd の添字 idx における外縁面の型を返す
+! (idx が範囲外=角のゴーストは辺の型に落とす)
+!----------------------------------------------------------------------
+function bc_face_type(sd, idx) result(t)
+  integer, intent(in) :: sd, idx
+  integer :: t
+  if (allocated(bt_cell) .and. idx >= 1 .and. idx <= size(bt_cell, 1)) then
+    t = bt_cell(idx, sd)
+  else
+    t = f_bc_side(sd)
+  end if
+end function
+
+end submodule

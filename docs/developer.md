@@ -584,6 +584,13 @@
   族別グループ(&list_bound_edge / &list_bound_source。将来
   &list_bound_inflow / &list_bound_outflow)。**グループ不在=その族なし**
   (iostat<0 で判別)。旧形式 &list_boundary は検出して par_stop。
+- **境界条件の適用層は submodule m_swflow_enc_bc に分離**(2026-08-02。
+  bc_init / boundary_h / boundary_uvmn / bc_open_face / bc_dispose)。
+  m_swflow_enc_adv と同じ「親の私有状態(重み・エッジ状態・方位定数)
+  へのホスト結合を活かしたコード分割」で、§12 の排他切替イディオムとは
+  別用途。親に残るのはホットパスが読む have_open_bc(bc_init が設定)
+  のみ。nvfortran の TPR #27323(親 private へのホスト結合)が発現した
+  場合は adv と同じ public 化で回避する。
 - **boundary_uvmn = エッジの uv/mn1 への強制条件の汎用適用点**
   (momentum → par_edge_merge → boundary_uvmn → continuous の位置で
   毎ステップ無条件に呼ぶ。強制条件の族を追加するときはルーチン内に
@@ -640,6 +647,17 @@
   - 流量指定型の境界(将来の区間流入)では mn1 を先に確定し
     uv1 = mn1/he で戻す。he は外縁内側セルの水深(+ dv 床)。質量は
     mn1 だけで厳密、uv1 は診断・移流参照用の同階層近似。
+- **区間流入(inflow 族)**: 外縁に接するセル区間の法線面に流量
+  Q(t) を規定する(boundary_uvmn 節2。mn1 = −Q/開口幅で指向性の流入。
+  h1 加算の湧き出しと違い運動量を持ち、u,v,m,n・record に乗る)。
+  規定流量は開口幅で按分するため総量は開口率(lp≈0.41)に非依存で
+  厳密。乾床への流入は he = max(h, 限界水深 (q²/g)^{1/3}, dv) の床で
+  uv の発散を防ぐ(ネスティングが水深も渡す事情の簡易代替)。
+  面型はセル別配列 bt_cell(辺の型を初期値に流入面を上書き)で解決し、
+  bc_open_face が参照する。流入は非負のみ(流出は stage / source)。
+  同一セルへの流量と水位の同時規定は過剰決定になる(クランプが
+  mn1 の質量を捨てる)ため不可 — ネスティング型の両立(境界行 stage
+  +内側面の流量規定)は将来の内部面上書し機構で(boundary_plan.md)。
 - **初期条件は解釈済みの t_initial(s%ini)として t_state が保持する**
   (list_initial の生値は m_state_init が解釈して写す。set_z/set_h/
   set_uv・user フック・他モジュール(η_ref 導出)は s%ini を参照)。
