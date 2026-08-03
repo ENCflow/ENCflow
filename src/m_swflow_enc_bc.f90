@@ -206,9 +206,9 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
 
   integer :: i, j
   integer :: ifl, m, k, sd, ie, je
-  integer :: ncseg, nwet
-  real :: qw, qwm, wsum, hmx, h, hc, he, uve1, mne1
-  logical :: weighted
+  integer :: ncseg
+  real :: qw, qwm, wsum, hmx, frw, alpha, h, hc, he, uve1, mne1
+  logical :: blend
   ! 各辺を横切る面の方位(1番目が法線、2・3番目が斜め)
   integer, parameter :: kfw(1:3) = [4, 1, 6]   ! 西辺(セル (1,j))
   integer, parameter :: kfe(1:3) = [5, 3, 8]   ! 東辺(セル (nx,j))
@@ -255,14 +255,19 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
   !     dist=1: 水深按分(qw_m = Q·h_m/Σ(h·w)。wet セルで流入流速が一様)
   !     dist=2: 通水能按分(重み h^{5/3}。マニング則の等勾配断面と同じ
   !             配分で、深いセルほど流速も大きい)
-  !   dist=1,2 は次の両方が成つときだけ有効で、それ以外は均等按分に
-  !   落とす(乾いた断面への種まきと異常時の頑健化。しきい値は固定):
-  !     (i)  wet(h >= dd)の面エントリが過半
-  !     (ii) 最深セルの配分流速が限界流速を超えない
-  !          (qw_max <= h_max·sqrt(g·h_max)。断面の通水能が Q に対して
-  !          細すぎる薄膜・退水時に、最深セルへの流量集中が薄膜上の
-  !          ダム崩壊流を起こして発散する実挙動への安定性ガード)
+  !   dist=1,2 は均等按分と連続ブレンドして適用する:
+  !     fr = u_max/sqrt(g·h_max)(最深セルに全面按分したときの流速比)
+  !     α  = clamp(2·(1 − fr), 0, 1)(fr<=0.5 で 1、fr>=1 で 0、間は線形)
+  !     qw_m = α·(重み按分) + (1−α)·(均等按分)
+  !   配分が現在の h の連続関数になるため、モード切替の不連続・振動が
+  !   原理的に存在せず、記憶する状態もない(リスタート往復も厳密)。
+  !   乾いた断面・薄膜だけの断面・退水時は fr が大きく自動的に均等側に
+  !   寄る(薄膜断面で最深セルへの流量集中がダム崩壊流を起こして発散
+  !   する実挙動への安定化を兼ねる。α·fr = 2fr(1−fr) <= 1/2 なので
+  !   最深セルの配分流量は常に限界流量の半分以下)。wet 率による切替は
+  !   行わない(低水時に澪筋だけが wet の状態が本モードの主用途のため)。
   !   重みの h は前ステップの s%h(スキームの他項と同じ時刻レベル)。
+  !   h < dd のセルへの重み側の配分はゼロ。
   !   節1の後に適用し、開いた辺上の流入区間では辺の式を上書きする。
   !   面の取り込みは bt_cell(e_bc_inflow)経由で bc_open_face が開く。
   !   MPI: 東西辺のスロット行=セル行なので、共有行 js-1 はハロの h から
@@ -274,9 +279,11 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
   do ifl = 1, b%ninflow
     ncseg = b%inflow(ifl)%ncell
 
-    ! 重み按分の準備(重みベクトルの共有と有効判定)
-    weighted = .false.
-    if (b%inflow(ifl)%dist > 0 .and. b%inflow(ifl)%q > 0.0) then
+    ! 重み按分の準備(重みベクトルの共有とブレンド係数 α の決定)
+    blend = (b%inflow(ifl)%dist > 0 .and. b%inflow(ifl)%q > 0.0)
+    alpha = 0.0
+    wsum = 0.0
+    if (blend) then
       infl_hseg(1:ncseg) = 0.0
       do m = 1, ncseg
         j = b%inflow(ifl)%cell(2,m)
@@ -284,20 +291,18 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
         infl_hseg(m) = s%h(b%inflow(ifl)%cell(1,m), j)
       end do
       call par_allreduce_sumr(infl_hseg(1:ncseg))
-      nwet = 0
-      wsum = 0.0
       do m = 1, ncseg
         h = infl_hseg(m)
         if (h < p%dd) cycle
-        nwet = nwet + 1
         wsum = wsum + wgt_dist(h, b%inflow(ifl)%dist) &
                       * l8(kn_side(b%inflow(ifl)%side(m)))
       end do
-      if (2 * nwet > ncseg .and. wsum > 0.0) then
-        ! 安定性ガード(頭書き (ii)): 最深セルの配分流量が限界流量以下
+      if (wsum > 0.0) then
+        ! 最深セルに全面按分したときの流速比(フルード数)から α を決める
         hmx = maxval(infl_hseg(1:ncseg))
-        qwm = b%inflow(ifl)%q * wgt_dist(hmx, b%inflow(ifl)%dist) / wsum
-        weighted = (qwm <= hmx * sqrt(p%gg * hmx))
+        frw = b%inflow(ifl)%q * wgt_dist(hmx, b%inflow(ifl)%dist) / wsum &
+              / (hmx * sqrt(p%gg * hmx))
+        alpha = min(1.0, max(0.0, 2.0 * (1.0 - frw)))
       end if
     end if
 
@@ -319,15 +324,17 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
       k = kn_side(sd)
       ie = i + die(k)
       je = j + dje(k)
-      ! 面エントリの単位幅流量(重み按分では dry 面はゼロ)と参照水深。
-      ! 重み按分の h は共有ベクトルから引く(共有行の冗長書きが両ランクで
-      ! ビット同値になる条件。均等按分は従来どおりハロの s%h)
-      if (weighted) then
+      ! 面エントリの単位幅流量(重み側は dry 面ゼロ、均等側と α で
+      ! ブレンド。α=0 なら qwm = qw に厳密に一致)と参照水深。
+      ! ブレンド時の h は共有ベクトルから引く(共有行の冗長書きが両ランク
+      ! でビット同値になる条件。dist=0 は従来どおりハロの s%h)
+      if (blend) then
         h = infl_hseg(m)
         if (h < p%dd) then
-          qwm = 0.0
+          qwm = (1.0 - alpha) * qw
         else
-          qwm = b%inflow(ifl)%q * wgt_dist(h, b%inflow(ifl)%dist) / wsum
+          qwm = alpha * (b%inflow(ifl)%q * wgt_dist(h, b%inflow(ifl)%dist) / wsum) &
+                + (1.0 - alpha) * qw
         end if
       else
         qwm = qw
