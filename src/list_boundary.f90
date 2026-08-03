@@ -22,6 +22,10 @@ module list_boundary
   integer, parameter :: nsrccmax = 999   ! 1ソースあたりの最大セル数
   integer, parameter :: nsrcvmax = 999   ! 1ソースあたりの時系列最大データ数
 
+  ! 大配列(セル座標・時系列)は allocatable 成分とし、対応する
+  ! グループが存在した場合のみ read_* が確保・充填する
+  ! (固定長成分にすると t_list_boundary のローカル変数が数 MB になり、
+  !  スタックあふれで segfault する。実際に踏んだ)
   type t_list_boundary
     ! ---- &list_bound_edge ----
     logical :: present_edge = .false.              ! グループが存在したか
@@ -35,18 +39,33 @@ module list_boundary
     real :: bc_eta_s = -9999.0                     !   set_etaref)
     ! ---- &list_bound_source ----
     logical :: present_source = .false.            ! グループが存在したか
-    integer :: src_cell(1:2,1:nsrccmax,1:nbsrcmax) = -9999  ! セル座標 (i, j)
-    real :: src_val(1:2,1:nsrcvmax,1:nbsrcmax) = -9999      ! 時系列 (min, m3/s)
+    integer, allocatable :: src_cell(:,:,:)        ! セル座標 (i, j)
+    real, allocatable :: src_val(:,:,:)            ! 時系列 (min, m3/s)
     character(len=maxpathlen) :: fn_src_cell(1:nbsrcmax) = ""  ! セル一覧ファイル名
     character(len=maxpathlen) :: fn_src_val(1:nbsrcmax) = ""   ! 時系列ファイル名
     ! ---- &list_bound_stage ----
     logical :: present_stage = .false.             ! グループが存在したか
-    integer :: stage_cell(1:2,1:nsrccmax,1:nbsrcmax) = -9999  ! セル座標 (i, j)
+    integer, allocatable :: stage_cell(:,:,:)      ! セル座標 (i, j)
     real :: stage_eta(1:nbsrcmax) = -9999          ! 規定水位の固定値 (m)
-    real :: stage_val(1:2,1:nsrcvmax,1:nbsrcmax) = -9999      ! 時系列 (min, m)
+    real, allocatable :: stage_val(:,:,:)          ! 時系列 (min, m)
     character(len=maxpathlen) :: fn_stage_cell(1:nbsrcmax) = ""  ! セル一覧ファイル名
     character(len=maxpathlen) :: fn_stage_val(1:nbsrcmax) = ""   ! 時系列ファイル名
+    ! ---- &list_bound_inflow ----
+    logical :: present_inflow = .false.            ! グループが存在したか
+    integer, allocatable :: inflow_cell(:,:,:)     ! セル座標 (i, j)
+    real, allocatable :: inflow_val(:,:,:)         ! 時系列 (min, m3/s)
+    character(len=maxpathlen) :: fn_inflow_cell(1:nbsrcmax) = ""  ! セル一覧ファイル名
+    character(len=maxpathlen) :: fn_inflow_val(1:nbsrcmax) = ""   ! 時系列ファイル名
   end type
+
+  ! namelist 読み込み用の静的作業配列(スタックに置かないための措置。
+  ! 読み込み時のみ使用し、値は read_* が毎回既定値で初期化する)
+  integer :: src_cell(1:2,1:nsrccmax,1:nbsrcmax)
+  real :: src_val(1:2,1:nsrcvmax,1:nbsrcmax)
+  integer :: stage_cell(1:2,1:nsrccmax,1:nbsrcmax)
+  real :: stage_val(1:2,1:nsrcvmax,1:nbsrcmax)
+  integer :: inflow_cell(1:2,1:nsrccmax,1:nbsrcmax)
+  real :: inflow_val(1:2,1:nsrcvmax,1:nbsrcmax)
 
 contains
 
@@ -71,6 +90,7 @@ subroutine list_boundary_read(p, list)
   call read_edge(un, list)
   call read_source(un, list)
   call read_stage(un, list)
+  call read_inflow(un, list)
   close(un)
 
 end subroutine
@@ -126,16 +146,14 @@ end subroutine
 subroutine read_source(un, list)
   integer, intent(in) :: un
   type(t_list_boundary), intent(inout) :: list
-  integer :: src_cell(1:2,1:nsrccmax,1:nbsrcmax)
-  real :: src_val(1:2,1:nsrcvmax,1:nbsrcmax)
   character(len=maxpathlen) :: fn_src_cell(1:nbsrcmax)
   character(len=maxpathlen) :: fn_src_val(1:nbsrcmax)
   integer :: ios
   character(len=1024) :: iom
   namelist /list_bound_source/ src_cell, src_val, fn_src_cell, fn_src_val
 
-  src_cell = list%src_cell
-  src_val = list%src_val
+  src_cell = -9999
+  src_val = -9999
   fn_src_cell = list%fn_src_cell
   fn_src_val = list%fn_src_val
 
@@ -159,9 +177,7 @@ end subroutine
 subroutine read_stage(un, list)
   integer, intent(in) :: un
   type(t_list_boundary), intent(inout) :: list
-  integer :: stage_cell(1:2,1:nsrccmax,1:nbsrcmax)
   real :: stage_eta(1:nbsrcmax)
-  real :: stage_val(1:2,1:nsrcvmax,1:nbsrcmax)
   character(len=maxpathlen) :: fn_stage_cell(1:nbsrcmax)
   character(len=maxpathlen) :: fn_stage_val(1:nbsrcmax)
   integer :: ios
@@ -169,9 +185,9 @@ subroutine read_stage(un, list)
   namelist /list_bound_stage/ stage_cell, stage_eta, stage_val, &
                               fn_stage_cell, fn_stage_val
 
-  stage_cell = list%stage_cell
+  stage_cell = -9999
   stage_eta = list%stage_eta
-  stage_val = list%stage_val
+  stage_val = -9999
   fn_stage_cell = list%fn_stage_cell
   fn_stage_val = list%fn_stage_val
 
@@ -186,6 +202,38 @@ subroutine read_stage(un, list)
   list%stage_val = stage_val
   list%fn_stage_cell = fn_stage_cell
   list%fn_stage_val = fn_stage_val
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! &list_bound_inflow を読む(不在なら present_inflow を偽のまま返す)
+!----------------------------------------------------------------------
+subroutine read_inflow(un, list)
+  integer, intent(in) :: un
+  type(t_list_boundary), intent(inout) :: list
+  character(len=maxpathlen) :: fn_inflow_cell(1:nbsrcmax)
+  character(len=maxpathlen) :: fn_inflow_val(1:nbsrcmax)
+  integer :: ios
+  character(len=1024) :: iom
+  namelist /list_bound_inflow/ inflow_cell, inflow_val, &
+                               fn_inflow_cell, fn_inflow_val
+
+  inflow_cell = -9999
+  inflow_val = -9999
+  fn_inflow_cell = list%fn_inflow_cell
+  fn_inflow_val = list%fn_inflow_val
+
+  rewind(un)
+  read(un, nml=list_bound_inflow, iostat=ios, iomsg=iom)
+  if (ios > 0) call par_stop("list_bound_inflow 読込失敗: "//trim(iom))
+  if (ios < 0) return              ! グループ不在(この族なし)
+  list%present_inflow = .true.
+
+  list%inflow_cell = inflow_cell
+  list%inflow_val = inflow_val
+  list%fn_inflow_cell = fn_inflow_cell
+  list%fn_inflow_val = fn_inflow_val
 
 end subroutine
 

@@ -13,6 +13,10 @@ module m_boundary
   !     現時刻の η を用意し、適用は boundary_h の最後
   !     (h = max(η − z, 0) のクランプ。最優先)。周囲との面フラックス
   !     は momentum が通常計算するため u,v,m,n・record に自然に乗る。
+  !   - 区間流入(inflow): 外縁に接するセル区間に流量時系列 Q(t) を
+  !     規定する(河川流入等。複数)。適用は boundary_uvmn(区間の
+  !     外縁法線面の mn1 規定=指向性の流入。辺の型を面単位で上書き)。
+  !     流入は非負(流出は stage / source を使う)。
   ! 族が肥大したら族別モジュールに分割する(boundary_plan.md §4.1)
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
@@ -29,13 +33,15 @@ module m_boundary
   public :: m_boundary_set_etaref
   public :: m_boundary_dispose
   public :: m_boundary_makebdc
-  public :: e_bc_wall, e_bc_outflow, e_bc_radiation
+  public :: e_bc_wall, e_bc_outflow, e_bc_radiation, e_bc_inflow
   public :: e_side_w, e_side_e, e_side_n, e_side_s
 
   ! 辺境界の型コード
   integer, parameter :: e_bc_wall = 0      ! 不透過(既定)
   integer, parameter :: e_bc_outflow = 1   ! 自由流出(洪水向け: 通過流+段落ち)
   integer, parameter :: e_bc_radiation = 2 ! 長波放射(津波向け: 水位偏差を透過)
+  integer, parameter :: e_bc_inflow = 3    ! 流量規定面(区間流入。面単位の内部型。
+                                           !   f_bc_* の値としては指定不可)
 
   ! 辺番号(btype の添字)
   integer, parameter :: e_side_w = 1       ! 西 (i=1)
@@ -68,12 +74,23 @@ module m_boundary
     real :: eta = 0.0                      ! 現時刻の規定水位 (m)
   end type
 
+  type t_bound_inflow                      ! 区間流入1個
+    integer :: ncell = 0                   ! 面エントリ数(角セルは辺ごとに複製)
+    integer, allocatable :: cell(:,:)      ! セル座標 (1:2, 1:ncell)
+    integer, allocatable :: side(:)        ! 各エントリの辺 (e_side_*)
+    integer :: nval = 0                    ! 時系列データ数
+    real, allocatable :: val(:,:)          ! 時系列 (1:2, 1:nval) (s, m3/s)
+    real :: q = 0.0                        ! 現時刻の流量 (m3/s)
+  end type
+
   type t_boundary
     type(t_bound_edge) :: edge             ! 辺境界
     integer :: nsrc = 0                    ! ソース数
     type(t_bound_src), allocatable :: src(:)  ! 湧き出し・吸い込み
     integer :: nstage = 0                  ! 水位規定セル群の数
     type(t_bound_stage), allocatable :: stage(:)  ! 水位規定セル群
+    integer :: ninflow = 0                 ! 区間流入の数
+    type(t_bound_inflow), allocatable :: inflow(:)  ! 区間流入
     logical :: initialized = .false.
   end type
 
@@ -110,6 +127,9 @@ subroutine m_boundary_init(b, p, g)
   !--- 水位規定セル群 ---
   call init_stage(b, p, g, list)
 
+  !--- 区間流入 ---
+  call init_inflow(b, p, g, list)
+
 end subroutine
 
 
@@ -121,7 +141,7 @@ subroutine m_boundary_makebdc(b, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  integer :: isrc, istage
+  integer :: isrc, istage, ifl
   real :: q
 
   !--- 各ソースの現時刻の流量をセル1個・1ステップあたりの水深増分に換算 ---
@@ -133,6 +153,11 @@ subroutine m_boundary_makebdc(b, p, g, s)
   !--- 各水位規定セル群の現時刻の規定水位を補間 ---
   do istage = 1, b%nstage
     b%stage(istage)%eta = interp_series(b%stage(istage)%val, b%stage(istage)%nval, s%t)
+  end do
+
+  !--- 各区間流入の現時刻の流量を補間 ---
+  do ifl = 1, b%ninflow
+    b%inflow(ifl)%q = interp_series(b%inflow(ifl)%val, b%inflow(ifl)%nval, s%t)
   end do
 
 end subroutine
@@ -205,9 +230,11 @@ subroutine m_boundary_dispose(b)
   type(t_boundary), intent(inout) :: b
   if (allocated(b%src)) deallocate(b%src)
   if (allocated(b%stage)) deallocate(b%stage)
+  if (allocated(b%inflow)) deallocate(b%inflow)
   if (allocated(b%edge%eta_cell)) deallocate(b%edge%eta_cell)
   b%nsrc = 0
   b%nstage = 0
+  b%ninflow = 0
   b%initialized = .false.
 end subroutine
 
@@ -489,6 +516,129 @@ subroutine read_val_file(fname, src)
   end do
   close(un)
   src%nval = n
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 区間流入の解釈・検証・格納
+!   セル集合(外縁に接するセル列)は namelist 配列またはファイル。
+!   流量は時系列(namelist かファイル)で、非負のみ(流出は stage /
+!   source を使う)。角セル(2辺に接する)は辺ごとにエントリを複製し、
+!   両方の法線面から按分流入する
+!----------------------------------------------------------------------
+subroutine init_inflow(b, p, g, list)
+  type(t_boundary), intent(inout) :: b
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_list_boundary), intent(in) :: list
+  logical :: active(1:nbsrcmax)
+  integer :: ncell
+  integer, allocatable :: cell(:,:)
+  integer :: sides(1:4), nsides
+  integer :: ifl, n, k, m, i, j
+
+  if (.not. list%present_inflow) return
+
+  !--- 有効な区間(セルか時系列かファイル指定がある)を数える ---
+  do ifl = 1, nbsrcmax
+    active(ifl) = (list%inflow_cell(1,1,ifl) > -9999) &
+                  .or. (list%inflow_val(1,1,ifl) > -9999) &
+                  .or. (len_trim(list%fn_inflow_cell(ifl)) > 0) &
+                  .or. (len_trim(list%fn_inflow_val(ifl)) > 0)
+  end do
+  b%ninflow = count(active)
+  if (b%ninflow <= 0) return
+  if (.not. all(active(1:b%ninflow))) then
+    call par_stop("list_bound_inflow: 区間番号は 1 から連続で指定してください")
+  end if
+
+  allocate(b%inflow(1:b%ninflow))
+
+  do ifl = 1, b%ninflow
+
+    !--- セル集合(ファイル指定が優先) ---
+    if (len_trim(list%fn_inflow_cell(ifl)) > 0) then
+      call read_cell_file2(trim(p%dir_data)//"/"//trim(list%fn_inflow_cell(ifl)), &
+                           ncell, cell)
+    else
+      n = 0
+      do k = 1, nsrccmax
+        if (list%inflow_cell(1,k,ifl) <= -9999) exit   ! 番兵で終端
+        n = n + 1
+      end do
+      allocate(cell(1:2,1:max(n,1)))
+      cell(1:2,1:n) = list%inflow_cell(1:2,1:n,ifl)
+      ncell = n
+    end if
+    if (ncell <= 0) then
+      call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" にセルがありません")
+    end if
+
+    !--- 流量時系列(ファイル指定が優先) ---
+    if (len_trim(list%fn_inflow_val(ifl)) > 0) then
+      call read_val_file2(trim(p%dir_data)//"/"//trim(list%fn_inflow_val(ifl)), &
+                          b%inflow(ifl)%nval, b%inflow(ifl)%val)
+    else
+      n = 0
+      do k = 1, nsrcvmax
+        if (list%inflow_val(1,k,ifl) <= -9999) exit    ! 番兵で終端
+        n = n + 1
+      end do
+      allocate(b%inflow(ifl)%val(1:2,1:max(n,1)))
+      b%inflow(ifl)%val(1,1:n) = list%inflow_val(1,1:n,ifl) * 60   ! 分を秒に換算
+      b%inflow(ifl)%val(2,1:n) = list%inflow_val(2,1:n,ifl)
+      b%inflow(ifl)%nval = n
+    end if
+    if (b%inflow(ifl)%nval <= 0) then
+      call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" に流量時系列がありません")
+    end if
+    do k = 1, b%inflow(ifl)%nval
+      if (b%inflow(ifl)%val(2,k) < 0) then
+        call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" の流量は非負のみです" &
+                      //"(流出は stage / source を使用)")
+      end if
+    end do
+
+    !--- 検証と (セル, 辺) エントリの構築(角セルは辺ごとに複製) ---
+    allocate(b%inflow(ifl)%cell(1:2,1:2*ncell))   ! 複製ぶんの余裕
+    allocate(b%inflow(ifl)%side(1:2*ncell))
+    m = 0
+    do k = 1, ncell
+      i = cell(1,k)
+      j = cell(2,k)
+      if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
+        call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" のセル (" &
+                      //itoa(i)//","//itoa(j)//") が領域外です")
+      end if
+      if (g%x(i,j) <= 0) then
+        call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" のセル (" &
+                      //itoa(i)//","//itoa(j)//") が無効セル(x=0)です")
+      end if
+      nsides = 0
+      if (i == 1)    then; nsides = nsides + 1; sides(nsides) = e_side_w; end if
+      if (i == g%nx) then; nsides = nsides + 1; sides(nsides) = e_side_e; end if
+      if (j == 1)    then; nsides = nsides + 1; sides(nsides) = e_side_n; end if
+      if (j == g%ny) then; nsides = nsides + 1; sides(nsides) = e_side_s; end if
+      if (nsides == 0) then
+        call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" のセル (" &
+                      //itoa(i)//","//itoa(j)//") が計算領域外縁に接していません")
+      end if
+      do n = 1, nsides
+        m = m + 1
+        b%inflow(ifl)%cell(1,m) = i
+        b%inflow(ifl)%cell(2,m) = j
+        b%inflow(ifl)%side(m) = sides(n)
+      end do
+    end do
+    b%inflow(ifl)%ncell = m
+    deallocate(cell)
+
+    !--- 計算開始時刻の流量を初期化する(stage と同じ理由。swflow init の
+    !    boundary_uvmn が makebdc より先に走る) ---
+    b%inflow(ifl)%q = interp_series(b%inflow(ifl)%val, b%inflow(ifl)%nval, p%t0)
+
+  end do
 
 end subroutine
 
