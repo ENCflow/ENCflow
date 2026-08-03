@@ -140,13 +140,15 @@ module subroutine boundary_h(p, g, b, s, sx)
   !$omp end parallel do
 
   ! 湧き出し・吸い込みを加える
-  !   所有ランクのみ適用する(リストは全ランクが保持。developer.md §11)
+  !   所有ランクのみ適用する(リストは全ランクが保持。developer.md §11)。
+  !   空隙率 gv で割って水深に換算する(降雨と同じ扱い。これで各セルの
+  !   受け取る体積が q·dx·dy で等しくなり、総量が厳密に Q になる)
   do isrc = 1, b%nsrc
     do k = 1, b%src(isrc)%ncell
       i = b%src(isrc)%cell(1,k)
       j = b%src(isrc)%cell(2,k)
       if (j < dcp%js .or. j > dcp%je) cycle
-      sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q
+      sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q / g%gv(i,j)
       ! 吸い込み(負の流量)でセルを負水深にしない(不足分は汲めない)
       if (sx%h1(i,j) < 0) sx%h1(i,j) = 0
     end do

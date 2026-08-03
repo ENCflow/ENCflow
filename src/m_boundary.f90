@@ -62,7 +62,9 @@ module m_boundary
     integer, allocatable :: cell(:,:)      ! セル座標 (1:2, 1:ncell)
     integer :: nval = 0                    ! 時系列データ数
     real, allocatable :: val(:,:)          ! 時系列 (1:2, 1:nval) (s, m3/s)
-    real :: q = 0.0                        ! 現時刻のセルあたり水深増分 (m)
+    real :: q = 0.0                        ! 現時刻のセルあたり水深増分 (m)。
+                                           !   等体積分配の dx·dy 換算値で、
+                                           !   空隙率 gv は適用側で除す
   end type
 
   type t_bound_stage                       ! 水位規定セル群1個
