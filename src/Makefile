@@ -16,7 +16,7 @@ PAR_OBJ	= m_parallel_$(MODE).o
 # ---------------------------------------------------------------
 LIBOBJS	= m_main.o m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o \
 	  m_geomorph.o m_gwflow.o m_gwflow_bucket.o m_intercept.o m_intercept_fixed.o \
-	  m_state.o m_record.o m_swflow.o m_swflow_enc.o m_swflow_enc_adv.o \
+	  m_state.o m_record.o m_swflow.o m_swflow_enc.o m_swflow_enc_adv.o m_swflow_enc_bc.o \
 	  m_output.o m_swflow_stg.o \
 	  $(PAR_OBJ) \
 	  list_sysparam.o list_geoinfo.o list_precip.o list_geomorph.o list_gwflow.o \
@@ -92,6 +92,7 @@ m_swflow_enc.o: m_sysparam.o list_enc.o m_geoinfo.o m_boundary.o \
 	m_precip.o m_state.o m_ffactor.o m_sysdep_util.o m_fileio.o $(PAR_OBJ)
 m_swflow_stg.o: m_sysparam.o m_geoinfo.o m_precip.o m_boundary.o m_state.o $(PAR_OBJ)
 m_swflow_enc_adv.o: m_swflow_enc.o m_state.o
+m_swflow_enc_bc.o: m_swflow_enc.o m_boundary.o m_state.o $(PAR_OBJ)
 list_sysparam.o: $(PAR_OBJ)
 list_geoinfo.o: m_sysparam.o $(PAR_OBJ)
 list_precip.o: m_sysparam.o $(PAR_OBJ)

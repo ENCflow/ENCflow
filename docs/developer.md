@@ -584,6 +584,13 @@
   族別グループ(&list_bound_edge / &list_bound_source。将来
   &list_bound_inflow / &list_bound_outflow)。**グループ不在=その族なし**
   (iostat<0 で判別)。旧形式 &list_boundary は検出して par_stop。
+- **境界条件の適用層は submodule m_swflow_enc_bc に分離**(2026-08-02。
+  bc_init / boundary_h / boundary_uvmn / bc_open_face / bc_dispose)。
+  m_swflow_enc_adv と同じ「親の私有状態(重み・エッジ状態・方位定数)
+  へのホスト結合を活かしたコード分割」で、§12 の排他切替イディオムとは
+  別用途。親に残るのはホットパスが読む have_open_bc(bc_init が設定)
+  のみ。nvfortran の TPR #27323(親 private へのホスト結合)が発現した
+  場合は adv と同じ public 化で回避する。
 - **boundary_uvmn = エッジの uv/mn1 への強制条件の汎用適用点**
   (momentum → par_edge_merge → boundary_uvmn → continuous の位置で
   毎ステップ無条件に呼ぶ。強制条件の族を追加するときはルーチン内に
