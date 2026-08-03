@@ -342,8 +342,22 @@ GeoTIFF 実装に先立ち、ESRI hdr ベースの座標管理を導入した(m_
    - 出力 hdr の座標は度のまま往復する(内部の xul/yul/csx/csy は
      入力の単位を保持し、変換しない)。
 
+9. **bil 読み込みの画素型対応(2026-08-01 追加)**。GIS からの
+   エクスポートが int8/int16 になりがちで読み込みエラーが頻発していた
+   ことへの対応。各 bil と同じ場所の .hdr があれば NBITS/PIXELTYPE を
+   見て読み分ける:
+   - 整数入力: 8/16/32bit × 符号付き/なし(既定 integer へ拡張)。
+     PIXELTYPE 未指定は 32bit=符号付き(従来互換)、8/16bit=符号なし
+     (ESRI の既定)とみなす。
+   - 実数入力: 32bit FLOAT のみ(64bit は明示エラー)。整数型の bil は
+     実数へ変換して読める(GeoTIFF と同じ扱い)。
+   - hdr に NCOLS/NROWS があれば格子数も照合する。
+   - hdr が無ければ従来どおりの生読み(int32 / float32)。
+     **書き出しは従来どおり 32bit 固定**。
+
 実装箇所: m_georef.f90(新規)、m_geoinfo(t_geoinfo%gr 成分と probe)、
-m_output(bil 書き出し 3 箇所に hdr 併記)、list_geoinfo(epsg)。
+m_output(bil 書き出し 3 箇所に hdr 併記)、list_geoinfo(epsg)、
+m_fileio(bil 読みの型対応。hdr 解析は m_georef の georef_parse_hdr)。
 hdr の探索・読み込みは全ランクが冗長に読む(他の入力読みと同じ方式)ため
 collective の追加はない。
 

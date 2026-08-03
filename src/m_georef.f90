@@ -25,7 +25,9 @@ module m_georef
   private
 
   public :: t_georef
+  public :: t_esri_hdr
   public :: georef_hdr_name
+  public :: georef_parse_hdr
   public :: georef_read_hdr
   public :: georef_write_hdr
   public :: georef_est_cellsize_m
@@ -45,6 +47,27 @@ module m_georef
     real(real64) :: nodata = 0.0_real64  ! その値(現状は保持のみ。GeoTIFF で使用予定)
     integer :: epsg = 0                  ! EPSG コード(0 = 不明。namelist 由来)
     logical :: is_geog = .false.         ! 経緯度(度単位)グリッドと推測されるか
+  end type
+
+  ! ESRI hdr の生の解析結果(数値の妥当性・対応可否の検証は呼び出し側で
+  ! 行う。m_fileio は rank0 単独の文脈でも呼ばれるため par_stop できない)
+  type t_esri_hdr
+    integer :: ncols = 0
+    integer :: nrows = 0
+    integer :: nbands = 1
+    integer :: nbits = 32
+    integer :: skipbytes = 0
+    character(len=16) :: layout = "BIL"
+    character(len=16) :: byteorder = "I"
+    character(len=16) :: pixeltype = ""    ! 未指定は空(FLOAT/SIGNEDINT/UNSIGNEDINT)
+    logical :: seen_grid = .false.         ! NCOLS と NROWS が揃っているか
+    logical :: seen_geo = .false.          ! XDIM, YDIM, ULXMAP, ULYMAP が揃っているか
+    real(real64) :: xdim = 0.0_real64
+    real(real64) :: ydim = 0.0_real64
+    real(real64) :: ulxmap = 0.0_real64
+    real(real64) :: ulymap = 0.0_real64
+    logical :: has_nodata = .false.
+    real(real64) :: nodata = 0.0_real64
   end type
 
 contains
@@ -86,25 +109,77 @@ subroutine georef_read_hdr(fname, gr, ncols, nrows)
   character(len=*), intent(in) :: fname
   type(t_georef), intent(inout) :: gr
   integer, intent(out) :: ncols, nrows
+  type(t_esri_hdr) :: h
+  integer :: stat
+  character(len=512) :: msg
+
+  call georef_parse_hdr(fname, h, stat, msg)
+  if (stat /= 0) call par_stop(trim(msg))
+  if (.not. h%seen_grid) then
+    call par_stop("georef: hdr に NCOLS/NROWS がありません: "//trim(fname))
+  end if
+  if (.not. h%seen_geo) then
+    call par_stop("georef: hdr に必須キー(NCOLS, NROWS, XDIM, YDIM, "// &
+                  "ULXMAP, ULYMAP)が揃っていません: "//trim(fname))
+  end if
+  if (h%ncols <= 0 .or. h%nrows <= 0) then
+    call par_stop("georef: NCOLS/NROWS が不正です: "//trim(fname))
+  end if
+  if (h%xdim <= 0.0_real64 .or. h%ydim <= 0.0_real64) then
+    call par_stop("georef: XDIM/YDIM が不正です: "//trim(fname))
+  end if
+
+  ncols = h%ncols
+  nrows = h%nrows
+  gr%has_nodata = h%has_nodata
+  gr%nodata = h%nodata
+
+  ! ULXMAP/ULYMAP はセル中心 → 外縁に変換して保持
+  gr%xul = h%ulxmap - 0.5_real64 * h%xdim
+  gr%yul = h%ulymap + 0.5_real64 * h%ydim
+  gr%csx = h%xdim
+  gr%csy = h%ydim
+  gr%active = .true.
+
+  ! 経緯度(度単位)グリッドの推測。hdr は CRS を持たないため、
+  ! セル寸法が 0.1 度未満かつ原点が経緯度の値域内、で判定する
+  ! (投影座標系のメートル格子でこれを満たすのは、CRS 原点至近を
+  ! 10cm 未満のセルで切った場合のみで、実用上は起こらない)。
+  ! GeoTIFF では CRS タグから確定的に判定する
+  gr%is_geog = (h%xdim < 0.1_real64 .and. h%ydim < 0.1_real64 .and. &
+                abs(h%ulymap) <= 90.0_real64 .and. abs(h%ulxmap) <= 360.0_real64)
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! ESRI hdr を解析して生の値を返す(検証は呼び出し側)
+!   キーは大文字小文字を問わない。未知キーは無視。解析できない値のみ
+!   stat/=0(メッセージ付き)で返す
+!----------------------------------------------------------------------
+subroutine georef_parse_hdr(fname, h, stat, msg)
+  character(len=*), intent(in) :: fname
+  type(t_esri_hdr), intent(out) :: h
+  integer, intent(out) :: stat
+  character(len=*), intent(out) :: msg
+
   integer :: un, ios
   character(len=1024) :: line
   character(:), allocatable :: key, val
-  real(real64) :: xdim, ydim, ulxmap, ulymap, rv
-  integer :: iv
   logical :: seen_nc, seen_nr, seen_xd, seen_yd, seen_ux, seen_uy
 
-  ncols = 0
-  nrows = 0
-  xdim = 0.0_real64
-  ydim = 0.0_real64
-  ulxmap = 0.0_real64
-  ulymap = 0.0_real64
+  stat = 0
+  msg = ""
   seen_nc = .false.; seen_nr = .false.
   seen_xd = .false.; seen_yd = .false.
   seen_ux = .false.; seen_uy = .false.
 
   open(newunit=un, file=fname, status='old', iostat=ios)
-  if (ios /= 0) call par_stop("georef: hdr を開けません: "//trim(fname))
+  if (ios /= 0) then
+    stat = 1
+    msg = "georef: hdr を開けません: "//trim(fname)
+    return
+  end if
 
   do
     read(un, '(a)', iostat=ios) line
@@ -113,77 +188,74 @@ subroutine georef_read_hdr(fname, gr, ncols, nrows)
     if (len(key) == 0) cycle
     select case (key)
       case ("NCOLS")
-        ncols = to_int(fname, key, val);  seen_nc = .true.
+        if (.not. geti(h%ncols)) exit
+        seen_nc = .true.
       case ("NROWS")
-        nrows = to_int(fname, key, val);  seen_nr = .true.
-      case ("XDIM")
-        xdim = to_real(fname, key, val);  seen_xd = .true.
-      case ("YDIM")
-        ydim = to_real(fname, key, val);  seen_yd = .true.
-      case ("ULXMAP")
-        ulxmap = to_real(fname, key, val);  seen_ux = .true.
-      case ("ULYMAP")
-        ulymap = to_real(fname, key, val);  seen_uy = .true.
+        if (.not. geti(h%nrows)) exit
+        seen_nr = .true.
       case ("NBANDS")
-        iv = to_int(fname, key, val)
-        if (iv /= 1) call par_stop("georef: NBANDS="//itoa(iv)// &
-                       " は未対応です(1バンドのみ): "//trim(fname))
+        if (.not. geti(h%nbands)) exit
       case ("NBITS")
-        iv = to_int(fname, key, val)
-        if (iv /= 32) call par_stop("georef: NBITS="//itoa(iv)// &
-                        " は未対応です(32bit のみ): "//trim(fname))
+        if (.not. geti(h%nbits)) exit
       case ("SKIPBYTES")
-        iv = to_int(fname, key, val)
-        if (iv /= 0) call par_stop("georef: SKIPBYTES="//itoa(iv)// &
-                       " は未対応です: "//trim(fname))
+        if (.not. geti(h%skipbytes)) exit
+      case ("XDIM")
+        if (.not. getr(h%xdim)) exit
+        seen_xd = .true.
+      case ("YDIM")
+        if (.not. getr(h%ydim)) exit
+        seen_yd = .true.
+      case ("ULXMAP")
+        if (.not. getr(h%ulxmap)) exit
+        seen_ux = .true.
+      case ("ULYMAP")
+        if (.not. getr(h%ulymap)) exit
+        seen_uy = .true.
       case ("LAYOUT")
         call upcase(val)
-        if (val /= "BIL") call par_stop("georef: LAYOUT="//val// &
-                            " は未対応です(BIL のみ): "//trim(fname))
+        h%layout = val
       case ("BYTEORDER")
         call upcase(val)
-        if (val /= "I") call par_stop("georef: BYTEORDER="//val// &
-                          " は未対応です(I=リトルエンディアンのみ): "//trim(fname))
+        h%byteorder = val
       case ("PIXELTYPE")
         call upcase(val)
-        if (val /= "FLOAT") call par_stop("georef: PIXELTYPE="//val// &
-                              " は未対応です(地盤高は FLOAT のみ): "//trim(fname))
+        h%pixeltype = val
       case ("NODATA", "NODATA_VALUE")
-        rv = to_real(fname, key, val)
-        gr%has_nodata = .true.
-        gr%nodata = rv
+        if (.not. getr(h%nodata)) exit
+        h%has_nodata = .true.
       case default
         ! 未知キー(BANDROWBYTES, TOTALROWBYTES 等)は無視
     end select
   end do
   close(un)
+  if (stat /= 0) return
 
-  if (.not. (seen_nc .and. seen_nr .and. seen_xd .and. seen_yd .and. &
-             seen_ux .and. seen_uy)) then
-    call par_stop("georef: hdr に必須キー(NCOLS, NROWS, XDIM, YDIM, "// &
-                  "ULXMAP, ULYMAP)が揃っていません: "//trim(fname))
-  end if
-  if (ncols <= 0 .or. nrows <= 0) then
-    call par_stop("georef: NCOLS/NROWS が不正です: "//trim(fname))
-  end if
-  if (xdim <= 0.0_real64 .or. ydim <= 0.0_real64) then
-    call par_stop("georef: XDIM/YDIM が不正です: "//trim(fname))
-  end if
+  h%seen_grid = seen_nc .and. seen_nr
+  h%seen_geo = seen_xd .and. seen_yd .and. seen_ux .and. seen_uy
 
-  ! ULXMAP/ULYMAP はセル中心 → 外縁に変換して保持
-  gr%xul = ulxmap - 0.5_real64 * xdim
-  gr%yul = ulymap + 0.5_real64 * ydim
-  gr%csx = xdim
-  gr%csy = ydim
-  gr%active = .true.
+contains
 
-  ! 経緯度(度単位)グリッドの推測。hdr は CRS を持たないため、
-  ! セル寸法が 0.1 度未満かつ原点が経緯度の値域内、で判定する
-  ! (投影座標系のメートル格子でこれを満たすのは、CRS 原点至近を
-  ! 10cm 未満のセルで切った場合のみで、実用上は起こらない)。
-  ! 将来の GeoTIFF では CRS タグから確定的に判定する
-  gr%is_geog = (xdim < 0.1_real64 .and. ydim < 0.1_real64 .and. &
-                abs(ulymap) <= 90.0_real64 .and. abs(ulxmap) <= 360.0_real64)
+  logical function geti(v)
+    integer, intent(out) :: v
+    integer :: ios2
+    read(val, *, iostat=ios2) v
+    geti = (ios2 == 0)
+    if (.not. geti) then
+      stat = 1
+      msg = "georef: "//key//" の値 '"//val//"' を整数として読めません: "//trim(fname)
+    end if
+  end function
+
+  logical function getr(v)
+    real(real64), intent(out) :: v
+    integer :: ios2
+    read(val, *, iostat=ios2) v
+    getr = (ios2 == 0)
+    if (.not. getr) then
+      stat = 1
+      msg = "georef: "//key//" の値 '"//val//"' を実数として読めません: "//trim(fname)
+    end if
+  end function
 
 end subroutine
 
@@ -298,17 +370,6 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-function to_int(fname, key, val) result(iv)
-  character(len=*), intent(in) :: fname, key, val
-  integer :: iv
-  integer :: ios
-  read(val, *, iostat=ios) iv
-  if (ios /= 0) call par_stop("georef: "//key//" の値 '"//val// &
-                              "' を整数として読めません: "//trim(fname))
-end function
-
-
-!----------------------------------------------------------------------
 ! 座標値の固定小数文字列化(小数 12 桁)
 !   f0 編集は 1 未満の値で先頭のゼロを省く(.001 等)処理系があるため、
 !   "0." 始まりをここで保証する
@@ -324,17 +385,6 @@ function ftoa(v) result(s)
   else if (len(s) >= 2) then
     if (s(1:2) == "-.") s = "-0"//s(2:)
   end if
-end function
-
-
-!----------------------------------------------------------------------
-function to_real(fname, key, val) result(rv)
-  character(len=*), intent(in) :: fname, key, val
-  real(real64) :: rv
-  integer :: ios
-  read(val, *, iostat=ios) rv
-  if (ios /= 0) call par_stop("georef: "//key//" の値 '"//val// &
-                              "' を実数として読めません: "//trim(fname))
 end function
 
 

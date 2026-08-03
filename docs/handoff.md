@@ -93,6 +93,11 @@
      GeoKey 併記(4612+2451)、QGIS の実数文字列 nodata、i8 型を実物で
      検証。QGIS 高圧縮(Deflate+pred2)も Phase 2 で読解済み。
      よく使う CRS は JGD2000 平面直角 9 系(EPSG:2451)
+   - bil 読みの画素型対応(2026-08-01。geotiff_plan.md §10 項9): sidecar
+     hdr の NBITS/PIXELTYPE で int8/int16/int32×符号有無を読み分け。
+     gfortran で検証済み: GDAL EHdr の Byte/Int16/UInt16 マスク入力が
+     int32 版と全出力ビット一致、hdr なし(生 int32)の従来経路ビット一致、
+     Float64・型違い・格子数不一致の明示エラー、経緯度 hdr の probe 不変
    - QGIS での目視確認済み(2026-08-01): wrk_*.tif の見た目 OK、
      実データ往復の wrk_d2451_real / wrk_d4326_real は位置も OK
      (便宜座標の wrk_* が架空位置に出るのは仕様。README 参照)。
