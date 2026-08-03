@@ -1,7 +1,8 @@
 module m_fileio
-  use, intrinsic :: iso_fortran_env, only: real32, int32, int64
+  use, intrinsic :: iso_fortran_env, only: real32, int8, int16, int32, int64
   use m_geotiff, only : gtif_read, gtif_write, t_gtif_info
-  use m_georef, only : t_georef
+  use m_georef, only : t_georef, t_esri_hdr, georef_hdr_name, georef_parse_hdr
+  use m_util, only : itoa
   use m_parallel, only : par_abort
 
   implicit none
@@ -109,9 +110,7 @@ subroutine fileio_read_matrix_int(fname, nx, ny, a, e_fmt)
       call read_textmatrix_int(un, nx, ny, a)
       close(un)
     case (e_fmt_bil)
-      open(newunit=un,file=fname, form='unformatted', status='old', access='stream')
-      call read_bil_int(un, nx, ny, a)
-      close(un)
+      call read_bil_int_file(fname, nx, ny, a)
     case (e_fmt_gtif)
       call read_gtif_int(fname, nx, ny, a)
     case default
@@ -167,9 +166,7 @@ subroutine fileio_read_matrix_real(fname, nx, ny, a, e_fmt)
       call read_textmatrix_real(un, nx, ny, a)
       close(un)
     case (e_fmt_bil)
-      open(newunit=un,file=fname, form='unformatted', status='old', access='stream')
-      call read_bil_real(un, nx, ny, a)
-      close(un)
+      call read_bil_real_file(fname, nx, ny, a)
     case (e_fmt_gtif)
       call read_gtif_real(fname, nx, ny, a)
     case default
@@ -334,6 +331,197 @@ subroutine gr2info(gr, info)
   info%csy = gr%csy
   info%epsg = gr%epsg
   info%is_geog = gr%is_geog
+end subroutine
+
+
+!======================================================================
+! bil 読み(sidecar hdr による型対応。docs/geotiff_plan.md §10)
+!   bil と同じ場所の .hdr があれば NBITS/PIXELTYPE を見て読み分ける:
+!   - 整数入力: 8/16/32bit × 符号付き/なし(既定 integer へ拡張)。
+!     PIXELTYPE 未指定は 32bit=符号付き(従来互換)、8/16bit=符号なし
+!     (ESRI の既定)とみなす
+!   - 実数入力: 32bit FLOAT のみ。整数型の bil は実数へ変換して読める
+!     (GeoTIFF と同じ扱い)。64bit は明示エラー
+!   - 格子数(NCOLS/NROWS)が hdr にあれば照合する
+!   hdr が無ければ従来どおりの生読み(整数=既定 integer、実数=real32)。
+!   書き出しは従来どおり 32bit 固定
+!======================================================================
+
+!----------------------------------------------------------------------
+! hdr の対応範囲と格子数の検査(bil 読み共通)
+!----------------------------------------------------------------------
+subroutine check_bil_hdr(fname, h, nx, ny)
+  character(len=*), intent(in) :: fname
+  type(t_esri_hdr), intent(in) :: h
+  integer, intent(in) :: nx, ny
+
+  if (trim(h%layout) /= "BIL") then
+    call par_abort("bil: LAYOUT="//trim(h%layout)//" は未対応です(BIL のみ): "//trim(fname))
+  end if
+  if (trim(h%byteorder) /= "I") then
+    call par_abort("bil: BYTEORDER="//trim(h%byteorder)// &
+                   " は未対応です(I=リトルエンディアンのみ): "//trim(fname))
+  end if
+  if (h%skipbytes /= 0) then
+    call par_abort("bil: SKIPBYTES="//itoa(h%skipbytes)//" は未対応です: "//trim(fname))
+  end if
+  if (h%nbands /= 1) then
+    call par_abort("bil: NBANDS="//itoa(h%nbands)//" は未対応です(1バンドのみ): "//trim(fname))
+  end if
+  if (h%seen_grid) then
+    if (h%ncols /= nx .or. h%nrows /= ny) then
+      call par_abort("bil: 格子数が一致しません(hdr "//itoa(h%ncols)//"x"//itoa(h%nrows) &
+                     //" / 要求 "//itoa(nx)//"x"//itoa(ny)//"): "//trim(fname))
+    end if
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! hdr の型情報から符号なしかどうかを決める(整数系のみで呼ぶ)
+!----------------------------------------------------------------------
+function bil_is_unsigned(h) result(unsigned)
+  type(t_esri_hdr), intent(in) :: h
+  logical :: unsigned
+  if (trim(h%pixeltype) == "SIGNEDINT") then
+    unsigned = .false.
+  else if (trim(h%pixeltype) == "UNSIGNEDINT") then
+    unsigned = .true.
+  else
+    ! 未指定: 32bit は従来運用(符号付き)、8/16bit は ESRI の既定(符号なし)
+    unsigned = (h%nbits /= 32)
+  end if
+end function
+
+
+!----------------------------------------------------------------------
+! 型対応の整数読み(コア)。hdr 検査済みの h に従って読む
+!----------------------------------------------------------------------
+subroutine read_bil_int_typed(fname, h, nx, ny, a)
+  character(len=*), intent(in) :: fname
+  type(t_esri_hdr), intent(in) :: h
+  integer, intent(in) :: nx, ny
+  integer, intent(inout) :: a(1:nx,1:ny)
+  integer :: un
+  logical :: unsigned
+
+  unsigned = bil_is_unsigned(h)
+  open(newunit=un, file=fname, form='unformatted', status='old', access='stream')
+  select case (h%nbits)
+    case (8)
+      block
+        integer(int8) :: b(nx,ny)
+        read(un) b
+        if (unsigned) then
+          a(:,:) = iand(int(b(:,:)), 255)
+        else
+          a(:,:) = int(b(:,:))
+        end if
+      end block
+    case (16)
+      block
+        integer(int16) :: b(nx,ny)
+        read(un) b
+        if (unsigned) then
+          a(:,:) = iand(int(b(:,:)), 65535)
+        else
+          a(:,:) = int(b(:,:))
+        end if
+      end block
+    case (32)
+      read(un) a
+      if (unsigned) then
+        if (any(a < 0)) then
+          call par_abort("bil: 符号なし 32bit の値が既定 integer の範囲を超えています: "//trim(fname))
+        end if
+      end if
+    case default
+      call par_abort("bil: 整数は NBITS=8/16/32 のみ対応です(NBITS=" &
+                     //itoa(h%nbits)//"): "//trim(fname))
+  end select
+  close(un)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 整数入力(hdr があれば型対応、無ければ従来の生読み)
+!----------------------------------------------------------------------
+subroutine read_bil_int_file(fname, nx, ny, a)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny
+  integer, intent(inout) :: a(1:nx,1:ny)
+  type(t_esri_hdr) :: h
+  character(:), allocatable :: hname
+  character(len=512) :: msg
+  integer :: un, stat
+  logical :: ex
+
+  hname = georef_hdr_name(fname)
+  inquire(file=hname, exist=ex)
+  if (.not. ex) then
+    ! 従来動作: 既定 integer(32bit)の生読み
+    open(newunit=un, file=fname, form='unformatted', status='old', access='stream')
+    call read_bil_int(un, nx, ny, a)
+    close(un)
+    return
+  end if
+
+  call georef_parse_hdr(hname, h, stat, msg)
+  if (stat /= 0) call par_abort(trim(msg))
+  call check_bil_hdr(fname, h, nx, ny)
+  if (trim(h%pixeltype) == "FLOAT") then
+    call par_abort("bil: 実数型(PIXELTYPE=FLOAT)の bil は整数入力に使えません: "//trim(fname))
+  end if
+  call read_bil_int_typed(fname, h, nx, ny, a)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 実数入力(hdr があれば型検査、無ければ従来の real32 生読み)
+!   整数型の bil は実数へ変換して読む(GeoTIFF と同じ扱い)
+!----------------------------------------------------------------------
+subroutine read_bil_real_file(fname, nx, ny, a)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny
+  real, intent(inout) :: a(1:nx,1:ny)
+  type(t_esri_hdr) :: h
+  character(:), allocatable :: hname
+  character(len=512) :: msg
+  integer :: un, stat
+  logical :: ex
+
+  hname = georef_hdr_name(fname)
+  inquire(file=hname, exist=ex)
+  if (.not. ex) then
+    ! 従来動作: real32 の生読み
+    open(newunit=un, file=fname, form='unformatted', status='old', access='stream')
+    call read_bil_real(un, nx, ny, a)
+    close(un)
+    return
+  end if
+
+  call georef_parse_hdr(hname, h, stat, msg)
+  if (stat /= 0) call par_abort(trim(msg))
+  call check_bil_hdr(fname, h, nx, ny)
+
+  if (trim(h%pixeltype) == "FLOAT" .or. &
+      (len_trim(h%pixeltype) == 0 .and. h%nbits == 32)) then
+    ! 実数: 32bit のみ(未指定+32bit は従来どおり FLOAT とみなす)
+    if (h%nbits /= 32) then
+      call par_abort("bil: 実数は NBITS=32 のみ対応です(NBITS=" &
+                     //itoa(h%nbits)//"。Float64 なら 32bit で書き出し直してください): "//trim(fname))
+    end if
+    open(newunit=un, file=fname, form='unformatted', status='old', access='stream')
+    call read_bil_real(un, nx, ny, a)
+    close(un)
+  else
+    ! 整数型の bil → 実数へ変換
+    block
+      integer :: b(nx,ny)
+      call read_bil_int_typed(fname, h, nx, ny, b)
+      a(:,:) = real(b(:,:))
+    end block
+  end if
 end subroutine
 
 
