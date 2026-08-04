@@ -11,8 +11,9 @@ module m_parallel
 !   par_abort(msg) 局所的な致命的エラー。表示して即時停止
 !
 ! 領域分割情報 dcp(MPI 版と共通のルール):
-!   - par_decomp_init(nx, ny, jw1, jw2) で設定する(格子サイズ確定後、
-!     m_geoinfo_init の直後に呼ぶこと)。逐次では常に全域を担当する。
+!   - par_decomp_init(nx, ny, jw1, jw2[, rowwork]) で設定する(格子サイズ
+!     確定後、m_geoinfo_init の直後に呼ぶこと)。逐次では常に全域を担当し、
+!     rowwork(行重み)は受け取るが使用しない。
 !   - 各モジュールは use m_parallel, only: dcp で直接参照してよい
 !     (protected 属性により変更は本モジュール内に限定される)
 !   - 計算カーネルには dcp を見せず、範囲(js, je 等)を引数で渡す
@@ -68,12 +69,15 @@ contains
       ! 何もしない
    end subroutine par_init
 
-   subroutine par_decomp_init(nx, ny, jw1, jw2)
+   subroutine par_decomp_init(nx, ny, jw1, jw2, rowwork)
       ! 領域分割の決定。格子サイズと有効窓の確定後
       ! (m_geoinfo_init の直後)に呼ぶこと。
-      ! 逐次では計算範囲=全域窓、確保範囲=全域。
+      ! 逐次では計算範囲=全域窓、確保範囲=全域。rowwork(行重み)は
+      ! MPI 版とのインターフェース一致のために受け取るが使用しない。
       integer, intent(in) :: nx, ny
       integer, intent(in) :: jw1, jw2   ! 全域の有効窓(= g%wy(1:2))
+      integer, intent(in), optional :: rowwork(:)
+      if (present(rowwork)) continue    ! 未使用引数警告の抑制
       dcp%nx_g = nx
       dcp%ny_g = ny
       dcp%jw1 = jw1

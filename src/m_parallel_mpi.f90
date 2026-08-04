@@ -15,8 +15,9 @@ module m_parallel
 !                  よい。ランク番号付きで表示して即時に全体強制終了
 !
 ! 領域分割情報 dcp:
-!   - par_decomp_init(nx, ny, jw1, jw2) で設定する(格子サイズ確定後、
-!     m_geoinfo_init の直後に呼ぶこと)
+!   - par_decomp_init(nx, ny, jw1, jw2[, rowwork]) で設定する(格子サイズ
+!     確定後、m_geoinfo_init の直後に呼ぶこと)。rowwork(行ごとの有効
+!     セル数)を渡すと帯幅を負荷が均等になるよう調整する(重み付き分割)
 !   - 各モジュールは use m_parallel, only: dcp で直接参照してよい
 !     (protected 属性により変更は本モジュール内に限定される)
 !   - 計算カーネルには dcp を見せず、範囲(js, je 等)を引数で渡す
@@ -41,7 +42,7 @@ module m_parallel
 !     Log.txt =回帰テストの比較対象= に混入させないため)
 !=====================================================================
    use mpi_f08
-   use, intrinsic :: iso_fortran_env, only: output_unit, error_unit, real64
+   use, intrinsic :: iso_fortran_env, only: output_unit, error_unit, real64, int64
    implicit none
    private
    public :: par_init, par_finalize
@@ -82,6 +83,10 @@ module m_parallel
    end type t_decomp
 
    type(t_decomp), protected, save :: dcp
+
+   ! 全ランク分の帯境界表(par_decomp_init が構築し band_range が引く。
+   ! 全ランクが同一の表を持つ)
+   integer, allocatable, save :: js_tab(:), je_tab(:)
 
    ! 実数通信用データ型(par_init が既定 real の実サイズから確定する)
    type(MPI_Datatype), protected, save :: MPI_WP = MPI_DATATYPE_NULL
@@ -131,14 +136,20 @@ contains
       end block check_np
    end subroutine par_init
 
-   subroutine par_decomp_init(nx, ny, jw1, jw2)
+   subroutine par_decomp_init(nx, ny, jw1, jw2, rowwork)
       ! 領域分割の決定。格子サイズと有効窓の確定後
       ! (m_geoinfo_init の直後)に全ランクが揃って呼ぶこと(collective)。
       ! 全域窓 [jw1, jw2] をランク数で行分割し、自ランクの帯を決める。
+      ! rowwork(行ごとの有効セル数。サイズ ny)を渡すと、重みの累積和を
+      ! 等分する位置に帯境界を置く(重み付き分割。列島形状の行間偏りに
+      ! よるランク間不均衡の対策)。省略時・総重みゼロ時は行数の均等分割。
+      ! 全ランクが同一の rowwork を渡すこと(全ランクが持つ全域マスク
+      ! から数えれば自然に満たされる。表の構築に通信はしない)。
       ! 第一段: 配列は全域確保のまま(jsh/jeh は 1..ny。第二段で
       !         js-nhalo..je+nhalo へ縮小する)
       integer, intent(in) :: nx, ny
       integer, intent(in) :: jw1, jw2   ! 全域の有効窓(= g%wy(1:2))
+      integer, intent(in), optional :: rowwork(:)   ! 行重み(有効セル数)
       integer :: nrows
       character(len=1024) :: buf
       dcp%nx_g = nx
@@ -152,12 +163,90 @@ contains
             ' ranks: window has ', nrows, ' rows (need >= 2 rows per rank)'
          call par_stop(trim(buf))       ! 全ランク同一の判定なので collective 安全
       end if
+      if (present(rowwork)) then
+         if (size(rowwork) /= ny) then
+            call par_stop('par_decomp_init: rowwork size /= ny')
+         end if
+      end if
+      call build_band_table(rowwork)
       call band_range(nrank, dcp%js, dcp%je)
       ! 第二段: 配列確保範囲 = 担当帯 ± ハロ幅(全域端でクリップ)
       call band_range_h(nrank, dcp%jsh, dcp%jeh)
       dcp%rank_s = nrank - 1                            ! nrank=0 では -1(隣なし)
       dcp%rank_n = merge(nrank + 1, -1, nrank < nproc - 1)
    end subroutine par_decomp_init
+
+   subroutine build_band_table(rowwork)
+      ! 全ランク分の帯境界表を構築する(分割規則の正本)。
+      ! 重み付き分割は「累積重みが total*(r+1)/nproc に達する最小の行」に
+      ! 境界 r|r+1 を置く。整数演算のみの決定的手順なので全ランクが
+      ! 同一の表を得る。各帯最低2行の制約は目標位置より優先する
+      ! (残りランクに2行ずつ残す上限 jmax で頭打ち。実行可能性は
+      ! nrows >= 2*nproc の事前検査で保証済み)
+      integer, intent(in), optional :: rowwork(:)
+      integer(int64), allocatable :: cum(:)   ! cum(j) = 重みの累積和(jw1..j)
+      integer(int64) :: total, target_r
+      integer :: r, j, je, jmax, nrows, base, rem
+      if (allocated(js_tab)) deallocate(js_tab)
+      if (allocated(je_tab)) deallocate(je_tab)
+      allocate(js_tab(0:nproc-1), je_tab(0:nproc-1))
+
+      ! 既定: 行数の均等分割(余りは若いランクへ)
+      nrows = dcp%jw2 - dcp%jw1 + 1
+      base = nrows / nproc
+      rem  = mod(nrows, nproc)
+      do r = 0, nproc - 1
+         js_tab(r) = dcp%jw1 + r * base + min(r, rem)
+         je_tab(r) = js_tab(r) + base - 1
+         if (r < rem) je_tab(r) = je_tab(r) + 1
+      end do
+      if (.not. present(rowwork)) return
+
+      ! 重み付き分割(int64: 全国級の総セル数×ランク数は int32 を超える)
+      allocate(cum(dcp%jw1-1:dcp%jw2))
+      cum(dcp%jw1-1) = 0
+      do j = dcp%jw1, dcp%jw2
+         cum(j) = cum(j-1) + max(rowwork(j), 0)
+      end do
+      total = cum(dcp%jw2)
+      if (total <= 0) return             ! 有効セルなし: 均等分割のまま
+
+      j = dcp%jw1
+      do r = 0, nproc - 1
+         js_tab(r) = j
+         if (r == nproc - 1) then
+            je = dcp%jw2
+         else
+            jmax = dcp%jw2 - 2 * (nproc - 1 - r)  ! 残りランクに2行ずつ残す
+            target_r = (total * (r + 1)) / nproc
+            je = min(j + 1, jmax)                 ! 各帯最低2行
+            do while (je < jmax .and. cum(je) < target_r)
+               je = je + 1
+            end do
+         end if
+         je_tab(r) = je
+         j = je + 1
+      end do
+
+      ! 分割結果の要約(標準出力=Screen.log 行き。回帰比較対象の
+      ! result/Log.txt には入らない)
+      report: block
+         character(len=256) :: msg
+         integer(int64) :: wmin, wmax, w
+         wmin = huge(wmin)
+         wmax = 0
+         do r = 0, nproc - 1
+            w = cum(je_tab(r)) - cum(js_tab(r) - 1)
+            wmin = min(wmin, w)
+            wmax = max(wmax, w)
+         end do
+         write(msg,'(a,i0,a,i0,a,i0,a,i0)') &
+            'band decomposition: weighted, cells/rank min=', wmin, &
+            ' max=', wmax, ', rows/rank min=', &
+            minval(je_tab - js_tab) + 1, ' max=', maxval(je_tab - js_tab) + 1
+         call par_info(trim(msg))
+      end block report
+   end subroutine build_band_table
 
    subroutine par_halo_cell(a)
       ! セル配列の行ハロ交換(幅 dcp%nhalo)。
@@ -233,17 +322,13 @@ contains
    end subroutine par_edge_merge
 
    subroutine band_range(r, js_r, je_r)
-      ! ランク r の担当帯を全域窓の均等分割から決める(余りは若い順)。
-      ! 分割規則の正本。gather の counts/displs もここから導く。
+      ! ランク r の担当帯を返す(境界表は par_decomp_init →
+      ! build_band_table が構築する=分割規則の正本)。
+      ! gather の counts/displs もここから導く。
       integer, intent(in) :: r
       integer, intent(out) :: js_r, je_r
-      integer :: nrows, base, rem
-      nrows = dcp%jw2 - dcp%jw1 + 1
-      base = nrows / nproc
-      rem  = mod(nrows, nproc)
-      js_r = dcp%jw1 + r * base + min(r, rem)
-      je_r = js_r + base - 1
-      if (r < rem) je_r = je_r + 1
+      js_r = js_tab(r)
+      je_r = je_tab(r)
    end subroutine band_range
 
    subroutine band_range_h(r, jsh_r, jeh_r)

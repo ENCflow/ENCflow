@@ -15,6 +15,7 @@ module m_geoinfo
 
   public :: t_geoinfo
   public :: m_geoinfo_init
+  public :: m_geoinfo_row_ncells
   public :: m_geoinfo_scatter_coeffs
   public :: m_geoinfo_band_shrink
   public :: m_geoinfo_dispose
@@ -173,6 +174,22 @@ subroutine count_valcells(p, g)
   if (g%n_valcells <= 0) then
     call par_stop("no valid cell in the entire domain")
   end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 行ごとの有効セル数を数える(par_decomp_init の行重み用)。
+!   カーネルの計算対象と同じ基準(x > 0。海域も x > 0 なら含む)。
+!   マスク x を全域添字で読むため、m_geoinfo_init 直後(ゾーン1)で
+!   呼ぶこと。全ランクが同一のマスクから同一の値を得るので通信は不要
+!----------------------------------------------------------------------
+subroutine m_geoinfo_row_ncells(g, rowwork)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(out) :: rowwork(:)     ! サイズ ny(行 j の有効セル数)
+  integer :: j
+  do j = 1, g%ny
+    rowwork(j) = count(g%x(1:g%nx, j) > 0)
+  end do
 end subroutine
 
 
