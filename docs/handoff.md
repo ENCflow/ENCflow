@@ -23,18 +23,13 @@
    - 切替器 vs 重ね合わせの使い分け原則、s%hg 柱状換算契約、S 台帳、
      モデル実装5箇条(m_gwflow_bucket ヘッダが正本)
 3. developer.md の日付プレースホルダ(2026-xx)の実日付化(残があれば)
-4. **診断集約の real64 固定化(hsum 系・par_sum_rows)の検証**
-   - PREC=double で全ケース既存 reference とビット一致(逐次・np=1,2,4。
-     real64=既定 real なので等価のはず)
-   - PREC=single は Log のモニタ値(貯留高 S 等)のみ改善方向に変化しうる
-     (single の reference は無いので同一バイナリのビット再現のみ確認)
-5. **降雨遮断モジュール(m_intercept / 固定遮断率モデル)の残検証**
+4. **降雨遮断モジュール(m_intercept / 固定遮断率モデル)の残検証**
    (無効時ビット一致と wave 疎通((1-α) 倍・np=1,2,4 ULP=0)は確認済み
     2026-08-04)
    - prtype=3 かつ dt_prupdate < dt_maplist の設定で二重減衰しないこと
      (updated ガードの検証。Pr 出力が分布更新のたびに一定率か目視)
    - developer.md への追記(gwflow/geomorph の項と併せて。上記2参照)
-6. **初期化の方式2・第1段(係数の rank0 化+scatter)の検証**
+5. **初期化の方式2・第1段(係数の rank0 化+scatter)の検証**
    - **確保に触れる変更なので -fcheck=all の np>=2 を最適化ビルドより先に**
      (静的データを使う chichibu で。規律3)
    - 逐次で既存 reference とビット一致(scatter_band は逐次 no-op 経路)
@@ -44,7 +39,7 @@
    - f_rntype=2(lu2rn 変換)のケースがあれば併せて確認(read_rn の
      rank0 経路)
 
-7. **座標管理(m_georef / ESRI hdr)導入コミットの検証**
+6. **座標管理(m_georef / ESRI hdr)導入コミットの検証**
    (仕様と決定事項は docs/geotiff_plan.md §10)
    - gfortran 逐次では検証済み: wave/chichibu(txt 入力)がベースラインと
      全出力ビット一致、bil+hdr 入力が bil 単独入力と全出力ビット一致
@@ -59,7 +54,7 @@
    - 残: 出力 .hdr+.bil を QGIS / ArcGIS で開いて位置・値の目視確認
      (GDAL EHdr 互換キーで書いている。gdalinfo でも可)
    - 残: examples の param サンプルへの epsg / hdr 運用の説明追記
-8. **GeoTIFF Phase 1〜3 完了(読み書きとも実用範囲は完成)**
+7. **GeoTIFF Phase 1〜3 完了(読み書きとも実用範囲は完成)**
    - 読み: m_geotiff + m_geotiff_codec + m_geotiff_inflate、f_input_mode=4
      (形式番号は出力のビット値と共通。3 は専用メッセージで停止)。
      書き: gtif_write(無圧縮単一 strip・Float32/Int32・GeoKey)、
@@ -94,7 +89,7 @@
      (便宜座標の wrk_* が架空位置に出るのは仕様。README 参照)。
      ArcGIS でも開けるかの確認は任意で残
 
-9. **境界条件 Phase 0/1(境界正規化・辺境界・ソース再編)の残検証**
+8. **境界条件 Phase 0/1(境界正規化・辺境界・ソース再編)の残検証**
    (実装・gfortran/OpenMPI 検証済み 2026-08-02。記録は boundary_plan.md
    §8/§9、設計正本は developer.md §15)
    - ifx での無効時ビット一致(逐次・np=1,2,4。inflow_dist で
@@ -102,7 +97,7 @@
    - 開辺ケースの恒常テスト化(放射境界ベンチマーク新設時に合流)
    - PREC=single ビルドの通し確認(inflow_dist の重み共有を含む)
 
-10. **乾床薄膜先端の「質量微増」— 原因特定済み(2026-08-03)。対処は要議論**
+9. **乾床薄膜先端の「質量微増」— 原因特定済み(2026-08-03)。対処は要議論**
    - 結論: 質量は作られていない。全セルの Σh(負値込み)は注入量と
      機械精度で一致する(一時計装の台帳測定で 600 ステップ累積残差
      ~1e-16 m³)。見かけの +0.1% は S モニタの定義による集計アーティ
