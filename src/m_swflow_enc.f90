@@ -7,7 +7,7 @@ module m_swflow_enc
   use list_enc, only : t_list_enc, list_enc_read
   use m_parallel, only : par_info, par_stop, dcp, is_root, &
                        par_halo_cell, par_halo_edge, par_edge_merge, &
-                       par_gather_edge_to, par_bcast_edge
+                       par_gather_edge_to, par_scatter_edge
   use m_sysdep_util, only : sysdep_mkdir
   use m_fileio, only : fileio_write_rle, fileio_read_rle
   implicit none
@@ -1008,20 +1008,23 @@ subroutine restore_state(p, sx)
     call par_stop("swflow_enc の保存ファイルがありません(保存時の格子系は ENC でしたか): "//fname)
   end if
 
-  ! rank0 が全域一時配列に読み、Bcast(全ランク同形)してから帯を切り出す。
-  ! 一時配列2本ぶんの全域メモリが復元時のみ一過性に必要になる点に注意
-  allocate(wuv(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
-  allocate(wmn(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
+  ! rank0 だけが全域一時配列に読み、par_scatter_edge で各ランクの
+  ! エッジ確保範囲(jsh-1:jeh)へ直接配布する(旧 Bcast 方式の置き換え。
+  ! 非 root は全域一時を確保しない。全域一時が rank0 に残るのは
+  ! RLE ストリームが先頭からの逐次展開のため。developer.md §7)
   if (is_root) then
+    allocate(wuv(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
+    allocate(wmn(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
     open(newunit=un, file=fname, form='unformatted', status='old')
     call fileio_read_rle(un, wuv)
     call fileio_read_rle(un, wmn)
     close(un)
+  else
+    allocate(wuv(1, 1, 1), source = 0.0)   ! 参照されないダミー
+    allocate(wmn(1, 1, 1), source = 0.0)
   end if
-  call par_bcast_edge(wuv)
-  call par_bcast_edge(wmn)
-  sx%uv(:,:,:) = wuv(1:4, 0:dcp%nx_g, dcp%jsh-1:dcp%jeh)
-  sx%mn(:,:,:) = wmn(1:4, 0:dcp%nx_g, dcp%jsh-1:dcp%jeh)
+  call par_scatter_edge(wuv, sx%uv)
+  call par_scatter_edge(wmn, sx%mn)
   sx%mn1(:,:,:) = sx%mn(:,:,:)   ! 書き込みバッファも正準状態で初期化する
 end subroutine
 

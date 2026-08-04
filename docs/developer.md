@@ -337,7 +337,7 @@
   - 場の gather は出力・計測(dt_file / dt_recrd)の直前のみ。**gather は
     collective なので、実行判定は全ランクで同一に評価してから分岐する**
     (is_root ガードの内側に置くとデッドロック)。
-  - save/restore: gather → rank0 書き / rank0 読み → Bcast。
+  - save/restore: gather → rank0 書き / rank0 読み → 配布。
   - 検証: 1, 2, 4 ランク+スレッド数変更で同一 reference にビット一致(達成)。
 - **第二段(確保の縮小)実装・検証済み(2026-xx)**: MPI 版のみ
   jsh/jeh = 担当帯±nhalo に縮小(逐次版は全域確保のまま=縮小の複雑さを
@@ -350,8 +350,14 @@
     恒久ゼロとなり、逐次出力とバイト一致する。静的・全域保持の g%z だけは
     gather せず rank0 直接書き(output_matrix_full)。
   - save/restore: 全域バッファへ gather → rank0 書き(レコード構成は旧形式と
-    バイト互換)/ rank0 読み → 全ランク同形の全域一時に Bcast → 帯切り出し。
-    復元時のみ全域一時ぶんのメモリが一過性に必要。
+    バイト互換)/ 復元の配布は2方式が混在(過渡期):
+    **エッジ(swflow_enc の uv/mn)は rank0 のみ全域一時に読み
+    par_scatter_edge で帯配布**(2026-08-04。非 root は全域一時を持たない)。
+    セル成分(m_state の h/z/rsh/hg)は全ランク同形の全域一時 ts に
+    Bcast → 帯切り出しのまま(ts は新規初期化も使うため、scatter 化は
+    初期化第2段(a)= ts の rank0 化と同時に行う。handoff の道標)。
+    rank0 の全域一時は残る(RLE ストリームが先頭からの逐次展開のため。
+    解消するなら展開しながら帯を送るストリーミング配布)。
   - prtype3: 全域一時配列に読んで帯を切り出す(全ランク冗長読み)。
   - **par_bcast_cell/edge は全ランク同形の配列(全域一時)専用**。帯確保の
     配列に使うとランク毎にサイズが異なり Bcast が破綻する。

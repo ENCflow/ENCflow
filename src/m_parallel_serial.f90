@@ -34,7 +34,7 @@ module m_parallel
    public :: par_allreduce_max, par_allreduce_sumi, par_allreduce_maxi
    public :: par_sum_rows
    public :: par_gather_to, par_gather_to_i, par_gather_edge_to
-   public :: par_scatter_cell, par_scatter_cell_i
+   public :: par_scatter_cell, par_scatter_cell_i, par_scatter_edge
    public :: par_reduce_points
    public :: par_bcast_cell, par_bcast_cell_i, par_bcast_edge
    public :: nrank, nproc, is_root
@@ -168,6 +168,14 @@ contains
       integer, intent(inout) :: a(1:, dcp%jsh:)
       a(:, dcp%jsh:dcp%jeh) = buf(:, dcp%jsh:dcp%jeh)
    end subroutine par_scatter_cell_i
+
+   subroutine par_scatter_edge(buf, a)
+      ! rank0 全域エッジバッファからの帯配布(par_gather_edge_to の
+      ! 逆向き)。逐次では確保範囲(=全域)を複写する。
+      real, intent(in) :: buf(1:, 0:, 0:)
+      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      a(:, :, dcp%jsh-1:dcp%jeh) = buf(:, :, dcp%jsh-1:dcp%jeh)
+   end subroutine par_scatter_edge
 
    subroutine par_reduce_points(vals)
       ! 点計測値の rank0 集約。逐次では何もしない

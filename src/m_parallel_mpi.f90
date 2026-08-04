@@ -53,7 +53,7 @@ module m_parallel
    public :: par_allreduce_max, par_allreduce_sumi, par_allreduce_maxi
    public :: par_sum_rows
    public :: par_gather_to, par_gather_to_i, par_gather_edge_to
-   public :: par_scatter_cell, par_scatter_cell_i
+   public :: par_scatter_cell, par_scatter_cell_i, par_scatter_edge
    public :: par_reduce_points
    public :: par_bcast_cell, par_bcast_cell_i, par_bcast_edge
    public :: nrank, nproc, is_root
@@ -400,6 +400,30 @@ contains
       end if
    end subroutine par_scatter_cell_i
 
+   subroutine par_scatter_edge(buf, a)
+      ! rank0 の全域エッジバッファ buf(1:4, 0:nx, 0:ny) を各ランクの
+      ! エッジ確保範囲 a(:, :, jsh-1:jeh) へ配布する(restore 用。
+      ! par_gather_edge_to の逆向き)。帯+ハロは隣接ランクと重なるため
+      ! par_scatter_cell と同じく rank0 からの個別送信で配る。
+      ! rank0 以外の buf は参照されないためサイズ1のダミーでよい。
+      ! 受信側 a はエッジ確保範囲(jsh-1:jeh)ちょうどで確保しておくこと。
+      real, intent(in) :: buf(1:, 0:, 0:)
+      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      integer :: r, jsh_r, jeh_r, n12
+      n12 = size(a, 1) * size(a, 2)
+      if (is_root) then
+         do r = 1, nproc - 1
+            call band_range_h(r, jsh_r, jeh_r)
+            call MPI_Send(buf(:, :, jsh_r-1:jeh_r), n12 * (jeh_r - jsh_r + 2), &
+                          MPI_WP, r, 23, MPI_COMM_WORLD)
+         end do
+         a(:, :, dcp%jsh-1:dcp%jeh) = buf(:, :, dcp%jsh-1:dcp%jeh)
+      else
+         call MPI_Recv(a, size(a), MPI_WP, 0, 23, MPI_COMM_WORLD, &
+                       MPI_STATUS_IGNORE)
+      end if
+   end subroutine par_scatter_edge
+
    subroutine par_reduce_points(vals)
       ! 点計測値の rank0 集約(m_record 用)。
       ! 各要素は「所有ランクがちょうど1つだけ値を格納し、他ランクは 0」の
@@ -417,7 +441,7 @@ contains
    end subroutine par_reduce_points
 
    subroutine par_bcast_cell(a)
-      ! rank0 の配列を全ランクへ配布(リスタート復元用)。
+      ! rank0 の配列を全ランクへ配布(user フック後の再配布等)。
       ! 注意: 全ランク同形の配列(全域一時配列)にのみ使うこと。
       ! 帯確保の配列に使うとランク毎にサイズが異なり Bcast が破綻する。
       real, intent(inout) :: a(1:, 1:)
@@ -432,7 +456,8 @@ contains
    end subroutine par_bcast_cell_i
 
    subroutine par_bcast_edge(a)
-      ! rank0 のエッジ配列を全ランクへ配布(リスタート復元用)。
+      ! rank0 のエッジ配列を全ランクへ配布(現在未使用。restore は
+      ! par_scatter_edge に移行済み。全ランク同形が必要な用途に残置)。
       ! 注意: 全ランク同形の配列(全域一時配列)にのみ使うこと。
       real, intent(inout) :: a(1:, 0:, 0:)
       call MPI_Bcast(a, size(a), MPI_WP, 0, MPI_COMM_WORLD)
