@@ -49,26 +49,17 @@ module m_geoinfo
   end type
 
 
+  ! user_geoinfo submodule の入口(個々のルーチンへの分岐と識別名簿は
+  ! submodule 側に閉じる。ルーチンの追加は user_geoinfo.f90 だけで完結する)
   interface
-    module subroutine init_geoinfo_user_1(p, g)
+    module function user_geoinfo_id2name(id) result(name)
+      integer, intent(in) :: id
+      character(len=:), allocatable :: name
+    end function
+    module subroutine user_geoinfo_run(p, g, name)
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(inout) :: g
-    end subroutine
-    module subroutine init_geoinfo_user_2(p, g)
-      type(t_sysparam), intent(in) :: p
-      type(t_geoinfo), intent(inout) :: g
-    end subroutine
-    module subroutine init_geoinfo_user_3(p, g)
-      type(t_sysparam), intent(in) :: p
-      type(t_geoinfo), intent(inout) :: g
-    end subroutine
-    module subroutine init_geoinfo_user_4(p, g)
-      type(t_sysparam), intent(in) :: p
-      type(t_geoinfo), intent(inout) :: g
-    end subroutine
-    module subroutine init_geoinfo_user_5(p, g)
-      type(t_sysparam), intent(in) :: p
-      type(t_geoinfo), intent(inout) :: g
+      character(len=*), intent(in) :: name
     end subroutine
   end interface
 
@@ -85,6 +76,7 @@ subroutine m_geoinfo_init(g, p)
   type(t_sysparam), intent(inout) :: p             ! システムパラメータ構造体
   type(t_geoinfo), intent(out) :: g             ! 地理情報構造体
   type(t_list_geoinfo) :: list                     ! パラメータファイル中の変数
+  character(len=:), allocatable :: uname           ! user フックの識別名
 
   call list_geoinfo_read(p, list)
   call set_params(p, g, list)
@@ -107,30 +99,20 @@ subroutine m_geoinfo_init(g, p)
   end if
   call adjust_rw(p, g, list)
 
-  ! user フック: ID の検証は全ランク(par_stop は collective)。実行は
+  ! user フック: 名前解決と検証は全ランク(par_stop は collective)。実行は
   ! 係数を含む全配列を持つ rank0 のみで、「全域添字で書く」契約は無変更。
+  ! 個々のルーチンへの分岐は user_geoinfo submodule 内(互換入力の id は
+  ! 識別名に変換して単一の名簿で解決する)。
   ! フックが地形・マスク類を変更した可能性があるため、実行後に rank0 から
   ! 再配布する(フック無指定なら通信なし)。
   ! 注意: フック内から par_stop を呼んではならない(rank0 のみで実行される
   ! ため collective が成立しない。エラーは par_abort を使うこと)
-  if (list%f_user_routine_id < 0 .or. list%f_user_routine_id > 5) then
-    call par_stop("undefined f_user_routine_id in list_geoinfo"//itoa(list%f_user_routine_id))
-  end if
-  if (list%f_user_routine_id > 0) then
-    if (is_root) then
-      select case (list%f_user_routine_id)
-        case (1)
-          call init_geoinfo_user_1(p, g)
-        case (2)
-          call init_geoinfo_user_2(p, g)
-        case (3)
-          call init_geoinfo_user_3(p, g)
-        case (4)
-          call init_geoinfo_user_4(p, g)
-        case (5)
-          call init_geoinfo_user_5(p, g)
-      end select
+  if (list%f_user_routine_id /= 0) then
+    uname = user_geoinfo_id2name(list%f_user_routine_id)
+    if (len_trim(uname) == 0) then
+      call par_stop("undefined f_user_routine_id in list_geoinfo"//itoa(list%f_user_routine_id))
     end if
+    if (is_root) call user_geoinfo_run(p, g, uname)
     call par_bcast_cell(g%z)
     call par_bcast_cell_i(g%x)
     call par_bcast_cell_i(g%sw)

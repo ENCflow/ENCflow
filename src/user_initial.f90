@@ -1,14 +1,109 @@
+!======================================================================
+! 初期条件のユーザールーチン集(m_state の submodule)
+!
+!   親モジュールへの公開面は入口の2手続きのみ:
+!     user_initial_id2name : 互換入力 f_user_routine_id → 識別名(未知は "")
+!     user_initial_run     : 識別名で該当ルーチンを実行(全ランクで呼ばれる)
+!   分岐(resolve)と識別名簿(routine_names)はこの submodule に閉じる。
+!
+!   ルーチンの追加手順(このファイルだけで完結する):
+!     1. initial_template を複製して実装する(全域一時状態 ts に
+!        全域添字 1:nx, 1:ny で書く契約)
+!     2. routine_names に識別名を登録する(snake_case。新規に id は割らない)
+!     3. resolve の select case に分岐を1行追加する
+!======================================================================
 submodule(m_state) user_initial
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
+  use m_parallel, only : par_abort
   implicit none
+
+  ! ユーザールーチンの呼び出し規約
+  abstract interface
+    subroutine user_initial_if(p, g, s)
+      import :: t_sysparam, t_geoinfo, t_state
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+    end subroutine
+  end interface
+
+  ! 識別名簿。f_user_routine_id との互換対応表を兼ねる(id = 配列添字)。
+  ! 名簿と resolve の分岐は同時に更新すること(乖離は defined/run が
+  ! 「未定義名」として検出する)
+  character(len=*), parameter :: routine_names(1:4) = [ character(len=32) :: &
+      "wave_hump",   &   ! 1: 波例題: 円形コサイン型の初期水位
+      "reserved_2",  &   ! 2: (スタブ)
+      "reserved_3",  &   ! 3: (スタブ)
+      "template"     ]   ! 4: 新規ルーチンの雛形(空)
 
 contains
 
+!======================================================================
+!===================== 入口(親モジュールへ公開)=====================
+!======================================================================
 
 !----------------------------------------------------------------------
+! 互換入力 f_user_routine_id を識別名に変換する(未知の id は "")
 !----------------------------------------------------------------------
-module subroutine init_state_user_1(p, g, s)
+module function user_initial_id2name(id) result(name)
+  integer, intent(in) :: id
+  character(len=:), allocatable :: name
+  if (id >= 1 .and. id <= size(routine_names)) then
+    name = trim(routine_names(id))
+  else
+    name = ""
+  end if
+end function
+
+!----------------------------------------------------------------------
+! 識別名で該当ルーチンを実行する(全ランクで冗長に呼ばれる)
+!   名前の検証は呼び出し側が済ませている前提。ここでの不一致は
+!   名簿と resolve の乖離(プログラミングエラー)なので abort
+!----------------------------------------------------------------------
+module subroutine user_initial_run(p, g, s, name)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  character(len=*), intent(in) :: name
+  procedure(user_initial_if), pointer :: fp
+  fp => resolve(name)
+  if (.not. associated(fp)) call par_abort("user_initial_run: 未定義の識別名 "//trim(name))
+  call fp(p, g, s)
+end subroutine
+
+!======================================================================
+!======================= 分岐(submodule 私有)=======================
+!======================================================================
+
+!----------------------------------------------------------------------
+! 識別名 → 手続きポインタ(未定義名は null)
+!----------------------------------------------------------------------
+function resolve(name) result(fp)
+  character(len=*), intent(in) :: name
+  procedure(user_initial_if), pointer :: fp
+  select case (trim(name))
+    case ("wave_hump")
+      fp => initial_wave_hump
+    case ("reserved_2")
+      fp => initial_reserved_2
+    case ("reserved_3")
+      fp => initial_reserved_3
+    case ("template")
+      fp => initial_template
+    case default
+      fp => null()
+  end select
+end function
+
+!======================================================================
+!========================== ユーザールーチン ==========================
+!======================================================================
+
+!----------------------------------------------------------------------
+! 波例題: 円形コサイン型の初期水位
+!----------------------------------------------------------------------
+subroutine initial_wave_hump(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -51,8 +146,9 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! (スタブ)
 !----------------------------------------------------------------------
-module subroutine init_state_user_2(p, g, s)
+subroutine initial_reserved_2(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -63,8 +159,9 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! (スタブ)
 !----------------------------------------------------------------------
-module subroutine init_state_user_3(p, g, s)
+subroutine initial_reserved_3(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -75,8 +172,9 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 新規ルーチンの雛形(空。複製して使う)
 !----------------------------------------------------------------------
-module subroutine init_state_user_4(p, g, s)
+subroutine initial_template(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s

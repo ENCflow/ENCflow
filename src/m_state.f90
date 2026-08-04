@@ -96,26 +96,18 @@ module m_state
 
 
 
+  ! user_initial submodule の入口(個々のルーチンへの分岐と識別名簿は
+  ! submodule 側に閉じる。ルーチンの追加は user_initial.f90 だけで完結する)
   interface
-    module subroutine init_state_user_1(p, g, s)
+    module function user_initial_id2name(id) result(name)
+      integer, intent(in) :: id
+      character(len=:), allocatable :: name
+    end function
+    module subroutine user_initial_run(p, g, s, name)
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
-    end subroutine
-    module subroutine init_state_user_2(p, g, s)
-      type(t_sysparam), intent(in) :: p
-      type(t_geoinfo), intent(in) :: g
-      type(t_state), intent(inout) :: s
-    end subroutine
-    module subroutine init_state_user_3(p, g, s)
-      type(t_sysparam), intent(in) :: p
-      type(t_geoinfo), intent(in) :: g
-      type(t_state), intent(inout) :: s
-    end subroutine
-    module subroutine init_state_user_4(p, g, s)
-      type(t_sysparam), intent(in) :: p
-      type(t_geoinfo), intent(in) :: g
-      type(t_state), intent(inout) :: s
+      character(len=*), intent(in) :: name
     end subroutine
   end interface
 
@@ -146,6 +138,7 @@ subroutine m_state_init(s, p, g)
                          ! 全ランクが全域で冗長に初期化し、最後に帯を切り出す。
                          ! user フックと fill_depression の「全域添字」契約を
                          ! 帯確保の下でも保つための方式。developer.md §11)
+  character(len=:), allocatable :: uname   ! user フックの識別名
 
   ! メモリ確保
   allocate(s%h(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
@@ -208,21 +201,16 @@ subroutine m_state_init(s, p, g)
 
   if (p%f_state_restore > 0) call restore_state(p, ts)
 
-  ! ユーザールーチンによる初期条件をセット(全域添字契約: ts に書く)
-  select case (list%f_user_routine_id)
-    case (0)
-      continue
-    case (1)
-      call init_state_user_1(p, g, ts)
-    case (2)
-      call init_state_user_2(p, g, ts)
-    case (3)
-      call init_state_user_3(p, g, ts)
-    case (4)
-      call init_state_user_4(p, g, ts)
-    case default
+  ! ユーザールーチンによる初期条件をセット(全域添字契約: ts に書く)。
+  ! 個々のルーチンへの分岐は user_initial submodule 内(互換入力の id は
+  ! 識別名に変換して単一の名簿で解決する)。実行は全ランク冗長
+  if (list%f_user_routine_id /= 0) then
+    uname = user_initial_id2name(list%f_user_routine_id)
+    if (len_trim(uname) == 0) then
       call par_stop("undefined f_user_routine_id in list_initial"//itoa(list%f_user_routine_id))
-  end select
+    end if
+    call user_initial_run(p, g, ts, uname)
+  end if
 
   ! --- 担当帯(+ハロ)を切り出す。ts はスコープ終了で自動解放 ---
   s%h(:,:) = ts%h(1:g%nx, dcp%jsh:dcp%jeh)
