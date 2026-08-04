@@ -28,11 +28,9 @@
      real64=既定 real なので等価のはず)
    - PREC=single は Log のモニタ値(貯留高 S 等)のみ改善方向に変化しうる
      (single の reference は無いので同一バイナリのビット再現のみ確認)
-5. **降雨遮断モジュール(m_intercept / 固定遮断率モデル)の検証**
-   - fn_intercept 未指定で全ケース既存 reference とビット一致
-     (機能追加の合否判定。makepre の updated 引数追加も無効時等価)
-   - 疎通: wave 系 + f_icmodel=1, ic_alpha=0.3 で総降雨(S への入力)が
-     ちょうど (1-α) 倍になること。np=1, 2, 4 で ULP=0
+5. **降雨遮断モジュール(m_intercept / 固定遮断率モデル)の残検証**
+   (無効時ビット一致と wave 疎通((1-α) 倍・np=1,2,4 ULP=0)は確認済み
+    2026-08-04)
    - prtype=3 かつ dt_prupdate < dt_maplist の設定で二重減衰しないこと
      (updated ガードの検証。Pr 出力が分布更新のたびに一定率か目視)
    - developer.md への追記(gwflow/geomorph の項と併せて。上記2参照)
