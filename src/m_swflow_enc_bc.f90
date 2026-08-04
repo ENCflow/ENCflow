@@ -12,7 +12,7 @@ submodule(m_swflow_enc) m_swflow_enc_bc
   ! ため submodule 側で直接 use する(§13)
   use m_boundary, only : t_boundary, e_bc_wall, e_bc_outflow, e_bc_radiation, &
                          e_bc_inflow, e_side_w, e_side_e, e_side_n, e_side_s
-  use m_parallel, only : dcp, par_stop
+  use m_parallel, only : dcp, par_stop, par_allreduce_sumr
   implicit none
 
   ! 境界条件の私有状態(bc_init が構築)
@@ -21,6 +21,8 @@ submodule(m_swflow_enc) m_swflow_enc_bc
                                             !   辺の型を初期値とし流入区間が上書き)
   real, allocatable :: bc_eta_cell(:,:)     ! 放射境界の基準水位(セル別)
   real, allocatable :: infl_wseg(:)         ! 各流入区間の開口幅の合計 (m)
+  real, allocatable :: infl_hseg(:)         ! 区間の面エントリ別水深(重み按分の
+                                            !   作業配列。全ランクが同値を共有)
   ! 辺の法線方向の方位(W, E, N, S)
   integer, parameter :: kn_side(1:4) = [4, 5, 2, 7]
   ! エッジ格納スロットの k 成分と符号(親の continuous と同じ写像)
@@ -37,7 +39,7 @@ module subroutine bc_init(p, g, b)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(in) :: b
-  integer :: ifl, m
+  integer :: ifl, ifl2, m
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   ! 辺境界条件を写す(ホットループでの間接参照回避)
@@ -74,11 +76,14 @@ module subroutine bc_init(p, g, b)
   ! (規定流量はこの幅で按分するため、総流入量は開口率によらず厳密)
   if (b%ninflow > 0) then
     allocate(infl_wseg(1:b%ninflow), source = 0.0)
+    m = 0
     do ifl = 1, b%ninflow
-      do m = 1, b%inflow(ifl)%ncell
-        infl_wseg(ifl) = infl_wseg(ifl) + l8(kn_side(b%inflow(ifl)%side(m)))
+      m = max(m, b%inflow(ifl)%ncell)
+      do ifl2 = 1, b%inflow(ifl)%ncell
+        infl_wseg(ifl) = infl_wseg(ifl) + l8(kn_side(b%inflow(ifl)%side(ifl2)))
       end do
     end do
+    allocate(infl_hseg(1:m), source = 0.0)
   end if
 
 end subroutine
@@ -91,6 +96,7 @@ module subroutine bc_dispose()
   if (allocated(bc_eta_cell)) deallocate(bc_eta_cell)
   if (allocated(bt_cell)) deallocate(bt_cell)
   if (allocated(infl_wseg)) deallocate(infl_wseg)
+  if (allocated(infl_hseg)) deallocate(infl_hseg)
 end subroutine
 
 
@@ -134,13 +140,15 @@ module subroutine boundary_h(p, g, b, s, sx)
   !$omp end parallel do
 
   ! 湧き出し・吸い込みを加える
-  !   所有ランクのみ適用する(リストは全ランクが保持。developer.md §11)
+  !   所有ランクのみ適用する(リストは全ランクが保持。developer.md §11)。
+  !   空隙率 gv で割って水深に換算する(降雨と同じ扱い。これで各セルの
+  !   受け取る体積が q·dx·dy で等しくなり、総量が厳密に Q になる)
   do isrc = 1, b%nsrc
     do k = 1, b%src(isrc)%ncell
       i = b%src(isrc)%cell(1,k)
       j = b%src(isrc)%cell(2,k)
       if (j < dcp%js .or. j > dcp%je) cycle
-      sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q
+      sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q / g%gv(i,j)
       ! 吸い込み(負の流量)でセルを負水深にしない(不足分は汲めない)
       if (sx%h1(i,j) < 0) sx%h1(i,j) = 0
     end do
@@ -198,7 +206,9 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
 
   integer :: i, j
   integer :: ifl, m, k, sd, ie, je
-  real :: qw, h, hc, he, uve1, mne1
+  integer :: ncseg
+  real :: qw, qwm, wsum, hmx, frw, alpha, h, hc, he, uve1, mne1
+  logical :: blend
   ! 各辺を横切る面の方位(1番目が法線、2・3番目が斜め)
   integer, parameter :: kfw(1:3) = [4, 1, 6]   ! 西辺(セル (1,j))
   integer, parameter :: kfe(1:3) = [5, 3, 8]   ! 東辺(セル (nx,j))
@@ -239,18 +249,69 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
   end if
 
   ! ==== 節2: 区間流入(外縁の法線面に流量を規定) ====
-  !   規定流量は区間の開口幅で按分するため総量は厳密(開口率に非依存)。
+  !   規定流量は区間内で按分して与える。按分は重みの正規化(Σ=Q)で
+  !   行うため、どのモードでも総流入量は厳密。
+  !     dist=0: 開口幅で均等按分(単位幅流量 qw = Q/W_seg が区間一様)
+  !     dist=1: 水深按分(qw_m = Q·h_m/Σ(h·w)。wet セルで流入流速が一様)
+  !     dist=2: 通水能按分(重み h^{5/3}。マニング則の等勾配断面と同じ
+  !             配分で、深いセルほど流速も大きい)
+  !   dist=1,2 は均等按分と連続ブレンドして適用する:
+  !     fr = u_max/sqrt(g·h_max)(最深セルに全面按分したときの流速比)
+  !     α  = clamp(2·(1 − fr), 0, 1)(fr<=0.5 で 1、fr>=1 で 0、間は線形)
+  !     qw_m = α·(重み按分) + (1−α)·(均等按分)
+  !   配分が現在の h の連続関数になるため、モード切替の不連続・振動が
+  !   原理的に存在せず、記憶する状態もない(リスタート往復も厳密)。
+  !   乾いた断面・薄膜だけの断面・退水時は fr が大きく自動的に均等側に
+  !   寄る(薄膜断面で最深セルへの流量集中がダム崩壊流を起こして発散
+  !   する実挙動への安定化を兼ねる。α·fr = 2fr(1−fr) <= 1/2 なので
+  !   最深セルの配分流量は常に限界流量の半分以下)。wet 率による切替は
+  !   行わない(低水時に澪筋だけが wet の状態が本モードの主用途のため)。
+  !   重みの h は前ステップの s%h(スキームの他項と同じ時刻レベル)。
+  !   h < dd のセルへの重み側の配分はゼロ。
   !   節1の後に適用し、開いた辺上の流入区間では辺の式を上書きする。
   !   面の取り込みは bt_cell(e_bc_inflow)経由で bc_open_face が開く。
   !   MPI: 東西辺のスロット行=セル行なので、共有行 js-1 はハロの h から
-  !   冗長計算する(節1と同じ規則)。南北辺は行の所有ランクのみ
+  !   冗長計算する(節1と同じ規則)。南北辺は行の所有ランクのみ。
+  !   重みの水深は「所有ランクだけが埋めるゼロ初期化ベクトル+全ランク
+  !   実数和」で全ランクに同値を配る(1要素1寄与なので加算順に依存せず
+  !   ビット決定的。par_allreduce_sumr の頭書き参照)。collective なので
+  !   実行判定(dist, q)は全ランク同値の量だけで行う(§5)
   do ifl = 1, b%ninflow
+    ncseg = b%inflow(ifl)%ncell
+
+    ! 重み按分の準備(重みベクトルの共有とブレンド係数 α の決定)
+    blend = (b%inflow(ifl)%dist > 0 .and. b%inflow(ifl)%q > 0.0)
+    alpha = 0.0
+    wsum = 0.0
+    if (blend) then
+      infl_hseg(1:ncseg) = 0.0
+      do m = 1, ncseg
+        j = b%inflow(ifl)%cell(2,m)
+        if (j < dcp%js .or. j > dcp%je) cycle       ! 所有ランクだけが埋める
+        infl_hseg(m) = s%h(b%inflow(ifl)%cell(1,m), j)
+      end do
+      call par_allreduce_sumr(infl_hseg(1:ncseg))
+      do m = 1, ncseg
+        h = infl_hseg(m)
+        if (h < p%dd) cycle
+        wsum = wsum + wgt_dist(h, b%inflow(ifl)%dist) &
+                      * l8(kn_side(b%inflow(ifl)%side(m)))
+      end do
+      if (wsum > 0.0) then
+        ! 最深セルに全面按分したときの流速比(フルード数)から α を決める
+        hmx = maxval(infl_hseg(1:ncseg))
+        frw = b%inflow(ifl)%q * wgt_dist(hmx, b%inflow(ifl)%dist) / wsum &
+              / (hmx * sqrt(p%gg * hmx))
+        alpha = min(1.0, max(0.0, 2.0 * (1.0 - frw)))
+      end if
+    end if
+
     if (b%inflow(ifl)%q <= 0.0) then
       qw = 0.0
     else
-      qw = b%inflow(ifl)%q / infl_wseg(ifl)     ! 単位幅流量 (m2/s)
+      qw = b%inflow(ifl)%q / infl_wseg(ifl)     ! 均等按分の単位幅流量 (m2/s)
     end if
-    do m = 1, b%inflow(ifl)%ncell
+    do m = 1, ncseg
       i = b%inflow(ifl)%cell(1,m)
       j = b%inflow(ifl)%cell(2,m)
       sd = b%inflow(ifl)%side(m)
@@ -263,20 +324,50 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
       k = kn_side(sd)
       ie = i + die(k)
       je = j + dje(k)
+      ! 面エントリの単位幅流量(重み側は dry 面ゼロ、均等側と α で
+      ! ブレンド。α=0 なら qwm = qw に厳密に一致)と参照水深。
+      ! ブレンド時の h は共有ベクトルから引く(共有行の冗長書きが両ランク
+      ! でビット同値になる条件。dist=0 は従来どおりハロの s%h)
+      if (blend) then
+        h = infl_hseg(m)
+        if (h < p%dd) then
+          qwm = (1.0 - alpha) * qw
+        else
+          qwm = alpha * (b%inflow(ifl)%q * wgt_dist(h, b%inflow(ifl)%dist) / wsum) &
+                + (1.0 - alpha) * qw
+        end if
+      else
+        qwm = qw
+        h = s%h(i,j)
+      end if
       ! エッジ水深: 内側セルの水深に限界水深の床を敷く(乾床への流入で
       ! uv1 = q/he が発散しないように。ネスティングが水深も渡す事情の
       ! 簡易代替。boundary_plan.md)
-      h = s%h(i,j)
-      hc = (qw**2 / p%gg)**(1.0 / 3.0)
+      hc = (qwm**2 / p%gg)**(1.0 / 3.0)
       he = max(h, hc, p%dv)
-      uve1 = -qw / he            ! 外向き正の負値=流入
-      mne1 = -qw
+      uve1 = -qwm / he           ! 外向き正の負値=流入
+      mne1 = -qwm
       sx%uv(ke(k), ie, je) = sign_e(k) * uve1
       sx%mn1(ke(k), ie, je) = sign_e(k) * mne1
     end do
   end do
 
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 区間流入の配分モード別の重み(dist=1: 水深、dist=2: 通水能 h^{5/3})
+!----------------------------------------------------------------------
+function wgt_dist(h, dist) result(w)
+  real, intent(in) :: h
+  integer, intent(in) :: dist
+  real :: w
+  if (dist >= 2) then
+    w = h**(5.0 / 3.0)
+  else
+    w = h
+  end if
+end function
 !----------------------------------------------------------------------
 ! セル (i,j) の、辺 sd を横切る面 kf(1:3) に辺境界の値を書く。
 ! エッジ水深は外縁内側セルの水深 h をそのまま使う(質量は mn1 だけで

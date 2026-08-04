@@ -32,6 +32,7 @@ module m_parallel
    public :: par_allreduce_min
    public :: par_halo_cell, par_halo_edge, par_edge_merge
    public :: par_allreduce_max, par_allreduce_sumi, par_allreduce_maxi
+   public :: par_allreduce_sumr
    public :: par_sum_rows
    public :: par_gather_to, par_gather_to_i, par_gather_edge_to
    public :: par_scatter_cell, par_scatter_cell_i
@@ -122,6 +123,12 @@ contains
       integer, intent(inout) :: ival
       if (ival == 0) continue
    end subroutine par_allreduce_maxi
+
+   subroutine par_allreduce_sumr(vals)
+      ! 全ランク合計。逐次では何もしない。
+      real, intent(inout) :: vals(:)
+      if (size(vals) > 0) continue
+   end subroutine par_allreduce_sumr
 
    subroutine par_sum_rows(rowsum, total)
       ! 行部分和の総和。逐次では従来どおり一括総和する
