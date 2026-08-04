@@ -446,6 +446,16 @@ subroutine probe_georef(p, g, list)
   else
     ! 経緯度(度単位)の格子: セル寸法は度なので dx, dy(m)には使えない
     call check_geog_cellsize(g)
+
+    ! 経緯度格子で CRS が決まらない場合は WGS84 を仮定する(表示して仮定。
+    ! dx, dy の概算検査が既に WGS84 の弧長式なので設計として一貫する。
+    ! 日本域の JGD2000/JGD2011 との差は cm 級で表示用途には実害がない)。
+    ! 正確な系を記録したいときは namelist の epsg で指定する(そちらが優先)
+    if (g%gr%epsg == 0) then
+      g%gr%epsg = 4326
+      call par_info(" georef: CRS 未指定のため WGS84(EPSG:4326)を仮定します" &
+                    //"(正確な CRS は namelist の epsg で指定)")
+    end if
   end if
 
 end subroutine

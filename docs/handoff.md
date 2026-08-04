@@ -98,6 +98,10 @@
      gfortran で検証済み: GDAL EHdr の Byte/Int16/UInt16 マスク入力が
      int32 版と全出力ビット一致、hdr なし(生 int32)の従来経路ビット一致、
      Float64・型違い・格子数不一致の明示エラー、経緯度 hdr の probe 不変
+   - 経緯度格子で CRS 未指定なら WGS84 を仮定(2026-08-01。表示つき。
+     epsg 明示が優先、投影系は従来どおり CRS なし)。検証: 仮定時の tif が
+     EPSG:4326、epsg=6668 明示時は JGD2011、メートル hdr は CRS なし、
+     既存結果ビット一致
    - QGIS での目視確認済み(2026-08-01): wrk_*.tif の見た目 OK、
      実データ往復の wrk_d2451_real / wrk_d4326_real は位置も OK
      (便宜座標の wrk_* が架空位置に出るのは仕様。README 参照)。
