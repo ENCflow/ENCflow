@@ -1,8 +1,10 @@
 !======================================================================
 ! 地形のユーザールーチン集(m_geoinfo の submodule)
 !
-!   親モジュールへの公開面は入口の2手続きのみ:
+!   親モジュールへの公開面は入口の手続きのみ:
 !     user_geoinfo_id2name : 互換入力 f_user_routine_id → 識別名(未知は "")
+!     user_geoinfo_defined : 識別名が登録済みかを返す(検証用。副作用なし)
+!     user_geoinfo_names   : 登録済み識別名の一覧文字列(エラー表示用)
 !     user_geoinfo_run     : 識別名で該当ルーチンを実行(rank0 のみで呼ばれる)
 !   分岐(resolve)と識別名簿(routine_names)はこの submodule に閉じる。
 !
@@ -55,6 +57,30 @@ module function user_geoinfo_id2name(id) result(name)
   else
     name = ""
   end if
+end function
+
+!----------------------------------------------------------------------
+! 識別名が登録済みかを返す(検証用。全ランクで呼んでよい)
+!----------------------------------------------------------------------
+module function user_geoinfo_defined(name) result(res)
+  character(len=*), intent(in) :: name
+  logical :: res
+  procedure(user_geoinfo_if), pointer :: fp
+  fp => resolve(name)
+  res = associated(fp)
+end function
+
+!----------------------------------------------------------------------
+! 登録済み識別名の一覧文字列(エラー表示用)
+!----------------------------------------------------------------------
+module function user_geoinfo_names() result(names)
+  character(len=:), allocatable :: names
+  integer :: i
+  names = ""
+  do i = 1, size(routine_names)
+    if (i > 1) names = names//", "
+    names = names//trim(routine_names(i))
+  end do
 end function
 
 !----------------------------------------------------------------------

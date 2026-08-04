@@ -56,6 +56,13 @@ module m_geoinfo
       integer, intent(in) :: id
       character(len=:), allocatable :: name
     end function
+    module function user_geoinfo_defined(name) result(res)
+      character(len=*), intent(in) :: name
+      logical :: res
+    end function
+    module function user_geoinfo_names() result(names)
+      character(len=:), allocatable :: names
+    end function
     module subroutine user_geoinfo_run(p, g, name)
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(inout) :: g
@@ -101,16 +108,28 @@ subroutine m_geoinfo_init(g, p)
 
   ! user フック: 名前解決と検証は全ランク(par_stop は collective)。実行は
   ! 係数を含む全配列を持つ rank0 のみで、「全域添字で書く」契約は無変更。
-  ! 個々のルーチンへの分岐は user_geoinfo submodule 内(互換入力の id は
-  ! 識別名に変換して単一の名簿で解決する)。
+  ! 指定は f_user_routine_name(識別名。trim 後完全一致)を正とし、
+  ! f_user_routine_id は互換入力(submodule 内の対応表で識別名に変換)。
+  ! 個々のルーチンへの分岐は user_geoinfo submodule 内。
   ! フックが地形・マスク類を変更した可能性があるため、実行後に rank0 から
   ! 再配布する(フック無指定なら通信なし)。
   ! 注意: フック内から par_stop を呼んではならない(rank0 のみで実行される
   ! ため collective が成立しない。エラーは par_abort を使うこと)
+  if (list%f_user_routine_id /= 0 .and. len_trim(list%f_user_routine_name) > 0) then
+    call par_stop("list_geoinfo: f_user_routine_id と f_user_routine_name は同時に指定できません")
+  end if
   if (list%f_user_routine_id /= 0) then
     uname = user_geoinfo_id2name(list%f_user_routine_id)
     if (len_trim(uname) == 0) then
       call par_stop("undefined f_user_routine_id in list_geoinfo"//itoa(list%f_user_routine_id))
+    end if
+  else
+    uname = trim(list%f_user_routine_name)
+  end if
+  if (len_trim(uname) > 0) then
+    if (.not. user_geoinfo_defined(uname)) then
+      call par_stop("undefined f_user_routine_name in list_geoinfo: "//trim(uname)// &
+                    " (defined: "//user_geoinfo_names()//")")
     end if
     if (is_root) call user_geoinfo_run(p, g, uname)
     call par_bcast_cell(g%z)
