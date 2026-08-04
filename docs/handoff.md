@@ -23,23 +23,12 @@
    - 切替器 vs 重ね合わせの使い分け原則、s%hg 柱状換算契約、S 台帳、
      モデル実装5箇条(m_gwflow_bucket ヘッダが正本)
 3. developer.md の日付プレースホルダ(2026-xx)の実日付化(残があれば)
-4. **save/restore 再編(dir_save + save_info.txt)の検証(直近の宿題)**
-   - 保存→復元の往復で状態がビット一致(逐次・np=1,2,4)
-   - save_info.txt の版・格子・精度・成分数の不一致で par_stop すること
-     (旧 save_state.dat 形式は読めなくなった=版エラーで停止が正)
-   - swflow_enc.dat 欠如時に par_stop すること
-   - PREC=single での保存→single 復元、および double 保存→single 復元の停止確認
-   - state.dat 4成分化(u,v除外・2026-07-31版)後の往復ビット一致の再確認
-   - STG(f_gridsystem=1)+ f_state_restore で par_stop すること
-   - RLE 圧縮(2026-07-31b 版)後の往復ビット一致(海域・乾燥域を含む chichibu で)
-   - RLE の両極端: ゼロなし成分(z)と全ゼロ成分(rsh 未使用時)が正しく往復すること
-   - 単精度(PREC=single)ビルドでの RLE 往復(ビット判定の int32 経路)
-5. **診断集約の real64 固定化(hsum 系・par_sum_rows)の検証**
+4. **診断集約の real64 固定化(hsum 系・par_sum_rows)の検証**
    - PREC=double で全ケース既存 reference とビット一致(逐次・np=1,2,4。
      real64=既定 real なので等価のはず)
    - PREC=single は Log のモニタ値(貯留高 S 等)のみ改善方向に変化しうる
      (single の reference は無いので同一バイナリのビット再現のみ確認)
-6. **降雨遮断モジュール(m_intercept / 固定遮断率モデル)の検証**
+5. **降雨遮断モジュール(m_intercept / 固定遮断率モデル)の検証**
    - fn_intercept 未指定で全ケース既存 reference とビット一致
      (機能追加の合否判定。makepre の updated 引数追加も無効時等価)
    - 疎通: wave 系 + f_icmodel=1, ic_alpha=0.3 で総降雨(S への入力)が
@@ -47,7 +36,7 @@
    - prtype=3 かつ dt_prupdate < dt_maplist の設定で二重減衰しないこと
      (updated ガードの検証。Pr 出力が分布更新のたびに一定率か目視)
    - developer.md への追記(gwflow/geomorph の項と併せて。上記2参照)
-7. **初期化の方式2・第1段(係数の rank0 化+scatter)の検証**
+6. **初期化の方式2・第1段(係数の rank0 化+scatter)の検証**
    - **確保に触れる変更なので -fcheck=all の np>=2 を最適化ビルドより先に**
      (静的データを使う chichibu で。規律3)
    - 逐次で既存 reference とビット一致(scatter_band は逐次 no-op 経路)
@@ -57,7 +46,7 @@
    - f_rntype=2(lu2rn 変換)のケースがあれば併せて確認(read_rn の
      rank0 経路)
 
-8. **座標管理(m_georef / ESRI hdr)導入コミットの検証**
+7. **座標管理(m_georef / ESRI hdr)導入コミットの検証**
    (仕様と決定事項は docs/geotiff_plan.md §10)
    - gfortran 逐次では検証済み: wave/chichibu(txt 入力)がベースラインと
      全出力ビット一致、bil+hdr 入力が bil 単独入力と全出力ビット一致
@@ -72,7 +61,7 @@
    - 残: 出力 .hdr+.bil を QGIS / ArcGIS で開いて位置・値の目視確認
      (GDAL EHdr 互換キーで書いている。gdalinfo でも可)
    - 残: examples の param サンプルへの epsg / hdr 運用の説明追記
-9. **GeoTIFF Phase 1〜3 完了(読み書きとも実用範囲は完成)**
+8. **GeoTIFF Phase 1〜3 完了(読み書きとも実用範囲は完成)**
    - 読み: m_geotiff + m_geotiff_codec + m_geotiff_inflate、f_input_mode=4
      (形式番号は出力のビット値と共通。3 は専用メッセージで停止)。
      書き: gtif_write(無圧縮単一 strip・Float32/Int32・GeoKey)、
