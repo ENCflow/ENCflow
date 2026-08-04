@@ -1,8 +1,11 @@
 !======================================================================
 module m_geoinfo
+  use, intrinsic :: iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use list_geoinfo, only : t_list_geoinfo, list_geoinfo_read
-  use m_fileio, only : fileio_read_matrix
+  use m_fileio, only : fileio_read_matrix, e_fmt_bil, e_fmt_gtif
+  use m_georef, only : t_georef, georef_hdr_name, georef_read_hdr, georef_est_cellsize_m
+  use m_geotiff, only : t_gtif_info, gtif_inquire
   use m_util, only : itoa
   use m_parallel, only : par_info, par_stop, par_abort, dcp, is_root, nproc, &
                        par_scatter_cell, par_scatter_cell_i, &
@@ -12,6 +15,7 @@ module m_geoinfo
 
   public :: t_geoinfo
   public :: m_geoinfo_init
+  public :: m_geoinfo_row_ncells
   public :: m_geoinfo_scatter_coeffs
   public :: m_geoinfo_band_shrink
   public :: m_geoinfo_dispose
@@ -27,6 +31,7 @@ module m_geoinfo
     real :: ly
     real :: min_gv                                    ! 家屋の空隙率の最小値
     real :: min_bb                                    ! 家屋の平均サイズの最小値
+    type(t_georef) :: gr                              ! 地理座標参照(hdr 由来。未管理なら active=.false.)
     real, allocatable :: z(:,:)                       ! 標高(m)
     real, allocatable :: rn(:,:)                      ! 粗度係数
     real, allocatable :: gv(:,:)                      ! 家屋の空隙率
@@ -133,6 +138,13 @@ subroutine m_geoinfo_init(g, p)
   end if
 
 
+  ! GeoTIFF 出力には座標参照が必須(geotiff_plan.md §10 条件1)。
+  ! 位置の分からない tif を黙って書かず、ここで止める
+  if (iand(p%f_output_mode, e_fmt_gtif) /= 0 .and. .not. g%gr%active) then
+    call par_stop("f_output_mode: GeoTIFF 出力には座標管理が必要です" &
+                  //"(bil+hdr 入力か GeoTIFF 入力で位置情報を与えてください)")
+  end if
+
   call calc_wxy(p, g)
   call count_valcells(p, g)
 
@@ -162,6 +174,22 @@ subroutine count_valcells(p, g)
   if (g%n_valcells <= 0) then
     call par_stop("no valid cell in the entire domain")
   end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 行ごとの有効セル数を数える(par_decomp_init の行重み用)。
+!   カーネルの計算対象と同じ基準(x > 0。海域も x > 0 なら含む)。
+!   マスク x を全域添字で読むため、m_geoinfo_init 直後(ゾーン1)で
+!   呼ぶこと。全ランクが同一のマスクから同一の値を得るので通信は不要
+!----------------------------------------------------------------------
+subroutine m_geoinfo_row_ncells(g, rowwork)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(out) :: rowwork(:)     ! サイズ ny(行 j の有効セル数)
+  integer :: j
+  do j = 1, g%ny
+    rowwork(j) = count(g%x(1:g%nx, j) > 0)
+  end do
 end subroutine
 
 
@@ -261,8 +289,10 @@ end subroutine
 !----------------------------------------------------------------------
 ! 地形とマスク類を縮小する(全モジュールの初期化完了後、run_main の
 ! 直前に呼ぶ)。x は番兵境界ごと帯へ、sw / rw は通常の帯へ。
-! z は Z ファイル出力(output_matrix_full)のため rank0 のみ全域を
-! 保持し続ける(将来の浸食計算では「初期地形の正本」にもなる)。
+! z は「入力地形の正本」として rank0 のみ全域を保持し続ける
+! (将来の浸食計算で初期地形との比較に使う。全域出力が必要になったら
+!  rank0 直接書きのルーチンを m_output に復元する。git 履歴の
+!  output_matrix_full 参照)。
 ! 時間ループでの sw/rw/gv の近傍参照(momentum, rivermouth の ±1)は
 ! ハロ幅2の帯確保で全て範囲内に収まることを監査済み
 !----------------------------------------------------------------------
@@ -312,12 +342,172 @@ subroutine set_params(p, g, list)
   g%lx = list%lx
   g%ly = list%ly
 
+  ! 地理座標参照の取得(bil 入力で地盤高の hdr がある場合のみ)。
+  ! nx, ny, dx, dy を補完しうるため resolve_geometry より前に行うこと
+  call probe_georef(p, g, list)
+
   ! 領域指定の判別・補完・検証(dr の計算より前に行うこと)
   call resolve_geometry(g)
 
   g%dr = sqrt(g%dx**2 + g%dy**2)
   g%min_gv = list%min_gv
   g%min_bb = list%min_bb
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 地理座標参照の探索・読み込み(docs/geotiff_plan.md §10)
+!   対象は地盤高ファイル(f_ztype=1 かつ fn_z 指定)のみ。
+!   - bil 入力: fn_z と同じ場所に .hdr があれば読む。無ければ何もしない
+!     (従来どおり namelist の nx, ny 等が必須のまま)。
+!   - GeoTIFF 入力: fn_z のタグから取得する。位置情報タグの無い TIFF は
+!     座標未管理として扱う(nx, ny の検査だけは自己記述性を使って行う)。
+!   取得できた場合:
+!   - nx, ny, dx, dy の未指定分をファイルの値で補完する。
+!   - namelist にも指定がある場合は無言でどちらかを優先せず整合を検査し、
+!     矛盾なら par_stop(resolve_geometry の過剰指定と同じ流儀)。
+!     一致する場合は namelist の値を保持する(既存設定に hdr を後付け
+!     しても計算がビット同値に保たれる)。
+!   - 経緯度格子は dx, dy 必須+概算検査(check_geog_cellsize)。
+!   - CRS(epsg): hdr には無いので namelist 由来。GeoTIFF は CRS を持つ
+!     ので、namelist が未指定(0)ならファイルの値を採用し、両方あれば
+!     一致を検査する。
+!   全ランクが同一のファイルを冗長に読む(他の入力ファイル読みと同じ方式)
+!----------------------------------------------------------------------
+subroutine probe_georef(p, g, list)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(inout) :: g
+  type(t_list_geoinfo), intent(in) :: list
+  real, parameter :: rtol = 1.0e-6   ! dx, dy の整合判定の相対許容差
+  character(:), allocatable :: fname, fname_hdr
+  type(t_gtif_info) :: tinfo
+  integer :: ncols, nrows, stat
+  character(len=512) :: msg
+  logical :: ex
+
+  g%gr%epsg = list%epsg
+
+  if (list%f_ztype /= 1) return
+  if (len_trim(list%fn_z) == 0) return
+  fname = trim(p%dir_data) // "/" // trim(list%fn_z)
+
+  if (p%f_input_mode == e_fmt_bil) then
+    fname_hdr = georef_hdr_name(fname)
+    inquire(file=fname_hdr, exist=ex)
+    if (.not. ex) return
+    call par_info(" reading "//fname_hdr)
+    call georef_read_hdr(fname_hdr, g%gr, ncols, nrows)
+
+  else if (p%f_input_mode == e_fmt_gtif) then
+    call gtif_inquire(fname, tinfo, stat, msg)
+    if (stat /= 0) call par_stop("GeoTIFF 読込失敗: "//trim(msg))
+    ncols = tinfo%nx
+    nrows = tinfo%ny
+    if (tinfo%has_georef) then
+      g%gr%active = .true.
+      g%gr%xul = tinfo%xul
+      g%gr%yul = tinfo%yul
+      g%gr%csx = tinfo%csx
+      g%gr%csy = tinfo%csy
+      g%gr%is_geog = tinfo%is_geog
+      g%gr%has_nodata = tinfo%has_nodata
+      g%gr%nodata = tinfo%nodata
+      if (tinfo%epsg /= 0) then
+        if (list%epsg == 0) then
+          g%gr%epsg = tinfo%epsg
+        else if (list%epsg /= tinfo%epsg) then
+          call par_stop("list_geoinfo: epsg("//itoa(list%epsg)//") が GeoTIFF の CRS(" &
+                        //itoa(tinfo%epsg)//") と一致しません")
+        end if
+      end if
+    end if
+
+  else
+    return
+  end if
+
+  ! nx, ny: 未指定なら補完、指定済みなら一致検査
+  ! (GeoTIFF は位置情報タグが無くても格子数は自己記述なのでここは通る)
+  if (g%nx <= 0) then
+    g%nx = ncols
+  else if (g%nx /= ncols) then
+    call par_stop("list_geoinfo: nx("//itoa(g%nx)//") がファイルの格子数(" &
+                  //itoa(ncols)//") と一致しません")
+  end if
+  if (g%ny <= 0) then
+    g%ny = nrows
+  else if (g%ny /= nrows) then
+    call par_stop("list_geoinfo: ny("//itoa(g%ny)//") がファイルの格子数(" &
+                  //itoa(nrows)//") と一致しません")
+  end if
+
+  ! dx, dy はファイルから座標参照が取れた場合のみ扱える
+  if (.not. g%gr%active) return
+
+  if (.not. g%gr%is_geog) then
+    ! 投影座標系(メートル)の格子: セル寸法をそのまま dx, dy に使える。
+    ! 未指定なら補完、指定済みなら整合検査(相対許容差 rtol)
+    if (g%dx <= 0.0) then
+      g%dx = real(g%gr%csx)
+    else if (abs(g%dx - g%gr%csx) > rtol * g%gr%csx) then
+      call par_stop("list_geoinfo: dx がファイルのセル寸法と矛盾しています。" &
+                    //"どちらか一方の指定にしてください")
+    end if
+    if (g%dy <= 0.0) then
+      g%dy = real(g%gr%csy)
+    else if (abs(g%dy - g%gr%csy) > rtol * g%gr%csy) then
+      call par_stop("list_geoinfo: dy がファイルのセル寸法と矛盾しています。" &
+                    //"どちらか一方の指定にしてください")
+    end if
+  else
+    ! 経緯度(度単位)の格子: セル寸法は度なので dx, dy(m)には使えない
+    call check_geog_cellsize(g)
+
+    ! 経緯度格子で CRS が決まらない場合は WGS84 を仮定する(表示して仮定。
+    ! dx, dy の概算検査が既に WGS84 の弧長式なので設計として一貫する。
+    ! 日本域の JGD2000/JGD2011 との差は cm 級で表示用途には実害がない)。
+    ! 正確な系を記録したいときは namelist の epsg で指定する(そちらが優先)
+    if (g%gr%epsg == 0) then
+      g%gr%epsg = 4326
+      call par_info(" georef: CRS 未指定のため WGS84(EPSG:4326)を仮定します" &
+                    //"(正確な CRS は namelist の epsg で指定)")
+    end if
+  end if
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 経緯度グリッドのセル寸法検査(docs/geotiff_plan.md §10)
+!   国土数値情報・基盤地図情報由来の経緯度格子を「dx=dy=100m, 250m」等の
+!   慣習的近似で使う運用を想定する。namelist の dx, dy(m)を必須とし、
+!   経緯度からの概算メートル寸法と両方を表示したうえで、相対差が
+!   rtol_geog を超える場合は格子の取り違えとみなして停止する
+!   (慣習的近似の差は日本周辺で高々 20% 程度、格子の取り違えは倍半分)
+!----------------------------------------------------------------------
+subroutine check_geog_cellsize(g)
+  type(t_geoinfo), intent(inout) :: g
+  real, parameter :: rtol_geog = 0.3   ! 停止判定の相対許容差
+  real(real64) :: dxm, dym
+  character(len=256) :: msg
+
+  if (g%dx <= 0.0 .or. g%dy <= 0.0) then
+    call par_stop("list_geoinfo: 経緯度グリッド(hdr が度単位)では " &
+                  //"dx, dy(m)の明示指定が必須です")
+  end if
+  call georef_est_cellsize_m(g%gr, g%ny, dxm, dym)
+  write(msg, '(a,f0.2,a,f0.2)') &
+    " georef: 経緯度グリッド。namelist の dx, dy(m) = ", g%dx, ", ", g%dy
+  call par_info(trim(msg))
+  write(msg, '(a,f0.2,a,f0.2)') &
+    " georef: 経緯度からの概算   dx, dy(m) = ", dxm, ", ", dym
+  call par_info(trim(msg))
+  if (abs(g%dx - dxm) > rtol_geog * dxm .or. &
+      abs(g%dy - dym) > rtol_geog * dym) then
+    call par_stop("list_geoinfo: dx, dy が経緯度からの概算と大きく食い違います" &
+                  //"(上記表示)。格子とセル寸法の対応を確認してください")
+  end if
 
 end subroutine
 

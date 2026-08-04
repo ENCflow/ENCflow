@@ -3,8 +3,13 @@
 *.mod
 *.smod
 *.obj
+*.a
+.mode_*
 a.out*
 tada
+test/gtif/test_gtif_reader
+test/gtif/wrk_*.tif
+utils/rmdepress_river/rmdepress_river
 
 # --- executable binaries ---
 bin/

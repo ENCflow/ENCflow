@@ -158,8 +158,8 @@ subroutine do_all(p, g, fn_ddir)
   dz(:,:) = g%z(:,:) - z(:,:)
 
   !call fileio_write_matrix("RM.bil", g%nx, g%ny, irm, 2, 0)
-  call fileio_write_matrix("Z0000.bil", g%nx, g%ny, z, e_fmt_bil, e_cmp_off)
-  call fileio_write_matrix("Zd0000.bil", g%nx, g%ny, dz, e_fmt_bil, e_cmp_off)
+  call fileio_write_matrix("Z0000.bil", g%nx, g%ny, z, e_fmt_bil)
+  call fileio_write_matrix("Zd0000.bil", g%nx, g%ny, dz, e_fmt_bil)
   
 end subroutine
 

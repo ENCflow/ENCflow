@@ -2,7 +2,8 @@ module m_output
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
-  use m_fileio, only : fileio_write_matrix, e_fmt_txt, e_fmt_bil, e_fmt_both
+  use m_fileio, only : fileio_write_matrix, e_fmt_txt, e_fmt_bil, e_fmt_gtif
+  use m_georef, only : georef_write_hdr, e_pix_float, e_pix_int
   use m_parallel
 
   implicit none
@@ -77,12 +78,12 @@ subroutine output_chk_geoinfo(g)
   if (g%initialized) continue  ! 引数未使用の警告を抑制
   if (.not. is_root) return
   ! デバッグ用データ出力
-  !call fileio_write_matrix("xxxx.txt", g%nx, g%ny, g%x(1:g%nx,1:g%ny), e_fmt_txt, e_cmp_off)
-  !call fileio_write_matrix("xxxx.bil", g%nx, g%ny, g%x(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
-  !call fileio_write_matrix("ssss.bil", g%nx, g%ny, g%sw(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
-  !call fileio_write_matrix("rrrr.bil", g%nx, g%ny, g%rw(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
-  !call fileio_write_matrix("ssss.txt", g%nx, g%ny, g%sw(1:g%nx,1:g%ny), e_fmt_txt, e_cmp_off)
-  !call fileio_write_matrix("zzzz.bil", g%nx, g%ny, g%z(1:g%nx,1:g%ny), e_fmt_bil, e_cmp_off)
+  !call fileio_write_matrix("xxxx.txt", g%nx, g%ny, g%x(1:g%nx,1:g%ny), e_fmt_txt)
+  !call fileio_write_matrix("xxxx.bil", g%nx, g%ny, g%x(1:g%nx,1:g%ny), e_fmt_bil)
+  !call fileio_write_matrix("ssss.bil", g%nx, g%ny, g%sw(1:g%nx,1:g%ny), e_fmt_bil)
+  !call fileio_write_matrix("rrrr.bil", g%nx, g%ny, g%rw(1:g%nx,1:g%ny), e_fmt_bil)
+  !call fileio_write_matrix("ssss.txt", g%nx, g%ny, g%sw(1:g%nx,1:g%ny), e_fmt_txt)
+  !call fileio_write_matrix("zzzz.bil", g%nx, g%ny, g%z(1:g%nx,1:g%ny), e_fmt_bil)
 end subroutine
 
 
@@ -162,37 +163,17 @@ subroutine output_matrix_real(p, g, prefix, a, k)
   write(snum, '(i4.4)') k
   fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
 
-  if (p%f_output_mode == e_fmt_txt .or. p%f_output_mode == e_fmt_both) then
-    call fileio_write_matrix(fn//".txt", g%nx, g%ny, wk_out, e_fmt_txt, p%f_output_compress)
+  ! f_output_mode はビット和(1:txt, 2:bil, 4:geotiff)。組合せ出力可
+  if (iand(p%f_output_mode, e_fmt_txt) /= 0) then
+    call fileio_write_matrix(fn//".txt", g%nx, g%ny, wk_out, e_fmt_txt)
   end if
-  if (p%f_output_mode == e_fmt_bil .or. p%f_output_mode == e_fmt_both) then
-    call fileio_write_matrix(fn//".bil", g%nx, g%ny, wk_out, e_fmt_bil, p%f_output_compress)
+  if (iand(p%f_output_mode, e_fmt_bil) /= 0) then
+    call fileio_write_matrix(fn//".bil", g%nx, g%ny, wk_out, e_fmt_bil)
+    ! 地理座標を管理している場合のみ hdr を併記
+    if (g%gr%active) call georef_write_hdr(fn//".hdr", g%gr, g%nx, g%ny, e_pix_float)
   end if
-
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 全域保持の静的配列をファイルに出力(g%z 等。rank0 が直接書く)
-!----------------------------------------------------------------------
-subroutine output_matrix_full(p, g, prefix, a, k)
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  character(len=*), intent(in) :: prefix
-  integer, intent(in) :: k
-  real, intent(in) :: a(1:g%nx,1:g%ny)
-  character(len=4) :: snum
-  character(:), allocatable :: fn
-
-  if (.not. is_root) return
-  write(snum, '(i4.4)') k
-  fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
-
-  if (p%f_output_mode == e_fmt_txt .or. p%f_output_mode == e_fmt_both) then
-    call fileio_write_matrix(fn//".txt", g%nx, g%ny, a, e_fmt_txt, p%f_output_compress)
-  end if
-  if (p%f_output_mode == e_fmt_bil .or. p%f_output_mode == e_fmt_both) then
-    call fileio_write_matrix(fn//".bil", g%nx, g%ny, a, e_fmt_bil, p%f_output_compress)
+  if (iand(p%f_output_mode, e_fmt_gtif) /= 0) then
+    call fileio_write_matrix(fn//".tif", g%nx, g%ny, wk_out, e_fmt_gtif, g%gr)
   end if
 
 end subroutine
@@ -217,11 +198,15 @@ subroutine output_matrix_int(p, g, prefix, a, k)
   write(snum, '(i4.4)') k
   fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
 
-  if (p%f_output_mode == e_fmt_txt .or. p%f_output_mode == e_fmt_both) then
-    call fileio_write_matrix(fn//".txt", g%nx, g%ny, wk_out_i, e_fmt_txt, p%f_output_compress)
+  if (iand(p%f_output_mode, e_fmt_txt) /= 0) then
+    call fileio_write_matrix(fn//".txt", g%nx, g%ny, wk_out_i, e_fmt_txt)
   end if
-  if (p%f_output_mode == e_fmt_bil .or. p%f_output_mode == e_fmt_both) then
-    call fileio_write_matrix(fn//".bil", g%nx, g%ny, wk_out_i, e_fmt_bil, p%f_output_compress)
+  if (iand(p%f_output_mode, e_fmt_bil) /= 0) then
+    call fileio_write_matrix(fn//".bil", g%nx, g%ny, wk_out_i, e_fmt_bil)
+    if (g%gr%active) call georef_write_hdr(fn//".hdr", g%gr, g%nx, g%ny, e_pix_int)
+  end if
+  if (iand(p%f_output_mode, e_fmt_gtif) /= 0) then
+    call fileio_write_matrix(fn//".tif", g%nx, g%ny, wk_out_i, e_fmt_gtif, g%gr)
   end if
 end subroutine
 

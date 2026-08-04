@@ -44,9 +44,8 @@ module list_sysparam
     integer :: f_check_cfl = 0                    ! CFL条件による実行停止
     integer :: f_state_save = 0                   ! 状態保存ファイルの出力
     integer :: f_state_restore = 0                ! 状態保存ファイルからの初期条件の設定
-    integer :: f_input_mode = 1                   ! matrix入力形式(1:text, 2:bil)
-    integer :: f_output_mode = 1                  ! matrix出力形式(1:text, 2:bil, 3:txt+bil)
-    integer :: f_output_compress = 0              ! 出力ファイルの圧縮(0:なし, 1:gzip)
+    integer :: f_input_mode = 1                   ! matrix入力形式(1:text, 2:bil, 4:geotiff。出力のビット値と共通)
+    integer :: f_output_mode = 1                  ! matrix出力形式のビット和(1:text, 2:bil, 4:geotiff)
 
     integer :: f_out_z = 0                        ! ファイル出力(地盤高Z0001, offでもt=0は常に出力)
     integer :: f_out_h = 1                        ! ファイル出力(水深H0001)
@@ -135,9 +134,8 @@ subroutine list_sysparam_read(list, fn_sysparam)
   integer :: f_check_cfl                     ! CFL条件による実行停止
   integer :: f_state_save                    ! 状態保存ファイルの出力
   integer :: f_state_restore                 ! 状態保存ファイルからの初期条件の設定
-  integer :: f_input_mode                    ! matrix入力形式(1:text, 2:bil)
-  integer :: f_output_mode                   ! matrix出力形式(1:text, 2:bil, 3:txt+bil)
-  integer :: f_output_compress               ! 出力ファイルの圧縮(0:なし, 1:gzip)
+  integer :: f_input_mode                    ! matrix入力形式(1:text, 2:bil, 4:geotiff。出力のビット値と共通)
+  integer :: f_output_mode                   ! matrix出力形式のビット和(1:text, 2:bil, 4:geotiff)
   integer :: f_out_z                         ! ファイル出力(地盤高Z0001)
   integer :: f_out_h                         ! ファイル出力(水深H0001)
   integer :: f_out_e                         ! ファイル出力(水位E0001)
@@ -187,7 +185,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         st_file_c, st_recrd_c, et_file_c, et_recrd_c, &
                         dd, dv, vv, gg, cm, cd, kk, &
                         f_gridsystem, f_govequation, f_check_cfl, f_state_save, &
-                        f_state_restore, f_input_mode, f_output_mode, f_output_compress, &
+                        f_state_restore, f_input_mode, f_output_mode, &
                         f_out_z, f_out_h, f_out_e, f_out_u, f_out_v, f_out_m, f_out_n, &
                         f_out_vv, f_out_qq, f_out_qc, f_out_qd, &
                         f_out_hmax, f_out_hmaxt, f_out_vvmax, f_out_qqmax, f_out_qqmaxt, f_out_qqmaxd, &
@@ -232,7 +230,6 @@ subroutine list_sysparam_read(list, fn_sysparam)
   f_state_restore = list%f_state_restore
   f_input_mode = list%f_input_mode
   f_output_mode = list%f_output_mode
-  f_output_compress = list%f_output_compress
   f_out_z = list%f_out_z
   f_out_h = list%f_out_h
   f_out_e = list%f_out_e
@@ -314,7 +311,6 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%f_state_restore = f_state_restore
   list%f_input_mode = f_input_mode
   list%f_output_mode = f_output_mode
-  list%f_output_compress = f_output_compress
   list%f_out_z = f_out_z
   list%f_out_h = f_out_h
   list%f_out_e = f_out_e

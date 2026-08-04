@@ -1,0 +1,6 @@
+# git blame で無視する「機械的な一括変更」のコミット。
+# 有効化(リポジトリごとに一度):
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# 改行コードの LF 統一(2026-08-01)
+3f0d79bdcf2024e0d4d277851c175ab39ef3ce4e

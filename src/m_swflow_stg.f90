@@ -6,7 +6,7 @@
 module m_swflow_stg
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
-  use m_boundary, only : t_boundary
+  use m_boundary, only : t_boundary, e_bc_wall
   use m_state, only : t_state
   use m_parallel, only : dcp, par_stop
   implicit none
@@ -67,6 +67,17 @@ subroutine m_swflow_stg_init(p, g, b, s)
   ! STG は運動量(M,N)を保存しないため restart 非対応(developer.md §7)
   if (p%f_state_restore > 0) then
     call par_stop("STG(f_gridsystem=1)は restart(f_state_restore)非対応です")
+  end if
+
+  ! 辺境界条件は STG 非対応(凍結方針 §7)。既定(全辺不透過)以外は停止
+  if (any(b%edge%btype /= e_bc_wall)) then
+    call par_stop("STG(f_gridsystem=1)は辺境界条件(list_bound_edge)非対応です")
+  end if
+  if (b%nstage > 0) then
+    call par_stop("STG(f_gridsystem=1)は水位規定セル群(list_bound_stage)非対応です")
+  end if
+  if (b%ninflow > 0) then
+    call par_stop("STG(f_gridsystem=1)は区間流入(list_bound_inflow)非対応です")
   end if
 
   select case (p%f_govequation)

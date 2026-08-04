@@ -5,7 +5,6 @@ module m_sysdep_util
 
   public :: sysdep_mkdir
   public :: sysdep_copy_to_dir
-  public :: sysdep_compress
 
 contains
 
@@ -46,19 +45,5 @@ subroutine sysdep_copy_to_dir(filename, dirname)
   end if
 end subroutine
 
-
-!----------------------------------------------------------------------
-! ファイルを圧縮
-!----------------------------------------------------------------------
-subroutine sysdep_compress(fname)
-  character(len=*) :: fname
-  character(len=256) :: command
-  integer :: i
-  command = "gzip -f --best "//trim(fname)//" &"
-  call execute_command_line(trim(command), exitstat=i)
-  if (i /= 0) then
-    stop
-  end if
-end subroutine
 
 end module

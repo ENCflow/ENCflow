@@ -1,1 +1,10 @@
-make.inc linguist-language=Makefile
+# 改行コードの統一(2026-08-01 導入)
+#   リポジトリ内・作業ツリーとも LF に統一する。Windows のエディタで
+#   編集しても commit 時に LF へ正規化される(現代のエディタは LF を
+#   そのまま扱えるため checkout も LF)。
+* text=auto eol=lf
+
+# バイナリ資産(改行変換の対象外であることを明示)
+*.tif binary
+*.bil binary
+*.png binary

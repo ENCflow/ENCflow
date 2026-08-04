@@ -4,7 +4,8 @@ submodule(m_swflow_enc) m_swflow_enc_adv
   implicit none
 
   type t_enc_adv
-    real, allocatable :: taxy(:,:,:) ! セル中心での移流項(第1添字は1~4，それぞれ風上差分と中心差分のx,y成分)
+    ! セル中心での移流項(第1添字は1~4，それぞれ風上差分と中心差分のx,y成分)
+    real, allocatable :: taxy(:,:,:)
     real, allocatable :: ulm(:,:)    ! セル中心でのu*lm (移流項計算用)
     real, allocatable :: vlm(:,:)    ! セル中心でのv*lm (移流項計算用)
   end type
@@ -161,6 +162,7 @@ function adv_edge_v1(s, sx, tx, i, j, k, in, jn, ie, je) result(ta)
   real :: taxe, taye
   real :: taxe2, taye2, tae2
   integer :: inn, jnn, ino, jno
+  real :: unn, vnn, uno, vno
   real :: duvc, duvr, duvl, duv0
   real :: rr, rl, phir, phil, phi
   real :: uve
@@ -183,9 +185,26 @@ function adv_edge_v1(s, sx, tx, i, j, k, in, jn, ie, je) result(ta)
     jnn = jn + djn(k)  ! k近傍のさらに外側のセル
     ino = i + din(9-k) ! k近傍の反対側のセル
     jno = j + djn(9-k) ! k近傍の反対側のセル
-    duvr = (s%u(inn,jnn) - s%u(in ,jn )) * n8x(k) + (s%v(inn,jnn) - s%v(in ,jn )) * n8y(k)
+    ! ±2ステンシルは u/v の確保範囲(1:nx, jsh:jeh)の外に出うる
+    ! (格子枠に接したエッジ)。枠外は u=v=0 として扱う
+    ! (領域外・無効セル x=0 の格納値と同じ扱いに揃える)
+    if (inn >= 1 .and. inn <= dcp%nx_g .and. jnn >= dcp%jsh .and. jnn <= dcp%jeh) then
+      unn = s%u(inn,jnn)
+      vnn = s%v(inn,jnn)
+    else
+      unn = 0
+      vnn = 0
+    end if
+    if (ino >= 1 .and. ino <= dcp%nx_g .and. jno >= dcp%jsh .and. jno <= dcp%jeh) then
+      uno = s%u(ino,jno)
+      vno = s%v(ino,jno)
+    else
+      uno = 0
+      vno = 0
+    end if
+    duvr = (unn - s%u(in ,jn )) * n8x(k) + (vnn - s%v(in ,jn )) * n8y(k)
     duvc = (s%u(in ,jn ) - s%u(i  ,j  )) * n8x(k) + (s%v(in ,jn ) - s%v(i  ,j  )) * n8y(k)
-    duvl = (s%u(i  ,j  ) - s%u(ino,jno)) * n8x(k) + (s%v(i  ,j  ) - s%v(ino,jno)) * n8y(k)
+    duvl = (s%u(i  ,j  ) - uno) * n8x(k) + (s%v(i  ,j  ) - vno) * n8y(k)
     duv0 = duvc + sign(1.E-5, duvc)
     rr = duvr / duv0
     rl = duvl / duv0

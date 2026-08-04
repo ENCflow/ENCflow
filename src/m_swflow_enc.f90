@@ -43,6 +43,12 @@ module m_swflow_enc
   real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
   real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
   real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
+  ! ---- 境界条件(t_boundary)からセットする ---
+  ! 境界条件の私有状態(辺型・面型・基準水位等)は submodule
+  ! m_swflow_enc_bc が保持する(bc_init が構築)。親には continuous /
+  ! restore_uvmn のホットパスが読む判定フラグだけを置く
+  logical :: have_open_bc = .false.         ! 開いた面(不透過でない)があるか
+                                            !   (bc_init が設定)
 
   ! 状態変数の構造体の宣言と定義
   type t_enc_status
@@ -113,6 +119,35 @@ module m_swflow_enc
     end subroutine
   end interface
 
+  ! 境界条件の適用層(submodule m_swflow_enc_bc)
+  interface
+    module subroutine bc_init(p, g, b)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_boundary), intent(in) :: b
+    end subroutine
+    module subroutine boundary_h(p, g, b, s, sx)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_boundary), intent(in) :: b
+      type(t_state), intent(inout) :: s
+      type(t_enc_status), intent(inout) :: sx
+    end subroutine
+    module subroutine boundary_uvmn(p, g, b, s, sx)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_boundary), intent(in) :: b
+      type(t_state), intent(in) :: s
+      type(t_enc_status), intent(inout) :: sx
+    end subroutine
+    module function bc_open_face(in, jn) result(op)
+      integer, intent(in) :: in, jn
+      logical :: op
+    end function
+    module subroutine bc_dispose()
+    end subroutine
+  end interface
+
 contains
  
 !======================================================================
@@ -161,6 +196,10 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 重み係数をセットする
   call init_weights(p, g)
 
+  ! 境界条件の適用層を初期化する(辺型・面型・基準水位・流入区間の
+  ! 開口幅の構築。開口幅が l8 を使うため init_weights より後に)
+  call bc_init(p, g, b)
+
   ! 初期条件を設定する
   call init_enc_status(p, g, s, sx_mod)
 
@@ -171,7 +210,24 @@ subroutine m_swflow_enc_init(p, g, b, s)
   call m_ffactor_init(f_friction_fastmath, p%dd, 30.0, 'UV')
 
   ! 水深の境界条件をセットする
+  !   init 時点で実効なのはため池の初期吸収だけ: 降雨は s%pre=0
+  !   (makepre は run_main が初期化後に呼ぶ)、ソースは q=0
+  !   (makebdc 未実行)で、どちらも構造的に +0 となる。
+  !   restore 時も安全: 保存状態は最終ステップの boundary_h 適用後
+  !   なので、ため池転送は冪等(保存 h>0 はため池満杯時のみ)。
+  !   この前提を崩す変更(makepre の前倒し、pre の初期条件化等)を
+  !   する場合はここを要再検討(developer.md §15)
   call boundary_h(p, g, b, s, sx_mod)
+
+  ! エッジの強制条件(境界面流量)を初期水深から初期化する(complete が
+  ! mn1→mn にコミットするので、初回ステップの RK が読む「前ステップの
+  ! 境界流量」が内部エッジ(init_enc_status で初期化)と同格になる)。
+  ! リスタート時は呼ばない: 保存された uv/mn に境界面の値が含まれており、
+  ! 復元後の h(保存時の連続式適用後)から再計算すると保存時の値
+  ! (適用前の h 起源)と食い違い、厳密復元が破れる
+  if (p%f_state_restore <= 0) then
+    call boundary_uvmn(p, g, b, s, sx_mod)
+  end if
 
   ! 変数を更新して次のタイムステップの準備をする
   call complete(p, g, s, sx_mod)
@@ -210,6 +266,10 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   call par_edge_merge(sx_mod%uv,  esync_s, esync_n)
   call par_edge_merge(sx_mod%mn1, esync_s, esync_n)
 
+  ! エッジの流速・流量への強制条件をセットする(辺境界の流出、
+  ! 区間流入など。各条件の有効判定は boundary_uvmn 内の節ごとに行う)
+  call boundary_uvmn(p, g, b, s, sx_mod)
+
   ! 連続式を解いて水深を更新する
   call continuous(p, g, s, sx_mod)
 
@@ -227,6 +287,7 @@ end subroutine
 subroutine m_swflow_enc_dispose(p)
   type(t_sysparam), intent(in) :: p
   if (p%f_state_save > 0) call save_state(p, sx_mod)
+  call bc_dispose
   call del_enc_status(sx_mod)
   call m_ffactor_dispose
   call adv_dispose
@@ -236,58 +297,6 @@ end subroutine
 !======================================================================
 !========================== PRIVATE ROUTINES ==========================
 !======================================================================
-
-!----------------------------------------------------------------------
-! 水深の境界条件をセットする
-!   このルーチンより前に実行されるcontinuous/init_enc_statusにおいて
-!   水深はs%hからsx%h1に更新されているので、ここではsx%h1を更新する　
-!     s%h：前ステップの水深
-!     sx%h1：現ステップの連続式適用後の水深
-!----------------------------------------------------------------------
-subroutine boundary_h(p, g, b, s, sx)
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_boundary), intent(in) :: b
-  type(t_state), intent(inout) :: s
-  type(t_enc_status), intent(inout) :: sx
-  integer :: i, j, k
-
-  !$omp parallel do schedule(dynamic) private(i, j)
-  do j = dcp%js, dcp%je
-    do i = g%wx(1,j), g%wx(2,j)
-      if (g%sw(i,j) > 0) cycle
-      if (g%x(i,j) <= 0) cycle
-
-      ! ため池の処理
-      if (g%rscap(i,j) > 0.0 .and. g%rscap(i,j) > s%rsh(i,j)) then ! ため池に余力がある
-        if (sx%h1(i,j) > (g%rscap(i,j) - s%rsh(i,j))) then         !   ため池があふれる
-          sx%h1(i,j) = sx%h1(i,j) - (g%rscap(i,j) - s%rsh(i,j))    !     場の水深がため池の余力分だけ減る
-          s%rsh(i,j) = g%rscap(i,j)                                !     ため池が満水になる
-        else                                                       !   ため池があふれない
-          s%rsh(i,j) = s%rsh(i,j) + sx%h1(i,j)                     !     ため池の水深が増加する
-          sx%h1(i,j) = 0.0                                         !     場の水深がゼロになる
-        end if
-      end if
-
-      ! 降雨を加えて次ステップの水深を初期化
-      sx%h1(i,j) = sx%h1(i,j) + s%pre(i,j) * p%dt / g%gv(i,j)
-
-    end do
-  end do
-  !$omp end parallel do
-
-  ! 湧出しを加える
-  if (b%nsrc > 0) then
-    ! 湧き出しは所有ランクのみ適用する(リストは全ランクが保持。developer.md §11)
-    do k = 1, b%nsrcc
-      i = b%srccell(1,k)
-      j = b%srccell(2,k)
-      if (j < dcp%js .or. j > dcp%je) cycle
-      sx%h1(i,j) = sx%h1(i,j) + b%srcq
-    end do
-  end if
-
-end subroutine
 
 !----------------------------------------------------------------------
 ! 重み係数の初期化
@@ -525,10 +534,12 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   have_error = .false.
 
   ! k近傍セルのインデックスを計算する
+  !   領域外との遮断は x 番兵(x=0。確保 0:nx+1)が一手に担う。
+  !   エッジ配列は (0:nx) 確保のため枠上セルのエッジ添字も範囲内で、
+  !   枠の添字ガードは不要(境界面の定義は docs/boundary_plan.md §4.3)
   in = i + din(k)
   jn = j + djn(k)
   if (g%x(in,jn) <= 0) return
-  if (in <= 1 .or. in >= g%nx .or. jn <= 1 .or. jn >= g%ny) return
 
   ! k近傍セルとの境界フラックスのインデックスを計算する
   ie = i + die(k)
@@ -825,11 +836,17 @@ subroutine continuous(p, g, s, sx)
       do k = 1, 8
         in = i + din(k)
         jn = j + djn(k)
-        if (g%x(in,jn) <= 0) cycle
-        if (in <= 1 .or. in >= g%nx .or. jn <= 1 .or. jn >= g%ny) cycle
-        ! ここでddと比較するのは前時間ステップでの値hでなければならない
-        ! そのためこのループ内でhを直接更新してはいけない
-        if (s%h(i,j) < p%dd .and. s%h(in,jn) < p%dd) cycle
+        if (g%x(in,jn) > 0) then
+          ! ここでddと比較するのは前時間ステップでの値hでなければならない
+          ! そのためこのループ内でhを直接更新してはいけない
+          if (s%h(i,j) < p%dd .and. s%h(in,jn) < p%dd) cycle
+        else
+          ! 開いた辺の境界面は取り込む(流出が h1 と u,v,m,n に乗る)。
+          ! 枠外近傍の s%h は確保範囲外のため dd 判定はしない
+          ! (乾燥時は boundary_uvmn が 0 を書いており寄与も 0)
+          if (.not. have_open_bc) cycle
+          if (.not. bc_open_face(in, jn)) cycle
+        end if
         ! 中心セルi,jから見たk近傍の境界フラックスのインデックス
         ie = i + die(k)
         je = j + dje(k)
@@ -932,8 +949,12 @@ subroutine restore_uvmn(p, g, s, sx)
         ! 中心セルi,jから見たk近傍セルのインデックス
         in = i + din(k)
         jn = j + djn(k)
-        if (g%x(in,jn) <= 0) cycle
-        if (in <= 1 .or. in >= g%nx .or. jn <= 1 .or. jn >= g%ny) cycle
+        if (g%x(in,jn) <= 0) then
+          ! 開いた辺の境界面は continuous と同様に取り込む
+          ! (取り込み条件は continuous と常に同時に更新すること)
+          if (.not. have_open_bc) cycle
+          if (.not. bc_open_face(in, jn)) cycle
+        end if
         ! 中心セルi,jから見たk近傍の境界フラックスのインデックス
         ie = i + die(k)
         je = j + dje(k)

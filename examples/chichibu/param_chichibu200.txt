@@ -38,8 +38,8 @@
 
   f_check_cfl = 1         ! CFL条件のチェック
 
-  f_input_mode = 1
-  f_output_mode = 1
+  f_input_mode = 2
+  f_output_mode = 7
 /
 
 !======================================================================
@@ -57,9 +57,9 @@
   z0 = 0.0        ! デフォルト地盤高(m)
   rn0 = 0.02      ! デフォルト粗度係数
 
-  fn_z = 'Chichibu_200m_filled2.txt'
-  fn_luse = 'Chichibu_200m_river.txt'
-  fn_mask = 'Chichibu_200m_basin.txt'
+  fn_z = 'Chichibu_200m_filled2.bil'
+  fn_luse = 'Chichibu_200m_river.bil'
+  fn_mask = 'Chichibu_200m_basin.bil'
 
   !lu2rn(:,1) = 0, 0.15
   !lu2rn(:,2) = 1, 0.02

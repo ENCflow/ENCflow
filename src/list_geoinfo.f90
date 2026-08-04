@@ -18,6 +18,7 @@ module list_geoinfo
     real :: dy = 0
     real :: lx = 0
     real :: ly = 0
+    integer :: epsg = 0                        ! 格子の CRS の EPSG コード(0:不明。GeoTIFF 用)
     real :: z0 = 0                             ! 地盤高固定値
     real :: rn0 = 0.015                        ! 粗度係数固定値
     real :: mag_z = 1                          ! 地盤高倍率
@@ -59,6 +60,7 @@ subroutine list_geoinfo_read(p, list)
   integer :: nx, ny
   real :: dx, dy
   real :: lx, ly
+  integer :: epsg               ! 格子の CRS の EPSG コード(0:不明)
   real :: z0                    ! 地盤高固定値
   real :: rn0                   ! 粗度係数固定値
   real :: mag_z                 ! 地盤高倍率
@@ -85,7 +87,7 @@ subroutine list_geoinfo_read(p, list)
   integer :: un
   integer :: ios
   character(len=1024) :: iom
-  namelist /list_geoinfo/ nx, ny, dx, dy, lx, ly, z0, rn0, mag_z, min_gv, min_bb, depth_rw, rn0_rw, &
+  namelist /list_geoinfo/ nx, ny, dx, dy, lx, ly, epsg, z0, rn0, mag_z, min_gv, min_bb, depth_rw, rn0_rw, &
                           f_user_routine_id, f_ztype, f_lusetype, f_rntype, f_masktype, f_edge_sw, &
                           fn_z, fn_mask, fn_sw, fn_rw, fn_rn, fn_luse, fn_gv, fn_bb, fn_rscap, lu2rn
   ! ネームリストにありながらファイルに記述のなかった変数は、
@@ -96,6 +98,7 @@ subroutine list_geoinfo_read(p, list)
   dy = list%dy
   lx = list%lx
   ly = list%ly
+  epsg = list%epsg
   z0 = list%z0
   rn0 = list%rn0
   mag_z = list%mag_z
@@ -135,6 +138,7 @@ subroutine list_geoinfo_read(p, list)
   list%dy = dy
   list%lx = lx
   list%ly = ly
+  list%epsg = epsg
   list%z0 = z0
   list%rn0 = rn0
   list%mag_z = mag_z

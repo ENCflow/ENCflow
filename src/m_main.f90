@@ -1,9 +1,9 @@
 module m_main
   use m_sysparam, only : t_sysparam, m_sysparam_init, m_sysparam_dispose
-  use m_geoinfo, only : t_geoinfo, m_geoinfo_init, m_geoinfo_dispose, m_geoinfo_scatter_coeffs, m_geoinfo_band_shrink
+  use m_geoinfo, only : t_geoinfo, m_geoinfo_init, m_geoinfo_dispose, m_geoinfo_scatter_coeffs, m_geoinfo_band_shrink, m_geoinfo_row_ncells
   use m_precip, only : t_precip, m_precip_init, m_precip_dispose, m_precip_makepre
   use m_tide, only : t_tide, m_tide_init, m_tide_dispose
-  use m_boundary, only : t_boundary, m_boundary_init, m_boundary_dispose, m_boundary_makebdc
+  use m_boundary, only : t_boundary, m_boundary_init, m_boundary_set_etaref, m_boundary_dispose, m_boundary_makebdc
   use m_state, only : t_state, m_state_init, m_state_dispose, m_state_updatetime, m_state_calcstat, m_state_printstate
   use m_record, only : t_record, m_record_init, m_record_dispose, m_record_probe, m_record_flux, m_record_summary
   use m_geomorph, only : t_geomorph, m_geomorph_init, m_geomorph_calc, m_geomorph_dispose
@@ -52,20 +52,29 @@ subroutine m_main_all()
 
   ! システムを初期化
   call m_sysparam_init(p, fn_sysparam)    ! sysparam を初期化
-  call init_resultdir(p)                  ! 結果を保存するディレクトリを作成してパラメータファイルを保存
+  ! 結果を保存するディレクトリを作成してパラメータファイルを保存
+  call init_resultdir(p)
 
   ! モジュールを初期化
   ! ==== 初期化ゾーン1: 地形・マスク類(z,x,sw,rw)は全ランク全域、
   !      物性係数(rn,gv,bb,lm,rscap,lu)は rank0 のみ全域(方式2)。
   !      係数を使うフック・前処理は rank0 実行(m_geoinfo_init 内) ====
   call m_geoinfo_init(g, p)               ! geoinfo を初期化
-  call par_decomp_init(g%nx, g%ny, g%wy(1), g%wy(2))  ! 全域窓を帯分割
+  ! 全域窓を帯分割(行ごとの有効セル数を重みとして帯幅を調整。
+  ! 列島形状の行間偏りによるランク間不均衡の対策。§11)
+  decomp: block
+    integer, allocatable :: rowwork(:)
+    allocate(rowwork(1:g%ny))
+    call m_geoinfo_row_ncells(g, rowwork)
+    call par_decomp_init(g%nx, g%ny, g%wy(1), g%wy(2), rowwork)
+  end block decomp
   call m_geoinfo_scatter_coeffs(g)        ! 物性係数を rank0 から帯+ハロへ配布
 
   ! ==== 初期化ゾーン2: 地形とマスク類(z, x, sw, rw)のみ全域
   !      (fill_depression, user_initial, record/boundary の検証はこの範囲) ====
   call m_boundary_init(b, p, g)           ! boundary を初期化(geoinfoより後に)
   call m_state_init(s, p, g)              ! state を初期化(geoinfo, boundaryより後に)
+  call m_boundary_set_etaref(b, p, g, s)  ! 放射境界の基準水位を確定(stateより後に)
   call m_record_init(r, p, g)             ! record を初期化(create_resultdirより後)
   call m_precip_init(pr, p, g)            ! precip を初期化
   call m_intercept_init(ic, p, g)         ! intercept を初期化(fn_intercept 指定時のみ有効)
