@@ -103,18 +103,18 @@ subroutine m_geoinfo_init(g, p)
 
   ! user フック: 名前の検証は全ランク(par_stop は collective)。実行は
   ! 係数を含む全配列を持つ rank0 のみで、「全域添字で書く」契約は無変更。
-  ! 指定は f_user_routine_name(識別名。trim 後完全一致)。
+  ! 指定は f_user_routine(識別名。trim 後完全一致)。
   ! 個々のルーチンへの分岐は user_geoinfo submodule 内。
   ! フックが地形・マスク類を変更した可能性があるため、実行後に rank0 から
   ! 再配布する(フック無指定なら通信なし)。
   ! 注意: フック内から par_stop を呼んではならない(rank0 のみで実行される
   ! ため collective が成立しない。エラーは par_abort を使うこと)
-  if (len_trim(list%f_user_routine_name) > 0) then
-    if (.not. user_geoinfo_defined(list%f_user_routine_name)) then
-      call par_stop("undefined f_user_routine_name in list_geoinfo: "//trim(list%f_user_routine_name)// &
+  if (len_trim(list%f_user_routine) > 0) then
+    if (.not. user_geoinfo_defined(list%f_user_routine)) then
+      call par_stop("undefined f_user_routine in list_geoinfo: "//trim(list%f_user_routine)// &
                     " (defined: "//user_geoinfo_names()//")")
     end if
-    if (is_root) call user_geoinfo_run(p, g, list%f_user_routine_name)
+    if (is_root) call user_geoinfo_run(p, g, list%f_user_routine)
     call par_bcast_cell(g%z)
     call par_bcast_cell_i(g%x)
     call par_bcast_cell_i(g%sw)

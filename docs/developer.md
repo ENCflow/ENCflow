@@ -507,7 +507,7 @@
 - submodule のモジュール変数は単一インスタンスのグローバル状態。将来ネスト
   格子等で多重化する場合は派生型に包む改修が要る。
 - **user フック(user_geoinfo / user_initial)は識別名方式**(2026-08-04)。
-  param では `f_user_routine_name`(文字列。trim 後の完全一致、snake_case
+  param では `f_user_routine`(文字列。trim 後の完全一致、snake_case
   推奨)で指定する。旧 `f_user_routine_id`(整数)は廃止(実運用前の
   ため互換入力なしで移行。旧 param は namelist 読込エラーになる)。
   親モジュールへの公開面は入口のみ(user_*_defined / names / run)で、

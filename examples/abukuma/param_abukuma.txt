@@ -61,7 +61,7 @@
   fn_z = 'elv1000rmd.txt'     ! 窪地除去済み
   !fn_z = 'elv1000raw.txt'     ! 窪地処理なし
 
-  f_user_routine_name = "abukuma_terrain"   ! ユーザールーチン識別名(阿武隈川例題用)
+  f_user_routine = "abukuma_terrain"   ! ユーザールーチン識別名(阿武隈川例題用)
 /
 
 !======================================================================
