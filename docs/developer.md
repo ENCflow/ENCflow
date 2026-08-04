@@ -534,7 +534,7 @@
 - gfortran の -Wuninitialized は「全成分デフォルト初期化済みの派生型を
   intent(inout) の init に渡す」形(m_main の t_boundary b →
   m_boundary_init)で「'b' is used uninitialized」の誤検知を出すことがある
-  (2026-08 実測: 環境依存で、13.3 / 14.2 では同一フラグ
+  (2026-08 実測: gfortran 15.2.0 で発生、13.3 / 14.2 では同一フラグ
   -Ofast+-fcheck=all で非再現。m_main の変更前後で共通=コード起因でない)。
   規格上、デフォルト初期化を持つ派生型は宣言時点で定義済みであり実害はない。
   警告消しのためのダミー代入等はしないこと。
