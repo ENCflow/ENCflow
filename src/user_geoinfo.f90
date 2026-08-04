@@ -2,7 +2,6 @@
 ! 地形のユーザールーチン集(m_geoinfo の submodule)
 !
 !   親モジュールへの公開面は入口の手続きのみ:
-!     user_geoinfo_id2name : 互換入力 f_user_routine_id → 識別名(未知は "")
 !     user_geoinfo_defined : 識別名が登録済みかを返す(検証用。副作用なし)
 !     user_geoinfo_names   : 登録済み識別名の一覧文字列(エラー表示用)
 !     user_geoinfo_run     : 識別名で該当ルーチンを実行(rank0 のみで呼ばれる)
@@ -10,7 +9,7 @@
 !
 !   ルーチンの追加手順(このファイルだけで完結する):
 !     1. geoinfo_template を複製して実装する(全域添字 1:nx, 1:ny で書く契約)
-!     2. routine_names に識別名を登録する(snake_case。新規に id は割らない)
+!     2. routine_names に識別名を登録する(snake_case)
 !     3. resolve の select case に分岐を1行追加する
 !
 !   注意: ここのルーチンは rank0 のみで実行されるため、par_stop
@@ -30,34 +29,20 @@ submodule(m_geoinfo) user_geoinfo
     end subroutine
   end interface
 
-  ! 識別名簿。f_user_routine_id との互換対応表を兼ねる(id = 配列添字)。
-  ! 名簿と resolve の分岐は同時に更新すること(乖離は defined/run が
-  ! 「未定義名」として検出する)
+  ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
+  ! 更新すること(乖離は defined/run が「未定義名」として検出する)
   character(len=*), parameter :: routine_names(1:5) = [ character(len=32) :: &
-      "wave_solid_wall",  &   ! 1: 波例題: 斜めの不透過壁(2セル厚)
-      "wave_leaky_wall",  &   ! 2: 波例題: 斜めの半透過壁(1セル厚)
-      "abukuma_terrain",  &   ! 3: 阿武隈川例題: 深海の埋め立てと地盤高 1/10
-      "tohoku_flood",     &   ! 4: 東北大氾濫計算(スタブ)
-      "template"          ]   ! 5: 新規ルーチンの雛形(空)
+      "wave_solid_wall",  &   ! 波例題: 斜めの不透過壁(2セル厚)
+      "wave_leaky_wall",  &   ! 波例題: 斜めの半透過壁(1セル厚)
+      "abukuma_terrain",  &   ! 阿武隈川例題: 深海の埋め立てと地盤高 1/10
+      "tohoku_flood",     &   ! 東北大氾濫計算(スタブ)
+      "template"          ]   ! 新規ルーチンの雛形(空)
 
 contains
 
 !======================================================================
 !===================== 入口(親モジュールへ公開)=====================
 !======================================================================
-
-!----------------------------------------------------------------------
-! 互換入力 f_user_routine_id を識別名に変換する(未知の id は "")
-!----------------------------------------------------------------------
-module function user_geoinfo_id2name(id) result(name)
-  integer, intent(in) :: id
-  character(len=:), allocatable :: name
-  if (id >= 1 .and. id <= size(routine_names)) then
-    name = trim(routine_names(id))
-  else
-    name = ""
-  end if
-end function
 
 !----------------------------------------------------------------------
 ! 識別名が登録済みかを返す(検証用。全ランクで呼んでよい)

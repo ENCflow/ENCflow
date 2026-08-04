@@ -27,7 +27,6 @@ module list_geoinfo
     real :: min_bb = 0.001                     ! 家屋の平均サイズの最小値
     real :: depth_rw = 0.0                     ! 河道マスク部の掘り込み深さ(河道マスク有りの場合のみ有効)
     real :: rn0_rw = -1.0                      ! 河道マスク部の固定粗度係数(負値の場合は設定せず)
-    integer :: f_user_routine_id = 0           ! ユーザールーチンID(互換入力。識別名指定を推奨)
     character(len=maxnamelen) :: f_user_routine_name = ""  ! ユーザールーチン識別名
     integer :: f_ztype = 0                     ! 地盤高タイプ (0:固定値, 1:ファイル)
     integer :: f_lusetype = 0                  ! 土地利用データの有無 (0:なし, 1:ファイル)
@@ -70,7 +69,6 @@ subroutine list_geoinfo_read(p, list)
   real :: min_bb                ! 家屋の平均サイズの最小値
   real :: depth_rw              ! 河道マスク部の掘り込み深さ
   real :: rn0_rw                ! 河道マスク部の固定粗度係数
-  integer :: f_user_routine_id  ! ユーザールーチンID(互換入力)
   character(len=maxnamelen) :: f_user_routine_name  ! ユーザールーチン識別名
   integer :: f_ztype            ! 地盤高タイプ (0:固定値, 1:テキストファイル)
   integer :: f_lusetype         ! 土地利用データの有無 (0:なし, 1:テキストファイル)
@@ -91,7 +89,7 @@ subroutine list_geoinfo_read(p, list)
   integer :: ios
   character(len=1024) :: iom
   namelist /list_geoinfo/ nx, ny, dx, dy, lx, ly, epsg, z0, rn0, mag_z, min_gv, min_bb, depth_rw, rn0_rw, &
-                          f_user_routine_id, f_user_routine_name, &
+                          f_user_routine_name, &
                           f_ztype, f_lusetype, f_rntype, f_masktype, f_edge_sw, &
                           fn_z, fn_mask, fn_sw, fn_rw, fn_rn, fn_luse, fn_gv, fn_bb, fn_rscap, lu2rn
   ! ネームリストにありながらファイルに記述のなかった変数は、
@@ -110,7 +108,6 @@ subroutine list_geoinfo_read(p, list)
   min_bb = list%min_bb
   depth_rw = list%depth_rw
   rn0_rw = list%rn0_rw
-  f_user_routine_id = list%f_user_routine_id
   f_user_routine_name = list%f_user_routine_name
   f_ztype = list%f_ztype
   f_lusetype = list%f_lusetype
@@ -151,7 +148,6 @@ subroutine list_geoinfo_read(p, list)
   list%min_bb = min_bb
   list%depth_rw = depth_rw
   list%rn0_rw = rn0_rw
-  list%f_user_routine_id = f_user_routine_id
   list%f_user_routine_name = f_user_routine_name
   list%f_ztype = f_ztype
   list%f_lusetype = f_lusetype
