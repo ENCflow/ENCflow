@@ -46,8 +46,7 @@
     u0 = 0                  ! 初期x方向流速 (m/s)
     v0 = 0                  ! 初期y方向流速 (m/s)
 
-    f_user_routine_id = 1   ! ユーザールーチンID (1:波伝搬例題用。互換入力の回帰テストを兼ねて id 指定を維持)
-    !f_user_routine_name = "wave_hump"   ! 識別名指定(推奨形式。id との同時指定は不可)
+    f_user_routine_name = "wave_hump"   ! ユーザールーチン識別名(円形コサイン型の初期水位)
 /
 
 !======================================================================
@@ -86,9 +85,9 @@
   z0 = 0.0        ! 地盤高固定値(m)
   rn0 = 0.0       ! 粗度係数固定値
 
-  f_user_routine_id = 0    ! ユーザールーチンID (0:障害物なし)
-  !f_user_routine_name = "wave_solid_wall"   ! 識別名指定(推奨形式): 斜めの不透過壁(2セル厚)
-  !f_user_routine_name = "wave_leaky_wall"   ! 識別名指定(推奨形式): 斜めの半透過壁(1セル厚)
+  ! ユーザールーチン識別名(未指定なら障害物なし)
+  !f_user_routine_name = "wave_solid_wall"   ! 斜めの不透過壁(2セル厚)
+  !f_user_routine_name = "wave_leaky_wall"   ! 斜めの半透過壁(1セル厚)
 /
 
 

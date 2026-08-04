@@ -99,10 +99,6 @@ module m_state
   ! user_initial submodule の入口(個々のルーチンへの分岐と識別名簿は
   ! submodule 側に閉じる。ルーチンの追加は user_initial.f90 だけで完結する)
   interface
-    module function user_initial_id2name(id) result(name)
-      integer, intent(in) :: id
-      character(len=:), allocatable :: name
-    end function
     module function user_initial_defined(name) result(res)
       character(len=*), intent(in) :: name
       logical :: res
@@ -145,7 +141,6 @@ subroutine m_state_init(s, p, g)
                          ! 全ランクが全域で冗長に初期化し、最後に帯を切り出す。
                          ! user フックと fill_depression の「全域添字」契約を
                          ! 帯確保の下でも保つための方式。developer.md §11)
-  character(len=:), allocatable :: uname   ! user フックの識別名
 
   ! メモリ確保
   allocate(s%h(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
@@ -209,26 +204,14 @@ subroutine m_state_init(s, p, g)
   if (p%f_state_restore > 0) call restore_state(p, ts)
 
   ! ユーザールーチンによる初期条件をセット(全域添字契約: ts に書く)。
-  ! 指定は f_user_routine_name(識別名。trim 後完全一致)を正とし、
-  ! f_user_routine_id は互換入力(submodule 内の対応表で識別名に変換)。
+  ! 指定は f_user_routine_name(識別名。trim 後完全一致)。
   ! 個々のルーチンへの分岐は user_initial submodule 内。実行は全ランク冗長
-  if (list%f_user_routine_id /= 0 .and. len_trim(list%f_user_routine_name) > 0) then
-    call par_stop("list_initial: f_user_routine_id と f_user_routine_name は同時に指定できません")
-  end if
-  if (list%f_user_routine_id /= 0) then
-    uname = user_initial_id2name(list%f_user_routine_id)
-    if (len_trim(uname) == 0) then
-      call par_stop("undefined f_user_routine_id in list_initial"//itoa(list%f_user_routine_id))
-    end if
-  else
-    uname = trim(list%f_user_routine_name)
-  end if
-  if (len_trim(uname) > 0) then
-    if (.not. user_initial_defined(uname)) then
-      call par_stop("undefined f_user_routine_name in list_initial: "//trim(uname)// &
+  if (len_trim(list%f_user_routine_name) > 0) then
+    if (.not. user_initial_defined(list%f_user_routine_name)) then
+      call par_stop("undefined f_user_routine_name in list_initial: "//trim(list%f_user_routine_name)// &
                     " (defined: "//user_initial_names()//")")
     end if
-    call user_initial_run(p, g, ts, uname)
+    call user_initial_run(p, g, ts, list%f_user_routine_name)
   end if
 
   ! --- 担当帯(+ハロ)を切り出す。ts はスコープ終了で自動解放 ---

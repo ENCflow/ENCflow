@@ -2,7 +2,6 @@
 ! 初期条件のユーザールーチン集(m_state の submodule)
 !
 !   親モジュールへの公開面は入口の手続きのみ:
-!     user_initial_id2name : 互換入力 f_user_routine_id → 識別名(未知は "")
 !     user_initial_defined : 識別名が登録済みかを返す(検証用。副作用なし)
 !     user_initial_names   : 登録済み識別名の一覧文字列(エラー表示用)
 !     user_initial_run     : 識別名で該当ルーチンを実行(全ランクで呼ばれる)
@@ -11,7 +10,7 @@
 !   ルーチンの追加手順(このファイルだけで完結する):
 !     1. initial_template を複製して実装する(全域一時状態 ts に
 !        全域添字 1:nx, 1:ny で書く契約)
-!     2. routine_names に識別名を登録する(snake_case。新規に id は割らない)
+!     2. routine_names に識別名を登録する(snake_case)
 !     3. resolve の select case に分岐を1行追加する
 !======================================================================
 submodule(m_state) user_initial
@@ -30,33 +29,17 @@ submodule(m_state) user_initial
     end subroutine
   end interface
 
-  ! 識別名簿。f_user_routine_id との互換対応表を兼ねる(id = 配列添字)。
-  ! 名簿と resolve の分岐は同時に更新すること(乖離は defined/run が
-  ! 「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:4) = [ character(len=32) :: &
-      "wave_hump",   &   ! 1: 波例題: 円形コサイン型の初期水位
-      "reserved_2",  &   ! 2: (スタブ)
-      "reserved_3",  &   ! 3: (スタブ)
-      "template"     ]   ! 4: 新規ルーチンの雛形(空)
+  ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
+  ! 更新すること(乖離は defined/run が「未定義名」として検出する)
+  character(len=*), parameter :: routine_names(1:2) = [ character(len=32) :: &
+      "wave_hump",   &   ! 波例題: 円形コサイン型の初期水位
+      "template"     ]   ! 新規ルーチンの雛形(空)
 
 contains
 
 !======================================================================
 !===================== 入口(親モジュールへ公開)=====================
 !======================================================================
-
-!----------------------------------------------------------------------
-! 互換入力 f_user_routine_id を識別名に変換する(未知の id は "")
-!----------------------------------------------------------------------
-module function user_initial_id2name(id) result(name)
-  integer, intent(in) :: id
-  character(len=:), allocatable :: name
-  if (id >= 1 .and. id <= size(routine_names)) then
-    name = trim(routine_names(id))
-  else
-    name = ""
-  end if
-end function
 
 !----------------------------------------------------------------------
 ! 識別名が登録済みかを返す(検証用)
@@ -111,10 +94,6 @@ function resolve(name) result(fp)
   select case (trim(name))
     case ("wave_hump")
       fp => initial_wave_hump
-    case ("reserved_2")
-      fp => initial_reserved_2
-    case ("reserved_3")
-      fp => initial_reserved_3
     case ("template")
       fp => initial_template
     case default
@@ -168,32 +147,6 @@ subroutine initial_wave_hump(p, g, s)
     end do
   end do
 
-end subroutine
-
-
-!----------------------------------------------------------------------
-! (スタブ)
-!----------------------------------------------------------------------
-subroutine initial_reserved_2(p, g, s)
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(inout) :: s
-  if (p%initialized) continue  ! 引数未使用の警告を抑制
-  if (g%initialized) continue  ! 引数未使用の警告を抑制
-  if (s%initialized) continue  ! 引数未使用の警告を抑制
-end subroutine
-
-
-!----------------------------------------------------------------------
-! (スタブ)
-!----------------------------------------------------------------------
-subroutine initial_reserved_3(p, g, s)
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(inout) :: s
-  if (p%initialized) continue  ! 引数未使用の警告を抑制
-  if (g%initialized) continue  ! 引数未使用の警告を抑制
-  if (s%initialized) continue  ! 引数未使用の警告を抑制
 end subroutine
 
 
