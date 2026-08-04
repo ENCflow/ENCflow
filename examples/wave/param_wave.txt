@@ -2,7 +2,7 @@
 !
 !======================================================================
 &list_sysparam
-  f_gridsystem = 2          ! 格子システム(0:ENC, 1:STG)
+  f_gridsystem = 0          ! 格子システム(0:ENC, 1:STG)
   f_govequation = 0         ! 基礎方程式(0:DynWE, 1:DifWE, 2:KinWE)
   !dt = 0.01                 ! 時間刻み (s)
   dt = 0.05                 ! 時間刻み (s)
