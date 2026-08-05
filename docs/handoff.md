@@ -17,8 +17,24 @@
 
 1. **gwflow 導入コミットの検証(直近の宿題)**
    - fn_gwflow 未指定で全ケース既存 reference とビット一致(逐次・np=1,2,4)
-   - バケツ疎通: wave 系 + f_gwmodel=1 で S_total が14桁不動、np=1,2,4 ULP=0
+   - バケツ疎通: wave 系 + f_gwvertical=1(旧 f_gwmodel。2026-08-05 改名)で
+     S_total が14桁不動、np=1,2,4 ULP=0
    - -fcheck np=2、リスタート往復(save/restore 6成分化の確認)
+   - 補記(2026-08-05): gfortran では gwflow 第2弾(下記 1b)の検証で
+     無効時ビット一致・np=1,2,4 場一致・-fcheck np=2 を確認済み。
+     残るは ifx での同確認とリスタート往復
+
+1b. **gwflow 第2弾(Green-Ampt + パラメータ体系確定)の ifx 検証**
+   (実装と gfortran 検証は 2026-08-05 完了。決定は developer.md §16、
+    進捗は handoff_gwflow_tani.md §9)
+   - 内容: f_gwmodel → f_gwvertical 改名+f_gwlateral 予約(0のみ受理)、
+     geoinfo の sd(f_sdtype 3状態)/sy0、m_gwflow_greenampt 追加、
+     モデル calc への実効時間刻み dts 供給(bucket の dt_gwflow>dt 時の
+     実効浸透率 1/N を修正)
+   - ifx で: 無効時ビット一致(wave/chichibu)、greenampt 疎通
+     (S_total 14桁不動・np=1,2,4)、-fcheck 相当(-check all)np=2
+   - 注意: 旧 param の f_gwmodel は namelist 読込エラーで検出される
+     (互換入力なし。examples/List_samples/list_gwflow.txt 参照)
 2. **developer.md への gwflow/geomorph の項の追記**(検証完了後)
    - 切替器 vs 重ね合わせの使い分け原則、s%hg 柱状換算契約、S 台帳、
      モデル実装5箇条(m_gwflow_bucket ヘッダが正本)

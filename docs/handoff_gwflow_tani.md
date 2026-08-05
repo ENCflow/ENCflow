@@ -490,15 +490,24 @@ T_vが側方流動の時間スケール(§4のΔt_gw)に対して無視できな
       場合、異なる拡散係数が隣接するセル境界でのフラックス評価方法
       (どちらのモデルの式を使うか)を要検討
 - [ ] Δtサブサイクリングの倍数Nの決定方法(固定値か動的判定か)、
-      および地表流ループとの同期・カウンタ管理の実装方法(§4a)
-- [ ] 分布パラメータのデフォルト範囲: d(i,j)のみ必須分布とし、
-      K_sv, K_sh, S_y, n_e, psi_fを分布させるオプションをどう
-      切り替え可能にするか(名前リスト等での制御方法)(§4a)
+      および地表流ループとの同期・カウンタ管理の実装方法(§4a)。
+      なお m_gwflow の calc インターフェースは実効時間刻み
+      dts = p%dt × idt_gwflow を渡す形に変更済み(2026-08-05)で、
+      側方独立周期の導入はこの延長で行う
+- [x] 分布パラメータの制御方法(2026-08-05 決定。developer.md §16):
+      土層厚 sd と比湧水量 sy0 は geoinfo が所有(&list_geoinfo の
+      f_sdtype/sd0/fn_sd/sy0。粗度係数と同じ流儀)。sd は3状態
+      ライフサイクル(gwflow 無効=未確保 / 固定値=require_sd の
+      遅延確保 / ファイル=方式2で rank0 読み+scatter)。モデル固有の
+      輸送係数(K_sv, psi_f, 将来の K_sh)は fn_gwflow のモデル私有
+      グループ。パラメータ体系は単一ファイル fn_gwflow に
+      f_gwvertical / f_gwlateral の2独立選択子(f_gwlateral=0 なら
+      側方資源を一切確保しない)
 - [ ] K_sh/K_sv の異方性比の扱い(観測が困難。仮定値の設定方針)
-- [ ] S_y(Boussinesq)と n_e/Δθ(Green-Ampt)の整合性: 初期実装では
-      n_e=S_y に統一するか、別パラメータのまま水収支残差を監視する
-      かを決定(§6.1)。統一する場合、m_gwflow_bucket/greenampt側の
-      パラメータ入力インターフェースをどちらの名前で公開するか
+- [x] S_y(Boussinesq)と n_e/Δθ(Green-Ampt)の整合性(2026-08-05
+      決定): 案1を採用し n_e = S_y に統一。&list_geoinfo の sy0 として
+      一元入力(当面スカラーのみ。分布が要る時は f_sytype を sd と
+      同じ3状態方式で追加)
 - [x] 地表流への引き渡しは **t_state を介する**(2026-08-05 決定):
       m_gwflow 側で超過分を計算し、m_gwflow_bucket 契約(1)(2)と同型の
       反対称適用で同一ループ内に s%h へ加算・s%hg(h_gw)から減算・
@@ -525,8 +534,17 @@ T_vが側方流動の時間スケール(§4のΔt_gw)に対して無視できな
 
 ## 9. 実装の優先順位(提案)
 
-1. m_gwflow_vertical (Green-Ampt版) を m_gwflow_bucket の構造を
+1. [x] m_gwflow_vertical (Green-Ampt版) を m_gwflow_bucket の構造を
    参考に単体実装・単体テスト(近傍セル依存がなく検証しやすい)
+   → **完了(2026-08-05)**: m_gwflow_greenampt として実装。
+   パラメータ体系(f_gwvertical/f_gwlateral、geoinfo の sd/sy0)も
+   併せて確定(developer.md §16)。現段階は F ≡ s%hg の恒等を利用し
+   私有状態なし(側方導入時に F を昇格。モジュールヘッダ参照)。
+   検証済み(gfortran): 無効時ビット一致(wave 対ベースライン、
+   chichibu 対 reference)、S_total 14桁不動、逐次と np=1,2,4 の
+   全場出力ビット一致(sd 一様・拘束的分布の両方)、-fcheck=all np=2
+   (f_sdtype=0/1 両経路)、エラー経路(lateral≠0 / sd0 未指定 /
+   fn_sd 空)の par_stop。ifx での確認は残(handoff.md 参照)
 2. m_gwflow_lateral を m_swflow_enc の continuous / calc_kth_flux
    構造を参考に実装(momentum 系装置は持ち込まない。§4a)。
    1Dベンチマーク: 解析解のあるBoussinesq拡散問題で検証
