@@ -35,7 +35,7 @@
 
   ! 側方モデルの選択
   !  0:なし(鉛直浸透のみ。側方流動の資源は一切確保されない)
-  !  1:非線形 Boussinesq(&list_gwflow_lateral_boussinesq を使用。
+  !  1:非線形 Boussinesq(&list_gwflow_lateral を使用。
   !    &list_geoinfo の土層厚 sd・比湧水量 sy0 が必要)
   f_gwlateral = 1
 
@@ -92,7 +92,7 @@
 !   陽解法の安定条件 dt <= 0.5 / (D*(1/dx^2+1/dy^2)),
 !   D = K_sh*max(土層厚)/sy0 を初期化時に検査し、超える場合は停止する。
 !======================================================================
-&list_gwflow_lateral_boussinesq
+&list_gwflow_lateral
   ! 側方飽和透水係数 (mm/h)。0 より大きいこと
   gw_ksh_mmh = 360.0
 

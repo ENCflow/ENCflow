@@ -1,4 +1,4 @@
-module m_gwflow_lateral_boussinesq
+module m_gwflow_lateral
   ! ========= 側方流動モデル: 非線形 Boussinesq(2次元・4近傍 FV) =========
   ! 飽和帯の側方 Darcy 流(handoff_gwflow_tani.md §3.2b)。エッジ状態レス
   ! 設計(同 §4a): フラックスは無履歴でエッジごとにその場計算し発散に
@@ -50,9 +50,9 @@ module m_gwflow_lateral_boussinesq
   use m_parallel, only : par_info, par_stop, dcp, par_halo_cell, par_allreduce_max
   implicit none
   private
-  public :: gwflow_lateral_bsq_init
-  public :: gwflow_lateral_bsq_calc
-  public :: gwflow_lateral_bsq_dispose
+  public :: gwflow_lateral_init
+  public :: gwflow_lateral_calc
+  public :: gwflow_lateral_dispose
 
   ! 4近傍(E, W, N, S)
   integer, parameter :: din4(1:4) = [ 1, -1, 0, 0 ]
@@ -80,7 +80,7 @@ contains
 ! g%sd は m_gwflow_init が m_geoinfo_require_sd で確保済み。
 ! dts は実効時間刻み(安定条件の静的検査に使う)
 !----------------------------------------------------------------------
-subroutine gwflow_lateral_bsq_init(p, g, s, dts)
+subroutine gwflow_lateral_init(p, g, s, dts)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -89,27 +89,27 @@ subroutine gwflow_lateral_bsq_init(p, g, s, dts)
   real :: gw_ksh_mmh, gw_eps
   real :: sdmax(1), dcoef, dt_lim
   character(len=256) :: msg
-  namelist /list_gwflow_lateral_boussinesq/ gw_ksh_mmh, gw_eps
+  namelist /list_gwflow_lateral/ gw_ksh_mmh, gw_eps
 
   if (s%initialized) continue  ! 引数未使用の警告を抑制
 
   gw_ksh_mmh = 0.0
   gw_eps = 1.0e-3
 
-  call par_info("reading list_gwflow_lateral_boussinesq in " // trim(p%fn_gwflow))
+  call par_info("reading list_gwflow_lateral in " // trim(p%fn_gwflow))
   open(newunit=un, file=trim(p%fn_gwflow), status='old', action='read', iostat=ios)
   if (ios /= 0) call par_stop("cannot open file: " // trim(p%fn_gwflow))
-  read(un, nml=list_gwflow_lateral_boussinesq, iostat=ios)
-  if (ios /= 0) call par_stop("error in reading list_gwflow_lateral_boussinesq")
+  read(un, nml=list_gwflow_lateral, iostat=ios)
+  if (ios /= 0) call par_stop("error in reading list_gwflow_lateral")
   close(un)
 
-  if (gw_ksh_mmh <= 0.0) call par_stop("list_gwflow_lateral_boussinesq: gw_ksh_mmh must be > 0")
-  if (gw_eps <= 0.0) call par_stop("list_gwflow_lateral_boussinesq: gw_eps must be > 0")
+  if (gw_ksh_mmh <= 0.0) call par_stop("list_gwflow_lateral: gw_ksh_mmh must be > 0")
+  if (gw_eps <= 0.0) call par_stop("list_gwflow_lateral: gw_eps must be > 0")
   if (g%sy0 <= 0.0 .or. g%sy0 > 1.0) then
     call par_stop("list_geoinfo: sy0 must be in (0,1] for gwflow lateral")
   end if
   ! 遅延確保口の呼び忘れ(m_gwflow_init の needs_sd)をここで検出する
-  if (.not. allocated(g%sd)) call par_stop("gwflow_lateral_bsq: g%sd is not allocated")
+  if (.not. allocated(g%sd)) call par_stop("gwflow_lateral: g%sd is not allocated")
 
   lbq%ksh = gw_ksh_mmh / 1000.0 / 3600.0   ! mm/h -> m/s
   lbq%eps = gw_eps
@@ -132,11 +132,11 @@ subroutine gwflow_lateral_bsq_init(p, g, s, dts)
   dcoef = lbq%ksh * sdmax(1) * lbq%syinv
   if (dcoef > 0.0) then
     dt_lim = 0.5 / (dcoef * (1.0/g%dx**2 + 1.0/g%dy**2))
-    write(msg,'(a,es10.3,a,es10.3,a)') "gwflow_lateral_bsq: dt limit = ", dt_lim, &
+    write(msg,'(a,es10.3,a,es10.3,a)') "gwflow_lateral: dt limit = ", dt_lim, &
                                        " s (dts = ", dts, " s)"
     call par_info(trim(msg))
     if (dts > dt_lim) then
-      call par_stop("gwflow_lateral_bsq: dts exceeds the explicit stability limit " &
+      call par_stop("gwflow_lateral: dts exceeds the explicit stability limit " &
                     // "(reduce dt/dt_gwflow or K_sh)")
     end if
   end if
@@ -151,7 +151,7 @@ end subroutine
 !   時刻 n の s%hg を wk に退避し、全フラックスを時刻 n の状態から計算
 !   する(更新途中の値を読まない)。末尾で飽和超過分を地表流へ渡す
 !----------------------------------------------------------------------
-subroutine gwflow_lateral_bsq_calc(p, g, s, it, dts)
+subroutine gwflow_lateral_calc(p, g, s, it, dts)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -245,7 +245,7 @@ end subroutine
 !----------------------------------------------------------------------
 ! Boussinesq 側方流の破棄(無履歴のため私有保存なし。ヘッダ【リスタート】)
 !----------------------------------------------------------------------
-subroutine gwflow_lateral_bsq_dispose(p)
+subroutine gwflow_lateral_dispose(p)
   type(t_sysparam), intent(in) :: p
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (allocated(lbq%wk)) deallocate(lbq%wk)

@@ -25,8 +25,8 @@ module m_gwflow
   use m_gwflow_bucket, only : gwflow_bucket_init, gwflow_bucket_calc, gwflow_bucket_dispose
   use m_gwflow_greenampt, only : gwflow_greenampt_init, gwflow_greenampt_calc, &
                                  gwflow_greenampt_dispose
-  use m_gwflow_lateral_boussinesq, only : gwflow_lateral_bsq_init, gwflow_lateral_bsq_calc, &
-                                          gwflow_lateral_bsq_dispose
+  use m_gwflow_lateral, only : gwflow_lateral_init, gwflow_lateral_calc, &
+                               gwflow_lateral_dispose
   use m_parallel, only : par_stop
   use m_util, only : itoa
   implicit none
@@ -147,7 +147,7 @@ subroutine m_gwflow_init(gw, p, g, s)
   gw%enabled = .true.
   s%gw_active = .true.               ! 質量台帳(S_grnd/S_total)と Log 列の拡張を有効化
   if (associated(gw%init)) call gw%init(p, g, s)
-  if (gw%lat_enabled) call gwflow_lateral_bsq_init(p, g, s, gw%dts)
+  if (gw%lat_enabled) call gwflow_lateral_init(p, g, s, gw%dts)
   gw%initialized = .true.
 end subroutine
 
@@ -166,9 +166,9 @@ subroutine m_gwflow_calc(gw, p, g, s, it)
   if (.not. gw%enabled) return
   if (mod(it, gw%idt_gwflow) /= 0) return
   ! 鉛直(セル内)→ 側方(近傍結合)の順。側方 calc の冒頭で
-  ! s%hg, s%h のハロを交換する(m_gwflow_lateral_boussinesq ヘッダ参照)
+  ! s%hg, s%h のハロを交換する(m_gwflow_lateral ヘッダ参照)
   if (associated(gw%calc)) call gw%calc(p, g, s, it, gw%dts)
-  if (gw%lat_enabled) call gwflow_lateral_bsq_calc(p, g, s, it, gw%dts)
+  if (gw%lat_enabled) call gwflow_lateral_calc(p, g, s, it, gw%dts)
 end subroutine
 
 
@@ -179,7 +179,7 @@ subroutine m_gwflow_dispose(gw, p)
   type(t_gwflow), intent(inout) :: gw
   type(t_sysparam), intent(in) :: p
   if (gw%enabled .and. associated(gw%dispose)) call gw%dispose(p)
-  if (gw%lat_enabled) call gwflow_lateral_bsq_dispose(p)
+  if (gw%lat_enabled) call gwflow_lateral_dispose(p)
   gw%init    => null()
   gw%calc    => null()
   gw%dispose => null()

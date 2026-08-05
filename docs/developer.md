@@ -829,7 +829,7 @@
   m_state の hg 保存で整合)。側方流動の導入で恒等が崩れたら F を
   私有状態に昇格し契約5(gwflow_greenampt.dat)で save/restore する。
 
-### 16.1 側方流動(m_gwflow_lateral_boussinesq)の設計(2026-08-05 決定)
+### 16.1 側方流動(m_gwflow_lateral)の設計(2026-08-05 決定)
 
 - **線形 Darcy 案は不採用(棚上げ)**: エッジ状態レス+陽解法では
   非線形 Boussinesq とのコスト・メモリ差が実質なく、「CFL が実行前に
@@ -841,6 +841,9 @@
   ポインタ束は作らない(1モデルでは死んだ柔軟性)。第2の側方モデルが
   実在した時点でポインタ束へ昇格する(等価リファクタとして逐次ビット
   一致で検証可能)。鉛直側のポインタ束方式は従来どおり。
+  第2モデルの導入予定がないため、モジュール名・namelist グループ名も
+  m_gwflow_lateral / &list_gwflow_lateral に短縮した(2026-08-05 改名。
+  旧名 m_gwflow_lateral_boussinesq / &list_gwflow_lateral_boussinesq)。
 - **離散化は4近傍 FV**: 等方拡散に十分で RRI と同じ。m_swflow_enc の
   8近傍対角配分は運動方程式向けの装置であり持ち込まない。
 - **全水頭 H = (s%z - sd) + s%hg/sy0 [+ s%h]**(handoff §3.2.3)。

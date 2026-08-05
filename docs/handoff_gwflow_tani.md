@@ -57,19 +57,18 @@
 
 ```
 m_gwflow (親モジュール・状態変数の所有者、init/calc/dispose の orchestrator)
-  ├── m_gwflow_lateral      … 側方流動のモデル選択層(新設。vertical同様
-  │     │                     プロシージャポインタで切替可能とする)
+  ├── m_gwflow_lateral      … 側方流動(非線形Boussinesq。§3.2b)
+  │     - 旧構成案の「選択層+darcy/boussinesq の2モデル」は 2026-08-05 に
+  │       単一モデル直接呼び出しへ変更(darcy 不採用・棚上げ。§3.2)。
+  │       これに伴いモジュール名も m_gwflow_lateral_boussinesq から
+  │       m_gwflow_lateral へ短縮(2026-08-05)
   │     - m_swflow_enc の continuous 相当の構造のみ踏襲(momentum 系装置は
   │       不要。§4a「エッジ状態レス設計」参照)
-  │     - 状態: h_gw(飽和帯厚) or z_w(地下水面深度)。セル配列のみ
+  │     - 状態: h_gw(柱状換算 s%hg が主変数。§8)。セル配列のみ
   │     - フラックス: 無履歴(Darcy則は局所平衡)。エッジごとにその場で
   │       計算し発散に消費する。永続エッジ配列(mn_gw, uv_gw相当)は持たない
-  │     - 通信: par_halo_cell(h_gw) セル幅1のみ。エッジ交換・エッジマージ
-  │       (par_halo_edge, par_edge_merge)は不要(§4a)
-  │     ├── m_gwflow_lateral_darcy       (線形。§3.2a)
-  │     └── m_gwflow_lateral_boussinesq  (非線形。§3.2b。分離型では
-  │                                        h_gw<=d が構造的に成立するため
-  │                                        RRIのh_dキャップは不要。§3.2.1)
+  │     - 通信: セルハロのみ(s%hg と s%h の2本。§4a 更新)。エッジ交換・
+  │       エッジマージ(par_halo_edge, par_edge_merge)は不要(§4a)
   │
   ├── m_gwflow_vertical     … 鉛直浸透・貯留のモデル選択層
   │     - m_swflowのenc/stgパターンに倣い、プロシージャポインタで切替
@@ -120,7 +119,7 @@ D <= K_sh*max(d)/S_y があるため、(b) でも実行前に評価できる
 (実装は init で検査し超過なら par_stop)。線形近似の物理的用途は
 K_sh の調整でほぼ代替でき、必要が生じた時点で追加すればよい。
 これに伴い、側方の内部実装は選択層(プロシージャポインタ束)を
-持たず m_gwflow_lateral_boussinesq の直接呼び出しとする。namelist の
+持たず m_gwflow_lateral の直接呼び出しとする。namelist の
 選択子 f_gwlateral(0:なし, 1:Boussinesq)は維持するので、第2の
 モデル追加時も param 形式は変わらない(developer.md §16)。
 
@@ -621,7 +620,7 @@ T_vが側方流動の時間スケール(§4のΔt_gw)に対して無視できな
       累積 F の古典形はイベント間の再配分を表現できない)。厳密な累積 F が
       必要になったら契約5の私有状態へ昇格(m_gwflow_greenampt ヘッダ)
 - [x] 正則化定数 eps(2026-08-05 決定): namelist
-      &list_gwflow_lateral_boussinesq の gw_eps(既定 1e-3 m)。
+      &list_gwflow_lateral の gw_eps(既定 1e-3 m)。
       乾燥判定・上流側判定・過大流出抑制の下限を兼ねる
 
 ---
@@ -640,7 +639,7 @@ T_vが側方流動の時間スケール(§4のΔt_gw)に対して無視できな
    (f_sdtype=0/1 両経路)、エラー経路(lateral≠0 / sd0 未指定 /
    fn_sd 空)の par_stop。ifx での確認は残(handoff.md 参照)
 2. [x] m_gwflow_lateral を実装(momentum 系装置は持ち込まない。§4a)
-   → **完了(2026-08-05)**: m_gwflow_lateral_boussinesq(4近傍FV・
+   → **完了(2026-08-05)**: m_gwflow_lateral(4近傍FV・
    エッジ状態レス・単一モデル直接呼び出し。§3.2 決定)。安定条件は
    init で静的検査(h_gw<=d の上界)。
    残: 解析解のある Boussinesq 拡散問題との定量比較(1Dベンチマーク)は
