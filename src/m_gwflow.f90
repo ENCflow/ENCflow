@@ -5,10 +5,13 @@ module m_gwflow
   !   - 有効化は fn_gwflow の指定の有無(未指定なら完全に不活性)
   !   - 鉛直モデルは fn_gwflow 内 &list_gwflow の f_gwvertical で選択
   !     (0 なら fn を書いたまま一時無効化できる)
-  !   - 側方モデルは同 f_gwlateral で選択。未指定(=0)なら鉛直のみで
-  !     実行し、側方流動のための資源(束縛・配列・ハロ交換)は一切
-  !     確保しない(現段階では 0 のみ受理。1以降は予約・未実装)
-  !   - 束縛は t_gwflow の手続きポインタ成分(abstract interface + nopass)
+  !   - 側方モデルは同 f_gwlateral で選択(0:なし, 1:非線形Boussinesq)。
+  !     未指定(=0)なら鉛直のみで実行し、側方流動のための資源
+  !     (配列・ハロ交換)は一切確保しない
+  !   - 鉛直の束縛は t_gwflow の手続きポインタ成分(abstract interface +
+  !     nopass)。側方は当面単一モデルのため直接呼び出し(第2の側方
+  !     モデルが実在した時点でポインタ束へ昇格する。等価リファクタとして
+  !     逐次ビット一致で検証できる。developer.md §16)
   !   - 各モデルの固有設定・内部状態・リスタート保存はモデル私有
   !     (実装の契約は m_gwflow_bucket のヘッダを参照)
   !   - 土層厚 g%sd を要するモデルを選んだときは、モデル init より前に
@@ -22,6 +25,8 @@ module m_gwflow
   use m_gwflow_bucket, only : gwflow_bucket_init, gwflow_bucket_calc, gwflow_bucket_dispose
   use m_gwflow_greenampt, only : gwflow_greenampt_init, gwflow_greenampt_calc, &
                                  gwflow_greenampt_dispose
+  use m_gwflow_lateral_boussinesq, only : gwflow_lateral_bsq_init, gwflow_lateral_bsq_calc, &
+                                          gwflow_lateral_bsq_dispose
   use m_parallel, only : par_stop
   use m_util, only : itoa
   implicit none
@@ -62,12 +67,13 @@ module m_gwflow
 
   type t_gwflow
     ! init に早期 return 経路があるため全成分デフォルト初期化必須(§13)
-    ! 現在の init/calc/dispose は鉛直モデルの束縛。側方モデルの導入時は
-    ! 側方用のポインタ束を並置する(f_gwlateral=0 なら null のまま)
+    ! init/calc/dispose は鉛直モデルの束縛(f_gwvertical=0 なら null の
+    ! まま)。側方は単一モデル直接呼び出しで lat_enabled が実行判定
     procedure(procedure_gwflow_init),    pointer, nopass :: init    => null()
     procedure(procedure_gwflow_calc),    pointer, nopass :: calc    => null()
     procedure(procedure_gwflow_dispose), pointer, nopass :: dispose => null()
-    logical :: enabled = .false.     ! fn_gwflow の有無と f_gwvertical で決まる
+    logical :: enabled = .false.     ! モジュール有効(鉛直か側方の少なくとも一方)
+    logical :: lat_enabled = .false. ! 側方流動の有効化(f_gwlateral=1)
     integer :: idt_gwflow = 1        ! 更新間隔(ステップ数)
     real :: dts = 0.0                ! 実効時間刻み(p%dt * idt_gwflow)(s)
     logical :: initialized = .false.
@@ -93,17 +99,25 @@ subroutine m_gwflow_init(gw, p, g, s)
 
   call list_gwflow_read(p, list)
 
-  ! 側方モデルは予約のみ(パラメータ体系を先に確定。実装は優先順位2)
-  if (list%f_gwlateral /= 0) then
-    call par_stop("list_gwflow: f_gwlateral is not implemented yet, must be 0: " &
-                  // itoa(list%f_gwlateral))
-  end if
+  ! --- 側方モデルの選択(当面 Boussinesq のみ。直接呼び出し) ---
+  select case (list%f_gwlateral)
+    case (0)
+      gw%lat_enabled = .false.
+    case (1)
+      gw%lat_enabled = .true.
+    case default
+      call par_stop("list_gwflow: f_gwlateral must be 0(none) or 1(boussinesq): " &
+                    // itoa(list%f_gwlateral))
+  end select
 
-  if (list%f_gwvertical == 0) return    ! fn を書いたまま一時無効化する経路
+  ! 両方 0 なら fn を書いたまま一時無効化する経路
+  if (list%f_gwvertical == 0 .and. .not. gw%lat_enabled) return
 
   ! --- 鉛直モデルの束縛(新モデルの追加はここに case を足す) ---
-  needs_sd = .false.
+  needs_sd = gw%lat_enabled          ! 側方は土層厚(容量・全水頭)を常に要する
   select case (list%f_gwvertical)
+    case (0)
+      ! 鉛直なし(側方のみ。初期条件の h_gw を側方流動だけで緩和する用途)
     case (1)
       gw%init    => gwflow_bucket_init
       gw%calc    => gwflow_bucket_calc
@@ -132,7 +146,8 @@ subroutine m_gwflow_init(gw, p, g, s)
 
   gw%enabled = .true.
   s%gw_active = .true.               ! 質量台帳(S_grnd/S_total)と Log 列の拡張を有効化
-  call gw%init(p, g, s)
+  if (associated(gw%init)) call gw%init(p, g, s)
+  if (gw%lat_enabled) call gwflow_lateral_bsq_init(p, g, s, gw%dts)
   gw%initialized = .true.
 end subroutine
 
@@ -150,7 +165,10 @@ subroutine m_gwflow_calc(gw, p, g, s, it)
 
   if (.not. gw%enabled) return
   if (mod(it, gw%idt_gwflow) /= 0) return
-  call gw%calc(p, g, s, it, gw%dts)
+  ! 鉛直(セル内)→ 側方(近傍結合)の順。側方 calc の冒頭で
+  ! s%hg, s%h のハロを交換する(m_gwflow_lateral_boussinesq ヘッダ参照)
+  if (associated(gw%calc)) call gw%calc(p, g, s, it, gw%dts)
+  if (gw%lat_enabled) call gwflow_lateral_bsq_calc(p, g, s, it, gw%dts)
 end subroutine
 
 
@@ -160,11 +178,13 @@ end subroutine
 subroutine m_gwflow_dispose(gw, p)
   type(t_gwflow), intent(inout) :: gw
   type(t_sysparam), intent(in) :: p
-  if (gw%enabled) call gw%dispose(p)
+  if (gw%enabled .and. associated(gw%dispose)) call gw%dispose(p)
+  if (gw%lat_enabled) call gwflow_lateral_bsq_dispose(p)
   gw%init    => null()
   gw%calc    => null()
   gw%dispose => null()
   gw%enabled = .false.
+  gw%lat_enabled = .false.
   gw%initialized = .false.
 end subroutine
 

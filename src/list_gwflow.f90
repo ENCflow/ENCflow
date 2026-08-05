@@ -13,7 +13,7 @@ module list_gwflow
   type t_list_gwflow
     integer :: f_gwvertical = 0      ! 鉛直モデル(0:なし, 1:バケツ, 2:Green-Ampt)
                                      ! fn_gwflow を書いたまま 0 で一時無効化できる
-    integer :: f_gwlateral = 0       ! 側方モデル(0:なし=鉛直のみ。1以降は予約・未実装)
+    integer :: f_gwlateral = 0       ! 側方モデル(0:なし=鉛直のみ, 1:非線形Boussinesq)
                                      ! 未指定(=0)なら側方流動の資源は一切確保されない
     real :: dt_gwflow = 0.0          ! 地下水計算の更新時間間隔 (s)。0なら毎ステップ
   end type
