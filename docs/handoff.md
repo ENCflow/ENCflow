@@ -35,6 +35,18 @@
      (S_total 14桁不動・np=1,2,4)、-fcheck 相当(-check all)np=2
    - 注意: 旧 param の f_gwmodel は namelist 読込エラーで検出される
      (互換入力なし。examples/List_samples/list_gwflow.txt 参照)
+
+1c. **gwflow 第3弾(側方流動 Boussinesq)の残検証**
+   (実装と gfortran 検証は 2026-08-05 完了。決定は developer.md §16.1、
+    進捗と検証内容は handoff_gwflow_tani.md §9 の 2〜5)
+   - ifx で: 無効時ビット一致、側方有効時の逐次 vs np=1,2,4 全場出力
+     ビット一致(gfortran では一様sd・拘束的分布sd・薄層飽和の3ケースで
+     確認済み)、-check all np=2
+   - **解析解のある Boussinesq 拡散問題との定量比較(1Dベンチマーク)は
+     未実施**(§9 の 2 の残)。恒常テストケース化(test/ 配下)も未着手
+   - 側方有効時のリスタート往復ビット一致の確認(私有状態なしの想定の
+     実証。s%hg は m_state 経由)
+   - 谷型シナリオテスト(§9 の 6)はこれから
 2. **developer.md への gwflow/geomorph の項の追記**(検証完了後)
    - 切替器 vs 重ね合わせの使い分け原則、s%hg 柱状換算契約、S 台帳、
      モデル実装5箇条(m_gwflow_bucket ヘッダが正本)
