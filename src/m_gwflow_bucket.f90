@@ -74,17 +74,20 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! バケツモデルの計算(1ステップぶんの鉛直交換)
+! バケツモデルの計算(1回の呼び出しで実効時間刻み dts ぶんの鉛直交換。
+! dt_gwflow による間引き時は dts = p%dt * idt_gwflow が渡される)
 !----------------------------------------------------------------------
-subroutine gwflow_bucket_calc(p, g, s, it)
+subroutine gwflow_bucket_calc(p, g, s, it, dts)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer, intent(in) :: it
+  real, intent(in) :: dts
   integer :: i, j
   real :: fx
 
   if (it < 0) continue  ! 引数未使用の警告を抑制(独自周期を持つモデル用に供給)
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   !$omp parallel do schedule(static) private(i, j, fx)
   do j = dcp%js, dcp%je
@@ -92,7 +95,7 @@ subroutine gwflow_bucket_calc(p, g, s, it)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       ! 浸透フラックス: 浸透能・表面水量・残容量の最小
-      fx = min(gwb%rate * p%dt, s%h(i,j), gwb%cap - s%hg(i,j))
+      fx = min(gwb%rate * dts, s%h(i,j), gwb%cap - s%hg(i,j))
       fx = max(fx, 0.0)
       ! 反対称適用(契約1)と水位の回復(契約2)
       s%h(i,j) = s%h(i,j) - fx

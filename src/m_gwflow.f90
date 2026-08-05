@@ -36,12 +36,13 @@ module m_gwflow
       type(t_state), intent(inout) :: s
     end subroutine
 
-    subroutine procedure_gwflow_calc(p, g, s, it)
+    subroutine procedure_gwflow_calc(p, g, s, it, dts)
       import :: t_sysparam, t_geoinfo, t_state
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
       integer, intent(in) :: it
+      real, intent(in) :: dts        ! 実効時間刻み(p%dt * idt_gwflow)(s)
     end subroutine
 
     subroutine procedure_gwflow_dispose(p)
@@ -59,6 +60,7 @@ module m_gwflow
     procedure(procedure_gwflow_dispose), pointer, nopass :: dispose => null()
     logical :: enabled = .false.     ! fn_gwflow の有無と f_gwmodel で決まる
     integer :: idt_gwflow = 1        ! 更新間隔(ステップ数)
+    real :: dts = 0.0                ! 実効時間刻み(p%dt * idt_gwflow)(s)
     logical :: initialized = .false.
   end type
 
@@ -100,6 +102,7 @@ subroutine m_gwflow_init(gw, p, g, s)
   else
     gw%idt_gwflow = 1
   end if
+  gw%dts = p%dt * gw%idt_gwflow
 
   gw%enabled = .true.
   s%gw_active = .true.               ! 質量台帳(S_grnd/S_total)と Log 列の拡張を有効化
@@ -121,7 +124,7 @@ subroutine m_gwflow_calc(gw, p, g, s, it)
 
   if (.not. gw%enabled) return
   if (mod(it, gw%idt_gwflow) /= 0) return
-  call gw%calc(p, g, s, it)
+  call gw%calc(p, g, s, it, gw%dts)
 end subroutine
 
 
