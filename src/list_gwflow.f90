@@ -11,8 +11,10 @@ module list_gwflow
   public :: list_gwflow_read
 
   type t_list_gwflow
-    integer :: f_gwmodel = 0         ! 地下水モデル(0:なし, 1:バケツ)
+    integer :: f_gwvertical = 0      ! 鉛直モデル(0:なし, 1:バケツ, 2:Green-Ampt)
                                      ! fn_gwflow を書いたまま 0 で一時無効化できる
+    integer :: f_gwlateral = 0       ! 側方モデル(0:なし=鉛直のみ。1以降は予約・未実装)
+                                     ! 未指定(=0)なら側方流動の資源は一切確保されない
     real :: dt_gwflow = 0.0          ! 地下水計算の更新時間間隔 (s)。0なら毎ステップ
   end type
 
@@ -27,12 +29,14 @@ subroutine list_gwflow_read(p, list)
   type(t_list_gwflow), intent(out) :: list
   integer :: un, ios
 
-  integer :: f_gwmodel
+  integer :: f_gwvertical
+  integer :: f_gwlateral
   real :: dt_gwflow
 
-  namelist /list_gwflow/ f_gwmodel, dt_gwflow
+  namelist /list_gwflow/ f_gwvertical, f_gwlateral, dt_gwflow
 
-  f_gwmodel = list%f_gwmodel
+  f_gwvertical = list%f_gwvertical
+  f_gwlateral = list%f_gwlateral
   dt_gwflow = list%dt_gwflow
 
   call par_info("reading list_gwflow in " // trim(p%fn_gwflow))
@@ -42,7 +46,8 @@ subroutine list_gwflow_read(p, list)
   if (ios /= 0) call par_stop("error in reading list_gwflow")
   close(un)
 
-  list%f_gwmodel = f_gwmodel
+  list%f_gwvertical = f_gwvertical
+  list%f_gwlateral = f_gwlateral
   list%dt_gwflow = dt_gwflow
 
 end subroutine
