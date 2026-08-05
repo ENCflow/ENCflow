@@ -18,6 +18,7 @@ module m_geoinfo
   public :: m_geoinfo_row_ncells
   public :: m_geoinfo_scatter_coeffs
   public :: m_geoinfo_band_shrink
+  public :: m_geoinfo_require_sd
   public :: m_geoinfo_dispose
 
 
@@ -38,6 +39,12 @@ module m_geoinfo
     real, allocatable :: bb(:,:)                      ! 家屋の平均寸法
     real, allocatable :: lm(:,:)                      ! 有効慣性係数
     real, allocatable :: rscap(:,:)                   ! ため池の限界貯留高(m)
+    real, allocatable :: sd(:,:)                      ! 土層厚(m)。gwflow が必要とする
+                                                      ! ときだけ確保(m_geoinfo_require_sd)
+    real :: sd0 = 0.0                                 ! 土層厚固定値(f_sdtype=0 用)
+    real :: sy0 = 0.0                                 ! 比湧水量(= 有効間隙率 n_e。均一スカラー)
+    logical :: sd_dist = .false.                      ! 土層厚の分布指定が有効(f_sdtype=1
+                                                      ! かつ fn_gwflow 指定。全ランク同値)
     integer, allocatable :: x(:,:)                    ! 対象領域判別マスク
     integer, allocatable :: sw(:,:)                   ! 海域マスク
     integer, allocatable :: rw(:,:)                   ! 河道マスク
@@ -98,6 +105,7 @@ subroutine m_geoinfo_init(g, p)
     call read_rn(p, g, list)
     call read_gvbb(p, g, list)
     call read_rscap(p, g, list)
+    if (g%sd_dist) call read_sd(p, g, list)
   end if
   call adjust_rw(p, g, list)
 
@@ -226,6 +234,29 @@ subroutine m_geoinfo_scatter_coeffs(g)
   call scatter_band_r(g%lm)
   call scatter_band_r(g%rscap)
   call scatter_band_i(g%lu)
+  ! 実行判定 sd_dist は namelist 由来で全ランク同一(collective 安全)
+  if (g%sd_dist) call scatter_band_r(g%sd)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 土層厚 sd の帯配列を要求する(sd を必要とする地下水モデルを選んだ
+! ときに m_gwflow_init が呼ぶ。scatter_coeffs より後であること)。
+!   f_sdtype=1 → scatter_coeffs で配布済みなので何もしない
+!   f_sdtype=0 → ここで初めて帯+ハロを確保し固定値 sd0 で埋める
+! 一様値でも配列を持つことで、計算カーネルは分布/固定値の区別なく
+! 常に sd(i,j) を参照する単一の式になる。gwflow が要求しない限り
+! 確保しない、の遅延確保口。通信はなく判定材料は全ランク同一の
+! namelist 値のみ(collective 安全)
+!----------------------------------------------------------------------
+subroutine m_geoinfo_require_sd(g)
+  type(t_geoinfo), intent(inout) :: g
+  if (allocated(g%sd)) return
+  if (g%sd0 <= 0.0) then
+    call par_stop("list_geoinfo: soil depth is required by gwflow " // &
+                  "(set sd0 > 0 or f_sdtype=1/fn_sd)")
+  end if
+  allocate(g%sd(1:dcp%nx_g, dcp%jsh:dcp%jeh), source = g%sd0)
 end subroutine
 
 
@@ -300,6 +331,7 @@ subroutine m_geoinfo_dispose(g)
   if (allocated(g%bb)) deallocate(g%bb)
   if (allocated(g%lm)) deallocate(g%lm)
   if (allocated(g%rscap)) deallocate(g%rscap)
+  if (allocated(g%sd)) deallocate(g%sd)
   if (allocated(g%x)) deallocate(g%x)
   if (allocated(g%sw)) deallocate(g%sw)
   if (allocated(g%rw)) deallocate(g%rw)
@@ -336,6 +368,24 @@ subroutine set_params(p, g, list)
   g%dr = sqrt(g%dx**2 + g%dy**2)
   g%min_gv = list%min_gv
   g%min_bb = list%min_bb
+
+  ! 地下水用の土層厚・比湧水量(所有は geoinfo。2026-08-05 決定。
+  ! developer.md §16)。sd_dist の判定材料は全ランク同一の namelist 値のみ
+  ! なので、後段の scatter・遅延確保の実行判定に使ってよい(collective 安全)
+  g%sd0 = list%sd0
+  g%sy0 = list%sy0
+  if (list%f_sdtype < 0 .or. list%f_sdtype > 1) then
+    call par_stop("list_geoinfo: f_sdtype must be 0(fixed) or 1(file): "//itoa(list%f_sdtype))
+  end if
+  g%sd_dist = (list%f_sdtype == 1)
+  if (g%sd_dist .and. len_trim(list%fn_sd) == 0) then
+    call par_stop('list_geoinfo: f_sdtype=1 but fn_sd=""')
+  end if
+  if (g%sd_dist .and. len_trim(p%fn_gwflow) == 0) then
+    ! gwflow 無効なら土層厚は読み込みも確保もしない(メモリを使わない)
+    call par_info("list_geoinfo: f_sdtype=1 but fn_gwflow is not set; skip reading soil depth")
+    g%sd_dist = .false.
+  end if
 
 end subroutine
 
@@ -565,6 +615,9 @@ subroutine allocate_arrays(g)
   allocate(g%lm(1:g%nx,1:g%ny), source = 1.0)    ! 有効慣性係数は1.0で初期化
   allocate(g%rscap(1:g%nx,1:g%ny), source = 0.0) ! ため池の深さは0.0で初期化
   allocate(g%lu(1:g%nx,1:g%ny), source = 0)
+  ! 土層厚は分布指定が有効なときだけ確保する(固定値運用の遅延確保は
+  ! m_geoinfo_require_sd。gwflow が使わなければ一切確保しない)
+  if (g%sd_dist) allocate(g%sd(1:g%nx,1:g%ny), source = 0.0)
 end subroutine
 
 
@@ -819,6 +872,37 @@ subroutine read_rscap(p, g, list)
     call par_info(" reading "//fname)
     call fileio_read_matrix(fname, g%nx, g%ny, g%rscap, p%f_input_mode)
   end if
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 土層厚データを読み込む(f_sdtype=1 のときのみ。rank0 実行)
+!   データ自体の健全性(負値)はここで検査する。可用性の検証
+!   (選択モデルが sd を要するか)は m_gwflow_init の分担
+!----------------------------------------------------------------------
+subroutine read_sd(p, g, list)
+  type(t_sysparam), intent(in) :: p             ! システムパラメータ構造体
+  type(t_geoinfo), intent(inout) :: g
+  type(t_list_geoinfo), intent(in) :: list
+  character(:), allocatable :: fname
+  integer :: i, j
+  character(len=1024) :: msg
+
+  fname = trim(p%dir_data) // "/" // trim(list%fn_sd)
+  call par_info(" reading "//fname)
+  call fileio_read_matrix(fname, g%nx, g%ny, g%sd, p%f_input_mode)
+
+  do j = 1, g%ny
+    do i = 1, g%nx
+      if (g%x(i,j) <= 0) cycle
+      if (g%sd(i,j) < 0.0) then
+        write(msg,'(a,2i7,es12.4)') "geoinfo: negative soil depth at", i, j, g%sd(i,j)
+        ! read_sd は rank0 のみで実行されるため par_stop(collective)は不可
+        call par_abort(trim(msg))
+      end if
+    end do
+  end do
 
 end subroutine
 

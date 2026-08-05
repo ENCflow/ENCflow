@@ -27,6 +27,9 @@ module list_geoinfo
     real :: min_bb = 0.001                     ! 家屋の平均サイズの最小値
     real :: depth_rw = 0.0                     ! 河道マスク部の掘り込み深さ(河道マスク有りの場合のみ有効)
     real :: rn0_rw = -1.0                      ! 河道マスク部の固定粗度係数(負値の場合は設定せず)
+    integer :: f_sdtype = 0                    ! 土層厚タイプ (0:固定値, 1:ファイル)。gwflow 用
+    real :: sd0 = 0.0                          ! 土層厚固定値 (m)
+    real :: sy0 = 0.2                          ! 比湧水量(= 有効間隙率 n_e。gwflow 用)
     character(len=maxnamelen) :: f_user_routine = ""  ! ユーザールーチン識別名
     integer :: f_ztype = 0                     ! 地盤高タイプ (0:固定値, 1:ファイル)
     integer :: f_lusetype = 0                  ! 土地利用データの有無 (0:なし, 1:ファイル)
@@ -42,6 +45,7 @@ module list_geoinfo
     character(len=maxpathlen) :: fn_gv = ""    ! 家屋の空隙率ファイル名
     character(len=maxpathlen) :: fn_bb = ""    ! 家屋の平均寸法ファイル名
     character(len=maxpathlen) :: fn_rscap = "" ! ため池の限界貯留高ファイル名
+    character(len=maxpathlen) :: fn_sd = ""    ! 土層厚ファイル名
     real :: lu2rn(1:2,1:maxnluse) = -999       ! 土地利用と粗度係数の対応
   end type
 
@@ -69,6 +73,9 @@ subroutine list_geoinfo_read(p, list)
   real :: min_bb                ! 家屋の平均サイズの最小値
   real :: depth_rw              ! 河道マスク部の掘り込み深さ
   real :: rn0_rw                ! 河道マスク部の固定粗度係数
+  integer :: f_sdtype           ! 土層厚タイプ (0:固定値, 1:ファイル)
+  real :: sd0                   ! 土層厚固定値 (m)
+  real :: sy0                   ! 比湧水量(= 有効間隙率 n_e)
   character(len=maxnamelen) :: f_user_routine  ! ユーザールーチン識別名
   integer :: f_ztype            ! 地盤高タイプ (0:固定値, 1:テキストファイル)
   integer :: f_lusetype         ! 土地利用データの有無 (0:なし, 1:テキストファイル)
@@ -84,14 +91,16 @@ subroutine list_geoinfo_read(p, list)
   character(:), allocatable :: fn_gv     ! 家屋の空隙率ファイル名
   character(:), allocatable :: fn_bb     ! 家屋の平均寸法ファイル名
   character(:), allocatable :: fn_rscap  ! ため池の限界貯留高ファイル名
+  character(:), allocatable :: fn_sd     ! 土層厚ファイル名
   real :: lu2rn(1:2,1:maxnluse)          ! 土地利用と粗度係数の対応
   integer :: un
   integer :: ios
   character(len=1024) :: iom
   namelist /list_geoinfo/ nx, ny, dx, dy, lx, ly, epsg, z0, rn0, mag_z, min_gv, min_bb, depth_rw, rn0_rw, &
+                          sd0, sy0, &
                           f_user_routine, &
-                          f_ztype, f_lusetype, f_rntype, f_masktype, f_edge_sw, &
-                          fn_z, fn_mask, fn_sw, fn_rw, fn_rn, fn_luse, fn_gv, fn_bb, fn_rscap, lu2rn
+                          f_ztype, f_lusetype, f_rntype, f_masktype, f_edge_sw, f_sdtype, &
+                          fn_z, fn_mask, fn_sw, fn_rw, fn_rn, fn_luse, fn_gv, fn_bb, fn_rscap, fn_sd, lu2rn
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
   nx = list%nx
@@ -108,6 +117,9 @@ subroutine list_geoinfo_read(p, list)
   min_bb = list%min_bb
   depth_rw = list%depth_rw
   rn0_rw = list%rn0_rw
+  f_sdtype = list%f_sdtype
+  sd0 = list%sd0
+  sy0 = list%sy0
   f_user_routine = list%f_user_routine
   f_ztype = list%f_ztype
   f_lusetype = list%f_lusetype
@@ -123,6 +135,7 @@ subroutine list_geoinfo_read(p, list)
   fn_gv = list%fn_gv
   fn_bb = list%fn_bb
   fn_rscap = list%fn_rscap
+  fn_sd = list%fn_sd
   lu2rn = list%lu2rn
 
   call par_info("reading list_geoinfo in "//trim(p%fn_geoinfo))
@@ -148,6 +161,9 @@ subroutine list_geoinfo_read(p, list)
   list%min_bb = min_bb
   list%depth_rw = depth_rw
   list%rn0_rw = rn0_rw
+  list%f_sdtype = f_sdtype
+  list%sd0 = sd0
+  list%sy0 = sy0
   list%f_user_routine = f_user_routine
   list%f_ztype = f_ztype
   list%f_lusetype = f_lusetype
@@ -163,6 +179,7 @@ subroutine list_geoinfo_read(p, list)
   list%fn_gv = fn_gv
   list%fn_bb = fn_bb
   list%fn_rscap = fn_rscap
+  list%fn_sd = fn_sd
   list%lu2rn = lu2rn
 
 end subroutine
