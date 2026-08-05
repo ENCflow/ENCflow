@@ -11,7 +11,7 @@ module list_initial
   integer, parameter :: maxnamelen = 32
 
   type t_list_initial
-    character(len=maxnamelen) :: f_user_routine_name = ""  ! ユーザールーチン識別名
+    character(len=maxnamelen) :: f_user_routine = ""  ! ユーザールーチン識別名
     integer :: f_htype = 0             ! 初期水深タイプ (0:水深固定値, 1:水深ファイル,
                                        !                 2:水位固定値, 3:水位ファイル)
     integer :: f_uvtype = 0            ! 初期流速タイプ (0: 固定値)
@@ -37,7 +37,7 @@ contains
 subroutine list_initial_read(p, list)
   type(t_sysparam), intent(in) :: p
   type(t_list_initial), intent(inout) :: list
-  character(len=maxnamelen) :: f_user_routine_name  ! ユーザールーチン識別名
+  character(len=maxnamelen) :: f_user_routine  ! ユーザールーチン識別名
   integer :: f_htype             ! 初期水深タイプ (0:水深固定値, 1:水深ファイル,
                                  !                 2:水位固定値, 3:水位ファイル)
   integer :: f_uvtype            ! 初期流速タイプ (0: 固定値)
@@ -51,12 +51,12 @@ subroutine list_initial_read(p, list)
   integer :: un
   integer :: ios
   character(len=1024) :: iom
-  namelist /list_initial/ f_user_routine_name, f_htype, f_uvtype, f_fill_depres, &
+  namelist /list_initial/ f_user_routine, f_htype, f_uvtype, f_fill_depres, &
                                 h0, e0, u0, v0, h0_rw, fn_hinit
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
-  f_user_routine_name = list%f_user_routine_name
+  f_user_routine = list%f_user_routine
   f_htype = list%f_htype
   f_uvtype = list%f_uvtype 
   f_fill_depres = list%f_fill_depres 
@@ -73,7 +73,7 @@ subroutine list_initial_read(p, list)
   if (ios /= 0) call par_stop("list_initial 読込失敗: "//trim(iom))
   close(un)
 
-  list%f_user_routine_name = f_user_routine_name
+  list%f_user_routine = f_user_routine
   list%f_htype = f_htype
   list%f_uvtype = f_uvtype
   list%f_fill_depres = f_fill_depres

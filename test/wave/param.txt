@@ -46,7 +46,7 @@
     u0 = 0                  ! 初期x方向流速 (m/s)
     v0 = 0                  ! 初期y方向流速 (m/s)
 
-    f_user_routine_name = "wave_hump"   ! ユーザールーチン識別名(円形コサイン型の初期水位)
+    f_user_routine = "wave_hump"   ! ユーザールーチン識別名(円形コサイン型の初期水位)
 /
 
 !======================================================================
@@ -86,8 +86,8 @@
   rn0 = 0.0       ! 粗度係数固定値
 
   ! ユーザールーチン識別名(未指定なら障害物なし)
-  !f_user_routine_name = "wave_solid_wall"   ! 斜めの不透過壁(2セル厚)
-  !f_user_routine_name = "wave_leaky_wall"   ! 斜めの半透過壁(1セル厚)
+  !f_user_routine = "wave_solid_wall"   ! 斜めの不透過壁(2セル厚)
+  !f_user_routine = "wave_leaky_wall"   ! 斜めの半透過壁(1セル厚)
 /
 
 

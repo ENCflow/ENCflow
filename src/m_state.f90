@@ -204,14 +204,14 @@ subroutine m_state_init(s, p, g)
   if (p%f_state_restore > 0) call restore_state(p, ts)
 
   ! ユーザールーチンによる初期条件をセット(全域添字契約: ts に書く)。
-  ! 指定は f_user_routine_name(識別名。trim 後完全一致)。
+  ! 指定は f_user_routine(識別名。trim 後完全一致)。
   ! 個々のルーチンへの分岐は user_initial submodule 内。実行は全ランク冗長
-  if (len_trim(list%f_user_routine_name) > 0) then
-    if (.not. user_initial_defined(list%f_user_routine_name)) then
-      call par_stop("undefined f_user_routine_name in list_initial: "//trim(list%f_user_routine_name)// &
+  if (len_trim(list%f_user_routine) > 0) then
+    if (.not. user_initial_defined(list%f_user_routine)) then
+      call par_stop("undefined f_user_routine in list_initial: "//trim(list%f_user_routine)// &
                     " (defined: "//user_initial_names()//")")
     end if
-    call user_initial_run(p, g, ts, list%f_user_routine_name)
+    call user_initial_run(p, g, ts, list%f_user_routine)
   end if
 
   ! --- 担当帯(+ハロ)を切り出す。ts はスコープ終了で自動解放 ---
