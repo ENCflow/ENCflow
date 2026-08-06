@@ -40,10 +40,10 @@ PREC	= double
 #   使う組をコメント切り替え。FRT は MODE に応じて自動決定される。
 # ---------------------------------------------------------------
 # Intel oneAPI (-ipo: リンク時に全体最適化。アーカイバは oneAPI の llvm-ar)
-FC	= ifx
-FC_MPI	= mpiifx
-R8	= -r8
-FFLAGS	= -g -fopenmp -warn all -fpe0 -Ofast -xHost -ipo $(RFLAG)
+#FC	= ifx
+#FC_MPI	= mpiifx
+#R8	= -r8
+#FFLAGS	= -g -fopenmp -warn all -fpe0 -Ofast -xHost -ipo $(RFLAG)
 #FFLAGS	= -g -O0 -traceback -check all -warn all -fpe0 $(RFLAG)
 #LDFLAGS =
 
@@ -54,10 +54,10 @@ FFLAGS	= -g -fopenmp -warn all -fpe0 -Ofast -xHost -ipo $(RFLAG)
 #     日本語コメントを含む行が誤って弾かれるのを防ぐ(生成コードに影響なし)。
 #     ただし行長の検査役もなくなるので、他コンパイラ(nfort 等)のために
 #     1 行 132 バイト以内を目安に保つこと
-#FC	= gfortran
-#FC_MPI	= mpifort
-#R8	= -fdefault-real-8 -fdefault-double-8
-#FFLAGS	= -g -fopenmp -Ofast -march=native -flto=auto -Wall -ffpe-trap=zero,overflow -ffree-line-length-none $(RFLAG)
+FC	= gfortran
+FC_MPI	= mpifort
+R8	= -fdefault-real-8 -fdefault-double-8
+FFLAGS	= -g -fopenmp -Ofast -march=native -flto=auto -Wall -ffpe-trap=zero,overflow -ffree-line-length-none $(RFLAG)
 #FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -ffree-line-length-none $(RFLAG) -fcheck=all -fbacktrace
 #FFLAGS	= -g -Og -fcheck=all -fbacktrace -Wall -ffpe-trap=invalid,zero,overflow -ffree-line-length-none $(RFLAG) -Wno-conversion -finit-real=snan -finit-integer=-88888888
 #LDFLAGS =
