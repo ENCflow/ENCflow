@@ -25,6 +25,8 @@ module list_channel
     integer :: f_bank_datum = 0                ! 堤防高さの基準 (0:河床(掘込後), 1:堤内地セル標高, 2:絶対標高)
     integer :: f_bank_aggr = 0                 ! 天端の集約方法 (f_bank_datum=1 のみ。0:平均, 1:最小, 2:最大)
     integer :: f_bank_mode = 0                 ! 堤防の水理モード (0:越流のみ, 1:樋門(逆止弁), 2:強制排水)
+    integer :: f_bank_opening = 1              ! 堤防時の開口補正 (0:なし, 1:塞がれた斜め開口の
+                                               !   シェアを河道—河道法線エッジへ振り替える。既定)
   end type
 
 
@@ -47,11 +49,13 @@ subroutine list_channel_read(p, list)
   integer :: f_bank_datum                ! 堤防高さの基準
   integer :: f_bank_aggr                 ! 天端の集約方法
   integer :: f_bank_mode                 ! 堤防の水理モード
+  integer :: f_bank_opening              ! 堤防時の開口補正
   integer :: un
   integer :: ios
   character(len=1024) :: iom
 
-  namelist /list_channel/ fn_bank, bank0, f_bank_datum, f_bank_aggr, f_bank_mode
+  namelist /list_channel/ fn_bank, bank0, f_bank_datum, f_bank_aggr, f_bank_mode, &
+                          f_bank_opening
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -60,6 +64,7 @@ subroutine list_channel_read(p, list)
   f_bank_datum = list%f_bank_datum
   f_bank_aggr = list%f_bank_aggr
   f_bank_mode = list%f_bank_mode
+  f_bank_opening = list%f_bank_opening
 
   call par_info("reading list_channel in "//trim(p%fn_channel))
   open(newunit=un, file=trim(p%fn_channel), status='old', iostat=ios, iomsg=iom)
@@ -73,6 +78,7 @@ subroutine list_channel_read(p, list)
   list%f_bank_datum = f_bank_datum
   list%f_bank_aggr = f_bank_aggr
   list%f_bank_mode = f_bank_mode
+  list%f_bank_opening = f_bank_opening
 
 end subroutine
 

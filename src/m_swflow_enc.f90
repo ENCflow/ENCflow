@@ -61,6 +61,19 @@ module m_swflow_enc
   integer, parameter :: e_bank_oneway = 1   ! 樋門(逆止弁): 堤内→河道のみ透過、逆は天端まで不透過
   integer, parameter :: e_bank_pump = 2     ! 強制排水: 堤内→河道は河道水位によらず常時段落ち
 
+  ! 堤防時の開口補正(developer.md §18)
+  !   壁で恒久的に塞がれた斜め開口の通過幅シェアを、同じ横断方向の
+  !   河道—河道「法線」エッジ(成分2, 4)へ振り替える。直線の幅1セル
+  !   河道で通過幅が法線開口(lp ≈ 0.414)に縮退する過小通水を治し、
+  !   横断方向の開口合計は面全長で厳密に保存される。斜めエッジと
+  !   壁エッジ(越流の敷幅)は不変。塞がりゼロのエッジは係数1で
+  !   現行と厳密一致(退化性)。frw は init で構築する静的テーブルで、
+  !   時間ループでは読み取り専用(w8mx 等の重み定数と同格の扱い)
+  integer :: f_bank_opening                 ! 開口補正 (0:なし, 1:振り替え)
+  logical :: have_bopen = .false.           ! 開口補正が有効か(have_bank との合成)
+  real, allocatable :: frw(:,:,:)           ! エッジ別通過幅係数 (1:4, 0:nx, jsh-1:jeh)。
+                                            !   法線成分 2, 4 のみ 1 以外になり得る
+
   ! 状態変数の構造体の宣言と定義
   type t_enc_status
     real, allocatable :: uv(:,:,:)   ! セル境界での流速(符合は中心セルから近傍セルに向かい正)
@@ -99,7 +112,8 @@ module m_swflow_enc
   real :: w8dr2(1:8)             ! 近傍セル中心までの距離の二乗
   real :: l8x(1:8)               ! k軸方向のフラックス通過幅の重み
   real :: l8y(1:8)               ! k軸方向のフラックス通過幅の重み
-  real :: l8(1:8)                ! k軸方向のフラックス通過幅の重み 
+  real :: l8(1:8)                ! k軸方向のフラックス通過幅の重み
+  real :: lpx, lpy, ldx, ldy     ! 通過幅シェア(法線 lp・斜め ld。開口補正が使う)
   real :: r8x(1:8)               ! din(:)/dx
   real :: r8y(1:8)               ! djn(:)/dy
   real :: n8x(1:8)               ! k軸の単位ベクトルのx方向成分
@@ -195,12 +209,18 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 河道条件ファイルから堤防の水理モードを読む(未指定ならデフォルト値)
   if (len_trim(p%fn_channel) > 0) call list_channel_read(p, chlist)
   f_bank_mode = chlist%f_bank_mode
+  f_bank_opening = chlist%f_bank_opening
 
   ! 堤防(仮想壁面)の有効判定はセル天端 zbank を構築した geoinfo に従う
   have_bank = g%bank_active
   if (f_bank_mode < e_bank_weir .or. f_bank_mode > e_bank_pump) then
     call par_stop("list_channel: f_bank_mode は 0(越流のみ), 1(樋門), 2(強制排水) のいずれか")
   end if
+  if (f_bank_opening < 0 .or. f_bank_opening > 1) then
+    call par_stop("list_channel: f_bank_opening は 0(なし), 1(振り替え) のいずれか")
+  end if
+  ! 有効判定は namelist 由来+geoinfo の bank_active で全ランク同一
+  have_bopen = have_bank .and. f_bank_opening > 0
 
   ! システムパラメータから継承するENCパラメータをセットする
   select case (p%f_govequation)
@@ -217,6 +237,11 @@ subroutine m_swflow_enc_init(p, g, b, s)
 
   ! 重み係数をセットする
   call init_weights(p, g)
+
+  ! 堤防時の開口補正テーブルを構築する(通過幅シェア lp/ld を使うため
+  ! init_weights より後。zbank は帯+ハロ(scatter_coeffs 済み)、
+  ! rw/sw/x はゾーン2で全域=全ランクが自分の帯+ハロ行を冗長構築する)
+  if (have_bopen) call build_bank_opening(g)
 
   ! 境界条件の適用層を初期化する(辺型・面型・基準水位・流入区間の
   ! 開口幅の構築。開口幅が l8 を使うため init_weights より後に)
@@ -311,6 +336,8 @@ subroutine m_swflow_enc_dispose(p)
   if (p%f_state_save > 0) call save_state(p, sx_mod)
   call bc_dispose
   call del_enc_status(sx_mod)
+  if (allocated(frw)) deallocate(frw)
+  have_bopen = .false.
   call m_ffactor_dispose
   call adv_dispose
 end subroutine
@@ -328,7 +355,6 @@ subroutine init_weights(p, g)
   type(t_geoinfo), intent(in) :: g
 
   integer :: k
-  real :: lpx, lpy, ldx, ldy
   real :: dr
 
   dr = sqrt(g%dx**2 + g%dy**2)
@@ -387,7 +413,95 @@ subroutine init_weights(p, g)
 
   ! セル境界での単位幅流量から中心セルの1時間ステップでの水位減少量を計算するための係数
   forall(k=1:8) mn2dh(k) = (l8(k) / (g%dx * g%dy)) * p%dt
-  
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 堤防時の開口補正テーブル frw の構築(developer.md §18)
+!   河道—河道の法線エッジ(成分4: x横断、成分2: y横断)について、
+!   同じ横断方向の斜め開口のうち堤防壁で恒久的に塞がれた本数
+!   (エッジ両側セルの平均)のシェアを法線エッジへ振り替える:
+!     成分4: frw = (lpy + nb·ldy) / lpy    (nb = 塞がり本数の平均 0〜2)
+!     成分2: frw = (lpx + nb·ldx) / lpx
+!   斜めエッジ(成分1, 3)と壁エッジ(越流の敷幅)は 1 のまま。
+!   「塞がれた」= その側の河道セルが天端を持ち(zbank 有効)、斜め先が
+!   堤内地(x>0, sw=0, rw<=0)。bank_wall の発動条件と同一に保つこと。
+!   領域外(x<=0)は従来どおり無フラックスのままで振り替え対象にしない。
+!   MPI: 入力(rw/sw/x は全域、zbank は帯+ハロ)から各ランクが自分の
+!   エッジ行 jsh..jeh-1 を決定的整数演算で冗長構築する(通信不要。
+!   §11「冗長計算=配布機構」)。行 jsh-1, jeh は参照されないため 1 のまま
+!----------------------------------------------------------------------
+subroutine build_bank_opening(g)
+  type(t_geoinfo), intent(in) :: g
+  integer :: i, j, jlo, jhi
+  real :: nb
+
+  allocate(frw(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 1.0)
+
+  jlo = max(dcp%jsh, 1)
+  jhi = min(dcp%jeh, g%ny)
+
+  ! x法線エッジ(成分4): セル (i,j)-(i+1,j) の間
+  do j = jlo, jhi
+    do i = 1, g%nx - 1
+      if (.not. is_channel(i, j) .or. .not. is_channel(i+1, j)) cycle
+      nb = (real(nblk(i, j, i+1)) + real(nblk(i+1, j, i))) / 2
+      if (nb > 0) frw(4,i,j) = (lpy + nb * ldy) / lpy
+    end do
+  end do
+
+  ! y法線エッジ(成分2): セル (i,j)-(i,j+1) の間
+  !   両セルの zbank(帯確保 jsh:jeh)を読むため上限は jeh-1
+  !   (時間ループが参照するエッジ行は je+1 = jeh-1 まで。§11)
+  do j = jlo, min(dcp%jeh - 1, g%ny - 1)
+    do i = 1, g%nx
+      if (.not. is_channel(i, j) .or. .not. is_channel(i, j+1)) cycle
+      nb = (real(nblk_y(i, j, j+1)) + real(nblk_y(i, j+1, j))) / 2
+      if (nb > 0) frw(2,i,j) = (lpx + nb * ldx) / lpx
+    end do
+  end do
+
+contains
+  !--------------------------------------------------------------------
+  ! 河道セル(陸)か
+  function is_channel(ic, jc) result(res)
+    integer, intent(in) :: ic, jc
+    logical :: res
+    res = g%x(ic,jc) > 0 .and. g%sw(ic,jc) == 0 .and. g%rw(ic,jc) > 0
+  end function
+  !--------------------------------------------------------------------
+  ! 河道セル (ic,jc) の x横断側(斜め先の列 id)の塞がり本数(0〜2)
+  function nblk(ic, jc, id) result(n)
+    integer, intent(in) :: ic, jc, id
+    integer :: n, jd
+    n = 0
+    if (g%zbank(ic,jc) <= zbank_min) return   ! 天端なし: 壁もなし
+    do jd = jc - 1, jc + 1, 2
+      if (blocked(id, jd)) n = n + 1
+    end do
+  end function
+  !--------------------------------------------------------------------
+  ! 河道セル (ic,jc) の y横断側(斜め先の行 jd)の塞がり本数(0〜2)
+  function nblk_y(ic, jc, jd) result(n)
+    integer, intent(in) :: ic, jc, jd
+    integer :: n, id
+    n = 0
+    if (g%zbank(ic,jc) <= zbank_min) return   ! 天端なし: 壁もなし
+    do id = ic - 1, ic + 1, 2
+      if (blocked(id, jd)) n = n + 1
+    end do
+  end function
+  !--------------------------------------------------------------------
+  ! 斜め先セルが堤防壁の相手(堤内地)か。x 番兵が領域外を弾くため
+  ! sw/rw の添字は番兵通過後のみ触る
+  function blocked(id, jd) result(res)
+    integer, intent(in) :: id, jd
+    logical :: res
+    res = .false.
+    if (g%x(id,jd) <= 0) return               ! 領域外・無効: 元々無フラックス
+    res = g%sw(id,jd) == 0 .and. g%rw(id,jd) <= 0
+  end function
 end subroutine
 
 
@@ -612,7 +726,9 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   if (have_bank) call bank_wall
 
   ! セル境界での単位幅流量から境界の両側のセルでの水深の減少量を計算する
+  !   開口補正有効時はエッジ別通過幅係数 frw を乗じる(k<=4 は成分=k)
   dh = mne1 * mn2dh(k)    ! 家屋占有率がゼロの場合の中心セルの水深減少量
+  if (have_bopen) dh = dh * frw(k,ie,je)
   dhc = dh / g%gv(i,j)
   dhn = -dh / g%gv(in,jn)
 
@@ -878,6 +994,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
     block
       integer :: kk
       real :: mnec, mnen
+      real :: fwc, fwn
       integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
       real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
       ! セル境界での流速の絶対値を更新
@@ -896,9 +1013,17 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
         ! 方位k(近傍セルでは方位9-k)は今回更新された流量
         if (kk == k) mnec = mne1
         if (kk == 9 - k) mnen = -mne1     ! 近傍セルの流出量は中心セルの流出量の逆符号
+        ! 開口補正有効時はエッジ別通過幅係数を乗じる(無効時は 1.0 の
+        ! 乗算で厳密に不変)
+        fwc = 1.0
+        fwn = 1.0
+        if (have_bopen) then
+          fwc = frw(ke(kk),i+die(kk),j+dje(kk))
+          fwn = frw(ke(kk),in+die(kk),jn+dje(kk))
+        end if
         ! 仮の水深を更新
-        hc = hc - mnec * mn2dh(kk) / g%gv(i,j) / a(l)
-        hn = hn - mnen * mn2dh(kk) / g%gv(in,jn) / a(l)
+        hc = hc - mnec * mn2dh(kk) * fwc / g%gv(i,j) / a(l)
+        hn = hn - mnen * mn2dh(kk) * fwn / g%gv(in,jn) / a(l)
       end do
     end block
 
@@ -949,11 +1074,12 @@ subroutine continuous(p, g, s, sx)
   integer :: in, jn, ie, je
   real :: uve, mne
   real :: dh
+  real :: fw
   real :: mnmax
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
-  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, uve, mne, dh, mnmax)
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, uve, mne, dh, fw, mnmax)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
@@ -988,16 +1114,20 @@ subroutine continuous(p, g, s, sx)
         !   近傍5~8は隣接するセルから見た(9-k)近傍に相当する(向きは逆)
         uve = sign_e(k) * sx%uv(ke(k),ie,je)
         mne = sign_e(k) * sx%mn1(ke(k),ie,je)
+        ! 開口補正有効時はエッジ別通過幅係数を乗じる(無効時は 1.0 の
+        ! 乗算で厳密に不変。質量換算と平均量の重みを同時に補正する)
+        fw = 1.0
+        if (have_bopen) fw = frw(ke(k),ie,je)
         ! 水深の減少量(m)に換算
         !   家屋占有率が0.0で無い場合はここで補正係数を乗じる
-        dh = mne * mn2dh(k) / g%gv(i,j)
+        dh = mne * mn2dh(k) * fw / g%gv(i,j)
         ! 水深を更新
         sx%h1(i,j) = sx%h1(i,j) - dh
         ! セル中心の平均流速・流量への寄与分を加算
-        s%u(i,j) = s%u(i,j) + uve * w8mx(k)
-        s%v(i,j) = s%v(i,j) + uve * w8my(k)
-        s%m(i,j) = s%m(i,j) + mne * w8mx(k)
-        s%n(i,j) = s%n(i,j) + mne * w8my(k)
+        s%u(i,j) = s%u(i,j) + uve * (w8mx(k) * fw)
+        s%v(i,j) = s%v(i,j) + uve * (w8my(k) * fw)
+        s%m(i,j) = s%m(i,j) + mne * (w8mx(k) * fw)
+        s%n(i,j) = s%n(i,j) + mne * (w8my(k) * fw)
         ! 流下方向を判定
         !if (mne > mnmax) s%ddir1(i,j) = 2**k             ! 最大流出方向
         if (mne > mnmax) then
@@ -1066,11 +1196,12 @@ subroutine restore_uvmn(p, g, s, sx)
   integer :: i, j, k
   integer :: in, jn, ie, je
   real :: uve, mne
+  real :: fw
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
-  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, uve, mne)
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, uve, mne, fw)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle   ! 海セルは continuous 同様に除外(u,v,m,n,vv,qq は 0 のまま)
@@ -1096,11 +1227,14 @@ subroutine restore_uvmn(p, g, s, sx)
         !   近傍5~8は隣接するセルから見た(9-k)近傍に相当する(向きは逆)
         uve = sign_e(k) * sx%uv(ke(k),ie,je)
         mne = sign_e(k) * sx%mn1(ke(k),ie,je)
+        ! 開口補正の係数は continuous と完全に一致させる(復元ビット一致の条件)
+        fw = 1.0
+        if (have_bopen) fw = frw(ke(k),ie,je)
         ! セル中心の平均流速・流量への寄与分を加算
-        s%u(i,j) = s%u(i,j) + uve * w8mx(k)
-        s%v(i,j) = s%v(i,j) + uve * w8my(k)
-        s%m(i,j) = s%m(i,j) + mne * w8mx(k)
-        s%n(i,j) = s%n(i,j) + mne * w8my(k)
+        s%u(i,j) = s%u(i,j) + uve * (w8mx(k) * fw)
+        s%v(i,j) = s%v(i,j) + uve * (w8my(k) * fw)
+        s%m(i,j) = s%m(i,j) + mne * (w8mx(k) * fw)
+        s%n(i,j) = s%n(i,j) + mne * (w8my(k) * fw)
       end do
       s%e(i,j) = s%h(i,j) + s%z(i,j)
       s%vv(i,j) = sqrt(s%u(i,j)**2 + s%v(i,j)**2)
