@@ -27,6 +27,11 @@ module list_channel
     integer :: f_bank_mode = 0                 ! 堤防の水理モード (0:越流のみ, 1:樋門(逆止弁), 2:強制排水)
     integer :: f_bank_opening = 1              ! 堤防時の開口補正 (0:なし, 1:塞がれた斜め開口の
                                                !   シェアを河道—河道法線エッジへ振り替える。既定)
+    character(len=maxpathlen) :: fn_width = "" ! 河道幅分布ファイル名 (m。河道セルのみ有効、
+                                               !   0 以下は幅情報なし=解像扱い。指定で
+                                               !   サブグリッド河道が有効化。fn_bank / bank0
+                                               !   無指定なら高さ0・堤内地標高基準の堤防を自動有効化)
+    integer :: f_channel_advection = 1         ! 河道セルを含むエッジの移流項 (1:通常, 0:落とす)
   end type
 
 
@@ -50,12 +55,14 @@ subroutine list_channel_read(p, list)
   integer :: f_bank_aggr                 ! 天端の集約方法
   integer :: f_bank_mode                 ! 堤防の水理モード
   integer :: f_bank_opening              ! 堤防時の開口補正
+  character(len=maxpathlen) :: fn_width  ! 河道幅分布ファイル名
+  integer :: f_channel_advection         ! 河道セルを含むエッジの移流項
   integer :: un
   integer :: ios
   character(len=1024) :: iom
 
   namelist /list_channel/ fn_bank, bank0, f_bank_datum, f_bank_aggr, f_bank_mode, &
-                          f_bank_opening
+                          f_bank_opening, fn_width, f_channel_advection
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -65,6 +72,8 @@ subroutine list_channel_read(p, list)
   f_bank_aggr = list%f_bank_aggr
   f_bank_mode = list%f_bank_mode
   f_bank_opening = list%f_bank_opening
+  fn_width = list%fn_width
+  f_channel_advection = list%f_channel_advection
 
   call par_info("reading list_channel in "//trim(p%fn_channel))
   open(newunit=un, file=trim(p%fn_channel), status='old', iostat=ios, iomsg=iom)
@@ -79,6 +88,8 @@ subroutine list_channel_read(p, list)
   list%f_bank_aggr = f_bank_aggr
   list%f_bank_mode = f_bank_mode
   list%f_bank_opening = f_bank_opening
+  list%fn_width = fn_width
+  list%f_channel_advection = f_channel_advection
 
 end subroutine
 

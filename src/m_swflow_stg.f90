@@ -79,6 +79,10 @@ subroutine m_swflow_stg_init(p, g, b, s)
   if (b%ninflow > 0) then
     call par_stop("STG(f_gridsystem=1)は区間流入(list_bound_inflow)非対応です")
   end if
+  ! 河道水理モデル(堤防・サブグリッド河道幅)は ENC 専用(§17, §18)
+  if (g%bank_active .or. g%width_active) then
+    call par_stop("STG(f_gridsystem=1)は河道水理モデル(fn_channel)非対応です")
+  end if
 
   select case (p%f_govequation)
     case (0)      ! DynWE

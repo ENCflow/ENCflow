@@ -49,8 +49,12 @@ module m_geoinfo
                                                       ! かつ fn_gwflow 指定。全ランク同値)
     real, allocatable :: zbank(:,:)                   ! 堤防天端の絶対標高(m)。河道セルのみ有効、
                                                       ! 堤防なしは zbank_none(bank_active のときだけ確保)
-    logical :: bank_active = .false.                  ! 堤防天端が有効(fn_channel の fn_bank / bank0
-                                                      ! 指定。全ランク同値)
+    logical :: bank_active = .false.                  ! 堤防天端が有効(fn_channel の fn_bank / bank0 /
+                                                      ! fn_width 指定。全ランク同値)
+    real, allocatable :: wrw(:,:)                     ! 河道幅(m)。河道セルのみ有効、0 以下は
+                                                      ! 幅情報なし=解像扱い(width_active のときだけ確保)
+    logical :: width_active = .false.                 ! サブグリッド河道幅が有効(fn_channel の
+                                                      ! fn_width 指定。全ランク同値)
     integer, allocatable :: x(:,:)                    ! 対象領域判別マスク
     integer, allocatable :: sw(:,:)                   ! 海域マスク
     integer, allocatable :: rw(:,:)                   ! 河道マスク
@@ -149,6 +153,10 @@ subroutine m_geoinfo_init(g, p)
   ! rank0 のみ=方式2で scatter_coeffs が帯配布)。掘り込み後の z と
   ! user フックによる地形・マスク変更を反映するため、この位置で行う
   call setup_bank(p, g, list, chlist)
+
+  ! サブグリッド河道幅を読み込む(検証は全ランク、読み込みは rank0 のみ
+  ! =方式2で scatter_coeffs が帯配布)
+  call setup_width(p, g, list, chlist)
 
   ! GeoTIFF 出力には座標参照が必須(geotiff_plan.md §10 条件1)。
   ! 位置の分からない tif を黙って書かず、ここで止める
@@ -254,9 +262,11 @@ subroutine m_geoinfo_scatter_coeffs(g)
   call scatter_band_r(g%lm)
   call scatter_band_r(g%rscap)
   call scatter_band_i(g%lu)
-  ! 実行判定 sd_dist / bank_active は namelist 由来で全ランク同一(collective 安全)
+  ! 実行判定 sd_dist / bank_active / width_active は namelist 由来で
+  ! 全ランク同一(collective 安全)
   if (g%sd_dist) call scatter_band_r(g%sd)
   if (g%bank_active) call scatter_band_r(g%zbank)
+  if (g%width_active) call scatter_band_r(g%wrw)
 end subroutine
 
 
@@ -354,6 +364,7 @@ subroutine m_geoinfo_dispose(g)
   if (allocated(g%rscap)) deallocate(g%rscap)
   if (allocated(g%sd)) deallocate(g%sd)
   if (allocated(g%zbank)) deallocate(g%zbank)
+  if (allocated(g%wrw)) deallocate(g%wrw)
   if (allocated(g%x)) deallocate(g%x)
   if (allocated(g%sw)) deallocate(g%sw)
   if (allocated(g%rw)) deallocate(g%rw)
@@ -1067,22 +1078,26 @@ subroutine setup_bank(p, g, list, ch)
   real, parameter :: hb_none = -900.0           ! 入力の「堤防なし」判定しきい値
   real, allocatable :: hb(:,:)
   character(:), allocatable :: fname
-  logical :: bank_file, bank_fixed
+  logical :: bank_file, bank_fixed, auto_zero
+  integer :: datum
   integer :: i, j, k, in, jn
   integer :: nedge, n_bank, n_low
   real :: zk, za
   character(len=1024) :: msg
 
-  ! 有効判定(namelist 由来で全ランク同一 = collective 安全)
+  ! 有効判定(namelist 由来で全ランク同一 = collective 安全)。
+  ! fn_width のみ指定の場合は「高さ0・堤内地セル標高基準」の堤防を
+  ! 自動有効化する(サブグリッド河道は壁との併用が定式化の前提。§18)
   bank_file = len_trim(ch%fn_bank) > 0
   bank_fixed = ch%bank0 > hb_none
-  g%bank_active = bank_file .or. bank_fixed
+  auto_zero = len_trim(ch%fn_width) > 0 .and. .not. (bank_file .or. bank_fixed)
+  g%bank_active = bank_file .or. bank_fixed .or. auto_zero
   if (.not. g%bank_active) return
   if (bank_file .and. bank_fixed) then
     call par_stop("list_channel: fn_bank と bank0 は同時に指定できません")
   end if
   if (len_trim(list%fn_rw) <= 0) then
-    call par_stop("list_channel: 堤防(fn_bank / bank0)には list_geoinfo の " // &
+    call par_stop("list_channel: 堤防(fn_bank / bank0 / fn_width)には list_geoinfo の " // &
                   "fn_rw(河道マスク)の指定が必要です")
   end if
   if (ch%f_bank_datum < 0 .or. ch%f_bank_datum > 2) then
@@ -1093,12 +1108,18 @@ subroutine setup_bank(p, g, list, ch)
     call par_stop("list_channel: f_bank_aggr は 0(平均), 1(最小), 2(最大) のいずれか: " // &
                   itoa(ch%f_bank_aggr))
   end if
+  datum = ch%f_bank_datum
+  if (auto_zero) then
+    datum = 1        ! 高さ0は堤内地セル標高基準でのみ「自然河岸」の意味になる
+    call par_info("geoinfo: fn_width のみ指定のため高さ0の堤防" // &
+                  "(堤内地セル標高基準)を自動有効化します")
+  end if
   if (.not. is_root) return
 
   allocate(g%zbank(1:g%nx,1:g%ny), source = zbank_none)
-  if (bank_fixed) then
+  if (bank_fixed .or. auto_zero) then
     ! 一律固定値: 全河道セルに同じ「高さ」を与える(基準変換は分布と同じ)
-    allocate(hb(1:g%nx,1:g%ny), source = ch%bank0)
+    allocate(hb(1:g%nx,1:g%ny), source = merge(0.0, ch%bank0, auto_zero))
   else
     allocate(hb(1:g%nx,1:g%ny), source = hb_none)
     fname = trim(p%dir_data) // "/" // trim(ch%fn_bank)
@@ -1112,7 +1133,7 @@ subroutine setup_bank(p, g, list, ch)
     do i = 1, g%nx
       if (g%x(i,j) <= 0 .or. g%rw(i,j) <= 0 .or. g%sw(i,j) /= 0) cycle
       if (hb(i,j) <= hb_none) cycle
-      select case (ch%f_bank_datum)
+      select case (datum)
       case (0)      ! 河床(掘り込み後 z)基準
         g%zbank(i,j) = g%z(i,j) + hb(i,j)
       case (2)      ! 絶対標高
@@ -1159,6 +1180,58 @@ subroutine setup_bank(p, g, list, ch)
   if (n_low > 0) then
     write(msg,'(a,i0,a)') "geoinfo: WARNING: bank crest below channel bed at ", n_low, " cells"
     call par_info(trim(msg))
+  end if
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! サブグリッド河道幅 wrw を読み込む(developer.md §18)
+!   入力 fn_width は河道セル位置の「河道幅」分布(m)。0 以下は
+!   幅情報なし=解像扱い(通水・貯留補正の対象外)。非河道セルの値は
+!   0 に落とす。通水キャップ・貯留補正への解釈は m_swflow_enc が行う。
+!   検証は全ランク(par_stop は collective)、読み込みは rank0 のみ(方式2)
+!----------------------------------------------------------------------
+subroutine setup_width(p, g, list, ch)
+  type(t_sysparam), intent(in) :: p             ! システムパラメータ構造体
+  type(t_geoinfo), intent(inout) :: g
+  type(t_list_geoinfo), intent(in) :: list
+  type(t_list_channel), intent(in) :: ch        ! 河道条件(fn_channel 未指定ならデフォルト値)
+  character(:), allocatable :: fname
+  integer :: i, j
+  integer :: n_width
+  character(len=1024) :: msg
+
+  g%width_active = len_trim(ch%fn_width) > 0
+  if (.not. g%width_active) return
+  if (len_trim(list%fn_rw) <= 0) then
+    call par_stop("list_channel: fn_width には list_geoinfo の fn_rw(河道マスク)の指定が必要です")
+  end if
+  if (.not. is_root) return
+
+  allocate(g%wrw(1:g%nx,1:g%ny), source = 0.0)
+  fname = trim(p%dir_data) // "/" // trim(ch%fn_width)
+  call par_info(" reading "//fname)
+  call fileio_read_matrix(fname, g%nx, g%ny, g%wrw, p%f_input_mode)
+
+  n_width = 0
+  do j = 1, g%ny
+    do i = 1, g%nx
+      if (g%x(i,j) <= 0 .or. g%rw(i,j) <= 0 .or. g%sw(i,j) /= 0) then
+        g%wrw(i,j) = 0.0                        ! 非河道セルの値は無効化
+      else if (g%wrw(i,j) > 0.0) then
+        n_width = n_width + 1
+      else
+        g%wrw(i,j) = 0.0                        ! 負値・番兵は「幅情報なし」に正規化
+      end if
+    end do
+  end do
+
+  write(msg,'(a,i0,a)') "geoinfo: channel width set at ", n_width, " channel cells"
+  call par_info(trim(msg))
+  if (n_width <= 0) then
+    ! rank0 のみで実行されるため par_stop(collective)は不可
+    call par_abort("geoinfo: fn_width 指定にもかかわらず有効な幅を持つ河道セルがありません")
   end if
 
 end subroutine

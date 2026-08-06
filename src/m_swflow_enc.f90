@@ -71,8 +71,27 @@ module m_swflow_enc
   !   時間ループでは読み取り専用(w8mx 等の重み定数と同格の扱い)
   integer :: f_bank_opening                 ! 開口補正 (0:なし, 1:振り替え)
   logical :: have_bopen = .false.           ! 開口補正が有効か(have_bank との合成)
+
+  ! サブグリッド河道幅(developer.md §18)
+  !   河道幅 W(g%wrw。セル属性)から2つの静的補正を導く:
+  !   (1) 通水: 河道—河道エッジの通過幅係数を min(W_e/面長, 1) 倍する
+  !       (W_e = 両セルの正の幅の最小値。frw に開口補正と重畳)。
+  !   (2) 貯留: セルの平面積率 wfrac = min(W·L_ch/(dx·dy), 1) で
+  !       水深換算を除算補正する(gv と同じ意味論の水深依存なし版。
+  !       L_ch = 河道隣接8近傍への半距離の総和)。
+  !   W ≥ 面長・平面積率 1 のセルでは係数がちょうど 1 となり、
+  !   解像河道(掘り込み+壁)の表現と厳密に一致する(退化性)。
+  !   セル内の非河道部の貯留は表現しない(河道セルの水位=河道内水位)
+  integer :: f_channel_advection            ! 河道セルを含むエッジの移流項 (1:通常, 0:落とす)
+  logical :: have_width = .false.           ! サブグリッド河道幅が有効か(g%width_active)
+  logical :: have_frw = .false.             ! エッジ通過幅係数 frw が有効か
+                                            !   (have_bopen または have_width)
+  logical :: adv_drop_rw = .false.          ! 河道セルを含むエッジで移流項を落とすか
   real, allocatable :: frw(:,:,:)           ! エッジ別通過幅係数 (1:4, 0:nx, jsh-1:jeh)。
-                                            !   法線成分 2, 4 のみ 1 以外になり得る
+                                            !   開口補正は法線成分 2, 4 のみ、幅キャップは
+                                            !   河道—河道の全成分に乗る
+  real, allocatable :: wfrac(:,:)           ! セルの河道平面積率 (1:nx, jsh:jeh)。
+                                            !   非河道・幅情報なしセルは 1
 
   ! 状態変数の構造体の宣言と定義
   type t_enc_status
@@ -210,17 +229,24 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (len_trim(p%fn_channel) > 0) call list_channel_read(p, chlist)
   f_bank_mode = chlist%f_bank_mode
   f_bank_opening = chlist%f_bank_opening
+  f_channel_advection = chlist%f_channel_advection
 
-  ! 堤防(仮想壁面)の有効判定はセル天端 zbank を構築した geoinfo に従う
+  ! 堤防(仮想壁面)・河道幅の有効判定は geoinfo の構築結果に従う
   have_bank = g%bank_active
+  have_width = g%width_active
   if (f_bank_mode < e_bank_weir .or. f_bank_mode > e_bank_pump) then
     call par_stop("list_channel: f_bank_mode は 0(越流のみ), 1(樋門), 2(強制排水) のいずれか")
   end if
   if (f_bank_opening < 0 .or. f_bank_opening > 1) then
     call par_stop("list_channel: f_bank_opening は 0(なし), 1(振り替え) のいずれか")
   end if
-  ! 有効判定は namelist 由来+geoinfo の bank_active で全ランク同一
+  if (f_channel_advection < 0 .or. f_channel_advection > 1) then
+    call par_stop("list_channel: f_channel_advection は 0(落とす), 1(通常) のいずれか")
+  end if
+  ! 有効判定は namelist 由来+geoinfo の構築結果で全ランク同一
   have_bopen = have_bank .and. f_bank_opening > 0
+  have_frw = have_bopen .or. have_width
+  adv_drop_rw = have_bank .and. f_channel_advection == 0
 
   ! システムパラメータから継承するENCパラメータをセットする
   select case (p%f_govequation)
@@ -238,10 +264,12 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 重み係数をセットする
   call init_weights(p, g)
 
-  ! 堤防時の開口補正テーブルを構築する(通過幅シェア lp/ld を使うため
-  ! init_weights より後。zbank は帯+ハロ(scatter_coeffs 済み)、
-  ! rw/sw/x はゾーン2で全域=全ランクが自分の帯+ハロ行を冗長構築する)
-  if (have_bopen) call build_bank_opening(g)
+  ! エッジ通過幅係数(開口補正+幅キャップ)とセル平面積率を構築する
+  ! (通過幅シェア lp/ld を使うため init_weights より後。zbank / wrw は
+  ! 帯+ハロ(scatter_coeffs 済み)、rw/sw/x はゾーン2で全域=
+  ! 全ランクが自分の帯+ハロ行を冗長構築する)
+  if (have_frw) call build_channel_frw(g)
+  if (have_width) call build_wfrac(g)
 
   ! 境界条件の適用層を初期化する(辺型・面型・基準水位・流入区間の
   ! 開口幅の構築。開口幅が l8 を使うため init_weights より後に)
@@ -337,7 +365,10 @@ subroutine m_swflow_enc_dispose(p)
   call bc_dispose
   call del_enc_status(sx_mod)
   if (allocated(frw)) deallocate(frw)
+  if (allocated(wfrac)) deallocate(wfrac)
   have_bopen = .false.
+  have_width = .false.
+  have_frw = .false.
   call m_ffactor_dispose
   call adv_dispose
 end subroutine
@@ -418,7 +449,9 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 堤防時の開口補正テーブル frw の構築(developer.md §18)
+! エッジ別通過幅係数テーブル frw の構築(developer.md §18)
+!
+! [開口補正(have_bopen)]
 !   河道—河道の法線エッジ(成分4: x横断、成分2: y横断)について、
 !   同じ横断方向の斜め開口のうち堤防壁で恒久的に塞がれた本数
 !   (エッジ両側セルの平均)のシェアを法線エッジへ振り替える:
@@ -428,41 +461,95 @@ end subroutine
 !   「塞がれた」= その側の河道セルが天端を持ち(zbank 有効)、斜め先が
 !   堤内地(x>0, sw=0, rw<=0)。bank_wall の発動条件と同一に保つこと。
 !   領域外(x<=0)は従来どおり無フラックスのままで振り替え対象にしない。
-!   MPI: 入力(rw/sw/x は全域、zbank は帯+ハロ)から各ランクが自分の
-!   エッジ行 jsh..jeh-1 を決定的整数演算で冗長構築する(通信不要。
+!
+! [幅キャップ(have_width)]
+!   河道—河道の全成分エッジについて、両セルの河道幅の最小値 W_e
+!   (正の値のみ。両方幅情報なしなら対象外)から
+!     q = min(W_e / 面長, 1)   面長: 成分4=dy, 成分2=dx,
+!                              成分1,3=√(dx·dy)(dx=dy で横断合計が厳密)
+!   を frw に重畳する。直線河道では法線エッジが幅 W_e を担い、蛇行の
+!   屈曲では法線+斜めショートカットへ横断合計 W_e が按分される。
+!   W_e ≥ 面長では q = 1 で解像河道の表現と厳密一致(退化性)。
+!
+! MPI: 入力(rw/sw/x は全域、zbank / wrw は帯+ハロ)から各ランクが
+!   自分のエッジ行 jsh..jeh-1 を決定的演算で冗長構築する(通信不要。
 !   §11「冗長計算=配布機構」)。行 jsh-1, jeh は参照されないため 1 のまま
 !----------------------------------------------------------------------
-subroutine build_bank_opening(g)
+subroutine build_channel_frw(g)
   type(t_geoinfo), intent(in) :: g
   integer :: i, j, jlo, jhi
-  real :: nb
+  real :: nb, capd
 
   allocate(frw(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 1.0)
 
   jlo = max(dcp%jsh, 1)
   jhi = min(dcp%jeh, g%ny)
+  capd = sqrt(g%dx * g%dy)
 
   ! x法線エッジ(成分4): セル (i,j)-(i+1,j) の間
   do j = jlo, jhi
     do i = 1, g%nx - 1
       if (.not. is_channel(i, j) .or. .not. is_channel(i+1, j)) cycle
-      nb = (real(nblk(i, j, i+1)) + real(nblk(i+1, j, i))) / 2
-      if (nb > 0) frw(4,i,j) = (lpy + nb * ldy) / lpy
+      if (have_bopen) then
+        nb = (real(nblk(i, j, i+1)) + real(nblk(i+1, j, i))) / 2
+        if (nb > 0) frw(4,i,j) = (lpy + nb * ldy) / lpy
+      end if
+      if (have_width) frw(4,i,j) = frw(4,i,j) * wcap(i, j, i+1, j, g%dy)
     end do
   end do
 
   ! y法線エッジ(成分2): セル (i,j)-(i,j+1) の間
-  !   両セルの zbank(帯確保 jsh:jeh)を読むため上限は jeh-1
+  !   両セルの zbank / wrw(帯確保 jsh:jeh)を読むため上限は jeh-1
   !   (時間ループが参照するエッジ行は je+1 = jeh-1 まで。§11)
   do j = jlo, min(dcp%jeh - 1, g%ny - 1)
     do i = 1, g%nx
       if (.not. is_channel(i, j) .or. .not. is_channel(i, j+1)) cycle
-      nb = (real(nblk_y(i, j, j+1)) + real(nblk_y(i, j+1, j))) / 2
-      if (nb > 0) frw(2,i,j) = (lpx + nb * ldx) / lpx
+      if (have_bopen) then
+        nb = (real(nblk_y(i, j, j+1)) + real(nblk_y(i, j+1, j))) / 2
+        if (nb > 0) frw(2,i,j) = (lpx + nb * ldx) / lpx
+      end if
+      if (have_width) frw(2,i,j) = frw(2,i,j) * wcap(i, j, i, j+1, g%dx)
     end do
   end do
 
+  ! 斜めエッジ: 成分1 は添字 (a,b) でセル (a,b)-(a+1,b+1) を、
+  !   成分3 はセル (a,b+1)-(a+1,b) を繋ぐ(die/dje の正準)。
+  !   幅キャップのみ(開口補正は法線へ振り替える設計のため対象外)
+  if (have_width) then
+    do j = jlo, min(dcp%jeh - 1, g%ny - 1)
+      do i = 1, g%nx - 1
+        if (is_channel(i, j) .and. is_channel(i+1, j+1)) then
+          frw(1,i,j) = frw(1,i,j) * wcap(i, j, i+1, j+1, capd)
+        end if
+        if (is_channel(i, j+1) .and. is_channel(i+1, j)) then
+          frw(3,i,j) = frw(3,i,j) * wcap(i, j+1, i+1, j, capd)
+        end if
+      end do
+    end do
+  end if
+
 contains
+  !--------------------------------------------------------------------
+  ! 幅キャップ係数 q = min(W_e / cap, 1)。W_e は両セルの正の幅の最小値。
+  ! 両セルとも幅情報なし(W<=0)なら 1(解像扱い)
+  function wcap(i1, j1, i2, j2, cap) result(q)
+    integer, intent(in) :: i1, j1, i2, j2
+    real, intent(in) :: cap
+    real :: q, w1, w2, we
+    q = 1.0
+    w1 = g%wrw(i1,j1)
+    w2 = g%wrw(i2,j2)
+    if (w1 > 0.0 .and. w2 > 0.0) then
+      we = min(w1, w2)
+    else if (w1 > 0.0) then
+      we = w1
+    else if (w2 > 0.0) then
+      we = w2
+    else
+      return
+    end if
+    q = min(we / cap, 1.0)
+  end function
   !--------------------------------------------------------------------
   ! 河道セル(陸)か
   function is_channel(ic, jc) result(res)
@@ -502,6 +589,45 @@ contains
     if (g%x(id,jd) <= 0) return               ! 領域外・無効: 元々無フラックス
     res = g%sw(id,jd) == 0 .and. g%rw(id,jd) <= 0
   end function
+end subroutine
+
+
+!----------------------------------------------------------------------
+! セルの河道平面積率 wfrac の構築(developer.md §18)
+!   wfrac = min(W · L_ch / (dx·dy), 1)。
+!   L_ch は河道長のセル内通過長の近似で、河道隣接8近傍(x>0, sw=0,
+!   rw>0)への半距離 w8dr(k)/2 の総和(直線 x 河道で dx、屈曲・合流・
+!   異方格子が1つの定義で閉じる)。河道隣接ゼロの孤立河道セルは
+!   L_ch = min(dx, dy) とみなす。下限は g%min_gv(gv と同じ理由の
+!   数値ガード)。非河道セル・幅情報なし(W<=0)セルは 1。
+!   蛇行によるセル内河道長の延長(蛇行係数)は表現しない(§18)。
+!   MPI: 各ランクが帯 jsh..jeh を冗長構築(rw/sw/x 全域、wrw 帯+ハロ)
+!----------------------------------------------------------------------
+subroutine build_wfrac(g)
+  type(t_geoinfo), intent(in) :: g
+  integer :: i, j, k, in, jn
+  real :: w, lch
+
+  allocate(wfrac(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
+
+  do j = max(dcp%jsh, 1), min(dcp%jeh, g%ny)
+    do i = 1, g%nx
+      if (g%x(i,j) <= 0 .or. g%sw(i,j) /= 0 .or. g%rw(i,j) <= 0) cycle
+      w = g%wrw(i,j)
+      if (w <= 0.0) cycle                     ! 幅情報なし: 解像扱い
+      lch = 0.0
+      do k = 1, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        if (g%x(in,jn) <= 0) cycle            ! x 番兵が領域外を弾く
+        if (g%sw(in,jn) /= 0 .or. g%rw(in,jn) <= 0) cycle
+        lch = lch + w8dr(k) / 2
+      end do
+      if (lch <= 0.0) lch = min(g%dx, g%dy)   ! 孤立河道セル
+      wfrac(i,j) = min(w * lch / (g%dx * g%dy), 1.0)
+      wfrac(i,j) = max(wfrac(i,j), g%min_gv)
+    end do
+  end do
 end subroutine
 
 
@@ -693,8 +819,13 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   mne = sx%mn(k,ie,je)
 
   ! セル境界の移流項をセットする
+  !   f_channel_advection=0 のときは河道セルを含むエッジで移流を落とす
+  !   (サブグリッド幅の強い不均質下での安定化オプション。§18)
   if (f_advection_term > 0) then
     tae = adv_edge(s, sx, i, j, k, in, jn, ie, je)
+    if (adv_drop_rw) then
+      if (g%rw(i,j) > 0 .or. g%rw(in,jn) > 0) tae = 0
+    end if
   else
     tae = 0
   end if
@@ -726,11 +857,16 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   if (have_bank) call bank_wall
 
   ! セル境界での単位幅流量から境界の両側のセルでの水深の減少量を計算する
-  !   開口補正有効時はエッジ別通過幅係数 frw を乗じる(k<=4 は成分=k)
+  !   通過幅係数有効時はエッジ別係数 frw を乗じる(k<=4 は成分=k)。
+  !   河道幅有効時はセルの平面積率 wfrac で水深換算を除算補正する
   dh = mne1 * mn2dh(k)    ! 家屋占有率がゼロの場合の中心セルの水深減少量
-  if (have_bopen) dh = dh * frw(k,ie,je)
+  if (have_frw) dh = dh * frw(k,ie,je)
   dhc = dh / g%gv(i,j)
   dhn = -dh / g%gv(in,jn)
+  if (have_width) then
+    dhc = dhc / wfrac(i,j)
+    dhn = dhn / wfrac(in,jn)
+  end if
 
   ! 過大な流出の抑制
   !if ((dh > 0 .and. dhc + p%dd > s%h(i,j)) .or. (dh < 0 .and. dhn + p%dd > s%h(in,jn))) then
@@ -995,10 +1131,19 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
       integer :: kk
       real :: mnec, mnen
       real :: fwc, fwn
+      real :: winvc, winvn
       integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
       real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
       ! セル境界での流速の絶対値を更新
       vve = sqrt(uve1**2 + vue2)
+
+      ! 河道幅有効時のセル平面積率の逆数(無効時は 1.0 の乗算で厳密に不変)
+      winvc = 1.0
+      winvn = 1.0
+      if (have_width) then
+        winvc = 1.0 / wfrac(i,j)
+        winvn = 1.0 / wfrac(in,jn)
+      end if
 
       ! 仮の水深を更新
       !   式の詳細は連続式を解くルーチン内のコメントを参照のこと
@@ -1013,17 +1158,17 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
         ! 方位k(近傍セルでは方位9-k)は今回更新された流量
         if (kk == k) mnec = mne1
         if (kk == 9 - k) mnen = -mne1     ! 近傍セルの流出量は中心セルの流出量の逆符号
-        ! 開口補正有効時はエッジ別通過幅係数を乗じる(無効時は 1.0 の
+        ! 通過幅係数有効時はエッジ別係数を乗じる(無効時は 1.0 の
         ! 乗算で厳密に不変)
         fwc = 1.0
         fwn = 1.0
-        if (have_bopen) then
+        if (have_frw) then
           fwc = frw(ke(kk),i+die(kk),j+dje(kk))
           fwn = frw(ke(kk),in+die(kk),jn+dje(kk))
         end if
         ! 仮の水深を更新
-        hc = hc - mnec * mn2dh(kk) * fwc / g%gv(i,j) / a(l)
-        hn = hn - mnen * mn2dh(kk) * fwn / g%gv(in,jn) / a(l)
+        hc = hc - mnec * mn2dh(kk) * fwc * winvc / g%gv(i,j) / a(l)
+        hn = hn - mnen * mn2dh(kk) * fwn * winvn / g%gv(in,jn) / a(l)
       end do
     end block
 
@@ -1074,12 +1219,12 @@ subroutine continuous(p, g, s, sx)
   integer :: in, jn, ie, je
   real :: uve, mne
   real :: dh
-  real :: fw
+  real :: fw, winv
   real :: mnmax
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
-  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, uve, mne, dh, fw, mnmax)
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, uve, mne, dh, fw, winv, mnmax)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
@@ -1089,6 +1234,9 @@ subroutine continuous(p, g, s, sx)
       s%m(i,j) = 0
       s%n(i,j) = 0
       sx%h1(i,j) = s%h(i,j)
+      ! 河道幅有効時のセル平面積率の逆数(無効時は 1.0 の乗算で厳密に不変)
+      winv = 1.0
+      if (have_width) winv = 1.0 / wfrac(i,j)
       mnmax = 0
       ! 対象セルi,jの8近傍全ての水の流出入を計算し平均流量・流速と水位を更新する
       s%ddir1(i,j) = 0
@@ -1114,13 +1262,14 @@ subroutine continuous(p, g, s, sx)
         !   近傍5~8は隣接するセルから見た(9-k)近傍に相当する(向きは逆)
         uve = sign_e(k) * sx%uv(ke(k),ie,je)
         mne = sign_e(k) * sx%mn1(ke(k),ie,je)
-        ! 開口補正有効時はエッジ別通過幅係数を乗じる(無効時は 1.0 の
+        ! 通過幅係数有効時はエッジ別係数を乗じる(無効時は 1.0 の
         ! 乗算で厳密に不変。質量換算と平均量の重みを同時に補正する)
         fw = 1.0
-        if (have_bopen) fw = frw(ke(k),ie,je)
+        if (have_frw) fw = frw(ke(k),ie,je)
         ! 水深の減少量(m)に換算
-        !   家屋占有率が0.0で無い場合はここで補正係数を乗じる
-        dh = mne * mn2dh(k) * fw / g%gv(i,j)
+        !   家屋占有率が0.0で無い場合はここで補正係数を乗じる。
+        !   河道幅有効時は平面積率 wfrac の逆数 winv も乗じる
+        dh = mne * mn2dh(k) * fw * winv / g%gv(i,j)
         ! 水深を更新
         sx%h1(i,j) = sx%h1(i,j) - dh
         ! セル中心の平均流速・流量への寄与分を加算
@@ -1227,9 +1376,9 @@ subroutine restore_uvmn(p, g, s, sx)
         !   近傍5~8は隣接するセルから見た(9-k)近傍に相当する(向きは逆)
         uve = sign_e(k) * sx%uv(ke(k),ie,je)
         mne = sign_e(k) * sx%mn1(ke(k),ie,je)
-        ! 開口補正の係数は continuous と完全に一致させる(復元ビット一致の条件)
+        ! 通過幅係数は continuous と完全に一致させる(復元ビット一致の条件)
         fw = 1.0
-        if (have_bopen) fw = frw(ke(k),ie,je)
+        if (have_frw) fw = frw(ke(k),ie,je)
         ! セル中心の平均流速・流量への寄与分を加算
         s%u(i,j) = s%u(i,j) + uve * (w8mx(k) * fw)
         s%v(i,j) = s%v(i,j) + uve * (w8my(k) * fw)

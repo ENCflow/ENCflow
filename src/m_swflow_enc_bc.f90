@@ -133,7 +133,13 @@ module subroutine boundary_h(p, g, b, s, sx)
       end if
 
       ! 降雨を加えて次ステップの水深を初期化
-      sx%h1(i,j) = sx%h1(i,j) + s%pre(i,j) * p%dt / g%gv(i,j)
+      !   河道幅有効時は平面積率 wfrac でも除す(セル全面の雨が河道断面へ
+      !   集中する。gv の建物集中と同じ意味論。§18)
+      if (have_width) then
+        sx%h1(i,j) = sx%h1(i,j) + s%pre(i,j) * p%dt / g%gv(i,j) / wfrac(i,j)
+      else
+        sx%h1(i,j) = sx%h1(i,j) + s%pre(i,j) * p%dt / g%gv(i,j)
+      end if
 
     end do
   end do
@@ -148,7 +154,12 @@ module subroutine boundary_h(p, g, b, s, sx)
       i = b%src(isrc)%cell(1,k)
       j = b%src(isrc)%cell(2,k)
       if (j < dcp%js .or. j > dcp%je) cycle
-      sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q / g%gv(i,j)
+      ! 河道幅有効時は平面積率 wfrac でも除す(体積→水深換算の統一。§18)
+      if (have_width) then
+        sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q / g%gv(i,j) / wfrac(i,j)
+      else
+        sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q / g%gv(i,j)
+      end if
       ! 吸い込み(負の流量)でセルを負水深にしない(不足分は汲めない)
       if (sx%h1(i,j) < 0) sx%h1(i,j) = 0
     end do
@@ -430,6 +441,7 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
       ! 過大な流出の抑制(流出方向のみ。momentum の抑制と同型で、
       ! 境界面ではフラグによらず適用)
       dh = mne1 * mn2dh(k) / g%gv(i,j)
+      if (have_width) dh = dh / wfrac(i,j)
       if (dh > 0 .and. h - dh <= 0) then
         cor = max(h - p%dd, 0.0) / dh
         uve1 = uve1 * cor
