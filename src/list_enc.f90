@@ -16,8 +16,6 @@ module list_enc
     integer :: f_friction_fastmath = 0        ! 摩擦項計算の高速化
     integer :: f_advection_tvd = 0            ! 移流項にTVDスキームを使用　
     integer :: f_rivermouth_drop = 0          ! 河口から海へ段落ち
-    integer :: f_bank_mode = 0                ! 堤防の水理モード (0:越流のみ, 1:樋門(逆止弁), 2:強制排水)
-                                              !   有効化は list_geoinfo の fn_bank の有無
     real :: p_diagratio = 2 / (2 + sqrt(2.))  ! ratio of diagonal component
     real :: p_adv_upwind_index = 0.0          ! upwind index of advection term
     real :: p_adprunge_thresh = 2.0           ! threshold of adaptive Runge-Kutta (1.1~)
@@ -43,7 +41,6 @@ subroutine list_enc_read(p, list)
   integer :: f_friction_fastmath        ! 摩擦項計算の高速化
   integer :: f_advection_tvd            ! 移流項にTVDスキームを使用　
   integer :: f_rivermouth_drop          ! 河口から海へ段落ち
-  integer :: f_bank_mode                ! 堤防の水理モード (0:越流のみ, 1:樋門(逆止弁), 2:強制排水)
   real :: p_diagratio                   ! ratio of diagonal component
   real :: p_adv_upwind_index            ! upwind index of advection term
   real :: p_adprunge_thresh             ! threshold of adaptive Runge-Kutta (1.1~)
@@ -52,7 +49,7 @@ subroutine list_enc_read(p, list)
   character(len=1024) :: iom
 
   namelist /list_enc/ f_gravity_correction, f_exflux_reduction, f_hcap_upwind, &
-                      f_friction_fastmath, f_advection_tvd, f_rivermouth_drop, f_bank_mode, &
+                      f_friction_fastmath, f_advection_tvd, f_rivermouth_drop, &
                       f_adaptive_runge, p_diagratio, p_adv_upwind_index, p_adprunge_thresh
 
   f_gravity_correction = list%f_gravity_correction 
@@ -62,7 +59,6 @@ subroutine list_enc_read(p, list)
   f_friction_fastmath = list%f_friction_fastmath 
   f_advection_tvd = list%f_advection_tvd 
   f_rivermouth_drop = list%f_rivermouth_drop
-  f_bank_mode = list%f_bank_mode
   p_diagratio = list%p_diagratio
   p_adv_upwind_index = list%p_adv_upwind_index
   p_adv_upwind_index = list%p_adv_upwind_index
@@ -83,7 +79,6 @@ subroutine list_enc_read(p, list)
   list%f_friction_fastmath = f_friction_fastmath 
   list%f_advection_tvd = f_advection_tvd 
   list%f_rivermouth_drop = f_rivermouth_drop
-  list%f_bank_mode = f_bank_mode
   list%p_diagratio = min(max(p_diagratio, 0.0), 1.0)                ! 値を0.0~1.0に制限
   list%p_adv_upwind_index = min(max(p_adv_upwind_index, 0.0), 1.0)  ! 値を0.0~1.0に制限
   list%p_adprunge_thresh = max(p_adprunge_thresh, 1.1)              ! 値を1.1以上に制限

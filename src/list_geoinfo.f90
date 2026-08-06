@@ -27,8 +27,6 @@ module list_geoinfo
     real :: min_bb = 0.001                     ! 家屋の平均サイズの最小値
     real :: depth_rw = 0.0                     ! 河道マスク部の掘り込み深さ(河道マスク有りの場合のみ有効)
     real :: rn0_rw = -1.0                      ! 河道マスク部の固定粗度係数(負値の場合は設定せず)
-    integer :: f_bank_datum = 0                ! 堤防高さの基準 (0:河床(掘込後), 1:堤内地セル標高, 2:絶対標高)
-    integer :: f_bank_aggr = 0                 ! 天端の集約方法 (f_bank_datum=1 のみ。0:平均, 1:最小, 2:最大)
     integer :: f_sdtype = 0                    ! 土層厚タイプ (0:固定値, 1:ファイル)。gwflow 用
     real :: sd0 = 0.0                          ! 土層厚固定値 (m)
     real :: sy0 = 0.2                          ! 比湧水量(= 有効間隙率 n_e。gwflow 用)
@@ -43,7 +41,6 @@ module list_geoinfo
     character(len=maxpathlen) :: fn_sw = ""    ! 海域マスクファイル名
     character(len=maxpathlen) :: fn_rw = ""    ! 河道マスクファイル名
     character(len=maxpathlen) :: fn_depth_rw = ""  ! 河床掘り込み深さ分布ファイル名(河道セルのみ有効。無指定なら depth_rw)
-    character(len=maxpathlen) :: fn_bank = ""  ! 堤防高さ分布ファイル名(河道セルのみ有効。-900 以下は堤防なし)
     character(len=maxpathlen) :: fn_rn = ""    ! 地盤高ファイル名
     character(len=maxpathlen) :: fn_luse = ""  ! 土地利用ファイル名
     character(len=maxpathlen) :: fn_gv = ""    ! 家屋の空隙率ファイル名
@@ -77,8 +74,6 @@ subroutine list_geoinfo_read(p, list)
   real :: min_bb                ! 家屋の平均サイズの最小値
   real :: depth_rw              ! 河道マスク部の掘り込み深さ
   real :: rn0_rw                ! 河道マスク部の固定粗度係数
-  integer :: f_bank_datum       ! 堤防高さの基準 (0:河床(掘込後), 1:堤内地セル標高, 2:絶対標高)
-  integer :: f_bank_aggr        ! 天端の集約方法 (0:平均, 1:最小, 2:最大)
   integer :: f_sdtype           ! 土層厚タイプ (0:固定値, 1:ファイル)
   real :: sd0                   ! 土層厚固定値 (m)
   real :: sy0                   ! 比湧水量(= 有効間隙率 n_e)
@@ -94,7 +89,6 @@ subroutine list_geoinfo_read(p, list)
   character(:), allocatable :: fn_sw     ! 海域マスクファイル名
   character(:), allocatable :: fn_rw     ! 河道マスクファイル名
   character(:), allocatable :: fn_depth_rw  ! 河床掘り込み深さ分布ファイル名
-  character(:), allocatable :: fn_bank   ! 堤防高さ分布ファイル名
   character(:), allocatable :: fn_luse   ! 土地利用ファイル名
   character(:), allocatable :: fn_gv     ! 家屋の空隙率ファイル名
   character(:), allocatable :: fn_bb     ! 家屋の平均寸法ファイル名
@@ -108,8 +102,7 @@ subroutine list_geoinfo_read(p, list)
                           sd0, sy0, &
                           f_user_routine, &
                           f_ztype, f_lusetype, f_rntype, f_masktype, f_edge_sw, f_sdtype, &
-                          f_bank_datum, f_bank_aggr, &
-                          fn_z, fn_mask, fn_sw, fn_rw, fn_depth_rw, fn_bank, &
+                          fn_z, fn_mask, fn_sw, fn_rw, fn_depth_rw, &
                           fn_rn, fn_luse, fn_gv, fn_bb, fn_rscap, fn_sd, lu2rn
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -127,8 +120,6 @@ subroutine list_geoinfo_read(p, list)
   min_bb = list%min_bb
   depth_rw = list%depth_rw
   rn0_rw = list%rn0_rw
-  f_bank_datum = list%f_bank_datum
-  f_bank_aggr = list%f_bank_aggr
   f_sdtype = list%f_sdtype
   sd0 = list%sd0
   sy0 = list%sy0
@@ -143,7 +134,6 @@ subroutine list_geoinfo_read(p, list)
   fn_sw = list%fn_sw
   fn_rw = list%fn_rw
   fn_depth_rw = list%fn_depth_rw
-  fn_bank = list%fn_bank
   fn_rn = list%fn_rn
   fn_luse = list%fn_luse
   fn_gv = list%fn_gv
@@ -175,8 +165,6 @@ subroutine list_geoinfo_read(p, list)
   list%min_bb = min_bb
   list%depth_rw = depth_rw
   list%rn0_rw = rn0_rw
-  list%f_bank_datum = f_bank_datum
-  list%f_bank_aggr = f_bank_aggr
   list%f_sdtype = f_sdtype
   list%sd0 = sd0
   list%sy0 = sy0
@@ -191,7 +179,6 @@ subroutine list_geoinfo_read(p, list)
   list%fn_sw = fn_sw
   list%fn_rw = fn_rw
   list%fn_depth_rw = fn_depth_rw
-  list%fn_bank = fn_bank
   list%fn_rn = fn_rn
   list%fn_luse = fn_luse
   list%fn_gv = fn_gv

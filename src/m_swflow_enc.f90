@@ -5,6 +5,7 @@ module m_swflow_enc
   use m_state, only : t_state
   use m_ffactor, only : m_ffactor_init, m_ffactor_calc, m_ffactor_dispose
   use list_enc, only : t_list_enc, list_enc_read
+  use list_channel, only : t_list_channel, list_channel_read
   use m_parallel, only : par_info, par_stop, dcp, is_root, &
                        par_halo_cell, par_halo_edge, par_edge_merge, &
                        par_gather_edge_to, par_scatter_edge
@@ -52,8 +53,9 @@ module m_swflow_enc
                                             !   (bc_init が設定)
 
   ! 堤防(仮想壁面)モデル(developer.md §17)
-  !   有効化は list_geoinfo の fn_bank の有無(g%bank_active)。天端の
-  !   絶対標高は geoinfo が河道セルごとに構築済み(g%zbank)
+  !   有効化は fn_channel の fn_bank / bank0 の有無(g%bank_active)。
+  !   天端の絶対標高は geoinfo が河道セルごとに構築済み(g%zbank)。
+  !   水理モード f_bank_mode は fn_channel の &list_channel から読む
   logical :: have_bank = .false.            ! 堤防天端が有効か
   integer, parameter :: e_bank_weir = 0     ! 越流のみ(単純堤防): 双方向とも天端まで不透過
   integer, parameter :: e_bank_oneway = 1   ! 樋門(逆止弁): 堤内→河道のみ透過、逆は天端まで不透過
@@ -172,28 +174,32 @@ subroutine m_swflow_enc_init(p, g, b, s)
   type(t_boundary), intent(in) :: b
   type(t_state), intent(inout) :: s
   type(t_list_enc) :: list
+  type(t_list_channel) :: chlist
 
 
 
   ! ENCパラメータファイルを読み込む
   call list_enc_read(p, list)
 
-  f_gravity_correction = list%f_gravity_correction 
-  f_exflux_reduction = list%f_exflux_reduction 
-  f_hcap_upwind = list%f_hcap_upwind 
-  f_adaptive_runge = list%f_adaptive_runge 
-  f_friction_fastmath = list%f_friction_fastmath 
-  f_advection_tvd = list%f_advection_tvd 
+  f_gravity_correction = list%f_gravity_correction
+  f_exflux_reduction = list%f_exflux_reduction
+  f_hcap_upwind = list%f_hcap_upwind
+  f_adaptive_runge = list%f_adaptive_runge
+  f_friction_fastmath = list%f_friction_fastmath
+  f_advection_tvd = list%f_advection_tvd
   f_rivermouth_drop = list%f_rivermouth_drop
-  f_bank_mode = list%f_bank_mode
   p_diagratio = list%p_diagratio
   p_adv_upwind_index = list%p_adv_upwind_index
   p_adprunge_thresh = list%p_adprunge_thresh
 
+  ! 河道条件ファイルから堤防の水理モードを読む(未指定ならデフォルト値)
+  if (len_trim(p%fn_channel) > 0) call list_channel_read(p, chlist)
+  f_bank_mode = chlist%f_bank_mode
+
   ! 堤防(仮想壁面)の有効判定はセル天端 zbank を構築した geoinfo に従う
   have_bank = g%bank_active
   if (f_bank_mode < e_bank_weir .or. f_bank_mode > e_bank_pump) then
-    call par_stop("list_enc: f_bank_mode は 0(越流のみ), 1(樋門), 2(強制排水) のいずれか")
+    call par_stop("list_channel: f_bank_mode は 0(越流のみ), 1(樋門), 2(強制排水) のいずれか")
   end if
 
   ! システムパラメータから継承するENCパラメータをセットする

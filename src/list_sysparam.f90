@@ -84,6 +84,7 @@ module list_sysparam
     character(len=maxpathlen) :: fn_geomorph = ""        ! 地形変化条件設定ファイル
     character(len=maxpathlen) :: fn_gwflow = ""          ! 地下水条件設定ファイル
     character(len=maxpathlen) :: fn_intercept = ""       ! 降雨遮断条件設定ファイル
+    character(len=maxpathlen) :: fn_channel = ""         ! 河道条件設定ファイル
     character(len=maxpathlen) :: fn_enc = ""             ! ENC設定ファイル
 
     character(len=maxpathlen) :: fn_log = "Log.txt"      ! 状態ログファイル
@@ -170,6 +171,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: fn_geomorph   ! 地形変化条件設定ファイル
   character(:), allocatable :: fn_gwflow     ! 地下水条件設定ファイル
   character(:), allocatable :: fn_intercept  ! 降雨遮断条件設定ファイル
+  character(:), allocatable :: fn_channel    ! 河道条件設定ファイル
   character(:), allocatable :: fn_enc        ! ENC設定ファイル
   character(:), allocatable :: fn_log        ! 状態ログファイル
   character(:), allocatable :: dir_data      ! 入力データディレクトリ
@@ -191,7 +193,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_hmax, f_out_hmaxt, f_out_vvmax, f_out_qqmax, f_out_qqmaxt, f_out_qqmaxd, &
                         f_out_ddd, f_out_dda, f_out_pre, f_out_rsh, f_out_fr, f_out_cn, f_out_hg, &
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
-                        fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_enc, &
+                        fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_channel, fn_enc, &
                         fn_log, dir_data, dir_result, dir_save, outfn_suffix
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
@@ -264,6 +266,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   fn_geomorph = list%fn_geomorph
   fn_gwflow = list%fn_gwflow
   fn_intercept = list%fn_intercept
+  fn_channel = list%fn_channel
   fn_enc = list%fn_enc
   fn_log = list%fn_log
   dir_data = list%dir_data
@@ -345,6 +348,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%fn_geomorph = fn_geomorph
   list%fn_gwflow = fn_gwflow
   list%fn_intercept = fn_intercept
+  list%fn_channel = fn_channel
   list%fn_enc = fn_enc
   list%fn_log = fn_log
   list%dir_data = dir_data
@@ -362,6 +366,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   if (trim(list%fn_geomorph) == "-") list%fn_geomorph = trim(fn_sysparam)
   if (trim(list%fn_gwflow) == "-") list%fn_gwflow = trim(fn_sysparam)
   if (trim(list%fn_intercept) == "-") list%fn_intercept = trim(fn_sysparam)
+  if (trim(list%fn_channel) == "-") list%fn_channel = trim(fn_sysparam)
   if (trim(list%fn_enc) == "-") list%fn_enc = trim(fn_sysparam)
 
 end subroutine

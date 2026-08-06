@@ -21,7 +21,7 @@ LIBOBJS	= m_main.o m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o \
 	  m_state.o m_record.o m_swflow.o m_swflow_enc.o m_swflow_enc_adv.o m_swflow_enc_bc.o \
 	  m_output.o m_swflow_stg.o \
 	  $(PAR_OBJ) \
-	  list_sysparam.o list_geoinfo.o list_precip.o list_geomorph.o list_gwflow.o \
+	  list_sysparam.o list_geoinfo.o list_channel.o list_precip.o list_geomorph.o list_gwflow.o \
 	  list_intercept.o \
 	  list_initial.o list_record.o list_tide.o list_boundary.o list_enc.o \
 	  m_ffactor.o user_geoinfo.o user_initial.o m_sysdep_util.o m_fileio.o m_georef.o \
@@ -74,7 +74,7 @@ main.o: m_main.o
 m_main.o: m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o m_state.o m_geomorph.o m_gwflow.o \
 	m_intercept.o m_record.o m_swflow.o m_output.o m_fileio.o m_sysdep_util.o $(PAR_OBJ)
 m_sysparam.o: list_sysparam.o m_fileio.o m_util.o $(PAR_OBJ)
-m_geoinfo.o: m_sysparam.o list_geoinfo.o m_fileio.o m_georef.o m_geotiff.o m_util.o $(PAR_OBJ)
+m_geoinfo.o: m_sysparam.o list_geoinfo.o list_channel.o m_fileio.o m_georef.o m_geotiff.o m_util.o $(PAR_OBJ)
 m_precip.o: m_sysparam.o list_precip.o m_state.o m_geoinfo.o m_util.o m_fileio.o $(PAR_OBJ)
 m_geomorph.o: m_sysparam.o list_geomorph.o m_state.o m_geoinfo.o $(PAR_OBJ)
 list_geomorph.o: m_sysparam.o $(PAR_OBJ)
@@ -95,13 +95,14 @@ m_state.o: m_sysparam.o m_geoinfo.o list_initial.o m_util.o m_sysdep_util.o m_fi
 m_record.o: m_sysparam.o list_record.o m_geoinfo.o m_state.o m_util.o m_sysdep_util.o $(PAR_OBJ)
 m_swflow.o: m_sysparam.o m_geoinfo.o m_boundary.o m_state.o \
 	m_swflow_enc.o m_swflow_stg.o $(PAR_OBJ)
-m_swflow_enc.o: m_sysparam.o list_enc.o m_geoinfo.o m_boundary.o \
+m_swflow_enc.o: m_sysparam.o list_enc.o list_channel.o m_geoinfo.o m_boundary.o \
 	m_precip.o m_state.o m_ffactor.o m_sysdep_util.o m_fileio.o $(PAR_OBJ)
 m_swflow_stg.o: m_sysparam.o m_geoinfo.o m_precip.o m_boundary.o m_state.o $(PAR_OBJ)
 m_swflow_enc_adv.o: m_swflow_enc.o m_state.o
 m_swflow_enc_bc.o: m_swflow_enc.o m_boundary.o m_state.o $(PAR_OBJ)
 list_sysparam.o: $(PAR_OBJ)
 list_geoinfo.o: m_sysparam.o $(PAR_OBJ)
+list_channel.o: m_sysparam.o $(PAR_OBJ)
 list_precip.o: m_sysparam.o $(PAR_OBJ)
 list_tide.o: m_sysparam.o $(PAR_OBJ)
 list_initial.o: m_sysparam.o $(PAR_OBJ)

@@ -81,6 +81,7 @@ module m_sysparam
     character(:), allocatable :: fn_geomorph   ! 地形変化条件設定ファイル
     character(:), allocatable :: fn_gwflow     ! 地下水条件設定ファイル
     character(:), allocatable :: fn_intercept  ! 降雨遮断条件設定ファイル
+    character(:), allocatable :: fn_channel    ! 河道条件設定ファイル
     character(:), allocatable :: fn_enc        ! ENC設定ファイル
     character(:), allocatable :: fn_log        ! 状態ログファイル
     character(:), allocatable :: dir_data      ! 入力データディレクトリ
@@ -185,6 +186,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%fn_geomorph = list%fn_geomorph             ! 地形変化条件設定ファイル
   p%fn_gwflow = list%fn_gwflow                 ! 地下水条件設定ファイル
   p%fn_intercept = list%fn_intercept           ! 降雨遮断条件設定ファイル
+  p%fn_channel = list%fn_channel               ! 河道条件設定ファイル
   p%fn_enc = list%fn_enc                       ! ENC設定ファイル
   p%fn_log = list%fn_log                       ! 状態ログファイル
   p%dir_data = list%dir_data                   ! 入力データディレクトリ
