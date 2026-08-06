@@ -92,6 +92,13 @@ module m_swflow_enc
                                             !   河道—河道の全成分に乗る
   real, allocatable :: wfrac(:,:)           ! セルの河道平面積率 (1:nx, jsh:jeh)。
                                             !   非河道・幅情報なしセルは 1
+  real, allocatable :: cwx(:,:), cwy(:,:)   ! セルの方向別通水率 (1:nx, js:je)。
+                                            !   幅キャップによるセル開口の減衰率
+                                            !   (キャップ後/キャップ前の開口和の比)。
+                                            !   continuous / restore_uvmn が u,v を
+                                            !   これで除算し、vv・摩擦・抗力・移流が
+                                            !   河道内流速を見る。m,n は正規化しない
+                                            !   (§18。フラックス測線の実流量の条件)
 
   ! 状態変数の構造体の宣言と定義
   type t_enc_status
@@ -366,6 +373,8 @@ subroutine m_swflow_enc_dispose(p)
   call del_enc_status(sx_mod)
   if (allocated(frw)) deallocate(frw)
   if (allocated(wfrac)) deallocate(wfrac)
+  if (allocated(cwx)) deallocate(cwx)
+  if (allocated(cwy)) deallocate(cwy)
   have_bopen = .false.
   have_width = .false.
   have_frw = .false.
@@ -494,7 +503,6 @@ subroutine build_channel_frw(g)
         nb = (real(nblk(i, j, i+1)) + real(nblk(i+1, j, i))) / 2
         if (nb > 0) frw(4,i,j) = (lpy + nb * ldy) / lpy
       end if
-      if (have_width) frw(4,i,j) = frw(4,i,j) * wcap(i, j, i+1, j, g%dy)
     end do
   end do
 
@@ -508,14 +516,36 @@ subroutine build_channel_frw(g)
         nb = (real(nblk_y(i, j, j+1)) + real(nblk_y(i, j+1, j))) / 2
         if (nb > 0) frw(2,i,j) = (lpx + nb * ldx) / lpx
       end if
-      if (have_width) frw(2,i,j) = frw(2,i,j) * wcap(i, j, i, j+1, g%dx)
     end do
   end do
 
-  ! 斜めエッジ: 成分1 は添字 (a,b) でセル (a,b)-(a+1,b+1) を、
-  !   成分3 はセル (a,b+1)-(a+1,b) を繋ぐ(die/dje の正準)。
-  !   幅キャップのみ(開口補正は法線へ振り替える設計のため対象外)
   if (have_width) then
+    ! セルの方向別通水率 cwx/cwy(u,v 正規化係数)を、幅キャップを
+    ! frw に乗せる「前」に構築する: 分子=キャップ後の開口和、
+    ! 分母=キャップ前(振り替えのみ)の開口和。比の形にすることで
+    ! W ≥ 面長のセルでは分子=分母となり厳密に 1.0(退化性)。
+    ! 対象は自帯セル js..je のみ(ハロ行の u,v は交換で得るため不要)。
+    ! 壁エッジ(zbank 有効な河道セル↔堤内地)は u,v に寄与しないため
+    ! 和から除外する(含めると比が 1 に希釈され正規化が失われる)
+    call build_cw(g)
+
+    ! 幅キャップ q を全成分の河道—河道エッジへ重畳する
+    ! (q の計算は build_cw と同じ wcap = 決定的に同値)
+    do j = jlo, jhi
+      do i = 1, g%nx - 1
+        if (.not. is_channel(i, j) .or. .not. is_channel(i+1, j)) cycle
+        frw(4,i,j) = frw(4,i,j) * wcap(i, j, i+1, j, g%dy)
+      end do
+    end do
+    do j = jlo, min(dcp%jeh - 1, g%ny - 1)
+      do i = 1, g%nx
+        if (.not. is_channel(i, j) .or. .not. is_channel(i, j+1)) cycle
+        frw(2,i,j) = frw(2,i,j) * wcap(i, j, i, j+1, g%dx)
+      end do
+    end do
+    ! 斜めエッジ: 成分1 は添字 (a,b) でセル (a,b)-(a+1,b+1) を、
+    !   成分3 はセル (a,b+1)-(a+1,b) を繋ぐ(die/dje の正準)。
+    !   幅キャップのみ(開口補正は法線へ振り替える設計のため対象外)
     do j = jlo, min(dcp%jeh - 1, g%ny - 1)
       do i = 1, g%nx - 1
         if (is_channel(i, j) .and. is_channel(i+1, j+1)) then
@@ -529,6 +559,56 @@ subroutine build_channel_frw(g)
   end if
 
 contains
+  !--------------------------------------------------------------------
+  ! セルの方向別通水率 cwx/cwy の構築(自帯セル js..je)。
+  ! 呼び出し時点の frw は振り替えのみ(幅キャップ前)であること
+  subroutine build_cw(g2)
+    type(t_geoinfo), intent(in) :: g2
+    integer :: ic, jc, k, in, jn
+    real :: f0, q, sx_, sy_
+    real :: numx, denx, numy, deny
+    real :: cap8(1:8)
+    integer, parameter :: ke8(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
+
+    ! k 方位ごとの幅キャップの分母(成分4系=dy, 成分2系=dx, 斜め=√(dx·dy))
+    cap8(1:8) = [ capd, g2%dx, capd, g2%dy, g2%dy, capd, g2%dx, capd ]
+
+    allocate(cwx(1:g2%nx, dcp%js:dcp%je), source = 1.0)
+    allocate(cwy(1:g2%nx, dcp%js:dcp%je), source = 1.0)
+
+    do jc = dcp%js, dcp%je
+      do ic = 1, g2%nx
+        if (.not. is_channel(ic, jc)) cycle
+        if (g2%wrw(ic,jc) <= 0.0) cycle       ! 幅情報なし: 正規化しない
+        numx = 0.0
+        denx = 0.0
+        numy = 0.0
+        deny = 0.0
+        do k = 1, 8
+          in = ic + din(k)
+          jn = jc + djn(k)
+          if (g2%x(in,jn) <= 0) cycle         ! 領域外・無効(x 番兵)
+          ! 壁エッジ(自セルが天端を持ち、相手が堤内地)は除外
+          if (g2%zbank(ic,jc) > zbank_min .and. g2%sw(in,jn) == 0 .and. &
+              g2%rw(in,jn) <= 0) cycle
+          f0 = frw(ke8(k), ic+die(k), jc+dje(k))
+          if (is_channel(in, jn)) then
+            q = wcap(ic, jc, in, jn, cap8(k))
+          else
+            q = 1.0                           ! 河道—河道以外はキャップなし
+          end if
+          sx_ = l8y(k) / 2
+          sy_ = l8x(k) / 2
+          numx = numx + sx_ * f0 * q
+          denx = denx + sx_ * f0
+          numy = numy + sy_ * f0 * q
+          deny = deny + sy_ * f0
+        end do
+        if (denx > 0.0) cwx(ic,jc) = numx / denx
+        if (deny > 0.0) cwy(ic,jc) = numy / deny
+      end do
+    end do
+  end subroutine
   !--------------------------------------------------------------------
   ! 幅キャップ係数 q = min(W_e / cap, 1)。W_e は両セルの正の幅の最小値。
   ! 両セルとも幅情報なし(W<=0)なら 1(解像扱い)
@@ -1285,6 +1365,13 @@ subroutine continuous(p, g, s, sx)
         end if
         if (dh > 0) s%ddir8(i,j) = s%ddir8(i,j) + 2**k   ! 全ての流出方向
       end do
+      ! 河道幅有効セルは u,v をセル方向別通水率で正規化する(vv・摩擦・
+      ! 抗力・移流が河道内流速を見る。m,n は流量積分の意味論を保つため
+      ! 正規化しない=フラックス測線の実流量が保たれる条件。§18)
+      if (have_width) then
+        s%u(i,j) = s%u(i,j) / cwx(i,j)
+        s%v(i,j) = s%v(i,j) / cwy(i,j)
+      end if
     end do
   end do
   !$omp end parallel do
@@ -1385,6 +1472,11 @@ subroutine restore_uvmn(p, g, s, sx)
         s%m(i,j) = s%m(i,j) + mne * (w8mx(k) * fw)
         s%n(i,j) = s%n(i,j) + mne * (w8my(k) * fw)
       end do
+      ! u,v の正規化は continuous と完全に一致させる(復元ビット一致の条件)
+      if (have_width) then
+        s%u(i,j) = s%u(i,j) / cwx(i,j)
+        s%v(i,j) = s%v(i,j) / cwy(i,j)
+      end if
       s%e(i,j) = s%h(i,j) + s%z(i,j)
       s%vv(i,j) = sqrt(s%u(i,j)**2 + s%v(i,j)**2)
       s%qq(i,j) = sqrt(s%m(i,j)**2 + s%n(i,j)**2)
