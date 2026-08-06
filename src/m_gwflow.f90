@@ -119,6 +119,14 @@ subroutine m_gwflow_init(gw, p, g, s)
     case (0)
       ! 鉛直なし(側方のみ。初期条件の h_gw を側方流動だけで緩和する用途)
     case (1)
+      ! バケツは側方と組めない: 容量が gw_capacity と sd*sy0 で二重定義に
+      ! なり、どちらが小さくても意図しない挙動になる(developer.md §16.1)。
+      ! 土層厚を容量とする定数浸透能モデルは greenampt + gw_psif=0 で表現できる
+      if (gw%lat_enabled) then
+        call par_stop("list_gwflow: f_gwvertical=1(bucket) cannot be combined with " &
+                      // "f_gwlateral=1 (use f_gwvertical=2 greenampt; gw_psif=0 " &
+                      // "gives a constant infiltration rate with capacity sd*sy0)")
+      end if
       gw%init    => gwflow_bucket_init
       gw%calc    => gwflow_bucket_calc
       gw%dispose => gwflow_bucket_dispose
