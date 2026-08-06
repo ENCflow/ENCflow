@@ -11,7 +11,7 @@ module list_intercept
   public :: list_intercept_read
 
   type t_list_intercept
-    integer :: f_icmodel = 0         ! 遮断モデル(0:なし, 1:固定遮断率)
+    integer :: f_icmodel = 0         ! 遮断モデル(0:なし, 1:固定遮断率, 2:初期損失)
                                      ! fn_intercept を書いたまま 0 で一時無効化できる
   end type
 

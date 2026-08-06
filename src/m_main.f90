@@ -8,7 +8,8 @@ module m_main
   use m_record, only : t_record, m_record_init, m_record_dispose, m_record_probe, m_record_flux, m_record_summary
   use m_geomorph, only : t_geomorph, m_geomorph_init, m_geomorph_calc, m_geomorph_dispose
   use m_gwflow, only : t_gwflow, m_gwflow_init, m_gwflow_calc, m_gwflow_dispose
-  use m_intercept, only : t_intercept, m_intercept_init, m_intercept_calc, m_intercept_dispose
+  use m_intercept, only : t_intercept, m_intercept_init, m_intercept_calc, m_intercept_step, &
+                        m_intercept_dispose
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc
   use m_output, only : output_init, output_dispose, output_chk_geoinfo, output_state, output_summary
   use m_util, only : itoa
@@ -178,6 +179,10 @@ subroutine run_main(p, g, b, pr, ic, s, r, sw, gm, gw, ierror)
       call m_precip_makepre(pr, p, g, s, pr_updated)
       if (pr_updated) call m_intercept_calc(ic, p, g, s, it)
     end if
+
+    ! 貯留型遮断モデルの毎ステップ更新(swflow が s%pre を読む前に呼ぶ。
+    ! step 口を持たないモデル(固定遮断率)や無効時は何もしない)
+    call m_intercept_step(ic, p, g, s, it)
 
     ! 境界条件を準備
     call m_boundary_makebdc(b, p, g, s)

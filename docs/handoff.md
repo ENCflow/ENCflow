@@ -51,12 +51,26 @@
    - 切替器 vs 重ね合わせの使い分け原則、s%hg 柱状換算契約、S 台帳、
      モデル実装5箇条(m_gwflow_bucket ヘッダが正本)
 3. developer.md の日付プレースホルダ(2026-xx)の実日付化(残があれば)
-4. **降雨遮断モジュール(m_intercept / 固定遮断率モデル)の残検証**
+4. **降雨遮断モジュール(m_intercept)の残検証**
    (無効時ビット一致と wave 疎通((1-α) 倍・np=1,2,4 ULP=0)は確認済み
     2026-08-04)
    - prtype=3 かつ dt_prupdate < dt_maplist の設定で二重減衰しないこと
      (updated ガードの検証。Pr 出力が分布更新のたびに一定率か目視)
    - developer.md への追記(gwflow/geomorph の項と併せて。上記2参照)
+   - **第2弾(分布ファイル+初期損失モデル。2026-08-06)の検証**:
+     - 無効時ビット一致の再確認(fn_intercept 未指定で全ケース。
+       run_main に m_intercept_step の毎ステップ呼び出しが増えたため)
+     - 固定率+一様値が第1弾と同値のままであること(乗算値は同一なので
+       ビット一致のはず。wave 一発で可)
+     - 固定率+分布: 一様値と同値を敷き詰めたマップで一様指定と
+       ビット一致(np=1,2,4)
+     - 初期損失の疎通: wave 一定雨+一様 smax で、遮断総量が
+       Σ smax(有効セル)に飽和し、飽和後は S の入力勾配が素通しに
+       復帰すること(相対 1e-14 程度は乗除の端数。契約D)。np=1,2,4 一致
+     - 初期損失のリスタート: save → restore → save で
+       intercept_initloss.dat がビット一致(st の往復)。
+       restore 時に保存ファイルが無い場合の par_stop も確認
+     - -fcheck np>=2(帯確保の新配列 st/pr0/prh0/マップ類)
 5. **初期化の方式2・第1段(係数の rank0 化+scatter)の検証**
    - **確保に触れる変更なので -fcheck=all の np>=2 を最適化ビルドより先に**
      (静的データを使う chichibu で。規律3)
@@ -154,13 +168,12 @@
 - geomorph: calc_creep 実装(ガウス丘の解析解ベンチマークを先に作る)。
   浸食有効化時は par_halo_cell(s%z) をステップ頭へ(§11 の TODO 参照)
 - gwflow: RRI 型・鉛直浸透重視型の追加(m_gwflow_bucket を複製して契約に従う)
-- intercept: 貯留型モデル(初期損失・キャノピー貯留・Gash)の追加。
-  固定率と違い貯留状態が毎ステップ発展するため、(1) makepre 直後の
-  適用口に加えて毎ステップの更新口を切替器に追加、(2) 原雨量のモデル私有
-  保管(適用が破壊的なため)、(3) 内部状態の save/restore
-  (intercept_<モデル名>.dat。m_gwflow_bucket 契約5)が必要。
-  遮断率・貯留容量の分布ファイル/土地利用からの構築(lu2rn 同型)は
-  固定率モデルの init 拡張でも可(m_intercept_fixed ヘッダ契約5)
+- intercept: 初期損失モデルと分布ファイル対応は実装済み(2026-08-06。
+  貯留型の3点セット=step 口・原雨量私有保管・st の save/restore を含む。
+  貯留型の実装契約は m_intercept_initloss ヘッダが正本)。残るは
+  キャノピー貯留(蒸発回復あり)・Gash の追加(m_intercept_initloss を
+  複製して契約に従う)と、土地利用からの構築(lu2rn 同型。
+  m_intercept_fixed ヘッダ契約5)
 - NEC SDK 実機検証(mpinfort -show の可否確認 → スタンプ機構の対応判断)
 - **初期化メモリピーク対策・第2段(ゾーン2の rank0 化)**。第1段
   (物性係数の rank0 化+scatter。2026-07-31 実装)で非 root の一過性

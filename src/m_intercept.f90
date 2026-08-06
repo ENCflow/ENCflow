@@ -17,8 +17,12 @@ module m_intercept
   !   ステップに再適用すると二重減衰になるため、makepre の updated が
   !   このガードの正本(prtype=3 では makepre が呼ばれても分布を更新
   !   しないステップがある)。
-  !   貯留型モデル(初期損失・キャノピー貯留)を導入する場合は、原雨量の
-  !   モデル私有保管+毎ステップの更新口の追加が必要(handoff の道標参照)。
+  !   貯留型モデル(状態が毎ステップ発展する)は2口で動く:
+  !     calc(降雨更新直後)= 原雨量を私有配列へ写し取る(s%pre は不変)
+  !     step(毎ステップ、swflow が s%pre を読む前)= 貯留を発展させ、
+  !       s%pre / s%prh を原雨量から計算し直す
+  !   固定遮断率のような無状態モデルは step を束縛しない(calc で破壊的に
+  !   適用して終わり)。貯留型の実装契約は m_intercept_initloss のヘッダ。
   ! ====================================================================
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
@@ -26,6 +30,8 @@ module m_intercept
   use list_intercept, only : t_list_intercept, list_intercept_read
   use m_intercept_fixed, only : intercept_fixed_init, intercept_fixed_calc, &
                                 intercept_fixed_dispose
+  use m_intercept_initloss, only : intercept_initloss_init, intercept_initloss_calc, &
+                                intercept_initloss_step, intercept_initloss_dispose
   use m_parallel, only : par_stop
   use m_util, only : itoa
   implicit none
@@ -33,6 +39,7 @@ module m_intercept
   public :: t_intercept
   public :: m_intercept_init
   public :: m_intercept_calc
+  public :: m_intercept_step
   public :: m_intercept_dispose
 
   !-------------------------------------------
@@ -66,6 +73,8 @@ module m_intercept
     ! init に早期 return 経路があるため全成分デフォルト初期化必須(§13)
     procedure(procedure_intercept_init),    pointer, nopass :: init    => null()
     procedure(procedure_intercept_calc),    pointer, nopass :: calc    => null()
+    procedure(procedure_intercept_calc),    pointer, nopass :: step    => null()
+                                     ! 毎ステップ口(貯留型のみ束縛。calc と同シグネチャ)
     procedure(procedure_intercept_dispose), pointer, nopass :: dispose => null()
     logical :: enabled = .false.     ! fn_intercept の有無と f_icmodel で決まる
     logical :: initialized = .false.
@@ -96,8 +105,13 @@ subroutine m_intercept_init(ic, p, g)
       ic%init    => intercept_fixed_init
       ic%calc    => intercept_fixed_calc
       ic%dispose => intercept_fixed_dispose
+    case (2)
+      ic%init    => intercept_initloss_init
+      ic%calc    => intercept_initloss_calc
+      ic%step    => intercept_initloss_step
+      ic%dispose => intercept_initloss_dispose
     case default
-      call par_stop("list_intercept: f_icmodel must be 0(none) or 1(fixed): " &
+      call par_stop("list_intercept: f_icmodel must be 0(none), 1(fixed) or 2(initloss): " &
                     // itoa(list%f_icmodel))
   end select
 
@@ -125,6 +139,24 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 貯留型モデルの毎ステップ更新(run_main が swflow の前に毎ステップ呼ぶ)
+!   step 口を持たないモデル(固定遮断率)では何もしない。
+!   冒頭の return 判定は全ランクで同一(collective 安全)
+!----------------------------------------------------------------------
+subroutine m_intercept_step(ic, p, g, s, it)
+  type(t_intercept), intent(in) :: ic
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: it
+
+  if (.not. ic%enabled) return
+  if (.not. associated(ic%step)) return
+  call ic%step(p, g, s, it)
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 降雨遮断モジュールを破棄する
 !----------------------------------------------------------------------
 subroutine m_intercept_dispose(ic, p)
@@ -133,6 +165,7 @@ subroutine m_intercept_dispose(ic, p)
   if (ic%enabled) call ic%dispose(p)
   ic%init    => null()
   ic%calc    => null()
+  ic%step    => null()
   ic%dispose => null()
   ic%enabled = .false.
   ic%initialized = .false.
