@@ -60,6 +60,13 @@
      W≥面長退化ビット一致、W=20m の np=2,4 ULP=0)。ifx 検証は上記に同梱
    - 河道内植生の抵抗は gv/bb の河道セル適用で表現可能と確認(§18。
      コード変更不要。粗度 rn との分担指針に注意)
+   - 破堤(&list_channel_breach。§18)実装・gfortran 検証済み 2026-08-06:
+     -fcheck np=2、無効時ビット一致(bank ケースは -O2 で前コミット一致)、
+     f=1.0 固定が無破堤と同一バイナリでビット一致、破堤前区間の一致、
+     MPI バイナリ内 np=1,2,4 完全一致、厳密数学で serial=MPI 一致。
+     注意: -Ofast では serial/MPI の別ビルド間に fast-math 差(§9 の
+     ULP=1 クラス)が出るようになった(bank_wall の submodule 化以降)。
+     ifx 検証・恒常テスト化は 1d の残項目に同梱
 
 1c. **gwflow 第3弾(側方流動 Boussinesq)の残検証**
    (実装と gfortran 検証は 2026-08-05 完了。決定は developer.md §16.1、

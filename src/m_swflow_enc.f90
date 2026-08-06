@@ -92,6 +92,13 @@ module m_swflow_enc
                                             !   河道—河道の全成分に乗る
   real, allocatable :: wfrac(:,:)           ! セルの河道平面積率 (1:nx, jsh:jeh)。
                                             !   非河道・幅情報なしセルは 1
+  ! 破堤(developer.md §18)
+  !   サイト(河道セル・堤内地セルの対=エッジ)ごとに実効天端を
+  !   時系列 f(t)(1=天端高, 0=堤内地盤高)で変える。サイトリストと
+  !   行バケットは submodule m_swflow_enc_channel の私有状態
+  !   (bank_wall が同 submodule 内で参照するため親には出さない)
+  logical :: have_breach = .false.          ! 破堤サイトがあるか(breach_init が設定)
+
   real, allocatable :: cwx(:,:), cwy(:,:)   ! セルの方向別通水率 (1:nx, js:je)。
                                             !   幅キャップによるセル開口の減衰率
                                             !   (キャップ後/キャップ前の開口和の比)。
@@ -216,6 +223,17 @@ module m_swflow_enc
       integer, intent(in) :: i, j, in, jn
       real, intent(inout) :: uve1, mne1
     end subroutine
+    module subroutine breach_init(p, g, s, ch)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+      type(t_list_channel), intent(in) :: ch
+    end subroutine
+    module subroutine breach_update(t)
+      real, intent(in) :: t
+    end subroutine
+    module subroutine breach_dispose()
+    end subroutine
   end interface
 
 contains
@@ -297,6 +315,10 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (have_frw) call build_channel_frw(g)
   if (have_width) call build_wfrac(g)
 
+  ! 破堤サイトの解釈・検証・行バケット構築(zbank の帯と s%z を読むため
+  ! この位置。have_breach を設定する)
+  call breach_init(p, g, s, chlist)
+
   ! 境界条件の適用層を初期化する(辺型・面型・基準水位・流入区間の
   ! 開口幅の構築。開口幅が l8 を使うため init_weights より後に)
   call bc_init(p, g, b)
@@ -356,6 +378,10 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   call par_halo_cell(s%vv)
   call par_halo_edge(sx_mod%mn)
 
+  ! 破堤サイトの現時刻の実効天端を更新する(サイト数ぶんの時系列補間。
+  ! t の純関数なので全ランクが同値を冗長計算する=通信不要)
+  if (have_breach) call breach_update(s%t)
+
   ! 移流項を計算する
   call adv_prepare(p, g, s, sx_mod)
 
@@ -394,6 +420,7 @@ subroutine m_swflow_enc_dispose(p)
   if (allocated(wfrac)) deallocate(wfrac)
   if (allocated(cwx)) deallocate(cwx)
   if (allocated(cwy)) deallocate(cwy)
+  call breach_dispose
   have_bopen = .false.
   have_width = .false.
   have_frw = .false.

@@ -14,8 +14,11 @@ module list_channel
 
   public :: t_list_channel
   public :: list_channel_read
+  public :: nbrsmax, nbrvmax
 
   integer, parameter :: maxpathlen = 256
+  integer, parameter :: nbrsmax = 100    ! 破堤サイトの最大数
+  integer, parameter :: nbrvmax = 200    ! 1サイトあたりの時系列最大データ数
 
   type t_list_channel
     character(len=maxpathlen) :: fn_bank = ""  ! 堤防高さ分布ファイル名(河道セルのみ有効。
@@ -32,6 +35,14 @@ module list_channel
                                                !   サブグリッド河道が有効化。fn_bank / bank0
                                                !   無指定なら高さ0・堤内地標高基準の堤防を自動有効化)
     integer :: f_channel_advection = 1         ! 河道セルを含むエッジの移流項 (1:通常, 0:落とす)
+    ! ---- &list_channel_breach(破堤。グループ不在=破堤なし)----
+    ! 大配列は allocatable 成分とし、グループが存在した場合のみ確保・充填
+    ! する(固定長成分はローカル変数のスタックあふれの元。list_boundary の教訓)
+    logical :: present_breach = .false.        ! グループが存在したか
+    integer, allocatable :: br_cell(:,:)       ! サイトのセル対 (1:4, サイト) = ic, jc, il, jl
+                                               !   (河道セル, 堤内地セル。8近傍で隣接)
+    real, allocatable :: br_series(:,:,:)      ! 天端割合の時系列 (1:2, 点, サイト)
+                                               !   = (時刻 min, 割合 0〜1)。1=天端高, 0=堤内地盤高
   end type
 
 
@@ -80,6 +91,7 @@ subroutine list_channel_read(p, list)
   if (ios /= 0) call par_stop("fn_channel を開けません: "//trim(iom))
   read(un, nml=list_channel, iostat=ios, iomsg=iom)
   if (ios /= 0) call par_stop("list_channel 読込失敗: "//trim(iom))
+  call read_breach(un, list)
   close(un)
 
   list%fn_bank = fn_bank
@@ -97,5 +109,33 @@ end subroutine
 !======================================================================
 !========================== PRIVATE ROUTINES ==========================
 !======================================================================
+
+!----------------------------------------------------------------------
+! &list_channel_breach を読む(不在なら present_breach を偽のまま返す)
+!   解釈・検証(隣接性・マスク・時系列の単調性等)は
+!   m_swflow_enc_channel の breach_init が行う(list_* は読むだけ)
+!----------------------------------------------------------------------
+subroutine read_breach(un, list)
+  integer, intent(in) :: un
+  type(t_list_channel), intent(inout) :: list
+  integer :: br_cell(1:4, 1:nbrsmax)
+  real :: br_series(1:2, 1:nbrvmax, 1:nbrsmax)
+  integer :: ios
+  character(len=1024) :: iom
+  namelist /list_channel_breach/ br_cell, br_series
+
+  br_cell = -9999
+  br_series = -9999.0
+
+  rewind(un)
+  read(un, nml=list_channel_breach, iostat=ios, iomsg=iom)
+  if (ios > 0) call par_stop("list_channel_breach 読込失敗: "//trim(iom))
+  if (ios < 0) return              ! グループ不在(破堤なし)
+  list%present_breach = .true.
+
+  list%br_cell = br_cell
+  list%br_series = br_series
+
+end subroutine
 
 end module

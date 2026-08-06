@@ -20,11 +20,36 @@ submodule(m_swflow_enc) m_swflow_enc_channel
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo, zbank_min
   use m_state, only : t_state
-  use m_parallel, only : dcp
+  use m_parallel, only : dcp, par_stop, par_allreduce_maxi
+  use m_util, only : itoa
+  use list_channel, only : t_list_channel, nbrsmax, nbrvmax
   implicit none
 
   ! エッジ格納スロットの k 成分(親の continuous と同じ写像)
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
+
+  ! ---- 破堤の私有状態(developer.md §18。breach_init が構築)----
+  ! サイト=セル対 (ic,jc)-(il,jl) で一意に決まるエッジ。実効天端は
+  !   zeff(t) = zgnd0 + f(t)·(zcrest0 − zgnd0)   (f: 1=天端高, 0=堤内地盤高)
+  ! で毎ステップ更新する(f は時系列の線形補間・範囲外は端値保持。
+  ! f>=1 は zcrest0、f<=0 は zgnd0 に厳密固定=無破堤とのビット一致条件)。
+  ! 履歴状態なし(t の純関数)のため save/restore 対象外。
+  ! 基準地盤 zgnd0 は init 時の堤内地セルの s%z で静的(侵食に追従しない)
+  type t_breach
+    integer :: ic = 0, jc = 0                 ! 河道セル
+    integer :: il = 0, jl = 0                 ! 堤内地セル
+    integer :: nval = 0                       ! 時系列データ数
+    real, allocatable :: val(:,:)             ! 時系列 (1:2, 1:nval) = (s, 割合0〜1)
+    real :: zcrest0 = 0.0                     ! 初期天端(セル対を帯内に持つランクのみ有効)
+    real :: zgnd0 = 0.0                       ! 基準地盤(同上)
+    real :: zeff = 0.0                        ! 現時刻の実効天端(breach_update が更新)
+  end type
+  integer :: nbr = 0                          ! サイト数
+  type(t_breach), allocatable :: br(:)        ! サイトリスト(全ランク同一)
+  ! 行バケット: 行 jc にあるサイトの並び ibrs(ibr0(jc):ibr1(jc))。
+  ! bank_wall のゲート(サイトのない行は整数比較1回で素通り)
+  integer, allocatable :: ibr0(:), ibr1(:)    ! (jsh:jeh)
+  integer, allocatable :: ibrs(:)             ! 行順に整列したサイト番号
 
 contains
 
@@ -207,6 +232,10 @@ module subroutine bank_wall(p, g, s, i, j, in, jn, uve1, mne1)
   zc = g%zbank(ic,jc)
   if (zc <= zbank_min) return     ! この河道セルは堤防なし(通常計算のまま)
 
+  ! 破堤サイトのエッジなら実効天端に差し替える(行バケットで
+  ! サイトのない行は整数比較1回で素通り。§18)
+  if (have_breach) zc = breach_crest(ic, jc, il, jl, zc)
+
   wsr = s%z(ic,jc) + max(s%h(ic,jc), 0.0)
   wsl = s%z(il,jl) + max(s%h(il,jl), 0.0)
 
@@ -251,9 +280,237 @@ module subroutine bank_wall(p, g, s, i, j, in, jn, uve1, mne1)
 end subroutine
 
 
+!----------------------------------------------------------------------
+! 破堤サイトの解釈・検証・行バケット構築(developer.md §18)
+!   検証は全ランク冗長(隣接性・マスクは全域データ)。zbank の有効性と
+!   zcrest0/zgnd0 の取得は帯を持つランクのみが行い、エラーは
+!   par_allreduce_maxi で全ランク共有してから collective に par_stop(§11)。
+!   セル対を帯内(jsh..jeh)に持たないランクの zcrest0/zgnd0 は 0 の
+!   ままだが、そのランクの bank_wall は当該エッジに触れないため無害
+!----------------------------------------------------------------------
+module subroutine breach_init(p, g, s, ch)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_list_channel), intent(in) :: ch
+  integer :: isite, k, n, ierr
+  integer :: ic, jc, il, jl
+  integer, allocatable :: nrow(:)
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+
+  have_breach = .false.
+  if (.not. ch%present_breach) return
+
+  ! サイト数(br_cell の第1成分が埋まっている数。先頭からの連続充填を要求)
+  nbr = 0
+  do isite = 1, nbrsmax
+    if (ch%br_cell(1,isite) == -9999) exit
+    nbr = nbr + 1
+  end do
+  if (nbr <= 0) then
+    call par_stop("list_channel_breach: br_cell が指定されていません")
+  end if
+  if (.not. have_bank) then
+    call par_stop("list_channel_breach: 破堤には堤防(fn_bank / bank0 / fn_width)が必要です")
+  end if
+
+  allocate(br(nbr))
+  do isite = 1, nbr
+    ic = ch%br_cell(1,isite)
+    jc = ch%br_cell(2,isite)
+    il = ch%br_cell(3,isite)
+    jl = ch%br_cell(4,isite)
+    ! --- 全域データによる検証(全ランク冗長・同一判定 = par_stop 安全)---
+    if (min(ic, il) < 1 .or. max(ic, il) > g%nx .or. &
+        min(jc, jl) < 1 .or. max(jc, jl) > g%ny) then
+      call par_stop("list_channel_breach: サイト"//itoa(isite)//" のセル座標が領域外です")
+    end if
+    if (max(abs(ic - il), abs(jc - jl)) /= 1) then
+      call par_stop("list_channel_breach: サイト"//itoa(isite)// &
+                    " のセル対が8近傍で隣接していません")
+    end if
+    if (.not. (g%x(ic,jc) > 0 .and. g%sw(ic,jc) == 0 .and. g%rw(ic,jc) > 0)) then
+      call par_stop("list_channel_breach: サイト"//itoa(isite)// &
+                    " の (ic,jc) が河道セルではありません")
+    end if
+    if (.not. (g%x(il,jl) > 0 .and. g%sw(il,jl) == 0 .and. g%rw(il,jl) <= 0)) then
+      call par_stop("list_channel_breach: サイト"//itoa(isite)// &
+                    " の (il,jl) が堤内地セルではありません")
+    end if
+    br(isite)%ic = ic
+    br(isite)%jc = jc
+    br(isite)%il = il
+    br(isite)%jl = jl
+    ! --- 時系列(分→秒、単調増加、割合 0〜1)---
+    n = 0
+    do k = 1, nbrvmax
+      if (ch%br_series(1,k,isite) <= -9998.0) exit
+      n = n + 1
+    end do
+    if (n <= 0) then
+      call par_stop("list_channel_breach: サイト"//itoa(isite)//" の br_series がありません")
+    end if
+    br(isite)%nval = n
+    allocate(br(isite)%val(1:2, 1:n))
+    do k = 1, n
+      br(isite)%val(1,k) = ch%br_series(1,k,isite) * 60   ! 分を秒に換算
+      br(isite)%val(2,k) = ch%br_series(2,k,isite)
+      if (br(isite)%val(2,k) < 0.0 .or. br(isite)%val(2,k) > 1.0) then
+        call par_stop("list_channel_breach: サイト"//itoa(isite)// &
+                      " の割合は 0〜1 で指定してください")
+      end if
+      if (k >= 2) then
+        if (br(isite)%val(1,k) <= br(isite)%val(1,k-1)) then
+          call par_stop("list_channel_breach: サイト"//itoa(isite)// &
+                        " の時系列の時刻が単調増加ではありません")
+        end if
+      end if
+    end do
+  end do
+
+  ! --- zbank の有効性検査と基準値の取得(帯を持つランクのみ)---
+  ierr = 0
+  do isite = 1, nbr
+    ic = br(isite)%ic
+    jc = br(isite)%jc
+    if (jc >= dcp%jsh .and. jc <= dcp%jeh) then
+      if (g%zbank(ic,jc) <= zbank_min) ierr = max(ierr, isite)
+    end if
+    if (jc >= dcp%jsh .and. jc <= dcp%jeh .and. &
+        br(isite)%jl >= dcp%jsh .and. br(isite)%jl <= dcp%jeh) then
+      br(isite)%zcrest0 = g%zbank(ic,jc)
+      br(isite)%zgnd0 = s%z(br(isite)%il, br(isite)%jl)
+      br(isite)%zeff = br(isite)%zcrest0
+    end if
+  end do
+  call par_allreduce_maxi(ierr)
+  if (ierr > 0) then
+    call par_stop("list_channel_breach: サイト"//itoa(ierr)// &
+                  " の河道セルに堤防天端がありません(zbank 無効)")
+  end if
+
+  ! --- 行バケットの構築(行 jc 順の安定整列。§18)---
+  allocate(nrow(dcp%jsh:dcp%jeh), source = 0)
+  allocate(ibr0(dcp%jsh:dcp%jeh), source = 1)
+  allocate(ibr1(dcp%jsh:dcp%jeh), source = 0)
+  allocate(ibrs(1:nbr), source = 0)
+  do isite = 1, nbr
+    jc = br(isite)%jc
+    if (jc >= dcp%jsh .and. jc <= dcp%jeh) nrow(jc) = nrow(jc) + 1
+  end do
+  n = 0
+  do jc = dcp%jsh, dcp%jeh
+    ibr0(jc) = n + 1
+    ibr1(jc) = n + nrow(jc)
+    n = n + nrow(jc)
+  end do
+  nrow(:) = 0
+  do isite = 1, nbr
+    jc = br(isite)%jc
+    if (jc >= dcp%jsh .and. jc <= dcp%jeh) then
+      ibrs(ibr0(jc) + nrow(jc)) = isite
+      nrow(jc) = nrow(jc) + 1
+    end if
+  end do
+  deallocate(nrow)
+
+  have_breach = .true.
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 破堤サイトの現時刻の実効天端 zeff の更新(毎ステップ。t の純関数で
+! 全ランクが同値を冗長計算。f>=1 / f<=0 は端値に厳密固定=無破堤・
+! 全破堤とのビット一致条件)
+!----------------------------------------------------------------------
+module subroutine breach_update(t)
+  real, intent(in) :: t
+  integer :: isite
+  real :: f
+  do isite = 1, nbr
+    f = interp_series(br(isite)%val, br(isite)%nval, t)
+    if (f >= 1.0) then
+      br(isite)%zeff = br(isite)%zcrest0
+    else if (f <= 0.0) then
+      br(isite)%zeff = br(isite)%zgnd0
+    else
+      br(isite)%zeff = br(isite)%zgnd0 + f * (br(isite)%zcrest0 - br(isite)%zgnd0)
+    end if
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+!----------------------------------------------------------------------
+module subroutine breach_dispose()
+  integer :: isite
+  if (allocated(br)) then
+    do isite = 1, nbr
+      if (allocated(br(isite)%val)) deallocate(br(isite)%val)
+    end do
+    deallocate(br)
+  end if
+  if (allocated(ibr0)) deallocate(ibr0)
+  if (allocated(ibr1)) deallocate(ibr1)
+  if (allocated(ibrs)) deallocate(ibrs)
+  nbr = 0
+  have_breach = .false.
+end subroutine
+
+
 !======================================================================
 !============= SUBMODULE 内の補助手続き(引数渡し。§13)==============
 !======================================================================
+
+!----------------------------------------------------------------------
+! エッジ (ic,jc)-(il,jl) が破堤サイトなら実効天端を返す(それ以外は zc)
+!----------------------------------------------------------------------
+function breach_crest(ic, jc, il, jl, zc) result(z)
+  integer, intent(in) :: ic, jc, il, jl
+  real, intent(in) :: zc
+  real :: z
+  integer :: n, isite
+  z = zc
+  if (jc < lbound(ibr0,1) .or. jc > ubound(ibr0,1)) return
+  do n = ibr0(jc), ibr1(jc)         ! この行のサイトだけ照合
+    isite = ibrs(n)
+    if (br(isite)%ic == ic .and. br(isite)%il == il .and. br(isite)%jl == jl) then
+      z = br(isite)%zeff
+      return
+    end if
+  end do
+end function
+
+
+!----------------------------------------------------------------------
+! 時系列の線形補間(範囲外は端値保持。m_boundary の interp_series と同一)
+!----------------------------------------------------------------------
+function interp_series(val, n, t) result(q)
+  real, intent(in) :: val(:,:)
+  integer, intent(in) :: n
+  real, intent(in) :: t
+  real :: q
+  real :: t0, t1, q0, q1
+  integer :: k
+
+  if (t <= val(1,1)) then             ! 最初の時刻よりも前の場合
+    q = val(2,1)
+  else if (t > val(1,n)) then         ! 最後の時刻より後の場合
+    q = val(2,n)
+  else
+    q = val(2,n)
+    do k = 2, n
+      t1 = val(1,k)
+      if (t < t1) then
+        t0 = val(1,k-1)
+        q0 = val(2,k-1)
+        q1 = val(2,k)
+        q = q0 + (t - t0) / (t1 - t0) * (q1 - q0)
+        exit
+      end if
+    end do
+  end if
+end function
 
 !----------------------------------------------------------------------
 ! 堤防天端の堰越流流束(本間公式。自由/潜りを自動切替)

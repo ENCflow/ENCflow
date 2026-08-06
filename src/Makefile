@@ -101,7 +101,8 @@ m_swflow_enc.o: m_sysparam.o list_enc.o list_channel.o m_geoinfo.o m_boundary.o 
 m_swflow_stg.o: m_sysparam.o m_geoinfo.o m_precip.o m_boundary.o m_state.o $(PAR_OBJ)
 m_swflow_enc_adv.o: m_swflow_enc.o m_state.o
 m_swflow_enc_bc.o: m_swflow_enc.o m_boundary.o m_state.o $(PAR_OBJ)
-m_swflow_enc_channel.o: m_swflow_enc.o m_sysparam.o m_geoinfo.o m_state.o $(PAR_OBJ)
+m_swflow_enc_channel.o: m_swflow_enc.o m_sysparam.o m_geoinfo.o m_state.o \
+	list_channel.o m_util.o $(PAR_OBJ)
 list_sysparam.o: $(PAR_OBJ)
 list_geoinfo.o: m_sysparam.o $(PAR_OBJ)
 list_channel.o: m_sysparam.o $(PAR_OBJ)
