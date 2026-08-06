@@ -1,6 +1,6 @@
 module m_swflow_enc
   use m_sysparam, only : t_sysparam
-  use m_geoinfo, only : t_geoinfo
+  use m_geoinfo, only : t_geoinfo, zbank_min
   use m_boundary, only : t_boundary
   use m_state, only : t_state
   use m_ffactor, only : m_ffactor_init, m_ffactor_calc, m_ffactor_dispose
@@ -40,6 +40,7 @@ module m_swflow_enc
   integer :: f_friction_fastmath != 0        ! 摩擦項計算の高速化
   integer :: f_advection_tvd != 9            ! 移流項にTVDスキームを使用　
   integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
+  integer :: f_bank_mode                    ! 堤防の水理モード(下の e_bank_*)
   real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
   real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
   real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
@@ -49,6 +50,14 @@ module m_swflow_enc
   ! restore_uvmn のホットパスが読む判定フラグだけを置く
   logical :: have_open_bc = .false.         ! 開いた面(不透過でない)があるか
                                             !   (bc_init が設定)
+
+  ! 堤防(仮想壁面)モデル(developer.md §17)
+  !   有効化は list_geoinfo の fn_bank の有無(g%bank_active)。天端の
+  !   絶対標高は geoinfo が河道セルごとに構築済み(g%zbank)
+  logical :: have_bank = .false.            ! 堤防天端が有効か
+  integer, parameter :: e_bank_weir = 0     ! 越流のみ(単純堤防): 双方向とも天端まで不透過
+  integer, parameter :: e_bank_oneway = 1   ! 樋門(逆止弁): 堤内→河道のみ透過、逆は天端まで不透過
+  integer, parameter :: e_bank_pump = 2     ! 強制排水: 堤内→河道は河道水位によらず常時段落ち
 
   ! 状態変数の構造体の宣言と定義
   type t_enc_status
@@ -175,10 +184,17 @@ subroutine m_swflow_enc_init(p, g, b, s)
   f_adaptive_runge = list%f_adaptive_runge 
   f_friction_fastmath = list%f_friction_fastmath 
   f_advection_tvd = list%f_advection_tvd 
-  f_rivermouth_drop = list%f_rivermouth_drop 
-  p_diagratio = list%p_diagratio 
-  p_adv_upwind_index = list%p_adv_upwind_index 
-  p_adprunge_thresh = list%p_adprunge_thresh 
+  f_rivermouth_drop = list%f_rivermouth_drop
+  f_bank_mode = list%f_bank_mode
+  p_diagratio = list%p_diagratio
+  p_adv_upwind_index = list%p_adv_upwind_index
+  p_adprunge_thresh = list%p_adprunge_thresh
+
+  ! 堤防(仮想壁面)の有効判定はセル天端 zbank を構築した geoinfo に従う
+  have_bank = g%bank_active
+  if (f_bank_mode < e_bank_weir .or. f_bank_mode > e_bank_pump) then
+    call par_stop("list_enc: f_bank_mode は 0(越流のみ), 1(樋門), 2(強制排水) のいずれか")
+  end if
 
   ! システムパラメータから継承するENCパラメータをセットする
   select case (p%f_govequation)
@@ -586,6 +602,9 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   ! 河口から海への段落ち強制
   if (f_rivermouth_drop > 0) call rivermouth_drop
 
+  ! 堤防(仮想壁面)エッジの流速・流量の上書き
+  if (have_bank) call bank_wall
+
   ! セル境界での単位幅流量から境界の両側のセルでの水深の減少量を計算する
   dh = mne1 * mn2dh(k)    ! 家屋占有率がゼロの場合の中心セルの水深減少量
   dhc = dh / g%gv(i,j)
@@ -628,6 +647,115 @@ contains
       h = max(s%h(in,jn), 0.0)    ! 近傍セルの水深
       uve1 = -((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)
       mne1 = uve1 * h
+    end if
+  end subroutine
+
+  !--------------------------------------------------------------------
+  ! 堤防(仮想壁面)エッジの処理(developer.md §17)
+  !   河道セル(rw>0)と堤内地セル(rw=0 の陸)の間の全エッジ(対角含む)に
+  !   セル天端標高 g%zbank(河道セル持ち)の仮想壁を立て、f_bank_mode に
+  !   応じて計算済みの uve1, mne1 を上書きする。天端は絶対標高
+  !   (静的。geomorph による z の変化には追従しない)。
+  !   海(sw)が絡むエッジは rivermouth_drop の管轄なので対象外
+  subroutine bank_wall
+    integer :: ic, jc               ! 河道側セルのインデックス
+    integer :: il, jl               ! 堤内地側セルのインデックス
+    real :: sgn                     ! 堤内地→河道向きの符号(中心→近傍が正)
+    real :: zc                      ! 天端標高
+    real :: wsr, wsl                ! 河道側・堤内地側の水位
+    real :: h, u
+
+    ! 対象エッジの判定
+    if (g%sw(i,j) > 0 .or. g%sw(in,jn) > 0) return
+    if (g%rw(i,j) > 0 .and. g%rw(in,jn) <= 0) then
+      ic = i;  jc = j;  il = in; jl = jn
+      sgn = -1.0
+    else if (g%rw(in,jn) > 0 .and. g%rw(i,j) <= 0) then
+      ic = in; jc = jn; il = i;  jl = j
+      sgn = 1.0
+    else
+      return
+    end if
+    zc = g%zbank(ic,jc)
+    if (zc <= zbank_min) return     ! この河道セルは堤防なし(通常計算のまま)
+
+    wsr = s%z(ic,jc) + max(s%h(ic,jc), 0.0)
+    wsl = s%z(il,jl) + max(s%h(il,jl), 0.0)
+
+    select case (f_bank_mode)
+    case (e_bank_pump)
+      ! 強制排水: 天端以下では河道水位によらず堤内地の全水深で段落ち
+      ! (rivermouth_drop と同式)。どちらかの水位が天端を超えたら
+      ! 単純堤防と同じ双方向の堰越流に切り替わる(ポンプの理想化は
+      ! 堤防が機能している水位域でのみ意味を持つため)
+      if (max(wsr, wsl) > zc) then
+        call bank_weir_flux(wsr, wsl, zc, sgn, uve1, mne1)
+      else
+        h = max(s%h(il,jl), 0.0)
+        u = ((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)
+        uve1 = sgn * u
+        mne1 = sgn * u * h
+      end if
+    case (e_bank_oneway)
+      ! 樋門(逆止弁): 堤内水位が高い間は壁なしの通常計算のまま通す
+      ! (逆向き成分は 0 にクリップ)。河道水位が高いときは天端まで
+      ! 不透過、天端を超えたら河道→堤内の堰越流
+      if (wsl >= wsr) then
+        if (sgn * uve1 < 0) then
+          uve1 = 0
+          mne1 = 0
+        end if
+      else if (wsr > zc) then
+        call bank_weir_flux(wsr, wsl, zc, sgn, uve1, mne1)
+      else
+        uve1 = 0
+        mne1 = 0
+      end if
+    case default    ! e_bank_weir
+      ! 越流のみ(単純堤防): 双方向とも天端までは不透過、超えたら堰越流
+      if (max(wsr, wsl) > zc) then
+        call bank_weir_flux(wsr, wsl, zc, sgn, uve1, mne1)
+      else
+        uve1 = 0
+        mne1 = 0
+      end if
+    end select
+  end subroutine
+
+  !--------------------------------------------------------------------
+  ! 堤防天端の堰越流流束(本間公式。自由/潜りを自動切替)
+  !   水位の高い側を上流として流向を決める。h2/h1 = 2/3 で両式は連続
+  subroutine bank_weir_flux(wsr, wsl, zc, sgn, uve1, mne1)
+    real, intent(in) :: wsr, wsl    ! 河道側・堤内地側の水位
+    real, intent(in) :: zc          ! 天端標高
+    real, intent(in) :: sgn         ! 堤内地→河道向きの符号(中心→近傍が正)
+    real, intent(out) :: uve1, mne1
+    real :: h1, h2                  ! 天端上の上流側・下流側の越流水深
+    real :: dir                     ! 流向の符号(中心→近傍が正)
+    real :: u
+
+    if (wsl >= wsr) then            ! 堤内地→河道の越流
+      h1 = max(wsl - zc, 0.0)
+      h2 = max(wsr - zc, 0.0)
+      dir = sgn
+    else                            ! 河道→堤内地の越流
+      h1 = max(wsr - zc, 0.0)
+      h2 = max(wsl - zc, 0.0)
+      dir = -sgn
+    end if
+    if (h1 <= 0) then
+      uve1 = 0
+      mne1 = 0
+      return
+    end if
+    if (h2 < h1 * (2. / 3.)) then   ! 自由越流
+      u = 0.35 * sqrt(2 * p%gg * h1)
+      uve1 = dir * u
+      mne1 = dir * u * h1
+    else                            ! 潜り越流
+      u = 0.91 * sqrt(2 * p%gg * (h1 - h2))
+      uve1 = dir * u
+      mne1 = dir * u * h2
     end if
   end subroutine
 
