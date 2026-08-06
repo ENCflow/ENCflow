@@ -14,6 +14,7 @@ module m_geoinfo
   private
 
   public :: t_geoinfo
+  public :: zbank_none, zbank_min
   public :: m_geoinfo_init
   public :: m_geoinfo_row_ncells
   public :: m_geoinfo_scatter_coeffs
@@ -45,6 +46,9 @@ module m_geoinfo
     real :: sy0 = 0.0                                 ! 比湧水量(= 有効間隙率 n_e。均一スカラー)
     logical :: sd_dist = .false.                      ! 土層厚の分布指定が有効(f_sdtype=1
                                                       ! かつ fn_gwflow 指定。全ランク同値)
+    real, allocatable :: zbank(:,:)                   ! 堤防天端の絶対標高(m)。河道セルのみ有効、
+                                                      ! 堤防なしは zbank_none(bank_active のときだけ確保)
+    logical :: bank_active = .false.                  ! 堤防天端が有効(fn_bank 指定。全ランク同値)
     integer, allocatable :: x(:,:)                    ! 対象領域判別マスク
     integer, allocatable :: sw(:,:)                   ! 海域マスク
     integer, allocatable :: rw(:,:)                   ! 河道マスク
@@ -55,6 +59,11 @@ module m_geoinfo
     logical :: initialized = .false.
   end type
 
+
+  ! 堤防天端の番兵値(setup_bank が設定)と有効判定しきい値。
+  ! 「zbank > zbank_min なら堤防あり」で判定する(番兵との等値比較を避ける)
+  real, parameter :: zbank_none = -1.0e30
+  real, parameter :: zbank_min = -1.0e29
 
   ! user_geoinfo submodule の入口(個々のルーチンへの分岐と識別名簿は
   ! submodule 側に閉じる。ルーチンの追加は user_geoinfo.f90 だけで完結する)
@@ -129,6 +138,11 @@ subroutine m_geoinfo_init(g, p)
     call par_bcast_cell_i(g%rw)
   end if
 
+
+  ! 堤防天端(セルごとの絶対標高)を構築する(検証は全ランク、構築は
+  ! rank0 のみ=方式2で scatter_coeffs が帯配布)。掘り込み後の z と
+  ! user フックによる地形・マスク変更を反映するため、この位置で行う
+  call setup_bank(p, g, list)
 
   ! GeoTIFF 出力には座標参照が必須(geotiff_plan.md §10 条件1)。
   ! 位置の分からない tif を黙って書かず、ここで止める
@@ -234,8 +248,9 @@ subroutine m_geoinfo_scatter_coeffs(g)
   call scatter_band_r(g%lm)
   call scatter_band_r(g%rscap)
   call scatter_band_i(g%lu)
-  ! 実行判定 sd_dist は namelist 由来で全ランク同一(collective 安全)
+  ! 実行判定 sd_dist / bank_active は namelist 由来で全ランク同一(collective 安全)
   if (g%sd_dist) call scatter_band_r(g%sd)
+  if (g%bank_active) call scatter_band_r(g%zbank)
 end subroutine
 
 
@@ -332,6 +347,7 @@ subroutine m_geoinfo_dispose(g)
   if (allocated(g%lm)) deallocate(g%lm)
   if (allocated(g%rscap)) deallocate(g%rscap)
   if (allocated(g%sd)) deallocate(g%sd)
+  if (allocated(g%zbank)) deallocate(g%zbank)
   if (allocated(g%x)) deallocate(g%x)
   if (allocated(g%sw)) deallocate(g%sw)
   if (allocated(g%rw)) deallocate(g%rw)
@@ -985,27 +1001,145 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 河道マスク部を掘り込む
+!   深さは fn_depth_rw(分布。負値は 0 として扱う)があれば分布、
+!   なければ一様値 depth_rw。分布ファイルは z と同様に全ランクが読む
+!   (z は全ランクが全域保持のため)
 !----------------------------------------------------------------------
 subroutine adjust_rw(p, g, list)
   type(t_sysparam), intent(in) :: p             ! システムパラメータ構造体
   type(t_geoinfo), intent(inout) :: g
   type(t_list_geoinfo), intent(in) :: list
+  real, allocatable :: dep(:,:)
+  character(:), allocatable :: fname
   integer :: i, j
-  logical :: set_rn
-  if (p%initialized) continue  ! 引数未使用の警告を抑制
-  if (len(list%fn_rw) <= 0) return
-  if (list%depth_rw == 0.0) return
+  logical :: set_rn, dep_dist
+  if (len_trim(list%fn_rw) <= 0) return
+  dep_dist = len_trim(list%fn_depth_rw) > 0
+  if (.not. dep_dist .and. list%depth_rw == 0.0) return
+  if (dep_dist) then
+    allocate(dep(1:g%nx,1:g%ny), source = 0.0)
+    fname = trim(p%dir_data) // "/" // trim(list%fn_depth_rw)
+    call par_info(" reading "//fname)
+    call fileio_read_matrix(fname, g%nx, g%ny, dep, p%f_input_mode)
+  end if
   ! z の掘り込みは全ランク(z は全ランクが全域保持)、
   ! rn の書き換えは rank0 のみ(rn は rank0 のみ保持。方式2)
   set_rn = is_root .and. list%rn0_rw > 0.0
   do j = 1, g%ny
     do i = 1, g%nx
       if (g%x(i,j) > 0 .and. g%rw(i,j) > 0) then
-        g%z(i,j) = g%z(i,j) - list%depth_rw
+        if (dep_dist) then
+          g%z(i,j) = g%z(i,j) - max(dep(i,j), 0.0)
+        else
+          g%z(i,j) = g%z(i,j) - list%depth_rw
+        end if
         if (set_rn) g%rn(i,j) = list%rn0_rw
       end if
     end do
   end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 堤防天端(セルごとの絶対標高 zbank)を構築する
+!   入力 fn_bank は河道セル位置の「堤防高さ」分布(-900 以下は堤防なし)。
+!   f_bank_datum に応じて絶対標高に変換して保持し、時間ループでは
+!   基準の違いは消えている。堤内地セル標高基準(f_bank_datum=1)では
+!   天端が隣接エッジごとに異なりうるため、セル外周の堤防エッジ
+!   (8近傍。対角含む)にわたって f_bank_aggr で1値に集約する。
+!   検証は全ランク(par_stop は collective)、構築は rank0 のみ(方式2)
+!----------------------------------------------------------------------
+subroutine setup_bank(p, g, list)
+  type(t_sysparam), intent(in) :: p             ! システムパラメータ構造体
+  type(t_geoinfo), intent(inout) :: g
+  type(t_list_geoinfo), intent(in) :: list
+  ! 8近傍のオフセット(m_swflow_enc の din/djn と同値)
+  integer, parameter :: din(1:8) = [ -1,  0,  1, -1,  1, -1,  0,  1]
+  integer, parameter :: djn(1:8) = [ -1, -1, -1,  0,  0,  1,  1,  1]
+  real, parameter :: hb_none = -900.0           ! 入力の「堤防なし」判定しきい値
+  real, allocatable :: hb(:,:)
+  character(:), allocatable :: fname
+  integer :: i, j, k, in, jn
+  integer :: nedge, n_bank, n_low
+  real :: zk, za
+  character(len=1024) :: msg
+
+  g%bank_active = len_trim(list%fn_bank) > 0
+  if (.not. g%bank_active) return
+  if (len_trim(list%fn_rw) <= 0) then
+    call par_stop("list_geoinfo: fn_bank には fn_rw(河道マスク)の指定が必要です")
+  end if
+  if (list%f_bank_datum < 0 .or. list%f_bank_datum > 2) then
+    call par_stop("list_geoinfo: f_bank_datum は 0(河床基準), 1(堤内地セル標高基準), " // &
+                  "2(絶対標高) のいずれか: "//itoa(list%f_bank_datum))
+  end if
+  if (list%f_bank_aggr < 0 .or. list%f_bank_aggr > 2) then
+    call par_stop("list_geoinfo: f_bank_aggr は 0(平均), 1(最小), 2(最大) のいずれか: " // &
+                  itoa(list%f_bank_aggr))
+  end if
+  if (.not. is_root) return
+
+  allocate(g%zbank(1:g%nx,1:g%ny), source = zbank_none)
+  allocate(hb(1:g%nx,1:g%ny), source = hb_none)
+  fname = trim(p%dir_data) // "/" // trim(list%fn_bank)
+  call par_info(" reading "//fname)
+  call fileio_read_matrix(fname, g%nx, g%ny, hb, p%f_input_mode)
+
+  n_bank = 0
+  n_low = 0
+  do j = 1, g%ny
+    do i = 1, g%nx
+      if (g%x(i,j) <= 0 .or. g%rw(i,j) <= 0 .or. g%sw(i,j) /= 0) cycle
+      if (hb(i,j) <= hb_none) cycle
+      select case (list%f_bank_datum)
+      case (0)      ! 河床(掘り込み後 z)基準
+        g%zbank(i,j) = g%z(i,j) + hb(i,j)
+      case (2)      ! 絶対標高
+        g%zbank(i,j) = hb(i,j)
+      case default  ! 堤内地セル標高基準: 隣接する堤内地セル(対角含む)で集約
+        nedge = 0
+        za = 0
+        do k = 1, 8
+          in = i + din(k)
+          jn = j + djn(k)
+          if (in < 1 .or. in > g%nx .or. jn < 1 .or. jn > g%ny) cycle
+          if (g%x(in,jn) <= 0) cycle
+          if (g%sw(in,jn) /= 0 .or. g%rw(in,jn) /= 0) cycle
+          zk = g%z(in,jn) + hb(i,j)
+          nedge = nedge + 1
+          select case (list%f_bank_aggr)
+          case (1)
+            if (nedge == 1) za = zk
+            za = min(za, zk)
+          case (2)
+            if (nedge == 1) za = zk
+            za = max(za, zk)
+          case default
+            za = za + zk
+          end select
+        end do
+        if (nedge <= 0) cycle       ! 堤内地に接しない河道セル: 堤防エッジなし
+        if (list%f_bank_aggr == 0) za = za / nedge
+        g%zbank(i,j) = za
+      end select
+      n_bank = n_bank + 1
+      ! 天端が河床を下回るセル(常時越流状態で始まる)は要注意として数える
+      if (g%zbank(i,j) < g%z(i,j)) n_low = n_low + 1
+    end do
+  end do
+  deallocate(hb)
+
+  write(msg,'(a,i0,a)') "geoinfo: bank crest set at ", n_bank, " channel cells"
+  call par_info(trim(msg))
+  if (n_bank <= 0) then
+    ! rank0 のみで実行されるため par_stop(collective)は不可
+    call par_abort("geoinfo: fn_bank 指定にもかかわらず有効な堤防セルがありません")
+  end if
+  if (n_low > 0) then
+    write(msg,'(a,i0,a)') "geoinfo: WARNING: bank crest below channel bed at ", n_low, " cells"
+    call par_info(trim(msg))
+  end if
+
 end subroutine
 
 !----------------------------------------------------------------------
