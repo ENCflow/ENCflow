@@ -45,11 +45,13 @@ module m_swflow_enc
   integer :: f_advection_tvd != 9            ! 移流項にTVDスキームを使用　
   integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
   integer :: f_bank_mode                    ! 堤防の水理モード(下の e_bank_*)
-  integer :: f_diffusion_term               ! 拡散項の計算の有無
+  integer :: f_diffusion_term               ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
   real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
   real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
   real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
-  real :: p_diffusion_nu != 0.0              ! 拡散項の動粘性係数 (m2/s)
+  real :: p_diffusion_nu != 0.0              ! 拡散項の動粘性係数 (m2/s。モデル2では
+                                            !   加算のバックグラウンド粘性)
+  real :: p_diffusion_alpha != 0.41/6        ! ゼロ方程式モデルの係数 α (ν=ν0+α·u*·h)
   ! ---- 境界条件(t_boundary)からセットする ---
   ! 境界条件の私有状態(辺型・面型・基準水位等)は submodule
   ! m_swflow_enc_bc が保持する(bc_init が構築)。親には continuous /
@@ -299,9 +301,21 @@ subroutine m_swflow_enc_init(p, g, b, s)
   p_adv_upwind_index = list%p_adv_upwind_index
   p_adprunge_thresh = list%p_adprunge_thresh
   p_diffusion_nu = list%p_diffusion_nu
-  if (f_diffusion_term > 0 .and. p_diffusion_nu <= 0) then
-    call par_stop("list_enc: f_diffusion_term=1 には p_diffusion_nu > 0 の指定が必要")
-  end if
+  p_diffusion_alpha = list%p_diffusion_alpha
+  select case (f_diffusion_term)
+    case (0)      ! 無効
+    case (1)      ! 定数モデル
+      if (p_diffusion_nu <= 0) then
+        call par_stop("list_enc: f_diffusion_term=1 には p_diffusion_nu > 0 の指定が必要")
+      end if
+    case (2)      ! ゼロ方程式モデル
+      if (p_diffusion_alpha <= 0 .and. p_diffusion_nu <= 0) then
+        call par_stop("list_enc: f_diffusion_term=2 には p_diffusion_alpha > 0 "// &
+                      "(または p_diffusion_nu > 0)の指定が必要")
+      end if
+    case default
+      call par_stop("list_enc: f_diffusion_term は 0(無効), 1(定数), 2(ゼロ方程式) のいずれか")
+  end select
 
   ! 河道条件ファイルから堤防の水理モードを読む(未指定ならデフォルト値)
   if (len_trim(p%fn_channel) > 0) call list_channel_read(p, chlist)
