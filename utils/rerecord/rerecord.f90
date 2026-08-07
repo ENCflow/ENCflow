@@ -52,7 +52,7 @@ subroutine m_rerecord_all(fn_sysparam, fn_qqdir, fn_qq)
 
   ! 最小限の状態変数を設定
   ! 注意: m_record_probe の点集約バッファが読む成分はすべて確保すること
-  ! (現在: z, h, u, v, vv, qq, hs, sd。m_record 側で成分を足したら
+  ! (現在: z, h, u, v, vv, qq, hg, hs, sd。m_record 側で成分を足したら
   !  ここにも確保を足す。§10 の utils 取り残し防止)
   s%t = 0.0
   allocate(s%h(1:g%nx,1:g%ny), source=0.0)
@@ -65,6 +65,7 @@ subroutine m_rerecord_all(fn_sysparam, fn_qqdir, fn_qq)
   allocate(s%qqdir(1:g%nx,1:g%ny), source=0.0)
   allocate(s%z(1:g%nx,1:g%ny), source=0.0)    ! probe の z 計測が読む
                                               ! (z 計測追加時の確保漏れの修正)
+  allocate(s%hg(1:g%nx,1:g%ny), source=0.0)   ! probe の hg 計測が読む
   allocate(s%hs(1:g%nx,1:g%ny), source=0.0)   ! probe の hs 計測が読む
   allocate(s%sd(1:g%nx,1:g%ny), source=0.0)   ! probe の sd 計測が読む
   s%initialized = .true.
