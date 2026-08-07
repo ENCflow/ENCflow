@@ -37,3 +37,5 @@ Thumbs.db
 
 # --- logs ---
 *.log
+save/
+save_*/
