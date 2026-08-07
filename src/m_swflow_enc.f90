@@ -45,9 +45,13 @@ module m_swflow_enc
   integer :: f_advection_tvd != 9            ! 移流項にTVDスキームを使用　
   integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
   integer :: f_bank_mode                    ! 堤防の水理モード(下の e_bank_*)
+  integer :: f_diffusion_term               ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
   real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
   real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
   real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
+  real :: p_diffusion_nu != 0.0              ! 拡散項の動粘性係数 (m2/s。モデル2では
+                                            !   加算のバックグラウンド粘性)
+  real :: p_diffusion_alpha != 0.41/6        ! ゼロ方程式モデルの係数 α (ν=ν0+α·u*·h)
   ! ---- 境界条件(t_boundary)からセットする ---
   ! 境界条件の私有状態(辺型・面型・基準水位等)は submodule
   ! m_swflow_enc_bc が保持する(bc_init が構築)。親には continuous /
@@ -185,6 +189,25 @@ module m_swflow_enc
     end subroutine
   end interface
 
+  ! 拡散項の計算層(submodule m_swflow_enc_diff。developer.md §20)
+  interface
+    module subroutine diff_init(p, g)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+    end subroutine
+    module subroutine diff_prepare(p, g, s)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+    end subroutine
+    module function diff_edge(i, j, k, in, jn) result(td_e)
+      integer, intent(in) :: i, j, k, in, jn
+      real :: td_e
+    end function
+    module subroutine diff_dispose()
+    end subroutine
+  end interface
+
   ! 境界条件の適用層(submodule m_swflow_enc_bc)
   interface
     module subroutine bc_init(p, g, b)
@@ -273,9 +296,26 @@ subroutine m_swflow_enc_init(p, g, b, s)
   f_friction_fastmath = list%f_friction_fastmath
   f_advection_tvd = list%f_advection_tvd
   f_rivermouth_drop = list%f_rivermouth_drop
+  f_diffusion_term = list%f_diffusion_term
   p_diagratio = list%p_diagratio
   p_adv_upwind_index = list%p_adv_upwind_index
   p_adprunge_thresh = list%p_adprunge_thresh
+  p_diffusion_nu = list%p_diffusion_nu
+  p_diffusion_alpha = list%p_diffusion_alpha
+  select case (f_diffusion_term)
+    case (0)      ! 無効
+    case (1)      ! 定数モデル
+      if (p_diffusion_nu <= 0) then
+        call par_stop("list_enc: f_diffusion_term=1 には p_diffusion_nu > 0 の指定が必要")
+      end if
+    case (2)      ! ゼロ方程式モデル
+      if (p_diffusion_alpha <= 0 .and. p_diffusion_nu <= 0) then
+        call par_stop("list_enc: f_diffusion_term=2 には p_diffusion_alpha > 0 "// &
+                      "(または p_diffusion_nu > 0)の指定が必要")
+      end if
+    case default
+      call par_stop("list_enc: f_diffusion_term は 0(無効), 1(定数), 2(ゼロ方程式) のいずれか")
+  end select
 
   ! 河道条件ファイルから堤防の水理モードを読む(未指定ならデフォルト値)
   if (len_trim(p%fn_channel) > 0) call list_channel_read(p, chlist)
@@ -337,6 +377,10 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 移流項計算サブモジュールを初期化する
   call adv_init(p, g)
 
+  ! 拡散項計算サブモジュールを初期化する(l8/w8dr を使うため
+  ! init_weights より後に)
+  call diff_init(p, g)
+
   ! 高速摩擦計算ルーチンを初期化する
   call m_ffactor_init(f_friction_fastmath, p%dd, 30.0, 'UV')
 
@@ -396,6 +440,9 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 移流項を計算する
   call adv_prepare(p, g, s, sx_mod)
 
+  ! 拡散項を計算する
+  call diff_prepare(p, g, s)
+
   ! 運動方程式を解いて流速を計算する
   call momentum(p, g, s, sx_mod, ierror)
 
@@ -448,6 +495,7 @@ subroutine m_swflow_enc_dispose(p)
   have_frw = .false.
   call m_ffactor_dispose
   call adv_dispose
+  call diff_dispose
 end subroutine
 
 
@@ -735,6 +783,9 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   else
     tae = 0
   end if
+
+  ! セル境界の拡散項を加算する(移流項と独立な重ね合わせ)
+  if (f_diffusion_term > 0) tae = tae + diff_edge(i, j, k, in, jn)
 
   ! 中心セルi,jからk近傍セルin,jnへの流速uv1と単位幅流量mn1を計算する
   call calc_kth_flux(p, g, s, sx, uve, tae, i, j, k, in, jn, 0, uve1, mne1)
