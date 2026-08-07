@@ -197,8 +197,13 @@
 - セル数重み付き帯分割は実装済み(2026-08。developer.md §11)。残るは
   全国データでの実測(メモリ RES、ランク別時間)による残余不均衡の確認
   (乾湿の時間変動が支配的なら静的分割では捉えられない)
-- geomorph: calc_creep 実装(ガウス丘の解析解ベンチマークを先に作る)。
-  浸食有効化時は par_halo_cell(s%z) をステップ頭へ(§11 の TODO 参照)
+- geomorph: **F0(calc_creep + 加速係数 morfac)実装・検証済み 2026-08-07**
+  (developer.md §19。解析解ベンチ test/creep 新設、無効時ビット一致・
+  -fcheck np=2・np=1,2,4 ビット一致は gfortran/OpenMPI で確認済み。
+  ifx での同確認は未)。s%z のハロは calc 末尾交換で解決(§11 TODO(1))。
+  次: F1a(s%sd 動的化+gwflow 読み替えの等価リファクタ)→ F1b(掃流砂
+  Exner)。設計正本は docs/geomorph_plan.md(改訂2)。残 TODO:
+  時間発展 z の dt_file 出力(§11 TODO(2)。F1b で実装予定)
 - gwflow: RRI 型・鉛直浸透重視型の追加(m_gwflow_bucket を複製して契約に従う)
 - intercept: 初期損失モデルと分布ファイル対応は実装済み(2026-08-06。
   貯留型の3点セット=step 口・原雨量私有保管・st の save/restore を含む。

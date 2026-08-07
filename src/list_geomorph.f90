@@ -12,6 +12,7 @@ module list_geomorph
   type t_list_geomorph
     ! --- 実行制御 ---
     real :: dt_geomorph = 0.0        ! 地形変化の更新時間間隔 (s)。0なら毎ステップ
+    real :: morfac = 1.0             ! 加速係数(地形時間の加速。全プロセス共通)
 
     ! --- プロセス別フラグ(排他選択ではなく重ね合わせ。0:無効) ---
     ! 各プロセスは独立に有効化でき、calc は有効なものを順に適用する
@@ -34,13 +35,15 @@ subroutine list_geomorph_read(p, list)
   integer :: un, ios
 
   real :: dt_geomorph
+  real :: morfac
   integer :: f_creep
   real :: creep_d
 
-  namelist /list_geomorph/ dt_geomorph, f_creep, creep_d
+  namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d
 
   ! 型宣言のデフォルトを namelist 変数の初期値にする
   dt_geomorph = list%dt_geomorph
+  morfac = list%morfac
   f_creep = list%f_creep
   creep_d = list%creep_d
 
@@ -52,6 +55,7 @@ subroutine list_geomorph_read(p, list)
   close(un)
 
   list%dt_geomorph = dt_geomorph
+  list%morfac = morfac
   list%f_creep = f_creep
   list%creep_d = creep_d
 

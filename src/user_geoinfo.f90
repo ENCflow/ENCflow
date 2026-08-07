@@ -31,11 +31,12 @@ submodule(m_geoinfo) user_geoinfo
 
   ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
   ! 更新すること(乖離は defined/run が「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:5) = [ character(len=32) :: &
+  character(len=*), parameter :: routine_names(1:6) = [ character(len=32) :: &
       "wave_solid_wall",  &   ! 波例題: 斜めの不透過壁(2セル厚)
       "wave_leaky_wall",  &   ! 波例題: 斜めの半透過壁(1セル厚)
       "abukuma_terrain",  &   ! 阿武隈川例題: 深海の埋め立てと地盤高 1/10
       "tohoku_flood",     &   ! 東北大氾濫計算(スタブ)
+      "gaussian_hill",    &   ! クリープ例題: 中央のガウス丘(解析解ベンチマーク)
       "template"          ]   ! 新規ルーチンの雛形(空)
 
 contains
@@ -102,6 +103,8 @@ function resolve(name) result(fp)
       fp => geoinfo_abukuma_terrain
     case ("tohoku_flood")
       fp => geoinfo_tohoku_flood
+    case ("gaussian_hill")
+      fp => geoinfo_gaussian_hill
     case ("template")
       fp => geoinfo_template
     case default
@@ -189,6 +192,34 @@ subroutine geoinfo_tohoku_flood(p, g)
   type(t_geoinfo), intent(inout) :: g
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (g%initialized) continue  ! 引数未使用の警告を抑制
+end subroutine
+
+
+!----------------------------------------------------------------------
+! クリープ例題: 領域中央のガウス丘
+!   z(r) = A exp(-r^2 / (2 sigma^2))、A = 1 m、sigma = 10 dx。
+!   線形拡散 dz/dt = D∇²z の解析解
+!     z(r,t) = A sigma^2/(sigma^2+2Dt) exp(-r^2/(2(sigma^2+2Dt)))
+!   との比較ベンチマーク(test/creep)専用。中心はセル ((nx+1)/2, (ny+1)/2)
+!   で、距離はセル番号差 × 格子幅(プローブの pbxytype=0 と同じ計量)
+!----------------------------------------------------------------------
+subroutine geoinfo_gaussian_hill(p, g)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(inout) :: g
+  integer :: i, j, ic, jc
+  real :: sigma2, r2
+  real, parameter :: amp = 1.0
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+
+  ic = (g%nx + 1) / 2
+  jc = (g%ny + 1) / 2
+  sigma2 = (10.0 * g%dx)**2
+  do j = 1, g%ny
+    do i = 1, g%nx
+      r2 = ((i - ic) * g%dx)**2 + ((j - jc) * g%dy)**2
+      g%z(i,j) = amp * exp(-r2 / (2.0 * sigma2))
+    end do
+  end do
 end subroutine
 
 
