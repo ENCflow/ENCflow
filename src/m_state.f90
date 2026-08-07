@@ -68,6 +68,13 @@ module m_state
     real, allocatable :: rsh(:,:)       ! water depth of reservoir (m)
     real, allocatable :: hg(:,:)        ! 地下貯留水深(柱状換算)(m)。どの地下水
                                         ! モデルも毎ステップここに反映する契約
+    real, allocatable :: sd(:,:)        ! 土層厚(=可動層厚)(m)。動的共有状態。
+                                        ! 初期値は g%sd(入力係数)から sd を要する
+                                        ! モジュールの init が転記する(restore 時は
+                                        ! 復元値が勝つ)。gwflow の容量 sd*sy0・
+                                        ! 全水頭と、geomorph の浸食限界(sd>=0)を
+                                        ! 兼ねる。浸食・堆積は z と同じ Δz で共動
+                                        ! 更新される(geomorph_plan.md §2.5)
     real, allocatable :: tide(:,:)      ! tidal level (m)
     real, allocatable :: hmax(:,:)      ! maximum depth (m)
     real, allocatable :: hmaxt(:,:)     ! maximum depth time (min)
@@ -156,6 +163,7 @@ subroutine m_state_init(s, p, g)
   allocate(s%prh(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%rsh(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hg(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%sd(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%tide(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hmax(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hmaxt(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
@@ -461,6 +469,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%prh)) deallocate(s%prh)
   if (allocated(s%rsh)) deallocate(s%rsh)
   if (allocated(s%hg)) deallocate(s%hg)
+  if (allocated(s%sd)) deallocate(s%sd)
   if (allocated(s%tide)) deallocate(s%tide)
   if (allocated(s%hmax)) deallocate(s%hmax)
   if (allocated(s%hmaxt)) deallocate(s%hmaxt)

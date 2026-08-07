@@ -149,8 +149,14 @@ subroutine m_gwflow_init(gw, p, g, s)
   end if
   gw%dts = p%dt * gw%idt_gwflow
 
-  ! 土層厚を要するモデルの遅延確保口(モデル init より前に。§16)
-  if (needs_sd) call m_geoinfo_require_sd(g)
+  ! 土層厚を要するモデルの遅延確保口(モデル init より前に。§16)。
+  ! 確保後、動的共有状態 s%sd へ初期値を転記する(以後のカーネルは
+  ! s%sd を読む。g%sd は入力係数として init 検証にのみ残る。
+  ! geomorph_plan.md §2.5: 浸食・堆積は s%sd を z と共動更新する)
+  if (needs_sd) then
+    call m_geoinfo_require_sd(g)
+    s%sd(:,:) = g%sd(:,:)
+  end if
 
   gw%enabled = .true.
   s%gw_active = .true.               ! 質量台帳(S_grnd/S_total)と Log 列の拡張を有効化

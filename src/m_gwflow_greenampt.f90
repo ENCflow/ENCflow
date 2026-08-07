@@ -1,7 +1,8 @@
 module m_gwflow_greenampt
   ! ========= 鉛直浸透モデル: Green-Ampt(ピストン近似) =========
   ! 谷(Tani)型の鉛直浸透支配機構の中核(handoff_gwflow_tani.md §3.1)。
-  ! 土層厚 g%sd(i,j) と比湧水量 g%sy0(= 有効間隙率 n_e。同 §6.1 の統一)
+  ! 土層厚 s%sd(i,j)(動的共有状態。初期値は入力係数 g%sd)と比湧水量
+  ! g%sy0(= 有効間隙率 n_e。同 §6.1 の統一)
   ! からセルごとの貯留容量 cap = sd * sy0 を決め、Green-Ampt 浸透能
   !   f_v = K_sv * (1 + psi_f * n_e / F)     (F: 累積浸透深)
   ! で表面水を地下貯留 s%hg へ移す。水平流なし・鉛直交換のみ。
@@ -111,7 +112,7 @@ subroutine gwflow_greenampt_calc(p, g, s, it, dts)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       ! 貯留容量(土層厚×水分不足量)。F ≡ s%hg(ヘッダ参照)
-      cap = g%sd(i,j) * ga%dtheta
+      cap = s%sd(i,j) * ga%dtheta
       ! Green-Ampt 浸透能(F_eff = max(F, ksv*dts) で F→0 を正則化)
       fv = ga%ksv * (1.0 + ga%psif * ga%dtheta / max(s%hg(i,j), ga%ksv * dts))
       ! 浸透フラックス: 浸透能・表面水量・残容量の最小

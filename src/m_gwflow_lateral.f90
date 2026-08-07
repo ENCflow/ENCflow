@@ -18,6 +18,9 @@ module m_gwflow_lateral
   ! 【定式化】
   !   h_gw = s%hg / sy0(飽和帯厚。s%hg は柱状換算水量)
   !   H    = (s%z - sd) + h_gw [+ s%h]   … 全水頭(同 §3.2.3)。
+  !          sd は動的共有状態 s%sd(初期値は入力係数 g%sd。将来
+  !          geomorph が z と共動更新する。geomorph_plan.md §2.5)。
+  !          z と sd が同じ Δz で動くため帯水層底 (z - sd) は不変
   !          地表湛水 s%h の寄与は飽和セル(s%hg >= sd*sy0)のみ。
   !          ENCflow は不飽和セルにも湛水が存在しうる(浸透途中の
   !          表面水)が、不飽和帯を介した湛水は地下水面と水圧的に
@@ -169,7 +172,7 @@ subroutine gwflow_lateral_init(p, g, s, dts)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
-      sdmax(1) = max(sdmax(1), g%sd(i,j))
+      sdmax(1) = max(sdmax(1), s%sd(i,j))
     end do
   end do
   call par_allreduce_max(sdmax)
@@ -230,8 +233,8 @@ subroutine gwflow_lateral_calc(p, g, s, it, dts)
       okc = (g%sw(i,j) <= 0)
       ! 書き手セルの飽和帯厚と全水頭(地表湛水は飽和セルのみ寄与)
       hgwc = s%hg(i,j) * glt%syinv
-      hc0 = s%z(i,j) - g%sd(i,j) + hgwc
-      if (s%hg(i,j) >= g%sd(i,j) * glt%sy0) hc0 = hc0 + s%h(i,j)
+      hc0 = s%z(i,j) - s%sd(i,j) + hgwc
+      if (s%hg(i,j) >= s%sd(i,j) * glt%sy0) hc0 = hc0 + s%h(i,j)
       do k = 1, 4
         in = i + din(k)
         jn = j + djn(k)
@@ -241,8 +244,8 @@ subroutine gwflow_lateral_calc(p, g, s, it, dts)
           if (g%sw(in,jn) <= 0) then
             hgwn = s%hg(in,jn) * glt%syinv
             if (hgwc > glt%eps .or. hgwn > glt%eps) then   ! 両側乾燥なら 0
-              hn0 = s%z(in,jn) - g%sd(in,jn) + hgwn
-              if (s%hg(in,jn) >= g%sd(in,jn) * glt%sy0) hn0 = hn0 + s%h(in,jn)
+              hn0 = s%z(in,jn) - s%sd(in,jn) + hgwn
+              if (s%hg(in,jn) >= s%sd(in,jn) * glt%sy0) hn0 = hn0 + s%h(in,jn)
               if (hc0 /= hn0) then                          ! 勾配ゼロなら 0
                 ! 上流側(全水頭の高い側)の飽和帯厚
                 if (hc0 > hn0) then
@@ -287,7 +290,7 @@ subroutine gwflow_lateral_calc(p, g, s, it, dts)
       end do
       s%hg(i,j) = s%hg(i,j) - dhg * dts * glt%ainv
       ! 飽和超過分を s%h へ(§3.2.1/§8 決定)
-      capc = g%sd(i,j) * glt%sy0
+      capc = s%sd(i,j) * glt%sy0
       if (s%hg(i,j) > capc) then
         fx = s%hg(i,j) - capc
         s%hg(i,j) = capc
