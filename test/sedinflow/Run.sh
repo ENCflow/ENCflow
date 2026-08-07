@@ -16,6 +16,14 @@ rc=0
 python3 "$sdir/Check_sedinflow.py" save || rc=1
 rm -rf save_serial && cp -r save save_serial
 
+# 流砂量指定(inflow_qs = C・Q と同量)でも同じ台帳が閉じることを検定
+# (期待値は同じ C・Q・tt = Qs・tt。save は上書きされる)
+set -o pipefail
+./a.out param_qs.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_sedinflow.py" save || rc=1
+
 if [ $rc -eq 0 ]; then
     echo "=== sedinflow 検定 PASS ==="
 else

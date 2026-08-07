@@ -21,7 +21,7 @@ module m_boundary
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
-  use m_parallel, only : par_stop, dcp
+  use m_parallel, only : par_stop, par_warn, is_root, dcp
   use m_util, only : itoa
   use list_boundary, only : t_list_boundary, list_boundary_read, &
                             nbsrcmax, nsrccmax, nsrcvmax
@@ -86,9 +86,16 @@ module m_boundary
     integer :: dist = 0                    ! 区間内の配分モード(0:開口幅で均等、
                                            !   1:水深按分=流入流速一様、
                                            !   2:通水能按分=重み h^{5/3})
-    integer :: nsval = 0                   ! 流入土砂濃度の時系列データ数(0=清水)
+    integer :: nsval = 0                   ! 流入土砂濃度の時系列データ数(0=指定なし)
     real, allocatable :: sval(:,:)         ! 濃度時系列 (1:2, 1:nsval) (s, m3/m3)
-    real :: cs = 0.0                       ! 現時刻の流入体積濃度 (m3/m3)
+    integer :: nqsval = 0                  ! 流入流砂量の時系列データ数(0=指定なし。
+                                           !   濃度時系列と区間ごとに排他)
+    real, allocatable :: qsval(:,:)        ! 流砂量時系列 (1:2, 1:nqsval) (s, m3/s 固体体積)
+    real :: cs = 0.0                       ! 現時刻の流入体積濃度 (m3/m3)。
+                                           !   流砂量指定では cs = Qs(t)/Q(t) の等価濃度
+                                           !   (注入総量 = Qs・dt が厳密。Q=0 の間は
+                                           !   注入されない=水が運ぶ)
+    integer :: ncsclip = 0                 ! 等価濃度の上限クリップ発動回数
   end type
 
   type t_boundary
@@ -175,6 +182,26 @@ subroutine m_boundary_makebdc(b, p, g, s)
     ! (advect_scalar が読むのは自帯セルのみ=ハロ不要)
     if (b%inflow(ifl)%nsval > 0) then
       b%inflow(ifl)%cs = interp_series(b%inflow(ifl)%sval, b%inflow(ifl)%nsval, s%t)
+    else if (b%inflow(ifl)%nqsval > 0) then
+      ! 流砂量指定: cs = Qs/Q の等価濃度に還元(按分が水と自動連動し、
+      ! 注入総量 = cs×流入水量 = Qs・dt が厳密)。Q=0 の間は注入なし。
+      ! Qs/Q が体積濃度として非物理(>=1)になる設定はクリップして
+      ! dispose で警告する(黙らない)
+      block
+        real :: qs2
+        qs2 = interp_series(b%inflow(ifl)%qsval, b%inflow(ifl)%nqsval, s%t)
+        if (b%inflow(ifl)%q > 0.0) then
+          b%inflow(ifl)%cs = qs2 / b%inflow(ifl)%q
+          if (b%inflow(ifl)%cs >= 1.0) then
+            b%inflow(ifl)%cs = 1.0
+            b%inflow(ifl)%ncsclip = b%inflow(ifl)%ncsclip + 1
+          end if
+        else
+          b%inflow(ifl)%cs = 0.0
+        end if
+      end block
+    end if
+    if (b%inflow(ifl)%nsval > 0 .or. b%inflow(ifl)%nqsval > 0) then
       block
         integer :: m2, i2, j2
         do m2 = 1, b%inflow(ifl)%ncell
@@ -256,7 +283,20 @@ subroutine m_boundary_dispose(b)
   type(t_boundary), intent(inout) :: b
   if (allocated(b%src)) deallocate(b%src)
   if (allocated(b%stage)) deallocate(b%stage)
-  if (allocated(b%inflow)) deallocate(b%inflow)
+  if (allocated(b%inflow)) then
+    ! 流砂量指定の等価濃度クリップの報告(全ランク同値のため root のみ表示)
+    block
+      integer :: ifl2
+      do ifl2 = 1, b%ninflow
+        if (b%inflow(ifl2)%ncsclip > 0 .and. is_root) then
+          call par_warn("bound_inflow: 区間 "//itoa(ifl2)//" で Qs/Q が体積濃度 1 を" &
+                        //"超え "//itoa(b%inflow(ifl2)%ncsclip)//" 回クリップしました" &
+                        //"(流量と流砂量の整合を確認してください)")
+        end if
+      end do
+    end block
+    deallocate(b%inflow)
+  end if
   if (allocated(b%csin)) deallocate(b%csin)
   if (allocated(b%edge%eta_cell)) deallocate(b%edge%eta_cell)
   b%nsrc = 0
@@ -651,6 +691,33 @@ subroutine init_inflow(b, p, g, list)
       end if
     end do
 
+    !--- 流入土砂の流砂量時系列(任意。濃度時系列と区間ごとに排他)---
+    if (len_trim(list%fn_inflow_qs(ifl)) > 0) then
+      call read_val_file2(trim(p%dir_data)//"/"//trim(list%fn_inflow_qs(ifl)), &
+                          b%inflow(ifl)%nqsval, b%inflow(ifl)%qsval)
+    else
+      n = 0
+      do k = 1, ubound(list%inflow_qs, 2)
+        if (list%inflow_qs(1,k,ifl) <= -9999) exit    ! 番兵で終端
+        n = n + 1
+      end do
+      if (n > 0) then
+        allocate(b%inflow(ifl)%qsval(1:2,1:n))
+        b%inflow(ifl)%qsval(1,1:n) = list%inflow_qs(1,1:n,ifl) * 60   ! 分を秒に換算
+        b%inflow(ifl)%qsval(2,1:n) = list%inflow_qs(2,1:n,ifl)
+        b%inflow(ifl)%nqsval = n
+      end if
+    end if
+    do k = 1, b%inflow(ifl)%nqsval
+      if (b%inflow(ifl)%qsval(2,k) < 0.0) then
+        call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" の流砂量は非負のみです")
+      end if
+    end do
+    if (b%inflow(ifl)%nsval > 0 .and. b%inflow(ifl)%nqsval > 0) then
+      call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" で濃度(inflow_cs)と" &
+                    //"流砂量(inflow_qs)は同時に指定できません(排他)")
+    end if
+
     !--- 検証と (セル, 辺) エントリの構築(角セルは辺ごとに複製) ---
     allocate(b%inflow(ifl)%cell(1:2,1:2*ncell))   ! 複製ぶんの余裕
     allocate(b%inflow(ifl)%side(1:2*ncell))
@@ -697,6 +764,11 @@ subroutine init_inflow(b, p, g, list)
     b%inflow(ifl)%q = interp_series(b%inflow(ifl)%val, b%inflow(ifl)%nval, p%t0)
     if (b%inflow(ifl)%nsval > 0) then
       b%inflow(ifl)%cs = interp_series(b%inflow(ifl)%sval, b%inflow(ifl)%nsval, p%t0)
+    else if (b%inflow(ifl)%nqsval > 0) then
+      if (b%inflow(ifl)%q > 0.0) then
+        b%inflow(ifl)%cs = min(interp_series(b%inflow(ifl)%qsval, &
+                               b%inflow(ifl)%nqsval, p%t0) / b%inflow(ifl)%q, 1.0)
+      end if
     end if
 
   end do
@@ -704,7 +776,7 @@ subroutine init_inflow(b, p, g, list)
   !--- 境界流入濃度のセル別テーブル(濃度指定のある区間が1つでもあれば
   !    確保。値は makebdc が毎ステップ書く。未確保 = 全区間清水) ---
   do ifl = 1, b%ninflow
-    if (b%inflow(ifl)%nsval > 0) then
+    if (b%inflow(ifl)%nsval > 0 .or. b%inflow(ifl)%nqsval > 0) then
       allocate(b%csin(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
       exit
     end if

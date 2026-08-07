@@ -57,9 +57,12 @@ module list_boundary
     integer :: inflow_dist(1:nbsrcmax) = 0         ! 配分モード(0:均等 1:水深 2:通水能)
     real, allocatable :: inflow_cs(:,:,:)          ! 流入土砂の体積濃度時系列 (min, m3/m3)。
                                                    !   未指定なら清水流入(浮遊砂有効時のみ意味)
+    real, allocatable :: inflow_qs(:,:,:)          ! 流入土砂の流砂量時系列 (min, m3/s 固体体積)。
+                                                   !   inflow_cs と区間ごとに排他
     character(len=maxpathlen) :: fn_inflow_cell(1:nbsrcmax) = ""  ! セル一覧ファイル名
     character(len=maxpathlen) :: fn_inflow_val(1:nbsrcmax) = ""   ! 時系列ファイル名
     character(len=maxpathlen) :: fn_inflow_cs(1:nbsrcmax) = ""    ! 濃度時系列ファイル名
+    character(len=maxpathlen) :: fn_inflow_qs(1:nbsrcmax) = ""    ! 流砂量時系列ファイル名
   end type
 
   ! namelist 読み込み用の静的作業配列(スタックに置かないための措置。
@@ -71,6 +74,7 @@ module list_boundary
   integer :: inflow_cell(1:2,1:nsrccmax,1:nbsrcmax)
   real :: inflow_val(1:2,1:nsrcvmax,1:nbsrcmax)
   real :: inflow_cs(1:2,1:nsrcvmax,1:nbsrcmax)
+  real :: inflow_qs(1:2,1:nsrcvmax,1:nbsrcmax)
 
 contains
 
@@ -221,19 +225,22 @@ subroutine read_inflow(un, list)
   character(len=maxpathlen) :: fn_inflow_cell(1:nbsrcmax)
   character(len=maxpathlen) :: fn_inflow_val(1:nbsrcmax)
   character(len=maxpathlen) :: fn_inflow_cs(1:nbsrcmax)
+  character(len=maxpathlen) :: fn_inflow_qs(1:nbsrcmax)
   integer :: ios
   character(len=1024) :: iom
   namelist /list_bound_inflow/ inflow_cell, inflow_val, inflow_dist, &
                                fn_inflow_cell, fn_inflow_val, &
-                               inflow_cs, fn_inflow_cs
+                               inflow_cs, fn_inflow_cs, inflow_qs, fn_inflow_qs
 
   inflow_cell = -9999
   inflow_val = -9999
   inflow_cs = -9999
+  inflow_qs = -9999
   inflow_dist = list%inflow_dist
   fn_inflow_cell = list%fn_inflow_cell
   fn_inflow_val = list%fn_inflow_val
   fn_inflow_cs = list%fn_inflow_cs
+  fn_inflow_qs = list%fn_inflow_qs
 
   rewind(un)
   read(un, nml=list_bound_inflow, iostat=ios, iomsg=iom)
@@ -244,10 +251,12 @@ subroutine read_inflow(un, list)
   list%inflow_cell = inflow_cell
   list%inflow_val = inflow_val
   list%inflow_cs = inflow_cs
+  list%inflow_qs = inflow_qs
   list%inflow_dist = inflow_dist
   list%fn_inflow_cell = fn_inflow_cell
   list%fn_inflow_val = fn_inflow_val
   list%fn_inflow_cs = fn_inflow_cs
+  list%fn_inflow_qs = fn_inflow_qs
 
 end subroutine
 
