@@ -48,11 +48,6 @@ module m_geomorph
   use list_geomorph, only : t_list_geomorph, list_geomorph_read
   use m_parallel, only : par_info, par_warn, par_stop, dcp, par_halo_cell, &
                          par_allreduce_max
-  ! サブグリッド河道幅の係数(protected 読み取り専用)。掃流砂が
-  ! 「水と同じ開口(frw)・河道底集中(1/wfrac)」で土砂を運ぶために読む。
-  ! STG では geomorph 自体が par_stop するため ENC 私有への依存で問題ない
-  use m_swflow_enc, only : have_width, have_frw, frw, wfrac, &
-                           have_open_bc, bc_open_face
   use m_util, only : itoa, rtoa
   implicit none
   private
@@ -127,6 +122,58 @@ module m_geomorph
   type(t_creep) :: crp
   type(t_fluvial) :: flv
   type(t_gmwork) :: wrk
+
+  ! プロセス実装(init/calc)は submodule に分割(m_geomorph_creep /
+  ! m_geomorph_fluvial / m_geomorph_suspend。m_swflow_enc の adv/bc/channel と
+  ! 同じコード分割用途)。親に残るのは型・定数・共有作業領域・配線
+  ! (init/calc の分配)・setup_sd・require_work・dispose。
+  ! 注意(§13): submodule 内では contained を使わない(nvfortran の
+  ! 二段ホスト結合不具合)。dcp 等の use 経由の名前は submodule 側で
+  ! 直接 use する
+  interface
+    module subroutine init_creep(gm, p, g)
+      type(t_geomorph), intent(in) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+    end subroutine
+    module subroutine calc_creep(gm, g, s, dts)
+      type(t_geomorph), intent(in) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
+    module subroutine init_fluvial(gm, p, g, list)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine calc_fluvial(gm, p, g, s, dts)
+      type(t_geomorph), intent(in) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
+    module subroutine init_suspend(gm, p, list)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine calc_suspend(gm, p, g, s, dtw)
+      type(t_geomorph), intent(in) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dtw
+    end subroutine
+    ! 共有スクラッチの確保口(実装は m_geomorph_creep 側。gfortran は
+    ! private なモジュール手続きをローカルシンボルにするため、submodule
+    ! から呼ぶ手続きは分離インターフェース+submodule 実装にする)
+    module subroutine require_work(g)
+      type(t_geoinfo), intent(in) :: g
+    end subroutine
+  end interface
 
 contains
 
@@ -298,148 +345,17 @@ end subroutine
 !   斜め成分の枠(cw(1), cw(3) = 0)は構造として確保してあり、8近傍化は
 !   cw の重み定義の変更で閉じる(その際は実効拡散係数が D と一致する
 !   重みの正規化を必ず検証すること)
-!----------------------------------------------------------------------
-subroutine init_creep(gm, p, g)
-  type(t_geomorph), intent(in) :: gm
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  real :: dts, dt_lim
-  character(len=256) :: msg
-
-  ! エッジ伝導度重み = 通過幅 / セル中心間距離(4近傍のみ)
-  crp%cw(1) = 0.0             ! 斜め(未使用)
-  crp%cw(2) = g%dx / g%dy     ! 法線 y 方向(通過幅 dx、距離 dy)
-  crp%cw(3) = 0.0             ! 斜め(未使用)
-  crp%cw(4) = g%dy / g%dx     ! 法線 x 方向(通過幅 dy、距離 dx)
-
-  ! 陽解法(FTCS)の安定条件の静的検査: D*dts*(1/dx^2+1/dy^2) <= 1/2。
-  ! D・格子・dts がすべて namelist 由来の静的量なので init で確定できる
-  ! (判定は全ランク同一 → par_stop の collective 条件を満たす)
-  dts = p%dt * gm%idt_geomorph * gm%morfac
-  dt_lim = 0.5 / (gm%creep_d * (1.0 / g%dx**2 + 1.0 / g%dy**2))
-  write(msg,'(a,es10.3,a,es10.3,a)') "geomorph creep: dt limit = ", dt_lim, &
-                                     " s (dts = ", dts, " s)"
-  call par_info(trim(msg))
-  if (dts > dt_lim) then
-    call par_stop("geomorph creep: dts exceeds the explicit stability limit " &
-                  // "(reduce dt_geomorph/morfac/creep_d)")
-  end if
-
-  call require_work(g)
-end subroutine
 
 
 !----------------------------------------------------------------------
 ! 掃流砂 Exner の初期化(検証・重み。共有設定(物性・sd・幅ガード)は
 ! m_geomorph_init の土砂プロセス共有部で設定済み)
-!----------------------------------------------------------------------
-subroutine init_fluvial(gm, p, g, list)
-  type(t_geomorph), intent(inout) :: gm
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_list_geomorph), intent(in) :: list
-  real :: lpx, lpy, ldx, ldy, dr
-
-  ! --- パラメータ検証 ---
-  if (list%fluv_d50 <= 0.0) call par_stop("list_geomorph: f_fluvial requires fluv_d50 > 0")
-  if (list%fluv_tausc <= 0.0) call par_stop("list_geomorph: fluv_tausc must be > 0")
-  if (list%fluv_dzmax <= 0.0) call par_stop("list_geomorph: fluv_dzmax must be > 0")
-  if (list%fluv_diagratio < 0.0 .or. list%fluv_diagratio > 1.0) then
-    call par_stop("list_geomorph: fluv_diagratio must be in [0,1]")
-  end if
-  if (list%f_qbform < 1 .or. list%f_qbform > 2) then
-    call par_stop("list_geomorph: f_qbform must be 1(Ashida-Michiue) or 2(MPM)")
-  end if
-
-  if (list%fluv_bcfeed < 0 .or. list%fluv_bcfeed > 1) then
-    call par_stop("list_geomorph: fluv_bcfeed must be 0(no feed) or 1(equilibrium feed)")
-  end if
-
-  gm%f_qbform = list%f_qbform
-  gm%d50 = list%fluv_d50
-  gm%tausc = list%fluv_tausc
-  gm%dzmax = list%fluv_dzmax
-  gm%f_bcfeed = list%fluv_bcfeed
-
-  ! --- 8近傍の通過幅と方向余弦(m_gwflow_lateral と同一の配分則) ---
-  dr = sqrt(g%dx**2 + g%dy**2)
-  if (g%dy > g%dx) then
-    lpy = 1 - (g%dx / g%dy)**2 * list%fluv_diagratio
-    ldy = list%fluv_diagratio / 2 * (g%dx / g%dy)**2
-    lpx = 1 - list%fluv_diagratio
-    ldx = list%fluv_diagratio / 2
-  else
-    lpy = 1 - list%fluv_diagratio
-    ldy = list%fluv_diagratio / 2
-    lpx = 1 - (g%dy / g%dx)**2 * list%fluv_diagratio
-    ldx = list%fluv_diagratio / 2 * (g%dy / g%dx)**2
-  end if
-  ! 通過幅(k=1: 斜め, k=2: y法線, k=3: 斜め, k=4: x法線。k=5..8 は
-  ! 対向方位で同幅。k>=5 は開境界面の書き手が使う)
-  flv%wl(1) = sqrt((ldy * g%dy)**2 + (ldx * g%dx)**2)
-  flv%wl(2) = lpx * g%dx
-  flv%wl(3) = flv%wl(1)
-  flv%wl(4) = lpy * g%dy
-  flv%wl(5) = flv%wl(4)
-  flv%wl(6) = flv%wl(3)
-  flv%wl(7) = flv%wl(2)
-  flv%wl(8) = flv%wl(1)
-  ! k軸方向(中心→近傍)の単位ベクトル
-  flv%ex(1) = -g%dx / dr;  flv%ey(1) = -g%dy / dr
-  flv%ex(2) = 0.0;         flv%ey(2) = -1.0
-  flv%ex(3) = g%dx / dr;   flv%ey(3) = -g%dy / dr
-  flv%ex(4) = -1.0;        flv%ey(4) = 0.0
-  flv%ex(5) = 1.0;         flv%ey(5) = 0.0
-  flv%ex(6) = -g%dx / dr;  flv%ey(6) = g%dy / dr
-  flv%ex(7) = 0.0;         flv%ey(7) = 1.0
-  flv%ex(8) = g%dx / dr;   flv%ey(8) = g%dy / dr
-
-  ! 流砂量の次元化係数(無次元流砂量 → m2/s)
-  flv%qbcoef = sqrt(gm%sgrav * p%gg * gm%d50**3)
-
-  call require_work(g)
-end subroutine
 
 
 !----------------------------------------------------------------------
 ! 浮遊砂の初期化(検証・沈降速度の導出)
 !   移流は m_swflow_enc がステップ内で行う(sed_active。エッジ作業領域は
 !   不要)。ここは E-D 交換(calc_suspend)のパラメータのみ
-!----------------------------------------------------------------------
-subroutine init_suspend(gm, p, list)
-  type(t_geomorph), intent(inout) :: gm
-  type(t_sysparam), intent(in) :: p
-  type(t_list_geomorph), intent(in) :: list
-  character(len=256) :: msg
-
-  if (list%susp_d50 <= 0.0) call par_stop("list_geomorph: f_suspend requires susp_d50 > 0")
-  if (list%susp_tausc <= 0.0) call par_stop("list_geomorph: susp_tausc must be > 0")
-  if (list%susp_beta <= 0.0) call par_stop("list_geomorph: susp_beta must be > 0")
-  if (list%susp_wf < 0.0) call par_stop("list_geomorph: susp_wf must be >= 0")
-  select case (list%f_esform)
-    case (1)      ! 超過掃流力線形(簡易式)。esa が必須
-      if (list%susp_esa <= 0.0) then
-        call par_stop("list_geomorph: f_esform=1 requires susp_esa > 0")
-      end if
-    case (2)      ! 板倉・岸(定数は原式固定。esa/tausc は不使用)
-      continue
-    case default
-      call par_stop("list_geomorph: f_esform must be 1(excess-shear linear) or 2(Itakura-Kishi)")
-  end select
-
-  gm%f_esform = list%f_esform
-  gm%sd50 = list%susp_d50
-  gm%stausc = list%susp_tausc
-  gm%beta = list%susp_beta
-  gm%esa = list%susp_esa
-  if (list%susp_wf > 0.0) then
-    gm%wf = list%susp_wf
-  else
-    gm%wf = rubey_wf(gm%sgrav, p%gg, gm%sd50)
-    write(msg,'(a,es10.3,a)') "geomorph suspend: settling velocity (Rubey) = ", gm%wf, " m/s"
-    call par_info(trim(msg))
-  end if
-end subroutine
 
 
 !----------------------------------------------------------------------
@@ -453,55 +369,14 @@ end subroutine
 !   自己整合性: τ*→0 で a'→∞、比 → a' の漸近から Ω→0(E は必ず負で
 !   浸食なし)。a' > 20 は erfc のアンダーフロー域なので 0 で打ち切る
 !   (その領域では q_su < 0 が保証される)
-!----------------------------------------------------------------------
-pure function ceq_itakura(gm, gg, taus) result(ceq)
-  type(t_geomorph), intent(in) :: gm
-  real, intent(in) :: gg      ! 重力加速度
-  real, intent(in) :: taus    ! 無次元掃流力 τ*
-  real :: ceq
-  real :: ap, ratio, omega, ustar, qsu
-  real, parameter :: pi = acos(-1.0)
-
-  ceq = 0.0
-  if (taus <= 0.0) return
-  ap = ik_bstar / taus - 1.0 / ik_eta0
-  if (ap > 20.0) return
-  ratio = exp(-ap**2) / (sqrt(pi) * erfc(ap))
-  omega = taus / ik_bstar * ratio + taus / (ik_bstar * ik_eta0) - 1.0
-  ustar = sqrt(taus * gm%sgrav * gg * gm%sd50)
-  qsu = ik_k * (ik_alpha / (gm%sgrav + 1.0) &
-                * (gm%sgrav * gg * gm%sd50 / ustar) * omega - gm%wf)
-  ceq = max(qsu, 0.0) / gm%wf
-end function
 
 
 !----------------------------------------------------------------------
 ! Rubey 式の沈降速度
 !   w_f = F * sqrt(s g d), F = sqrt(2/3 + 36ν²/(s g d³)) − sqrt(36ν²/(s g d³))
 !   (ν = 1.0e-6 m²/s: 清水 20℃ 相当)
-!----------------------------------------------------------------------
-pure function rubey_wf(sgrav, gg, d) result(wf)
-  real, intent(in) :: sgrav, gg, d
-  real :: wf
-  real :: bb
-  real, parameter :: nu = 1.0e-6
-  bb = 36.0 * nu**2 / (sgrav * gg * d**3)
-  wf = (sqrt(2.0 / 3.0 + bb) - sqrt(bb)) * sqrt(sgrav * gg * d)
-end function
 
 
-!----------------------------------------------------------------------
-! エッジ流量スクラッチの確保(プロセス間で共有。最初の要求者が確保)
-!   j 範囲はセル j を挟むエッジが j-1 と j にあるため下限 jsh-1
-!   (m_swflow_enc の uv/mn と同形)。確保時 0: マスク起因で書かれない
-!   エッジは恒久 0(無フラックス)
-!----------------------------------------------------------------------
-subroutine require_work(g)
-  type(t_geoinfo), intent(in) :: g
-  if (allocated(wrk%q)) return
-  wrk%ainv = 1.0 / (g%dx * g%dy)
-  allocate(wrk%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
-end subroutine
 
 
 !----------------------------------------------------------------------
@@ -517,226 +392,6 @@ end subroutine
 !   平衡仮定: 掃流砂の適応距離は局所(格子スケールで平衡が成立)。
 !   τ* = n^2 V^2 / (s d50 h^{1/3})(マニング閉じ。有効掃流力の分離は
 !   簡略化して省く — 平坦床相当)
-!----------------------------------------------------------------------
-subroutine calc_fluvial(gm, p, g, s, dts)
-  type(t_geomorph), intent(in) :: gm
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(inout) :: s
-  real, intent(in) :: dts
-  integer :: i, j, k, in, jn, jt
-  real :: gq, ue, vve, hhe, rne, taus, qbs, qb, sdup, dze, winvd
-  real :: dv8, dz, cap, fx, winv
-  integer :: nclip
-  real :: vleak
-  logical :: okc, okbank
-
-  nclip = 0
-  vleak = 0.0
-
-  ! --- ステップ頭のハロ交換(m_gwflow_lateral と同じ「冒頭に置く」理由) ---
-  ! 界面エッジの冗長計算(ハロ行 je+1 の書き手)が読む u, v, vv, h は
-  ! swflow・gwflow が帯のみを更新するため、ステップ頭交換のままでは
-  ! 前ステップの値に古びている。ここで交換しないと隣接ランクと異なる
-  ! 入力から同一エッジを計算し、反対称性(=土砂体積保存)が壊れる
-  ! (np=2 の保存則検定で実検出したバグ)。z, sd のハロは本モジュール
-  ! calc 末尾の交換で維持されているため不要
-  call par_halo_cell(s%h)
-  call par_halo_cell(s%u)
-  call par_halo_cell(s%v)
-  call par_halo_cell(s%vv)
-
-  ! --- ループ1: エッジの掃流砂フラックス(各成分の書き手は一意) ---
-  jt = min(dcp%je + 1, dcp%jeh)
-  !$omp parallel do schedule(static) reduction(+: nclip) &
-  !$omp   private(i, j, k, in, jn, okc, okbank, gq, ue, vve, hhe, rne, taus, qbs, qb, &
-  !$omp           sdup, dze, winvd)
-  do j = dcp%js, jt
-    do i = g%wx(1,j), g%wx(2,j)
-      if (g%x(i,j) <= 0) cycle
-      okc = (g%sw(i,j) <= 0)
-      do k = 1, 4
-        in = i + din(k)
-        jn = j + djn(k)
-        ! 乾湿・流向は動的なので、条件を満たさない場合も必ず 0 を代入する
-        gq = 0.0
-        ! 堤防(仮想壁面)エッジ = 河道—非河道の境界では掃流砂を運ばない
-        ! (掃流砂は河道内に閉じる。越流時の土砂輸送は浮遊砂(移流が
-        ! 壁を含む実フラックス mn1 を使う)が担う。§17 の壁は水理側で
-        ! 動的(越流)だが、河床材料の掃流は堤防を越えないとする)
-        if (okc .and. g%x(in,jn) > 0) then
-          if (g%sw(in,jn) <= 0) then
-            ! 堤防エッジ判定は近傍が有効セルと確定してから行う
-            ! (rw の確保範囲は x と違い番兵なし。x 番兵ガードより先に
-            ! rw(in,jn) を読むと i=0/nx+1 で範囲外 — -fcheck np=2 で実検出)
-            okbank = .true.
-            if (g%bank_active) then
-              okbank = ((g%rw(i,j) > 0) .eqv. (g%rw(in,jn) > 0))
-            end if
-            ! エッジ水理量(両セル平均)と法線流速
-            vve = (s%vv(i,j) + s%vv(in,jn)) / 2
-            hhe = (s%h(i,j) + s%h(in,jn)) / 2
-            if (okbank .and. vve > 0.0 .and. hhe > p%dd) then
-              ue = (s%u(i,j) + s%u(in,jn)) / 2 * flv%ex(k) &
-                 + (s%v(i,j) + s%v(in,jn)) / 2 * flv%ey(k)
-              if (ue /= 0.0) then
-                hhe = max(hhe, p%dv)         ! 極浅水深での τ* 発散を防ぐ
-                rne = (g%rn(i,j) + g%rn(in,jn)) / 2
-                ! 無次元掃流力(マニング閉じ。g は分子分母で相殺)
-                taus = rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
-                if (taus > gm%tausc) then
-                  ! 平衡流砂量(無次元)
-                  if (gm%f_qbform == 1) then       ! 芦田・道上
-                    qbs = 17.0 * taus**1.5 * (1.0 - gm%tausc / taus) &
-                                           * (1.0 - sqrt(gm%tausc / taus))
-                  else                             ! MPM
-                    qbs = 8.0 * (taus - gm%tausc)**1.5
-                  end if
-                  qb = qbs * flv%qbcoef            ! 固体体積の単位幅流砂量 (m2/s)
-                  ! 流向射影(|ue|/vve <= 1)× 通過幅でエッジ流量に
-                  gq = qb * (ue / vve) * flv%wl(k)
-                  ! 通過幅係数(水と同じ開口・幅キャップ。無効時は乗算なし)
-                  if (have_frw) gq = gq * frw(k, i+die(k), j+dje(k))
-                  ! 可動層クランプ: 供給側(風上)セルの土層厚を超える
-                  ! 浸食をこのエッジ単独で起こさない(複数エッジの同時
-                  ! 流出による僅かな超過はループ2の床クリップが受ける)。
-                  ! 河道幅有効時は供給側の河道底面積あたりに換算(winvd)
-                  if (gq > 0.0) then
-                    sdup = s%sd(i,j)
-                  else
-                    sdup = s%sd(in,jn)
-                  end if
-                  winvd = 1.0
-                  if (have_width) then
-                    if (gq > 0.0) then
-                      winvd = 1.0 / wfrac(i,j)
-                    else
-                      winvd = 1.0 / wfrac(in,jn)
-                    end if
-                  end if
-                  dze = abs(gq) * dts * wrk%ainv * winvd * gm%poroi
-                  if (dze > sdup) then
-                    gq = gq * (sdup / dze)         ! sdup=0(岩盤)なら 0
-                    dze = sdup
-                  end if
-                  ! 変動上限ガード(地形波の CFL 相当。morfac を上げた
-                  ! ときの暴走防止。クリップは流量段階=保存則は保たれる)
-                  if (dze > gm%dzmax) then
-                    gq = gq * (gm%dzmax / dze)
-                    nclip = nclip + 1
-                  end if
-                end if
-              end if
-            end if
-          end if
-        end if
-        wrk%q(k, i+die(k), j+dje(k)) = gq
-      end do
-
-      ! --- 開境界面の掃流フラックス(境界土砂供給・流出の第1段) ---
-      ! 面に接する唯一の有効セルが全8方位を検査して書く(k>=5 の面
-      ! スロットの所有者は域外に居ないため、内側セルが代わりに書く。
-      ! 単一書き手は保たれる)。水理量は内側セルの一方側値、流向は
-      ! セル流速の面法線射影。ue > 0(流出)は常に容量輸送(河床低下波が
-      ! 域外へ抜ける)、ue < 0(流入)は f_bcfeed=1 のとき容量供給
-      ! (平衡給砂。上流端の河床が維持される)。境界面の通過幅補正 frw は
-      ! 未適用(§18 制約(5) の辺開口と同じ扱い)
-      if (have_open_bc .and. okc) then
-        do k = 1, 8
-          in = i + din(k)
-          jn = j + djn(k)
-          if (g%x(in,jn) > 0) cycle
-          if (.not. bc_open_face(in, jn)) cycle
-          ! 開面は毎ステップ必ず代入する(乾湿・流向は動的)
-          gq = 0.0
-          vve = s%vv(i,j)
-          hhe = s%h(i,j)
-          if (vve > 0.0 .and. hhe > p%dd) then
-            ue = s%u(i,j) * flv%ex(k) + s%v(i,j) * flv%ey(k)   ! 正 = 域外へ
-            if (ue > 0.0 .or. gm%f_bcfeed > 0) then
-              hhe = max(hhe, p%dv)
-              rne = g%rn(i,j)
-              taus = rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
-              if (taus > gm%tausc) then
-                if (gm%f_qbform == 1) then       ! 芦田・道上
-                  qbs = 17.0 * taus**1.5 * (1.0 - gm%tausc / taus) &
-                                         * (1.0 - sqrt(gm%tausc / taus))
-                else                             ! MPM
-                  qbs = 8.0 * (taus - gm%tausc)**1.5
-                end if
-                qb = qbs * flv%qbcoef
-                gq = qb * (ue / vve) * flv%wl(k)
-                winvd = 1.0
-                if (have_width) winvd = 1.0 / wfrac(i,j)
-                dze = abs(gq) * dts * wrk%ainv * winvd * gm%poroi
-                if (gq > 0.0) then
-                  ! 流出: 供給側 = 自セルの可動層クランプ
-                  if (dze > s%sd(i,j)) then
-                    gq = gq * (s%sd(i,j) / dze)
-                    dze = s%sd(i,j)
-                  end if
-                end if
-                ! 変動上限ガード(流出・流入とも)
-                if (dze > gm%dzmax) then
-                  gq = gq * (gm%dzmax / dze)
-                  nclip = nclip + 1
-                end if
-              end if
-            end if
-          end if
-          ! 格納は所有者正準の向き(sign_e を乗じて格納すると、ループ2の
-          ! sign_e(k) 倍の読み出しで gq = 域外向き正 が復元される)
-          wrk%q(ke(k), i+die(k), j+dje(k)) = sign_e(k) * gq
-        end do
-      end if
-    end do
-  end do
-  !$omp end parallel do
-
-  ! --- ループ2: 発散 → z と sd の共動更新 + 地下水容量の整合 ---
-  !$omp parallel do schedule(static) reduction(+: vleak) &
-  !$omp   private(i, j, k, dv8, dz, cap, fx, winv)
-  do j = dcp%js, dcp%je
-    do i = g%wx(1,j), g%wx(2,j)
-      if (g%x(i,j) <= 0) cycle
-      if (g%sw(i,j) > 0) cycle
-      dv8 = 0.0
-      do k = 1, 8
-        dv8 = dv8 + sign_e(k) * wrk%q(ke(k), i+die(k), j+dje(k))
-      end do
-      ! 河道幅有効時は体積発散を河道底面積 wfrac*dx*dy で厚さに換算
-      ! (Δz の河道底集中。無効時は 1.0 の乗算で厳密に不変)
-      winv = 1.0
-      if (have_width) winv = 1.0 / wfrac(i,j)
-      dz = -dv8 * dts * wrk%ainv * winv * gm%poroi
-      ! 岩盤床クリップ(複数エッジの同時流出でエッジ別クランプを僅かに
-      ! 超えた場合の最終防衛。失った体積は vleak に計上して黙らない)
-      if (dz < -s%sd(i,j)) then
-        vleak = vleak + (-dz - s%sd(i,j)) / gm%poroi / wrk%ainv / winv
-        dz = -s%sd(i,j)
-      end if
-      ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
-      s%z(i,j) = s%z(i,j) + dz
-      s%sd(i,j) = s%sd(i,j) + dz
-      ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
-      ! (飽和表土が削られ、含まれていた水が地表に出る。反対称適用)
-      if (s%gw_active) then
-        cap = s%sd(i,j) * g%sy0
-        if (s%hg(i,j) > cap) then
-          fx = s%hg(i,j) - cap
-          s%hg(i,j) = cap
-          s%h(i,j) = s%h(i,j) + fx
-        end if
-      end if
-    end do
-  end do
-  !$omp end parallel do
-
-  ! ガード発動の累計(dispose で報告)
-  flv%nclip = flv%nclip + nclip
-  flv%vleak = flv%vleak + vleak
-
-end subroutine
 
 
 !----------------------------------------------------------------------
@@ -758,69 +413,6 @@ end subroutine
 !   ×morfac(1回の計算 = morfac 回のイベントぶんの河床変化)。
 !   morfac=1 では hs と河床の交換が厳密に反対称になり、
 !   Σhs + (1−λ)Σ(z−z0) が機械精度で保存される(test/suspend が検定)
-!----------------------------------------------------------------------
-subroutine calc_suspend(gm, p, g, s, dtw)
-  type(t_geomorph), intent(in) :: gm
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(inout) :: s
-  real, intent(in) :: dtw       ! 水柱側の実効時間刻み(morfac を含まない)
-  integer :: i, j
-  real :: hh, taus, ceq, cc, fx, dzb, cap, fxg
-
-  !$omp parallel do schedule(static) private(i, j, hh, taus, ceq, cc, fx, dzb, cap, fxg)
-  do j = dcp%js, dcp%je
-    do i = g%wx(1,j), g%wx(2,j)
-      if (g%x(i,j) <= 0) cycle
-      if (g%sw(i,j) > 0) cycle
-      if (s%h(i,j) <= p%dd) then
-        ! 乾燥セル: 浮遊分を全量河床へ
-        if (s%hs(i,j) <= 0.0) cycle
-        fx = -s%hs(i,j)
-      else
-        ! 平衡濃度(浸食レート E = wf・ceq に相当する濃度換算)
-        hh = max(s%h(i,j), p%dv)
-        taus = g%rn(i,j)**2 * s%vv(i,j)**2 / (gm%sgrav * gm%sd50 * hh**(1.0/3.0))
-        ceq = 0.0
-        if (gm%f_esform == 1) then
-          ! 超過掃流力線形(簡易式)
-          if (taus > gm%stausc) ceq = gm%esa * (taus / gm%stausc - 1.0)
-        else
-          ! 板倉・岸(ceq = q_su / wf)
-          ceq = ceq_itakura(gm, p%gg, taus)
-        end if
-        cc = 0.0
-        if (s%hs(i,j) > 0.0) cc = s%hs(i,j) / s%h(i,j)
-        ! 正味の交換(>0: 浸食で hs へ、<0: 沈降で河床へ)
-        fx = gm%wf * (ceq - gm%beta * cc) * dtw
-        if (fx > 0.0) then
-          ! 可動層クランプ(河床側は ×morfac・poroi で減るため換算して制限)
-          fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
-        else
-          fx = max(fx, -max(s%hs(i,j), 0.0))    ! 沈降は浮遊量まで
-        end if
-        if (fx == 0.0) cycle
-      end if
-      s%hs(i,j) = s%hs(i,j) + fx
-      ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
-      dzb = -fx * gm%morfac * gm%poroi
-      s%z(i,j) = s%z(i,j) + dzb
-      s%sd(i,j) = s%sd(i,j) + dzb
-      ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
-      ! (calc_fluvial と同じ整合。反対称適用)
-      if (s%gw_active) then
-        cap = s%sd(i,j) * g%sy0
-        if (s%hg(i,j) > cap) then
-          fxg = s%hg(i,j) - cap
-          s%hg(i,j) = cap
-          s%h(i,j) = s%h(i,j) + fxg
-        end if
-      end if
-    end do
-  end do
-  !$omp end parallel do
-
-end subroutine
 
 
 !----------------------------------------------------------------------
@@ -835,60 +427,6 @@ end subroutine
 !         初期化の帯+ハロ切り出しで有効)
 !   書き: 自帯 js..je の s%z のみ(e の回復とハロ交換は呼び出し側)
 !   境界: 領域外(x=0)・海(sw>0)とは無フラックス(海域の地形は不変)
-!----------------------------------------------------------------------
-subroutine calc_creep(gm, g, s, dts)
-  type(t_geomorph), intent(in) :: gm
-  type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(inout) :: s
-  real, intent(in) :: dts
-  integer :: i, j, k, in, jn, jt
-  real :: gq, dv
-  logical :: okc
-
-  ! --- ループ1: エッジ流量(各成分の書き手は一意なので競合しない) ---
-  !   帯界面のエッジ成分 k=1..3(行 je)はハロ行 je+1 の書き手が担う
-  !   (冗長計算。全域端では行が存在せず対象外)
-  jt = min(dcp%je + 1, dcp%jeh)
-  !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, gq)
-  do j = dcp%js, jt
-    do i = g%wx(1,j), g%wx(2,j)
-      if (g%x(i,j) <= 0) cycle
-      okc = (g%sw(i,j) <= 0)
-      do k = 1, 4
-        in = i + din(k)
-        jn = j + djn(k)
-        ! z は毎回変わるため、条件を満たさない場合も必ず 0 を代入する
-        gq = 0.0
-        if (crp%cw(k) > 0.0 .and. okc .and. g%x(in,jn) > 0) then
-          if (g%sw(in,jn) <= 0) then
-            ! エッジ流量(書き手 c から k 近傍 n に向かい正)
-            gq = gm%creep_d * (s%z(i,j) - s%z(in,jn)) * crp%cw(k)
-          end if
-        end if
-        wrk%q(k, i+die(k), j+dje(k)) = gq
-      end do
-    end do
-  end do
-  !$omp end parallel do
-
-  ! --- ループ2: 発散を取り z を更新 ---
-  !   マスク・斜め成分のエッジは 0 が入っているため無条件に8近傍を
-  !   集計できる(流出の総和が正)
-  !$omp parallel do schedule(static) private(i, j, k, dv)
-  do j = dcp%js, dcp%je
-    do i = g%wx(1,j), g%wx(2,j)
-      if (g%x(i,j) <= 0) cycle
-      if (g%sw(i,j) > 0) cycle
-      dv = 0.0
-      do k = 1, 8
-        dv = dv + sign_e(k) * wrk%q(ke(k), i+die(k), j+dje(k))
-      end do
-      s%z(i,j) = s%z(i,j) - dv * dts * wrk%ainv
-    end do
-  end do
-  !$omp end parallel do
-
-end subroutine
 
 
 !----------------------------------------------------------------------
