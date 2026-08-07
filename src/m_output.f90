@@ -113,7 +113,7 @@ subroutine output_state(p, g, s, k)
   if (p%f_out_ddd > 0) call output_matrix(p, g, "Ddd", s%ddir1, k)  ! 卓越流下方向フラグ
   if (p%f_out_dda > 0) call output_matrix(p, g, "Dda", s%ddir8, k)  ! 全流下方向フラグ
   if (p%f_out_pre > 0) call output_matrix(p, g, "Pr", s%prh, k)     ! 降雨強度
-  if (p%f_out_rsh > 0) call output_matrix(p, g, "Rsh", s%rsh, k)    ! ため池水深
+  if (p%f_out_hrs > 0) call output_matrix(p, g, "Hrs", s%hrs, k)    ! ため池水深
   if (p%f_out_fr > 0) call output_matrix(p, g, "Fr", s%fr, k)       ! フルード数
   if (p%f_out_cn > 0) call output_matrix(p, g, "Cn", s%cn, k)       ! クーラン数
   if (p%f_out_hg > 0) call output_matrix(p, g, "Hg", s%hg, k)       ! 地下貯留水深

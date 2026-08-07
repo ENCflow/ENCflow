@@ -169,7 +169,7 @@
     に書くので完成マーカーを兼ねる)。内容: save_version(**仕様変更日の
     日付文字列**。形式を変えたら m_state の save_version_cur を更新)、
     nx, ny, precision_bits, n_state, t, it。
-  - `state.dat` — m_state の4成分(h, z, rsh, hg の連結)。
+  - `state.dat` — m_state の4成分(h, z, hrs, hg の連結)。
   - `swflow_enc.dat` — sx%uv, mn(エッジ状態。力学状態は厳密に復元される)。
   - `gwflow_<モデル名>.dat` — 内部状態を持つ地下水モデルの私有ファイル。
 - **保存対象の線引き: 質量はスキーム非依存の共有状態として m_state が保存し、
@@ -366,7 +366,7 @@
     バイト互換)/ 復元の配布は2方式が混在(過渡期):
     **エッジ(swflow_enc の uv/mn)は rank0 のみ全域一時に読み
     par_scatter_edge で帯配布**(2026-08-04。非 root は全域一時を持たない)。
-    セル成分(m_state の h/z/rsh/hg)は全ランク同形の全域一時 ts に
+    セル成分(m_state の h/z/hrs/hg)は全ランク同形の全域一時 ts に
     Bcast → 帯切り出しのまま(ts は新規初期化も使うため、scatter 化は
     初期化第2段(a)= ts の rank0 化と同時に行う。handoff の道標)。
     rank0 の全域一時は残る(RLE ストリームが先頭からの逐次展開のため。
@@ -430,9 +430,9 @@
   - プローブは z を計測量に追加(点集約バッファ 6 成分)。m_record の
     「計測量の追加手順」の初適用例であり、浸食後は地形の時間変化を
     プローブで直接観測できる。
-  - save/restore は h, u, v, z, rsh の5成分(リスタート形式の変更)。
+  - save/restore は h, u, v, z, hrs の5成分(リスタート形式の変更)。
     **成分を足すときは save の write 並びと restore の read 並びを必ず
-    同時に更新する**(z 追加時に read 側の更新漏れ+ts%rsh 未確保で
+    同時に更新する**(z 追加時に read 側の更新漏れ+ts%hrs 未確保で
     復元が壊れた実バグ。読み並びコメントを restore に明記済み)。
   - **浸食(s%z の時間発展)を導入する時の必須 TODO**:
     (1) ステップ頭の交換リストに par_halo_cell(s%z) を追加(現在は

@@ -124,12 +124,12 @@ module subroutine boundary_h(p, g, b, s, sx)
       if (g%x(i,j) <= 0) cycle
 
       ! ため池の処理
-      if (g%rscap(i,j) > 0.0 .and. g%rscap(i,j) > s%rsh(i,j)) then ! ため池に余力がある
-        if (sx%h1(i,j) > (g%rscap(i,j) - s%rsh(i,j))) then         !   ため池があふれる
-          sx%h1(i,j) = sx%h1(i,j) - (g%rscap(i,j) - s%rsh(i,j))    !     場の水深がため池の余力分だけ減る
-          s%rsh(i,j) = g%rscap(i,j)                                !     ため池が満水になる
+      if (g%rscap(i,j) > 0.0 .and. g%rscap(i,j) > s%hrs(i,j)) then ! ため池に余力がある
+        if (sx%h1(i,j) > (g%rscap(i,j) - s%hrs(i,j))) then         !   ため池があふれる
+          sx%h1(i,j) = sx%h1(i,j) - (g%rscap(i,j) - s%hrs(i,j))    !     場の水深がため池の余力分だけ減る
+          s%hrs(i,j) = g%rscap(i,j)                                !     ため池が満水になる
         else                                                       !   ため池があふれない
-          s%rsh(i,j) = s%rsh(i,j) + sx%h1(i,j)                     !     ため池の水深が増加する
+          s%hrs(i,j) = s%hrs(i,j) + sx%h1(i,j)                     !     ため池の水深が増加する
           sx%h1(i,j) = 0.0                                         !     場の水深がゼロになる
         end if
       end if
