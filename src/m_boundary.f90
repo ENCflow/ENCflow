@@ -125,6 +125,7 @@ module m_boundary
 
   ! 内部水理構造物の種別コード
   integer, parameter :: e_struct_pump = 1     ! 排水ポンプ
+  integer, parameter :: e_struct_culvert = 2  ! カルバート(矩形断面・双方向)
 
   type t_structure                         ! 内部水理構造物1基(§22)。
                                            !   共通骨格: 取水セル群 cin → 吐口セル群
@@ -176,8 +177,9 @@ module m_boundary
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
     end subroutine
-    module subroutine structure_makebdc(b, g, s)
+    module subroutine structure_makebdc(b, p, g, s)
       type(t_boundary), intent(inout) :: b
+      type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(in) :: s
     end subroutine
@@ -286,7 +288,7 @@ subroutine m_boundary_makebdc(b, p, g, s)
 
   !--- 各内部水理構造物の現時刻の目標流量を水理則から決める(§22。
   !    実装は submodule m_boundary_structure)---
-  if (b%nstruct > 0) call structure_makebdc(b, g, s)
+  if (b%nstruct > 0) call structure_makebdc(b, p, g, s)
 
 end subroutine
 

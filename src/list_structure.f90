@@ -5,6 +5,7 @@ module list_structure
   ! (submodule m_boundary_structure)が行う。
   !   &list_struct_pump    : 排水ポンプ(旧 &list_bound_pump を fn_boundary
   !                          から移設。2026-08-07)
+  !   &list_struct_culvert : カルバート(矩形断面・双方向。2026-08-07)
   ! グループ不在は正常(その型なし。present_* が偽のまま)。
   ! 構文エラー(iostat>0)は par_stop。
   use m_sysparam, only : t_sysparam
@@ -34,6 +35,19 @@ module list_structure
     real, allocatable :: pump_rule(:,:,:)          ! 運転ルール折れ線 (基準値 m, 流量 m3/s)
     character(len=maxpathlen) :: fn_pump_in_cell(1:nstmax) = ""   ! 取水セル一覧ファイル名
     character(len=maxpathlen) :: fn_pump_out_cell(1:nstmax) = ""  ! 吐口セル一覧ファイル名
+    ! ---- &list_struct_culvert ----
+    logical :: present_culvert = .false.           ! グループが存在したか
+    integer, allocatable :: culv_in_cell(:,:,:)    ! 上流側セル座標 (i, j)
+    integer, allocatable :: culv_out_cell(:,:,:)   ! 下流側セル座標 (i, j。必須)
+    real :: culv_width(1:nstmax) = -9999.0         ! 断面幅 B (m)
+    real :: culv_height(1:nstmax) = -9999.0        ! 断面高 D (m)
+    real :: culv_zin(1:nstmax) = -9999.0           ! 上流側敷高 (m)
+    real :: culv_zout(1:nstmax) = -9999.0          ! 下流側敷高 (m)
+    real :: culv_length(1:nstmax) = 0.0            ! 管路長 L (m。0=摩擦損失なし)
+    real :: culv_manning(1:nstmax) = 0.02          ! 管内粗度 n
+    real :: culv_ce(1:nstmax) = 0.5                ! 流入損失係数
+    character(len=maxpathlen) :: fn_culv_in_cell(1:nstmax) = ""   ! 上流側セル一覧ファイル名
+    character(len=maxpathlen) :: fn_culv_out_cell(1:nstmax) = ""  ! 下流側セル一覧ファイル名
   end type
 
   ! namelist 読み込み用の静的作業配列(スタックに置かないための措置。
@@ -41,6 +55,8 @@ module list_structure
   integer :: pump_in_cell(1:2,1:nstccmax,1:nstmax)
   integer :: pump_out_cell(1:2,1:nstccmax,1:nstmax)
   real :: pump_rule(1:2,1:nstvmax,1:nstmax)
+  integer :: culv_in_cell(1:2,1:nstccmax,1:nstmax)
+  integer :: culv_out_cell(1:2,1:nstccmax,1:nstmax)
 
 contains
 
@@ -62,6 +78,7 @@ subroutine list_structure_read(p, list)
   open(newunit=un, file=trim(p%fn_structure), status='old', action='read', iostat=ios)
   if (ios /= 0) call par_stop("cannot open file: "//trim(p%fn_structure))
   call read_pump(un, list)
+  call read_culvert(un, list)
   close(un)
 
 end subroutine
@@ -108,6 +125,58 @@ subroutine read_pump(un, list)
   list%f_pump_ref = f_pump_ref
   list%fn_pump_in_cell = fn_pump_in_cell
   list%fn_pump_out_cell = fn_pump_out_cell
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! &list_struct_culvert を読む(不在なら present_culvert を偽のまま返す)
+!   解釈・検証(セル・形状の妥当性)は init_structure が行う
+!----------------------------------------------------------------------
+subroutine read_culvert(un, list)
+  integer, intent(in) :: un
+  type(t_list_structure), intent(inout) :: list
+  real :: culv_width(1:nstmax), culv_height(1:nstmax)
+  real :: culv_zin(1:nstmax), culv_zout(1:nstmax)
+  real :: culv_length(1:nstmax), culv_manning(1:nstmax), culv_ce(1:nstmax)
+  character(len=maxpathlen) :: fn_culv_in_cell(1:nstmax)
+  character(len=maxpathlen) :: fn_culv_out_cell(1:nstmax)
+  integer :: ios
+  character(len=1024) :: iom
+  namelist /list_struct_culvert/ culv_in_cell, culv_out_cell, &
+                                 culv_width, culv_height, culv_zin, culv_zout, &
+                                 culv_length, culv_manning, culv_ce, &
+                                 fn_culv_in_cell, fn_culv_out_cell
+
+  culv_in_cell = -9999
+  culv_out_cell = -9999
+  culv_width = list%culv_width
+  culv_height = list%culv_height
+  culv_zin = list%culv_zin
+  culv_zout = list%culv_zout
+  culv_length = list%culv_length
+  culv_manning = list%culv_manning
+  culv_ce = list%culv_ce
+  fn_culv_in_cell = list%fn_culv_in_cell
+  fn_culv_out_cell = list%fn_culv_out_cell
+
+  rewind(un)
+  read(un, nml=list_struct_culvert, iostat=ios, iomsg=iom)
+  if (ios > 0) call par_stop("list_struct_culvert 読込失敗: "//trim(iom))
+  if (ios < 0) return              ! グループ不在(この型なし)
+  list%present_culvert = .true.
+
+  list%culv_in_cell = culv_in_cell
+  list%culv_out_cell = culv_out_cell
+  list%culv_width = culv_width
+  list%culv_height = culv_height
+  list%culv_zin = culv_zin
+  list%culv_zout = culv_zout
+  list%culv_length = culv_length
+  list%culv_manning = culv_manning
+  list%culv_ce = culv_ce
+  list%fn_culv_in_cell = fn_culv_in_cell
+  list%fn_culv_out_cell = fn_culv_out_cell
 
 end subroutine
 

@@ -113,7 +113,8 @@ module subroutine boundary_h(p, g, b, s, sx)
   type(t_boundary), intent(in) :: b
   type(t_state), intent(inout) :: s
   type(t_enc_status), intent(inout) :: sx
-  integer :: i, j, k, isrc, istage, ip
+  integer :: i, j, k, isrc, istage, ip, ncs, ncd
+  logical :: fwd
   real :: qcell, dht, dh
   real, allocatable :: vst(:)
 
@@ -167,23 +168,36 @@ module subroutine boundary_h(p, g, b, s, sx)
     end do
   end do
 
-  ! 内部水理構造物(ポンプ等。§22): 取水セル群から吐口セル群への
-  ! 質量保存的な強制転送。目標流量 q は makebdc がステップ開始時状態の
-  ! 水理則から決定済み。ここでは取水側で「実在する水量まで」の
-  ! 吸い上げ制限を適用し、実際に汲めた体積だけを吐口へ与える(授受の
-  ! 体積が厳密に一致)。取水と吐口が別ランクでも、実体積の共有は
-  ! 「所有ランクのみ非ゼロ+総和 allreduce」で決定的(§11)。
-  ! 吐口なし(ncout=0)は域外排水(系から除去)。
+  ! 内部水理構造物(ポンプ・カルバート等。§22): 取水セル群から吐口
+  ! セル群への質量保存的な強制転送。目標流量 q は makebdc がステップ
+  ! 開始時状態の水理則から決定済み。q < 0 は逆向きの転送(cout→cin。
+  ! カルバートの双方向)で、源側・先側のセル群が入れ替わるだけで
+  ! 処理は同形。ここでは源側で「実在する水量まで」の吸い上げ制限を
+  ! 適用し、実際に汲めた体積だけを先側へ与える(授受の体積が厳密に
+  ! 一致)。源と先が別ランクでも、実体積の共有は「所有ランクのみ
+  ! 非ゼロ+総和 allreduce」で決定的(§11)。
+  ! 順方向で吐口なし(ncout=0)は域外排水(系から除去。ポンプのみ)。
   ! collective は全ランクが同数実行する(nstruct は namelist 由来で全ランク同一)
   if (b%nstruct > 0) then
     allocate(vst(1:b%nstruct), source = 0.0)
     do ip = 1, b%nstruct
-      if (b%struct(ip)%q <= 0.0) cycle
+      if (b%struct(ip)%q == 0.0) cycle
+      fwd = b%struct(ip)%q > 0.0
+      if (fwd) then
+        ncs = b%struct(ip)%ncin
+      else
+        ncs = b%struct(ip)%ncout
+      end if
       ! セルあたり目標水深(体積の等分配。gv・wfrac で水深に換算)
-      qcell = b%struct(ip)%q * p%dt / (b%struct(ip)%ncin * g%dx * g%dy)
-      do k = 1, b%struct(ip)%ncin
-        i = b%struct(ip)%cin(1,k)
-        j = b%struct(ip)%cin(2,k)
+      qcell = abs(b%struct(ip)%q) * p%dt / (ncs * g%dx * g%dy)
+      do k = 1, ncs
+        if (fwd) then
+          i = b%struct(ip)%cin(1,k)
+          j = b%struct(ip)%cin(2,k)
+        else
+          i = b%struct(ip)%cout(1,k)
+          j = b%struct(ip)%cout(2,k)
+        end if
         if (j < dcp%js .or. j > dcp%je) cycle
         if (have_width) then
           dht = qcell / g%gv(i,j) / wfrac(i,j)
@@ -192,7 +206,9 @@ module subroutine boundary_h(p, g, b, s, sx)
         end if
         ! ため池セル(rscap>0)は場の水面でなく貯留 s%hrs から汲む
         ! (前池排水。§22)。汲んで空いた容量への地表水の再吸収は
-        ! 次ステップのため池処理が行う(1ステップ遅れ)
+        ! 次ステップのため池処理が行う(1ステップ遅れ)。
+        ! カルバートはため池セル不許可(init で検証)のため、この分岐は
+        ! 順方向(ポンプ)でのみ生きる
         if (g%rscap(i,j) > 0.0) then
           dh = min(max(s%hrs(i,j), 0.0), dht)
           s%hrs(i,j) = s%hrs(i,j) - dh
@@ -209,11 +225,23 @@ module subroutine boundary_h(p, g, b, s, sx)
     end do
     call par_allreduce_sumr(vst)
     do ip = 1, b%nstruct
-      if (vst(ip) <= 0.0 .or. b%struct(ip)%ncout <= 0) cycle   ! 域外排水は除去のみ
-      qcell = vst(ip) / (b%struct(ip)%ncout * g%dx * g%dy)
-      do k = 1, b%struct(ip)%ncout
-        i = b%struct(ip)%cout(1,k)
-        j = b%struct(ip)%cout(2,k)
+      if (vst(ip) <= 0.0) cycle
+      fwd = b%struct(ip)%q > 0.0
+      if (fwd) then
+        ncd = b%struct(ip)%ncout
+        if (ncd <= 0) cycle                      ! 域外排水は除去のみ
+      else
+        ncd = b%struct(ip)%ncin
+      end if
+      qcell = vst(ip) / (ncd * g%dx * g%dy)
+      do k = 1, ncd
+        if (fwd) then
+          i = b%struct(ip)%cout(1,k)
+          j = b%struct(ip)%cout(2,k)
+        else
+          i = b%struct(ip)%cin(1,k)
+          j = b%struct(ip)%cin(2,k)
+        end if
         if (j < dcp%js .or. j > dcp%je) cycle
         if (have_width) then
           sx%h1(i,j) = sx%h1(i,j) + qcell / g%gv(i,j) / wfrac(i,j)
