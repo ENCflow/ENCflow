@@ -207,10 +207,17 @@
   **F1b(掃流砂 Exner f_fluvial+sd 共動更新+gwflow 容量引き渡し)も
   実装・検証済み 2026-08-07**(developer.md §19.2。test/fluvial 新設。
   時間発展 z の出力は既存の f_out_z=1 で可能=§11 TODO(2) は解消)。
-  残: 等流×給砂平衡の解析解ベンチマーク(境界土砂供給=平衡給砂の
-  設計と併せて)、fluvial の morfac 等価性ベンチ、fn_width 併用対応
-  (winv/frw ミラー)、ifx での geomorph/F1a/F1b の確認。
-  次の実装段: F2(浮遊砂 s%hs+swflow_enc ステップ内移流)。
+  **F2(浮遊砂 f_suspend: s%hs+swflow_enc ステップ内移流(汎用
+  スカラーカーネル advect_scalar)+E-D 交換)も実装・検証済み
+  2026-08-07**(developer.md §19.3。test/suspend 新設。save は
+  6成分 "2026-08-07b")。
+  残: 板倉・岸等の平衡濃度式の追加(f_esform の case。現状は超過掃流力
+  線形の簡易式のみ — **式の選定は文献確認の上で行う**)、
+  等流×給砂平衡・定常巻き上げ沈降の解析解ベンチマーク(境界土砂供給=
+  平衡給砂の設計と併せて)、fluvial/suspend の morfac 等価性ベンチ、
+  fn_width 併用対応(winv/frw ミラー)、record への hs/sd 計測追加、
+  ifx での geomorph 一式(F0〜F2)の確認。
+  次の実装段: F3(斜面浸食 f_wash: 雨滴・面状侵食を hs へ注入)。
   設計正本は docs/geomorph_plan.md(改訂2)
 - gwflow: RRI 型・鉛直浸透重視型の追加(m_gwflow_bucket を複製して契約に従う)
 - intercept: 初期損失モデルと分布ファイル対応は実装済み(2026-08-06。

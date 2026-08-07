@@ -29,8 +29,17 @@ module list_geomorph
     real :: fluv_diagratio = 0.5857864376  ! 斜め方向の通過幅配分(= 2/(2+√2)。
                                      ! m_swflow_enc の p_diagratio と同値の既定)
 
+    integer :: f_suspend = 0         ! 浮遊砂(移流+浸食・沈降)(0:無効, 1:有効)
+    integer :: f_esform = 1          ! 平衡濃度式(1:超過掃流力線形(簡易))
+    real :: susp_d50 = 0.0           ! 浮遊砂の代表粒径 (m)。f_suspend=1 で必須
+    real :: susp_wf = 0.0            ! 沈降速度 (m/s)。0 なら Rubey 式で d50 から導出
+    real :: susp_tausc = 0.05        ! 浮遊の限界無次元掃流力 τ*c
+    real :: susp_beta = 1.0          ! 沈降の底面濃度係数(c_b = β・C)
+    real :: susp_esa = 0.0           ! 平衡濃度係数(C_eq = esa・(τ*/τ*c - 1))。
+                                     ! f_suspend=1 で必須(体積濃度スケール)
+
     ! 将来のプロセス追加はここにフラグとパラメータを足す
-    ! (例: f_suspend 浮遊砂, f_wash 斜面浸食, f_badland 崩壊性浸食)
+    ! (例: f_wash 斜面浸食, f_badland 崩壊性浸食)
   end type
 
 contains
@@ -56,10 +65,19 @@ subroutine list_geomorph_read(p, list)
   real :: fluv_sgrav
   real :: fluv_dzmax
   real :: fluv_diagratio
+  integer :: f_suspend
+  integer :: f_esform
+  real :: susp_d50
+  real :: susp_wf
+  real :: susp_tausc
+  real :: susp_beta
+  real :: susp_esa
 
   namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
-                           fluv_porosity, fluv_sgrav, fluv_dzmax, fluv_diagratio
+                           fluv_porosity, fluv_sgrav, fluv_dzmax, fluv_diagratio, &
+                           f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
+                           susp_beta, susp_esa
 
   ! 型宣言のデフォルトを namelist 変数の初期値にする
   dt_geomorph = list%dt_geomorph
@@ -74,6 +92,13 @@ subroutine list_geomorph_read(p, list)
   fluv_sgrav = list%fluv_sgrav
   fluv_dzmax = list%fluv_dzmax
   fluv_diagratio = list%fluv_diagratio
+  f_suspend = list%f_suspend
+  f_esform = list%f_esform
+  susp_d50 = list%susp_d50
+  susp_wf = list%susp_wf
+  susp_tausc = list%susp_tausc
+  susp_beta = list%susp_beta
+  susp_esa = list%susp_esa
 
   call par_info("reading list_geomorph in " // trim(p%fn_geomorph))
   open(newunit=un, file=trim(p%fn_geomorph), status='old', action='read', iostat=ios)
@@ -94,6 +119,13 @@ subroutine list_geomorph_read(p, list)
   list%fluv_sgrav = fluv_sgrav
   list%fluv_dzmax = fluv_dzmax
   list%fluv_diagratio = fluv_diagratio
+  list%f_suspend = f_suspend
+  list%f_esform = f_esform
+  list%susp_d50 = susp_d50
+  list%susp_wf = susp_wf
+  list%susp_tausc = susp_tausc
+  list%susp_beta = susp_beta
+  list%susp_esa = susp_esa
 
 end subroutine
 

@@ -1222,3 +1222,46 @@
   リスタート往復(sd が発展した状態の save→restore→save)バイト一致。
 - **残(次段)**: 等流×給砂平衡の解析解ベンチマーク(境界土砂供給=
   平衡給砂の設計と併せて)、morfac 等価性の fluvial 版、浮遊砂(F2)。
+
+### 19.3 浮遊砂(f_suspend。F2。2026-08-07 実装)
+
+- **責務の分業**: 移流 = m_swflow_enc のステップ内輸送(s%sed_active
+  フラグ。s%gw_active と同じ通知様式)、浸食・沈降(E-D)= m_geomorph の
+  calc_suspend(dt_geomorph 間隔)。状態は s%hs(浮遊砂柱状量 [m]。
+  濃度 C = hs/h は導出量)。
+- **移流カーネルはスカラー非依存の汎用手続き advect_scalar**
+  (geomorph_plan.md §2.6。栄養塩・汚染物質輸送の将来共用を想定した
+  利用者第1号)。continuous と同一のエッジ流量 mn1・通過幅係数 fw・
+  平面積率逆数 winv・空隙率 gv・乾燥エッジ条件で風上輸送するため、
+  「一様濃度は一様のまま」が式の形で保証される。時刻 n の h と hs が
+  必要なため continuous 直後(complete 前)に置き、コミット
+  (hs1→s%hs)は complete が行う(h1→h と同じ意味論)。
+  開境界からの流入は清水(C=0)、流出は内部濃度で自然流出。
+- **【実バグ】sx%hs1 は確保時に s%hs の複製で初期化する**(mn1 = mn と
+  同じ流儀)。init 末尾の complete は移流を経ずにコミットするため、
+  0 のままだと restore 済みの hs を消す(リスタート往復ビット一致で
+  実検出。cold start は hs=0 なので複製で挙動不変)。
+- **E-D 交換**(calc_suspend): E = w_f・C_eq(可動層 sd でクランプ)、
+  D = w_f・β・C(浮遊量 hs でクランプ)。C_eq は f_esform で選択
+  (現状 1: 超過掃流力線形 C_eq = esa・(τ*/τ*c − 1) の簡易式のみ。
+  **板倉・岸等の標準式は文献確認の上で case 追加する**設計。式の枠は
+  f_qbform と同型)。w_f は susp_wf 直接指定か Rubey 式導出。
+  乾燥セル(h <= dd)は浮遊分を全量河床へ繰り入れ(水のない浮遊砂を
+  残さない)。z と sd の共動更新・gwflow 容量引き渡しは fluvial と同一。
+- **MORFAC の台帳分離**: 水柱側(hs)は水理時間 dtw、河床側(z, sd)は
+  ×morfac。morfac=1 では交換が厳密に反対称で、固体総量
+  Σhs + (1−λ)Σ(z−z0) が機械精度保存(test/suspend が検定。実測 2.2e-15)。
+- **ハロ**: s%hs は swflow_enc のステップ頭交換に追加(sed_active 時のみ。
+  E-D による帯の更新は前ステップの geomorph なので、移流直前の交換で
+  最新)。E-D はセル内交換のみでエッジ・ハロ不要。
+- **save/restore**: state.dat を6成分に拡張(h, z, rsh, hg, sd, hs。
+  save_version = "2026-08-07b")。
+- **既知の挙動**: 強い乾燥化では h1 同様に hs1 も僅かに負になり得る
+  (f_exflux_reduction=1 で緩和。handoff 項9と同種)。
+- **検証(2026-08-07, gfortran/OpenMPI, -O2 厳密数学)**: 無効時
+  ビット一致(wave / gwflow ケース / creep / fluvial)、-fcheck np=2
+  先行、np=1,2,4 の state.dat 逐次バイト一致、固体総量保存 2.2e-15、
+  共動更新恒等 1.6e-14、gwflow 併用の S_total 14桁不動、リスタート往復
+  (hs 復元)の逐次・np=2 バイト一致(上記 hs1 初期化バグを捕捉)。
+- **残(次段)**: 板倉・岸等の平衡濃度式、定常巻き上げ・沈降の解析解
+  ベンチマーク、境界土砂供給(掃流と共通)、record への hs 計測追加。

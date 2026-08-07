@@ -113,6 +113,8 @@ module m_swflow_enc
     real, allocatable :: mn(:,:,:)   ! セル境界での流量(時刻n。ステップ中は読み取り専用)
     real, allocatable :: mn1(:,:,:)  ! セル境界での流量の書き込み先(時刻n+1。completeでmnへコミット)
     real, allocatable :: h1(:,:)     ! セル中心での計算済み水深
+    real, allocatable :: hs1(:,:)    ! 浮遊砂柱状量の書き込み先(時刻n+1。completeでs%hsへ
+                                     ! コミット。s%sed_active のときだけ確保)
     logical :: initialized = .false.
   end type
   type(t_enc_status) :: sx_mod
@@ -377,6 +379,9 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   call par_halo_cell(s%z)
   call par_halo_cell(s%vv)
   call par_halo_edge(sx_mod%mn)
+  ! 浮遊砂柱状量(移流の風上濃度がハロ行の hs/h を読む。E-D による帯の
+  ! 更新は前ステップの geomorph なので、ここで交換すれば最新)
+  if (s%sed_active) call par_halo_cell(s%hs)
 
   ! 破堤サイトの現時刻の実効天端を更新する(サイト数ぶんの時系列補間。
   ! t の純関数なので全ランクが同値を冗長計算する=通信不要)
@@ -399,6 +404,10 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
 
   ! 連続式を解いて水深を更新する
   call continuous(p, g, s, sx_mod)
+
+  ! 浮遊砂柱状量を移流する(連続式と同一のエッジ流量・係数による
+  ! 風上輸送。時刻 n の s%h と s%hs が必要なため complete より前に置く)
+  if (s%sed_active) call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1)
 
   ! 水深の境界条件をセットする
   call boundary_h(p, g, b, s, sx_mod)
@@ -523,6 +532,15 @@ subroutine init_enc_status(p, g, s, sx)
   allocate(sx%h1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(sx%mn1(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
   allocate(sx%mn(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
+  ! 浮遊砂の書き込みバッファ(sed_active は m_geomorph_init が設定済み。
+  ! 初期化順序: geomorph init → swflow init)。正準状態 s%hs の複製で
+  ! 初期化する(mn1 = mn と同じ流儀): init 末尾の complete は移流を
+  ! 経ずにコミットするため、0 のままだと restore 済みの hs を消す
+  ! (リスタート往復ビット一致で実検出したバグ)
+  if (s%sed_active) then
+    allocate(sx%hs1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+    sx%hs1(:,:) = s%hs(:,:)
+  end if
 
   ! 流速の初期条件を設定する
   !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, ue, ve)
@@ -576,6 +594,7 @@ subroutine del_enc_status(sx)
   if (allocated(sx%mn)) deallocate(sx%mn)
   if (allocated(sx%mn1)) deallocate(sx%mn1)
   if (allocated(sx%h1)) deallocate(sx%h1)
+  if (allocated(sx%hs1)) deallocate(sx%hs1)
 end subroutine
 
 
@@ -1094,6 +1113,95 @@ subroutine complete(p, g, s, sx)
       s%e(i,j) = s%h(i,j) + s%z(i,j)
       s%vv(i,j) = sqrt(s%u(i,j)**2 + s%v(i,j)**2)
       s%qq(i,j) = sqrt(s%m(i,j)**2 + s%n(i,j)**2)
+    end do
+  end do
+  !$omp end parallel do
+
+  ! 浮遊砂柱状量のコミット(セルの h1→h と同じ意味論。範囲・スキップは
+  ! advect_scalar の書き込み集合と一致させる — 海セルは移流対象外)
+  if (s%sed_active) then
+    !$omp parallel do schedule(dynamic) private(i, j)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        if (g%sw(i,j) > 0) cycle
+        s%hs(i,j) = sx%hs1(i,j)
+      end do
+    end do
+    !$omp end parallel do
+  end if
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 柱状量スカラーの保存輸送(汎用カーネル。利用者第1号は浮遊砂 s%hs)
+!   連続式(continuous)と同一のエッジ流量 mn1・通過幅係数 fw・
+!   平面積率逆数 winv・空隙率 gv で風上輸送する。係数が完全に一致する
+!   ため「一様濃度 c/h は一様のまま」が式の形で保証される。
+!   契約(geomorph_plan.md §2.6):
+!     - c は柱状量(セル平面積あたりの量。貯留の意味論は h と同一)。
+!       単位は所有者が決める(線形輸送のため単位不問)。濃度 = c/h は導出量
+!     - 読み: 時刻 n の s%h と c(ハロ行含む。ステップ頭交換が前提)、
+!       sx%mn1(par_edge_merge・boundary_uvmn 適用後 = continuous と同一)
+!     - 書き: c1 の自帯 js..je(海・域外セルは書かない。コミットは所有者)
+!     - 源泉・消滅・乾燥時の処遇は所有モジュールの責務(ここは純移流)
+!     - 風上セルが領域外(開境界からの流入)の濃度は 0(清水流入)
+!     - 乾燥エッジ条件(h<dd 両セル)は continuous と同一。強い乾燥化では
+!       h1 同様に c1 も僅かに負になり得る(f_exflux_reduction=1 で緩和)
+!----------------------------------------------------------------------
+subroutine advect_scalar(p, g, s, sx, c, c1)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(in) :: sx
+  real, intent(in) :: c(1:, dcp%jsh:)
+  real, intent(inout) :: c1(1:, dcp%jsh:)
+  integer :: i, j, k
+  integer :: in, jn, ie, je
+  real :: mne, fw, winv, cdon
+  integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
+  real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
+
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, mne, fw, winv, cdon)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%sw(i,j) > 0) cycle
+      if (g%x(i,j) <= 0) cycle
+      c1(i,j) = c(i,j)
+      ! 河道幅有効時のセル平面積率の逆数(無効時は 1.0 の乗算で厳密に不変)
+      winv = 1.0
+      if (have_width) winv = 1.0 / wfrac(i,j)
+      do k = 1, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        if (g%x(in,jn) > 0) then
+          ! 乾燥エッジ判定は時刻 n の h(continuous と同一の条件)
+          if (s%h(i,j) < p%dd .and. s%h(in,jn) < p%dd) cycle
+        else
+          ! 開いた辺の境界面は取り込む(continuous と同一)
+          if (.not. have_open_bc) cycle
+          if (.not. bc_open_face(in, jn)) cycle
+        end if
+        ie = i + die(k)
+        je = j + dje(k)
+        mne = sign_e(k) * sx%mn1(ke(k),ie,je)
+        if (mne == 0.0) cycle
+        ! 風上(donor)セルの濃度(境界面からの流入は清水 = 0)
+        cdon = 0.0
+        if (mne > 0.0) then
+          if (s%h(i,j) > 0.0) cdon = c(i,j) / s%h(i,j)
+        else
+          if (g%x(in,jn) > 0) then
+            if (s%h(in,jn) > 0.0) cdon = c(in,jn) / s%h(in,jn)
+          end if
+        end if
+        if (cdon == 0.0) cycle
+        ! 通過幅係数(continuous と同一)
+        fw = 1.0
+        if (have_frw) fw = frw(ke(k),ie,je)
+        c1(i,j) = c1(i,j) - mne * cdon * mn2dh(k) * fw * winv / g%gv(i,j)
+      end do
     end do
   end do
   !$omp end parallel do

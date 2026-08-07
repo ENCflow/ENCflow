@@ -79,7 +79,8 @@ subroutine m_main_all()
   call m_record_init(r, p, g)             ! record を初期化(create_resultdirより後)
   call m_precip_init(pr, p, g)            ! precip を初期化
   call m_intercept_init(ic, p, g)         ! intercept を初期化(fn_intercept 指定時のみ有効)
-  call m_geomorph_init(gm, p, g, s)       ! geomorph を初期化(fn_geomorph 指定時のみ有効)
+  call m_geomorph_init(gm, p, g, s)       ! geomorph を初期化(fn_geomorph 指定時のみ有効。
+                                          ! s%sed_active を設定するため swflow init より前)
   call m_gwflow_init(gw, p, g, s)         ! gwflow を初期化(fn_gwflow 指定時のみ有効)
   call m_tide_init(ti, p, g)              ! tide を初期化
   call m_swflow_init(sw, p, g, b, s)      ! swflow を初期化

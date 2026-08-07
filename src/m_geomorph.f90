@@ -71,11 +71,18 @@ module m_geomorph
     real :: creep_d = 0.0            ! クリープ拡散係数 (m2/s)
     integer :: f_fluvial = 0         ! 掃流砂 Exner(0:無効, 1:有効)
     integer :: f_qbform = 1          ! 流砂量式(1:芦田・道上, 2:MPM)
-    real :: d50 = 0.0                ! 代表粒径 (m)
-    real :: tausc = 0.05             ! 限界無次元掃流力 τ*c
-    real :: poroi = 0.0              ! 1 / (1 - λ)(λ: 河床の空隙率)
-    real :: sgrav = 1.65             ! 土粒子の水中比重 s = (ρs - ρ)/ρ
+    real :: d50 = 0.0                ! 掃流砂の代表粒径 (m)
+    real :: tausc = 0.05             ! 掃流の限界無次元掃流力 τ*c
+    real :: poroi = 0.0              ! 1 / (1 - λ)(λ: 河床の空隙率。掃流・浮遊共有)
+    real :: sgrav = 1.65             ! 土粒子の水中比重 s = (ρs - ρ)/ρ(共有)
     real :: dzmax = 0.0              ! 1エッジ・1更新の河床変動上限 (m)
+    integer :: f_suspend = 0         ! 浮遊砂(0:無効, 1:有効)
+    integer :: f_esform = 1          ! 平衡濃度式(1:超過掃流力線形(簡易))
+    real :: sd50 = 0.0               ! 浮遊砂の代表粒径 (m)
+    real :: stausc = 0.05            ! 浮遊の限界無次元掃流力 τ*c
+    real :: wf = 0.0                 ! 沈降速度 (m/s)(指定 or Rubey 式で導出)
+    real :: beta = 1.0               ! 沈降の底面濃度係数(c_b = β・C)
+    real :: esa = 0.0                ! 平衡濃度係数(C_eq = esa・(τ*/τ*c - 1))
     logical :: initialized = .false.
   end type
 
@@ -155,12 +162,65 @@ subroutine m_geomorph_init(gm, p, g, s)
   end if
 
   gm%f_fluvial = list%f_fluvial
-  if (gm%f_fluvial > 0) call init_fluvial(gm, p, g, s, list)
+  gm%f_suspend = list%f_suspend
+
+  ! --- 土砂プロセス(掃流・浮遊)の共有設定 ---
+  if (gm%f_fluvial > 0 .or. gm%f_suspend > 0) then
+    ! 河床の物性(共有)
+    if (list%fluv_porosity < 0.0 .or. list%fluv_porosity >= 1.0) then
+      call par_stop("list_geomorph: fluv_porosity must be in [0,1)")
+    end if
+    if (list%fluv_sgrav <= 0.0) call par_stop("list_geomorph: fluv_sgrav must be > 0")
+    gm%poroi = 1.0 / (1.0 - list%fluv_porosity)
+    gm%sgrav = list%fluv_sgrav
+    ! サブグリッド河道幅との併用は未対応(Δz の河道底集中 winv と通過幅
+    ! frw のミラーが必要。geomorph_plan.md §2.1)
+    if (g%width_active) then
+      call par_stop("m_geomorph: 土砂プロセス(f_fluvial/f_suspend)と" &
+                    // "サブグリッド河道幅(fn_width)の併用は未対応です")
+    end if
+    ! 土層厚(=可動層厚)の確保と s%sd への転記
+    call setup_sd(p, g, s)
+  end if
+
+  if (gm%f_fluvial > 0) call init_fluvial(gm, p, g, list)
+  if (gm%f_suspend > 0) call init_suspend(gm, p, list)
+
+  ! 浮遊砂輸送の有効化を通知(swflow_enc がステップ内で s%hs を移流する。
+  ! 初期化順序: 本 init は m_swflow_init より前)
+  s%sed_active = (gm%f_suspend > 0)
 
   ! (将来のプロセスの検証をここに追加する)
 
   gm%enabled = .true.
   gm%initialized = .true.
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 土層厚(=可動層厚)の確保と s%sd への転記(m_gwflow_init と同じ規約の
+! 第2の利用者。geomorph init が先に走るため、gwflow 併用時はこちらの
+! 転記が先に行われる — 値は同じ g%sd 由来で同一)
+!----------------------------------------------------------------------
+subroutine setup_sd(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(inout) :: g
+  type(t_state), intent(inout) :: s
+  real :: sdmax(1)
+
+  call m_geoinfo_require_sd(g)
+  if (p%f_state_restore > 0) then
+    ! restore 時は転記しない(復元値が勝つ)。土層ゼロの save を
+    ! 浸食計算に使う設定齟齬は停止(判定は全ランク同一 = collective 安全)
+    sdmax(1) = maxval(s%sd(:, dcp%js:dcp%je))
+    call par_allreduce_max(sdmax)
+    if (sdmax(1) <= 0.0) then
+      call par_stop("geomorph: 復元した save に土層厚がありません(旧構成で作成された" &
+                    // " save)。restore を使わないか、save を作り直してください")
+    end if
+  else
+    s%sd(:,:) = g%sd(:,:)
+  end if
 end subroutine
 
 
@@ -187,7 +247,10 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
   dts = p%dt * gm%idt_geomorph * gm%morfac
 
   ! --- 有効なプロセスを順に適用(それぞれ自帯 js..je を更新) ---
+  ! 浮遊砂の E-D は水柱側が水理時間(morfac なし)、河床側が ×morfac の
+  ! 台帳分離(MORFAC 方式。geomorph_plan.md §4)のため dtw を別に渡す
   if (gm%f_fluvial > 0) call calc_fluvial(gm, p, g, s, dts)
+  if (gm%f_suspend > 0) call calc_suspend(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_creep > 0) call calc_creep(gm, g, s, dts)
   ! (将来のプロセスの適用をここに追加する)
 
@@ -205,7 +268,8 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
   ! 自プロセスの次回の近傍参照(±1)と、流れの重力項・gwflow 側方の
   ! 近傍参照が、この1回の交換で賄われる(developer.md §11)
   call par_halo_cell(s%z)
-  if (gm%f_fluvial > 0) call par_halo_cell(s%sd)
+  if (gm%f_fluvial > 0 .or. gm%f_suspend > 0) call par_halo_cell(s%sd)
+  ! s%hs のハロは swflow_enc のステップ頭交換が担う(移流の直前に最新化)
 
 end subroutine
 
@@ -249,24 +313,19 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 掃流砂 Exner の初期化(検証・土層厚の確保と転記・重み)
+! 掃流砂 Exner の初期化(検証・重み。共有設定(物性・sd・幅ガード)は
+! m_geomorph_init の土砂プロセス共有部で設定済み)
 !----------------------------------------------------------------------
-subroutine init_fluvial(gm, p, g, s, list)
+subroutine init_fluvial(gm, p, g, list)
   type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(inout) :: g
-  type(t_state), intent(inout) :: s
+  type(t_geoinfo), intent(in) :: g
   type(t_list_geomorph), intent(in) :: list
   real :: lpx, lpy, ldx, ldy, dr
-  real :: sdmax(1)
 
   ! --- パラメータ検証 ---
   if (list%fluv_d50 <= 0.0) call par_stop("list_geomorph: f_fluvial requires fluv_d50 > 0")
   if (list%fluv_tausc <= 0.0) call par_stop("list_geomorph: fluv_tausc must be > 0")
-  if (list%fluv_porosity < 0.0 .or. list%fluv_porosity >= 1.0) then
-    call par_stop("list_geomorph: fluv_porosity must be in [0,1)")
-  end if
-  if (list%fluv_sgrav <= 0.0) call par_stop("list_geomorph: fluv_sgrav must be > 0")
   if (list%fluv_dzmax <= 0.0) call par_stop("list_geomorph: fluv_dzmax must be > 0")
   if (list%fluv_diagratio < 0.0 .or. list%fluv_diagratio > 1.0) then
     call par_stop("list_geomorph: fluv_diagratio must be in [0,1]")
@@ -274,35 +333,11 @@ subroutine init_fluvial(gm, p, g, s, list)
   if (list%f_qbform < 1 .or. list%f_qbform > 2) then
     call par_stop("list_geomorph: f_qbform must be 1(Ashida-Michiue) or 2(MPM)")
   end if
-  ! サブグリッド河道幅との併用は未対応(Δz の河道底集中 winv と通過幅
-  ! frw のミラーが必要。geomorph_plan.md §2.1)
-  if (g%width_active) then
-    call par_stop("m_geomorph: f_fluvial とサブグリッド河道幅(fn_width)の併用は未対応です")
-  end if
 
   gm%f_qbform = list%f_qbform
   gm%d50 = list%fluv_d50
   gm%tausc = list%fluv_tausc
-  gm%poroi = 1.0 / (1.0 - list%fluv_porosity)
-  gm%sgrav = list%fluv_sgrav
   gm%dzmax = list%fluv_dzmax
-
-  ! --- 土層厚(=可動層厚)の確保と s%sd への転記(m_gwflow_init と同じ
-  !     規約の第2の利用者。geomorph init が先に走るため、gwflow 併用時は
-  !     こちらの転記が先に行われる — 値は同じ g%sd 由来で同一) ---
-  call m_geoinfo_require_sd(g)
-  if (p%f_state_restore > 0) then
-    ! restore 時は転記しない(復元値が勝つ)。土層ゼロの save を
-    ! 浸食計算に使う設定齟齬は停止(判定は全ランク同一 = collective 安全)
-    sdmax(1) = maxval(s%sd(:, dcp%js:dcp%je))
-    call par_allreduce_max(sdmax)
-    if (sdmax(1) <= 0.0) then
-      call par_stop("geomorph: 復元した save に土層厚がありません(旧構成で作成された" &
-                    // " save)。restore を使わないか、save を作り直してください")
-    end if
-  else
-    s%sd(:,:) = g%sd(:,:)
-  end if
 
   ! --- 8近傍の通過幅と方向余弦(m_gwflow_lateral と同一の配分則) ---
   dr = sqrt(g%dx**2 + g%dy**2)
@@ -333,6 +368,57 @@ subroutine init_fluvial(gm, p, g, s, list)
 
   call require_work(g)
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 浮遊砂の初期化(検証・沈降速度の導出)
+!   移流は m_swflow_enc がステップ内で行う(sed_active。エッジ作業領域は
+!   不要)。ここは E-D 交換(calc_suspend)のパラメータのみ
+!----------------------------------------------------------------------
+subroutine init_suspend(gm, p, list)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_sysparam), intent(in) :: p
+  type(t_list_geomorph), intent(in) :: list
+  character(len=256) :: msg
+
+  if (list%susp_d50 <= 0.0) call par_stop("list_geomorph: f_suspend requires susp_d50 > 0")
+  if (list%susp_esa <= 0.0) call par_stop("list_geomorph: f_suspend requires susp_esa > 0")
+  if (list%susp_tausc <= 0.0) call par_stop("list_geomorph: susp_tausc must be > 0")
+  if (list%susp_beta <= 0.0) call par_stop("list_geomorph: susp_beta must be > 0")
+  if (list%susp_wf < 0.0) call par_stop("list_geomorph: susp_wf must be >= 0")
+  if (list%f_esform /= 1) then
+    ! 平衡濃度式のメニュー枠。板倉・岸等の追加は case を足す
+    call par_stop("list_geomorph: f_esform must be 1 (excess-shear linear)")
+  end if
+
+  gm%f_esform = list%f_esform
+  gm%sd50 = list%susp_d50
+  gm%stausc = list%susp_tausc
+  gm%beta = list%susp_beta
+  gm%esa = list%susp_esa
+  if (list%susp_wf > 0.0) then
+    gm%wf = list%susp_wf
+  else
+    gm%wf = rubey_wf(gm%sgrav, p%gg, gm%sd50)
+    write(msg,'(a,es10.3,a)') "geomorph suspend: settling velocity (Rubey) = ", gm%wf, " m/s"
+    call par_info(trim(msg))
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! Rubey 式の沈降速度
+!   w_f = F * sqrt(s g d), F = sqrt(2/3 + 36ν²/(s g d³)) − sqrt(36ν²/(s g d³))
+!   (ν = 1.0e-6 m²/s: 清水 20℃ 相当)
+!----------------------------------------------------------------------
+pure function rubey_wf(sgrav, gg, d) result(wf)
+  real, intent(in) :: sgrav, gg, d
+  real :: wf
+  real :: bb
+  real, parameter :: nu = 1.0e-6
+  bb = 36.0 * nu**2 / (sgrav * gg * d**3)
+  wf = (sqrt(2.0 / 3.0 + bb) - sqrt(bb)) * sqrt(sgrav * gg * d)
+end function
 
 
 !----------------------------------------------------------------------
@@ -496,6 +582,80 @@ subroutine calc_fluvial(gm, p, g, s, dts)
   ! ガード発動の累計(dispose で報告)
   flv%nclip = flv%nclip + nclip
   flv%vleak = flv%vleak + vleak
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 浮遊砂の浸食・沈降(E-D 交換。セル内の鉛直交換のみ=エッジ・ハロ不要)
+!   移流は swflow_enc がステップ内で実施済み(sed_active)。ここでは
+!   平衡濃度 C_eq への緩和として河床との交換を行う:
+!     E = w_f・C_eq(浸食。可動層 sd の範囲でクランプ)
+!     D = w_f・β・C (沈降。浮遊量 hs の範囲でクランプ。C = hs/h)
+!   C_eq は f_esform で選択(1: 超過掃流力線形 C_eq = esa・(τ*/τ*c − 1)。
+!   板倉・岸等の実装は式の case 追加で閉じる)。
+!   τ* はセル値(rn, vv, h)からマニング閉じで導出(calc_fluvial と同型)。
+!   乾燥セル(h <= dd)は浮遊分を全量河床へ繰り入れる(水のない浮遊砂を
+!   残さない。乾湿の激しい氾濫原で必須の閉じ)。
+!   MORFAC の台帳分離: 水柱側(hs)は水理時間 dtw、河床側(z, sd)は
+!   ×morfac(1回の計算 = morfac 回のイベントぶんの河床変化)。
+!   morfac=1 では hs と河床の交換が厳密に反対称になり、
+!   Σhs + (1−λ)Σ(z−z0) が機械精度で保存される(test/suspend が検定)
+!----------------------------------------------------------------------
+subroutine calc_suspend(gm, p, g, s, dtw)
+  type(t_geomorph), intent(in) :: gm
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: dtw       ! 水柱側の実効時間刻み(morfac を含まない)
+  integer :: i, j
+  real :: hh, taus, ceq, cc, fx, dzb, cap, fxg
+
+  !$omp parallel do schedule(static) private(i, j, hh, taus, ceq, cc, fx, dzb, cap, fxg)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      if (s%h(i,j) <= p%dd) then
+        ! 乾燥セル: 浮遊分を全量河床へ
+        if (s%hs(i,j) <= 0.0) cycle
+        fx = -s%hs(i,j)
+      else
+        ! 平衡濃度(f_esform=1: 超過掃流力線形)
+        hh = max(s%h(i,j), p%dv)
+        taus = g%rn(i,j)**2 * s%vv(i,j)**2 / (gm%sgrav * gm%sd50 * hh**(1.0/3.0))
+        ceq = 0.0
+        if (taus > gm%stausc) ceq = gm%esa * (taus / gm%stausc - 1.0)
+        cc = 0.0
+        if (s%hs(i,j) > 0.0) cc = s%hs(i,j) / s%h(i,j)
+        ! 正味の交換(>0: 浸食で hs へ、<0: 沈降で河床へ)
+        fx = gm%wf * (ceq - gm%beta * cc) * dtw
+        if (fx > 0.0) then
+          ! 可動層クランプ(河床側は ×morfac・poroi で減るため換算して制限)
+          fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
+        else
+          fx = max(fx, -max(s%hs(i,j), 0.0))    ! 沈降は浮遊量まで
+        end if
+        if (fx == 0.0) cycle
+      end if
+      s%hs(i,j) = s%hs(i,j) + fx
+      ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
+      dzb = -fx * gm%morfac * gm%poroi
+      s%z(i,j) = s%z(i,j) + dzb
+      s%sd(i,j) = s%sd(i,j) + dzb
+      ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
+      ! (calc_fluvial と同じ整合。反対称適用)
+      if (s%gw_active) then
+        cap = s%sd(i,j) * g%sy0
+        if (s%hg(i,j) > cap) then
+          fxg = s%hg(i,j) - cap
+          s%hg(i,j) = cap
+          s%h(i,j) = s%h(i,j) + fxg
+        end if
+      end if
+    end do
+  end do
+  !$omp end parallel do
 
 end subroutine
 

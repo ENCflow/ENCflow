@@ -68,6 +68,11 @@ module m_state
     real, allocatable :: rsh(:,:)       ! water depth of reservoir (m)
     real, allocatable :: hg(:,:)        ! 地下貯留水深(柱状換算)(m)。どの地下水
                                         ! モデルも毎ステップここに反映する契約
+    real, allocatable :: hs(:,:)        ! 浮遊砂柱状量(m。単位床面積あたりの固体
+                                        ! 体積)。濃度 C = hs/h は導出量。移流は
+                                        ! swflow_enc がステップ内で行い(sed_active
+                                        ! フラグ)、浸食・沈降(E-D)は m_geomorph が
+                                        ! 行う(geomorph_plan.md §2.2)
     real, allocatable :: sd(:,:)        ! 土層厚(=可動層厚)(m)。動的共有状態。
                                         ! 初期値は g%sd(入力係数)から sd を要する
                                         ! モジュールの init が転記する(restore 時は
@@ -90,6 +95,8 @@ module m_state
     integer, allocatable :: ddir8(:,:)  ! all down stream direction flag (sum(2**(1~8)))
     real :: hgmean = 0.0     ! 領域平均の地下貯留高(m)。gw_active 時のみ更新
     logical :: gw_active = .false.  ! 地下水モデルの有効化(m_gwflow_init が設定)
+    logical :: sed_active = .false. ! 浮遊砂輸送の有効化(m_geomorph_init が設定。
+                                    ! swflow_enc がステップ内で s%hs を移流する)
     real :: hmean
     real :: cnmax
     integer :: n_valcells               ! number of valid cells
@@ -126,8 +133,8 @@ module m_state
   !   仕様変更日の日付文字列。save の並び・成分・メタデータ・圧縮形式を
   !   変更したら必ずこの日付を更新する(restore 時の照合に使う。§7)。
   !   同日に複数回変更した場合は英字サフィックスで区別する
-  character(len=*), parameter :: save_version_cur = "2026-08-07"
-  integer, parameter :: n_state_save = 5     ! state.dat の成分数(h,z,rsh,hg,sd)
+  character(len=*), parameter :: save_version_cur = "2026-08-07b"
+  integer, parameter :: n_state_save = 6     ! state.dat の成分数(h,z,rsh,hg,sd,hs)
 
 
 contains
@@ -164,6 +171,7 @@ subroutine m_state_init(s, p, g)
   allocate(s%rsh(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hg(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%sd(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%hs(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%tide(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hmax(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hmaxt(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
@@ -200,6 +208,7 @@ subroutine m_state_init(s, p, g)
   allocate(ts%rsh(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%hg(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%sd(1:g%nx,1:g%ny), source = 0.0)
+  allocate(ts%hs(1:g%nx,1:g%ny), source = 0.0)
 
   call m_state_updatetime(s, p, 0)
   call set_z(p, g, ts)
@@ -231,6 +240,7 @@ subroutine m_state_init(s, p, g)
   s%rsh(:,:) = ts%rsh(1:g%nx, dcp%jsh:dcp%jeh)
   s%hg(:,:) = ts%hg(1:g%nx, dcp%jsh:dcp%jeh)
   s%sd(:,:) = ts%sd(1:g%nx, dcp%jsh:dcp%jeh)
+  s%hs(:,:) = ts%hs(1:g%nx, dcp%jsh:dcp%jeh)
   s%ini = ts%ini
 
   ! 初期水位をセット
@@ -472,6 +482,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%rsh)) deallocate(s%rsh)
   if (allocated(s%hg)) deallocate(s%hg)
   if (allocated(s%sd)) deallocate(s%sd)
+  if (allocated(s%hs)) deallocate(s%hs)
   if (allocated(s%tide)) deallocate(s%tide)
   if (allocated(s%hmax)) deallocate(s%hmax)
   if (allocated(s%hmaxt)) deallocate(s%hmaxt)
@@ -724,7 +735,7 @@ subroutine save_state(p, s)
   integer :: un
   real, allocatable :: wk(:,:,:)
   ! 全域バッファに集約してから rank0 のみが書く。
-  ! write(un) wk のレコードは h, z, rsh, hg, sd の連結。
+  ! write(un) wk のレコードは h, z, rsh, hg, sd, hs の連結。
   ! 運動量表現(uv/mn 等)はスキーム私有の保存(swflow_enc.dat)、
   ! u,v,m,n,vv,qq,e は復元時に再導出される導出量(§7 の線引き)
   call sysdep_mkdir(p%dir_save)
@@ -738,6 +749,7 @@ subroutine save_state(p, s)
   call par_gather_to(wk(:,:,3), s%rsh)
   call par_gather_to(wk(:,:,4), s%hg)
   call par_gather_to(wk(:,:,5), s%sd)
+  call par_gather_to(wk(:,:,6), s%hs)
   if (.not. is_root) return
   open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', status='replace')
   ! 成分ごとにゼロ抑制 RLE で書く(海域・乾燥域のゼロを圧縮。§7)
@@ -746,6 +758,7 @@ subroutine save_state(p, s)
   call fileio_write_rle(un, wk(:,:,3))   ! rsh
   call fileio_write_rle(un, wk(:,:,4))   ! hg
   call fileio_write_rle(un, wk(:,:,5))   ! sd
+  call fileio_write_rle(un, wk(:,:,6))   ! hs
   close(un)
 
   ! メタデータは最後に書く(save 一式の完成マーカーを兼ねる。
@@ -770,13 +783,14 @@ subroutine restore_state(p, s)
   ! (全ランク同形)なので Bcast が成立する。帯への切り出しは呼び出し側
   if (is_root) then
     open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', status='old')
-    ! 読み並びは save_state の書き込み順(h, z, rsh, hg, sd)と一致させること。
+    ! 読み並びは save_state の書き込み順(h, z, rsh, hg, sd, hs)と一致させること。
     ! 成分を足すときは save と restore を必ず同時に更新する
     call fileio_read_rle(un, s%h)
     call fileio_read_rle(un, s%z)
     call fileio_read_rle(un, s%rsh)
     call fileio_read_rle(un, s%hg)
     call fileio_read_rle(un, s%sd)
+    call fileio_read_rle(un, s%hs)
     close(un)
   end if
   call par_bcast_cell(s%h)
@@ -784,6 +798,7 @@ subroutine restore_state(p, s)
   call par_bcast_cell(s%rsh)
   call par_bcast_cell(s%hg)
   call par_bcast_cell(s%sd)
+  call par_bcast_cell(s%hs)
 end subroutine
 
 
