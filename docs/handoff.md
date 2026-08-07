@@ -74,7 +74,7 @@
      ULP=1 クラス)が出るようになった(bank_wall の submodule 化以降)。
      ifx 検証・恒常テスト化は 1d の残項目に同梱
 
-1e. **排水ポンプ(&list_bound_pump。§15)の残検証**(実装と gfortran/
+1e. **排水ポンプ(&list_struct_pump。§15/§22)の残検証**(実装と gfortran/
     OpenMPI 検証は 2026-08-07 完了。無効時ビット一致、閾値未達=無ポンプ
     一致、一定流量= source±Q 一致、np=1,2,4 一致、厳密数学 serial=MPI
     一致、-fcheck np=2)
@@ -84,9 +84,13 @@
      代表セルの par_stop、np=1,2,4 一致、厳密数学 serial=MPI 一致、
      -fcheck np=2。あわせて rsh→hrs 改名(等価リファクタ。f_out_hrs /
      Hrs0001。旧 f_out_rsh は namelist エラーで検出)
+   - 内部水理構造物族への移設(2026-08-07。§22): 設定は fn_structure の
+     &list_struct_pump へ(パラメータ名は同じ)、実装は submodule
+     m_boundary_structure へ。等価移設のビット一致検証済み(§22)
    - 残: ifx / PREC=single、実ケース(前池+排水機場)での適用検証
    - 第2弾候補: 起動/停止ヒステリシス(履歴状態+save 対応)、
-     吐口の到達遅れ、時系列との併用(運転スケジュール)
+     吐口の到達遅れ、時系列との併用(運転スケジュール)、
+     内部状態を持つ種別(ダム貯留・ゲート開度。save 対応と併せて)
 
 1c. **gwflow 第3弾(側方流動 Boussinesq)の残検証**
    (実装と gfortran 検証は 2026-08-05 完了。決定は developer.md §16.1、

@@ -6,8 +6,9 @@ module list_boundary
   !   &list_bound_source : 内部の湧き出し・吸い込み(複数)
   ! グループ不在は正常(その族なし。present_* が偽のまま)。
   ! 構文エラー(iostat>0)は par_stop。
-  ! 旧形式の単一グループ &list_boundary は検出して par_stop で
-  ! 書式移行を案内する(黙って無視しない)
+  ! 旧形式の単一グループ &list_boundary と、fn_structure へ移設済みの
+  ! &list_bound_pump(2026-08-07 → &list_struct_pump)は検出して
+  ! par_stop で書式移行を案内する(黙って無視しない)
   use m_sysparam, only : t_sysparam
   use m_parallel, only : par_info, par_stop
   implicit none
@@ -63,15 +64,6 @@ module list_boundary
     character(len=maxpathlen) :: fn_inflow_val(1:nbsrcmax) = ""   ! 時系列ファイル名
     character(len=maxpathlen) :: fn_inflow_cs(1:nbsrcmax) = ""    ! 濃度時系列ファイル名
     character(len=maxpathlen) :: fn_inflow_qs(1:nbsrcmax) = ""    ! 流砂量時系列ファイル名
-    ! ---- &list_bound_pump ----
-    logical :: present_pump = .false.              ! グループが存在したか
-    integer, allocatable :: pump_in_cell(:,:,:)    ! 取水セル座標 (i, j)
-    integer, allocatable :: pump_out_cell(:,:,:)   ! 吐口セル座標 (i, j)。未指定=域外排水
-    real :: pump_q0(1:nbsrcmax) = -9999.0          ! 一定流量 (m3/s。pump_rule と排他)
-    integer :: f_pump_ref(1:nbsrcmax) = 0          ! 運転基準 (0:水位η=z+h, 1:水深h)
-    real, allocatable :: pump_rule(:,:,:)          ! 運転ルール折れ線 (基準値 m, 流量 m3/s)
-    character(len=maxpathlen) :: fn_pump_in_cell(1:nbsrcmax) = ""   ! 取水セル一覧ファイル名
-    character(len=maxpathlen) :: fn_pump_out_cell(1:nbsrcmax) = ""  ! 吐口セル一覧ファイル名
   end type
 
   ! namelist 読み込み用の静的作業配列(スタックに置かないための措置。
@@ -84,9 +76,6 @@ module list_boundary
   real :: inflow_val(1:2,1:nsrcvmax,1:nbsrcmax)
   real :: inflow_cs(1:2,1:nsrcvmax,1:nbsrcmax)
   real :: inflow_qs(1:2,1:nsrcvmax,1:nbsrcmax)
-  integer :: pump_in_cell(1:2,1:nsrccmax,1:nbsrcmax)
-  integer :: pump_out_cell(1:2,1:nsrccmax,1:nbsrcmax)
-  real :: pump_rule(1:2,1:nsrcvmax,1:nbsrcmax)
 
 contains
 
@@ -112,7 +101,6 @@ subroutine list_boundary_read(p, list)
   call read_source(un, list)
   call read_stage(un, list)
   call read_inflow(un, list)
-  call read_pump(un, list)
   close(un)
 
 end subroutine
@@ -275,56 +263,16 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! &list_bound_pump を読む(不在なら present_pump を偽のまま返す)
-!   解釈・検証(セル・ルールの妥当性)は m_boundary_init が行う
-!----------------------------------------------------------------------
-subroutine read_pump(un, list)
-  integer, intent(in) :: un
-  type(t_list_boundary), intent(inout) :: list
-  real :: pump_q0(1:nbsrcmax)
-  integer :: f_pump_ref(1:nbsrcmax)
-  character(len=maxpathlen) :: fn_pump_in_cell(1:nbsrcmax)
-  character(len=maxpathlen) :: fn_pump_out_cell(1:nbsrcmax)
-  integer :: ios
-  character(len=1024) :: iom
-  namelist /list_bound_pump/ pump_in_cell, pump_out_cell, pump_q0, f_pump_ref, &
-                             pump_rule, fn_pump_in_cell, fn_pump_out_cell
-
-  pump_in_cell = -9999
-  pump_out_cell = -9999
-  pump_rule = -9999
-  pump_q0 = list%pump_q0
-  f_pump_ref = list%f_pump_ref
-  fn_pump_in_cell = list%fn_pump_in_cell
-  fn_pump_out_cell = list%fn_pump_out_cell
-
-  rewind(un)
-  read(un, nml=list_bound_pump, iostat=ios, iomsg=iom)
-  if (ios > 0) call par_stop("list_bound_pump 読込失敗: "//trim(iom))
-  if (ios < 0) return              ! グループ不在(この族なし)
-  list%present_pump = .true.
-
-  list%pump_in_cell = pump_in_cell
-  list%pump_out_cell = pump_out_cell
-  list%pump_rule = pump_rule
-  list%pump_q0 = pump_q0
-  list%f_pump_ref = f_pump_ref
-  list%fn_pump_in_cell = fn_pump_in_cell
-  list%fn_pump_out_cell = fn_pump_out_cell
-
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 旧形式(単一グループ &list_boundary)の検出。
-! namelist の探索は「不在」と区別できないため、行頭トークンの
-! 文字列比較で行う(大文字小文字は同一視)
+! 旧形式(単一グループ &list_boundary、移設済みの &list_bound_pump)の
+! 検出。namelist の探索は「不在」と区別できないため、行頭トークンの
+! 文字列比較で行う(大文字小文字は同一視)。黙って無視しない
 !----------------------------------------------------------------------
 subroutine check_old_format(p)
   type(t_sysparam), intent(in) :: p
   integer :: un, ios
   character(len=1024) :: line
   character(len=14) :: tok
+  character(len=16) :: tok16
   character(len=1) :: c
 
   open(newunit=un, file=trim(p%fn_boundary), status='old', action='read', iostat=ios)
@@ -333,6 +281,16 @@ subroutine check_old_format(p)
     read(un, '(a)', iostat=ios) line
     if (ios /= 0) exit
     line = adjustl(line)
+    if (len_trim(line) >= 16) then
+      tok16 = to_lower(line(1:16))
+      c = line(17:17)              ! 次の文字が名前文字なら別グループ
+      if (tok16 == "&list_bound_pump" .and. .not. is_name_char(c)) then
+        close(un)
+        call par_stop("list_boundary: &list_bound_pump は fn_structure の " &
+                      //"&list_struct_pump へ移設されました(パラメータ名は同じ)。" &
+                      //"examples/List_samples/list_structure.txt 参照: "//trim(p%fn_boundary))
+      end if
+    end if
     if (len_trim(line) < 14) cycle
     tok = to_lower(line(1:14))
     if (tok /= "&list_boundary") cycle

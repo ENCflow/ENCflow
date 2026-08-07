@@ -80,6 +80,7 @@ module list_sysparam
     character(len=maxpathlen) :: fn_reservoir = ""       ! ため池条件設定ファイル
     character(len=maxpathlen) :: fn_tide = ""            ! 潮位条件設定ファイル
     character(len=maxpathlen) :: fn_boundary = ""        ! 境界条件設定ファイル
+    character(len=maxpathlen) :: fn_structure = ""       ! 内部水理構造物設定ファイル
     character(len=maxpathlen) :: fn_record = ""          ! 記録設定ファイル
     character(len=maxpathlen) :: fn_geomorph = ""        ! 地形変化条件設定ファイル
     character(len=maxpathlen) :: fn_gwflow = ""          ! 地下水条件設定ファイル
@@ -167,6 +168,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: fn_reservoir  ! ため池条件設定ファイル
   character(:), allocatable :: fn_tide       ! 潮位条件設定ファイル
   character(:), allocatable :: fn_boundary   ! 境界条件設定ファイル
+  character(:), allocatable :: fn_structure  ! 内部水理構造物設定ファイル
   character(:), allocatable :: fn_record     ! 記録設定ファイル
   character(:), allocatable :: fn_geomorph   ! 地形変化条件設定ファイル
   character(:), allocatable :: fn_gwflow     ! 地下水条件設定ファイル
@@ -193,6 +195,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_hmax, f_out_hmaxt, f_out_vvmax, f_out_qqmax, f_out_qqmaxt, f_out_qqmaxd, &
                         f_out_ddd, f_out_dda, f_out_pre, f_out_hrs, f_out_fr, f_out_cn, f_out_hg, &
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
+                        fn_structure, &
                         fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_channel, fn_enc, &
                         fn_log, dir_data, dir_result, dir_save, outfn_suffix
 
@@ -262,6 +265,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   fn_reservoir = list%fn_reservoir
   fn_tide = list%fn_tide
   fn_boundary = list%fn_boundary
+  fn_structure = list%fn_structure
   fn_record = list%fn_record
   fn_geomorph = list%fn_geomorph
   fn_gwflow = list%fn_gwflow
@@ -344,6 +348,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%fn_reservoir = fn_reservoir
   list%fn_tide = fn_tide
   list%fn_boundary = fn_boundary
+  list%fn_structure = fn_structure
   list%fn_record = fn_record
   list%fn_geomorph = fn_geomorph
   list%fn_gwflow = fn_gwflow
@@ -362,6 +367,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   if (trim(list%fn_reservoir) == "-") list%fn_reservoir = trim(fn_sysparam)
   if (trim(list%fn_tide) == "-") list%fn_tide = trim(fn_sysparam)
   if (trim(list%fn_boundary) == "-") list%fn_boundary = trim(fn_sysparam)
+  if (trim(list%fn_structure) == "-") list%fn_structure = trim(fn_sysparam)
   if (trim(list%fn_record) == "-") list%fn_record = trim(fn_sysparam)
   if (trim(list%fn_geomorph) == "-") list%fn_geomorph = trim(fn_sysparam)
   if (trim(list%fn_gwflow) == "-") list%fn_gwflow = trim(fn_sysparam)

@@ -17,7 +17,12 @@ module m_boundary
   !     規定する(河川流入等。複数)。適用は boundary_uvmn(区間の
   !     外縁法線面の mn1 規定=指向性の流入。辺の型を面単位で上書き)。
   !     流入は非負(流出は stage / source を使う)。
-  ! 族が肥大したら族別モジュールに分割する(boundary_plan.md §4.1)
+  !   - 内部水理構造物(structure): ポンプ・カルバート等の共通骨格
+  !     (2つのセル集合+水理則 Q+質量保存転送。§22)。設定は独立
+  !     ファイル fn_structure、実装は submodule m_boundary_structure。
+  !     makebdc が水理則で目標流量を決め、適用は boundary_h の転送節。
+  ! 族が肥大したら族別モジュールに分割する(boundary_plan.md §4.1。
+  ! 内部水理構造物族は 2026-08-07 に submodule へ分割済み)
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
@@ -36,6 +41,10 @@ module m_boundary
   public :: m_boundary_makebdc
   public :: e_bc_wall, e_bc_outflow, e_bc_radiation, e_bc_inflow
   public :: e_side_w, e_side_e, e_side_n, e_side_s
+  ! 共有補助手続き(submodule m_boundary_structure も使う)。private のままだと
+  ! gfortran が全呼び出しをインライン化してシンボルを局所化・消去し、
+  ! submodule からのホスト結合参照がリンク不能になる(実際に踏んだ)
+  public :: interp_series, read_cell_file2
 
   ! 辺境界の型コード
   integer, parameter :: e_bc_wall = 0      ! 不透過(既定)
@@ -99,19 +108,47 @@ module m_boundary
     integer :: ncsclip = 0                 ! 等価濃度の上限クリップ発動回数
   end type
 
-  type t_bound_pump                        ! 排水ポンプ1基(内部水理構造物族。§15)
+  ! 内部水理構造物族の水理則の共通インターフェース(§22)。
+  ! 目標流量 Q を上下流の基準値の純関数として返す(履歴状態なし)。
+  ! 引数に t_structure 自身を渡さないのは前方参照の循環を避けるため
+  ! (手続きポインタ成分の interface は型定義より前に必要)
+  abstract interface
+    function i_struct_law(rule, nrule, geom, refu, refd) result(q)
+      real, intent(in) :: rule(:,:)        ! 運転ルール折れ線(種別ごとの意味)
+      integer, intent(in) :: nrule         ! 折れ線の点数
+      real, intent(in) :: geom(:)          ! 形状等の定数(種別ごとの意味)
+      real, intent(in) :: refu             ! 取水(上流)側の基準値 (m)
+      real, intent(in) :: refd             ! 吐口(下流)側の基準値 (m)
+      real :: q                            ! 目標流量 (m3/s。符号付き >0 = cin→cout)
+    end function
+  end interface
+
+  ! 内部水理構造物の種別コード
+  integer, parameter :: e_struct_pump = 1     ! 排水ポンプ
+
+  type t_structure                         ! 内部水理構造物1基(§22)。
+                                           !   共通骨格: 取水セル群 cin → 吐口セル群
+                                           !   cout(または域外)+ 水理則 law による
+                                           !   目標流量 Q + 質量保存転送(適用は
+                                           !   boundary_h)。水理則は手続きポインタ
+                                           !   成分で切り替える(排他切替の様式)
+    integer :: kind = 0                    ! 種別 (e_struct_*)
     integer :: ncin = 0                    ! 取水セル数
     integer, allocatable :: cin(:,:)       ! 取水セル座標 (1:2, 1:ncin)
-    integer :: ncout = 0                   ! 吐口セル数(0 = 域外排水)
+    integer :: ncout = 0                   ! 吐口セル数(0 = 域外排水。ポンプのみ)
     integer, allocatable :: cout(:,:)      ! 吐口セル座標 (1:2, 1:ncout)
-    integer :: f_ref = 0                   ! 運転基準 (0:水位η=z+h, 1:水深h)。
-                                           !   代表セル=取水セル群の先頭
+    integer :: f_ref = 0                   ! 基準の選択(種別ごとの意味。ポンプ:
+                                           !   0=水位η, 1=水深h。代表セル=各セル群の
+                                           !   先頭)
     integer :: nrule = 0                   ! 運転ルール折れ線の点数
     real, allocatable :: rule(:,:)         ! 折れ線 (1:2, 1:nrule) (基準値 m, m3/s)。
-                                           !   一定流量 pump_q0 は1点折れ線に退化。
-                                           !   線形補間・範囲外端値(=現在状態の
+                                           !   ポンプの一定流量 pump_q0 は1点折れ線に
+                                           !   退化。線形補間・範囲外端値(=現在状態の
                                            !   純関数。履歴状態なし)
-    real :: q = 0.0                        ! 現時刻の目標流量 (m3/s。makebdc が更新)
+    real :: geom(1:8) = 0.0                ! 形状等の定数(種別ごとの意味。ポンプは未使用)
+    procedure(i_struct_law), pointer, nopass :: law => null()  ! 水理則
+    real :: q = 0.0                        ! 現時刻の目標流量 (m3/s。makebdc が更新。
+                                           !   符号付き >0 = cin→cout)
   end type
 
   type t_boundary
@@ -127,11 +164,24 @@ module m_boundary
                                            !   makebdc が毎ステップ現時刻値を書く。
                                            !   swflow_enc の advect_scalar が境界面からの
                                            !   流入の風上濃度として読む(未確保=全て清水)
-    integer :: npump = 0                   ! 排水ポンプの数
-    type(t_bound_pump), allocatable :: pump(:)  ! 排水ポンプ
+    integer :: nstruct = 0                 ! 内部水理構造物の数
+    type(t_structure), allocatable :: struct(:)  ! 内部水理構造物(§22)
     logical :: initialized = .false.
   end type
 
+  ! 内部水理構造物族の実装は submodule m_boundary_structure(§22)
+  interface
+    module subroutine init_structure(b, p, g)
+      type(t_boundary), intent(inout) :: b
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+    end subroutine
+    module subroutine structure_makebdc(b, g, s)
+      type(t_boundary), intent(inout) :: b
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+    end subroutine
+  end interface
 
 contains
 
@@ -150,26 +200,26 @@ subroutine m_boundary_init(b, p, g)
 
   b%initialized = .true.
 
-  !--- 境界条件パラメータ自体が設定されていない場合(全て既定のまま) ---
-  if (len_trim(p%fn_boundary) <= 0) return
+  !--- 境界条件パラメータファイル(fn_boundary)の族 ---
+  if (len_trim(p%fn_boundary) > 0) then
+    call list_boundary_read(p, list)
 
-  !--- 境界条件パラメータファイルを読み込む ---
-  call list_boundary_read(p, list)
+    !--- 辺境界 ---
+    call init_edge(b, list)
 
-  !--- 辺境界 ---
-  call init_edge(b, list)
+    !--- 内部ソース(湧き出し・吸い込み) ---
+    call init_source(b, p, g, list)
 
-  !--- 内部ソース(湧き出し・吸い込み) ---
-  call init_source(b, p, g, list)
+    !--- 水位規定セル群 ---
+    call init_stage(b, p, g, list)
 
-  !--- 水位規定セル群 ---
-  call init_stage(b, p, g, list)
+    !--- 区間流入 ---
+    call init_inflow(b, p, g, list)
+  end if
 
-  !--- 区間流入 ---
-  call init_inflow(b, p, g, list)
-
-  !--- 排水ポンプ ---
-  call init_pump(b, p, g, list)
+  !--- 内部水理構造物族(独立ファイル fn_structure。fn_boundary の
+  !    有無に依らず初期化する。§22)---
+  call init_structure(b, p, g)
 
 end subroutine
 
@@ -182,9 +232,8 @@ subroutine m_boundary_makebdc(b, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  integer :: isrc, istage, ifl, ip, i, j
+  integer :: isrc, istage, ifl
   real :: q
-  real, allocatable :: refp(:)
 
   !--- 各ソースの現時刻の流量をセル1個・1ステップあたりの水深増分に換算 ---
   do isrc = 1, b%nsrc
@@ -235,37 +284,9 @@ subroutine m_boundary_makebdc(b, p, g, s)
     end if
   end do
 
-  !--- 各ポンプの現時刻の目標流量を運転ルールから決める ---
-  !   基準水位(代表セル=取水セル群の先頭)は所有ランクだけが読めるため、
-  !   「所有ランクのみ非ゼロ+総和 allreduce」で全ランクに共有する(§11。
-  !   collective は npump が namelist 由来で全ランク同一のため安全)。
-  !   評価はステップ開始時点の状態(s%h)による(他族の時系列と同じ時相)。
-  !   ルールは現在状態の純関数=履歴状態なし(save/restore 対象外)
-  if (b%npump > 0) then
-    allocate(refp(1:b%npump), source = 0.0)
-    do ip = 1, b%npump
-      i = b%pump(ip)%cin(1,1)
-      j = b%pump(ip)%cin(2,1)
-      if (j >= dcp%js .and. j <= dcp%je) then
-        if (b%pump(ip)%f_ref == 1) then
-          ! 水深基準: 代表セルがため池(rscap>0)なら貯留水深 hrs を読む
-          ! (前池水深トリガー。地表 h は池が満杯になるまで 0 のため)
-          if (g%rscap(i,j) > 0.0) then
-            refp(ip) = max(s%hrs(i,j), 0.0)
-          else
-            refp(ip) = max(s%h(i,j), 0.0)
-          end if
-        else
-          refp(ip) = s%z(i,j) + max(s%h(i,j), 0.0)
-        end if
-      end if
-    end do
-    call par_allreduce_sumr(refp)
-    do ip = 1, b%npump
-      b%pump(ip)%q = max(interp_series(b%pump(ip)%rule, b%pump(ip)%nrule, refp(ip)), 0.0)
-    end do
-    deallocate(refp)
-  end if
+  !--- 各内部水理構造物の現時刻の目標流量を水理則から決める(§22。
+  !    実装は submodule m_boundary_structure)---
+  if (b%nstruct > 0) call structure_makebdc(b, g, s)
 
 end subroutine
 
@@ -352,12 +373,12 @@ subroutine m_boundary_dispose(b)
     deallocate(b%inflow)
   end if
   if (allocated(b%csin)) deallocate(b%csin)
-  if (allocated(b%pump)) deallocate(b%pump)
+  if (allocated(b%struct)) deallocate(b%struct)
   if (allocated(b%edge%eta_cell)) deallocate(b%edge%eta_cell)
   b%nsrc = 0
   b%nstage = 0
   b%ninflow = 0
-  b%npump = 0
+  b%nstruct = 0
   b%initialized = .false.
 end subroutine
 
@@ -582,172 +603,6 @@ subroutine init_stage(b, p, g, list)
     b%stage(istage)%eta = interp_series(b%stage(istage)%val, b%stage(istage)%nval, p%t0)
 
   end do
-
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 排水ポンプの解釈・検証・格納(内部水理構造物族の第一号。§15)
-!   取水セル群から吐口セル群(未指定なら域外)への強制転送。
-!   運転ルールは「一定流量 pump_q0」か「基準水位—流量の折れ線
-!   pump_rule」のどちらか一方(排他)。一定流量は1点折れ線に退化させ、
-!   実行時は単一経路にする(stage の固定値と同じ流儀)。
-!   折れ線は現在状態の純関数(線形補間・範囲外端値)で履歴状態なし。
-!   起動/停止ヒステリシスは表現しない(必要なら急なランプで近似)。
-!   位置の検証は全域マスク(ゾーン2)で全ランク冗長に行う
-!----------------------------------------------------------------------
-subroutine init_pump(b, p, g, list)
-  type(t_boundary), intent(inout) :: b
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_list_boundary), intent(in) :: list
-  logical :: active(1:nbsrcmax)
-  logical :: has_q0, has_rule
-  integer :: ip, n, k, i, j
-
-  if (.not. list%present_pump) return
-
-  !--- 有効なポンプ(取水セルかルールかファイル指定がある)を数える ---
-  do ip = 1, nbsrcmax
-    active(ip) = (list%pump_in_cell(1,1,ip) > -9999) &
-                 .or. (list%pump_q0(ip) > -9998.0) &
-                 .or. (list%pump_rule(1,1,ip) > -9999) &
-                 .or. (len_trim(list%fn_pump_in_cell(ip)) > 0)
-  end do
-  b%npump = count(active)
-  if (b%npump <= 0) return
-  if (.not. all(active(1:b%npump))) then
-    call par_stop("list_bound_pump: ポンプ番号は 1 から連続で指定してください")
-  end if
-
-  allocate(b%pump(1:b%npump))
-
-  do ip = 1, b%npump
-
-    !--- 取水セル集合(ファイル指定が優先) ---
-    if (len_trim(list%fn_pump_in_cell(ip)) > 0) then
-      call read_cell_file2(trim(p%dir_data)//"/"//trim(list%fn_pump_in_cell(ip)), &
-                           b%pump(ip)%ncin, b%pump(ip)%cin)
-    else
-      n = 0
-      do k = 1, nsrccmax
-        if (list%pump_in_cell(1,k,ip) <= -9999) exit   ! 番兵で終端
-        n = n + 1
-      end do
-      allocate(b%pump(ip)%cin(1:2,1:max(n,1)))
-      b%pump(ip)%cin(1:2,1:n) = list%pump_in_cell(1:2,1:n,ip)
-      b%pump(ip)%ncin = n
-    end if
-
-    !--- 吐口セル集合(任意。なければ域外排水) ---
-    if (len_trim(list%fn_pump_out_cell(ip)) > 0) then
-      call read_cell_file2(trim(p%dir_data)//"/"//trim(list%fn_pump_out_cell(ip)), &
-                           b%pump(ip)%ncout, b%pump(ip)%cout)
-    else
-      n = 0
-      do k = 1, nsrccmax
-        if (list%pump_out_cell(1,k,ip) <= -9999) exit  ! 番兵で終端
-        n = n + 1
-      end do
-      allocate(b%pump(ip)%cout(1:2,1:max(n,1)))
-      b%pump(ip)%cout(1:2,1:n) = list%pump_out_cell(1:2,1:n,ip)
-      b%pump(ip)%ncout = n
-    end if
-
-    !--- 運転ルール(pump_q0 と pump_rule は排他) ---
-    has_q0 = list%pump_q0(ip) > -9998.0
-    has_rule = list%pump_rule(1,1,ip) > -9999
-    if (has_q0 .and. has_rule) then
-      call par_stop("list_bound_pump: ポンプ "//itoa(ip) &
-                    //" は pump_q0 と pump_rule を同時に指定できません")
-    end if
-    if (.not. (has_q0 .or. has_rule)) then
-      call par_stop("list_bound_pump: ポンプ "//itoa(ip) &
-                    //" に運転ルール(pump_q0 か pump_rule)がありません")
-    end if
-    if (has_q0) then
-      if (list%pump_q0(ip) < 0.0) then
-        call par_stop("list_bound_pump: ポンプ "//itoa(ip)//" の pump_q0 は非負のみです")
-      end if
-      ! 一定流量は1点折れ線に退化(補間は常に固定値を返す)
-      allocate(b%pump(ip)%rule(1:2,1:1))
-      b%pump(ip)%rule(1,1) = 0.0
-      b%pump(ip)%rule(2,1) = list%pump_q0(ip)
-      b%pump(ip)%nrule = 1
-    else
-      n = 0
-      do k = 1, nsrcvmax
-        if (list%pump_rule(1,k,ip) <= -9999) exit      ! 番兵で終端
-        n = n + 1
-      end do
-      ! 第1列は基準水位 (m)。時系列と違い分→秒換算はしない
-      allocate(b%pump(ip)%rule(1:2,1:max(n,1)))
-      b%pump(ip)%rule(1:2,1:n) = list%pump_rule(1:2,1:n,ip)
-      b%pump(ip)%nrule = n
-      do k = 1, n
-        if (b%pump(ip)%rule(2,k) < 0.0) then
-          call par_stop("list_bound_pump: ポンプ "//itoa(ip)//" の流量は非負のみです")
-        end if
-        if (k >= 2) then
-          if (b%pump(ip)%rule(1,k) <= b%pump(ip)%rule(1,k-1)) then
-            call par_stop("list_bound_pump: ポンプ "//itoa(ip) &
-                          //" のルールの基準水位が単調増加ではありません")
-          end if
-        end if
-      end do
-    end if
-    if (list%f_pump_ref(ip) < 0 .or. list%f_pump_ref(ip) > 1) then
-      call par_stop("list_bound_pump: f_pump_ref は 0(水位η), 1(水深h) のいずれか: " &
-                    //itoa(list%f_pump_ref(ip)))
-    end if
-    b%pump(ip)%f_ref = list%f_pump_ref(ip)
-
-    !--- 検証(セルは有効な陸セルのみ) ---
-    if (b%pump(ip)%ncin <= 0) then
-      call par_stop("list_bound_pump: ポンプ "//itoa(ip)//" に取水セルがありません")
-    end if
-    do k = 1, b%pump(ip)%ncin + b%pump(ip)%ncout
-      if (k <= b%pump(ip)%ncin) then
-        i = b%pump(ip)%cin(1,k)
-        j = b%pump(ip)%cin(2,k)
-      else
-        i = b%pump(ip)%cout(1,k-b%pump(ip)%ncin)
-        j = b%pump(ip)%cout(2,k-b%pump(ip)%ncin)
-      end if
-      if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
-        call par_stop("list_bound_pump: ポンプ "//itoa(ip)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が領域外です")
-      end if
-      if (g%x(i,j) <= 0) then
-        call par_stop("list_bound_pump: ポンプ "//itoa(ip)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が無効セル(x=0)です")
-      end if
-      if (g%sw(i,j) /= 0) then
-        call par_stop("list_bound_pump: ポンプ "//itoa(ip)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が海セルです")
-      end if
-    end do
-
-  end do
-
-  ! 代表セルがため池(rscap>0)のポンプは水位基準(η)を使えない
-  ! (ため池水面の標高は未定義。取水は s%hrs から行われる)。
-  ! rscap は帯配布済み(方式2)のため所有ランクが判定し、エラー番号を
-  ! allreduce で共有してから collective に停止する(§11)
-  n = 0
-  do ip = 1, b%npump
-    if (b%pump(ip)%f_ref /= 0) cycle
-    i = b%pump(ip)%cin(1,1)
-    j = b%pump(ip)%cin(2,1)
-    if (j >= dcp%js .and. j <= dcp%je) then
-      if (g%rscap(i,j) > 0.0) n = max(n, ip)
-    end if
-  end do
-  call par_allreduce_maxi(n)
-  if (n > 0) then
-    call par_stop("list_bound_pump: ポンプ "//itoa(n)//" の代表セルはため池(rscap>0)です。" &
-                  //"水位基準(f_pump_ref=0)は使えません。f_pump_ref=1(水深=ため池水深)を指定してください")
-  end if
 
 end subroutine
 

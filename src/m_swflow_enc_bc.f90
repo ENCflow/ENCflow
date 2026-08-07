@@ -115,7 +115,7 @@ module subroutine boundary_h(p, g, b, s, sx)
   type(t_enc_status), intent(inout) :: sx
   integer :: i, j, k, isrc, istage, ip
   real :: qcell, dht, dh
-  real, allocatable :: vpump(:)
+  real, allocatable :: vst(:)
 
   !$omp parallel do schedule(dynamic) private(i, j)
   do j = dcp%js, dcp%je
@@ -167,23 +167,23 @@ module subroutine boundary_h(p, g, b, s, sx)
     end do
   end do
 
-  ! 排水ポンプ(内部水理構造物族。§15): 取水セル群から吐口セル群への
+  ! 内部水理構造物(ポンプ等。§22): 取水セル群から吐口セル群への
   ! 質量保存的な強制転送。目標流量 q は makebdc がステップ開始時状態の
-  ! 運転ルールから決定済み。ここでは取水側で「実在する水量まで」の
+  ! 水理則から決定済み。ここでは取水側で「実在する水量まで」の
   ! 吸い上げ制限を適用し、実際に汲めた体積だけを吐口へ与える(授受の
   ! 体積が厳密に一致)。取水と吐口が別ランクでも、実体積の共有は
   ! 「所有ランクのみ非ゼロ+総和 allreduce」で決定的(§11)。
   ! 吐口なし(ncout=0)は域外排水(系から除去)。
-  ! collective は全ランクが同数実行する(npump は namelist 由来で全ランク同一)
-  if (b%npump > 0) then
-    allocate(vpump(1:b%npump), source = 0.0)
-    do ip = 1, b%npump
-      if (b%pump(ip)%q <= 0.0) cycle
+  ! collective は全ランクが同数実行する(nstruct は namelist 由来で全ランク同一)
+  if (b%nstruct > 0) then
+    allocate(vst(1:b%nstruct), source = 0.0)
+    do ip = 1, b%nstruct
+      if (b%struct(ip)%q <= 0.0) cycle
       ! セルあたり目標水深(体積の等分配。gv・wfrac で水深に換算)
-      qcell = b%pump(ip)%q * p%dt / (b%pump(ip)%ncin * g%dx * g%dy)
-      do k = 1, b%pump(ip)%ncin
-        i = b%pump(ip)%cin(1,k)
-        j = b%pump(ip)%cin(2,k)
+      qcell = b%struct(ip)%q * p%dt / (b%struct(ip)%ncin * g%dx * g%dy)
+      do k = 1, b%struct(ip)%ncin
+        i = b%struct(ip)%cin(1,k)
+        j = b%struct(ip)%cin(2,k)
         if (j < dcp%js .or. j > dcp%je) cycle
         if (have_width) then
           dht = qcell / g%gv(i,j) / wfrac(i,j)
@@ -191,7 +191,7 @@ module subroutine boundary_h(p, g, b, s, sx)
           dht = qcell / g%gv(i,j)
         end if
         ! ため池セル(rscap>0)は場の水面でなく貯留 s%hrs から汲む
-        ! (前池排水。§15)。汲んで空いた容量への地表水の再吸収は
+        ! (前池排水。§22)。汲んで空いた容量への地表水の再吸収は
         ! 次ステップのため池処理が行う(1ステップ遅れ)
         if (g%rscap(i,j) > 0.0) then
           dh = min(max(s%hrs(i,j), 0.0), dht)
@@ -201,19 +201,19 @@ module subroutine boundary_h(p, g, b, s, sx)
           sx%h1(i,j) = sx%h1(i,j) - dh
         end if
         if (have_width) then
-          vpump(ip) = vpump(ip) + dh * g%gv(i,j) * wfrac(i,j) * g%dx * g%dy
+          vst(ip) = vst(ip) + dh * g%gv(i,j) * wfrac(i,j) * g%dx * g%dy
         else
-          vpump(ip) = vpump(ip) + dh * g%gv(i,j) * g%dx * g%dy
+          vst(ip) = vst(ip) + dh * g%gv(i,j) * g%dx * g%dy
         end if
       end do
     end do
-    call par_allreduce_sumr(vpump)
-    do ip = 1, b%npump
-      if (vpump(ip) <= 0.0 .or. b%pump(ip)%ncout <= 0) cycle   ! 域外排水は除去のみ
-      qcell = vpump(ip) / (b%pump(ip)%ncout * g%dx * g%dy)
-      do k = 1, b%pump(ip)%ncout
-        i = b%pump(ip)%cout(1,k)
-        j = b%pump(ip)%cout(2,k)
+    call par_allreduce_sumr(vst)
+    do ip = 1, b%nstruct
+      if (vst(ip) <= 0.0 .or. b%struct(ip)%ncout <= 0) cycle   ! 域外排水は除去のみ
+      qcell = vst(ip) / (b%struct(ip)%ncout * g%dx * g%dy)
+      do k = 1, b%struct(ip)%ncout
+        i = b%struct(ip)%cout(1,k)
+        j = b%struct(ip)%cout(2,k)
         if (j < dcp%js .or. j > dcp%je) cycle
         if (have_width) then
           sx%h1(i,j) = sx%h1(i,j) + qcell / g%gv(i,j) / wfrac(i,j)
@@ -222,7 +222,7 @@ module subroutine boundary_h(p, g, b, s, sx)
         end if
       end do
     end do
-    deallocate(vpump)
+    deallocate(vst)
   end if
 
   ! 水位規定セル群(流域出口の流出境界、背水・感潮域等)

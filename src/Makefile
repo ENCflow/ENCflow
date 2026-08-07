@@ -15,6 +15,7 @@ PAR_OBJ	= m_parallel_$(MODE).o
 # (utils/ 以下のユーティリティはこのライブラリをリンクする)
 # ---------------------------------------------------------------
 LIBOBJS	= m_main.o m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o \
+	  m_boundary_structure.o \
 	  m_geomorph.o m_geomorph_creep.o m_geomorph_fluvial.o m_geomorph_suspend.o \
 	  m_geomorph_wash.o \
 	  m_gwflow.o m_gwflow_bucket.o m_gwflow_greenampt.o \
@@ -26,7 +27,7 @@ LIBOBJS	= m_main.o m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o \
 	  $(PAR_OBJ) \
 	  list_sysparam.o list_geoinfo.o list_channel.o list_precip.o list_geomorph.o list_gwflow.o \
 	  list_intercept.o \
-	  list_initial.o list_record.o list_tide.o list_boundary.o list_enc.o \
+	  list_initial.o list_record.o list_tide.o list_boundary.o list_structure.o list_enc.o \
 	  m_ffactor.o user_geoinfo.o user_initial.o m_sysdep_util.o m_fileio.o m_georef.o \
 	  m_geotiff.o m_geotiff_codec.o m_geotiff_inflate.o m_util.o
 
@@ -98,6 +99,7 @@ m_intercept_initloss.o: m_sysparam.o m_state.o m_geoinfo.o m_fileio.o m_sysdep_u
 list_intercept.o: m_sysparam.o $(PAR_OBJ)
 m_tide.o: m_sysparam.o list_tide.o m_geoinfo.o $(PAR_OBJ)
 m_boundary.o: m_sysparam.o m_geoinfo.o m_state.o list_boundary.o $(PAR_OBJ)
+m_boundary_structure.o: m_boundary.o list_structure.o m_util.o $(PAR_OBJ)
 m_state.o: m_sysparam.o m_geoinfo.o list_initial.o m_util.o m_sysdep_util.o m_fileio.o
 m_record.o: m_sysparam.o list_record.o m_geoinfo.o m_state.o m_util.o m_sysdep_util.o $(PAR_OBJ)
 m_swflow.o: m_sysparam.o m_geoinfo.o m_boundary.o m_state.o \
@@ -118,6 +120,7 @@ list_tide.o: m_sysparam.o $(PAR_OBJ)
 list_initial.o: m_sysparam.o $(PAR_OBJ)
 list_record.o: m_sysparam.o $(PAR_OBJ)
 list_boundary.o: m_sysparam.o $(PAR_OBJ)
+list_structure.o: m_sysparam.o $(PAR_OBJ)
 list_enc.o: m_sysparam.o $(PAR_OBJ)
 user_geoinfo.o: m_sysparam.o m_geoinfo.o
 user_initial.o: m_sysparam.o m_state.o m_geoinfo.o

@@ -784,7 +784,14 @@
   しないと、初期水面(wave の山など)が復元状態に再加算されて
   「復元が壊れた」ように見える(実際に踏んだ)。
 
-### 排水ポンプ(&list_bound_pump。内部水理構造物族の第一号。2026-08-07)
+### 排水ポンプ(内部水理構造物族の第一号。2026-08-07)
+
+> **移設(2026-08-07)**: 設定は fn_boundary の &list_bound_pump から
+> **独立ファイル fn_structure の &list_struct_pump へ移設**した
+> (パラメータ名は同じ)。実装も m_boundary 本体から submodule
+> m_boundary_structure へ分離した。族の共通骨格・水理則の切替様式・
+> カルバート等の後続種別は **§22 が正本**。本小節はポンプの水理仕様の
+> 記録として残す。
 
 - 取水セル群 → 吐口セル群(未指定=域外排水)の質量保存的な強制転送。
   隣接不要・距離無制限。**状態依存 Q の最初の実装**: 運転ルールは
@@ -1598,3 +1605,63 @@ taxy のループ先頭で毎ステップ全成分をクリアする方式に変
   無害で、変更の影響は減水期の水際のみ。ulm/vlm にも同様の残存はあるが、
   get_diff が乾き近傍を h ガードで除外するため読まれない(クリア不要。
   読む側の仕様を変える場合は要再検討)。
+
+## 22. 内部水理構造物族(fn_structure: ポンプ・カルバート等)の設計(2026-08-07 決定)
+
+カルバート・分水・ダム放流・容量付きポンプ・ゲート付き樋門は、すべて
+同一の骨格を持つ:
+
+> **2つのセル集合(上流側・下流側または域外)+ 水理則 Q(基準値の純関数)
+> + 質量保存的な転送**
+
+これを個別機能として別々に実装せず、1つの族として設計し、水理則だけを
+切り替える。排水ポンプ(§15)が第一号。
+
+### 配置と責務分担
+
+- **状態は t_boundary(親 m_boundary)に置く**: `b%nstruct` /
+  `b%struct(:)`(t_structure)。makebdc からの呼び出しと boundary_h の
+  適用が親の型を読むため(河道モデル §18 の「状態は親、コードは
+  submodule」と同じ判断)。
+- **実装は submodule m_boundary_structure**: namelist の解釈・検証・格納
+  (init_structure)と毎ステップの水理則評価(structure_makebdc)。
+  §13 の submodule 規約(contained 禁止・use 経由名の直接 use)に従う。
+- **設定は独立ファイル fn_structure**(&list_sysparam。"-" で param 同居
+  可)。型別の namelist グループ(&list_struct_pump、…)を list_structure
+  が生の値のまま運ぶ(層契約 §12)。**fn_boundary の有無に依らず初期化
+  する**(m_boundary_init の早期 return の外)。
+- **適用は boundary_h の構造物節**(source と stage の間。位置・式形は
+  ポンプ実装から不変): 取水側に吸い上げ制限 → 実体積を allreduce →
+  吐口へ付与。適用側は種別に依らない汎用転送で、種別差は水理則(目標 Q)
+  に閉じる。
+- STG は nstruct > 0 で par_stop(ENC 専用)。
+
+### 水理則の切替様式
+
+- t_structure の**手続きポインタ成分** `law`(排他切替のモデル群の様式。
+  CLAUDE.md)。シグネチャは
+  `q = law(rule, nrule, geom, refu, refd)`(折れ線・形状定数・上下流の
+  基準値 → 符号付き目標流量 >0 = cin→cout)。
+  **型自身を引数に渡さない**のは、手続きポインタ成分の interface が型定義
+  より前に必要という前方参照の循環を避けるため。
+- 水理則は**現在状態の純関数=履歴状態なし**(save/restore 対象外)。
+  内部状態を持つ種別(ダム貯留・ゲート開度・ヒステリシス)は save 対応と
+  併せて第2弾(handoff)。
+- 基準値の収集(structure_makebdc): 代表セル=各セル群の先頭。所有ランク
+  のみ非ゼロ+総和 allreduce(§11)。評価はステップ開始時点の状態
+  (他族の時系列と同じ時相)。
+
+### 移設の互換性(2026-08-07)
+
+- &list_bound_pump は**廃止**(互換読み込みなし。追加直後で利用実績が
+  ないため)。fn_boundary 内に旧グループを検出したら par_stop で移行を
+  案内する(黙って無視しない。list_boundary の check_old_format)。
+- 落とし穴(実際に踏んだ): **submodule から親の private 手続きを
+  ホスト結合で呼ぶと、gfortran が全呼び出しをインライン化した private
+  手続きのシンボルを局所化・消去し、submodule 側の参照がリンク不能に
+  なる**。submodule と共有する補助手続き(interp_series,
+  read_cell_file2)は親で public にする。
+- 検証(2026-08-07, gfortran): 等価移設として、同一物理設定のポンプ
+  (一定流量+吐口 / 水深ルール+域外)で移設前(&list_bound_pump)と
+  移設後(&list_struct_pump)が厳密数学(-O2)ビット一致。無効時は
+  wave/chichibu 回帰 PASS。

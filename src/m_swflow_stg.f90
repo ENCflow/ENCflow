@@ -83,8 +83,8 @@ subroutine m_swflow_stg_init(p, g, b, s)
   if (g%bank_active .or. g%width_active) then
     call par_stop("STG(f_gridsystem=1)は河道水理モデル(fn_channel)非対応です")
   end if
-  if (b%npump > 0) then
-    call par_stop("STG(f_gridsystem=1)は排水ポンプ(list_bound_pump)非対応です")
+  if (b%nstruct > 0) then
+    call par_stop("STG(f_gridsystem=1)は内部水理構造物(fn_structure)非対応です")
   end if
 
   select case (p%f_govequation)
