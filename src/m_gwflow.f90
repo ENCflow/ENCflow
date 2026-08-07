@@ -27,7 +27,7 @@ module m_gwflow
                                  gwflow_greenampt_dispose
   use m_gwflow_lateral, only : gwflow_lateral_init, gwflow_lateral_calc, &
                                gwflow_lateral_dispose
-  use m_parallel, only : par_stop
+  use m_parallel, only : par_stop, par_allreduce_max, dcp
   use m_util, only : itoa
   implicit none
   private
@@ -94,6 +94,7 @@ subroutine m_gwflow_init(gw, p, g, s)
   type(t_state), intent(inout) :: s
   type(t_list_gwflow) :: list
   logical :: needs_sd
+  real :: sdmax(1)
 
   if (len_trim(p%fn_gwflow) == 0) return
 
@@ -155,7 +156,21 @@ subroutine m_gwflow_init(gw, p, g, s)
   ! geomorph_plan.md §2.5: 浸食・堆積は s%sd を z と共動更新する)
   if (needs_sd) then
     call m_geoinfo_require_sd(g)
-    s%sd(:,:) = g%sd(:,:)
+    if (p%f_state_restore > 0) then
+      ! restore 時は転記しない(復元値が勝つ。「保存状態を初期条件に
+      ! 使う」意味論。sd の入力係数を変えても restore には効かない)。
+      ! ただし土層ゼロの save(gwflow 無効時に作成された save)を
+      ! sd 必須モデルで使う設定齟齬は停止する(黙って容量ゼロの
+      ! 地下水になるのを防ぐ)。判定は全ランク同一(collective 安全)
+      sdmax(1) = maxval(s%sd(:, dcp%js:dcp%je))
+      call par_allreduce_max(sdmax)
+      if (sdmax(1) <= 0.0) then
+        call par_stop("gwflow: 復元した save に土層厚がありません(gwflow 無効時に" &
+                      // "作成された save)。restore を使わないか、save を作り直してください")
+      end if
+    else
+      s%sd(:,:) = g%sd(:,:)
+    end if
   end if
 
   gw%enabled = .true.

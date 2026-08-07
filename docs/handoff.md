@@ -201,9 +201,12 @@
   (developer.md §19。解析解ベンチ test/creep 新設、無効時ビット一致・
   -fcheck np=2・np=1,2,4 ビット一致は gfortran/OpenMPI で確認済み。
   ifx での同確認は未)。s%z のハロは calc 末尾交換で解決(§11 TODO(1))。
-  次: F1a(s%sd 動的化+gwflow 読み替えの等価リファクタ)→ F1b(掃流砂
-  Exner)。設計正本は docs/geomorph_plan.md(改訂2)。残 TODO:
-  時間発展 z の dt_file 出力(§11 TODO(2)。F1b で実装予定)
+  **F1a(s%sd 動的化+gwflow 読み替え+save 5成分化)も実装・検証済み
+  2026-08-07**(developer.md §19.1。save_version = "2026-08-07" に更新。
+  旧 save は版照合で停止する)。
+  次: F1b(掃流砂 Exner+sd 共動更新)。設計正本は docs/geomorph_plan.md
+  (改訂2)。残 TODO: 時間発展 z の dt_file 出力(§11 TODO(2)。F1b で
+  実装予定)、ifx での geomorph/F1a の確認
 - gwflow: RRI 型・鉛直浸透重視型の追加(m_gwflow_bucket を複製して契約に従う)
 - intercept: 初期損失モデルと分布ファイル対応は実装済み(2026-08-06。
   貯留型の3点セット=step 口・原雨量私有保管・st の save/restore を含む。

@@ -126,8 +126,8 @@ module m_state
   !   仕様変更日の日付文字列。save の並び・成分・メタデータ・圧縮形式を
   !   変更したら必ずこの日付を更新する(restore 時の照合に使う。§7)。
   !   同日に複数回変更した場合は英字サフィックスで区別する
-  character(len=*), parameter :: save_version_cur = "2026-07-31b"
-  integer, parameter :: n_state_save = 4     ! state.dat の成分数(h,z,rsh,hg)
+  character(len=*), parameter :: save_version_cur = "2026-08-07"
+  integer, parameter :: n_state_save = 5     ! state.dat の成分数(h,z,rsh,hg,sd)
 
 
 contains
@@ -199,6 +199,7 @@ subroutine m_state_init(s, p, g)
   allocate(ts%z(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%rsh(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%hg(1:g%nx,1:g%ny), source = 0.0)
+  allocate(ts%sd(1:g%nx,1:g%ny), source = 0.0)
 
   call m_state_updatetime(s, p, 0)
   call set_z(p, g, ts)
@@ -229,6 +230,7 @@ subroutine m_state_init(s, p, g)
   s%z(:,:) = ts%z(1:g%nx, dcp%jsh:dcp%jeh)
   s%rsh(:,:) = ts%rsh(1:g%nx, dcp%jsh:dcp%jeh)
   s%hg(:,:) = ts%hg(1:g%nx, dcp%jsh:dcp%jeh)
+  s%sd(:,:) = ts%sd(1:g%nx, dcp%jsh:dcp%jeh)
   s%ini = ts%ini
 
   ! 初期水位をセット
@@ -722,7 +724,7 @@ subroutine save_state(p, s)
   integer :: un
   real, allocatable :: wk(:,:,:)
   ! 全域バッファに集約してから rank0 のみが書く。
-  ! write(un) wk のレコードは h, z, rsh, hg の連結。
+  ! write(un) wk のレコードは h, z, rsh, hg, sd の連結。
   ! 運動量表現(uv/mn 等)はスキーム私有の保存(swflow_enc.dat)、
   ! u,v,m,n,vv,qq,e は復元時に再導出される導出量(§7 の線引き)
   call sysdep_mkdir(p%dir_save)
@@ -735,6 +737,7 @@ subroutine save_state(p, s)
   call par_gather_to(wk(:,:,2), s%z)
   call par_gather_to(wk(:,:,3), s%rsh)
   call par_gather_to(wk(:,:,4), s%hg)
+  call par_gather_to(wk(:,:,5), s%sd)
   if (.not. is_root) return
   open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', status='replace')
   ! 成分ごとにゼロ抑制 RLE で書く(海域・乾燥域のゼロを圧縮。§7)
@@ -742,6 +745,7 @@ subroutine save_state(p, s)
   call fileio_write_rle(un, wk(:,:,2))   ! z
   call fileio_write_rle(un, wk(:,:,3))   ! rsh
   call fileio_write_rle(un, wk(:,:,4))   ! hg
+  call fileio_write_rle(un, wk(:,:,5))   ! sd
   close(un)
 
   ! メタデータは最後に書く(save 一式の完成マーカーを兼ねる。
@@ -766,18 +770,20 @@ subroutine restore_state(p, s)
   ! (全ランク同形)なので Bcast が成立する。帯への切り出しは呼び出し側
   if (is_root) then
     open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', status='old')
-    ! 読み並びは save_state の書き込み順(h, z, rsh, hg)と一致させること。
+    ! 読み並びは save_state の書き込み順(h, z, rsh, hg, sd)と一致させること。
     ! 成分を足すときは save と restore を必ず同時に更新する
     call fileio_read_rle(un, s%h)
     call fileio_read_rle(un, s%z)
     call fileio_read_rle(un, s%rsh)
     call fileio_read_rle(un, s%hg)
+    call fileio_read_rle(un, s%sd)
     close(un)
   end if
   call par_bcast_cell(s%h)
   call par_bcast_cell(s%z)
   call par_bcast_cell(s%rsh)
   call par_bcast_cell(s%hg)
+  call par_bcast_cell(s%sd)
 end subroutine
 
 

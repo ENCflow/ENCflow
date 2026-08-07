@@ -169,7 +169,7 @@
     に書くので完成マーカーを兼ねる)。内容: save_version(**仕様変更日の
     日付文字列**。形式を変えたら m_state の save_version_cur を更新)、
     nx, ny, precision_bits, n_state, t, it。
-  - `state.dat` — m_state の4成分(h, z, rsh, hg の連結)。
+  - `state.dat` — m_state の5成分(h, z, rsh, hg, sd の連結。2026-08-07)。
   - `swflow_enc.dat` — sx%uv, mn(エッジ状態。力学状態は厳密に復元される)。
   - `gwflow_<モデル名>.dat` — 内部状態を持つ地下水モデルの私有ファイル。
 - **保存対象の線引き: 質量はスキーム非依存の共有状態として m_state が保存し、
@@ -1140,3 +1140,38 @@
 - **将来(F1a 以降)の注意**: s%sd 導入後は各プロセスの Δz を s%sd にも
   共動適用する(浸食で土層が薄くなる→飽和・流出の早期化の結合。
   geomorph_plan.md §2.5)。calc 内に TODO コメントあり。
+
+### 19.1 土層厚の動的共有状態化(F1a。2026-08-07 実装)
+
+浸食モデルと地下水モデルの結合(表層浸食→土層厚減少→飽和・流出の
+早期化)の土台。設計は geomorph_plan.md §2.5。
+
+- **s%sd(動的共有状態)を t_state に追加**。gwflow カーネル(lateral の
+  全水頭・飽和判定・容量・安定条件走査、greenampt の容量)は s%sd を
+  読む。g%sd は「初期土層厚の入力係数」として存続(f_sdtype 3状態・
+  方式2配布・遅延確保口 require_sd は不変)。
+- **初期値の転記は m_gwflow_init が require_sd の直後に行う**
+  (m_state_init の時点では g%sd が未確保のため、そこでは転記できない
+  — この初期化順序が転記位置の決定理由)。将来 geomorph が sd を要する
+  場合も同じ規約で転記する(先に転記した方が勝ち、値は同一 g%sd 由来)。
+- **restore 時は転記をスキップ**(復元値が勝つ。「保存状態を初期条件に
+  使う」意味論。sd の入力係数を差し替えても restore には効かない)。
+  ガード: 土層ゼロの save(gwflow 無効時に作成)を sd 必須モデルで
+  restore する設定齟齬は par_stop(黙って容量ゼロの地下水になるのを
+  防ぐ。判定は maxval+allreduce_max で全ランク同一 = collective 安全)。
+- **save/restore: state.dat を5成分に拡張**(h, z, rsh, hg, sd。
+  save_version = "2026-08-07")。sd は hg と同じ一律保存(無効時は
+  ゼロ面)。utils/ に state.dat の読み手はないことを確認済み(§10 の
+  形式変更チェック)。
+- **将来(F1b)**: geomorph の各プロセスは Δz を s%sd にも共動適用する。
+  z と sd が同じ Δz で動くため帯水層底 (z − sd) は不変(岩盤固定が
+  構造的に成立)。堆積で sd が init 時の max(sd) を超えると lateral の
+  静的安定条件検査が非保守側になる点に注意(超過の par_warn 監視を
+  F1b で入れる)。
+- **検証(2026-08-07, gfortran/OpenMPI, -O2 厳密数学)**: コミットA
+  (読み替え)= wave と greenampt+lateral 合成ケースの逐次・np=1,2,4 が
+  変更前 Log とバイト一致、-fcheck np=2 先行。コミットB(save 拡張)=
+  非 restore 実行のバイト一致、リスタート往復(save→restore(tt=0)→save)
+  で state.dat / swflow_enc.dat バイト一致、np=2 の save が逐次 save と
+  バイト一致、-fcheck np=2 で save/restore 経路、ゼロ土層 restore の
+  par_stop 動作。
