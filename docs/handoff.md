@@ -74,6 +74,14 @@
      ULP=1 クラス)が出るようになった(bank_wall の submodule 化以降)。
      ifx 検証・恒常テスト化は 1d の残項目に同梱
 
+1e. **排水ポンプ(&list_bound_pump。§15)の残検証**(実装と gfortran/
+    OpenMPI 検証は 2026-08-07 完了。無効時ビット一致、閾値未達=無ポンプ
+    一致、一定流量= source±Q 一致、np=1,2,4 一致、厳密数学 serial=MPI
+    一致、-fcheck np=2)
+   - 残: ifx / PREC=single、実ケース(前池+排水機場)での適用検証
+   - 第2弾候補: 起動/停止ヒステリシス(履歴状態+save 対応)、
+     吐口の到達遅れ、時系列との併用(運転スケジュール)
+
 1c. **gwflow 第3弾(側方流動 Boussinesq)の残検証**
    (実装と gfortran 検証は 2026-08-05 完了。決定は developer.md §16.1、
     進捗と検証内容は handoff_gwflow_tani.md §9 の 2〜5)
