@@ -16,6 +16,7 @@ PAR_OBJ	= m_parallel_$(MODE).o
 # ---------------------------------------------------------------
 LIBOBJS	= m_main.o m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o \
 	  m_geomorph.o m_geomorph_creep.o m_geomorph_fluvial.o m_geomorph_suspend.o \
+	  m_geomorph_wash.o \
 	  m_gwflow.o m_gwflow_bucket.o m_gwflow_greenampt.o \
 	  m_gwflow_lateral.o \
 	  m_intercept.o m_intercept_fixed.o m_intercept_initloss.o \
@@ -82,6 +83,7 @@ m_geomorph.o: m_sysparam.o list_geomorph.o m_state.o m_geoinfo.o m_util.o $(PAR_
 m_geomorph_creep.o: m_geomorph.o $(PAR_OBJ)
 m_geomorph_fluvial.o: m_geomorph.o m_swflow_enc.o $(PAR_OBJ)
 m_geomorph_suspend.o: m_geomorph.o $(PAR_OBJ)
+m_geomorph_wash.o: m_geomorph.o $(PAR_OBJ)
 list_geomorph.o: m_sysparam.o $(PAR_OBJ)
 m_gwflow.o: m_sysparam.o list_gwflow.o m_state.o m_geoinfo.o m_gwflow_bucket.o \
 	m_gwflow_greenampt.o m_gwflow_lateral.o m_util.o $(PAR_OBJ)

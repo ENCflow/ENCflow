@@ -223,8 +223,13 @@
   掃流=frw+河道底集中、浮遊=無修正整合、堤防エッジは掃流遮断)。
   **record への hs/sd 計測追加も実装・検証済み 2026-08-07**(プローブ
   8成分化・CSV 列追加。rerecord の z 確保漏れ修正を含む。§19.3)。
-  次の実装段: F3(斜面浸食 f_wash: 雨滴・面状侵食を hs へ注入)。
-  設計正本は docs/geomorph_plan.md(改訂2)
+  **F3(斜面浸食 f_wash)実装・検証済み 2026-08-07**(developer.md §19.5。
+  test/wash 新設。m_geomorph はプロセス別 submodule に分割済み)。
+  F0〜F3 完了。残の主要項目: 解析解ベンチマーク(平衡勾配・巻き上げ
+  沈降)、morfac 等価性ベンチ(fluvial/suspend)、浮遊砂の境界流入濃度・
+  区間流入 Qs(t)(plan §2.7)、侵食係数の校正指針、混合粒径(F4)、
+  ifx / PREC=single での geomorph 一式の確認。
+  設計正本は docs/geomorph_plan.md(改訂3)
 - gwflow: RRI 型・鉛直浸透重視型の追加(m_gwflow_bucket を複製して契約に従う)
 - intercept: 初期損失モデルと分布ファイル対応は実装済み(2026-08-06。
   貯留型の3点セット=step 口・原雨量私有保管・st の save/restore を含む。

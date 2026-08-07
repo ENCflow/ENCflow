@@ -1316,3 +1316,33 @@
   rerecord に明記)。検証: wave Log ビット一致、chichibu が委託
   reference と完全一致 PASS、creep の解析解 PASS+np=2,4 の
   プローブ CSV 逐次バイト一致、hs/sd 列の実値確認。
+
+### 19.5 斜面浸食(f_wash。F3。2026-08-07 実装)+ submodule 分割
+
+- **m_geomorph はプロセス別 submodule に分割**(等価リファクタ。creep /
+  fluvial / suspend / wash。m_swflow_enc の adv/bc/channel と同じコード
+  分割イディオム)。親には型・定数・共有作業領域・配線・setup_sd・
+  dispose が残る。落とし穴: **gfortran は private なモジュール手続きを
+  ローカルシンボルにするため、submodule から呼ぶ共有手続き
+  (require_work)は分離インターフェース+submodule 実装にする**
+  (親内実装のままだと -O2 で消えリンク不能)。
+- **f_wash = 雨滴+面状侵食**: E = wash_kr・P + wash_kf・(τ*/τ*c − 1)。
+  剥離土砂は s%hs へ注入し、z・sd から共動で差し引く(可動層クランプ・
+  gwflow 容量引き渡し・MORFAC 台帳分離は suspend と同一規約)。
+  **河道への土砂流入は浮遊砂の移流が自動的に実現する**ため f_suspend
+  必須(init で par_stop)。適用は陸の湿潤セルのみ(乾燥セルは suspend の
+  乾燥繰り入れと空回りになるため対象外)、**河道セル(rw>0)は対象外**
+  (河道内は fluvial/suspend の管轄=「斜面」の意味論)。
+  斜面の表層浸食が s%sd を直接減らすため「土層減少→飽和・流出の早期化」
+  結合(plan §2.5 のユーザー要件)がそのまま現れ、sd=0 で岩盤露出
+  (badland の挙動)。
+- **probe は10列に拡張**(z, h, u, v, |V|, q, hg, hs, sd。hg を q と hs の
+  間に挿入。2026-08-07)。
+- **test/wash**: 降雨(50mm/h 一様)+ダムブレイクの閉領域で固体総量保存
+  (実測 1.7e-13)・共動更新恒等・活性を検定(Check_suspend.py を共用)。
+- **検証(2026-08-07, gfortran/OpenMPI, -O2 厳密数学)**: 分割の等価性=
+  全ケース(wave/gwflow/creep/fluvial/suspend 両式/開境界)バイト一致 /
+  wash 無効時ビット一致 / -fcheck np=2 先行 / wash の np=1,2,4 が逐次と
+  state.dat バイト一致。
+- 残: 侵食係数(kr, kf)の実流域校正指針、USLE 型の土地利用別係数
+  (lu からの構築 — intercept の lu2rn 同型)、リル・ガリー侵食。

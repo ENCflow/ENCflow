@@ -40,8 +40,13 @@ module list_geomorph
     real :: susp_esa = 0.0           ! 平衡濃度係数(C_eq = esa・(τ*/τ*c - 1))。
                                      ! f_suspend=1 で必須(体積濃度スケール)
 
+    integer :: f_wash = 0            ! 斜面浸食(雨滴+面状。f_suspend が必須)(0:無効, 1:有効)
+    real :: wash_kr = 0.0            ! 雨滴侵食係数(無次元。E_r = kr・降雨強度)
+    real :: wash_kf = 0.0            ! 面状侵食係数 (m/s)(E_f = kf・(τ*/τ*c - 1))
+    real :: wash_tausc = 0.05        ! 面状侵食の限界無次元掃流力 τ*c
+
     ! 将来のプロセス追加はここにフラグとパラメータを足す
-    ! (例: f_wash 斜面浸食, f_badland 崩壊性浸食)
+    ! (例: f_badland 崩壊性浸食)
   end type
 
 contains
@@ -75,12 +80,16 @@ subroutine list_geomorph_read(p, list)
   real :: susp_tausc
   real :: susp_beta
   real :: susp_esa
+  integer :: f_wash
+  real :: wash_kr
+  real :: wash_kf
+  real :: wash_tausc
 
   namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
                            fluv_porosity, fluv_sgrav, fluv_dzmax, fluv_diagratio, &
                            fluv_bcfeed, f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
-                           susp_beta, susp_esa
+                           susp_beta, susp_esa, f_wash, wash_kr, wash_kf, wash_tausc
 
   ! 型宣言のデフォルトを namelist 変数の初期値にする
   dt_geomorph = list%dt_geomorph
@@ -103,6 +112,10 @@ subroutine list_geomorph_read(p, list)
   susp_tausc = list%susp_tausc
   susp_beta = list%susp_beta
   susp_esa = list%susp_esa
+  f_wash = list%f_wash
+  wash_kr = list%wash_kr
+  wash_kf = list%wash_kf
+  wash_tausc = list%wash_tausc
 
   call par_info("reading list_geomorph in " // trim(p%fn_geomorph))
   open(newunit=un, file=trim(p%fn_geomorph), status='old', action='read', iostat=ios)
@@ -131,6 +144,10 @@ subroutine list_geomorph_read(p, list)
   list%susp_tausc = susp_tausc
   list%susp_beta = susp_beta
   list%susp_esa = susp_esa
+  list%f_wash = f_wash
+  list%wash_kr = wash_kr
+  list%wash_kf = wash_kf
+  list%wash_tausc = wash_tausc
 
 end subroutine
 

@@ -95,6 +95,10 @@ module m_geomorph
     real :: wf = 0.0                 ! 沈降速度 (m/s)(指定 or Rubey 式で導出)
     real :: beta = 1.0               ! 沈降の底面濃度係数(c_b = β・C)
     real :: esa = 0.0                ! 平衡濃度係数(C_eq = esa・(τ*/τ*c - 1))
+    integer :: f_wash = 0            ! 斜面浸食(0:無効, 1:有効。f_suspend 必須)
+    real :: wkr = 0.0                ! 雨滴侵食係数(無次元)
+    real :: wkf = 0.0                ! 面状侵食係数 (m/s)
+    real :: wtausc = 0.05            ! 面状侵食の限界無次元掃流力 τ*c
     logical :: initialized = .false.
   end type
 
@@ -167,6 +171,17 @@ module m_geomorph
       type(t_state), intent(inout) :: s
       real, intent(in) :: dtw
     end subroutine
+    module subroutine init_wash(gm, list)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine calc_wash(gm, p, g, s, dtw)
+      type(t_geomorph), intent(in) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dtw
+    end subroutine
     ! 共有スクラッチの確保口(実装は m_geomorph_creep 側。gfortran は
     ! private なモジュール手続きをローカルシンボルにするため、submodule
     ! から呼ぶ手続きは分離インターフェース+submodule 実装にする)
@@ -227,8 +242,10 @@ subroutine m_geomorph_init(gm, p, g, s)
 
   gm%f_fluvial = list%f_fluvial
   gm%f_suspend = list%f_suspend
+  gm%f_wash = list%f_wash
 
-  ! --- 土砂プロセス(掃流・浮遊)の共有設定 ---
+  ! --- 土砂プロセス(掃流・浮遊・斜面)の共有設定 ---
+  ! (f_wash は f_suspend 必須なので条件には現れない — init_wash が検証)
   if (gm%f_fluvial > 0 .or. gm%f_suspend > 0) then
     ! 河床の物性(共有)
     if (list%fluv_porosity < 0.0 .or. list%fluv_porosity >= 1.0) then
@@ -249,6 +266,7 @@ subroutine m_geomorph_init(gm, p, g, s)
 
   if (gm%f_fluvial > 0) call init_fluvial(gm, p, g, list)
   if (gm%f_suspend > 0) call init_suspend(gm, p, list)
+  if (gm%f_wash > 0) call init_wash(gm, list)
 
   ! 浮遊砂輸送の有効化を通知(swflow_enc がステップ内で s%hs を移流する。
   ! 初期化順序: 本 init は m_swflow_init より前)
@@ -315,6 +333,7 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
   ! 台帳分離(MORFAC 方式。geomorph_plan.md §4)のため dtw を別に渡す
   if (gm%f_fluvial > 0) call calc_fluvial(gm, p, g, s, dts)
   if (gm%f_suspend > 0) call calc_suspend(gm, p, g, s, p%dt * gm%idt_geomorph)
+  if (gm%f_wash > 0) call calc_wash(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_creep > 0) call calc_creep(gm, g, s, dts)
   ! (将来のプロセスの適用をここに追加する)
 
