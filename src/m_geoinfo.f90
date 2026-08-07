@@ -284,7 +284,7 @@ subroutine m_geoinfo_require_sd(g)
   type(t_geoinfo), intent(inout) :: g
   if (allocated(g%sd)) return
   if (g%sd0 <= 0.0) then
-    call par_stop("list_geoinfo: soil depth is required by gwflow " // &
+    call par_stop("list_geoinfo: soil depth is required by gwflow/geomorph " // &
                   "(set sd0 > 0 or f_sdtype=1/fn_sd)")
   end if
   allocate(g%sd(1:dcp%nx_g, dcp%jsh:dcp%jeh), source = g%sd0)

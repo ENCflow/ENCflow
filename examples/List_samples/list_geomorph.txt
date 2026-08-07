@@ -27,4 +27,18 @@
   ! 斜面クリープ(線形拡散 dz/dt = D∇²z)(0:無効, 1:有効)
   f_creep = 0
   creep_d = 0.0            ! クリープ拡散係数 D (m2/s)。f_creep=1 で必須
+
+  ! 掃流砂 Exner(河床の浸食・堆積)(0:無効, 1:有効)
+  !   平衡流砂量による河床変動。土層厚(可動層厚)の初期値は
+  !   &list_geoinfo の sd0 / f_sdtype / fn_sd(gwflow と共通)で与える。
+  !   浸食・堆積は土層厚 s%sd を標高と共動更新し、gwflow 併用時は
+  !   貯留容量 sd*sy0 の減少(飽和・流出の早期化)が自動で結合する。
+  !   制約: STG 非対応、サブグリッド河道幅(fn_width)との併用は未対応
+  f_fluvial = 0
+  f_qbform = 1             ! 流砂量式(1:芦田・道上, 2:MPM)
+  fluv_d50 = 0.0           ! 代表粒径 (m)。f_fluvial=1 で必須
+  fluv_tausc = 0.05        ! 限界無次元掃流力 τ*c
+  fluv_porosity = 0.4      ! 河床の空隙率 λ
+  fluv_sgrav = 1.65        ! 土粒子の水中比重 s = (ρs-ρ)/ρ
+  fluv_dzmax = 0.05        ! 1エッジ・1更新の河床変動上限 (m)(暴走ガード)
 /

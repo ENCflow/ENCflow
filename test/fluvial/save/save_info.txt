@@ -1,0 +1,10 @@
+! ENCflow restart save (2026-08-07 05:27)
+&SAVE_INFO
+ SAVE_VERSION="2026-08-07      ",
+ NX=101        ,
+ NY=101        ,
+ PRECISION_BITS=64         ,
+ N_STATE=5          ,
+ T=  0.0000000000000000     ,
+ IT=0          ,
+ /
