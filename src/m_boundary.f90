@@ -21,7 +21,7 @@ module m_boundary
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
-  use m_parallel, only : par_stop, dcp, par_allreduce_sumr
+  use m_parallel, only : par_stop, dcp, par_allreduce_sumr, par_allreduce_maxi
   use m_util, only : itoa
   use list_boundary, only : t_list_boundary, list_boundary_read, &
                             nbsrcmax, nsrccmax, nsrcvmax
@@ -199,7 +199,13 @@ subroutine m_boundary_makebdc(b, p, g, s)
       j = b%pump(ip)%cin(2,1)
       if (j >= dcp%js .and. j <= dcp%je) then
         if (b%pump(ip)%f_ref == 1) then
-          refp(ip) = max(s%h(i,j), 0.0)
+          ! 水深基準: 代表セルがため池(rscap>0)なら貯留水深 hrs を読む
+          ! (前池水深トリガー。地表 h は池が満杯になるまで 0 のため)
+          if (g%rscap(i,j) > 0.0) then
+            refp(ip) = max(s%hrs(i,j), 0.0)
+          else
+            refp(ip) = max(s%h(i,j), 0.0)
+          end if
         else
           refp(ip) = s%z(i,j) + max(s%h(i,j), 0.0)
         end if
@@ -660,6 +666,25 @@ subroutine init_pump(b, p, g, list)
     end do
 
   end do
+
+  ! 代表セルがため池(rscap>0)のポンプは水位基準(η)を使えない
+  ! (ため池水面の標高は未定義。取水は s%hrs から行われる)。
+  ! rscap は帯配布済み(方式2)のため所有ランクが判定し、エラー番号を
+  ! allreduce で共有してから collective に停止する(§11)
+  n = 0
+  do ip = 1, b%npump
+    if (b%pump(ip)%f_ref /= 0) cycle
+    i = b%pump(ip)%cin(1,1)
+    j = b%pump(ip)%cin(2,1)
+    if (j >= dcp%js .and. j <= dcp%je) then
+      if (g%rscap(i,j) > 0.0) n = max(n, ip)
+    end if
+  end do
+  call par_allreduce_maxi(n)
+  if (n > 0) then
+    call par_stop("list_bound_pump: ポンプ "//itoa(n)//" の代表セルはため池(rscap>0)です。" &
+                  //"水位基準(f_pump_ref=0)は使えません。f_pump_ref=1(水深=ため池水深)を指定してください")
+  end if
 
 end subroutine
 

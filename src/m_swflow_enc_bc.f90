@@ -187,14 +187,24 @@ module subroutine boundary_h(p, g, b, s, sx)
         if (j < dcp%js .or. j > dcp%je) cycle
         if (have_width) then
           dht = qcell / g%gv(i,j) / wfrac(i,j)
-          dh = min(max(sx%h1(i,j), 0.0), dht)
-          vpump(ip) = vpump(ip) + dh * g%gv(i,j) * wfrac(i,j) * g%dx * g%dy
         else
           dht = qcell / g%gv(i,j)
+        end if
+        ! ため池セル(rscap>0)は場の水面でなく貯留 s%hrs から汲む
+        ! (前池排水。§15)。汲んで空いた容量への地表水の再吸収は
+        ! 次ステップのため池処理が行う(1ステップ遅れ)
+        if (g%rscap(i,j) > 0.0) then
+          dh = min(max(s%hrs(i,j), 0.0), dht)
+          s%hrs(i,j) = s%hrs(i,j) - dh
+        else
           dh = min(max(sx%h1(i,j), 0.0), dht)
+          sx%h1(i,j) = sx%h1(i,j) - dh
+        end if
+        if (have_width) then
+          vpump(ip) = vpump(ip) + dh * g%gv(i,j) * wfrac(i,j) * g%dx * g%dy
+        else
           vpump(ip) = vpump(ip) + dh * g%gv(i,j) * g%dx * g%dy
         end if
-        sx%h1(i,j) = sx%h1(i,j) - dh
       end do
     end do
     call par_allreduce_sumr(vpump)
