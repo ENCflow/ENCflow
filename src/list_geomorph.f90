@@ -28,6 +28,8 @@ module list_geomorph
     real :: fluv_dzmax = 0.05        ! 1エッジ・1更新の河床変動上限 (m)
     real :: fluv_diagratio = 0.5857864376  ! 斜め方向の通過幅配分(= 2/(2+√2)。
                                      ! m_swflow_enc の p_diagratio と同値の既定)
+    integer :: fluv_bcfeed = 0       ! 開境界の掃流砂給砂(0:流入は無給砂,
+                                     ! 1:平衡給砂。流出は常に容量輸送)
 
     integer :: f_suspend = 0         ! 浮遊砂(移流+浸食・沈降)(0:無効, 1:有効)
     integer :: f_esform = 1          ! 平衡濃度式(1:超過掃流力線形(簡易))
@@ -65,6 +67,7 @@ subroutine list_geomorph_read(p, list)
   real :: fluv_sgrav
   real :: fluv_dzmax
   real :: fluv_diagratio
+  integer :: fluv_bcfeed
   integer :: f_suspend
   integer :: f_esform
   real :: susp_d50
@@ -76,7 +79,7 @@ subroutine list_geomorph_read(p, list)
   namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
                            fluv_porosity, fluv_sgrav, fluv_dzmax, fluv_diagratio, &
-                           f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
+                           fluv_bcfeed, f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa
 
   ! 型宣言のデフォルトを namelist 変数の初期値にする
@@ -92,6 +95,7 @@ subroutine list_geomorph_read(p, list)
   fluv_sgrav = list%fluv_sgrav
   fluv_dzmax = list%fluv_dzmax
   fluv_diagratio = list%fluv_diagratio
+  fluv_bcfeed = list%fluv_bcfeed
   f_suspend = list%f_suspend
   f_esform = list%f_esform
   susp_d50 = list%susp_d50
@@ -119,6 +123,7 @@ subroutine list_geomorph_read(p, list)
   list%fluv_sgrav = fluv_sgrav
   list%fluv_dzmax = fluv_dzmax
   list%fluv_diagratio = fluv_diagratio
+  list%fluv_bcfeed = fluv_bcfeed
   list%f_suspend = f_suspend
   list%f_esform = f_esform
   list%susp_d50 = susp_d50

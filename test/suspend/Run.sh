@@ -16,6 +16,14 @@ rc=0
 python3 "$sdir/Check_suspend.py" save || rc=1
 rm -rf save_serial && cp -r save save_serial
 
+# 板倉・岸(f_esform=2)でも同じ保存則検定を通す(save は上書きされる。
+# MPI 比較用の save_serial は上で確保済み)
+set -o pipefail
+./a.out param_ik.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_suspend.py" save || rc=1
+
 if [ $rc -eq 0 ]; then
     echo "=== suspend 検定 PASS ==="
 else

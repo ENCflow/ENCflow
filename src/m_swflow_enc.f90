@@ -26,6 +26,8 @@ module m_swflow_enc
   public :: p_adv_upwind_index
   public :: n8x, n8y
   public :: have_width, have_frw, frw, wfrac   ! protected(m_geomorph の掃流砂が読む)
+  public :: have_open_bc, bc_open_face         ! 開境界の面判定(m_geomorph の
+                                               ! 開境界土砂フラックスが読む。読み取り専用)
 
   !--------------------------------------------------------------------
   ! モジュール内で共有される構造体と変数の宣言
@@ -50,7 +52,7 @@ module m_swflow_enc
   ! 境界条件の私有状態(辺型・面型・基準水位等)は submodule
   ! m_swflow_enc_bc が保持する(bc_init が構築)。親には continuous /
   ! restore_uvmn のホットパスが読む判定フラグだけを置く
-  logical :: have_open_bc = .false.         ! 開いた面(不透過でない)があるか
+  logical, protected :: have_open_bc = .false.  ! 開いた面(不透過でない)があるか
                                             !   (bc_init が設定)
 
   ! 堤防(仮想壁面)モデル(developer.md §17)

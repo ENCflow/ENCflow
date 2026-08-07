@@ -51,7 +51,8 @@ module m_geomorph
   ! サブグリッド河道幅の係数(protected 読み取り専用)。掃流砂が
   ! 「水と同じ開口(frw)・河道底集中(1/wfrac)」で土砂を運ぶために読む。
   ! STG では geomorph 自体が par_stop するため ENC 私有への依存で問題ない
-  use m_swflow_enc, only : have_width, have_frw, frw, wfrac
+  use m_swflow_enc, only : have_width, have_frw, frw, wfrac, &
+                           have_open_bc, bc_open_face
   use m_util, only : itoa, rtoa
   implicit none
   private
@@ -69,6 +70,14 @@ module m_geomorph
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
+  ! 板倉・岸の浮上量式の定数(実践河川水理学(iRIC)第4章 式(3)-(5)。
+  ! 原典: 板倉忠興: 河川における乱流拡散現象に関する研究, 土木試験所報告
+  ! 第83号, 1984。定数は原式の値であり namelist にしない)
+  real, parameter :: ik_k = 0.008        ! K
+  real, parameter :: ik_alpha = 0.14     ! α*
+  real, parameter :: ik_bstar = 0.143    ! B*
+  real, parameter :: ik_eta0 = 0.5       ! η0
+
   type t_geomorph
     ! init に早期 return 経路があるため全成分デフォルト初期化必須(§13)
     logical :: enabled = .false.     ! fn_geomorph 指定の有無で決まる
@@ -83,6 +92,7 @@ module m_geomorph
     real :: poroi = 0.0              ! 1 / (1 - λ)(λ: 河床の空隙率。掃流・浮遊共有)
     real :: sgrav = 1.65             ! 土粒子の水中比重 s = (ρs - ρ)/ρ(共有)
     real :: dzmax = 0.0              ! 1エッジ・1更新の河床変動上限 (m)
+    integer :: f_bcfeed = 0          ! 開境界の掃流砂給砂(0:流入は無給砂, 1:平衡給砂)
     integer :: f_suspend = 0         ! 浮遊砂(0:無効, 1:有効)
     integer :: f_esform = 1          ! 平衡濃度式(1:超過掃流力線形(簡易))
     real :: sd50 = 0.0               ! 浮遊砂の代表粒径 (m)
@@ -100,9 +110,9 @@ module m_geomorph
     real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離)
   end type
   type t_fluvial
-    real :: wl(1:4) = 0.0            ! k軸方向フラックスの通過幅 (m)
-    real :: ex(1:4) = 0.0            ! k軸方向の単位ベクトル x 成分
-    real :: ey(1:4) = 0.0            ! k軸方向の単位ベクトル y 成分
+    real :: wl(1:8) = 0.0            ! k軸方向フラックスの通過幅 (m)
+    real :: ex(1:8) = 0.0            ! k軸方向の単位ベクトル x 成分
+    real :: ey(1:8) = 0.0            ! k軸方向の単位ベクトル y 成分
     real :: qbcoef = 0.0             ! 流砂量の次元化係数 sqrt(s g d50^3)
     integer :: nclip = 0             ! dzmax クリップの発生エッジ数(累計)
     real :: vleak = 0.0              ! 岩盤床クリップで失った土砂体積 (m3)(累計)
@@ -341,10 +351,15 @@ subroutine init_fluvial(gm, p, g, list)
     call par_stop("list_geomorph: f_qbform must be 1(Ashida-Michiue) or 2(MPM)")
   end if
 
+  if (list%fluv_bcfeed < 0 .or. list%fluv_bcfeed > 1) then
+    call par_stop("list_geomorph: fluv_bcfeed must be 0(no feed) or 1(equilibrium feed)")
+  end if
+
   gm%f_qbform = list%f_qbform
   gm%d50 = list%fluv_d50
   gm%tausc = list%fluv_tausc
   gm%dzmax = list%fluv_dzmax
+  gm%f_bcfeed = list%fluv_bcfeed
 
   ! --- 8近傍の通過幅と方向余弦(m_gwflow_lateral と同一の配分則) ---
   dr = sqrt(g%dx**2 + g%dy**2)
@@ -359,16 +374,25 @@ subroutine init_fluvial(gm, p, g, list)
     lpx = 1 - (g%dy / g%dx)**2 * list%fluv_diagratio
     ldx = list%fluv_diagratio / 2 * (g%dy / g%dx)**2
   end if
-  ! k=1..4 の通過幅(k=1: 斜め, k=2: y法線, k=3: 斜め, k=4: x法線)
+  ! 通過幅(k=1: 斜め, k=2: y法線, k=3: 斜め, k=4: x法線。k=5..8 は
+  ! 対向方位で同幅。k>=5 は開境界面の書き手が使う)
   flv%wl(1) = sqrt((ldy * g%dy)**2 + (ldx * g%dx)**2)
   flv%wl(2) = lpx * g%dx
   flv%wl(3) = flv%wl(1)
   flv%wl(4) = lpy * g%dy
+  flv%wl(5) = flv%wl(4)
+  flv%wl(6) = flv%wl(3)
+  flv%wl(7) = flv%wl(2)
+  flv%wl(8) = flv%wl(1)
   ! k軸方向(中心→近傍)の単位ベクトル
   flv%ex(1) = -g%dx / dr;  flv%ey(1) = -g%dy / dr
   flv%ex(2) = 0.0;         flv%ey(2) = -1.0
   flv%ex(3) = g%dx / dr;   flv%ey(3) = -g%dy / dr
   flv%ex(4) = -1.0;        flv%ey(4) = 0.0
+  flv%ex(5) = 1.0;         flv%ey(5) = 0.0
+  flv%ex(6) = -g%dx / dr;  flv%ey(6) = g%dy / dr
+  flv%ex(7) = 0.0;         flv%ey(7) = 1.0
+  flv%ex(8) = g%dx / dr;   flv%ey(8) = g%dy / dr
 
   ! 流砂量の次元化係数(無次元流砂量 → m2/s)
   flv%qbcoef = sqrt(gm%sgrav * p%gg * gm%d50**3)
@@ -389,14 +413,19 @@ subroutine init_suspend(gm, p, list)
   character(len=256) :: msg
 
   if (list%susp_d50 <= 0.0) call par_stop("list_geomorph: f_suspend requires susp_d50 > 0")
-  if (list%susp_esa <= 0.0) call par_stop("list_geomorph: f_suspend requires susp_esa > 0")
   if (list%susp_tausc <= 0.0) call par_stop("list_geomorph: susp_tausc must be > 0")
   if (list%susp_beta <= 0.0) call par_stop("list_geomorph: susp_beta must be > 0")
   if (list%susp_wf < 0.0) call par_stop("list_geomorph: susp_wf must be >= 0")
-  if (list%f_esform /= 1) then
-    ! 平衡濃度式のメニュー枠。板倉・岸等の追加は case を足す
-    call par_stop("list_geomorph: f_esform must be 1 (excess-shear linear)")
-  end if
+  select case (list%f_esform)
+    case (1)      ! 超過掃流力線形(簡易式)。esa が必須
+      if (list%susp_esa <= 0.0) then
+        call par_stop("list_geomorph: f_esform=1 requires susp_esa > 0")
+      end if
+    case (2)      ! 板倉・岸(定数は原式固定。esa/tausc は不使用)
+      continue
+    case default
+      call par_stop("list_geomorph: f_esform must be 1(excess-shear linear) or 2(Itakura-Kishi)")
+  end select
 
   gm%f_esform = list%f_esform
   gm%sd50 = list%susp_d50
@@ -411,6 +440,39 @@ subroutine init_suspend(gm, p, list)
     call par_info(trim(msg))
   end if
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 板倉・岸の浮上量式による平衡濃度 ceq = q_su / w_f
+!   実践河川水理学(iRIC)第4章 式(4)(5)。原典: 板倉(1984)。
+!     q_su/√(sgd) = K( α*・(ρ/ρs)・Ω/√τ* − w_f/√(sgd) )
+!     Ω = (τ*/B*)・[∫_{a'}^∞ ξ(1/√π)e^{−ξ²}dξ / ∫_{a'}^∞ (1/√π)e^{−ξ²}dξ]
+!         + τ*/(B*η0) − 1
+!       = (τ*/B*)・e^{−a'²}/(√π・erfc(a')) + τ*/(B*η0) − 1
+!     a' = B*/τ* − 1/η0、ρ/ρs = 1/(s+1)(s: 水中比重)
+!   自己整合性: τ*→0 で a'→∞、比 → a' の漸近から Ω→0(E は必ず負で
+!   浸食なし)。a' > 20 は erfc のアンダーフロー域なので 0 で打ち切る
+!   (その領域では q_su < 0 が保証される)
+!----------------------------------------------------------------------
+pure function ceq_itakura(gm, gg, taus) result(ceq)
+  type(t_geomorph), intent(in) :: gm
+  real, intent(in) :: gg      ! 重力加速度
+  real, intent(in) :: taus    ! 無次元掃流力 τ*
+  real :: ceq
+  real :: ap, ratio, omega, ustar, qsu
+  real, parameter :: pi = acos(-1.0)
+
+  ceq = 0.0
+  if (taus <= 0.0) return
+  ap = ik_bstar / taus - 1.0 / ik_eta0
+  if (ap > 20.0) return
+  ratio = exp(-ap**2) / (sqrt(pi) * erfc(ap))
+  omega = taus / ik_bstar * ratio + taus / (ik_bstar * ik_eta0) - 1.0
+  ustar = sqrt(taus * gm%sgrav * gg * gm%sd50)
+  qsu = ik_k * (ik_alpha / (gm%sgrav + 1.0) &
+                * (gm%sgrav * gg * gm%sd50 / ustar) * omega - gm%wf)
+  ceq = max(qsu, 0.0) / gm%wf
+end function
 
 
 !----------------------------------------------------------------------
@@ -570,6 +632,63 @@ subroutine calc_fluvial(gm, p, g, s, dts)
         end if
         wrk%q(k, i+die(k), j+dje(k)) = gq
       end do
+
+      ! --- 開境界面の掃流フラックス(境界土砂供給・流出の第1段) ---
+      ! 面に接する唯一の有効セルが全8方位を検査して書く(k>=5 の面
+      ! スロットの所有者は域外に居ないため、内側セルが代わりに書く。
+      ! 単一書き手は保たれる)。水理量は内側セルの一方側値、流向は
+      ! セル流速の面法線射影。ue > 0(流出)は常に容量輸送(河床低下波が
+      ! 域外へ抜ける)、ue < 0(流入)は f_bcfeed=1 のとき容量供給
+      ! (平衡給砂。上流端の河床が維持される)。境界面の通過幅補正 frw は
+      ! 未適用(§18 制約(5) の辺開口と同じ扱い)
+      if (have_open_bc .and. okc) then
+        do k = 1, 8
+          in = i + din(k)
+          jn = j + djn(k)
+          if (g%x(in,jn) > 0) cycle
+          if (.not. bc_open_face(in, jn)) cycle
+          ! 開面は毎ステップ必ず代入する(乾湿・流向は動的)
+          gq = 0.0
+          vve = s%vv(i,j)
+          hhe = s%h(i,j)
+          if (vve > 0.0 .and. hhe > p%dd) then
+            ue = s%u(i,j) * flv%ex(k) + s%v(i,j) * flv%ey(k)   ! 正 = 域外へ
+            if (ue > 0.0 .or. gm%f_bcfeed > 0) then
+              hhe = max(hhe, p%dv)
+              rne = g%rn(i,j)
+              taus = rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              if (taus > gm%tausc) then
+                if (gm%f_qbform == 1) then       ! 芦田・道上
+                  qbs = 17.0 * taus**1.5 * (1.0 - gm%tausc / taus) &
+                                         * (1.0 - sqrt(gm%tausc / taus))
+                else                             ! MPM
+                  qbs = 8.0 * (taus - gm%tausc)**1.5
+                end if
+                qb = qbs * flv%qbcoef
+                gq = qb * (ue / vve) * flv%wl(k)
+                winvd = 1.0
+                if (have_width) winvd = 1.0 / wfrac(i,j)
+                dze = abs(gq) * dts * wrk%ainv * winvd * gm%poroi
+                if (gq > 0.0) then
+                  ! 流出: 供給側 = 自セルの可動層クランプ
+                  if (dze > s%sd(i,j)) then
+                    gq = gq * (s%sd(i,j) / dze)
+                    dze = s%sd(i,j)
+                  end if
+                end if
+                ! 変動上限ガード(流出・流入とも)
+                if (dze > gm%dzmax) then
+                  gq = gq * (gm%dzmax / dze)
+                  nclip = nclip + 1
+                end if
+              end if
+            end if
+          end if
+          ! 格納は所有者正準の向き(sign_e を乗じて格納すると、ループ2の
+          ! sign_e(k) 倍の読み出しで gq = 域外向き正 が復元される)
+          wrk%q(ke(k), i+die(k), j+dje(k)) = sign_e(k) * gq
+        end do
+      end if
     end do
   end do
   !$omp end parallel do
@@ -659,11 +778,17 @@ subroutine calc_suspend(gm, p, g, s, dtw)
         if (s%hs(i,j) <= 0.0) cycle
         fx = -s%hs(i,j)
       else
-        ! 平衡濃度(f_esform=1: 超過掃流力線形)
+        ! 平衡濃度(浸食レート E = wf・ceq に相当する濃度換算)
         hh = max(s%h(i,j), p%dv)
         taus = g%rn(i,j)**2 * s%vv(i,j)**2 / (gm%sgrav * gm%sd50 * hh**(1.0/3.0))
         ceq = 0.0
-        if (taus > gm%stausc) ceq = gm%esa * (taus / gm%stausc - 1.0)
+        if (gm%f_esform == 1) then
+          ! 超過掃流力線形(簡易式)
+          if (taus > gm%stausc) ceq = gm%esa * (taus / gm%stausc - 1.0)
+        else
+          ! 板倉・岸(ceq = q_su / wf)
+          ceq = ceq_itakura(gm, p%gg, taus)
+        end if
         cc = 0.0
         if (s%hs(i,j) > 0.0) cc = s%hs(i,j) / s%h(i,j)
         ! 正味の交換(>0: 浸食で hs へ、<0: 沈降で河床へ)
