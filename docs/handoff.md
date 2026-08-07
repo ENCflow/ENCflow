@@ -226,8 +226,10 @@
   **F3(斜面浸食 f_wash)実装・検証済み 2026-08-07**(developer.md §19.5。
   test/wash 新設。m_geomorph はプロセス別 submodule に分割済み)。
   F0〜F3 完了。残の主要項目: 解析解ベンチマーク(平衡勾配・巻き上げ
-  沈降)、morfac 等価性ベンチ(fluvial/suspend)、浮遊砂の境界流入濃度・
-  区間流入 Qs(t)(plan §2.7)、侵食係数の校正指針、混合粒径(F4)、
+  沈降)、morfac 等価性ベンチ(fluvial/suspend)、**区間流入の土砂濃度時系列
+  (inflow_cs)実装・検証済み 2026-08-07**(§19.7。test/sedinflow で台帳
+  閉合 2.6e-16)。残: 平衡濃度モード・Qs(t) 直接指定(plan §2.7)、
+  侵食係数の校正指針、混合粒径(F4)、
   ifx / PREC=single での geomorph 一式の確認。
   設計正本は docs/geomorph_plan.md(改訂3)
 - gwflow: RRI 型・鉛直浸透重視型の追加(m_gwflow_bucket を複製して契約に従う)

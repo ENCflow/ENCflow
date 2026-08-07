@@ -1,0 +1,80 @@
+!======================================================================
+! sedinflow: 区間流入の土砂濃度時系列(inflow_cs)の台帳検定
+!   乾いた平坦床の閉領域(壁境界)の西辺に区間流入(Q=5 m3/s,
+!   体積濃度 C=0.001 の一定時系列)を与える。土砂の流入総量は
+!   厳密に C×(流入水量) = C・Q・tt なので、固体総量
+!     Σhs + (1-λ)Σ(z-z0) = C・Q・tt
+!   が機械精度で成立する(Check_sedinflow.py が検定)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 8
+  dt_disp = 1
+  dt_file = 8
+  dt_recrd = 8
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 乾いた床(流入だけが水を供給する)
+/
+
+&list_geoinfo
+  lx = 101.0
+  ly = 101.0
+  nx = 101
+  ny = 101
+  f_ztype = 0
+  f_rntype = 0
+  z0 = 0.0
+  rn0 = 0.03
+  sd0 = 10.0
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_suspend = 1             ! 浮遊砂(移流+E-D)
+  f_esform = 1
+  susp_d50 = 0.0002
+  susp_tausc = 0.05
+  susp_esa = 1.0e-4
+  susp_beta = 1.0
+/
+
+!======================================================================
+! 区間流入(西辺のセル (1, 45)-(1, 55)。流量と濃度の一定時系列)
+!======================================================================
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 45
+  inflow_cell(1:2,2,1) = 1, 46
+  inflow_cell(1:2,3,1) = 1, 47
+  inflow_cell(1:2,4,1) = 1, 48
+  inflow_cell(1:2,5,1) = 1, 49
+  inflow_cell(1:2,6,1) = 1, 50
+  inflow_cell(1:2,7,1) = 1, 51
+  inflow_cell(1:2,8,1) = 1, 52
+  inflow_cell(1:2,9,1) = 1, 53
+  inflow_cell(1:2,10,1) = 1, 54
+  inflow_cell(1:2,11,1) = 1, 55
+  inflow_val(1:2,1,1) = 0, 5.0
+  inflow_val(1:2,2,1) = 9999, 5.0
+  inflow_cs(1:2,1,1) = 0, 0.001
+  inflow_cs(1:2,2,1) = 9999, 0.001
+  inflow_dist(1) = 0
+/

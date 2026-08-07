@@ -412,8 +412,15 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   call continuous(p, g, s, sx_mod)
 
   ! 浮遊砂柱状量を移流する(連続式と同一のエッジ流量・係数による
-  ! 風上輸送。時刻 n の s%h と s%hs が必要なため complete より前に置く)
-  if (s%sed_active) call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1)
+  ! 風上輸送。時刻 n の s%h と s%hs が必要なため complete より前に置く)。
+  ! 区間流入に濃度時系列があるときは境界流入濃度テーブルを渡す
+  if (s%sed_active) then
+    if (allocated(b%csin)) then
+      call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1, cbin=b%csin)
+    else
+      call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1)
+    end if
+  end if
 
   ! 水深の境界条件をセットする
   call boundary_h(p, g, b, s, sx_mod)
@@ -1156,18 +1163,22 @@ end subroutine
 !     - 乾燥エッジ条件(h<dd 両セル)は continuous と同一。強い乾燥化では
 !       h1 同様に c1 も僅かに負になり得る(f_exflux_reduction=1 で緩和)
 !----------------------------------------------------------------------
-subroutine advect_scalar(p, g, s, sx, c, c1)
+subroutine advect_scalar(p, g, s, sx, c, c1, cbin)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   type(t_enc_status), intent(in) :: sx
   real, intent(in) :: c(1:, dcp%jsh:)
   real, intent(inout) :: c1(1:, dcp%jsh:)
+  real, intent(in), optional :: cbin(1:, dcp%jsh:)   ! 境界流入濃度(セル別)
   integer :: i, j, k
   integer :: in, jn, ie, je
   real :: mne, fw, winv, cdon
+  logical :: has_cbin
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
+
+  has_cbin = present(cbin)
 
   !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, mne, fw, winv, cdon)
   do j = dcp%js, dcp%je
@@ -1193,13 +1204,16 @@ subroutine advect_scalar(p, g, s, sx, c, c1)
         je = j + dje(k)
         mne = sign_e(k) * sx%mn1(ke(k),ie,je)
         if (mne == 0.0) cycle
-        ! 風上(donor)セルの濃度(境界面からの流入は清水 = 0)
+        ! 風上(donor)セルの濃度。境界面からの流入は cbin(区間流入の
+        ! 濃度時系列等)があればセル値、なければ清水 = 0
         cdon = 0.0
         if (mne > 0.0) then
           if (s%h(i,j) > 0.0) cdon = c(i,j) / s%h(i,j)
         else
           if (g%x(in,jn) > 0) then
             if (s%h(in,jn) > 0.0) cdon = c(in,jn) / s%h(in,jn)
+          else
+            if (has_cbin) cdon = cbin(i,j)
           end if
         end if
         if (cdon == 0.0) cycle

@@ -55,8 +55,11 @@ module list_boundary
     integer, allocatable :: inflow_cell(:,:,:)     ! セル座標 (i, j)
     real, allocatable :: inflow_val(:,:,:)         ! 時系列 (min, m3/s)
     integer :: inflow_dist(1:nbsrcmax) = 0         ! 配分モード(0:均等 1:水深 2:通水能)
+    real, allocatable :: inflow_cs(:,:,:)          ! 流入土砂の体積濃度時系列 (min, m3/m3)。
+                                                   !   未指定なら清水流入(浮遊砂有効時のみ意味)
     character(len=maxpathlen) :: fn_inflow_cell(1:nbsrcmax) = ""  ! セル一覧ファイル名
     character(len=maxpathlen) :: fn_inflow_val(1:nbsrcmax) = ""   ! 時系列ファイル名
+    character(len=maxpathlen) :: fn_inflow_cs(1:nbsrcmax) = ""    ! 濃度時系列ファイル名
   end type
 
   ! namelist 読み込み用の静的作業配列(スタックに置かないための措置。
@@ -67,6 +70,7 @@ module list_boundary
   real :: stage_val(1:2,1:nsrcvmax,1:nbsrcmax)
   integer :: inflow_cell(1:2,1:nsrccmax,1:nbsrcmax)
   real :: inflow_val(1:2,1:nsrcvmax,1:nbsrcmax)
+  real :: inflow_cs(1:2,1:nsrcvmax,1:nbsrcmax)
 
 contains
 
@@ -216,16 +220,20 @@ subroutine read_inflow(un, list)
   integer :: inflow_dist(1:nbsrcmax)
   character(len=maxpathlen) :: fn_inflow_cell(1:nbsrcmax)
   character(len=maxpathlen) :: fn_inflow_val(1:nbsrcmax)
+  character(len=maxpathlen) :: fn_inflow_cs(1:nbsrcmax)
   integer :: ios
   character(len=1024) :: iom
   namelist /list_bound_inflow/ inflow_cell, inflow_val, inflow_dist, &
-                               fn_inflow_cell, fn_inflow_val
+                               fn_inflow_cell, fn_inflow_val, &
+                               inflow_cs, fn_inflow_cs
 
   inflow_cell = -9999
   inflow_val = -9999
+  inflow_cs = -9999
   inflow_dist = list%inflow_dist
   fn_inflow_cell = list%fn_inflow_cell
   fn_inflow_val = list%fn_inflow_val
+  fn_inflow_cs = list%fn_inflow_cs
 
   rewind(un)
   read(un, nml=list_bound_inflow, iostat=ios, iomsg=iom)
@@ -235,9 +243,11 @@ subroutine read_inflow(un, list)
 
   list%inflow_cell = inflow_cell
   list%inflow_val = inflow_val
+  list%inflow_cs = inflow_cs
   list%inflow_dist = inflow_dist
   list%fn_inflow_cell = fn_inflow_cell
   list%fn_inflow_val = fn_inflow_val
+  list%fn_inflow_cs = fn_inflow_cs
 
 end subroutine
 
