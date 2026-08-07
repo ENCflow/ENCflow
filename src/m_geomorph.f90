@@ -35,9 +35,12 @@ module m_geomorph
   ! 制約(実装済みの明示ガード):
   !   - STG(f_gridsystem=1)は非対応(init 時コピーのため z の時間発展に
   !     追従しない。init で par_stop)
-  !   - サブグリッド河道幅(fn_width)との併用は未対応(Δz の河道底集中
-  !     winv と通過幅 frw のミラーが必要。geomorph_plan.md §2.1。
-  !     f_fluvial との併用は init で par_stop)
+  ! サブグリッド河道幅(fn_width)との併用(2026-08-07 対応):
+  !   掃流砂はエッジ流量に frw(水と同じ開口・幅キャップ)、Δz 換算に
+  !   1/wfrac(河道底のみ変動)を乗じる。浮遊砂は移流・E-D とも無修正で
+  !   整合(calc_suspend ヘッダ参照)。堤防(§17)エッジ=河道—非河道の
+  !   境界では掃流砂を運ばない(掃流砂は河道内に閉じる。越流時の土砂は
+  !   浮遊砂が壁込みの実フラックス mn1 で運ぶ)
   ! ==============================================================
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo, m_geoinfo_require_sd
@@ -45,6 +48,10 @@ module m_geomorph
   use list_geomorph, only : t_list_geomorph, list_geomorph_read
   use m_parallel, only : par_info, par_warn, par_stop, dcp, par_halo_cell, &
                          par_allreduce_max
+  ! サブグリッド河道幅の係数(protected 読み取り専用)。掃流砂が
+  ! 「水と同じ開口(frw)・河道底集中(1/wfrac)」で土砂を運ぶために読む。
+  ! STG では geomorph 自体が par_stop するため ENC 私有への依存で問題ない
+  use m_swflow_enc, only : have_width, have_frw, frw, wfrac
   use m_util, only : itoa, rtoa
   implicit none
   private
@@ -173,12 +180,12 @@ subroutine m_geomorph_init(gm, p, g, s)
     if (list%fluv_sgrav <= 0.0) call par_stop("list_geomorph: fluv_sgrav must be > 0")
     gm%poroi = 1.0 / (1.0 - list%fluv_porosity)
     gm%sgrav = list%fluv_sgrav
-    ! サブグリッド河道幅との併用は未対応(Δz の河道底集中 winv と通過幅
-    ! frw のミラーが必要。geomorph_plan.md §2.1)
-    if (g%width_active) then
-      call par_stop("m_geomorph: 土砂プロセス(f_fluvial/f_suspend)と" &
-                    // "サブグリッド河道幅(fn_width)の併用は未対応です")
-    end if
+    ! サブグリッド河道幅(fn_width)併用時の扱い(geomorph_plan.md §2.1):
+    !   掃流砂 = frw(水と同じ開口)× Δz の 1/wfrac(河道底のみ変動)。
+    !   浮遊砂 = 移流が continuous のミラーで自動整合、E-D は hs・Δz とも
+    !   河道断面あたりの量なので wfrac が相殺し無修正(calc_suspend 参照)。
+    !   注意: gwflow 併用時の容量 sd*sy0 はセル全面の土層解釈のままで、
+    !   幅セルの sd(河道底の土層)とは近似的な整合(既知の妥協)
     ! 土層厚(=可動層厚)の確保と s%sd への転記
     call setup_sd(p, g, s)
   end if
@@ -456,11 +463,11 @@ subroutine calc_fluvial(gm, p, g, s, dts)
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt
-  real :: gq, ue, vve, hhe, rne, taus, qbs, qb, sdup, dze
-  real :: dv8, dz, cap, fx
+  real :: gq, ue, vve, hhe, rne, taus, qbs, qb, sdup, dze, winvd
+  real :: dv8, dz, cap, fx, winv
   integer :: nclip
   real :: vleak
-  logical :: okc
+  logical :: okc, okbank
 
   nclip = 0
   vleak = 0.0
@@ -480,7 +487,8 @@ subroutine calc_fluvial(gm, p, g, s, dts)
   ! --- ループ1: エッジの掃流砂フラックス(各成分の書き手は一意) ---
   jt = min(dcp%je + 1, dcp%jeh)
   !$omp parallel do schedule(static) reduction(+: nclip) &
-  !$omp   private(i, j, k, in, jn, okc, gq, ue, vve, hhe, rne, taus, qbs, qb, sdup, dze)
+  !$omp   private(i, j, k, in, jn, okc, okbank, gq, ue, vve, hhe, rne, taus, qbs, qb, &
+  !$omp           sdup, dze, winvd)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -490,12 +498,23 @@ subroutine calc_fluvial(gm, p, g, s, dts)
         jn = j + djn(k)
         ! 乾湿・流向は動的なので、条件を満たさない場合も必ず 0 を代入する
         gq = 0.0
+        ! 堤防(仮想壁面)エッジ = 河道—非河道の境界では掃流砂を運ばない
+        ! (掃流砂は河道内に閉じる。越流時の土砂輸送は浮遊砂(移流が
+        ! 壁を含む実フラックス mn1 を使う)が担う。§17 の壁は水理側で
+        ! 動的(越流)だが、河床材料の掃流は堤防を越えないとする)
         if (okc .and. g%x(in,jn) > 0) then
           if (g%sw(in,jn) <= 0) then
+            ! 堤防エッジ判定は近傍が有効セルと確定してから行う
+            ! (rw の確保範囲は x と違い番兵なし。x 番兵ガードより先に
+            ! rw(in,jn) を読むと i=0/nx+1 で範囲外 — -fcheck np=2 で実検出)
+            okbank = .true.
+            if (g%bank_active) then
+              okbank = ((g%rw(i,j) > 0) .eqv. (g%rw(in,jn) > 0))
+            end if
             ! エッジ水理量(両セル平均)と法線流速
             vve = (s%vv(i,j) + s%vv(in,jn)) / 2
             hhe = (s%h(i,j) + s%h(in,jn)) / 2
-            if (vve > 0.0 .and. hhe > p%dd) then
+            if (okbank .and. vve > 0.0 .and. hhe > p%dd) then
               ue = (s%u(i,j) + s%u(in,jn)) / 2 * flv%ex(k) &
                  + (s%v(i,j) + s%v(in,jn)) / 2 * flv%ey(k)
               if (ue /= 0.0) then
@@ -514,15 +533,26 @@ subroutine calc_fluvial(gm, p, g, s, dts)
                   qb = qbs * flv%qbcoef            ! 固体体積の単位幅流砂量 (m2/s)
                   ! 流向射影(|ue|/vve <= 1)× 通過幅でエッジ流量に
                   gq = qb * (ue / vve) * flv%wl(k)
+                  ! 通過幅係数(水と同じ開口・幅キャップ。無効時は乗算なし)
+                  if (have_frw) gq = gq * frw(k, i+die(k), j+dje(k))
                   ! 可動層クランプ: 供給側(風上)セルの土層厚を超える
                   ! 浸食をこのエッジ単独で起こさない(複数エッジの同時
-                  ! 流出による僅かな超過はループ2の床クリップが受ける)
+                  ! 流出による僅かな超過はループ2の床クリップが受ける)。
+                  ! 河道幅有効時は供給側の河道底面積あたりに換算(winvd)
                   if (gq > 0.0) then
                     sdup = s%sd(i,j)
                   else
                     sdup = s%sd(in,jn)
                   end if
-                  dze = abs(gq) * dts * wrk%ainv * gm%poroi
+                  winvd = 1.0
+                  if (have_width) then
+                    if (gq > 0.0) then
+                      winvd = 1.0 / wfrac(i,j)
+                    else
+                      winvd = 1.0 / wfrac(in,jn)
+                    end if
+                  end if
+                  dze = abs(gq) * dts * wrk%ainv * winvd * gm%poroi
                   if (dze > sdup) then
                     gq = gq * (sdup / dze)         ! sdup=0(岩盤)なら 0
                     dze = sdup
@@ -546,7 +576,7 @@ subroutine calc_fluvial(gm, p, g, s, dts)
 
   ! --- ループ2: 発散 → z と sd の共動更新 + 地下水容量の整合 ---
   !$omp parallel do schedule(static) reduction(+: vleak) &
-  !$omp   private(i, j, k, dv8, dz, cap, fx)
+  !$omp   private(i, j, k, dv8, dz, cap, fx, winv)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -555,11 +585,15 @@ subroutine calc_fluvial(gm, p, g, s, dts)
       do k = 1, 8
         dv8 = dv8 + sign_e(k) * wrk%q(ke(k), i+die(k), j+dje(k))
       end do
-      dz = -dv8 * dts * wrk%ainv * gm%poroi
+      ! 河道幅有効時は体積発散を河道底面積 wfrac*dx*dy で厚さに換算
+      ! (Δz の河道底集中。無効時は 1.0 の乗算で厳密に不変)
+      winv = 1.0
+      if (have_width) winv = 1.0 / wfrac(i,j)
+      dz = -dv8 * dts * wrk%ainv * winv * gm%poroi
       ! 岩盤床クリップ(複数エッジの同時流出でエッジ別クランプを僅かに
       ! 超えた場合の最終防衛。失った体積は vleak に計上して黙らない)
       if (dz < -s%sd(i,j)) then
-        vleak = vleak + (-dz - s%sd(i,j)) / gm%poroi / wrk%ainv
+        vleak = vleak + (-dz - s%sd(i,j)) / gm%poroi / wrk%ainv / winv
         dz = -s%sd(i,j)
       end if
       ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
@@ -597,6 +631,10 @@ end subroutine
 !   τ* はセル値(rn, vv, h)からマニング閉じで導出(calc_fluvial と同型)。
 !   乾燥セル(h <= dd)は浮遊分を全量河床へ繰り入れる(水のない浮遊砂を
 !   残さない。乾湿の激しい氾濫原で必須の閉じ)。
+!   サブグリッド河道幅(fn_width)セルでも本ルーチンは無修正で整合する:
+!   hs は h と同じ貯留規約(河道断面あたりの柱状量)、Δz も河道底の
+!   厚さ変化なので、交換式 dzb = -fx・morfac・poroi から wfrac が相殺する
+!   (セル内の実体積は両辺とも ×wfrac・dx・dy)。
 !   MORFAC の台帳分離: 水柱側(hs)は水理時間 dtw、河床側(z, sd)は
 !   ×morfac(1回の計算 = morfac 回のイベントぶんの河床変化)。
 !   morfac=1 では hs と河床の交換が厳密に反対称になり、

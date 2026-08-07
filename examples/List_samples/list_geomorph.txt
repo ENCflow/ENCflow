@@ -33,7 +33,7 @@
   !   &list_geoinfo の sd0 / f_sdtype / fn_sd(gwflow と共通)で与える。
   !   浸食・堆積は土層厚 s%sd を標高と共動更新し、gwflow 併用時は
   !   貯留容量 sd*sy0 の減少(飽和・流出の早期化)が自動で結合する。
-  !   制約: STG 非対応、サブグリッド河道幅(fn_width)との併用は未対応
+  !   制約: STG 非対応
   f_fluvial = 0
   f_qbform = 1             ! 流砂量式(1:芦田・道上, 2:MPM)
   fluv_d50 = 0.0           ! 代表粒径 (m)。f_fluvial=1 で必須
