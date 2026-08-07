@@ -107,6 +107,10 @@ subroutine adv_prepare_v1(p, g, s, sx, tx)
   ! taxy はハロ行 js-1/je+1 でも再計算する(案A: u,v の交換で賄う)
   do j = max(dcp%js - 1, dcp%jw1 + 1), min(dcp%je + 1, dcp%jw2 - 1)
     do i = g%wx(1,j)+1, g%wx(2,j)-1
+      ! 乾湿遷移で前ステップの値が残らないよう毎回クリアする(片乾き
+      ! エッジの adv_edge が乾側の古い taxy を読む経路の遮断。拡散項と
+      ! 同じ流儀。リスタート再現性の根拠も含め developer.md §21)
+      tx%taxy(:,i,j) = 0
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%h(i,j) < p%dd) cycle
