@@ -61,7 +61,7 @@ module list_sysparam
     integer :: f_out_ddd = 0                      ! ファイル出力(卓越流下方向Ddd0001)
     integer :: f_out_dda = 0                      ! ファイル出力(全流下方向Dda0001) rmdepress_riverで必要
     integer :: f_out_pre = 0                      ! ファイル出力(降雨強度Pr0001)
-    integer :: f_out_rsh = 0                      ! ファイル出力(ため池水深Rsh0001)
+    integer :: f_out_hrs = 0                      ! ファイル出力(ため池水深Hrs0001)
     integer :: f_out_fr = 0                       ! ファイル出力(フルード数Fr0001)
     integer :: f_out_cn = 0                       ! ファイル出力(クーラン数Cn0001)
     integer :: f_out_hg = 0                       ! ファイル出力(地下貯留水深Hg0001)
@@ -151,7 +151,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   integer :: f_out_ddd                       ! ファイル出力(卓越流下方向フラグDdd0001)
   integer :: f_out_dda                       ! ファイル出力(全流下方向フラグDda0001)
   integer :: f_out_pre                       ! ファイル出力(降雨強度Pr0001)
-  integer :: f_out_rsh                       ! ファイル出力(ため池水深Rsh0001)
+  integer :: f_out_hrs                       ! ファイル出力(ため池水深Hrs0001)
   integer :: f_out_fr                        ! ファイル出力(フルード数Fr0001)
   integer :: f_out_cn                        ! ファイル出力(クーラン数Cn0001)
   integer :: f_out_hg                        ! ファイル出力(地下貯留水深Hg0001)
@@ -191,7 +191,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_z, f_out_h, f_out_e, f_out_u, f_out_v, f_out_m, f_out_n, &
                         f_out_vv, f_out_qq, f_out_qc, f_out_qd, &
                         f_out_hmax, f_out_hmaxt, f_out_vvmax, f_out_qqmax, f_out_qqmaxt, f_out_qqmaxd, &
-                        f_out_ddd, f_out_dda, f_out_pre, f_out_rsh, f_out_fr, f_out_cn, f_out_hg, &
+                        f_out_ddd, f_out_dda, f_out_pre, f_out_hrs, f_out_fr, f_out_cn, f_out_hg, &
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
                         fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_channel, fn_enc, &
                         fn_log, dir_data, dir_result, dir_save, outfn_suffix
@@ -246,7 +246,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   f_out_ddd = list%f_out_ddd
   f_out_dda = list%f_out_dda
   f_out_pre = list%f_out_pre
-  f_out_rsh = list%f_out_rsh
+  f_out_hrs = list%f_out_hrs
   f_out_cn = list%f_out_cn
   f_out_hg = list%f_out_hg
   f_out_fr = list%f_out_fr
@@ -328,7 +328,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%f_out_ddd = f_out_ddd
   list%f_out_dda = f_out_dda
   list%f_out_pre = f_out_pre
-  list%f_out_rsh = f_out_rsh
+  list%f_out_hrs = f_out_hrs
   list%f_out_fr = f_out_fr
   list%f_out_cn = f_out_cn
   list%f_out_hg = f_out_hg

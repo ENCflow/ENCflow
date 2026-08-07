@@ -63,6 +63,15 @@ module list_boundary
     character(len=maxpathlen) :: fn_inflow_val(1:nbsrcmax) = ""   ! 時系列ファイル名
     character(len=maxpathlen) :: fn_inflow_cs(1:nbsrcmax) = ""    ! 濃度時系列ファイル名
     character(len=maxpathlen) :: fn_inflow_qs(1:nbsrcmax) = ""    ! 流砂量時系列ファイル名
+    ! ---- &list_bound_pump ----
+    logical :: present_pump = .false.              ! グループが存在したか
+    integer, allocatable :: pump_in_cell(:,:,:)    ! 取水セル座標 (i, j)
+    integer, allocatable :: pump_out_cell(:,:,:)   ! 吐口セル座標 (i, j)。未指定=域外排水
+    real :: pump_q0(1:nbsrcmax) = -9999.0          ! 一定流量 (m3/s。pump_rule と排他)
+    integer :: f_pump_ref(1:nbsrcmax) = 0          ! 運転基準 (0:水位η=z+h, 1:水深h)
+    real, allocatable :: pump_rule(:,:,:)          ! 運転ルール折れ線 (基準値 m, 流量 m3/s)
+    character(len=maxpathlen) :: fn_pump_in_cell(1:nbsrcmax) = ""   ! 取水セル一覧ファイル名
+    character(len=maxpathlen) :: fn_pump_out_cell(1:nbsrcmax) = ""  ! 吐口セル一覧ファイル名
   end type
 
   ! namelist 読み込み用の静的作業配列(スタックに置かないための措置。
@@ -75,6 +84,9 @@ module list_boundary
   real :: inflow_val(1:2,1:nsrcvmax,1:nbsrcmax)
   real :: inflow_cs(1:2,1:nsrcvmax,1:nbsrcmax)
   real :: inflow_qs(1:2,1:nsrcvmax,1:nbsrcmax)
+  integer :: pump_in_cell(1:2,1:nsrccmax,1:nbsrcmax)
+  integer :: pump_out_cell(1:2,1:nsrccmax,1:nbsrcmax)
+  real :: pump_rule(1:2,1:nsrcvmax,1:nbsrcmax)
 
 contains
 
@@ -100,6 +112,7 @@ subroutine list_boundary_read(p, list)
   call read_source(un, list)
   call read_stage(un, list)
   call read_inflow(un, list)
+  call read_pump(un, list)
   close(un)
 
 end subroutine
@@ -257,6 +270,47 @@ subroutine read_inflow(un, list)
   list%fn_inflow_val = fn_inflow_val
   list%fn_inflow_cs = fn_inflow_cs
   list%fn_inflow_qs = fn_inflow_qs
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! &list_bound_pump を読む(不在なら present_pump を偽のまま返す)
+!   解釈・検証(セル・ルールの妥当性)は m_boundary_init が行う
+!----------------------------------------------------------------------
+subroutine read_pump(un, list)
+  integer, intent(in) :: un
+  type(t_list_boundary), intent(inout) :: list
+  real :: pump_q0(1:nbsrcmax)
+  integer :: f_pump_ref(1:nbsrcmax)
+  character(len=maxpathlen) :: fn_pump_in_cell(1:nbsrcmax)
+  character(len=maxpathlen) :: fn_pump_out_cell(1:nbsrcmax)
+  integer :: ios
+  character(len=1024) :: iom
+  namelist /list_bound_pump/ pump_in_cell, pump_out_cell, pump_q0, f_pump_ref, &
+                             pump_rule, fn_pump_in_cell, fn_pump_out_cell
+
+  pump_in_cell = -9999
+  pump_out_cell = -9999
+  pump_rule = -9999
+  pump_q0 = list%pump_q0
+  f_pump_ref = list%f_pump_ref
+  fn_pump_in_cell = list%fn_pump_in_cell
+  fn_pump_out_cell = list%fn_pump_out_cell
+
+  rewind(un)
+  read(un, nml=list_bound_pump, iostat=ios, iomsg=iom)
+  if (ios > 0) call par_stop("list_bound_pump 読込失敗: "//trim(iom))
+  if (ios < 0) return              ! グループ不在(この族なし)
+  list%present_pump = .true.
+
+  list%pump_in_cell = pump_in_cell
+  list%pump_out_cell = pump_out_cell
+  list%pump_rule = pump_rule
+  list%pump_q0 = pump_q0
+  list%f_pump_ref = f_pump_ref
+  list%fn_pump_in_cell = fn_pump_in_cell
+  list%fn_pump_out_cell = fn_pump_out_cell
 
 end subroutine
 

@@ -65,7 +65,7 @@ module m_state
     real, allocatable :: z(:,:)         ! 標高(m)
     real, allocatable :: pre(:,:)       ! precipitation (m/s)
     real, allocatable :: prh(:,:)       ! precipitation (mm/h)
-    real, allocatable :: rsh(:,:)       ! water depth of reservoir (m)
+    real, allocatable :: hrs(:,:)       ! water depth of reservoir (m)
     real, allocatable :: hg(:,:)        ! 地下貯留水深(柱状換算)(m)。どの地下水
                                         ! モデルも毎ステップここに反映する契約
     real, allocatable :: hs(:,:)        ! 浮遊砂柱状量(m。単位床面積あたりの固体
@@ -134,7 +134,7 @@ module m_state
   !   変更したら必ずこの日付を更新する(restore 時の照合に使う。§7)。
   !   同日に複数回変更した場合は英字サフィックスで区別する
   character(len=*), parameter :: save_version_cur = "2026-08-07b"
-  integer, parameter :: n_state_save = 6     ! state.dat の成分数(h,z,rsh,hg,sd,hs)
+  integer, parameter :: n_state_save = 6     ! state.dat の成分数(h,z,hrs,hg,sd,hs)
 
 
 contains
@@ -168,7 +168,7 @@ subroutine m_state_init(s, p, g)
   allocate(s%z(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%pre(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%prh(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(s%rsh(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%hrs(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hg(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%sd(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hs(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
@@ -205,7 +205,7 @@ subroutine m_state_init(s, p, g)
   allocate(ts%u(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%v(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%z(1:g%nx,1:g%ny), source = 0.0)
-  allocate(ts%rsh(1:g%nx,1:g%ny), source = 0.0)
+  allocate(ts%hrs(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%hg(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%sd(1:g%nx,1:g%ny), source = 0.0)
   allocate(ts%hs(1:g%nx,1:g%ny), source = 0.0)
@@ -237,7 +237,7 @@ subroutine m_state_init(s, p, g)
   s%u(:,:) = ts%u(1:g%nx, dcp%jsh:dcp%jeh)
   s%v(:,:) = ts%v(1:g%nx, dcp%jsh:dcp%jeh)
   s%z(:,:) = ts%z(1:g%nx, dcp%jsh:dcp%jeh)
-  s%rsh(:,:) = ts%rsh(1:g%nx, dcp%jsh:dcp%jeh)
+  s%hrs(:,:) = ts%hrs(1:g%nx, dcp%jsh:dcp%jeh)
   s%hg(:,:) = ts%hg(1:g%nx, dcp%jsh:dcp%jeh)
   s%sd(:,:) = ts%sd(1:g%nx, dcp%jsh:dcp%jeh)
   s%hs(:,:) = ts%hs(1:g%nx, dcp%jsh:dcp%jeh)
@@ -479,7 +479,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%qq)) deallocate(s%qq)
   if (allocated(s%pre)) deallocate(s%pre)
   if (allocated(s%prh)) deallocate(s%prh)
-  if (allocated(s%rsh)) deallocate(s%rsh)
+  if (allocated(s%hrs)) deallocate(s%hrs)
   if (allocated(s%hg)) deallocate(s%hg)
   if (allocated(s%sd)) deallocate(s%sd)
   if (allocated(s%hs)) deallocate(s%hs)
@@ -735,7 +735,7 @@ subroutine save_state(p, s)
   integer :: un
   real, allocatable :: wk(:,:,:)
   ! 全域バッファに集約してから rank0 のみが書く。
-  ! write(un) wk のレコードは h, z, rsh, hg, sd, hs の連結。
+  ! write(un) wk のレコードは h, z, hrs, hg, sd, hs の連結。
   ! 運動量表現(uv/mn 等)はスキーム私有の保存(swflow_enc.dat)、
   ! u,v,m,n,vv,qq,e は復元時に再導出される導出量(§7 の線引き)
   call sysdep_mkdir(p%dir_save)
@@ -746,7 +746,7 @@ subroutine save_state(p, s)
   end if
   call par_gather_to(wk(:,:,1), s%h)
   call par_gather_to(wk(:,:,2), s%z)
-  call par_gather_to(wk(:,:,3), s%rsh)
+  call par_gather_to(wk(:,:,3), s%hrs)
   call par_gather_to(wk(:,:,4), s%hg)
   call par_gather_to(wk(:,:,5), s%sd)
   call par_gather_to(wk(:,:,6), s%hs)
@@ -755,7 +755,7 @@ subroutine save_state(p, s)
   ! 成分ごとにゼロ抑制 RLE で書く(海域・乾燥域のゼロを圧縮。§7)
   call fileio_write_rle(un, wk(:,:,1))   ! h
   call fileio_write_rle(un, wk(:,:,2))   ! z
-  call fileio_write_rle(un, wk(:,:,3))   ! rsh
+  call fileio_write_rle(un, wk(:,:,3))   ! hrs
   call fileio_write_rle(un, wk(:,:,4))   ! hg
   call fileio_write_rle(un, wk(:,:,5))   ! sd
   call fileio_write_rle(un, wk(:,:,6))   ! hs
@@ -783,11 +783,11 @@ subroutine restore_state(p, s)
   ! (全ランク同形)なので Bcast が成立する。帯への切り出しは呼び出し側
   if (is_root) then
     open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', status='old')
-    ! 読み並びは save_state の書き込み順(h, z, rsh, hg, sd, hs)と一致させること。
+    ! 読み並びは save_state の書き込み順(h, z, hrs, hg, sd, hs)と一致させること。
     ! 成分を足すときは save と restore を必ず同時に更新する
     call fileio_read_rle(un, s%h)
     call fileio_read_rle(un, s%z)
-    call fileio_read_rle(un, s%rsh)
+    call fileio_read_rle(un, s%hrs)
     call fileio_read_rle(un, s%hg)
     call fileio_read_rle(un, s%sd)
     call fileio_read_rle(un, s%hs)
@@ -795,7 +795,7 @@ subroutine restore_state(p, s)
   end if
   call par_bcast_cell(s%h)
   call par_bcast_cell(s%z)
-  call par_bcast_cell(s%rsh)
+  call par_bcast_cell(s%hrs)
   call par_bcast_cell(s%hg)
   call par_bcast_cell(s%sd)
   call par_bcast_cell(s%hs)
