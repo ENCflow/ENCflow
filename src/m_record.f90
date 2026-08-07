@@ -204,7 +204,7 @@ subroutine set_probe
     write(un, '("# z(m) =,",f14.3)') r%probe(i)%z
     write(un, '("# ix =,",i7)') r%probe(i)%ixy(1)
     write(un, '("# iy =,",i7)') r%probe(i)%ixy(2)
-    write(un, '("# t(hour), t(min), z(m), h(m), u(m/s), v(m/s), |V|(m/s), q(m2/s)")')
+    write(un, '("# t(hour), t(min), z(m), h(m), u(m/s), v(m/s), |V|(m/s), q(m2/s), hs(m), sd(m)")')
     r%probe(i)%un = un
   end do
 end subroutine
@@ -509,10 +509,11 @@ subroutine m_record_probe(r, p, s)
   type(t_state), intent(in) :: s
   integer :: ipb, un
   integer :: ix, iy
-  real :: wk(6, r%npb)     ! 点集約バッファ: z, h, u, v, |V|, q
+  real :: wk(8, r%npb)     ! 点集約バッファ: z, h, u, v, |V|, q, hs, sd
   character(len=10) :: ffmt
   character(len=80) :: afmt
-  integer, parameter :: iw_z = 1, iw_h = 2, iw_u = 3, iw_v = 4, iw_vv = 5, iw_qq = 6
+  integer, parameter :: iw_z = 1, iw_h = 2, iw_u = 3, iw_v = 4, iw_vv = 5, iw_qq = 6, &
+                        iw_hs = 7, iw_sd = 8
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   if (r%npb <= 0) return
@@ -529,6 +530,8 @@ subroutine m_record_probe(r, p, s)
       wk(iw_v,ipb) = s%v(ix,iy)
       wk(iw_vv,ipb) = s%vv(ix,iy)
       wk(iw_qq,ipb) = s%qq(ix,iy)
+      wk(iw_hs,ipb) = s%hs(ix,iy)
+      wk(iw_sd,ipb) = s%sd(ix,iy)
     end if
   end do
   call par_reduce_points(wk)
@@ -559,6 +562,10 @@ subroutine m_record_probe(r, p, s)
     write(un, afmt, advance='no') wk(iw_vv,ipb)
     write(un, '(a)', advance='no') ","
     write(un, afmt, advance='no') wk(iw_qq,ipb)
+    write(un, '(a)', advance='no') ","
+    write(un, afmt, advance='no') wk(iw_hs,ipb)
+    write(un, '(a)', advance='no') ","
+    write(un, afmt, advance='no') wk(iw_sd,ipb)
     write(un, *)
     if (wk(iw_qq,ipb) > r%probe(ipb)%qmax) then
       r%probe(ipb)%tp = s%t / 60.
