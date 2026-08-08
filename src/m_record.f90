@@ -14,13 +14,18 @@ module m_record
   ! 注意: (1)(2) は collective なので is_root ガードより前に置くこと。
   !       所有判定に halo 行(jsh..js-1 等)を含めると二重計上になる。
   ! ==================================================================
+  ! フラックス測線は DDA 階段面方式(§24。2026-08-08 変更): セル番号で
+  !   指定した両端セルの中心を結ぶ DDA セル列の「踏面+蹴上げ」に沿って
+  !   セル中心の m, n を符号付きで積算する(一様流で任意の傾きに厳密)。
+  !   実座標指定(flxytype=1)は廃止(検出して停止)。
   ! サブグリッド河道(fn_width。§18)との契約:
-  !   フラックス測線の実流量 Q = Σ (m,n)·n̂·ℓ は、m, n が「流量をセル幅に
+  !   フラックス測線の実流量は、m, n が「流量をセル幅に
   !   塗り広げたセル平均」であることに依存する(河道セルを完全横断する
   !   測線で Q = 河道実流量が厳密に復元される)。m, n を河道内流速側に
   !   正規化してはならない(正規化されるのは u, v のみ。m_swflow_enc の
-  !   cwx/cwy 参照)。また測線は河道セルを部分的に横切らせないこと
-  !   (塗り広げのため ℓ/セル幅 倍しか計上されない)。
+  !   cwx/cwy 参照)。また測線は河道セル群を完全に横断させること。
+  ! 構造物転送(ポンプ・カルバート・分水。§22)は m, n に乗らないため
+  !   測線では計測されない(貯水池の流入計測等では収支方式と併用する)。
   ! ====================================================================
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
@@ -55,13 +60,28 @@ module m_record
   end type
 
   type t_flux
-    real :: trlen                          ! 測線の長さ(m)
-    real :: trnvec(1:2)                    ! 測線の単位法線ベクトル
-    real :: xy0(1:4)                       ! 測線の両端点の実座標(m)
+    ! DDA 階段面方式(§24。2026-08-08 変更): 両端セルの中心を結ぶ直線を
+    ! 長手軸方向に1セルずつ走査し(短手セル番号は中心線の最近傍)、
+    ! 短手方向に重複のないセル列(踏面)を作る。計測面は
+    !   踏面: 各セル内の長手軸に平行な線分(幅=長手セル幅)
+    !   蹴上げ: 隣接踏面セルの短手段差を繋ぐ線分(幅=短手セル幅)
+    ! の階段で、踏面は短手方向フラックス、蹴上げは長手方向フラックス
+    ! (段差を挟む踏面2セルの平均)を符号付きで積算する。一様流では
+    ! 任意の傾きで厳密(踏面のみの方式は cos^2θ に過小評価する)。
+    ! 縦横の直線測線では旧方式(重み付き平均×測線長)と解析的に同値。
+    ! 符号は旧方式と同じ「始点から終点に向かって右側が正」
+    ! (連続系の法線 (−Δy, Δx)/L との内積に一致)
+    real :: trlen                          ! 測線の長さ(m。両端セルの外縁まで延長した
+                                           !   直線長。報告用=計測には使わない)
+    real :: xy0(1:4)                       ! 測線の両端セル中心の実座標(m)
     integer :: ixy0(1:4)                   ! 測線の両端点のセルの座標
-    integer :: ncell                       ! 測線が通過するセルの数
-    integer :: ixy(1:2,1:ncellmax)         ! 測線が通過するセルの座標
-    real :: w(1:ncellmax)                  ! セルの重み
+    integer :: major = 1                   ! 長手軸 (1:x, 2:y)
+    real :: ct = 0.0                       ! 踏面の係数(法線符号×長手セル幅 m)
+    real :: cr = 0.0                       ! 蹴上げの係数(法線符号×短手セル幅 m)
+    integer :: ncell                       ! 踏面セルの数
+    integer :: ixy(1:2,1:ncellmax)         ! 踏面セルの座標(走査順)
+    integer :: nris = 0                    ! 蹴上げの数
+    integer :: irs(1:ncellmax)             ! 蹴上げ k は踏面セル irs(k) と irs(k)+1 の間
     real :: tp                             ! 最大流量の発生時刻(s)
     real :: qmax                           ! 最大流量
     real :: hmax                           ! 最大流量のときの水深
@@ -213,20 +233,17 @@ end subroutine
 !
 !---------------------------------------------------------------------
 subroutine set_flux
-!subroutine set_flux(p)
-!  type(t_sysparam), intent(in) :: p
+  ! DDA 階段面方式(t_flux のコメントと §24 参照)。
+  ! 測線はセル番号指定(flxytype=0)のみ。実座標指定(flxytype=1)は
+  ! 廃止(斜め測線で重み求積が不安定だった旧方式の仕様。検出して停止)
   integer :: nfl, un
   integer :: i, ix0, iy0, ix1, iy1
   real :: x0, y0, x1, y1
-  real :: dx, dy, nvx, nvy, nva
-  real :: a, b, c!, d
-  integer :: ix, iy, ncell, ixa, ixb, iya, iyb
-  real :: xa, xb, ya, yb, xc, yc
-  real :: wa, wb, ww
+  integer :: adx, ady, sd, ncell, nris, k, ix, iy, ish
+  real :: t, ext
   character(len=80) :: fn_fl
   character(len=4) :: cun
   character(len=1024) :: msg
-  integer :: j
 
   !---- フラックス計測の測線数をカウント ----
   nfl = 0
@@ -237,30 +254,24 @@ subroutine set_flux
   r%nfl = nfl
   if (nfl < 1) return
 
+  if (flxytype /= 0) then
+    call par_abort("m_record: 測線の実座標指定(flxytype=1)は廃止されました。" &
+                   //"セル番号指定(flxytype=0)へ移行してください" &
+                   //"(測線は両端セル中心を結ぶ DDA セル列=階段面で定義されます。§24)")
+  end if
+
   !---- 測線情報を保存 ----
   allocate(r%flux(1:nfl))
   do i = 1, nfl
-    if (flxytype == 0) then
-      ! 設定ファイルでセルの座標を指定
-      ix0 = nint(flxy(1,i))
-      iy0 = nint(flxy(2,i))
-      ix1 = nint(flxy(3,i))
-      iy1 = nint(flxy(4,i))
-      x0 = (ix0 - 0.5) * g%dx 
-      y0 = (iy0 - 0.5) * g%dy
-      x1 = (ix1 - 0.5) * g%dx 
-      y1 = (iy1 - 0.5) * g%dy
-    else
-      ! 設定ファイルで実座標を指定
-      x0 = flxy(1,i)
-      y0 = flxy(2,i)
-      x1 = flxy(3,i)
-      y1 = flxy(4,i)
-      ix0 = int(x0 / g%dx) + 1
-      iy0 = int(y0 / g%dy) + 1
-      ix1 = int(x1 / g%dx) + 1
-      iy1 = int(y1 / g%dy) + 1
-    end if
+    ! セルの座標指定のみ(両端セルの中心を結ぶ)
+    ix0 = nint(flxy(1,i))
+    iy0 = nint(flxy(2,i))
+    ix1 = nint(flxy(3,i))
+    iy1 = nint(flxy(4,i))
+    x0 = (ix0 - 0.5) * g%dx
+    y0 = (iy0 - 0.5) * g%dy
+    x1 = (ix1 - 0.5) * g%dx
+    y1 = (iy1 - 0.5) * g%dy
     if (ix0 < 1 .or. ix0 > g%nx .or. iy0 < 1 .or. iy0 > g%ny) then
       write(msg, '("error: point R of flux ",i0," is out of area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
       call par_abort(trim(msg))
@@ -278,139 +289,6 @@ subroutine set_flux
       call par_info(trim(msg))
     end if
 
-
-    dx = x1 - x0
-    dy = y1 - y0
-    ! 測線の法線ベクトルを計算
-    ! 始点から終点に向かって右側が正
-    nvx = -dy
-    nvy = dx
-    nva = sqrt(nvx**2 + nvy**2)
-    if (nva <= 0.0) then
-      call par_info("warning: point A == point B then IGNORE, flux No."//itoa(i))
-      r%flux(i)%xy0(1) = x0
-      r%flux(i)%xy0(2) = y0
-      r%flux(i)%xy0(3) = x1
-      r%flux(i)%xy0(4) = y1
-      r%flux(i)%ixy0(1) = ix0
-      r%flux(i)%ixy0(2) = iy0
-      r%flux(i)%ixy0(3) = ix1
-      r%flux(i)%ixy0(4) = iy1
-      r%flux(i)%ncell = 0       ! これを1でなく0にしておく
-      r%flux(i)%trlen = 0.0
-      r%flux(i)%tp = 0
-      r%flux(i)%qmax = 0.
-      cycle
-    end if
-    nvx = nvx / nva
-    nvy = nvy / nva
-    r%flux(i)%trnvec(1) = nvx
-    r%flux(i)%trnvec(2) = nvy
-    ! a*x + b*y + c = 0
-    ! y = -a/b*x - c/b
-    ! x = -b/a*y - c/a
-    a = y1 - y0
-    b = x0 - x1
-    c = x1 * y0 - x0 * y1
-    if (abs(dx) >= abs(dy)) then
-      ! 測線をセルの範囲いっぱいまで延長する
-      ! 実座標を指定した場合はそのまま
-      !   *** その場合のウェイトが現状では正しくない ***
-      if (flxytype == 0) then
-        if (x0 < x1) then
-          x0 = (ix0 - 1) * g%dx
-          x1 = ix1 * g%dx
-        else
-          x1 = (ix1 - 1) * g%dx
-          x0 = ix0 * g%dx
-        end if
-        y0 = -a / b * x0 - c / b
-        y1 = -a / b * x1 - c / b
-      end if
-      ncell = 0
-      ! x方向に刻みながら処理
-      do ix = ix0, ix1, sign(1, ix1 - ix0)
-        ncell = ncell + 1
-        xa = (ix - 1) * g%dx           ! セルの左端のx座標
-        xb = ix * g%dx                 ! セルの右端のx座標
-        ya = -a / b * xa - c / b       ! セルの左端での測線のy座標
-        yb = -a / b * xb - c / b       ! セルの右端での測線のy座標
-        iya = int(ya / g%dy) + 1       ! セルの右端での測線のy方向セル番号
-        iyb = int(yb / g%dy) + 1       ! セルの左端での測線のy方向セル番号
-        r%flux(i)%ixy(1,ncell) = ix
-        r%flux(i)%ixy(2,ncell) = iya
-        if (iya /= iyb) then           ! 測線がセル境界を跨ぐ
-          ncell = ncell + 1
-          r%flux(i)%ixy(1,ncell) = ix
-          r%flux(i)%ixy(2,ncell) = iyb
-          yc = ((iya + iyb) / 2. - 0.5) * g%dy  ! セル境界のy座標
-          wa = abs(ya - yc)
-          wb = abs(yb - yc)
-          ww = wa + wb
-          r%flux(i)%w(ncell-1) = wa / ww
-          r%flux(i)%w(ncell) = wb / ww
-        else
-          r%flux(i)%w(ncell) = 1
-        end if
-      end do
-    else
-      ! 測線をセルの範囲いっぱいまで延長する
-      ! 実座標を指定した場合はそのまま
-      !   *** その場合のウェイトが現状では正しくない ***
-      if (flxytype == 0) then
-        if (y0 < y1) then
-          y0 = (iy0 - 1) * g%dy
-          y1 = iy1 * g%dy
-        else
-          y1 = (iy1 - 1) * g%dy
-          y0 = iy0 * g%dy
-        end if
-                             xa = (ix0 - 1) * g%dx           ! セルの左端のx座標
-                             xb = ix0 * g%dx                 ! セルの右端のx座標
-        x0 = -b / a * y0 - c / a
-        x1 = -b / a * y1 - c / a
-        iya = int(xa / g%dx) + 1
-        iyb = int(xb / g%dx) + 1
-      end if
-      ncell = 0
-      ! y方向に刻みながら処理
-      do iy = iy0, iy1, sign(1, iy1 - iy0)
-        ncell = ncell + 1
-        ya = (iy - 1) * g%dy           ! セルの下端のy座標
-        yb = iy * g%dy                 ! セルの上端のy座標
-        xa = -b / a * ya - c / a       ! セルの下端での測線のx座標
-        xb = -b / a * yb - c / a       ! セルの上端での測線のx座標
-        ixa = int(xa / g%dx) + 1       ! セルの下端での測線のx方向セル番号
-        ixb = int(xb / g%dx) + 1       ! セルの上端での測線のx方向セル番号
-        r%flux(i)%ixy(1,ncell) = ixa
-        r%flux(i)%ixy(2,ncell) = iy
-        if (ixa /= ixb) then           ! 測線がセル境界を跨ぐ
-          ncell = ncell + 1
-          r%flux(i)%ixy(1,ncell) = ixb
-          r%flux(i)%ixy(2,ncell) = iy
-          xc = ((ixa + ixb) / 2. - 0.5) * g%dx  ! セル境界のx座標
-          wa = abs(xa - xc)
-          wb = abs(xb - xc)
-          ww = wa + wb
-          r%flux(i)%w(ncell-1) = wa / ww
-          r%flux(i)%w(ncell) = wb / ww
-        else
-          r%flux(i)%w(ncell) = 1
-        end if
-      end do
-    end if
-
-    ! 各セルの測線全体の中でのウェイトを計算
-    ww = 0
-    do j = 1, ncell
-      ww = ww + r%flux(i)%w(j)
-    end do
-    if (ww > 0) then
-      do j = 1, ncell
-        r%flux(i)%w(j) = r%flux(i)%w(j) / ww
-      end do
-    end if
-
     r%flux(i)%xy0(1) = x0
     r%flux(i)%xy0(2) = y0
     r%flux(i)%xy0(3) = x1
@@ -419,9 +297,73 @@ subroutine set_flux
     r%flux(i)%ixy0(2) = iy0
     r%flux(i)%ixy0(3) = ix1
     r%flux(i)%ixy0(4) = iy1
-    r%flux(i)%ncell = ncell
-    r%flux(i)%trlen = sqrt((x0 - x1)**2 + (y0 - y1)**2)
     r%flux(i)%tp = 0
+
+    if (ix0 == ix1 .and. iy0 == iy1) then
+      call par_info("warning: point A == point B then IGNORE, flux No."//itoa(i))
+      r%flux(i)%ncell = 0       ! これを1でなく0にしておく
+      r%flux(i)%nris = 0
+      r%flux(i)%trlen = 0.0
+      r%flux(i)%qmax = 0.
+      cycle
+    end if
+
+    adx = abs(ix1 - ix0)
+    ady = abs(iy1 - iy0)
+    ncell = 0
+    if (adx >= ady) then
+      ! x が長手(ちょうど 45 度も x 長手とする: DDA セル列は y 長手と
+      ! 同一の対角列になり、踏面+蹴上げの合計も一致するため選択は不問)
+      r%flux(i)%major = 1
+      sd = sign(1, ix1 - ix0)
+      do k = 0, adx
+        ix = ix0 + sd * k
+        t = real(k) / real(adx)
+        iy = iy0 + nint(t * (iy1 - iy0))   ! 中心線の最近傍の短手セル番号
+        ncell = ncell + 1
+        if (ncell > ncellmax) call par_abort("m_record: flux "//itoa(i)//" が長すぎます")
+        r%flux(i)%ixy(1,ncell) = ix
+        r%flux(i)%ixy(2,ncell) = iy
+      end do
+      ! 法線は旧方式と同じ (−Δy, Δx)/L との内積に一致させる:
+      !   踏面(x 平行)の法線 y 成分 = sign(Δx)、蹴上げ(y 平行)の
+      !   法線 x 成分 = −sign(Δy)
+      r%flux(i)%ct = real(sign(1, ix1 - ix0)) * g%dx
+      r%flux(i)%cr = -real(sign(1, iy1 - iy0)) * g%dy
+      ext = real(adx + 1) * g%dx   ! 長手方向の全幅(両端セルの外縁まで)
+      r%flux(i)%trlen = ext * sqrt(1.0 + (real(ady) / real(adx))**2)
+    else
+      ! y が長手
+      r%flux(i)%major = 2
+      sd = sign(1, iy1 - iy0)
+      do k = 0, ady
+        iy = iy0 + sd * k
+        t = real(k) / real(ady)
+        ix = ix0 + nint(t * (ix1 - ix0))
+        ncell = ncell + 1
+        if (ncell > ncellmax) call par_abort("m_record: flux "//itoa(i)//" が長すぎます")
+        r%flux(i)%ixy(1,ncell) = ix
+        r%flux(i)%ixy(2,ncell) = iy
+      end do
+      ! 踏面(y 平行)の法線 x 成分 = −sign(Δy)、蹴上げ(x 平行)の
+      ! 法線 y 成分 = sign(Δx)
+      r%flux(i)%ct = -real(sign(1, iy1 - iy0)) * g%dy
+      r%flux(i)%cr = real(sign(1, ix1 - ix0)) * g%dx
+      ext = real(ady + 1) * g%dy
+      r%flux(i)%trlen = ext * sqrt(1.0 + (real(adx) / real(ady))**2)
+    end if
+    r%flux(i)%ncell = ncell
+
+    ! 蹴上げ: 連続する踏面セルの短手番号の段差(DDA では 0 か ±1)
+    nris = 0
+    ish = 3 - r%flux(i)%major    ! 短手成分の添字 (major=1 → 2, major=2 → 1)
+    do k = 1, ncell - 1
+      if (r%flux(i)%ixy(ish,k+1) /= r%flux(i)%ixy(ish,k)) then
+        nris = nris + 1
+        r%flux(i)%irs(nris) = k
+      end if
+    end do
+    r%flux(i)%nris = nris
     r%flux(i)%qmax = -1.
   end do
 
@@ -586,10 +528,9 @@ subroutine m_record_flux(r, p, s)
   type(t_sysparam), intent(in) :: p
   type(t_state), intent(in) :: s
   integer :: ifl, un, ncell
-  integer :: i, ix, iy
-  real :: vn, qi, qm, q
+  integer :: i, k, ix, iy
+  real :: q
   real :: hmax, vmax, b
-  real, parameter :: eps = 1.0e-5
   real, allocatable :: wk(:,:)   ! 点集約バッファ: (4, ncell) = m, n, h, |V|
   character(len=10) :: ffmt
   character(len=80) :: afmt
@@ -623,19 +564,31 @@ subroutine m_record_flux(r, p, s)
       cycle
     end if
 
-    qm = 0.0
+    ! DDA 階段面の積算(§24): 踏面=短手方向フラックス×係数 ct、
+    ! 蹴上げ=長手方向フラックス(段差を挟む踏面2セルの平均)×係数 cr。
+    ! 係数は set_flux が法線符号×セル幅で前計算済み
+    q = 0.0
     hmax = 0.0
     vmax = 0.0
     b = 0.
     do i = 1, ncell
-      vn = wk(1,i) * flx%trnvec(1) + wk(2,i) * flx%trnvec(2)   ! 測線の法線方向線流量
-      qi = vn
-      qm = qm + qi * flx%w(i)
+      if (flx%major == 1) then
+        q = q + wk(2,i) * flx%ct               ! x 長手: 踏面は n(y方向フラックス)
+      else
+        q = q + wk(1,i) * flx%ct               ! y 長手: 踏面は m(x方向フラックス)
+      end if
       hmax = max(wk(3,i), hmax)
       vmax = max(wk(4,i), vmax)
     end do
+    do i = 1, flx%nris
+      k = flx%irs(i)
+      if (flx%major == 1) then
+        q = q + 0.5 * (wk(1,k) + wk(1,k+1)) * flx%cr   ! 蹴上げは m
+      else
+        q = q + 0.5 * (wk(2,k) + wk(2,k+1)) * flx%cr   ! 蹴上げは n
+      end if
+    end do
     deallocate(wk)
-    q = qm * flx%trlen
     if (hmax * vmax > 0.0) b = abs(q / hmax / vmax)
 
     ffmt = "f13.4"
