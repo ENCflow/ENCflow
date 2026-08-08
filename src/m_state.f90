@@ -321,6 +321,12 @@ subroutine m_state_calcstat(s, p, g)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) == 0) cycle
+      ! ため池・ダムの貯留(hrs)は h と独立に貯水量へ計上する
+      ! (h=0 のセルでも貯留は存在する。ゼロ加算はスキップ=従来ケースと
+      !  総和のビット一致を保つ)
+      if (s%hrs(i,j) > 0.0) then
+        hsum_j(j) = hsum_j(j) + real(s%hrs(i,j), real64) * g%gv(i,j)
+      end if
       if (s%h(i,j) <= 0) cycle
       if (s%h(i,j) > s%hmax(i,j)) then
         s%hmax(i,j) = s%h(i,j)                                 ! 最大水深
@@ -343,7 +349,10 @@ subroutine m_state_calcstat(s, p, g)
       else
         s%cn(i,j) = (s%vv(i,j) + cc) * dtpdx                   ! クーラン数(波速を考慮)
       end if
-      hsum_j(j) = hsum_j(j) + s%h(i,j)
+      ! 真の貯水量: 空隙率 gv で体積換算した水深(2026-08-08 定義変更。
+      ! gv=1 のケースは従来とビット一致)。河道幅 wfrac は m_state から
+      ! 不可視のため未反映(幅有効時の S は河道セルで過大。§18 の妥協)
+      hsum_j(j) = hsum_j(j) + real(s%h(i,j), real64) * g%gv(i,j)
       if (s%gw_active) hgsum_j(j) = hgsum_j(j) + s%hg(i,j)
       hmax = max(hmax, s%h(i,j))
       vvmax = max(vvmax, s%vv(i,j))
@@ -373,7 +382,8 @@ subroutine m_state_calcstat(s, p, g)
   nglob = [s%n_exfluxes, s%n_runge]
   call par_allreduce_sumi(nglob)
 
-  s%hmean = hsum / s%n_valcells                                ! 領域平均貯留高(m)
+  s%hmean = hsum / s%n_valcells                                ! 領域平均貯留高(m。
+                                                               !   gv 換算+ため池・ダム貯留込み)
   s%cnmax = cnmax                                              ! 領域最大クーラン数(全域値)
 
   ! 画面出力ステップ内での最大値(画面出力時にリセットされる)
