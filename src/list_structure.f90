@@ -46,6 +46,11 @@ module list_structure
     real :: culv_length(1:nstmax) = 0.0            ! 管路長 L (m。0=摩擦損失なし)
     real :: culv_manning(1:nstmax) = 0.02          ! 管内粗度 n
     real :: culv_ce(1:nstmax) = 0.5                ! 流入損失係数
+    integer :: culv_flap(1:nstmax) = 0             ! フラップゲート (0:なし, 1:逆流遮断)
+    real, allocatable :: culv_gate_rule(:,:,:)     ! ゲート開度折れ線 (基準水位η m, 開度0-1)。
+                                                   !   未指定=常時全開(樋門の operated gate)
+    integer :: culv_gate_ref(1:nstmax) = 1         ! 開度ルールの基準セル
+                                                   !   (0:in側代表, 1:out側代表=河川側)
     character(len=maxpathlen) :: fn_culv_in_cell(1:nstmax) = ""   ! 上流側セル一覧ファイル名
     character(len=maxpathlen) :: fn_culv_out_cell(1:nstmax) = ""  ! 下流側セル一覧ファイル名
   end type
@@ -57,6 +62,7 @@ module list_structure
   real :: pump_rule(1:2,1:nstvmax,1:nstmax)
   integer :: culv_in_cell(1:2,1:nstccmax,1:nstmax)
   integer :: culv_out_cell(1:2,1:nstccmax,1:nstmax)
+  real :: culv_gate_rule(1:2,1:nstvmax,1:nstmax)
 
 contains
 
@@ -139,6 +145,7 @@ subroutine read_culvert(un, list)
   real :: culv_width(1:nstmax), culv_height(1:nstmax)
   real :: culv_zin(1:nstmax), culv_zout(1:nstmax)
   real :: culv_length(1:nstmax), culv_manning(1:nstmax), culv_ce(1:nstmax)
+  integer :: culv_flap(1:nstmax), culv_gate_ref(1:nstmax)
   character(len=maxpathlen) :: fn_culv_in_cell(1:nstmax)
   character(len=maxpathlen) :: fn_culv_out_cell(1:nstmax)
   integer :: ios
@@ -146,10 +153,12 @@ subroutine read_culvert(un, list)
   namelist /list_struct_culvert/ culv_in_cell, culv_out_cell, &
                                  culv_width, culv_height, culv_zin, culv_zout, &
                                  culv_length, culv_manning, culv_ce, &
+                                 culv_flap, culv_gate_rule, culv_gate_ref, &
                                  fn_culv_in_cell, fn_culv_out_cell
 
   culv_in_cell = -9999
   culv_out_cell = -9999
+  culv_gate_rule = -9999
   culv_width = list%culv_width
   culv_height = list%culv_height
   culv_zin = list%culv_zin
@@ -157,6 +166,8 @@ subroutine read_culvert(un, list)
   culv_length = list%culv_length
   culv_manning = list%culv_manning
   culv_ce = list%culv_ce
+  culv_flap = list%culv_flap
+  culv_gate_ref = list%culv_gate_ref
   fn_culv_in_cell = list%fn_culv_in_cell
   fn_culv_out_cell = list%fn_culv_out_cell
 
@@ -168,6 +179,7 @@ subroutine read_culvert(un, list)
 
   list%culv_in_cell = culv_in_cell
   list%culv_out_cell = culv_out_cell
+  list%culv_gate_rule = culv_gate_rule
   list%culv_width = culv_width
   list%culv_height = culv_height
   list%culv_zin = culv_zin
@@ -175,6 +187,8 @@ subroutine read_culvert(un, list)
   list%culv_length = culv_length
   list%culv_manning = culv_manning
   list%culv_ce = culv_ce
+  list%culv_flap = culv_flap
+  list%culv_gate_ref = culv_gate_ref
   list%fn_culv_in_cell = fn_culv_in_cell
   list%fn_culv_out_cell = fn_culv_out_cell
 

@@ -187,21 +187,36 @@ end subroutine
 !                Q = min(堰, 管路) で連続に接続(浅水では堰支配、
 !                深い水没では管路容量が上限)
 ! 係数(cw_free/cw_sub/cp)は init_culvert が gg・形状・損失から前計算
-! して geom に畳み込み済み(law の引数に p を持たないため)
+! して geom に畳み込み済み(law の引数に p を持たないため)。
+! 樋管・樋門のゲート(§22):
+!   開度ルール(geom(10)=1): 基準側(geom(9): 0=in/1=out)代表水位の
+!   折れ線 rule = (η, 開度0-1) を線形補間した乗率を掛ける(開度は
+!   流量の線形乗率の妥協=オリフィス面積の非線形は非表現)。
+!   ゲート無しは乗算自体をスキップ(ゲート無しカルバートとビット同一)。
+!   フラップ(geom(8)=1): 逆流(q<0 = out→in)を遮断(無動力の
+!   逆流防止弁)。評価順: 3レジーム流量 → ×開度 → フラップ
 !----------------------------------------------------------------------
 function law_culvert(rule, nrule, geom, refu, refd) result(q)
   real, intent(in) :: rule(:,:)
   integer, intent(in) :: nrule
   real, intent(in) :: geom(:)
   real, intent(in) :: refu, refd
-  real :: q
-  if (size(rule) < 0 .or. nrule < 0) continue  ! 引数未使用の警告を抑制
+  real :: q, c
 
   if (refu >= refd) then
     q = culv_q1(geom(1), geom(2), geom(3), geom(4), geom(5), geom(6), refu, refd)
   else
     q = -culv_q1(geom(2), geom(1), geom(3), geom(4), geom(5), geom(6), refd, refu)
   end if
+  if (geom(10) > 0.5) then
+    if (geom(9) > 0.5) then
+      c = interp_series(rule, nrule, refd)
+    else
+      c = interp_series(rule, nrule, refu)
+    end if
+    q = q * c
+  end if
+  if (geom(8) > 0.5 .and. q < 0.0) q = 0.0
 
 end function
 
@@ -417,6 +432,11 @@ end subroutine
 !     (5)=cw_sub  = 0.91 B √(2g)         (本間・潜り)
 !     (6)=cp = BD √(2g / (1+ce+2g n²L/R^(4/3)))  (管路。R=BD/(2(B+D)))
 !     (7)=Ah = 有効平面積(Σgv·dx·dy)の調和平均(均衡上限用。§22)
+!     (8)=フラップ (0/1)、(9)=ゲート基準側 (0:in/1:out)、
+!     (10)=ゲート有無 (0/1。1 なら rule = 開度折れ線)
+!   樋管・樋門はゲート付きカルバートとして表す(§22): フラップ
+!   (culv_flap=1)は逆流 out→in の遮断、開度ルール(culv_gate_rule)は
+!   基準側代表水位の折れ線 (η, 開度0-1) による流量乗率。
 !   ため池(rscap>0)セルは不許可(転送則が hrs と絡むため。実務は
 !   ポンプを使う)。域外(下流側なし)も不許可(逆流の定義がないため。
 !   域外排水はポンプの一定流量で代替)
@@ -440,9 +460,47 @@ subroutine init_culvert(b, p, g, list, ofs, nculv)
     b%struct(ist)%law => law_culvert
     b%struct(ist)%f_ref = 0
 
-    ! 折れ線はカルバートでは未使用(law へ渡す実引数のための1点ダミー)
-    allocate(b%struct(ist)%rule(1:2,1:1), source = 0.0)
-    b%struct(ist)%nrule = 1
+    !--- ゲート(樋管・樋門): フラップと開度ルール ---
+    if (list%culv_flap(ic) < 0 .or. list%culv_flap(ic) > 1) then
+      call par_stop("list_struct_culvert: culv_flap は 0(なし), 1(逆流遮断) のいずれか: " &
+                    //itoa(list%culv_flap(ic)))
+    end if
+    if (list%culv_gate_ref(ic) < 0 .or. list%culv_gate_ref(ic) > 1) then
+      call par_stop("list_struct_culvert: culv_gate_ref は 0(in側), 1(out側) のいずれか: " &
+                    //itoa(list%culv_gate_ref(ic)))
+    end if
+    b%struct(ist)%geom(8) = real(list%culv_flap(ic))
+    n = 0
+    do k = 1, size(list%culv_gate_rule, 2)
+      if (list%culv_gate_rule(1,k,ic) <= -9999) exit   ! 番兵で終端
+      n = n + 1
+    end do
+    if (n > 0) then
+      ! 開度折れ線 (基準水位η m, 開度0-1)。第1列は水位(分→秒換算なし)
+      allocate(b%struct(ist)%rule(1:2,1:n))
+      b%struct(ist)%rule(1:2,1:n) = list%culv_gate_rule(1:2,1:n,ic)
+      b%struct(ist)%nrule = n
+      do k = 1, n
+        if (b%struct(ist)%rule(2,k) < 0.0 .or. b%struct(ist)%rule(2,k) > 1.0) then
+          call par_stop("list_struct_culvert: カルバート "//itoa(ic) &
+                        //" のゲート開度は 0〜1 のみです")
+        end if
+        if (k >= 2) then
+          if (b%struct(ist)%rule(1,k) <= b%struct(ist)%rule(1,k-1)) then
+            call par_stop("list_struct_culvert: カルバート "//itoa(ic) &
+                          //" のゲートルールの基準水位が単調増加ではありません")
+          end if
+        end if
+      end do
+      b%struct(ist)%geom(9) = real(list%culv_gate_ref(ic))
+      b%struct(ist)%geom(10) = 1.0
+    else
+      ! ゲート無し: 折れ線は law へ渡す実引数のための1点ダミー
+      allocate(b%struct(ist)%rule(1:2,1:1), source = 0.0)
+      b%struct(ist)%nrule = 1
+      b%struct(ist)%geom(9) = 0.0
+      b%struct(ist)%geom(10) = 0.0
+    end if
 
     !--- 上流側セル集合(ファイル指定が優先) ---
     if (len_trim(list%fn_culv_in_cell(ic)) > 0) then
