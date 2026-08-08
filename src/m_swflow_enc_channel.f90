@@ -125,6 +125,12 @@ module subroutine build_channel_frw(g)
     ! 和から除外する(含めると比が 1 に希釈され正規化が失われる)
     call build_cw(g, capd)
 
+    ! σ 有効時はキャップ前の frw を保存する(cw_cell の h 依存再評価が
+    ! build_cw と同じ分母・分子を再構成するため。§26)
+    if (have_sect) then
+      allocate(frw0, source = frw)
+    end if
+
     ! 幅キャップ q を全成分の河道—河道エッジへ重畳する
     ! (q の計算は build_cw と同じ wcap = 決定的に同値)
     do j = jlo, jhi
@@ -628,6 +634,82 @@ function wcap(g, i1, j1, i2, j2, cap) result(q)
   end if
   q = min(we / cap, 1.0)
 end function
+
+
+!----------------------------------------------------------------------
+! スケール付き幅キャップ q = min(W_e·sig / cap, 1)(§26)。
+! sig=1 のとき we*1.0 はビット恒等のため wcap と厳密同値
+!----------------------------------------------------------------------
+function wcap_s(g, i1, j1, i2, j2, cap, sig) result(q)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i1, j1, i2, j2
+  real, intent(in) :: cap, sig
+  real :: q, w1, w2, we
+  q = 1.0
+  w1 = g%wrw(i1,j1)
+  w2 = g%wrw(i2,j2)
+  if (w1 > 0.0 .and. w2 > 0.0) then
+    we = min(w1, w2)
+  else if (w1 > 0.0) then
+    we = w1
+  else if (w2 > 0.0) then
+    we = w2
+  else
+    return
+  end if
+  q = min(we * sig / cap, 1.0)
+end function
+
+
+!----------------------------------------------------------------------
+! セル方向別通水率をスケール sig 付きで計算する(§26)。
+! build_cw の1セル分と同一の式・同一の巡回順で、frw はキャップ前の
+! 保存値 frw0 を使う(sig=1 で静的 cwx/cwy と厳密同値)。
+! 親の continuous / restore_uvmn から σ(h) 付きで呼ばれる
+!----------------------------------------------------------------------
+module subroutine cw_cell(g, i, j, sig, cx, cy)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i, j
+  real, intent(in) :: sig
+  real, intent(out) :: cx, cy
+  integer :: k, in, jn
+  real :: f0, q, sx_, sy_
+  real :: numx, denx, numy, deny
+  real :: cap8(1:8), capd
+
+  cx = 1.0
+  cy = 1.0
+  if (.not. is_channel(g, i, j)) return
+  if (g%wrw(i,j) <= 0.0) return
+  capd = sqrt(g%dx * g%dy)
+  cap8(1:8) = [ capd, g%dx, capd, g%dy, g%dy, capd, g%dx, capd ]
+  numx = 0.0
+  denx = 0.0
+  numy = 0.0
+  deny = 0.0
+  do k = 1, 8
+    in = i + din(k)
+    jn = j + djn(k)
+    if (g%x(in,jn) <= 0) cycle
+    if (g%zbank(i,j) > zbank_min .and. g%sw(in,jn) == 0 .and. &
+        g%rw(in,jn) <= 0) cycle
+    f0 = frw0(ke(k), i+die(k), j+dje(k))
+    if (is_channel(g, in, jn)) then
+      q = wcap_s(g, i, j, in, jn, cap8(k), sig)
+    else
+      q = 1.0
+    end if
+    sx_ = l8y(k) / 2
+    sy_ = l8x(k) / 2
+    numx = numx + sx_ * f0 * q
+    denx = denx + sx_ * f0
+    numy = numy + sy_ * f0 * q
+    deny = deny + sy_ * f0
+  end do
+  if (denx > 0.0) cx = numx / denx
+  if (deny > 0.0) cy = numy / deny
+
+end subroutine
 
 
 !----------------------------------------------------------------------

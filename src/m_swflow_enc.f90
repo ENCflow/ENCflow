@@ -1,7 +1,7 @@
 module m_swflow_enc
   use m_sysparam, only : t_sysparam
-  use m_geoinfo, only : t_geoinfo
-  use m_boundary, only : t_boundary
+  use m_geoinfo, only : t_geoinfo, zbank_min
+  use m_boundary, only : t_boundary, e_struct_dam
   use m_state, only : t_state
   use m_ffactor, only : m_ffactor_init, m_ffactor_calc, m_ffactor_dispose
   use list_enc, only : t_list_enc, list_enc_read
@@ -26,6 +26,9 @@ module m_swflow_enc
   public :: p_adv_upwind_index
   public :: n8x, n8y
   public :: have_width, have_frw, frw, wfrac   ! protected(m_geomorph の掃流砂が読む)
+  ! sect_* は submodule(enc_bc の水位規定変換)も呼ぶ。private のままだと
+  ! gfortran がシンボルを局所化しリンク不能(§22 の実バグと同型)
+  public :: sect_v, sect_hinv, sect_sigma
   public :: have_open_bc, bc_open_face         ! 開境界の面判定(m_geomorph の
                                                ! 開境界土砂フラックスが読む。読み取り専用)
 
@@ -116,6 +119,26 @@ module m_swflow_enc
                                             !   これで除算し、vv・摩擦・抗力・移流が
                                             !   河道内流速を見る。m,n は正規化しない
                                             !   (§18。フラックス測線の実流量の条件)
+
+  ! ---- 河道断面形の一般化 σ(h) = (h/D)^m(§26)----
+  ! sx%h1 は σ 有効時「矩形換算水深 vh = ∫σdh'」として運用する
+  ! (真の体積 = vh×gv×wfrac×セル面積)。既存の加算式は無変更で、
+  ! 変換は連続式開始時 sect_v とコミット時 sect_hinv に集約される。
+  logical, parameter :: f_sect_rk = .true.  ! RK 内の仮水深更新で σ を再評価する
+                                            !   (コンパイル時切替。.false. = RK 中は
+                                            !    矩形近似=従来の加算式。コスト比較用。§26)
+  logical :: have_sect = .false.            ! σ が有効か(p_sect_m>0 かつ遷移深さ源あり)
+  real :: sect_m = 0.0                      ! 形状指数 m(0=矩形)
+  real :: sect_mp1 = 1.0                    ! m+1(前計算)
+  real :: sect_rmp1 = 1.0                   ! 1/(m+1)
+  real :: sect_mfac = 0.0                   ! m/(m+1)
+  real, parameter :: sect_sgmin = 0.01      ! σ の下限(乾燥近傍の感度増幅の抑制)
+  real, allocatable :: sdep(:,:)            ! 断面遷移深さ D (1:nx, jsh:jeh)。
+                                            !   0 = σ 非適用セル(恒等写像)
+  real, allocatable :: frw0(:,:,:)          ! 幅キャップ「前」の frw のコピー
+                                            !   (σ 有効時のみ。cw_cell の h 依存
+                                            !    再評価が静的 cwx/cwy と同じ比の
+                                            !    分母・分子を作るための保存。§26)
 
   ! 状態変数の構造体の宣言と定義
   type t_enc_status
@@ -254,6 +277,14 @@ module m_swflow_enc
     module subroutine build_wfrac(g)
       type(t_geoinfo), intent(in) :: g
     end subroutine
+    ! セル方向別通水率をスケール sig 付きで計算する(§26。sig=1 が静的
+    ! cwx/cwy と厳密同値になるよう build_channel_frw と実装を共有)
+    module subroutine cw_cell(g, i, j, sig, cx, cy)
+      type(t_geoinfo), intent(in) :: g
+      integer, intent(in) :: i, j
+      real, intent(in) :: sig
+      real, intent(out) :: cx, cy
+    end subroutine
     module subroutine bank_wall(p, g, s, i, j, in, jn, uve1, mne1)
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
@@ -373,8 +404,29 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! (通過幅シェア lp/ld を使うため init_weights より後。zbank / wrw は
   ! 帯+ハロ(scatter_coeffs 済み)、rw/sw/x はゾーン2で全域=
   ! 全ランクが自分の帯+ハロ行を冗長構築する)
+  ! 断面形一般化 σ(h)(§26)の有効判定は build_channel_frw より前に行う
+  ! (キャップ前 frw の保存 frw0 の要否を build が参照するため)
+  sect_m = chlist%p_sect_m
+  if (sect_m < 0.0) call par_stop("list_channel: p_sect_m は非負のみです")
+  have_sect = sect_m > 0.0 .and. (g%bank_active .or. g%drw_active)
+  if (sect_m > 0.0 .and. .not. have_sect) then
+    call par_stop("list_channel: p_sect_m > 0 には遷移深さの源(堤防 fn_bank/bank0 の" &
+                  //"天端、または掘り込み深さ depth_rw/fn_depth_rw)が必要です")
+  end if
+  if (have_sect) then
+    sect_mp1 = sect_m + 1.0
+    sect_rmp1 = 1.0 / sect_mp1
+    sect_mfac = sect_m * sect_rmp1
+  end if
+
   if (have_frw) call build_channel_frw(g)
   if (have_width) call build_wfrac(g)
+
+  ! σ の遷移深さ D の構築(zbank/drw は帯配布済み)
+  if (have_sect) call build_sdep(g, b, s)
+  ! 実効平面積率 af(§25/§26)。restore 後の統計・gwflow が最初のステップ
+  ! 前に読むため init でも埋める(既定は m_state_init の gv のまま)
+  if (have_width .or. have_sect) call update_af(g, s)
 
   ! 破堤サイトの解釈・検証・行バケット構築(zbank の帯と s%z を読むため
   ! この位置。have_breach を設定する)
@@ -417,8 +469,9 @@ subroutine m_swflow_enc_init(p, g, b, s)
     call boundary_uvmn(p, g, b, s, sx_mod)
   end if
 
-  ! 変数を更新して次のタイムステップの準備をする
-  call complete(p, g, s, sx_mod)
+  ! 変数を更新して次のタイムステップの準備をする(initial: σ 適用セルの
+  ! h は正準のまま保ち、u,v の再正規化もしない。§26)
+  call complete(p, g, s, sx_mod, initial=.true.)
 
 end subroutine
 
@@ -504,10 +557,14 @@ subroutine m_swflow_enc_dispose(p)
   if (allocated(frw)) deallocate(frw)
   if (allocated(wfrac)) deallocate(wfrac)
   if (allocated(cwx)) deallocate(cwx)
+  if (allocated(sdep)) deallocate(sdep)
+  if (allocated(frw0)) deallocate(frw0)
   if (allocated(cwy)) deallocate(cwy)
   call breach_dispose
   have_bopen = .false.
   have_width = .false.
+  have_sect = .false.
+  sect_m = 0.0
   have_frw = .false.
   call m_ffactor_dispose
   call adv_dispose
@@ -642,12 +699,18 @@ subroutine init_enc_status(p, g, s, sx)
   end do
   !$omp end parallel do
 
-  ! 水深の初期条件を設定する
+  ! 水深の初期条件を設定する(σ 有効時は continuous の seeding と同じく
+  ! 矩形換算水深 vh。init 中の h1 の読み手は boundary_h のため池節
+  ! (sdep=0 = 恒等単位)と complete(initial)のみ。§26)
   !$omp parallel do schedule(dynamic) private(i, j)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
-      sx%h1(i,j) = s%h(i,j)
+      if (have_sect) then
+        sx%h1(i,j) = sect_v(s%h(i,j), sdep(i,j))
+      else
+        sx%h1(i,j) = s%h(i,j)
+      end if
     end do
   end do
   !$omp end parallel do
@@ -843,6 +906,23 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
 
   ! 過大な流出の抑制
   !if ((dh > 0 .and. dhc + p%dd > s%h(i,j)) .or. (dh < 0 .and. dhn + p%dd > s%h(in,jn))) then
+  if (have_sect) then
+    ! σ 有効時は矩形換算水深(体積)で判定・抑制する(dhc/dhn は vh 増分。
+    ! 非適用セルは sect_v が恒等のため従来と同値。§26)
+    if ((dh > 0 .and. sect_v(s%h(i,j), sdep(i,j)) - dhc <= 0) .or. &
+        (dh < 0 .and. sect_v(s%h(in,jn), sdep(in,jn)) - dhn <= 0)) then
+      have_exflux = .true.
+      if (f_exflux_reduction > 0) then
+        if (dh > 0) then
+          cor = max(sect_v(s%h(i,j), sdep(i,j)) - p%dd, 0.0) / dhc
+        else
+          cor = max(sect_v(s%h(in,jn), sdep(in,jn)) - p%dd, 0.0) / dhn
+        end if
+        uve1 = uve1 * cor
+        mne1 = mne1 * cor
+      end if
+    end if
+  else
   if ((dh > 0 .and. s%h(i,j) - dhc <= 0) .or. (dh < 0 .and. s%h(in,jn) - dhn <= 0)) then
     have_exflux = .true.
     if (f_exflux_reduction > 0) then
@@ -854,6 +934,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
       uve1 = uve1 * cor
       mne1 = mne1 * cor
     end if
+  end if
   end if
 
   ! セル境界の流速を更新する
@@ -1012,6 +1093,31 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
 
       ! 仮の水深を更新
       !   式の詳細は連続式を解くルーチン内のコメントを参照のこと
+      if (have_sect .and. f_sect_rk) then
+        ! σ 有効(かつ RK 再評価オン)時: vh 増分を積算してから逆変換する
+        ! (§26。f_sect_rk=.false. なら下の従来経路=RK 中は矩形近似)
+        block
+          real :: dvc, dvn
+          dvc = 0.0
+          dvn = 0.0
+          do kk = 1, 8
+            mnec = sign_e(kk) * sx%mn(ke(kk),i+die(kk),j+dje(kk))
+            mnen = sign_e(kk) * sx%mn(ke(kk),in+die(kk),jn+dje(kk))
+            if (kk == k) mnec = mne1
+            if (kk == 9 - k) mnen = -mne1
+            fwc = 1.0
+            fwn = 1.0
+            if (have_frw) then
+              fwc = frw(ke(kk),i+die(kk),j+dje(kk))
+              fwn = frw(ke(kk),in+die(kk),jn+dje(kk))
+            end if
+            dvc = dvc + mnec * mn2dh(kk) * fwc * winvc / g%gv(i,j) / a(l)
+            dvn = dvn + mnen * mn2dh(kk) * fwn * winvn / g%gv(in,jn) / a(l)
+          end do
+          hc = sect_hinv(sect_v(hc0, sdep(i,j)) - dvc, sdep(i,j))
+          hn = sect_hinv(sect_v(hn0, sdep(in,jn)) - dvn, sdep(in,jn))
+        end block
+      else
       hc = hc0       ! 中心セルの水深
       hn = hn0       ! 近傍セルの水深
       do kk = 1, 8
@@ -1035,6 +1141,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
         hc = hc - mnec * mn2dh(kk) * fwc * winvc / g%gv(i,j) / a(l)
         hn = hn - mnen * mn2dh(kk) * fwn * winvn / g%gv(in,jn) / a(l)
       end do
+      end if
     end block
 
     ! 段数を更新して次の段へ
@@ -1098,7 +1205,12 @@ subroutine continuous(p, g, s, sx)
       s%v(i,j) = 0
       s%m(i,j) = 0
       s%n(i,j) = 0
-      sx%h1(i,j) = s%h(i,j)
+      ! σ 有効時は h1 を矩形換算水深 vh で初期化(非適用セルは恒等。§26)
+      if (have_sect) then
+        sx%h1(i,j) = sect_v(s%h(i,j), sdep(i,j))
+      else
+        sx%h1(i,j) = s%h(i,j)
+      end if
       ! 河道幅有効時のセル平面積率の逆数(無効時は 1.0 の乗算で厳密に不変)
       winv = 1.0
       if (have_width) winv = 1.0 / wfrac(i,j)
@@ -1153,7 +1265,11 @@ subroutine continuous(p, g, s, sx)
       ! 河道幅有効セルは u,v をセル方向別通水率で正規化する(vv・摩擦・
       ! 抗力・移流が河道内流速を見る。m,n は流量積分の意味論を保つため
       ! 正規化しない=フラックス測線の実流量が保たれる条件。§18)
-      if (have_width) then
+      ! σ 有効時はここでは正規化しない: この後の boundary_h・dam が h1 を
+      ! さらに更新するため、確定水深 h(n+1) の σ で complete が正規化する
+      ! (u,v と h の時刻整合、かつ restore_uvmn が保存 h から厳密に
+      ! 再現できる条件。§26)
+      if (have_width .and. .not. have_sect) then
         s%u(i,j) = s%u(i,j) / cwx(i,j)
         s%v(i,j) = s%v(i,j) / cwy(i,j)
       end if
@@ -1167,13 +1283,24 @@ end subroutine
 !----------------------------------------------------------------------
 ! 変数の更新
 !----------------------------------------------------------------------
-subroutine complete(p, g, s, sx)
+subroutine complete(p, g, s, sx, initial)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   type(t_enc_status), intent(inout) :: sx
-  integer :: i, j 
+  ! initial=.true. は init 末尾からの呼び出し(σ 有効時のみ意味を持つ):
+  !   σ 適用セルでは h が正準(初期条件・復元状態)なので h1→h の逆変換
+  !   コミットをせず、u,v の正規化もしない(初期条件・restore_uvmn が
+  !   正規化済みの値を持つ)。恒等コミットに見えて hinv(h) を書いてしまい
+  !   復元水深が最大 D·m/(m+1) 膨張する実バグの対策(hs1 の複製初期化と
+  !   同族の問題。§26)
+  logical, intent(in), optional :: initial
+  integer :: i, j
+  real :: cxv, cyv
+  logical :: linit
   if (p%initialized) continue  ! 引数未使用の警告を抑制
+  linit = .false.
+  if (present(initial)) linit = initial
 
   ! 流量のコミット: 時刻n+1の値を正準状態へ(セルの h1→h と対をなす)
   !   エッジの書き込み集合はセル窓より i,j とも1つ外側(die/dje=-1)に
@@ -1185,11 +1312,37 @@ subroutine complete(p, g, s, sx)
   end do
   !$omp end parallel do
 
-  !$omp parallel do schedule(dynamic) private(i, j)
+  !$omp parallel do schedule(dynamic) private(i, j, cxv, cyv)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
-      s%h(i,j) = sx%h1(i,j)
+      ! σ 有効時は矩形換算水深 vh から真の水深へ逆変換(非適用セルは恒等。§26)
+      if (have_sect) then
+        if (linit) then
+          ! init 呼び出し: σ 適用セルは h が正準(h1 は seeding 済みで
+          ! boundary_h の init 時実効対象はため池 = sdep=0 のみ)。
+          ! sdep=0 セルは従来通り h1 をコミット(ため池初期吸収の反映)
+          if (sdep(i,j) <= 0.0) s%h(i,j) = sx%h1(i,j)
+        else
+          s%h(i,j) = sect_hinv(sx%h1(i,j), sdep(i,j))
+          ! 河道幅有効セルの u,v 正規化(σ 無効時は continuous が静的
+          ! cw で行う)。確定水深 h(n+1) の σ で通水率を再評価する
+          ! (§26。sdep=0 セルは静的値と厳密同値)。海セルの除外は
+          ! continuous の書き込み集合(sw スキップ)と一致させる
+          if (have_width .and. g%sw(i,j) <= 0) then
+            if (sdep(i,j) > 0.0) then
+              call cw_cell(g, i, j, sect_sigma(s%h(i,j), sdep(i,j)), cxv, cyv)
+            else
+              cxv = cwx(i,j)
+              cyv = cwy(i,j)
+            end if
+            s%u(i,j) = s%u(i,j) / cxv
+            s%v(i,j) = s%v(i,j) / cyv
+          end if
+        end if
+      else
+        s%h(i,j) = sx%h1(i,j)
+      end if
       s%e(i,j) = s%h(i,j) + s%z(i,j)
       s%vv(i,j) = sqrt(s%u(i,j)**2 + s%v(i,j)**2)
       s%qq(i,j) = sqrt(s%m(i,j)**2 + s%n(i,j)**2)
@@ -1210,6 +1363,9 @@ subroutine complete(p, g, s, sx)
     end do
     !$omp end parallel do
   end if
+
+  ! 実効平面積率 af の更新(§25/§26。幅・σ とも無効なら af=gv のまま不変)
+  if (have_width .or. have_sect) call update_af(g, s)
 
 end subroutine
 
@@ -1314,11 +1470,12 @@ subroutine restore_uvmn(p, g, s, sx)
   integer :: in, jn, ie, je
   real :: uve, mne
   real :: fw
+  real :: cxv, cyv
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
-  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, uve, mne, fw)
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, uve, mne, fw, cxv, cyv)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle   ! 海セルは continuous 同様に除外(u,v,m,n,vv,qq は 0 のまま)
@@ -1353,10 +1510,25 @@ subroutine restore_uvmn(p, g, s, sx)
         s%m(i,j) = s%m(i,j) + mne * (w8mx(k) * fw)
         s%n(i,j) = s%n(i,j) + mne * (w8my(k) * fw)
       end do
-      ! u,v の正規化は continuous と完全に一致させる(復元ビット一致の条件)
+      ! u,v の正規化は正規化の実施箇所と完全に一致させる(復元ビット一致の
+      ! 条件): σ 無効時は continuous(静的 cw)、σ 有効時は complete が
+      ! 確定水深 h(n+1) の σ で行う。保存された s%h は最終ステップの
+      ! h(n+1) なので、ここでの σ(s%h) 再評価は保存時の正規化と厳密に
+      ! 同一の式・同一の引数になる(§26)
       if (have_width) then
-        s%u(i,j) = s%u(i,j) / cwx(i,j)
-        s%v(i,j) = s%v(i,j) / cwy(i,j)
+        if (have_sect) then
+          if (sdep(i,j) > 0.0) then
+            call cw_cell(g, i, j, sect_sigma(s%h(i,j), sdep(i,j)), cxv, cyv)
+          else
+            cxv = cwx(i,j)
+            cyv = cwy(i,j)
+          end if
+          s%u(i,j) = s%u(i,j) / cxv
+          s%v(i,j) = s%v(i,j) / cyv
+        else
+          s%u(i,j) = s%u(i,j) / cwx(i,j)
+          s%v(i,j) = s%v(i,j) / cwy(i,j)
+        end if
       end if
       s%e(i,j) = s%h(i,j) + s%z(i,j)
       s%vv(i,j) = sqrt(s%u(i,j)**2 + s%v(i,j)**2)
@@ -1443,4 +1615,136 @@ end subroutine
 
 !===== 8方位コロケート格子計算終了 ====================================
 !======================================================================
+!----------------------------------------------------------------------
+! 断面形一般化(§26)の変換関数群
+!   vh(矩形換算水深)= ∫0^h σ(h')dh'。真の体積 = vh×gv×wfrac×セル面積。
+!   d<=0(σ 非適用セル)は恒等写像(ビット厳密)。h<=0/v<=0 も恒等
+!   (強い乾燥化での僅かな負値の扱いを従来と同一に保つ)。
+!   σ(h) = (h/D)^m (h<D), 1 (h>=D)。h=D で v・hinv とも連続
+!----------------------------------------------------------------------
+pure function sect_v(h, d) result(v)
+  real, intent(in) :: h, d
+  real :: v
+  if (d <= 0.0) then
+    v = h
+  else if (h >= d) then
+    v = h - d * sect_mfac
+  else if (h <= 0.0) then
+    v = h
+  else
+    v = d * (h / d)**sect_mp1 * sect_rmp1
+  end if
+end function
+
+
+pure function sect_hinv(v, d) result(h)
+  real, intent(in) :: v, d
+  real :: h
+  real :: vd
+  if (d <= 0.0) then
+    h = v
+  else
+    vd = d * sect_rmp1              ! 満杯遷移点(h=D)の vh
+    if (v >= vd) then
+      h = v + d * sect_mfac
+    else if (v <= 0.0) then
+      h = v
+    else
+      h = d * (v * sect_mp1 / d)**sect_rmp1
+    end if
+  end if
+end function
+
+
+pure function sect_sigma(h, d) result(sg)
+  real, intent(in) :: h, d
+  real :: sg
+  if (d <= 0.0 .or. h >= d) then
+    sg = 1.0
+  else if (h <= 0.0) then
+    sg = sect_sgmin
+  else
+    sg = max((h / d)**sect_m, sect_sgmin)
+  end if
+end function
+
+
+!----------------------------------------------------------------------
+! 断面遷移深さ D の構築(§26)
+!   優先: 堤防有効かつ天端が有効なセルは D = zbank − 河床(σ の満杯
+!   遷移点と堰天端が入力から整合する)。なければ掘り込み深さ分布 g%drw。
+!   河道セル(rw>0)のみ。ため池(rscap>0)とダム捕捉帯は hrs 系の
+!   機構と競合するため σ 非適用(D=0)。河床は init 時点の s%z で
+!   固定(geomorph による河床変動後も D は不変=既知の妥協)
+!----------------------------------------------------------------------
+subroutine build_sdep(g, b, s)
+  type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
+  type(t_state), intent(in) :: s
+  integer :: i, j, ist, k
+  real :: d
+
+  allocate(sdep(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  do j = dcp%jsh, dcp%jeh
+    do i = 1, g%nx
+      if (g%x(i,j) <= 0) cycle
+      if (g%rw(i,j) <= 0) cycle
+      if (g%rscap(i,j) > 0.0) cycle
+      d = 0.0
+      if (g%bank_active) then
+        if (g%zbank(i,j) > zbank_min) d = max(g%zbank(i,j) - s%z(i,j), 0.0)
+      end if
+      if (d <= 0.0 .and. g%drw_active) d = max(g%drw(i,j), 0.0)
+      sdep(i,j) = d
+    end do
+  end do
+
+  ! ダム捕捉帯セルは σ 非適用(hrs へ h1 をそのまま移すため。§22)
+  do ist = 1, b%nstruct
+    if (b%struct(ist)%kind /= e_struct_dam) cycle
+    do k = 1, b%struct(ist)%ncin
+      i = b%struct(ist)%cin(1,k)
+      j = b%struct(ist)%cin(2,k)
+      if (j < dcp%jsh .or. j > dcp%jeh) cycle
+      sdep(i,j) = 0.0
+    end do
+  end do
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 実効平面積率 af の更新(§25/§26)
+!   af = gv × wfrac × (v(h)/h)。h×af = 真の貯水体積/セル面積 となる
+!   (v(h)/h は深さ平均の湿潤率)。幅・σ とも無効の場合は呼ばれず、
+!   af は m_state_init の gv のまま(従来の S とビット一致)
+!----------------------------------------------------------------------
+subroutine update_af(g, s)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real :: base
+
+  !$omp parallel do schedule(dynamic) private(i, j, base)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      base = g%gv(i,j)
+      if (have_width) base = base * wfrac(i,j)
+      if (have_sect) then
+        if (sdep(i,j) > 0.0) then
+          if (s%h(i,j) > 0.0) then
+            base = base * (sect_v(s%h(i,j), sdep(i,j)) / s%h(i,j))
+          else
+            base = base * sect_sgmin
+          end if
+        end if
+      end if
+      s%af(i,j) = base
+    end do
+  end do
+  !$omp end parallel do
+
+end subroutine
+
 end module

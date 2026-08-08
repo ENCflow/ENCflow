@@ -265,7 +265,13 @@ module subroutine boundary_h(p, g, b, s, sx)
       i = b%stage(istage)%cell(1,k)
       j = b%stage(istage)%cell(2,k)
       if (j < dcp%js .or. j > dcp%je) cycle
-      sx%h1(i,j) = max(b%stage(istage)%eta - s%z(i,j), 0.0)
+      ! σ 有効時は規定水位の水深を矩形換算水深へ変換して格納する
+      ! (h1 は vh 運用。非適用セルは sect_v が恒等。§26)
+      if (have_sect) then
+        sx%h1(i,j) = sect_v(max(b%stage(istage)%eta - s%z(i,j), 0.0), sdep(i,j))
+      else
+        sx%h1(i,j) = max(b%stage(istage)%eta - s%z(i,j), 0.0)
+      end if
     end do
   end do
 

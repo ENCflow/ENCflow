@@ -35,6 +35,8 @@ module list_channel
                                                !   サブグリッド河道が有効化。fn_bank / bank0
                                                !   無指定なら高さ0・堤内地標高基準の堤防を自動有効化)
     integer :: f_channel_advection = 1         ! 河道セルを含むエッジの移流項 (1:通常, 0:落とす)
+    real :: p_sect_m = 0.0                     ! 河道断面の形状指数 m(σ(h)=(h/D)^m。
+                                               !   0:矩形=従来(既定), 0.5:放物線的, 1:三角形的。§26)
     ! ---- &list_channel_breach(破堤。グループ不在=破堤なし)----
     ! 大配列は allocatable 成分とし、グループが存在した場合のみ確保・充填
     ! する(固定長成分はローカル変数のスタックあふれの元。list_boundary の教訓)
@@ -68,12 +70,13 @@ subroutine list_channel_read(p, list)
   integer :: f_bank_opening              ! 堤防時の開口補正
   character(len=maxpathlen) :: fn_width  ! 河道幅分布ファイル名
   integer :: f_channel_advection         ! 河道セルを含むエッジの移流項
+  real :: p_sect_m                       ! 河道断面の形状指数
   integer :: un
   integer :: ios
   character(len=1024) :: iom
 
   namelist /list_channel/ fn_bank, bank0, f_bank_datum, f_bank_aggr, f_bank_mode, &
-                          f_bank_opening, fn_width, f_channel_advection
+                          f_bank_opening, fn_width, f_channel_advection, p_sect_m
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -85,6 +88,7 @@ subroutine list_channel_read(p, list)
   f_bank_opening = list%f_bank_opening
   fn_width = list%fn_width
   f_channel_advection = list%f_channel_advection
+  p_sect_m = list%p_sect_m
 
   call par_info("reading list_channel in "//trim(p%fn_channel))
   open(newunit=un, file=trim(p%fn_channel), status='old', iostat=ios, iomsg=iom)
@@ -102,6 +106,7 @@ subroutine list_channel_read(p, list)
   list%f_bank_opening = f_bank_opening
   list%fn_width = fn_width
   list%f_channel_advection = f_channel_advection
+  list%p_sect_m = p_sect_m
 
 end subroutine
 

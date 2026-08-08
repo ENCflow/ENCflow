@@ -53,6 +53,9 @@ module m_geoinfo
                                                       ! fn_width 指定。全ランク同値)
     real, allocatable :: wrw(:,:)                     ! 河道幅(m)。河道セルのみ有効、0 以下は
                                                       ! 幅情報なし=解像扱い(width_active のときだけ確保)
+    real, allocatable :: drw(:,:)                     ! 河道の掘り込み深さ分布 (m。断面形一般化 σ の
+                                                      ! 遷移深さ候補。§26。ゾーン2=全域→帯)
+    logical :: drw_active = .false.                   ! 掘り込み深さ保持の有無
     logical :: width_active = .false.                 ! サブグリッド河道幅が有効(fn_channel の
                                                       ! fn_width 指定。全ランク同値)
     integer, allocatable :: x(:,:)                    ! 対象領域判別マスク
@@ -267,6 +270,7 @@ subroutine m_geoinfo_scatter_coeffs(g)
   if (g%sd_dist) call scatter_band_r(g%sd)
   if (g%bank_active) call scatter_band_r(g%zbank)
   if (g%width_active) call scatter_band_r(g%wrw)
+  if (g%drw_active) call scatter_band_r(g%drw)
 end subroutine
 
 
@@ -365,6 +369,7 @@ subroutine m_geoinfo_dispose(g)
   if (allocated(g%sd)) deallocate(g%sd)
   if (allocated(g%zbank)) deallocate(g%zbank)
   if (allocated(g%wrw)) deallocate(g%wrw)
+  if (allocated(g%drw)) deallocate(g%drw)
   if (allocated(g%x)) deallocate(g%x)
   if (allocated(g%sw)) deallocate(g%sw)
   if (allocated(g%rw)) deallocate(g%rw)
@@ -1022,6 +1027,9 @@ subroutine adjust_rw(p, g, list)
   if (len_trim(list%fn_rw) <= 0) return
   dep_dist = len_trim(list%fn_depth_rw) > 0
   if (.not. dep_dist .and. list%depth_rw == 0.0) return
+  ! 掘り込み深さを保持する(断面形一般化 σ の遷移深さ候補。§26)
+  allocate(g%drw(1:g%nx,1:g%ny), source = 0.0)
+  g%drw_active = .true.
   if (dep_dist) then
     allocate(dep(1:g%nx,1:g%ny), source = 0.0)
     fname = trim(p%dir_data) // "/" // trim(list%fn_depth_rw)
@@ -1036,8 +1044,10 @@ subroutine adjust_rw(p, g, list)
       if (g%x(i,j) > 0 .and. g%rw(i,j) > 0) then
         if (dep_dist) then
           g%z(i,j) = g%z(i,j) - max(dep(i,j), 0.0)
+          g%drw(i,j) = max(dep(i,j), 0.0)
         else
           g%z(i,j) = g%z(i,j) - list%depth_rw
+          g%drw(i,j) = list%depth_rw
         end if
         if (set_rn) g%rn(i,j) = list%rn0_rw
       end if

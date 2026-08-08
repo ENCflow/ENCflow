@@ -66,6 +66,10 @@ module m_state
     real, allocatable :: pre(:,:)       ! precipitation (m/s)
     real, allocatable :: prh(:,:)       ! precipitation (mm/h)
     real, allocatable :: hrs(:,:)       ! water depth of reservoir (m)
+    real, allocatable :: af(:,:)        ! 実効平面積率(gv×wfrac×平均湿潤率。§26)。
+                                        !   h×af = 真の貯水体積/セル面積 となるよう
+                                        !   swflow(complete)が毎ステップ更新する導出量
+                                        !   (save 対象外。既定・非河道セルは gv と同値)
     real, allocatable :: hg(:,:)        ! 地下貯留水深(柱状換算)(m)。どの地下水
                                         ! モデルも毎ステップここに反映する契約
     real, allocatable :: hs(:,:)        ! 浮遊砂柱状量(m。単位床面積あたりの固体
@@ -175,6 +179,8 @@ subroutine m_state_init(s, p, g)
   allocate(s%pre(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%prh(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hrs(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%af(1:g%nx,dcp%jsh:dcp%jeh), source = 1.0)
+  s%af(:,dcp%jsh:dcp%jeh) = g%gv(:,dcp%jsh:dcp%jeh)   ! 実効平面積率の初期値 = gv
   allocate(s%hg(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%sd(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hs(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
@@ -352,7 +358,7 @@ subroutine m_state_calcstat(s, p, g)
       ! 真の貯水量: 空隙率 gv で体積換算した水深(2026-08-08 定義変更。
       ! gv=1 のケースは従来とビット一致)。河道幅 wfrac は m_state から
       ! 不可視のため未反映(幅有効時の S は河道セルで過大。§18 の妥協)
-      hsum_j(j) = hsum_j(j) + real(s%h(i,j), real64) * g%gv(i,j)
+      hsum_j(j) = hsum_j(j) + real(s%h(i,j), real64) * s%af(i,j)
       if (s%gw_active) hgsum_j(j) = hgsum_j(j) + s%hg(i,j)
       hmax = max(hmax, s%h(i,j))
       vvmax = max(vvmax, s%vv(i,j))
@@ -502,6 +508,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%pre)) deallocate(s%pre)
   if (allocated(s%prh)) deallocate(s%prh)
   if (allocated(s%hrs)) deallocate(s%hrs)
+  if (allocated(s%af)) deallocate(s%af)
   if (allocated(s%hg)) deallocate(s%hg)
   if (allocated(s%sd)) deallocate(s%sd)
   if (allocated(s%hs)) deallocate(s%hs)

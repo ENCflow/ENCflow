@@ -103,7 +103,9 @@ subroutine gwflow_bucket_calc(p, g, s, it, dts)
       fx = max(fx, 0.0)
       ! 反対称適用(契約1)と水位の回復(契約2)
       s%h(i,j) = s%h(i,j) - fx
-      s%hg(i,j) = s%hg(i,j) + fx
+      ! 地下側は実効平面積率で体積整合させる(§26。河道幅・断面 σ の
+      ! 有効セルのみ af/gv < 1。無効時は af=gv で係数 1.0 =従来とビット一致)
+      s%hg(i,j) = s%hg(i,j) + fx * (s%af(i,j) / g%gv(i,j))
       s%e(i,j) = s%z(i,j) + s%h(i,j)
     end do
   end do
