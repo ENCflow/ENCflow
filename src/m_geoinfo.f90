@@ -717,9 +717,13 @@ subroutine read_mask(p, g, list)
   end if
 
 
-  ! 領域の外側が海の場合、領域を1セル分拡張
-  !if (.false.) then
-  if (.true.) then
+  ! 領域マスクと海域マスクの両方がファイルで与えられた場合、
+  ! 領域境界の外側が海域なら領域を1セル分拡張する
+  ! (海域指定があるのに純粋な陸域だけのマスクが与えられたとき、
+  !  海に接する陸から海への流出境界を確保するための忖度。
+  !  f_masktype=2 は do_sw2x が既に海域1セル分を領域内に取り込んで
+  !  いるため対象外 = 海域の帯は常に1セル幅)
+  if (list%f_masktype == 1 .and. len_trim(list%fn_sw) > 0) then
         block
         integer :: i, j, k, ii, jj
         integer :: x1(0:g%nx+1,0:g%ny+1)
