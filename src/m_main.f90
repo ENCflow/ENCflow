@@ -138,7 +138,6 @@ subroutine run_main(p, g, b, pr, ic, s, r, sw, gm, gw, ierror)
   type(t_swflow), intent(in) :: sw
   integer, intent(out) :: ierror
   integer :: it            ! 時間ループのカウント
-  integer :: ifn           ! 出力ファイル番号
   logical :: do_file       ! このステップでファイル出力するか
   logical :: do_recd       ! このステップでプローブ・フラックス出力するか
   logical :: pr_updated    ! このコールで降雨分布が実際に更新されたか
@@ -149,16 +148,18 @@ subroutine run_main(p, g, b, pr, ic, s, r, sw, gm, gw, ierror)
   call par_info("number of valid cells : "//itoa(s%n_valcells))
 
   ! 諸情報を初期化
-  it = 0                                  ! 時間ループのカウントを初期化
-  ifn = 0                                 ! 出力ファイルのカウントを初期化
-  call m_state_updatetime(s, p, it)       ! 時刻情報を初期化
+  !   時間軸は絶対時刻1本(s%t = t0 + dt*it)。フレッシュランは it=0 から、
+  !   restore 時は save 記録の it(s%it0)から継続する(§7)。
+  !   出力ファイル番号 s%ifn も restore 時は続き番号(m_state_init が設定済み)
+  call m_state_updatetime(s, p, s%it0)    ! 時刻情報を初期化
   call m_precip_makepre(pr, p, g, s, pr_updated)  ! 初期降水分布を作成　
   if (pr_updated) call m_intercept_calc(ic, p, g, s, 0)  ! 遮断による有効雨量化(fn_intercept 未指定なら no-op)
   call m_state_calcstat(s, p, g)          ! 統計情報を計算
 
-  ! 初期状態の出力(ファイルへの書き込みはランク0のみ)
+  ! 初期状態の出力(ファイルへの書き込みはランク0のみ。番号 0 は
+  ! 「このランの開始状態」の固定スロット: restore 時は復元状態が書かれる)
   call m_state_printstate(p, s)         ! 途中経過を画面に出力
-  call output_state(p, g, s, ifn)       ! 初期状態をファイル出力(集約は output_matrix 内)
+  call output_state(p, g, s, 0)         ! 初期状態をファイル出力(集約は output_matrix 内)
   call m_record_probe(r, p, s)          ! プローブの値を出力
   call m_record_flux(r, p, s)           ! フラックスの値を出力
   ierror = 0                            ! エラー数をリセット
@@ -168,7 +169,7 @@ subroutine run_main(p, g, b, pr, ic, s, r, sw, gm, gw, ierror)
 
 
   !------ 時間ステップのループここから ------
-  do it = 1, p%nt
+  do it = s%it0 + 1, p%nt
 
     ! 時刻情報を更新
     call m_state_updatetime(s, p, it)
@@ -215,10 +216,11 @@ subroutine run_main(p, g, b, pr, ic, s, r, sw, gm, gw, ierror)
     do_file = (it >= p%ist_file .and. it <= p%iet_file .and. mod(it, p%idt_file) == 0)
     do_recd = (it >= p%ist_recd .and. it <= p%iet_recd .and. mod(it, p%idt_recd) == 0)
 
-    ! dt_file 間隔で計算結果をファイルに出力
+    ! dt_file 間隔で計算結果をファイルに出力(通し番号は s%ifn。
+    ! save に記録され、restore 時は続き番号から再開する)
     if (do_file) then
-      ifn = ifn + 1
-      call output_state(p, g, s, ifn)
+      s%ifn = s%ifn + 1
+      call output_state(p, g, s, s%ifn)
     end if
 
     ! dt_record 間隔でプローブとフラックスの値を出力

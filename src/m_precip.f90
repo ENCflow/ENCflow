@@ -238,7 +238,10 @@ subroutine m_precip_makepre(pr, p, g, s, updated)
     !$omp end parallel do
   !---- 降雨分布ファイルから作成 ----
   else if (pr%prtype == 3) then
-    if (mod(s%it, pr%idt_maplist) == 0) then
+    ! 分布境界ステップで次のフレームへ。restore 直後の初回呼び出し
+    ! (s%it = s%it0 > 0)は境界ステップでなくても現在時刻を含む
+    ! フレームを読み直す(中断なしランと同じ分布で継続する条件。§7)
+    if (mod(s%it, pr%idt_maplist) == 0 .or. (s%it0 > 0 .and. s%it == s%it0)) then
       updated = .true.
       i = s%it / pr%idt_maplist + 1
       if (i <= size(pr%un_maplist)) then

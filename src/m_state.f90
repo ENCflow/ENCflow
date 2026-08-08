@@ -99,6 +99,12 @@ module m_state
                                     ! swflow_enc がステップ内で s%hs を移流する)
     real :: hmean
     real :: cnmax
+    integer :: it0 = 0       ! 時間ループの開始ステップ(フレッシュランは 0。
+                             ! restore 時は save 記録の it から継続する = 時間軸は
+                             ! 絶対時刻1本で、s%t = t0 + dt*it の式が中断なしランと
+                             ! 全ステップでビット同一になる。§7)
+    integer :: ifn = 0       ! 出力ファイル通し番号(run_main が更新。save に記録し
+                             ! restore 時は続き番号から再開する)
     integer :: n_valcells               ! number of valid cells
     integer :: n_exfluxes               ! number of excessive fluxes
     integer :: n_runge                  ! number of Runge-Kutta flux calculations
@@ -133,7 +139,7 @@ module m_state
   !   仕様変更日の日付文字列。save の並び・成分・メタデータ・圧縮形式を
   !   変更したら必ずこの日付を更新する(restore 時の照合に使う。§7)。
   !   同日に複数回変更した場合は英字サフィックスで区別する
-  character(len=*), parameter :: save_version_cur = "2026-08-07b"
+  character(len=*), parameter :: save_version_cur = "2026-08-08"
   integer, parameter :: n_state_save = 6     ! state.dat の成分数(h,z,hrs,hg,sd,hs)
 
 
@@ -223,13 +229,17 @@ subroutine m_state_init(s, p, g)
 
   ! ユーザールーチンによる初期条件をセット(全域添字契約: ts に書く)。
   ! 指定は f_user_routine(識別名。trim 後完全一致)。
-  ! 個々のルーチンへの分岐は user_initial submodule 内。実行は全ランク冗長
+  ! 個々のルーチンへの分岐は user_initial submodule 内。実行は全ランク冗長。
+  ! restore 時は名前の検証だけ行い実行しない: 保存状態が正本であり、
+  ! 加算型のフック(wave_hump 等)を復元値に重ねると初期擾乱が二重に
+  ! 乗る(リスタート往復ビット一致で実検出)。フックによる地形改変
+  ! (壁等)は保存された z に含まれているので、スキップしても失われない
   if (len_trim(list%f_user_routine) > 0) then
     if (.not. user_initial_defined(list%f_user_routine)) then
       call par_stop("undefined f_user_routine in list_initial: "//trim(list%f_user_routine)// &
                     " (defined: "//user_initial_names()//")")
     end if
-    call user_initial_run(p, g, ts, list%f_user_routine)
+    if (p%f_state_restore <= 0) call user_initial_run(p, g, ts, list%f_user_routine)
   end if
 
   ! --- 担当帯(+ハロ)を切り出す。ts はスコープ終了で自動解放 ---
@@ -242,6 +252,8 @@ subroutine m_state_init(s, p, g)
   s%sd(:,:) = ts%sd(1:g%nx, dcp%jsh:dcp%jeh)
   s%hs(:,:) = ts%hs(1:g%nx, dcp%jsh:dcp%jeh)
   s%ini = ts%ini
+  s%it0 = ts%it0        ! restore 時は save 記録の it(フレッシュランは 0)
+  s%ifn = ts%ifn        ! restore 時は save 記録の出力番号(続き番号で再開)
 
   ! 初期水位をセット
   s%e(:,:) = s%z(:,:) + s%h(:,:)
@@ -776,8 +788,10 @@ subroutine restore_state(p, s)
   integer :: un
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (s%initialized) continue  ! 引数未使用の警告を抑制
-  ! 門番: メタデータを検証してから読む(不一致は par_stop)
-  call check_save_info(p)
+  ! 門番: メタデータを検証してから読む(不一致は par_stop)。
+  ! 時間軸の継続情報(it0, ifn)もここで s(呼び出し側の全域一時状態 ts)
+  ! に取り込む(m_state_init が帯切り出し時に正準 s へ写す)
+  call check_save_info(p, s)
 
   ! rank0 が読み、全ランクへ配布する。受け取る s は全域一時状態 ts
   ! (全ランク同形)なので Bcast が成立する。帯への切り出しは呼び出し側
@@ -813,9 +827,9 @@ subroutine write_save_info(p, s)
   character(len=8) :: d
   character(len=10) :: tod
   character(len=16) :: save_version
-  integer :: nx, ny, precision_bits, n_state, it
-  real :: t
-  namelist /save_info/ save_version, nx, ny, precision_bits, n_state, t, it
+  integer :: nx, ny, precision_bits, n_state, it, ifn
+  real :: t, t0, dt
+  namelist /save_info/ save_version, nx, ny, precision_bits, n_state, t, it, t0, dt, ifn
 
   if (.not. is_root) return
   save_version = save_version_cur
@@ -825,6 +839,11 @@ subroutine write_save_info(p, s)
   n_state = n_state_save
   t = s%t
   it = s%it
+  ! 再開の継続に必要な時間軸情報(§7)。t0, dt は restore 時の一致検査用、
+  ! it は時間ループの開始ステップ、ifn は出力ファイルの続き番号
+  t0 = p%t0
+  dt = p%dt
+  ifn = s%ifn
   call date_and_time(date=d, time=tod)
   open(newunit=un, file=trim(p%dir_save)//'/save_info.txt', status='replace')
   write(un, '(11a)') "! ENCflow restart save (", d(1:4), "-", d(5:6), "-", d(7:8), &
@@ -839,21 +858,29 @@ end subroutine
 !   版・格子サイズ・実数精度・成分数の不一致は par_stop。
 !   検証は全ランク同一 → par_stop の collective 条件を満たす。
 !   後段のモジュール(swflow_enc、内部状態を持つ gwflow モデル等)は
-!   ここで検証済みとして自ファイルの有無だけを確認すればよい(§7)
+!   ここで検証済みとして自ファイルの有無だけを確認すればよい(§7)。
+!   再開の時間軸(§7): 時間軸は絶対時刻1本で、restore 時は save 記録の
+!   it から時間ループを継続する(s%it0)。namelist の t0 と dt は軸の
+!   同一性の条件なので save 記録との一致を検査し、矛盾なら par_stop
+!   (無言でどちらかを優先しない)。tt は絶対終了時刻のままで、
+!   保存時刻以前なら回すステップが無いのでエラーにする
 !----------------------------------------------------------------------
-subroutine check_save_info(p)
+subroutine check_save_info(p, s)
   type(t_sysparam), intent(in) :: p
+  type(t_state), intent(inout) :: s    ! it0(開始ステップ)と ifn(出力番号)を設定
   integer :: un, ios
   character(:), allocatable :: fname
   character(len=16) :: save_version
-  integer :: nx, ny, precision_bits, n_state, it
-  real :: t
-  namelist /save_info/ save_version, nx, ny, precision_bits, n_state, t, it
+  integer :: nx, ny, precision_bits, n_state, it, ifn
+  real :: t, t0, dt
+  real, parameter :: rtol = 1.0e-6   ! t0, dt の一致判定の相対許容差
+  namelist /save_info/ save_version, nx, ny, precision_bits, n_state, t, it, t0, dt, ifn
 
   fname = trim(p%dir_save)//'/save_info.txt'
   save_version = ""
   nx = -1; ny = -1; precision_bits = -1; n_state = -1
-  t = 0.0; it = 0
+  t = 0.0; it = 0; ifn = 0
+  t0 = 0.0; dt = 0.0
 
   open(newunit=un, file=fname, status='old', action='read', iostat=ios)
   if (ios /= 0) then
@@ -880,7 +907,24 @@ subroutine check_save_info(p)
                   //itoa(n_state_save)//")と一致しません")
   end if
 
-  call par_info("restore: t="//rtoa(t)//" s (it="//itoa(it)//") の保存状態を初期条件に読み込みます")
+  ! 時間軸の同一性検査(再開は同じ軸の続き。§7)
+  if (abs(p%t0 - t0) > rtol * max(1.0, abs(t0))) then
+    call par_stop("list_sysparam: t0("//rtoa(p%t0)//")が save の t0("//rtoa(t0) &
+                  //")と一致しません。再開は保存時と同じパラメータファイルを使ってください")
+  end if
+  if (abs(p%dt - dt) > rtol * dt) then
+    call par_stop("list_sysparam: dt("//rtoa(p%dt)//")が save の dt("//rtoa(dt) &
+                  //")と一致しません(dt を変えた再開は不可)")
+  end if
+  if (p%nt <= it) then
+    call par_stop("list_sysparam: 計算終了時刻 tt("//rtoa(p%tt)//" s)が保存時刻 t1(" &
+                  //rtoa(t)//" s)以前です。計算を延長するには tt を増やしてください")
+  end if
+
+  s%it0 = it
+  s%ifn = ifn
+
+  call par_info("restore: t="//rtoa(t)//" s (it="//itoa(it)//") の保存状態から計算を継続します")
 end subroutine
 
 end module
