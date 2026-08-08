@@ -212,7 +212,7 @@ END SUBROUTINE
 SUBROUTINE m_swflow_stg_calc(p, g, b, s, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
-  type(t_boundary), intent(in) :: b
+  type(t_boundary), intent(inout) :: b   ! calc 共通インターフェースに合わせる(§22)
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
 

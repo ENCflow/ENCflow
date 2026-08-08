@@ -23,6 +23,7 @@ module m_boundary
   !     makebdc が水理則で目標流量を決め、適用は boundary_h の転送節。
   ! 族が肥大したら族別モジュールに分割する(boundary_plan.md §4.1。
   ! 内部水理構造物族は 2026-08-07 に submodule へ分割済み)
+  use, intrinsic :: iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
@@ -39,6 +40,9 @@ module m_boundary
   public :: m_boundary_set_etaref
   public :: m_boundary_dispose
   public :: m_boundary_makebdc
+  public :: m_boundary_dam_seed
+  public :: m_boundary_dam_record
+  public :: dam_operate, e_struct_dam
   public :: e_bc_wall, e_bc_outflow, e_bc_radiation, e_bc_inflow
   public :: e_side_w, e_side_e, e_side_n, e_side_s
   ! 共有補助手続き(submodule m_boundary_structure も使う)。private のままだと
@@ -127,6 +131,7 @@ module m_boundary
   integer, parameter :: e_struct_pump = 1     ! 排水ポンプ
   integer, parameter :: e_struct_culvert = 2  ! カルバート(矩形断面・双方向)
   integer, parameter :: e_struct_diversion = 3 ! 分水(rating による受動的な一方向取水)
+  integer, parameter :: e_struct_dam = 4      ! ダム(捕捉帯吸収+hrs バケツ+運転ルール放流)
 
   type t_structure                         ! 内部水理構造物1基(§22)。
                                            !   共通骨格: 取水セル群 cin → 吐口セル群
@@ -148,9 +153,23 @@ module m_boundary
                                            !   退化。線形補間・範囲外端値(=現在状態の
                                            !   純関数。履歴状態なし)
     real :: geom(1:10) = 0.0               ! 形状等の定数(種別ごとの意味。ポンプは未使用)
-    procedure(i_struct_law), pointer, nopass :: law => null()  ! 水理則
+    procedure(i_struct_law), pointer, nopass :: law => null()  ! 水理則(ダムは不使用=null。
+                                           !   評価は boundary_h のダム節 → dam_operate)
     real :: q = 0.0                        ! 現時刻の目標流量 (m3/s。makebdc が更新。
-                                           !   符号付き >0 = cin→cout)
+                                           !   符号付き >0 = cin→cout。ダムは常に 0)
+    ! ---- 以下はダム(e_struct_dam)専用 ----
+    integer :: dmode = 0                   ! 運転モード (1:一定量, 2:一定率カット, 3:自然調節)
+    integer :: nhv = 0                     ! HV 曲線の点数
+    real, allocatable :: hv(:,:)           ! HV 曲線 (1:2, 1:nhv) (水位 m, 貯水量 m3。
+                                           !   両列とも単調増加。区間は直線補間)
+    ! ダムの診断量(dam_operate が毎ステップ更新。決定的総和により全ランク
+    ! 同値。CSV 出力用の純診断=save 対象外。貯留の状態は s%hrs のみ)
+    real :: dv = 0.0                       ! 現在貯水量 (m3)
+    real :: dh = 0.0                       ! 現在水位 (m)
+    real :: dqin = 0.0                     ! 流入量 (m3/s。捕捉帯吸収の積算)
+    real :: dqout = 0.0                    ! 放流量 (m3/s。ルール分)
+    real :: dqsp = 0.0                     ! スピル (m3/s。サーチャージ超過の強制放流)
+    integer :: un = 0                      ! ダム CSV の装置番号(rank0)
   end type
 
   type t_boundary
@@ -182,6 +201,34 @@ module m_boundary
       type(t_boundary), intent(inout) :: b
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+    end subroutine
+    ! ダムの初期貯留を s%hrs に投入する(m_state_init の後・フレッシュ
+    ! ラン時のみ。restore 時は復元された hrs をそのまま使う)
+    module subroutine m_boundary_dam_seed(b, p, g, s)
+      type(t_boundary), intent(inout) :: b   ! 初期診断量(V,H)を書く
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+    end subroutine
+    ! ダムの毎ステップ運転(boundary_h のダム節から呼ばれる)。
+    ! 吸収体積・貯留体積の行部分和(呼び出し側が構築)を決定的総和し、
+    ! 運転ルールで放流量を決め、担当帯の s%hrs を比例縮小して引き落とす。
+    ! 戻り値 vdraw = 放流+スピルの総体積 (m3。呼び出し側が放流セルへ分配)
+    module subroutine dam_operate(b, ist, p, g, s, vabs_row, vrow, vdraw)
+      type(t_boundary), intent(inout) :: b
+      integer, intent(in) :: ist
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real(real64), intent(in) :: vabs_row(dcp%js:)
+      real(real64), intent(in) :: vrow(dcp%js:)
+      real, intent(out) :: vdraw
+    end subroutine
+    ! ダム CSV(t, H, V, Qin, Qout, Qspill)の1行出力(記録間隔で呼ぶ)
+    module subroutine m_boundary_dam_record(b, p, s)
+      type(t_boundary), intent(in) :: b
+      type(t_sysparam), intent(in) :: p
       type(t_state), intent(in) :: s
     end subroutine
   end interface
@@ -376,7 +423,18 @@ subroutine m_boundary_dispose(b)
     deallocate(b%inflow)
   end if
   if (allocated(b%csin)) deallocate(b%csin)
-  if (allocated(b%struct)) deallocate(b%struct)
+  if (allocated(b%struct)) then
+    ! ダム CSV を閉じる(開いているのは rank0 のみ)
+    if (is_root) then
+      block
+        integer :: ist2
+        do ist2 = 1, b%nstruct
+          if (b%struct(ist2)%un /= 0) close(b%struct(ist2)%un)  ! newunit は負値
+        end do
+      end block
+    end if
+    deallocate(b%struct)
+  end if
   if (allocated(b%edge%eta_cell)) deallocate(b%edge%eta_cell)
   b%nsrc = 0
   b%nstage = 0

@@ -9,6 +9,8 @@ module list_structure
   !                          ゲート拡張で表す。2026-08-07)
   !   &list_struct_diversion : 分水(取水堰の rating による受動的な
   !                          一方向取水。流域外分水が主用途。2026-08-08)
+  !   &list_struct_dam     : ダム(捕捉帯吸収+hrs バケツ貯留+運転
+  !                          ルール放流。2026-08-08)
   ! グループ不在は正常(その型なし。present_* が偽のまま)。
   ! 構文エラー(iostat>0)は par_stop。
   use m_sysparam, only : t_sysparam
@@ -65,6 +67,29 @@ module list_structure
                                                    !   水位η m, 流量 m3/s)
     character(len=maxpathlen) :: fn_div_in_cell(1:nstmax) = ""    ! 取水セル一覧ファイル名
     character(len=maxpathlen) :: fn_div_out_cell(1:nstmax) = ""   ! 送水先セル一覧ファイル名
+    ! ---- &list_struct_dam ----
+    logical :: present_dam = .false.               ! グループが存在したか
+    integer, allocatable :: dam_in_cell(:,:,:)     ! 貯水池セル群=捕捉帯 (i, j)
+    integer, allocatable :: dam_out_cell(:,:,:)    ! 放流セル群 (i, j。必須)
+    real, allocatable :: dam_hv(:,:,:)             ! HV 曲線 (水位 m, 貯水量 m3)。
+                                                   !   最低2点(最低水位・サーチャージ)
+    integer :: f_dam_mode(1:nstmax) = 0            ! 運転モード (1:一定量, 2:一定率カット,
+                                                   !   3:自然調節)
+    real :: dam_q0(1:nstmax) = -9999.0             ! モード1: 一定放流量 (m3/s)
+    real :: dam_rate(1:nstmax) = -9999.0           ! モード2: 放流率 r (0-1)
+    real, allocatable :: dam_hq_rule(:,:,:)        ! モード3(a): H-Q 折れ線 (水位 m, m3/s)
+    real :: dam_ori_width(1:nstmax) = -9999.0      ! モード3(b): オリフィス幅 B (m)
+    real :: dam_ori_height(1:nstmax) = -9999.0     ! モード3(b): オリフィス高 D (m)
+    real :: dam_ori_zbase(1:nstmax) = -9999.0      ! モード3(b): オリフィス敷高 (m)
+    real :: dam_ori_ce(1:nstmax) = -9999.0         ! モード3(b): 流入損失係数 (省略時 0.5)
+    real :: dam_qmax(1:nstmax) = -9999.0           ! モード3(c): 計画最大放流量 (m3/s。
+                                                   !   サーチャージ時。√則で自動構成)
+    real :: dam_zbase(1:nstmax) = -9999.0          ! モード3(c): √則の敷高 (m。省略時=最低水位)
+    real :: dam_tadashigaki(1:nstmax) = -9999.0    ! 但し書き開始水位 (m。モード1,2。
+                                                   !   省略時=最低+0.9×(サーチャージ−最低))
+    real :: dam_h_init(1:nstmax) = -9999.0         ! 初期水位 (m。省略時=最低水位=空虚)
+    character(len=maxpathlen) :: fn_dam_in_cell(1:nstmax) = ""    ! 捕捉帯セル一覧ファイル名
+    character(len=maxpathlen) :: fn_dam_out_cell(1:nstmax) = ""   ! 放流セル一覧ファイル名
   end type
 
   ! namelist 読み込み用の静的作業配列(スタックに置かないための措置。
@@ -78,6 +103,10 @@ module list_structure
   integer :: div_in_cell(1:2,1:nstccmax,1:nstmax)
   integer :: div_out_cell(1:2,1:nstccmax,1:nstmax)
   real :: div_rule(1:2,1:nstvmax,1:nstmax)
+  integer :: dam_in_cell(1:2,1:nstccmax,1:nstmax)
+  integer :: dam_out_cell(1:2,1:nstccmax,1:nstmax)
+  real :: dam_hv(1:2,1:nstvmax,1:nstmax)
+  real :: dam_hq_rule(1:2,1:nstvmax,1:nstmax)
 
 contains
 
@@ -101,6 +130,7 @@ subroutine list_structure_read(p, list)
   call read_pump(un, list)
   call read_culvert(un, list)
   call read_diversion(un, list)
+  call read_dam(un, list)
   close(un)
 
 end subroutine
@@ -245,6 +275,74 @@ subroutine read_diversion(un, list)
   list%div_q0 = div_q0
   list%fn_div_in_cell = fn_div_in_cell
   list%fn_div_out_cell = fn_div_out_cell
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! &list_struct_dam を読む(不在なら present_dam を偽のまま返す)
+!   解釈・検証(セル・HV・モードの妥当性)は init_structure が行う
+!----------------------------------------------------------------------
+subroutine read_dam(un, list)
+  integer, intent(in) :: un
+  type(t_list_structure), intent(inout) :: list
+  integer :: f_dam_mode(1:nstmax)
+  real :: dam_q0(1:nstmax), dam_rate(1:nstmax)
+  real :: dam_ori_width(1:nstmax), dam_ori_height(1:nstmax)
+  real :: dam_ori_zbase(1:nstmax), dam_ori_ce(1:nstmax)
+  real :: dam_qmax(1:nstmax), dam_zbase(1:nstmax)
+  real :: dam_tadashigaki(1:nstmax), dam_h_init(1:nstmax)
+  character(len=maxpathlen) :: fn_dam_in_cell(1:nstmax)
+  character(len=maxpathlen) :: fn_dam_out_cell(1:nstmax)
+  integer :: ios
+  character(len=1024) :: iom
+  namelist /list_struct_dam/ dam_in_cell, dam_out_cell, dam_hv, f_dam_mode, &
+                             dam_q0, dam_rate, dam_hq_rule, &
+                             dam_ori_width, dam_ori_height, dam_ori_zbase, dam_ori_ce, &
+                             dam_qmax, dam_zbase, dam_tadashigaki, dam_h_init, &
+                             fn_dam_in_cell, fn_dam_out_cell
+
+  dam_in_cell = -9999
+  dam_out_cell = -9999
+  dam_hv = -9999
+  dam_hq_rule = -9999
+  f_dam_mode = list%f_dam_mode
+  dam_q0 = list%dam_q0
+  dam_rate = list%dam_rate
+  dam_ori_width = list%dam_ori_width
+  dam_ori_height = list%dam_ori_height
+  dam_ori_zbase = list%dam_ori_zbase
+  dam_ori_ce = list%dam_ori_ce
+  dam_qmax = list%dam_qmax
+  dam_zbase = list%dam_zbase
+  dam_tadashigaki = list%dam_tadashigaki
+  dam_h_init = list%dam_h_init
+  fn_dam_in_cell = list%fn_dam_in_cell
+  fn_dam_out_cell = list%fn_dam_out_cell
+
+  rewind(un)
+  read(un, nml=list_struct_dam, iostat=ios, iomsg=iom)
+  if (ios > 0) call par_stop("list_struct_dam 読込失敗: "//trim(iom))
+  if (ios < 0) return              ! グループ不在(この型なし)
+  list%present_dam = .true.
+
+  list%dam_in_cell = dam_in_cell
+  list%dam_out_cell = dam_out_cell
+  list%dam_hv = dam_hv
+  list%dam_hq_rule = dam_hq_rule
+  list%f_dam_mode = f_dam_mode
+  list%dam_q0 = dam_q0
+  list%dam_rate = dam_rate
+  list%dam_ori_width = dam_ori_width
+  list%dam_ori_height = dam_ori_height
+  list%dam_ori_zbase = dam_ori_zbase
+  list%dam_ori_ce = dam_ori_ce
+  list%dam_qmax = dam_qmax
+  list%dam_zbase = dam_zbase
+  list%dam_tadashigaki = dam_tadashigaki
+  list%dam_h_init = dam_h_init
+  list%fn_dam_in_cell = fn_dam_in_cell
+  list%fn_dam_out_cell = fn_dam_out_cell
 
 end subroutine
 

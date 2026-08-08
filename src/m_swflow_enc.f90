@@ -222,6 +222,13 @@ module m_swflow_enc
       type(t_state), intent(inout) :: s
       type(t_enc_status), intent(inout) :: sx
     end subroutine
+    module subroutine dam_apply(p, g, b, s, sx)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_boundary), intent(inout) :: b    ! ダム診断量を更新(§22)
+      type(t_state), intent(inout) :: s
+      type(t_enc_status), intent(inout) :: sx
+    end subroutine
     module subroutine boundary_uvmn(p, g, b, s, sx)
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
@@ -422,7 +429,7 @@ end subroutine
 subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
-  type(t_boundary), intent(in) :: b
+  type(t_boundary), intent(inout) :: b   ! ダム節が診断量を更新(§22)
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
 
@@ -474,6 +481,9 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
       call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1)
     end if
   end if
+
+  ! ダムの適用(捕捉帯吸収→運転→放流。時間ループのみ。§22)
+  call dam_apply(p, g, b, s, sx_mod)
 
   ! 水深の境界条件をセットする
   call boundary_h(p, g, b, s, sx_mod)

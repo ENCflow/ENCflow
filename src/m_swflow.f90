@@ -38,7 +38,7 @@ module m_swflow
       use m_state, only : t_state
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
-      type(t_boundary), intent(in) :: b
+      type(t_boundary), intent(inout) :: b   ! ダム節が診断量を更新(§22)
       type(t_state), intent(inout) :: s
       integer, intent(inout) :: ierror
     end subroutine
@@ -102,7 +102,7 @@ subroutine m_swflow_calc(sw, p, g, b, s, ierror)
   type(t_swflow), intent(in) :: sw
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
-  type(t_boundary), intent(in) :: b
+  type(t_boundary), intent(inout) :: b
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
   if (.not. sw%initialized) call par_stop("m_swflow_calc: not initialized")

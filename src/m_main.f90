@@ -3,7 +3,8 @@ module m_main
   use m_geoinfo, only : t_geoinfo, m_geoinfo_init, m_geoinfo_dispose, m_geoinfo_scatter_coeffs, m_geoinfo_band_shrink, m_geoinfo_row_ncells
   use m_precip, only : t_precip, m_precip_init, m_precip_dispose, m_precip_makepre
   use m_tide, only : t_tide, m_tide_init, m_tide_calc, m_tide_dispose
-  use m_boundary, only : t_boundary, m_boundary_init, m_boundary_set_etaref, m_boundary_dispose, m_boundary_makebdc
+  use m_boundary, only : t_boundary, m_boundary_init, m_boundary_set_etaref, m_boundary_dispose, m_boundary_makebdc, &
+                         m_boundary_dam_seed, m_boundary_dam_record
   use m_state, only : t_state, m_state_init, m_state_dispose, m_state_updatetime, m_state_calcstat, m_state_printstate
   use m_record, only : t_record, m_record_init, m_record_dispose, m_record_probe, m_record_flux, m_record_summary
   use m_geomorph, only : t_geomorph, m_geomorph_init, m_geomorph_calc, m_geomorph_dispose
@@ -76,6 +77,7 @@ subroutine m_main_all()
   call m_boundary_init(b, p, g)           ! boundary を初期化(geoinfoより後に)
   call m_state_init(s, p, g)              ! state を初期化(geoinfo, boundaryより後に)
   call m_boundary_set_etaref(b, p, g, s)  ! 放射境界の基準水位を確定(stateより後に)
+  call m_boundary_dam_seed(b, p, g, s)    ! ダム初期貯留を hrs へ(フレッシュラン時のみ。§22)
   call m_record_init(r, p, g)             ! record を初期化(create_resultdirより後)
   call m_precip_init(pr, p, g)            ! precip を初期化
   call m_intercept_init(ic, p, g)         ! intercept を初期化(fn_intercept 指定時のみ有効)
@@ -164,6 +166,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ierror)
   call output_state(p, g, s, 0)         ! 初期状態をファイル出力(集約は output_matrix 内)
   call m_record_probe(r, p, s)          ! プローブの値を出力
   call m_record_flux(r, p, s)           ! フラックスの値を出力
+  call m_boundary_dam_record(b, p, s)   ! ダム CSV(ダムがなければ no-op)
   ierror = 0                            ! エラー数をリセット
 
   ! デバッグ用データを出力
@@ -233,6 +236,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ierror)
     if (do_recd) then
      call m_record_probe(r, p, s)
      call m_record_flux(r, p, s)
+     call m_boundary_dam_record(b, p, s)
     end if
 
 

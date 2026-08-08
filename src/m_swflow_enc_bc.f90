@@ -10,8 +10,10 @@ submodule(m_swflow_enc) m_swflow_enc_bc
   ! 親の重み(l8, mn2dh, n8x/y)・方位定数(din/dje 等)・t_enc_status は
   ! ホスト結合で参照する。dcp 等の use 経由の名前は nvfortran バグ回避の
   ! ため submodule 側で直接 use する(§13)
+  use, intrinsic :: iso_fortran_env, only : r64 => real64
   use m_boundary, only : t_boundary, e_bc_wall, e_bc_outflow, e_bc_radiation, &
-                         e_bc_inflow, e_side_w, e_side_e, e_side_n, e_side_s
+                         e_bc_inflow, e_side_w, e_side_e, e_side_n, e_side_s, &
+                         dam_operate, e_struct_dam
   use m_parallel, only : dcp, par_stop, par_allreduce_sumr
   implicit none
 
@@ -265,6 +267,62 @@ module subroutine boundary_h(p, g, b, s, sx)
       if (j < dcp%js .or. j > dcp%je) cycle
       sx%h1(i,j) = max(b%stage(istage)%eta - s%z(i,j), 0.0)
     end do
+  end do
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! ダムの適用(§22): 捕捉帯セルの到達水を全量吸収して s%hrs に貯留し
+! (=バケツ。到達水は段落ち的に消える)、運転ルール(dam_operate)で
+! 引き落とし体積を決めて放流セルへ分配する。
+!   呼び出しは時間ループの boundary_h の直前のみ(init の boundary_h
+!   適用には含めない: 含めると restore 時に最終ステップのダム操作が
+!   二重適用され、往復ビット一致が破れる)。
+!   位置は連続式適用後・boundary_h(降雨・湧き出し)より前
+!   (この歩に流入した水を捕捉する。捕捉帯セルへの直接降雨・湧き出しは
+!   次の歩に吸収される=1歩遅れ)。
+!   collective(par_sum_rows×2/基)は全ランクがダムごとに同数実行する
+!   (nstruct・kind は namelist 由来で全ランク同一)。
+!   捕捉帯・放流セルは ため池・河道幅指定と併用不可(init で検証済み)
+!   のため換算は /gv のみ
+!----------------------------------------------------------------------
+module subroutine dam_apply(p, g, b, s, sx)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(inout) :: b    ! dam_operate が診断量を更新する
+  type(t_state), intent(inout) :: s
+  type(t_enc_status), intent(inout) :: sx
+  integer :: i, j, k, ip
+  real :: qcell, vola, vdraw
+  real(r64) :: vabs_row(dcp%js:dcp%je), vrow(dcp%js:dcp%je)
+
+  do ip = 1, b%nstruct
+    if (b%struct(ip)%kind /= e_struct_dam) cycle
+    vabs_row = 0.0_r64
+    vrow = 0.0_r64
+    do k = 1, b%struct(ip)%ncin
+      i = b%struct(ip)%cin(1,k)
+      j = b%struct(ip)%cin(2,k)
+      if (j < dcp%js .or. j > dcp%je) cycle
+      if (sx%h1(i,j) > 0.0) then
+        vola = sx%h1(i,j) * g%gv(i,j) * g%dx * g%dy
+        s%hrs(i,j) = s%hrs(i,j) + sx%h1(i,j)
+        sx%h1(i,j) = 0.0
+        vabs_row(j) = vabs_row(j) + real(vola, r64)
+      end if
+      vrow(j) = vrow(j) + real(s%hrs(i,j) * g%gv(i,j) * g%dx * g%dy, r64)
+    end do
+    call dam_operate(b, ip, p, g, s, vabs_row, vrow, vdraw)
+    if (vdraw > 0.0) then
+      qcell = vdraw / (b%struct(ip)%ncout * g%dx * g%dy)
+      do k = 1, b%struct(ip)%ncout
+        i = b%struct(ip)%cout(1,k)
+        j = b%struct(ip)%cout(2,k)
+        if (j < dcp%js .or. j > dcp%je) cycle
+        sx%h1(i,j) = sx%h1(i,j) + qcell / g%gv(i,j)
+      end do
+    end if
   end do
 
 end subroutine
