@@ -745,21 +745,6 @@ subroutine read_mask(p, g, list)
   end if
 
 
-  ! 四辺を強制的に海域に
-  if (list%f_edge_sw > 0) then
-      block
-      integer :: i, j
-      do j = 1, g%ny
-        g%sw(1,j) = 1
-        g%sw(g%ny,j) = 1
-      end do
-      do i = 1, g%nx
-        g%sw(i,1) = 1
-        g%sw(i,g%ny) = 1
-      end do
-      end block
-  end if
-
 contains
   ! 海域マスクから領域マスクを作る
   !   このとき陸域と隣接する海域セルを計算領域に入れる

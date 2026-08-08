@@ -35,7 +35,6 @@ module list_geoinfo
     integer :: f_lusetype = 0                  ! 土地利用データの有無 (0:なし, 1:ファイル)
     integer :: f_rntype = 0                    ! 粗度係数タイプ (0:固定値, 1:ファイル, 2:土地利用から計算)
     integer :: f_masktype = 0                  ! 領域マスクのタイプ (0:なし, 1:ファイル, 2:自動)
-    integer :: f_edge_sw = 0                   ! 領域端部を海に設定
     character(len=maxpathlen) :: fn_z = ""     ! 地盤高ファイル名
     character(len=maxpathlen) :: fn_mask = ""  ! 領域マスクファイル名
     character(len=maxpathlen) :: fn_sw = ""    ! 海域マスクファイル名
@@ -82,7 +81,6 @@ subroutine list_geoinfo_read(p, list)
   integer :: f_lusetype         ! 土地利用データの有無 (0:なし, 1:テキストファイル)
   integer :: f_rntype           ! 粗度係数タイプ (0:固定値, 1:土地利用ファイル)
   integer :: f_masktype         ! 粗度係数タイプ (0:なし, 1:テキストファイル)
-  integer :: f_edge_sw          ! 領域単部を海に設定
   character(:), allocatable :: fn_z      ! 地盤高ファイル名
   character(:), allocatable :: fn_rn     ! 粗度係数ファイル名
   character(:), allocatable :: fn_mask   ! 領域マスクファイル名
@@ -101,7 +99,7 @@ subroutine list_geoinfo_read(p, list)
   namelist /list_geoinfo/ nx, ny, dx, dy, lx, ly, epsg, z0, rn0, mag_z, min_gv, min_bb, depth_rw, rn0_rw, &
                           sd0, sy0, &
                           f_user_routine, &
-                          f_ztype, f_lusetype, f_rntype, f_masktype, f_edge_sw, f_sdtype, &
+                          f_ztype, f_lusetype, f_rntype, f_masktype, f_sdtype, &
                           fn_z, fn_mask, fn_sw, fn_rw, fn_depth_rw, &
                           fn_rn, fn_luse, fn_gv, fn_bb, fn_rscap, fn_sd, lu2rn
   ! ネームリストにありながらファイルに記述のなかった変数は、
@@ -128,7 +126,6 @@ subroutine list_geoinfo_read(p, list)
   f_lusetype = list%f_lusetype
   f_rntype = list%f_rntype
   f_masktype = list%f_masktype
-  f_edge_sw = list%f_edge_sw
   fn_z = list%fn_z
   fn_mask = list%fn_mask
   fn_sw = list%fn_sw
@@ -173,7 +170,6 @@ subroutine list_geoinfo_read(p, list)
   list%f_lusetype = f_lusetype
   list%f_rntype = f_rntype
   list%f_masktype = f_masktype
-  list%f_edge_sw = f_edge_sw
   list%fn_z = fn_z
   list%fn_mask = fn_mask
   list%fn_sw = fn_sw
