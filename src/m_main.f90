@@ -2,7 +2,7 @@ module m_main
   use m_sysparam, only : t_sysparam, m_sysparam_init, m_sysparam_dispose
   use m_geoinfo, only : t_geoinfo, m_geoinfo_init, m_geoinfo_dispose, m_geoinfo_scatter_coeffs, m_geoinfo_band_shrink, m_geoinfo_row_ncells
   use m_precip, only : t_precip, m_precip_init, m_precip_dispose, m_precip_makepre
-  use m_tide, only : t_tide, m_tide_init, m_tide_dispose
+  use m_tide, only : t_tide, m_tide_init, m_tide_calc, m_tide_dispose
   use m_boundary, only : t_boundary, m_boundary_init, m_boundary_set_etaref, m_boundary_dispose, m_boundary_makebdc
   use m_state, only : t_state, m_state_init, m_state_dispose, m_state_updatetime, m_state_calcstat, m_state_printstate
   use m_record, only : t_record, m_record_init, m_record_dispose, m_record_probe, m_record_flux, m_record_summary
@@ -82,7 +82,8 @@ subroutine m_main_all()
   call m_geomorph_init(gm, p, g, s)       ! geomorph を初期化(fn_geomorph 指定時のみ有効。
                                           ! s%sed_active を設定するため swflow init より前)
   call m_gwflow_init(gw, p, g, s)         ! gwflow を初期化(fn_gwflow 指定時のみ有効)
-  call m_tide_init(ti, p, g)              ! tide を初期化
+  call m_tide_init(ti, p, g, s)           ! tide を初期化(state より後・swflow より
+                                          ! 前: 海セルの初期状態(z, h)をセットする)
   call m_swflow_init(sw, p, g, b, s)      ! swflow を初期化
   call output_init(p, g)                  ! ファイル出力の準備(geoinfoより後に)
 
@@ -90,7 +91,7 @@ subroutine m_main_all()
   call m_geoinfo_band_shrink(g)           ! マスク類(x,sw,rw)と z(rank0以外)を帯に縮小
 
   ! ==== 時間ループ: すべて帯確保(z のみ rank0 が全域を保持) ====
-  call run_main(p, g, b, pr, ic, s, r, sw, gm, gw, ierror)  ! 計算本体
+  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ierror)  ! 計算本体
 
   ! モジュールを破棄
   call output_dispose()
@@ -125,11 +126,12 @@ end subroutine
 !----------------------------------------------------------------------
 ! 計算本体
 !----------------------------------------------------------------------
-subroutine run_main(p, g, b, pr, ic, s, r, sw, gm, gw, ierror)
+subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
   type(t_precip), intent(in) :: pr
+  type(t_tide), intent(inout) :: ti    ! titype=4 の分布バッファを更新するため inout
   type(t_intercept), intent(in) :: ic
   type(t_state), intent(inout) :: s
   type(t_record), intent(inout) :: r
@@ -188,6 +190,10 @@ subroutine run_main(p, g, b, pr, ic, s, r, sw, gm, gw, ierror)
 
     ! 境界条件を準備
     call m_boundary_makebdc(b, p, g, s)
+
+    ! 潮位を更新して海セルへ適用(fn_tide 未指定なら no-op。更新間隔は
+    ! dt_tiupdate。s%z の変更はステップ頭のハロ交換が運ぶので swflow より前に)
+    call m_tide_calc(ti, p, g, s)
 
     ! 地表水を計算
     call m_swflow_calc(sw, p, g, b, s, ierror)

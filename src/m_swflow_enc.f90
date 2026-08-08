@@ -297,6 +297,12 @@ subroutine m_swflow_enc_init(p, g, b, s)
   f_advection_tvd = list%f_advection_tvd
   f_rivermouth_drop = list%f_rivermouth_drop
   f_diffusion_term = list%f_diffusion_term
+  ! 河口の強制段落ちは潮位(fn_tide)と両立しない(高潮位時の背水を
+  ! 無視して常時射流で流出させてしまう)。判定材料は namelist 由来で
+  ! 全ランク同一(par_stop は collective 安全)
+  if (f_rivermouth_drop > 0 .and. len_trim(p%fn_tide) > 0) then
+    call par_stop("list_enc: f_rivermouth_drop は潮位(fn_tide)と併用できません")
+  end if
   p_diagratio = list%p_diagratio
   p_adv_upwind_index = list%p_adv_upwind_index
   p_adprunge_thresh = list%p_adprunge_thresh
