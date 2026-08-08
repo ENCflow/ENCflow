@@ -1,0 +1,8 @@
+date      : 2026-08-08 07:24:06
+host      : vm
+user      : 
+pwd       : /home/user/ENCflow/test/tide
+a.out     : /home/user/ENCflow/bin/a.out
+mode      : serial__double
+modules   : （module未使用）
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007fd522e00000)
