@@ -5,7 +5,10 @@ module list_structure
   ! (submodule m_boundary_structure)が行う。
   !   &list_struct_pump    : 排水ポンプ(旧 &list_bound_pump を fn_boundary
   !                          から移設。2026-08-07)
-  !   &list_struct_culvert : カルバート(矩形断面・双方向。2026-08-07)
+  !   &list_struct_culvert : カルバート(矩形断面・双方向。樋管・樋門は
+  !                          ゲート拡張で表す。2026-08-07)
+  !   &list_struct_diversion : 分水(取水堰の rating による受動的な
+  !                          一方向取水。流域外分水が主用途。2026-08-08)
   ! グループ不在は正常(その型なし。present_* が偽のまま)。
   ! 構文エラー(iostat>0)は par_stop。
   use m_sysparam, only : t_sysparam
@@ -53,6 +56,15 @@ module list_structure
                                                    !   (0:in側代表, 1:out側代表=河川側)
     character(len=maxpathlen) :: fn_culv_in_cell(1:nstmax) = ""   ! 上流側セル一覧ファイル名
     character(len=maxpathlen) :: fn_culv_out_cell(1:nstmax) = ""  ! 下流側セル一覧ファイル名
+    ! ---- &list_struct_diversion ----
+    logical :: present_diversion = .false.         ! グループが存在したか
+    integer, allocatable :: div_in_cell(:,:,:)     ! 取水セル座標 (i, j)
+    integer, allocatable :: div_out_cell(:,:,:)    ! 送水先セル座標 (i, j)。未指定=域外分水
+    real :: div_q0(1:nstmax) = -9999.0             ! 一定流量 (m3/s。div_rule と排他)
+    real, allocatable :: div_rule(:,:,:)           ! 取水 rating 折れ線 (取水代表セルの
+                                                   !   水位η m, 流量 m3/s)
+    character(len=maxpathlen) :: fn_div_in_cell(1:nstmax) = ""    ! 取水セル一覧ファイル名
+    character(len=maxpathlen) :: fn_div_out_cell(1:nstmax) = ""   ! 送水先セル一覧ファイル名
   end type
 
   ! namelist 読み込み用の静的作業配列(スタックに置かないための措置。
@@ -63,6 +75,9 @@ module list_structure
   integer :: culv_in_cell(1:2,1:nstccmax,1:nstmax)
   integer :: culv_out_cell(1:2,1:nstccmax,1:nstmax)
   real :: culv_gate_rule(1:2,1:nstvmax,1:nstmax)
+  integer :: div_in_cell(1:2,1:nstccmax,1:nstmax)
+  integer :: div_out_cell(1:2,1:nstccmax,1:nstmax)
+  real :: div_rule(1:2,1:nstvmax,1:nstmax)
 
 contains
 
@@ -85,6 +100,7 @@ subroutine list_structure_read(p, list)
   if (ios /= 0) call par_stop("cannot open file: "//trim(p%fn_structure))
   call read_pump(un, list)
   call read_culvert(un, list)
+  call read_diversion(un, list)
   close(un)
 
 end subroutine
@@ -191,6 +207,44 @@ subroutine read_culvert(un, list)
   list%culv_gate_ref = culv_gate_ref
   list%fn_culv_in_cell = fn_culv_in_cell
   list%fn_culv_out_cell = fn_culv_out_cell
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! &list_struct_diversion を読む(不在なら present_diversion を偽のまま返す)
+!   解釈・検証(セル・ルールの妥当性)は init_structure が行う
+!----------------------------------------------------------------------
+subroutine read_diversion(un, list)
+  integer, intent(in) :: un
+  type(t_list_structure), intent(inout) :: list
+  real :: div_q0(1:nstmax)
+  character(len=maxpathlen) :: fn_div_in_cell(1:nstmax)
+  character(len=maxpathlen) :: fn_div_out_cell(1:nstmax)
+  integer :: ios
+  character(len=1024) :: iom
+  namelist /list_struct_diversion/ div_in_cell, div_out_cell, div_q0, &
+                                   div_rule, fn_div_in_cell, fn_div_out_cell
+
+  div_in_cell = -9999
+  div_out_cell = -9999
+  div_rule = -9999
+  div_q0 = list%div_q0
+  fn_div_in_cell = list%fn_div_in_cell
+  fn_div_out_cell = list%fn_div_out_cell
+
+  rewind(un)
+  read(un, nml=list_struct_diversion, iostat=ios, iomsg=iom)
+  if (ios > 0) call par_stop("list_struct_diversion 読込失敗: "//trim(iom))
+  if (ios < 0) return              ! グループ不在(この型なし)
+  list%present_diversion = .true.
+
+  list%div_in_cell = div_in_cell
+  list%div_out_cell = div_out_cell
+  list%div_rule = div_rule
+  list%div_q0 = div_q0
+  list%fn_div_in_cell = fn_div_in_cell
+  list%fn_div_out_cell = fn_div_out_cell
 
 end subroutine
 

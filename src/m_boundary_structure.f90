@@ -33,7 +33,7 @@ module subroutine init_structure(b, p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_list_structure) :: list
-  integer :: npump, nculv
+  integer :: npump, nculv, ndiv
 
   if (len_trim(p%fn_structure) <= 0) return
 
@@ -42,7 +42,8 @@ module subroutine init_structure(b, p, g)
   !--- 型別に数えてから一括確保し、通し番号で格納する ---
   npump = count_pump(list)
   nculv = count_culvert(list)
-  b%nstruct = npump + nculv
+  ndiv = count_diversion(list)
+  b%nstruct = npump + nculv + ndiv
   if (b%nstruct <= 0) return
   allocate(b%struct(1:b%nstruct))
 
@@ -51,6 +52,9 @@ module subroutine init_structure(b, p, g)
 
   !--- カルバート(&list_struct_culvert): npump+1..npump+nculv ---
   call init_culvert(b, p, g, list, npump, nculv)
+
+  !--- 分水(&list_struct_diversion): npump+nculv+1.. ---
+  call init_diversion(b, p, g, list, npump + nculv, ndiv)
 
 end subroutine
 
@@ -107,6 +111,32 @@ end function
 
 
 !----------------------------------------------------------------------
+! 有効な分水数を数える(番号の連続性も検証)
+!----------------------------------------------------------------------
+function count_diversion(list) result(ndiv)
+  type(t_list_structure), intent(in) :: list
+  integer :: ndiv
+  logical :: active(1:nstmax)
+  integer :: id
+
+  ndiv = 0
+  if (.not. list%present_diversion) return
+  do id = 1, nstmax
+    active(id) = (list%div_in_cell(1,1,id) > -9999) &
+                 .or. (list%div_q0(id) > -9998.0) &
+                 .or. (list%div_rule(1,1,id) > -9999) &
+                 .or. (len_trim(list%fn_div_in_cell(id)) > 0)
+  end do
+  ndiv = count(active)
+  if (ndiv <= 0) return
+  if (.not. all(active(1:ndiv))) then
+    call par_stop("list_struct_diversion: 分水番号は 1 から連続で指定してください")
+  end if
+
+end function
+
+
+!----------------------------------------------------------------------
 ! 各内部水理構造物の現時刻の目標流量を水理則から決める(毎ステップ、
 ! makebdc から呼ばれる)。
 !   基準値(代表セル=各セル群の先頭)は所有ランクだけが読めるため、
@@ -144,11 +174,14 @@ module subroutine structure_makebdc(b, p, g, s)
           else
             refs(2*ist-1) = s%z(i,j) + max(s%h(i,j), 0.0)
           end if
-        case (e_struct_culvert)
+        case (e_struct_culvert, e_struct_diversion)
           refs(2*ist-1) = s%z(i,j) + max(s%h(i,j), 0.0)
       end select
     end if
-    if (b%struct(ist)%kind == e_struct_culvert) then
+    ! 下流(送水先)側の基準値: カルバートは常に、分水は送水先ありのみ
+    ! (域外分水は refd 不要=0 のまま)
+    if (b%struct(ist)%kind == e_struct_culvert &
+        .or. (b%struct(ist)%kind == e_struct_diversion .and. b%struct(ist)%ncout > 0)) then
       i = b%struct(ist)%cout(1,1)
       j = b%struct(ist)%cout(2,1)
       if (j >= dcp%js .and. j <= dcp%je) then
@@ -634,6 +667,183 @@ subroutine init_culvert(b, p, g, list, ofs, nculv)
   if (n > 0) then
     call par_stop("list_struct_culvert: カルバート "//itoa(n)//" のセルにため池(rscap>0)が" &
                   //"含まれています。カルバートはため池セルに接続できません(ポンプを使ってください)")
+  end if
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 分水の水理則: 取水側代表水位ηの rating 折れ線(線形補間・範囲外端値。
+! 非負=一方向)。受動性ガード: 送水先あり(geom(1)=1)で下流側代表 η が
+! 上流側以上なら 0(重力では登れない)。0/1 の粗い遮断で、背水が上流
+! 水位に迫る状態の漸減は非表現(§22)。域外分水はガードなし
+!----------------------------------------------------------------------
+function law_diversion(rule, nrule, geom, refu, refd) result(q)
+  real, intent(in) :: rule(:,:)
+  integer, intent(in) :: nrule
+  real, intent(in) :: geom(:)
+  real, intent(in) :: refu, refd
+  real :: q
+
+  q = max(interp_series(rule, nrule, refu), 0.0)
+  if (geom(1) > 0.5 .and. refd >= refu) q = 0.0
+
+end function
+
+
+!----------------------------------------------------------------------
+! 分水の解釈・検証・格納(族の第三号。§22。2026-08-08)
+!   取水セル群から域外(流域外分水=主用途)または送水先セル群への
+!   一方向・受動的な取水。ルールは「一定流量 div_q0」か「取水代表セルの
+!   水位η—流量の rating 折れ線 div_rule」のどちらか一方(排他。ポンプと
+!   同じ流儀で一定流量は1点折れ線に退化)。基準は η のみ(f_ref なし。
+!   受動性ガードとの基準統一のため)。ため池セルは不許可(η未定義。
+!   ポンプで代替)。geom(1) = 送水先の有無(受動性ガード用)
+!----------------------------------------------------------------------
+subroutine init_diversion(b, p, g, list, ofs, ndiv)
+  type(t_boundary), intent(inout) :: b
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_list_structure), intent(in) :: list
+  integer, intent(in) :: ofs            ! 通し番号のオフセット(=ポンプ数+カルバート数)
+  integer, intent(in) :: ndiv           ! count_diversion の結果
+  logical :: has_q0, has_rule
+  integer :: id, ist, n, k, i, j
+
+  if (ndiv <= 0) return
+
+  do id = 1, ndiv
+    ist = ofs + id
+
+    b%struct(ist)%kind = e_struct_diversion
+    b%struct(ist)%law => law_diversion
+    b%struct(ist)%f_ref = 0
+
+    !--- 取水セル集合(ファイル指定が優先) ---
+    if (len_trim(list%fn_div_in_cell(id)) > 0) then
+      call read_cell_file2(trim(p%dir_data)//"/"//trim(list%fn_div_in_cell(id)), &
+                           b%struct(ist)%ncin, b%struct(ist)%cin)
+    else
+      n = 0
+      do k = 1, nstccmax
+        if (list%div_in_cell(1,k,id) <= -9999) exit    ! 番兵で終端
+        n = n + 1
+      end do
+      allocate(b%struct(ist)%cin(1:2,1:max(n,1)))
+      b%struct(ist)%cin(1:2,1:n) = list%div_in_cell(1:2,1:n,id)
+      b%struct(ist)%ncin = n
+    end if
+
+    !--- 送水先セル集合(任意。なければ域外分水) ---
+    if (len_trim(list%fn_div_out_cell(id)) > 0) then
+      call read_cell_file2(trim(p%dir_data)//"/"//trim(list%fn_div_out_cell(id)), &
+                           b%struct(ist)%ncout, b%struct(ist)%cout)
+    else
+      n = 0
+      do k = 1, nstccmax
+        if (list%div_out_cell(1,k,id) <= -9999) exit   ! 番兵で終端
+        n = n + 1
+      end do
+      allocate(b%struct(ist)%cout(1:2,1:max(n,1)))
+      b%struct(ist)%cout(1:2,1:n) = list%div_out_cell(1:2,1:n,id)
+      b%struct(ist)%ncout = n
+    end if
+
+    b%struct(ist)%geom(1) = merge(1.0, 0.0, b%struct(ist)%ncout > 0)
+
+    !--- ルール(div_q0 と div_rule は排他) ---
+    has_q0 = list%div_q0(id) > -9998.0
+    has_rule = list%div_rule(1,1,id) > -9999
+    if (has_q0 .and. has_rule) then
+      call par_stop("list_struct_diversion: 分水 "//itoa(id) &
+                    //" は div_q0 と div_rule を同時に指定できません")
+    end if
+    if (.not. (has_q0 .or. has_rule)) then
+      call par_stop("list_struct_diversion: 分水 "//itoa(id) &
+                    //" にルール(div_q0 か div_rule)がありません")
+    end if
+    if (has_q0) then
+      if (list%div_q0(id) < 0.0) then
+        call par_stop("list_struct_diversion: 分水 "//itoa(id)//" の div_q0 は非負のみです")
+      end if
+      ! 一定流量は1点折れ線に退化(補間は常に固定値を返す)
+      allocate(b%struct(ist)%rule(1:2,1:1))
+      b%struct(ist)%rule(1,1) = 0.0
+      b%struct(ist)%rule(2,1) = list%div_q0(id)
+      b%struct(ist)%nrule = 1
+    else
+      n = 0
+      do k = 1, size(list%div_rule, 2)
+        if (list%div_rule(1,k,id) <= -9999) exit       ! 番兵で終端
+        n = n + 1
+      end do
+      ! 第1列は基準水位 (m)。時系列と違い分→秒換算はしない
+      allocate(b%struct(ist)%rule(1:2,1:max(n,1)))
+      b%struct(ist)%rule(1:2,1:n) = list%div_rule(1:2,1:n,id)
+      b%struct(ist)%nrule = n
+      do k = 1, n
+        if (b%struct(ist)%rule(2,k) < 0.0) then
+          call par_stop("list_struct_diversion: 分水 "//itoa(id)//" の流量は非負のみです")
+        end if
+        if (k >= 2) then
+          if (b%struct(ist)%rule(1,k) <= b%struct(ist)%rule(1,k-1)) then
+            call par_stop("list_struct_diversion: 分水 "//itoa(id) &
+                          //" のルールの基準水位が単調増加ではありません")
+          end if
+        end if
+      end do
+    end if
+
+    !--- 検証(セルは有効な陸セルのみ) ---
+    if (b%struct(ist)%ncin <= 0) then
+      call par_stop("list_struct_diversion: 分水 "//itoa(id)//" に取水セルがありません")
+    end if
+    do k = 1, b%struct(ist)%ncin + b%struct(ist)%ncout
+      if (k <= b%struct(ist)%ncin) then
+        i = b%struct(ist)%cin(1,k)
+        j = b%struct(ist)%cin(2,k)
+      else
+        i = b%struct(ist)%cout(1,k-b%struct(ist)%ncin)
+        j = b%struct(ist)%cout(2,k-b%struct(ist)%ncin)
+      end if
+      if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
+        call par_stop("list_struct_diversion: 分水 "//itoa(id)//" のセル (" &
+                      //itoa(i)//","//itoa(j)//") が領域外です")
+      end if
+      if (g%x(i,j) <= 0) then
+        call par_stop("list_struct_diversion: 分水 "//itoa(id)//" のセル (" &
+                      //itoa(i)//","//itoa(j)//") が無効セル(x=0)です")
+      end if
+      if (g%sw(i,j) /= 0) then
+        call par_stop("list_struct_diversion: 分水 "//itoa(id)//" のセル (" &
+                      //itoa(i)//","//itoa(j)//") が海セルです")
+      end if
+    end do
+
+  end do
+
+  ! ため池(rscap>0)セルは不許可(η未定義。所有ランク判定+allreduce →
+  ! collective 停止)
+  n = 0
+  do id = 1, ndiv
+    ist = ofs + id
+    do k = 1, b%struct(ist)%ncin + b%struct(ist)%ncout
+      if (k <= b%struct(ist)%ncin) then
+        i = b%struct(ist)%cin(1,k)
+        j = b%struct(ist)%cin(2,k)
+      else
+        i = b%struct(ist)%cout(1,k-b%struct(ist)%ncin)
+        j = b%struct(ist)%cout(2,k-b%struct(ist)%ncin)
+      end if
+      if (j >= dcp%js .and. j <= dcp%je) then
+        if (g%rscap(i,j) > 0.0) n = max(n, id)
+      end if
+    end do
+  end do
+  call par_allreduce_maxi(n)
+  if (n > 0) then
+    call par_stop("list_struct_diversion: 分水 "//itoa(n)//" のセルにため池(rscap>0)が" &
+                  //"含まれています。分水はため池セルに接続できません(ポンプを使ってください)")
   end if
 
 end subroutine

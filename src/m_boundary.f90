@@ -126,6 +126,7 @@ module m_boundary
   ! 内部水理構造物の種別コード
   integer, parameter :: e_struct_pump = 1     ! 排水ポンプ
   integer, parameter :: e_struct_culvert = 2  ! カルバート(矩形断面・双方向)
+  integer, parameter :: e_struct_diversion = 3 ! 分水(rating による受動的な一方向取水)
 
   type t_structure                         ! 内部水理構造物1基(§22)。
                                            !   共通骨格: 取水セル群 cin → 吐口セル群
