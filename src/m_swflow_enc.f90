@@ -115,8 +115,20 @@ module m_swflow_enc
   !   サイト(河道セル・堤内地セルの対=エッジ)ごとに実効天端を
   !   時系列 f(t)(1=天端高, 0=堤内地盤高)で変える。サイトリストと
   !   行バケットは submodule m_swflow_enc_channel の私有状態
-  !   (bank_wall が同 submodule 内で参照するため親には出さない)
+  !   (bank_wall が同 submodule 内で参照するため親には出さない)。
+  !   型定義だけは親に置く: submodule 内定義の派生型を allocate すると
+  !   AOCC flang の LTO が型記述子シンボルを解決できずリンクエラーに
+  !   なる(§13。意味論・成分は不変)
   logical :: have_breach = .false.          ! 破堤サイトがあるか(breach_init が設定)
+  type t_breach
+    integer :: ic = 0, jc = 0               ! 河道セル
+    integer :: il = 0, jl = 0               ! 堤内地セル
+    integer :: nval = 0                     ! 時系列データ数
+    real, allocatable :: val(:,:)           ! 時系列 (1:2, 1:nval) = (s, 割合0〜1)
+    real :: zcrest0 = 0.0                   ! 初期天端(セル対を帯内に持つランクのみ有効)
+    real :: zgnd0 = 0.0                     ! 基準地盤(同上)
+    real :: zeff = 0.0                      ! 現時刻の実効天端(breach_update が更新)
+  end type
 
   real, allocatable :: cwx(:,:), cwy(:,:)   ! セルの方向別通水率 (1:nx, js:je)。
                                             !   幅キャップによるセル開口の減衰率
