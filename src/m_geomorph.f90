@@ -112,6 +112,10 @@ module m_geomorph
     integer :: f_release = 0         ! 瞬時流動化(0:無効, 1:有効 = fn_dbinit 指定)
     real :: db_reltime = 0.0         ! 流動化の発生時刻 (s)
     real :: db_relsat = 1.0          ! 崩壊土塊の飽和度(gwflow 無効時のみ使用)
+    integer :: f_slide = 0           ! 無限長斜面安定判定(0:無効, 1:有効)
+    real :: sl_c = 0.0               ! 有効粘着力 c' (Pa)
+    real :: sl_tanphi = 0.0          ! tan(せん断抵抗角 φs)
+    real :: sl_gamma = 0.0           ! 飽和単位体積重量 γt (N/m3)
     logical :: initialized = .false.
   end type
 
@@ -146,6 +150,11 @@ module m_geomorph
     real, allocatable :: rel(:,:)    ! 瞬時流動化の崩壊深 (m)(1:nx, js:je)。
                                      !   発火後に解放(発火は1回だけ)
     integer :: nrelclip = 0          ! 崩壊深 > sd でクリップしたセル数(dispose で報告)
+    logical, allocatable :: sld(:,:) ! f_slide の崩壊フラグ (1:nx, js:je)。
+                                     !   Fs 評価(時刻 n の z)と適用を分離する
+                                     !   2パス用(fx と同じ理由)
+    integer :: nslide = 0            ! この run で流動化したセル数(dispose で報告)
+    real :: fsmin = huge(1.0)        ! この run の Fs 最小値(ランク局所の診断)
   end type
   type(t_creep) :: crp
   type(t_fluvial) :: flv
@@ -298,6 +307,14 @@ subroutine m_geomorph_init(gm, p, g, s)
   ! 土石流はイベント計算であり地形時間の加速は適用外
   if (gm%f_debris > 0 .and. gm%morfac /= 1.0) then
     call par_stop("list_geomorph: f_debris は morfac=1 のみ対応です(イベント計算)")
+  end if
+  ! 斜面安定判定・瞬時流動化は f_debris の付属機構(流動化した土砂の
+  ! 輸送・抵抗・停止を土石流モデルが担う)
+  if (list%f_slide > 0 .and. gm%f_debris <= 0) then
+    call par_stop("list_geomorph: f_slide requires f_debris=1")
+  end if
+  if (len_trim(list%fn_dbinit) > 0 .and. gm%f_debris <= 0) then
+    call par_stop("list_geomorph: fn_dbinit requires f_debris=1")
   end if
 
   ! --- 土砂プロセス(掃流・浮遊・斜面・土石流)の共有設定 ---
@@ -544,10 +561,18 @@ subroutine m_geomorph_dispose(gm)
                   // itoa(dbr%nrelclip) // " セルで sd にクリップされました" &
                   // "(fn_dbinit と土層厚入力の整合を確認してください)")
   end if
+  if (gm%f_slide > 0) then
+    ! ランク局所の診断(帯内の最小 Fs と流動化セル数)
+    call par_warn("geomorph slide: min Fs = " // rtoa(dbr%fsmin) &
+                  // ", 流動化セル数 = " // itoa(dbr%nslide))
+  end if
   if (allocated(wrk%q)) deallocate(wrk%q)
   if (allocated(dbr%fx)) deallocate(dbr%fx)
   if (allocated(dbr%rel)) deallocate(dbr%rel)
+  if (allocated(dbr%sld)) deallocate(dbr%sld)
   dbr%nrelclip = 0
+  dbr%nslide = 0
+  dbr%fsmin = huge(1.0)
   flv%nclip = 0
   flv%vleak = 0.0
   gm%enabled = .false.

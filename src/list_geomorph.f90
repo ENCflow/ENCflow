@@ -67,6 +67,16 @@ module list_geomorph
     real :: db_relsat = 1.0          ! 崩壊土塊の飽和度 0〜1(gwflow 無効時の
                                      ! 間隙水付与 h += λ・relsat・D に使用。
                                      ! gwflow 有効時は容量超過引き渡しが担い不使用)
+    integer :: f_slide = 0           ! 無限長斜面安定判定による自動流動化
+                                     ! (0:無効, 1:有効)。f_debris=1 必須。
+                                     ! Fs < 1 のセルの土層 sd を全層流動化する。
+                                     ! 間隙水圧は gwflow の飽和厚 hg/sy0 から
+                                     ! (gwflow 無効なら 0)。debris_plan.md §2.5
+    real :: slide_c = 0.0            ! 有効粘着力 c' (Pa)。f_slide=1 で必須(0 可)
+    real :: slide_phi = 0.0          ! 土のせん断抵抗角 φs (deg)。f_slide=1 で必須
+    real :: slide_gamma = 0.0        ! 飽和単位体積重量 γt (N/m3)。f_slide=1 で必須
+                                     ! (例: 18000〜20000。湿潤・飽和の区別は
+                                     ! 一律 γt の近似)
 
     ! 将来のプロセス追加はここにフラグとパラメータを足す
     ! (例: f_badland 崩壊性浸食)
@@ -118,6 +128,10 @@ subroutine list_geomorph_read(p, list)
   character(len=256) :: fn_dbinit
   real :: db_reltime
   real :: db_relsat
+  integer :: f_slide
+  real :: slide_c
+  real :: slide_phi
+  real :: slide_gamma
 
   namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
@@ -125,7 +139,8 @@ subroutine list_geomorph_read(p, list)
                            fluv_bcfeed, f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_wash, wash_kr, wash_kf, wash_tausc, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
-                           fn_dbinit, db_reltime, db_relsat
+                           fn_dbinit, db_reltime, db_relsat, &
+                           f_slide, slide_c, slide_phi, slide_gamma
 
   ! 型宣言のデフォルトを namelist 変数の初期値にする
   dt_geomorph = list%dt_geomorph
@@ -163,6 +178,10 @@ subroutine list_geomorph_read(p, list)
   fn_dbinit = list%fn_dbinit
   db_reltime = list%db_reltime
   db_relsat = list%db_relsat
+  f_slide = list%f_slide
+  slide_c = list%slide_c
+  slide_phi = list%slide_phi
+  slide_gamma = list%slide_gamma
 
   call par_info("reading list_geomorph in " // trim(p%fn_geomorph))
   open(newunit=un, file=trim(p%fn_geomorph), status='old', action='read', iostat=ios)
@@ -206,6 +225,10 @@ subroutine list_geomorph_read(p, list)
   list%fn_dbinit = fn_dbinit
   list%db_reltime = db_reltime
   list%db_relsat = db_relsat
+  list%f_slide = f_slide
+  list%slide_c = slide_c
+  list%slide_phi = slide_phi
+  list%slide_gamma = slide_gamma
 
 end subroutine
 

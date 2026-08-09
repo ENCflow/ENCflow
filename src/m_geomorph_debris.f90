@@ -131,6 +131,29 @@ module subroutine init_debris(gm, p, g, list)
     gm%db_relsat = list%db_relsat
     call read_release(p, g, trim(list%fn_dbinit))
   end if
+
+  ! --- 無限長斜面安定判定(f_slide) ---
+  if (list%f_slide > 0) then
+    if (list%f_slide /= 1) call par_stop("list_geomorph: f_slide must be 0 or 1")
+    if (list%slide_c < 0.0) call par_stop("list_geomorph: slide_c must be >= 0")
+    if (list%slide_phi <= 0.0 .or. list%slide_phi >= 90.0) then
+      call par_stop("list_geomorph: f_slide requires slide_phi in (0, 90) deg")
+    end if
+    if (list%slide_gamma <= 0.0) then
+      call par_stop("list_geomorph: f_slide requires slide_gamma > 0 (N/m3)")
+    end if
+    if (list%db_relsat < 0.0 .or. list%db_relsat > 1.0) then
+      call par_stop("list_geomorph: db_relsat must be in [0, 1]")
+    end if
+    gm%f_slide = 1
+    gm%sl_c = list%slide_c
+    gm%sl_tanphi = tan(list%slide_phi * deg2rad)
+    gm%sl_gamma = list%slide_gamma
+    gm%db_relsat = list%db_relsat      ! gwflow 無効時の間隙水付与(release と共有)
+    if (.not. allocated(dbr%sld)) then
+      allocate(dbr%sld(1:g%nx, dcp%js:dcp%je), source = .false.)
+    end if
+  end if
 end subroutine
 
 
@@ -169,6 +192,10 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   real, intent(in) :: dtw       ! 実効時間刻み(morfac=1 を init で保証済み)
   integer :: i, j
   real :: tanth, cinf, cc, hm, fx, dzb, cap, fxg, hseq
+
+  ! --- 斜面安定のパス1: Fs 評価(時刻 n の z。E-D パス2 より前に評価する
+  !     ことで、勾配読みが帯内更新とハロの不整合を起こさない) ---
+  if (gm%f_slide > 0) call slide_pass1(gm, p, g, s)
 
   ! --- パス1: 交換量の計算(時刻 n の状態のみを読む) ---
   !$omp parallel do schedule(static) private(i, j, tanth, cinf, cc, hm, fx, hseq)
@@ -241,6 +268,91 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   end do
   !$omp end parallel do
 
+  ! --- 斜面安定のパス2: Fs < 1 のセルの土層を全層流動化 ---
+  if (gm%f_slide > 0) call slide_pass2(gm, g, s)
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 無限長斜面安定の評価(パス1)
+!   Fs = (c' + (γt・sd − γw・hw)・cos²θ・tanφs) / (γt・sd・sinθ・cosθ)
+!   (有効応力のクーロン則。斜面平行浸透の間隙水圧 u = γw・hw・cos²θ。
+!    導出式で経験定数なし — debris_plan.md §2.5)
+!   hw = 飽和厚 = min(hg/sy0, sd)(gwflow 有効時。無効なら 0 = 静的判定)。
+!   近似(文書化): セル独立の無限長斜面(側方支持なし)、浅層崩壊限定、
+!   γt は湿潤・飽和一律。tanθ ≈ 0 は駆動なし = 判定対象外。
+!   γw = 1000・g(淡水の単位体積重量)
+!----------------------------------------------------------------------
+subroutine slide_pass1(gm, p, g, s)
+  type(t_geomorph), intent(in) :: gm
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real :: tanth, cos2, w, hw, u, fs
+  real :: fsmin_loc
+  real, parameter :: rhow = 1000.0          ! 水の密度 (kg/m3。淡水)
+
+  fsmin_loc = huge(1.0)
+  !$omp parallel do schedule(static) private(i, j, tanth, cos2, w, hw, u, fs) &
+  !$omp reduction(min: fsmin_loc)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      dbr%sld(i,j) = .false.
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      if (s%sd(i,j) <= 0.0) cycle
+      tanth = slope8(g, s, i, j)
+      if (tanth <= 1.0e-6) cycle              ! 駆動なし(Fs=∞ 扱い)
+      cos2 = 1.0 / (1.0 + tanth**2)
+      w = gm%sl_gamma * s%sd(i,j)             ! 単位面積の土塊重量 (N/m2)
+      hw = 0.0
+      if (s%gw_active .and. g%sy0 > 0.0) hw = min(s%hg(i,j) / g%sy0, s%sd(i,j))
+      u = rhow * p%gg * hw                    ! γw・hw(cos²θ は下で共通に乗算)
+      fs = (gm%sl_c + (w - u) * cos2 * gm%sl_tanphi) / (w * tanth * cos2)
+      if (fs < fsmin_loc) fsmin_loc = fs
+      if (fs < 1.0) dbr%sld(i,j) = .true.
+    end do
+  end do
+  !$omp end parallel do
+  if (fsmin_loc < dbr%fsmin) dbr%fsmin = fsmin_loc
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 斜面崩壊セルの全層流動化(パス2。書き込みは自セルに閉じる)
+!   転換は release_debris と同じ台帳整合の fluidize
+!----------------------------------------------------------------------
+subroutine slide_pass2(gm, g, s)
+  type(t_geomorph), intent(in) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real :: dd, cap, fxg
+
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (.not. dbr%sld(i,j)) cycle
+      dd = s%sd(i,j)
+      if (dd <= 0.0) cycle
+      s%hs(i,j) = s%hs(i,j) + dd / gm%poroi   ! 固体分 (1−λ)・D
+      s%z(i,j) = s%z(i,j) - dd
+      s%sd(i,j) = 0.0                          ! 岩盤露出(堆積で再生すれば再判定)
+      dbr%nslide = dbr%nslide + 1
+      if (s%gw_active) then
+        ! 容量 0 になった帯水の全量を地表へ(容量超過引き渡しの極限)
+        cap = 0.0
+        if (s%hg(i,j) > cap) then
+          fxg = s%hg(i,j) - cap
+          s%hg(i,j) = cap
+          s%h(i,j) = s%h(i,j) + fxg
+        end if
+      else
+        s%h(i,j) = s%h(i,j) + (1.0 - 1.0 / gm%poroi) * gm%db_relsat * dd
+      end if
+    end do
+  end do
 end subroutine
 
 
