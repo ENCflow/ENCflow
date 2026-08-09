@@ -58,6 +58,8 @@ module m_wq
   real, parameter :: secday = 86400.0
   ! 原単位 kg/ha/day -> g/s/m2(1 kg/ha/day = 1000 g / 10000 m2 / 86400 s)
   real, parameter :: unit2gsm2 = 1000.0 / 10000.0 / 86400.0
+  real, parameter :: kgha2gm2 = 0.1          ! kg/ha -> g/m2
+  real, parameter :: rhow = 1000.0           ! 水の密度 (kg/m3。せん断応力の次元化)
 
   ! 発生源グループ(点源・面源共通の骨格)
   type t_wqsrc
@@ -95,12 +97,24 @@ module m_wq
                                                     !   面積あたり。帯。未指定なら未確保)
     logical :: have_rain = .false.                  ! 降雨中濃度(湿性沈着)の有効
     type(t_wqsrc) :: rain                           ! 降雨中濃度 (mg/L。q0 か ser)
+    ! 表面蓄積プール+洗い出し(buildup-washoff。プール本体は s%bp。§30)
+    logical :: have_pool = .false.                  ! プールの有効(確保・保存・出力)
+    logical :: have_bd = .false.                    ! 蓄積レートあり
+    logical :: map_to_pool = .false.                ! rmap を蓄積レートとして使う
+    real :: bdrate = 0.0                            ! 一様蓄積レート (g/s/m2)
+    real :: bmax = 0.0                              ! 蓄積上限 (g/m2。0=線形無限)
+    logical :: have_wash = .false.                  ! 洗い出しの有効
+    real :: wkr = 0.0                               ! 雨滴洗い出し係数 (1/m)
+    real :: wkf = 0.0                               ! せん断洗い出し係数 (1/s)
+    real :: wtauc = 1.0                             ! 限界せん断応力 (N/m2)
+    integer :: f_settle = 0                         ! 沈降の行き先 (0:消失, 1:プール)
     integer :: ndam = 0
     type(t_wqdam), allocatable :: dam(:)
     ! 診断(行部分和 real64。累積 m3 でなく質量 g)
-    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:8) 1=点源 2=面源 3=浸透(→cg)
-                                            !   4=ダム捕捉 5=減衰消失 6=沈降消失
-                                            !   7=分布面源 8=降雨沈着
+    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:10) 1=点源 2=面源 3=浸透(→cg)
+                                            !   4=ダム捕捉 5=減衰消失 6=沈降
+                                            !   7=分布面源 8=降雨沈着 9=蓄積(→bp)
+                                            !   10=洗い出し(bp→cq)
     integer :: un = 0                       ! CSV 装置番号(rank0。open(newunit=) は負値。§22)
   end type
 
@@ -162,6 +176,9 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- 降雨中濃度(湿性沈着。点源・面源・分布と重ね合わせ) ---
   call setup_rain_conc(wq, list)
 
+  ! --- 表面蓄積プール+洗い出し(buildup-washoff) ---
+  call setup_pool(wq, p, g, s, list)
+
   ! --- 境界流入濃度 ---
   call setup_inflow_conc(wq, g, b, list)
 
@@ -188,13 +205,14 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- リスタート ---
   if (p%f_state_restore > 0) call restore_state(wq, p, g, s)
 
-  allocate(wq%vrow(dcp%js:dcp%je, 1:8), source = 0.0_real64)
+  allocate(wq%vrow(dcp%js:dcp%je, 1:10), source = 0.0_real64)
 
   ! --- 診断 CSV(rank0。累積はラン先頭からの積算 = restore でリセット) ---
   if (is_root) then
     open(newunit=wq%un, file=trim(p%dir_result)//"/wq.csv", status='replace')
-    write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,to_gw_g," &
-                        //"to_dam_g,decay_g,settle_g,mass_surface_g,mass_gw_g"
+    write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,in_bldup_g," &
+                        //"wash_g,to_gw_g,to_dam_g,decay_g,settle_g," &
+                        //"mass_surface_g,mass_gw_g,mass_pool_g"
   end if
 
   s%wq_active = .true.
@@ -403,13 +421,33 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 分布面源の読み込み(原単位 kg/ha/day のセル別分布 × 倍率。
-! rank0 読み+帯 scatter。負値はエラー。全有効セルへ一定率で投入。§30)
+! rank0 読み+帯 scatter。負値はエラー。全有効セルへ一定率で投入。§30。
+! f_wq_map=1 のときは蓄積プールへのレートとして使われる(setup_pool))
 !----------------------------------------------------------------------
 subroutine setup_map_source(wq, p, g, list)
   type(t_wq), intent(inout) :: wq
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_list_wq), intent(in) :: list
+
+  if (list%wq_map_factor < 0.0) call par_stop("list_wq: wq_map_factor は非負のみです")
+  allocate(wq%rmap(1:g%nx, dcp%jsh:dcp%jeh))
+  ! kg/ha/day -> g/s/m2 に倍率込みで換算(rank0 で乗じてから配布)
+  call read_map_scatter(p, g, list%fn_wq_map, "fn_wq_map", &
+                        unit2gsm2 * list%wq_map_factor, wq%rmap)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 分布ファイルの rank0 読み+倍率+帯 scatter(共通ヘルパ)。
+! 使用セルの負値はエラー(0 は「なし」として許す)
+!----------------------------------------------------------------------
+subroutine read_map_scatter(p, g, fn, label, factor, a)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  character(len=*), intent(in) :: fn, label
+  real, intent(in) :: factor
+  real, intent(inout) :: a(1:, dcp%jsh:)
   real, allocatable :: wk(:,:)
   real :: dum(1,1)
   character(:), allocatable :: fname
@@ -417,32 +455,135 @@ subroutine setup_map_source(wq, p, g, list)
   logical :: found
   integer :: i, j
 
-  if (list%wq_map_factor < 0.0) call par_stop("list_wq: wq_map_factor は非負のみです")
-  fname = trim(p%dir_data)//"/"//trim(list%fn_wq_map)
+  fname = trim(p%dir_data)//"/"//trim(fn)
   inquire(file=fname, exist=found)
-  if (.not. found) call par_stop("list_wq: fn_wq_map が見つかりません: "//fname)
+  if (.not. found) call par_stop("list_wq: "//label//" が見つかりません: "//fname)
 
-  allocate(wq%rmap(1:g%nx, dcp%jsh:dcp%jeh))
   if (is_root) then
     allocate(wk(1:g%nx, 1:g%ny))
     call par_info(" reading "//fname)
     call fileio_read_matrix(fname, g%nx, g%ny, wk, p%f_input_mode)
-    ! 検証は使用セルのみ(0 は「負荷なし」として許す)
     do j = 1, g%ny
       do i = 1, g%nx
         if (g%x(i,j) <= 0) cycle
         if (wk(i,j) < 0.0) then
-          write(msg,'(a,2i7,es12.4)') "list_wq: fn_wq_map の値が負", i, j, wk(i,j)
+          write(msg,'(a,2i7,es12.4)') "list_wq: "//label//" の値が負", i, j, wk(i,j)
           call par_abort(trim(msg))
         end if
       end do
     end do
-    ! kg/ha/day -> g/s/m2 に倍率込みで換算してから配布
-    wk(:,:) = wk(:,:) * unit2gsm2 * list%wq_map_factor
-    call par_scatter_cell(wk, wq%rmap)
+    wk(:,:) = wk(:,:) * factor
+    call par_scatter_cell(wk, a)
   else
-    call par_scatter_cell(dum, wq%rmap)
+    call par_scatter_cell(dum, a)
   end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 表面蓄積プール+洗い出し(buildup-washoff)の解釈(§30)
+!   蓄積 dB/dt = r·(1 − B/Bmax)(Bmax 省略で線形 dB/dt = r)。
+!   洗い出し率 λ = kr·P + kf·max(τ/τc − 1, 0)(m_geomorph_wash と同型。
+!   kr は SWMM 指数型洗い出し c1[1/mm]×1000 と互換)。
+!   プール本体 s%bp はここで確保する(restore より前に呼ぶこと)
+!----------------------------------------------------------------------
+subroutine setup_pool(wq, p, g, s, list)
+  type(t_wq), intent(inout) :: wq
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  type(t_list_wq), intent(in) :: list
+  logical :: have_bd0
+
+  ! --- 蓄積レート(一様値か分布の排他) ---
+  if (list%f_wq_map < 0 .or. list%f_wq_map > 1) then
+    call par_stop("list_wq: f_wq_map は 0(直接投入) か 1(蓄積レート) です")
+  end if
+  if (list%f_wq_map == 1 .and. len_trim(list%fn_wq_map) == 0) then
+    call par_stop("list_wq: f_wq_map=1 には fn_wq_map が必要です")
+  end if
+  wq%map_to_pool = (list%f_wq_map == 1)
+  if (list%wq_bd_rate > -9998.0) then
+    if (wq%map_to_pool) then
+      call par_stop("list_wq: 蓄積レートは wq_bd_rate(一様)か fn_wq_map" &
+                    //"(f_wq_map=1)のどちらか一方で指定してください")
+    end if
+    if (list%wq_bd_rate < 0.0) call par_stop("list_wq: wq_bd_rate は非負のみです")
+    wq%bdrate = list%wq_bd_rate * unit2gsm2
+  end if
+  wq%have_bd = wq%map_to_pool .or. wq%bdrate > 0.0
+
+  ! --- 蓄積上限(飽和指数形。レートと併用のみ意味を持つ) ---
+  if (list%wq_bd_max > -9998.0) then
+    if (list%wq_bd_max <= 0.0) call par_stop("list_wq: wq_bd_max は正のみです")
+    if (.not. wq%have_bd) then
+      call par_stop("list_wq: wq_bd_max は蓄積レート(wq_bd_rate か f_wq_map=1)と" &
+                    //"併用してください")
+    end if
+    wq%bmax = list%wq_bd_max * kgha2gm2
+  end if
+
+  ! --- 洗い出し係数 ---
+  if (list%wq_wash_kr > -9998.0) then
+    if (list%wq_wash_kr < 0.0) call par_stop("list_wq: wq_wash_kr は非負のみです")
+    wq%wkr = list%wq_wash_kr
+  end if
+  if (list%wq_wash_kf > -9998.0) then
+    if (list%wq_wash_kf < 0.0) call par_stop("list_wq: wq_wash_kf は非負のみです")
+    wq%wkf = list%wq_wash_kf
+    if (wq%wkf > 0.0) then
+      if (list%wq_wash_tauc <= -9998.0) then
+        call par_stop("list_wq: wq_wash_kf には wq_wash_tauc (N/m2) が必要です")
+      end if
+      if (list%wq_wash_tauc <= 0.0) call par_stop("list_wq: wq_wash_tauc は正のみです")
+      wq%wtauc = list%wq_wash_tauc
+    end if
+  end if
+  wq%have_wash = wq%wkr > 0.0 .or. wq%wkf > 0.0
+
+  ! --- 沈降の行き先 ---
+  if (list%f_wq_settle < 0 .or. list%f_wq_settle > 1) then
+    call par_stop("list_wq: f_wq_settle は 0(河床へ消失) か 1(プールへ) です")
+  end if
+  wq%f_settle = list%f_wq_settle
+  if (wq%f_settle == 1 .and. wq%vs <= 0.0) then
+    call par_stop("list_wq: f_wq_settle=1 には wq_vs(沈降速度)が必要です")
+  end if
+
+  ! --- 初期プール(一様か分布の排他) ---
+  have_bd0 = list%wq_bd0 > -9998.0 .or. len_trim(list%fn_wq_bd0) > 0
+  if (list%wq_bd0 > -9998.0 .and. len_trim(list%fn_wq_bd0) > 0) then
+    call par_stop("list_wq: 初期プールは wq_bd0(一様)か fn_wq_bd0(分布)の" &
+                  //"どちらか一方で指定してください")
+  end if
+  if (list%wq_bd0 > -9998.0 .and. list%wq_bd0 < 0.0) then
+    call par_stop("list_wq: wq_bd0 は非負のみです")
+  end if
+
+  ! --- プールの有効判定と確保 ---
+  wq%have_pool = wq%have_bd .or. have_bd0 .or. wq%f_settle == 1
+  if (wq%have_wash .and. .not. wq%have_pool) then
+    call par_stop("list_wq: 洗い出し(wq_wash_*)には蓄積レート・初期プール・" &
+                  //"f_wq_settle=1 のいずれかのプール供給が必要です")
+  end if
+  if (.not. wq%have_pool) return
+
+  allocate(s%bp(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  if (list%wq_bd0 > 0.0) then
+    s%bp(:,:) = list%wq_bd0 * kgha2gm2
+  else if (len_trim(list%fn_wq_bd0) > 0) then
+    call read_map_scatter(p, g, list%fn_wq_bd0, "fn_wq_bd0", kgha2gm2, s%bp)
+  end if
+  ! 海セルにはプールを置かない(蓄積・洗い出しとも sw 除外と整合。
+  ! ゾーン2 = sw は全域が使える)
+  block
+    integer :: i2, j2
+    do j2 = dcp%jsh, dcp%jeh
+      do i2 = 1, g%nx
+        if (g%sw(i2,j2) > 0) s%bp(i2,j2) = 0.0
+      end do
+    end do
+  end block
 end subroutine
 
 
@@ -617,8 +758,9 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
     end do
   end do
 
-  ! (3b) 分布面源の投入(全有効セル。一定率の前計算配列)
-  if (allocated(wq%rmap)) then
+  ! (3b) 分布面源の投入(全有効セル。一定率の前計算配列。
+  !      f_wq_map=1 のときは直接投入せず蓄積プールのレートとして使う)
+  if (allocated(wq%rmap) .and. .not. wq%map_to_pool) then
     !$omp parallel do schedule(static) private(i, j, w)
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
@@ -661,6 +803,62 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
     end if
   end if
 
+  ! (3d) 蓄積(buildup): dB/dt = r·(1 − B/Bmax)。Bmax=0 は線形 dB/dt = r。
+  !      指数厳密更新(無条件安定)。B が既に Bmax 以上のセルは蓄積しない
+  !      (沈降還流などで上限超過したプールを蓄積式が削らない条件)
+  if (wq%have_bd) then
+    !$omp parallel do schedule(static) private(i, j, w, rate)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%sw(i,j) > 0) cycle
+        if (g%x(i,j) <= 0) cycle
+        if (wq%map_to_pool) then
+          rate = wq%rmap(i,j)
+        else
+          rate = wq%bdrate
+        end if
+        if (rate <= 0.0) cycle
+        if (wq%bmax > 0.0) then
+          if (s%bp(i,j) >= wq%bmax) cycle
+          w = (wq%bmax - s%bp(i,j)) * (1.0 - exp(-rate * p%dt / wq%bmax))
+        else
+          w = rate * p%dt
+        end if
+        s%bp(i,j) = s%bp(i,j) + w
+        wq%vrow(j,9) = wq%vrow(j,9) + real(w, real64) * acell
+      end do
+    end do
+    !$omp end parallel do
+  end if
+
+  ! (3e) 洗い出し(washoff): λ = kr·P + kf·max(τ/τc − 1, 0)。
+  !      P = 地表到達降雨強度(m/s)、τ = ρg·n²·vv²/h^(1/3)(マニング閉じ。
+  !      m_geomorph_wash の面状侵食と同型)。湿潤セルのみ。
+  !      移送 ΔB = B·(1 − e^(−λΔt))(指数厳密・質量保存厳密)
+  if (wq%have_wash) then
+    !$omp parallel do schedule(static) private(i, j, w, fx, rate)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%sw(i,j) > 0) cycle
+        if (g%x(i,j) <= 0) cycle
+        if (s%bp(i,j) <= 0.0) cycle
+        if (s%h(i,j) <= p%dd) cycle          ! 乾燥セルは輸送水がなく洗えない
+        rate = wq%wkr * s%pre(i,j)           ! 雨滴項 (1/s)
+        if (wq%wkf > 0.0) then
+          fx = max(s%h(i,j), p%dv)
+          fx = rhow * p%gg * g%rn(i,j)**2 * s%vv(i,j)**2 / fx**(1.0/3.0)  ! τ (N/m2)
+          if (fx > wq%wtauc) rate = rate + wq%wkf * (fx / wq%wtauc - 1.0)
+        end if
+        if (rate <= 0.0) cycle
+        w = s%bp(i,j) * (1.0 - exp(-rate * p%dt))          ! g/m2(幾何面積基底)
+        s%bp(i,j) = s%bp(i,j) - w
+        s%cq(i,j) = s%cq(i,j) + w * real(acell) / real(mass_of(g, i, j, 1.0))
+        wq%vrow(j,10) = wq%vrow(j,10) + real(w, real64) * acell
+      end do
+    end do
+    !$omp end parallel do
+  end if
+
   ! (4) ダム捕捉帯の質量吸収(水は毎ステップ全量吸収されるため質量も
   !     同伴してダム台帳へ。放流濃度 0 = 既知の妥協。§30)
   do nd = 1, wq%ndam
@@ -693,12 +891,24 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
               wq%vrow(j,5) = wq%vrow(j,5) + mass_of(g, i, j, w)
             end if
           end if
+          if (wq%have_pool) then
+            if (s%bp(i,j) > 0.0) then
+              w = s%bp(i,j) * (1.0 - wq%fdec)
+              s%bp(i,j) = s%bp(i,j) - w
+              wq%vrow(j,5) = wq%vrow(j,5) + real(w, real64) * acell
+            end if
+          end if
         end if
         if (wq%vs > 0.0 .and. s%cq(i,j) > 0.0) then
           fx = swflow_vh(i, j, s%h(i,j))
           if (fx > p%dd) then
             w = s%cq(i,j) * min(wq%vs * p%dt / fx, 1.0)
             s%cq(i,j) = s%cq(i,j) - w
+            ! 行き先: 消失(河床外)かプール(再懸濁サイクル。f_wq_settle=1)。
+            ! 台帳 settle は行き先によらず沈降量を数える(閉合の解釈は §30)
+            if (wq%f_settle == 1) then
+              s%bp(i,j) = s%bp(i,j) + real(mass_of(g, i, j, w)) / real(acell)
+            end if
             wq%vrow(j,6) = wq%vrow(j,6) + mass_of(g, i, j, w)
           end if
         end if
@@ -783,30 +993,34 @@ subroutine m_wq_record(wq, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: v(1:8), msur, mgw
-  real(real64) :: rows(dcp%js:dcp%je), rows2(dcp%js:dcp%je)
+  real(real64) :: v(1:10), msur, mgw, mpool, acell
+  real(real64) :: rows(dcp%js:dcp%je), rows2(dcp%js:dcp%je), rows3(dcp%js:dcp%je)
   integer :: i, j, k
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (.not. wq%enabled) return
 
-  do k = 1, 8
+  acell = real(g%dx, real64) * real(g%dy, real64)
+  do k = 1, 10
     call par_sum_rows(wq%vrow(:,k), v(k))
   end do
   rows(:) = 0.0_real64
   rows2(:) = 0.0_real64
+  rows3(:) = 0.0_real64
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       rows(j) = rows(j) + mass_of(g, i, j, s%cq(i,j))
       if (allocated(wq%cg)) rows2(j) = rows2(j) + mass_of(g, i, j, wq%cg(i,j))
+      if (wq%have_pool) rows3(j) = rows3(j) + real(s%bp(i,j), real64) * acell
     end do
   end do
   call par_sum_rows(rows, msur)
   call par_sum_rows(rows2, mgw)
+  call par_sum_rows(rows3, mpool)
 
   if (is_root .and. wq%un /= 0) then
-    write(wq%un, '(f0.2,10(",",es15.7))') s%t, v(1), v(2), v(7), v(8), v(3), v(4), v(5), v(6), &
-                                          msur, mgw
+    write(wq%un, '(f0.2,13(",",es15.7))') s%t, v(1), v(2), v(7), v(8), v(9), v(10), &
+                                          v(3), v(4), v(5), v(6), msur, mgw, mpool
     flush(wq%un)
   end if
 end subroutine
@@ -838,6 +1052,13 @@ subroutine save_state(wq, p, g, s)
   ! cg(f_wq_infil=0 では不使用 = ゼロを書いて形式を固定)
   if (allocated(wq%cg)) then
     call par_gather_to(wk, wq%cg)
+  else
+    if (is_root) wk = 0.0
+  end if
+  if (is_root) call fileio_write_rle(un, wk)
+  ! bp(プール無効時もゼロを書いて形式を固定 = 常に3成分)
+  if (wq%have_pool) then
+    call par_gather_to(wk, s%bp)
   else
     if (is_root) wk = 0.0
   end if
@@ -884,8 +1105,18 @@ subroutine restore_state(wq, p, g, s)
     else
       call par_scatter_cell(dum, wq%cg)
     end if
+  else
+    if (is_root) call fileio_read_rle(un, wk)   ! cg 不使用 = 読み飛ばし
   end if
-  ! f_wq_infil=0 のときは cg レコードを読み飛ばすだけ(形式は常に2成分)
+  if (wq%have_pool) then
+    if (is_root) then
+      call fileio_read_rle(un, wk)
+      call par_scatter_cell(wk, s%bp)
+    else
+      call par_scatter_cell(dum, s%bp)
+    end if
+  end if
+  ! プール無効時は bp レコードを読み飛ばすだけ(形式は常に3成分)
   if (is_root) close(un)
 end subroutine
 
