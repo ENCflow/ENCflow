@@ -54,8 +54,11 @@ module list_geomorph
     real :: db_deltd = 0.05          ! 堆積速度係数 δd(Kanako 系の慣用値【要文献照合】)
     integer :: f_dbstop = 0          ! 停止条件の切替 (0:なし(E-D の ∝|V| のみ),
                                      ! 1:低速凝集 — vv<db_vstop で超過濃度を河床へ)
-    real :: db_vstop = 0.0           ! 停止判定の速度閾値 (m/s)。f_dbstop=1 で必須
+    real :: db_vstop = 0.05          ! 停止判定の速度閾値 (m/s)。f_dbstop=1 の凝集と
+                                     ! f_dbres=1 の降伏判定(静止維持)が共有する
     real :: db_wstop = 0.0           ! 低速凝集の河床転換レート (m/s)。f_dbstop=1 で必須
+    integer :: f_dbres = 1           ! 抵抗則 (0:マニングのみ, 1:クーロン+マニング合成
+                                     ! (推奨), 2:高橋ダイラタント(予約。文献照合後))
 
     ! 将来のプロセス追加はここにフラグとパラメータを足す
     ! (例: f_badland 崩壊性浸食)
@@ -103,13 +106,14 @@ subroutine list_geomorph_read(p, list)
   integer :: f_dbstop
   real :: db_vstop
   real :: db_wstop
+  integer :: f_dbres
 
   namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
                            fluv_porosity, fluv_sgrav, fluv_dzmax, fluv_diagratio, &
                            fluv_bcfeed, f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_wash, wash_kr, wash_kf, wash_tausc, &
-                           f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop
+                           f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres
 
   ! 型宣言のデフォルトを namelist 変数の初期値にする
   dt_geomorph = list%dt_geomorph
@@ -143,6 +147,7 @@ subroutine list_geomorph_read(p, list)
   f_dbstop = list%f_dbstop
   db_vstop = list%db_vstop
   db_wstop = list%db_wstop
+  f_dbres = list%f_dbres
 
   call par_info("reading list_geomorph in " // trim(p%fn_geomorph))
   open(newunit=un, file=trim(p%fn_geomorph), status='old', action='read', iostat=ios)
@@ -182,6 +187,7 @@ subroutine list_geomorph_read(p, list)
   list%f_dbstop = f_dbstop
   list%db_vstop = db_vstop
   list%db_wstop = db_wstop
+  list%f_dbres = f_dbres
 
 end subroutine
 

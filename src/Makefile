@@ -85,7 +85,7 @@ m_geomorph_creep.o: m_geomorph.o $(PAR_OBJ)
 m_geomorph_fluvial.o: m_geomorph.o m_swflow_enc.o $(PAR_OBJ)
 m_geomorph_suspend.o: m_geomorph.o $(PAR_OBJ)
 m_geomorph_wash.o: m_geomorph.o $(PAR_OBJ)
-m_geomorph_debris.o: m_geomorph.o $(PAR_OBJ)
+m_geomorph_debris.o: m_geomorph.o m_swflow_enc.o $(PAR_OBJ)
 list_geomorph.o: m_sysparam.o $(PAR_OBJ)
 m_gwflow.o: m_sysparam.o list_gwflow.o m_state.o m_geoinfo.o m_gwflow_bucket.o \
 	m_gwflow_greenampt.o m_gwflow_lateral.o m_util.o $(PAR_OBJ)

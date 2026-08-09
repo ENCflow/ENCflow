@@ -101,6 +101,9 @@ module m_state
     logical :: gw_active = .false.  ! 地下水モデルの有効化(m_gwflow_init が設定)
     logical :: sed_active = .false. ! 浮遊砂輸送の有効化(m_geomorph_init が設定。
                                     ! swflow_enc がステップ内で s%hs を移流する)
+    logical :: debris_active = .false. ! 土石流モデルの有効化(m_geomorph_init が
+                                    ! 設定。swflow_enc が運動量へ hs を算入し、
+                                    ! 抵抗則を切り替える。debris_plan.md §2.3-2.4)
     real :: hmean
     real :: cnmax
     integer :: it0 = 0       ! 時間ループの開始ステップ(フレッシュランは 0。

@@ -107,6 +107,8 @@ module m_geomorph
     integer :: f_dbstop = 0          ! 停止条件の切替(0:なし, 1:低速凝集)
     real :: db_vstop = 0.0           ! 停止判定の速度閾値 (m/s)
     real :: db_wstop = 0.0           ! 低速凝集の河床転換レート (m/s)
+    integer :: f_dbres = 0           ! 抵抗則(0:マニング, 1:クーロン+マニング。
+                                     !   実体は m_swflow_enc(set_debris で通知))
     logical :: initialized = .false.
   end type
 
@@ -314,6 +316,9 @@ subroutine m_geomorph_init(gm, p, g, s)
   ! 初期化順序: 本 init は m_swflow_init より前)。土石流(f_debris)も
   ! 同じ advect_scalar による hs 輸送を使う
   s%sed_active = (gm%f_suspend > 0 .or. gm%f_debris > 0)
+  ! 土石流モデルの有効化を通知(swflow_enc が運動量へ hs を算入し抵抗則を
+  ! 切り替える。抵抗則のパラメータは init_debris が set_debris で渡し済み)
+  s%debris_active = (gm%f_debris > 0)
 
   ! (将来のプロセスの検証をここに追加する)
 

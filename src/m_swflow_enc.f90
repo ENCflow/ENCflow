@@ -20,6 +20,8 @@ module m_swflow_enc
   public :: m_swflow_enc_init
   public :: m_swflow_enc_calc
   public :: m_swflow_enc_dispose
+  public :: m_swflow_enc_set_debris   ! 土石流抵抗則の設定口(m_geomorph の
+                                      ! init_debris が呼ぶ。swflow init より前)
 
   ! nvfortran の submodule バグ回避(TPR #27323 系)。修正され次第 private に戻す
   public :: f_advection_tvd
@@ -63,6 +65,17 @@ module m_swflow_enc
                                             !   (bc_init が設定。protected 不可:
                                             !   nvfortran は submodule のホスト結合を
                                             !   use 結合扱いし書き込みを拒否する。§13)
+
+  ! 土石流モデルの結合(debris_plan.md §2.3-2.4)
+  !   有効判定は s%debris_active(m_geomorph_init が設定)。パラメータは
+  !   m_geomorph の init_debris が m_swflow_enc_set_debris で渡す
+  !   (namelist の所有は list_geomorph。swflow init より前に呼ばれる契約)。
+  !   運動量への hs 算入(重力・圧力項の水面 = z+h+hs、摩擦水深 = h+hs)は
+  !   debris_active で常時、クーロン抵抗と降伏判定は db_res=1 のとき有効
+  integer :: db_res = 0                     ! 抵抗則 (0:マニングのみ, 1:クーロン+マニング)
+  real :: db_tanphi = 0.0                   ! tan(内部摩擦角)
+  real :: db_sgrav = 0.0                    ! 土粒子の水中比重 s
+  real :: db_vstop = 0.0                    ! 降伏判定の速度閾値 (m/s)
 
   ! 堤防(仮想壁面)モデル(developer.md §17)
   !   有効化は fn_channel の fn_bank / bank0 の有無(g%bank_active)。
@@ -572,6 +585,21 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 土石流抵抗則の設定口(m_geomorph の init_debris が呼ぶ)
+!   本モジュールの init より前に呼ばれる(m_main の初期化順序)。
+!   検証は呼び出し側(init_debris)が済ませている
+!----------------------------------------------------------------------
+subroutine m_swflow_enc_set_debris(fres, tanphi, sgrav, vstop)
+  integer, intent(in) :: fres
+  real, intent(in) :: tanphi, sgrav, vstop
+  db_res = fres
+  db_tanphi = tanphi
+  db_sgrav = sgrav
+  db_vstop = vstop
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! ENCの終了
 !----------------------------------------------------------------------
 subroutine m_swflow_enc_dispose(p)
@@ -591,6 +619,10 @@ subroutine m_swflow_enc_dispose(p)
   have_sect = .false.
   sect_m = 0.0
   have_frw = .false.
+  db_res = 0
+  db_tanphi = 0.0
+  db_sgrav = 0.0
+  db_vstop = 0.0
   call m_ffactor_dispose
   call adv_dispose
   call diff_dispose
@@ -1019,6 +1051,12 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
   real :: hc, hn
   real :: dtl
   integer :: l
+  ! 土石流(debris_active。debris_plan.md §2.3-2.4)
+  logical :: have_db              ! 運動量への hs 算入の有無
+  real :: hsc, hsn, hse           ! 両セル・エッジの土砂柱状量(時刻 n。負値クランプ)
+  real :: tgs                     ! 圧力項への hs 寄与(RK 内で不変)
+  real :: aye                     ! クーロン降伏減速度 (m/s²)(db_res=1 のとき > 0)
+  real :: cme                     ! エッジの混合体積濃度
 
   ! セル境界での物理量を求める
   vve = (s%vv(i,j) + s%vv(in,jn)) / 2       ! 速度の絶対値
@@ -1050,6 +1088,30 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
   hc = hc0
   hn = hn0
 
+  ! 土石流: 運動量への hs 算入と抵抗則の前計算(RK 内で不変の量。
+  ! hs は時刻 n の値 = ステップ頭交換済み。負値(強い乾燥化の名残)は
+  ! クランプ。debris_active=偽 なら全て 0 で以降の加算は厳密に不変)
+  have_db = s%debris_active
+  hse = 0.0
+  tgs = 0.0
+  aye = 0.0
+  if (have_db) then
+    hsc = max(s%hs(i,j), 0.0)
+    hsn = max(s%hs(in,jn), 0.0)
+    hse = (hsc + hsn) / 2
+    ! 圧力項への hs 寄与(水面 = z + h + hs。f_pressure_term に整合)
+    if (f_pressure_term > 0) tgs = -ge * (hsn - hsc) / w8dr(k) * gve
+    ! クーロン降伏減速度: a_y = ge・tanφ・sC/(1+sC)(水中固体重量の底面
+    ! 摩擦を混合密度 ρ(1+sC) で除した加速度形。ge は correct_ge 済み =
+    ! cos²θ を重力・圧力項と共有。経験定数なし)
+    if (db_res > 0) then
+      if (hsc + hsn > 0.0) then
+        cme = (hsc + hsn) / (hc0 + hn0 + hsc + hsn)
+        aye = ge * db_tanphi * db_sgrav * cme / (1.0 + db_sgrav * cme)
+      end if
+    end if
+  end if
+
   ! ルンゲクッタの段数を初期化
   if (f_runge > 0) then
     l = 1                ! ルンゲクッタの場合は1段目から
@@ -1067,11 +1129,13 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
 
     ! 摩擦項で使用する水深
     !   水深が浅い場合に摩擦が過大となることを防ぐために水深の最小値を制限
-    hhe = max(he, p%dv)
+    !   (土石流有効時は混合流動深 h + hs。hse=0 なら厳密に従来と同値)
+    hhe = max(he + hse, p%dv)
 
     ! セル境界での重力項(符合は中心セルから近傍セルに向かい正)
+    !   土石流有効時は水面勾配に hs を算入(z+h+hs。tgs は RK 内で不変)
     if (f_pressure_term > 0) then
-      tge = tg0e - ge * (hn - hc) / w8dr(k) * gve
+      tge = tg0e - ge * (hn - hc) / w8dr(k) * gve + tgs
     else
       tge = tg0e
     end if
@@ -1084,14 +1148,28 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
     !   摩擦項と一緒に半陰解法で計算するため、次元が他の項と異なる(値は常に正)
     tfe = tfe - p%kk * p%cd * hhe / bbe * (1 - gve) * vve / 2
 
+    ! 土石流のクーロン抵抗(db_res=1)
+    !   速度非依存の降伏減速度 a_y を半陰解法に合成(÷|V| で次元を合わせる)
+    if (aye > 0.0) tfe = tfe - aye / max(vve, p%vv)
+
     ! l段目の時間刻み
     dtl = p%dt / a(l) / lme
 
     ! セル境界での流速(符合は中心セルから近傍セルに向かい正)を更新
     !   摩擦項を半陰解法で計算する
     !   どちらも中心セルから近傍セルに向かい正
-    uve1 = (uve0 + (tae + tge) * dtl) / (1 - tfe * dtl) 
+    uve1 = (uve0 + (tae + tge) * dtl) / (1 - tfe * dtl)
     mne1 = uve1 * he
+
+    ! 土石流の降伏判定(動き出し・停止): 低速かつ駆動(移流+重力)が
+    ! 降伏減速度以下なら静止を維持する(半陰解法の漸近だけでは完全静止に
+    ! ならないための明示的な零化。debris_plan.md §2.3)
+    if (aye > 0.0) then
+      if (abs(uve0) < db_vstop .and. abs(tae + tge) <= aye) then
+        uve1 = 0.0
+        mne1 = 0.0
+      end if
+    end if
 
     ! これ以降はルンゲクッタ最終段(陽的オイラー)では不要
     if (l >= 4) exit

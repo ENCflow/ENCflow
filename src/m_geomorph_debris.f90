@@ -35,6 +35,7 @@
 !======================================================================
 submodule(m_geomorph) m_geomorph_debris
   use m_parallel, only : par_stop, dcp
+  use m_swflow_enc, only : m_swflow_enc_set_debris
   implicit none
 
   ! 勾配領域の閾値と係数(【要文献照合】高橋理論の慣用値。原式固定で
@@ -89,6 +90,24 @@ module subroutine init_debris(gm, g, list)
   gm%f_dbstop = list%f_dbstop
   gm%db_vstop = list%db_vstop
   gm%db_wstop = list%db_wstop
+
+  ! 抵抗則(実体は m_swflow_enc。パラメータをここで検証して渡す。
+  ! 初期化順序: geomorph init は swflow init より前 — m_main 参照)
+  select case (list%f_dbres)
+    case (0)      ! マニングのみ(E-D の単独検証用)
+      continue
+    case (1)      ! クーロン+マニング合成(推奨)
+      if (list%db_vstop <= 0.0) then
+        call par_stop("list_geomorph: f_dbres=1 requires db_vstop > 0(降伏判定の閾値)")
+      end if
+    case (2)      ! 高橋ダイラタント(予約)
+      call par_stop("list_geomorph: f_dbres=2(高橋ダイラタント)は未実装です" &
+                    // "(係数の文献照合待ち — debris_plan.md §1)")
+    case default
+      call par_stop("list_geomorph: f_dbres must be 0(Manning) or 1(Coulomb+Manning)")
+  end select
+  gm%f_dbres = list%f_dbres
+  call m_swflow_enc_set_debris(gm%f_dbres, gm%db_tanphi, gm%sgrav, gm%db_vstop)
 
   ! 8近傍距離テーブル(最急降下勾配用)
   do k = 1, 8
