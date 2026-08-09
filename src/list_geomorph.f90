@@ -59,6 +59,14 @@ module list_geomorph
     real :: db_wstop = 0.0           ! 低速凝集の河床転換レート (m/s)。f_dbstop=1 で必須
     integer :: f_dbres = 1           ! 抵抗則 (0:マニングのみ, 1:クーロン+マニング合成
                                      ! (推奨), 2:高橋ダイラタント(予約。文献照合後))
+    character(len=256) :: fn_dbinit = ""  ! 瞬時流動化の崩壊深分布ファイル (m)。
+                                     ! 指定で f_release 有効(fn_* の有無の慣例)。
+                                     ! f_debris=1 が必須。debris_plan.md §2.5
+    real :: db_reltime = 0.0         ! 流動化の発生時刻 (s)。t0 以前なら最初の
+                                     ! geomorph 更新で発火(1回だけ。リスタート安全)
+    real :: db_relsat = 1.0          ! 崩壊土塊の飽和度 0〜1(gwflow 無効時の
+                                     ! 間隙水付与 h += λ・relsat・D に使用。
+                                     ! gwflow 有効時は容量超過引き渡しが担い不使用)
 
     ! 将来のプロセス追加はここにフラグとパラメータを足す
     ! (例: f_badland 崩壊性浸食)
@@ -107,13 +115,17 @@ subroutine list_geomorph_read(p, list)
   real :: db_vstop
   real :: db_wstop
   integer :: f_dbres
+  character(len=256) :: fn_dbinit
+  real :: db_reltime
+  real :: db_relsat
 
   namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
                            fluv_porosity, fluv_sgrav, fluv_dzmax, fluv_diagratio, &
                            fluv_bcfeed, f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_wash, wash_kr, wash_kf, wash_tausc, &
-                           f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres
+                           f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
+                           fn_dbinit, db_reltime, db_relsat
 
   ! 型宣言のデフォルトを namelist 変数の初期値にする
   dt_geomorph = list%dt_geomorph
@@ -148,6 +160,9 @@ subroutine list_geomorph_read(p, list)
   db_vstop = list%db_vstop
   db_wstop = list%db_wstop
   f_dbres = list%f_dbres
+  fn_dbinit = list%fn_dbinit
+  db_reltime = list%db_reltime
+  db_relsat = list%db_relsat
 
   call par_info("reading list_geomorph in " // trim(p%fn_geomorph))
   open(newunit=un, file=trim(p%fn_geomorph), status='old', action='read', iostat=ios)
@@ -188,6 +203,9 @@ subroutine list_geomorph_read(p, list)
   list%db_vstop = db_vstop
   list%db_wstop = db_wstop
   list%f_dbres = f_dbres
+  list%fn_dbinit = fn_dbinit
+  list%db_reltime = db_reltime
+  list%db_relsat = db_relsat
 
 end subroutine
 

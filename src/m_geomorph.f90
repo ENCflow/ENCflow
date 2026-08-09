@@ -109,6 +109,9 @@ module m_geomorph
     real :: db_wstop = 0.0           ! 低速凝集の河床転換レート (m/s)
     integer :: f_dbres = 0           ! 抵抗則(0:マニング, 1:クーロン+マニング。
                                      !   実体は m_swflow_enc(set_debris で通知))
+    integer :: f_release = 0         ! 瞬時流動化(0:無効, 1:有効 = fn_dbinit 指定)
+    real :: db_reltime = 0.0         ! 流動化の発生時刻 (s)
+    real :: db_relsat = 1.0          ! 崩壊土塊の飽和度(gwflow 無効時のみ使用)
     logical :: initialized = .false.
   end type
 
@@ -140,6 +143,9 @@ module m_geomorph
                                      !   から fx を計算し、パス2が適用する。
                                      !   1パスのその場更新は slope8 の近傍読みと
                                      !   競合する(OpenMP データ競合の実バグ)
+    real, allocatable :: rel(:,:)    ! 瞬時流動化の崩壊深 (m)(1:nx, js:je)。
+                                     !   発火後に解放(発火は1回だけ)
+    integer :: nrelclip = 0          ! 崩壊深 > sd でクリップしたセル数(dispose で報告)
   end type
   type(t_creep) :: crp
   type(t_fluvial) :: flv
@@ -201,8 +207,9 @@ module m_geomorph
       type(t_state), intent(inout) :: s
       real, intent(in) :: dtw
     end subroutine
-    module subroutine init_debris(gm, g, list)
+    module subroutine init_debris(gm, p, g, list)
       type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_list_geomorph), intent(in) :: list
     end subroutine
@@ -212,6 +219,12 @@ module m_geomorph
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
       real, intent(in) :: dtw
+    end subroutine
+    module subroutine release_debris(gm, p, g, s)
+      type(t_geomorph), intent(in) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
     end subroutine
     ! 共有スクラッチの確保口(実装は m_geomorph_creep 側。gfortran は
     ! private なモジュール手続きをローカルシンボルにするため、submodule
@@ -310,7 +323,9 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_fluvial > 0) call init_fluvial(gm, p, g, list)
   if (gm%f_suspend > 0) call init_suspend(gm, p, list)
   if (gm%f_wash > 0) call init_wash(gm, list)
-  if (gm%f_debris > 0) call init_debris(gm, g, list)
+  if (gm%f_debris > 0) call init_debris(gm, p, g, list)
+  ! 瞬時流動化(f_release)は f_debris の付属機構(fn_dbinit の有無で有効化。
+  ! 検証・読み込みは init_debris 内)
 
   ! 浮遊砂輸送の有効化を通知(swflow_enc がステップ内で s%hs を移流する。
   ! 初期化順序: 本 init は m_swflow_init より前)。土石流(f_debris)も
@@ -389,6 +404,11 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
   if (gm%f_wash > 0) call calc_wash(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_creep > 0) call calc_creep(gm, g, s, dts)
   ! (将来のプロセスの適用をここに追加する)
+
+  ! 瞬時流動化(時刻交差で1回だけ発火。プロセス群の後に置く理由:
+  ! 発火ステップの z 変更が末尾のハロ交換で配布されてから、次ステップの
+  ! calc_debris の勾配計算に入る = 帯界面でランク数不変)
+  if (gm%f_release > 0) call release_debris(gm, p, g, s)
 
   ! --- s%e の整合を回復する(本モジュールは水深 h を保存する契約) ---
   !$omp parallel do schedule(static) private(i, j)
@@ -519,8 +539,15 @@ subroutine m_geomorph_dispose(gm)
     call par_warn("geomorph fluvial: 岩盤床クリップで " &
                   // rtoa(flv%vleak) // " m3 の土砂収支誤差が生じました")
   end if
+  if (dbr%nrelclip > 0) then
+    call par_warn("geomorph debris: 瞬時流動化の崩壊深が土層厚 sd を超え " &
+                  // itoa(dbr%nrelclip) // " セルで sd にクリップされました" &
+                  // "(fn_dbinit と土層厚入力の整合を確認してください)")
+  end if
   if (allocated(wrk%q)) deallocate(wrk%q)
   if (allocated(dbr%fx)) deallocate(dbr%fx)
+  if (allocated(dbr%rel)) deallocate(dbr%rel)
+  dbr%nrelclip = 0
   flv%nclip = 0
   flv%vleak = 0.0
   gm%enabled = .false.

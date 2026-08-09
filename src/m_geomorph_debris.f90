@@ -36,6 +36,7 @@
 submodule(m_geomorph) m_geomorph_debris
   use m_parallel, only : par_stop, dcp
   use m_swflow_enc, only : m_swflow_enc_set_debris
+  use m_fileio, only : fileio_read_matrix
   implicit none
 
   ! 勾配領域の閾値と係数(【要文献照合】高橋理論の慣用値。原式固定で
@@ -50,8 +51,9 @@ contains
 !----------------------------------------------------------------------
 ! 土石流 E-D の初期化(検証と距離テーブル。エッジ作業領域は不要)
 !----------------------------------------------------------------------
-module subroutine init_debris(gm, g, list)
+module subroutine init_debris(gm, p, g, list)
   type(t_geomorph), intent(inout) :: gm
+  type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_list_geomorph), intent(in) :: list
   integer :: k
@@ -118,6 +120,35 @@ module subroutine init_debris(gm, g, list)
   if (.not. allocated(dbr%fx)) then
     allocate(dbr%fx(1:g%nx, dcp%js:dcp%je), source = 0.0)
   end if
+
+  ! --- 瞬時流動化(f_release)。fn_dbinit の有無で有効化 ---
+  if (len_trim(list%fn_dbinit) > 0) then
+    if (list%db_relsat < 0.0 .or. list%db_relsat > 1.0) then
+      call par_stop("list_geomorph: db_relsat must be in [0, 1]")
+    end if
+    gm%f_release = 1
+    gm%db_reltime = list%db_reltime
+    gm%db_relsat = list%db_relsat
+    call read_release(p, g, trim(list%fn_dbinit))
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 崩壊深分布ファイルを読み帯を切り出す(全ランク冗長の全域読み。
+! read_hinit と同じ流儀。負値は設定誤りとして停止)
+!----------------------------------------------------------------------
+subroutine read_release(p, g, fname)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  character(len=*), intent(in) :: fname
+  real, allocatable :: wk(:,:)
+  allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
+  call fileio_read_matrix(trim(p%dir_data)//"/"//fname, g%nx, g%ny, wk, p%f_input_mode)
+  if (minval(wk) < 0.0) then
+    call par_stop("list_geomorph: fn_dbinit の崩壊深に負値があります: "//fname)
+  end if
+  allocate(dbr%rel(1:g%nx, dcp%js:dcp%je), source = wk(1:g%nx, dcp%js:dcp%je))
 end subroutine
 
 
@@ -210,6 +241,68 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   end do
   !$omp end parallel do
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 瞬時流動化(f_release)の発火判定と適用
+!   発火は時刻交差(前回の geomorph 呼び出し時刻 < db_reltime ≤ 現時刻)で
+!   1回だけ。呼び出しは it の絶対格子(idt_geomorph の倍数)上にあるため、
+!   リスタート後も交差判定だけで再発火しない(新規保存状態なし)。
+!   最初の呼び出し(it−idt ≤ 0 = それ以前に呼び出しなし)は t0 以前の
+!   指定も拾う。判定材料は全ランク同一(collective 安全)。
+!   転換(台帳整合の fluidize。debris_plan.md §2.5):
+!     hs += (1−λ)・D、z −= D、sd −= D(固体台帳 Δhs = −(1−λ)Δz が構造的に閉合)
+!     水: gw_active なら容量超過引き渡し(間隙水は hg から出る)、
+!         無効なら h += λ・relsat・D(シナリオ的な間隙水付与)
+!----------------------------------------------------------------------
+module subroutine release_debris(gm, p, g, s)
+  type(t_geomorph), intent(in) :: gm
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real :: tprev, dd, fx, cap, fxg
+
+  if (.not. allocated(dbr%rel)) return          ! この run で発火済み
+  if (gm%db_reltime > s%t) return
+  if (s%it - gm%idt_geomorph > 0) then
+    tprev = p%t0 + p%dt * (s%it - gm%idt_geomorph)
+    if (gm%db_reltime <= tprev) return          ! 前回呼び出し以前に発火済み
+  end if
+
+  ! --- 発火: 帯内の崩壊深 > 0 のセルを流動化する(セル局所) ---
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      dd = dbr%rel(i,j)
+      if (dd <= 0.0) cycle
+      if (dd > s%sd(i,j)) then
+        dd = s%sd(i,j)                          ! 可動層クランプ(dispose で報告)
+        dbr%nrelclip = dbr%nrelclip + 1
+        if (dd <= 0.0) cycle
+      end if
+      fx = dd / gm%poroi                        ! 固体分 (1−λ)・D
+      s%hs(i,j) = s%hs(i,j) + fx
+      s%z(i,j) = s%z(i,j) - dd
+      s%sd(i,j) = s%sd(i,j) - dd
+      if (s%gw_active) then
+        ! 間隙水は地下水から出る(容量超過引き渡し。suspend と同じ整合)
+        cap = s%sd(i,j) * g%sy0
+        if (s%hg(i,j) > cap) then
+          fxg = s%hg(i,j) - cap
+          s%hg(i,j) = cap
+          s%h(i,j) = s%h(i,j) + fxg
+        end if
+      else
+        ! gwflow 無効: 飽和度 relsat の間隙水をシナリオ的に付与
+        s%h(i,j) = s%h(i,j) + (1.0 - 1.0 / gm%poroi) * gm%db_relsat * dd
+      end if
+    end do
+  end do
+
+  deallocate(dbr%rel)                           ! 発火は1回だけ
 end subroutine
 
 
