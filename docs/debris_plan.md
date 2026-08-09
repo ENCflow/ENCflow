@@ -1,8 +1,9 @@
 # 土石流・地滑りモデルの設計(debris_plan.md)
 
-**状態: 設計合意済み・実装中(2026-08-09)**。ユーザーとの設計議論
-(2026-08-09)で方向を合意した。実装完了とともに決定を developer.md へ
-移して消し込む(geomorph_plan.md と同じ運用)。
+**状態: C1〜C6 実装・検証済み(2026-08-09。developer.md §27)**。
+残るのは §1 の文献照合(閾値・係数の確定、f_dbres=2 ダイラタント則、
+第3領域 C∞ 式)と解析解ベンチマーク(handoff 参照)。照合完了とともに
+本書を消し込む(geomorph_plan.md と同じ運用)。
 
 前提となる既存構造: s%hs(浮遊砂柱状量)+ advect_scalar(ステップ内
 風上輸送)、s%sd(動的土層厚)と z の共動更新、E-D 交換の反対称適用、
@@ -218,11 +219,14 @@ s%debris_active のときのみ(分岐1個。無効時ビット一致):
 
 ## 4. 実装段階とコミット構成
 
-| 段階 | 内容 | 検証 |
-|---|---|---|
-| C1 | 本設計文書 | — |
-| C2 (D1) | f_debris E-D + 排他ガード + sed_active 拡張 | 無効時ビット一致・疎通・保存則 |
-| C3 (D2+D3) | 抵抗則 f_dbres・降伏判定・hs 算入(swflow_enc)+ setter | 無効時ビット一致・降伏静的検定 |
-| C4 (D4) | f_release(fn_dbinit/db_reltime)+ fluidize | 発火・台帳・リスタート |
-| C5 | f_slide + Fs 診断 | 飽和→発生の疎通 |
-| C6 | test/debris・test/slide・docs 反映 | np=1,2,4・-fcheck |
+| 段階 | 内容 | 検証 | 状態 |
+|---|---|---|---|
+| C1 | 本設計文書 | — | 済 |
+| C2 (D1) | f_debris E-D + 排他ガード + sed_active 拡張 | 無効時ビット一致・疎通・保存則 | 済(2026-08-09) |
+| C3 (D2+D3) | 抵抗則 f_dbres・降伏判定・hs 算入(swflow_enc)+ setter | 無効時ビット一致・降伏静的検定 | 済(同上) |
+| C4 (D4) | f_release(fn_dbinit/db_reltime)+ fluidize | 発火・台帳・リスタート | 済(同上) |
+| C5 | f_slide + Fs 診断 | 飽和→発生の疎通 | 済(同上) |
+| C6 | test/debris・test/slide・docs 反映 | np=1,2,4・-fcheck | 済(同上) |
+
+実装記録・実バグ(勾配読みプロセスの2パス規約)・検証記録・既知の
+制約は developer.md §27 を参照。

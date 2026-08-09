@@ -248,6 +248,29 @@
      (c) 抑制 OFF でも負水深を許さない設計変更(挙動変更なので
          reference 更新を伴う。優先度低)
 
+1j. **土石流・地滑りモデル(f_debris/f_release/f_slide。2026-08-09 実装。
+    developer.md §27、docs/debris_plan.md)の残作業**
+   - **文献照合(最優先)**: 実装環境から学術文献に到達できず、§19.8 の
+     方針で以下を【要文献照合】のまま実装した。Kanako 論文
+     (Nakatani et al. 2008, IJECE 1(2), 62-72)か砂防基本計画策定指針・
+     Morpho2DH Solver Manual で人間が確認すること:
+     (a) 勾配領域閾値 tanθ = 0.138 / 0.03、未成熟係数 6.7、上限 0.9C*
+     (b) 侵食・堆積速度式の形(δe・(C∞−C)/(C*−C∞)・|V| /
+         δd・(C∞−C)/C*・|V|)と δe=0.0007・δd=0.05 の既定値
+     (c) f_dbres=2(高橋ダイラタント抵抗則)の係数 → 確認後に実装
+         (par_stop 予約済み。新パラメータは db_d50 のみの見込み)
+     (d) 掃流域(tanθ≤0.03)の第3領域 C∞ 式 → 確認後に追加
+   - 解析解・実験ベンチマーク: 斜面等流の平衡濃度、停止距離
+     (高橋の実験式)、morfac なし版の検証階段(test/debris は疎通+
+     保存則のみ)
+   - ifx / nvfortran / AOCC でのビルド・検証(gfortran のみ実施済み)
+   - S_grnd 表示が h=0 セルの hg を集計しない既存仕様の扱い
+     (developer.md §27.4。直すなら m_state_calcstat の cycle 位置の
+     変更 = 表示のみだが既存 Log との比較に影響 — 要議論)
+   - Fs 分布の output_matrix 出力(f_out_fs)と record 計測の追加
+   - f_wash と f_debris の併用(現状 wash は f_suspend 必須)、
+     斜面崩壊の部分深さ化(現状は全層)、二相・二層モデルは将来
+
 ## 中期の道標(着手順は実測次第)
 
 - セル数重み付き帯分割は実装済み(2026-08。developer.md §11)。残るは
