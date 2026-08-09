@@ -31,7 +31,8 @@ module m_intercept
   use m_intercept_fixed, only : intercept_fixed_init, intercept_fixed_calc, &
                                 intercept_fixed_dispose
   use m_intercept_initloss, only : intercept_initloss_init, intercept_initloss_calc, &
-                                intercept_initloss_step, intercept_initloss_dispose
+                                intercept_initloss_step, intercept_initloss_draw, &
+                                intercept_initloss_dispose
   use m_parallel, only : par_stop
   use m_util, only : itoa
   implicit none
@@ -65,6 +66,15 @@ module m_intercept
       import :: t_sysparam
       type(t_sysparam), intent(in) :: p
     end subroutine
+
+    ! 蒸発散による貯留の引き落とし口(m_evap が毎ステップ・セルごとに呼ぶ。
+    ! §27)。需要 dem (m) のうち貯留から引けた量を返し、内部状態を減じる
+    ! (=遮断容量の乾き戻り)。貯留を持つモデルのみ束縛する
+    function procedure_intercept_draw(i, j, dem) result(w)
+      integer, intent(in) :: i, j
+      real, intent(in) :: dem
+      real :: w
+    end function
   end interface
   !-------------------------------------------
 
@@ -75,6 +85,8 @@ module m_intercept
     procedure(procedure_intercept_calc),    pointer, nopass :: calc    => null()
     procedure(procedure_intercept_calc),    pointer, nopass :: step    => null()
                                      ! 毎ステップ口(貯留型のみ束縛。calc と同シグネチャ)
+    procedure(procedure_intercept_draw),    pointer, nopass :: draw    => null()
+                                     ! 蒸発散の引き落とし口(貯留型のみ束縛。§27)
     procedure(procedure_intercept_dispose), pointer, nopass :: dispose => null()
     logical :: enabled = .false.     ! fn_intercept の有無と f_icmodel で決まる
     logical :: initialized = .false.
@@ -109,6 +121,7 @@ subroutine m_intercept_init(ic, p, g)
       ic%init    => intercept_initloss_init
       ic%calc    => intercept_initloss_calc
       ic%step    => intercept_initloss_step
+      ic%draw    => intercept_initloss_draw
       ic%dispose => intercept_initloss_dispose
     case default
       call par_stop("list_intercept: f_icmodel must be 0(none), 1(fixed) or 2(initloss): " &
@@ -166,6 +179,7 @@ subroutine m_intercept_dispose(ic, p)
   ic%init    => null()
   ic%calc    => null()
   ic%step    => null()
+  ic%draw    => null()
   ic%dispose => null()
   ic%enabled = .false.
   ic%initialized = .false.
