@@ -99,6 +99,14 @@ module m_geomorph
     real :: wkr = 0.0                ! 雨滴侵食係数(無次元)
     real :: wkf = 0.0                ! 面状侵食係数 (m/s)
     real :: wtausc = 0.05            ! 面状侵食の限界無次元掃流力 τ*c
+    integer :: f_debris = 0          ! 土石流 E-D(0:無効, 1:有効。f_suspend と排他)
+    real :: db_tanphi = 0.0          ! tan(内部摩擦角)
+    real :: db_delte = 0.0           ! 侵食速度係数 δe
+    real :: db_deltd = 0.0           ! 堆積速度係数 δd
+    real :: db_cstar = 0.0           ! 河床の充填濃度 C* = 1 - λ(fluv_porosity から導出)
+    integer :: f_dbstop = 0          ! 停止条件の切替(0:なし, 1:低速凝集)
+    real :: db_vstop = 0.0           ! 停止判定の速度閾値 (m/s)
+    real :: db_wstop = 0.0           ! 低速凝集の河床転換レート (m/s)
     logical :: initialized = .false.
   end type
 
@@ -123,8 +131,17 @@ module m_geomorph
                                      ! ループ1は対象セルの4成分すべてを
                                      ! 0 を含めて必ず上書きする契約)
   end type
+  type t_debris
+    real :: dist8(1:8) = 0.0         ! 8近傍セル中心までの距離 (m)(最急降下勾配用)
+    real, allocatable :: fx(:,:)     ! E-D 交換量の作業領域 (1:nx, js:je)。
+                                     !   2パス構造用: パス1が時刻 n の z(近傍参照)
+                                     !   から fx を計算し、パス2が適用する。
+                                     !   1パスのその場更新は slope8 の近傍読みと
+                                     !   競合する(OpenMP データ競合の実バグ)
+  end type
   type(t_creep) :: crp
   type(t_fluvial) :: flv
+  type(t_debris) :: dbr
   type(t_gmwork) :: wrk
 
   ! プロセス実装(init/calc)は submodule に分割(m_geomorph_creep /
@@ -176,6 +193,18 @@ module m_geomorph
       type(t_list_geomorph), intent(in) :: list
     end subroutine
     module subroutine calc_wash(gm, p, g, s, dtw)
+      type(t_geomorph), intent(in) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dtw
+    end subroutine
+    module subroutine init_debris(gm, g, list)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine calc_debris(gm, p, g, s, dtw)
       type(t_geomorph), intent(in) :: gm
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
@@ -243,10 +272,22 @@ subroutine m_geomorph_init(gm, p, g, s)
   gm%f_fluvial = list%f_fluvial
   gm%f_suspend = list%f_suspend
   gm%f_wash = list%f_wash
+  gm%f_debris = list%f_debris
 
-  ! --- 土砂プロセス(掃流・浮遊・斜面)の共有設定 ---
+  ! 土石流 E-D と浮遊砂 E-D は同一の s%hs 上で動くため排他
+  ! (二重計上防止。debris_plan.md §2.2)
+  if (gm%f_debris > 0 .and. gm%f_suspend > 0) then
+    call par_stop("list_geomorph: f_debris と f_suspend は併用できません" &
+                  // "(同一の hs に対する E-D の二重計上になります)")
+  end if
+  ! 土石流はイベント計算であり地形時間の加速は適用外
+  if (gm%f_debris > 0 .and. gm%morfac /= 1.0) then
+    call par_stop("list_geomorph: f_debris は morfac=1 のみ対応です(イベント計算)")
+  end if
+
+  ! --- 土砂プロセス(掃流・浮遊・斜面・土石流)の共有設定 ---
   ! (f_wash は f_suspend 必須なので条件には現れない — init_wash が検証)
-  if (gm%f_fluvial > 0 .or. gm%f_suspend > 0) then
+  if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0) then
     ! 河床の物性(共有)
     if (list%fluv_porosity < 0.0 .or. list%fluv_porosity >= 1.0) then
       call par_stop("list_geomorph: fluv_porosity must be in [0,1)")
@@ -267,10 +308,12 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_fluvial > 0) call init_fluvial(gm, p, g, list)
   if (gm%f_suspend > 0) call init_suspend(gm, p, list)
   if (gm%f_wash > 0) call init_wash(gm, list)
+  if (gm%f_debris > 0) call init_debris(gm, g, list)
 
   ! 浮遊砂輸送の有効化を通知(swflow_enc がステップ内で s%hs を移流する。
-  ! 初期化順序: 本 init は m_swflow_init より前)
-  s%sed_active = (gm%f_suspend > 0)
+  ! 初期化順序: 本 init は m_swflow_init より前)。土石流(f_debris)も
+  ! 同じ advect_scalar による hs 輸送を使う
+  s%sed_active = (gm%f_suspend > 0 .or. gm%f_debris > 0)
 
   ! (将来のプロセスの検証をここに追加する)
 
@@ -331,6 +374,11 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
   ! --- 有効なプロセスを順に適用(それぞれ自帯 js..je を更新) ---
   ! 浮遊砂の E-D は水柱側が水理時間(morfac なし)、河床側が ×morfac の
   ! 台帳分離(MORFAC 方式。geomorph_plan.md §4)のため dtw を別に渡す
+  ! 土石流 E-D は最初に適用する: 最急降下勾配が近傍の s%z を読むため、
+  ! 他プロセスが帯内の z を先に動かすとハロ行(時刻 n のまま)との
+  ! 不整合でランク数依存になる。先頭なら全セル・ハロとも時刻 n の z で
+  ! 一貫する(ハロはステップ頭の swflow 交換で最新)
+  if (gm%f_debris > 0) call calc_debris(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_fluvial > 0) call calc_fluvial(gm, p, g, s, dts)
   if (gm%f_suspend > 0) call calc_suspend(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_wash > 0) call calc_wash(gm, p, g, s, p%dt * gm%idt_geomorph)
@@ -351,7 +399,9 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
   ! 自プロセスの次回の近傍参照(±1)と、流れの重力項・gwflow 側方の
   ! 近傍参照が、この1回の交換で賄われる(developer.md §11)
   call par_halo_cell(s%z)
-  if (gm%f_fluvial > 0 .or. gm%f_suspend > 0) call par_halo_cell(s%sd)
+  if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0) then
+    call par_halo_cell(s%sd)
+  end if
   ! s%hs のハロは swflow_enc のステップ頭交換が担う(移流の直前に最新化)
 
 end subroutine
@@ -465,6 +515,7 @@ subroutine m_geomorph_dispose(gm)
                   // rtoa(flv%vleak) // " m3 の土砂収支誤差が生じました")
   end if
   if (allocated(wrk%q)) deallocate(wrk%q)
+  if (allocated(dbr%fx)) deallocate(dbr%fx)
   flv%nclip = 0
   flv%vleak = 0.0
   gm%enabled = .false.

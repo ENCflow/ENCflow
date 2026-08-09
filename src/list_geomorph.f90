@@ -45,6 +45,18 @@ module list_geomorph
     real :: wash_kf = 0.0            ! 面状侵食係数 (m/s)(E_f = kf・(τ*/τ*c - 1))
     real :: wash_tausc = 0.05        ! 面状侵食の限界無次元掃流力 τ*c
 
+    integer :: f_debris = 0          ! 土石流 E-D(高橋型平衡濃度)(0:無効, 1:有効)。
+                                     ! f_suspend と排他(同一 hs 上の E-D 二重計上防止)。
+                                     ! morfac=1 必須(イベント計算)。debris_plan.md §2.2
+    real :: db_phi = 0.0             ! 土砂の内部摩擦角 (deg)。f_debris=1 で必須
+    real :: db_delte = 0.0007        ! 侵食速度係数 δe(既定は Takahashi 2007 の一般値
+                                     ! 【要文献照合】debris_plan.md §1)
+    real :: db_deltd = 0.05          ! 堆積速度係数 δd(Kanako 系の慣用値【要文献照合】)
+    integer :: f_dbstop = 0          ! 停止条件の切替 (0:なし(E-D の ∝|V| のみ),
+                                     ! 1:低速凝集 — vv<db_vstop で超過濃度を河床へ)
+    real :: db_vstop = 0.0           ! 停止判定の速度閾値 (m/s)。f_dbstop=1 で必須
+    real :: db_wstop = 0.0           ! 低速凝集の河床転換レート (m/s)。f_dbstop=1 で必須
+
     ! 将来のプロセス追加はここにフラグとパラメータを足す
     ! (例: f_badland 崩壊性浸食)
   end type
@@ -84,12 +96,20 @@ subroutine list_geomorph_read(p, list)
   real :: wash_kr
   real :: wash_kf
   real :: wash_tausc
+  integer :: f_debris
+  real :: db_phi
+  real :: db_delte
+  real :: db_deltd
+  integer :: f_dbstop
+  real :: db_vstop
+  real :: db_wstop
 
   namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
                            fluv_porosity, fluv_sgrav, fluv_dzmax, fluv_diagratio, &
                            fluv_bcfeed, f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
-                           susp_beta, susp_esa, f_wash, wash_kr, wash_kf, wash_tausc
+                           susp_beta, susp_esa, f_wash, wash_kr, wash_kf, wash_tausc, &
+                           f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop
 
   ! 型宣言のデフォルトを namelist 変数の初期値にする
   dt_geomorph = list%dt_geomorph
@@ -116,6 +136,13 @@ subroutine list_geomorph_read(p, list)
   wash_kr = list%wash_kr
   wash_kf = list%wash_kf
   wash_tausc = list%wash_tausc
+  f_debris = list%f_debris
+  db_phi = list%db_phi
+  db_delte = list%db_delte
+  db_deltd = list%db_deltd
+  f_dbstop = list%f_dbstop
+  db_vstop = list%db_vstop
+  db_wstop = list%db_wstop
 
   call par_info("reading list_geomorph in " // trim(p%fn_geomorph))
   open(newunit=un, file=trim(p%fn_geomorph), status='old', action='read', iostat=ios)
@@ -148,6 +175,13 @@ subroutine list_geomorph_read(p, list)
   list%wash_kr = wash_kr
   list%wash_kf = wash_kf
   list%wash_tausc = wash_tausc
+  list%f_debris = f_debris
+  list%db_phi = db_phi
+  list%db_delte = db_delte
+  list%db_deltd = db_deltd
+  list%f_dbstop = f_dbstop
+  list%db_vstop = db_vstop
+  list%db_wstop = db_wstop
 
 end subroutine
 
