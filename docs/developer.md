@@ -594,6 +594,13 @@
   なる(実例: m_boundary の interp_series 公開後、m_swflow_enc_channel
   内の同名複製が衝突。複製を削除し公開手続きを直接 use して解消)。
   同名の局所複製は作らず、共用化して use するのが安全。
+  同族3件目: **submodule から親の protected 変数への書き込みをホスト
+  結合でなく use 結合とみなし 0155 エラーにする**(規格上、protected が
+  制限するのは use 結合のみで、submodule はモジュールの一部=書き込み
+  可能)。このため submodule が構築する公開変数(frw/wfrac/
+  have_open_bc)には protected を付けられない(読み取り専用は規約で
+  担保し、宣言部に注記)。親モジュール本体だけが書く変数
+  (have_width/have_frw 等)の protected は維持できる。
 - fortls は .mod を読めないため mpi_f08 を "not found" と警告する。
   対処は使用範囲だけの interface スタブを ext_source_dirs に置く
   (コンパイル対象には絶対に入れない)。
