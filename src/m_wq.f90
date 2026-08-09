@@ -8,8 +8,10 @@ module m_wq
   !   単位系: cq = 柱状量 (g/m2。貯留の意味論は h と同一 = セル内質量 =
   !           cq×gv×wfrac×A)。濃度 cqc = cq/vh (mg/L。vh は σ の矩形換算
   !           水深 = swflow_vh。σ・幅セルでも体積平均濃度が正しく出る)
-  !   発生源: 点源(セル群、g/s)・面源(セル群、kg/ha/day)。一定または
-  !           時系列(t=0 からの経過日、線形補間・端値保持)。
+  !   発生源: 点源(セル群、g/s)・面源(セル群、kg/ha/day)は一定または
+  !           時系列(t=0 からの経過日、線形補間・端値保持)。分布面源
+  !           (fn_wq_map: 原単位 kg/ha/day のセル別分布×倍率。一定)は
+  !           全有効セルへ投入し、点源・面源と排他でなく重ね合わせ。
   !           境界流入濃度(区間流入ごと、mg/L)は b%cqin テーブル経由で
   !           輸送カーネルに渡す
   !   浸透:   f_wq_infil=1(既定)で浸透水に濃度同伴し、地下質量プール cg
@@ -37,9 +39,9 @@ module m_wq
   use m_boundary, only : t_boundary, e_struct_dam, interp_series, read_cell_file2
   use m_swflow_enc, only : swflow_vh, have_width, wfrac
   use list_wq, only : t_list_wq, list_wq_read, nwqgmax, nwqcmax, nwqvmax, nwqfmax
-  use m_fileio, only : fileio_write_rle, fileio_read_rle
+  use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
   use m_sysdep_util, only : sysdep_mkdir
-  use m_parallel, only : dcp, is_root, par_info, par_stop, par_sum_rows, &
+  use m_parallel, only : dcp, is_root, par_info, par_stop, par_abort, par_sum_rows, &
                          par_gather_to, par_scatter_cell
   use m_util, only : itoa
   implicit none
@@ -87,11 +89,13 @@ module m_wq
     type(t_wqsrc), allocatable :: inser(:)          ! 時系列(ser のみ使用)
     real, allocatable :: cg(:,:)                    ! 地下質量プール (g/m2。cq と同基底。
                                                     !   W1 では台帳=横移動なし。§30)
+    real, allocatable :: rmap(:,:)                  ! 分布面源の投入率 (g/s/m2。地理的
+                                                    !   面積あたり。帯。未指定なら未確保)
     integer :: ndam = 0
     type(t_wqdam), allocatable :: dam(:)
     ! 診断(行部分和 real64。累積 m3 でなく質量 g)
-    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:6) 1=点源 2=面源 3=浸透(→cg)
-                                            !   4=ダム捕捉 5=減衰消失 6=沈降消失
+    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:7) 1=点源 2=面源 3=浸透(→cg)
+                                            !   4=ダム捕捉 5=減衰消失 6=沈降消失 7=分布面源
     integer :: un = 0                       ! CSV 装置番号(rank0。open(newunit=) は負値。§22)
   end type
 
@@ -147,6 +151,9 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- 発生源グループの解釈(点源・面源) ---
   call setup_sources(wq, p, g, list)
 
+  ! --- 分布面源(全有効セル・一定。点源・面源と重ね合わせ) ---
+  if (len_trim(list%fn_wq_map) > 0) call setup_map_source(wq, p, g, list)
+
   ! --- 境界流入濃度 ---
   call setup_inflow_conc(wq, g, b, list)
 
@@ -173,12 +180,12 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- リスタート ---
   if (p%f_state_restore > 0) call restore_state(wq, p, g, s)
 
-  allocate(wq%vrow(dcp%js:dcp%je, 1:6), source = 0.0_real64)
+  allocate(wq%vrow(dcp%js:dcp%je, 1:7), source = 0.0_real64)
 
   ! --- 診断 CSV(rank0。累積はラン先頭からの積算 = restore でリセット) ---
   if (is_root) then
     open(newunit=wq%un, file=trim(p%dir_result)//"/wq.csv", status='replace')
-    write(wq%un, '(a)') "time_s,in_point_g,in_area_g,to_gw_g,to_dam_g," &
+    write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,to_gw_g,to_dam_g," &
                         //"decay_g,settle_g,mass_surface_g,mass_gw_g"
   end if
 
@@ -387,6 +394,51 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 分布面源の読み込み(原単位 kg/ha/day のセル別分布 × 倍率。
+! rank0 読み+帯 scatter。負値はエラー。全有効セルへ一定率で投入。§30)
+!----------------------------------------------------------------------
+subroutine setup_map_source(wq, p, g, list)
+  type(t_wq), intent(inout) :: wq
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_list_wq), intent(in) :: list
+  real, allocatable :: wk(:,:)
+  real :: dum(1,1)
+  character(:), allocatable :: fname
+  character(len=1024) :: msg
+  logical :: found
+  integer :: i, j
+
+  if (list%wq_map_factor < 0.0) call par_stop("list_wq: wq_map_factor は非負のみです")
+  fname = trim(p%dir_data)//"/"//trim(list%fn_wq_map)
+  inquire(file=fname, exist=found)
+  if (.not. found) call par_stop("list_wq: fn_wq_map が見つかりません: "//fname)
+
+  allocate(wq%rmap(1:g%nx, dcp%jsh:dcp%jeh))
+  if (is_root) then
+    allocate(wk(1:g%nx, 1:g%ny))
+    call par_info(" reading "//fname)
+    call fileio_read_matrix(fname, g%nx, g%ny, wk, p%f_input_mode)
+    ! 検証は使用セルのみ(0 は「負荷なし」として許す)
+    do j = 1, g%ny
+      do i = 1, g%nx
+        if (g%x(i,j) <= 0) cycle
+        if (wk(i,j) < 0.0) then
+          write(msg,'(a,2i7,es12.4)') "list_wq: fn_wq_map の値が負", i, j, wk(i,j)
+          call par_abort(trim(msg))
+        end if
+      end do
+    end do
+    ! kg/ha/day -> g/s/m2 に倍率込みで換算してから配布
+    wk(:,:) = wk(:,:) * unit2gsm2 * list%wq_map_factor
+    call par_scatter_cell(wk, wq%rmap)
+  else
+    call par_scatter_cell(dum, wq%rmap)
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! ダム捕捉台帳の構築(全ダムの捕捉帯セル。自帯分のみ)
 !----------------------------------------------------------------------
 subroutine setup_dams(wq, g, b)
@@ -519,6 +571,21 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
     end do
   end do
 
+  ! (3b) 分布面源の投入(全有効セル。一定率の前計算配列)
+  if (allocated(wq%rmap)) then
+    !$omp parallel do schedule(static) private(i, j, w)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        if (wq%rmap(i,j) <= 0.0) cycle
+        w = wq%rmap(i,j) * real(acell) * p%dt / real(mass_of(g, i, j, 1.0))
+        s%cq(i,j) = s%cq(i,j) + w
+        wq%vrow(j,7) = wq%vrow(j,7) + real(wq%rmap(i,j), real64) * acell * real(p%dt, real64)
+      end do
+    end do
+    !$omp end parallel do
+  end if
+
   ! (4) ダム捕捉帯の質量吸収(水は毎ステップ全量吸収されるため質量も
   !     同伴してダム台帳へ。放流濃度 0 = 既知の妥協。§30)
   do nd = 1, wq%ndam
@@ -641,13 +708,13 @@ subroutine m_wq_record(wq, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: v(1:6), msur, mgw
+  real(real64) :: v(1:7), msur, mgw
   real(real64) :: rows(dcp%js:dcp%je), rows2(dcp%js:dcp%je)
   integer :: i, j, k
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (.not. wq%enabled) return
 
-  do k = 1, 6
+  do k = 1, 7
     call par_sum_rows(wq%vrow(:,k), v(k))
   end do
   rows(:) = 0.0_real64
@@ -663,7 +730,7 @@ subroutine m_wq_record(wq, p, g, s)
   call par_sum_rows(rows2, mgw)
 
   if (is_root .and. wq%un /= 0) then
-    write(wq%un, '(f0.2,8(",",es15.7))') s%t, v(1), v(2), v(3), v(4), v(5), v(6), msur, mgw
+    write(wq%un, '(f0.2,9(",",es15.7))') s%t, v(1), v(2), v(7), v(3), v(4), v(5), v(6), msur, mgw
     flush(wq%un)
   end if
 end subroutine
@@ -765,6 +832,7 @@ subroutine m_wq_dispose(wq, p, g, s)
   if (allocated(wq%incval)) deallocate(wq%incval)
   if (allocated(wq%inser)) deallocate(wq%inser)
   if (allocated(wq%cg)) deallocate(wq%cg)
+  if (allocated(wq%rmap)) deallocate(wq%rmap)
   if (allocated(wq%dam)) deallocate(wq%dam)
   if (allocated(wq%vrow)) deallocate(wq%vrow)
   wq%enabled = .false.

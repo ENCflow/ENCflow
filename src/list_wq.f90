@@ -36,6 +36,10 @@ module list_wq
     character(len=maxpathlen) :: fn_wq_ar_cell(1:nwqgmax) = ""
     real :: wq_ar_load(1:nwqgmax) = -9999.0        ! 原単位 (kg/ha/day)
     real, allocatable :: wq_ar_series(:,:,:)       ! (経過日, kg/ha/day)
+    ! ---- 分布面源(全有効セル。原単位 kg/ha/day のセル別分布。一定)----
+    !   点源・面源・境界流入と排他でなく重ね合わせ(背景負荷+特定源)
+    character(len=maxpathlen) :: fn_wq_map = ""    ! 原単位分布ファイル名 (kg/ha/day)
+    real :: wq_map_factor = 1.0                    ! 分布への倍率(校正用)
     ! ---- 境界流入濃度(list_boundary の区間流入番号ごと。一定か時系列)----
     real :: wq_in_conc(1:nwqfmax) = -9999.0        ! 一定濃度 (mg/L)
     real, allocatable :: wq_in_series(:,:,:)       ! (1:2, 1:nwqvmax, 1:nwqfmax) = (経過日, mg/L)
@@ -63,6 +67,8 @@ subroutine list_wq_read(p, list)
   character(len=maxpathlen) :: fn_wq_ar_cell(1:nwqgmax)
   real :: wq_ar_load(1:nwqgmax)
   real :: wq_ar_series(1:2,1:nwqvmax,1:nwqgmax)
+  character(len=maxpathlen) :: fn_wq_map
+  real :: wq_map_factor
   real :: wq_in_conc(1:nwqfmax)
   real :: wq_in_series(1:2,1:nwqvmax,1:nwqfmax)
   integer :: un
@@ -72,6 +78,7 @@ subroutine list_wq_read(p, list)
   namelist /list_wq/ f_wq, wq_c0, f_wq_infil, wq_thalf, wq_k20, wq_vs, &
                      wq_pt_cell, fn_wq_pt_cell, wq_pt_load, wq_pt_series, &
                      wq_ar_cell, fn_wq_ar_cell, wq_ar_load, wq_ar_series, &
+                     fn_wq_map, wq_map_factor, &
                      wq_in_conc, wq_in_series
 
   f_wq = list%f_wq
@@ -88,6 +95,8 @@ subroutine list_wq_read(p, list)
   fn_wq_ar_cell = list%fn_wq_ar_cell
   wq_ar_load = list%wq_ar_load
   wq_ar_series = -9999.0
+  fn_wq_map = list%fn_wq_map
+  wq_map_factor = list%wq_map_factor
   wq_in_conc = list%wq_in_conc
   wq_in_series = -9999.0
 
@@ -112,6 +121,8 @@ subroutine list_wq_read(p, list)
   list%fn_wq_ar_cell = fn_wq_ar_cell
   list%wq_ar_load = wq_ar_load
   allocate(list%wq_ar_series(1:2,1:nwqvmax,1:nwqgmax), source = wq_ar_series)
+  list%fn_wq_map = fn_wq_map
+  list%wq_map_factor = wq_map_factor
   list%wq_in_conc = wq_in_conc
   allocate(list%wq_in_series(1:2,1:nwqvmax,1:nwqfmax), source = wq_in_series)
 
