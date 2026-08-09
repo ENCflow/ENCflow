@@ -21,6 +21,9 @@ module list_sysparam
     real :: et_file = -1                          ! ファイル出力終了時間 (s)
     real :: et_recrd = -1                         ! プローブ出力終了時間 (s)
     character(len=80) :: t0_c = ""                ! 計算開始時刻 (d, h, m, s)
+    character(len=80) :: date0_c = ""             ! シミュレーション時刻 t=0 の暦
+                                                  !   "YYYY-MM-DD" または "YYYY-MM-DD hh:mm"
+                                                  !   (蒸発散・水質など暦を使う機能で必須。§27)
     character(len=80) :: tt_c = ""                ! 計算終了時刻 (d, h, m, s)
     character(len=80) :: dt_c = ""                ! 時間ステップ (d, h, m, s)
     character(len=80) :: dt_disp_c = ""           ! 画面表示時間刻み (s)
@@ -86,6 +89,7 @@ module list_sysparam
     character(len=maxpathlen) :: fn_gwflow = ""          ! 地下水条件設定ファイル
     character(len=maxpathlen) :: fn_intercept = ""       ! 降雨遮断条件設定ファイル
     character(len=maxpathlen) :: fn_evap = ""            ! 蒸発散条件設定ファイル
+    character(len=maxpathlen) :: fn_meteo = ""           ! 気象強制場設定ファイル
     character(len=maxpathlen) :: fn_channel = ""         ! 河道条件設定ファイル
     character(len=maxpathlen) :: fn_enc = ""             ! ENC設定ファイル
 
@@ -116,6 +120,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   real :: et_file                            ! ファイル出力終了時間 (s)
   real :: et_recrd                           ! プローブ出力終了時間 (s)
   character(:), allocatable :: t0_c          ! 計算開始時刻 (d, h, m, s)
+  character(:), allocatable :: date0_c       ! t=0 の暦
   character(:), allocatable :: tt_c          ! 計算終了時刻 (d, h, m, s)
   character(:), allocatable :: dt_c          ! 時間ステップ (d, h, m, s)
   character(:), allocatable :: dt_disp_c     ! 画面表示時間刻み (d, h, m, s)
@@ -175,6 +180,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: fn_gwflow     ! 地下水条件設定ファイル
   character(:), allocatable :: fn_intercept  ! 降雨遮断条件設定ファイル
   character(:), allocatable :: fn_evap       ! 蒸発散条件設定ファイル
+  character(:), allocatable :: fn_meteo      ! 気象強制場設定ファイル
   character(:), allocatable :: fn_channel    ! 河道条件設定ファイル
   character(:), allocatable :: fn_enc        ! ENC設定ファイル
   character(:), allocatable :: fn_log        ! 状態ログファイル
@@ -187,7 +193,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(len=1024) :: iom
   namelist /list_sysparam/ t0, tt, dt, dt_disp, dt_file, dt_recrd, &
                         st_file, st_recrd, et_file, et_recrd, &
-                        t0_c, tt_c, dt_c, dt_disp_c, dt_file_c, dt_recrd_c, &
+                        t0_c, date0_c, tt_c, dt_c, dt_disp_c, dt_file_c, dt_recrd_c, &
                         st_file_c, st_recrd_c, et_file_c, et_recrd_c, &
                         dd, dv, vv, gg, cm, cd, kk, &
                         f_gridsystem, f_govequation, f_check_cfl, f_state_save, &
@@ -198,7 +204,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_ddd, f_out_dda, f_out_pre, f_out_hrs, f_out_fr, f_out_cn, f_out_hg, &
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
                         fn_structure, &
-                        fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_evap, fn_channel, fn_enc, &
+                        fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_evap, fn_meteo, fn_channel, fn_enc, &
                         fn_log, dir_data, dir_result, dir_save, outfn_suffix
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
@@ -214,6 +220,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   et_file = list%et_file
   et_recrd = list%et_recrd
   t0_c = list%t0_c
+  date0_c = list%date0_c
   tt_c = list%tt_c
   dt_c = list%dt_c
   dt_disp_c = list%dt_disp_c
@@ -273,6 +280,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   fn_gwflow = list%fn_gwflow
   fn_intercept = list%fn_intercept
   fn_evap = list%fn_evap
+  fn_meteo = list%fn_meteo
   fn_channel = list%fn_channel
   fn_enc = list%fn_enc
   fn_log = list%fn_log
@@ -298,6 +306,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%et_file = et_file
   list%et_recrd = et_recrd
   list%t0_c = t0_c
+  list%date0_c = date0_c
   list%tt_c = tt_c
   list%dt_c = dt_c
   list%dt_disp_c = dt_disp_c
@@ -357,6 +366,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%fn_gwflow = fn_gwflow
   list%fn_intercept = fn_intercept
   list%fn_evap = fn_evap
+  list%fn_meteo = fn_meteo
   list%fn_channel = fn_channel
   list%fn_enc = fn_enc
   list%fn_log = fn_log
@@ -377,6 +387,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   if (trim(list%fn_gwflow) == "-") list%fn_gwflow = trim(fn_sysparam)
   if (trim(list%fn_intercept) == "-") list%fn_intercept = trim(fn_sysparam)
   if (trim(list%fn_evap) == "-") list%fn_evap = trim(fn_sysparam)
+  if (trim(list%fn_meteo) == "-") list%fn_meteo = trim(fn_sysparam)
   if (trim(list%fn_channel) == "-") list%fn_channel = trim(fn_sysparam)
   if (trim(list%fn_enc) == "-") list%fn_enc = trim(fn_sysparam)
 

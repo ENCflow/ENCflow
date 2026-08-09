@@ -10,6 +10,7 @@ module m_main
   use m_geomorph, only : t_geomorph, m_geomorph_init, m_geomorph_calc, m_geomorph_dispose
   use m_gwflow, only : t_gwflow, m_gwflow_init, m_gwflow_calc, m_gwflow_dispose
   use m_evap, only : t_evap, m_evap_init, m_evap_calc, m_evap_record, m_evap_dispose
+  use m_meteo, only : t_meteo, m_meteo_init, m_meteo_dispose
   use m_intercept, only : t_intercept, m_intercept_init, m_intercept_calc, m_intercept_step, &
                         m_intercept_dispose
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc, m_swflow_post
@@ -43,6 +44,7 @@ subroutine m_main_all()
   type(t_geomorph) :: gm
   type(t_gwflow) :: gw
   type(t_evap) :: ev
+  type(t_meteo) :: mt
   type(t_intercept) :: ic
   type(t_swflow) :: sw
   character(len=256) :: fn_sysparam
@@ -89,7 +91,9 @@ subroutine m_main_all()
   call m_tide_init(ti, p, g, s)           ! tide を初期化(state より後・swflow より
                                           ! 前: 海セルの初期状態(z, h)をセットする)
   call m_swflow_init(sw, p, g, b, s)      ! swflow を初期化
-  call m_evap_init(ev, p, g, b, s)        ! evap を初期化(fn_evap 指定時のみ有効。
+  call m_meteo_init(mt, p, g, s)          ! meteo を初期化(fn_meteo 指定時のみ有効。
+                                          ! 基準標高の既定に state の z を使うため後に)
+  call m_evap_init(ev, p, g, b, s, mt)    ! evap を初期化(fn_evap 指定時のみ有効。
                                           ! ダム湛水面積の登録に boundary、基準標高に
                                           ! state の z を使うため両者より後に)
   call output_init(p, g)                  ! ファイル出力の準備(geoinfoより後に)
@@ -98,7 +102,7 @@ subroutine m_main_all()
   call m_geoinfo_band_shrink(g)           ! マスク類(x,sw,rw)と z(rank0以外)を帯に縮小
 
   ! ==== 時間ループ: すべて帯確保(z のみ rank0 が全域を保持) ====
-  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, ierror)  ! 計算本体
+  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, ierror)  ! 計算本体
 
   ! モジュールを破棄
   call output_dispose()
@@ -109,6 +113,7 @@ subroutine m_main_all()
   call m_geomorph_dispose(gm)
   call m_gwflow_dispose(gw, p)
   call m_evap_dispose(ev, p)
+  call m_meteo_dispose(mt)
   call m_record_dispose(r)
   call m_state_dispose(s, p)
   call m_boundary_dispose(b)
@@ -134,7 +139,7 @@ end subroutine
 !----------------------------------------------------------------------
 ! 計算本体
 !----------------------------------------------------------------------
-subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, ierror)
+subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
@@ -147,6 +152,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, ierror)
   type(t_gwflow), intent(in) :: gw
   type(t_swflow), intent(in) :: sw
   type(t_evap), intent(inout) :: ev    ! 蒸発散(PET の日次更新・累積診断を保持)
+  type(t_meteo), intent(inout) :: mt   ! 気象強制場(分布気温の読み進みを保持)
   integer, intent(out) :: ierror
   integer :: it            ! 時間ループのカウント
   logical :: do_file       ! このステップでファイル出力するか
@@ -217,7 +223,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, ierror)
 
     ! 蒸発散を適用(fn_evap 未指定なら no-op。樹冠→地表水→hrs→地下水の
     ! 優先順位減算とダム湛水面蒸発。浸透後の状態に作用させる。§27)
-    call m_evap_calc(ev, p, g, b, s, ic, it)
+    call m_evap_calc(ev, p, g, b, s, ic, mt, it)
 
     ! ステップ末尾パス: σ 有効時の u,v 正規化を最終確定 h で行う
     ! (gwflow・evap の後、geomorph・統計・出力の前。σ 無効・STG では

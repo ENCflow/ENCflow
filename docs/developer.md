@@ -2138,19 +2138,16 @@ have_sect 分岐の内側のみ)。既存 reference は全て不変。
     平年月平均気温 temp_normal(12) から init で計算(高温域 >26.5℃ の
     修正式は省略=既知の妥協)
   - 可照時間 N: Cooper 近似の太陽赤緯+日出角(白夜・極夜はクランプ)
-- **暦**: モデルは相対時刻しか持たないため、date0_c(t=0 の暦)を
-  &list_evap 私有で導入(将来他モジュールが暦を使うなら sysparam へ昇格)。
-  グレゴリオ暦⇔ユリウス通日は Fliegel & Van Flandern(整数演算、
-  うるう年規則込み。Python 対照で往復・2100年平年を検証済み)。
+- **暦**: date0_c(t=0 の暦)は &list_sysparam が正本(p%jdn0/sec0/
+  has_date。当初 evap 私有だったが水質等の第2利用者の出現に伴い昇格。
+  §29)。グレゴリオ暦⇔ユリウス通日は m_util の Fliegel & Van Flandern
+  (整数演算、うるう年規則込み。Python 対照で往復・2100年平年を検証済み)。
 - **評価粒度**: 暦日ごとに1日1回、「日の先頭」の気温で PET を更新し
   日内一定。気温式は本来日平均気温の式のため、入力は日平均系列を推奨
   (時系列の時刻単位は「日」。疎な点でも線形補間・端値保持)。
-- **気温入力**(モード3,4。ちょうど1つ): temp0(一様定数)/
-  tempval(一様時系列。(経過日, ℃))/ fn_tempmap(分布ファイルリスト、
-  dt_tempmap_c 間隔で順次適用・終端は端値保持。rank0 読み+帯 scatter)。
-- **標高減率**(オプション、一様入力のみ): T(i,j) = T − γ(z−zref)。
-  γ=temp_lapse(℃/100m、既定0.65)、zref=temp_zref(省略時=使用セルの
-  領域最低標高。min の allreduce = 決定的)。
+- **気温入力**(モード3,4): m_meteo(&list_meteo。§29)が提供する。
+  fn_meteo が必須(一様定数/一様時系列/分布時系列+標高減率の仕様は
+  §29 を参照。当初 evap 私有だった入力機構を移設)。
 - **減算順序**: 樹冠保水 → 地表水 h → ため池 hrs → 地下水 hg の順に
   「あるだけ引く」(供給制限のみ。土壌乾燥による抑制なし=RRI 同等)。
   - 樹冠: t_intercept に draw 口を追加(貯留型モデルのみ束縛。現状
@@ -2288,3 +2285,25 @@ z 更新とハロの不整合も避ける)。
   議論は §19.6 と同型)
 - f_slide の進行性崩壊(堆積した飽和土の再崩壊)は物理的に妥当だが
   転換回数が多くなる(診断カウントの解釈に注意)
+
+## 29. 気象強制場 m_meteo と暦の正本化(2026-08-09 分離)
+
+- **暦**: &list_sysparam の date0_c(t=0 の暦)を正本とし、
+  p%jdn0 / p%sec0 / p%has_date に解釈済みで保持。ユリウス通日変換
+  (ymd_to_jdn / jdn_to_ymd)と日時解析(parse_datetime)は m_util の
+  公開ユーティリティ。暦を使うモジュール(evap、水質の月別・気温式)は
+  p%has_date を検査して p%jdn0 を使う。
+- **m_meteo(&list_meteo。fn_meteo で有効化)**: 気温入力を一元化し
+  消費者(m_evap、将来の m_wq 温度補正等)へ提供する。
+  - 入力: temp0(一様定数)/ tempval(一様時系列。(経過日, ℃))/
+    fn_tempmap(分布ファイルリスト。dt_tempmap_c 間隔・終端保持)
+  - 標高減率(一様入力のみ): T(z) = Tb − γ(z − zref)。zref 省略時=
+    使用セルの領域最低標高(min の allreduce = 決定的)
+  - API: meteo_temp_set(評価時刻のセット。分布の読み進みを含むため
+    collective)→ meteo_temp_cell(自帯セル)/ meteo_temp_global
+    (任意セル。collective)/ meteo_temp_mean(使用セル平均。collective)
+  - 将来の拡張枠: 湿度・風速・放射・降雪(成分を足し API を並べる)
+- **互換性**: 旧 &list_evap の date0_c・気温キーは廃止(指定すると
+  namelist 読込エラー+移設先の案内)。移設は等価リファクタとして検証:
+  evap 有効構成(σ+樹冠+Hamon+減率、chichibu 6時間、-O2)で移設前後の
+  全出力(evap.csv 含む)ビット一致、無効時は回帰ビット一致。

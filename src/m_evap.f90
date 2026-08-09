@@ -5,8 +5,8 @@ module m_evap
   !   有効化: fn_evap の指定(&list_evap。f_evmodel=0 で一時無効化)
   !   PET:    1=一定速度, 2=月別気候値, 3=Hamon, 4=Thornthwaite(排他切替。
   !           式の追加は pet_mmday に case を足す)
-  !   気温:   一様定数 / 一様時系列(経過日, ℃)/ 分布時系列(ファイルリスト)。
-  !           オプションで標高減率(一様入力のみ。基準標高の既定=領域最低標高)
+  !   気温:   m_meteo(&list_meteo。§29)が提供(一様定数/一様時系列/
+  !           分布時系列+標高減率)。モード3,4は fn_meteo が必須
   !   評価粒度: 暦日平均の思想で「日の先頭の気温」から1日1回更新、日内一定。
   !           気温式は本来日平均気温の式のため、日平均系列(日単位の点)を
   !           推奨する(疎な系列も線形補間・端値保持で機能する)
@@ -15,7 +15,7 @@ module m_evap
   !           ダムは dam_area(湛水面積)指定時、貯水量から E×面積 を
   !           比例配分で引き、捕捉帯セルの個別蒸発は止める(二重計上防止)。
   !           未指定ダムの捕捉帯はため池と同様セル面積分。
-  !   時刻:   暦は date0_c(シミュレーション時刻 t=0 の暦)を原点とする
+  !   時刻:   暦は &list_sysparam の date0_c(t=0 の暦)を原点とする
   !           純関数。履歴状態なし = save/restore 対象外(復元後は現在時刻の
   !           暦日で再評価される)。診断 CSV(evap.csv)の累積量のみ
   !           ラン先頭からの積算(restore でリセット。§27)
@@ -27,14 +27,13 @@ module m_evap
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
-  use m_boundary, only : t_boundary, e_struct_dam, interp_series
+  use m_boundary, only : t_boundary, e_struct_dam
   use m_intercept, only : t_intercept
-  use list_evap, only : t_list_evap, list_evap_read, nevmax
-  use m_fileio, only : fileio_read_matrix
-  use m_parallel, only : dcp, is_root, par_info, par_stop, par_abort, &
-                         par_allreduce_min, par_allreduce_sumr, par_sum_rows, &
-                         par_scatter_cell
-  use m_util, only : str2sec, itoa
+  use m_meteo, only : t_meteo, meteo_temp_set, meteo_temp_cell, meteo_temp_global, &
+                      meteo_temp_mean
+  use list_evap, only : t_list_evap, list_evap_read
+  use m_parallel, only : dcp, is_root, par_info, par_stop, par_sum_rows, par_allreduce_sumr
+  use m_util, only : itoa, jdn_to_ymd, ymd_to_jdn
   implicit none
   private
   public :: t_evap
@@ -47,15 +46,13 @@ module m_evap
   real, parameter :: secday = 86400.0            ! 1日の秒数
   real, parameter :: mmday2ms = 1.0e-3 / 86400.0 ! mm/day -> m/s
 
-  ! 気温入力の種別
-  integer, parameter :: e_tsrc_const = 1, e_tsrc_series = 2, e_tsrc_map = 3
-
   ! ダム湛水面積蒸発の管理(§27)
   type t_evdam
     integer :: ist = 0       ! b%struct のインデックス
     real :: area = 0.0       ! 湛水面積 (m2)
+    integer :: ci = 0, cj = 0  ! 代表セル(捕捉帯先頭)の全域座標
     real :: zrep = 0.0       ! 代表セル(捕捉帯先頭)の標高(減率評価用)
-    real :: trep = 0.0       ! 代表セルの気温(分布時系列時に更新)
+    real :: trep = 0.0       ! 代表セルの気温(update_pet が更新)
     real :: petd = 0.0       ! 現在日の PET (m/s)
     integer :: nc = 0        ! 自帯内の捕捉帯セル数
     integer, allocatable :: cells(:,:)   ! 自帯内の捕捉帯セル (1:2, 1:nc)
@@ -69,23 +66,11 @@ module m_evap
     real :: kc = 1.0
     real :: pet0 = 0.0             ! モード1: PET (mm/day)
     real :: pmon(1:12) = 0.0       ! モード2: 月別 PET (mm/day)
-    integer :: jdn0 = 0            ! t=0 の日のユリウス通日
-    real :: sec0 = 0.0             ! t=0 の日内秒
+    integer :: jdn0 = 0            ! t=0 の日のユリウス通日(p から転記)
+    real :: sec0 = 0.0             ! t=0 の日内秒(同上)
     real :: latrad = 0.0           ! 緯度 (rad)
     real :: tw_i = 0.0             ! Thornthwaite 熱指数 I
     real :: tw_a = 0.0             ! Thornthwaite 指数 a
-    integer :: tsrc = 0            ! 気温入力の種別 (e_tsrc_*)
-    real :: t0c = 0.0              ! 一様定数気温 (℃)
-    integer :: ntser = 0
-    real, allocatable :: tser(:,:) ! 一様時系列 (1:2,1:ntser) = (s, ℃)
-    integer :: nmap = 0
-    character(len=1024), allocatable :: mapfiles(:)  ! 分布ファイル名(dir_data 込み)
-    real :: dtmap = 86400.0        ! 分布の時間間隔 (s)
-    integer :: imap = -1           ! 読み込み済みファイル番号(1-based。-1=未読)
-    real, allocatable :: tmap(:,:) ! 現在の気温分布 (℃)(帯)
-    logical :: lapse = .false.
-    real :: gam = 0.0              ! 気温減率 (℃/m)
-    real :: zref = 0.0             ! 減率の基準標高 (m)
     integer :: curday = -2147483647  ! 現在の暦日番号(t=0 の日 = 0)
     real, allocatable :: pet(:,:)  ! 現在日の PET (m/s)(帯。kc 適用済み)
     real :: petref = 0.0           ! 基準値 PET (mm/day。CSV 診断用。分布時は領域平均気温で評価)
@@ -106,15 +91,15 @@ contains
 !   fn_evap 未指定 or f_evmodel=0 なら何もしない(enabled = .false.)。
 !   検証はすべてここで行う(list_evap は読むだけ。§12)
 !----------------------------------------------------------------------
-subroutine m_evap_init(ev, p, g, b, s)
+subroutine m_evap_init(ev, p, g, b, s, mt)
   type(t_evap), intent(out) :: ev
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(in) :: b
   type(t_state), intent(in) :: s
+  type(t_meteo), intent(in) :: mt
   type(t_list_evap) :: list
-  integer :: k, m, nsrc
-  real :: zmin
+  integer :: m
 
   if (len_trim(p%fn_evap) == 0) return
 
@@ -129,13 +114,14 @@ subroutine m_evap_init(ev, p, g, b, s)
   if (list%evap_kc <= 0.0) call par_stop("list_evap: evap_kc は正のみです")
   ev%kc = list%evap_kc
 
-  ! --- 暦の原点(モード2〜4で必須) ---
+  ! --- 暦の原点(モード2〜4で必須。正本は &list_sysparam の date0_c。§29) ---
   if (ev%model >= 2) then
-    if (len_trim(list%date0_c) == 0) then
-      call par_stop("list_evap: f_evmodel>=2 には date0_c(t=0 の暦。" &
-                    //'"YYYY-MM-DD" または "YYYY-MM-DD hh:mm")が必要です')
+    if (.not. p%has_date) then
+      call par_stop("list_evap: f_evmodel>=2 には &list_sysparam の date0_c" &
+                    //'(t=0 の暦。"YYYY-MM-DD" または "YYYY-MM-DD hh:mm")が必要です')
     end if
-    call parse_date0(trim(list%date0_c), ev%jdn0, ev%sec0)
+    ev%jdn0 = p%jdn0
+    ev%sec0 = p%sec0
   end if
 
   ! --- モード別の必須パラメータ ---
@@ -176,49 +162,10 @@ subroutine m_evap_init(ev, p, g, b, s)
     ev%tw_a = ((6.75e-7 * ev%tw_i - 7.71e-5) * ev%tw_i + 1.792e-2) * ev%tw_i + 0.49239
   end if
 
-  ! --- 気温入力(モード3,4。ちょうど1つを指定) ---
+  ! --- 気温(モード3,4。&list_meteo が提供する。§29) ---
   if (ev%model >= 3) then
-    nsrc = 0
-    if (list%temp0 > -9998.0) then
-      nsrc = nsrc + 1
-      ev%tsrc = e_tsrc_const
-      ev%t0c = list%temp0
-    end if
-    if (list%tempval(1,1) > -9998.0) then
-      nsrc = nsrc + 1
-      ev%tsrc = e_tsrc_series
-      call setup_tseries(ev, list)
-    end if
-    if (len_trim(list%fn_tempmap) > 0) then
-      nsrc = nsrc + 1
-      ev%tsrc = e_tsrc_map
-      call setup_tmaplist(ev, p, g, list)
-    end if
-    if (nsrc /= 1) then
-      call par_stop("list_evap: 気温入力は temp0 / tempval / fn_tempmap の" &
-                    //"いずれか1つを指定してください")
-    end if
-
-    ! --- 標高減率(一様入力のみ) ---
-    if (list%f_temp_lapse > 0) then
-      if (ev%tsrc == e_tsrc_map) then
-        call par_stop("list_evap: f_temp_lapse は一様気温(temp0 / tempval)専用です" &
-                      //"(分布気温には適用できません)")
-      end if
-      ev%lapse = .true.
-      ev%gam = list%temp_lapse / 100.0            ! ℃/100m -> ℃/m
-      if (list%temp_zref > -9998.0) then
-        ev%zref = list%temp_zref
-      else
-        ! 既定 = 領域(使用セル)の最低標高。min は演算順によらず厳密 = 決定的
-        zmin = huge(zmin)
-        do k = dcp%js, dcp%je
-          zmin = min(zmin, minval(s%z(g%wx(1,k):g%wx(2,k), k), &
-                                  mask = g%x(g%wx(1,k):g%wx(2,k), k) > 0))
-        end do
-        call par_allreduce_min(zmin)
-        ev%zref = zmin
-      end if
+    if (.not. mt%enabled) then
+      call par_stop("list_evap: f_evmodel>=3 には気温入力(&list_meteo。fn_meteo)が必要です")
     end if
   end if
 
@@ -240,79 +187,6 @@ subroutine m_evap_init(ev, p, g, b, s)
   ev%enabled = .true.
   ev%initialized = .true.
   call par_info("evapotranspiration enabled (f_evmodel="//itoa(ev%model)//")")
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 一様気温時系列の変換(経過日 -> 秒。interp_series の規約に合わせる)
-!----------------------------------------------------------------------
-subroutine setup_tseries(ev, list)
-  type(t_evap), intent(inout) :: ev
-  type(t_list_evap), intent(in) :: list
-  integer :: k, n
-  n = 0
-  do k = 1, nevmax
-    if (list%tempval(1,k) <= -9998.0) exit     ! 番兵で終端
-    n = n + 1
-  end do
-  if (n < 1) call par_stop("list_evap: tempval が空です")
-  do k = 2, n
-    if (list%tempval(1,k) <= list%tempval(1,k-1)) then
-      call par_stop("list_evap: tempval の時刻(経過日)は単調増加で指定してください")
-    end if
-  end do
-  allocate(ev%tser(1:2, 1:n))
-  ev%tser(1,1:n) = list%tempval(1,1:n) * secday    ! 日 -> 秒
-  ev%tser(2,1:n) = list%tempval(2,1:n)
-  ev%ntser = n
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 気温分布ファイルリストの読み込み(1行1ファイル名。等間隔で順次適用、
-! リストを過ぎたら最終ファイルを保持=端値保持)
-!----------------------------------------------------------------------
-subroutine setup_tmaplist(ev, p, g, list)
-  type(t_evap), intent(inout) :: ev
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_list_evap), intent(in) :: list
-  character(:), allocatable :: fname
-  character(len=1024) :: line
-  integer :: un, ios, n
-  logical :: found
-
-  ev%dtmap = str2sec(trim(list%dt_tempmap_c), "bad dt_tempmap_c in &list_evap")
-  if (ev%dtmap <= 0.0) call par_stop("list_evap: dt_tempmap_c は正の時間です")
-
-  fname = trim(p%dir_data)//"/"//trim(list%fn_tempmap)
-  inquire(file=fname, exist=found)
-  if (.not. found) call par_stop("list_evap: fn_tempmap が見つかりません: "//fname)
-
-  ! 1回目: 行数を数える / 2回目: 取り込む(全ランク冗長・同一)
-  open(newunit=un, file=fname, status='old', action='read')
-  n = 0
-  do
-    read(un, '(a)', iostat=ios) line
-    if (ios /= 0) exit
-    if (len_trim(line) == 0) cycle
-    n = n + 1
-  end do
-  if (n < 1) call par_stop("list_evap: fn_tempmap にファイル名がありません: "//fname)
-  allocate(ev%mapfiles(1:n))
-  rewind(un)
-  n = 0
-  do
-    read(un, '(a)', iostat=ios) line
-    if (ios /= 0) exit
-    if (len_trim(line) == 0) cycle
-    n = n + 1
-    ev%mapfiles(n) = trim(p%dir_data)//"/"//trim(adjustl(line))
-  end do
-  close(un)
-  ev%nmap = n
-
-  allocate(ev%tmap(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
 end subroutine
 
 
@@ -366,8 +240,10 @@ subroutine setup_dams(ev, g, b, s)
       ev%dam(nd)%cells(2,n) = j
       ev%skip(i,j) = .true.
     end do
-    ! 代表セル(捕捉帯先頭)の標高: 所有ランクだけが寄与する allreduce
-    ! (単一寄与の総和 = 順序によらず厳密)
+    ! 代表セル(捕捉帯先頭)の全域座標と標高(標高は所有ランクだけが
+    ! 寄与する allreduce = 単一寄与の総和で順序によらず厳密)
+    ev%dam(nd)%ci = b%struct(ist)%cin(1,1)
+    ev%dam(nd)%cj = b%struct(ist)%cin(2,1)
     block
       real :: w1(1)
       w1(1) = 0.0
@@ -386,13 +262,14 @@ end subroutine
 ! 蒸発散を適用する(毎ステップ。run_main が gwflow の後に呼ぶ。
 ! 無効時は no-op。冒頭の return 判定は全ランクで同一 = collective 安全)
 !----------------------------------------------------------------------
-subroutine m_evap_calc(ev, p, g, b, s, ic, it)
+subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
   type(t_evap), intent(inout) :: ev
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(in) :: b
   type(t_state), intent(inout) :: s
   type(t_intercept), intent(in) :: ic
+  type(t_meteo), intent(inout) :: mt
   integer, intent(in) :: it
   integer :: i, j, day
   real :: dem, w
@@ -404,7 +281,7 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, it)
 
   ! 暦日が変わったら PET を再評価(t=0 の暦日を 0 とする通し日)
   day = floor((s%t + ev%sec0) / secday)
-  if (day /= ev%curday) call update_pet(ev, p, g, s, day)
+  if (day /= ev%curday) call update_pet(ev, p, g, s, day, mt)
 
   canopy = ic%enabled .and. associated(ic%draw)
   acell = real(g%dx, real64) * real(g%dy, real64)
@@ -505,16 +382,17 @@ end subroutine
 !----------------------------------------------------------------------
 ! 暦日の PET 評価(日1回。全ランクが同一の day で呼ぶ = collective 安全)
 !----------------------------------------------------------------------
-subroutine update_pet(ev, p, g, s, day)
+subroutine update_pet(ev, p, g, s, day, mt)
   type(t_evap), intent(inout) :: ev
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
+  type(t_meteo), intent(inout) :: mt   ! 分布気温の読み進みを含むため inout
   integer, intent(in) :: day
   integer :: i, j, y, mo, d, doy, nd
-  real :: tday, tb, pref, tsum, tnum
-  real(real64) :: rows(dcp%js:dcp%je), rsum
+  real :: tday, pref
 
+  pref = 0.0
   ev%curday = day
   tday = real(day) * secday - ev%sec0     ! この暦日の先頭のシミュレーション時刻
 
@@ -533,75 +411,22 @@ subroutine update_pet(ev, p, g, s, day)
       pref = ev%pmon(mo)
       ev%pet(:,:) = pref * ev%kc * mmday2ms
     case (3, 4)
-      select case (ev%tsrc)
-        case (e_tsrc_const, e_tsrc_series)
-          if (ev%tsrc == e_tsrc_const) then
-            tb = ev%t0c
-          else
-            tb = interp_series(ev%tser, ev%ntser, tday)
-          end if
-          if (ev%lapse) then
-            ! T(i,j) = tb - γ(z - zref)。PET は (z) の純関数 = 全ランク同値
-            !$omp parallel do schedule(static) private(i, j)
-            do j = dcp%js, dcp%je
-              do i = g%wx(1,j), g%wx(2,j)
-                if (g%x(i,j) <= 0) cycle
-                ev%pet(i,j) = pet_mmday(ev, tb - ev%gam * (s%z(i,j) - ev%zref), doy) &
-                              * ev%kc * mmday2ms
-              end do
-            end do
-            !$omp end parallel do
-            pref = pet_mmday(ev, tb, doy)     ! 基準標高での値
-          else
-            pref = pet_mmday(ev, tb, doy)
-            ev%pet(:,:) = pref * ev%kc * mmday2ms
-          end if
-          ! ダムの代表気温
-          do nd = 1, ev%ndam
-            if (ev%lapse) then
-              ev%dam(nd)%trep = tb - ev%gam * (ev%dam(nd)%zrep - ev%zref)
-            else
-              ev%dam(nd)%trep = tb
-            end if
-          end do
-        case (e_tsrc_map)
-          call update_tmap(ev, p, g, tday)
-          !$omp parallel do schedule(static) private(i, j)
-          do j = dcp%js, dcp%je
-            do i = g%wx(1,j), g%wx(2,j)
-              if (g%x(i,j) <= 0) cycle
-              ev%pet(i,j) = pet_mmday(ev, ev%tmap(i,j), doy) * ev%kc * mmday2ms
-            end do
-          end do
-          !$omp end parallel do
-          ! 診断の基準値は領域(使用セル)平均気温で評価(決定的総和。
-          ! セル数は整数値の実数和 = 丸め順不問で厳密)
-          rows(:) = 0.0_real64
-          tnum = 0.0
-          do j = dcp%js, dcp%je
-            tsum = 0.0
-            do i = g%wx(1,j), g%wx(2,j)
-              if (g%x(i,j) <= 0) cycle
-              tsum = tsum + ev%tmap(i,j)
-              tnum = tnum + 1.0
-            end do
-            rows(j) = real(tsum, real64)
-          end do
-          call par_sum_rows(rows, rsum)
-          block
-            real :: w1(1)
-            w1(1) = tnum
-            call par_allreduce_sumr(w1)
-            tnum = w1(1)
-          end block
-          if (tnum > 0.0) then
-            pref = pet_mmday(ev, real(rsum) / tnum, doy)
-          else
-            pref = 0.0
-          end if
-      end select
-      ! ダムの PET
+      ! 気温は m_meteo が提供する(評価時刻のセットは collective。§29)
+      call meteo_temp_set(mt, p, g, tday)
+      !$omp parallel do schedule(static) private(i, j)
+      do j = dcp%js, dcp%je
+        do i = g%wx(1,j), g%wx(2,j)
+          if (g%x(i,j) <= 0) cycle
+          ev%pet(i,j) = pet_mmday(ev, meteo_temp_cell(mt, i, j, s%z(i,j)), doy) &
+                        * ev%kc * mmday2ms
+        end do
+      end do
+      !$omp end parallel do
+      ! 診断の基準値: 一様系は基準気温、分布は使用セル平均気温で評価(collective)
+      pref = pet_mmday(ev, meteo_temp_mean(mt, g), doy)
+      ! ダムの PET(代表セルの気温。_global は collective = ダム順で全ランク同一に呼ぶ)
       do nd = 1, ev%ndam
+        ev%dam(nd)%trep = meteo_temp_global(mt, ev%dam(nd)%ci, ev%dam(nd)%cj, ev%dam(nd)%zrep)
         ev%dam(nd)%petd = pet_mmday(ev, ev%dam(nd)%trep, doy) * ev%kc * mmday2ms
       end do
   end select
@@ -614,51 +439,6 @@ subroutine update_pet(ev, p, g, s, day)
   end if
 
   ev%petref = pref * ev%kc
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 気温分布ファイルの更新(必要なファイル番号に達していなければ読み進める。
-! リスト終端後は最終ファイルを保持 = 端値保持)
-!----------------------------------------------------------------------
-subroutine update_tmap(ev, p, g, tday)
-  type(t_evap), intent(inout) :: ev
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  real, intent(in) :: tday
-  real, allocatable :: wk(:,:)
-  real :: dum(1,1)
-  integer :: need
-  logical :: found
-
-  need = min(max(int(floor(max(tday, 0.0) / ev%dtmap)) + 1, 1), ev%nmap)
-  if (need == ev%imap) return
-
-  inquire(file=trim(ev%mapfiles(need)), exist=found)
-  if (.not. found) then
-    call par_stop("list_evap: 気温分布ファイルが見つかりません: "//trim(ev%mapfiles(need)))
-  end if
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny))
-    call par_info(" reading "//trim(ev%mapfiles(need)))
-    call fileio_read_matrix(trim(ev%mapfiles(need)), g%nx, g%ny, wk, p%f_input_mode)
-    call par_scatter_cell(wk, ev%tmap)
-  else
-    call par_scatter_cell(dum, ev%tmap)
-  end if
-  ev%imap = need
-
-  ! ダム代表セルの気温: 所有ランクだけが寄与する allreduce(単一寄与 = 厳密)
-  block
-    integer :: nd
-    real :: w1(1)
-    do nd = 1, ev%ndam
-      w1(1) = 0.0
-      if (ev%dam(nd)%nc > 0) w1(1) = ev%tmap(ev%dam(nd)%cells(1,1), ev%dam(nd)%cells(2,1))
-      call par_allreduce_sumr(w1)
-      ev%dam(nd)%trep = w1(1)
-    end do
-  end block
 end subroutine
 
 
@@ -705,66 +485,6 @@ end function
 
 
 !----------------------------------------------------------------------
-! date0_c の解析("YYYY-MM-DD" または "YYYY-MM-DD hh:mm"。区切りは - : / 可)
-!----------------------------------------------------------------------
-subroutine parse_date0(str, jdn, sec)
-  character(len=*), intent(in) :: str
-  integer, intent(out) :: jdn
-  real, intent(out) :: sec
-  character(len=len(str)) :: buf
-  integer :: y, mo, d, hh, mi, k, ios
-  buf = str
-  do k = 1, len_trim(buf)
-    if (buf(k:k) == '-' .or. buf(k:k) == ':' .or. buf(k:k) == '/') buf(k:k) = ' '
-  end do
-  hh = 0
-  mi = 0
-  read(buf, *, iostat=ios) y, mo, d, hh, mi
-  if (ios /= 0) then
-    hh = 0
-    mi = 0
-    read(buf, *, iostat=ios) y, mo, d
-    if (ios /= 0) call par_stop("list_evap: date0_c を解釈できません: "//trim(str))
-  end if
-  if (mo < 1 .or. mo > 12 .or. d < 1 .or. d > 31 .or. &
-      hh < 0 .or. hh > 23 .or. mi < 0 .or. mi > 59) then
-    call par_stop("list_evap: date0_c の値が不正です: "//trim(str))
-  end if
-  jdn = ymd_to_jdn(y, mo, d)
-  sec = real(hh) * 3600.0 + real(mi) * 60.0
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 暦(グレゴリオ暦)とユリウス通日の相互変換(Fliegel & Van Flandern)
-!----------------------------------------------------------------------
-pure function ymd_to_jdn(y, mo, d) result(jdn)
-  integer, intent(in) :: y, mo, d
-  integer :: jdn
-  integer :: a
-  a = (mo - 14) / 12
-  jdn = (1461 * (y + 4800 + a)) / 4 + (367 * (mo - 2 - 12 * a)) / 12 &
-        - (3 * ((y + 4900 + a) / 100)) / 4 + d - 32075
-end function
-
-pure subroutine jdn_to_ymd(jdn, y, mo, d)
-  integer, intent(in) :: jdn
-  integer, intent(out) :: y, mo, d
-  integer :: l, n, i, j
-  l = jdn + 68569
-  n = (4 * l) / 146097
-  l = l - (146097 * n + 3) / 4
-  i = (4000 * (l + 1)) / 1461001
-  l = l - (1461 * i) / 4 + 31
-  j = (80 * l) / 2447
-  d = l - (2447 * j) / 80
-  l = j / 11
-  mo = j + 2 - 12 * l
-  y = 100 * (n - 49) + i + l
-end subroutine
-
-
-!----------------------------------------------------------------------
 ! 診断 CSV の出力(record 間隔で run_main から呼ばれる。collective:
 ! par_sum_rows を全ランクで呼び、書き込みは rank0 のみ)
 !----------------------------------------------------------------------
@@ -798,9 +518,6 @@ subroutine m_evap_dispose(ev, p)
   if (.not. ev%enabled) return
   if (is_root .and. ev%un /= 0) close(ev%un)
   ev%un = 0
-  if (allocated(ev%tser)) deallocate(ev%tser)
-  if (allocated(ev%mapfiles)) deallocate(ev%mapfiles)
-  if (allocated(ev%tmap)) deallocate(ev%tmap)
   if (allocated(ev%pet)) deallocate(ev%pet)
   if (allocated(ev%dam)) deallocate(ev%dam)
   if (allocated(ev%skip)) deallocate(ev%skip)

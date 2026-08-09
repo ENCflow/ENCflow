@@ -1,6 +1,6 @@
 module m_sysparam
   use list_sysparam, only : t_list_sysparam, list_sysparam_read
-  use m_util, only : str2sec, itoa
+  use m_util, only : str2sec, itoa, parse_datetime
   use m_fileio, only : e_fmt_txt, e_fmt_bil, e_fmt_gtif
   use m_parallel, only : par_stop
   implicit none
@@ -13,6 +13,9 @@ module m_sysparam
 
   type t_sysparam
     real :: t0                                 ! 計算開始時刻 (s)
+    logical :: has_date = .false.              ! t=0 の暦(date0_c)が指定されたか
+    integer :: jdn0 = 0                        ! t=0 の日のユリウス通日(has_date 時のみ有効)
+    real :: sec0 = 0.0                         ! t=0 の日内秒(同上)
     real :: tt                                 ! 計算終了時刻 (s)
     real :: dt_disp                            ! 画面表示時間刻み (s)
     real :: dt_file                            ! ファイル出力時間刻み (s)
@@ -83,6 +86,7 @@ module m_sysparam
     character(:), allocatable :: fn_gwflow     ! 地下水条件設定ファイル
     character(:), allocatable :: fn_intercept  ! 降雨遮断条件設定ファイル
     character(:), allocatable :: fn_evap       ! 蒸発散条件設定ファイル
+    character(:), allocatable :: fn_meteo      ! 気象強制場設定ファイル
     character(:), allocatable :: fn_channel    ! 河道条件設定ファイル
     character(:), allocatable :: fn_enc        ! ENC設定ファイル
     character(:), allocatable :: fn_log        ! 状態ログファイル
@@ -190,6 +194,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%fn_gwflow = list%fn_gwflow                 ! 地下水条件設定ファイル
   p%fn_intercept = list%fn_intercept           ! 降雨遮断条件設定ファイル
   p%fn_evap = list%fn_evap                     ! 蒸発散条件設定ファイル
+  p%fn_meteo = list%fn_meteo                   ! 気象強制場設定ファイル
   p%fn_channel = list%fn_channel               ! 河道条件設定ファイル
   p%fn_enc = list%fn_enc                       ! ENC設定ファイル
   p%fn_log = list%fn_log                       ! 状態ログファイル
@@ -199,6 +204,11 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%outfn_suffix = list%outfn_suffix           ! 出力ファイル名のサフィックス
 
   if (len(trim(list%t0_c)) > 0) p%t0 = str2sec(list%t0_c, "bad t0_c in &list_sysparam")
+  ! t=0 の暦(蒸発散・水質など暦を使う機能の正本。§27)
+  if (len(trim(list%date0_c)) > 0) then
+    call parse_datetime(trim(list%date0_c), p%jdn0, p%sec0, "bad date0_c in &list_sysparam")
+    p%has_date = .true.
+  end if
   if (len(trim(list%tt_c)) > 0) p%tt = str2sec(list%tt_c, "bad tt_c in &list_sysparam")
   if (len(trim(list%dt_c)) > 0) p%dt = str2sec(list%dt_c, "bad dt_c in &list_sysparam")
   if (len(trim(list%dt_disp_c)) > 0) p%dt_disp = str2sec(list%dt_disp_c, "bad dt_disp_c in &list_sysparam")
