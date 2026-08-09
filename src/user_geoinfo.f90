@@ -31,12 +31,13 @@ submodule(m_geoinfo) user_geoinfo
 
   ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
   ! 更新すること(乖離は defined/run が「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:6) = [ character(len=32) :: &
+  character(len=*), parameter :: routine_names(1:7) = [ character(len=32) :: &
       "wave_solid_wall",  &   ! 波例題: 斜めの不透過壁(2セル厚)
       "wave_leaky_wall",  &   ! 波例題: 斜めの半透過壁(1セル厚)
       "abukuma_terrain",  &   ! 阿武隈川例題: 深海の埋め立てと地盤高 1/10
       "tohoku_flood",     &   ! 東北大氾濫計算(スタブ)
       "gaussian_hill",    &   ! クリープ例題: 中央のガウス丘(解析解ベンチマーク)
+      "slope_break",      &   ! 土石流例題: 遷緩点付き斜面(test/debris, test/slide)
       "template"          ]   ! 新規ルーチンの雛形(空)
 
 contains
@@ -105,6 +106,8 @@ function resolve(name) result(fp)
       fp => geoinfo_tohoku_flood
     case ("gaussian_hill")
       fp => geoinfo_gaussian_hill
+    case ("slope_break")
+      fp => geoinfo_slope_break
     case ("template")
       fp => geoinfo_template
     case default
@@ -218,6 +221,34 @@ subroutine geoinfo_gaussian_hill(p, g)
     do i = 1, g%nx
       r2 = ((i - ic) * g%dx)**2 + ((j - jc) * g%dy)**2
       g%z(i,j) = amp * exp(-r2 / (2.0 * sigma2))
+    end do
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 土石流・地滑り例題: 遷緩点付き斜面(test/debris, test/slide 専用)
+!   x < xb では tanθ = 0.4(約 21.8°)の下り斜面、以降は平坦。
+!     z(x) = st・(xb − x)  (x < xb),  0  (x >= xb),  x = (i − 0.5)dx
+!   パラメータ(st = 0.4, xb = 30 m)は test/*/param.txt・Check_*.py の
+!   z0 計算式と対で保守すること(gaussian_hill と同じ運用)
+!----------------------------------------------------------------------
+subroutine geoinfo_slope_break(p, g)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(inout) :: g
+  integer :: i, j
+  real :: x
+  real, parameter :: st = 0.4      ! 斜面勾配 tanθ
+  real, parameter :: xb = 30.0     ! 遷緩点の x 座標 (m)
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  do j = 1, g%ny
+    do i = 1, g%nx
+      x = (i - 0.5) * g%dx
+      if (x < xb) then
+        g%z(i,j) = st * (xb - x)
+      else
+        g%z(i,j) = 0.0
+      end if
     end do
   end do
 end subroutine

@@ -1,0 +1,66 @@
+!======================================================================
+! slide(構成1: f_release): 瞬時流動化(地滑り型)の疎通・保存則検定
+!   遷緩点付き斜面(slope_break: tanθ=0.4)の斜面上に崩壊深 D=1m の
+!   セル群(dbinit.txt。Run.sh が生成)を与え、t=1s に流動化。
+!   φ=30° では駆動がクーロン降伏を上回り、流下して遷緩点下に堆積する。
+!   検定(Check_slide.py release):
+!     (1) 固体総量保存: Σhs + (1-λ)Σ(z-z0) ≈ 0(流動化転換の台帳整合)
+!     (2) 共動更新恒等: (sd - sd0) ≈ (z - z0)
+!     (3) 水収支: Σh = λ・relsat・ΣD(放出間隙水のみ。機械精度)
+!     (4) 活性確認: 崩壊域の掘削と域外への土砂移動
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02
+  t0 = 0
+  tt = 10
+  dt_disp = 2
+  dt_file = 100
+  dt_recrd = 100
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_result = 'result'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_enc
+  f_gravity_correction = 1
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 60.0
+  ly = 20.0
+  nx = 60
+  ny = 20
+  f_ztype = 0
+  z0 = 0.0
+  f_user_routine = "slope_break"   ! tanθ=0.4, 遷緩点 x=30m
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 5.0
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_debris = 1
+  db_phi = 30.0             ! tanφ=0.577 → C≈C* でも駆動が降伏を上回り流下する
+  f_dbres = 1
+  f_dbstop = 1
+  db_vstop = 0.05
+  db_wstop = 0.05
+  fn_dbinit = 'dbinit.txt'  ! 崩壊深分布(Run.sh が生成)
+  db_reltime = 1.0          ! t=1s に流動化(時刻指定発火の検定)
+  db_relsat = 1.0
+  fluv_porosity = 0.4
+/

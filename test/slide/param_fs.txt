@@ -1,0 +1,84 @@
+!======================================================================
+! slide(構成2: f_slide): 降雨 → Green-Ampt 浸透 → 飽和 → Fs<1 →
+!   自動流動化 → 土石流化、の一連の疎通検定。
+!   φs=25°: 乾燥時 Fs = tanφs/tanθ ≈ 1.17(安定)、飽和進行で Fs<1。
+!   検定(Check_slide.py fslide):
+!     (1) 固体総量保存(許容緩め: 多数回転換の丸め累積)
+!     (2) 共動更新恒等
+!     (4) 活性確認: 斜面部に sd=0(崩壊発生)のセルが存在する
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.05
+  t0 = 0
+  tt = 400
+  dt_disp = 100
+  dt_file = 1000
+  dt_recrd = 1000
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_gwflow = '-'
+  fn_precip = '-'
+  dir_result = 'result'
+  dir_save = 'save_fs'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_enc
+  f_gravity_correction = 1
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 60.0
+  ly = 20.0
+  nx = 60
+  ny = 20
+  f_ztype = 0
+  z0 = 0.0
+  f_user_routine = "slope_break"
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 0
+  sd0 = 0.5                 ! 薄い土層(飽和到達を早める)
+  sy0 = 0.3
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt 浸透
+  f_gwlateral = 0
+/
+&list_gwflow_greenampt
+  gw_ksv_mmh = 600.0
+  gw_psif = 0.1
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 500
+  prval(1:2,2) = 9999, 500
+/
+
+&list_geomorph
+  dt_geomorph = 1.0         ! Fs 評価・E-D は 1s 周期(コスト調整)
+  morfac = 1.0
+  f_debris = 1
+  db_phi = 35.0
+  f_dbres = 1
+  f_dbstop = 1
+  db_vstop = 0.05
+  db_wstop = 0.05
+  f_slide = 1
+  slide_c = 0.0             ! 有効粘着力 (Pa)
+  slide_phi = 25.0          ! せん断抵抗角 (deg)
+  slide_gamma = 19000.0     ! 飽和単位体積重量 (N/m3)
+  fluv_porosity = 0.4
+/
