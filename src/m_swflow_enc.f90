@@ -31,6 +31,7 @@ module m_swflow_enc
   ! sect_* は submodule(enc_bc の水位規定変換)も呼ぶ。private のままだと
   ! gfortran がシンボルを局所化しリンク不能(§22 の実バグと同型)
   public :: sect_v, sect_hinv, sect_sigma
+  public :: m_swflow_enc_post            ! ステップ末尾の u,v 正規化パス(§26)
   public :: have_open_bc, bc_open_face         ! 開境界の面判定(m_geomorph の
                                                ! 開境界土砂フラックスが読む。読み取り専用)
 
@@ -1399,7 +1400,6 @@ subroutine complete(p, g, s, sx, initial)
   !   同族の問題。§26)
   logical, intent(in), optional :: initial
   integer :: i, j
-  real :: cxv, cyv
   logical :: linit
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   linit = .false.
@@ -1415,7 +1415,7 @@ subroutine complete(p, g, s, sx, initial)
   end do
   !$omp end parallel do
 
-  !$omp parallel do schedule(dynamic) private(i, j, cxv, cyv)
+  !$omp parallel do schedule(dynamic) private(i, j)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -1428,20 +1428,10 @@ subroutine complete(p, g, s, sx, initial)
           if (sdep(i,j) <= 0.0) s%h(i,j) = sx%h1(i,j)
         else
           s%h(i,j) = sect_hinv(sx%h1(i,j), sdep(i,j))
-          ! 河道幅有効セルの u,v 正規化(σ 無効時は continuous が静的
-          ! cw で行う)。確定水深 h(n+1) の σ で通水率を再評価する
-          ! (§26。sdep=0 セルは静的値と厳密同値)。海セルの除外は
-          ! continuous の書き込み集合(sw スキップ)と一致させる
-          if (have_width .and. g%sw(i,j) <= 0) then
-            if (sdep(i,j) > 0.0) then
-              call cw_cell(g, i, j, sect_sigma(s%h(i,j), sdep(i,j)), cxv, cyv)
-            else
-              cxv = cwx(i,j)
-              cyv = cwy(i,j)
-            end if
-            s%u(i,j) = s%u(i,j) / cxv
-            s%v(i,j) = s%v(i,j) / cyv
-          end if
+          ! u,v の正規化はここでは行わない: complete の後に h を変える
+          ! モジュール(gwflow/evap)があるため、最終確定 h の σ で
+          ! ステップ末尾パス m_swflow_enc_post が1回だけ行う(§26。
+          ! ここで計算する vv は暫定値で、post が正規化後に上書きする)
         end if
       else
         s%h(i,j) = sx%h1(i,j)
@@ -1725,6 +1715,47 @@ end subroutine
 !   (強い乾燥化での僅かな負値の扱いを従来と同一に保つ)。
 !   σ(h) = (h/D)^m (h<D), 1 (h>=D)。h=D で v・hinv とも連続
 !----------------------------------------------------------------------
+!----------------------------------------------------------------------
+! ステップ末尾の u,v 正規化パス(§26。σ 有効時のみ実効)
+!   σ 有効時の u,v 正規化は complete でなくここで行う: complete の後に
+!   h を変えるモジュール(gwflow の鉛直交換、evap の蒸発)があるため、
+!   「最終確定 h の σ で1回だけ割る」ことが (a) u,v と h の整合、
+!   (b) restore_uvmn(保存 h で同じ式を再評価)による厳密復元、の
+!   両方の条件になる(complete 内正規化では σ+gwflow/evap のリスタート
+!   が ULP 単位で破れることをリスタート実検証で発見)。
+!   run_main が gwflow・evap の後、geomorph・統計・出力の前に呼ぶ。
+!   σ 無効(正規化は従来どおり continuous の静的 cw)・STG では no-op。
+!   対象セル集合(窓・x・sw スキップ)は restore_uvmn と完全に一致させる
+!----------------------------------------------------------------------
+subroutine m_swflow_enc_post(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real :: cxv, cyv
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  if (.not. have_sect) return
+  if (.not. have_width) return
+  !$omp parallel do schedule(dynamic) private(i, j, cxv, cyv)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%sw(i,j) > 0) cycle
+      if (g%x(i,j) <= 0) cycle
+      if (sdep(i,j) > 0.0) then
+        call cw_cell(g, i, j, sect_sigma(s%h(i,j), sdep(i,j)), cxv, cyv)
+      else
+        cxv = cwx(i,j)
+        cyv = cwy(i,j)
+      end if
+      s%u(i,j) = s%u(i,j) / cxv
+      s%v(i,j) = s%v(i,j) / cyv
+      s%vv(i,j) = sqrt(s%u(i,j)**2 + s%v(i,j)**2)
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
 pure function sect_v(h, d) result(v)
   real, intent(in) :: h, d
   real :: v

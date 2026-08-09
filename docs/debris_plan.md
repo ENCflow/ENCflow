@@ -1,6 +1,6 @@
 # 土石流・地滑りモデルの設計(debris_plan.md)
 
-**状態: C1〜C6 実装・検証済み(2026-08-09。developer.md §27)**。
+**状態: C1〜C6 実装・検証済み(2026-08-09。developer.md §28)**。
 残るのは §1 の文献照合(閾値・係数の確定、f_dbres=2 ダイラタント則、
 第3領域 C∞ 式)と解析解ベンチマーク(handoff 参照)。照合完了とともに
 本書を消し込む(geomorph_plan.md と同じ運用)。
@@ -229,4 +229,4 @@ s%debris_active のときのみ(分岐1個。無効時ビット一致):
 | C6 | test/debris・test/slide・docs 反映 | np=1,2,4・-fcheck | 済(同上) |
 
 実装記録・実バグ(勾配読みプロセスの2パス規約)・検証記録・既知の
-制約は developer.md §27 を参照。
+制約は developer.md §28 を参照。

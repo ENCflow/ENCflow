@@ -72,7 +72,7 @@
 
   ! 土石流・地滑り(高橋型平衡濃度の E-D)(0:無効, 1:有効)
   !   地表水 h と土砂柱状量 hs の単層混合体で土石流を表現する
-  !   (docs/debris_plan.md、developer.md §27)。有効時は流れ計算が
+  !   (docs/debris_plan.md、developer.md §28)。有効時は流れ計算が
   !   運動量に hs を算入し(流動深 = h+hs)、抵抗則を f_dbres で切替。
   !   f_suspend とは排他(同一 hs 上の E-D 二重計上防止)。morfac=1 必須。
   !   移動可能範囲・深さは土層厚(&list_geoinfo の sd0/f_sdtype/fn_sd)で

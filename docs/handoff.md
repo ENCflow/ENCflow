@@ -249,7 +249,7 @@
          reference 更新を伴う。優先度低)
 
 1j. **土石流・地滑りモデル(f_debris/f_release/f_slide。2026-08-09 実装。
-    developer.md §27、docs/debris_plan.md)の残作業**
+    developer.md §28、docs/debris_plan.md)の残作業**
    - **文献照合(最優先)**: 実装環境から学術文献に到達できず、§19.8 の
      方針で以下を【要文献照合】のまま実装した。Kanako 論文
      (Nakatani et al. 2008, IJECE 1(2), 62-72)か砂防基本計画策定指針・
@@ -265,11 +265,16 @@
      保存則のみ)
    - ifx / nvfortran / AOCC でのビルド・検証(gfortran のみ実施済み)
    - S_grnd 表示が h=0 セルの hg を集計しない既存仕様の扱い
-     (developer.md §27.4。直すなら m_state_calcstat の cycle 位置の
+     (developer.md §28.4。直すなら m_state_calcstat の cycle 位置の
      変更 = 表示のみだが既存 Log との比較に影響 — 要議論)
    - Fs 分布の output_matrix 出力(f_out_fs)と record 計測の追加
    - f_wash と f_debris の併用(現状 wash は f_suspend 必須)、
      斜面崩壊の部分深さ化(現状は全層)、二相・二層モデルは将来
+   - 監視: main(蒸発散・σ post パス)とのマージ直後の Run_MPI で
+     test/debris と test/slide(release)の逐次バイト比較が1回だけ
+     不一致になった(fslide は一致)。直後の再試行 7 回+np=2 決定性
+     4 回はすべて一致・決定的で再現せず。-Ofast の fast-math ビルド間
+     差(§28.3)の可能性が高いが、再発したら記録すること
 
 ## 中期の道標(着手順は実測次第)
 
@@ -393,3 +398,14 @@
      精度差の実測、ifx / PREC=single
    - 第2弾候補: 幅 W と σ の合成の実河川検証、geomorph 河床変動との
      D 連動、浮遊砂濃度解釈(hs/vh)の geomorph 側整合
+
+1k. **蒸発散(§27。2026-08-09 実装)の残項目**
+   - gfortran 検証済み(実装コミット参照): 無効時ビット一致、一定速度の
+     収支厳密性(wave)、式の Python 対照、統合(σ+遮断+日界+リスタート)、
+     MPI np=1,2,4 / -fcheck np=2
+   - 残: FAO Penman-Monteith 等の上位式(f_evmodel の追加枠)、
+     分布気温×標高減率の併用(現状は排他)、土壌水分による蒸発抑制
+     (現状は供給制限のみ)、evap.csv 累積の restore 継続、
+     実河川の長期水収支検証(handoff 1j の低水逓減検証と併せて)
+   - 気温分布ファイルの時間アンカーはシミュレーション時刻 t=0
+     (date0_c の日界とはずれ得る。日単位運用なら実害なし)
