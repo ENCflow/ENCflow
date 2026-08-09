@@ -32,21 +32,11 @@ submodule(m_swflow_enc) m_swflow_enc_channel
   ! エッジ格納スロットの k 成分(親の continuous と同じ写像)
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
 
-  ! ---- 破堤の私有状態(developer.md §18。breach_init が構築)----
-  ! サイト=セル対 (ic,jc)-(il,jl) で一意に決まるエッジ。実効天端は
-  !   zeff(t) = zgnd0 + f(t)·(zcrest0 − zgnd0)   (f: 1=天端高, 0=堤内地盤高)
-  ! で毎ステップ更新する(f は時系列の線形補間・範囲外は端値保持。
-  ! f>=1 は zcrest0、f<=0 は zgnd0 に厳密固定=無破堤とのビット一致条件)。
-  ! 履歴状態なし(t の純関数)のため save/restore 対象外。
-  ! 基準地盤 zgnd0 は init 時の堤内地セルの s%z で静的(侵食に追従しない)。
-  ! 型 t_breach の定義は親モジュール(AOCC flang の LTO が submodule 内
-  ! 定義型の型記述子を解決できないため。§13)
-  integer :: nbr = 0                          ! サイト数
-  type(t_breach), allocatable :: br(:)        ! サイトリスト(全ランク同一)
-  ! 行バケット: 行 jc にあるサイトの並び ibrs(ibr0(jc):ibr1(jc))。
-  ! bank_wall のゲート(サイトのない行は整数比較1回で素通り)
-  integer, allocatable :: ibr0(:), ibr1(:)    ! (jsh:jeh)
-  integer, allocatable :: ibrs(:)             ! 行順に整列したサイト番号
+  ! 破堤の状態(t_breach 型・br/行バケット)は親モジュールに置く
+  ! (frw/wfrac/cwx と同じ「状態は親、構築は本 submodule」の様式。
+  ! submodule 内に置けない理由は §13 の classic flang 系不具合2件:
+  ! submodule 内定義型は AOCC の LTO が型記述子を解決できず、親の
+  ! private 型は submodule の宣言部から見えない)
 
 contains
 
