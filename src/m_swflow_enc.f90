@@ -111,14 +111,15 @@ module m_swflow_enc
                                             !   河道—河道の全成分に乗る
   real, allocatable :: wfrac(:,:)           ! セルの河道平面積率 (1:nx, jsh:jeh)。
                                             !   非河道・幅情報なしセルは 1
-  ! 破堤(developer.md §18)
-  !   サイト(河道セル・堤内地セルの対=エッジ)ごとに実効天端を
-  !   時系列 f(t)(1=天端高, 0=堤内地盤高)で変える。サイトリストと
-  !   行バケットは submodule m_swflow_enc_channel の私有状態
-  !   (bank_wall が同 submodule 内で参照するため親には出さない)。
-  !   型定義だけは親に置く: submodule 内定義の派生型を allocate すると
-  !   AOCC flang の LTO が型記述子シンボルを解決できずリンクエラーに
-  !   なる(§13。意味論・成分は不変)
+  ! 破堤(developer.md §18。構築・更新は submodule m_swflow_enc_channel)
+  !   サイト=セル対 (ic,jc)-(il,jl) で一意に決まるエッジ。実効天端を
+  !   時系列 f(t)(1=天端高, 0=堤内地盤高)で変える:
+  !     zeff(t) = zgnd0 + f(t)·(zcrest0 − zgnd0)
+  !   f>=1 は zcrest0、f<=0 は zgnd0 に厳密固定=無破堤とのビット一致条件。
+  !   履歴状態なし(t の純関数)のため save/restore 対象外。基準地盤
+  !   zgnd0 は init 時の堤内地セルの s%z で静的(侵食に追従しない)。
+  !   型と状態を親に置くのは frw/wfrac/cwx と同じ様式(submodule 内に
+  !   置けない理由は §13 の classic flang 系不具合2件)
   logical :: have_breach = .false.          ! 破堤サイトがあるか(breach_init が設定)
   type t_breach
     integer :: ic = 0, jc = 0               ! 河道セル
@@ -129,6 +130,12 @@ module m_swflow_enc
     real :: zgnd0 = 0.0                     ! 基準地盤(同上)
     real :: zeff = 0.0                      ! 現時刻の実効天端(breach_update が更新)
   end type
+  integer :: nbr = 0                        ! 破堤サイト数
+  type(t_breach), allocatable :: br(:)      ! サイトリスト(全ランク同一)
+  ! 行バケット: 行 jc にあるサイトの並び ibrs(ibr0(jc):ibr1(jc))。
+  ! bank_wall のゲート(サイトのない行は整数比較1回で素通り)
+  integer, allocatable :: ibr0(:), ibr1(:)  ! (jsh:jeh)
+  integer, allocatable :: ibrs(:)           ! 行順に整列したサイト番号
 
   real, allocatable :: cwx(:,:), cwy(:,:)   ! セルの方向別通水率 (1:nx, js:je)。
                                             !   幅キャップによるセル開口の減衰率

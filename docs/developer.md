@@ -607,9 +607,13 @@
   `..._t_breach__td_` が undefined symbol になる)。デフォルト初期化
   付き派生型の allocate は型記述子を要求するため発症する。静的な
   スカラーインスタンスのみの型(t_enc_adv / t_enc_diff)は記述子参照が
-  出ず無事。対処: **submodule で allocate する派生型の定義は親
-  モジュールに置く**(状態変数は submodule のままでよい。型は既定
-  private なので公開範囲は不変)。
+  出ず無事。ただし型定義だけを親に移すと今度は classic flang 系の
+  private ホスト結合不具合(上記 TPR #27323 系)により、submodule の
+  宣言部で `type(t_breach)` が「未宣言」になる(F90-S-0155)。
+  対処: **submodule で allocate する派生型は、型定義と状態変数の両方を
+  親モジュールに置く**(frw/wfrac/cwx と同じ「状態は親、構築は
+  submodule」の様式。submodule の手続き本体からの変数参照は private
+  でも通る=have_bank と同じ)。
 - fortls は .mod を読めないため mpi_f08 を "not found" と警告する。
   対処は使用範囲だけの interface スタブを ext_source_dirs に置く
   (コンパイル対象には絶対に入れない)。

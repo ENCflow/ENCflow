@@ -11,6 +11,14 @@ test/gtif/test_gtif_reader
 test/gtif/wrk_*.tif
 utils/rmdepress_river/rmdepress_river
 utils/rerecord/rerecord
+utils/calc_catchmentarea/calcarea
+utils/calc_catchmentarea/chkdowndir
+utils/calc_catchmentarea/mkdowndir
+utils/calc_catchmentarea/pickuparea
+utils/modify_elevation/modify_elevation
+utils/modify_river/modify_river
+utils/modify_sealand/modify_sealand
+utils/prep_flux_transect/prep_transect
 
 # --- executable binaries ---
 bin/
