@@ -11,7 +11,7 @@ module m_main
   use m_gwflow, only : t_gwflow, m_gwflow_init, m_gwflow_calc, m_gwflow_dispose
   use m_intercept, only : t_intercept, m_intercept_init, m_intercept_calc, m_intercept_step, &
                         m_intercept_dispose
-  use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc
+  use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc, m_swflow_post
   use m_output, only : output_init, output_dispose, output_chk_geoinfo, output_state, output_summary
   use m_util, only : itoa
   use m_sysdep_util, only : sysdep_mkdir, sysdep_copy_to_dir
@@ -206,6 +206,11 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ierror)
 
     ! 地下水を計算(fn_gwflow 未指定なら no-op。流れ→水収支→地形の順)
     call m_gwflow_calc(gw, p, g, s, it)
+
+    ! ステップ末尾パス: σ 有効時の u,v 正規化を最終確定 h で行う
+    ! (gwflow・蒸発散など complete 後に h を変えるモジュールの後、
+    ! geomorph・統計・出力の前。σ 無効・STG では no-op。§26)
+    call m_swflow_post(sw, p, g, s)
 
     ! 地形変化を計算(fn_geomorph 未指定なら no-op。s%z と s%e を更新し、
     ! 末尾で s%z のハロ交換まで済ませる)

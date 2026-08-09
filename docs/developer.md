@@ -2041,14 +2041,19 @@ taxy のループ先頭で毎ステップ全成分をクリアする方式に変
   q = min(W·σ/面長, 1)。build_cw と同一式・同一巡回順を共有し、
   **キャップ前 frw の保存(frw0)**を用いる(実行時 frw はキャップ乗算
   済みのため。σ=1 で静的 cwx/cwy と厳密同値)。
-  **正規化の実施箇所は complete**(σ 無効時は従来どおり continuous の
-  静的 cw): continuous の後に boundary_h・dam が h1 をさらに更新する
-  ため、σ を時刻 n の h で評価すると確定状態の u,v と h(n+1) の時刻が
-  食い違い、保存された h からの厳密復元が構造的に不可能になる。
-  complete が h(n+1) 確定直後に σ(h(n+1)) で正規化することで
-  restore_uvmn(保存 h = 最終 h(n+1) で σ を再評価)と厳密に一致する。
-  正規化の対象セル集合(sw スキップ)は continuous の書き込み集合と
-  一致させる。
+  **正規化の実施箇所はステップ末尾パス m_swflow_enc_post**(σ 無効時は
+  従来どおり continuous の静的 cw): u,v は毎ステップエッジ和から
+  再構築されるため、正規化(σ(h) の cw で1回割る)は「そのステップで
+  h を確定させる最後のモジュールの後」で行う必要がある。
+  (1) continuous 内では boundary_h・dam が h1 をさらに更新するため不可、
+  (2) complete 内でも gwflow・evap が complete 後に h を変えるため不可
+  (σ+gwflow のリスタート実検証で ULP 単位の不一致として発見。比率
+  乗算での付け替えは丸めの連鎖で厳密性が出ない)。
+  post は run_main が gwflow・evap の後、geomorph・統計・出力の前に
+  呼ぶ(m_swflow の post 口。STG は束縛しない)。restore_uvmn は
+  保存 h(=最終確定 h)で同じ式を再評価するため厳密に一致する。
+  対象セル集合(窓・x・sw スキップ)は restore_uvmn と一致させること。
+  complete 後に h を変えるモジュールを追加する場合は post より前に置く。
 - **gwflow 鉛直交換(浸透反映)**: 地表側は真水深から fx を引く(従来
   どおり)。地下側 hg への繰入を fx×(af/gv) に変更し体積整合させる
   (af=gv のセルでは係数が厳密に 1.0 =従来とビット一致)。
@@ -2117,3 +2122,4 @@ have_sect 分岐の内側のみ)。既存 reference は全て不変。
 - MPI: -Og -fcheck=all np=2 で2時間クリーン。-O2 で np=1,2,4 の
   6時間全出力が逐次と ULP=0。
 - f_sect_rk=.false. はビルド・2時間走行とも正常(S の差は9桁目)。
+
