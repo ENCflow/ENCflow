@@ -87,6 +87,7 @@ module m_sysparam
     character(:), allocatable :: fn_intercept  ! 降雨遮断条件設定ファイル
     character(:), allocatable :: fn_evap       ! 蒸発散条件設定ファイル
     character(:), allocatable :: fn_meteo      ! 気象強制場設定ファイル
+    character(:), allocatable :: fn_wq         ! 水質(負荷流出)設定ファイル
     character(:), allocatable :: fn_channel    ! 河道条件設定ファイル
     character(:), allocatable :: fn_enc        ! ENC設定ファイル
     character(:), allocatable :: fn_log        ! 状態ログファイル
@@ -195,6 +196,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%fn_intercept = list%fn_intercept           ! 降雨遮断条件設定ファイル
   p%fn_evap = list%fn_evap                     ! 蒸発散条件設定ファイル
   p%fn_meteo = list%fn_meteo                   ! 気象強制場設定ファイル
+  p%fn_wq = list%fn_wq                         ! 水質(負荷流出)設定ファイル
   p%fn_channel = list%fn_channel               ! 河道条件設定ファイル
   p%fn_enc = list%fn_enc                       ! ENC設定ファイル
   p%fn_log = list%fn_log                       ! 状態ログファイル

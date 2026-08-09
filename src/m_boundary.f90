@@ -180,6 +180,8 @@ module m_boundary
     type(t_bound_stage), allocatable :: stage(:)  ! 水位規定セル群
     integer :: ninflow = 0                 ! 区間流入の数
     type(t_bound_inflow), allocatable :: inflow(:)  ! 区間流入
+    real, allocatable :: cqin(:,:)         ! 境界流入の輸送物質濃度テーブル (g/m3 =
+                                           !   mg/L。m_wq が確保・毎ステップ更新。§30)
     real, allocatable :: csin(:,:)         ! 境界流入濃度のセル別テーブル (m3/m3)。
                                            !   濃度指定のある区間が1つでもあれば確保し、
                                            !   makebdc が毎ステップ現時刻値を書く。
@@ -423,6 +425,7 @@ subroutine m_boundary_dispose(b)
     deallocate(b%inflow)
   end if
   if (allocated(b%csin)) deallocate(b%csin)
+  if (allocated(b%cqin)) deallocate(b%cqin)
   if (allocated(b%struct)) then
     ! ダム CSV を閉じる(開いているのは rank0 のみ)
     if (is_root) then

@@ -99,6 +99,17 @@ module m_state
     integer, allocatable :: ddir8(:,:)  ! all down stream direction flag (sum(2**(1~8)))
     real :: hgmean = 0.0     ! 領域平均の地下貯留高(m)。gw_active 時のみ更新
     logical :: gw_active = .false.  ! 地下水モデルの有効化(m_gwflow_init が設定)
+    real, allocatable :: cq(:,:)        ! 輸送物質柱状量 (g/m2。§30。濃度 = cq/vh は
+                                        ! 導出量 cqc。移流は swflow_enc がステップ内で
+                                        ! 行い(wq_active)、発生源・浸透同伴・減衰は
+                                        ! m_wq が担う。確保は m_wq_init(有効時のみ))
+    real, allocatable :: cqc(:,:)       ! 体積平均濃度 (mg/L。導出量。m_wq が毎ステップ
+                                        ! 更新。σ・河道幅の換算込み。出力・プローブ用)
+    real, allocatable :: fxg(:,:)       ! 浸透フラックスの記録 (m。gwflow の鉛直交換が
+                                        ! 書き、m_wq が読んでゼロ戻し。§30 の契約。
+                                        ! 確保は m_wq_init(f_wq_infil=1 のときのみ))
+    logical :: wq_active = .false.  ! 水質輸送の有効化(m_wq_init が設定。
+                                    ! swflow_enc がステップ内で s%cq を移流する)
     logical :: sed_active = .false. ! 浮遊砂輸送の有効化(m_geomorph_init が設定。
                                     ! swflow_enc がステップ内で s%hs を移流する)
     logical :: debris_active = .false. ! 土石流モデルの有効化(m_geomorph_init が
@@ -515,6 +526,9 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hg)) deallocate(s%hg)
   if (allocated(s%sd)) deallocate(s%sd)
   if (allocated(s%hs)) deallocate(s%hs)
+  if (allocated(s%cq)) deallocate(s%cq)
+  if (allocated(s%cqc)) deallocate(s%cqc)
+  if (allocated(s%fxg)) deallocate(s%fxg)
   if (allocated(s%tide)) deallocate(s%tide)
   if (allocated(s%hmax)) deallocate(s%hmax)
   if (allocated(s%hmaxt)) deallocate(s%hmaxt)

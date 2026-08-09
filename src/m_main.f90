@@ -11,6 +11,7 @@ module m_main
   use m_gwflow, only : t_gwflow, m_gwflow_init, m_gwflow_calc, m_gwflow_dispose
   use m_evap, only : t_evap, m_evap_init, m_evap_calc, m_evap_record, m_evap_dispose
   use m_meteo, only : t_meteo, m_meteo_init, m_meteo_dispose
+  use m_wq, only : t_wq, m_wq_init, m_wq_calc, m_wq_derive, m_wq_record, m_wq_dispose
   use m_intercept, only : t_intercept, m_intercept_init, m_intercept_calc, m_intercept_step, &
                         m_intercept_dispose
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc, m_swflow_post
@@ -45,6 +46,7 @@ subroutine m_main_all()
   type(t_gwflow) :: gw
   type(t_evap) :: ev
   type(t_meteo) :: mt
+  type(t_wq) :: wq
   type(t_intercept) :: ic
   type(t_swflow) :: sw
   character(len=256) :: fn_sysparam
@@ -82,7 +84,11 @@ subroutine m_main_all()
   call m_state_init(s, p, g)              ! state を初期化(geoinfo, boundaryより後に)
   call m_boundary_set_etaref(b, p, g, s)  ! 放射境界の基準水位を確定(stateより後に)
   call m_boundary_dam_seed(b, p, g, s)    ! ダム初期貯留を hrs へ(フレッシュラン時のみ。§22)
-  call m_record_init(r, p, g)             ! record を初期化(create_resultdirより後)
+  call m_wq_init(wq, p, g, b, s)          ! wq を初期化(fn_wq 指定時のみ有効。
+                                          ! s%wq_active を立てるため swflow・record init
+                                          ! より前、セル検証にゾーン2の全域マスクを使う)
+  call m_record_init(r, p, g, s)          ! record を初期化(create_resultdirより後。
+                                          ! wq の追加列判定に state を使う)
   call m_precip_init(pr, p, g)            ! precip を初期化
   call m_intercept_init(ic, p, g)         ! intercept を初期化(fn_intercept 指定時のみ有効)
   call m_geomorph_init(gm, p, g, s)       ! geomorph を初期化(fn_geomorph 指定時のみ有効。
@@ -102,7 +108,7 @@ subroutine m_main_all()
   call m_geoinfo_band_shrink(g)           ! マスク類(x,sw,rw)と z(rank0以外)を帯に縮小
 
   ! ==== 時間ループ: すべて帯確保(z のみ rank0 が全域を保持) ====
-  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, ierror)  ! 計算本体
+  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, ierror)  ! 計算本体
 
   ! モジュールを破棄
   call output_dispose()
@@ -114,6 +120,7 @@ subroutine m_main_all()
   call m_gwflow_dispose(gw, p)
   call m_evap_dispose(ev, p)
   call m_meteo_dispose(mt)
+  call m_wq_dispose(wq, p, g, s)          ! save は dispose で(m_state より先に走る)
   call m_record_dispose(r)
   call m_state_dispose(s, p)
   call m_boundary_dispose(b)
@@ -139,7 +146,7 @@ end subroutine
 !----------------------------------------------------------------------
 ! 計算本体
 !----------------------------------------------------------------------
-subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, ierror)
+subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
@@ -153,6 +160,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, ierror)
   type(t_swflow), intent(in) :: sw
   type(t_evap), intent(inout) :: ev    ! 蒸発散(PET の日次更新・累積診断を保持)
   type(t_meteo), intent(inout) :: mt   ! 気象強制場(分布気温の読み進みを保持)
+  type(t_wq), intent(inout) :: wq      ! 水質(発生源・台帳を保持)
   integer, intent(out) :: ierror
   integer :: it            ! 時間ループのカウント
   logical :: do_file       ! このステップでファイル出力するか
@@ -172,6 +180,8 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, ierror)
   call m_precip_makepre(pr, p, g, s, pr_updated)  ! 初期降水分布を作成　
   if (pr_updated) call m_intercept_calc(ic, p, g, s, 0)  ! 遮断による有効雨量化(fn_intercept 未指定なら no-op)
   call m_state_calcstat(s, p, g)          ! 統計情報を計算
+  call m_wq_derive(wq, p, g, s)           ! 初期濃度場の導出(初期出力・プローブより
+                                          ! 前に。fn_wq 未指定なら no-op。§30)
 
   ! 初期状態の出力(ファイルへの書き込みはランク0のみ。番号 0 は
   ! 「このランの開始状態」の固定スロット: restore 時は復元状態が書かれる)
@@ -181,6 +191,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, ierror)
   call m_record_flux(r, p, s)           ! フラックスの値を出力
   call m_boundary_dam_record(b, p, s)   ! ダム CSV(ダムがなければ no-op)
   call m_evap_record(ev, p, s)          ! 蒸発散 CSV(fn_evap 未指定なら no-op)
+  call m_wq_record(wq, p, g, s)         ! 水質 CSV(fn_wq 未指定なら no-op)
   ierror = 0                            ! エラー数をリセット
 
   ! デバッグ用データを出力
@@ -221,6 +232,11 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, ierror)
     ! 地下水を計算(fn_gwflow 未指定なら no-op。流れ→水収支→地形の順)
     call m_gwflow_calc(gw, p, g, s, it)
 
+    ! 水質過程を適用(fn_wq 未指定なら no-op。境界流入濃度の更新・
+    ! 浸透同伴・発生源投入・ダム捕捉。gwflow が記録した浸透量 fxg を
+    ! 消費するため直後に置く。§30)
+    call m_wq_calc(wq, p, g, b, s, it)
+
     ! 蒸発散を適用(fn_evap 未指定なら no-op。樹冠→地表水→hrs→地下水の
     ! 優先順位減算とダム湛水面蒸発。浸透後の状態に作用させる。§27)
     call m_evap_calc(ev, p, g, b, s, ic, mt, it)
@@ -229,6 +245,9 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, ierror)
     ! (gwflow・evap の後、geomorph・統計・出力の前。σ 無効・STG では
     ! no-op。§26)
     call m_swflow_post(sw, p, g, s)
+
+    ! 導出濃度場の更新(確定 h に対する cqc。統計・出力より前。§30)
+    call m_wq_derive(wq, p, g, s)
 
     ! 地形変化を計算(fn_geomorph 未指定なら no-op。s%z と s%e を更新し、
     ! 末尾で s%z のハロ交換まで済ませる)
@@ -261,6 +280,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, ierror)
      call m_record_flux(r, p, s)
      call m_boundary_dam_record(b, p, s)
      call m_evap_record(ev, p, s)
+     call m_wq_record(wq, p, g, s)
     end if
 
 

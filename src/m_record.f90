@@ -29,6 +29,7 @@ module m_record
   ! ====================================================================
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
+  use iso_fortran_env, only : real64
   use m_state, only : t_state
   use m_parallel, only : is_root
   use m_util, only : itoa
@@ -83,6 +84,7 @@ module m_record
     integer :: nris = 0                    ! 蹴上げの数
     integer :: irs(1:ncellmax)             ! 蹴上げ k は踏面セル irs(k) と irs(k)+1 の間
     real :: tp                             ! 最大流量の発生時刻(s)
+    real(real64) :: lcum = 0.0_real64      ! 累積負荷 (kg。wq 有効時のみ更新。§30)
     real :: qmax                           ! 最大流量
     real :: hmax                           ! 最大流量のときの水深
     integer :: un                          ! 出力ファイルの装置番号
@@ -108,10 +110,11 @@ contains
 !----------------------------------------------------------------------
 ! レコード構造体を初期化
 !----------------------------------------------------------------------
-subroutine m_record_init(r, p, g)
+subroutine m_record_init(r, p, g, s)
   type(t_record), intent(out) :: r
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s       ! wq_active(追加列ヘッダの判定)
   type(t_list_record) :: list
   integer :: pbxytype
   real, allocatable :: pbxy(:,:)
@@ -224,7 +227,11 @@ subroutine set_probe
     write(un, '("# z(m) =,",f14.3)') r%probe(i)%z
     write(un, '("# ix =,",i7)') r%probe(i)%ixy(1)
     write(un, '("# iy =,",i7)') r%probe(i)%ixy(2)
-    write(un, '("# t(hour), t(min), z(m), h(m), u(m/s), v(m/s), |V|(m/s), q(m2/s), hg(m), hs(m), sd(m)")')
+    if (s%wq_active) then
+      write(un, '("# t(hour), t(min), z(m), h(m), u(m/s), v(m/s), |V|(m/s), q(m2/s), hg(m), hs(m), sd(m), C(mg/L), cq(g/m2)")')
+    else
+      write(un, '("# t(hour), t(min), z(m), h(m), u(m/s), v(m/s), |V|(m/s), q(m2/s), hg(m), hs(m), sd(m)")')
+    end if
     r%probe(i)%un = un
   end do
 end subroutine
@@ -378,7 +385,11 @@ subroutine set_flux
     write(un, '("# xR, yR, xL, yL(m) =,",f14.3,",",f14.3,",",f14.3,",",f14.3)') r%flux(i)%xy0(1:4)
     write(un, '("# ixR, iyR, ixL, iyL =,",i7,",",i7,",",i7,",",i7)') r%flux(i)%ixy0(1:4)
     write(un, '("# length of transect(m) =,",f14.3)') r%flux(i)%trlen
-    write(un, '("# t(hour), t(min), Q(m3/s), Hmax(m), Vmax(m/s), B(m)(=Q/Hmax/Vmax)")')
+    if (s%wq_active) then
+      write(un, '("# t(hour), t(min), Q(m3/s), Hmax(m), Vmax(m/s), B(m)(=Q/Hmax/Vmax), L(g/s), Lcum(kg)")')
+    else
+      write(un, '("# t(hour), t(min), Q(m3/s), Hmax(m), Vmax(m/s), B(m)(=Q/Hmax/Vmax)")')
+    end if
     r%flux(i)%un = un
   end do
 end subroutine
@@ -451,11 +462,12 @@ subroutine m_record_probe(r, p, s)
   type(t_state), intent(in) :: s
   integer :: ipb, un
   integer :: ix, iy
-  real :: wk(9, r%npb)     ! 点集約バッファ: z, h, u, v, |V|, q, hg, hs, sd
+  real :: wk(11, r%npb)    ! 点集約バッファ: z, h, u, v, |V|, q, hg, hs, sd
+                           ! (+ wq 有効時のみ書く: C(mg/L), cq(g/m2))
   character(len=10) :: ffmt
   character(len=80) :: afmt
   integer, parameter :: iw_z = 1, iw_h = 2, iw_u = 3, iw_v = 4, iw_vv = 5, iw_qq = 6, &
-                        iw_hg = 7, iw_hs = 8, iw_sd = 9
+                        iw_hg = 7, iw_hs = 8, iw_sd = 9, iw_cc = 10, iw_cq = 11
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   if (r%npb <= 0) return
@@ -475,6 +487,10 @@ subroutine m_record_probe(r, p, s)
       wk(iw_hg,ipb) = s%hg(ix,iy)
       wk(iw_hs,ipb) = s%hs(ix,iy)
       wk(iw_sd,ipb) = s%sd(ix,iy)
+      if (s%wq_active) then
+        wk(iw_cc,ipb) = s%cqc(ix,iy)
+        wk(iw_cq,ipb) = s%cq(ix,iy)
+      end if
     end if
   end do
   call par_reduce_points(wk)
@@ -511,6 +527,12 @@ subroutine m_record_probe(r, p, s)
     write(un, afmt, advance='no') wk(iw_hs,ipb)
     write(un, '(a)', advance='no') ","
     write(un, afmt, advance='no') wk(iw_sd,ipb)
+    if (s%wq_active) then
+      write(un, '(a)', advance='no') ","
+      write(un, afmt, advance='no') wk(iw_cc,ipb)
+      write(un, '(a)', advance='no') ","
+      write(un, afmt, advance='no') wk(iw_cq,ipb)
+    end if
     write(un, *)
     if (wk(iw_qq,ipb) > r%probe(ipb)%qmax) then
       r%probe(ipb)%tp = s%t / 60.
@@ -529,9 +551,9 @@ subroutine m_record_flux(r, p, s)
   type(t_state), intent(in) :: s
   integer :: ifl, un, ncell
   integer :: i, k, ix, iy
-  real :: q
+  real :: q, lq
   real :: hmax, vmax, b
-  real, allocatable :: wk(:,:)   ! 点集約バッファ: (4, ncell) = m, n, h, |V|
+  real, allocatable :: wk(:,:)   ! 点集約バッファ: (5, ncell) = m, n, h, |V|, C(mg/L)
   character(len=10) :: ffmt
   character(len=80) :: afmt
   type(t_flux) :: flx
@@ -545,7 +567,7 @@ subroutine m_record_flux(r, p, s)
     ncell = flx%ncell
 
     ! --- 全ランク: 測線上の所有セルの値を詰めて rank0 に点集約(collective) ---
-    allocate(wk(4, ncell), source = 0.0)
+    allocate(wk(5, ncell), source = 0.0)
     do i = 1, ncell
       ix = flx%ixy(1,i)
       iy = flx%ixy(2,i)
@@ -554,6 +576,7 @@ subroutine m_record_flux(r, p, s)
         wk(2,i) = s%n(ix,iy)
         wk(3,i) = s%h(ix,iy)
         wk(4,i) = s%vv(ix,iy)
+        if (s%wq_active) wk(5,i) = s%cqc(ix,iy)
       end if
     end do
     call par_reduce_points(wk)
@@ -568,14 +591,17 @@ subroutine m_record_flux(r, p, s)
     ! 蹴上げ=長手方向フラックス(段差を挟む踏面2セルの平均)×係数 cr。
     ! 係数は set_flux が法線符号×セル幅で前計算済み
     q = 0.0
+    lq = 0.0
     hmax = 0.0
     vmax = 0.0
     b = 0.
     do i = 1, ncell
       if (flx%major == 1) then
         q = q + wk(2,i) * flx%ct               ! x 長手: 踏面は n(y方向フラックス)
+        lq = lq + wk(2,i) * flx%ct * wk(5,i)   ! 負荷 = 水フラックス×セル濃度(§30)
       else
         q = q + wk(1,i) * flx%ct               ! y 長手: 踏面は m(x方向フラックス)
+        lq = lq + wk(1,i) * flx%ct * wk(5,i)
       end if
       hmax = max(wk(3,i), hmax)
       vmax = max(wk(4,i), vmax)
@@ -584,8 +610,10 @@ subroutine m_record_flux(r, p, s)
       k = flx%irs(i)
       if (flx%major == 1) then
         q = q + 0.5 * (wk(1,k) + wk(1,k+1)) * flx%cr   ! 蹴上げは m
+        lq = lq + 0.5 * (wk(1,k) * wk(5,k) + wk(1,k+1) * wk(5,k+1)) * flx%cr
       else
         q = q + 0.5 * (wk(2,k) + wk(2,k+1)) * flx%cr   ! 蹴上げは n
+        lq = lq + 0.5 * (wk(2,k) * wk(5,k) + wk(2,k+1) * wk(5,k+1)) * flx%cr
       end if
     end do
     deallocate(wk)
@@ -604,6 +632,14 @@ subroutine m_record_flux(r, p, s)
     write(un, afmt, advance='no') vmax
     write(un, '(a)', advance='no') ","
     write(un, afmt, advance='no') b
+    if (s%wq_active) then
+      ! 負荷フラックス L (g/s) と累積負荷 (kg。記録間隔の矩形積分 = 近似)
+      r%flux(ifl)%lcum = r%flux(ifl)%lcum + real(lq, real64) * real(p%dt_recrd, real64) / 1000.0_real64
+      write(un, '(a)', advance='no') ","
+      write(un, afmt, advance='no') lq
+      write(un, '(a)', advance='no') ","
+      write(un, afmt, advance='no') real(r%flux(ifl)%lcum)
+    end if
     write(un, *)
     if (q > r%flux(ifl)%qmax) then
       r%flux(ifl)%tp = s%t / 60.

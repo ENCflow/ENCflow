@@ -123,6 +123,8 @@ subroutine gwflow_greenampt_calc(p, g, s, it, dts)
       ! 地下側は実効平面積率で体積整合させる(§26。河道幅・断面 σ の
       ! 有効セルのみ af/gv < 1。無効時は af=gv で係数 1.0 =従来とビット一致)
       s%hg(i,j) = s%hg(i,j) + fx * (s%af(i,j) / g%gv(i,j))
+      ! 浸透フラックスの記録(水質の濃度同伴用。m_wq が読んでゼロ戻し。§30)
+      if (allocated(s%fxg)) s%fxg(i,j) = s%fxg(i,j) + fx
       s%e(i,j) = s%z(i,j) + s%h(i,j)
     end do
   end do

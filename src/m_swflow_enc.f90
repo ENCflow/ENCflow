@@ -32,6 +32,8 @@ module m_swflow_enc
   ! gfortran がシンボルを局所化しリンク不能(§22 の実バグと同型)
   public :: sect_v, sect_hinv, sect_sigma
   public :: m_swflow_enc_post            ! ステップ末尾の u,v 正規化パス(§26)
+  public :: swflow_vh                    ! 矩形換算水深 vh の照会(§26/§30。
+                                         ! 水質の濃度換算 conc = cq/vh 用)
   public :: have_open_bc, bc_open_face         ! 開境界の面判定(m_geomorph の
                                                ! 開境界土砂フラックスが読む。読み取り専用)
 
@@ -187,6 +189,8 @@ module m_swflow_enc
     real, allocatable :: h1(:,:)     ! セル中心での計算済み水深
     real, allocatable :: hs1(:,:)    ! 浮遊砂柱状量の書き込み先(時刻n+1。completeでs%hsへ
                                      ! コミット。s%sed_active のときだけ確保)
+    real, allocatable :: cq1(:,:)    ! 輸送物質柱状量の書き込み先(同上の意味論。
+                                     ! s%wq_active のときだけ確保。§30)
     logical :: initialized = .false.
   end type
   type(t_enc_status) :: sx_mod
@@ -537,6 +541,8 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 浮遊砂柱状量(移流の風上濃度がハロ行の hs/h を読む。E-D による帯の
   ! 更新は前ステップの geomorph なので、ここで交換すれば最新)
   if (s%sed_active) call par_halo_cell(s%hs)
+  ! 輸送物質柱状量(浮遊砂と同じ理由でステップ頭交換。§30)
+  if (s%wq_active) call par_halo_cell(s%cq)
 
   ! 破堤サイトの現時刻の実効天端を更新する(サイト数ぶんの時系列補間。
   ! t の純関数なので全ランクが同値を冗長計算する=通信不要)
@@ -571,6 +577,16 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
       call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1, cbin=b%csin)
     else
       call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1)
+    end if
+  end if
+
+  ! 輸送物質柱状量を移流する(浮遊砂と同一の保存輸送カーネル。境界流入
+  ! 濃度テーブル cqin は m_wq が毎ステップ更新する。§30)
+  if (s%wq_active) then
+    if (allocated(b%cqin)) then
+      call advect_scalar(p, g, s, sx_mod, s%cq, sx_mod%cq1, cbin=b%cqin)
+    else
+      call advect_scalar(p, g, s, sx_mod, s%cq, sx_mod%cq1)
     end if
   end if
 
@@ -733,6 +749,11 @@ subroutine init_enc_status(p, g, s, sx)
     allocate(sx%hs1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
     sx%hs1(:,:) = s%hs(:,:)
   end if
+  ! 輸送物質の書き込みバッファ(hs1 と同じ理由で正準状態の複製で初期化。§30)
+  if (s%wq_active) then
+    allocate(sx%cq1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+    sx%cq1(:,:) = s%cq(:,:)
+  end if
 
   ! 流速の初期条件を設定する
   !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, ue, ve)
@@ -793,6 +814,7 @@ subroutine del_enc_status(sx)
   if (allocated(sx%mn1)) deallocate(sx%mn1)
   if (allocated(sx%h1)) deallocate(sx%h1)
   if (allocated(sx%hs1)) deallocate(sx%hs1)
+  if (allocated(sx%cq1)) deallocate(sx%cq1)
 end subroutine
 
 
@@ -1457,6 +1479,19 @@ subroutine complete(p, g, s, sx, initial)
     !$omp end parallel do
   end if
 
+  ! 輸送物質柱状量のコミット(hs と同じ意味論。§30)
+  if (s%wq_active) then
+    !$omp parallel do schedule(dynamic) private(i, j)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        if (g%sw(i,j) > 0) cycle
+        s%cq(i,j) = sx%cq1(i,j)
+      end do
+    end do
+    !$omp end parallel do
+  end if
+
   ! 実効平面積率 af の更新(§25/§26。幅・σ とも無効なら af=gv のまま不変)
   if (have_width .or. have_sect) call update_af(g, s)
 
@@ -1754,6 +1789,22 @@ subroutine m_swflow_enc_post(p, g, s)
   end do
   !$omp end parallel do
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 矩形換算水深 vh の照会(§26/§30)。σ 非適用セル・σ 無効時は h を返す。
+! 水質の体積平均濃度 conc = cq/vh の分母(m_wq が使う)
+!----------------------------------------------------------------------
+function swflow_vh(i, j, h) result(vh)
+  integer, intent(in) :: i, j
+  real, intent(in) :: h
+  real :: vh
+  if (have_sect) then
+    vh = sect_v(h, sdep(i,j))
+  else
+    vh = h
+  end if
+end function
 
 
 pure function sect_v(h, d) result(v)
