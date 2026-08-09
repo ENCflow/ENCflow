@@ -25,7 +25,7 @@ module m_swflow_enc
   public :: f_advection_tvd
   public :: p_adv_upwind_index
   public :: n8x, n8y
-  public :: have_width, have_frw, frw, wfrac   ! protected(m_geomorph の掃流砂が読む)
+  public :: have_width, have_frw, frw, wfrac   ! m_geomorph の掃流砂が読む(宣言部の注記参照)
   ! sect_* は submodule(enc_bc の水位規定変換)も呼ぶ。private のままだと
   ! gfortran がシンボルを局所化しリンク不能(§22 の実バグと同型)
   public :: sect_v, sect_hinv, sect_sigma
@@ -59,8 +59,10 @@ module m_swflow_enc
   ! 境界条件の私有状態(辺型・面型・基準水位等)は submodule
   ! m_swflow_enc_bc が保持する(bc_init が構築)。親には continuous /
   ! restore_uvmn のホットパスが読む判定フラグだけを置く
-  logical, protected :: have_open_bc = .false.  ! 開いた面(不透過でない)があるか
-                                            !   (bc_init が設定)
+  logical :: have_open_bc = .false.         ! 開いた面(不透過でない)があるか
+                                            !   (bc_init が設定。protected 不可:
+                                            !   nvfortran は submodule のホスト結合を
+                                            !   use 結合扱いし書き込みを拒否する。§13)
 
   ! 堤防(仮想壁面)モデル(developer.md §17)
   !   有効化は fn_channel の fn_bank / bank0 の有無(g%bank_active)。
@@ -93,17 +95,21 @@ module m_swflow_enc
   !   解像河道(掘り込み+壁)の表現と厳密に一致する(退化性)。
   !   セル内の非河道部の貯留は表現しない(河道セルの水位=河道内水位)
   integer :: f_channel_advection            ! 河道セルを含むエッジの移流項 (1:通常, 0:落とす)
-  ! have_width/have_frw/frw/wfrac は protected 公開: m_geomorph の掃流砂が
-  ! 「水と同じ開口・同じ貯留補正」で土砂を運ぶために読む(読み取り専用。
-  ! 書き手は本モジュールと submodule m_swflow_enc_channel のみ)
+  ! have_width/have_frw/frw/wfrac は公開: m_geomorph の掃流砂が
+  ! 「水と同じ開口・同じ貯留補正」で土砂を運ぶために読む(読み取り専用の
+  ! 規約。書き手は本モジュールと submodule m_swflow_enc_channel のみ)。
+  ! frw/wfrac に protected は付けられない: submodule 内の構築(allocate・
+  ! 代入)を nvfortran がホスト結合でなく use 結合とみなし 0155 エラーに
+  ! する(§13)。親モジュール本体だけが書く have_width/have_frw は
+  ! protected を維持する
   logical, protected :: have_width = .false. ! サブグリッド河道幅が有効か(g%width_active)
   logical, protected :: have_frw = .false.  ! エッジ通過幅係数 frw が有効か
                                             !   (have_bopen または have_width)
   logical :: adv_drop_rw = .false.          ! 河道セルを含むエッジで移流項を落とすか
-  real, allocatable, protected :: frw(:,:,:) ! エッジ別通過幅係数 (1:4, 0:nx, jsh-1:jeh)。
+  real, allocatable :: frw(:,:,:)           ! エッジ別通過幅係数 (1:4, 0:nx, jsh-1:jeh)。
                                             !   開口補正は法線成分 2, 4 のみ、幅キャップは
                                             !   河道—河道の全成分に乗る
-  real, allocatable, protected :: wfrac(:,:) ! セルの河道平面積率 (1:nx, jsh:jeh)。
+  real, allocatable :: wfrac(:,:)           ! セルの河道平面積率 (1:nx, jsh:jeh)。
                                             !   非河道・幅情報なしセルは 1
   ! 破堤(developer.md §18)
   !   サイト(河道セル・堤内地セルの対=エッジ)ごとに実効天端を

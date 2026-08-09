@@ -23,6 +23,10 @@ submodule(m_swflow_enc) m_swflow_enc_channel
   use m_parallel, only : dcp, par_stop, par_allreduce_maxi
   use m_util, only : itoa
   use list_channel, only : t_list_channel, nbrsmax, nbrvmax
+  ! 時系列補間は m_boundary の公開手続きを共用する(以前あった同一実装の
+  ! 複製は削除: nvfortran は submodule のホスト結合で祖先の use を
+  ! only 制限なしに見せるため、複製の再宣言が 1254 エラーになる。§13)
+  use m_boundary, only : interp_series
   implicit none
 
   ! エッジ格納スロットの k 成分(親の continuous と同じ写像)
@@ -487,36 +491,6 @@ function breach_crest(ic, jc, il, jl, zc) result(z)
   end do
 end function
 
-
-!----------------------------------------------------------------------
-! 時系列の線形補間(範囲外は端値保持。m_boundary の interp_series と同一)
-!----------------------------------------------------------------------
-function interp_series(val, n, t) result(q)
-  real, intent(in) :: val(:,:)
-  integer, intent(in) :: n
-  real, intent(in) :: t
-  real :: q
-  real :: t0, t1, q0, q1
-  integer :: k
-
-  if (t <= val(1,1)) then             ! 最初の時刻よりも前の場合
-    q = val(2,1)
-  else if (t > val(1,n)) then         ! 最後の時刻より後の場合
-    q = val(2,n)
-  else
-    q = val(2,n)
-    do k = 2, n
-      t1 = val(1,k)
-      if (t < t1) then
-        t0 = val(1,k-1)
-        q0 = val(2,k-1)
-        q1 = val(2,k)
-        q = q0 + (t - t0) / (t1 - t0) * (q1 - q0)
-        exit
-      end if
-    end do
-  end if
-end function
 
 !----------------------------------------------------------------------
 ! 堤防天端の堰越流流束(本間公式。自由/潜りを自動切替)
