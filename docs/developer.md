@@ -601,6 +601,15 @@
   have_open_bc)には protected を付けられない(読み取り専用は規約で
   担保し、宣言部に注記)。親モジュール本体だけが書く変数
   (have_width/have_frw 等)の protected は維持できる。
+- **AOCC flang は -flto で submodule 内定義の派生型の型記述子を解決
+  できない**(実例: m_swflow_enc_channel 内定義の t_breach を
+  allocate する breach_init が LTO で親の init にインライン化され、
+  `..._t_breach__td_` が undefined symbol になる)。デフォルト初期化
+  付き派生型の allocate は型記述子を要求するため発症する。静的な
+  スカラーインスタンスのみの型(t_enc_adv / t_enc_diff)は記述子参照が
+  出ず無事。対処: **submodule で allocate する派生型の定義は親
+  モジュールに置く**(状態変数は submodule のままでよい。型は既定
+  private なので公開範囲は不変)。
 - fortls は .mod を読めないため mpi_f08 を "not found" と警告する。
   対処は使用範囲だけの interface スタブを ext_source_dirs に置く
   (コンパイル対象には絶対に入れない)。

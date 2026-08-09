@@ -38,16 +38,9 @@ submodule(m_swflow_enc) m_swflow_enc_channel
   ! で毎ステップ更新する(f は時系列の線形補間・範囲外は端値保持。
   ! f>=1 は zcrest0、f<=0 は zgnd0 に厳密固定=無破堤とのビット一致条件)。
   ! 履歴状態なし(t の純関数)のため save/restore 対象外。
-  ! 基準地盤 zgnd0 は init 時の堤内地セルの s%z で静的(侵食に追従しない)
-  type t_breach
-    integer :: ic = 0, jc = 0                 ! 河道セル
-    integer :: il = 0, jl = 0                 ! 堤内地セル
-    integer :: nval = 0                       ! 時系列データ数
-    real, allocatable :: val(:,:)             ! 時系列 (1:2, 1:nval) = (s, 割合0〜1)
-    real :: zcrest0 = 0.0                     ! 初期天端(セル対を帯内に持つランクのみ有効)
-    real :: zgnd0 = 0.0                       ! 基準地盤(同上)
-    real :: zeff = 0.0                        ! 現時刻の実効天端(breach_update が更新)
-  end type
+  ! 基準地盤 zgnd0 は init 時の堤内地セルの s%z で静的(侵食に追従しない)。
+  ! 型 t_breach の定義は親モジュール(AOCC flang の LTO が submodule 内
+  ! 定義型の型記述子を解決できないため。§13)
   integer :: nbr = 0                          ! サイト数
   type(t_breach), allocatable :: br(:)        ! サイトリスト(全ランク同一)
   ! 行バケット: 行 jc にあるサイトの並び ibrs(ibr0(jc):ibr1(jc))。
