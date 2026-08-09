@@ -12,6 +12,8 @@ module m_wq
   !           時系列(t=0 からの経過日、線形補間・端値保持)。分布面源
   !           (fn_wq_map: 原単位 kg/ha/day のセル別分布×倍率。一定)は
   !           全有効セルへ投入し、点源・面源と排他でなく重ね合わせ。
+  !           降雨中濃度(湿性沈着 wq_rain_conc/wq_rain_series、mg/L)は
+  !           地表到達雨量 s%pre×濃度を全域投入(これも重ね合わせ)。
   !           境界流入濃度(区間流入ごと、mg/L)は b%cqin テーブル経由で
   !           輸送カーネルに渡す
   !   浸透:   f_wq_infil=1(既定)で浸透水に濃度同伴し、地下質量プール cg
@@ -91,11 +93,14 @@ module m_wq
                                                     !   W1 では台帳=横移動なし。§30)
     real, allocatable :: rmap(:,:)                  ! 分布面源の投入率 (g/s/m2。地理的
                                                     !   面積あたり。帯。未指定なら未確保)
+    logical :: have_rain = .false.                  ! 降雨中濃度(湿性沈着)の有効
+    type(t_wqsrc) :: rain                           ! 降雨中濃度 (mg/L。q0 か ser)
     integer :: ndam = 0
     type(t_wqdam), allocatable :: dam(:)
     ! 診断(行部分和 real64。累積 m3 でなく質量 g)
-    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:7) 1=点源 2=面源 3=浸透(→cg)
-                                            !   4=ダム捕捉 5=減衰消失 6=沈降消失 7=分布面源
+    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:8) 1=点源 2=面源 3=浸透(→cg)
+                                            !   4=ダム捕捉 5=減衰消失 6=沈降消失
+                                            !   7=分布面源 8=降雨沈着
     integer :: un = 0                       ! CSV 装置番号(rank0。open(newunit=) は負値。§22)
   end type
 
@@ -154,6 +159,9 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- 分布面源(全有効セル・一定。点源・面源と重ね合わせ) ---
   if (len_trim(list%fn_wq_map) > 0) call setup_map_source(wq, p, g, list)
 
+  ! --- 降雨中濃度(湿性沈着。点源・面源・分布と重ね合わせ) ---
+  call setup_rain_conc(wq, list)
+
   ! --- 境界流入濃度 ---
   call setup_inflow_conc(wq, g, b, list)
 
@@ -180,13 +188,13 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- リスタート ---
   if (p%f_state_restore > 0) call restore_state(wq, p, g, s)
 
-  allocate(wq%vrow(dcp%js:dcp%je, 1:7), source = 0.0_real64)
+  allocate(wq%vrow(dcp%js:dcp%je, 1:8), source = 0.0_real64)
 
   ! --- 診断 CSV(rank0。累積はラン先頭からの積算 = restore でリセット) ---
   if (is_root) then
     open(newunit=wq%un, file=trim(p%dir_result)//"/wq.csv", status='replace')
-    write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,to_gw_g,to_dam_g," &
-                        //"decay_g,settle_g,mass_surface_g,mass_gw_g"
+    write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,to_gw_g," &
+                        //"to_dam_g,decay_g,settle_g,mass_surface_g,mass_gw_g"
   end if
 
   s%wq_active = .true.
@@ -439,6 +447,44 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 降雨中濃度の解釈(一定 wq_rain_conc か時系列 wq_rain_series の排他。
+! 未指定なら無効。時系列は 経過日 -> 秒)
+!----------------------------------------------------------------------
+subroutine setup_rain_conc(wq, list)
+  type(t_wq), intent(inout) :: wq
+  type(t_list_wq), intent(in) :: list
+  integer :: n, k
+
+  n = 0
+  do k = 1, size(list%wq_rain_series, 2)
+    if (list%wq_rain_series(1,k) <= -9998.0) exit
+    n = n + 1
+  end do
+  if (n == 0 .and. list%wq_rain_conc <= -9998.0) return    ! 未指定 = 無効
+  if (n > 0 .and. list%wq_rain_conc > -9998.0) then
+    call par_stop("list_wq: 降雨中濃度は wq_rain_conc(一定)か wq_rain_series の" &
+                  //"どちらか一方で指定してください")
+  end if
+  if (n > 0) then
+    do k = 2, n
+      if (list%wq_rain_series(1,k) <= list%wq_rain_series(1,k-1)) then
+        call par_stop("list_wq: wq_rain_series の時刻(経過日)は単調増加で" &
+                      //"指定してください")
+      end if
+    end do
+    allocate(wq%rain%ser(1:2, 1:n))
+    wq%rain%ser(1,1:n) = list%wq_rain_series(1,1:n) * secday
+    wq%rain%ser(2,1:n) = list%wq_rain_series(2,1:n)
+    wq%rain%nser = n
+  else
+    if (list%wq_rain_conc < 0.0) call par_stop("list_wq: wq_rain_conc は非負のみです")
+    wq%rain%q0 = list%wq_rain_conc
+  end if
+  wq%have_rain = .true.
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! ダム捕捉台帳の構築(全ダムの捕捉帯セル。自帯分のみ)
 !----------------------------------------------------------------------
 subroutine setup_dams(wq, g, b)
@@ -586,6 +632,35 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
     !$omp end parallel do
   end if
 
+  ! (3c) 降雨中濃度(湿性沈着)の投入: このステップに swflow が加えた
+  !      有効雨量 s%pre·dt(遮断適用後 = 地表到達分)× 濃度。セル判定は
+  !      swflow の降雨適用と同一(sw セル除外)= 水と質量が厳密整合。
+  !      樹冠に遮断された雨の沈着分は水と同伴して系外(既知の妥協。§30)
+  if (wq%have_rain) then
+    if (wq%rain%nser > 0) then
+      rate = interp_series(wq%rain%ser, wq%rain%nser, s%t)     ! mg/L = g/m3
+    else
+      rate = wq%rain%q0
+    end if
+    if (rate > 0.0) then
+      !$omp parallel do schedule(static) private(i, j, w)
+      do j = dcp%js, dcp%je
+        do i = g%wx(1,j), g%wx(2,j)
+          if (g%sw(i,j) > 0) cycle
+          if (g%x(i,j) <= 0) cycle
+          if (s%pre(i,j) <= 0.0) cycle
+          ! セルの質量 = 濃度×雨量×面積。柱状量へは実効面積で除す
+          w = rate * s%pre(i,j) * p%dt * real(acell) / real(mass_of(g, i, j, 1.0))
+          s%cq(i,j) = s%cq(i,j) + w
+          wq%vrow(j,8) = wq%vrow(j,8) &
+                         + real(rate, real64) * real(s%pre(i,j), real64) &
+                           * real(p%dt, real64) * acell
+        end do
+      end do
+      !$omp end parallel do
+    end if
+  end if
+
   ! (4) ダム捕捉帯の質量吸収(水は毎ステップ全量吸収されるため質量も
   !     同伴してダム台帳へ。放流濃度 0 = 既知の妥協。§30)
   do nd = 1, wq%ndam
@@ -708,13 +783,13 @@ subroutine m_wq_record(wq, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: v(1:7), msur, mgw
+  real(real64) :: v(1:8), msur, mgw
   real(real64) :: rows(dcp%js:dcp%je), rows2(dcp%js:dcp%je)
   integer :: i, j, k
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (.not. wq%enabled) return
 
-  do k = 1, 7
+  do k = 1, 8
     call par_sum_rows(wq%vrow(:,k), v(k))
   end do
   rows(:) = 0.0_real64
@@ -730,7 +805,8 @@ subroutine m_wq_record(wq, p, g, s)
   call par_sum_rows(rows2, mgw)
 
   if (is_root .and. wq%un /= 0) then
-    write(wq%un, '(f0.2,9(",",es15.7))') s%t, v(1), v(2), v(7), v(3), v(4), v(5), v(6), msur, mgw
+    write(wq%un, '(f0.2,10(",",es15.7))') s%t, v(1), v(2), v(7), v(8), v(3), v(4), v(5), v(6), &
+                                          msur, mgw
     flush(wq%un)
   end if
 end subroutine

@@ -30,6 +30,13 @@
   !fn_wq_map = "loadmap.txt"
   !wq_map_factor = 1.0              ! 分布への倍率(校正用)
 
+  ! ---- 降雨中濃度(湿性沈着。地表到達雨量 × 濃度で全域投入)----
+  !   一定(wq_rain_conc)か時系列(wq_rain_series)の排他。
+  !   これも他の発生源と重ね合わせ
+  !wq_rain_conc = 2.0               ! 一定濃度 (mg/L)
+  !wq_rain_series(:,1) = 0.0, 5.0   ! 時系列 (t=0 からの経過日, mg/L)
+  !wq_rain_series(:,2) = 1.0, 1.0
+
   ! ---- 一次減衰・沈降(W2。省略時=保存性物質)----
   !wq_thalf = 4500.0               ! 半減期 (day。例: Cs-137 は約 11000 day)
   !wq_k20 = 0.1                    ! 一次減衰係数 (1/day。wq_thalf と排他)
