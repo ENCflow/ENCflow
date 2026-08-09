@@ -2,7 +2,9 @@ module m_intercept_initloss
   ! ========== 貯留型遮断モデルの見本: 初期損失モデル ==========
   ! 累積遮断量 st がセルごとの最大貯留量 smax に達するまで降雨を遮断し
   ! (I = min(P, 残容量))、以後は素通しにする(Initial Loss)。
-  ! 蒸発による貯留の回復(乾き戻り)は表現しない。
+  ! 蒸発による貯留の回復(乾き戻り)は draw 口経由でのみ起きる
+  ! (fn_evap 有効時に m_evap が引き落とす。§27。蒸発散無効なら従来
+  ! どおり回復なし)。
   ! 最大貯留量は一様値(ic_smax_mm)または分布ファイル(fn_icsmax)で
   ! 与える(いずれも mm。fn_icsmax 指定時は ic_smax_mm を使わない)。
   !
@@ -37,6 +39,7 @@ module m_intercept_initloss
   public :: intercept_initloss_init
   public :: intercept_initloss_calc
   public :: intercept_initloss_step
+  public :: intercept_initloss_draw
   public :: intercept_initloss_dispose
 
   ! モデル私有の設定と内部状態(単一インスタンス前提。developer.md §12)
@@ -206,6 +209,21 @@ subroutine intercept_initloss_step(p, g, s, it)
   ! 近傍参照なしのためハロ交換は不要(契約2)
 
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 蒸発散による貯留の引き落とし(t_intercept%draw の実装。§27)
+!   需要 dem (m) のうち累積遮断量 st から引けた量を返し、st を減じる
+!   (=遮断容量の乾き戻り)。呼び出し側(m_evap)は自帯の使用セルのみを
+!   渡す契約(範囲検査はしない)。st は h と同じ柱状量基底 (m)
+!----------------------------------------------------------------------
+function intercept_initloss_draw(i, j, dem) result(w)
+  integer, intent(in) :: i, j
+  real, intent(in) :: dem
+  real :: w
+  w = min(ici%st(i,j), max(dem, 0.0))
+  ici%st(i,j) = ici%st(i,j) - w
+end function
 
 
 !----------------------------------------------------------------------
