@@ -122,6 +122,8 @@ subroutine output_state(p, g, s, k)
   if (s%wq_active) call output_matrix(p, g, "C", s%cqc, k)          ! 輸送物質濃度 (mg/L。§30)
   ! 積雪水量 SWE (mm。fn_snow 有効時のみ。§31)
   if (allocated(s%swe)) call output_matrix(p, g, "Sw", 1000.0*s%swe, k)
+  ! 土層厚 (m。sd を持つ構成=土砂・風化・地下水等の有効時のみ。§32)
+  if (allocated(s%sd)) call output_matrix(p, g, "Sd", s%sd, k)
   ! 表面蓄積プール (kg/ha = g/m2 × 10。プール有効時のみ。§30)
   if (s%wq_active .and. allocated(s%bp)) call output_matrix(p, g, "B", 10.0*s%bp, k)
   if (is_root) write(un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it

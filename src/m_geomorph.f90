@@ -51,6 +51,10 @@ module m_geomorph
   use m_util, only : itoa, rtoa
   implicit none
   private
+
+  ! 長期プロセスの時間換算(ユリウス年)
+  real, parameter :: yr_s = 365.25 * 86400.0        ! 1 年 (s)
+  real, parameter :: kyr_s = 1000.0 * 365.25 * 86400.0  ! 1 千年 (s)
   public :: t_geomorph
   public :: m_geomorph_init
   public :: m_geomorph_calc
@@ -116,6 +120,12 @@ module m_geomorph
     real :: sl_c = 0.0               ! 有効粘着力 c' (Pa)
     real :: sl_tanphi = 0.0          ! tan(せん断抵抗角 φs)
     real :: sl_gamma = 0.0           ! 飽和単位体積重量 γt (N/m3)
+    integer :: f_wthr = 0            ! 基岩風化=土層生成(0:無効, 1:有効。§32)
+    real :: wp0 = 0.0                ! 裸岩生成速度 (m/s。mm/kyr から換算)
+    real :: wsdstar = 0.0            ! 生成の減衰深 sd* (m)
+    real :: wsdinv = 0.0             ! 1 / sd*
+    integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
+    real :: uprate = 0.0             ! 隆起速度 (m/s。mm/yr から換算)
     logical :: initialized = .false.
   end type
 
@@ -337,6 +347,30 @@ subroutine m_geomorph_init(gm, p, g, s)
     call setup_sd(p, g, s)
   end if
 
+  ! --- 基岩風化(土層生成関数。§32)---
+  !   dsd/dt = W0·exp(−sd/sd*)。s%sd を要する(土砂プロセス未使用でも確保)
+  gm%f_wthr = list%f_wthr
+  if (gm%f_wthr > 0) then
+    if (list%wthr_p0 <= -9998.0) call par_stop("list_geomorph: f_wthr=1 には wthr_p0 " &
+                                               // "(mm/kyr) が必要です")
+    if (list%wthr_p0 <= 0.0) call par_stop("list_geomorph: wthr_p0 は正のみです")
+    if (list%wthr_sdstar <= 0.0) call par_stop("list_geomorph: wthr_sdstar は正のみです")
+    gm%wp0 = list%wthr_p0 * 1.0e-3 / kyr_s          ! mm/kyr -> m/s
+    gm%wsdstar = list%wthr_sdstar
+    gm%wsdinv = 1.0 / list%wthr_sdstar
+    if (.not. (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0)) then
+      call setup_sd(p, g, s)                        ! 風化のみでも sd を確保・転記
+    end if
+  end if
+
+  ! --- 隆起(§32)---
+  gm%f_uplift = list%f_uplift
+  if (gm%f_uplift > 0) then
+    if (list%uplift0 <= -9998.0) call par_stop("list_geomorph: f_uplift=1 には uplift0 " &
+                                               // "(mm/yr) が必要です")
+    gm%uprate = list%uplift0 * 1.0e-3 / yr_s        ! mm/yr -> m/s(負=沈降も可)
+  end if
+
   if (gm%f_fluvial > 0) call init_fluvial(gm, p, g, list)
   if (gm%f_suspend > 0) call init_suspend(gm, p, list)
   if (gm%f_wash > 0) call init_wash(gm, list)
@@ -387,6 +421,61 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 基岩風化=土層生成(§32): dsd/dt = W0·exp(−sd/sd*)(Heimsath 型)。
+!   指数厳密更新(オーバーフロー安全な ln1p 形):
+!     sd_new = sd + sd*·ln(1 + (W0·dts/sd*)·e^(−sd/sd*))
+!   z は不変(体積膨張 bulking は無視)= 基岩面 z − sd が下がる。
+!   地下水容量 sd·sy0 と層2の底 z−sd−d2 は自動で追随する。
+!   wash 侵食の「sd=0 で岩盤露出・停止」と対になり、風化→土層化→侵食の
+!   収支が閉じる。海セルは対象外
+!----------------------------------------------------------------------
+subroutine calc_wthr(gm, g, s, dts)
+  type(t_geomorph), intent(in) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: dts
+  integer :: i, j
+  real :: w
+
+  !$omp parallel do schedule(static) private(i, j, w)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      w = gm%wsdstar * log(1.0 + (gm%wp0 * dts * gm%wsdinv) &
+                                 * exp(-s%sd(i,j) * gm%wsdinv))
+      s%sd(i,j) = s%sd(i,j) + w
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 隆起(§32): z += U·dts(sd 不変 = 基岩ごと剛体上昇。負値=沈降)。
+!   海セルは対象外(海=侵食基準面。内陸の基準面制御は境界条件側で行う。
+!   分布隆起(断層ブロック)は将来 fn_uplift で。§32)
+!----------------------------------------------------------------------
+subroutine calc_uplift(gm, g, s, dts)
+  type(t_geomorph), intent(in) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: dts
+  integer :: i, j
+
+  !$omp parallel do schedule(static) private(i, j)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      s%z(i,j) = s%z(i,j) + gm%uprate * dts
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 地形変化を計算する(dt_geomorph 間隔で run_main から毎ステップ呼ばれる)
 !   有効なプロセスを順に適用して s%z(fluvial は s%sd も)を更新する
 !   (演算子分割)。各プロセスは実効時間刻み dts(加速係数込み)ぶんの
@@ -420,6 +509,8 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
   if (gm%f_suspend > 0) call calc_suspend(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_wash > 0) call calc_wash(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_creep > 0) call calc_creep(gm, g, s, dts)
+  if (gm%f_wthr > 0) call calc_wthr(gm, g, s, dts)
+  if (gm%f_uplift > 0) call calc_uplift(gm, g, s, dts)
   ! (将来のプロセスの適用をここに追加する)
 
   ! 瞬時流動化(時刻交差で1回だけ発火。プロセス群の後に置く理由:
@@ -441,7 +532,7 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
   ! 自プロセスの次回の近傍参照(±1)と、流れの重力項・gwflow 側方の
   ! 近傍参照が、この1回の交換で賄われる(developer.md §11)
   call par_halo_cell(s%z)
-  if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0) then
+  if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 .or. gm%f_wthr > 0) then
     call par_halo_cell(s%sd)
   end if
   ! s%hs のハロは swflow_enc のステップ頭交換が担う(移流の直前に最新化)

@@ -75,6 +75,11 @@ module list_geomorph
     real :: slide_c = 0.0            ! 有効粘着力 c' (Pa)。f_slide=1 で必須(0 可)
     real :: slide_phi = 0.0          ! 土のせん断抵抗角 φs (deg)。f_slide=1 で必須
     real :: slide_gamma = 0.0        ! 飽和単位体積重量 γt (N/m3)。f_slide=1 で必須
+    integer :: f_wthr = 0            ! 基岩風化=土層生成(0:無効, 1:有効。§32)
+    real :: wthr_p0 = -9999.0        ! 裸岩での土層生成速度 (mm/kyr)。f_wthr=1 で必須
+    real :: wthr_sdstar = 0.5        ! 生成の減衰深 sd* (m)
+    integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
+    real :: uplift0 = -9999.0        ! 隆起速度 (mm/yr)。f_uplift=1 で必須
                                      ! (例: 18000〜20000。湿潤・飽和の区別は
                                      ! 一律 γt の近似)
 
@@ -132,6 +137,10 @@ subroutine list_geomorph_read(p, list)
   real :: slide_c
   real :: slide_phi
   real :: slide_gamma
+  integer :: f_wthr
+  real :: wthr_p0, wthr_sdstar
+  integer :: f_uplift
+  real :: uplift0
 
   namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
@@ -140,7 +149,8 @@ subroutine list_geomorph_read(p, list)
                            susp_beta, susp_esa, f_wash, wash_kr, wash_kf, wash_tausc, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
                            fn_dbinit, db_reltime, db_relsat, &
-                           f_slide, slide_c, slide_phi, slide_gamma
+                           f_slide, slide_c, slide_phi, slide_gamma, &
+                           f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0
 
   ! 型宣言のデフォルトを namelist 変数の初期値にする
   dt_geomorph = list%dt_geomorph
@@ -182,6 +192,11 @@ subroutine list_geomorph_read(p, list)
   slide_c = list%slide_c
   slide_phi = list%slide_phi
   slide_gamma = list%slide_gamma
+  f_wthr = list%f_wthr
+  wthr_p0 = list%wthr_p0
+  wthr_sdstar = list%wthr_sdstar
+  f_uplift = list%f_uplift
+  uplift0 = list%uplift0
 
   call par_info("reading list_geomorph in " // trim(p%fn_geomorph))
   open(newunit=un, file=trim(p%fn_geomorph), status='old', action='read', iostat=ios)
@@ -226,6 +241,11 @@ subroutine list_geomorph_read(p, list)
   list%db_reltime = db_reltime
   list%db_relsat = db_relsat
   list%f_slide = f_slide
+  list%f_wthr = f_wthr
+  list%wthr_p0 = wthr_p0
+  list%wthr_sdstar = wthr_sdstar
+  list%f_uplift = f_uplift
+  list%uplift0 = uplift0
   list%slide_c = slide_c
   list%slide_phi = slide_phi
   list%slide_gamma = slide_gamma
