@@ -197,6 +197,85 @@ end subroutine
 !   海(sw)が絡むエッジは rivermouth_drop の管轄なので対象外。
 !   calc_kth_momentum から対象エッジ判定込みで毎エッジ呼ばれる
 !----------------------------------------------------------------------
+module subroutine seawall_wall(p, g, s, i, j, in, jn, uve1, mne1)
+  ! 海岸堤防(仮想壁面の海岸応用。§17.1・handoff 1o 改訂設計)。
+  ! 「天端を持つ陸側セル」と「海側セル(ssw = fn_seaside ∪ sw)」の間の
+  ! 全エッジ(対角含む)に仮想壁を立てる。天端は陸側(保護側)セルの
+  ! g%zswall。sw を使わない津波ケース(境界入射の伝搬計算)でも
+  ! fn_seaside の向き付けで機能し、海側水位には伝搬してきた波の動的
+  ! 水位がそのまま効く。河道セルには setup が天端を置かないため河口は
+  ! 開口。水理モード f_swall_mode は f_bank_mode と同義(0:越流のみ,
+  ! 1:フラップ=陸閘・水門相当(陸→海の排水のみ通し海→陸は天端まで
+  ! 遮断), 2:強制排水=排水機場相当)。越流は本間公式(bank_weir_flux
+  ! を共用)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j     ! 中心セルのインデックス
+  integer, intent(in) :: in, jn   ! 近傍セルのインデックス
+  real, intent(inout) :: uve1, mne1  ! エッジの流速・流量(中心→近傍が正)
+  integer :: ic, jc               ! 海側セルのインデックス
+  integer :: il, jl               ! 陸側セルのインデックス
+  real :: sgn                     ! 陸→海向きの符号(中心→近傍が正)
+  real :: zc                      ! 天端標高
+  real :: wsr, wsl                ! 海側・陸側の水位
+  real :: h, u
+
+  ! 対象エッジの判定(片側が海側マスク・他側が陸)
+  if (g%ssw(i,j) > 0 .and. g%ssw(in,jn) <= 0) then
+    ic = i;  jc = j;  il = in; jl = jn
+    sgn = -1.0
+  else if (g%ssw(in,jn) > 0 .and. g%ssw(i,j) <= 0) then
+    ic = in; jc = jn; il = i;  jl = j
+    sgn = 1.0
+  else
+    return
+  end if
+  zc = g%zswall(il,jl)
+  if (zc <= zbank_min) return     ! この陸側セルは堤防なし(通常計算のまま)
+
+  wsr = s%z(ic,jc) + max(s%h(ic,jc), 0.0)
+  wsl = s%z(il,jl) + max(s%h(il,jl), 0.0)
+
+  select case (f_swall_mode)
+  case (e_bank_pump)
+    ! 強制排水(排水機場): 天端以下では海側水位によらず陸側の全水深で
+    ! 段落ち排水。どちらかの水位が天端を超えたら双方向の堰越流に切替
+    if (max(wsr, wsl) > zc) then
+      call bank_weir_flux(p%gg, wsr, wsl, zc, sgn, uve1, mne1)
+    else
+      h = max(s%h(il,jl), 0.0)
+      u = ((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)
+      uve1 = sgn * u
+      mne1 = sgn * u * h
+    end if
+  case (e_bank_oneway)
+    ! フラップ(陸閘・水門): 陸側水位が高い間は壁なしの通常計算のまま
+    ! 通す(海→陸成分は 0 にクリップ)。海側水位が高いときは天端まで
+    ! 不透過、天端を超えたら海→陸の堰越流
+    if (wsl >= wsr) then
+      if (sgn * uve1 < 0) then
+        uve1 = 0
+        mne1 = 0
+      end if
+    else if (wsr > zc) then
+      call bank_weir_flux(p%gg, wsr, wsl, zc, sgn, uve1, mne1)
+    else
+      uve1 = 0
+      mne1 = 0
+    end if
+  case default    ! e_bank_weir
+    ! 越流のみ(単純堤防): 双方向とも天端までは不透過、超えたら堰越流
+    if (max(wsr, wsl) > zc) then
+      call bank_weir_flux(p%gg, wsr, wsl, zc, sgn, uve1, mne1)
+    else
+      uve1 = 0
+      mne1 = 0
+    end if
+  end select
+end subroutine
+
+
 module subroutine bank_wall(p, g, s, i, j, in, jn, uve1, mne1)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g

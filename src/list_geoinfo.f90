@@ -39,6 +39,15 @@ module list_geoinfo
     character(len=maxpathlen) :: fn_mask = ""  ! 領域マスクファイル名
     character(len=maxpathlen) :: fn_sw = ""    ! 海域マスクファイル名
     character(len=maxpathlen) :: fn_rw = ""    ! 河道マスクファイル名
+    ! ---- 海岸堤防(仮想壁面の海岸応用。§17.1。指定は河川堤防と独立)----
+    character(len=maxpathlen) :: fn_seaside = ""  ! 海側マスク(0/1)。sw>0 は常に海側扱い
+                                                  ! (潮位ケースは省略可・津波ケースは必須)
+    character(len=maxpathlen) :: fn_seawall = ""  ! 天端分布(陸側セル位置。-900 以下はなし)
+    real :: seawall0 = -9999.0                 ! 一律天端値(fn_seawall と排他。海側に接する
+                                               !   全陸セルへ自動付与=海岸線全周の壁)
+    integer :: f_seawall_datum = 2             ! 高さの基準(1:自セル地盤基準, 2:絶対標高=既定)
+    integer :: f_seawall_mode = 0              ! 水理モード(0:越流のみ, 1:フラップ=陸閘・水門,
+                                               !   2:強制排水=排水機場。f_bank_mode と同義)
     character(len=maxpathlen) :: fn_depth_rw = ""  ! 河床掘り込み深さ分布ファイル名(河道セルのみ有効。無指定なら depth_rw)
     character(len=maxpathlen) :: fn_rn = ""    ! 地盤高ファイル名
     character(len=maxpathlen) :: fn_luse = ""  ! 土地利用ファイル名
@@ -86,6 +95,9 @@ subroutine list_geoinfo_read(p, list)
   character(:), allocatable :: fn_mask   ! 領域マスクファイル名
   character(:), allocatable :: fn_sw     ! 海域マスクファイル名
   character(:), allocatable :: fn_rw     ! 河道マスクファイル名
+  character(len=maxpathlen) :: fn_seaside, fn_seawall
+  real :: seawall0
+  integer :: f_seawall_datum, f_seawall_mode
   character(:), allocatable :: fn_depth_rw  ! 河床掘り込み深さ分布ファイル名
   character(:), allocatable :: fn_luse   ! 土地利用ファイル名
   character(:), allocatable :: fn_gv     ! 家屋の空隙率ファイル名
@@ -101,6 +113,7 @@ subroutine list_geoinfo_read(p, list)
                           f_user_routine, &
                           f_ztype, f_lusetype, f_rntype, f_masktype, f_sdtype, &
                           fn_z, fn_mask, fn_sw, fn_rw, fn_depth_rw, &
+                          fn_seaside, fn_seawall, seawall0, f_seawall_datum, f_seawall_mode, &
                           fn_rn, fn_luse, fn_gv, fn_bb, fn_rscap, fn_sd, lu2rn
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -130,6 +143,11 @@ subroutine list_geoinfo_read(p, list)
   fn_mask = list%fn_mask
   fn_sw = list%fn_sw
   fn_rw = list%fn_rw
+  fn_seaside = list%fn_seaside
+  fn_seawall = list%fn_seawall
+  seawall0 = list%seawall0
+  f_seawall_datum = list%f_seawall_datum
+  f_seawall_mode = list%f_seawall_mode
   fn_depth_rw = list%fn_depth_rw
   fn_rn = list%fn_rn
   fn_luse = list%fn_luse
@@ -173,6 +191,11 @@ subroutine list_geoinfo_read(p, list)
   list%fn_z = fn_z
   list%fn_mask = fn_mask
   list%fn_sw = fn_sw
+  list%fn_seaside = fn_seaside
+  list%fn_seawall = fn_seawall
+  list%seawall0 = seawall0
+  list%f_seawall_datum = f_seawall_datum
+  list%f_seawall_mode = f_seawall_mode
   list%fn_rw = fn_rw
   list%fn_depth_rw = fn_depth_rw
   list%fn_rn = fn_rn

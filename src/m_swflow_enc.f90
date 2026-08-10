@@ -85,6 +85,8 @@ module m_swflow_enc
   !   天端の絶対標高は geoinfo が河道セルごとに構築済み(g%zbank)。
   !   水理モード f_bank_mode は fn_channel の &list_channel から読む
   logical :: have_bank = .false.            ! 堤防天端が有効か
+  logical :: have_swall = .false.           ! 海岸堤防天端が有効か(§17 一般化)
+  integer :: f_swall_mode = 0               ! 海岸堤防の水理モード(e_bank_* と同義)
   integer, parameter :: e_bank_weir = 0     ! 越流のみ(単純堤防): 双方向とも天端まで不透過
   integer, parameter :: e_bank_oneway = 1   ! 樋門(逆止弁): 堤内→河道のみ透過、逆は天端まで不透過
   integer, parameter :: e_bank_pump = 2     ! 強制排水: 堤内→河道は河道水位によらず常時段落ち
@@ -328,6 +330,14 @@ module m_swflow_enc
       real, intent(in) :: sig
       real, intent(out) :: cx, cy
     end subroutine
+    module subroutine seawall_wall(p, g, s, i, j, in, jn, uve1, mne1)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+      integer, intent(in) :: i, j, in, jn
+      real, intent(inout) :: uve1, mne1
+    end subroutine
+
     module subroutine bank_wall(p, g, s, i, j, in, jn, uve1, mne1)
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
@@ -412,6 +422,8 @@ subroutine m_swflow_enc_init(p, g, b, s)
 
   ! 堤防(仮想壁面)・河道幅の有効判定は geoinfo の構築結果に従う
   have_bank = g%bank_active
+  have_swall = g%swall_active
+  f_swall_mode = g%f_swall_mode             ! 検証は geoinfo(setup_seawall)済み
   have_width = g%width_active
   if (f_bank_mode < e_bank_weir .or. f_bank_mode > e_bank_pump) then
     call par_stop("list_channel: f_bank_mode は 0(越流のみ), 1(樋門), 2(強制排水) のいずれか")
@@ -971,6 +983,10 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
 
   ! 堤防(仮想壁面)エッジの流速・流量の上書き(submodule m_swflow_enc_channel)
   if (have_bank) call bank_wall(p, g, s, i, j, in, jn, uve1, mne1)
+
+  ! 海岸堤防(仮想壁面)エッジの流速・流量の上書き(同 submodule。
+  ! bank_wall は sw エッジに触れないため干渉しない)
+  if (have_swall) call seawall_wall(p, g, s, i, j, in, jn, uve1, mne1)
 
   ! セル境界での単位幅流量から境界の両側のセルでの水深の減少量を計算する
   !   通過幅係数有効時はエッジ別係数 frw を乗じる(k<=4 は成分=k)。

@@ -49,6 +49,13 @@ module m_geoinfo
                                                       ! かつ fn_gwflow 指定。全ランク同値)
     real, allocatable :: zbank(:,:)                   ! 堤防天端の絶対標高(m)。河道セルのみ有効、
                                                       ! 堤防なしは zbank_none(bank_active のときだけ確保)
+    real, allocatable :: zswall(:,:)                  ! 海岸堤防天端の絶対標高(m)。陸側(保護側)セル
+                                                      ! のみ有効、なしは zbank_none(swall_active の
+                                                      ! ときだけ確保。§17.1)
+    integer, allocatable :: ssw(:,:)                  ! 海側マスク(1=海側。fn_seaside ∪ sw>0。
+                                                      ! swall_active のときだけ確保。壁エッジの向き付け)
+    logical :: swall_active = .false.                 ! 海岸堤防の有効(setup_seawall が設定)
+    integer :: f_swall_mode = 0                       ! 海岸堤防の水理モード(swflow が転記して使う)
     logical :: bank_active = .false.                  ! 堤防天端が有効(fn_channel の fn_bank / bank0 /
                                                       ! fn_width 指定。全ランク同値)
     real, allocatable :: wrw(:,:)                     ! 河道幅(m)。河道セルのみ有効、0 以下は
@@ -156,6 +163,7 @@ subroutine m_geoinfo_init(g, p)
   ! rank0 のみ=方式2で scatter_coeffs が帯配布)。掘り込み後の z と
   ! user フックによる地形・マスク変更を反映するため、この位置で行う
   call setup_bank(p, g, list, chlist)
+  call setup_seawall(p, g, list)
 
   ! サブグリッド河道幅を読み込む(検証は全ランク、読み込みは rank0 のみ
   ! =方式2で scatter_coeffs が帯配布)
@@ -269,6 +277,7 @@ subroutine m_geoinfo_scatter_coeffs(g)
   ! 全ランク同一(collective 安全)
   if (g%sd_dist) call scatter_band_r(g%sd)
   if (g%bank_active) call scatter_band_r(g%zbank)
+  if (g%swall_active) call scatter_band_r(g%zswall)
   if (g%width_active) call scatter_band_r(g%wrw)
   if (g%drw_active) call scatter_band_r(g%drw)
 end subroutine
@@ -350,6 +359,7 @@ subroutine m_geoinfo_band_shrink(g)
   type(t_geoinfo), intent(inout) :: g
   call shrink_band_i(g%x,  dcp%jsh - 1, dcp%jeh + 1)
   call shrink_band_i(g%sw, dcp%jsh, dcp%jeh)
+  if (g%swall_active) call shrink_band_i(g%ssw, dcp%jsh, dcp%jeh)
   call shrink_band_i(g%rw, dcp%jsh, dcp%jeh)
   if (.not. is_root) call shrink_band_r(g%z, dcp%jsh, dcp%jeh)
 end subroutine
@@ -368,6 +378,8 @@ subroutine m_geoinfo_dispose(g)
   if (allocated(g%rscap)) deallocate(g%rscap)
   if (allocated(g%sd)) deallocate(g%sd)
   if (allocated(g%zbank)) deallocate(g%zbank)
+  if (allocated(g%zswall)) deallocate(g%zswall)
+  if (allocated(g%ssw)) deallocate(g%ssw)
   if (allocated(g%wrw)) deallocate(g%wrw)
   if (allocated(g%drw)) deallocate(g%drw)
   if (allocated(g%x)) deallocate(g%x)
@@ -1179,6 +1191,141 @@ subroutine setup_bank(p, g, list, ch)
   if (n_low > 0) then
     write(msg,'(a,i0,a)') "geoinfo: WARNING: bank crest below channel bed at ", n_low, " cells"
     call par_info(trim(msg))
+  end if
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 海岸堤防天端(陸側セルごとの絶対標高 zswall)と海側マスク ssw を構築
+! する(§17.1。handoff 1o 改訂設計)
+!   天端は陸側(保護側)セルが持つ: fn_seawall(陸側セル位置の分布。
+!   -900 以下はなし)か seawall0(一律)の排他。基準 f_seawall_datum は
+!   1:自セル地盤基準(z + 値。陸側持ちのため隣接集約は不要)、
+!   2:絶対標高(既定。海岸の天端高は T.P.+x m で公表される実態)。
+!   海側は fn_seaside(0/1 ラスタ)で明示し、sw>0 セルは常に海側扱い
+!   (潮位ケースは fn_seaside 省略可、津波ケース=sw なしでは必須)。
+!   壁エッジ = 天端を持つ陸側セル × 海側セルの間の全エッジ(対角含む。
+!   判定は m_swflow_enc の seawall_wall)。河道セル(rw>0)上の天端は
+!   警告して無視する(河口は開口)
+!----------------------------------------------------------------------
+subroutine setup_seawall(p, g, list)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(inout) :: g
+  type(t_list_geoinfo), intent(in) :: list
+  integer, parameter :: din(1:8) = [ -1,  0,  1, -1,  1, -1,  0,  1]
+  integer, parameter :: djn(1:8) = [ -1, -1, -1,  0,  0,  1,  1,  1]
+  real, parameter :: hb_none = -900.0           ! 入力の「堤防なし」判定しきい値
+  real, allocatable :: hb(:,:)
+  character(:), allocatable :: fname
+  logical :: sw_file, sw_fixed, front
+  integer :: i, j, k, in, jn
+  integer :: n_wall, n_orph, n_rw, n_sea
+  character(len=1024) :: msg
+
+  ! 有効判定(namelist 由来で全ランク同一 = collective 安全)
+  sw_file = len_trim(list%fn_seawall) > 0
+  sw_fixed = list%seawall0 > hb_none
+  g%swall_active = sw_file .or. sw_fixed
+  if (.not. g%swall_active) return
+  if (sw_file .and. sw_fixed) then
+    call par_stop("list_geoinfo: fn_seawall と seawall0 は同時に指定できません")
+  end if
+  if (list%f_seawall_datum < 1 .or. list%f_seawall_datum > 2) then
+    call par_stop("list_geoinfo: f_seawall_datum は 1(自セル地盤基準) か 2(絶対標高) です: " &
+                  // itoa(list%f_seawall_datum))
+  end if
+  if (list%f_seawall_mode < 0 .or. list%f_seawall_mode > 2) then
+    call par_stop("list_geoinfo: f_seawall_mode は 0(越流のみ), 1(フラップ), 2(強制排水) " &
+                  // "のいずれか: "//itoa(list%f_seawall_mode))
+  end if
+  g%f_swall_mode = list%f_seawall_mode
+
+  ! --- 海側マスク(全ランクが全域を冗長構築。sw の読みと同じ流儀) ---
+  allocate(g%ssw(1:g%nx,1:g%ny), source = 0)
+  if (len_trim(list%fn_seaside) > 0) then
+    fname = trim(p%dir_data) // "/" // trim(list%fn_seaside)
+    call par_info(" reading "//fname)
+    call fileio_read_matrix(fname, g%nx, g%ny, g%ssw, p%f_input_mode)
+  end if
+  n_sea = 0
+  do j = 1, g%ny
+    do i = 1, g%nx
+      if (g%ssw(i,j) < 0) g%ssw(i,j) = 0
+      if (g%sw(i,j) > 0) g%ssw(i,j) = 1        ! 静的海域は常に海側扱い
+      if (g%x(i,j) <= 0) g%ssw(i,j) = 0        ! 領域外は対象外
+      if (g%ssw(i,j) > 0) n_sea = n_sea + 1
+    end do
+  end do
+  if (n_sea <= 0) then
+    call par_stop("list_geoinfo: 海岸堤防には海側セルが必要です(fn_seaside を指定するか、" &
+                  // "fn_sw の海域マスクを使ってください)")
+  end if
+
+  if (.not. is_root) return
+
+  ! --- 天端(rank0 が全域を構築 → scatter_band_r で帯配布) ---
+  allocate(g%zswall(1:g%nx,1:g%ny), source = zbank_none)
+  if (sw_fixed) then
+    ! 一律値: 海側に接する全ての陸側セルへ自動付与(海岸線全周の壁)
+    allocate(hb(1:g%nx,1:g%ny), source = list%seawall0)
+  else
+    allocate(hb(1:g%nx,1:g%ny), source = hb_none)
+    fname = trim(p%dir_data) // "/" // trim(list%fn_seawall)
+    call par_info(" reading "//fname)
+    call fileio_read_matrix(fname, g%nx, g%ny, hb, p%f_input_mode)
+  end if
+
+  n_wall = 0
+  n_orph = 0
+  n_rw = 0
+  do j = 1, g%ny
+    do i = 1, g%nx
+      if (g%x(i,j) <= 0) cycle
+      if (g%ssw(i,j) > 0) cycle                 ! 海側セル自身には置かない
+      if (hb(i,j) <= hb_none) cycle
+      if (g%rw(i,j) > 0) then                   ! 河道セルは開口(河口)
+        n_rw = n_rw + 1
+        cycle
+      end if
+      ! 海側セルに接するか(対角含む。接しない天端は壁にならない)
+      front = .false.
+      do k = 1, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        if (in < 1 .or. in > g%nx .or. jn < 1 .or. jn > g%ny) cycle
+        if (g%ssw(in,jn) > 0) front = .true.
+      end do
+      if (.not. front) then
+        if (.not. sw_fixed) n_orph = n_orph + 1  ! 分布指定の孤立天端のみ数える
+        cycle
+      end if
+      select case (list%f_seawall_datum)
+      case (1)      ! 自セル地盤基準
+        g%zswall(i,j) = g%z(i,j) + hb(i,j)
+      case default  ! 絶対標高(既定)
+        g%zswall(i,j) = hb(i,j)
+      end select
+      n_wall = n_wall + 1
+    end do
+  end do
+  deallocate(hb)
+
+  write(msg,'(a,i0,a)') "geoinfo: seawall crest set at ", n_wall, " land cells"
+  call par_info(trim(msg))
+  if (n_rw > 0) then
+    write(msg,'(a,i0,a)') "geoinfo: NOTE: seawall on ", n_rw, &
+                          " channel cells ignored (river mouth opening)"
+    call par_info(trim(msg))
+  end if
+  if (n_orph > 0) then
+    write(msg,'(a,i0,a)') "geoinfo: WARNING: seawall crest at ", n_orph, &
+                          " cells not adjacent to seaside (no wall effect)"
+    call par_info(trim(msg))
+  end if
+  if (n_wall <= 0) then
+    call par_abort("geoinfo: 海岸堤防指定にもかかわらず有効な天端セルがありません" &
+                   // "(fn_seaside / fn_sw と天端位置の整合を確認してください)")
   end if
 
 end subroutine
