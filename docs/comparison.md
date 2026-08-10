@@ -23,6 +23,7 @@
 | GSSHA | USACE ERDC | 無償 | 公開 | 分布型水文+2D 地表流+地下水+積雪 |
 | SHETRAN | Newcastle 大 | 無償 | 公開(GitHub) | 物理ベース 3D 地下水+積雪 |
 | ANUGA | ANU/GA | 無償 | 公開 | Python の SWE。氾濫・津波 |
+| GeoClaw | Clawpack 団体 | 無償 | 公開(BSD) | 津波の発生〜伝播〜遡上(AMR)。津波特化 |
 
 出典(2026-08-10 確認):
 [RRI](https://www.pwri.go.jp/icharm/research/rri/index.html) /
@@ -40,6 +41,7 @@
 | プロセス | ENCflow | 同等以上を持つ代表 | 備考 |
 |---|---|---|---|
 | 2D 浅水(力学波) | ○ ENC 8近傍・適応 RK | TELEMAC, Delft3D, HEC-RAS, TUFLOW, Iber, BASEMENT | ENC 配置格子は独自 |
+| 高潮・津波の遡上(沿岸氾濫) | ○ 海域セル+潮位/水位時系列(m_tide)+乾湿処理 | TELEMAC, Delft3D, ANUGA, GeoClaw | 沖側の発生・伝播は外部(観測波形・大領域モデル)から水位で受ける。高潮×河川×豪雨の複合災害を単一モデルで扱えるのは統合設計の利点 |
 | サブグリッド河道(σ断面・幅) | ○ | LISFLOOD-FP(サブグリッド河道), HEC-RAS(1D-2D) | 1セル1水位+σ(h) は独自色 |
 | 構造物(破堤・ポンプ・カルバート・樋門・分水・ダム操作) | ○ | HEC-RAS, TUFLOW, MIKE, SOBEK 系 | 無償・公開勢では手薄な領域 |
 | 降雨流出・遮断・蒸発散 | ○(樹冠・Hamon/Thornthwaite・減率) | RRI, GSSHA, MIKE SHE, SHETRAN | 水理特化勢は持たない |
