@@ -98,6 +98,7 @@ module m_state
     integer, allocatable :: ddir1(:,:)  ! dominant down stream direction flag (2**(1~8))
     integer, allocatable :: ddir8(:,:)  ! all down stream direction flag (sum(2**(1~8)))
     real :: hgmean = 0.0     ! 領域平均の地下貯留高(m)。gw_active 時のみ更新
+    real :: swemean = 0.0    ! 領域平均の積雪水量(m)。fn_snow 有効時のみ更新
     logical :: gw_active = .false.  ! 地下水モデルの有効化(m_gwflow_init が設定)
     real, allocatable :: cq(:,:)        ! 輸送物質柱状量 (g/m2。§30。濃度 = cq/vh は
                                         ! 導出量 cqc。移流は swflow_enc がステップ内で
@@ -111,6 +112,9 @@ module m_state
     real, allocatable :: hg2(:,:)       ! 風化基岩層の貯留水深 (m。柱状換算。
                                         ! m_gwflow_layer2 が確保・更新・保存する。
                                         ! f_gwlayer2=0 なら未確保。§16)
+    real, allocatable :: swe(:,:)       ! 積雪水量 SWE (m 水柱。幾何面積基底。
+                                        ! m_snow が確保・更新・保存する。
+                                        ! fn_snow 未指定なら未確保。§31)
     real, allocatable :: fxg(:,:)       ! 浸透フラックスの記録 (m。gwflow の鉛直交換が
                                         ! 書き、m_wq が読んでゼロ戻し。§30 の契約。
                                         ! 確保は m_wq_init(f_wq_infil=1 のときのみ))
@@ -323,6 +327,7 @@ subroutine m_state_calcstat(s, p, g)
   real(real64) :: hsum_j(dcp%js:dcp%je)
   real(real64) :: hgsum
   real(real64) :: hgsum_j(dcp%js:dcp%je)
+  real(real64) :: swesum_j(dcp%js:dcp%je), swesum
   real :: qcumf
   real :: dtpdx     ! dt / min(dx, dy)
   real :: cosdir
@@ -335,6 +340,7 @@ subroutine m_state_calcstat(s, p, g)
   hsum_j(:) = 0.0
   hgsum = 0
   hgsum_j(:) = 0.0
+  swesum_j(:) = 0.0
   hmax = 0
   vvmax = 0
   qqmax = 0
@@ -352,6 +358,10 @@ subroutine m_state_calcstat(s, p, g)
       !  総和のビット一致を保つ)
       if (s%hrs(i,j) > 0.0) then
         hsum_j(j) = hsum_j(j) + real(s%hrs(i,j), real64) * g%gv(i,j)
+      end if
+      ! 積雪は乾燥セルにも存在するため h 判定より前に計上する(§31)
+      if (allocated(s%swe)) then
+        if (s%swe(i,j) > 0.0) swesum_j(j) = swesum_j(j) + s%swe(i,j)
       end if
       if (s%h(i,j) <= 0) cycle
       if (s%h(i,j) > s%hmax(i,j)) then
@@ -402,6 +412,11 @@ subroutine m_state_calcstat(s, p, g)
   if (s%gw_active) then
     call par_sum_rows(hgsum_j, hgsum)
     s%hgmean = hgsum / s%n_valcells
+  end if
+  ! 積雪水量の総和(判定 allocated(s%swe) は namelist 由来 = 全ランク同一)
+  if (allocated(s%swe)) then
+    call par_sum_rows(swesum_j, swesum)
+    s%swemean = swesum / s%n_valcells
   end if
   rmax = [hmax, vvmax, qqmax, cnmax]
   call par_allreduce_max(rmax)
@@ -456,7 +471,7 @@ subroutine m_state_printstate(p, s)
 
   ! 凡例を表示
   if (mod(s%sp%count_disp, 36) == 0) then
-    if (s%gw_active) then
+    if (s%gw_active .or. allocated(s%swe)) then
       call par_info("time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max")
       write(s%un_log, '(a)') "time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, " &
                              //"ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
@@ -469,19 +484,21 @@ subroutine m_state_printstate(p, s)
 
   progress = (s%it) / real(p%nt) * 100
   hmean = s%hmean
-  if (s%gw_active) then
-    ! 地下水有効時: S を S_surf / S_grnd / S_total の3列に拡張。
+  if (s%gw_active .or. allocated(s%swe)) then
+    ! 地下水か積雪の有効時: S を S_surf / S_grnd / S_total の3列に拡張。
+    ! S_total には積雪水量も算入(閉じた系の保存監視列)。
     ! 桁数は最大の量(S_total)に合わせる。閉じた系では S_total が保存監視列
     digi1 = p%real_precision + 5
-    digi2 =  max(1, int(log10(max(hmean + s%hgmean, 1e-6))) + 1)
+    digi2 =  max(1, int(log10(max(hmean + s%hgmean + s%swemean, 1e-6))) + 1)
     digi3 = p%real_precision - digi2 - 0
     digi3 = max(digi3, 1)
     write(fmt0, '("f",i2,".",i0)') digi1, digi3
     fmt = '(RN,a," ",f5.1,"%",3(' //trim(fmt0)// ',1x)," ",f5.1,"%",i7,*(f10.4))'
-    write(msg, fmt) s%ctime, progress, hmean, s%hgmean, hmean + s%hgmean, &
+    ! 全水量列は積雪水量も算入(fn_snow 無効時は swemean=0 で従来と同値)
+    write(msg, fmt) s%ctime, progress, hmean, s%hgmean, hmean + s%hgmean + s%swemean, &
                     s%sp%runger, s%sp%n_exf, s%sp%h, s%sp%vv, s%sp%qq, s%sp%cn
     call par_info(trim(msg))
-    write(s%un_log, fmt) s%ctime, progress, hmean, s%hgmean, hmean + s%hgmean, &
+    write(s%un_log, fmt) s%ctime, progress, hmean, s%hgmean, hmean + s%hgmean + s%swemean, &
                     s%sp%runger, s%sp%n_exf, s%sp%h, s%sp%vv, s%sp%qq, s%sp%cn
   else
     digi1 = p%real_precision + 5                          ! 全体の表示桁数
@@ -540,6 +557,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%cqc)) deallocate(s%cqc)
   if (allocated(s%bp)) deallocate(s%bp)
   if (allocated(s%hg2)) deallocate(s%hg2)
+  if (allocated(s%swe)) deallocate(s%swe)
   if (allocated(s%fxg)) deallocate(s%fxg)
   if (allocated(s%tide)) deallocate(s%tide)
   if (allocated(s%hmax)) deallocate(s%hmax)

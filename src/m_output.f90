@@ -120,6 +120,8 @@ subroutine output_state(p, g, s, k)
   ! 風化基岩層の貯留水深(f_gwlayer2=1 のときのみ。フラグは Hg と共用)
   if (p%f_out_hg > 0 .and. allocated(s%hg2)) call output_matrix(p, g, "Hg2", s%hg2, k)
   if (s%wq_active) call output_matrix(p, g, "C", s%cqc, k)          ! 輸送物質濃度 (mg/L。§30)
+  ! 積雪水量 SWE (mm。fn_snow 有効時のみ。§31)
+  if (allocated(s%swe)) call output_matrix(p, g, "Sw", 1000.0*s%swe, k)
   ! 表面蓄積プール (kg/ha = g/m2 × 10。プール有効時のみ。§30)
   if (s%wq_active .and. allocated(s%bp)) call output_matrix(p, g, "B", 10.0*s%bp, k)
   if (is_root) write(un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it

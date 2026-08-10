@@ -41,6 +41,7 @@ module m_intercept
   public :: m_intercept_init
   public :: m_intercept_calc
   public :: m_intercept_step
+  public :: m_intercept_has_step
   public :: m_intercept_dispose
 
   !-------------------------------------------
@@ -167,6 +168,17 @@ subroutine m_intercept_step(ic, p, g, s, it)
   if (.not. associated(ic%step)) return
   call ic%step(p, g, s, it)
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 貯留型(毎ステップ s%pre を書き直す step 口)を持つか(m_snow の
+! スナップショット更新判定に使う。§31)
+!----------------------------------------------------------------------
+function m_intercept_has_step(ic) result(res)
+  type(t_intercept), intent(in) :: ic
+  logical :: res
+  res = ic%enabled .and. associated(ic%step)
+end function
 
 
 !----------------------------------------------------------------------

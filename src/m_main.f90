@@ -12,8 +12,9 @@ module m_main
   use m_evap, only : t_evap, m_evap_init, m_evap_calc, m_evap_record, m_evap_dispose
   use m_meteo, only : t_meteo, m_meteo_init, m_meteo_dispose
   use m_wq, only : t_wq, m_wq_init, m_wq_calc, m_wq_derive, m_wq_record, m_wq_dispose
+  use m_snow, only : t_snow, m_snow_init, m_snow_calc, m_snow_dispose
   use m_intercept, only : t_intercept, m_intercept_init, m_intercept_calc, m_intercept_step, &
-                        m_intercept_dispose
+                        m_intercept_has_step, m_intercept_dispose
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc, m_swflow_post
   use m_output, only : output_init, output_dispose, output_chk_geoinfo, output_state, output_summary
   use m_util, only : itoa
@@ -47,6 +48,7 @@ subroutine m_main_all()
   type(t_evap) :: ev
   type(t_meteo) :: mt
   type(t_wq) :: wq
+  type(t_snow) :: sn
   type(t_intercept) :: ic
   type(t_swflow) :: sw
   character(len=256) :: fn_sysparam
@@ -102,13 +104,15 @@ subroutine m_main_all()
   call m_evap_init(ev, p, g, b, s, mt)    ! evap を初期化(fn_evap 指定時のみ有効。
                                           ! ダム湛水面積の登録に boundary、基準標高に
                                           ! state の z を使うため両者より後に)
+  call m_snow_init(sn, p, g, s, mt)       ! snow を初期化(fn_snow 指定時のみ有効。
+                                          ! 気温が必須のため meteo より後に)
   call output_init(p, g)                  ! ファイル出力の準備(geoinfoより後に)
 
   ! 地理情報を各ランクに合わせて縮小
   call m_geoinfo_band_shrink(g)           ! マスク類(x,sw,rw)と z(rank0以外)を帯に縮小
 
   ! ==== 時間ループ: すべて帯確保(z のみ rank0 が全域を保持) ====
-  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, ierror)  ! 計算本体
+  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, sn, ierror)  ! 計算本体
 
   ! モジュールを破棄
   call output_dispose()
@@ -121,6 +125,7 @@ subroutine m_main_all()
   call m_evap_dispose(ev, p)
   call m_meteo_dispose(mt)
   call m_wq_dispose(wq, p, g, s)          ! save は dispose で(m_state より先に走る)
+  call m_snow_dispose(sn, p, g, s)        ! save は dispose で(契約5)
   call m_record_dispose(r)
   call m_state_dispose(s, p)
   call m_boundary_dispose(b)
@@ -146,7 +151,7 @@ end subroutine
 !----------------------------------------------------------------------
 ! 計算本体
 !----------------------------------------------------------------------
-subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, ierror)
+subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, sn, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
@@ -161,6 +166,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, ierror)
   type(t_evap), intent(inout) :: ev    ! 蒸発散(PET の日次更新・累積診断を保持)
   type(t_meteo), intent(inout) :: mt   ! 気象強制場(分布気温の読み進みを保持)
   type(t_wq), intent(inout) :: wq      ! 水質(発生源・台帳を保持)
+  type(t_snow), intent(inout) :: sn    ! 積雪・融雪(SWE とスナップショットを保持)
   integer, intent(out) :: ierror
   integer :: it            ! 時間ループのカウント
   logical :: do_file       ! このステップでファイル出力するか
@@ -215,6 +221,13 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, ierror)
     ! 貯留型遮断モデルの毎ステップ更新(swflow が s%pre を読む前に呼ぶ。
     ! step 口を持たないモデル(固定遮断率)や無効時は何もしない)
     call m_intercept_step(ic, p, g, s, it)
+
+    ! 積雪・融雪(fn_snow 未指定なら no-op。遮断後降水の雨/雪分離で
+    ! s%pre を液体分に減じ、融雪を h へ直接投入する。swflow より前。
+    ! pr_fresh = 上流が s%pre を書き直したステップ(スナップショット契約。§31)
+    call m_snow_calc(sn, p, g, s, mt, &
+                     (mod(it, pr%idt_prupdate) == 0 .and. pr_updated) &
+                     .or. m_intercept_has_step(ic))
 
     ! 境界条件を準備
     call m_boundary_makebdc(b, p, g, s)
