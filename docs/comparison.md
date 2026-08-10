@@ -40,7 +40,7 @@
 
 | プロセス | ENCflow | 同等以上を持つ代表 | 備考 |
 |---|---|---|---|
-| 2D 浅水(力学波) | ○ ENC 8近傍・適応 RK | TELEMAC, Delft3D, HEC-RAS, TUFLOW, Iber, BASEMENT | ENC 配置格子は独自 |
+| 2D 浅水(力学波) | ○ 八近傍連結コロケート格子(ENC格子)・適応 RK | TELEMAC, Delft3D, HEC-RAS, TUFLOW, Iber, BASEMENT | ENC格子は独自(Tada, 2026, HRL 20(2), doi:10.3178/hrl.25-00052) |
 | 高潮・津波の遡上(沿岸氾濫) | ○ 海域セル+潮位/水位時系列(m_tide)+乾湿処理 | TELEMAC, Delft3D, ANUGA, GeoClaw | 沖側の発生・伝播は外部(観測波形・大領域モデル)から水位で受ける。高潮×河川×豪雨の複合災害を単一モデルで扱えるのは統合設計の利点 |
 | サブグリッド河道(σ断面・幅) | ○ | LISFLOOD-FP(サブグリッド河道), HEC-RAS(1D-2D) | 1セル1水位+σ(h) は独自色 |
 | 構造物(破堤・ポンプ・カルバート・樋門・分水・ダム操作) | ○ | HEC-RAS, TUFLOW, MIKE, SOBEK 系 | 無償・公開勢では手薄な領域 |
