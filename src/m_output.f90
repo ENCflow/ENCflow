@@ -117,6 +117,8 @@ subroutine output_state(p, g, s, k)
   if (p%f_out_fr > 0) call output_matrix(p, g, "Fr", s%fr, k)       ! フルード数
   if (p%f_out_cn > 0) call output_matrix(p, g, "Cn", s%cn, k)       ! クーラン数
   if (p%f_out_hg > 0) call output_matrix(p, g, "Hg", s%hg, k)       ! 地下貯留水深
+  ! 風化基岩層の貯留水深(f_gwlayer2=1 のときのみ。フラグは Hg と共用)
+  if (p%f_out_hg > 0 .and. allocated(s%hg2)) call output_matrix(p, g, "Hg2", s%hg2, k)
   if (s%wq_active) call output_matrix(p, g, "C", s%cqc, k)          ! 輸送物質濃度 (mg/L。§30)
   ! 表面蓄積プール (kg/ha = g/m2 × 10。プール有効時のみ。§30)
   if (s%wq_active .and. allocated(s%bp)) call output_matrix(p, g, "B", 10.0*s%bp, k)

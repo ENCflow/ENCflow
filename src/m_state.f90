@@ -108,6 +108,9 @@ module m_state
     real, allocatable :: bp(:,:)        ! 表面蓄積プール (g/m2。幾何面積基底 =
                                         ! セル内質量 bp×A。m_wq が確保・更新・保存し、
                                         ! m_output が B 場(kg/ha)を書く。§30)
+    real, allocatable :: hg2(:,:)       ! 風化基岩層の貯留水深 (m。柱状換算。
+                                        ! m_gwflow_layer2 が確保・更新・保存する。
+                                        ! f_gwlayer2=0 なら未確保。§16)
     real, allocatable :: fxg(:,:)       ! 浸透フラックスの記録 (m。gwflow の鉛直交換が
                                         ! 書き、m_wq が読んでゼロ戻し。§30 の契約。
                                         ! 確保は m_wq_init(f_wq_infil=1 のときのみ))
@@ -376,7 +379,11 @@ subroutine m_state_calcstat(s, p, g)
       ! gv=1 のケースは従来とビット一致)。河道幅 wfrac は m_state から
       ! 不可視のため未反映(幅有効時の S は河道セルで過大。§18 の妥協)
       hsum_j(j) = hsum_j(j) + real(s%h(i,j), real64) * s%af(i,j)
-      if (s%gw_active) hgsum_j(j) = hgsum_j(j) + s%hg(i,j)
+      if (s%gw_active) then
+        hgsum_j(j) = hgsum_j(j) + s%hg(i,j)
+        ! 風化基岩層の貯留も地下水合計へ(有効時のみ = 無効時の表示不変)
+        if (allocated(s%hg2)) hgsum_j(j) = hgsum_j(j) + s%hg2(i,j)
+      end if
       hmax = max(hmax, s%h(i,j))
       vvmax = max(vvmax, s%vv(i,j))
       qqmax = max(qqmax, s%qq(i,j))
@@ -532,6 +539,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%cq)) deallocate(s%cq)
   if (allocated(s%cqc)) deallocate(s%cqc)
   if (allocated(s%bp)) deallocate(s%bp)
+  if (allocated(s%hg2)) deallocate(s%hg2)
   if (allocated(s%fxg)) deallocate(s%fxg)
   if (allocated(s%tide)) deallocate(s%tide)
   if (allocated(s%hmax)) deallocate(s%hmax)

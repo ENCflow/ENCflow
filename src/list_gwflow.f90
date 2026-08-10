@@ -15,6 +15,8 @@ module list_gwflow
                                      ! fn_gwflow を書いたまま 0 で一時無効化できる
     integer :: f_gwlateral = 0       ! 側方モデル(0:なし=鉛直のみ, 1:非線形Boussinesq)
                                      ! 未指定(=0)なら側方流動の資源は一切確保されない
+    integer :: f_gwlayer2 = 0        ! 風化基岩層(0:なし, 1:有効。&list_gwflow_layer2)
+                                     ! 未指定(=0)なら層2の資源は一切確保されない
     real :: dt_gwflow = 0.0          ! 地下水計算の更新時間間隔 (s)。0なら毎ステップ
   end type
 
@@ -31,12 +33,14 @@ subroutine list_gwflow_read(p, list)
 
   integer :: f_gwvertical
   integer :: f_gwlateral
+  integer :: f_gwlayer2
   real :: dt_gwflow
 
-  namelist /list_gwflow/ f_gwvertical, f_gwlateral, dt_gwflow
+  namelist /list_gwflow/ f_gwvertical, f_gwlateral, f_gwlayer2, dt_gwflow
 
   f_gwvertical = list%f_gwvertical
   f_gwlateral = list%f_gwlateral
+  f_gwlayer2 = list%f_gwlayer2
   dt_gwflow = list%dt_gwflow
 
   call par_info("reading list_gwflow in " // trim(p%fn_gwflow))
@@ -48,6 +52,7 @@ subroutine list_gwflow_read(p, list)
 
   list%f_gwvertical = f_gwvertical
   list%f_gwlateral = f_gwlateral
+  list%f_gwlayer2 = f_gwlayer2
   list%dt_gwflow = dt_gwflow
 
 end subroutine

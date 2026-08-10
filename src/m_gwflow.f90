@@ -27,6 +27,8 @@ module m_gwflow
                                  gwflow_greenampt_dispose
   use m_gwflow_lateral, only : gwflow_lateral_init, gwflow_lateral_calc, &
                                gwflow_lateral_dispose
+  use m_gwflow_layer2, only : gwflow_layer2_init, gwflow_layer2_calc, &
+                              gwflow_layer2_dispose
   use m_parallel, only : par_stop, par_allreduce_max, dcp
   use m_util, only : itoa
   implicit none
@@ -72,8 +74,9 @@ module m_gwflow
     procedure(procedure_gwflow_init),    pointer, nopass :: init    => null()
     procedure(procedure_gwflow_calc),    pointer, nopass :: calc    => null()
     procedure(procedure_gwflow_dispose), pointer, nopass :: dispose => null()
-    logical :: enabled = .false.     ! モジュール有効(鉛直か側方の少なくとも一方)
+    logical :: enabled = .false.     ! モジュール有効(鉛直・側方・層2のいずれか)
     logical :: lat_enabled = .false. ! 側方流動の有効化(f_gwlateral=1)
+    logical :: l2_enabled = .false.  ! 風化基岩層の有効化(f_gwlayer2=1)
     integer :: idt_gwflow = 1        ! 更新間隔(ステップ数)
     real :: dts = 0.0                ! 実効時間刻み(p%dt * idt_gwflow)(s)
     logical :: initialized = .false.
@@ -111,11 +114,22 @@ subroutine m_gwflow_init(gw, p, g, s)
                     // itoa(list%f_gwlateral))
   end select
 
-  ! 両方 0 なら fn を書いたまま一時無効化する経路
-  if (list%f_gwvertical == 0 .and. .not. gw%lat_enabled) return
+  ! --- 風化基岩層(加算的プロセス。無効時は資源を一切確保しない) ---
+  select case (list%f_gwlayer2)
+    case (0)
+      gw%l2_enabled = .false.
+    case (1)
+      gw%l2_enabled = .true.
+    case default
+      call par_stop("list_gwflow: f_gwlayer2 must be 0(none) or 1(weathered bedrock): " &
+                    // itoa(list%f_gwlayer2))
+  end select
+
+  ! すべて 0 なら fn を書いたまま一時無効化する経路
+  if (list%f_gwvertical == 0 .and. .not. gw%lat_enabled .and. .not. gw%l2_enabled) return
 
   ! --- 鉛直モデルの束縛(新モデルの追加はここに case を足す) ---
-  needs_sd = gw%lat_enabled          ! 側方は土層厚(容量・全水頭)を常に要する
+  needs_sd = gw%lat_enabled .or. gw%l2_enabled   ! 側方・層2は土層厚を常に要する
   select case (list%f_gwvertical)
     case (0)
       ! 鉛直なし(側方のみ。初期条件の h_gw を側方流動だけで緩和する用途)
@@ -127,6 +141,11 @@ subroutine m_gwflow_init(gw, p, g, s)
         call par_stop("list_gwflow: f_gwvertical=1(bucket) cannot be combined with " &
                       // "f_gwlateral=1 (use f_gwvertical=2 greenampt; gw_psif=0 " &
                       // "gives a constant infiltration rate with capacity sd*sy0)")
+      end if
+      ! 層2も同じ理由で不可(底面標高 z-sd-d2 に実土層 sd が要る)
+      if (gw%l2_enabled) then
+        call par_stop("list_gwflow: f_gwvertical=1(bucket) cannot be combined with " &
+                      // "f_gwlayer2=1 (use f_gwvertical=2 greenampt)")
       end if
       gw%init    => gwflow_bucket_init
       gw%calc    => gwflow_bucket_calc
@@ -177,6 +196,7 @@ subroutine m_gwflow_init(gw, p, g, s)
   s%gw_active = .true.               ! 質量台帳(S_grnd/S_total)と Log 列の拡張を有効化
   if (associated(gw%init)) call gw%init(p, g, s)
   if (gw%lat_enabled) call gwflow_lateral_init(p, g, s, gw%dts)
+  if (gw%l2_enabled) call gwflow_layer2_init(p, g, s, gw%dts)
   gw%initialized = .true.
 end subroutine
 
@@ -198,22 +218,29 @@ subroutine m_gwflow_calc(gw, p, g, s, it)
   ! s%hg, s%h のハロを交換する(m_gwflow_lateral ヘッダ参照)
   if (associated(gw%calc)) call gw%calc(p, g, s, it, gw%dts)
   if (gw%lat_enabled) call gwflow_lateral_calc(p, g, s, it, gw%dts)
+  ! 風化基岩層(層1→2 の鉛直浸透と層2内の側方流動。加算的)
+  if (gw%l2_enabled) call gwflow_layer2_calc(p, g, s, it, gw%dts)
 end subroutine
 
 
 !----------------------------------------------------------------------
 ! 地下水モジュールを破棄する
 !----------------------------------------------------------------------
-subroutine m_gwflow_dispose(gw, p)
+subroutine m_gwflow_dispose(gw, p, g, s)
   type(t_gwflow), intent(inout) :: gw
   type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
   if (gw%enabled .and. associated(gw%dispose)) call gw%dispose(p)
-  if (gw%lat_enabled) call gwflow_lateral_dispose(p)
+  if (gw%l2_enabled) call gwflow_layer2_dispose(p, g, s)   ! save は dispose で(契約5)
+  ! 幾何・エッジ作業領域は層間共有のため、どちらかが使っていれば破棄する
+  if (gw%lat_enabled .or. gw%l2_enabled) call gwflow_lateral_dispose(p)
   gw%init    => null()
   gw%calc    => null()
   gw%dispose => null()
   gw%enabled = .false.
   gw%lat_enabled = .false.
+  gw%l2_enabled = .false.
   gw%initialized = .false.
 end subroutine
 
