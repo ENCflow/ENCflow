@@ -26,6 +26,7 @@ module list_sysparam
                                                   !   (蒸発散・水質など暦を使う機能で必須。§27)
     character(len=80) :: tt_c = ""                ! 計算終了時刻 (d, h, m, s)
     character(len=80) :: dt_c = ""                ! 時間ステップ (d, h, m, s)
+    character(len=80) :: t_cycle_c = ""           ! 強制の反復周期 (d, h, m, s。§32.4)
     character(len=80) :: dt_disp_c = ""           ! 画面表示時間刻み (s)
     character(len=80) :: dt_file_c = ""           ! ファイル出力時間刻み (s)
     character(len=80) :: dt_recrd_c = ""          ! プローブ出力時間刻み (s)
@@ -125,6 +126,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: date0_c       ! t=0 の暦
   character(:), allocatable :: tt_c          ! 計算終了時刻 (d, h, m, s)
   character(:), allocatable :: dt_c          ! 時間ステップ (d, h, m, s)
+  character(:), allocatable :: t_cycle_c     ! 強制の反復周期 (d, h, m, s)
   character(:), allocatable :: dt_disp_c     ! 画面表示時間刻み (d, h, m, s)
   character(:), allocatable :: dt_file_c     ! ファイル出力時間刻み (d, h, m, s)
   character(:), allocatable :: dt_recrd_c    ! プローブ出力時間刻み (d, h, m, s)
@@ -197,7 +199,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(len=1024) :: iom
   namelist /list_sysparam/ t0, tt, dt, dt_disp, dt_file, dt_recrd, &
                         st_file, st_recrd, et_file, et_recrd, &
-                        t0_c, date0_c, tt_c, dt_c, dt_disp_c, dt_file_c, dt_recrd_c, &
+                        t0_c, date0_c, tt_c, dt_c, t_cycle_c, dt_disp_c, dt_file_c, dt_recrd_c, &
                         st_file_c, st_recrd_c, et_file_c, et_recrd_c, &
                         dd, dv, vv, gg, cm, cd, kk, &
                         f_gridsystem, f_govequation, f_check_cfl, f_state_save, &
@@ -224,6 +226,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   et_file = list%et_file
   et_recrd = list%et_recrd
   t0_c = list%t0_c
+  t_cycle_c = list%t_cycle_c
   date0_c = list%date0_c
   tt_c = list%tt_c
   dt_c = list%dt_c
@@ -312,6 +315,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%et_file = et_file
   list%et_recrd = et_recrd
   list%t0_c = t0_c
+  list%t_cycle_c = t_cycle_c
   list%date0_c = date0_c
   list%tt_c = tt_c
   list%dt_c = dt_c

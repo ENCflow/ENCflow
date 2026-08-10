@@ -89,6 +89,7 @@ module m_sysparam
     character(:), allocatable :: fn_meteo      ! 気象強制場設定ファイル
     character(:), allocatable :: fn_wq         ! 水質(負荷流出)設定ファイル
     character(:), allocatable :: fn_snow       ! 積雪・融雪設定ファイル
+    real :: t_cycle = 0.0                      ! 強制の反復周期 (s。0=なし。§32.4)
     character(:), allocatable :: fn_channel    ! 河道条件設定ファイル
     character(:), allocatable :: fn_enc        ! ENC設定ファイル
     character(:), allocatable :: fn_log        ! 状態ログファイル
@@ -214,6 +215,11 @@ subroutine m_sysparam_init(p, fn_sysparam)
     p%has_date = .true.
   end if
   if (len(trim(list%tt_c)) > 0) p%tt = str2sec(list%tt_c, "bad tt_c in &list_sysparam")
+  ! 強制の反復周期(降雨・気温の時系列参照を mod(t, T) で折り返す。§32.4)
+  if (len(trim(list%t_cycle_c)) > 0) then
+    p%t_cycle = str2sec(list%t_cycle_c, "bad t_cycle_c in &list_sysparam")
+    if (p%t_cycle <= 0.0) call par_stop("list_sysparam: t_cycle_c は正の周期を指定してください")
+  end if
   if (len(trim(list%dt_c)) > 0) p%dt = str2sec(list%dt_c, "bad dt_c in &list_sysparam")
   if (len(trim(list%dt_disp_c)) > 0) p%dt_disp = str2sec(list%dt_disp_c, "bad dt_disp_c in &list_sysparam")
   if (len(trim(list%dt_file_c)) > 0) p%dt_file = str2sec(list%dt_file_c, "bad dt_file_c in &list_sysparam")

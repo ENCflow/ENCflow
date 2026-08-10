@@ -46,9 +46,9 @@
 | 地下水 | ○ 2層(土層 Boussinesq+風化基岩層) | MIKE SHE(3D), SHETRAN(3D), GSSHA | 平面2次元モデルで2層は少数派。RRI は1層 |
 | 土砂・地形変化(掃流・浮遊・崩壊・土石流) | ○ MORFAC 付き | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood | |
 | 水質(負荷流出・減衰・沈降・buildup-washoff) | ○ | MIKE ECO Lab, Delft3D-WAQ, Iber-WQ, GSSHA | 無償・公開で水文+水質+水理の同居は稀 |
-| 積雪・融雪 | ×(次段候補) | MIKE SHE・GSSHA・SHETRAN(度日法系が実務主流) | HEC-RAS は HMS 側。RRI 標準版になし |
-| 氷河 | × | 汎用洪水モデルには皆無 | 専用モデル(PISM, Elmer/Ice, OGGM)の領域 |
-| 長期地形変動 | ×(将来) | CAESAR-Lisflood, Landlab, Badlands, FastScape | §4 参照 |
+| 積雪・融雪 | ○ 度日法(§31。2026-08-10) | MIKE SHE・GSSHA・SHETRAN(同じく度日法系) | HEC-RAS は HMS 側。RRI 標準版になし |
+| 氷河 | ×(SIA を将来枠に設計済み) | 汎用洪水モデルには皆無 | 専用モデル(PISM, Elmer/Ice, OGGM)の領域 |
+| 長期地形変動 | ○ 風化・隆起・周期強制(§32。2026-08-10) | CAESAR-Lisflood, Landlab, Badlands, FastScape | 実水理駆動では CAESAR-Lisflood と並ぶ。§4 参照 |
 | 並列化 | OpenMP+MPI。**ランク数によらずビット再現** | TELEMAC/Delft3D は MPI(ビット再現は保証せず) | 決定的リダクション(§11)が差別化点 |
 | リスタート厳密性 | ○(モジュール私有 save 契約。§7) | 商用勢は概ね対応 | 公開勢で徹底例は少ない |
 
@@ -70,18 +70,16 @@
 
 ## 4. 残項目の実装勢と方向性
 
-- **積雪・融雪**: 比較先(MIKE SHE・GSSHA・SHETRAN)の実務主流は
-  度日法(degree-day)。ENCflow には m_meteo(気温場+減率)と暦が
-  既にあるため、セル別スノーパック状態量+気温閾値の降雨/降雪分離+
-  度日融雪(融雪水は降雨と同じ口で地表へ)が自然な次段。エネルギー
-  収支法は m_meteo に放射・風速の枠を足してから。
+- **積雪・融雪**: 度日法で実装済み(§31。2026-08-10)。二重閾値の
+  雨/雪分離+標高減率による雪線+融雪の h 直接投入。エネルギー収支法は
+  m_meteo に放射・風速の枠を足してから(handoff 1m)。
 - **氷河**: 水文的には「涵養・消耗を持つ多年性スノーパック」として
   度日法の延長(OGGM と同じ発想)。氷体流動まで入れるなら SIA
   (浅氷近似)が浅水方程式と相似構造で、枠組みとの相性は良い。
-- **長期地形変動**: 既存勢は CAESAR-Lisflood(実水理駆動、時間〜千年)と
-  Landlab/Badlands/FastScape(プロセス則 LEM、水理簡略)。ENCflow は
-  MORFAC 付き侵食・堆積・崩壊を持つため CAESAR-Lisflood と同路線を
-  より精緻な水理で辿れる。基岩風化は LEM で確立した土層生成関数
-  (soil production function: 生成速度 = f(土層厚) の指数減衰)が
-  s%sd/s%z 共動更新の枠にそのまま足せる形で、風化基岩層(s%hg2)の
-  導入により「風化→土層化→侵食」の収支を閉じる下地はできている。
+- **長期地形変動**: 供給側(基岩風化=土層生成関数・隆起)と周期強制
+  t_cycle を実装済み(§32。2026-08-10)。既存の輸送側(MORFAC 付き
+  侵食・堆積・崩壊)と合わせ、CAESAR-Lisflood と同じ「実水理駆動の
+  地形進化」をより精緻な水理で構成できる。実行様式は代表水文の反復×
+  MORFAC×リスタート連鎖(§32.3)。残: 分布隆起・bulking・実証ラン
+  (handoff 1n)。Landlab/Badlands/FastScape はプロセス則 LEM
+  (水理簡略)で棲み分け。

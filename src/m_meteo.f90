@@ -223,7 +223,12 @@ subroutine meteo_temp_set(mt, p, g, teval)
     case (e_tsrc_const)
       mt%tb = mt%t0c
     case (e_tsrc_series)
-      mt%tb = interp_series(mt%tser, mt%ntser, teval)
+      ! 周期強制 t_cycle 指定時は mod で折り返す(§32.4。分布 map は対象外)
+      if (p%t_cycle > 0.0) then
+        mt%tb = interp_series(mt%tser, mt%ntser, mod(max(teval, 0.0), p%t_cycle))
+      else
+        mt%tb = interp_series(mt%tser, mt%ntser, teval)
+      end if
     case (e_tsrc_map)
       need = min(max(int(floor(max(teval, 0.0) / mt%dtmap)) + 1, 1), mt%nmap)
       if (need == mt%imap) return

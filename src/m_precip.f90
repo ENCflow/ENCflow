@@ -208,7 +208,7 @@ subroutine m_precip_makepre(pr, p, g, s, updated)
   !---- 降雨強度時系列から一様分布データを作成 ----
   if (pr%prtype == 1) then
     updated = .true.
-    call get_prval(s%t, prval)   ! 現在時間ステップでの降水強度を計算
+    call get_prval(teval_cyc(), prval)   ! 現在時間ステップでの降水強度を計算
     f = 1. / 1000. / 3600.         ! 単位を(mm/h)から(m/s)に換算
     !$omp parallel do
     do j = dcp%js, dcp%je
@@ -223,7 +223,7 @@ subroutine m_precip_makepre(pr, p, g, s, updated)
   !---- 時系列倍率から分布データを作成 ----
   else if (pr%prtype == 2) then
     updated = .true.
-    call get_prval(s%t, prval)   ! 現在時間ステップでの倍率を計算
+    call get_prval(teval_cyc(), prval)   ! 現在時間ステップでの倍率を計算
     !f = 1. / 1000. / 3600. / 24.   ! 単位を(mm/day)から(m/s)に換算
     f = 1. / 1000. / pr%dt_mapunit   ! 単位を(m/s)に換算
     !$omp parallel do
@@ -263,6 +263,14 @@ subroutine m_precip_makepre(pr, p, g, s, updated)
   end if
 
 contains
+ !----------------------------------------------------
+ ! 系列参照の評価時刻(周期強制 t_cycle 指定時は mod で折り返す。§32.4。
+ ! 未指定なら s%t のまま = 従来とビット同一)
+ function teval_cyc() result(tv)
+  real :: tv
+  tv = s%t
+  if (p%t_cycle > 0.0) tv = mod(max(s%t, 0.0), p%t_cycle)
+ end function
  !----------------------------------------------------
  ! 時刻tでの降水強度または倍率を計算
  subroutine get_prval(t, val)
