@@ -24,7 +24,7 @@ bin=../../bin/a.out
 
 # a.out(シンボリックリンク)の存在確認。リンク切れも -e で検出される
 if [ ! -e ./a.out ]; then
-    echo "ERROR: ./a.out がありません。先に make を実行してください。" >&2
+    echo "ERROR: ./a.out がありません。先に src で make install を実行してください。" >&2
     exit 1
 fi
 

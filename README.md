@@ -33,7 +33,7 @@ OpenMP×MPI のハイブリッド並列でノードをまたいでスケール�
 
 ```bash
 git clone https://github.com/xxxx/ENCflow.git
-cd ENCflow/src && make
+cd ENCflow/src && make install
 cd ../test/wave && ./Run.sh
 ```
 
@@ -101,7 +101,7 @@ OS は Linux / macOS / WSL を想定しています。詳細は
 
 ## 使い方を学ぶ
 
-1. [インストール](docs/install.md) — make 一発です
+1. [インストール](docs/install.md) — make install 一発です
 2. [チュートリアル](docs/tutorial.md) — 最小例から実地形の流域計算まで
 3. [ユーザーガイド](docs/users_guide.md) — 全設定項目のリファレンス
 4. [examples/](examples/) — 設定ファイルのサンプル集
