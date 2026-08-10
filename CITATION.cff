@@ -1,7 +1,5 @@
 # ENCflow の引用情報(Citation File Format 1.2.0)
 # GitHub はこのファイルを認識し、リポジトリに「Cite this repository」を表示します。
-# TODO: preferred-citation の authors(論文著者)を正しい表記で記入してください。
-#       DOI も J-STAGE の論文ページで最終確認してください。
 cff-version: 1.2.0
 message: >-
   ENCflow を研究に使用した場合は、以下の論文(preferred-citation)を
@@ -10,7 +8,9 @@ message: >-
 title: "ENCflow"
 type: software
 authors:
-  - name: "Hydraulic Engineering Laboratory, Department of Civil and Environmental Engineering, National Defense Academy of Japan"
+  - family-names: "Tada"
+    given-names: "Tsuyoshi"
+    affiliation: "Department of Civil and Environmental Engineering, National Defense Academy, Japan"
   - name: "Water Environment Systems Laboratory, School of Engineering, Tohoku University"
 license: GPL-3.0
 repository-code: "https://github.com/xxxx/ENCflow"
@@ -18,15 +18,14 @@ preferred-citation:
   type: article
   title: "An eight-neighborhood connected collocated grid scheme for overland flow simulation"
   authors:
-    # TODO: 著者を記入(例)
-    # - family-names: "Xxxx"
-    #   given-names: "Xxxx"
-    - name: "(著者名を記入してください)"
+    - family-names: "Tada"
+      given-names: "Tsuyoshi"
+      affiliation: "Department of Civil and Environmental Engineering, National Defense Academy, Japan"
   journal: "Hydrological Research Letters"
   volume: 20
   issue: 2
   start: 113
   end: 118
   year: 2026
-  doi: "10.3178/hrl.25-00052"   # TODO: J-STAGE 論文ページで要確認
+  doi: "10.3178/hrl.25-00052"
   url: "https://www.jstage.jst.go.jp/article/hrl/20/2/20_113/_article"
