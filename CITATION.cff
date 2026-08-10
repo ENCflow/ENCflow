@@ -8,9 +8,7 @@ message: >-
 title: "ENCflow"
 type: software
 authors:
-  - family-names: "Tada"
-    given-names: "Tsuyoshi"
-    affiliation: "Department of Civil and Environmental Engineering, National Defense Academy, Japan"
+  - name: "Hydraulic Engineering Laboratory, Department of Civil and Environmental Engineering, National Defense Academy of Japan"
   - name: "Water Environment Systems Laboratory, School of Engineering, Tohoku University"
 license: GPL-3.0
 repository-code: "https://github.com/xxxx/ENCflow"
