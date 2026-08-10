@@ -99,6 +99,23 @@ module m_state
     integer, allocatable :: ddir8(:,:)  ! all down stream direction flag (sum(2**(1~8)))
     real :: hgmean = 0.0     ! 領域平均の地下貯留高(m)。gw_active 時のみ更新
     logical :: gw_active = .false.  ! 地下水モデルの有効化(m_gwflow_init が設定)
+    real, allocatable :: cq(:,:)        ! 輸送物質柱状量 (g/m2。§30。濃度 = cq/vh は
+                                        ! 導出量 cqc。移流は swflow_enc がステップ内で
+                                        ! 行い(wq_active)、発生源・浸透同伴・減衰は
+                                        ! m_wq が担う。確保は m_wq_init(有効時のみ))
+    real, allocatable :: cqc(:,:)       ! 体積平均濃度 (mg/L。導出量。m_wq が毎ステップ
+                                        ! 更新。σ・河道幅の換算込み。出力・プローブ用)
+    real, allocatable :: bp(:,:)        ! 表面蓄積プール (g/m2。幾何面積基底 =
+                                        ! セル内質量 bp×A。m_wq が確保・更新・保存し、
+                                        ! m_output が B 場(kg/ha)を書く。§30)
+    real, allocatable :: hg2(:,:)       ! 風化基岩層の貯留水深 (m。柱状換算。
+                                        ! m_gwflow_layer2 が確保・更新・保存する。
+                                        ! f_gwlayer2=0 なら未確保。§16)
+    real, allocatable :: fxg(:,:)       ! 浸透フラックスの記録 (m。gwflow の鉛直交換が
+                                        ! 書き、m_wq が読んでゼロ戻し。§30 の契約。
+                                        ! 確保は m_wq_init(f_wq_infil=1 のときのみ))
+    logical :: wq_active = .false.  ! 水質輸送の有効化(m_wq_init が設定。
+                                    ! swflow_enc がステップ内で s%cq を移流する)
     logical :: sed_active = .false. ! 浮遊砂輸送の有効化(m_geomorph_init が設定。
                                     ! swflow_enc がステップ内で s%hs を移流する)
     logical :: debris_active = .false. ! 土石流モデルの有効化(m_geomorph_init が
@@ -146,7 +163,7 @@ module m_state
   !   仕様変更日の日付文字列。save の並び・成分・メタデータ・圧縮形式を
   !   変更したら必ずこの日付を更新する(restore 時の照合に使う。§7)。
   !   同日に複数回変更した場合は英字サフィックスで区別する
-  character(len=*), parameter :: save_version_cur = "2026-08-08"
+  character(len=*), parameter :: save_version_cur = "2026-08-09"
   integer, parameter :: n_state_save = 6     ! state.dat の成分数(h,z,hrs,hg,sd,hs)
 
 
@@ -362,7 +379,11 @@ subroutine m_state_calcstat(s, p, g)
       ! gv=1 のケースは従来とビット一致)。河道幅 wfrac は m_state から
       ! 不可視のため未反映(幅有効時の S は河道セルで過大。§18 の妥協)
       hsum_j(j) = hsum_j(j) + real(s%h(i,j), real64) * s%af(i,j)
-      if (s%gw_active) hgsum_j(j) = hgsum_j(j) + s%hg(i,j)
+      if (s%gw_active) then
+        hgsum_j(j) = hgsum_j(j) + s%hg(i,j)
+        ! 風化基岩層の貯留も地下水合計へ(有効時のみ = 無効時の表示不変)
+        if (allocated(s%hg2)) hgsum_j(j) = hgsum_j(j) + s%hg2(i,j)
+      end if
       hmax = max(hmax, s%h(i,j))
       vvmax = max(vvmax, s%vv(i,j))
       qqmax = max(qqmax, s%qq(i,j))
@@ -515,6 +536,11 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hg)) deallocate(s%hg)
   if (allocated(s%sd)) deallocate(s%sd)
   if (allocated(s%hs)) deallocate(s%hs)
+  if (allocated(s%cq)) deallocate(s%cq)
+  if (allocated(s%cqc)) deallocate(s%cqc)
+  if (allocated(s%bp)) deallocate(s%bp)
+  if (allocated(s%hg2)) deallocate(s%hg2)
+  if (allocated(s%fxg)) deallocate(s%fxg)
   if (allocated(s%tide)) deallocate(s%tide)
   if (allocated(s%hmax)) deallocate(s%hmax)
   if (allocated(s%hmaxt)) deallocate(s%hmaxt)

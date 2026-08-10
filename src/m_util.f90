@@ -6,6 +6,9 @@ module m_util
   public :: str2sec
   public :: itoa
   public :: rtoa
+  public :: ymd_to_jdn
+  public :: jdn_to_ymd
+  public :: parse_datetime
 
 contains
 !=======================================================================
@@ -117,6 +120,69 @@ pure function rtoa(r) result(s)
   write(buf,'(f0.5)') r
   s = trim(buf)
 end function rtoa
+
+
+!----------------------------------------------------------------------
+! 暦(グレゴリオ暦)とユリウス通日の相互変換(Fliegel & Van Flandern。
+! 整数演算・うるう年規則込み。往復・2100年平年を Python 対照で検証済み。§27)
+!----------------------------------------------------------------------
+pure function ymd_to_jdn(y, mo, d) result(jdn)
+  integer, intent(in) :: y, mo, d
+  integer :: jdn
+  integer :: a
+  a = (mo - 14) / 12
+  jdn = (1461 * (y + 4800 + a)) / 4 + (367 * (mo - 2 - 12 * a)) / 12 &
+        - (3 * ((y + 4900 + a) / 100)) / 4 + d - 32075
+end function
+
+pure subroutine jdn_to_ymd(jdn, y, mo, d)
+  integer, intent(in) :: jdn
+  integer, intent(out) :: y, mo, d
+  integer :: l, n, i, j
+  l = jdn + 68569
+  n = (4 * l) / 146097
+  l = l - (146097 * n + 3) / 4
+  i = (4000 * (l + 1)) / 1461001
+  l = l - (1461 * i) / 4 + 31
+  j = (80 * l) / 2447
+  d = l - (2447 * j) / 80
+  l = j / 11
+  mo = j + 2 - 12 * l
+  y = 100 * (n - 49) + i + l
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 日時文字列の解析("YYYY-MM-DD" または "YYYY-MM-DD hh:mm"。
+! 区切りは - : / 可)。jdn = その日のユリウス通日、sec = 日内秒
+!----------------------------------------------------------------------
+subroutine parse_datetime(str, jdn, sec, message)
+  character(len=*), intent(in) :: str
+  integer, intent(out) :: jdn
+  real, intent(out) :: sec
+  character(len=*), intent(in) :: message
+  character(len=len(str)) :: buf
+  integer :: y, mo, d, hh, mi, k, ios
+  buf = str
+  do k = 1, len_trim(buf)
+    if (buf(k:k) == '-' .or. buf(k:k) == ':' .or. buf(k:k) == '/') buf(k:k) = ' '
+  end do
+  hh = 0
+  mi = 0
+  read(buf, *, iostat=ios) y, mo, d, hh, mi
+  if (ios /= 0) then
+    hh = 0
+    mi = 0
+    read(buf, *, iostat=ios) y, mo, d
+    if (ios /= 0) call par_stop("Error, "//message//": "//trim(str))
+  end if
+  if (mo < 1 .or. mo > 12 .or. d < 1 .or. d > 31 .or. &
+      hh < 0 .or. hh > 23 .or. mi < 0 .or. mi > 59) then
+    call par_stop("Error, "//message//": "//trim(str))
+  end if
+  jdn = ymd_to_jdn(y, mo, d)
+  sec = real(hh) * 3600.0 + real(mi) * 60.0
+end subroutine
 
 
 end module
