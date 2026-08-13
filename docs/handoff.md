@@ -276,6 +276,22 @@
      4 回はすべて一致・決定的で再現せず。-Ofast の fast-math ビルド間
      差(§28.3)の可能性が高いが、再発したら記録すること
 
+## 公開準備(方針の正本は developer.md §34)
+
+- **GitHub Organization(名称案: encflow)の作成と移管**。期限の目安は
+  論文・資料への URL 印字前。owner は両研究室の代表(複数)。
+  移管後に README・CITATION.cff の xxxx プレースホルダを埋める。
+  リリース時は Zenodo で DOI 付与。
+- **README.en.md の作成**(公開の節目。機械翻訳+レビュー、
+  「based on commit XXXX」刻印付き)。
+- **実行時メッセージの英語化収斂**(触ったファイルから順に。
+  Log 比較対象の文字列に触れる場合は reference への影響に注意)。
+- 国際化の節目: docs/en/ ミラー+日英同期の CI チェック導入。
+  コード内コメントの言語方針は海外コア開発者が現実になった時点で
+  §34.2 を改定して決定(それまで日本語のまま)。
+- 残ドキュメント: docs/install.md, docs/tutorial.md, docs/users_guide.md
+  (README のダミーリンク先)。
+
 ## 中期の道標(着手順は実測次第)
 
 - セル数重み付き帯分割は実装済み(2026-08。developer.md §11)。残るは
