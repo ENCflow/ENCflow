@@ -1,8 +1,11 @@
-date      : 2026-08-08 07:24:06
-host      : vm
-user      : 
-pwd       : /home/user/ENCflow/test/tide
-a.out     : /home/user/ENCflow/bin/a.out
+date      : 2026-08-13 15:01:45
+host      : DESKTOP-JMELF3A
+user      : tada
+pwd       : /home/tada/ENC/ENCflow/test/tide
+exe       : /home/tada/ENC/ENCflow/bin/encflow
 mode      : serial__double
-modules   : （module未使用）
-lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007fd522e00000)
+modules   : tbb/latest:compiler-rt/latest:umf/latest:tcm/latest:compiler/latest:nvhpc/26.3
+lib       : 	libgfortran.so.5 => /usr/lib/x86_64-linux-gnu/libgfortran.so.5 (0x0000062a31600000)
+lib       : 	libgomp.so.1 => /opt/nvidia/hpc_sdk/Linux_x86_64/26.3/compilers/lib/libgomp.so.1 (0x0000062a30400000)
+lib       : 	libnvc.so => /opt/nvidia/hpc_sdk/Linux_x86_64/26.3/compilers/lib/libnvc.so (0x0000062a2fc00000)
+lib       : 	libnvcpumath.so => /opt/nvidia/hpc_sdk/Linux_x86_64/26.3/compilers/lib/libnvcpumath.so (0x0000062a2f600000)
