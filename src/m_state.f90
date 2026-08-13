@@ -493,12 +493,18 @@ subroutine m_state_printstate(p, s)
     ns = 3
   end if
 
-  ! --- 保存量列の書式: 全有効桁を表示(バグ発見用) ---
-  !     桁数は最大の量(1列なら S、3列なら S_total)に合わせる
-  digi1 = p%real_precision + 5                          ! 全体の表示桁数
-  digi2 =  max(1, int(log10(max(sblk(ns), 1e-6))) + 1)  ! 整数部の桁数(1未満の場合も1桁)
-  digi3 = max(p%real_precision - digi2, 1)              ! 小数点以下の表示桁数
-  write(fmt0, '("f",i2,".",i0)') digi1, digi3
+  ! --- 保存量列の書式 ---
+  !     f_disp_debug=1: 全有効桁を表示(バグ発見用。回帰テストはこちら)。
+  !     桁数は最大の量(1列なら S、3列なら S_total)に合わせる。
+  !     既定(0)は他列と同じ f10.4
+  if (p%f_disp_debug > 0) then
+    digi1 = p%real_precision + 5                          ! 全体の表示桁数
+    digi2 =  max(1, int(log10(max(sblk(ns), 1e-6))) + 1)  ! 整数部の桁数(1未満の場合も1桁)
+    digi3 = max(p%real_precision - digi2, 1)              ! 小数点以下の表示桁数
+    write(fmt0, '("f",i2,".",i0)') digi1, digi3
+  else
+    fmt0 = "f10.4"
+  end if
 
   ! --- 行全体の書式(RN は round='nearest' に相当) ---
   if (ns == 3) then
@@ -507,17 +513,20 @@ subroutine m_state_printstate(p, s)
     fmt = '(RN,a," ",f5.1,"%",' //trim(fmt0)// '," ",f5.1,"%",i7,*(f10.4))'
   end if
 
-  ! --- ヘッダの組み立てと、場の最大値の列の選択 ---
+  ! --- ヘッダの組み立てと、場の最大値の列の選択(f_disp_*) ---
+  !     並びは 固定(time, progress)→ 保存量(S 系列)→ 健康監視
+  !     (Runge, ex_flux, Cn_max)→ 場の最大値。時刻・保存量・Runge・
+  !     ex_flux は常設
   if (ns == 3) then
     hdr = "time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux"
   else
     hdr = "time, progress, S(m), Runge, ex_flux"
   end if
   ntl = 0
-  call addcol(s%sp%h, "h_max(m)")
-  call addcol(s%sp%vv, "V_max(m/s)")
-  call addcol(s%sp%qq, "Q_max(m2/s)")
-  call addcol(s%sp%cn, "Cn_max")
+  call addcol(p%f_disp_cn, s%sp%cn, "Cn_max")
+  call addcol(p%f_disp_h, s%sp%h, "h_max(m)")
+  call addcol(p%f_disp_vv, s%sp%vv, "V_max(m/s)")
+  call addcol(p%f_disp_qq, s%sp%qq, "Q_max(m2/s)")
 
   ! 凡例を表示
   if (mod(s%sp%count_disp, 36) == 0) then
@@ -545,11 +554,13 @@ subroutine m_state_printstate(p, s)
 
 contains
   !--------------------------------------------------------------------
-  ! 列の登録: ヘッダ名の追記と値の格納を同時に行う
+  ! 列の登録: ヘッダ名の追記と値の格納を同時に行う(flag<=0 なら非表示)
   !--------------------------------------------------------------------
-  subroutine addcol(val, name)
+  subroutine addcol(flag, val, name)
+    integer, intent(in) :: flag
     real, intent(in) :: val
     character(len=*), intent(in) :: name
+    if (flag <= 0) return
     ntl = ntl + 1
     tail(ntl) = val
     hdr = trim(hdr)//", "//name

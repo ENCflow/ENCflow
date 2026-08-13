@@ -17,6 +17,8 @@
   fn_enc = '-'
   !fn_boundary = '-'
   dir_result = 'result'
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_disp_qq = 1             ! 回帰テスト用: Q_max 列も表示
   f_check_cfl = 0
   f_out_e = 1
 /

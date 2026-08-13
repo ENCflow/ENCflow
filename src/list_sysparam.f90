@@ -76,6 +76,13 @@ module list_sysparam
     integer :: f_out_qqmaxt = 0                   ! ファイル出力(最大流量発生時刻Qt9999)
     integer :: f_out_qqmaxd = 0                   ! ファイル出力(最大流量の流向Qd9999)
 
+    ! 画面・Log の表示列の選択(時刻・保存量 S 系列・Runge・ex_flux は常設)
+    integer :: f_disp_debug = 0                   ! 画面表示(S 系列を全有効桁で表示。デバッグ・回帰テスト用)
+    integer :: f_disp_h = 1                       ! 画面表示(最大水深 h_max)
+    integer :: f_disp_vv = 1                      ! 画面表示(最大流速 V_max)
+    integer :: f_disp_qq = 0                      ! 画面表示(最大流量 Q_max)
+    integer :: f_disp_cn = 1                      ! 画面表示(最大クーラン数 Cn_max)
+
     ! ファイル名として"-"を指定するとシステムパラメータファイルと同一ファイル
     ! ファイル名として空白""を指定すると読み込まれない
     character(len=maxpathlen) :: fn_geoinfo = "-"        ! 地形条件設定ファイル(必須)
@@ -172,6 +179,11 @@ subroutine list_sysparam_read(list, fn_sysparam)
   integer :: f_out_qqmax                     ! ファイル出力(最大流量Q9999)
   integer :: f_out_qqmaxt                    ! ファイル出力(最大流量発生時刻Qt9999)
   integer :: f_out_qqmaxd                    ! ファイル出力(最大流量の流向Qt9999)
+  integer :: f_disp_debug                    ! 画面表示(S 系列を全有効桁で表示)
+  integer :: f_disp_h                        ! 画面表示(最大水深 h_max)
+  integer :: f_disp_vv                       ! 画面表示(最大流速 V_max)
+  integer :: f_disp_qq                       ! 画面表示(最大流量 Q_max)
+  integer :: f_disp_cn                       ! 画面表示(最大クーラン数 Cn_max)
   character(:), allocatable :: fn_geoinfo    ! 地形条件設定ファイル
   character(:), allocatable :: fn_initial    ! 初期条件設定ファイル
   character(:), allocatable :: fn_precip     ! 降水条件設定ファイル
@@ -207,6 +219,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_z, f_out_h, f_out_e, f_out_u, f_out_v, f_out_m, f_out_n, &
                         f_out_vv, f_out_qq, f_out_qc, f_out_qd, &
                         f_out_hmax, f_out_hmaxt, f_out_vvmax, f_out_qqmax, f_out_qqmaxt, f_out_qqmaxd, &
+                        f_disp_debug, f_disp_h, f_disp_vv, f_disp_qq, f_disp_cn, &
                         f_out_ddd, f_out_dda, f_out_pre, f_out_hrs, f_out_fr, f_out_cn, f_out_hg, &
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
                         fn_structure, &
@@ -275,6 +288,11 @@ subroutine list_sysparam_read(list, fn_sysparam)
   f_out_qqmax = list%f_out_qqmax
   f_out_qqmaxt = list%f_out_qqmaxt
   f_out_qqmaxd = list%f_out_qqmaxd
+  f_disp_debug = list%f_disp_debug
+  f_disp_h = list%f_disp_h
+  f_disp_vv = list%f_disp_vv
+  f_disp_qq = list%f_disp_qq
+  f_disp_cn = list%f_disp_cn
   fn_geoinfo = list%fn_geoinfo
   fn_initial = list%fn_initial
   fn_precip = list%fn_precip
@@ -364,6 +382,11 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%f_out_qqmax = f_out_qqmax
   list%f_out_qqmaxt = f_out_qqmaxt
   list%f_out_qqmaxd = f_out_qqmaxd
+  list%f_disp_debug = f_disp_debug
+  list%f_disp_h = f_disp_h
+  list%f_disp_vv = f_disp_vv
+  list%f_disp_qq = f_disp_qq
+  list%f_disp_cn = f_disp_cn
   list%fn_geoinfo = fn_geoinfo
   list%fn_initial = fn_initial
   list%fn_precip = fn_precip

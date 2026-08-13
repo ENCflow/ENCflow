@@ -73,6 +73,11 @@ module m_sysparam
     integer :: f_out_qqmax                     ! ファイル出力(最大流量Q9999)
     integer :: f_out_qqmaxt                    ! ファイル出力(最大流量発生時刻Qt9999)
     integer :: f_out_qqmaxd                    ! ファイル出力(最大流量の流向Qt9999)
+    integer :: f_disp_debug                    ! 画面表示(S 系列を全有効桁で表示)
+    integer :: f_disp_h                        ! 画面表示(最大水深 h_max)
+    integer :: f_disp_vv                       ! 画面表示(最大流速 V_max)
+    integer :: f_disp_qq                       ! 画面表示(最大流量 Q_max)
+    integer :: f_disp_cn                       ! 画面表示(最大クーラン数 Cn_max)
     character(:), allocatable :: fn_sysparam   ! システムパラメータ設定ファイル
     character(:), allocatable :: fn_geoinfo    ! 地形条件設定ファイル
     character(:), allocatable :: fn_initial    ! 初期条件設定ファイル
@@ -185,6 +190,11 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%f_out_qqmax = list%f_out_qqmax             ! ファイル出力(最大流量Q9999)
   p%f_out_qqmaxt = list%f_out_qqmaxt           ! ファイル出力(最大流量発生時刻Qt9999)
   p%f_out_qqmaxd = list%f_out_qqmaxd           ! ファイル出力(最大流量の流向Qt9999)
+  p%f_disp_debug = list%f_disp_debug           ! 画面表示(S 系列を全有効桁で表示)
+  p%f_disp_h = list%f_disp_h                   ! 画面表示(最大水深 h_max)
+  p%f_disp_vv = list%f_disp_vv                 ! 画面表示(最大流速 V_max)
+  p%f_disp_qq = list%f_disp_qq                 ! 画面表示(最大流量 Q_max)
+  p%f_disp_cn = list%f_disp_cn                 ! 画面表示(最大クーラン数 Cn_max)
   p%fn_geoinfo = list%fn_geoinfo               ! 地形条件設定ファイル
   p%fn_initial = list%fn_initial               ! 初期条件設定ファイル
   p%fn_precip = list%fn_precip                 ! 降水条件設定ファイル
