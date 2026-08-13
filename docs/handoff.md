@@ -289,8 +289,8 @@
 - 国際化の節目: docs/en/ ミラー+日英同期の CI チェック導入。
   コード内コメントの言語方針は海外コア開発者が現実になった時点で
   §34.2 を改定して決定(それまで日本語のまま)。
-- 残ドキュメント: docs/install.md, docs/tutorial.md, docs/users_guide.md
-  (README のダミーリンク先)。
+- 残ドキュメント: docs/tutorial.md, docs/users_guide.md(README の
+  ダミーリンク先。install.md は 2026-08-13 作成済み)。
 
 ## 中期の道標(着手順は実測次第)
 
