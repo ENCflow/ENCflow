@@ -278,10 +278,8 @@
 
 ## 公開準備(方針の正本は developer.md §34)
 
-- **GitHub Organization(名称案: encflow)の作成と移管**。期限の目安は
-  論文・資料への URL 印字前。owner は両研究室の代表(複数)。
-  移管後に README・CITATION.cff の xxxx プレースホルダを埋める。
-  リリース時は Zenodo で DOI 付与。
+- **GitHub Organization「ENCflow」作成・移管・URL 確定済み(2026-08-13)**。
+  残: owner の複数化(両研究室の代表を追加)、リリース時の Zenodo DOI 付与。
 - **README.en.md の作成**(公開の節目。機械翻訳+レビュー、
   「based on commit XXXX」刻印付き)。
 - **実行時メッセージの英語化収斂**(触ったファイルから順に。

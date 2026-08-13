@@ -30,7 +30,7 @@ brew install gcc    # gfortran は gcc に同梱されています
 続いて共通:
 
 ```bash
-git clone https://github.com/xxxx/ENCflow.git
+git clone https://github.com/ENCflow/ENCflow.git
 cd ENCflow/src
 make install        # → ../bin/encflow ができます
 ```

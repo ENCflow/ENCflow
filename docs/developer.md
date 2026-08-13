@@ -2781,17 +2781,18 @@ Cn_max)→ 場の最大値**。
 
 ### 34.1 リポジトリの置き場所
 
-- 現在は開発者の個人アカウント(tadadaze)に置かれているが、普及を
-  進める段階で **GitHub Organization(名称案: encflow)を作成して移管
-  する**。理由: (1) 引用 URL・インストール手順に印字される「所在地」の
-  信頼性(公開モデルは組織名が通例)、(2) 2研究室共同開発との整合、
-  (3) 継続性(owner 複数化による bus factor 解消と権限管理)。
-- 移管の期限は「**論文・資料に URL が印字され始める前**」。GitHub の
-  リポジトリ移管は旧 URL から自動リダイレクトされる(旧名を再利用
-  しない限り)ため、既存ユーザーは壊れない。
-- README・CITATION.cff の URL プレースホルダ(xxxx)は Organization
-  確定後に埋める。リリースには Zenodo で DOI を付与し、引用の永続性を
-  GitHub の URL から切り離す。
+- **Organization「ENCflow」を作成し移管済み(2026-08-13)**。正式な
+  所在地は https://github.com/ENCflow/ENCflow。移管の理由: (1) 引用
+  URL・インストール手順に印字される「所在地」の信頼性(公開モデルは
+  組織名が通例)、(2) 2研究室共同開発との整合、(3) 継続性(owner
+  複数化による bus factor 解消と権限管理)。旧 tadadaze/ENCflow への
+  アクセスは GitHub が自動リダイレクトする(旧名を再利用しない限り)。
+- README・install.md・CITATION.cff の URL は新組織名で確定済み
+  (2026-08-13)。リリースには Zenodo で DOI を付与し、引用の永続性を
+  GitHub の URL から切り離す(未実施)。
+- 残: 組織 owner の複数化(両研究室の代表を追加)。将来の組織サイトは
+  ENCflow/ENCflow.github.io リポジトリで https://encflow.github.io が
+  使える。
 
 ### 34.2 言語方針(3層で扱いを分ける)
 

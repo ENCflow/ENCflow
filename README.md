@@ -36,7 +36,7 @@ OpenMP×MPI のハイブリッド並列でノードをまたいでスケール�
 ## 5分で最初の計算
 
 ```bash
-git clone https://github.com/xxxx/ENCflow.git
+git clone https://github.com/ENCflow/ENCflow.git
 cd ENCflow/src && make install
 cd ../test/wave && ./Run.sh
 ```
@@ -161,6 +161,5 @@ OS は Linux / macOS / WSL を想定しています。詳細は
 - 防衛大学校 建設環境工学科 水工学研究室
 - 東北大学 工学部 水環境システム研究室
 
-バグ報告・機能提案は [Issues](https://github.com/xxxx/ENCflow/issues) へ。
-研究利用の引用方法は [CITATION.cff](CITATION.cff)(準備中)を参照して
-ください。
+バグ報告・機能提案は [Issues](https://github.com/ENCflow/ENCflow/issues) へ。
+研究利用の引用方法は [CITATION.cff](CITATION.cff) を参照してください。
