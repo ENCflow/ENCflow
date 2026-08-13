@@ -30,6 +30,7 @@
   f_gravity_correction = 0
   f_exflux_reduction = 1
   f_hcap_upwind = 1
+  p_adv_upwind_index = 0.0  ! reference 作成時の既定値を明示固定
   f_adaptive_runge = 1
   p_adprunge_thresh = 1.2
 /
