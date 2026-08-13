@@ -18,7 +18,7 @@ module list_enc
     integer :: f_rivermouth_drop = 0          ! 河口から海へ段落ち
     integer :: f_diffusion_term = 0           ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
     real :: p_diagratio = 2 / (2 + sqrt(2.))  ! ratio of diagonal component
-    real :: p_adv_upwind_index = 1.0          ! upwind index of advection term
+    real :: p_adv_upwind_index = 0.5          ! upwind index of advection term
     real :: p_adprunge_thresh = 1.5           ! threshold of adaptive Runge-Kutta (1.1~)
     real :: p_diffusion_nu = 0.0              ! 拡散項の動粘性係数 (m2/s。モデル2では
                                               !   加算のバックグラウンド粘性)
