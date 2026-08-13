@@ -75,7 +75,9 @@ subroutine m_rerecord_all(fn_sysparam, fn_qqdir, fn_qq)
   print *, "ny =", g%ny
 
   ! モジュールの初期化
-  call m_record_init(r, p, g)
+  ! (s は wq 追加列の有無の判定に使われる。ここでは wq_active =
+  !  既定 .false. のため従来形式の列構成になる。§30)
+  call m_record_init(r, p, g, s)
 
   ! データの読み込み
   print *, "reading discharge direction from ", trim(fn_qqdir)

@@ -29,6 +29,9 @@ ENC 配置格子(独自スキーム)が主実装、STG は旧互換の比較用�
 - ビルド: `src/` で `make`。コンパイラ・モード(release/debug)・MPI・
   実数精度(PREC=double|single)は `make.inc` で設定(詳細は developer.md
   §1, §3)。モード・精度切替の整合はスタンプ機構が検出する。
+  **公開インターフェース(モジュールの引数等)を変えたらトップレベルで
+  `make` を実行し utils/ の追随漏れを検出すること**(§10。utils は
+  libencflow.a をリンクするため src だけのビルドでは漏れる)。
 - 回帰テスト: 各ケース(`test/wave`, `test/chichibu` 等)で
   `./Run.sh`(逐次)/ `./Run_MPI.sh N`(N ランク)。
   reference との比較は自動(Compare_ref.sh)。
