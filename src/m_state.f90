@@ -465,58 +465,71 @@ end subroutine
 ! 計算状態を画面に出力
 !----------------------------------------------------------------------
 subroutine m_state_printstate(p, s)
+  ! 列は「ヘッダ名と値を同じ場所で積む」方式で組み立てる(addcol)。
+  ! 列を追加・削除するときはヘッダと値がずれないよう addcol を使うこと
   type(t_sysparam), intent(in) :: p
   type(t_state), intent(inout) :: s
   real :: progress      ! 進行割合(%)
-  character(len=256) :: fmt, fmt0
+  character(len=256) :: fmt, fmt0, hdr
   character(len=1024) :: msg
   integer :: digi1, digi2, digi3
   real :: hmean
+  real :: sblk(3)       ! 保存量列 S(1列)または S_surf/S_grnd/S_total(3列)
+  real :: tail(4)       ! 場の最大値の列(f10.4 固定書式)
+  integer :: ns, ntl
 
   if (.not. is_root) return
 
+  hmean = s%hmean
+
+  ! --- 保存量列: 地下水か積雪の有効時は S_surf / S_grnd / S_total に拡張。
+  !     S_total には積雪水量も算入(閉じた系の保存監視列) ---
+  ns = 1
+  sblk(1) = hmean
+  if (s%gw_active .or. allocated(s%swe)) then
+    ! 全水量列は積雪水量も算入(fn_snow 無効時は swemean=0 で従来と同値)
+    sblk(2) = s%hgmean
+    sblk(3) = hmean + s%hgmean + s%swemean
+    ns = 3
+  end if
+
+  ! --- 保存量列の書式: 全有効桁を表示(バグ発見用) ---
+  !     桁数は最大の量(1列なら S、3列なら S_total)に合わせる
+  digi1 = p%real_precision + 5                          ! 全体の表示桁数
+  digi2 =  max(1, int(log10(max(sblk(ns), 1e-6))) + 1)  ! 整数部の桁数(1未満の場合も1桁)
+  digi3 = max(p%real_precision - digi2, 1)              ! 小数点以下の表示桁数
+  write(fmt0, '("f",i2,".",i0)') digi1, digi3
+
+  ! --- 行全体の書式(RN は round='nearest' に相当) ---
+  if (ns == 3) then
+    fmt = '(RN,a," ",f5.1,"%",3(' //trim(fmt0)// ',1x)," ",f5.1,"%",i7,*(f10.4))'
+  else
+    fmt = '(RN,a," ",f5.1,"%",' //trim(fmt0)// '," ",f5.1,"%",i7,*(f10.4))'
+  end if
+
+  ! --- ヘッダの組み立てと、場の最大値の列の選択 ---
+  if (ns == 3) then
+    hdr = "time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux"
+  else
+    hdr = "time, progress, S(m), Runge, ex_flux"
+  end if
+  ntl = 0
+  call addcol(s%sp%h, "h_max(m)")
+  call addcol(s%sp%vv, "V_max(m/s)")
+  call addcol(s%sp%qq, "Q_max(m2/s)")
+  call addcol(s%sp%cn, "Cn_max")
+
   ! 凡例を表示
   if (mod(s%sp%count_disp, 36) == 0) then
-    if (s%gw_active .or. allocated(s%swe)) then
-      call par_info("time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max")
-      write(s%un_log, '(a)') "time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, " &
-                             //"ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
-    else
-      call par_info("time, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max")
-      write(s%un_log, '(a)') "time, progress, S(m), Runge, ex_flux, h_max(m), V_max(m/s), Q_max(m2/s), Cn_max"
-    end if
+    call par_info(trim(hdr))
+    write(s%un_log, '(a)') trim(hdr)
     flush(s%un_log)
   end if
 
   progress = (s%it) / real(p%nt) * 100
-  hmean = s%hmean
-  if (s%gw_active .or. allocated(s%swe)) then
-    ! 地下水か積雪の有効時: S を S_surf / S_grnd / S_total の3列に拡張。
-    ! S_total には積雪水量も算入(閉じた系の保存監視列)。
-    ! 桁数は最大の量(S_total)に合わせる。閉じた系では S_total が保存監視列
-    digi1 = p%real_precision + 5
-    digi2 =  max(1, int(log10(max(hmean + s%hgmean + s%swemean, 1e-6))) + 1)
-    digi3 = p%real_precision - digi2 - 0
-    digi3 = max(digi3, 1)
-    write(fmt0, '("f",i2,".",i0)') digi1, digi3
-    fmt = '(RN,a," ",f5.1,"%",3(' //trim(fmt0)// ',1x)," ",f5.1,"%",i7,*(f10.4))'
-    ! 全水量列は積雪水量も算入(fn_snow 無効時は swemean=0 で従来と同値)
-    write(msg, fmt) s%ctime, progress, hmean, s%hgmean, hmean + s%hgmean + s%swemean, &
-                    s%sp%runger, s%sp%n_exf, s%sp%h, s%sp%vv, s%sp%qq, s%sp%cn
-    call par_info(trim(msg))
-    write(s%un_log, fmt) s%ctime, progress, hmean, s%hgmean, hmean + s%hgmean + s%swemean, &
-                    s%sp%runger, s%sp%n_exf, s%sp%h, s%sp%vv, s%sp%qq, s%sp%cn
-  else
-    digi1 = p%real_precision + 5                          ! 全体の表示桁数
-    digi2 =  max(1, int(log10(max(hmean, 1e-6))) + 1)     ! 整数部の桁数(1未満の場合も1桁)
-    digi3 = p%real_precision - digi2 - 0                  ! 小数点以下の表示桁数
-    digi3 = max(digi3, 1)
-    write(fmt0, '("f",i2,".",i0)') digi1, digi3
-    fmt = '(RN,a," ",f5.1,"%",' //trim(fmt0)// '," ",f5.1,"%",i7,*(f10.4))'     ! RNはround='nearest'に相当
-    write(msg, fmt) s%ctime, progress, hmean, s%sp%runger, s%sp%n_exf, s%sp%h, s%sp%vv, s%sp%qq, s%sp%cn
-    call par_info(trim(msg))
-    write(s%un_log, fmt) s%ctime, progress, hmean, s%sp%runger, s%sp%n_exf, s%sp%h, s%sp%vv, s%sp%qq, s%sp%cn
-  end if
+  write(msg, fmt) s%ctime, progress, sblk(1:ns), s%sp%runger, s%sp%n_exf, tail(1:ntl)
+  call par_info(trim(msg))
+  write(s%un_log, fmt) s%ctime, progress, sblk(1:ns), s%sp%runger, s%sp%n_exf, tail(1:ntl)
   flush(s%un_log)
 
   ! 画面出力用の最大値のリセット
@@ -529,6 +542,18 @@ subroutine m_state_printstate(p, s)
 
   ! 凡例表示のカウンタを更新
   s%sp%count_disp = s%sp%count_disp + 1
+
+contains
+  !--------------------------------------------------------------------
+  ! 列の登録: ヘッダ名の追記と値の格納を同時に行う
+  !--------------------------------------------------------------------
+  subroutine addcol(val, name)
+    real, intent(in) :: val
+    character(len=*), intent(in) :: name
+    ntl = ntl + 1
+    tail(ntl) = val
+    hdr = trim(hdr)//", "//name
+  end subroutine
 end subroutine
 
 
