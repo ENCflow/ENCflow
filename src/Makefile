@@ -35,11 +35,24 @@ OBJS	= main.o $(LIBOBJS)
 
 LIB	= libencflow.a
 
+# ---------------------------------------------------------------
+# 実行ファイル名(§3)
+#   serial(OpenMP)版 = encflow、MPI ハイブリッド版 = encflow_mpi。
+#   別名にするのは、bin/ で両モードを共存させるためと、
+#   「serial バイナリを mpirun で起動する」事故(全プロセスが独立に
+#   nproc=1 で走り気づきにくい)を名前の段階で防ぐため。
+# ---------------------------------------------------------------
+ifeq ($(MODE),mpi)
+TARGET	= encflow_mpi
+else
+TARGET	= encflow
+endif
+
 BINDIR	= ../bin
 
-all: a.out $(LIB)
+all: $(TARGET) $(LIB)
 
-a.out: $(OBJS)
+$(TARGET): $(OBJS)
 	$(FRT) -o $@ $(FFLAGS) $(OBJS) $(LDFLAGS)
 
 $(LIB): $(LIBOBJS)
@@ -159,11 +172,11 @@ $(PAR_OBJ):
 
 
 clean:
-	rm -f *.o *.mod *.smod a.out $(LIB) gmon.out *__genmod.* .mode_*
+	rm -f *.o *.mod *.smod encflow encflow_mpi a.out $(LIB) gmon.out *__genmod.* .mode_*
 
 install: all
 	mkdir -p $(BINDIR)
-	cp -f a.out $(BINDIR)
+	cp -f $(TARGET) $(BINDIR)
 
 # Check_mode.sh から「現環境での期待スタンプ名」を問い合わせるための
 # ターゲット(make -s print-stamp MODE=... で使う)

@@ -67,15 +67,24 @@ make_reference() {
     mkdir -p "$envdir"
     cp -p ./Screen.log "$envdir"/ 2>/dev/null
     cp -p ../../make.inc "$envdir"/ 2>/dev/null
+    # 実行ファイル: Run_case.sh が ENCFLOW_EXE で伝える。直接呼ばれた
+    # 場合は存在するリンクから推定する(共存時は encflow を優先)
+    local exe=${ENCFLOW_EXE:-}
+    if [ -z "$exe" ]; then
+        local c
+        for c in ./encflow ./encflow_mpi ./a.out; do
+            if [ -e "$c" ]; then exe=$c; break; fi
+        done
+    fi
     {
         echo "date      : $(date '+%Y-%m-%d %H:%M:%S')"
         echo "host      : $(hostname)"
         echo "user      : $USER"
         echo "pwd       : $PWD"
-        echo "a.out     : $(readlink -f ./a.out 2>/dev/null)"
+        echo "exe       : $(readlink -f "$exe" 2>/dev/null)"
         echo "mode      : $(ls ../../src/.mode_* 2>/dev/null | sed 's/.*\.mode_//')"
         echo "modules   : ${LOADEDMODULES:-（module未使用）}"
-        ldd "$(readlink -f ./a.out)" 2>/dev/null | grep -iE 'mpi|gfortran|ifcore|nvf' \
+        ldd "$(readlink -f "$exe")" 2>/dev/null | grep -iE 'mpi|gfortran|ifcore|nvf' \
             | sed 's/^/lib       : /'
     } > "$envdir/BUILDINFO.txt"
 }

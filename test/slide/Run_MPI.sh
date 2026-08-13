@@ -13,7 +13,7 @@ export ENCFLOW_EXPECT_NP="$NP"
 rc=0
 
 set -o pipefail
-mpirun -np "$NP" $MPIRUN_OPTS ./a.out param.txt | tee Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param.txt | tee Screen.log || exit 1
 set +o pipefail
 echo ""
 python3 "$sdir/Check_slide.py" save release || rc=1
@@ -27,7 +27,7 @@ if [ -d save_serial ]; then
 fi
 
 set -o pipefail
-mpirun -np "$NP" $MPIRUN_OPTS ./a.out param_fs.txt | tee -a Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_fs.txt | tee -a Screen.log || exit 1
 set +o pipefail
 echo ""
 python3 "$sdir/Check_slide.py" save_fs fslide || rc=1

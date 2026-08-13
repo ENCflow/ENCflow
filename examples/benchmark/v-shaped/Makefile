@@ -1,30 +1,34 @@
-# ENCflow/examples/<case>/Makefile  (abukuma, chichibu 共通)
+# ENCflow/examples/<case>/Makefile(各ケース共通)
 #
-#   make        ../../bin/a.out がなければ src で make install を実行し、
-#               ここに a.out のシンボリックリンクを作る
-#               (../../bin/a.out が既にあれば新しさは問わない)
-#   make clean  a.out(リンク)と ./result 以下をすべて削除する
+#   make        ../../bin/ にある実行ファイル(encflow, encflow_mpi)への
+#               シンボリックリンクをここに作る(共存可)。どちらも
+#               未ビルドなら src で make install(make.inc の現在の
+#               モード)を実行してから作る
+#   make clean  リンクと ./result 以下をすべて削除する
 #
-#   実行は手動で:  ./a.out param_xxx.txt など
+#   実行は手動で:  ./encflow param_xxx.txt など
+#   (MPI 版は mpirun -np N ./encflow_mpi param_xxx.txt)
 
-TOPDIR	= ../../..
-BIN	= $(TOPDIR)/bin/a.out
+TOPDIR	= ../..
+BINDIR	= $(TOPDIR)/bin
 SRCDIR	= $(TOPDIR)/src
 
-all: a.out
+all: links
 
 # シンボリックリンクの作成
-#   a.out が既に存在すれば何もしない。リンク先が消えている
-#   (dangling link)場合は存在しない扱いになり、作り直される。
-a.out: $(BIN)
-	ln -sf $(BIN) a.out
-
-# ../../bin/a.out がないときだけ発動する(存在すれば更新しない)
-$(BIN):
-	$(MAKE) -C $(SRCDIR) install
+#   bin/ に存在する実行ファイルすべてにリンクを張る(常に張り直すので
+#   リンク切れも解消される)。実体が消えた側のリンクは削除する。
+links:
+	@if [ ! -e $(BINDIR)/encflow ] && [ ! -e $(BINDIR)/encflow_mpi ]; then \
+	    $(MAKE) -C $(SRCDIR) install; \
+	fi
+	@for b in encflow encflow_mpi; do \
+	    if [ -e $(BINDIR)/$$b ]; then ln -sf $(BINDIR)/$$b $$b; \
+	    else rm -f $$b; fi; \
+	done
 
 clean:
-	rm -f a.out
+	rm -f encflow encflow_mpi a.out
 	rm -rf result
 
-.PHONY: all clean
+.PHONY: all links clean

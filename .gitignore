@@ -6,6 +6,8 @@
 *.a
 .mode_*
 a.out*
+encflow
+encflow_mpi
 tada
 test/gtif/test_gtif_reader
 test/gtif/wrk_*.tif

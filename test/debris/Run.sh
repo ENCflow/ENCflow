@@ -8,7 +8,7 @@ sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh serial || exit 1
 
 set -o pipefail
-./a.out param.txt | tee Screen.log || exit 1
+./encflow param.txt | tee Screen.log || exit 1
 set +o pipefail
 echo ""
 

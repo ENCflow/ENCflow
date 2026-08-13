@@ -11,7 +11,7 @@ sdir=$(dirname "$(readlink -f "$0")")
 
 export ENCFLOW_EXPECT_NP="$NP"
 set -o pipefail
-mpirun -np "$NP" $MPIRUN_OPTS ./a.out param.txt | tee Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param.txt | tee Screen.log || exit 1
 set +o pipefail
 echo ""
 

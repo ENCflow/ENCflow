@@ -14,14 +14,14 @@ python3 "$sdir/make_dbinit.py" > dbinit.txt || exit 1
 rc=0
 
 set -o pipefail
-./a.out param.txt | tee Screen.log || exit 1
+./encflow param.txt | tee Screen.log || exit 1
 set +o pipefail
 echo ""
 python3 "$sdir/Check_slide.py" save release || rc=1
 rm -rf save_serial && cp -r save save_serial
 
 set -o pipefail
-./a.out param_fs.txt | tee -a Screen.log || exit 1
+./encflow param_fs.txt | tee -a Screen.log || exit 1
 set +o pipefail
 echo ""
 python3 "$sdir/Check_slide.py" save_fs fslide || rc=1

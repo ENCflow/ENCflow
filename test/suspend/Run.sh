@@ -8,7 +8,7 @@ sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh serial || exit 1
 
 set -o pipefail
-./a.out param.txt | tee Screen.log || exit 1
+./encflow param.txt | tee Screen.log || exit 1
 set +o pipefail
 echo ""
 
@@ -19,7 +19,7 @@ rm -rf save_serial && cp -r save save_serial
 # 板倉・岸(f_esform=2)でも同じ保存則検定を通す(save は上書きされる。
 # MPI 比較用の save_serial は上で確保済み)
 set -o pipefail
-./a.out param_ik.txt | tee -a Screen.log || exit 1
+./encflow param_ik.txt | tee -a Screen.log || exit 1
 set +o pipefail
 echo ""
 python3 "$sdir/Check_suspend.py" save || rc=1

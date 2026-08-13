@@ -7,5 +7,5 @@ make
 ```
 
 ``` bash
-./a.out param.txt
+./encflow param.txt
 ```

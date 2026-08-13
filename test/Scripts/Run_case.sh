@@ -60,14 +60,18 @@ FILES=${FILES:-Log.txt}
 "$sdir/Check_mode.sh" "$mode" || exit 1
 
 # --- 実行(pipefail: tee でなく計算本体の終了コードを拾う) ---
+# 実行ファイルはモードごとに別名(serial: encflow / mpi: encflow_mpi)。
+# Compare_ref.sh の環境記録にも同じものを伝える
 set -o pipefail
 if [ "$mode" = mpi ]; then
+    export ENCFLOW_EXE=./encflow_mpi
     # 期待ランク数をバイナリに伝え、シングルトン化(PMI 不整合で全プロセス
     # が nproc=1 で独立起動する事故)を par_init で検出させる
     export ENCFLOW_EXPECT_NP="$NP"
-    time mpirun -np "$NP" $MPIRUN_OPTS ./a.out "$PARAM" | tee Screen.log
+    time mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi "$PARAM" | tee Screen.log
 else
-    time ./a.out "$PARAM" | tee Screen.log
+    export ENCFLOW_EXE=./encflow
+    time ./encflow "$PARAM" | tee Screen.log
 fi
 rc=$?
 set +o pipefail
