@@ -378,7 +378,8 @@ subroutine m_swflow_enc_init(p, g, b, s)
 
 
   ! ENCパラメータファイルを読み込む
-  call list_enc_read(p, list)
+  ! fn_enc 未指定なら既定値で続行(geoinfo/initial と異なり必須にしない)
+  if (len_trim(p%fn_enc) > 0) call list_enc_read(p, list)
 
   f_gravity_correction = list%f_gravity_correction
   f_exflux_reduction = list%f_exflux_reduction

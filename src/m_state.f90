@@ -206,7 +206,13 @@ subroutine m_state_init(s, p, g)
   allocate(s%af(1:g%nx,dcp%jsh:dcp%jeh), source = 1.0)
   s%af(:,dcp%jsh:dcp%jeh) = g%gv(:,dcp%jsh:dcp%jeh)   ! 実効平面積率の初期値 = gv
   allocate(s%hg(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(s%sd(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  ! 土層厚 sd は利用モジュール(fn_geomorph / fn_gwflow)があるときのみ
+  ! 確保する(§0 方針8: 有効化しないモデルはメモリを確保しない)。
+  ! state は list を読まない層のためファイル指定の有無で判定する
+  ! (bucket 等 sd 不要モデルでも確保される粗い判定 = 既知の妥協)
+  if (len_trim(p%fn_geomorph) > 0 .or. len_trim(p%fn_gwflow) > 0) then
+    allocate(s%sd(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  end if
   allocate(s%hs(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%tide(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hmax(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
@@ -279,7 +285,7 @@ subroutine m_state_init(s, p, g)
   s%z(:,:) = ts%z(1:g%nx, dcp%jsh:dcp%jeh)
   s%hrs(:,:) = ts%hrs(1:g%nx, dcp%jsh:dcp%jeh)
   s%hg(:,:) = ts%hg(1:g%nx, dcp%jsh:dcp%jeh)
-  s%sd(:,:) = ts%sd(1:g%nx, dcp%jsh:dcp%jeh)
+  if (allocated(s%sd)) s%sd(:,:) = ts%sd(1:g%nx, dcp%jsh:dcp%jeh)
   s%hs(:,:) = ts%hs(1:g%nx, dcp%jsh:dcp%jeh)
   s%ini = ts%ini
   s%it0 = ts%it0        ! restore 時は save 記録の it(フレッシュランは 0)
@@ -824,7 +830,7 @@ subroutine save_state(p, s)
   call par_gather_to(wk(:,:,2), s%z)
   call par_gather_to(wk(:,:,3), s%hrs)
   call par_gather_to(wk(:,:,4), s%hg)
-  call par_gather_to(wk(:,:,5), s%sd)
+  if (allocated(s%sd)) call par_gather_to(wk(:,:,5), s%sd)   ! 未確保時は 0(形式不変)
   call par_gather_to(wk(:,:,6), s%hs)
   if (.not. is_root) return
   open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', status='replace')

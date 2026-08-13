@@ -486,7 +486,11 @@ subroutine m_record_probe(r, p, s)
       wk(iw_qq,ipb) = s%qq(ix,iy)
       wk(iw_hg,ipb) = s%hg(ix,iy)
       wk(iw_hs,ipb) = s%hs(ix,iy)
-      wk(iw_sd,ipb) = s%sd(ix,iy)
+      if (allocated(s%sd)) then
+        wk(iw_sd,ipb) = s%sd(ix,iy)
+      else
+        wk(iw_sd,ipb) = 0.0     ! sd 未確保(利用モジュールなし)= 従来の 0 と同値
+      end if
       if (s%wq_active) then
         wk(iw_cc,ipb) = s%cqc(ix,iy)
         wk(iw_cq,ipb) = s%cq(ix,iy)
