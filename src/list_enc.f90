@@ -9,7 +9,7 @@ module list_enc
 
 
   type t_list_enc
-    integer :: f_gravity_correction = 0       ! 重力の補正
+    integer :: f_gravity_correction = 1       ! 重力の補正
     integer :: f_exflux_reduction = 1         ! reduction of excessive flux
     integer :: f_hcap_upwind = 1              ! 上流側水深によるセル境界水深の制限
     integer :: f_adaptive_runge = 1           ! 適応的ルンゲクッタ
@@ -18,8 +18,8 @@ module list_enc
     integer :: f_rivermouth_drop = 0          ! 河口から海へ段落ち
     integer :: f_diffusion_term = 0           ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
     real :: p_diagratio = 2 / (2 + sqrt(2.))  ! ratio of diagonal component
-    real :: p_adv_upwind_index = 0.0          ! upwind index of advection term
-    real :: p_adprunge_thresh = 2.0           ! threshold of adaptive Runge-Kutta (1.1~)
+    real :: p_adv_upwind_index = 1.0          ! upwind index of advection term
+    real :: p_adprunge_thresh = 1.5           ! threshold of adaptive Runge-Kutta (1.1~)
     real :: p_diffusion_nu = 0.0              ! 拡散項の動粘性係数 (m2/s。モデル2では
                                               !   加算のバックグラウンド粘性)
     real :: p_diffusion_alpha = 0.41 / 6      ! ゼロ方程式モデルの係数 α (ν=ν0+α·u*·h。

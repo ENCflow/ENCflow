@@ -58,8 +58,8 @@ module list_sysparam
     integer :: f_out_v = 0                        ! ファイル出力(y方向流速v0001)
     integer :: f_out_m = 0                        ! ファイル出力(x方向線流量m0001)
     integer :: f_out_n = 0                        ! ファイル出力(y方向線流量n0001)
-    integer :: f_out_vv = 1                       ! ファイル出力(流量絶対値Q0001)
-    integer :: f_out_qq = 1                       ! ファイル出力(流速絶対値V0001)
+    integer :: f_out_vv = 0                       ! ファイル出力(流速絶対値V0001)
+    integer :: f_out_qq = 0                       ! ファイル出力(流量絶対値Q0001)
     integer :: f_out_qc = 0                       ! ファイル出力(積算流量Qc0001)
     integer :: f_out_qd = 0                       ! ファイル出力(流向Qd0001) rerecordで必要
     integer :: f_out_ddd = 0                      ! ファイル出力(卓越流下方向Ddd0001)
@@ -71,8 +71,8 @@ module list_sysparam
     integer :: f_out_hg = 0                       ! ファイル出力(地下貯留水深Hg0001)
     integer :: f_out_hmax = 1                     ! ファイル出力(最大水深H9999)
     integer :: f_out_hmaxt = 0                    ! ファイル出力(最大水深発生時刻Ht9999)
-    integer :: f_out_vvmax = 1                    ! ファイル出力(最大流速V9999)
-    integer :: f_out_qqmax = 1                    ! ファイル出力(最大流量Q9999)
+    integer :: f_out_vvmax = 0                    ! ファイル出力(最大流速V9999)
+    integer :: f_out_qqmax = 0                    ! ファイル出力(最大流量Q9999)
     integer :: f_out_qqmaxt = 0                   ! ファイル出力(最大流量発生時刻Qt9999)
     integer :: f_out_qqmaxd = 0                   ! ファイル出力(最大流量の流向Qd9999)
 
