@@ -965,11 +965,13 @@ end subroutine
 !   検証は全ランク同一 → par_stop の collective 条件を満たす。
 !   後段のモジュール(swflow_enc、内部状態を持つ gwflow モデル等)は
 !   ここで検証済みとして自ファイルの有無だけを確認すればよい(§7)。
-!   再開の時間軸(§7): 時間軸は絶対時刻1本で、restore 時は save 記録の
-!   it から時間ループを継続する(s%it0)。namelist の t0 と dt は軸の
-!   同一性の条件なので save 記録との一致を検査し、矛盾なら par_stop
-!   (無言でどちらかを優先しない)。tt は絶対終了時刻のままで、
-!   保存時刻以前なら回すステップが無いのでエラーにする
+!   再開の時間軸(§7): 時間軸は絶対時刻1本で、f_state_restore=1 の
+!   restore は save 記録の it から時間ループを継続する(s%it0)。
+!   namelist の t0 と dt は軸の同一性の条件なので save 記録との一致を
+!   検査し、矛盾なら par_stop(無言でどちらかを優先しない)。tt は
+!   絶対終了時刻のままで、保存時刻以前なら回すステップが無いので
+!   エラーにする。f_state_restore=2 は場だけを引き継ぐ「初期条件と
+!   して利用」モードで、時間軸は新規(検査対象は形式の門番のみ)
 !----------------------------------------------------------------------
 subroutine check_save_info(p, s)
   type(t_sysparam), intent(in) :: p
@@ -1013,14 +1015,29 @@ subroutine check_save_info(p, s)
                   //itoa(n_state_save)//")と一致しません")
   end if
 
-  ! 時間軸の同一性検査(再開は同じ軸の続き。§7)
+  ! 時間軸(§7): f_state_restore=1(再開)は同じ軸の続き — t0, dt の
+  ! 一致を検査し、it・出力番号 ifn を継続する。=2(初期条件として利用)
+  ! は場だけを引き継ぎ、新しい軸(新しい t0・暦。dt の変更も可)を
+  ! it=0, ifn=0 から開始する。時系列強制(潮位・降雨等)は新しい軸で
+  ! 頭から読まれるため、シナリオ先頭の強制値を保存状態と整合させるのは
+  ! 利用者の責務(不整合だと初期に擾乱が走る)
+  if (p%f_state_restore == 2) then
+    s%it0 = 0
+    s%ifn = 0
+    call par_info("restore: t="//rtoa(t)//" s の保存状態を初期条件として読み込み、" &
+                  //"t0="//rtoa(p%t0)//" s から新しい時間軸で開始します")
+    return
+  end if
+
   if (abs(p%t0 - t0) > rtol * max(1.0, abs(t0))) then
     call par_stop("list_sysparam: t0("//rtoa(p%t0)//")が save の t0("//rtoa(t0) &
-                  //")と一致しません。再開は保存時と同じパラメータファイルを使ってください")
+                  //")と一致しません。再開は保存時と同じパラメータファイルを使ってください" &
+                  //"(新しい時間軸で始めるには f_state_restore=2)")
   end if
   if (abs(p%dt - dt) > rtol * dt) then
     call par_stop("list_sysparam: dt("//rtoa(p%dt)//")が save の dt("//rtoa(dt) &
-                  //")と一致しません(dt を変えた再開は不可)")
+                  //")と一致しません(dt を変えた再開は不可。" &
+                  //"dt を変えて新しい時間軸で始めるには f_state_restore=2)")
   end if
   if (p%nt <= it) then
     call par_stop("list_sysparam: 計算終了時刻 tt("//rtoa(p%tt)//" s)が保存時刻 t1(" &

@@ -44,7 +44,7 @@ module m_sysparam
     integer :: f_govequation                   ! 基礎方程式
     integer :: f_check_cfl                     ! CFL条件による実行停止
     integer :: f_state_save                    ! 状態保存ファイルの出力
-    integer :: f_state_restore                 ! 状態保存ファイルからの初期条件設定
+    integer :: f_state_restore                 ! 状態保存ファイルの利用 (0:なし, 1:再開=時刻継続, 2:初期条件として利用=新しい t0 から)
     integer :: f_input_mode                    ! matrix入力形式(1:text, 2:bil, 4:geotiff)
     integer :: f_output_mode                   ! matrix出力形式のビット和(1:text, 2:bil, 4:geotiff)
     integer :: num_threads                     ! スレッド数
@@ -144,7 +144,11 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%f_govequation = list%f_govequation         ! 基礎方程式
   p%f_check_cfl =  list%f_check_cfl            ! CFL条件による実行停止
   p%f_state_save =  list%f_state_save          ! 状態保存ファイルの出力
-  p%f_state_restore =  list%f_state_restore    ! 状態保存ファイルからの初期条件設定
+  p%f_state_restore =  list%f_state_restore    ! 状態保存ファイルの利用 (0/1/2)
+  if (p%f_state_restore < 0 .or. p%f_state_restore > 2) then
+    call par_stop("list_sysparam: f_state_restore は 0(なし)/1(再開)/" &
+                  //"2(初期条件として利用)のいずれかです: "//itoa(p%f_state_restore))
+  end if
   ! matrix入力形式(1:text, 2:bil, 4:geotiff。値は f_output_mode のビットと共通)
   if (list%f_input_mode == 1) then
     p%f_input_mode = e_fmt_txt
