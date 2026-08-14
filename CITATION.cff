@@ -10,7 +10,6 @@ type: software
 authors:
   - name: "Hydraulic Engineering Laboratory, Department of Civil and Environmental Engineering, National Defense Academy of Japan"
   - name: "Hydro-Environmental System Laboratory, Department of Civil Engineering, Tohoku University"
-license: Apache-2.0
 repository-code: "https://github.com/ENCflow/ENCflow"
 preferred-citation:
   type: article
