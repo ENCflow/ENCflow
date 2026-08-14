@@ -28,8 +28,8 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [初期条件](users_guide/initial.md)(&list_initial)— 水深・水位・窪地充填
 - [境界条件](users_guide/boundary.md)(&list_bound_edge/source/stage/inflow)— 辺境界・ソース・水位規定・区間流入
 - [潮位・海面](users_guide/tide.md)(&list_tide)— 高潮・上げ潮浸水・排水
-- 内部水理構造物・ため池(&list_struct_pump/culvert/diversion/dam)— 準備中
-- 河道(&list_channel)— 準備中
+- [内部水理構造物](users_guide/structure.md)(&list_struct_pump/culvert/diversion/dam)— ポンプ・カルバート・分水・ダム
+- [河道](users_guide/channel.md)(&list_channel)— 堤防・河道幅・断面形・破堤
 - [降雨・気象](users_guide/forcing.md)(&list_precip / intercept / meteo / evap / snow)— 降水・遮断・気温・蒸発散・積雪融雪
 - 地下水(&list_gwflow とモデル固有設定)— 準備中
 - 土砂・地形変化(&list_geomorph)— 準備中
