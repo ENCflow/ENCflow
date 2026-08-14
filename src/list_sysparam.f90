@@ -45,7 +45,9 @@ module list_sysparam
 
     integer :: f_gridsystem = 0                   ! 格子システム
     integer :: f_govequation = 0                  ! 基礎方程式
-    integer :: f_check_cfl = 0                    ! CFL条件による実行停止
+    integer :: f_check_cfl = 1                    ! CFL条件による実行停止 (0:監視のみ,
+                                                  !   1:Cn>1で停止(既定), 2:波速を無視した
+                                                  !   移流クーラン数で判定・停止)
     integer :: f_state_save = 0                   ! 状態保存ファイルの出力
     integer :: f_state_restore = 0                ! 状態保存ファイルの利用 (0:なし, 1:再開=時刻継続, 2:初期条件として利用=新しい t0 から)
     integer :: f_input_mode = 1                   ! matrix入力形式(1:text, 2:bil, 4:geotiff。出力のビット値と共通)
@@ -150,7 +152,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   real :: kk                                 ! 抗力係数補正係数
   integer :: f_gridsystem                    ! 格子システム
   integer :: f_govequation                   ! 基礎方程式
-  integer :: f_check_cfl                     ! CFL条件による実行停止
+  integer :: f_check_cfl                     ! CFL条件による実行停止 (0:監視のみ, 1:既定, 2:移流Cn)
   integer :: f_state_save                    ! 状態保存ファイルの出力
   integer :: f_state_restore                 ! 状態保存ファイルの利用 (0:なし, 1:再開, 2:初期条件として利用)
   integer :: f_input_mode                    ! matrix入力形式(1:text, 2:bil, 4:geotiff。出力のビット値と共通)
