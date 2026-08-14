@@ -4,7 +4,7 @@
 — 洪水・高潮・津波の遡上から、降雨流出・地下水・土砂・水質・積雪融雪・
 地形変化まで、単一の Fortran プログラムで。
 
-[English README](README.en.md)(準備中)/
+[English README](README.en.md) /
 [インストール](docs/install.md) /
 [チュートリアル](docs/tutorial.md) /
 [ユーザーガイド](docs/users_guide.md) /
