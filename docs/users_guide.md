@@ -95,7 +95,9 @@ ENCflow は、1本の時間発展ループの上に機能(プロセスモジュ�
 ファイル内に使われないグループが残っていても無視されるので、
 `&list_precip_案A` のように名前を変えて設定の変種を保存しておく
 使い方もできます([examples/List_samples](../examples/List_samples/)
-がこの流儀で書かれています)。
+がこの流儀で書かれています)。&list_sysparam の全パラメータの注釈付き
+一覧は [list_sysparam.txt](../examples/List_samples/list_sysparam.txt)
+にあります(そのまま実行できる最小例を兼ねています)。
 
 ## パラメータファイルの読み方
 

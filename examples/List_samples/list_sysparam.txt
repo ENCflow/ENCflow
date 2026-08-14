@@ -1,0 +1,132 @@
+!======================================================================
+!
+! システムパラメータ設定 &list_sysparam の例(全パラメータの一覧)
+!
+!   このグループだけは「実行時に与えるパラメータファイル」の本体です:
+!     ./encflow このファイル名
+!   他の機能(&list_geoinfo 以下)はこの中の fn_XXX で有効化します。
+!   fn_XXX = "-" は「同じファイルから読む」、"" は「使わない」
+!   (完全不活性。メモリ・計算時間ゼロ)、ファイル名は別ファイル。
+!
+!   コメントアウトしてある行は既定値の明示です(書かなければその値)。
+!   このファイルは最小の動く例(100m 四方の静水+水位の山)として
+!   そのまま実行できます。
+!
+!======================================================================
+&list_sysparam
+
+  ! ---- 時間軸(必須は dt と tt。詳細は users_guide/time.md)----
+  dt = 0.01                 ! 時間刻み (s)。指定必須
+  tt = 2.0                  ! 計算終了時刻 (s)。絶対時刻(経過時間ではない)
+  !t0 = 0.0                 ! 計算開始時刻 (s)
+  !date0_c = "2019-10-11"   ! t=0 の暦("YYYY-MM-DD [hh:mm]"。蒸発散・
+                            !   積雪・水質など暦を使う機能で必須)
+  !t_cycle_c = "365d"       ! 強制の反復周期(長期地形計算向け)
+
+  ! 秒指定の代わりに「数値+単位(d/h/m/s)」の文字列でも指定できます
+  ! (t0_c, tt_c, dt_c, dt_disp_c, dt_file_c, dt_recrd_c, st_file_c,
+  !  st_recrd_c, et_file_c, et_recrd_c。両方書くと _c が優先)
+  !tt_c = "24h"
+
+  ! ---- 表示・出力の間隔と時間窓 ----
+  dt_disp = 1.0             ! 画面・Log 表示の間隔 (s)(既定 60)
+  dt_file = 1.0             ! 分布ファイル出力の間隔 (s)(既定 3600)
+  !dt_recrd = 60.0          ! プローブ・測線出力の間隔 (s)(fn_record 有効時)
+  !st_file = 0.0            ! 分布ファイル出力の開始時刻 (s)
+  !et_file = -1.0           ! 分布ファイル出力の終了時刻 (s)(-1: 最後まで)
+  !st_recrd = 0.0           ! プローブ出力の開始時刻 (s)
+  !et_recrd = -1.0          ! プローブ出力の終了時刻 (s)(-1: 最後まで)
+
+  ! ---- 機能の有効化(fn_XXX。詳細は各機能の List_samples と users_guide)----
+  fn_geoinfo = "-"          ! 地理情報(必須。既定 "-")
+  fn_initial = "-"          ! 初期条件
+  !fn_enc = ""              ! 浅水流計算(ENC)の調整
+  !fn_boundary = ""         ! 境界条件
+  !fn_tide = ""             ! 潮位・海面
+  !fn_structure = ""        ! 内部水理構造物(ポンプ・カルバート等)
+  !fn_reservoir = ""        ! ため池
+  !fn_channel = ""          ! 河道(堤防・河道幅)
+  !fn_precip = ""           ! 降水
+  !fn_intercept = ""        ! 降雨遮断
+  !fn_meteo = ""            ! 気象強制場(気温ほか)
+  !fn_evap = ""             ! 蒸発散
+  !fn_snow = ""             ! 積雪・融雪
+  !fn_gwflow = ""           ! 地下水
+  !fn_geomorph = ""         ! 土砂・地形変化
+  !fn_wq = ""               ! 水質(負荷流出)
+  !fn_record = ""           ! 計測(プローブ・測線)
+
+  ! ---- 分布ファイルの形式(users_guide/io.md)----
+  !f_input_mode = 1         ! 入力形式(1:text, 2:bil, 4:GeoTIFF。単一選択)
+  !f_output_mode = 1        ! 出力形式のビット和(1:text + 2:bil + 4:GeoTIFF)
+
+  ! ---- 分布ファイル出力の選択(f_out_XXX = 1 で有効。users_guide/io.md)----
+  !f_out_h = 1              ! 水深 H(既定 on)
+  f_out_e = 1               ! 水位 E
+  !f_out_z = 0              ! 地盤高 Z(off でも Z0000 は常に出力)
+  !f_out_u = 0              ! x方向流速 u
+  !f_out_v = 0              ! y方向流速 v
+  !f_out_m = 0              ! x方向線流量 m
+  !f_out_n = 0              ! y方向線流量 n
+  !f_out_vv = 0             ! 流速絶対値 V
+  !f_out_qq = 0             ! 流量絶対値 Q
+  !f_out_qc = 0             ! 積算流量 Qc
+  !f_out_qd = 0             ! 流向 Qd(utils/rerecord で必要)
+  !f_out_ddd = 0            ! 卓越流下方向 Ddd
+  !f_out_dda = 0            ! 全流下方向 Dda(utils/rmdepress_river で必要)
+  !f_out_pre = 0            ! 降雨強度 Pr
+  !f_out_hrs = 0            ! ため池水深 Hrs
+  !f_out_fr = 0             ! フルード数 Fr
+  !f_out_cn = 0             ! クーラン数 Cn
+  !f_out_hg = 0             ! 地下貯留水深 Hg
+  !f_out_hmax = 1           ! 最大水深 H9999(既定 on)
+  !f_out_hmaxt = 0          ! 最大水深の発生時刻 Ht9999
+  !f_out_vvmax = 0          ! 最大流速 V9999
+  !f_out_qqmax = 0          ! 最大流量 Q9999
+  !f_out_qqmaxt = 0         ! 最大流量の発生時刻 Qt9999
+  !f_out_qqmaxd = 0         ! 最大流量の流向 Qd9999
+
+  ! ---- 画面・Log の表示列(時刻・S・Runge・ex_flux は常設)----
+  !f_disp_h = 1             ! 最大水深 h_max
+  !f_disp_vv = 1            ! 最大流速 V_max
+  !f_disp_cn = 1            ! 最大クーラン数 Cn_max
+  !f_disp_qq = 0            ! 最大流量 Q_max
+  !f_disp_debug = 0         ! S 列を全有効桁で表示(デバッグ・回帰テスト用)
+
+  ! ---- 中断と再開(users_guide/restart.md)----
+  !f_state_save = 0         ! 1: 計算終了時に状態を dir_save へ保存
+  !f_state_restore = 0      ! 1: 再開(時刻継続), 2: 保存状態を初期条件に利用
+
+  ! ---- ディレクトリ・ファイル名 ----
+  !dir_data = "."           ! 入力データの基点ディレクトリ
+  !dir_result = "result"    ! 結果出力ディレクトリ
+  !dir_save = "save"        ! 状態保存(save/restore)ディレクトリ
+  !fn_log = "Log.txt"       ! ログファイル名
+  !outfn_suffix = ""        ! 出力ファイル名の末尾に付く文字列(並走時の衝突回避)
+
+  ! ---- 計算方式と数値定数(通常は変更不要。users_guide/swflow.md)----
+  !f_gridsystem = 0         ! 0: ENC 格子(既定), 1: STG(比較用)
+  !f_govequation = 0        ! 0: 力学波(既定), 1: 拡散波, 2: 運動波
+  !f_check_cfl = 0          ! 1 以上: クーラン数 > 1 で停止
+  !dd = 0.001               ! 限界水深 (m)
+  !dv = 0.001               ! 仮想水深 (m)
+  !vv = 0.01                ! 摩擦項計算の流速下限 (m/s)
+  !gg = 9.8                 ! 重力加速度 (m/s^2)
+  !cm = 2.0                 ! 家屋の付加質量係数(gv/bb 指定時)
+  !cd = 1.0                 ! 家屋の抗力係数
+  !kk = 0.5                 ! 家屋の抗力補正係数
+
+/
+
+!======================================================================
+! 最小の動く例のための地理情報・初期条件(fn_* = "-" で読まれる)
+!======================================================================
+&list_geoinfo
+  lx = 100.0, ly = 100.0    ! 計算領域の大きさ (m)
+  nx = 300, ny = 300        ! 計算格子数
+/
+
+&list_initial
+  h0 = 1.0                       ! 初期水深固定値 (m)
+  f_user_routine = "wave_hump"   ! 円形コサイン型の初期水位
+/

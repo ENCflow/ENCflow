@@ -116,6 +116,8 @@
 
 ## 例題
 
+全パラメータの注釈付き一覧:
+[examples/List_samples/list_geomorph.txt](../../examples/List_samples/list_geomorph.txt)。
 検証済みのテストケースがプロセスごとにあります:
 [test/creep](../../test/creep/)(解析解ベンチマーク)、
 [test/fluvial](../../test/fluvial/)、[test/suspend](../../test/suspend/)、

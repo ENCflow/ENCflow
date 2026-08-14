@@ -32,7 +32,7 @@ module list_geomorph
                                      ! 1:平衡給砂。流出は常に容量輸送)
 
     integer :: f_suspend = 0         ! 浮遊砂(移流+浸食・沈降)(0:無効, 1:有効)
-    integer :: f_esform = 1          ! 平衡濃度式(1:超過掃流力線形(簡易))
+    integer :: f_esform = 1          ! 平衡濃度式(1:超過掃流力線形(簡易), 2:板倉・岸)
     real :: susp_d50 = 0.0           ! 浮遊砂の代表粒径 (m)。f_suspend=1 で必須
     real :: susp_wf = 0.0            ! 沈降速度 (m/s)。0 なら Rubey 式で d50 から導出
     real :: susp_tausc = 0.05        ! 浮遊の限界無次元掃流力 τ*c

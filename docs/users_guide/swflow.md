@@ -74,6 +74,11 @@
 |---|---|---|
 | f_rivermouth_drop | 0 | 河口から海への段落ち(旧方式。潮位機能 fn_tide とは併用不可 — 現在は[潮位](tide.md)+[境界条件](boundary.md)の利用を推奨) |
 
+## 書式の実例
+
+全パラメータの注釈付き一覧(既定値の明示):
+[examples/List_samples/list_enc.txt](../../examples/List_samples/list_enc.txt)。
+
 ## 検証との関係
 
 これらのスイッチの多くは計算結果を変えます。回帰テスト

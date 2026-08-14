@@ -119,10 +119,10 @@
 - 流量は非負のみです(流出には水位規定か吸い込みを使います)。
 - 土砂計算(浮遊砂)と併用する場合は、流入土砂を濃度時系列
   `inflow_cs` または流砂量時系列 `inflow_qs`(排他)で与えられます
-  (土砂・地形変化の章 — 準備中)。未指定なら清水流入です。
+  ([土砂・地形変化の章](geomorph.md))。未指定なら清水流入です。
 
 ## 例題・書式の実例
 
 - 全パラメータの注釈付き実例: [examples/List_samples/list_boundary.txt](../../examples/List_samples/list_boundary.txt)
 - 辺境界(放射): [tutorials/wave](../../tutorials/wave/) Step 3
-- 排水ポンプ・樋門などの構造物は fn_structure 側です(構造物の章 — 準備中)。
+- 排水ポンプ・樋門などの構造物は fn_structure 側です([構造物の章](structure.md))。

@@ -64,6 +64,11 @@ GIS のラスタは 0 から数えるので、GIS 上で拾った番号は行・
 計測を有効にすると、`result/summary.csv` に全プローブ・全測線の
 集計(最大値等)がまとめて出力されます。
 
+## 書式の実例
+
+全パラメータの注釈付き一覧:
+[examples/List_samples/list_record.txt](../../examples/List_samples/list_record.txt)。
+
 ## 分布データからの事後計測(utils/rerecord)
 
 「計算が終わってから計測点を追加したい」場合のために、出力済みの

@@ -320,9 +320,10 @@
   (params_index.md。370項目)も namelist 宣言からの機械抽出で
   2026-08-14 生成済み(生成スクリプトは使い捨て。§35.1。namelist
   変更時は再生成するか該当行を手修正)。残:
-  付録の全パラメータ索引、examples/List_samples の不足分
-  (sysparam / geoinfo / initial / enc / record / geomorph)。
-  チュートリアル続編(実地形 chichibu)も順次。
+  付録の全パラメータ索引、List_samples の不足6件も 2026-08-14
+  作成済み(sysparam は実行可能な最小例を兼ねる。initial / enc /
+  record / geomorph は wave での読込動作を確認済み)。
+  残: チュートリアル続編(実地形 chichibu)。
 
 ## 中期の道標(着手順は実測次第)
 
