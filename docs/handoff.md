@@ -287,11 +287,17 @@
 - 国際化の節目: docs/en/ ミラー+日英同期の CI チェック導入。
   コード内コメントの言語方針は海外コア開発者が現実になった時点で
   §34.2 を改定して決定(それまで日本語のまま)。
-- 残ドキュメント: docs/users_guide.md(README のダミーリンク先。
-  install.md は 2026-08-13、tutorial.md(目次)と wave チュートリアル
-  本文 tutorials/wave/README.md(図の再生成は Fig_wave.sh)は
-  2026-08-14 作成済み)。チュートリアルの続編(実地形の流域計算等)は
-  順次追加。
+- 残ドキュメント: install.md は 2026-08-13、tutorial.md(目次)と
+  wave チュートリアル本文 tutorials/wave/README.md(図の再生成は
+  Fig_wave.sh)は 2026-08-14 作成済み。users_guide は構成方針を
+  developer.md §35 に決定・記録し(precip/meteo 分離維持の決定を含む)、
+  目次+第I部(docs/users_guide.md)と第II部5章(users_guide/ の
+  time / coordinates / io / restart / parallel)を 2026-08-14 作成済み。
+  **残: 第III部の機能別リファレンス12章**(パラメータ表は list_*.f90
+  から機械抽出で初稿を作る。§35.1)と付録の全パラメータ索引、
+  examples/List_samples の不足分(sysparam / geoinfo / initial / enc /
+  record / geomorph)。執筆順は地理情報→降雨・気象(chichibu
+  チュートリアル準備と相乗)。チュートリアル続編(実地形)も順次。
 
 ## 中期の道標(着手順は実測次第)
 
