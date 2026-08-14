@@ -11,6 +11,7 @@ encflow_mpi
 tada
 test/gtif/test_gtif_reader
 test/gtif/wrk_*.tif
+tutorials/*/wrk_*
 utils/rmdepress_river/rmdepress_river
 utils/rerecord/rerecord
 utils/calc_catchmentarea/calcarea
@@ -39,6 +40,7 @@ result/
 result_*/
 Screen.log
 *.png
+!tutorials/*/figs/*.png
 
 # --- OS / editor ---
 .DS_Store

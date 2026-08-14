@@ -287,8 +287,11 @@
 - 国際化の節目: docs/en/ ミラー+日英同期の CI チェック導入。
   コード内コメントの言語方針は海外コア開発者が現実になった時点で
   §34.2 を改定して決定(それまで日本語のまま)。
-- 残ドキュメント: docs/tutorial.md, docs/users_guide.md(README の
-  ダミーリンク先。install.md は 2026-08-13 作成済み)。
+- 残ドキュメント: docs/users_guide.md(README のダミーリンク先。
+  install.md は 2026-08-13、tutorial.md(目次)と wave チュートリアル
+  本文 tutorials/wave/README.md(図の再生成は Fig_wave.sh)は
+  2026-08-14 作成済み)。チュートリアルの続編(実地形の流域計算等)は
+  順次追加。
 
 ## 中期の道標(着手順は実測次第)
 
