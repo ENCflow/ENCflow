@@ -293,11 +293,15 @@
   developer.md §35 に決定・記録し(precip/meteo 分離維持の決定を含む)、
   目次+第I部(docs/users_guide.md)と第II部5章(users_guide/ の
   time / coordinates / io / restart / parallel)を 2026-08-14 作成済み。
-  **残: 第III部の機能別リファレンス12章**(パラメータ表は list_*.f90
-  から機械抽出で初稿を作る。§35.1)と付録の全パラメータ索引、
-  examples/List_samples の不足分(sysparam / geoinfo / initial / enc /
-  record / geomorph)。執筆順は地理情報→降雨・気象(chichibu
-  チュートリアル準備と相乗)。チュートリアル続編(実地形)も順次。
+  第III部は地理情報(geoinfo.md)と降雨・気象(forcing.md)を
+  2026-08-14 作成済み(コード照合: 格子の過剰指定検査、f_masktype=2 の
+  生成規則、dt_mapunit の既定、evap/snow の par_stop 条件を確認済み)。
+  **残: 第III部の残り10章**(浅水流 enc+sysparam 数値定数 / 初期条件 /
+  境界条件 / 潮位 / 構造物 / 河道 / 地下水 / 土砂・地形変化 / 水質 /
+  計測。パラメータ表は list_*.f90 から機械抽出で初稿。§35.1)と
+  付録の全パラメータ索引、examples/List_samples の不足分
+  (sysparam / geoinfo / initial / enc / record / geomorph)。
+  チュートリアル続編(実地形 chichibu)も順次。
 
 ## 中期の道標(着手順は実測次第)
 

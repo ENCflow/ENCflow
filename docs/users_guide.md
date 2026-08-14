@@ -24,13 +24,13 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 
 **第III部 機能別リファレンス**(準備中の章は順次追加)
 - 浅水流計算(&list_enc、数値パラメータ)— 準備中
-- 地理情報(&list_geoinfo)— 準備中
+- [地理情報](users_guide/geoinfo.md)(&list_geoinfo)— 格子・地形・粗度・マスク・海岸堤防
 - 初期条件(&list_initial)— 準備中
 - 境界条件(&list_bound_edge/source/stage/inflow)— 準備中
 - 潮位・海面(&list_tide)— 準備中
 - 内部水理構造物・ため池(&list_struct_pump/culvert/diversion/dam)— 準備中
 - 河道(&list_channel)— 準備中
-- 降雨・気象(&list_precip / intercept / meteo / evap / snow)— 準備中
+- [降雨・気象](users_guide/forcing.md)(&list_precip / intercept / meteo / evap / snow)— 降水・遮断・気温・蒸発散・積雪融雪
 - 地下水(&list_gwflow とモデル固有設定)— 準備中
 - 土砂・地形変化(&list_geomorph)— 準備中
 - 水質(&list_wq)— 準備中
@@ -77,7 +77,7 @@ ENCflow は、1本の時間発展ループの上に機能(プロセスモジュ�
 降水は水収支への質量入力(モデルの主入力)、気象強制場は気温など
 計算の背景となる場です。雨だけを使う計算では `fn_meteo` を意識する
 必要はありません。両方使うときに気象入力を1枚のファイルへまとめる
-書き方は降雨・気象の章(準備中)に示します。
+書き方は[降雨・気象の章](users_guide/forcing.md)に示します。
 
 ## 機能の有効化 — fn_\* の原則
 
@@ -159,12 +159,12 @@ ENCflow は、1本の時間発展ループの上に機能(プロセスモジュ�
 
 | やりたいこと | 使う機能(章) |
 |---|---|
-| 洪水氾濫の計算 | 地理情報+境界条件(+河道・構造物) |
+| 洪水氾濫の計算 | [地理情報](users_guide/geoinfo.md)+境界条件(+河道・構造物) |
 | 高潮・津波の遡上 | 潮位・海面+境界条件 |
-| 降雨流出(流域水文) | 降水(+遮断・蒸発散・地下水) |
+| 降雨流出(流域水文) | [降雨・気象](users_guide/forcing.md)(+地下水) |
 | 土砂輸送・土石流 | 土砂・地形変化 |
 | 汚濁負荷・物質輸送 | 水質 |
-| 融雪を含む計算 | 積雪・融雪+気象強制場 |
+| 融雪を含む計算 | [降雨・気象](users_guide/forcing.md)(積雪・融雪+気温減率) |
 | 観測点との比較・流量測線 | 計測 |
 | 長時間計算の分割・シナリオ分岐 | [中断と再開](users_guide/restart.md) |
 | GIS データ(GeoTIFF 等)の入出力 | [座標系](users_guide/coordinates.md)+[入出力](users_guide/io.md) |
