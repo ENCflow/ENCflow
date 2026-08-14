@@ -1035,31 +1035,40 @@ subroutine adjust_rw(p, g, list)
   real, allocatable :: dep(:,:)
   character(:), allocatable :: fname
   integer :: i, j
-  logical :: set_rn, dep_dist
+  logical :: set_rn, set_dep, dep_dist
   if (len_trim(list%fn_rw) <= 0) return
+  ! 掘り込み(set_dep)と河道粗度の上書き(set_rn)は独立に適用する。
+  ! rn0_rw は粗度の与え方(f_rntype=0/1/2)によらず read_rn の結果を
+  ! 河道セルで上書きする(掘り込み未指定でも有効。2026-08-14 変更 —
+  ! 旧実装は掘り込み未指定だと早期 return で rn0_rw が黙って無視された)
   dep_dist = len_trim(list%fn_depth_rw) > 0
-  if (.not. dep_dist .and. list%depth_rw == 0.0) return
-  ! 掘り込み深さを保持する(断面形一般化 σ の遷移深さ候補。§26)
-  allocate(g%drw(1:g%nx,1:g%ny), source = 0.0)
-  g%drw_active = .true.
-  if (dep_dist) then
-    allocate(dep(1:g%nx,1:g%ny), source = 0.0)
-    fname = trim(p%dir_data) // "/" // trim(list%fn_depth_rw)
-    call par_info(" reading "//fname)
-    call fileio_read_matrix(fname, g%nx, g%ny, dep, p%f_input_mode)
+  set_dep = dep_dist .or. list%depth_rw /= 0.0
+  set_rn = is_root .and. list%rn0_rw > 0.0
+  if (.not. set_dep .and. .not. set_rn) return
+  if (set_dep) then
+    ! 掘り込み深さを保持する(断面形一般化 σ の遷移深さ候補。§26)
+    allocate(g%drw(1:g%nx,1:g%ny), source = 0.0)
+    g%drw_active = .true.
+    if (dep_dist) then
+      allocate(dep(1:g%nx,1:g%ny), source = 0.0)
+      fname = trim(p%dir_data) // "/" // trim(list%fn_depth_rw)
+      call par_info(" reading "//fname)
+      call fileio_read_matrix(fname, g%nx, g%ny, dep, p%f_input_mode)
+    end if
   end if
   ! z の掘り込みは全ランク(z は全ランクが全域保持)、
   ! rn の書き換えは rank0 のみ(rn は rank0 のみ保持。方式2)
-  set_rn = is_root .and. list%rn0_rw > 0.0
   do j = 1, g%ny
     do i = 1, g%nx
       if (g%x(i,j) > 0 .and. g%rw(i,j) > 0) then
-        if (dep_dist) then
-          g%z(i,j) = g%z(i,j) - max(dep(i,j), 0.0)
-          g%drw(i,j) = max(dep(i,j), 0.0)
-        else
-          g%z(i,j) = g%z(i,j) - list%depth_rw
-          g%drw(i,j) = list%depth_rw
+        if (set_dep) then
+          if (dep_dist) then
+            g%z(i,j) = g%z(i,j) - max(dep(i,j), 0.0)
+            g%drw(i,j) = max(dep(i,j), 0.0)
+          else
+            g%z(i,j) = g%z(i,j) - list%depth_rw
+            g%drw(i,j) = list%depth_rw
+          end if
         end if
         if (set_rn) g%rn(i,j) = list%rn0_rw
       end if
