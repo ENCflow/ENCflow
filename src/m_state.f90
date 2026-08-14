@@ -229,8 +229,10 @@ subroutine m_state_init(s, p, g)
   allocate(s%ddir1(1:g%nx,dcp%jsh:dcp%jeh), source = 0)
   allocate(s%ddir8(1:g%nx,dcp%jsh:dcp%jeh), source = 0)
 
-  ! 初期条件設定ファイル読み込み
-  call list_initial_read(p, list)
+  ! 初期条件設定ファイル読み込み(fn_initial 未指定なら読まず、
+  ! t_list_initial の既定値=乾いた状態 h=0 から開始する。
+  ! 空文字のまま open して実行時エラーになる実バグの修正 2026-08-14)
+  if (len_trim(p%fn_initial) > 0) call list_initial_read(p, list)
 
   ! 解釈済み初期条件を構築する(層契約: list は生値のまま、解釈はここ)
   ts%ini%f_htype = list%f_htype
