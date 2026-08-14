@@ -296,9 +296,11 @@
   第III部は地理情報(geoinfo.md)と降雨・気象(forcing.md)を
   2026-08-14 作成済み(コード照合: 格子の過剰指定検査、f_masktype=2 の
   生成規則、dt_mapunit の既定、evap/snow の par_stop 条件を確認済み)。
-  **残: 第III部の残り10章**(浅水流 enc+sysparam 数値定数 / 初期条件 /
-  境界条件 / 潮位 / 構造物 / 河道 / 地下水 / 土砂・地形変化 / 水質 /
-  計測。パラメータ表は list_*.f90 から機械抽出で初稿。§35.1)と
+  初期条件(initial.md)・境界条件(boundary.md)・潮位(tide.md)も
+  2026-08-14 作成済み(List_samples の注釈と §15/§23 を典拠に再構成)。
+  **残: 第III部の残り7章**(浅水流 enc+sysparam 数値定数 / 構造物 /
+  河道 / 地下水 / 土砂・地形変化 / 水質 / 計測。パラメータ表は
+  list_*.f90 から機械抽出で初稿。§35.1)と
   付録の全パラメータ索引、examples/List_samples の不足分
   (sysparam / geoinfo / initial / enc / record / geomorph)。
   チュートリアル続編(実地形 chichibu)も順次。
