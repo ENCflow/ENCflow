@@ -17,7 +17,12 @@ module m_record
   ! フラックス測線は DDA 階段面方式(§24。2026-08-08 変更): セル番号で
   !   指定した両端セルの中心を結ぶ DDA セル列の「踏面+蹴上げ」に沿って
   !   セル中心の m, n を符号付きで積算する(一様流で任意の傾きに厳密)。
-  !   実座標指定(flxytype=1)は廃止(検出して停止)。
+  !   実座標指定(flxytype=1)は §36 の新仕様(2026-08-14): 線分が
+  !   かすめる各セルのセル内線分成分で積算する(mode=1。旧方式の
+  !   重み求積とは別物。1セル内の短い測線も定義される)。
+  ! 実座標の解釈(プローブ・測線共通。§36): x 東・y 北が正。
+  !   地理参照(hdr/GeoTIFF 由来)があれば絶対座標、なければ領域南西端
+  !   原点のローカル座標。解決したセル番号を初期化時に表示する。
   ! サブグリッド河道(fn_width。§18)との契約:
   !   フラックス測線の実流量は、m, n が「流量をセル幅に
   !   塗り広げたセル平均」であることに依存する(河道セルを完全横断する
@@ -83,6 +88,14 @@ module m_record
     integer :: ixy(1:2,1:ncellmax)         ! 踏面セルの座標(走査順)
     integer :: nris = 0                    ! 蹴上げの数
     integer :: irs(1:ncellmax)             ! 蹴上げ k は踏面セル irs(k) と irs(k)+1 の間
+    ! 実座標指定(mode=1。§36): 測線の線分がかすめる各セル k について
+    ! セル内の線分成分から前計算した係数で Q = Σ am(k)·m + an(k)·n を
+    ! 積算する(内部座標系(y 南向き)の成分 (u,v) に対し am=−v, an=u。
+    ! 軸平行・全幅のとき DDA の踏面と厳密に一致し、一様流で任意の
+    ! 傾き・長さに厳密。符号規約は DDA と同じ「進行方向右側が正」)
+    integer :: mode = 0                    ! 0: セル番号指定(DDA), 1: 実座標指定(線分積算)
+    real :: am(1:ncellmax)                 ! mode=1: セル k の m の係数 (m)
+    real :: an(1:ncellmax)                 ! mode=1: セル k の n の係数 (m)
     real :: tp                             ! 最大流量の発生時刻(s)
     real(real64) :: lcum = 0.0_real64      ! 累積負荷 (kg。wq 有効時のみ更新。§30)
     real :: qmax                           ! 最大流量
@@ -120,7 +133,7 @@ subroutine m_record_init(r, p, g, s)
   real, allocatable :: pbxy(:,:)
   integer :: flxyfile
   integer :: flxytype
-  real :: flxy(1:4,1:nflmax) = -9999
+  real :: flxy(1:4,1:nflmax) = -9.999e33   ! 未設定番兵(絶対座標の負値と衝突しない値)
 
   ! リスト構築・検証は全ランクが冗長に実行する(全ランクが所有セルを
   ! 判定できるようにするため。§11 の「静的データは全ランク保持」)。
@@ -165,6 +178,8 @@ subroutine set_probe
   integer :: npb, un
   integer :: i, ix, iy
   real :: x, y
+  real :: xi, yi
+  logical :: absol
   character(len=80) :: fn_pb
   character(len=4) :: cun
   character(len=1024) :: msg
@@ -173,7 +188,9 @@ subroutine set_probe
   npb = 0
   !do i = 1, size(pbxy, 2)
   do i = 1, ubound(pbxy, 2)
-    if (pbxy(1,i) < -999) exit   ! 有効なデータが無い場合は終了
+    if (pbxy(1,i) < -1.0e30) exit   ! 有効なデータが無い場合は終了
+                                    ! (番兵は -9.999e33。実座標の大きな負値=
+                                    !  平面直角座標系の西側・南側と衝突させない。§36)
     npb = npb + 1
   end do
   r%npb = npb
@@ -189,11 +206,18 @@ subroutine set_probe
       x = (ix - 0.5) * g%dx 
       y = (iy - 0.5) * g%dy
     else
-      ! 設定ファイルで実座標を指定
+      ! 実座標指定(x 東・y 北が正。地理参照があれば絶対座標、
+      ! なければ南西端原点のローカル座標。§36)
       x = pbxy(1,i)
       y = pbxy(2,i)
-      ix = int(x / g%dx) + 1
-      iy = int(y / g%dy) + 1
+      call resolve_xy(x, y, xi, yi, ix, iy, absol)
+      if (absol) then
+        call par_info(" probe "//itoa(i)//": absolute coordinates -> cell (" &
+                      //itoa(ix)//","//itoa(iy)//")")
+      else
+        call par_info(" probe "//itoa(i)//": local coordinates (SW origin) -> cell (" &
+                      //itoa(ix)//","//itoa(iy)//")")
+      end if
     end if
     if (ix < 1 .or. ix > g%nx .or. iy < 1 .or. iy > g%ny) then
       write(msg, '("error: probe ",i0," is out of area.",2f15.2,2i7)') i, x, y, ix, iy
@@ -255,22 +279,26 @@ subroutine set_flux
   !---- フラックス計測の測線数をカウント ----
   nfl = 0
   do i = 1, ubound(flxy, 2)
-    if (flxy(1,i) < -999) exit   ! 有効なデータが無い場合は終了
+    if (flxy(1,i) < -1.0e30) exit   ! 有効なデータが無い場合は終了(番兵は同上)
     nfl = nfl + 1
   end do
   r%nfl = nfl
   if (nfl < 1) return
 
-  if (flxytype /= 0) then
-    call par_abort("m_record: 測線の実座標指定(flxytype=1)は廃止されました。" &
-                   //"セル番号指定(flxytype=0)へ移行してください" &
-                   //"(測線は両端セル中心を結ぶ DDA セル列=階段面で定義されます。§24)")
+  if (flxytype /= 0 .and. flxytype /= 1) then
+    call par_abort("m_record: flxytype は 0(セル番号指定)か 1(実座標指定)です: " &
+                   //itoa(flxytype))
   end if
 
   !---- 測線情報を保存 ----
   allocate(r%flux(1:nfl))
   do i = 1, nfl
-    ! セルの座標指定のみ(両端セルの中心を結ぶ)
+    if (flxytype == 1) then
+      ! 実座標指定(mode=1。§36): セル内線分成分の積算方式
+      call set_flux_segment(i)
+      cycle
+    end if
+    ! セル番号指定(両端セルの中心を結ぶ DDA 階段面)
     ix0 = nint(flxy(1,i))
     iy0 = nint(flxy(2,i))
     ix1 = nint(flxy(3,i))
@@ -307,12 +335,12 @@ subroutine set_flux
     r%flux(i)%tp = 0
 
     if (ix0 == ix1 .and. iy0 == iy1) then
-      call par_info("warning: point A == point B then IGNORE, flux No."//itoa(i))
-      r%flux(i)%ncell = 0       ! これを1でなく0にしておく
-      r%flux(i)%nris = 0
-      r%flux(i)%trlen = 0.0
-      r%flux(i)%qmax = 0.
-      cycle
+      ! 1セルのみの計測は「どの向きの面で測るか」が決められないため
+      ! セル番号指定では定義できない(2026-08-14 に warning+無視から
+      ! エラーへ格上げ。§36)
+      call par_abort("m_record: flux "//itoa(i)//" の両端が同一セルです。" &
+                     //"1セル内の計測は向きが定義できないため、実座標指定" &
+                     //"(flxytype=1)で測線の向きと長さを与えてください(§36)")
     end if
 
     adx = abs(ix1 - ix0)
@@ -394,6 +422,164 @@ subroutine set_flux
   end do
 end subroutine
 
+!---------------------------------------------------------------------
+! 実座標(x 東・y 北が正)をセル番号に解決する(§36)
+!   地理参照(hdr/GeoTIFF 由来)があれば絶対座標、なければ領域南西端
+!   原点のローカル座標として解釈する。返す xi, yi は内部ローカル座標
+!   (北西原点・y 南向き, m)。範囲外は呼び出し側で検査する
+!---------------------------------------------------------------------
+subroutine resolve_xy(x, y, xi, yi, ix, iy, absol)
+  real, intent(in) :: x, y
+  real, intent(out) :: xi, yi
+  integer, intent(out) :: ix, iy
+  logical, intent(out) :: absol
+  if (g%gr%active) then
+    ! 絶対座標: 北西隅外縁からセル寸法(経緯度格子では度)で正規化して
+    ! 内部座標 (m) へ換算する(投影格子では csx=dx なので恒等)
+    absol = .true.
+    xi = real((real(x, real64) - g%gr%xul) / g%gr%csx * real(g%dx, real64))
+    yi = real((g%gr%yul - real(y, real64)) / g%gr%csy * real(g%dy, real64))
+  else
+    absol = .false.
+    xi = x
+    yi = g%ly - y
+  end if
+  ix = floor(xi / g%dx) + 1
+  iy = floor(yi / g%dy) + 1
+end subroutine
+
+!---------------------------------------------------------------------
+! 実座標指定の測線(mode=1。§36)を構築する
+!   線分がかすめる各セルについて、セル内の線分成分 (u, v)(内部座標系
+!   =y 南向き, m)から係数 am=−v, an=u を前計算する。軸平行・セル全幅
+!   のとき DDA の踏面1枚と厳密に一致し、一様流では任意の位置・傾き・
+!   長さに厳密。1セル内の短い測線も定義される
+!---------------------------------------------------------------------
+subroutine set_flux_segment(i)
+  integer, intent(in) :: i
+  integer :: ix0, iy0, ix1, iy1, ix, iy, ncell, nstep
+  real :: x0, y0, x1, y1
+  real :: xi0, yi0, xi1, yi1
+  real :: dxs, dys, dxs1, dys1, tlen, t, tnx, tny, tnext, uc, vc
+  logical :: absol, absol1
+  character(len=1024) :: msg
+
+  x0 = flxy(1,i)
+  y0 = flxy(2,i)
+  x1 = flxy(3,i)
+  y1 = flxy(4,i)
+  call resolve_xy(x0, y0, xi0, yi0, ix0, iy0, absol)
+  call resolve_xy(x1, y1, xi1, yi1, ix1, iy1, absol1)
+
+  if (ix0 < 1 .or. ix0 > g%nx .or. iy0 < 1 .or. iy0 > g%ny) then
+    write(msg, '("error: point R of flux ",i0," is out of area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
+    call par_abort(trim(msg))
+  end if
+  if (ix1 < 1 .or. ix1 > g%nx .or. iy1 < 1 .or. iy1 > g%ny) then
+    write(msg, '("error: point L of flux ",i0," is out of area.",2f15.2,2i7)') i, x1, y1, ix1, iy1
+    call par_abort(trim(msg))
+  end if
+  if (g%x(ix0,iy0) < 1) then
+    write(msg, '("warning: point R of flux ",i0," is not in valid area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
+    call par_info(trim(msg))
+  end if
+  if (g%x(ix1,iy1) < 1) then
+    write(msg, '("warning: point L of flux ",i0," is not in valid area.",2f15.2,2i7)') i, x1, y1, ix1, iy1
+    call par_info(trim(msg))
+  end if
+
+  ! 指定された実座標(利用者の座標系)をそのまま記録する
+  r%flux(i)%xy0(1) = x0
+  r%flux(i)%xy0(2) = y0
+  r%flux(i)%xy0(3) = x1
+  r%flux(i)%xy0(4) = y1
+  r%flux(i)%ixy0(1) = ix0
+  r%flux(i)%ixy0(2) = iy0
+  r%flux(i)%ixy0(3) = ix1
+  r%flux(i)%ixy0(4) = iy1
+  r%flux(i)%tp = 0
+  r%flux(i)%mode = 1
+  r%flux(i)%major = 0
+  r%flux(i)%ct = 0.0
+  r%flux(i)%cr = 0.0
+  r%flux(i)%nris = 0
+  r%flux(i)%qmax = -1.
+
+  dxs = xi1 - xi0
+  dys = yi1 - yi0
+  tlen = sqrt(dxs**2 + dys**2)
+  if (tlen <= 0.0) then
+    call par_abort("m_record: flux "//itoa(i)//" の両端が同一点です" &
+                   //"(測線の向きが定義できません)")
+  end if
+  r%flux(i)%trlen = tlen
+
+  ! 線分をセル境界で区切りながら走査する(内部座標系)
+  ! 除数は安全値に差し替えておく(軸平行の測線で成分が厳密に 0 のとき、
+  ! -Ofast の if 変換が不使用側の分岐の除算を投機実行して 0 除算トラップを
+  ! 踏む実障害があった。差し替え値の商は使われない)
+  dxs1 = dxs
+  if (dxs1 == 0.0) dxs1 = 1.0
+  dys1 = dys
+  if (dys1 == 0.0) dys1 = 1.0
+  ix = ix0
+  iy = iy0
+  t = 0.0
+  ncell = 0
+  do nstep = 1, g%nx + g%ny + 4
+    ! 現在セルから出る位置(線分パラメータ t)を求める
+    if (dxs > 0.0) then
+      tnx = (real(ix) * g%dx - xi0) / dxs1
+    else if (dxs < 0.0) then
+      tnx = (real(ix - 1) * g%dx - xi0) / dxs1
+    else
+      tnx = 2.0
+    end if
+    if (dys > 0.0) then
+      tny = (real(iy) * g%dy - yi0) / dys1
+    else if (dys < 0.0) then
+      tny = (real(iy - 1) * g%dy - yi0) / dys1
+    else
+      tny = 2.0
+    end if
+    tnext = min(min(tnx, tny), 1.0)
+    ! セル内成分から係数を積む(空でない区間のみ)
+    if (tnext > t) then
+      uc = dxs * (tnext - t)
+      vc = dys * (tnext - t)
+      ncell = ncell + 1
+      if (ncell > ncellmax) call par_abort("m_record: flux "//itoa(i)//" が長すぎます")
+      r%flux(i)%ixy(1,ncell) = ix
+      r%flux(i)%ixy(2,ncell) = iy
+      r%flux(i)%am(ncell) = -vc
+      r%flux(i)%an(ncell) = uc
+      t = tnext
+    end if
+    if (tnext >= 1.0) exit
+    ! 到達した境界を跨いで隣のセルへ進む
+    if (tnx <= tny) then
+      ix = ix + int(sign(1.0, dxs))
+    else
+      iy = iy + int(sign(1.0, dys))
+    end if
+    if (ix < 1 .or. ix > g%nx .or. iy < 1 .or. iy > g%ny) exit  ! 端点が外縁上の丸め保険
+  end do
+  r%flux(i)%ncell = ncell
+  if (ncell < 1) then
+    call par_abort("m_record: flux "//itoa(i)//" の測線がセルを通過しません")
+  end if
+
+  if (absol) then
+    call par_info(" flux "//itoa(i)//": absolute coordinates -> cells (" &
+                  //itoa(ix0)//","//itoa(iy0)//")-("//itoa(ix1)//","//itoa(iy1) &
+                  //"), ncell="//itoa(ncell))
+  else
+    call par_info(" flux "//itoa(i)//": local coordinates (SW origin) -> cells (" &
+                  //itoa(ix0)//","//itoa(iy0)//")-("//itoa(ix1)//","//itoa(iy1) &
+                  //"), ncell="//itoa(ncell))
+  end if
+end subroutine
+
 end subroutine m_record_init
 
 !----------------------------------------------------------------------
@@ -423,7 +609,7 @@ subroutine read_flxy(p, fn_flxy, flxy)
     call par_abort("Error: too many flux transect"//itoa(n))
   end if
 
-  flxy(:,:) = -9999           ! パラメータファイルの情報を上書きして初期化する
+  flxy(:,:) = -9.999e33       ! パラメータファイルの情報を上書きして初期化する
   call par_info(" reading "//fname)
   do i = 1, n
     read(un, *) flxy(1,i), flxy(2,i), flxy(3,i), flxy(4,i)
@@ -599,6 +785,15 @@ subroutine m_record_flux(r, p, s)
     hmax = 0.0
     vmax = 0.0
     b = 0.
+    if (flx%mode == 1) then
+      ! 実座標指定(§36): セル内線分成分の係数 am, an で積算
+      do i = 1, ncell
+        q = q + flx%am(i) * wk(1,i) + flx%an(i) * wk(2,i)
+        lq = lq + (flx%am(i) * wk(1,i) + flx%an(i) * wk(2,i)) * wk(5,i)
+        hmax = max(wk(3,i), hmax)
+        vmax = max(wk(4,i), vmax)
+      end do
+    else
     do i = 1, ncell
       if (flx%major == 1) then
         q = q + wk(2,i) * flx%ct               ! x 長手: 踏面は n(y方向フラックス)
@@ -620,6 +815,7 @@ subroutine m_record_flux(r, p, s)
         lq = lq + 0.5 * (wk(2,k) * wk(5,k) + wk(2,k+1) * wk(5,k+1)) * flx%cr
       end if
     end do
+    end if
     deallocate(wk)
     if (hmax * vmax > 0.0) b = abs(q / hmax / vmax)
 
