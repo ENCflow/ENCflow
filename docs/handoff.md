@@ -301,8 +301,9 @@
   構造物(structure.md)・河道(channel.md)も 2026-08-14 作成済み
   (List_samples の注釈が典拠。list_channel.txt の旧 &list_bound_pump
   参照の記述も修正)。
-  浅水流(swflow.md)・地下水(gwflow.md)も 2026-08-14 作成済み。
-  **残: 第III部の残り3章**(土砂・地形変化 / 水質 / 計測)と
+  浅水流(swflow.md)・地下水(gwflow.md)・計測(record.md)・
+  水質(wq.md)・土砂地形(geomorph.md)も 2026-08-14 作成済みで
+  **第III部の12章が完結**。残:
   付録の全パラメータ索引、examples/List_samples の不足分
   (sysparam / geoinfo / initial / enc / record / geomorph)。
   チュートリアル続編(実地形 chichibu)も順次。

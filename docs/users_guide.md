@@ -22,7 +22,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [中断と再開](users_guide/restart.md) — 状態保存・時刻継続・初期条件としての利用
 - [並列実行](users_guide/parallel.md) — OpenMP・MPI・結果の再現性
 
-**第III部 機能別リファレンス**(準備中の章は順次追加)
+**第III部 機能別リファレンス**
 - [浅水流計算](users_guide/swflow.md)(&list_enc、数値パラメータ)— 方式選択・適応的ルンゲクッタ・数値定数
 - [地理情報](users_guide/geoinfo.md)(&list_geoinfo)— 格子・地形・粗度・マスク・海岸堤防
 - [初期条件](users_guide/initial.md)(&list_initial)— 水深・水位・窪地充填
@@ -32,9 +32,9 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [河道](users_guide/channel.md)(&list_channel)— 堤防・河道幅・断面形・破堤
 - [降雨・気象](users_guide/forcing.md)(&list_precip / intercept / meteo / evap / snow)— 降水・遮断・気温・蒸発散・積雪融雪
 - [地下水](users_guide/gwflow.md)(&list_gwflow とモデル固有設定)— 浸透・側方流動・風化基岩層
-- 土砂・地形変化(&list_geomorph)— 準備中
-- 水質(&list_wq)— 準備中
-- 計測(&list_record)— 準備中
+- [土砂・地形変化](users_guide/geomorph.md)(&list_geomorph)— 掃流砂・浮遊砂・斜面浸食・土石流・長期地形発達
+- [水質](users_guide/wq.md)(&list_wq)— 負荷投入・輸送・減衰・洗い出し
+- [計測](users_guide/record.md)(&list_record)— プローブ・フラックス測線
 
 **付録**
 - 全パラメータ索引 — 準備中(第III部の完成に合わせて作成)
@@ -162,10 +162,10 @@ ENCflow は、1本の時間発展ループの上に機能(プロセスモジュ�
 | 洪水氾濫の計算 | [地理情報](users_guide/geoinfo.md)+[境界条件](users_guide/boundary.md)(+河道・構造物) |
 | 高潮・津波の遡上 | [潮位・海面](users_guide/tide.md)+[境界条件](users_guide/boundary.md) |
 | 降雨流出(流域水文) | [降雨・気象](users_guide/forcing.md)(+地下水) |
-| 土砂輸送・土石流 | 土砂・地形変化 |
-| 汚濁負荷・物質輸送 | 水質 |
+| 土砂輸送・土石流 | [土砂・地形変化](users_guide/geomorph.md) |
+| 汚濁負荷・物質輸送 | [水質](users_guide/wq.md) |
 | 融雪を含む計算 | [降雨・気象](users_guide/forcing.md)(積雪・融雪+気温減率) |
-| 観測点との比較・流量測線 | 計測 |
+| 観測点との比較・流量測線 | [計測](users_guide/record.md) |
 | 長時間計算の分割・シナリオ分岐 | [中断と再開](users_guide/restart.md) |
 | GIS データ(GeoTIFF 等)の入出力 | [座標系](users_guide/coordinates.md)+[入出力](users_guide/io.md) |
 | 大規模計算・クラスタ実行 | [並列実行](users_guide/parallel.md) |
