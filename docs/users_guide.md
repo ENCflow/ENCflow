@@ -23,7 +23,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [並列実行](users_guide/parallel.md) — OpenMP・MPI・結果の再現性
 
 **第III部 機能別リファレンス**(準備中の章は順次追加)
-- 浅水流計算(&list_enc、数値パラメータ)— 準備中
+- [浅水流計算](users_guide/swflow.md)(&list_enc、数値パラメータ)— 方式選択・適応的ルンゲクッタ・数値定数
 - [地理情報](users_guide/geoinfo.md)(&list_geoinfo)— 格子・地形・粗度・マスク・海岸堤防
 - [初期条件](users_guide/initial.md)(&list_initial)— 水深・水位・窪地充填
 - [境界条件](users_guide/boundary.md)(&list_bound_edge/source/stage/inflow)— 辺境界・ソース・水位規定・区間流入
@@ -31,7 +31,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [内部水理構造物](users_guide/structure.md)(&list_struct_pump/culvert/diversion/dam)— ポンプ・カルバート・分水・ダム
 - [河道](users_guide/channel.md)(&list_channel)— 堤防・河道幅・断面形・破堤
 - [降雨・気象](users_guide/forcing.md)(&list_precip / intercept / meteo / evap / snow)— 降水・遮断・気温・蒸発散・積雪融雪
-- 地下水(&list_gwflow とモデル固有設定)— 準備中
+- [地下水](users_guide/gwflow.md)(&list_gwflow とモデル固有設定)— 浸透・側方流動・風化基岩層
 - 土砂・地形変化(&list_geomorph)— 準備中
 - 水質(&list_wq)— 準備中
 - 計測(&list_record)— 準備中
