@@ -15,7 +15,9 @@ module list_initial
     integer :: f_htype = 0             ! 初期水深タイプ (0:水深固定値, 1:水深ファイル,
                                        !                 2:水位固定値, 3:水位ファイル)
     integer :: f_uvtype = 0            ! 初期流速タイプ (0: 固定値)
-    integer :: f_fill_depres = 0       ! 窪地を満水にする (0:無効, 1:有効)
+    integer :: f_fill_depres = 0       ! 窪地の充填 (0:なし, 1:全域で満水,
+                                   !   2:河道セルのみ満水, 3:河道セルのみ満水後に
+                                   !   水を地盤高へ転換=地形で埋める)
     real :: h0 = 0                     ! 初期水深固定値 (m)
     real :: e0 = 0                     ! 初期水位固定値 (m。z と同じ基準)
     real :: u0 = 0                     ! 初期x方向流速 (m/s)
@@ -41,7 +43,7 @@ subroutine list_initial_read(p, list)
   integer :: f_htype             ! 初期水深タイプ (0:水深固定値, 1:水深ファイル,
                                  !                 2:水位固定値, 3:水位ファイル)
   integer :: f_uvtype            ! 初期流速タイプ (0: 固定値)
-  integer :: f_fill_depres       ! 窪地を満水にする (0:無効, 1:有効)
+  integer :: f_fill_depres       ! 窪地の充填 (0:なし, 1:全域, 2:河道のみ, 3:河道のみ+地盤転換)
   real :: h0                     ! 初期水深固定値 (m)
   real :: e0                     ! 初期水位固定値 (m)
   real :: u0                     ! 初期x方向流速 (m/s)
