@@ -1,0 +1,11 @@
+ENCflow
+Copyright 2026 Tsuyoshi Tada,
+Hydraulic Engineering Laboratory, Department of Civil and Environmental
+Engineering, National Defense Academy of Japan, and
+Water Environment Systems Laboratory, School of Engineering,
+Tohoku University
+
+If you use ENCflow in your research, please cite:
+  Tada, T. (2026): An eight-neighborhood connected collocated grid
+  scheme for overland flow simulation. Hydrological Research Letters,
+  20(2), 113-118. doi:10.3178/hrl.25-00052
