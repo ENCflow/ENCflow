@@ -372,6 +372,16 @@ subroutine m_state_calcstat(s, p, g)
       if (allocated(s%swe)) then
         if (s%swe(i,j) > 0.0) swesum_j(j) = swesum_j(j) + s%swe(i,j)
       end if
+      ! 地下水も乾燥セルに存在するため h 判定より前に計上する
+      ! (浸透で乾いたセルの hg が S_grnd から漏れ、S_total が見かけ上
+      !  減る実バグの修正 2026-08-14。ゼロ加算はスキップ=湿潤のみの
+      !  既存ケースと総和のビット一致を保つ)
+      if (s%gw_active) then
+        if (s%hg(i,j) > 0.0) hgsum_j(j) = hgsum_j(j) + s%hg(i,j)
+        if (allocated(s%hg2)) then
+          if (s%hg2(i,j) > 0.0) hgsum_j(j) = hgsum_j(j) + s%hg2(i,j)
+        end if
+      end if
       if (s%h(i,j) <= 0) cycle
       if (s%h(i,j) > s%hmax(i,j)) then
         s%hmax(i,j) = s%h(i,j)                                 ! 最大水深
@@ -398,11 +408,6 @@ subroutine m_state_calcstat(s, p, g)
       ! gv=1 のケースは従来とビット一致)。河道幅 wfrac は m_state から
       ! 不可視のため未反映(幅有効時の S は河道セルで過大。§18 の妥協)
       hsum_j(j) = hsum_j(j) + real(s%h(i,j), real64) * s%af(i,j)
-      if (s%gw_active) then
-        hgsum_j(j) = hgsum_j(j) + s%hg(i,j)
-        ! 風化基岩層の貯留も地下水合計へ(有効時のみ = 無効時の表示不変)
-        if (allocated(s%hg2)) hgsum_j(j) = hgsum_j(j) + s%hg2(i,j)
-      end if
       hmax = max(hmax, s%h(i,j))
       vvmax = max(vvmax, s%vv(i,j))
       qqmax = max(qqmax, s%qq(i,j))
