@@ -159,7 +159,7 @@ OS は Linux / macOS / WSL を想定しています。詳細は
 ## 開発
 
 - 防衛大学校 建設環境工学科 水工学研究室
-- 東北大学 工学部 水環境システム研究室
+- 東北大学 工学部 水環境システム学研究室
 
 バグ報告・機能提案は [Issues](https://github.com/ENCflow/ENCflow/issues) へ。
 研究利用の引用方法は [CITATION.cff](CITATION.cff) を参照してください。
