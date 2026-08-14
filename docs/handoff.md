@@ -303,7 +303,10 @@
   参照の記述も修正)。
   浅水流(swflow.md)・地下水(gwflow.md)・計測(record.md)・
   水質(wq.md)・土砂地形(geomorph.md)も 2026-08-14 作成済みで
-  **第III部の12章が完結**。残:
+  **第III部の12章が完結**。付録の全パラメータ索引
+  (params_index.md。370項目)も namelist 宣言からの機械抽出で
+  2026-08-14 生成済み(生成スクリプトは使い捨て。§35.1。namelist
+  変更時は再生成するか該当行を手修正)。残:
   付録の全パラメータ索引、examples/List_samples の不足分
   (sysparam / geoinfo / initial / enc / record / geomorph)。
   チュートリアル続編(実地形 chichibu)も順次。

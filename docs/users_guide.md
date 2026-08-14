@@ -37,7 +37,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [計測](users_guide/record.md)(&list_record)— プローブ・フラックス測線
 
 **付録**
-- 全パラメータ索引 — 準備中(第III部の完成に合わせて作成)
+- [全パラメータ索引](users_guide/params_index.md) — 全370パラメータの名前→章の逆引き
 
 ---
 
