@@ -323,7 +323,10 @@
   付録の全パラメータ索引、List_samples の不足6件も 2026-08-14
   作成済み(sysparam は実行可能な最小例を兼ねる。initial / enc /
   record / geomorph は wave での読込動作を確認済み)。
-  残: チュートリアル続編(実地形 chichibu)。
+  チュートリアル続編(実地形 chichibu)は 2026-08-14 作成済み
+  (tutorials/chichibu/README.md。Step 1〜6 = 最小構成・GeoTIFF・
+  計測・数値調整・遮断+バケツ・出口境界。図の再生成は
+  Fig_chichibu.sh。流量振動の説明は §39.3 が典拠)。
 
 ## 中期の道標(着手順は実測次第)
 
