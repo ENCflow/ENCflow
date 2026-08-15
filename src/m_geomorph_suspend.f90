@@ -41,7 +41,8 @@ module subroutine init_suspend(gm, p, list)
     gm%wf = list%susp_wf
   else
     gm%wf = rubey_wf(gm%sgrav, p%gg, gm%sd50)
-    write(msg,'(a,es10.3,a)') "geomorph suspend: settling velocity (Rubey) = ", gm%wf, " m/s"
+    write(msg,'(a,es10.3,a)') "geomorph: suspended sediment settling velocity (Rubey) = ", &
+                              gm%wf, " m/s"
     call par_info(trim(msg))
   end if
 end subroutine

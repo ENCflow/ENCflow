@@ -38,7 +38,7 @@ module subroutine init_wash(gm, list)
   ! 浮遊砂が輸送を担う(注入先 hs の移流・沈降がないと土砂が動けない)
   if (gm%f_suspend <= 0) then
     call par_stop("list_geomorph: f_wash requires f_suspend=1 " &
-                  // "(剥離した土砂は浮遊砂として輸送される)")
+                  // "(detached soil is transported as suspended sediment)")
   end if
   if (list%wash_kr < 0.0) call par_stop("list_geomorph: wash_kr must be >= 0")
   if (list%wash_kf < 0.0) call par_stop("list_geomorph: wash_kf must be >= 0")

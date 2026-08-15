@@ -59,8 +59,8 @@ module subroutine diff_init(p, g)
     td_mod%nu(:,:) = p_diffusion_nu
     if (p_diffusion_nu > td_mod%nu_max) then
       write(msg, '(a,g0.4,a,g0.4,a)') &
-        "WARNING: 拡散項の安定条件を超過 nu=", p_diffusion_nu, &
-        " > ", td_mod%nu_max, " (m2/s)"
+        "list_enc: p_diffusion_nu=", p_diffusion_nu, &
+        " exceeds the diffusion stability limit ", td_mod%nu_max, " (m2/s)"
       call par_info(trim(msg))
     end if
   end if
@@ -108,8 +108,8 @@ module subroutine diff_prepare(p, g, s)
     !$omp end parallel do
     if (any_clamp .and. .not. td_mod%clamp_warned) then
       write(msg, '(a,g0.4,a)') &
-        "WARNING: 拡散項の渦動粘性を安定上界 ", td_mod%nu_max, &
-        " (m2/s) でクランプしました(以後の発生は表示しない)"
+        "swflow: diffusion eddy viscosity clamped to the stability limit ", td_mod%nu_max, &
+        " (m2/s), further occurrences are not reported"
       call par_info(trim(msg))
       td_mod%clamp_warned = .true.
     end if

@@ -103,7 +103,7 @@ subroutine m_swflow_init(sw, p, g, b, s)
     sw%calc    => m_swflow_stg_calc
     sw%dispose => m_swflow_stg_dispose
   else
-    call par_stop("invalid gridsystem")
+    call par_stop("list_sysparam: f_gridsystem must be 0(ENC) or 1(STG)")
   end if
   sw%initialized = .true.
 
@@ -120,7 +120,7 @@ subroutine m_swflow_calc(sw, p, g, b, s, ierror)
   type(t_boundary), intent(inout) :: b
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
-  if (.not. sw%initialized) call par_stop("m_swflow_calc: not initialized")
+  if (.not. sw%initialized) call par_stop("swflow: calc called before init")
   call sw%calc(p, g, b, s, ierror)
 end subroutine
 
