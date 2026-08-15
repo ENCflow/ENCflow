@@ -230,6 +230,12 @@ docs/comparison.md を参照。
 | 排水機場 | pumping station | | 状態保存ファイル | state file |
 | 陸閘・水門 | gate | | 再開 | restart |
 | 帯(分割) | band | | 格子/セル | grid / cell |
+| 敷高 | invert elevation | | 測線 | transect |
+| フラップ | flap gate | | 浸透(能) | infiltration (capacity) |
+| 捕捉帯(ダム) | capture band | | 初期損失 | initial loss |
+| 但し書き操作 | emergency release | | 湿性沈着 | wet deposition |
+| 破堤 | breach | | 原単位 | unit load |
+| 数値発散 | solution diverged | | 収支誤差 | imbalance(error は使わない) |
 - 領域分割後の集約対象(判定・出力の直前に allreduce/gather が要るもの):
   **ierror(swflow の発散検出はランク局所値になる)、s%cnmax、
   s%hmean(二段総和の行部分和)、s%sp の各成分(表示区間内最大値)**。
