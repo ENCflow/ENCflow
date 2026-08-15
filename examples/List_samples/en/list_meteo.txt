@@ -1,0 +1,32 @@
+!======================================================================
+! English mirror of examples/List_samples/list_meteo.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+! Meteorological forcing settings sample (&list_meteo; developer.md Sec. 29)
+!   Enabled by fn_meteo = "this file" or "-" in the main parameters.
+!   The common input for features that use air temperature (Hamon /
+!   Thornthwaite evapotranspiration, temperature correction of water
+!   quality, etc.). The calendar origin of the time series is date0_c of
+!   &list_sysparam.
+!======================================================================
+&list_meteo
+  ! ---- Air temperature input (exactly one of these) ----
+  !   A series of daily mean temperatures is recommended (evaluated at
+  !   calendar-day granularity. Sparse points are linearly interpolated,
+  !   end values held)
+  !temp0 = 15.0                 ! uniform constant (degC)
+  tempval(:,1) = 0.0, 15.0     ! uniform time series (days elapsed from t=0, degC)
+  tempval(:,2) = 1.0, 12.0
+  tempval(:,3) = 2.0, 10.0
+  !fn_tempmap = "temp_maps.txt" ! list of temperature distribution files (one
+                                !   file per line; applied sequentially at
+                                !   dt_tempmap_c intervals, the last one held)
+  !dt_tempmap_c = "1 day"       ! time interval of the distribution files
+
+  ! ---- Temperature lapse with elevation (optional; uniform temperature
+  !      input only) ----
+  f_temp_lapse = 1              ! 1 to enable
+  temp_lapse = 0.65             ! lapse rate (degC/100m)
+  !temp_zref = 200.0            ! reference elevation (m; if omitted = the
+                                !   lowest elevation of the domain)
+/

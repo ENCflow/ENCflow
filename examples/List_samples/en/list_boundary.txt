@@ -1,0 +1,231 @@
+!======================================================================
+! English mirror of examples/List_samples/list_boundary.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of boundary condition settings &list_bound_edge / &list_bound_source
+!
+!   Use this file by specifying, in the system parameters &list_sysparam,
+!     fn_boundary = "list_boundary.txt"
+!   (if fn_boundary is not specified, the boundary condition feature is
+!   completely inactive).
+!
+!   Write the groups of each family in this same file. If a group itself
+!   is not written, that family is disabled (absence is normal).
+!
+!   Cell coordinates (i, j) are 1-based (the westernmost column and the
+!   northernmost row are 1). GIS software such as QGIS counts rasters
+!   from 0, so add +1 to both the row and column numbers picked in GIS.
+!
+!   Note: the old-format single group &list_boundary has been abolished.
+!   When detected, the program stops and explains how to migrate to this
+!   format.
+!
+!======================================================================
+! Edge boundary conditions: the boundary condition type for each of the
+! four outer edges of the computational domain
+!======================================================================
+!   0: impermeable (wall; default)
+!   1: free outflow (for flood inundation)
+!      A flow that has advanced to the boundary passes through it at its
+!      own velocity, and ponded water drains as a free overfall
+!      (free overflow). No inflow occurs.
+!      Use this for the outflow of inundation flow advancing over a dry bed.
+!   2: long-wave radiation (for tsunami / wave propagation)
+!      At still water (water level = reference level) there is no outflow;
+!      only the water-level deviation of waves reaching the boundary is
+!      transmitted (inflow of a receding wave is also allowed).
+!      If not specified, the reference level is derived automatically
+!      from the initial condition:
+!        - e0 if the initial condition is a fixed water level
+!          (f_htype=2 of list_initial)
+!        - otherwise, the initial water level (z+h) of each boundary cell
+!      With the automatic derivation, the radiation flux at t=0 is
+!      exactly zero. Specifying bc_eta_* explicitly makes that uniform
+!      value take precedence (same datum as z; e.g. when you want to fix
+!      the datum in restored runs).
+!
+!   Correspondence between directions and grid indices (raster row order
+!   = north to south):
+!     west = i=1 (left edge), east = i=nx (right edge),
+!     north = j=1 (top edge), south = j=ny (bottom edge)
+!
+!   Edge boundaries are effective only on edges where active cells (x=1)
+!   touch the grid frame. They do not act on terrain surrounded by a rim
+!   of nodata (x=0) cells.
+!======================================================================
+&list_bound_edge
+  f_bc_w = 0
+  f_bc_e = 0
+  f_bc_n = 0
+  f_bc_s = 0
+  !bc_eta_w = 0.0
+  !bc_eta_e = 0.0
+  !bc_eta_n = 0.0
+  !bc_eta_s = 0.0
+/
+
+!======================================================================
+! Internal sources: injection and extraction (multiple allowed)
+!======================================================================
+!   For each source, specify a "cell set" and a "discharge time series
+!   Q(t)". The third subscript is the source number (consecutive from 1).
+!     src_cell(:,k,n) = i, j     : coordinates of the k-th cell of source n
+!     src_val(:,k,n) = t, q      : time series of source n
+!                                  (time (min), discharge (m3/s))
+!                                  q is the total for the whole cell set
+!                                  (not per cell nor per unit area).
+!                                  The series is linearly interpolated;
+!                                  outside the range the end values are
+!                                  held. q < 0 extracts water (the cell
+!                                  depth bottoms out at 0; the deficit
+!                                  cannot be pumped)
+!   The discharge is distributed evenly over the source's cell set (the
+!   same volume to each cell; in cells with building void fraction
+!   gv < 1 the depth increment becomes correspondingly larger).
+!   Cell sets and time series can also be given as files (relative paths
+!   from dir_data):
+!     fn_src_cell(n) = "..."     : each line "i j"
+!     fn_src_val(n) = "..."      : each line "time(min) discharge(m3/s)"
+!======================================================================
+!&list_bound_source
+!  ! Source 1: injection (100 m3/s distributed over 2 cells)
+!  src_cell(:,1,1) = 10, 10
+!  src_cell(:,2,1) = 10, 11
+!  src_val(:,1,1) =   0,   0.0
+!  src_val(:,2,1) =  60, 100.0
+!  src_val(:,3,1) = 120,   0.0
+!  ! Source 2: extraction (a drain)
+!  src_cell(:,1,2) = 50, 50
+!  src_val(:,1,2) =   0,  -5.0
+!  src_val(:,2,2) = 999,  -5.0
+!/
+
+!======================================================================
+! Prescribed-stage cell groups: force the water level of cell sets to
+! given values (multiple allowed)
+!======================================================================
+!   Used for the outlet of a catchment-extraction run (an outflow
+!   boundary to outside the catchment), backwater and tidal reaches, etc.
+!   The depth of the specified cells is forced every step to
+!   h = max(eta - z, 0) (taking precedence over injection), and the
+!   exchange with the surroundings is computed by the momentum equations
+!   from the gradient created by the prescribed level (it also appears in
+!   u,v,m,n and in the record transects).
+!   Setting eta below the river bed keeps the cells always empty = a
+!   perfect drain (a replacement for the old trick of "surrounding with
+!   sea + free overfall").
+!   The third subscript is the group number (consecutive from 1).
+!     stage_cell(:,k,n) = i, j   : coordinates of the k-th cell of group n
+!     stage_eta(n) = eta         : fixed prescribed water level (m; same
+!                                  datum as z)
+!     stage_val(:,k,n) = t, eta  : time series of the prescribed level
+!                                  (time (min), water level (m))
+!                                  (given instead of the fixed value;
+!                                   linear interpolation, end values held
+!                                   outside the range)
+!   Cell sets and time series can also be given as files (from dir_data):
+!     fn_stage_cell(n) = "..."   : each line "i j"
+!     fn_stage_val(n) = "..."    : each line "time(min) water level(m)"
+!   Note: a large level difference between prescribed cells and their
+!   surroundings produces a local dam-break flow, which may require
+!   revisiting the CFL condition (dt).
+!======================================================================
+!&list_bound_stage
+!  ! Group 1: catchment outlet (perfect drainage with a level below the bed)
+!  stage_cell(:,1,1) = 100, 200
+!  stage_cell(:,2,1) = 101, 200
+!  stage_eta(1) = -999.0
+!  ! Group 2: tidal reach (water level time series)
+!  stage_cell(:,1,2) = 300, 150
+!  stage_val(:,1,2) =   0, 0.0
+!  stage_val(:,2,2) = 360, 0.5
+!  stage_val(:,3,2) = 720, 0.0
+!/
+
+!======================================================================
+! Section inflow: prescribed discharge into cell sections touching the
+! outer edge (multiple allowed)
+!======================================================================
+!   A boundary where a river etc. flows in across the outer edge of the
+!   computational domain. The discharge is prescribed on the outer-edge
+!   normal faces of the section cells (which must touch the outer edge).
+!   Unlike injection, this is a directional inflow (carrying momentum),
+!   and it also appears in u,v,m,n and record.
+!   The discharge Q is the total inflow of the whole section (not per
+!   cell nor per unit width). It is apportioned within the section, and
+!   for every distribution mode the total inflow is exactly Q(t).
+!   The edge type (impermeable/outflow/radiation) is overridden only on
+!   the faces of the section.
+!   Only non-negative discharge (for outflow use stage / source).
+!   The third subscript is the section number (consecutive from 1).
+!     inflow_cell(:,k,n) = i, j  : coordinates of the k-th cell of section n
+!     inflow_val(:,k,n) = t, Q   : discharge time series (time (min),
+!                                  total discharge (m3/s))
+!     inflow_dist(n) = 0|1|2     : distribution mode within the section
+!                                  (default 0)
+!     inflow_cs(:,k,n) = t, C    : concentration time series of inflowing
+!                                  sediment (time (min), volumetric
+!                                  concentration (m3/m3)). If unspecified,
+!                                  clear-water inflow. Meaningful only when
+!                                  suspended sediment (f_suspend) is
+!                                  active; the sediment inflow rate is
+!                                  C(t)*Q(t) (automatically following the
+!                                  discharge).
+!                                  Conversion from mg/L:
+!                                  C = (mg/L)/(rho_s*1000)
+!     inflow_qs(:,k,n) = t, Qs   : transport rate time series of inflowing
+!                                  sediment (time (min), m3/s solid
+!                                  volume). Mutually exclusive with
+!                                  inflow_cs per section. Internally
+!                                  reduced to the equivalent concentration
+!                                  cs = Qs/Q (the injected total = Qs*dt
+!                                  is exact; nothing is injected while
+!                                  Q=0)
+!       0: even apportionment. By opening-width apportionment the
+!          unit-width discharge (m2/s) is uniform over the section
+!       1: depth apportionment. Weight = depth h. A distribution in which
+!          the inflow velocity (m/s) is uniform over wet cells (intended
+!          for inflow through a channel cross-section; cells without
+!          depth get zero inflow)
+!       2: conveyance apportionment. Weight = h^(5/3). The same
+!          distribution as a uniform-slope Manning cross-section; deeper
+!          cells also get higher velocity (more channel-like than 1)
+!       The weighted apportionments 1 and 2 are blended continuously with
+!       the even apportionment according to the Froude number margin of
+!       the assumed velocity at the deepest cell (fully weighted for
+!       Fr <= 0.5, even for Fr >= 1, linear in between; the total inflow
+!       is exact regardless of the blend). Having no threshold switch,
+!       the distribution is continuous in time, and dry cross-sections,
+!       film-only cross-sections and receding stages shift automatically
+!       toward the even side. At low water, in a cross-section where only
+!       the low-flow channel is wet, the apportionment is fully weighted
+!       and nothing flows into the dry floodplain. The weighted share to
+!       cells without depth (h < dd) is zero. The weights use the depths
+!       of the previous step, and the distribution is updated every step.
+!   Cell sets and time series can also be given as files (from dir_data):
+!     fn_inflow_cell(n) = "..."  : each line "i j"
+!     fn_inflow_val(n) = "..."   : each line "time(min) total discharge(m3/s)"
+!     fn_inflow_cs(n) = "..."    : each line "time(min) volumetric conc.(m3/m3)"
+!     fn_inflow_qs(n) = "..."    : each line "time(min) transport rate(m3/s
+!                                  solid volume)"
+!======================================================================
+!&list_bound_inflow
+!  ! Section 1: river inflow across the west edge, j=100..102
+!  inflow_cell(:,1,1) = 1, 100
+!  inflow_cell(:,2,1) = 1, 101
+!  inflow_cell(:,3,1) = 1, 102
+!  inflow_val(:,1,1) =   0,   0.0
+!  inflow_val(:,2,1) =  60, 500.0
+!  inflow_val(:,3,1) = 720,  50.0
+!  inflow_dist(1) = 2
+!/
+
+!======================================================================
+! Drainage pumps have been moved to fn_structure (&list_struct_pump)
+!   (2026-08-07; parameter names unchanged). For the settings of the
+!   internal hydraulic structure family, see
+!   examples/List_samples/list_structure.txt.
+!   An &list_bound_pump at the old location stops the program with
+!   migration guidance when detected.
+!======================================================================

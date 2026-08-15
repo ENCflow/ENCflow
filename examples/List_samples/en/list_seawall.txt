@@ -1,0 +1,47 @@
+!======================================================================
+! English mirror of examples/List_samples/list_seawall.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+! Seawall (coastal application of virtual walls) settings sample
+!   (developer.md Sec. 17.1)
+!   The keys are written in &list_geoinfo (the seaside mask is geographic
+!   information of the same family as fn_sw/fn_rw). Paste the fragment
+!   below into the &list_geoinfo you are using. The specification is
+!   independent of river levees (the fn_bank family of fn_channel).
+!
+!   Wall edges = all edges (diagonals included) between a "landside cell
+!   holding a crest" and a "seaside cell". The set of seaside cells
+!   = the 1 cells of fn_seaside union the cells with sw>0.
+!   - Tide case (with the sea mask of fn_sw): fn_seaside may be omitted
+!   - Tsunami case (waves solved with the sea as ordinary cells; no sw):
+!     fn_seaside is mandatory
+!   No crest can be placed on channel cells (rw>0); river mouths
+!   automatically become openings.
+!   Overtopping uses the Honma formula. Crests are static (do not follow
+!   landform evolution).
+!======================================================================
+&list_geoinfo
+  ! ... (the usual geographic information settings: nx, ny, fn_z, etc.) ...
+
+  ! ---- Seaside mask (0/1 raster. Cells with sw>0 are always seaside) ----
+  !fn_seaside = 'seaside.txt'
+
+  ! ---- Crest (held by the landside = protected cell. Exactly one of
+  !      these) ----
+  !fn_seawall = 'seawall.txt' ! crest distribution (at landside cells. -900 or
+                              !   below = none. Unpainted cells become openings)
+  !seawall0 = 5.0             ! uniform crest value (automatically given to all
+                              !   land cells touching the seaside = a wall
+                              !   around the whole coastline with minimal input)
+
+  ! ---- Height datum ----
+  !f_seawall_datum = 2        ! 1: own-cell ground datum (z+value), 2: absolute
+                              !   elevation (default. Published crest heights
+                              !   of T.P.+x m can be used as they are)
+
+  ! ---- Hydraulic mode (same meaning as f_bank_mode) ----
+  !f_seawall_mode = 0         ! 0: overtopping only (default), 1: flap gate
+                              !   = equivalent to gates (passes only land-to-sea
+                              !   drainage), 2: forced drainage = equivalent to
+                              !   a pumping station
+/

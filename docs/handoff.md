@@ -291,6 +291,12 @@
 
 ## 既知の壊れている例題
 
+- **tutorials/wave の param_step4.txt が欠落**: README.md には Step 4
+  (斜め壁 wave_solid_wall / wave_leaky_wall)の本文・実行例・結果図
+  (figs/step4_*.png)まであるが、パラメータファイル本体がない。
+  ルーチンは src/user_geoinfo.f90 に実装済みで、README 記載の
+  &list_geoinfo ブロックと検算値(number of valid cells 89550)から
+  復元可能とみられる(2026-08-15 検出)。
 - **examples/benchmark/h-plane の hp10x**: 実行中に FPE で停止する
   (-ffpe-trap 検知。f_rntype=2 廃止の等価変換(2026-08-15)以前からの
   既存問題。hp10 は正常)。原因未調査。

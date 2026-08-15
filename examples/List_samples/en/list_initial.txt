@@ -1,0 +1,63 @@
+!======================================================================
+! English mirror of examples/List_samples/list_initial.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of initial condition settings &list_initial (list of all
+! parameters)
+!
+!   Use this file by specifying, in the system parameters &list_sysparam,
+!     fn_initial = "list_initial.txt"
+!   (if fn_initial is not specified, the run starts from an entirely dry
+!   state h=0. For runs fed with water by rainfall-runoff or river
+!   inflow, that is often sufficient).
+!
+!   To start from a more realistic "flowing" field, the saved state of a
+!   spin-up run can be used as the initial condition (f_state_restore = 2
+!   of &list_sysparam; docs/users_guide/restart.md). Explanations in
+!   docs/users_guide/initial.md.
+!
+!======================================================================
+&list_initial
+
+  ! How to give the initial depth / water level
+  !  0: fixed depth value h0 (default)
+  !  1: depth distribution file fn_hinit
+  !  2: fixed water level value e0 (h = max(e0 - z, 0). For initializing
+  !     lakes, reservoirs and the sea surface)
+  !  3: water level distribution file fn_hinit
+  f_htype = 0
+  h0 = 1.0                  ! fixed initial depth (m)
+  !e0 = 5.0                 ! fixed initial water level (m; the same elevation
+                            !   datum as z. f_htype=2)
+  !fn_hinit = "hinit.txt"   ! initial depth / water level distribution file
+                            !   (f_htype=1, 3)
+
+  ! Increment of the initial depth (m) on channel mask cells (fn_rw of
+  ! &list_geoinfo) (to pre-wet the channel at normal flow)
+  !h0_rw = 0.5
+
+  ! Initial velocity (f_uvtype=0: uniform value only)
+  !f_uvtype = 0
+  !u0 = 0.0                 ! initial velocity in x (m/s)
+  !v0 = 0.0                 ! initial velocity in y (m/s)
+
+  ! Filling depressions (pre-fill hollows without an outlet before starting)
+  !  0: none (default)
+  !  1: fill the depressions of the whole domain to the brim (skips the
+  !     spin-up until outflow starts)
+  !  2: fill only channel cells to the brim (fills spurious pits in the
+  !     channel long profile)
+  !  3: after filling only channel cells, convert that water into ground
+  !     elevation (fill with terrain. When you do not want the initial
+  !     water volume in the water budget)
+  !  2 and 3 require the channel mask fn_rw. Depressions that can drain
+  !  to the sea are not filled
+  !f_fill_depres = 0
+
+  ! Identifier of a user routine that modifies the initial field (for
+  ! idealized experiments. Registered names at the top of
+  ! src/user_initial.f90)
+  !f_user_routine = "wave_hump"
+
+/

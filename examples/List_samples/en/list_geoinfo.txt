@@ -1,0 +1,97 @@
+!======================================================================
+! English mirror of examples/List_samples/list_geoinfo.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of geographic information settings &list_geoinfo (list of all
+! parameters)
+!
+!   Use this file by specifying, in the system parameters &list_sysparam,
+!     fn_geoinfo = "list_geoinfo.txt"
+!   (the default is "-" = read from this same file. Geographic
+!   information is the only mandatory feature).
+!
+!   The grid is defined by nx, ny (mandatory) and, for each direction,
+!   either dx or lx (writing both makes them checked for consistency;
+!   contradiction stops the run). If a bil input has an .hdr sidecar,
+!   nx, ny, dx, dy are filled in from it.
+!
+!   Paths of distribution files are relative to dir_data of
+!   &list_sysparam. Explanations in docs/users_guide/geoinfo.md.
+!
+!======================================================================
+&list_geoinfo
+
+  ! ---- Grid definition ----
+  nx = 700, ny = 600        ! number of grid cells (mandatory)
+  dx = 100.0, dy = 100.0    ! grid spacing (m) (or lx, ly = domain size)
+  !epsg = 6677              ! EPSG code of the coordinate system (0: unknown.
+                            !   Used for GeoTIFF output and coordinate
+                            !   management. users_guide/coordinates.md)
+
+  ! ---- Terrain (ground elevation) ----
+  f_ztype = 1               ! 0: fixed value z0 (default), 1: file fn_z
+  fn_z = "dem.bil"          ! ground elevation distribution file
+  !z0 = 0.0                 ! fixed ground elevation (m) (f_ztype=0)
+  !mag_z = 1.0              ! factor multiplied onto the ground elevation (for
+                            !   sensitivity experiments and unit conversion)
+  !f_user_routine = ""      ! identifier of a user routine that modifies the
+                            !   terrain (registered names at the top of
+                            !   src/user_geoinfo.f90)
+
+  ! ---- Roughness (Manning coefficient) ----
+  !f_rntype = 0             ! 0: fixed value rn0 (default), 1: file fn_rn
+  !rn0 = 0.015              ! fixed roughness value
+  !fn_rn = "roughness.txt"  ! roughness distribution file (f_rntype=1)
+
+  ! ---- Domain mask (limits the computed area. Zero memory and CPU
+  !      outside the mask) ----
+  !f_masktype = 0           ! 0: compute the whole domain (default),
+                            ! 1: file fn_mask,
+                            ! 2: auto-generate from the sea mask (all land
+                            !    + 1 coastal cell)
+  !fn_mask = "basin.txt"    ! domain mask (1: computed, 0: excluded)
+
+  ! ---- Sea mask and channel mask ----
+  !fn_sw = "sea.txt"        ! sea mask (1: sea. For tide, storm surge and
+                            !   tsunami runs)
+  !fn_rw = "river.txt"      ! channel mask (1: channel cell)
+  !depth_rw = 2.0           ! incision depth of channel cells (m) (uniform value)
+  !fn_depth_rw = "depth.txt"  ! incision depth distribution (instead of the
+                            !   uniform value)
+  !rn0_rw = 0.03            ! fixed roughness of channel cells (negative: not
+                            !   set. Default -1. A positive value overrides the
+                            !   roughness of channel cells regardless of how
+                            !   roughness is given (f_rntype=0/1/2); independent
+                            !   of whether incision is present)
+
+  ! ---- Building drag (urban inundation) ----
+  !fn_gv = "gv.txt"         ! distribution of the building void fraction (the
+                            !   fraction not covered by buildings)
+  !fn_bb = "bb.txt"         ! distribution of the mean building dimension (m)
+  !min_gv = 0.001           ! lower bound of the void fraction
+  !min_bb = 0.001           ! lower bound of the mean dimension (m)
+
+  ! ---- Ponds ----
+  !fn_rscap = "rscap.txt"   ! distribution of the pond storage limit depth (m)
+                            !   (cells with a value are ponds. Cooperates with
+                            !   pump intake)
+
+  ! ---- Soil layer (for the groundwater computation fn_gwflow) ----
+  !f_sdtype = 0             ! 0: fixed value sd0 (default), 1: file fn_sd
+  !sd0 = 1.0                ! fixed soil depth (m)
+  !fn_sd = "sd.txt"         ! soil depth distribution file
+  !sy0 = 0.2                ! specific yield (effective porosity)
+
+  ! ---- Seawall (virtual walls. Details in list_seawall.txt) ----
+  !fn_seaside = "seaside.txt"   ! seaside mask (may be omitted for tide cases;
+                            !   mandatory for tsunami)
+  !fn_seawall = "seawall.txt"   ! crest height distribution (at landside cells)
+  !seawall0 = 5.0           ! uniform crest value (exclusive with fn_seawall.
+                            !   Default -9999 = none)
+  !f_seawall_datum = 2      ! height datum (1: own-cell ground datum,
+                            !   2: absolute elevation = default)
+  !f_seawall_mode = 0       ! hydraulic mode (0: overtopping only, 1: flap gate,
+                            !   2: forced drainage)
+
+/

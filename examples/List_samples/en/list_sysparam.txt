@@ -1,0 +1,158 @@
+!======================================================================
+! English mirror of examples/List_samples/list_sysparam.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of system parameter settings &list_sysparam (list of all
+! parameters)
+!
+!   This group alone is the body of "the parameter file given at run
+!   time":
+!     ./encflow this_file_name
+!   The other features (&list_geoinfo and below) are enabled by the
+!   fn_XXX entries inside it.
+!   fn_XXX = "-" means "read from this same file", "" means "not used"
+!   (completely inactive; zero memory and computation time), and a file
+!   name means a separate file.
+!
+!   The commented-out lines state the default values explicitly (not
+!   writing them gives those values).
+!   This file can be run as it is, as a minimal working example (still
+!   water in a 100 m square + a water level hump).
+!
+!======================================================================
+&list_sysparam
+
+  ! ---- Time axis (dt and tt are mandatory. Details in users_guide/time.md) ----
+  dt = 0.01                 ! time step (s). Mandatory
+  tt = 2.0                  ! end time of the run (s). Absolute time (not the
+                            !   elapsed time)
+  !t0 = 0.0                 ! start time of the run (s)
+  !date0_c = "2019-10-11"   ! calendar date of t=0 ("YYYY-MM-DD [hh:mm]".
+                            !   Mandatory for features that use the calendar:
+                            !   evapotranspiration, snow, water quality, etc.)
+  !t_cycle_c = "365d"       ! repetition period of the forcing (for long-term
+                            !   landform runs)
+
+  ! Instead of seconds, a string of "number + unit (d/h/m/s)" can also
+  ! be given (t0_c, tt_c, dt_c, dt_disp_c, dt_file_c, dt_recrd_c, st_file_c,
+  !  st_recrd_c, et_file_c, et_recrd_c. If both are written, _c wins)
+  !tt_c = "24h"
+
+  ! ---- Display and output intervals and time windows ----
+  dt_disp = 1.0             ! screen and Log display interval (s) (default 60)
+  dt_file = 1.0             ! distribution file output interval (s) (default 3600)
+  !dt_recrd = 60.0          ! probe and transect output interval (s) (when
+                            !   fn_record is active)
+  !st_file = 0.0            ! start time of distribution file output (s)
+  !et_file = -1.0           ! end time of distribution file output (s)
+                            !   (-1: to the end)
+  !st_recrd = 0.0           ! start time of probe output (s)
+  !et_recrd = -1.0          ! end time of probe output (s) (-1: to the end)
+
+  ! ---- Enabling features (fn_XXX. Details in the List_samples and
+  !      users_guide of each feature) ----
+  fn_geoinfo = "-"          ! geographic information (mandatory. Default "-")
+  fn_initial = "-"          ! initial conditions
+  !fn_enc = ""              ! tuning of the shallow water computation (ENC)
+  !fn_boundary = ""         ! boundary conditions
+  !fn_tide = ""             ! tide and sea level
+  !fn_structure = ""        ! internal hydraulic structures (pumps, culverts, etc.)
+  !fn_reservoir = ""        ! ponds
+  !fn_channel = ""          ! channels (levees and channel width)
+  !fn_precip = ""           ! precipitation
+  !fn_intercept = ""        ! rainfall interception
+  !fn_meteo = ""            ! meteorological forcing (air temperature etc.)
+  !fn_evap = ""             ! evapotranspiration
+  !fn_snow = ""             ! snow accumulation and snowmelt
+  !fn_gwflow = ""           ! groundwater
+  !fn_geomorph = ""         ! sediment and landform evolution
+  !fn_wq = ""               ! water quality (load runoff)
+  !fn_record = ""           ! measurement (probes and transects)
+
+  ! ---- Distribution file formats (users_guide/io.md) ----
+  !f_input_mode = 1         ! input format (1:text, 2:bil, 4:GeoTIFF. Single choice)
+  !f_output_mode = 1        ! bit sum of output formats (1:text + 2:bil + 4:GeoTIFF)
+
+  ! ---- Selection of distribution file outputs (enabled by f_out_XXX = 1.
+  !      users_guide/io.md) ----
+  !f_out_h = 1              ! depth H (default on)
+  f_out_e = 1               ! water level E
+  !f_out_z = 0              ! ground elevation Z (Z0000 is always output even
+                            !   when off)
+  !f_out_u = 0              ! velocity u in x
+  !f_out_v = 0              ! velocity v in y
+  !f_out_m = 0              ! line discharge m in x
+  !f_out_n = 0              ! line discharge n in y
+  !f_out_vv = 0             ! velocity magnitude V
+  !f_out_qq = 0             ! discharge magnitude Q
+  !f_out_qc = 0             ! cumulative discharge Qc
+  !f_out_qd = 0             ! flow direction Qd (needed by utils/rerecord)
+  !f_out_ddd = 0            ! dominant downstream direction Ddd
+  !f_out_dda = 0            ! all downstream directions Dda (needed by
+                            !   utils/rmdepress_river)
+  !f_out_pre = 0            ! rainfall intensity Pr
+  !f_out_hrs = 0            ! pond depth Hrs
+  !f_out_fr = 0             ! Froude number Fr
+  !f_out_cn = 0             ! Courant number Cn
+  !f_out_hg = 0             ! subsurface storage depth Hg
+  !f_out_hmax = 1           ! maximum depth H9999 (default on)
+  !f_out_hmaxt = 0          ! time of the maximum depth Ht9999
+  !f_out_vvmax = 0          ! maximum velocity V9999
+  !f_out_qqmax = 0          ! maximum discharge Q9999
+  !f_out_qqmaxt = 0         ! time of the maximum discharge Qt9999
+  !f_out_qqmaxd = 0         ! flow direction at the maximum discharge Qd9999
+
+  ! ---- Screen and Log display columns (time, S, Runge and ex_flux are
+  !      always present) ----
+  !f_disp_h = 1             ! maximum depth h_max
+  !f_disp_vv = 1            ! maximum velocity V_max
+  !f_disp_cn = 1            ! maximum Courant number Cn_max
+  !f_disp_qq = 0            ! maximum discharge Q_max
+  !f_disp_debug = 0         ! display the S column with all significant digits
+                            !   (for debugging and regression tests)
+
+  ! ---- Interruption and restart (users_guide/restart.md) ----
+  !f_state_save = 0         ! 1: save the state to dir_save at the end of the run
+  !f_state_restore = 0      ! 1: restart (continue in time), 2: use the saved
+                            !   state as the initial condition
+
+  ! ---- Directories and file names ----
+  !dir_data = "."           ! base directory of input data
+  !dir_result = "result"    ! result output directory
+  !dir_save = "save"        ! state save (save/restore) directory
+  !fn_log = "Log.txt"       ! log file name
+  !outfn_suffix = ""        ! string appended to output file names (avoids
+                            !   collisions of runs in parallel)
+
+  ! ---- Computation scheme and numerical constants (normally no need to
+  !      change. users_guide/swflow.md) ----
+  !f_gridsystem = 0         ! 0: ENC grid (default), 1: STG (for comparison)
+  !f_govequation = 0        ! 0: dynamic wave (default), 1: diffusive wave,
+                            !   2: kinematic wave
+  !f_check_cfl = 1          ! Courant number monitoring (0: monitor only,
+                            !   1: stop when Cn>1 (default), 2: judge and stop
+                            !   by the advective Courant number)
+  !dd = 0.001               ! threshold depth (m)
+  !dv = 0.001               ! virtual depth (m)
+  !vv = 0.01                ! velocity floor for the friction term (m/s)
+  !gg = 9.8                 ! gravitational acceleration (m/s^2)
+  !cm = 2.0                 ! added mass coefficient of buildings (with gv/bb)
+  !cd = 1.0                 ! drag coefficient of buildings
+  !kk = 0.5                 ! drag correction coefficient of buildings
+
+/
+
+!======================================================================
+! Geographic information and initial conditions for the minimal working
+! example (read via fn_* = "-")
+!======================================================================
+&list_geoinfo
+  lx = 100.0, ly = 100.0    ! size of the computational domain (m)
+  nx = 300, ny = 300        ! number of grid cells
+/
+
+&list_initial
+  h0 = 1.0                       ! fixed initial depth (m)
+  f_user_routine = "wave_hump"   ! circular cosine-shaped initial water level
+/

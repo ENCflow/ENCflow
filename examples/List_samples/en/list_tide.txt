@@ -1,0 +1,57 @@
+!======================================================================
+! English mirror of examples/List_samples/list_tide.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+! Sample of tide settings (m_tide)
+!   Enabling: specify this file as fn_tide of &list_sysparam
+!   (no fn_tide = no tide; sea cells keep the conventional behavior
+!   z=0, h=0).
+!   The tide is forced as a water level on the cells inside the sea mask
+!   (fn_sw of list_geoinfo): s%z = tide level - hsea0, s%h = hsea0 (sea
+!   cells are not solved).
+!   ENC grid system only. Cannot be combined with f_rivermouth_drop.
+!   The authoritative specification is docs/developer.md Sec. 23
+!======================================================================
+&list_tide
+  ! Tide type
+  !   1: uniform fixed value (ti0)
+  !   2: uniform time series (tival: time (min), tide level (m). Linear
+  !      interpolation)
+  !   3: one distribution x factor time series (fn_timap (m) x tival:
+  !      time (min), factor)
+  !   4: list of distribution files (fn_timaplist. The time of frame i is
+  !      (i-1)*dt_timaplist. Two adjacent frames are linearly
+  !      interpolated; end values held outside the range)
+  titype = 2
+
+  ! Apparent water column thickness of sea cells (m). For flooding where
+  ! the sea is the supplying side (storm surge, rising tide), this
+  ! column covers the dryness judgment, the cell-boundary depth and the
+  ! friction, so several tens of dd or more is recommended (too small a
+  ! value underestimates the flooding discharge). dd or less is an error
+  hsea0 = 1.0
+
+  ! Tide update time interval (min). The phase is based on the absolute
+  ! step number (after a restart it updates at the same steps as an
+  ! uninterrupted run)
+  dt_tiupdate = 1
+
+  ! titype=1: uniform fixed tide level (m)
+  !ti0 = 0.5
+
+  ! titype=2, 3: time series (time (min), tide level (m) or factor)
+  tival(1:2,1) = 0,    0.0
+  tival(1:2,2) = 180,  0.8
+  tival(1:2,3) = 360,  0.0
+  tival(1:2,4) = 540, -0.8
+  tival(1:2,5) = 720,  0.0
+
+  ! titype=3: tide level distribution file (m)
+  !fn_timap = 'tide_amp.txt'
+
+  ! titype=4: list of tide distribution files (one file name per line)
+  ! and its time interval
+  !fn_timaplist = 'tide_maps.txt'
+  !dt_timaplist = 60        ! (min)
+  !dt_timaplist_c = '1h'    ! string form (h, m, s). Takes precedence if given
+/

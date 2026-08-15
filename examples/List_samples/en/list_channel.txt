@@ -1,0 +1,125 @@
+!======================================================================
+! English mirror of examples/List_samples/list_channel.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of channel condition settings &list_channel
+!
+!   Use this file by specifying, in the system parameters &list_sysparam,
+!     fn_channel = "list_channel.txt"
+!   (if fn_channel is not specified, the channel hydraulic model
+!   = levees (virtual walls) is completely inactive).
+!
+!   The parameters of the channel hydraulic structure model (levees,
+!   subgrid channel width) are collected here. The dividing line is:
+!     - quantities building the terrain and properties of cells
+!       = &list_geoinfo
+!       (fn_rw: channel mask, depth_rw / fn_depth_rw: bed incision,
+!        rn0_rw: channel roughness)
+!     - conveyance structure and hydraulic modes of edges = this file
+!   Specifying levees requires fn_rw (the channel mask) of &list_geoinfo.
+!
+!   Specify the levee height in exactly one of the following ways
+!   (specifying both is an error):
+!     fn_bank : levee height distribution file at channel cell positions
+!               (-900 or below = no levee)
+!     bank0   : a single fixed value applied to all channel cells
+!
+!======================================================================
+
+&list_channel
+  ! ---- Levees (virtual walls). Enabled by specifying fn_bank or bank0 ----
+  !fn_bank = "bank_height.txt"  ! levee height distribution file (effective on
+                                !   channel cells only. -900 or below = no
+                                !   levee. Exclusive with bank0)
+  bank0 = 1.0                   ! single fixed levee height (-900 or below =
+                                !   treated as unspecified)
+
+  f_bank_datum = 1              ! datum of the levee height
+                                !   0: river bed (z after incision)
+                                !   1: landside cell elevation (recommended
+                                !      default. Aggregated over the adjacent
+                                !      landside cells by f_bank_aggr)
+                                !   2: absolute elevation
+  f_bank_aggr = 0               ! crest aggregation method (f_bank_datum=1 only)
+                                !   0: mean (default; suppresses noise)
+                                !   1: minimum (faithful to the physics of
+                                !      overtopping onset)
+                                !   2: maximum (conservative for the levee
+                                !      function)
+  f_bank_mode = 0               ! hydraulic mode of the levee
+                                !   0: overtopping only (simple levee.
+                                !      Impermeable in both directions up to the
+                                !      crest; Honma weir overflow beyond it)
+                                !   1: sluice (check valve. Landside -> channel
+                                !      computed normally, channel -> landside
+                                !      impermeable up to the crest)
+                                !   2: forced drainage (below the crest the full
+                                !      landside depth drops as an overfall. For
+                                !      compatibility with past runs and
+                                !      extreme-scenario experiments; for real
+                                !      pumping stations use &list_struct_pump
+                                !      of fn_structure)
+  f_bank_opening = 1            ! opening correction with levees (default 1)
+                                !   Reassigns the passage-width share of
+                                !   diagonal openings blocked by walls to the
+                                !   channel-channel normal edges, correcting
+                                !   the underestimated conveyance of narrow
+                                !   channels (41.4% opening for a 1-cell-wide
+                                !   channel). 0 for the old behavior (for A/B
+                                !   comparison)
+
+  ! ---- Subgrid channel width. Enabled by specifying fn_width ----
+  !   Represents the conveyance and storage of rivers narrower than the
+  !   cell size (rectangular section; a channel cell has a single water
+  !   level, that of the in-channel water. Storage of the non-channel
+  !   part of the cell is not represented). If fn_bank / bank0 is not
+  !   given, a levee of "height 0, landside cell elevation datum" is
+  !   enabled automatically. Cells whose width is at least the cell size
+  !   are automatically treated the same as a conventional resolved
+  !   channel (incision + walls)
+  !fn_width = "channel_width.txt"  ! channel width distribution (m; effective on
+                                   !   channel cells only. 0 or below = no
+                                   !   width information = resolved)
+  f_channel_advection = 1       ! advection term on edges involving channel cells
+!  p_sect_m = 0.5                ! shape exponent m of the channel section
+                                 !   (sigma(h)=(h/D)^m; Sec. 26). 0=rectangular
+                                 !   =conventional (default), 0.5=parabola-like,
+                                 !   1=triangle-like. The transition depth D is
+                                 !   crest - bed on levee-enabled cells,
+                                 !   otherwise the incision depth
+                                 !   depth_rw/fn_depth_rw (with neither present,
+                                 !   p_sect_m>0 stops with an error). Improves
+                                 !   the reproduction of level and recession at
+                                 !   low to medium flows; for h>=D it reduces to
+                                 !   the conventional rectangular dynamics
+                                !   (1: normal (default), 0: drop it = a
+                                !    stabilization option under strong width
+                                !    heterogeneity)
+/
+
+!----------------------------------------------------------------------
+! Breach (group absent = no breach. Requires levees to be enabled)
+!   A site is a pair of an adjacent channel cell (ic,jc) and landside
+!   cell (il,jl); the effective crest of the virtual wall on that single
+!   boundary edge is varied as a time series:
+!     effective crest = landside ground elevation
+!                       + fraction x (crest height - landside ground elevation)
+!   The fraction is 0-1 (1 = crest height unchanged, 0 = breached down to
+!   the landside ground elevation). The series is pairs of (time min,
+!   fraction); linear interpolation in between, end values held outside.
+!   Even on a 1-cell-wide channel, left and right banks are distinguished
+!   by the landside cell. A breach spanning multiple cells is specified
+!   as multiple sites (breach width has the granularity of the edge
+!   opening width). The reference landside ground elevation is fixed at
+!   its value at the start of the run (does not follow erosion)
+!----------------------------------------------------------------------
+!&list_channel_breach
+!  br_cell(:,1) = 120, 45, 120, 44         ! site 1: ic, jc, il, jl
+!  br_series(:,1,1) = 0.0,  1.0            ! (time min, fraction 0-1)
+!  br_series(:,2,1) = 60.0, 1.0            !   no breach until 60 min
+!  br_series(:,3,1) = 70.0, 0.2            !   breach to 20% from 60 to 70 min
+!  br_series(:,4,1) = 90.0, 0.0            !   full breach down to the landside
+!                                          !     ground elevation at 90 min
+!  br_cell(:,2) = ...                      ! site 2 and later likewise
+!/

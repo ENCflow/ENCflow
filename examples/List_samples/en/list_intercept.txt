@@ -1,0 +1,81 @@
+!======================================================================
+! English mirror of examples/List_samples/list_intercept.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of rainfall interception settings &list_intercept /
+!   &list_intercept_fixed / &list_intercept_initloss
+!
+!   Use this file by specifying, in the system parameters &list_sysparam,
+!     fn_intercept = "list_intercept.txt"
+!   (if fn_intercept is not specified, the interception computation is
+!   completely inactive).
+!
+!   Write the common settings &list_intercept and the specific settings
+!   of the selected model in this same file. A model-specific group is
+!   read only by the selected model, so groups of unused models may
+!   remain and are ignored.
+!
+!   With interception applied, the rainfall intensity distribution
+!   (s%pre / output Pr) becomes the effective rainfall (the rainfall
+!   reaching the ground).
+!
+!======================================================================
+! Interception common settings
+!======================================================================
+&list_intercept
+  ! Choice of the interception model
+  !  0: none (fn_intercept can stay written; temporarily disabled)
+  !  1: fixed interception ratio model (uses &list_intercept_fixed)
+  !  2: initial loss model (uses &list_intercept_initloss)
+  f_icmodel = 1
+
+/
+
+
+!======================================================================
+! Fixed interception ratio model specific settings (f_icmodel = 1)
+!======================================================================
+!   The simplest model, intercepting a constant fraction of rainfall and
+!   giving the effective rainfall (1-alpha)P to the ground (I = alpha*P).
+!   Storage capacity, evaporation and rainfall intensity dependence are
+!   not represented.
+!   Give the interception ratio either as a uniform value or as a
+!   distribution file.
+!======================================================================
+&list_intercept_fixed
+  ! Uniform interception ratio. Must satisfy 0 < ic_alpha < 1
+  ! (guide: roughly 0.1-0.4 for forested land)
+  ic_alpha = 0.2
+
+  ! Interception ratio distribution file (relative path from dir_data;
+  ! format follows f_input_mode). If specified, ic_alpha is not used.
+  ! Values are 0 <= alpha < 1 per cell
+  ! (0 = no interception; use for unvegetated cells)
+  !fn_icalpha = "icalpha.txt"
+
+/
+
+
+!======================================================================
+! Initial loss model specific settings (f_icmodel = 2)
+!======================================================================
+!   An Initial Loss model that intercepts rainfall until the cumulative
+!   interception reaches the maximum storage (I = min(P, remaining
+!   capacity)) and passes it through afterward. Recovery of the storage
+!   by evaporation (drying back) is not represented.
+!   On restart the cumulative interception is saved/restored
+!   (save file: save/intercept_initloss.dat).
+!======================================================================
+&list_intercept_initloss
+  ! Uniform maximum storage (mm). Must be greater than 0
+  ! (guide: grassland 0.5-2 mm, broadleaf forest 1-3 mm, conifer forest
+  !  2-5 mm)
+  ic_smax_mm = 2.0
+
+  ! Maximum storage distribution file (mm) (relative path from dir_data;
+  ! format follows f_input_mode). If specified, ic_smax_mm is not used.
+  ! Values are 0 or more per cell (0 = no interception)
+  !fn_icsmax = "icsmax.txt"
+
+/

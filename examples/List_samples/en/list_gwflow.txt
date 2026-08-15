@@ -1,0 +1,176 @@
+!======================================================================
+! English mirror of examples/List_samples/list_gwflow.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of groundwater condition settings &list_gwflow and
+! model-specific settings
+!
+!   Use this file by specifying, in the system parameters &list_sysparam,
+!     fn_gwflow = "list_gwflow.txt"
+!   (if fn_gwflow is not specified, the groundwater computation is
+!   completely inactive).
+!
+!   Write the common settings &list_gwflow and the specific settings of
+!   the selected model (&list_gwflow_bucket / &list_gwflow_greenampt
+!   etc.) in this same file. A model-specific group is read only by the
+!   selected model, so groups of unused models may remain and are ignored
+!   (you can A/B compare just by switching the selector to 0).
+!
+!   Soil depth (sd) and specific yield (sy0) are configured on the
+!   &list_geoinfo side as part of the geographic information (same style
+!   as the roughness):
+!     sd0 = 1.0          ! fixed soil depth (m) (when f_sdtype=0)
+!     f_sdtype = 1       ! 0: fixed value sd0, 1: file fn_sd
+!     fn_sd = "sd.txt"   ! soil depth distribution file
+!     sy0 = 0.2          ! specific yield (= effective porosity n_e)
+!   Memory is allocated only when a model that needs the soil depth
+!   (Green-Ampt) is selected.
+!
+!======================================================================
+! Groundwater common settings
+!======================================================================
+&list_gwflow
+  ! Choice of the vertical model
+  !  0: none (fn_gwflow can stay written; temporarily disabled)
+  !  1: bucket model (uses &list_gwflow_bucket)
+  !  2: Green-Ampt model (uses &list_gwflow_greenampt. Requires the soil
+  !     depth sd and specific yield sy0 of &list_geoinfo)
+  f_gwvertical = 2
+
+  ! Choice of the lateral model
+  !  0: none (vertical infiltration only. No resources for lateral flow
+  !     are allocated at all)
+  !  1: nonlinear Boussinesq (uses &list_gwflow_lateral. Requires the
+  !     soil depth sd and specific yield sy0 of &list_geoinfo)
+  f_gwlateral = 1
+
+  ! Enabling the weathered bedrock layer (second groundwater layer)
+  !  0: none (no resources for layer 2 are allocated at all)
+  !  1: enabled (uses &list_gwflow_layer2. Cannot be combined with the
+  !     bucket vertical model)
+  !f_gwlayer2 = 1
+
+  ! Update time interval of the groundwater computation (s)
+  !  0 updates every step
+  !  A nonzero value must be at least the time step dt
+  !  (the model receives the effective time step dts = dt x thinning
+  !  factor)
+  dt_gwflow = 0
+
+/
+
+
+!======================================================================
+! Bucket model specific settings (f_gwvertical = 1)
+!======================================================================
+!   The simplest model: moves surface water into a per-cell subsurface
+!   storage (capacity gw_capacity) at a constant infiltration capacity
+!   gw_infil_mmh. No horizontal flow; vertical exchange only.
+!   The infiltration of each step is the minimum of "infiltration
+!   capacity x dts, surface depth, and remaining storage capacity".
+!   Cannot be combined with the lateral model (f_gwlateral=1) (that would
+!   define the capacity twice, so it stops with an error. If you need a
+!   constant infiltration capacity with the soil depth as the capacity,
+!   use Green-Ampt with gw_psif=0).
+!======================================================================
+&list_gwflow_bucket
+  ! Infiltration capacity (mm/h). Must be greater than 0
+  gw_infil_mmh = 10.0
+
+  ! Subsurface storage capacity (column-equivalent water depth) (m).
+  ! Must be greater than 0
+  gw_capacity = 0.5
+
+/
+
+
+!======================================================================
+! Green-Ampt model specific settings (f_gwvertical = 2)
+!======================================================================
+!   Moves surface water into the subsurface storage at the infiltration
+!   capacity of the Green-Ampt formula (piston approximation)
+!     f_v = K_sv * (1 + psi_f * n_e / F)   (F: cumulative infiltration depth)
+!   The per-cell storage capacity is soil depth x specific yield
+!   (sd, sy0 of &list_geoinfo). Saturated cells stop infiltrating and
+!   the excess is handled by the shallow water side as surface water.
+!======================================================================
+&list_gwflow_greenampt
+  ! Vertical saturated hydraulic conductivity (mm/h). Must be greater than 0
+  gw_ksv_mmh = 36.0
+
+  ! Capillary pressure head at the wetting front (m). 0 or more (0
+  ! degenerates to the constant infiltration capacity K_sv)
+  gw_psif = 0.1
+
+/
+
+!======================================================================
+! Nonlinear Boussinesq lateral flow specific settings (f_gwlateral = 1)
+!======================================================================
+!   Lateral Darcy flow of the saturated zone (2D, 8 neighbors; the same
+!   diagonal share as the ENC core). Driven by the gradient of the total
+!   head
+!     H = (ground elevation - soil depth) + saturated thickness
+!         [+ surface ponded depth (saturated cells only)];
+!   the excess of cells exceeding the saturated capacity is passed to
+!   the surface flow. The stability condition of the explicit scheme
+!     dt <= 0.5 * sy0 * dx*dy / (K_sh * max(soil depth) * sum_k l_k/dr_k)
+!   is checked at initialization; if exceeded, the upper bound is
+!   displayed and the run stops.
+!======================================================================
+&list_gwflow_lateral
+  ! Lateral saturated hydraulic conductivity (mm/h). Must be greater than 0
+  gw_ksh_mmh = 360.0
+
+  ! Regularization thickness for the dryness judgment and the suppression
+  ! of excessive outflow (m). Must be greater than 0 (default 1e-3)
+  gw_eps = 1.0e-3
+
+  ! Diagonal passage-width share [0,1] (default 2/(2+sqrt(2)) = the same
+  ! value as p_diagratio of the ENC core. Normally no need to change.
+  ! 0 is equivalent to 4 neighbors)
+  !gw_diagratio = 0.5857864
+
+/
+
+
+!======================================================================
+! Weathered bedrock layer specific settings (f_gwlayer2 = 1)
+!======================================================================
+!   Inserts a second layer of thickness gw2_depth and specific yield
+!   gw2_sy directly under the soil layer (capacity = gw2_depth x gw2_sy).
+!   Water percolates down from layer 1 at the constant infiltration
+!   capacity gw2_infil_mmh and, if gw2_ksh_mmh > 0, moves within layer 2
+!   as lateral Darcy flow
+!   (head = (ground elevation - soil depth - gw2_depth) + saturated
+!   thickness. No coupling to surface ponding).
+!   Saturation excess of layer 2 returns to layer 1, and the excess of
+!   layer 1 exfiltrates to the surface. A layer for providing the
+!   slowly-receding component (baseflow) and long residence times.
+!   Evapotranspiration does not touch layer 2. Cannot be combined with
+!   the bucket vertical model (f_gwvertical=1).
+!   The Hg2 field is output when f_out_hg=1. Restart uses the private
+!   file gwflow_layer2.dat (f_gwlayer2 must have been active at save
+!   time).
+!======================================================================
+&list_gwflow_layer2
+  ! Layer thickness (m). Must be greater than 0
+  gw2_depth = 2.0
+
+  ! Specific yield (effective porosity). (0,1]
+  gw2_sy = 0.05
+
+  ! Infiltration capacity from layer 1 to layer 2 (mm/h). Must be greater than 0
+  gw2_infil_mmh = 5.0
+
+  ! Lateral saturated hydraulic conductivity of layer 2 (mm/h). 0 for no
+  ! lateral flow (acts as a capacity buffer)
+  gw2_ksh_mmh = 360.0
+
+  ! Initial saturation [0,1] (default 0 = empty. In event runs this is
+  ! effectively the calibration parameter that sets the baseflow. For
+  ! long-term runs, spin-up -> save -> restore is recommended)
+  gw2_sat0 = 0.0
+
+/

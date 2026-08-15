@@ -1,0 +1,31 @@
+!======================================================================
+! English mirror of examples/List_samples/list_evap.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+! Evapotranspiration settings sample (&list_evap; developer.md Sec. 27)
+!   Enabled by fn_evap = "this file" or "-" in the main parameters.
+!   f_evmodel = 0 temporarily disables it while keeping the file.
+!   The calendar uses date0_c of &list_sysparam; the air temperature
+!   input uses &list_meteo (fn_meteo) (Sec. 29. Modes 2-4 require
+!   date0_c, and modes 3,4 additionally require fn_meteo)
+!======================================================================
+&list_evap
+  ! ---- Method to determine potential evapotranspiration (PET)
+  !      (exclusive choice) ----
+  !   1: constant rate (evap0)
+  !   2: monthly climatology (evap_monthly)
+  !   3: Hamon formula (air temperature + possible sunshine duration)
+  !   4: Thornthwaite formula (temp_normal required in addition to 3)
+  f_evmodel = 3
+
+  !evap0 = 3.0                  ! mode 1: PET (mm/day)
+  !evap_monthly = 0.5, 0.7, 1.2, 2.0, 2.8, 3.2, 3.6, 3.8, 2.8, 1.8, 1.0, 0.6
+                                ! mode 2: monthly PET (mm/day)
+  evap_kc = 1.0                 ! conversion factor (pan coefficient / for
+                                !   calibration; common to all modes)
+  lat = 36.0                    ! representative latitude (deg; modes 3,4)
+
+  !temp_normal = 5.4, 6.1, 9.4, 14.3, 18.8, 21.9, 25.7, 26.9, 23.3, 18.0, 12.5, 7.7
+                                ! mode 4: climatological normals of monthly mean
+                                !   air temperature (degC; for the heat index I)
+/

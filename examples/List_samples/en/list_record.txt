@@ -1,0 +1,67 @@
+!======================================================================
+! English mirror of examples/List_samples/list_record.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of measurement settings &list_record (list of all parameters)
+!
+!   Use this file by specifying, in the system parameters &list_sysparam,
+!     fn_record = "list_record.txt"
+!   (if fn_record is not specified, no measurement is made).
+!   The output interval is dt_recrd of &list_sysparam (the time window
+!   is st_recrd/et_recrd).
+!
+!   Output: result/probes/probe0001.csv (one file per point),
+!           result/fluxes/flux0001.csv (one file per transect),
+!           result/summary.csv (summary of all measurements)
+!
+!   Cell numbers are 1-based (the westernmost column and the northernmost
+!   row are 1). GIS software such as QGIS counts rasters from 0, so add
+!   +1 to both the row and column numbers picked in GIS.
+!   Real coordinates (pbxytype/flxytype = 1) have x positive to the east
+!   and y positive to the north; with georeferencing (from hdr/GeoTIFF)
+!   they are absolute coordinates, otherwise they are interpreted as
+!   local coordinates (m) with the origin at the southwest corner of the
+!   domain (the resolved cell numbers are displayed at initialization.
+!   Avoid coordinates exactly on cell boundaries; point at cell
+!   interiors. Sec. 36).
+!   Explanations in docs/users_guide/record.md.
+!
+!======================================================================
+&list_record
+
+  ! ---- Probes (point time series: z, h, u, v, |V|, q, hg, hs, sd ...) ----
+  ! How the coordinates are specified (common to all probes)
+  !  0: by cell numbers (ix, iy) (default)
+  !  1: by real coordinates (x, y) (interpretation rules in the header above)
+  pbxytype = 0
+  pbxy(:,1) = 150, 150           ! point 1 (ix, iy)
+  pbxy(:,2) = 200, 120           ! point 2 (continue as many as needed)
+
+  ! ---- Flux transects (time series of the discharge crossing a line) ----
+  ! How the coordinates are specified (common to all transects)
+  !  0: by cell numbers (default). Measured on the DDA staircase surface
+  !     connecting the centers of the two end cells. The two ends must
+  !     not be the same cell (the orientation cannot be determined, so
+  !     that is an error; for measurement within one cell use real
+  !     coordinates)
+  !  1: by real coordinates. Accumulated over the in-cell line segment of
+  !     each cell the segment grazes. Short transects not spanning
+  !     multiple cells can also be measured
+  flxytype = 0
+
+  ! Start and end points of each transect. Sign: flow crossing toward the
+  ! right-hand side when going from the start to the end is positive
+  ! = in rivers, taking the right bank as the start and the left bank as
+  ! the end makes the downstream direction positive
+  flxy(:,1) = 100, 50, 100, 60   ! transect 1 (right-bank ix, right-bank iy,
+                                 !   left-bank ix, left-bank iy)
+  !flxy(:,2) = 40.0, 55.0, 42.0, 56.5   ! example in real coordinates (flxytype=1)
+
+  ! To specify the transects in a file (one transect per line, comma or
+  ! space separated "right-bank x, right-bank y, left-bank x, left-bank y";
+  ! relative path from dir_data)
+  !flxyfile = 1
+  !fn_flxy = "transects.csv"
+
+/

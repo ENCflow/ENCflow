@@ -1,0 +1,254 @@
+!======================================================================
+! English mirror of examples/List_samples/list_structure.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of internal hydraulic structure settings
+!   &list_struct_pump      : drainage pumps
+!   &list_struct_culvert   : culverts (sluice pipes and sluice gates are
+!                            represented with the gate extension)
+!   &list_struct_diversion : diversions (out-of-catchment diversion /
+!                            intake weirs)
+!
+!   Use this file by specifying, in the system parameters &list_sysparam,
+!     fn_structure = "list_structure.txt"
+!   (if fn_structure is not specified, internal hydraulic structures are
+!   completely inactive).
+!
+!   The internal hydraulic structure family shares a common skeleton:
+!     two cell sets (intake side -> outlet side or out of the domain)
+!     + a hydraulic law Q (a pure function of the reference value)
+!     + mass-conservative transfer
+!   Write the groups of each type in this same file. If a group itself
+!   is not written, that type is disabled (absence is normal).
+!
+!   Cell coordinates (i, j) are 1-based (the westernmost column and the
+!   northernmost row are 1). GIS software such as QGIS counts rasters
+!   from 0, so add +1 to both the row and column numbers picked in GIS.
+!
+!   Note: drainage pumps were moved from &list_bound_pump of fn_boundary
+!   to &list_struct_pump of this file (2026-08-07; parameter names
+!   unchanged). An &list_bound_pump written at the old location stops the
+!   program with migration guidance when detected.
+!
+!======================================================================
+! Drainage pumps (group absent = no pumps)
+!   Forced transfer (mechanical drainage) from an intake cell set to an
+!   outlet cell set. Intake and outlet need not be adjacent; the distance
+!   is unlimited. Omitting the outlet drains out of the domain (pumping
+!   to sewers or another catchment = removal from the system). The
+!   transfer is mass conservative, and a limit to the water actually
+!   present on the intake side applies every step (the travel delay of
+!   the pumping is not represented).
+!   The operating rule is exactly one of:
+!     pump_q0(n)     : constant discharge at all times (m3/s)
+!     pump_rule(:,k,n): a reference level-discharge polyline (reference
+!                       value m, discharge m3/s). Linear interpolation;
+!                       end values outside the range. A simple threshold
+!                       ON/OFF is expressed by a steep ramp (two close
+!                       points), and staged operation (adding pump units)
+!                       by a staircase polyline. Being a pure function of
+!                       the current level, there is no history state
+!                       (restart unchanged). Start/stop hysteresis is not
+!                       represented
+!   The reference is f_pump_ref(n) = 0: water level eta=z+h (m) of the
+!                         representative (first) intake cell
+!                         1: depth h (m) of the same cell
+!   Cell sets can also be given as files (from dir_data, each line "i j"):
+!     fn_pump_in_cell(n) / fn_pump_out_cell(n)
+!   Pond intake: when an intake cell has rscap > 0 (a pond), water is
+!   drawn from the pond storage (hrs) instead of the field water surface
+!   (forebay drainage). In that case the depth reference (f_pump_ref=1)
+!   refers to the pond depth hrs. The water-level reference (=0) cannot
+!   be used at a pond representative cell (stops with an error)
+!   Note: f_bank_mode=2 (forced drainage) of the levee model (fn_channel)
+!   is for compatibility with past runs and extreme-scenario experiments;
+!   for real pumping stations use this family
+!======================================================================
+!&list_struct_pump
+!  ! Pump 1: interior water to the main river; starts at forebay depth
+!  ! 0.5 m and reaches the rating at 1.0 m
+!  pump_in_cell(:,1,1)  = 120, 45        ! intake cell (multiple lines for a set)
+!  pump_out_cell(:,1,1) = 95, 12         ! outlet cell
+!  f_pump_ref(1) = 1                     ! reference = depth h of the
+!                                        !   representative intake cell
+!  pump_rule(:,1,1) = 0.5, 0.0           ! (depth m, discharge m3/s)
+!  pump_rule(:,2,1) = 1.0, 5.0           !   ramp over 0.5-1.0 m, 5 m3/s beyond
+!  ! Pump 2: constant 2 m3/s at all times, out of the domain (sewer)
+!  pump_in_cell(:,1,2) = 200, 80
+!  pump_q0(2) = 2.0
+!/
+
+!======================================================================
+! Culverts (group absent = no culverts)
+!   A pipe of rectangular section B x D connecting an upstream cell set
+!   and a downstream cell set (both mandatory). Represents underdrains,
+!   sluice pipes and sluice gates crossing embankments, roads and levees.
+!   **Bidirectional**: water flows from the higher to the lower level,
+!   and the flow reverses automatically if the levels reverse.
+!   Gates (sluice pipes / sluice gates):
+!     culv_flap(n) = 1     : flap gate (an unpowered check valve that
+!                            blocks reverse flow out -> in)
+!     culv_gate_rule(:,k,n): gate opening polyline (reference water level
+!                            eta m, opening 0-1). Linear interpolation;
+!                            end values outside the range. Unspecified =
+!                            always fully open. The opening is a linear
+!                            multiplier on the discharge (the nonlinearity
+!                            of the area is approximated)
+!     culv_gate_ref(n)     : reference cell of the opening rule
+!                            (0: in-side representative, 1: out-side
+!                            representative = river side. Default 1)
+!   Discharge law (3 regimes; Sec. 22):
+!     no flow      : upstream depth zero or below, or upstream level at
+!                    or below the downstream invert elevation
+!     free surface : Honma formula (width B; the same family as levee
+!                    overtopping. Free/submerged switch at downstream
+!                    depth ratio 2/3)
+!     full pipe    : orifice formula
+!                    Q = BD*sqrt(2g*deta/(1+ce+2g*n^2*L/R^(4/3)))
+!                    (continuously connected by Q = min(weir, pipe))
+!   The transfer per step is capped by "the volume that fills half the
+!   representative level difference" (prevents back-and-forth oscillation
+!   at coarse dt; Sec. 22).
+!   Parameters per culvert (for each number n):
+!     culv_in_cell / culv_out_cell : upstream and downstream cells (sets
+!                                    allowed; file specification is
+!                                    fn_culv_*_cell)
+!     culv_width(n) / culv_height(n) : section B x D (m). Mandatory
+!     culv_zin(n) / culv_zout(n)     : upstream and downstream invert
+!                                      elevations (m). Mandatory
+!     culv_length(n)  : pipe length L (m). Default 0 (no friction loss)
+!     culv_manning(n) : in-pipe roughness n. Default 0.02
+!     culv_ce(n)      : entrance loss coefficient. Default 0.5
+!   Constraints: cannot connect to pond (rscap>0) cells. The downstream
+!   side cannot be omitted (out of the domain) either (for out-of-domain
+!   drainage use the pump pump_q0). The transfer is clear water (carries
+!   no sediment). Flux transects (record) do not measure culvert
+!   discharge.
+!   Note (scale requirement): a configuration whose conveyance reaches
+!   the scale of cell area x depth (a section too large for the cell
+!   size) makes the point-source forcing on the receiving side exceed
+!   the stability limit of the shallow water system and diverge
+!   (Sec. 22). Use a scale realistic for the cell size and dt
+!======================================================================
+!&list_struct_culvert
+!  ! Culvert 1: a 2m x 2m box culvert crossing a road embankment
+!  culv_in_cell(:,1,1)  = 150, 60        ! upstream cell
+!  culv_out_cell(:,1,1) = 152, 60        ! downstream cell
+!  culv_width(1)  = 2.0                  ! section width B (m)
+!  culv_height(1) = 2.0                  ! section height D (m)
+!  culv_zin(1)  = 12.50                  ! upstream invert elevation (m)
+!  culv_zout(1) = 12.30                  ! downstream invert elevation (m)
+!  culv_length(1) = 25.0                 ! pipe length (m)
+!  ! Culvert 2: a sluice gate (landside = in side -> river = out side).
+!  ! A flap prevents reverse flow and, in addition, an operated gate
+!  ! closes at river levels 8.0-8.5 m
+!  culv_in_cell(:,1,2)  = 120, 45        ! landside cell
+!  culv_out_cell(:,1,2) = 118, 45        ! river-side cell
+!  culv_width(2)  = 1.5
+!  culv_height(2) = 1.5
+!  culv_zin(2)  = 6.20
+!  culv_zout(2) = 6.00
+!  culv_length(2) = 30.0
+!  culv_flap(2) = 1                      ! check valve against reverse flow
+!  culv_gate_ref(2) = 1                  ! reference = water level eta of the
+!                                        !   river-side representative cell
+!  culv_gate_rule(:,1,2) = 8.0, 1.0      ! (water level m, opening)
+!  culv_gate_rule(:,2,2) = 8.5, 0.0      !   closing ramp over 8.0-8.5 m
+!/
+
+!======================================================================
+! Diversions (group absent = no diversions)
+!   One-way, passive withdrawal (intake weir / diversion channel) from an
+!   intake cell set to out of the domain (out-of-catchment diversion
+!   = the main use) or to a destination cell set. The rule is exactly
+!   one of:
+!     div_q0(n)      : constant discharge at all times (m3/s)
+!     div_rule(:,k,n): a rating polyline of the water level eta of the
+!                      representative (first) intake cell vs discharge
+!                      (water level eta m, discharge m3/s). Linear
+!                      interpolation; end values outside the range
+!   Difference from pumps (passivity): when a destination is specified,
+!   the diversion stops automatically while the water level of the
+!   destination representative cell is at or above the intake side
+!   (gravity cannot climb). With the out-of-domain specification
+!   (div_out_cell omitted) this guard does not apply.
+!   The reference is the water level eta only. Pond (rscap>0) cells are
+!   not allowed (substitute a pump).
+!   Cell sets can also be given as files: fn_div_in_cell(n) / fn_div_out_cell(n)
+!   The limit to the water actually present on the intake side is shared
+!   with the other structures
+!======================================================================
+!&list_struct_diversion
+!  ! Diversion 1: diversion out of the catchment by an intake weir rating
+!  ! (withdrawal starts at water level 10.2 m)
+!  div_in_cell(:,1,1) = 80, 30           ! intake cell (just upstream of the weir)
+!  div_rule(:,1,1) = 10.2, 0.0           ! (water level eta m, discharge m3/s)
+!  div_rule(:,2,1) = 10.8, 20.0          !   ramp over 10.2-10.8 m, 20 m3/s beyond
+!  ! Diversion 2: constant diversion to an irrigation canal (with a
+!  ! destination = stops automatically when downstream is higher)
+!  div_in_cell(:,1,2)  = 80, 30
+!  div_out_cell(:,1,2) = 95, 60
+!  div_q0(2) = 3.0
+!/
+
+!======================================================================
+! Dams (group absent = no dams)
+!   The capture band (a cell set crossing just upstream of the dam body;
+!   specify it with generous margin in wetted width so that it catches
+!   all water from upstream) absorbs and stores all arriving water every
+!   step (the storage state is shared with s%hrs = save/restore is
+!   complete with the existing mechanism), and releases to the release
+!   cell set (the channel just downstream of the dam body) according to
+!   the operating rule. The impounded surface (the surface of the dam
+!   lake) is not solved (a bucket model).
+!   The HV curve dam_hv is a polyline of (water level m, storage m3)
+!   (at least 2 points = the lowest level and the surcharge; more points
+!   allowed, linear interpolation).
+!   Operation mode f_dam_mode:
+!     1: constant release dam_q0 (m3/s)
+!     2: constant-rate cut dam_rate (release ratio 0-1; releases the
+!        inflow of that step x r)
+!     3: natural regulation (a level-release rating). Specify one of the
+!        following (in order of precedence):
+!        (a) dam_hq_rule (polyline of water level m, release m3/s)
+!        (b) the orifice dimensions dam_ori_width/height/zbase
+!            (+ optional ce)
+!        (c) dam_qmax (design maximum release = at surcharge; available
+!            in dam yearbooks)
+!            -> automatically builds the square root law
+!            Q(H)=Qmax*sqrt((H-invert)/(Hsur-invert))
+!            (if the invert elevation dam_zbase is omitted = the lowest
+!            level)
+!   Emergency release (modes 1,2): from dam_tadashigaki (start level m;
+!   if omitted = lowest + 0.9 x (surcharge - lowest)) up to the
+!   surcharge, the release is ramped up toward the inflow. The excess
+!   above the surcharge is forced spill (automatic).
+!   Initial level dam_h_init (if omitted = the lowest level = empty. For
+!   multipurpose dams specify the restricted level explicitly). Drawdown
+!   floor = the storage at the lowest level (dead storage).
+!   Impounded area dam_area (m2. An option when evapotranspiration
+!   &list_evap is active. Sec. 27. If given, open-water evaporation is
+!   evaluated as E x this area and the individual evaporation of the
+!   capture band cells is stopped. If omitted, the areas of the capture
+!   band cells are used = same as ponds).
+!   At every record time, (t, H, V, Qin, Qout, Qspill) is written to
+!   result/dams/dam0001.csv (Qin is the direct accumulation of the
+!   capture band absorption = exact).
+!   Constraints: neither capture band nor release cells can be combined
+!   with ponds (rscap>0) or channel-width cells. Absorption of direct
+!   rainfall and injection on the capture band lags by one step
+!======================================================================
+!&list_struct_dam
+!  ! Dam 1: a flood control dam with a constant 70% cut (release ratio 0.3)
+!  dam_in_cell(:,1,1) = 120, 44          ! capture band (a column crossing the
+!                                        !   dam lake)
+!  dam_in_cell(:,2,1) = 120, 45
+!  dam_in_cell(:,3,1) = 120, 46
+!  dam_out_cell(:,1,1) = 123, 45         ! release cell (the channel just
+!                                        !   downstream of the dam body)
+!  dam_hv(:,1,1) = 320.0, 0.0            ! lowest level and its storage
+!  dam_hv(:,2,1) = 355.0, 1.5e7          ! surcharge level and total storage
+!  f_dam_mode(1) = 2
+!  dam_rate(1) = 0.3
+!/

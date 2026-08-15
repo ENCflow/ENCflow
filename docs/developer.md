@@ -242,6 +242,10 @@ docs/comparison.md を参照。
 | 但し書き操作 | emergency release | | 湿性沈着 | wet deposition |
 | 破堤 | breach | | 原単位 | unit load |
 | 数値発散 | solution diverged | | 収支誤差 | imbalance(error は使わない) |
+| 樋門・樋管 | sluice gate / sluice pipe | | 限界水深(dd) | threshold depth |
+| 湧き出し/吸い込み | injection / extraction | | 仮想水深(dv) | virtual depth |
+| 段落ち(自由越流) | free overfall | | 静振 | seiching |
+| 防波堤 | breakwater | | 但し書き操作 | emergency release |
 - 領域分割後の集約対象(判定・出力の直前に allreduce/gather が要るもの):
   **ierror(swflow の発散検出はランク局所値になる)、s%cnmax、
   s%hmean(二段総和の行部分和)、s%sp の各成分(表示区間内最大値)**。

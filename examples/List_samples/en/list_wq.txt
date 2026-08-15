@@ -1,0 +1,94 @@
+!======================================================================
+! English mirror of examples/List_samples/list_wq.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+! Water quality (load runoff) settings sample (&list_wq; developer.md Sec. 30)
+!   Enabled by fn_wq = "this file" or "-" in the main parameters.
+!   Conservative transport of a single substance + sources. Outputs: the
+!   concentration field C (mg/L), the load columns of probes/transects,
+!   and result/wq.csv (the mass ledger).
+!======================================================================
+&list_wq
+  f_wq = 1                          ! 0 temporarily disables while keeping the file
+  wq_c0 = 0.0                       ! initial concentration (mg/L; uniform)
+  f_wq_infil = 1                    ! substance transport on infiltration
+                                    !   (1: carried with the concentration into
+                                    !   the subsurface pool = for dissolved
+                                    !   forms (default), 0: remains on the
+                                    !   surface = for particulate forms)
+
+  ! ---- Point sources (cell set + load g/s. The group total is divided
+  !      equally among the cells) ----
+  !   Cells are inline (wq_pt_cell) or a file (fn_wq_pt_cell); the load
+  !   is constant (wq_pt_load) or a time series (wq_pt_series), mutually
+  !   exclusive
+  wq_pt_cell(:,1,1) = 120, 45       ! cell 1 of group 1 (i, j)
+  wq_pt_load(1) = 50.0              ! constant load (g/s)
+  !wq_pt_series(:,1,2) = 0.0, 200.0 ! group 2: time series (days elapsed from
+                                    !   t=0, g/s)
+  !wq_pt_series(:,2,2) = 1.0, 100.0
+  !fn_wq_pt_cell(2) = "stp_cells.txt"
+
+  ! ---- Diffuse sources (cell set + unit load kg/ha/day. The input is
+  !      multiplied by the cell area) ----
+  !wq_ar_cell(:,1,1) = 100, 40
+  !wq_ar_load(1) = 1.5              ! unit load (kg/ha/day)
+  !fn_wq_ar_cell(1) = "farm_cells.txt"
+
+  ! ---- Distributed diffuse source (all active cells. A unit load
+  !      distribution built from land use etc.) ----
+  !   A per-cell matrix of kg/ha/day (same orientation as the terrain)
+  !   x a factor. Constant (no time series).
+  !   Superposed with the point and diffuse sources, not exclusive
+  !   (background load + specific sources)
+  !fn_wq_map = "loadmap.txt"
+  !wq_map_factor = 1.0              ! factor on the distribution (for calibration)
+  !f_wq_map = 0                     ! interpretation of the distribution
+                                    !   (0: put directly into surface water
+                                    !   (default), 1: buildup rate into the
+                                    !   surface accumulation pool)
+
+  ! ---- Surface accumulation pool + washoff (buildup-washoff; a
+  !      mechanism for nonlinear L-Q) ----
+  !   Buildup dB/dt = r*(1 - B/Bmax) (linear if wq_bd_max is omitted).
+  !   The rate is wq_bd_rate (uniform) or fn_wq_map + f_wq_map=1
+  !   (distributed), mutually exclusive.
+  !   Washoff rate lambda = kr*P + kf*max(tau/tauc - 1, 0)
+  !     kr: rainsplash term (1/m). Compatible with the SWMM exponential
+  !         washoff coefficient c1 [1/mm] x 1000
+  !         (e.g. the equivalent of c1=0.05/mm -> kr=50)
+  !     kf: shear term (1/s). tau = rho*g*n^2*vv^2 / h^(1/3) (N/m2). Also
+  !         represents resuspension of bed deposits (acts on channel
+  !         cells too)
+  !   The pool field B (kg/ha) is output at dt_file intervals
+  !wq_bd_rate = 1.5                 ! uniform buildup rate (kg/ha/day)
+  !wq_bd_max = 50.0                 ! buildup limit (kg/ha. Omitted = linear and
+                                    !   unbounded)
+  !wq_bd0 = 100.0                   ! uniform initial pool (kg/ha)
+  !fn_wq_bd0 = "depomap.txt"        ! initial pool distribution (kg/ha; exclusive
+                                    !   with wq_bd0. Radionuclide deposition
+                                    !   maps go here)
+  !wq_wash_kr = 50.0                ! rainsplash washoff coefficient (1/m)
+  !wq_wash_kf = 1.0e-3              ! shear washoff coefficient (1/s)
+  !wq_wash_tauc = 0.05              ! critical shear stress (N/m2. Required
+                                    !   for kf)
+  !f_wq_settle = 0                  ! destination of settling (0: lost to the
+                                    !   bed (default), 1: to the accumulation
+                                    !   pool = a resuspension cycle)
+
+  ! ---- Rainfall concentration (wet deposition. Input over the whole
+  !      domain as ground-reaching rainfall x concentration) ----
+  !   Constant (wq_rain_conc) or a time series (wq_rain_series),
+  !   mutually exclusive. Also superposed with the other sources
+  !wq_rain_conc = 2.0               ! constant concentration (mg/L)
+  !wq_rain_series(:,1) = 0.0, 5.0   ! time series (days elapsed from t=0, mg/L)
+  !wq_rain_series(:,2) = 1.0, 1.0
+
+  ! ---- First-order decay and settling (W2. Omitted = a conservative
+  !      substance) ----
+  !wq_thalf = 4500.0               ! half life (day. E.g. Cs-137 is about
+                                   !   11000 day)
+  !wq_k20 = 0.1                    ! first-order decay coefficient (1/day;
+                                   !   exclusive with wq_thalf)
+  !wq_vs = 0.5                     ! settling velocity (m/day. Loss to the bed)
+/

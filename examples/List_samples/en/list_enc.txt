@@ -1,0 +1,64 @@
+!======================================================================
+! English mirror of examples/List_samples/list_enc.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of ENC computation settings &list_enc (list of all parameters)
+!
+!   Use this file by specifying, in the system parameters &list_sysparam,
+!     fn_enc = "list_enc.txt"
+!   (even without fn_enc, the core shallow water computation runs with
+!   the defaults. This group is for tuning accuracy and cost).
+!
+!   Everything below states the default values explicitly. In ordinary
+!   runs, about the only one worth considering changing is the adaptive
+!   Runge-Kutta threshold p_adprunge_thresh
+!   (see tutorial Step 2). Many of these switches change the results, so
+!   comparison with the regression-test references is possible only at
+!   the default values.
+!   Explanations in docs/users_guide/swflow.md.
+!
+!======================================================================
+&list_enc
+
+  ! ---- Time integration (adaptive Runge-Kutta) ----
+  !f_adaptive_runge = 1     ! recompute with 4-stage RK only the cells with
+                            !   large velocity variation
+  !p_adprunge_thresh = 1.5  ! velocity variation ratio threshold triggering
+                            !   recomputation (1.1 and up; smaller = more
+                            !   accurate and more costly)
+
+  ! ---- Fluxes and stabilization ----
+  !f_gravity_correction = 1 ! gravity correction (corrects the slope-direction
+                            !   gravity error on steep terrain)
+  !f_exflux_reduction = 1   ! suppression of excessive outgoing fluxes (prevents
+                            !   negative depths at dry-bed fronts; on is
+                            !   recommended for runs with dry beds)
+  !f_hcap_upwind = 1        ! limit the cell-boundary depth by the upstream depth
+  !f_friction_fastmath = 0  ! faster friction term computation (0: exact,
+                            !   1-5: table approximation. Larger numbers are
+                            !   coarser and faster)
+  !p_diagratio = 0.5857864376  ! diagonal share of the 8-direction fluxes
+                            !   (= 2/(2+sqrt(2)); normally no need to change)
+
+  ! ---- Advection and diffusion terms ----
+  !f_advection_tvd = 0      ! use a TVD scheme for the advection term
+  !p_adv_upwind_index = 0.5 ! upwinding index of the advection term (0-1.
+                            !   0: central difference, 1: first-order upwind)
+  !f_diffusion_term = 0     ! diffusion term (0: none, 1: constant viscosity,
+                            !   2: zero-equation model nu = nu0 + alpha*(u*)*h).
+                            !   For a first try, 2 is handy (no coefficient to
+                            !   specify, and a physically scaled nu acts)
+  !p_diffusion_nu = 0.0     ! kinematic viscosity nu0 (m2/s) (background
+                            !   viscosity in model 2). Model 1 requires an
+                            !   explicit positive value (unspecified stops
+                            !   with an error)
+  !p_diffusion_alpha = 0.0683333  ! coefficient alpha of the zero-equation model
+                            !   (default 0.41/6 = Elder type)
+
+  ! ---- Miscellaneous ----
+  !f_rivermouth_drop = 0    ! overfall from the river mouth to the sea (old
+                            !   method; cannot be combined with fn_tide. Using
+                            !   tide + boundary conditions is now recommended)
+
+/

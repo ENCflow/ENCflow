@@ -1,0 +1,114 @@
+!======================================================================
+! English mirror of examples/List_samples/list_geomorph.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of sediment and landform evolution settings &list_geomorph
+! (list of all parameters)
+!
+!   Use this file by specifying, in the system parameters &list_sysparam,
+!     fn_geomorph = "list_geomorph.txt"
+!   (if fn_geomorph is not specified, landform evolution is completely
+!   inactive).
+!
+!   The processes are superposed, not an exclusive choice. Only the
+!   processes set to f_XXX = 1 are applied in order; processes at 0
+!   allocate no resources.
+!   The time-evolving terrain can be output with f_out_z = 1 of
+!   &list_sysparam.
+!   Verified examples: test/creep, fluvial, suspend, wash, debris, slide,
+!   sedinflow. Explanations in docs/users_guide/geomorph.md.
+!
+!======================================================================
+&list_geomorph
+
+  ! ---- Execution control (common to all processes) ----
+  !dt_geomorph = 0.0        ! update interval of landform evolution (s).
+                            !   0: every step (default)
+  !morfac = 1.0             ! morphological acceleration factor (for equilibrium
+                            !   landforms and long-term studies. Keep 1 in event
+                            !   runs. f_debris requires morfac = 1)
+
+  ! ---- Hillslope creep (linear diffusion) ----
+  f_creep = 1
+  creep_d = 1.0e-6          ! creep diffusion coefficient (m2/s)
+
+  ! ---- Bedload (Exner. Bed erosion and deposition) ----
+  !f_fluvial = 1
+  !f_qbform = 1             ! bedload formula (1: Ashida-Michiue, 2: MPM)
+  !fluv_d50 = 0.001         ! representative grain size (m). Mandatory
+  !fluv_tausc = 0.05        ! critical dimensionless shear stress tau*c
+  !fluv_porosity = 0.4      ! bed porosity
+  !fluv_sgrav = 1.65        ! submerged specific gravity of sediment grains
+  !fluv_dzmax = 0.05        ! bed change limit per edge per update (m)
+                            !   (stabilization)
+  !fluv_bcfeed = 0          ! sediment feed at open boundaries (0: inflow feeds
+                            !   nothing, 1: equilibrium feed. Outflow is always
+                            !   at transport capacity)
+  !fluv_diagratio = 0.5857864376  ! diagonal share (normally no need to change)
+
+  ! ---- Suspended sediment (advection + entrainment and settling) ----
+  !f_suspend = 1
+  !f_esform = 1             ! equilibrium concentration formula (1: linear in
+                            !   excess shear stress (simple), 2: Itakura-Kishi)
+  !susp_d50 = 0.0001        ! representative grain size (m). Mandatory
+  !susp_wf = 0.0            ! settling velocity (m/s). 0: derived from d50 by
+                            !   the Rubey formula
+  !susp_tausc = 0.05        ! critical dimensionless shear stress for suspension
+  !susp_beta = 1.0          ! near-bed concentration factor for settling
+                            !   (c_b = beta*C)
+  !susp_esa = 0.001         ! equilibrium concentration coefficient (mandatory
+                            !   for f_esform=1. A calibration parameter)
+
+  ! ---- Hillslope erosion (rainsplash + sheetwash. Requires f_suspend) ----
+  !f_wash = 1
+  !wash_kr = 0.001          ! rainsplash erosion coefficient (dimensionless.
+                            !   E = kr x rainfall intensity)
+  !wash_kf = 1.0e-6         ! sheetwash erosion coefficient (m/s)
+  !wash_tausc = 0.05        ! critical dimensionless shear stress of sheetwash
+
+  ! ---- Debris flow (Takahashi-type E-D. Exclusive with f_suspend;
+  !      morfac=1 required) ----
+  !f_debris = 1
+  !db_phi = 35.0            ! internal friction angle of the sediment (deg).
+                            !   Mandatory
+  !db_delte = 0.0007        ! erosion rate coefficient delta_e (default is a
+                            !   common literature value)
+  !db_deltd = 0.05          ! deposition rate coefficient delta_d
+  !f_dbres = 1              ! resistance law (0: Manning only,
+                            !   1: Coulomb + Manning combined = recommended)
+  !f_dbstop = 0             ! stopping condition (0: none, 1: low-speed
+                            !   solidification)
+  !db_vstop = 0.05          ! velocity threshold of the stopping judgment (m/s)
+                            !   (f_dbstop=1)
+  !db_wstop = 0.01          ! bed conversion rate of low-speed solidification
+                            !   (m/s) (mandatory for f_dbstop=1)
+
+  ! Triggering method 1: instantaneous fluidization (give a distribution
+  ! of collapse depth)
+  !fn_dbinit = "collapse_depth.txt"  ! collapse depth distribution (m).
+                            !   Specifying it enables this trigger
+  !db_reltime = 0.0         ! time of fluidization (s). If at or before t0, it
+                            !   fires at the first update
+  !db_relsat = 1.0          ! saturation of the collapsed mass, 0-1 (gives pore
+                            !   water when gwflow is disabled)
+
+  ! Triggering method 2: automatic fluidization by the infinite-slope
+  ! stability judgment (the soil layer of cells with Fs < 1 is fluidized
+  ! over its full depth. Pore pressure from the saturated thickness of
+  ! gwflow)
+  !f_slide = 1
+  !slide_c = 1000.0         ! effective cohesion c (Pa). Mandatory (0 allowed)
+  !slide_phi = 30.0         ! shear resistance angle of the soil (deg). Mandatory
+  !slide_gamma = 18000.0    ! saturated unit weight (N/m3). Mandatory
+
+  ! ---- Long-term landform development (millennial scale. Combine with
+  !      morfac and restart chains) ----
+  !f_wthr = 1               ! bedrock weathering = soil production
+  !wthr_p0 = 100.0          ! soil production rate on bare rock (mm/kyr).
+                            !   Mandatory
+  !wthr_sdstar = 0.5        ! decay depth of the production (m)
+  !f_uplift = 1             ! uplift
+  !uplift0 = 1.0            ! uplift rate (mm/yr). Mandatory
+
+/

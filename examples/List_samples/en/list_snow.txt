@@ -1,0 +1,38 @@
+!======================================================================
+! English mirror of examples/List_samples/list_snow.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+! Snow accumulation and snowmelt settings sample (&list_snow;
+!   developer.md Sec. 31)
+!   Enabled by fn_snow = "this file" or "-" in the main parameters.
+!   Air temperature is required, so also specify fn_meteo (&list_meteo).
+!   Combined with the elevation lapse rate (f_temp_lapse), the elevation
+!   dependence of the snow line emerges automatically.
+!   Degree-day method: precipitation is separated linearly into rain and
+!   snow by a double temperature threshold; the snow part accumulates
+!   into the per-cell snow water equivalent SWE, and the snowmelt
+!   M = ddf x max(T - t_melt, 0) enters the surface water. The SWE field
+!   (Sw, mm) is output at dt_file intervals.
+!   Restart uses the private file snow.dat (fn_snow must have been
+!   active at save time).
+!======================================================================
+&list_snow
+  f_snow = 1                ! 0 temporarily disables while keeping the file
+
+  ! ---- Rain/snow separation (linear mixing with double thresholds) ----
+  snow_t_snow = 0.0         ! temperature at which everything is snow (degC)
+  snow_t_rain = 2.0         ! temperature at which everything is rain (degC;
+                            !   if equal, a single threshold)
+
+  ! ---- Degree-day snowmelt ----
+  snow_t_melt = 0.0         ! snowmelt threshold (degC)
+  snow_ddf = 4.0            ! degree-day factor (mm/degC/day. Literature values
+                            !   about 3-5. Smaller in forests, larger in open
+                            !   land and in the late melt season)
+
+  ! ---- Initial snow cover (if unspecified, 0 = start without snow) ----
+  !snow_swe0 = 100.0        ! uniform initial SWE (mm)
+  !fn_snow_swe0 = "swe0.txt" ! initial SWE distribution (mm; exclusive with
+                            !   snow_swe0. For assimilating satellite, AMeDAS
+                            !   and other observations)
+/

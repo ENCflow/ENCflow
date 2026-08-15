@@ -1,0 +1,118 @@
+!======================================================================
+! English mirror of examples/List_samples/list_precip.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of precipitation settings &list_precip
+!
+!   Of the several lists &list_precip_X exemplified below, rename the
+!   one you want to enable to &list_precip and use it.
+!   The others are ignored, so it is fine to leave them as they are.
+!
+!======================================================================
+! Precipitation settings (no precipitation)
+!======================================================================
+&list_precip_0
+  ! Type of precipitation data
+  !  0: no precipitation
+  !  1: time series of a uniform distribution, given in this settings file
+  !  2: distribution file x factors given in this settings file
+  !  3: time-series distribution files (specified by fn_maplist)
+  prtype = 0
+
+  ! For no precipitation, you may instead specify fn_precip="" (an empty
+  ! string) in the system parameters &list_sysparam, or omit fn_precip itself
+/
+
+
+!======================================================================
+! Precipitation settings (uniform-distribution time series)
+!======================================================================
+&list_precip_1
+  ! Type of precipitation data
+  !  0: no precipitation
+  !  1: time series of a uniform distribution, given in this settings file
+  !  2: distribution file x factors given in this settings file
+  !  3: time-series distribution files (specified by fn_maplist)
+  prtype = 1
+
+  ! Update time interval of the precipitation distribution (min)
+  !  1 minute if omitted
+  dt_prupdate = 1
+
+  ! Precipitation time series (time (min), rainfall intensity (mm/h))
+  !  Any number of entries may be given
+  !  After the last specified time, the last intensity continues
+  prval(:,1) =    0,   0
+  prval(:,2) =   10,  15
+  prval(:,3) = 1440,  15
+  prval(:,4) = 1450,   0
+
+/
+
+
+!======================================================================
+! Precipitation settings (distribution file x factor time series)
+!======================================================================
+&list_precip_2
+  ! Type of precipitation data
+  !  0: no precipitation
+  !  1: time series of a uniform distribution, given in this settings file
+  !  2: distribution file x factors given in this settings file
+  !  3: time-series distribution files (specified by fn_maplist)
+  prtype = 2
+
+  ! Update time interval of the precipitation distribution (min)
+  !  1 minute if omitted
+  dt_prupdate = 1
+
+  ! Precipitation distribution file (mm/day)
+  !  Relative path from the data directory specified in the system parameters
+  fn_prmap = "precip/ProFloodPrecip_200y_TM_all_station_30m.bil"
+
+  ! Factors applied to the distribution file (time (min), factor (0.0-1.0))
+  !  Any number of entries may be given
+  !  After the last specified time, the last factor continues
+  prval(:,1) =     0,   0
+  prval(:,2) =    10,   1
+  prval(:,3) =  1440,   1
+  prval(:,4) =  1450,   0
+
+/
+
+
+!======================================================================
+! Precipitation settings (time-series distribution files)
+!======================================================================
+&list_precip_3
+  ! Type of precipitation data
+  !  0: no precipitation
+  !  1: time series of a uniform distribution, given in this settings file
+  !  2: distribution file x factors given in this settings file
+  !  3: time-series distribution files (specified by fn_maplist)
+  prtype = 3
+
+  ! Time interval of the precipitation distribution files (min)
+  !  During this interval the rainfall of the file is held constant
+  !  The distribution update interval dt_prupdate has no effect even if
+  !  specified
+  dt_maplist = 60
+
+  ! List of the precipitation distribution files
+  !  Relative path from the data directory of the system parameters
+  !  The unit of the precipitation distribution files is rainfall
+  !  intensity (mm/h)
+  fn_maplist = "AnPrecip/An01.Prec_20191011.txt"
+  !------------------------------------------
+  ! Example of the contents of the list
+  !  The files in the list are also relative paths from the data directory
+  !  Note that they are not relative to the list file
+  !------------------------------------------
+  !AnPrecip/An01.Prec_20191011_01.bil
+  !AnPrecip/An01.Prec_20191011_02.bil
+  !AnPrecip/An01.Prec_20191011_03.bil
+  !AnPrecip/An01.Prec_20191011_04.bil
+  !------------------------------------------
+
+/
+
