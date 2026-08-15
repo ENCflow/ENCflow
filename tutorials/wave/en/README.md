@@ -426,11 +426,10 @@ linear obstacles such as walls and levees are represented on a raster
 grid, this shows up as a property that four-connected models do not
 have.
 
-`param_step4.txt` (this Step uses the Japanese original; there is no
-English mirror, and only the comments differ) uses a user routine in
-`&list_geoinfo` to place a wall -- cells with ground elevation 1.5 m,
-excluded from the computation -- crossing the computational domain
-diagonally at 45 degrees.
+`en/param_step4.txt` uses a user routine in `&list_geoinfo` to place a
+wall -- cells with ground elevation 1.5 m, excluded from the
+computation -- crossing the computational domain diagonally at 45
+degrees.
 
 ```
 &list_geoinfo
@@ -449,7 +448,7 @@ First, run with the **2-cell-thick** wall `wave_solid_wall` as
 provided.
 
 ```bash
-./encflow param_step4.txt
+./encflow en/param_step4.txt
 ```
 
 In the startup display, `number of valid cells` has dropped from 90000
@@ -464,7 +463,7 @@ still water.
 
 ### A wall that is semi-permeable
 
-Next, switch the user routine in `param_step4.txt` to the
+Next, switch the user routine in `en/param_step4.txt` to the
 **1-cell-thick** wall `wave_leaky_wall` (swap the comment `!` marks)
 and run again.
 
