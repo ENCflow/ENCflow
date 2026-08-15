@@ -6,10 +6,10 @@ groundwater, sediment, water quality, snow, and landscape evolution,
 all in one Fortran program.
 
 [日本語 README](README.md) /
-[Installation](docs/install.md) /
-[Tutorial](docs/tutorial.md) /
-[User's Guide](docs/users_guide.md) /
-[Comparison with other models](docs/comparison.md)
+[Installation](docs/en/install.md) /
+[Tutorial](docs/en/tutorial.md) /
+[User's Guide](docs/en/users_guide.md) /
+[Comparison with other models](docs/en/comparison.md)
 
 *The Japanese documentation is the authoritative version; this English
 README is a derived translation (based on commit 2a9d10d). Guides and
@@ -54,7 +54,7 @@ The first example is nothing more than a mound of water collapsing and
 spreading over a still surface. The input is a single text file a few
 dozen lines long. From there, the ENCflow way is to grow the model one
 line at a time: add rainfall, switch to real terrain, thread a river
-channel, add groundwater… ([Tutorial](docs/tutorial.md), in Japanese).
+channel, add groundwater… ([Tutorial](docs/en/tutorial.md)).
 
 ## What it can do
 
@@ -104,7 +104,7 @@ well-behaved 2-D flood model.
 ENCflow intentionally stays within the two-dimensional
 (depth-averaged, constant-density, hydrostatic) world. The following
 are out of scope by design and belong to specialized models
-([comparison](docs/comparison.md)):
+([comparison](docs/en/comparison.md)):
 
 - **Wind waves** — short-period waves (wind waves, swell, breaking).
   Storm surge and tsunami are long waves and can be solved; wave
@@ -156,20 +156,20 @@ are out of scope by design and belong to specialized models
 | Other libraries | **None** | — |
 
 Linux, macOS, and WSL are the assumed platforms. See the
-[installation guide](docs/install.md) (in Japanese).
+[installation guide](docs/en/install.md).
 
 ## Learning to use it
 
-1. [Installation](docs/install.md) — a single `make install`
-2. [Tutorial](docs/tutorial.md) — from the minimal example to real-terrain catchments
-3. [User's Guide](docs/users_guide.md) — reference for every setting
+1. [Installation](docs/en/install.md) — a single `make install`
+2. [Tutorial](docs/en/tutorial.md) — from the minimal example to real-terrain catchments
+3. [User's Guide](docs/en/users_guide.md) — reference for every setting
 4. [examples/](examples/) — sample configuration files
 5. [test/](test/) — verified examples (doubling as regression tests)
 
 Developers and the curious should head to
-[docs/developer.md](docs/developer.md) (the authoritative source for
+[docs/developer.md](docs/developer.md) (in Japanese) (the authoritative source for
 design philosophy and conventions) and
-[docs/comparison.md](docs/comparison.md) (comparison with other
+[docs/comparison.md](docs/en/comparison.md) (comparison with other
 models). Documentation is currently in Japanese.
 
 ## Who it is for

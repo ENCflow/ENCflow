@@ -14,7 +14,7 @@ square basin, no terrain and no rainfall, you will learn:
 - **Step 4**: wall properties unique to the ENC grid (impermeable and
   semi-permeable walls)
 
-See the [installation guide](../../../docs/install.md) for preparing a
+See the [installation guide](../../../docs/en/install.md) for preparing a
 compiler. All commands below are run in the case directory
 (`tutorials/wave`), one level above this `en/` directory; the English
 parameter files are passed as `en/param_step1.txt` etc.
@@ -502,7 +502,7 @@ From here:
 - To run with MPI parallelism, use the `encflow_mpi` executable built
   with the corresponding `make.inc` settings, e.g.
   `mpirun -np 4 ./encflow_mpi en/param_step1.txt`
-  ([installation guide](../../../docs/install.md)). The results, of
+  ([installation guide](../../../docs/en/install.md)). The results, of
   course, match the serial run bit for bit.
 
 The figures in this document (`../figs/`) can be regenerated in one

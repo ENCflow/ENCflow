@@ -208,7 +208,7 @@ channel mask and roughness.
 - At this stage the channel mask `fn_rw` is used only to swap the
   roughness. From here you can refine step by step toward incision
   below the terrain (`depth_rw`) or subgrid channels (`fn_channel`)
-  ([users guide](../../../docs/users_guide.md)).
+  ([users guide](../../../docs/en/users_guide.md)).
 
 When you run it, the numbers on screen change slightly from Step 1
 (because the roughness changed). The result directory now contains
@@ -259,7 +259,7 @@ toward the end point is positive", so writing it in the right-bank to
 left-bank direction makes downstream discharge positive. Specification
 in real coordinates (m) (`pbxytype = 1` / `flxytype = 1`) is also
 available ([the record chapter of the users
-guide](../../../docs/users_guide/record.md)).
+guide](../../../docs/en/users_guide/record.md)).
 
 When you run it, the numbers on screen match Step 2 **exactly**:
 measurement and file output have no effect whatsoever on the
@@ -458,7 +458,7 @@ Note that if you prescribe the water level as a time series
 downstream river stage or a tide level. For the use of edge boundaries
 (free outflow, long-wave radiation), inflow boundaries, and so on, see
 [the boundary condition chapter of the users
-guide](../../../docs/users_guide/boundary.md).
+guide](../../../docs/en/users_guide/boundary.md).
 
 ### About the fine oscillations in the hydrograph
 
@@ -531,7 +531,7 @@ conditions. From here:
 
 - Refining the groundwater model (Green-Ampt, lateral flow), roughness
   distribution from land use, subgrid channels, and more --
-  [users guide](../../../docs/users_guide.md)
+  [users guide](../../../docs/en/users_guide.md)
 - How to write the namelists of each feature --
   [examples/List_samples/](../../../examples/List_samples/)
 - To run a large computation in parallel with MPI:

@@ -2890,6 +2890,13 @@ Cn_max)→ 場の最大値**。
   m_geotiff の set_err 系。書式・用語は §4.1/4.2 が正本。Log.txt など
   比較対象のデータ文字列は対象外のまま=全回帰の reference 不変を確認)。
   以後の新規メッセージは §4.1 に従って英語で書く。
+- **docs/en ミラーの整備状況(2026-08-15)**: 利用者向け文書
+  (users_guide.md+users_guide/ 全18章、install.md、tutorial.md、
+  comparison.md)の英語版を docs/en/ に整備済み(刻印・リンク存在検査
+  付き。英語版同士のリンクは en/ 側へ接続し、未翻訳の内部文書への
+  リンクは日本語版+"(in Japanese)" 注記)。**developer.md・handoff・
+  *_plan・channel_model は内部開発文書のため対象外**(コード内コメントと
+  同じ扱い。国際化の実態を見て再判断)。
 - **サンプル・チュートリアルの英語ミラー(2026-08-15 決定)**:
   ディレクトリ単位の英語版は同じディレクトリ内の **`en/` ミラー**に置く
   (examples/List_samples/en/、tutorials/<case>/en/。将来の docs/en/ と
