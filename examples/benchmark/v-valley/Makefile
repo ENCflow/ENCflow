@@ -9,7 +9,7 @@
 #   実行は手動で:  ./encflow param_xxx.txt など
 #   (MPI 版は mpirun -np N ./encflow_mpi param_xxx.txt)
 
-TOPDIR	= ../..
+TOPDIR	= ../../..
 BINDIR	= $(TOPDIR)/bin
 SRCDIR	= $(TOPDIR)/src
 
