@@ -1,0 +1,58 @@
+! English mirror of tutorials/wave/param_step3.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+
+!======================================================================
+! System parameter settings
+!======================================================================
+&list_sysparam
+  dt = 0.05                 ! time step (s)
+  tt = 14.0                 ! end time of computation (s)
+  dt_disp = 1.0             ! screen display interval (s)
+  dt_file = 1.0             ! file output interval (s)
+  f_out_e = 1               ! water level distribution file output
+  fn_geoinfo = "-"          ! geographic information settings file
+  fn_initial = "-"          ! initial condition settings file
+  fn_enc = "-"              ! ENC parameter settings file
+  fn_boundary = "-"         ! boundary condition settings file
+/
+
+!======================================================================
+! Geographic information settings
+!======================================================================
+&list_geoinfo
+  lx = 100.0, ly = 100.0    ! size of computational domain (m)
+  nx = 300, ny = 300        ! number of grid cells
+/
+
+!======================================================================
+! Initial condition settings
+!======================================================================
+&list_initial
+  h0 = 1.0                       ! fixed initial water depth (m)
+  f_user_routine = "wave_hump"   ! user routine identifier (circular cosine-shaped initial water level)
+/
+
+!======================================================================
+! ENC computation conditions
+!======================================================================
+&list_enc
+  p_adprunge_thresh = 1.1        ! threshold of the adaptive Runge-Kutta method (1.1 ~)
+/
+
+!======================================================================
+! Edge boundary conditions: boundary condition type for each of the
+!   four edges of the outer rim of the computational domain
+!   0: impermeable (wall; default)
+!   1: free outflow (for flood inundation)
+!   2: long-wave radiation (for tsunami / wave propagation)
+!   Correspondence between compass directions and grid indices
+!   (raster row order = north to south):
+!     west = i=1 (left edge), east = i=nx (right edge),
+!     north = j=1 (top edge), south = j=ny (bottom edge)
+!======================================================================
+&list_bound_edge
+  f_bc_w = 2
+  f_bc_e = 2
+  f_bc_n = 2
+  f_bc_s = 2
+/

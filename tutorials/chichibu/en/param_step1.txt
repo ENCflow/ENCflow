@@ -1,0 +1,48 @@
+! English mirror of tutorials/chichibu/param_step1.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Step 1: Minimal configuration
+!
+!======================================================================
+! System parameter settings
+!======================================================================
+&list_sysparam
+  dt = 6.0                       ! time step (s)
+  tt_c = "6 hour"                ! end time of the computation
+  dt_disp_c = "30 min"           ! screen display interval
+  dt_file_c = "30 min"           ! file output interval
+
+  fn_geoinfo = "-"               ! geographic information settings file
+  fn_precip  = "-"               ! precipitation settings file
+
+  dir_data   = "data_chichibu"   ! input data directory
+/
+
+!======================================================================
+! Geographic information settings
+!======================================================================
+&list_geoinfo
+  nx = 280
+  ny = 150
+  dx = 200.0
+  dy = 200.0
+
+  f_ztype = 1          ! ground elevation type (0: default constant, 1: file)
+  f_masktype = 1       ! domain mask (0: none, 1: catchment mask)
+
+  fn_z = "Chichibu_200m_filled.txt"        ! ground elevation file name
+  fn_mask = "Chichibu_200m_basin.txt"      ! domain mask file name
+/
+
+!======================================================================
+! Precipitation settings
+!======================================================================
+&list_precip
+  ! precipitation data type (0: no precipitation, 1: uniform, time series)
+  prtype = 1
+  ! precipitation time series (time (min), intensity (mm/h))
+  prval(:,1) =   0,   0
+  prval(:,2) =  30, 200
+  prval(:,3) =  60,   0
+/

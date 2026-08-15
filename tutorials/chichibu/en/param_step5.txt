@@ -1,0 +1,164 @@
+! English mirror of tutorials/chichibu/param_step5.txt (based on commit c664f1c).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Step 5: Introducing rainfall interception and subsurface infiltration
+!
+!======================================================================
+! System parameter settings
+!======================================================================
+&list_sysparam
+  f_govequation = 0          ! governing equation (0: DynWE, 1: DifWE, 2: KinWE)
+
+  dt = 6.0                   ! time step (s)
+  tt_c = "6 hour"            ! end time of the computation
+  dt_disp_c = "30 min"       ! screen display interval
+  dt_file_c = "30 min"       ! file output interval
+  dt_recrd_c = "1 min"       ! probe output interval
+
+  fn_geoinfo = "-"           ! geographic information settings file
+  fn_precip  = "-"           ! precipitation settings file
+  fn_record  = "-"           ! record settings file
+  fn_enc     = "-"           ! ENC settings file
+  fn_intercept = "-"         ! rainfall interception settings file
+  fn_gwflow = "-"            ! groundwater settings file
+
+  dir_data = "data_chichibu" ! input data directory
+
+  f_input_mode = 4           ! matrix input format (1: text, 2: bil, 4: geotiff)
+  f_output_mode = 5          ! matrix output format (1: text, 2: bil, 4: geotiff)
+
+  f_out_h = 1                ! file output (depth H0001)
+  f_out_vv = 1               ! file output (velocity magnitude V0001)
+  f_out_qq = 1               ! file output (discharge magnitude Q0001)
+  f_out_cn = 1               ! file output (Courant number Cn0001)
+  f_out_hmax = 1             ! file output (maximum depth H9999)
+  f_out_vvmax = 1            ! file output (maximum velocity V9999)
+
+  dd = 0.0001                ! water movement is computed above this depth (threshold depth)
+  dv = 0.0001                ! depths below this are forced to this value (virtual depth)
+/
+
+!======================================================================
+! Geographic information settings
+!======================================================================
+&list_geoinfo
+  dx = 200.0
+  dy = 200.0
+
+  f_ztype = 1          ! ground elevation type (0: default constant, 1: file)
+  f_masktype = 1       ! domain mask (0: none, 1: catchment mask)
+
+  f_rntype = 0         ! roughness type (0: default constant, 1: file, 2: from land use)
+  rn0 = 0.05           ! constant roughness value
+  rn0_rw = 0.02        ! constant roughness for channel-mask cells
+
+  fn_z = "Chichibu_200m_filled.tif"        ! ground elevation file name
+  fn_mask = "Chichibu_200m_basin.tif"      ! domain mask file name
+  fn_rw = "Chichibu_200m_river.tif"        ! channel mask file name
+
+  !f_sdtype = 0         ! 0: constant sd0 (default), 1: file fn_sd
+  !sd0 = 1.0            ! constant soil depth (m)
+  !sy0 = 0.2            ! specific yield (effective porosity)
+/
+
+!======================================================================
+! Precipitation settings
+!======================================================================
+&list_precip
+  ! precipitation data type (0: no precipitation, 1: uniform, time series)
+  prtype = 1
+  ! precipitation time series (time (min), intensity (mm/h))
+  prval(:,1) =   0,   0
+  prval(:,2) =  30, 200
+  prval(:,3) =  60,   0
+/
+
+!======================================================================
+! Record settings
+!======================================================================
+&list_record
+  ! probe position type (0: cell indices, 1: real coordinates (m))
+  ! probe positions (x, y)
+  pbxytype = 0
+  pbxy(:,1) =  82, 105
+  pbxy(:,2) = 107, 102
+  pbxy(:,3) = 147, 103
+  pbxy(:,4) = 216,  40
+
+  ! flux transect coordinate type (0: cell indices, 1: real coordinates (m))
+  ! flux transect endpoints (right-bank x, right-bank y, left-bank x, left-bank y)
+  flxytype = 0
+  flxy(:,1) =  82, 106,   82, 103
+  flxy(:,2) = 107, 103,  107, 100
+  flxy(:,3) = 147, 105,  147, 102
+  flxy(:,4) = 216,  43,  216,  37
+/
+
+!======================================================================
+! ENC computation settings
+!======================================================================
+&list_enc
+  p_adv_upwind_index = 0.0        ! upwind differencing fraction (0.0 ~ 1.0)
+  p_adprunge_thresh = 1.5         ! adaptive Runge-Kutta threshold (1.1 ~)
+/
+
+!======================================================================
+! Interception: common settings
+!======================================================================
+&list_intercept
+  ! interception model selection
+  !  0: none (temporarily disable while keeping fn_intercept in place)
+  !  1: fixed interception rate model (uses &list_intercept_fixed)
+  !  2: initial loss model (uses &list_intercept_initloss)
+  f_icmodel = 1
+/
+
+!======================================================================
+! Fixed interception rate model settings (f_icmodel = 1)
+!======================================================================
+!   Simplest model: a fixed fraction of rainfall is intercepted
+!   (I = alpha*P) and the effective rainfall (1-alpha)P reaches the
+!   ground surface. Storage capacity, evaporation, and dependence on
+!   rainfall intensity are not represented. The interception rate is
+!   given either as a uniform value or as a distributed file.
+!======================================================================
+&list_intercept_fixed
+  ! uniform interception rate; must satisfy 0 < ic_alpha < 1
+  ! (typical: about 0.1 to 0.4 for forested land)
+  ic_alpha = 0.2
+/
+
+!======================================================================
+! Groundwater: common settings
+!======================================================================
+&list_gwflow
+  ! vertical model selection
+  !  0: none (temporarily disable while keeping fn_gwflow in place)
+  !  1: bucket model (uses &list_gwflow_bucket)
+  !  2: Green-Ampt model (uses &list_gwflow_greenampt;
+  !     requires soil depth sd and specific yield sy0 in &list_geoinfo)
+  f_gwvertical = 1
+/
+
+!======================================================================
+! Bucket model settings (f_gwvertical = 1)
+!======================================================================
+!   Simplest model: surface water moves into a per-cell subsurface
+!   storage (capacity gw_capacity) at a constant infiltration capacity
+!   gw_infil_mmh. No lateral flow; vertical exchange only.
+!   The infiltration per step is the minimum of (infiltration capacity
+!   x dts), (surface water depth), and (remaining storage capacity).
+!   Cannot be combined with the lateral model (f_gwlateral=1): the
+!   capacity would be defined twice, so the run stops with an error.
+!   If you need a constant infiltration capacity with the soil depth
+!   as the capacity, use the Green-Ampt model with gw_psif=0.
+!======================================================================
+&list_gwflow_bucket
+  ! infiltration capacity (mm/h); must be greater than 0
+  gw_infil_mmh = 5.0
+
+  ! subsurface storage capacity (water-column equivalent depth) (m);
+  ! must be greater than 0
+  gw_capacity = 0.2
+/
