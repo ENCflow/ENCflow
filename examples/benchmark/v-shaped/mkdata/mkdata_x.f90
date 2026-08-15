@@ -26,11 +26,12 @@ program mkdata
 
   open(1, file='elev.txt')
   open(2, file='mask.txt')
-  open(3, file='luse.txt')
+  open(3, file='rn.txt')
   do j = 1, ny
     write(1, '(*(f12.5))') elev(1:nx,j)
     write(2, '(*(i5))') mask(1:nx,j)
-    write(3, '(*(i5))') luse(1:nx,j)
+    ! 粗度係数を直接書く(斜面 0.015 / 水路 0.15。f_rntype=1 で読む)
+    write(3, '(*(f8.3))') merge(0.15, 0.015, luse(1:nx,j) == 1)
   end do
   close(1)
   close(2)
