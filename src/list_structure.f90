@@ -129,7 +129,7 @@ subroutine list_structure_read(p, list)
   call par_info("reading structure lists in "//trim(p%fn_structure))
 
   open(newunit=un, file=trim(p%fn_structure), status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: "//trim(p%fn_structure))
+  if (ios /= 0) call par_stop("list_structure: cannot open file "//trim(p%fn_structure))
   call read_pump(un, list)
   call read_culvert(un, list)
   call read_diversion(un, list)
@@ -169,7 +169,7 @@ subroutine read_pump(un, list)
 
   rewind(un)
   read(un, nml=list_struct_pump, iostat=ios, iomsg=iom)
-  if (ios > 0) call par_stop("list_struct_pump 読込失敗: "//trim(iom))
+  if (ios > 0) call par_stop("list_struct_pump: namelist read failed: "//trim(iom))
   if (ios < 0) return              ! グループ不在(この型なし)
   list%present_pump = .true.
 
@@ -222,7 +222,7 @@ subroutine read_culvert(un, list)
 
   rewind(un)
   read(un, nml=list_struct_culvert, iostat=ios, iomsg=iom)
-  if (ios > 0) call par_stop("list_struct_culvert 読込失敗: "//trim(iom))
+  if (ios > 0) call par_stop("list_struct_culvert: namelist read failed: "//trim(iom))
   if (ios < 0) return              ! グループ不在(この型なし)
   list%present_culvert = .true.
 
@@ -268,7 +268,7 @@ subroutine read_diversion(un, list)
 
   rewind(un)
   read(un, nml=list_struct_diversion, iostat=ios, iomsg=iom)
-  if (ios > 0) call par_stop("list_struct_diversion 読込失敗: "//trim(iom))
+  if (ios > 0) call par_stop("list_struct_diversion: namelist read failed: "//trim(iom))
   if (ios < 0) return              ! グループ不在(この型なし)
   list%present_diversion = .true.
 
@@ -327,7 +327,7 @@ subroutine read_dam(un, list)
 
   rewind(un)
   read(un, nml=list_struct_dam, iostat=ios, iomsg=iom)
-  if (ios > 0) call par_stop("list_struct_dam 読込失敗: "//trim(iom))
+  if (ios > 0) call par_stop("list_struct_dam: namelist read failed: "//trim(iom))
   if (ios < 0) return              ! グループ不在(この型なし)
   list%present_dam = .true.
 
