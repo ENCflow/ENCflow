@@ -175,6 +175,12 @@ docs/comparison.md を参照。
 - namelist の read は `iostat=` `iomsg=` で捕捉し par_stop に渡す。
   ランタイム任せにすると全ランクがメッセージを出す。ファイル open も同様
   (m_fileio に集約済みのため、入口数箇所の iostat 化で全読み込みに効く)。
+  **m_fileio の open・行列 read の iostat 化は 2026-08-15 実施済み**
+  (open_old_text 等の検査付きヘルパー4種+abort_read。fn_z 欠落等が
+  ランタイムのバックトレースではなく整った ABORT メッセージで止まる。
+  m_fileio は rank0 単独の文脈でも呼ばれるため par_abort を使う。
+  残: RLE(save/restore)本体の read は未捕捉 — save_info の事前検査が
+  大半を防ぐため保留)。
 - 時間ループのエラー処理: **判定は全ランクで同一に行い、exit は全ランクが
   同時に実行する**。print だけ is_root。ランク0だけが exit すると他ランクが
   回り続け finalize で整合しなくなる。`error stop` は dispose/par_finalize を
