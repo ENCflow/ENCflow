@@ -77,7 +77,7 @@ module subroutine user_initial_run(p, g, s, name)
   character(len=*), intent(in) :: name
   procedure(user_initial_if), pointer :: fp
   fp => resolve(name)
-  if (.not. associated(fp)) call par_abort("user_initial_run: 未定義の識別名 "//trim(name))
+  if (.not. associated(fp)) call par_abort("state: user routine listed but not resolved: "//trim(name))
   call fp(p, g, s)
 end subroutine
 

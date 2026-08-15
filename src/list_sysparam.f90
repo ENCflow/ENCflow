@@ -321,7 +321,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   call par_info("reading list_sysparam in "//trim(fn_sysparam))
   open(newunit=un, file=trim(fn_sysparam), status='old')
   read(un, nml=list_sysparam, iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("list_sysparam 読込失敗: "//trim(iom))
+  if (ios /= 0) call par_stop("list_sysparam: failed to read namelist: "//trim(iom))
   close(un)
 
   list%t0 = t0

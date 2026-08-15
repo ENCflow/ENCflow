@@ -72,7 +72,7 @@ subroutine list_initial_read(p, list)
   call par_info("reading list_initial in "//trim(p%fn_initial))
   open(newunit=un, file=trim(p%fn_initial), status='old')
   read(un, nml=list_initial, iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("list_initial 読込失敗: "//trim(iom))
+  if (ios /= 0) call par_stop("list_initial: failed to read namelist: "//trim(iom))
   close(un)
 
   list%f_user_routine = f_user_routine

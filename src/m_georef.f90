@@ -116,17 +116,17 @@ subroutine georef_read_hdr(fname, gr, ncols, nrows)
   call georef_parse_hdr(fname, h, stat, msg)
   if (stat /= 0) call par_stop(trim(msg))
   if (.not. h%seen_grid) then
-    call par_stop("georef: hdr に NCOLS/NROWS がありません: "//trim(fname))
+    call par_stop("georef: hdr is missing NCOLS/NROWS: "//trim(fname))
   end if
   if (.not. h%seen_geo) then
-    call par_stop("georef: hdr に必須キー(NCOLS, NROWS, XDIM, YDIM, "// &
-                  "ULXMAP, ULYMAP)が揃っていません: "//trim(fname))
+    call par_stop("georef: hdr is missing required keys (NCOLS, NROWS, XDIM, YDIM, "// &
+                  "ULXMAP, ULYMAP): "//trim(fname))
   end if
   if (h%ncols <= 0 .or. h%nrows <= 0) then
-    call par_stop("georef: NCOLS/NROWS が不正です: "//trim(fname))
+    call par_stop("georef: invalid NCOLS/NROWS in hdr: "//trim(fname))
   end if
   if (h%xdim <= 0.0_real64 .or. h%ydim <= 0.0_real64) then
-    call par_stop("georef: XDIM/YDIM が不正です: "//trim(fname))
+    call par_stop("georef: invalid XDIM/YDIM in hdr: "//trim(fname))
   end if
 
   ncols = h%ncols
@@ -177,7 +177,7 @@ subroutine georef_parse_hdr(fname, h, stat, msg)
   open(newunit=un, file=fname, status='old', iostat=ios)
   if (ios /= 0) then
     stat = 1
-    msg = "georef: hdr を開けません: "//trim(fname)
+    msg = "georef: cannot open hdr: "//trim(fname)
     return
   end if
 
@@ -242,7 +242,7 @@ contains
     geti = (ios2 == 0)
     if (.not. geti) then
       stat = 1
-      msg = "georef: "//key//" の値 '"//val//"' を整数として読めません: "//trim(fname)
+      msg = "georef: cannot read "//key//" value '"//val//"' as an integer: "//trim(fname)
     end if
   end function
 
@@ -253,7 +253,7 @@ contains
     getr = (ios2 == 0)
     if (.not. getr) then
       stat = 1
-      msg = "georef: "//key//" の値 '"//val//"' を実数として読めません: "//trim(fname)
+      msg = "georef: cannot read "//key//" value '"//val//"' as a real: "//trim(fname)
     end if
   end function
 
@@ -311,7 +311,7 @@ subroutine georef_write_hdr(fname, gr, nx, ny, e_pix)
       write(un, '(a)')      "PIXELTYPE      SIGNEDINT"
     case default
       ! 書き込みは rank0 のみが呼ぶため collective な par_stop は使えない(§5)
-      call par_abort("georef_write_hdr: 不正な e_pix "//itoa(e_pix))
+      call par_abort("georef: invalid e_pix for hdr output: "//itoa(e_pix))
   end select
   ! 外縁 → セル中心(ULXMAP/ULYMAP)に戻して書く。
   ! 指数表記を解さない読み手を考慮して固定小数で書く(小数 12 桁は

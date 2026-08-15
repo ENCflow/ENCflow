@@ -159,13 +159,13 @@ contains
       nrows = jw2 - jw1 + 1
       ! 各帯は最低2行必要(ハロ交換が隣の隣を参照しない前提のため)
       if (nrows < 2 * nproc) then
-         write(buf,'(a,i0,a,i0,a)') 'domain too small for ', nproc, &
+         write(buf,'(a,i0,a,i0,a)') 'parallel: domain too small for ', nproc, &
             ' ranks: window has ', nrows, ' rows (need >= 2 rows per rank)'
          call par_stop(trim(buf))       ! 全ランク同一の判定なので collective 安全
       end if
       if (present(rowwork)) then
          if (size(rowwork) /= ny) then
-            call par_stop('par_decomp_init: rowwork size /= ny')
+            call par_stop('parallel: rowwork size does not match ny')
          end if
       end if
       call build_band_table(rowwork)
@@ -241,7 +241,7 @@ contains
             wmax = max(wmax, w)
          end do
          write(msg,'(a,i0,a,i0,a,i0,a,i0)') &
-            'band decomposition: weighted, cells/rank min=', wmin, &
+            'parallel: weighted band decomposition, cells/rank min=', wmin, &
             ' max=', wmax, ', rows/rank min=', &
             minval(je_tab - js_tab) + 1, ' max=', maxval(je_tab - js_tab) + 1
          call par_info(trim(msg))

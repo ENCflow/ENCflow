@@ -92,9 +92,9 @@ subroutine list_channel_read(p, list)
 
   call par_info("reading list_channel in "//trim(p%fn_channel))
   open(newunit=un, file=trim(p%fn_channel), status='old', iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("fn_channel を開けません: "//trim(iom))
+  if (ios /= 0) call par_stop("list_channel: cannot open fn_channel: "//trim(iom))
   read(un, nml=list_channel, iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("list_channel 読込失敗: "//trim(iom))
+  if (ios /= 0) call par_stop("list_channel: failed to read namelist: "//trim(iom))
   call read_breach(un, list)
   close(un)
 
@@ -134,7 +134,7 @@ subroutine read_breach(un, list)
 
   rewind(un)
   read(un, nml=list_channel_breach, iostat=ios, iomsg=iom)
-  if (ios > 0) call par_stop("list_channel_breach 読込失敗: "//trim(iom))
+  if (ios > 0) call par_stop("list_channel_breach: failed to read namelist: "//trim(iom))
   if (ios < 0) return              ! グループ不在(破堤なし)
   list%present_breach = .true.
 

@@ -173,10 +173,10 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, sn, ierro
   logical :: do_recd       ! このステップでプローブ・フラックス出力するか
   logical :: pr_updated    ! このコールで降雨分布が実際に更新されたか
 
-  call par_info("number of processes : "//itoa(nproc))
-  call par_info("number of threads : "//itoa(p%num_threads))
-  call par_info("real precision : "//itoa(storage_size(1.0))//" bit")
-  call par_info("number of valid cells : "//itoa(s%n_valcells))
+  call par_info("main: number of processes: "//itoa(nproc))
+  call par_info("main: number of threads: "//itoa(p%num_threads))
+  call par_info("main: real precision: "//itoa(storage_size(1.0))//" bit")
+  call par_info("main: number of valid cells: "//itoa(s%n_valcells))
 
   ! 諸情報を初期化
   !   時間軸は絶対時刻1本(s%t = t0 + dt*it)。フレッシュランは it=0 から、

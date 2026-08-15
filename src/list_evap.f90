@@ -60,11 +60,11 @@ subroutine list_evap_read(p, list)
 
   call par_info("reading list_evap in "//trim(p%fn_evap))
   open(newunit=un, file=trim(p%fn_evap), status='old', iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("cannot open file: "//trim(p%fn_evap)//" : "//trim(iom))
+  if (ios /= 0) call par_stop("list_evap: cannot open fn_evap ("//trim(p%fn_evap)//"): "//trim(iom))
   read(un, nml=list_evap, iostat=ios, iomsg=iom)
   if (ios /= 0) then
-    call par_stop("error in reading list_evap: "//trim(iom) &
-                  //"(旧 date0_c は &list_sysparam、気温入力は &list_meteo へ移設。§29)")
+    call par_stop("list_evap: failed to read namelist: "//trim(iom) &
+                  //" (old date0_c moved to &list_sysparam, temperature input to &list_meteo)")
   end if
   close(un)
 
