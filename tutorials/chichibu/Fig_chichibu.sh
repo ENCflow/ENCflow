@@ -7,7 +7,7 @@
 # (全て計算し直す場合は rm -rf result_step* result_raw してから実行)。
 set -eu
 
-mkdir -p figs
+mkdir -p figs en/figs
 rm -f wrk_*
 
 # --- Step 1〜6 の実行(結果を result_stepN に退避) ---
@@ -33,6 +33,7 @@ awk 'NR==FNR{for(i=1;i<=NF;i++)b[FNR,i]=$i;next}
      {for(i=1;i<=NF;i++)printf "%s ",(b[FNR,i]>0? $i : -9999); print ""}' \
   data_chichibu/Chichibu_200m_basin.txt result_step1/Z0000.txt > wrk_zmask.txt
 
-# --- 描画 ---
+# --- 描画(日本語版 figs/ と英語版 en/figs/ を同時に再生成) ---
 gnuplot Fig_chichibu.plt
-echo "generated figures in figs/"
+gnuplot en/Fig_chichibu.plt
+echo "generated figures in figs/ and en/figs/"

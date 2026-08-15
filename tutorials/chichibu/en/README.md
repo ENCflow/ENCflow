@@ -50,7 +50,7 @@ stream-order data
 built from the river data of Kokudo Suuchi Jouhou (National Land
 Numerical Information).
 
-![Terrain (inside the catchment mask)](../figs/step1_z.png)
+![Terrain (inside the catchment mask)](figs/step1_z.png)
 
 The northeast corner (elevation around 100 m) is the outlet of the
 catchment, and peaks of the 2,500 m class line up along the main ridge
@@ -133,7 +133,7 @@ The screen output tells us the following.
 The depth distribution at the final time (`result/H9998.txt`) shows
 where it accumulates.
 
-![Step 1: depth after 6 hours](../figs/step1_hend.png)
+![Step 1: depth after 6 hours](figs/step1_hend.png)
 
 Just upstream of the catchment outlet (the northeast corner), ponded
 water over 30 m deep has grown. This ponding of runoff dammed by the
@@ -150,7 +150,7 @@ reads a GeoTIFF, the easiest way is to try it in Step 2's
 
 | Depression-filled (filled) | Unprocessed (raw) |
 |---|---|
-| ![filled](../figs/step1_hmax_filled.png) | ![raw](../figs/step1_hmax_raw.png) |
+| ![filled](figs/step1_hmax_filled.png) | ![raw](figs/step1_hmax_raw.png) |
 
 With the filled DEM, tributaries gather into the main stem and a single
 river network heading for the outlet is drawn; with the raw DEM the
@@ -275,7 +275,7 @@ displays the hydrographs of the four transects in turn (the bundled
 `../Plot_flux.plt` / `../Plot_map.plt` are scripts for visual
 inspection of results; run them from the case directory).
 
-![Step 3: hydrographs at each transect](../figs/step3_transects.png)
+![Step 3: hydrographs at each transect](figs/step3_transects.png)
 
 We obtained catchment-scale flood routing at 1-minute resolution, with
 the flood wave growing and lagging from upstream transect 1 to
@@ -327,7 +327,7 @@ allows (here 0 = central differencing). Solving with the diffusive wave
 (`f_govequation = 1` in `&list_sysparam`), which drops the advection
 term altogether, is another option.
 
-![Step 4: effect of parameter tuning](../figs/step4_hydro.png)
+![Step 4: effect of parameter tuning](figs/step4_hydro.png)
 
 After tuning (`en/param_step4.txt`), the peak stands up and the blunted
 waveform becomes sharp (an 18% difference in peak discharge at transect
@@ -389,7 +389,7 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
 - S_surf decreases and S_grnd increases over time -- you can read the
   progress of infiltration directly.
 
-![Step 5: effect of interception and infiltration](../figs/step5_hydro.png)
+![Step 5: effect of interception and infiltration](figs/step5_hydro.png)
 
 In the hydrograph the peak discharge roughly halves (6,080 to 2,970
 m^3/s). Interception cuts the total by 20%, and infiltration keeps
@@ -447,7 +447,7 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
 
 | Step 5 (no outlet) | Step 6 (perfect drain) |
 |---|---|
-| ![step5](../figs/step6_hend_step5.png) | ![step6](../figs/step6_hend.png) |
+| ![step5](figs/step6_hend_step5.png) | ![step6](figs/step6_hend.png) |
 
 The hydrographs at the upstream transects 1-4 barely change from Step 5
 (the outlet ponding affects only a very small area at the far
@@ -468,7 +468,7 @@ remain in Step 6 with the outlet in place. This is not a defect of the
 model but **a phenomenon you will universally encounter in runoff
 computations using real terrain data**, so let us explain what it is.
 
-![Step 6: 1-minute discharge oscillations and moving average](../figs/step6_osc.png)
+![Step 6: 1-minute discharge oscillations and moving average](figs/step6_osc.png)
 
 The cause lies in the terrain data. Along the channels of a
 depression-filled DEM, "perfectly flat reaches" appear here and there
@@ -508,7 +508,7 @@ Deal with it in stages.
    center it (so the peak time does not shift). Drawing the raw values
    on top also shows the reader what the smoothing removed.
 
-   ![Same, zoomed](../figs/step6_osc_zoom.png)
+   ![Same, zoomed](figs/step6_osc_zoom.png)
 
 2. **The fundamental remedy is improving the terrain data.**
    Preprocessing the channels so that the longitudinal profile is
@@ -538,7 +538,8 @@ conditions. From here:
   `mpirun -np 4 ./encflow_mpi en/param_step6.txt` (the results match
   the serial run bit for bit)
 
-The figures of this document (`../figs/`) can be regenerated in one go
-with `./Fig_chichibu.sh` run from the case directory (gnuplot is
-required; it runs the same computations as in the text, in order, and
-draws the figures).
+The figures of this document (`figs/`, i.e. `en/figs/`) can be
+regenerated in one go with `./Fig_chichibu.sh` run from the case
+directory (gnuplot is required; it runs the same computations as in
+the text, in order, and draws both the Japanese and the English
+figures).
