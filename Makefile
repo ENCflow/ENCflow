@@ -44,8 +44,7 @@ SMPLDIRS	= \
 		  examples/benchmark/h-plane \
 		  examples/benchmark/v-shaped \
 		  examples/benchmark/v-valley \
-		  examples/chichibu \
-		  examples/wave
+		  examples/chichibu
 
 all: $(SUBDIRS)
 
