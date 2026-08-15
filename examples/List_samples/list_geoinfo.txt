@@ -32,17 +32,9 @@
                             !   (登録名は src/user_geoinfo.f90 冒頭)
 
   ! ---- 粗度(Manning 係数)----
-  !f_rntype = 0             ! 0: 固定値 rn0(既定), 1: ファイル fn_rn,
-                            ! 2: 土地利用から変換(f_lusetype, lu2rn)
+  !f_rntype = 0             ! 0: 固定値 rn0(既定), 1: ファイル fn_rn
   !rn0 = 0.015              ! 粗度係数固定値
   !fn_rn = "roughness.txt"  ! 粗度係数分布ファイル(f_rntype=1)
-
-  ! 土地利用からの変換の例(f_rntype=2)
-  !f_lusetype = 1           ! 1: 土地利用ファイルを読む
-  !fn_luse = "landuse.txt"  ! 土地利用コードの分布
-  !lu2rn(:,1) = 1, 0.06     ! (土地利用コード, 粗度係数)の対応表
-  !lu2rn(:,2) = 2, 0.05
-  !lu2rn(:,3) = 5, 0.03
 
   ! ---- 領域マスク(計算対象の限定。マスク外はメモリ・CPU ゼロ)----
   !f_masktype = 0           ! 0: 全域を計算(既定), 1: ファイル fn_mask,

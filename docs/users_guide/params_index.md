@@ -132,7 +132,6 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_htype | &list_initial | [初期条件](initial.md) |
 | f_icmodel | &list_intercept | [降雨・気象](forcing.md) |
 | f_input_mode | &list_sysparam | [入出力](io.md) |
-| f_lusetype | &list_geoinfo | [地理情報](geoinfo.md) |
 | f_masktype | &list_geoinfo | [地理情報](geoinfo.md) |
 | f_out_cn | &list_sysparam | [入出力](io.md) |
 | f_out_dda | &list_sysparam | [入出力](io.md) |
@@ -222,7 +221,6 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_initial | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
 | fn_intercept | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
 | fn_log | &list_sysparam | [入出力](io.md) |
-| fn_luse | &list_geoinfo | [地理情報](geoinfo.md) |
 | fn_maplist | &list_precip | [降雨・気象](forcing.md) |
 | fn_mask | &list_geoinfo | [地理情報](geoinfo.md) |
 | fn_meteo | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
@@ -282,7 +280,6 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | inflow_val | &list_bound_inflow | [境界条件](boundary.md) |
 | kk | &list_sysparam | [浅水流計算](swflow.md) |
 | lat | &list_evap | [降雨・気象](forcing.md) |
-| lu2rn | &list_geoinfo | [地理情報](geoinfo.md) |
 | lx | &list_geoinfo | [地理情報](geoinfo.md) |
 | ly | &list_geoinfo | [地理情報](geoinfo.md) |
 | mag_z | &list_geoinfo | [地理情報](geoinfo.md) |

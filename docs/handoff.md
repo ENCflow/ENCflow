@@ -289,6 +289,15 @@
      4 回はすべて一致・決定的で再現せず。-Ofast の fast-math ビルド間
      差(§28.3)の可能性が高いが、再発したら記録すること
 
+## 既知の壊れている例題
+
+- **examples/benchmark/h-plane の hp10x**: 実行中に FPE で停止する
+  (-ffpe-trap 検知。f_rntype=2 廃止の等価変換(2026-08-15)以前からの
+  既存問題。hp10 は正常)。原因未調査。
+- examples/benchmark の mkdata/ ディレクトリに生成物(elev.txt,
+  mask.txt)やビルド済みバイナリ(v-valley の tada)がコミットされて
+  いる。掃除するか .gitignore の対象にするか要判断。
+
 ## 公開準備(方針の正本は developer.md §34)
 
 - **GitHub Organization「ENCflow」作成・移管・URL 確定済み(2026-08-13)**。

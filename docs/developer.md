@@ -47,6 +47,12 @@ docs/comparison.md を参照。
     ポストプロセス・パラメータファイル作成の GUI 化などは利用者側に
     委ねる(テキスト行列・namelist・CSV を基本とし、バイナリは
     bil/GeoTIFF の実務最小限)。
+12. **計算で使う物理量は、直接与えられるものはできるだけ直接与える**。
+    他データからの派生量をモデル内部で生成するのは明確な理由がある
+    場合に限る(例: f_masktype=2 の海域→領域マスクは「1セル海帯」と
+    いう離散化内部の知識を使うため内部生成)。コード対応表による変換
+    などの前処理は utils・GIS 側に置く(実例: lu2mask §40、
+    f_rntype=2 の廃止 §41)。(2026-08-15 追加)
 
 ## 1. 実数精度の方針
 
@@ -2995,6 +3001,7 @@ Cn_max)→ 場の最大値**。
 - 適用位置は従来どおり read_rn の後(rank0 の全域前処理)なので、
   正値の rn0_rw は f_rntype=0(固定値)/1(分布ファイル)/2(土地利用
   変換)いずれの粗度も河道セルで上書きする。負値(既定)は不変。
+  (注: f_rntype=2 は §41 で廃止。現行は 0/1 の2方式)
 - 検証(2026-08-14, gfortran -Ofast): (a) rn0_rw = rn0 の恒等上書きが
   無指定とビット一致(副作用なし)(b) rn0_rw 変更で結果が変化
   (掘り込みなしで有効=修正の本体)(c) f_rntype=1/2 の上書き結果が
@@ -3107,12 +3114,14 @@ fn_sw(海域)・fn_rw(河道)を、土地利用(fn_luse)と対象コードの指
 
 ### 40.2 utils/lu2mask の仕様
 
-- 使い方: `lu2mask parameterfile maskfile code1 [code2 ...]`。
-  計算に使うパラメータファイルをそのまま渡し、dir_data・f_input_mode・
-  nx, ny・fn_luse を本体と同じ解釈で読む(rerecord と同じ流儀)。
+- 使い方: `lu2mask parameterfile lusefile maskfile code1 [code2 ...]`。
+  計算に使うパラメータファイルをそのまま渡し、f_input_mode・nx, ny を
+  本体と同じ解釈で読む(rerecord と同じ流儀)。土地利用ファイルは
+  引数で与える(当初は list_geoinfo の fn_luse を参照したが、§41 で
+  本体が土地利用を読まなくなったため引数指定に変更)。
   生成物は fn_sw / fn_rw / fn_seaside 等にそのまま指定できる。
 - 指定コードに一致するセルを 1、他を 0 とするラスタを maskfile へ書く。
-  形式は f_input_mode に従う。bil は fn_luse の hdr から nx, ny を
+  形式は f_input_mode に従う。bil は lusefile の hdr から nx, ny を
   補完・検査し(probe_georef と同じ流儀を fn_luse に適用)、座標が
   分かる場合は出力に hdr を併記。GeoTIFF は自己記述の格子数を使い、
   位置情報タグを出力へ引き継ぐ(タグの無い GeoTIFF への出力は停止)。
@@ -3125,3 +3134,63 @@ fn_sw(海域)・fn_rw(河道)を、土地利用(fn_luse)と対象コードの指
 該当ゼロ警告・全ゼロ停止、hdr/タグからの nx, ny 補完と namelist 不整合
 停止、出力 hdr の座標往復(中心/外縁変換)を確認。本体コードは無変更で
 wave・chichibu の逐次回帰 PASS。
+
+## 41. f_rntype=2(土地利用から粗度)の廃止と「物理量は直接与える」原則(2026-08-15 決定・実装)
+
+### 41.1 方針(§0 に12項として追加)
+
+**計算で使う物理量は、直接与えられるものはできるだけ直接与える。
+他データからの派生量をモデル内部で生成するのは、明確な理由がある
+場合に限る。** コード対応表など前処理で済む変換を本体に持ち込むと、
+パラメータ体系とコードが複雑化し(§0 の 6・11 と競合)、生成物を
+ファイルとして目視確認・手修正することもできない。内部生成を残す
+例は f_masktype=2(海域→領域マスク。「陸に接する1セル海帯」という
+離散化内部の知識を使うため)。
+
+### 41.2 f_rntype=2 と土地利用読み込みの削除
+
+- g%lu の用途は read_rn の f_rntype=2 だけだった(intercept・geomorph の
+  lu2rn 同型は将来構想のみ。m_wq の fn_wq_map は別ファイルで無関係)。
+  実運用での使用実績はなく、使用していた全ケースが直接指定で等価に
+  書き換えられることを確認したため、**f_rntype=2(fn_luse + lu2rn の
+  粗度変換)と土地利用の読み込み自体(g%lu, f_lusetype, fn_luse,
+  lu2rn)を削除**した。土地利用はモデルの語彙から消え、扱うのは
+  前処理(utils/lu2mask §40)だけになる。
+- ケースの等価変換(削除に先行する別コミット。規律4)。書き換えの
+  型は3通りで、以後の同種の変換の見本になる:
+  - **luse が実は河道マスク** → rn0 + fn_rw + rn0_rw
+    (test/chichibu, examples/chichibu の6ケース)。fn_rw の新規指定に
+    伴う粗度以外の副作用は精査済み(移流ドロップ adv_drop_rw は
+    have_bank 限定、河口段落ちは海域なし、fill_depres・h0_rw は既定 —
+    いずれも不活性)。
+  - **ゾーンごとに粗度が違う(河道線ではない)** → f_rntype=1 +
+    粗度分布ファイル(examples/benchmark/v-shaped の6ケース。luse から
+    0→0.015, 1→0.15 で生成し、mkdata / mkdata_x も rn.txt を直接出力
+    するよう変更)。
+  - **lu2rn が全コード同値=実は一様** → f_rntype=0 の rn0
+    (examples/benchmark/v-valley の6ケース、h-plane の2ケース。
+    mkdata の土地利用出力も廃止)。
+- 旧設定の検出: f_rntype=2 は set_params(全ランク・collective 安全)が
+  廃止メッセージ付き par_stop で止める。f_lusetype / fn_luse / lu2rn は
+  namelist から削除したため読込エラーになる(公開前につき互換シムは
+  置かない)。
+- **utils/lu2mask は lusefile を引数指定に変更**
+  (`lu2mask parameterfile lusefile maskfile code1 ...`。§40.2 に反映)。
+
+検証記録(2026-08-15):
+- 等価変換: test/chichibu の Log が既存 reference とビット一致
+  (reference は Log 不変のため据え置き。param.txt コピーの更新(-u)は
+  目視確認後に人間が行う)。v-shaped 全6・v-valley 全6・hp10 で
+  変換前後の result が(param コピーを除き)ビット一致。examples の
+  残り(examples/chichibu, hp10x)は「動作確認不要」の指示により
+  変換のみ(chichibu 例は test/chichibu と同構造で間接的に実証済み。
+  hp10x は変換前から FPE で実行不能な既存問題があり別件)。
+- 削除コミット: wave・chichibu の逐次回帰 PASS(reference 不変)。
+  wave の MPI 回帰 np=1,2,4 PASS。chichibu の MPI np=1,2,4 の Log が
+  逐次 reference とビット一致(lu の scatter 1本削除 = collective 列の
+  変更に対する規律2)。gfortran -Og -fcheck=all の np=2(chichibu)
+  完走・Log ビット一致(規律3)。f_rntype=2 指定時の停止メッセージを
+  確認。lu2mask は新引数形式で txt/bil の生成物が変更前と一致。
+- 付随修正: benchmark 3例題の Makefile の TOPDIR 階層(make links が
+  不能だった)、h-plane・v-valley の旧 namelist 名 &list_param
+  (現行バイナリで読込不能だった)をそれぞれ独立コミットで修正。
