@@ -114,6 +114,22 @@ For how to write parameter files, see the
 [tutorial](../../tutorials/wave/en/README.md) and the
 [user's guide](users_guide.md).
 
+### 2.5 Installing the visualization tool (gnuplot)
+
+ENCflow itself does not depend on any visualization tool (results are
+plain matrix text or GeoTIFF, readable by GIS, Python, Excel, and so
+on). The tutorials and the bundled plot scripts (`Plot_*.plt`),
+however, use **gnuplot** (5.2 or later), so install it with your
+package manager if you plan to follow the tutorials.
+
+```bash
+sudo apt install gnuplot        # Ubuntu / Debian (including WSL)
+brew install gnuplot            # macOS (Homebrew)
+sudo dnf install gnuplot        # Fedora / RHEL family
+```
+
+`gnuplot --version` confirms the installation and version.
+
 ## 3. Building the MPI hybrid version
 
 To compute across nodes on a workstation or supercomputer, build the
