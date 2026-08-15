@@ -179,6 +179,57 @@ docs/comparison.md を参照。
   同時に実行する**。print だけ is_root。ランク0だけが exit すると他ランクが
   回り続け finalize で整合しなくなる。`error stop` は dispose/par_finalize を
   素通りするので使わない — ierror を返し、finalize 後に stop 1。
+
+### 4.1 メッセージ本文の規約(2026-08-15 制定)
+
+実行時メッセージは英語一本(§34.2)。全 542 箇所の一括英語化と同時に
+書式を以下に統一した。
+
+- **深刻さはラッパーが唯一の所有者**。`ERROR:`/`WARNING:`/`ABORT:` は
+  ラッパーが付けるので、本文に error / warning / fatal 等の severity 語を
+  書かない。警告の情報は par_warn で出す(par_info の本文に "warning:" と
+  書かない)。
+- **本文は `<context>: <message>` の1行英文**。context は2種類だけ:
+  - 設定・入力の誤り(利用者がパラメータファイルを直すもの)→
+    **namelist グループ名**(例 `list_geoinfo: f_rntype must be 0(fixed)
+    or 1(file): 3`)
+  - 実行時の異常・進捗 → **モジュールの話題名**(m_ 抜き。`geoinfo:`,
+    `tide:`, `save:`, `fileio:`)
+  - **ルーチン名は書かない**(利用者に無意味・リファクタで陳腐化する)。
+    発生箇所の特定は「本文がリポジトリ内で一意」であることで担保する。
+- **文体**: context タグの後は小文字始まり・一文・終端ピリオドなし。
+  値は `name=value` か文末の `: value`。可能なら対処を1節添える
+  (例 "specify only one of dx and lx")。パラメータ名・ファイル名は
+  翻訳せずそのまま書く。ASCII のみ。
+- par_info の進捗は動名詞開始(`reading <path>`)。従属項目は先頭
+  1スペースの字下げ。
+- **対象外**: probe/flux CSV のヘッダ・Log.txt の列見出しなど「出力
+  データの一部」である文字列(変更は互換性の別議論)。コード内コメントは
+  日本語のまま(§34.2)。
+
+### 4.2 メッセージ用語の対訳(追補していく)
+
+| 日本語 | 英語 | | 日本語 | 英語 |
+|---|---|---|---|---|
+| 河道(マスク) | channel (mask) | | 窪地 | depression |
+| 海域(マスク) | sea (mask) | | 越流 | overtopping |
+| 領域マスク | domain mask | | 河口 | river mouth |
+| 流域 | catchment | | 土層厚 | soil depth |
+| 地盤高 | ground elevation | | 比湧水量 | specific yield |
+| 粗度係数 | roughness | | 遮断 | interception |
+| 掘り込み(深さ) | incision (depth) | | 蒸発散 | evapotranspiration |
+| 堤防 | levee | | 融雪 | snowmelt |
+| 天端 | crest | | 土石流 | debris flow |
+| 海岸堤防 | seawall | | 浮遊砂 | suspended sediment |
+| 海側マスク | seaside mask | | 点源/面源 | point/diffuse source |
+| ため池 | pond | | 水位 | water level |
+| 家屋 | building | | 水深 | depth |
+| 空隙率 | void fraction | | 流量 | discharge |
+| 構造物 | structure | | 流速 | velocity |
+| 分水 | diversion | | 境界条件 | boundary condition |
+| 排水機場 | pumping station | | 状態保存ファイル | state file |
+| 陸閘・水門 | gate | | 再開 | restart |
+| 帯(分割) | band | | 格子/セル | grid / cell |
 - 領域分割後の集約対象(判定・出力の直前に allreduce/gather が要るもの):
   **ierror(swflow の発散検出はランク局所値になる)、s%cnmax、
   s%hmean(二段総和の行部分和)、s%sp の各成分(表示区間内最大値)**。
