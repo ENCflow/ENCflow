@@ -51,20 +51,17 @@
   dx = 200.0
   dy = 200.0
   f_ztype = 1     ! 地盤高タイプ (0:デフォルト固定値, 1:ファイル)
-  f_lusetype = 1  ! 土地利用データの有無 (0:なし, 1:ファイル)
-  f_rntype = 2    ! 粗度係数タイプ (0:デフォルト固定値, 1:ファイル, 2:土地利用から)
+  f_rntype = 0    ! 粗度係数タイプ (0:デフォルト固定値, 1:テキストファイル)
   f_masktype = 1  ! 領域マスクの有無 (0:なし, 1:流域マスク)
   z0 = 0.0        ! デフォルト地盤高(m)
-  rn0 = 0.02      ! デフォルト粗度係数
+  rn0 = 0.05      ! デフォルト粗度係数
 
   fn_z = 'Chichibu_200m_filled2.bil'
-  fn_luse = 'Chichibu_200m_river.bil'
+  fn_rw = 'Chichibu_200m_river.bil'
   fn_mask = 'Chichibu_200m_basin.bil'
 
-  !lu2rn(:,1) = 0, 0.15
-  !lu2rn(:,2) = 1, 0.02
-  lu2rn(:,1) = 0, 0.05
-  lu2rn(:,2) = 1, 0.02
+  !rn0 = 0.15
+  rn0_rw = 0.02   ! 河道セルの固定粗度係数
 
 /
 

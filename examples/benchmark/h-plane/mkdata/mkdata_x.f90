@@ -26,15 +26,12 @@ program mkdata
 
   open(1, file='elev.txt')
   open(2, file='mask.txt')
-  open(3, file='luse.txt')
   do j = 1, ny
     write(1, '(*(f12.5))') elev(1:nx,j)
     write(2, '(*(i5))') mask(1:nx,j)
-    write(3, '(*(i5))') luse(1:nx,j)
   end do
   close(1)
   close(2)
-  close(3)
 
 
 end program
