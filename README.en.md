@@ -167,10 +167,12 @@ Linux, macOS, and WSL are the assumed platforms. See the
 5. [test/](test/) — verified examples (doubling as regression tests)
 
 Developers and the curious should head to
+[docs/architecture.md](docs/architecture.md) (in Japanese) (the
+one-page map of the architecture — read this first),
 [docs/developer.md](docs/developer.md) (in Japanese) (the authoritative source for
 design philosophy and conventions) and
 [docs/comparison.md](docs/en/comparison.md) (comparison with other
-models). Documentation is currently in Japanese.
+models). Developer documentation is currently in Japanese.
 
 ## Who it is for
 

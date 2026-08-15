@@ -137,7 +137,9 @@ OS は Linux / macOS / WSL を想定しています。詳細は
 5. [test/](test/) — 検証済みの例題(回帰テストを兼ねています)
 
 開発に参加したい方・中身を知りたい方は
-[docs/developer.md](docs/developer.md)(設計思想と規約の正本)と
+[docs/architecture.md](docs/architecture.md)(全体像の案内図。
+最初に読む1枚)、
+[docs/developer.md](docs/developer.md)(設計思想と規約の正本)、
 [docs/comparison.md](docs/comparison.md)(他モデルとの比較)へ。
 
 ## 想定ユーザー
