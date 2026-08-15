@@ -14,7 +14,7 @@
 
   fn_geoinfo = "-"           ! 地理情報設定ファイル
   fn_precip  = "-"           ! 降水条件設定ファイル
-  fn_record  = "-"           ! 降水条件設定ファイル
+  fn_record  = "-"           ! 記録設定ファイル
 
   dir_data = "data_chichibu" ! 入力データディレクトリ
 
@@ -40,8 +40,8 @@
   f_masktype = 1       ! 領域マスクの有無 (0:なし, 1:流域マスク)
 
   f_rntype = 0         ! 粗度係数タイプ (0:デフォルト固定値, 1:ファイル, 2:土地利用から)
-  rn0 = 0.05           ! 祖度係数固定値
-  rn0_rw = 0.02        ! 河道マスク部の固定祖度係数
+  rn0 = 0.05           ! 粗度係数固定値
+  rn0_rw = 0.02        ! 河道マスク部の固定粗度係数
 
   fn_z = "Chichibu_200m_filled.tif"        ! 地盤高ファイル名
   fn_mask = "Chichibu_200m_basin.tif"      ! 領域マスクファイル名
