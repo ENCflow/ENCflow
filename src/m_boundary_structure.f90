@@ -85,7 +85,7 @@ function count_dam(list) result(ndam)
   ndam = count(active)
   if (ndam <= 0) return
   if (.not. all(active(1:ndam))) then
-    call par_stop("list_struct_dam: ダム番号は 1 から連続で指定してください")
+    call par_stop("list_struct_dam: dam numbers must be consecutive from 1")
   end if
 
 end function
@@ -111,7 +111,7 @@ function count_pump(list) result(npump)
   npump = count(active)
   if (npump <= 0) return
   if (.not. all(active(1:npump))) then
-    call par_stop("list_struct_pump: ポンプ番号は 1 から連続で指定してください")
+    call par_stop("list_struct_pump: pump numbers must be consecutive from 1")
   end if
 
 end function
@@ -136,7 +136,7 @@ function count_culvert(list) result(nculv)
   nculv = count(active)
   if (nculv <= 0) return
   if (.not. all(active(1:nculv))) then
-    call par_stop("list_struct_culvert: カルバート番号は 1 から連続で指定してください")
+    call par_stop("list_struct_culvert: culvert numbers must be consecutive from 1")
   end if
 
 end function
@@ -162,7 +162,7 @@ function count_diversion(list) result(ndiv)
   ndiv = count(active)
   if (ndiv <= 0) return
   if (.not. all(active(1:ndiv))) then
-    call par_stop("list_struct_diversion: 分水番号は 1 から連続で指定してください")
+    call par_stop("list_struct_diversion: diversion numbers must be consecutive from 1")
   end if
 
 end function
@@ -396,16 +396,16 @@ subroutine init_pump(b, p, g, list, npump)
     has_q0 = list%pump_q0(ip) > -9998.0
     has_rule = list%pump_rule(1,1,ip) > -9999
     if (has_q0 .and. has_rule) then
-      call par_stop("list_struct_pump: ポンプ "//itoa(ip) &
-                    //" は pump_q0 と pump_rule を同時に指定できません")
+      call par_stop("list_struct_pump: specify only one of pump_q0 and pump_rule" &
+                    //" for pump "//itoa(ip))
     end if
     if (.not. (has_q0 .or. has_rule)) then
-      call par_stop("list_struct_pump: ポンプ "//itoa(ip) &
-                    //" に運転ルール(pump_q0 か pump_rule)がありません")
+      call par_stop("list_struct_pump: pump "//itoa(ip) &
+                    //" has no operating rule (specify pump_q0 or pump_rule)")
     end if
     if (has_q0) then
       if (list%pump_q0(ip) < 0.0) then
-        call par_stop("list_struct_pump: ポンプ "//itoa(ip)//" の pump_q0 は非負のみです")
+        call par_stop("list_struct_pump: pump_q0 of pump "//itoa(ip)//" must be >= 0")
       end if
       ! 一定流量は1点折れ線に退化(補間は常に固定値を返す)
       allocate(b%struct(ip)%rule(1:2,1:1))
@@ -424,25 +424,25 @@ subroutine init_pump(b, p, g, list, npump)
       b%struct(ip)%nrule = n
       do k = 1, n
         if (b%struct(ip)%rule(2,k) < 0.0) then
-          call par_stop("list_struct_pump: ポンプ "//itoa(ip)//" の流量は非負のみです")
+          call par_stop("list_struct_pump: rule discharge of pump "//itoa(ip)//" must be >= 0")
         end if
         if (k >= 2) then
           if (b%struct(ip)%rule(1,k) <= b%struct(ip)%rule(1,k-1)) then
-            call par_stop("list_struct_pump: ポンプ "//itoa(ip) &
-                          //" のルールの基準水位が単調増加ではありません")
+            call par_stop("list_struct_pump: rule reference levels of pump "//itoa(ip) &
+                          //" must be monotonically increasing")
           end if
         end if
       end do
     end if
     if (list%f_pump_ref(ip) < 0 .or. list%f_pump_ref(ip) > 1) then
-      call par_stop("list_struct_pump: f_pump_ref は 0(水位η), 1(水深h) のいずれか: " &
+      call par_stop("list_struct_pump: f_pump_ref must be 0(water level) or 1(depth): " &
                     //itoa(list%f_pump_ref(ip)))
     end if
     b%struct(ip)%f_ref = list%f_pump_ref(ip)
 
     !--- 検証(セルは有効な陸セルのみ) ---
     if (b%struct(ip)%ncin <= 0) then
-      call par_stop("list_struct_pump: ポンプ "//itoa(ip)//" に取水セルがありません")
+      call par_stop("list_struct_pump: pump "//itoa(ip)//" has no intake cells")
     end if
     do k = 1, b%struct(ip)%ncin + b%struct(ip)%ncout
       if (k <= b%struct(ip)%ncin) then
@@ -453,16 +453,16 @@ subroutine init_pump(b, p, g, list, npump)
         j = b%struct(ip)%cout(2,k-b%struct(ip)%ncin)
       end if
       if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
-        call par_stop("list_struct_pump: ポンプ "//itoa(ip)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が領域外です")
+        call par_stop("list_struct_pump: pump "//itoa(ip)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain")
       end if
       if (g%x(i,j) <= 0) then
-        call par_stop("list_struct_pump: ポンプ "//itoa(ip)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が無効セル(x=0)です")
+        call par_stop("list_struct_pump: pump "//itoa(ip)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain mask (x=0)")
       end if
       if (g%sw(i,j) /= 0) then
-        call par_stop("list_struct_pump: ポンプ "//itoa(ip)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が海セルです")
+        call par_stop("list_struct_pump: pump "//itoa(ip)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is a sea cell")
       end if
     end do
 
@@ -483,8 +483,8 @@ subroutine init_pump(b, p, g, list, npump)
   end do
   call par_allreduce_maxi(n)
   if (n > 0) then
-    call par_stop("list_struct_pump: ポンプ "//itoa(n)//" の代表セルはため池(rscap>0)です。" &
-                  //"水位基準(f_pump_ref=0)は使えません。f_pump_ref=1(水深=ため池水深)を指定してください")
+    call par_stop("list_struct_pump: representative cell of pump "//itoa(n)//" is a pond " &
+                  //"(rscap>0), specify f_pump_ref=1 (pond depth) instead of 0 (water level)")
   end if
 
 end subroutine
@@ -530,11 +530,11 @@ subroutine init_culvert(b, p, g, list, ofs, nculv)
 
     !--- ゲート(樋管・樋門): フラップと開度ルール ---
     if (list%culv_flap(ic) < 0 .or. list%culv_flap(ic) > 1) then
-      call par_stop("list_struct_culvert: culv_flap は 0(なし), 1(逆流遮断) のいずれか: " &
+      call par_stop("list_struct_culvert: culv_flap must be 0(none) or 1(block reverse flow): " &
                     //itoa(list%culv_flap(ic)))
     end if
     if (list%culv_gate_ref(ic) < 0 .or. list%culv_gate_ref(ic) > 1) then
-      call par_stop("list_struct_culvert: culv_gate_ref は 0(in側), 1(out側) のいずれか: " &
+      call par_stop("list_struct_culvert: culv_gate_ref must be 0(in side) or 1(out side): " &
                     //itoa(list%culv_gate_ref(ic)))
     end if
     b%struct(ist)%geom(8) = real(list%culv_flap(ic))
@@ -550,13 +550,13 @@ subroutine init_culvert(b, p, g, list, ofs, nculv)
       b%struct(ist)%nrule = n
       do k = 1, n
         if (b%struct(ist)%rule(2,k) < 0.0 .or. b%struct(ist)%rule(2,k) > 1.0) then
-          call par_stop("list_struct_culvert: カルバート "//itoa(ic) &
-                        //" のゲート開度は 0〜1 のみです")
+          call par_stop("list_struct_culvert: gate opening of culvert "//itoa(ic) &
+                        //" must be in [0,1]")
         end if
         if (k >= 2) then
           if (b%struct(ist)%rule(1,k) <= b%struct(ist)%rule(1,k-1)) then
-            call par_stop("list_struct_culvert: カルバート "//itoa(ic) &
-                          //" のゲートルールの基準水位が単調増加ではありません")
+            call par_stop("list_struct_culvert: gate rule reference levels of culvert "//itoa(ic) &
+                          //" must be monotonically increasing")
           end if
         end if
       end do
@@ -601,28 +601,28 @@ subroutine init_culvert(b, p, g, list, ofs, nculv)
     end if
 
     if (b%struct(ist)%ncin <= 0) then
-      call par_stop("list_struct_culvert: カルバート "//itoa(ic)//" に上流側セルがありません")
+      call par_stop("list_struct_culvert: culvert "//itoa(ic)//" has no upstream cells")
     end if
     if (b%struct(ist)%ncout <= 0) then
-      call par_stop("list_struct_culvert: カルバート "//itoa(ic)//" に下流側セルがありません" &
-                    //"(双方向のため両側必須。域外排水はポンプ pump_q0 を使ってください)")
+      call par_stop("list_struct_culvert: culvert "//itoa(ic)//" has no downstream cells" &
+                    //" (both sides are required, use pump pump_q0 to drain out of the domain)")
     end if
 
     !--- 形状・損失の検証と係数の前計算 ---
     bw = list%culv_width(ic)
     d = list%culv_height(ic)
     if (bw <= 0.0 .or. d <= 0.0) then
-      call par_stop("list_struct_culvert: カルバート "//itoa(ic) &
-                    //" の断面(culv_width, culv_height)は正の値で必須です")
+      call par_stop("list_struct_culvert: culvert "//itoa(ic) &
+                    //" requires a positive cross section (culv_width, culv_height)")
     end if
     if (list%culv_zin(ic) < -9998.0 .or. list%culv_zout(ic) < -9998.0) then
-      call par_stop("list_struct_culvert: カルバート "//itoa(ic) &
-                    //" の敷高(culv_zin, culv_zout)は必須です")
+      call par_stop("list_struct_culvert: culvert "//itoa(ic) &
+                    //" requires invert elevations (culv_zin, culv_zout)")
     end if
     if (list%culv_length(ic) < 0.0 .or. list%culv_manning(ic) < 0.0 &
         .or. list%culv_ce(ic) < 0.0) then
-      call par_stop("list_struct_culvert: カルバート "//itoa(ic) &
-                    //" の culv_length / culv_manning / culv_ce は非負のみです")
+      call par_stop("list_struct_culvert: culv_length / culv_manning / culv_ce of culvert " &
+                    //itoa(ic)//" must be >= 0")
     end if
     a = bw * d
     r = a / (2.0 * (bw + d))
@@ -644,16 +644,16 @@ subroutine init_culvert(b, p, g, list, ofs, nculv)
         j = b%struct(ist)%cout(2,k-b%struct(ist)%ncin)
       end if
       if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
-        call par_stop("list_struct_culvert: カルバート "//itoa(ic)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が領域外です")
+        call par_stop("list_struct_culvert: culvert "//itoa(ic)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain")
       end if
       if (g%x(i,j) <= 0) then
-        call par_stop("list_struct_culvert: カルバート "//itoa(ic)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が無効セル(x=0)です")
+        call par_stop("list_struct_culvert: culvert "//itoa(ic)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain mask (x=0)")
       end if
       if (g%sw(i,j) /= 0) then
-        call par_stop("list_struct_culvert: カルバート "//itoa(ic)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が海セルです")
+        call par_stop("list_struct_culvert: culvert "//itoa(ic)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is a sea cell")
       end if
     end do
 
@@ -674,8 +674,8 @@ subroutine init_culvert(b, p, g, list, ofs, nculv)
     end do
     call par_allreduce_sumr(area)
     if (area(1) <= 0.0 .or. area(2) <= 0.0) then
-      call par_stop("list_struct_culvert: カルバート "//itoa(ic) &
-                    //" のセル群の有効平面積(gv)がゼロです")
+      call par_stop("list_struct_culvert: effective plan area (gv) of culvert "//itoa(ic) &
+                    //" cell sets is zero")
     end if
     b%struct(ist)%geom(7) = area(1) * area(2) / (area(1) + area(2))
 
@@ -700,8 +700,8 @@ subroutine init_culvert(b, p, g, list, ofs, nculv)
   end do
   call par_allreduce_maxi(n)
   if (n > 0) then
-    call par_stop("list_struct_culvert: カルバート "//itoa(n)//" のセルにため池(rscap>0)が" &
-                  //"含まれています。カルバートはため池セルに接続できません(ポンプを使ってください)")
+    call par_stop("list_struct_culvert: culvert "//itoa(n)//" has pond cells (rscap>0), " &
+                  //"culverts cannot connect to pond cells (use a pump)")
   end if
 
 end subroutine
@@ -790,16 +790,16 @@ subroutine init_diversion(b, p, g, list, ofs, ndiv)
     has_q0 = list%div_q0(id) > -9998.0
     has_rule = list%div_rule(1,1,id) > -9999
     if (has_q0 .and. has_rule) then
-      call par_stop("list_struct_diversion: 分水 "//itoa(id) &
-                    //" は div_q0 と div_rule を同時に指定できません")
+      call par_stop("list_struct_diversion: specify only one of div_q0 and div_rule" &
+                    //" for diversion "//itoa(id))
     end if
     if (.not. (has_q0 .or. has_rule)) then
-      call par_stop("list_struct_diversion: 分水 "//itoa(id) &
-                    //" にルール(div_q0 か div_rule)がありません")
+      call par_stop("list_struct_diversion: diversion "//itoa(id) &
+                    //" has no rule (specify div_q0 or div_rule)")
     end if
     if (has_q0) then
       if (list%div_q0(id) < 0.0) then
-        call par_stop("list_struct_diversion: 分水 "//itoa(id)//" の div_q0 は非負のみです")
+        call par_stop("list_struct_diversion: div_q0 of diversion "//itoa(id)//" must be >= 0")
       end if
       ! 一定流量は1点折れ線に退化(補間は常に固定値を返す)
       allocate(b%struct(ist)%rule(1:2,1:1))
@@ -818,12 +818,13 @@ subroutine init_diversion(b, p, g, list, ofs, ndiv)
       b%struct(ist)%nrule = n
       do k = 1, n
         if (b%struct(ist)%rule(2,k) < 0.0) then
-          call par_stop("list_struct_diversion: 分水 "//itoa(id)//" の流量は非負のみです")
+          call par_stop("list_struct_diversion: rule discharge of diversion "//itoa(id) &
+                        //" must be >= 0")
         end if
         if (k >= 2) then
           if (b%struct(ist)%rule(1,k) <= b%struct(ist)%rule(1,k-1)) then
-            call par_stop("list_struct_diversion: 分水 "//itoa(id) &
-                          //" のルールの基準水位が単調増加ではありません")
+            call par_stop("list_struct_diversion: rule reference levels of diversion "//itoa(id) &
+                          //" must be monotonically increasing")
           end if
         end if
       end do
@@ -831,7 +832,7 @@ subroutine init_diversion(b, p, g, list, ofs, ndiv)
 
     !--- 検証(セルは有効な陸セルのみ) ---
     if (b%struct(ist)%ncin <= 0) then
-      call par_stop("list_struct_diversion: 分水 "//itoa(id)//" に取水セルがありません")
+      call par_stop("list_struct_diversion: diversion "//itoa(id)//" has no intake cells")
     end if
     do k = 1, b%struct(ist)%ncin + b%struct(ist)%ncout
       if (k <= b%struct(ist)%ncin) then
@@ -842,16 +843,16 @@ subroutine init_diversion(b, p, g, list, ofs, ndiv)
         j = b%struct(ist)%cout(2,k-b%struct(ist)%ncin)
       end if
       if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
-        call par_stop("list_struct_diversion: 分水 "//itoa(id)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が領域外です")
+        call par_stop("list_struct_diversion: diversion "//itoa(id)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain")
       end if
       if (g%x(i,j) <= 0) then
-        call par_stop("list_struct_diversion: 分水 "//itoa(id)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が無効セル(x=0)です")
+        call par_stop("list_struct_diversion: diversion "//itoa(id)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain mask (x=0)")
       end if
       if (g%sw(i,j) /= 0) then
-        call par_stop("list_struct_diversion: 分水 "//itoa(id)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が海セルです")
+        call par_stop("list_struct_diversion: diversion "//itoa(id)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is a sea cell")
       end if
     end do
 
@@ -877,8 +878,8 @@ subroutine init_diversion(b, p, g, list, ofs, ndiv)
   end do
   call par_allreduce_maxi(n)
   if (n > 0) then
-    call par_stop("list_struct_diversion: 分水 "//itoa(n)//" のセルにため池(rscap>0)が" &
-                  //"含まれています。分水はため池セルに接続できません(ポンプを使ってください)")
+    call par_stop("list_struct_diversion: diversion "//itoa(n)//" has pond cells (rscap>0), " &
+                  //"diversions cannot connect to pond cells (use a pump)")
   end if
 
 end subroutine
@@ -952,10 +953,10 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
       b%struct(ist)%ncout = n
     end if
     if (b%struct(ist)%ncin <= 0) then
-      call par_stop("list_struct_dam: ダム "//itoa(id)//" に貯水池セル(捕捉帯)がありません")
+      call par_stop("list_struct_dam: dam "//itoa(id)//" has no reservoir cells (capture band)")
     end if
     if (b%struct(ist)%ncout <= 0) then
-      call par_stop("list_struct_dam: ダム "//itoa(id)//" に放流セルがありません")
+      call par_stop("list_struct_dam: dam "//itoa(id)//" has no release cells")
     end if
 
     !--- HV 曲線(必須。水位・貯水量とも単調増加) ---
@@ -965,8 +966,8 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
       n = n + 1
     end do
     if (n < 2) then
-      call par_stop("list_struct_dam: ダム "//itoa(id)//" の HV 曲線(dam_hv)は最低2点" &
-                    //"(最低水位・サーチャージ)必要です")
+      call par_stop("list_struct_dam: HV curve (dam_hv) of dam "//itoa(id)//" needs at least" &
+                    //" 2 points (minimum level and surcharge)")
     end if
     allocate(b%struct(ist)%hv(1:2,1:n))
     b%struct(ist)%hv(1:2,1:n) = list%dam_hv(1:2,1:n,id)
@@ -974,12 +975,13 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
     do k = 2, n
       if (b%struct(ist)%hv(1,k) <= b%struct(ist)%hv(1,k-1) &
           .or. b%struct(ist)%hv(2,k) <= b%struct(ist)%hv(2,k-1)) then
-        call par_stop("list_struct_dam: ダム "//itoa(id)//" の HV 曲線は水位・貯水量とも" &
-                      //"単調増加で指定してください")
+        call par_stop("list_struct_dam: HV curve of dam "//itoa(id)//" must be monotonically" &
+                      //" increasing in both water level and storage")
       end if
     end do
     if (b%struct(ist)%hv(2,1) < 0.0) then
-      call par_stop("list_struct_dam: ダム "//itoa(id)//" の最低水位の貯水量は非負のみです")
+      call par_stop("list_struct_dam: storage at the minimum level of dam "//itoa(id) &
+                    //" must be >= 0")
     end if
     hmin = b%struct(ist)%hv(1,1)
     hsur = b%struct(ist)%hv(1,n)
@@ -991,14 +993,14 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
     select case (list%f_dam_mode(id))
       case (1)      ! 一定量放流
         if (list%dam_q0(id) < 0.0) then
-          call par_stop("list_struct_dam: ダム "//itoa(id) &
-                        //"(モード1)には dam_q0 >= 0 が必要です")
+          call par_stop("list_struct_dam: dam "//itoa(id) &
+                        //" (mode 1) requires dam_q0 >= 0")
         end if
         b%struct(ist)%geom(4) = list%dam_q0(id)
       case (2)      ! 一定率カット
         if (list%dam_rate(id) < 0.0 .or. list%dam_rate(id) > 1.0) then
-          call par_stop("list_struct_dam: ダム "//itoa(id) &
-                        //"(モード2)には dam_rate(放流率 0〜1)が必要です")
+          call par_stop("list_struct_dam: dam "//itoa(id) &
+                        //" (mode 2) requires dam_rate (release ratio in [0,1])")
         end if
         b%struct(ist)%geom(5) = list%dam_rate(id)
       case (3)      ! 自然調節(rating の3段階指定)
@@ -1014,12 +1016,13 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
           b%struct(ist)%nrule = n
           do k = 1, n
             if (b%struct(ist)%rule(2,k) < 0.0) then
-              call par_stop("list_struct_dam: ダム "//itoa(id)//" の dam_hq_rule の流量は非負のみです")
+              call par_stop("list_struct_dam: dam_hq_rule discharge of dam "//itoa(id) &
+                            //" must be >= 0")
             end if
             if (k >= 2) then
               if (b%struct(ist)%rule(1,k) <= b%struct(ist)%rule(1,k-1)) then
-                call par_stop("list_struct_dam: ダム "//itoa(id) &
-                              //" の dam_hq_rule の水位が単調増加ではありません")
+                call par_stop("list_struct_dam: dam_hq_rule water levels of dam "//itoa(id) &
+                              //" must be monotonically increasing")
               end if
             end if
           end do
@@ -1030,8 +1033,8 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
           zb = list%dam_ori_zbase(id)
           ce = merge(0.5, list%dam_ori_ce(id), list%dam_ori_ce(id) < -9998.0)
           if (bw <= 0.0 .or. d <= 0.0 .or. zb < -9998.0 .or. ce < 0.0) then
-            call par_stop("list_struct_dam: ダム "//itoa(id)//" のオリフィス諸元" &
-                          //"(dam_ori_width/height/zbase, 任意 ce)が不正です")
+            call par_stop("list_struct_dam: orifice parameters of dam "//itoa(id) &
+                          //" (dam_ori_width/height/zbase, optional ce) are invalid")
           end if
           b%struct(ist)%geom(6) = bw * d * sqrt(2.0 * p%gg / (1.0 + ce))
           b%struct(ist)%geom(7) = zb
@@ -1039,18 +1042,18 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
           ! (c) 計画最大放流量アンカーの √則: Q(H) = Qmax·√((H−zb)/(Hsur−zb))
           zb = merge(hmin, list%dam_zbase(id), list%dam_zbase(id) < -9998.0)
           if (zb >= hsur) then
-            call par_stop("list_struct_dam: ダム "//itoa(id)//" の √則敷高(dam_zbase)は" &
-                          //"サーチャージ水位より低い必要があります")
+            call par_stop("list_struct_dam: sqrt-law base elevation (dam_zbase) of dam " &
+                          //itoa(id)//" must be below the surcharge level")
           end if
           b%struct(ist)%geom(6) = list%dam_qmax(id) / sqrt(hsur - zb)
           b%struct(ist)%geom(7) = zb
         else
-          call par_stop("list_struct_dam: ダム "//itoa(id)//"(モード3=自然調節)には " &
-                        //"dam_hq_rule / オリフィス諸元 / dam_qmax のいずれかが必要です")
+          call par_stop("list_struct_dam: dam "//itoa(id)//" (mode 3 = natural regulation) " &
+                        //"requires one of dam_hq_rule, orifice parameters, or dam_qmax")
         end if
       case default
-        call par_stop("list_struct_dam: ダム "//itoa(id)//" の f_dam_mode は " &
-                      //"1(一定量), 2(一定率カット), 3(自然調節) のいずれか: " &
+        call par_stop("list_struct_dam: f_dam_mode of dam "//itoa(id)//" must be " &
+                      //"1(constant release), 2(constant-ratio cut) or 3(natural regulation): " &
                       //itoa(list%f_dam_mode(id)))
     end select
 
@@ -1067,8 +1070,8 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
       htad = hmin + 0.9 * (hsur - hmin)
     end if
     if (htad <= hmin .or. htad >= hsur) then
-      call par_stop("list_struct_dam: ダム "//itoa(id)//" の但し書き開始水位は" &
-                    //"最低水位とサーチャージ水位の間(両端を除く)で指定してください")
+      call par_stop("list_struct_dam: emergency-release start level (dam_tadashigaki) of dam " &
+                    //itoa(id)//" must be strictly between the minimum and surcharge levels")
     end if
     b%struct(ist)%geom(3) = dam_v_of_h(b%struct(ist)%hv, b%struct(ist)%nhv, htad)
 
@@ -1079,15 +1082,15 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
       hini = hmin
     end if
     if (hini < hmin .or. hini > hsur) then
-      call par_stop("list_struct_dam: ダム "//itoa(id)//" の初期水位は" &
-                    //"最低水位とサーチャージ水位の間で指定してください")
+      call par_stop("list_struct_dam: initial water level (dam_h_init) of dam "//itoa(id) &
+                    //" must be between the minimum and surcharge levels")
     end if
     b%struct(ist)%geom(8) = dam_v_of_h(b%struct(ist)%hv, b%struct(ist)%nhv, hini)
 
     !--- 湛水面積(蒸発散用オプション。§27。未指定は 0 = 捕捉帯セル面積で評価) ---
     if (list%dam_area(id) > -9998.0) then
       if (list%dam_area(id) <= 0.0) then
-        call par_stop("list_struct_dam: ダム "//itoa(id)//" の dam_area は正のみです")
+        call par_stop("list_struct_dam: dam_area of dam "//itoa(id)//" must be > 0")
       end if
       b%struct(ist)%geom(9) = list%dam_area(id)
     end if
@@ -1102,16 +1105,16 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
         j = b%struct(ist)%cout(2,k-b%struct(ist)%ncin)
       end if
       if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
-        call par_stop("list_struct_dam: ダム "//itoa(id)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が領域外です")
+        call par_stop("list_struct_dam: dam "//itoa(id)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain")
       end if
       if (g%x(i,j) <= 0) then
-        call par_stop("list_struct_dam: ダム "//itoa(id)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が無効セル(x=0)です")
+        call par_stop("list_struct_dam: dam "//itoa(id)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain mask (x=0)")
       end if
       if (g%sw(i,j) /= 0) then
-        call par_stop("list_struct_dam: ダム "//itoa(id)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が海セルです")
+        call par_stop("list_struct_dam: dam "//itoa(id)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is a sea cell")
       end if
     end do
 
@@ -1140,8 +1143,8 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
   end do
   call par_allreduce_maxi(n)
   if (n > 0) then
-    call par_stop("list_struct_dam: ダム "//itoa(n)//" のセルにため池(rscap>0)または" &
-                  //"河道幅指定(wrw>0)が含まれています。ダムのセル群とは併用できません")
+    call par_stop("list_struct_dam: dam "//itoa(n)//" has pond (rscap>0) or channel width " &
+                  //"(wrw>0) cells, these cannot be combined with dam cell sets")
   end if
 
   !--- ダム CSV の初期化(rank0 のみ) ---

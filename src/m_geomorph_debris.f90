@@ -65,8 +65,8 @@ module subroutine init_debris(gm, p, g, list)
   gm%db_tanphi = tan(list%db_phi * deg2rad)
   ! 石礫型領域(tanθ > 0.138)で分母 tanφ − tanθ が定義されるための下限
   if (gm%db_tanphi <= db_tan1) then
-    call par_stop("list_geomorph: db_phi が小さすぎます(tanφ > 0.138 が必要。" &
-                  // "土砂の内部摩擦角は通常 30〜40 deg)")
+    call par_stop("list_geomorph: db_phi is too small, tan(phi) > 0.138 is required " &
+                  // "(internal friction angle of sediment is usually 30-40 deg)")
   end if
   if (list%db_delte <= 0.0) call par_stop("list_geomorph: db_delte must be > 0")
   if (list%db_deltd <= 0.0) call par_stop("list_geomorph: db_deltd must be > 0")
@@ -100,11 +100,11 @@ module subroutine init_debris(gm, p, g, list)
       continue
     case (1)      ! クーロン+マニング合成(推奨)
       if (list%db_vstop <= 0.0) then
-        call par_stop("list_geomorph: f_dbres=1 requires db_vstop > 0(降伏判定の閾値)")
+        call par_stop("list_geomorph: f_dbres=1 requires db_vstop > 0 (yield threshold)")
       end if
     case (2)      ! 高橋ダイラタント(予約)
-      call par_stop("list_geomorph: f_dbres=2(高橋ダイラタント)は未実装です" &
-                    // "(係数の文献照合待ち — debris_plan.md §1)")
+      call par_stop("list_geomorph: f_dbres=2 (Takahashi dilatant) is not implemented yet " &
+                    // "(coefficients pending literature check, see debris_plan.md)")
     case default
       call par_stop("list_geomorph: f_dbres must be 0(Manning) or 1(Coulomb+Manning)")
   end select
@@ -124,7 +124,7 @@ module subroutine init_debris(gm, p, g, list)
   ! --- 瞬時流動化(f_release)。fn_dbinit の有無で有効化 ---
   if (len_trim(list%fn_dbinit) > 0) then
     if (list%db_relsat < 0.0 .or. list%db_relsat > 1.0) then
-      call par_stop("list_geomorph: db_relsat must be in [0, 1]")
+      call par_stop("list_geomorph: fn_dbinit requires db_relsat in [0, 1]")
     end if
     gm%f_release = 1
     gm%db_reltime = list%db_reltime
@@ -143,7 +143,7 @@ module subroutine init_debris(gm, p, g, list)
       call par_stop("list_geomorph: f_slide requires slide_gamma > 0 (N/m3)")
     end if
     if (list%db_relsat < 0.0 .or. list%db_relsat > 1.0) then
-      call par_stop("list_geomorph: db_relsat must be in [0, 1]")
+      call par_stop("list_geomorph: f_slide requires db_relsat in [0, 1]")
     end if
     gm%f_slide = 1
     gm%sl_c = list%slide_c
@@ -169,7 +169,7 @@ subroutine read_release(p, g, fname)
   allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
   call fileio_read_matrix(trim(p%dir_data)//"/"//fname, g%nx, g%ny, wk, p%f_input_mode)
   if (minval(wk) < 0.0) then
-    call par_stop("list_geomorph: fn_dbinit の崩壊深に負値があります: "//fname)
+    call par_stop("list_geomorph: fn_dbinit release depth has negative values: "//fname)
   end if
   allocate(dbr%rel(1:g%nx, dcp%js:dcp%je), source = wk(1:g%nx, dcp%js:dcp%je))
 end subroutine

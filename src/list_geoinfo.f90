@@ -152,7 +152,7 @@ subroutine list_geoinfo_read(p, list)
   call par_info("reading list_geoinfo in "//trim(p%fn_geoinfo))
   open(newunit=un, file=trim(p%fn_geoinfo), status='old')
   read(un, nml=list_geoinfo, iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("list_geoinfo 読込失敗: "//trim(iom))
+  if (ios /= 0) call par_stop("list_geoinfo: failed to read namelist: "//trim(iom))
   close(un)
 
   ! 領域指定の判別・補完・検証は m_geoinfo(resolve_geometry)が行う。

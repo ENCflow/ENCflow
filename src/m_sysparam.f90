@@ -146,8 +146,8 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%f_state_save =  list%f_state_save          ! 状態保存ファイルの出力
   p%f_state_restore =  list%f_state_restore    ! 状態保存ファイルの利用 (0/1/2)
   if (p%f_state_restore < 0 .or. p%f_state_restore > 2) then
-    call par_stop("list_sysparam: f_state_restore は 0(なし)/1(再開)/" &
-                  //"2(初期条件として利用)のいずれかです: "//itoa(p%f_state_restore))
+    call par_stop("list_sysparam: f_state_restore must be 0(none), 1(restart) or " &
+                  //"2(use as initial condition): "//itoa(p%f_state_restore))
   end if
   ! matrix入力形式(1:text, 2:bil, 4:geotiff。値は f_output_mode のビットと共通)
   if (list%f_input_mode == 1) then
@@ -158,17 +158,17 @@ subroutine m_sysparam_init(p, fn_sysparam)
     p%f_input_mode = e_fmt_gtif
   else if (list%f_input_mode == 3) then
     ! 出力の 3=text+bil との混同を疑う(入力は単一形式のみ)
-    call par_stop("list_sysparam: f_input_mode=3 は指定できません。" &
-                  //"入力は単一形式(1:text, 2:bil, 4:geotiff)です")
+    call par_stop("list_sysparam: f_input_mode=3 is not allowed; input must be a single " &
+                  //"format (1:text, 2:bil, 4:geotiff)")
   else
-    call par_stop("list_sysparam: unknown f_input_mode "//itoa(list%f_input_mode))
+    call par_stop("list_sysparam: unknown f_input_mode: "//itoa(list%f_input_mode))
   end if
   ! matrix出力形式はビット和(1:text, 2:bil, 4:geotiff。3=text+bil は従来互換)
   if (list%f_output_mode >= 1 .and. list%f_output_mode <= 7) then
     p%f_output_mode = list%f_output_mode
   else
-    call par_stop("list_sysparam: f_output_mode は 1〜7 のビット和" &
-                  //"(1:text, 2:bil, 4:geotiff)です: "//itoa(list%f_output_mode))
+    call par_stop("list_sysparam: f_output_mode must be a bit sum in 1-7 " &
+                  //"(1:text, 2:bil, 4:geotiff): "//itoa(list%f_output_mode))
   end if
   p%f_out_z = list%f_out_z                     ! ファイル出力(地盤高Z0001)
   p%f_out_h = list%f_out_h                     ! ファイル出力(水深H0001)
@@ -222,29 +222,29 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%dir_save = list%dir_save                   ! 状態保存(save/restore)ディレクトリ
   p%outfn_suffix = list%outfn_suffix           ! 出力ファイル名のサフィックス
 
-  if (len(trim(list%t0_c)) > 0) p%t0 = str2sec(list%t0_c, "bad t0_c in &list_sysparam")
+  if (len(trim(list%t0_c)) > 0) p%t0 = str2sec(list%t0_c, "list_sysparam: bad t0_c")
   ! t=0 の暦(蒸発散・水質など暦を使う機能の正本。§27)
   if (len(trim(list%date0_c)) > 0) then
-    call parse_datetime(trim(list%date0_c), p%jdn0, p%sec0, "bad date0_c in &list_sysparam")
+    call parse_datetime(trim(list%date0_c), p%jdn0, p%sec0, "list_sysparam: bad date0_c")
     p%has_date = .true.
   end if
-  if (len(trim(list%tt_c)) > 0) p%tt = str2sec(list%tt_c, "bad tt_c in &list_sysparam")
+  if (len(trim(list%tt_c)) > 0) p%tt = str2sec(list%tt_c, "list_sysparam: bad tt_c")
   ! 強制の反復周期(降雨・気温の時系列参照を mod(t, T) で折り返す。§32.4)
   if (len(trim(list%t_cycle_c)) > 0) then
-    p%t_cycle = str2sec(list%t_cycle_c, "bad t_cycle_c in &list_sysparam")
-    if (p%t_cycle <= 0.0) call par_stop("list_sysparam: t_cycle_c は正の周期を指定してください")
+    p%t_cycle = str2sec(list%t_cycle_c, "list_sysparam: bad t_cycle_c")
+    if (p%t_cycle <= 0.0) call par_stop("list_sysparam: t_cycle_c must be a positive period")
   end if
-  if (len(trim(list%dt_c)) > 0) p%dt = str2sec(list%dt_c, "bad dt_c in &list_sysparam")
-  if (len(trim(list%dt_disp_c)) > 0) p%dt_disp = str2sec(list%dt_disp_c, "bad dt_disp_c in &list_sysparam")
-  if (len(trim(list%dt_file_c)) > 0) p%dt_file = str2sec(list%dt_file_c, "bad dt_file_c in &list_sysparam")
-  if (len(trim(list%dt_recrd_c)) > 0) p%dt_recrd = str2sec(list%dt_recrd_c, "bad dt_recrd_c in &list_sysparam")
-  if (len(trim(list%st_file_c)) > 0) p%st_file = str2sec(list%st_file_c, "bad st_file_c in &list_sysparam")
-  if (len(trim(list%st_recrd_c)) > 0) p%st_recrd = str2sec(list%st_recrd_c, "bad st_recrd_c in &list_sysparam")
-  if (len(trim(list%et_file_c)) > 0) p%et_file = str2sec(list%et_file_c, "bad et_file_c in &list_sysparam")
-  if (len(trim(list%et_recrd_c)) > 0) p%et_recrd = str2sec(list%et_recrd_c, "bad et_recrd_c in &list_sysparam")
+  if (len(trim(list%dt_c)) > 0) p%dt = str2sec(list%dt_c, "list_sysparam: bad dt_c")
+  if (len(trim(list%dt_disp_c)) > 0) p%dt_disp = str2sec(list%dt_disp_c, "list_sysparam: bad dt_disp_c")
+  if (len(trim(list%dt_file_c)) > 0) p%dt_file = str2sec(list%dt_file_c, "list_sysparam: bad dt_file_c")
+  if (len(trim(list%dt_recrd_c)) > 0) p%dt_recrd = str2sec(list%dt_recrd_c, "list_sysparam: bad dt_recrd_c")
+  if (len(trim(list%st_file_c)) > 0) p%st_file = str2sec(list%st_file_c, "list_sysparam: bad st_file_c")
+  if (len(trim(list%st_recrd_c)) > 0) p%st_recrd = str2sec(list%st_recrd_c, "list_sysparam: bad st_recrd_c")
+  if (len(trim(list%et_file_c)) > 0) p%et_file = str2sec(list%et_file_c, "list_sysparam: bad et_file_c")
+  if (len(trim(list%et_recrd_c)) > 0) p%et_recrd = str2sec(list%et_recrd_c, "list_sysparam: bad et_recrd_c")
 
   if (p%dt == 0.0) then
-    call par_stop("error: dt = 0.0")
+    call par_stop("list_sysparam: dt is not set (specify dt or dt_c)")
     stop
   end if
 

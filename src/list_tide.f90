@@ -67,7 +67,7 @@ subroutine list_tide_read(p, list)
   call par_info("reading list_tide in "//trim(p%fn_tide))
   open(newunit=un, file=trim(p%fn_tide), status='old')
   read(un, nml=list_tide, iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("list_tide 読込失敗: "//trim(iom))
+  if (ios /= 0) call par_stop("list_tide: failed to read namelist: "//trim(iom))
   close(un)
 
   ! 解釈・検証・導出は m_tide の init が行う(list_* 層の共通契約)

@@ -63,9 +63,9 @@ subroutine gwflow_bucket_init(p, g, s)
 
   call par_info("reading list_gwflow_bucket in " // trim(p%fn_gwflow))
   open(newunit=un, file=trim(p%fn_gwflow), status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: " // trim(p%fn_gwflow))
+  if (ios /= 0) call par_stop("list_gwflow_bucket: cannot open " // trim(p%fn_gwflow))
   read(un, nml=list_gwflow_bucket, iostat=ios)
-  if (ios /= 0) call par_stop("error in reading list_gwflow_bucket")
+  if (ios /= 0) call par_stop("list_gwflow_bucket: cannot read namelist")
   close(un)
 
   if (gw_infil_mmh <= 0.0) call par_stop("list_gwflow_bucket: gw_infil_mmh must be > 0")

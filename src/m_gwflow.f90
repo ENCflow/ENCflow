@@ -184,8 +184,8 @@ subroutine m_gwflow_init(gw, p, g, s)
       sdmax(1) = maxval(s%sd(:, dcp%js:dcp%je))
       call par_allreduce_max(sdmax)
       if (sdmax(1) <= 0.0) then
-        call par_stop("gwflow: 復元した save に土層厚がありません(gwflow 無効時に" &
-                      // "作成された save)。restore を使わないか、save を作り直してください")
+        call par_stop("gwflow: restored state has zero soil depth (the state file was " &
+                      // "created with gwflow disabled), disable restore or recreate the state file")
       end if
     else
       s%sd(:,:) = g%sd(:,:)

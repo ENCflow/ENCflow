@@ -50,8 +50,8 @@ module subroutine bc_init(p, g, b)
   if (any(f_bc_side == e_bc_radiation)) then
     ! 基準水位は m_boundary_set_etaref(m_state_init 直後)が確定済み
     if (.not. allocated(b%edge%eta_cell)) then
-      call par_stop("bc_init: 放射境界の基準水位が未設定です" &
-                    //"(m_boundary_set_etaref の配線を確認)")
+      call par_stop("swflow: reference water level for the radiation boundary is not set" &
+                    //" (check the m_boundary_set_etaref wiring)")
     end if
     bc_eta_cell = b%edge%eta_cell
   end if

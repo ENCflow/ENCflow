@@ -66,14 +66,14 @@ function str2sec(str, message) result(t)
   end if
 
   if (ierr > 0) then
-    call par_stop("Error, "//message)
+    call par_stop(message//" (bad time unit): "//trim(s))
   end if
 
   if (isnumber(s(1:ll))) then
     read(s(1:ll), *) t
     t = t * c
   else
-    call par_stop("Error, "//message)
+    call par_stop(message//" (not a number): "//trim(s))
   end if
 end function str2sec
 
@@ -174,11 +174,11 @@ subroutine parse_datetime(str, jdn, sec, message)
     hh = 0
     mi = 0
     read(buf, *, iostat=ios) y, mo, d
-    if (ios /= 0) call par_stop("Error, "//message//": "//trim(str))
+    if (ios /= 0) call par_stop(message//" (unreadable date): "//trim(str))
   end if
   if (mo < 1 .or. mo > 12 .or. d < 1 .or. d > 31 .or. &
       hh < 0 .or. hh > 23 .or. mi < 0 .or. mi > 59) then
-    call par_stop("Error, "//message//": "//trim(str))
+    call par_stop(message//" (out of range): "//trim(str))
   end if
   jdn = ymd_to_jdn(y, mo, d)
   sec = real(hh) * 3600.0 + real(mi) * 60.0

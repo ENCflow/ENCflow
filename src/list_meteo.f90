@@ -63,9 +63,9 @@ subroutine list_meteo_read(p, list)
 
   call par_info("reading list_meteo in "//trim(p%fn_meteo))
   open(newunit=un, file=trim(p%fn_meteo), status='old', iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("cannot open file: "//trim(p%fn_meteo)//" : "//trim(iom))
+  if (ios /= 0) call par_stop("list_meteo: cannot open "//trim(p%fn_meteo)//": "//trim(iom))
   read(un, nml=list_meteo, iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("error in reading list_meteo: "//trim(iom))
+  if (ios /= 0) call par_stop("list_meteo: cannot read namelist: "//trim(iom))
   close(un)
 
   list%temp0 = temp0

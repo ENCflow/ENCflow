@@ -200,9 +200,9 @@ subroutine list_geomorph_read(p, list)
 
   call par_info("reading list_geomorph in " // trim(p%fn_geomorph))
   open(newunit=un, file=trim(p%fn_geomorph), status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: " // trim(p%fn_geomorph))
+  if (ios /= 0) call par_stop("list_geomorph: cannot open " // trim(p%fn_geomorph))
   read(un, nml=list_geomorph, iostat=ios)
-  if (ios /= 0) call par_stop("error in reading list_geomorph")
+  if (ios /= 0) call par_stop("list_geomorph: cannot read namelist")
   close(un)
 
   list%dt_geomorph = dt_geomorph

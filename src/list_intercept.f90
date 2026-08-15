@@ -34,9 +34,9 @@ subroutine list_intercept_read(p, list)
 
   call par_info("reading list_intercept in " // trim(p%fn_intercept))
   open(newunit=un, file=trim(p%fn_intercept), status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: " // trim(p%fn_intercept))
+  if (ios /= 0) call par_stop("list_intercept: cannot open " // trim(p%fn_intercept))
   read(un, nml=list_intercept, iostat=ios)
-  if (ios /= 0) call par_stop("error in reading list_intercept")
+  if (ios /= 0) call par_stop("list_intercept: cannot read namelist")
   close(un)
 
   list%f_icmodel = f_icmodel

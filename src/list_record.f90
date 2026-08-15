@@ -75,7 +75,7 @@ subroutine list_record_read(p, list)
   call par_info("reading list_record in "//trim(p%fn_record))
   open(newunit=un, file=trim(p%fn_record), status='old')
   read(un, nml=list_record, iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("list_record 読込失敗: "//trim(iom))
+  if (ios /= 0) call par_stop("list_record: failed to read namelist: "//trim(iom))
   close(un)
 
   list%pbxytype = pbxytype

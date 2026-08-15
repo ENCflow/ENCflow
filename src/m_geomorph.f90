@@ -274,7 +274,8 @@ subroutine m_geomorph_init(gm, p, g, s)
 
   ! STG は非対応(init 時コピーのため z の時間発展に追従しない)
   if (p%f_gridsystem /= 0) then
-    call par_stop("m_geomorph: STG(f_gridsystem=1)は地形変化非対応です")
+    call par_stop("list_sysparam: geomorphic change (fn_geomorph) is not supported " &
+                  // "with STG (f_gridsystem=1)")
   end if
 
   call list_geomorph_read(p, list)
@@ -311,12 +312,12 @@ subroutine m_geomorph_init(gm, p, g, s)
   ! 土石流 E-D と浮遊砂 E-D は同一の s%hs 上で動くため排他
   ! (二重計上防止。debris_plan.md §2.2)
   if (gm%f_debris > 0 .and. gm%f_suspend > 0) then
-    call par_stop("list_geomorph: f_debris と f_suspend は併用できません" &
-                  // "(同一の hs に対する E-D の二重計上になります)")
+    call par_stop("list_geomorph: f_debris and f_suspend cannot be combined " &
+                  // "(E-D on the same hs would be counted twice)")
   end if
   ! 土石流はイベント計算であり地形時間の加速は適用外
   if (gm%f_debris > 0 .and. gm%morfac /= 1.0) then
-    call par_stop("list_geomorph: f_debris は morfac=1 のみ対応です(イベント計算)")
+    call par_stop("list_geomorph: f_debris requires morfac=1 (event-scale computation)")
   end if
   ! 斜面安定判定・瞬時流動化は f_debris の付属機構(流動化した土砂の
   ! 輸送・抵抗・停止を土石流モデルが担う)
@@ -351,10 +352,10 @@ subroutine m_geomorph_init(gm, p, g, s)
   !   dsd/dt = W0·exp(−sd/sd*)。s%sd を要する(土砂プロセス未使用でも確保)
   gm%f_wthr = list%f_wthr
   if (gm%f_wthr > 0) then
-    if (list%wthr_p0 <= -9998.0) call par_stop("list_geomorph: f_wthr=1 には wthr_p0 " &
-                                               // "(mm/kyr) が必要です")
-    if (list%wthr_p0 <= 0.0) call par_stop("list_geomorph: wthr_p0 は正のみです")
-    if (list%wthr_sdstar <= 0.0) call par_stop("list_geomorph: wthr_sdstar は正のみです")
+    if (list%wthr_p0 <= -9998.0) call par_stop("list_geomorph: f_wthr=1 requires wthr_p0 " &
+                                               // "(mm/kyr)")
+    if (list%wthr_p0 <= 0.0) call par_stop("list_geomorph: wthr_p0 must be > 0")
+    if (list%wthr_sdstar <= 0.0) call par_stop("list_geomorph: wthr_sdstar must be > 0")
     gm%wp0 = list%wthr_p0 * 1.0e-3 / kyr_s          ! mm/kyr -> m/s
     gm%wsdstar = list%wthr_sdstar
     gm%wsdinv = 1.0 / list%wthr_sdstar
@@ -366,8 +367,8 @@ subroutine m_geomorph_init(gm, p, g, s)
   ! --- 隆起(§32)---
   gm%f_uplift = list%f_uplift
   if (gm%f_uplift > 0) then
-    if (list%uplift0 <= -9998.0) call par_stop("list_geomorph: f_uplift=1 には uplift0 " &
-                                               // "(mm/yr) が必要です")
+    if (list%uplift0 <= -9998.0) call par_stop("list_geomorph: f_uplift=1 requires uplift0 " &
+                                               // "(mm/yr)")
     gm%uprate = list%uplift0 * 1.0e-3 / yr_s        ! mm/yr -> m/s(負=沈降も可)
   end if
 
@@ -411,8 +412,8 @@ subroutine setup_sd(p, g, s)
     sdmax(1) = maxval(s%sd(:, dcp%js:dcp%je))
     call par_allreduce_max(sdmax)
     if (sdmax(1) <= 0.0) then
-      call par_stop("geomorph: 復元した save に土層厚がありません(旧構成で作成された" &
-                    // " save)。restore を使わないか、save を作り直してください")
+      call par_stop("geomorph: restored state file has no soil depth (saved by an old " &
+                    // "configuration), disable restore or recreate the state file")
     end if
   else
     s%sd(:,:) = g%sd(:,:)
@@ -639,23 +640,23 @@ end subroutine
 subroutine m_geomorph_dispose(gm)
   type(t_geomorph), intent(inout) :: gm
   if (flv%nclip > 0) then
-    call par_warn("geomorph fluvial: dzmax クリップが " &
-                  // itoa(flv%nclip) // " エッジで発動しました" &
-                  // "(dt_geomorph/morfac の見直しを推奨)")
+    call par_warn("geomorph: fluvial dzmax clip fired on " &
+                  // itoa(flv%nclip) // " edges" &
+                  // " (review dt_geomorph/morfac)")
   end if
   if (flv%vleak > 0.0) then
-    call par_warn("geomorph fluvial: 岩盤床クリップで " &
-                  // rtoa(flv%vleak) // " m3 の土砂収支誤差が生じました")
+    call par_warn("geomorph: bedrock floor clip caused a sediment budget imbalance of " &
+                  // rtoa(flv%vleak) // " m3")
   end if
   if (dbr%nrelclip > 0) then
-    call par_warn("geomorph debris: 瞬時流動化の崩壊深が土層厚 sd を超え " &
-                  // itoa(dbr%nrelclip) // " セルで sd にクリップされました" &
-                  // "(fn_dbinit と土層厚入力の整合を確認してください)")
+    call par_warn("geomorph: instantaneous release depth exceeded soil depth sd " &
+                  // "and was clipped to sd in " // itoa(dbr%nrelclip) // " cells" &
+                  // " (check consistency between fn_dbinit and the soil depth input)")
   end if
   if (gm%f_slide > 0) then
     ! ランク局所の診断(帯内の最小 Fs と流動化セル数)
-    call par_warn("geomorph slide: min Fs = " // rtoa(dbr%fsmin) &
-                  // ", 流動化セル数 = " // itoa(dbr%nslide))
+    call par_warn("geomorph: slide min Fs = " // rtoa(dbr%fsmin) &
+                  // ", fluidized cells = " // itoa(dbr%nslide))
   end if
   if (allocated(wrk%q)) deallocate(wrk%q)
   if (allocated(dbr%fx)) deallocate(dbr%fx)

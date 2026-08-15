@@ -71,7 +71,7 @@ subroutine list_precip_read(p, list)
   call par_info("reading list_precip in "//trim(p%fn_precip))
   open(newunit=un, file=trim(p%fn_precip), status='old')
   read(un, nml=list_precip, iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("list_precip 読込失敗: "//trim(iom))
+  if (ios /= 0) call par_stop("list_precip: failed to read namelist: "//trim(iom))
   close(un)
 
   list%prtype = prtype

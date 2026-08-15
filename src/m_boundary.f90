@@ -416,9 +416,9 @@ subroutine m_boundary_dispose(b)
       integer :: ifl2
       do ifl2 = 1, b%ninflow
         if (b%inflow(ifl2)%ncsclip > 0 .and. is_root) then
-          call par_warn("bound_inflow: 区間 "//itoa(ifl2)//" で Qs/Q が体積濃度 1 を" &
-                        //"超え "//itoa(b%inflow(ifl2)%ncsclip)//" 回クリップしました" &
-                        //"(流量と流砂量の整合を確認してください)")
+          call par_warn("boundary: Qs/Q of inflow segment "//itoa(ifl2)//" exceeded volume" &
+                        //" concentration 1 and was clipped "//itoa(b%inflow(ifl2)%ncsclip) &
+                        //" times (check consistency of discharge and sediment discharge)")
         end if
       end do
     end block
@@ -470,7 +470,7 @@ subroutine init_edge(b, list)
   do sd = 1, 4
     if (bt(sd) < e_bc_wall .or. bt(sd) > e_bc_radiation) then
       call par_stop("list_bound_edge: f_bc_"//side_name(sd) &
-                    //" は 0(不透過)・1(自由流出)・2(放射) を指定してください: "//itoa(bt(sd)))
+                    //" must be 0(wall), 1(free outflow) or 2(radiation): "//itoa(bt(sd)))
     end if
   end do
   b%edge%btype = bt
@@ -507,7 +507,7 @@ subroutine init_source(b, p, g, list)
   b%nsrc = count(active)
   if (b%nsrc <= 0) return
   if (.not. all(active(1:b%nsrc))) then
-    call par_stop("list_bound_source: ソース番号は 1 から連続で指定してください")
+    call par_stop("list_bound_source: source numbers must be consecutive from 1")
   end if
 
   allocate(b%src(1:b%nsrc))
@@ -545,21 +545,21 @@ subroutine init_source(b, p, g, list)
 
     !--- 検証 ---
     if (b%src(isrc)%ncell <= 0) then
-      call par_stop("list_bound_source: ソース "//itoa(isrc)//" にセルがありません")
+      call par_stop("list_bound_source: source "//itoa(isrc)//" has no cells")
     end if
     if (b%src(isrc)%nval <= 0) then
-      call par_stop("list_bound_source: ソース "//itoa(isrc)//" に時系列がありません")
+      call par_stop("list_bound_source: source "//itoa(isrc)//" has no time series")
     end if
     do k = 1, b%src(isrc)%ncell
       i = b%src(isrc)%cell(1,k)
       j = b%src(isrc)%cell(2,k)
       if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
-        call par_stop("list_bound_source: ソース "//itoa(isrc)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が領域外です")
+        call par_stop("list_bound_source: source "//itoa(isrc)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain")
       end if
       if (g%x(i,j) <= 0) then
-        call par_stop("list_bound_source: ソース "//itoa(isrc)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が無効セル(x=0)です")
+        call par_stop("list_bound_source: source "//itoa(isrc)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain mask (x=0)")
       end if
     end do
 
@@ -595,7 +595,7 @@ subroutine init_stage(b, p, g, list)
   b%nstage = count(active)
   if (b%nstage <= 0) return
   if (.not. all(active(1:b%nstage))) then
-    call par_stop("list_bound_stage: 群番号は 1 から連続で指定してください")
+    call par_stop("list_bound_stage: group numbers must be consecutive from 1")
   end if
 
   allocate(b%stage(1:b%nstage))
@@ -641,22 +641,22 @@ subroutine init_stage(b, p, g, list)
 
     !--- 検証 ---
     if (b%stage(istage)%ncell <= 0) then
-      call par_stop("list_bound_stage: 群 "//itoa(istage)//" にセルがありません")
+      call par_stop("list_bound_stage: group "//itoa(istage)//" has no cells")
     end if
     if (b%stage(istage)%nval <= 0) then
-      call par_stop("list_bound_stage: 群 "//itoa(istage) &
-                    //" に規定水位(stage_eta か時系列)がありません")
+      call par_stop("list_bound_stage: group "//itoa(istage) &
+                    //" has no prescribed water level (specify stage_eta or a time series)")
     end if
     do k = 1, b%stage(istage)%ncell
       i = b%stage(istage)%cell(1,k)
       j = b%stage(istage)%cell(2,k)
       if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
-        call par_stop("list_bound_stage: 群 "//itoa(istage)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が領域外です")
+        call par_stop("list_bound_stage: group "//itoa(istage)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain")
       end if
       if (g%x(i,j) <= 0) then
-        call par_stop("list_bound_stage: 群 "//itoa(istage)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が無効セル(x=0)です")
+        call par_stop("list_bound_stage: group "//itoa(istage)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain mask (x=0)")
       end if
     end do
 
@@ -680,7 +680,7 @@ subroutine read_cell_file(fname, src)
   integer :: un, n, k, ios
 
   open(newunit=un, file=fname, status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: "//fname)
+  if (ios /= 0) call par_stop("boundary: cannot open source cell file "//fname)
   n = 0
   do
     read(un, *, iostat=ios)
@@ -708,7 +708,7 @@ subroutine read_val_file(fname, src)
   real :: t, val
 
   open(newunit=un, file=fname, status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: "//fname)
+  if (ios /= 0) call par_stop("boundary: cannot open source time series file "//fname)
   n = 0
   do
     read(un, *, iostat=ios)
@@ -758,7 +758,7 @@ subroutine init_inflow(b, p, g, list)
   b%ninflow = count(active)
   if (b%ninflow <= 0) return
   if (.not. all(active(1:b%ninflow))) then
-    call par_stop("list_bound_inflow: 区間番号は 1 から連続で指定してください")
+    call par_stop("list_bound_inflow: segment numbers must be consecutive from 1")
   end if
 
   allocate(b%inflow(1:b%ninflow))
@@ -780,7 +780,7 @@ subroutine init_inflow(b, p, g, list)
       ncell = n
     end if
     if (ncell <= 0) then
-      call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" にセルがありません")
+      call par_stop("list_bound_inflow: segment "//itoa(ifl)//" has no cells")
     end if
 
     !--- 流量時系列(ファイル指定が優先) ---
@@ -799,12 +799,12 @@ subroutine init_inflow(b, p, g, list)
       b%inflow(ifl)%nval = n
     end if
     if (b%inflow(ifl)%nval <= 0) then
-      call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" に流量時系列がありません")
+      call par_stop("list_bound_inflow: segment "//itoa(ifl)//" has no discharge time series")
     end if
     do k = 1, b%inflow(ifl)%nval
       if (b%inflow(ifl)%val(2,k) < 0) then
-        call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" の流量は非負のみです" &
-                      //"(流出は stage / source を使用)")
+        call par_stop("list_bound_inflow: discharge of segment "//itoa(ifl) &
+                      //" must be >= 0 (use stage / source for outflow)")
       end if
     end do
 
@@ -827,8 +827,8 @@ subroutine init_inflow(b, p, g, list)
     end if
     do k = 1, b%inflow(ifl)%nsval
       if (b%inflow(ifl)%sval(2,k) < 0.0 .or. b%inflow(ifl)%sval(2,k) >= 1.0) then
-        call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" の濃度は" &
-                      //" [0,1) の体積濃度で指定してください")
+        call par_stop("list_bound_inflow: concentration of segment "//itoa(ifl) &
+                      //" must be a volume concentration in [0,1)")
       end if
     end do
 
@@ -851,12 +851,13 @@ subroutine init_inflow(b, p, g, list)
     end if
     do k = 1, b%inflow(ifl)%nqsval
       if (b%inflow(ifl)%qsval(2,k) < 0.0) then
-        call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" の流砂量は非負のみです")
+        call par_stop("list_bound_inflow: sediment discharge of segment "//itoa(ifl) &
+                      //" must be >= 0")
       end if
     end do
     if (b%inflow(ifl)%nsval > 0 .and. b%inflow(ifl)%nqsval > 0) then
-      call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" で濃度(inflow_cs)と" &
-                    //"流砂量(inflow_qs)は同時に指定できません(排他)")
+      call par_stop("list_bound_inflow: specify only one of inflow_cs and inflow_qs" &
+                    //" for segment "//itoa(ifl))
     end if
 
     !--- 検証と (セル, 辺) エントリの構築(角セルは辺ごとに複製) ---
@@ -867,12 +868,12 @@ subroutine init_inflow(b, p, g, list)
       i = cell(1,k)
       j = cell(2,k)
       if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
-        call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が領域外です")
+        call par_stop("list_bound_inflow: segment "//itoa(ifl)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain")
       end if
       if (g%x(i,j) <= 0) then
-        call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が無効セル(x=0)です")
+        call par_stop("list_bound_inflow: segment "//itoa(ifl)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain mask (x=0)")
       end if
       nsides = 0
       if (i == 1)    then; nsides = nsides + 1; sides(nsides) = e_side_w; end if
@@ -880,8 +881,8 @@ subroutine init_inflow(b, p, g, list)
       if (j == 1)    then; nsides = nsides + 1; sides(nsides) = e_side_n; end if
       if (j == g%ny) then; nsides = nsides + 1; sides(nsides) = e_side_s; end if
       if (nsides == 0) then
-        call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" のセル (" &
-                      //itoa(i)//","//itoa(j)//") が計算領域外縁に接していません")
+        call par_stop("list_bound_inflow: segment "//itoa(ifl)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is not on the outer edge of the domain")
       end if
       do n = 1, nsides
         m = m + 1
@@ -896,8 +897,8 @@ subroutine init_inflow(b, p, g, list)
     !--- 配分モード ---
     b%inflow(ifl)%dist = list%inflow_dist(ifl)
     if (b%inflow(ifl)%dist < 0 .or. b%inflow(ifl)%dist > 2) then
-      call par_stop("list_bound_inflow: 区間 "//itoa(ifl)//" の inflow_dist は" &
-                    //" 0(均等)/1(水深按分)/2(通水能按分)で指定してください")
+      call par_stop("list_bound_inflow: inflow_dist of segment "//itoa(ifl) &
+                    //" must be 0(uniform), 1(depth) or 2(conveyance)")
     end if
 
     !--- 計算開始時刻の流量を初期化する(stage と同じ理由。swflow init の
@@ -936,7 +937,7 @@ subroutine read_cell_file2(fname, ncell, cell)
   integer :: un, n, k, ios
 
   open(newunit=un, file=fname, status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: "//fname)
+  if (ios /= 0) call par_stop("boundary: cannot open cell list file "//fname)
   n = 0
   do
     read(un, *, iostat=ios)
@@ -965,7 +966,7 @@ subroutine read_val_file2(fname, nval, val)
   real :: t, v
 
   open(newunit=un, file=fname, status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: "//fname)
+  if (ios /= 0) call par_stop("boundary: cannot open time series file "//fname)
   n = 0
   do
     read(un, *, iostat=ios)

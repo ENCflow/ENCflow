@@ -275,7 +275,7 @@ subroutine m_state_init(s, p, g)
   ! (壁等)は保存された z に含まれているので、スキップしても失われない
   if (len_trim(list%f_user_routine) > 0) then
     if (.not. user_initial_defined(list%f_user_routine)) then
-      call par_stop("undefined f_user_routine in list_initial: "//trim(list%f_user_routine)// &
+      call par_stop("list_initial: undefined f_user_routine: "//trim(list%f_user_routine)// &
                     " (defined: "//user_initial_names()//")")
     end if
     if (p%f_state_restore <= 0) call user_initial_run(p, g, ts, list%f_user_routine)
@@ -654,8 +654,8 @@ subroutine set_h(p, g, s)
       call read_hinit(p, g, s%ini, wk)
       forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%h(i,j) = max(wk(i,j) - s%z(i,j), 0.0)
     case default
-      call par_stop("list_initial: f_htype は 0(水深固定)・1(水深ファイル)・" &
-                    //"2(水位固定)・3(水位ファイル)です: "//itoa(s%ini%f_htype))
+      call par_stop("list_initial: f_htype must be 0(fixed depth), 1(depth file), " &
+                    //"2(fixed water level) or 3(water level file): "//itoa(s%ini%f_htype))
   end select
   if (s%ini%f_fill_depres > 0)  call fill_depression(p, g, s)
   if (s%ini%h0_rw > 0.0) call adjust_h0rw(p, g, s)
@@ -673,7 +673,7 @@ subroutine read_hinit(p, g, ini, wk)
   real, allocatable, intent(out) :: wk(:,:)
   if (len_trim(ini%fn_hinit) <= 0) then
     call par_stop("list_initial: f_htype="//itoa(ini%f_htype) &
-                  //" には fn_hinit の指定が必要です")
+                  //" requires fn_hinit")
   end if
   allocate(wk(1:g%nx,1:g%ny), source = 0.0)
   call fileio_read_matrix(trim(p%dir_data)//"/"//trim(ini%fn_hinit), &
@@ -1000,27 +1000,27 @@ subroutine check_save_info(p, s)
 
   open(newunit=un, file=fname, status='old', action='read', iostat=ios)
   if (ios /= 0) then
-    call par_stop("save_info.txt がありません(save が存在しないか不完全です): "//fname)
+    call par_stop("save: save_info.txt not found (state file is missing or incomplete): "//fname)
   end if
   read(un, nml=save_info, iostat=ios)
   close(un)
-  if (ios /= 0) call par_stop("save_info.txt を読めません: "//fname)
+  if (ios /= 0) call par_stop("save: cannot read save_info.txt: "//fname)
 
   if (trim(save_version) /= save_version_cur) then
-    call par_stop("save は "//trim(save_version)//" 版の形式で保存されていますが、" &
-                  //"この実行形式が読めるのは "//save_version_cur//" 版です: "//fname)
+    call par_stop("save: state file format version "//trim(save_version)//" does not match " &
+                  //"the version this executable reads ("//save_version_cur//"): "//fname)
   end if
   if (nx /= dcp%nx_g .or. ny /= dcp%ny_g) then
-    call par_stop("save の格子("//itoa(nx)//" x "//itoa(ny)//")が" &
-                  //"現在の格子("//itoa(dcp%nx_g)//" x "//itoa(dcp%ny_g)//")と一致しません")
+    call par_stop("save: grid in state file ("//itoa(nx)//" x "//itoa(ny)//") does not match " &
+                  //"the current grid ("//itoa(dcp%nx_g)//" x "//itoa(dcp%ny_g)//")")
   end if
   if (precision_bits /= storage_size(1.0)) then
-    call par_stop("save の実数精度("//itoa(precision_bits)//" bit)が" &
-                  //"実行時の精度("//itoa(storage_size(1.0))//" bit)と一致しません")
+    call par_stop("save: real precision in state file ("//itoa(precision_bits)//" bit) does " &
+                  //"not match this run ("//itoa(storage_size(1.0))//" bit)")
   end if
   if (n_state /= n_state_save) then
-    call par_stop("save の状態成分数("//itoa(n_state)//")が想定(" &
-                  //itoa(n_state_save)//")と一致しません")
+    call par_stop("save: number of state components in state file ("//itoa(n_state)//") does " &
+                  //"not match the expected ("//itoa(n_state_save)//")")
   end if
 
   ! 時間軸(§7): f_state_restore=1(再開)は同じ軸の続き — t0, dt の
@@ -1032,30 +1032,30 @@ subroutine check_save_info(p, s)
   if (p%f_state_restore == 2) then
     s%it0 = 0
     s%ifn = 0
-    call par_info("restore: t="//rtoa(t)//" s の保存状態を初期条件として読み込み、" &
-                  //"t0="//rtoa(p%t0)//" s から新しい時間軸で開始します")
+    call par_info("save: reading state at t="//rtoa(t)//" s as the initial condition and " &
+                  //"starting a new time axis from t0="//rtoa(p%t0)//" s")
     return
   end if
 
   if (abs(p%t0 - t0) > rtol * max(1.0, abs(t0))) then
-    call par_stop("list_sysparam: t0("//rtoa(p%t0)//")が save の t0("//rtoa(t0) &
-                  //")と一致しません。再開は保存時と同じパラメータファイルを使ってください" &
-                  //"(新しい時間軸で始めるには f_state_restore=2)")
+    call par_stop("list_sysparam: t0("//rtoa(p%t0)//") does not match t0 in state file (" &
+                  //rtoa(t0)//"); use the same parameter file as when saved" &
+                  //" (f_state_restore=2 starts a new time axis)")
   end if
   if (abs(p%dt - dt) > rtol * dt) then
-    call par_stop("list_sysparam: dt("//rtoa(p%dt)//")が save の dt("//rtoa(dt) &
-                  //")と一致しません(dt を変えた再開は不可。" &
-                  //"dt を変えて新しい時間軸で始めるには f_state_restore=2)")
+    call par_stop("list_sysparam: dt("//rtoa(p%dt)//") does not match dt in state file (" &
+                  //rtoa(dt)//"); restart cannot change dt" &
+                  //" (f_state_restore=2 starts a new time axis with a new dt)")
   end if
   if (p%nt <= it) then
-    call par_stop("list_sysparam: 計算終了時刻 tt("//rtoa(p%tt)//" s)が保存時刻 t1(" &
-                  //rtoa(t)//" s)以前です。計算を延長するには tt を増やしてください")
+    call par_stop("list_sysparam: end time tt("//rtoa(p%tt)//" s) is not after the saved " &
+                  //"time t1("//rtoa(t)//" s); increase tt to extend the run")
   end if
 
   s%it0 = it
   s%ifn = ifn
 
-  call par_info("restore: t="//rtoa(t)//" s (it="//itoa(it)//") の保存状態から計算を継続します")
+  call par_info("save: resuming from saved state at t="//rtoa(t)//" s (it="//itoa(it)//")")
 end subroutine
 
 end module

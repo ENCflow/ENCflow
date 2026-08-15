@@ -138,32 +138,33 @@ subroutine m_wq_init(wq, p, g, b, s)
 
   if (len_trim(p%fn_wq) == 0) return
   if (p%f_gridsystem /= 0) then
-    call par_stop("list_wq: 水質輸送は ENC 格子のみ対応です(浮遊砂と同じ制約)")
+    call par_stop("list_wq: water quality transport supports the ENC grid only " &
+                  //"(same restriction as suspended sediment)")
   end if
 
   call list_wq_read(p, list)
   if (list%f_wq == 0) return    ! fn を書いたまま一時無効化する経路
 
-  if (list%wq_c0 < 0.0) call par_stop("list_wq: wq_c0 は非負のみです")
+  if (list%wq_c0 < 0.0) call par_stop("list_wq: wq_c0 must be >= 0")
   if (list%f_wq_infil < 0 .or. list%f_wq_infil > 1) then
-    call par_stop("list_wq: f_wq_infil は 0(残留) か 1(濃度同伴) です")
+    call par_stop("list_wq: f_wq_infil must be 0(remain at surface) or 1(carry with infiltration)")
   end if
   wq%f_infil = list%f_wq_infil
 
   ! --- 一次減衰(半減期か k20 の排他。W2)と沈降 ---
   if (list%wq_thalf > -9998.0 .and. list%wq_k20 > -9998.0) then
-    call par_stop("list_wq: 減衰は wq_thalf(半減期)か wq_k20 のどちらか一方で" &
-                  //"指定してください")
+    call par_stop("list_wq: specify decay by either wq_thalf (half-life) or wq_k20, " &
+                  //"not both")
   end if
   if (list%wq_thalf > -9998.0) then
-    if (list%wq_thalf <= 0.0) call par_stop("list_wq: wq_thalf は正のみです")
+    if (list%wq_thalf <= 0.0) call par_stop("list_wq: wq_thalf must be > 0")
     wq%fdec = exp(-log(2.0) / (list%wq_thalf * secday) * p%dt)
   else if (list%wq_k20 > -9998.0) then
-    if (list%wq_k20 < 0.0) call par_stop("list_wq: wq_k20 は非負のみです")
+    if (list%wq_k20 < 0.0) call par_stop("list_wq: wq_k20 must be >= 0")
     wq%fdec = exp(-list%wq_k20 / secday * p%dt)
   end if
   if (list%wq_vs > -9998.0) then
-    if (list%wq_vs < 0.0) call par_stop("list_wq: wq_vs は非負のみです")
+    if (list%wq_vs < 0.0) call par_stop("list_wq: wq_vs must be >= 0")
     wq%vs = list%wq_vs / secday
   end if
 
@@ -240,12 +241,12 @@ subroutine setup_sources(wq, p, g, list)
   if (wq%nar > 0) allocate(wq%ar(1:wq%nar))
 
   do igrp = 1, wq%npt
-    call setup_one_source(wq%pt(igrp), p, g, "点源", igrp, &
+    call setup_one_source(wq%pt(igrp), p, g, "point source", igrp, &
                           list%wq_pt_cell(:,:,igrp), list%fn_wq_pt_cell(igrp), &
                           list%wq_pt_load(igrp), list%wq_pt_series(:,:,igrp))
   end do
   do igrp = 1, wq%nar
-    call setup_one_source(wq%ar(igrp), p, g, "面源", igrp, &
+    call setup_one_source(wq%ar(igrp), p, g, "diffuse source", igrp, &
                           list%wq_ar_cell(:,:,igrp), list%fn_wq_ar_cell(igrp), &
                           list%wq_ar_load(igrp), list%wq_ar_series(:,:,igrp))
   end do
@@ -279,8 +280,8 @@ subroutine setup_one_source(src, p, g, label, igrp, cells, fn, q0, series)
 
   ! --- セル集合(inline かファイルの排他) ---
   if (len_trim(fn) > 0 .and. cells(1,1) /= -9999) then
-    call par_stop("list_wq: "//label//itoa(igrp)//" のセルは inline とファイルの" &
-                  //"どちらか一方で指定してください")
+    call par_stop("list_wq: specify the cells of "//label//" "//itoa(igrp) &
+                  //" either inline or by file, not both")
   end if
   if (len_trim(fn) > 0) then
     call read_cell_file2(trim(p%dir_data)//"/"//trim(fn), n, wkcell)
@@ -293,7 +294,7 @@ subroutine setup_one_source(src, p, g, label, igrp, cells, fn, q0, series)
     allocate(wkcell(1:2, 1:max(n,1)))
     wkcell(1:2, 1:n) = cells(1:2, 1:n)
   end if
-  if (n < 1) call par_stop("list_wq: "//label//itoa(igrp)//" のセルが空です")
+  if (n < 1) call par_stop("list_wq: "//label//" "//itoa(igrp)//" has no cells")
   src%ncall = n
 
   ! --- 検証(全域マスク。ゾーン2で全ランク冗長・同一判定) ---
@@ -301,10 +302,10 @@ subroutine setup_one_source(src, p, g, label, igrp, cells, fn, q0, series)
     i = wkcell(1,k)
     j = wkcell(2,k)
     if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
-      call par_stop("list_wq: "//label//itoa(igrp)//" のセルが領域外です")
+      call par_stop("list_wq: "//label//" "//itoa(igrp)//" has a cell outside the domain")
     end if
     if (g%x(i,j) <= 0) then
-      call par_stop("list_wq: "//label//itoa(igrp)//" のセルが計算対象外です")
+      call par_stop("list_wq: "//label//" "//itoa(igrp)//" has a cell outside the valid area")
     end if
   end do
 
@@ -328,17 +329,17 @@ subroutine setup_one_source(src, p, g, label, igrp, cells, fn, q0, series)
     n = n + 1
   end do
   if (n > 0 .and. q0 > -9998.0) then
-    call par_stop("list_wq: "//label//itoa(igrp)//" の負荷は一定値と時系列の" &
-                  //"どちらか一方で指定してください")
+    call par_stop("list_wq: specify the load of "//label//" "//itoa(igrp) &
+                  //" by either a constant or a time series, not both")
   end if
   if (n == 0 .and. q0 <= -9998.0) then
-    call par_stop("list_wq: "//label//itoa(igrp)//" の負荷が未指定です")
+    call par_stop("list_wq: no load specified for "//label//" "//itoa(igrp))
   end if
   if (n > 0) then
     do k = 2, n
       if (series(1,k) <= series(1,k-1)) then
-        call par_stop("list_wq: "//label//itoa(igrp)//" の時系列の時刻(経過日)は" &
-                      //"単調増加で指定してください")
+        call par_stop("list_wq: time series of "//label//" "//itoa(igrp) &
+                      //" must have monotonically increasing times (elapsed days)")
       end if
     end do
     allocate(src%ser(1:2, 1:n))
@@ -346,7 +347,7 @@ subroutine setup_one_source(src, p, g, label, igrp, cells, fn, q0, series)
     src%ser(2,1:n) = series(2,1:n)
     src%nser = n
   else
-    if (q0 < 0.0) call par_stop("list_wq: "//label//itoa(igrp)//" の負荷は非負のみです")
+    if (q0 < 0.0) call par_stop("list_wq: load of "//label//" "//itoa(igrp)//" must be >= 0")
     src%q0 = q0
   end if
 end subroutine
@@ -371,8 +372,8 @@ subroutine setup_inflow_conc(wq, g, b, list)
   if (wq%nin == 0) return
 
   if (b%ninflow <= 0) then
-    call par_stop("list_wq: wq_in_conc/wq_in_series には &list_bound_inflow の" &
-                  //"区間流入が必要です")
+    call par_stop("list_wq: wq_in_conc/wq_in_series require inflow sections " &
+                  //"in &list_bound_inflow")
   end if
   allocate(wq%inifl(1:wq%nin), source = 0)
   allocate(wq%incval(1:wq%nin), source = 0.0)
@@ -382,7 +383,7 @@ subroutine setup_inflow_conc(wq, g, b, list)
     if (list%wq_in_conc(ifl) <= -9998.0 .and. list%wq_in_series(1,1,ifl) <= -9998.0) cycle
     m = m + 1
     if (ifl > b%ninflow) then
-      call par_stop("list_wq: wq_in_*("//itoa(ifl)//") に対応する区間流入がありません")
+      call par_stop("list_wq: wq_in_*("//itoa(ifl)//") has no matching inflow section")
     end if
     wq%inifl(m) = ifl
     n = 0
@@ -391,14 +392,14 @@ subroutine setup_inflow_conc(wq, g, b, list)
       n = n + 1
     end do
     if (n > 0 .and. list%wq_in_conc(ifl) > -9998.0) then
-      call par_stop("list_wq: wq_in_*("//itoa(ifl)//") は一定値と時系列の" &
-                    //"どちらか一方で指定してください")
+      call par_stop("list_wq: specify wq_in_*("//itoa(ifl)//") by either a constant " &
+                    //"or a time series, not both")
     end if
     if (n > 0) then
       do k = 2, n
         if (list%wq_in_series(1,k,ifl) <= list%wq_in_series(1,k-1,ifl)) then
-          call par_stop("list_wq: wq_in_series("//itoa(ifl)//") の時刻(経過日)は" &
-                        //"単調増加で指定してください")
+          call par_stop("list_wq: wq_in_series("//itoa(ifl)//") must have monotonically " &
+                        //"increasing times (elapsed days)")
         end if
       end do
       allocate(wq%inser(m)%ser(1:2, 1:n))
@@ -407,7 +408,7 @@ subroutine setup_inflow_conc(wq, g, b, list)
       wq%inser(m)%nser = n
     else
       if (list%wq_in_conc(ifl) < 0.0) then
-        call par_stop("list_wq: wq_in_conc("//itoa(ifl)//") は非負のみです")
+        call par_stop("list_wq: wq_in_conc("//itoa(ifl)//") must be >= 0")
       end if
       wq%incval(m) = list%wq_in_conc(ifl)
     end if
@@ -430,7 +431,7 @@ subroutine setup_map_source(wq, p, g, list)
   type(t_geoinfo), intent(in) :: g
   type(t_list_wq), intent(in) :: list
 
-  if (list%wq_map_factor < 0.0) call par_stop("list_wq: wq_map_factor は非負のみです")
+  if (list%wq_map_factor < 0.0) call par_stop("list_wq: wq_map_factor must be >= 0")
   allocate(wq%rmap(1:g%nx, dcp%jsh:dcp%jeh))
   ! kg/ha/day -> g/s/m2 に倍率込みで換算(rank0 で乗じてから配布)
   call read_map_scatter(p, g, list%fn_wq_map, "fn_wq_map", &
@@ -457,7 +458,7 @@ subroutine read_map_scatter(p, g, fn, label, factor, a)
 
   fname = trim(p%dir_data)//"/"//trim(fn)
   inquire(file=fname, exist=found)
-  if (.not. found) call par_stop("list_wq: "//label//" が見つかりません: "//fname)
+  if (.not. found) call par_stop("list_wq: "//label//" not found: "//fname)
 
   if (is_root) then
     allocate(wk(1:g%nx, 1:g%ny))
@@ -467,7 +468,8 @@ subroutine read_map_scatter(p, g, fn, label, factor, a)
       do i = 1, g%nx
         if (g%x(i,j) <= 0) cycle
         if (wk(i,j) < 0.0) then
-          write(msg,'(a,2i7,es12.4)') "list_wq: "//label//" の値が負", i, j, wk(i,j)
+          write(msg,'(a,2i7,es12.4)') "list_wq: "//label//" has a negative value at cell", &
+                                      i, j, wk(i,j)
           call par_abort(trim(msg))
         end if
       end do
@@ -497,45 +499,45 @@ subroutine setup_pool(wq, p, g, s, list)
 
   ! --- 蓄積レート(一様値か分布の排他) ---
   if (list%f_wq_map < 0 .or. list%f_wq_map > 1) then
-    call par_stop("list_wq: f_wq_map は 0(直接投入) か 1(蓄積レート) です")
+    call par_stop("list_wq: f_wq_map must be 0(direct input) or 1(buildup rate)")
   end if
   if (list%f_wq_map == 1 .and. len_trim(list%fn_wq_map) == 0) then
-    call par_stop("list_wq: f_wq_map=1 には fn_wq_map が必要です")
+    call par_stop("list_wq: f_wq_map=1 requires fn_wq_map")
   end if
   wq%map_to_pool = (list%f_wq_map == 1)
   if (list%wq_bd_rate > -9998.0) then
     if (wq%map_to_pool) then
-      call par_stop("list_wq: 蓄積レートは wq_bd_rate(一様)か fn_wq_map" &
-                    //"(f_wq_map=1)のどちらか一方で指定してください")
+      call par_stop("list_wq: specify the buildup rate by either wq_bd_rate (uniform) " &
+                    //"or fn_wq_map (f_wq_map=1), not both")
     end if
-    if (list%wq_bd_rate < 0.0) call par_stop("list_wq: wq_bd_rate は非負のみです")
+    if (list%wq_bd_rate < 0.0) call par_stop("list_wq: wq_bd_rate must be >= 0")
     wq%bdrate = list%wq_bd_rate * unit2gsm2
   end if
   wq%have_bd = wq%map_to_pool .or. wq%bdrate > 0.0
 
   ! --- 蓄積上限(飽和指数形。レートと併用のみ意味を持つ) ---
   if (list%wq_bd_max > -9998.0) then
-    if (list%wq_bd_max <= 0.0) call par_stop("list_wq: wq_bd_max は正のみです")
+    if (list%wq_bd_max <= 0.0) call par_stop("list_wq: wq_bd_max must be > 0")
     if (.not. wq%have_bd) then
-      call par_stop("list_wq: wq_bd_max は蓄積レート(wq_bd_rate か f_wq_map=1)と" &
-                    //"併用してください")
+      call par_stop("list_wq: wq_bd_max requires a buildup rate (wq_bd_rate " &
+                    //"or f_wq_map=1)")
     end if
     wq%bmax = list%wq_bd_max * kgha2gm2
   end if
 
   ! --- 洗い出し係数 ---
   if (list%wq_wash_kr > -9998.0) then
-    if (list%wq_wash_kr < 0.0) call par_stop("list_wq: wq_wash_kr は非負のみです")
+    if (list%wq_wash_kr < 0.0) call par_stop("list_wq: wq_wash_kr must be >= 0")
     wq%wkr = list%wq_wash_kr
   end if
   if (list%wq_wash_kf > -9998.0) then
-    if (list%wq_wash_kf < 0.0) call par_stop("list_wq: wq_wash_kf は非負のみです")
+    if (list%wq_wash_kf < 0.0) call par_stop("list_wq: wq_wash_kf must be >= 0")
     wq%wkf = list%wq_wash_kf
     if (wq%wkf > 0.0) then
       if (list%wq_wash_tauc <= -9998.0) then
-        call par_stop("list_wq: wq_wash_kf には wq_wash_tauc (N/m2) が必要です")
+        call par_stop("list_wq: wq_wash_kf requires wq_wash_tauc (N/m2)")
       end if
-      if (list%wq_wash_tauc <= 0.0) call par_stop("list_wq: wq_wash_tauc は正のみです")
+      if (list%wq_wash_tauc <= 0.0) call par_stop("list_wq: wq_wash_tauc must be > 0")
       wq%wtauc = list%wq_wash_tauc
     end if
   end if
@@ -543,28 +545,28 @@ subroutine setup_pool(wq, p, g, s, list)
 
   ! --- 沈降の行き先 ---
   if (list%f_wq_settle < 0 .or. list%f_wq_settle > 1) then
-    call par_stop("list_wq: f_wq_settle は 0(河床へ消失) か 1(プールへ) です")
+    call par_stop("list_wq: f_wq_settle must be 0(lost to the bed) or 1(to the pool)")
   end if
   wq%f_settle = list%f_wq_settle
   if (wq%f_settle == 1 .and. wq%vs <= 0.0) then
-    call par_stop("list_wq: f_wq_settle=1 には wq_vs(沈降速度)が必要です")
+    call par_stop("list_wq: f_wq_settle=1 requires wq_vs (settling velocity)")
   end if
 
   ! --- 初期プール(一様か分布の排他) ---
   have_bd0 = list%wq_bd0 > -9998.0 .or. len_trim(list%fn_wq_bd0) > 0
   if (list%wq_bd0 > -9998.0 .and. len_trim(list%fn_wq_bd0) > 0) then
-    call par_stop("list_wq: 初期プールは wq_bd0(一様)か fn_wq_bd0(分布)の" &
-                  //"どちらか一方で指定してください")
+    call par_stop("list_wq: specify the initial pool by either wq_bd0 (uniform) " &
+                  //"or fn_wq_bd0 (map), not both")
   end if
   if (list%wq_bd0 > -9998.0 .and. list%wq_bd0 < 0.0) then
-    call par_stop("list_wq: wq_bd0 は非負のみです")
+    call par_stop("list_wq: wq_bd0 must be >= 0")
   end if
 
   ! --- プールの有効判定と確保 ---
   wq%have_pool = wq%have_bd .or. have_bd0 .or. wq%f_settle == 1
   if (wq%have_wash .and. .not. wq%have_pool) then
-    call par_stop("list_wq: 洗い出し(wq_wash_*)には蓄積レート・初期プール・" &
-                  //"f_wq_settle=1 のいずれかのプール供給が必要です")
+    call par_stop("list_wq: washoff (wq_wash_*) requires a pool supply, one of " &
+                  //"a buildup rate, an initial pool or f_wq_settle=1")
   end if
   if (.not. wq%have_pool) return
 
@@ -603,14 +605,14 @@ subroutine setup_rain_conc(wq, list)
   end do
   if (n == 0 .and. list%wq_rain_conc <= -9998.0) return    ! 未指定 = 無効
   if (n > 0 .and. list%wq_rain_conc > -9998.0) then
-    call par_stop("list_wq: 降雨中濃度は wq_rain_conc(一定)か wq_rain_series の" &
-                  //"どちらか一方で指定してください")
+    call par_stop("list_wq: specify the concentration in precipitation by either " &
+                  //"wq_rain_conc (constant) or wq_rain_series, not both")
   end if
   if (n > 0) then
     do k = 2, n
       if (list%wq_rain_series(1,k) <= list%wq_rain_series(1,k-1)) then
-        call par_stop("list_wq: wq_rain_series の時刻(経過日)は単調増加で" &
-                      //"指定してください")
+        call par_stop("list_wq: wq_rain_series must have monotonically increasing " &
+                      //"times (elapsed days)")
       end if
     end do
     allocate(wq%rain%ser(1:2, 1:n))
@@ -618,7 +620,7 @@ subroutine setup_rain_conc(wq, list)
     wq%rain%ser(2,1:n) = list%wq_rain_series(2,1:n)
     wq%rain%nser = n
   else
-    if (list%wq_rain_conc < 0.0) call par_stop("list_wq: wq_rain_conc は非負のみです")
+    if (list%wq_rain_conc < 0.0) call par_stop("list_wq: wq_rain_conc must be >= 0")
     wq%rain%q0 = list%wq_rain_conc
   end if
   wq%have_rain = .true.
@@ -1087,7 +1089,7 @@ subroutine restore_state(wq, p, g, s)
   fname = trim(p%dir_save)//'/wq.dat'
   inquire(file=fname, exist=found)
   if (.not. found) then
-    call par_stop("wq の保存ファイルがありません(保存時に fn_wq は有効でしたか): "//fname)
+    call par_stop("wq: state file not found (was fn_wq enabled when saving): "//fname)
   end if
 
   if (is_root) then

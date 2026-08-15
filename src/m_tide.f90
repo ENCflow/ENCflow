@@ -100,16 +100,16 @@ subroutine m_tide_init(ti, p, g, s)
 
   !---- 検証 ----
   if (list%titype < 1 .or. list%titype > 4) then
-    call par_stop("list_tide: titype は 1(一様固定値), 2(一様時系列), " // &
-                  "3(分布×倍率), 4(分布リスト) のいずれか: "//itoa(list%titype))
+    call par_stop("list_tide: titype must be 1(uniform fixed), 2(uniform series), " // &
+                  "3(map with factor) or 4(map list): "//itoa(list%titype))
   end if
   if (p%f_gridsystem /= 0) then
-    call par_stop("fn_tide(潮位)は ENC 格子系(f_gridsystem=0)専用です")
+    call par_stop("list_sysparam: tide (fn_tide) requires the ENC grid system (f_gridsystem=0)")
   end if
   if (list%hsea0 <= p%dd) then
-    call par_stop("list_tide: hsea0("//rtoa(list%hsea0)//")は限界水深 dd(" // &
-                  rtoa(p%dd)//")より大きくしてください(海が供給側の浸水は " // &
-                  "hsea0 の水柱が賄うため、dd の数十倍以上を推奨)")
+    call par_stop("list_tide: hsea0("//rtoa(list%hsea0)//") must be larger than the " // &
+                  "depth threshold dd("//rtoa(p%dd)//"), tens of times dd or more is " // &
+                  "recommended (the hsea0 water column supplies sea-driven flooding)")
   end if
 
   ! 領域内の海セル(x>0 かつ sw>0)の存在検査(ゾーン1: マスクは全域)
@@ -120,7 +120,7 @@ subroutine m_tide_init(ti, p, g, s)
     end do
   end do
   if (nsea <= 0) then
-    call par_stop("list_tide: 領域内に海セル(fn_sw の海域マスク)がありません")
+    call par_stop("list_tide: no sea cells (sea mask fn_sw) in the domain")
   end if
   call par_info("tide: applying to "//itoa(nsea)//" sea cells (hsea0 = " // &
                 rtoa(list%hsea0)//" m)")
@@ -160,7 +160,7 @@ contains
     end do
     if (nti <= 0) then
       call par_stop("list_tide: titype="//itoa(ti%titype)// &
-                    " には tival の時系列指定が必要です")
+                    " requires a tival time series")
     end if
     allocate(ti%tival(1:2,1:nti))
     ti%tival(1,1:nti) = list%tival(1,1:nti) * 60    ! 分を秒に換算
@@ -172,7 +172,7 @@ contains
   ! 潮位分布(1枚)を読み込む(titype=3。全ランク冗長読み・帯へ切り出し)
   subroutine set_timap
     if (len_trim(list%fn_timap) == 0) then
-      call par_stop('list_tide: titype=3 but fn_timap=""')
+      call par_stop("list_tide: titype=3 requires fn_timap")
     end if
     allocate(ti%timap(1:g%nx, dcp%jsh:dcp%jeh))
     call read_map_band(p, g, trim(list%fn_timap), ti%timap)
@@ -186,27 +186,27 @@ contains
     character(len=maxpathlen) :: mapname
     integer :: un, k, n, ios
     if (len_trim(list%fn_timaplist) == 0) then
-      call par_stop('list_tide: titype=4 but fn_timaplist=""')
+      call par_stop("list_tide: titype=4 requires fn_timaplist")
     end if
     ti%dt_timap = list%dt_timaplist * 60             ! 分を秒に換算
     if (len_trim(list%dt_timaplist_c) > 0) then
-      ti%dt_timap = str2sec(list%dt_timaplist_c, "bad dt_timaplist_c in &list_tide")
+      ti%dt_timap = str2sec(list%dt_timaplist_c, "list_tide: bad time format in dt_timaplist_c")
     end if
     if (ti%dt_timap <= 0.0) then
-      call par_stop("list_tide: dt_timaplist は正の時間間隔を指定してください")
+      call par_stop("list_tide: dt_timaplist must be a positive interval")
     end if
 
     fname = trim(p%dir_data)//"/"//trim(list%fn_timaplist)
     call par_info(" reading tide map list "//fname)
     open(newunit=un, file=fname, status='old', iostat=ios)
-    if (ios /= 0) call par_stop("list_tide: fn_timaplist を開けません: "//fname)
+    if (ios /= 0) call par_stop("list_tide: cannot open fn_timaplist: "//fname)
     n = 0
     do
       read(un, *, iostat=ios)
       if (ios < 0) exit
       n = n + 1
     end do
-    if (n <= 0) call par_stop("list_tide: fn_timaplist が空です: "//fname)
+    if (n <= 0) call par_stop("list_tide: fn_timaplist is empty: "//fname)
     allocate(ti%fn_map(1:n))
     rewind(un)
     do k = 1, n

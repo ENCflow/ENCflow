@@ -95,20 +95,20 @@ subroutine m_snow_init(sn, p, g, s, mt)
   if (list%f_snow == 0) return    ! fn を書いたまま一時無効化する経路
 
   if (.not. mt%enabled) then
-    call par_stop("list_snow: 積雪・融雪には気温が必要です(fn_meteo を指定して" &
-                  //"ください)")
+    call par_stop("list_snow: snow accumulation and snowmelt require air temperature " &
+                  //"(specify fn_meteo)")
   end if
   if (list%snow_t_rain < list%snow_t_snow) then
-    call par_stop("list_snow: snow_t_rain は snow_t_snow 以上にしてください")
+    call par_stop("list_snow: snow_t_rain must be >= snow_t_snow")
   end if
-  if (list%snow_ddf <= -9998.0) call par_stop("list_snow: snow_ddf は必須です")
-  if (list%snow_ddf <= 0.0) call par_stop("list_snow: snow_ddf は正のみです")
+  if (list%snow_ddf <= -9998.0) call par_stop("list_snow: snow_ddf is required")
+  if (list%snow_ddf <= 0.0) call par_stop("list_snow: snow_ddf must be > 0")
   if (list%snow_swe0 > -9998.0 .and. list%snow_swe0 < 0.0) then
-    call par_stop("list_snow: snow_swe0 は非負のみです")
+    call par_stop("list_snow: snow_swe0 must be >= 0")
   end if
   if (list%snow_swe0 > -9998.0 .and. len_trim(list%fn_snow_swe0) > 0) then
-    call par_stop("list_snow: 初期積雪は snow_swe0(一様)か fn_snow_swe0(分布)の" &
-                  //"どちらか一方で指定してください")
+    call par_stop("list_snow: specify the initial snow water equivalent by either " &
+                  //"snow_swe0 (uniform) or fn_snow_swe0 (map), not both")
   end if
 
   sn%tsnow = list%snow_t_snow
@@ -165,7 +165,7 @@ subroutine setup_swe0_map(p, g, s, fn)
 
   fname = trim(p%dir_data)//"/"//trim(fn)
   inquire(file=fname, exist=found)
-  if (.not. found) call par_stop("list_snow: fn_snow_swe0 が見つかりません: "//fname)
+  if (.not. found) call par_stop("list_snow: fn_snow_swe0 not found: "//fname)
   if (is_root) then
     allocate(wk(1:g%nx, 1:g%ny))
     call par_info(" reading "//fname)
@@ -174,7 +174,8 @@ subroutine setup_swe0_map(p, g, s, fn)
       do i = 1, g%nx
         if (g%x(i,j) <= 0) cycle
         if (wk(i,j) < 0.0) then
-          write(msg,'(a,2i7,es12.4)') "list_snow: fn_snow_swe0 の値が負", i, j, wk(i,j)
+          write(msg,'(a,2i7,es12.4)') "list_snow: fn_snow_swe0 has a negative value " &
+                                      //"at cell", i, j, wk(i,j)
           call par_abort(trim(msg))
         end if
       end do
@@ -295,7 +296,7 @@ subroutine restore_state(p, g, s)
   fname = trim(p%dir_save)//'/snow.dat'
   inquire(file=fname, exist=found)
   if (.not. found) then
-    call par_stop("snow の保存ファイルがありません(保存時に fn_snow は有効でしたか): " &
+    call par_stop("snow: state file not found (was fn_snow enabled when saving): " &
                   //fname)
   end if
   if (is_root) then

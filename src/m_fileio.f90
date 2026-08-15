@@ -50,6 +50,62 @@ module m_fileio
 contains
 
 !----------------------------------------------------------------------
+! open の入口(§4 の iostat 化)。失敗は整ったメッセージで止める。
+!   m_fileio は rank0 単独の文脈でも呼ばれるため par_abort(非 collective)
+!----------------------------------------------------------------------
+function open_old_text(fname) result(un)
+  character(len=*), intent(in) :: fname
+  integer :: un, ios
+  character(len=512) :: iom
+  open(newunit=un, file=fname, status='old', iostat=ios, iomsg=iom)
+  if (ios /= 0) call par_abort("fileio: cannot open text file "//trim(fname)//": "//trim(iom))
+end function
+
+function open_old_stream(fname) result(un)
+  character(len=*), intent(in) :: fname
+  integer :: un, ios
+  character(len=512) :: iom
+  open(newunit=un, file=fname, form='unformatted', status='old', access='stream', &
+       iostat=ios, iomsg=iom)
+  if (ios /= 0) call par_abort("fileio: cannot open binary file "//trim(fname)//": "//trim(iom))
+end function
+
+function open_new_text(fname) result(un)
+  character(len=*), intent(in) :: fname
+  integer :: un, ios
+  character(len=512) :: iom
+  open(newunit=un, file=fname, status='replace', iostat=ios, iomsg=iom)
+  if (ios /= 0) call par_abort("fileio: cannot create text file "//trim(fname)//": "//trim(iom))
+end function
+
+function open_new_stream(fname) result(un)
+  character(len=*), intent(in) :: fname
+  integer :: un, ios
+  character(len=512) :: iom
+  open(newunit=un, file=fname, form='unformatted', status='replace', access='stream', &
+       iostat=ios, iomsg=iom)
+  if (ios /= 0) call par_abort("fileio: cannot create binary file "//trim(fname)//": "//trim(iom))
+end function
+
+!----------------------------------------------------------------------
+! read の失敗(ファイル不足・書式不正)を整ったメッセージで止める
+!----------------------------------------------------------------------
+subroutine abort_read(un, iom, row)
+  integer, intent(in) :: un
+  character(len=*), intent(in) :: iom
+  integer, intent(in), optional :: row
+  character(len=1024) :: fname
+  inquire(unit=un, name=fname)
+  if (present(row)) then
+    call par_abort("fileio: cannot read row "//itoa(row)//" of "//trim(fname) &
+                   //" (file truncated or malformed): "//trim(iom))
+  else
+    call par_abort("fileio: file too short or unreadable: "//trim(fname)//": "//trim(iom))
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
 !----------------------------------------------------------------------
 function fileio_un_open(fname, e_fmt) result(un)
   character(len=*), intent(in) :: fname
@@ -58,14 +114,15 @@ function fileio_un_open(fname, e_fmt) result(un)
 
   select case (e_fmt)
     case (e_fmt_txt)
-      open(newunit=un, file=fname, status='old')
+      un = open_old_text(fname)
     case (e_fmt_bil)
-      open(newunit=un,file=fname, form='unformatted', status='old', access='stream')
+      un = open_old_stream(fname)
     case (e_fmt_gtif)
       un = -1
-      call par_abort("GeoTIFF は逐次読み(precip の maplist)に使えません。txt か bil を指定してください")
+      call par_abort("fileio: GeoTIFF cannot be used for sequential reads (precip maplist);" &
+                     //" use txt or bil")
     case default
-      open(newunit=un, file=fname, status='old')
+      un = open_old_text(fname)
   end select
 
 end function
@@ -106,7 +163,7 @@ subroutine fileio_read_matrix_int(fname, nx, ny, a, e_fmt)
 
   select case (e_fmt)
     case (e_fmt_txt)
-      open(newunit=un, file=fname, status='old')
+      un = open_old_text(fname)
       call read_textmatrix_int(un, nx, ny, a)
       close(un)
     case (e_fmt_bil)
@@ -114,7 +171,7 @@ subroutine fileio_read_matrix_int(fname, nx, ny, a, e_fmt)
     case (e_fmt_gtif)
       call read_gtif_int(fname, nx, ny, a)
     case default
-      open(newunit=un, file=fname, status='old')
+      un = open_old_text(fname)
       call read_textmatrix_int(un, nx, ny, a)
       close(un)
   end select
@@ -134,17 +191,17 @@ subroutine fileio_write_matrix_int(fname, nx, ny, a, e_fmt, gr)
 
   select case (e_fmt)
     case (e_fmt_txt)
-      open(newunit=un, file=fname, status='replace')
+      un = open_new_text(fname)
       call write_textmatrix_int(un, nx, ny, a)
       close(un)
     case (e_fmt_bil)
-      open(newunit=un,file=fname, form='unformatted', status='replace', access='stream')
+      un = open_new_stream(fname)
       call write_bil_int(un, nx, ny, a)
       close(un)
     case (e_fmt_gtif)
       call write_gtif_int(fname, nx, ny, a, gr)
     case default
-      open(newunit=un, file=fname, status='replace')
+      un = open_new_text(fname)
       call write_textmatrix_int(un, nx, ny, a)
       close(un)
   end select
@@ -162,7 +219,7 @@ subroutine fileio_read_matrix_real(fname, nx, ny, a, e_fmt)
 
   select case (e_fmt)
     case (e_fmt_txt)
-      open(newunit=un, file=fname, status='old')
+      un = open_old_text(fname)
       call read_textmatrix_real(un, nx, ny, a)
       close(un)
     case (e_fmt_bil)
@@ -170,7 +227,7 @@ subroutine fileio_read_matrix_real(fname, nx, ny, a, e_fmt)
     case (e_fmt_gtif)
       call read_gtif_real(fname, nx, ny, a)
     case default
-      open(newunit=un, file=fname, status='old')
+      un = open_old_text(fname)
       call read_textmatrix_real(un, nx, ny, a)
       close(un)
   end select
@@ -190,17 +247,17 @@ subroutine fileio_write_matrix_real(fname, nx, ny, a, e_fmt, gr)
 
   select case (e_fmt)
     case (e_fmt_txt)
-      open(newunit=un, file=fname, status='replace')
+      un = open_new_text(fname)
       call write_textmatrix_real(un, nx, ny, a)
       close(un)
     case (e_fmt_bil)
-      open(newunit=un,file=fname, form='unformatted', status='replace', access='stream')
+      un = open_new_stream(fname)
       call write_bil_real(un, nx, ny, a)
       close(un)
     case (e_fmt_gtif)
       call write_gtif_real(fname, nx, ny, a, gr)
     case default
-      open(newunit=un, file=fname, status='replace')
+      un = open_new_text(fname)
       call write_textmatrix_real(un, nx, ny, a)
       close(un)
   end select
@@ -214,9 +271,11 @@ subroutine read_textmatrix_int(un, nx, ny, a)
   integer, intent(in) :: un
   integer, intent(in) :: nx, ny
   integer, intent(inout) :: a(1:nx,1:ny)
-  integer :: j
+  integer :: j, ios
+  character(len=512) :: iom
   do j = 1, ny
-    read(un, *) a(1:nx,j)
+    read(un, *, iostat=ios, iomsg=iom) a(1:nx,j)
+    if (ios /= 0) call abort_read(un, iom, j)
   enddo
 end subroutine
 
@@ -239,9 +298,11 @@ subroutine read_textmatrix_real(un, nx, ny, a)
   integer, intent(in) :: un
   integer, intent(in) :: nx, ny
   real, intent(inout) :: a(1:nx,1:ny)
-  integer :: j
+  integer :: j, ios
+  character(len=512) :: iom
   do j = 1, ny
-    read(un, *) a(1:nx,j)
+    read(un, *, iostat=ios, iomsg=iom) a(1:nx,j)
+    if (ios /= 0) call abort_read(un, iom, j)
   enddo
 end subroutine
 
@@ -269,7 +330,7 @@ subroutine read_gtif_real(fname, nx, ny, a)
   integer :: stat
   character(len=512) :: msg
   call gtif_read(fname, nx, ny, a, stat, msg)
-  if (stat /= 0) call par_abort("GeoTIFF 読込失敗: "//trim(msg))
+  if (stat /= 0) call par_abort("fileio: failed to read GeoTIFF as real: "//trim(msg))
 end subroutine
 
 subroutine read_gtif_int(fname, nx, ny, a)
@@ -279,7 +340,7 @@ subroutine read_gtif_int(fname, nx, ny, a)
   integer :: stat
   character(len=512) :: msg
   call gtif_read(fname, nx, ny, a, stat, msg)
-  if (stat /= 0) call par_abort("GeoTIFF 読込失敗: "//trim(msg))
+  if (stat /= 0) call par_abort("fileio: failed to read GeoTIFF as integer: "//trim(msg))
 end subroutine
 
 
@@ -298,7 +359,7 @@ subroutine write_gtif_real(fname, nx, ny, a, gr)
   character(len=512) :: msg
   call gr2info(gr, info)
   call gtif_write(fname, nx, ny, a, info, stat, msg)
-  if (stat /= 0) call par_abort("GeoTIFF 出力失敗: "//trim(msg))
+  if (stat /= 0) call par_abort("fileio: failed to write GeoTIFF as real: "//trim(msg))
 end subroutine
 
 subroutine write_gtif_int(fname, nx, ny, a, gr)
@@ -311,18 +372,18 @@ subroutine write_gtif_int(fname, nx, ny, a, gr)
   character(len=512) :: msg
   call gr2info(gr, info)
   call gtif_write(fname, nx, ny, a, info, stat, msg)
-  if (stat /= 0) call par_abort("GeoTIFF 出力失敗: "//trim(msg))
+  if (stat /= 0) call par_abort("fileio: failed to write GeoTIFF as integer: "//trim(msg))
 end subroutine
 
 subroutine gr2info(gr, info)
   type(t_georef), intent(in), optional :: gr
   type(t_gtif_info), intent(out) :: info
   if (.not. present(gr)) then
-    call par_abort("GeoTIFF 出力には座標管理(georef)が必要です")
+    call par_abort("fileio: GeoTIFF output requires georeferencing (georef not given)")
   end if
   if (.not. gr%active) then
-    call par_abort("GeoTIFF 出力には座標管理が必要です" &
-                   //"(bil+hdr 入力か GeoTIFF 入力で位置情報を与えてください)")
+    call par_abort("fileio: GeoTIFF output requires georeferencing" &
+                   //" (give location info via bil+hdr or GeoTIFF input)")
   end if
   info%has_georef = .true.
   info%xul = gr%xul
@@ -356,22 +417,24 @@ subroutine check_bil_hdr(fname, h, nx, ny)
   integer, intent(in) :: nx, ny
 
   if (trim(h%layout) /= "BIL") then
-    call par_abort("bil: LAYOUT="//trim(h%layout)//" は未対応です(BIL のみ): "//trim(fname))
+    call par_abort("fileio: bil LAYOUT="//trim(h%layout)//" is not supported (BIL only): " &
+                   //trim(fname))
   end if
   if (trim(h%byteorder) /= "I") then
-    call par_abort("bil: BYTEORDER="//trim(h%byteorder)// &
-                   " は未対応です(I=リトルエンディアンのみ): "//trim(fname))
+    call par_abort("fileio: bil BYTEORDER="//trim(h%byteorder)// &
+                   " is not supported (only I = little endian): "//trim(fname))
   end if
   if (h%skipbytes /= 0) then
-    call par_abort("bil: SKIPBYTES="//itoa(h%skipbytes)//" は未対応です: "//trim(fname))
+    call par_abort("fileio: bil SKIPBYTES="//itoa(h%skipbytes)//" is not supported: "//trim(fname))
   end if
   if (h%nbands /= 1) then
-    call par_abort("bil: NBANDS="//itoa(h%nbands)//" は未対応です(1バンドのみ): "//trim(fname))
+    call par_abort("fileio: bil NBANDS="//itoa(h%nbands)//" is not supported (single band " &
+                   //"only): "//trim(fname))
   end if
   if (h%seen_grid) then
     if (h%ncols /= nx .or. h%nrows /= ny) then
-      call par_abort("bil: 格子数が一致しません(hdr "//itoa(h%ncols)//"x"//itoa(h%nrows) &
-                     //" / 要求 "//itoa(nx)//"x"//itoa(ny)//"): "//trim(fname))
+      call par_abort("fileio: bil grid size mismatch (hdr "//itoa(h%ncols)//"x"//itoa(h%nrows) &
+                     //" / requested "//itoa(nx)//"x"//itoa(ny)//"): "//trim(fname))
     end if
   end if
 end subroutine
@@ -402,16 +465,18 @@ subroutine read_bil_int_typed(fname, h, nx, ny, a)
   type(t_esri_hdr), intent(in) :: h
   integer, intent(in) :: nx, ny
   integer, intent(inout) :: a(1:nx,1:ny)
-  integer :: un
+  integer :: un, ios
   logical :: unsigned
+  character(len=512) :: iom
 
   unsigned = bil_is_unsigned(h)
-  open(newunit=un, file=fname, form='unformatted', status='old', access='stream')
+  un = open_old_stream(fname)
   select case (h%nbits)
     case (8)
       block
         integer(int8) :: b(nx,ny)
-        read(un) b
+        read(un, iostat=ios, iomsg=iom) b
+        if (ios /= 0) call abort_read(un, iom)
         if (unsigned) then
           a(:,:) = iand(int(b(:,:)), 255)
         else
@@ -421,7 +486,8 @@ subroutine read_bil_int_typed(fname, h, nx, ny, a)
     case (16)
       block
         integer(int16) :: b(nx,ny)
-        read(un) b
+        read(un, iostat=ios, iomsg=iom) b
+        if (ios /= 0) call abort_read(un, iom)
         if (unsigned) then
           a(:,:) = iand(int(b(:,:)), 65535)
         else
@@ -429,14 +495,16 @@ subroutine read_bil_int_typed(fname, h, nx, ny, a)
         end if
       end block
     case (32)
-      read(un) a
+      read(un, iostat=ios, iomsg=iom) a
+      if (ios /= 0) call abort_read(un, iom)
       if (unsigned) then
         if (any(a < 0)) then
-          call par_abort("bil: 符号なし 32bit の値が既定 integer の範囲を超えています: "//trim(fname))
+          call par_abort("fileio: unsigned 32bit bil value exceeds the default integer " &
+                         //"range: "//trim(fname))
         end if
       end if
     case default
-      call par_abort("bil: 整数は NBITS=8/16/32 のみ対応です(NBITS=" &
+      call par_abort("fileio: bil integer input supports NBITS=8/16/32 only (NBITS=" &
                      //itoa(h%nbits)//"): "//trim(fname))
   end select
   close(un)
@@ -460,7 +528,7 @@ subroutine read_bil_int_file(fname, nx, ny, a)
   inquire(file=hname, exist=ex)
   if (.not. ex) then
     ! 従来動作: 既定 integer(32bit)の生読み
-    open(newunit=un, file=fname, form='unformatted', status='old', access='stream')
+    un = open_old_stream(fname)
     call read_bil_int(un, nx, ny, a)
     close(un)
     return
@@ -470,7 +538,8 @@ subroutine read_bil_int_file(fname, nx, ny, a)
   if (stat /= 0) call par_abort(trim(msg))
   call check_bil_hdr(fname, h, nx, ny)
   if (trim(h%pixeltype) == "FLOAT") then
-    call par_abort("bil: 実数型(PIXELTYPE=FLOAT)の bil は整数入力に使えません: "//trim(fname))
+    call par_abort("fileio: bil with PIXELTYPE=FLOAT cannot be used as integer input: " &
+                   //trim(fname))
   end if
   call read_bil_int_typed(fname, h, nx, ny, a)
 end subroutine
@@ -494,7 +563,7 @@ subroutine read_bil_real_file(fname, nx, ny, a)
   inquire(file=hname, exist=ex)
   if (.not. ex) then
     ! 従来動作: real32 の生読み
-    open(newunit=un, file=fname, form='unformatted', status='old', access='stream')
+    un = open_old_stream(fname)
     call read_bil_real(un, nx, ny, a)
     close(un)
     return
@@ -508,10 +577,10 @@ subroutine read_bil_real_file(fname, nx, ny, a)
       (len_trim(h%pixeltype) == 0 .and. h%nbits == 32)) then
     ! 実数: 32bit のみ(未指定+32bit は従来どおり FLOAT とみなす)
     if (h%nbits /= 32) then
-      call par_abort("bil: 実数は NBITS=32 のみ対応です(NBITS=" &
-                     //itoa(h%nbits)//"。Float64 なら 32bit で書き出し直してください): "//trim(fname))
+      call par_abort("fileio: bil real input supports NBITS=32 only (NBITS=" &
+                     //itoa(h%nbits)//"; rewrite Float64 data as 32bit): "//trim(fname))
     end if
-    open(newunit=un, file=fname, form='unformatted', status='old', access='stream')
+    un = open_old_stream(fname)
     call read_bil_real(un, nx, ny, a)
     close(un)
   else
@@ -531,7 +600,10 @@ subroutine read_bil_int(un, nx, ny, a)
   integer, intent(in) :: un
   integer, intent(in) :: nx, ny
   integer, intent(inout) :: a(1:nx,1:ny)
-  read(un) a
+  integer :: ios
+  character(len=512) :: iom
+  read(un, iostat=ios, iomsg=iom) a
+  if (ios /= 0) call abort_read(un, iom)
 end subroutine
 
 !----------------------------------------------------------------------
@@ -550,7 +622,10 @@ subroutine read_bil_real(un, nx, ny, a)
   integer, intent(in) :: nx, ny
   real, intent(inout) :: a(1:nx,1:ny)
   real(real32) :: r(1:nx,1:ny)
-  read(un) r
+  integer :: ios
+  character(len=512) :: iom
+  read(un, iostat=ios, iomsg=iom) r
+  if (ios /= 0) call abort_read(un, iom)
   a(:,:) = r(:,:)
 end subroutine
 
@@ -656,8 +731,8 @@ subroutine rle_read_decode(un, f)
 
   read(un) n_total, nrun
   if (n_total /= size(f, kind=int64)) then
-    call par_abort("fileio_read_rle: 要素数が一致しません(save 内: " &
-                   //itoa64(n_total)//" / 展開先: "//itoa64(size(f, kind=int64))//")")
+    call par_abort("fileio: RLE element count mismatch (in save: " &
+                   //itoa64(n_total)//" / target: "//itoa64(size(f, kind=int64))//")")
   end if
   allocate(runs(2, nrun))
   read(un) runs

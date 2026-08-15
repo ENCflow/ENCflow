@@ -29,11 +29,11 @@ module subroutine init_creep(gm, p, g)
   ! (判定は全ランク同一 → par_stop の collective 条件を満たす)
   dts = p%dt * gm%idt_geomorph * gm%morfac
   dt_lim = 0.5 / (gm%creep_d * (1.0 / g%dx**2 + 1.0 / g%dy**2))
-  write(msg,'(a,es10.3,a,es10.3,a)') "geomorph creep: dt limit = ", dt_lim, &
+  write(msg,'(a,es10.3,a,es10.3,a)') "geomorph: creep stability dt limit = ", dt_lim, &
                                      " s (dts = ", dts, " s)"
   call par_info(trim(msg))
   if (dts > dt_lim) then
-    call par_stop("geomorph creep: dts exceeds the explicit stability limit " &
+    call par_stop("list_geomorph: creep dts exceeds the explicit stability limit " &
                   // "(reduce dt_geomorph/morfac/creep_d)")
   end if
 

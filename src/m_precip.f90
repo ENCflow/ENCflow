@@ -66,7 +66,8 @@ subroutine m_precip_init(pr, p, g)
   else if (prtype == 3) then
     call set_maplist
   else
-    call par_stop("Error, Unknown prtype in list_precip"//itoa(prtype))
+    call par_stop("list_precip: prtype must be 1(uniform series), 2(map with factor series) or " &
+                  //"3(map list): "//itoa(prtype))
   end if
 
   pr%prtype = prtype
@@ -77,9 +78,9 @@ subroutine m_precip_init(pr, p, g)
   pr%runoff_rate = max(list%runoff_rate, 0.0)
 
   if (len(trim(list%dt_maplist_c)) > 0) pr%dt_maplist = &
-                                str2sec(list%dt_maplist_c, "bad dt_maplist_c in &list_precip")
+                str2sec(list%dt_maplist_c, "list_precip: dt_maplist_c is not a valid duration")
   if (len(trim(list%dt_mapunit_c)) > 0) pr%dt_mapunit = &
-                                str2sec(list%dt_mapunit_c, "bad dt_mapunit_c in &list_precip")
+                str2sec(list%dt_mapunit_c, "list_precip: dt_mapunit_c is not a valid duration")
 
   if (list%dt_mapunit > 0.0) then
     pr%dt_mapunit = list%dt_mapunit
@@ -112,7 +113,7 @@ subroutine set_precip
   pr%prval(2,1:npr) = prval(2,1:npr)
   pr%npr = npr
 
-  if (npr <= 0) call par_stop("list_precip: prtype requires prval time series (no valid entries)")
+  if (npr <= 0) call par_stop("list_precip: prval has no valid entries (required for prtype=1 and 2)")
 
 end subroutine
 
@@ -121,7 +122,7 @@ subroutine set_prmap
   character(:), allocatable :: fname
   integer :: i, j, have_nan
   if (len_trim(list%fn_prmap) == 0) then
-    call par_stop("Error, prtype=2 but fn_prmap is not set" )
+    call par_stop("list_precip: prtype=2 requires fn_prmap")
   end if
 
   ! 降水分布の読み込み
@@ -141,7 +142,7 @@ subroutine set_prmap
     end do
   end do
   if (have_nan > 0) then
-    call par_info("warning: precipitation map has NaN in"//itoa(have_nan)//" cells")
+    call par_info("precip: "//itoa(have_nan)//" cells with NaN in the precipitation map, treated as 0")
   end if
 end subroutine
 
@@ -153,7 +154,7 @@ subroutine set_maplist
   integer :: i, n
   integer :: ios
   if (len_trim(list%fn_maplist) == 0) then
-    call par_stop("Error, prtype=3 but fn_maplist is not set" )
+    call par_stop("list_precip: prtype=3 requires fn_maplist")
   end if
 
   ! 分布リストの行数をカウント
@@ -173,7 +174,7 @@ subroutine set_maplist
   do i = 1, n
     read(un, '(a256)') mapname
     fname_map = trim(p%dir_data)//"/"//trim(mapname)
-    call par_info(" checking precipitaiton map "//trim(fname_map))
+    call par_info(" checking precipitation map "//trim(fname_map))
     pr%un_maplist(i) = fileio_un_open(fname_map, p%f_input_mode)
   end do
   close(un)

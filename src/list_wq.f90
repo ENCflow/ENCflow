@@ -140,9 +140,9 @@ subroutine list_wq_read(p, list)
 
   call par_info("reading list_wq in "//trim(p%fn_wq))
   open(newunit=un, file=trim(p%fn_wq), status='old', iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("cannot open file: "//trim(p%fn_wq)//" : "//trim(iom))
+  if (ios /= 0) call par_stop("list_wq: cannot open "//trim(p%fn_wq)//": "//trim(iom))
   read(un, nml=list_wq, iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("error in reading list_wq: "//trim(iom))
+  if (ios /= 0) call par_stop("list_wq: cannot read namelist: "//trim(iom))
   close(un)
 
   list%f_wq = f_wq

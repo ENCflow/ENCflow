@@ -81,7 +81,7 @@ module subroutine user_geoinfo_run(p, g, name)
   character(len=*), intent(in) :: name
   procedure(user_geoinfo_if), pointer :: fp
   fp => resolve(name)
-  if (.not. associated(fp)) call par_abort("user_geoinfo_run: 未定義の識別名 "//trim(name))
+  if (.not. associated(fp)) call par_abort("geoinfo: user routine listed but not resolved: "//trim(name))
   call fp(p, g)
 end subroutine
 

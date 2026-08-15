@@ -96,7 +96,7 @@ subroutine list_boundary_read(p, list)
   call check_old_format(p)
 
   open(newunit=un, file=trim(p%fn_boundary), status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: "//trim(p%fn_boundary))
+  if (ios /= 0) call par_stop("list_boundary: cannot open file "//trim(p%fn_boundary))
   call read_edge(un, list)
   call read_source(un, list)
   call read_stage(un, list)
@@ -134,7 +134,7 @@ subroutine read_edge(un, list)
 
   rewind(un)
   read(un, nml=list_bound_edge, iostat=ios, iomsg=iom)
-  if (ios > 0) call par_stop("list_bound_edge 読込失敗: "//trim(iom))
+  if (ios > 0) call par_stop("list_bound_edge: namelist read failed: "//trim(iom))
   if (ios < 0) return              ! グループ不在(この族なし)
   list%present_edge = .true.
 
@@ -169,7 +169,7 @@ subroutine read_source(un, list)
 
   rewind(un)
   read(un, nml=list_bound_source, iostat=ios, iomsg=iom)
-  if (ios > 0) call par_stop("list_bound_source 読込失敗: "//trim(iom))
+  if (ios > 0) call par_stop("list_bound_source: namelist read failed: "//trim(iom))
   if (ios < 0) return              ! グループ不在(この族なし)
   list%present_source = .true.
 
@@ -203,7 +203,7 @@ subroutine read_stage(un, list)
 
   rewind(un)
   read(un, nml=list_bound_stage, iostat=ios, iomsg=iom)
-  if (ios > 0) call par_stop("list_bound_stage 読込失敗: "//trim(iom))
+  if (ios > 0) call par_stop("list_bound_stage: namelist read failed: "//trim(iom))
   if (ios < 0) return              ! グループ不在(この族なし)
   list%present_stage = .true.
 
@@ -245,7 +245,7 @@ subroutine read_inflow(un, list)
 
   rewind(un)
   read(un, nml=list_bound_inflow, iostat=ios, iomsg=iom)
-  if (ios > 0) call par_stop("list_bound_inflow 読込失敗: "//trim(iom))
+  if (ios > 0) call par_stop("list_bound_inflow: namelist read failed: "//trim(iom))
   if (ios < 0) return              ! グループ不在(この族なし)
   list%present_inflow = .true.
 
@@ -276,7 +276,8 @@ subroutine check_old_format(p)
   character(len=1) :: c
 
   open(newunit=un, file=trim(p%fn_boundary), status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: "//trim(p%fn_boundary))
+  if (ios /= 0) call par_stop("list_boundary: cannot open file for format check: " &
+                              //trim(p%fn_boundary))
   do
     read(un, '(a)', iostat=ios) line
     if (ios /= 0) exit
@@ -286,9 +287,9 @@ subroutine check_old_format(p)
       c = line(17:17)              ! 次の文字が名前文字なら別グループ
       if (tok16 == "&list_bound_pump" .and. .not. is_name_char(c)) then
         close(un)
-        call par_stop("list_boundary: &list_bound_pump は fn_structure の " &
-                      //"&list_struct_pump へ移設されました(パラメータ名は同じ)。" &
-                      //"examples/List_samples/list_structure.txt 参照: "//trim(p%fn_boundary))
+        call par_stop("list_boundary: &list_bound_pump has moved to &list_struct_pump in " &
+                      //"fn_structure (parameter names unchanged), see " &
+                      //"examples/List_samples/list_structure.txt: "//trim(p%fn_boundary))
       end if
     end if
     if (len_trim(line) < 14) cycle
@@ -297,9 +298,9 @@ subroutine check_old_format(p)
     c = line(15:15)                ! 次の文字が名前文字なら別グループ
     if (is_name_char(c)) cycle
     close(un)
-    call par_stop("list_boundary: 旧形式の &list_boundary グループを検出しました。" &
-                  //"&list_bound_edge / &list_bound_source の新形式へ移行してください" &
-                  //"(examples/List_samples/list_boundary.txt 参照): "//trim(p%fn_boundary))
+    call par_stop("list_boundary: obsolete &list_boundary group found, migrate to the " &
+                  //"&list_bound_edge / &list_bound_source format (see " &
+                  //"examples/List_samples/list_boundary.txt): "//trim(p%fn_boundary))
   end do
   close(un)
 

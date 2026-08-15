@@ -175,10 +175,73 @@ docs/comparison.md を参照。
 - namelist の read は `iostat=` `iomsg=` で捕捉し par_stop に渡す。
   ランタイム任せにすると全ランクがメッセージを出す。ファイル open も同様
   (m_fileio に集約済みのため、入口数箇所の iostat 化で全読み込みに効く)。
+  **m_fileio の open・行列 read の iostat 化は 2026-08-15 実施済み**
+  (open_old_text 等の検査付きヘルパー4種+abort_read。fn_z 欠落等が
+  ランタイムのバックトレースではなく整った ABORT メッセージで止まる。
+  m_fileio は rank0 単独の文脈でも呼ばれるため par_abort を使う。
+  残: RLE(save/restore)本体の read は未捕捉 — save_info の事前検査が
+  大半を防ぐため保留)。
 - 時間ループのエラー処理: **判定は全ランクで同一に行い、exit は全ランクが
   同時に実行する**。print だけ is_root。ランク0だけが exit すると他ランクが
   回り続け finalize で整合しなくなる。`error stop` は dispose/par_finalize を
   素通りするので使わない — ierror を返し、finalize 後に stop 1。
+
+### 4.1 メッセージ本文の規約(2026-08-15 制定)
+
+実行時メッセージは英語一本(§34.2)。全 542 箇所の一括英語化と同時に
+書式を以下に統一した。
+
+- **深刻さはラッパーが唯一の所有者**。`ERROR:`/`WARNING:`/`ABORT:` は
+  ラッパーが付けるので、本文に error / warning / fatal 等の severity 語を
+  書かない。警告の情報は par_warn で出す(par_info の本文に "warning:" と
+  書かない)。
+- **本文は `<context>: <message>` の1行英文**。context は2種類だけ:
+  - 設定・入力の誤り(利用者がパラメータファイルを直すもの)→
+    **namelist グループ名**(例 `list_geoinfo: f_rntype must be 0(fixed)
+    or 1(file): 3`)
+  - 実行時の異常・進捗 → **モジュールの話題名**(m_ 抜き。`geoinfo:`,
+    `tide:`, `save:`, `fileio:`)
+  - **ルーチン名は書かない**(利用者に無意味・リファクタで陳腐化する)。
+    発生箇所の特定は「本文がリポジトリ内で一意」であることで担保する。
+- **文体**: context タグの後は小文字始まり・一文・終端ピリオドなし。
+  値は `name=value` か文末の `: value`。可能なら対処を1節添える
+  (例 "specify only one of dx and lx")。パラメータ名・ファイル名は
+  翻訳せずそのまま書く。ASCII のみ。
+- par_info の進捗は動名詞開始(`reading <path>`)。従属項目は先頭
+  1スペースの字下げ。
+- **対象外**: probe/flux CSV のヘッダ・Log.txt の列見出しなど「出力
+  データの一部」である文字列(変更は互換性の別議論)。コード内コメントは
+  日本語のまま(§34.2)。
+
+### 4.2 メッセージ用語の対訳(追補していく)
+
+| 日本語 | 英語 | | 日本語 | 英語 |
+|---|---|---|---|---|
+| 河道(マスク) | channel (mask) | | 窪地 | depression |
+| 海域(マスク) | sea (mask) | | 越流 | overtopping |
+| 領域マスク | domain mask | | 河口 | river mouth |
+| 流域 | catchment | | 土層厚 | soil depth |
+| 地盤高 | ground elevation | | 比湧水量 | specific yield |
+| 粗度係数 | roughness | | 遮断 | interception |
+| 掘り込み(深さ) | incision (depth) | | 蒸発散 | evapotranspiration |
+| 堤防 | levee | | 融雪 | snowmelt |
+| 天端 | crest | | 土石流 | debris flow |
+| 海岸堤防 | seawall | | 浮遊砂 | suspended sediment |
+| 海側マスク | seaside mask | | 点源/面源 | point/diffuse source |
+| ため池 | pond | | 水位 | water level |
+| 家屋 | building | | 水深 | depth |
+| 空隙率 | void fraction | | 流量 | discharge |
+| 構造物 | structure | | 流速 | velocity |
+| 分水 | diversion | | 境界条件 | boundary condition |
+| 排水機場 | pumping station | | 状態保存ファイル | state file |
+| 陸閘・水門 | gate | | 再開 | restart |
+| 帯(分割) | band | | 格子/セル | grid / cell |
+| 敷高 | invert elevation | | 測線 | transect |
+| フラップ | flap gate | | 浸透(能) | infiltration (capacity) |
+| 捕捉帯(ダム) | capture band | | 初期損失 | initial loss |
+| 但し書き操作 | emergency release | | 湿性沈着 | wet deposition |
+| 破堤 | breach | | 原単位 | unit load |
+| 数値発散 | solution diverged | | 収支誤差 | imbalance(error は使わない) |
 - 領域分割後の集約対象(判定・出力の直前に allreduce/gather が要るもの):
   **ierror(swflow の発散検出はランク局所値になる)、s%cnmax、
   s%hmean(二段総和の行部分和)、s%sp の各成分(表示区間内最大値)**。
@@ -2818,10 +2881,11 @@ Cn_max)→ 場の最大値**。
 - **実行時メッセージ**: プログラムの出力(エラー・進行表示)は英語に
   収斂させる。検索可能性(ユーザーが世界中でメッセージを検索・質問
   できること)は翻訳より価値があり、ロケール機構は §0 の「過度に複雑化
-  しない」に反する。日本語の解説はドキュメント側が担う。既存の日本語
-  メッセージは触ったファイルから順に英語へ置き換えてよい(挙動変更
-  ではないが、Log 比較対象の文字列に触れる場合は reference への影響に
-  注意)。
+  しない」に反する。日本語の解説はドキュメント側が担う。
+  **既存メッセージの一括英語化は 2026-08-15 に完了**(全 542 箇所+
+  m_geotiff の set_err 系。書式・用語は §4.1/4.2 が正本。Log.txt など
+  比較対象のデータ文字列は対象外のまま=全回帰の reference 不変を確認)。
+  以後の新規メッセージは §4.1 に従って英語で書く。
 - **コード内コメント**: 言語別のファイル二重保持は行わない(確実に
   乖離するため)。当面は日本語のまま。海外読者は編集環境・LLM での
   翻訳が現実的になっており、必要なら「コメントだけ機械翻訳した英語

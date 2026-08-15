@@ -66,25 +66,30 @@ subroutine m_swflow_stg_init(p, g, b, s)
 
   ! STG は運動量(M,N)を保存しないため restart 非対応(developer.md §7)
   if (p%f_state_restore > 0) then
-    call par_stop("STG(f_gridsystem=1)は restart(f_state_restore)非対応です")
+    call par_stop("list_sysparam: restart (f_state_restore) is not supported " &
+                  //"with STG (f_gridsystem=1)")
   end if
 
   ! 辺境界条件は STG 非対応(凍結方針 §7)。既定(全辺不透過)以外は停止
   if (any(b%edge%btype /= e_bc_wall)) then
-    call par_stop("STG(f_gridsystem=1)は辺境界条件(list_bound_edge)非対応です")
+    call par_stop("list_bound_edge: edge boundary conditions are not supported " &
+                  //"with STG (f_gridsystem=1)")
   end if
   if (b%nstage > 0) then
-    call par_stop("STG(f_gridsystem=1)は水位規定セル群(list_bound_stage)非対応です")
+    call par_stop("list_bound_stage: prescribed water level cells are not supported " &
+                  //"with STG (f_gridsystem=1)")
   end if
   if (b%ninflow > 0) then
-    call par_stop("STG(f_gridsystem=1)は区間流入(list_bound_inflow)非対応です")
+    call par_stop("list_bound_inflow: segment inflow is not supported with STG (f_gridsystem=1)")
   end if
   ! 河道水理モデル(堤防・サブグリッド河道幅)は ENC 専用(§17, §18)
   if (g%bank_active .or. g%width_active) then
-    call par_stop("STG(f_gridsystem=1)は河道水理モデル(fn_channel)非対応です")
+    call par_stop("list_channel: the channel hydraulics model (fn_channel) is not supported " &
+                  //"with STG (f_gridsystem=1)")
   end if
   if (b%nstruct > 0) then
-    call par_stop("STG(f_gridsystem=1)は内部水理構造物(fn_structure)非対応です")
+    call par_stop("list_structure: internal hydraulic structures (fn_structure) are not " &
+                  //"supported with STG (f_gridsystem=1)")
   end if
 
   select case (p%f_govequation)

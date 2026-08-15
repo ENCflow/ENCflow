@@ -145,7 +145,7 @@ subroutine gtif_read_int(fname, nx, ny, a, stat, msg, info)
   if (stat == 0) call check_dims(t, nx, ny, fname, stat, msg)
   if (stat == 0) then
     if (t%sfmt == 3) then
-      call set_err(stat, msg, "実数型の GeoTIFF は整数入力に使えません: "//trim(fname))
+      call set_err(stat, msg, "float GeoTIFF cannot be read as integer input: "//trim(fname))
     end if
   end if
   if (stat == 0) call decode_blocks(t, .false., rdum, a, fname, stat, msg)
@@ -182,7 +182,7 @@ subroutine gtif_write_real(fname, nx, ny, a, info, stat, msg)
     row(:) = real(a(1:nx,j), real32)
     write(un, iostat=ios) row
     if (ios /= 0) then
-      call set_err(stat, msg, "GeoTIFF の画素データを書けません: "//trim(fname))
+      call set_err(stat, msg, "cannot write GeoTIFF pixel data: "//trim(fname))
       close(un)
       return
     end if
@@ -206,7 +206,7 @@ subroutine gtif_write_int(fname, nx, ny, a, info, stat, msg)
   do j = 1, ny
     write(un, iostat=ios) a(1:nx,j)
     if (ios /= 0) then
-      call set_err(stat, msg, "GeoTIFF の画素データを書けません: "//trim(fname))
+      call set_err(stat, msg, "cannot write GeoTIFF pixel data: "//trim(fname))
       close(un)
       return
     end if
@@ -237,8 +237,8 @@ subroutine check_dims(t, nx, ny, fname, stat, msg)
   stat = 0
   msg = ""
   if (t%nx /= nx .or. t%ny /= ny) then
-    call set_err(stat, msg, "格子数が一致しません(ファイル "//itoa(t%nx)//"x" &
-                 //itoa(t%ny)//" / 要求 "//itoa(nx)//"x"//itoa(ny)//"): "//trim(fname))
+    call set_err(stat, msg, "grid size mismatch (file "//itoa(t%nx)//"x" &
+                 //itoa(t%ny)//" / requested "//itoa(nx)//"x"//itoa(ny)//"): "//trim(fname))
   end if
 end subroutine
 
@@ -269,14 +269,14 @@ subroutine open_parse(fname, t, stat, msg)
        status='old', iostat=ios)
   if (ios /= 0) then
     t%un = -1
-    call set_err(stat, msg, "GeoTIFF を開けません: "//trim(fname))
+    call set_err(stat, msg, "cannot open GeoTIFF: "//trim(fname))
     return
   end if
 
   ! --- ヘッダ(バイト順・magic・IFD オフセット) ---
   read(t%un, pos=1, iostat=ios) h
   if (ios /= 0) then
-    call set_err(stat, msg, "GeoTIFF ヘッダを読めません: "//trim(fname))
+    call set_err(stat, msg, "cannot read GeoTIFF header: "//trim(fname))
     return
   end if
   if (h(1) == iachar("I") .and. h(2) == iachar("I")) then
@@ -284,15 +284,15 @@ subroutine open_parse(fname, t, stat, msg)
   else if (h(1) == iachar("M") .and. h(2) == iachar("M")) then
     t%be = .true.
   else
-    call set_err(stat, msg, "TIFF ではありません(バイト順識別子が不正): "//trim(fname))
+    call set_err(stat, msg, "not a TIFF (bad byte-order mark): "//trim(fname))
     return
   end if
   magic = int(bytes_u(h(3:4), t%be))
   if (magic == 43) then
-    call set_err(stat, msg, "BigTIFF は未対応です(Phase 4 で対応予定): "//trim(fname))
+    call set_err(stat, msg, "BigTIFF is not supported: "//trim(fname))
     return
   else if (magic /= 42) then
-    call set_err(stat, msg, "TIFF ではありません(magic="//itoa(magic)//"): "//trim(fname))
+    call set_err(stat, msg, "not a TIFF (magic="//itoa(magic)//"): "//trim(fname))
     return
   end if
   ifdoff = bytes_u(h(5:8), t%be)
@@ -302,7 +302,7 @@ subroutine open_parse(fname, t, stat, msg)
     integer(int8) :: b2(2), b12(12)
     read(t%un, pos=ifdoff+1, iostat=ios) b2
     if (ios /= 0) then
-      call set_err(stat, msg, "IFD を読めません: "//trim(fname))
+      call set_err(stat, msg, "cannot read IFD: "//trim(fname))
       return
     end if
     nent = int(bytes_u(b2, t%be))
@@ -310,7 +310,7 @@ subroutine open_parse(fname, t, stat, msg)
     do i = 1, nent
       read(t%un, pos=ifdoff+3+(i-1)*12, iostat=ios) b12
       if (ios /= 0) then
-        call set_err(stat, msg, "IFD エントリを読めません: "//trim(fname))
+        call set_err(stat, msg, "cannot read IFD entries: "//trim(fname))
         return
       end if
       ents(i)%tag = int(bytes_u(b12(1:2), t%be))
@@ -324,18 +324,18 @@ subroutine open_parse(fname, t, stat, msg)
   t%nx = int(tag_int1(ents, 256, t%be, 0_int64))
   t%ny = int(tag_int1(ents, 257, t%be, 0_int64))
   if (t%nx <= 0 .or. t%ny <= 0) then
-    call set_err(stat, msg, "ImageWidth/ImageLength がありません: "//trim(fname))
+    call set_err(stat, msg, "ImageWidth/ImageLength tags are missing: "//trim(fname))
     return
   end if
   spp = int(tag_int1(ents, 277, t%be, 1_int64))
   if (spp /= 1) then
-    call set_err(stat, msg, "多バンド("//itoa(spp)//"バンド)は未対応です(1バンドのみ): "//trim(fname))
+    call set_err(stat, msg, "multi-band ("//itoa(spp)//" bands) is not supported, single band only: "//trim(fname))
     return
   end if
   photo = int(tag_int1(ents, 262, t%be, 1_int64))
   if (photo > 1) then
     call set_err(stat, msg, "PhotometricInterpretation="//itoa(photo)// &
-                 " は未対応です(グレースケールのみ): "//trim(fname))
+                 " is not supported, grayscale only: "//trim(fname))
     return
   end if
   t%bits = int(tag_int1(ents, 258, t%be, 1_int64))
@@ -345,20 +345,20 @@ subroutine open_parse(fname, t, stat, msg)
   select case (t%bits)
     case (8, 16, 32)
       if (t%sfmt == 3 .and. t%bits /= 32) then
-        call set_err(stat, msg, "実数 "//itoa(t%bits)//"bit は未対応です: "//trim(fname))
+        call set_err(stat, msg, "float "//itoa(t%bits)//"bit is not supported: "//trim(fname))
         return
       end if
     case (64)
       if (t%sfmt /= 3) then
-        call set_err(stat, msg, "整数 64bit は未対応です: "//trim(fname))
+        call set_err(stat, msg, "integer 64bit is not supported: "//trim(fname))
         return
       end if
     case default
-      call set_err(stat, msg, "BitsPerSample="//itoa(t%bits)//" は未対応です: "//trim(fname))
+      call set_err(stat, msg, "BitsPerSample="//itoa(t%bits)//" is not supported: "//trim(fname))
       return
   end select
   if (t%sfmt < 1 .or. t%sfmt > 3) then
-    call set_err(stat, msg, "SampleFormat="//itoa(t%sfmt)//" は未対応です: "//trim(fname))
+    call set_err(stat, msg, "SampleFormat="//itoa(t%sfmt)//" is not supported: "//trim(fname))
     return
   end if
 
@@ -368,13 +368,13 @@ subroutine open_parse(fname, t, stat, msg)
     t%bw = int(tag_int1(ents, 322, t%be, 0_int64))
     t%bh = int(tag_int1(ents, 323, t%be, 0_int64))
     if (t%bw <= 0 .or. t%bh <= 0) then
-      call set_err(stat, msg, "TileWidth/TileLength が不正です: "//trim(fname))
+      call set_err(stat, msg, "bad TileWidth/TileLength: "//trim(fname))
       return
     end if
     call tag_ints(t%un, ents, 324, t%be, t%off, stat)
     if (stat == 0) call tag_ints(t%un, ents, 325, t%be, t%cnt, stat)
     if (stat /= 0) then
-      call set_err(stat, msg, "TileOffsets/TileByteCounts を読めません: "//trim(fname))
+      call set_err(stat, msg, "cannot read TileOffsets/TileByteCounts: "//trim(fname))
       return
     end if
     ntx = (t%nx + t%bw - 1) / t%bw
@@ -387,14 +387,14 @@ subroutine open_parse(fname, t, stat, msg)
     t%bh = int(min(rps, int(t%ny, int64)))
     call tag_ints(t%un, ents, 273, t%be, t%off, stat)
     if (stat /= 0) then
-      call set_err(stat, msg, "StripOffsets を読めません: "//trim(fname))
+      call set_err(stat, msg, "cannot read StripOffsets: "//trim(fname))
       return
     end if
     nblocks = (t%ny + t%bh - 1) / t%bh
     if (find_ent(ents, 279) > 0) then
       call tag_ints(t%un, ents, 279, t%be, t%cnt, stat)
       if (stat /= 0) then
-        call set_err(stat, msg, "StripByteCounts を読めません: "//trim(fname))
+        call set_err(stat, msg, "cannot read StripByteCounts: "//trim(fname))
         return
       end if
     else if (t%comp == 1) then             ! 無圧縮なら計算で補える
@@ -403,12 +403,12 @@ subroutine open_parse(fname, t, stat, msg)
         t%cnt(i) = int(t%bw, int64) * min(t%bh, t%ny - (i-1)*t%bh) * (t%bits/8)
       end do
     else
-      call set_err(stat, msg, "StripByteCounts がありません: "//trim(fname))
+      call set_err(stat, msg, "StripByteCounts tag is missing: "//trim(fname))
       return
     end if
   end if
   if (size(t%off, kind=int64) /= nblocks .or. size(t%cnt, kind=int64) /= nblocks) then
-    call set_err(stat, msg, "strip/tile の数がタグと一致しません: "//trim(fname))
+    call set_err(stat, msg, "strip/tile count does not match the tags: "//trim(fname))
     return
   end if
 
@@ -441,14 +441,14 @@ subroutine open_parse(fname, t, stat, msg)
   if (find_ent(ents, 33550) > 0 .and. find_ent(ents, 33922) > 0) then
     call tag_dbls(t%un, ents, 33550, t%be, dv, stat)
     if (stat /= 0 .or. size(dv) < 2) then
-      call set_err(stat, msg, "ModelPixelScaleTag を読めません: "//trim(fname))
+      call set_err(stat, msg, "cannot read ModelPixelScaleTag: "//trim(fname))
       return
     end if
     t%info%csx = dv(1)
     t%info%csy = dv(2)
     call tag_dbls(t%un, ents, 33922, t%be, dv, stat)
     if (stat /= 0 .or. size(dv) < 6) then
-      call set_err(stat, msg, "ModelTiepointTag を読めません: "//trim(fname))
+      call set_err(stat, msg, "cannot read ModelTiepointTag: "//trim(fname))
       return
     end if
     if (t%info%csx > 0.0_real64 .and. t%info%csy > 0.0_real64) then
@@ -463,7 +463,7 @@ subroutine open_parse(fname, t, stat, msg)
   if (find_ent(ents, 34735) > 0) then
     call tag_ints(t%un, ents, 34735, t%be, iv, stat)
     if (stat /= 0 .or. size(iv) < 4) then
-      call set_err(stat, msg, "GeoKeyDirectoryTag を読めません: "//trim(fname))
+      call set_err(stat, msg, "cannot read GeoKeyDirectoryTag: "//trim(fname))
       return
     end if
     do i = 1, int(iv(4))                   ! iv(1:4) はヘッダ、以降 4 要素/キー
@@ -535,18 +535,18 @@ subroutine decode_blocks(t, want_real, ar, ai, fname, stat, msg)
   select case (t%comp)
     case (1, 5, 32773, 8, 32946)           ! 無圧縮 / LZW / PackBits / Deflate
     case (6, 7)
-      call set_err(stat, msg, "JPEG 系圧縮は対象外です: "//trim(fname))
+      call set_err(stat, msg, "JPEG-family compression is not supported: "//trim(fname))
       return
     case default
-      call set_err(stat, msg, "Compression="//itoa(t%comp)//" は未対応です: "//trim(fname))
+      call set_err(stat, msg, "Compression="//itoa(t%comp)//" is not supported: "//trim(fname))
       return
   end select
   if (t%pred < 1 .or. t%pred > 3) then
-    call set_err(stat, msg, "Predictor="//itoa(t%pred)//" は未対応です: "//trim(fname))
+    call set_err(stat, msg, "Predictor="//itoa(t%pred)//" is not supported: "//trim(fname))
     return
   end if
   if (t%pred == 3 .and. t%sfmt /= 3) then
-    call set_err(stat, msg, "整数への Predictor=3 は未対応です: "//trim(fname))
+    call set_err(stat, msg, "Predictor=3 for integer data is not supported: "//trim(fname))
     return
   end if
 
@@ -566,19 +566,19 @@ subroutine decode_blocks(t, want_real, ar, ai, fname, stat, msg)
       need = int(t%bw, int64) * rows * bpb
     end if
     if (t%off(ib) == 0) then
-      call set_err(stat, msg, "スパース(未書き込みブロック)は未対応です: "//trim(fname))
+      call set_err(stat, msg, "sparse (unwritten) blocks are not supported: "//trim(fname))
       return
     end if
 
     select case (t%comp)
       case (1)
         if (t%cnt(ib) < need) then
-          call set_err(stat, msg, "ブロック"//itoa(ib)//"のバイト数が不足しています: "//trim(fname))
+          call set_err(stat, msg, "block "//itoa(ib)//" has too few bytes: "//trim(fname))
           return
         end if
         read(t%un, pos=t%off(ib)+1, iostat=ios) ubuf(1:need)
         if (ios /= 0) then
-          call set_err(stat, msg, "ブロック"//itoa(ib)//"を読めません: "//trim(fname))
+          call set_err(stat, msg, "cannot read uncompressed block "//itoa(ib)//": "//trim(fname))
           return
         end if
       case default
@@ -586,7 +586,7 @@ subroutine decode_blocks(t, want_real, ar, ai, fname, stat, msg)
         allocate(cbuf(t%cnt(ib)))
         read(t%un, pos=t%off(ib)+1, iostat=ios) cbuf
         if (ios /= 0) then
-          call set_err(stat, msg, "ブロック"//itoa(ib)//"を読めません: "//trim(fname))
+          call set_err(stat, msg, "cannot read block "//itoa(ib)//": "//trim(fname))
           return
         end if
         if (t%comp == 5) then
@@ -597,7 +597,7 @@ subroutine decode_blocks(t, want_real, ar, ai, fname, stat, msg)
           call gtc_inflate_zlib(cbuf, ubuf(1:need), stat)
         end if
         if (stat /= 0) then
-          call set_err(stat, msg, "ブロック"//itoa(ib)//"の復号に失敗しました(圧縮データ破損): " &
+          call set_err(stat, msg, "block "//itoa(ib)//" failed to decode, compressed data corrupt: " &
                        //trim(fname))
           return
         end if
@@ -624,7 +624,7 @@ subroutine decode_blocks(t, want_real, ar, ai, fname, stat, msg)
         else
           call sample_int(ubuf, pos, t%bits, t%sfmt, be_eff, v)
           if (v > int(huge(0), int64) .or. v < -int(huge(0), int64) - 1) then
-            call set_err(stat, msg, "値 "//i64toa(v)//" が既定 integer の範囲外です: "//trim(fname))
+            call set_err(stat, msg, "value "//i64toa(v)//" is out of default integer range: "//trim(fname))
             return
           end if
           ai(gx, gy) = int(v)
@@ -895,7 +895,7 @@ subroutine write_meta(fname, nx, ny, sf, info, un, stat, msg)
   msg = ""
   un = -1
   if (nx <= 0 .or. ny <= 0) then
-    call set_err(stat, msg, "格子数が不正です: "//trim(fname))
+    call set_err(stat, msg, "bad grid size: "//trim(fname))
     return
   end if
 
@@ -919,7 +919,7 @@ subroutine write_meta(fname, nx, ny, sf, info, un, stat, msg)
   end if
   databytes = int(nx, int64) * ny * 4
   if (o_data + databytes >= 4294967296_int64) then
-    call set_err(stat, msg, "4GiB を超えるため書けません(BigTIFF 書きは未対応): "//trim(fname))
+    call set_err(stat, msg, "file would exceed 4GiB, BigTIFF writing is not supported: "//trim(fname))
     return
   end if
 
@@ -981,12 +981,12 @@ subroutine write_meta(fname, nx, ny, sf, info, un, stat, msg)
        status='replace', iostat=ios)
   if (ios /= 0) then
     un = -1
-    call set_err(stat, msg, "GeoTIFF を作成できません: "//trim(fname))
+    call set_err(stat, msg, "cannot create GeoTIFF: "//trim(fname))
     return
   end if
   write(un, iostat=ios) buf
   if (ios /= 0) then
-    call set_err(stat, msg, "GeoTIFF ヘッダを書けません: "//trim(fname))
+    call set_err(stat, msg, "cannot write GeoTIFF header: "//trim(fname))
     close(un)
     un = -1
     return

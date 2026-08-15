@@ -393,7 +393,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 無視して常時射流で流出させてしまう)。判定材料は namelist 由来で
   ! 全ランク同一(par_stop は collective 安全)
   if (f_rivermouth_drop > 0 .and. len_trim(p%fn_tide) > 0) then
-    call par_stop("list_enc: f_rivermouth_drop は潮位(fn_tide)と併用できません")
+    call par_stop("list_enc: f_rivermouth_drop cannot be used together with tide (fn_tide)")
   end if
   p_diagratio = list%p_diagratio
   p_adv_upwind_index = list%p_adv_upwind_index
@@ -404,15 +404,15 @@ subroutine m_swflow_enc_init(p, g, b, s)
     case (0)      ! 無効
     case (1)      ! 定数モデル
       if (p_diffusion_nu <= 0) then
-        call par_stop("list_enc: f_diffusion_term=1 には p_diffusion_nu > 0 の指定が必要")
+        call par_stop("list_enc: f_diffusion_term=1 requires p_diffusion_nu > 0")
       end if
     case (2)      ! ゼロ方程式モデル
       if (p_diffusion_alpha <= 0 .and. p_diffusion_nu <= 0) then
-        call par_stop("list_enc: f_diffusion_term=2 には p_diffusion_alpha > 0 "// &
-                      "(または p_diffusion_nu > 0)の指定が必要")
+        call par_stop("list_enc: f_diffusion_term=2 requires p_diffusion_alpha > 0 "// &
+                      "(or p_diffusion_nu > 0)")
       end if
     case default
-      call par_stop("list_enc: f_diffusion_term は 0(無効), 1(定数), 2(ゼロ方程式) のいずれか")
+      call par_stop("list_enc: f_diffusion_term must be 0(off), 1(constant) or 2(zero-equation)")
   end select
 
   ! 河道条件ファイルから堤防の水理モードを読む(未指定ならデフォルト値)
@@ -427,13 +427,14 @@ subroutine m_swflow_enc_init(p, g, b, s)
   f_swall_mode = g%f_swall_mode             ! 検証は geoinfo(setup_seawall)済み
   have_width = g%width_active
   if (f_bank_mode < e_bank_weir .or. f_bank_mode > e_bank_pump) then
-    call par_stop("list_channel: f_bank_mode は 0(越流のみ), 1(樋門), 2(強制排水) のいずれか")
+    call par_stop("list_channel: f_bank_mode must be 0(overtopping only), " &
+                  //"1(one-way sluice) or 2(forced drainage)")
   end if
   if (f_bank_opening < 0 .or. f_bank_opening > 1) then
-    call par_stop("list_channel: f_bank_opening は 0(なし), 1(振り替え) のいずれか")
+    call par_stop("list_channel: f_bank_opening must be 0(none) or 1(reassign to normal edges)")
   end if
   if (f_channel_advection < 0 .or. f_channel_advection > 1) then
-    call par_stop("list_channel: f_channel_advection は 0(落とす), 1(通常) のいずれか")
+    call par_stop("list_channel: f_channel_advection must be 0(drop) or 1(normal)")
   end if
   ! 有効判定は namelist 由来+geoinfo の構築結果で全ランク同一
   have_bopen = have_bank .and. f_bank_opening > 0
@@ -463,11 +464,11 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 断面形一般化 σ(h)(§26)の有効判定は build_channel_frw より前に行う
   ! (キャップ前 frw の保存 frw0 の要否を build が参照するため)
   sect_m = chlist%p_sect_m
-  if (sect_m < 0.0) call par_stop("list_channel: p_sect_m は非負のみです")
+  if (sect_m < 0.0) call par_stop("list_channel: p_sect_m must be >= 0")
   have_sect = sect_m > 0.0 .and. (g%bank_active .or. g%drw_active)
   if (sect_m > 0.0 .and. .not. have_sect) then
-    call par_stop("list_channel: p_sect_m > 0 には遷移深さの源(堤防 fn_bank/bank0 の" &
-                  //"天端、または掘り込み深さ depth_rw/fn_depth_rw)が必要です")
+    call par_stop("list_channel: p_sect_m > 0 requires a transition depth source " &
+                  //"(levee crest via fn_bank/bank0, or incision depth via depth_rw/fn_depth_rw)")
   end if
   if (have_sect) then
     sect_mp1 = sect_m + 1.0
@@ -883,9 +884,9 @@ subroutine momentum(p, g, s, sx, ierror)
   s%n_runge = n_runge
 
   if (n_error > 0) then
-    call par_info("**********************************************************************")
-    call par_info("********* Unrealistic calculation (Velocity exceeds 250 m/s) *********")
-    call par_info("**********************************************************************")
+    call par_info("swflow: solution diverged, velocity exceeded 250 m/s")
+    call par_info(" review dt, roughness and boundary/input data")
+    call par_info(" the run stops after this step")
     ierror = ierror + n_error
   end if
 
@@ -1733,7 +1734,8 @@ subroutine restore_state(p, sx)
   fname = trim(p%dir_save)//'/swflow_enc.dat'
   inquire(file=fname, exist=found)
   if (.not. found) then
-    call par_stop("swflow_enc の保存ファイルがありません(保存時の格子系は ENC でしたか): "//fname)
+    call par_stop("swflow: state file not found " &
+                  //"(was the state saved with the ENC grid system): "//fname)
   end if
 
   ! rank0 だけが全域一時配列に読み、par_scatter_edge で各ランクの

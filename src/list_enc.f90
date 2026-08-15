@@ -84,7 +84,7 @@ subroutine list_enc_read(p, list)
   call par_info("reading list_enc in "//trim(p%fn_enc))
   open(newunit=un, file=trim(p%fn_enc), status='old')
   read(un, nml=list_enc, iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("list_enc 読込失敗: "//trim(iom))
+  if (ios /= 0) call par_stop("list_enc: failed to read namelist: "//trim(iom))
   close(un)
 
   list%f_gravity_correction = f_gravity_correction 

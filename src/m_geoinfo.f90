@@ -146,7 +146,7 @@ subroutine m_geoinfo_init(g, p)
   ! ため collective が成立しない。エラーは par_abort を使うこと)
   if (len_trim(list%f_user_routine) > 0) then
     if (.not. user_geoinfo_defined(list%f_user_routine)) then
-      call par_stop("undefined f_user_routine in list_geoinfo: "//trim(list%f_user_routine)// &
+      call par_stop("list_geoinfo: undefined f_user_routine: "//trim(list%f_user_routine)// &
                     " (defined: "//user_geoinfo_names()//")")
     end if
     if (is_root) call user_geoinfo_run(p, g, list%f_user_routine)
@@ -170,8 +170,8 @@ subroutine m_geoinfo_init(g, p)
   ! GeoTIFF 出力には座標参照が必須(geotiff_plan.md §10 条件1)。
   ! 位置の分からない tif を黙って書かず、ここで止める
   if (iand(p%f_output_mode, e_fmt_gtif) /= 0 .and. .not. g%gr%active) then
-    call par_stop("f_output_mode: GeoTIFF 出力には座標管理が必要です" &
-                  //"(bil+hdr 入力か GeoTIFF 入力で位置情報を与えてください)")
+    call par_stop("list_sysparam: f_output_mode requests GeoTIFF output but georeferencing is" &
+                  //" not available (give location info via bil+hdr or GeoTIFF input)")
   end if
 
   call calc_wxy(p, g)
@@ -201,7 +201,7 @@ subroutine count_valcells(p, g)
     end do
   end do
   if (g%n_valcells <= 0) then
-    call par_stop("no valid cell in the entire domain")
+    call par_stop("geoinfo: no valid cell in the entire domain")
   end if
 end subroutine
 
@@ -405,9 +405,9 @@ subroutine set_params(p, g, list)
   ! f_rntype=2(土地利用から変換)は 2026-08-15 に廃止(developer.md §41。
   ! 粗度は直接与える。変換は前処理で行う)
   if (list%f_rntype == 2) then
-    call par_stop("list_geoinfo: f_rntype=2 (roughness from land use) was removed." &
-                  //" Give roughness directly: fn_rn (f_rntype=1) or rn0_rw." &
-                  //" See developer.md sec.41")
+    call par_stop("list_geoinfo: f_rntype=2 (roughness from land use) was removed;" &
+                  //" give roughness directly via fn_rn (f_rntype=1) or rn0_rw" &
+                  //" (see developer.md sec.41)")
   else if (list%f_rntype < 0 .or. list%f_rntype > 1) then
     call par_stop("list_geoinfo: f_rntype must be 0(fixed) or 1(file): "//itoa(list%f_rntype))
   end if
@@ -423,7 +423,7 @@ subroutine set_params(p, g, list)
   end if
   if (g%sd_dist .and. len_trim(p%fn_gwflow) == 0) then
     ! gwflow 無効なら土層厚は読み込みも確保もしない(メモリを使わない)
-    call par_info("list_geoinfo: f_sdtype=1 but fn_gwflow is not set; skip reading soil depth")
+    call par_info("list_geoinfo: f_sdtype=1 but fn_gwflow is not set; skipping soil depth")
     g%sd_dist = .false.
   end if
 
@@ -475,7 +475,7 @@ subroutine probe_georef(p, g, list)
 
   else if (p%f_input_mode == e_fmt_gtif) then
     call gtif_inquire(fname, tinfo, stat, msg)
-    if (stat /= 0) call par_stop("GeoTIFF 読込失敗: "//trim(msg))
+    if (stat /= 0) call par_stop("geoinfo: failed to probe GeoTIFF: "//trim(msg))
     ncols = tinfo%nx
     nrows = tinfo%ny
     if (tinfo%has_georef) then
@@ -491,8 +491,8 @@ subroutine probe_georef(p, g, list)
         if (list%epsg == 0) then
           g%gr%epsg = tinfo%epsg
         else if (list%epsg /= tinfo%epsg) then
-          call par_stop("list_geoinfo: epsg("//itoa(list%epsg)//") が GeoTIFF の CRS(" &
-                        //itoa(tinfo%epsg)//") と一致しません")
+          call par_stop("list_geoinfo: epsg("//itoa(list%epsg)//") does not match the GeoTIFF CRS(" &
+                        //itoa(tinfo%epsg)//")")
         end if
       end if
     end if
@@ -506,14 +506,14 @@ subroutine probe_georef(p, g, list)
   if (g%nx <= 0) then
     g%nx = ncols
   else if (g%nx /= ncols) then
-    call par_stop("list_geoinfo: nx("//itoa(g%nx)//") がファイルの格子数(" &
-                  //itoa(ncols)//") と一致しません")
+    call par_stop("list_geoinfo: nx("//itoa(g%nx)//") does not match the grid size in the file(" &
+                  //itoa(ncols)//")")
   end if
   if (g%ny <= 0) then
     g%ny = nrows
   else if (g%ny /= nrows) then
-    call par_stop("list_geoinfo: ny("//itoa(g%ny)//") がファイルの格子数(" &
-                  //itoa(nrows)//") と一致しません")
+    call par_stop("list_geoinfo: ny("//itoa(g%ny)//") does not match the grid size in the file(" &
+                  //itoa(nrows)//")")
   end if
 
   ! dx, dy はファイルから座標参照が取れた場合のみ扱える
@@ -525,14 +525,14 @@ subroutine probe_georef(p, g, list)
     if (g%dx <= 0.0) then
       g%dx = real(g%gr%csx)
     else if (abs(g%dx - g%gr%csx) > rtol * g%gr%csx) then
-      call par_stop("list_geoinfo: dx がファイルのセル寸法と矛盾しています。" &
-                    //"どちらか一方の指定にしてください")
+      call par_stop("list_geoinfo: dx conflicts with the cell size in the file;" &
+                    //" specify only one of them")
     end if
     if (g%dy <= 0.0) then
       g%dy = real(g%gr%csy)
     else if (abs(g%dy - g%gr%csy) > rtol * g%gr%csy) then
-      call par_stop("list_geoinfo: dy がファイルのセル寸法と矛盾しています。" &
-                    //"どちらか一方の指定にしてください")
+      call par_stop("list_geoinfo: dy conflicts with the cell size in the file;" &
+                    //" specify only one of them")
     end if
   else
     ! 経緯度(度単位)の格子: セル寸法は度なので dx, dy(m)には使えない
@@ -544,8 +544,8 @@ subroutine probe_georef(p, g, list)
     ! 正確な系を記録したいときは namelist の epsg で指定する(そちらが優先)
     if (g%gr%epsg == 0) then
       g%gr%epsg = 4326
-      call par_info(" georef: CRS 未指定のため WGS84(EPSG:4326)を仮定します" &
-                    //"(正確な CRS は namelist の epsg で指定)")
+      call par_info(" georef: assuming WGS84 (EPSG:4326) since CRS is unspecified" &
+                    //" (set epsg in the namelist for the exact CRS)")
     end if
   end if
 
@@ -567,20 +567,20 @@ subroutine check_geog_cellsize(g)
   character(len=256) :: msg
 
   if (g%dx <= 0.0 .or. g%dy <= 0.0) then
-    call par_stop("list_geoinfo: 経緯度グリッド(hdr が度単位)では " &
-                  //"dx, dy(m)の明示指定が必須です")
+    call par_stop("list_geoinfo: dx and dy (m) must be given explicitly for a " &
+                  //"geographic (lat/lon) grid (hdr in degrees)")
   end if
   call georef_est_cellsize_m(g%gr, g%ny, dxm, dym)
   write(msg, '(a,f0.2,a,f0.2)') &
-    " georef: 経緯度グリッド。namelist の dx, dy(m) = ", g%dx, ", ", g%dy
+    " georef: geographic (lat/lon) grid, namelist dx, dy (m) = ", g%dx, ", ", g%dy
   call par_info(trim(msg))
   write(msg, '(a,f0.2,a,f0.2)') &
-    " georef: 経緯度からの概算   dx, dy(m) = ", dxm, ", ", dym
+    " georef: estimated from lat/lon  dx, dy (m) = ", dxm, ", ", dym
   call par_info(trim(msg))
   if (abs(g%dx - dxm) > rtol_geog * dxm .or. &
       abs(g%dy - dym) > rtol_geog * dym) then
-    call par_stop("list_geoinfo: dx, dy が経緯度からの概算と大きく食い違います" &
-                  //"(上記表示)。格子とセル寸法の対応を確認してください")
+    call par_stop("list_geoinfo: dx, dy differ too much from the lat/lon estimate" &
+                  //" (shown above); check the grid against the cell size")
   end if
 
 end subroutine
@@ -600,13 +600,13 @@ subroutine resolve_geometry(g)
   real, parameter :: rtol = 1.0e-6   ! 過剰指定の整合判定の相対許容差
 
   ! セル数はどちらの指定方法でも必須
-  if (g%nx <= 0) call par_stop("list_geoinfo: nx が未指定か不正です")
-  if (g%ny <= 0) call par_stop("list_geoinfo: ny が未指定か不正です")
+  if (g%nx <= 0) call par_stop("list_geoinfo: nx is missing or invalid")
+  if (g%ny <= 0) call par_stop("list_geoinfo: ny is missing or invalid")
 
   ! x 方向
   if (g%dx <= 0.0) then
     if (g%lx <= 0.0) then
-      call par_stop("list_geoinfo: dx か lx のどちらかを指定してください")
+      call par_stop("list_geoinfo: specify dx or lx")
     end if
     g%dx = g%lx / g%nx                     ! 指定方法A
   else if (g%lx <= 0.0) then
@@ -614,21 +614,21 @@ subroutine resolve_geometry(g)
   else
     ! 過剰指定: 無言でどちらかを優先せず、整合を検査する
     if (abs(g%nx * g%dx - g%lx) > rtol * g%lx) then
-      call par_stop("list_geoinfo: lx と nx*dx が矛盾しています。どちらか一方の指定にしてください")
+      call par_stop("list_geoinfo: lx conflicts with nx*dx; specify only one of dx and lx")
     end if
   end if
 
   ! y 方向(x 方向と対称)
   if (g%dy <= 0.0) then
     if (g%ly <= 0.0) then
-      call par_stop("list_geoinfo: dy か ly のどちらかを指定してください")
+      call par_stop("list_geoinfo: specify dy or ly")
     end if
     g%dy = g%ly / g%ny                     ! 指定方法A
   else if (g%ly <= 0.0) then
     g%ly = g%ny * g%dy                     ! 指定方法B
   else
     if (abs(g%ny * g%dy - g%ly) > rtol * g%ly) then
-      call par_stop("list_geoinfo: ly と ny*dy が矛盾しています。どちらか一方の指定にしてください")
+      call par_stop("list_geoinfo: ly conflicts with ny*dy; specify only one of dy and ly")
     end if
   end if
 
@@ -703,7 +703,7 @@ subroutine read_mask(p, g, list)
         do j = 1, g%ny
           do i = 1, g%nx
             if (a(i,j) /= 0 .and. a(i,j) /= 1) then
-              write(msg,'(a,3i7)') "list_geoinfo: invalid data in mask data", i, j, a(i,j)
+              write(msg,'(a,3i7)') "list_geoinfo: invalid value in domain mask at", i, j, a(i,j)
               call par_stop(trim(msg))
             end if
           end do
@@ -714,12 +714,12 @@ subroutine read_mask(p, g, list)
   else if (list%f_masktype == 2) then
     ! 海域マスクから生成を指定の場合
     if (len_trim(list%fn_sw) == 0) then
-      call par_stop('list_geoinfo: f_mastype=2 but fn_sw=""')
+      call par_stop('list_geoinfo: f_masktype=2 but fn_sw=""')
     end if
     call do_sw2x
   else
     ! 不正なマスクタイプ
-    call par_stop("list_geoinfo: unknown mask type"//itoa(list%f_masktype))
+    call par_stop("list_geoinfo: unknown f_masktype: "//itoa(list%f_masktype))
   end if
 
 
@@ -1040,25 +1040,25 @@ subroutine setup_bank(p, g, list, ch)
   g%bank_active = bank_file .or. bank_fixed .or. auto_zero
   if (.not. g%bank_active) return
   if (bank_file .and. bank_fixed) then
-    call par_stop("list_channel: fn_bank と bank0 は同時に指定できません")
+    call par_stop("list_channel: specify only one of fn_bank and bank0")
   end if
   if (len_trim(list%fn_rw) <= 0) then
-    call par_stop("list_channel: 堤防(fn_bank / bank0 / fn_width)には list_geoinfo の " // &
-                  "fn_rw(河道マスク)の指定が必要です")
+    call par_stop("list_channel: levee (fn_bank / bank0 / fn_width) requires " // &
+                  "fn_rw (channel mask) in list_geoinfo")
   end if
   if (ch%f_bank_datum < 0 .or. ch%f_bank_datum > 2) then
-    call par_stop("list_channel: f_bank_datum は 0(河床基準), 1(堤内地セル標高基準), " // &
-                  "2(絶対標高) のいずれか: "//itoa(ch%f_bank_datum))
+    call par_stop("list_channel: f_bank_datum must be 0(channel bed), 1(landside cell " // &
+                  "elevation) or 2(absolute elevation): "//itoa(ch%f_bank_datum))
   end if
   if (ch%f_bank_aggr < 0 .or. ch%f_bank_aggr > 2) then
-    call par_stop("list_channel: f_bank_aggr は 0(平均), 1(最小), 2(最大) のいずれか: " // &
+    call par_stop("list_channel: f_bank_aggr must be 0(mean), 1(min) or 2(max): " // &
                   itoa(ch%f_bank_aggr))
   end if
   datum = ch%f_bank_datum
   if (auto_zero) then
     datum = 1        ! 高さ0は堤内地セル標高基準でのみ「自然河岸」の意味になる
-    call par_info("geoinfo: fn_width のみ指定のため高さ0の堤防" // &
-                  "(堤内地セル標高基準)を自動有効化します")
+    call par_info("geoinfo: enabling zero-height levee (landside cell elevation datum) " // &
+                  "since only fn_width is given")
   end if
   if (.not. is_root) return
 
@@ -1117,14 +1117,14 @@ subroutine setup_bank(p, g, list, ch)
   end do
   deallocate(hb)
 
-  write(msg,'(a,i0,a)') "geoinfo: bank crest set at ", n_bank, " channel cells"
+  write(msg,'(a,i0,a)') "geoinfo: levee crest set at ", n_bank, " channel cells"
   call par_info(trim(msg))
   if (n_bank <= 0) then
     ! rank0 のみで実行されるため par_stop(collective)は不可
-    call par_abort("geoinfo: 堤防(fn_bank / bank0)指定にもかかわらず有効な堤防セルがありません")
+    call par_abort("geoinfo: no valid levee cell although levee (fn_bank / bank0) is specified")
   end if
   if (n_low > 0) then
-    write(msg,'(a,i0,a)') "geoinfo: WARNING: bank crest below channel bed at ", n_low, " cells"
+    write(msg,'(a,i0,a)') "geoinfo: levee crest below channel bed at ", n_low, " cells"
     call par_info(trim(msg))
   end if
 
@@ -1164,15 +1164,15 @@ subroutine setup_seawall(p, g, list)
   g%swall_active = sw_file .or. sw_fixed
   if (.not. g%swall_active) return
   if (sw_file .and. sw_fixed) then
-    call par_stop("list_geoinfo: fn_seawall と seawall0 は同時に指定できません")
+    call par_stop("list_geoinfo: specify only one of fn_seawall and seawall0")
   end if
   if (list%f_seawall_datum < 1 .or. list%f_seawall_datum > 2) then
-    call par_stop("list_geoinfo: f_seawall_datum は 1(自セル地盤基準) か 2(絶対標高) です: " &
-                  // itoa(list%f_seawall_datum))
+    call par_stop("list_geoinfo: f_seawall_datum must be 1(own-cell ground elevation) or " &
+                  // "2(absolute elevation): "//itoa(list%f_seawall_datum))
   end if
   if (list%f_seawall_mode < 0 .or. list%f_seawall_mode > 2) then
-    call par_stop("list_geoinfo: f_seawall_mode は 0(越流のみ), 1(フラップ), 2(強制排水) " &
-                  // "のいずれか: "//itoa(list%f_seawall_mode))
+    call par_stop("list_geoinfo: f_seawall_mode must be 0(overtopping only), 1(flap gate) or " &
+                  // "2(forced drainage): "//itoa(list%f_seawall_mode))
   end if
   g%f_swall_mode = list%f_seawall_mode
 
@@ -1193,8 +1193,8 @@ subroutine setup_seawall(p, g, list)
     end do
   end do
   if (n_sea <= 0) then
-    call par_stop("list_geoinfo: 海岸堤防には海側セルが必要です(fn_seaside を指定するか、" &
-                  // "fn_sw の海域マスクを使ってください)")
+    call par_stop("list_geoinfo: seawall requires seaside cells (specify fn_seaside or " &
+                  // "use the sea mask fn_sw)")
   end if
 
   if (.not. is_root) return
@@ -1249,18 +1249,18 @@ subroutine setup_seawall(p, g, list)
   write(msg,'(a,i0,a)') "geoinfo: seawall crest set at ", n_wall, " land cells"
   call par_info(trim(msg))
   if (n_rw > 0) then
-    write(msg,'(a,i0,a)') "geoinfo: NOTE: seawall on ", n_rw, &
+    write(msg,'(a,i0,a)') "geoinfo: seawall crest on ", n_rw, &
                           " channel cells ignored (river mouth opening)"
     call par_info(trim(msg))
   end if
   if (n_orph > 0) then
-    write(msg,'(a,i0,a)') "geoinfo: WARNING: seawall crest at ", n_orph, &
+    write(msg,'(a,i0,a)') "geoinfo: seawall crest at ", n_orph, &
                           " cells not adjacent to seaside (no wall effect)"
     call par_info(trim(msg))
   end if
   if (n_wall <= 0) then
-    call par_abort("geoinfo: 海岸堤防指定にもかかわらず有効な天端セルがありません" &
-                   // "(fn_seaside / fn_sw と天端位置の整合を確認してください)")
+    call par_abort("geoinfo: no valid seawall crest cell although seawall is specified" &
+                   // " (check crest locations against fn_seaside / fn_sw)")
   end if
 
 end subroutine
@@ -1286,7 +1286,7 @@ subroutine setup_width(p, g, list, ch)
   g%width_active = len_trim(ch%fn_width) > 0
   if (.not. g%width_active) return
   if (len_trim(list%fn_rw) <= 0) then
-    call par_stop("list_channel: fn_width には list_geoinfo の fn_rw(河道マスク)の指定が必要です")
+    call par_stop("list_channel: fn_width requires fn_rw (channel mask) in list_geoinfo")
   end if
   if (.not. is_root) return
 
@@ -1312,7 +1312,7 @@ subroutine setup_width(p, g, list, ch)
   call par_info(trim(msg))
   if (n_width <= 0) then
     ! rank0 のみで実行されるため par_stop(collective)は不可
-    call par_abort("geoinfo: fn_width 指定にもかかわらず有効な幅を持つ河道セルがありません")
+    call par_abort("geoinfo: no channel cell with valid width although fn_width is specified")
   end if
 
 end subroutine

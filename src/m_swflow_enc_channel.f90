@@ -380,10 +380,10 @@ module subroutine breach_init(p, g, s, ch)
     nbr = nbr + 1
   end do
   if (nbr <= 0) then
-    call par_stop("list_channel_breach: br_cell が指定されていません")
+    call par_stop("list_channel_breach: br_cell is not specified")
   end if
   if (.not. have_bank) then
-    call par_stop("list_channel_breach: 破堤には堤防(fn_bank / bank0 / fn_width)が必要です")
+    call par_stop("list_channel_breach: breach requires a levee (fn_bank / bank0 / fn_width)")
   end if
 
   allocate(br(nbr))
@@ -395,19 +395,20 @@ module subroutine breach_init(p, g, s, ch)
     ! --- 全域データによる検証(全ランク冗長・同一判定 = par_stop 安全)---
     if (min(ic, il) < 1 .or. max(ic, il) > g%nx .or. &
         min(jc, jl) < 1 .or. max(jc, jl) > g%ny) then
-      call par_stop("list_channel_breach: サイト"//itoa(isite)//" のセル座標が領域外です")
+      call par_stop("list_channel_breach: cell coordinates of site "//itoa(isite)// &
+                    " are outside the domain")
     end if
     if (max(abs(ic - il), abs(jc - jl)) /= 1) then
-      call par_stop("list_channel_breach: サイト"//itoa(isite)// &
-                    " のセル対が8近傍で隣接していません")
+      call par_stop("list_channel_breach: cell pair of site "//itoa(isite)// &
+                    " is not adjacent within the 8 neighbors")
     end if
     if (.not. (g%x(ic,jc) > 0 .and. g%sw(ic,jc) == 0 .and. g%rw(ic,jc) > 0)) then
-      call par_stop("list_channel_breach: サイト"//itoa(isite)// &
-                    " の (ic,jc) が河道セルではありません")
+      call par_stop("list_channel_breach: (ic,jc) of site "//itoa(isite)// &
+                    " is not a channel cell")
     end if
     if (.not. (g%x(il,jl) > 0 .and. g%sw(il,jl) == 0 .and. g%rw(il,jl) <= 0)) then
-      call par_stop("list_channel_breach: サイト"//itoa(isite)// &
-                    " の (il,jl) が堤内地セルではありません")
+      call par_stop("list_channel_breach: (il,jl) of site "//itoa(isite)// &
+                    " is not a landside (non-channel) cell")
     end if
     br(isite)%ic = ic
     br(isite)%jc = jc
@@ -420,7 +421,7 @@ module subroutine breach_init(p, g, s, ch)
       n = n + 1
     end do
     if (n <= 0) then
-      call par_stop("list_channel_breach: サイト"//itoa(isite)//" の br_series がありません")
+      call par_stop("list_channel_breach: br_series of site "//itoa(isite)//" is missing")
     end if
     br(isite)%nval = n
     allocate(br(isite)%val(1:2, 1:n))
@@ -428,13 +429,13 @@ module subroutine breach_init(p, g, s, ch)
       br(isite)%val(1,k) = ch%br_series(1,k,isite) * 60   ! 分を秒に換算
       br(isite)%val(2,k) = ch%br_series(2,k,isite)
       if (br(isite)%val(2,k) < 0.0 .or. br(isite)%val(2,k) > 1.0) then
-        call par_stop("list_channel_breach: サイト"//itoa(isite)// &
-                      " の割合は 0〜1 で指定してください")
+        call par_stop("list_channel_breach: breach fraction of site "//itoa(isite)// &
+                      " must be in [0, 1]")
       end if
       if (k >= 2) then
         if (br(isite)%val(1,k) <= br(isite)%val(1,k-1)) then
-          call par_stop("list_channel_breach: サイト"//itoa(isite)// &
-                        " の時系列の時刻が単調増加ではありません")
+          call par_stop("list_channel_breach: br_series times of site "//itoa(isite)// &
+                        " must be strictly increasing")
         end if
       end if
     end do
@@ -457,8 +458,8 @@ module subroutine breach_init(p, g, s, ch)
   end do
   call par_allreduce_maxi(ierr)
   if (ierr > 0) then
-    call par_stop("list_channel_breach: サイト"//itoa(ierr)// &
-                  " の河道セルに堤防天端がありません(zbank 無効)")
+    call par_stop("list_channel_breach: channel cell of site "//itoa(ierr)// &
+                  " has no levee crest (zbank is invalid there)")
   end if
 
   ! --- 行バケットの構築(行 jc 順の安定整列。§18)---
