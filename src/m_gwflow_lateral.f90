@@ -222,9 +222,9 @@ subroutine gwflow_lateral_init(p, g, s, dts)
 
   call par_info("reading list_gwflow_lateral in " // trim(p%fn_gwflow))
   open(newunit=un, file=trim(p%fn_gwflow), status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: " // trim(p%fn_gwflow))
+  if (ios /= 0) call par_stop("list_gwflow_lateral: cannot open " // trim(p%fn_gwflow))
   read(un, nml=list_gwflow_lateral, iostat=ios)
-  if (ios /= 0) call par_stop("error in reading list_gwflow_lateral")
+  if (ios /= 0) call par_stop("list_gwflow_lateral: cannot read namelist")
   close(un)
 
   if (gw_ksh_mmh <= 0.0) call par_stop("list_gwflow_lateral: gw_ksh_mmh must be > 0")
@@ -236,7 +236,7 @@ subroutine gwflow_lateral_init(p, g, s, dts)
     call par_stop("list_geoinfo: sy0 must be in (0,1] for gwflow lateral")
   end if
   ! 遅延確保口の呼び忘れ(m_gwflow_init の needs_sd)をここで検出する
-  if (.not. allocated(g%sd)) call par_stop("gwflow_lateral: g%sd is not allocated")
+  if (.not. allocated(g%sd)) call par_stop("gwflow_lateral: g%sd (soil depth) is not allocated")
 
   lay1%ksh = gw_ksh_mmh / 1000.0 / 3600.0   ! mm/h -> m/s
   lay1%sy = g%sy0

@@ -70,9 +70,9 @@ subroutine gwflow_greenampt_init(p, g, s)
 
   call par_info("reading list_gwflow_greenampt in " // trim(p%fn_gwflow))
   open(newunit=un, file=trim(p%fn_gwflow), status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: " // trim(p%fn_gwflow))
+  if (ios /= 0) call par_stop("list_gwflow_greenampt: cannot open " // trim(p%fn_gwflow))
   read(un, nml=list_gwflow_greenampt, iostat=ios)
-  if (ios /= 0) call par_stop("error in reading list_gwflow_greenampt")
+  if (ios /= 0) call par_stop("list_gwflow_greenampt: cannot read namelist")
   close(un)
 
   if (gw_ksv_mmh <= 0.0) call par_stop("list_gwflow_greenampt: gw_ksv_mmh must be > 0")
@@ -81,7 +81,7 @@ subroutine gwflow_greenampt_init(p, g, s)
     call par_stop("list_geoinfo: sy0 must be in (0,1] for gwflow greenampt")
   end if
   ! 遅延確保口の呼び忘れ(m_gwflow_init の needs_sd)をここで検出する
-  if (.not. allocated(g%sd)) call par_stop("gwflow_greenampt: g%sd is not allocated")
+  if (.not. allocated(g%sd)) call par_stop("gwflow_greenampt: g%sd (soil depth) is not allocated")
 
   ga%ksv = gw_ksv_mmh / 1000.0 / 3600.0   ! mm/h -> m/s
   ga%psif = gw_psif

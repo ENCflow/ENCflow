@@ -45,9 +45,9 @@ subroutine list_gwflow_read(p, list)
 
   call par_info("reading list_gwflow in " // trim(p%fn_gwflow))
   open(newunit=un, file=trim(p%fn_gwflow), status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: " // trim(p%fn_gwflow))
+  if (ios /= 0) call par_stop("list_gwflow: cannot open " // trim(p%fn_gwflow))
   read(un, nml=list_gwflow, iostat=ios)
-  if (ios /= 0) call par_stop("error in reading list_gwflow")
+  if (ios /= 0) call par_stop("list_gwflow: cannot read namelist")
   close(un)
 
   list%f_gwvertical = f_gwvertical

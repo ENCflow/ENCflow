@@ -107,18 +107,18 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
   if (list%f_evmodel == 0) return    ! fn を書いたまま一時無効化する経路
 
   if (list%f_evmodel < 1 .or. list%f_evmodel > 4) then
-    call par_stop("list_evap: f_evmodel は 0(無効), 1(一定), 2(月別), 3(Hamon), " &
-                  //"4(Thornthwaite) のいずれかです: "//itoa(list%f_evmodel))
+    call par_stop("list_evap: f_evmodel must be 0(none), 1(constant), 2(monthly), " &
+                  //"3(Hamon) or 4(Thornthwaite): "//itoa(list%f_evmodel))
   end if
   ev%model = list%f_evmodel
-  if (list%evap_kc <= 0.0) call par_stop("list_evap: evap_kc は正のみです")
+  if (list%evap_kc <= 0.0) call par_stop("list_evap: evap_kc must be > 0")
   ev%kc = list%evap_kc
 
   ! --- 暦の原点(モード2〜4で必須。正本は &list_sysparam の date0_c。§29) ---
   if (ev%model >= 2) then
     if (.not. p%has_date) then
-      call par_stop("list_evap: f_evmodel>=2 には &list_sysparam の date0_c" &
-                    //'(t=0 の暦。"YYYY-MM-DD" または "YYYY-MM-DD hh:mm")が必要です')
+      call par_stop("list_evap: f_evmodel>=2 requires date0_c in &list_sysparam " &
+                    //'(calendar at t=0, "YYYY-MM-DD" or "YYYY-MM-DD hh:mm")')
     end if
     ev%jdn0 = p%jdn0
     ev%sec0 = p%sec0
@@ -127,20 +127,20 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
   ! --- モード別の必須パラメータ ---
   select case (ev%model)
     case (1)
-      if (list%evap0 < 0.0) call par_stop("list_evap: f_evmodel=1 には evap0 >= 0 " &
-                                          //"(mm/day)が必要です")
+      if (list%evap0 < 0.0) call par_stop("list_evap: f_evmodel=1 requires " &
+                                          //"evap0 >= 0 (mm/day)")
       ev%pet0 = list%evap0
     case (2)
       do m = 1, 12
         if (list%evap_monthly(m) < 0.0) then
-          call par_stop("list_evap: f_evmodel=2 には evap_monthly の12ヶ月分" &
-                        //"(mm/day, 非負)が必要です")
+          call par_stop("list_evap: f_evmodel=2 requires all 12 months of " &
+                        //"evap_monthly (mm/day, non-negative)")
         end if
       end do
       ev%pmon = list%evap_monthly
     case (3, 4)
       if (list%lat < -90.0 .or. list%lat > 90.0) then
-        call par_stop("list_evap: f_evmodel>=3 には lat(-90〜90 deg)が必要です")
+        call par_stop("list_evap: f_evmodel>=3 requires lat (-90 to 90 deg)")
       end if
       ev%latrad = list%lat * pi / 180.0
   end select
@@ -150,14 +150,14 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
     ev%tw_i = 0.0
     do m = 1, 12
       if (list%temp_normal(m) <= -9998.0) then
-        call par_stop("list_evap: f_evmodel=4 には temp_normal(月平均気温の平年値" &
-                      //"12ヶ月分, ℃)が必要です")
+        call par_stop("list_evap: f_evmodel=4 requires temp_normal (12 monthly " &
+                      //"normal air temperatures, degC)")
       end if
       ev%tw_i = ev%tw_i + (max(list%temp_normal(m), 0.0) / 5.0)**1.514
     end do
     if (ev%tw_i <= 0.0) then
-      call par_stop("list_evap: temp_normal が全月 0℃ 以下では Thornthwaite の" &
-                    //"熱指数 I が 0 になります(f_evmodel=3 を使ってください)")
+      call par_stop("list_evap: Thornthwaite heat index I is 0 when temp_normal " &
+                    //"is <= 0 degC for all months (use f_evmodel=3)")
     end if
     ev%tw_a = ((6.75e-7 * ev%tw_i - 7.71e-5) * ev%tw_i + 1.792e-2) * ev%tw_i + 0.49239
   end if
@@ -165,7 +165,7 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
   ! --- 気温(モード3,4。&list_meteo が提供する。§29) ---
   if (ev%model >= 3) then
     if (.not. mt%enabled) then
-      call par_stop("list_evap: f_evmodel>=3 には気温入力(&list_meteo。fn_meteo)が必要です")
+      call par_stop("list_evap: f_evmodel>=3 requires air temperature input (&list_meteo, fn_meteo)")
     end if
   end if
 

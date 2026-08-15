@@ -50,9 +50,9 @@ subroutine list_snow_read(p, list)
 
   call par_info("reading list_snow in "//trim(p%fn_snow))
   open(newunit=un, file=trim(p%fn_snow), status='old', iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("cannot open file: "//trim(p%fn_snow)//" : "//trim(iom))
+  if (ios /= 0) call par_stop("list_snow: cannot open "//trim(p%fn_snow)//": "//trim(iom))
   read(un, nml=list_snow, iostat=ios, iomsg=iom)
-  if (ios /= 0) call par_stop("error in reading list_snow: "//trim(iom))
+  if (ios /= 0) call par_stop("list_snow: cannot read namelist: "//trim(iom))
   close(un)
 
   list%f_snow = f_snow

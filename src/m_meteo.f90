@@ -99,15 +99,15 @@ subroutine m_meteo_init(mt, p, g, s)
     call setup_tmaplist(mt, p, g, list)
   end if
   if (nsrc /= 1) then
-    call par_stop("list_meteo: 気温入力は temp0 / tempval / fn_tempmap の" &
-                  //"いずれか1つを指定してください")
+    call par_stop("list_meteo: specify exactly one of temp0, tempval or fn_tempmap " &
+                  //"for the air temperature input")
   end if
 
   ! --- 標高減率(一様入力のみ) ---
   if (list%f_temp_lapse > 0) then
     if (mt%tsrc == e_tsrc_map) then
-      call par_stop("list_meteo: f_temp_lapse は一様気温(temp0 / tempval)専用です" &
-                    //"(分布気温には適用できません)")
+      call par_stop("list_meteo: f_temp_lapse applies only to uniform air temperature " &
+                    //"(temp0 / tempval), not to fn_tempmap")
     end if
     mt%lapse = .true.
     mt%gam = list%temp_lapse / 100.0            ! ℃/100m -> ℃/m
@@ -143,10 +143,10 @@ subroutine setup_tseries(mt, list)
     if (list%tempval(1,k) <= -9998.0) exit     ! 番兵で終端
     n = n + 1
   end do
-  if (n < 1) call par_stop("list_meteo: tempval が空です")
+  if (n < 1) call par_stop("list_meteo: tempval is empty")
   do k = 2, n
     if (list%tempval(1,k) <= list%tempval(1,k-1)) then
-      call par_stop("list_meteo: tempval の時刻(経過日)は単調増加で指定してください")
+      call par_stop("list_meteo: tempval must have monotonically increasing times (elapsed days)")
     end if
   end do
   allocate(mt%tser(1:2, 1:n))
@@ -170,12 +170,12 @@ subroutine setup_tmaplist(mt, p, g, list)
   integer :: un, ios, n
   logical :: found
 
-  mt%dtmap = str2sec(trim(list%dt_tempmap_c), "bad dt_tempmap_c in &list_meteo")
-  if (mt%dtmap <= 0.0) call par_stop("list_meteo: dt_tempmap_c は正の時間です")
+  mt%dtmap = str2sec(trim(list%dt_tempmap_c), "list_meteo: dt_tempmap_c is not a valid duration")
+  if (mt%dtmap <= 0.0) call par_stop("list_meteo: dt_tempmap_c must be a positive duration")
 
   fname = trim(p%dir_data)//"/"//trim(list%fn_tempmap)
   inquire(file=fname, exist=found)
-  if (.not. found) call par_stop("list_meteo: fn_tempmap が見つかりません: "//fname)
+  if (.not. found) call par_stop("list_meteo: fn_tempmap not found: "//fname)
 
   ! 1回目: 行数を数える / 2回目: 取り込む(全ランク冗長・同一)
   open(newunit=un, file=fname, status='old', action='read')
@@ -186,7 +186,7 @@ subroutine setup_tmaplist(mt, p, g, list)
     if (len_trim(line) == 0) cycle
     n = n + 1
   end do
-  if (n < 1) call par_stop("list_meteo: fn_tempmap にファイル名がありません: "//fname)
+  if (n < 1) call par_stop("list_meteo: no file names in fn_tempmap: "//fname)
   allocate(mt%mapfiles(1:n))
   rewind(un)
   n = 0
@@ -218,7 +218,7 @@ subroutine meteo_temp_set(mt, p, g, teval)
   integer :: need
   logical :: found
 
-  if (.not. mt%enabled) call par_stop("meteo_temp_set: fn_meteo が未指定です")
+  if (.not. mt%enabled) call par_stop("meteo: air temperature requested but fn_meteo is not set")
   select case (mt%tsrc)
     case (e_tsrc_const)
       mt%tb = mt%t0c
@@ -234,7 +234,7 @@ subroutine meteo_temp_set(mt, p, g, teval)
       if (need == mt%imap) return
       inquire(file=trim(mt%mapfiles(need)), exist=found)
       if (.not. found) then
-        call par_stop("list_meteo: 気温分布ファイルが見つかりません: "//trim(mt%mapfiles(need)))
+        call par_stop("list_meteo: air temperature map file not found: "//trim(mt%mapfiles(need)))
       end if
       if (is_root) then
         allocate(wk(1:g%nx, 1:g%ny))

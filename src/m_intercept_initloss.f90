@@ -72,9 +72,9 @@ subroutine intercept_initloss_init(p, g)
 
   call par_info("reading list_intercept_initloss in " // trim(p%fn_intercept))
   open(newunit=un, file=trim(p%fn_intercept), status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: " // trim(p%fn_intercept))
+  if (ios /= 0) call par_stop("list_intercept_initloss: cannot open " // trim(p%fn_intercept))
   read(un, nml=list_intercept_initloss, iostat=ios)
-  if (ios /= 0) call par_stop("error in reading list_intercept_initloss")
+  if (ios /= 0) call par_stop("list_intercept_initloss: cannot read namelist")
   close(un)
 
   if (len_trim(fn_icsmax) > 0) then
@@ -119,7 +119,7 @@ subroutine read_smax_map(p, g, fn)
   ! 存在確認は全ランクで(par_stop は collective)
   inquire(file=fname, exist=found)
   if (.not. found) then
-    call par_stop("list_intercept_initloss: fn_icsmax が見つかりません: " // fname)
+    call par_stop("list_intercept_initloss: fn_icsmax not found: " // fname)
   end if
 
   allocate(ici%smaxmap(1:g%nx, dcp%jsh:dcp%jeh))
@@ -133,7 +133,7 @@ subroutine read_smax_map(p, g, fn)
         if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
         if (smap(i,j) < 0.0) then
           write(msg,'(a,2i7,es12.4)') &
-                "list_intercept_initloss: fn_icsmax の値が負", i, j, smap(i,j)
+                "list_intercept_initloss: fn_icsmax has a negative value at cell", i, j, smap(i,j)
           call par_abort(trim(msg))
         end if
       end do
@@ -240,7 +240,8 @@ subroutine restore_state(p)
   fname = trim(p%dir_save) // '/intercept_initloss.dat'
   inquire(file=fname, exist=found)
   if (.not. found) then
-    call par_stop("intercept_initloss の保存ファイルがありません(保存時も初期損失モデルでしたか): "//fname)
+    call par_stop("intercept: state file not found (was the initial loss model " &
+                  //"enabled when saving): "//fname)
   end if
 
   if (is_root) then
@@ -252,7 +253,7 @@ subroutine restore_state(p)
   else
     call par_scatter_cell(dum, ici%st)
   end if
-  call par_info("restore: intercept_initloss の貯留状態を復元しました")
+  call par_info("restoring interception storage (initial loss model) from "//fname)
 end subroutine
 
 

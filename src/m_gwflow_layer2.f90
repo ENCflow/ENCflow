@@ -82,9 +82,9 @@ subroutine gwflow_layer2_init(p, g, s, dts)
 
   call par_info("reading list_gwflow_layer2 in " // trim(p%fn_gwflow))
   open(newunit=un, file=trim(p%fn_gwflow), status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: " // trim(p%fn_gwflow))
+  if (ios /= 0) call par_stop("list_gwflow_layer2: cannot open " // trim(p%fn_gwflow))
   read(un, nml=list_gwflow_layer2, iostat=ios)
-  if (ios /= 0) call par_stop("error in reading list_gwflow_layer2")
+  if (ios /= 0) call par_stop("list_gwflow_layer2: cannot read namelist")
   close(un)
 
   if (gw2_depth <= 0.0) call par_stop("list_gwflow_layer2: gw2_depth must be > 0")
@@ -96,7 +96,7 @@ subroutine gwflow_layer2_init(p, g, s, dts)
   if (gw2_sat0 < 0.0 .or. gw2_sat0 > 1.0) then
     call par_stop("list_gwflow_layer2: gw2_sat0 must be in [0,1]")
   end if
-  if (.not. allocated(g%sd)) call par_stop("gwflow_layer2: g%sd is not allocated")
+  if (.not. allocated(g%sd)) call par_stop("gwflow_layer2: g%sd (soil depth) is not allocated")
 
   gl2%kv = gw2_infil_mmh / 1000.0 / 3600.0    ! mm/h -> m/s
   gl2%d2 = gw2_depth
@@ -218,8 +218,8 @@ subroutine restore_state(p, g, s)
   fname = trim(p%dir_save)//'/gwflow_layer2.dat'
   inquire(file=fname, exist=found)
   if (.not. found) then
-    call par_stop("gwflow_layer2 の保存ファイルがありません" &
-                  // "(保存時に f_gwlayer2 は有効でしたか): "//fname)
+    call par_stop("gwflow_layer2: state file not found " &
+                  // "(was f_gwlayer2 enabled when saving): "//fname)
   end if
 
   if (is_root) then

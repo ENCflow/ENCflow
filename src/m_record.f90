@@ -220,11 +220,11 @@ subroutine set_probe
       end if
     end if
     if (ix < 1 .or. ix > g%nx .or. iy < 1 .or. iy > g%ny) then
-      write(msg, '("error: probe ",i0," is out of area.",2f15.2,2i7)') i, x, y, ix, iy
+      write(msg, '("list_record: probe ",i0," is outside the domain:",2f15.2,2i7)') i, x, y, ix, iy
       call par_abort(trim(msg))
     end if
     if (g%x(ix,iy) < 1) then
-      write(msg, '("error: probe ",i0," is not in valid area.",2f15.2,2i7)') i, x, y, ix, iy
+      write(msg, '("list_record: probe ",i0," is outside the valid area:",2f15.2,2i7)') i, x, y, ix, iy
       call par_abort(trim(msg))
     end if
     r%probe(i)%xy(1) = x
@@ -286,7 +286,7 @@ subroutine set_flux
   if (nfl < 1) return
 
   if (flxytype /= 0 .and. flxytype /= 1) then
-    call par_abort("m_record: flxytype は 0(セル番号指定)か 1(実座標指定)です: " &
+    call par_abort("list_record: flxytype must be 0(cell indices) or 1(real coordinates): " &
                    //itoa(flxytype))
   end if
 
@@ -308,19 +308,23 @@ subroutine set_flux
     x1 = (ix1 - 0.5) * g%dx
     y1 = (iy1 - 0.5) * g%dy
     if (ix0 < 1 .or. ix0 > g%nx .or. iy0 < 1 .or. iy0 > g%ny) then
-      write(msg, '("error: point R of flux ",i0," is out of area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
+      write(msg, '("list_record: point R of flux ",i0," is outside the domain:",2f15.2,2i7)') &
+            i, x0, y0, ix0, iy0
       call par_abort(trim(msg))
     end if
     if (ix1 < 1 .or. ix1 > g%nx .or. iy1 < 1 .or. iy1 > g%ny) then
-      write(msg, '("error: point L flux ",i0," is out of area.",2f15.2,2i7)') i, x1, y1, ix1, iy1
+      write(msg, '("list_record: point L of flux ",i0," is outside the domain:",2f15.2,2i7)') &
+            i, x1, y1, ix1, iy1
       call par_abort(trim(msg))
     end if
     if (g%x(ix0,iy0) < 1) then
-      write(msg, '("warning: point R of flux ",i0," is not in valid area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
+      write(msg, '("record: point R of flux ",i0," is outside the valid area:",2f15.2,2i7)') &
+            i, x0, y0, ix0, iy0
       call par_info(trim(msg))
     end if
     if (g%x(ix1,iy1) < 1) then
-      write(msg, '("warning: point L flux ",i0," is not in valid area.",2f15.2,2i7)') i, x1, y1, ix1, iy1
+      write(msg, '("record: point L of flux ",i0," is outside the valid area:",2f15.2,2i7)') &
+            i, x1, y1, ix1, iy1
       call par_info(trim(msg))
     end if
 
@@ -338,9 +342,9 @@ subroutine set_flux
       ! 1セルのみの計測は「どの向きの面で測るか」が決められないため
       ! セル番号指定では定義できない(2026-08-14 に warning+無視から
       ! エラーへ格上げ。§36)
-      call par_abort("m_record: flux "//itoa(i)//" の両端が同一セルです。" &
-                     //"1セル内の計測は向きが定義できないため、実座標指定" &
-                     //"(flxytype=1)で測線の向きと長さを与えてください(§36)")
+      call par_abort("list_record: both ends of flux "//itoa(i)//" are in the same cell, " &
+                     //"give the transect direction and length with real coordinates " &
+                     //"(flxytype=1)")
     end if
 
     adx = abs(ix1 - ix0)
@@ -356,7 +360,8 @@ subroutine set_flux
         t = real(k) / real(adx)
         iy = iy0 + nint(t * (iy1 - iy0))   ! 中心線の最近傍の短手セル番号
         ncell = ncell + 1
-        if (ncell > ncellmax) call par_abort("m_record: flux "//itoa(i)//" が長すぎます")
+        if (ncell > ncellmax) call par_abort("list_record: flux "//itoa(i) &
+                                             //" spans too many cells in x")
         r%flux(i)%ixy(1,ncell) = ix
         r%flux(i)%ixy(2,ncell) = iy
       end do
@@ -376,7 +381,8 @@ subroutine set_flux
         t = real(k) / real(ady)
         ix = ix0 + nint(t * (ix1 - ix0))
         ncell = ncell + 1
-        if (ncell > ncellmax) call par_abort("m_record: flux "//itoa(i)//" が長すぎます")
+        if (ncell > ncellmax) call par_abort("list_record: flux "//itoa(i) &
+                                             //" spans too many cells in y")
         r%flux(i)%ixy(1,ncell) = ix
         r%flux(i)%ixy(2,ncell) = iy
       end do
@@ -472,19 +478,23 @@ subroutine set_flux_segment(i)
   call resolve_xy(x1, y1, xi1, yi1, ix1, iy1, absol1)
 
   if (ix0 < 1 .or. ix0 > g%nx .or. iy0 < 1 .or. iy0 > g%ny) then
-    write(msg, '("error: point R of flux ",i0," is out of area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
+    write(msg, '("list_record: point R of flux ",i0," resolves outside the domain:",2f15.2,2i7)') &
+          i, x0, y0, ix0, iy0
     call par_abort(trim(msg))
   end if
   if (ix1 < 1 .or. ix1 > g%nx .or. iy1 < 1 .or. iy1 > g%ny) then
-    write(msg, '("error: point L of flux ",i0," is out of area.",2f15.2,2i7)') i, x1, y1, ix1, iy1
+    write(msg, '("list_record: point L of flux ",i0," resolves outside the domain:",2f15.2,2i7)') &
+          i, x1, y1, ix1, iy1
     call par_abort(trim(msg))
   end if
   if (g%x(ix0,iy0) < 1) then
-    write(msg, '("warning: point R of flux ",i0," is not in valid area.",2f15.2,2i7)') i, x0, y0, ix0, iy0
+    write(msg, '("record: point R of flux ",i0," resolves outside the valid area:",2f15.2,2i7)') &
+          i, x0, y0, ix0, iy0
     call par_info(trim(msg))
   end if
   if (g%x(ix1,iy1) < 1) then
-    write(msg, '("warning: point L of flux ",i0," is not in valid area.",2f15.2,2i7)') i, x1, y1, ix1, iy1
+    write(msg, '("record: point L of flux ",i0," resolves outside the valid area:",2f15.2,2i7)') &
+          i, x1, y1, ix1, iy1
     call par_info(trim(msg))
   end if
 
@@ -509,8 +519,8 @@ subroutine set_flux_segment(i)
   dys = yi1 - yi0
   tlen = sqrt(dxs**2 + dys**2)
   if (tlen <= 0.0) then
-    call par_abort("m_record: flux "//itoa(i)//" の両端が同一点です" &
-                   //"(測線の向きが定義できません)")
+    call par_abort("list_record: both ends of flux "//itoa(i)//" are at the same point, " &
+                   //"the transect direction is undefined")
   end if
   r%flux(i)%trlen = tlen
 
@@ -548,7 +558,8 @@ subroutine set_flux_segment(i)
       uc = dxs * (tnext - t)
       vc = dys * (tnext - t)
       ncell = ncell + 1
-      if (ncell > ncellmax) call par_abort("m_record: flux "//itoa(i)//" が長すぎます")
+      if (ncell > ncellmax) call par_abort("list_record: transect of flux "//itoa(i) &
+                                           //" crosses too many cells")
       r%flux(i)%ixy(1,ncell) = ix
       r%flux(i)%ixy(2,ncell) = iy
       r%flux(i)%am(ncell) = -vc
@@ -566,7 +577,7 @@ subroutine set_flux_segment(i)
   end do
   r%flux(i)%ncell = ncell
   if (ncell < 1) then
-    call par_abort("m_record: flux "//itoa(i)//" の測線がセルを通過しません")
+    call par_abort("list_record: transect of flux "//itoa(i)//" does not cross any cell")
   end if
 
   if (absol) then
@@ -606,7 +617,7 @@ subroutine read_flxy(p, fn_flxy, flxy)
   rewind(un)
 
   if (n > nflmax) then
-    call par_abort("Error: too many flux transect"//itoa(n))
+    call par_abort("list_record: too many flux transects: "//itoa(n))
   end if
 
   flxy(:,:) = -9.999e33       ! パラメータファイルの情報を上書きして初期化する

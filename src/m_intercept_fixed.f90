@@ -65,9 +65,9 @@ subroutine intercept_fixed_init(p, g)
 
   call par_info("reading list_intercept_fixed in " // trim(p%fn_intercept))
   open(newunit=un, file=trim(p%fn_intercept), status='old', action='read', iostat=ios)
-  if (ios /= 0) call par_stop("cannot open file: " // trim(p%fn_intercept))
+  if (ios /= 0) call par_stop("list_intercept_fixed: cannot open " // trim(p%fn_intercept))
   read(un, nml=list_intercept_fixed, iostat=ios)
-  if (ios /= 0) call par_stop("error in reading list_intercept_fixed")
+  if (ios /= 0) call par_stop("list_intercept_fixed: cannot read namelist")
   close(un)
 
   if (len_trim(fn_icalpha) > 0) then
@@ -106,7 +106,7 @@ subroutine read_alpha_map(p, g, fn)
   ! 存在確認は全ランクで(par_stop は collective)
   inquire(file=fname, exist=found)
   if (.not. found) then
-    call par_stop("list_intercept_fixed: fn_icalpha が見つかりません: " // fname)
+    call par_stop("list_intercept_fixed: fn_icalpha not found: " // fname)
   end if
 
   allocate(icf%passmap(1:g%nx, dcp%jsh:dcp%jeh))
@@ -122,7 +122,7 @@ subroutine read_alpha_map(p, g, fn)
         if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
         if (amap(i,j) < 0.0 .or. amap(i,j) >= 1.0) then
           write(msg,'(a,2i7,es12.4)') &
-                "list_intercept_fixed: fn_icalpha の値が範囲外(0 <= alpha < 1)", i, j, amap(i,j)
+                "list_intercept_fixed: fn_icalpha has a value outside [0,1) at cell", i, j, amap(i,j)
           call par_abort(trim(msg))
         end if
       end do
