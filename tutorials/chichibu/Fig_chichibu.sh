@@ -35,4 +35,4 @@ awk 'NR==FNR{for(i=1;i<=NF;i++)b[FNR,i]=$i;next}
 
 # --- 描画 ---
 gnuplot Fig_chichibu.plt
-echo "figs/ に図を生成しました"
+echo "generated figures in figs/"

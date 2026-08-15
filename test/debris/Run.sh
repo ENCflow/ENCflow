@@ -17,8 +17,8 @@ python3 "$sdir/Check_debris.py" save || rc=1
 rm -rf save_serial && cp -r save save_serial
 
 if [ $rc -eq 0 ]; then
-    echo "=== debris 検定 PASS ==="
+    echo "=== debris verification PASS ==="
 else
-    echo "=== debris 検定 FAIL ===" >&2
+    echo "=== debris verification FAIL ===" >&2
 fi
 exit $rc

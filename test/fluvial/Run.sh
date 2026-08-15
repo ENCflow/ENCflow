@@ -17,8 +17,8 @@ python3 "$sdir/Check_fluvial.py" save || rc=1
 rm -rf save_serial && cp -r save save_serial
 
 if [ $rc -eq 0 ]; then
-    echo "=== fluvial 検定 PASS ==="
+    echo "=== fluvial verification PASS ==="
 else
-    echo "=== fluvial 検定 FAIL ===" >&2
+    echo "=== fluvial verification FAIL ===" >&2
 fi
 exit $rc

@@ -17,8 +17,8 @@ python3 "$sdir/../suspend/Check_suspend.py" save || rc=1
 rm -rf save_serial && cp -r save save_serial
 
 if [ $rc -eq 0 ]; then
-    echo "=== wash 検定 PASS ==="
+    echo "=== wash verification PASS ==="
 else
-    echo "=== wash 検定 FAIL ===" >&2
+    echo "=== wash verification FAIL ===" >&2
 fi
 exit $rc

@@ -25,8 +25,8 @@ echo ""
 python3 "$sdir/Check_suspend.py" save || rc=1
 
 if [ $rc -eq 0 ]; then
-    echo "=== suspend 検定 PASS ==="
+    echo "=== suspend verification PASS ==="
 else
-    echo "=== suspend 検定 FAIL ===" >&2
+    echo "=== suspend verification FAIL ===" >&2
 fi
 exit $rc

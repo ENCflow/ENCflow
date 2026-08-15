@@ -18,7 +18,7 @@ python3 "$sdir/Check_debris.py" save || rc=1
 
 if [ -d save_serial ]; then
     if cmp -s save/state.dat save_serial/state.dat; then
-        echo "=== state.dat は逐次結果(save_serial)とビット一致 ==="
+        echo "=== state.dat is bit-identical to the serial result (save_serial) ==="
     else
         echo "MISMATCH: save/state.dat != save_serial/state.dat" >&2
         rc=1

@@ -28,8 +28,8 @@ python3 "$sdir/Check_slide.py" save_fs fslide || rc=1
 rm -rf save_fs_serial && cp -r save_fs save_fs_serial
 
 if [ $rc -eq 0 ]; then
-    echo "=== slide 検定 PASS ==="
+    echo "=== slide verification PASS ==="
 else
-    echo "=== slide 検定 FAIL ===" >&2
+    echo "=== slide verification FAIL ===" >&2
 fi
 exit $rc

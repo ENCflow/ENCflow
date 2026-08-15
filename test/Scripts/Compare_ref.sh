@@ -49,7 +49,7 @@ fi
 # --- 対象ファイルの存在確認 ---
 for f in "$@"; do
     if [ ! -e "$resdir/$f" ]; then
-        echo "ERROR: $resdir/$f がありません(dir_result と RESDIR は一致していますか)" >&2
+        echo "ERROR: $resdir/$f not found (do dir_result and RESDIR match?)" >&2
         exit 2
     fi
 done
@@ -83,7 +83,7 @@ make_reference() {
         echo "pwd       : $PWD"
         echo "exe       : $(readlink -f "$exe" 2>/dev/null)"
         echo "mode      : $(ls ../../src/.mode_* 2>/dev/null | sed 's/.*\.mode_//')"
-        echo "modules   : ${LOADEDMODULES:-（module未使用）}"
+        echo "modules   : ${LOADEDMODULES:-(no modules)}"
         ldd "$(readlink -f "$exe")" 2>/dev/null | grep -iE 'mpi|gfortran|ifcore|nvf' \
             | sed 's/^/lib       : /'
     } > "$envdir/BUILDINFO.txt"
@@ -93,16 +93,16 @@ make_reference() {
 if [ $update -eq 1 ]; then
     rm -rf "$refdir"
     make_reference "$@"
-    echo "=== REFERENCE UPDATED: 今回の結果を新しい基準として保存しました ==="
-    echo "    (結果の妥当性をプロット等で確認してから信頼してください)"
+    echo "=== REFERENCE UPDATED: current results saved as the new reference ==="
+    echo "    (verify the results by plotting etc. before trusting them)"
     exit 0
 fi
 
 # --- 初回: reference 作成 ---
 if [ ! -d "$refdir" ]; then
     make_reference "$@"
-    echo "=== REFERENCE CREATED: 比較対象がないため今回の結果を基準として保存しました ==="
-    echo "    (初回のため比較は行っていません。結果の妥当性を必ず確認してください)"
+    echo "=== REFERENCE CREATED: no reference existed; current results saved as the reference ==="
+    echo "    (nothing was compared this first time; be sure to verify the results)"
     exit 0
 fi
 
@@ -112,27 +112,27 @@ norm_param() {
     | grep -v '^$'
 }
 if ! diff <(norm_param "$param") <(norm_param "$refdir/$param") > /dev/null 2>&1; then
-    echo "=== SKIP: param.txt が reference と異なるため比較できません ==="
-    echo "    条件変更が意図したものなら ./Run.sh -u で reference を更新してください"
+    echo "=== SKIP: param.txt differs from the reference; cannot compare ==="
+    echo "    if the change is intended, update the reference with ./Run.sh -u"
     exit 2
 fi
 
 # --- ファイルごとの比較 ---
 if [ -n "$SKIPCOLS" ]; then
-    echo "      (列 $SKIPCOLS は比較から除外)"
+    echo "      (column(s) $SKIPCOLS excluded from comparison)"
 fi
 status=0
 for f in "$@"; do
     cf=$resdir/$f
     rf=$refdir/$(basename "$f")
     if [ ! -e "$rf" ]; then
-        echo "FAIL: $f (reference 内に存在しません)"
+        echo "FAIL: $f (not present in the reference)"
         status=1
         continue
     fi
 
     if cmp -s "$cf" "$rf"; then
-        echo "PASS: $cf (完全一致)"
+        echo "PASS: $cf (identical)"
         continue
     fi
 
@@ -202,34 +202,34 @@ for f in "$@"; do
                         rd = (s > 0 ? d / s : 0)
                         if (rd >= maxrd) {
                             maxrd = rd
-                            msg = "行 " FNR " 列 " i ": " a " vs " b " (差 " nq " 量子)"
+                            msg = "row " FNR " col " i ": " a " vs " b " (diff " nq " quanta)"
                         }
                     } else if (d > 0) {
                         nflip++    # 許容内の微小差(最終桁ズレ等)を数える
                     }
                 } else if (a != b) {
                     nbad++
-                    if (msg == "") msg = "行 " FNR " 列 " i ": \"" a "\" vs \"" b "\""
+                    if (msg == "") msg = "row " FNR " col " i ": \"" a "\" vs \"" b "\""
                 }
             }
         }
         END {
             if (ncur != nref) {
                 nbad++
-                if (msg == "") msg = "行数不一致 (ref:" nref " vs now:" ncur ")"
+                if (msg == "") msg = "row count mismatch (ref:" nref " vs now:" ncur ")"
             }
             if (nbad > 0) {
-                printf("      不一致 %d 箇所, 最大相対差 %.3e (%s)\n", nbad, maxrd, msg)
-                if (nflip > 0) printf("      (ほかに許容内の微小差 %d 箇所)\n", nflip)
+                printf("      %d mismatches, max relative difference %.3e (%s)\n", nbad, maxrd, msg)
+                if (nflip > 0) printf("      (plus %d small differences within tolerance)\n", nflip)
                 exit 1
             }
-            if (nflip > 0) printf("      許容内の微小差 %d 箇所 (ULP=%s RTOL=%s ATOL=%s)\n", nflip, ulp, rtol, atol)
+            if (nflip > 0) printf("      %d small differences within tolerance (ULP=%s RTOL=%s ATOL=%s)\n", nflip, ulp, rtol, atol)
             exit 0
         }
     ' "$rf" "$cf"
 
     if [ $? -eq 0 ]; then
-        echo "PASS: $cf (許容誤差内)"
+        echo "PASS: $cf (within tolerance)"
     else
         echo "FAIL: $cf"
         status=1
@@ -237,8 +237,8 @@ for f in "$@"; do
 done
 
 if [ $status -eq 0 ]; then
-    echo "=== 回帰テスト PASS ==="
+    echo "=== regression test PASS ==="
 else
-    echo "=== 回帰テスト FAIL: 意図した変更なら ./Run.sh -u で reference を更新してください ==="
+    echo "=== regression test FAIL: if the change is intended, update the reference with ./Run.sh -u ==="
 fi
 exit $status

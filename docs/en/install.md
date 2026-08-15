@@ -46,7 +46,7 @@ cd ../test/wave
 ./Run.sh
 ```
 
-If the run ends with a regression-test PASS message, your build of
+If the last line reads `=== regression test PASS ===`, your build of
 ENCflow produces the same answers as the development environment.
 Installation is complete. Next stop: the
 [tutorial](../../tutorials/wave/en/README.md).
@@ -215,11 +215,11 @@ Sec. 1-3.
 The compiler is not installed. Install it with the commands in
 [Sec. 1](#1-up-and-running-in-5-minutes).
 
-**An ERROR message saying `../../bin/encflow` is missing and asking you to run `make MODE=serial install` in src first**
+**`ERROR: ../../bin/encflow not found; run 'make MODE=serial install' in src first`**
 The executable has not been built. Run the command shown in the
 message in `src/` (for the MPI version, `make MODE=mpi install`).
 
-**An ERROR message about a build mode or MPI implementation mismatch, or a possibly forgotten install**
+**`ERROR: the src build does not match the current environment` / `may not have been installed`**
 The build state of `src/` disagrees with the mode or environment you
 are trying to run. Running the remedy command shown in the message
 (`make MODE=... install`) as-is resolves it. This can also appear

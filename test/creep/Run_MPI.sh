@@ -24,7 +24,7 @@ if [ -d result_serial ]; then
         cmp -s "$f" "result/probes/$(basename "$f")" || { echo "MISMATCH: $f" >&2; ok=0; }
     done
     if [ $ok -eq 1 ]; then
-        echo "=== プローブ CSV は逐次結果(result_serial)とビット一致 ==="
+        echo "=== probe CSVs are bit-identical to the serial result (result_serial) ==="
     else
         rc=1
     fi

@@ -44,7 +44,7 @@ update=
 for a in "$@"; do
     case $a in
         -u)          update=-u ;;
-        *[!0-9]*|'') echo "usage: $(basename "$0") [serial|mpi] [ランク数] [-u]" >&2
+        *[!0-9]*|'') echo "usage: $(basename "$0") [serial|mpi] [nranks] [-u]" >&2
                      exit 2 ;;
         *)           NP=$a ;;
     esac
@@ -77,7 +77,7 @@ rc=$?
 set +o pipefail
 
 if [ $rc -ne 0 ]; then
-    echo "ERROR: 実行が異常終了しました (rc=$rc)。回帰テストは行いません。" >&2
+    echo "ERROR: run terminated abnormally (rc=$rc); skipping the regression test" >&2
     exit $rc
 fi
 echo ""

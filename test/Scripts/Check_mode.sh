@@ -40,7 +40,7 @@ if [ ! -e "./$exe" ]; then
     if [ -e "$bin" ]; then
         ln -sf "$bin" "./$exe"
     else
-        echo "ERROR: $bin がありません。先に src で make MODE=$want install を実行してください。" >&2
+        echo "ERROR: $bin not found; run 'make MODE=$want install' in src first" >&2
         exit 1
     fi
 fi
@@ -48,8 +48,8 @@ fi
 # 現在の環境(make.inc + module)での期待スタンプ名を make に計算させる
 expected=$(make -s -C "$srcdir" print-stamp MODE="$want" 2>/dev/null)
 if [ -z "$expected" ]; then
-    echo "ERROR: 期待スタンプ名を取得できません" >&2
-    echo "  (src/Makefile に print-stamp ターゲットはありますか)" >&2
+    echo "ERROR: cannot determine the expected build stamp" >&2
+    echo "  (does src/Makefile have the print-stamp target?)" >&2
     exit 1
 fi
 stamp=$srcdir/$expected
@@ -58,8 +58,8 @@ if [ -e "$stamp" ]; then
     # 直近ビルドが現環境と一致: install 忘れの検出
     # (bin の実行ファイルがモード切替時刻より古ければエラー)
     if [ "$bin" -ot "$stamp" ]; then
-        echo "ERROR: $bin が $expected より古く、install 忘れの可能性があります。" >&2
-        echo "  cd $srcdir && make install の実行をお勧めします。" >&2
+        echo "ERROR: $bin is older than $expected; it may not have been installed" >&2
+        echo "  running 'cd $srcdir && make install' is recommended" >&2
         exit 1
     fi
 else
@@ -68,11 +68,11 @@ else
         # 同モードなのにスタンプが違う = MPI 実装(module 環境)か
         # PREC が現環境とズレている。bin の実行ファイルも同じズレを
         # 持つ可能性が高いので停止する
-        echo "ERROR: src のビルドが現環境と一致しません" >&2
-        echo "  要求(現環境): ${expected#.mode_}" >&2
-        echo "  src のビルド : $actual" >&2
-        echo "  対処: cd $srcdir && make MODE=$want install" >&2
-        echo "  (module 環境がビルド時と同じかどうかも確認してください)" >&2
+        echo "ERROR: the src build does not match the current environment" >&2
+        echo "  required (current env): ${expected#.mode_}" >&2
+        echo "  src build             : $actual" >&2
+        echo "  fix: cd $srcdir && make MODE=$want install" >&2
+        echo "  (also check that the module environment matches the build)" >&2
         exit 1
     fi
     # 直近ビルドは別モード(共存運用)。$bin は過去のビルド物で、

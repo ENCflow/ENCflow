@@ -42,7 +42,7 @@ cd ../test/wave
 ./Run.sh
 ```
 
-最後に `=== 回帰テスト PASS ===` と表示されれば、あなたの環境の
+最後に `=== regression test PASS ===` と表示されれば、あなたの環境の
 ENCflow は開発環境と同じ答えを出しています。これでインストールは
 完了です。次は[チュートリアル](../tutorials/wave/README.md)へ。
 
@@ -199,11 +199,11 @@ LTO とアーカイバの対応関係など)は [developer.md](developer.md) の
 コンパイラが未インストールです。[1章](#1-5分で動かす)のコマンドで
 インストールしてください。
 
-**`ERROR: ../../bin/encflow がありません。先に src で make MODE=serial install を実行してください。`**
+**`ERROR: ../../bin/encflow not found; run 'make MODE=serial install' in src first`**
 実行ファイルが未ビルドです。メッセージに表示されるコマンドを
 `src/` で実行してください(MPI 版なら `make MODE=mpi install`)。
 
-**`ERROR: ビルドモードまたは MPI 実装が一致しません` / `install 忘れの可能性`**
+**`ERROR: the src build does not match the current environment` / `may not have been installed`**
 `src/` のビルド状態が実行しようとしているモードや環境と食い違って
 います。表示される対処コマンド(`make MODE=... install`)をそのまま
 実行すれば解消します。スパコンで module を切り替えた後にも出ることが

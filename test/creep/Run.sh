@@ -23,8 +23,8 @@ python3 "$sdir/Check_analytic.py" result/probes 1.0 || rc=1
 python3 "$sdir/Check_analytic.py" result_morfac2/probes 2.0 || rc=1
 
 if [ $rc -eq 0 ]; then
-    echo "=== creep ベンチマーク PASS ==="
+    echo "=== creep verification PASS ==="
 else
-    echo "=== creep ベンチマーク FAIL ===" >&2
+    echo "=== creep verification FAIL ===" >&2
 fi
 exit $rc

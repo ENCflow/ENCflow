@@ -19,7 +19,7 @@ echo ""
 python3 "$sdir/Check_slide.py" save release || rc=1
 if [ -d save_serial ]; then
     if cmp -s save/state.dat save_serial/state.dat; then
-        echo "=== release: state.dat は逐次結果とビット一致 ==="
+        echo "=== release: state.dat is bit-identical to the serial result ==="
     else
         echo "MISMATCH: save/state.dat != save_serial/state.dat" >&2
         rc=1
@@ -33,7 +33,7 @@ echo ""
 python3 "$sdir/Check_slide.py" save_fs fslide || rc=1
 if [ -d save_fs_serial ]; then
     if cmp -s save_fs/state.dat save_fs_serial/state.dat; then
-        echo "=== fslide: state.dat は逐次結果とビット一致 ==="
+        echo "=== fslide: state.dat is bit-identical to the serial result ==="
     else
         echo "MISMATCH: save_fs/state.dat != save_fs_serial/state.dat" >&2
         rc=1
