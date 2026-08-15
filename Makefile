@@ -17,6 +17,7 @@
 #   順序が崩れても壊れはしないが、先に src を済ませる方が効率的)
 SUBDIRS	= src \
 	  utils/calc_catchmentarea \
+	  utils/lu2mask \
 	  utils/modify_elevation \
 	  utils/modify_river \
 	  utils/modify_sealand \
@@ -53,8 +54,8 @@ all: $(SUBDIRS)
 $(SUBDIRS):
 	$(MAKE) -C $@
 
-# utils/rerecord, utils/rmdepress_river は src の成果物に依存
-utils/rerecord utils/rmdepress_river: src
+# utils/lu2mask, utils/rerecord, utils/rmdepress_river は src の成果物に依存
+utils/lu2mask utils/rerecord utils/rmdepress_river: src
 
 
 install: all
