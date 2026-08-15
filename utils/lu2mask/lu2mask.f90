@@ -3,26 +3,28 @@
 ! "lu2mask"
 !----------------------------------------------------------------------
 !
-! 土地利用ファイル(list_geoinfo の fn_luse)を読み、指定した土地利用
-! コードのセルを 1、それ以外を 0 とするラスタを書き出す。
-! 生成したファイルは list_geoinfo の fn_sw(海域マスク)・fn_rw(河道
-! マスク)・fn_seaside(海側マスク)等にそのまま指定できる。
+! 土地利用ファイルを読み、指定した土地利用コードのセルを 1、それ以外を
+! 0 とするラスタを書き出す。生成したファイルは list_geoinfo の fn_sw
+! (海域マスク)・fn_rw(河道マスク)・fn_seaside(海側マスク)等に
+! そのまま指定できる。
 ! 本体へのマスク自動生成の組み込みは行わない、との設計判断に基づく
-! 前処理ユーティリティ(developer.md §40)。
+! 前処理ユーティリティ(developer.md §40)。本体は土地利用データを
+! 読まない(§41。土地利用を扱うのはこの前処理だけ)。
 !
 ! 使い方:
-!   $ ./lu2mask parameterfile maskfile code1 [code2 ...]
+!   $ ./lu2mask parameterfile lusefile maskfile code1 [code2 ...]
 !
 !   1. parameterfile: 計算に使うシステムパラメータファイル。
-!      dir_data・f_input_mode と、fn_geoinfo 経由の nx, ny, fn_luse を
-!      本体と同じ解釈で読む(nx, ny の指定方法も本体と同じ)。
-!   2. maskfile: 書き出すマスクのパス(書いたとおりの場所に出力する。
+!      f_input_mode と、fn_geoinfo 経由の nx, ny を本体と同じ解釈で
+!      読む(nx, ny の指定方法も本体と同じ)。
+!   2. lusefile: 土地利用ファイルのパス(書いたとおりの場所を読む)。
+!   3. maskfile: 書き出すマスクのパス(書いたとおりの場所に出力する。
 !      fn_sw 等は dir_data 相対で参照されるため、通常は dir_data 内を
 !      指定する)。
-!   3. code: マスクを 1 にする土地利用コード(整数)。複数指定可。
+!   4. code: マスクを 1 にする土地利用コード(整数)。複数指定可。
 !
 ! 入出力の形式は f_input_mode に従う(1:text, 2:bil, 4:GeoTIFF)。
-!   - bil: fn_luse と同じ場所に hdr があれば nx, ny を補完・検査し、
+!   - bil: lusefile と同じ場所に hdr があれば nx, ny を補完・検査し、
 !     出力にも hdr を併記する。hdr が無ければ namelist の nx, ny が必須。
 !   - GeoTIFF: 格子数はファイルの自己記述から補完・検査する。位置情報
 !     タグがあれば出力にも引き継ぐ(無ければ GeoTIFF では書けないので
@@ -60,18 +62,13 @@ program lu2mask
   character(:), allocatable :: fn_sysparam, fn_out, fn_luse
   integer :: i, j, k, nhit
 
-  call get_args(fn_sysparam, fn_out, codes)
+  call get_args(fn_sysparam, fn_luse, fn_out, codes)
 
   call par_init()
   call m_sysparam_init(p, fn_sysparam)
   call list_geoinfo_read(p, list)
 
-  if (len_trim(list%fn_luse) == 0) then
-    call par_stop("lu2mask: fn_luse is not set in list_geoinfo ("//trim(p%fn_geoinfo)//")")
-  end if
-  fn_luse = trim(p%dir_data) // "/" // trim(list%fn_luse)
-
-  ! nx, ny の確定と地理座標参照の取得(fn_luse 自身から補完する)
+  ! nx, ny の確定と地理座標参照の取得(土地利用ファイル自身から補完する)
   call probe_grid(p, list, fn_luse, nx, ny, gr)
   print '(a,i0,a,i0)', "grid: ", nx, " x ", ny
 
@@ -133,25 +130,26 @@ contains
 !----------------------------------------------------------------------
 ! コマンドライン引数の取得
 !----------------------------------------------------------------------
-subroutine get_args(fn_sysparam, fn_out, codes)
-  character(:), allocatable, intent(out) :: fn_sysparam, fn_out
+subroutine get_args(fn_sysparam, fn_luse, fn_out, codes)
+  character(:), allocatable, intent(out) :: fn_sysparam, fn_luse, fn_out
   integer, allocatable, intent(out) :: codes(:)
   character(:), allocatable :: s
   integer :: argc, i, ios
 
   argc = command_argument_count()
-  if (argc < 3) then
+  if (argc < 4) then
     call get_arg(0, s)
-    print '(a)', "usage: " // s // " parameterfile maskfile code1 [code2 ...]"
+    print '(a)', "usage: " // s // " parameterfile lusefile maskfile code1 [code2 ...]"
     stop 1
   end if
 
   call get_arg(1, fn_sysparam)
-  call get_arg(2, fn_out)
-  allocate(codes(1:argc-2))
-  do i = 3, argc
+  call get_arg(2, fn_luse)
+  call get_arg(3, fn_out)
+  allocate(codes(1:argc-3))
+  do i = 4, argc
     call get_arg(i, s)
-    read(s, *, iostat=ios) codes(i-2)
+    read(s, *, iostat=ios) codes(i-3)
     if (ios /= 0) then
       print '(a)', "lu2mask: invalid land-use code: " // s
       stop 1

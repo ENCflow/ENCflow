@@ -9,7 +9,7 @@ module m_geoinfo
   use m_geotiff, only : t_gtif_info, gtif_inquire
   use m_util, only : itoa
   use m_parallel, only : par_info, par_stop, par_abort, dcp, is_root, nproc, &
-                       par_scatter_cell, par_scatter_cell_i, &
+                       par_scatter_cell, &
                        par_bcast_cell, par_bcast_cell_i
   implicit none
   private
@@ -68,7 +68,6 @@ module m_geoinfo
     integer, allocatable :: x(:,:)                    ! 対象領域判別マスク
     integer, allocatable :: sw(:,:)                   ! 海域マスク
     integer, allocatable :: rw(:,:)                   ! 河道マスク
-    integer, allocatable :: lu(:,:)                   ! 土地利用
     integer, allocatable :: wx(:,:)                   ! 行ごとの計算対象範囲
     integer :: n_valcells = 0                         ! 計算対象セル数(海域除く)
     integer :: wy(1:2)                                ! 行の計算対象範囲
@@ -119,7 +118,7 @@ subroutine m_geoinfo_init(g, p)
   if (len_trim(p%fn_channel) > 0) call list_channel_read(p, chlist)
   call set_params(p, g, list)
 
-  ! 方式2(rank0 読み込み+帯配布): 物性係数(rn, gv, bb, lm, rscap, lu)は
+  ! 方式2(rank0 読み込み+帯配布): 物性係数(rn, gv, bb, lm, rscap)は
   ! rank0 のみが全域を確保・構築し、par_decomp_init 後に
   ! m_geoinfo_scatter_coeffs で各ランクの帯+ハロへ配布する。
   ! 地形・マスク類(z, x, sw, rw)はゾーン2の冗長処理が使うため、
@@ -128,7 +127,6 @@ subroutine m_geoinfo_init(g, p)
   call read_sw(p, g, list)     ! read_maskよりも先に実行する
   call read_mask(p, g, list)
   call read_z(p, g, list)
-  if (is_root) call read_lu(p, g, list)
   call read_rw(p, g, list)
   if (is_root) then
     call read_rn(p, g, list)
@@ -272,7 +270,6 @@ subroutine m_geoinfo_scatter_coeffs(g)
   call scatter_band_r(g%bb)
   call scatter_band_r(g%lm)
   call scatter_band_r(g%rscap)
-  call scatter_band_i(g%lu)
   ! 実行判定 sd_dist / bank_active / width_active は namelist 由来で
   ! 全ランク同一(collective 安全)
   if (g%sd_dist) call scatter_band_r(g%sd)
@@ -328,23 +325,6 @@ subroutine scatter_band_r(a)
 end subroutine
 
 
-subroutine scatter_band_i(a)
-  integer, allocatable, intent(inout) :: a(:,:)
-  integer, allocatable :: t(:,:)
-  integer :: dum(1,1)
-  if (nproc == 1) then
-    if (lbound(a,2) == dcp%jsh .and. ubound(a,2) == dcp%jeh) return
-  end if
-  allocate(t(1:dcp%nx_g, dcp%jsh:dcp%jeh))
-  if (is_root) then
-    call par_scatter_cell_i(a, t)
-  else
-    call par_scatter_cell_i(dum, t)
-  end if
-  call move_alloc(t, a)
-end subroutine
-
-
 !----------------------------------------------------------------------
 ! 地形とマスク類を縮小する(全モジュールの初期化完了後、run_main の
 ! 直前に呼ぶ)。x は番兵境界ごと帯へ、sw / rw は通常の帯へ。
@@ -371,7 +351,6 @@ subroutine m_geoinfo_dispose(g)
   type(t_geoinfo), intent(inout) :: g
   if (allocated(g%z)) deallocate(g%z)
   if (allocated(g%rn)) deallocate(g%rn)
-  if (allocated(g%lu)) deallocate(g%lu)
   if (allocated(g%gv)) deallocate(g%gv)
   if (allocated(g%bb)) deallocate(g%bb)
   if (allocated(g%lm)) deallocate(g%lm)
@@ -422,6 +401,17 @@ subroutine set_params(p, g, list)
   ! 地下水用の土層厚・比湧水量(所有は geoinfo。2026-08-05 決定。
   ! developer.md §16)。sd_dist の判定材料は全ランク同一の namelist 値のみ
   ! なので、後段の scatter・遅延確保の実行判定に使ってよい(collective 安全)
+  ! 粗度の与え方の検証(全ランク同一の namelist 値なので collective 安全)。
+  ! f_rntype=2(土地利用から変換)は 2026-08-15 に廃止(developer.md §41。
+  ! 粗度は直接与える。変換は前処理で行う)
+  if (list%f_rntype == 2) then
+    call par_stop("list_geoinfo: f_rntype=2 (roughness from land use) was removed." &
+                  //" Give roughness directly: fn_rn (f_rntype=1) or rn0_rw." &
+                  //" See developer.md sec.41")
+  else if (list%f_rntype < 0 .or. list%f_rntype > 1) then
+    call par_stop("list_geoinfo: f_rntype must be 0(fixed) or 1(file): "//itoa(list%f_rntype))
+  end if
+
   g%sd0 = list%sd0
   g%sy0 = list%sy0
   if (list%f_sdtype < 0 .or. list%f_sdtype > 1) then
@@ -664,7 +654,6 @@ subroutine allocate_arrays(g)
   allocate(g%bb(1:g%nx,1:g%ny), source = 1.e10)  ! 家屋サイズは大きな値で初期化
   allocate(g%lm(1:g%nx,1:g%ny), source = 1.0)    ! 有効慣性係数は1.0で初期化
   allocate(g%rscap(1:g%nx,1:g%ny), source = 0.0) ! ため池の深さは0.0で初期化
-  allocate(g%lu(1:g%nx,1:g%ny), source = 0)
   ! 土層厚は分布指定が有効なときだけ確保する(固定値運用の遅延確保は
   ! m_geoinfo_require_sd。gwflow が使わなければ一切確保しない)
   if (g%sd_dist) allocate(g%sd(1:g%nx,1:g%ny), source = 0.0)
@@ -829,25 +818,6 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 土地利用データを読み込む
-!----------------------------------------------------------------------
-subroutine read_lu(p, g, list)
-  type(t_sysparam), intent(in) :: p             ! システムパラメータ構造体
-  type(t_geoinfo), intent(inout) :: g
-  type(t_list_geoinfo), intent(in) :: list
-  character(:), allocatable :: fname
-
-  if (list%f_lusetype == 0) then
-    g%lu = 0
-  else
-    fname = trim(p%dir_data) // "/" // trim(list%fn_luse)
-    call par_info(" reading "//fname)
-    call fileio_read_matrix(fname, g%nx, g%ny, g%lu, p%f_input_mode)
-  end if
-
-end subroutine
-
-!----------------------------------------------------------------------
 ! 河道マスクを読み込む
 !----------------------------------------------------------------------
 subroutine read_rw(p, g, list)
@@ -953,40 +923,16 @@ subroutine read_rn(p, g, list)
   type(t_sysparam), intent(in) :: p             ! システムパラメータ構造体
   type(t_geoinfo), intent(inout) :: g
   type(t_list_geoinfo), intent(in) :: list
-  integer :: nluse
   integer :: i, j
   character(:), allocatable :: fname
-  character(len=1024) :: msg
 
   if (list%f_rntype == 0) then
-    g%lu = 0
     g%rn = list%rn0
-  else if (list%f_rntype == 1) then
+  else
+    ! f_rntype=1(値の検証は set_params が実施済み)
     fname = trim(p%dir_data) // "/" // trim(list%fn_rn)
     call par_info(" reading "//fname)
     call fileio_read_matrix(fname, g%nx, g%ny, g%rn, p%f_input_mode)
-  else
-    ! 土地利用と粗度係数の関係の数をカウントする
-    nluse = 0
-    do i = 1, ubound(list%lu2rn, 2)
-      if (list%lu2rn(1,i) < 0) exit
-      nluse = nluse + 1
-    end do
-    if (nluse < 1) then
-      ! read_rn は rank0 のみで実行されるため par_stop(collective)は不可
-      call par_abort("error in geoimfo: need lu2rn(:,:) for f_rntype=2")
-    end if
-    do j = 1, g%ny
-      do i = 1, g%nx
-        if (g%x(i,j) == 0) cycle
-        g%rn(i,j) = get_rn(list%lu2rn, nluse, g%lu(i,j))
-        if (g%rn(i,j) < 0) then
-          write(msg,'(a,i3,a,i0,a,i0,a)') &
-                "error in geoinfo: landuse categoly", g%lu(i,j), " at", i, ",", j, " not found in lu2rn"
-          call par_abort(trim(msg))   ! rank0 のみで実行(par_stop 不可)
-        end if
-      end do
-    end do
   end if
 
   if (list%f_masktype > 0) then
@@ -998,26 +944,6 @@ subroutine read_rn(p, g, list)
       end do
     end do
   end if
-
-
-
-contains
-  function get_rn(lu2rn, nlu, lu) result(rn)
-    real :: rn
-    !real, intent(in) :: lu2rn(1:2,1:maxnluse)
-    real, intent(in) :: lu2rn(:,:)
-    integer, intent(in) :: nlu
-    integer, intent(in) :: lu
-    integer :: ilu
-    rn = -1
-    do ilu = 1, nlu
-      if (nint(lu2rn(1,ilu)) == lu) then
-        rn = lu2rn(2,ilu)
-        exit
-      end if
-    end do
-  end function
-         
 
 end subroutine
 
