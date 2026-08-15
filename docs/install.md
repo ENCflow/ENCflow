@@ -105,6 +105,22 @@ ln -s ~/ENCflow/bin/encflow .     # リンクを張る(推奨)
 パラメータファイルの書き方は[チュートリアル](../tutorials/wave/README.md)
 と[ユーザーガイド](users_guide.md)へ。
 
+### 2.5 可視化ツール(gnuplot)の準備
+
+ENCflow 本体は可視化ツールに依存しません(結果は行列テキストや
+GeoTIFF なので、GIS・Python・Excel など何でも読めます)。ただし
+チュートリアルと同梱のプロットスクリプト(`Plot_*.plt`)は
+**gnuplot**(5.2 以降)を使うので、チュートリアルを進める場合は
+パッケージマネージャで入れておいてください。
+
+```bash
+sudo apt install gnuplot        # Ubuntu / Debian(WSL を含む)
+brew install gnuplot            # macOS(Homebrew)
+sudo dnf install gnuplot        # Fedora / RHEL 系
+```
+
+`gnuplot --version` でインストールとバージョンを確認できます。
+
 ## 3. MPI ハイブリッド版のビルド
 
 ワークステーションやスパコンでノードをまたいで計算する場合は、
