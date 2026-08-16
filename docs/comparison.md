@@ -12,6 +12,7 @@ buildup-washoff+積雪+長期地形変動まで完了)を前提とする。
 | **ENCflow** | (本プロジェクト) | 無償(方針) | 全公開(方針) | 基本方針は developer.md §0 |
 | RRI | ICHARM/土研 | 無償 | 公開(独自条件) | 著作権表示義務・商用は許可制。iRIC 版ソルバも公開 |
 | iRIC (Nays2DFlood 等) | iRIC 団体 | 無償 | 主要ソルバ公開 | GUI+ソルバ群の基盤 |
+| Morpho2DH | 竹林(京大防災研)/iRIC | 無償 | 非公開(iRIC 経由配布) | Morpho2D(平面2次元河床変動)+土石流・泥流。砂防堰堤等の構造物考慮 |
 | HEC-RAS 2D | 米陸軍 USACE | 無償 | 非公開 | 実務標準の一つ。流域水文は HEC-HMS が分担 |
 | LISFLOOD-FP 8 | Bristol 大 | 無償 | 公開(GPL) | サブグリッド河道・GPU |
 | CAESAR-Lisflood | 英大学系 | 無償 | 公開(GPL) | LISFLOOD-FP 水理+地形進化(時間〜千年) |
@@ -35,7 +36,9 @@ buildup-washoff+積雪+長期地形変動まで完了)を前提とする。
 [GSSHA](https://en.wikipedia.org/wiki/GSSHA) /
 [Delft3D FM](https://oss.deltares.nl/web/delft3dfm) /
 [TUFLOW Licensing](https://wiki.tuflow.com/index.php?title=TUFLOW_Licensing) /
-[CAESAR-Lisflood](https://sourceforge.net/projects/caesar-lisflood/)
+[CAESAR-Lisflood](https://sourceforge.net/projects/caesar-lisflood/) /
+[Morpho2DH](https://i-ric.org/en/solvers/morpho2dh/)(2026-08-16 確認。
+ソルバ本体のソース公開は確認できず = iRIC 経由のバイナリ配布)
 
 ## 2. プロセスカバレッジの比較(ENCflow 現況との対比)
 
@@ -47,7 +50,7 @@ buildup-washoff+積雪+長期地形変動まで完了)を前提とする。
 | 構造物(破堤・ポンプ・カルバート・樋門・分水・ダム操作) | ○ | HEC-RAS, TUFLOW, MIKE, SOBEK 系 | 無償・公開勢では手薄な領域 |
 | 降雨流出・遮断・蒸発散 | ○(樹冠・Hamon/Thornthwaite・減率) | RRI, GSSHA, MIKE SHE, SHETRAN | 水理特化勢は持たない |
 | 地下水 | ○ 2層(土層 Boussinesq+風化基岩層) | MIKE SHE(3D), SHETRAN(3D), GSSHA | 平面2次元モデルで2層は少数派。 |
-| 土砂・地形変化(掃流・浮遊・崩壊・土石流) | ○ MORFAC 付き | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood | |
+| 土砂・地形変化(掃流・浮遊・崩壊・土石流) | ○ MORFAC 付き | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | 土石流・泥流(地すべり起因の流動・堆積)の無償実務勢は Morpho2DH(iRIC)が代表。ENCflow は土石流を流域水文・洪水と同居させる点が異なる |
 | 水質(負荷流出・減衰・沈降・buildup-washoff) | ○ | MIKE ECO Lab, Delft3D-WAQ, Iber-WQ, GSSHA | 無償・公開で水文+水質+水理の同居は稀 |
 | 積雪・融雪 | ○ 度日法(§31。2026-08-10) | MIKE SHE・GSSHA・SHETRAN(同じく度日法系) | HEC-RAS は HMS 側。 |
 | 氷河 | ×(SIA を将来枠に設計済み) | 汎用洪水モデルには皆無 | 専用モデル(PISM, Elmer/Ice, OGGM)の領域 |

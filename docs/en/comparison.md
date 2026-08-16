@@ -18,6 +18,7 @@ site before citing.
 | **ENCflow** | (this project) | Free (policy) | Fully open (policy) | Basic policy is developer.md Sec. 0 |
 | RRI | ICHARM/PWRI | Free | Open (own terms) | Copyright-notice obligation; commercial use by permission. iRIC-version solver also published |
 | iRIC (Nays2DFlood etc.) | iRIC organization | Free | Main solvers open | Platform of GUI + solver suite |
+| Morpho2DH | Takebayashi (DPRI, Kyoto Univ.) / iRIC | Free | Closed (distributed via iRIC) | Morpho2D (2D bed deformation) + debris/mud flow. Considers structures such as sabo dams |
 | HEC-RAS 2D | USACE (US Army) | Free | Closed | One of the de facto standards in practice. Catchment hydrology is delegated to HEC-HMS |
 | LISFLOOD-FP 8 | University of Bristol | Free | Open (GPL) | Subgrid channels, GPU |
 | CAESAR-Lisflood | UK universities | Free | Open (GPL) | LISFLOOD-FP hydraulics + landscape evolution (hours to millennia) |
@@ -41,7 +42,10 @@ Sources (confirmed 2026-08-10):
 [GSSHA](https://en.wikipedia.org/wiki/GSSHA) /
 [Delft3D FM](https://oss.deltares.nl/web/delft3dfm) /
 [TUFLOW Licensing](https://wiki.tuflow.com/index.php?title=TUFLOW_Licensing) /
-[CAESAR-Lisflood](https://sourceforge.net/projects/caesar-lisflood/)
+[CAESAR-Lisflood](https://sourceforge.net/projects/caesar-lisflood/) /
+[Morpho2DH](https://i-ric.org/en/solvers/morpho2dh/) (checked
+2026-08-16; no public source of the solver itself could be confirmed
+= binary distribution via iRIC)
 
 ## 2. Comparison of process coverage (against ENCflow's current state)
 
@@ -53,7 +57,7 @@ Sources (confirmed 2026-08-10):
 | Structures (breach, pumps, culverts, sluice gates, diversions, dam operation) | Yes | HEC-RAS, TUFLOW, MIKE, SOBEK family | An area where the free/open camp is thin |
 | Rainfall runoff, interception, evapotranspiration | Yes (canopy, Hamon/Thornthwaite, lapse rate) | RRI, GSSHA, MIKE SHE, SHETRAN | The hydraulics-specialized camp does not have these |
 | Groundwater | Yes: two layers (soil-layer Boussinesq + weathered bedrock layer) | MIKE SHE (3D), SHETRAN (3D), GSSHA | Two layers in a plan-view 2D model is a minority position |
-| Sediment and landform change (bedload, suspension, collapse, debris flow) | Yes, with MORFAC | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood | |
+| Sediment and landform change (bedload, suspension, collapse, debris flow) | Yes, with MORFAC | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | For debris/mud flow (landslide-triggered runout and deposition), the representative free practical tool is Morpho2DH (iRIC); ENCflow differs in housing debris flow together with catchment hydrology and flooding |
 | Water quality (load runoff, decay, settling, buildup-washoff) | Yes | MIKE ECO Lab, Delft3D-WAQ, Iber-WQ, GSSHA | Free and open coexistence of hydrology + water quality + hydraulics is rare |
 | Snow accumulation and snowmelt | Yes: degree-day method (Sec. 31; 2026-08-10) | MIKE SHE, GSSHA, SHETRAN (also degree-day family) | For HEC-RAS this is on the HMS side |
 | Glaciers | No (SIA designed in as a future slot) | Absent from all general-purpose flood models | The domain of dedicated models (PISM, Elmer/Ice, OGGM) |
