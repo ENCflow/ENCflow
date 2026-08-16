@@ -34,7 +34,7 @@
 !
 !-----------------------------------------------------------------------
 module m_out2vtk
-  use, intrinsic :: iso_fortran_env, only : real32, real64, int64
+  use, intrinsic :: iso_fortran_env, only : real32, real64, int8, int64
   use, intrinsic :: ieee_arithmetic, only : ieee_value, ieee_quiet_nan
   use m_fileio, only : fileio_read_matrix, e_fmt_txt, e_fmt_bil, e_fmt_gtif
   use m_georef, only : t_georef, georef_read_hdr, georef_est_cellsize_m
@@ -59,9 +59,11 @@ module m_out2vtk
   real(real64) :: csx = 0.0_real64    ! セル寸法(0 = 自動。地理参照が無い
   real(real64) :: csy = 0.0_real64    !   txt 出力ではデフォルト 1 m)
   character(len=8) :: vars(64) = ""   ! 同梱する変数の接頭辞リスト(空=検出全部)
+  integer :: f_mask = 1               ! 領域マスク X0000 による非表示
+                                      ! (1: 陸域のみ、2: 海域込み、0: マスク無し)
 
   namelist /out2vtk/ fn_param, dir_result, dir_vtk, outfn_suffix, hmin, &
-                     nx, ny, csx, csy, vars
+                     nx, ny, csx, csy, vars, f_mask
 
   ! ---- 変数カタログ(m_output の出力接頭辞)-------------------------
   ! masked: 水面上の量(乾燥域では無意味)→ hmin で NaN マスクする。
@@ -102,6 +104,11 @@ module m_out2vtk
   real(real64), allocatable :: xc(:), yc(:)  ! セル中心座標(モデルの i, j 順)
   real(real32) :: vnan                  ! quiet NaN(マスク用)
   logical :: var_seen(22) = .false.     ! 変数ごとの「初回検出」表示済みフラグ
+
+  ! 領域マスク(X0000。0=領域外, 1=陸域, 2=海域。無ければ未確保のまま)
+  ! 全セル 1(マスクなしと等価)の場合も未確保に落とし、従来出力と一致させる
+  integer, allocatable :: xmask(:,:)
+  integer(int8), allocatable :: ghost(:)  ! vtkGhostType セル配列(0 or 32)
 
   ! VTK に書く点データ配列の束(名前と成分数、VTK 点順の平坦データ)
   type t_arr
@@ -160,6 +167,7 @@ subroutine out2vtk_run(fn_config)
 
   call probe_grid()
   call setup_coords()
+  call load_mask()
   call read_filenumber(knums, ktimes)
   nk = size(knums)
 
@@ -474,6 +482,108 @@ end subroutine
 
 
 !-----------------------------------------------------------------------
+! 領域マスク X0000(0=領域外, 1=陸域, 2=海域)を読み、非表示セルの
+! ghost 配列を作る
+!   X0000 が無い(旧結果)か全セル 1(マスクなしの計算)なら何もせず、
+!   出力は従来と完全一致のまま。f_mask=0(マスク無し表示)は ghost を
+!   作らないが mask 点データは同梱する
+!-----------------------------------------------------------------------
+subroutine load_mask()
+  character(:), allocatable :: base
+  integer :: i, jj, ci, cj, n, nhide
+  logical :: ex
+  logical, allocatable :: vis(:,:)      ! VTK 点順 (i, jj) の可視判定
+
+  base = trim(dir_result)//"/X0000"//trim(outfn_suffix)
+  inquire(file=base//".bil", exist=ex)
+  if (.not. ex) inquire(file=base//".tif", exist=ex)
+  if (.not. ex) inquire(file=base//".txt", exist=ex)
+  if (.not. ex) return                  ! 旧結果など。マスクなしで従来どおり
+
+  allocate(xmask(1:nx,1:ny))
+  block
+    integer :: ios
+    call read_var_int("X", 0, xmask, ios)
+    if (ios /= 0) then
+      deallocate(xmask)
+      return
+    end if
+  end block
+
+  if (all(xmask == 1)) then             ! マスクなしの計算と等価
+    deallocate(xmask)
+    return
+  end if
+  print '(a,i0,a,i0,a,i0)', " mask      : outside=", count(xmask == 0), &
+    "  land=", count(xmask == 1), "  sea=", count(xmask == 2)
+
+  if (f_mask == 0) return               ! 表示は全域(mask 点データのみ同梱)
+
+  ! 可視 = 陸域(1)、f_mask=2 なら海域(2)も。VTK 点順(jj: 南→北)
+  allocate(vis(1:nx,1:ny))
+  do jj = 1, ny
+    do i = 1, nx
+      vis(i,jj) = (xmask(i,ny+1-jj) == 1) .or. &
+                  (f_mask == 2 .and. xmask(i,ny+1-jj) == 2)
+    end do
+  end do
+
+  ! セルの4隅(格子セル中心=VTK 点)がすべて不可視のセルだけ隠す
+  ! (マスク内セルの点を全て残す保守的規則。表示は境界から半セル外に出る)
+  allocate(ghost((nx-1)*(ny-1)))
+  nhide = 0
+  n = 0
+  do cj = 1, ny - 1
+    do ci = 1, nx - 1
+      n = n + 1
+      if (vis(ci,cj) .or. vis(ci+1,cj) .or. vis(ci,cj+1) .or. vis(ci+1,cj+1)) then
+        ghost(n) = 0_int8
+      else
+        ghost(n) = 32_int8              ! HIDDENCELL(vtkDataSetAttributes)
+      end if
+      if (ghost(n) /= 0) nhide = nhide + 1
+    end do
+  end do
+  print '(a,i0,a,i0)', " hidden    : ", nhide, " / ", (nx-1)*(ny-1)
+  if (nhide == 0) deallocate(ghost)     ! 全可視なら ghost 自体を省く
+end subroutine
+
+
+!-----------------------------------------------------------------------
+! 分布ファイル1つを読む(整数。bil → tif → txt の順に探す)
+!-----------------------------------------------------------------------
+subroutine read_var_int(prefix, k, a, ios)
+  character(len=*), intent(in) :: prefix
+  integer, intent(in) :: k
+  integer, intent(inout) :: a(1:nx,1:ny)
+  integer, intent(out) :: ios
+  character(:), allocatable :: base
+  character(len=4) :: snum
+  logical :: ex
+
+  write(snum, '(i4.4)') k
+  base = trim(dir_result)//"/"//trim(prefix)//snum//trim(outfn_suffix)
+
+  inquire(file=base//".bil", exist=ex)
+  if (ex) then
+    call fileio_read_matrix(base//".bil", nx, ny, a, e_fmt_bil)
+    ios = 0; return
+  end if
+  inquire(file=base//".tif", exist=ex)
+  if (ex) then
+    call fileio_read_matrix(base//".tif", nx, ny, a, e_fmt_gtif)
+    ios = 0; return
+  end if
+  inquire(file=base//".txt", exist=ex)
+  if (ex) then
+    call fileio_read_matrix(base//".txt", nx, ny, a, e_fmt_txt)
+    ios = 0; return
+  end if
+  ios = 1
+end subroutine
+
+
+!-----------------------------------------------------------------------
 ! 分布ファイル1つを読む(bil → tif → txt の順に探す)
 !   ios: 0 = 読めた、1 = 見つからない
 !-----------------------------------------------------------------------
@@ -513,16 +623,24 @@ end subroutine
 !-----------------------------------------------------------------------
 subroutine write_terrain(zg)
   real, intent(in) :: zg(1:nx,1:ny)
-  type(t_arr) :: arrs(2)
+  type(t_arr) :: arrs(3)
   real(real64), allocatable :: pts(:)
+  integer :: na
 
   call pack_points(zg, pts)
   arrs(1)%name = "Z"
   arrs(1)%ncomp = 1
   call pack_scalar(zg, arrs(1)%dat)
   call make_tcoords(arrs(2))
+  na = 2
+  if (allocated(xmask)) then
+    na = 3
+    arrs(3)%name = "mask"
+    arrs(3)%ncomp = 1
+    call pack_scalar(real(xmask), arrs(3)%dat)
+  end if
 
-  call vtk_write_vts(trim(dir_vtk)//"/terrain.vts", pts, arrs, &
+  call vtk_write_vts(trim(dir_vtk)//"/terrain.vts", pts, arrs(1:na), &
                      scalars="Z", tcoords="TCoords")
   print '(a)', " wrote: "//trim(dir_vtk)//"/terrain.vts"
 end subroutine
@@ -666,6 +784,14 @@ subroutine write_flood_one(zg, k, fname, ok)
     call pack_vector_masked(uu, vv, dry, arrs(na)%dat)
   end if
 
+  ! 領域マスク(0=領域外, 1=陸域, 2=海域。NaN マスクは掛けない)
+  if (allocated(xmask)) then
+    na = na + 1
+    arrs(na)%name = "mask"
+    arrs(na)%ncomp = 1
+    call pack_scalar(real(xmask), arrs(na)%dat)
+  end if
+
   call pack_points(wse, pts)
   call vtk_write_vts(fname, pts, arrs(1:na), scalars="H", vectors="velocity")
   ok = .true.
@@ -802,7 +928,9 @@ end subroutine
 !-----------------------------------------------------------------------
 ! VTK XML StructuredGrid(.vts)を書く
 !   appended raw binary(リトルエンディアン前提。既存 bil 出力と同じ)。
-!   ヘッダは UInt64 のバイト数プレフィクス。点座標 Float64・点データ Float32
+!   ヘッダは UInt64 のバイト数プレフィクス。点座標 Float64・点データ Float32。
+!   モジュール変数 ghost が確保済みなら vtkGhostType セル配列(UInt8。
+!   HIDDENCELL=32)を併記し、ParaView は該当セルを描画しない(ブランキング)
 !-----------------------------------------------------------------------
 subroutine vtk_write_vts(fname, pts, arrs, scalars, vectors, tcoords)
   character(len=*), intent(in) :: fname
@@ -850,6 +978,16 @@ subroutine vtk_write_vts(fname, pts, arrs, scalars, vectors, tcoords)
   end do
   call puts(un, '      </PointData>' // new_line('a'))
 
+  ! 領域マスクによる非表示セル(ブランキング)
+  if (allocated(ghost)) then
+    call puts(un, '      <CellData>' // new_line('a'))
+    write(buf, '(a,i0,a)') '        <DataArray type="UInt8"' // &
+      ' Name="vtkGhostType" format="appended" offset="', offset, '"/>'
+    call puts(un, trim(buf) // new_line('a'))
+    offset = offset + 8 + size(ghost, kind=int64)
+    call puts(un, '      </CellData>' // new_line('a'))
+  end if
+
   call puts(un, '      <Points>' // new_line('a'))
   write(buf, '(a,i0,a)') '        <DataArray type="Float64" Name="Points"' // &
     ' NumberOfComponents="3" format="appended" offset="', offset, '"/>'
@@ -865,6 +1003,10 @@ subroutine vtk_write_vts(fname, pts, arrs, scalars, vectors, tcoords)
     nbytes = 4_int64 * size(arrs(ia)%dat, kind=int64)
     write(un) nbytes, arrs(ia)%dat
   end do
+  if (allocated(ghost)) then
+    nbytes = size(ghost, kind=int64)
+    write(un) nbytes, ghost
+  end if
   nbytes = 8_int64 * size(pts, kind=int64)
   write(un) nbytes, pts
 
