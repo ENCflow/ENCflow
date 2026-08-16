@@ -88,6 +88,7 @@ written.)
 | f_out_hmaxt | 0 | Ht9999 | time of maximum depth |
 | f_out_vvmax | 0 | V9999 | maximum velocity |
 | f_out_qqmax / f_out_qqmaxt / f_out_qqmaxd | 0 | Q9999 / Qt9999 / Qd9999 | maximum discharge and its time / direction |
+| — (always) | — | X0000 | domain mask (0: outside, 1: land, 2: sea); for visualization and checking the active domain in GIS |
 
 In addition, `Log.txt` (identical to the on-screen log) and a copy of
 the parameter file used are always saved.

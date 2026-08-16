@@ -37,6 +37,8 @@ contains
 ! 
 !----------------------------------------------------------------------
 subroutine output_init(p, g)
+  ! 契約: m_geoinfo_band_shrink より前に呼ぶこと(領域マスク X0000 の
+  ! 出力が g%x, g%sw の全域確保を前提とするため。m_main の呼び出し順)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   character(len=256) :: fname
@@ -57,6 +59,11 @@ subroutine output_init(p, g)
     open(newunit=un_fnolist, file=trim(fname), status='replace')
     write(un_fnolist, '(a)') "# No., time, t(s), it"
   end if
+
+  ! 領域マスク X0000 を常時出力(Z0000 と同じ扱い。時系列ではないので
+  ! FILENUMBER.csv には載せない。可視化(utils/out2vtk)・GIS での
+  ! 使用領域確認用。§44)
+  call output_maskfile(p, g)
 end subroutine
 
 
@@ -152,6 +159,51 @@ end subroutine
 !======================================================================
 !========================= PRIVATE ROUTINES ===========================
 !======================================================================
+
+!----------------------------------------------------------------------
+! 領域マスクファイル X0000 を出力(rank0 のみ。output_init から)
+!   値: 0 = 領域外、1 = 陸域(x=1 かつ sw=0)、2 = 海域(x=1 かつ sw=1)。
+!   有効マスク(f_masktype=2 の自動生成・海接続の1セル拡張を含む)の
+!   記録であり、入力の fn_mask とは一般に一致しない。
+!   全ランクが全域の g%x, g%sw を保持している段階(band_shrink 前)で
+!   呼ぶこと。collective なし(is_root ガード内は書き込みのみ。§5)
+!----------------------------------------------------------------------
+subroutine output_maskfile(p, g)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  ! 全域スケールの作業配列はヒープに置く(§42)
+  integer, allocatable :: wk(:,:)
+  character(:), allocatable :: fn
+  integer :: i, j
+
+  if (.not. is_root) return
+
+  allocate(wk(1:g%nx, 1:g%ny))
+  do j = 1, g%ny
+    do i = 1, g%nx
+      if (g%x(i,j) <= 0) then
+        wk(i,j) = 0
+      else if (g%sw(i,j) == 1) then
+        wk(i,j) = 2
+      else
+        wk(i,j) = 1
+      end if
+    end do
+  end do
+
+  fn = trim(p%dir_result)//"/X0000"//trim(adjustl(p%outfn_suffix))
+  if (iand(p%f_output_mode, e_fmt_txt) /= 0) then
+    call fileio_write_matrix(fn//".txt", g%nx, g%ny, wk, e_fmt_txt)
+  end if
+  if (iand(p%f_output_mode, e_fmt_bil) /= 0) then
+    call fileio_write_matrix(fn//".bil", g%nx, g%ny, wk, e_fmt_bil)
+    if (g%gr%active) call georef_write_hdr(fn//".hdr", g%gr, g%nx, g%ny, e_pix_int)
+  end if
+  if (iand(p%f_output_mode, e_fmt_gtif) /= 0) then
+    call fileio_write_matrix(fn//".tif", g%nx, g%ny, wk, e_fmt_gtif, g%gr)
+  end if
+end subroutine
+
 
 !----------------------------------------------------------------------
 ! 計算結果の配列をファイルに出力(real)
