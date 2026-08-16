@@ -307,6 +307,9 @@ subroutine m_geomorph_init(gm, p, g, s)
     call par_stop("list_geomorph: morfac must be > 0")
   end if
   gm%morfac = list%morfac
+  ! 加速係数を共有状態へ通知(m_glacier_init が「morfac は全プロセス共通の
+  ! 1個」を検査する。§45。本 init は m_glacier_init より前に走る)
+  s%geo_morfac = gm%morfac
 
   gm%f_creep = list%f_creep
   if (gm%f_creep > 0) then

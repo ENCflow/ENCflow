@@ -13,6 +13,7 @@ module m_main
   use m_meteo, only : t_meteo, m_meteo_init, m_meteo_dispose
   use m_wq, only : t_wq, m_wq_init, m_wq_calc, m_wq_derive, m_wq_record, m_wq_dispose
   use m_snow, only : t_snow, m_snow_init, m_snow_calc, m_snow_dispose
+  use m_glacier, only : t_glacier, m_glacier_init, m_glacier_calc, m_glacier_dispose
   use m_intercept, only : t_intercept, m_intercept_init, m_intercept_calc, m_intercept_step, &
                         m_intercept_has_step, m_intercept_dispose
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc, m_swflow_post
@@ -49,6 +50,7 @@ subroutine m_main_all()
   type(t_meteo) :: mt
   type(t_wq) :: wq
   type(t_snow) :: sn
+  type(t_glacier) :: gl
   type(t_intercept) :: ic
   type(t_swflow) :: sw
   character(len=256) :: fn_sysparam
@@ -106,13 +108,16 @@ subroutine m_main_all()
                                           ! state の z を使うため両者より後に)
   call m_snow_init(sn, p, g, s, mt)       ! snow を初期化(fn_snow 指定時のみ有効。
                                           ! 気温が必須のため meteo より後に)
+  call m_glacier_init(gl, p, g, s, mt)    ! glacier を初期化(fn_glacier 指定時のみ有効。
+                                          ! 気温と積雪(涵養源)が必須のため
+                                          ! meteo・snow より後に。§45)
   call output_init(p, g)                  ! ファイル出力の準備(geoinfoより後に)
 
   ! 地理情報を各ランクに合わせて縮小
   call m_geoinfo_band_shrink(g)           ! マスク類(x,sw,rw)と z(rank0以外)を帯に縮小
 
   ! ==== 時間ループ: すべて帯確保(z のみ rank0 が全域を保持) ====
-  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, sn, ierror)  ! 計算本体
+  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, sn, gl, ierror)  ! 計算本体
 
   ! モジュールを破棄
   call output_dispose()
@@ -126,6 +131,7 @@ subroutine m_main_all()
   call m_meteo_dispose(mt)
   call m_wq_dispose(wq, p, g, s)          ! save は dispose で(m_state より先に走る)
   call m_snow_dispose(sn, p, g, s)        ! save は dispose で(契約5)
+  call m_glacier_dispose(gl, p, g, s)     ! save は dispose で(契約5)
   call m_record_dispose(r)
   call m_state_dispose(s, p)
   call m_boundary_dispose(b)
@@ -151,7 +157,7 @@ end subroutine
 !----------------------------------------------------------------------
 ! 計算本体
 !----------------------------------------------------------------------
-subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, sn, ierror)
+subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, sn, gl, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
@@ -167,6 +173,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, sn, ierro
   type(t_meteo), intent(inout) :: mt   ! 気象強制場(分布気温の読み進みを保持)
   type(t_wq), intent(inout) :: wq      ! 水質(発生源・台帳を保持)
   type(t_snow), intent(inout) :: sn    ! 積雪・融雪(SWE とスナップショットを保持)
+  type(t_glacier), intent(in) :: gl    ! 氷河(氷厚 s%hi と作業台帳を保持)
   integer, intent(out) :: ierror
   integer :: it            ! 時間ループのカウント
   logical :: do_file       ! このステップでファイル出力するか
@@ -183,7 +190,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, sn, ierro
   !   restore 時は save 記録の it(s%it0)から継続する(§7)。
   !   出力ファイル番号 s%ifn も restore 時は続き番号(m_state_init が設定済み)
   call m_state_updatetime(s, p, s%it0)    ! 時刻情報を初期化
-  call m_precip_makepre(pr, p, g, s, pr_updated)  ! 初期降水分布を作成　
+  call m_precip_makepre(pr, p, g, s, mt, pr_updated)  ! 初期降水分布を作成
   if (pr_updated) call m_intercept_calc(ic, p, g, s, 0)  ! 遮断による有効雨量化(fn_intercept 未指定なら no-op)
   call m_state_calcstat(s, p, g)          ! 統計情報を計算
   call m_wq_derive(wq, p, g, s)           ! 初期濃度場の導出(初期出力・プローブより
@@ -214,7 +221,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, sn, ierro
     ! (prtype=3 は makepre が呼ばれても分布を更新しないステップがあり、
     !  そこで遮断を再適用すると二重減衰になる。updated が正本)
     if (mod(it, pr%idt_prupdate) == 0) then
-      call m_precip_makepre(pr, p, g, s, pr_updated)
+      call m_precip_makepre(pr, p, g, s, mt, pr_updated)
       if (pr_updated) call m_intercept_calc(ic, p, g, s, it)
     end if
 
@@ -228,6 +235,12 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, sn, ierro
     call m_snow_calc(sn, p, g, s, mt, &
                      (mod(it, pr%idt_prupdate) == 0 .and. pr_updated) &
                      .or. m_intercept_has_step(ic))
+
+    ! 氷河(fn_glacier 未指定なら no-op。氷面の度日融解を毎ステップ h へ
+    ! 投入し、雪崩再配分・氷化・SIA 流動・氷河侵食を dt_glacier 間隔で
+    ! 行う。侵食時は s%z / s%sd の更新と e 回復・ハロ交換まで済ませる。
+    ! snow の後(SWE を受ける)・swflow の前(融解水を流す)。§45)
+    call m_glacier_calc(gl, p, g, s, mt, it)
 
     ! 境界条件を準備
     call m_boundary_makebdc(b, p, g, s)

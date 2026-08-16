@@ -1,0 +1,78 @@
+!======================================================================
+! English mirror of examples/List_samples/list_glacier.txt.
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+! Glacier settings sample (&list_glacier; developer.md Sec. 45,
+!   docs/glacier_plan.md)
+!   Enabled by fn_glacier = "this file" or "-" in the main parameters.
+!   Air temperature (fn_meteo) and snow (fn_snow; the accumulation
+!   source) are required.
+!   The state is the ice thickness s%hi (m of ice column). Field output
+!   Hi (m); restart uses the private file glacier.dat. The default
+!   initial condition is "no ice + accumulation from snowfall"; for real
+!   glaciers supply fn_glacier_hi0 (e.g. an ice thickness estimation
+!   product).
+!   Time ledgers: flow, erosion and the ice budget advance in geomorphic
+!   time (x gl_morfac), while meltwater and snowfall (SWE) stay in
+!   hydrologic time (the MORFAC ledger separation; when combined with
+!   fn_geomorph, gl_morfac must equal its morfac). Long-term runs are
+!   composed of a repeated representative year (t_cycle) x restart
+!   chaining.
+!======================================================================
+&list_glacier
+  f_glacier = 1             ! 0 temporarily disables while keeping the file
+
+  ! ---- Update interval and time acceleration ----
+  dt_glacier_c = "1 day"    ! interval of firnification, flow and erosion
+  gl_morfac = 1.0           ! glacier/geomorphic time acceleration (must equal
+                            !   morfac of &list_geomorph when combined)
+
+  ! ---- Mass balance (G1) ----
+  gl_dens = 900.0           ! ice density (kg/m3)
+  gl_tfirn_yr = 10.0        ! e-folding time of snow-to-ice conversion
+                            !   (firnification) in years (~a few to 10 for
+                            !   temperate glaciers)
+  gl_ddfi = 8.0             ! degree-day factor of the ice surface
+                            !   (mm/degC/day; required; larger than the snow
+                            !   value, literature ~6-12; ice under snow cover
+                            !   does not melt)
+  gl_tmelt = 0.0            ! temperature threshold of ice melt (degC)
+
+  ! ---- SIA ice flow (G2) ----
+  f_glflow = 1              ! 0: no flow (the simplest hydrological glacier)
+  gl_afl = 1.0e-16          ! Glen flow-law coefficient A (Pa^-3 yr^-1;
+                            !   ~1e-16 for temperate ice; n=3 fixed; the
+                            !   explicit substep is chosen automatically
+                            !   from D_max)
+  !gl_cfl = 0.4             ! subcycling safety factor (0-1)
+  !gl_nsubmax = 10000       ! upper bound of subcycles per update (guard)
+
+  ! ---- Weertman basal sliding (G3; requires f_glflow) ----
+  f_glslide = 0             ! 1 to enable (us = As tau_b^3)
+  !gl_as = 1.0e-13          ! sliding coefficient As (m yr^-1 Pa^-3;
+                            !   required when f_glslide=1)
+
+  ! ---- Glacial erosion (G3; requires f_glslide) ----
+  !   edot = Kg * us^l (us measured in m/yr) lowers s%z. s%sd is reduced
+  !   in step (the bedrock is fixed until sd=0, then bedrock erodes =
+  !   the same structure as the fluvial z/sd co-update). Eroded debris is
+  !   treated as exported from the system (the ledger is reported at
+  !   dispose; a documented simplification, glacier_plan.md Sec. 6)
+  f_glero = 0               ! 1 to enable
+  !gl_kg = 1.0e-4           ! erosion coefficient Kg (dimensionless for l=1;
+                            !   literature around 1e-4)
+  !gl_lexp = 1.0            ! sliding-speed exponent l (1-2)
+
+  ! ---- Gravitational snow redistribution = avalanching (G4) ----
+  !   Moves the SWE of cells whose steepest ice-surface slope (z+hi)
+  !   exceeds the threshold to the steepest-descent neighbor
+  !   (concentrates accumulation from cliffs into cirques)
+  f_glava = 0               ! 1 to enable
+  !gl_ava_tanc = 0.6        ! critical slope tan(theta_c) (0.6 = ~31 deg)
+
+  ! ---- Initial ice thickness (if omitted: 0 = start from no ice) ----
+  !fn_glacier_hi0 = "hi0.txt"  ! distributed initial ice thickness (m of
+                            !   ice; e.g. a clip of the Farinotti et al.
+                            !   global consensus estimate; the restored
+                            !   state wins on restart)
+/

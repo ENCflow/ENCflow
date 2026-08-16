@@ -65,6 +65,7 @@
   !fn_meteo = ""            ! meteorological forcing (air temperature etc.)
   !fn_evap = ""             ! evapotranspiration
   !fn_snow = ""             ! snow accumulation and snowmelt
+  !fn_glacier = ""          ! glaciers (accumulation, flow, erosion)
   !fn_gwflow = ""           ! groundwater
   !fn_geomorph = ""         ! sediment and landform evolution
   !fn_wq = ""               ! water quality (load runoff)

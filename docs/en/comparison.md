@@ -60,7 +60,7 @@ Sources (confirmed 2026-08-10):
 | Sediment and landform change (bedload, suspension, collapse, debris flow) | Yes, with MORFAC | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | For debris/mud flow (landslide-triggered runout and deposition), the representative free practical tool is Morpho2DH (iRIC); ENCflow differs in housing debris flow together with catchment hydrology and flooding |
 | Water quality (load runoff, decay, settling, buildup-washoff) | Yes | MIKE ECO Lab, Delft3D-WAQ, Iber-WQ, GSSHA | Free and open coexistence of hydrology + water quality + hydraulics is rare |
 | Snow accumulation and snowmelt | Yes: degree-day method (Sec. 31; 2026-08-10) | MIKE SHE, GSSHA, SHETRAN (also degree-day family) | For HEC-RAS this is on the HMS side |
-| Glaciers | No (SIA designed in as a future slot) | Absent from all general-purpose flood models | The domain of dedicated models (PISM, Elmer/Ice, OGGM) |
+| Glaciers | Yes: degree-day mass balance + SIA flow + sliding + glacial erosion + avalanche redistribution (Sec. 45; 2026-08-16) | Absent from all general-purpose flood models | Detailed ice dynamics remain the domain of dedicated models (PISM, Elmer/Ice, OGGM). Running glaciers alongside flood hydraulics, catchment hydrology, and landform change in a single model has no counterpart |
 | Long-term landform evolution | Yes: weathering, uplift, cyclic forcing (Sec. 32; 2026-08-10) | CAESAR-Lisflood, Landlab, Badlands, FastScape | Driven by real hydraulics, on par with CAESAR-Lisflood. See Sec. 4 |
 | Parallelization | OpenMP + MPI. **Bit reproducibility regardless of rank count** | TELEMAC/Delft3D use MPI (bit reproducibility not guaranteed) | Deterministic reductions (Sec. 11) are the differentiator |
 | Restart exactness | Yes (module-private save contract; Sec. 7) | Commercial products generally support this | Thorough examples are rare in the open camp |
@@ -90,7 +90,7 @@ Sources (confirmed 2026-08-10):
   limits and the commercial GUI-first products.
 - (Added 2026-08-14, updated 2026-08-16) In addition to features, a
   first full round of user-facing groundwork is now in place: a
-  17-chapter user's guide plus a full parameter index (370 entries),
+  18-chapter user's guide plus a full parameter index (401 entries),
   annotated namelist samples for every feature
   (examples/List_samples), and 2 hands-on tutorials (minimal example
   wave, real terrain chichibu; from the pitfalls of real data --
@@ -115,11 +115,16 @@ Sources (confirmed 2026-08-10):
   partitioning + snowline by elevation lapse rate + direct injection
   of snowmelt into h. The energy balance method comes after adding
   radiation and wind speed slots to m_meteo (handoff 1m).
-- **Glaciers**: hydrologically, a glacier is "a perennial snowpack
-  with accumulation and ablation", an extension of the degree-day
-  method (the same idea as OGGM). If ice-body flow is to be included,
-  the SIA (shallow ice approximation) has a structure similar to the
-  shallow water equations, so it fits the framework well.
+- **Glaciers**: implemented (m_glacier; Sec. 45; 2026-08-16).
+  Degree-day mass balance (the same idea as OGGM) + SIA ice flow
+  (a nonlinear diffusion solved with the existing conservative
+  two-loop pattern) + Weertman sliding + a sliding-speed power-law
+  erosion rule + avalanche redistribution. Glacial landform formation
+  (cirques etc.) runs as repeated representative years x MORFAC x
+  restart chaining (the same recipe as Sec. 32.3). The design master
+  copy is docs/glacier_plan.md. Detailed ice dynamics (higher-order
+  approximations, ice temperature, calving) are deliberately left to
+  PISM / Elmer/Ice.
 - **Long-term landform evolution**: the supply side (bedrock
   weathering = soil production function, uplift) and cyclic forcing
   t_cycle are implemented (Sec. 32; 2026-08-10). Together with the

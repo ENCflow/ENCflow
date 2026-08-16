@@ -100,6 +100,7 @@ module m_state
     integer, allocatable :: ddir8(:,:)  ! all down stream direction flag (sum(2**(1~8)))
     real :: hgmean = 0.0     ! 領域平均の地下貯留高(m)。gw_active 時のみ更新
     real :: swemean = 0.0    ! 領域平均の積雪水量(m)。fn_snow 有効時のみ更新
+    real :: himean = 0.0     ! 領域平均の氷河貯留(m 水当量)。fn_glacier 有効時のみ更新
     logical :: gw_active = .false.  ! 地下水モデルの有効化(m_gwflow_init が設定)
     real, allocatable :: cq(:,:)        ! 輸送物質柱状量 (g/m2。§30。濃度 = cq/vh は
                                         ! 導出量 cqc。移流は swflow_enc がステップ内で
@@ -116,6 +117,14 @@ module m_state
     real, allocatable :: swe(:,:)       ! 積雪水量 SWE (m 水柱。幾何面積基底。
                                         ! m_snow が確保・更新・保存する。
                                         ! fn_snow 未指定なら未確保。§31)
+    real, allocatable :: hi(:,:)        ! 氷河の氷厚 (m 氷柱。幾何面積基底。水当量は
+                                        ! hi×(ρi/ρw)。m_glacier が確保・更新・保存する。
+                                        ! fn_glacier 未指定なら未確保。§45)
+    real :: geo_morfac = 0.0 ! geomorph の地形時間加速係数(m_geomorph_init が設定。
+                             ! 0 = geomorph 無効。m_glacier_init が「morfac は
+                             ! 全プロセス共通の1個」の検査に使う。§45)
+    real :: gl_ir = 0.0      ! 氷の密度比 ρi/ρw(m_glacier_init が設定。himean の
+                             ! 水当量換算に使う。fn_glacier 無効時は未使用)
     real, allocatable :: fxg(:,:)       ! 浸透フラックスの記録 (m。gwflow の鉛直交換が
                                         ! 書き、m_wq が読んでゼロ戻し。§30 の契約。
                                         ! 確保は m_wq_init(f_wq_infil=1 のときのみ))
@@ -337,6 +346,7 @@ subroutine m_state_calcstat(s, p, g)
   real(real64) :: hgsum
   real(real64) :: hgsum_j(dcp%js:dcp%je)
   real(real64) :: swesum_j(dcp%js:dcp%je), swesum
+  real(real64) :: hisum_j(dcp%js:dcp%je), hisum
   real :: qcumf
   real :: dtpdx     ! dt / min(dx, dy)
   real :: cosdir
@@ -350,6 +360,7 @@ subroutine m_state_calcstat(s, p, g)
   hgsum = 0
   hgsum_j(:) = 0.0
   swesum_j(:) = 0.0
+  hisum_j(:) = 0.0
   hmax = 0
   vvmax = 0
   qqmax = 0
@@ -371,6 +382,10 @@ subroutine m_state_calcstat(s, p, g)
       ! 積雪は乾燥セルにも存在するため h 判定より前に計上する(§31)
       if (allocated(s%swe)) then
         if (s%swe(i,j) > 0.0) swesum_j(j) = swesum_j(j) + s%swe(i,j)
+      end if
+      ! 氷河の氷も同様(氷厚のまま総和し、平均化の際に水当量へ換算。§45)
+      if (allocated(s%hi)) then
+        if (s%hi(i,j) > 0.0) hisum_j(j) = hisum_j(j) + s%hi(i,j)
       end if
       ! 地下水も乾燥セルに存在するため h 判定より前に計上する
       ! (浸透で乾いたセルの hg が S_grnd から漏れ、S_total が見かけ上
@@ -431,6 +446,12 @@ subroutine m_state_calcstat(s, p, g)
   if (allocated(s%swe)) then
     call par_sum_rows(swesum_j, swesum)
     s%swemean = swesum / s%n_valcells
+  end if
+  ! 氷河貯留の総和(判定 allocated(s%hi) は namelist 由来 = 全ランク同一)。
+  ! 水当量への密度比換算 gl_ir は m_glacier_init が s に設定する
+  if (allocated(s%hi)) then
+    call par_sum_rows(hisum_j, hisum)
+    s%himean = hisum / s%n_valcells * s%gl_ir
   end if
   rmax = [hmax, vvmax, qqmax, cnmax]
   call par_allreduce_max(rmax)
@@ -494,10 +515,11 @@ subroutine m_state_printstate(p, s)
   !     S_total には積雪水量も算入(閉じた系の保存監視列) ---
   ns = 1
   sblk(1) = hmean
-  if (s%gw_active .or. allocated(s%swe)) then
-    ! 全水量列は積雪水量も算入(fn_snow 無効時は swemean=0 で従来と同値)
+  if (s%gw_active .or. allocated(s%swe) .or. allocated(s%hi)) then
+    ! 全水量列は積雪水量・氷河貯留(水当量)も算入
+    ! (fn_snow / fn_glacier 無効時は 0 で従来と同値)
     sblk(2) = s%hgmean
-    sblk(3) = hmean + s%hgmean + s%swemean
+    sblk(3) = hmean + s%hgmean + s%swemean + s%himean
     ns = 3
   end if
 
@@ -608,6 +630,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%bp)) deallocate(s%bp)
   if (allocated(s%hg2)) deallocate(s%hg2)
   if (allocated(s%swe)) deallocate(s%swe)
+  if (allocated(s%hi)) deallocate(s%hi)
   if (allocated(s%fxg)) deallocate(s%fxg)
   if (allocated(s%tide)) deallocate(s%tide)
   if (allocated(s%hmax)) deallocate(s%hmax)

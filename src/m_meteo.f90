@@ -8,6 +8,14 @@ module m_meteo
   !            終端は端値保持。rank0 読み+帯 scatter)
   !   標高減率: 一様入力のみ。T(z) = Tb − γ(z − zref)。zref 省略時は
   !            使用セルの領域最低標高(min の allreduce = 決定的)
+  !   長周期の気候変調(tempofs。§45): 気温オフセット系列 ΔT(t) を
+  !            t_cycle で折り返さない実時間軸で線形補間し、気温入力
+  !            (一様・分布とも)へ加算する。代表年反復(t_cycle)に
+  !            氷期サイクル等の長期トレンドを重畳する用途
+  !   降水の標高勾配(f_prec_lapse。§45): 倍率 max(0, 1 + β(z − zref))
+  !            を meteo_prec_factor で提供し、m_precip が降水へ乗じる
+  !            (山岳の涵養増加の簡便表現。分布降水入力でも表現できるが、
+  !            一様入力+勾配の簡易指定を §0-6 の範囲で提供する)
   !   評価: 消費者が meteo_temp_set(teval) で評価時刻をセットし(分布
   !         ファイルの読み進みを含むため collective = 全ランク同一時刻で
   !         呼ぶこと)、meteo_temp_cell / meteo_temp_mean / _global で
@@ -35,6 +43,7 @@ module m_meteo
   public :: meteo_temp_cell
   public :: meteo_temp_global
   public :: meteo_temp_mean
+  public :: meteo_prec_factor
 
   real, parameter :: secday = 86400.0
 
@@ -57,7 +66,15 @@ module m_meteo
     logical :: lapse = .false.
     real :: gam = 0.0              ! 気温減率 (℃/m)
     real :: zref = 0.0             ! 減率の基準標高 (m)
-    real :: tb = 0.0               ! 現在の評価時刻の一様基準気温(℃。set が更新)
+    real :: tb = 0.0               ! 現在の評価時刻の一様基準気温(℃。set が更新。
+                                   !   一様系は気候変調 tofs 込み)
+    integer :: nofs = 0            ! 気候変調系列の点数(0 = なし)
+    real, allocatable :: ofsser(:,:)  ! 気温オフセット系列 (1:2,1:nofs) = (s, ℃)
+    real :: tofs = 0.0             ! 現在の評価時刻のオフセット(℃。set が更新。
+                                   !   分布入力の加算用。一様系は tb に合成済み)
+    logical :: plapse = .false.    ! 降水の標高勾配の有効化
+    real :: plgrad = 0.0           ! 降水の増率 (1/m)
+    real :: pzref = 0.0            ! 降水勾配の基準標高 (m)
   end type
 
 contains
@@ -74,8 +91,7 @@ subroutine m_meteo_init(mt, p, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   type(t_list_meteo) :: list
-  integer :: k, nsrc
-  real :: zmin
+  integer :: nsrc
 
   if (len_trim(p%fn_meteo) == 0) return
 
@@ -114,20 +130,72 @@ subroutine m_meteo_init(mt, p, g, s)
     if (list%temp_zref > -9998.0) then
       mt%zref = list%temp_zref
     else
-      ! 既定 = 領域(使用セル)の最低標高。min は演算順によらず厳密 = 決定的
-      zmin = huge(zmin)
-      do k = dcp%js, dcp%je
-        zmin = min(zmin, minval(s%z(g%wx(1,k):g%wx(2,k), k), &
-                                mask = g%x(g%wx(1,k):g%wx(2,k), k) > 0))
-      end do
-      call par_allreduce_min(zmin)
-      mt%zref = zmin
+      mt%zref = zmin_domain(g, s)
+    end if
+  end if
+
+  ! --- 長周期の気候変調(気温オフセット系列。§45) ---
+  if (list%tempofs(1,1) > -9998.0) then
+    call setup_ofsseries(mt, list)
+  end if
+
+  ! --- 降水の標高勾配(§45) ---
+  if (list%f_prec_lapse > 0) then
+    mt%plapse = .true.
+    mt%plgrad = list%prec_lapse / 100.0 / 100.0   ! %/100m -> 1/m
+    if (list%prec_zref > -9998.0) then
+      mt%pzref = list%prec_zref
+    else
+      mt%pzref = zmin_domain(g, s)
     end if
   end if
 
   mt%enabled = .true.
   mt%initialized = .true.
   call par_info("meteo forcing enabled (temperature)")
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 領域(使用セル)の最低標高(基準標高の既定値。min は演算順によらず
+! 厳密 = 決定的。collective)
+!----------------------------------------------------------------------
+function zmin_domain(g, s) result(zmin)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  real :: zmin
+  integer :: k
+  zmin = huge(zmin)
+  do k = dcp%js, dcp%je
+    zmin = min(zmin, minval(s%z(g%wx(1,k):g%wx(2,k), k), &
+                            mask = g%x(g%wx(1,k):g%wx(2,k), k) > 0))
+  end do
+  call par_allreduce_min(zmin)
+end function
+
+
+!----------------------------------------------------------------------
+! 気候変調(気温オフセット)系列の変換(経過日 -> 秒。tempval と同じ規約)
+!----------------------------------------------------------------------
+subroutine setup_ofsseries(mt, list)
+  type(t_meteo), intent(inout) :: mt
+  type(t_list_meteo), intent(in) :: list
+  integer :: k, n
+  n = 0
+  do k = 1, nmtmax
+    if (list%tempofs(1,k) <= -9998.0) exit     ! 番兵で終端
+    n = n + 1
+  end do
+  if (n < 1) call par_stop("list_meteo: tempofs is empty")
+  do k = 2, n
+    if (list%tempofs(1,k) <= list%tempofs(1,k-1)) then
+      call par_stop("list_meteo: tempofs must have monotonically increasing times (elapsed days)")
+    end if
+  end do
+  allocate(mt%ofsser(1:2, 1:n))
+  mt%ofsser(1,1:n) = list%tempofs(1,1:n) * secday    ! 日 -> 秒
+  mt%ofsser(2,1:n) = list%tempofs(2,1:n)
+  mt%nofs = n
 end subroutine
 
 
@@ -219,15 +287,18 @@ subroutine meteo_temp_set(mt, p, g, teval)
   logical :: found
 
   if (.not. mt%enabled) call par_stop("meteo: air temperature requested but fn_meteo is not set")
+  ! 気候変調オフセット(t_cycle で折り返さない実時間軸で評価。§45)。
+  ! 一様系は tb に合成し、分布(map)はセル値取り出しで加算する
+  if (mt%nofs > 0) mt%tofs = interp_series(mt%ofsser, mt%nofs, teval)
   select case (mt%tsrc)
     case (e_tsrc_const)
-      mt%tb = mt%t0c
+      mt%tb = mt%t0c + mt%tofs
     case (e_tsrc_series)
       ! 周期強制 t_cycle 指定時は mod で折り返す(§32.4。分布 map は対象外)
       if (p%t_cycle > 0.0) then
-        mt%tb = interp_series(mt%tser, mt%ntser, mod(max(teval, 0.0), p%t_cycle))
+        mt%tb = interp_series(mt%tser, mt%ntser, mod(max(teval, 0.0), p%t_cycle)) + mt%tofs
       else
-        mt%tb = interp_series(mt%tser, mt%ntser, teval)
+        mt%tb = interp_series(mt%tser, mt%ntser, teval) + mt%tofs
       end if
     case (e_tsrc_map)
       need = min(max(int(floor(max(teval, 0.0) / mt%dtmap)) + 1, 1), mt%nmap)
@@ -259,7 +330,7 @@ function meteo_temp_cell(mt, i, j, zc) result(tc)
   real, intent(in) :: zc
   real :: tc
   if (mt%tsrc == e_tsrc_map) then
-    tc = mt%tmap(i,j)
+    tc = mt%tmap(i,j) + mt%tofs
   else if (mt%lapse) then
     tc = mt%tb - mt%gam * (zc - mt%zref)
   else
@@ -283,7 +354,7 @@ function meteo_temp_global(mt, i, j, zc) result(tc)
     w1(1) = 0.0
     if (j >= dcp%js .and. j <= dcp%je) w1(1) = mt%tmap(i,j)
     call par_allreduce_sumr(w1)
-    tc = w1(1)
+    tc = w1(1) + mt%tofs
   else
     tc = meteo_temp_cell(mt, i, j, zc)
   end if
@@ -322,10 +393,24 @@ function meteo_temp_mean(mt, g) result(tc)
   call par_allreduce_sumr(w1)     ! セル数(整数値の和 = 丸め順不問で厳密)
   tnum = w1(1)
   if (tnum > 0.0) then
-    tc = real(rsum) / tnum
+    tc = real(rsum) / tnum + mt%tofs
   else
     tc = 0.0
   end if
+end function
+
+
+!----------------------------------------------------------------------
+! 降水の標高倍率(f_prec_lapse。§45)。max(0, 1 + β(z − zref))。
+! (t, z) の純関数で全ランク同値。無効時は常に 1(呼び出し側は
+! mt%plapse でガードして乗算自体を省いてよい = ビット互換)
+!----------------------------------------------------------------------
+function meteo_prec_factor(mt, zc) result(f)
+  type(t_meteo), intent(in) :: mt
+  real, intent(in) :: zc
+  real :: f
+  f = 1.0
+  if (mt%plapse) f = max(0.0, 1.0 + mt%plgrad * (zc - mt%pzref))
 end function
 
 
@@ -335,6 +420,7 @@ end function
 subroutine m_meteo_dispose(mt)
   type(t_meteo), intent(inout) :: mt
   if (allocated(mt%tser)) deallocate(mt%tser)
+  if (allocated(mt%ofsser)) deallocate(mt%ofsser)
   if (allocated(mt%mapfiles)) deallocate(mt%mapfiles)
   if (allocated(mt%tmap)) deallocate(mt%tmap)
   mt%enabled = .false.

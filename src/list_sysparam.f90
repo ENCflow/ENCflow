@@ -102,6 +102,7 @@ module list_sysparam
     character(len=maxpathlen) :: fn_meteo = ""           ! 気象強制場設定ファイル
     character(len=maxpathlen) :: fn_wq = ""              ! 水質(負荷流出)設定ファイル
     character(len=maxpathlen) :: fn_snow = ""            ! 積雪・融雪設定ファイル
+    character(len=maxpathlen) :: fn_glacier = ""         ! 氷河設定ファイル
     character(len=maxpathlen) :: fn_channel = ""         ! 河道条件設定ファイル
     character(len=maxpathlen) :: fn_enc = ""             ! ENC設定ファイル
 
@@ -201,6 +202,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: fn_meteo      ! 気象強制場設定ファイル
   character(:), allocatable :: fn_wq         ! 水質(負荷流出)設定ファイル
   character(:), allocatable :: fn_snow       ! 積雪・融雪設定ファイル
+  character(:), allocatable :: fn_glacier    ! 氷河設定ファイル
   character(:), allocatable :: fn_channel    ! 河道条件設定ファイル
   character(:), allocatable :: fn_enc        ! ENC設定ファイル
   character(:), allocatable :: fn_log        ! 状態ログファイル
@@ -225,7 +227,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_ddd, f_out_dda, f_out_pre, f_out_hrs, f_out_fr, f_out_cn, f_out_hg, &
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
                         fn_structure, &
-                        fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_evap, fn_meteo, fn_wq, fn_snow, fn_channel, fn_enc, &
+                        fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_evap, fn_meteo, fn_wq, fn_snow, fn_glacier, fn_channel, fn_enc, &
                         fn_log, dir_data, dir_result, dir_save, outfn_suffix
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
@@ -310,6 +312,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   fn_meteo = list%fn_meteo
   fn_wq = list%fn_wq
   fn_snow = list%fn_snow
+  fn_glacier = list%fn_glacier
   fn_channel = list%fn_channel
   fn_enc = list%fn_enc
   fn_log = list%fn_log
@@ -404,6 +407,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%fn_meteo = fn_meteo
   list%fn_wq = fn_wq
   list%fn_snow = fn_snow
+  list%fn_glacier = fn_glacier
   list%fn_channel = fn_channel
   list%fn_enc = fn_enc
   list%fn_log = fn_log
@@ -427,6 +431,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   if (trim(list%fn_meteo) == "-") list%fn_meteo = trim(fn_sysparam)
   if (trim(list%fn_wq) == "-") list%fn_wq = trim(fn_sysparam)
   if (trim(list%fn_snow) == "-") list%fn_snow = trim(fn_sysparam)
+  if (trim(list%fn_glacier) == "-") list%fn_glacier = trim(fn_sysparam)
   if (trim(list%fn_channel) == "-") list%fn_channel = trim(fn_sysparam)
   if (trim(list%fn_enc) == "-") list%fn_enc = trim(fn_sysparam)
 

@@ -33,11 +33,12 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [降雨・気象](users_guide/forcing.md)(&list_precip / intercept / meteo / evap / snow)— 降水・遮断・気温・蒸発散・積雪融雪
 - [地下水](users_guide/gwflow.md)(&list_gwflow とモデル固有設定)— 浸透・側方流動・風化基岩層
 - [土砂・地形変化](users_guide/geomorph.md)(&list_geomorph)— 掃流砂・浮遊砂・斜面浸食・土石流・長期地形発達
+- [氷河](users_guide/glacier.md)(&list_glacier)— 涵養・融解・氷体流動・氷河侵食・雪崩再配分
 - [水質](users_guide/wq.md)(&list_wq)— 負荷投入・輸送・減衰・洗い出し
 - [計測](users_guide/record.md)(&list_record)— プローブ・フラックス測線
 
 **付録**
-- [全パラメータ索引](users_guide/params_index.md) — 全370パラメータの名前→章の逆引き
+- [全パラメータ索引](users_guide/params_index.md) — 全401パラメータの名前→章の逆引き
 
 ---
 
@@ -68,6 +69,7 @@ ENCflow は、1本の時間発展ループの上に機能(プロセスモジュ�
 | 気象強制場(気温ほか) | `fn_meteo` | &list_meteo |
 | 蒸発散 | `fn_evap` | &list_evap |
 | 積雪・融雪 | `fn_snow` | &list_snow |
+| 氷河 | `fn_glacier` | &list_glacier |
 | 地下水 | `fn_gwflow` | &list_gwflow(+ モデル固有) |
 | 土砂・地形変化 | `fn_geomorph` | &list_geomorph |
 | 水質(負荷流出) | `fn_wq` | &list_wq |
@@ -170,6 +172,7 @@ ENCflow は、1本の時間発展ループの上に機能(プロセスモジュ�
 | 土砂輸送・土石流 | [土砂・地形変化](users_guide/geomorph.md) |
 | 汚濁負荷・物質輸送 | [水質](users_guide/wq.md) |
 | 融雪を含む計算 | [降雨・気象](users_guide/forcing.md)(積雪・融雪+気温減率) |
+| 氷河の融解水・カール地形の形成 | [氷河](users_guide/glacier.md)(+降雨・気象、長期は中断と再開) |
 | 観測点との比較・流量測線 | [計測](users_guide/record.md) |
 | 長時間計算の分割・シナリオ分岐 | [中断と再開](users_guide/restart.md) |
 | GIS データ(GeoTIFF 等)の入出力 | [座標系](users_guide/coordinates.md)+[入出力](users_guide/io.md) |
