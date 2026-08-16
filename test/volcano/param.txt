@@ -1,0 +1,88 @@
+!======================================================================
+! volcano(構成1: Voellmy 定常等流ベンチマーク)
+!   等勾配斜面(tanθ=0.2, 150m x 8m)の上流端に混合体の区間流入
+!   (Q=4.0 m3/s, 濃度 cs=0.8=hs/h 比)を与え、Voellmy 抵抗則
+!   (f_dbres=4: 降伏 μ + 乱流項 gV²/(ξh))の定常等流を発達させる。
+!   解析解(駆動 ge・tanθ = ge・μ + ge・V²/(ξ・h_t) と連続 q_m = V・h_t):
+!     h_t = (q_m² / (ξ・(tanθ − μ)))^(1/3),  V = q_m / h_t
+!   ge が両辺で相殺するため f_gravity_correction の有無に依らない。
+!   E-D は交換なし(f_dbed=0 の等価流体モード)なので、閉領域の台帳
+!     Σh = Q・tt,  Σhs + (1-λ)Σ(z-z0) = cs・Q・tt
+!   が機械精度で成立する(Check_volcano.py voellmy モード)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02
+  t0 = 0
+  tt = 120
+  dt_disp = 10
+  dt_file = 120
+  dt_recrd = 120
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result'
+  dir_save = 'save'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_enc
+  f_gravity_correction = 1
+  p_diagratio = 0.0         ! 4近傍化(斜めエッジの通過幅ゼロ)。8方向配分では
+                            !   斜めエッジの勾配低下×降伏 μ の非線形で実効通水能が
+                            !   下がり、1次元解析解と直接比較できないため
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 乾いた斜面(流入だけが供給する)
+/
+
+&list_geoinfo
+  lx = 150.0
+  ly = 8.0
+  nx = 150
+  ny = 8
+  f_ztype = 1
+  fn_z = 'zinit.txt'        ! 等勾配斜面 tanθ=0.2(make_init.py z)
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 1.0                 ! 土層厚(f_dbed=0 は交換なしのため実質不使用。
+                            !   geomorph 有効時は sd0 > 0 が必須)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_debris = 1
+  f_dbed = 0                ! 交換なし(等価流体モード: 移流・停止のみ)
+  f_dbres = 4               ! Voellmy(μ + gV²/(ξh))
+  db_mu = 0.1               ! 摩擦係数 μ
+  db_xi = 200.0             ! 乱流係数 ξ (m/s²)
+  db_vstop = 0.05
+  fluv_porosity = 0.4       ! λ(C* = 0.6。台帳の (1-λ) に使用)
+/
+
+!======================================================================
+! 区間流入(西辺 (1,1)-(1,8)。混合体 = 水 Q + 土砂 cs・Q の一定時系列)
+!======================================================================
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 1
+  inflow_cell(1:2,2,1) = 1, 2
+  inflow_cell(1:2,3,1) = 1, 3
+  inflow_cell(1:2,4,1) = 1, 4
+  inflow_cell(1:2,5,1) = 1, 5
+  inflow_cell(1:2,6,1) = 1, 6
+  inflow_cell(1:2,7,1) = 1, 7
+  inflow_cell(1:2,8,1) = 1, 8
+  inflow_val(1:2,1,1) = 0, 4.0
+  inflow_val(1:2,2,1) = 9999, 4.0
+  inflow_cs(1:2,1,1) = 0, 0.8
+  inflow_cs(1:2,2,1) = 9999, 0.8
+  inflow_dist(1) = 0
+/

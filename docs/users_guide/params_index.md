@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 370 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 377 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -46,13 +46,20 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | dam_tadashigaki | &list_struct_dam | [構造物](structure.md) |
 | dam_zbase | &list_struct_dam | [構造物](structure.md) |
 | date0_c | &list_sysparam | [時刻の管理](time.md) |
+| db_cmin | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| db_d50 | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_deltd | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_delte | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| db_erest | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| db_mu | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_phi | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_relsat | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_reltime | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| db_satbed | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| db_tauy | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_vstop | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_wstop | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| db_xi | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | dd | &list_sysparam | [浅水流計算](swflow.md) |
 | depth_rw | &list_geoinfo | [地理情報](geoinfo.md) |
 | dir_data | &list_sysparam | [入出力](io.md) |
@@ -108,8 +115,10 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_check_cfl | &list_sysparam | [浅水流計算](swflow.md) |
 | f_creep | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dam_mode | &list_struct_dam | [構造物](structure.md) |
+| f_dbed | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbres | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbstop | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| f_dbwet | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_debris | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_diffusion_term | &list_enc | [浅水流計算](swflow.md) |
 | f_disp_cn | &list_sysparam | [入出力](io.md) |

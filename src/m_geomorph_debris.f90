@@ -63,17 +63,23 @@ module subroutine init_debris(gm, p, g, list)
   integer :: k
   real, parameter :: deg2rad = acos(-1.0) / 180.0
 
-  if (list%db_phi <= 0.0 .or. list%db_phi >= 90.0) then
-    call par_stop("list_geomorph: f_debris requires db_phi in (0, 90) deg")
+  ! 内部摩擦角 φ は E-D(f_dbed>=1)と濃度依存の降伏抵抗(f_dbres=1,2)が
+  ! 使う。等価流体構成(f_dbed=0 + f_dbres=0,3,4,5)では不要
+  if (list%f_dbed >= 1 .or. list%f_dbres == 1 .or. list%f_dbres == 2) then
+    if (list%db_phi <= 0.0 .or. list%db_phi >= 90.0) then
+      call par_stop("list_geomorph: f_debris requires db_phi in (0, 90) deg")
+    end if
+    gm%db_tanphi = tan(list%db_phi * deg2rad)
+    ! 石礫型領域(tanθ > 0.138)で分母 tanφ − tanθ が定義されるための下限
+    if (gm%db_tanphi <= db_tan1) then
+      call par_stop("list_geomorph: db_phi is too small, tan(phi) > 0.138 is required " &
+                    // "(internal friction angle of sediment is usually 30-40 deg)")
+    end if
   end if
-  gm%db_tanphi = tan(list%db_phi * deg2rad)
-  ! 石礫型領域(tanθ > 0.138)で分母 tanφ − tanθ が定義されるための下限
-  if (gm%db_tanphi <= db_tan1) then
-    call par_stop("list_geomorph: db_phi is too small, tan(phi) > 0.138 is required " &
-                  // "(internal friction angle of sediment is usually 30-40 deg)")
+  if (list%f_dbed >= 1) then
+    if (list%db_delte <= 0.0) call par_stop("list_geomorph: db_delte must be > 0")
+    if (list%db_deltd <= 0.0) call par_stop("list_geomorph: db_deltd must be > 0")
   end if
-  if (list%db_delte <= 0.0) call par_stop("list_geomorph: db_delte must be > 0")
-  if (list%db_deltd <= 0.0) call par_stop("list_geomorph: db_deltd must be > 0")
   gm%db_delte = list%db_delte
   gm%db_deltd = list%db_deltd
   ! C* = 1 − λ(空隙率は土砂プロセス共有の fluv_porosity。新パラメータに
@@ -104,7 +110,7 @@ module subroutine init_debris(gm, p, g, list)
   !       レートは δe/δd・q_T/d_L(db_d50 必須)。
   !       典拠: 高橋・中川, 新砂防 44(3), 1991, 12-19
   select case (list%f_dbed)
-    case (1, 2)
+    case (0, 1, 2)      ! 0 = 交換なし(等価流体モード: 移流・停止のみ)
       gm%f_dbed = list%f_dbed
     case (3)
       if (list%db_d50 <= 0.0) then
@@ -112,8 +118,8 @@ module subroutine init_debris(gm, p, g, list)
       end if
       gm%f_dbed = list%f_dbed
     case default
-      call par_stop("list_geomorph: f_dbed must be 1(simplified), 2(Egashira-Ashida)" &
-                    // " or 3(Takahashi-Nakagawa 1991)")
+      call par_stop("list_geomorph: f_dbed must be 0(no exchange), 1(simplified)," &
+                    // " 2(Egashira-Ashida) or 3(Takahashi-Nakagawa 1991)")
   end select
 
   ! 抵抗則(実体は m_swflow_enc。パラメータをここで検証して渡す。
@@ -149,16 +155,44 @@ module subroutine init_debris(gm, p, g, list)
       if (list%db_cmin <= 0.0 .or. list%db_cmin >= gm%db_cstar) then
         call par_stop("list_geomorph: db_cmin must be in (0, C*)")
       end if
+    case (4)      ! Voellmy 等価流体(降伏 μ + 乱流項 gV²/(ξh)。RAMMS/Titan2D 系)
+      if (list%db_mu <= 0.0) then
+        call par_stop("list_geomorph: f_dbres=4 requires db_mu > 0(Voellmy 摩擦係数)")
+      end if
+      if (list%db_xi <= 0.0) then
+        call par_stop("list_geomorph: f_dbres=4 requires db_xi > 0(Voellmy 乱流係数 m/s²)")
+      end if
+      if (list%db_vstop <= 0.0) then
+        call par_stop("list_geomorph: f_dbres=4 requires db_vstop > 0(降伏判定の閾値)")
+      end if
+      if (list%db_cmin <= 0.0 .or. list%db_cmin >= gm%db_cstar) then
+        call par_stop("list_geomorph: db_cmin must be in (0, C*)")
+      end if
+    case (5)      ! 一定停止応力 τ_y + マニング合成(VolcFlow 型)
+      if (list%db_tauy <= 0.0) then
+        call par_stop("list_geomorph: f_dbres=5 requires db_tauy > 0(停止応力 Pa)")
+      end if
+      if (list%db_vstop <= 0.0) then
+        call par_stop("list_geomorph: f_dbres=5 requires db_vstop > 0(降伏判定の閾値)")
+      end if
+      if (list%db_cmin <= 0.0 .or. list%db_cmin >= gm%db_cstar) then
+        call par_stop("list_geomorph: db_cmin must be in (0, C*)")
+      end if
     case default
       call par_stop("list_geomorph: f_dbres must be 0(Manning), 1(Coulomb+Manning)," &
-                    // " 2(Egashira) or 3(Takahashi-Nakagawa 1991)")
+                    // " 2(Egashira), 3(Takahashi-Nakagawa 1991), 4(Voellmy)" &
+                    // " or 5(constant retarding stress)")
   end select
+  gm%db_mu = list%db_mu
+  gm%db_xi = list%db_xi
+  gm%db_tauy = list%db_tauy
   gm%f_dbres = list%f_dbres
   gm%db_d50v = list%db_d50
   gm%db_erest = list%db_erest
   gm%db_cmin = list%db_cmin
   call m_swflow_enc_set_debris(gm%f_dbres, gm%db_tanphi, gm%sgrav, gm%db_vstop, &
-                               gm%db_cstar, gm%db_cmin, gm%db_d50v, gm%db_erest)
+                               gm%db_cstar, gm%db_cmin, gm%db_d50v, gm%db_erest, &
+                               gm%db_mu, gm%db_xi, gm%db_tauy)
 
   ! 間隙水の連行(f_dbwet。高橋・中川1991 式(5)の源泉 i{c*+(1−c*)s_b} 形)
   select case (list%f_dbwet)
@@ -298,7 +332,13 @@ module subroutine calc_debris(gm, p, g, s, dtw)
         hm = s%h(i,j) + max(s%hs(i,j), 0.0)
         cc = 0.0
         if (s%hs(i,j) > 0.0) cc = s%hs(i,j) / hm
-        if (gm%f_dbed == 2) then
+        if (gm%f_dbed == 0) then
+          ! 交換なし(等価流体モード: 移流・停止のみ。火砕流・岩屑なだれ —
+          ! debris_plan.md 火山編)。f_dbstop=1 の平衡濃度は 0 扱い =
+          ! 低速セルの hs 全量が db_wstop レートで河床へ固定される
+          fx = 0.0
+          cinf = 0.0
+        else if (gm%f_dbed == 2) then
           ! 江頭・芦田(1992): E = |V|・C*・tan(θ−θe)(流向の河床勾配。
           ! 侵食・堆積が1本の式で連続。Morpho2DH 式(5)-(7))
           if (s%vv(i,j) > 0.0) then

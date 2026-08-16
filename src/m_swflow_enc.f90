@@ -77,7 +77,8 @@ module m_swflow_enc
   !   運動量への hs 算入(重力・圧力項の水面 = z+h+hs、摩擦水深 = h+hs)は
   !   debris_active で常時、クーロン抵抗と降伏判定は db_res=1 のとき有効
   integer :: db_res = 0                     ! 抵抗則 (0:マニングのみ, 1:クーロン+マニング,
-                                            !   2:江頭構成則)
+                                            !   2:江頭構成則, 3:高橋・中川1991,
+                                            !   4:Voellmy, 5:一定停止応力)
   real :: db_tanphi = 0.0                   ! tan(内部摩擦角)
   real :: db_sgrav = 0.0                    ! 土粒子の水中比重 s
   real :: db_vstop = 0.0                    ! 降伏判定の速度閾値 (m/s)
@@ -85,6 +86,11 @@ module m_swflow_enc
   real :: db_cmin = 0.0                     ! 江頭層流則の濃度下限(未満はマニング)
   real :: db_d50v = 0.0                     ! 代表粒径 d (m)(層流則の (h/d)^{-2})
   real :: db_kcol = 0.0                     ! 前計算 k_d・(σ/ρ)・(1−e²)(層流則第2項)
+  real :: db_mu = 0.0                       ! Voellmy 摩擦係数 μ(db_res=4)
+  real :: db_xi = 0.0                       ! Voellmy 乱流係数 ξ (m/s²)(db_res=4)
+  real :: db_tauy = 0.0                     ! 一定停止応力 τ_y (Pa)(db_res=5)
+  real, parameter :: db_rhow = 1000.0       ! 清水密度 (kg/m³)(τ_y を加速度に落とす
+                                            !   換算。混合密度 ρm = ρw(1+sC))
   ! 江頭構成則の定数(原式固定。典拠: 江頭・芦田・矢島・高濱(1989)の
   ! 抵抗則 = 江頭(1993)講座 式(25)、Morpho2DH Solver Manual 式(17)(19)。
   ! k_f は 0.16〜0.25 の範囲が示されており Morpho2DH の 0.16 を採用)
@@ -639,13 +645,17 @@ end subroutine
 !   本モジュールの init より前に呼ばれる(m_main の初期化順序)。
 !   検証は呼び出し側(init_debris)が済ませている
 !----------------------------------------------------------------------
-subroutine m_swflow_enc_set_debris(fres, tanphi, sgrav, vstop, cstar, cmin, d50, erest)
+subroutine m_swflow_enc_set_debris(fres, tanphi, sgrav, vstop, cstar, cmin, d50, erest, &
+                                   mu, xi, tauy)
   integer, intent(in) :: fres
   real, intent(in) :: tanphi, sgrav, vstop
   real, intent(in) :: cstar             ! 河床の充填濃度 C* = 1−λ
-  real, intent(in) :: cmin              ! 江頭層流則の濃度下限(f_dbres=2)
+  real, intent(in) :: cmin              ! 希薄側の濃度下限(f_dbres=2,3,4,5)
   real, intent(in) :: d50               ! 代表粒径 (m)(f_dbres=2)
   real, intent(in) :: erest             ! 粒子の反発係数 e(f_dbres=2)
+  real, intent(in) :: mu                ! Voellmy 摩擦係数 μ(f_dbres=4)
+  real, intent(in) :: xi                ! Voellmy 乱流係数 ξ (m/s²)(f_dbres=4)
+  real, intent(in) :: tauy              ! 一定停止応力 τ_y (Pa)(f_dbres=5)
   db_res = fres
   db_tanphi = tanphi
   db_sgrav = sgrav
@@ -655,6 +665,9 @@ subroutine m_swflow_enc_set_debris(fres, tanphi, sgrav, vstop, cstar, cmin, d50,
   db_d50v = d50
   ! 層流則第2項の係数 k_d・(σ/ρ)・(1−e²)(σ/ρ = s+1)
   db_kcol = db_kd * (sgrav + 1.0) * (1.0 - erest**2)
+  db_mu = mu
+  db_xi = xi
+  db_tauy = tauy
 end subroutine
 
 
@@ -686,6 +699,9 @@ subroutine m_swflow_enc_dispose(p)
   db_cmin = 0.0
   db_d50v = 0.0
   db_kcol = 0.0
+  db_mu = 0.0
+  db_xi = 0.0
+  db_tauy = 0.0
   call m_ffactor_dispose
   call adv_dispose
   call diff_dispose
@@ -1193,6 +1209,24 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
       if (hsc + hsn > 0.0) then
         cme = (hsc + hsn) / (hc0 + hn0 + hsc + hsn)
         rme = 1.0 + db_sgrav * cme
+        if (db_res == 4) then
+          ! Voellmy 等価流体(RAMMS/Titan2D 系): 降伏 μ + 乱流項 ge・V²/(ξ・h_t)。
+          ! μ は流動体全体の見かけ摩擦(濃度に依らず直接与える — §0)。
+          ! 希薄側(C < db_cmin)はマニング+降伏なしに退化(数値的閉じ)
+          if (cme >= db_cmin) then
+            aye = ge * db_mu
+            hte = max((hc0 + hn0) / 2 + hse, p%dv)
+            ! 乱流項 減速度 ge・V²/(ξ・h_t) を −fbe・vve/(rme・hte) 形に載せる
+            ! (fbe = ge・rme/ξ で rme が相殺)。マニング則は置換される
+            fbe = ge * rme / db_xi
+          end if
+        else if (db_res == 5) then
+          ! 一定停止応力(VolcFlow 型): a_y = τ_y/(ρm・h_t)+マニング合成。
+          ! ρm = ρw(1+sC)。希薄側(C < db_cmin)は降伏なしに退化
+          if (cme >= db_cmin) then
+            aye = db_tauy / (db_rhow * rme * max((hc0 + hn0) / 2 + hse, p%dv))
+          end if
+        else
         ! 降伏減速度: a_y = ge・tanφ・sC/(1+sC)(水中固体重量の底面摩擦を
         ! 混合密度 ρ(1+sC) で除した加速度形。ge は correct_ge 済み =
         ! cos²θ を重力・圧力項と共有)。江頭構成則(db_res=2)はさらに
@@ -1228,6 +1262,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
           else
             hte = 0.0     ! マニング経路(fbe=0)へ
           end if
+        end if
         end if
       end if
     end if

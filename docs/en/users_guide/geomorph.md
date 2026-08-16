@@ -89,17 +89,34 @@ required**). Detachment reduces the soil depth sd.
 
 ## Debris flow / landslide (f_debris / fn_dbinit / f_slide)
 
-Handles debris flows with erosion and deposition (E-D) based on the
-Takahashi-type equilibrium concentration. **Mutually exclusive with
+Handles debris flows as a single-layer mixture of surface water and
+sediment (flow depth = h + hs). The erosion-deposition (E-D) closure
+and the resistance law are each selectable. **Mutually exclusive with
 f_suspend** (to avoid double-counting the same concentration field),
-and **morfac=1 is required** (event runs).
+and **morfac=1 is required** (event runs). For steep terrain we
+recommend `f_gravity_correction = 1` in &list_enc.
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| db_phi | - | Internal friction angle of the sediment (deg). **Required** |
-| db_delte / db_deltd | 0.0007 / 0.05 | Rate coefficients for erosion / deposition (defaults are common literature values) |
-| f_dbres | 1 | Resistance law. 0: Manning only, 1: Coulomb + Manning combined (recommended) |
-| f_dbstop / db_vstop / db_wstop | 0 | Stopping condition by low-speed consolidation (optional) |
+| f_dbed | 1 | E-D closure. 0: no exchange (equivalent fluid; see volcanic flows below), 1: relaxation to the equilibrium concentration (simplified), 2: Egashira-Ashida 1992, 3: Takahashi-Nakagawa 1991 (requires db_d50) |
+| db_phi | - | Internal friction angle of the sediment (deg). **Required** when f_dbed>=1 or f_dbres=1,2 |
+| db_delte / db_deltd | 0.0007 / 0.05 | Rate coefficients for erosion / deposition (calibration parameters of f_dbed=1,3) |
+| f_dbres | 1 | Resistance law. 0: Manning only, 1: Coulomb + Manning combined, 2: Egashira constitutive law (requires db_d50, db_erest), 3: Takahashi-Nakagawa 1991 stony type (requires db_d50), 4: Voellmy (requires db_mu, db_xi), 5: constant retarding stress (requires db_tauy) |
+| f_dbstop / db_vstop / db_wstop | 0 | Stopping condition by low-speed consolidation (stopped sediment is fixed to the bed elevation z; natural dam formation) |
+| f_dbwet / db_satbed | 0 / 1.0 | Pore-water entrainment (exchange of bed pore water with surface water on erosion/deposition; a first-order bulking effect where erosion dominates. Mutually exclusive with the groundwater computation) |
+
+**Volcanic flows (debris avalanches, dense pyroclastic flows,
+lahars)** - density flows without bed erosion can be approximated with
+the "equivalent fluid" setup `f_dbed = 0` (no exchange) plus
+`f_dbres = 4` (Voellmy) or `5` (constant retarding stress) - the same
+modeling level as Titan2D / VolcFlow / RAMMS. Initiate them with the
+instantaneous mobilization below (fn_dbinit) or with a
+sediment-laden inflow boundary (eruption supply rate), and fix stopped
+material to the terrain with f_dbstop=1. Deposition, natural dam
+formation, dam-break flooding, and rainfall-triggered secondary lahars
+are all chained within a single run. Dilute phenomena (pyroclastic
+surges, plumes, atmospheric ash transport) are out of scope by design
+(see debris_plan.md §5).
 
 **There are two ways to trigger a debris flow** (they can be combined):
 

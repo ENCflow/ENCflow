@@ -48,7 +48,9 @@ module list_geomorph
     integer :: f_debris = 0          ! 土石流 E-D(高橋型平衡濃度)(0:無効, 1:有効)。
                                      ! f_suspend と排他(同一 hs 上の E-D 二重計上防止)。
                                      ! morfac=1 必須(イベント計算)。debris_plan.md §2.2
-    real :: db_phi = 0.0             ! 土砂の内部摩擦角 (deg)。f_debris=1 で必須
+    real :: db_phi = 0.0             ! 土砂の内部摩擦角 (deg)。f_dbed>=1 または
+                                     ! f_dbres=1,2 で必須(等価流体構成
+                                     ! f_dbed=0 + f_dbres=4,5 では不使用)
     real :: db_delte = 0.0007        ! 侵食速度係数 δe(既定は Takahashi 2007 の一般値
                                      ! 【要文献照合】debris_plan.md §1)
     real :: db_deltd = 0.05          ! 堆積速度係数 δd(Kanako 系の慣用値【要文献照合】)
@@ -62,8 +64,14 @@ module list_geomorph
                                      ! 層流抵抗。江頭ら1989 式(25)/Morpho2DH 式(17)(19)),
                                      ! 3:高橋・中川1991 石礫型(降伏 tanα'=0.45 +
                                      ! ダイラタント項 A'=4。濃度・相対水深で
-                                     ! 石礫型/掃流状/泥流(マニング)を自動切替))
-    integer :: f_dbed = 1            ! E-D 式 (1:高橋型平衡濃度への緩和(δe/δd。簡易形),
+                                     ! 石礫型/掃流状/泥流(マニング)を自動切替),
+                                     ! 4:Voellmy 等価流体(降伏 μ + 乱流項 gV²/(ξh)。
+                                     ! 岩屑なだれ・火砕流の実務標準(RAMMS/Titan2D 系)),
+                                     ! 5:一定停止応力 τ_y + マニング合成(VolcFlow 型。
+                                     ! 火砕流のランアウト・堆積形状の再現に実績))
+    integer :: f_dbed = 1            ! E-D 式 (0:交換なし(等価流体モード: 移流・停止
+                                     ! のみ。河床侵食を持たない火砕流・岩屑なだれ用),
+                                     ! 1:高橋型平衡濃度への緩和(δe/δd。簡易形),
                                      ! 2:江頭・芦田1992 — E = |V|・C*・tan(θ−θe)。
                                      ! 流向勾配・パラメータ追加なし。Morpho2DH 式(5)-(7),
                                      ! 3:高橋・中川1991 式(12)(27) — 飽和床侵食+
@@ -84,6 +92,14 @@ module list_geomorph
     real :: db_satbed = 1.0          ! 堆積層の飽和度 s_b(0〜1)。f_dbwet=1 で使用
                                      ! (高橋・中川1991 式(5)の記号。洞谷適用値は
                                      ! 勾配 21°以上で 0.8、以下で 1.0)
+    real :: db_mu = 0.0              ! Voellmy 摩擦係数 μ(無次元)。f_dbres=4 で必須
+                                     ! (雪崩 0.1〜0.3、岩屑なだれは体積とともに低下。
+                                     ! 見かけ摩擦 H/L を直接与える — 体積依存式は
+                                     ! 内蔵しない(§0: 物理量は直接与える))
+    real :: db_xi = 0.0              ! Voellmy 乱流係数 ξ (m/s²)。f_dbres=4 で必須
+                                     ! (雪崩・土石流の慣用範囲 200〜1000)
+    real :: db_tauy = 0.0            ! 一定停止応力 τ_y (Pa)。f_dbres=5 で必須
+                                     ! (火砕流の適用例 5〜50 kPa(VolcFlow 系文献))
     character(len=256) :: fn_dbinit = ""  ! 瞬時流動化の崩壊深分布ファイル (m)。
                                      ! 指定で f_release 有効(fn_* の有無の慣例)。
                                      ! f_debris=1 が必須。debris_plan.md §2.5
@@ -161,6 +177,9 @@ subroutine list_geomorph_read(p, list)
   real :: db_cmin
   integer :: f_dbwet
   real :: db_satbed
+  real :: db_mu
+  real :: db_xi
+  real :: db_tauy
   character(len=256) :: fn_dbinit
   real :: db_reltime
   real :: db_relsat
@@ -180,6 +199,7 @@ subroutine list_geomorph_read(p, list)
                            susp_beta, susp_esa, f_wash, wash_kr, wash_kf, wash_tausc, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
                            f_dbed, db_d50, db_erest, db_cmin, f_dbwet, db_satbed, &
+                           db_mu, db_xi, db_tauy, &
                            fn_dbinit, db_reltime, db_relsat, &
                            f_slide, slide_c, slide_phi, slide_gamma, &
                            f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0
@@ -223,6 +243,9 @@ subroutine list_geomorph_read(p, list)
   db_cmin = list%db_cmin
   f_dbwet = list%f_dbwet
   db_satbed = list%db_satbed
+  db_mu = list%db_mu
+  db_xi = list%db_xi
+  db_tauy = list%db_tauy
   fn_dbinit = list%fn_dbinit
   db_reltime = list%db_reltime
   db_relsat = list%db_relsat
@@ -281,6 +304,9 @@ subroutine list_geomorph_read(p, list)
   list%db_cmin = db_cmin
   list%f_dbwet = f_dbwet
   list%db_satbed = db_satbed
+  list%db_mu = db_mu
+  list%db_xi = db_xi
+  list%db_tauy = db_tauy
   list%fn_dbinit = fn_dbinit
   list%db_reltime = db_reltime
   list%db_relsat = db_relsat

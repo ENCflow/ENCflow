@@ -112,12 +112,18 @@ module m_geomorph
     real :: db_vstop = 0.0           ! 停止判定の速度閾値 (m/s)
     real :: db_wstop = 0.0           ! 低速凝集の河床転換レート (m/s)
     integer :: f_dbres = 0           ! 抵抗則(0:マニング, 1:クーロン+マニング,
-                                     !   2:江頭構成則。実体は m_swflow_enc
-                                     !   (set_debris で通知))
-    integer :: f_dbed = 1            ! E-D 式(1:高橋型平衡濃度緩和, 2:江頭・芦田1992)
+                                     !   2:江頭構成則, 3:高橋・中川1991,
+                                     !   4:Voellmy, 5:一定停止応力。実体は
+                                     !   m_swflow_enc(set_debris で通知))
+    integer :: f_dbed = 1            ! E-D 式(0:交換なし(等価流体),
+                                     !   1:高橋型平衡濃度緩和, 2:江頭・芦田1992,
+                                     !   3:高橋・中川1991)
     real :: db_d50v = 0.0            ! 代表粒径 (m)(f_dbres=2)
     real :: db_erest = 0.0           ! 粒子の反発係数 e(f_dbres=2)
     real :: db_cmin = 0.0            ! 江頭層流則の濃度下限(f_dbres=2)
+    real :: db_mu = 0.0              ! Voellmy 摩擦係数 μ(f_dbres=4)
+    real :: db_xi = 0.0              ! Voellmy 乱流係数 ξ (m/s²)(f_dbres=4)
+    real :: db_tauy = 0.0            ! 一定停止応力 τ_y (Pa)(f_dbres=5)
     integer :: f_dbwet = 0           ! 間隙水の連行(0:無視, 1:飽和床の連行)
     real :: db_lamsb = 0.0           ! λ・s_b(前計算。連行水深 = λ・s_b・|Δz|)
     integer :: f_release = 0         ! 瞬時流動化(0:無効, 1:有効 = fn_dbinit 指定)

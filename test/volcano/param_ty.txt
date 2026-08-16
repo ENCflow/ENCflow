@@ -1,0 +1,70 @@
+!======================================================================
+! volcano(構成2: 一定停止応力 τ_y のランアウト・停止検定)
+!   slope_break 地形(tanθ=0.4 の斜面 + 遷緩点 x=30m の平坦部)の
+!   斜面上に瞬時流動化(D=2m, i∈[5,15], j∈[8,13])で「等価流体」の
+!   土塊を置き、一定停止応力則(f_dbres=5: τ_y + マニング合成)で
+!   流下・平坦部への堆積・停止を検定する(火砕流・岩屑なだれの
+!   VolcFlow 型概算 — debris_plan.md 火山編)。
+!   間隙流体は疑似間隙水近似(db_relsat=1.0 → h = λ・D, C = C*)。
+!   E-D は交換なし(f_dbed=0)+低速凝集(f_dbstop=1)で停止分を
+!   河床 z へ固定する。閉領域の固体台帳
+!     Σhs + (1-λ)Σ(z-z0) = 0
+!   が機械精度で成立する(Check_volcano.py tauy モード)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02
+  t0 = 0
+  tt = 90
+  dt_disp = 10
+  dt_file = 90
+  dt_recrd = 90
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_result = 'result'
+  dir_save = 'save_ty'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_enc
+  f_gravity_correction = 1
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 60.0
+  ly = 20.0
+  nx = 60
+  ny = 20
+  f_ztype = 0
+  z0 = 0.0
+  f_user_routine = "slope_break"   ! tanθ=0.4, 遷緩点 x=30m
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 5.0                 ! 可動層(流動化 D=2m の供給源)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_debris = 1
+  f_dbed = 0                ! 交換なし(等価流体モード)
+  f_dbres = 5               ! 一定停止応力 τ_y + マニング合成
+  db_tauy = 4000.0          ! 停止応力 (Pa)
+  db_vstop = 0.05
+  f_dbstop = 1              ! 低速凝集(停止分を河床 z へ固定)
+  db_wstop = 0.05
+  fluv_porosity = 0.4
+  fn_dbinit = 'dbinit.txt'  ! 崩壊深 D=2m の分布(make_init.py db)
+  db_reltime = 1.0          ! t=1s に一斉流動化
+  db_relsat = 1.0           ! 疑似間隙水(h = λ・D。C = C* = 0.6)
+/
