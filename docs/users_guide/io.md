@@ -82,6 +82,11 @@ H・H9999 と、地盤高の初期値 Z0000 のみ)
 このほか、`Log.txt`(画面表示と同一のログ)と、使用したパラメータ
 ファイルの控えが常に保存されます。
 
+分布出力は GIS(QGIS / ArcGIS)でそのまま開けるほか、
+**utils/out2vtk** で ParaView 用の VTK 形式に変換すると、地形の 3D
+表示・水面の時系列アニメーション・衛星写真のドレープができます
+(手順は [utils/out2vtk/README.md](../../utils/out2vtk/README.md))。
+
 ## 画面・ログの表示列(f_disp_\*)
 
 時刻・保存量 S・Runge・ex_flux は常に表示され、場の最大値の列は

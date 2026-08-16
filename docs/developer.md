@@ -3282,3 +3282,54 @@ wave・chichibu の逐次回帰 PASS。
 - 付随修正: benchmark 3例題の Makefile の TOPDIR 階層(make links が
   不能だった)、h-plane・v-valley の旧 namelist 名 &list_param
   (現行バイナリで読込不能だった)をそれぞれ独立コミットで修正。
+
+## 42. ParaView 可視化は後処理ユーティリティ out2vtk で行う(2026-08-16 決定・実装)
+
+計算結果の 3D 可視化(時系列アニメーション・地図/衛星画像ドレープ)の
+ため VTK 形式が必要になったが、**本体の出力形式(f_output_mode)への
+追加は不採用**とし、後処理ユーティリティ **utils/out2vtk** を追加した。
+
+### 42.1 本体組み込みを不採用とした理由
+
+- §0 の「入出力は単純形式・GUI 等は利用者側」「変換は前処理で」に照らし、
+  可視化ツール都合の形式は計算コアの責務外(txt/bil/GeoTIFF はデータ
+  交換の単純形式だが、VTK は可視化専用形式)。
+- 可視化に適した VTK は「1時刻の全変数を1ファイルに束ね、派生量
+  (水面標高 = z+h、流速ベクトル (u,v))と乾燥域マスクを持つ」形で、
+  本体の出力構造(1変数1ファイル、変数ごとの gather → 書き出し)と
+  合わない。束ね・派生・マスクは本体側では複雑化要因にしかならない。
+- 後処理なら水膜閾値・対象変数を変えて何度でも再変換できる(本体出力
+  だと再計算)。本体無変更のため回帰テスト・reference への影響もゼロ。
+
+### 42.2 utils/out2vtk の仕様(利用手順の正本は utils/out2vtk/README.md)
+
+- 入力: result/ の分布出力(bil → GeoTIFF → txt の順に探す)+
+  FILENUMBER.csv(実時刻)。出力: VTK XML StructuredGrid(.vts。
+  appended raw binary、リトルエンディアン前提 = 既存 bil と同じ)+
+  時系列コレクション .pvd。外部ライブラリ不使用。
+- terrain.vts(Z0000 の地形面。0..1 正規化のテクスチャ座標付きで
+  QGIS 書き出し画像のドレープに対応)、flood_XXXX.vts(z+H の水面と
+  点データ H, WSE + 検出変数 + velocity)、summary.vts(特番 9999 の
+  統計量)。特番 9998(最終状態の再掲)は時系列と重複するため対象外。
+- 水膜閾値 hmin(既定 0.01 m)未満のセルは水面系変数を NaN 化
+  (ParaView 側は NaN 不透明度 0 か Threshold で消す)。地表・地中系
+  (Pr, Hg, Sw 等)はマスクしない。整数フラグ(Ddd/Dda)は対象外。
+- 格子情報は Z0000 の hdr / GeoTIFF から自動取得(txt は寸法を数える)。
+  地理参照があれば投影座標の実座標(点座標は real64。単精度だと
+  UTM 級の座標で桁落ちするため)、なければ南西端原点のローカル座標。
+  経緯度格子は georef_est_cellsize_m でメートル換算したローカル座標。
+- 設定は namelist(&out2vtk)ファイル1つを引数に取る(全項目省略可)。
+  引数に計算のパラメータファイルを直接渡すと dir_result・outfn_suffix・
+  格子情報(&list_geoinfo の nx, ny, dx, dy)を引き継ぐ(rerecord・
+  lu2mask と同じ流儀。&out2vtk 群の有無で自動判別)。
+- libencflow.a をリンクする(§10 の追随検出の対象)。y 軸は j=1 が
+  北端のため、VTK には南→北の昇順に詰め替えて書く(v の正方向は
+  もともと北向き正なのでベクトルは詰め替え不要)。
+
+検証記録(2026-08-16): wave(txt・地理参照なし)で値・座標・NaN
+マスク・テクスチャ座標・pvd 時刻単調性を数値照合、6x4 合成 bil+hdr
+(投影座標)で座標絶対値・流速ベクトル・pvd 時刻を照合、chichibu で
+param.txt 引き継ぎ(100 m セル)を確認。生成ファイルは VTK 9.7 の
+公式リーダ(vtkXMLStructuredGridReader)で読解・属性(Scalars/
+Vectors/TCoords)認識を確認。本体コードは無変更で wave・chichibu の
+逐次回帰 PASS。

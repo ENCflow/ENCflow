@@ -22,6 +22,7 @@ utils/calc_catchmentarea/pickuparea
 utils/modify_elevation/modify_elevation
 utils/modify_river/modify_river
 utils/modify_sealand/modify_sealand
+utils/out2vtk/out2vtk
 utils/prep_flux_transect/prep_transect
 
 # --- executable binaries ---

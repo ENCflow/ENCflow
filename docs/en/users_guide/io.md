@@ -92,6 +92,12 @@ written.)
 In addition, `Log.txt` (identical to the on-screen log) and a copy of
 the parameter file used are always saved.
 
+Distributed outputs can be opened directly in GIS (QGIS / ArcGIS), and
+**utils/out2vtk** converts them to VTK files for ParaView — 3D terrain
+views, time-animated water surfaces, and draping of satellite imagery
+(see [utils/out2vtk/README.md](../../../utils/out2vtk/README.md),
+in Japanese).
+
 ## Screen and log display columns (f_disp_\*)
 
 The time, the conserved quantity S, Runge, and ex_flux are always
