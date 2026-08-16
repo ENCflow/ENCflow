@@ -2,10 +2,12 @@
 
 # Comparison with Other Simulation Software (comparison.md)
 
-Survey as of 2026-08-10. It assumes the current state of ENCflow's
-feature implementation (complete up to shallow water + channels +
-structures + runoff + evapotranspiration + two-layer groundwater +
-sediment + water quality + buildup-washoff).
+Survey as of 2026-08-10 (later additions to the findings are dated
+individually). It assumes the current state of ENCflow's feature
+implementation (complete up to shallow water + channels + structures
++ runoff + evapotranspiration + two-layer groundwater + sediment +
+water quality + buildup-washoff + snow + long-term landscape
+evolution).
 Licenses and distribution forms can change, so re-check each official
 site before citing.
 
@@ -82,17 +84,23 @@ Sources (confirmed 2026-08-10):
   stack). The reach of a single source from educational use (a laptop)
   to vector machines and supercomputers contrasts with TUFLOW's demo
   limits and the commercial GUI-first products.
-- (Added 2026-08-14) In addition to features, a first full round of
-  user documentation is now in place: a 17-chapter user's guide plus a
-  full parameter index (370 entries), annotated namelist samples for
-  every feature (examples/List_samples), and 2 hands-on tutorials
-  (minimal example wave, real terrain chichibu; even the pitfalls of
-  real data -- depression removal and discharge oscillations from
-  flat reaches -- are turned into teaching material). In the
-  comparison of adoption cost (self-teachability), it also ranks high
-  among the open players. On the other hand, English documentation is
-  only README.en, so internationally, documentation remains on the
-  weak side. Note also that most of the comparative advantages
+- (Added 2026-08-14, updated 2026-08-16) In addition to features, a
+  first full round of user-facing groundwork is now in place: a
+  17-chapter user's guide plus a full parameter index (370 entries),
+  annotated namelist samples for every feature
+  (examples/List_samples), and 2 hands-on tutorials (minimal example
+  wave, real terrain chichibu; from the pitfalls of real data --
+  depression removal and discharge oscillations from flat reaches --
+  up to 3D visualization with ParaView, all turned into teaching
+  material). Pre/post-processing utilities are also bundled (utils/:
+  depression removal rmdepress_river, catchment delineation
+  calc_catchmentarea, land-use-to-mask lu2mask, VTK conversion
+  out2vtk, and more). In the comparison of adoption cost
+  (self-teachability), it also ranks high among the open players.
+  User-facing documentation now has a full Japanese-English mirror
+  (docs/en/ and the tutorials' en/); the remaining English gap is
+  only in the developer documentation (developer.md etc. are
+  Japanese-only). Note also that most of the comparative advantages
   presuppose finalizing "free and fully open" (restoration of the
   license notice; Sec. 34.3).
 
