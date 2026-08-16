@@ -28,7 +28,7 @@ module m_swflow_stg
   real,ALLOCATABLE:: H(:,:)            ! H:標高
   real,ALLOCATABLE:: HQ(:,:)           ! HQ:降雨データ（計算用）
   real,ALLOCATABLE:: GV(:,:)           ! GV:1-家屋占有率,BB:家屋の大きさ
-  real,ALLOCATABLE:: DN(:,:)           ! DN:土地利用の合成粗度
+  real,ALLOCATABLE:: DN(:,:)           ! DN:合成粗度
   real,ALLOCATABLE:: BB(:,:)           ! 家屋の平均寸法
   INTEGER,ALLOCATABLE:: X(:,:)         ! 海陸判別パラメータ
   INTEGER,ALLOCATABLE:: R(:,:)         ! 河道判別パラメータ
@@ -150,7 +150,7 @@ subroutine m_swflow_stg_init(p, g, b, s)
   H(:,:)=s%z(:,:)     ! H:標高
   GV(:,:)=g%gv(:,:)   ! GV:1-家屋占有率
   BB(:,:)=g%bb(:,:)   ! BB:家屋の平均寸法
-  DN(:,:)=g%rn(:,:)   ! DN:土地利用の合成粗度
+  DN(:,:)=g%rn(:,:)   ! DN:合成粗度
   X(:,:)=g%sw(:,:)    ! X:海陸判別パラメータ
   R(:,:)=g%rw(:,:)    ! R:河道判別パラメータ
   D(:,:)=s%h(:,:)     ! D:水深

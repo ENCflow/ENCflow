@@ -186,7 +186,7 @@ channel mask and roughness.
 
 &list_geoinfo
   ...
-  f_rntype = 0         ! roughness type (0: default constant, 1: file, 2: from land use)
+  f_rntype = 0         ! roughness type (0: default constant, 1: file)
   rn0 = 0.05           ! constant roughness value
   rn0_rw = 0.02        ! constant roughness for channel-mask cells
 
@@ -204,8 +204,7 @@ channel mask and roughness.
 - Roughness is a two-tier setup: the base value `rn0 = 0.05`
   (mountain/wildland-like) is overridden on channel cells by
   `rn0_rw = 0.02` (channel-like). `rn0_rw` overrides channel cells
-  regardless of how roughness is given (constant, file, or land-use
-  conversion).
+  regardless of how roughness is given (constant or file).
 - At this stage the channel mask `fn_rw` is used only to swap the
   roughness. From here you can refine step by step toward incision
   below the terrain (`depth_rw`) or subgrid channels (`fn_channel`)
@@ -618,8 +617,8 @@ catchment computation with real terrain data: data preparation
 of numerical settings -> adding physical processes -> boundary
 conditions -> 3D visualization. From here:
 
-- Refining the groundwater model (Green-Ampt, lateral flow), roughness
-  distribution from land use, subgrid channels, and more --
+- Refining the groundwater model (Green-Ampt, lateral flow),
+  distributed roughness, subgrid channels, and more --
   [users guide](../../../docs/en/users_guide.md)
 - How to write the namelists of each feature --
   [examples/List_samples/](../../../examples/List_samples/)

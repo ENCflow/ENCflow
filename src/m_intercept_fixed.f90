@@ -23,8 +23,8 @@ module m_intercept_fixed
   !      rank0 が全域に読んで検証(par_abort)→ par_scatter_cell で
   !      帯配布」で読む(方式2。read_alpha_map が見本)。検証は使用セル
   !      (x>0 かつ sw=0)に限る(領域外の nodata 値を弾かないため)。
-  !      土地利用からの構築(lu2rn 同型)を足す場合も init で行い、
-  !      g%lu 等の係数は帯確保なので帯添字で読むこと(§11)
+  !      係数の分布は前処理で作成しファイルで与える(§41 の原則。
+  !      モデル内での土地利用等からの変換は行わない)
   ! ==============================================================
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo

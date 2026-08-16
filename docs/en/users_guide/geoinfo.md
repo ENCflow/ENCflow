@@ -85,7 +85,7 @@ excluding the wide offshore sea from the computation.
 | fn_sw | "" | sea mask (1: sea). Marks the sea area for tide, storm surge, and tsunami computations ([tide chapter](tide.md)) |
 | fn_rw | "" | channel mask (1: channel cell) |
 | depth_rw / fn_depth_rw | 0 / "" | incision depth of channel cells (uniform value / distribution; dug down from the topography) |
-| rn0_rw | -1 | fixed roughness of channel cells. A positive value **overrides the roughness of channel cells** regardless of how roughness is given (rn0 / file / land use), independently of whether incision is specified |
+| rn0_rw | -1 | fixed roughness of channel cells. A positive value **overrides the roughness of channel cells** regardless of how roughness is given (rn0 / file), independently of whether incision is specified |
 
 The channel mask is a shortcut for representing channels that are not
 resolved at the resolution of the topography data, by incising the

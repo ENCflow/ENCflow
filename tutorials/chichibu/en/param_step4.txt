@@ -47,7 +47,7 @@
   f_ztype = 1          ! ground elevation type (0: default constant, 1: file)
   f_masktype = 1       ! domain mask (0: none, 1: catchment mask)
 
-  f_rntype = 0         ! roughness type (0: default constant, 1: file, 2: from land use)
+  f_rntype = 0         ! roughness type (0: default constant, 1: file)
   rn0 = 0.05           ! constant roughness value
   rn0_rw = 0.02        ! constant roughness for channel-mask cells
 

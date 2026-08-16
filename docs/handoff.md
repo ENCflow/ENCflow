@@ -179,8 +179,6 @@
    - np=1, 2, 4 が逐次 reference に ULP=0(chichibu: 実地形+粗度+河道)
    - user フックありのケース(wave 系の f_user_routine_id>0)で np=1,2,4
      ビット一致(フックの rank0 実行+マスク再 bcast 経路の検証)
-   - f_rntype=2(lu2rn 変換)のケースがあれば併せて確認(read_rn の
-     rank0 経路)
 
 6. **座標管理(m_georef / ESRI hdr)導入コミットの検証**
    (仕様と決定事項は docs/geotiff_plan.md §10)
@@ -401,8 +399,8 @@
   貯留型の3点セット=step 口・原雨量私有保管・st の save/restore を含む。
   貯留型の実装契約は m_intercept_initloss ヘッダが正本)。残るは
   キャノピー貯留(蒸発回復あり)・Gash の追加(m_intercept_initloss を
-  複製して契約に従う)と、土地利用からの構築(lu2rn 同型。
-  m_intercept_fixed ヘッダ契約5)
+  複製して契約に従う。遮断率の分布は §41 の原則どおり前処理で作成し
+  ファイルで与える)
 - NEC SDK 実機検証(mpinfort -show の可否確認 → スタンプ機構の対応判断)
 - **初期化メモリピーク対策・第2段(ゾーン2の rank0 化)**。第1段
   (物性係数の rank0 化+scatter。2026-07-31 実装)で非 root の一過性
