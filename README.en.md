@@ -2,8 +2,8 @@
 
 **Solving surface-water phenomena seamlessly on a single grid** —
 from river flooding, storm surge, and tsunami run-up to rainfall–runoff,
-groundwater, sediment, water quality, snow, and landscape evolution,
-all in one Fortran program.
+groundwater, sediment, water quality, snow, glaciers, and landscape
+evolution, all in one Fortran program.
 
 [日本語 README](README.md) /
 [Installation](docs/en/install.md) /
@@ -30,7 +30,7 @@ conventional four-neighbor rasters. This grid is where the name comes
 from.
 
 Ordinarily, river flooding, catchment hydrology, sediment transport,
-water quality, and snow are computed with separate software packages,
+water quality, and snow/ice are computed with separate software packages,
 passing results from one to the next. ENCflow handles all of them in a
 single program with a single input system. Processes you do not need
 are simply left unactivated — and each additional configuration file
@@ -90,6 +90,11 @@ read only the lines you care about.
   runoff analysis.
 - **Snow accumulation and melt**: degree-day method. With the
   temperature lapse rate, the snow line emerges automatically.
+- **Glaciers**: firnification of perennial snow (accumulation) and
+  ice-surface melt, ice flow by the shallow ice approximation (SIA),
+  basal sliding with glacial erosion, and avalanche redistribution of
+  snow. Glacier meltwater feeds the runoff and flood computation, and
+  long-term experiments can form glacial landforms such as cirques.
 - **Long-term landscape evolution**: bedrock weathering (soil
   production), uplift, and repeated representative hydrology for
   millennium-scale landscape evolution experiments (a landscape

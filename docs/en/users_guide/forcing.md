@@ -128,6 +128,16 @@ With the temperature lapse rate, even a uniform temperature input
 gives mountain temperatures that decrease with elevation, and in the
 snowmelt computation **a snow line emerges automatically**.
 
+Two further options target long-term runs
+([glaciers](glacier.md), long-term landform change).
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| tempofs | - | Long-period air temperature offset series `(elapsed days, dT degC)`, added to the temperature input (uniform and distributed alike). It is interpolated on the real time axis, which is not folded by the cyclic forcing t_cycle, so **a cooling/warming trend or a glacial cycle can be superimposed on a repeated representative year** |
+| f_prec_lapse | 0 | 1: enable the precipitation gradient with elevation. Precipitation is multiplied by max(0, 1 + rate x (z - prec_zref)) (a simple representation of orographic precipitation and the elevation dependence of glacier accumulation; prefer distributed precipitation input when available) |
+| prec_lapse | 0.0 | Precipitation increase rate (%/100 m) |
+| prec_zref | lowest elevation in the domain | Reference elevation of the precipitation gradient (m) |
+
 ## Evapotranspiration (&list_evap)
 
 Select how potential evapotranspiration (PET) is given with `f_evmodel`.
@@ -183,6 +193,7 @@ represented per elevation band.
 | Evapotranspiration (mode 1) | None |
 | Evapotranspiration (modes 2-4) | Calendar date0_c (3, 4 also need the meteorological forcing field and latitude) |
 | Snowpack / snowmelt | Precipitation + meteorological forcing field |
+| Glaciers ([dedicated chapter](glacier.md)) | Precipitation + meteorological forcing field + snowpack/snowmelt |
 
 For worked examples of the settings, see list_precip / list_intercept /
 list_meteo / list_evap / list_snow in

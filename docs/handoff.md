@@ -541,5 +541,6 @@
    - 将来拡張(glacier_plan.md §7): 氷底ティル・モレーン(侵食物の系外
      排出を土砂プロセスへの引き渡しに置換)、雪崩の保持容量モデル
      (Gruber 型)、有効圧依存滑動、GLOF、cold-based 閾値、分布 A
-   - ユーザーガイド(users_guide/ 章+params_index)への氷河章の追加は
-     未着手(namelist 見本 examples/List_samples/list_glacier.txt はあり)
+   - ユーザーガイド: 氷河章(users_guide/glacier.md 日英)・params_index
+     (+24 項目 = 392)・forcing 章の気象拡張・README 日英を整備済み
+     (2026-08-16)

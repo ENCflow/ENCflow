@@ -36,11 +36,12 @@ input; individual topics are split into per-chapter pages.
 - [Rainfall and weather](users_guide/forcing.md) (&list_precip / intercept / meteo / evap / snow) -- precipitation, interception, air temperature, evapotranspiration, snow accumulation and snowmelt
 - [Groundwater](users_guide/gwflow.md) (&list_gwflow plus model-specific settings) -- infiltration, lateral flow, weathered bedrock layer
 - [Sediment and landform change](users_guide/geomorph.md) (&list_geomorph) -- bedload, suspended sediment, hillslope erosion, debris flow, long-term landscape evolution
+- [Glaciers](users_guide/glacier.md) (&list_glacier) -- accumulation, melt, ice flow, glacial erosion, avalanche redistribution
 - [Water quality](users_guide/wq.md) (&list_wq) -- load input, transport, decay, washoff
 - [Measurement](users_guide/record.md) (&list_record) -- probes, flux transects
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 370 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 392 parameter names to their chapters
 
 ---
 
@@ -73,6 +74,7 @@ memory and no computation time at all**.
 | Weather forcing fields (air temperature etc.) | `fn_meteo` | &list_meteo |
 | Evapotranspiration | `fn_evap` | &list_evap |
 | Snow accumulation and snowmelt | `fn_snow` | &list_snow |
+| Glaciers | `fn_glacier` | &list_glacier |
 | Groundwater | `fn_gwflow` | &list_gwflow (+ model-specific) |
 | Sediment and landform change | `fn_geomorph` | &list_geomorph |
 | Water quality (load runoff) | `fn_wq` | &list_wq |
@@ -187,6 +189,7 @@ not used in ordinary computations with real data.
 | Sediment transport / debris flow | [Sediment and landform change](users_guide/geomorph.md) |
 | Pollutant loads / mass transport | [Water quality](users_guide/wq.md) |
 | Runs including snowmelt | [Rainfall and weather](users_guide/forcing.md) (snow accumulation / snowmelt + temperature lapse rate) |
+| Glacier meltwater / cirque formation | [Glaciers](users_guide/glacier.md) (+ rainfall and weather; suspend and restart for long runs) |
 | Comparison with gauging stations / discharge transects | [Measurement](users_guide/record.md) |
 | Splitting long runs / scenario branching | [Suspend and restart](users_guide/restart.md) |
 | GIS data (GeoTIFF etc.) input and output | [Coordinate systems](users_guide/coordinates.md) + [input and output](users_guide/io.md) |

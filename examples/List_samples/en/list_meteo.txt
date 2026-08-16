@@ -29,4 +29,23 @@
   temp_lapse = 0.65             ! lapse rate (degC/100m)
   !temp_zref = 200.0            ! reference elevation (m; if omitted = the
                                 !   lowest elevation of the domain)
+
+  ! ---- Long-period climate modulation (optional; Sec. 45) ----
+  !   An air temperature offset series dT(t), linearly interpolated on the
+  !   real time axis (not folded by t_cycle) and added to the temperature
+  !   input (uniform and distributed alike). Superimposes a cooling/warming
+  !   trend or a glacial cycle on a repeated representative year (long-term
+  !   glacier experiments)
+  !tempofs(:,1) = 0.0, 0.0      ! (days elapsed from t=0, dT degC)
+  !tempofs(:,2) = 3650.0, -2.0
+
+  ! ---- Precipitation gradient with elevation (optional; Sec. 45) ----
+  !   Multiplies precipitation by max(0, 1 + rate*(z - zref)) (a simple
+  !   representation of orographic precipitation and the elevation
+  !   dependence of glacier accumulation; prefer distributed precipitation
+  !   input when available)
+  !f_prec_lapse = 1             ! 1 to enable
+  !prec_lapse = 5.0             ! increase rate (%/100m)
+  !prec_zref = 200.0            ! reference elevation (m; if omitted = the
+                                !   lowest elevation of the domain)
 /
