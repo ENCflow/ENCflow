@@ -38,4 +38,18 @@ if [ -d save_eg_serial ]; then
         echo "警告: save_eg/state.dat が逐次ビルドと不一致(同上)" >&2
     fi
 fi
+
+# 構成3: 高橋・中川則
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./a.out param_tk.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_debris.py" save_tk eg || rc=1
+if [ -d save_tk_serial ]; then
+    if cmp -s save_tk/state.dat save_tk_serial/state.dat; then
+        echo "=== 高橋・中川則: state.dat は逐次結果とビット一致 ==="
+    else
+        echo "警告: save_tk/state.dat が逐次ビルドと不一致(同上)" >&2
+    fi
+fi
 exit $rc

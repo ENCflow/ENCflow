@@ -88,6 +88,12 @@ module m_swflow_enc
   real, parameter :: db_kf = 0.16           ! 間隙流体の乱れの係数 k_f
   real, parameter :: db_kd = 0.0828         ! 粒子非弾性衝突の係数 k_d
   real, parameter :: db_yexp = 0.2          ! 降伏応力の指数 1/n(n=5。Morpho2DH 式(17))
+  ! 高橋・中川(1991)新砂防 44(3) の定数(原式固定。db_res=3。式(22)-(25))
+  real, parameter :: db_tana = 0.45         ! 石礫群の流動時の摩擦係数 tanα'
+  real, parameter :: db_apr = 4.0           ! ダイラタント項の係数 A'
+  real, parameter :: db_c49 = 0.49          ! 掃流状集合流動の抵抗係数(= 0.7²)
+  real, parameter :: db_cbl = 0.4           ! 掃流状域の濃度閾値(C ≤ 0.4C*)
+  real, parameter :: db_hdmud = 30.0        ! 泥流域の相対水深閾値(h/d ≥ 30 でマニング)
 
   ! 堤防(仮想壁面)モデル(developer.md §17)
   !   有効化は fn_channel の fn_bank / bank0 の有無(g%bank_active)。
@@ -1151,6 +1157,25 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
             hte = max((hc0 + hn0) / 2 + hse, p%dv)
             fbe = 6.25 * (db_kf * (1.0 - cme)**(5.0/3.0) / cme**(2.0/3.0) &
                           + db_kcol * cme**(1.0/3.0)) * (db_d50v / hte)**2
+          end if
+        else if (db_res == 3) then
+          ! 高橋・中川(1991)石礫型(式(22)-(25)。単一粒径 ρm=ρ):
+          !   降伏項の摩擦係数は流動時の tanα' = 0.45(原式固定。tanφ でなく)
+          aye = ge * db_tana * db_sgrav * cme / rme
+          hte = max((hc0 + hn0) / 2 + hse, p%dv)
+          ! 流動型の自動切替(泥流域 C<cmin または h/d≥30 はマニング=式(4))
+          if (cme >= db_cmin .and. hte < db_hdmud * db_d50v) then
+            if (cme > db_cbl * db_cstar) then
+              ! 石礫型(式(22)第2項): A'・{(1−C)/C}^{2/3}・(dL/h)²
+              !   減速度 = A'ρm{...}(dL/h)²V²/(ρT h) → fbe/(rme・hte) 形
+              fbe = db_apr * ((1.0 - cme) / cme)**(2.0/3.0) * (db_d50v / hte)**2
+            else
+              ! 掃流状集合流動(式(24)): (ρT/0.49)(dL/h)。ρT/ρT が相殺する
+              ! ため rme を fbe に含めて同じ −fbe・vve/(rme・hte) 形に載せる
+              fbe = rme * (db_d50v / hte) / db_c49
+            end if
+          else
+            hte = 0.0     ! マニング経路(fbe=0)へ
           end if
         end if
       end if

@@ -24,6 +24,14 @@ echo ""
 python3 "$sdir/Check_debris.py" save_eg eg || rc=1
 rm -rf save_eg_serial && cp -r save_eg save_eg_serial
 
+# 構成3: 高橋・中川(1991)則(E-D = 式(12)(27)、抵抗 = 式(22)-(25))
+set -o pipefail
+./a.out param_tk.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_debris.py" save_tk eg || rc=1
+rm -rf save_tk_serial && cp -r save_tk save_tk_serial
+
 if [ $rc -eq 0 ]; then
     echo "=== debris 検定 PASS ==="
 else
