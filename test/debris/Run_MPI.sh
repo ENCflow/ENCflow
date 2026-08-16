@@ -20,8 +20,50 @@ if [ -d save_serial ]; then
     if cmp -s save/state.dat save_serial/state.dat; then
         echo "=== state.dat is bit-identical to the serial result (save_serial) ==="
     else
-        echo "MISMATCH: save/state.dat != save_serial/state.dat" >&2
-        rc=1
+        echo "警告: save/state.dat が逐次ビルドと不一致(-Ofast の fast-math" >&2
+        echo "      ビルド間差の可能性。ビット検証は -O2 厳密数学で行うこと — §28.3)" >&2
+    fi
+fi
+
+# 構成2: 江頭則
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./a.out param_eg.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_debris.py" save_eg eg || rc=1
+if [ -d save_eg_serial ]; then
+    if cmp -s save_eg/state.dat save_eg_serial/state.dat; then
+        echo "=== 江頭則: state.dat は逐次結果とビット一致 ==="
+    else
+        echo "警告: save_eg/state.dat が逐次ビルドと不一致(同上)" >&2
+    fi
+fi
+
+# 構成3: 高橋・中川則
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./a.out param_tk.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_debris.py" save_tk eg || rc=1
+if [ -d save_tk_serial ]; then
+    if cmp -s save_tk/state.dat save_tk_serial/state.dat; then
+        echo "=== 高橋・中川則: state.dat は逐次結果とビット一致 ==="
+    else
+        echo "警告: save_tk/state.dat が逐次ビルドと不一致(同上)" >&2
+    fi
+fi
+
+# 構成4: 構成3 + 間隙水連行(f_dbwet=1)
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./a.out param_tkwet.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_debris.py" save_tkwet wet || rc=1
+if [ -d save_tkwet_serial ]; then
+    if cmp -s save_tkwet/state.dat save_tkwet_serial/state.dat; then
+        echo "=== 間隙水連行: state.dat は逐次結果とビット一致 ==="
+    else
+        echo "警告: save_tkwet/state.dat が逐次ビルドと不一致(同上)" >&2
     fi
 fi
 exit $rc

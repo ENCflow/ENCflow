@@ -1,0 +1,80 @@
+!======================================================================
+! debris(構成4: 高橋・中川則 + 間隙水連行): 疎通・保存則検定
+!   param.txt と同一の地形・降雨で、E-D を高橋・中川(1991)の
+!   飽和床侵食(式12)+慣性係数付き堆積(式27)、抵抗則を同・石礫型
+!   構成則(式(22)-(25)。tanα'=0.45, A'=4。濃度・相対水深で石礫型/
+!   掃流状/泥流を自動切替)にする。
+!   典拠: 高橋保・中川一「豪雨時に発生する石礫型土石流の予測」
+!   新砂防 Vol.44 No.3, 1991, pp.12-19。
+!   δe は校正パラメータ(検定の薄層流で活性を確保する値に設定。
+!   洞谷適用値は δe=0.0001, δd=0.5)。検定は Check_debris.py(wet モード:
+!   構成3との比較で bulking(Σh の増加)を確認する)。
+!   構成3に f_dbwet=1(間隙水連行。developer.md §28.7)を重ねた構成。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02
+  t0 = 0
+  tt = 60
+  dt_disp = 5
+  dt_file = 60
+  dt_recrd = 60
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_precip = '-'
+  dir_result = 'result'
+  dir_save = 'save_tkwet'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_enc
+  f_gravity_correction = 1
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 60.0
+  ly = 20.0
+  nx = 60
+  ny = 20
+  f_ztype = 0
+  z0 = 0.0
+  f_user_routine = "slope_break"   ! tanθ=0.4, 遷緩点 x=30m
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 5.0
+  sy0 = 0.2
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 200
+  prval(1:2,2) = 9999, 200
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_debris = 1
+  db_phi = 35.0             ! 内部摩擦角 = 安息角 φs (deg)
+  f_dbed = 3                ! E-D 式: 高橋・中川1991(式(12)(27))
+  f_dbres = 3               ! 抵抗則: 高橋・中川1991 石礫型(式(22)-(25))
+  db_d50 = 0.01             ! 代表粒径 (m)(抵抗則と E-D レート q_T/d_L の d)
+  db_delte = 0.005          ! 侵食係数 δe(校正パラメータ。本検定の薄層流で
+                            !   活性を確保する値。洞谷適用値は 0.0001)
+  db_deltd = 0.5            ! 堆積係数 δd(同上)
+  f_dbstop = 1              ! 低速凝集(停止 → 河床へ固定)
+  db_vstop = 0.05
+  db_wstop = 0.05
+  fluv_porosity = 0.4       ! 空隙率 λ(C* = 1-λ = 0.6)
+  f_dbwet = 1               ! 間隙水連行(高橋・中川1991 式(5)の i{c*+(1-c*)s_b} 台帳)
+  db_satbed = 1.0           ! 渓床飽和度 s_b
+/
