@@ -3,6 +3,7 @@ module m_precip
   use m_sysparam, only : t_sysparam
   use m_state, only : t_state
   use m_geoinfo, only : t_geoinfo
+  use m_meteo, only : t_meteo, meteo_prec_factor
   use m_util, only : str2sec, itoa
   use m_fileio, only : fileio_un_open, fileio_un_read_matrix, fileio_read_matrix
   use list_precip, only : t_list_precip, list_precip_read
@@ -187,13 +188,17 @@ end subroutine m_precip_init
 !   updated: このコールで s%pre / s%prh を実際に更新したか。
 !   m_intercept_calc(遮断)の呼び出しガードに使う(prtype=3 は呼ばれても
 !   更新しないステップがあり、そこで遮断を再適用すると二重減衰になる)。
-!   判定は全ランクで同一(s%it は全ランク共通)
+!   判定は全ランクで同一(s%it は全ランク共通)。
+!   mt: 降水の標高勾配(f_prec_lapse。§45)。更新時に倍率を乗じる
+!   (更新のたび元データから作り直すため二重適用はない)。無効時は
+!   乗算経路に入らず従来とビット同一
 !----------------------------------------------------------------------
-subroutine m_precip_makepre(pr, p, g, s, updated)
+subroutine m_precip_makepre(pr, p, g, s, mt, updated)
   type(t_precip), intent(in) :: pr
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
+  type(t_meteo), intent(in) :: mt
   logical, intent(out) :: updated
   real :: prval     ! 降水強度(mm/h)
   real :: f
@@ -261,6 +266,26 @@ subroutine m_precip_makepre(pr, p, g, s, updated)
       !s%pre(:,:) = s%prh(:,:) / 3600. / 1000.    ! (m/s)
       s%pre(:,:) = s%prh(:,:) / pr%dt_mapunit / 1000. * pr%runoff_rate   ! (m/s)
     end if
+  end if
+
+  ! ---- 降水の標高勾配(f_prec_lapse。§45)----
+  !   標高は氷河有効時は氷面 z+hi(涵養は氷面の標高で決まる)。
+  !   書き手は自帯 js..je のみ(pre のハロは全経路で従来から未使用)
+  if (updated .and. mt%plapse) then
+    !$omp parallel do private(i, j, f)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
+        if (allocated(s%hi)) then
+          f = meteo_prec_factor(mt, s%z(i,j) + s%hi(i,j))
+        else
+          f = meteo_prec_factor(mt, s%z(i,j))
+        end if
+        s%pre(i,j) = s%pre(i,j) * f
+        s%prh(i,j) = s%prh(i,j) * f
+      end do
+    end do
+    !$omp end parallel do
   end if
 
 contains

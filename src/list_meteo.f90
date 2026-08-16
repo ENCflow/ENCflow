@@ -26,6 +26,15 @@ module list_meteo
     integer :: f_temp_lapse = 0                    ! 1 で有効
     real :: temp_lapse = 0.65                      ! 減率 (℃/100m)
     real :: temp_zref = -9999.0                    ! 基準標高 (m。省略時=領域最低標高)
+    ! ---- 長周期の気候変調(オプション。§45)----
+    real :: tempofs(1:2,1:nmtmax) = -9999.0        ! 気温オフセット系列 (経過日数, ΔT ℃)。
+                                                   !   t_cycle で折り返さない実時間軸で
+                                                   !   評価し、気温入力に加算する
+                                                   !   (代表年反復×長期気候トレンドの重畳)
+    ! ---- 標高による降水勾配(オプション。§45)----
+    integer :: f_prec_lapse = 0                    ! 1 で有効
+    real :: prec_lapse = 0.0                       ! 降水の増率 (%/100m)
+    real :: prec_zref = -9999.0                    ! 基準標高 (m。省略時=領域最低標高)
   end type
 
 contains
@@ -44,12 +53,17 @@ subroutine list_meteo_read(p, list)
   integer :: f_temp_lapse
   real :: temp_lapse
   real :: temp_zref
+  real :: tempofs(1:2,1:nmtmax)
+  integer :: f_prec_lapse
+  real :: prec_lapse
+  real :: prec_zref
   integer :: un
   integer :: ios
   character(len=1024) :: iom
 
   namelist /list_meteo/ temp0, tempval, fn_tempmap, dt_tempmap_c, &
-                        f_temp_lapse, temp_lapse, temp_zref
+                        f_temp_lapse, temp_lapse, temp_zref, &
+                        tempofs, f_prec_lapse, prec_lapse, prec_zref
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -60,6 +74,10 @@ subroutine list_meteo_read(p, list)
   f_temp_lapse = list%f_temp_lapse
   temp_lapse = list%temp_lapse
   temp_zref = list%temp_zref
+  tempofs = list%tempofs
+  f_prec_lapse = list%f_prec_lapse
+  prec_lapse = list%prec_lapse
+  prec_zref = list%prec_zref
 
   call par_info("reading list_meteo in "//trim(p%fn_meteo))
   open(newunit=un, file=trim(p%fn_meteo), status='old', iostat=ios, iomsg=iom)
@@ -75,6 +93,10 @@ subroutine list_meteo_read(p, list)
   list%f_temp_lapse = f_temp_lapse
   list%temp_lapse = temp_lapse
   list%temp_zref = temp_zref
+  list%tempofs = tempofs
+  list%f_prec_lapse = f_prec_lapse
+  list%prec_lapse = prec_lapse
+  list%prec_zref = prec_zref
 
 end subroutine
 

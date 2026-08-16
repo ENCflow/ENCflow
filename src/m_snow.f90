@@ -206,7 +206,7 @@ subroutine m_snow_calc(sn, p, g, s, mt, pr_fresh)
   type(t_meteo), intent(inout) :: mt
   logical, intent(in) :: pr_fresh
   integer :: i, j
-  real :: tc, fsnow, w, wf
+  real :: tc, fsnow, w, wf, zc
 
   if (.not. sn%enabled) return
 
@@ -220,12 +220,16 @@ subroutine m_snow_calc(sn, p, g, s, mt, pr_fresh)
     sn%have0 = .true.
   end if
 
-  !$omp parallel do schedule(static) private(i, j, tc, fsnow, w, wf)
+  !$omp parallel do schedule(static) private(i, j, tc, fsnow, w, wf, zc)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
-      tc = meteo_temp_cell(mt, i, j, s%z(i,j))
+      ! 氷河有効時は氷面標高で気温を評価する(厚い氷の上ほど寒い =
+      ! 減率の負フィードバック。fn_glacier 無効時は従来とビット同一。§45)
+      zc = s%z(i,j)
+      if (allocated(s%hi)) zc = zc + s%hi(i,j)
+      tc = meteo_temp_cell(mt, i, j, zc)
 
       ! (1) 降雨/降雪の分離(スナップショットから毎ステップ再計算)
       if (sn%pr0(i,j) > 0.0) then
