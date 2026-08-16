@@ -84,7 +84,7 @@ ma(x) = (A[(int($0) % N) + 1] = x, $0 < N-1 ? NaN : (sum [i=1:N] A[i]) / N)
 set output "figs/step6_osc.png"
 set title "Step 6: 1 分値の流量振動と移動平均(測線 4)"
 set xrange [60:360]
-plot 'result_step6/fluxes/flux0004.csv' using 2:3 with lines lc rgb "#a0c8e8" title "1 分値(生)", \
+plot 'result_step6/fluxes/flux0004.csv' using 2:3 with lines lc rgb "#4477aa" title "1 分値(生)", \
      ''                                 using ($2 - (N-1)/2.0):(ma($3)) with lines lw 2 lc rgb "#c04040" title sprintf("%d 分移動平均(中央寄せ)", N)
 
 set output "figs/step6_osc_zoom.png"
@@ -92,5 +92,5 @@ set title "同 拡大(120〜240 min)"
 set xrange [120:240]
 set yrange [1500:3200]
 do for [i=1:N] { A[i] = 0.0 }
-plot 'result_step6/fluxes/flux0004.csv' using 2:3 with lines lc rgb "#a0c8e8" title "1 分値(生)", \
+plot 'result_step6/fluxes/flux0004.csv' using 2:3 with lines lc rgb "#4477aa" title "1 分値(生)", \
      ''                                 using ($2 - (N-1)/2.0):(ma($3)) with lines lw 2 lc rgb "#c04040" title sprintf("%d 分移動平均(中央寄せ)", N)

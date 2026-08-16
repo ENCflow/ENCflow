@@ -496,8 +496,10 @@ went on to time integration accuracy and the adaptive Runge-Kutta
 method, boundary conditions, and the wall properties of the ENC grid.
 From here:
 
+- [Tutorial 2: chichibu](../../chichibu/en/README.md) -- on to
+  rainfall-runoff computation of a catchment with real terrain data;
+  the standard workflow of practical computations is taught there
 - [examples/](../../../examples/) -- a collection of setup samples
-  using real terrain, rainfall, and so on
 - [test/](../../../test/) -- verified example cases (they double as
   regression tests)
 - To run with MPI parallelism, use the `encflow_mpi` executable built

@@ -448,7 +448,9 @@ time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
 時間積分の精度と適応的ルンゲクッタ法、境界条件、ENC 格子の壁の性質
 までを見てきました。ここから先は:
 
-- [examples/](../../examples/) — 実地形・降雨などを使った設定サンプル集
+- [チュートリアル 2: chichibu](../chichibu/README.md) — 実地形データを
+  使った流域の降雨流出計算へ。実務的な計算の型はこちらで学べます
+- [examples/](../../examples/) — 設定ファイルのサンプル集
 - [test/](../../test/) — 検証済みの例題(回帰テストを兼ねています)
 - MPI 並列で実行したい場合は `make.inc` の設定でビルドした
   `encflow_mpi` を `mpirun -np 4 ./encflow_mpi param_step1.txt` の
