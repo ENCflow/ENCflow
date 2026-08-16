@@ -41,7 +41,7 @@ input; individual topics are split into per-chapter pages.
 - [Measurement](users_guide/record.md) (&list_record) -- probes, flux transects
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 392 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 401 parameter names to their chapters
 
 ---
 

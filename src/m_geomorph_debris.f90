@@ -34,7 +34,7 @@
 !   morfac は 1 に限定(init で検証。イベント計算)。
 !======================================================================
 submodule(m_geomorph) m_geomorph_debris
-  use m_parallel, only : par_stop, dcp
+  use m_parallel, only : par_stop, dcp, par_halo_cell
   use m_swflow_enc, only : m_swflow_enc_set_debris
   use m_fileio, only : fileio_read_matrix
   implicit none
@@ -45,6 +45,10 @@ submodule(m_geomorph) m_geomorph_debris
   real, parameter :: db_tan2 = 0.03      ! 未成熟/掃流の境界 tanθ
   real, parameter :: db_immat = 6.7      ! 未成熟領域の係数(C∞ = 6.7 C∞d²)
   real, parameter :: db_cfrac = 0.9      ! C∞ の上限係数(C∞ ≤ 0.9 C*)
+
+  ! 高橋・中川(1991)新砂防 44(3) の定数(原式固定。f_dbed=3)
+  real, parameter :: tk_ab = 0.02        ! a_i・sinα_i(式(2)(15)の 0.02)
+  real, parameter :: tk_p = 1.0 / 3.0    ! 堆積の慣性係数の定数 p(式(27)。採用値)
 
 contains
 
@@ -59,17 +63,23 @@ module subroutine init_debris(gm, p, g, list)
   integer :: k
   real, parameter :: deg2rad = acos(-1.0) / 180.0
 
-  if (list%db_phi <= 0.0 .or. list%db_phi >= 90.0) then
-    call par_stop("list_geomorph: f_debris requires db_phi in (0, 90) deg")
+  ! 内部摩擦角 φ は E-D(f_dbed>=1)と濃度依存の降伏抵抗(f_dbres=1,2)が
+  ! 使う。等価流体構成(f_dbed=0 + f_dbres=0,3,4,5)では不要
+  if (list%f_dbed >= 1 .or. list%f_dbres == 1 .or. list%f_dbres == 2) then
+    if (list%db_phi <= 0.0 .or. list%db_phi >= 90.0) then
+      call par_stop("list_geomorph: f_debris requires db_phi in (0, 90) deg")
+    end if
+    gm%db_tanphi = tan(list%db_phi * deg2rad)
+    ! 石礫型領域(tanθ > 0.138)で分母 tanφ − tanθ が定義されるための下限
+    if (gm%db_tanphi <= db_tan1) then
+      call par_stop("list_geomorph: db_phi is too small, tan(phi) > 0.138 is required " &
+                    // "(internal friction angle of sediment is usually 30-40 deg)")
+    end if
   end if
-  gm%db_tanphi = tan(list%db_phi * deg2rad)
-  ! 石礫型領域(tanθ > 0.138)で分母 tanφ − tanθ が定義されるための下限
-  if (gm%db_tanphi <= db_tan1) then
-    call par_stop("list_geomorph: db_phi is too small, tan(phi) > 0.138 is required " &
-                  // "(internal friction angle of sediment is usually 30-40 deg)")
+  if (list%f_dbed >= 1) then
+    if (list%db_delte <= 0.0) call par_stop("list_geomorph: db_delte must be > 0")
+    if (list%db_deltd <= 0.0) call par_stop("list_geomorph: db_deltd must be > 0")
   end if
-  if (list%db_delte <= 0.0) call par_stop("list_geomorph: db_delte must be > 0")
-  if (list%db_deltd <= 0.0) call par_stop("list_geomorph: db_deltd must be > 0")
   gm%db_delte = list%db_delte
   gm%db_deltd = list%db_deltd
   ! C* = 1 − λ(空隙率は土砂プロセス共有の fluv_porosity。新パラメータに
@@ -93,23 +103,120 @@ module subroutine init_debris(gm, p, g, list)
   gm%db_vstop = list%db_vstop
   gm%db_wstop = list%db_wstop
 
+  ! E-D 式の選択
+  !   2 = 江頭・芦田1992: E = |V|・C*・tan(θ−θe)。追加パラメータなし。
+  !       典拠: Egashira & Ashida (1992), Morpho2DH Solver Manual 式(5)-(7)
+  !   3 = 高橋・中川1991: 飽和床侵食(式12)+慣性係数付き堆積(式27)。
+  !       レートは δe/δd・q_T/d_L(db_d50 必須)。
+  !       典拠: 高橋・中川, 新砂防 44(3), 1991, 12-19
+  select case (list%f_dbed)
+    case (0, 1, 2)      ! 0 = 交換なし(等価流体モード: 移流・停止のみ)
+      gm%f_dbed = list%f_dbed
+    case (3)
+      if (list%db_d50 <= 0.0) then
+        call par_stop("list_geomorph: f_dbed=3 requires db_d50 > 0(レート q_T/d_L の粒径)")
+      end if
+      gm%f_dbed = list%f_dbed
+    case default
+      call par_stop("list_geomorph: f_dbed must be 0(no exchange), 1(simplified)," &
+                    // " 2(Egashira-Ashida) or 3(Takahashi-Nakagawa 1991)")
+  end select
+
   ! 抵抗則(実体は m_swflow_enc。パラメータをここで検証して渡す。
   ! 初期化順序: geomorph init は swflow init より前 — m_main 参照)
   select case (list%f_dbres)
     case (0)      ! マニングのみ(E-D の単独検証用)
       continue
-    case (1)      ! クーロン+マニング合成(推奨)
+    case (1)      ! クーロン+マニング合成
       if (list%db_vstop <= 0.0) then
         call par_stop("list_geomorph: f_dbres=1 requires db_vstop > 0 (yield threshold)")
       end if
-    case (2)      ! 高橋ダイラタント(予約)
-      call par_stop("list_geomorph: f_dbres=2 (Takahashi dilatant) is not implemented yet " &
-                    // "(coefficients pending literature check, see debris_plan.md)")
+    case (2)      ! 江頭構成則(τy + 層流抵抗。江頭ら1989 式(25)/Morpho2DH 式(17)(19))
+      if (list%db_vstop <= 0.0) then
+        call par_stop("list_geomorph: f_dbres=2 requires db_vstop > 0(降伏判定の閾値)")
+      end if
+      if (list%db_d50 <= 0.0) then
+        call par_stop("list_geomorph: f_dbres=2 requires db_d50 > 0(層流抵抗の h/d)")
+      end if
+      if (list%db_erest <= 0.0 .or. list%db_erest > 1.0) then
+        call par_stop("list_geomorph: f_dbres=2 requires db_erest in (0, 1]" &
+                      // "(粒子の反発係数。材料固有値 — 文献に既定なし)")
+      end if
+      if (list%db_cmin <= 0.0 .or. list%db_cmin >= gm%db_cstar) then
+        call par_stop("list_geomorph: db_cmin must be in (0, C*)")
+      end if
+    case (3)      ! 高橋・中川1991 石礫型(式(22)-(25)。tanα'=0.45, A'=4 は原式固定)
+      if (list%db_vstop <= 0.0) then
+        call par_stop("list_geomorph: f_dbres=3 requires db_vstop > 0(降伏判定の閾値)")
+      end if
+      if (list%db_d50 <= 0.0) then
+        call par_stop("list_geomorph: f_dbres=3 requires db_d50 > 0(抵抗則の d_L/h)")
+      end if
+      if (list%db_cmin <= 0.0 .or. list%db_cmin >= gm%db_cstar) then
+        call par_stop("list_geomorph: db_cmin must be in (0, C*)")
+      end if
+    case (4)      ! Voellmy 等価流体(降伏 μ + 乱流項 gV²/(ξh)。RAMMS/Titan2D 系)
+      if (list%db_mu <= 0.0) then
+        call par_stop("list_geomorph: f_dbres=4 requires db_mu > 0(Voellmy 摩擦係数)")
+      end if
+      if (list%db_xi <= 0.0) then
+        call par_stop("list_geomorph: f_dbres=4 requires db_xi > 0(Voellmy 乱流係数 m/s²)")
+      end if
+      if (list%db_vstop <= 0.0) then
+        call par_stop("list_geomorph: f_dbres=4 requires db_vstop > 0(降伏判定の閾値)")
+      end if
+      if (list%db_cmin <= 0.0 .or. list%db_cmin >= gm%db_cstar) then
+        call par_stop("list_geomorph: db_cmin must be in (0, C*)")
+      end if
+    case (5)      ! 一定停止応力 τ_y + マニング合成(VolcFlow 型)
+      if (list%db_tauy <= 0.0) then
+        call par_stop("list_geomorph: f_dbres=5 requires db_tauy > 0(停止応力 Pa)")
+      end if
+      if (list%db_vstop <= 0.0) then
+        call par_stop("list_geomorph: f_dbres=5 requires db_vstop > 0(降伏判定の閾値)")
+      end if
+      if (list%db_cmin <= 0.0 .or. list%db_cmin >= gm%db_cstar) then
+        call par_stop("list_geomorph: db_cmin must be in (0, C*)")
+      end if
     case default
-      call par_stop("list_geomorph: f_dbres must be 0(Manning) or 1(Coulomb+Manning)")
+      call par_stop("list_geomorph: f_dbres must be 0(Manning), 1(Coulomb+Manning)," &
+                    // " 2(Egashira), 3(Takahashi-Nakagawa 1991), 4(Voellmy)" &
+                    // " or 5(constant retarding stress)")
   end select
+  gm%db_mu = list%db_mu
+  gm%db_xi = list%db_xi
+  gm%db_tauy = list%db_tauy
   gm%f_dbres = list%f_dbres
-  call m_swflow_enc_set_debris(gm%f_dbres, gm%db_tanphi, gm%sgrav, gm%db_vstop)
+  gm%db_d50v = list%db_d50
+  gm%db_erest = list%db_erest
+  gm%db_cmin = list%db_cmin
+  call m_swflow_enc_set_debris(gm%f_dbres, gm%db_tanphi, gm%sgrav, gm%db_vstop, &
+                               gm%db_cstar, gm%db_cmin, gm%db_d50v, gm%db_erest, &
+                               gm%db_mu, gm%db_xi, gm%db_tauy)
+
+  ! 間隙水の連行(f_dbwet。高橋・中川1991 式(5)の源泉 i{c*+(1−c*)s_b} 形)
+  select case (list%f_dbwet)
+    case (0)
+      continue
+    case (1)
+      if (list%db_satbed < 0.0 .or. list%db_satbed > 1.0) then
+        call par_stop("list_geomorph: db_satbed must be in [0, 1]")
+      end if
+      ! gwflow との併用は不可: 侵食時の間隙水放出は gwflow 併用時は
+      ! 容量超過引き渡し(hg → h)が担っており、二重計上になる。
+      ! (gw_active は gwflow init 後に確定するため、ここでは設定ファイル
+      !  指定の有無で判定する。fn_gwflow を書いたまま f_gwvertical=0 で
+      !  無効化している構成もエラーになるが、メッセージで案内する)
+      if (len_trim(p%fn_gwflow) > 0) then
+        call par_stop("list_geomorph: f_dbwet=1 は gwflow と併用できません" &
+                      // "(侵食時の間隙水放出が容量引き渡しと二重計上になります。" &
+                      // " fn_gwflow の指定を外してください)")
+      end if
+    case default
+      call par_stop("list_geomorph: f_dbwet must be 0(ignore) or 1(saturated-bed entrainment)")
+  end select
+  gm%f_dbwet = list%f_dbwet
+  gm%db_lamsb = (1.0 - gm%db_cstar) * list%db_satbed    ! λ・s_b(λ = 1−C*)
 
   ! 8近傍距離テーブル(最急降下勾配用)
   do k = 1, 8
@@ -191,14 +298,26 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   type(t_state), intent(inout) :: s
   real, intent(in) :: dtw       ! 実効時間刻み(morfac=1 を init で保証済み)
   integer :: i, j
-  real :: tanth, cinf, cc, hm, fx, dzb, cap, fxg, hseq
+  real :: tanth, cinf, cc, hm, fx, dzb, cap, fxg, hseq, dhw
+  real :: tanthc, sinthc, vcr, fac
+
+  ! --- f_dbed=3 の流動面勾配は近傍の h・hs を読む。両者のハロは
+  !     ステップ頭交換のままで、swflow が帯内を更新済み = 帯界面で
+  !     古い(calc_fluvial の冒頭交換と同じ構図。np=2 の state.dat
+  !     不一致で実検出)。ここで最新化する(判定は namelist 由来で
+  !     全ランク同一 = collective 安全。z は交換済みで不要) ---
+  if (gm%f_dbed == 3) then
+    call par_halo_cell(s%h)
+    call par_halo_cell(s%hs)
+  end if
 
   ! --- 斜面安定のパス1: Fs 評価(時刻 n の z。E-D パス2 より前に評価する
   !     ことで、勾配読みが帯内更新とハロの不整合を起こさない) ---
   if (gm%f_slide > 0) call slide_pass1(gm, p, g, s)
 
   ! --- パス1: 交換量の計算(時刻 n の状態のみを読む) ---
-  !$omp parallel do schedule(static) private(i, j, tanth, cinf, cc, hm, fx, hseq)
+  !$omp parallel do schedule(static) private(i, j, tanth, cinf, cc, hm, fx, hseq, &
+  !$omp                                      tanthc, sinthc, vcr, fac)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       dbr%fx(i,j) = 0.0
@@ -209,22 +328,89 @@ module subroutine calc_debris(gm, p, g, s, dtw)
         if (s%hs(i,j) <= 0.0) cycle
         fx = -s%hs(i,j)
       else
-        ! 最急降下勾配(時刻 n の z。本プロセスは calc の先頭で適用)
-        tanth = slope8(g, s, i, j)
-        cinf = ceq_debris(gm, tanth)
         ! 混合体積濃度 C = hs/(h+hs)(希薄極限で hs/h に漸近)
         hm = s%h(i,j) + max(s%hs(i,j), 0.0)
         cc = 0.0
         if (s%hs(i,j) > 0.0) cc = s%hs(i,j) / hm
-        if (cc < cinf) then
-          ! 侵食(C* − C∞ ≥ 0.1C* が上限 0.9C* により保証される)
-          fx = gm%db_cstar * gm%db_delte * (cinf - cc) / (gm%db_cstar - cinf) &
-               * s%vv(i,j) * dtw
-          ! 可動層クランプ(河床側は ×morfac・poroi で減るため換算して制限)
-          fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
+        if (gm%f_dbed == 0) then
+          ! 交換なし(等価流体モード: 移流・停止のみ。火砕流・岩屑なだれ —
+          ! debris_plan.md 火山編)。f_dbstop=1 の平衡濃度は 0 扱い =
+          ! 低速セルの hs 全量が db_wstop レートで河床へ固定される
+          fx = 0.0
+          cinf = 0.0
+        else if (gm%f_dbed == 2) then
+          ! 江頭・芦田(1992): E = |V|・C*・tan(θ−θe)(流向の河床勾配。
+          ! 侵食・堆積が1本の式で連続。Morpho2DH 式(5)-(7))
+          if (s%vv(i,j) > 0.0) then
+            tanth = slope_flow(g, s, i, j)
+            fx = gm%db_cstar * s%vv(i,j) &
+                 * tan(atan(tanth) - atan(gm%sgrav * cc / (gm%sgrav * cc + 1.0) &
+                                          * gm%db_tanphi)) * dtw
+            if (fx > 0.0) then
+              ! 可動層クランプ(河床側は ×morfac・poroi で減るため換算して制限)
+              fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
+            end if
+          else
+            ! 静止セルは E-D なし(E ∝ |V|)。停止判定用の勾配は地形勾配
+            tanth = slope8(g, s, i, j)
+            fx = 0.0
+          end if
+          ! 停止条件(f_dbstop=1)の平衡濃度は同式の逆関数(勾配→濃度)
+          cinf = ceq_egashira(gm, tanth)
+        else if (gm%f_dbed == 3) then
+          ! 高橋・中川(1991)新砂防 44(3)。単一粒径・飽和床形
+          ! (多粒径の式(12)(27)は単一粒径 ρm=ρ, c_L=c_T=C, c*DL=C* で
+          !  以下に帰着する — debris_plan.md §1)
+          if (s%vv(i,j) > 0.0) then
+            ! 流速ベクトル方向の流動面(z+h+hs)勾配(式(26))
+            tanth = slope_flow_surf(g, s, i, j)
+            cinf = ceq_egashira(gm, tanth)   ! 式(11)(13)の単一粒径形(上限 0.9C*)
+            if (cc < cinf) then
+              ! 飽和床の侵食(式(12): δe・(C∞−C)/(C*−C∞)・q_T/d_L。
+              ! 固体換算 fx = C*・i・dtw)
+              fx = gm%db_cstar * gm%db_delte * (cinf - cc) / (gm%db_cstar - cinf) &
+                   * s%vv(i,j) * hm / gm%db_d50v * dtw
+              fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
+            else
+              ! 堆積(式(27): δd・(1−V/(p・vc))⁴・(C∞−C)/C*・q_T/d_L。
+              ! vc は限界速度(式(15))、tanθc は限界勾配(式(16))。
+              ! 慣性係数が負(V ≥ p・vc)の間は堆積しない(慣性走行)
+              fx = 0.0
+              if (cc > 0.0) then
+                tanthc = gm%sgrav * cc / (gm%sgrav * cc + 1.0) * gm%db_tanphi
+                sinthc = tanthc / sqrt(1.0 + tanthc**2)
+                vcr = 0.4 / gm%db_d50v &
+                      * sqrt(p%gg * sinthc / tk_ab * (cc + (1.0 - cc) / (gm%sgrav + 1.0))) &
+                      * ((gm%db_cstar / cc)**(1.0/3.0) - 1.0) * hm**1.5
+                if (vcr > 0.0) then
+                  fac = 1.0 - s%vv(i,j) / (tk_p * vcr)
+                  if (fac > 0.0) then
+                    fx = gm%db_deltd * fac**4 * (cinf - cc) &
+                         * s%vv(i,j) * hm / gm%db_d50v * dtw
+                  end if
+                end if
+              end if
+            end if
+          else
+            ! 静止セルは E-D なし(レート ∝ q_T)。停止判定用の勾配は地形勾配
+            tanth = slope8(g, s, i, j)
+            cinf = ceq_egashira(gm, tanth)
+            fx = 0.0
+          end if
         else
-          ! 堆積(C*・δd・(C∞−C)/C* = δd・(C∞−C))
-          fx = gm%db_deltd * (cinf - cc) * s%vv(i,j) * dtw
+          ! 高橋型: 平衡濃度 C∞(θ) への緩和(最急降下勾配。時刻 n の z)
+          tanth = slope8(g, s, i, j)
+          cinf = ceq_debris(gm, tanth)
+          if (cc < cinf) then
+            ! 侵食(C* − C∞ ≥ 0.1C* が上限 0.9C* により保証される)
+            fx = gm%db_cstar * gm%db_delte * (cinf - cc) / (gm%db_cstar - cinf) &
+                 * s%vv(i,j) * dtw
+            ! 可動層クランプ(河床側は ×morfac・poroi で減るため換算して制限)
+            fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
+          else
+            ! 堆積(C*・δd・(C∞−C)/C* = δd・(C∞−C))
+            fx = gm%db_deltd * (cinf - cc) * s%vv(i,j) * dtw
+          end if
         end if
         ! 停止条件(低速凝集): 低速かつ過飽和なら平衡までの超過分を
         ! レート db_wstop(河床深さ)で河床へ(f_dbstop=1)
@@ -244,7 +430,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   !$omp end parallel do
 
   ! --- パス2: 適用(書き込みは自セルに閉じる) ---
-  !$omp parallel do schedule(static) private(i, j, fx, dzb, cap, fxg)
+  !$omp parallel do schedule(static) private(i, j, fx, dzb, cap, fxg, dhw)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       fx = dbr%fx(i,j)
@@ -254,6 +440,16 @@ module subroutine calc_debris(gm, p, g, s, dtw)
       dzb = -fx * gm%morfac * gm%poroi
       s%z(i,j) = s%z(i,j) + dzb
       s%sd(i,j) = s%sd(i,j) + dzb
+      ! 間隙水の連行(f_dbwet=1。高橋・中川1991 式(5)の源泉
+      ! i{c*+(1−c*)s_b} の水側。
+      ! gwflow 併用は init で排除済み):
+      !   侵食(Δz<0): λ・s_b・|Δz| の間隙水を地表水 h へ放出(飽和床)
+      !   堆積(Δz>0): 同量を埋没(地表水の範囲で。不足分は不飽和堆積)
+      if (gm%f_dbwet == 1) then
+        dhw = -gm%db_lamsb * dzb
+        if (dhw < 0.0) dhw = max(dhw, -max(s%h(i,j), 0.0))
+        s%h(i,j) = s%h(i,j) + dhw
+      end if
       ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
       ! (calc_suspend と同じ整合。反対称適用)
       if (s%gw_active) then
@@ -437,6 +633,138 @@ pure function slope8(g, s, i, j) result(tanth)
     sl = (s%z(i,j) - s%z(in,jn)) / dbr%dist8(k)
     if (sl > tanth) tanth = sl
   end do
+end function
+
+
+!----------------------------------------------------------------------
+! 流向の河床勾配 tanθ(Morpho2DH 式(6): sinθ = (u sinθx + v sinθy)/|V|)
+!   θx, θy は時刻 n の z の中央差分(片側フォールバック。近傍が領域外・
+!   海なら自セル値で代用 = 勾配 0 側に倒す)。流向が上り勾配なら負を返す
+!   (江頭・芦田式の堆積側)。|V| = 0 は呼び出し側で除外済み
+!----------------------------------------------------------------------
+pure function slope_flow(g, s, i, j) result(tanth)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  real :: tanth
+  real :: zl, zr, dl, sinthx, sinthy, sinth
+  real, parameter :: smax = 0.999
+
+  ! x 方向の河床勾配角 θx(下り正)。近傍マスク(sw)の読みは x 番兵
+  ! ガードの内側で(.and. は短絡評価が保証されない — §12 の帯確保規則の系。
+  ! -fcheck np=2 で実検出)
+  zl = s%z(i,j); zr = s%z(i,j); dl = 0.0
+  if (g%x(i-1,j) > 0) then
+    if (g%sw(i-1,j) <= 0) then
+      zl = s%z(i-1,j); dl = dl + g%dx
+    end if
+  end if
+  if (g%x(i+1,j) > 0) then
+    if (g%sw(i+1,j) <= 0) then
+      zr = s%z(i+1,j); dl = dl + g%dx
+    end if
+  end if
+  sinthx = 0.0
+  if (dl > 0.0) sinthx = sin(atan((zl - zr) / dl))
+  ! y 方向の河床勾配角 θy(下り正)
+  zl = s%z(i,j); zr = s%z(i,j); dl = 0.0
+  if (g%x(i,j-1) > 0) then
+    if (g%sw(i,j-1) <= 0) then
+      zl = s%z(i,j-1); dl = dl + g%dy
+    end if
+  end if
+  if (g%x(i,j+1) > 0) then
+    if (g%sw(i,j+1) <= 0) then
+      zr = s%z(i,j+1); dl = dl + g%dy
+    end if
+  end if
+  sinthy = 0.0
+  if (dl > 0.0) sinthy = sin(atan((zl - zr) / dl))
+
+  sinth = (s%u(i,j) * sinthx + s%v(i,j) * sinthy) / s%vv(i,j)
+  sinth = max(-smax, min(smax, sinth))
+  tanth = sinth / sqrt(1.0 - sinth**2)
+end function
+
+
+!----------------------------------------------------------------------
+! 流速ベクトル方向の流動面勾配 tanθ(高橋・中川1991 式(26)):
+!   tanθ = (u sinθ'x + v sinθ'y) / √(u²cos²θ'x + v²cos²θ'y)
+!   θ' は流動面(z + h + hs)の傾斜角(中央差分・片側フォールバック。
+!   近傍マスクの読みは x 番兵ガードのネスト内側 — §12/§28 の規約)。
+!   |V| = 0 は呼び出し側で除外済み
+!----------------------------------------------------------------------
+pure function slope_flow_surf(g, s, i, j) result(tanth)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  real :: tanth
+  real :: el, er, dl, thx, thy, sx_, cx_, sy_, cy_, den
+
+  ! x 方向の流動面勾配角 θ'x(下り正)
+  el = surf(s, i, j); er = el; dl = 0.0
+  if (g%x(i-1,j) > 0) then
+    if (g%sw(i-1,j) <= 0) then
+      el = surf(s, i-1, j); dl = dl + g%dx
+    end if
+  end if
+  if (g%x(i+1,j) > 0) then
+    if (g%sw(i+1,j) <= 0) then
+      er = surf(s, i+1, j); dl = dl + g%dx
+    end if
+  end if
+  thx = 0.0
+  if (dl > 0.0) thx = atan((el - er) / dl)
+  ! y 方向の流動面勾配角 θ'y(下り正)
+  el = surf(s, i, j); er = el; dl = 0.0
+  if (g%x(i,j-1) > 0) then
+    if (g%sw(i,j-1) <= 0) then
+      el = surf(s, i, j-1); dl = dl + g%dy
+    end if
+  end if
+  if (g%x(i,j+1) > 0) then
+    if (g%sw(i,j+1) <= 0) then
+      er = surf(s, i, j+1); dl = dl + g%dy
+    end if
+  end if
+  thy = 0.0
+  if (dl > 0.0) thy = atan((el - er) / dl)
+
+  sx_ = sin(thx); cx_ = cos(thx)
+  sy_ = sin(thy); cy_ = cos(thy)
+  den = sqrt((s%u(i,j) * cx_)**2 + (s%v(i,j) * cy_)**2)
+  tanth = 0.0
+  if (den > 0.0) tanth = (s%u(i,j) * sx_ + s%v(i,j) * sy_) / den
+end function
+
+
+!----------------------------------------------------------------------
+! 流動面標高(z + h + hs。hs の負値はクランプ)
+!----------------------------------------------------------------------
+pure function surf(s, i, j) result(e)
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  real :: e
+  e = s%z(i,j) + s%h(i,j) + max(s%hs(i,j), 0.0)
+end function
+
+
+!----------------------------------------------------------------------
+! 江頭の平衡濃度(平衡勾配式 tanθe = sC/(sC+1)・tanφ の逆関数。
+! 石礫型 C∞ 式(高橋・中川1991 式(11)(13)の単一粒径形)と同形 —
+! 独立導出の一致。上限 0.9C* は高橋側と共通。f_dbed=2, 3 が共用)
+!----------------------------------------------------------------------
+pure function ceq_egashira(gm, tanth) result(cinf)
+  type(t_geomorph), intent(in) :: gm
+  real, intent(in) :: tanth
+  real :: cinf
+  cinf = 0.0
+  if (tanth <= 0.0) return
+  if (tanth >= gm%db_tanphi) then
+    cinf = db_cfrac * gm%db_cstar
+  else
+    cinf = min(tanth / (gm%sgrav * (gm%db_tanphi - tanth)), db_cfrac * gm%db_cstar)
+  end if
 end function
 
 

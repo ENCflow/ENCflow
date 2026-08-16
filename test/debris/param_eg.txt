@@ -1,0 +1,71 @@
+!======================================================================
+! debris(構成2: 江頭則): 土石流の疎通・保存則検定
+!   param.txt と同一の地形・降雨で、E-D を江頭・芦田(1992)
+!   (E = |V|・C*・tan(θ−θe)。流向勾配・追加パラメータなし)、抵抗則を
+!   江頭構成則(降伏応力 + 粒子衝突・間隙流体の層流抵抗)に切り替える。
+!   典拠: 江頭(1993)新砂防 46(2) 式(25)(26)、Morpho2DH Solver Manual
+!   式(5)-(7), (15)-(19)。検定は Check_debris.py(param.txt と共通)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02
+  t0 = 0
+  tt = 30
+  dt_disp = 5
+  dt_file = 30
+  dt_recrd = 30
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_precip = '-'
+  dir_result = 'result'
+  dir_save = 'save_eg'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_enc
+  f_gravity_correction = 1
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 60.0
+  ly = 20.0
+  nx = 60
+  ny = 20
+  f_ztype = 0
+  z0 = 0.0
+  f_user_routine = "slope_break"   ! tanθ=0.4, 遷緩点 x=30m
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 5.0
+  sy0 = 0.2
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 200
+  prval(1:2,2) = 9999, 200
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_debris = 1
+  db_phi = 35.0             ! 内部摩擦角 = 安息角 φs (deg)
+  f_dbed = 2                ! E-D 式: 江頭・芦田1992(パラメータ追加なし)
+  f_dbres = 2               ! 抵抗則: 江頭構成則
+  db_d50 = 0.05             ! 代表粒径 (m)(層流抵抗の h/d)
+  db_erest = 0.85           ! 粒子の反発係数 e(材料固有値)
+  f_dbstop = 1              ! 低速凝集(停止 → 河床へ固定)
+  db_vstop = 0.05
+  db_wstop = 0.05
+  fluv_porosity = 0.4       ! 空隙率 λ(C* = 1-λ = 0.6)
+/

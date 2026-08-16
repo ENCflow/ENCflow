@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<defs><clipPath id="c"><circle cx="512" cy="512" r="512"/></clipPath></defs>
+<circle cx="512" cy="512" r="512" fill="#0E5A8A"/>
+<circle cx="512" cy="512" r="402" fill="none" stroke="#66C2E0" stroke-width="16"/>
+<g clip-path="url(#c)">
+<rect x="874" y="493" width="180" height="38" fill="#FFFFFF" transform="rotate(45 512 512)"/>
+<rect x="874" y="493" width="180" height="38" fill="#FFFFFF" transform="rotate(135 512 512)"/>
+<rect x="874" y="493" width="180" height="38" fill="#FFFFFF" transform="rotate(225 512 512)"/>
+<rect x="874" y="493" width="180" height="38" fill="#FFFFFF" transform="rotate(315 512 512)"/>
+<rect x="874" y="483" width="180" height="58" fill="#FFFFFF" transform="rotate(0 512 512)"/>
+<rect x="874" y="483" width="180" height="58" fill="#FFFFFF" transform="rotate(90 512 512)"/>
+<rect x="874" y="483" width="180" height="58" fill="#FFFFFF" transform="rotate(180 512 512)"/>
+<rect x="874" y="483" width="180" height="58" fill="#FFFFFF" transform="rotate(270 512 512)"/>
+</g>
+<g transform="translate(289,432)"><g transform="scale(1.6)"><g fill="none" stroke="#FFFFFF" stroke-width="28.8">
+<path d="M9,0 V100"/>
+<path d="M0,9 H62"/>
+<path d="M0,50 H56"/>
+<path d="M0,91 H62"/>
+<path d="M101,0 V100"/>
+<path d="M149,100 V0"/>
+<path d="M101,7 L149,93"/>
+<path d="M264.4,81.4 A41,41 0 1,1 264.4,18.6"/>
+</g>
+</g></g>
+</svg>

@@ -51,6 +51,7 @@ buildup-washoff+積雪+長期地形変動まで完了)を前提とする。
 | 降雨流出・遮断・蒸発散 | ○(樹冠・Hamon/Thornthwaite・減率) | RRI, GSSHA, MIKE SHE, SHETRAN | 水理特化勢は持たない |
 | 地下水 | ○ 2層(土層 Boussinesq+風化基岩層) | MIKE SHE(3D), SHETRAN(3D), GSSHA | 平面2次元モデルで2層は少数派。 |
 | 土砂・地形変化(掃流・浮遊・崩壊・土石流) | ○ MORFAC 付き | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | 土石流・泥流(地すべり起因の流動・堆積)の無償実務勢は Morpho2DH(iRIC)が代表。ENCflow は土石流を流域水文・洪水と同居させる点が異なる |
+| 火山流動(岩屑なだれ・dense 火砕流・ラハール) | ○ 等価流体(Voellmy・一定停止応力・f_release。§28.8) | Titan2D, VolcFlow, RAMMS(雪崩), LaharZ(経験則) | 専用勢と同じ SWE+粒状体抵抗則の水準。ENCflow は噴火→流下→堆積→天然ダム→決壊洪水→降雨二次泥流の連鎖を単一モデル・単一計算で追える点が独自(専用勢は単プロセス)。希薄系(サージ・噴煙・降灰輸送)は対象外と明言(debris_plan.md §5) |
 | 水質(負荷流出・減衰・沈降・buildup-washoff) | ○ | MIKE ECO Lab, Delft3D-WAQ, Iber-WQ, GSSHA | 無償・公開で水文+水質+水理の同居は稀 |
 | 積雪・融雪 | ○ 度日法(§31。2026-08-10) | MIKE SHE・GSSHA・SHETRAN(同じく度日法系) | HEC-RAS は HMS 側。 |
 | 氷河 | ○ 度日質量収支+SIA 流動+滑動+氷河侵食+雪崩再配分(§45。2026-08-16) | 汎用洪水モデルには皆無 | 精緻な氷力学は専用モデル(PISM, Elmer/Ice, OGGM)の領域。洪水水理・流域水文・地形変動と氷河を単一モデルで併走させる構成は他に例がない |
@@ -74,7 +75,7 @@ buildup-washoff+積雪+長期地形変動まで完了)を前提とする。
   スタック前提)。教育利用(ノート PC)からベクトル機・スパコンまで
   同一ソースという間口は、TUFLOW デモ制限や商用 GUI 前提と対照的。
 - (追記 2026-08-14、2026-08-16 更新)機能面に加えて利用者向けの
-  整備が一巡した: ユーザーガイド 17 章+全パラメータ索引(370 項目)、
+  整備が一巡した: ユーザーガイド 18 章+全パラメータ索引(401 項目)、
   全機能の注釈付き namelist 見本(examples/List_samples)、実行して
   学ぶチュートリアル 2 件(最小例 wave・実地形 chichibu。実データの
   落とし穴 = 窪地除去・平坦区間由来の流量振動から、ParaView での

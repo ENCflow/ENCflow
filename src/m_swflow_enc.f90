@@ -76,10 +76,33 @@ module m_swflow_enc
   !   (namelist の所有は list_geomorph。swflow init より前に呼ばれる契約)。
   !   運動量への hs 算入(重力・圧力項の水面 = z+h+hs、摩擦水深 = h+hs)は
   !   debris_active で常時、クーロン抵抗と降伏判定は db_res=1 のとき有効
-  integer :: db_res = 0                     ! 抵抗則 (0:マニングのみ, 1:クーロン+マニング)
+  integer :: db_res = 0                     ! 抵抗則 (0:マニングのみ, 1:クーロン+マニング,
+                                            !   2:江頭構成則, 3:高橋・中川1991,
+                                            !   4:Voellmy, 5:一定停止応力)
   real :: db_tanphi = 0.0                   ! tan(内部摩擦角)
   real :: db_sgrav = 0.0                    ! 土粒子の水中比重 s
   real :: db_vstop = 0.0                    ! 降伏判定の速度閾値 (m/s)
+  real :: db_cstar = 0.0                    ! 河床の充填濃度 C*(降伏応力の (C/C*)^{1/5})
+  real :: db_cmin = 0.0                     ! 江頭層流則の濃度下限(未満はマニング)
+  real :: db_d50v = 0.0                     ! 代表粒径 d (m)(層流則の (h/d)^{-2})
+  real :: db_kcol = 0.0                     ! 前計算 k_d・(σ/ρ)・(1−e²)(層流則第2項)
+  real :: db_mu = 0.0                       ! Voellmy 摩擦係数 μ(db_res=4)
+  real :: db_xi = 0.0                       ! Voellmy 乱流係数 ξ (m/s²)(db_res=4)
+  real :: db_tauy = 0.0                     ! 一定停止応力 τ_y (Pa)(db_res=5)
+  real, parameter :: db_rhow = 1000.0       ! 清水密度 (kg/m³)(τ_y を加速度に落とす
+                                            !   換算。混合密度 ρm = ρw(1+sC))
+  ! 江頭構成則の定数(原式固定。典拠: 江頭・芦田・矢島・高濱(1989)の
+  ! 抵抗則 = 江頭(1993)講座 式(25)、Morpho2DH Solver Manual 式(17)(19)。
+  ! k_f は 0.16〜0.25 の範囲が示されており Morpho2DH の 0.16 を採用)
+  real, parameter :: db_kf = 0.16           ! 間隙流体の乱れの係数 k_f
+  real, parameter :: db_kd = 0.0828         ! 粒子非弾性衝突の係数 k_d
+  real, parameter :: db_yexp = 0.2          ! 降伏応力の指数 1/n(n=5。Morpho2DH 式(17))
+  ! 高橋・中川(1991)新砂防 44(3) の定数(原式固定。db_res=3。式(22)-(25))
+  real, parameter :: db_tana = 0.45         ! 石礫群の流動時の摩擦係数 tanα'
+  real, parameter :: db_apr = 4.0           ! ダイラタント項の係数 A'
+  real, parameter :: db_c49 = 0.49          ! 掃流状集合流動の抵抗係数(= 0.7²)
+  real, parameter :: db_cbl = 0.4           ! 掃流状域の濃度閾値(C ≤ 0.4C*)
+  real, parameter :: db_hdmud = 30.0        ! 泥流域の相対水深閾値(h/d ≥ 30 でマニング)
 
   ! 堤防(仮想壁面)モデル(developer.md §17)
   !   有効化は fn_channel の fn_bank / bank0 の有無(g%bank_active)。
@@ -622,13 +645,29 @@ end subroutine
 !   本モジュールの init より前に呼ばれる(m_main の初期化順序)。
 !   検証は呼び出し側(init_debris)が済ませている
 !----------------------------------------------------------------------
-subroutine m_swflow_enc_set_debris(fres, tanphi, sgrav, vstop)
+subroutine m_swflow_enc_set_debris(fres, tanphi, sgrav, vstop, cstar, cmin, d50, erest, &
+                                   mu, xi, tauy)
   integer, intent(in) :: fres
   real, intent(in) :: tanphi, sgrav, vstop
+  real, intent(in) :: cstar             ! 河床の充填濃度 C* = 1−λ
+  real, intent(in) :: cmin              ! 希薄側の濃度下限(f_dbres=2,3,4,5)
+  real, intent(in) :: d50               ! 代表粒径 (m)(f_dbres=2)
+  real, intent(in) :: erest             ! 粒子の反発係数 e(f_dbres=2)
+  real, intent(in) :: mu                ! Voellmy 摩擦係数 μ(f_dbres=4)
+  real, intent(in) :: xi                ! Voellmy 乱流係数 ξ (m/s²)(f_dbres=4)
+  real, intent(in) :: tauy              ! 一定停止応力 τ_y (Pa)(f_dbres=5)
   db_res = fres
   db_tanphi = tanphi
   db_sgrav = sgrav
   db_vstop = vstop
+  db_cstar = cstar
+  db_cmin = cmin
+  db_d50v = d50
+  ! 層流則第2項の係数 k_d・(σ/ρ)・(1−e²)(σ/ρ = s+1)
+  db_kcol = db_kd * (sgrav + 1.0) * (1.0 - erest**2)
+  db_mu = mu
+  db_xi = xi
+  db_tauy = tauy
 end subroutine
 
 
@@ -656,6 +695,13 @@ subroutine m_swflow_enc_dispose(p)
   db_tanphi = 0.0
   db_sgrav = 0.0
   db_vstop = 0.0
+  db_cstar = 0.0
+  db_cmin = 0.0
+  db_d50v = 0.0
+  db_kcol = 0.0
+  db_mu = 0.0
+  db_xi = 0.0
+  db_tauy = 0.0
   call m_ffactor_dispose
   call adv_dispose
   call diff_dispose
@@ -1100,8 +1146,11 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   logical :: have_db              ! 運動量への hs 算入の有無
   real :: hsc, hsn, hse           ! 両セル・エッジの土砂柱状量(時刻 n。負値クランプ)
   real :: tgs                     ! 圧力項への hs 寄与(RK 内で不変)
-  real :: aye                     ! クーロン降伏減速度 (m/s²)(db_res=1 のとき > 0)
+  real :: aye                     ! 降伏減速度 (m/s²)(db_res>=1 のとき > 0)
   real :: cme                     ! エッジの混合体積濃度
+  real :: fbe                     ! 江頭層流則の抵抗係数 f_b(db_res=2 かつ C>=cmin)
+  real :: hte                     ! エッジの混合流動深(時刻 n。層流則用)
+  real :: rme                     ! 1 + s・C(混合密度比 ρm/ρ)
 
   ! セル境界での物理量を求める
   vve = (s%vv(i,j) + s%vv(in,jn)) / 2       ! 速度の絶対値
@@ -1147,19 +1196,74 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   hse = 0.0
   tgs = 0.0
   aye = 0.0
+  fbe = 0.0
+  hte = 0.0
+  rme = 1.0
   if (have_db) then
     hsc = max(s%hs(i,j), 0.0)
     hsn = max(s%hs(in,jn), 0.0)
     hse = (hsc + hsn) / 2
     ! 圧力項への hs 寄与(水面 = z + h + hs。f_pressure_term に整合)
     if (f_pressure_term > 0) tgs = -ge * (hsn - hsc) / w8dr(k) * gve
-    ! クーロン降伏減速度: a_y = ge・tanφ・sC/(1+sC)(水中固体重量の底面
-    ! 摩擦を混合密度 ρ(1+sC) で除した加速度形。ge は correct_ge 済み =
-    ! cos²θ を重力・圧力項と共有。経験定数なし)
     if (db_res > 0) then
       if (hsc + hsn > 0.0) then
         cme = (hsc + hsn) / (hc0 + hn0 + hsc + hsn)
-        aye = ge * db_tanphi * db_sgrav * cme / (1.0 + db_sgrav * cme)
+        rme = 1.0 + db_sgrav * cme
+        if (db_res == 4) then
+          ! Voellmy 等価流体(RAMMS/Titan2D 系): 降伏 μ + 乱流項 ge・V²/(ξ・h_t)。
+          ! μ は流動体全体の見かけ摩擦(濃度に依らず直接与える — §0)。
+          ! 希薄側(C < db_cmin)はマニング+降伏なしに退化(数値的閉じ)
+          if (cme >= db_cmin) then
+            aye = ge * db_mu
+            hte = max((hc0 + hn0) / 2 + hse, p%dv)
+            ! 乱流項 減速度 ge・V²/(ξ・h_t) を −fbe・vve/(rme・hte) 形に載せる
+            ! (fbe = ge・rme/ξ で rme が相殺)。マニング則は置換される
+            fbe = ge * rme / db_xi
+          end if
+        else if (db_res == 5) then
+          ! 一定停止応力(VolcFlow 型): a_y = τ_y/(ρm・h_t)+マニング合成。
+          ! ρm = ρw(1+sC)。希薄側(C < db_cmin)は降伏なしに退化
+          if (cme >= db_cmin) then
+            aye = db_tauy / (db_rhow * rme * max((hc0 + hn0) / 2 + hse, p%dv))
+          end if
+        else
+        ! 降伏減速度: a_y = ge・tanφ・sC/(1+sC)(水中固体重量の底面摩擦を
+        ! 混合密度 ρ(1+sC) で除した加速度形。ge は correct_ge 済み =
+        ! cos²θ を重力・圧力項と共有)。江頭構成則(db_res=2)はさらに
+        ! (C/C*)^{1/5} を乗じる(Morpho2DH 式(17)。n=5 は原式固定)
+        aye = ge * db_tanphi * db_sgrav * cme / rme
+        if (db_res == 2) then
+          aye = aye * (cme / db_cstar)**db_yexp
+          ! 江頭層流則(江頭ら1989 式(25)/Morpho2DH 式(19)):
+          !   f_b = (25/4){k_f(1−C)^{5/3}/C^{2/3} + k_d(σ/ρ)(1−e²)C^{1/3}}(h/d)^{−2}
+          ! C < cmin の希薄側はマニングで閉じる(層流則は C→0 で発散)。
+          ! 混合流動深 hte は時刻 n で固定(RK 内不変。hse と同じ近似)
+          if (cme >= db_cmin) then
+            hte = max((hc0 + hn0) / 2 + hse, p%dv)
+            fbe = 6.25 * (db_kf * (1.0 - cme)**(5.0/3.0) / cme**(2.0/3.0) &
+                          + db_kcol * cme**(1.0/3.0)) * (db_d50v / hte)**2
+          end if
+        else if (db_res == 3) then
+          ! 高橋・中川(1991)石礫型(式(22)-(25)。単一粒径 ρm=ρ):
+          !   降伏項の摩擦係数は流動時の tanα' = 0.45(原式固定。tanφ でなく)
+          aye = ge * db_tana * db_sgrav * cme / rme
+          hte = max((hc0 + hn0) / 2 + hse, p%dv)
+          ! 流動型の自動切替(泥流域 C<cmin または h/d≥30 はマニング=式(4))
+          if (cme >= db_cmin .and. hte < db_hdmud * db_d50v) then
+            if (cme > db_cbl * db_cstar) then
+              ! 石礫型(式(22)第2項): A'・{(1−C)/C}^{2/3}・(dL/h)²
+              !   減速度 = A'ρm{...}(dL/h)²V²/(ρT h) → fbe/(rme・hte) 形
+              fbe = db_apr * ((1.0 - cme) / cme)**(2.0/3.0) * (db_d50v / hte)**2
+            else
+              ! 掃流状集合流動(式(24)): (ρT/0.49)(dL/h)。ρT/ρT が相殺する
+              ! ため rme を fbe に含めて同じ −fbe・vve/(rme・hte) 形に載せる
+              fbe = rme * (db_d50v / hte) / db_c49
+            end if
+          else
+            hte = 0.0     ! マニング経路(fbe=0)へ
+          end if
+        end if
+        end if
       end if
     end if
   end if
@@ -1203,14 +1307,20 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     end if
 
     ! セル境界での摩擦項
-    !   摩擦項は半陰解法で計算するため、次元が他の項と異なる(値は常に正)
-    tfe = -ge * rne**2 * vve * m_ffactor_calc(hhe) * gve
+    !   摩擦項は半陰解法で計算するため、次元が他の項と異なる(値は常に正)。
+    !   江頭層流則が有効なエッジ(fbe > 0)ではマニング則を置き換える:
+    !   減速度 = f_b・V²/((1+sC)・h_t) → 半陰形 f_b・vve/((1+sC)・h_t)
+    if (fbe > 0.0) then
+      tfe = -fbe * vve / (rme * hte) * gve
+    else
+      tfe = -ge * rne**2 * vve * m_ffactor_calc(hhe) * gve
+    end if
 
     ! セル境界での抗力項
     !   摩擦項と一緒に半陰解法で計算するため、次元が他の項と異なる(値は常に正)
     tfe = tfe - p%kk * p%cd * hhe / bbe * (1 - gve) * vve / 2
 
-    ! 土石流のクーロン抵抗(db_res=1)
+    ! 土石流の降伏抵抗(db_res>=1)
     !   速度非依存の降伏減速度 a_y を半陰解法に合成(÷|V| で次元を合わせる)
     if (aye > 0.0) tfe = tfe - aye / max(vve, p%vv)
 

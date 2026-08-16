@@ -83,6 +83,14 @@ read only the lines you care about.
   suspended load, hillslope erosion, slope failure (stability
   analysis), and debris flow. Terrain and soil depth evolve during the
   computation and feed back into the flow.
+- **Volcanic hazards (density flows)**: sector collapse (debris
+  avalanches), pyroclastic flows, and lahars, with their deposition
+  and natural dam formation, as equivalent-fluid analyses (Voellmy and
+  constant-retarding-stress laws — the same modeling level as Titan2D /
+  VolcFlow). The chain from eruption supply through runout,
+  deposition, natural damming, dam-break flooding, and
+  rainfall-triggered secondary lahars can be followed **in a single
+  run**.
 - **Water quality and mass transport**: load runoff from point sources,
   areal sources, land-use-specific unit loads, and wet deposition;
   advective transport, decay and settling, buildup–washoff (nonlinear
@@ -114,6 +122,12 @@ are out of scope by design and belong to specialized models
 - **Wind waves** — short-period waves (wind waves, swell, breaking).
   Storm surge and tsunami are long waves and can be solved; wave
   computation is the realm of wave models such as SWAN.
+- **Pyroclastic surges, eruption plumes, and atmospheric ash
+  transport** — compressible, three-dimensional atmospheric phenomena
+  outside the shallow-water approximation (the volcanic *density
+  flows* above are covered; give ash-fall deposit distributions to the
+  terrain and soil layer in preprocessing and their
+  rainfall-triggered secondary lahars can be analyzed).
 - **Water temperature** — no energy balance is solved, so water
   temperature itself is not predicted (temperature-based corrections
   for snowmelt, evapotranspiration, and water quality are handled via

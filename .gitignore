@@ -43,6 +43,7 @@ result_*/
 Screen.log
 Screen_*.log
 *.png
+!docs/icon/*.png
 !tutorials/*/figs/*.png
 !tutorials/*/en/figs/*.png
 
