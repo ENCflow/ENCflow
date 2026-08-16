@@ -3282,3 +3282,30 @@ wave・chichibu の逐次回帰 PASS。
 - 付随修正: benchmark 3例題の Makefile の TOPDIR 階層(make links が
   不能だった)、h-plane・v-valley の旧 namelist 名 &list_param
   (現行バイナリで読込不能だった)をそれぞれ独立コミットで修正。
+
+## 42. 全域スケール自動配列のヒープ化(2026-08-16)
+
+- WSL 等の既定スタック上限(8192 KB)で、大規模格子の読み込み中に
+  無言の Segmentation fault で停止する報告を受けた対処(等価リファクタ)。
+  全域(nx×ny)・帯スケールの自動配列を allocatable(ヒープ)へ移した。
+- 対象 8 箇所: m_fileio の bil 読み書きバッファ 5(int8 / int16 /
+  整数→実数変換 / read_bil_real / write_bil_real)、m_geoinfo
+  read_mask の a と海域帯拡張ブロックの x1、m_swflow_stg の OUTD_
+  (帯×nx。逐次では全域になる)。
+- 洗い出しは「ローカル・非 allocatable・実行時寸法」の宣言走査
+  (165 件)から全域スケールのみを抽出。残る自動配列は行ベクトル・
+  固定小サイズのみ。なお -Ofast は -fstack-arrays を含むため式の
+  一時配列はスタックに残る(現状の式構成では全域規模の一時は
+  生成されない)。
+- **規約: 全域・帯スケールの作業配列は自動配列にせず allocatable に
+  する**(行ベクトル・8 近傍などの小配列は自動配列でよい)。
+- 検証: gfortran -Og -fcheck=all の np=2(chichibu)を先行実施
+  (規律3)→ リリースビルドで 11 テスト PASS(ULP=0)、STG
+  (wave 30 min 相当)が変更前バイナリとビット一致、chichibu の
+  MPI np=1,2,4 PASS、`ulimit -s 512` で従来クラッシュした chichibu
+  が完走(修正の実証)。
+- install.md §6 の ulimit 案内は保険として維持(式の一時配列・
+  OpenMP スレッドスタック・将来の変更のため)。
+- 発見事項(未対処): STG(f_gridsystem=1)は chichibu 構成
+  (実地形+降雨+乾き出発)で初回ステップに FPE 停止する(本変更前
+  から。ENC は正常)。STG は旧互換の比較用のため優先度低。

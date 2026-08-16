@@ -474,7 +474,10 @@ subroutine read_bil_int_typed(fname, h, nx, ny, a)
   select case (h%nbits)
     case (8)
       block
-        integer(int8) :: b(nx,ny)
+        ! 全域スケールの作業配列はヒープに置く(自動配列はスタック上限で
+        ! 無言の Segmentation fault になる。developer.md §40)
+        integer(int8), allocatable :: b(:,:)
+        allocate(b(nx,ny))
         read(un, iostat=ios, iomsg=iom) b
         if (ios /= 0) call abort_read(un, iom)
         if (unsigned) then
@@ -485,7 +488,8 @@ subroutine read_bil_int_typed(fname, h, nx, ny, a)
       end block
     case (16)
       block
-        integer(int16) :: b(nx,ny)
+        integer(int16), allocatable :: b(:,:)  ! ヒープ(§40)
+        allocate(b(nx,ny))
         read(un, iostat=ios, iomsg=iom) b
         if (ios /= 0) call abort_read(un, iom)
         if (unsigned) then
@@ -586,7 +590,8 @@ subroutine read_bil_real_file(fname, nx, ny, a)
   else
     ! 整数型の bil → 実数へ変換
     block
-      integer :: b(nx,ny)
+      integer, allocatable :: b(:,:)  ! ヒープ(§40)
+      allocate(b(nx,ny))
       call read_bil_int_typed(fname, h, nx, ny, b)
       a(:,:) = real(b(:,:))
     end block
@@ -621,9 +626,10 @@ subroutine read_bil_real(un, nx, ny, a)
   integer, intent(in) :: un
   integer, intent(in) :: nx, ny
   real, intent(inout) :: a(1:nx,1:ny)
-  real(real32) :: r(1:nx,1:ny)
+  real(real32), allocatable :: r(:,:)  ! ヒープ(§40)
   integer :: ios
   character(len=512) :: iom
+  allocate(r(1:nx,1:ny))
   read(un, iostat=ios, iomsg=iom) r
   if (ios /= 0) call abort_read(un, iom)
   a(:,:) = r(:,:)
@@ -635,7 +641,8 @@ subroutine write_bil_real(un, nx, ny, a)
   integer, intent(in) :: un
   integer, intent(in) :: nx, ny
   real, intent(in) :: a(1:nx,1:ny)
-  real(real32) :: r(1:nx,1:ny)
+  real(real32), allocatable :: r(:,:)  ! ヒープ(§40)
+  allocate(r(1:nx,1:ny))
   r(:,:) = real(a(:,:), kind=real32)
   write(un) r
 end subroutine
