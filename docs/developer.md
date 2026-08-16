@@ -3283,13 +3283,40 @@ wave・chichibu の逐次回帰 PASS。
   不能だった)、h-plane・v-valley の旧 namelist 名 &list_param
   (現行バイナリで読込不能だった)をそれぞれ独立コミットで修正。
 
-## 42. ParaView 可視化は後処理ユーティリティ out2vtk で行う(2026-08-16 決定・実装)
+## 42. 全域スケール自動配列のヒープ化(2026-08-16)
+
+- WSL 等の既定スタック上限(8192 KB)で、大規模格子の読み込み中に
+  無言の Segmentation fault で停止する報告を受けた対処(等価リファクタ)。
+  全域(nx×ny)・帯スケールの自動配列を allocatable(ヒープ)へ移した。
+- 対象 8 箇所: m_fileio の bil 読み書きバッファ 5(int8 / int16 /
+  整数→実数変換 / read_bil_real / write_bil_real)、m_geoinfo
+  read_mask の a と海域帯拡張ブロックの x1、m_swflow_stg の OUTD_
+  (帯×nx。逐次では全域になる)。
+- 洗い出しは「ローカル・非 allocatable・実行時寸法」の宣言走査
+  (165 件)から全域スケールのみを抽出。残る自動配列は行ベクトル・
+  固定小サイズのみ。なお -Ofast は -fstack-arrays を含むため式の
+  一時配列はスタックに残る(現状の式構成では全域規模の一時は
+  生成されない)。
+- **規約: 全域・帯スケールの作業配列は自動配列にせず allocatable に
+  する**(行ベクトル・8 近傍などの小配列は自動配列でよい)。
+- 検証: gfortran -Og -fcheck=all の np=2(chichibu)を先行実施
+  (規律3)→ リリースビルドで 11 テスト PASS(ULP=0)、STG
+  (wave 30 min 相当)が変更前バイナリとビット一致、chichibu の
+  MPI np=1,2,4 PASS、`ulimit -s 512` で従来クラッシュした chichibu
+  が完走(修正の実証)。
+- install.md §6 の ulimit 案内は保険として維持(式の一時配列・
+  OpenMP スレッドスタック・将来の変更のため)。
+- 発見事項(未対処): STG(f_gridsystem=1)は chichibu 構成
+  (実地形+降雨+乾き出発)で初回ステップに FPE 停止する(本変更前
+  から。ENC は正常)。STG は旧互換の比較用のため優先度低。
+
+## 43. ParaView 可視化は後処理ユーティリティ out2vtk で行う(2026-08-16 決定・実装)
 
 計算結果の 3D 可視化(時系列アニメーション・地図/衛星画像ドレープ)の
 ため VTK 形式が必要になったが、**本体の出力形式(f_output_mode)への
 追加は不採用**とし、後処理ユーティリティ **utils/out2vtk** を追加した。
 
-### 42.1 本体組み込みを不採用とした理由
+### 43.1 本体組み込みを不採用とした理由
 
 - §0 の「入出力は単純形式・GUI 等は利用者側」「変換は前処理で」に照らし、
   可視化ツール都合の形式は計算コアの責務外(txt/bil/GeoTIFF はデータ
@@ -3301,7 +3328,7 @@ wave・chichibu の逐次回帰 PASS。
 - 後処理なら水膜閾値・対象変数を変えて何度でも再変換できる(本体出力
   だと再計算)。本体無変更のため回帰テスト・reference への影響もゼロ。
 
-### 42.2 utils/out2vtk の仕様(利用手順の正本は utils/out2vtk/README.md)
+### 43.2 utils/out2vtk の仕様(利用手順の正本は utils/out2vtk/README.md)
 
 - 入力: result/ の分布出力(bil → GeoTIFF → txt の順に探す)+
   FILENUMBER.csv(実時刻)。出力: VTK XML StructuredGrid(.vts。

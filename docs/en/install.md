@@ -247,11 +247,11 @@ after switching modules on a supercomputer (align the module
 environment with the one used at build time).
 
 **A large computation stops with nothing but `Segmentation fault`**
-The shell's stack size limit is the most likely cause. ENCflow may
-place large work arrays on the stack, and with the default limit
-(8192 KB on WSL and many Linux systems) a large grid exceeds it
-during input reading or computation and the run dies without any
-message. Running
+The shell's stack size limit is the most likely cause. Fortran
+compilers may place work arrays and expression temporaries on the
+stack, and with the default limit (8192 KB on WSL and many Linux
+systems) a large grid exceeds it during input reading or computation
+and the run dies without any message. Running
 
 ```bash
 ulimit -s unlimited

@@ -685,7 +685,9 @@ subroutine read_mask(p, g, list)
   type(t_geoinfo), intent(inout) :: g
   type(t_list_geoinfo), intent(in) :: list
   character(:), allocatable :: fname
-  integer :: a(1:g%nx,1:g%ny)
+  ! 全域スケールの作業配列はヒープに置く(自動配列はスタック上限で
+  ! 無言の Segmentation fault になる。developer.md §40)
+  integer, allocatable :: a(:,:)
   character(len=1024) :: msg
 
   if (list%f_masktype == 0) then
@@ -697,6 +699,7 @@ subroutine read_mask(p, g, list)
     ! ファイルから読み込む
     fname = trim(p%dir_data) // "/" // trim(list%fn_mask)
     call par_info(" reading "//fname)
+    allocate(a(1:g%nx,1:g%ny))
     call fileio_read_matrix(fname, g%nx, g%ny, a, p%f_input_mode)
         block
         integer :: i, j
@@ -732,9 +735,10 @@ subroutine read_mask(p, g, list)
   if (list%f_masktype == 1 .and. len_trim(list%fn_sw) > 0) then
         block
         integer :: i, j, k, ii, jj
-        integer :: x1(0:g%nx+1,0:g%ny+1)
+        integer, allocatable :: x1(:,:)  ! ヒープ(§40)
         integer, parameter :: din(1:8) = [ -1,  0,  1, -1,  1, -1,  0,  1]
         integer, parameter :: djn(1:8) = [ -1, -1, -1,  0,  0,  1,  1,  1]
+        allocate(x1(0:g%nx+1,0:g%ny+1))
         x1(:,:) = g%x(:,:)
         do j = 2, g%ny-1
           do i = 2, g%nx-1

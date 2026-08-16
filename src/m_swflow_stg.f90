@@ -230,13 +230,16 @@ SUBROUTINE m_swflow_stg_calc(p, g, b, s, ierror)
   REAL:: D1,D2,D3
   REAL:: GV1,GV2,GV3,GVC,LM1,LM2,LM3,LMC,BBC
   REAL:: OUTMN,OUTD !,V,QF  !QF:単位幅流量（スカラー）　rev0827
-  REAL:: OUTD_(IG,dcp%jsh:dcp%jeh)
+  ! 帯スケール(逐次では全域)の作業配列はヒープに置く(§40)
+  REAL, ALLOCATABLE :: OUTD_(:,:)
   INTEGER:: I,J,L
   INTEGER:: ITER
   REAL:: Mm,Nm,QF
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (g%initialized) continue  ! 引数未使用の警告を抑制
   if (b%initialized) continue  ! 引数未使用の警告を抑制
+
+  ALLOCATE(OUTD_(IG,dcp%jsh:dcp%jeh))
 
   s%n_runge = s%n_valcells * 4
   ierror = ierror + 0
