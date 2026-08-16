@@ -51,6 +51,7 @@ module m_swflow_enc
   integer :: f_adaptive_runge != 1           ! 適応的ルンゲクッタ
   integer :: f_friction_fastmath != 0        ! 摩擦項計算の高速化
   integer :: f_advection_tvd != 9            ! 移流項にTVDスキームを使用　
+  integer :: f_advection_runge != 0          ! 移流項のルンゲクッタでの更新
   integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
   integer :: f_bank_mode                    ! 堤防の水理モード(下の e_bank_*)
   integer :: f_diffusion_term               ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
@@ -387,6 +388,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   f_adaptive_runge = list%f_adaptive_runge
   f_friction_fastmath = list%f_friction_fastmath
   f_advection_tvd = list%f_advection_tvd
+  f_advection_runge = list%f_advection_runge
   f_rivermouth_drop = list%f_rivermouth_drop
   f_diffusion_term = list%f_diffusion_term
   ! 河口の強制段落ちは潮位(fn_tide)と両立しない(高潮位時の背水を
@@ -1066,13 +1068,13 @@ end subroutine
 !----------------------------------------------------------------------
 ! 中心セルi,jからk近傍セルへin,jnの流速uve1と単位幅流量mne1を計算する
 !----------------------------------------------------------------------
-subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1, mne1)
+subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1, mne1)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   type(t_enc_status), intent(in) :: sx
   real, intent(in) :: uve0        ! セル境界での流速
-  real, intent(in) :: tae         ! セル境界での移流項
+  real, intent(in) :: tae0        ! セル境界での移流項
   integer, intent(in) :: i, j     ! 中心セルのインデックス
   integer, intent(in) :: k        ! 近傍セルの方位
   integer, intent(in) :: in, jn   ! 近傍セルのインデックス
@@ -1082,6 +1084,8 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
 
   real :: he                      ! セル境界の水深
   real :: ge                      ! セル境界での重力加速度
+  real :: tae0n                   ! セル境界での移流項をセル境界流速で正規化したもの
+  real :: tae                     ! セル境界での移流項(更新後)
   real :: tg0e, tge, tfe          ! セル境界での重力項、摩擦項
   real :: rne, hhe, vve           ! セル境界での粗度係数、摩擦項用水深、摩擦項用絶対流速
   real :: gve, bbe                ! セル境界での家屋の空隙率、家屋の平均サイズ
@@ -1111,6 +1115,13 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
   !   静止からの流動開始直後に流速が小さいために摩擦が過小となることを防ぐために
   !   (この現象は正攻法では時間刻みを極めて小さくしないと解消しない)
   vve = max(vve, p%vv)
+
+  ! セル境界流速で正規化した移流項
+  if (abs(uve0) > 1.e-3) then
+    tae0n = tae0 / uve0
+  else
+    tae0n = 0.0
+  end if
 
   ! セル境界での有効重力加速度を計算
   ge = p%gg                                 ! 重力加速度
@@ -1160,6 +1171,9 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
     l = 4                ! 陽的オイラーの場合は4段目のみを実行
   end if
 
+  ! ルンゲクッタでの更新後流速を初期流速で初期化
+  uve1 = uve0
+
   ! ルンゲクッタのループ
   do while (l <= 4)
     ! セル境界での水深を求める
@@ -1172,6 +1186,13 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae, i, j, k, in, jn, f_runge, uve1,
     !   水深が浅い場合に摩擦が過大となることを防ぐために水深の最小値を制限
     !   (土石流有効時は混合流動深 h + hs。hse=0 なら厳密に従来と同値)
     hhe = max(he + hse, p%dv)
+
+    ! セル境界での移流項
+    if (f_advection_runge > 0) then
+      tae = tae0n * uve1      ! ルンゲクッタによる移流項の更新を有効化
+    else
+      tae = tae0              ! ルンゲクッタによる移流項の更新を無効化
+    end if
 
     ! セル境界での重力項(符合は中心セルから近傍セルに向かい正)
     !   土石流有効時は水面勾配に hs を算入(z+h+hs。tgs は RK 内で不変)

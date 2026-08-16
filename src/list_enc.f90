@@ -17,6 +17,7 @@ module list_enc
     integer :: f_friction_fastmath = 0        ! 摩擦項計算の高速化 (0:厳密,
                                               !   1~5:テーブル近似。大きいほど粗く速い)
     integer :: f_advection_tvd = 0            ! 移流項にTVDスキームを使用　
+    integer :: f_advection_runge = 0          ! 移流項をルンゲクッタで更新
     integer :: f_rivermouth_drop = 0          ! 河口から海へ段落ち
     integer :: f_diffusion_term = 0           ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
     real :: p_diagratio = 2 / (2 + sqrt(2.))  ! ratio of diagonal component
@@ -48,6 +49,7 @@ subroutine list_enc_read(p, list)
   integer :: f_adaptive_runge           ! 適応的簡易ルンゲクッタ
   integer :: f_friction_fastmath        ! 摩擦項計算の高速化
   integer :: f_advection_tvd            ! 移流項にTVDスキームを使用　
+  integer :: f_advection_runge          ! 移流項をルンゲクッタで更新
   integer :: f_rivermouth_drop          ! 河口から海へ段落ち
   integer :: f_diffusion_term           ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
   real :: p_diagratio                   ! ratio of diagonal component
@@ -60,7 +62,7 @@ subroutine list_enc_read(p, list)
   character(len=1024) :: iom
 
   namelist /list_enc/ f_gravity_correction, f_exflux_reduction, f_hcap_upwind, &
-                      f_friction_fastmath, f_advection_tvd, f_rivermouth_drop, &
+                      f_friction_fastmath, f_advection_tvd, f_advection_runge, f_rivermouth_drop, &
                       f_adaptive_runge, p_diagratio, p_adv_upwind_index, p_adprunge_thresh, &
                       f_diffusion_term, p_diffusion_nu, p_diffusion_alpha
 
@@ -70,6 +72,7 @@ subroutine list_enc_read(p, list)
   f_adaptive_runge = list%f_adaptive_runge 
   f_friction_fastmath = list%f_friction_fastmath 
   f_advection_tvd = list%f_advection_tvd 
+  f_advection_runge = list%f_advection_runge 
   f_rivermouth_drop = list%f_rivermouth_drop
   f_diffusion_term = list%f_diffusion_term
   p_diffusion_alpha = list%p_diffusion_alpha
@@ -93,6 +96,7 @@ subroutine list_enc_read(p, list)
   list%f_adaptive_runge = f_adaptive_runge 
   list%f_friction_fastmath = f_friction_fastmath 
   list%f_advection_tvd = f_advection_tvd 
+  list%f_advection_runge = f_advection_runge 
   list%f_rivermouth_drop = f_rivermouth_drop
   list%f_diffusion_term = f_diffusion_term
   list%p_diagratio = min(max(p_diagratio, 0.0), 1.0)                ! 値を0.0~1.0に制限
