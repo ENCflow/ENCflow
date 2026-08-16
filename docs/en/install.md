@@ -109,6 +109,10 @@ ln -s ~/ENCflow/bin/encflow .     # create a link (recommended)
 - **Copy**: a copy is better when you want to freeze the executable
   used for a computation at a specific version (freezing
   reproducibility in long-term projects).
+- For large grids, remove the shell's stack limit first
+  (`ulimit -s unlimited`; with the default limit the run may die with
+  a silent Segmentation fault —
+  [Sec. 6](#6-troubleshooting)).
 
 For how to write parameter files, see the
 [tutorial](../../tutorials/wave/en/README.md) and the
@@ -241,6 +245,32 @@ are trying to run. Running the remedy command shown in the message
 (`make MODE=... install`) as-is resolves it. This can also appear
 after switching modules on a supercomputer (align the module
 environment with the one used at build time).
+
+**A large computation stops with nothing but `Segmentation fault`**
+The shell's stack size limit is the most likely cause. ENCflow may
+place large work arrays on the stack, and with the default limit
+(8192 KB on WSL and many Linux systems) a large grid exceeds it
+during input reading or computation and the run dies without any
+message. Running
+
+```bash
+ulimit -s unlimited
+```
+
+before the computation resolves it. Instead of typing it every time,
+**we recommend putting it in `~/.bashrc`** (takes effect in every new
+shell from then on):
+
+```bash
+echo 'ulimit -s unlimited' >> ~/.bashrc
+```
+
+- macOS does not accept unlimited; use `ulimit -s hard` (raise to the
+  hard limit) instead.
+- If the symptom persists in OpenMP thread-parallel runs, also set
+  the per-thread stack limit: `export OMP_STACKSIZE=512m`.
+- On supercomputers, batch jobs may not read `~/.bashrc`; put the
+  line in the job script.
 
 **The MPI version does not get faster with more threads (CPU usage
 stays pinned around 100% per rank)**
