@@ -1,0 +1,99 @@
+! English mirror of tutorials/chichibu/param_step7.txt (based on commit 72224ff).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Step 7: 3D visualization with ParaView (based on Step 4; 4-hour run,
+!         output every 2 min, GeoTIFF only)
+!
+!======================================================================
+! System parameter settings
+!======================================================================
+&list_sysparam
+  f_govequation = 0          ! governing equation (0: DynWE, 1: DifWE, 2: KinWE)
+
+  dt = 6.0                   ! time step (s)
+  tt_c = "4 hour"            ! end time of the computation
+  dt_disp_c = "30 min"       ! screen display interval
+  dt_file_c = "2 min"        ! file output interval
+  dt_recrd_c = "1 min"       ! probe output interval
+
+  fn_geoinfo = "-"           ! geographic information settings file
+  fn_precip  = "-"           ! precipitation settings file
+  fn_record  = "-"           ! record settings file
+  fn_enc     = "-"           ! ENC settings file
+
+  dir_data = "data_chichibu" ! input data directory
+
+  f_input_mode = 4           ! matrix input format (1: text, 2: bil, 4: geotiff)
+  f_output_mode = 4          ! matrix output format (1: text, 2: bil, 4: geotiff)
+
+  f_out_h = 1                ! file output (depth H0001)
+  f_out_vv = 1               ! file output (velocity magnitude V0001)
+  f_out_qq = 1               ! file output (discharge magnitude Q0001)
+  f_out_cn = 1               ! file output (Courant number Cn0001)
+  f_out_hmax = 1             ! file output (maximum depth H9999)
+  f_out_vvmax = 1            ! file output (maximum velocity V9999)
+
+  dd = 0.0001                ! water movement is computed above this depth (threshold depth)
+  dv = 0.0001                ! depths below this are forced to this value (virtual depth)
+/
+
+!======================================================================
+! Geographic information settings
+!======================================================================
+&list_geoinfo
+  dx = 200.0
+  dy = 200.0
+
+  f_ztype = 1          ! ground elevation type (0: default constant, 1: file)
+  f_masktype = 1       ! domain mask (0: none, 1: catchment mask)
+
+  f_rntype = 0         ! roughness type (0: default constant, 1: file, 2: from land use)
+  rn0 = 0.05           ! constant roughness value
+  rn0_rw = 0.02        ! constant roughness for channel-mask cells
+
+  fn_z = "Chichibu_200m_filled.tif"        ! ground elevation file name
+  fn_mask = "Chichibu_200m_basin.tif"      ! domain mask file name
+  fn_rw = "Chichibu_200m_river.tif"        ! channel mask file name
+/
+
+!======================================================================
+! Precipitation settings
+!======================================================================
+&list_precip
+  ! precipitation data type (0: no precipitation, 1: uniform, time series)
+  prtype = 1
+  ! precipitation time series (time (min), intensity (mm/h))
+  prval(:,1) =   0,   0
+  prval(:,2) =  30, 200
+  prval(:,3) =  60,   0
+/
+
+!======================================================================
+! Record settings
+!======================================================================
+&list_record
+  ! probe position type (0: cell indices, 1: real coordinates (m))
+  ! probe positions (x, y)
+  pbxytype = 0
+  pbxy(:,1) =  82, 105
+  pbxy(:,2) = 107, 102
+  pbxy(:,3) = 147, 103
+  pbxy(:,4) = 216,  40
+
+  ! flux transect coordinate type (0: cell indices, 1: real coordinates (m))
+  ! flux transect endpoints (right-bank x, right-bank y, left-bank x, left-bank y)
+  flxytype = 0
+  flxy(:,1) =  82, 106,   82, 103
+  flxy(:,2) = 107, 103,  107, 100
+  flxy(:,3) = 147, 105,  147, 102
+  flxy(:,4) = 216,  43,  216,  37
+/
+
+!======================================================================
+! ENC computation settings
+!======================================================================
+&list_enc
+  p_adv_upwind_index = 0.0        ! upwind differencing fraction (0.0 ~ 1.0)
+  p_adprunge_thresh = 1.5         ! adaptive Runge-Kutta threshold (1.1 ~)
+/

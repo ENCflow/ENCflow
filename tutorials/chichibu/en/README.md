@@ -1,4 +1,4 @@
-> English mirror of tutorials/chichibu/README.md (based on commit c664f1c). The Japanese file is the master copy.
+> English mirror of tutorials/chichibu/README.md (based on commit 72224ff). The Japanese file is the master copy.
 
 # Tutorial 2: chichibu -- rain on a real-terrain catchment
 
@@ -19,6 +19,7 @@ computation with real terrain data, in the following order.
   model), the three water-storage columns
 - **Step 6**: Boundary condition at the catchment outlet; understanding
   discharge oscillations caused by real terrain data
+- **Step 7**: 3D visualization (animation) with ParaView
 
 We assume you have completed the [wave tutorial](../../wave/README.md)
 first (it explains how to run the model, the meaning of each screen
@@ -521,13 +522,100 @@ Deal with it in stages.
    pond's surface motion directly, so **place transects on ordinary
    channel reaches with a longitudinal slope**.
 
+## Step 7: 3D visualization with ParaView
+
+Finally, let us look at the distributed outputs as a 3D animation. We
+use the free visualization software
+[ParaView](https://www.paraview.org/) (Windows / macOS / Linux) and
+the bundled converter utility utils/out2vtk.
+
+`en/param_step7.txt` is the Step 4 configuration adapted for
+animation: the run is shortened to 4 hours (`tt_c`), distributed
+output is written every 2 minutes (`dt_file_c`), and the output format
+is GeoTIFF only (`f_output_mode = 4`). The smoothness of the animation
+is set by the output interval, so runs made for visualization use a
+finer one.
+
+### Running the conversion
+
+```bash
+make -C ../../utils/out2vtk install   # first time only: build the converter
+./encflow en/param_step7.txt
+../../bin/out2vtk en/param_step7.txt
+```
+
+out2vtk takes the parameter file used for the computation as it is
+(it inherits the result directory and the grid information). The
+following files appear in `result/vtk/`.
+
+| file | contents |
+|---|---|
+| `flood.pvd` + `flood_0000.vts` ... | water surface time series (121 times, every 2 min); the pvd is the entry point of the animation |
+| `terrain.vts` | terrain surface (3D) |
+| `summary.vts` | statistics such as the maximum depth |
+
+The outside of the catchment is hidden automatically (out2vtk reads
+the domain mask `X0000` that encflow always writes, and by default
+keeps the land area only).
+
+### Start with the minimal procedure
+
+Launch ParaView; the following four operations already give you the
+animation.
+
+1. **File → Open** `result/vtk/flood.pvd` and press **Apply**
+2. Set Coloring in the toolbar to **H** (water depth)
+3. In **Edit Color Map** (the rainbow icon), change the **NaN color to
+   gray** (dry cells carry NaN depth and are painted yellow by default)
+4. Press **▶ (play)**
+
+![Step 7: the minimal procedure (t = 2 hours)](figs/step7_simple.png)
+
+This alone gives a picture of "depth colors draped on the 3D
+terrain". The surface in this file is the water surface elevation
+(ground elevation + depth), so dry places show the terrain relief
+itself and wet places rise slightly above it. Drag to rotate, use the
+wheel to zoom; the timeline shows the real time of the computation in
+seconds. You can watch the rain spread over the hillslopes in the
+first 30 minutes and then gather into the channel network as the flood
+wave travels down.
+
+### Making it look better
+
+Independent refinements you can add to the minimal procedure.
+
+- **Water that looks like water**: open `terrain.vts` too, press
+  Apply, and set its Coloring to `Solid Color` (grayish). On the
+  `flood.pvd` side, set the **NaN opacity to 0** in Edit Color Map so
+  that dry places disappear and only the water remains on the terrain.
+  A bluish colormap preset (e.g. Blues) makes it more water-like.
+  (Instead of the NaN opacity you can use **Filters → Threshold**
+  keeping H ≥ 0.01; when channels one cell wide disappear, uncheck
+  "All Scalars" in the Threshold panel.)
+- **Emphasizing the relief**: apply **Filters → Transform** to both
+  objects with Scale = `(1, 1, 3)` (3x vertical exaggeration). Hide
+  the original objects with the eye icons after applying the filter.
+- **Showing the time**: **Filters → Annotate Time**.
+- **To a movie file**: **File → Save Animation** (PNG sequence or AVI).
+
+![Step 7: two-layer view of terrain + water (t = 2 hours, 3x vertical exaggeration)](figs/step7_3d.png)
+
+### Further: overlaying maps and satellite imagery
+
+`terrain.vts` carries texture coordinates, so a map or satellite image
+of the same extent exported from QGIS can be draped on the terrain.
+For that procedure and for settings such as the water-film threshold
+`hmin`, variable selection and the handling of sea areas, see
+[utils/out2vtk/README.md](../../../utils/out2vtk/README.md)
+(in Japanese).
+
 ## Closing remarks
 
 In this tutorial we went once around the standard workflow of a
 catchment computation with real terrain data: data preparation
 (depression filling) -> minimal configuration -> measurement -> tuning
 of numerical settings -> adding physical processes -> boundary
-conditions. From here:
+conditions -> 3D visualization. From here:
 
 - Refining the groundwater model (Green-Ampt, lateral flow), roughness
   distribution from land use, subgrid channels, and more --
@@ -542,4 +630,6 @@ The figures of this document (`figs/`, i.e. `en/figs/`) can be
 regenerated in one go with `./Fig_chichibu.sh` run from the case
 directory (gnuplot is required; it runs the same computations as in
 the text, in order, and draws both the Japanese and the English
-figures).
+figures). Only the 3D figures of Step 7 are outside its scope; they
+are regenerated with `Fig_step7.py`, which draws with the same VTK
+library that ParaView uses.
