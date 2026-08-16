@@ -118,7 +118,7 @@ For how to write parameter files, see the
 [tutorial](../../tutorials/wave/en/README.md) and the
 [user's guide](users_guide.md).
 
-### 2.5 Installing the visualization tool (gnuplot)
+### 2.5 Installing the visualization tools (gnuplot, ParaView)
 
 ENCflow itself does not depend on any visualization tool (results are
 plain matrix text or GeoTIFF, readable by GIS, Python, Excel, and so
@@ -133,6 +133,21 @@ sudo dnf install gnuplot        # Fedora / RHEL family
 ```
 
 `gnuplot --version` confirms the installation and version.
+
+For 3D visualization and animation (Step 7 of the chichibu tutorial),
+we use **ParaView**. Installing the binaries from the
+[official site](https://www.paraview.org/download/) (Windows / macOS /
+Linux) is the most reliable route; package managers also work:
+
+```bash
+sudo apt install paraview             # Ubuntu / Debian
+brew install --cask paraview          # macOS (Homebrew)
+```
+
+If you compute inside WSL, install ParaView **on the Windows side**
+and open the result files through the Explorer path `\\wsl$\...` (or
+place results under `/mnt/c/...`); with WSLg enabled, ParaView inside
+WSL also works.
 
 ## 3. Building the MPI hybrid version
 

@@ -468,8 +468,9 @@ ex_flux も跳ね上がりますが、これは保護機構の正常動作で、
 
 最後に、分布出力を 3D アニメーションとして眺めます。使うのは
 無料の可視化ソフト [ParaView](https://www.paraview.org/)
-(Windows / macOS / Linux)と、同梱の変換ユーティリティ
-utils/out2vtk です。
+(Windows / macOS / Linux。インストールは
+[インストールガイドの 2.5 節](../../docs/install.md)を参照)と、
+同梱の変換ユーティリティ utils/out2vtk です。
 
 `param_step7.txt` は Step 4 の設定をアニメーション向けに変えた
 ものです: 計算時間を 4 時間に短縮し(`tt_c`)、分布出力を 2 分毎に

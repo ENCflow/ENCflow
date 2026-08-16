@@ -109,7 +109,7 @@ ln -s ~/ENCflow/bin/encflow .     # リンクを張る(推奨)
 パラメータファイルの書き方は[チュートリアル](../tutorials/wave/README.md)
 と[ユーザーガイド](users_guide.md)へ。
 
-### 2.5 可視化ツール(gnuplot)の準備
+### 2.5 可視化ツール(gnuplot・ParaView)の準備
 
 ENCflow 本体は可視化ツールに依存しません(結果は行列テキストや
 GeoTIFF なので、GIS・Python・Excel など何でも読めます)。ただし
@@ -124,6 +124,21 @@ sudo dnf install gnuplot        # Fedora / RHEL 系
 ```
 
 `gnuplot --version` でインストールとバージョンを確認できます。
+
+3D 可視化・アニメーション(チュートリアル chichibu の Step 7)には
+**ParaView** を使います。[公式サイト](https://www.paraview.org/download/)
+のバイナリ(Windows / macOS / Linux)をインストールするのが確実です。
+パッケージマネージャでも入ります:
+
+```bash
+sudo apt install paraview             # Ubuntu / Debian
+brew install --cask paraview          # macOS(Homebrew)
+```
+
+WSL で計算している場合は、ParaView は **Windows 側にインストール**し、
+結果ファイルをエクスプローラのパス `\\wsl$\...`(または
+`/mnt/c/...` に置いた結果)から開くのが手軽です(WSLg が有効なら
+WSL 内の ParaView も動きます)。
 
 ## 3. MPI ハイブリッド版のビルド
 
