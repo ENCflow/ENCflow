@@ -26,19 +26,20 @@ QGIS で書き出した地図・衛星画像のドレープ(地形への貼り�
 
 ```
 cd utils/out2vtk
-make
+make install        # → リポジトリ直下の bin/ にコピーされます
 ```
 
-トップレベルの `make` でも一緒にビルドされます。
+リポジトリ直下の `make install` でも本体・他ユーティリティと一緒に
+ビルド・コピーされます。
 
 ## 使い方
 
 計算ケースのディレクトリ(`result/` がある場所)で:
 
 ```
-../../utils/out2vtk/out2vtk param.txt    # 計算のパラメータファイルを渡す(推奨)
-../../utils/out2vtk/out2vtk              # 全項目デフォルト
-../../utils/out2vtk/out2vtk out2vtk.nml  # 設定ファイル指定
+../../bin/out2vtk param.txt    # 計算のパラメータファイルを渡す(推奨)
+../../bin/out2vtk              # 全項目デフォルト
+../../bin/out2vtk out2vtk.nml  # 設定ファイル指定
 ```
 
 計算のパラメータファイルを渡すと、`dir_result`・`outfn_suffix` と
