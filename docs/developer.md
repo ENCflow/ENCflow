@@ -3405,3 +3405,42 @@ X0000 からの独立再計算と一致、公式 VTK リーダの描画セル数
 6x4 合成(領域外・陸・海の3値)で f_mask=0/1/2 の3モードの ghost・
 mask 配列・描画セル数を照合。MPI 経路は無変更(rank0 の書き込みのみ、
 collective なし)。
+
+## 45. 氷河モジュール m_glacier(fn_glacier。2026-08-16 実装)
+
+設計・定式・初期条件論・既知の妥協の正本は **docs/glacier_plan.md**。
+ここには他 § と関わる規約だけを書く。
+
+- **構成**: 独立モジュール(fn_glacier / &list_glacier)+内部は加算的
+  フラグの重ね合わせ(G1 質量収支=常時、G2 SIA 流動 f_glflow、G3 滑動
+  f_glslide・侵食 f_glero、G4 雪崩 f_glava)。気温(fn_meteo)と積雪
+  (fn_snow。涵養源)が必須。積雪の有効判定は allocated(s%swe)で行う
+  (プロセス層どうしの use を避ける)。STG 非対応(geomorph と同じガード)。
+- **状態**: s%hi(m 氷柱。有効時のみ確保)。場出力 Hi。リスタートは私有
+  ファイル glacier.dat(契約5)。S 台帳には水当量(×s%gl_ir)で算入
+  (swemean と同じ扱い。m_state の himean)。
+- **実行順序**(§2.2 の結合仕様に追加): snow_calc の後・boundary/swflow の
+  前に glacier_calc。毎ステップ=氷面度日融解(水は dt×1 で h へ、氷は
+  ×morfac)。dt_glacier tick =雪崩→氷化→SIA 流動→侵食の順(ヘッダが
+  契約)。侵食は s%z・s%sd を共動更新し、e 回復と z/sd のハロ交換まで
+  自分で行う(geomorph_calc と同じ契約)。
+- **morfac は全プロセス共通の1個**: m_geomorph_init が s%geo_morfac を
+  通知し、m_glacier_init が gl_morfac との同値を検査(不一致は par_stop)。
+  氷⇄水の交換は MORFAC 台帳分離(§19.3 と同型。glacier_plan.md §2.1)。
+- **SIA の陽解法は適応サブサイクリング**: tick 内で D_max の
+  allreduce_max から分割数を動的決定(全ランク同一 = collective 安全)。
+  サブサイクルごとに hi のハロ交換。エッジ流量はドナー律速
+  (1エッジ ≤ ドナー氷体積の 1/4)で hi>=0 を構造的に保証。
+- **【実バグ】.and. の短絡評価は保証されない**: `g%x(in,jn) > 0 .and.
+  g%sw(in,jn) <= 0` は g%sw(0 縁取りなし)を範囲外で読み得る
+  (-fcheck np=2 で実検出)。近傍検査は g%x(0 縁取りあり)を先に、
+  g%sw をその内側で入れ子にする(calc_creep と同じ流儀)。
+- **m_meteo の拡張**: tempofs(長周期 ΔT 系列。t_cycle で折り返さない
+  実時間軸)と f_prec_lapse(降水の標高倍率。m_precip_makepre が mt を
+  受けて更新時に乗じる — 更新のたび元データから作り直すため二重適用は
+  ない)。無効時はビット互換。makepre の引数追加に伴い utils 追随は
+  トップレベル make で確認済み(§10)。
+- **検証**(gfortran 13.3/OpenMPI): 無効時=全回帰ケースがビット一致
+  (逐次+np=1,2,4)。有効時= test/glacier の Halfar 相似解(平均誤差
+  1.2% H0・体積保存 1.8e-15)+カール形成スモーク。-fcheck=all np=2
+  クリーン。詳細は glacier_plan.md §7。
