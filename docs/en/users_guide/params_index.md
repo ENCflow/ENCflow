@@ -96,6 +96,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | evap_kc | &list_evap | [Rainfall and meteorology](forcing.md) |
 | evap_monthly | &list_evap | [Rainfall and meteorology](forcing.md) |
 | f_adaptive_runge | &list_enc | [Shallow water flow computation](swflow.md) |
+| f_advection_runge | &list_enc | [Shallow water flow computation](swflow.md) |
 | f_advection_tvd | &list_enc | [Shallow water flow computation](swflow.md) |
 | f_bank_aggr | &list_channel | [Channels](channel.md) |
 | f_bank_datum | &list_channel | [Channels](channel.md) |

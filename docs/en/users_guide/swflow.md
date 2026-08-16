@@ -69,7 +69,8 @@ The Runge column on the screen shows the application rate.
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| f_advection_tvd | 0 | use a TVD scheme for the advection term |
+| f_advection_runge | 0 | also update the advection term in the recomputation stages of the adaptive Runge-Kutta. 0: no update (default; the advection term stays fixed at its explicit-Euler value), 1: update it in proportion to each stage's updated velocity |
+| f_advection_tvd | 0 | use a TVD scheme for the advection term (**experimental; enabling it is currently not recommended**) |
 | p_adv_upwind_index | 0.5 | upwinding index of the advection term (0-1). 0: central difference, 1: first-order upwind difference |
 | f_diffusion_term | 0 | diffusion term. 0: none (default), 1: constant viscosity, 2: zero-equation model (nu = nu0 + alpha * u_star * h) |
 | p_diffusion_nu | -- | kinematic eddy viscosity nu0 (m^2/s). **For model 1 a positive value must be specified explicitly** (unset is an error stop). For model 2 an optional background viscosity |

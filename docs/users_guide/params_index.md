@@ -94,6 +94,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | evap_kc | &list_evap | [降雨・気象](forcing.md) |
 | evap_monthly | &list_evap | [降雨・気象](forcing.md) |
 | f_adaptive_runge | &list_enc | [浅水流計算](swflow.md) |
+| f_advection_runge | &list_enc | [浅水流計算](swflow.md) |
 | f_advection_tvd | &list_enc | [浅水流計算](swflow.md) |
 | f_bank_aggr | &list_channel | [河道](channel.md) |
 | f_bank_datum | &list_channel | [河道](channel.md) |
