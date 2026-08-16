@@ -7,7 +7,11 @@
 #         遷緩点(i>=30)下流の堆積 max(dz) > MIN_DEP
 #   を検定する。z0 は slope_break(tanθ=0.4, 遷緩点 x=30m)、sd0, λ は
 #   param.txt と対で保守する。
-#   使い方: Check_debris.py <savedir>
+#   使い方: Check_debris.py <savedir> [eg]
+#   eg モード(江頭則構成): (3) を「斜面侵食 + 平坦部への土砂到達
+#   (max hs)」に替える。希薄なシート流では θe ≈ 0 のため平坦部の
+#   河床堆積は遅く(物理的に正しい)、短時間の疎通検定では hs の到達を
+#   活性の証拠とする。
 import sys, struct
 
 SD0, PORO = 5.0, 0.4
@@ -52,6 +56,7 @@ def z0_of(idx):
 
 
 savedir = sys.argv[1]
+mode = sys.argv[2] if len(sys.argv) > 2 else "tk"
 with open(savedir + "/state.dat", "rb") as f:
     ntot = NX * NY
     h = read_rle_array(f, ntot)
@@ -66,16 +71,24 @@ solids = sum(hs) + (1.0 - PORO) * sum(dz)
 max_ident = max(abs((sdi - SD0) - d) for sdi, d in zip(sd, dz))
 ero = min(dz[idx] for idx in range(ntot) if (idx % NX + 1) < 30)
 dep = max(dz[idx] for idx in range(ntot) if (idx % NX + 1) >= 30)
+arr = max(hs[idx] for idx in range(ntot) if (idx % NX + 1) >= 30)
 
 ok1 = abs(solids) < TOL_SUM
 ok2 = max_ident < TOL_SD
-ok3 = ero < -MIN_ERO and dep > MIN_DEP
+if mode == "eg":
+    ok3 = ero < -MIN_ERO and arr > 1.0e-4
+else:
+    ok3 = ero < -MIN_ERO and dep > MIN_DEP
 print("(1) 固体総量保存: sum(hs)+(1-λ)sum(dz) = %.3e m*cell (tol %.0e) : %s"
       % (solids, TOL_SUM, "PASS" if ok1 else "FAIL"))
 print("(2) 共動更新    : max|(sd-sd0)-(z-z0)| = %.3e m (tol %.0e) : %s"
       % (max_ident, TOL_SD, "PASS" if ok2 else "FAIL"))
-print("(3) 活性確認    : 斜面侵食 min dz = %.3e m, 遷緩点下堆積 max dz = %.3e m : %s"
-      % (ero, dep, "PASS" if ok3 else "FAIL"))
+if mode == "eg":
+    print("(3) 活性確認    : 斜面侵食 min dz = %.3e m, 平坦部到達 max hs = %.3e m : %s"
+          % (ero, arr, "PASS" if ok3 else "FAIL"))
+else:
+    print("(3) 活性確認    : 斜面侵食 min dz = %.3e m, 遷緩点下堆積 max dz = %.3e m : %s"
+          % (ero, dep, "PASS" if ok3 else "FAIL"))
 
 ok = ok1 and ok2 and ok3
 print("== debris 検定: %s ==" % ("PASS" if ok else "FAIL"))

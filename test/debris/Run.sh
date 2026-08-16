@@ -16,6 +16,14 @@ rc=0
 python3 "$sdir/Check_debris.py" save || rc=1
 rm -rf save_serial && cp -r save save_serial
 
+# 構成2: 江頭則(E-D = 江頭・芦田1992、抵抗 = 江頭構成則)
+set -o pipefail
+./a.out param_eg.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_debris.py" save_eg eg || rc=1
+rm -rf save_eg_serial && cp -r save_eg save_eg_serial
+
 if [ $rc -eq 0 ]; then
     echo "=== debris 検定 PASS ==="
 else

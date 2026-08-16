@@ -57,8 +57,19 @@ module list_geomorph
     real :: db_vstop = 0.05          ! 停止判定の速度閾値 (m/s)。f_dbstop=1 の凝集と
                                      ! f_dbres=1 の降伏判定(静止維持)が共有する
     real :: db_wstop = 0.0           ! 低速凝集の河床転換レート (m/s)。f_dbstop=1 で必須
-    integer :: f_dbres = 1           ! 抵抗則 (0:マニングのみ, 1:クーロン+マニング合成
-                                     ! (推奨), 2:高橋ダイラタント(予約。文献照合後))
+    integer :: f_dbres = 1           ! 抵抗則 (0:マニングのみ, 1:クーロン+マニング合成,
+                                     ! 2:江頭構成則(降伏応力+粒子衝突・間隙流体の
+                                     ! 層流抵抗。江頭ら1989 式(25)/Morpho2DH 式(17)(19)))
+    integer :: f_dbed = 1            ! E-D 式 (1:高橋型平衡濃度への緩和(δe/δd),
+                                     ! 2:江頭・芦田1992 — E = |V|・C*・tan(θ−θe)。
+                                     ! 流向勾配・パラメータ追加なし。Morpho2DH 式(5)-(7))
+    real :: db_d50 = 0.0             ! 代表粒径 (m)。f_dbres=2 で必須(抵抗則の h/d)
+    real :: db_erest = 0.0           ! 粒子の反発係数 e(0〜1)。f_dbres=2 で必須
+                                     ! (材料固有値。文献に既定値なし)
+    real :: db_cmin = 0.02           ! 江頭層流則を適用する濃度下限(これ未満は
+                                     ! マニング則 = 希薄側の閉じ。層流則は C→0 で
+                                     ! 発散するため必要な数値的切替。既定 2% は
+                                     ! geomorph_plan.md §3 の希薄限界と整合)
     character(len=256) :: fn_dbinit = ""  ! 瞬時流動化の崩壊深分布ファイル (m)。
                                      ! 指定で f_release 有効(fn_* の有無の慣例)。
                                      ! f_debris=1 が必須。debris_plan.md §2.5
@@ -125,6 +136,10 @@ subroutine list_geomorph_read(p, list)
   real :: db_vstop
   real :: db_wstop
   integer :: f_dbres
+  integer :: f_dbed
+  real :: db_d50
+  real :: db_erest
+  real :: db_cmin
   character(len=256) :: fn_dbinit
   real :: db_reltime
   real :: db_relsat
@@ -139,6 +154,7 @@ subroutine list_geomorph_read(p, list)
                            fluv_bcfeed, f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_wash, wash_kr, wash_kf, wash_tausc, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
+                           f_dbed, db_d50, db_erest, db_cmin, &
                            fn_dbinit, db_reltime, db_relsat, &
                            f_slide, slide_c, slide_phi, slide_gamma
 
@@ -175,6 +191,10 @@ subroutine list_geomorph_read(p, list)
   db_vstop = list%db_vstop
   db_wstop = list%db_wstop
   f_dbres = list%f_dbres
+  f_dbed = list%f_dbed
+  db_d50 = list%db_d50
+  db_erest = list%db_erest
+  db_cmin = list%db_cmin
   fn_dbinit = list%fn_dbinit
   db_reltime = list%db_reltime
   db_relsat = list%db_relsat
@@ -222,6 +242,10 @@ subroutine list_geomorph_read(p, list)
   list%db_vstop = db_vstop
   list%db_wstop = db_wstop
   list%f_dbres = f_dbres
+  list%f_dbed = f_dbed
+  list%db_d50 = db_d50
+  list%db_erest = db_erest
+  list%db_cmin = db_cmin
   list%fn_dbinit = fn_dbinit
   list%db_reltime = db_reltime
   list%db_relsat = db_relsat
