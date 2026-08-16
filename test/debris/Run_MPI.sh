@@ -27,7 +27,7 @@ fi
 
 # 構成2: 江頭則
 set -o pipefail
-mpirun -np "$NP" $MPIRUN_OPTS ./a.out param_eg.txt | tee -a Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_eg.txt | tee -a Screen.log || exit 1
 set +o pipefail
 echo ""
 python3 "$sdir/Check_debris.py" save_eg eg || rc=1
@@ -41,7 +41,7 @@ fi
 
 # 構成3: 高橋・中川則
 set -o pipefail
-mpirun -np "$NP" $MPIRUN_OPTS ./a.out param_tk.txt | tee -a Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_tk.txt | tee -a Screen.log || exit 1
 set +o pipefail
 echo ""
 python3 "$sdir/Check_debris.py" save_tk eg || rc=1
@@ -55,7 +55,7 @@ fi
 
 # 構成4: 構成3 + 間隙水連行(f_dbwet=1)
 set -o pipefail
-mpirun -np "$NP" $MPIRUN_OPTS ./a.out param_tkwet.txt | tee -a Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_tkwet.txt | tee -a Screen.log || exit 1
 set +o pipefail
 echo ""
 python3 "$sdir/Check_debris.py" save_tkwet wet || rc=1
