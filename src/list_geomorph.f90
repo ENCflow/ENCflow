@@ -74,7 +74,16 @@ module list_geomorph
     real :: db_cmin = 0.02           ! 江頭層流則を適用する濃度下限(これ未満は
                                      ! マニング則 = 希薄側の閉じ。層流則は C→0 で
                                      ! 発散するため必要な数値的切替。既定 2% は
-                                     ! geomorph_plan.md §3 の希薄限界と整合)
+                                     ! 高橋・中川1991 の泥流域判定(濃度2%以下)と整合)
+    integer :: f_dbwet = 0           ! 間隙水の連行 (0:無視(水相は独立に保存。従来),
+                                     ! 1:飽和床の連行 — 侵食で λ・s_b・Δz の間隙水を
+                                     ! 地表水 h へ放出、堆積で埋没(高橋・中川1991
+                                     ! 式(5)の源泉 i{c*+(1−c*)s_b} 形。Kanako 式(1)は
+                                     ! s_b=1 の特別形)。gwflow とは併用不可
+                                     ! (容量超過引き渡しと役割重複))
+    real :: db_satbed = 1.0          ! 堆積層の飽和度 s_b(0〜1)。f_dbwet=1 で使用
+                                     ! (高橋・中川1991 式(5)の記号。洞谷適用値は
+                                     ! 勾配 21°以上で 0.8、以下で 1.0)
     character(len=256) :: fn_dbinit = ""  ! 瞬時流動化の崩壊深分布ファイル (m)。
                                      ! 指定で f_release 有効(fn_* の有無の慣例)。
                                      ! f_debris=1 が必須。debris_plan.md §2.5
@@ -145,6 +154,8 @@ subroutine list_geomorph_read(p, list)
   real :: db_d50
   real :: db_erest
   real :: db_cmin
+  integer :: f_dbwet
+  real :: db_satbed
   character(len=256) :: fn_dbinit
   real :: db_reltime
   real :: db_relsat
@@ -159,7 +170,7 @@ subroutine list_geomorph_read(p, list)
                            fluv_bcfeed, f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_wash, wash_kr, wash_kf, wash_tausc, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
-                           f_dbed, db_d50, db_erest, db_cmin, &
+                           f_dbed, db_d50, db_erest, db_cmin, f_dbwet, db_satbed, &
                            fn_dbinit, db_reltime, db_relsat, &
                            f_slide, slide_c, slide_phi, slide_gamma
 
@@ -200,6 +211,8 @@ subroutine list_geomorph_read(p, list)
   db_d50 = list%db_d50
   db_erest = list%db_erest
   db_cmin = list%db_cmin
+  f_dbwet = list%f_dbwet
+  db_satbed = list%db_satbed
   fn_dbinit = list%fn_dbinit
   db_reltime = list%db_reltime
   db_relsat = list%db_relsat
@@ -251,6 +264,8 @@ subroutine list_geomorph_read(p, list)
   list%db_d50 = db_d50
   list%db_erest = db_erest
   list%db_cmin = db_cmin
+  list%f_dbwet = f_dbwet
+  list%db_satbed = db_satbed
   list%fn_dbinit = fn_dbinit
   list%db_reltime = db_reltime
   list%db_relsat = db_relsat

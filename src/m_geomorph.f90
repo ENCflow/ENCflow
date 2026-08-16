@@ -114,6 +114,8 @@ module m_geomorph
     real :: db_d50v = 0.0            ! 代表粒径 (m)(f_dbres=2)
     real :: db_erest = 0.0           ! 粒子の反発係数 e(f_dbres=2)
     real :: db_cmin = 0.0            ! 江頭層流則の濃度下限(f_dbres=2)
+    integer :: f_dbwet = 0           ! 間隙水の連行(0:無視, 1:飽和床の連行)
+    real :: db_lamsb = 0.0           ! λ・s_b(前計算。連行水深 = λ・s_b・|Δz|)
     integer :: f_release = 0         ! 瞬時流動化(0:無効, 1:有効 = fn_dbinit 指定)
     real :: db_reltime = 0.0         ! 流動化の発生時刻 (s)
     real :: db_relsat = 1.0          ! 崩壊土塊の飽和度(gwflow 無効時のみ使用)

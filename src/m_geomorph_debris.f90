@@ -160,6 +160,30 @@ module subroutine init_debris(gm, p, g, list)
   call m_swflow_enc_set_debris(gm%f_dbres, gm%db_tanphi, gm%sgrav, gm%db_vstop, &
                                gm%db_cstar, gm%db_cmin, gm%db_d50v, gm%db_erest)
 
+  ! 間隙水の連行(f_dbwet。高橋・中川1991 式(5)の源泉 i{c*+(1−c*)s_b} 形)
+  select case (list%f_dbwet)
+    case (0)
+      continue
+    case (1)
+      if (list%db_satbed < 0.0 .or. list%db_satbed > 1.0) then
+        call par_stop("list_geomorph: db_satbed must be in [0, 1]")
+      end if
+      ! gwflow との併用は不可: 侵食時の間隙水放出は gwflow 併用時は
+      ! 容量超過引き渡し(hg → h)が担っており、二重計上になる。
+      ! (gw_active は gwflow init 後に確定するため、ここでは設定ファイル
+      !  指定の有無で判定する。fn_gwflow を書いたまま f_gwvertical=0 で
+      !  無効化している構成もエラーになるが、メッセージで案内する)
+      if (len_trim(p%fn_gwflow) > 0) then
+        call par_stop("list_geomorph: f_dbwet=1 は gwflow と併用できません" &
+                      // "(侵食時の間隙水放出が容量引き渡しと二重計上になります。" &
+                      // " fn_gwflow の指定を外してください)")
+      end if
+    case default
+      call par_stop("list_geomorph: f_dbwet must be 0(ignore) or 1(saturated-bed entrainment)")
+  end select
+  gm%f_dbwet = list%f_dbwet
+  gm%db_lamsb = (1.0 - gm%db_cstar) * list%db_satbed    ! λ・s_b(λ = 1−C*)
+
   ! 8近傍距離テーブル(最急降下勾配用)
   do k = 1, 8
     dbr%dist8(k) = sqrt((din(k) * g%dx)**2 + (djn(k) * g%dy)**2)
@@ -240,7 +264,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   type(t_state), intent(inout) :: s
   real, intent(in) :: dtw       ! 実効時間刻み(morfac=1 を init で保証済み)
   integer :: i, j
-  real :: tanth, cinf, cc, hm, fx, dzb, cap, fxg, hseq
+  real :: tanth, cinf, cc, hm, fx, dzb, cap, fxg, hseq, dhw
   real :: tanthc, sinthc, vcr, fac
 
   ! --- f_dbed=3 の流動面勾配は近傍の h・hs を読む。両者のハロは
@@ -366,7 +390,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   !$omp end parallel do
 
   ! --- パス2: 適用(書き込みは自セルに閉じる) ---
-  !$omp parallel do schedule(static) private(i, j, fx, dzb, cap, fxg)
+  !$omp parallel do schedule(static) private(i, j, fx, dzb, cap, fxg, dhw)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       fx = dbr%fx(i,j)
@@ -376,6 +400,16 @@ module subroutine calc_debris(gm, p, g, s, dtw)
       dzb = -fx * gm%morfac * gm%poroi
       s%z(i,j) = s%z(i,j) + dzb
       s%sd(i,j) = s%sd(i,j) + dzb
+      ! 間隙水の連行(f_dbwet=1。高橋・中川1991 式(5)の源泉
+      ! i{c*+(1−c*)s_b} の水側。
+      ! gwflow 併用は init で排除済み):
+      !   侵食(Δz<0): λ・s_b・|Δz| の間隙水を地表水 h へ放出(飽和床)
+      !   堆積(Δz>0): 同量を埋没(地表水の範囲で。不足分は不飽和堆積)
+      if (gm%f_dbwet == 1) then
+        dhw = -gm%db_lamsb * dzb
+        if (dhw < 0.0) dhw = max(dhw, -max(s%h(i,j), 0.0))
+        s%h(i,j) = s%h(i,j) + dhw
+      end if
       ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
       ! (calc_suspend と同じ整合。反対称適用)
       if (s%gw_active) then
