@@ -132,6 +132,11 @@ transition depth D is "crest - bed" on levee-active cells, otherwise
 the incision depth (with neither, p_sect_m > 0 is an error); at h >= D
 it degenerates to the conventional rectangular dynamics.
 
+The channel width (fn_width) is not required for using sigma. **On
+cells without a width, sigma is applied to a section of the full cell
+width (= the cell size)**. Enabling sigma alone, without preparing any
+width data, is the simplest configuration.
+
 **Inaccurate channel widths do not break the model badly**. With sigma
 active, the low-flow regime depends on the width value through the
 effective width = width x sigma(h); but even when the width is
