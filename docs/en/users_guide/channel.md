@@ -62,6 +62,23 @@ Represents the conveyance and storage of rivers narrower than the cell
 size as a subgrid channel of rectangular cross section. Enabled by
 specifying `fn_width`.
 
+**Key premise of the model (important)**: once the width is active,
+the physical quantities and state variables of that cell (depth, water
+level, discharge, storage) represent **only the channel portion of the
+cell**. The landside (non-channel) portion of that cell is treated as
+nonexistent, and the water exchange between the channel and the
+landside (overtopping inundation and return flow) takes place
+**directly with the adjacent landside cells**. This design differs
+from models like RRI that carry two water levels (slope and channel)
+per cell: it **cannot represent storage or inundation of the landside
+portion within the cell**, and in exchange there is no model switching
+as the river width crosses the cell size, so **a single formulation
+solves seamlessly from the thin uppermost streams to the large
+downstream river** (the record of this decision is developer.md §18).
+The inundation area is resolved at cell granularity; where you need to
+resolve flooding inside the channel cell itself, make the cell size
+finer than the river width and move to a resolved channel.
+
 ```
   fn_width = "channel_width.txt"  ! channel width distribution (m; effective on channel cells only.
                                   !   0 or below means no width information = treated as resolved)
