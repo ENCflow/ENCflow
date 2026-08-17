@@ -168,6 +168,11 @@ Notes when giving the crest with a distribution file `fn_seawall`:
   through the diagonal links. The uniform value `seawall0` is assigned
   automatically to every land cell adjacent (including diagonally) to
   the seaside, so this is not a concern.
+- Conversely, **giving extra values is harmless**. Crests on land cells
+  not adjacent to the seaside become no wall (the number of such cells
+  is merely reported at startup and does not affect the computation).
+  Painting a **generous buffer along the coast** is therefore the safe
+  side, and it automatically prevents the corner-contact leaks above.
 
 ## Examples and constraints
 

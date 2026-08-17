@@ -30,7 +30,11 @@
 !   the channel-side cell. Give a height also to channel cells that
 !   touch landside cells only at a corner (diagonally), or water leaks
 !   through the diagonal links (opposite of the coastal fn_seawall,
-!   which is held by land-side cells. users_guide/channel.md)
+!   which is held by land-side cells. users_guide/channel.md).
+!   Conversely, extra values are harmless (values on channel cells not
+!   adjacent to the landside are unused, and values on non-channel
+!   cells are ignored). Painting a generous buffer along the channel
+!   is the safe side
 !
 !======================================================================
 

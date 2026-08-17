@@ -35,6 +35,11 @@ Notes when giving the height with a distribution file `fn_bank`:
   through diagonal links too, water leaks to the landside there. The
   uniform value `bank0` is assigned to every channel cell, so this is
   not a concern.
+- Conversely, **giving extra values is harmless**. Values on channel
+  cells not adjacent to the landside are never used (no wall is
+  erected), and values on non-channel cells are ignored. Painting a
+  **generous buffer along the channel** is therefore the safe side,
+  and it automatically prevents the corner-contact leaks above.
 
 ```
 &list_channel

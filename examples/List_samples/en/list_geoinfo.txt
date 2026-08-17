@@ -91,7 +91,10 @@
                             !   fn_bank held by channel cells. Give a
                             !   crest also to land cells touching the
                             !   seaside only diagonally, or water leaks
-                            !   through the diagonal links)
+                            !   through the diagonal links. Conversely,
+                            !   values on cells not adjacent to the
+                            !   seaside are harmless = simply no wall;
+                            !   painting generously is the safe side)
   !seawall0 = 5.0           ! uniform crest value (exclusive with fn_seawall.
                             !   Default -9999 = none)
   !f_seawall_datum = 2      ! height datum (1: own-cell ground datum,
