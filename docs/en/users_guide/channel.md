@@ -104,7 +104,9 @@ finer than the river width and move to a resolved channel.
 - **Exception: when combined with the cross-section shape sigma
   (p_sect_m > 0)**, the effective width at low flow depends on the
   actual value as "width x sigma(h)", so "any large value is the same"
-  does not hold. Give the real width when using sigma.
+  does not strictly hold (though even an overstated width remains
+  interpretable and does not break the model badly -- see the note in
+  the cross-section section below).
 - `f_channel_advection = 0` drops the advection term on edges involving
   channel cells (a stabilization option under strong width
   heterogeneity; the default is 1 = normal).
@@ -129,6 +131,25 @@ sigma(h) = (h/D)^m; m = 0 corresponds to the conventional rectangle,
 transition depth D is "crest - bed" on levee-active cells, otherwise
 the incision depth (with neither, p_sect_m > 0 is an error); at h >= D
 it degenerates to the conventional rectangular dynamics.
+
+**Inaccurate channel widths do not break the model badly**. With sigma
+active, the low-flow regime depends on the width value through the
+effective width = width x sigma(h); but even when the width is
+overstated (e.g., set to the cell size or a uniform convenience
+value), the low-flow state admits an equivalent interpretation as a
+multi-thread section -- many thin braided threads flowing across the
+overly wide bed -- and at high flow (h >= D) the dynamics degenerate
+to the rectangle, so the difference from the real width nearly
+vanishes. In line with this program's policy that simple data should
+just work, refining the width data gradually is enough -- start
+refining to real widths in the reaches where the low-flow stage and
+velocity matter.
+
+The shape exponent m is currently a single domain-uniform value. It
+is only natural that mountain streams upstream and the large river
+downstream have different section shapes, so an extension to per-cell
+specification via a distribution file is a candidate for the future,
+to be considered when the need arises.
 
 ## Breach (&list_channel_breach)
 
