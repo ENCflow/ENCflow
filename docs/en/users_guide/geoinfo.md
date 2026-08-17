@@ -154,6 +154,21 @@ fn_bank). In tide cases fn_seaside can be omitted (it is derived
 automatically from the sea area), but **for cases where waves enter
 through the boundary, such as tsunamis, fn_seaside is mandatory**.
 
+Notes when giving the crest with a distribution file `fn_seawall`:
+
+- The crest is given at **land-side (protected-side) cell** positions.
+  This is the opposite of river levees, fn_bank (held by the channel =
+  water-side cells): in cases like tsunamis where the sea is solved as
+  ordinary cells, the "water side" cannot be determined by a static
+  mask (the design record is developer.md §17.1).
+- Wall edges are erected on all edges (**including diagonals**) between
+  a crest-holding land cell and a seaside cell. **Also give a crest to
+  land cells that touch seaside cells only at a corner (diagonally)** —
+  edges of cells without a value get no wall and water leaks inland
+  through the diagonal links. The uniform value `seawall0` is assigned
+  automatically to every land cell adjacent (including diagonally) to
+  the seaside, so this is not a concern.
+
 ## Examples and constraints
 
 - Annotated list of all parameters: [examples/List_samples/list_geoinfo.txt](../../../examples/List_samples/en/list_geoinfo.txt)

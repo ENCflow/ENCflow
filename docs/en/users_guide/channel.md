@@ -21,6 +21,21 @@ Erects a virtual wall, without widening cells, on the boundary between
 channel cells and landside cells. Whatever exceeds the crest spills to
 the landside as weir overtopping by the Honma formula.
 
+Notes when giving the height with a distribution file `fn_bank`:
+
+- The height is given at **channel-cell** positions (wall edges are
+  erected on all edges — **including diagonals** — between channel
+  cells and landside cells, and the crest uses the channel-side cell's
+  value). Beware that this is the opposite of the coastal seawall
+  `fn_seawall`, which is held by the land-side cells
+  ([geographic information chapter](geoinfo.md)).
+- **Also give a height to channel cells that touch landside cells only
+  at a corner (diagonally)**. Edges of a channel cell without a value
+  (−900 or below) get no wall, and since the ENC grid exchanges water
+  through diagonal links too, water leaks to the landside there. The
+  uniform value `bank0` is assigned to every channel cell, so this is
+  not a concern.
+
 ```
 &list_channel
   bank0 = 1.0                   ! uniform levee height (mutually exclusive with fn_bank)

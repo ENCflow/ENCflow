@@ -25,6 +25,13 @@
 !               (-900 or below = no levee)
 !     bank0   : a single fixed value applied to all channel cells
 !
+!   Note on fn_bank: wall edges are erected on all edges (including
+!   diagonals) between channel and landside cells, using the crest of
+!   the channel-side cell. Give a height also to channel cells that
+!   touch landside cells only at a corner (diagonally), or water leaks
+!   through the diagonal links (opposite of the coastal fn_seawall,
+!   which is held by land-side cells. users_guide/channel.md)
+!
 !======================================================================
 
 &list_channel
