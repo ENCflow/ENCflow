@@ -90,7 +90,16 @@
   !   are automatically treated the same as a conventional resolved
   !   channel (incision + walls)
   !fn_width = "channel_width.txt"  ! channel width distribution (m; effective on
-                                   !   channel cells only. 0 or below = no
+                                   !   channel cells only. Values at or above
+                                   !   the cell size all give the identical
+                                   !   resolved-channel result, so they need
+                                   !   not be the real width (to saturate even
+                                   !   channel-end cells use 2x the cell size
+                                   !   or more, e.g. 9999). But with the
+                                   !   cross-section sigma (p_sect_m>0) the
+                                   !   actual value matters at low flow as
+                                   !   W*sigma(h) -- give the real width then.
+                                   !   0 or below = no
                                    !   width information = resolved)
   f_channel_advection = 1       ! advection term on edges involving channel cells
 !  p_sect_m = 0.5                ! shape exponent m of the channel section

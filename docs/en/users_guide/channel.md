@@ -74,6 +74,20 @@ specifying `fn_width`.
   treated the same as a conventional resolved channel (incision +
   wall) -- a single width dataset connects the thin upstream streams to
   the large downstream river.
+- In that regime **the width value itself does not affect the
+  results**. The width is only ever used as a coefficient of the form
+  "min(width / cell dimension, 1)", so any value beyond the cell size
+  -- the real river width or a convenience value like 9999 -- gives
+  strictly identical results and is harmless. Feel free to paint
+  reaches you want treated as resolved with a single large value
+  (strictly speaking, only the cells at the upstream/downstream ends
+  of a channel need twice the cell size to saturate the plan-area
+  fraction, so to be certain use at least 2x the cell size, e.g.
+  9999).
+- **Exception: when combined with the cross-section shape sigma
+  (p_sect_m > 0)**, the effective width at low flow depends on the
+  actual value as "width x sigma(h)", so "any large value is the same"
+  does not hold. Give the real width when using sigma.
 - `f_channel_advection = 0` drops the advection term on edges involving
   channel cells (a stabilization option under strong width
   heterogeneity; the default is 1 = normal).
