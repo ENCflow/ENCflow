@@ -51,7 +51,7 @@ cd ../test/wave && ./Run.sh
 ```
 
 **You can also try it without installing anything** — a
-[Colab notebook](https://colab.research.google.com/github/ENCflow/ENCflow/blob/main/docs/colab_quickstart.ipynb)
+[Colab notebook](https://colab.research.google.com/github/ENCflow/ENCflow/blob/main/docs/en/colab_quickstart.ipynb)
 runs entirely in the browser (Windows users new to Unix: see
 [Using ENCflow on Windows](docs/en/windows.md)).
 

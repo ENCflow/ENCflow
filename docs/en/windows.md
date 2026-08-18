@@ -10,8 +10,7 @@ Windows, that is fine — we recommend the following route.
 A Colab notebook lets you build, run, and visualize ENCflow entirely
 in your browser. No administrator rights, no setup.
 
-**[→ Run ENCflow on Colab](https://colab.research.google.com/github/ENCflow/ENCflow/blob/main/docs/colab_quickstart.ipynb)**
-(the notebook text is currently in Japanese; the commands are universal)
+**[→ Run ENCflow on Colab](https://colab.research.google.com/github/ENCflow/ENCflow/blob/main/docs/en/colab_quickstart.ipynb)**
 
 The `git clone` and `make` written in the notebook cells are the very
 same Unix commands you will use in WSL below. Running them once here
