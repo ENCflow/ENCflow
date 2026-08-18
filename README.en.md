@@ -83,17 +83,14 @@ read only the lines you care about.
   (sharp interface) approximation, seawater intrusion into and retreat
   from aquifers (Ghyben-Herzberg), freshwater lenses, and where the
   seawater that ran up in a storm surge or tsunami ends up - on the
-  same grid as the surface and ground water (prototype, 2026-08;
-  mixing and brackish water are not handled - see "What ENCflow does
-  not do").
+  same grid as the surface and ground water.
 - **Urban pluvial flooding (sewer drainage and surcharge)**: the sewer
   network is represented as an equivalent continuum (an artificial
   confined layer) with per-cell capacity and 8-direction conveyances,
   fully coupled with the surface inundation in a single time evolution
   - from inlet uptake through pipe-full pressurized flow (surcharge) to
-  manhole eruption (prototype, 2026-08; see "What it deliberately
-  does not do" for the limits of applicability). The same machinery
-  applies to fractured bedrock, karst, and farmland tile drains.
+  manhole eruption. The same machinery applies to fractured bedrock,
+  karst, and farmland tile drains.
 - **Sediment and slope hazards**: riverbed evolution by bedload and
   suspended load, hillslope erosion, slope failure (stability
   analysis), and debris flow. Terrain and soil depth evolve during the
