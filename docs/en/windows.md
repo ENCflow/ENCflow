@@ -63,9 +63,15 @@ preparation is needed.
 ## Exchanging files with the Windows side
 
 - Type `\\wsl$` in the address bar of Explorer and the files inside
-  WSL appear **as ordinary folders**. Edit parameter files with
-  Notepad or VS Code, open the text/CSV results in Excel, and open the
-  GeoTIFF outputs in GIS software directly.
+  WSL appear **as ordinary folders**. Note that what you see first is
+  the root of the whole Linux system; your own files are under
+  `Ubuntu` → `home` → `your user name` (the name you chose when you
+  first started WSL). If you followed the steps above, ENCflow is at
+  `\\wsl$\Ubuntu\home\username\ENCflow`. You will visit this place
+  often, so **pinning it to Quick access** is convenient.
+  Edit parameter files with Notepad or VS Code, open the text/CSV
+  results in Excel, and open the GeoTIFF outputs in GIS software
+  directly.
 - For serious use, [VS Code](https://code.visualstudio.com/) with the
   "WSL" extension is comfortable (editing, terminal, and file browsing
   in one window).
