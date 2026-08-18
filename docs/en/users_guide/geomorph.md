@@ -109,7 +109,7 @@ recommend `f_gravity_correction = 1` in &list_enc.
 lahars)** - density flows without bed erosion can be approximated with
 the "equivalent fluid" setup `f_dbed = 0` (no exchange) plus
 `f_dbres = 4` (Voellmy) or `5` (constant retarding stress) - the same
-modeling level as Titan2D / VolcFlow / RAMMS. Initiate them with the
+formulation level as dedicated volcanic-flow models. Initiate them with the
 instantaneous mobilization below (fn_dbinit) or with a
 sediment-laden inflow boundary (eruption supply rate), and fix stopped
 material to the terrain with f_dbstop=1. Deposition, natural dam

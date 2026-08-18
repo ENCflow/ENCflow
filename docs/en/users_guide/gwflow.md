@@ -190,7 +190,7 @@ Applications are expressed by parameter combinations:
     gradient-driven flow, so a continuum cannot represent them
     (standalone structures are covered by
     [internal hydraulic structures](structure.md); networks dominated
-    by them belong to network models such as SWMM).
+    by them belong to dedicated 1-D pipe-network models).
   - **Systems dominated by a single trunk main** (catchments where one
     pipe larger than the cell size controls the behavior). The
     homogenization premise breaks down.

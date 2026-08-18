@@ -12,7 +12,8 @@
 !   sharp interface) into the surface water and the shallow groundwater
 !   (soil layer), handling salt wedges, seawater intrusion, and
 !   freshwater lenses with a quasi-static approximation of the same
-!   type as MODFLOW's SWI2 package. The depth h and subsurface storage
+!   type as established sharp-interface (two-zone) methods. The depth h
+!   and subsurface storage
 !   Hg remain the fresh+salt totals; the salt-layer thicknesses
 !   (Hss / Hgs) are part of them. The density difference appears only
 !   in the driving head of the salt layer,

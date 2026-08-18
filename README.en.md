@@ -101,8 +101,8 @@ read only the lines you care about.
 - **Volcanic hazards (density flows)**: sector collapse (debris
   avalanches), pyroclastic flows, and lahars, with their deposition
   and natural dam formation, as equivalent-fluid analyses (Voellmy and
-  constant-retarding-stress laws — the same modeling level as Titan2D /
-  VolcFlow). The chain from eruption supply through runout,
+  constant-retarding-stress laws — the same formulation level as
+  dedicated models). The chain from eruption supply through runout,
   deposition, natural damming, dam-break flooding, and
   rainfall-triggered secondary lahars can be followed **in a single
   run**.
@@ -144,7 +144,7 @@ are out of scope by design and belong to specialized models
 
 - **Wind waves** — short-period waves (wind waves, swell, breaking).
   Storm surge and tsunami are long waves and can be solved; wave
-  computation is the realm of wave models such as SWAN.
+  computation is the realm of dedicated wave models.
 - **Pyroclastic surges, eruption plumes, and atmospheric ash
   transport** — compressible, three-dimensional atmospheric phenomena
   outside the shallow-water approximation (the volcanic *density
@@ -165,7 +165,8 @@ are out of scope by design and belong to specialized models
 - **Individual sewer pipes and operational control** — tracking
   individual pipes, and network analyses involving **control structures
   driven by operating rules** (pumps, weirs, outfalls, CSOs), are the
-  realm of SWMM and similar network models (standalone structures are
+  realm of network models (dedicated 1-D pipe-network models;
+  standalone structures are
   covered by the internal hydraulic structures; the areal drainage
   capacity, pressurized flow, and eruption of dense street-level
   networks are covered by the conduit continuum layer. Being a

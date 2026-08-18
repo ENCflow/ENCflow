@@ -54,7 +54,7 @@
   !   The rate is wq_bd_rate (uniform) or fn_wq_map + f_wq_map=1
   !   (distributed), mutually exclusive.
   !   Washoff rate lambda = kr*P + kf*max(tau/tauc - 1, 0)
-  !     kr: rainsplash term (1/m). Compatible with the SWMM exponential
+  !     kr: rainsplash term (1/m). Compatible with 1000 x the exponential
   !         washoff coefficient c1 [1/mm] x 1000
   !         (e.g. the equivalent of c1=0.05/mm -> kr=50)
   !     kf: shear term (1/s). tau = rho*g*n^2*vv^2 / h^(1/3) (N/m2). Also

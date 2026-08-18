@@ -10,7 +10,8 @@ such as salt wedges, seawater intrusion, and freshwater lenses. Enable
 it with `fn_salt`.
 
 The model is a **quasi-static sharp-interface approximation** of the
-same type as MODFLOW's SWI2 package: the depth and subsurface storage
+same type as the sharp-interface (two-zone) methods established in
+groundwater modeling: the depth and subsurface storage
 (h and Hg) remain the fresh+salt **totals**, and the "salt layer
 thickness" (always the lowest part of the column) is tracked as part of
 those totals. The density difference eps = (rho_s - rho_f)/rho_f

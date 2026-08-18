@@ -75,7 +75,7 @@
 | wq_bd_rate | 一様蓄積レート (kg/ha/day)(f_wq_map=1 の分布指定と排他) |
 | wq_bd_max | 蓄積上限 (kg/ha)。省略で線形無限 |
 | wq_bd0 / fn_wq_bd0 | 初期プール (kg/ha)(一様値 / 分布。排他) |
-| wq_wash_kr | 雨滴洗い出し係数 (1/m。SWMM の c1[1/mm]×1000 に相当) |
+| wq_wash_kr | 雨滴洗い出し係数 (1/m。都市排水モデルで慣用の指数型洗い出し係数 c1 [1/mm] の 1000 倍に相当) |
 | wq_wash_kf / wq_wash_tauc | せん断洗い出し係数 (1/s)と限界せん断応力 (N/m²)(kf に必須) |
 
 ## 出力・監視

@@ -101,4 +101,4 @@ the existing framework (order and timing undecided).
 | Wind-driven flow / wind setup (bays, lakes, wide floodplains) | No wind stress term | Wind stress in the momentum equations + wind input (extension of the weather forcing) |
 | Complete salt-damage analysis (contamination of soil/aquifer by infiltrated seawater) | Possible up to the areal extent of run-up seawater (above) | Fresh/salt partitioning of infiltration and evapotranspiration |
 | Paddy field dams (runoff suppression by outlet restriction) | Can be approximated by storage + orifices, but no standard recipe | Under consideration |
-| Online coupling with network models (SWMM etc.), explicit tracking of large trunk mains | Out of scope (beyond the continuum approximation) | Under consideration as external coupling / a trunk hybrid |
+| Online coupling with 1-D pipe-network models, explicit tracking of large trunk mains | Out of scope (beyond the continuum approximation) | Under consideration as external coupling / a trunk hybrid |

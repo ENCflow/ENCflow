@@ -84,7 +84,7 @@ L-Q relation between discharge and load, and first flush.
 | wq_bd_rate | Uniform buildup rate (kg/ha/day) (mutually exclusive with the distributed form f_wq_map=1) |
 | wq_bd_max | Buildup limit (kg/ha). Omit for linear, unlimited buildup |
 | wq_bd0 / fn_wq_bd0 | Initial pool (kg/ha) (uniform value / distribution; mutually exclusive) |
-| wq_wash_kr | Raindrop washoff coefficient (1/m; corresponds to SWMM's c1 [1/mm] x 1000) |
+| wq_wash_kr | Raindrop washoff coefficient (1/m; corresponds to 1000 x the exponential washoff coefficient c1 [1/mm] customary in urban drainage models) |
 | wq_wash_kf / wq_wash_tauc | Shear washoff coefficient (1/s) and critical shear stress (N/m^2) (required with kf) |
 
 ## Output and monitoring
