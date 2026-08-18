@@ -51,6 +51,12 @@
   !     bucket vertical model)
   !f_gwlayer2 = 1
 
+  ! Enabling the conduit continuum layer (equivalent confined continuum
+  ! for sewer networks, fractured bedrock, etc.)
+  !  0: none (no resources for the conduit layer are allocated at all)
+  !  1: enabled (uses &list_gwflow_conduit)
+  !f_gwconduit = 1
+
   ! Update time interval of the groundwater computation (s)
   !  0 updates every step
   !  A nonzero value must be at least the time step dt
@@ -172,5 +178,85 @@
   ! effectively the calibration parameter that sets the baseflow. For
   ! long-term runs, spin-up -> save -> restore is recommended)
   gw2_sat0 = 0.0
+
+/
+
+
+!======================================================================
+! Conduit continuum layer specific settings (f_gwconduit = 1)
+!======================================================================
+!   Represents subgrid conduit networks - sewer networks, fractured
+!   bedrock, karst, farmland tile drains - as an "artificial confined
+!   aquifer" with a per-cell capacity cap and 8-direction conveyances
+!   (equivalent continuum approximation; design in
+!   docs/gwconduit_plan.md, decisions in developer.md sec. 46). When a
+!   cell becomes pipe-full it switches to a pseudo-slot confined state,
+!   representing pressurized flow (surcharge) and manhole eruption.
+!   Applications are switch combinations:
+!     urban sewers   = inlet density given, no interlayer exchange
+!                      (use gwc_leak_layer=1 for infiltration/inflow)
+!     bedrock/karst  = no inlet density (specify it for sinkholes),
+!                      gwc_leak_layer=2
+!   The stability condition of the explicit scheme is checked at
+!   initialization (the limit is governed by gwc_slot_sy; if exceeded,
+!   lower dt_gwflow or relax slot_sy / eps_h).
+!   The Hgc field is output with f_out_hg=1. Restart uses the private
+!   file gwflow_conduit.dat (f_gwconduit must have been active at save
+!   time).
+!======================================================================
+&list_gwflow_conduit
+  ! Lateral flux law (1: linear, 2: sqrt turbulent conduit flow)
+  f_gwc_fluxlaw = 2
+
+  ! Conveyance density (m2/s; pipe-full discharge per unit width at
+  ! unit hydraulic gradient). Uniform value or a map (fn_gwc_cnd).
+  ! 0 disables lateral conveyance (storage and exchanges only)
+  gwc_cnd_m2s = 0.02
+  !fn_gwc_cnd = "gwc_cnd.txt"
+
+  ! Storage capacity (columnar m = total pipe volume / cell area).
+  ! Uniform value or a map. Cells with 0 have no conduits (storage,
+  ! conveyance, and exchanges are all disabled)
+  gwc_cap = 0.01
+  !fn_gwc_cap = "gwc_cap.txt"
+
+  ! Head datum (invert) elevation: uniform burial depth
+  ! (zbot = z - gwc_depth) or an elevation map
+  gwc_depth = 3.0
+  !fn_gwc_bot = "gwc_bot.txt"
+
+  ! Storage coefficients: unconfined branch (in-pipe filling; (0,1])
+  ! and confined branch (pseudo slot; <= gwc_sy. Smaller = stiffer
+  ! pressure response but a stricter dt limit)
+  gwc_sy = 0.05
+  gwc_slot_sy = 0.001
+
+  ! Initial filling ratio [0,1] (default 0 = empty)
+  gwc_sat0 = 0.0
+
+  ! Density of stormwater inlets / manholes / sinkholes (1/m2).
+  ! Uniform value or a map. Specifying it enables surface exchange
+  ! (weir-type inflow / orifice-type eruption)
+  gwc_inlet = 0.01
+  !fn_gwc_inlet = "gwc_inlet.txt"
+
+  ! Surface exchange coefficients: weir type (per inlet,
+  ! q = cw h^1.5 m3/s) and orifice type (q = co sqrt(2g dH);
+  ! co = Cd x opening area, m2)
+  gwc_cw = 2.66
+  gwc_co = 0.15
+
+  ! Interlayer exchange (0: none, 1: with the soil layer =
+  ! infiltration/exfiltration of sewers, 2: with the weathered bedrock
+  ! layer = recharge/leakage of bedrock conduits; requires f_gwlayer2=1)
+  gwc_leak_layer = 0
+  ! Interlayer exchange capacity (mm/h). Required when
+  ! gwc_leak_layer > 0
+  !gwc_leak_mmh = 5.0
+
+  ! Numerical parameters (normally no need to change)
+  gwc_eps = 1.0e-3          ! regularization amount for the dry test (m)
+  gwc_eps_h = 1.0e-2        ! linearization width of the sqrt law (m)
+  !gwc_diagratio = 0.5857864 ! diagonal partitioning of the flux width
 
 /

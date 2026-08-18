@@ -3594,3 +3594,104 @@ collective なし)。
   (逐次+np=1,2,4)。有効時= test/glacier の Halfar 相似解(平均誤差
   1.2% H0・体積保存 1.8e-15)+カール形成スモーク。-fcheck=all np=2
   クリーン。詳細は glacier_plan.md §7。
+
+## 46. 管路連続体層 m_gwflow_conduit(f_gwconduit。2026-08-18 実装)
+
+下水道網・岩盤亀裂網・カルスト洞窟網・農地暗渠などのサブグリッド管路網を、
+セル別容量と 8 方向異方コンダクタンスを持つ**等価被圧連続体層**(人工被圧
+帯水層)として表す加算的プロセス。設計検討の正本は docs/gwconduit_plan.md
+(§10 = 統合設計の決定)。第一用途は都市下水道(科研費の都市水文軸)。
+
+### 46.1 設計決定(gwconduit_plan.md §10 の要約)
+
+- **用途別にモジュールを分けない**(単一モジュール+直交スイッチ)。
+  「下水道は地下水と交換しない/岩盤は地表と交換しない」という二分法は
+  構造ではなく典型設定にすぎない(カルストの吸込穴=雨水枡と同型、
+  下水道の浸入水=岩盤の層間漏水と同型)ため、
+  (i) 流束則 f_gwc_fluxlaw、(ii) 地表交換(枡・穴密度の指定有無)、
+  (iii) 層間交換 gwc_leak_layer、の独立スイッチで構成し、用途は
+  namelist プリセットで表す。コードに「下水道」「岩盤」の分岐はない。
+- **単一インスタンス**(§12 の慣習どおり)。下水道×岩盤の同一ラン併用が
+  必要になったら、私有状態(t_gwcond 1 個に集約済み)を配列化する
+  多重インスタンス昇格を等価リファクタとして行う。
+- **カーネルは lateral_core の拡張ではなく専用 conduit_core を併設**
+  (m_gwflow_lateral 内。幾何・エッジ作業領域・8近傍規約は層1・層2と
+  共有)。plan §10.4 は t_latlayer 拡張を先に挙げていたが、水頭の折れ線・
+  エッジ別係数・充満率通水・容量超過の層内保持と相違が多く、単一カーネル
+  では全行が分岐する。別カーネルなら lateral_core は 1 行も変わらず、
+  層1・層2 のビット一致が構造的に保証される(実装時判断)。
+
+### 46.2 定式化(実装)
+
+- **状態 s%hgc**(柱状換算水量 m。確保・更新・保存は m_gwflow_conduit)。
+- **水頭は折れ線**(conduit_head。1 状態変数で不圧⇄被圧を連続表現):
+  H = zbot + hgc/sy_c(hgc ≤ cap)/
+  H = zbot + cap/sy_c + (hgc − cap)/sy_slot(被圧 = Preissmann スロット
+  連続体版)。容量超過は排出せず層内に保持する(lateral_core の
+  クランプ+引き渡しに対する第 3 の挙動)。
+- **側方流束**: q_k = cnd_k · fill_e · sqrt(|ΔH|·rdr_k) · sign(ΔH)
+  (f_gwc_fluxlaw=2。=1 は線形則)。fill_e = 充満率 min(hgc/cap,1) の
+  算術平均を上流側でキャップ(correct_he と同型)。|ΔH| < gwc_eps_h は
+  線形化(実効拡散係数の発散防止。eps_h で連続接続)。乾燥判定・
+  過大流出抑制は lateral_core と同じ機構(eps は柱状量)。
+- **エッジ係数 cnd(1:4, 0:nx, jsh-1:jeh)**: 静的。現行はセル別
+  コンダクタンス密度(m2/s。一様 or マップ)から
+  cnd_k = min(両セル密度)·wl_k で構築(conduit_build_cnd。min 規約 =
+  管路は両セルに存在して初めて連続)。GIS 前処理による 4 成分エッジ
+  マップの直接入力は将来この構築を置き換える。
+- **地表交換**(枡・人孔・吸込穴): 密度場 × 単孔式。流入 = 堰式
+  cw·h^1.5(不圧)/オリフィス式 co·√(2gΔH)(満管)、噴出 = 被圧時のみ
+  オリフィス式。流入・噴出とも「水頭が等化する量」(折れ線の枝ごとの
+  閉形式 eq_inflow)で制限し、交換項の数値振動を防ぐ(検証 46.4 で
+  平衡値が解析値に厳密一致・振動なしを確認)。
+- **層間交換**: 水頭比較で向きを決める定数交換能 gwc_leak_mmh・容量制限の
+  単純形(layer2 の kv 項と同型)。相手は層1(要 sd/sy0)か層2
+  (m_gwflow_layer2 の公開口 gwflow_layer2_active/leakinfo で定数を取得。
+  依存方向: conduit → layer2。init 順序は layer2 が先)。
+- **安定条件**: gwflow_conduit_dtcheck。sqrt 則は線形化枝が最大勾配
+  dq/dΔH = cnd·√(rdr/eps_h)。セルごとに 8 入射エッジの係数和を集計し
+  max を allreduce_max(順序不変で決定的)。
+  dt ≤ 0.5·dx·dy / (max(1/sy)·max_cell Σ_k cnd_k·fac_k)。
+  **疑似スロットの sy_slot が dt 上界を支配する**(被圧圧力波の速さ)。
+  細かい格子×小さい sy_slot は陽解法では成立しない — 実用解像度
+  (dx ~ 100 m)なら dt_gwflow ~ 1 s で成立する(plan §10.7 の感度検討)。
+- **呼び出し順**: gwflow_calc 内で 鉛直 → 層1側方 → 層2 → 管路層。
+  モジュール内は 地表交換 → 側方 → 層間 の順で固定(結合仕様)。
+- **zbot は静的**(init 時に z − gwc_depth または fn_gwc_bot)。geomorph の
+  z 変化に追随しない(管路は掘り直さない意味論)。蒸発散は hgc に
+  触れない(閉管路)。cap=0 セルは管路なし(貯留・通水・交換とも恒久無効。
+  エッジは 0 を書く = 層間共有スクラッチ q に前層の値を残さない)。
+- **入力マップ**(fn_gwc_cap/bot/cnd/inlet): rank0 読み+par_scatter_cell の
+  帯+ハロ配布(方式2)。save/restore はモデル私有 gwflow_conduit.dat
+  (RLE。契約5)。S 台帳・Hgc 出力(f_out_hg と共用)は hg2 と同型。
+
+### 46.3 パラメータ(&list_gwflow_conduit)
+
+f_gwc_fluxlaw(1:線形, 2:sqrt。既定 2)/ gwc_cnd_m2s・fn_gwc_cnd
+(コンダクタンス密度)/ gwc_cap・fn_gwc_cap(容量)/ gwc_depth・
+fn_gwc_bot(水頭底)/ gwc_sy・gwc_slot_sy(貯留係数。slot ≤ sy)/
+gwc_sat0(初期充満率)/ gwc_inlet・fn_gwc_inlet(枡密度 個/m2)/
+gwc_cw(堰)・gwc_co(オリフィス Cd·A)/ gwc_leak_layer・gwc_leak_mmh /
+gwc_eps・gwc_eps_h・gwc_diagratio。
+CFPM2 型の閾値切替則(Darcy⇄Darcy-Weisbach)は f_gwc_fluxlaw=3 として
+将来追加(現行は 1・2 のみ受理)。
+
+### 46.4 検証記録(2026-08-18。gfortran 13.3 / OpenMPI)
+
+- **無効時**: test/wave・test/chichibu 逐次ビット一致(既存 reference と
+  ULP=0)。トップレベル make で utils 追随確認。
+- **模式実験 A**(test/conduit param.txt: 一様・枡・被圧平衡):
+  S_surf/S_grnd が解析平衡値 h_eq = 0.049/1.001 = 0.0489510489…、
+  hgc_eq = 51.1/1001 = 0.0510489510… に**表示全桁(14 桁)で一致**、
+  S_total は 0.10000000000000 で不変(質量保存)、平衡到達後の振動なし
+  (eq_inflow 制限の実証)。np=1,2,4 が逐次 reference と ULP=0。
+- **模式実験 B**(param_lat.txt: 中心 3×3 枡・sqrt 側方・greenampt・
+  層1漏水の全結合): S_total 14 桁保存、Hgc 分布の点対称・転置対称が
+  誤差 0.0(ビット厳密 = 8 方向等方性)、中心セル被圧化(hgc > cap)と
+  周辺への浸入水を確認。np=1,2,4 の Log が逐次と完全一致。
+- **-fcheck=all**(-Og・snan 初期化・invalid トラップ、MPI np=2):
+  両ケースともクリーン完走。
+- **リスタート往復**: 0–75 s save → restore 継続 75–150 s が一気通し
+  150 s と H/Hgc/E 全出力でビット一致(gwflow_conduit.dat の往復)。
+- test/conduit の reference は未コミット(新設ケースの基準確定は人間の
+  目視確認後。規律1の趣旨)。

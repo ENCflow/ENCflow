@@ -50,6 +50,7 @@ buildup-washoff+積雪+長期地形変動まで完了)を前提とする。
 | 構造物(破堤・ポンプ・カルバート・樋門・分水・ダム操作) | ○ | HEC-RAS, TUFLOW, MIKE, SOBEK 系 | 無償・公開勢では手薄な領域 |
 | 降雨流出・遮断・蒸発散 | ○(樹冠・Hamon/Thornthwaite・減率) | RRI, GSSHA, MIKE SHE, SHETRAN | 水理特化勢は持たない |
 | 地下水 | ○ 2層(土層 Boussinesq+風化基岩層) | MIKE SHE(3D), SHETRAN(3D), GSSHA | 平面2次元モデルで2層は少数派。 |
+| 都市排水・管路網 | △ 管路連続体層(等価被圧連続体・8方向異方通水・被圧サーチャージ・枡交換。§46。2026-08-18 プロトタイプ) | SWMM+2D 結合(TUFLOW, InfoWorks ICM, xpswmm 等の dual drainage) | 世界標準は地表 2D と管路 1D 網の別モデル結合。ENCflow は網を連続体化して単一時間発展で解く独自路線(適用限界の定量化が研究テーマ。gwconduit_plan.md §3)。制御構造物・幹線支配系は原理的に対象外で網モデル結合に譲る |
 | 土砂・地形変化(掃流・浮遊・崩壊・土石流) | ○ MORFAC 付き | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | 土石流・泥流(地すべり起因の流動・堆積)の無償実務勢は Morpho2DH(iRIC)が代表。ENCflow は土石流を流域水文・洪水と同居させる点が異なる |
 | 火山流動(岩屑なだれ・dense 火砕流・ラハール) | ○ 等価流体(Voellmy・一定停止応力・f_release。§28.8) | Titan2D, VolcFlow, RAMMS(雪崩), LaharZ(経験則) | 専用勢と同じ SWE+粒状体抵抗則の水準。ENCflow は噴火→流下→堆積→天然ダム→決壊洪水→降雨二次泥流の連鎖を単一モデル・単一計算で追える点が独自(専用勢は単プロセス)。希薄系(サージ・噴煙・降灰輸送)は対象外と明言(debris_plan.md §5) |
 | 水質(負荷流出・減衰・沈降・buildup-washoff) | ○ | MIKE ECO Lab, Delft3D-WAQ, Iber-WQ, GSSHA | 無償・公開で水文+水質+水理の同居は稀 |

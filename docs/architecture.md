@@ -14,7 +14,8 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理)
   ├─ 物理プロセス層(fn_* で個別に有効化。無効ならコスト・メモリゼロ)
   │    m_swflow      浅水流の切替器(排他: m_swflow_enc / m_swflow_stg)
   │      m_swflow_enc + submodule: _adv(移流) _bc(境界) _channel(河道・堤防) _diff(拡散)
-  │    m_gwflow      地下水の切替器(排他: bucket / greenampt / lateral / layer2)
+  │    m_gwflow      地下水の切替器(鉛直は排他: bucket / greenampt。
+  │                  加算: lateral / layer2 / conduit(管路連続体層))
   │    m_geomorph    土砂・地形変化(加算: creep / fluvial / suspend / wash / debris。
   │                  debris は土石流・地滑り・火山流動の抵抗則/E-D 切替を含む)
   │    m_glacier     氷河(加算: 質量収支(常時)/ flow / slide / ero / ava)
