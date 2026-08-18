@@ -201,6 +201,14 @@ are out of scope by design and belong to specialized models
 - **Simple text input and output** — matrix text, namelists, and CSV
   (plus GeoTIFF for practical work). Pre- and post-process with GIS,
   Python, Excel — whatever you prefer.
+- **High affinity with script automation** — because the parameter
+  files are plain text (namelists), you can generate cases
+  mechanically with sed or Python, run them in batch, and diff or
+  aggregate the text outputs, all from shell scripts alone. This suits
+  sensitivity analysis, calibration, and bulk scenario runs — and
+  ENCflow's own regression tests (test/*/Run.sh: generating derived
+  cases and automatically comparing against references) run on
+  exactly this machinery.
 - **Full source code available** — inspect it, verify it.
 
 ## Requirements
