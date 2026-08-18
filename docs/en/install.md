@@ -18,7 +18,9 @@ gone, deleting the whole directory restores your system exactly.
 
 All you need are git and gfortran.
 
-**Ubuntu / Debian / WSL** (on Windows, Ubuntu under WSL is recommended):
+**Ubuntu / Debian / WSL** (on Windows, Ubuntu under WSL is recommended;
+for setting up WSL and a Unix-beginner guide, see
+[Using ENCflow on Windows](windows.md)):
 
 ```bash
 sudo apt install git gfortran make

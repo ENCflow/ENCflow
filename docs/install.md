@@ -15,7 +15,9 @@ ENCflow のインストールは「Fortran コンパイラを用意して `make 
 
 必要なのは git と gfortran だけです。
 
-**Ubuntu / Debian / WSL**(Windows の方は WSL の Ubuntu を推奨):
+**Ubuntu / Debian / WSL**(Windows の方は WSL の Ubuntu を推奨。
+WSL の導入と Unix がはじめての方向けの案内は
+[Windows での使い方](windows.md) へ):
 
 ```bash
 sudo apt install git gfortran make

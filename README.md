@@ -41,6 +41,11 @@ cd ENCflow/src && make install
 cd ../test/wave && ./Run.sh
 ```
 
+**インストールなしで試すこともできます** — ブラウザだけで動く
+[Colab ノートブック](https://colab.research.google.com/github/ENCflow/ENCflow/blob/main/docs/colab_quickstart.ipynb)
+を用意しています(Windows で Unix がはじめての方は
+[Windows での使い方](docs/windows.md) へ)。
+
 最初の例題は「水面に立てた水の山が崩れて広がる」だけの計算です。
 入力は数十行のテキストファイル1枚。ここから、降雨を足す、地形を
 実データにする、河道を通す、地下水を足す…と1行ずつ設定を足して
@@ -172,7 +177,9 @@ ENCflow は平面2次元(深さ平均・密度一定・静水圧)の世界に意
 | その他ライブラリ | **不要** | — |
 
 OS は Linux / macOS / WSL を想定しています。詳細は
-[インストールガイド](docs/install.md) へ。
+[インストールガイド](docs/install.md) へ。Windows で Unix が
+はじめての方は [Windows での使い方](docs/windows.md) から
+どうぞ(ブラウザだけで試せる Colab ノートブックもあります)。
 
 ## 使い方を学ぶ
 

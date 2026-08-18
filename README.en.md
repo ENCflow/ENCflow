@@ -50,6 +50,11 @@ cd ENCflow/src && make install
 cd ../test/wave && ./Run.sh
 ```
 
+**You can also try it without installing anything** — a
+[Colab notebook](https://colab.research.google.com/github/ENCflow/ENCflow/blob/main/docs/colab_quickstart.ipynb)
+runs entirely in the browser (Windows users new to Unix: see
+[Using ENCflow on Windows](docs/en/windows.md)).
+
 The first example is nothing more than a mound of water collapsing and
 spreading over a still surface. The input is a single text file a few
 dozen lines long. From there, the ENCflow way is to grow the model one
@@ -221,7 +226,9 @@ are out of scope by design and belong to specialized models
 | Other libraries | **None** | — |
 
 Linux, macOS, and WSL are the assumed platforms. See the
-[installation guide](docs/en/install.md).
+[installation guide](docs/en/install.md). Windows users new to Unix:
+start from [Using ENCflow on Windows](docs/en/windows.md) (a Colab
+notebook that runs in the browser alone is also available).
 
 ## Learning to use it
 
