@@ -355,7 +355,8 @@
   スイッチ。developer.md §46、設計は docs/gwconduit_plan.md §10)。
   模式実験 test/conduit で解析平衡の全桁一致・np=1,2,4 ビット一致・
   -fcheck np=2・リスタート往復まで確認。残:
-  (1) test/conduit の reference 承認(人間の目視確認後に -u で確定)
+  (1) test/conduit の暫定 reference の目視承認(コミット済み。妥当なら
+      そのまま基準、作り直すなら ./Run.sh -u)
   (2) 閾値切替流束則 f_gwc_fluxlaw=3(CFPM2 型。Darcy⇄D-W)
   (3) GIS 前処理(下水道 GIS → 4 成分エッジコンダクタンス・cap・枡密度。
       utils/ 側。Python 可)と 4 成分エッジマップの直接入力

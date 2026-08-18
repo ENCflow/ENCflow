@@ -3693,5 +3693,5 @@ CFPM2 型の閾値切替則(Darcy⇄Darcy-Weisbach)は f_gwc_fluxlaw=3 として
   両ケースともクリーン完走。
 - **リスタート往復**: 0–75 s save → restore 継続 75–150 s が一気通し
   150 s と H/Hgc/E 全出力でビット一致(gwflow_conduit.dat の往復)。
-- test/conduit の reference は未コミット(新設ケースの基準確定は人間の
-  目視確認後。規律1の趣旨)。
+- test/conduit の reference は暫定としてコミット済み(解析平衡との
+  全桁一致が根拠)。規律1の趣旨により人間の目視確認をもって確定とする。
