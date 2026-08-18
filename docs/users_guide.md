@@ -32,6 +32,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [河道](users_guide/channel.md)(&list_channel)— 堤防・河道幅・断面形・破堤
 - [降雨・気象](users_guide/forcing.md)(&list_precip / intercept / meteo / evap / snow)— 降水・遮断・気温・蒸発散・積雪融雪
 - [地下水](users_guide/gwflow.md)(&list_gwflow とモデル固有設定)— 浸透・側方流動・風化基岩層・管路連続体層(下水道網・岩盤亀裂網)
+- [淡塩2層](users_guide/salt.md)(&list_salt)— 塩水くさび・海水浸入・淡水レンズ(鋭利界面近似)
 - [土砂・地形変化](users_guide/geomorph.md)(&list_geomorph)— 掃流砂・浮遊砂・斜面浸食・土石流・長期地形発達
 - [氷河](users_guide/glacier.md)(&list_glacier)— 涵養・融解・氷体流動・氷河侵食・雪崩再配分
 - [水質](users_guide/wq.md)(&list_wq)— 負荷投入・輸送・減衰・洗い出し
@@ -71,6 +72,7 @@ ENCflow は、1本の時間発展ループの上に機能(プロセスモジュ�
 | 積雪・融雪 | `fn_snow` | &list_snow |
 | 氷河 | `fn_glacier` | &list_glacier |
 | 地下水 | `fn_gwflow` | &list_gwflow(+ モデル固有) |
+| 淡塩2層 | `fn_salt` | &list_salt |
 | 土砂・地形変化 | `fn_geomorph` | &list_geomorph |
 | 水質(負荷流出) | `fn_wq` | &list_wq |
 | 計測(プローブ・測線) | `fn_record` | &list_record |
@@ -170,6 +172,7 @@ ENCflow は、1本の時間発展ループの上に機能(プロセスモジュ�
 | 高潮・津波の遡上 | [潮位・海面](users_guide/tide.md)+[境界条件](users_guide/boundary.md) |
 | 降雨流出(流域水文) | [降雨・気象](users_guide/forcing.md)(+地下水) |
 | 都市の内水氾濫(下水道の排水・噴出) | [地下水](users_guide/gwflow.md)(管路連続体層)+[降雨・気象](users_guide/forcing.md) |
+| 海水浸入・塩水くさび・淡水レンズ | [淡塩2層](users_guide/salt.md)+[潮位・海面](users_guide/tide.md) |
 | 土砂輸送・土石流 | [土砂・地形変化](users_guide/geomorph.md) |
 | 汚濁負荷・物質輸送 | [水質](users_guide/wq.md) |
 | 融雪を含む計算 | [降雨・気象](users_guide/forcing.md)(積雪・融雪+気温減率) |

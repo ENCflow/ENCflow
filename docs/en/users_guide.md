@@ -35,6 +35,7 @@ input; individual topics are split into per-chapter pages.
 - [Channels](users_guide/channel.md) (&list_channel) -- levees, channel width, cross-section shape, breach
 - [Rainfall and weather](users_guide/forcing.md) (&list_precip / intercept / meteo / evap / snow) -- precipitation, interception, air temperature, evapotranspiration, snow accumulation and snowmelt
 - [Groundwater](users_guide/gwflow.md) (&list_gwflow plus model-specific settings) -- infiltration, lateral flow, weathered bedrock layer, conduit continuum layer (sewer networks, fractured bedrock)
+- [Fresh and salt water layers](users_guide/salt.md) (&list_salt) -- salt wedges, seawater intrusion, freshwater lenses (sharp-interface approximation)
 - [Sediment and landform change](users_guide/geomorph.md) (&list_geomorph) -- bedload, suspended sediment, hillslope erosion, debris flow, long-term landscape evolution
 - [Glaciers](users_guide/glacier.md) (&list_glacier) -- accumulation, melt, ice flow, glacial erosion, avalanche redistribution
 - [Water quality](users_guide/wq.md) (&list_wq) -- load input, transport, decay, washoff
@@ -76,6 +77,7 @@ memory and no computation time at all**.
 | Snow accumulation and snowmelt | `fn_snow` | &list_snow |
 | Glaciers | `fn_glacier` | &list_glacier |
 | Groundwater | `fn_gwflow` | &list_gwflow (+ model-specific) |
+| Fresh and salt water layers | `fn_salt` | &list_salt |
 | Sediment and landform change | `fn_geomorph` | &list_geomorph |
 | Water quality (load runoff) | `fn_wq` | &list_wq |
 | Measurement (probes, transects) | `fn_record` | &list_record |
@@ -187,6 +189,7 @@ not used in ordinary computations with real data.
 | Storm surge / tsunami run-up | [Tide and sea surface](users_guide/tide.md) + [boundary conditions](users_guide/boundary.md) |
 | Rainfall runoff (catchment hydrology) | [Rainfall and weather](users_guide/forcing.md) (+ groundwater) |
 | Urban pluvial flooding (sewer drainage and surcharge) | [Groundwater](users_guide/gwflow.md) (conduit continuum layer) + [Rainfall and weather](users_guide/forcing.md) |
+| Seawater intrusion, salt wedges, freshwater lenses | [Fresh and salt water layers](users_guide/salt.md) + [Tide and sea level](users_guide/tide.md) |
 | Sediment transport / debris flow | [Sediment and landform change](users_guide/geomorph.md) |
 | Pollutant loads / mass transport | [Water quality](users_guide/wq.md) |
 | Runs including snowmelt | [Rainfall and weather](users_guide/forcing.md) (snow accumulation / snowmelt + temperature lapse rate) |

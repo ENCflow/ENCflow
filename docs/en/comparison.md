@@ -57,6 +57,7 @@ Sources (confirmed 2026-08-10):
 | Structures (breach, pumps, culverts, sluice gates, diversions, dam operation) | Yes | HEC-RAS, TUFLOW, MIKE, SOBEK family | An area where the free/open camp is thin |
 | Rainfall runoff, interception, evapotranspiration | Yes (canopy, Hamon/Thornthwaite, lapse rate) | RRI, GSSHA, MIKE SHE, SHETRAN | The hydraulics-specialized camp does not have these |
 | Groundwater | Yes: two layers (soil-layer Boussinesq + weathered bedrock layer) | MIKE SHE (3D), SHETRAN (3D), GSSHA | Two layers in a plan-view 2D model is a minority position |
+| Seawater intrusion / fresh-salt two-layer | Partial: sharp-interface 2-zone (SWI2-type; Phi_s = eta + eps*zeta, prescribed sea head, surface salt layer; developer.md sec. 47; prototype 2026-08-18) | MODFLOW+SWI2/SEAWAT, SUTRA, FEFLOW (variable density) | Variable-density transport (SEAWAT/SUTRA) resolves dispersion and mixing and is a dedicated domain. ENCflow's originality is the quasi-static sharp interface in a single time evolution with surface inundation and tide (tracking run-up seawater end to end) |
 | Urban drainage / conduit networks | Partial: conduit continuum layer (equivalent confined continuum, 8-direction anisotropic conveyance, pressurized surcharge, inlet exchange; developer.md sec. 46, prototype 2026-08-18) | SWMM + 2D couplings (TUFLOW, InfoWorks ICM, xpswmm and other dual-drainage codes) | The world standard couples a 2D surface model with a 1D pipe-network model. ENCflow takes the original route of homogenizing the network into a continuum solved in a single time evolution (quantifying its limits of applicability is a research theme; gwconduit_plan.md sec. 3). Control structures and trunk-dominated systems are out of scope in principle and are ceded to network-model coupling |
 | Sediment and landform change (bedload, suspension, collapse, debris flow) | Yes, with MORFAC | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | For debris/mud flow (landslide-triggered runout and deposition), the representative free practical tool is Morpho2DH (iRIC); ENCflow differs in housing debris flow together with catchment hydrology and flooding |
 | Water quality (load runoff, decay, settling, buildup-washoff) | Yes | MIKE ECO Lab, Delft3D-WAQ, Iber-WQ, GSSHA | Free and open coexistence of hydrology + water quality + hydraulics is rare |
@@ -91,7 +92,7 @@ Sources (confirmed 2026-08-10):
   limits and the commercial GUI-first products.
 - (Added 2026-08-14, updated 2026-08-16) In addition to features, a
   first full round of user-facing groundwork is now in place: a
-  18-chapter user's guide plus a full parameter index (421 entries),
+  19-chapter user's guide plus a full parameter index (436 entries),
   annotated namelist samples for every feature
   (examples/List_samples), and 2 hands-on tutorials (minimal example
   wave, real terrain chichibu; from the pitfalls of real data --

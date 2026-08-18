@@ -60,7 +60,7 @@ H・H9999 と、地盤高の初期値 Z0000 のみ)
 
 | フラグ | 既定 | ファイル | 内容 |
 |---|---|---|---|
-| f_out_h | 1 | H | 水深 (m) |
+| f_out_h | 1 | H | 水深 (m)(淡塩2層有効時は地表塩水層厚 Hss も出力) |
 | f_out_e | 0 | E | 水位(標高基準)(m) |
 | f_out_z | 0 | Z | 地盤高 (m)(off でも Z0000 は常に出力。地形変化計算の時間発展に) |
 | f_out_u / f_out_v | 0 | u / v | x / y 方向流速 (m/s) |
@@ -72,7 +72,7 @@ H・H9999 と、地盤高の初期値 Z0000 のみ)
 | f_out_ddd / f_out_dda | 0 | Ddd / Dda | 卓越/全流下方向(utils/rmdepress_river で必要) |
 | f_out_pre | 0 | Pr | 降雨強度 (mm/h) |
 | f_out_fr / f_out_cn | 0 | Fr / Cn | フルード数 / クーラン数 |
-| f_out_hg | 0 | Hg | 地下貯留水深 (m)(fn_gwflow 有効時。風化基岩層有効時は Hg2、管路連続体層有効時は Hgc も出力) |
+| f_out_hg | 0 | Hg | 地下貯留水深 (m)(fn_gwflow 有効時。風化基岩層有効時は Hg2、管路連続体層有効時は Hgc、淡塩2層有効時は Hgs も出力) |
 | f_out_hrs | 0 | Hrs | ため池水深 (m)(fn_reservoir 有効時) |
 | f_out_hmax | 1 | H9999 | 最大水深 |
 | f_out_hmaxt | 0 | Ht9999 | 最大水深の発生時刻 |

@@ -79,6 +79,13 @@ read only the lines you care about.
   (Hamon/Thornthwaite with temperature lapse rate), Green–Ampt
   infiltration, and two-layer groundwater (soil-layer Boussinesq plus a
   weathered-bedrock layer) providing baseflow and recession.
+- **Seawater intrusion and salt wedges**: with a fresh/salt two-layer
+  (sharp interface) approximation, seawater intrusion into and retreat
+  from aquifers (Ghyben-Herzberg), freshwater lenses, and where the
+  seawater that ran up in a storm surge or tsunami ends up - on the
+  same grid as the surface and ground water (prototype, 2026-08;
+  mixing and brackish water are not handled - see "What ENCflow does
+  not do").
 - **Urban pluvial flooding (sewer drainage and surcharge)**: the sewer
   network is represented as an equivalent continuum (an artificial
   confined layer) with per-cell capacity and 8-direction conveyances,
@@ -140,10 +147,13 @@ are out of scope by design and belong to specialized models
   temperature itself is not predicted (temperature-based corrections
   for snowmelt, evapotranspiration, and water quality are handled via
   air temperature).
-- **Density currents and stratification** — with constant density,
-  salt wedges, freshwater lenses, and reservoir thermal stratification
-  cannot be reproduced; nor can vertical structure such as secondary
-  flow in bends.
+- **The dynamics of density currents and stratification** — the
+  momentum equations keep a constant density. Fresh/salt two-layer
+  phenomena (salt wedges, seawater intrusion, freshwater lenses) are
+  handled with a sharp-interface approximation, but mixing and
+  entrainment (brackish water generation), internal waves, and
+  reservoir thermal stratification cannot be reproduced; nor can
+  vertical structure such as secondary flow in bends.
 - **Individual sewer pipes and operational control** — tracking
   individual pipes, and network analyses involving **control structures
   driven by operating rules** (pumps, weirs, outfalls, CSOs), are the

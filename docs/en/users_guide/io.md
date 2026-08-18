@@ -70,7 +70,7 @@ written.)
 
 | Flag | Default | File | Contents |
 |---|---|---|---|
-| f_out_h | 1 | H | depth (m) |
+| f_out_h | 1 | H | depth (m) (with the fresh/salt layers enabled, the surface salt-layer thickness Hss is also written) |
 | f_out_e | 0 | E | water level (relative to datum) (m) |
 | f_out_z | 0 | Z | ground elevation (m) (even when off, Z0000 is always written; for the time evolution of landform-change runs) |
 | f_out_u / f_out_v | 0 | u / v | velocity in the x / y direction (m/s) |
@@ -82,7 +82,7 @@ written.)
 | f_out_ddd / f_out_dda | 0 | Ddd / Dda | dominant / all downstream directions (needed by utils/rmdepress_river) |
 | f_out_pre | 0 | Pr | rainfall intensity (mm/h) |
 | f_out_fr / f_out_cn | 0 | Fr / Cn | Froude number / Courant number |
-| f_out_hg | 0 | Hg | subsurface storage depth (m) (when fn_gwflow is enabled; also Hg2 with the weathered bedrock layer and Hgc with the conduit continuum layer) |
+| f_out_hg | 0 | Hg | subsurface storage depth (m) (when fn_gwflow is enabled; also Hg2 with the weathered bedrock layer, Hgc with the conduit continuum layer, and Hgs with the fresh/salt layers) |
 | f_out_hrs | 0 | Hrs | pond depth (m) (when fn_reservoir is enabled) |
 | f_out_hmax | 1 | H9999 | maximum depth |
 | f_out_hmaxt | 0 | Ht9999 | time of maximum depth |

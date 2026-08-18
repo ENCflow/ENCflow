@@ -1,0 +1,63 @@
+!======================================================================
+!
+! Example of the fresh/salt two-layer settings &list_salt
+!
+!   Use this file by specifying, inside the system parameters
+!   &list_sysparam,
+!     fn_salt = "list_salt.txt"
+!   (without fn_salt the fresh/salt layers are completely inactive -
+!   no state and no computation are added).
+!
+!   Introduces a "salt layer" (always the lowest part of the column;
+!   sharp interface) into the surface water and the shallow groundwater
+!   (soil layer), handling salt wedges, seawater intrusion, and
+!   freshwater lenses with a quasi-static approximation of the same
+!   type as MODFLOW's SWI2 package. The depth h and subsurface storage
+!   Hg remain the fresh+salt totals; the salt-layer thicknesses
+!   (Hss / Hgs) are part of them. The density difference appears only
+!   in the driving head of the salt layer,
+!   Phi_s = water level + eps x interface elevation
+!   (eps = (rho_s - rho_f)/rho_f). Sea cells (the sea mask of
+!   &list_tide) automatically become an "all salt, level = tide"
+!   boundary. Design: docs/swi_plan.md; decisions: developer.md
+!   sec. 47.
+!
+!======================================================================
+&list_salt
+  ! Surface salt layer (rides the shallow-water advection + bottom
+  ! gravity current)
+  f_salt_surf = 1
+
+  ! Subsurface (soil layer) salt zone (lateral flow + sea boundary).
+  ! Requires f_gwlateral=1 in &list_gwflow (shares K_sh and sy0)
+  f_salt_gw = 1
+
+  ! Fresh / salt densities (kg/m3); they set eps = (rho_s-rho_f)/rho_f
+  salt_rhof = 1000.0
+  salt_rhos = 1025.0
+
+  ! Barotropic advection share of the salt layer, alpha in [0,1]
+  ! (the bottom layer carries less of the flow; 1 = concentration-
+  ! proportional = well-mixed equivalent)
+  salt_alpha = 1.0
+
+  ! Interfacial Manning roughness of the bottom gravity current
+  salt_ni = 0.025
+
+  ! Initial surface salt-layer thickness (specified as part of the
+  ! existing h; clipped to min(h, value))
+  salt_hss0 = 0.0
+  !fn_salt_hss0 = "hss0.txt"
+
+  ! Initial subsurface salt storage (added salt water - also added
+  ! to Hg)
+  salt_hgs0 = 0.0
+  !fn_salt_hgs0 = "hgs0.txt"
+
+  ! Numerical parameters (normally no need to change)
+  salt_eps = 1.0e-3         ! regularization amount for the dry test (m)
+  salt_eps_h = 1.0e-2       ! linearization width of the sqrt law (m)
+  !salt_diagratio = 0.5857864 ! diagonal partitioning of the flux width
+  salt_nsubmax = 200        ! upper bound of adaptive subcycling
+
+/
