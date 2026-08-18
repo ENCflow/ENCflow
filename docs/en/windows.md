@@ -40,6 +40,14 @@ cd ../test/wave && ./Run.sh
 If you get stuck, see Microsoft's
 [WSL installation guide](https://learn.microsoft.com/en-us/windows/wsl/install).
 
+> **On a school or workplace network**: behind a proxy or content
+> filter, `wsl --install` and `sudo apt update` may fail to download
+> (timeouts or certificate errors). This is a restriction on the
+> network side, not a mistake on your part — ask your network
+> administrator. Even if it cannot be resolved right away, you can
+> keep going with Colab alone, as described in
+> "3. Where WSL is not available" at the end of this document.
+
 ## These are all the commands you need (cheat sheet)
 
 Day-to-day use of ENCflow involves about ten Unix commands. No further
@@ -77,7 +85,8 @@ preparation is needed.
 
 ## 3. Where WSL is not available
 
-On school PCs and other machines where WSL cannot be enabled, the
-Colab route in step 1 still works in the browser alone. ENCflow is
+On school PCs and other machines where WSL cannot be enabled, or
+where network restrictions block the installation, the Colab route in
+step 1 still works in the browser alone. ENCflow is
 expected to work in native Windows environments (MSYS2 etc.) as well,
 but this has not been verified yet, so WSL is the recommended path.
