@@ -62,6 +62,13 @@ Green-Ampt 式(ピストン近似)f_v = K_sv (1 + ψ_f n_e / F) の浸透能で
 |---|---|
 | gw_ksv_mmh | 鉛直飽和透水係数 K_sv (mm/h) |
 | gw_psif | 湿潤前線の毛管圧力水頭 ψ_f (m)。0 で一定浸透能 K_sv に退化 |
+| fn_gw_ksv | K_sv の分布マップ(mm/h。省略時は gw_ksv_mmh の一様値) |
+| fn_gw_psif | ψ_f の分布マップ(m。省略時は gw_psif の一様値) |
+
+K_sv・ψ_f は土地利用に応じた面的分布をマップで与えられます
+(透水性舗装・浸透施設・裸地/舗装の区別など)。マップの K_sv は
+0 を許し、0 のセルは不浸透(完全舗装)になります。一様指定
+(gw_ksv_mmh)は従来どおり正の値が必要です。
 
 ## 側方流動(f_gwlateral=1、&list_gwflow_lateral)
 

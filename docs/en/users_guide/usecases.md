@@ -45,7 +45,7 @@ accuracy caveats (blank = nothing special).
 |---|---|---|---|
 | Pluvial flooding including sewer drainage and surcharge (dual drainage) | Conduit continuum layer in [Groundwater](gwflow.md) | f_gwconduit=1 + capacity, conveyance, inlet density | Reproduces the areal drainage capacity and the spatial pattern of surcharge (does not identify *which* manhole erupts). Networks dominated by operated structures (pumps, CSOs) or by a single trunk main are out of scope |
 | Storage effect of underground detention / storm trunks | Conduit continuum layer | Give large cap and conveyance along the relevant cell strings | Tracking a single trunk main is a weak point (continuum approximation) |
-| Rainwater storage/infiltration facilities, green infrastructure | Storage is possible with [Structures](structure.md) and ponds (rscap) | - | **Distributed infiltration (permeable pavement etc.) is planned** (below; infiltration parameters are currently uniform) |
+| Rainwater storage/infiltration facilities, green infrastructure, permeable pavement | [Structures](structure.md) and ponds (rscap) + infiltration maps ([Groundwater](gwflow.md)) | Represent storage with structures/ponds, and infiltration with map input of the Green-Ampt parameters (fn_gw_ksv / fn_gw_psif) | Give the K_sv map by land use, from 0 (fully paved = impervious) up to large values (infiltration facilities). The internal structure of a facility is not represented (expressed as per-cell infiltration capacity and storage) |
 
 ## Catchment hydrology and groundwater
 
@@ -97,7 +97,6 @@ the existing framework (order and timing undecided).
 |---|---|---|
 | Well pumping / groundwater abstraction (including pumping-induced seawater intrusion) | No groundwater sink mechanism | Cell + time-series pumping sinks (a subsurface version of the boundary source) |
 | Wind-driven flow / wind setup (bays, lakes, wide floodplains) | No wind stress term | Wind stress in the momentum equations + wind input (extension of the weather forcing) |
-| Areal evaluation of permeable pavement / infiltration facilities | Infiltration parameters (Green-Ampt K etc.) are spatially uniform | Map input of infiltration parameters |
 | Infiltration suppression by frozen ground (snowmelt floods) | Infiltration does not depend on temperature | Temperature-dependent infiltration reduction |
 | Complete salt-damage analysis (contamination of soil/aquifer by infiltrated seawater) | Possible up to the areal extent of run-up seawater (above) | Fresh/salt partitioning of infiltration and evapotranspiration |
 | Paddy field dams (runoff suppression by outlet restriction) | Can be approximated by storage + orifices, but no standard recipe | Under consideration |

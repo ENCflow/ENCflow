@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 436 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 438 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -233,6 +233,8 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_glacier | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
 | fn_glacier_hi0 | &list_glacier | [氷河](glacier.md) |
 | fn_gv | &list_geoinfo | [地理情報](geoinfo.md) |
+| fn_gw_ksv | &list_gwflow_greenampt | [地下水](gwflow.md) |
+| fn_gw_psif | &list_gwflow_greenampt | [地下水](gwflow.md) |
 | fn_gwc_bot | &list_gwflow_conduit | [地下水](gwflow.md) |
 | fn_gwc_cap | &list_gwflow_conduit | [地下水](gwflow.md) |
 | fn_gwc_cnd | &list_gwflow_conduit | [地下水](gwflow.md) |

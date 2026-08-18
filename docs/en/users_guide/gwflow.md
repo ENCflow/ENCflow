@@ -76,6 +76,14 @@ handled by the shallow-water side as surface water.
 |---|---|
 | gw_ksv_mmh | Vertical saturated hydraulic conductivity K_sv (mm/h) |
 | gw_psif | Capillary pressure head at the wetting front psi_f (m). 0 degenerates to a constant infiltration capacity K_sv |
+| fn_gw_ksv | Distribution map of K_sv (mm/h; if omitted, the uniform value gw_ksv_mmh is used) |
+| fn_gw_psif | Distribution map of psi_f (m; if omitted, the uniform value gw_psif is used) |
+
+K_sv and psi_f can be given as areal distributions by maps, following
+the land use (permeable pavement, infiltration facilities,
+bare/paved-surface distinctions, and so on). The map K_sv may be 0;
+cells with 0 are impervious (fully paved). The uniform specification
+(gw_ksv_mmh) still requires a positive value.
 
 ## Lateral flow (f_gwlateral=1, &list_gwflow_lateral)
 

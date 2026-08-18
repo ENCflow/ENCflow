@@ -109,6 +109,13 @@
   ! degenerates to the constant infiltration capacity K_sv)
   gw_psif = 0.1
 
+  ! Distribution maps of K_sv and psi_f (optional; land-use-dependent
+  ! infiltration capacity, permeable pavement, etc.). A map takes
+  ! precedence over the uniform value. The map K_sv may be 0; cells
+  ! with 0 are impervious (fully paved)
+  !fn_gw_ksv = "ksv.txt"      ! K_sv map (mm/h)
+  !fn_gw_psif = "psif.txt"    ! psi_f map (m)
+
 /
 
 !======================================================================
