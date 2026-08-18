@@ -217,6 +217,8 @@ module m_swflow_enc
                                      ! コミット。s%sed_active のときだけ確保)
     real, allocatable :: cq1(:,:)    ! 輸送物質柱状量の書き込み先(同上の意味論。
                                      ! s%wq_active のときだけ確保。§30)
+    real, allocatable :: hss1(:,:)   ! 地表塩水層厚の書き込み先(同上の意味論。
+                                     ! s%salt_active のときだけ確保。§47)
     logical :: initialized = .false.
   end type
   type(t_enc_status) :: sx_mod
@@ -582,6 +584,8 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   if (s%sed_active) call par_halo_cell(s%hs)
   ! 輸送物質柱状量(浮遊砂と同じ理由でステップ頭交換。§30)
   if (s%wq_active) call par_halo_cell(s%cq)
+  ! 地表塩水層厚(同上。§47)
+  if (s%salt_active) call par_halo_cell(s%hss)
 
   ! 破堤サイトの現時刻の実効天端を更新する(サイト数ぶんの時系列補間。
   ! t の純関数なので全ランクが同値を冗長計算する=通信不要)
@@ -627,6 +631,12 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
     else
       call advect_scalar(p, g, s, sx_mod, s%cq, sx_mod%cq1)
     end if
+  end if
+
+  ! 地表塩水層厚を移流する(同一カーネル。分担率 α で底層の流速分担を
+  ! 表す。境界流入は清水 = cbin なし。§47)
+  if (s%salt_active) then
+    call advect_scalar(p, g, s, sx_mod, s%hss, sx_mod%hss1, share=s%salt_alpha)
   end if
 
   ! ダムの適用(捕捉帯吸収→運転→放流。時間ループのみ。§22)
@@ -815,6 +825,11 @@ subroutine init_enc_status(p, g, s, sx)
   if (s%wq_active) then
     allocate(sx%cq1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
     sx%cq1(:,:) = s%cq(:,:)
+  end if
+  ! 地表塩水層の書き込みバッファ(同上の理由で複製初期化。§47)
+  if (s%salt_active) then
+    allocate(sx%hss1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+    sx%hss1(:,:) = s%hss(:,:)
   end if
 
   ! 流速の初期条件を設定する
@@ -1641,6 +1656,19 @@ subroutine complete(p, g, s, sx, initial)
     !$omp end parallel do
   end if
 
+  ! 地表塩水層厚のコミット(hs と同じ意味論。§47)
+  if (s%salt_active) then
+    !$omp parallel do schedule(dynamic) private(i, j)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        if (g%sw(i,j) > 0) cycle
+        s%hss(i,j) = sx%hss1(i,j)
+      end do
+    end do
+    !$omp end parallel do
+  end if
+
   ! 実効平面積率 af の更新(§25/§26。幅・σ とも無効なら af=gv のまま不変)
   if (have_width .or. have_sect) call update_af(g, s)
 
@@ -1663,7 +1691,7 @@ end subroutine
 !     - 乾燥エッジ条件(h<dd 両セル)は continuous と同一。強い乾燥化では
 !       h1 同様に c1 も僅かに負になり得る(f_exflux_reduction=1 で緩和)
 !----------------------------------------------------------------------
-subroutine advect_scalar(p, g, s, sx, c, c1, cbin)
+subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
@@ -1671,14 +1699,18 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin)
   real, intent(in) :: c(1:, dcp%jsh:)
   real, intent(inout) :: c1(1:, dcp%jsh:)
   real, intent(in), optional :: cbin(1:, dcp%jsh:)   ! 境界流入濃度(セル別)
+  real, intent(in), optional :: share                ! 移流分担率(省略時 1.0。
+                                                     !   底層スカラーの流速分担。§47)
   integer :: i, j, k
   integer :: in, jn, ie, je
-  real :: mne, fw, winv, cdon
+  real :: mne, fw, winv, cdon, sh
   logical :: has_cbin
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
   has_cbin = present(cbin)
+  sh = 1.0
+  if (present(share)) sh = share
 
   !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, mne, fw, winv, cdon)
   do j = dcp%js, dcp%je
@@ -1720,7 +1752,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin)
         ! 通過幅係数(continuous と同一)
         fw = 1.0
         if (have_frw) fw = frw(ke(k),ie,je)
-        c1(i,j) = c1(i,j) - mne * cdon * mn2dh(k) * fw * winv / g%gv(i,j)
+        c1(i,j) = c1(i,j) - mne * cdon * sh * mn2dh(k) * fw * winv / g%gv(i,j)
       end do
     end do
   end do

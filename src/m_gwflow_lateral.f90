@@ -109,6 +109,8 @@ module m_gwflow_lateral
   public :: conduit_core
   public :: conduit_build_cnd
   public :: gwflow_conduit_dtcheck
+  public :: gwflow_lateral_geom_get
+  public :: gwflow_lateral_layer1_get
 
   ! 8近傍の規約(m_swflow_enc と同一。din/djn=近傍、die/dje/ke/sign_e=
   ! エッジ成分の格納位置と向き。k=1..4 が所有成分、k=5..8 は近傍の所有)
@@ -200,6 +202,36 @@ subroutine gwflow_lateral_geom_init(g, diagratio, eps)
   ! 確保時 0: マスク起因で書かれないエッジは恒久 0(無フラックス)
   allocate(glt%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
   glt%geom_ready = .true.
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 幾何(距離・通過幅・面積逆数)の公開口(m_saltwater 等、glt を持たない
+! モジュールが同一の 8 近傍幾何で独自カーネルを書くための読み取り口。
+! geom_init 済みであること)
+!----------------------------------------------------------------------
+subroutine gwflow_lateral_geom_get(rdr, wl, ainv)
+  real, intent(out) :: rdr(1:8)
+  real, intent(out) :: wl(1:8)
+  real, intent(out) :: ainv
+  if (.not. glt%geom_ready) call par_stop("gwflow_lateral_geom_get: geometry is not initialized")
+  rdr(1:8) = glt%rdr(1:8)
+  wl(1:8) = glt%wl(1:8)
+  ainv = glt%ainv
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 層1(土層)側方流の有効状態と係数の公開口(m_saltwater の塩水 zone が
+! 同一媒体の K_sh・sy を使うため。gwflow_lateral_init より後に呼ぶこと)
+!----------------------------------------------------------------------
+subroutine gwflow_lateral_layer1_get(active, ksh, sy)
+  logical, intent(out) :: active
+  real, intent(out) :: ksh
+  real, intent(out) :: sy
+  active = glt%initialized
+  ksh = lay1%ksh
+  sy = lay1%sy
 end subroutine
 
 

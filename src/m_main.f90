@@ -3,6 +3,8 @@ module m_main
   use m_geoinfo, only : t_geoinfo, m_geoinfo_init, m_geoinfo_dispose, m_geoinfo_scatter_coeffs, m_geoinfo_band_shrink, m_geoinfo_row_ncells
   use m_precip, only : t_precip, m_precip_init, m_precip_dispose, m_precip_makepre
   use m_tide, only : t_tide, m_tide_init, m_tide_calc, m_tide_dispose
+  use m_saltwater, only : t_saltwater, m_saltwater_init, m_saltwater_calc, &
+                          m_saltwater_dispose
   use m_boundary, only : t_boundary, m_boundary_init, m_boundary_set_etaref, m_boundary_dispose, m_boundary_makebdc, &
                          m_boundary_dam_seed, m_boundary_dam_record
   use m_state, only : t_state, m_state_init, m_state_dispose, m_state_updatetime, m_state_calcstat, m_state_printstate
@@ -41,6 +43,7 @@ subroutine m_main_all()
   type(t_geoinfo) :: g
   type(t_precip) :: pr
   type(t_tide) :: ti
+  type(t_saltwater) :: sl
   type(t_boundary) :: b
   type(t_state) :: s
   type(t_record) :: r
@@ -98,6 +101,9 @@ subroutine m_main_all()
   call m_geomorph_init(gm, p, g, s)       ! geomorph を初期化(fn_geomorph 指定時のみ有効。
                                           ! s%sed_active を設定するため swflow init より前)
   call m_gwflow_init(gw, p, g, s)         ! gwflow を初期化(fn_gwflow 指定時のみ有効)
+  call m_saltwater_init(sl, p, g, s)      ! saltwater を初期化(fn_salt 指定時のみ
+                                          ! 有効。s%salt_active を立てるため swflow init
+                                          ! より前、層1側方の係数取得のため gwflow より後)
   call m_tide_init(ti, p, g, s)           ! tide を初期化(state より後・swflow より
                                           ! 前: 海セルの初期状態(z, h)をセットする)
   call m_swflow_init(sw, p, g, b, s)      ! swflow を初期化
@@ -117,12 +123,13 @@ subroutine m_main_all()
   call m_geoinfo_band_shrink(g)           ! マスク類(x,sw,rw)と z(rank0以外)を帯に縮小
 
   ! ==== 時間ループ: すべて帯確保(z のみ rank0 が全域を保持) ====
-  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, sn, gl, ierror)  ! 計算本体
+  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, gl, ierror)  ! 計算本体
 
   ! モジュールを破棄
   call output_dispose()
   call m_swflow_dispose(sw, p)
   call m_tide_dispose(ti)
+  call m_saltwater_dispose(sl, p, g, s)   ! save は dispose で(契約5)
   call m_precip_dispose(pr)
   call m_intercept_dispose(ic, p)
   call m_geomorph_dispose(gm)
@@ -157,12 +164,13 @@ end subroutine
 !----------------------------------------------------------------------
 ! 計算本体
 !----------------------------------------------------------------------
-subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, sn, gl, ierror)
+subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, gl, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
   type(t_precip), intent(in) :: pr
   type(t_tide), intent(inout) :: ti    ! titype=4 の分布バッファを更新するため inout
+  type(t_saltwater), intent(in) :: sl
   type(t_intercept), intent(in) :: ic
   type(t_state), intent(inout) :: s
   type(t_record), intent(inout) :: r
@@ -257,6 +265,10 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, ev, mt, wq, sn, gl, i
 
     ! 地下水を計算(fn_gwflow 未指定なら no-op。流れ→水収支→地形の順)
     call m_gwflow_calc(gw, p, g, s, it)
+
+    ! 淡塩2層を適用(fn_salt 未指定なら no-op。地表重力流・地下塩水 zone・
+    ! 海側境界。合計 h/hg の確定後に塩水層厚を追随させる。§47)
+    call m_saltwater_calc(sl, p, g, s, it)
 
     ! 水質過程を適用(fn_wq 未指定なら no-op。境界流入濃度の更新・
     ! 浸透同伴・発生源投入・ダム捕捉。gwflow が記録した浸透量 fxg を

@@ -117,6 +117,16 @@ module m_state
     real, allocatable :: hgc(:,:)       ! 管路連続体層の貯留水量 (m。柱状換算。
                                         ! m_gwflow_conduit が確保・更新・保存する。
                                         ! f_gwconduit=0 なら未確保。§46)
+    real, allocatable :: hss(:,:)       ! 地表水の塩水層厚 (m。柱状換算。h の内数 =
+                                        ! 最下層の塩水。m_saltwater が確保・更新・
+                                        ! 保存する。fn_salt 未指定なら未確保。§47)
+    real, allocatable :: hgs(:,:)       ! 地下水(層1)の塩水貯留 (m。柱状換算。
+                                        ! hg の内数。m_saltwater が確保・更新・
+                                        ! 保存する。fn_salt 未指定なら未確保。§47)
+    logical :: salt_active = .false.    ! 地表塩水層の有効化(m_saltwater_init が設定。
+                                        ! swflow_enc がステップ内で s%hss を移流する)
+    real :: salt_alpha = 1.0            ! 塩水層のバロトロピック移流分担率 α
+                                        ! (m_saltwater_init が設定。§47)
     real, allocatable :: swe(:,:)       ! 積雪水量 SWE (m 水柱。幾何面積基底。
                                         ! m_snow が確保・更新・保存する。
                                         ! fn_snow 未指定なら未確保。§31)
@@ -636,6 +646,8 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%bp)) deallocate(s%bp)
   if (allocated(s%hg2)) deallocate(s%hg2)
   if (allocated(s%hgc)) deallocate(s%hgc)
+  if (allocated(s%hss)) deallocate(s%hss)
+  if (allocated(s%hgs)) deallocate(s%hgs)
   if (allocated(s%swe)) deallocate(s%swe)
   if (allocated(s%hi)) deallocate(s%hi)
   if (allocated(s%fxg)) deallocate(s%fxg)
