@@ -62,6 +62,11 @@
   !  1: enabled (uses &list_gwflow_pump)
   !f_gwpump = 1
 
+  ! Enabling infiltration suppression by frozen ground
+  !  0: none (no resources are allocated at all)
+  !  1: enabled (uses &list_gwflow_frost. Requires air temperature, fn_meteo)
+  !f_gwfrost = 1
+
   ! Update time interval of the groundwater computation (s)
   !  0 updates every step
   !  A nonzero value must be at least the time step dt
@@ -300,5 +305,54 @@
   !fn_gwp_cell(2) = 'well2.txt'  ! cell list (each line "i j")
   !fn_gwp_val(2) = 'qwell2.txt'  ! rate time series (each line "min m3/s")
   !gwp_val(1:2,1,2) = 0.0, 0.01  ! (an inline time series (min, m3/s) also works)
+
+/
+
+!======================================================================
+! Frozen ground settings (f_gwfrost = 1)
+!======================================================================
+!   Accumulates a freezing index FI (degC.day) per cell from the air
+!   temperature (fn_meteo; lapse rate included) and multiplies the
+!   vertical infiltration capacity (Green-Ampt and bucket) by the
+!   reduction factor
+!     fac = max(fro_fmin, 1 - FI/fro_fifull)
+!   (meltwater running over frozen ground = snowmelt floods).
+!   Freezing degree-days accumulate below fro_tf; otherwise thawing
+!   degree-days (x fro_ct) reduce FI. With snow enabled (fn_snow),
+!   fro_swe0 > 0 attenuates both freezing and thawing by
+!   exp(-swe/fro_swe0) (snow insulation). The simplest degree-day
+!   model - soil temperature and frost depth are not solved
+!   (fro_fifull is the practical calibration point).
+!   The reduction factor is output as the Ff field. The freezing index
+!   is carried across restarts by the private file gwflow_frost.dat.
+!======================================================================
+&list_gwflow_frost
+  ! Freezing index at which the factor reaches its minimum (degC.day).
+  ! Must be greater than 0 (required)
+  fro_fifull = 20.0
+
+  ! Lower bound of the reduction factor [0,1) (default 0 = fully
+  ! frozen ground is impervious)
+  fro_fmin = 0.05
+
+  ! Freeze/thaw threshold air temperature (degC) (default 0)
+  !fro_tf = 0.0
+
+  ! Thawing efficiency (multiplier on thawing degree-days; default 1.
+  ! Smaller values delay the spring thaw)
+  !fro_ct = 1.0
+
+  ! e-folding snow water equivalent of the snow insulation (m)
+  ! (default 0 = no insulation. Requires fn_snow)
+  !fro_swe0 = 0.1
+
+  ! Cap on the freezing index (degC.day) (default 0 = no cap. About
+  ! 1-2 x fro_fifull is recommended to keep the thaw from being
+  ! unrealistically delayed after a long severe winter)
+  !fro_fimax = 40.0
+
+  ! Initial freezing index (degC.day) (default 0. Set it to start an
+  ! event run of the melt season "already frozen")
+  !fro_fi0 = 20.0
 
 /

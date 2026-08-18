@@ -1243,6 +1243,48 @@ np=2 クリーン、release np=1,2,4 が逐次 reference と全列ビット一�
 ビット一致)。reference は解析解との一致を根拠に暫定コミット
 (人間の目視承認待ち)。
 
+### 16.4 凍土による浸透抑制 m_gwflow_frost(f_gwfrost。2026-08-18 実装)
+
+融雪期の出水(凍った地面の上を流れる融雪水)のための、気温連動の
+浸透能低減(handoff 小拡張候補 (4) の消し込み)。
+
+- **モデル**: 度日ベースの凍結指数 FI(°C·day。セル状態)。
+  Ta < fro_tf で凍結度日を積算、以上で融解度日(× fro_ct)を減算
+  (FI ≥ 0、fro_fimax > 0 なら上限クリップ = 凍結深の飽和の簡便表現)。
+  低減係数は線形ランプ fac = max(fro_fmin, 1 − FI/fro_fifull)
+  (指数形より利用者が挙動を読める・fifull で完全凍結時刻が陽に決まる)。
+  積雪断熱は fro_swe0 > 0 のとき凍結・融解の両項に exp(−swe/fro_swe0)
+  (雪の下では地面と大気の熱結合が対称に弱まる)。地温・凍結深・
+  不凍水は解かない(積雪の度日法と同格の最簡モデル。§0-4)。
+- **結合**: s%frofac(帯配列。fro が所有・毎ステップ更新)を鉛直浸透
+  モデルが浸透能に乗じる。greenampt は実効 kv = ksv·fac を式全体
+  (F_eff 正則化・kv≤0 ガード込み)に使い、bucket は rate·fac。
+  参照は `allocated(s%frofac)` ガード(s%fxg と同型 = 無効時ビット一致)。
+  frost calc は m_gwflow_calc の**先頭**(鉛直より前。実行順序が結合仕様)。
+- **気温**: m_meteo の meteo_temp_set / meteo_temp_cell(減率込み。
+  評価標高は s%z — 積雪面・氷面補正はせず断熱は swe0 で表す)。
+  m_gwflow_calc の引数に mt を追加(公開インターフェース変更 →
+  トップレベル make で utils 追随を確認)。**meteo の存在検査は
+  m_main が m_meteo_init の後に m_gwflow_check_meteo で行う**
+  (gwflow init は saltwater/tide/swflow の順序制約で meteo init より
+  先に走るため、init 内では検査できない)。
+- **状態と保存**: FI は持続状態 → 契約5の私有ファイル gwflow_frost.dat
+  (RLE。restore は自ファイル必須で par_stop)。初期値は fro_fi0 一様
+  (融雪期イベントを「凍った状態から」始める校正入口。gw2_sat0 と同格)。
+  低減係数場は Ff として出力(swe の Sw と同じ allocated ガード方式)。
+
+検証記録(2026-08-18): test/frost(平坦閉領域 21×21・一様定数気温
+−8.64 ℃・K_sv=36 mm/h・fifull=0.36 → fac_k = 1 − k/7200)で
+S_grnd(3600) = K·dt·(7200 − 7201/2) = 0.0179975 に**全 14 桁一致**
+(中間時刻も厳密)、Ff(1800)=0.5・Ff(3600)=0 が厳密。融解
+(fi0=0.36・Ta=+8.64・ct=0.5)で Ff(1800)=0.25・Ff(3600)=0.5 厳密。
+積雪断熱(swe=0.1 m・swe0=0.1)で Ff(3600)=0.6321 = 1−e⁻¹。
+リスタート往復(1800 で save→restore)が直行ランと Log ビット一致
+(gwflow_frost.dat が FI を運ぶ)。-Og -fcheck=all np=2 クリーン、
+release np=1,2,4 が逐次 reference と全列ビット一致、wave・chichibu・
+conduit・salt・pump 全回帰 PASS(無効時ビット一致)。reference は
+解析解一致を根拠に暫定コミット(人間の目視承認待ち)。
+
 ## 17. 堤防(仮想壁面)モデルの設計(2026-08-06 決定)
 
 河道セル(rw>0)と堤内地セル(rw=0 の陸)の間の全エッジ(**対角含む**)に

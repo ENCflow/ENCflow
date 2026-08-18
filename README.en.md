@@ -113,6 +113,8 @@ read only the lines you care about.
   runoff analysis.
 - **Snow accumulation and melt**: degree-day method. With the
   temperature lapse rate, the snow line emerges automatically.
+  Infiltration suppression by frozen ground (a temperature-driven
+  freezing index) captures snowmelt floods running over frozen soil.
 - **Glaciers**: firnification of perennial snow (accumulation) and
   ice-surface melt, ice flow by the shallow ice approximation (SIA),
   basal sliding with glacial erosion, and avalanche redistribution of

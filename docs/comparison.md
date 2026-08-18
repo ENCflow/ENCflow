@@ -55,7 +55,7 @@ buildup-washoff+積雪+長期地形変動まで完了)を前提とする。
 | 土砂・地形変化(掃流・浮遊・崩壊・土石流) | ○ MORFAC 付き | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | 土石流・泥流(地すべり起因の流動・堆積)の無償実務勢は Morpho2DH(iRIC)が代表。ENCflow は土石流を流域水文・洪水と同居させる点が異なる |
 | 火山流動(岩屑なだれ・dense 火砕流・ラハール) | ○ 等価流体(Voellmy・一定停止応力・f_release。§28.8) | Titan2D, VolcFlow, RAMMS(雪崩), LaharZ(経験則) | 専用勢と同じ SWE+粒状体抵抗則の水準。ENCflow は噴火→流下→堆積→天然ダム→決壊洪水→降雨二次泥流の連鎖を単一モデル・単一計算で追える点が独自(専用勢は単プロセス)。希薄系(サージ・噴煙・降灰輸送)は対象外と明言(debris_plan.md §5) |
 | 水質(負荷流出・減衰・沈降・buildup-washoff) | ○ | MIKE ECO Lab, Delft3D-WAQ, Iber-WQ, GSSHA | 無償・公開で水文+水質+水理の同居は稀 |
-| 積雪・融雪 | ○ 度日法(§31。2026-08-10) | MIKE SHE・GSSHA・SHETRAN(同じく度日法系) | HEC-RAS は HMS 側。 |
+| 積雪・融雪 | ○ 度日法(§31)+凍土の浸透抑制(凍結指数。2026-08-18) | MIKE SHE・GSSHA・SHETRAN(同じく度日法系) | HEC-RAS は HMS 側。 |
 | 氷河 | ○ 度日質量収支+SIA 流動+滑動+氷河侵食+雪崩再配分(§45。2026-08-16) | 汎用洪水モデルには皆無 | 精緻な氷力学は専用モデル(PISM, Elmer/Ice, OGGM)の領域。洪水水理・流域水文・地形変動と氷河を単一モデルで併走させる構成は他に例がない |
 | 長期地形変動 | ○ 風化・隆起・周期強制(§32。2026-08-10) | CAESAR-Lisflood, Landlab, Badlands, FastScape | 実水理駆動では CAESAR-Lisflood と並ぶ。§4 参照 |
 | 並列化 | OpenMP+MPI。**ランク数によらずビット再現** | TELEMAC/Delft3D は MPI(ビット再現は保証せず) | 決定的リダクション(§11)が差別化点 |
@@ -77,7 +77,7 @@ buildup-washoff+積雪+長期地形変動まで完了)を前提とする。
   スタック前提)。教育利用(ノート PC)からベクトル機・スパコンまで
   同一ソースという間口は、TUFLOW デモ制限や商用 GUI 前提と対照的。
 - (追記 2026-08-14、2026-08-18 更新)機能面に加えて利用者向けの
-  整備が一巡した: ユーザーガイド 20 章+全パラメータ索引(445 項目)、
+  整備が一巡した: ユーザーガイド 20 章+全パラメータ索引(453 項目)、
   全機能の注釈付き namelist 見本(examples/List_samples)、実行して
   学ぶチュートリアル 2 件(最小例 wave・実地形 chichibu。実データの
   落とし穴 = 窪地除去・平坦区間由来の流量振動から、ParaView での

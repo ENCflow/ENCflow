@@ -141,6 +141,9 @@ module m_state
     real, allocatable :: fxg(:,:)       ! 浸透フラックスの記録 (m。gwflow の鉛直交換が
                                         ! 書き、m_wq が読んでゼロ戻し。§30 の契約。
                                         ! 確保は m_wq_init(f_wq_infil=1 のときのみ))
+    real, allocatable :: frofac(:,:)    ! 凍土の浸透低減係数 [fro_fmin,1](m_gwflow_frost
+                                        ! が書き、鉛直浸透モデルが浸透能に乗じる。
+                                        ! 確保は gwflow_frost_init(f_gwfrost=1 のみ)。§16.4)
     logical :: wq_active = .false.  ! 水質輸送の有効化(m_wq_init が設定。
                                     ! swflow_enc がステップ内で s%cq を移流する)
     logical :: sed_active = .false. ! 浮遊砂輸送の有効化(m_geomorph_init が設定。
@@ -651,6 +654,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%swe)) deallocate(s%swe)
   if (allocated(s%hi)) deallocate(s%hi)
   if (allocated(s%fxg)) deallocate(s%fxg)
+  if (allocated(s%frofac)) deallocate(s%frofac)
   if (allocated(s%tide)) deallocate(s%tide)
   if (allocated(s%hmax)) deallocate(s%hmax)
   if (allocated(s%hmaxt)) deallocate(s%hmaxt)

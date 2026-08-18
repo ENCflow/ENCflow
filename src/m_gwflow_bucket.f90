@@ -88,18 +88,22 @@ subroutine gwflow_bucket_calc(p, g, s, it, dts)
   integer, intent(in) :: it
   real, intent(in) :: dts
   integer :: i, j
-  real :: fx
+  real :: rt, fx
 
   if (it < 0) continue  ! 引数未使用の警告を抑制(独自周期を持つモデル用に供給)
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
-  !$omp parallel do schedule(static) private(i, j, fx)
+  !$omp parallel do schedule(static) private(i, j, rt, fx)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
+      ! 実効浸透能: 凍土有効時は低減係数を乗じる(§16.4。無効時は
+      ! rt = rate で従来とビット一致)
+      rt = gwb%rate
+      if (allocated(s%frofac)) rt = rt * s%frofac(i,j)
       ! 浸透フラックス: 浸透能・表面水量・残容量の最小
-      fx = min(gwb%rate * dts, s%h(i,j), gwb%cap - s%hg(i,j))
+      fx = min(rt * dts, s%h(i,j), gwb%cap - s%hg(i,j))
       fx = max(fx, 0.0)
       ! 反対称適用(契約1)と水位の回復(契約2)
       s%h(i,j) = s%h(i,j) - fx

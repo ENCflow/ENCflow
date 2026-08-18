@@ -32,6 +32,7 @@ a second layer, a conduit continuum layer, and pumping sinks if needed.
 | f_gwlayer2 | 0 | 1: enable the weathered bedrock layer (second layer) |
 | f_gwconduit | 0 | 1: enable the conduit continuum layer (sewer networks, fractured bedrock, etc.) |
 | f_gwpump | 0 | 1: enable well pumping / groundwater abstraction (sink) |
+| f_gwfrost | 0 | 1: enable infiltration suppression by frozen ground (requires air temperature, fn_meteo) |
 | dt_gwflow | 0 | Update interval of the groundwater computation (s). 0: every step. If specified, must be at least dt (consistency is maintained through the effective time step) |
 
 **Soil depth sd and specific yield sy0 belong to the geographic
@@ -235,6 +236,47 @@ consecutively from 1.
   [Boundary conditions](boundary.md)).
 - A well is a cell-scale sink (borehole-scale hydraulics - well
   radius, skin, partial penetration - are not represented).
+
+## Infiltration suppression by frozen ground (f_gwfrost=1, &list_gwflow_frost)
+
+To represent meltwater and rain running over frozen ground (snowmelt
+floods, enhanced early-spring runoff), a **freezing index** FI
+(degC.day) is accumulated per cell from the air temperature (fn_meteo
+in [Rainfall and meteorology](forcing.md); lapse rate included), and a
+reduction factor is applied to the vertical infiltration capacity
+(Green-Ampt and bucket).
+
+- Freezing index: freezing degree-days accumulate while the air
+  temperature is below the threshold fro_tf, and thawing degree-days
+  (times fro_ct) reduce it above the threshold (FI >= 0).
+- Reduction factor (linear): fac = max(fro_fmin, 1 - FI/fro_fifull).
+  The factor reaches its minimum (impervious if fro_fmin=0) at
+  FI = fro_fifull.
+- Snow insulation (optional): with fro_swe0 > 0 and snow enabled
+  (fn_snow in [Rainfall and meteorology](forcing.md)), both freezing
+  and thawing are attenuated by exp(-swe/fro_swe0) (under snow the
+  ground cools - and thaws - more slowly).
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| fro_fifull | - | Freezing index at which the reduction factor reaches its minimum (degC.day). The practical calibration point |
+| fro_fmin | 0 | Lower bound of the reduction factor [0,1). 0 = fully frozen ground is impervious |
+| fro_tf | 0 | Freeze/thaw threshold air temperature (degC) |
+| fro_ct | 1 | Thawing efficiency (multiplier on thawing degree-days). Smaller values delay the spring thaw |
+| fro_swe0 | 0 | e-folding snow water equivalent of the snow insulation (m). 0 = no insulation |
+| fro_fimax | 0 | Cap on the freezing index (degC.day). 0 = no cap. To keep the thaw from being unrealistically delayed after a long severe winter, about 1-2 x fro_fifull is recommended |
+| fro_fi0 | 0 | Initial freezing index (degC.day). Set it to start an event run of the melt season "already frozen" |
+
+- This is the simplest degree-day model (same philosophy as the
+  degree-day snow model); soil temperature, frost depth, and unfrozen
+  water are not solved. Fitting fro_fifull to observed runoff is the
+  practical approach.
+- The distribution of the reduction factor is output as `Ff0001`
+  (1 = unfrozen, fro_fmin = fully frozen).
+- The freezing index is a persistent state; across
+  [Suspend and restart](restart.md) it is carried automatically by the
+  private file gwflow_frost.dat (f_gwfrost must have been enabled at
+  save time).
 
 ## Output and monitoring
 

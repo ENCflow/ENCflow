@@ -61,7 +61,7 @@ Sources (confirmed 2026-08-10):
 | Urban drainage / conduit networks | Partial: conduit continuum layer (equivalent confined continuum, 8-direction anisotropic conveyance, pressurized surcharge, inlet exchange; developer.md sec. 46, prototype 2026-08-18) | SWMM + 2D couplings (TUFLOW, InfoWorks ICM, xpswmm and other dual-drainage codes) | The world standard couples a 2D surface model with a 1D pipe-network model. ENCflow takes the original route of homogenizing the network into a continuum solved in a single time evolution (quantifying its limits of applicability is a research theme; gwconduit_plan.md sec. 3). Control structures and trunk-dominated systems are out of scope in principle and are ceded to network-model coupling |
 | Sediment and landform change (bedload, suspension, collapse, debris flow) | Yes, with MORFAC | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | For debris/mud flow (landslide-triggered runout and deposition), the representative free practical tool is Morpho2DH (iRIC); ENCflow differs in housing debris flow together with catchment hydrology and flooding |
 | Water quality (load runoff, decay, settling, buildup-washoff) | Yes | MIKE ECO Lab, Delft3D-WAQ, Iber-WQ, GSSHA | Free and open coexistence of hydrology + water quality + hydraulics is rare |
-| Snow accumulation and snowmelt | Yes: degree-day method (Sec. 31; 2026-08-10) | MIKE SHE, GSSHA, SHETRAN (also degree-day family) | For HEC-RAS this is on the HMS side |
+| Snow accumulation and snowmelt | Yes: degree-day method (Sec. 31) + infiltration suppression by frozen ground (freezing index; 2026-08-18) | MIKE SHE, GSSHA, SHETRAN (also degree-day family) | For HEC-RAS this is on the HMS side |
 | Glaciers | Yes: degree-day mass balance + SIA flow + sliding + glacial erosion + avalanche redistribution (Sec. 45; 2026-08-16) | Absent from all general-purpose flood models | Detailed ice dynamics remain the domain of dedicated models (PISM, Elmer/Ice, OGGM). Running glaciers alongside flood hydraulics, catchment hydrology, and landform change in a single model has no counterpart |
 | Long-term landform evolution | Yes: weathering, uplift, cyclic forcing (Sec. 32; 2026-08-10) | CAESAR-Lisflood, Landlab, Badlands, FastScape | Driven by real hydraulics, on par with CAESAR-Lisflood. See Sec. 4 |
 | Parallelization | OpenMP + MPI. **Bit reproducibility regardless of rank count** | TELEMAC/Delft3D use MPI (bit reproducibility not guaranteed) | Deterministic reductions (Sec. 11) are the differentiator |
@@ -92,7 +92,7 @@ Sources (confirmed 2026-08-10):
   limits and the commercial GUI-first products.
 - (Added 2026-08-14, updated 2026-08-16) In addition to features, a
   first full round of user-facing groundwork is now in place: a
-  20-chapter user's guide plus a full parameter index (445 entries),
+  20-chapter user's guide plus a full parameter index (453 entries),
   annotated namelist samples for every feature
   (examples/List_samples), and 2 hands-on tutorials (minimal example
   wave, real terrain chichibu; from the pitfalls of real data --

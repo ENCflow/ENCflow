@@ -10,7 +10,8 @@ module m_main
   use m_state, only : t_state, m_state_init, m_state_dispose, m_state_updatetime, m_state_calcstat, m_state_printstate
   use m_record, only : t_record, m_record_init, m_record_dispose, m_record_probe, m_record_flux, m_record_summary
   use m_geomorph, only : t_geomorph, m_geomorph_init, m_geomorph_calc, m_geomorph_dispose
-  use m_gwflow, only : t_gwflow, m_gwflow_init, m_gwflow_calc, m_gwflow_dispose
+  use m_gwflow, only : t_gwflow, m_gwflow_init, m_gwflow_check_meteo, &
+                       m_gwflow_calc, m_gwflow_dispose
   use m_evap, only : t_evap, m_evap_init, m_evap_calc, m_evap_record, m_evap_dispose
   use m_meteo, only : t_meteo, m_meteo_init, m_meteo_dispose
   use m_wq, only : t_wq, m_wq_init, m_wq_calc, m_wq_derive, m_wq_record, m_wq_dispose
@@ -109,6 +110,8 @@ subroutine m_main_all()
   call m_swflow_init(sw, p, g, b, s)      ! swflow を初期化
   call m_meteo_init(mt, p, g, s)          ! meteo を初期化(fn_meteo 指定時のみ有効。
                                           ! 基準標高の既定に state の z を使うため後に)
+  call m_gwflow_check_meteo(gw, mt)       ! 凍土(f_gwfrost)の気温入力検査(gwflow init は
+                                          ! meteo より先に走るため、ここで検査する)
   call m_evap_init(ev, p, g, b, s, mt)    ! evap を初期化(fn_evap 指定時のみ有効。
                                           ! ダム湛水面積の登録に boundary、基準標高に
                                           ! state の z を使うため両者より後に)
@@ -264,7 +267,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, g
     call par_allreduce_maxi(ierror)
 
     ! 地下水を計算(fn_gwflow 未指定なら no-op。流れ→水収支→地形の順)
-    call m_gwflow_calc(gw, p, g, s, it)
+    call m_gwflow_calc(gw, p, g, s, mt, it)
 
     ! 淡塩2層を適用(fn_salt 未指定なら no-op。地表重力流・地下塩水 zone・
     ! 海側境界。合計 h/hg の確定後に塩水層厚を追随させる。§47)

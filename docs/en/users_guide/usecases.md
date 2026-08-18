@@ -73,6 +73,7 @@ accuracy caveats (blank = nothing special).
 | Phenomenon | Features | Key settings | Notes |
 |---|---|---|---|
 | Snowmelt floods, rain-on-snow | Snow in [Rainfall and weather](forcing.md) | fn_snow + air temperature (lapse rate) | Degree-day method (energy balance not implemented) |
+| Infiltration suppression by frozen ground (meltwater running over frozen soil) | Frozen ground (f_gwfrost) in [Groundwater](gwflow.md) + temperature (+ snow) | f_gwfrost=1 + fro_fifull (+ fro_swe0 for snow insulation, fro_fi0 to start "already frozen") | The simplest model - a degree-day freezing index reduces the infiltration capacity (soil temperature and frost depth are not solved). fro_fifull is the practical calibration point |
 | Glacial lake outburst floods (GLOF) | [Glaciers](glacier.md) + terrain + breach in [Channels](channel.md) | Represent the glacial lake as impounded terrain; give the breach as a crest time series | The breach trigger and widening are inputs |
 | Glacier retreat / cirque formation (long term) | [Glaciers](glacier.md) + long runs | Repeated representative years x morfac x restart chains | |
 
@@ -97,7 +98,6 @@ the existing framework (order and timing undecided).
 | Phenomenon | Current state | Planned form |
 |---|---|---|
 | Wind-driven flow / wind setup (bays, lakes, wide floodplains) | No wind stress term | Wind stress in the momentum equations + wind input (extension of the weather forcing) |
-| Infiltration suppression by frozen ground (snowmelt floods) | Infiltration does not depend on temperature | Temperature-dependent infiltration reduction |
 | Complete salt-damage analysis (contamination of soil/aquifer by infiltrated seawater) | Possible up to the areal extent of run-up seawater (above) | Fresh/salt partitioning of infiltration and evapotranspiration |
 | Paddy field dams (runoff suppression by outlet restriction) | Can be approximated by storage + orifices, but no standard recipe | Under consideration |
 | Online coupling with network models (SWMM etc.), explicit tracking of large trunk mains | Out of scope (beyond the continuum approximation) | Under consideration as external coupling / a trunk hybrid |

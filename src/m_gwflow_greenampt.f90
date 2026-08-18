@@ -167,24 +167,28 @@ subroutine gwflow_greenampt_calc(p, g, s, it, dts)
   integer, intent(in) :: it
   real, intent(in) :: dts
   integer :: i, j
-  real :: cap, fv, fx
+  real :: kv, cap, fv, fx
 
   if (it < 0) continue  ! 引数未使用の警告を抑制(独自周期を持つモデル用に供給)
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
-  !$omp parallel do schedule(static) private(i, j, cap, fv, fx)
+  !$omp parallel do schedule(static) private(i, j, kv, cap, fv, fx)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
-      ! K_sv = 0(マップ指定の不浸透セル)は浸透なし(正則化 F_eff の
-      ! 除算保護を兼ねる。一様指定では > 0 が保証されるため無縁)
-      if (ga%ksv(i,j) <= 0.0) cycle
+      ! 実効透水係数: 凍土有効時は低減係数を乗じる(§16.4。
+      ! 無効時は kv = ksv でスカラー時代とビット一致)
+      kv = ga%ksv(i,j)
+      if (allocated(s%frofac)) kv = kv * s%frofac(i,j)
+      ! kv = 0(マップ指定の不浸透セル・完全凍結)は浸透なし
+      ! (正則化 F_eff の除算保護を兼ねる)
+      if (kv <= 0.0) cycle
       ! 貯留容量(土層厚×水分不足量)。F ≡ s%hg(ヘッダ参照)
       cap = s%sd(i,j) * ga%dtheta
-      ! Green-Ampt 浸透能(F_eff = max(F, ksv*dts) で F→0 を正則化)
-      fv = ga%ksv(i,j) * (1.0 + ga%psif(i,j) * ga%dtheta &
-                                / max(s%hg(i,j), ga%ksv(i,j) * dts))
+      ! Green-Ampt 浸透能(F_eff = max(F, kv*dts) で F→0 を正則化)
+      fv = kv * (1.0 + ga%psif(i,j) * ga%dtheta &
+                       / max(s%hg(i,j), kv * dts))
       ! 浸透フラックス: 浸透能・表面水量・残容量の最小
       fx = min(fv * dts, s%h(i,j), cap - s%hg(i,j))
       fx = max(fx, 0.0)

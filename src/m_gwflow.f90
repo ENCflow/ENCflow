@@ -13,6 +13,9 @@ module m_gwflow
   !     いずれも無効時は資源を一切確保しない
   !   - 加算的なシンク: f_gwpump(井戸揚水・地下水取水。m_gwflow_pump。
   !     無効時は資源を一切確保しない)
+  !   - 加算的な修飾: f_gwfrost(凍土による浸透抑制。m_gwflow_frost。
+  !     気温(fn_meteo)必須 — 初期化順序の制約により存在検査は m_main が
+  !     meteo init 後に m_gwflow_check_meteo で行う。無効時は資源ゼロ)
   !   - 鉛直の束縛は t_gwflow の手続きポインタ成分(abstract interface +
   !     nopass)。側方は当面単一モデルのため直接呼び出し(第2の側方
   !     モデルが実在した時点でポインタ束へ昇格する。等価リファクタとして
@@ -37,12 +40,15 @@ module m_gwflow
   use m_gwflow_conduit, only : gwflow_conduit_init, gwflow_conduit_calc, &
                                gwflow_conduit_dispose
   use m_gwflow_pump, only : gwflow_pump_init, gwflow_pump_calc, gwflow_pump_dispose
+  use m_gwflow_frost, only : gwflow_frost_init, gwflow_frost_calc, gwflow_frost_dispose
+  use m_meteo, only : t_meteo
   use m_parallel, only : par_stop, par_allreduce_max, dcp
   use m_util, only : itoa
   implicit none
   private
   public :: t_gwflow
   public :: m_gwflow_init
+  public :: m_gwflow_check_meteo
   public :: m_gwflow_calc
   public :: m_gwflow_dispose
 
@@ -87,6 +93,7 @@ module m_gwflow
     logical :: l2_enabled = .false.  ! 風化基岩層の有効化(f_gwlayer2=1)
     logical :: c_enabled = .false.   ! 管路連続体層の有効化(f_gwconduit=1)
     logical :: pump_enabled = .false. ! 井戸揚水の有効化(f_gwpump=1)
+    logical :: frost_enabled = .false. ! 凍土による浸透抑制の有効化(f_gwfrost=1)
     integer :: idt_gwflow = 1        ! 更新間隔(ステップ数)
     real :: dts = 0.0                ! 実効時間刻み(p%dt * idt_gwflow)(s)
     logical :: initialized = .false.
@@ -155,6 +162,21 @@ subroutine m_gwflow_init(gw, p, g, s)
     case default
       call par_stop("list_gwflow: f_gwpump must be 0(none) or 1(wells): " &
                     // itoa(list%f_gwpump))
+  end select
+
+  ! --- 凍土による浸透抑制(鉛直浸透能の修飾。無効時は資源ゼロ) ---
+  select case (list%f_gwfrost)
+    case (0)
+      gw%frost_enabled = .false.
+    case (1)
+      if (list%f_gwvertical == 0) then
+        call par_stop("list_gwflow: f_gwfrost=1 requires a vertical model " &
+                      // "(f_gwvertical=1 or 2)")
+      end if
+      gw%frost_enabled = .true.
+    case default
+      call par_stop("list_gwflow: f_gwfrost must be 0(none) or 1(frozen ground): " &
+                    // itoa(list%f_gwfrost))
   end select
 
   ! すべて 0 なら fn を書いたまま一時無効化する経路
@@ -234,7 +256,23 @@ subroutine m_gwflow_init(gw, p, g, s)
   if (gw%c_enabled) call gwflow_conduit_init(p, g, s, gw%dts)
   ! 井戸揚水は層2より後(gwp_layer=2 が層2の有効化を参照する)
   if (gw%pump_enabled) call gwflow_pump_init(p, g, s)
+  ! 凍土(s%frofac の確保。気温の存在検査は m_gwflow_check_meteo)
+  if (gw%frost_enabled) call gwflow_frost_init(p, g, s)
   gw%initialized = .true.
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 凍土モデルの気温入力の存在検査(m_main が m_meteo_init の後に呼ぶ。
+! m_gwflow_init は初期化順序の制約で meteo より先に走るため)
+!----------------------------------------------------------------------
+subroutine m_gwflow_check_meteo(gw, mt)
+  type(t_gwflow), intent(in) :: gw
+  type(t_meteo), intent(in) :: mt
+  if (gw%frost_enabled .and. .not. mt%enabled) then
+    call par_stop("list_gwflow: f_gwfrost=1 requires air temperature " &
+                  // "(specify fn_meteo)")
+  end if
 end subroutine
 
 
@@ -242,15 +280,18 @@ end subroutine
 ! 地下水を計算する(run_main から毎ステップ呼ばれる)
 !   冒頭の return 判定は全ランクで同一(collective 安全)
 !----------------------------------------------------------------------
-subroutine m_gwflow_calc(gw, p, g, s, it)
+subroutine m_gwflow_calc(gw, p, g, s, mt, it)
   type(t_gwflow), intent(in) :: gw
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
+  type(t_meteo), intent(inout) :: mt   ! 凍土の気温評価(分布気温の読み進みを保持)
   integer, intent(in) :: it
 
   if (.not. gw%enabled) return
   if (mod(it, gw%idt_gwflow) /= 0) return
+  ! 凍土(s%frofac の更新)は鉛直浸透モデルより前(実行順序が結合仕様)
+  if (gw%frost_enabled) call gwflow_frost_calc(p, g, s, mt, gw%dts)
   ! 鉛直(セル内)→ 側方(近傍結合)の順。側方 calc の冒頭で
   ! s%hg, s%h のハロを交換する(m_gwflow_lateral ヘッダ参照)
   if (associated(gw%calc)) call gw%calc(p, g, s, it, gw%dts)
@@ -277,6 +318,7 @@ subroutine m_gwflow_dispose(gw, p, g, s)
   if (gw%l2_enabled) call gwflow_layer2_dispose(p, g, s)   ! save は dispose で(契約5)
   if (gw%c_enabled) call gwflow_conduit_dispose(p, g, s)   ! save は dispose で(契約5)
   if (gw%pump_enabled) call gwflow_pump_dispose(p, g)      ! 取水総括の表示(内部状態なし)
+  if (gw%frost_enabled) call gwflow_frost_dispose(p, g)    ! save は dispose で(契約5)
   ! 幾何・エッジ作業領域は層間共有のため、どれかが使っていれば破棄する
   if (gw%lat_enabled .or. gw%l2_enabled .or. gw%c_enabled) call gwflow_lateral_dispose(p)
   gw%init    => null()
@@ -287,6 +329,7 @@ subroutine m_gwflow_dispose(gw, p, g, s)
   gw%l2_enabled = .false.
   gw%c_enabled = .false.
   gw%pump_enabled = .false.
+  gw%frost_enabled = .false.
   gw%initialized = .false.
 end subroutine
 

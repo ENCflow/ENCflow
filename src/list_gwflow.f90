@@ -21,6 +21,8 @@ module list_gwflow
                                      ! 未指定(=0)なら管路層の資源は一切確保されない
     integer :: f_gwpump = 0          ! 井戸揚水・地下水取水(0:なし, 1:有効。
                                      ! &list_gwflow_pump)。無効時は資源を確保しない
+    integer :: f_gwfrost = 0         ! 凍土による浸透抑制(0:なし, 1:有効。
+                                     ! &list_gwflow_frost。要 fn_meteo)。無効時は資源を確保しない
     real :: dt_gwflow = 0.0          ! 地下水計算の更新時間間隔 (s)。0なら毎ステップ
   end type
 
@@ -40,16 +42,18 @@ subroutine list_gwflow_read(p, list)
   integer :: f_gwlayer2
   integer :: f_gwconduit
   integer :: f_gwpump
+  integer :: f_gwfrost
   real :: dt_gwflow
 
   namelist /list_gwflow/ f_gwvertical, f_gwlateral, f_gwlayer2, f_gwconduit, &
-                         f_gwpump, dt_gwflow
+                         f_gwpump, f_gwfrost, dt_gwflow
 
   f_gwvertical = list%f_gwvertical
   f_gwlateral = list%f_gwlateral
   f_gwlayer2 = list%f_gwlayer2
   f_gwconduit = list%f_gwconduit
   f_gwpump = list%f_gwpump
+  f_gwfrost = list%f_gwfrost
   dt_gwflow = list%dt_gwflow
 
   call par_info("reading list_gwflow in " // trim(p%fn_gwflow))
@@ -64,6 +68,7 @@ subroutine list_gwflow_read(p, list)
   list%f_gwlayer2 = f_gwlayer2
   list%f_gwconduit = f_gwconduit
   list%f_gwpump = f_gwpump
+  list%f_gwfrost = f_gwfrost
   list%dt_gwflow = dt_gwflow
 
 end subroutine
