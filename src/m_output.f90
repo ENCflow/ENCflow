@@ -126,6 +126,8 @@ subroutine output_state(p, g, s, k)
   if (p%f_out_hg > 0) call output_matrix(p, g, "Hg", s%hg, k)       ! 地下貯留水深
   ! 風化基岩層の貯留水深(f_gwlayer2=1 のときのみ。フラグは Hg と共用)
   if (p%f_out_hg > 0 .and. allocated(s%hg2)) call output_matrix(p, g, "Hg2", s%hg2, k)
+  ! 管路連続体層の貯留水量(f_gwconduit=1 のときのみ。フラグは Hg と共用)
+  if (p%f_out_hg > 0 .and. allocated(s%hgc)) call output_matrix(p, g, "Hgc", s%hgc, k)
   if (s%wq_active) call output_matrix(p, g, "C", s%cqc, k)          ! 輸送物質濃度 (mg/L。§30)
   ! 積雪水量 SWE (mm。fn_snow 有効時のみ。§31)
   if (allocated(s%swe)) call output_matrix(p, g, "Sw", 1000.0*s%swe, k)

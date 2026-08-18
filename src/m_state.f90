@@ -114,6 +114,9 @@ module m_state
     real, allocatable :: hg2(:,:)       ! 風化基岩層の貯留水深 (m。柱状換算。
                                         ! m_gwflow_layer2 が確保・更新・保存する。
                                         ! f_gwlayer2=0 なら未確保。§16)
+    real, allocatable :: hgc(:,:)       ! 管路連続体層の貯留水量 (m。柱状換算。
+                                        ! m_gwflow_conduit が確保・更新・保存する。
+                                        ! f_gwconduit=0 なら未確保。§46)
     real, allocatable :: swe(:,:)       ! 積雪水量 SWE (m 水柱。幾何面積基底。
                                         ! m_snow が確保・更新・保存する。
                                         ! fn_snow 未指定なら未確保。§31)
@@ -396,6 +399,9 @@ subroutine m_state_calcstat(s, p, g)
         if (allocated(s%hg2)) then
           if (s%hg2(i,j) > 0.0) hgsum_j(j) = hgsum_j(j) + s%hg2(i,j)
         end if
+        if (allocated(s%hgc)) then
+          if (s%hgc(i,j) > 0.0) hgsum_j(j) = hgsum_j(j) + s%hgc(i,j)
+        end if
       end if
       if (s%h(i,j) <= 0) cycle
       if (s%h(i,j) > s%hmax(i,j)) then
@@ -629,6 +635,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%cqc)) deallocate(s%cqc)
   if (allocated(s%bp)) deallocate(s%bp)
   if (allocated(s%hg2)) deallocate(s%hg2)
+  if (allocated(s%hgc)) deallocate(s%hgc)
   if (allocated(s%swe)) deallocate(s%swe)
   if (allocated(s%hi)) deallocate(s%hi)
   if (allocated(s%fxg)) deallocate(s%fxg)

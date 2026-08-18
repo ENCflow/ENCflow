@@ -20,6 +20,20 @@ module m_gwflow_lateral
   !   (gwflow_lateral_geom_init。冪等)。安定条件の検査は層ごとに
   !   gwflow_lateral_dtcheck で行う
   !
+  ! 【管路連続体層カーネル(2026-08-18。gwconduit_plan.md §10)】
+  !   下水道網・岩盤亀裂網などを表す等価連続体管路層のための第2カーネル
+  !   conduit_core を併設する(呼び手は m_gwflow_conduit)。lateral_core と
+  !   同じ 8 近傍・エッジ規約・2 ループ構造・幾何/作業領域(glt)を共有する
+  !   が、次の点が異なるため別カーネルとする(lateral_core は不変 =
+  !   層1・層2 のビット一致は構造的に保証):
+  !     - 水頭が折れ線(不圧 sy_c / 被圧 sy_slot の疑似スロット切替。
+  !       conduit_head)。容量超過は排出せず層内に保持する(被圧化)
+  !     - 通水係数がエッジ別配列(t_conduitlayer%cnd。8 方向異方)
+  !     - 流束則が選択制(1:線形, 2:sqrt 乱流。sqrt は |ΔH| < eps_h で
+  !       線形化し、実効拡散係数の発散を抑える)
+  !     - 通水断面は飽和厚でなく充満率 fill = min(hgc/cap, 1) で縮小
+  !   安定条件は gwflow_conduit_dtcheck(線形化枝が最大勾配)で検査する
+  !
   ! 【エッジ配列は一時作業領域(永続エッジ状態レスの原則は不変。§4a)】
   !   フラックスは無履歴なので、エッジ配列 q は calc 内で書いて読み切る
   !   スクラッチである: 二重バッファなし・save/restore 対象外・
@@ -90,6 +104,11 @@ module m_gwflow_lateral
   public :: gwflow_lateral_geom_init
   public :: gwflow_lateral_dtcheck
   public :: lateral_core
+  public :: t_conduitlayer
+  public :: conduit_head
+  public :: conduit_core
+  public :: conduit_build_cnd
+  public :: gwflow_conduit_dtcheck
 
   ! 8近傍の規約(m_swflow_enc と同一。din/djn=近傍、die/dje/ke/sign_e=
   ! エッジ成分の格納位置と向き。k=1..4 が所有成分、k=5..8 は近傍の所有)
@@ -109,6 +128,20 @@ module m_gwflow_lateral
     real :: cap_const = -1.0         ! 容量 (m)。負なら動的 sd·sy(層1)
     logical :: to_surface = .true.   ! 飽和超過の行き先(T: s%h、F: s%hg)。
                                      !   T では地表湛水の水頭結合も行う
+  end type
+
+  ! 管路連続体層のパラメータ・静的場(conduit_core の引数。呼び手 =
+  ! m_gwflow_conduit が init で構築する。gwconduit_plan.md §10.4)
+  type t_conduitlayer
+    integer :: fluxlaw = 2           ! 流束則(1:線形, 2:sqrt 乱流)
+    real :: syinvc = 0.0             ! 不圧枝の 1/sy_c
+    real :: syinv_slot = 0.0         ! 被圧(疑似スロット)枝の 1/sy_slot
+    real :: eps = 1.0e-3             ! 乾燥判定・過大流出抑制の正則化量 (m 柱状)
+    real :: eps_h = 1.0e-2           ! sqrt 則の線形化幅 (m 水頭差)
+    real, allocatable :: zbot(:,:)   ! 水頭底標高 (m)。帯+ハロ
+    real, allocatable :: cap(:,:)    ! 貯留容量 (m 柱状)。0 = 管路なし。帯+ハロ
+    real, allocatable :: cnd(:,:,:)  ! エッジ別コンダクタンス(所有4成分。m3/s。
+                                     !   q 配列と同形状・同格納規約。静的)
   end type
 
   ! 幾何・作業領域(層間で共有。単一インスタンス前提。developer.md §12)
@@ -399,6 +432,227 @@ subroutine lateral_core(g, s, hg, lay, dts)
   end do
   !$omp end parallel do
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 管路連続体層の水頭(折れ線。ヘッダ【管路連続体層カーネル】参照)
+!   不圧枝: H = zbot + hgc/sy_c(hgc <= cap)
+!   被圧枝: H = zbot + cap/sy_c + (hgc - cap)/sy_slot(疑似スロット)
+!   交換項(m_gwflow_conduit)からも使うため公開の純関数とする
+!----------------------------------------------------------------------
+pure real function conduit_head(cl, hgcv, capv, zbotv)
+  type(t_conduitlayer), intent(in) :: cl
+  real, intent(in) :: hgcv           ! 貯留水量 (m 柱状)
+  real, intent(in) :: capv           ! 貯留容量 (m 柱状)
+  real, intent(in) :: zbotv          ! 水頭底標高 (m)
+  if (hgcv <= capv) then
+    conduit_head = zbotv + hgcv * cl%syinvc
+  else
+    conduit_head = zbotv + capv * cl%syinvc + (hgcv - capv) * cl%syinv_slot
+  end if
+end function
+
+
+!----------------------------------------------------------------------
+! 管路連続体層の側方流カーネル(1回の呼び出しで dts ぶんの更新)
+!   構造は lateral_core と同一(ループ1: 所有エッジ 4 成分、書き手は
+!   ハロ行 je+1 まで冗長計算 / ループ2: 発散)。相違はヘッダ参照。
+!   cap <= 0 のセル(管路なし)はエッジ 0 を書き、貯留も更新しない。
+!   呼び手の責務: hgc のハロ交換を済ませてから呼ぶこと
+!----------------------------------------------------------------------
+subroutine conduit_core(g, hgc, cl, dts)
+  type(t_geoinfo), intent(in) :: g
+  real, intent(inout) :: hgc(1:, dcp%jsh:)
+  type(t_conduitlayer), intent(in) :: cl
+  real, intent(in) :: dts
+  integer :: i, j, k, in, jn, jt
+  real :: capc, capn, hc0, hn0, fillc, filln, fill_e, fill_up, hg_up
+  real :: cndk, dh, gq, dh_up, dhg
+
+  ! --- ループ1: エッジ流量(各成分の書き手は一意なので競合しない) ---
+  jt = min(dcp%je + 1, dcp%jeh)
+  !$omp parallel do schedule(static) &
+  !$omp   private(i, j, k, in, jn, capc, capn, hc0, hn0, fillc, filln, &
+  !$omp           fill_e, fill_up, hg_up, cndk, dh, gq, dh_up)
+  do j = dcp%js, jt
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      capc = cl%cap(i,j)
+      if (capc > 0.0) then
+        hc0 = conduit_head(cl, hgc(i,j), capc, cl%zbot(i,j))
+        fillc = min(hgc(i,j) / capc, 1.0)
+      else
+        hc0 = 0.0
+        fillc = 0.0
+      end if
+      do k = 1, 4
+        in = i + din(k)
+        jn = j + djn(k)
+        ! 乾湿は動的なので、条件を満たさない場合も必ず 0 を代入する
+        ! (q は層間共有スクラッチ。前の層の値を残してはならない)
+        gq = 0.0
+        if (capc > 0.0 .and. g%sw(i,j) <= 0 .and. g%x(in,jn) > 0) then
+          capn = cl%cap(in,jn)
+          if (g%sw(in,jn) <= 0 .and. capn > 0.0) then
+            cndk = cl%cnd(k, i+die(k), j+dje(k))
+            if (cndk > 0.0) then
+              if (hgc(i,j) > cl%eps .or. hgc(in,jn) > cl%eps) then  ! 両側乾燥なら 0
+                hn0 = conduit_head(cl, hgc(in,jn), capn, cl%zbot(in,jn))
+                if (hc0 /= hn0) then                                ! 勾配ゼロなら 0
+                  filln = min(hgc(in,jn) / capn, 1.0)
+                  ! 上流側(水頭の高い側)の貯留量と充満率
+                  if (hc0 > hn0) then
+                    hg_up = hgc(i,j)
+                    fill_up = fillc
+                  else
+                    hg_up = hgc(in,jn)
+                    fill_up = filln
+                  end if
+                  if (hg_up > cl%eps) then                          ! 上流側乾燥なら 0
+                    ! 界面充満率: 算術平均を上流側でキャップ(correct_he 相当)
+                    fill_e = min(0.5 * (fillc + filln), fill_up)
+                    dh = hc0 - hn0
+                    ! エッジ流量(書き手 c から k 近傍 n に向かい正)
+                    if (cl%fluxlaw == 2) then
+                      if (abs(dh) >= cl%eps_h) then
+                        gq = cndk * fill_e * sign(sqrt(abs(dh) * glt%rdr(k)), dh)
+                      else
+                        ! 線形化枝(|ΔH| < eps_h。eps_h で連続接続)
+                        gq = cndk * fill_e * dh * sqrt(glt%rdr(k) / cl%eps_h)
+                      end if
+                    else
+                      gq = cndk * fill_e * dh * glt%rdr(k)
+                    end if
+                    ! 過大流出の抑制: このエッジの流出で上流側が eps を
+                    ! 割るなら縮小(lateral_core と同じ)
+                    dh_up = abs(gq) * dts * glt%ainv
+                    if (hg_up - dh_up <= cl%eps) then
+                      gq = gq * (max(hg_up - cl%eps, 0.0) / dh_up)
+                    end if
+                  end if
+                end if
+              end if
+            end if
+          end if
+        end if
+        glt%q(k, i+die(k), j+dje(k)) = gq
+      end do
+    end do
+  end do
+  !$omp end parallel do
+
+  ! --- ループ2: 連続式(発散)---
+  !   容量超過はクランプ・排出せず層内に保持する(水頭関数の被圧枝が
+  !   立ち上がる = Preissmann スロット連続体版。飽和超過の引き渡しなし)
+  !$omp parallel do schedule(static) private(i, j, k, dhg)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      if (cl%cap(i,j) <= 0.0) cycle
+      dhg = 0.0
+      do k = 1, 8
+        dhg = dhg + sign_e(k) * glt%q(ke(k), i+die(k), j+dje(k))
+      end do
+      hgc(i,j) = hgc(i,j) - dhg * dts * glt%ainv
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! セル別コンダクタンス密度 dens (m2/s。帯+ハロ) からエッジ別
+! コンダクタンス cl%cnd を構築する(通過幅配分は側方 Darcy 流と同一の
+! diagratio 規約。gwflow_lateral_geom_init の後に呼ぶこと)
+!   cnd_k = min(両セルの密度) · wl_k
+!   min 規約: 管路は両セルに存在して初めて連続する(片側 0 なら無結合)。
+!   将来の GIS 前処理(4 成分エッジマップの直接入力)はこの構築を
+!   置き換える形で追加する(gwconduit_plan.md §9)。
+!   書き手はループ1と同じ jt = je+1 まで(所有エッジの完全被覆。
+!   dens は帯+ハロ jsh:jeh に有効値が要る = par_scatter_cell の配布規約)
+!----------------------------------------------------------------------
+subroutine conduit_build_cnd(g, dens, cl)
+  type(t_geoinfo), intent(in) :: g
+  real, intent(in) :: dens(1:, dcp%jsh:)
+  type(t_conduitlayer), intent(inout) :: cl
+  integer :: i, j, k, in, jn, jt
+  real :: cv
+
+  if (.not. glt%geom_ready) call par_stop("conduit_build_cnd: geometry is not initialized")
+  if (.not. allocated(cl%cnd)) then
+    allocate(cl%cnd(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+  end if
+  jt = min(dcp%je + 1, dcp%jeh)
+  do j = dcp%js, jt
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      do k = 1, 4
+        in = i + din(k)
+        jn = j + djn(k)
+        cv = 0.0
+        if (g%sw(i,j) <= 0 .and. g%x(in,jn) > 0) then
+          if (g%sw(in,jn) <= 0) then
+            cv = min(dens(i,j), dens(in,jn)) * glt%wl(k)
+          end if
+        end if
+        cl%cnd(k, i+die(k), j+dje(k)) = cv
+      end do
+    end do
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 陽解法の安定条件の静的検査(管路連続体層)
+!   水頭勾配の最大感度は sqrt 則では線形化枝(dq/dΔH = C·sqrt(rdr/eps_h))、
+!   線形則では C·rdr。充満率 <= 1、水頭感度 dH/dhgc <= max(1/sy) より
+!     dt <= 0.5 * dx*dy / (max(1/sy) * max_cell Σ_k cnd_k · fac_k)
+!   cnd はエッジ別なのでセルごとに 8 近傍の入射エッジ係数を集計し、
+!   最大値を allreduce_max(順序不変で決定的)する
+!----------------------------------------------------------------------
+subroutine gwflow_conduit_dtcheck(g, label, cl, dts)
+  type(t_geoinfo), intent(in) :: g
+  character(len=*), intent(in) :: label
+  type(t_conduitlayer), intent(in) :: cl
+  real, intent(in) :: dts
+  integer :: i, j, k
+  real :: fac(1:8), sums, summax(1), syinvmax, dt_lim
+  character(len=256) :: msg
+
+  do k = 1, 8
+    if (cl%fluxlaw == 2) then
+      fac(k) = sqrt(glt%rdr(k) / cl%eps_h)
+    else
+      fac(k) = glt%rdr(k)
+    end if
+  end do
+  summax(1) = 0.0
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      if (cl%cap(i,j) <= 0.0) cycle
+      sums = 0.0
+      do k = 1, 8
+        sums = sums + cl%cnd(ke(k), i+die(k), j+dje(k)) * fac(k)
+      end do
+      summax(1) = max(summax(1), sums)
+    end do
+  end do
+  call par_allreduce_max(summax)
+  syinvmax = max(cl%syinvc, cl%syinv_slot)
+  if (summax(1) * syinvmax > 0.0) then
+    dt_lim = 0.5 * g%dx * g%dy / (syinvmax * summax(1))
+    write(msg,'(a,es10.3,a,es10.3,a)') label // ": dt limit = ", dt_lim, &
+                                       " s (dts = ", dts, " s)"
+    call par_info(trim(msg))
+    if (dts > dt_lim) then
+      call par_stop(label // ": dts exceeds the explicit stability limit " &
+                    // "(reduce dt/dt_gwflow or conductance, or increase slot_sy/eps_h)")
+    end if
+  end if
 end subroutine
 
 

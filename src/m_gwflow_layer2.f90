@@ -45,6 +45,8 @@ module m_gwflow_layer2
   public :: gwflow_layer2_init
   public :: gwflow_layer2_calc
   public :: gwflow_layer2_dispose
+  public :: gwflow_layer2_active
+  public :: gwflow_layer2_leakinfo
 
   ! モデル私有の設定(単一インスタンス前提。developer.md §12)
   type t_gwl2
@@ -174,6 +176,26 @@ subroutine gwflow_layer2_calc(p, g, s, it, dts)
     call par_halo_cell(s%hg2)
     call lateral_core(g, s, s%hg2, gl2%lay, dts)
   end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 層2の有効状態と層間交換に要する定数の公開口(管路連続体層の
+! gwc_leak_layer=2 が水頭 H2 = (z − sd − d2) + hg2/sy2 と容量 cap2 を
+! 計算するために使う。m_gwflow_conduit の init は layer2 init より後)
+!----------------------------------------------------------------------
+pure logical function gwflow_layer2_active()
+  gwflow_layer2_active = gl2%initialized
+end function
+
+
+pure subroutine gwflow_layer2_leakinfo(d2, sy2, cap)
+  real, intent(out) :: d2            ! 層厚 (m)
+  real, intent(out) :: sy2           ! 比湧水量
+  real, intent(out) :: cap           ! 容量 d2·sy2 (m)
+  d2 = gl2%d2
+  sy2 = gl2%sy2
+  cap = gl2%cap
 end subroutine
 
 

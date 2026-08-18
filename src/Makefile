@@ -19,7 +19,7 @@ LIBOBJS	= m_main.o m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o \
 	  m_geomorph.o m_geomorph_creep.o m_geomorph_fluvial.o m_geomorph_suspend.o \
 	  m_geomorph_wash.o m_geomorph_debris.o \
 	  m_gwflow.o m_gwflow_bucket.o m_gwflow_greenampt.o \
-	  m_gwflow_lateral.o m_gwflow_layer2.o m_evap.o m_meteo.o m_wq.o m_snow.o m_glacier.o \
+	  m_gwflow_lateral.o m_gwflow_layer2.o m_gwflow_conduit.o m_evap.o m_meteo.o m_wq.o m_snow.o m_glacier.o \
 	  m_intercept.o m_intercept_fixed.o m_intercept_initloss.o \
 	  m_state.o m_record.o m_swflow.o m_swflow_enc.o m_swflow_enc_adv.o m_swflow_enc_bc.o \
 	  m_swflow_enc_channel.o m_swflow_enc_diff.o \
@@ -101,7 +101,10 @@ m_geomorph_wash.o: m_geomorph.o $(PAR_OBJ)
 m_geomorph_debris.o: m_geomorph.o m_swflow_enc.o $(PAR_OBJ)
 list_geomorph.o: m_sysparam.o $(PAR_OBJ)
 m_gwflow.o: m_sysparam.o list_gwflow.o m_state.o m_geoinfo.o m_gwflow_bucket.o \
-	m_gwflow_greenampt.o m_gwflow_lateral.o m_gwflow_layer2.o m_util.o $(PAR_OBJ)
+	m_gwflow_greenampt.o m_gwflow_lateral.o m_gwflow_layer2.o m_gwflow_conduit.o \
+	m_util.o $(PAR_OBJ)
+m_gwflow_conduit.o: m_sysparam.o m_state.o m_geoinfo.o m_gwflow_lateral.o \
+	m_gwflow_layer2.o m_fileio.o m_sysdep_util.o $(PAR_OBJ)
 m_gwflow_layer2.o: m_sysparam.o m_state.o m_geoinfo.o m_gwflow_lateral.o \
 	m_fileio.o m_sysdep_util.o $(PAR_OBJ)
 m_gwflow_bucket.o: m_sysparam.o m_state.o m_geoinfo.o $(PAR_OBJ)
