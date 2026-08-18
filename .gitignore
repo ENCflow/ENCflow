@@ -1,3 +1,6 @@
+# --- ユーザー・AI エージェントの作業ディレクトリ(docs/ai_guide.md) ---
+work/
+
 # --- build outputs (Fortran等) ---
 *.o
 *.mod
