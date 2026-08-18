@@ -92,7 +92,7 @@ Sources (confirmed 2026-08-10):
   limits and the commercial GUI-first products.
 - (Added 2026-08-14, updated 2026-08-16) In addition to features, a
   first full round of user-facing groundwork is now in place: a
-  19-chapter user's guide plus a full parameter index (436 entries),
+  20-chapter user's guide plus a full parameter index (436 entries),
   annotated namelist samples for every feature
   (examples/List_samples), and 2 hands-on tutorials (minimal example
   wave, real terrain chichibu; from the pitfalls of real data --

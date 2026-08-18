@@ -37,6 +37,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [氷河](users_guide/glacier.md)(&list_glacier)— 涵養・融解・氷体流動・氷河侵食・雪崩再配分
 - [水質](users_guide/wq.md)(&list_wq)— 負荷投入・輸送・減衰・洗い出し
 - [計測](users_guide/record.md)(&list_record)— プローブ・フラックス測線
+- [用途集](users_guide/usecases.md)— 現象名から機能の組み合わせを引く(未対応の現象も明示)
 
 **付録**
 - [全パラメータ索引](users_guide/params_index.md) — 全421パラメータの名前→章の逆引き
@@ -166,17 +167,26 @@ ENCflow は、1本の時間発展ループの上に機能(プロセスモジュ�
 
 ## やりたいことから引く
 
+より詳しい一覧(現象名 → 機能の組み合わせ → 設定の要点。未対応の
+現象も含む)は**[用途集](users_guide/usecases.md)**へ。
+
 | やりたいこと | 使う機能(章) |
 |---|---|
 | 洪水氾濫の計算 | [地理情報](users_guide/geoinfo.md)+[境界条件](users_guide/boundary.md)(+河道・構造物) |
+| ダム・ため池の決壊氾濫 | [河道](users_guide/channel.md)(堤防+破堤)+[用途集](users_guide/usecases.md) |
+| 霞堤・遊水地・二線堤の治水効果 | [河道](users_guide/channel.md)(堤防・開口)+[構造物](users_guide/structure.md) |
+| 干拓地・低平地の機場排水 | [構造物](users_guide/structure.md)(ポンプ)+[潮位・海面](users_guide/tide.md) |
 | 高潮・津波の遡上 | [潮位・海面](users_guide/tide.md)+[境界条件](users_guide/boundary.md) |
 | 降雨流出(流域水文) | [降雨・気象](users_guide/forcing.md)(+地下水) |
 | 都市の内水氾濫(下水道の排水・噴出) | [地下水](users_guide/gwflow.md)(管路連続体層)+[降雨・気象](users_guide/forcing.md) |
 | 海水浸入・塩水くさび・淡水レンズ | [淡塩2層](users_guide/salt.md)+[潮位・海面](users_guide/tide.md) |
 | 土砂輸送・土石流 | [土砂・地形変化](users_guide/geomorph.md) |
+| 降雨で誘発される斜面崩壊・土石流 | [土砂・地形変化](users_guide/geomorph.md)+[地下水](users_guide/gwflow.md)(浸透→間隙水圧) |
+| 貯水池の堆砂・排砂 | [土砂・地形変化](users_guide/geomorph.md)+[構造物](users_guide/structure.md) |
 | 汚濁負荷・物質輸送 | [水質](users_guide/wq.md) |
 | 融雪を含む計算 | [降雨・気象](users_guide/forcing.md)(積雪・融雪+気温減率) |
 | 氷河の融解水・カール地形の形成 | [氷河](users_guide/glacier.md)(+降雨・気象、長期は中断と再開) |
+| 氷河湖決壊洪水(GLOF) | [氷河](users_guide/glacier.md)+[河道](users_guide/channel.md)(破堤) |
 | 観測点との比較・流量測線 | [計測](users_guide/record.md) |
 | 長時間計算の分割・シナリオ分岐 | [中断と再開](users_guide/restart.md) |
 | GIS データ(GeoTIFF 等)の入出力 | [座標系](users_guide/coordinates.md)+[入出力](users_guide/io.md) |

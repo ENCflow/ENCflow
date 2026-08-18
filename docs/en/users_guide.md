@@ -40,6 +40,7 @@ input; individual topics are split into per-chapter pages.
 - [Glaciers](users_guide/glacier.md) (&list_glacier) -- accumulation, melt, ice flow, glacial erosion, avalanche redistribution
 - [Water quality](users_guide/wq.md) (&list_wq) -- load input, transport, decay, washoff
 - [Measurement](users_guide/record.md) (&list_record) -- probes, flux transects
+- [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
 - [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 421 parameter names to their chapters
@@ -183,17 +184,27 @@ not used in ordinary computations with real data.
 
 ## Finding features by task
 
+For a more detailed list (phenomenon -> feature combination -> key
+settings, including unsupported phenomena), see
+**[Use cases](users_guide/usecases.md)**.
+
 | What you want to do | Features to use (chapters) |
 |---|---|
 | Flood inundation | [Geographic information](users_guide/geoinfo.md) + [boundary conditions](users_guide/boundary.md) (+ channels, structures) |
+| Dam / farm-pond breach floods | [Channels](users_guide/channel.md) (levees + breach) + [Use cases](users_guide/usecases.md) |
+| Open levees, detention basins, secondary levees | [Channels](users_guide/channel.md) (levees, openings) + [Structures](users_guide/structure.md) |
+| Polder / lowland drainage by pumping | [Structures](users_guide/structure.md) (pumps) + [Tide and sea surface](users_guide/tide.md) |
 | Storm surge / tsunami run-up | [Tide and sea surface](users_guide/tide.md) + [boundary conditions](users_guide/boundary.md) |
 | Rainfall runoff (catchment hydrology) | [Rainfall and weather](users_guide/forcing.md) (+ groundwater) |
 | Urban pluvial flooding (sewer drainage and surcharge) | [Groundwater](users_guide/gwflow.md) (conduit continuum layer) + [Rainfall and weather](users_guide/forcing.md) |
 | Seawater intrusion, salt wedges, freshwater lenses | [Fresh and salt water layers](users_guide/salt.md) + [Tide and sea level](users_guide/tide.md) |
 | Sediment transport / debris flow | [Sediment and landform change](users_guide/geomorph.md) |
+| Rainfall-induced slope failure and debris flow | [Sediment and landform change](users_guide/geomorph.md) + [Groundwater](users_guide/gwflow.md) (infiltration -> pore pressure) |
+| Reservoir sedimentation and flushing | [Sediment and landform change](users_guide/geomorph.md) + [Structures](users_guide/structure.md) |
 | Pollutant loads / mass transport | [Water quality](users_guide/wq.md) |
 | Runs including snowmelt | [Rainfall and weather](users_guide/forcing.md) (snow accumulation / snowmelt + temperature lapse rate) |
 | Glacier meltwater / cirque formation | [Glaciers](users_guide/glacier.md) (+ rainfall and weather; suspend and restart for long runs) |
+| Glacial lake outburst floods (GLOF) | [Glaciers](users_guide/glacier.md) + [Channels](users_guide/channel.md) (breach) |
 | Comparison with gauging stations / discharge transects | [Measurement](users_guide/record.md) |
 | Splitting long runs / scenario branching | [Suspend and restart](users_guide/restart.md) |
 | GIS data (GeoTIFF etc.) input and output | [Coordinate systems](users_guide/coordinates.md) + [input and output](users_guide/io.md) |
