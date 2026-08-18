@@ -214,8 +214,16 @@ are out of scope by design and belong to specialized models
   sensitivity analysis, calibration, and bulk scenario runs — and
   ENCflow's own regression tests (test/*/Run.sh: generating derived
   cases and automatically comparing against references) run on
-  exactly this machinery.
-- **Full source code available** — inspect it, verify it.
+  exactly this machinery. The same property extends directly to
+  **advanced automation by AI**: since the input and output are pure
+  text, AI agents can drive case generation, execution, verification,
+  and analysis directly. In fact, much of the development and
+  verification of this very project is carried out in collaboration
+  with AI agents — a working **demonstration** of that claim.
+- **Full source code available** — inspect it, verify it. The
+  computational code is written entirely from scratch and **contains
+  no third-party code** (zero dependencies also means a clean,
+  unambiguous copyright provenance).
 
 ## Requirements
 
