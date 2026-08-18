@@ -124,6 +124,12 @@ Any process that is not used **consumes no memory and no CPU time at
 all**. In its minimal configuration, ENCflow is simply a fast,
 well-behaved 2-D flood model.
 
+To look up the feature combination and key settings from the
+phenomenon you want to compute (farm-pond breach, open levees and
+detention basins, polder drainage, rainfall-induced slope failure,
+glacial lake outburst floods, and more), see the
+**[use-case gallery](docs/en/users_guide/usecases.md)**.
+
 ## What it deliberately does not do
 
 ENCflow intentionally stays within the two-dimensional
