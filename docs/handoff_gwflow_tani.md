@@ -7,6 +7,12 @@
 参照コード: `m_swflow_enc.f90` (既存の浅水方程式ソルバー。安定化手法の
 実装パターンを踏襲する)
 
+補記(2026-08-18): 本書の設計に基づく層1(土層)・層2(風化基岩層)に
+加えて、第3の加算的レイヤ**管路連続体層 m_gwflow_conduit**(下水道網・
+岩盤亀裂網の等価被圧連続体。f_gwconduit)が追加された。設計は
+docs/gwconduit_plan.md、決定事項は developer.md §46(本書の
+lateral_core/t_latlayer は不変のまま、専用カーネル conduit_core を併設)。
+
 ---
 
 ## 1. 背景と目的

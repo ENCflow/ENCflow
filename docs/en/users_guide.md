@@ -34,14 +34,14 @@ input; individual topics are split into per-chapter pages.
 - [Internal hydraulic structures](users_guide/structure.md) (&list_struct_pump/culvert/diversion/dam) -- pumps, culverts, diversions, dams
 - [Channels](users_guide/channel.md) (&list_channel) -- levees, channel width, cross-section shape, breach
 - [Rainfall and weather](users_guide/forcing.md) (&list_precip / intercept / meteo / evap / snow) -- precipitation, interception, air temperature, evapotranspiration, snow accumulation and snowmelt
-- [Groundwater](users_guide/gwflow.md) (&list_gwflow plus model-specific settings) -- infiltration, lateral flow, weathered bedrock layer
+- [Groundwater](users_guide/gwflow.md) (&list_gwflow plus model-specific settings) -- infiltration, lateral flow, weathered bedrock layer, conduit continuum layer (sewer networks, fractured bedrock)
 - [Sediment and landform change](users_guide/geomorph.md) (&list_geomorph) -- bedload, suspended sediment, hillslope erosion, debris flow, long-term landscape evolution
 - [Glaciers](users_guide/glacier.md) (&list_glacier) -- accumulation, melt, ice flow, glacial erosion, avalanche redistribution
 - [Water quality](users_guide/wq.md) (&list_wq) -- load input, transport, decay, washoff
 - [Measurement](users_guide/record.md) (&list_record) -- probes, flux transects
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 401 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 421 parameter names to their chapters
 
 ---
 
@@ -186,6 +186,7 @@ not used in ordinary computations with real data.
 | Flood inundation | [Geographic information](users_guide/geoinfo.md) + [boundary conditions](users_guide/boundary.md) (+ channels, structures) |
 | Storm surge / tsunami run-up | [Tide and sea surface](users_guide/tide.md) + [boundary conditions](users_guide/boundary.md) |
 | Rainfall runoff (catchment hydrology) | [Rainfall and weather](users_guide/forcing.md) (+ groundwater) |
+| Urban pluvial flooding (sewer drainage and surcharge) | [Groundwater](users_guide/gwflow.md) (conduit continuum layer) + [Rainfall and weather](users_guide/forcing.md) |
 | Sediment transport / debris flow | [Sediment and landform change](users_guide/geomorph.md) |
 | Pollutant loads / mass transport | [Water quality](users_guide/wq.md) |
 | Runs including snowmelt | [Rainfall and weather](users_guide/forcing.md) (snow accumulation / snowmelt + temperature lapse rate) |

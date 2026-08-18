@@ -22,7 +22,7 @@ like - as an equivalent continuum.
 
 Choose the vertical part (surface <-> subsurface exchange) and the
 lateral part (horizontal subsurface movement) independently, and stack
-a second layer if needed.
+a second layer and a conduit continuum layer if needed.
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -44,6 +44,7 @@ when a model that needs soil depth (Green-Ampt or lateral) is selected.
 | Infiltration losses in an event flood | f_gwvertical=2 (Green-Ampt) only |
 | Catchment hydrology (up to interflow) | f_gwvertical=2 + f_gwlateral=1 |
 | Down to baseflow / low-flow recession | The above + f_gwlayer2=1 |
+| Urban pluvial flooding (sewer drainage and surcharge) | f_gwconduit=1 (alone where imperviousness dominates; add f_gwvertical=2 to include infiltration) |
 | Simplest loss model | f_gwvertical=1 (bucket) |
 
 ## Bucket model (f_gwvertical=1, &list_gwflow_bucket)
@@ -162,6 +163,33 @@ Applications are expressed by parameter combinations:
   lateral) to be enabled; =2 requires f_gwlayer2=1.
 - See test/conduit for schematic experiments (with an analytic
   equilibrium check).
+
+**What it can and cannot do (range of the continuum approximation)**
+
+- Can do: the **areal drainage capacity** of dense street-level
+  networks, pressure propagation after pipe-full and the **spatial
+  pattern of surcharge**, and the **two-way exchange** between the
+  sewer system and surface inundation (dual drainage) - on the same
+  grid and in the same time evolution as the surface water.
+- Cannot do (limits in principle; see gwconduit_plan.md sec. 2):
+  - **Tracking individual pipes and manholes.** It shows roughly where
+    surcharge occurs, but cannot identify *which* manhole erupts.
+  - **Control structures driven by operating rules** (pumps, weirs,
+    outfalls, CSOs). They sit outside conservation laws plus
+    gradient-driven flow, so a continuum cannot represent them
+    (standalone structures are covered by
+    [internal hydraulic structures](structure.md); networks dominated
+    by them belong to network models such as SWMM).
+  - **Systems dominated by a single trunk main** (catchments where one
+    pipe larger than the cell size controls the behavior). The
+    homogenization premise breaks down.
+- Other constraints:
+  - **Multiple conduit layers cannot be combined in one run** (e.g.
+    sewers plus bedrock; single instance).
+  - The invert elevation is fixed at the start of the run and does not
+    follow terrain evolution (fn_geomorph). Evapotranspiration and
+    water quality (solute transport) do not touch the conduit layer.
+    No exchange with sea cells.
 
 ## Output and monitoring
 

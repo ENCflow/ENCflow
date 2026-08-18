@@ -82,7 +82,7 @@ written.)
 | f_out_ddd / f_out_dda | 0 | Ddd / Dda | dominant / all downstream directions (needed by utils/rmdepress_river) |
 | f_out_pre | 0 | Pr | rainfall intensity (mm/h) |
 | f_out_fr / f_out_cn | 0 | Fr / Cn | Froude number / Courant number |
-| f_out_hg | 0 | Hg | subsurface storage depth (m) (when fn_gwflow is enabled) |
+| f_out_hg | 0 | Hg | subsurface storage depth (m) (when fn_gwflow is enabled; also Hg2 with the weathered bedrock layer and Hgc with the conduit continuum layer) |
 | f_out_hrs | 0 | Hrs | pond depth (m) (when fn_reservoir is enabled) |
 | f_out_hmax | 1 | H9999 | maximum depth |
 | f_out_hmaxt | 0 | Ht9999 | time of maximum depth |

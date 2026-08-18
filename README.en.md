@@ -79,6 +79,14 @@ read only the lines you care about.
   (Hamon/Thornthwaite with temperature lapse rate), Green–Ampt
   infiltration, and two-layer groundwater (soil-layer Boussinesq plus a
   weathered-bedrock layer) providing baseflow and recession.
+- **Urban pluvial flooding (sewer drainage and surcharge)**: the sewer
+  network is represented as an equivalent continuum (an artificial
+  confined layer) with per-cell capacity and 8-direction conveyances,
+  fully coupled with the surface inundation in a single time evolution
+  - from inlet uptake through pipe-full pressurized flow (surcharge) to
+  manhole eruption (prototype, 2026-08; see "What it deliberately
+  does not do" for the limits of applicability). The same machinery
+  applies to fractured bedrock, karst, and farmland tile drains.
 - **Sediment and slope hazards**: riverbed evolution by bedload and
   suspended load, hillslope erosion, slope failure (stability
   analysis), and debris flow. Terrain and soil depth evolve during the
@@ -136,12 +144,22 @@ are out of scope by design and belong to specialized models
   salt wedges, freshwater lenses, and reservoir thermal stratification
   cannot be reproduced; nor can vertical structure such as secondary
   flow in bends.
-- **Sewer networks** — pressurized pipe-network flow is the realm of
-  SWMM and similar models (individual structures such as pumps,
-  culverts, sluice gates, and diversions are supported).
+- **Individual sewer pipes and operational control** — tracking
+  individual pipes, and network analyses involving **control structures
+  driven by operating rules** (pumps, weirs, outfalls, CSOs), are the
+  realm of SWMM and similar network models (standalone structures are
+  covered by the internal hydraulic structures; the areal drainage
+  capacity, pressurized flow, and eruption of dense street-level
+  networks are covered by the conduit continuum layer. Being a
+  continuum approximation, it reproduces the spatial pattern of
+  surcharge but cannot identify *which* manhole erupts. Systems
+  dominated by a single trunk main also belong to network models).
 - **Deep groundwater** — ENCflow's groundwater is a shallow two-layer
-  system for runoff analysis. Confined aquifers and well-scale
-  groundwater resource analysis belong to 3-D groundwater models.
+  system (plus the conduit continuum layer) for runoff analysis. The
+  "confined" state of the conduit layer is an artificial confinement
+  representing pipe-full pressurized flow; natural regional confined
+  aquifers and well-scale groundwater resource analysis belong to 3-D
+  groundwater models.
 
 ## Why choose ENCflow
 

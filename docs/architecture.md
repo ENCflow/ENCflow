@@ -81,7 +81,7 @@ boundary_makebdc              境界条件値の準備
 tide_calc                     潮位(海域セルの水位強制)
 swflow_calc                   ★浅水流本体(uv/mn 更新 → 連続式 → h,e,u,v,m,n 確定)
   └ par_allreduce_maxi(ierror) 発散検出の全ランク集約
-gwflow_calc                   地下浸透・地下水(s%h から s%hg へ)
+gwflow_calc                   地下浸透・地下水(s%h から s%hg/s%hgc へ)
 wq_calc                       水質(移流・沈降・負荷)
 evap_calc                     蒸発散(h・遮断貯留・hg からの蒸発)
 swflow_post                   ステップ確定処理(σ・河道幅有効時の u,v 正規化)
@@ -102,7 +102,7 @@ calcstat                      統計(S 台帳・max 類。決定的総和)
 |---|---|---|---|
 | p | t_sysparam | m_sysparam | 実行制御。init 後は全モジュール読み取り専用 |
 | g | t_geoinfo | m_geoinfo | 地形 z(入力)・粗度 rn・マスク x/sw/rw・格子。原則不変(例外: なし。動的な標高は s%z) |
-| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hs(土砂), cq(輸送物質), swe(積雪), hi(氷河の氷厚), hrs(ため池)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi 等のモジュール私有 save は各 dispose。契約5) |
+| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hs(土砂), cq(輸送物質), swe(積雪), hi(氷河の氷厚), hrs(ため池)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi 等のモジュール私有 save は各 dispose。契約5) |
 | sx | t_enc_status | m_swflow_enc 私有 | エッジ流速 uv・流量 mn(前ステップ確定)・mn1(更新中)。他モジュールから不可視 |
 | r, b, … | 各 t_* | 各モジュール | モジュール私有。リスタートは各自の save ファイル(契約5) |
 
@@ -161,10 +161,10 @@ s%h を変更するモジュールは同じループで s%e = s%z + s%h を回�
 | 設計判断の理由・経緯・実バグ | docs/developer.md(§0 方針 12 箇条から) |
 | 変更時の検証手順・禁止事項 | CLAUDE.md |
 | 未完了の作業・中期の道標 | docs/handoff.md |
-| パラメータの意味(401 項目) | docs/users_guide/params_index.md と各章 |
+| パラメータの意味(421 項目) | docs/users_guide/params_index.md と各章 |
 | namelist の書き方の見本 | examples/List_samples/ |
 | 使い方(利用者視点) | docs/users_guide.md・tutorials/ |
 | 他モデルとの立ち位置 | docs/comparison.md |
-| 個別機能の設計文書 | docs/*_plan.md(geomorph・debris・glacier・boundary・geotiff)・channel_model.md |
+| 個別機能の設計文書 | docs/*_plan.md(geomorph・debris・glacier・boundary・geotiff・gwconduit)・channel_model.md |
 | モジュール実装の作法 | src/m_gwflow_bucket.f90 のヘッダ |
 | ビルドの仕組み | make.inc・docs/install.md・§1/§3 |
