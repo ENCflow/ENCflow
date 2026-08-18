@@ -15,7 +15,8 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理)
   │    m_swflow      浅水流の切替器(排他: m_swflow_enc / m_swflow_stg)
   │      m_swflow_enc + submodule: _adv(移流) _bc(境界) _channel(河道・堤防) _diff(拡散)
   │    m_gwflow      地下水の切替器(鉛直は排他: bucket / greenampt。
-  │                  加算: lateral / layer2 / conduit(管路連続体層))
+  │                  加算: lateral / layer2 / conduit(管路連続体層)/
+  │                  pump(井戸揚水シンク))
   │    m_geomorph    土砂・地形変化(加算: creep / fluvial / suspend / wash / debris。
   │                  debris は土石流・地滑り・火山流動の抵抗則/E-D 切替を含む)
   │    m_glacier     氷河(加算: 質量収支(常時)/ flow / slide / ero / ava)
@@ -82,7 +83,7 @@ boundary_makebdc              境界条件値の準備
 tide_calc                     潮位(海域セルの水位強制)
 swflow_calc                   ★浅水流本体(uv/mn 更新 → 連続式 → h,e,u,v,m,n 確定)
   └ par_allreduce_maxi(ierror) 発散検出の全ランク集約
-gwflow_calc                   地下浸透・地下水(s%h から s%hg/s%hgc へ)
+gwflow_calc                   地下浸透・地下水(s%h から s%hg/s%hgc へ。末尾で井戸揚水シンク)
 saltwater_calc                淡塩2層(地表重力流・地下塩水 zone・海側境界)
 wq_calc                       水質(移流・沈降・負荷)
 evap_calc                     蒸発散(h・遮断貯留・hg からの蒸発)
@@ -163,7 +164,7 @@ s%h を変更するモジュールは同じループで s%e = s%z + s%h を回�
 | 設計判断の理由・経緯・実バグ | docs/developer.md(§0 方針 12 箇条から) |
 | 変更時の検証手順・禁止事項 | CLAUDE.md |
 | 未完了の作業・中期の道標 | docs/handoff.md |
-| パラメータの意味(438 項目) | docs/users_guide/params_index.md と各章 |
+| パラメータの意味(445 項目) | docs/users_guide/params_index.md と各章 |
 | namelist の書き方の見本 | examples/List_samples/ |
 | 使い方(利用者視点) | docs/users_guide.md・tutorials/ |
 | 他モデルとの立ち位置 | docs/comparison.md |

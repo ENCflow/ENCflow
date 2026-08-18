@@ -33,6 +33,7 @@ accuracy caveats (blank = nothing special).
 | River tsunami (tsunami intrusion up a river) | [Tide and sea level](tide.md) + [Channels](channel.md) | Tsunami waveform on the sea cells at the river mouth | One water level per cell inside the channel (no cross-sectional variation) |
 | Compound flooding (surge x river flood x heavy rain) | Superposition of tide + boundaries + rainfall | Just enable the features together | The ordering and coupling between processes is automatic (single time evolution) |
 | Seawater intrusion into / retreat from aquifers | [Fresh and salt water layers](salt.md) + [Groundwater](gwflow.md) | fn_salt (f_salt_gw=1) + f_gwlateral=1 + sea mask | Sharp-interface approximation: no brackish water (mixing) is produced. Equilibrium follows Ghyben-Herzberg |
+| Pumping-induced seawater intrusion / well salinization | [Fresh and salt water layers](salt.md) + pumping sink in [Groundwater](gwflow.md) | The above + f_gwpump=1 (coastal wells) | Pumping takes fresh water first (shallow well screen approximation); whatever the fresh thickness cannot supply appears as salt contamination of the well, and the induced wedge movement / upconing emerge automatically from the lateral flow and the salt-layer dynamics |
 | Freshwater lenses (islands, sand bars) | [Fresh and salt water layers](salt.md) + rainfall/infiltration | Recharge (rain + Green-Ampt) + sea mask | Lens thickness is set by the recharge-to-K_sh ratio (spin-up recommended) |
 | Estuarine salt wedge | [Fresh and salt water layers](salt.md) (f_salt_surf=1) | River inflow (fresh) + tide (salt) | Targets the quasi-steady wedge position and its response (no internal-wave inertia). The advection share salt_alpha is the practical calibration point |
 | Tidal response of coastal aquifers | [Fresh and salt water layers](salt.md) + [Tide and sea level](tide.md) | The tide series directly becomes the subsurface sea-side boundary head | The sea-subsurface connection exists only through the fresh/salt module |
@@ -55,7 +56,7 @@ accuracy caveats (blank = nothing special).
 | Baseflow / low-flow recession | Weathered bedrock layer in [Groundwater](gwflow.md) | f_gwlayer2=1 + spin-up via [Suspend and restart](restart.md) | In event runs the initial saturation gw2_sat0 is the practical calibration point |
 | Catchment water balance / recharge estimates | [Rainfall and weather](forcing.md) (evapotranspiration) + [Groundwater](gwflow.md) | Track S_surf/S_grnd/S_total over a long run | The S columns are domain-mean storage depths (m); their differences give the net balance |
 | Farmland tile drainage | Conduit continuum layer | The tile-drain preset with gwc_leak_layer=1 (exchange with the soil layer) | |
-| Well pumping / groundwater drawdown | - | - | **Not yet supported (planned)**: a groundwater sink mechanism (below) |
+| Well pumping / groundwater drawdown | Pumping sink in [Groundwater](gwflow.md) | f_gwpump=1 + well cells + rate (gwp_cell / gwp_q0 / gwp_val) | Withdrawal is capped by the cell's storage (check dry wells in the demand-vs-pumped summary printed at the end). Borehole-scale hydraulics (well radius, skin, etc.) are not represented |
 
 ## Sediment, slopes, and volcanoes
 
@@ -95,7 +96,6 @@ the existing framework (order and timing undecided).
 
 | Phenomenon | Current state | Planned form |
 |---|---|---|
-| Well pumping / groundwater abstraction (including pumping-induced seawater intrusion) | No groundwater sink mechanism | Cell + time-series pumping sinks (a subsurface version of the boundary source) |
 | Wind-driven flow / wind setup (bays, lakes, wide floodplains) | No wind stress term | Wind stress in the momentum equations + wind input (extension of the weather forcing) |
 | Infiltration suppression by frozen ground (snowmelt floods) | Infiltration does not depend on temperature | Temperature-dependent infiltration reduction |
 | Complete salt-damage analysis (contamination of soil/aquifer by infiltrated seawater) | Possible up to the areal extent of run-up seawater (above) | Fresh/salt partitioning of infiltration and evapotranspiration |

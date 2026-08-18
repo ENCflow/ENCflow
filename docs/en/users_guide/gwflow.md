@@ -12,17 +12,18 @@ remain in the file and are ignored - A/B comparisons only require
 switching the selectors).
 
 Groundwater in ENCflow is a **shallow two-layer** scheme for runoff
-analysis (soil layer + weathered bedrock layer; confined aquifers and
-well-scale resource analyses are out of scope). On top of these you can
-stack a **conduit continuum layer** (f_gwconduit) that represents
-subgrid conduit networks - sewer networks, fractured bedrock, and the
-like - as an equivalent continuum.
+analysis (soil layer + weathered bedrock layer; natural confined
+aquifers and borehole-scale hydraulics are out of scope). On top of
+these you can stack a **conduit continuum layer** (f_gwconduit) that
+represents subgrid conduit networks - sewer networks, fractured
+bedrock, and the like - as an equivalent continuum, and **well pumping
+/ groundwater abstraction sinks** (f_gwpump).
 
 ## Overall configuration (&list_gwflow)
 
 Choose the vertical part (surface <-> subsurface exchange) and the
 lateral part (horizontal subsurface movement) independently, and stack
-a second layer and a conduit continuum layer if needed.
+a second layer, a conduit continuum layer, and pumping sinks if needed.
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -30,6 +31,7 @@ a second layer and a conduit continuum layer if needed.
 | f_gwlateral | 0 | Lateral model. 0: none, 1: nonlinear Boussinesq |
 | f_gwlayer2 | 0 | 1: enable the weathered bedrock layer (second layer) |
 | f_gwconduit | 0 | 1: enable the conduit continuum layer (sewer networks, fractured bedrock, etc.) |
+| f_gwpump | 0 | 1: enable well pumping / groundwater abstraction (sink) |
 | dt_gwflow | 0 | Update interval of the groundwater computation (s). 0: every step. If specified, must be at least dt (consistency is maintained through the effective time step) |
 
 **Soil depth sd and specific yield sy0 belong to the geographic
@@ -198,6 +200,41 @@ Applications are expressed by parameter combinations:
     follow terrain evolution (fn_geomorph). Evapotranspiration and
     water quality (solute transport) do not touch the conduit layer.
     No exchange with sea cells.
+
+## Well pumping / groundwater abstraction (f_gwpump=1, &list_gwflow_pump)
+
+A sink that withdraws the specified pumping rate from subsurface
+storage at a set of cells and removes it from the system (the
+subsurface counterpart of the internal source &list_bound_source; for
+water-supply / agricultural abstraction, pumping-induced drawdown, and
+pumping-induced seawater intrusion). Up to 50 wells, numbered
+consecutively from 1.
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| gwp_cell(1:2,k,n) | - | Abstraction cells (i, j) of well n (multiple cells = well field / gallery) |
+| fn_gwp_cell(n) | - | Cell list file (each line "i j"; takes precedence over inline) |
+| gwp_q0(n) | - | Constant pumping rate (m3/s; positive = abstraction) |
+| gwp_val(1:2,k,n) | - | Pumping rate time series (min, m3/s) (takes precedence over gwp_q0) |
+| fn_gwp_val(n) | - | Time series file (each line "min m3/s"; highest precedence) |
+| gwp_layer(n) | 1 | Abstraction layer. 1: soil layer, 2: weathered bedrock layer (requires f_gwlayer2=1) |
+
+- The demand is **divided equally** over the cell set, and the
+  withdrawal at each cell is capped by that cell's storage (a dry well
+  = supply-limited; no redistribution to other cells). A per-well
+  summary of demand vs. actual withdrawal is printed at the end of the
+  run so you can check for dry wells.
+- Combined with the [fresh and salt water layers](salt.md)
+  (f_salt_gw=1), pumping takes **fresh water first** (shallow well
+  screen approximation). Whatever the fresh thickness cannot supply is
+  taken from the salt layer (= salt contamination of the well);
+  pumping-induced seawater intrusion and upconing emerge automatically
+  from the lateral flow and the salt-layer dynamics.
+- Injection (negative rates) is not supported (return flow /
+  irrigation to the surface is given with &list_bound_source in
+  [Boundary conditions](boundary.md)).
+- A well is a cell-scale sink (borehole-scale hydraulics - well
+  radius, skin, partial penetration - are not represented).
 
 ## Output and monitoring
 

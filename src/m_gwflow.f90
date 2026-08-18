@@ -11,6 +11,8 @@ module m_gwflow
   !   - 加算的な層: f_gwlayer2(風化基岩層)と f_gwconduit(管路連続体層。
   !     下水道網・岩盤亀裂網の等価被圧連続体。m_gwflow_conduit)。
   !     いずれも無効時は資源を一切確保しない
+  !   - 加算的なシンク: f_gwpump(井戸揚水・地下水取水。m_gwflow_pump。
+  !     無効時は資源を一切確保しない)
   !   - 鉛直の束縛は t_gwflow の手続きポインタ成分(abstract interface +
   !     nopass)。側方は当面単一モデルのため直接呼び出し(第2の側方
   !     モデルが実在した時点でポインタ束へ昇格する。等価リファクタとして
@@ -34,6 +36,7 @@ module m_gwflow
                               gwflow_layer2_dispose
   use m_gwflow_conduit, only : gwflow_conduit_init, gwflow_conduit_calc, &
                                gwflow_conduit_dispose
+  use m_gwflow_pump, only : gwflow_pump_init, gwflow_pump_calc, gwflow_pump_dispose
   use m_parallel, only : par_stop, par_allreduce_max, dcp
   use m_util, only : itoa
   implicit none
@@ -83,6 +86,7 @@ module m_gwflow
     logical :: lat_enabled = .false. ! 側方流動の有効化(f_gwlateral=1)
     logical :: l2_enabled = .false.  ! 風化基岩層の有効化(f_gwlayer2=1)
     logical :: c_enabled = .false.   ! 管路連続体層の有効化(f_gwconduit=1)
+    logical :: pump_enabled = .false. ! 井戸揚水の有効化(f_gwpump=1)
     integer :: idt_gwflow = 1        ! 更新間隔(ステップ数)
     real :: dts = 0.0                ! 実効時間刻み(p%dt * idt_gwflow)(s)
     logical :: initialized = .false.
@@ -142,9 +146,20 @@ subroutine m_gwflow_init(gw, p, g, s)
                     // itoa(list%f_gwconduit))
   end select
 
+  ! --- 井戸揚水(加算的プロセス。無効時は資源を一切確保しない) ---
+  select case (list%f_gwpump)
+    case (0)
+      gw%pump_enabled = .false.
+    case (1)
+      gw%pump_enabled = .true.
+    case default
+      call par_stop("list_gwflow: f_gwpump must be 0(none) or 1(wells): " &
+                    // itoa(list%f_gwpump))
+  end select
+
   ! すべて 0 なら fn を書いたまま一時無効化する経路
   if (list%f_gwvertical == 0 .and. .not. gw%lat_enabled .and. .not. gw%l2_enabled &
-      .and. .not. gw%c_enabled) return
+      .and. .not. gw%c_enabled .and. .not. gw%pump_enabled) return
 
   ! --- 鉛直モデルの束縛(新モデルの追加はここに case を足す) ---
   needs_sd = gw%lat_enabled .or. gw%l2_enabled   ! 側方・層2は土層厚を常に要する
@@ -217,6 +232,8 @@ subroutine m_gwflow_init(gw, p, g, s)
   if (gw%l2_enabled) call gwflow_layer2_init(p, g, s, gw%dts)
   ! 管路層は層2より後(gwc_leak_layer=2 が層2の有効化・定数を参照する)
   if (gw%c_enabled) call gwflow_conduit_init(p, g, s, gw%dts)
+  ! 井戸揚水は層2より後(gwp_layer=2 が層2の有効化を参照する)
+  if (gw%pump_enabled) call gwflow_pump_init(p, g, s)
   gw%initialized = .true.
 end subroutine
 
@@ -243,6 +260,8 @@ subroutine m_gwflow_calc(gw, p, g, s, it)
   ! 管路連続体層(地表交換→側方通水→層間交換。加算的。層2より後 =
   ! 上から下の順。この実行順序が結合仕様)
   if (gw%c_enabled) call gwflow_conduit_calc(p, g, s, it, gw%dts)
+  ! 井戸揚水(輸送の後に取水 = 水位低下を次ステップの輸送が見る)
+  if (gw%pump_enabled) call gwflow_pump_calc(p, g, s, it, gw%dts)
 end subroutine
 
 
@@ -257,6 +276,7 @@ subroutine m_gwflow_dispose(gw, p, g, s)
   if (gw%enabled .and. associated(gw%dispose)) call gw%dispose(p)
   if (gw%l2_enabled) call gwflow_layer2_dispose(p, g, s)   ! save は dispose で(契約5)
   if (gw%c_enabled) call gwflow_conduit_dispose(p, g, s)   ! save は dispose で(契約5)
+  if (gw%pump_enabled) call gwflow_pump_dispose(p, g)      ! 取水総括の表示(内部状態なし)
   ! 幾何・エッジ作業領域は層間共有のため、どれかが使っていれば破棄する
   if (gw%lat_enabled .or. gw%l2_enabled .or. gw%c_enabled) call gwflow_lateral_dispose(p)
   gw%init    => null()
@@ -266,6 +286,7 @@ subroutine m_gwflow_dispose(gw, p, g, s)
   gw%lat_enabled = .false.
   gw%l2_enabled = .false.
   gw%c_enabled = .false.
+  gw%pump_enabled = .false.
   gw%initialized = .false.
 end subroutine
 

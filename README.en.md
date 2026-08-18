@@ -78,12 +78,15 @@ read only the lines you care about.
   distributed), canopy interception, evapotranspiration
   (Hamon/Thornthwaite with temperature lapse rate), Green–Ampt
   infiltration, and two-layer groundwater (soil-layer Boussinesq plus a
-  weathered-bedrock layer) providing baseflow and recession.
+  weathered-bedrock layer) providing baseflow and recession. Well
+  pumping / groundwater abstraction sinks (cells + time series) for
+  drawdown analysis.
 - **Seawater intrusion and salt wedges**: with a fresh/salt two-layer
   (sharp interface) approximation, seawater intrusion into and retreat
-  from aquifers (Ghyben-Herzberg), freshwater lenses, and where the
-  seawater that ran up in a storm surge or tsunami ends up - on the
-  same grid as the surface and ground water.
+  from aquifers (Ghyben-Herzberg), freshwater lenses, pumping-induced
+  intrusion and well salinization, and where the seawater that ran up
+  in a storm surge or tsunami ends up - on the same grid as the
+  surface and ground water.
 - **Urban pluvial flooding (sewer drainage and surcharge)**: the sewer
   network is represented as an equivalent continuum (an artificial
   confined layer) with per-cell capacity and 8-direction conveyances,
@@ -170,9 +173,10 @@ are out of scope by design and belong to specialized models
 - **Deep groundwater** — ENCflow's groundwater is a shallow two-layer
   system (plus the conduit continuum layer) for runoff analysis. The
   "confined" state of the conduit layer is an artificial confinement
-  representing pipe-full pressurized flow; natural regional confined
-  aquifers and well-scale groundwater resource analysis belong to 3-D
-  groundwater models.
+  representing pipe-full pressurized flow; the hydraulics of natural
+  regional confined aquifers belong to 3-D groundwater models. Pumping
+  is given as a cell-scale sink; borehole-scale hydraulics (well
+  radius, skin, partial penetration, lift) are not represented.
 
 ## Why choose ENCflow
 

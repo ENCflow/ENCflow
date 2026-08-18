@@ -49,6 +49,7 @@ module m_boundary
   ! gfortran が全呼び出しをインライン化してシンボルを局所化・消去し、
   ! submodule からのホスト結合参照がリンク不能になる(実際に踏んだ)
   public :: interp_series, read_cell_file2
+  public :: read_val_file2               ! 時系列の汎用読み込み(m_gwflow_pump も使う)
 
   ! 辺境界の型コード
   integer, parameter :: e_bc_wall = 0      ! 不透過(既定)

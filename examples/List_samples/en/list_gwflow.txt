@@ -57,6 +57,11 @@
   !  1: enabled (uses &list_gwflow_conduit)
   !f_gwconduit = 1
 
+  ! Enabling well pumping / groundwater abstraction (sink)
+  !  0: none (no resources are allocated at all)
+  !  1: enabled (uses &list_gwflow_pump)
+  !f_gwpump = 1
+
   ! Update time interval of the groundwater computation (s)
   !  0 updates every step
   !  A nonzero value must be at least the time step dt
@@ -265,5 +270,35 @@
   gwc_eps = 1.0e-3          ! regularization amount for the dry test (m)
   gwc_eps_h = 1.0e-2        ! linearization width of the sqrt law (m)
   !gwc_diagratio = 0.5857864 ! diagonal partitioning of the flux width
+
+/
+
+!======================================================================
+! Well pumping / groundwater abstraction settings (f_gwpump = 1)
+!======================================================================
+!   Withdraws the specified pumping rate from subsurface storage at a
+!   set of cells and removes it from the system (the subsurface
+!   counterpart of the internal source &list_bound_source). Up to 50
+!   wells, numbered consecutively from 1. The demand is divided
+!   equally over the cell set, and the withdrawal at each cell is
+!   capped by that cell's storage (dry well; a per-well summary of
+!   demand vs. actual withdrawal is printed at the end of the run).
+!   Combined with the fresh/salt layers (f_salt_gw=1), pumping takes
+!   fresh water first (the shortfall becomes salt contamination).
+!   Injection (negative rates) is not supported (return flow to the
+!   surface goes through &list_bound_source).
+!======================================================================
+&list_gwflow_pump
+  ! Well 1: inline cells and a constant rate
+  gwp_cell(1:2,1,1) = 15, 22     ! abstraction cell (i, j) (multiple cells = well field)
+  !gwp_cell(1:2,2,1) = 16, 22    ! second cell (the demand is divided equally)
+  gwp_q0(1) = 0.02               ! constant pumping rate (m3/s; positive = abstraction)
+  !gwp_layer(1) = 1              ! abstraction layer (1: soil layer (default),
+                                 !   2: weathered bedrock; 2 requires f_gwlayer2=1)
+
+  ! Well 2: cell list file plus a rate time series file
+  !fn_gwp_cell(2) = 'well2.txt'  ! cell list (each line "i j")
+  !fn_gwp_val(2) = 'qwell2.txt'  ! rate time series (each line "min m3/s")
+  !gwp_val(1:2,1,2) = 0.0, 0.01  ! (an inline time series (min, m3/s) also works)
 
 /
