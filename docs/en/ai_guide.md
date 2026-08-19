@@ -100,6 +100,36 @@ the design of comparisons.
 > level by 0.2 m in work/ and report, in numbers, how the reach of
 > the salt wedge changes.
 
+## From conceptual cases to real problems (a staged approach)
+
+Conceptual cases like the examples above (generated terrain, uniform
+rainfall) are not practice pieces — they are **the entrance to real
+problems**. Because every ENCflow input is an independent text file,
+you can confirm the mechanism with model data first and then **swap
+the data for real-world data one file at a time**:
+
+1. **Conceptual case** — on a small grid with generated terrain and
+   uniform data, confirm in minutes that the intended mechanism works
+   and which parameters matter.
+2. **To real terrain** — swap fn_z for a DEM (GeoTIFF / bil).
+   Preprocessing such as depression removal (utils/rmdepress_river)
+   can also be delegated to the agent.
+3. **To real forcing** — swap in observed rainfall and tide time
+   series, and roughness/infiltration maps that follow the land use.
+4. **To calibration and production runs** — compare against
+   observations (flood marks, hydrographs), adjust parameters, refine
+   the grid, and proceed to the production run.
+
+Only a handful of input files change at each stage, and the result of
+the previous stage serves as the expectation for the next. The
+instruction to the agent also stays short at every stage:
+
+> Replace the terrain of the snowmelt case we just built with this
+> DEM (dem.tif). Match the resolution and extent to the data, and
+> remove depressions with utils if there are any. Make the same
+> figures as with the conceptual terrain and explain the differences
+> in behavior.
+
 ## Rules the agent must follow (important)
 
 These are also in the repository's CLAUDE.md (which agents read
