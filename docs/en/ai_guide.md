@@ -30,17 +30,17 @@ case-building procedure described below — try it first:
 /make-case a snowmelt-flood-like phenomenon involving snowmelt and frozen ground
 ```
 
-`/make-case` is merely an entry point that packages the standard
-procedure. You can also **talk to the agent in plain language** — the
-example instructions below are all plain requests without any slash
-command. Modifying an existing case is just as direct: "change the
-roughness rn0 in work/mycase/param.txt to 0.03, rerun, and compare the
-depth distribution with the previous result". The conversation
-continues, so you can iterate on what you see: "stronger rain",
-"put the figures side by side". Compound tasks — batch sensitivity
-runs over many cases, a simple calibration against observations,
-writing up a report of the results — can all be delegated as long as
-you can describe the procedure in words.
+> **Note**: `/make-case` is merely an entry point that packages the
+> standard procedure. You can also **talk to the agent in plain
+> language** — the example instructions below are all plain requests
+> without any slash command. Modifying an existing case is just as
+> direct: "change the roughness rn0 in work/mycase/param.txt to 0.03,
+> rerun, and compare the depth distribution with the previous result".
+> The conversation continues, so you can iterate on what you see:
+> "stronger rain", "put the figures side by side". Compound tasks —
+> batch sensitivity runs over many cases, a simple calibration against
+> observations, writing up a report of the results — can all be
+> delegated as long as you can describe the procedure in words.
 
 The agent asks for permission before creating files or running
 commands (or approves automatically, depending on your settings and
