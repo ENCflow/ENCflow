@@ -31,10 +31,9 @@ submodule(m_geoinfo) user_geoinfo
 
   ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
   ! 更新すること(乖離は defined/run が「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:7) = [ character(len=32) :: &
+  character(len=*), parameter :: routine_names(1:6) = [ character(len=32) :: &
       "wave_solid_wall",  &   ! 波例題: 斜めの不透過壁(2セル厚)
       "wave_leaky_wall",  &   ! 波例題: 斜めの半透過壁(1セル厚)
-      "abukuma_terrain",  &   ! 阿武隈川例題: 深海の埋め立てと地盤高 1/10
       "tohoku_flood",     &   ! 東北大氾濫計算(スタブ)
       "gaussian_hill",    &   ! クリープ例題: 中央のガウス丘(解析解ベンチマーク)
       "slope_break",      &   ! 土石流例題: 遷緩点付き斜面(test/debris, test/slide)
@@ -100,8 +99,6 @@ function resolve(name) result(fp)
       fp => geoinfo_wave_solid_wall
     case ("wave_leaky_wall")
       fp => geoinfo_wave_leaky_wall
-    case ("abukuma_terrain")
-      fp => geoinfo_abukuma_terrain
     case ("tohoku_flood")
       fp => geoinfo_tohoku_flood
     case ("gaussian_hill")
@@ -156,34 +153,6 @@ subroutine geoinfo_wave_leaky_wall(p, g)
     g%z(ix,iy) = 1.5
     g%x(ix,iy) = 0
   end do
-
-end subroutine
-
-!----------------------------------------------------------------------
-! 阿武隈川例題: 深海の埋め立て(対象外化)と地盤高 1/10
-!----------------------------------------------------------------------
-subroutine geoinfo_abukuma_terrain(p, g)
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(inout) :: g
-  integer :: i, j
-  if (p%initialized) continue  ! 引数未使用の警告を抑制
-
-  do j = 1, g%ny
-    do i = 1, g%nx
-
-      if (g%z(i,j) <= -2000) then
-        g%z(i,j) = 1000
-        g%x(i,j) = 0
-      else if (g%z(i,j) <= -100) then
-        g%z(i,j) = 1000
-        g%x(i,j) = 0
-      else
-        g%z(i,j) = g%z(i,j) / 10
-        g%x(i,j) = 1
-      endif
-
-    enddo
-  enddo
 
 end subroutine
 
