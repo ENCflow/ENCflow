@@ -50,7 +50,10 @@ Three tips for writing instructions:
    visible if it worked". The agent runs the case and checks the Log
    and outputs against it by itself.
 2. **Specify the working location** — have it build under `work/` or
-   similar, outside the bundled examples (test/, examples/).
+   similar, outside the bundled examples (test/, examples/). If you
+   forget, the agent may keep asking where to save things, or pick a
+   location on its own judgment (`/make-case` is defined to build
+   under work/, so there you can omit it).
 3. **Ask for verification and figures** — writing "run it, check the
    water budget in the S column of the Log, and plot the result"
    prevents fire-and-forget case generation.
@@ -69,13 +72,13 @@ Three tips for writing instructions:
 > cases, with and without frozen ground, and show in a figure that
 > surface runoff increases with frozen ground.
 
-> Starting from the examples/chichibu case, set up a sensitivity
-> experiment with 1.5x the rainfall, and compare the hydrographs
-> against the original case in one figure.
+> Starting from tutorials/chichibu/param_step5.txt, set up a
+> sensitivity experiment in work/ with 1.5x the rainfall, and compare
+> the hydrographs against the original case in one figure.
 
 > For the seawater-intrusion case in test/salt, try raising the tide
-> level by 0.2 m as a scratch experiment and report, in numbers, how
-> the reach of the salt wedge changes.
+> level by 0.2 m in work/ and report, in numbers, how the reach of
+> the salt wedge changes.
 
 ## Rules the agent must follow (important)
 
@@ -89,6 +92,15 @@ automatically), but for user work in particular:
   location such as work/** (work/ is already in .gitignore).
 - Building cases requires no changes to src/ (if the agent starts
   editing code unasked, stop it).
+
+### Recovering from a broken state
+
+If the agent's changes leave the repository in a strange state, it is
+**faster and safer to start over** than to hunt for the cause: copy
+your own products (the contents of work/, etc.) somewhere else, delete
+the repository folder entirely, and clone it again. Think of a cloned
+repository as a disposable box you can recreate any number of times —
+as long as your own cases are backed up, nothing is lost.
 
 ## When it goes wrong
 
