@@ -11,8 +11,8 @@ revert ではなく本計画で**新規に設置**する。
 
 ## 0. 実行前にユーザーが確認しておくこと
 
-- [ ] 職場承認の文言と、著作権表示の**年の範囲**(下書きの `20XX` を
-      開発開始年に置換)
+- [ ] 職場承認の文言が「個人名・Apache-2.0」の形と一致しているか確認
+      (著作権表示の年の範囲は **2020-2026** で確定済み 2026-08-19)
 - [ ] Zenodo アカウントの用意(GitHub でログイン可)
 - [ ] (推奨・任意)org owner の複数化
 
@@ -24,7 +24,7 @@ revert ではなく本計画で**新規に設置**する。
 
   ```
   ENCflow
-  Copyright 20XX-2026 Tsuyoshi Tada
+  Copyright 2020-2026 Tsuyoshi Tada
 
   Licensed under the Apache License, Version 2.0.
 
@@ -104,7 +104,9 @@ Discussions(Announcements)に一言:
 > ENCflow を Apache License 2.0 で公開しました。商用利用を含め、
 > どなたでも自由に利用・改変・再配布できます。あわせて v1.0.0 を
 > リリースし、Zenodo で DOI を付与しました(引用方法は README 参照)。
-> コードのプルリクエストの受け付けも開始します(CONTRIBUTING 参照)。
+> コードのプルリクエストは運用が安定するまで引き続き受け付けて
+> いませんが、指摘・提案は Issues へ、質問・相談は Discussions へ
+> どうぞ(CONTRIBUTING 参照)。
 
 ## 5. 実施後の消し込み
 
