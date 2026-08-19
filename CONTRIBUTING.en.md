@@ -5,9 +5,19 @@
 Thank you for your interest in ENCflow. The current ways to help are
 as follows.
 
+## Questions and consultations (welcome)
+
+Usage questions, "not sure if it's a bug", and consultations about
+what you want to compute are all welcome in
+[Discussions](https://github.com/ENCflow/ENCflow/discussions). No
+question is too basic. If it turns out to be a bug, we will convert
+it into an Issue.
+
 ## Bug reports and feature requests (welcome)
 
-Please use [Issues](https://github.com/ENCflow/ENCflow/issues).
+For clear-cut cases, please use
+[Issues](https://github.com/ENCflow/ENCflow/issues) (when in doubt,
+Discussions is fine).
 Following the templates and including the items below speeds things
 up considerably:
 

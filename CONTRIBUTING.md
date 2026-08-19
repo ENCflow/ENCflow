@@ -5,9 +5,17 @@
 ENCflow に関心を持っていただきありがとうございます。現時点での
 協力のかたちは次のとおりです。
 
+## 質問・相談(歓迎します)
+
+使い方の質問、「バグかどうか分からない」、計算したい現象の相談は
+[Discussions](https://github.com/ENCflow/ENCflow/discussions) へ
+どうぞ。初歩的すぎる質問というものはありません。バグと分かった
+場合はこちらで Issue に変換します。
+
 ## バグ報告・機能提案(歓迎します)
 
-[Issues](https://github.com/ENCflow/ENCflow/issues) へどうぞ。
+明確なものは [Issues](https://github.com/ENCflow/ENCflow/issues) へ
+どうぞ(迷ったら Discussions で構いません)。
 テンプレートに沿って、次を含めてもらえると対応が速くなります:
 
 - **バグ報告**: 再現手順(実行したコマンド)、パラメータファイル

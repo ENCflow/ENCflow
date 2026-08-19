@@ -288,8 +288,10 @@ Please contact us if you wish to use ENCflow.
 - Hydro-Environmental System Laboratory, Department of Civil
   Engineering, Tohoku University
 
-Bug reports and feature requests are welcome at
+Questions and consultations are welcome at
+[Discussions](https://github.com/ENCflow/ENCflow/discussions);
+clear bug reports and feature requests go to
 [Issues](https://github.com/ENCflow/ENCflow/issues)
 (see [CONTRIBUTING](CONTRIBUTING.en.md) for how to write them and the
-current policy on code pull requests).
+current policy on code pull requests — when in doubt, Discussions is fine).
 For citation in research, see [CITATION.cff](CITATION.cff).

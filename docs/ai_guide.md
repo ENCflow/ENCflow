@@ -140,3 +140,6 @@ Claude Code の場合は、リポジトリに同梱のスラッシュコマン�
   にあります — 「〜を参照して」と一言添えるだけで精度が上がります。
 - ビルドや実行の環境づくり自体も「src で make install して test/wave の
   Run.sh が PASS するところまで確認して」と頼めます。
+- それでも解決しないときは、人間に聞いてください —
+  [Discussions](https://github.com/ENCflow/ENCflow/discussions) へどうぞ
+  (試したことと画面出力の末尾を添えると速いです)。

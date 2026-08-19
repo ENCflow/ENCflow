@@ -162,3 +162,7 @@ as long as your own cases are backed up, nothing is lost.
   to ..." raises the accuracy noticeably.
 - You can also delegate environment setup itself: "run make install in
   src and confirm that Run.sh in test/wave reaches PASS".
+- If it still does not resolve, ask a human —
+  [Discussions](https://github.com/ENCflow/ENCflow/discussions) is the
+  place (attaching what you tried and the tail of the screen output
+  speeds things up).
