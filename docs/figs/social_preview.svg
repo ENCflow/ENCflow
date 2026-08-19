@@ -1,0 +1,196 @@
+<svg width="1280" height="640" viewBox="0 0 1280 640" xmlns="http://www.w3.org/2000/svg" font-family="'DejaVu Sans',Arial,sans-serif">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#b8d9ef"/><stop offset="1" stop-color="#eaf5fc"/>
+  </linearGradient>
+  <linearGradient id="soil" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#b3946c"/><stop offset="1" stop-color="#8a7052"/>
+  </linearGradient>
+  <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#4a94cf"/><stop offset="1" stop-color="#1d5e96"/>
+  </linearGradient>
+  <linearGradient id="ice" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#bfe0f2"/>
+  </linearGradient>
+</defs>
+
+<!-- sky -->
+<rect width="1280" height="640" fill="url(#sky)"/>
+
+<!-- ===== terrain (side cross-section) ===== -->
+<path id="ground" d="M0,240 L90,120 L150,215 L200,232 L260,160 L470,430 L640,442 L940,447 L945,452
+         L1010,505 L1120,545 L1280,560 L1280,700 L0,700 Z" fill="url(#soil)"/>
+
+<!-- rocky shade on steep slope -->
+<path d="M260,160 L470,430 L470,450 L420,442 L248,178 Z" fill="#6f6455" opacity="0.3"/>
+
+<!-- dam and reservoir on the hillside -->
+<g>
+  <rect x="38" y="300" width="112" height="16" rx="4" fill="#4a94cf"/>
+  <path d="M148,296 L170,296 L186,348 L148,348 Z" fill="#8d99a3" stroke="#5f6b75" stroke-width="2"/>
+  <path d="M170,344 Q205,382 240,408 Q290,436 350,442 L430,446" fill="none" stroke="#4a94cf" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="182" cy="352" r="5" fill="#ffffff" opacity="0.9"/>
+  <circle cx="192" cy="362" r="4" fill="#ffffff" opacity="0.8"/>
+</g>
+
+<!-- forest on the hillside -->
+<g>
+  <g fill="#2f6b3a">
+    <path d="M30,252 L42,278 L18,278 Z"/><path d="M64,238 L76,264 L52,264 Z"/>
+    <path d="M100,254 L112,280 L88,280 Z"/>
+    <path d="M32,362 L46,392 L18,392 Z"/><path d="M74,344 L88,374 L60,374 Z"/>
+    <path d="M116,366 L130,396 L102,396 Z"/><path d="M48,412 L62,442 L34,442 Z"/>
+    <path d="M94,430 L108,460 L80,460 Z"/><path d="M144,406 L158,436 L130,436 Z"/>
+    <path d="M28,468 L42,498 L14,498 Z"/><path d="M72,488 L86,518 L58,518 Z"/>
+    <path d="M126,478 L140,508 L112,508 Z"/><path d="M180,442 L194,472 L166,472 Z"/>
+    <path d="M182,502 L196,532 L168,532 Z"/><path d="M230,472 L244,502 L216,502 Z"/>
+  </g>
+  <g fill="#4d3a26">
+    <rect x="28" y="278" width="4" height="6"/><rect x="62" y="264" width="4" height="6"/>
+    <rect x="98" y="280" width="4" height="6"/>
+    <rect x="30" y="392" width="4" height="7"/><rect x="72" y="374" width="4" height="7"/>
+    <rect x="114" y="396" width="4" height="7"/><rect x="46" y="442" width="4" height="7"/>
+    <rect x="92" y="460" width="4" height="7"/><rect x="142" y="436" width="4" height="7"/>
+    <rect x="26" y="498" width="4" height="7"/><rect x="70" y="518" width="4" height="7"/>
+    <rect x="124" y="508" width="4" height="7"/><rect x="178" y="472" width="4" height="7"/>
+    <rect x="180" y="532" width="4" height="7"/><rect x="228" y="502" width="4" height="7"/>
+  </g>
+</g>
+
+<!-- grass band on plain -->
+<path d="M470,430 L640,442 L940,447 L945,452 L938,464 L640,458 L470,446 Z" fill="#6a9c52"/>
+
+<!-- snow caps -->
+<path d="M0,240 L90,120 L150,215 L118,218 L60,200 L20,235 Z" fill="#ffffff"/>
+<path d="M228,200 L260,160 L292,204 L275,214 L242,212 Z" fill="#ffffff"/>
+
+<!-- glacier: icefield in the saddle with crevasses -->
+<path d="M150,215 L200,232 L242,212 Q250,250 285,300 Q270,315 248,310 Q205,275 168,240 Q155,228 150,215 Z" fill="url(#ice)"/>
+<g stroke="#7db6d8" stroke-width="3.5" stroke-linecap="round" opacity="0.85">
+  <line x1="196" y1="245" x2="220" y2="236"/>
+  <line x1="218" y1="268" x2="242" y2="258"/>
+  <line x1="242" y1="292" x2="264" y2="282"/>
+</g>
+<!-- meltwater stream from glacier toe joining the river -->
+<path d="M285,300 Q330,370 380,415 Q430,445 470,446 L470,434 Q430,432 392,404 Q345,360 296,296 Z" fill="#4a94cf"/>
+
+<!-- river along the plain -->
+<path d="M470,432 L640,442 L940,448 L945,452 L938,466 L640,460 L470,450 Z" fill="#4a94cf"/>
+
+<!-- debris flow from the right flank of the cone -->
+<path d="M292,204 L310,225 Q380,320 448,415 Q470,436 505,444 L540,450 Q485,462 440,452 Q400,430 372,388 Q330,320 284,222 Z" fill="#a8541c" stroke="#5c2c0d" stroke-width="2.5"/>
+<g fill="#a06a3a" stroke="#5f3416" stroke-width="1">
+  <circle cx="460" cy="436" r="9"/><circle cx="488" cy="442" r="7"/>
+  <circle cx="515" cy="445" r="8"/><circle cx="435" cy="426" r="7"/>
+  <circle cx="535" cy="447" r="6"/>
+</g>
+
+<!-- flood water sheet over plain -->
+<path d="M590,436 Q640,432 700,435 Q780,438 830,436 Q880,434 905,439 L905,456 L590,452 Z" fill="#69b0e0" opacity="0.9"/>
+
+<!-- houses in flood zone (bases on the plain, feet in water) -->
+<g>
+  <g transform="translate(660,408)">
+    <rect x="0" y="10" width="38" height="28" fill="#e8e2d5"/>
+    <path d="M-5,12 L19,-7 L43,12 Z" fill="#b0492f"/>
+  </g>
+  <g transform="translate(755,410)">
+    <rect x="0" y="10" width="34" height="27" fill="#ddd8ce"/>
+    <path d="M-5,12 L17,-5 L39,12 Z" fill="#7d8a94"/>
+  </g>
+  <g transform="translate(845,409)">
+    <rect x="0" y="10" width="36" height="28" fill="#e8e2d5"/>
+    <path d="M-5,12 L18,-6 L41,12 Z" fill="#b0492f"/>
+  </g>
+</g>
+<!-- water over the house feet -->
+<path d="M590,438 L905,442 L905,452 L590,450 Z" fill="#69b0e0" opacity="0.95"/>
+
+<!-- sea -->
+<path d="M945,440 L1280,440 L1280,560 L1120,545 L1010,505 L945,452 Z" fill="url(#sea)"/>
+<line x1="1100" y1="446" x2="1270" y2="446" stroke="#bcd9ef" stroke-width="2" opacity="0.6"/>
+
+<!-- storm surge / tsunami wave -->
+<path d="M945,440 Q958,352 1018,336 Q1078,322 1094,370 Q1102,396 1078,392 Q1100,418 1130,440 Z" fill="#2f74ad"/>
+<g fill="#ffffff" opacity="0.92">
+  <circle cx="1014" cy="341" r="10"/><circle cx="1040" cy="331" r="11"/>
+  <circle cx="1067" cy="329" r="10"/><circle cx="1088" cy="342" r="9"/>
+  <circle cx="1097" cy="362" r="8"/><circle cx="994" cy="360" r="8"/>
+  <circle cx="972" cy="388" r="7"/>
+</g>
+
+<!-- pollutant source (small plant) and plume spreading in the flood water -->
+<g transform="translate(600,398)">
+  <rect x="0" y="14" width="30" height="26" fill="#9aa4ad"/>
+  <path d="M0,14 L10,4 L10,14 L20,4 L20,14 L30,4 L30,14 Z" fill="#7d8a94"/>
+  <rect x="22" y="-14" width="7" height="20" fill="#7d8a94"/>
+</g>
+<path d="M632,436 Q700,430 760,436 Q830,442 880,440 L880,452 Q800,456 720,452 Q670,449 632,446 Z"
+      fill="#c026d3" opacity="0.42"/>
+<g fill="#a21caf" opacity="0.6">
+  <circle cx="700" cy="441" r="4"/><circle cx="760" cy="444" r="3"/>
+  <circle cx="820" cy="446" r="3"/><circle cx="866" cy="446" r="3"/>
+</g>
+
+<!-- ===== subsurface ===== -->
+<!-- saturated groundwater zone under plain -->
+<path d="M300,560 Q380,505 470,478 Q700,498 940,505 L945,522 L940,700 L300,700 Z" fill="#5b8fb5"/>
+<!-- water table dashed -->
+<path d="M300,560 Q380,505 470,478 Q700,498 940,505" fill="none" stroke="#eaf5fc" stroke-width="3" stroke-dasharray="10 8" opacity="0.9"/>
+<!-- salt wedge intruding from the sea -->
+<path d="M945,522 L1280,566 L1280,700 L845,700 Q895,575 945,522 Z" fill="#155e75" opacity="0.8"/>
+
+<!-- pumping well into the aquifer -->
+<g>
+  <rect x="561" y="456" width="8" height="104" fill="#e8e2d5" stroke="#6b6257" stroke-width="1.5"/>
+  <rect x="553" y="442" width="24" height="16" fill="#6b6257"/>
+  <rect x="547" y="436" width="36" height="8" rx="3" fill="#4d463d"/>
+</g>
+<!-- water-table symbol on the dashed line -->
+<g>
+  <path d="M632,480 L624,493 L640,493 Z" fill="#eaf5fc"/>
+</g>
+
+<!-- ===== clouds & precipitation ===== -->
+<!-- snow cloud -->
+<g>
+  <g fill="#f2f6f9">
+    <ellipse cx="80" cy="62" rx="62" ry="26"/><ellipse cx="150" cy="55" rx="55" ry="22"/>
+    <ellipse cx="120" cy="72" rx="75" ry="24"/>
+  </g>
+  <g fill="#ffffff">
+    <circle cx="70" cy="110" r="4"/><circle cx="110" cy="130" r="4"/>
+    <circle cx="90" cy="155" r="4"/><circle cx="140" cy="150" r="4"/>
+    <circle cx="60" cy="175" r="4"/><circle cx="130" cy="100" r="4"/>
+    <circle cx="160" cy="120" r="4"/>
+  </g>
+</g>
+<!-- rain cloud -->
+<g>
+  <g fill="#7d93a6">
+    <ellipse cx="400" cy="70" rx="70" ry="27"/><ellipse cx="480" cy="62" rx="60" ry="24"/>
+    <ellipse cx="450" cy="82" rx="85" ry="26"/>
+  </g>
+  <g stroke="#5f88ad" stroke-width="3.5" stroke-linecap="round">
+    <line x1="390" y1="115" x2="380" y2="150"/>
+    <line x1="425" y1="120" x2="415" y2="155"/>
+    <line x1="460" y1="118" x2="450" y2="153"/>
+    <line x1="495" y1="115" x2="485" y2="150"/>
+    <line x1="440" y1="160" x2="430" y2="195"/>
+    <line x1="475" y1="158" x2="465" y2="193"/>
+  </g>
+</g>
+
+<!-- ===== faint computational grid ===== -->
+<g stroke="#ffffff" stroke-width="1" opacity="0.10">
+  <path d="M64,0 V640 M128,0 V640 M192,0 V640 M256,0 V640 M320,0 V640 M384,0 V640 M448,0 V640 M512,0 V640 M576,0 V640 M640,0 V640 M704,0 V640 M768,0 V640 M832,0 V640 M896,0 V640 M960,0 V640 M1024,0 V640 M1088,0 V640 M1152,0 V640 M1216,0 V640"/>
+  <path d="M0,64 H1280 M0,128 H1280 M0,192 H1280 M0,256 H1280 M0,320 H1280 M0,384 H1280 M0,448 H1280 M0,512 H1280 M0,576 H1280"/>
+</g>
+
+<!-- ===== title ===== -->
+<g>
+  <text x="830" y="150" text-anchor="middle" font-size="84" font-weight="bold" fill="#123a5f">ENCflow</text>
+  <text x="830" y="196" text-anchor="middle" font-size="26" fill="#2a5578">Solving surface-water phenomena</text>
+  <text x="830" y="228" text-anchor="middle" font-size="26" fill="#2a5578">seamlessly on a single grid</text>
+</g>
+</svg>
