@@ -47,6 +47,7 @@ Screen.log
 Screen_*.log
 *.png
 !docs/icon/*.png
+!docs/figs/*.png
 !tutorials/*/figs/*.png
 !tutorials/*/en/figs/*.png
 
