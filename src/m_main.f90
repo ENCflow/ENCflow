@@ -148,6 +148,14 @@ subroutine m_main_all()
   call m_geoinfo_dispose(g)
   call m_sysparam_dispose(p)
 
+  ! 終了メッセージ(画面のみ。Log には書かない = 回帰基準の Log.txt を
+  ! 不変に保つ。最終の状態表示行で切れたように見えるのを防ぐ)
+  if (ierror > 0) then
+    call par_info("main: program terminated with error(s)")
+  else
+    call par_info("main: program terminated normally")
+  end if
+
   ! MPIを終了
   call par_finalize()
 
