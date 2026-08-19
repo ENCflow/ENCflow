@@ -112,8 +112,8 @@ the data for real-world data one file at a time**:
    uniform data, confirm in minutes that the intended mechanism works
    and which parameters matter.
 2. **To real terrain** — swap fn_z for a DEM (GeoTIFF / bil).
-   Preprocessing such as depression removal (utils/rmdepress_river)
-   can also be delegated to the agent.
+   Preprocessing such as handling depressions can also be delegated
+   to the agent.
 3. **To real forcing** — swap in observed rainfall and tide time
    series, and roughness/infiltration maps that follow the land use.
 4. **To calibration and production runs** — compare against
@@ -125,10 +125,9 @@ the previous stage serves as the expectation for the next. The
 instruction to the agent also stays short at every stage:
 
 > Replace the terrain of the snowmelt case we just built with this
-> DEM (dem.tif). Match the resolution and extent to the data, and
-> remove depressions with utils if there are any. Make the same
-> figures as with the conceptual terrain and explain the differences
-> in behavior.
+> DEM (dem.tif). Match the resolution and extent to the data. Make
+> the same figures as with the conceptual terrain and explain the
+> differences in behavior.
 
 ## Rules the agent must follow (important)
 
