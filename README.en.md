@@ -211,15 +211,15 @@ are out of scope by design and belong to specialized models
   files are plain text (namelists), you can generate cases
   mechanically with sed or Python, run them in batch, and diff or
   aggregate the text outputs, all from shell scripts alone. This suits
-  sensitivity analysis, calibration, and bulk scenario runs — and
-  ENCflow's own regression tests (test/*/Run.sh: generating derived
-  cases and automatically comparing against references) run on
-  exactly this machinery. The same property extends directly to
-  **advanced automation by AI**: since the input and output are pure
-  text, AI agents can drive case generation, execution, verification,
-  and analysis directly. In fact, much of the development and
-  verification of this very project is carried out in collaboration
-  with AI agents — a working **demonstration** of that claim.
+  sensitivity analysis, calibration, and bulk scenario runs. The same
+  property extends directly to **advanced automation by AI**: since
+  the input and output are pure text, AI agents can drive case
+  generation, execution, verification, and analysis directly. In
+  practice, ENCflow's own regression tests (test/*/Run.sh: generating
+  derived cases and automatically comparing against references) run on
+  exactly this machinery, and much of the development and verification
+  of this very project is carried out in collaboration with AI agents
+  — both are working **demonstrations** of the claim.
 - **Full source code available** — inspect it, verify it. The
   computational code is written entirely from scratch and **contains
   no third-party code** (zero dependencies also means a clean,
