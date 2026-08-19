@@ -15,7 +15,7 @@ site before citing.
 
 | Model | Developer | Cost | Code | Notes |
 |---|---|---|---|---|
-| **ENCflow** | (this project) | Free (policy) | Fully open (policy) | Basic policy is developer.md Sec. 0 |
+| **ENCflow** | (this project) | Free (policy) | Fully open (policy) | Basic policy is developer.md Sec. 0. Ships agent-oriented groundwork (Sec. 3) |
 | RRI | ICHARM/PWRI | Free | Open (own terms) | Copyright-notice obligation; commercial use by permission. iRIC-version solver also published |
 | iRIC (Nays2DFlood etc.) | iRIC organization | Free | Main solvers open | Platform of GUI + solver suite |
 | Morpho2DH | Takebayashi (DPRI, Kyoto Univ.) / iRIC | Free | Closed (distributed via iRIC) | Morpho2D (2D bed deformation) + debris/mud flow. Considers structures such as sabo dams |
@@ -109,6 +109,22 @@ Sources (confirmed 2026-08-10):
   Japanese-only). Note also that most of the comparative advantages
   presuppose finalizing "free and fully open" (restoration of the
   license notice; Sec. 34.3).
+
+- (Added 2026-08-19) **AI-agent orientation**: on top of the fully
+  text-based input and output (no GUI dependency), ENCflow ships a
+  documentation system that lets "phenomenon -> features -> parameters"
+  be looked up mechanically (use-case gallery, full parameter index,
+  annotated samples) and repository-bundled groundwork for agents (the
+  CLAUDE.md conventions, the /make-case standard procedure, and the
+  user-facing docs/ai_guide.md in Japanese and English). Bit
+  reproducibility and the regression baselines are also the foundation
+  that lets an agent verify its own work in a loop. Much of the
+  development and verification of ENCflow itself is carried out in
+  collaboration with AI agents, so the claim comes with a working
+  demonstration. GUI-first and closed-source products are structurally
+  hard for agents to operate, and among the open players no example of
+  repository-level agent groundwork is found at this time (a gap that
+  may narrow as other models catch up).
 
 ## 4. Remaining items: who implements them, and directions
 
