@@ -283,10 +283,13 @@ Please contact us if you wish to use ENCflow.
 
 ## Development
 
-- Hydraulic Engineering Laboratory, Department of Civil and
-  Environmental Engineering, National Defense Academy of Japan
-- Hydro-Environmental System Laboratory, Department of Civil
-  Engineering, Tohoku University
+ENCflow is jointly developed by:
+
+- Tsuyoshi Tada (Hydraulic Engineering Laboratory, Department of
+  Civil and Environmental Engineering, National Defense Academy of
+  Japan) — design and implementation
+- So Kazama (Hydro-Environmental System Laboratory, Department of
+  Civil Engineering, Tohoku University) — ideas and validation
 
 Questions and consultations are welcome at
 [Discussions](https://github.com/ENCflow/ENCflow/discussions);

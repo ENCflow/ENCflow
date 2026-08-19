@@ -223,8 +223,10 @@ OS は Linux / macOS / WSL を想定しています。詳細は
 
 ## 開発
 
-- 防衛大学校 建設環境工学科 水工学研究室
-- 東北大学 工学部 水環境システム学研究室
+ENCflow は次の 2 名による共同開発です:
+
+- 多田 毅(防衛大学校 建設環境工学科 水工学研究室)— 設計・実装
+- 風間 聡(東北大学 工学部 水環境システム学研究室)— 構想・検証
 
 質問・相談は [Discussions](https://github.com/ENCflow/ENCflow/discussions) へ、
 明確なバグ報告・機能提案は [Issues](https://github.com/ENCflow/ENCflow/issues) へ
