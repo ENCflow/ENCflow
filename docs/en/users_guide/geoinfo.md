@@ -178,6 +178,6 @@ Notes when giving the crest with a distribution file `fn_seawall`:
 
 - Annotated list of all parameters: [examples/List_samples/list_geoinfo.txt](../../../examples/List_samples/en/list_geoinfo.txt)
 - Minimal configuration: [tutorials/wave](../../../tutorials/wave/en/README.md) (grid only + a user routine)
-- Real terrain: [examples/chichibu](../../../examples/chichibu/), [examples/abukuma](../../../examples/abukuma/)
+- Real terrain: [tutorials/chichibu](../../../tutorials/chichibu/en/README.md)
 - For the format and coordinate system of distribution files, see the [input/output](io.md) and [coordinates](coordinates.md) chapters.
 - Subgrid channel elements such as channel width and levees are configured on the fn_channel side ([channel chapter](channel.md)).

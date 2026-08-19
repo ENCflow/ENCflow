@@ -158,6 +158,6 @@ fn_seaside が必須**です。
 
 - 全パラメータの注釈付き一覧: [examples/List_samples/list_geoinfo.txt](../../examples/List_samples/list_geoinfo.txt)
 - 最小構成: [tutorials/wave](../../tutorials/wave/)(格子のみ+ユーザールーチン)
-- 実地形: [examples/chichibu](../../examples/chichibu/)、[examples/abukuma](../../examples/abukuma/)
+- 実地形: [tutorials/chichibu](../../tutorials/chichibu/)
 - 分布ファイルの形式・座標系は[入出力](io.md)・[座標系](coordinates.md)の章を参照。
 - 河道幅・堤防などのサブグリッド河道要素は fn_channel 側の設定です([河道の章](channel.md))。
