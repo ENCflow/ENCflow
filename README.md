@@ -195,7 +195,7 @@ OS は Linux / macOS / WSL を想定しています。詳細は
 4. [examples/](examples/) — 設定ファイルのサンプル集
 5. [test/](test/) — 検証済みの例題(回帰テストを兼ねています)
 6. [AI エージェントと使う](docs/ai_guide.md) — 「現象の言葉」で
-   ケース作成・実行・解析を AI に任せる方法(/make-case コマンド同梱)
+   ケース作成・実行・解析を AI に任せる方法
 
 開発に参加したい方・中身を知りたい方は
 [docs/architecture.md](docs/architecture.md)(全体像の案内図。

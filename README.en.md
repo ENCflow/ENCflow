@@ -247,7 +247,7 @@ notebook that runs in the browser alone is also available).
 5. [test/](test/) — verified examples (doubling as regression tests)
 6. [Using ENCflow with AI agents](docs/en/ai_guide.md) — delegating
    case building, execution, and analysis to an AI in the words of the
-   phenomenon (a bundled /make-case command included)
+   phenomenon
 
 Developers and the curious should head to
 [docs/architecture.md](docs/architecture.md) (in Japanese) (the
