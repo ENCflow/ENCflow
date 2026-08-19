@@ -1,0 +1,19 @@
+name: 機能提案 / Feature request
+description: 新しい機能・改善の提案 / Propose a new feature or an improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: phenomenon
+    attributes:
+      label: 計算したい現象・やりたいこと / The phenomenon or task you want to handle
+      description: >-
+        機能の実装方法より「何を計算したいか」を教えてください。
+        docs/users_guide/usecases.md に近い現象があれば挙げてください。 /
+        Tell us what you want to compute rather than how to implement it.
+        If docs/users_guide/usecases.md has a similar phenomenon, mention it.
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: 現状の回避策 / Current workaround (if any)

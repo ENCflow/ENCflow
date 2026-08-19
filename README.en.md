@@ -1,5 +1,7 @@
 # ENCflow
 
+[![CI](https://github.com/ENCflow/ENCflow/actions/workflows/ci.yml/badge.svg)](https://github.com/ENCflow/ENCflow/actions/workflows/ci.yml)
+
 **Solving surface-water phenomena seamlessly on a single grid** —
 from river flooding, storm surge, and tsunami run-up to rainfall–runoff,
 groundwater, sediment, water quality, snow, glaciers, and landscape
@@ -11,9 +13,11 @@ evolution, all in one Fortran program.
 [User's Guide](docs/en/users_guide.md) /
 [Comparison with other models](docs/en/comparison.md)
 
-*The Japanese documentation is the authoritative version; this English
-README is a derived translation (based on commit 2a9d10d). Guides and
-tutorials are currently available in Japanese only.*
+*The Japanese documentation is the authoritative version; the English
+pages are derived mirrors. The user-facing documentation — README,
+installation, tutorials, user's guide, use-case gallery, comparison,
+and the AI guide — is fully mirrored in English (docs/en/); developer
+documentation (developer.md etc.) is currently Japanese only.*
 
 ---
 
@@ -285,5 +289,7 @@ Please contact us if you wish to use ENCflow.
   Engineering, Tohoku University
 
 Bug reports and feature requests are welcome at
-[Issues](https://github.com/ENCflow/ENCflow/issues).
+[Issues](https://github.com/ENCflow/ENCflow/issues)
+(see [CONTRIBUTING](CONTRIBUTING.en.md) for how to write them and the
+current policy on code pull requests).
 For citation in research, see [CITATION.cff](CITATION.cff).

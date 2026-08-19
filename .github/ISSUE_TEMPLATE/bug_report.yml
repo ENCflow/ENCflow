@@ -1,0 +1,38 @@
+name: バグ報告 / Bug report
+description: 計算が失敗する・結果がおかしい等の報告 / Report a failure or wrong result
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: 何が起きたか / What happened
+      description: 期待した挙動と実際の挙動 / What you expected and what actually happened
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: 再現手順 / Steps to reproduce
+      description: 実行したコマンドの列 / The commands you ran
+      placeholder: |
+        cd test/wave
+        ./Run.sh
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: パラメータファイルと Log / Parameter file and Log
+      description: >-
+        再現に必要な param.txt(と小さなデータ)を貼るか添付してください。
+        result/Log.txt と画面出力(Screen.log)の末尾も有用です。 /
+        Paste or attach the param.txt (and small data) needed to
+        reproduce, plus the tail of result/Log.txt and Screen.log.
+  - type: textarea
+    id: env
+    attributes:
+      label: 環境 / Environment
+      description: OS・コンパイラとバージョン・逐次/MPI・make.inc の変更点 / OS, compiler + version, serial/MPI, changes to make.inc
+      placeholder: "Ubuntu 24.04 (WSL) / gfortran 13.2 / serial / make.inc unchanged"
+    validations:
+      required: true

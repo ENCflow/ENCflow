@@ -1,0 +1,48 @@
+# ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
+#   高速な 5 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
+#   ローカルで test/chichibu/Run.sh を実行すること)
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  serial:
+    name: build + regression (serial)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y gfortran make
+      - name: Build
+        run: make -C src install
+      - name: Regression tests
+        run: |
+          set -e
+          for c in wave frost pump conduit salt; do
+            echo "===== test/$c ====="
+            (cd "test/$c" && ./Run.sh)
+          done
+
+  mpi:
+    name: build + regression (MPI np=2)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y gfortran make openmpi-bin libopenmpi-dev
+      - name: Build (MPI)
+        run: make -C src MODE=mpi install
+      - name: Regression tests (np=2)
+        run: |
+          set -e
+          export OMP_NUM_THREADS=1
+          for c in wave frost pump conduit salt; do
+            echo "===== test/$c (np=2) ====="
+            (cd "test/$c" && ./Run_MPI.sh 2)
+          done

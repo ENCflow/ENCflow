@@ -1,5 +1,7 @@
 # ENCflow
 
+[![CI](https://github.com/ENCflow/ENCflow/actions/workflows/ci.yml/badge.svg)](https://github.com/ENCflow/ENCflow/actions/workflows/ci.yml)
+
 **地表の水に関わる現象を、ひとつの格子の上でシームレスに解く**
 — 洪水・高潮・津波の遡上から、降雨流出・地下水・土砂・水質・積雪融雪・
 氷河・地形変化まで、単一の Fortran プログラムで。
@@ -224,5 +226,6 @@ OS は Linux / macOS / WSL を想定しています。詳細は
 - 防衛大学校 建設環境工学科 水工学研究室
 - 東北大学 工学部 水環境システム学研究室
 
-バグ報告・機能提案は [Issues](https://github.com/ENCflow/ENCflow/issues) へ。
+バグ報告・機能提案は [Issues](https://github.com/ENCflow/ENCflow/issues) へ
+(書き方とコード PR の現行方針は [CONTRIBUTING](CONTRIBUTING.md) を参照)。
 研究利用の引用方法は [CITATION.cff](CITATION.cff) を参照してください。
