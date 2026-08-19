@@ -72,6 +72,14 @@ Three tips for writing instructions:
 
 ### Example instructions
 
+The examples below are for **instructing the agent directly**, without
+`/make-case`. Whereas `/make-case` performs the whole standard
+sequence (feature selection, case building, execution, verification,
+figures) from a single line describing the phenomenon, a direct
+instruction spells out **what to do, how, and how far** in your own
+words — which in return gives you fine control over the procedure and
+the design of comparisons.
+
 > Build a minimal case in work/ where a 100 mm/h rainstorm falls for
 > 30 minutes on a bowl-shaped terrain and the depression ponds up.
 > You may generate the terrain with Python. Run it, confirm the S
