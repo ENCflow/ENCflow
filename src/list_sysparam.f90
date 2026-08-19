@@ -87,6 +87,8 @@ module list_sysparam
 
     ! ファイル名として"-"を指定するとシステムパラメータファイルと同一ファイル
     ! ファイル名として空白""を指定すると読み込まれない
+    ! 設定ファイルを追加したら m_main の init_resultdir(結果ディレクトリへの
+    ! 保存)にも追加すること
     character(len=maxpathlen) :: fn_geoinfo = "-"        ! 地形条件設定ファイル(必須)
     character(len=maxpathlen) :: fn_initial = ""         ! 初期条件設定ファイル
     character(len=maxpathlen) :: fn_precip = ""          ! 降水条件設定ファイル

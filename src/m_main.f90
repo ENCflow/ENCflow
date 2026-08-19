@@ -387,14 +387,29 @@ end subroutine
 !----------------------------------------------------------------------
 subroutine init_resultdir(p)
   type(t_sysparam), intent(in) :: p
+  ! 設定ファイル一式を結果ディレクトリへ保存する(計算の再現記録)。
+  ! t_sysparam に設定ファイルを追加したらここにも追加すること。
+  ! "-"(fn_sysparam と同一)は読込前に正規化済みのため全て実在ファイル。
   call sysdep_mkdir(p%dir_result)                       ! 結果を保存するディレクトリを作成
   call sysdep_copy_to_dir(p%fn_sysparam, p%dir_result)  ! パラメータファイルを保存
   call sysdep_copy_to_dir(p%fn_geoinfo, p%dir_result)
   call sysdep_copy_to_dir(p%fn_initial, p%dir_result)
   call sysdep_copy_to_dir(p%fn_precip, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_reservoir, p%dir_result)
   call sysdep_copy_to_dir(p%fn_tide, p%dir_result)
   call sysdep_copy_to_dir(p%fn_boundary, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_structure, p%dir_result)
   call sysdep_copy_to_dir(p%fn_record, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_geomorph, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_gwflow, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_intercept, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_evap, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_meteo, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_wq, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_snow, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_glacier, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_salt, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_channel, p%dir_result)
   call sysdep_copy_to_dir(p%fn_enc, p%dir_result)
 end subroutine
 
