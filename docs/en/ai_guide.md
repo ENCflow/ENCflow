@@ -147,7 +147,11 @@ automatically), but for user work in particular:
 If the agent's changes leave the repository in a strange state, it is
 **faster and safer to start over** than to hunt for the cause: copy
 your own products (the contents of work/, etc.) somewhere else, delete
-the repository folder entirely, and clone it again. Think of a cloned
+the repository folder entirely, and start again from a fresh clone.
+```bash
+git clone https://github.com/ENCflow/ENCflow.git
+```
+Think of a cloned
 repository as a disposable box you can recreate any number of times —
 as long as your own cases are backed up, nothing is lost.
 
