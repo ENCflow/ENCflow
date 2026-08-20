@@ -182,13 +182,17 @@ surges, plumes, atmospheric ash transport) are out of scope by design
 statistical fields representing sediment-hazard intensity (see also
 the table in [Input and output](io.md)): `f_out_fs` (safety factor Fs
 distribution and its period minimum Fs9999 = slope failure hazard
-map), `f_out_dmax` (maximum flow depth h+hs, D9999 = debris flow
-inundation depth), `f_out_fmax` (maximum fluid force (h+hs)·V²,
-F9999 = a standard indicator for building damage), and `f_out_hs`
-(sediment column frames). The saturation ratio - a precursor
-indicator for shallow slope failure - can be derived in
-post-processing as hg/(sy0·sd) from the Hg (`f_out_hg`) and Sd
-outputs.
+map; **requires f_slide = 1 or 2**), `f_out_dmax` (maximum flow depth
+h+hs, D9999 = debris flow inundation depth), `f_out_fmax` (maximum
+fluid force (h+hs)·V², F9999 = a standard indicator for building
+damage), and `f_out_hs` (sediment column frames). If the hazard map
+is all you need, the recommended pair is **f_slide = 2 (judge only)
+with f_out_fs = 1** - with f_slide = 1 the failures alter the terrain
+and groundwater, so the subsequent Fs field reflects the disturbed
+state (Fs9999 still keeps the pre-failure hazard). The saturation
+ratio - a precursor indicator for shallow slope failure - can be
+derived in post-processing as hg/(sy0·sd) from the Hg (`f_out_hg`)
+and Sd outputs.
 
 ## Long-term landform evolution (f_wthr / f_uplift)
 
