@@ -144,8 +144,8 @@ detention basins, polder drainage, rainfall-induced slope failure,
 glacial lake outburst floods, and more), see the
 **[use-case gallery](docs/en/users_guide/usecases.md)**. And
 [with an AI agent](docs/en/ai_guide.md) you can **start from a model
-case described in the words of the phenomenon**, without looking up
-the feature combination yourself.
+case described in the words of the phenomenon**, without looking
+anything up yourself.
 
 ## What it deliberately does not do
 
