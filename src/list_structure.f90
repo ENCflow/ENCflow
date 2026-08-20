@@ -9,8 +9,10 @@ module list_structure
   !                          ゲート拡張で表す。2026-08-07)
   !   &list_struct_diversion : 分水(取水堰の rating による受動的な
   !                          一方向取水。流域外分水が主用途。2026-08-08)
-  !   &list_struct_dam     : ダム(捕捉帯吸収+hrs バケツ貯留+運転
-  !                          ルール放流。2026-08-08)
+  !   &list_struct_dam     : ダム・湖沼(捕捉帯吸収+hrs バケツ貯留+運転
+  !                          ルール放流。2026-08-08。湖沼への一般化=
+  !                          fn_dam_map / dam_hmin / dam_hsur / 水位固定
+  !                          湖沼は 2026-08-20。lake_plan.md)
   ! グループ不在は正常(その型なし。present_* が偽のまま)。
   ! 構文エラー(iostat>0)は par_stop。
   use m_sysparam, only : t_sysparam
@@ -87,10 +89,17 @@ module list_structure
     real :: dam_zbase(1:nstmax) = -9999.0          ! モード3(c): √則の敷高 (m。省略時=最低水位)
     real :: dam_tadashigaki(1:nstmax) = -9999.0    ! 但し書き開始水位 (m。モード1,2。
                                                    !   省略時=最低+0.9×(サーチャージ−最低))
-    real :: dam_h_init(1:nstmax) = -9999.0         ! 初期水位 (m。省略時=最低水位=空虚)
-    real :: dam_area(1:nstmax) = -9999.0           ! 湛水面積 (m2。蒸発散用オプション。
-                                                   !   指定時は貯水面からの蒸発をこの面積で
-                                                   !   評価し、捕捉帯セルの個別蒸発は止める。§27)
+    real :: dam_h_init(1:nstmax) = -9999.0         ! 初期水位 (m。省略時=最低水位=空虚。
+                                                   !   水位固定湖沼では固定水位=必須)
+    real :: dam_hmin(1:nstmax) = -9999.0           ! 自動線形 HV の下限水位 (標高 m。dam_hv の
+                                                   !   代替。湖面積=捕捉セル数×セル面積)
+    real :: dam_hsur(1:nstmax) = -9999.0           ! 自動線形 HV のサーチャージ水位 (標高 m。
+                                                   !   省略時=上限なし(スピルなし)。モード1,2
+                                                   !   と √則(dam_qmax)では必須)
+    character(len=maxpathlen) :: fn_dam_map = ""   ! 湖沼番号ラスタ(全湖沼共通1枚。0以下=
+                                                   !   湖沼なし、値 n = 構造物番号 n の湖面=
+                                                   !   捕捉集合。セルリスト指定との併用は
+                                                   !   番号ごとに択一)
     character(len=maxpathlen) :: fn_dam_in_cell(1:nstmax) = ""    ! 捕捉帯セル一覧ファイル名
     character(len=maxpathlen) :: fn_dam_out_cell(1:nstmax) = ""   ! 放流セル一覧ファイル名
   end type
@@ -295,7 +304,8 @@ subroutine read_dam(un, list)
   real :: dam_ori_zbase(1:nstmax), dam_ori_ce(1:nstmax)
   real :: dam_qmax(1:nstmax), dam_zbase(1:nstmax)
   real :: dam_tadashigaki(1:nstmax), dam_h_init(1:nstmax)
-  real :: dam_area(1:nstmax)
+  real :: dam_hmin(1:nstmax), dam_hsur(1:nstmax)
+  character(len=maxpathlen) :: fn_dam_map
   character(len=maxpathlen) :: fn_dam_in_cell(1:nstmax)
   character(len=maxpathlen) :: fn_dam_out_cell(1:nstmax)
   integer :: ios
@@ -304,7 +314,8 @@ subroutine read_dam(un, list)
                              dam_q0, dam_rate, dam_hq_rule, &
                              dam_ori_width, dam_ori_height, dam_ori_zbase, dam_ori_ce, &
                              dam_qmax, dam_zbase, dam_tadashigaki, dam_h_init, &
-                             dam_area, fn_dam_in_cell, fn_dam_out_cell
+                             dam_hmin, dam_hsur, fn_dam_map, &
+                             fn_dam_in_cell, fn_dam_out_cell
 
   dam_in_cell = -9999
   dam_out_cell = -9999
@@ -321,7 +332,9 @@ subroutine read_dam(un, list)
   dam_zbase = list%dam_zbase
   dam_tadashigaki = list%dam_tadashigaki
   dam_h_init = list%dam_h_init
-  dam_area = list%dam_area
+  dam_hmin = list%dam_hmin
+  dam_hsur = list%dam_hsur
+  fn_dam_map = list%fn_dam_map
   fn_dam_in_cell = list%fn_dam_in_cell
   fn_dam_out_cell = list%fn_dam_out_cell
 
@@ -346,7 +359,9 @@ subroutine read_dam(un, list)
   list%dam_zbase = dam_zbase
   list%dam_tadashigaki = dam_tadashigaki
   list%dam_h_init = dam_h_init
-  list%dam_area = dam_area
+  list%dam_hmin = dam_hmin
+  list%dam_hsur = dam_hsur
+  list%fn_dam_map = fn_dam_map
   list%fn_dam_in_cell = fn_dam_in_cell
   list%fn_dam_out_cell = fn_dam_out_cell
 

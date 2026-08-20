@@ -12,27 +12,25 @@ module m_evap
   !           推奨する(疎な系列も線形補間・端値保持で機能する)
   !   減算:   樹冠保水(貯留型遮断の draw 口)→ 地表水 h → ため池 hrs →
   !           地下水 hg の順に「あるだけ引く」(供給制限のみ。乾燥抑制なし)。
-  !           ダムは dam_area(湛水面積)指定時、貯水量から E×面積 を
-  !           比例配分で引き、捕捉帯セルの個別蒸発は止める(二重計上防止)。
-  !           未指定ダムの捕捉帯はため池と同様セル面積分。
+  !           ダム・湖沼の捕捉帯(hrs)もため池と同様セル面積分ずつ引く
+  !           (湛水面積=捕捉セル数×セル面積。湖面をラスタで塗れば実面積。
+  !           旧 dam_area の一括評価は 2026-08-20 廃止。§27)。
   !   時刻:   暦は &list_sysparam の date0_c(t=0 の暦)を原点とする
   !           純関数。履歴状態なし = save/restore 対象外(復元後は現在時刻の
   !           暦日で再評価される)。診断 CSV(evap.csv)の累積量のみ
   !           ラン先頭からの積算(restore でリセット。§27)
   !   MPI:    PET は (t, z) の純関数で全ランク同値。分布気温は帯 scatter。
-  !           ダムの貯水量集計は par_sum_rows(決定的)、代表セル値の共有は
-  !           単一寄与の allreduce(総和順によらず厳密)
+  !           累積診断は行部分和+par_sum_rows(決定的)
   ! ========================================================================
   use iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
-  use m_boundary, only : t_boundary, e_struct_dam
+  use m_boundary, only : t_boundary
   use m_intercept, only : t_intercept
-  use m_meteo, only : t_meteo, meteo_temp_set, meteo_temp_cell, meteo_temp_global, &
-                      meteo_temp_mean
+  use m_meteo, only : t_meteo, meteo_temp_set, meteo_temp_cell, meteo_temp_mean
   use list_evap, only : t_list_evap, list_evap_read
-  use m_parallel, only : dcp, is_root, par_info, par_stop, par_sum_rows, par_allreduce_sumr
+  use m_parallel, only : dcp, is_root, par_info, par_stop, par_sum_rows
   use m_util, only : itoa, jdn_to_ymd, ymd_to_jdn
   implicit none
   private
@@ -45,18 +43,6 @@ module m_evap
   real, parameter :: pi = acos(-1.0)
   real, parameter :: secday = 86400.0            ! 1日の秒数
   real, parameter :: mmday2ms = 1.0e-3 / 86400.0 ! mm/day -> m/s
-
-  ! ダム湛水面積蒸発の管理(§27)
-  type t_evdam
-    integer :: ist = 0       ! b%struct のインデックス
-    real :: area = 0.0       ! 湛水面積 (m2)
-    integer :: ci = 0, cj = 0  ! 代表セル(捕捉帯先頭)の全域座標
-    real :: zrep = 0.0       ! 代表セル(捕捉帯先頭)の標高(減率評価用)
-    real :: trep = 0.0       ! 代表セルの気温(update_pet が更新)
-    real :: petd = 0.0       ! 現在日の PET (m/s)
-    integer :: nc = 0        ! 自帯内の捕捉帯セル数
-    integer, allocatable :: cells(:,:)   ! 自帯内の捕捉帯セル (1:2, 1:nc)
-  end type
 
   type t_evap
     ! init に早期 return 経路があるため全成分デフォルト初期化必須(§13)
@@ -74,12 +60,8 @@ module m_evap
     integer :: curday = -2147483647  ! 現在の暦日番号(t=0 の日 = 0)
     real, allocatable :: pet(:,:)  ! 現在日の PET (m/s)(帯。kc 適用済み)
     real :: petref = 0.0           ! 基準値 PET (mm/day。CSV 診断用。分布時は領域平均気温で評価)
-    integer :: ndam = 0
-    type(t_evdam), allocatable :: dam(:)
-    logical, allocatable :: skip(:,:)      ! 個別蒸発を止めるセル(dam_area 指定ダムの捕捉帯)
     real(real64), allocatable :: vrow(:,:) ! 累積蒸発体積の行部分和 (js:je, 1:4) (m3)
                                            !   1=樹冠, 2=地表水 h, 3=hrs, 4=地下水 hg
-    real(real64) :: vdam = 0.0             ! ダム湛水面積蒸発の累積 (m3。全ランク同値)
     integer :: un = 0                      ! CSV 装置番号(rank0。open(newunit=) は負値。§22)
   end type
 
@@ -100,6 +82,7 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
   type(t_meteo), intent(in) :: mt
   type(t_list_evap) :: list
   integer :: m
+  if (allocated(b%struct) .or. allocated(s%h)) continue  ! 引数未使用の警告を抑制
 
   if (len_trim(p%fn_evap) == 0) return
 
@@ -169,92 +152,20 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
     end if
   end if
 
-  ! --- ダム湛水面積蒸発の登録と捕捉帯マスク(§27) ---
-  call setup_dams(ev, g, b, s)
-
   ! --- 作業配列と診断 ---
   allocate(ev%pet(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(ev%vrow(dcp%js:dcp%je, 1:4), source = 0.0_real64)
-  ev%vdam = 0.0_real64
 
   ! --- 診断 CSV(rank0。累積はラン先頭からの積算 = restore でリセット) ---
   if (is_root) then
     open(newunit=ev%un, file=trim(p%dir_result)//"/evap.csv", status='replace')
     write(ev%un, '(a)') "time_s,pet_ref_mmday,ev_canopy_m3,ev_surface_m3," &
-                        //"ev_pond_m3,ev_gw_m3,ev_dam_m3,ev_total_m3"
+                        //"ev_pond_m3,ev_gw_m3,ev_total_m3"
   end if
 
   ev%enabled = .true.
   ev%initialized = .true.
   call par_info("evapotranspiration enabled (f_evmodel="//itoa(ev%model)//")")
-end subroutine
-
-
-!----------------------------------------------------------------------
-! ダム湛水面積蒸発の登録(dam_area = geom(9) > 0 のダム)。
-!   捕捉帯の自帯内セル一覧・スキップマスク・代表セル標高(単一寄与の
-!   allreduce = 総和順によらず厳密)を構築する
-!----------------------------------------------------------------------
-subroutine setup_dams(ev, g, b, s)
-  type(t_evap), intent(inout) :: ev
-  type(t_geoinfo), intent(in) :: g
-  type(t_boundary), intent(in) :: b
-  type(t_state), intent(in) :: s
-  integer :: ist, n, k, i, j, nd
-
-  nd = 0
-  if (allocated(b%struct)) then
-    do ist = 1, size(b%struct)
-      if (b%struct(ist)%kind /= e_struct_dam) cycle
-      if (b%struct(ist)%geom(9) <= 0.0) cycle
-      nd = nd + 1
-    end do
-  end if
-  ev%ndam = nd
-  if (nd == 0) return
-
-  allocate(ev%dam(1:nd))
-  allocate(ev%skip(1:g%nx, dcp%jsh:dcp%jeh), source = .false.)
-  nd = 0
-  do ist = 1, size(b%struct)
-    if (b%struct(ist)%kind /= e_struct_dam) cycle
-    if (b%struct(ist)%geom(9) <= 0.0) cycle
-    nd = nd + 1
-    ev%dam(nd)%ist = ist
-    ev%dam(nd)%area = b%struct(ist)%geom(9)
-    ! 自帯内の捕捉帯セル一覧とスキップマスク
-    n = 0
-    do k = 1, b%struct(ist)%ncin
-      j = b%struct(ist)%cin(2,k)
-      if (j >= dcp%js .and. j <= dcp%je) n = n + 1
-    end do
-    ev%dam(nd)%nc = n
-    allocate(ev%dam(nd)%cells(1:2, 1:max(n,1)), source = 0)
-    n = 0
-    do k = 1, b%struct(ist)%ncin
-      i = b%struct(ist)%cin(1,k)
-      j = b%struct(ist)%cin(2,k)
-      if (j < dcp%js .or. j > dcp%je) cycle
-      n = n + 1
-      ev%dam(nd)%cells(1,n) = i
-      ev%dam(nd)%cells(2,n) = j
-      ev%skip(i,j) = .true.
-    end do
-    ! 代表セル(捕捉帯先頭)の全域座標と標高(標高は所有ランクだけが
-    ! 寄与する allreduce = 単一寄与の総和で順序によらず厳密)
-    ev%dam(nd)%ci = b%struct(ist)%cin(1,1)
-    ev%dam(nd)%cj = b%struct(ist)%cin(2,1)
-    block
-      real :: w1(1)
-      w1(1) = 0.0
-      j = b%struct(ist)%cin(2,1)
-      if (j >= dcp%js .and. j <= dcp%je) then
-        w1(1) = s%z(b%struct(ist)%cin(1,1), j)
-      end if
-      call par_allreduce_sumr(w1)
-      ev%dam(nd)%zrep = w1(1)
-    end block
-  end do
 end subroutine
 
 
@@ -294,9 +205,6 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
-      if (ev%ndam > 0) then
-        if (ev%skip(i,j)) cycle    ! dam_area 指定ダムの捕捉帯(湛水面で一括評価)
-      end if
       dem = ev%pet(i,j) * p%dt
       if (dem <= 0.0) cycle
       ! (1) 樹冠保水(貯留型遮断モデルのみ。draw が状態を減じる)
@@ -316,7 +224,7 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
         ev%vrow(j,2) = ev%vrow(j,2) + real(w, real64) * real(s%af(i,j), real64) * acell
         if (dem <= 0.0) cycle
       end if
-      ! (3) ため池・非 dam_area ダム捕捉帯の貯留 hrs
+      ! (3) ため池・ダム/湖沼捕捉帯の貯留 hrs
       if (s%hrs(i,j) > 0.0) then
         w = min(s%hrs(i,j), dem)
         s%hrs(i,j) = s%hrs(i,j) - w
@@ -334,48 +242,6 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
   end do
   !$omp end parallel do
 
-  ! ダム湛水面積蒸発: 貯水量(捕捉帯 hrs の総和)から E×面積 を比例配分で
-  ! 引く(dam_operate の引き落としと同じ決定的方式。§22/§27)
-  if (ev%ndam > 0) call dam_evap(ev, p, g, s)
-
-end subroutine
-
-
-!----------------------------------------------------------------------
-! ダム湛水面積蒸発(collective: 全ダムを全ランクが同順で処理すること)
-!----------------------------------------------------------------------
-subroutine dam_evap(ev, p, g, s)
-  type(t_evap), intent(inout) :: ev
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(inout) :: s
-  integer :: nd, k, i, j
-  real(real64) :: rows(dcp%js:dcp%je), vtot, vdem, fac
-  real(real64) :: acell
-
-  acell = real(g%dx, real64) * real(g%dy, real64)
-  do nd = 1, ev%ndam
-    ! 現在貯水量(m3。決定的総和)
-    rows(:) = 0.0_real64
-    do k = 1, ev%dam(nd)%nc
-      i = ev%dam(nd)%cells(1,k)
-      j = ev%dam(nd)%cells(2,k)
-      rows(j) = rows(j) + real(s%hrs(i,j), real64) * real(g%gv(i,j), real64) * acell
-    end do
-    call par_sum_rows(rows, vtot)
-    if (vtot <= 0.0_real64) cycle
-    vdem = real(ev%dam(nd)%petd, real64) * real(p%dt, real64) &
-           * real(ev%dam(nd)%area, real64)
-    vdem = min(vdem, vtot)
-    if (vdem <= 0.0_real64) cycle
-    fac = (vtot - vdem) / vtot        ! 全ランク同値(vtot・vdem とも同値)
-    do k = 1, ev%dam(nd)%nc
-      i = ev%dam(nd)%cells(1,k)
-      j = ev%dam(nd)%cells(2,k)
-      s%hrs(i,j) = s%hrs(i,j) * real(fac)
-    end do
-    ev%vdam = ev%vdam + vdem
-  end do
 end subroutine
 
 
@@ -389,7 +255,7 @@ subroutine update_pet(ev, p, g, s, day, mt)
   type(t_state), intent(in) :: s
   type(t_meteo), intent(inout) :: mt   ! 分布気温の読み進みを含むため inout
   integer, intent(in) :: day
-  integer :: i, j, y, mo, d, doy, nd
+  integer :: i, j, y, mo, d, doy
   real :: tday, pref
 
   pref = 0.0
@@ -424,19 +290,7 @@ subroutine update_pet(ev, p, g, s, day, mt)
       !$omp end parallel do
       ! 診断の基準値: 一様系は基準気温、分布は使用セル平均気温で評価(collective)
       pref = pet_mmday(ev, meteo_temp_mean(mt, g), doy)
-      ! ダムの PET(代表セルの気温。_global は collective = ダム順で全ランク同一に呼ぶ)
-      do nd = 1, ev%ndam
-        ev%dam(nd)%trep = meteo_temp_global(mt, ev%dam(nd)%ci, ev%dam(nd)%cj, ev%dam(nd)%zrep)
-        ev%dam(nd)%petd = pet_mmday(ev, ev%dam(nd)%trep, doy) * ev%kc * mmday2ms
-      end do
   end select
-
-  ! モード1,2のダム PET(気温式でない場合は一様値)
-  if (ev%model <= 2) then
-    do nd = 1, ev%ndam
-      ev%dam(nd)%petd = pref * ev%kc * mmday2ms
-    end do
-  end if
 
   ev%petref = pref * ev%kc
 end subroutine
@@ -499,10 +353,10 @@ subroutine m_evap_record(ev, p, s)
   do k = 1, 4
     call par_sum_rows(ev%vrow(:,k), v(k))
   end do
-  vtotal = v(1) + v(2) + v(3) + v(4) + ev%vdam
+  vtotal = v(1) + v(2) + v(3) + v(4)
   if (is_root .and. ev%un /= 0) then
-    write(ev%un, '(f0.2,",",f0.4,6(",",es15.7))') &
-          s%t, ev%petref, v(1), v(2), v(3), v(4), ev%vdam, vtotal
+    write(ev%un, '(f0.2,",",f0.4,5(",",es15.7))') &
+          s%t, ev%petref, v(1), v(2), v(3), v(4), vtotal
     flush(ev%un)
   end if
 end subroutine
@@ -519,8 +373,6 @@ subroutine m_evap_dispose(ev, p)
   if (is_root .and. ev%un /= 0) close(ev%un)
   ev%un = 0
   if (allocated(ev%pet)) deallocate(ev%pet)
-  if (allocated(ev%dam)) deallocate(ev%dam)
-  if (allocated(ev%skip)) deallocate(ev%skip)
   if (allocated(ev%vrow)) deallocate(ev%vrow)
   ev%enabled = .false.
   ev%initialized = .false.

@@ -42,7 +42,7 @@ module m_boundary
   public :: m_boundary_makebdc
   public :: m_boundary_dam_seed
   public :: m_boundary_dam_record
-  public :: dam_operate, e_struct_dam
+  public :: dam_operate, dam_sink, e_struct_dam
   public :: e_bc_wall, e_bc_outflow, e_bc_radiation, e_bc_inflow
   public :: e_side_w, e_side_e, e_side_n, e_side_s
   ! 共有補助手続き(submodule m_boundary_structure も使う)。private のままだと
@@ -227,6 +227,14 @@ module m_boundary
       real(real64), intent(in) :: vabs_row(dcp%js:)
       real(real64), intent(in) :: vrow(dcp%js:)
       real, intent(out) :: vdraw
+    end subroutine
+    ! 水位固定湖沼(放流セルなし。dmode=0)の毎ステップ処理: 呼び出し側が
+    ! 消去した到達水の行部分和を決定的総和し、診断量のみ更新する
+    module subroutine dam_sink(b, ist, p, vabs_row)
+      type(t_boundary), intent(inout) :: b
+      integer, intent(in) :: ist
+      type(t_sysparam), intent(in) :: p
+      real(real64), intent(in) :: vabs_row(dcp%js:)
     end subroutine
     ! ダム CSV(t, H, V, Qin, Qout, Qspill)の1行出力(記録間隔で呼ぶ)
     module subroutine m_boundary_dam_record(b, p, s)

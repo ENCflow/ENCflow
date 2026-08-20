@@ -1,5 +1,5 @@
 !======================================================================
-! English mirror of examples/List_samples/list_structure.txt (based on commit c664f1c).
+! English mirror of examples/List_samples/list_structure.txt (based on commit cb96faa).
 ! The Japanese file is the master copy; edit it first.
 !======================================================================
 !
@@ -9,6 +9,8 @@
 !                            represented with the gate extension)
 !   &list_struct_diversion : diversions (out-of-catchment diversion /
 !                            intake weirs)
+!   &list_struct_dam       : dams and lakes (capture set absorption +
+!                            bucket storage + release by an operating rule)
 !
 !   Use this file by specifying, in the system parameters &list_sysparam,
 !     fn_structure = "list_structure.txt"
@@ -25,6 +27,10 @@
 !   Cell coordinates (i, j) are 1-based (the westernmost column and the
 !   northernmost row are 1). GIS software such as QGIS counts rasters
 !   from 0, so add +1 to both the row and column numbers picked in GIS.
+!
+!   Structure numbers n are consecutive from 1 per type (a gap stops
+!   with an error). Up to 50 structures per type, 999 cells per
+!   structure, and 999 polyline points.
 !
 !   Note: drainage pumps were moved from &list_bound_pump of fn_boundary
 !   to &list_struct_pump of this file (2026-08-07; parameter names
@@ -193,22 +199,47 @@
 !/
 
 !======================================================================
-! Dams (group absent = no dams)
-!   The capture band (a cell set crossing just upstream of the dam body;
-!   specify it with generous margin in wetted width so that it catches
-!   all water from upstream) absorbs and stores all arriving water every
-!   step (the storage state is shared with s%hrs = save/restore is
-!   complete with the existing mechanism), and releases to the release
-!   cell set (the channel just downstream of the dam body) according to
-!   the operating rule. The impounded surface (the surface of the dam
-!   lake) is not solved (a bucket model).
-!   The HV curve dam_hv is a polyline of (water level m, storage m3)
-!   (at least 2 points = the lowest level and the surcharge; more points
-!   allowed, linear interpolation).
+! Dams and lakes (group absent = none)
+!   The cells of the water surface (capture set) absorb and store all
+!   arriving water every step (the storage state is shared with s%hrs =
+!   save/restore is complete with the existing mechanism), and release
+!   to the release cell set according to the operating rule. The
+!   impounded surface (flow and backwater on the lake) is not solved
+!   (a bucket model). Not only dam reservoirs but general lakes
+!   (natural lakes, lagoons, regulating ponds, and lake groups sharing
+!   one level) are handled by the same mechanism.
+!   The surface is specified in one of three ways (per number n):
+!     dam_in_cell (namelist) / fn_dam_in_cell (file)
+!       : the capture band of a dam (a line crossing just upstream of
+!         the dam body; specify with generous margin in wetted width so
+!         that it catches all water from upstream)
+!     fn_dam_map (lake-number raster; one file shared by all lakes)
+!       : a surface resolved by the raster. <= 0 = none (negative
+!         nodata ignored), value n = the surface of structure n.
+!         The same number on detached bodies = a level-sharing group
+!   Note (diagonal leakage): specify the capture set 4-neighbor
+!   connected (diagonal-only corners can be slipped through by diagonal
+!   links; the program does not check = user's responsibility)
+!   HV (level-storage; levels are absolute elevations):
+!     dam_hv               : the HV polyline from references (at least
+!                            2 points = lowest level and surcharge;
+!                            more allowed, linear interpolation). For dams
+!     dam_hmin (+dam_hsur) : auto-built linear HV V(H)=A x (H-hmin),
+!                            A = number of capture cells x cell area.
+!                            No bathymetry needed = for lakes. hmin only
+!                            places the drawdown floor; any value below
+!                            the normal level gives identical results
+!                            (about normal level - 5 m is fine).
+!                            dam_hsur omitted = no upper bound (no
+!                            spill; mandatory for modes 1,2 and the
+!                            sqrt law)
+!     neither              : accepted only for pass-through
+!                            (f_dam_mode=2, dam_rate=1.0)
 !   Operation mode f_dam_mode:
 !     1: constant release dam_q0 (m3/s)
 !     2: constant-rate cut dam_rate (release ratio 0-1; releases the
-!        inflow of that step x r)
+!        inflow of that step x r. rate=1.0 is pass-through = storage
+!        untouched, inflow released as is)
 !     3: natural regulation (a level-release rating). Specify one of the
 !        following (in order of precedence):
 !        (a) dam_hq_rule (polyline of water level m, release m3/s)
@@ -219,28 +250,40 @@
 !            -> automatically builds the square root law
 !            Q(H)=Qmax*sqrt((H-invert)/(Hsur-invert))
 !            (if the invert elevation dam_zbase is omitted = the lowest
-!            level)
+!            level. Needs a surcharge level)
+!     none (and no release cells): a level-held lake (all inflow
+!        vanishes; the level stays at dam_h_init = not lowered even by
+!        evaporation. A "large water surface not solved")
 !   Emergency release (modes 1,2): from dam_tadashigaki (start level m;
 !   if omitted = lowest + 0.9 x (surcharge - lowest)) up to the
 !   surcharge, the release is ramped up toward the inflow. The excess
 !   above the surcharge is forced spill (automatic).
-!   Initial level dam_h_init (if omitted = the lowest level = empty. For
-!   multipurpose dams specify the restricted level explicitly). Drawdown
-!   floor = the storage at the lowest level (dead storage).
-!   Impounded area dam_area (m2. An option when evapotranspiration
-!   &list_evap is active. Sec. 27. If given, open-water evaporation is
-!   evaluated as E x this area and the individual evaporation of the
-!   capture band cells is stopped. If omitted, the areas of the capture
-!   band cells are used = same as ponds).
+!   Initial level dam_h_init (if omitted = the lowest level = empty.
+!   For multipurpose dams the restricted level, for storage lakes the
+!   normal level, explicitly). Drawdown floor = the storage at the
+!   lowest level (dead storage). Keeping the normal level is the job of
+!   the rating (the level of Q=0 = the outlet sill).
+!   Evaporation (with &list_evap active): from the capture set storage
+!   cell by cell by the cell area (same as ponds). Painting the surface
+!   on the raster makes the impounded area = cells x cell area.
+!   (The former dam_area was removed on 2026-08-20 = specifying it
+!   stops with a read error.)
 !   At every record time, (t, H, V, Qin, Qout, Qspill) is written to
 !   result/dams/dam0001.csv (Qin is the direct accumulation of the
-!   capture band absorption = exact).
-!   Constraints: neither capture band nor release cells can be combined
-!   with ponds (rscap>0) or channel-width cells. Absorption of direct
-!   rainfall and injection on the capture band lags by one step
+!   capture set absorption = exact; for a level-held lake the vanished
+!   volume).
+!   Constraints: neither surface nor release cells can be combined
+!   with ponds (rscap>0) or channel-width cells. A multi-cell release
+!   is divided equally by the number of cells. Absorption of direct
+!   rainfall and injection on the capture set lags by one step.
+!   Represent large lakes (Lake Biwa class) as storage lakes (mode 3),
+!   not pass-through (the storage attenuation A dH/dt = Qin - Q(H) is
+!   the leading control of the flood response)
 !======================================================================
 !&list_struct_dam
-!  ! Dam 1: a flood control dam with a constant 70% cut (release ratio 0.3)
+!  fn_dam_map = "lake_map.txt"           ! lake-number raster (used by lakes 2, 4)
+!  ! Dam 1: a flood control dam with a constant 70% cut (release ratio
+!  ! 0.3; the HV curve from references)
 !  dam_in_cell(:,1,1) = 120, 44          ! capture band (a column crossing the
 !                                        !   dam lake)
 !  dam_in_cell(:,2,1) = 120, 45
@@ -251,4 +294,24 @@
 !  dam_hv(:,2,1) = 355.0, 1.5e7          ! surcharge level and total storage
 !  f_dam_mode(1) = 2
 !  dam_rate(1) = 0.3
+!  dam_h_init(1) = 340.0                 ! initial level (default = lowest = empty)
+!  ! Lake 2: a storage lake on the raster surface. Natural regulation
+!  ! (H-Q rating) + auto linear HV
+!  dam_hmin(2) = 81.0                    ! lower-bound level (insensitive if below
+!                                        !   the normal level)
+!  f_dam_mode(2) = 3
+!  dam_hq_rule(:,1,2) = 84.0, 0.0        ! level of Q=0 = outlet sill ~ normal level
+!  dam_hq_rule(:,2,2) = 86.0, 400.0      ! (level m, release m3/s)
+!  dam_h_init(2) = 84.2                  ! initial level = the normal level
+!  dam_out_cell(:,1,2) = 210, 95         ! the most upstream cell of the outlet river
+!  ! Lake 3: pass-through (a connecting water surface with negligible
+!  ! retention. No HV needed)
+!  dam_in_cell(:,1,3) = 60, 22
+!  dam_in_cell(:,2,3) = 60, 23
+!  f_dam_mode(3) = 2
+!  dam_rate(3) = 1.0
+!  dam_out_cell(:,1,3) = 63, 22
+!  ! Lake 4: a level-held lake (a large surface not solved; inflow
+!  ! vanishes, level fixed)
+!  dam_h_init(4) = 12.0                  ! the fixed level (surface = raster number 4)
 !/

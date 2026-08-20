@@ -20,9 +20,16 @@ submodule (m_boundary) m_boundary_structure
                          par_allreduce_sumr, par_allreduce_maxi, par_sum_rows
   use m_util, only : itoa
   use m_sysdep_util, only : sysdep_mkdir
+  use m_fileio, only : fileio_read_matrix
   use list_structure, only : t_list_structure, list_structure_read, &
                              nstmax, nstccmax
   implicit none
+
+  ! サーチャージ水位なしの湖沼(自動線形 HV で dam_hsur 省略、または
+  ! 素通し)の Vmax・V_tad 番兵。ramp = (V-0.9vbig)/(0.1vbig) は常に負
+  ! → 但し書き不発動、スピル判定 V-vbig も常に負 → 不発動(ゼロ除算や
+  ! NaN を作らない有限値であることが要件。lake_plan.md §3.3)
+  real, parameter :: vbig = 1.0e30
 
 contains
 
@@ -77,10 +84,18 @@ function count_dam(list) result(ndam)
 
   ndam = 0
   if (.not. list%present_dam) return
+  ! 湖面をラスタ(fn_dam_map)だけで与える湖沼も、運転・水位の
+  ! パラメータのいずれかは必ず namelist に持つ(水位固定湖沼でも
+  ! dam_h_init が必須)ため、ここの検出で数え漏れは生じない
   do id = 1, nstmax
     active(id) = (list%dam_in_cell(1,1,id) > -9999) &
                  .or. (list%dam_hv(1,1,id) > -9998.0) &
-                 .or. (len_trim(list%fn_dam_in_cell(id)) > 0)
+                 .or. (len_trim(list%fn_dam_in_cell(id)) > 0) &
+                 .or. (list%f_dam_mode(id) > 0) &
+                 .or. (list%dam_hmin(id) > -9998.0) &
+                 .or. (list%dam_h_init(id) > -9998.0) &
+                 .or. (list%dam_out_cell(1,1,id) > -9999) &
+                 .or. (len_trim(list%fn_dam_out_cell(id)) > 0)
   end do
   ndam = count(active)
   if (ndam <= 0) return
@@ -886,23 +901,41 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! ダムの解釈・検証・格納(族の第四号。§22。2026-08-08)
-!   捕捉帯(堤体直上流を横断するセル群)が到達水を毎ステップ全量吸収して
-!   s%hrs に貯留し(=バケツ。湛水面は解かない)、運転ルールで放流セル群
-!   へ放流する。状態は s%hrs のみ(save/restore は既存機構で閉じる)。
+! ダム・湖沼の解釈・検証・格納(族の第四号。§22。2026-08-08。
+! 湖沼への一般化は 2026-08-20 = lake_plan.md 第1弾)
+!   捕捉集合(ダム: 堤体直上流を横断するセル群。湖沼: 湖面全体)が
+!   到達水を毎ステップ全量吸収して s%hrs に貯留し(=バケツ。湛水面は
+!   解かない)、運転ルールで放流セル群へ放流する。状態は s%hrs のみ
+!   (save/restore は既存機構で閉じる)。
+!   捕捉集合の指定(番号ごとに択一):
+!     fn_dam_in_cell > dam_in_cell > fn_dam_map(湖沼番号ラスタ)の番号
+!   HV(番号ごとに択一):
+!     dam_hv 折れ線 / dam_hmin[+dam_hsur] の自動線形 HV
+!     (V(H) = A×(H−hmin)、A = 捕捉セル数×セル面積)/
+!     なし(素通し f_dam_mode=2, dam_rate=1.0 のみ受理)
 !   運転ルール(f_dam_mode):
 !     1: 一定量放流 dam_q0(+但し書き)
 !     2: 一定率カット dam_rate(吸収スプリッタ: その歩の吸収×r を放流。
 !        遅れゼロ・履歴状態ゼロ)(+但し書き)
 !     3: 自然調節 = 水位—放流の rating。指定は3段階(優先順):
 !        (a) dam_hq_rule 折れ線 / (b) オリフィス諸元 →係数前計算 /
-!        (c) dam_qmax(計画最大放流量)1点アンカーの √則
+!        (c) dam_qmax(計画最大放流量)1点アンカーの √則(要サーチャージ)
+!   放流セルなし(dam_out_cell / fn_dam_out_cell とも未指定)は
+!   水位固定湖沼: 流入は全量消失、水位は dam_h_init(必須)で一定。
+!   HV・運転モードの指定は矛盾としてエラー。dmode=0 で標識
+!   (dam_apply が dam_sink へ分岐。dam_operate には到達しない)。
 !   但し書き(モード1,2): V が開始水位相当を超えたら放流を流入へ漸増
 !   (r_eff→1 ランプ)。サーチャージ超過分は強制スピル(自動)。
-!   geom の割当: (1)=Vmin, (2)=Vmax, (3)=V_tadashigaki, (4)=q0,
-!   (5)=rate, (6)=√則係数, (7)=√則敷高, (8)=V_init
-!   制約: 捕捉帯・放流セルとも ため池(rscap>0)・河道幅指定(wrw>0)
-!   セルは不許可(hrs・体積換算の機構が競合するため)
+!   モード1,2はサーチャージ水位必須(dam_hv または dam_hsur。
+!   例外: 素通し rate=1.0 は貯留が動かないため不要)。
+!   geom の割当: (1)=Vmin, (2)=Vmax(サーチャージなしは vbig),
+!   (3)=V_tadashigaki(同 0.9*vbig), (4)=q0, (5)=rate, (6)=√則係数,
+!   (7)=√則敷高, (8)=V_init, (9)=自動線形 HV の湖面積 A (m2。折れ線
+!   HV では 0), (10)=自動線形 HV の下限水位 hmin / 水位固定湖沼の固定水位
+!   制約: 捕捉集合・放流セルとも ため池(rscap>0)・河道幅指定(wrw>0)
+!   セルは不許可(hrs・体積換算の機構が競合するため)。
+!   捕捉集合は4近傍連結で指定すること(斜め接続の角は対角リンクの
+!   すり抜けを生む。検査はしない=利用者の責任。lake_plan.md §3.2)
 !----------------------------------------------------------------------
 subroutine init_dam(b, p, g, list, ofs, ndam)
   type(t_boundary), intent(inout) :: b
@@ -912,11 +945,38 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
   integer, intent(in) :: ofs            ! 通し番号のオフセット
   integer, intent(in) :: ndam           ! count_dam の結果
   real :: hmin, hsur, htad, hini, ce, zb, bw, d
-  integer :: id, ist, n, k, i, j, un
+  logical :: have_sur, have_base
+  ! 全域スケールの作業配列はヒープに置く(§40)
+  integer, allocatable :: lmap(:,:)     ! 湖沼番号ラスタ(指定時のみ確保)
+  integer :: id, ist, n, k, i, j, un, nmap
   character(len=80) :: fn
   character(len=4) :: cun
 
-  if (ndam <= 0) return
+  if (ndam <= 0) then
+    if (len_trim(list%fn_dam_map) > 0) then
+      call par_stop("list_struct_dam: fn_dam_map is given but no dam/lake is configured " &
+                    //"in the namelist")
+    end if
+    return
+  end if
+
+  !--- 湖沼番号ラスタ(全湖沼共通1枚。ゾーン2の全域冗長読み込み)。
+  !    0以下 = 湖沼なし(GIS の nodata 負値を許容)、1..ndam = その番号の
+  !    湖面、ndam 超えは設定漏れとして停止 ---
+  if (len_trim(list%fn_dam_map) > 0) then
+    call par_info(" reading "//trim(p%dir_data)//"/"//trim(list%fn_dam_map))
+    allocate(lmap(1:g%nx,1:g%ny))
+    call fileio_read_matrix(trim(p%dir_data)//"/"//trim(list%fn_dam_map), &
+                            g%nx, g%ny, lmap, p%f_input_mode)
+    do j = 1, g%ny
+      do i = 1, g%nx
+        if (lmap(i,j) > ndam) then
+          call par_stop("list_struct_dam: fn_dam_map contains number "//itoa(lmap(i,j)) &
+                        //" but only "//itoa(ndam)//" dams/lakes are configured")
+        end if
+      end do
+    end do
+  end if
 
   do id = 1, ndam
     ist = ofs + id
@@ -939,6 +999,29 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
       b%struct(ist)%cin(1:2,1:n) = list%dam_in_cell(1:2,1:n,id)
       b%struct(ist)%ncin = n
     end if
+    !--- 湖沼番号ラスタの番号 id のセル(セルリスト指定とは番号ごとに択一。
+    !    走査順 = 北の行から i 昇順で決定的) ---
+    if (allocated(lmap)) then
+      nmap = count(lmap == id)
+      if (nmap > 0) then
+        if (b%struct(ist)%ncin > 0) then
+          call par_stop("list_struct_dam: capture cells of dam/lake "//itoa(id) &
+                        //" are given both in fn_dam_map and in the namelist - use one")
+        end if
+        deallocate(b%struct(ist)%cin)
+        allocate(b%struct(ist)%cin(1:2,1:nmap))
+        n = 0
+        do j = 1, g%ny
+          do i = 1, g%nx
+            if (lmap(i,j) /= id) cycle
+            n = n + 1
+            b%struct(ist)%cin(1,n) = i
+            b%struct(ist)%cin(2,n) = j
+          end do
+        end do
+        b%struct(ist)%ncin = nmap
+      end if
+    end if
     if (len_trim(list%fn_dam_out_cell(id)) > 0) then
       call read_cell_file2(trim(p%dir_data)//"/"//trim(list%fn_dam_out_cell(id)), &
                            b%struct(ist)%ncout, b%struct(ist)%cout)
@@ -953,40 +1036,132 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
       b%struct(ist)%ncout = n
     end if
     if (b%struct(ist)%ncin <= 0) then
-      call par_stop("list_struct_dam: dam "//itoa(id)//" has no reservoir cells (capture band)")
-    end if
-    if (b%struct(ist)%ncout <= 0) then
-      call par_stop("list_struct_dam: dam "//itoa(id)//" has no release cells")
+      call par_stop("list_struct_dam: dam/lake "//itoa(id)//" has no capture cells (give " &
+                    //"dam_in_cell, fn_dam_in_cell, or paint its number in fn_dam_map)")
     end if
 
-    !--- HV 曲線(必須。水位・貯水量とも単調増加) ---
+    !--- 位置の検証(全域マスク。ゾーン2で全ランク冗長) ---
+    do k = 1, b%struct(ist)%ncin + b%struct(ist)%ncout
+      if (k <= b%struct(ist)%ncin) then
+        i = b%struct(ist)%cin(1,k)
+        j = b%struct(ist)%cin(2,k)
+      else
+        i = b%struct(ist)%cout(1,k-b%struct(ist)%ncin)
+        j = b%struct(ist)%cout(2,k-b%struct(ist)%ncin)
+      end if
+      if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
+        call par_stop("list_struct_dam: dam "//itoa(id)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain")
+      end if
+      if (g%x(i,j) <= 0) then
+        call par_stop("list_struct_dam: dam "//itoa(id)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is outside the domain mask (x=0)")
+      end if
+      if (g%sw(i,j) /= 0) then
+        call par_stop("list_struct_dam: dam "//itoa(id)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is a sea cell")
+      end if
+    end do
+
+    !--- 放流セルなし = 水位固定湖沼(流入は全量消失、水位は dam_h_init で
+    !    一定。HV・運転モードの指定は矛盾として停止。lake_plan.md §3.4) ---
+    if (b%struct(ist)%ncout <= 0) then
+      if (list%f_dam_mode(id) /= 0 .or. list%dam_hv(1,1,id) > -9998.0 &
+          .or. list%dam_hmin(id) > -9998.0) then
+        call par_stop("list_struct_dam: lake "//itoa(id)//" has no release cells (= a " &
+                      //"level-held lake) - do not specify f_dam_mode / dam_hv / dam_hmin, " &
+                      //"or add release cells")
+      end if
+      if (list%dam_h_init(id) <= -9998.0) then
+        call par_stop("list_struct_dam: level-held lake "//itoa(id)//" (no release cells) " &
+                      //"requires dam_h_init (the fixed water level)")
+      end if
+      b%struct(ist)%dmode = 0
+      b%struct(ist)%geom(10) = list%dam_h_init(id)
+      cycle
+    end if
+
+    !--- HV: dam_hv 折れ線 / dam_hmin[+dam_hsur] の自動線形 / なし(素通し
+    !    のみ受理 = 後段で検証)。水位はいずれも絶対標高(lake_plan.md §3.3) ---
     n = 0
     do k = 1, size(list%dam_hv, 2)
       if (list%dam_hv(1,k,id) <= -9998.0) exit         ! 番兵で終端
       n = n + 1
     end do
-    if (n < 2) then
+    if (n >= 1 .and. list%dam_hmin(id) > -9998.0) then
+      call par_stop("list_struct_dam: dam/lake "//itoa(id)//" has both dam_hv and " &
+                    //"dam_hmin - give either the HV curve or the linear-HV anchor")
+    end if
+    if (n >= 2) then
+      ! (a) HV 折れ線(水位・貯水量とも単調増加)
+      allocate(b%struct(ist)%hv(1:2,1:n))
+      b%struct(ist)%hv(1:2,1:n) = list%dam_hv(1:2,1:n,id)
+      b%struct(ist)%nhv = n
+      do k = 2, n
+        if (b%struct(ist)%hv(1,k) <= b%struct(ist)%hv(1,k-1) &
+            .or. b%struct(ist)%hv(2,k) <= b%struct(ist)%hv(2,k-1)) then
+          call par_stop("list_struct_dam: HV curve of dam "//itoa(id)//" must be monotonically" &
+                        //" increasing in both water level and storage")
+        end if
+      end do
+      if (b%struct(ist)%hv(2,1) < 0.0) then
+        call par_stop("list_struct_dam: storage at the minimum level of dam "//itoa(id) &
+                      //" must be >= 0")
+      end if
+      hmin = b%struct(ist)%hv(1,1)
+      hsur = b%struct(ist)%hv(1,n)
+      have_sur = .true.
+      b%struct(ist)%geom(1) = b%struct(ist)%hv(2,1)    ! Vmin
+      b%struct(ist)%geom(2) = b%struct(ist)%hv(2,n)    ! Vmax
+    else if (n == 1) then
       call par_stop("list_struct_dam: HV curve (dam_hv) of dam "//itoa(id)//" needs at least" &
                     //" 2 points (minimum level and surcharge)")
-    end if
-    allocate(b%struct(ist)%hv(1:2,1:n))
-    b%struct(ist)%hv(1:2,1:n) = list%dam_hv(1:2,1:n,id)
-    b%struct(ist)%nhv = n
-    do k = 2, n
-      if (b%struct(ist)%hv(1,k) <= b%struct(ist)%hv(1,k-1) &
-          .or. b%struct(ist)%hv(2,k) <= b%struct(ist)%hv(2,k-1)) then
-        call par_stop("list_struct_dam: HV curve of dam "//itoa(id)//" must be monotonically" &
-                      //" increasing in both water level and storage")
+    else if (list%dam_hmin(id) > -9998.0) then
+      ! (b) 自動線形 HV: V(H) = A×(H−hmin)、A = 捕捉セル数×セル面積。
+      !     水位変化は A と H にのみ依存し hmin の値には無感度(定数シフト
+      !     =死水床の位置を決めるだけ)なので、水深不明の湖沼は平常水位より
+      !     確実に低い値を与えれば十分(lake_plan.md §3.3)
+      hmin = list%dam_hmin(id)
+      b%struct(ist)%nhv = 0
+      b%struct(ist)%geom(9) = real(b%struct(ist)%ncin) * g%dx * g%dy   ! A (m2)
+      b%struct(ist)%geom(10) = hmin
+      b%struct(ist)%geom(1) = 0.0                      ! Vmin(hmin で 0)
+      if (list%dam_hsur(id) > -9998.0) then
+        hsur = list%dam_hsur(id)
+        if (hsur <= hmin) then
+          call par_stop("list_struct_dam: dam_hsur of dam/lake "//itoa(id) &
+                        //" must be above dam_hmin")
+        end if
+        have_sur = .true.
+        b%struct(ist)%geom(2) = b%struct(ist)%geom(9) * (hsur - hmin)  ! Vmax
+      else
+        hsur = 0.0                                     ! 不使用(have_sur が守る)
+        have_sur = .false.
+        b%struct(ist)%geom(2) = vbig                   ! 上限なし=スピルなし
       end if
-    end do
-    if (b%struct(ist)%hv(2,1) < 0.0) then
-      call par_stop("list_struct_dam: storage at the minimum level of dam "//itoa(id) &
-                    //" must be >= 0")
+    else
+      ! (c) HV なし: 素通し(f_dam_mode=2, dam_rate=1.0)のみ受理(後段で
+      !     検証)。貯留は動かないので水位・体積の基準を持たない
+      if (list%dam_hsur(id) > -9998.0) then
+        call par_stop("list_struct_dam: dam_hsur of dam/lake "//itoa(id) &
+                      //" requires dam_hmin (the linear-HV anchor)")
+      end if
+      hmin = 0.0                                       ! 不使用
+      hsur = 0.0                                       ! 不使用(have_sur が守る)
+      have_sur = .false.
+      b%struct(ist)%nhv = 0
+      b%struct(ist)%geom(1) = 0.0
+      b%struct(ist)%geom(2) = vbig
     end if
-    hmin = b%struct(ist)%hv(1,1)
-    hsur = b%struct(ist)%hv(1,n)
-    b%struct(ist)%geom(1) = b%struct(ist)%hv(2,1)    ! Vmin
-    b%struct(ist)%geom(2) = b%struct(ist)%hv(2,n)    ! Vmax
+    have_base = (b%struct(ist)%nhv >= 2) .or. (b%struct(ist)%geom(9) > 0.0)
+    if (.not. have_base) then
+      ! HV なしは素通し(貯留を動かさない)のみ受理
+      if (.not. (list%f_dam_mode(id) == 2 .and. list%dam_rate(id) == 1.0)) then
+        call par_stop("list_struct_dam: dam/lake "//itoa(id)//" needs dam_hv or dam_hmin " &
+                      //"(only a pass-through lake, f_dam_mode=2 with dam_rate=1.0, " &
+                      //"works without)")
+      end if
+    end if
 
     !--- 運転モード ---
     b%struct(ist)%dmode = list%f_dam_mode(id)
@@ -1040,6 +1215,10 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
           b%struct(ist)%geom(7) = zb
         else if (list%dam_qmax(id) > 0.0) then
           ! (c) 計画最大放流量アンカーの √則: Q(H) = Qmax·√((H−zb)/(Hsur−zb))
+          if (.not. have_sur) then
+            call par_stop("list_struct_dam: the sqrt law (dam_qmax) of dam "//itoa(id) &
+                          //" requires a surcharge level (dam_hv or dam_hsur)")
+          end if
           zb = merge(hmin, list%dam_zbase(id), list%dam_zbase(id) < -9998.0)
           if (zb >= hsur) then
             call par_stop("list_struct_dam: sqrt-law base elevation (dam_zbase) of dam " &
@@ -1057,68 +1236,63 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
                       //itoa(list%f_dam_mode(id)))
     end select
 
+    ! モード1,2の但し書き・スピルはサーチャージ水位を要する(例外:
+    ! 素通し rate=1.0 は貯留が動かないため不要。lake_plan.md §3.3)
+    if (.not. have_sur) then
+      if (b%struct(ist)%dmode == 1 .or. &
+          (b%struct(ist)%dmode == 2 .and. b%struct(ist)%geom(5) < 1.0)) then
+        call par_stop("list_struct_dam: dam/lake "//itoa(id)//" (f_dam_mode=1, or 2 with " &
+                      //"dam_rate<1) requires a surcharge level (dam_hv or dam_hsur)")
+      end if
+    end if
+
     ! 折れ線未確保の種別も law 実引数の形を保つ(ダムは law 不使用だが統一)
     if (.not. allocated(b%struct(ist)%rule)) then
       allocate(b%struct(ist)%rule(1:2,1:1), source = 0.0)
       b%struct(ist)%nrule = merge(b%struct(ist)%nrule, 1, b%struct(ist)%nrule > 0)
     end if
 
-    !--- 但し書き開始水位(モード1,2。省略時=最低+0.9×(サーチャージ−最低)) ---
-    if (list%dam_tadashigaki(id) > -9998.0) then
-      htad = list%dam_tadashigaki(id)
+    !--- 但し書き開始水位(モード1,2。省略時=最低+0.9×(サーチャージ−最低)。
+    !    サーチャージなしの湖沼は番兵(発動しない)---
+    if (have_sur) then
+      if (list%dam_tadashigaki(id) > -9998.0) then
+        htad = list%dam_tadashigaki(id)
+      else
+        htad = hmin + 0.9 * (hsur - hmin)
+      end if
+      if (htad <= hmin .or. htad >= hsur) then
+        call par_stop("list_struct_dam: emergency-release start level (dam_tadashigaki) of dam " &
+                      //itoa(id)//" must be strictly between the minimum and surcharge levels")
+      end if
+      b%struct(ist)%geom(3) = struct_v_of_h(b%struct(ist), htad)
     else
-      htad = hmin + 0.9 * (hsur - hmin)
+      if (list%dam_tadashigaki(id) > -9998.0) then
+        call par_stop("list_struct_dam: dam_tadashigaki of dam/lake "//itoa(id) &
+                      //" requires a surcharge level (dam_hv or dam_hsur)")
+      end if
+      b%struct(ist)%geom(3) = 0.9 * vbig
     end if
-    if (htad <= hmin .or. htad >= hsur) then
-      call par_stop("list_struct_dam: emergency-release start level (dam_tadashigaki) of dam " &
-                    //itoa(id)//" must be strictly between the minimum and surcharge levels")
-    end if
-    b%struct(ist)%geom(3) = dam_v_of_h(b%struct(ist)%hv, b%struct(ist)%nhv, htad)
 
     !--- 初期水位(省略時=最低水位=空虚) ---
     if (list%dam_h_init(id) > -9998.0) then
+      if (.not. have_base) then
+        call par_stop("list_struct_dam: dam_h_init of pass-through lake "//itoa(id) &
+                      //" requires dam_hv or dam_hmin (a pass-through lake holds no storage)")
+      end if
       hini = list%dam_h_init(id)
     else
       hini = hmin
     end if
-    if (hini < hmin .or. hini > hsur) then
-      call par_stop("list_struct_dam: initial water level (dam_h_init) of dam "//itoa(id) &
-                    //" must be between the minimum and surcharge levels")
+    if (have_base) then
+      if (hini < hmin .or. (have_sur .and. hini > hsur)) then
+        call par_stop("list_struct_dam: initial water level (dam_h_init) of dam "//itoa(id) &
+                      //" must be between the minimum and surcharge levels")
+      end if
     end if
-    b%struct(ist)%geom(8) = dam_v_of_h(b%struct(ist)%hv, b%struct(ist)%nhv, hini)
-
-    !--- 湛水面積(蒸発散用オプション。§27。未指定は 0 = 捕捉帯セル面積で評価) ---
-    if (list%dam_area(id) > -9998.0) then
-      if (list%dam_area(id) <= 0.0) then
-        call par_stop("list_struct_dam: dam_area of dam "//itoa(id)//" must be > 0")
-      end if
-      b%struct(ist)%geom(9) = list%dam_area(id)
-    end if
-
-    !--- 位置の検証(全域マスク。ゾーン2で全ランク冗長) ---
-    do k = 1, b%struct(ist)%ncin + b%struct(ist)%ncout
-      if (k <= b%struct(ist)%ncin) then
-        i = b%struct(ist)%cin(1,k)
-        j = b%struct(ist)%cin(2,k)
-      else
-        i = b%struct(ist)%cout(1,k-b%struct(ist)%ncin)
-        j = b%struct(ist)%cout(2,k-b%struct(ist)%ncin)
-      end if
-      if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
-        call par_stop("list_struct_dam: dam "//itoa(id)//" cell (" &
-                      //itoa(i)//","//itoa(j)//") is outside the domain")
-      end if
-      if (g%x(i,j) <= 0) then
-        call par_stop("list_struct_dam: dam "//itoa(id)//" cell (" &
-                      //itoa(i)//","//itoa(j)//") is outside the domain mask (x=0)")
-      end if
-      if (g%sw(i,j) /= 0) then
-        call par_stop("list_struct_dam: dam "//itoa(id)//" cell (" &
-                      //itoa(i)//","//itoa(j)//") is a sea cell")
-      end if
-    end do
+    b%struct(ist)%geom(8) = struct_v_of_h(b%struct(ist), hini)
 
   end do
+  if (allocated(lmap)) deallocate(lmap)
 
   ! ため池(rscap>0)・河道幅(wrw>0)セルの不許可(hrs・体積換算の機構が
   ! 競合するため)。帯配布データの判定は所有ランク+allreduce → collective 停止
@@ -1207,6 +1381,41 @@ end function
 
 
 !----------------------------------------------------------------------
+! 構造物単位の HV 変換(折れ線 HV / 自動線形 HV / 基準なしを分岐)。
+!   線形: V = A×(H−hmin)(hmin 未満は 0 = 死水床)、H = hmin + V/A。
+!   A = geom(9)、hmin = geom(10)。基準なし(素通し)は 0 を返す
+!   (素通しは貯留が動かないため診断値のみ。水位固定湖沼は dam_sink が
+!   扱い、ここへは到達しない)
+!----------------------------------------------------------------------
+function struct_v_of_h(st, h) result(v)
+  type(t_structure), intent(in) :: st
+  real, intent(in) :: h
+  real :: v
+  if (st%nhv >= 2) then
+    v = dam_v_of_h(st%hv, st%nhv, h)
+  else if (st%geom(9) > 0.0) then
+    v = st%geom(9) * max(h - st%geom(10), 0.0)
+  else
+    v = 0.0
+  end if
+end function
+
+
+function struct_h_of_v(st, v) result(h)
+  type(t_structure), intent(in) :: st
+  real, intent(in) :: v
+  real :: h
+  if (st%nhv >= 2) then
+    h = dam_h_of_v(st%hv, st%nhv, v)
+  else if (st%geom(9) > 0.0) then
+    h = st%geom(10) + max(v, 0.0) / st%geom(9)
+  else
+    h = 0.0
+  end if
+end function
+
+
+!----------------------------------------------------------------------
 ! ダムの初期貯留を s%hrs に投入する(フレッシュラン時のみ。
 ! restore 時は復元された hrs をそのまま使う=状態は hrs で完結)。
 ! 初期貯水量 V_init を捕捉帯セルへ体積等分し、水深換算(/gv)で置く
@@ -1222,6 +1431,13 @@ module subroutine m_boundary_dam_seed(b, p, g, s)
 
   do ist = 1, b%nstruct
     if (b%struct(ist)%kind /= e_struct_dam) cycle
+
+    !--- 水位固定湖沼: 貯留なし(hrs は常に 0)。診断は固定水位のみ ---
+    if (b%struct(ist)%dmode == 0) then
+      b%struct(ist)%dv = 0.0
+      b%struct(ist)%dh = b%struct(ist)%geom(10)
+      cycle             ! dmode は namelist 由来で全ランク同一 = collective 安全
+    end if
 
     !--- 初期貯留の投入(フレッシュランのみ。restore は復元 hrs を使う) ---
     if (p%f_state_restore <= 0 .and. b%struct(ist)%geom(8) > 0.0) then
@@ -1245,7 +1461,7 @@ module subroutine m_boundary_dam_seed(b, p, g, s)
     end do
     call par_sum_rows(vrow, v8)
     b%struct(ist)%dv = real(v8)
-    b%struct(ist)%dh = dam_h_of_v(b%struct(ist)%hv, b%struct(ist)%nhv, b%struct(ist)%dv)
+    b%struct(ist)%dh = struct_h_of_v(b%struct(ist), b%struct(ist)%dv)
   end do
 
 end subroutine
@@ -1296,7 +1512,7 @@ module subroutine dam_operate(b, ist, p, g, s, vabs_row, vrow, vdraw)
       reff = b%struct(ist)%geom(5) + (1.0 - b%struct(ist)%geom(5)) * ramp
       vt = reff * a
     case default  ! 3: 自然調節 = rating(H(V))
-      hh = dam_h_of_v(b%struct(ist)%hv, b%struct(ist)%nhv, vnow)
+      hh = struct_h_of_v(b%struct(ist), vnow)
       if (b%struct(ist)%nrule >= 2) then
         vt = interp_series(b%struct(ist)%rule, b%struct(ist)%nrule, hh) * p%dt
       else
@@ -1325,10 +1541,33 @@ module subroutine dam_operate(b, ist, p, g, s, vabs_row, vrow, vdraw)
 
   ! 診断量(CSV 用。全ランク同値)
   b%struct(ist)%dv = vnow - vdraw
-  b%struct(ist)%dh = dam_h_of_v(b%struct(ist)%hv, b%struct(ist)%nhv, b%struct(ist)%dv)
+  b%struct(ist)%dh = struct_h_of_v(b%struct(ist), b%struct(ist)%dv)
   b%struct(ist)%dqin = a / p%dt
   b%struct(ist)%dqout = vrel / p%dt
   b%struct(ist)%dqsp = vspill / p%dt
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 水位固定湖沼の毎ステップ処理(boundary_h のダム節から呼ばれる。
+! lake_plan.md §3.4)。呼び出し側が捕捉集合の到達水を消去済み
+! (vabs_row = 消失体積の行部分和)。ここでは決定的総和で診断量だけを
+! 更新する(貯留なし・放流なし。水位は固定値 geom(10))
+!----------------------------------------------------------------------
+module subroutine dam_sink(b, ist, p, vabs_row)
+  type(t_boundary), intent(inout) :: b
+  integer, intent(in) :: ist
+  type(t_sysparam), intent(in) :: p
+  real(r64), intent(in) :: vabs_row(dcp%js:)
+  real(r64) :: a8
+
+  call par_sum_rows(vabs_row, a8)
+  b%struct(ist)%dv = 0.0
+  b%struct(ist)%dh = b%struct(ist)%geom(10)
+  b%struct(ist)%dqin = real(a8) / p%dt
+  b%struct(ist)%dqout = 0.0
+  b%struct(ist)%dqsp = 0.0
 
 end subroutine
 
