@@ -236,6 +236,17 @@ are out of scope by design and belong to specialized models
   no third-party code** (zero dependencies also means a clean,
   unambiguous copyright provenance). Licensed under Apache-2.0,
   **commercial use included**.
+- **Sustainability as a project** — everything from the reasoning
+  behind each design decision ([docs/developer.md](docs/developer.md),
+  in Japanese) to the overall map
+  ([docs/architecture.md](docs/architecture.md)) is documented, and
+  the correctness of changes is verified mechanically by the
+  regression tests (bit reproducibility) and CI. Because the
+  development knowledge lives in the repository itself, combined with
+  the fully open source code (Apache-2.0), **development can be
+  continued by third parties** even if the current developers do not
+  — and AI agents make that easier still (this project itself is the
+  demonstration).
 
 ## Requirements
 
