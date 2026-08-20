@@ -53,7 +53,8 @@ bil output, and the CRS is embedded in GeoTIFF output
 > **GeoTIFF output is uncompressed** (4 bytes per cell; unlike
 > reading, compressed writing is not supported). If you output many
 > time steps for an animation and the data volume matters, compress
-> in post-processing:
+> in post-processing (requires [GDAL](https://gdal.org/) — bundled
+> with QGIS, or installable via apt / conda):
 >
 > ```bash
 > for f in result/*.tif; do
@@ -61,8 +62,11 @@ bil output, and the CRS is embedded in GeoTIFF output
 > done
 > ```
 >
-> Even floating-point fields typically shrink to 1/2–1/4 (GIS opens
-> them as usual).
+> Even floating-point fields typically shrink to 1/2–1/4. The
+> compressed GeoTIFFs open in GIS as usual, and are **also directly
+> usable as ENCflow input (f_input_mode=4) and by utils/out2vtk**
+> (reading Deflate with predictor 3 is supported, and agreement with
+> real GDAL outputs is checked in the regression tests — test/gtif).
 
 ## Output file scheme
 
