@@ -103,6 +103,13 @@ module m_geomorph
     real :: wkr = 0.0                ! 雨滴侵食係数(無次元)
     real :: wkf = 0.0                ! 面状侵食係数 (m/s)
     real :: wtausc = 0.05            ! 面状侵食の限界無次元掃流力 τ*c
+    integer :: f_splash = 0          ! 乾式斜面侵食(0:無効, 1:有効。§48)
+    real :: skr = 0.0                ! 雨滴侵食係数(無次元)
+    real :: sca = 0.0                ! 雨滴項の凹地形増幅長 (m)
+    real :: skt = 0.0                ! サブグリッドリル侵食係数(無次元)
+    real :: scb = 0.0                ! リル項の凹地形増幅長 (m)
+    real :: shexp = 1.0              ! リル項の勾配べき指数
+    real :: sdzmax = 0.0             ! 1セル・1更新の侵食上限 (m)(0=無効)
     integer :: f_debris = 0          ! 土石流 E-D(0:無効, 1:有効。f_suspend と排他)
     real :: db_tanphi = 0.0          ! tan(内部摩擦角)
     real :: db_delte = 0.0           ! 侵食速度係数 δe
@@ -179,9 +186,19 @@ module m_geomorph
     integer :: nslide = 0            ! この run で流動化したセル数(dispose で報告)
     real :: fsmin = huge(1.0)        ! この run の Fs 最小値(ランク局所の診断)
   end type
+  type t_splash
+    real, allocatable :: fx(:,:)     ! 評価済みの侵食深(河床 Δz の絶対値, m)
+                                     !   (1:nx, js:je)。2パス構造用: eval_splash が
+                                     !   時刻 n の z(近傍参照)から計算し、
+                                     !   apply_splash が局所適用する(debris の
+                                     !   fx と同じ理由 = 近傍読みと更新の分離)
+    integer :: nclip = 0             ! spl_dzmax クリップの発生セル数(累計)
+    real :: vout = 0.0               ! 系外排出した固体土砂体積 (m3)(ランク局所累計)
+  end type
   type(t_creep) :: crp
   type(t_fluvial) :: flv
   type(t_debris) :: dbr
+  type(t_splash) :: spl
   type(t_gmwork) :: wrk
 
   ! プロセス実装(init/calc)は submodule に分割(m_geomorph_creep /
@@ -238,6 +255,23 @@ module m_geomorph
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
       real, intent(in) :: dtw
+    end subroutine
+    module subroutine init_splash(gm, g, list)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine eval_splash(gm, p, g, s, dts)
+      type(t_geomorph), intent(in) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+      real, intent(in) :: dts
+    end subroutine
+    module subroutine apply_splash(gm, g, s)
+      type(t_geomorph), intent(in) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
     end subroutine
     module subroutine init_debris(gm, p, g, list)
       type(t_geomorph), intent(inout) :: gm
@@ -323,6 +357,7 @@ subroutine m_geomorph_init(gm, p, g, s)
   gm%f_fluvial = list%f_fluvial
   gm%f_suspend = list%f_suspend
   gm%f_wash = list%f_wash
+  gm%f_splash = list%f_splash
   gm%f_debris = list%f_debris
 
   ! 土石流 E-D と浮遊砂 E-D は同一の s%hs 上で動くため排他
@@ -344,9 +379,10 @@ subroutine m_geomorph_init(gm, p, g, s)
     call par_stop("list_geomorph: fn_dbinit requires f_debris=1")
   end if
 
-  ! --- 土砂プロセス(掃流・浮遊・斜面・土石流)の共有設定 ---
+  ! --- 土砂プロセス(掃流・浮遊・斜面・乾式・土石流)の共有設定 ---
   ! (f_wash は f_suspend 必須なので条件には現れない — init_wash が検証)
-  if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0) then
+  if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 &
+      .or. gm%f_splash > 0) then
     ! 河床の物性(共有)
     if (list%fluv_porosity < 0.0 .or. list%fluv_porosity >= 1.0) then
       call par_stop("list_geomorph: fluv_porosity must be in [0,1)")
@@ -391,6 +427,7 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_fluvial > 0) call init_fluvial(gm, p, g, list)
   if (gm%f_suspend > 0) call init_suspend(gm, p, list)
   if (gm%f_wash > 0) call init_wash(gm, list)
+  if (gm%f_splash > 0) call init_splash(gm, g, list)
   if (gm%f_debris > 0) call init_debris(gm, p, g, list)
   ! 瞬時流動化(f_release)は f_debris の付属機構(fn_dbinit の有無で有効化。
   ! 検証・読み込みは init_debris 内)
@@ -521,7 +558,12 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
   ! 他プロセスが帯内の z を先に動かすとハロ行(時刻 n のまま)との
   ! 不整合でランク数依存になる。先頭なら全セル・ハロとも時刻 n の z で
   ! 一貫する(ハロはステップ頭の swflow 交換で最新)
+  ! 乾式斜面侵食(f_splash)も勾配・曲率で近傍の s%z を読むため、
+  ! 評価は debris の適用より前(=全プロセスが時刻 n の z を見る)、
+  ! 適用(局所)は debris の後に置く(§48)
+  if (gm%f_splash > 0) call eval_splash(gm, p, g, s, dts)
   if (gm%f_debris > 0) call calc_debris(gm, p, g, s, p%dt * gm%idt_geomorph)
+  if (gm%f_splash > 0) call apply_splash(gm, g, s)
   if (gm%f_fluvial > 0) call calc_fluvial(gm, p, g, s, dts)
   if (gm%f_suspend > 0) call calc_suspend(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_wash > 0) call calc_wash(gm, p, g, s, p%dt * gm%idt_geomorph)
@@ -549,7 +591,8 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
   ! 自プロセスの次回の近傍参照(±1)と、流れの重力項・gwflow 側方の
   ! 近傍参照が、この1回の交換で賄われる(developer.md §11)
   call par_halo_cell(s%z)
-  if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 .or. gm%f_wthr > 0) then
+  if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 .or. gm%f_wthr > 0 &
+      .or. gm%f_splash > 0) then
     call par_halo_cell(s%sd)
   end if
   ! s%hs のハロは swflow_enc のステップ頭交換が担う(移流の直前に最新化)
@@ -674,10 +717,22 @@ subroutine m_geomorph_dispose(gm)
     call par_warn("geomorph: slide min Fs = " // rtoa(dbr%fsmin) &
                   // ", fluidized cells = " // itoa(dbr%nslide))
   end if
+  if (gm%f_splash > 0) then
+    ! ランク局所の診断(系外排出の台帳。開いた系の収支確認用)
+    call par_warn("geomorph: splash exported sediment volume = " &
+                  // rtoa(spl%vout) // " m3 (solid)")
+    if (spl%nclip > 0) then
+      call par_warn("geomorph: splash spl_dzmax clip fired on " &
+                    // itoa(spl%nclip) // " cells (review dt_geomorph/morfac)")
+    end if
+  end if
   if (allocated(wrk%q)) deallocate(wrk%q)
   if (allocated(dbr%fx)) deallocate(dbr%fx)
   if (allocated(dbr%rel)) deallocate(dbr%rel)
   if (allocated(dbr%sld)) deallocate(dbr%sld)
+  if (allocated(spl%fx)) deallocate(spl%fx)
+  spl%nclip = 0
+  spl%vout = 0.0
   dbr%nrelclip = 0
   dbr%nslide = 0
   dbr%fsmin = huge(1.0)

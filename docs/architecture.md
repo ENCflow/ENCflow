@@ -17,7 +17,7 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理)
   │    m_gwflow      地下水の切替器(鉛直は排他: bucket / greenampt。
   │                  加算: lateral / layer2 / conduit(管路連続体層)/
   │                  pump(井戸揚水シンク)/ frost(凍土の浸透抑制))
-  │    m_geomorph    土砂・地形変化(加算: creep / fluvial / suspend / wash / debris。
+  │    m_geomorph    土砂・地形変化(加算: creep / fluvial / suspend / wash / splash / debris。
   │                  debris は土石流・地滑り・火山流動の抵抗則/E-D 切替を含む)
   │    m_glacier     氷河(加算: 質量収支(常時)/ flow / slide / ero / ava)
   │    m_intercept   降雨遮断(排他: fixed / initloss)

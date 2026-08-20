@@ -45,6 +45,20 @@ module list_geomorph
     real :: wash_kf = 0.0            ! 面状侵食係数 (m/s)(E_f = kf・(τ*/τ*c - 1))
     real :: wash_tausc = 0.05        ! 面状侵食の限界無次元掃流力 τ*c
 
+    integer :: f_splash = 0          ! 乾式斜面侵食(無流水: 雨滴・サブグリッドリル)
+                                     ! (0:無効, 1:有効)。乾燥セル(h <= dd)対象で
+                                     ! f_wash(湿潤セル)と相補。剥離土砂は系外排出
+                                     ! (開いた系。バッドランド・海食崖向け。§48)
+    real :: spl_kr = 0.0             ! 雨滴(スプラッシュ)侵食係数(無次元。
+                                     ! E1 = kr・(1 + ca・κ)・P。P: 地表到達降雨強度)
+    real :: spl_ca = 0.0             ! 雨滴項の凹地形増幅長 (m)(κ = max(∇²z, 0))
+    real :: spl_kt = 0.0             ! サブグリッドリル侵食係数(無次元。
+                                     ! E2 = kt・(1 + cb・κ)・S^h・P)
+    real :: spl_cb = 0.0             ! リル項の凹地形増幅長 (m)
+    real :: spl_h = 1.0              ! リル項の勾配べき指数 h
+    real :: spl_dzmax = 0.0          ! 1セル・1更新の侵食上限 (m)(0=無効。
+                                     ! 正のフィードバック暴走の安全弁)
+
     integer :: f_debris = 0          ! 土石流 E-D(高橋型平衡濃度)(0:無効, 1:有効)。
                                      ! f_suspend と排他(同一 hs 上の E-D 二重計上防止)。
                                      ! morfac=1 必須(イベント計算)。debris_plan.md §2.2
@@ -163,6 +177,8 @@ subroutine list_geomorph_read(p, list)
   real :: wash_kr
   real :: wash_kf
   real :: wash_tausc
+  integer :: f_splash
+  real :: spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax
   integer :: f_debris
   real :: db_phi
   real :: db_delte
@@ -197,6 +213,7 @@ subroutine list_geomorph_read(p, list)
                            fluv_porosity, fluv_sgrav, fluv_dzmax, fluv_diagratio, &
                            fluv_bcfeed, f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_wash, wash_kr, wash_kf, wash_tausc, &
+                           f_splash, spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
                            f_dbed, db_d50, db_erest, db_cmin, f_dbwet, db_satbed, &
                            db_mu, db_xi, db_tauy, &
@@ -229,6 +246,13 @@ subroutine list_geomorph_read(p, list)
   wash_kr = list%wash_kr
   wash_kf = list%wash_kf
   wash_tausc = list%wash_tausc
+  f_splash = list%f_splash
+  spl_kr = list%spl_kr
+  spl_ca = list%spl_ca
+  spl_kt = list%spl_kt
+  spl_cb = list%spl_cb
+  spl_h = list%spl_h
+  spl_dzmax = list%spl_dzmax
   f_debris = list%f_debris
   db_phi = list%db_phi
   db_delte = list%db_delte
@@ -290,6 +314,13 @@ subroutine list_geomorph_read(p, list)
   list%wash_kr = wash_kr
   list%wash_kf = wash_kf
   list%wash_tausc = wash_tausc
+  list%f_splash = f_splash
+  list%spl_kr = spl_kr
+  list%spl_ca = spl_ca
+  list%spl_kt = spl_kt
+  list%spl_cb = spl_cb
+  list%spl_h = spl_h
+  list%spl_dzmax = spl_dzmax
   list%f_debris = f_debris
   list%db_phi = db_phi
   list%db_delte = db_delte

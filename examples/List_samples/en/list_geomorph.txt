@@ -67,6 +67,24 @@
   !wash_kf = 1.0e-6         ! sheetwash erosion coefficient (m/s)
   !wash_tausc = 0.05        ! critical dimensionless shear stress of sheetwash
 
+  ! ---- dry-slope erosion (no overland flow: rainsplash + subgrid rills;
+  !      dry cells only) ----
+  !   Valley formation on highly permeable slopes without surface runoff
+  !   (badlands, pyroclastic cliffs).
+  !   E = P.[kr.(1+ca.kappa) + kt.(1+cb.kappa).S^h] (kappa: curvature,
+  !   positive in hollows). Detached sediment leaves the system
+  !   (open system). developer.md sec. 48
+  !f_splash = 1
+  !spl_kr = 0.001           ! rainsplash coefficient (dimensionless; additive
+                            !   term that acts even on flat plateaus)
+  !spl_ca = 0.0             ! hollow-amplification length of the splash term (m)
+  !spl_kt = 0.01            ! subgrid-rill coefficient (dimensionless; multiplies S^h)
+  !spl_cb = 5.0             ! hollow-amplification length of the rill term (m)
+                            !   (positive feedback of valley deepening)
+  !spl_h = 1.0              ! slope exponent h of the rill term
+  !spl_dzmax = 0.0          ! erosion cap per cell per update (m) (0: off;
+                            !   safety valve against runaway feedback)
+
   ! ---- Debris flow (Takahashi-type E-D. Exclusive with f_suspend;
   !      morfac=1 required) ----
   !f_debris = 1

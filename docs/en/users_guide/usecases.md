@@ -68,6 +68,7 @@ accuracy caveats (blank = nothing special).
 | Reservoir sedimentation and sediment flushing | [Sediment and landform change](geomorph.md) + [Structures](structure.md) | Suspended load (f_suspend) + dam operation | Flushing-gate operation is given as a time series |
 | Riverbed evolution / river-mouth bar flushing | [Sediment and landform change](geomorph.md) + [Tide and sea level](tide.md) | Bedload and suspended load + floods / tide | |
 | Lahars and snowmelt-type mudflows | [Sediment and landform change](geomorph.md) + snow ([Rainfall and weather](forcing.md)) | Debris-flow resistance laws + meltwater | Dilute systems (pyroclastic surges, ash transport) are out of scope |
+| Valley formation on badlands and pyroclastic cones (highly permeable slopes with no surface runoff) | [Sediment and landform change](geomorph.md) | f_splash (dry-slope erosion) + infiltration (Green-Ampt); combine with weak f_creep to select the valley spacing | Even where all rainfall infiltrates and no overland flow occurs, valleys grow from cliff margins through the hollow-amplification feedback of rainsplash + subgrid rills. Cohesion (combine with f_slide) decides whether valleys form at all |
 
 ## Snow and ice
 

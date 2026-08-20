@@ -16,6 +16,7 @@ run and feed back into the flow.
 | Bedload | f_fluvial | Riverbed erosion and deposition (Exner equation) |
 | Suspended sediment | f_suspend | Advection of concentration + entrainment and settling |
 | Hillslope erosion | f_wash | Raindrop + sheet erosion (requires f_suspend) |
+| Dry-slope erosion | f_splash | Rainsplash + subgrid rills without overland flow (dry cells) |
 | Debris flow / landslide | f_debris / f_slide | Takahashi-type E-D, slope stability test |
 | Bedrock weathering / uplift | f_wthr / f_uplift | Long-term landform evolution (millennial scale) |
 
@@ -86,6 +87,41 @@ required**). Detachment reduces the soil depth sd.
 | wash_kr | Raindrop erosion coefficient (dimensionless; E = kr x rainfall intensity) |
 | wash_kf | Sheet erosion coefficient (m/s) |
 | wash_tausc | Critical dimensionless shear stress for sheet erosion |
+
+## Dry-slope erosion (f_splash)
+
+Erosion and valley formation on **slopes without overland flow**. On
+highly permeable slopes where all rainfall infiltrates (badlands,
+pyroclastic cliffs), the terrain is carved by raindrop impact and by
+subgrid-scale rills and grain rolling that the grid cannot resolve.
+The erosion efficiency increases in hollows (incipient valleys) — a
+positive feedback that lets **valleys grow from cliff margins without
+any surface runoff**.
+
+The erosion rate is (P: rainfall intensity reaching the ground, S:
+slope, kappa: curvature, positive in hollows):
+
+E = P [ spl_kr (1 + spl_ca kappa) + spl_kt (1 + spl_cb kappa) S^spl_h ]
+
+It acts on **dry cells only** (h <= dd) and is complementary to f_wash
+(wet cells); combining them does not double-count. Detached sediment
+is not transported but **exported out of the system** (an
+approximation of open systems where steep cliffs shed to the sea; the
+total exported volume is reported at the end). Detachment reduces the
+soil depth sd, and erosion stops at sd = 0 (bedrock exposure), closing
+the budget with weathering (f_wthr). Whether valleys form at all
+depends on cliff cohesion (slopes that cannot stand steeper than the
+angle of repose do not preserve hollows) — combine with f_slide to
+represent this.
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| spl_kr | 0 | Rainsplash coefficient (dimensionless); additive term that acts even on flat plateaus (S = 0) |
+| spl_ca | 0 | Hollow-amplification length of the splash term (m) |
+| spl_kt | 0 | Subgrid-rill coefficient (dimensionless); multiplies S^h |
+| spl_cb | 0 | Hollow-amplification length of the rill term (m); strength of the valley-deepening feedback |
+| spl_h | 1.0 | Slope exponent h of the rill term |
+| spl_dzmax | 0 | Erosion cap per cell per update (m) (0: off); safety valve against runaway feedback |
 
 ## Debris flow / landslide (f_debris / fn_dbinit / f_slide)
 
