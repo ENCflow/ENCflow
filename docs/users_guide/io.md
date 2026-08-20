@@ -41,6 +41,18 @@
 座標系を管理していると、bil には `.hdr` が併記され、GeoTIFF には CRS が
 埋め込まれます([座標系の章](coordinates.md))。
 
+> **GeoTIFF 出力は無圧縮です**(1 セル 4 バイト。読み込みと違い
+> 圧縮書き出しには対応していません)。アニメーション用に多数の
+> 時刻を出力してデータ量が気になる場合は、後処理で圧縮できます:
+>
+> ```bash
+> for f in result/*.tif; do
+>   gdal_translate -q -co COMPRESS=DEFLATE -co PREDICTOR=3 "$f" "${f%.tif}_c.tif"
+> done
+> ```
+>
+> 実数場でも概ね 1/2〜1/4 になります(GIS ではそのまま開けます)。
+
 ## 出力ファイルの体系
 
 出力は `dir_result`(既定 `result/`)に、**接頭辞+4桁番号**の名前で
@@ -87,6 +99,9 @@ H・H9999 と、地盤高の初期値 Z0000 のみ)
 **utils/out2vtk** で ParaView 用の VTK 形式に変換すると、地形の 3D
 表示・水面の時系列アニメーション・衛星写真のドレープができます
 (手順は [utils/out2vtk/README.md](../../utils/out2vtk/README.md))。
+アニメーション用に GeoTIFF を多数出力するとデータ量が大きくなる
+場合は、[出力形式の節](#出力形式f_output_mode)の後処理圧縮を
+参照してください。
 
 ## 画面・ログの表示列(f_disp_\*)
 

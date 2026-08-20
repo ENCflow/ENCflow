@@ -50,6 +50,20 @@ When the coordinate system is managed, a `.hdr` is written alongside
 bil output, and the CRS is embedded in GeoTIFF output
 (see [the coordinate systems chapter](coordinates.md)).
 
+> **GeoTIFF output is uncompressed** (4 bytes per cell; unlike
+> reading, compressed writing is not supported). If you output many
+> time steps for an animation and the data volume matters, compress
+> in post-processing:
+>
+> ```bash
+> for f in result/*.tif; do
+>   gdal_translate -q -co COMPRESS=DEFLATE -co PREDICTOR=3 "$f" "${f%.tif}_c.tif"
+> done
+> ```
+>
+> Even floating-point fields typically shrink to 1/2–1/4 (GIS opens
+> them as usual).
+
 ## Output file scheme
 
 Outputs are written to `dir_result` (default `result/`) with names of
@@ -98,6 +112,9 @@ Distributed outputs can be opened directly in GIS (QGIS / ArcGIS), and
 views, time-animated water surfaces, and draping of satellite imagery
 (see [utils/out2vtk/README.md](../../../utils/out2vtk/README.md),
 in Japanese).
+If outputting many GeoTIFFs for an animation makes the data volume a
+concern, see the post-processing compression note in
+[the output format section](#output-format-f_output_mode).
 
 ## Screen and log display columns (f_disp_\*)
 
