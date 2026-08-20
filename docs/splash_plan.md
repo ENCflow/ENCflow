@@ -122,11 +122,15 @@ c_b = spl_cb, h = spl_h)。
 
 格子幅 dx, dy、5点ラプラシアンと中央差分:
 
-$$\kappa_{ij} = \max\!\left(\frac{z_{i+1,j}+z_{i-1,j}-2z_{ij}}{\Delta x^2}
- + \frac{z_{i,j+1}+z_{i,j-1}-2z_{ij}}{\Delta y^2},\ 0\right)$$
+$$
+\kappa_{ij} = \max\!\left(\frac{z_{i+1,j}+z_{i-1,j}-2z_{ij}}{\Delta x^2}
+ + \frac{z_{i,j+1}+z_{i,j-1}-2z_{ij}}{\Delta y^2},\ 0\right)
+$$
 
-$$S_{ij} = \sqrt{\left(\frac{z_{i+1,j}-z_{i-1,j}}{2\Delta x}\right)^2
- + \left(\frac{z_{i,j+1}-z_{i,j-1}}{2\Delta y}\right)^2}$$
+$$
+S_{ij} = \sqrt{\left(\frac{z_{i+1,j}-z_{i-1,j}}{2\Delta x}\right)^2
+ + \left(\frac{z_{i,j+1}-z_{i,j-1}}{2\Delta y}\right)^2}
+$$
 
 無効な近傍(配列範囲外・領域外 x=0)は自セル値で鏡像(寄与ゼロ)。
 1回の地形更新(実効時間 Δt_geo = dt × idt_geomorph × morfac)の
