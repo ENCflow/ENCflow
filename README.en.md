@@ -72,8 +72,9 @@ practical application, yet all share the same input system, the same
 grid, and the same way of running. They are not mutually exclusive
 modes — **any combination can be activated at once**, and interactions
 between processes (rainfall → snowmelt → runoff → erosion →
-inundation…) are solved within the same time evolution. Feel free to
-read only the lines you care about.
+inundation…) are solved within the same time evolution. You do not
+need to understand all of it — **feel free to read only the lines you
+care about.**
 
 - **River flooding and inundation**: dynamic-wave shallow water
   equations on the ENC grid. Subgrid channels (cross-section shape and
