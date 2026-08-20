@@ -1,5 +1,5 @@
 !======================================================================
-! English mirror of examples/List_samples/list_structure.txt (based on commit c664f1c).
+! English mirror of examples/List_samples/list_structure.txt (based on commit 248804f).
 ! The Japanese file is the master copy; edit it first.
 !======================================================================
 !
@@ -9,6 +9,8 @@
 !                            represented with the gate extension)
 !   &list_struct_diversion : diversions (out-of-catchment diversion /
 !                            intake weirs)
+!   &list_struct_dam       : dams (capture band absorption + bucket
+!                            storage + release by an operating rule)
 !
 !   Use this file by specifying, in the system parameters &list_sysparam,
 !     fn_structure = "list_structure.txt"
@@ -25,6 +27,10 @@
 !   Cell coordinates (i, j) are 1-based (the westernmost column and the
 !   northernmost row are 1). GIS software such as QGIS counts rasters
 !   from 0, so add +1 to both the row and column numbers picked in GIS.
+!
+!   Structure numbers n are consecutive from 1 per type (a gap stops
+!   with an error). Up to 50 structures per type, 999 cells per
+!   structure, and 999 polyline points.
 !
 !   Note: drainage pumps were moved from &list_bound_pump of fn_boundary
 !   to &list_struct_pump of this file (2026-08-07; parameter names
@@ -251,4 +257,19 @@
 !  dam_hv(:,2,1) = 355.0, 1.5e7          ! surcharge level and total storage
 !  f_dam_mode(1) = 2
 !  dam_rate(1) = 0.3
+!  ! Dam 2: natural regulation (sqrt law from the design maximum release).
+!  ! Starts full at the restricted level; with evapotranspiration
+!  ! (fn_evap) active, open-water evaporation uses the impounded area
+!  dam_in_cell(:,1,2) = 200, 30
+!  dam_in_cell(:,2,2) = 200, 31
+!  dam_out_cell(:,1,2) = 203, 30
+!  dam_hv(:,1,2) = 210.0, 0.0            ! lowest level and its storage
+!  dam_hv(:,2,2) = 245.0, 8.0e6          ! surcharge level and total storage
+!  f_dam_mode(2) = 3
+!  dam_qmax(2) = 250.0                   ! design maximum release (at surcharge)
+!  dam_h_init(2) = 230.0                 ! initial level = restricted level
+!                                        !   (default = lowest level = empty)
+!  dam_area(2) = 6.0e5                   ! impounded area m2 (used only with
+!                                        !   evapotranspiration active; if omitted,
+!                                        !   capture band cells evaporate by cell area)
 !/
