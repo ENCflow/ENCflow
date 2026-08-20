@@ -114,6 +114,17 @@ finer than the river width and move to a resolved channel.
   more smoothly than the raster. Applying it to a small river that
   meanders within one cell underestimates the channel length and makes
   discharge and velocity too large.
+- **Accuracy limit (connectivity ambiguity)**: the channel is
+  represented as a raster (channel mask + width), and channel cells are
+  connected by the implicit rule "adjacent cells are connected". Unlike
+  one-dimensional channel-network models, which hold the connectivity
+  between reaches explicitly, the correspondence at confluences and
+  bifurcations, and the separation of nearby parallel channels, cannot
+  be specified exactly, so unintended connections or breaks can occur.
+  Where the topology of the river network (what flows into what)
+  dominates the result, this ambiguity limits the accuracy. Refine the
+  cell size around suspect locations so that connections and
+  separations are resolved.
 
 ## Cross-section shape (sigma law)
 
