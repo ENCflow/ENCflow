@@ -272,6 +272,15 @@ notebook that runs in the browser alone is also available).
    case building, execution, and analysis to an AI in the words of the
    phenomenon
 
+When you want algorithm or implementation details that the
+documentation does not cover, the quickest route is to have an AI
+agent examine the source code for you. The entire computation lives
+in the Fortran under `src/`, and the reasons behind every design
+decision are documented in
+[docs/developer.md](docs/developer.md), so a question like "which
+equation computes X, and where?" can be answered with the actual
+code as evidence.
+
 Developers and the curious should head to
 [docs/architecture.md](docs/architecture.md) (in Japanese) (the
 one-page map of the architecture — read this first),
