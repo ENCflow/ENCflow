@@ -127,6 +127,10 @@ subroutine output_state(p, g, s, k)
   ! 風化基岩層の貯留水深(f_gwlayer2=1 のときのみ。フラグは Hg と共用)
   if (p%f_out_hg > 0 .and. allocated(s%hg2)) call output_matrix(p, g, "Hg2", s%hg2, k)
   if (s%wq_active) call output_matrix(p, g, "C", s%cqc, k)          ! 輸送物質濃度 (mg/L。§30)
+  if (p%f_out_hs > 0) call output_matrix(p, g, "Hs", s%hs, k)       ! 土砂柱状量 (m。§28.9)
+  ! 斜面安全率 Fs(-1 = 評価対象外。slide_pass1 が dt_geomorph 周期で
+  ! 更新するため t=0 フレームは全域 -1。§28.9)
+  if (p%f_out_fs > 0 .and. allocated(s%fs)) call output_matrix(p, g, "Fs", s%fs, k)
   ! 積雪水量 SWE (mm。fn_snow 有効時のみ。§31)
   if (allocated(s%swe)) call output_matrix(p, g, "Sw", 1000.0*s%swe, k)
   ! 土層厚 (m。sd を実際に使うモデルの有効時のみ = require_sd 済み。§32)
@@ -152,6 +156,12 @@ subroutine output_summary(p, g, s, k)
   if (p%f_out_qqmax > 0) call output_matrix(p, g, "Q", s%qqmax, k)    ! 最大流量
   if (p%f_out_qqmaxt > 0) call output_matrix(p, g, "Qt", s%qqt, k)    ! 最大流量の時刻
   if (p%f_out_qqmaxd > 0) call output_matrix(p, g, "Qd", s%qqdir, k)  ! 最大流量の流向
+  ! 土砂災害の危険度統計(§28.9)
+  if (p%f_out_dmax > 0)  call output_matrix(p, g, "D", s%dmax, k)     ! 最大流動深 h+hs
+  if (p%f_out_dmaxt > 0) call output_matrix(p, g, "Dt", s%dmaxt, k)   ! 最大流動深の時刻
+  if (p%f_out_fmax > 0)  call output_matrix(p, g, "F", s%fmax, k)     ! 最大流体力 (h+hs)V²
+  if (p%f_out_fs > 0 .and. allocated(s%fsmin)) &
+    call output_matrix(p, g, "Fs", s%fsmin, k)                        ! 期間最小の安全率
   if (is_root) write(un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it
 end subroutine
 

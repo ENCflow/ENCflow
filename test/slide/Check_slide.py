@@ -56,7 +56,12 @@ def z0_of(idx):
 
 
 savedir, mode = sys.argv[1], sys.argv[2]
+resultdir = sys.argv[3] if len(sys.argv) > 3 else ""
 SD0 = 5.0 if mode == "release" else 0.5
+
+
+def load_matrix(fn):
+    return [[float(x) for x in line.split()] for line in open(fn) if line.split()]
 with open(savedir + "/state.dat", "rb") as f:
     ntot = NX * NY
     h = read_rle_array(f, ntot)
@@ -89,6 +94,23 @@ if mode == "release":
     print("(4) 活性確認    : 崩壊域 min dz = %.3f, 域外堆積 max dz = %.3e : %s"
           % (src_min, out_dep, "PASS" if ok4 else "FAIL"))
     ok = ok1 and ok2 and ok3 and ok4
+elif mode == "fsdiag":
+    # f_slide=2(判定のみ。§28.9): 流動化しない(z・sd・hs 不変)+
+    # Fs9999(期間最小)が斜面部で危険(<1)を検出している
+    maxdz = max(abs(d) for d in dz)
+    maxds = max(abs(sdi - SD0) for sdi in sd)
+    maxhs = max(hs)
+    ok1 = maxdz == 0.0 and maxds == 0.0 and maxhs == 0.0
+    print("(1) 無流動化    : max|dz| = %.3e, max|sd-sd0| = %.3e, max hs = %.3e : %s"
+          % (maxdz, maxds, maxhs, "PASS" if ok1 else "FAIL"))
+    fsm = [x for row in load_matrix(resultdir + "/Fs9999.txt") for x in row]
+    fse = [x for x in fsm if x >= 0.0]
+    nsent = sum(1 for x in fsm if x < 0.0)
+    ok2 = len(fse) > 0 and min(fse) < 1.0 and nsent > 0
+    print("(2) Fs 診断     : 評価 %d セル min Fs = %.3f(<1 = 危険域検出), "
+          "番兵 %d セル : %s" % (len(fse), min(fse) if fse else -1.0, nsent,
+                                 "PASS" if ok2 else "FAIL"))
+    ok = ok1 and ok2
 else:
     slid = min(sd[idx] for idx in range(ntot) if idx % NX + 1 < 30)
     ok1 = abs(solids) < TOL_SUM_FS
@@ -99,6 +121,17 @@ else:
     print("(4) 活性確認    : 斜面部 min sd = %.3e(0 = 崩壊発生): %s"
           % (slid, "PASS" if ok4 else "FAIL"))
     ok = ok1 and ok2 and ok4
+    if ok and resultdir:
+        # 危険度出力(§28.9): Fs9999 の危険検出、D9999 >= H9999(混合 >= 水)
+        fsm = [x for row in load_matrix(resultdir + "/Fs9999.txt") for x in row]
+        fse = [x for x in fsm if x >= 0.0]
+        dmax = [x for row in load_matrix(resultdir + "/D9999.txt") for x in row]
+        hmax = [x for row in load_matrix(resultdir + "/H9999.txt") for x in row]
+        dneg = min(a - b for a, b in zip(dmax, hmax))
+        ok5 = len(fse) > 0 and min(fse) < 1.0 and dneg >= 0.0
+        print("(5) 危険度出力  : min Fs9999 = %.3f(<1), min(D9999-H9999) = %.3e(>=0) : %s"
+              % (min(fse) if fse else -1.0, dneg, "PASS" if ok5 else "FAIL"))
+        ok = ok and ok5
 
 print("== slide(%s)検定: %s ==" % (mode, "PASS" if ok else "FAIL"))
 sys.exit(0 if ok else 1)

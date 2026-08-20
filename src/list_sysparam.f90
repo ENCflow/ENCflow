@@ -77,6 +77,12 @@ module list_sysparam
     integer :: f_out_qqmax = 0                    ! ファイル出力(最大流量Q9999)
     integer :: f_out_qqmaxt = 0                   ! ファイル出力(最大流量発生時刻Qt9999)
     integer :: f_out_qqmaxd = 0                   ! ファイル出力(最大流量の流向Qd9999)
+    integer :: f_out_hs = 0                       ! ファイル出力(土砂柱状量Hs0001。土砂系有効時)
+    integer :: f_out_fs = 0                       ! ファイル出力(斜面安全率Fs0001+期間最小Fs9999。
+                                                  !   f_slide>0 が必須。-1 = 評価対象外)
+    integer :: f_out_dmax = 0                     ! ファイル出力(最大流動深 h+hs のD9999。土砂系有効時)
+    integer :: f_out_dmaxt = 0                    ! ファイル出力(最大流動深発生時刻Dt9999)
+    integer :: f_out_fmax = 0                     ! ファイル出力(最大流体力 (h+hs)・V² のF9999)
 
     ! 画面・Log の表示列の選択(時刻・保存量 S 系列・Runge・ex_flux は常設)
     integer :: f_disp_debug = 0                   ! 画面表示(S 系列を全有効桁で表示。デバッグ・回帰テスト用)
@@ -181,6 +187,11 @@ subroutine list_sysparam_read(list, fn_sysparam)
   integer :: f_out_qqmax                     ! ファイル出力(最大流量Q9999)
   integer :: f_out_qqmaxt                    ! ファイル出力(最大流量発生時刻Qt9999)
   integer :: f_out_qqmaxd                    ! ファイル出力(最大流量の流向Qt9999)
+  integer :: f_out_hs                        ! ファイル出力(土砂柱状量Hs0001)
+  integer :: f_out_fs                        ! ファイル出力(斜面安全率Fs0001/Fs9999)
+  integer :: f_out_dmax                      ! ファイル出力(最大流動深D9999)
+  integer :: f_out_dmaxt                     ! ファイル出力(最大流動深発生時刻Dt9999)
+  integer :: f_out_fmax                      ! ファイル出力(最大流体力F9999)
   integer :: f_disp_debug                    ! 画面表示(S 系列を全有効桁で表示)
   integer :: f_disp_h                        ! 画面表示(最大水深 h_max)
   integer :: f_disp_vv                       ! 画面表示(最大流速 V_max)
@@ -221,6 +232,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_z, f_out_h, f_out_e, f_out_u, f_out_v, f_out_m, f_out_n, &
                         f_out_vv, f_out_qq, f_out_qc, f_out_qd, &
                         f_out_hmax, f_out_hmaxt, f_out_vvmax, f_out_qqmax, f_out_qqmaxt, f_out_qqmaxd, &
+                        f_out_hs, f_out_fs, f_out_dmax, f_out_dmaxt, f_out_fmax, &
                         f_disp_debug, f_disp_h, f_disp_vv, f_disp_qq, f_disp_cn, &
                         f_out_ddd, f_out_dda, f_out_pre, f_out_hrs, f_out_fr, f_out_cn, f_out_hg, &
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
@@ -290,6 +302,11 @@ subroutine list_sysparam_read(list, fn_sysparam)
   f_out_qqmax = list%f_out_qqmax
   f_out_qqmaxt = list%f_out_qqmaxt
   f_out_qqmaxd = list%f_out_qqmaxd
+  f_out_hs = list%f_out_hs
+  f_out_fs = list%f_out_fs
+  f_out_dmax = list%f_out_dmax
+  f_out_dmaxt = list%f_out_dmaxt
+  f_out_fmax = list%f_out_fmax
   f_disp_debug = list%f_disp_debug
   f_disp_h = list%f_disp_h
   f_disp_vv = list%f_disp_vv
@@ -384,6 +401,11 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%f_out_qqmax = f_out_qqmax
   list%f_out_qqmaxt = f_out_qqmaxt
   list%f_out_qqmaxd = f_out_qqmaxd
+  list%f_out_hs = f_out_hs
+  list%f_out_fs = f_out_fs
+  list%f_out_dmax = f_out_dmax
+  list%f_out_dmaxt = f_out_dmaxt
+  list%f_out_fmax = f_out_fmax
   list%f_disp_debug = f_disp_debug
   list%f_disp_h = f_disp_h
   list%f_disp_vv = f_disp_vv

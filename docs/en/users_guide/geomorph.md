@@ -132,7 +132,21 @@ surges, plumes, atmospheric ash transport) are out of scope by design
   (saturated unit weight, N/m^3) are required; the pore water pressure
   is taken from the saturated thickness of the groundwater computation
   (rainfall -> groundwater rise -> slope failure -> debris flow are
-  linked in a single time evolution).
+  linked in a single time evolution). `f_slide = 2` is a
+  **judge-only** diagnostic mode (no mobilization) for producing an
+  undisturbed hazard map.
+
+**Hazard outputs** - output switches in &list_sysparam provide
+statistical fields representing sediment-hazard intensity (see also
+the table in [Input and output](io.md)): `f_out_fs` (safety factor Fs
+distribution and its period minimum Fs9999 = slope failure hazard
+map), `f_out_dmax` (maximum flow depth h+hs, D9999 = debris flow
+inundation depth), `f_out_fmax` (maximum fluid force (h+hs)·V²,
+F9999 = a standard indicator for building damage), and `f_out_hs`
+(sediment column frames). The saturation ratio - a precursor
+indicator for shallow slope failure - can be derived in
+post-processing as hg/(sy0·sd) from the Hg (`f_out_hg`) and Sd
+outputs.
 
 ## Long-term landform evolution (f_wthr / f_uplift)
 

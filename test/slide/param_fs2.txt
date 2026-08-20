@@ -1,11 +1,10 @@
 !======================================================================
-! slide(構成2: f_slide): 降雨 → Green-Ampt 浸透 → 飽和 → Fs<1 →
-!   自動流動化 → 土石流化、の一連の疎通検定。
-!   φs=25°: 乾燥時 Fs = tanφs/tanθ ≈ 1.17(安定)、飽和進行で Fs<1。
-!   検定(Check_slide.py fslide):
-!     (1) 固体総量保存(許容緩め: 多数回転換の丸め累積)
-!     (2) 共動更新恒等
-!     (4) 活性確認: 斜面部に sd=0(崩壊発生)のセルが存在する
+! slide(構成3: f_slide=2 判定のみ): 構成2と同一の降雨・飽和進行で、
+!   斜面安定判定を「診断のみ」(流動化しない)で走らせ、危険度マップ
+!   Fs9999(期間最小の安全率)を出力する(developer.md §28.9)。
+!   検定(Check_slide.py fsdiag):
+!     (1) 無流動化: z・sd・hs が不変
+!     (2) Fs 診断: 斜面部で min Fs < 1(危険域の検出)+番兵(-1)構造
 !======================================================================
 &list_sysparam
   f_gridsystem = 0
@@ -22,14 +21,10 @@
   fn_geomorph = '-'
   fn_gwflow = '-'
   fn_precip = '-'
-  dir_result = 'result'
-  dir_save = 'save_fs'
+  dir_result = 'result_fs2'
+  dir_save = 'save_fs2'
   f_state_save = 1
-  f_out_fs = 1              ! 安全率 Fs 分布+期間最小 Fs9999(§28.9)
-  f_out_dmax = 1            ! 最大流動深 h+hs(D9999)
-  f_out_dmaxt = 1           ! 最大流動深の発生時刻(Dt9999)
-  f_out_fmax = 1            ! 最大流体力 (h+hs)・V²(F9999)
-  f_out_hs = 1              ! 土砂柱状量のフレーム(Hs0001)
+  f_out_fs = 1              ! 安全率 Fs の分布(Fs0001)+期間最小(Fs9999。危険度マップ)
   f_check_cfl = 0
 /
 
@@ -81,7 +76,7 @@
   f_dbstop = 1
   db_vstop = 0.05
   db_wstop = 0.05
-  f_slide = 1
+  f_slide = 2
   slide_c = 0.0             ! 有効粘着力 (Pa)
   slide_phi = 25.0          ! せん断抵抗角 (deg)
   slide_gamma = 19000.0     ! 飽和単位体積重量 (N/m3)

@@ -84,10 +84,14 @@ written.)
 | f_out_fr / f_out_cn | 0 | Fr / Cn | Froude number / Courant number |
 | f_out_hg | 0 | Hg | subsurface storage depth (m) (when fn_gwflow is enabled) |
 | f_out_hrs | 0 | Hrs | pond depth (m) (when fn_reservoir is enabled) |
+| f_out_hs | 0 | Hs | sediment column (m) (requires an active sediment process; for visualizing the concentration C = hs/(h+hs)) |
+| f_out_fs | 0 | Fs / Fs9999 | slope safety factor Fs distribution and its period minimum (requires f_slide = 1 or 2; -1 = not evaluated; see [Sediment and landform change](geomorph.md)) |
 | f_out_hmax | 1 | H9999 | maximum depth |
 | f_out_hmaxt | 0 | Ht9999 | time of maximum depth |
 | f_out_vvmax | 0 | V9999 | maximum velocity |
 | f_out_qqmax / f_out_qqmaxt / f_out_qqmaxd | 0 | Q9999 / Qt9999 / Qd9999 | maximum discharge and its time / direction |
+| f_out_dmax / f_out_dmaxt | 0 | D9999 / Dt9999 | maximum flow depth h+hs and its time (requires an active sediment process; for debris and volcanic flows the true "inundation depth" is the mixture depth) |
+| f_out_fmax | 0 | F9999 | maximum fluid force (h+hs)·V² (m³/s²) (a standard indicator for building damage; also usable for water-only runs) |
 | — (always) | — | X0000 | domain mask (0: outside, 1: land, 2: sea); for visualization and checking the active domain in GIS |
 
 In addition, `Log.txt` (identical to the on-screen log) and a copy of
