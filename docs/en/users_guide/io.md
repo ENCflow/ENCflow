@@ -67,6 +67,11 @@ bil output, and the CRS is embedded in GeoTIFF output
 > usable as ENCflow input (f_input_mode=4) and by utils/out2vtk**
 > (reading Deflate with predictor 3 is supported, and agreement with
 > real GDAL outputs is checked in the regression tests — test/gtif).
+> Running out2vtk right after the compression is fine (it assembles
+> exact file names, so the `_c` files are ignored and the originals
+> are used). If you delete the originals to save space and keep only
+> the `_c` files, set `outfn_suffix = "_c"` in the out2vtk namelist
+> to convert directly from the compressed files.
 
 ## Output file scheme
 
