@@ -350,23 +350,17 @@
 
 ## 中期の道標(着手順は実測次第)
 
-- **ライセンス確定日の実施は docs/license_plan.md に準備済み**
-  (2026-08-19。文面ドラフト・実施順・Zenodo/v1.0.0 連動込み。
-  旧履歴の revert は不成立と確認済み — developer.md §34.3)。
-  以下は同計画に吸収された覚え書き:
-- **ライセンス確定後の README 追記(忘れないように)**: (1)「選ぶ理由」の
-  全ソース公開の項に**商用利用の可否**を明記(現状は全権利留保のため
-  書けない)。(2) Zenodo で DOI を取得し(登録メタデータにライセンス
-  指定が要るため確定が先)、**版を特定した正確な引用が可能**である旨と
-  DOI バッジを追加、CITATION.cff に DOI を反映。**このとき v1.0.0 タグを
-  打つ**(現行は v0.9.0。developer.md §34.4)。(3)「第三者の著作物を
-  含まない」の主張は現状**計算コードに限定**している — 実地形データは
-  第三者データ(基盤地図情報 DEM 等)からの派生物なので、リポジトリ
-  全体には広げないこと(2026-08-19 判断)。出典未記載だった
-  examples/chichibu・examples/abukuma は削除済みで、残る実地形データは
-  test/chichibu と tutorials/chichibu の 2 箇所のみ。出典はそれぞれ
-  test/chichibu/data_chichibu/README.md と tutorials/chichibu/README.md
-  に記載済み(2026-08-19)。
+- **ライセンス: Apache-2.0 設置済み(2026-08-20。職場承認取得)**。
+  LICENSE・NOTICE・README(商用利用可の明記込み)・CONTRIBUTING・
+  CITATION.cff の license 行まで完了(license_plan.md §1〜§2)。
+  **残り = license_plan.md §3 のみ**: CITATION.cff の著者 2 名化
+  (多田・風間)→ v1.0.0 タグ → Zenodo DOI → DOI バッジ・引用箇条。
+  **着手条件は風間先生の著者掲載の確認**(DOI で著者名が恒久化される
+  ため確認が先)。
+  覚え書き: 「第三者の著作物を含まない」の主張は**計算コードに限定**
+  のまま維持する — 実地形データ(test/chichibu・tutorials/chichibu の
+  2 箇所のみ、出典は各 README に記載済み)は第三者データの派生物のため
+  (2026-08-19 判断)。
 
 - **乾式斜面侵食 f_splash の続き(developer.md §48.2。2026-08-20)**:
   Phase 1(雨滴+サブグリッドリル・凹地形増幅・系外排出)は実装・検証済み。

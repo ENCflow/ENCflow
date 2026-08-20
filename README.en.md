@@ -230,7 +230,8 @@ are out of scope by design and belong to specialized models
 - **Full source code available** — inspect it, verify it. The
   computational code is written entirely from scratch and **contains
   no third-party code** (zero dependencies also means a clean,
-  unambiguous copyright provenance).
+  unambiguous copyright provenance). Licensed under Apache-2.0,
+  **commercial use included**.
 
 ## Requirements
 
@@ -280,19 +281,17 @@ models). Developer documentation is currently in Japanese.
 
 ## License
 
-The license is currently under consideration. Until it is formally
-determined, all rights are reserved as a matter of copyright law.
-Please contact us if you wish to use ENCflow.
+[Apache License 2.0](LICENSE). Commercial use, modification, and
+redistribution are permitted (retaining the copyright notice and
+[NOTICE](NOTICE); see LICENSE for details).
+For citation in research, see [CITATION.cff](CITATION.cff).
 
 ## Development
 
-ENCflow is jointly developed by:
-
-- Tsuyoshi Tada (Hydraulic Engineering Laboratory, Department of
-  Civil and Environmental Engineering, National Defense Academy of
-  Japan) — design and implementation
-- So Kazama (Hydro-Environmental System Laboratory, Department of
-  Civil Engineering, Tohoku University) — ideas and validation
+- Hydraulic Engineering Laboratory, Department of Civil and
+  Environmental Engineering, National Defense Academy of Japan
+- Hydro-Environmental System Laboratory, Department of Civil
+  Engineering, Tohoku University
 
 Questions and consultations are welcome at
 [Discussions](https://github.com/ENCflow/ENCflow/discussions);

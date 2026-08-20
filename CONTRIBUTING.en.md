@@ -34,16 +34,17 @@ up considerably:
 
 ## About code pull requests (not accepted for now)
 
-ENCflow maintains a state in which the computational code contains no
-third-party code, and the license is currently being finalized. To
-keep the rights situation unambiguous, **code pull requests are not
-accepted until the license is settled**. Please raise code-related
-findings and proposals in Issues instead — the development team will
-implement them (with credit to the proposer). Documentation
-corrections are also welcome via Issues.
+Changes to ENCflow are quality-assured by taking each one through
+bit-identical verification against the regression baselines. Until
+this verification-backed review process can be run reliably for
+external contributions, code pull requests are not accepted. Please
+raise code-related findings and proposals in Issues instead — the
+development team will implement them (with credit to the proposer).
+Documentation corrections are also welcome via Issues.
 
-Once the license is settled, the conditions for accepting
-contributions (including the handling of rights) will be defined here.
+Note that under [Apache-2.0](LICENSE) you are **entirely free to fork
+and modify** ENCflow. Results and insights from forks are welcome in
+Issues and Discussions.
 
 ## For those interested in the internals
 
