@@ -165,6 +165,19 @@ the step-like jumps of the DEM become large. Once the jumps exceed the
 order of the water depth, the flow is severely obstructed, so **prior
 depression filling is essential for runoff computations**.
 
+Depressions are also dangerous for numerical stability. In a
+depression with no outlet the water depth keeps growing, and the wave
+speed of the shallow water equations (≈ √(gh)) grows with it, so the
+Courant number Cn (= wave speed × dt / cell size) increases and the
+stability condition (Cn ≲ 1) becomes easy to violate
+(see [the time-step chapter](../../../docs/en/users_guide/time.md)).
+This chain is a general troubleshooting rule beyond depressions:
+**when a computation blows up (diverges), first suspect "water depth
+grows somewhere → wave speed grows → stability condition breaks"**.
+Check the Cn_max column on screen for a rising trend, and look for
+places where water piles up abnormally in the maximum-depth
+distribution H9999 — that is the first step.
+
 Note that in ordinary structured-grid models, where water cannot move
 diagonally across the grid, a DEM filled with the common D8
 (eight-direction flow) method of GIS software can still leave water
