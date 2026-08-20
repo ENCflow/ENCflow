@@ -564,6 +564,15 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
   if (gm%f_splash > 0) call eval_splash(gm, p, g, s, dts)
   if (gm%f_debris > 0) call calc_debris(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_splash > 0) call apply_splash(gm, g, s)
+  ! splash(・debris)が帯内の z を更新した後に近傍参照プロセス
+  ! (fluvial・creep)が続く場合は、ここで z のハロを最新化する。
+  ! これを怠ると帯界面のエッジ計算が「自帯=更新後・ハロ=時刻 n」の
+  ! 混在入力になり、ランク数依存が生じる(test/splashslide が検出した
+  ! 実バグ。判定は全ランク同一 = collective 安全)
+  if (gm%f_splash > 0 .and. (gm%f_creep > 0 .or. gm%f_fluvial > 0)) then
+    call par_halo_cell(s%z)
+    if (gm%f_fluvial > 0) call par_halo_cell(s%sd)
+  end if
   if (gm%f_fluvial > 0) call calc_fluvial(gm, p, g, s, dts)
   if (gm%f_suspend > 0) call calc_suspend(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_wash > 0) call calc_wash(gm, p, g, s, p%dt * gm%idt_geomorph)
