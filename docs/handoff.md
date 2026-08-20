@@ -363,6 +363,14 @@
 
 ## 中期の道標(着手順は実測次第)
 
+- **ダム・湖沼への拡張(&list_struct_dam の一般化。2026-08-20 検討)**:
+  湖沼番号ラスタ(fn_dam_map)による湖面指定+自動線形 HV+水位固定
+  湖沼(放流セルなし=流入消失)+dam_area 廃止(セル面積に統一)+
+  捕捉集合の対角透過検査。第2弾=複数放流群(dam_lake 参照)、
+  第3弾=隣接セルの地下水位への水位強制。設計検討メモは
+  **docs/lake_plan.md**(要決定事項 §9 への回答待ち。合意後に実装、
+  決定の正本化は developer.md へ)。
+
 - **ライセンス: Apache-2.0 設置済み(2026-08-20。職場承認取得)**。
   LICENSE・NOTICE・README(商用利用可の明記込み)・CONTRIBUTING・
   CITATION.cff の license 行まで完了(license_plan.md §1〜§2)。
