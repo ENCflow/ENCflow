@@ -92,7 +92,9 @@ module m_state
     ! --- 土砂災害の危険度統計(f_out_* 指定時のみ確保。§28.9)---
     real, allocatable :: dmax(:,:)      ! 最大流動深 h+hs (m)(f_out_dmax/dmaxt)
     real, allocatable :: dmaxt(:,:)     ! 最大流動深の時刻 (min)
-    real, allocatable :: fmax(:,:)      ! 最大流体力 (h+hs)・vv² (m3/s2)(f_out_fmax)
+    real, allocatable :: fmax(:,:)      ! 最大流体力 (ρm/ρw)・(h+hs)・vv² (m3/s2。
+                                        ! 清水密度で規格化 = 水のみでは u²h と同一。
+                                        ! ×ρw で N/m)(f_out_fmax)
     real, allocatable :: fs(:,:)        ! 斜面安全率 Fs(f_out_fs。slide_pass1 が
                                         ! dt_geomorph 周期で更新。-1 = 評価対象外)
     real, allocatable :: fsmin(:,:)     ! Fs の期間最小(-1 = 未評価。危険度マップ)
@@ -155,6 +157,9 @@ module m_state
                                     ! swflow_enc がステップ内で s%cq を移流する)
     logical :: sed_active = .false. ! 浮遊砂輸送の有効化(m_geomorph_init が設定。
                                     ! swflow_enc がステップ内で s%hs を移流する)
+    real :: sed_sgrav = 0.0         ! 土粒子の水中比重 s(m_geomorph_init が
+                                    ! sed_active とともに設定。fmax の混合密度
+                                    ! 係数 ρm/ρw = 1+sC に使用。無効時 0 = 水)
     logical :: debris_active = .false. ! 土石流モデルの有効化(m_geomorph_init が
                                     ! 設定。swflow_enc が運動量へ hs を算入し、
                                     ! 抵抗則を切り替える。debris_plan.md §2.3-2.4)
@@ -451,7 +456,10 @@ subroutine m_state_calcstat(s, p, g)
         end if
       end if
       if (allocated(s%fmax)) then
-        ht = (s%h(i,j) + max(s%hs(i,j), 0.0)) * s%vv(i,j)**2
+        ! 流体力 = (ρm/ρw)(h+hs)V² = (h + (1+s)hs)V²(混合密度
+        ! ρm = ρw(1+sC)、C = hs/(h+hs) より。清水規格化 = 水のみでは
+        ! u²h と厳密に同一。§28.9)
+        ht = (s%h(i,j) + (1.0 + s%sed_sgrav) * max(s%hs(i,j), 0.0)) * s%vv(i,j)**2
         if (ht > s%fmax(i,j)) s%fmax(i,j) = ht                 ! 最大流体力
       end if
       if (s%qq(i,j) > 0.0) then

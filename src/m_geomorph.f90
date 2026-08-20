@@ -447,6 +447,7 @@ subroutine m_geomorph_init(gm, p, g, s)
   ! 初期化順序: 本 init は m_swflow_init より前)。土石流(f_debris)も
   ! 同じ advect_scalar による hs 輸送を使う
   s%sed_active = (gm%f_suspend > 0 .or. gm%f_debris > 0)
+  if (s%sed_active) s%sed_sgrav = gm%sgrav   ! fmax の混合密度係数用(§28.9)
 
   ! 土砂系の危険度出力の前提検証(§28.9。配列確保は m_state_init 済み)
   if ((p%f_out_hs > 0 .or. p%f_out_dmax > 0 .or. p%f_out_dmaxt > 0) &

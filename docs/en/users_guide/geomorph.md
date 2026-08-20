@@ -184,8 +184,9 @@ the table in [Input and output](io.md)): `f_out_fs` (safety factor Fs
 distribution and its period minimum Fs9999 = slope failure hazard
 map; **requires f_slide = 1 or 2**), `f_out_dmax` (maximum flow depth
 h+hs, D9999 = debris flow inundation depth), `f_out_fmax` (maximum
-fluid force (h+hs)·V², F9999 = a standard indicator for building
-damage), and `f_out_hs` (sediment column frames). If the hazard map
+fluid force (ρm/ρw)·(h+hs)·V², F9999 = a standard indicator for
+building damage; includes the mixture density, and for water-only
+runs it equals the conventional u²h), and `f_out_hs` (sediment column frames). If the hazard map
 is all you need, the recommended pair is **f_slide = 2 (judge only)
 with f_out_fs = 1** - with f_slide = 1 the failures alter the terrain
 and groundwater, so the subsequent Fs field reflects the disturbed
