@@ -1087,14 +1087,6 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
     end if
     b%struct(ist)%geom(8) = dam_v_of_h(b%struct(ist)%hv, b%struct(ist)%nhv, hini)
 
-    !--- 湛水面積(蒸発散用オプション。§27。未指定は 0 = 捕捉帯セル面積で評価) ---
-    if (list%dam_area(id) > -9998.0) then
-      if (list%dam_area(id) <= 0.0) then
-        call par_stop("list_struct_dam: dam_area of dam "//itoa(id)//" must be > 0")
-      end if
-      b%struct(ist)%geom(9) = list%dam_area(id)
-    end if
-
     !--- 位置の検証(全域マスク。ゾーン2で全ランク冗長) ---
     do k = 1, b%struct(ist)%ncin + b%struct(ist)%ncout
       if (k <= b%struct(ist)%ncin) then

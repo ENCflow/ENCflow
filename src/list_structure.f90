@@ -88,9 +88,6 @@ module list_structure
     real :: dam_tadashigaki(1:nstmax) = -9999.0    ! 但し書き開始水位 (m。モード1,2。
                                                    !   省略時=最低+0.9×(サーチャージ−最低))
     real :: dam_h_init(1:nstmax) = -9999.0         ! 初期水位 (m。省略時=最低水位=空虚)
-    real :: dam_area(1:nstmax) = -9999.0           ! 湛水面積 (m2。蒸発散用オプション。
-                                                   !   指定時は貯水面からの蒸発をこの面積で
-                                                   !   評価し、捕捉帯セルの個別蒸発は止める。§27)
     character(len=maxpathlen) :: fn_dam_in_cell(1:nstmax) = ""    ! 捕捉帯セル一覧ファイル名
     character(len=maxpathlen) :: fn_dam_out_cell(1:nstmax) = ""   ! 放流セル一覧ファイル名
   end type
@@ -295,7 +292,6 @@ subroutine read_dam(un, list)
   real :: dam_ori_zbase(1:nstmax), dam_ori_ce(1:nstmax)
   real :: dam_qmax(1:nstmax), dam_zbase(1:nstmax)
   real :: dam_tadashigaki(1:nstmax), dam_h_init(1:nstmax)
-  real :: dam_area(1:nstmax)
   character(len=maxpathlen) :: fn_dam_in_cell(1:nstmax)
   character(len=maxpathlen) :: fn_dam_out_cell(1:nstmax)
   integer :: ios
@@ -304,7 +300,7 @@ subroutine read_dam(un, list)
                              dam_q0, dam_rate, dam_hq_rule, &
                              dam_ori_width, dam_ori_height, dam_ori_zbase, dam_ori_ce, &
                              dam_qmax, dam_zbase, dam_tadashigaki, dam_h_init, &
-                             dam_area, fn_dam_in_cell, fn_dam_out_cell
+                             fn_dam_in_cell, fn_dam_out_cell
 
   dam_in_cell = -9999
   dam_out_cell = -9999
@@ -321,7 +317,6 @@ subroutine read_dam(un, list)
   dam_zbase = list%dam_zbase
   dam_tadashigaki = list%dam_tadashigaki
   dam_h_init = list%dam_h_init
-  dam_area = list%dam_area
   fn_dam_in_cell = list%fn_dam_in_cell
   fn_dam_out_cell = list%fn_dam_out_cell
 
@@ -346,7 +341,6 @@ subroutine read_dam(un, list)
   list%dam_zbase = dam_zbase
   list%dam_tadashigaki = dam_tadashigaki
   list%dam_h_init = dam_h_init
-  list%dam_area = dam_area
   list%fn_dam_in_cell = fn_dam_in_cell
   list%fn_dam_out_cell = fn_dam_out_cell
 

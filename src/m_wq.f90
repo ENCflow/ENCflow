@@ -183,7 +183,7 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- 境界流入濃度 ---
   call setup_inflow_conc(wq, g, b, list)
 
-  ! --- ダム捕捉台帳(全ダムが対象。dam_area の有無によらない) ---
+  ! --- ダム捕捉台帳(全ダム・湖沼が対象) ---
   call setup_dams(wq, g, b)
 
   ! --- 状態の確保 ---
