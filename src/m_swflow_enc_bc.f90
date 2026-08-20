@@ -13,7 +13,7 @@ submodule(m_swflow_enc) m_swflow_enc_bc
   use, intrinsic :: iso_fortran_env, only : r64 => real64
   use m_boundary, only : t_boundary, e_bc_wall, e_bc_outflow, e_bc_radiation, &
                          e_bc_inflow, e_side_w, e_side_e, e_side_n, e_side_s, &
-                         dam_operate, e_struct_dam
+                         dam_operate, dam_sink, e_struct_dam
   use m_parallel, only : dcp, par_stop, par_allreduce_sumr
   implicit none
 
@@ -279,9 +279,11 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! ダムの適用(§22): 捕捉帯セルの到達水を全量吸収して s%hrs に貯留し
-! (=バケツ。到達水は段落ち的に消える)、運転ルール(dam_operate)で
-! 引き落とし体積を決めて放流セルへ分配する。
+! ダム・湖沼の適用(§22): 捕捉集合セルの到達水を全量吸収して s%hrs に
+! 貯留し(=バケツ。到達水は段落ち的に消える)、運転ルール(dam_operate)
+! で引き落とし体積を決めて放流セルへ分配する。水位固定湖沼(dmode=0。
+! 放流セルなし)は到達水を貯留せず全量消失させる(dam_sink。
+! lake_plan.md §3.4)。
 !   呼び出しは時間ループの boundary_h の直前のみ(init の boundary_h
 !   適用には含めない: 含めると restore 時に最終ステップのダム操作が
 !   二重適用され、往復ビット一致が破れる)。
@@ -307,6 +309,21 @@ module subroutine dam_apply(p, g, b, s, sx)
     if (b%struct(ip)%kind /= e_struct_dam) cycle
     vabs_row = 0.0_r64
     vrow = 0.0_r64
+    !--- 水位固定湖沼(dmode=0): 到達水は全量消失(貯留しない)。
+    !    hrs は常に 0 のまま。分岐は namelist 由来で全ランク同一 ---
+    if (b%struct(ip)%dmode == 0) then
+      do k = 1, b%struct(ip)%ncin
+        i = b%struct(ip)%cin(1,k)
+        j = b%struct(ip)%cin(2,k)
+        if (j < dcp%js .or. j > dcp%je) cycle
+        if (sx%h1(i,j) > 0.0) then
+          vabs_row(j) = vabs_row(j) + real(sx%h1(i,j) * g%gv(i,j) * g%dx * g%dy, r64)
+          sx%h1(i,j) = 0.0
+        end if
+      end do
+      call dam_sink(b, ip, p, vabs_row)
+      cycle
+    end if
     do k = 1, b%struct(ip)%ncin
       i = b%struct(ip)%cin(1,k)
       j = b%struct(ip)%cin(2,k)
