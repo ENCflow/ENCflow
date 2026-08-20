@@ -89,6 +89,13 @@ module m_state
     real, allocatable :: hmax(:,:)      ! maximum depth (m)
     real, allocatable :: hmaxt(:,:)     ! maximum depth time (min)
     real, allocatable :: vvmax(:,:)     ! maximum velocity (m/s)
+    ! --- 土砂災害の危険度統計(f_out_* 指定時のみ確保。§28.9)---
+    real, allocatable :: dmax(:,:)      ! 最大流動深 h+hs (m)(f_out_dmax/dmaxt)
+    real, allocatable :: dmaxt(:,:)     ! 最大流動深の時刻 (min)
+    real, allocatable :: fmax(:,:)      ! 最大流体力 (h+hs)・vv² (m3/s2)(f_out_fmax)
+    real, allocatable :: fs(:,:)        ! 斜面安全率 Fs(f_out_fs。slide_pass1 が
+                                        ! dt_geomorph 周期で更新。-1 = 評価対象外)
+    real, allocatable :: fsmin(:,:)     ! Fs の期間最小(-1 = 未評価。危険度マップ)
     real, allocatable :: qqmax(:,:)     ! maximum discharge (m^2/s)
     real, allocatable :: qqdir(:,:)     ! maximum discharge direction (angle from x-axis, -pi~pi)
     real, allocatable :: qdir(:,:)      ! discharge direction (angle from x-axis, -pi~pi)
@@ -254,6 +261,18 @@ subroutine m_state_init(s, p, g)
   allocate(s%ddir1(1:g%nx,dcp%jsh:dcp%jeh), source = 0)
   allocate(s%ddir8(1:g%nx,dcp%jsh:dcp%jeh), source = 0)
 
+  ! 土砂災害の危険度統計(指定時のみ確保 = 無効時ゼロコスト。§28.9。
+  ! 前提条件(土砂モジュール・f_slide)の検証は m_geomorph_init が行う)
+  if (p%f_out_dmax > 0 .or. p%f_out_dmaxt > 0) then
+    allocate(s%dmax(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%dmaxt(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  end if
+  if (p%f_out_fmax > 0) allocate(s%fmax(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  if (p%f_out_fs > 0) then
+    allocate(s%fs(1:g%nx,dcp%jsh:dcp%jeh), source = -1.0)
+    allocate(s%fsmin(1:g%nx,dcp%jsh:dcp%jeh), source = -1.0)
+  end if
+
   ! 初期条件設定ファイル読み込み(fn_initial 未指定なら読まず、
   ! t_list_initial の既定値=乾いた状態 h=0 から開始する。
   ! 空文字のまま open して実行時エラーになる実バグの修正 2026-08-14)
@@ -353,6 +372,7 @@ subroutine m_state_calcstat(s, p, g)
   type(t_geoinfo), intent(in) :: g
   real :: hmax
   real :: vvmax
+  real :: ht
   real :: qqmax
   real :: cnmax
   ! 診断集約の総和は PREC によらず real64 で行う(単精度ビルドでの
@@ -384,7 +404,7 @@ subroutine m_state_calcstat(s, p, g)
   qcumf = p%dt / g%dx / g%dy / s%n_valcells * 1000
   dtpdx = p%dt / min(g%dx, g%dy)
 
-  !$omp parallel do schedule(dynamic) private(i, j, cosdir, cc), & 
+  !$omp parallel do schedule(dynamic) private(i, j, cosdir, cc, ht), & 
   !$omp reduction(max: hmax, vvmax, qqmax, cnmax)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
@@ -422,6 +442,18 @@ subroutine m_state_calcstat(s, p, g)
         s%hmaxt(i,j) = s%t / 60.                               ! 最大水深発生時刻(min)
       end if
       if (s%vv(i,j) > s%vvmax(i,j)) s%vvmax(i,j) = s%vv(i,j)   ! 最大流速
+      ! 土砂災害の危険度統計(確保時のみ。§28.9。混合流動深 h+hs)
+      if (allocated(s%dmax)) then
+        ht = s%h(i,j) + max(s%hs(i,j), 0.0)
+        if (ht > s%dmax(i,j)) then
+          s%dmax(i,j) = ht                                     ! 最大流動深
+          s%dmaxt(i,j) = s%t / 60.                             ! 発生時刻(min)
+        end if
+      end if
+      if (allocated(s%fmax)) then
+        ht = (s%h(i,j) + max(s%hs(i,j), 0.0)) * s%vv(i,j)**2
+        if (ht > s%fmax(i,j)) s%fmax(i,j) = ht                 ! 最大流体力
+      end if
       if (s%qq(i,j) > 0.0) then
         cosdir = min(1.,max(-1.,s%m(i,j) / s%qq(i,j)))         ! 流向のcos
         s%qdir(i,j) = acos(cosdir) * sign(1., s%n(i,j))        ! 流向
@@ -659,6 +691,11 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hmax)) deallocate(s%hmax)
   if (allocated(s%hmaxt)) deallocate(s%hmaxt)
   if (allocated(s%vvmax)) deallocate(s%vvmax)
+  if (allocated(s%dmax)) deallocate(s%dmax)
+  if (allocated(s%dmaxt)) deallocate(s%dmaxt)
+  if (allocated(s%fmax)) deallocate(s%fmax)
+  if (allocated(s%fs)) deallocate(s%fs)
+  if (allocated(s%fsmin)) deallocate(s%fsmin)
   if (allocated(s%qqmax)) deallocate(s%qqmax)
   if (allocated(s%qqdir)) deallocate(s%qqdir)
   if (allocated(s%qdir)) deallocate(s%qdir)

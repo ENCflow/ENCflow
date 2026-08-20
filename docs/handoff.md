@@ -292,7 +292,10 @@
    - S_grnd 表示が h=0 セルの hg を集計しない既存仕様の扱い
      (developer.md §28.4。直すなら m_state_calcstat の cycle 位置の
      変更 = 表示のみだが既存 Log との比較に影響 — 要議論)
-   - Fs 分布の output_matrix 出力(f_out_fs)と record 計測の追加
+   - (解決 2026-08-20)Fs 分布の出力は f_out_fs として実装
+     (期間最小 Fs9999・f_slide=2 診断モード・f_out_dmax/fmax/hs と
+     一式。developer.md §28.9)。残るは record 計測(プローブ時系列)
+     への Fs・流動深の追加のみ
    - f_wash と f_debris の併用(現状 wash は f_suspend 必須)、
      斜面崩壊の部分深さ化(現状は全層)、二相・二層モデルは将来
    - (解決 2026-08-16)マージ直後に観測した Run_MPI の過渡的な

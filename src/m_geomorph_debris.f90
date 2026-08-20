@@ -239,9 +239,12 @@ module subroutine init_debris(gm, p, g, list)
     call read_release(p, g, trim(list%fn_dbinit))
   end if
 
-  ! --- 無限長斜面安定判定(f_slide) ---
+  ! --- 無限長斜面安定判定(f_slide。2 = 判定のみ = Fs 診断・危険度
+  !     マップ用で流動化しない(§28.9)。パラメータ要件は 1 と同じ)---
   if (list%f_slide > 0) then
-    if (list%f_slide /= 1) call par_stop("list_geomorph: f_slide must be 0 or 1")
+    if (list%f_slide /= 1 .and. list%f_slide /= 2) then
+      call par_stop("list_geomorph: f_slide must be 0, 1(judge+fluidize) or 2(judge only)")
+    end if
     if (list%slide_c < 0.0) call par_stop("list_geomorph: slide_c must be >= 0")
     if (list%slide_phi <= 0.0 .or. list%slide_phi >= 90.0) then
       call par_stop("list_geomorph: f_slide requires slide_phi in (0, 90) deg")
@@ -252,7 +255,7 @@ module subroutine init_debris(gm, p, g, list)
     if (list%db_relsat < 0.0 .or. list%db_relsat > 1.0) then
       call par_stop("list_geomorph: f_slide requires db_relsat in [0, 1]")
     end if
-    gm%f_slide = 1
+    gm%f_slide = list%f_slide
     gm%sl_c = list%slide_c
     gm%sl_tanphi = tan(list%slide_phi * deg2rad)
     gm%sl_gamma = list%slide_gamma
@@ -465,7 +468,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   !$omp end parallel do
 
   ! --- 斜面安定のパス2: Fs < 1 のセルの土層を全層流動化 ---
-  if (gm%f_slide > 0) call slide_pass2(gm, g, s)
+  if (gm%f_slide == 1) call slide_pass2(gm, g, s)   ! 2(判定のみ)は流動化しない
 
 end subroutine
 
@@ -488,14 +491,19 @@ subroutine slide_pass1(gm, p, g, s)
   integer :: i, j
   real :: tanth, cos2, w, hw, u, fs
   real :: fsmin_loc
+  logical :: dofs
   real, parameter :: rhow = 1000.0          ! 水の密度 (kg/m3。淡水)
 
+  ! Fs 分布出力(f_out_fs。§28.9)。評価のたびに自セルへ書く。
+  ! 未評価セル(無効・海・岩盤・勾配なし)は -1(番兵)へ戻す
+  dofs = allocated(s%fs)
   fsmin_loc = huge(1.0)
   !$omp parallel do schedule(static) private(i, j, tanth, cos2, w, hw, u, fs) &
   !$omp reduction(min: fsmin_loc)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       dbr%sld(i,j) = .false.
+      if (dofs) s%fs(i,j) = -1.0
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%sd(i,j) <= 0.0) cycle
@@ -507,6 +515,10 @@ subroutine slide_pass1(gm, p, g, s)
       if (s%gw_active .and. g%sy0 > 0.0) hw = min(s%hg(i,j) / g%sy0, s%sd(i,j))
       u = rhow * p%gg * hw                    ! γw・hw(cos²θ は下で共通に乗算)
       fs = (gm%sl_c + (w - u) * cos2 * gm%sl_tanphi) / (w * tanth * cos2)
+      if (dofs) then
+        s%fs(i,j) = fs
+        if (s%fsmin(i,j) < 0.0 .or. fs < s%fsmin(i,j)) s%fsmin(i,j) = fs
+      end if
       if (fs < fsmin_loc) fsmin_loc = fs
       if (fs < 1.0) dbr%sld(i,j) = .true.
     end do
