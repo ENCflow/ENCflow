@@ -41,6 +41,7 @@ BINDIR	= bin
 
 # サンプルデータディレクトリ
 SMPLDIRS	= \
+		  examples/badland \
 		  examples/benchmark/h-plane \
 		  examples/benchmark/v-shaped \
 		  examples/benchmark/v-valley

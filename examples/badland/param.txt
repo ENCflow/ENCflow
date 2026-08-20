@@ -1,0 +1,69 @@
+! バッドランド・火砕丘型の谷形成デモ(f_splash。developer.md §48、
+! docs/splash_plan.md §5 の模式実験そのもの)
+!   台地(z=15 m)+擾乱付き急崖(tanθ=1.5 ≈ 56°、縁位置に ±0.65 m の
+!   2 モード正弦擾乱)へ一様降雨 10 mm/h。浸透能(Green-Ampt 36 mm/h)が
+!   降雨を上回るため地表流はゼロのまま、雨滴+サブグリッドリルの
+!   凹地形フィードバック(spl_cb)が崖縁の擾乱を谷に成長させる。
+!   弱い斜面クリープ(creep_d)が波長選択を担う(強すぎると谷が均され、
+!   なしだと格子スケールの市松が卓越する — splash_plan.md §6.2)。
+!   実行: python3 make_terrain.py && ./encflow param.txt
+!   期待される挙動: 台地内部は均一 ~2 mm の低下のみ(谷ゼロ)、
+!   崖縁の y 方向起伏が ~0.5 m → 1.5 m(×3)に成長、谷 ~9 本・
+!   最大下刻 ~5 m・稜線の鋭化(T_geo = tt×morfac = 1.8e6 s の降雨相当)
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 2.0
+  t0 = 0
+  tt = 3600
+  dt_disp = 600
+  dt_file = 3600
+  dt_recrd = 3600
+  fn_geoinfo = '-'
+  fn_precip = '-'
+  fn_gwflow = '-'
+  fn_geomorph = '-'
+  fn_enc = '-'
+  dir_data = '.'
+  dir_result = 'result'
+  f_out_z = 1
+  f_check_cfl = 0
+/
+&list_enc
+/
+&list_geoinfo
+  lx = 80.0
+  ly = 60.0
+  nx = 80
+  ny = 60
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 30.0
+  sy0 = 0.2
+/
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 10
+  prval(1:2,2) = 9999, 10
+/
+&list_gwflow
+  f_gwvertical = 2
+  f_gwlateral = 0
+/
+&list_gwflow_greenampt
+  gw_ksv_mmh = 36.0
+/
+&list_geomorph
+  dt_geomorph = 20.0
+  morfac = 500.0
+  f_creep = 1
+  creep_d = 5.0e-7
+  f_splash = 1
+  spl_kr = 0.0002
+  spl_kt = 0.05
+  spl_cb = 8.0
+  spl_h = 1.5
+  spl_dzmax = 0.05
+/

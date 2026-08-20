@@ -109,6 +109,10 @@ f_slide との併用で表せます。
 | spl_h | 1.0 | リル項の勾配べき指数 |
 | spl_dzmax | 0 | 1セル・1更新の侵食上限 (m)(0: 無効)。フィードバック暴走の安全弁 |
 
+動く実例: [examples/badland](../../examples/badland/)(台地+急崖への
+長期降雨で、表面流ゼロのまま崖縁から谷が成長するデモ)。固結度による
+谷形成の有無の対照は [test/splashslide](../../test/splashslide/)。
+
 ## 土石流・斜面崩壊(f_debris / fn_dbinit / f_slide)
 
 地表水と土砂の単層混合体(流動深 = h + hs)で土石流を扱います。

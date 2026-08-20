@@ -123,6 +123,12 @@ represent this.
 | spl_h | 1.0 | Slope exponent h of the rill term |
 | spl_dzmax | 0 | Erosion cap per cell per update (m) (0: off); safety valve against runaway feedback |
 
+Working example: [examples/badland](../../../examples/badland/) (in
+Japanese; long-duration rain on a plateau-and-cliff terrain grows
+valleys from the cliff margin with zero surface runoff). The
+cohesion contrast (whether valleys form at all) is in
+[test/splashslide](../../../test/splashslide/).
+
 ## Debris flow / landslide (f_debris / fn_dbinit / f_slide)
 
 Handles debris flows as a single-layer mixture of surface water and
