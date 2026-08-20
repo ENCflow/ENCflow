@@ -106,7 +106,10 @@ read only the lines you care about.
 - **Sediment and slope hazards**: riverbed evolution by bedload and
   suspended load, hillslope erosion, slope failure (stability
   analysis), and debris flow. Terrain and soil depth evolve during the
-  computation and feed back into the flow.
+  computation and feed back into the flow. Hazard outputs (safety
+  factor Fs maps, maximum flow depth and fluid force) and the
+  operational **Soil Water Index** (JMA 3-tank model; dedicated runs)
+  are included.
 - **Volcanic hazards (density flows)**: sector collapse (debris
   avalanches), pyroclastic flows, and lahars, with their deposition
   and natural dam formation, as equivalent-fluid analyses (Voellmy and

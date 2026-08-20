@@ -139,6 +139,8 @@ subroutine output_state(p, g, s, k)
   if (p%f_out_fs > 0 .and. allocated(s%fs)) call output_matrix(p, g, "Fs", s%fs, k)
   ! 積雪水量 SWE (mm。fn_snow 有効時のみ。§31)
   if (allocated(s%swe)) call output_matrix(p, g, "Sw", 1000.0*s%swe, k)
+  ! 土壌雨量指数 SWI (mm。fn_swi 有効時のみ。§49)
+  if (allocated(s%swi)) call output_matrix(p, g, "Swi", s%swi, k)
   if (allocated(s%frofac)) call output_matrix(p, g, "Ff", s%frofac, k)
   ! 氷河の氷厚 (m 氷柱。fn_glacier 有効時のみ。§45)
   if (allocated(s%hi)) call output_matrix(p, g, "Hi", s%hi, k)
@@ -171,6 +173,9 @@ subroutine output_summary(p, g, s, k)
   if (p%f_out_fmax > 0)  call output_matrix(p, g, "F", s%fmax, k)     ! 最大流体力 (h+hs)V²
   if (p%f_out_fs > 0 .and. allocated(s%fsmin)) &
     call output_matrix(p, g, "Fs", s%fsmin, k)                        ! 期間最小の安全率
+  ! 土壌雨量指数の期間最大と発生時刻(fn_swi 有効時のみ。§49)
+  if (allocated(s%swimax)) call output_matrix(p, g, "Swi", s%swimax, k)
+  if (allocated(s%swimaxt)) call output_matrix(p, g, "Swit", s%swimaxt, k)
   if (is_root) write(un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it
 end subroutine
 

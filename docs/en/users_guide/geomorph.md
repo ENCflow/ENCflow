@@ -193,7 +193,9 @@ and groundwater, so the subsequent Fs field reflects the disturbed
 state (Fs9999 still keeps the pre-failure hazard). The saturation
 ratio - a precursor indicator for shallow slope failure - can be
 derived in post-processing as hg/(sy0·sd) from the Hg (`f_out_hg`)
-and Sd outputs.
+and Sd outputs. The operational warning indicator itself - the JMA
+Soil Water Index - can be computed in a dedicated run
+([Soil Water Index](swi.md)).
 
 ## Long-term landform evolution (f_wthr / f_uplift)
 

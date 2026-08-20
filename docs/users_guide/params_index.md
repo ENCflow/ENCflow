@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 458 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 461 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -198,6 +198,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_state_restore | &list_sysparam | [中断と再開](restart.md) |
 | f_state_save | &list_sysparam | [中断と再開](restart.md) |
 | f_suspend | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| f_swi | &list_swi | [土壌雨量指数](swi.md) |
 | f_temp_lapse | &list_meteo | [降雨・気象](forcing.md) |
 | f_uplift | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_user_routine | &list_geoinfo | [地理情報](geoinfo.md) |
@@ -285,6 +286,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_stage_val | &list_bound_stage | [境界条件](boundary.md) |
 | fn_structure | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
 | fn_sw | &list_geoinfo | [地理情報](geoinfo.md) |
+| fn_swi | &list_sysparam | [土壌雨量指数](swi.md) |
 | fn_tempmap | &list_meteo | [降雨・気象](forcing.md) |
 | fn_tide | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
 | fn_timap | &list_tide | [潮位・海面](tide.md) |
@@ -420,6 +422,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | susp_esa | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | susp_tausc | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | susp_wf | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| swi0 | &list_swi | [土壌雨量指数](swi.md) |
 | sy0 | &list_geoinfo | [地理情報](geoinfo.md) |
 | t0 | &list_sysparam | [時刻の管理](time.md) |
 | t0_c | &list_sysparam | [時刻の管理](time.md) |

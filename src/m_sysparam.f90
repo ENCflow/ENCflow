@@ -101,6 +101,7 @@ module m_sysparam
     character(:), allocatable :: fn_snow       ! 積雪・融雪設定ファイル
     character(:), allocatable :: fn_glacier    ! 氷河設定ファイル
     character(:), allocatable :: fn_salt       ! 淡塩2層設定ファイル
+    character(:), allocatable :: fn_swi        ! 土壌雨量指数設定ファイル(§49)
     real :: t_cycle = 0.0                      ! 強制の反復周期 (s。0=なし。§32.4)
     character(:), allocatable :: fn_channel    ! 河道条件設定ファイル
     character(:), allocatable :: fn_enc        ! ENC設定ファイル
@@ -228,6 +229,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%fn_snow = list%fn_snow                     ! 積雪・融雪設定ファイル
   p%fn_glacier = list%fn_glacier               ! 氷河設定ファイル
   p%fn_salt = list%fn_salt                     ! 淡塩2層設定ファイル
+  p%fn_swi = list%fn_swi                       ! 土壌雨量指数設定ファイル
   p%fn_channel = list%fn_channel               ! 河道条件設定ファイル
   p%fn_enc = list%fn_enc                       ! ENC設定ファイル
   p%fn_log = list%fn_log                       ! 状態ログファイル

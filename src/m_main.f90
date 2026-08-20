@@ -16,6 +16,7 @@ module m_main
   use m_meteo, only : t_meteo, m_meteo_init, m_meteo_dispose
   use m_wq, only : t_wq, m_wq_init, m_wq_calc, m_wq_derive, m_wq_record, m_wq_dispose
   use m_snow, only : t_snow, m_snow_init, m_snow_calc, m_snow_dispose
+  use m_swi, only : t_swi, m_swi_init, m_swi_calc, m_swi_dispose
   use m_glacier, only : t_glacier, m_glacier_init, m_glacier_calc, m_glacier_dispose
   use m_intercept, only : t_intercept, m_intercept_init, m_intercept_calc, m_intercept_step, &
                         m_intercept_has_step, m_intercept_dispose
@@ -54,6 +55,7 @@ subroutine m_main_all()
   type(t_meteo) :: mt
   type(t_wq) :: wq
   type(t_snow) :: sn
+  type(t_swi) :: si
   type(t_glacier) :: gl
   type(t_intercept) :: ic
   type(t_swflow) :: sw
@@ -120,13 +122,15 @@ subroutine m_main_all()
   call m_glacier_init(gl, p, g, s, mt)    ! glacier を初期化(fn_glacier 指定時のみ有効。
                                           ! 気温と積雪(涵養源)が必須のため
                                           ! meteo・snow より後に。§45)
+  call m_swi_init(si, p, g, s)            ! swi を初期化(fn_swi 指定時のみ有効。
+                                          ! 排他検査に他モジュールの fn_* を使う。§49)
   call output_init(p, g)                  ! ファイル出力の準備(geoinfoより後に)
 
   ! 地理情報を各ランクに合わせて縮小
   call m_geoinfo_band_shrink(g)           ! マスク類(x,sw,rw)と z(rank0以外)を帯に縮小
 
   ! ==== 時間ループ: すべて帯確保(z のみ rank0 が全域を保持) ====
-  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, gl, ierror)  ! 計算本体
+  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, gl, si, ierror)  ! 計算本体
 
   ! モジュールを破棄
   call output_dispose()
@@ -142,6 +146,7 @@ subroutine m_main_all()
   call m_wq_dispose(wq, p, g, s)          ! save は dispose で(m_state より先に走る)
   call m_snow_dispose(sn, p, g, s)        ! save は dispose で(契約5)
   call m_glacier_dispose(gl, p, g, s)     ! save は dispose で(契約5)
+  call m_swi_dispose(si, p, g)            ! save は dispose で(契約5。§49)
   call m_record_dispose(r)
   call m_state_dispose(s, p)
   call m_boundary_dispose(b)
@@ -175,7 +180,7 @@ end subroutine
 !----------------------------------------------------------------------
 ! 計算本体
 !----------------------------------------------------------------------
-subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, gl, ierror)
+subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, gl, si, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
@@ -193,6 +198,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, g
   type(t_wq), intent(inout) :: wq      ! 水質(発生源・台帳を保持)
   type(t_snow), intent(inout) :: sn    ! 積雪・融雪(SWE とスナップショットを保持)
   type(t_glacier), intent(in) :: gl    ! 氷河(氷厚 s%hi と作業台帳を保持)
+  type(t_swi), intent(inout) :: si     ! 土壌雨量指数(タンク貯留を保持。§49)
   integer, intent(out) :: ierror
   integer :: it            ! 時間ループのカウント
   logical :: do_file       ! このステップでファイル出力するか
@@ -254,6 +260,10 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, g
     call m_snow_calc(sn, p, g, s, mt, &
                      (mod(it, pr%idt_prupdate) == 0 .and. pr_updated) &
                      .or. m_intercept_has_step(ic))
+
+    ! 土壌雨量指数(fn_swi 未指定なら no-op。遮断適用後の地上雨量 s%pre を
+    ! 読む純診断。どの物理場にも書かない。§49)
+    call m_swi_calc(si, p, g, s)
 
     ! 氷河(fn_glacier 未指定なら no-op。氷面の度日融解を毎ステップ h へ
     ! 投入し、雪崩再配分・氷化・SIA 流動・氷河侵食を dt_glacier 間隔で

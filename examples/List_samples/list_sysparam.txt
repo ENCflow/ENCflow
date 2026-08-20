@@ -55,6 +55,7 @@
   !fn_gwflow = ""           ! 地下水
   !fn_geomorph = ""         ! 土砂・地形変化
   !fn_wq = ""               ! 水質(負荷流出)
+  !fn_swi = ""              ! 土壌雨量指数(専用ラン。users_guide/swi.md)
   !fn_record = ""           ! 計測(プローブ・測線)
 
   ! ---- 分布ファイルの形式(users_guide/io.md)----

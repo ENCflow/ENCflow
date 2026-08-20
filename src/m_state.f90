@@ -139,6 +139,11 @@ module m_state
     real, allocatable :: swe(:,:)       ! 積雪水量 SWE (m 水柱。幾何面積基底。
                                         ! m_snow が確保・更新・保存する。
                                         ! fn_snow 未指定なら未確保。§31)
+    real, allocatable :: swi(:,:)       ! 土壌雨量指数 SWI (mm)。m_swi が確保・
+                                        ! 更新(タンクは私有、SWI は診断和)。
+                                        ! fn_swi 未指定なら未確保。§49
+    real, allocatable :: swimax(:,:)    ! SWI の期間最大 (mm)(save 対象外。§7)
+    real, allocatable :: swimaxt(:,:)   ! SWI 最大の発生時刻 (min)
     real, allocatable :: hi(:,:)        ! 氷河の氷厚 (m 氷柱。幾何面積基底。水当量は
                                         ! hi×(ρi/ρw)。m_glacier が確保・更新・保存する。
                                         ! fn_glacier 未指定なら未確保。§45)
@@ -692,6 +697,9 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hss)) deallocate(s%hss)
   if (allocated(s%hgs)) deallocate(s%hgs)
   if (allocated(s%swe)) deallocate(s%swe)
+  if (allocated(s%swi)) deallocate(s%swi)
+  if (allocated(s%swimax)) deallocate(s%swimax)
+  if (allocated(s%swimaxt)) deallocate(s%swimaxt)
   if (allocated(s%hi)) deallocate(s%hi)
   if (allocated(s%fxg)) deallocate(s%fxg)
   if (allocated(s%frofac)) deallocate(s%frofac)
