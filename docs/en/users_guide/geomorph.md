@@ -140,7 +140,7 @@ recommend `f_gravity_correction = 1` in &list_enc.
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| f_dbed | 1 | E-D closure. 0: no exchange (equivalent fluid; see volcanic flows below), 1: relaxation to the equilibrium concentration (simplified), 2: Egashira-Ashida 1992, 3: Takahashi-Nakagawa 1991 (requires db_d50) |
+| f_dbed | 1 | E-D closure. 0: no exchange (equivalent fluid; see volcanic flows below), 1: relaxation to the equilibrium concentration (simplified), 2: Egashira-Ashida 1992, 3: Takahashi-Nakagawa 1991 (requires db_d50), 4: velocity-proportional entrainment E = δe·|V| (path entrainment for avalanches and debris avalanches; entrainment only — deposition via f_dbstop; see the snow-avalanche paragraph below) |
 | db_phi | - | Internal friction angle of the sediment (deg). **Required** when f_dbed>=1 or f_dbres=1,2 |
 | db_delte / db_deltd | 0.0007 / 0.05 | Rate coefficients for erosion / deposition (calibration parameters of f_dbed=1,3) |
 | f_dbres | 1 | Resistance law. 0: Manning only, 1: Coulomb + Manning combined, 2: Egashira constitutive law (requires db_d50, db_erest), 3: Takahashi-Nakagawa 1991 stony type (requires db_d50), 4: Voellmy (requires db_mu, db_xi), 5: constant retarding stress (requires db_tauy) |
@@ -156,9 +156,15 @@ instantaneous mobilization below (fn_dbinit) or with a
 sediment-laden inflow boundary (eruption supply rate), and fix stopped
 material to the terrain with f_dbstop=1. Deposition, natural dam
 formation, dam-break flooding, and rainfall-triggered secondary lahars
-are all chained within a single run. Dilute phenomena (pyroclastic
-surges, plumes, atmospheric ash transport) are out of scope by design
-(see debris_plan.md §5).
+are all chained within a single run. If **entrainment of path
+deposits** is needed (a debris avalanche growing by incorporating
+colluvium or pyroclastic deposits along its path), use
+`f_dbed = 4` (velocity-proportional entrainment E = δe·|V|) and give
+the entrainable layer thickness as the soil depth sd (the mechanism
+and setup are the same as in the snow-avalanche paragraph below —
+only the reinterpretation of the entrainable layer differs). Dilute
+phenomena (pyroclastic surges, plumes, atmospheric ash transport) are
+out of scope by design (see debris_plan.md §5).
 
 **Snow avalanches (dense flow)** - the same equivalent-fluid setup is
 also the standard formulation for dense-flow snow avalanches. The
