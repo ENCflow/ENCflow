@@ -42,7 +42,7 @@ module m_boundary
   public :: m_boundary_makebdc
   public :: m_boundary_dam_seed
   public :: m_boundary_dam_record
-  public :: dam_operate, dam_sink, e_struct_dam
+  public :: dam_operate, dam_sink, dam_draw, e_struct_dam
   public :: e_bc_wall, e_bc_outflow, e_bc_radiation, e_bc_inflow
   public :: e_side_w, e_side_e, e_side_n, e_side_s
   ! 共有補助手続き(submodule m_boundary_structure も使う)。private のままだと
@@ -158,8 +158,13 @@ module m_boundary
                                            !   評価は boundary_h のダム節 → dam_operate)
     real :: q = 0.0                        ! 現時刻の目標流量 (m3/s。makebdc が更新。
                                            !   符号付き >0 = cin→cout。ダムは常に 0)
-    ! ---- 以下はダム(e_struct_dam)専用 ----
-    integer :: dmode = 0                   ! 運転モード (1:一定量, 2:一定率カット, 3:自然調節)
+    ! ---- 以下はダム・湖沼(e_struct_dam)専用 ----
+    integer :: dmode = 0                   ! 運転モード (0:水位固定湖沼, 1:一定量,
+                                           !   2:一定率カット, 3:自然調節)
+    integer :: lref = 0                    ! >0: 湖沼参照(b%struct の通し番号)。自前の
+                                           !   湖面を持たず参照先の貯留から自分の運転則で
+                                           !   引く追加の放流工(§22。貯留幾何は init が
+                                           !   参照先からコピー済み)
     integer :: nhv = 0                     ! HV 曲線の点数
     real, allocatable :: hv(:,:)           ! HV 曲線 (1:2, 1:nhv) (水位 m, 貯水量 m3。
                                            !   両列とも単調増加。区間は直線補間)
@@ -235,6 +240,17 @@ module m_boundary
       integer, intent(in) :: ist
       type(t_sysparam), intent(in) :: p
       real(real64), intent(in) :: vabs_row(dcp%js:)
+    end subroutine
+    ! 湖沼参照構造物(lref>0)の毎ステップ運転: 参照先湖沼の貯留から
+    ! 自分の運転則で引き落とし体積を決め、湖沼の hrs を比例縮小する
+    ! (参照先の dam_operate の後に呼ぶこと=番号順。collective なし)
+    module subroutine dam_draw(b, ist, p, g, s, vdraw)
+      type(t_boundary), intent(inout) :: b
+      integer, intent(in) :: ist
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(out) :: vdraw
     end subroutine
     ! ダム CSV(t, H, V, Qin, Qout, Qspill)の1行出力(記録間隔で呼ぶ)
     module subroutine m_boundary_dam_record(b, p, s)

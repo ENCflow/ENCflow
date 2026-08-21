@@ -100,6 +100,10 @@ module list_structure
                                                    !   湖沼なし、値 n = 構造物番号 n の湖面=
                                                    !   捕捉集合。セルリスト指定との併用は
                                                    !   番号ごとに択一)
+    integer :: dam_lake(1:nstmax) = 0              ! >0: 湖沼参照(自前の湖面を持たず番号 m の
+                                                   !   湖沼の貯留から自分の運転則・放流セルで
+                                                   !   引く=追加の放流工。m < n。参照先は
+                                                   !   主放流を持つ湖沼であること)
     character(len=maxpathlen) :: fn_dam_in_cell(1:nstmax) = ""    ! 捕捉帯セル一覧ファイル名
     character(len=maxpathlen) :: fn_dam_out_cell(1:nstmax) = ""   ! 放流セル一覧ファイル名
   end type
@@ -305,6 +309,7 @@ subroutine read_dam(un, list)
   real :: dam_qmax(1:nstmax), dam_zbase(1:nstmax)
   real :: dam_tadashigaki(1:nstmax), dam_h_init(1:nstmax)
   real :: dam_hmin(1:nstmax), dam_hsur(1:nstmax)
+  integer :: dam_lake(1:nstmax)
   character(len=maxpathlen) :: fn_dam_map
   character(len=maxpathlen) :: fn_dam_in_cell(1:nstmax)
   character(len=maxpathlen) :: fn_dam_out_cell(1:nstmax)
@@ -314,7 +319,7 @@ subroutine read_dam(un, list)
                              dam_q0, dam_rate, dam_hq_rule, &
                              dam_ori_width, dam_ori_height, dam_ori_zbase, dam_ori_ce, &
                              dam_qmax, dam_zbase, dam_tadashigaki, dam_h_init, &
-                             dam_hmin, dam_hsur, fn_dam_map, &
+                             dam_hmin, dam_hsur, dam_lake, fn_dam_map, &
                              fn_dam_in_cell, fn_dam_out_cell
 
   dam_in_cell = -9999
@@ -334,6 +339,7 @@ subroutine read_dam(un, list)
   dam_h_init = list%dam_h_init
   dam_hmin = list%dam_hmin
   dam_hsur = list%dam_hsur
+  dam_lake = list%dam_lake
   fn_dam_map = list%fn_dam_map
   fn_dam_in_cell = list%fn_dam_in_cell
   fn_dam_out_cell = list%fn_dam_out_cell
@@ -361,6 +367,7 @@ subroutine read_dam(un, list)
   list%dam_h_init = dam_h_init
   list%dam_hmin = dam_hmin
   list%dam_hsur = dam_hsur
+  list%dam_lake = dam_lake
   list%fn_dam_map = fn_dam_map
   list%fn_dam_in_cell = fn_dam_in_cell
   list%fn_dam_out_cell = fn_dam_out_cell

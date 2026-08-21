@@ -13,7 +13,7 @@ submodule(m_swflow_enc) m_swflow_enc_bc
   use, intrinsic :: iso_fortran_env, only : r64 => real64
   use m_boundary, only : t_boundary, e_bc_wall, e_bc_outflow, e_bc_radiation, &
                          e_bc_inflow, e_side_w, e_side_e, e_side_n, e_side_s, &
-                         dam_operate, dam_sink, e_struct_dam
+                         dam_operate, dam_sink, dam_draw, e_struct_dam
   use m_parallel, only : dcp, par_stop, par_allreduce_sumr
   implicit none
 
@@ -309,6 +309,22 @@ module subroutine dam_apply(p, g, b, s, sx)
     if (b%struct(ip)%kind /= e_struct_dam) cycle
     vabs_row = 0.0_r64
     vrow = 0.0_r64
+    !--- 湖沼参照構造物(lref>0): 参照先湖沼の貯留から自分の運転則で引き、
+    !    自分の放流セルへ分配する(§22 第2弾)。参照先(小さい番号)の
+    !    dam_operate はこのループで処理済み。collective なし ---
+    if (b%struct(ip)%lref > 0) then
+      call dam_draw(b, ip, p, g, s, vdraw)
+      if (vdraw > 0.0) then
+        qcell = vdraw / (b%struct(ip)%ncout * g%dx * g%dy)
+        do k = 1, b%struct(ip)%ncout
+          i = b%struct(ip)%cout(1,k)
+          j = b%struct(ip)%cout(2,k)
+          if (j < dcp%js .or. j > dcp%je) cycle
+          sx%h1(i,j) = sx%h1(i,j) + qcell / g%gv(i,j)
+        end do
+      end if
+      cycle
+    end if
     !--- 水位固定湖沼(dmode=0): 到達水は全量消失(貯留しない)。
     !    hrs は常に 0 のまま。分岐は namelist 由来で全ランク同一 ---
     if (b%struct(ip)%dmode == 0) then
