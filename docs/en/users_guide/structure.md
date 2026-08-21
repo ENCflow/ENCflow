@@ -1,6 +1,6 @@
 # Internal hydraulic structures (&list_struct_pump / culvert / diversion / dam)
 
-> English mirror of docs/users_guide/structure.md (based on commit 72deb52). The Japanese file is the master copy.
+> English mirror of docs/users_guide/structure.md (based on commit 583d100). The Japanese file is the master copy.
 
 [Back to the user's guide index](../users_guide.md)
 
@@ -243,9 +243,10 @@ to it as long as the floor is not hit).
   for multi-purpose dams specify the restricted level explicitly).
   Water below the minimum level is dead storage and cannot be drawn
   down.
-- At every recording time, (t, H, V, Qin, Qout, Qspill) is written to
-  `result/dams/dam0001.csv` (a level-held lake records Qin = the
-  vanished volume).
+- At every recording time, (t, H, V, Qin, Qout, Qspill, Qgw) is
+  written to `result/dams/dam0001.csv` (a level-held lake records Qin
+  = the vanished volume; Qgw is the exchange of the groundwater-head
+  forcing dam_gw, 0 when unused).
 - **Evaporation**: with evapotranspiration ([fn_evap](forcing.md))
   active, the storage of the capture set evaporates cell by cell by
   the cell area, the same as ponds. Painting the surface on the raster
@@ -307,6 +308,33 @@ release cells**.
   column is 0; the header carries the referenced lake number as
   `# lake =`).
 
+### Forcing the groundwater head to the lake level (dam_gw)
+
+Specifying `dam_gw(n) = 1` **fixes the groundwater head to the lake
+level** on the surface cells of lake n (a Dirichlet boundary). Use it
+to solve the exchange between the lake and the aquifer -- groundwater
+levels in lakeside lowlands, seepage into reclaimed land, and so on.
+The **lateral groundwater flow f_gwlateral = 1** of fn_gwflow is
+mandatory.
+
+- For a storage lake the exchanged volume is automatically traded with
+  the lake storage V (leakage to the groundwater lowers V; a higher
+  groundwater head raises it. When the lake runs dry the forcing backs
+  off automatically). For a level-held lake the level stays fixed and
+  only the exchange is recorded (the same semantics as the sea mask).
+- The exchange appears in the `Qgw` column of the CSV (m3/s; positive
+  = lake to groundwater). This column is always written for every
+  dam/lake and stays 0 without dam_gw.
+- Approximation: the groundwater head saturates at the ground surface
+  (the excess pressure of the lake depth is not represented). At the
+  start of a run an initial filling saturates the soil of the surface
+  cells with lake water (for a storage lake this is real water taken
+  from V).
+- Combined with evapotranspiration, groundwater evaporation at the
+  surface cells is replenished from the lake at the next forcing, so
+  the lake effectively supplies the evapotranspiration through the
+  groundwater.
+
 | Parameter | Default | Meaning |
 |---|---|---|
 | dam_in_cell(:,k,n) | -- | Cells (i, j) of the surface (capture set). Mandatory through one of the three ways (fn_dam_in_cell / fn_dam_map) |
@@ -317,6 +345,7 @@ release cells**.
 | dam_hsur(n) | none | Surcharge level of the auto linear HV (elevation m). Omitted = no upper bound (no spill). Mandatory for modes 1, 2 (except pass-through) and the sqrt law |
 | f_dam_mode(n) | -- | Operation mode. 1: constant release, 2: constant-rate cut, 3: natural regulation. None + no release cells = a level-held lake |
 | dam_lake(n) | 0 | >0: lake reference (structure n is an additional release work drawing from the storage of lake m=dam_lake(n) with its own rule and release cells). The referenced lake must be a lower-numbered lake with a main release. No surface / dam_hv / dam_hmin / dam_h_init on the referencing structure |
+| dam_gw(n) | 0 | 1: fix the groundwater head to the lake level on the surface cells (see "Forcing the groundwater head" above). Requires f_gwlateral=1 of fn_gwflow. Not allowed on pass-through lakes and referencing structures |
 | dam_q0(n) | -- | Constant release of mode 1 (m3/s). Mandatory in mode 1 |
 | dam_rate(n) | -- | Release ratio r of mode 2 (0-1). Mandatory in mode 2. 1.0 = pass-through |
 | dam_hq_rule(:,k,n) | -- | Mode 3(a): level-release polyline (m, m3/s). Levels monotonically increasing |

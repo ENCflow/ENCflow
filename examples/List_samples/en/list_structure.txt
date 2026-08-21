@@ -1,5 +1,5 @@
 !======================================================================
-! English mirror of examples/List_samples/list_structure.txt (based on commit 72deb52).
+! English mirror of examples/List_samples/list_structure.txt (based on commit 583d100).
 ! The Japanese file is the master copy; edit it first.
 !======================================================================
 !
@@ -260,6 +260,12 @@
 !   lower-numbered lake with a main release. Draws are applied in
 !   number order; the spill goes out through the main release. No
 !   surface / dam_hv / dam_hmin / dam_h_init on the referencing side)
+!   Groundwater-head forcing: dam_gw(n) = 1 fixes the groundwater head
+!   on the surface cells to the lake level (Dirichlet. Requires
+!   f_gwlateral=1 of fn_gwflow. Storage lakes trade the exchange with
+!   V; level-held lakes only record it. Written to the Qgw column of
+!   the CSV. The head saturates at the ground surface = the excess
+!   pressure of the lake depth is not represented)
 !   Emergency release (modes 1,2): from dam_tadashigaki (start level m;
 !   if omitted = lowest + 0.9 x (surcharge - lowest)) up to the
 !   surcharge, the release is ramped up toward the inflow. The excess
@@ -318,8 +324,10 @@
 !  dam_rate(3) = 1.0
 !  dam_out_cell(:,1,3) = 63, 22
 !  ! Lake 4: a level-held lake (a large surface not solved; inflow
-!  ! vanishes, level fixed)
+!  ! vanishes, level fixed). The lakeside groundwater head is also fixed
+!  ! to the lake level (needs the lateral flow of fn_gwflow)
 !  dam_h_init(4) = 12.0                  ! the fixed level (surface = raster number 4)
+!  dam_gw(4) = 1                         ! fix the groundwater head to 12.0
 !  ! Structure 5: an additional release work of lake 2 (dam_lake
 !  ! reference = several releases with different operations. The
 !  ! referenced lake must be a lower-numbered lake with a main release.
