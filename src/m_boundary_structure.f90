@@ -1036,6 +1036,9 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
       b%struct(ist)%cout(1:2,1:n) = list%dam_out_cell(1:2,1:n,id)
       b%struct(ist)%ncout = n
     end if
+    if (list%dam_gw(id) /= 0 .and. list%dam_gw(id) /= 1) then
+      call par_stop("list_struct_dam: dam_gw of dam/lake "//itoa(id)//" must be 0 or 1")
+    end if
     is_ref = list%dam_lake(id) > 0     ! 湖沼参照構造物(自前の湖面を持たない)
     if (.not. is_ref .and. b%struct(ist)%ncin <= 0) then
       call par_stop("list_struct_dam: dam/lake "//itoa(id)//" has no capture cells (give " &
@@ -1090,6 +1093,10 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
                       //"dam_h_init on referencing structure "//itoa(id) &
                       //" (lake "//itoa(list%dam_lake(id))//" owns the storage)")
       end if
+      if (list%dam_gw(id) == 1) then
+        call par_stop("list_struct_dam: specify dam_gw on lake "//itoa(list%dam_lake(id)) &
+                      //" itself, not on referencing structure "//itoa(id))
+      end if
       itgt = ofs + list%dam_lake(id)
       if (b%struct(itgt)%lref /= 0) then
         call par_stop("list_struct_dam: structure "//itoa(id)//" cannot reference " &
@@ -1142,6 +1149,7 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
       end if
       b%struct(ist)%dmode = 0
       b%struct(ist)%geom(10) = list%dam_h_init(id)
+      b%struct(ist)%gwf = list%dam_gw(id)   ! 水位固定湖沼の地下水頭強制(主用途)
       cycle
     end if
 
@@ -1359,6 +1367,16 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
       b%struct(ist)%geom(8) = struct_v_of_h(b%struct(ist), hini)
     end if
 
+    !--- 湖水位の地下水頭強制(dam_gw。gwflow 側の前提は
+    !    m_boundary_dam_gwcheck が gwflow init 後に検査する) ---
+    if (list%dam_gw(id) == 1) then
+      if (.not. have_base) then
+        call par_stop("list_struct_dam: dam_gw of pass-through lake "//itoa(id) &
+                      //" is not possible (it holds no water level)")
+      end if
+      b%struct(ist)%gwf = 1
+    end if
+
   end do
   if (allocated(lmap)) deallocate(lmap)
 
@@ -1404,7 +1422,7 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
     end if
     write(un, '("# Vmin(m3) =,",es14.6,", Vmax(m3) =,",es14.6)') &
           b%struct(ist)%geom(1), b%struct(ist)%geom(2)
-    write(un, '("# t(hour), t(min), H(m), V(m3), Qin(m3/s), Qout(m3/s), Qspill(m3/s)")')
+    write(un, '("# t(hour), t(min), H(m), V(m3), Qin(m3/s), Qout(m3/s), Qspill(m3/s), Qgw(m3/s)")')
     b%struct(ist)%un = un
   end do
 
@@ -1743,9 +1761,130 @@ module subroutine m_boundary_dam_record(b, p, s)
     if (b%struct(ist)%kind /= e_struct_dam) cycle
     un = b%struct(ist)%un
     if (un == 0) cycle           ! 0 = 未開設(newunit は負値を返す)
-    write(un, '(f13.4,",",f13.4,",",f13.4,",",es15.7,3(",",f13.4))') &
+    write(un, '(f13.4,",",f13.4,",",f13.4,",",es15.7,4(",",f13.4))') &
           s%t / 3600, s%t / 60, b%struct(ist)%dh, b%struct(ist)%dv, &
-          b%struct(ist)%dqin, b%struct(ist)%dqout, b%struct(ist)%dqsp
+          b%struct(ist)%dqin, b%struct(ist)%dqout, b%struct(ist)%dqsp, &
+          b%struct(ist)%dqgw
+  end do
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 湖水位の地下水頭強制(dam_gw)の前提検査(m_main が gwflow init 後に
+! 呼ぶ。強制は側方 Boussinesq の水頭 H=(z−sd)+hg/sy を規定するため、
+! fn_gwflow の側方流 f_gwlateral=1 が必須)
+!----------------------------------------------------------------------
+module subroutine m_boundary_dam_gwcheck(b, gw_ok)
+  type(t_boundary), intent(in) :: b
+  logical, intent(in) :: gw_ok
+  integer :: ist
+
+  if (gw_ok) return
+  do ist = 1, b%nstruct
+    if (b%struct(ist)%kind /= e_struct_dam) cycle
+    if (b%struct(ist)%gwf > 0) then
+      call par_stop("list_struct_dam: dam_gw requires groundwater flow with the lateral " &
+                    //"model (fn_gwflow with f_gwlateral=1)")
+    end if
+  end do
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 湖水位の地下水頭強制の適用(§22 第3弾。lake_plan.md §7 段階(i))。
+!   m_main が gwflow と同周期(mod(it, idt_gwflow)=0)で m_gwflow_calc の
+!   直前に呼ぶ。dam_gw=1 の湖沼の湖面セルで、層1の地下水量 hg を
+!     hg_f = min(cap, max(0, sy0·(H_lake − (z − sd))))、cap = sd·sy0
+!   に規定する(Dirichlet。hg ≤ cap の頭打ち=湖水深分の過圧は表現
+!   しない近似。cap 内に収まるため側方流の安定条件の上界も不変)。
+!   差分体積(需要 vdem = Σ(hg_f − hg)·gv·セル面積。正 = 湖→地下水)は
+!   行部分和+par_sum_rows で決定的に集計し、貯留湖沼は V と交換する:
+!     湖→地下水: hrs を比例縮小(V 不足時は係数 f = V/vdem で強制を
+!                比例縮小=枯渇まで)
+!     地下水→湖: hrs へセル等分で加算
+!   水位固定湖沼は計上のみ(消失/湧出。海域マスクと同じ意味論)。
+!   湖水位はステップ開始側の診断値 dh(dam_apply 更新後=全ランク同値)。
+!   履歴状態なし(毎回現在状態から評価)= save/restore 対象外
+!----------------------------------------------------------------------
+module subroutine m_boundary_dam_gwforce(b, p, g, s, dts)
+  type(t_boundary), intent(inout) :: b
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: dts
+  real(r64) :: vrow(dcp%js:dcp%je), vdem8
+  real :: hlake, cap, hf, vdem, f, vap, ratio, vshare, acell
+  integer :: ist, k, i, j
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+
+  acell = g%dx * g%dy
+  do ist = 1, b%nstruct
+    if (b%struct(ist)%kind /= e_struct_dam) cycle
+    if (b%struct(ist)%gwf <= 0) cycle
+    hlake = b%struct(ist)%dh
+
+    !--- 需要(規定値との差分体積)の決定的集計 ---
+    vrow = 0.0_r64
+    do k = 1, b%struct(ist)%ncin
+      i = b%struct(ist)%cin(1,k)
+      j = b%struct(ist)%cin(2,k)
+      if (j < dcp%js .or. j > dcp%je) cycle
+      cap = s%sd(i,j) * g%sy0
+      hf = min(max(g%sy0 * (hlake - (s%z(i,j) - s%sd(i,j))), 0.0), cap)
+      vrow(j) = vrow(j) + real((hf - s%hg(i,j)) * g%gv(i,j), r64) * real(acell, r64)
+    end do
+    call par_sum_rows(vrow, vdem8)
+    vdem = real(vdem8)
+
+    !--- 供給制限(貯留湖沼の湖→地下水は V まで。地下水→湖と水位固定は無制限) ---
+    f = 1.0
+    if (b%struct(ist)%dmode > 0 .and. vdem > 0.0) then
+      if (b%struct(ist)%dv <= 0.0) then
+        f = 0.0
+      else if (vdem > b%struct(ist)%dv) then
+        f = b%struct(ist)%dv / vdem
+      end if
+    end if
+    vap = f * vdem                       ! 実適用量(全ランク同値)
+
+    !--- hg の規定(係数 f で比例適用) ---
+    if (f > 0.0) then
+      do k = 1, b%struct(ist)%ncin
+        i = b%struct(ist)%cin(1,k)
+        j = b%struct(ist)%cin(2,k)
+        if (j < dcp%js .or. j > dcp%je) cycle
+        cap = s%sd(i,j) * g%sy0
+        hf = min(max(g%sy0 * (hlake - (s%z(i,j) - s%sd(i,j))), 0.0), cap)
+        s%hg(i,j) = s%hg(i,j) + f * (hf - s%hg(i,j))
+      end do
+    end if
+
+    !--- 貯留湖沼の V との交換(hrs へ反映。水位固定湖沼は計上のみ) ---
+    if (b%struct(ist)%dmode > 0 .and. vap /= 0.0) then
+      if (vap > 0.0) then
+        ratio = (b%struct(ist)%dv - vap) / b%struct(ist)%dv   ! f の定義より 0 <= ratio < 1
+        do k = 1, b%struct(ist)%ncin
+          i = b%struct(ist)%cin(1,k)
+          j = b%struct(ist)%cin(2,k)
+          if (j < dcp%js .or. j > dcp%je) cycle
+          s%hrs(i,j) = s%hrs(i,j) * ratio
+        end do
+      else
+        vshare = -vap / b%struct(ist)%ncin
+        do k = 1, b%struct(ist)%ncin
+          i = b%struct(ist)%cin(1,k)
+          j = b%struct(ist)%cin(2,k)
+          if (j < dcp%js .or. j > dcp%je) cycle
+          s%hrs(i,j) = s%hrs(i,j) + vshare / (g%gv(i,j) * acell)
+        end do
+      end if
+      b%struct(ist)%dv = b%struct(ist)%dv - vap
+      b%struct(ist)%dh = struct_h_of_v(b%struct(ist), b%struct(ist)%dv)
+    end if
+
+    b%struct(ist)%dqgw = vap / dts
   end do
 
 end subroutine

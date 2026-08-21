@@ -6,7 +6,8 @@ module m_main
   use m_saltwater, only : t_saltwater, m_saltwater_init, m_saltwater_calc, &
                           m_saltwater_dispose
   use m_boundary, only : t_boundary, m_boundary_init, m_boundary_set_etaref, m_boundary_dispose, m_boundary_makebdc, &
-                         m_boundary_dam_seed, m_boundary_dam_record
+                         m_boundary_dam_seed, m_boundary_dam_record, &
+                         m_boundary_dam_gwcheck, m_boundary_dam_gwforce
   use m_state, only : t_state, m_state_init, m_state_dispose, m_state_updatetime, m_state_calcstat, m_state_printstate
   use m_record, only : t_record, m_record_init, m_record_dispose, m_record_probe, m_record_flux, m_record_summary
   use m_geomorph, only : t_geomorph, m_geomorph_init, m_geomorph_calc, m_geomorph_dispose
@@ -114,6 +115,10 @@ subroutine m_main_all()
                                           ! 基準標高の既定に state の z を使うため後に)
   call m_gwflow_check_meteo(gw, mt)       ! 凍土(f_gwfrost)の気温入力検査(gwflow init は
                                           ! meteo より先に走るため、ここで検査する)
+  call m_boundary_dam_gwcheck(b, gw%enabled .and. gw%lat_enabled)
+                                          ! 湖水位の地下水頭強制(dam_gw)の前提検査
+                                          ! (boundary init は gwflow より先に走るため、
+                                          ! ここで検査する。§22 第3弾)
   call m_evap_init(ev, p, g, b, s, mt)    ! evap を初期化(fn_evap 指定時のみ有効。
                                           ! ダム湛水面積の登録に boundary、基準標高に
                                           ! state の z を使うため両者より後に)
@@ -283,6 +288,15 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, g
 
     ! 発散検出はランク局所のため、判定に先立ち全ランク最大へ集約する
     call par_allreduce_maxi(ierror)
+
+    ! 湖水位の地下水頭強制(dam_gw 指定の湖沼のみ。gwflow と同周期で
+    ! m_gwflow_calc の直前に湖面セルの hg を規定し、交換量を湖の貯留と
+    ! やり取りする。未指定なら実質 no-op。§22 第3弾)
+    if (gw%enabled .and. gw%lat_enabled) then
+      if (mod(it, gw%idt_gwflow) == 0) then
+        call m_boundary_dam_gwforce(b, p, g, s, gw%dts)
+      end if
+    end if
 
     ! 地下水を計算(fn_gwflow 未指定なら no-op。流れ→水収支→地形の順)
     call m_gwflow_calc(gw, p, g, s, mt, it)
