@@ -17,7 +17,7 @@ authors:
   - family-names: "Kazama"
     given-names: "So"
     affiliation: "Department of Civil Engineering, Tohoku University, Japan"
-doi: "10.5281/zenodo.22042848"
+doi: "10.5281/zenodo.22042847"
 repository-code: "https://github.com/ENCflow/ENCflow"
 preferred-citation:
   type: article
