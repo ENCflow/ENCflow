@@ -19,14 +19,14 @@ LIBOBJS	= m_main.o m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o \
 	  m_geomorph.o m_geomorph_creep.o m_geomorph_fluvial.o m_geomorph_suspend.o \
 	  m_geomorph_wash.o m_geomorph_splash.o m_geomorph_debris.o \
 	  m_gwflow.o m_gwflow_bucket.o m_gwflow_greenampt.o \
-	  m_gwflow_lateral.o m_gwflow_layer2.o m_gwflow_conduit.o m_gwflow_pump.o m_gwflow_frost.o m_saltwater.o m_evap.o m_meteo.o m_wq.o m_snow.o m_glacier.o m_swi.o \
+	  m_gwflow_lateral.o m_gwflow_layer2.o m_gwflow_conduit.o m_gwflow_pump.o m_gwflow_frost.o m_saltwater.o m_evap.o m_meteo.o m_wq.o m_driftwood.o m_snow.o m_glacier.o m_swi.o \
 	  m_intercept.o m_intercept_fixed.o m_intercept_initloss.o \
 	  m_state.o m_record.o m_swflow.o m_swflow_enc.o m_swflow_enc_adv.o m_swflow_enc_bc.o \
 	  m_swflow_enc_channel.o m_swflow_enc_diff.o \
 	  m_output.o m_swflow_stg.o \
 	  $(PAR_OBJ) \
 	  list_sysparam.o list_geoinfo.o list_channel.o list_precip.o list_geomorph.o list_gwflow.o \
-	  list_intercept.o list_evap.o list_meteo.o list_wq.o list_snow.o list_glacier.o list_swi.o \
+	  list_intercept.o list_evap.o list_meteo.o list_wq.o list_driftwood.o list_snow.o list_glacier.o list_swi.o \
 	  list_initial.o list_record.o list_tide.o list_boundary.o list_structure.o list_enc.o \
 	  m_ffactor.o user_geoinfo.o user_initial.o m_sysdep_util.o m_fileio.o m_georef.o \
 	  m_geotiff.o m_geotiff_codec.o m_geotiff_inflate.o m_util.o
@@ -90,7 +90,7 @@ $(MODESTAMP):
 main.o: m_main.o
 m_main.o: m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o m_state.o m_geomorph.o m_gwflow.o \
 	m_saltwater.o \
-	m_intercept.o m_evap.o m_meteo.o m_wq.o m_snow.o m_glacier.o m_swi.o m_record.o m_swflow.o m_output.o m_fileio.o m_sysdep_util.o $(PAR_OBJ)
+	m_intercept.o m_evap.o m_meteo.o m_wq.o m_driftwood.o m_snow.o m_glacier.o m_swi.o m_record.o m_swflow.o m_output.o m_fileio.o m_sysdep_util.o $(PAR_OBJ)
 m_sysparam.o: list_sysparam.o m_fileio.o m_util.o $(PAR_OBJ)
 m_geoinfo.o: m_sysparam.o list_geoinfo.o list_channel.o m_fileio.o m_georef.o m_geotiff.o m_util.o $(PAR_OBJ)
 m_precip.o: m_sysparam.o list_precip.o m_state.o m_geoinfo.o m_meteo.o m_util.o m_fileio.o $(PAR_OBJ)
@@ -128,6 +128,9 @@ list_meteo.o: m_sysparam.o $(PAR_OBJ)
 m_wq.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o m_swflow_enc.o list_wq.o \
 	m_fileio.o m_sysdep_util.o m_util.o $(PAR_OBJ)
 list_wq.o: m_sysparam.o $(PAR_OBJ)
+m_driftwood.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o m_swflow_enc.o \
+	list_driftwood.o m_fileio.o m_sysdep_util.o $(PAR_OBJ)
+list_driftwood.o: m_sysparam.o $(PAR_OBJ)
 m_snow.o: m_sysparam.o m_geoinfo.o m_state.o m_meteo.o m_swflow_enc.o list_snow.o \
 	m_fileio.o m_sysdep_util.o $(PAR_OBJ)
 list_snow.o: m_sysparam.o $(PAR_OBJ)

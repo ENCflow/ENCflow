@@ -97,6 +97,8 @@ H・H9999 と、地盤高の初期値 Z0000 のみ)
 | f_out_hg | 0 | Hg | 地下貯留水深 (m)(fn_gwflow 有効時。風化基岩層有効時は Hg2、管路連続体層有効時は Hgc、淡塩2層有効時は Hgs も出力) |
 | f_out_hrs | 0 | Hrs | ため池水深 (m)(fn_reservoir 有効時) |
 | f_out_hs | 0 | Hs | 土砂柱状量 (m)(土砂プロセス有効時。濃度 C = hs/(h+hs) の可視化に) |
+| f_out_hd | 0 | Hd | 流動流木の柱状材積 (m³/m²)([流木](driftwood.md)有効時) |
+| f_out_wd | 0 | Wd / Wd9999 | 堆積流木 (m³/m²) と期間最大到達量 max(流動+堆積)(流木ハザードマップ) |
 | f_out_fs | 0 | Fs / Fs9999 | 斜面安全率 Fs の分布と期間最小(f_slide=1 or 2 が必要。-1 = 評価対象外。[土砂・地形変化](geomorph.md)) |
 | f_out_hmax | 1 | H9999 | 最大水深 |
 | f_out_hmaxt | 0 | Ht9999 | 最大水深の発生時刻 |

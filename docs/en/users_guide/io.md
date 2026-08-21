@@ -108,6 +108,8 @@ written.)
 | f_out_hg | 0 | Hg | subsurface storage depth (m) (when fn_gwflow is enabled; also Hg2 with the weathered bedrock layer, Hgc with the conduit continuum layer, and Hgs with the fresh/salt layers) |
 | f_out_hrs | 0 | Hrs | pond depth (m) (when fn_reservoir is enabled) |
 | f_out_hs | 0 | Hs | sediment column (m) (requires an active sediment process; for visualizing the concentration C = hs/(h+hs)) |
+| f_out_hd | 0 | Hd | floating driftwood volume (m³/m²) (requires [Driftwood](driftwood.md)) |
+| f_out_wd | 0 | Wd / Wd9999 | deposited driftwood (m³/m²) and the maximum arrival max(floating+deposited) over the run (the driftwood hazard map) |
 | f_out_fs | 0 | Fs / Fs9999 | slope safety factor Fs distribution and its period minimum (requires f_slide = 1 or 2; -1 = not evaluated; see [Sediment and landform change](geomorph.md)) |
 | f_out_hmax | 1 | H9999 | maximum depth |
 | f_out_hmaxt | 0 | Ht9999 | time of maximum depth |

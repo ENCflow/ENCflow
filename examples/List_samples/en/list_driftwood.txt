@@ -1,0 +1,50 @@
+!======================================================================
+! Driftwood sample (&list_driftwood; developer.md §50, Japanese)
+!   Enable with fn_driftwood = "this file" or "-" in the main parameter
+!   file. Estimates driftwood as a raster field of wood volume per cell
+!   (m3/m2); individual-log tracking and geometric jamming at bridges
+!   are out of scope.
+!   Ledgers: standing stock -> (hydraulic washout / erosion
+!   entrainment) -> floating wood -> (grounding / drying) -> deposited
+!   wood (refloat optional).
+!   Output: f_out_hd (floating Hd0001...), f_out_wd (deposited
+!   Wd0001... + maximum arrival Wd9999), result/driftwood.csv (volume
+!   ledger).
+!   NOTE: thresholds and rates are calibration parameters (no
+!   established standard values).
+!======================================================================
+&list_driftwood
+  f_dw = 1                          ! 0 disables temporarily, keeping the file
+
+  ! ---- standing stock (uniform or map; exactly one is required) ----
+  dw_stock0 = 0.01                  ! uniform standing stock (m3/m2)
+  !fn_dwstock = "stock.txt"         ! stock map (m3/m2, same matrix format as
+                                    !   the terrain; convert forest inventory
+                                    !   data in preprocessing)
+
+  ! ---- representative log properties (required) ----
+  dw_dlog = 0.3                     ! representative diameter (m)
+  dw_sglog = 0.5                    ! wood specific gravity (0-1); the draft
+                                    !   (float/ground switch depth) is derived from
+                                    !   the cylinder buoyancy balance
+                                    !   (Braudrick & Grant 2000; half submerged at 0.5)
+
+  ! ---- recruitment; at least one path is required ----
+  dw_wrec = 1.0e-5                  ! hydraulic washout rate (m/s = m3/m2/s; enables it)
+  dw_hrec = 0.5                     ! depth threshold (m; mixed flow depth with debris flow)
+  dw_vrec = 1.0                     ! velocity threshold (m/s)
+  dw_droot = 0.5                    ! rooting depth (m; enables erosion entrainment --
+                                    !   full washout when the cumulative erosion depth
+                                    !   exceeds it; couples automatically to bedload,
+                                    !   debris-flow and slope-failure erosion)
+
+  ! ---- stopping / deposition ----
+  dw_wstop = 0.01                   ! grounding deposition rate (m/s; required)
+  !dw_vstop = 0.05                  ! slow-flow deposition threshold (m/s; default 0
+                                    !   = draft criterion only)
+
+  ! ---- refloat (default off = deposited wood never moves; conservative) ----
+  !dw_wfloat = 0.01                 ! refloat rate (m/s; >0 enables)
+  !dw_rfloat = 1.5                  ! buoyancy margin (refloat when depth > rfloat*draft; >1)
+  !dw_vfloat = 0.1                  ! refloat velocity threshold (m/s; >= dw_vstop)
+/

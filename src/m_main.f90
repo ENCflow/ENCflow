@@ -16,6 +16,8 @@ module m_main
   use m_evap, only : t_evap, m_evap_init, m_evap_calc, m_evap_record, m_evap_dispose
   use m_meteo, only : t_meteo, m_meteo_init, m_meteo_dispose
   use m_wq, only : t_wq, m_wq_init, m_wq_calc, m_wq_derive, m_wq_record, m_wq_dispose
+  use m_driftwood, only : t_driftwood, m_driftwood_init, m_driftwood_calc, &
+                          m_driftwood_record, m_driftwood_dispose
   use m_snow, only : t_snow, m_snow_init, m_snow_calc, m_snow_dispose
   use m_swi, only : t_swi, m_swi_init, m_swi_calc, m_swi_dispose
   use m_glacier, only : t_glacier, m_glacier_init, m_glacier_calc, m_glacier_dispose
@@ -55,6 +57,7 @@ subroutine m_main_all()
   type(t_evap) :: ev
   type(t_meteo) :: mt
   type(t_wq) :: wq
+  type(t_driftwood) :: dw
   type(t_snow) :: sn
   type(t_swi) :: si
   type(t_glacier) :: gl
@@ -104,6 +107,10 @@ subroutine m_main_all()
   call m_intercept_init(ic, p, g)         ! intercept を初期化(fn_intercept 指定時のみ有効)
   call m_geomorph_init(gm, p, g, s)       ! geomorph を初期化(fn_geomorph 指定時のみ有効。
                                           ! s%sed_active を設定するため swflow init より前)
+  call m_driftwood_init(dw, p, g, b, s)   ! driftwood を初期化(fn_driftwood 指定時のみ
+                                          ! 有効。s%dw_active を立てるため swflow init
+                                          ! より前、morfac 検査(s%geo_morfac)のため
+                                          ! geomorph init より後に。§50)
   call m_gwflow_init(gw, p, g, s)         ! gwflow を初期化(fn_gwflow 指定時のみ有効)
   call m_saltwater_init(sl, p, g, s)      ! saltwater を初期化(fn_salt 指定時のみ
                                           ! 有効。s%salt_active を立てるため swflow init
@@ -135,7 +142,7 @@ subroutine m_main_all()
   call m_geoinfo_band_shrink(g)           ! マスク類(x,sw,rw)と z(rank0以外)を帯に縮小
 
   ! ==== 時間ループ: すべて帯確保(z のみ rank0 が全域を保持) ====
-  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, gl, si, ierror)  ! 計算本体
+  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, sn, gl, si, ierror)  ! 計算本体
 
   ! モジュールを破棄
   call output_dispose()
@@ -149,6 +156,7 @@ subroutine m_main_all()
   call m_evap_dispose(ev, p)
   call m_meteo_dispose(mt)
   call m_wq_dispose(wq, p, g, s)          ! save は dispose で(m_state より先に走る)
+  call m_driftwood_dispose(dw, p, g, s)   ! save は dispose で(m_state より先に走る)
   call m_snow_dispose(sn, p, g, s)        ! save は dispose で(契約5)
   call m_glacier_dispose(gl, p, g, s)     ! save は dispose で(契約5)
   call m_swi_dispose(si, p, g)            ! save は dispose で(契約5。§49)
@@ -185,7 +193,7 @@ end subroutine
 !----------------------------------------------------------------------
 ! 計算本体
 !----------------------------------------------------------------------
-subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, gl, si, ierror)
+subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, sn, gl, si, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
@@ -201,6 +209,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, g
   type(t_evap), intent(inout) :: ev    ! 蒸発散(PET の日次更新・累積診断を保持)
   type(t_meteo), intent(inout) :: mt   ! 気象強制場(分布気温の読み進みを保持)
   type(t_wq), intent(inout) :: wq      ! 水質(発生源・台帳を保持)
+  type(t_driftwood), intent(inout) :: dw  ! 流木(立木ストック・台帳を保持。§50)
   type(t_snow), intent(inout) :: sn    ! 積雪・融雪(SWE とスナップショットを保持)
   type(t_glacier), intent(in) :: gl    ! 氷河(氷厚 s%hi と作業台帳を保持)
   type(t_swi), intent(inout) :: si     ! 土壌雨量指数(タンク貯留を保持。§49)
@@ -235,6 +244,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, g
   call m_boundary_dam_record(b, p, s)   ! ダム CSV(ダムがなければ no-op)
   call m_evap_record(ev, p, s)          ! 蒸発散 CSV(fn_evap 未指定なら no-op)
   call m_wq_record(wq, p, g, s)         ! 水質 CSV(fn_wq 未指定なら no-op)
+  call m_driftwood_record(dw, p, g, s)  ! 流木 CSV(fn_driftwood 未指定なら no-op)
   ierror = 0                            ! エラー数をリセット
 
   ! デバッグ用データを出力
@@ -326,6 +336,11 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, g
     ! 末尾で s%z のハロ交換まで済ませる)
     call m_geomorph_calc(gm, p, g, s, it)
 
+    ! 流木過程を適用(fn_driftwood 未指定なら no-op。発生・停止・再流動・
+    ! ダム捕捉。geomorph の後 = 同一ステップの z 更新を見た侵食連行。
+    ! セル局所のみでハロ交換なし。§50)
+    call m_driftwood_calc(dw, p, g, s, it)
+
     ! 統計情報を計算
     call m_state_calcstat(s, p, g)
 
@@ -354,6 +369,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, sn, g
      call m_boundary_dam_record(b, p, s)
      call m_evap_record(ev, p, s)
      call m_wq_record(wq, p, g, s)
+     call m_driftwood_record(dw, p, g, s)
     end if
 
 
@@ -430,6 +446,7 @@ subroutine init_resultdir(p)
   call sysdep_copy_to_dir(p%fn_evap, p%dir_result)
   call sysdep_copy_to_dir(p%fn_meteo, p%dir_result)
   call sysdep_copy_to_dir(p%fn_wq, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_driftwood, p%dir_result)
   call sysdep_copy_to_dir(p%fn_snow, p%dir_result)
   call sysdep_copy_to_dir(p%fn_glacier, p%dir_result)
   call sysdep_copy_to_dir(p%fn_salt, p%dir_result)

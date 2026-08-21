@@ -83,6 +83,8 @@ module list_sysparam
     integer :: f_out_dmax = 0                     ! ファイル出力(最大流動深 h+hs のD9999。土砂系有効時)
     integer :: f_out_dmaxt = 0                    ! ファイル出力(最大流動深発生時刻Dt9999)
     integer :: f_out_fmax = 0                     ! ファイル出力(最大流体力 (h+hs)・V² のF9999)
+    integer :: f_out_hd = 0                       ! ファイル出力(流動流木Hd0001。fn_driftwood 必須。§50)
+    integer :: f_out_wd = 0                       ! ファイル出力(堆積流木Wd0001+期間最大到達量Wd9999)
 
     ! 画面・Log の表示列の選択(時刻・保存量 S 系列・Runge・ex_flux は常設)
     integer :: f_disp_debug = 0                   ! 画面表示(S 系列を全有効桁で表示。デバッグ・回帰テスト用)
@@ -113,6 +115,7 @@ module list_sysparam
     character(len=maxpathlen) :: fn_glacier = ""         ! 氷河設定ファイル
     character(len=maxpathlen) :: fn_salt = ""            ! 淡塩2層設定ファイル
     character(len=maxpathlen) :: fn_swi = ""             ! 土壌雨量指数設定ファイル(§49)
+    character(len=maxpathlen) :: fn_driftwood = ""       ! 流木設定ファイル(§50)
     character(len=maxpathlen) :: fn_channel = ""         ! 河道条件設定ファイル
     character(len=maxpathlen) :: fn_enc = ""             ! ENC設定ファイル
 
@@ -197,6 +200,8 @@ subroutine list_sysparam_read(list, fn_sysparam)
   integer :: f_out_dmax                      ! ファイル出力(最大流動深D9999)
   integer :: f_out_dmaxt                     ! ファイル出力(最大流動深発生時刻Dt9999)
   integer :: f_out_fmax                      ! ファイル出力(最大流体力F9999)
+  integer :: f_out_hd                        ! ファイル出力(流動流木Hd0001)
+  integer :: f_out_wd                        ! ファイル出力(堆積流木Wd0001/Wd9999)
   integer :: f_disp_debug                    ! 画面表示(S 系列を全有効桁で表示)
   integer :: f_disp_h                        ! 画面表示(最大水深 h_max)
   integer :: f_disp_vv                       ! 画面表示(最大流速 V_max)
@@ -220,6 +225,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: fn_glacier    ! 氷河設定ファイル
   character(:), allocatable :: fn_salt       ! 淡塩2層設定ファイル
   character(:), allocatable :: fn_swi        ! 土壌雨量指数設定ファイル
+  character(:), allocatable :: fn_driftwood  ! 流木設定ファイル
   character(:), allocatable :: fn_channel    ! 河道条件設定ファイル
   character(:), allocatable :: fn_enc        ! ENC設定ファイル
   character(:), allocatable :: fn_log        ! 状態ログファイル
@@ -241,11 +247,12 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_vv, f_out_qq, f_out_qc, f_out_qd, &
                         f_out_hmax, f_out_hmaxt, f_out_vvmax, f_out_qqmax, f_out_qqmaxt, f_out_qqmaxd, &
                         f_out_hs, f_out_fs, f_out_dmax, f_out_dmaxt, f_out_fmax, &
+                        f_out_hd, f_out_wd, &
                         f_disp_debug, f_disp_h, f_disp_vv, f_disp_qq, f_disp_cn, &
                         f_out_ddd, f_out_dda, f_out_pre, f_out_hrs, f_out_fr, f_out_cn, f_out_hg, &
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
                         fn_structure, &
-                        fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_evap, fn_meteo, fn_wq, fn_snow, fn_glacier, fn_salt, fn_swi, fn_channel, fn_enc, &
+                        fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_evap, fn_meteo, fn_wq, fn_snow, fn_glacier, fn_salt, fn_swi, fn_driftwood, fn_channel, fn_enc, &
                         fn_log, dir_data, dir_result, dir_save, outfn_suffix
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
@@ -315,6 +322,8 @@ subroutine list_sysparam_read(list, fn_sysparam)
   f_out_dmax = list%f_out_dmax
   f_out_dmaxt = list%f_out_dmaxt
   f_out_fmax = list%f_out_fmax
+  f_out_hd = list%f_out_hd
+  f_out_wd = list%f_out_wd
   f_disp_debug = list%f_disp_debug
   f_disp_h = list%f_disp_h
   f_disp_vv = list%f_disp_vv
@@ -338,6 +347,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   fn_glacier = list%fn_glacier
   fn_salt = list%fn_salt
   fn_swi = list%fn_swi
+  fn_driftwood = list%fn_driftwood
   fn_channel = list%fn_channel
   fn_enc = list%fn_enc
   fn_log = list%fn_log
@@ -417,6 +427,8 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%f_out_dmax = f_out_dmax
   list%f_out_dmaxt = f_out_dmaxt
   list%f_out_fmax = f_out_fmax
+  list%f_out_hd = f_out_hd
+  list%f_out_wd = f_out_wd
   list%f_disp_debug = f_disp_debug
   list%f_disp_h = f_disp_h
   list%f_disp_vv = f_disp_vv
@@ -440,6 +452,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%fn_glacier = fn_glacier
   list%fn_salt = fn_salt
   list%fn_swi = fn_swi
+  list%fn_driftwood = fn_driftwood
   list%fn_channel = fn_channel
   list%fn_enc = fn_enc
   list%fn_log = fn_log
@@ -466,6 +479,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   if (trim(list%fn_glacier) == "-") list%fn_glacier = trim(fn_sysparam)
   if (trim(list%fn_salt) == "-") list%fn_salt = trim(fn_sysparam)
   if (trim(list%fn_swi) == "-") list%fn_swi = trim(fn_sysparam)
+  if (trim(list%fn_driftwood) == "-") list%fn_driftwood = trim(fn_sysparam)
   if (trim(list%fn_channel) == "-") list%fn_channel = trim(fn_sysparam)
   if (trim(list%fn_enc) == "-") list%fn_enc = trim(fn_sysparam)
 

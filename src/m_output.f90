@@ -134,6 +134,10 @@ subroutine output_state(p, g, s, k)
   if (p%f_out_hg > 0 .and. allocated(s%hgs)) call output_matrix(p, g, "Hgs", s%hgs, k)
   if (s%wq_active) call output_matrix(p, g, "C", s%cqc, k)          ! 輸送物質濃度 (mg/L。§30)
   if (p%f_out_hs > 0) call output_matrix(p, g, "Hs", s%hs, k)       ! 土砂柱状量 (m。§28.9)
+  ! 流動流木・堆積流木 (m3/m2。fn_driftwood 有効時のみ = 前提検証は
+  ! m_driftwood_init。§50)
+  if (p%f_out_hd > 0 .and. allocated(s%hd)) call output_matrix(p, g, "Hd", s%hd, k)
+  if (p%f_out_wd > 0 .and. allocated(s%wd)) call output_matrix(p, g, "Wd", s%wd, k)
   ! 斜面安全率 Fs(-1 = 評価対象外。slide_pass1 が dt_geomorph 周期で
   ! 更新するため t=0 フレームは全域 -1。§28.9)
   if (p%f_out_fs > 0 .and. allocated(s%fs)) call output_matrix(p, g, "Fs", s%fs, k)
@@ -173,6 +177,9 @@ subroutine output_summary(p, g, s, k)
   if (p%f_out_fmax > 0)  call output_matrix(p, g, "F", s%fmax, k)     ! 最大流体力 (h+hs)V²
   if (p%f_out_fs > 0 .and. allocated(s%fsmin)) &
     call output_matrix(p, g, "Fs", s%fsmin, k)                        ! 期間最小の安全率
+  ! 流木の期間最大到達量 max(hd+wd)(f_out_wd。§50)
+  if (p%f_out_wd > 0 .and. allocated(s%wdmax)) &
+    call output_matrix(p, g, "Wd", s%wdmax, k)
   ! 土壌雨量指数の期間最大と発生時刻(fn_swi 有効時のみ。§49)
   if (allocated(s%swimax)) call output_matrix(p, g, "Swi", s%swimax, k)
   if (allocated(s%swimaxt)) call output_matrix(p, g, "Swit", s%swimaxt, k)

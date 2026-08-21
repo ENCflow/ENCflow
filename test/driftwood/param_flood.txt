@@ -1,0 +1,74 @@
+!======================================================================
+! driftwood 構成2: 洪水氾濫での流木(水理的流失起点。geomorph なし)
+!   構成1と同じ遷緩点付き斜面への一様降雨によるシート流出。斜面上の
+!   立木が水深・流速の閾値超過で流失(dw_wrec)し、流木が斜面を流下、
+!   平坦部(i>=30)の湛水域で減速して堆積する。地形変化モジュールは
+!   使わない = 流木モジュール単独(水理的流失のみ)の疎通を検定する。
+!   検定(Check_driftwood.py flood, 最終 save_flood/driftwood.dat から):
+!     (1) 材積保存: Σwst + Σhd + Σwd = 初期ストック総量(閉領域)
+!     (2) 活性確認: 水理的流失の発生(Σwst < 初期)と堆積(Σwd > 0)
+!     (3) 到達確認: 平坦部(i>=30)への流木到達 max(hd+wd) > 0
+!   ※ 閾値・レートは疎通検定用の設定であり実地の推奨値ではない
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02
+  t0 = 0
+  tt = 60                   ! 平坦部の湛水が発達するまで
+  dt_disp = 10
+  dt_file = 60
+  dt_recrd = 10
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_precip = '-'
+  fn_driftwood = '-'
+  dir_result = 'result_flood'
+  dir_save = 'save_flood'
+  f_state_save = 1
+  f_out_hd = 1
+  f_out_wd = 1
+  f_check_cfl = 0
+/
+
+&list_enc
+  f_gravity_correction = 1
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 60.0
+  ly = 20.0
+  nx = 60
+  ny = 20
+  f_ztype = 0
+  z0 = 0.0
+  f_user_routine = "slope_break"   ! tanθ=0.4, 遷緩点 x=30m
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 200
+  prval(1:2,2) = 9999, 200
+/
+
+!======================================================================
+! 流木(水理的流失のみ。小径木のストック)
+!======================================================================
+&list_driftwood
+  dw_stock0 = 0.01          ! 立木ストック (m3/m2)
+  dw_dlog = 0.005           ! 代表直径 (m) → 喫水 hf = 0.0025 m
+  dw_sglog = 0.5            ! 材比重
+  dw_wrec = 2.0e-5          ! 水理的流失レート (m/s)
+  dw_hrec = 0.002           ! 流失の水深閾値 (m)
+  dw_vrec = 0.2             ! 流失の流速閾値 (m/s)
+  dw_wstop = 0.005          ! 接地堆積レート (m/s)
+  dw_vstop = 0.01           ! 低速堆積の流速閾値 (m/s)
+/
