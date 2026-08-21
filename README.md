@@ -1,7 +1,7 @@
 # ENCflow
 
 [![CI](https://github.com/ENCflow/ENCflow/actions/workflows/ci.yml/badge.svg)](https://github.com/ENCflow/ENCflow/actions/workflows/ci.yml)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22042847.svg)](https://doi.org/10.5281/zenodo.22042847)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.22042847-blue)](https://doi.org/10.5281/zenodo.22042847)
 
 **地表の水に関わる現象を、ひとつの格子の上でシームレスに解く**
 — 洪水・高潮・津波の遡上から、降雨流出・地下水・土砂・水質・積雪融雪・
