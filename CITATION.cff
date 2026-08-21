@@ -11,8 +11,12 @@ version: "0.9.0"
 date-released: "2026-08-19"
 license: Apache-2.0
 authors:
-  - name: "Hydraulic Engineering Laboratory, Department of Civil and Environmental Engineering, National Defense Academy of Japan"
-  - name: "Hydro-Environmental System Laboratory, Department of Civil Engineering, Tohoku University"
+  - family-names: "Tada"
+    given-names: "Tsuyoshi"
+    affiliation: "Department of Civil and Environmental Engineering, National Defense Academy, Japan"
+  - family-names: "Kazama"
+    given-names: "So"
+    affiliation: "Department of Civil Engineering, Tohoku University, Japan"
 repository-code: "https://github.com/ENCflow/ENCflow"
 preferred-citation:
   type: article
