@@ -313,6 +313,38 @@ and Sd outputs. The operational warning indicator itself - the JMA
 Soil Water Index - can be computed in a dedicated run
 ([Soil Water Index](swi.md)).
 
+**Representing sabo facilities (sediment-retarding basins, check
+dams)** - the effect of a countermeasure facility is studied as a
+two-case comparison (with / without). The difference is only in the
+inputs (terrain and settings), and results are bit-reproducible
+regardless of rank or thread count, so the difference between the two
+cases is exactly the facility's effect, cleanly separated from
+numerical noise.
+
+- **Sediment-retarding basin (yusachi)**: just carve the excavation
+  and widening into the terrain z in preprocessing. Deposition by
+  slope reduction and deceleration (fixed to the terrain with
+  f_dbstop=1) acts automatically, and the trap efficiency (deposit
+  volume inside the facility / sediment inflow) and the sediment load
+  passed downstream can be quantified from the time evolution of Hs
+  and z and from D9999/F9999.
+- **Closed-type check dam**: add the dam body to the terrain z and set
+  the soil depth there to sd=0 (non-erodible). The time evolution of
+  sedimentation -> filling -> crest overflow emerges automatically
+  (the same framework as landslide-dam formation and overtopping). To
+  represent the body as a wall thinner than a cell, the channel levee
+  (bank; [Channels](channel.md)) can be used - on overtopping the
+  sediment (hs) crosses together with the water as a real flux.
+- **Open-type (slit / grid) check dam**: being single grain size, the
+  size selectivity ("trap coarse boulders and driftwood, pass fines
+  and water") cannot be represented. Giving the dam body
+  (non-erodible terrain) an outlet with a culvert
+  ([Structures](structure.md); it transfers clear water only and
+  carries no sediment) yields the approximation "passes water, traps
+  all sediment" = an **upper-bound estimate of trapping**. After
+  filling, sediment passes downstream by crest overflow. Driftwood is
+  not modeled.
+
 ## Long-term landform evolution (f_wthr / f_uplift)
 
 Processes for millennial-scale landform evolution experiments (used in

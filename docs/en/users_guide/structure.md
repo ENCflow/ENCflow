@@ -111,7 +111,10 @@ full conduit (orifice + conduit friction).
 Constraints: cannot connect to pond cells. The downstream side cannot
 be omitted (no out-of-domain drainage; use a pump for that). The
 transfer is clear water (it carries no sediment) and does not register
-on flux transects (record). A cross section too large for the cell size
+on flux transects (record) (this "passes water only" property can be
+used to approximate the outlet of an open-type check dam - see the
+sabo-facilities paragraph in
+[Sediment and landform change](geomorph.md)). A cross section too large for the cell size
 (conveyance on the order of cell area x depth) makes the receiving side
 diverge -- use realistic dimensions.
 
