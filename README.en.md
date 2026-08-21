@@ -128,6 +128,9 @@ care about.**
   temperature lapse rate, the snow line emerges automatically.
   Infiltration suppression by frozen ground (a temperature-driven
   freezing index) captures snowmelt floods running over frozen soil.
+  Runout and deposition of **dense-flow snow avalanches** can also be
+  analyzed with the same equivalent fluid (Voellmy law) as the
+  volcanic flows.
 - **Glaciers**: firnification of perennial snow (accumulation) and
   ice-surface melt, ice flow by the shallow ice approximation (SIA),
   basal sliding with glacial erosion, and avalanche redistribution of
