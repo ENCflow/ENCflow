@@ -342,8 +342,12 @@ numerical noise.
   ([Structures](structure.md); it transfers clear water only and
   carries no sediment) yields the approximation "passes water, traps
   all sediment" = an **upper-bound estimate of trapping**. After
-  filling, sediment passes downstream by crest overflow. Driftwood is
-  not modeled.
+  filling, sediment passes downstream by crest overflow. The map-scale
+  generation, transport and deposition of driftwood is handled by
+  [Driftwood](driftwood.md) (culverts carry no wood either, so the
+  trapping is likewise an upper-bound estimate; geometric size-selective
+  trapping by member spacing vs. log length is out of scope of the
+  driftwood module as well).
 
 ## Long-term landform evolution (f_wthr / f_uplift)
 
