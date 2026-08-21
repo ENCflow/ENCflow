@@ -168,6 +168,24 @@ release area and fracture depth, and compute runout and deposition.
 Voellmy dynamics are density-independent (both driving and resistance
 are in acceleration form, so density cancels), which is why snow being
 much lighter than water does not affect the runout computation.
+Avalanches **borrow** the sediment-flow model, reinterpreting its
+reservoirs in snow terms (the parameter names keep their sediment
+vocabulary):
+
+| Model quantity (sediment name) | Reinterpretation for avalanches |
+|---|---|
+| sd (soil depth = movable layer) | entrainable snow depth along the path |
+| hs (sediment column) | (net) volume of flowing snow |
+| z (elevation) | snow-surface elevation (z − sd is the ground) |
+| fluv_porosity λ | snow-porosity interpretation (keep it small so hs ≈ snow depth) |
+| collapse depth D of fn_dbinit | fracture depth of the release area |
+| bed fixing of f_dbstop | deposition of the stopped snow (debris) |
+
+Through this reuse, the verified conservation machinery (solid budget
+and the co-update identity) applies to snow as well. Dense-flow snow
+avalanches and sediment density flows are the same "granular
+shallow-water flow", so the reuse rests on an identity of
+formulation, not on appearances.
 
 - **Typical setup**: `f_debris = 1`, `f_dbed = 4`
   (**velocity-proportional entrainment** of path snow, E = δe·|V|; use
