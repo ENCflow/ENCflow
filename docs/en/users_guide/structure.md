@@ -1,6 +1,6 @@
 # Internal hydraulic structures (&list_struct_pump / culvert / diversion / dam)
 
-> English mirror of docs/users_guide/structure.md (based on commit cb96faa). The Japanese file is the master copy.
+> English mirror of docs/users_guide/structure.md (based on commit 72deb52). The Japanese file is the master copy.
 
 [Back to the user's guide index](../users_guide.md)
 
@@ -265,6 +265,7 @@ to it as long as the floor is not hit).
 | **Pass-through lake** (small lake / connecting water surface with negligible retention) | either | not needed | f_dam_mode = 2, dam_rate = 1.0 | not needed (holds no level state) |
 | **Level-held lake** (large surface not solved / terminal lake) | fn_dam_map | not needed | none (no release cells) | dam_h_init = the fixed level |
 | **Lake group sharing one level** (lagoon group / linked ponds) | paint the same number on several surfaces | any of the above | any of the above | any of the above |
+| **Multiple release works** (weir + canal + intakes) | one on the lake itself (main release) | one on the lake itself | additional ones via dam_lake(n)=lake number + each own mode | on the lake itself |
 
 The normal level is not a constraint but **an initial value
 (dam_h_init) plus a maintaining mechanism (the rating)**: place the
@@ -273,6 +274,38 @@ low flow. The flood response of a storage lake is naturally expressed
 as the storage attenuation A dH/dt = Qin - Q(H), so **using
 pass-through (rate=1.0) for a large lake is inappropriate** (the flood
 wave would be transmitted without attenuation).
+
+### Multiple release works (dam_lake)
+
+To give one lake several releases with different operations (e.g. Lake
+Biwa's Seta weir + the Sosui canal + intakes), use a **referencing
+structure** `dam_lake(n) = m`: structure n has no surface of its own
+and draws from the storage of lake m with **its own operation mode and
+release cells**.
+
+```
+  ! an additional release work of lake 2 (the example above): constant canal intake
+  dam_lake(5) = 2                   ! draws from the storage of lake 2
+  f_dam_mode(5) = 1
+  dam_q0(5) = 15.0                  ! constant 15 m3/s
+  dam_out_cell(:,1,5) = 150, 120    ! the inlet cell of the canal
+/
+```
+
+- The referenced lake m must be a **lower-numbered lake with a main
+  release** (its own mode and release cells); level-held lakes,
+  pass-through lakes, and referencing structures cannot be referenced.
+  Draws are applied sequentially in structure-number order (earlier
+  structures draw first), and the surcharge spill goes out through the
+  main release.
+- The HV and levels are shared with lake m (dam_hv / dam_hmin /
+  dam_h_init cannot be written on the referencing structure).
+  `dam_tadashigaki(n)` can be given per release work (default = the
+  lake's default).
+- The CSV (`result/dams/dam0005.csv` etc.) records the referencing
+  structure's own Qout and the lake's H and V after the draw (the Qin
+  column is 0; the header carries the referenced lake number as
+  `# lake =`).
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -283,6 +316,7 @@ wave would be transmitted without attenuation).
 | dam_hmin(n) | -- | Lower-bound level of the auto linear HV (elevation m). The alternative to dam_hv. Surface area = number of capture cells x cell area |
 | dam_hsur(n) | none | Surcharge level of the auto linear HV (elevation m). Omitted = no upper bound (no spill). Mandatory for modes 1, 2 (except pass-through) and the sqrt law |
 | f_dam_mode(n) | -- | Operation mode. 1: constant release, 2: constant-rate cut, 3: natural regulation. None + no release cells = a level-held lake |
+| dam_lake(n) | 0 | >0: lake reference (structure n is an additional release work drawing from the storage of lake m=dam_lake(n) with its own rule and release cells). The referenced lake must be a lower-numbered lake with a main release. No surface / dam_hv / dam_hmin / dam_h_init on the referencing structure |
 | dam_q0(n) | -- | Constant release of mode 1 (m3/s). Mandatory in mode 1 |
 | dam_rate(n) | -- | Release ratio r of mode 2 (0-1). Mandatory in mode 2. 1.0 = pass-through |
 | dam_hq_rule(:,k,n) | -- | Mode 3(a): level-release polyline (m, m3/s). Levels monotonically increasing |

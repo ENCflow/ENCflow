@@ -1,5 +1,5 @@
 !======================================================================
-! English mirror of examples/List_samples/list_structure.txt (based on commit cb96faa).
+! English mirror of examples/List_samples/list_structure.txt (based on commit 72deb52).
 ! The Japanese file is the master copy; edit it first.
 !======================================================================
 !
@@ -254,6 +254,12 @@
 !     none (and no release cells): a level-held lake (all inflow
 !        vanishes; the level stays at dam_h_init = not lowered even by
 !        evaporation. A "large water surface not solved")
+!   Multiple release works: dam_lake(n) = m makes structure n draw from
+!   the storage of lake m with its own rule and release cells (an
+!   additional release work. The referenced lake must be a
+!   lower-numbered lake with a main release. Draws are applied in
+!   number order; the spill goes out through the main release. No
+!   surface / dam_hv / dam_hmin / dam_h_init on the referencing side)
 !   Emergency release (modes 1,2): from dam_tadashigaki (start level m;
 !   if omitted = lowest + 0.9 x (surcharge - lowest)) up to the
 !   surcharge, the release is ramped up toward the inflow. The excess
@@ -314,4 +320,12 @@
 !  ! Lake 4: a level-held lake (a large surface not solved; inflow
 !  ! vanishes, level fixed)
 !  dam_h_init(4) = 12.0                  ! the fixed level (surface = raster number 4)
+!  ! Structure 5: an additional release work of lake 2 (dam_lake
+!  ! reference = several releases with different operations. The
+!  ! referenced lake must be a lower-numbered lake with a main release.
+!  ! HV and levels are shared with lake 2)
+!  dam_lake(5) = 2                       ! draws from the storage of lake 2
+!  f_dam_mode(5) = 1
+!  dam_q0(5) = 15.0                      ! constant canal intake 15 m3/s
+!  dam_out_cell(:,1,5) = 150, 120        ! the inlet cell of the canal
 !/
