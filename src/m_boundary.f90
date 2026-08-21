@@ -42,6 +42,8 @@ module m_boundary
   public :: m_boundary_makebdc
   public :: m_boundary_dam_seed
   public :: m_boundary_dam_record
+  public :: m_boundary_dam_gwcheck
+  public :: m_boundary_dam_gwforce
   public :: dam_operate, dam_sink, dam_draw, e_struct_dam
   public :: e_bc_wall, e_bc_outflow, e_bc_radiation, e_bc_inflow
   public :: e_side_w, e_side_e, e_side_n, e_side_s
@@ -165,6 +167,9 @@ module m_boundary
                                            !   湖面を持たず参照先の貯留から自分の運転則で
                                            !   引く追加の放流工(§22。貯留幾何は init が
                                            !   参照先からコピー済み)
+    integer :: gwf = 0                     ! 1: 湖水位を湖面セルの地下水頭に強制
+                                           !   (dam_gw。§22 第3弾。適用は
+                                           !   m_boundary_dam_gwforce)
     integer :: nhv = 0                     ! HV 曲線の点数
     real, allocatable :: hv(:,:)           ! HV 曲線 (1:2, 1:nhv) (水位 m, 貯水量 m3。
                                            !   両列とも単調増加。区間は直線補間)
@@ -175,6 +180,8 @@ module m_boundary
     real :: dqin = 0.0                     ! 流入量 (m3/s。捕捉帯吸収の積算)
     real :: dqout = 0.0                    ! 放流量 (m3/s。ルール分)
     real :: dqsp = 0.0                     ! スピル (m3/s。サーチャージ超過の強制放流)
+    real :: dqgw = 0.0                     ! 湖→地下水の交換率 (m3/s。dam_gw 有効時のみ
+                                           !   非ゼロ。負 = 地下水→湖)
     integer :: un = 0                      ! ダム CSV の装置番号(rank0)
   end type
 
@@ -252,11 +259,27 @@ module m_boundary
       type(t_state), intent(inout) :: s
       real, intent(out) :: vdraw
     end subroutine
-    ! ダム CSV(t, H, V, Qin, Qout, Qspill)の1行出力(記録間隔で呼ぶ)
+    ! ダム CSV(t, H, V, Qin, Qout, Qspill, Qgw)の1行出力(記録間隔で呼ぶ)
     module subroutine m_boundary_dam_record(b, p, s)
       type(t_boundary), intent(in) :: b
       type(t_sysparam), intent(in) :: p
       type(t_state), intent(in) :: s
+    end subroutine
+    ! 湖水位の地下水頭強制(dam_gw)の前提検査(gwflow init の後に呼ぶ。
+    ! gw_ok = gwflow 有効かつ側方流有効)
+    module subroutine m_boundary_dam_gwcheck(b, gw_ok)
+      type(t_boundary), intent(in) :: b
+      logical, intent(in) :: gw_ok
+    end subroutine
+    ! 湖水位の地下水頭強制の適用(gwflow と同周期・m_gwflow_calc の直前に
+    ! 呼ぶ。湖面セルの hg を規定水頭相当へ設定し、差分体積を湖の貯留と
+    ! 交換・計上する。§22 第3弾)
+    module subroutine m_boundary_dam_gwforce(b, p, g, s, dts)
+      type(t_boundary), intent(inout) :: b
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts        ! gwflow の実効時間刻み (s)
     end subroutine
   end interface
 
