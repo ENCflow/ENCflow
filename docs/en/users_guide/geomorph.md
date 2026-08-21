@@ -111,6 +111,17 @@ grain-size distribution (inland fining) is not represented. hs is a
 passive scalar under the dilute assumption; high-concentration mud
 flows (density currents) are out of scope.
 
+**The sea mask (fn_sw) and the fate of sediment** - sea cells behave
+as the following boundary for sediment: **suspended sediment leaving
+into a sea cell is treated as lost from the system** (a perfect sink;
+inflow from the sea to the land is always clear water), and **bedload
+does not cross an edge bordering a sea cell** (a wall; sand piles up
+artificially along the seaward front). Wherever you want deposition on
+the sea bottom or seaward landform change to be solved (formation of a
+river-mouth terrace, the tsunami deposits above), represent that area
+as ordinary cells + an initial water level, and if you use a sea mask,
+place it offshore of the area of interest.
+
 ## Hillslope erosion (f_wash)
 
 Detaches sediment from hillslopes by raindrop erosion and sheet
