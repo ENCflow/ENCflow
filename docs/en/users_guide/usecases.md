@@ -78,6 +78,7 @@ accuracy caveats (blank = nothing special).
 | Infiltration suppression by frozen ground (meltwater running over frozen soil) | Frozen ground (f_gwfrost) in [Groundwater](gwflow.md) + temperature (+ snow) | f_gwfrost=1 + fro_fifull (+ fro_swe0 for snow insulation, fro_fi0 to start "already frozen") | The simplest model - a degree-day freezing index reduces the infiltration capacity (soil temperature and frost depth are not solved). fro_fifull is the practical calibration point |
 | Glacial lake outburst floods (GLOF) | [Glaciers](glacier.md) + terrain + breach in [Channels](channel.md) | Represent the glacial lake as impounded terrain; give the breach as a crest time series | The breach trigger and widening are inputs |
 | Glacier retreat / cirque formation (long term) | [Glaciers](glacier.md) + long runs | Repeated representative years x morfac x restart chains | |
+| Snow avalanche (dense flow) runout and deposition | Equivalent fluid in [Sediment and landform change](geomorph.md) (snow-avalanche paragraph) | f_dbed=0 + f_dbres=4 (Voellmy) + fn_dbinit (release area + fracture depth) | Release is given as a scenario (the same practice as dedicated avalanche models). No snow entrainment along the path; powder-snow avalanches are out of scope. See the "Snow avalanches (dense flow)" paragraph in the geomorph chapter for the typical setup and limits |
 
 ## Water quality
 
@@ -102,4 +103,5 @@ the existing framework (order and timing undecided).
 | Wind-driven flow / wind setup (bays, lakes, wide floodplains) | No wind stress term | Wind stress in the momentum equations + wind input (extension of the weather forcing) |
 | Complete salt-damage analysis (contamination of soil/aquifer by infiltrated seawater) | Possible up to the areal extent of run-up seawater (above) | Fresh/salt partitioning of infiltration and evapotranspiration |
 | Paddy field dams (runoff suppression by outlet restriction) | Can be approximated by storage + orifices, but no standard recipe | Under consideration |
+| Avalanche path entrainment / powder-snow avalanches | Dense-flow runout is available (see Snow and ice above); no entrainment, and powder avalanches are outside the shallow-water approximation | Entrainment is under consideration as a coupling with the snow (SWE) field; powder avalanches remain out of scope |
 | Online coupling with 1-D pipe-network models, explicit tracking of large trunk mains | Out of scope (beyond the continuum approximation) | Under consideration as external coupling / a trunk hybrid |

@@ -160,6 +160,44 @@ are all chained within a single run. Dilute phenomena (pyroclastic
 surges, plumes, atmospheric ash transport) are out of scope by design
 (see debris_plan.md §5).
 
+**Snow avalanches (dense flow)** - the same equivalent-fluid setup is
+also the standard formulation for dense-flow snow avalanches. The
+Voellmy law (μ + gV²/ξ) was originally developed for avalanches, and
+the workflow is the same as operational avalanche models: give the
+release area and fracture depth, and compute runout and deposition.
+Voellmy dynamics are density-independent (both driving and resistance
+are in acceleration form, so density cancels), which is why snow being
+much lighter than water does not affect the runout computation.
+
+- **Typical setup**: `f_debris = 1`, `f_dbed = 0`, `f_dbres = 4`
+  (μ = db_mu ≈ 0.15-0.3 and ξ = db_xi ≈ 1000-3000 m/s² are the
+  customary avalanche ranges), `f_dbstop = 1` (fix stopped material to
+  the terrain). Give the release area and fracture depth (snow
+  thickness) with `fn_dbinit`, and the release time with
+  `db_reltime`. A small `fluv_porosity` (e.g., 0.1) makes hs read
+  approximately as snow thickness. Keep `db_relsat` small (e.g.,
+  0.1) - the mixture model carries a small amount of water as the
+  carrier fluid, and that water remains and drains after the avalanche
+  stops (a minor artifact if the amount is small). Steep terrain, so
+  `f_gravity_correction = 1` is recommended.
+- **What it cannot do (honest limits)**: (1) no snow entrainment
+  along the path (f_dbed=0 means no exchange; avalanches that grow by
+  entrainment over long paths are underestimated), (2) powder-snow
+  avalanches are out of scope (an air suspension - outside the
+  shallow-water approximation), (3) release is not predicted (the
+  release area and fracture depth are inputs - the same as dedicated
+  avalanche models, where release is given as a scenario), (4) impact
+  pressures need conversion (F9999 is normalized by the freshwater
+  density; use the flowing-snow density of 200-400 kg/m³ for avalanche
+  impact pressures).
+- The Voellmy steady uniform-flow analytic benchmark (0.04%
+  agreement) is continuously tested in
+  [test/volcano](../../../test/volcano/) configuration 1 (the same
+  setup). Comparison with observed avalanche runouts has not been
+  done. The "avalanche redistribution" in the glacier module is a slow
+  slope redistribution of snow for accumulation - a different thing
+  from the dynamic avalanche flow described here.
+
 **There are two ways to trigger a debris flow** (they can be combined):
 
 - **Instantaneous mobilization (fn_dbinit)** - give a distribution
