@@ -18,7 +18,8 @@ module m_driftwood
   !           dw_droot を超えたセルの wst 全量→hd(zref は init 時 z の
   !           私有写し。z 低下の事実だけを見るため f_fluvial/f_debris/
   !           f_slide/f_release のどの侵食・崩壊とも自動連動)
-  !   停止:   喫水 hf = dw_sglog・dw_dlog(円柱の浮力平衡。導出)。
+  !   停止:   喫水 hf = 円柱の浮力平衡の厳密解(Braudrick & Grant 2000
+  !           式(23)(6)。sg・D の線形近似でなく円形セグメント面積で解く)。
   !           h+hs < hf または vv < dw_vstop で hd→wd をレート dw_wstop
   !           (f_dbstop=1 と同型の数値的閉包)。乾燥セル(h≤dd)は全量。
   !           再流動は h+hs > dw_rfloat・hf かつ vv > dw_vfloat で wd→hd
@@ -65,7 +66,8 @@ module m_driftwood
     ! init に早期 return 経路があるため全成分デフォルト初期化必須(§13)
     logical :: enabled = .false.
     logical :: initialized = .false.
-    real :: hf = 0.0                     ! 喫水 (m) = dw_sglog・dw_dlog(導出)
+    real :: hf = 0.0                     ! 喫水 (m)。円柱の浮力平衡の厳密解
+                                         !   (B&G2000 式(23)(6)。init で二分法)
     logical :: have_hyd = .false.        ! 水理的流失の有効
     real :: wrec = 0.0                   ! 水理的流失レート (m/s)
     real :: hrec = 0.0                   ! 水理的流失の水深閾値 (m。h+hs)
@@ -140,7 +142,27 @@ subroutine m_driftwood_init(dw, p, g, b, s)
     call par_stop("list_driftwood: dw_sglog must be in (0,1) — the module assumes " &
                   //"floatable wood (sinking logs are out of scope)")
   end if
-  dw%hf = list%dw_sglog * list%dw_dlog
+  ! 喫水(浮遊限界水深)d_b: 円柱の浮力平衡 ρlog・πD²/4 = ρw・A_sub(d_b)
+  ! (Braudrick & Grant 2000, WRR 36(2), 式(23)(6))。A_sub は円形断面の
+  ! 水没セグメント面積で、面積率 f(x) = (θ − sinθ)/(2π)、θ = 2acos(1−2x)、
+  ! x = d/D。f(x) = sg を二分法で解く(単調増加。全ランク同一演算 =
+  ! 決定的。sg=0.5 は x=0.5 の厳密対称解)
+  block
+    real :: xlo, xhi, xm, th
+    integer :: k2
+    xlo = 0.0
+    xhi = 1.0
+    do k2 = 1, 60
+      xm = 0.5 * (xlo + xhi)
+      th = 2.0 * acos(1.0 - 2.0 * xm)
+      if ((th - sin(th)) / (2.0 * acos(-1.0)) < list%dw_sglog) then
+        xlo = xm
+      else
+        xhi = xm
+      end if
+    end do
+    dw%hf = 0.5 * (xlo + xhi) * list%dw_dlog
+  end block
 
   ! --- 発生(少なくとも一方が必須) ---
   if (list%dw_wrec > -9998.0) then

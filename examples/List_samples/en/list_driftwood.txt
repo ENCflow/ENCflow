@@ -24,8 +24,10 @@
 
   ! ---- representative log properties (required) ----
   dw_dlog = 0.3                     ! representative diameter (m)
-  dw_sglog = 0.5                    ! wood specific gravity (0-1);
-                                    !   draft = dw_sglog*dw_dlog (float/ground switch)
+  dw_sglog = 0.5                    ! wood specific gravity (0-1); the draft
+                                    !   (float/ground switch depth) is derived from
+                                    !   the cylinder buoyancy balance
+                                    !   (Braudrick & Grant 2000; half submerged at 0.5)
 
   ! ---- recruitment; at least one path is required ----
   dw_wrec = 1.0e-5                  ! hydraulic washout rate (m/s = m3/m2/s; enables it)

@@ -25,8 +25,10 @@ standing stock wst --recruit--> floating wood hd --ground/dry--> deposit wd
   [sediment and landform change](geomorph.md) — bedload, debris flow or
   slope failure — couples automatically (no extra setting).
 - **Stopping**: wood deposits in cells where the water depth falls
-  below the draft (= wood specific gravity × representative diameter)
-  or the flow becomes slow. In dry cells the whole amount deposits.
+  below the draft (the buoyant depth from the buoyancy balance of a
+  cylinder, determined by the wood specific gravity and diameter;
+  Braudrick & Grant, 2000) or the flow becomes slow. In dry cells the
+  whole amount deposits.
 - **Transport**: floating wood is advected at the same velocity as the
   water (or the water-sediment mixture when the debris-flow model is
   active). **A mixed debris-flow-and-driftwood surge is represented
@@ -42,7 +44,8 @@ recruitment and stopping parameters:
 &list_driftwood
   dw_stock0 = 0.01          ! standing stock (m3/m2, uniform)
   dw_dlog = 0.3             ! representative log diameter (m)
-  dw_sglog = 0.5            ! wood specific gravity (0-1; draft = dw_sglog*dw_dlog)
+  dw_sglog = 0.5            ! wood specific gravity (0-1; the draft is derived
+                            !   automatically from the buoyancy balance)
   dw_wrec = 1.0e-5          ! hydraulic recruitment rate (m/s)
   dw_hrec = 0.5             ! depth threshold of recruitment (m)
   dw_vrec = 1.0             ! velocity threshold of recruitment (m/s)
@@ -59,7 +62,7 @@ recruitment and stopping parameters:
 | dw_stock0 | — | uniform standing stock (m³/m²). Exclusive with fn_dwstock; one of them is **required** |
 | fn_dwstock | — | standing stock map (m³/m², same matrix format as the terrain) |
 | dw_dlog | — | representative log diameter (m). **Required** |
-| dw_sglog | — | wood specific gravity ρwood/ρwater (0-1). **Required**. Draft = dw_sglog×dw_dlog |
+| dw_sglog | — | wood specific gravity ρwood/ρwater (0-1). **Required**. The draft (buoyant depth) is derived automatically as the exact solution of the cylinder buoyancy balance (Braudrick & Grant, 2000; sg=0.5 gives exactly half submergence = 0.5×dw_dlog) |
 | dw_wrec | none | hydraulic recruitment rate (m/s = m³/m²/s). Specifying it enables hydraulic recruitment |
 | dw_hrec | — | depth threshold of recruitment (m; with debris flow the mixed flow depth h+sediment is used. Required with dw_wrec) |
 | dw_vrec | — | velocity threshold of recruitment (m/s; ditto) |
@@ -74,6 +77,11 @@ At least one recruitment path (dw_wrec / dw_droot) must be specified.
 Convert forest inventory data into stock volume (m³/m²) in
 preprocessing. Thresholds and rates are calibration parameters (no
 established standard values — sensitivity analysis is recommended).
+As guidance for refloat, flume experiments show that logs parallel to
+the flow or with rootwads move at about 1.2 times their buoyant depth,
+while logs oblique to the flow move below the buoyant depth by
+pivoting (Braudrick & Grant, 2000 — the default dw_rfloat=1.5 is on
+the stable side).
 
 ## Output
 
@@ -112,4 +120,7 @@ jamming at bridge piers and slit dams (log length vs. opening width),
 and impact forces are out of scope (an explicit limit of the raster
 representation policy). To examine the **effect** of blockage, give it
 as a scenario (narrowed openings or culverts) and compare two cases.
-Implementation details: developer.md §50 (Japanese).
+Implementation details: developer.md §50 (Japanese). Reference for the
+draft and movement thresholds: Braudrick, C. A. and Grant, G. E.
+(2000), When do logs move in rivers?, Water Resources Research 36(2),
+571-583.
