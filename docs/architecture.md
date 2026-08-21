@@ -19,6 +19,8 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理)
   │                  pump(井戸揚水シンク)/ frost(凍土の浸透抑制))
   │    m_geomorph    土砂・地形変化(加算: creep / fluvial / suspend / wash / splash / debris。
   │                  debris は土石流・地滑り・火山流動の抵抗則/E-D 切替を含む)
+  │    m_driftwood   流木(材積のラスタ場3台帳: 立木 wst → 流動 s%hd → 堆積 s%wd。
+  │                  発生・停止・再流動を担う。移流は swflow_enc の advect_scalar)
   │    m_glacier     氷河(加算: 質量収支(常時)/ flow / slide / ero / ava)
   │    m_intercept   降雨遮断(排他: fixed / initloss)
   │    m_precip      降水    m_evap  蒸発散    m_snow  積雪・融雪
@@ -57,7 +59,9 @@ par_init → sysparam → geoinfo(全域読込・全域前処理)
   → par_decomp_init(セル数重み付き帯分割)
   → geoinfo_scatter_coeffs(物性係数を rank0 から帯+ハロへ配布)
   → boundary → state(← geoinfo, boundary より後)
-  → wq → record → precip → intercept → geomorph → gwflow
+  → wq → record → precip → intercept → geomorph
+  → driftwood(← geomorph より後: morfac 検査に s%geo_morfac を参照)
+  → gwflow
   → saltwater(← gwflow より後: 層1側方の係数を参照)
   → tide → swflow → meteo → evap(← meteo より後) → snow
   → glacier(← meteo・snow より後: 気温と涵養源が必須)
@@ -94,6 +98,9 @@ evap_calc                     蒸発散(h・遮断貯留・hg からの蒸発)
 swflow_post                   ステップ確定処理(σ・河道幅有効時の u,v 正規化)
 wq_derive                     導出濃度場の更新(確定 h に対して)
 geomorph_calc                 地形変化(s%z, s%e 更新+z のハロ交換)
+driftwood_calc                流木(発生・停止・再流動・ダム捕捉。← geomorph の後 =
+                                同一ステップの z 更新を見た侵食連行。移流自体は
+                                swflow_calc 内の advect_scalar が hs/cq と同様に実行)
 calcstat                      統計(S 台帳・max 類。決定的総和)
 表示・ファイル出力・計測      (collective 判定は全ランク同一に)
 エラー判定                    CFL 超過等。全ランクで同一判定・同時 exit
@@ -109,7 +116,7 @@ calcstat                      統計(S 台帳・max 類。決定的総和)
 |---|---|---|---|
 | p | t_sysparam | m_sysparam | 実行制御。init 後は全モジュール読み取り専用 |
 | g | t_geoinfo | m_geoinfo | 地形 z(入力)・粗度 rn・マスク x/sw/rw・格子。原則不変(例外: なし。動的な標高は s%z) |
-| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), cq(輸送物質), swe(積雪), hi(氷河の氷厚), hrs(ため池)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi 等のモジュール私有 save は各 dispose。契約5) |
+| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), cq(輸送物質), hd/wd(流動・堆積流木), swe(積雪), hi(氷河の氷厚), hrs(ため池)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi 等のモジュール私有 save は各 dispose。契約5) |
 | sx | t_enc_status | m_swflow_enc 私有 | エッジ流速 uv・流量 mn(前ステップ確定)・mn1(更新中)。他モジュールから不可視 |
 | r, b, … | 各 t_* | 各モジュール | モジュール私有。リスタートは各自の save ファイル(契約5) |
 
@@ -168,10 +175,10 @@ s%h を変更するモジュールは同じループで s%e = s%z + s%h を回�
 | 設計判断の理由・経緯・実バグ | docs/developer.md(§0 方針 12 箇条から) |
 | 変更時の検証手順・禁止事項 | CLAUDE.md |
 | 未完了の作業・中期の道標 | docs/handoff.md |
-| パラメータの意味(461 項目) | docs/users_guide/params_index.md と各章 |
+| パラメータの意味(482 項目) | docs/users_guide/params_index.md と各章 |
 | namelist の書き方の見本 | examples/List_samples/ |
 | 使い方(利用者視点) | docs/users_guide.md・tutorials/ |
 | 他モデルとの立ち位置 | docs/comparison.md |
-| 個別機能の設計文書 | docs/*_plan.md(geomorph・debris・splash・glacier・boundary・geotiff・gwconduit・swi〔実装済み〕)・channel_model.md |
+| 個別機能の設計文書 | docs/*_plan.md(geomorph・debris・splash・glacier・boundary・geotiff・gwconduit・swi・driftwood〔実装済み〕)・channel_model.md |
 | モジュール実装の作法 | src/m_gwflow_bucket.f90 のヘッダ |
 | ビルドの仕組み | make.inc・docs/install.md・§1/§3 |
