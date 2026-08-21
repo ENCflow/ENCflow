@@ -1,6 +1,7 @@
 # ENCflow
 
 [![CI](https://github.com/ENCflow/ENCflow/actions/workflows/ci.yml/badge.svg)](https://github.com/ENCflow/ENCflow/actions/workflows/ci.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22042848.svg)](https://doi.org/10.5281/zenodo.22042848)
 
 **Solving surface-water phenomena seamlessly on a single grid** —
 from river flooding, storm surge, and tsunami run-up to rainfall–runoff,
@@ -312,6 +313,9 @@ models). Developer documentation is currently in Japanese.
 redistribution are permitted (retaining the copyright notice and
 [NOTICE](NOTICE); see LICENSE for details).
 For citation in research, see [CITATION.cff](CITATION.cff).
+Every release is archived on
+[Zenodo](https://doi.org/10.5281/zenodo.22042848) with a DOI, so you
+can cite the exact version you used.
 
 ## Development
 

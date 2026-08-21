@@ -1,6 +1,7 @@
 # ENCflow
 
 [![CI](https://github.com/ENCflow/ENCflow/actions/workflows/ci.yml/badge.svg)](https://github.com/ENCflow/ENCflow/actions/workflows/ci.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22042848.svg)](https://doi.org/10.5281/zenodo.22042848)
 
 **地表の水に関わる現象を、ひとつの格子の上でシームレスに解く**
 — 洪水・高潮・津波の遡上から、降雨流出・地下水・土砂・水質・積雪融雪・
@@ -242,6 +243,9 @@ OS は Linux / macOS / WSL を想定しています。詳細は
 [Apache License 2.0](LICENSE) です。商用利用・改変・再配布が可能です
 (著作権表示と [NOTICE](NOTICE) の保持が条件。詳細は LICENSE 参照)。
 研究利用の引用方法は [CITATION.cff](CITATION.cff) を参照してください。
+各リリースは [Zenodo](https://doi.org/10.5281/zenodo.22042848) に
+アーカイブされ DOI が付与されるため、使用した版を特定した引用が
+できます。
 
 ## 開発
 

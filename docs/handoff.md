@@ -378,13 +378,11 @@
   ないので既存機構で閉じるはずだが実証)、(c) 地下水強制の段階(ii)=
   カーネル強制水頭配列による過圧表現(必要が生じたら。lake_plan.md §7)。
 
-- **ライセンス: Apache-2.0 設置済み(2026-08-20。職場承認取得)**。
-  LICENSE・NOTICE・README(商用利用可の明記込み)・CONTRIBUTING・
-  CITATION.cff の license 行まで完了(license_plan.md §1〜§2)。
-  **残り = license_plan.md §3 のみ**: CITATION.cff の著者 2 名化
-  (多田・風間)→ v1.0.0 タグ → Zenodo DOI → DOI バッジ・引用箇条。
-  **着手条件は風間先生の著者掲載の確認**(DOI で著者名が恒久化される
-  ため確認が先)。
+- **ライセンス: 完了(2026-08-21)**。Apache-2.0 設置、CITATION.cff
+  著者 2 名化(多田・風間)、v1.0.0 リリース、Zenodo DOI
+  (10.5281/zenodo.22042848)、README DOI バッジまで実施済み
+  (経緯は developer.md §34.3/§34.4)。残るは Discussions への
+  告知投稿(任意・ユーザー操作)のみ。
   覚え書き: 「第三者の著作物を含まない」の主張は**計算コードに限定**
   のまま維持する — 実地形データ(test/chichibu・tutorials/chichibu の
   2 箇所のみ、出典は各 README に記載済み)は第三者データの派生物のため
