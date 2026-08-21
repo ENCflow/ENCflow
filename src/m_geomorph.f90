@@ -124,7 +124,7 @@ module m_geomorph
                                      !   m_swflow_enc(set_debris で通知))
     integer :: f_dbed = 1            ! E-D 式(0:交換なし(等価流体),
                                      !   1:高橋型平衡濃度緩和, 2:江頭・芦田1992,
-                                     !   3:高橋・中川1991)
+                                     !   3:高橋・中川1991, 4:速度比例連行(雪崩))
     real :: db_d50v = 0.0            ! 代表粒径 (m)(f_dbres=2)
     real :: db_erest = 0.0           ! 粒子の反発係数 e(f_dbres=2)
     real :: db_cmin = 0.0            ! 江頭層流則の濃度下限(f_dbres=2)

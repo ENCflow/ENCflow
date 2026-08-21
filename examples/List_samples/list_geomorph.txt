@@ -11,7 +11,7 @@
 !   プロセスだけが順に適用され、0 のプロセスは資源を確保しません。
 !   時間発展する地形は &list_sysparam の f_out_z = 1 で出力できます。
 !   検証済みの例題: test/creep, fluvial, suspend, wash, debris, slide,
-!   sedinflow。解説は docs/users_guide/geomorph.md。
+!   avalanche, sedinflow。解説は docs/users_guide/geomorph.md。
 !
 !======================================================================
 &list_geomorph
@@ -86,7 +86,11 @@
                            !   流向勾配・追加パラメータなし(文献照合済み),
                            !   3:高橋・中川1991 — 飽和床侵食(式12)+慣性係数付き
                            !   堆積(式27)。レート δe/δd・|V|h/d(文献照合済み。
-                           !   db_d50 必須。洞谷適用値 δe=0.0001, δd=0.5))
+                           !   db_d50 必須。洞谷適用値 δe=0.0001, δd=0.5),
+                           !   4:速度比例連行 E = δe・|V| — 雪崩・岩屑なだれの
+                           !   走路連行(連行のみ。堆積は f_dbstop。連行可能層は
+                           !   sd(雪崩では走路の雪厚)。C >= db_cmin のセルのみ。
+                           !   users_guide/geomorph.md の雪崩の項))
   db_delte = 0.0007        ! 侵食速度係数 δe(f_dbed=1,3。校正パラメータ)
   db_deltd = 0.05          ! 堆積速度係数 δd(f_dbed=1,3。校正パラメータ)
   f_dbres = 1              ! 抵抗則(0:マニングのみ, 1:クーロン+マニング合成,

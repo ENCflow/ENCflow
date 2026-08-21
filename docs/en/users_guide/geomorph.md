@@ -169,34 +169,42 @@ Voellmy dynamics are density-independent (both driving and resistance
 are in acceleration form, so density cancels), which is why snow being
 much lighter than water does not affect the runout computation.
 
-- **Typical setup**: `f_debris = 1`, `f_dbed = 0`, `f_dbres = 4`
+- **Typical setup**: `f_debris = 1`, `f_dbed = 4`
+  (**velocity-proportional entrainment** of path snow, E = δe·|V|; use
+  0 if entrainment is not needed), `f_dbres = 4`
   (μ = db_mu ≈ 0.15-0.3 and ξ = db_xi ≈ 1000-3000 m/s² are the
   customary avalanche ranges), `f_dbstop = 1` (fix stopped material to
   the terrain). Give the release area and fracture depth (snow
   thickness) with `fn_dbinit`, and the release time with
-  `db_reltime`. A small `fluv_porosity` (e.g., 0.1) makes hs read
+  `db_reltime`. The **entrainable snow depth along the path is given
+  as the soil depth sd** (sd0 / fn_sd; z is the snow-surface
+  elevation and z−sd the ground; the entrainment coefficient
+  `db_delte` is a calibration parameter, typically 0.01-0.05).
+  A small `fluv_porosity` (e.g., 0.1) makes hs read
   approximately as snow thickness. Keep `db_relsat` small (e.g.,
-  0.1) - the mixture model carries a small amount of water as the
+  0.1-0.15) - the mixture model carries a small amount of water as the
   carrier fluid, and that water remains and drains after the avalanche
   stops (a minor artifact if the amount is small). Steep terrain, so
   `f_gravity_correction = 1` is recommended.
-- **What it cannot do (honest limits)**: (1) no snow entrainment
-  along the path (f_dbed=0 means no exchange; avalanches that grow by
-  entrainment over long paths are underestimated), (2) powder-snow
+- **What it cannot do (honest limits)**: (1) powder-snow
   avalanches are out of scope (an air suspension - outside the
-  shallow-water approximation), (3) release is not predicted (the
+  shallow-water approximation), (2) release is not predicted (the
   release area and fracture depth are inputs - the same as dedicated
-  avalanche models, where release is given as a scenario), (4) impact
+  avalanche models, where release is given as a scenario), (3) impact
   pressures need conversion (F9999 is normalized by the freshwater
   density; use the flowing-snow density of 200-400 kg/m³ for avalanche
-  impact pressures).
-- The Voellmy steady uniform-flow analytic benchmark (0.04%
-  agreement) is continuously tested in
+  impact pressures), (4) no automatic coupling with the snow (SWE)
+  module (to chain from a winter snowpack run, convert SWE to sd in
+  preprocessing).
+- A verified example is [test/avalanche](../../../test/avalanche/)
+  (release → growth to 1.5x by entrainment → stopping on the flat;
+  solid ledger at machine precision). The Voellmy steady uniform-flow
+  analytic benchmark (0.04% agreement) is continuously tested in
   [test/volcano](../../../test/volcano/) configuration 1 (the same
-  setup). Comparison with observed avalanche runouts has not been
-  done. The "avalanche redistribution" in the glacier module is a slow
-  slope redistribution of snow for accumulation - a different thing
-  from the dynamic avalanche flow described here.
+  resistance law). Comparison with observed avalanche runouts has not
+  been done. The "avalanche redistribution" in the glacier module is a
+  slow slope redistribution of snow for accumulation - a different
+  thing from the dynamic avalanche flow described here.
 
 **There are two ways to trigger a debris flow** (they can be combined):
 
@@ -254,5 +262,5 @@ Verified test cases exist per process:
 [test/creep](../../../test/creep/) (analytical-solution benchmark),
 [test/fluvial](../../../test/fluvial/), [test/suspend](../../../test/suspend/),
 [test/wash](../../../test/wash/), [test/debris](../../../test/debris/),
-[test/slide](../../../test/slide/),
+[test/slide](../../../test/slide/), [test/avalanche](../../../test/avalanche/),
 [test/sedinflow](../../../test/sedinflow/) (boundary sediment supply).

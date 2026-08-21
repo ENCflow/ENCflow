@@ -63,9 +63,10 @@ module subroutine init_debris(gm, p, g, list)
   integer :: k
   real, parameter :: deg2rad = acos(-1.0) / 180.0
 
-  ! 内部摩擦角 φ は E-D(f_dbed>=1)と濃度依存の降伏抵抗(f_dbres=1,2)が
-  ! 使う。等価流体構成(f_dbed=0 + f_dbres=0,3,4,5)では不要
-  if (list%f_dbed >= 1 .or. list%f_dbres == 1 .or. list%f_dbres == 2) then
+  ! 内部摩擦角 φ は平衡濃度系の E-D(f_dbed=1,2,3)と濃度依存の降伏抵抗
+  ! (f_dbres=1,2)が使う。等価流体構成(f_dbed=0,4 + f_dbres=0,3,4,5)では不要
+  if ((list%f_dbed >= 1 .and. list%f_dbed <= 3) &
+      .or. list%f_dbres == 1 .or. list%f_dbres == 2) then
     if (list%db_phi <= 0.0 .or. list%db_phi >= 90.0) then
       call par_stop("list_geomorph: f_debris requires db_phi in (0, 90) deg")
     end if
@@ -78,6 +79,8 @@ module subroutine init_debris(gm, p, g, list)
   end if
   if (list%f_dbed >= 1) then
     if (list%db_delte <= 0.0) call par_stop("list_geomorph: db_delte must be > 0")
+  end if
+  if (list%f_dbed >= 1 .and. list%f_dbed <= 3) then
     if (list%db_deltd <= 0.0) call par_stop("list_geomorph: db_deltd must be > 0")
   end if
   gm%db_delte = list%db_delte
@@ -117,9 +120,15 @@ module subroutine init_debris(gm, p, g, list)
         call par_stop("list_geomorph: f_dbed=3 requires db_d50 > 0(レート q_T/d_L の粒径)")
       end if
       gm%f_dbed = list%f_dbed
+    case (4)            ! 速度比例連行(E = δe・|V|。雪崩・岩屑なだれの走路連行)
+      if (list%db_cmin <= 0.0 .or. list%db_cmin >= gm%db_cstar) then
+        call par_stop("list_geomorph: db_cmin must be in (0, C*)")
+      end if
+      gm%f_dbed = list%f_dbed
     case default
       call par_stop("list_geomorph: f_dbed must be 0(no exchange), 1(simplified)," &
-                    // " 2(Egashira-Ashida) or 3(Takahashi-Nakagawa 1991)")
+                    // " 2(Egashira-Ashida), 3(Takahashi-Nakagawa 1991)" &
+                    // " or 4(velocity-proportional entrainment)")
   end select
 
   ! 抵抗則(実体は m_swflow_enc。パラメータをここで検証して渡す。
@@ -341,6 +350,19 @@ module subroutine calc_debris(gm, p, g, s, dtw)
           ! 低速セルの hs 全量が db_wstop レートで河床へ固定される
           fx = 0.0
           cinf = 0.0
+        else if (gm%f_dbed == 4) then
+          ! 速度比例連行(E = δe・|V|。雪崩・岩屑なだれの走路連行 —
+          ! users_guide/geomorph.md 雪崩の項)。連行のみで堆積はなし
+          ! (停止・堆積は f_dbstop=1 が担う。平衡濃度は 0 扱い)。
+          ! 密な流動体(C >= db_cmin)のセルだけが連行する — 移流の
+          ! 希薄な裾(微小 hs)が全速で削るのを防ぐ閾値
+          fx = 0.0
+          cinf = 0.0
+          if (s%vv(i,j) > 0.0 .and. cc >= gm%db_cmin) then
+            fx = gm%db_cstar * gm%db_delte * s%vv(i,j) * dtw
+            ! 可動層クランプ(連行可能層 = sd。雪崩では雪の厚さ)
+            fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
+          end if
         else if (gm%f_dbed == 2) then
           ! 江頭・芦田(1992): E = |V|・C*・tan(θ−θe)(流向の河床勾配。
           ! 侵食・堆積が1本の式で連続。Morpho2DH 式(5)-(7))

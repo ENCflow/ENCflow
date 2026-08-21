@@ -1,0 +1,75 @@
+!======================================================================
+! avalanche: 流れ型雪崩(等価流体 + 速度比例連行)の疎通・保存則検定
+!   slope_break 地形(tanθ=0.4 の斜面 + 遷緩点 x=30m の平坦部)。
+!   発生区(i∈[3,10], j∈[8,13])の雪 D=0.5m を t=1s に流動化し、
+!   走路の雪(sd0=0.5m = 連行可能層)を速度比例連行(f_dbed=4:
+!   E = δe・|V|)で取り込みながら Voellmy 則(f_dbres=4)で流下、
+!   平坦部で停止・堆積(f_dbstop=1)する。
+!   キャリアは疑似間隙水(db_relsat 小。users_guide/geomorph.md 雪崩の項)。
+!   検定は Check_avalanche.py:
+!     (1) 固体台帳(放出・連行・凝集すべて内部移転 = 機械精度で 0)
+!     (2) 共動更新恒等 (sd-sd0) = (z-z0)
+!     (3) 連行の活性(発生区の外の走路で雪が削られている)
+!     (4) 成長(連行量が放出量に対して有意)
+!     (5) 停止(残存 hs が小さい = 堆積が地形に固定済み)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02
+  t0 = 0
+  tt = 60
+  dt_disp = 10
+  dt_file = 60
+  dt_recrd = 60
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_result = 'result'
+  dir_save = 'save'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_enc
+  f_gravity_correction = 1
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 60.0
+  ly = 20.0
+  nx = 60
+  ny = 20
+  f_ztype = 0
+  z0 = 0.0
+  f_user_routine = "slope_break"   ! tanθ=0.4, 遷緩点 x=30m
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 0.5                 ! 連行可能な雪の厚さ(全域。z は雪面込み)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_debris = 1
+  f_dbed = 4                ! 速度比例連行 E = δe・|V|(堆積は f_dbstop)
+  db_delte = 0.05           ! 連行係数 δe(校正パラメータ。V=5 m/s で 0.25 m/s の削り込み)
+  f_dbres = 4               ! Voellmy(μ + gV²/(ξh))
+  db_mu = 0.2               ! 摩擦係数 μ(雪崩の慣用域)
+  db_xi = 1500.0            ! 乱流係数 ξ (m/s²)(同上)
+  db_vstop = 0.05
+  db_cmin = 0.02            ! 連行する「密な流動体」の濃度下限
+  f_dbstop = 1              ! 低速凝集(停止 → 雪面(z)へ固定)
+  db_wstop = 0.1
+  fluv_porosity = 0.1       ! 雪の空隙率解釈(C* = 0.9。hs ≈ 雪厚)
+  fn_dbinit = 'dbinit.txt'  ! 発生区の破断深 D=0.5m(make_init.py)
+  db_reltime = 1.0          ! t=1s に一斉流動化
+  db_relsat = 0.15          ! 疑似間隙水(キャリアの水を少量。雪崩ガイド)
+/
