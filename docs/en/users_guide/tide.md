@@ -76,6 +76,12 @@ value and check.
 ## Constraints and notes
 
 - ENC grid system only (not available in the legacy STG).
+- Sea-mask cells do not solve the flow, and **none of the
+  landform-change (sediment) processes act on sea cells**. To handle
+  tsunami / storm-surge resuspension and deposition of bottom mud or
+  sand, represent the water body as ordinary cells + an initial water
+  level (see the suspended-sediment section of
+  [Sediment and landform change](geomorph.md)).
 - The tide update phase is based on the absolute step number, so after
   a [restart](restart.md) updates occur at the same timing as an
   uninterrupted run (a restart round trip with tide enabled is also

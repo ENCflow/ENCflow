@@ -76,6 +76,41 @@ Sediment inflow from the boundaries (time series of concentration and
 bedload discharge) is given by the segment inflows (inflow_cs /
 inflow_qs) of [Boundary conditions](boundary.md).
 
+**Tsunami / storm-surge resuspension and deposition in the run-up zone
+(tsunami deposits)** - resuspension of bay-bottom mud or sand and its
+deposition in the run-up zone can be represented with f_suspend. One
+important condition: **sea-mask (fn_sw) cells do not solve the flow,
+and none of the landform-change processes act on sea cells**. Represent
+the water body to be resuspended not as a sea mask but as ordinary
+cells with real bathymetry z plus an initial water level (f_htype=2 in
+[Initial conditions](initial.md)), and let the tsunami enter through
+the long-wave radiation edge boundary (type 2) or
+water-level-prescribed cells ([Boundary conditions](boundary.md)).
+Give the thickness and extent of the erodible layer as the soil depth
+sd (sd=0 means non-erodible).
+
+- **Sand**: the model's native regime. f_esform=2 (Itakura-Kishi) with
+  susp_wf=0 (Rubey-derived) works without calibration parameters.
+  Where the bedload contribution matters (run-up front, shallow
+  high-velocity return flow), superpose f_fluvial.
+- **Mud (cohesive)**: handled by reinterpretation. Give the effective
+  floc settling velocity directly as susp_wf (on the order of
+  1e-4 to 1e-3 m/s; the Rubey derivation is unrealistic at clay grain
+  sizes), regard the f_esform=1 law E = wf*esa*(tau*/tau*c - 1) as
+  identical in form to the Partheniades law E = M(tau/tau_ce - 1), and
+  calibrate susp_esa and susp_tausc to the mud's erosion rate constant
+  and critical shear stress. Flocculation and consolidation are not
+  represented explicitly.
+
+In the run-up zone settling dominates as the flow decelerates, and in
+cells that dry out the entire suspended load is fixed to the bed. The
+deposit thickness is obtained as the before/after difference of z
+(f_out_z; the probe CSV also has hs and sd columns). Being single
+grain size, the scope is deposit thickness and extent - the spatial
+grain-size distribution (inland fining) is not represented. hs is a
+passive scalar under the dilute assumption; high-concentration mud
+flows (density currents) are out of scope.
+
 ## Hillslope erosion (f_wash)
 
 Detaches sediment from hillslopes by raindrop erosion and sheet
