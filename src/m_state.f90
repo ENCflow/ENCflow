@@ -147,6 +147,18 @@ module m_state
     real, allocatable :: hi(:,:)        ! 氷河の氷厚 (m 氷柱。幾何面積基底。水当量は
                                         ! hi×(ρi/ρw)。m_glacier が確保・更新・保存する。
                                         ! fn_glacier 未指定なら未確保。§45)
+    real, allocatable :: hd(:,:)        ! 流動流木柱状量 (m3/m2 = m。貯留の意味論は
+                                        ! h・hs と同一)。移流は swflow_enc がステップ
+                                        ! 内で行い(dw_active)、発生・停止・再流動は
+                                        ! m_driftwood が担う。確保・保存は
+                                        ! m_driftwood_init(有効時のみ)。§50
+    real, allocatable :: wd(:,:)        ! 堆積流木 (m3/m2。柱状量。m_driftwood が
+                                        ! 確保・更新・保存し、m_output が Wd 場を
+                                        ! 書く。fn_driftwood 未指定なら未確保。§50)
+    real, allocatable :: wdmax(:,:)     ! 流木の期間最大到達量 max(hd+wd)
+                                        ! (f_out_wd 指定時のみ確保。save 対象外。§7)
+    logical :: dw_active = .false.      ! 流木輸送の有効化(m_driftwood_init が設定。
+                                        ! swflow_enc がステップ内で s%hd を移流する)
     real :: geo_morfac = 0.0 ! geomorph の地形時間加速係数(m_geomorph_init が設定。
                              ! 0 = geomorph 無効。m_glacier_init が「morfac は
                              ! 全プロセス共通の1個」の検査に使う。§45)
@@ -701,6 +713,9 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%swimax)) deallocate(s%swimax)
   if (allocated(s%swimaxt)) deallocate(s%swimaxt)
   if (allocated(s%hi)) deallocate(s%hi)
+  if (allocated(s%hd)) deallocate(s%hd)
+  if (allocated(s%wd)) deallocate(s%wd)
+  if (allocated(s%wdmax)) deallocate(s%wdmax)
   if (allocated(s%fxg)) deallocate(s%fxg)
   if (allocated(s%frofac)) deallocate(s%frofac)
   if (allocated(s%tide)) deallocate(s%tide)

@@ -4273,10 +4273,34 @@ L=15, α=0.01, β=0.01(1/hr)【要文献照合】)。SWI = S1+S2+S3 (mm)。
 
 ### 50.2 パラメータ(&list_driftwood)
 
-必須: fn_dwstock(立木ストック分布 m3/m2)、dw_dlog(代表直径 m)、
-dw_sglog(材比重 0<sg<1。浮遊前提の検証つき)。
+必須: 立木ストック(一様 dw_stock0 か分布 fn_dwstock の排他。m3/m2)、
+dw_dlog(代表直径 m)、dw_sglog(材比重 0<sg<1。浮遊前提の検証つき)。
 発生: dw_hrec / dw_vrec / dw_wrec(水理的流失の水深・流速閾値と
 レート)、dw_droot(根系深 m。侵食連行の閾値)。
 停止・再流動: dw_vstop / dw_wstop(接地・低速堆積)、dw_rfloat
 (浮遊余裕率。既定 1.5)、dw_vfloat / dw_wfloat(再流動。既定 0)。
 レート・閾値は校正パラメータ(コードは形のみ。§19.8 の運用)。
+
+### 50.3 検証記録(2026-08-21, gfortran 13.3/OpenMPI)
+
+- **無効時ビット一致**: fn_driftwood 未指定で全21テストケース
+  (wave/chichibu/debris/slide/volcano/avalanche/glacier ほか)PASS
+  (chichibu は reference と完全一致)
+- **規律3(-fcheck 先行)**: gfortran -fcheck=all の np=2 を最適化 MPI
+  より先に実行 — chichibu(無効・実地形静的データ。Log は -O0 でも
+  reference と完全一致)と test/driftwood 有効2構成の両方で異常なし
+- **保存則**(test/driftwood 閉領域): Σwst + Σhd + Σwd −初期ストック
+  総量 = -9.6e-14(構成1)/ 1.5e-13(構成2)m·cell(機械精度)
+- **疎通**: 構成1(土石流+侵食連行)= 渓床侵食 ~3mm で dw_droot=2mm の
+  連行が発火(5.6 m³ 流木化)→ 混合体と同速流下 → 遷緩点下流へ到達・
+  低速凝集域で全量堆積(堆積ピークは遷緩点直上流 i=28)。
+  構成2(洪水・水理的流失。geomorph なし)= 斜面シート流で流失 →
+  平坦部の湛水域で減速堆積
+- **np=1, 2, 4**: -O2 厳密数学で逐次 = np1 = np2 = np4 の state.dat・
+  driftwood.dat がバイト一致(両構成)。-Ofast はビルド間差(fast-math)
+  が既知のため Run_MPI.sh の逐次比較は警告扱い(§28.3 と同じ)
+- **リスタート分割継続**: 0→15s(save)+ 復元 15→30s が通し 0→30s と
+  driftwood.dat・state.dat ともバイト一致(本ケース。継続等価の一般
+  保証は ULP 水準 — §28.4)
+- 検定の自動化: test/driftwood(Check_driftwood.py = 材積保存・活性・
+  到達の3検定+Run.sh の分割継続バイト比較+Run_MPI.sh の逐次比較)

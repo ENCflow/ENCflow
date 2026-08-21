@@ -219,6 +219,8 @@ module m_swflow_enc
                                      ! s%wq_active のときだけ確保。§30)
     real, allocatable :: hss1(:,:)   ! 地表塩水層厚の書き込み先(同上の意味論。
                                      ! s%salt_active のときだけ確保。§47)
+    real, allocatable :: hd1(:,:)    ! 流動流木柱状量の書き込み先(同上の意味論。
+                                     ! s%dw_active のときだけ確保。§50)
     logical :: initialized = .false.
   end type
   type(t_enc_status) :: sx_mod
@@ -584,6 +586,7 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   if (s%sed_active) call par_halo_cell(s%hs)
   ! 輸送物質柱状量(浮遊砂と同じ理由でステップ頭交換。§30)
   if (s%wq_active) call par_halo_cell(s%cq)
+  if (s%dw_active) call par_halo_cell(s%hd)
   ! 地表塩水層厚(同上。§47)
   if (s%salt_active) call par_halo_cell(s%hss)
 
@@ -637,6 +640,12 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 表す。境界流入は清水 = cbin なし。§47)
   if (s%salt_active) then
     call advect_scalar(p, g, s, sx_mod, s%hss, sx_mod%hss1, share=s%salt_alpha)
+  end if
+
+  ! 流動流木柱状量を移流する(同一カーネル。鉛直平均流速と同速の単相
+  ! 近似。境界流入は清水 = cbin なし。発生・停止は m_driftwood。§50)
+  if (s%dw_active) then
+    call advect_scalar(p, g, s, sx_mod, s%hd, sx_mod%hd1)
   end if
 
   ! ダムの適用(捕捉帯吸収→運転→放流。時間ループのみ。§22)
@@ -831,6 +840,11 @@ subroutine init_enc_status(p, g, s, sx)
     allocate(sx%hss1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
     sx%hss1(:,:) = s%hss(:,:)
   end if
+  ! 流動流木の書き込みバッファ(同上の理由で複製初期化。§50)
+  if (s%dw_active) then
+    allocate(sx%hd1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+    sx%hd1(:,:) = s%hd(:,:)
+  end if
 
   ! 流速の初期条件を設定する
   !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, ue, ve)
@@ -892,6 +906,7 @@ subroutine del_enc_status(sx)
   if (allocated(sx%h1)) deallocate(sx%h1)
   if (allocated(sx%hs1)) deallocate(sx%hs1)
   if (allocated(sx%cq1)) deallocate(sx%cq1)
+  if (allocated(sx%hd1)) deallocate(sx%hd1)
 end subroutine
 
 
@@ -1664,6 +1679,19 @@ subroutine complete(p, g, s, sx, initial)
         if (g%x(i,j) <= 0) cycle
         if (g%sw(i,j) > 0) cycle
         s%hss(i,j) = sx%hss1(i,j)
+      end do
+    end do
+    !$omp end parallel do
+  end if
+
+  ! 流動流木柱状量のコミット(hs と同じ意味論。§50)
+  if (s%dw_active) then
+    !$omp parallel do schedule(dynamic) private(i, j)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        if (g%sw(i,j) > 0) cycle
+        s%hd(i,j) = sx%hd1(i,j)
       end do
     end do
     !$omp end parallel do

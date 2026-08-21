@@ -190,8 +190,9 @@
   流動・堆積・ダム捕捉・系外流出(収支残差として台帳化)。
   総和は par_sum_rows(決定的。§11)。
 - 測線の流木フラックス列(m_record)は将来(§6-7)。
-- **save**: モジュール私有 driftwood.dat(hd, wst, dep, zref +
-  台帳累計。§7 契約C。state.dat の形式・save_version は不変)。
+- **save**: モジュール私有 driftwood.dat(hd, wd, wst, zref の4成分。
+  §7 契約C。state.dat の形式・save_version は不変。台帳 CSV の累積は
+  ラン先頭からの積算 = restore でリセット(wq.csv と同じ))。
   ※ s%hd を state.dat でなく私有ファイルに置くのは s%cq(wq.dat)の
   前例に合わせる。restore では自ファイルの有無のみ確認し、無ければ
   par_stop(版・格子・精度の検証は m_state が済ませている)。
@@ -233,16 +234,14 @@
 
 ## 5. 実装段階とコミット構成
 
-| 段階 | 内容 | 検証 |
-|---|---|---|
-| C1 | 本設計文書の合意・確定(§6 の論点消化) | — |
-| C2 | s%hd + advect 分岐 + ハロ + list_driftwood + init 骨格 | 無効時ビット一致・-fcheck np=2 先行 |
-| C3 | 発生・停止・再流動(wst / dep / zref)+ 乾燥繰り入れ | 保存則・疎通1, 2・np=1,2,4 |
-| C4 | 出力(f_out_hd / wd)・台帳 csv・save/restore・ダム同伴 | リスタート往復・出力の np 一致 |
-| C5 | test/driftwood・users_guide 章・params_index・comparison 反映 | 全回帰 PASS |
+| 段階 | 内容 | 検証 | 状態 |
+|---|---|---|---|
+| C1 | 本設計文書の合意・確定(§6 の論点消化) | — | 済(2026-08-21) |
+| C2〜C4 | s%hd/s%wd + advect 分岐 + list_driftwood + m_driftwood(発生・停止・再流動・乾燥繰り入れ・台帳 csv・save/restore・ダム同伴)+ 出力(f_out_hd / wd) | 無効時ビット一致(全21ケース)・-fcheck np=2 先行・保存則(機械精度)・リスタート分割継続・np=1,2,4 | 済(同日。実装が一体のため1コミットに統合 — 検証項目は全段階分を実施。記録は developer.md §50.3) |
+| C5 | test/driftwood・users_guide 章(日英)・params_index・List_samples・comparison・handoff 反映 | 全回帰 PASS | 済(同日) |
 
-各段階とも等価変換とは分け、機能追加は「無効時に既存 reference と
-ビット一致」を合否とする(絶対規律2・4)。
+機能追加は「無効時に既存 reference とビット一致」を合否とする
+(絶対規律2・4)。
 
 ## 6. 論点と合意結果(2026-08-21 合意。全て推奨案で確定)
 
