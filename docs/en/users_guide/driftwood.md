@@ -74,14 +74,36 @@ recruitment and stopping parameters:
 | dw_vfloat | — | velocity threshold of refloat (m/s; required with dw_wfloat > 0; must be >= dw_vstop) |
 
 At least one recruitment path (dw_wrec / dw_droot) must be specified.
-Convert forest inventory data into stock volume (m³/m²) in
-preprocessing. Thresholds and rates are calibration parameters (no
-established standard values — sensitivity analysis is recommended).
-As guidance for refloat, flume experiments show that logs parallel to
-the flow or with rootwads move at about 1.2 times their buoyant depth,
-while logs oblique to the flow move below the buoyant depth by
-pivoting (Braudrick & Grant, 2000 — the default dw_rfloat=1.5 is on
-the stable side).
+
+**Practical guidance** (from NILIM Technical Note No. 904, the
+Japanese national sabo planning manual for debris flow and driftwood,
+2016):
+
+- **dw_dlog**: the manual estimates the mean driftwood diameter as
+  roughly equal to the **mean diameter at breast height (DBH)** of the
+  standing trees upstream — survey DBH values can be used directly.
+- **Standing stock**: single-tree volume = (π/4)×height×DBH²×form
+  factor (0.3-0.7) × tree density, converted to m³/m² in
+  preprocessing. Observed envelopes of generated driftwood volume in
+  torrents are about 1,000 m³/km² (= 0.001 m³/m²) for conifer forests
+  and about 100 m³/km² (= 0.0001 m³/m²) for broadleaf forests (a
+  guide for uniform stock values and for sanity-checking magnitudes).
+- **Validation metric**: the manual cites field evidence that, without
+  countermeasure works, 80-90% of the generated driftwood reached the
+  valley outlet (outflow ratio 0.8-0.9) — usable to check
+  torrent-scale results.
+- **Erosion entrainment (dw_droot)** follows the same idea as the
+  manual's generation estimate (standing trees within the
+  failure/debris-flow erosion area become driftwood).
+
+Thresholds and rates of hydraulic recruitment (dw_wrec/hrec/vrec) are
+calibration parameters (the manual has no depth/velocity washout
+criterion, so no standard values exist — sensitivity analysis is
+recommended). As guidance for refloat, flume experiments show that
+logs parallel to the flow or with rootwads move at about 1.2 times
+their buoyant depth, while logs oblique to the flow move below the
+buoyant depth by pivoting (Braudrick & Grant, 2000 — the default
+dw_rfloat=1.5 is on the stable side).
 
 ## Output
 
@@ -120,7 +142,9 @@ jamming at bridge piers and slit dams (log length vs. opening width),
 and impact forces are out of scope (an explicit limit of the raster
 representation policy). To examine the **effect** of blockage, give it
 as a scenario (narrowed openings or culverts) and compare two cases.
-Implementation details: developer.md §50 (Japanese). Reference for the
-draft and movement thresholds: Braudrick, C. A. and Grant, G. E.
-(2000), When do logs move in rivers?, Water Resources Research 36(2),
-571-583.
+Implementation details: developer.md §50 (Japanese). References: draft
+and movement thresholds — Braudrick, C. A. and Grant, G. E. (2000),
+When do logs move in rivers?, Water Resources Research 36(2), 571-583;
+practical values and generation mechanisms — NILIM Technical Notes
+No. 904 and No. 905 (sabo planning and design manuals for debris flow
+and driftwood, 2016, in Japanese).
