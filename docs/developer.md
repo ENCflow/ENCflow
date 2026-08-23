@@ -4393,3 +4393,83 @@ When do logs move in rivers?, Water Resources Research 36(2), 571-583。
   堆積側挙動が失われるため。文書化のみ)。未成熟域の 6.7C∞d² と
   閾値 0.138/0.03 は指針解説にも現れない(高橋系成書の系譜のまま。
   handoff 1j)。
+
+## 51. 溶岩流モジュール m_lavaflow(fn_lavaflow。2026-08-23 実装)
+
+噴火口セル群からの湧き出し・深さ平均 Bingham 粘性重力流・停止セルの
+固化(→ s%z)を担う独立モジュール。設計の正本は docs/lava_plan.md
+(方式選定の理由 = debris 援用が不適な4点、スコープの線引き、段階2
+〔温度1変数〕の将来枠を含む)。利用者向けは users_guide/lavaflow.md。
+
+### 51.1 構成(合意事項の要約)
+
+- **独立モジュール(glacier 型)**: 状態は s%hl(m 溶岩柱。有効時のみ
+  確保)。fn_lavaflow / &list_lavaflow で有効化、無効時はメモリ・CPU
+  追加ゼロ。他モジュール依存なし(段階2の温度で meteo 連動予定)。
+- **定式(等温 Bingham 潤滑流)**: 溶岩面 s = z+hl、面勾配 S、
+  降伏最小厚 h0 = τ_y/(ρgS)。エッジ単位幅フラックス
+  q = (ρgS/6η)(he−h0)²(2he+h0)(he = エッジ平均厚。τ_y=0 で
+  q = ρgS he³/3η の Newton 極限)。拡散形 D = (ρg/6η)(he−h0)²(2he+h0)
+  として SIA と同族の非線形拡散になり、§0-5「水平は SWE+1方程式拡散が
+  上限」の範囲内。離散化は m_glacier tick_flow と同型(保存形2ループ・
+  4近傍 Mahaffy 型・エッジ反対称・ドナー律速 1/4・適応サブサイクル
+  〔D_max allreduce_max = 全ランク同一〕)。
+- **噴火口ソース**: モジュール私有(&list_lavaflow 内。水の
+  &list_bound_source は流用しない。私有ソースの前例は m_gwflow_pump で、
+  書式・検証・セル集合への均等分配も同じ)。運動量なし(拡散型に
+  運動量入力は存在しない)。時系列は m_boundary の interp_series /
+  read_cell_file2 / read_val_file2 を再利用。
+- **固化(数値的閉包)**: エッジ深さ平均速度 u = D・S/he の最大が
+  lv_vsol 未満の「停止セル」の hl をレート lv_wsol で s%z へ転換。
+  **速度閾値+レートは f_dbstop=1(db_vstop/db_wstop)と同じ閉じ方**。
+  当初案の「フラックス厳密 0 の不動セル」判定は、Bingham の停止が
+  漸近的(q ∝ (h−h∞)² → 0 だが有限時間で 0 に達しない)なため実際には
+  発火しないことが実装中に判明し、速度閾値方式へ変更した(2026-08-23。
+  lava_plan.md §5 も同時改定)。判定はパス1が時刻 n の場から行い
+  パス2が適用する(tick_erosion と同型の競合対策)。z のみ増加
+  (**sd は増やさない** = 固化溶岩は侵食されない岩盤。f_dbstop の
+  z・sd 共動〔可動堆積物〕とは意図的に異なる)。再流動なし。
+  e 回復と z のハロ交換まで行う。
+- **実行順序**: geomorph_calc・driftwood_calc の後(z 更新プロセスの
+  末尾)、calcstat の前。init は geomorph の後(morfac=1 検査に
+  s%geo_morfac を参照)。STG 非対応・morfac>1 非対応(イベント計算)。
+- **水理との関係**: 地表水は流動中の溶岩に不可視で z の上を流れる
+  (glacier §5 と同じ割り切り)。海セルとは無フラックス。固化面の
+  粗度・浸透は既存分布のまま(段階1の割り切り。lava_plan.md §7)。
+- **台帳・リスタート**: 場出力 Hl。S_total に算入しない(水柱でない。
+  噴出・固化・残存の体積台帳を dispose で allreduce_sumr し root 表示)。
+  リスタートは私有 lavaflow.dat(契約5)。
+
+### 51.2 パラメータ(&list_lavaflow)
+
+lv_rho(ρ)・lv_visc(η。必須)・lv_tauy(τ_y。0 = Newton)は直接入力
+(§0-12)、**レオロジーはラン全体で1組**(噴火口別の粘度は不採用 —
+合流時に混合則=粘度の移流場が必要になる複雑化に見合わない。粘度差の
+実体は温度・組成で、段階2の温度従属+噴火口毎の噴出温度で表現する。
+2026-08-23 討議)。固化は lv_wsol + lv_vsol(§51.1)。噴火口は
+lv_cell / lv_q0 / lv_val / fn_lv_cell / fn_lv_val(pump と同じ様式。
+最大 20 噴火口・番号連続・負率は par_stop・海セル/域外は par_stop)。
+dt_lavaflow_c 未指定は毎ステップ。
+
+### 51.3 検証記録(2026-08-23。gfortran 13.3 / OpenMPI)
+
+- **test/lava 新設**(reference 比較なし = 解析解検定で閉じる。volcano と
+  同じ流儀):
+  - 構成1(Huppert): 平坦床・中央1セル定率湧き出し(Newton 極限)。
+    Huppert (1982) の定率供給軸対称相似解 r_N = 0.715(gQ³/3ν)^{1/8}√t に
+    対し面積等価半径の誤差 8.5%(tol 10%。エッジ平均厚の前縁遅れを含む)、
+    成長則 r(tt)/r(tt/2) は √2 に誤差 0.6%、台帳 Σhl は機械精度(3e-13 m³)。
+  - 構成2(Bingham 停止・固化): 等勾配斜面 tanθ=0.2・列噴火口 300 s
+    供給。停止厚 h∞ = τ_y/(ρg tanθ) に対し誤差 7.1%(tol 20%。lv_vsol
+    打切りによる上振れ h∞+√(v_sol·h/(coef·(2h+h0)·S)) を含む)、CV 0.001、
+    固化率 1.000、台帳 Σhl+Σdz 機械精度(1e-11 m³)。
+  - 停止の漸近が遅いため、検定は「検定時間内に排水が h∞ 近傍へ届く
+    粘度」で組む(η=2e3、tt=4800 s。η=1e4 では 900 s で 29% 上振れの
+    実測 = パラメータ選定の目安として記録)。
+- 既定で全22テスト無効時ビット一致(逐次)+ wave/chichibu MPI np=2 PASS。
+- -fcheck=all MPI np=2(lava 両構成+chichibu)を最適化検証より先に実行、
+  クリーン(絶対規律3)。
+- -O2 厳密数学ビルドで逐次 = MPI np=1,2,4 の state.dat / lavaflow.dat
+  バイト一致(両構成)。リスタート往復(300 s save → restore → 600 s)も
+  フル計算とバイト一致。
+- 新規コンパイル警告なし(m_lavaflow / list_lavaflow)。

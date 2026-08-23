@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 482 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 497 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -80,6 +80,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | dt_file_c | &list_sysparam | [時刻の管理](time.md) |
 | dt_geomorph | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | dt_glacier_c | &list_glacier | [氷河](glacier.md) |
+| dt_lavaflow_c | &list_lavaflow | [溶岩流](lavaflow.md) |
 | dt_gwflow | &list_gwflow | [地下水](gwflow.md) |
 | dt_maplist | &list_precip | [降雨・気象](forcing.md) |
 | dt_maplist_c | &list_precip | [降雨・気象](forcing.md) |
@@ -168,6 +169,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_htype | &list_initial | [初期条件](initial.md) |
 | f_icmodel | &list_intercept | [降雨・気象](forcing.md) |
 | f_input_mode | &list_sysparam | [入出力](io.md) |
+| f_lavaflow | &list_lavaflow | [溶岩流](lavaflow.md) |
 | f_masktype | &list_geoinfo | [地理情報](geoinfo.md) |
 | f_out_cn | &list_sysparam | [入出力](io.md) |
 | f_out_dda | &list_sysparam | [入出力](io.md) |
@@ -280,7 +282,10 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_inflow_val | &list_bound_inflow | [境界条件](boundary.md) |
 | fn_initial | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
 | fn_intercept | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
+| fn_lavaflow | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
 | fn_log | &list_sysparam | [入出力](io.md) |
+| fn_lv_cell | &list_lavaflow | [溶岩流](lavaflow.md) |
+| fn_lv_val | &list_lavaflow | [溶岩流](lavaflow.md) |
 | fn_maplist | &list_precip | [降雨・気象](forcing.md) |
 | fn_mask | &list_geoinfo | [地理情報](geoinfo.md) |
 | fn_meteo | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
@@ -381,6 +386,16 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | inflow_val | &list_bound_inflow | [境界条件](boundary.md) |
 | kk | &list_sysparam | [浅水流計算](swflow.md) |
 | lat | &list_evap | [降雨・気象](forcing.md) |
+| lv_cell | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_cfl | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_nsubmax | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_q0 | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_rho | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_tauy | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_val | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_visc | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_vsol | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_wsol | &list_lavaflow | [溶岩流](lavaflow.md) |
 | lx | &list_geoinfo | [地理情報](geoinfo.md) |
 | ly | &list_geoinfo | [地理情報](geoinfo.md) |
 | mag_z | &list_geoinfo | [地理情報](geoinfo.md) |

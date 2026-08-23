@@ -147,6 +147,10 @@ module m_state
     real, allocatable :: hi(:,:)        ! 氷河の氷厚 (m 氷柱。幾何面積基底。水当量は
                                         ! hi×(ρi/ρw)。m_glacier が確保・更新・保存する。
                                         ! fn_glacier 未指定なら未確保。§45)
+    real, allocatable :: hl(:,:)        ! 溶岩厚 (m 溶岩柱。幾何面積基底。水柱でない
+                                        ! ため S 台帳には算入しない。m_lavaflow が
+                                        ! 確保・更新・保存する。fn_lavaflow 未指定
+                                        ! なら未確保。lava_plan.md)
     real, allocatable :: hd(:,:)        ! 流動流木柱状量 (m3/m2 = m。貯留の意味論は
                                         ! h・hs と同一)。移流は swflow_enc がステップ
                                         ! 内で行い(dw_active)、発生・停止・再流動は
@@ -713,6 +717,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%swimax)) deallocate(s%swimax)
   if (allocated(s%swimaxt)) deallocate(s%swimaxt)
   if (allocated(s%hi)) deallocate(s%hi)
+  if (allocated(s%hl)) deallocate(s%hl)
   if (allocated(s%hd)) deallocate(s%hd)
   if (allocated(s%wd)) deallocate(s%wd)
   if (allocated(s%wdmax)) deallocate(s%wdmax)

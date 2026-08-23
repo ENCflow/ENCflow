@@ -123,6 +123,12 @@ care about.**
   deposition, natural damming, dam-break flooding, and
   rainfall-triggered secondary lahars can be followed **in a single
   run**.
+- **Lava flows**: effusion from a set of vent cells (an effusion-rate
+  time series), Bingham viscous spreading and stopping (viscosity and
+  yield stress given directly), and solidification into lava-field
+  topography. Because solidified lava becomes the bed, **subsequent
+  rainfall, floods, and sediment transport flow over the new
+  topography** in the same run.
 - **Water quality and mass transport**: load runoff from point sources,
   areal sources, land-use-specific unit loads, and wet deposition;
   advective transport, decay and settling, buildup–washoff (nonlinear

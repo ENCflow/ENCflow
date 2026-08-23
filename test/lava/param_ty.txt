@@ -1,0 +1,65 @@
+!======================================================================
+! lava(構成2: Bingham 停止と固化の検定)
+!   等勾配斜面(tanθ=0.2, 100m x 8m)の上流端の列(i=5, j=1..8)に
+!   噴出率 Q=0.5 m3/s を 300 s 与えて止め、Bingham 降伏(τ_y=2000 Pa)に
+!   よる停止 → 速度閾値 lv_vsol の固化(lv_wsol)→ s%z への転換を検定する。
+!   解析解: 停止後の一様域の厚さ h∞ = τ_y/(ρ g tanθ) = 0.3925 m。
+!   検定(Check_lava.py bingham):
+!     (1) 台帳 Σhl + Σ(z−z0) = 注入量(機械精度。固化は z への内部移転)
+!     (2) 平坦域(検定窓)の堆積厚 hl+dz の平均が h∞ に相対 20% 以内・
+!         変動係数 < 0.15(停止形状の一様性)
+!     (3) 固化の活性: Σdz / 注入量 > 0.7(大半が z へ固定)かつ
+!         max dz > 0.2 m(地形化の実体)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.5
+  t0 = 0
+  tt = 4800
+  dt_disp = 800
+  dt_file = 4800
+  dt_recrd = 4800
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_lavaflow = '-'
+  dir_result = 'result_ty'
+  dir_save = 'save_ty'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 水なし(溶岩のみの検定)
+/
+
+&list_geoinfo
+  lx = 100.0
+  ly = 8.0
+  nx = 100
+  ny = 8
+  f_ztype = 1
+  fn_z = 'zinit.txt'        ! 等勾配斜面 tanθ=0.2(make_init.py)
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_lavaflow
+  lv_rho = 2600.0
+  lv_visc = 2.0e3           ! η (Pa s)(検定時間内に h∞ へ排水が届く粘度)
+  lv_tauy = 2000.0          ! 降伏応力 (Pa)。h∞ = τ_y/(ρg tanθ) = 0.3925 m
+  lv_wsol = 0.005           ! 固化レート (m/s)
+  lv_vsol = 5.0e-4          ! 停止判定の速度閾値 (m/s)
+  lv_cell(1:2,1,1) = 5, 1   ! 上流端の列噴火口(割れ目噴火の型)
+  lv_cell(1:2,2,1) = 5, 2
+  lv_cell(1:2,3,1) = 5, 3
+  lv_cell(1:2,4,1) = 5, 4
+  lv_cell(1:2,5,1) = 5, 5
+  lv_cell(1:2,6,1) = 5, 6
+  lv_cell(1:2,7,1) = 5, 7
+  lv_cell(1:2,8,1) = 5, 8
+  lv_val(1:2,1,1) = 0, 0.5  ! (時刻(min), 総噴出率(m3/s))
+  lv_val(1:2,2,1) = 5, 0.5
+  lv_val(1:2,3,1) = 5, 0.0  ! 重複時刻 = t=300s ちょうどで階段状に停止
+/

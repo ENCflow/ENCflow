@@ -102,6 +102,7 @@ module m_sysparam
     character(:), allocatable :: fn_wq         ! 水質(負荷流出)設定ファイル
     character(:), allocatable :: fn_snow       ! 積雪・融雪設定ファイル
     character(:), allocatable :: fn_glacier    ! 氷河設定ファイル
+    character(:), allocatable :: fn_lavaflow   ! 溶岩流設定ファイル
     character(:), allocatable :: fn_salt       ! 淡塩2層設定ファイル
     character(:), allocatable :: fn_swi        ! 土壌雨量指数設定ファイル(§49)
     character(:), allocatable :: fn_driftwood  ! 流木設定ファイル(§50)
@@ -233,6 +234,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%fn_wq = list%fn_wq                         ! 水質(負荷流出)設定ファイル
   p%fn_snow = list%fn_snow                     ! 積雪・融雪設定ファイル
   p%fn_glacier = list%fn_glacier               ! 氷河設定ファイル
+  p%fn_lavaflow = list%fn_lavaflow             ! 溶岩流設定ファイル
   p%fn_salt = list%fn_salt                     ! 淡塩2層設定ファイル
   p%fn_swi = list%fn_swi                       ! 土壌雨量指数設定ファイル
   p%fn_driftwood = list%fn_driftwood           ! 流木設定ファイル
