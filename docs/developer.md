@@ -4212,7 +4212,27 @@ CFPM2 型の閾値切替則(Darcy⇄Darcy-Weisbach)は f_gwc_fluxlaw=3 として
 > 設定)が subcycles=2 で安定に走り、終状態 hgc = 0.10260 =
 > cap+(潮位−管頂水頭)·slot_sy の解析平衡に厳密一致。glacier 型の
 > 適応化(充満率で実効係数を毎サイクル評価)と RKL2 置換は将来の
-> 最適化(採否基準は本項既載)。 同じ「dtcheck+par_stop → 自動細分」の置換は、静的
+> 最適化(採否基準は本項既載)。
+
+> **実装記録・第4弾(2026-08-23)**: (5) sy・slot_sy のセル別化を
+> 実装済み(fn_gwc_sy / fn_gwc_slot_sy。セットで)。t_conduitlayer の
+> syinvc/syinv_slot を帯+ハロの配列にし、conduit_head・eq_inflow・
+> eq_outflow はセル別値をスカラー引数で受ける純関数に変更(呼び手が
+> (i,j) 値を渡す)。一様指定はスカラー値充填で従来とビット一致
+> (qanat・coastal_drain の Log 全桁一致、test/conduit 両ケース PASS)。
+> **dtcheck はセル別ペアリング**(max_cell[max(1/sy)·Σcnd·fac])に変更 —
+> 一様 sy では乗算の単調性により旧形とビット同一、不均質では
+> 「枝管の硬い slot × 幹線の大きい通水」の過大ペアを作らない分だけ
+> 上界が緩む。機能確認: sewer_hybrid ラン D(セル別 sy = 幹線 0.0911/
+> 枝管 0.0314、slot = sy/5)で最終氾濫 36.4 mm — 緩い一様 slot の
+> ラン A(18.2)/B(10.2)は**幻の貯留により氾濫を半分以下に過小評価
+> していた**ことを定量確認(本項の数値特性の実証)。検証: 全 23
+> スイート逐次 PASS、conduit np=2,4・tide/pump/lava np=2 PASS、ラン D の
+> np=2,4 が逐次と全ファイル一致、-fcheck=all(-Og)の逐次(ラン D・
+> param_stiff)と np=2(ラン D)クリーン完走。**§46.5 の残りは
+> (6) 4 成分エッジマップ直接入力のみ(未着手)**。
+
+**(4) の横展開**: 同じ「dtcheck+par_stop → 自動細分」の置換は、静的
 dt 上界を持つ他の拡散型カーネルにもそのまま載る — gwflow_lateral
 (層1)・gwflow_layer2・geomorph_creep(morfac 大の長期地形で効く)・
 saltwater 側方。いずれも既存ケースは N=1 でビット一致という同じ

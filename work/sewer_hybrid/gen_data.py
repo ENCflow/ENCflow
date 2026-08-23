@@ -86,4 +86,14 @@ write_mat(os.path.join(d, "cnd_C.txt"), lambda i, j: dens_b)
 write_mat(os.path.join(d, "inlet.txt"),
           lambda i, j: 0.1 if (i == i2 and j == jline) else 0.01)
 
+# --- ラン D 用: セル別の貯留係数(§46.5 (5)) ---
+#     幹線セル = 幹線に整合(sy 0.0911)、枝管セル = 枝管に整合(0.0314)。
+#     slot は各セルの sy/5(物理寄りの硬い圧力応答。dt 上界を超える分は
+#     サブサイクリング(§46.5 (4))が自動で吸収する)
+sy_t, sy_b = cap_trunkcell / 1.0, cap_b / 0.4
+write_mat(os.path.join(d, "sy_T.txt"),
+          lambda i, j: sy_t if on_trunk(i, j) else sy_b)
+write_mat(os.path.join(d, "slot_T.txt"),
+          lambda i, j: (sy_t if on_trunk(i, j) else sy_b) / 5.0)
+
 print("maps written to data_sewer/")

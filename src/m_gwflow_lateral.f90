@@ -136,8 +136,9 @@ module m_gwflow_lateral
   ! m_gwflow_conduit が init で構築する。gwconduit_plan.md §10.4)
   type t_conduitlayer
     integer :: fluxlaw = 2           ! 流束則(1:線形, 2:sqrt 乱流)
-    real :: syinvc = 0.0             ! 不圧枝の 1/sy_c
-    real :: syinv_slot = 0.0         ! 被圧(疑似スロット)枝の 1/sy_slot
+    real, allocatable :: syinvc(:,:)     ! 不圧枝の 1/sy_c(セル別。§46.5 (5)。
+                                         !   一様指定はスカラー値充填 = ビット一致)
+    real, allocatable :: syinv_slot(:,:) ! 被圧(疑似スロット)枝の 1/sy_slot(同上)
     real :: eps = 1.0e-3             ! 乾燥判定・過大流出抑制の正則化量 (m 柱状)
     real :: eps_h = 1.0e-2           ! sqrt 則の線形化幅 (m 水頭差)
     real, allocatable :: zbot(:,:)   ! 水頭底標高 (m)。帯+ハロ
@@ -473,15 +474,16 @@ end subroutine
 !   被圧枝: H = zbot + cap/sy_c + (hgc - cap)/sy_slot(疑似スロット)
 !   交換項(m_gwflow_conduit)からも使うため公開の純関数とする
 !----------------------------------------------------------------------
-pure real function conduit_head(cl, hgcv, capv, zbotv)
-  type(t_conduitlayer), intent(in) :: cl
+pure real function conduit_head(hgcv, capv, zbotv, syic, syis)
   real, intent(in) :: hgcv           ! 貯留水量 (m 柱状)
   real, intent(in) :: capv           ! 貯留容量 (m 柱状)
   real, intent(in) :: zbotv          ! 水頭底標高 (m)
+  real, intent(in) :: syic           ! 不圧枝の 1/sy_c(セル別値。§46.5 (5))
+  real, intent(in) :: syis           ! 被圧枝の 1/sy_slot(同上)
   if (hgcv <= capv) then
-    conduit_head = zbotv + hgcv * cl%syinvc
+    conduit_head = zbotv + hgcv * syic
   else
-    conduit_head = zbotv + capv * cl%syinvc + (hgcv - capv) * cl%syinv_slot
+    conduit_head = zbotv + capv * syic + (hgcv - capv) * syis
   end if
 end function
 
@@ -512,7 +514,8 @@ subroutine conduit_core(g, hgc, cl, dts)
       if (g%x(i,j) <= 0) cycle
       capc = cl%cap(i,j)
       if (capc > 0.0) then
-        hc0 = conduit_head(cl, hgc(i,j), capc, cl%zbot(i,j))
+        hc0 = conduit_head(hgc(i,j), capc, cl%zbot(i,j), &
+                           cl%syinvc(i,j), cl%syinv_slot(i,j))
         fillc = min(hgc(i,j) / capc, 1.0)
       else
         hc0 = 0.0
@@ -530,7 +533,8 @@ subroutine conduit_core(g, hgc, cl, dts)
             cndk = cl%cnd(k, i+die(k), j+dje(k))
             if (cndk > 0.0) then
               if (hgc(i,j) > cl%eps .or. hgc(in,jn) > cl%eps) then  ! 両側乾燥なら 0
-                hn0 = conduit_head(cl, hgc(in,jn), capn, cl%zbot(in,jn))
+                hn0 = conduit_head(hgc(in,jn), capn, cl%zbot(in,jn), &
+                                   cl%syinvc(in,jn), cl%syinv_slot(in,jn))
                 if (hc0 /= hn0) then                                ! 勾配ゼロなら 0
                   filln = min(hgc(in,jn) / capn, 1.0)
                   ! 上流側(水頭の高い側)の貯留量と充満率
@@ -653,7 +657,7 @@ subroutine gwflow_conduit_dtcheck(g, label, cl, dts, nsub)
                                      ! (§46.5 (4)。dt_lim は allreduce_max
                                      !  由来で全ランク同一 → nsub も同一)
   integer :: i, j, k
-  real :: fac(1:8), sums, summax(1), syinvmax, dt_lim
+  real :: fac(1:8), sums, summax(1), dt_lim
   character(len=256) :: msg
 
   do k = 1, 8
@@ -673,14 +677,17 @@ subroutine gwflow_conduit_dtcheck(g, label, cl, dts, nsub)
       do k = 1, 8
         sums = sums + cl%cnd(ke(k), i+die(k), j+dje(k)) * fac(k)
       end do
+      ! セル別の水頭感度 max(1/sy) を掛けてから最大化する(§46.5 (5)。
+      ! 一様 sy では乗算の単調性により旧「全域 max(1/sy)×max Σ」と
+      ! ビット同一。不均質では過大にペアリングしない分だけ上界が緩む)
+      sums = sums * max(cl%syinvc(i,j), cl%syinv_slot(i,j))
       summax(1) = max(summax(1), sums)
     end do
   end do
   call par_allreduce_max(summax)
-  syinvmax = max(cl%syinvc, cl%syinv_slot)
   nsub = 1
-  if (summax(1) * syinvmax > 0.0) then
-    dt_lim = 0.5 * g%dx * g%dy / (syinvmax * summax(1))
+  if (summax(1) > 0.0) then
+    dt_lim = 0.5 * g%dx * g%dy / summax(1)
     ! dts が上界を超える場合は par_stop でなくサブサイクル数を返す
     ! (§46.5 (4)。上限の検査は呼び手 = namelist を持つ側が行う)
     if (dts > dt_lim) nsub = ceiling(dts / dt_lim)

@@ -273,6 +273,8 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_gwc_inlet | &list_gwflow_conduit | [地下水](gwflow.md) |
 | fn_gwc_leak | &list_gwflow_conduit | [地下水](gwflow.md) |
 | fn_gwc_outfall | &list_gwflow_conduit | [地下水](gwflow.md) |
+| fn_gwc_slot_sy | &list_gwflow_conduit | [地下水](gwflow.md) |
+| fn_gwc_sy | &list_gwflow_conduit | [地下水](gwflow.md) |
 | fn_gwflow | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
 | fn_gwp_cell | &list_gwflow_pump | [地下水](gwflow.md) |
 | fn_gwp_val | &list_gwflow_pump | [地下水](gwflow.md) |

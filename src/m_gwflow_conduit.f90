@@ -133,7 +133,7 @@ subroutine gwflow_conduit_init(p, g, s, dts)
   real, intent(in) :: dts
   integer :: un, ios, i, j
   real :: sy2
-  real, allocatable :: dens(:,:)
+  real, allocatable :: dens(:,:), wksy(:,:), wkslot(:,:)
   character(len=256) :: msg
   integer :: f_gwc_fluxlaw, gwc_nsubmax
   real :: gwc_cnd_m2s, gwc_cap, gwc_depth, gwc_sy, gwc_slot_sy, gwc_sat0
@@ -141,9 +141,10 @@ subroutine gwflow_conduit_init(p, g, s, dts)
   real :: gwc_eps, gwc_eps_h, gwc_diagratio
   integer :: gwc_leak_layer
   character(len=1024) :: fn_gwc_cnd, fn_gwc_cap, fn_gwc_bot, fn_gwc_inlet
-  character(len=1024) :: fn_gwc_outfall, fn_gwc_leak
+  character(len=1024) :: fn_gwc_outfall, fn_gwc_leak, fn_gwc_sy, fn_gwc_slot_sy
   namelist /list_gwflow_conduit/ f_gwc_fluxlaw, gwc_cnd_m2s, fn_gwc_cnd, &
     gwc_cap, fn_gwc_cap, gwc_depth, fn_gwc_bot, gwc_sy, gwc_slot_sy, &
+    fn_gwc_sy, fn_gwc_slot_sy, &
     gwc_sat0, gwc_inlet, fn_gwc_inlet, gwc_cw, gwc_co, &
     gwc_leak_layer, gwc_leak_mmh, gwc_eps, gwc_eps_h, gwc_diagratio, &
     fn_gwc_outfall, fn_gwc_leak, gwc_nsubmax
@@ -162,6 +163,8 @@ subroutine gwflow_conduit_init(p, g, s, dts)
   fn_gwc_inlet = ""
   fn_gwc_outfall = ""
   fn_gwc_leak = ""
+  fn_gwc_sy = ""
+  fn_gwc_slot_sy = ""
   gwc_cw = 2.66                      ! 堰式の既定(越流幅 1 m・流量係数 0.6 相当)
   gwc_co = 0.15                      ! オリフィスの既定(Cd 0.6 × 開口 0.25 m2)
   gwc_leak_layer = 0
@@ -182,11 +185,16 @@ subroutine gwflow_conduit_init(p, g, s, dts)
   if (f_gwc_fluxlaw /= 1 .and. f_gwc_fluxlaw /= 2) then
     call par_stop("list_gwflow_conduit: f_gwc_fluxlaw must be 1(linear) or 2(sqrt)")
   end if
-  if (gwc_sy <= 0.0 .or. gwc_sy > 1.0) then
-    call par_stop("list_gwflow_conduit: gwc_sy must be in (0,1]")
-  end if
-  if (gwc_slot_sy <= 0.0 .or. gwc_slot_sy > gwc_sy) then
-    call par_stop("list_gwflow_conduit: gwc_slot_sy must be in (0, gwc_sy]")
+  ! 貯留係数のスカラー検証はマップ指定がない側にのみ適用する
+  ! (マップ指定時はセル別検証 = 下の sy 節で行う。§46.5 (5))
+  if (len_trim(fn_gwc_sy) == 0) then
+    if (gwc_sy <= 0.0 .or. gwc_sy > 1.0) then
+      call par_stop("list_gwflow_conduit: gwc_sy must be in (0,1]")
+    end if
+    if (len_trim(fn_gwc_slot_sy) == 0 &
+        .and. (gwc_slot_sy <= 0.0 .or. gwc_slot_sy > gwc_sy)) then
+      call par_stop("list_gwflow_conduit: gwc_slot_sy must be in (0, gwc_sy]")
+    end if
   end if
   if (gwc_cap <= 0.0 .and. len_trim(fn_gwc_cap) == 0) then
     call par_stop("list_gwflow_conduit: set gwc_cap > 0 or fn_gwc_cap")
@@ -243,8 +251,6 @@ subroutine gwflow_conduit_init(p, g, s, dts)
 
   ! --- カーネルの層パラメータ ---
   gwc%cl%fluxlaw = f_gwc_fluxlaw
-  gwc%cl%syinvc = 1.0 / gwc_sy
-  gwc%cl%syinv_slot = 1.0 / gwc_slot_sy
   gwc%cl%eps = gwc_eps
   gwc%cl%eps_h = gwc_eps_h
 
@@ -270,6 +276,56 @@ subroutine gwflow_conduit_init(p, g, s, dts)
   else
     ! 初期地形 z − 一様埋設深(静的。geomorph の z 変化には追随しない)
     gwc%cl%zbot(:,:) = g%z(1:g%nx, dcp%jsh:dcp%jeh) - gwc_depth
+  end if
+
+  ! --- 貯留係数(セル別。§46.5 (5)。一様指定はスカラー値充填 =
+  !     スカラー指定とビット一致。断面の異なる幹線・枝管の同居に必要。
+  !     セル別検証: 管路セル(cap>0)は sy ∈ (0,1] かつ slot ∈ (0, sy]。
+  !     非管路セルの値は使われない(逆数は値 > 0 のセルのみ計算し、
+  !     0 のセルは 0 のまま = 参照されない)---
+  allocate(gwc%cl%syinvc(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(gwc%cl%syinv_slot(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  if (len_trim(fn_gwc_sy) > 0 .or. len_trim(fn_gwc_slot_sy) > 0) then
+    allocate(wksy(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(wkslot(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    if (len_trim(fn_gwc_sy) > 0) then
+      call read_map_scatter(p, g, fn_gwc_sy, wksy, "gwc_sy")
+    else
+      wksy(:,:) = gwc_sy
+    end if
+    if (len_trim(fn_gwc_slot_sy) > 0) then
+      call read_map_scatter(p, g, fn_gwc_slot_sy, wkslot, "gwc_slot_sy")
+    else
+      wkslot(:,:) = gwc_slot_sy
+    end if
+    do j = dcp%js, dcp%je
+      do i = 1, g%nx
+        if (g%x(i,j) <= 0) cycle
+        if (g%sw(i,j) > 0) cycle
+        if (gwc%cl%cap(i,j) <= 0.0) cycle
+        if (wksy(i,j) <= 0.0 .or. wksy(i,j) > 1.0) then
+          write(msg,'(a,2i7,es12.4)') "gwflow_conduit: gwc_sy must be in (0,1] at", &
+                                      i, j, wksy(i,j)
+          call par_stop(trim(msg))
+        end if
+        if (wkslot(i,j) <= 0.0 .or. wkslot(i,j) > wksy(i,j)) then
+          write(msg,'(a,2i7,es12.4)') "gwflow_conduit: gwc_slot_sy must be in " &
+                                      // "(0, gwc_sy] at", i, j, wkslot(i,j)
+          call par_stop(trim(msg))
+        end if
+      end do
+    end do
+    ! 逆数化は帯+ハロ全行(conduit_core が隣接セルの水頭を計算するため)
+    do j = dcp%jsh, dcp%jeh
+      do i = 1, g%nx
+        if (wksy(i,j) > 0.0) gwc%cl%syinvc(i,j) = 1.0 / wksy(i,j)
+        if (wkslot(i,j) > 0.0) gwc%cl%syinv_slot(i,j) = 1.0 / wkslot(i,j)
+      end do
+    end do
+    deallocate(wksy, wkslot)
+  else
+    gwc%cl%syinvc(:,:) = 1.0 / gwc_sy
+    gwc%cl%syinv_slot(:,:) = 1.0 / gwc_slot_sy
   end if
 
   ! --- 状態の確保と初期値(海セル・無効セル・管路なしセルには置かない) ---
@@ -399,25 +455,25 @@ end subroutine
 ! 折れ線水頭の枝ごとの閉形式(不圧枝で収まらなければ満管まで詰めて
 ! 被圧枝で等化)。流入の行き過ぎ(数値振動)の防止に使う
 !----------------------------------------------------------------------
-pure real function eq_inflow(cl, capv, zbotv, hgcv, hsv)
-  type(t_conduitlayer), intent(in) :: cl
+pure real function eq_inflow(capv, zbotv, hgcv, hsv, syic, syis)
   real, intent(in) :: capv, zbotv, hgcv, hsv
+  real, intent(in) :: syic, syis     ! セル別の 1/sy_c, 1/sy_slot(§46.5 (5))
   real :: hc, fx1, du
 
-  hc = conduit_head(cl, hgcv, capv, zbotv)
+  hc = conduit_head(hgcv, capv, zbotv, syic, syis)
   if (hsv <= hc) then
     eq_inflow = 0.0
   else if (hgcv < capv) then
-    fx1 = (hsv - hc) / (1.0 + cl%syinvc)
+    fx1 = (hsv - hc) / (1.0 + syic)
     if (hgcv + fx1 <= capv) then
       eq_inflow = fx1                          ! 等化点は不圧枝
     else
       du = capv - hgcv                         ! 満管まで詰めて被圧枝で等化
-      eq_inflow = du + max(hsv - du - (zbotv + capv * cl%syinvc), 0.0) &
-                       / (1.0 + cl%syinv_slot)
+      eq_inflow = du + max(hsv - du - (zbotv + capv * syic), 0.0) &
+                       / (1.0 + syis)
     end if
   else
-    eq_inflow = (hsv - hc) / (1.0 + cl%syinv_slot)
+    eq_inflow = (hsv - hc) / (1.0 + syis)
   end if
 end function
 
@@ -428,25 +484,25 @@ end function
 ! 閉形式(被圧枝で収まらなければ満管まで下げて不圧枝で等化)。
 ! 陸側開放吐口の数値振動防止に使う(§46.5 (3))
 !----------------------------------------------------------------------
-pure real function eq_outflow(cl, capv, zbotv, hgcv, hsv)
-  type(t_conduitlayer), intent(in) :: cl
+pure real function eq_outflow(capv, zbotv, hgcv, hsv, syic, syis)
   real, intent(in) :: capv, zbotv, hgcv, hsv
+  real, intent(in) :: syic, syis     ! セル別の 1/sy_c, 1/sy_slot(§46.5 (5))
   real :: hc, fx1, du
 
-  hc = conduit_head(cl, hgcv, capv, zbotv)
+  hc = conduit_head(hgcv, capv, zbotv, syic, syis)
   if (hc <= hsv) then
     eq_outflow = 0.0
   else if (hgcv > capv) then
-    fx1 = (hc - hsv) / (1.0 + cl%syinv_slot)
+    fx1 = (hc - hsv) / (1.0 + syis)
     if (hgcv - fx1 >= capv) then
       eq_outflow = fx1                          ! 等化点は被圧枝
     else
       du = hgcv - capv                          ! 満管まで下げて不圧枝で等化
-      eq_outflow = du + max((zbotv + capv * cl%syinvc) - (hsv + du), 0.0) &
-                        / (1.0 + cl%syinvc)
+      eq_outflow = du + max((zbotv + capv * syic) - (hsv + du), 0.0) &
+                        / (1.0 + syic)
     end if
   else
-    eq_outflow = (hc - hsv) / (1.0 + cl%syinvc)
+    eq_outflow = (hc - hsv) / (1.0 + syic)
   end if
 end function
 
@@ -462,7 +518,7 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
   real, intent(in) :: dts
   integer :: i, j, di2, dj2, isub
   real :: capc, hcnd, hs, q1, fx, hother, capo
-  real :: esea, hgt, ca
+  real :: esea, hgt, ca, syic, syis
   logical :: hassea
 
   if (it < 0) continue  ! 引数未使用の警告を抑制
@@ -470,7 +526,7 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
   ! (1) 地表交換(枡・吸込穴。堰式流入/オリフィス式噴出。反対称適用。
   !     owner-compute。s%h を変更したら s%e を回復する = 契約(2))
   if (gwc%surf) then
-    !$omp parallel do schedule(static) private(i, j, capc, hcnd, hs, q1, fx)
+    !$omp parallel do schedule(static) private(i, j, capc, hcnd, hs, q1, fx, syic, syis)
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
@@ -478,7 +534,9 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
         capc = gwc%cl%cap(i,j)
         if (capc <= 0.0) cycle
         if (gwc%dinlet(i,j) <= 0.0) cycle
-        hcnd = conduit_head(gwc%cl, s%hgc(i,j), capc, gwc%cl%zbot(i,j))
+        syic = gwc%cl%syinvc(i,j)
+        syis = gwc%cl%syinv_slot(i,j)
+        hcnd = conduit_head(s%hgc(i,j), capc, gwc%cl%zbot(i,j), syic, syis)
         hs = s%z(i,j) + s%h(i,j)
         if (hs > hcnd .and. s%h(i,j) > 0.0) then
           ! 流入(不圧 = 堰式の自由流入、満管 = オリフィス式の圧力流入)
@@ -488,7 +546,7 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
             q1 = gwc%cw * s%h(i,j)**1.5
           end if
           fx = min(gwc%dinlet(i,j) * q1 * dts, s%h(i,j), &
-                   eq_inflow(gwc%cl, capc, gwc%cl%zbot(i,j), s%hgc(i,j), hs))
+                   eq_inflow(capc, gwc%cl%zbot(i,j), s%hgc(i,j), hs, syic, syis))
           if (fx > 0.0) then
             s%h(i,j) = s%h(i,j) - fx
             s%hgc(i,j) = s%hgc(i,j) + fx
@@ -498,7 +556,7 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
           ! 噴出(被圧時のみ。オリフィス式。被圧分と等化量で制限)
           q1 = gwc%co * sqrt(2.0 * p%gg * (hcnd - hs))
           fx = min(gwc%dinlet(i,j) * q1 * dts, s%hgc(i,j) - capc, &
-                   (hcnd - hs) / (1.0 + gwc%cl%syinv_slot))
+                   (hcnd - hs) / (1.0 + syis))
           if (fx > 0.0) then
             s%hgc(i,j) = s%hgc(i,j) - fx
             s%h(i,j) = s%h(i,j) + fx
@@ -523,14 +581,16 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
   ! (3) 層間交換(浸入水・漏水/涵養・漏出。水頭比較で向きを決める
   !     定数交換能・容量制限の単純形。反対称適用。s%h に触れない)
   if (gwc%leak_layer > 0) then
-    !$omp parallel do schedule(static) private(i, j, capc, capo, hcnd, hother, fx)
+    !$omp parallel do schedule(static) private(i, j, capc, capo, hcnd, hother, fx, syic, syis)
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
         if (g%sw(i,j) > 0) cycle
         capc = gwc%cl%cap(i,j)
         if (capc <= 0.0) cycle
-        hcnd = conduit_head(gwc%cl, s%hgc(i,j), capc, gwc%cl%zbot(i,j))
+        syic = gwc%cl%syinvc(i,j)
+        syis = gwc%cl%syinv_slot(i,j)
+        hcnd = conduit_head(s%hgc(i,j), capc, gwc%cl%zbot(i,j), syic, syis)
         if (gwc%leak_layer == 1) then
           hother = (s%z(i,j) - s%sd(i,j)) + s%hg(i,j) * gwc%syinv1
           if (hother > hcnd) then
@@ -575,7 +635,7 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
   if (gwc%outf) then
     call par_halo_cell(s%e)
     !$omp parallel do schedule(static) &
-    !$omp   private(i, j, di2, dj2, capc, ca, hcnd, esea, hs, hgt, q1, fx, hassea)
+    !$omp   private(i, j, di2, dj2, capc, ca, hcnd, esea, hs, hgt, q1, fx, hassea, syic, syis)
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
@@ -601,7 +661,9 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
             end if
           end do
         end do
-        hcnd = conduit_head(gwc%cl, s%hgc(i,j), capc, gwc%cl%zbot(i,j))
+        syic = gwc%cl%syinvc(i,j)
+        syis = gwc%cl%syinv_slot(i,j)
+        hcnd = conduit_head(s%hgc(i,j), capc, gwc%cl%zbot(i,j), syic, syis)
         if (hassea) then
           ! 海側吐口(§46.5 (8b)): 受け水頭 = 潮位(固定)。系外へ除去
           if (hcnd <= esea) cycle              ! フラップ: 逆流なし
@@ -609,11 +671,10 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
           ! 等化上限: 管路水頭が受け水頭まで下がる貯留量(折れ線の逆関数)
           if (esea <= gwc%cl%zbot(i,j)) then
             hgt = 0.0
-          else if (esea <= gwc%cl%zbot(i,j) + capc * gwc%cl%syinvc) then
-            hgt = (esea - gwc%cl%zbot(i,j)) / gwc%cl%syinvc
+          else if (esea <= gwc%cl%zbot(i,j) + capc * syic) then
+            hgt = (esea - gwc%cl%zbot(i,j)) / syic
           else
-            hgt = capc + (esea - gwc%cl%zbot(i,j) - capc * gwc%cl%syinvc) &
-                         / gwc%cl%syinv_slot
+            hgt = capc + (esea - gwc%cl%zbot(i,j) - capc * syic) / syis
           end if
           fx = min(q1 * dts / (g%dx * g%dy), s%hgc(i,j) - hgt)
           if (fx > 0.0) then
@@ -629,7 +690,7 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
           if (hcnd <= hs) cycle                ! フラップ: 逆流なし
           q1 = ca * sqrt(2.0 * p%gg * (hcnd - hs))
           fx = min(q1 * dts / (g%dx * g%dy), s%hgc(i,j), &
-                   eq_outflow(gwc%cl, capc, gwc%cl%zbot(i,j), s%hgc(i,j), hs))
+                   eq_outflow(capc, gwc%cl%zbot(i,j), s%hgc(i,j), hs, syic, syis))
           if (fx > 0.0) then
             s%hgc(i,j) = s%hgc(i,j) - fx
             s%h(i,j) = s%h(i,j) + fx
@@ -655,8 +716,9 @@ end function
 pure real function gwflow_conduit_head_of(s, i, j)
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
-  gwflow_conduit_head_of = conduit_head(gwc%cl, s%hgc(i,j), gwc%cl%cap(i,j), &
-                                        gwc%cl%zbot(i,j))
+  gwflow_conduit_head_of = conduit_head(s%hgc(i,j), gwc%cl%cap(i,j), &
+                                        gwc%cl%zbot(i,j), gwc%cl%syinvc(i,j), &
+                                        gwc%cl%syinv_slot(i,j))
 end function
 
 
@@ -770,6 +832,8 @@ subroutine gwflow_conduit_dispose(p, g, s)
     end if
   end if
   if (allocated(gwc%cl%zbot)) deallocate(gwc%cl%zbot)
+  if (allocated(gwc%cl%syinvc)) deallocate(gwc%cl%syinvc)
+  if (allocated(gwc%cl%syinv_slot)) deallocate(gwc%cl%syinv_slot)
   if (allocated(gwc%cl%cap)) deallocate(gwc%cl%cap)
   if (allocated(gwc%cl%cnd)) deallocate(gwc%cl%cnd)
   if (allocated(gwc%dinlet)) deallocate(gwc%dinlet)
