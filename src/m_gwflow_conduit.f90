@@ -219,7 +219,9 @@ subroutine gwflow_conduit_init(p, g, s, dts)
   end if
   allocate(gwc%cl%zbot(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (len_trim(fn_gwc_bot) > 0) then
-    call read_map_scatter(p, g, fn_gwc_bot, gwc%cl%zbot, "gwc_bot")
+    ! 標高マップは負値可(海抜下の管底。一様埋設深 z-depth も負になり得る
+    ! のと整合。§46.5 (7))
+    call read_map_scatter(p, g, fn_gwc_bot, gwc%cl%zbot, "gwc_bot", signed=.true.)
   else
     ! 初期地形 z − 一様埋設深(静的。geomorph の z 変化には追随しない)
     gwc%cl%zbot(:,:) = g%z(1:g%nx, dcp%jsh:dcp%jeh) - gwc_depth
@@ -271,20 +273,26 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! rank0 が全域マップを読み par_scatter_cell で帯+ハロへ配布する(方式2)。
-! 負値はデータ不良として停止(判定は全ランク同一 = 配布後の帯で検査)
+! 係数マップ(cap/cnd/inlet 等)の負値はデータ不良として停止(判定は
+! 全ランク同一 = 配布後の帯で検査)。標高マップ(zbot)は負値が正当
+! (海抜下の管底)のため signed=.true. で検査を外す(§46.5 (7))
 !----------------------------------------------------------------------
-subroutine read_map_scatter(p, g, fn, a, label)
+subroutine read_map_scatter(p, g, fn, a, label, signed)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: fn
   real, intent(inout) :: a(1:, dcp%jsh:)
   character(len=*), intent(in) :: label
+  logical, intent(in), optional :: signed
   real, allocatable :: wk(:,:)
   real :: dum(1,1)
   character(:), allocatable :: fname
   integer :: i, j
+  logical :: nonneg
   character(len=1024) :: msg
 
+  nonneg = .true.
+  if (present(signed)) nonneg = .not. signed
   fname = trim(p%dir_data) // "/" // trim(fn)
   call par_info(" reading " // fname)
   if (is_root) then
@@ -294,6 +302,7 @@ subroutine read_map_scatter(p, g, fn, a, label)
   else
     call par_scatter_cell(dum, a)
   end if
+  if (.not. nonneg) return
   do j = dcp%js, dcp%je
     do i = 1, g%nx
       if (g%x(i,j) <= 0) cycle
