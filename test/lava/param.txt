@@ -1,0 +1,53 @@
+!======================================================================
+! lava(構成1: Huppert 相似解ベンチマーク。Newton 極限 τ_y=0)
+!   平坦床(61m x 61m)の中央1セルに定率湧き出し Q=0.5 m3/s を与え、
+!   粘性重力流の軸対称拡がりを発達させる。
+!   解析解(Huppert 1982, J. Fluid Mech. 121。定率供給の先端半径):
+!     r_N(t) = 0.715 (g Q^3 / (3 ν))^{1/8} t^{1/2},  ν = η/ρ
+!   検定(Check_lava.py huppert):
+!     (1) 台帳 Σhl = Q・dtΣ が機械精度(注入は厳密加算・拡散は反対称)
+!     (2) 面積等価半径 r_A = √(N_wet dx dy / π) が r_N に相対 10% 以内
+!     (3) 成長則 r_A(600)/r_A(300) ≈ √2(相対 5% 以内)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.5
+  t0 = 0
+  tt = 600
+  dt_disp = 100
+  dt_file = 150
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_lavaflow = '-'
+  dir_result = 'result'
+  dir_save = 'save'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 水なし(溶岩のみの検定)
+/
+
+&list_geoinfo
+  lx = 61.0
+  ly = 61.0
+  nx = 61
+  ny = 61
+  f_ztype = 0
+  z0 = 0.0                  ! 平坦床
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_lavaflow
+  lv_rho = 2600.0
+  lv_visc = 2.0e4           ! η (Pa s)
+  lv_tauy = 0.0             ! Newton 極限
+  lv_wsol = 0.0             ! 固化なし(相似解は流動のみ)
+  lv_cell(1:2,1,1) = 31, 31 ! 中央1セルの噴火口
+  lv_q0(1) = 0.5            ! 一定噴出率 (m3/s)
+/
