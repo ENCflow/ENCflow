@@ -39,13 +39,14 @@ input; individual topics are split into per-chapter pages.
 - [Sediment and landform change](users_guide/geomorph.md) (&list_geomorph) -- bedload, suspended sediment, hillslope erosion, debris flow, long-term landscape evolution
 - [Driftwood](users_guide/driftwood.md) (&list_driftwood) -- wood recruitment (hydraulic washout / erosion entrainment), transport and deposition (raster-field estimate)
 - [Glaciers](users_guide/glacier.md) (&list_glacier) -- accumulation, melt, ice flow, glacial erosion, avalanche redistribution
+- [Lava flows](users_guide/lavaflow.md) (&list_lavaflow) -- vent effusion, Bingham viscous spreading, stopping and solidification (lava fields as topography)
 - [Water quality](users_guide/wq.md) (&list_wq) -- load input, transport, decay, washoff
 - [Soil Water Index](users_guide/swi.md) (&list_swi) - the operational sediment-disaster warning index (JMA 3-tank model; dedicated runs)
 - [Measurement](users_guide/record.md) (&list_record) -- probes, flux transects
 - [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 482 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 497 parameter names to their chapters
 
 ---
 
@@ -79,6 +80,7 @@ memory and no computation time at all**.
 | Evapotranspiration | `fn_evap` | &list_evap |
 | Snow accumulation and snowmelt | `fn_snow` | &list_snow |
 | Glaciers | `fn_glacier` | &list_glacier |
+| Lava flows | `fn_lavaflow` | &list_lavaflow |
 | Groundwater | `fn_gwflow` | &list_gwflow (+ model-specific) |
 | Fresh and salt water layers | `fn_salt` | &list_salt |
 | Sediment and landform change | `fn_geomorph` | &list_geomorph |

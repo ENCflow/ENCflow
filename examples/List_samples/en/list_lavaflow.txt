@@ -1,0 +1,53 @@
+!======================================================================
+! English mirror of examples/List_samples/list_lavaflow.txt.
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+! Lava flow settings sample (&list_lavaflow; developer.md Sec. 51,
+!   docs/lava_plan.md)
+!   Enabled by fn_lavaflow = "this file" or "-" in the main parameters.
+!   No dependency on other modules (water and weather not required).
+!   The state is the lava thickness s%hl (m). Field output Hl (m);
+!   restart uses the private file lavaflow.dat. Solidified lava appears
+!   as an increase of the bed elevation z (sd unchanged = non-erodible
+!   bedrock). Surface water does not see flowing lava and flows over z.
+!   Dynamics: isothermal depth-averaged Bingham viscous gravity current
+!   (lubrication approximation). One rheology set per run (no per-vent
+!   viscosity; a future temperature extension covers that).
+!======================================================================
+&list_lavaflow
+  f_lavaflow = 1            ! 0 disables temporarily while keeping the file
+
+  ! ---- update interval ----
+  !dt_lavaflow_c = "10 s"   ! lava update interval (default = every step)
+
+  ! ---- rheology (given directly; one set per run) ----
+  lv_rho = 2600.0           ! density rho (kg/m3)
+  lv_visc = 1.0e4           ! viscosity eta (Pa s; required; basaltic
+                            !   1e2-1e4, andesitic and up >= 1e5. Smaller
+                            !   eta means more explicit subcycles - plan Sec. 6)
+  lv_tauy = 2000.0          ! yield stress tau_y (Pa; 0 = Newtonian.
+                            !   stopping thickness on slope = tau_y/(rho g tan))
+
+  ! ---- solidification (stopped cells: hl -> z; 0 = none) ----
+  lv_wsol = 0.005           ! solidification rate (m/s)
+  lv_vsol = 5.0e-4          ! stop-detection velocity threshold (m/s;
+                            !   required if lv_wsol > 0; typically
+                            !   1e-4-1e-3. Smaller values approach the
+                            !   theoretical h-inf but take longer to trigger)
+
+  ! ---- subcycling ----
+  !lv_cfl = 0.4             ! safety factor of the explicit scheme (0-1)
+  !lv_nsubmax = 10000       ! cap on subcycles per update (runaway guard)
+
+  ! ---- vents (numbers n consecutive from 1; up to 20) ----
+  !   The rate is the total over the cell set, distributed equally
+  !   (no momentum). Represent fissure eruptions by listing cells.
+  lv_cell(1:2,1,1) = 55, 40 ! cells (i, j) of vent 1
+  lv_cell(1:2,2,1) = 55, 41
+  lv_val(1:2,1,1) = 0, 10.0 ! effusion time series (time (min), m3/s;
+  lv_val(1:2,2,1) = 60, 5.0 !   linear interpolation; duplicate a time
+  lv_val(1:2,3,1) = 120, 0.0 !  for a step change)
+  !lv_q0(1) = 10.0          ! constant effusion rate (m3/s; instead of lv_val)
+  !fn_lv_cell(1) = "vent1_cells.txt"  ! cell-set file (rows of "i j"; overrides)
+  !fn_lv_val(1) = "vent1_q.txt"       ! time-series file (min, m3/s; highest)
+/
