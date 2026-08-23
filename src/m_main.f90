@@ -21,6 +21,7 @@ module m_main
   use m_snow, only : t_snow, m_snow_init, m_snow_calc, m_snow_dispose
   use m_swi, only : t_swi, m_swi_init, m_swi_calc, m_swi_dispose
   use m_glacier, only : t_glacier, m_glacier_init, m_glacier_calc, m_glacier_dispose
+  use m_lavaflow, only : t_lavaflow, m_lavaflow_init, m_lavaflow_calc, m_lavaflow_dispose
   use m_intercept, only : t_intercept, m_intercept_init, m_intercept_calc, m_intercept_step, &
                         m_intercept_has_step, m_intercept_dispose
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc, m_swflow_post
@@ -61,6 +62,7 @@ subroutine m_main_all()
   type(t_snow) :: sn
   type(t_swi) :: si
   type(t_glacier) :: gl
+  type(t_lavaflow) :: lv
   type(t_intercept) :: ic
   type(t_swflow) :: sw
   character(len=256) :: fn_sysparam
@@ -134,6 +136,9 @@ subroutine m_main_all()
   call m_glacier_init(gl, p, g, s, mt)    ! glacier を初期化(fn_glacier 指定時のみ有効。
                                           ! 気温と積雪(涵養源)が必須のため
                                           ! meteo・snow より後に。§45)
+  call m_lavaflow_init(lv, p, g, s)       ! lavaflow を初期化(fn_lavaflow 指定時のみ
+                                          ! 有効。morfac 検査(s%geo_morfac)のため
+                                          ! geomorph init より後に。lava_plan.md)
   call m_swi_init(si, p, g, s)            ! swi を初期化(fn_swi 指定時のみ有効。
                                           ! 排他検査に他モジュールの fn_* を使う。§49)
   call output_init(p, g)                  ! ファイル出力の準備(geoinfoより後に)
@@ -142,7 +147,7 @@ subroutine m_main_all()
   call m_geoinfo_band_shrink(g)           ! マスク類(x,sw,rw)と z(rank0以外)を帯に縮小
 
   ! ==== 時間ループ: すべて帯確保(z のみ rank0 が全域を保持) ====
-  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, sn, gl, si, ierror)  ! 計算本体
+  call run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, sn, gl, lv, si, ierror)  ! 計算本体
 
   ! モジュールを破棄
   call output_dispose()
@@ -159,6 +164,7 @@ subroutine m_main_all()
   call m_driftwood_dispose(dw, p, g, s)   ! save は dispose で(m_state より先に走る)
   call m_snow_dispose(sn, p, g, s)        ! save は dispose で(契約5)
   call m_glacier_dispose(gl, p, g, s)     ! save は dispose で(契約5)
+  call m_lavaflow_dispose(lv, p, g, s)    ! save は dispose で(契約5)
   call m_swi_dispose(si, p, g)            ! save は dispose で(契約5。§49)
   call m_record_dispose(r)
   call m_state_dispose(s, p)
@@ -193,7 +199,7 @@ end subroutine
 !----------------------------------------------------------------------
 ! 計算本体
 !----------------------------------------------------------------------
-subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, sn, gl, si, ierror)
+subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, sn, gl, lv, si, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
@@ -212,6 +218,7 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, s
   type(t_driftwood), intent(inout) :: dw  ! 流木(立木ストック・台帳を保持。§50)
   type(t_snow), intent(inout) :: sn    ! 積雪・融雪(SWE とスナップショットを保持)
   type(t_glacier), intent(in) :: gl    ! 氷河(氷厚 s%hi と作業台帳を保持)
+  type(t_lavaflow), intent(in) :: lv   ! 溶岩流(溶岩厚 s%hl と作業台帳を保持)
   type(t_swi), intent(inout) :: si     ! 土壌雨量指数(タンク貯留を保持。§49)
   integer, intent(out) :: ierror
   integer :: it            ! 時間ループのカウント
@@ -341,6 +348,12 @@ subroutine run_main(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, s
     ! セル局所のみでハロ交換なし。§50)
     call m_driftwood_calc(dw, p, g, s, it)
 
+    ! 溶岩流を計算(fn_lavaflow 未指定なら no-op。噴火口ソース →
+    ! Bingham 拡散流動 → 固化。固化時は s%z の更新と e 回復・ハロ交換
+    ! まで済ませる。z 更新プロセスの末尾 = geomorph・driftwood の後。
+    ! lava_plan.md)
+    call m_lavaflow_calc(lv, p, g, s, it)
+
     ! 統計情報を計算
     call m_state_calcstat(s, p, g)
 
@@ -449,6 +462,7 @@ subroutine init_resultdir(p)
   call sysdep_copy_to_dir(p%fn_driftwood, p%dir_result)
   call sysdep_copy_to_dir(p%fn_snow, p%dir_result)
   call sysdep_copy_to_dir(p%fn_glacier, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_lavaflow, p%dir_result)
   call sysdep_copy_to_dir(p%fn_salt, p%dir_result)
   call sysdep_copy_to_dir(p%fn_channel, p%dir_result)
   call sysdep_copy_to_dir(p%fn_enc, p%dir_result)

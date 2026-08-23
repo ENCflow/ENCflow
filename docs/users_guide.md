@@ -36,13 +36,14 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [土砂・地形変化](users_guide/geomorph.md)(&list_geomorph)— 掃流砂・浮遊砂・斜面浸食・土石流・長期地形発達
 - [流木](users_guide/driftwood.md)(&list_driftwood)— 流木化(水理的流失・侵食連行)・輸送・堆積(ラスタ場の概算)
 - [氷河](users_guide/glacier.md)(&list_glacier)— 涵養・融解・氷体流動・氷河侵食・雪崩再配分
+- [溶岩流](users_guide/lavaflow.md)(&list_lavaflow)— 噴火口からの湧き出し・Bingham 粘性流動・停止・固化(溶岩原の地形化)
 - [水質](users_guide/wq.md)(&list_wq)— 負荷投入・輸送・減衰・洗い出し
 - [土壌雨量指数](users_guide/swi.md)(&list_swi)— 土砂災害警戒の実務指標(気象庁3段タンク。専用ラン)
 - [計測](users_guide/record.md)(&list_record)— プローブ・フラックス測線
 - [用途集](users_guide/usecases.md)— 現象名から機能の組み合わせを引く(未対応の現象も明示)
 
 **付録**
-- [全パラメータ索引](users_guide/params_index.md) — 全482パラメータの名前→章の逆引き
+- [全パラメータ索引](users_guide/params_index.md) — 全497パラメータの名前→章の逆引き
 
 ---
 
@@ -74,6 +75,7 @@ ENCflow は、1本の時間発展ループの上に機能(プロセスモジュ�
 | 蒸発散 | `fn_evap` | &list_evap |
 | 積雪・融雪 | `fn_snow` | &list_snow |
 | 氷河 | `fn_glacier` | &list_glacier |
+| 溶岩流 | `fn_lavaflow` | &list_lavaflow |
 | 地下水 | `fn_gwflow` | &list_gwflow(+ モデル固有) |
 | 淡塩2層 | `fn_salt` | &list_salt |
 | 土砂・地形変化 | `fn_geomorph` | &list_geomorph |
