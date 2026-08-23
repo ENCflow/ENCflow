@@ -18,6 +18,8 @@ submodule (m_boundary) m_boundary_structure
   use, intrinsic :: iso_fortran_env, only : r64 => real64
   use m_parallel, only : par_stop, par_info, is_root, dcp, &
                          par_allreduce_sumr, par_allreduce_maxi, par_sum_rows
+  use m_gwflow_conduit, only : gwflow_conduit_ready, gwflow_conduit_head_of, &
+                               gwflow_conduit_cap_of
   use m_util, only : itoa
   use m_sysdep_util, only : sysdep_mkdir
   use m_fileio, only : fileio_read_matrix
@@ -30,6 +32,11 @@ submodule (m_boundary) m_boundary_structure
   ! → 但し書き不発動、スピル判定 V-vbig も常に負 → 不発動(ゼロ除算や
   ! NaN を作らない有限値であることが要件。lake_plan.md §3.3)
   real, parameter :: vbig = 1.0e30
+
+  ! 管路取水ポンプ(f_pump_src=1。§46.5 (8a))の遅延検査済みフラグ。
+  ! boundary の init は gwflow より先に走るため、f_gwconduit の有効性と
+  ! 取水セルの管路有無(cap>0)は最初の makebdc で検査する(per-rank)
+  logical :: pump_src_checked = .false.
 
 contains
 
@@ -201,6 +208,13 @@ module subroutine structure_makebdc(b, p, g, s)
   real :: deta, qcap
   integer :: ist, i, j
 
+  ! 管路取水ポンプの遅延検査(f_gwconduit の有効性と取水セルの管路有無。
+  ! boundary init は gwflow init より先のためここで 1 回だけ行う)
+  if (.not. pump_src_checked) then
+    call check_pump_src(b)
+    pump_src_checked = .true.
+  end if
+
   ! refs(2*ist-1) = 取水(上流)側代表セル、refs(2*ist) = 吐口(下流)側
   ! 代表セルの基準値。値の意味は種別ごと(ポンプ: f_ref に従う片側のみ、
   ! カルバート: 両側の水位η)
@@ -211,7 +225,15 @@ module subroutine structure_makebdc(b, p, g, s)
     if (j >= dcp%js .and. j <= dcp%je) then
       select case (b%struct(ist)%kind)
         case (e_struct_pump)
-          if (b%struct(ist)%f_ref == 1) then
+          if (b%struct(ist)%src == 1) then
+            ! 管路取水(§46.5 (8a)): f_ref=0 は管路水頭(折れ線水頭)、
+            ! f_ref=1 は貯留量 hgc (m 柱状) を基準にする
+            if (b%struct(ist)%f_ref == 1) then
+              refs(2*ist-1) = max(s%hgc(i,j), 0.0)
+            else
+              refs(2*ist-1) = gwflow_conduit_head_of(s, i, j)
+            end if
+          else if (b%struct(ist)%f_ref == 1) then
             ! 水深基準: 代表セルがため池(rscap>0)なら貯留水深 hrs を読む
             ! (前池水深トリガー。地表 h は池が満杯になるまで 0 のため)
             if (g%rscap(i,j) > 0.0) then
@@ -256,6 +278,35 @@ module subroutine structure_makebdc(b, p, g, s)
   end do
   deallocate(refs)
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 管路取水ポンプ(f_pump_src=1)の整合検査(最初の makebdc で 1 回。
+! f_gwconduit の有効性は全ランク同一の状態フラグで判定(par_stop も
+! 全ランク同時)。取水セルの管路有無(cap>0)は帯配列のため所有帯のみ
+! 検査する(データ不良の owner 側 par_stop は既存の入力検査と同じ流儀)
+!----------------------------------------------------------------------
+subroutine check_pump_src(b)
+  type(t_boundary), intent(in) :: b
+  integer :: ist, k, i, j
+
+  do ist = 1, b%nstruct
+    if (b%struct(ist)%kind /= e_struct_pump) cycle
+    if (b%struct(ist)%src /= 1) cycle
+    if (.not. gwflow_conduit_ready()) then
+      call par_stop("struct_pump: f_pump_src=1 (conduit intake) requires f_gwconduit=1")
+    end if
+    do k = 1, b%struct(ist)%ncin
+      i = b%struct(ist)%cin(1,k)
+      j = b%struct(ist)%cin(2,k)
+      if (j < dcp%js .or. j > dcp%je) cycle
+      if (gwflow_conduit_cap_of(i, j) <= 0.0) then
+        call par_stop("struct_pump: conduit intake cell ("//itoa(i)//","//itoa(j) &
+                      //") has no conduit (gwc cap=0)")
+      end if
+    end do
+  end do
 end subroutine
 
 
@@ -455,6 +506,13 @@ subroutine init_pump(b, p, g, list, npump)
                     //itoa(list%f_pump_ref(ip)))
     end if
     b%struct(ip)%f_ref = list%f_pump_ref(ip)
+    ! 取水源(0:地表水(ため池自動), 1:管路連続体層。§46.5 (8a))。
+    ! f_gwconduit の有効性は gwflow init が後のため最初の makebdc で検査
+    if (list%f_pump_src(ip) < 0 .or. list%f_pump_src(ip) > 1) then
+      call par_stop("list_struct_pump: f_pump_src must be 0(surface) or 1(conduit): " &
+                    //itoa(list%f_pump_src(ip)))
+    end if
+    b%struct(ip)%src = list%f_pump_src(ip)
 
     !--- 検証(セルは有効な陸セルのみ) ---
     if (b%struct(ip)%ncin <= 0) then

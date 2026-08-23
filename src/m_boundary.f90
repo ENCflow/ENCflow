@@ -150,6 +150,10 @@ module m_boundary
     integer :: f_ref = 0                   ! 基準の選択(種別ごとの意味。ポンプ:
                                            !   0=水位η, 1=水深h。代表セル=各セル群の
                                            !   先頭)
+    integer :: src = 0                     ! 取水源(ポンプのみ。0:地表水(ため池
+                                           !   自動), 1:管路連続体層 s%hgc。§46.5 (8a)。
+                                           !   1 のとき f_ref の意味は 0=管路水頭,
+                                           !   1=貯留量 hgc (m 柱状) に読み替わる)
     integer :: nrule = 0                   ! 運転ルール折れ線の点数
     real, allocatable :: rule(:,:)         ! 折れ線 (1:2, 1:nrule) (基準値 m, m3/s)。
                                            !   ポンプの一定流量 pump_q0 は1点折れ線に

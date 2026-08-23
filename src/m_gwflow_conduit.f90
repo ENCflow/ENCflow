@@ -29,6 +29,15 @@ module m_gwflow_conduit
   !  (3) 層間交換(gwc_leak_layer > 0): 相手層(s%hg / s%hg2)との
   !      水頭比較で向きを決め、定数交換能 kleak・容量制限の単純形で
   !      双方向に移す(下水道の浸入水・漏水と岩盤の涵養・漏出は同一の項)
+  !  (4) 吐口(fn_gwc_outfall 指定時。§46.5 (8b)): 隣接海域セルの最低
+  !      水位を受け水頭とするオリフィス式 q = ca·sqrt(2g·ΔH)(ca =
+  !      セル別 Cd·A マップ)。フラップ内蔵 = 管路水頭 > 受け水頭の
+  !      ときのみ放流(逆流なし)。不圧・被圧を問わない(開放管端)。
+  !      放流量は「管路水頭が受け水頭まで下がる量」(折れ線水頭の
+  !      逆関数)で制限され無条件安定。放流水は系外へ除去する(海域
+  !      セルは水位固定の受け皿 = 潮位が受け水頭を与える。S_total は
+  !      放流分だけ減少する)。累積放流体積は行部分和で集計し dispose
+  !      で総括表示(par_sum_rows = 決定的)
   !
   ! 【制約・意味論】
   !  - 水頭底 zbot は静的(init 時に z − gwc_depth または fn_gwc_bot)。
@@ -43,8 +52,11 @@ module m_gwflow_conduit
   !
   ! 【リスタート】s%hgc はモデル私有ファイル gwflow_conduit.dat(RLE)で
   !  保存(m_gwflow_bucket ヘッダの契約5。state.dat の形式は不変)。
-  !  restore 時に自ファイルが無ければ par_stop
+  !  restore 時に自ファイルが無ければ par_stop。吐口の累積放流体積は
+  !  純診断のため save 対象外(hmax・qcum と同じ扱い。§7)= 再開後は
+  !  再開時点からの累積になる
   ! ==================================================================
+  use, intrinsic :: iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
@@ -55,12 +67,18 @@ module m_gwflow_conduit
   use m_fileio, only : fileio_read_matrix, fileio_write_rle, fileio_read_rle
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : par_info, par_stop, dcp, is_root, par_halo_cell, &
-                         par_gather_to, par_scatter_cell
+                         par_gather_to, par_scatter_cell, par_sum_rows
   implicit none
   private
   public :: gwflow_conduit_init
   public :: gwflow_conduit_calc
   public :: gwflow_conduit_dispose
+  ! 機場(struct_pump の管路取水 f_pump_src=1)向けの公開口(§46.5 (8a)。
+  ! 依存方向: m_boundary_structure → 本モジュール。boundary の init は
+  ! gwflow より先に走るため、有効性検査は makebdc 側の遅延検査で行う)
+  public :: gwflow_conduit_ready
+  public :: gwflow_conduit_head_of
+  public :: gwflow_conduit_cap_of
 
   ! モデル私有の設定(単一インスタンス前提。developer.md §12。
   ! 多重インスタンス(下水道×岩盤の併用)が要る時はこの型を配列化する
@@ -74,6 +92,9 @@ module m_gwflow_conduit
     real :: co = 0.0                 ! オリフィス係数 Cd·A (m2)
     integer :: leak_layer = 0        ! 層間交換の相手(0:なし, 1:層1, 2:層2)
     real :: kleak = 0.0              ! 層間交換能 (m/s)
+    logical :: outf = .false.        ! 吐口(海域セル放流)の有効
+    real, allocatable :: caout(:,:)  ! 吐口のオリフィス係数 Cd·A (m2)。0 = なし
+    real(real64), allocatable :: vout_row(:)  ! 累積放流体積の行部分和 (m3)
     real :: syinv1 = 0.0             ! 層1水頭用 1/sy0(leak_layer=1)
     real :: d2 = 0.0                 ! 層2の層厚・比湧水量・容量(leak_layer=2)
     real :: syinv2 = 0.0
@@ -102,10 +123,12 @@ subroutine gwflow_conduit_init(p, g, s, dts)
   real :: gwc_eps, gwc_eps_h, gwc_diagratio
   integer :: gwc_leak_layer
   character(len=1024) :: fn_gwc_cnd, fn_gwc_cap, fn_gwc_bot, fn_gwc_inlet
+  character(len=1024) :: fn_gwc_outfall
   namelist /list_gwflow_conduit/ f_gwc_fluxlaw, gwc_cnd_m2s, fn_gwc_cnd, &
     gwc_cap, fn_gwc_cap, gwc_depth, fn_gwc_bot, gwc_sy, gwc_slot_sy, &
     gwc_sat0, gwc_inlet, fn_gwc_inlet, gwc_cw, gwc_co, &
-    gwc_leak_layer, gwc_leak_mmh, gwc_eps, gwc_eps_h, gwc_diagratio
+    gwc_leak_layer, gwc_leak_mmh, gwc_eps, gwc_eps_h, gwc_diagratio, &
+    fn_gwc_outfall
 
   f_gwc_fluxlaw = 2
   gwc_cnd_m2s = 0.0
@@ -119,6 +142,7 @@ subroutine gwflow_conduit_init(p, g, s, dts)
   gwc_sat0 = 0.0
   gwc_inlet = 0.0
   fn_gwc_inlet = ""
+  fn_gwc_outfall = ""
   gwc_cw = 2.66                      ! 堰式の既定(越流幅 1 m・流量係数 0.6 相当)
   gwc_co = 0.15                      ! オリフィスの既定(Cd 0.6 × 開口 0.25 m2)
   gwc_leak_layer = 0
@@ -249,6 +273,18 @@ subroutine gwflow_conduit_init(p, g, s, dts)
     end if
   end if
 
+  ! --- 吐口(海域セル放流)のオリフィス係数マップ(§46.5 (8b)) ---
+  !     吐口セルは管路あり(cap > 0)かつ 8 近傍に海域セルが必要
+  !     (受け水頭 = 隣接海域セルの最低水位。判定は所有帯で検査 —
+  !      init はゾーン2で g%sw の帯+ハロ行が有効)
+  gwc%outf = (len_trim(fn_gwc_outfall) > 0)
+  if (gwc%outf) then
+    allocate(gwc%caout(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    call read_map_scatter(p, g, fn_gwc_outfall, gwc%caout, "gwc_outfall")
+    call outfall_check(g)
+    allocate(gwc%vout_row(dcp%js:dcp%je), source = 0.0_real64)
+  end if
+
   ! --- 側方通水: 幾何(層1/2 と共有・冪等)→ エッジ係数 → 安定条件 ---
   if (gwc%lat) then
     call gwflow_lateral_geom_init(g, gwc_diagratio, 1.0e-3)
@@ -353,8 +389,10 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
   type(t_state), intent(inout) :: s
   integer, intent(in) :: it
   real, intent(in) :: dts
-  integer :: i, j
+  integer :: i, j, di2, dj2
   real :: capc, hcnd, hs, q1, fx, hother, capo
+  real :: esea, hgt, ca
+  logical :: hassea
 
   if (it < 0) continue  ! 引数未使用の警告を抑制
 
@@ -454,6 +492,124 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
     end do
     !$omp end parallel do
   end if
+
+  ! (4) 吐口(隣接海域セルへの放流。§46.5 (8b)。フラップ内蔵・等化上限で
+  !     無条件安定。放流水は系外へ除去 = S_total 減少。受け水頭の海域
+  !     セル水位はハロ行を読み得るため s%e のハロを先に交換する
+  !     (collective は outf が namelist 由来で全ランク同一)
+  if (gwc%outf) then
+    call par_halo_cell(s%e)
+    !$omp parallel do schedule(static) &
+    !$omp   private(i, j, di2, dj2, capc, ca, hcnd, esea, hgt, q1, fx, hassea)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        if (g%sw(i,j) > 0) cycle
+        capc = gwc%cl%cap(i,j)
+        if (capc <= 0.0) cycle
+        ca = gwc%caout(i,j)
+        if (ca <= 0.0) cycle
+        if (s%hgc(i,j) <= gwc%cl%eps) cycle
+        ! 受け水頭 = 隣接海域セルの最低水位(min は順序不変で決定的)
+        esea = 0.0
+        hassea = .false.
+        do dj2 = -1, 1
+          do di2 = -1, 1
+            if (di2 == 0 .and. dj2 == 0) cycle
+            if (g%x(i+di2,j+dj2) <= 0) cycle
+            if (g%sw(i+di2,j+dj2) <= 0) cycle
+            if (hassea) then
+              esea = min(esea, s%e(i+di2,j+dj2))
+            else
+              esea = s%e(i+di2,j+dj2)
+              hassea = .true.
+            end if
+          end do
+        end do
+        if (.not. hassea) cycle                ! 海隣接なし(init で検査済み)
+        hcnd = conduit_head(gwc%cl, s%hgc(i,j), capc, gwc%cl%zbot(i,j))
+        if (hcnd <= esea) cycle                ! フラップ: 逆流なし
+        q1 = ca * sqrt(2.0 * p%gg * (hcnd - esea))
+        ! 等化上限: 管路水頭が受け水頭まで下がる貯留量(折れ線の逆関数)
+        if (esea <= gwc%cl%zbot(i,j)) then
+          hgt = 0.0
+        else if (esea <= gwc%cl%zbot(i,j) + capc * gwc%cl%syinvc) then
+          hgt = (esea - gwc%cl%zbot(i,j)) / gwc%cl%syinvc
+        else
+          hgt = capc + (esea - gwc%cl%zbot(i,j) - capc * gwc%cl%syinvc) &
+                       / gwc%cl%syinv_slot
+        end if
+        fx = min(q1 * dts / (g%dx * g%dy), s%hgc(i,j) - hgt)
+        if (fx > 0.0) then
+          s%hgc(i,j) = s%hgc(i,j) - fx
+          ! 行部分和(行の書き手スレッドは一意 = 競合なし・加算順は
+          ! i 昇順で固定 = スレッド数・ランク数によらず決定的)
+          gwc%vout_row(j) = gwc%vout_row(j) + real(fx, real64) * g%dx * g%dy
+        end if
+      end do
+    end do
+    !$omp end parallel do
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 機場向け公開口(§46.5 (8a)): 有効状態・管路水頭・容量。
+! head/cap は帯内セル (i, 帯行 j) 前提(呼び手が所有ガードを掛ける)
+!----------------------------------------------------------------------
+pure logical function gwflow_conduit_ready()
+  gwflow_conduit_ready = gwc%initialized
+end function
+
+
+pure real function gwflow_conduit_head_of(s, i, j)
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  gwflow_conduit_head_of = conduit_head(gwc%cl, s%hgc(i,j), gwc%cl%cap(i,j), &
+                                        gwc%cl%zbot(i,j))
+end function
+
+
+pure real function gwflow_conduit_cap_of(i, j)
+  integer, intent(in) :: i, j
+  gwflow_conduit_cap_of = gwc%cl%cap(i,j)
+end function
+
+
+!----------------------------------------------------------------------
+! 吐口セルの整合検査(管路あり・海域セル隣接が必須。所有帯で検査 =
+! データ不良の停止は read_map_scatter の負値検査と同じ owner 側 par_stop)
+!----------------------------------------------------------------------
+subroutine outfall_check(g)
+  type(t_geoinfo), intent(in) :: g
+  integer :: i, j, di2, dj2
+  logical :: hassea
+  character(len=256) :: msg
+
+  do j = dcp%js, dcp%je
+    do i = 1, g%nx
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      if (gwc%caout(i,j) <= 0.0) cycle
+      if (gwc%cl%cap(i,j) <= 0.0) then
+        write(msg,'(a,2i7)') "gwflow_conduit: outfall on a no-conduit cell (cap=0) at", i, j
+        call par_stop(trim(msg))
+      end if
+      hassea = .false.
+      do dj2 = -1, 1
+        do di2 = -1, 1
+          if (di2 == 0 .and. dj2 == 0) cycle
+          if (g%x(i+di2,j+dj2) <= 0) cycle
+          if (g%sw(i+di2,j+dj2) > 0) hassea = .true.
+        end do
+      end do
+      if (.not. hassea) then
+        write(msg,'(a,2i7)') "gwflow_conduit: outfall cell has no adjacent sea cell " &
+                             // "(fn_sw) at", i, j
+        call par_stop(trim(msg))
+      end if
+    end do
+  end do
 end subroutine
 
 
@@ -521,12 +677,26 @@ subroutine gwflow_conduit_dispose(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
+  real(real64) :: vtot
+  character(len=256) :: msg
   if (.not. gwc%initialized) return
   if (p%f_state_save > 0) call save_state(p, g, s)
+  ! 吐口の累積放流体積の総括(par_sum_rows = 決定的。collective は
+  ! outf が namelist 由来で全ランク同一のため安全)
+  if (gwc%outf) then
+    call par_sum_rows(gwc%vout_row, vtot)
+    if (is_root) then
+      write(msg,'(a,es12.4,a)') " gwflow_conduit: outfall discharge total = ", &
+                                vtot, " m3 (removed to sea)"
+      call par_info(trim(msg))
+    end if
+  end if
   if (allocated(gwc%cl%zbot)) deallocate(gwc%cl%zbot)
   if (allocated(gwc%cl%cap)) deallocate(gwc%cl%cap)
   if (allocated(gwc%cl%cnd)) deallocate(gwc%cl%cnd)
   if (allocated(gwc%dinlet)) deallocate(gwc%dinlet)
+  if (allocated(gwc%caout)) deallocate(gwc%caout)
+  if (allocated(gwc%vout_row)) deallocate(gwc%vout_row)
   gwc%initialized = .false.
 end subroutine
 

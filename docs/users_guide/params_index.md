@@ -203,6 +203,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_output_mode | &list_sysparam | [入出力](io.md) |
 | f_prec_lapse | &list_meteo | [降雨・気象](forcing.md) |
 | f_pump_ref | &list_struct_pump | [構造物](structure.md) |
+| f_pump_src | &list_struct_pump | [構造物](structure.md) |
 | f_qbform | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_rivermouth_drop | &list_enc | [浅水流計算](swflow.md) |
 | f_rntype | &list_geoinfo | [地理情報](geoinfo.md) |
@@ -268,6 +269,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_gwc_cap | &list_gwflow_conduit | [地下水](gwflow.md) |
 | fn_gwc_cnd | &list_gwflow_conduit | [地下水](gwflow.md) |
 | fn_gwc_inlet | &list_gwflow_conduit | [地下水](gwflow.md) |
+| fn_gwc_outfall | &list_gwflow_conduit | [地下水](gwflow.md) |
 | fn_gwflow | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
 | fn_gwp_cell | &list_gwflow_pump | [地下水](gwflow.md) |
 | fn_gwp_val | &list_gwflow_pump | [地下水](gwflow.md) |

@@ -4004,6 +4004,7 @@ f_gwc_fluxlaw(1:線形, 2:sqrt。既定 2)/ gwc_cnd_m2s・fn_gwc_cnd
 fn_gwc_bot(水頭底)/ gwc_sy・gwc_slot_sy(貯留係数。slot ≤ sy)/
 gwc_sat0(初期充満率)/ gwc_inlet・fn_gwc_inlet(枡密度 個/m2)/
 gwc_cw(堰)・gwc_co(オリフィス Cd·A)/ gwc_leak_layer・gwc_leak_mmh /
+fn_gwc_outfall(吐口の Cd·A マップ。§46.5 (8b))/
 gwc_eps・gwc_eps_h・gwc_diagratio。
 CFPM2 型の閾値切替則(Darcy⇄Darcy-Weisbach)は f_gwc_fluxlaw=3 として
 将来追加(現行は 1・2 のみ受理)。
@@ -4157,6 +4158,28 @@ CFPM2 型の閾値切替則(Darcy⇄Darcy-Weisbach)は f_gwc_fluxlaw=3 として
    当面の回避策(コード変更なし): 機場セルに枡密度を置き被圧噴出で
    地表へ吐かせ struct_pump(地表取水)で汲むチェーン。ただし
    「被圧になるまで吐けない」制約はこの経路でも残る。
+
+> **実装記録(2026-08-23)**: (7)(8a)(8b) を実装済み。
+> (7) = read_map_scatter の optional signed 引数(fn_gwc_bot のみ検査
+> 除外。一様深 z−depth 経路が元々負値可だった不整合も解消)。
+> (8b) = fn_gwc_outfall(Cd·A マップ)。受け水頭は隣接海域セルの
+> 最低水位(min = 順序不変)、フラップ内蔵、折れ線水頭の**逆関数**に
+> よる等化上限で無条件安定(dtcheck 不変)、放流は系外除去で累積を
+> 行部分和+par_sum_rows で総括(決定的)。calc は 地表交換→側方→
+> 層間→吐口 の順で固定。s%e のハロを吐口節の冒頭で交換する。
+> (8a) = f_pump_src(0:地表(ため池自動)/1:管路)。t_structure%src、
+> 公開口 gwflow_conduit_ready/head_of/cap_of(依存方向は
+> m_boundary_structure → m_gwflow_conduit のみ)、boundary init が
+> gwflow init より先のため有効性・cap>0 は最初の makebdc の遅延検査。
+> boundary_h の取水は s%hgc から柱状換算のまま(gv・wfrac 換算なし)。
+> 検証: 無効時 = 全 22 スイート逐次 PASS+tide/conduit/pump/wave/salt
+> の np=2,4 PASS(gfortran 13.3 / OpenMPI)。新機能 = work/coastal_drain
+> (海抜下ポルダー: 地盤 0.2 m・潮位 0.5 m 一定・管底 −1.8 m)で
+> 終状態が解析平衡に厳密一致(全域水位 = 潮位 0.5、全管路セル
+> hgc = 0.1260 = cap + (0.5 − 管頂水頭)·slot_sy の全桁一致)、
+> np=1,2,4 の全場・Log が逐次と完全一致、-fcheck=all(-Og)の逐次・
+> np=2 がクリーン完走かつ -Ofast と S 列全桁一致、吐口累積
+> 6.7062 m3 が全構成で同値。
 
 **(4) の横展開**: 同じ「dtcheck+par_stop → 自動細分」の置換は、静的
 dt 上界を持つ他の拡散型カーネルにもそのまま載る — gwflow_lateral

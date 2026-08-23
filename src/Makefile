@@ -147,7 +147,7 @@ m_intercept_initloss.o: m_sysparam.o m_state.o m_geoinfo.o m_fileio.o m_sysdep_u
 list_intercept.o: m_sysparam.o $(PAR_OBJ)
 m_tide.o: m_sysparam.o list_tide.o m_geoinfo.o m_state.o m_fileio.o m_util.o $(PAR_OBJ)
 m_boundary.o: m_sysparam.o m_geoinfo.o m_state.o list_boundary.o $(PAR_OBJ)
-m_boundary_structure.o: m_boundary.o list_structure.o m_util.o $(PAR_OBJ)
+m_boundary_structure.o: m_boundary.o list_structure.o m_util.o m_gwflow_conduit.o $(PAR_OBJ)
 m_state.o: m_sysparam.o m_geoinfo.o list_initial.o m_util.o m_sysdep_util.o m_fileio.o
 m_record.o: m_sysparam.o list_record.o m_geoinfo.o m_state.o m_util.o m_sysdep_util.o $(PAR_OBJ)
 m_swflow.o: m_sysparam.o m_geoinfo.o m_boundary.o m_state.o \

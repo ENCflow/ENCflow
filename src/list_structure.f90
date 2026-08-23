@@ -39,6 +39,7 @@ module list_structure
     integer, allocatable :: pump_out_cell(:,:,:)   ! 吐口セル座標 (i, j)。未指定=域外排水
     real :: pump_q0(1:nstmax) = -9999.0            ! 一定流量 (m3/s。pump_rule と排他)
     integer :: f_pump_ref(1:nstmax) = 0            ! 運転基準 (0:水位η=z+h, 1:水深h)
+    integer :: f_pump_src(1:nstmax) = 0            ! 取水源 (0:地表水(ため池自動), 1:管路連続体層)
     real, allocatable :: pump_rule(:,:,:)          ! 運転ルール折れ線 (基準値 m, 流量 m3/s)
     character(len=maxpathlen) :: fn_pump_in_cell(1:nstmax) = ""   ! 取水セル一覧ファイル名
     character(len=maxpathlen) :: fn_pump_out_cell(1:nstmax) = ""  ! 吐口セル一覧ファイル名
@@ -169,18 +170,20 @@ subroutine read_pump(un, list)
   type(t_list_structure), intent(inout) :: list
   real :: pump_q0(1:nstmax)
   integer :: f_pump_ref(1:nstmax)
+  integer :: f_pump_src(1:nstmax)
   character(len=maxpathlen) :: fn_pump_in_cell(1:nstmax)
   character(len=maxpathlen) :: fn_pump_out_cell(1:nstmax)
   integer :: ios
   character(len=1024) :: iom
   namelist /list_struct_pump/ pump_in_cell, pump_out_cell, pump_q0, f_pump_ref, &
-                              pump_rule, fn_pump_in_cell, fn_pump_out_cell
+                              f_pump_src, pump_rule, fn_pump_in_cell, fn_pump_out_cell
 
   pump_in_cell = -9999
   pump_out_cell = -9999
   pump_rule = -9999
   pump_q0 = list%pump_q0
   f_pump_ref = list%f_pump_ref
+  f_pump_src = list%f_pump_src
   fn_pump_in_cell = list%fn_pump_in_cell
   fn_pump_out_cell = list%fn_pump_out_cell
 
@@ -195,6 +198,7 @@ subroutine read_pump(un, list)
   list%pump_rule = pump_rule
   list%pump_q0 = pump_q0
   list%f_pump_ref = f_pump_ref
+  list%f_pump_src = f_pump_src
   list%fn_pump_in_cell = fn_pump_in_cell
   list%fn_pump_out_cell = fn_pump_out_cell
 

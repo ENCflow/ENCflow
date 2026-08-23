@@ -201,6 +201,16 @@ module subroutine boundary_h(p, g, b, s, sx)
           j = b%struct(ip)%cout(2,k)
         end if
         if (j < dcp%js .or. j > dcp%je) cycle
+        ! 管路取水ポンプ(src=1。機場。§46.5 (8a))は管路連続体層の
+        ! 貯留 s%hgc から汲む。hgc は柱状換算水量(セル全面積基準)の
+        ! ため gv・wfrac の換算はしない。src=1 はポンプのみ(init で
+        ! 検証)= 常に順方向
+        if (b%struct(ip)%src == 1) then
+          dh = min(max(s%hgc(i,j), 0.0), qcell)
+          s%hgc(i,j) = s%hgc(i,j) - dh
+          vst(ip) = vst(ip) + dh * g%dx * g%dy
+          cycle
+        end if
         if (have_width) then
           dht = qcell / g%gv(i,j) / wfrac(i,j)
         else
