@@ -32,15 +32,19 @@ module m_gwflow_conduit
   !      交換能はセル別マップ fn_gwc_leak(mm/h)でも与えられる
   !      (0 のセルは交換なし = ライニング区間・健全管。§46.5 (2)。
   !       一様指定はスカラー値充填 = スカラー指定とビット一致)
-  !  (4) 吐口(fn_gwc_outfall 指定時。§46.5 (8b)): 隣接海域セルの最低
-  !      水位を受け水頭とするオリフィス式 q = ca·sqrt(2g·ΔH)(ca =
-  !      セル別 Cd·A マップ)。フラップ内蔵 = 管路水頭 > 受け水頭の
-  !      ときのみ放流(逆流なし)。不圧・被圧を問わない(開放管端)。
-  !      放流量は「管路水頭が受け水頭まで下がる量」(折れ線水頭の
-  !      逆関数)で制限され無条件安定。放流水は系外へ除去する(海域
-  !      セルは水位固定の受け皿 = 潮位が受け水頭を与える。S_total は
-  !      放流分だけ減少する)。累積放流体積は行部分和で集計し dispose
-  !      で総括表示(par_sum_rows = 決定的)
+  !  (4) 吐口(fn_gwc_outfall 指定時。§46.5 (8b)(3)): オリフィス式
+  !      q = ca·sqrt(2g·ΔH)(ca = セル別 Cd·A マップ)の開放管端。
+  !      フラップ内蔵 = 管路水頭 > 受け水頭のときのみ放流(逆流なし)。
+  !      不圧・被圧を問わない。受け先はセルの隣接状況で決まる:
+  !      - 海域セルに隣接(8近傍): 受け水頭 = 隣接海域セルの最低水位
+  !        (潮位)。放流水は系外へ除去(海は水位固定の受け皿。
+  !        S_total は放流分だけ減少)。等化上限 = 管路水頭が受け水頭
+  !        まで下がる量(折れ線水頭の逆関数)で無条件安定。累積放流は
+  !        行部分和で集計し dispose で総括(par_sum_rows = 決定的)
+  !      - 海隣接なし(陸側開放吐口 = 坑口・暗渠の daylight): 受け
+  !        水頭 = 自セルの地表水位。放流は s%h へ(域内 = 質量保存。
+  !        同一ループで s%e を回復 = 契約2)。等化上限は流出で地表
+  !        水位が 1:1 で上がる逆向き閉形式(eq_outflow)で無条件安定
   !
   ! 【制約・意味論】
   !  - 水頭底 zbot は静的(init 時に z − gwc_depth または fn_gwc_bot)。
@@ -398,6 +402,35 @@ end function
 
 
 !----------------------------------------------------------------------
+! 地表水位 hsv と管路水頭が等しくなる流出量の上界(m 柱状)。
+! eq_inflow の逆向き(流出で地表水位は 1:1 で上がる)。折れ線の枝ごとの
+! 閉形式(被圧枝で収まらなければ満管まで下げて不圧枝で等化)。
+! 陸側開放吐口の数値振動防止に使う(§46.5 (3))
+!----------------------------------------------------------------------
+pure real function eq_outflow(cl, capv, zbotv, hgcv, hsv)
+  type(t_conduitlayer), intent(in) :: cl
+  real, intent(in) :: capv, zbotv, hgcv, hsv
+  real :: hc, fx1, du
+
+  hc = conduit_head(cl, hgcv, capv, zbotv)
+  if (hc <= hsv) then
+    eq_outflow = 0.0
+  else if (hgcv > capv) then
+    fx1 = (hc - hsv) / (1.0 + cl%syinv_slot)
+    if (hgcv - fx1 >= capv) then
+      eq_outflow = fx1                          ! 等化点は被圧枝
+    else
+      du = hgcv - capv                          ! 満管まで下げて不圧枝で等化
+      eq_outflow = du + max((zbotv + capv * cl%syinvc) - (hsv + du), 0.0) &
+                        / (1.0 + cl%syinvc)
+    end if
+  else
+    eq_outflow = (hc - hsv) / (1.0 + cl%syinvc)
+  end if
+end function
+
+
+!----------------------------------------------------------------------
 ! 管路連続体層の計算(毎 gwflow ステップ。地表交換→側方→層間の順で固定)
 !----------------------------------------------------------------------
 subroutine gwflow_conduit_calc(p, g, s, it, dts)
@@ -517,7 +550,7 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
   if (gwc%outf) then
     call par_halo_cell(s%e)
     !$omp parallel do schedule(static) &
-    !$omp   private(i, j, di2, dj2, capc, ca, hcnd, esea, hgt, q1, fx, hassea)
+    !$omp   private(i, j, di2, dj2, capc, ca, hcnd, esea, hs, hgt, q1, fx, hassea)
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
@@ -543,25 +576,40 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
             end if
           end do
         end do
-        if (.not. hassea) cycle                ! 海隣接なし(init で検査済み)
         hcnd = conduit_head(gwc%cl, s%hgc(i,j), capc, gwc%cl%zbot(i,j))
-        if (hcnd <= esea) cycle                ! フラップ: 逆流なし
-        q1 = ca * sqrt(2.0 * p%gg * (hcnd - esea))
-        ! 等化上限: 管路水頭が受け水頭まで下がる貯留量(折れ線の逆関数)
-        if (esea <= gwc%cl%zbot(i,j)) then
-          hgt = 0.0
-        else if (esea <= gwc%cl%zbot(i,j) + capc * gwc%cl%syinvc) then
-          hgt = (esea - gwc%cl%zbot(i,j)) / gwc%cl%syinvc
+        if (hassea) then
+          ! 海側吐口(§46.5 (8b)): 受け水頭 = 潮位(固定)。系外へ除去
+          if (hcnd <= esea) cycle              ! フラップ: 逆流なし
+          q1 = ca * sqrt(2.0 * p%gg * (hcnd - esea))
+          ! 等化上限: 管路水頭が受け水頭まで下がる貯留量(折れ線の逆関数)
+          if (esea <= gwc%cl%zbot(i,j)) then
+            hgt = 0.0
+          else if (esea <= gwc%cl%zbot(i,j) + capc * gwc%cl%syinvc) then
+            hgt = (esea - gwc%cl%zbot(i,j)) / gwc%cl%syinvc
+          else
+            hgt = capc + (esea - gwc%cl%zbot(i,j) - capc * gwc%cl%syinvc) &
+                         / gwc%cl%syinv_slot
+          end if
+          fx = min(q1 * dts / (g%dx * g%dy), s%hgc(i,j) - hgt)
+          if (fx > 0.0) then
+            s%hgc(i,j) = s%hgc(i,j) - fx
+            ! 行部分和(行の書き手スレッドは一意 = 競合なし・加算順は
+            ! i 昇順で固定 = スレッド数・ランク数によらず決定的)
+            gwc%vout_row(j) = gwc%vout_row(j) + real(fx, real64) * g%dx * g%dy
+          end if
         else
-          hgt = capc + (esea - gwc%cl%zbot(i,j) - capc * gwc%cl%syinvc) &
-                       / gwc%cl%syinv_slot
-        end if
-        fx = min(q1 * dts / (g%dx * g%dy), s%hgc(i,j) - hgt)
-        if (fx > 0.0) then
-          s%hgc(i,j) = s%hgc(i,j) - fx
-          ! 行部分和(行の書き手スレッドは一意 = 競合なし・加算順は
-          ! i 昇順で固定 = スレッド数・ランク数によらず決定的)
-          gwc%vout_row(j) = gwc%vout_row(j) + real(fx, real64) * g%dx * g%dy
+          ! 陸側開放吐口(§46.5 (3)。坑口・暗渠の daylight): 受け水頭 =
+          ! 自セルの地表水位。域内転送(s%h へ。s%e 回復 = 契約2)
+          hs = s%z(i,j) + s%h(i,j)
+          if (hcnd <= hs) cycle                ! フラップ: 逆流なし
+          q1 = ca * sqrt(2.0 * p%gg * (hcnd - hs))
+          fx = min(q1 * dts / (g%dx * g%dy), s%hgc(i,j), &
+                   eq_outflow(gwc%cl, capc, gwc%cl%zbot(i,j), s%hgc(i,j), hs))
+          if (fx > 0.0) then
+            s%hgc(i,j) = s%hgc(i,j) - fx
+            s%h(i,j) = s%h(i,j) + fx
+            s%e(i,j) = s%z(i,j) + s%h(i,j)
+          end if
         end if
       end do
     end do
@@ -594,13 +642,14 @@ end function
 
 
 !----------------------------------------------------------------------
-! 吐口セルの整合検査(管路あり・海域セル隣接が必須。所有帯で検査 =
-! データ不良の停止は read_map_scatter の負値検査と同じ owner 側 par_stop)
+! 吐口セルの整合検査(管路ありが必須。所有帯で検査 = データ不良の停止は
+! read_map_scatter の負値検査と同じ owner 側 par_stop)。
+! 海域セル隣接の有無は吐口の受け先(海/自セル地表)を決めるだけで、
+! どちらも正当(§46.5 (3) で陸側開放吐口を追加)
 !----------------------------------------------------------------------
 subroutine outfall_check(g)
   type(t_geoinfo), intent(in) :: g
-  integer :: i, j, di2, dj2
-  logical :: hassea
+  integer :: i, j
   character(len=256) :: msg
 
   do j = dcp%js, dcp%je
@@ -610,19 +659,6 @@ subroutine outfall_check(g)
       if (gwc%caout(i,j) <= 0.0) cycle
       if (gwc%cl%cap(i,j) <= 0.0) then
         write(msg,'(a,2i7)') "gwflow_conduit: outfall on a no-conduit cell (cap=0) at", i, j
-        call par_stop(trim(msg))
-      end if
-      hassea = .false.
-      do dj2 = -1, 1
-        do di2 = -1, 1
-          if (di2 == 0 .and. dj2 == 0) cycle
-          if (g%x(i+di2,j+dj2) <= 0) cycle
-          if (g%sw(i+di2,j+dj2) > 0) hassea = .true.
-        end do
-      end do
-      if (.not. hassea) then
-        write(msg,'(a,2i7)') "gwflow_conduit: outfall cell has no adjacent sea cell " &
-                             // "(fn_sw) at", i, j
         call par_stop(trim(msg))
       end if
     end do

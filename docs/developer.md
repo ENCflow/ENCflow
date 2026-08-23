@@ -4181,6 +4181,25 @@ CFPM2 型の閾値切替則(Darcy⇄Darcy-Weisbach)は f_gwc_fluxlaw=3 として
 > np=2 がクリーン完走かつ -Ofast と S 列全桁一致、吐口累積
 > 6.7062 m3 が全構成で同値。
 
+> **実装記録・第2弾(2026-08-23)**: (1)(2)(3) も実装済み。
+> (1) = users_guide/gwflow.md に管諸元→(cap, cnd, sy) の換算式を記載
+> (コード不変)。
+> (2) = fn_gwc_leak(kleak のセル別配列化)。一様指定はスカラー値
+> 充填で従来とビット等価(work/qanat の Log 全桁一致で確認)。マップの
+> 0 セルは交換なし = ライニング区間・健全管。機能確認: qanat の導水部
+> ライニング変種(param_lined)で最終湧出 1.28→2.29 mm(1.8 倍)。
+> (3) = fn_gwc_outfall の一般化: 海域セル隣接のない吐口セルは
+> **陸側開放吐口**(坑口・暗渠吐口の daylight)として受け水頭を自セルの
+> 地表水位とし、s%h へ域内転送する(e 回復 = 契約2。質量保存)。
+> 等化上限は eq_inflow の逆向き閉形式 eq_outflow(流出で地表水位が
+> 1:1 で上がる)。海側・吐口なしの既存経路は演算列不変 =
+> coastal_drain・qanat の Log 全桁一致。機能確認: qanat の坑口を
+> 開放吐口化(param_open)すると湧出開始 2.65 h → 0.02 h(被圧待ちの
+> 解消)、準定常 6.8→7.9 L/s、初期貯留の掃き出しピーク 41 L/s。
+> 検証: 全 23 スイート逐次 PASS、param_open の np=2,4 が逐次と数値差
+> ゼロ(probe CSV の ±0.0 表示差のみ)、-fcheck=all(-Og)の逐次・
+> np=2(param_lined / param_open / coastal_drain)クリーン完走。
+
 **(4) の横展開**: 同じ「dtcheck+par_stop → 自動細分」の置換は、静的
 dt 上界を持つ他の拡散型カーネルにもそのまま載る — gwflow_lateral
 (層1)・gwflow_layer2・geomorph_creep(morfac 大の長期地形で効く)・
