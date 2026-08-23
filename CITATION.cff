@@ -7,7 +7,7 @@ message: >-
   the article below.
 title: "ENCflow"
 type: software
-version: "1.1.0"
+version: "1.2.0"
 date-released: "2026-08-23"
 license: Apache-2.0
 authors:
