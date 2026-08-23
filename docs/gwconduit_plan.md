@@ -417,6 +417,8 @@ m_gwflow_lateral(層1)と m_gwflow_layer2 が lateral_core を共有する現行
 > セル別マップ不均質(cap/cnd/zbot、将来 sy/slot_sy・kleak もマップ化)で
 > 幹線をセル列として表す**(河道マスク+サブグリッド河道と同じ型。
 > 多重インスタンスは下水道×岩盤の併用専用のまま)。決定と根拠
-> (実証実験 work/qanat・work/sewer_hybrid、拡張 6 項目、数値特性)の
-> 正本は **developer.md §46.5**。断面幾何つき準1次元の新設判断は
-> SWMM 参照解比較(段4)で連続体セル列の不足が実証されてからとする。
+> (実証実験 work/qanat・work/sewer_hybrid、拡張 7 項目、数値特性)の
+> 正本は **developer.md §46.5**。陽解法の dt 硬直はサブサイクリング
+> (m_glacier tick_flow の型)で解き、局所陰解法は不採用。断面幾何つき
+> 準1次元の新設判断は SWMM 参照解比較(段4)で連続体セル列の不足が
+> 実証されてからとする。
