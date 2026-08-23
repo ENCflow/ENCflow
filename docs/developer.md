@@ -4200,7 +4200,19 @@ CFPM2 型の閾値切替則(Darcy⇄Darcy-Weisbach)は f_gwc_fluxlaw=3 として
 > ゼロ(probe CSV の ±0.0 表示差のみ)、-fcheck=all(-Og)の逐次・
 > np=2(param_lined / param_open / coastal_drain)クリーン完走。
 
-**(4) の横展開**: 同じ「dtcheck+par_stop → 自動細分」の置換は、静的
+> **実装記録・第3弾(2026-08-23)**: (4) サブサイクリング(静的 N の
+> 最小形)を実装済み。gwflow_conduit_dtcheck は par_stop する代わりに
+> N = ceiling(dts/dt_lim) を返し(dt_lim は allreduce_max 由来で全ランク
+> 同一 → N も同一)、calc の側方通水を「サイクルごとに par_halo_cell →
+> conduit_core(dts/N)」の N 回ループに置換。交換項(地表・層間・吐口)は
+> 等化上限・容量制限で無条件安定のため dts のまま(細分は側方のみ)。
+> 上限 gwc_nsubmax(既定 100)超過は par_stop。N=1 は演算列が従来と
+> 厳密同一 — qanat・coastal_drain の Log 全桁一致、test/conduit PASS で
+> 確認。機能確認: coastal_drain の slot_sy=0.002(従来は par_stop する
+> 設定)が subcycles=2 で安定に走り、終状態 hgc = 0.10260 =
+> cap+(潮位−管頂水頭)·slot_sy の解析平衡に厳密一致。glacier 型の
+> 適応化(充満率で実効係数を毎サイクル評価)と RKL2 置換は将来の
+> 最適化(採否基準は本項既載)。 同じ「dtcheck+par_stop → 自動細分」の置換は、静的
 dt 上界を持つ他の拡散型カーネルにもそのまま載る — gwflow_lateral
 (層1)・gwflow_layer2・geomorph_creep(morfac 大の長期地形で効く)・
 saltwater 側方。いずれも既存ケースは N=1 でビット一致という同じ

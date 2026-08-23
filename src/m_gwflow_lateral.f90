@@ -644,11 +644,14 @@ end subroutine
 !   cnd はエッジ別なのでセルごとに 8 近傍の入射エッジ係数を集計し、
 !   最大値を allreduce_max(順序不変で決定的)する
 !----------------------------------------------------------------------
-subroutine gwflow_conduit_dtcheck(g, label, cl, dts)
+subroutine gwflow_conduit_dtcheck(g, label, cl, dts, nsub)
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: label
   type(t_conduitlayer), intent(in) :: cl
   real, intent(in) :: dts
+  integer, intent(out) :: nsub       ! dts を安定に消化するサブサイクル数
+                                     ! (§46.5 (4)。dt_lim は allreduce_max
+                                     !  由来で全ランク同一 → nsub も同一)
   integer :: i, j, k
   real :: fac(1:8), sums, summax(1), syinvmax, dt_lim
   character(len=256) :: msg
@@ -675,15 +678,15 @@ subroutine gwflow_conduit_dtcheck(g, label, cl, dts)
   end do
   call par_allreduce_max(summax)
   syinvmax = max(cl%syinvc, cl%syinv_slot)
+  nsub = 1
   if (summax(1) * syinvmax > 0.0) then
     dt_lim = 0.5 * g%dx * g%dy / (syinvmax * summax(1))
-    write(msg,'(a,es10.3,a,es10.3,a)') label // ": dt limit = ", dt_lim, &
-                                       " s (dts = ", dts, " s)"
+    ! dts が上界を超える場合は par_stop でなくサブサイクル数を返す
+    ! (§46.5 (4)。上限の検査は呼び手 = namelist を持つ側が行う)
+    if (dts > dt_lim) nsub = ceiling(dts / dt_lim)
+    write(msg,'(a,es10.3,a,es10.3,a,i0,a)') label // ": dt limit = ", dt_lim, &
+        " s (dts = ", dts, " s, subcycles = ", nsub, ")"
     call par_info(trim(msg))
-    if (dts > dt_lim) then
-      call par_stop(label // ": dts exceeds the explicit stability limit " &
-                    // "(reduce dt/dt_gwflow or conductance, or increase slot_sy/eps_h)")
-    end if
   end if
 end subroutine
 

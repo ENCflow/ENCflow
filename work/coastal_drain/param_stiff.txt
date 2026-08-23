@@ -1,0 +1,113 @@
+!======================================================================
+! coastal_drain: §46.5 (7)(8) の検証ケース(海抜下ポルダーの排水)
+!
+!   地盤 0.2 m の平坦なポルダー(300x150 m, dx=10 m)の東側に海
+!   (海底 -2 m、潮位 0.5 m 一定 = 地盤より高いゼロメートル地帯)。
+!   幹線(j=8, i=2..26)の管底は -1.8 m(負値 = (7) fn_gwc_bot の検証)。
+!   初期湛水 5 cm を幹線の枡が飲み込み、
+!    (8b) 吐口 (26,8): 管路水頭 > 潮位 0.5 のとき海へ放流(フラップ)。
+!         重力排水は水頭 0.5(hgc = 0.126)で平衡し、それ以下は吐けない
+!    (8a) 機場 (20,8): f_pump_src=1 で管路から直接取水し、西の低地
+!         (4,4) へ放流(域内還元 = 質量保存)。hgc > 0.05 で起動する
+!   検証: S_total の減少 = 吐口の累積放流(dispose の総括)と一致する
+!   こと、np=1,2,4 の場一致、-fcheck np=2。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.25                 ! 時間刻み (s)
+  t0 = 0
+  tt = 7200                 ! 2 時間
+  dt_disp = 300
+  dt_file = 1800
+  dt_recrd = 60
+  fn_geoinfo = '-'
+  fn_enc = '-'
+  fn_gwflow = '-'
+  fn_tide = '-'
+  fn_structure = '-'
+  fn_record = '-'
+  fn_initial = '-'
+  dir_data = 'data_cd'
+  dir_result = 'result_stiff'
+  f_disp_debug = 1          ! S 列を全有効桁で表示(収支照合)
+  f_out_e = 1
+  f_out_hg = 1              ! Hgc 場の出力
+/
+
+&list_enc
+  f_adaptive_runge = 1
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.05                 ! 初期湛水 5 cm(降雨の代わりの単純な水源)
+/
+
+&list_geoinfo
+  nx = 30
+  ny = 15
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1
+  fn_z = 'z.txt'            ! ポルダー 0.2 m / 海底 -2 m
+  fn_sw = 'sw.txt'          ! 海域マスク(i>=27)
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound
+/
+
+&list_tide
+  titype = 2                ! 一様時系列
+  hsea0 = 2.5               ! 海セルの見かけ水柱厚 (m)
+  dt_tiupdate = 1
+  tival(1:2,1) = 0, 0.5     ! 潮位 0.5 m 一定(地盤 0.2 m より高い)
+  tival(1:2,2) = 120, 0.5
+/
+
+!======================================================================
+! 地下水設定: 管路連続体層のみ(幹線+吐口)
+!======================================================================
+&list_gwflow
+  f_gwvertical = 0
+  f_gwlateral = 0
+  f_gwlayer2 = 0
+  f_gwconduit = 1
+  dt_gwflow = 0
+/
+
+&list_gwflow_conduit
+  f_gwc_fluxlaw = 2
+  fn_gwc_cnd = 'cnd.txt'    ! 幹線 0.05 m2/s
+  fn_gwc_cap = 'cap.txt'    ! 0.1 m 柱状(断面 1 m2 相当)
+  fn_gwc_bot = 'bot.txt'    ! 管底 -1.8 m(負値 = (7) の検証)
+  gwc_sy = 0.1
+  gwc_slot_sy = 0.002
+  gwc_sat0 = 0.0
+  fn_gwc_inlet = 'inlet.txt'    ! 幹線セルの枡 0.01 個/m2
+  gwc_cw = 2.66
+  gwc_co = 0.15
+  gwc_leak_layer = 0
+  gwc_eps_h = 0.05
+  fn_gwc_outfall = 'outfall.txt' ! (8b) 吐口 (26,8): Cd·A = 0.15 m2
+/
+
+!======================================================================
+! 機場 (8a): 管路から直接取水し西の低地へ放流(域内還元)
+!======================================================================
+&list_struct_pump
+  pump_in_cell(1:2,1,1) = 20, 8   ! 取水セル(幹線上)
+  pump_out_cell(1:2,1,1) = 4, 4   ! 放流セル(域内の低地)
+  f_pump_src(1) = 1               ! 取水源 = 管路連続体層(§46.5 (8a))
+  f_pump_ref(1) = 1               ! 基準 = 貯留量 hgc (m 柱状)
+  pump_rule(1:2,1,1) = 0.04, 0.0  ! hgc 0.04 以下で停止
+  pump_rule(1:2,2,1) = 0.05, 0.05 ! hgc 0.05 以上で 0.05 m3/s
+/
+
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 26, 8         ! 吐口セル
+  pbxy(:,2) = 20, 8         ! 機場取水セル
+  pbxy(:,3) = 4, 4          ! 機場放流先
+/

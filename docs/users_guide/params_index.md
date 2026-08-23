@@ -370,6 +370,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | gwc_inlet | &list_gwflow_conduit | [地下水](gwflow.md) |
 | gwc_leak_layer | &list_gwflow_conduit | [地下水](gwflow.md) |
 | gwc_leak_mmh | &list_gwflow_conduit | [地下水](gwflow.md) |
+| gwc_nsubmax | &list_gwflow_conduit | [地下水](gwflow.md) |
 | gwc_sat0 | &list_gwflow_conduit | [地下水](gwflow.md) |
 | gwc_slot_sy | &list_gwflow_conduit | [地下水](gwflow.md) |
 | gwc_sy | &list_gwflow_conduit | [地下水](gwflow.md) |

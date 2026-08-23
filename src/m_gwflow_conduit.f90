@@ -25,7 +25,16 @@ module m_gwflow_conduit
   !  (2) 側方通水(コンダクタンス指定時): m_gwflow_lateral の conduit_core。
   !      水頭は折れ線(不圧 sy_c / 被圧 sy_slot の疑似スロット)。
   !      容量超過は排出せず層内保持(サーチャージ = Preissmann スロット
-  !      連続体版)。呼び出し前に s%hgc のハロを交換する
+  !      連続体版)。呼び出し前に s%hgc のハロを交換する。
+  !      **サブサイクリング(§46.5 (4)。静的 N)**: dts が陽解法の
+  !      dt 上界を超える設定は par_stop せず、init で決めた
+  !      N = ceiling(dts/dt_lim) 回に細分して dts/N ずつ進める
+  !      (ハロ交換はサイクルごと。dt_lim は allreduce_max 由来で
+  !      全ランク同一 → N も同一 = collective が同期)。N = 1 なら
+  !      演算列は従来と厳密同一 = 既存ケースはビット一致。上限
+  !      gwc_nsubmax を超える設定は par_stop。細分は側方通水のみ
+  !      (交換項 (1)(3)(4) は等化上限・容量制限で無条件安定のため
+  !      dts のまま)
   !  (3) 層間交換(gwc_leak_layer > 0): 相手層(s%hg / s%hg2)との
   !      水頭比較で向きを決め、定数交換能 kleak・容量制限の単純形で
   !      双方向に移す(下水道の浸入水・漏水と岩盤の涵養・漏出は同一の項)。
@@ -99,6 +108,7 @@ module m_gwflow_conduit
     real :: co = 0.0                 ! オリフィス係数 Cd·A (m2)
     integer :: leak_layer = 0        ! 層間交換の相手(0:なし, 1:層1, 2:層2)
     real, allocatable :: kleakc(:,:) ! 層間交換能 (m/s。セル別。0 = 交換なし)
+    integer :: nsub = 1              ! 側方通水のサブサイクル数(§46.5 (4)。静的)
     logical :: outf = .false.        ! 吐口(海域セル放流)の有効
     real, allocatable :: caout(:,:)  ! 吐口のオリフィス係数 Cd·A (m2)。0 = なし
     real(real64), allocatable :: vout_row(:)  ! 累積放流体積の行部分和 (m3)
@@ -124,7 +134,8 @@ subroutine gwflow_conduit_init(p, g, s, dts)
   integer :: un, ios, i, j
   real :: sy2
   real, allocatable :: dens(:,:)
-  integer :: f_gwc_fluxlaw
+  character(len=256) :: msg
+  integer :: f_gwc_fluxlaw, gwc_nsubmax
   real :: gwc_cnd_m2s, gwc_cap, gwc_depth, gwc_sy, gwc_slot_sy, gwc_sat0
   real :: gwc_inlet, gwc_cw, gwc_co, gwc_leak_mmh
   real :: gwc_eps, gwc_eps_h, gwc_diagratio
@@ -135,7 +146,7 @@ subroutine gwflow_conduit_init(p, g, s, dts)
     gwc_cap, fn_gwc_cap, gwc_depth, fn_gwc_bot, gwc_sy, gwc_slot_sy, &
     gwc_sat0, gwc_inlet, fn_gwc_inlet, gwc_cw, gwc_co, &
     gwc_leak_layer, gwc_leak_mmh, gwc_eps, gwc_eps_h, gwc_diagratio, &
-    fn_gwc_outfall, fn_gwc_leak
+    fn_gwc_outfall, fn_gwc_leak, gwc_nsubmax
 
   f_gwc_fluxlaw = 2
   gwc_cnd_m2s = 0.0
@@ -158,6 +169,7 @@ subroutine gwflow_conduit_init(p, g, s, dts)
   gwc_eps = 1.0e-3
   gwc_eps_h = 1.0e-2
   gwc_diagratio = 2.0 / (2.0 + sqrt(2.0))   ! m_swflow_enc の p_diagratio と同値
+  gwc_nsubmax = 100                         ! サブサイクル数の上限(§46.5 (4))
 
   call par_info("reading list_gwflow_conduit in " // trim(p%fn_gwflow))
   open(newunit=un, file=trim(p%fn_gwflow), status='old', action='read', iostat=ios)
@@ -317,7 +329,16 @@ subroutine gwflow_conduit_init(p, g, s, dts)
     end if
     call conduit_build_cnd(g, dens, gwc%cl)
     deallocate(dens)
-    call gwflow_conduit_dtcheck(g, "gwflow_conduit", gwc%cl, dts)
+    ! 安定条件 → サブサイクル数 N の決定(§46.5 (4)。N = 1 なら従来と
+    ! 演算列が厳密同一。上限超過は設定エラーとして停止)
+    if (gwc_nsubmax < 1) call par_stop("list_gwflow_conduit: gwc_nsubmax must be >= 1")
+    call gwflow_conduit_dtcheck(g, "gwflow_conduit", gwc%cl, dts, gwc%nsub)
+    if (gwc%nsub > gwc_nsubmax) then
+      write(msg,'(a,i0,a,i0,a)') "gwflow_conduit: subcycle count ", gwc%nsub, &
+          " exceeds gwc_nsubmax = ", gwc_nsubmax, &
+          " (reduce conductance/dt or increase slot_sy/eps_h/gwc_nsubmax)"
+      call par_stop(trim(msg))
+    end if
   end if
 
   ! --- リスタート ---
@@ -439,7 +460,7 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
   type(t_state), intent(inout) :: s
   integer, intent(in) :: it
   real, intent(in) :: dts
-  integer :: i, j, di2, dj2
+  integer :: i, j, di2, dj2, isub
   real :: capc, hcnd, hs, q1, fx, hother, capo
   real :: esea, hgt, ca
   logical :: hassea
@@ -489,10 +510,14 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
     !$omp end parallel do
   end if
 
-  ! (2) 側方通水(近傍結合のためハロ交換してからカーネルへ)
+  ! (2) 側方通水(近傍結合のためサイクルごとにハロ交換してからカーネルへ。
+  !     サブサイクリング = §46.5 (4)。nsub は init 決定の静的値で全ランク
+  !     同一 → ループ回数・collective が同期。nsub=1 は従来と演算列同一)
   if (gwc%lat) then
-    call par_halo_cell(s%hgc)
-    call conduit_core(g, s%hgc, gwc%cl, dts)
+    do isub = 1, gwc%nsub
+      call par_halo_cell(s%hgc)
+      call conduit_core(g, s%hgc, gwc%cl, dts / gwc%nsub)
+    end do
   end if
 
   ! (3) 層間交換(浸入水・漏水/涵養・漏出。水頭比較で向きを決める
