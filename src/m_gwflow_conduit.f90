@@ -28,7 +28,10 @@ module m_gwflow_conduit
   !      連続体版)。呼び出し前に s%hgc のハロを交換する
   !  (3) 層間交換(gwc_leak_layer > 0): 相手層(s%hg / s%hg2)との
   !      水頭比較で向きを決め、定数交換能 kleak・容量制限の単純形で
-  !      双方向に移す(下水道の浸入水・漏水と岩盤の涵養・漏出は同一の項)
+  !      双方向に移す(下水道の浸入水・漏水と岩盤の涵養・漏出は同一の項)。
+  !      交換能はセル別マップ fn_gwc_leak(mm/h)でも与えられる
+  !      (0 のセルは交換なし = ライニング区間・健全管。§46.5 (2)。
+  !       一様指定はスカラー値充填 = スカラー指定とビット一致)
   !  (4) 吐口(fn_gwc_outfall 指定時。§46.5 (8b)): 隣接海域セルの最低
   !      水位を受け水頭とするオリフィス式 q = ca·sqrt(2g·ΔH)(ca =
   !      セル別 Cd·A マップ)。フラップ内蔵 = 管路水頭 > 受け水頭の
@@ -91,7 +94,7 @@ module m_gwflow_conduit
     real :: cw = 0.0                 ! 堰係数(q1 = cw·h^1.5 m3/s/個)
     real :: co = 0.0                 ! オリフィス係数 Cd·A (m2)
     integer :: leak_layer = 0        ! 層間交換の相手(0:なし, 1:層1, 2:層2)
-    real :: kleak = 0.0              ! 層間交換能 (m/s)
+    real, allocatable :: kleakc(:,:) ! 層間交換能 (m/s。セル別。0 = 交換なし)
     logical :: outf = .false.        ! 吐口(海域セル放流)の有効
     real, allocatable :: caout(:,:)  ! 吐口のオリフィス係数 Cd·A (m2)。0 = なし
     real(real64), allocatable :: vout_row(:)  ! 累積放流体積の行部分和 (m3)
@@ -123,12 +126,12 @@ subroutine gwflow_conduit_init(p, g, s, dts)
   real :: gwc_eps, gwc_eps_h, gwc_diagratio
   integer :: gwc_leak_layer
   character(len=1024) :: fn_gwc_cnd, fn_gwc_cap, fn_gwc_bot, fn_gwc_inlet
-  character(len=1024) :: fn_gwc_outfall
+  character(len=1024) :: fn_gwc_outfall, fn_gwc_leak
   namelist /list_gwflow_conduit/ f_gwc_fluxlaw, gwc_cnd_m2s, fn_gwc_cnd, &
     gwc_cap, fn_gwc_cap, gwc_depth, fn_gwc_bot, gwc_sy, gwc_slot_sy, &
     gwc_sat0, gwc_inlet, fn_gwc_inlet, gwc_cw, gwc_co, &
     gwc_leak_layer, gwc_leak_mmh, gwc_eps, gwc_eps_h, gwc_diagratio, &
-    fn_gwc_outfall
+    fn_gwc_outfall, fn_gwc_leak
 
   f_gwc_fluxlaw = 2
   gwc_cnd_m2s = 0.0
@@ -143,6 +146,7 @@ subroutine gwflow_conduit_init(p, g, s, dts)
   gwc_inlet = 0.0
   fn_gwc_inlet = ""
   fn_gwc_outfall = ""
+  fn_gwc_leak = ""
   gwc_cw = 2.66                      ! 堰式の既定(越流幅 1 m・流量係数 0.6 相当)
   gwc_co = 0.15                      ! オリフィスの既定(Cd 0.6 × 開口 0.25 m2)
   gwc_leak_layer = 0
@@ -211,11 +215,12 @@ subroutine gwflow_conduit_init(p, g, s, dts)
     case default
       call par_stop("list_gwflow_conduit: gwc_leak_layer must be 0(none), 1(soil) or 2(layer2)")
   end select
-  if (gwc_leak_layer > 0 .and. gwc_leak_mmh <= 0.0) then
-    call par_stop("list_gwflow_conduit: gwc_leak_mmh must be > 0 when gwc_leak_layer > 0")
+  if (gwc_leak_layer > 0 .and. gwc_leak_mmh <= 0.0 &
+      .and. len_trim(fn_gwc_leak) == 0) then
+    call par_stop("list_gwflow_conduit: set gwc_leak_mmh > 0 or fn_gwc_leak " &
+                  // "when gwc_leak_layer > 0")
   end if
   gwc%leak_layer = gwc_leak_layer
-  gwc%kleak = gwc_leak_mmh / 1000.0 / 3600.0   ! mm/h -> m/s
   gwc%cw = gwc_cw
   gwc%co = gwc_co
   gwc%lat = (gwc_cnd_m2s > 0.0 .or. len_trim(fn_gwc_cnd) > 0)
@@ -283,6 +288,18 @@ subroutine gwflow_conduit_init(p, g, s, dts)
     call read_map_scatter(p, g, fn_gwc_outfall, gwc%caout, "gwc_outfall")
     call outfall_check(g)
     allocate(gwc%vout_row(dcp%js:dcp%je), source = 0.0_real64)
+  end if
+
+  ! --- 層間交換能(セル別。一様指定はスカラー値充填 = スカラーと
+  !     ビット一致。マップの 0 セルは交換なし = ライニング。§46.5 (2)) ---
+  if (gwc%leak_layer > 0) then
+    allocate(gwc%kleakc(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    if (len_trim(fn_gwc_leak) > 0) then
+      call read_map_scatter(p, g, fn_gwc_leak, gwc%kleakc, "gwc_leak")
+      gwc%kleakc(:,:) = gwc%kleakc(:,:) / 1000.0 / 3600.0   ! mm/h -> m/s
+    else
+      gwc%kleakc(:,:) = gwc_leak_mmh / 1000.0 / 3600.0
+    end if
   end if
 
   ! --- 側方通水: 幾何(層1/2 と共有・冪等)→ エッジ係数 → 安定条件 ---
@@ -459,14 +476,14 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
         if (gwc%leak_layer == 1) then
           hother = (s%z(i,j) - s%sd(i,j)) + s%hg(i,j) * gwc%syinv1
           if (hother > hcnd) then
-            fx = min(gwc%kleak * dts, s%hg(i,j))            ! 浸入水(層1→管路)
+            fx = min(gwc%kleakc(i,j) * dts, s%hg(i,j))            ! 浸入水(層1→管路)
             if (fx > 0.0) then
               s%hg(i,j) = s%hg(i,j) - fx
               s%hgc(i,j) = s%hgc(i,j) + fx
             end if
           else if (hcnd > hother) then
             capo = s%sd(i,j) * g%sy0
-            fx = min(gwc%kleak * dts, s%hgc(i,j), max(capo - s%hg(i,j), 0.0))
+            fx = min(gwc%kleakc(i,j) * dts, s%hgc(i,j), max(capo - s%hg(i,j), 0.0))
             if (fx > 0.0) then                              ! 漏水(管路→層1)
               s%hgc(i,j) = s%hgc(i,j) - fx
               s%hg(i,j) = s%hg(i,j) + fx
@@ -475,13 +492,13 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
         else
           hother = (s%z(i,j) - s%sd(i,j) - gwc%d2) + s%hg2(i,j) * gwc%syinv2
           if (hother > hcnd) then
-            fx = min(gwc%kleak * dts, s%hg2(i,j))           ! 涵養(層2→管路)
+            fx = min(gwc%kleakc(i,j) * dts, s%hg2(i,j))           ! 涵養(層2→管路)
             if (fx > 0.0) then
               s%hg2(i,j) = s%hg2(i,j) - fx
               s%hgc(i,j) = s%hgc(i,j) + fx
             end if
           else if (hcnd > hother) then
-            fx = min(gwc%kleak * dts, s%hgc(i,j), max(gwc%cap2 - s%hg2(i,j), 0.0))
+            fx = min(gwc%kleakc(i,j) * dts, s%hgc(i,j), max(gwc%cap2 - s%hg2(i,j), 0.0))
             if (fx > 0.0) then                              ! 漏出(管路→層2)
               s%hgc(i,j) = s%hgc(i,j) - fx
               s%hg2(i,j) = s%hg2(i,j) + fx
@@ -697,6 +714,7 @@ subroutine gwflow_conduit_dispose(p, g, s)
   if (allocated(gwc%dinlet)) deallocate(gwc%dinlet)
   if (allocated(gwc%caout)) deallocate(gwc%caout)
   if (allocated(gwc%vout_row)) deallocate(gwc%vout_row)
+  if (allocated(gwc%kleakc)) deallocate(gwc%kleakc)
   gwc%initialized = .false.
 end subroutine
 

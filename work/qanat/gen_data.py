@@ -62,6 +62,13 @@ write_mat(os.path.join(d, "gwc_cnd.txt"), lambda i, j: 0.05 if on_line(i, j) els
 # 枡(開口)密度: 出口セルのみ
 write_mat(os.path.join(d, "gwc_inlet.txt"),
           lambda i, j: 0.01 if (i == i2 and j == jline) else 0.0)
+# 層間交換能マップ (mm/h): 導水部(i>=32)をライニング(=0)した変種用
+write_mat(os.path.join(d, "gwc_leak.txt"),
+          lambda i, j: 30.0 if (on_line(i, j) and i < 32) else 0.0)
+# 開放吐口の変種用: 出口セルに吐口(Cd*A = 0.15 m2。海隣接なし =
+# 自セル地表への自由流出)
+write_mat(os.path.join(d, "gwc_outfall.txt"),
+          lambda i, j: 0.15 if (i == i2 and j == jline) else 0.0)
 
 # 集水部・導水部の目安を表示(wt = 初期地下水位 = z - 1.8)
 print("mouth: i=%d z=%.2f zbot=%.2f" % (i2, z_of(i2), zbot_mouth))
