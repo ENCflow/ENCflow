@@ -113,6 +113,7 @@ module list_sysparam
     character(len=maxpathlen) :: fn_wq = ""              ! 水質(負荷流出)設定ファイル
     character(len=maxpathlen) :: fn_snow = ""            ! 積雪・融雪設定ファイル
     character(len=maxpathlen) :: fn_glacier = ""         ! 氷河設定ファイル
+    character(len=maxpathlen) :: fn_lavaflow = ""        ! 溶岩流設定ファイル
     character(len=maxpathlen) :: fn_salt = ""            ! 淡塩2層設定ファイル
     character(len=maxpathlen) :: fn_swi = ""             ! 土壌雨量指数設定ファイル(§49)
     character(len=maxpathlen) :: fn_driftwood = ""       ! 流木設定ファイル(§50)
@@ -223,6 +224,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: fn_wq         ! 水質(負荷流出)設定ファイル
   character(:), allocatable :: fn_snow       ! 積雪・融雪設定ファイル
   character(:), allocatable :: fn_glacier    ! 氷河設定ファイル
+  character(:), allocatable :: fn_lavaflow   ! 溶岩流設定ファイル
   character(:), allocatable :: fn_salt       ! 淡塩2層設定ファイル
   character(:), allocatable :: fn_swi        ! 土壌雨量指数設定ファイル
   character(:), allocatable :: fn_driftwood  ! 流木設定ファイル
@@ -252,7 +254,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_ddd, f_out_dda, f_out_pre, f_out_hrs, f_out_fr, f_out_cn, f_out_hg, &
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
                         fn_structure, &
-                        fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_evap, fn_meteo, fn_wq, fn_snow, fn_glacier, fn_salt, fn_swi, fn_driftwood, fn_channel, fn_enc, &
+                        fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_evap, fn_meteo, fn_wq, fn_snow, fn_glacier, fn_lavaflow, fn_salt, fn_swi, fn_driftwood, fn_channel, fn_enc, &
                         fn_log, dir_data, dir_result, dir_save, outfn_suffix
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
@@ -345,6 +347,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   fn_wq = list%fn_wq
   fn_snow = list%fn_snow
   fn_glacier = list%fn_glacier
+  fn_lavaflow = list%fn_lavaflow
   fn_salt = list%fn_salt
   fn_swi = list%fn_swi
   fn_driftwood = list%fn_driftwood
@@ -450,6 +453,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%fn_wq = fn_wq
   list%fn_snow = fn_snow
   list%fn_glacier = fn_glacier
+  list%fn_lavaflow = fn_lavaflow
   list%fn_salt = fn_salt
   list%fn_swi = fn_swi
   list%fn_driftwood = fn_driftwood
@@ -477,6 +481,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   if (trim(list%fn_wq) == "-") list%fn_wq = trim(fn_sysparam)
   if (trim(list%fn_snow) == "-") list%fn_snow = trim(fn_sysparam)
   if (trim(list%fn_glacier) == "-") list%fn_glacier = trim(fn_sysparam)
+  if (trim(list%fn_lavaflow) == "-") list%fn_lavaflow = trim(fn_sysparam)
   if (trim(list%fn_salt) == "-") list%fn_salt = trim(fn_sysparam)
   if (trim(list%fn_swi) == "-") list%fn_swi = trim(fn_sysparam)
   if (trim(list%fn_driftwood) == "-") list%fn_driftwood = trim(fn_sysparam)
