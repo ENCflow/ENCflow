@@ -47,6 +47,11 @@ set output "figs/step1_hend_raw.png"
 set title "最終時刻の水深: 未処理 DEM(raw)"
 plot 'result_raw/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
+# ---- Step 1: 4近傍計算との比較(D8 窪地除去と 8 方向交換の相性) ----
+set output "figs/step1_hend_4nb.png"
+set title "最終時刻の水深: filled DEM を 4 近傍で計算(p_diagratio = 0)" noenhanced
+plot 'result_4nb/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
+
 # ---- Step 6: 湛水の解消(最終時刻の水深) ----
 set output "figs/step6_hend_step5.png"
 set title "Step 5: 6 時間後の水深(出口なし)"

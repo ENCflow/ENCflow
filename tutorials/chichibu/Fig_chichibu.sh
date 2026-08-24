@@ -28,6 +28,17 @@ if [ ! -d result_raw ]; then
   mv result result_raw
 fi
 
+# --- 4近傍の比較計算(Step 2 の設定で対角成分をゼロに) ---
+if [ ! -d result_4nb ]; then
+  sed -e '/dir_data/i\  fn_enc     = "-"           ! ENC条件設定ファイル' \
+      param_step2.txt > wrk_param_4nb.txt
+  printf '\n&%s\n  p_diagratio = 0.0        ! 対角成分ゼロ = 4近傍相当\n/\n' \
+      list_enc >> wrk_param_4nb.txt
+  rm -rf result
+  ./encflow wrk_param_4nb.txt
+  mv result result_4nb
+fi
+
 # --- 地形図用: 流域マスク外を欠損(-9999)にした地盤高 ---
 awk 'NR==FNR{for(i=1;i<=NF;i++)b[FNR,i]=$i;next}
      {for(i=1;i<=NF;i++)printf "%s ",(b[FNR,i]>0? $i : -9999); print ""}' \

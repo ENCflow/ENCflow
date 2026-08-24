@@ -203,6 +203,17 @@ stuck on diagonal flow paths, requiring extra depression processing or
 higher resolution. The ENC grid exchanges water in eight directions, so
 it is a natural match for D8: **a D8-filled DEM can be used as is**.
 
+You can confirm this by experiment. Specifying `fn_enc = "-"` and
+`p_diagratio = 0.0` in `&list_enc` closes the diagonal exchange of the
+ENC grid, giving a "4-neighbor" computation. Even on the same
+depression-filled DEM, the water now gets stuck on diagonal flow paths:
+the final depth distribution is chopped up all over the catchment just
+like with the raw DEM, and the water never reaches the outlet (the
+maximum velocity also drops to about 0.9 m/s toward the end — the flow
+dies).
+
+![Step 1: filled DEM computed with 4-neighbor exchange](figs/step1_hend_4nb.png)
+
 ## Step 2: GeoTIFF input/output and representing the channel
 
 `en/param_step2.txt` switches the input/output to GeoTIFF and adds the
