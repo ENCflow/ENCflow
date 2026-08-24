@@ -19,8 +19,10 @@
 | 2 | bil(生バイナリ+ESRI hdr) |
 | 4 | GeoTIFF |
 
-- bil は同名の `.hdr` があれば画素型(int8/int16/int32・符号の有無)を
-  読み分けます。hdr がなければ int32 として読みます。
+- bil は同名の `.hdr` があれば画素型(float32 / int8・int16・int32 と
+  符号の有無)を読み分けます(整数型の bil を実数の場へ変換して読む
+  こともできます)。hdr がなければ、実数の場は float32、整数の場は
+  int32 として読みます。
 - 格子諸元の指定: txt・hdr なし bil では `nx, ny` と `dx, dy`(または
   `lx, ly`)の namelist 指定が必須です。hdr あり bil・GeoTIFF では
   基本的に不要です(ファイルの値で補完されます。ただし経緯度格子では
