@@ -1,6 +1,6 @@
 # Input and Output Formats
 
-> English mirror of docs/users_guide/io.md (based on commit 3089f8a). The Japanese file is the master copy.
+> English mirror of docs/users_guide/io.md (based on commit b9bee77). The Japanese file is the master copy.
 
 [Back to the User's Guide index](../users_guide.md)
 
@@ -25,8 +25,10 @@ etc.) supports three formats. All of them are selected in
 | 4 | GeoTIFF |
 
 - For bil, if a `.hdr` with the same base name exists, the pixel type
-  (int8/int16/int32, signed or unsigned) is read from it. Without an
-  hdr, the file is read as int32.
+  (float32 / int8, int16, int32, signed or unsigned) is read from it
+  (an integer bil can also be read into a real field with conversion).
+  Without an hdr, real fields are read as float32 and integer fields
+  as int32.
 - Specifying the grid geometry: for txt and bil without hdr, `nx, ny`
   and `dx, dy` (or `lx, ly`) must be given in the namelist. For bil
   with hdr and GeoTIFF this is basically unnecessary (the values are
