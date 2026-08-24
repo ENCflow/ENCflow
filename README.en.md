@@ -103,8 +103,12 @@ care about.**
   confined layer) with per-cell capacity and 8-direction conveyances,
   fully coupled with the surface inundation in a single time evolution
   - from inlet uptake through pipe-full pressurized flow (surcharge) to
-  manhole eruption. The same machinery applies to fractured bedrock,
-  karst, and farmland tile drains.
+  manhole eruption, sea outfalls and pump stations (pumps drawing
+  directly from the conduit layer), and - coupled with the water
+  quality module - **sanitation-risk assessment of sewage eruption
+  (E. coli spreading with the flood)**. The same machinery applies to
+  fractured bedrock, karst, farmland tile drains, and qanats
+  (groundwater-collecting galleries).
 - **Sediment and slope hazards**: riverbed evolution by bedload and
   suspended load, hillslope erosion, slope failure (stability
   analysis), and debris flow. Terrain and soil depth evolve during the
