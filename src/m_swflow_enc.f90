@@ -254,6 +254,7 @@ module m_swflow_enc
   real :: l8x(1:8)               ! k軸方向のフラックス通過幅の重み
   real :: l8y(1:8)               ! k軸方向のフラックス通過幅の重み
   real :: l8(1:8)                ! k軸方向のフラックス通過幅の重み
+  logical :: skip8(1:8)          ! 通過幅ゼロのエッジ(p_diagratio=0/1 の対角・法線)
   real :: lpx, lpy, ldx, ldy     ! 通過幅シェア(法線 lp・斜め ld。開口補正が使う)
   real :: r8x(1:8)               ! din(:)/dx
   real :: r8y(1:8)               ! djn(:)/dy
@@ -786,6 +787,10 @@ subroutine init_weights(p, g)
   ! k軸方向フラックスの通過幅
   forall(k=1:8) l8(k) = sqrt((l8y(k) * g%dy)**2 + (l8x(k) * g%dx)**2)
 
+  ! 通過幅ゼロのエッジは運動方程式の対象外(質量交換が常にゼロのまま
+  ! 流速の積分だけが続くと、大きな段差のエッジで発散判定に掛かるため)
+  forall(k=1:8) skip8(k) = (l8(k) <= 0)
+
   ! セル境界の流速・流量からセル中心の平均流速・平均流量の増分を計算するための係数
   !   セル中心から近傍に向かうフラックスuvをn8x, n8yで除して投影前のxとyの正の方向成分に戻す
   !   近傍の方向に応じた開口幅(辺長)をl8x, l8yで調整し、
@@ -1011,6 +1016,13 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   ! k近傍セルとの境界フラックスのインデックスを計算する
   ie = i + die(k)
   je = j + dje(k)
+
+  ! 通過幅ゼロのエッジ(p_diagratio=0 の対角等)は流量流速ゼロ
+  if (skip8(k)) then
+    sx%uv(k,ie,je) = 0
+    sx%mn1(k,ie,je) = 0
+    return
+  end if
 
   ! 移動限界水深未満の場合は流量ゼロ(ddを大きくすると過大流出が増える)
   if (s%h(i,j) < p%dd .and. s%h(in,jn) < p%dd) then
