@@ -166,10 +166,12 @@ reads a GeoTIFF, the easiest way is to try it in Step 2's
 |---|---|
 | ![filled](figs/step1_hmax_filled.png) | ![raw](figs/step1_hmax_raw.png) |
 
+The color bar of these figures is logarithmic, fitting everything from
+centimeter-scale hillslope flow to 10-m-class ponding into one map.
 With the filled DEM, tributaries gather into the main stem and a single
 river network heading for the outlet is drawn; with the raw DEM the
-water gets trapped in depressions all over the catchment and the river
-network is chopped into pieces. The maximum velocity also drops to
+water gets trapped in depressions all over the catchment (the scattered
+red dots) and the river network is chopped into pieces. The maximum velocity also drops to
 about 1.5 m/s toward the end, showing that the flow has died across the
 whole catchment.
 

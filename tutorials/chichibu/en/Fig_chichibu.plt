@@ -31,14 +31,19 @@ set title "Step 1: depth after 6 hours (ponding at the outlet)"
 splot 'result_step1/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with pm3d notitle
 
 # ---- Step 1: 窪地除去の有無(最大水深の比較) ----
+# 河川網の連続/寸断を見る図: セル単位描画(with image)+対数カラーバーで、
+# 数 cm の斜面流から 10 m 級の湛水までを 1 枚に収める(pm3d は隣接セルが
+# NaN の四角形を落とすため 1 セル幅の河道が欠けることがある)
 set output "en/figs/step1_hmax_filled.png"
-set cbrange [0:10]
+set cbrange [0.05:10]
+set logscale cb
 set title "Maximum depth: depression-filled DEM (filled)"
-splot 'result_step2/H9999.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with pm3d notitle
+plot 'result_step2/H9999.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
 set output "en/figs/step1_hmax_raw.png"
 set title "Maximum depth: unprocessed DEM (raw)"
-splot 'result_raw/H9999.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with pm3d notitle
+plot 'result_raw/H9999.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
+unset logscale cb
 
 # ---- Step 6: 湛水の解消(最終時刻の水深) ----
 set output "en/figs/step6_hend_step5.png"
