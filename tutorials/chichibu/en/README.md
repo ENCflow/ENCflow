@@ -132,10 +132,9 @@ The screen output tells us the following.
   that cannot get out keeps accumulating somewhere.
 
 The depth distribution at the final time (`result/H9998.txt`) shows
-where it accumulates (in the depth maps from here on, zero depth is
-white, deep water is in warm colors, and the logarithmic color bar
-fits everything from centimeter-scale hillslope flow to 10-m-class
-ponding into one map). The bundled gnuplot script displays the depth
+where it accumulates (the depth maps use a palette in which zero depth
+is white and deeper water is warmer: places the water has drained from
+fade to white, and only the places it accumulates take on color). The bundled gnuplot script displays the depth
 distributions at four times side by side on one screen (gnuplot is
 required; after the plot appears, press Enter in the terminal to
 quit; the bundled scripts sit in the case directory, so run this from
@@ -163,16 +162,19 @@ affects the measurements further upstream).
 If you replace `fn_z` in `&list_geoinfo` with `Chichibu_200m_raw.tif`,
 you can run on the original DEM without depression filling (since this
 reads a GeoTIFF, the easiest way is to try it in Step 2's
-`en/param_step2.txt`). Comparing the maximum depth distributions:
+`en/param_step2.txt`). Comparing the depth distributions at the final
+time:
 
 | Depression-filled (filled) | Unprocessed (raw) |
 |---|---|
-| ![filled](figs/step1_hmax_filled.png) | ![raw](figs/step1_hmax_raw.png) |
+| ![filled](figs/step1_hend_filled.png) | ![raw](figs/step1_hend_raw.png) |
 
-With the filled DEM, tributaries gather into the main stem and a single
-river network heading for the outlet is drawn; with the raw DEM the
-water gets trapped in depressions all over the catchment (the scattered
-red dots) and the river network is chopped into pieces. The maximum velocity also drops to
+With the filled DEM the catchment is almost entirely white: the rain
+has drained properly from the hillslopes into the channels and on
+downstream, gathering at the single ponded spot at the outlet (which is
+still a wall at this stage). With the raw DEM, color is scattered all
+over the catchment: the water gets trapped in depressions along the way
+and never reaches the outlet. The maximum velocity also drops to
 about 1.5 m/s toward the end, showing that the flow has died across the
 whole catchment.
 
