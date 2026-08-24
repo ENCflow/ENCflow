@@ -55,6 +55,11 @@ module list_wq
     integer :: f_wq_settle = 0                     ! 沈降の行き先 (0:河床へ消失,
                                                    !   1:蓄積プールへ=再懸濁サイクル)
     ! ---- 降雨中濃度(湿性沈着。地表到達雨量 × 濃度で全域投入)----
+    ! ---- 管路連続体層との連携(下水噴出の衛生リスク評価。§30 追記)----
+    real :: wq_gwc_conc = -9999.0                  ! 噴出・陸側吐口水の固定濃度 (mg/L。
+                                                   !   >= 0 で管路連携が有効。要 f_gwconduit=1)
+    integer :: f_wq_gwc_in = 1                     ! 枡流入時の輸送物質 (0:地表に残留,
+                                                   !   1:濃度同伴で管路台帳へ除去)
     real :: wq_rain_conc = -9999.0                 ! 一定濃度 (mg/L。wq_rain_series と排他)
     real, allocatable :: wq_rain_series(:,:)       ! (1:2, 1:nwqvmax) = (経過日, mg/L)
     ! ---- 境界流入濃度(list_boundary の区間流入番号ごと。一定か時系列)----
@@ -91,6 +96,8 @@ subroutine list_wq_read(p, list)
   character(len=maxpathlen) :: fn_wq_bd0
   real :: wq_wash_kr, wq_wash_kf, wq_wash_tauc
   integer :: f_wq_settle
+  real :: wq_gwc_conc
+  integer :: f_wq_gwc_in
   real :: wq_rain_conc
   real :: wq_rain_series(1:2,1:nwqvmax)
   real :: wq_in_conc(1:nwqfmax)
@@ -105,6 +112,7 @@ subroutine list_wq_read(p, list)
                      fn_wq_map, wq_map_factor, f_wq_map, &
                      wq_bd_rate, wq_bd_max, wq_bd0, fn_wq_bd0, &
                      wq_wash_kr, wq_wash_kf, wq_wash_tauc, f_wq_settle, &
+                     wq_gwc_conc, f_wq_gwc_in, &
                      wq_rain_conc, wq_rain_series, &
                      wq_in_conc, wq_in_series
 
@@ -133,6 +141,8 @@ subroutine list_wq_read(p, list)
   wq_wash_kf = list%wq_wash_kf
   wq_wash_tauc = list%wq_wash_tauc
   f_wq_settle = list%f_wq_settle
+  wq_gwc_conc = list%wq_gwc_conc
+  f_wq_gwc_in = list%f_wq_gwc_in
   wq_rain_conc = list%wq_rain_conc
   wq_rain_series = -9999.0
   wq_in_conc = list%wq_in_conc
@@ -170,6 +180,8 @@ subroutine list_wq_read(p, list)
   list%wq_wash_kf = wq_wash_kf
   list%wq_wash_tauc = wq_wash_tauc
   list%f_wq_settle = f_wq_settle
+  list%wq_gwc_conc = wq_gwc_conc
+  list%f_wq_gwc_in = f_wq_gwc_in
   list%wq_rain_conc = wq_rain_conc
   allocate(list%wq_rain_series(1:2,1:nwqvmax), source = wq_rain_series)
   list%wq_in_conc = wq_in_conc

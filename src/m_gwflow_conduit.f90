@@ -60,6 +60,9 @@ module m_gwflow_conduit
   !    geomorph による z の時間変化には追随しない(管路は掘り直さない)
   !  - cap = 0 のセルは「管路なし」: 貯留・通水・交換のすべてが恒久無効
   !  - 蒸発散は hgc に触れない(閉管路の意味論)
+  !  - 水質連携(§30): wq の管路連携(wq_gwc_conc)が有効なときだけ、
+  !    地表交換量を s%fxci(流入)/ s%fxco(噴出・陸側吐口)へ記録する
+  !    (allocated 判定 = 本モジュールは wq を知らない。fxg と同じ契約)
   !  - gwc_leak_layer=1 は土層系(sd, sy0)の有効化、=2 は f_gwlayer2=1 が
   !    前提(init で検証して par_stop)
   !
@@ -551,6 +554,8 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
             s%h(i,j) = s%h(i,j) - fx
             s%hgc(i,j) = s%hgc(i,j) + fx
             s%e(i,j) = s%z(i,j) + s%h(i,j)
+            ! 水質連携: 流入量を記録(fxg と同じ契約。wq が消費・ゼロ戻し)
+            if (allocated(s%fxci)) s%fxci(i,j) = s%fxci(i,j) + fx
           end if
         else if (hcnd > hs .and. s%hgc(i,j) > capc) then
           ! 噴出(被圧時のみ。オリフィス式。被圧分と等化量で制限)
@@ -561,6 +566,8 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
             s%hgc(i,j) = s%hgc(i,j) - fx
             s%h(i,j) = s%h(i,j) + fx
             s%e(i,j) = s%z(i,j) + s%h(i,j)
+            ! 水質連携: 噴出量を記録(wq が固定濃度の質量を同伴させる)
+            if (allocated(s%fxco)) s%fxco(i,j) = s%fxco(i,j) + fx
           end if
         end if
       end do
@@ -695,6 +702,8 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
             s%hgc(i,j) = s%hgc(i,j) - fx
             s%h(i,j) = s%h(i,j) + fx
             s%e(i,j) = s%z(i,j) + s%h(i,j)
+            ! 水質連携: 吐口放流量を記録(wq が固定濃度の質量を同伴させる)
+            if (allocated(s%fxco)) s%fxco(i,j) = s%fxco(i,j) + fx
           end if
         end if
       end do

@@ -171,6 +171,12 @@ module m_state
     real, allocatable :: fxg(:,:)       ! 浸透フラックスの記録 (m。gwflow の鉛直交換が
                                         ! 書き、m_wq が読んでゼロ戻し。§30 の契約。
                                         ! 確保は m_wq_init(f_wq_infil=1 のときのみ))
+    real, allocatable :: fxci(:,:)      ! 地表→管路(枡流入)交換量の記録 (m。fxg と
+                                        ! 同じ契約: m_gwflow_conduit が書き、m_wq が
+                                        ! 読んでゼロ戻し。確保は m_wq_init(管路連携
+                                        ! wq_gwc_conc 指定かつ f_wq_gwc_in=1 のみ)。§30)
+    real, allocatable :: fxco(:,:)      ! 管路→地表(噴出・陸側吐口)交換量の記録 (m。
+                                        ! 同上。確保は m_wq_init(管路連携指定時)。§30)
     real, allocatable :: frofac(:,:)    ! 凍土の浸透低減係数 [fro_fmin,1](m_gwflow_frost
                                         ! が書き、鉛直浸透モデルが浸透能に乗じる。
                                         ! 確保は gwflow_frost_init(f_gwfrost=1 のみ)。§16.4)
@@ -722,6 +728,8 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%wd)) deallocate(s%wd)
   if (allocated(s%wdmax)) deallocate(s%wdmax)
   if (allocated(s%fxg)) deallocate(s%fxg)
+  if (allocated(s%fxci)) deallocate(s%fxci)
+  if (allocated(s%fxco)) deallocate(s%fxco)
   if (allocated(s%frofac)) deallocate(s%frofac)
   if (allocated(s%tide)) deallocate(s%tide)
   if (allocated(s%hmax)) deallocate(s%hmax)

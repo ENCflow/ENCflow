@@ -227,6 +227,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_uvtype | &list_initial | [初期条件](initial.md) |
 | f_wash | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_wq | &list_wq | [水質](wq.md) |
+| f_wq_gwc_in | &list_wq | [水質](wq.md) |
 | f_wq_infil | &list_wq | [水質](wq.md) |
 | f_wq_map | &list_wq | [水質](wq.md) |
 | f_wq_settle | &list_wq | [水質](wq.md) |
@@ -501,6 +502,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | wq_pt_cell | &list_wq | [水質](wq.md) |
 | wq_pt_load | &list_wq | [水質](wq.md) |
 | wq_pt_series | &list_wq | [水質](wq.md) |
+| wq_gwc_conc | &list_wq | [水質](wq.md) |
 | wq_rain_conc | &list_wq | [水質](wq.md) |
 | wq_rain_series | &list_wq | [水質](wq.md) |
 | wq_thalf | &list_wq | [水質](wq.md) |

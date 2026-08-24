@@ -126,7 +126,7 @@ m_meteo.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o list_meteo.o m_fileio
 	m_util.o $(PAR_OBJ)
 list_meteo.o: m_sysparam.o $(PAR_OBJ)
 m_wq.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o m_swflow_enc.o list_wq.o \
-	m_fileio.o m_sysdep_util.o m_util.o $(PAR_OBJ)
+	m_gwflow_conduit.o m_fileio.o m_sysdep_util.o m_util.o $(PAR_OBJ)
 list_wq.o: m_sysparam.o $(PAR_OBJ)
 m_driftwood.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o m_swflow_enc.o \
 	list_driftwood.o m_fileio.o m_sysdep_util.o $(PAR_OBJ)

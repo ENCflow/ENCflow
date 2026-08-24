@@ -20,6 +20,14 @@ module m_wq
   !           (モジュール私有。W1 では台帳=横移動なし)へ移す。gwflow の
   !           鉛直交換が s%fxg に浸透量を記録し、本モジュールが読んで
   !           ゼロ戻しする契約。0 で地表に残留(粒子態向け)
+  !   管路:   wq_gwc_conc(mg/L)指定で管路連続体層(f_gwconduit)と連携
+  !           (下水噴出の衛生リスク評価。供給側固定濃度近似 = 管内の
+  !           質量は解かず、噴出・陸側開放吐口の水量 s%fxco に固定濃度を
+  !           乗じた質量を地表 cq へ投入する。晴天時汚水の定数濃度近似)。
+  !           枡流入は f_wq_gwc_in=1(既定)で s%fxci の水量に濃度同伴し
+  !           管路台帳へ除去(0 で地表残留)。fxci/fxco は fxg と同じ
+  !           「conduit が記録し本モジュールが読んでゼロ戻し」の契約。
+  !           管内の質量プール・管内移流は将来拡張(§46.5 の議論)
   !   ダム:   捕捉帯セルは毎ステップ全量吸収されるため、質量も同伴して
   !           ダム別台帳へ移す(放流濃度 0 = 既知の妥協。貯水池内混合は
   !           将来拡張)。ため池(rscap)の吸収分は W1 では地表に残留
@@ -40,6 +48,7 @@ module m_wq
   use m_state, only : t_state
   use m_boundary, only : t_boundary, e_struct_dam, interp_series, read_cell_file2
   use m_swflow_enc, only : swflow_vh, have_width, wfrac
+  use m_gwflow_conduit, only : gwflow_conduit_ready
   use list_wq, only : t_list_wq, list_wq_read, nwqgmax, nwqcmax, nwqvmax, nwqfmax
   use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
   use m_sysdep_util, only : sysdep_mkdir
@@ -83,6 +92,10 @@ module m_wq
     logical :: enabled = .false.
     logical :: initialized = .false.
     integer :: f_infil = 1
+    real :: gwc_conc = -1.0                         ! 管路連携: 噴出・吐口水の固定濃度
+                                                    !   (g/m3。負 = 連携無効)
+    integer :: f_gwc_in = 1                         ! 管路連携: 枡流入の同伴 (0:残留, 1:台帳へ)
+    logical :: gwc_checked = .false.                ! f_gwconduit 有効性の遅延検査済み
     real :: fdec = 1.0                              ! 1ステップの減衰係数 exp(-k·dt)(1=減衰なし)
     real :: vs = 0.0                                ! 沈降速度 (m/s。0=なし)
     integer :: npt = 0, nar = 0
@@ -111,10 +124,11 @@ module m_wq
     integer :: ndam = 0
     type(t_wqdam), allocatable :: dam(:)
     ! 診断(行部分和 real64。累積 m3 でなく質量 g)
-    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:10) 1=点源 2=面源 3=浸透(→cg)
+    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:12) 1=点源 2=面源 3=浸透(→cg)
                                             !   4=ダム捕捉 5=減衰消失 6=沈降
                                             !   7=分布面源 8=降雨沈着 9=蓄積(→bp)
                                             !   10=洗い出し(bp→cq)
+                                            !   11=管路噴出・吐口の投入 12=枡流入(→管路台帳)
     integer :: un = 0                       ! CSV 装置番号(rank0。open(newunit=) は負値。§22)
   end type
 
@@ -150,6 +164,17 @@ subroutine m_wq_init(wq, p, g, b, s)
     call par_stop("list_wq: f_wq_infil must be 0(remain at surface) or 1(carry with infiltration)")
   end if
   wq%f_infil = list%f_wq_infil
+
+  ! --- 管路連続体層との連携(下水噴出の衛生リスク評価。§30 追記) ---
+  !     f_gwconduit の有効性は gwflow init が後のため最初の calc で遅延検査
+  if (list%wq_gwc_conc > -9998.0) then
+    if (list%wq_gwc_conc < 0.0) call par_stop("list_wq: wq_gwc_conc must be >= 0")
+    wq%gwc_conc = list%wq_gwc_conc                  ! mg/L = g/m3(換算不要)
+  end if
+  if (list%f_wq_gwc_in < 0 .or. list%f_wq_gwc_in > 1) then
+    call par_stop("list_wq: f_wq_gwc_in must be 0(remain at surface) or 1(carry to conduit)")
+  end if
+  wq%f_gwc_in = list%f_wq_gwc_in
 
   ! --- 一次減衰(半減期か k20 の排他。W2)と沈降 ---
   if (list%wq_thalf > -9998.0 .and. list%wq_k20 > -9998.0) then
@@ -193,6 +218,12 @@ subroutine m_wq_init(wq, p, g, b, s)
     allocate(s%fxg(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(wq%cg(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   end if
+  if (wq%gwc_conc >= 0.0) then
+    ! 管路連携の交換量記録場(fxg と同じ契約。conduit は allocated 判定で
+    ! 記録するだけ = wq を知らない)
+    allocate(s%fxco(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    if (wq%f_gwc_in == 1) allocate(s%fxci(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  end if
   ! 初期濃度(mg/L)から柱状量へ: cq = conc × vh。init 時点は swflow 未初期化
   ! (σ の sdep 未構築)だが、restore 前のフレッシュ初期 h に対する換算は
   ! vh=h の矩形でよい(σ 有効時の初期水深は通常 0。非 0 初期水面に σ を
@@ -206,13 +237,13 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- リスタート ---
   if (p%f_state_restore > 0) call restore_state(wq, p, g, s)
 
-  allocate(wq%vrow(dcp%js:dcp%je, 1:10), source = 0.0_real64)
+  allocate(wq%vrow(dcp%js:dcp%je, 1:12), source = 0.0_real64)
 
   ! --- 診断 CSV(rank0。累積はラン先頭からの積算 = restore でリセット) ---
   if (is_root) then
     open(newunit=wq%un, file=trim(p%dir_result)//"/wq.csv", status='replace')
-    write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,in_bldup_g," &
-                        //"wash_g,to_gw_g,to_dam_g,decay_g,settle_g," &
+    write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,in_gwc_g," &
+                        //"in_bldup_g,wash_g,to_gw_g,to_gwc_g,to_dam_g,decay_g,settle_g," &
                         //"mass_surface_g,mass_gw_g,mass_pool_g"
   end if
 
@@ -727,6 +758,52 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
     !$omp end parallel do
   end if
 
+  ! (2b) 管路連続体層との交換同伴(供給側固定濃度近似。fxci/fxco は
+  !      conduit が記録 = fxg と同じ契約。消費後ゼロ戻し)
+  if (wq%gwc_conc >= 0.0) then
+    if (.not. wq%gwc_checked) then
+      ! f_gwconduit の有効性の遅延検査(wq init は gwflow init より先の
+      ! ため。状態フラグは全ランク同一 = par_stop も同時)
+      if (.not. gwflow_conduit_ready()) then
+        call par_stop("list_wq: wq_gwc_conc requires f_gwconduit=1 (conduit layer)")
+      end if
+      wq%gwc_checked = .true.
+    end if
+    ! 噴出・陸側吐口 = 下水固定濃度の源(fxco は h と同基底の柱状水量)
+    if (allocated(s%fxco)) then
+      !$omp parallel do schedule(static) private(i, j, fx, w)
+      do j = dcp%js, dcp%je
+        do i = g%wx(1,j), g%wx(2,j)
+          if (g%x(i,j) <= 0) cycle
+          fx = s%fxco(i,j)
+          if (fx <= 0.0) cycle
+          s%fxco(i,j) = 0.0
+          w = fx * wq%gwc_conc                       ! (m)×(g/m3) = g/m2 柱状
+          s%cq(i,j) = s%cq(i,j) + w
+          wq%vrow(j,11) = wq%vrow(j,11) + mass_of(g, i, j, w)
+        end do
+      end do
+      !$omp end parallel do
+    end if
+    ! 枡流入 = 濃度同伴で管路台帳へ(浸透同伴と同じ同率移動)
+    if (wq%f_gwc_in == 1 .and. allocated(s%fxci)) then
+      !$omp parallel do schedule(static) private(i, j, fx, w)
+      do j = dcp%js, dcp%je
+        do i = g%wx(1,j), g%wx(2,j)
+          if (g%x(i,j) <= 0) cycle
+          fx = s%fxci(i,j)
+          if (fx <= 0.0) cycle
+          s%fxci(i,j) = 0.0
+          if (s%cq(i,j) <= 0.0) cycle
+          w = s%cq(i,j) * (fx / max(s%h(i,j) + fx, tiny(fx)))
+          s%cq(i,j) = s%cq(i,j) - w
+          wq%vrow(j,12) = wq%vrow(j,12) + mass_of(g, i, j, w)
+        end do
+      end do
+      !$omp end parallel do
+    end if
+  end if
+
   ! (3) 発生源の投入(グループ負荷をセルへ配分し柱状量に加算)
   do k = 1, wq%npt
     if (wq%pt(k)%nser > 0) then
@@ -995,14 +1072,14 @@ subroutine m_wq_record(wq, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: v(1:10), msur, mgw, mpool, acell
+  real(real64) :: v(1:12), msur, mgw, mpool, acell
   real(real64) :: rows(dcp%js:dcp%je), rows2(dcp%js:dcp%je), rows3(dcp%js:dcp%je)
   integer :: i, j, k
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (.not. wq%enabled) return
 
   acell = real(g%dx, real64) * real(g%dy, real64)
-  do k = 1, 10
+  do k = 1, 12
     call par_sum_rows(wq%vrow(:,k), v(k))
   end do
   rows(:) = 0.0_real64
@@ -1021,8 +1098,9 @@ subroutine m_wq_record(wq, p, g, s)
   call par_sum_rows(rows3, mpool)
 
   if (is_root .and. wq%un /= 0) then
-    write(wq%un, '(f0.2,13(",",es15.7))') s%t, v(1), v(2), v(7), v(8), v(9), v(10), &
-                                          v(3), v(4), v(5), v(6), msur, mgw, mpool
+    write(wq%un, '(f0.2,15(",",es15.7))') s%t, v(1), v(2), v(7), v(8), v(11), v(9), &
+                                          v(10), v(3), v(12), v(4), v(5), v(6), &
+                                          msur, mgw, mpool
     flush(wq%un)
   end if
 end subroutine
