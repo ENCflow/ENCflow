@@ -135,6 +135,58 @@ precision (outflow and dam trapping are subtracted where present).
 - On save/restore all wood ledgers are stored in `driftwood.dat`, so a
   split run continues exactly.
 
+## Worked example: timber influx from a coastal log yard by storm surge
+
+An idealized experiment of the Isewan-typhoon type — timber floating in
+a coastal log storage yard is released by the storm-surge water-level
+rise and carried into an urban area by the overtopping flow — is
+included in [examples/timberyard](../../examples/timberyard/)
+(`python3 make_terrain.py && ./encflow param.txt`; about one minute).
+Key points of the setup:
+
+1. **Do not use the sea mask for the log yard and harbor water**. Sea
+   cells cannot hold timber stock and wood is not advected there, so
+   represent the whole area where inundation and timber transport are
+   solved as normal cells + an initial water level (`f_htype=2`), and
+   use the sea mask + tide forcing (`fn_tide`) only for an offshore
+   boundary strip (same manner as tsunami sediment — see "Sea mask and
+   the fate of sediment" in [Sediment and landform change](geomorph.md)).
+2. **Give the timber stock only in the yard cells** via `fn_dwstock`
+   (the example uses 0.5 m³/m² × 200 m × 600 m = 60,000 m³).
+3. **Use hydraulic recruitment as "mooring loss / floating-off by the
+   surge"**: set `dw_hrec` higher than the normal yard depth (3.0 m
+   vs. the normal 2.0 m in the example), so release starts only when
+   the surge raises the water level — recruitment synchronizes with
+   the surge. Use `dw_vrec = 0` (released once afloat) and a `dw_wrec`
+   rate that releases the full stock within the surge duration. No
+   erosion entrainment (dw_droot) and no geomorph module are needed.
+4. **Seawalls and openings** are terrain (the example has a +1.5 m
+   crest with a +0.5 m low opening). Inflow concentrates at the
+   opening and timber deposition concentrates in the urban blocks
+   behind it, visible in the Wd outputs.
+5. Urban **buildings** are represented by the void ratio `fn_gv`
+   (0.6 in the example).
+
+How to read the results: **Wd9999 is the envelope of the maximum
+arrival (floating+deposited)** — cells that wood merely passed through
+retain a value (that is what makes it a hazard map). For the final
+deposit distribution and volume accounting use the final frame
+(Wd9998), and convert to volume as column × gv × cell area (in the
+example about 70% of the 60,000 m³ deposits in the town, and the total
+matches the initial stock to machine precision).
+
+**Impact forces of timber on houses** are not computed inside the
+model (individual collisions are out of scope), but all inputs of the
+impact-force formulas are available from the outputs: the Japanese
+design standard (NILIM No. 905 §4.3) evaluates driftwood impact by
+applying the boulder impact formula with the flow velocity and the
+maximum log diameter — a postprocessing recipe. Feed ENCflow's maximum
+velocity V9999 (or velocity frames) and the representative log
+properties into that formula (or the FEMA P-646 log impact formula) to
+obtain a standard-consistent impact-force map. Use Wd9999 / Hd to
+judge which buildings the timber reaches, and F9999 (= u²h) for the
+fluid force of the water itself.
+
 ## What is not modeled
 
 Trajectories, orientation and rotation of individual logs, geometric
