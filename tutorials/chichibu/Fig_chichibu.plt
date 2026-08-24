@@ -8,9 +8,9 @@ set terminal pngcairo size 760,440 font ",11"
 
 # 分布図の共通設定(格子番号→km 換算、行順=北→南なので y 反転)
 kx(i) = i * 0.2
-set palette defined ( 0 '#000090',1 '#000fff',2 '#0090ff',3 '#0fffee',4 '#90ff70',5 '#ffee00',6 '#ff7000',7 '#ee0000',8 '#7f0000')
 
 # ---- 地形(流域外は欠損) ----
+set palette defined ( 0 '#000090',1 '#000fff',2 '#0090ff',3 '#0fffee',4 '#90ff70',5 '#ffee00',6 '#ff7000',7 '#ee0000',8 '#7f0000')
 set output "figs/step1_z.png"
 set view map
 set size ratio -1
@@ -23,37 +23,38 @@ set cbrange [0:2600]
 set title "地形(流域マスク内)"
 splot 'wrk_zmask.txt' matrix using (kx($1)):(kx($2)):($3 < -9000 ? NaN : $3) with pm3d notitle
 
-# ---- Step 1: 最終時刻の水深(閉流域の湛水) ----
-set output "figs/step1_hend.png"
+# ---- ここから水深図の共通設定 ----
+# 水深 0 を白とするパレット(水が無い場所を濃色にしない)+対数カラーバーで、
+# 数 cm の斜面流から 10 m 級の湛水までを 1 枚に収める。描画はセル単位の
+# with image(pm3d は隣接セルが NaN の四角形を落とすため 1 セル幅の河道が
+# 欠けることがある)
+set palette defined ( -1 '#ffffff', 0 '#000090',1 '#000fff',2 '#0090ff',3 '#0fffee',4 '#90ff70',5 '#ffee00',6 '#ff7000',7 '#ee0000',8 '#7f0000')
 set cblabel "水深 (m)"
-set cbrange [0:10]
-set title "Step 1: 6 時間後の水深(出口に湛水)"
-splot 'result_step1/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with pm3d notitle
-
-# ---- Step 1: 窪地除去の有無(最大水深の比較) ----
-# 河川網の連続/寸断を見る図: セル単位描画(with image)+対数カラーバーで、
-# 数 cm の斜面流から 10 m 級の湛水までを 1 枚に収める(pm3d は隣接セルが
-# NaN の四角形を落とすため 1 セル幅の河道が欠けることがある)
-set output "figs/step1_hmax_filled.png"
 set cbrange [0.05:10]
 set logscale cb
+
+# ---- Step 1: 最終時刻の水深(閉流域の湛水) ----
+set output "figs/step1_hend.png"
+set title "Step 1: 6 時間後の水深(出口に湛水)"
+plot 'result_step1/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
+
+# ---- Step 1: 窪地除去の有無(最大水深の比較) ----
+set output "figs/step1_hmax_filled.png"
 set title "最大水深: 窪地除去済み DEM(filled)"
 plot 'result_step2/H9999.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
 set output "figs/step1_hmax_raw.png"
 set title "最大水深: 未処理 DEM(raw)"
 plot 'result_raw/H9999.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
-unset logscale cb
 
 # ---- Step 6: 湛水の解消(最終時刻の水深) ----
 set output "figs/step6_hend_step5.png"
-set cbrange [0:10]
 set title "Step 5: 6 時間後の水深(出口なし)"
-splot 'result_step5/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with pm3d notitle
+plot 'result_step5/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
 set output "figs/step6_hend.png"
 set title "Step 6: 6 時間後の水深(完全排水口あり)"
-splot 'result_step6/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with pm3d notitle
+plot 'result_step6/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
 # ---- ここからハイドログラフ(CSV はカンマ区切り) ----
 reset

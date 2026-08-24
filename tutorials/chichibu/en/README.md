@@ -132,7 +132,10 @@ The screen output tells us the following.
   that cannot get out keeps accumulating somewhere.
 
 The depth distribution at the final time (`result/H9998.txt`) shows
-where it accumulates. The bundled gnuplot script displays the depth
+where it accumulates (in the depth maps from here on, zero depth is
+white, deep water is in warm colors, and the logarithmic color bar
+fits everything from centimeter-scale hillslope flow to 10-m-class
+ponding into one map). The bundled gnuplot script displays the depth
 distributions at four times side by side on one screen (gnuplot is
 required; after the plot appears, press Enter in the terminal to
 quit; the bundled scripts sit in the case directory, so run this from
@@ -166,8 +169,6 @@ reads a GeoTIFF, the easiest way is to try it in Step 2's
 |---|---|
 | ![filled](figs/step1_hmax_filled.png) | ![raw](figs/step1_hmax_raw.png) |
 
-The color bar of these figures is logarithmic, fitting everything from
-centimeter-scale hillslope flow to 10-m-class ponding into one map.
 With the filled DEM, tributaries gather into the main stem and a single
 river network heading for the outlet is drawn; with the raw DEM the
 water gets trapped in depressions all over the catchment (the scattered
