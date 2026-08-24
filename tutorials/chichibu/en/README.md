@@ -132,7 +132,20 @@ The screen output tells us the following.
   that cannot get out keeps accumulating somewhere.
 
 The depth distribution at the final time (`result/H9998.txt`) shows
-where it accumulates.
+where it accumulates. The bundled gnuplot script displays the depth
+distributions at four times side by side on one screen (gnuplot is
+required; after the plot appears, press Enter in the terminal to
+quit; the bundled scripts sit in the case directory, so run this from
+there):
+
+```bash
+gnuplot Plot_step1.plt
+```
+
+You can read how the water gathers from the hillslopes into the
+channel network while it rains (t = 0:30, 1:00), drains downstream
+after the rain stops (t = 3:00), and finally piles up just short of
+the northeast corner.
 
 ![Step 1: depth after 6 hours](figs/step1_hend.png)
 
@@ -293,6 +306,21 @@ inspection of results; run them from the case directory).
 We obtained catchment-scale flood routing at 1-minute resolution, with
 the flood wave growing and lagging from upstream transect 1 to
 downstream transect 4.
+
+The distributed outputs can be surveyed with `../Plot_step3.plt`,
+which arranges six maps of the final-time and maximum fields on one
+screen:
+
+```bash
+gnuplot Plot_step3.plt
+```
+
+The top row shows the final-time depth, velocity and discharge; the
+bottom row shows the maximum depth, the maximum velocity and the
+final-time Courant number. `Plot_step1.plt` from Step 1 also takes
+the variable as its first argument, so `gnuplot -c Plot_step1.plt V`
+(or `Q`) shows the time evolution of the velocity or the discharge
+with the same four-time layout.
 
 ## Step 4: Parameter tuning
 
