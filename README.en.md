@@ -86,8 +86,7 @@ care about.**
   wetting-and-drying tracks the run-up front. Storm surge + river flood
   + heavy rainfall — **compound flooding in a single model**. Combined
   with the driftwood feature it also handles Isewan-typhoon-style
-  timber influx from coastal log yards into urban areas (worked
-  example: examples/timberyard).
+  timber influx from coastal log yards into urban areas.
 - **Rainfall–runoff and catchment hydrology**: rainfall (uniform or
   distributed), canopy interception, evapotranspiration
   (Hamon/Thornthwaite with temperature lapse rate), Green–Ampt
