@@ -84,7 +84,10 @@ care about.**
 - **Storm surge and tsunami run-up**: coastal inundation driven by
   tide/sea-level time series on sea cells. The dynamic wave with
   wetting-and-drying tracks the run-up front. Storm surge + river flood
-  + heavy rainfall — **compound flooding in a single model**.
+  + heavy rainfall — **compound flooding in a single model**. Combined
+  with the driftwood feature it also handles Isewan-typhoon-style
+  timber influx from coastal log yards into urban areas (worked
+  example: examples/timberyard).
 - **Rainfall–runoff and catchment hydrology**: rainfall (uniform or
   distributed), canopy interception, evapotranspiration
   (Hamon/Thornthwaite with temperature lapse rate), Green–Ampt
