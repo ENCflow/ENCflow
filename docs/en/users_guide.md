@@ -20,7 +20,7 @@ input; individual topics are split into per-chapter pages.
 
 **Part II: Cross-cutting facilities**
 - [Time management](users_guide/time.md) -- time axis, time step, output interval, calendar
-- [Coordinate systems](users_guide/coordinates.md) -- EPSG, ESRI hdr, geographic (lat-lon) grids
+- [Coordinate systems](users_guide/coordinates.md) -- absolute vs. local coordinates, EPSG, geographic (lat-lon) grids
 - [Input and output formats](users_guide/io.md) -- text / bil / GeoTIFF, output file organization
 - [Suspend and restart](users_guide/restart.md) -- state files, time continuation, use as initial conditions
 - [Parallel execution](users_guide/parallel.md) -- OpenMP, MPI, reproducibility of results
