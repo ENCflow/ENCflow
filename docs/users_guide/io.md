@@ -20,7 +20,11 @@
 | 4 | GeoTIFF |
 
 - bil は同名の `.hdr` があれば画素型(int8/int16/int32・符号の有無)を
-  読み分けます。hdr がなければ従来の int32 として読みます。
+  読み分けます。hdr がなければ int32 として読みます。
+- 格子諸元の指定: txt・hdr なし bil では `nx, ny` と `dx, dy`(または
+  `lx, ly`)の namelist 指定が必須です。hdr あり bil・GeoTIFF では
+  基本的に不要です(ファイルの値で補完されます。ただし経緯度格子では
+  `dx, dy`(m)の指定が必要 — [座標系の章](coordinates.md))。
 - GeoTIFF は無圧縮・LZW・Deflate(predictor 付き含む)、ストリップ・
   タイル配置に対応し、QGIS / ArcGIS / GDAL の実出力で検証済みです。
   外部ライブラリは使っていません(自前実装)。
