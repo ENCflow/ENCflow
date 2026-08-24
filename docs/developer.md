@@ -3149,7 +3149,8 @@ SWE+粒状体抵抗則の水準 = §0 の範囲内)。
   (C×100 = CFU/100mL)・上下限 2 ケース運用・限界。
 - **検証(2026-08-23。gfortran 13.3/OpenMPI)**: 無効時 = 全 23
   スイート PASS+qanat/coastal_drain Log 全桁一致(記録場未確保 =
-  経路不変)。機能 = work/sewer_wq(sewer_hybrid ラン D + 連携)で
+  経路不変)。機能 = sewer_wq ケース(sewer_hybrid ラン D + 連携。
+  当時 work/、現在は短縮版を test/sewer_wq として収載)で
   台帳が機械精度で閉合(残差 1.9e-2 g / 投入 2.63e7 g = 相対 7e-10)、
   噴出由来プルームの濃度が設定濃度×希釈と整合。np=2,4 の全出力が
   逐次と一致、-fcheck=all(-Og)の逐次・np=2 クリーン完走。
@@ -4062,7 +4063,7 @@ CFPM2 型の閾値切替則(Darcy⇄Darcy-Weisbach)は f_gwc_fluxlaw=3 として
 - test/conduit の reference は暫定としてコミット済み(解析平衡との
   全桁一致が根拠)。規律1の趣旨により人間の目視確認をもって確定とする。
 
-### 46.5 拡張方針の決定(2026-08-23。実証実験 work/qanat・work/sewer_hybrid)
+### 46.5 拡張方針の決定(2026-08-23。実証実験 examples/qanat・examples/sewer_hybrid)
 
 **経緯**: カナート(横坑集水)と都市幹線下水道の表現をめぐる設計議論で、
 「河道マスク+サブグリッド河道」に相当する地下の線的要素(設置深さ・
@@ -4077,15 +4078,16 @@ CFPM2 型の閾値切替則(Darcy⇄Darcy-Weisbach)は f_gwc_fluxlaw=3 として
 多重インスタンス昇格(§46.1)の位置づけは変えない — 必要になるのは
 **同一セルで水頭を共有できない別系統の併用**(下水道×岩盤)だけである。
 
-**実証**(利用者ケースとして work/ ブランチに保存。コード変更なし):
+**実証**(利用者ケースとして作成。コード変更なし。当初 work/ に置き、
+2026-08-24 に examples/ へ昇格):
 
-- work/qanat: 層2帯水層+坑道セル列(fn_gwc_bot の縦断勾配)+崖出口で
+- examples/qanat: 層2帯水層+坑道セル列(fn_gwc_bot の縦断勾配)+崖出口で
   カナートの集水→導水→湧出を再現(出口 6.8 L/s、S_total 14 桁保存)。
   副産物: 帯水層側方 K が小さいと坑道周りの水位降下で水頭が均衡し集水が
   停止する/水面上の導水部が長いと坑道→帯水層の漏水が集水と釣り合い
   出口まで水が届かない(=実カナートが導水部を裏込めし崖・段丘に口を
   開ける理由が、そのまま数値実験に現れる)。
-- work/sewer_hybrid: 幹線(D=1.0 m のセル列、埋設 5 m)+枝管網
+- examples/sewer_hybrid: 幹線(D=1.0 m のセル列、埋設 5 m)+枝管網
   (D=0.4 m の面、埋設 2 m)+降雨 60 mm/h×1 h の 3 ラン比較。
   最終地表氾濫量は 幹線なし 21.6 mm > sy=枝管適合 18.2 mm >
   sy=幹線適合 10.2 mm。同一インスタンス同居は機構的に成立し幹線は
@@ -4099,7 +4101,7 @@ CFPM2 型の閾値切替則(Darcy⇄Darcy-Weisbach)は f_gwc_fluxlaw=3 として
    「計算で使う物理量は直接与える。変換は前処理で」)。換算式
    C = (1/n)·A·R^(2/3)(満管通水能)、dens = C×セル幅あたり本数、
    cap = A·管長/セル面積、sy = cap/管高 を users_guide/gwflow.md に
-   記載する(実演は work/sewer_hybrid/gen_data.py)。
+   記載する(実演は examples/sewer_hybrid/gen_data.py)。
 2. **層間交換能のマップ化 fn_gwc_leak**(現状はスカラー gwc_leak_mmh)。
    カナートのライニング区間・下水道の老朽度分布はこれがないと表せない
    (qanat 実験で場所別制御の不能を確認)。
@@ -4224,7 +4226,7 @@ CFPM2 型の閾値切替則(Darcy⇄Darcy-Weisbach)は f_gwc_fluxlaw=3 として
 > gwflow init より先のため有効性・cap>0 は最初の makebdc の遅延検査。
 > boundary_h の取水は s%hgc から柱状換算のまま(gv・wfrac 換算なし)。
 > 検証: 無効時 = 全 22 スイート逐次 PASS+tide/conduit/pump/wave/salt
-> の np=2,4 PASS(gfortran 13.3 / OpenMPI)。新機能 = work/coastal_drain
+> の np=2,4 PASS(gfortran 13.3 / OpenMPI)。新機能 = test/coastal_drain
 > (海抜下ポルダー: 地盤 0.2 m・潮位 0.5 m 一定・管底 −1.8 m)で
 > 終状態が解析平衡に厳密一致(全域水位 = 潮位 0.5、全管路セル
 > hgc = 0.1260 = cap + (0.5 − 管頂水頭)·slot_sy の全桁一致)、
@@ -4236,7 +4238,7 @@ CFPM2 型の閾値切替則(Darcy⇄Darcy-Weisbach)は f_gwc_fluxlaw=3 として
 > (1) = users_guide/gwflow.md に管諸元→(cap, cnd, sy) の換算式を記載
 > (コード不変)。
 > (2) = fn_gwc_leak(kleak のセル別配列化)。一様指定はスカラー値
-> 充填で従来とビット等価(work/qanat の Log 全桁一致で確認)。マップの
+> 充填で従来とビット等価(examples/qanat の Log 全桁一致で確認)。マップの
 > 0 セルは交換なし = ライニング区間・健全管。機能確認: qanat の導水部
 > ライニング変種(param_lined)で最終湧出 1.28→2.29 mm(1.8 倍)。
 > (3) = fn_gwc_outfall の一般化: 海域セル隣接のない吐口セルは

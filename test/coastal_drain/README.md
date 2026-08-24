@@ -1,4 +1,4 @@
-# coastal_drain — §46.5 (7)(8) の検証ケース(海抜下ポルダーの排水)
+# coastal_drain — 回帰テスト(海抜下ポルダーの排水。§46.5 (7)(8))
 
 地盤 0.2 m のポルダー+潮位 0.5 m 一定の海(ゼロメートル地帯)で、
 (7) 負の管底標高(fn_gwc_bot = −1.8 m)、(8b) 海域セル吐口
@@ -9,9 +9,14 @@
 ## 実行方法
 
 ```
-python3 gen_data.py            # data_cd/ を生成
-../../bin/encflow param.txt    # 数十秒(2 時間の計算)
+make            # ../../bin/ の実行ファイルへのリンクを張る
+./Run.sh        # 逐次 + reference 比較(数十秒。2 時間の計算)
+./Run_MPI.sh 2  # MPI(np=2)+ 逐次 reference と ULP=0 比較
+./Run_stiff.sh  # 硬い変種(slot_sy=0.002 → サブサイクル N=2)。
+                # reference 機構は使わない(下記の解析平衡で検算)
 ```
+
+data_cd/ は静的データとしてコミット済み(gen_data.py は生成の記録)。
 
 ## 検証結果(2026-08-23。gfortran 13.3 / OpenMPI)
 

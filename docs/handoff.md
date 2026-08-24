@@ -461,11 +461,16 @@
   模式実験 test/conduit で解析平衡の全桁一致・np=1,2,4 ビット一致・
   -fcheck np=2・リスタート往復まで確認。
   **拡張方針を決定(2026-08-23。正本は developer.md §46.5。実証は
-  work/qanat・work/sewer_hybrid)**: 幹線・地下水路・横坑は単一
+  examples/qanat・examples/sewer_hybrid)**: 幹線・地下水路・横坑は単一
   インスタンス内のセル別不均質で表す(河道モデルの型。多重インスタンス
   昇格は下水道×岩盤の併用専用のまま)。残:
   (1) test/conduit の暫定 reference の目視承認(コミット済み。妥当なら
-      そのまま基準、作り直すなら ./Run.sh -u)
+      そのまま基準、作り直すなら ./Run.sh -u)。
+      **2026-08-24 追加: test/coastal_drain・test/sewer_wq の暫定
+      reference も同様に目視承認待ち**(work/ からの昇格時に作成。
+      coastal_drain は解析平衡・吐口累積 6.7062 m3 と一致確認済み、
+      sewer_wq は wq.csv 収支の機械精度閉合を確認済み。np=2,4 とも
+      ULP=0 PASS)
   (2) 閾値切替流束則 f_gwc_fluxlaw=3(CFPM2 型。Darcy⇄D-W)
   (3) §46.5 の決定 8 項目の実装: **(1)〜(5)・(7)・(8a)(8b) は実装・
       検証済み 2026-08-23(§46.5 の実装記録 4 件を参照)**。残るは

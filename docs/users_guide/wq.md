@@ -169,8 +169,9 @@
 - 濃度は完全混合(鉛直分布なし)、単一物質です(ウイルス等を併算する
   場合は物質ごとに別ランで)。
 
-例題: [work/sewer_wq](../../work/sewer_wq/)(幹線+枝管の市街地に
-降雨 60 mm/h — 噴出→氾濫→拡散→減衰の一連と、wq.csv の収支検算)。
+例題: [test/sewer_wq](../../test/sewer_wq/)(幹線+枝管の市街地に
+降雨 100 mm/h × 30 min — 噴出→氾濫→拡散→減衰の一連と、wq.csv の
+収支検算。管路網の作り方は [examples/sewer_hybrid](../../examples/sewer_hybrid/))。
 
 ## 出力・監視
 

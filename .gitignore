@@ -50,6 +50,8 @@ Screen_*.log
 !docs/figs/*.png
 !tutorials/*/figs/*.png
 !tutorials/*/en/figs/*.png
+!examples/qanat/qanat_result.png
+!examples/sewer_hybrid/sewer_hybrid_result.png
 
 # --- OS / editor ---
 .DS_Store
