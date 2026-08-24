@@ -17,7 +17,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 
 **第II部 横断機能**
 - [時刻の管理](users_guide/time.md) — 時間軸・時間刻み・出力間隔・暦
-- [座標系の管理](users_guide/coordinates.md) — EPSG・ESRI hdr・経緯度格子
+- [座標系の管理](users_guide/coordinates.md) — 絶対座標とローカル座標・EPSG・経緯度格子
 - [入出力の形式](users_guide/io.md) — テキスト/bil/GeoTIFF・出力ファイル体系
 - [中断と再開](users_guide/restart.md) — 状態保存・時刻継続・初期条件としての利用
 - [並列実行](users_guide/parallel.md) — OpenMP・MPI・結果の再現性
