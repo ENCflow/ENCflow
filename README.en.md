@@ -103,10 +103,8 @@ care about.**
   confined layer) with per-cell capacity and 8-direction conveyances,
   fully coupled with the surface inundation in a single time evolution
   - from inlet uptake through pipe-full pressurized flow (surcharge) to
-  manhole eruption, sea outfalls and pump stations (pumps drawing
-  directly from the conduit layer), and - coupled with the water
-  quality module - **sanitation-risk assessment of sewage eruption
-  (E. coli spreading with the flood)**. The same machinery applies to
+  manhole eruption, sea outfalls, and pump stations (pumps drawing
+  directly from the conduit layer). The same machinery applies to
   fractured bedrock, karst, farmland tile drains, and qanats
   (groundwater-collecting galleries).
 - **Sediment and slope hazards**: riverbed evolution by bedload and
@@ -136,8 +134,10 @@ care about.**
 - **Water quality and mass transport**: load runoff from point sources,
   areal sources, land-use-specific unit loads, and wet deposition;
   advective transport, decay and settling, buildup–washoff (nonlinear
-  L–Q), and entrainment into infiltration. Also suited to radionuclide
-  runoff analysis.
+  L–Q), and entrainment into infiltration. Coupled with the urban
+  sewer layer, it assesses the **sanitation risk of sewage eruption
+  (E. coli spreading with the floodwater)**; also suited to
+  radionuclide runoff analysis.
 - **Snow accumulation and melt**: degree-day method. With the
   temperature lapse rate, the snow line emerges automatically.
   Infiltration suppression by frozen ground (a temperature-driven
