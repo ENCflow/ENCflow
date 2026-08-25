@@ -1,4 +1,4 @@
-> English mirror of tutorials/wave/README.md (based on commit c664f1c). The Japanese file is the master copy.
+> English mirror of tutorials/wave/README.md (based on commit 5e0dc42). The Japanese file is the master copy.
 
 # Tutorial 1: wave -- waves spreading over still water
 
@@ -27,6 +27,24 @@ parameter files are passed as `en/param_step1.txt` etc.
 ## Step 1: first steps
 
 ### Preparation
+
+First, check where you are. The tutorial is done in the repository's
+`tutorials/wave` directory, so move there:
+
+```bash
+pwd     # show your current location
+ls      # list the files here (ls .. lists "one level up")
+```
+
+Right after installation (just after running `./Run.sh` in
+`test/wave`), `cd ../../tutorials/wave` takes you there. From
+anywhere else, work your way to `tutorials/wave` with `ls` and `cd`.
+Make it a habit to **confirm with `pwd` after every move** — it
+avoids failures caused by being in the wrong place:
+
+```bash
+pwd     # → OK if it shows .../ENCflow/tutorials/wave
+```
 
 In the case directory, run
 

@@ -51,6 +51,30 @@ If you get stuck, see Microsoft's
 > keep going with Colab alone, as described in
 > "3. Where WSL is not available" at the end of this document.
 
+### After installation — check where you are, then move
+
+When the steps above finish, you are inside the directory (folder)
+`ENCflow/test/wave`. In a terminal, what a command does depends on
+"where you are", so first check your location with `pwd`:
+
+```bash
+pwd        # → shows /home/username/ENCflow/test/wave
+```
+
+The [tutorial](../../tutorials/wave/en/README.md) that comes next is
+done in a different place, `ENCflow/tutorials/wave`. Moving around is
+done with `cd` (`..` means "one directory up"):
+
+```bash
+cd ../../tutorials/wave
+pwd        # → you are there if it shows .../ENCflow/tutorials/wave
+```
+
+Make it a habit to **confirm with `pwd` after every move** — it
+avoids the single most common terminal stumble, "the command fails
+because I am in the wrong place". The commands you will use are
+listed in the cheat sheet below.
+
 ## These are all the commands you need (cheat sheet)
 
 Day-to-day use of ENCflow involves about ten Unix commands. No further
