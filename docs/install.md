@@ -102,7 +102,9 @@ brew install --cask paraview
 WSL で計算している場合は、ParaView は **Windows 側にインストール**し、
 結果ファイルをエクスプローラのパス `\\wsl$\...`(または
 `/mnt/c/...` に置いた結果)から開くのが手軽です(WSLg が有効なら
-WSL 内の ParaView も動きます)。
+WSL 内の ParaView も動きます)。日本語版 Windows ではバックスラッシュ
+`\` は円記号 `¥` として表示・入力されます(同じ文字です。
+[Windows での使い方](windows.md))。
 
 ## 3. インストールの仕組み
 
