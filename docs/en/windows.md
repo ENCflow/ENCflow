@@ -8,7 +8,10 @@ Windows, that is fine — we recommend the following route.
 ## 1. Try it first with zero installation (5 minutes)
 
 A Colab notebook lets you build, run, and visualize ENCflow entirely
-in your browser. No administrator rights, no setup.
+in your browser. No administrator rights, no setup. Running it does
+require a (free) **Google account** — if you do not have one and do
+not wish to create one, skip step 1 and **start with WSL in step 2
+just below** (skipping step 1 causes no problem for what follows).
 
 **[→ Run ENCflow on Colab](https://colab.research.google.com/github/ENCflow/ENCflow/blob/main/docs/en/colab_quickstart.ipynb)**
 
@@ -69,19 +72,32 @@ preparation is needed.
 
 ## Exchanging files with the Windows side
 
-- Type `\\wsl$` in the address bar of Explorer and the files inside
-  WSL appear **as ordinary folders**. Note that what you see first is
-  the root of the whole Linux system; your own files are under
+The files inside WSL appear **as ordinary folders** in **Explorer** —
+the standard Windows window for browsing files and folders (the
+yellow folder icon on the taskbar, or `Windows key + E`). There are
+two ways to get there:
+
+- **From the left-hand pane**: scroll down the list on the left side
+  of Explorer and you will find a **Linux** entry with a penguin icon
+  (on recent Windows). From there, click through
   `Ubuntu` → `home` → `your user name` (the name you chose when you
-  first started WSL). If you followed the steps above, ENCflow is at
-  `\\wsl$\Ubuntu\home\username\ENCflow`. You will visit this place
-  often, so **pinning it to Quick access** is convenient.
-  Edit parameter files with Notepad or VS Code, open the text/CSV
-  results in Excel, and open the GeoTIFF outputs in GIS software
-  directly.
-- For serious use, [VS Code](https://code.visualstudio.com/) with the
-  "WSL" extension is comfortable (editing, terminal, and file browsing
-  in one window).
+  first started WSL).
+- **From the address bar**: click the wide box at the top of Explorer
+  that shows the current folder name (the address bar), type
+  `\\wsl$`, and press Enter. What you see first is the root of the
+  whole Linux system; your own files are likewise under
+  `Ubuntu` → `home` → `your user name`.
+
+If you followed the steps above, ENCflow is at
+`\\wsl$\Ubuntu\home\username\ENCflow`. You will visit this place
+often, so right-click the folder and **pin it to Quick access**.
+Edit parameter files with Notepad or VS Code, open the text/CSV
+results in Excel, and open the GeoTIFF outputs in GIS software
+directly.
+
+For serious use, [VS Code](https://code.visualstudio.com/) with the
+"WSL" extension is comfortable (editing, terminal, and file browsing
+in one window).
 
 ## 3. Where WSL is not available
 
