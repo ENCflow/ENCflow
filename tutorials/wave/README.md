@@ -65,10 +65,10 @@ make
 reading list_sysparam in param_step1.txt
 reading list_geoinfo in param_step1.txt
 reading list_initial in param_step1.txt
-number of processes : 1
-number of threads : 4
-real precision : 64 bit
-number of valid cells : 90000
+main: number of processes: 1
+main: number of threads: 4
+main: real precision: 64 bit
+main: number of valid cells: 90000
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    1.0210   0.0%      0    0.1328    1.9994    0.0000
   0:00:01.00  12.5%    1.0210   8.0%      0    0.1386    1.9993    0.8665
@@ -79,6 +79,7 @@ time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:06.00  75.0%    1.0210   5.7%      0    0.1225    1.2044    0.6512
   0:00:07.00  87.5%    1.0210   6.2%      0    0.1206    1.1967    0.6026
   0:00:08.00 100.0%    1.0210   6.6%      0    0.1214    1.2093    0.6062
+main: program terminated normally
 ```
 
 表の各列の意味は次のとおりです。

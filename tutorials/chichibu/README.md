@@ -61,10 +61,10 @@ reading list_geoinfo in param_step1.txt
  reading data_chichibu/Chichibu_200m_basin.txt
  reading data_chichibu/Chichibu_200m_filled.txt
 reading list_precip in param_step1.txt
-number of processes : 1
-number of threads : 4
-real precision : 64 bit
-number of valid cells : 17885
+main: number of processes: 1
+main: number of threads: 4
+main: real precision: 64 bit
+main: number of valid cells: 17885
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000   0.0%      0    0.0000    0.0000    0.0000
   0:30:00.00   8.3%    0.0487  97.7%      0    0.3876    2.3735   10.3884
@@ -73,6 +73,7 @@ time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   2:00:00.00  33.3%    0.1000   1.9%     15    0.6868   14.8529   18.9331
   ...
   6:00:00.00 100.0%    0.1000   0.9%    190    0.5896   33.0043    6.7073
+main: program terminated normally
 ```
 
 パラメータファイルの構成は wave の Step 1 とほとんど同じで、
