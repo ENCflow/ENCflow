@@ -152,7 +152,7 @@ A parameter file is a text file in Fortran **namelist format**.
 You run ENCflow by giving it a single parameter file. To set up the
 executable, just place a link to `bin/encflow` (or a copy of it) in
 the directory where you want to compute -- it works anywhere
-([installation guide Sec. 2.4](install.md#24-run-your-computations-anywhere)).
+([installation guide Sec. 3.4](install.md#34-run-your-computations-anywhere)).
 The screen shows the configuration loading progress, followed by
 monitoring columns such as time, conserved quantity S, Runge-Kutta
 application rate, and Courant number (how to read the columns:

@@ -583,7 +583,7 @@ Deal with it in stages.
 Finally, let us look at the distributed outputs as a 3D animation. We
 use the free visualization software
 [ParaView](https://www.paraview.org/) (Windows / macOS / Linux; see
-section 2.5 of the [installation guide](../../../docs/en/install.md)
+section 2 of the [installation guide](../../../docs/en/install.md)
 for installing it) and the bundled converter utility utils/out2vtk.
 
 `en/param_step7.txt` is the Step 4 configuration adapted for

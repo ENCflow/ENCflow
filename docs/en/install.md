@@ -1,4 +1,4 @@
-> English mirror of docs/install.md (based on commit 6c5acfc). The Japanese file is the master copy.
+> English mirror of docs/install.md (based on commit ffe38ee). The Japanese file is the master copy.
 
 # Installation Guide
 
@@ -9,10 +9,11 @@ placed in `bin/` inside the repository, so if you ever want them
 gone, deleting the whole directory restores your system exactly.
 
 - Just want it running -> [1. Up and running in 5 minutes](#1-up-and-running-in-5-minutes)
-- Faster on multiple cores -> it is parallel with no action needed ([2.3](#23-openmp-parallelism-is-on-from-the-start))
-- On a cluster or supercomputer -> [3. Building the MPI hybrid version](#3-building-the-mpi-hybrid-version)
-- With a compiler other than gfortran -> [4. Switching compilers](#4-switching-compilers)
-- Got an error -> [6. Troubleshooting](#6-troubleshooting)
+- Plotting in the tutorials -> [2. Installing the visualization tools](#2-installing-the-visualization-tools-gnuplot-paraview)
+- Faster on multiple cores -> it is parallel with no action needed ([3.3](#33-openmp-parallelism-is-on-from-the-start))
+- On a cluster or supercomputer -> [4. Building the MPI hybrid version](#4-building-the-mpi-hybrid-version)
+- With a compiler other than gfortran -> [5. Switching compilers](#5-switching-compilers)
+- Got an error -> [7. Troubleshooting](#7-troubleshooting)
 
 ## 1. Up and running in 5 minutes
 
@@ -23,7 +24,7 @@ for setting up WSL and a Unix-beginner guide, see
 [Using ENCflow on Windows](windows.md)):
 
 ```bash
-sudo apt install git gfortran make
+sudo apt install -y git gfortran make
 ```
 
 **macOS** (Homebrew):
@@ -51,11 +52,67 @@ cd ../test/wave
 If the last line reads `=== regression test PASS ===`, your build of
 ENCflow produces the same answers as the development environment.
 Installation is complete. Next stop: the
-[tutorial](../../tutorials/wave/en/README.md).
+[tutorial](../../tutorials/wave/en/README.md) (the tutorials use
+gnuplot to plot the results, so it is smoothest to install it first —
+[Sec. 2](#2-installing-the-visualization-tools-gnuplot-paraview)).
 
-## 2. How the installation works
+## 2. Installing the visualization tools (gnuplot, ParaView)
 
-### 2.1 What gets created where
+ENCflow itself does not depend on any visualization tool (results are
+plain matrix text or GeoTIFF, readable by GIS, Python, Excel, and so
+on). The tutorials and the bundled plot scripts (`Plot_*.plt`),
+however, use **gnuplot** (5.2 or later), so install it if you plan to
+follow the tutorials.
+
+**Pick the single command that matches your environment** (pasting
+several of these lines at once will produce errors).
+
+Ubuntu / Debian (including WSL):
+
+```bash
+sudo apt install -y gnuplot
+```
+
+macOS (Homebrew):
+
+```bash
+brew install gnuplot
+```
+
+Fedora / RHEL family:
+
+```bash
+sudo dnf install -y gnuplot
+```
+
+`gnuplot --version` confirms the installation and version.
+
+For 3D visualization and animation (Step 7 of the chichibu tutorial),
+we use **ParaView**. Installing the binaries from the
+[official site](https://www.paraview.org/download/) (Windows / macOS /
+Linux) is the most reliable route; package managers also work (again,
+pick the one line for your environment):
+
+Ubuntu / Debian:
+
+```bash
+sudo apt install -y paraview
+```
+
+macOS (Homebrew):
+
+```bash
+brew install --cask paraview
+```
+
+If you compute inside WSL, install ParaView **on the Windows side**
+and open the result files through the Explorer path `\\wsl$\...` (or
+place results under `/mnt/c/...`); with WSLg enabled, ParaView inside
+WSL also works.
+
+## 3. How the installation works
+
+### 3.1 What gets created where
 
 - Running `make install` in `src/` builds the executable
   **`encflow`** and copies it to **`bin/`** at the repository root.
@@ -68,7 +125,7 @@ Installation is complete. Next stop: the
   to the main program, the pre/post-processing utilities in `utils/`
   (you do not need them at first).
 
-### 2.2 Build configuration in a single make.inc
+### 3.2 Build configuration in a single make.inc
 
 All build settings -- compiler, optimization, parallel mode -- are
 collected in **`make.inc`** at the repository root (switched by
@@ -76,9 +133,9 @@ commenting lines in and out). The default is "gfortran, optimized,
 serial (OpenMP) version", which you can use as-is. When you edit
 `make.inc`, the next make automatically rebuilds everything, so a
 manual `make clean` is normally unnecessary (for the exception, see
-[Sec. 6](#6-troubleshooting)).
+[Sec. 7](#7-troubleshooting)).
 
-### 2.3 OpenMP parallelism is on from the start
+### 3.3 OpenMP parallelism is on from the start
 
 `encflow` has OpenMP thread parallelism enabled by default and uses
 all cores of the machine with no configuration. Set an environment
@@ -88,7 +145,7 @@ variable only when you want to control the thread count:
 export OMP_NUM_THREADS=4    # example: limit to 4 threads
 ```
 
-### 2.4 Run your computations anywhere
+### 3.4 Run your computations anywhere
 
 There is no additional installation step before starting your own
 computations. **Just place a symbolic link to `encflow` in `bin/`
@@ -114,51 +171,20 @@ ln -s ~/ENCflow/bin/encflow .     # create a link (recommended)
 - For large grids, remove the shell's stack limit first
   (`ulimit -s unlimited`; with the default limit the run may die with
   a silent Segmentation fault —
-  [Sec. 6](#6-troubleshooting)).
+  [Sec. 7](#7-troubleshooting)).
 
 For how to write parameter files, see the
 [tutorial](../../tutorials/wave/en/README.md) and the
 [user's guide](users_guide.md).
 
-### 2.5 Installing the visualization tools (gnuplot, ParaView)
-
-ENCflow itself does not depend on any visualization tool (results are
-plain matrix text or GeoTIFF, readable by GIS, Python, Excel, and so
-on). The tutorials and the bundled plot scripts (`Plot_*.plt`),
-however, use **gnuplot** (5.2 or later), so install it with your
-package manager if you plan to follow the tutorials.
-
-```bash
-sudo apt install gnuplot        # Ubuntu / Debian (including WSL)
-brew install gnuplot            # macOS (Homebrew)
-sudo dnf install gnuplot        # Fedora / RHEL family
-```
-
-`gnuplot --version` confirms the installation and version.
-
-For 3D visualization and animation (Step 7 of the chichibu tutorial),
-we use **ParaView**. Installing the binaries from the
-[official site](https://www.paraview.org/download/) (Windows / macOS /
-Linux) is the most reliable route; package managers also work:
-
-```bash
-sudo apt install paraview             # Ubuntu / Debian
-brew install --cask paraview          # macOS (Homebrew)
-```
-
-If you compute inside WSL, install ParaView **on the Windows side**
-and open the result files through the Explorer path `\\wsl$\...` (or
-place results under `/mnt/c/...`); with WSLg enabled, ParaView inside
-WSL also works.
-
-## 3. Building the MPI hybrid version
+## 4. Building the MPI hybrid version
 
 To compute across nodes on a workstation or supercomputer, build the
 MPI version **`encflow_mpi`**. An MPI library (OpenMPI or MPICH) is
 required:
 
 ```bash
-sudo apt install openmpi-bin libopenmpi-dev    # Ubuntu example
+sudo apt install -y openmpi-bin libopenmpi-dev    # Ubuntu example
 ```
 
 Build and run:
@@ -210,9 +236,9 @@ Notes:
   all processes become rank 0 even with the bundled mpiexec
   (Debian Bug #1066735). On Ubuntu, OpenMPI is the safe choice. An
   incorrect launch is also detected and stopped on the ENCflow side
-  ([Sec. 6](#6-troubleshooting)).
+  ([Sec. 7](#7-troubleshooting)).
 
-## 4. Switching compilers
+## 5. Switching compilers
 
 Just switch the comments in the compiler block of `make.inc`. The
 following have been verified:
@@ -232,7 +258,7 @@ mode**, run `make clean` in `src/` after the switch (all other
 switches -- optimization flags, MODE, precision -- are detected
 automatically).
 
-## 5. Configuration reference (make.inc)
+## 6. Configuration reference (make.inc)
 
 | Setting | Default | Description |
 |---|---|---|
@@ -246,7 +272,7 @@ interlocks of mode switching, the correspondence between LTO and the
 archiver, etc.), see [developer.md](../developer.md) (in Japanese),
 Sec. 1-3.
 
-## 6. Troubleshooting
+## 7. Troubleshooting
 
 **`gfortran: command not found`**
 The compiler is not installed. Install it with the commands in
@@ -293,7 +319,7 @@ echo 'ulimit -s unlimited' >> ~/.bashrc
 stays pinned around 100% per rank)**
 Open MPI's default binding is squeezing all threads onto one core.
 Add `mpirun --bind-to none`
-([Sec. 3](#3-building-the-mpi-hybrid-version)).
+([Sec. 4](#4-building-the-mpi-hybrid-version)).
 
 **An MPI run stops immediately with a rank-count mismatch**
 The combination of mpirun and the MPI library is inconsistent, and
@@ -301,7 +327,7 @@ all processes started independently (when launched via the test
 scripts, ENCflow detects this automatically and stops). Use the
 mpirun of the same implementation as the MPI used for the build. If
 the cause is the defect in Ubuntu 24.04's apt-packaged MPICH itself,
-switch to OpenMPI ([Sec. 3](#3-building-the-mpi-hybrid-version)).
+switch to OpenMPI ([Sec. 4](#4-building-the-mpi-hybrid-version)).
 
 **Masses of errors after switching compilers**
 Switching the compiler itself in serial mode is the one change that

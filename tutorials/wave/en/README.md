@@ -15,7 +15,7 @@ square basin, no terrain and no rainfall, you will learn:
   semi-permeable walls)
 
 See the [installation guide](../../../docs/en/install.md) for preparing a
-compiler. Visualization uses gnuplot (see section 2.5 of the same
+compiler. Visualization uses gnuplot (see section 2 of the same
 guide for installation). All commands below are run in the case directory
 (`tutorials/wave`), one level above this `en/` directory; the English
 parameter files are passed as `en/param_step1.txt` etc.

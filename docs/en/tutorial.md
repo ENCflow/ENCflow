@@ -9,7 +9,7 @@ typing the commands yourself while reading the README inside. For
 prerequisites, see the [installation guide](install.md) (all the
 computation needs is a single Fortran compiler; visualization of the
 results uses gnuplot, and the 3D visualization in chichibu uses
-ParaView -- see section 2.5 of the same guide for installing them).
+ParaView -- see section 2 of the same guide for installing them).
 
 ## Tutorial list
 
