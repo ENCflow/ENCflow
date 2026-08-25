@@ -6,10 +6,11 @@ ENCflow のインストールは「Fortran コンパイラを用意して `make 
 ディレクトリごと削除すれば元通りです。
 
 - まず動かしたい → [1. 5分で動かす](#1-5分で動かす)
-- 複数コアで速く → 何もしなくても並列です([2.3](#23-openmp-並列は最初から有効))
-- クラスタ・スパコンで → [3. MPI ハイブリッド版](#3-mpi-ハイブリッド版のビルド)
-- gfortran 以外で → [4. コンパイラの切り替え](#4-コンパイラの切り替え)
-- エラーが出た → [6. トラブルシューティング](#6-トラブルシューティング)
+- チュートリアルの図化に → [2. 可視化ツールの準備](#2-可視化ツールの準備gnuplotparaview)
+- 複数コアで速く → 何もしなくても並列です([3.3](#33-openmp-並列は最初から有効))
+- クラスタ・スパコンで → [4. MPI ハイブリッド版](#4-mpi-ハイブリッド版のビルド)
+- gfortran 以外で → [5. コンパイラの切り替え](#5-コンパイラの切り替え)
+- エラーが出た → [7. トラブルシューティング](#7-トラブルシューティング)
 
 ## 1. 5分で動かす
 
@@ -20,7 +21,7 @@ WSL の導入と Unix がはじめての方向けの案内は
 [Windows での使い方](windows.md) へ):
 
 ```bash
-sudo apt install git gfortran make
+sudo apt install -y git gfortran make
 ```
 
 **macOS**(Homebrew):
@@ -46,11 +47,66 @@ cd ../test/wave
 
 最後に `=== regression test PASS ===` と表示されれば、あなたの環境の
 ENCflow は開発環境と同じ答えを出しています。これでインストールは
-完了です。次は[チュートリアル](../tutorials/wave/README.md)へ。
+完了です。次は[チュートリアル](../tutorials/wave/README.md)へ
+(チュートリアルは結果の図化に gnuplot を使うので、先に
+[2章](#2-可視化ツールの準備gnuplotparaview)で入れておくとスムーズです)。
 
-## 2. インストールの仕組み
+## 2. 可視化ツールの準備(gnuplot・ParaView)
 
-### 2.1 どこに何ができるか
+ENCflow 本体は可視化ツールに依存しません(結果は行列テキストや
+GeoTIFF なので、GIS・Python・Excel など何でも読めます)。ただし
+チュートリアルと同梱のプロットスクリプト(`Plot_*.plt`)は
+**gnuplot**(5.2 以降)を使うので、チュートリアルを進める場合は
+インストールしておいてください。
+
+**以下からお使いの環境に合ったコマンドを1つだけ選んで**実行して
+ください(複数行をまとめてコピペするとエラーになります)。
+
+Ubuntu / Debian(WSL を含む):
+
+```bash
+sudo apt install -y gnuplot
+```
+
+macOS(Homebrew):
+
+```bash
+brew install gnuplot
+```
+
+Fedora / RHEL 系:
+
+```bash
+sudo dnf install -y gnuplot
+```
+
+`gnuplot --version` でインストールとバージョンを確認できます。
+
+3D 可視化・アニメーション(チュートリアル chichibu の Step 7)には
+**ParaView** を使います。[公式サイト](https://www.paraview.org/download/)
+のバイナリ(Windows / macOS / Linux)をインストールするのが確実です。
+パッケージマネージャでも入ります(こちらも環境に合った1つだけ):
+
+Ubuntu / Debian:
+
+```bash
+sudo apt install -y paraview
+```
+
+macOS(Homebrew):
+
+```bash
+brew install --cask paraview
+```
+
+WSL で計算している場合は、ParaView は **Windows 側にインストール**し、
+結果ファイルをエクスプローラのパス `\\wsl$\...`(または
+`/mnt/c/...` に置いた結果)から開くのが手軽です(WSLg が有効なら
+WSL 内の ParaView も動きます)。
+
+## 3. インストールの仕組み
+
+### 3.1 どこに何ができるか
 
 - `src/` で `make install` すると、実行ファイル **`encflow`** が
   ビルドされ、リポジトリ直下の **`bin/`** にコピーされます。
@@ -63,16 +119,16 @@ ENCflow は開発環境と同じ答えを出しています。これでインス
   前処理・後処理ユーティリティ群もまとめてビルドされます
   (最初は不要です)。
 
-### 2.2 ビルド設定は make.inc 1枚
+### 3.2 ビルド設定は make.inc 1枚
 
 コンパイラ・最適化・並列モードなどのビルド設定は、リポジトリ直下の
 **`make.inc`** に集約されています(コメントの付け外しで切り替える
 方式)。既定は「gfortran・最適化あり・逐次(OpenMP)版」で、
 そのまま使い始められます。`make.inc` を編集すると次回の make で
 全体が自動的に作り直されるので、手動の `make clean` は原則不要です
-(例外は [6章](#6-トラブルシューティング))。
+(例外は [7章](#7-トラブルシューティング))。
 
-### 2.3 OpenMP 並列は最初から有効
+### 3.3 OpenMP 並列は最初から有効
 
 `encflow` は既定で OpenMP スレッド並列が有効で、何も設定しなくても
 マシンの全コアを使います。スレッド数を制御したいときだけ環境変数を
@@ -82,7 +138,7 @@ ENCflow は開発環境と同じ答えを出しています。これでインス
 export OMP_NUM_THREADS=4    # 4スレッドに制限する例
 ```
 
-### 2.4 自分の計算はどこで実行してもよい
+### 3.4 自分の計算はどこで実行してもよい
 
 自分の計算を始めるのに、追加のインストール作業はありません。
 **計算を実行したいディレクトリに `bin/` の `encflow`(MPI 版は
@@ -106,50 +162,19 @@ ln -s ~/ENCflow/bin/encflow .     # リンクを張る(推奨)
 - 大規模な格子の計算では、シェルのスタック上限を先に外しておくことを
   勧めます(`ulimit -s unlimited`。既定上限のままだと無言の
   Segmentation fault で止まることがあります —
-  [6章](#6-トラブルシューティング))。
+  [7章](#7-トラブルシューティング))。
 
 パラメータファイルの書き方は[チュートリアル](../tutorials/wave/README.md)
 と[ユーザーガイド](users_guide.md)へ。
 
-### 2.5 可視化ツール(gnuplot・ParaView)の準備
-
-ENCflow 本体は可視化ツールに依存しません(結果は行列テキストや
-GeoTIFF なので、GIS・Python・Excel など何でも読めます)。ただし
-チュートリアルと同梱のプロットスクリプト(`Plot_*.plt`)は
-**gnuplot**(5.2 以降)を使うので、チュートリアルを進める場合は
-パッケージマネージャで入れておいてください。
-
-```bash
-sudo apt install gnuplot        # Ubuntu / Debian(WSL を含む)
-brew install gnuplot            # macOS(Homebrew)
-sudo dnf install gnuplot        # Fedora / RHEL 系
-```
-
-`gnuplot --version` でインストールとバージョンを確認できます。
-
-3D 可視化・アニメーション(チュートリアル chichibu の Step 7)には
-**ParaView** を使います。[公式サイト](https://www.paraview.org/download/)
-のバイナリ(Windows / macOS / Linux)をインストールするのが確実です。
-パッケージマネージャでも入ります:
-
-```bash
-sudo apt install paraview             # Ubuntu / Debian
-brew install --cask paraview          # macOS(Homebrew)
-```
-
-WSL で計算している場合は、ParaView は **Windows 側にインストール**し、
-結果ファイルをエクスプローラのパス `\\wsl$\...`(または
-`/mnt/c/...` に置いた結果)から開くのが手軽です(WSLg が有効なら
-WSL 内の ParaView も動きます)。
-
-## 3. MPI ハイブリッド版のビルド
+## 4. MPI ハイブリッド版のビルド
 
 ワークステーションやスパコンでノードをまたいで計算する場合は、
 MPI 版 **`encflow_mpi`** をビルドします。MPI ライブラリ(OpenMPI か
 MPICH)が必要です:
 
 ```bash
-sudo apt install openmpi-bin libopenmpi-dev    # Ubuntu の例
+sudo apt install -y openmpi-bin libopenmpi-dev    # Ubuntu の例
 ```
 
 ビルドと実行:
@@ -196,9 +221,9 @@ mpirun -np 4 --bind-to none ./encflow_mpi param.txt
 - Ubuntu 24.04 の apt 版 MPICH には、同梱 mpiexec でも全プロセスが
   ランク0になる既知の不具合があります(Debian Bug #1066735)。
   Ubuntu では OpenMPI を使うのが無難です。誤った起動は ENCflow 側でも
-  検出して停止します([6章](#6-トラブルシューティング))。
+  検出して停止します([7章](#7-トラブルシューティング))。
 
-## 4. コンパイラの切り替え
+## 5. コンパイラの切り替え
 
 `make.inc` のコンパイラブロックのコメントを切り替えるだけです。
 以下で動作確認しています:
@@ -217,7 +242,7 @@ mpirun -np 4 --bind-to none ./encflow_mpi param.txt
 `src/` で `make clean` を実行してください(それ以外の切り替え —
 最適化フラグ・MODE・精度 — は自動検出されます)。
 
-## 5. 設定リファレンス(make.inc)
+## 6. 設定リファレンス(make.inc)
 
 | 設定 | 既定 | 説明 |
 |---|---|---|
@@ -230,7 +255,7 @@ mpirun -np 4 --bind-to none ./encflow_mpi param.txt
 LTO とアーカイバの対応関係など)は [developer.md](developer.md) の
 §1〜§3 を参照してください。
 
-## 6. トラブルシューティング
+## 7. トラブルシューティング
 
 **`gfortran: command not found`**
 コンパイラが未インストールです。[1章](#1-5分で動かす)のコマンドで
@@ -276,14 +301,14 @@ echo 'ulimit -s unlimited' >> ~/.bashrc
 ランクあたり 100% 前後に張り付く)**
 Open MPI の既定バインドで全スレッドが1コアに押し込められています。
 `mpirun --bind-to none` を付けてください
-([3章](#3-mpi-ハイブリッド版のビルド))。
+([4章](#4-mpi-ハイブリッド版のビルド))。
 
 **MPI 実行が「ランク数不一致」で即座に停止する**
 mpirun と MPI ライブラリの組み合わせが不整合で、全プロセスが独立に
 起動しています(テストスクリプト経由では ENCflow が自動検出して
 停止します)。ビルドに使った MPI と同じ実装の mpirun を使って
 ください。Ubuntu 24.04 の apt 版 MPICH 自体の不具合の場合は
-OpenMPI に切り替えてください([3章](#3-mpi-ハイブリッド版のビルド))。
+OpenMPI に切り替えてください([4章](#4-mpi-ハイブリッド版のビルド))。
 
 **コンパイラを替えたら大量のエラーが出る**
 serial モードでのコンパイラ本体切替だけは自動検出されません。

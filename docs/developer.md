@@ -3820,7 +3820,7 @@ wave・chichibu の逐次回帰 PASS。
   (wave 30 min 相当)が変更前バイナリとビット一致、chichibu の
   MPI np=1,2,4 PASS、`ulimit -s 512` で従来クラッシュした chichibu
   が完走(修正の実証)。
-- install.md §6 の ulimit 案内は保険として維持(式の一時配列・
+- install.md §7(旧 §6)の ulimit 案内は保険として維持(式の一時配列・
   OpenMP スレッドスタック・将来の変更のため)。
 - 発見事項(未対処): STG(f_gridsystem=1)は chichibu 構成
   (実地形+降雨+乾き出発)で初回ステップに FPE 停止する(本変更前
