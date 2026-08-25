@@ -72,8 +72,21 @@ pwd        # → you are there if it shows .../ENCflow/tutorials/wave
 
 Make it a habit to **confirm with `pwd` after every move** — it
 avoids the single most common terminal stumble, "the command fails
-because I am in the wrong place". The commands you will use are
-listed in the cheat sheet below.
+because I am in the wrong place".
+
+In WSL (Ubuntu), the **prompt** (the text shown to the left of where
+you type) also always shows your current location:
+
+```
+username@machine:~/ENCflow/test/wave$
+```
+
+The part between `:` and `$` is where you are. The leading `~`
+(tilde) means your **home directory** — the place you start in right
+after logging in / opening WSL (its real path is `/home/username`).
+Typing just `cd` takes you back to the home directory at any time.
+
+The commands you will use are listed in the cheat sheet below.
 
 ## These are all the commands you need (cheat sheet)
 
