@@ -119,7 +119,7 @@ catchment mask from files, and that `&list_precip` makes it rain.
 
 The screen output tells us the following.
 
-- `number of valid cells : 17885` -- the full grid has 280 x 150 =
+- `number of valid cells: 17885` -- the full grid has 280 x 150 =
   42,000 cells, but thanks to the catchment mask only 17,885 cells are
   actually computed. Cells outside the mask consume neither memory nor
   computation time.
