@@ -128,9 +128,26 @@ two ways to get there:
 If you followed the steps above, ENCflow is at
 `\\wsl$\Ubuntu\home\username\ENCflow`. You will visit this place
 often, so right-click the folder and **pin it to Quick access**.
-Edit parameter files with Notepad or VS Code, open the text/CSV
-results in Excel, and open the GeoTIFF outputs in GIS software
-directly.
+
+## Viewing and editing files
+
+Parameter files (`param_step1.txt` etc.) and the results and logs are
+plain text files. There is no need to learn a terminal editor (vim
+and the like) — open the directory in Explorer as in the previous
+section and view/edit them **just like ordinary Windows files**.
+
+- Text files (`.txt`) open in Notepad (or similar) with a double
+  click. Other extensions (`.plt`, `.hdr`, ...) open via right-click
+  → "Open with" → "Notepad".
+- Edit in Notepad and **save — the WSL-side computation uses the file
+  as-is** (Windows and WSL see the same actual file, so no copying or
+  transferring is needed).
+- Open the CSV results in Excel and the GeoTIFF outputs in GIS
+  software (QGIS etc.) directly.
+- When creating a new parameter file, rather than Notepad's "Save
+  as", it is safer to **copy first in the terminal** — e.g.
+  `cp param_step1.txt param2.txt` — and then open and edit the copy
+  (this avoids accidents with the save location and file format).
 
 For serious use, [VS Code](https://code.visualstudio.com/) with the
 "WSL" extension is comfortable (editing, terminal, and file browsing
