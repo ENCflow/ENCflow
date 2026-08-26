@@ -41,6 +41,18 @@ single program with a single input system. Processes you do not need
 are simply left unactivated — and each additional configuration file
 you drop in makes the model one step smarter.
 
+ENCflow is also designed to **lower the barrier to running a first
+computation outside your own field**. When a river engineer wants to
+try groundwater, a geomorphologist wants to try floods, or a
+hydrologist wants to try sediment or water quality, there is no need
+to learn an entirely new modeling system — you keep the same grid and
+the same input system, and add the processes you need one at a time.
+Estimate with a simple model whether a process matters, and move on to
+a specialist model of that field only once you know it does. ENCflow
+is also a **common ground for that first step** (what it lowers is the
+barrier to *trying*: interpreting the results still takes the
+knowledge of the field).
+
 **All you need is a Fortran compiler.** Zero external libraries. The
 same source code runs unchanged on a student's laptop, a lab
 workstation, or a supercomputer. On a laptop, OpenMP automatically uses
