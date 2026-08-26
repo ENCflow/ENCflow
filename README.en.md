@@ -189,7 +189,8 @@ far even without software optimized for the purpose, ENCflow is a
 powerful tool in the hands of each field's experts. Just as Excel
 serves those beginning to learn accounting, ENCflow serves
 researchers and students entering a neighboring field as the entry
-point where they first compute and understand its phenomena. And just
+point where they first compute and understand its phenomena (with
+[support from an AI agent](docs/en/ai_guide.md) available as well). And just
 as Excel is not dedicated to accounting, ENCflow aims to be a common
 platform for numerical experiments shared across disciplines.
 
