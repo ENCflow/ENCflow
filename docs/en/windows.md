@@ -22,11 +22,15 @@ makes everything that follows look familiar.
 ## 2. To continue, use WSL (the standard Linux environment on Windows)
 
 WSL is an official Microsoft feature that puts Ubuntu (Linux) inside
-Windows. Installation is a single command in PowerShell (as
-administrator):
+Windows. Installation is a single command in PowerShell opened **as
+administrator**: search for "PowerShell" in the Start menu (or the
+taskbar search box), then **right-click "Windows PowerShell" →
+"Run as administrator"** (answer "Yes" when asked "Do you want to
+allow this app to make changes to your device?"). In the blue window
+that opens, type the following and press Enter:
 
 ```powershell
-wsl --install
+wsl --install    # install WSL and Ubuntu
 ```
 
 After a reboot, open Ubuntu from the Start menu, choose a user name
@@ -34,10 +38,10 @@ and password, and then follow the
 [installation guide](install.md):
 
 ```bash
-sudo apt update && sudo apt install -y gfortran make git
-git clone https://github.com/ENCflow/ENCflow.git
-cd ENCflow/src && make install
-cd ../test/wave && ./Run.sh
+sudo apt update && sudo apt install -y gfortran make git   # install the compiler etc.
+git clone https://github.com/ENCflow/ENCflow.git           # fetch all of ENCflow
+cd ENCflow/src && make install                             # move there and build
+cd ../test/wave && ./Run.sh                                # run an example to verify
 ```
 
 If you get stuck, see Microsoft's

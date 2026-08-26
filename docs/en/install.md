@@ -1,4 +1,4 @@
-> English mirror of docs/install.md (based on commit ffe38ee). The Japanese file is the master copy.
+> English mirror of docs/install.md (based on commit 7401b91). The Japanese file is the master copy.
 
 # Installation Guide
 
@@ -33,20 +33,22 @@ sudo apt install -y git gfortran make
 brew install gcc    # gfortran ships with gcc
 ```
 
-Then, on any platform:
+Then, on any platform. `git clone` copies (clones) a repository
+published on GitHub — the whole project, with source code, examples,
+and documentation — onto your own PC:
 
 ```bash
-git clone https://github.com/ENCflow/ENCflow.git
-cd ENCflow/src
-make install        # -> ../bin/encflow is created
+git clone https://github.com/ENCflow/ENCflow.git   # copy the whole repository here
+cd ENCflow/src                                     # move into the source directory
+make install                                       # build -> ../bin/encflow is created
 ```
 
 Verify the installation (this runs the first example and
 automatically compares it against the verified results):
 
 ```bash
-cd ../test/wave
-./Run.sh
+cd ../test/wave    # move into the first example's directory
+./Run.sh           # run and auto-compare against the verified results
 ```
 
 If the last line reads `=== regression test PASS ===`, your build of
