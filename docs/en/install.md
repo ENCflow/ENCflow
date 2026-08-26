@@ -1,4 +1,4 @@
-> English mirror of docs/install.md (based on commit 5219fac). The Japanese file is the master copy.
+> English mirror of docs/install.md (based on commit 5760f4d). The Japanese file is the master copy.
 
 # Installation Guide
 
@@ -95,12 +95,10 @@ sudo dnf install -y gnuplot
 `gnuplot --version` confirms the installation and version.
 
 For 3D visualization and animation (Step 7 of the chichibu tutorial),
-we use **ParaView**. Installing the binaries from the
-[official site](https://www.paraview.org/download/) (Windows / macOS /
-Linux) is the most reliable route; package managers also work (again,
-pick the one line for your environment):
+we use **ParaView**. You can install it with your package manager
+(again, pick the one line for your environment):
 
-Ubuntu / Debian:
+Ubuntu / Debian (including WSL):
 
 ```bash
 sudo apt install -y paraview
@@ -112,10 +110,15 @@ macOS (Homebrew):
 brew install --cask paraview
 ```
 
-If you compute inside WSL, install ParaView **on the Windows side**
-and open the result files through the Explorer path `\\wsl$\...` (or
-place results under `/mnt/c/...`); with WSLg enabled, ParaView inside
-WSL also works.
+This works in WSL too: on recent Windows (or older Windows kept up to
+date with Windows Update) WSLg is enabled, so the window of the
+apt-installed ParaView appears as-is.
+
+If you prefer, you can instead install the binaries from the
+[official site](https://www.paraview.org/download/) (Windows / macOS /
+Linux). When you compute inside WSL, installing ParaView **on the
+Windows side** is convenient: you can open the result files through
+the Explorer path `\\wsl$\...` (or place results under `/mnt/c/...`).
 
 ## 3. How the installation works
 

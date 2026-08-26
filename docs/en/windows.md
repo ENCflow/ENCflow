@@ -45,9 +45,8 @@ cd ../test/wave && ./Run.sh                                        # run an exam
 ```
 
 The first line also installs **gnuplot**, used for plotting in the
-tutorials. The other visualization tool, **ParaView** (3D views; not
-needed until Step 7 of the chichibu tutorial), is easiest to install
-**on the Windows side** when you compute in WSL — see
+tutorials. For the other visualization tool, **ParaView** (3D views;
+not needed until Step 7 of the chichibu tutorial), see
 [section 2 of the installation guide](install.md) when you get there.
 
 If you get stuck, see Microsoft's
