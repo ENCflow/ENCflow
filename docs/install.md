@@ -5,6 +5,7 @@ ENCflow のインストールは「Fortran コンパイラを用意して `make 
 生成物はリポジトリ内の `bin/` に置かれるだけなので、消したくなったら
 ディレクトリごと削除すれば元通りです。
 
+- Windows の方・Unix がはじめての方 → [Windows での使い方](windows.md)
 - まず動かしたい → [1. 5分で動かす](#1-5分で動かす)
 - チュートリアルの図化に → [2. 可視化ツールの準備](#2-可視化ツールの準備gnuplotparaview)
 - 複数コアで速く → 何もしなくても並列です([3.3](#33-openmp-並列は最初から有効))
@@ -14,11 +15,15 @@ ENCflow のインストールは「Fortran コンパイラを用意して `make 
 
 ## 1. 5分で動かす
 
+> **Unix / Linux がはじめての方・Windows の方は、まず
+> [Windows での使い方](windows.md) へ。** WSL(Windows 標準の
+> Linux 環境)の導入から、ターミナルの基本、ファイルのやりとり
+> まで、迷わない順路で案内しています。本章は、ターミナル(WSL の
+> Ubuntu を含む)が使える状態からの手順です。
+
 必要なのは git と gfortran だけです。
 
-**Ubuntu / Debian / WSL**(Windows の方は WSL の Ubuntu を推奨。
-WSL の導入と Unix がはじめての方向けの案内は
-[Windows での使い方](windows.md) へ):
+**Ubuntu / Debian / WSL**:
 
 ```bash
 sudo apt install -y git gfortran make
