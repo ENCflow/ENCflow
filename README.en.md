@@ -181,6 +181,18 @@ glacial lake outburst floods, and more), see the
 case described in the words of the phenomenon**, without looking
 anything up yourself.
 
+The relationship between ENCflow and each field resembles the one
+between Excel and accounting. Just as having Excel does not make you
+an accountant, having ENCflow does not make you an expert in any of
+these fields. But just as an accountant with Excel can get remarkably
+far even without software optimized for the purpose, ENCflow is a
+powerful tool in the hands of each field's experts. Just as Excel
+serves those beginning to learn accounting, ENCflow serves
+researchers and students entering a neighboring field as the entry
+point where they first compute and understand its phenomena. And just
+as Excel is not dedicated to accounting, ENCflow aims to be a common
+platform for numerical experiments shared across disciplines.
+
 ## What it deliberately does not do
 
 ENCflow intentionally stays within the two-dimensional
