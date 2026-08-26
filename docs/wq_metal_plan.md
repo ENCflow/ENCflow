@@ -16,8 +16,8 @@ handoff.md 1l の W3 構想に突き合わせて判定した。
 > (W3 = §4 方式B+wq_rg)を実装済み**。実装にあたり cg の基底を
 > 幾何面積基底へ変更した(横輸送の台帳閉合を gv・wfrac の分布に
 > よらず厳密にする条件。save_version 更新)。決定事項・検証記録の
-> 正本は **developer.md §30.5**。残: test/sewer_wq の wq.csv
-> reference 更新(seep_g 列追加。人間の目視確認後)。Phase 2(K1)・
+> 正本は **developer.md §30.5**(恒常テスト test/gwseep も収載済み。
+> sewer_wq の wq.csv reference は許可を得て更新済み)。Phase 2(K1)・
 > Phase 3(貯水池 M/V)・保留項は未着手。
 
 ---
