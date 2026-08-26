@@ -38,11 +38,17 @@ and password, and then follow the
 [installation guide](install.md):
 
 ```bash
-sudo apt update && sudo apt install -y gfortran make git   # install the compiler etc.
-git clone https://github.com/ENCflow/ENCflow.git           # fetch all of ENCflow
-cd ENCflow/src && make install                             # move there and build
-cd ../test/wave && ./Run.sh                                # run an example to verify
+sudo apt update && sudo apt install -y gfortran make git gnuplot   # install the compiler etc. and the plotting tool
+git clone https://github.com/ENCflow/ENCflow.git                   # fetch all of ENCflow
+cd ENCflow/src && make install                                     # move there and build
+cd ../test/wave && ./Run.sh                                        # run an example to verify
 ```
+
+The first line also installs **gnuplot**, used for plotting in the
+tutorials. The other visualization tool, **ParaView** (3D views; not
+needed until Step 7 of the chichibu tutorial), is easiest to install
+**on the Windows side** when you compute in WSL — see
+[section 2 of the installation guide](install.md) when you get there.
 
 If you get stuck, see Microsoft's
 [WSL installation guide](https://learn.microsoft.com/en-us/windows/wsl/install).
