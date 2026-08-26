@@ -1,9 +1,9 @@
-> English mirror of docs/comparison.md (based on commit 9c01a35). The Japanese file is the master copy.
+> English mirror of docs/comparison.md (based on commit 826944f). The Japanese file is the master copy.
 
 # Comparison with Other Simulation Software (comparison.md)
 
-Survey as of 2026-08-10 (later additions to the findings are dated
-individually). It assumes the current state of ENCflow's feature
+Survey as of 2026-08-10, updated since (source-check dates are
+noted inline). It assumes the current state of ENCflow's feature
 implementation (complete up to shallow water + channels + structures
 + runoff + evapotranspiration + two-layer groundwater + sediment +
 water quality + buildup-washoff + snow + long-term landscape
@@ -101,8 +101,8 @@ Sources (confirmed 2026-08-10):
   stack). The reach of a single source from educational use (a laptop)
   to vector machines and supercomputers contrasts with TUFLOW's demo
   limits and the commercial GUI-first products.
-- (Added 2026-08-14, updated 2026-08-16) In addition to features, a
-  first full round of user-facing groundwork is now in place: a
+- **Ease of adoption (self-teachability)**: as user-facing
+  groundwork, it ships a
   20-chapter user's guide plus a full parameter index (453 entries),
   annotated namelist samples for every feature
   (examples/List_samples), and 2 hands-on tutorials (minimal example
@@ -112,8 +112,8 @@ Sources (confirmed 2026-08-10):
   material). Pre/post-processing utilities are also bundled (utils/:
   depression removal rmdepress_river, catchment delineation
   calc_catchmentarea, land-use-to-mask lu2mask, VTK conversion
-  out2vtk, and more). In the comparison of adoption cost
-  (self-teachability), it also ranks high among the open players.
+  out2vtk, and more). In the comparison of adoption cost it also
+  ranks high among the open players.
   User-facing documentation now has a full Japanese-English mirror
   (docs/en/ and the tutorials' en/); the remaining English gap is
   only in the developer documentation (developer.md etc. are
@@ -121,7 +121,7 @@ Sources (confirmed 2026-08-10):
   presuppose finalizing "free and fully open" (restoration of the
   license notice; Sec. 34.3).
 
-- (Added 2026-08-19) **AI-agent orientation**: on top of the fully
+- **AI-agent orientation**: on top of the fully
   text-based input and output (no GUI dependency), ENCflow ships a
   documentation system that lets "phenomenon -> features -> parameters"
   be looked up mechanically (use-case gallery, full parameter index,
@@ -137,7 +137,7 @@ Sources (confirmed 2026-08-10):
   repository-level agent groundwork is found at this time (a gap that
   may narrow as other models catch up).
 
-- (Added 2026-08-26) **A third positioning axis — a gateway across
+- **A third positioning axis — a gateway across
   disciplines (screening)**: the value of ENCflow cannot be measured
   only on the axis "is it more precise than each field's specialist
   model?". Because neighboring-field processes can be added one at a
@@ -160,7 +160,7 @@ Sources (confirmed 2026-08-10):
   without expertise" — what is lowered is the barrier to trying, not
   the expertise barrier, and user-facing wording keeps to this line.
 
-- (Added 2026-08-26) **Contrast with two other routes to
+- **Contrast with two other routes to
   integration**: (a) **physics-first integrated hydrology (ParFlow)**
   — the representative open model that tightly couples 3D variably
   saturated Richards flow with land-surface processes (CLM). Superior
