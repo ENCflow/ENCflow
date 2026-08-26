@@ -1,4 +1,4 @@
-> English mirror of docs/install.md (based on commit 5760f4d). The Japanese file is the master copy.
+> English mirror of docs/install.md (based on commit a933140). The Japanese file is the master copy.
 
 # Installation Guide
 
@@ -119,6 +119,11 @@ If you prefer, you can instead install the binaries from the
 Linux). When you compute inside WSL, installing ParaView **on the
 Windows side** is convenient: you can open the result files through
 the Explorer path `\\wsl$\...` (or place results under `/mnt/c/...`).
+
+**Once you have made it this far, you are all set — head to the
+[tutorial](../../tutorials/wave/en/README.md).** The sections from
+Sec. 3 on are for when you want to know how the installation works,
+or when you need MPI or a different compiler (feel free to skip them).
 
 ## 3. How the installation works
 
