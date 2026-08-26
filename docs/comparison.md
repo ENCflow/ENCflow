@@ -24,6 +24,9 @@ buildup-washoff+積雪+長期地形変動まで完了)を前提とする。
 | BASEMENT | ETH Zürich | 無償(商用可) | 非公開(バイナリ配布) | 河床変動に強い |
 | GSSHA | USACE ERDC | 無償 | 公開 | 分布型水文+2D 地表流+地下水+積雪 |
 | SHETRAN | Newcastle 大 | 無償 | 公開(GitHub) | 物理ベース 3D 地下水+積雪 |
+| ParFlow | CSM・LLNL・Bonn 大等 | 無償 | 公開(LGPL) | 3D 変飽和地下水(Richards)+地表流+陸面過程(CLM)の統合水文。MPI・GPU。依存多数(Hypre・HDF5・NetCDF 等) |
+| r.avaflow | Mergili & Pudasaini | 無償 | 公開(GRASS GIS モジュール) | 多相質量流(土石流・雪崩・ラハール・GLOF)。質量流どうしの連鎖に対応(v4, 2025) |
+| CSDMS(Landlab・pymt) | 米 NSF/コロラド大 | 無償 | 公開 | 単一モデルではなくコミュニティ基盤: 200+ モデルの登録庫と BMI 結合枠組み(§3 参照) |
 | ANUGA | ANU/GA | 無償 | 公開 | Python の SWE。氾濫・津波 |
 | GeoClaw | Clawpack 団体 | 無償 | 公開(BSD) | 津波の発生〜伝播〜遡上(AMR)。津波特化 |
 
@@ -38,7 +41,13 @@ buildup-washoff+積雪+長期地形変動まで完了)を前提とする。
 [TUFLOW Licensing](https://wiki.tuflow.com/index.php?title=TUFLOW_Licensing) /
 [CAESAR-Lisflood](https://sourceforge.net/projects/caesar-lisflood/) /
 [Morpho2DH](https://i-ric.org/en/solvers/morpho2dh/)(2026-08-16 確認。
-ソルバ本体のソース公開は確認できず = iRIC 経由のバイナリ配布)
+ソルバ本体のソース公開は確認できず = iRIC 経由のバイナリ配布) /
+[ParFlow](https://github.com/parflow/parflow)(2026-08-26 確認) /
+[r.avaflow v1 論文](https://gmd.copernicus.org/articles/10/553/2017/)・
+[v4 論文](https://gmd.copernicus.org/articles/18/9879/2025/)
+(2026-08-26 確認) /
+[CSDMS 論文](https://gmd.copernicus.org/articles/15/1413/2022/)
+(2026-08-26 確認)
 
 ## 2. プロセスカバレッジの比較(ENCflow 現況との対比)
 
@@ -49,11 +58,11 @@ buildup-washoff+積雪+長期地形変動まで完了)を前提とする。
 | サブグリッド河道(σ断面・幅) | ○ | LISFLOOD-FP(サブグリッド河道), HEC-RAS(1D-2D) | 1セル1水位+σ(h) は独自色 |
 | 構造物(破堤・ポンプ・カルバート・樋門・分水・ダム操作) | ○ | HEC-RAS, TUFLOW, MIKE, SOBEK 系 | 無償・公開勢では手薄な領域 |
 | 降雨流出・遮断・蒸発散 | ○(樹冠・Hamon/Thornthwaite・減率) | RRI, GSSHA, MIKE SHE, SHETRAN | 水理特化勢は持たない |
-| 地下水 | ○ 2層(土層 Boussinesq+風化基岩層)+井戸揚水シンク(2026-08-18) | MIKE SHE(3D), SHETRAN(3D), GSSHA | 平面2次元モデルで2層は少数派。揚水はセル単位シンク(MODFLOW WEL の平面版)で、揚水誘引の海水浸入も淡塩2層との併用で扱える |
+| 地下水 | ○ 2層(土層 Boussinesq+風化基岩層)+井戸揚水シンク(2026-08-18) | MIKE SHE(3D), SHETRAN(3D), GSSHA, ParFlow(3D 変飽和 Richards+CLM) | 平面2次元モデルで2層は少数派。揚水はセル単位シンク(MODFLOW WEL の平面版)で、揚水誘引の海水浸入も淡塩2層との併用で扱える。ParFlow は物理精緻の極(§3) |
 | 海水浸入・淡塩2層 | △ 鋭利界面 2 zone(SWI2 同型。Φs = η+εζ・海側規定水頭・地表塩水層。§47。2026-08-18 プロトタイプ) | MODFLOW+SWI2/SEAWAT, SUTRA, FEFLOW(変密度) | 変密度輸送(SEAWAT/SUTRA)は分散・混合まで解く専用領域。ENCflow は鋭利界面の準静的近似で地表氾濫・潮位と単一時間発展の点が独自(遡上海水の行き先まで一気通貫) |
 | 都市排水・管路網 | △ 管路連続体層(等価被圧連続体・8方向異方通水・被圧サーチャージ・枡交換。§46。2026-08-18 プロトタイプ) | SWMM+2D 結合(TUFLOW, InfoWorks ICM, xpswmm 等の dual drainage) | 世界標準は地表 2D と管路 1D 網の別モデル結合。ENCflow は網を連続体化して単一時間発展で解く独自路線(適用限界の定量化が研究テーマ。gwconduit_plan.md §3)。制御構造物・幹線支配系は原理的に対象外で網モデル結合に譲る |
 | 土砂・地形変化(掃流・浮遊・崩壊・土石流) | ○ MORFAC 付き | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | 土石流・泥流(地すべり起因の流動・堆積)の無償実務勢は Morpho2DH(iRIC)が代表。ENCflow は土石流を流域水文・洪水と同居させる点が異なる |
-| 火山流動・雪崩(岩屑なだれ・dense 火砕流・ラハール・流れ型雪崩) | ○ 等価流体(Voellmy・一定停止応力・f_release。§28.8) | Titan2D, VolcFlow, RAMMS(雪崩), LaharZ(経験則) | 専用勢と同じ SWE+粒状体抵抗則の水準。ENCflow は噴火→流下→堆積→天然ダム→決壊洪水→降雨二次泥流の連鎖を単一モデル・単一計算で追える点が独自(専用勢は単プロセス)。流れ型雪崩も同構成で対象(発生はシナリオ。走路の雪の速度比例連行 f_dbed=4 あり。users_guide/geomorph.md)。希薄系(サージ・噴煙・降灰輸送・煙型雪崩)は対象外と明言(debris_plan.md §5) |
+| 火山流動・雪崩(岩屑なだれ・dense 火砕流・ラハール・流れ型雪崩) | ○ 等価流体(Voellmy・一定停止応力・f_release。§28.8) | Titan2D, VolcFlow, RAMMS(雪崩), r.avaflow(多相・連鎖), LaharZ(経験則) | 専用勢と同じ SWE+粒状体抵抗則の水準。ENCflow は噴火→流下→堆積→天然ダム→決壊洪水→降雨二次泥流の連鎖を単一モデル・単一計算で追える点が独自(専用勢は概ね単プロセス。r.avaflow は Pudasaini 多相モデルで質量流どうしの連鎖 — 崩壊→湖水衝突→GLOF 等 — を扱う点で最も近いが、流域水文・洪水水理・水質との同居はない)。流れ型雪崩も同構成で対象(発生はシナリオ。走路の雪の速度比例連行 f_dbed=4 あり。users_guide/geomorph.md)。希薄系(サージ・噴煙・降灰輸送・煙型雪崩)は対象外と明言(debris_plan.md §5) |
 | 溶岩流(噴火口からの湧き出し・停止・固化) | ○ 深さ平均 Bingham 粘性重力流(等温。η・τ_y 直接入力+速度閾値の固化→地形化。§51、lava_plan.md。2026-08-23) | MOLASSES・Q-LavHA(確率論/CA)、MAGFLOW・LavaSIM(温度結合)、VolcFlow(lava 版) | 実務標準は CA・確率論系(等温・経験則)と温度結合系に二分される。ENCflow の等温 Bingham 拡散はその中間の物理水準で、固化溶岩が地盤 z になり同一ランで降雨・洪水・土砂が新地形上を流れる連鎖(噴火→溶岩原→二次水文応答)が独自。冷却・温度依存粘度は将来枠(lava_plan.md §8)、溶岩と水の熱的相互作用は対象外と明言 |
 | 流木(発生・輸送・堆積) | △ ラスタ場の概算(材積のオイラー輸送+水理的流失・侵食連行・接地堆積。§50。2026-08-21) | iRIC 系の流木個別要素モジュール、IberWood(いずれも個別剛体のラグランジュ追跡) | 世界の主流は個別流木追跡で、橋梁・スリットの幾何的閉塞まで解く(ENCflow はラスタ純化方針により対象外と明言)。ENCflow は流木量の面的ポテンシャル評価(到達・堆積マップ)を洪水・土石流・崩壊と単一時間発展で扱う点が独自(発生の侵食連行はどの侵食プロセスとも自動連動) |
 | 水質(負荷流出・減衰・沈降・buildup-washoff・Kd 二相分配・地下水中輸送・貯水池完全混合) | ○ | MIKE ECO Lab, Delft3D-WAQ, Iber-WQ, GSSHA | 無償・公開で水文+水質+水理の同居は稀。地表・地下・貯水池を跨ぐ物質収支を単一コードで閉じる |
@@ -118,6 +127,19 @@ buildup-washoff+積雪+長期地形変動まで完了)を前提とする。
   しての明文化は developer.md §0 冒頭。なお「専門知識なしで正しい
   結果が得られる」の意ではない — 下げるのは試す障壁であって専門知識の
   障壁ではなく、利用者向け文書の表現もこの線を守る。
+- (追記 2026-08-26)**統合の2つの別路線との対比**:
+  (a) **物理精緻の統合水文(ParFlow)** — 3D 変飽和 Richards+陸面
+  過程(CLM)を密結合で解く公開勢の代表。物理の忠実さでは上位に
+  あるが、HPC・依存スタック(Hypre・HDF5 等)前提で、構造物・土砂・
+  水質・火山系は持たない。ENCflow は鉛直を抽象化した概算路線
+  (developer.md §0 方針5)により、ノート PC からの間口とプロセスの
+  幅で棲み分ける。
+  (b) **結合枠組み(CSDMS: BMI・pymt・Landlab)** — 既存の専用
+  モデル群を標準インターフェースで繋ぐコミュニティ路線。各分野の
+  専用モデルをそのまま使える強みの一方、格子・時間刻み・I/O の整合と
+  モデル間の結び付けは利用者側の作業になる。ENCflow は単一コード・
+  単一時間発展の内製統合で、結合作業なしにプロセスを足せる代わりに、
+  各プロセスは概算水準にとどめる — 相補的な関係にある。
 
 ## 4. 残項目の実装勢と方向性
 
