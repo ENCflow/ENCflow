@@ -1,4 +1,4 @@
-> English mirror of docs/comparison.md (based on commit 3f71a97). The Japanese file is the master copy.
+> English mirror of docs/comparison.md (based on commit 9c01a35). The Japanese file is the master copy.
 
 # Comparison with Other Simulation Software (comparison.md)
 
@@ -74,7 +74,7 @@ Sources (confirmed 2026-08-10):
 | Water quality (load runoff, decay, settling, buildup-washoff, Kd two-phase partitioning, in-groundwater transport, completely mixed reservoirs) | Yes | MIKE ECO Lab, Delft3D-WAQ, Iber-WQ, GSSHA | Free and open coexistence of hydrology + water quality + hydraulics is rare; the mass budget across surface, groundwater and reservoirs closes in a single code |
 | Snow accumulation and snowmelt | Yes: degree-day method (Sec. 31) + infiltration suppression by frozen ground (freezing index; 2026-08-18) | MIKE SHE, GSSHA, SHETRAN (also degree-day family) | For HEC-RAS this is on the HMS side |
 | Glaciers | Yes: degree-day mass balance + SIA flow + sliding + glacial erosion + avalanche redistribution (Sec. 45; 2026-08-16) | Absent from all general-purpose flood models | Detailed ice dynamics remain the domain of dedicated models (PISM, Elmer/Ice, OGGM). Running glaciers alongside flood hydraulics, catchment hydrology, and landform change in a single model has no counterpart |
-| Long-term landform evolution | Yes: weathering, uplift, cyclic forcing (Sec. 32; 2026-08-10) | CAESAR-Lisflood, Landlab, Badlands, FastScape | Driven by real hydraulics, on par with CAESAR-Lisflood. See Sec. 4 |
+| Long-term landform evolution | Yes: weathering, uplift, cyclic forcing (Sec. 32; 2026-08-10) | CAESAR-Lisflood, Landlab, Badlands, FastScape | Driven by real hydraulics, on par with CAESAR-Lisflood. Landlab/Badlands/FastScape are process-law LEMs (simplified hydraulics) occupying a different niche |
 | Parallelization | OpenMP + MPI. **Bit reproducibility regardless of rank count** | TELEMAC/Delft3D use MPI (bit reproducibility not guaranteed) | Deterministic reductions (Sec. 11) are the differentiator |
 | Restart exactness | Yes (module-private save contract; Sec. 7) | Commercial products generally support this | Thorough examples are rare in the open camp |
 
@@ -177,46 +177,3 @@ Sources (confirmed 2026-08-10):
   integration in a single code and a single time evolution: processes
   can be added without coupling work, at the price of keeping each
   process at the screening level — the two routes are complementary.
-
-## 4. Remaining items: who implements them, and directions
-
-- **Snow accumulation and snowmelt**: implemented with the degree-day
-  method (Sec. 31; 2026-08-10). Double-threshold rain/snow
-  partitioning + snowline by elevation lapse rate + direct injection
-  of snowmelt into h. The energy balance method comes after adding
-  radiation and wind speed slots to m_meteo (handoff 1m).
-- **Glaciers**: implemented (m_glacier; Sec. 45; 2026-08-16).
-  Degree-day mass balance (the same idea as OGGM) + SIA ice flow
-  (a nonlinear diffusion solved with the existing conservative
-  two-loop pattern) + Weertman sliding + a sliding-speed power-law
-  erosion rule + avalanche redistribution. Glacial landform formation
-  (cirques etc.) runs as repeated representative years x MORFAC x
-  restart chaining (the same recipe as Sec. 32.3). The design master
-  copy is docs/glacier_plan.md. Detailed ice dynamics (higher-order
-  approximations, ice temperature, calving) are deliberately left to
-  PISM / Elmer/Ice.
-- **Urban drainage / conduit networks**: a prototype conduit continuum
-  layer is implemented (m_gwflow_conduit; developer.md sec. 46;
-  2026-08-18). Against the world-standard dual drainage (a 2D surface
-  model coupled to a separate 1D network model), ENCflow takes the
-  original route of homogenizing the network into an equivalent
-  confined continuum solved in a single time evolution. Direction: a
-  three-way comparison - (a) continuum vs (b) online network coupling
-  (SWMM reference) vs (c) offline one-way - to build an applicability
-  map over cell size x network density x rainfall magnitude (research
-  plan in gwconduit_plan.md secs. 3 and 7). Remaining: preprocessing
-  from sewer GIS (aggregation to 4-component edge conveyances), the
-  trunk-main hybrid (buried channels), and the CFPM2-style threshold
-  flux law. Control structures and trunk-dominated systems are out of
-  scope in principle (ceded to network-model coupling).
-- **Long-term landform evolution**: the supply side (bedrock
-  weathering = soil production function, uplift) and cyclic forcing
-  t_cycle are implemented (Sec. 32; 2026-08-10). Together with the
-  existing transport side (erosion, deposition, and collapse with
-  MORFAC), it can constitute the same "landscape evolution driven by
-  real hydraulics" as CAESAR-Lisflood, with more refined hydraulics.
-  The execution style is repetition of representative hydrology x
-  MORFAC x restart chaining (Sec. 32.3). Remaining: distributed
-  uplift, bulking, demonstration runs (handoff 1n).
-  Landlab/Badlands/FastScape are process-law LEMs (simplified
-  hydraulics) and occupy a separate niche.
