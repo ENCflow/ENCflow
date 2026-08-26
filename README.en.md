@@ -47,11 +47,6 @@ try groundwater, a geomorphologist wants to try floods, or a
 hydrologist wants to try sediment or water quality, there is no need
 to learn an entirely new modeling system — you keep the same grid and
 the same input system, and add the processes you need one at a time.
-Estimate with a simple model whether a process matters, and move on to
-a specialist model of that field only once you know it does. ENCflow
-is also a **common ground for that first step** (what it lowers is the
-barrier to *trying*: interpreting the results still takes the
-knowledge of the field).
 
 **All you need is a Fortran compiler.** Zero external libraries. The
 same source code runs unchanged on a student's laptop, a lab
@@ -246,6 +241,11 @@ are out of scope by design and belong to specialized models
 - **Progressive refinement by design** — start from minimal "it just
   runs" parameters and refine step by step as data becomes available.
   Every feature is built with this philosophy.
+- **A gateway to the field next door** — estimate with a simple model
+  whether a process matters, and move on to a specialist model of that
+  field only once you know it does. ENCflow is also a common ground
+  for that first step (what it lowers is the barrier to *trying*:
+  interpreting the results still takes the knowledge of the field).
 - **Simple text input and output** — matrix text, namelists, and CSV
   (plus GeoTIFF for practical work). Pre- and post-process with GIS,
   Python, Excel — whatever you prefer.
