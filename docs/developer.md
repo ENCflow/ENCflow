@@ -3396,7 +3396,7 @@ wq_metal_plan.md §6(Phase 3)。W1 の 2 つの既知の妥協 —「ダム放�
 ### 設計
 
 - **度日法の最簡構成**(比較先 MIKE SHE/GSSHA/SHETRAN の実務主流と同格。
-  comparison.md §4)。セル別の状態は積雪水量 SWE = s%swe(m 水柱・幾何
+  comparison.md §2)。セル別の状態は積雪水量 SWE = s%swe(m 水柱・幾何
   面積基底)1本のみ。積雪深・密度・冷量・再凍結・昇華・rain-on-snow の
   雪内保持は持たない(§0 方針5・6 の割り切り。文書化済みの妥協)。
   有効化は fn_snow(f_snow=0 で一時無効化)。気温は m_meteo 必須
@@ -3449,7 +3449,7 @@ wq_metal_plan.md §6(Phase 3)。W1 の 2 つの既知の妥協 —「ダム放�
 
 ## 32. 長期地形変動(LEM 化。2026-08-10 実装)
 
-CAESAR-Lisflood 型「実水理駆動の地形進化」路線(comparison.md §4)。
+CAESAR-Lisflood 型「実水理駆動の地形進化」路線(comparison.md §2)。
 既存の輸送側(匍行・掃流・浮遊 E-D・斜面侵食・崩壊・土石流・MORFAC・
 z/sd 共動更新)に、供給側と境界条件を足して LEM として閉じる。
 いずれも &list_geomorph の加算的フラグ(無効時ゼロコスト・ビット一致)。
