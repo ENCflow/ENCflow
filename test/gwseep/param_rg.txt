@@ -1,0 +1,69 @@
+!======================================================================
+! gwseep: wq_rg=1e12(完全不動化)の検定用バリアント
+!   param.txt との差: tt=1800、dir_result=result_rg、wq_rg=1.0e12。
+!   地下へ入った質量が動かない(seep ≈ 0・mass_gw = to_gw)ことを
+!   Check_gwseep.py immobile が検定する(reference 比較はしない)
+!======================================================================
+
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 1800
+  dt_disp = 900
+  dt_file = 2700
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_gwflow = '-'
+  fn_wq = '-'
+  dir_data = 'data_gwseep'
+  dir_result = 'result_rg'
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_check_cfl = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.05
+/
+
+&list_geoinfo
+  nx = 40
+  ny = 20
+  dx = 1.0
+  dy = 1.0
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 0.2
+  sy0 = 0.2
+/
+
+&list_bound
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! greenampt(psif=0 = 定率浸透)
+  f_gwlateral = 1           ! 非線形 Boussinesq 側方流動
+  dt_gwflow = 0             ! 毎ステップ更新
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 360.0
+  gw_psif = 0.0
+/
+
+&list_gwflow_lateral
+  gw_ksh_mmh = 36000.0
+/
+
+&list_wq
+  wq_c0 = 100.0
+  wq_rg = 1.0e12            ! 完全不動化(seep ≈ 0・mass_gw = to_gw の検定)
+/

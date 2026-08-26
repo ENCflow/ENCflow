@@ -3234,6 +3234,11 @@ SWE+粒状体抵抗則の水準 = §0 の範囲内)。
   - MPI: -fcheck=all(-Og)np=2 クリーン完走(S 列は逐次一致)。
     -O2(release)np=1, 2, 4 の C/H/Log が逐次とビット一致、wq.csv の
     台帳 4 列も全桁一致。
+- 恒常テスト: 上記の閉領域斜面ケースを **test/gwseep** として収載
+  (2026-08-26)。回帰(Log.txt + wq.csv、ULP=0。MPI は逐次 reference
+  比較)に加えて、reference 非依存の検定(Check_gwseep.py: 台帳閉合
+  to_gw − seep = mass_gw・総質量保存・輸送の活性、param_rg.txt の
+  wq_rg=1e12 で完全不動化)を毎回実行する。逐次・np=2, 4 PASS 確認済み。
 
 ## 31. 積雪・融雪モジュール m_snow(&list_snow。2026-08-10 実装)
 

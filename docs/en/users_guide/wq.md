@@ -106,6 +106,11 @@ that judgement through R.
   entrainment of the mass absorbed by small retention ponds (rscap)
   are not supported yet (the absorbed mass remains on the surface).
 
+Worked example: [test/gwseep](../../../test/gwseep/) (a closed sloping
+domain cycling infiltration → lateral groundwater flow → seepage →
+re-infiltration, with built-in checks of the ledger closure and the
+immobilization at wq_rg=1e12).
+
 ## Surface buildup + washoff (nonlinear L-Q)
 
 A buildup-washoff mechanism where the load accumulated on the surface

@@ -1,0 +1,69 @@
+!======================================================================
+! gwseep: 水質 W3(地下横輸送+湧出還元)の恒常検定ケース(§30.5)
+!   閉領域の一様斜面(勾配 0.1)に初期湛水 5 cm・濃度 100 mg/L を置き、
+!   浸透(greenampt)→ 地下側方(Boussinesq)→ 下流端で飽和湧出 →
+!   再浸透の循環を 1.5 h 追う。全水・全質量が系内に留まるため、
+!   wq.csv の台帳閉合(to_gw − seep = mass_gw、総質量 = 初期 4000 g)と
+!   濃度の連続性(C ≈ 100)が厳密に検定できる
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 5400
+  dt_disp = 900
+  dt_file = 2700
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_gwflow = '-'
+  fn_wq = '-'
+  dir_data = 'data_gwseep'
+  dir_result = 'result'
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_check_cfl = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.05
+/
+
+&list_geoinfo
+  nx = 40
+  ny = 20
+  dx = 1.0
+  dy = 1.0
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 0.2
+  sy0 = 0.2
+/
+
+&list_bound
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! greenampt(psif=0 = 定率浸透)
+  f_gwlateral = 1           ! 非線形 Boussinesq 側方流動
+  dt_gwflow = 0             ! 毎ステップ更新
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 360.0
+  gw_psif = 0.0
+/
+
+&list_gwflow_lateral
+  gw_ksh_mmh = 36000.0
+/
+
+&list_wq
+  wq_c0 = 100.0             ! 初期濃度(遅延なし wq_rg=1 の既定)
+/
