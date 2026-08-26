@@ -200,6 +200,9 @@ module m_state
     real :: sed_sgrav = 0.0         ! 土粒子の水中比重 s(m_geomorph_init が
                                     ! sed_active とともに設定。fmax の混合密度
                                     ! 係数 ρm/ρw = 1+sC に使用。無効時 0 = 水)
+    real :: sed_wf = 0.0            ! 浮遊砂の沈降速度 (m/s。f_suspend 有効時のみ
+                                    ! >0。m_geomorph_init が設定し、m_wq の
+                                    ! Kd 分配(wq_kd)が粒子態の沈降に読む。§30.6)
     logical :: debris_active = .false. ! 土石流モデルの有効化(m_geomorph_init が
                                     ! 設定。swflow_enc が運動量へ hs を算入し、
                                     ! 抵抗則を切り替える。debris_plan.md §2.3-2.4)

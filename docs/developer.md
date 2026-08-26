@@ -3241,6 +3241,63 @@ SWE+粒状体抵抗則の水準 = §0 の範囲内)。
   to_gw − seep = mass_gw・総質量保存・輸送の活性、param_rg.txt の
   wq_rg=1e12 で完全不動化)を毎回実行する。逐次・np=2, 4 PASS 確認済み。
 
+### 30.6 Kd 平衡二相分配(K1。2026-08-26 実装)
+
+重金属など吸着性物質の溶存態⇄粒子態の平衡分配。wq_metal_plan.md §5 の
+K1(段階1)= 「分配は毎ステップの平衡、輸送する状態は cq 一本のまま、
+相の差は鉛直交換だけに現れる」という最小構成。
+
+- **有効化**: wq_kd(**L/kg**。文献の慣用単位。内部で m3/kg へ換算)。
+  **f_suspend 必須**(浮遊砂濃度が分配の分母。wq init は geomorph init
+  より先のため、最初の calc で遅延検査 — gwc_checked と同じ流儀。
+  f_debris の hs は流動体の固相で対象外 = s%sed_wf > 0 で判別)。
+  **wq_vs と排他**(Kd 有効時の沈降速度は浮遊砂の wf で決まるため)。
+- **分配**: 溶存率 fd = 1/(1 + Kd·Css)、Css = hs·ρs/vh(kg/m3。
+  ρs = (s%sed_sgrav + 1)·ρw、vh = σ・幅の矩形換算水深 = 濃度 cqc と
+  同じ基底)。浮遊砂なし・水なしのセルは fd = 1(全量溶存扱い)。
+  状態の追加はなく save 形式は不変(fd は毎ステップの導出量)。
+- **適用先**(既存機構の係数化のみ):
+  - 浸透同伴(f_wq_infil=1): 同伴質量を fd 倍(粒子態は土中に濾し
+    取られず地表残留)。
+  - 沈降: fp = 1 − fd 分の cq が**浮遊砂の沈降速度 s%sed_wf** で沈む
+    (w = cq·fp·min(wf·Δt/vh, 1)。wf は m_geomorph_init が
+    init_suspend の後に s%sed_wf へ公開する)。行き先は f_wq_settle の
+    既存機構(=1 の bp プール推奨 — せん断洗い出しが再懸濁を担い、
+    河床金属の蓄積↔再懸濁が閉じる)。f_wq_settle=1 の必須条件は
+    「wq_vs か wq_kd のどちらか」に緩和。
+  - 水平移流は cq 一本のまま(両相とも水柱と同速で動くため分ける
+    必要がない — 差が出るのは鉛直・河床交換だけ)。
+- **沈降式の意味論**: w = fp·cq·wf/vh は「金属/砂 質量比 × 砂の
+  沈着フラックス wf·Css」と恒等 = 粒子態金属のグロス沈着。浮遊砂側の
+  E-D が正味浸食のセルでも粒子態金属は沈着し、河床側からの再懸濁は
+  bp プール+せん断洗い出しが別途担う(グロス双方向交換の近似)。
+- **管路連携(fxci)・ダム捕捉は総量のまま**(枡・捕捉帯に飲まれる
+  水柱は懸濁粒子ごと飲まれる)。wq_rg(W3)とは独立に併用可
+  (地表の分配と地下の遅延はそれぞれの係数)。
+- **K2(保留)**: E-D フラックスとの厳密結合(記録契約+河床交換層の
+  金属/砂比)は、K1 の実流域適用で不足が示されてから
+  (wq_metal_plan.md §5)。
+
+#### 検証記録(2026-08-26。gfortran 13/OpenMPI)
+
+- 無効時(wq_kd 未指定): 全回帰 26 スイート PASS
+  (gwseep・sewer_wq の wq 有効ケースを含む逐次ビット一致)。
+- kdpart ケース(test/kdpart として収載。suspend と同じ閉領域ダム
+  ブレイクに中央点源 50 g/s + greenampt 浸透 + Kd=200 L/kg +
+  f_wq_settle=1、8 s):
+  - 閉合: in_point 400 g = mass_surface + mass_gw + mass_pool が
+    出力全桁一致(Kd=200・2e5 の両方)。
+  - 単調性: Kd 1000 倍で settle_g 1.50 → 38.2 g(増)、
+    to_gw_g 4.44e-2 → 2.74e-2 g(減)— fd の浸透抑制と fp 沈降の
+    両経路の向きを分離確認(hs=0 のセルは fd=1 のため to_gw は
+    ゼロにはならない = 設計どおり)。
+  - リスタート往復(4s save→8s): C/H/B 場と Log がビット一致。
+  - MPI: -fcheck=all(-Og)np=2 クリーン完走。-O2(release)
+    np=2, 4 の Log.txt + wq.csv が逐次 reference と ULP=0、
+    閉合検定も PASS。
+- 恒常テスト: 回帰(Log.txt + wq.csv、ULP=0)+ reference 非依存の
+  検定(Check_kdpart.py: closure / activity / monotonic)を毎回実行。
+
 ## 31. 積雪・融雪モジュール m_snow(&list_snow。2026-08-10 実装)
 
 ### 設計

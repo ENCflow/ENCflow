@@ -4,10 +4,11 @@
 
 [Back to the User's Guide index](../users_guide.md)
 
-Handles load input, advective transport, decay, settling, and
-infiltration entrainment of a single substance. Usable for runoff
-analyses of pollutant loads, radionuclide migration, tracer
-experiments, and so on. Enable it with `fn_wq`.
+Handles load input, advective transport, decay, settling,
+infiltration entrainment, Kd two-phase partitioning, and transport
+through groundwater of a single substance. Usable for runoff analyses
+of pollutant loads, radionuclide migration, basin-scale heavy-metal
+transport, tracer experiments, and so on. Enable it with `fn_wq`.
 
 ```
 &list_wq
@@ -26,7 +27,8 @@ experiments, and so on. Enable it with `fn_wq`.
 | f_wq | 1 | 0 temporarily disables while keeping the file |
 | wq_c0 | 0 | Initial concentration (mg/L, uniform) |
 | wq_thalf / wq_k20 | - | Decay: half-life (day) or first-order decay coefficient (1/day). Mutually exclusive |
-| wq_vs | - | Settling velocity (m/day). Loss from surface water to the riverbed |
+| wq_vs | - | Settling velocity (m/day). Loss from surface water to the riverbed (single-phase approximation; mutually exclusive with wq_kd) |
+| wq_kd | - | Equilibrium partition coefficient (L/kg). Two-phase dissolved/particulate partitioning (below; requires f_suspend) |
 | f_wq_settle | 0 | Destination of settling. 0: lost to the riverbed, 1: to the surface buildup pool (resuspension cycle) |
 | f_wq_infil | 1 | Behavior at infiltration. 0: remains on the surface (for particulate substances), 1: entrained at the current concentration into the subsurface pool (for dissolved substances) |
 | wq_rg | 1 | Retardation factor R (>= 1) for subsurface transport. Reduces the effective concentration of groundwater advection and seepage return to 1/R (see "Transport through groundwater" below) |
@@ -73,6 +75,42 @@ distribution over the whole domain
 **Boundary inflow concentration** - per segment-inflow number of
 [Boundary conditions](boundary.md), `wq_in_conc(n)` (constant) or
 `wq_in_series(:,:,n)` (time series).
+
+## Two-phase partitioning of sorbing substances (Kd; e.g. heavy metals)
+
+Substances that sorb strongly onto suspended sediment, such as heavy
+metals, are treated as an equilibrium two-phase (dissolved +
+particulate) substance when `wq_kd` (equilibrium partition
+coefficient, L/kg) is given. [Suspended sediment](geomorph.md)
+(`f_suspend`) is required (the partitioning needs a sediment
+concentration; without it the run stops with an error).
+
+Every step and cell, the dissolved fraction fd = 1/(1 + Kd·Css)
+(Css: suspended-sediment mass concentration, kg/m³) is evaluated, and
+
+- **infiltration** entrains only the dissolved fraction fd into the
+  ground (the particulate fraction is filtered out and remains on the
+  surface),
+- **settling** removes the particulate fraction (1 − fd) at the
+  **same settling velocity as the suspended sediment** (`wq_vs` is no
+  longer needed; specifying both is an error). The destination is
+  `f_wq_settle`, and **1 (the surface buildup pool) is recommended** —
+  combined with shear washoff (`wq_wash_kf`) it closes the cycle of
+  resuspension during floods and bed accumulation during low flow.
+- Advection carries the total mass with the water (dissolved and
+  suspended particles move at the same velocity; the phases differ
+  only vertically).
+
+Kd varies by orders of magnitude with the substance, the sediment and
+the water chemistry (pH etc.). Literature orders of magnitude are
+roughly Pb: 10⁴–10⁶, Cu/Zn/Cd: 10³–10⁵, As: 10¹–10³ L/kg, but
+**back-calculating from observed particulate/dissolved ratios in the
+target basin is more reliable**. Sorption retardation in groundwater
+is given separately by `wq_rg` (below).
+
+Worked example: [test/kdpart](../../../test/kdpart/) (a suspended-
+sediment dam break plus a point source, with built-in checks of the
+ledger closure and the monotonic response to increasing Kd).
 
 ## Transport through groundwater (infiltration → lateral flow → seepage)
 

@@ -17,8 +17,10 @@ handoff.md 1l の W3 構想に突き合わせて判定した。
 > 幾何面積基底へ変更した(横輸送の台帳閉合を gv・wfrac の分布に
 > よらず厳密にする条件。save_version 更新)。決定事項・検証記録の
 > 正本は **developer.md §30.5**(恒常テスト test/gwseep も収載済み。
-> sewer_wq の wq.csv reference は許可を得て更新済み)。Phase 2(K1)・
-> Phase 3(貯水池 M/V)・保留項は未着手。
+> sewer_wq の wq.csv reference は許可を得て更新済み)。
+> **Phase 2(K1 = §5 の Kd 平衡分配)も実装済み(2026-08-26。wq_kd /
+> developer.md §30.6 / test/kdpart)**。Phase 3(貯水池 M/V)・
+> K2(E-D 結合)・保留項(分散・TVD)は未着手。
 
 ---
 

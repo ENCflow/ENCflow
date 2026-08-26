@@ -30,6 +30,13 @@ module m_wq
   !           遅延化係数 wq_rg(R >= 1。平衡吸着の遅延)は側方移流と
   !           湧出の実効濃度を 1/R に落とす(s%cg_rginv 経由で lateral に
   !           渡す。R→∞ で不動化)。層2(cg2)・gwflow_bucket 系は将来拡張
+  !   分配:   wq_kd(L/kg)指定で溶存⇄粒子態の平衡二相分配(K1。§30.6)。
+  !           溶存率 fd = 1/(1 + Kd·Css)、Css = hs·ρs/vh(要 f_suspend —
+  !           geomorph init が後のため最初の calc で遅延検査)。浸透同伴は
+  !           fd 分のみ、沈降は fp = 1 − fd 分が浮遊砂の沈降速度 s%sed_wf
+  !           で沈む(wq_vs と排他)。水平移流は cq 一本のまま(両相とも
+  !           水柱と同速 — 差が出るのは鉛直・河床交換だけ)。再懸濁は
+  !           f_wq_settle=1 + 洗い出し(せん断項)の既存機構が担う
   !   管路:   wq_gwc_conc(mg/L)指定で管路連続体層(f_gwconduit)と連携
   !           (下水噴出の衛生リスク評価。供給側固定濃度近似 = 管内の
   !           質量は解かず、噴出・陸側開放吐口の水量 s%fxco に固定濃度を
@@ -109,6 +116,9 @@ module m_wq
     logical :: gwc_checked = .false.                ! f_gwconduit 有効性の遅延検査済み
     real :: fdec = 1.0                              ! 1ステップの減衰係数 exp(-k·dt)(1=減衰なし)
     real :: vs = 0.0                                ! 沈降速度 (m/s。0=なし)
+    real :: kdsi = -1.0                             ! 平衡分配係数 Kd (m3/kg。負 = 分配無効。§30.6)
+    logical :: kd_checked = .false.                 ! f_suspend 有効性の遅延検査済み
+    real :: rhos = 0.0                              ! 土粒子密度 ρs (kg/m3。= (s+1)·ρw。遅延検査で設定)
     integer :: npt = 0, nar = 0
     type(t_wqsrc), allocatable :: pt(:), ar(:)
     integer :: nin = 0                              ! 境界流入濃度の指定数
@@ -210,6 +220,17 @@ subroutine m_wq_init(wq, p, g, b, s)
   if (list%wq_vs > -9998.0) then
     if (list%wq_vs < 0.0) call par_stop("list_wq: wq_vs must be >= 0")
     wq%vs = list%wq_vs / secday
+  end if
+
+  ! --- 平衡分配係数 Kd(K1。溶存⇄粒子態の二相分配。§30.6)---
+  !     f_suspend の有効性は geomorph init が後のため最初の calc で遅延検査
+  if (list%wq_kd > -9998.0) then
+    if (list%wq_kd <= 0.0) call par_stop("list_wq: wq_kd must be > 0 (L/kg)")
+    if (list%wq_vs > -9998.0) then
+      call par_stop("list_wq: wq_kd and wq_vs are mutually exclusive (with Kd the " &
+                    //"particulate fraction settles at the suspended-sediment velocity)")
+    end if
+    wq%kdsi = list%wq_kd * 1.0e-3                   ! L/kg -> m3/kg
   end if
 
   ! --- 発生源グループの解釈(点源・面源) ---
@@ -601,8 +622,8 @@ subroutine setup_pool(wq, p, g, s, list)
     call par_stop("list_wq: f_wq_settle must be 0(lost to the bed) or 1(to the pool)")
   end if
   wq%f_settle = list%f_wq_settle
-  if (wq%f_settle == 1 .and. wq%vs <= 0.0) then
-    call par_stop("list_wq: f_wq_settle=1 requires wq_vs (settling velocity)")
+  if (wq%f_settle == 1 .and. wq%vs <= 0.0 .and. wq%kdsi <= 0.0) then
+    call par_stop("list_wq: f_wq_settle=1 requires settling, one of wq_vs or wq_kd")
   end if
 
   ! --- 初期プール(一様か分布の排他) ---
@@ -742,11 +763,22 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
   type(t_state), intent(inout) :: s
   integer, intent(in) :: it
   integer :: i, j, k, m, nd
-  real :: w, rate, fx
+  real :: w, rate, fx, fp
   real(real64) :: acell
 
   if (it < 0) continue  ! 引数未使用の警告を抑制
   if (.not. wq%enabled) return
+
+  ! Kd 分配の前提の遅延検査(wq init は geomorph init より先のため。
+  ! 判定は全ランク同一 = par_stop も同時。§30.6)
+  if (wq%kdsi > 0.0 .and. .not. wq%kd_checked) then
+    if (.not. s%sed_active .or. s%sed_wf <= 0.0) then
+      call par_stop("list_wq: wq_kd requires suspended sediment " &
+                    //"(f_suspend=1 in fn_geomorph)")
+    end if
+    wq%rhos = (s%sed_sgrav + 1.0) * rhow            ! 水中比重 s -> ρs (kg/m3)
+    wq%kd_checked = .true.
+  end if
 
   acell = real(g%dx, real64) * real(g%dy, real64)
 
@@ -773,6 +805,10 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
         if (s%cq(i,j) <= 0.0) cycle
         ! 移動割合 = fx / 浸透前水深(浸透後の h に fx を足し戻して復元)
         w = s%cq(i,j) * (fx / max(s%h(i,j) + fx, tiny(fx)))
+        ! Kd 分配有効時は溶存分 fd のみが浸透水に同伴する(粒子態は
+        ! 土中に濾し取られず地表に残留。K1。§30.6)
+        if (wq%kdsi > 0.0) w = w * fd_of(wq, p, i, j, s%h(i,j), s%hs(i,j))
+        if (w <= 0.0) cycle
         s%cq(i,j) = s%cq(i,j) - w
         ! cg は幾何面積基底 = cq 基底(gv×wfrac)から換算して積む
         ! (台帳 to_gw = mass_of(w) = Δcg×A と厳密整合。W3)
@@ -995,9 +1031,11 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
   end do
 
   ! (5) 一次減衰(地表 cq・地下 cg とも。指数厳密解 c·exp(-kΔt)。W2)
-  !     と沈降(地表のみ。線形近似 c·(1 - vs·Δt/vh)、下限 0。W2)
-  if (wq%fdec < 1.0 .or. wq%vs > 0.0) then
-    !$omp parallel do schedule(static) private(i, j, w, fx)
+  !     と沈降(地表のみ。W2/K1)。沈降は wq_vs(単相の線形近似
+  !     c·(1 - vs·Δt/vh)、下限 0)か wq_kd(粒子態 fp = 1 − fd のみが
+  !     浮遊砂の沈降速度 wf で沈む。§30.6)の排他
+  if (wq%fdec < 1.0 .or. wq%vs > 0.0 .or. wq%kdsi > 0.0) then
+    !$omp parallel do schedule(static) private(i, j, w, fx, fp)
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
@@ -1023,17 +1061,29 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
             end if
           end if
         end if
-        if (wq%vs > 0.0 .and. s%cq(i,j) > 0.0) then
+        if ((wq%vs > 0.0 .or. wq%kdsi > 0.0) .and. s%cq(i,j) > 0.0) then
           fx = swflow_vh(i, j, s%h(i,j))
           if (fx > p%dd) then
-            w = s%cq(i,j) * min(wq%vs * p%dt / fx, 1.0)
-            s%cq(i,j) = s%cq(i,j) - w
-            ! 行き先: 消失(河床外)かプール(再懸濁サイクル。f_wq_settle=1)。
-            ! 台帳 settle は行き先によらず沈降量を数える(閉合の解釈は §30)
-            if (wq%f_settle == 1) then
-              s%bp(i,j) = s%bp(i,j) + real(mass_of(g, i, j, w)) / real(acell)
+            if (wq%kdsi > 0.0) then
+              ! K1: 粒子態 fp = 1 − 1/(1 + Kd·ρs·hs/vh) のみが浮遊砂の
+              ! 沈降速度 wf で沈む(浮遊砂なしのセルは沈降なし)
+              fp = 0.0
+              if (s%hs(i,j) > 0.0) then
+                fp = 1.0 - 1.0 / (1.0 + wq%kdsi * wq%rhos * s%hs(i,j) / fx)
+              end if
+              w = s%cq(i,j) * fp * min(s%sed_wf * p%dt / fx, 1.0)
+            else
+              w = s%cq(i,j) * min(wq%vs * p%dt / fx, 1.0)
             end if
-            wq%vrow(j,6) = wq%vrow(j,6) + mass_of(g, i, j, w)
+            if (w > 0.0) then
+              s%cq(i,j) = s%cq(i,j) - w
+              ! 行き先: 消失(河床外)かプール(再懸濁サイクル。f_wq_settle=1)。
+              ! 台帳 settle は行き先によらず沈降量を数える(閉合の解釈は §30)
+              if (wq%f_settle == 1) then
+                s%bp(i,j) = s%bp(i,j) + real(mass_of(g, i, j, w)) / real(acell)
+              end if
+              wq%vrow(j,6) = wq%vrow(j,6) + mass_of(g, i, j, w)
+            end if
           end if
         end if
       end do
@@ -1071,6 +1121,25 @@ subroutine m_wq_derive(wq, p, g, s)
   end do
   !$omp end parallel do
 end subroutine
+
+
+!----------------------------------------------------------------------
+! セル (i,j) の溶存率 fd = 1/(1 + Kd·Css)(K1 平衡分配。§30.6)
+!   Css = hs·ρs/vh = 浮遊砂の質量体積濃度 (kg/m3。vh は σ・幅の矩形換算
+!   水深 = 濃度 cqc と同じ基底)。浮遊砂なし・水なしのセルは fd = 1
+!   (全量溶存扱い)。呼び手は wq%kdsi > 0(かつ遅延検査済み)を保証する
+!----------------------------------------------------------------------
+function fd_of(wq, p, i, j, h, hs) result(fd)
+  type(t_wq), intent(in) :: wq
+  type(t_sysparam), intent(in) :: p
+  integer, intent(in) :: i, j
+  real, intent(in) :: h, hs
+  real :: fd, vh
+  fd = 1.0
+  if (hs <= 0.0) return
+  vh = swflow_vh(i, j, h)
+  if (vh > p%dd) fd = 1.0 / (1.0 + wq%kdsi * wq%rhos * hs / vh)
+end function
 
 
 !----------------------------------------------------------------------

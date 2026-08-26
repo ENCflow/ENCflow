@@ -448,6 +448,9 @@ subroutine m_geomorph_init(gm, p, g, s)
   ! 同じ advect_scalar による hs 輸送を使う
   s%sed_active = (gm%f_suspend > 0 .or. gm%f_debris > 0)
   if (s%sed_active) s%sed_sgrav = gm%sgrav   ! fmax の混合密度係数用(§28.9)
+  ! 浮遊砂の沈降速度(f_suspend のみ。m_wq の Kd 分配が粒子態の沈降に
+  ! 読む — debris の hs は流動体の固相で対象外。§30.6)
+  if (gm%f_suspend > 0) s%sed_wf = gm%wf
 
   ! 土砂系の危険度出力の前提検証(§28.9。配列確保は m_state_init 済み)
   if ((p%f_out_hs > 0 .or. p%f_out_dmax > 0 .or. p%f_out_dmaxt > 0) &

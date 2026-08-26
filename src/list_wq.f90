@@ -25,6 +25,9 @@ module list_wq
     real :: wq_rg = -9999.0                        ! 地下輸送の遅延化係数 R (>=1。平衡吸着の
                                                    !   遅延 = 側方移流・湧出の実効濃度を 1/R に。
                                                    !   省略 = 1(遅延なし)。§30 W3)
+    real :: wq_kd = -9999.0                        ! 平衡分配係数 Kd (L/kg。溶存⇄粒子態の
+                                                   !   二相分配。要 f_suspend。wq_vs と排他。
+                                                   !   省略 = 分配なし(単相)。§30.6)
     real :: wq_thalf = -9999.0                     ! 半減期 (day。放射性核種等。wq_k20 と排他)
     real :: wq_k20 = -9999.0                       ! 一次減衰係数 (1/day。20℃基準。温度補正は将来)
     real :: wq_vs = -9999.0                        ! 沈降速度 (m/day。地表水のみ。河床への消失)
@@ -84,6 +87,7 @@ subroutine list_wq_read(p, list)
   real :: wq_c0
   integer :: f_wq_infil
   real :: wq_rg
+  real :: wq_kd
   real :: wq_thalf, wq_k20, wq_vs
   integer :: wq_pt_cell(1:2,1:nwqcmax,1:nwqgmax)
   character(len=maxpathlen) :: fn_wq_pt_cell(1:nwqgmax)
@@ -110,7 +114,7 @@ subroutine list_wq_read(p, list)
   integer :: ios
   character(len=1024) :: iom
 
-  namelist /list_wq/ f_wq, wq_c0, f_wq_infil, wq_rg, wq_thalf, wq_k20, wq_vs, &
+  namelist /list_wq/ f_wq, wq_c0, f_wq_infil, wq_rg, wq_kd, wq_thalf, wq_k20, wq_vs, &
                      wq_pt_cell, fn_wq_pt_cell, wq_pt_load, wq_pt_series, &
                      wq_ar_cell, fn_wq_ar_cell, wq_ar_load, wq_ar_series, &
                      fn_wq_map, wq_map_factor, f_wq_map, &
@@ -124,6 +128,7 @@ subroutine list_wq_read(p, list)
   wq_c0 = list%wq_c0
   f_wq_infil = list%f_wq_infil
   wq_rg = list%wq_rg
+  wq_kd = list%wq_kd
   wq_thalf = list%wq_thalf
   wq_k20 = list%wq_k20
   wq_vs = list%wq_vs
@@ -164,6 +169,7 @@ subroutine list_wq_read(p, list)
   list%wq_c0 = wq_c0
   list%f_wq_infil = f_wq_infil
   list%wq_rg = wq_rg
+  list%wq_kd = wq_kd
   list%wq_thalf = wq_thalf
   list%wq_k20 = wq_k20
   list%wq_vs = wq_vs
