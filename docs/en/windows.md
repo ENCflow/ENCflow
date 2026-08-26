@@ -2,7 +2,7 @@
 
 > English mirror of docs/windows.md. The Japanese file is the master copy.
 
-ENCflow runs in Linux-like environments. If you have only ever used
+ENCflow runs in Unix-like environments. If you have only ever used
 Windows, that is fine — we recommend the following route.
 
 ## 1. Try it first with zero installation (5 minutes)
@@ -162,6 +162,11 @@ section and view/edit them **just like ordinary Windows files**.
 For serious use, [VS Code](https://code.visualstudio.com/) with the
 "WSL" extension is comfortable (editing, terminal, and file browsing
 in one window).
+
+**Once you have made it this far, you are all set — head to the
+[tutorial](../../tutorials/wave/en/README.md)** (the first tutorial,
+wave, teaches how to run the model, how to read the output, and the
+structure of parameter files, all hands-on).
 
 ## 3. Where WSL is not available
 
