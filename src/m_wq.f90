@@ -16,10 +16,20 @@ module m_wq
   !           地表到達雨量 s%pre×濃度を全域投入(これも重ね合わせ)。
   !           境界流入濃度(区間流入ごと、mg/L)は b%cqin テーブル経由で
   !           輸送カーネルに渡す
-  !   浸透:   f_wq_infil=1(既定)で浸透水に濃度同伴し、地下質量プール cg
-  !           (s%cg。W1 では台帳=横移動なし)へ移す。gwflow の
-  !           鉛直交換が s%fxg に浸透量を記録し、本モジュールが読んで
-  !           ゼロ戻しする契約。0 で地表に残留(粒子態向け)
+  !   浸透:   f_wq_infil=1(既定)で浸透水に濃度同伴し、地下質量プール
+  !           s%cg へ移す。gwflow の鉛直交換が s%fxg に浸透量を記録し、
+  !           本モジュールが読んでゼロ戻しする契約。0 で地表に残留
+  !           (粒子態向け)。cg は幾何面積基底(セル内質量 = cg×A)で
+  !           保持し、cq 基底(gv×wfrac)との換算(gwfac_of)は浸透同伴・
+  !           湧出還元の両端で行う — 地下横輸送(柱状量の対称交換)の
+  !           質量収支が gv・wfrac の分布によらず厳密に閉じる条件(W3)
+  !   地下輸送: 側方流動(f_gwlateral=1)有効時、m_gwflow_lateral が水と
+  !           同じエッジ流量で cg を風上輸送し、飽和湧出には同率移動
+  !           ×1/R を同伴して s%fxs に記録する(W3。§30)。本モジュールは
+  !           fxs を読んで地表 cq へ還元(湧出還元)しゼロ戻しする。
+  !           遅延化係数 wq_rg(R >= 1。平衡吸着の遅延)は側方移流と
+  !           湧出の実効濃度を 1/R に落とす(s%cg_rginv 経由で lateral に
+  !           渡す。R→∞ で不動化)。層2(cg2)・gwflow_bucket 系は将来拡張
   !   管路:   wq_gwc_conc(mg/L)指定で管路連続体層(f_gwconduit)と連携
   !           (下水噴出の衛生リスク評価。供給側固定濃度近似 = 管内の
   !           質量は解かず、噴出・陸側開放吐口の水量 s%fxco に固定濃度を
@@ -35,7 +45,8 @@ module m_wq
   !   蒸発:   純水のみが抜けるため質量は残留(濃縮)= 物理的に正しい。
   !           コード上の連携は不要
   !   save:   s%cq と cg をモジュール私有ファイル wq.dat で保存(§7 の
-  !           契約C と同型。state.dat の形式は不変)
+  !           契約C と同型。state.dat の形式は不変。cg の基底変更
+  !           (2026-08-26)で save_version を更新済み)
   !   診断:   result/wq.csv(投入・境界流入・浸透・ダム捕捉・系外流出は
   !           収支残差として台帳化。rank0、dt_recrd 間隔)。
   !           濃度場 C(m_output)とプローブ・測線負荷列(m_record)は
@@ -122,10 +133,10 @@ module m_wq
     integer :: ndam = 0
     type(t_wqdam), allocatable :: dam(:)
     ! 診断(行部分和 real64。累積 m3 でなく質量 g)
-    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:12) 1=点源 2=面源 3=浸透(→cg)
+    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:13) 1=点源 2=面源 3=浸透(→cg)
                                             !   4=ダム捕捉 5=減衰消失 6=沈降
                                             !   7=分布面源 8=降雨沈着 9=蓄積(→bp)
-                                            !   10=洗い出し(bp→cq)
+                                            !   10=洗い出し(bp→cq) 13=湧出還元(cg→cq)
                                             !   11=管路噴出・吐口の投入 12=枡流入(→管路台帳)
     integer :: un = 0                       ! CSV 装置番号(rank0。open(newunit=) は負値。§22)
   end type
@@ -162,6 +173,16 @@ subroutine m_wq_init(wq, p, g, b, s)
     call par_stop("list_wq: f_wq_infil must be 0(remain at surface) or 1(carry with infiltration)")
   end if
   wq%f_infil = list%f_wq_infil
+
+  ! --- 地下輸送の遅延化係数(W3。平衡吸着の遅延 R = 1 + ρb·Kd/θ を
+  !     物理量として直接与える — 導出は前処理。§0)---
+  if (list%wq_rg > -9998.0) then
+    if (list%wq_rg < 1.0) call par_stop("list_wq: wq_rg must be >= 1 (retardation factor)")
+    if (wq%f_infil /= 1) then
+      call par_stop("list_wq: wq_rg requires f_wq_infil=1 (groundwater mass pool)")
+    end if
+    s%cg_rginv = 1.0 / list%wq_rg
+  end if
 
   ! --- 管路連続体層との連携(下水噴出の衛生リスク評価。§30 追記) ---
   !     f_gwconduit の有効性は gwflow init が後のため最初の calc で遅延検査
@@ -215,6 +236,9 @@ subroutine m_wq_init(wq, p, g, b, s)
   if (wq%f_infil == 1) then
     allocate(s%fxg(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(s%cg(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    ! 湧出同伴質量の記録場(W3。gwflow_lateral が書き、本モジュールが
+    ! 読んで cq へ還元しゼロ戻し。側方無効時は恒久 0 のまま)
+    allocate(s%fxs(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   end if
   if (wq%gwc_conc >= 0.0) then
     ! 管路連携の交換量記録場(fxg と同じ契約。conduit は allocated 判定で
@@ -235,14 +259,14 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- リスタート ---
   if (p%f_state_restore > 0) call restore_state(wq, p, g, s)
 
-  allocate(wq%vrow(dcp%js:dcp%je, 1:12), source = 0.0_real64)
+  allocate(wq%vrow(dcp%js:dcp%je, 1:13), source = 0.0_real64)
 
   ! --- 診断 CSV(rank0。累積はラン先頭からの積算 = restore でリセット) ---
   if (is_root) then
     open(newunit=wq%un, file=trim(p%dir_result)//"/wq.csv", status='replace')
     write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,in_gwc_g," &
-                        //"in_bldup_g,wash_g,to_gw_g,to_gwc_g,to_dam_g,decay_g,settle_g," &
-                        //"mass_surface_g,mass_gw_g,mass_pool_g"
+                        //"in_bldup_g,wash_g,to_gw_g,seep_g,to_gwc_g,to_dam_g,decay_g," &
+                        //"settle_g,mass_surface_g,mass_gw_g,mass_pool_g"
   end if
 
   s%wq_active = .true.
@@ -704,6 +728,7 @@ end subroutine
 ! 水質過程を適用する(毎ステップ。run_main が swflow・gwflow の後に呼ぶ)
 !   順序: (1) 境界流入濃度テーブルの更新(次ステップの移流が読む)
 !         (2) 浸透同伴 cq→cg(gwflow が記録した fxg を消費)
+!         (2a) 湧出還元 cg→cq(gwflow_lateral が記録した fxs を消費。W3)
 !         (3) 発生源の投入
 !         (4) ダム捕捉帯の質量吸収
 !         (5) 導出濃度 cqc の更新
@@ -749,8 +774,29 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
         ! 移動割合 = fx / 浸透前水深(浸透後の h に fx を足し戻して復元)
         w = s%cq(i,j) * (fx / max(s%h(i,j) + fx, tiny(fx)))
         s%cq(i,j) = s%cq(i,j) - w
-        s%cg(i,j) = s%cg(i,j) + w
+        ! cg は幾何面積基底 = cq 基底(gv×wfrac)から換算して積む
+        ! (台帳 to_gw = mass_of(w) = Δcg×A と厳密整合。W3)
+        s%cg(i,j) = s%cg(i,j) + w * gwfac_of(g, i, j)
         wq%vrow(j,3) = wq%vrow(j,3) + mass_of(g, i, j, w)
+      end do
+    end do
+    !$omp end parallel do
+  end if
+
+  ! (2a) 湧出還元(W3): gwflow_lateral の飽和湧出に同伴して地下プールを
+  !      抜けた質量(s%fxs。幾何面積基底)を、水と同じセルの地表 cq へ
+  !      還元する(cq 基底へ換算)。fxg と同型の「lateral が記録し
+  !      本モジュールが消費してゼロ戻し」の契約。側方無効時は恒久 0
+  if (allocated(s%fxs)) then
+    !$omp parallel do schedule(static) private(i, j, fx)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        fx = s%fxs(i,j)
+        if (fx <= 0.0) cycle
+        s%fxs(i,j) = 0.0
+        s%cq(i,j) = s%cq(i,j) + fx / gwfac_of(g, i, j)
+        wq%vrow(j,13) = wq%vrow(j,13) + real(fx, real64) * acell
       end do
     end do
     !$omp end parallel do
@@ -965,7 +1011,8 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
             if (s%cg(i,j) > 0.0) then
               w = s%cg(i,j) * (1.0 - wq%fdec)
               s%cg(i,j) = s%cg(i,j) - w
-              wq%vrow(j,5) = wq%vrow(j,5) + mass_of(g, i, j, w)
+              ! cg は幾何面積基底(質量 = w×A。W3)
+              wq%vrow(j,5) = wq%vrow(j,5) + real(w, real64) * acell
             end if
           end if
           if (wq%have_pool) then
@@ -1027,6 +1074,20 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! セル (i,j) の cq 基底(gv×wfrac)→ cg の幾何面積基底への換算係数(W3)。
+! cg×A = 質量 となる基底に揃えることで、地下横輸送(柱状量の対称交換)の
+! 質量収支が gv・wfrac の分布によらず厳密に閉じる(§30)
+!----------------------------------------------------------------------
+function gwfac_of(g, i, j) result(f)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i, j
+  real :: f
+  f = g%gv(i,j)
+  if (have_width) f = f * wfrac(i,j)
+end function
+
+
+!----------------------------------------------------------------------
 ! セル (i,j) の柱状量 w に対応する質量 (g)(real64)。
 ! 質量 = w × gv × wfrac × A(幅無効時は wfrac=1 の乗算で厳密に不変)
 !----------------------------------------------------------------------
@@ -1070,14 +1131,14 @@ subroutine m_wq_record(wq, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: v(1:12), msur, mgw, mpool, acell
+  real(real64) :: v(1:13), msur, mgw, mpool, acell
   real(real64) :: rows(dcp%js:dcp%je), rows2(dcp%js:dcp%je), rows3(dcp%js:dcp%je)
   integer :: i, j, k
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (.not. wq%enabled) return
 
   acell = real(g%dx, real64) * real(g%dy, real64)
-  do k = 1, 12
+  do k = 1, 13
     call par_sum_rows(wq%vrow(:,k), v(k))
   end do
   rows(:) = 0.0_real64
@@ -1087,7 +1148,8 @@ subroutine m_wq_record(wq, p, g, s)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       rows(j) = rows(j) + mass_of(g, i, j, s%cq(i,j))
-      if (allocated(s%cg)) rows2(j) = rows2(j) + mass_of(g, i, j, s%cg(i,j))
+      ! cg は幾何面積基底(質量 = cg×A。W3)
+      if (allocated(s%cg)) rows2(j) = rows2(j) + real(s%cg(i,j), real64) * acell
       if (wq%have_pool) rows3(j) = rows3(j) + real(s%bp(i,j), real64) * acell
     end do
   end do
@@ -1096,8 +1158,8 @@ subroutine m_wq_record(wq, p, g, s)
   call par_sum_rows(rows3, mpool)
 
   if (is_root .and. wq%un /= 0) then
-    write(wq%un, '(f0.2,15(",",es15.7))') s%t, v(1), v(2), v(7), v(8), v(11), v(9), &
-                                          v(10), v(3), v(12), v(4), v(5), v(6), &
+    write(wq%un, '(f0.2,16(",",es15.7))') s%t, v(1), v(2), v(7), v(8), v(11), v(9), &
+                                          v(10), v(3), v(13), v(12), v(4), v(5), v(6), &
                                           msur, mgw, mpool
     flush(wq%un)
   end if

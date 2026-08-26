@@ -505,6 +505,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | wq_gwc_conc | &list_wq | [水質](wq.md) |
 | wq_rain_conc | &list_wq | [水質](wq.md) |
 | wq_rain_series | &list_wq | [水質](wq.md) |
+| wq_rg | &list_wq | [水質](wq.md) |
 | wq_thalf | &list_wq | [水質](wq.md) |
 | wq_vs | &list_wq | [水質](wq.md) |
 | wq_wash_kf | &list_wq | [水質](wq.md) |

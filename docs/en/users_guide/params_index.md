@@ -499,6 +499,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | wq_pt_series | &list_wq | [Water quality](wq.md) |
 | wq_rain_conc | &list_wq | [Water quality](wq.md) |
 | wq_rain_series | &list_wq | [Water quality](wq.md) |
+| wq_rg | &list_wq | [Water quality](wq.md) |
 | wq_thalf | &list_wq | [Water quality](wq.md) |
 | wq_vs | &list_wq | [Water quality](wq.md) |
 | wq_wash_kf | &list_wq | [Water quality](wq.md) |

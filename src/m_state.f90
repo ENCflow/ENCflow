@@ -117,7 +117,8 @@ module m_state
                                         ! m_wq が担う。確保は m_wq_init(有効時のみ))
     real, allocatable :: cqc(:,:)       ! 体積平均濃度 (mg/L。導出量。m_wq が毎ステップ
                                         ! 更新。σ・河道幅の換算込み。出力・プローブ用)
-    real, allocatable :: cg(:,:)        ! 地下質量プール (g/m2。§30。地下横輸送は
+    real, allocatable :: cg(:,:)        ! 地下質量プール (g/m2。幾何面積基底 =
+                                        ! セル内質量 cg×A。§30 W3。地下横輸送は
                                         ! m_gwflow_lateral がステップ内で行い、
                                         ! 浸透同伴・湧出還元・減衰・保存は m_wq が
                                         ! 担う。確保は m_wq_init(f_wq_infil=1 のみ))
@@ -181,11 +182,19 @@ module m_state
                                         ! wq_gwc_conc 指定かつ f_wq_gwc_in=1 のみ)。§30)
     real, allocatable :: fxco(:,:)      ! 管路→地表(噴出・陸側吐口)交換量の記録 (m。
                                         ! 同上。確保は m_wq_init(管路連携指定時)。§30)
+    real, allocatable :: fxs(:,:)       ! 飽和湧出に同伴した地下質量の記録 (g/m2。
+                                        ! 幾何面積基底 = cg と同基底。m_gwflow_lateral が
+                                        ! 書き、m_wq が読んで地表 cq へ還元しゼロ戻し。
+                                        ! fxg と同型の契約。確保は m_wq_init
+                                        ! (f_wq_infil=1 のみ)。§30 W3)
     real, allocatable :: frofac(:,:)    ! 凍土の浸透低減係数 [fro_fmin,1](m_gwflow_frost
                                         ! が書き、鉛直浸透モデルが浸透能に乗じる。
                                         ! 確保は gwflow_frost_init(f_gwfrost=1 のみ)。§16.4)
     logical :: wq_active = .false.  ! 水質輸送の有効化(m_wq_init が設定。
                                     ! swflow_enc がステップ内で s%cq を移流する)
+    real :: cg_rginv = 1.0          ! 地下輸送の移流分担率 1/R(遅延化係数 wq_rg の
+                                    ! 逆数。m_wq_init が設定し、m_gwflow_lateral が
+                                    ! 側方移流と湧出同伴の実効濃度に乗じる。§30 W3)
     logical :: sed_active = .false. ! 浮遊砂輸送の有効化(m_geomorph_init が設定。
                                     ! swflow_enc がステップ内で s%hs を移流する)
     real :: sed_sgrav = 0.0         ! 土粒子の水中比重 s(m_geomorph_init が
@@ -236,7 +245,7 @@ module m_state
   !   仕様変更日の日付文字列。save の並び・成分・メタデータ・圧縮形式を
   !   変更したら必ずこの日付を更新する(restore 時の照合に使う。§7)。
   !   同日に複数回変更した場合は英字サフィックスで区別する
-  character(len=*), parameter :: save_version_cur = "2026-08-09"
+  character(len=*), parameter :: save_version_cur = "2026-08-26"
   integer, parameter :: n_state_save = 6     ! state.dat の成分数(h,z,hrs,hg,sd,hs)
 
 
@@ -733,6 +742,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%wd)) deallocate(s%wd)
   if (allocated(s%wdmax)) deallocate(s%wdmax)
   if (allocated(s%fxg)) deallocate(s%fxg)
+  if (allocated(s%fxs)) deallocate(s%fxs)
   if (allocated(s%fxci)) deallocate(s%fxci)
   if (allocated(s%fxco)) deallocate(s%fxco)
   if (allocated(s%frofac)) deallocate(s%frofac)

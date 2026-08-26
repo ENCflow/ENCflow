@@ -34,6 +34,24 @@ module m_gwflow_lateral
   !     - 通水断面は飽和厚でなく充満率 fill = min(hgc/cap, 1) で縮小
   !   安定条件は gwflow_conduit_dtcheck(線形化枝が最大勾配)で検査する
   !
+  ! 【水質の同伴輸送(§30 W3。2026-08-26)】
+  !   水質(fn_wq)が地下質量プール s%cg を持つとき(f_wq_infil=1)、
+  !   層1の lateral_core は水と同じエッジ流量で cg を同伴輸送する:
+  !     - ループ1: 質量エッジフラックス qm = q・(1/R)・cg_up/hg_up を
+  !       水流量と同時に計算する(風上濃度・時刻 n の cg/hg。1/R =
+  !       s%cg_rginv は平衡吸着の遅延化係数 wq_rg の逆数)。cg・hg は
+  !       柱状量同士なので比は体積濃度と同義
+  !     - ループ2: cg に発散を適用し、飽和超過の引き渡しでは超過水量に
+  !       同率移動 w = (1/R)・cg・fx/(hg+fx) を同伴して記録場 s%fxs へ
+  !       移す(湧出還元。m_wq が読んで地表 cq へ還元しゼロ戻しする =
+  !       fxg と同型の契約。基底換算・台帳は m_wq が担い、本モジュールは
+  !       wq の意味論を知らない)
+  !   有効判定は s%cg の allocated(呼び手 gwflow_lateral_calc)。未確保
+  !   なら qm も確保せず経路は完全に従来どおり。層2・管路層は cg を
+  !   渡さない(層2の cg2 は将来拡張。§30)。複数エッジ同時流出の
+  !   微小な行き過ぎは水と同じく許容(cg の微小負値は風上ガードで
+  !   自己回復する)
+  !
   ! 【エッジ配列は一時作業領域(永続エッジ状態レスの原則は不変。§4a)】
   !   フラックスは無履歴なので、エッジ配列 q は calc 内で書いて読み切る
   !   スクラッチである: 二重バッファなし・save/restore 対象外・
@@ -154,6 +172,9 @@ module m_gwflow_lateral
     real :: rdr(1:8) = 0.0           ! 1 / 近傍セル中心間距離
     real :: wl(1:8) = 0.0            ! k軸方向フラックスの通過幅 (m)
     real, allocatable :: q(:,:,:)    ! エッジ流量4成分 (m3/s)。一時作業領域
+    real, allocatable :: qm(:,:,:)   ! 質量エッジフラックス4成分 (g/s = 水流量 q ×
+                                     !   風上体積濃度 cg/hg。q と同形状・同格納規約。
+                                     !   一時作業領域。s%cg 確保時のみ確保。§30 W3)
     logical :: geom_ready = .false.  ! 幾何・作業領域の初期化済み(冪等口)
     logical :: initialized = .false. ! 層1(土層)側方の有効化
   end type
@@ -313,6 +334,12 @@ subroutine gwflow_lateral_init(p, g, s, dts)
 
   call gwflow_lateral_geom_init(g, gw_diagratio, gw_eps)
 
+  ! 水質の同伴輸送(§30 W3): s%cg があるときだけ質量エッジ配列を確保する
+  ! (m_wq_init は本 init より先に走る。未確保なら経路は完全に従来どおり)
+  if (allocated(s%cg) .and. .not. allocated(glt%qm)) then
+    allocate(glt%qm(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+  end if
+
   ! 層1の安定条件(層厚上界 = max(sd) の allreduce = 決定的)
   sdmax(1) = 0.0
   do j = dcp%js, dcp%je
@@ -346,7 +373,14 @@ subroutine gwflow_lateral_calc(p, g, s, it, dts)
   call par_halo_cell(s%hg)
   call par_halo_cell(s%h)
 
-  call lateral_core(g, s, s%hg, lay1, dts)
+  if (allocated(s%cg)) then
+    ! 水質の同伴輸送(§30 W3)。帯界面エッジの冗長計算が風上 cg を
+    ! ハロから読むため、cg も毎回交換する
+    call par_halo_cell(s%cg)
+    call lateral_core(g, s, s%hg, lay1, dts, cg=s%cg, rginv=s%cg_rginv)
+  else
+    call lateral_core(g, s, s%hg, lay1, dts)
+  end if
 end subroutine
 
 
@@ -357,21 +391,31 @@ end subroutine
 !   呼び手の責務: 対象層 hg(と to_surface 層では s%h)のハロ交換を
 !   済ませてから呼ぶこと
 !----------------------------------------------------------------------
-subroutine lateral_core(g, s, hg, lay, dts)
+subroutine lateral_core(g, s, hg, lay, dts, cg, rginv)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(inout) :: hg(1:, dcp%jsh:)
   type(t_latlayer), intent(in) :: lay
   real, intent(in) :: dts
+  real, intent(inout), optional :: cg(1:, dcp%jsh:)  ! 同伴輸送するスカラー柱状量
+                                                     !   (地下質量プール s%cg。§30 W3。
+                                                     !   ハロ交換は呼び手の責務)
+  real, intent(in), optional :: rginv                ! 移流分担率 1/R(省略時 1.0)
   integer :: i, j, k, in, jn, jt
   real :: hgwc, hgwn, hc0, hn0, hgw_up, hgw_e, gq, dh_up, dhg, capc, capn, fx
+  real :: qmv, dcm, wm, rgi
+  logical :: do_cg
+
+  do_cg = present(cg)
+  rgi = 1.0
+  if (present(rginv)) rgi = rginv
 
   ! --- ループ1: エッジ流量(各成分の書き手は一意なので競合しない) ---
   !   帯界面のエッジ成分 k=1..3(行 je)はハロ行 je+1 の書き手が担う
   !   (冗長計算。全域端では行が存在せず対象外)
   jt = min(dcp%je + 1, dcp%jeh)
   !$omp parallel do schedule(static) &
-  !$omp   private(i, j, k, in, jn, hgwc, hgwn, hc0, hn0, hgw_up, hgw_e, gq, dh_up, capc, capn)
+  !$omp   private(i, j, k, in, jn, hgwc, hgwn, hc0, hn0, hgw_up, hgw_e, gq, dh_up, capc, capn, qmv)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -420,6 +464,19 @@ subroutine lateral_core(g, s, hg, lay, dts)
           end if
         end if
         glt%q(k, i+die(k), j+dje(k)) = gq
+        ! 質量エッジフラックス(同伴輸送。§30 W3): 風上セルの体積濃度
+        ! cg/hg(時刻 n。柱状量同士の比)× 水流量 × 1/R。水が動かない
+        ! エッジ(gq=0)や風上の質量が空のときは 0(動的エッジなので
+        ! 必ず代入する)。gq /= 0 なら風上 hg > eps·sy > 0 が保証される
+        if (do_cg) then
+          qmv = 0.0
+          if (gq > 0.0) then
+            if (cg(i,j) > 0.0) qmv = gq * rgi * cg(i,j) / hg(i,j)
+          else if (gq < 0.0) then
+            if (cg(in,jn) > 0.0) qmv = gq * rgi * cg(in,jn) / hg(in,jn)
+          end if
+          glt%qm(k, i+die(k), j+dje(k)) = qmv
+        end if
       end do
     end do
   end do
@@ -428,7 +485,7 @@ subroutine lateral_core(g, s, hg, lay, dts)
   ! --- ループ2: 連続式+飽和超過分の引き渡し ---
   !   マスク・乾燥エッジは 0 が入っているため無条件に8近傍を集計できる。
   !   引き渡しは反対称適用と水位の回復(契約(1)(2)相当)
-  !$omp parallel do schedule(static) private(i, j, k, dhg, capc, fx)
+  !$omp parallel do schedule(static) private(i, j, k, dhg, capc, fx, dcm, wm)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -439,6 +496,16 @@ subroutine lateral_core(g, s, hg, lay, dts)
         dhg = dhg + sign_e(k) * glt%q(ke(k), i+die(k), j+dje(k))
       end do
       hg(i,j) = hg(i,j) - dhg * dts * glt%ainv
+      ! 同伴輸送の発散(§30 W3。水と同じ反対称集計 = 柱状量の総和保存。
+      ! 複数エッジ同時流出の微小な行き過ぎは水と同じく許容 — 微小負値は
+      ! 次ステップの風上ガード(cg > 0)で自己回復する)
+      if (do_cg) then
+        dcm = 0.0
+        do k = 1, 8
+          dcm = dcm + sign_e(k) * glt%qm(ke(k), i+die(k), j+dje(k))
+        end do
+        cg(i,j) = cg(i,j) - dcm * dts * glt%ainv
+      end if
       ! 飽和超過分の引き渡し(層1: s%h へ=§3.2.1/§8 決定。層2: s%hg へ。
       ! 層2超過で層1も溢れる場合は層1の容量判定が次の機会に地表へ渡す
       ! のではなく、ここで直列に処理して湧出の連鎖を同一ステップで閉じる)
@@ -446,6 +513,16 @@ subroutine lateral_core(g, s, hg, lay, dts)
       if (hg(i,j) > capc) then
         fx = hg(i,j) - capc
         hg(i,j) = capc
+        ! 湧出同伴(§30 W3): 超過水量 fx に同率移動 ×1/R を同伴して
+        ! 記録場 s%fxs へ移す(m_wq が読んで地表 cq へ還元しゼロ戻し。
+        ! 分母は超過処理前の貯留 = capc + fx。柱状量同士の同率移動)
+        if (do_cg) then
+          if (cg(i,j) > 0.0) then
+            wm = rgi * cg(i,j) * (fx / (capc + fx))
+            cg(i,j) = cg(i,j) - wm
+            s%fxs(i,j) = s%fxs(i,j) + wm
+          end if
+        end if
         if (lay%to_surface) then
           s%h(i,j) = s%h(i,j) + fx
           s%e(i,j) = s%z(i,j) + s%h(i,j)
@@ -705,6 +782,7 @@ subroutine gwflow_lateral_dispose(p)
   type(t_sysparam), intent(in) :: p
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (allocated(glt%q)) deallocate(glt%q)
+  if (allocated(glt%qm)) deallocate(glt%qm)
   glt%geom_ready = .false.
   glt%initialized = .false.
 end subroutine

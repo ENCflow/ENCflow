@@ -29,6 +29,7 @@ experiments, and so on. Enable it with `fn_wq`.
 | wq_vs | - | Settling velocity (m/day). Loss from surface water to the riverbed |
 | f_wq_settle | 0 | Destination of settling. 0: lost to the riverbed, 1: to the surface buildup pool (resuspension cycle) |
 | f_wq_infil | 1 | Behavior at infiltration. 0: remains on the surface (for particulate substances), 1: entrained at the current concentration into the subsurface pool (for dissolved substances) |
+| wq_rg | 1 | Retardation factor R (>= 1) for subsurface transport. Reduces the effective concentration of groundwater advection and seepage return to 1/R (see "Transport through groundwater" below) |
 
 ## How loads are given (superposable)
 
@@ -73,6 +74,38 @@ distribution over the whole domain
 [Boundary conditions](boundary.md), `wq_in_conc(n)` (constant) or
 `wq_in_series(:,:,n)` (time series).
 
+## Transport through groundwater (infiltration → lateral flow → seepage)
+
+With `f_wq_infil=1` (the default), the mass entrained into the
+subsurface pool by infiltration **moves with the groundwater** when
+[lateral groundwater flow](gwflow.md) (`f_gwlateral=1`) is enabled, and
+**returns to the surface water at its groundwater concentration where
+saturation excess seeps out**. No extra setting is needed — enabling
+both water quality and lateral flow activates it. This closes the
+"infiltration → groundwater flow → seepage into rivers" pathway, so
+the dry-weather river quality dominated by baseflow can be handled in
+one run.
+
+The **retardation factor `wq_rg`** (R >= 1, default 1 = no
+retardation) lumps the delay caused by equilibrium sorption in the
+soil. The substance moves at 1/R of the groundwater velocity (and the
+seepage water carries the dissolved 1/R side of the concentration).
+For linear equilibrium sorption, R = 1 + ρb·Kd/θ (ρb: dry bulk
+density, θ: effective porosity, Kd: partition coefficient). Strongly
+sorbing substances such as heavy metals have R of the order of
+10–10⁴, which effectively immobilizes the groundwater pathway — give
+that judgement through R.
+
+- Only the dissolved treatment (`f_wq_infil=1`) is transported. Decay
+  (wq_thalf / wq_k20) acts on the subsurface pool as well.
+- The subsurface budget can be verified in `result/wq.csv` with
+  `to_gw_g` (infiltrated into the ground), `seep_g` (cumulative mass
+  returned by seepage) and `mass_gw_g` (current subsurface storage):
+  to_gw − seep = mass_gw.
+- Transport inside the weathered-bedrock layer (f_gwlayer2) and
+  entrainment of the mass absorbed by small retention ponds (rscap)
+  are not supported yet (the absorbed mass remains on the surface).
+
 ## Surface buildup + washoff (nonlinear L-Q)
 
 A buildup-washoff mechanism where the load accumulated on the surface
@@ -93,8 +126,9 @@ L-Q relation between discharge and load, and first flush.
   automatically (also the pool distribution `B0001` when the buildup
   pool is enabled).
 - A mass-budget ledger is output to `result/wq.csv` (cumulative
-  inputs, boundary inflows, infiltration, outflow out of the system,
-  decay, and so on; useful to verify the budget).
+  inputs, boundary inflows, infiltration, seepage return (seep_g),
+  outflow out of the system, decay, and so on; useful to verify the
+  budget).
 - Columns for concentration C and surface load cq are added to the
   probe CSV ([the measurement chapter](record.md)).
 - Restart (save/restore) is handled automatically.
