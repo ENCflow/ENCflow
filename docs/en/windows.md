@@ -192,6 +192,7 @@ Minimal explanations of the words used in this and later documents.
 | Directory | A folder (the Unix word for it) |
 | Home directory | The directory you are in right after logging in / opening WSL. Abbreviated `~` (its real path is `/home/username`) |
 | Path | The address of a file or directory. Unix separates it with `/` (Windows with `\`) |
+| GitHub | The de-facto standard web service for publishing and sharing source code. ENCflow is developed and published at [github.com/ENCflow/ENCflow](https://github.com/ENCflow/ENCflow) (no account is needed just to browse or download) |
 | Repository | The container of a whole project (source code, examples, documentation). `git clone` copies it from GitHub onto your PC |
 | Build (compile) | Turning source code into an executable. `make install` does it for you |
 | Editor | Software for editing text. Notepad and VS Code are editors |
