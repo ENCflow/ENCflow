@@ -1,4 +1,4 @@
-> English mirror of docs/install.md (based on commit 7401b91). The Japanese file is the master copy.
+> English mirror of docs/install.md (based on commit 5219fac). The Japanese file is the master copy.
 
 # Installation Guide
 
@@ -8,6 +8,7 @@ administrator privileges (sudo) are needed. The products are simply
 placed in `bin/` inside the repository, so if you ever want them
 gone, deleting the whole directory restores your system exactly.
 
+- On Windows / new to Unix -> [Using ENCflow on Windows](windows.md)
 - Just want it running -> [1. Up and running in 5 minutes](#1-up-and-running-in-5-minutes)
 - Plotting in the tutorials -> [2. Installing the visualization tools](#2-installing-the-visualization-tools-gnuplot-paraview)
 - Faster on multiple cores -> it is parallel with no action needed ([3.3](#33-openmp-parallelism-is-on-from-the-start))
@@ -17,11 +18,15 @@ gone, deleting the whole directory restores your system exactly.
 
 ## 1. Up and running in 5 minutes
 
+> **New to Unix / Linux, or on Windows? Start with
+> [Using ENCflow on Windows](windows.md).** It walks you, in order,
+> from setting up WSL (the standard Linux environment on Windows)
+> through terminal basics and file exchange. This section assumes a
+> working terminal (including Ubuntu under WSL).
+
 All you need are git and gfortran.
 
-**Ubuntu / Debian / WSL** (on Windows, Ubuntu under WSL is recommended;
-for setting up WSL and a Unix-beginner guide, see
-[Using ENCflow on Windows](windows.md)):
+**Ubuntu / Debian / WSL**:
 
 ```bash
 sudo apt install -y git gfortran make
