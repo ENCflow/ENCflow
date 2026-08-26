@@ -1,4 +1,4 @@
-> English mirror of docs/comparison.md (based on commit 826944f). The Japanese file is the master copy.
+> English mirror of docs/comparison.md (based on commit 76b671c). The Japanese file is the master copy.
 
 # Comparison with Other Simulation Software (comparison.md)
 
@@ -117,9 +117,7 @@ Sources (confirmed 2026-08-10):
   User-facing documentation now has a full Japanese-English mirror
   (docs/en/ and the tutorials' en/); the remaining English gap is
   only in the developer documentation (developer.md etc. are
-  Japanese-only). Note also that most of the comparative advantages
-  presuppose finalizing "free and fully open" (restoration of the
-  license notice; Sec. 34.3).
+  Japanese-only).
 
 - **AI-agent orientation**: on top of the fully
   text-based input and output (no GUI dependency), ENCflow ships a
