@@ -1,4 +1,4 @@
-> English mirror of docs/comparison.md (based on commit 84e47c4). The Japanese file is the master copy.
+> English mirror of docs/comparison.md (based on commit 3f71a97). The Japanese file is the master copy.
 
 # Comparison with Other Simulation Software (comparison.md)
 
@@ -30,6 +30,9 @@ site before citing.
 | BASEMENT | ETH Zurich | Free (commercial use allowed) | Closed (binary distribution) | Strong on riverbed evolution |
 | GSSHA | USACE ERDC | Free | Open | Distributed hydrology + 2D overland flow + groundwater + snow |
 | SHETRAN | Newcastle University | Free | Open (GitHub) | Physically based 3D groundwater + snow |
+| ParFlow | CSM, LLNL, Univ. of Bonn et al. | Free | Open (LGPL) | Integrated hydrology: 3D variably saturated groundwater (Richards) + overland flow + land surface (CLM). MPI, GPU. Many dependencies (Hypre, HDF5, NetCDF, ...) |
+| r.avaflow | Mergili & Pudasaini | Free | Open (GRASS GIS module) | Multi-phase mass flows (debris flows, avalanches, lahars, GLOFs). Supports chains of mass flows (v4, 2025) |
+| CSDMS (Landlab, pymt) | US NSF / Univ. of Colorado | Free | Open | Not a single model but a community platform: a repository of 200+ models and the BMI coupling framework (see Sec. 3) |
 | ANUGA | ANU/GA | Free | Open | SWE in Python. Inundation and tsunami |
 | GeoClaw | Clawpack team | Free | Open (BSD) | Tsunami generation to propagation to run-up (AMR). Tsunami-specialized |
 
@@ -45,7 +48,13 @@ Sources (confirmed 2026-08-10):
 [CAESAR-Lisflood](https://sourceforge.net/projects/caesar-lisflood/) /
 [Morpho2DH](https://i-ric.org/en/solvers/morpho2dh/) (checked
 2026-08-16; no public source of the solver itself could be confirmed
-= binary distribution via iRIC)
+= binary distribution via iRIC) /
+[ParFlow](https://github.com/parflow/parflow) (checked 2026-08-26) /
+[r.avaflow v1 paper](https://gmd.copernicus.org/articles/10/553/2017/),
+[v4 paper](https://gmd.copernicus.org/articles/18/9879/2025/)
+(checked 2026-08-26) /
+[CSDMS paper](https://gmd.copernicus.org/articles/15/1413/2022/)
+(checked 2026-08-26)
 
 ## 2. Comparison of process coverage (against ENCflow's current state)
 
@@ -56,11 +65,11 @@ Sources (confirmed 2026-08-10):
 | Subgrid channels (sigma cross-section, width) | Yes | LISFLOOD-FP (subgrid channels), HEC-RAS (1D-2D) | One water level per cell + sigma(h) is a distinctive approach |
 | Structures (breach, pumps, culverts, sluice gates, diversions, dam operation) | Yes | HEC-RAS, TUFLOW, MIKE, SOBEK family | An area where the free/open camp is thin |
 | Rainfall runoff, interception, evapotranspiration | Yes (canopy, Hamon/Thornthwaite, lapse rate) | RRI, GSSHA, MIKE SHE, SHETRAN | The hydraulics-specialized camp does not have these |
-| Groundwater | Yes: two layers (soil-layer Boussinesq + weathered bedrock layer) + well pumping sinks (2026-08-18) | MIKE SHE (3D), SHETRAN (3D), GSSHA | Two layers in a plan-view 2D model is a minority position. Pumping is a cell-scale sink (a plan-view analog of MODFLOW WEL); combined with the fresh/salt layers it also covers pumping-induced seawater intrusion |
+| Groundwater | Yes: two layers (soil-layer Boussinesq + weathered bedrock layer) + well pumping sinks (2026-08-18) | MIKE SHE (3D), SHETRAN (3D), GSSHA, ParFlow (3D variably saturated Richards + CLM) | Two layers in a plan-view 2D model is a minority position. Pumping is a cell-scale sink (a plan-view analog of MODFLOW WEL); combined with the fresh/salt layers it also covers pumping-induced seawater intrusion. ParFlow is the physics-fidelity pole (Sec. 3) |
 | Seawater intrusion / fresh-salt two-layer | Partial: sharp-interface 2-zone (SWI2-type; Phi_s = eta + eps*zeta, prescribed sea head, surface salt layer; developer.md sec. 47; prototype 2026-08-18) | MODFLOW+SWI2/SEAWAT, SUTRA, FEFLOW (variable density) | Variable-density transport (SEAWAT/SUTRA) resolves dispersion and mixing and is a dedicated domain. ENCflow's originality is the quasi-static sharp interface in a single time evolution with surface inundation and tide (tracking run-up seawater end to end) |
 | Urban drainage / conduit networks | Partial: conduit continuum layer (equivalent confined continuum, 8-direction anisotropic conveyance, pressurized surcharge, inlet exchange; developer.md sec. 46, prototype 2026-08-18) | SWMM + 2D couplings (TUFLOW, InfoWorks ICM, xpswmm and other dual-drainage codes) | The world standard couples a 2D surface model with a 1D pipe-network model. ENCflow takes the original route of homogenizing the network into a continuum solved in a single time evolution (quantifying its limits of applicability is a research theme; gwconduit_plan.md sec. 3). Control structures and trunk-dominated systems are out of scope in principle and are ceded to network-model coupling |
 | Sediment and landform change (bedload, suspension, collapse, debris flow) | Yes, with MORFAC | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | For debris/mud flow (landslide-triggered runout and deposition), the representative free practical tool is Morpho2DH (iRIC); ENCflow differs in housing debris flow together with catchment hydrology and flooding |
-| Volcanic flows and snow avalanches (debris avalanches, dense pyroclastic flows, lahars, dense-flow snow avalanches) | Yes: equivalent fluid (Voellmy, constant retarding stress, f_release; Sec. 28.8) | Titan2D, VolcFlow, RAMMS (avalanches), LaharZ (empirical) | The same SWE + granular-resistance level as the dedicated tools. ENCflow is unique in following the chain eruption supply → runout → deposition → natural damming → dam-break flood → rainfall-triggered secondary lahars in a single model and a single run (the dedicated tools are single-process). Dense-flow snow avalanches use the same setup (release as a scenario; velocity-proportional path entrainment via f_dbed=4; see users_guide/geomorph.md). Dilute phenomena (surges, plumes, ash transport, powder avalanches) are declared out of scope (debris_plan.md Sec. 5) |
+| Volcanic flows and snow avalanches (debris avalanches, dense pyroclastic flows, lahars, dense-flow snow avalanches) | Yes: equivalent fluid (Voellmy, constant retarding stress, f_release; Sec. 28.8) | Titan2D, VolcFlow, RAMMS (avalanches), r.avaflow (multi-phase, chains), LaharZ (empirical) | The same SWE + granular-resistance level as the dedicated tools. ENCflow is unique in following the chain eruption supply → runout → deposition → natural damming → dam-break flood → rainfall-triggered secondary lahars in a single model and a single run (the dedicated tools are mostly single-process; r.avaflow, with the Pudasaini multi-phase model, comes closest in handling chains between mass flows — collapse → lake impact → GLOF etc. — but does not house catchment hydrology, flood hydraulics, or water quality). Dense-flow snow avalanches use the same setup (release as a scenario; velocity-proportional path entrainment via f_dbed=4; see users_guide/geomorph.md). Dilute phenomena (surges, plumes, ash transport, powder avalanches) are declared out of scope (debris_plan.md Sec. 5) |
 | Lava flows (vent effusion, stopping, solidification) | Yes: depth-averaged Bingham viscous gravity current (isothermal; η and τ_y given directly + velocity-threshold solidification into topography; Sec. 51, lava_plan.md; 2026-08-23) | MOLASSES, Q-LavHA (probabilistic/CA), MAGFLOW, LavaSIM (thermally coupled), VolcFlow (lava version) | The practical standards split into CA/probabilistic tools (isothermal, empirical) and thermally coupled ones. ENCflow's isothermal Bingham diffusion sits between those physics levels; its distinctive point is that solidified lava becomes the bed z, so rain, floods, and sediment flow over the new topography in the same run (eruption → lava field → secondary hydrologic response). Cooling and temperature-dependent viscosity are future extensions (lava_plan.md Sec. 8); thermal lava-water interaction is declared out of scope |
 | Water quality (load runoff, decay, settling, buildup-washoff, Kd two-phase partitioning, in-groundwater transport, completely mixed reservoirs) | Yes | MIKE ECO Lab, Delft3D-WAQ, Iber-WQ, GSSHA | Free and open coexistence of hydrology + water quality + hydraulics is rare; the mass budget across surface, groundwater and reservoirs closes in a single code |
 | Snow accumulation and snowmelt | Yes: degree-day method (Sec. 31) + infiltration suppression by frozen ground (freezing index; 2026-08-18) | MIKE SHE, GSSHA, SHETRAN (also degree-day family) | For HEC-RAS this is on the HMS side |
@@ -150,6 +159,24 @@ Sources (confirmed 2026-08-10):
   developer.md Sec. 0. Note this does not mean "correct results
   without expertise" — what is lowered is the barrier to trying, not
   the expertise barrier, and user-facing wording keeps to this line.
+
+- (Added 2026-08-26) **Contrast with two other routes to
+  integration**: (a) **physics-first integrated hydrology (ParFlow)**
+  — the representative open model that tightly couples 3D variably
+  saturated Richards flow with land-surface processes (CLM). Superior
+  in physical fidelity, but premised on HPC and a dependency stack
+  (Hypre, HDF5, ...), and without structures, sediment, water
+  quality, or the volcanic family. ENCflow's approximate route with
+  an abstracted vertical (developer.md Sec. 0, policy 5) coexists by
+  its laptop-first accessibility and its breadth of processes.
+  (b) **coupling frameworks (CSDMS: BMI, pymt, Landlab)** — the
+  community route of connecting existing specialist models through a
+  standard interface. Its strength is using each field's specialist
+  model as-is, while aligning grids, time steps, and I/O — and wiring
+  the models together — remains the user's work. ENCflow is in-house
+  integration in a single code and a single time evolution: processes
+  can be added without coupling work, at the price of keeping each
+  process at the screening level — the two routes are complementary.
 
 ## 4. Remaining items: who implements them, and directions
 
