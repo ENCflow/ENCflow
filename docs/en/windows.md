@@ -196,3 +196,18 @@ Minimal explanations of the words used in this and later documents.
 | Repository | The container of a whole project (source code, examples, documentation). `git clone` copies it from GitHub onto your PC |
 | Build (compile) | Turning source code into an executable. `make install` does it for you |
 | Editor | Software for editing text. Notepad and VS Code are editors |
+
+### Programs (apps) used in this project
+
+| Program | Role |
+|---|---|
+| apt | The mechanism (package manager) that installs and updates software on Ubuntu. `sudo apt install name` installs a program |
+| gfortran | A Fortran compiler. It turns the ENCflow source code into the executable |
+| git | A version-control tool for source code. In this guide it is used only for `git clone` (fetching the repository) |
+| gnuplot | Graph-plotting software, used by the tutorials' plot scripts (`Plot_*.plt`) |
+| less | A viewer that shows a text file one screen at a time. Quit with `q` |
+| make | A tool that runs build steps automatically — it is what `make install` actually is |
+| ParaView | 3D visualization software, used in Step 7 (animation) of the chichibu tutorial |
+| QGIS | Free GIS software. It shows the GeoTIFF inputs and outputs directly on a map |
+| sudo | A command prefix that runs a command with administrator rights, used when installing software (apt). When asked for a password, type the one you chose at the first WSL startup (**nothing appears on screen while you type, but the input is being received**) |
+| VS Code | Microsoft's free editor. With the "WSL" extension, editing, terminal, and file browsing come together in one window |
