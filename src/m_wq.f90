@@ -17,7 +17,7 @@ module m_wq
   !           境界流入濃度(区間流入ごと、mg/L)は b%cqin テーブル経由で
   !           輸送カーネルに渡す
   !   浸透:   f_wq_infil=1(既定)で浸透水に濃度同伴し、地下質量プール cg
-  !           (モジュール私有。W1 では台帳=横移動なし)へ移す。gwflow の
+  !           (s%cg。W1 では台帳=横移動なし)へ移す。gwflow の
   !           鉛直交換が s%fxg に浸透量を記録し、本モジュールが読んで
   !           ゼロ戻しする契約。0 で地表に残留(粒子態向け)
   !   管路:   wq_gwc_conc(mg/L)指定で管路連続体層(f_gwconduit)と連携
@@ -104,8 +104,6 @@ module m_wq
     integer, allocatable :: inifl(:)                ! 対象の区間流入番号
     real, allocatable :: incval(:)                  ! 一定濃度 (g/m3)
     type(t_wqsrc), allocatable :: inser(:)          ! 時系列(ser のみ使用)
-    real, allocatable :: cg(:,:)                    ! 地下質量プール (g/m2。cq と同基底。
-                                                    !   W1 では台帳=横移動なし。§30)
     real, allocatable :: rmap(:,:)                  ! 分布面源の投入率 (g/s/m2。地理的
                                                     !   面積あたり。帯。未指定なら未確保)
     logical :: have_rain = .false.                  ! 降雨中濃度(湿性沈着)の有効
@@ -216,7 +214,7 @@ subroutine m_wq_init(wq, p, g, b, s)
   allocate(s%cqc(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (wq%f_infil == 1) then
     allocate(s%fxg(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-    allocate(wq%cg(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%cg(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   end if
   if (wq%gwc_conc >= 0.0) then
     ! 管路連携の交換量記録場(fxg と同じ契約。conduit は allocated 判定で
@@ -751,7 +749,7 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
         ! 移動割合 = fx / 浸透前水深(浸透後の h に fx を足し戻して復元)
         w = s%cq(i,j) * (fx / max(s%h(i,j) + fx, tiny(fx)))
         s%cq(i,j) = s%cq(i,j) - w
-        wq%cg(i,j) = wq%cg(i,j) + w
+        s%cg(i,j) = s%cg(i,j) + w
         wq%vrow(j,3) = wq%vrow(j,3) + mass_of(g, i, j, w)
       end do
     end do
@@ -963,10 +961,10 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
             s%cq(i,j) = s%cq(i,j) - w
             wq%vrow(j,5) = wq%vrow(j,5) + mass_of(g, i, j, w)
           end if
-          if (allocated(wq%cg)) then
-            if (wq%cg(i,j) > 0.0) then
-              w = wq%cg(i,j) * (1.0 - wq%fdec)
-              wq%cg(i,j) = wq%cg(i,j) - w
+          if (allocated(s%cg)) then
+            if (s%cg(i,j) > 0.0) then
+              w = s%cg(i,j) * (1.0 - wq%fdec)
+              s%cg(i,j) = s%cg(i,j) - w
               wq%vrow(j,5) = wq%vrow(j,5) + mass_of(g, i, j, w)
             end if
           end if
@@ -1089,7 +1087,7 @@ subroutine m_wq_record(wq, p, g, s)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       rows(j) = rows(j) + mass_of(g, i, j, s%cq(i,j))
-      if (allocated(wq%cg)) rows2(j) = rows2(j) + mass_of(g, i, j, wq%cg(i,j))
+      if (allocated(s%cg)) rows2(j) = rows2(j) + mass_of(g, i, j, s%cg(i,j))
       if (wq%have_pool) rows3(j) = rows3(j) + real(s%bp(i,j), real64) * acell
     end do
   end do
@@ -1130,8 +1128,8 @@ subroutine save_state(wq, p, g, s)
   call par_gather_to(wk, s%cq)
   if (is_root) call fileio_write_rle(un, wk)
   ! cg(f_wq_infil=0 では不使用 = ゼロを書いて形式を固定)
-  if (allocated(wq%cg)) then
-    call par_gather_to(wk, wq%cg)
+  if (allocated(s%cg)) then
+    call par_gather_to(wk, s%cg)
   else
     if (is_root) wk = 0.0
   end if
@@ -1178,12 +1176,12 @@ subroutine restore_state(wq, p, g, s)
   else
     call par_scatter_cell(dum, s%cq)
   end if
-  if (allocated(wq%cg)) then
+  if (allocated(s%cg)) then
     if (is_root) then
       call fileio_read_rle(un, wk)
-      call par_scatter_cell(wk, wq%cg)
+      call par_scatter_cell(wk, s%cg)
     else
-      call par_scatter_cell(dum, wq%cg)
+      call par_scatter_cell(dum, s%cg)
     end if
   else
     if (is_root) call fileio_read_rle(un, wk)   ! cg 不使用 = 読み飛ばし
@@ -1218,7 +1216,6 @@ subroutine m_wq_dispose(wq, p, g, s)
   if (allocated(wq%inifl)) deallocate(wq%inifl)
   if (allocated(wq%incval)) deallocate(wq%incval)
   if (allocated(wq%inser)) deallocate(wq%inser)
-  if (allocated(wq%cg)) deallocate(wq%cg)
   if (allocated(wq%rmap)) deallocate(wq%rmap)
   if (allocated(wq%dam)) deallocate(wq%dam)
   if (allocated(wq%vrow)) deallocate(wq%vrow)

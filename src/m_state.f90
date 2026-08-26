@@ -117,6 +117,10 @@ module m_state
                                         ! m_wq が担う。確保は m_wq_init(有効時のみ))
     real, allocatable :: cqc(:,:)       ! 体積平均濃度 (mg/L。導出量。m_wq が毎ステップ
                                         ! 更新。σ・河道幅の換算込み。出力・プローブ用)
+    real, allocatable :: cg(:,:)        ! 地下質量プール (g/m2。§30。地下横輸送は
+                                        ! m_gwflow_lateral がステップ内で行い、
+                                        ! 浸透同伴・湧出還元・減衰・保存は m_wq が
+                                        ! 担う。確保は m_wq_init(f_wq_infil=1 のみ))
     real, allocatable :: bp(:,:)        ! 表面蓄積プール (g/m2。幾何面積基底 =
                                         ! セル内質量 bp×A。m_wq が確保・更新・保存し、
                                         ! m_output が B 場(kg/ha)を書く。§30)
@@ -713,6 +717,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hs)) deallocate(s%hs)
   if (allocated(s%cq)) deallocate(s%cq)
   if (allocated(s%cqc)) deallocate(s%cqc)
+  if (allocated(s%cg)) deallocate(s%cg)
   if (allocated(s%bp)) deallocate(s%bp)
   if (allocated(s%hg2)) deallocate(s%hg2)
   if (allocated(s%hgc)) deallocate(s%hgc)
