@@ -35,11 +35,17 @@ wsl --install    # WSL と Ubuntu を導入する
 決めたら、あとは [インストールガイド](install.md) の手順どおりです:
 
 ```bash
-sudo apt update && sudo apt install -y gfortran make git   # コンパイラ等を導入
-git clone https://github.com/ENCflow/ENCflow.git           # ENCflow 一式を取得
-cd ENCflow/src && make install                             # 移動してビルド
-cd ../test/wave && ./Run.sh                                # 例題を実行して動作確認
+sudo apt update && sudo apt install -y gfortran make git gnuplot   # コンパイラ等と作図ツールを導入
+git clone https://github.com/ENCflow/ENCflow.git                   # ENCflow 一式を取得
+cd ENCflow/src && make install                                     # 移動してビルド
+cd ../test/wave && ./Run.sh                                        # 例題を実行して動作確認
 ```
+
+1 行目でチュートリアルの作図に使う **gnuplot** も一緒に入れています。
+もう1つの可視化ツール **ParaView**(3D 表示。チュートリアル chichibu の
+Step 7 まで出番はありません)は、WSL の場合 **Windows 側に
+インストールする**のが手軽なので、必要になったときに
+[インストールガイドの 2 章](install.md)を参照してください。
 
 詰まったら Microsoft の
 [WSL インストールガイド](https://learn.microsoft.com/ja-jp/windows/wsl/install)
