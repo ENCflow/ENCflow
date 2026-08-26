@@ -3,7 +3,9 @@
 > English mirror of docs/windows.md. The Japanese file is the master copy.
 
 ENCflow runs in Unix-like environments. If you have only ever used
-Windows, that is fine — we recommend the following route.
+Windows, that is fine — we recommend the following route. When you
+meet an unfamiliar word, check the
+[mini glossary](#appendix-mini-glossary) at the end of this document.
 
 ## 1. Try it first with zero installation (5 minutes)
 
@@ -33,9 +35,11 @@ that opens, type the following and press Enter:
 wsl --install    # install WSL and Ubuntu
 ```
 
-After a reboot, open Ubuntu from the Start menu, choose a user name
-and password, and then follow the
-[installation guide](install.md):
+After a reboot, open Ubuntu from the Start menu and a black window
+appears. This is the **terminal** — instead of clicking with the
+mouse, you operate the computer by typing **commands** (instructions)
+into this window. Choose a user name and password first, and then
+follow the [installation guide](install.md):
 
 ```bash
 sudo apt update && sudo apt install -y gfortran make git gnuplot   # install the compiler etc. and the plotting tool
@@ -174,3 +178,20 @@ where network restrictions block the installation, the Colab route in
 step 1 still works in the browser alone. ENCflow is
 expected to work in native Windows environments (MSYS2 etc.) as well,
 but this has not been verified yet, so WSL is the recommended path.
+
+## Appendix: mini glossary
+
+Minimal explanations of the words used in this and later documents.
+
+| Term | Meaning |
+|---|---|
+| Terminal | The screen (black window) where you operate the computer by typing commands. It is what appears when you open Ubuntu in WSL |
+| CUI / GUI | Interacting with the computer by **typed text**, as in the terminal, is called a CUI (character user interface); operating by **mouse clicks**, as in Explorer, is a GUI. In this guide's style, computations are done in the CUI, while viewing/editing files and visualization may be done in the GUI |
+| Command | A one-line instruction typed into the terminal, executed with Enter ([cheat sheet](#these-are-all-the-commands-you-need-cheat-sheet)) |
+| Prompt | The text shown to the left of the input line in the terminal. It signals "waiting for input" and also shows your current location |
+| Directory | A folder (the Unix word for it) |
+| Home directory | The directory you are in right after logging in / opening WSL. Abbreviated `~` (its real path is `/home/username`) |
+| Path | The address of a file or directory. Unix separates it with `/` (Windows with `\`) |
+| Repository | The container of a whole project (source code, examples, documentation). `git clone` copies it from GitHub onto your PC |
+| Build (compile) | Turning source code into an executable. `make install` does it for you |
+| Editor | Software for editing text. Notepad and VS Code are editors |
