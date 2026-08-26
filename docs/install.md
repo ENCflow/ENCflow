@@ -90,11 +90,10 @@ sudo dnf install -y gnuplot
 `gnuplot --version` でインストールとバージョンを確認できます。
 
 3D 可視化・アニメーション(チュートリアル chichibu の Step 7)には
-**ParaView** を使います。[公式サイト](https://www.paraview.org/download/)
-のバイナリ(Windows / macOS / Linux)をインストールするのが確実です。
-パッケージマネージャでも入ります(こちらも環境に合った1つだけ):
+**ParaView** を使います。パッケージマネージャでインストールできます
+(こちらも環境に合った1つだけ):
 
-Ubuntu / Debian:
+Ubuntu / Debian(WSL を含む):
 
 ```bash
 sudo apt install -y paraview
@@ -106,12 +105,17 @@ macOS(Homebrew):
 brew install --cask paraview
 ```
 
-WSL で計算している場合は、ParaView は **Windows 側にインストール**し、
-結果ファイルをエクスプローラのパス `\\wsl$\...`(または
-`/mnt/c/...` に置いた結果)から開くのが手軽です(WSLg が有効なら
-WSL 内の ParaView も動きます)。日本語版 Windows ではバックスラッシュ
-`\` は円記号 `¥` として表示・入力されます(同じ文字です。
-[Windows での使い方](windows.md))。
+WSL でも、最近の Windows なら(古くても Windows Update を当てていれば)
+WSLg が有効なので、apt で入れた ParaView のウィンドウがそのまま
+表示されます。
+
+お好みで、[公式サイト](https://www.paraview.org/download/)のバイナリ
+(Windows / macOS / Linux)をインストールしてもかまいません。WSL で
+計算している場合に ParaView を **Windows 側にインストール**すると、
+結果ファイルをエクスプローラのパス `\\wsl$\...`(または `/mnt/c/...`
+に置いた結果)から開けて手軽です。日本語版 Windows では
+バックスラッシュ `\` は円記号 `¥` として表示・入力されます
+(同じ文字です。[Windows での使い方](windows.md))。
 
 ## 3. インストールの仕組み
 
