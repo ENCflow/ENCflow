@@ -45,10 +45,16 @@ module m_wq
   !           管路台帳へ除去(0 で地表残留)。fxci/fxco は fxg と同じ
   !           「conduit が記録し本モジュールが読んでゼロ戻し」の契約。
   !           管内の質量プール・管内移流は将来拡張(§46.5 の議論)
-  !   ダム:   捕捉帯セルは毎ステップ全量吸収されるため、質量も同伴して
-  !           ダム別台帳へ移す(放流濃度 0 = 既知の妥協。貯水池内混合は
-  !           将来拡張)。ため池(rscap)の吸収分は W1 では地表に残留
-  !           (既知の妥協)
+  !   ダム:   捕捉帯セルは毎ステップ全量吸収されるため質量も同伴し、
+  !           貯留湖沼(dmode>0)は完全混合プール M へ移す(§30.7)。
+  !           放流はこの歩の放流量 × 濃度 M/V を放流セルへ水と同じ
+  !           セル数等分で同伴(複数放流工は struct 順の逐次比例縮小)。
+  !           水位固定湖沼(dmode=0)は水と同じく系外 = 台帳計上のみ。
+  !           M は決定的総和で全ランク同値に維持し、wq.dat に保存する
+  !   ため池: rscap の吸収は boundary_h が s%fxr に記録し、本モジュールが
+  !           同率移動で質量を同伴してセル別プール s%crs へ移す(§30.7。
+  !           fxg と同型の契約)。満水後のあふれ水は吸収されないため
+  !           プールは蓄積・減衰のみのシンク(蒸発は純水のみ = 連携不要)
   !   蒸発:   純水のみが抜けるため質量は残留(濃縮)= 物理的に正しい。
   !           コード上の連携は不要
   !   save:   s%cq と cg をモジュール私有ファイル wq.dat で保存(§7 の
@@ -71,7 +77,8 @@ module m_wq
   use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : dcp, is_root, par_info, par_stop, par_abort, par_sum_rows, &
-                         par_gather_to, par_scatter_cell
+                         par_gather_to, par_scatter_cell, par_allreduce_max, &
+                         par_allreduce_maxi, par_allreduce_sumr
   use m_util, only : itoa
   implicit none
   private
@@ -98,11 +105,19 @@ module m_wq
     real, allocatable :: ser(:,:)        ! 時系列 (1:2, 1:nser) = (s, 値)
   end type
 
-  ! ダム捕捉台帳
+  ! ダム・湖沼の質量台帳+完全混合プール(§30.7)
   type t_wqdam
     integer :: ist = 0                   ! b%struct のインデックス
     integer :: nc = 0                    ! 自帯内の捕捉帯セル数
     integer, allocatable :: cells(:,:)
+    integer :: dmode = 0                 ! 運転モード(0 = 水位固定湖沼 = プールなし)
+    integer :: lref = 0                  ! >0: 参照先湖沼の wq%dam インデックス
+    logical :: pooled = .false.          ! 質量プールを持つ(dmode>0 かつ lref=0)
+    integer :: ncout_all = 0             ! 放流セル総数(質量の等分配用)
+    integer :: ncout = 0                 ! 自帯内の放流セル数
+    integer, allocatable :: cout(:,:)    ! 自帯内の放流セル (1:2, 1:ncout)
+    real(real64) :: mass = 0.0_real64    ! 質量プール M (g。全ランク同値に維持。
+                                         !   放流濃度 = M/V の完全混合。save 対象)
   end type
 
   type t_wq
@@ -142,11 +157,15 @@ module m_wq
     integer :: f_settle = 0                         ! 沈降の行き先 (0:消失, 1:プール)
     integer :: ndam = 0
     type(t_wqdam), allocatable :: dam(:)
+    logical :: have_rs = .false.            ! ため池(rscap)同伴の有効(§30.7)
+    real(real64) :: dam_decay = 0.0_real64  ! ダムプールの減衰消失の累積 (g。全ランク
+                                            !   同値 = 台帳へは rank0 の出力時に加算)
     ! 診断(行部分和 real64。累積 m3 でなく質量 g)
-    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:13) 1=点源 2=面源 3=浸透(→cg)
+    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:15) 1=点源 2=面源 3=浸透(→cg)
                                             !   4=ダム捕捉 5=減衰消失 6=沈降
                                             !   7=分布面源 8=降雨沈着 9=蓄積(→bp)
                                             !   10=洗い出し(bp→cq) 13=湧出還元(cg→cq)
+                                            !   14=ダム放流(プール→cq) 15=ため池吸収(→crs)
                                             !   11=管路噴出・吐口の投入 12=枡流入(→管路台帳)
     integer :: un = 0                       ! CSV 装置番号(rank0。open(newunit=) は負値。§22)
   end type
@@ -168,6 +187,7 @@ subroutine m_wq_init(wq, p, g, b, s)
   type(t_state), intent(inout) :: s      ! cq/cqc/fxg の確保と wq_active
   type(t_list_wq) :: list
   integer :: k
+  real :: rsmax(1)
 
   if (len_trim(p%fn_wq) == 0) return
   if (p%f_gridsystem /= 0) then
@@ -251,9 +271,25 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- ダム捕捉台帳(全ダム・湖沼が対象) ---
   call setup_dams(wq, g, b)
 
+  ! --- ため池(rscap)同伴の有効判定(§30.7): rscap セルがどこかの帯に
+  !     あれば全ランクで有効化する(確保・saveの読み書き順が全ランク・
+  !     全ケースで同一になる条件。判定は allreduce = 決定的)---
+  rsmax(1) = 0.0
+  do k = dcp%js, dcp%je
+    rsmax(1) = max(rsmax(1), maxval(g%rscap(:,k)))
+  end do
+  call par_allreduce_max(rsmax)
+  wq%have_rs = rsmax(1) > 0.0
+
   ! --- 状態の確保 ---
   allocate(s%cq(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%cqc(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  if (wq%have_rs) then
+    ! ため池の吸収量記録場と質量プール(boundary_h が fxr に記録し、
+    ! 本モジュールが消費して crs へ同伴する契約。§30.7)
+    allocate(s%fxr(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%crs(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  end if
   if (wq%f_infil == 1) then
     allocate(s%fxg(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(s%cg(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
@@ -280,14 +316,15 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- リスタート ---
   if (p%f_state_restore > 0) call restore_state(wq, p, g, s)
 
-  allocate(wq%vrow(dcp%js:dcp%je, 1:13), source = 0.0_real64)
+  allocate(wq%vrow(dcp%js:dcp%je, 1:15), source = 0.0_real64)
 
   ! --- 診断 CSV(rank0。累積はラン先頭からの積算 = restore でリセット) ---
   if (is_root) then
     open(newunit=wq%un, file=trim(p%dir_result)//"/wq.csv", status='replace')
     write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,in_gwc_g," &
-                        //"in_bldup_g,wash_g,to_gw_g,seep_g,to_gwc_g,to_dam_g,decay_g," &
-                        //"settle_g,mass_surface_g,mass_gw_g,mass_pool_g"
+                        //"in_bldup_g,wash_g,to_gw_g,seep_g,to_gwc_g,to_dam_g,rel_dam_g," &
+                        //"to_rs_g,decay_g,settle_g,mass_surface_g,mass_gw_g,mass_pool_g," &
+                        //"mass_dam_g,mass_rs_g"
   end if
 
   s%wq_active = .true.
@@ -741,6 +778,36 @@ subroutine setup_dams(wq, g, b)
       wq%dam(nd)%cells(1,n) = b%struct(ist)%cin(1,k)
       wq%dam(nd)%cells(2,n) = j
     end do
+    ! --- 完全混合プールと放流同伴のための追加情報(§30.7)---
+    wq%dam(nd)%dmode = b%struct(ist)%dmode
+    ! 参照先湖沼(lref = struct 通し番号)を wq%dam のインデックスへ
+    ! (参照先は小さい番号の湖沼 = 構築済みのエントリにある)
+    if (b%struct(ist)%lref > 0) then
+      do k = 1, nd - 1
+        if (wq%dam(k)%ist == b%struct(ist)%lref) wq%dam(nd)%lref = k
+      end do
+      if (wq%dam(nd)%lref == 0) then
+        call par_stop("wq: dam pool setup failed to resolve the referenced lake")
+      end if
+    end if
+    wq%dam(nd)%pooled = (wq%dam(nd)%dmode > 0 .and. wq%dam(nd)%lref == 0)
+    ! 放流セルの帯内サブセット(質量は水と同じセル数等分で同伴する)
+    wq%dam(nd)%ncout_all = b%struct(ist)%ncout
+    n = 0
+    do k = 1, b%struct(ist)%ncout
+      j = b%struct(ist)%cout(2,k)
+      if (j >= dcp%js .and. j <= dcp%je) n = n + 1
+    end do
+    wq%dam(nd)%ncout = n
+    allocate(wq%dam(nd)%cout(1:2, 1:max(n,1)), source = 0)
+    n = 0
+    do k = 1, b%struct(ist)%ncout
+      j = b%struct(ist)%cout(2,k)
+      if (j < dcp%js .or. j > dcp%je) cycle
+      n = n + 1
+      wq%dam(nd)%cout(1,n) = b%struct(ist)%cout(1,k)
+      wq%dam(nd)%cout(2,n) = j
+    end do
   end do
 end subroutine
 
@@ -762,9 +829,11 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
   type(t_boundary), intent(inout) :: b
   type(t_state), intent(inout) :: s
   integer, intent(in) :: it
-  integer :: i, j, k, m, nd
+  integer :: i, j, k, m, nd, lk
   real :: w, rate, fx, fp
-  real(real64) :: acell
+  real(real64) :: acell, w8, m8
+  real(real64) :: drow(dcp%js:dcp%je)
+  real(real64) :: vout(wq%ndam), vrun(wq%ndam)
 
   if (it < 0) continue  ! 引数未使用の警告を抑制
   if (.not. wq%enabled) return
@@ -833,6 +902,29 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
         s%fxs(i,j) = 0.0
         s%cq(i,j) = s%cq(i,j) + fx / gwfac_of(g, i, j)
         wq%vrow(j,13) = wq%vrow(j,13) + real(fx, real64) * acell
+      end do
+    end do
+    !$omp end parallel do
+  end if
+
+  ! (2r) ため池吸収の同伴(§30.7): boundary_h が記録した吸収量 fxr に
+  !      同率移動で質量を同伴し、セル別プール crs(幾何面積基底)へ移す。
+  !      ため池は吸収のみ(満水後のあふれ水は吸収されない)= プールは
+  !      蓄積・減衰のみのシンク。蒸発は hrs から純水だけが抜けるため
+  !      質量残留 = 連携不要。fxg と同型の契約
+  if (allocated(s%fxr)) then
+    !$omp parallel do schedule(static) private(i, j, fx, w)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        fx = s%fxr(i,j)
+        if (fx <= 0.0) cycle
+        s%fxr(i,j) = 0.0
+        if (s%cq(i,j) <= 0.0) cycle
+        w = s%cq(i,j) * (fx / max(s%h(i,j) + fx, tiny(fx)))
+        s%cq(i,j) = s%cq(i,j) - w
+        s%crs(i,j) = s%crs(i,j) + w * gwfac_of(g, i, j)
+        wq%vrow(j,15) = wq%vrow(j,15) + mass_of(g, i, j, w)
       end do
     end do
     !$omp end parallel do
@@ -1018,17 +1110,76 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
     !$omp end parallel do
   end if
 
-  ! (4) ダム捕捉帯の質量吸収(水は毎ステップ全量吸収されるため質量も
-  !     同伴してダム台帳へ。放流濃度 0 = 既知の妥協。§30)
+  ! (4) ダム・湖沼の捕捉同伴(§30.7): 水は毎ステップ全量吸収されるため
+  !     質量も同伴し、貯留湖沼(dmode>0)は完全混合プール M へ移す
+  !     (決定的総和 = M は全ランク同値に保たれる。collective の実行判定は
+  !     namelist 由来で全ランク同一)。水位固定湖沼(dmode=0)は水と同じく
+  !     系外扱い = 台帳計上のみ(従来どおり)
   do nd = 1, wq%ndam
+    drow(:) = 0.0_real64
     do k = 1, wq%dam(nd)%nc
       i = wq%dam(nd)%cells(1,k)
       j = wq%dam(nd)%cells(2,k)
       if (s%cq(i,j) <= 0.0) cycle
       wq%vrow(j,4) = wq%vrow(j,4) + mass_of(g, i, j, s%cq(i,j))
+      drow(j) = drow(j) + mass_of(g, i, j, s%cq(i,j))
       s%cq(i,j) = 0.0
     end do
+    if (wq%dam(nd)%pooled) then
+      call par_sum_rows(drow, w8)
+      wq%dam(nd)%mass = wq%dam(nd)%mass + w8
+    end if
   end do
+
+  ! (4b) ダム放流の質量同伴(§30.7): この歩の放流量(診断量 dqout/dqsp は
+  !      全ランク同値)に完全混合濃度 M/V を乗じ、放流セルへ水と同じ
+  !      セル数等分で投入する。複数放流工(湖沼参照 lref)は struct 順の
+  !      逐次比例縮小 = 水の引き落とし順の鏡写し。V は引き落とし後の
+  !      貯水量 dv に全放流量を足し戻して復元する
+  if (wq%ndam > 0) then
+    vout(:) = 0.0_real64
+    vrun(:) = 0.0_real64
+    do nd = 1, wq%ndam
+      lk = nd
+      if (wq%dam(nd)%lref > 0) lk = wq%dam(nd)%lref
+      if (.not. wq%dam(lk)%pooled) cycle
+      if (wq%dam(nd)%lref > 0) then
+        ! 参照放流工はルール分のみ(スピルは主放流が処理)
+        vout(nd) = real(b%struct(wq%dam(nd)%ist)%dqout, real64) * real(p%dt, real64)
+      else
+        vout(nd) = (real(b%struct(wq%dam(nd)%ist)%dqout, real64) &
+                    + real(b%struct(wq%dam(nd)%ist)%dqsp, real64)) * real(p%dt, real64)
+      end if
+      vrun(lk) = vrun(lk) + vout(nd)
+    end do
+    do nd = 1, wq%ndam
+      if (wq%dam(nd)%pooled) then
+        vrun(nd) = vrun(nd) + real(b%struct(wq%dam(nd)%ist)%dv, real64)
+      end if
+    end do
+    do nd = 1, wq%ndam
+      if (vout(nd) <= 0.0_real64) cycle
+      if (wq%dam(nd)%ncout_all <= 0) cycle
+      lk = nd
+      if (wq%dam(nd)%lref > 0) lk = wq%dam(nd)%lref
+      if (vrun(lk) <= 0.0_real64) cycle
+      if (wq%dam(lk)%mass <= 0.0_real64) then
+        vrun(lk) = vrun(lk) - vout(nd)
+        cycle
+      end if
+      m8 = wq%dam(lk)%mass * min(vout(nd) / vrun(lk), 1.0_real64)
+      wq%dam(lk)%mass = wq%dam(lk)%mass - m8
+      vrun(lk) = vrun(lk) - vout(nd)
+      ! 放流セルへ等分(自帯分のみ。点源と同じ換算で柱状量へ)
+      m8 = m8 / real(wq%dam(nd)%ncout_all, real64)
+      do k = 1, wq%dam(nd)%ncout
+        i = wq%dam(nd)%cout(1,k)
+        j = wq%dam(nd)%cout(2,k)
+        s%cq(i,j) = s%cq(i,j) + real(m8 / mass_of(g, i, j, 1.0))
+        wq%vrow(j,14) = wq%vrow(j,14) + m8
+      end do
+    end do
+  end if
 
   ! (5) 一次減衰(地表 cq・地下 cg とも。指数厳密解 c·exp(-kΔt)。W2)
   !     と沈降(地表のみ。W2/K1)。沈降は wq_vs(単相の線形近似
@@ -1057,6 +1208,14 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
             if (s%bp(i,j) > 0.0) then
               w = s%bp(i,j) * (1.0 - wq%fdec)
               s%bp(i,j) = s%bp(i,j) - w
+              wq%vrow(j,5) = wq%vrow(j,5) + real(w, real64) * acell
+            end if
+          end if
+          if (wq%have_rs) then
+            if (s%crs(i,j) > 0.0) then
+              w = s%crs(i,j) * (1.0 - wq%fdec)
+              s%crs(i,j) = s%crs(i,j) - w
+              ! crs は幾何面積基底(質量 = w×A。§30.7)
               wq%vrow(j,5) = wq%vrow(j,5) + real(w, real64) * acell
             end if
           end if
@@ -1089,6 +1248,18 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
       end do
     end do
     !$omp end parallel do
+    ! ダムプールの減衰(M は全ランク同値。台帳は行部分和に載せると
+    ! ランク数倍に数えてしまうため wq%dam_decay に別置し、rank0 が
+    ! 出力時に decay_g へ加算する。§30.7)
+    if (wq%fdec < 1.0) then
+      do nd = 1, wq%ndam
+        if (.not. wq%dam(nd)%pooled) cycle
+        if (wq%dam(nd)%mass <= 0.0_real64) cycle
+        w8 = wq%dam(nd)%mass * real(1.0 - wq%fdec, real64)
+        wq%dam(nd)%mass = wq%dam(nd)%mass - w8
+        wq%dam_decay = wq%dam_decay + w8
+      end do
+    end if
   end if
 
 end subroutine
@@ -1200,19 +1371,21 @@ subroutine m_wq_record(wq, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: v(1:13), msur, mgw, mpool, acell
+  real(real64) :: v(1:15), msur, mgw, mpool, mdam, mrs, acell
   real(real64) :: rows(dcp%js:dcp%je), rows2(dcp%js:dcp%je), rows3(dcp%js:dcp%je)
+  real(real64) :: rows4(dcp%js:dcp%je)
   integer :: i, j, k
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (.not. wq%enabled) return
 
   acell = real(g%dx, real64) * real(g%dy, real64)
-  do k = 1, 13
+  do k = 1, 15
     call par_sum_rows(wq%vrow(:,k), v(k))
   end do
   rows(:) = 0.0_real64
   rows2(:) = 0.0_real64
   rows3(:) = 0.0_real64
+  rows4(:) = 0.0_real64
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -1220,16 +1393,25 @@ subroutine m_wq_record(wq, p, g, s)
       ! cg は幾何面積基底(質量 = cg×A。W3)
       if (allocated(s%cg)) rows2(j) = rows2(j) + real(s%cg(i,j), real64) * acell
       if (wq%have_pool) rows3(j) = rows3(j) + real(s%bp(i,j), real64) * acell
+      ! crs も幾何面積基底(§30.7)
+      if (wq%have_rs) rows4(j) = rows4(j) + real(s%crs(i,j), real64) * acell
     end do
   end do
   call par_sum_rows(rows, msur)
   call par_sum_rows(rows2, mgw)
   call par_sum_rows(rows3, mpool)
+  call par_sum_rows(rows4, mrs)
+  ! ダムプールの現在質量(M は全ランク同値 = 集計不要)と減衰の別置台帳
+  mdam = 0.0_real64
+  do k = 1, wq%ndam
+    mdam = mdam + wq%dam(k)%mass
+  end do
 
   if (is_root .and. wq%un /= 0) then
-    write(wq%un, '(f0.2,16(",",es15.7))') s%t, v(1), v(2), v(7), v(8), v(11), v(9), &
-                                          v(10), v(3), v(13), v(12), v(4), v(5), v(6), &
-                                          msur, mgw, mpool
+    write(wq%un, '(f0.2,20(",",es15.7))') s%t, v(1), v(2), v(7), v(8), v(11), v(9), &
+                                          v(10), v(3), v(13), v(12), v(4), v(14), v(15), &
+                                          v(5) + wq%dam_decay, v(6), &
+                                          msur, mgw, mpool, mdam, mrs
     flush(wq%un)
   end if
 end subroutine
@@ -1246,7 +1428,7 @@ subroutine save_state(wq, p, g, s)
   type(t_state), intent(in) :: s
   real, allocatable :: wk(:,:)
   real :: dum(1,1)
-  integer :: un
+  integer :: un, k
   if (is_root) then
     allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
   else
@@ -1265,14 +1447,24 @@ subroutine save_state(wq, p, g, s)
     if (is_root) wk = 0.0
   end if
   if (is_root) call fileio_write_rle(un, wk)
-  ! bp(プール無効時もゼロを書いて形式を固定 = 常に3成分)
+  ! bp(プール無効時もゼロを書いて形式を固定 = 常に4成分)
   if (wq%have_pool) then
     call par_gather_to(wk, s%bp)
   else
     if (is_root) wk = 0.0
   end if
+  if (is_root) call fileio_write_rle(un, wk)
+  ! crs(ため池無効時もゼロを書いて形式を固定。§30.7)
+  if (wq%have_rs) then
+    call par_gather_to(wk, s%crs)
+  else
+    if (is_root) wk = 0.0
+  end if
+  if (is_root) call fileio_write_rle(un, wk)
+  ! ダムプール(基数+質量 real64。ダムなしでも基数 0 を書いて形式を固定)
   if (is_root) then
-    call fileio_write_rle(un, wk)
+    write(un) wq%ndam
+    if (wq%ndam > 0) write(un) (wq%dam(k)%mass, k = 1, wq%ndam)
     close(un)
   end if
   if (dum(1,1) > huge(0.0)) continue  ! 引数未使用の警告を抑制
@@ -1286,9 +1478,11 @@ subroutine restore_state(wq, p, g, s)
   type(t_state), intent(inout) :: s
   real, allocatable :: wk(:,:)
   real :: dum(1,1)
+  real :: mv(max(wq%ndam, 1))
+  real(real64) :: mv8(max(wq%ndam, 1))
   character(:), allocatable :: fname
   logical :: found
-  integer :: un
+  integer :: un, k, nd0
 
   ! 版・格子・精度の検証は m_state(check_save_info)が済ませている。
   ! 自ファイルの有無のみ確認(無ければ「保存時は wq 無効だった」として
@@ -1324,8 +1518,41 @@ subroutine restore_state(wq, p, g, s)
     else
       call par_scatter_cell(dum, s%bp)
     end if
+  else
+    if (is_root) call fileio_read_rle(un, wk)   ! bp 不使用 = 読み飛ばし
   end if
-  ! プール無効時は bp レコードを読み飛ばすだけ(形式は常に3成分)
+  ! crs(常に4成分。§30.7)
+  if (wq%have_rs) then
+    if (is_root) then
+      call fileio_read_rle(un, wk)
+      call par_scatter_cell(wk, s%crs)
+    else
+      call par_scatter_cell(dum, s%crs)
+    end if
+  else
+    if (is_root) call fileio_read_rle(un, wk)   ! crs 不使用 = 読み飛ばし
+  end if
+  ! ダムプール(基数の一致を検証し、rank0 の読み値を allreduce で共有。
+  ! 「寄与ランクがちょうど1つ」の使い方 = ビット決定的。§11)
+  nd0 = 0
+  if (is_root) read(un) nd0
+  call par_allreduce_maxi(nd0)
+  if (nd0 /= wq%ndam) then
+    call par_stop("wq: number of dams in the state file ("//itoa(nd0) &
+                  //") does not match the current setup ("//itoa(wq%ndam)//")")
+  end if
+  if (wq%ndam > 0) then
+    if (is_root) then
+      read(un) (mv8(k), k = 1, wq%ndam)
+      mv(1:wq%ndam) = real(mv8(1:wq%ndam))
+    else
+      mv(:) = 0.0
+    end if
+    call par_allreduce_sumr(mv)
+    do k = 1, wq%ndam
+      wq%dam(k)%mass = real(mv(k), real64)
+    end do
+  end if
   if (is_root) close(un)
 end subroutine
 

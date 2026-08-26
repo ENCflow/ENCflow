@@ -182,6 +182,14 @@ module m_state
                                         ! wq_gwc_conc 指定かつ f_wq_gwc_in=1 のみ)。§30)
     real, allocatable :: fxco(:,:)      ! 管路→地表(噴出・陸側吐口)交換量の記録 (m。
                                         ! 同上。確保は m_wq_init(管路連携指定時)。§30)
+    real, allocatable :: crs(:,:)       ! ため池(rscap)の質量プール (g/m2。幾何面積
+                                        ! 基底 = cg と同基底。吸収同伴で蓄積・減衰のみの
+                                        ! シンク(あふれ水は吸収されないため放出経路
+                                        ! なし)。m_wq が確保・更新・保存。§30.7)
+    real, allocatable :: fxr(:,:)       ! ため池(rscap)吸収量の記録 (m。h 基底。
+                                        ! boundary_h が書き、m_wq が読んで crs へ
+                                        ! 同伴しゼロ戻し。fxg と同型の契約。
+                                        ! 確保は m_wq_init(rscap 存在時のみ)。§30.7)
     real, allocatable :: fxs(:,:)       ! 飽和湧出に同伴した地下質量の記録 (g/m2。
                                         ! 幾何面積基底 = cg と同基底。m_gwflow_lateral が
                                         ! 書き、m_wq が読んで地表 cq へ還元しゼロ戻し。
@@ -746,6 +754,8 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%wdmax)) deallocate(s%wdmax)
   if (allocated(s%fxg)) deallocate(s%fxg)
   if (allocated(s%fxs)) deallocate(s%fxs)
+  if (allocated(s%crs)) deallocate(s%crs)
+  if (allocated(s%fxr)) deallocate(s%fxr)
   if (allocated(s%fxci)) deallocate(s%fxci)
   if (allocated(s%fxco)) deallocate(s%fxco)
   if (allocated(s%frofac)) deallocate(s%frofac)

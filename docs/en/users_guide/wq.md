@@ -140,14 +140,41 @@ that judgement through R.
   `to_gw_g` (infiltrated into the ground), `seep_g` (cumulative mass
   returned by seepage) and `mass_gw_g` (current subsurface storage):
   to_gw − seep = mass_gw.
-- Transport inside the weathered-bedrock layer (f_gwlayer2) and
-  entrainment of the mass absorbed by small retention ponds (rscap)
-  are not supported yet (the absorbed mass remains on the surface).
+- Transport inside the weathered-bedrock layer (f_gwlayer2) is not
+  supported yet.
 
 Worked example: [test/gwseep](../../../test/gwseep/) (a closed sloping
 domain cycling infiltration → lateral groundwater flow → seepage →
 re-infiltration, with built-in checks of the ledger closure and the
 immobilization at wq_rg=1e12).
+
+## Reservoirs and retention ponds
+
+No extra setting is needed — this works automatically when
+dams/lakes ([structures](structure.md)) or retention ponds (rscap;
+[geographic information](geoinfo.md)) are present.
+
+- **Dams and lakes (storage type)** are treated as **completely mixed
+  reservoirs**. The mass entering with the captured water accumulates
+  in the lake's pool, and the released water carries the storage
+  concentration M/V (spills carry the same concentration). This
+  represents the attenuation and delay of loads passing through
+  reservoir chains such as tank cascades. Decay (wq_thalf / wq_k20)
+  acts inside the pool as well. **In-reservoir settling is not
+  implemented**, so for settling substances the release concentration
+  is on the safe (high) side.
+- The mass entering a **fixed-level lake** (no release cells) leaves
+  the system together with the water (counted in the to_dam_g
+  ledger).
+- The mass of the water absorbed by **retention ponds (rscap)**
+  accumulates in a per-cell pond pool (the overflow after the pond is
+  full is never absorbed, so the pool only accumulates; evaporation
+  removes pure water and the mass remains = enrichment).
+
+Worked example: [test/damwq](../../../test/damwq/) (a slope with a
+retention-pond patch and a constant-release dam, with built-in checks
+of the ledger closure and the end-to-end preservation of a uniform
+concentration).
 
 ## Surface buildup + washoff (nonlinear L-Q)
 
@@ -170,8 +197,10 @@ L-Q relation between discharge and load, and first flush.
   pool is enabled).
 - A mass-budget ledger is output to `result/wq.csv` (cumulative
   inputs, boundary inflows, infiltration, seepage return (seep_g),
-  outflow out of the system, decay, and so on; useful to verify the
-  budget).
+  dam capture/release (to_dam_g / rel_dam_g), pond absorption
+  (to_rs_g), outflow out of the system, decay, and so on, plus the
+  current stored mass on the surface, underground, in the buildup
+  pool, in dams and in ponds; useful to verify the budget).
 - Columns for concentration C and surface load cq are added to the
   probe CSV ([the measurement chapter](record.md)).
 - Restart (save/restore) is handled automatically.

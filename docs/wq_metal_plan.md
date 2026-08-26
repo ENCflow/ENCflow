@@ -19,8 +19,12 @@ handoff.md 1l の W3 構想に突き合わせて判定した。
 > 正本は **developer.md §30.5**(恒常テスト test/gwseep も収載済み。
 > sewer_wq の wq.csv reference は許可を得て更新済み)。
 > **Phase 2(K1 = §5 の Kd 平衡分配)も実装済み(2026-08-26。wq_kd /
-> developer.md §30.6 / test/kdpart)**。Phase 3(貯水池 M/V)・
-> K2(E-D 結合)・保留項(分散・TVD)は未着手。
+> developer.md §30.6 / test/kdpart)**。
+> **Phase 3(§6 = 貯水池 M/V 完全混合+ため池 rscap 同伴)も実装済み
+> (2026-08-26。developer.md §30.7 / test/damwq。池内沈降は未実装 =
+> 放流濃度は安全側)**。残: K2(E-D 結合)・保留項(分散・TVD)。
+> これで §8 の Phase 1〜3 のコード側は完了し、以後はケース作成
+> (Phase 0)が主作業になる。
 
 ---
 

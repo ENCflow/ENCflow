@@ -126,12 +126,15 @@ module subroutine boundary_h(p, g, b, s, sx)
       if (g%sw(i,j) > 0) cycle
       if (g%x(i,j) <= 0) cycle
 
-      ! ため池の処理
+      ! ため池の処理(吸収量は s%fxr へ記録 — m_wq が読んで質量を
+      ! 同伴しゼロ戻しする契約。fxg と同型。未確保なら記録しない。§30.7)
       if (g%rscap(i,j) > 0.0 .and. g%rscap(i,j) > s%hrs(i,j)) then ! ため池に余力がある
         if (sx%h1(i,j) > (g%rscap(i,j) - s%hrs(i,j))) then         !   ため池があふれる
+          if (allocated(s%fxr)) s%fxr(i,j) = s%fxr(i,j) + (g%rscap(i,j) - s%hrs(i,j))
           sx%h1(i,j) = sx%h1(i,j) - (g%rscap(i,j) - s%hrs(i,j))    !     場の水深がため池の余力分だけ減る
           s%hrs(i,j) = g%rscap(i,j)                                !     ため池が満水になる
         else                                                       !   ため池があふれない
+          if (allocated(s%fxr)) s%fxr(i,j) = s%fxr(i,j) + sx%h1(i,j)
           s%hrs(i,j) = s%hrs(i,j) + sx%h1(i,j)                     !     ため池の水深が増加する
           sx%h1(i,j) = 0.0                                         !     場の水深がゼロになる
         end if
