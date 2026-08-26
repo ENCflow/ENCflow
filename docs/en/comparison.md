@@ -1,4 +1,4 @@
-> English mirror of docs/comparison.md (based on commit 6c5acfc). The Japanese file is the master copy.
+> English mirror of docs/comparison.md (based on commit 84e47c4). The Japanese file is the master copy.
 
 # Comparison with Other Simulation Software (comparison.md)
 
@@ -127,6 +127,29 @@ Sources (confirmed 2026-08-10):
   hard for agents to operate, and among the open players no example of
   repository-level agent groundwork is found at this time (a gap that
   may narrow as other models catch up).
+
+- (Added 2026-08-26) **A third positioning axis — a gateway across
+  disciplines (screening)**: the value of ENCflow cannot be measured
+  only on the axis "is it more precise than each field's specialist
+  model?". Because neighboring-field processes can be added one at a
+  time while keeping the same grid, the same input system, and the
+  same way of running, the barrier to running a *first* computation
+  outside one's own field is one step lower than with the conventional
+  practice of combining separate software systems (e.g. a river
+  researcher can try groundwater, and a flood researcher can try
+  sediment, snowmelt, or water quality, starting from one added
+  configuration file). The value is as a screening tool — estimate
+  with a simple model whether a process matters, and move to a
+  specialist model once you know it does — so the positioning is **a
+  gateway to, not a replacement for, specialist models**. This is an
+  advantage on a different axis from the feature table (Sec. 2), and
+  it aligns with education (processes can be learned as accumulating
+  on the same state) and with AI-agent operation (the uniform
+  structure lets a machine guide the entry into an unfamiliar
+  process). The statement of purpose is codified at the head of
+  developer.md Sec. 0. Note this does not mean "correct results
+  without expertise" — what is lowered is the barrier to trying, not
+  the expertise barrier, and user-facing wording keeps to this line.
 
 ## 4. Remaining items: who implements them, and directions
 
