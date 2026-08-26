@@ -106,6 +106,12 @@ The stability condition of the explicit scheme is checked at
 initialization; if dt exceeds the limit, the limit value is printed
 and the run stops (lower dt or thin the updates with dt_gwflow).
 
+When [water quality](wq.md) (fn_wq) is enabled, dissolved substances
+in the groundwater move with the lateral flow and return to the
+surface water at their groundwater concentration where seepage
+occurs (sorption retardation is given by wq_rg on the water-quality
+side).
+
 ## Weathered bedrock layer (f_gwlayer2=1, &list_gwflow_layer2)
 
 Inserts a second layer directly below the soil layer to hold a

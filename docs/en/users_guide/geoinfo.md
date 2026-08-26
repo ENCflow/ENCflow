@@ -126,6 +126,9 @@ chapter](swflow.md)).
 Gives cells a storage separate from the surface water, used e.g. as an
 intake source for pumps ([structures chapter](structure.md)). The pond
 water depth can be output as `Hrs0001` with `f_out_hrs = 1`.
+When [water quality](wq.md) is enabled, the mass of the absorbed water
+accumulates in a per-cell pond pool (the overflow after the pond is
+full is never absorbed).
 
 ## Soil layer (for groundwater computation)
 

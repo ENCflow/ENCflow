@@ -75,6 +75,10 @@ and exchanges with the riverbed through entrainment (E) and settling
 Sediment inflow from the boundaries (time series of concentration and
 bedload discharge) is given by the segment inflows (inflow_cs /
 inflow_qs) of [Boundary conditions](boundary.md).
+Suspended sediment also serves as the partner of the Kd two-phase
+partitioning (wq_kd) in [water quality](wq.md) (the particulate
+fraction of sorbing substances such as heavy metals is allocated
+according to the sediment concentration).
 
 **Tsunami / storm-surge resuspension and deposition in the run-up zone
 (tsunami deposits)** - resuspension of bay-bottom mud or sand and its

@@ -136,10 +136,14 @@ care about.**
 - **Water quality and mass transport**: load runoff from point sources,
   areal sources, land-use-specific unit loads, and wet deposition;
   advective transport, decay and settling, buildup–washoff (nonlinear
-  L–Q), and entrainment into infiltration. Coupled with the urban
-  sewer layer, it assesses the **sanitation risk of sewage eruption
-  (E. coli spreading with the floodwater)**; also suited to
-  radionuclide runoff analysis.
+  L–Q). **Kd two-phase partitioning** of sorbing substances such as
+  heavy metals (tied to suspended sediment), **transport through
+  groundwater** (infiltration → lateral flow → seepage, with sorption
+  retardation) and **completely mixed reservoirs and ponds** close the
+  mass budget across surface, subsurface and impounded water in one
+  run. Coupled with the urban sewer layer, it assesses the
+  **sanitation risk of sewage eruption (E. coli spreading with the
+  floodwater)**; also suited to radionuclide runoff analysis.
 - **Snow accumulation and melt**: degree-day method. With the
   temperature lapse rate, the snow line emerges automatically.
   Infiltration suppression by frozen ground (a temperature-driven

@@ -90,7 +90,10 @@ accuracy caveats (blank = nothing special).
 | Phenomenon | Features | Key settings | Notes |
 |---|---|---|---|
 | Pollutant load runoff / first flush | [Water quality](wq.md) | Buildup-washoff + advection | |
-| Coliform, nutrient, pesticide runoff (first-order approximation) | [Water quality](wq.md) | Match decay coefficients and settling velocities to the substance | Reactions are first-order decay and settling only (no ecosystem / reaction networks). Concentrations are fully mixed (no vertical profile) |
+| Coliform, nutrient, pesticide runoff (first-order approximation) | [Water quality](wq.md) | Match decay coefficients and settling velocities to the substance | Reactions are first-order decay, settling and Kd equilibrium partitioning only (no ecosystem / reaction networks). Concentrations are fully mixed (no vertical profile) |
+| Basin-scale transport of sorbing substances such as heavy metals | [Water quality](wq.md) + [Sediment](geomorph.md) | wq_kd (equilibrium two-phase partitioning) + f_suspend + f_wq_settle=1 | Dissolved/particulate phases partitioned continuously by Kd. One run per metal. Take Kd from the literature or observed particulate/dissolved ratios |
+| Dry-weather (baseflow) river quality | [Water quality](wq.md) + [Groundwater](gwflow.md) | f_gwlateral=1 + f_wq_infil=1 (sorption retardation via wq_rg) | Closes the mass pathway infiltration → groundwater flow → seepage |
+| Loads passing through reservoir / pond chains | [Water quality](wq.md) + [Structures](structure.md) | Automatic with dams/lakes and rscap (complete mixing M/V) | Attenuation and delay of tank cascades. In-reservoir settling is not implemented (release concentration on the safe side) |
 
 ## Long-term landforms
 

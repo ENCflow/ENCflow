@@ -168,7 +168,11 @@ set (intake weirs, diversion channels).
 A bucket model in which the cells of the **water surface (capture
 set)** absorb all arriving water every step into storage, and release
 it to the outlet cells according to an operation rule (the flow and
-backwater on the impounded surface are not solved). Not only dam
+backwater on the impounded surface are not solved). When
+[water quality](wq.md) is enabled, storage lakes act as completely
+mixed reservoirs and the released water carries the storage
+concentration M/V (see "Reservoirs and retention ponds" in the wq
+chapter). Not only dam
 reservoirs but **general lakes** (natural lakes, lagoons, regulating
 ponds, and lake groups sharing one water level) are handled by the
 same mechanism.

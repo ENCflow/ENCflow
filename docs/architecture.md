@@ -95,7 +95,9 @@ swflow_calc                   ★浅水流本体(uv/mn 更新 → 連続式 → 
   └ par_allreduce_maxi(ierror) 発散検出の全ランク集約
 gwflow_calc                   地下浸透・地下水(s%h から s%hg/s%hgc へ。冒頭で凍土係数の更新、末尾で井戸揚水シンク)
 saltwater_calc                淡塩2層(地表重力流・地下塩水 zone・海側境界)
-wq_calc                       水質(移流・沈降・負荷)
+wq_calc                       水質(発生源・浸透/湧出/ため池の同伴・Kd 分配・沈降・
+                              ダム完全混合プール。移流本体は swflow_calc・地下横輸送は
+                              gwflow_calc 内)
 evap_calc                     蒸発散(h・遮断貯留・hg からの蒸発)
 swflow_post                   ステップ確定処理(σ・河道幅有効時の u,v 正規化)
 wq_derive                     導出濃度場の更新(確定 h に対して)
@@ -120,7 +122,7 @@ calcstat                      統計(S 台帳・max 類。決定的総和)
 |---|---|---|---|
 | p | t_sysparam | m_sysparam | 実行制御。init 後は全モジュール読み取り専用 |
 | g | t_geoinfo | m_geoinfo | 地形 z(入力)・粗度 rn・マスク x/sw/rw・格子。原則不変(例外: なし。動的な標高は s%z) |
-| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), cq(輸送物質), hd/wd(流動・堆積流木), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi 等のモジュール私有 save は各 dispose。契約5) |
+| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), cq/cg/crs(輸送物質の地表・地下・ため池プール), hd/wd(流動・堆積流木), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi 等のモジュール私有 save は各 dispose。契約5) |
 | sx | t_enc_status | m_swflow_enc 私有 | エッジ流速 uv・流量 mn(前ステップ確定)・mn1(更新中)。他モジュールから不可視 |
 | r, b, … | 各 t_* | 各モジュール | モジュール私有。リスタートは各自の save ファイル(契約5) |
 
