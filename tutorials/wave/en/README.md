@@ -1,4 +1,4 @@
-> English mirror of tutorials/wave/README.md (based on commit adfdb2e). The Japanese file is the master copy.
+> English mirror of tutorials/wave/README.md (based on commit 451e87a). The Japanese file is the master copy.
 
 # Tutorial 1: wave -- waves spreading over still water
 
@@ -19,15 +19,6 @@ compiler. Visualization uses gnuplot (see section 2 of the same
 guide for installation). All commands below are run in the case directory
 (`tutorials/wave`), one level above this `en/` directory; the English
 parameter files are passed as `en/param_step1.txt` etc.
-
-The real protagonists of this tutorial are the parameter files of each
-step (`en/param_step1.txt` etc.). **Do not just run the commands and
-move on — open the parameter file each time and compare its contents
-with the text** as you go. On Windows (WSL), it is easiest to keep
-Explorer open at `tutorials/wave` (the English parameter files are in
-its `en/` subfolder) and open them with Notepad — see the section
-"Viewing and editing files" in
-[Using ENCflow on Windows](../../../docs/en/windows.md).
 
 > A case with the same name also exists in `test/wave`, but that one is
 > a regression test for development (automatic comparison against
@@ -179,7 +170,14 @@ ripples (right).
 
 ### Inside the parameter file
 
-Now let's look inside the parameter file.
+Now let's look inside the parameter file. Its contents are reproduced
+below, but **do open the real `en/param_step1.txt` yourself**. On
+Windows (WSL), it is easiest to open `tutorials/wave` in Explorer and
+open the file (in its `en/` subfolder) with Notepad — see the section
+"Viewing and editing files" in
+[Using ENCflow on Windows](../../../docs/en/windows.md). In the later
+steps too, whenever a new parameter file appears, open it in the same
+way and compare it with the text as you go.
 
 ```
 !======================================================================
