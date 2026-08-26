@@ -8,6 +8,16 @@ from river flooding, storm surge, and tsunami run-up to rainfall–runoff,
 groundwater, sediment, water quality, snow, glaciers, and landscape
 evolution, all in one Fortran program.
 
+ENCflow aims to:
+
+1. represent the process chains of the Earth's surface as one model,
+2. be a laboratory where whatever catches your interest can be put to
+   a numerical experiment right away, and
+3. make it easier for researchers and students to take a first step
+   into the field next door.
+
+Replacing each field's specialist models is not the goal.
+
 [日本語 README](README.md) /
 [Installation](docs/en/install.md) /
 [Tutorial](docs/en/tutorial.md) /
