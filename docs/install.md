@@ -30,19 +30,21 @@ sudo apt install -y git gfortran make
 brew install gcc    # gfortran は gcc に同梱されています
 ```
 
-続いて共通:
+続いて共通です。`git clone` は、GitHub で公開されているリポジトリ
+(ソースコード・例題・文書を含むプロジェクト一式)を手元の PC に
+クローン(コピー)するコマンドです:
 
 ```bash
-git clone https://github.com/ENCflow/ENCflow.git
-cd ENCflow/src
-make install        # → ../bin/encflow ができます
+git clone https://github.com/ENCflow/ENCflow.git   # リポジトリ一式を手元にコピー
+cd ENCflow/src                                     # ソースコードのディレクトリへ移動
+make install                                       # ビルド → ../bin/encflow ができます
 ```
 
 動作確認(最初の例題を実行して検証済みの結果と自動比較します):
 
 ```bash
-cd ../test/wave
-./Run.sh
+cd ../test/wave    # 最初の例題のディレクトリへ移動
+./Run.sh           # 実行して検証済みの結果と自動比較
 ```
 
 最後に `=== regression test PASS ===` と表示されれば、あなたの環境の

@@ -20,20 +20,25 @@ ENCflow は Linux 系の環境で動きます。Windows しか使ったことが
 ## ② 続けるなら WSL(Windows 標準の Linux 環境)
 
 WSL は Microsoft 公式の機能で、Windows の中に Ubuntu(Linux)を
-入れられます。インストールは PowerShell(管理者)で 1 コマンドです:
+入れられます。インストールは、PowerShell を**管理者として**開いて
+1 コマンドです。スタートメニュー(またはタスクバーの検索欄)で
+「PowerShell」と検索し、表示された「Windows PowerShell」を
+**右クリック →「管理者として実行」**で開いてください
+(「このアプリがデバイスに変更を加えることを許可しますか?」と
+聞かれたら「はい」)。開いた青い画面に次を入力して Enter します:
 
 ```powershell
-wsl --install
+wsl --install    # WSL と Ubuntu を導入する
 ```
 
 再起動後、スタートメニューから Ubuntu を開き、ユーザー名とパスワードを
 決めたら、あとは [インストールガイド](install.md) の手順どおりです:
 
 ```bash
-sudo apt update && sudo apt install -y gfortran make git
-git clone https://github.com/ENCflow/ENCflow.git
-cd ENCflow/src && make install
-cd ../test/wave && ./Run.sh
+sudo apt update && sudo apt install -y gfortran make git   # コンパイラ等を導入
+git clone https://github.com/ENCflow/ENCflow.git           # ENCflow 一式を取得
+cd ENCflow/src && make install                             # 移動してビルド
+cd ../test/wave && ./Run.sh                                # 例題を実行して動作確認
 ```
 
 詰まったら Microsoft の
