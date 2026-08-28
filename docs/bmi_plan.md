@@ -240,8 +240,82 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
    仕様のままでよいか(BMI の initialize(config) に自然に載る見込み)。
 7. **再 initialize**: finalize 後の再 initialize(同一プロセス内)を
    許すなら、t_encflow 成分のデフォルト初期化(§13)への依存を確認。
+8. **MPI 時の get_value の返り値の意味論**: 全域配列は rank0 のみ
+   有効とするか(gather 先が rank0 のため自然)、全ランクへ bcast
+   するか。呼び出しは全ランク collective とし、有効値の所在だけを
+   規約化する(§8 の利用イメージ参照)。
 
-## 8. 位置づけへの影響
+## 8. 利用イメージ(Python サンプル。設計スケッチ)
+
+BMI 化後に利用者側がどう書けるかのイメージ(**未実装につきこのままでは
+動かない**。`ENCflow` クラスは bmi/python/encflow.py に置く予定の
+ctypes 最小ラッパー、変数名は仮)。実験条件(tt, dt)を Python 側で
+定義し、水深分布とハイドログラフを matplotlib で描く例:
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from encflow import ENCflow          # bmi/python/encflow.py(ctypes ラッパー)
+
+# ---- 1. 実験条件は Python 側で定義する ----
+dt      = 0.05        # 数値時間刻み (s)
+tt      = 8.0         # 計算終了時刻 (s)
+dt_plot = 0.1         # Python 側の取得・描画間隔 (s)
+ip, jp  = 50, 2       # ハイドログラフを取るセル(1始まり。Fortran と同じ)
+
+# 数値条件はパラメータファイルが正(方針12)なので、Python からは
+# namelist を生成してから initialize に渡す(set_value で dt は変えない)
+base = open("param_base.txt").read()          # dt = <DT>, tt = <TT> の雛形
+open("param_run.txt", "w").write(
+    base.replace("<DT>", str(dt)).replace("<TT>", str(tt)))
+
+# ---- 2. BMI で初期化し、格子情報はモデルに問い合わせる ----
+model  = ENCflow("param_run.txt")             # initialize
+nx, ny = model.grid_shape("surface_water__depth")
+dx, dy = model.grid_spacing("surface_water__depth")
+
+# ---- 3. Python が時間を進め、都度 状態を取得する ----
+times, hp = [], []
+while model.time() < tt:
+    model.update_until(min(model.time() + dt_plot, tt))
+    h = model.get("surface_water__depth").reshape(ny, nx)   # 1D→2D(行=j)
+    times.append(model.time())
+    hp.append(h[jp - 1, ip - 1])
+model.finalize()
+
+# ---- 4. matplotlib で描画 ----
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+im = ax1.imshow(np.where(h > 1e-3, h, np.nan), origin="lower",
+                extent=(0, nx * dx, 0, ny * dy))
+fig.colorbar(im, ax=ax1, label="h (m)")
+ax1.set_title(f"water depth at t = {times[-1]:.1f} s")
+ax2.plot(times, hp)
+ax2.set_xlabel("t (s)"); ax2.set_ylabel("h (m)")
+ax2.set_title(f"hydrograph at cell ({ip}, {jp})")
+fig.savefig("result.png", dpi=150)
+```
+
+このサンプルが示す設計上の分担(重要):
+
+- **進行制御は Python が握る**: どこまで進めるか(update_until)・
+  どの間隔で状態を取るか(dt_plot)は完全に Python 側の自由。既存の
+  dt_file / dt_recrd の出力も並行して生きる(BMI は加算的な操作口)。
+- **数値条件(dt, tt)はパラメータファイルが正のまま**: BMI には
+  dt を設定する標準口がない(get_time_step は照会のみ)ため、Python で
+  決めた dt・tt は namelist 生成(テンプレート置換)で渡す。方針12
+  (入力はファイル駆動)と衝突しない自然な形。
+- **tt は上限として効く**: 現行設計では nt = tt/dt が確保・出力番号に
+  効くため、BMI 化後も「nt を超える update は BMI_FAILURE」とするのが
+  自然(§7-3 の端数問題と合わせて設計段階で確定)。
+- **ハイドログラフを流量にする場合**は qq(線流量)等を同様に取得
+  (変数名マッピングは §7-5)。既存の m_record プローブ CSV を使う
+  選択肢も残る。
+- **MPI 版で同じスクリプトを使う場合**は `mpiexec -n N python …` と
+  なり、get_value の全域配列は rank0 のみ有効という規約になる見込み
+  (描画・保存は rank0 で行う)。非 rank0 での get_value の返り値の
+  意味論は §7 の設計論点に追加する。
+
+## 9. 位置づけへの影響
 
 対応した場合、docs/comparison.md の「提供形態」に BMI(PyMT /
 NextGen 系エコシステムとの相互運用)を追記する節目になる。
