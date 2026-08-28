@@ -5140,3 +5140,46 @@ CSDMS BMI 2.0 の逐次アダプタ。全体計画は docs/bmi_plan.md §6、
 MPI BMI(z の gather、rank0 有効の規約化、owns_mpi ガード)、
 set_value(強制場の所有権設計 = bmi_plan.md §4.2)、bind(c) 層+
 ctypes サンプル(bmi_plan.md §4.3-4.4)、Standard Names の拡充。
+
+
+## 55. BMI の C 相互運用層と Python サンプル(BMI 対応 段2.5。2026-08-28 実装)
+
+bmi/ に bind(c) 層と ctypes ラッパーを追加し、逐次 ENCflow を Python
+から直接駆動できるようにした(bmi_plan.md §4.3 軽量ルート・§4.4 形態2)。
+
+### 構成と決定事項
+
+- **bmi_encflow_c.f90**: bind(c) の C 相互運用層。iso_c_binding のみで
+  外部依存なし。encflow_bmi_* の実用サブセット(IRF・時間・格子・
+  get_value_double・変数名列挙)を公開。配列受け渡しは PREC に
+  よらず c_double に統一し内部変換。完全な BMI-C 互換(babelizer
+  互換)が必要になったら拡張する。
+- **libencflow_bmi.so**(make で生成): bmi/ の .o は -fPIC ビルド。
+  **libencflow.a は LTO ビルド(gfortran -flto)ならリンク時に -fPIC で
+  再コード生成されるため src の再ビルド不要**。LTO を使わない
+  コンパイラ設定では make.inc FFLAGS に -fPIC を足して src から
+  ビルドし直す必要がある(bmi/Makefile に注記)。
+- **bmi/python/encflow.py**: ctypes 最小ラッパー(サンプル扱い =
+  方針10 の対象外)。ENCflow クラスが initialize〜finalize、時間・
+  格子問い合わせ、get(name)/get2d(name)(numpy)を提供。
+  with 構文で finalize を保証。
+- **bmi/python/live_view.py**: update_until で進めながら水深分布
+  (地形グレー+水深 Blues)とハイドログラフを順次表示・PNG 保存する
+  サンプル。表示間隔は --interval、省略時は param の dt_file
+  (数値形式と dt_file_c 文字列形式の両方を解釈)= ファイル出力と
+  同期した表示。**行 j=1 は北**(gnuplot 側 yrange reverse と同じ
+  向き)なので origin='upper' で描く。
+
+### 検証と既知の差(2026-08-28)
+
+- Python(live_view.py)駆動で test/wave・test/chichibu を完走。
+  chichibu の Log.txt は reference と identical。wave は
+  **比較除外列の第4列(適応 RK 発動率)のみ +0.1%** の差があり、
+  他の全列(質量 S の全15桁を含む)は一致。原因は .so 化に伴う
+  LTO 再コード生成(-fPIC)による浮動小数点コード差が、閾値近傍の
+  適応 RK 発動判定に現れたもの。**.so はコンパイルフラグの異なる
+  別バイナリ**として扱う(同列は既存の回帰でも比較除外指定)。
+  静的な test_encflow_bmi は従来どおり全列 identical。
+- Landlab 連携(bmi_plan.md §8.1)への注意を1点確定: 内部 j は
+  北→南に増えるため、Landlab(左下原点・y 北向き)へ渡すときは
+  行反転(np.flipud)が必要。マッピング設計(§7-5)に含めること。

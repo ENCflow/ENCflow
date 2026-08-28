@@ -73,3 +73,5 @@ examples/timberyard/stock.txt
 # --- BMI adapter (bmi/) ---
 bmi/test_encflow_bmi
 test/*/test_encflow_bmi
+bmi/libencflow_bmi.so
+test/*/frames_bmi/

@@ -219,6 +219,10 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
 > 段2 = bmi/(vendor/bmi.f90 同梱・bmi_encflow.f90・test_bmi.f90)+
 > m_main アクセサ4つ。BMI 経由の完走で wave・chichibu(非正方形)の
 > Log.txt が reference と identical。公開変数は h, z, pre の3出力。
+> 段2.5(同日・§55)= bind(c) 層 + libencflow_bmi.so + Python ctypes
+> ラッパー(bmi/python/encflow.py)+ ライブ表示サンプル(live_view.py。
+> §8 の利用イメージが実際に動く)。§4.3 軽量ルート実装済み。
+> 判明事項: 内部 j は北→南のため Landlab 連携では行反転が必要(§8.1)。
 
 | 段 | 内容 | 規模感 | 検証 |
 | --- | --- | --- | --- |
