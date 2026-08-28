@@ -385,7 +385,50 @@ while enc.time() < tt:
 - Landlab は serial Python のため、まずは **serial ENCflow との組合せ**が
   素直(MPI 版は rank0 規約で可能だが初期段の対象外)。
 
-## 9. 位置づけへの影響
+## 9. 連携候補の見取り図(エコシステム)
+
+BMI 対応モデルのカタログは CSDMS model repository・pymt components・
+周辺枠組み(NextGen, eWaterCycle, GLOFRIM, OpenDA)に集まっており、
+重心は水文・地表過程 = ENCflow の領域と重なる。2026-08 時点の主な顔ぶれ:
+
+**ENCflow 側から使いたくなる相手**(上流強制・境界・検証相手):
+
+- 降雨流出・陸面(流量境界の供給元): NOAA **NextGen** のモジュール群
+  (CFE, Noah-OWP, LSTM 等。NextGen は BMI 2.0 をモジュール規格に採用)、
+  TopoFlow、PRMS、wflow、PCR-GLOBWB、HBV 系(eWaterCycle 経由)。
+- 地下水: **MODFLOW 6**(公式に BMI/XMI を公開: libmf6 + xmipy)。
+  ENCflow の簡便2層地下水の検証相手、または精緻側への置換相手。
+- 流域からの水・土砂供給: HydroTrend(pymt)。
+- 海岸・沿岸: XBeach、Delft3D FM(BMI あり)。高潮・波を潮位/境界
+  水位強制として受ける。
+- 雪氷・凍土: ECSimpleSnow、GIPL、Ku(permamodel。pymt)。
+- 地形進化: Landlab(§8.1)、CHILD、Sedflux(pymt)。
+
+**ENCflow と連携したくなりそうな側**(ENCflow が供給側に立つ文脈):
+
+- **GLOFRIM** 型の「大域水文 → 局所氾濫」チェーン(openearth/glofrim。
+  PCR-GLOBWB / wflow / CaMa-Flood と氾濫モデルを BMI で格子間結合)。
+  現在その「局所氾濫エンジン」の座は LISFLOOD-FP / Delft3D FM で、
+  ENCflow は同じ座に入れる上、氾濫+土砂+流木+地下水を1格子で持つ
+  点が既存の座にない供給物になる。
+- Landlab / pymt コミュニティ: Landlab 自前の OverlandFlow は
+  de Almeida 近似であり、フル SWE+多プロセスの水理エンジンには
+  需要がある(§8.1 の逆方向)。
+- **eWaterCycle**: BMI 水文モデルの収集地(grpc4bmi+コンテナ。
+  §4.4 形態3と適合)。
+- **OpenDA** 等のデータ同化枠組み: BMI 対応モデルをそのまま同化対象に
+  できる。
+- NextGen: BMI 2.0 準拠モジュールとして原理的には参入可能
+  (制度・運用面のハードルは別問題)。
+
+**非対称性の見立て**: ENCflow が「受ける」ものの多くは時系列境界
+(流量・水位)で、実はファイル渡し(既存の fn_boundary 体系)でも
+済む。一方 ENCflow が「渡す」ものは 2D 場(水深・流速・地形変化)で、
+こちらは BMI の価値が大きい。**ENCflow は BMI の供給側として特に
+価値が出る**——これは §4.2 で「第1段は get_value まで」とした判断とも
+整合する。
+
+## 10. 位置づけへの影響
 
 対応した場合、docs/comparison.md の「提供形態」に BMI(PyMT /
 NextGen 系エコシステムとの相互運用)を追記する節目になる。
