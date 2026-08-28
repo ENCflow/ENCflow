@@ -5183,3 +5183,21 @@ bmi/ に bind(c) 層と ctypes ラッパーを追加し、逐次 ENCflow を Pyt
 - Landlab 連携(bmi_plan.md §8.1)への注意を1点確定: 内部 j は
   北→南に増えるため、Landlab(左下原点・y 北向き)へ渡すときは
   行反転(np.flipud)が必要。マッピング設計(§7-5)に含めること。
+
+### 55.1 行順の標準形正規化(bmi_plan.md §7-5 案A。2026-08-28 追記)
+
+上記の「Landlab 連携では行反転が必要」は本追記で解消した。行反転の
+要否が連結相手の規約次第になるのは生配列の直接受け渡しの場合であり、
+BMI では格子が origin/spacing/shape で自己記述されるため、配列並びを
+メタデータと整合させれば相手は規約を推測しなくてよい。そこで
+**BMI 層(bmi_encflow.f90 の get 経路。将来は set も)で行反転し、
+「要素0 = 南西隅・行は南→北・origin = 左下・spacing 正」の標準形に
+正規化**した。内部(j=1 = 北)と m_main アクセサは不変で、変換は
+翻訳層のコピー時のみ(追加コスト実質ゼロ)。Landlab の
+RasterModelGrid ノード配列とは無変換で 1:1 対応する。
+
+検証: chichibu の DEM 入力(1行目=北)と BMI 取得 z の照合で
+「要素0行 = DEM 最終行(南)」を確認。wave / chichibu の BMI 経由
+完走 Log は reference と identical のまま(get 経路の変更は Log に
+影響しない)。live_view.py は origin='lower' 表示に更新し、--probe の
+内部セル番地 (i, j) は arr[ny-j, i-1] へ変換する。

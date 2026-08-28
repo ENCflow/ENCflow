@@ -205,7 +205,12 @@ class ENCflow:
     # ---- 状態量 ----
 
     def get(self, name):
-        """状態量の flatten 1 次元コピー(float64、長さ nx*ny)。"""
+        """状態量の flatten 1 次元コピー(float64、長さ nx*ny)。
+
+        BMI 標準形(要素 0 = 南西隅、行は南→北、x は西→東)。
+        origin(左下)+ spacing と整合しており、Landlab の
+        RasterModelGrid ノード配列とは無変換で 1:1 対応する。
+        """
         n = self.nx * self.ny
         dest = np.empty(n, dtype=np.float64)
         self._check(
@@ -219,5 +224,10 @@ class ENCflow:
         return dest
 
     def get2d(self, name):
-        """状態量の (ny, nx) 2 次元コピー([j, i] で参照)。"""
+        """状態量の (ny, nx) 2 次元コピー。
+
+        行 0 が南(BMI 標準形)。matplotlib では origin='lower' で
+        地図の向きどおりに表示できる。ENCflow 内部のセル (i, j)
+        (j=1 が北)は arr[ny - j, i - 1] に対応する。
+        """
         return self.get(name).reshape(self.ny, self.nx)

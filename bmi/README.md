@@ -59,7 +59,8 @@ python3 ../../bmi/python/live_view.py param.txt --save frames   # PNG 連番(ヘ
 注意: 共有ライブラリ経由はコンパイルフラグ(-fPIC)の異なる別
 バイナリになる(gfortran の LTO がリンク時に再コード生成する)。
 物理量の出力は一致するが、比較除外列(適応 RK 発動率)がまれに
-±0.1% 変わり得る(developer.md §55)。配列の行 j=1 は北。
+±0.1% 変わり得る(developer.md §55)。get/get2d の行順は標準形
+(行0=南)。
 
 ## 公開変数(段2)
 
@@ -69,5 +70,9 @@ python3 ../../bmi/python/live_view.py param.txt --save frames   # PNG 連番(ヘ
 | `land_surface__elevation` | s%z | m |
 | `atmosphere_water__precipitation_leq-volume_flux` | s%pre | m s-1 |
 
-配列は BMI 仕様どおり flatten した 1 次元(index = i + (j-1)*nx)。
-格子は grid 0 = uniform_rectilinear、shape は [ny, nx] 順。
+配列は BMI 仕様どおり flatten した 1 次元。行順は **BMI 標準形に
+正規化**して受け渡す: 要素 0 = 南西隅、行は南→北(origin = 左下・
+spacing 正と整合。内部の j=1=北 とは逆順で、変換は BMI 層が行う。
+bmi_plan.md §7-5 案A)。Landlab の RasterModelGrid ノード配列とは
+無変換で 1:1 対応する。格子は grid 0 = uniform_rectilinear、
+shape は [ny, nx] 順。

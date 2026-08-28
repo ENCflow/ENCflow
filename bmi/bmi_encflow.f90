@@ -10,8 +10,12 @@
 !   仕様: bmif_2_0(vendor/bmi.f90。CSDMS bmi-fortran、MIT)。
 !
 !   規約:
-!   - 配列の受け渡しは BMI 仕様どおり flatten した 1 次元
-!     (列優先: index = i + (j-1)*nx。grid shape は [ny, nx] の順)。
+!   - 配列の受け渡しは BMI 仕様どおり flatten した 1 次元。
+!     **行順は BMI 標準形に正規化する**(bmi_plan.md §7-5 案A):
+!     要素 0 = 南西隅、行は南→北(origin = 左下・spacing 正と整合し、
+!     consumer が origin + index*spacing で座標復元できる)。内部の
+!     j=1 = 北とは行が逆順のため、get(将来は set も)のコピー時に
+!     反転する。x は内部と同じ西→東(index = i + (ny-j)*nx)。
 !   - 現段階(段2)は逐次専用・出力変数のみ(set_value は BMI_FAILURE)。
 !   - 該当機能がない問い合わせは BMI_FAILURE を返す(仕様が許容)。
 !   - 本ファイルは計算本体(src/)の外の optional アダプタであり、
@@ -414,8 +418,8 @@ contains
       bmi_status = BMI_FAILURE
       return
     end if
-    ! flatten(列優先: index = i + (j-1)*nx)
-    dest = reshape(buf, [nx*ny])
+    ! flatten + 行反転(内部 j=1=北 → BMI 標準形 要素0=南西。ヘッダ参照)
+    dest = reshape(buf(:, ny:1:-1), [nx*ny])
     bmi_status = BMI_SUCCESS
   end function
 
@@ -444,7 +448,8 @@ contains
       bmi_status = BMI_FAILURE
       return
     end if
-    dest = reshape(dble(buf), [nx*ny])
+    ! flatten + 行反転(内部 j=1=北 → BMI 標準形 要素0=南西。ヘッダ参照)
+    dest = reshape(dble(buf(:, ny:1:-1)), [nx*ny])
     bmi_status = BMI_SUCCESS
   end function
 

@@ -248,7 +248,9 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
 > 段2.5(同日・§55)= bind(c) 層 + libencflow_bmi.so + Python ctypes
 > ラッパー(bmi/python/encflow.py)+ ライブ表示サンプル(live_view.py。
 > §8 の利用イメージが実際に動く)。§4.3 軽量ルート実装済み。
-> 判明事項: 内部 j は北→南のため Landlab 連携では行反転が必要(§8.1)。
+> 判明事項: 内部 j は北→南。当初は Landlab 連携で行反転が必要と
+> 記したが、§7-5 案A(BMI 層で行順を標準形 = 要素0が南西に正規化。
+> 同日実装)により**連結相手側の反転は不要**になった。
 
 | 段 | 内容 | 規模感 | 検証 |
 | --- | --- | --- | --- |
@@ -295,6 +297,10 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
        多くの consumer が想定しない)。
      - 案C: 現状のまま注記運用(ad-hoc 連携では動くが自動処理で
        南北逆のリスクを相手に残す)。
+     - **決定(2026-08-28)**: 案Aを採用し実装済み。get のコピー時に
+       行反転(将来の set も同様)。検証: chichibu の DEM 入力
+       (1行目=北)と BMI 取得 z の照合で「要素0行=南」を確認、
+       wave/chichibu の Log は reference と identical のまま。
 6. **save/restore との関係**: initialize が restore を内包する現行
    仕様のままでよいか(BMI の initialize(config) に自然に載る見込み)。
 7. **再 initialize**: finalize 後の再 initialize(同一プロセス内)を
@@ -397,7 +403,8 @@ BMI は通信規約であって自動結合ではなく、仲介するのは利�
 - **配列の並びが一致する見込み**: Landlab の RasterModelGrid はノードを
   「左下起点・x 方向が最速」の 1D 配列で持つ。ENCflow h(nx,ny) の
   column-major flatten も x 最速で、reshape なしに 1:1 対応する
-  (y の向き = j の増加方向の規約合わせのみ §7-5 のマッピング設計で確認)。
+  (y の向きは §7-5 案Aの正規化で解決済み: BMI 層が「要素0=南西」の
+  標準形で受け渡すため、Landlab 側の反転は不要)。
 - **名前規約が同族**: Landlab のフィールド名(surface_water__depth,
   topographic__elevation 等)は CSDMS 流の二重アンダースコア規約
   そのもので、マッピング表が素直に書ける。

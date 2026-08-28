@@ -14,7 +14,9 @@
 
 表示: 左 = 地形(グレー)+水深(青系の単色シーケンシャル)、
       右 = 水深の時系列(--probe セル、省略時は領域最大水深)。
-行 j=1 が北(入力行列の先頭行)なので origin='upper' で表示する。
+BMI 層は行順を標準形(行0=南)に正規化して返すため origin='lower' で
+表示する。--probe は ENCflow 内部のセル番地 (i, j)(j=1 が北。record の
+プローブ指定と同じ流儀)で受け、内部で行反転後の添字に変換する。
 """
 
 import argparse
@@ -84,16 +86,18 @@ def main():
           f"tend={tend:g}s  interval={interval:g}s")
 
     z = model.get2d(VAR_ELEVATION)
-    extent = (0.0, nx * dx, ny * dy, 0.0)   # j=1 が北 → origin='upper' 相当
+    extent = (0.0, nx * dx, 0.0, ny * dy)   # BMI 標準形(行0=南)→ origin='lower'
 
     fig, (ax_map, ax_ts) = plt.subplots(
         1, 2, figsize=(12, 5), gridspec_kw={"width_ratios": [1.3, 1.0]})
     fig.suptitle(f"ENCflow via BMI — {Path(args.param).name}")
 
     # 左: 地形(グレー)+ 水深(単色シーケンシャル。マゼンタ等は使わない)
-    ax_map.imshow(z, cmap="Greys", extent=extent, interpolation="nearest")
+    ax_map.imshow(z, cmap="Greys", origin="lower", extent=extent,
+                  interpolation="nearest")
     im = ax_map.imshow(np.full((ny, nx), np.nan), cmap="Blues",
-                       extent=extent, interpolation="nearest",
+                       origin="lower", extent=extent,
+                       interpolation="nearest",
                        vmin=0.0, vmax=args.vmax or HMIN)
     cbar = fig.colorbar(im, ax=ax_map, shrink=0.85, label="water depth h (m)")
     ax_map.set_xlabel("x (m)")
@@ -133,7 +137,8 @@ def main():
             im.set_clim(0.0, hmax)          # 自動拡大(縮めない = ちらつき防止)
         ax_map.set_title(f"t = {t:,.0f} s   max h = {hmax:.3f} m")
         times.append(t)
-        series.append(h[jp - 1, ip - 1] if ip else hmax)
+        # 内部セル (i, j)(j=1=北)→ 標準形配列(行0=南)の添字
+        series.append(h[ny - jp, ip - 1] if ip else hmax)
         line.set_data(times, series)
         ax_ts.relim()
         ax_ts.autoscale_view(scalex=False)
