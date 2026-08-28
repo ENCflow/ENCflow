@@ -103,14 +103,24 @@ CSDMS 公式の Fortran binding(bmif_2_0 抽象型、MIT)にリンクして
 
 追加ツールの話が出るのは、その先の**Python から実際に使う段**:
 
-- 公式ルート(babelizer で C ラッパー生成 → pymt component 化)は
-  conda エコシステム前提で重い。ただしこれは**利用者側の作業**で、
-  ENCflow リポジトリには何も持ち込まない(BMI 準拠の Fortran 層まで
-  提供していれば babelize できる、が公式ルートの意味)。
+- 公式ルート(babelizer → pymt component 化)は conda エコシステム
+  前提で重い。babelizer は BMI 仕様の一部ではなく **CSDMS Workbench の
+  パッケージ生成ツール**(bmi-fortran=仕様、bmi-tester=検証、
+  babelizer=Python 化、pymt=結合枠組み、という道具立ての一つ)。
+  bmif_2_0 準拠の Fortran 実装と設定ファイル(babel.toml)を入力に、
+  **bind(c) 相互運用層(bmi_interoperability.f90)と Cython 層を定型
+  生成する**(テンプレートに同名ファイルを確認。手書き不要)。生成物は
+  ENCflow とは別リポジトリの Python パッケージ(pymt_encflow 相当。
+  meson + Python packaging でビルド)であり、ENCflow リポジトリには
+  何も持ち込まない(BMI 準拠の Fortran 層まで提供していれば babelize
+  できる、が公式ルートの意味)。
 - 軽量ルート: `bind(c)` の薄い C API を bmi/ に自前で書き、Python
   標準の ctypes から呼ぶ。追加ツール不要(共有ライブラリ化の
-  -fPIC/-shared だけ)で、ENCflow の思想に合う。BMI 準拠の Fortran 層が
-  あれば C 層は機械的に書ける。第1段の動作確認はこちらで十分。
+  -fPIC/-shared だけ)で、ENCflow の思想に合う。bind(c)/iso_c_binding
+  は Fortran 2003 の言語標準機能でありツールではない。BMI 準拠の
+  Fortran 層があれば C 層は機械的に書ける(babelizer が生成するものと
+  同種の定型コードを自分で書く、という関係)。第1段の動作確認は
+  こちらで十分。
 - ビルド上の注意: 共有ライブラリ(libencflow_bmi.so)を作るには
   -fPIC でのコンパイルが要り、既存 libencflow.a(非 PIC)とは
   オブジェクトを共有できない。`make bmi` は別フラグの再コンパイルに
