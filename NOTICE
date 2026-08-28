@@ -5,3 +5,10 @@ Licensed under the Apache License, Version 2.0.
 
 If you use ENCflow in your research, please cite the article
 listed in CITATION.cff.
+
+Third-party components:
+
+bmi/vendor/bmi.f90 -- the Basic Model Interface (BMI) 2.0 Fortran
+specification, from https://github.com/csdms/bmi-fortran.
+Copyright (c) 2017-2019 Community Surface Dynamics Modeling System.
+Licensed under the MIT License (see bmi/vendor/LICENSE).

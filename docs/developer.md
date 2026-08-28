@@ -5075,3 +5075,68 @@ finalize に分離した。**計算物理コードには一切触れていない
 BMI アダプタ(bmi/)、変数アクセサ、MPI 所有権ガード(owns_mpi)は
 段2〜4 で。m_main の公開 API はその際 get_time / get_value 系の
 アクセサを追加していく。
+
+
+## 54. BMI アダプタ bmi/(BMI 対応 段2。2026-08-28 実装)
+
+CSDMS BMI 2.0 の逐次アダプタ。全体計画は docs/bmi_plan.md §6、
+ライフサイクル API(段1)は §53、方針10 との整合は §0 方針10 追記
+(2026-08-28。外部連携アダプタは計算本体の外・仕様定義ファイルの
+同梱は NOTICE 表示の上で可)。
+
+### 構成と決定事項
+
+- **bmi/ は optional ビルド**。src/ の既定ビルドは bmi/ に一切依存
+  しない。bmi/Makefile は ../make.inc を include し、本体と同一
+  フラグ(実数既定種別 = PREC を含む)でビルドする。
+- **bmi/vendor/bmi.f90 を同梱**(CSDMS bmi-fortran、MIT、約560行の
+  純仕様 = 抽象型+定数のみ)。外部インストール・CMake は不要で、
+  make だけで自己完結する。出所とライセンスは NOTICE と
+  bmi/vendor/LICENSE に表示。
+- **m_main に薄いアクセサを追加**: m_main_get_timeinfo /
+  m_main_get_gridinfo / m_main_get_ierror / m_main_get_value(name,
+  dest, ierr)。get_value は内部名('h','z','e','pre')で受け、
+  par_gather_to による全域コピーを返す(帯外は 0 埋め。MPI では
+  rank0 のみ有効という契約)。**CSDMS Standard Names への対応付けは
+  bmi_encflow.f90 側の責務**とし、m_main は BMI を知らない。
+- **bmi_encflow.f90**: type(encflow_bmi) extends(bmi) が bmif_2_0 の
+  全51手続きを実装。公開変数は段2では出力3つ(surface_water__depth=h,
+  land_surface__elevation=z, atmosphere_water__precipitation_
+  leq-volume_flux=pre)。set_value・get_value_ptr・at_indices・
+  非構造格子系は BMI_FAILURE(仕様が許容)。update_until は dt の
+  整数倍・[現在, tend] のみ受理。grid 0 = uniform_rectilinear、
+  shape/spacing/origin は BMI 規約の [y, x] 順。
+- **検証ドライバ test_bmi.f90**: ケースを BMI 経由で完走させる。
+  呼び出し列が initialize → update×nt → finalize = m_main_all と
+  同一のため Log.txt は既存 reference とビット一致する(これを
+  BMI 経由の等価性検証に使う)。誤用(未知変数・サイズ不一致・
+  過去への update_until・終了後 update)が FAILURE を返すことも検査。
+
+### 落とし穴・既知の制約
+
+- **MPI の z**: rank0 の s%z は時間ループ中も全域確保のため、
+  par_gather_to の帯下限(jsh:)での再解釈が rank0 で行ずれする
+  恐れがある(逐次は確保=全域・下限1で一致し問題ない)。段3(MPI
+  BMI)で z の gather 経路を設計すること(m_main_get_value 内に
+  注記あり)。
+- **実数既定種別**: 本体フラグ(-fdefault-real-8 等)でビルドする
+  ため、PREC=double では bmif の real 系と double 系が同一 8 byte に
+  なる。純 Fortran 利用では無害。将来 bind(c) 層(babelizer 互換)を
+  作る際は c_double/c_float の明示変換で吸収する。
+- get_input_var_names は入力変数ゼロのため FAILURE を返す(空配列を
+  指す安全な方法がない)。利用側は get_input_item_count == 0 を正とする。
+
+### 検証(2026-08-28。gfortran 13.3)
+
+- BMI 経由完走: test/wave(385×385)・test/chichibu(560×300 =
+  非正方形で flatten・shape 順序を確認)とも result/Log.txt が
+  既存 reference と identical(ULP=0)。
+- アクセサ追加(src/m_main.f90)後の既存経路: 逐次 wave/chichibu
+  ビット一致 PASS、MPI np=2 wave/chichibu identical PASS
+  (機能無効時ビット一致 = 規律2)。
+
+### 残作業(段3以降)
+
+MPI BMI(z の gather、rank0 有効の規約化、owns_mpi ガード)、
+set_value(強制場の所有権設計 = bmi_plan.md §4.2)、bind(c) 層+
+ctypes サンプル(bmi_plan.md §4.3-4.4)、Standard Names の拡充。

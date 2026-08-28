@@ -69,3 +69,7 @@ examples/timberyard/z.txt
 examples/timberyard/sw.txt
 examples/timberyard/gv.txt
 examples/timberyard/stock.txt
+
+# --- BMI adapter (bmi/) ---
+bmi/test_encflow_bmi
+test/*/test_encflow_bmi

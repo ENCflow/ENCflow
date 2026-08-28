@@ -211,11 +211,14 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
 
 ## 6. 段階的な工事計画と検証
 
-> **実装記録(2026-08-28)**: 段1 実装済み。決定事項・検証記録の正本は
-> **developer.md §53**(t_encflow は m_main private の singleton、
-> 公開は m_main_initialize/update/finished/finalize、旧 run_main は
-> run_init/run_step/run_close に3分割)。逐次 wave/chichibu ビット
-> 一致、MPI wave np=1,2,4・chichibu np=2,4 いずれも identical PASS。
+> **実装記録(2026-08-28)**: 段1・段2 実装済み。正本は **developer.md
+> §53(段1: ライフサイクル API)・§54(段2: bmi/ アダプタ)**。
+> 段1 = t_encflow は m_main private の singleton、公開は
+> m_main_initialize/update/finished/finalize。逐次 wave/chichibu
+> ビット一致、MPI wave np=1,2,4・chichibu np=2,4 identical PASS。
+> 段2 = bmi/(vendor/bmi.f90 同梱・bmi_encflow.f90・test_bmi.f90)+
+> m_main アクセサ4つ。BMI 経由の完走で wave・chichibu(非正方形)の
+> Log.txt が reference と identical。公開変数は h, z, pre の3出力。
 
 | 段 | 内容 | 規模感 | 検証 |
 | --- | --- | --- | --- |

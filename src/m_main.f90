@@ -38,6 +38,10 @@ module m_main
   public :: m_main_update
   public :: m_main_finished
   public :: m_main_finalize
+  public :: m_main_get_timeinfo
+  public :: m_main_get_gridinfo
+  public :: m_main_get_ierror
+  public :: m_main_get_value
 
   !----------------------------------------------------------------------
   ! ENCflow 全体を表す派生型(ライフサイクル API の内部状態)
@@ -295,6 +299,82 @@ subroutine m_main_finalize()
 
   enc%initialized = .false.
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! アクセサ: 時間情報
+!   t = 現在時刻、t0 = 開始時刻、tend = 終了時刻(t0 + dt*nt)、
+!   dt = 時間刻み(いずれも秒)。BMI アダプタ等の外部制御層向け
+!----------------------------------------------------------------------
+subroutine m_main_get_timeinfo(t, t0, tend, dt)
+  double precision, intent(out) :: t, t0, tend, dt
+  t = dble(enc%s%t)
+  t0 = dble(enc%p%t0)
+  tend = dble(enc%p%t0) + dble(enc%p%dt) * dble(enc%p%nt)
+  dt = dble(enc%p%dt)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! アクセサ: 格子情報
+!   論理全域格子(nx×ny、セル寸法 dx, dy)。x_ll, y_ll は左下隅セルの
+!   外縁座標(georef 管理時のみ。未管理なら 0)。MPI の帯分割・ハロは
+!   内部実装であり、ここには現れない(bmi_plan.md §6)
+!----------------------------------------------------------------------
+subroutine m_main_get_gridinfo(nx, ny, dx, dy, x_ll, y_ll)
+  integer, intent(out) :: nx, ny
+  double precision, intent(out) :: dx, dy, x_ll, y_ll
+  nx = enc%g%nx
+  ny = enc%g%ny
+  dx = dble(enc%g%dx)
+  dy = dble(enc%g%dy)
+  if (enc%g%gr%active) then
+    x_ll = enc%g%gr%xul
+    y_ll = enc%g%gr%yul - dble(enc%g%ny) * enc%g%gr%csy
+  else
+    x_ll = 0d0
+    y_ll = 0d0
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! アクセサ: 累積エラー数(update 失敗の検出用)
+!----------------------------------------------------------------------
+integer function m_main_get_ierror()
+  m_main_get_ierror = enc%ierror
+end function
+
+
+!----------------------------------------------------------------------
+! アクセサ: 状態量の全域コピー取得
+!   name は内部名('h', 'z', 'e', 'pre')。CSDMS Standard Names への
+!   対応付けは BMI アダプタ側の責務(m_main は BMI を知らない)。
+!   dest は全域 (1:nx, 1:ny)。全域窓・担当帯の外は 0 で埋める。
+!   MPI では全ランク collective に呼び、有効な値は rank0 のみ
+!   (par_gather_to の契約)。ierr: 0 = 成功、1 = 未対応の変数名
+!----------------------------------------------------------------------
+subroutine m_main_get_value(name, dest, ierr)
+  character(len=*), intent(in) :: name
+  real, intent(inout) :: dest(:,:)
+  integer, intent(out) :: ierr
+  ierr = 0
+  dest = 0.
+  select case (trim(name))
+  case ('h')
+    call par_gather_to(dest, enc%s%h)
+  case ('z')
+    call par_gather_to(dest, enc%s%z)   ! 注意: MPI では rank0 の z が全域確保
+                                        ! のため帯下限の再解釈が必要(段3で対処。
+                                        ! 逐次は確保=全域・下限1で一致し問題ない)
+  case ('e')
+    call par_gather_to(dest, enc%s%e)
+  case ('pre')
+    call par_gather_to(dest, enc%s%pre)
+  case default
+    ierr = 1
+  end select
 end subroutine
 
 
