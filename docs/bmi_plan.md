@@ -279,6 +279,22 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
 5. **変数名マッピング表**: CSDMS Standard Names ↔ t_state 成分の
    対応表と単位(内部は SI が基本)。PREC=double|single は
    get_var_type / get_var_itemsize で実精度を報告する。
+   - **y の向き(行順)の検討(2026-08-28)**: 反転が要るか否かは
+     連結相手の行順規約次第(上から描く表示系なら不要、Landlab の
+     左下原点なら必要)— は事実だが、BMI には「相手次第」で済ませない
+     道がある: 格子は origin/spacing/shape で自己記述されるので、
+     **配列の並びとメタデータが整合していれば相手は規約を推測しなくて
+     よい**。現在の実装は origin に左下隅(y_ll)を返しつつ配列は
+     北始まり(内部 j=1 = 北)で、consumer が origin + index×spacing で
+     座標復元すると南北が逆になる(厳密には不整合)。選択肢:
+     - 案A(推奨): BMI 層の get_value / set_value で行反転し、
+       「index 0 = 南西隅・dy 正・origin = 左下」の標準形に正規化する。
+       内部は不変、コピー時の flip のみ(コスト僅少)。Landlab とも
+       無反転で一致し、pymt 等の自動処理でも南北が正しく出る。
+     - 案B: 北始まりのまま origin を北西にし dy を負で返す(非標準。
+       多くの consumer が想定しない)。
+     - 案C: 現状のまま注記運用(ad-hoc 連携では動くが自動処理で
+       南北逆のリスクを相手に残す)。
 6. **save/restore との関係**: initialize が restore を内包する現行
    仕様のままでよいか(BMI の initialize(config) に自然に載る見込み)。
 7. **再 initialize**: finalize 後の再 initialize(同一プロセス内)を
