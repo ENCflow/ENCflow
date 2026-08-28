@@ -5201,3 +5201,51 @@ RasterModelGrid ノード配列とは無変換で 1:1 対応する。
 完走 Log は reference と identical のまま(get 経路の変更は Log に
 影響しない)。live_view.py は origin='lower' 表示に更新し、--probe の
 内部セル番地 (i, j) は arr[ny-j, i-1] へ変換する。
+
+
+## 56. BMI set_value による外部降水供給(逐次。2026-08-28 実装)
+
+bmi_plan.md §4.2 の合意案(ステージング+update 冒頭適用・生産者は
+変数ごとに一人)を逐次で実装した。対象は降水のみ。
+
+### 決定事項
+
+- **所有権**: 降水がファイル駆動(prtype /= 0)のケースでは set を
+  受理しない(ierr=2)。外部供給はファイル強制の「代替」であり併用
+  しない(方針7 の fn_* 流儀の準用)。逆に prtype=0 なら BMI が唯一の
+  生産者になる。
+- **ステージング**: m_main_set_value('pre', src, ierr) は t_encflow の
+  extpre(帯形状)に格納するだけで s%pre には触れない。適用は次の
+  run_step 冒頭で makepre の代わりに行い(extpre_active 分岐)、
+  適用は「新しい場が来た最初のステップのみ」(= pr_updated と同じ
+  意味論。遮断の二重減衰を防ぐ)。設定された場は次の set まで持続する
+  (定常強制)。
+- **適用はmakepre(prtype=1)と同一の契約**: マスク(x<=0・海セルは
+  skip、wx 窓内のみ)、prh = pre×3600×1000。runoff_rate 等の precip
+  モジュール機能は通らない = 「素の降水強度 (m/s)」を与える契約。
+  適用後に m_intercept_calc を呼び、雪の分離契約(§31)へは
+  pre_rewritten として渡す(ファイル駆動時は従来の mod∧updated と
+  同値になるよう run_step を等価に再構成)。
+- **入力検査**: 負値は ierr=3 で拒否(NaN 検査は -Ofast/-ffast-math
+  下で信頼できないため置かない)。BMI 層では未知変数・出力専用変数・
+  サイズ不一致を FAILURE で拒否(状態は変更されない)。
+- BMI 層(bmi_encflow.f90)は input_items に降水を公開し、
+  set_value_double/float → 行反転(標準形→内部)→ m_main_set_value。
+  C 層に encflow_bmi_set_value_double、Python ラッパーに
+  ENCflow.set(name, values) を追加。
+
+### 検証(2026-08-28。規律2)
+
+- **受け入れ試験(bmi/python/test_set_value.py。test/wave で実行)**:
+  一様降雨 36 mm/h をファイル駆動(prtype=1)で与えたランと、
+  その降水場を get して prtype=0 のランに set_value で与えたランの
+  **Log.txt が全行一致**(文字列一致 = ULP 0)。誤用検査(ファイル
+  駆動中の set・負値 set が BmiError、set→get の厳密往復)も内包。
+- 機能無効時(set 未使用): 逐次 wave/chichibu ビット一致、
+  MPI np=2 wave/chichibu identical、BMI 経由完走 wave/chichibu
+  identical。すべて PASS。
+
+### 残作業
+
+MPI 対応(scatter 経路)、h・z の set(整合処理 = e 回復が必要。
+§7 論点9)、時変強制の高頻度 set の性能(現状はコピー2回/set)。

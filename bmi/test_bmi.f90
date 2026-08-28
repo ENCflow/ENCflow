@@ -73,11 +73,15 @@ program test_bmi
 
   allocate(h(gsize), z(gsize))
 
-  ! ---- 誤用の検査(FAILURE が返ること) ----
+  ! ---- 誤用の検査(FAILURE が返ること。状態は変更されない) ----
   call chkf(model%get_value_double("no_such__variable", h), "get unknown name")
   allocate(hbad(gsize - 1))
   call chkf(model%get_value_double("surface_water__depth", hbad), "get with wrong size")
   call chkf(model%update_until(t0 - dt), "update_until into the past")
+  call chkf(model%set_value_double("no_such__variable", h), "set unknown name")
+  call chkf(model%set_value_double("surface_water__depth", h), "set output-only var")
+  call chkf(model%set_value_double( &
+    "atmosphere_water__precipitation_leq-volume_flux", hbad), "set with wrong size")
 
   ! ---- 前半は update_until、後半は update で最後まで進める ----
   nhalf = nstep / 2

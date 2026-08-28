@@ -42,6 +42,7 @@ module m_main
   public :: m_main_get_gridinfo
   public :: m_main_get_ierror
   public :: m_main_get_value
+  public :: m_main_set_value
 
   !----------------------------------------------------------------------
   ! ENCflow 全体を表す派生型(ライフサイクル API の内部状態)
@@ -73,6 +74,13 @@ module m_main
     type(t_swflow) :: sw
     integer :: ierror = 0            ! 累積エラー数(>0 で時間ループ終了)
     logical :: initialized = .false.
+    ! BMI 外部強制のステージング(bmi_plan.md §4.2。降水が未設定
+    ! (prtype=0)のときのみ有効化できる = 生産者は変数ごとに一人。
+    ! set_value はここに格納するだけで、適用は次の update 冒頭で
+    ! makepre の代わりに行う(run_step 参照))
+    logical :: extpre_active = .false.  ! 外部降水供給モードか
+    logical :: extpre_fresh = .false.   ! 未適用の新しい場があるか
+    real, allocatable :: extpre(:,:)    ! ステージング場 (m/s。帯形状)
   end type t_encflow
 
   type(t_encflow), save :: enc
@@ -228,7 +236,8 @@ subroutine m_main_update()
              gl => enc%gl, lv => enc%lv, ic => enc%ic, sw => enc%sw)
 
     call run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, &
-                  wq, dw, sn, gl, lv, si, enc%ierror)
+                  wq, dw, sn, gl, lv, si, &
+                  enc%extpre_active, enc%extpre_fresh, enc%extpre, enc%ierror)
 
   end associate
 
@@ -378,6 +387,43 @@ subroutine m_main_get_value(name, dest, ierr)
 end subroutine
 
 
+!----------------------------------------------------------------------
+! アクセサ: 強制場の設定(BMI set_value 用)
+!   name は内部名(現在は 'pre' のみ)。src は全域 (1:nx, 1:ny)・
+!   内部行順(j=1 が北)。値はステージングに格納するだけで、適用は
+!   次の update 冒頭で行う(bmi_plan.md §4.2: 生産者は変数ごとに
+!   一人 — 降水がファイル駆動(prtype /= 0)のときは受け付けない)。
+!   設定された場は次に set されるまで持続する(定常強制)。
+!   ierr: 0 = 成功、1 = 未対応の変数名、2 = 許可されない(生産者が
+!   既に存在)、3 = 不正値(負の降水強度)
+!----------------------------------------------------------------------
+subroutine m_main_set_value(name, src, ierr)
+  character(len=*), intent(in) :: name
+  real, intent(in) :: src(:,:)
+  integer, intent(out) :: ierr
+  ierr = 0
+  select case (trim(name))
+  case ('pre')
+    if (enc%pr%prtype /= 0) then
+      ierr = 2
+      return
+    end if
+    if (any(src < 0.)) then
+      ierr = 3
+      return
+    end if
+    if (.not. allocated(enc%extpre)) then
+      allocate(enc%extpre(1:size(src, 1), dcp%jsh:dcp%jeh), source = 0.0)
+    end if
+    enc%extpre(:, dcp%js:dcp%je) = src(:, dcp%js:dcp%je)
+    enc%extpre_active = .true.
+    enc%extpre_fresh = .true.
+  case default
+    ierr = 1
+  end select
+end subroutine
+
+
 !======================================================================
 !========================== PRIVATE ROUTINES ==========================
 !======================================================================
@@ -439,7 +485,8 @@ end subroutine
 !   進行位置は s%it が正本(m_state_updatetime が更新)。エラーは
 !   ierror に累積し、継続判定は呼び出し側(m_main_finished)が行う
 !----------------------------------------------------------------------
-subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, sn, gl, lv, si, ierror)
+subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, sn, gl, lv, si, &
+                    extpre_active, extpre_fresh, extpre, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
@@ -460,25 +507,56 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, s
   type(t_glacier), intent(in) :: gl    ! 氷河(氷厚 s%hi と作業台帳を保持)
   type(t_lavaflow), intent(in) :: lv   ! 溶岩流(溶岩厚 s%hl と作業台帳を保持)
   type(t_swi), intent(inout) :: si     ! 土壌雨量指数(タンク貯留を保持。§49)
+  logical, intent(in) :: extpre_active    ! BMI 外部降水供給モードか
+  logical, intent(inout) :: extpre_fresh  ! 未適用の新しい場があるか(適用で消す)
+  real, allocatable, intent(in) :: extpre(:,:)  ! ステージング場 (m/s。帯形状。
+                                                ! active のときのみ確保・参照)
   integer, intent(inout) :: ierror
   integer :: it            ! このステップの時間カウント(= s%it + 1)
+  integer :: i, j          ! 外部降水の適用ループ用
   logical :: do_file       ! このステップでファイル出力するか
   logical :: do_recd       ! このステップでプローブ・フラックス出力するか
   logical :: pr_updated    ! このコールで降雨分布が実際に更新されたか
+  logical :: pre_rewritten ! このステップで s%pre を書き直したか(雪の
+                           ! 雨/雪分離のスナップショット契約 §31 に渡す)
 
   it = s%it + 1
   pr_updated = .false.     ! makepre 未実行ステップの参照を定義済みにする
                            ! (読むのは makepre 実行ステップのみ = 挙動不変)
+  pre_rewritten = .false.
 
   ! 時刻情報を更新
   call m_state_updatetime(s, p, it)
 
-  ! dt_prupdate 間隔で降水分布を更新し、更新時のみ遮断を適用する
-  ! (prtype=3 は makepre が呼ばれても分布を更新しないステップがあり、
-  !  そこで遮断を再適用すると二重減衰になる。updated が正本)
-  if (mod(it, pr%idt_prupdate) == 0) then
-    call m_precip_makepre(pr, p, g, s, mt, pr_updated)
-    if (pr_updated) call m_intercept_calc(ic, p, g, s, it)
+  if (extpre_active) then
+    ! BMI 外部供給(bmi_plan.md §4.2)。set_value された場を makepre の
+    ! 代わりに適用する(新しい場が来た最初のステップのみ = pr_updated と
+    ! 同じ意味論で、遮断の二重減衰を防ぐ。以降は次の set まで持続)。
+    ! 適用マスクと prh 換算は makepre(prtype=1)と同一。runoff_rate 等の
+    ! precip モジュール機能は通らない = 素の降水強度 (m/s) を与える契約
+    if (extpre_fresh) then
+      !$omp parallel do
+      do j = dcp%js, dcp%je
+        do i = g%wx(1,j), g%wx(2,j)
+          if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
+          s%pre(i,j) = extpre(i,j)
+          s%prh(i,j) = s%pre(i,j) * 3600 * 1000
+        end do
+      end do
+      !$omp end parallel do
+      call m_intercept_calc(ic, p, g, s, it)
+      extpre_fresh = .false.
+      pre_rewritten = .true.
+    end if
+  else
+    ! dt_prupdate 間隔で降水分布を更新し、更新時のみ遮断を適用する
+    ! (prtype=3 は makepre が呼ばれても分布を更新しないステップがあり、
+    !  そこで遮断を再適用すると二重減衰になる。updated が正本)
+    if (mod(it, pr%idt_prupdate) == 0) then
+      call m_precip_makepre(pr, p, g, s, mt, pr_updated)
+      if (pr_updated) call m_intercept_calc(ic, p, g, s, it)
+      pre_rewritten = pr_updated
+    end if
   end if
 
   ! 貯留型遮断モデルの毎ステップ更新(swflow が s%pre を読む前に呼ぶ。
@@ -487,10 +565,10 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, s
 
   ! 積雪・融雪(fn_snow 未指定なら no-op。遮断後降水の雨/雪分離で
   ! s%pre を液体分に減じ、融雪を h へ直接投入する。swflow より前。
-  ! pr_fresh = 上流が s%pre を書き直したステップ(スナップショット契約。§31)
+  ! pre_rewritten = 上流が s%pre を書き直したステップ(スナップショット
+  ! 契約。§31。ファイル駆動時は従来の mod∧updated と同値)
   call m_snow_calc(sn, p, g, s, mt, &
-                   (mod(it, pr%idt_prupdate) == 0 .and. pr_updated) &
-                   .or. m_intercept_has_step(ic))
+                   pre_rewritten .or. m_intercept_has_step(ic))
 
   ! 土壌雨量指数(fn_swi 未指定なら no-op。遮断適用後の地上雨量 s%pre を
   ! 読む純診断。どの物理場にも書かない。§49)

@@ -205,6 +205,11 @@ set_value で与えた場合の結果一致**(強制の等価性テスト)。MPI
 増えるのは scatter・ハロ交換・z の帯下限問題(§54)のみで、所有権の
 設計は逐次と共通。
 
+> **実装記録(2026-08-28)**: 上記 1(降水)を逐次で実装。正本は
+> **developer.md §56**。受け入れ試験 bmi/python/test_set_value.py で
+> ファイル強制と set_value 強制の Log 全行一致を確認(誤用検査込み)。
+> 機能無効時は逐次・MPI・BMI 経由ともビット一致 PASS。
+
 ## 5. 推奨構成
 
 ENCflow 全体を **1つの BMI component** として公開する(rainfall /

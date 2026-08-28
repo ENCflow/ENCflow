@@ -96,6 +96,7 @@ class ENCflow:
         lib.encflow_bmi_get_grid_origin.argtypes = [pd, pd]
         lib.encflow_bmi_get_grid_size.argtypes = [pi]
         lib.encflow_bmi_get_value_double.argtypes = [c_char_p, pd, c_int]
+        lib.encflow_bmi_set_value_double.argtypes = [c_char_p, pd, c_int]
 
     @staticmethod
     def _check(status, what):
@@ -222,6 +223,29 @@ class ENCflow:
             f"get_value({name})",
         )
         return dest
+
+    def set(self, name, values):
+        """強制場を設定する(現在は VAR_PRECIP のみ。単位 m/s)。
+
+        values は長さ nx*ny の 1 次元(BMI 標準形 = 要素 0 が南西)か、
+        (ny, nx) の 2 次元(行 0 = 南。get2d と同じ向き)。設定値は
+        次の update の冒頭で適用され、次に set するまで持続する。
+        降水がパラメータファイル駆動(prtype != 0)のケースでは
+        BmiError になる(生産者は一人の規則)。
+        """
+        arr = np.ascontiguousarray(values, dtype=np.float64).ravel()
+        n = self.nx * self.ny
+        if arr.size != n:
+            raise ValueError(
+                f"set({name}): size {arr.size} != nx*ny = {n}")
+        self._check(
+            self._lib.encflow_bmi_set_value_double(
+                name.encode(),
+                arr.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                n,
+            ),
+            f"set_value({name})",
+        )
 
     def get2d(self, name):
         """状態量の (ny, nx) 2 次元コピー。

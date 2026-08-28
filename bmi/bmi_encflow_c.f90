@@ -210,6 +210,20 @@ contains
     n = int(sz, c_int)
   end function
 
+  !=========================== Set values ==============================
+
+  function ebmi_set_value_double(name, src, n) &
+      bind(c, name="encflow_bmi_set_value_double") result(status)
+    ! flatten した全域強制場の設定(標準形: 要素0=南西。c_double 固定)
+    character(kind=c_char), intent(in) :: name(*)
+    integer(c_int), value :: n
+    real(c_double), intent(in) :: src(n)
+    integer(c_int) :: status
+    character(len=:), allocatable :: fname
+    call c_to_f_string(name, fname)
+    status = int(model%set_value_double(fname, dble(src)), c_int)
+  end function
+
   !=========================== Get values ==============================
 
   function ebmi_get_value_double(name, dest, n) &

@@ -16,7 +16,8 @@
 !     consumer が origin + index*spacing で座標復元できる)。内部の
 !     j=1 = 北とは行が逆順のため、get(将来は set も)のコピー時に
 !     反転する。x は内部と同じ西→東(index = i + (ny-j)*nx)。
-!   - 現段階(段2)は逐次専用・出力変数のみ(set_value は BMI_FAILURE)。
+!   - 現段階は逐次専用。出力3変数 + 入力1変数(降水。set_value は
+!     降水未設定 = prtype=0 のケースでのみ受理される持続強制)。
 !   - 該当機能がない問い合わせは BMI_FAILURE を返す(仕様が許容)。
 !   - 本ファイルは計算本体(src/)の外の optional アダプタであり、
 !     src/ のビルドはこのファイルに依存しない(方針10 追記 2026-08-28)
@@ -25,16 +26,18 @@ module bmi_encflow
   use bmif_2_0
   use m_main, only : m_main_initialize, m_main_update, m_main_finished, &
                      m_main_finalize, m_main_get_timeinfo, &
-                     m_main_get_gridinfo, m_main_get_ierror, m_main_get_value
+                     m_main_get_gridinfo, m_main_get_ierror, &
+                     m_main_get_value, m_main_set_value
   implicit none
   private
 
   public :: encflow_bmi
 
   ! 公開変数表(CSDMS Standard Name ↔ m_main 内部名)。
-  ! 追加するときは n_outputs と var_internal() と get_var_units() を
-  ! 同時に更新すること
-  integer, parameter :: n_inputs = 0
+  ! 追加するときは n_outputs / n_inputs と var_internal() と
+  ! get_var_units() を同時に更新すること。降水は入出力の両方
+  ! (set は降水未設定 = prtype=0 のときのみ受理。bmi_plan.md §4.2)
+  integer, parameter :: n_inputs = 1
   integer, parameter :: n_outputs = 3
 
   character(len=BMI_MAX_COMPONENT_NAME), target :: &
@@ -44,6 +47,10 @@ module bmi_encflow
     output_items(n_outputs) = [ character(len=BMI_MAX_VAR_NAME) :: &
       "surface_water__depth", &
       "land_surface__elevation", &
+      "atmosphere_water__precipitation_leq-volume_flux" ]
+
+  character(len=BMI_MAX_VAR_NAME), target :: &
+    input_items(n_inputs) = [ character(len=BMI_MAX_VAR_NAME) :: &
       "atmosphere_water__precipitation_leq-volume_flux" ]
 
   type, extends(bmi) :: encflow_bmi
@@ -211,10 +218,8 @@ contains
     class(encflow_bmi), intent(in) :: this
     character(len=*), pointer, intent(out) :: names(:)
     integer :: bmi_status
-    ! 入力変数なし(段2)。空リストの返却はできないため FAILURE とし、
-    ! 利用側は get_input_item_count == 0 を正とする
-    names => null()
-    bmi_status = BMI_FAILURE
+    names => input_items
+    bmi_status = BMI_SUCCESS
   end function
 
   function encflow_output_var_names(this, names) result(bmi_status)
@@ -505,14 +510,49 @@ contains
   end function
 
   !========================= Setters, by type ==========================
-  ! 強制場の所有権設計(bmi_plan.md §4.2)が済むまで set は非対応
+  ! 対応は降水(input_items)のみ。値はステージングされ、次の update
+  ! 冒頭で適用される(持続強制。所有権規則は m_main_set_value が判定:
+  ! 降水がファイル駆動(prtype /= 0)なら FAILURE。bmi_plan.md §4.2)
+
+  !--------------------------------------------------------------------
+  ! set 共通処理: 標準形 1 次元(要素0=南西)→ 内部行順に反転して
+  ! m_main へ渡す
+  !--------------------------------------------------------------------
+  function set_field(name, src) result(bmi_status)
+    character(len=*), intent(in) :: name
+    real, intent(in) :: src(:)
+    integer :: bmi_status
+    character(len=8) :: iname
+    integer :: ierr, nx, ny
+    double precision :: dx, dy, x0, y0
+    real, allocatable :: buf(:,:)
+    call var_internal(name, iname, ierr)
+    if (ierr /= 0 .or. trim(iname) /= "pre") then
+      bmi_status = BMI_FAILURE
+      return
+    end if
+    call m_main_get_gridinfo(nx, ny, dx, dy, x0, y0)
+    if (size(src) /= nx*ny) then
+      bmi_status = BMI_FAILURE
+      return
+    end if
+    allocate(buf(nx, ny))
+    ! 行反転(BMI 標準形 要素0=南西 → 内部 j=1=北。get と逆写像)
+    buf(:, ny:1:-1) = reshape(src, [nx, ny])
+    call m_main_set_value(trim(iname), buf, ierr)
+    if (ierr /= 0) then
+      bmi_status = BMI_FAILURE
+    else
+      bmi_status = BMI_SUCCESS
+    end if
+  end function
 
   function encflow_set_int(this, name, src) result(bmi_status)
     class(encflow_bmi), intent(inout) :: this
     character(len=*), intent(in) :: name
     integer, intent(in) :: src(:)
     integer :: bmi_status
-    bmi_status = BMI_FAILURE
+    bmi_status = BMI_FAILURE          ! 整数の入力変数なし
   end function
 
   function encflow_set_float(this, name, src) result(bmi_status)
@@ -520,7 +560,7 @@ contains
     character(len=*), intent(in) :: name
     real, intent(in) :: src(:)
     integer :: bmi_status
-    bmi_status = BMI_FAILURE
+    bmi_status = set_field(name, src)
   end function
 
   function encflow_set_double(this, name, src) result(bmi_status)
@@ -528,7 +568,7 @@ contains
     character(len=*), intent(in) :: name
     double precision, intent(in) :: src(:)
     integer :: bmi_status
-    bmi_status = BMI_FAILURE
+    bmi_status = set_field(name, real(src))
   end function
 
   function encflow_set_at_indices_int(this, name, inds, src) result(bmi_status)

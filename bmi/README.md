@@ -62,13 +62,20 @@ python3 ../../bmi/python/live_view.py param.txt --save frames   # PNG 連番(ヘ
 ±0.1% 変わり得る(developer.md §55)。get/get2d の行順は標準形
 (行0=南)。
 
-## 公開変数(段2)
+## 公開変数
 
-| CSDMS Standard Name | 内部 | 単位 |
-| --- | --- | --- |
-| `surface_water__depth` | s%h | m |
-| `land_surface__elevation` | s%z | m |
-| `atmosphere_water__precipitation_leq-volume_flux` | s%pre | m s-1 |
+| CSDMS Standard Name | 内部 | 単位 | 入出力 |
+| --- | --- | --- | --- |
+| `surface_water__depth` | s%h | m | 出力 |
+| `land_surface__elevation` | s%z | m | 出力 |
+| `atmosphere_water__precipitation_leq-volume_flux` | s%pre | m s-1 | 出力・**入力** |
+
+降水の set_value は**降水未設定(prtype=0)のケースでのみ**受理される
+(生産者は変数ごとに一人 = ファイル強制との併用不可。developer.md §56)。
+設定値は次の update 冒頭で適用され、次に set するまで持続する。
+Python では `model.set(VAR_PRECIP, arr)`(m/s。1 次元標準形か
+(ny, nx) の 2 次元)。受け入れ試験は `bmi/python/test_set_value.py`
+(test/wave で実行 — ファイル強制と set_value 強制の Log 全行一致)。
 
 配列は BMI 仕様どおり flatten した 1 次元。行順は **BMI 標準形に
 正規化**して受け渡す: 要素 0 = 南西隅、行は南→北(origin = 左下・
