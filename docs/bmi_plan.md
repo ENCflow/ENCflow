@@ -207,6 +207,12 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
 
 ## 6. 段階的な工事計画と検証
 
+> **実装記録(2026-08-28)**: 段1 実装済み。決定事項・検証記録の正本は
+> **developer.md §53**(t_encflow は m_main private の singleton、
+> 公開は m_main_initialize/update/finished/finalize、旧 run_main は
+> run_init/run_step/run_close に3分割)。逐次 wave/chichibu ビット
+> 一致、MPI wave np=1,2,4・chichibu np=2,4 いずれも identical PASS。
+
 | 段 | 内容 | 規模感 | 検証 |
 | --- | --- | --- | --- |
 | 1 | m_main のライフサイクル化(t_encflow 導入、run_main のループ1回分を update に抽出、ループ前後の初期出力・最終出力を initialize 末尾 / finalize 先頭へ移設) | 中。m_main.f90 中心の等価リファクタ | **絶対規律2がそのまま使える**: 逐次ビット一致 + MPI np=1,2,4 ULP=0。既存 reference 不変 |

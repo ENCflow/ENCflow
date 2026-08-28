@@ -5009,3 +5009,62 @@ dt_lavaflow_c 未指定は毎ステップ。
 - 副次: 幅ゼロエッジの運動方程式評価が省けるため 4 近傍実験は僅かに
   高速化。tutorials/chichibu の「D8 窪地除去済みでも4近傍では水が
   斜め流路で捕まる」実演(README Step 1)がこの修正で可能になった。
+
+
+## 53. m_main のライフサイクル API 化(BMI 対応 段1。2026-08-28 実装)
+
+背景・全体計画は docs/bmi_plan.md(BMI 対応の実現可能性検討メモ)。
+その段1 = 等価リファクタとして m_main を initialize / update /
+finalize に分離した。**計算物理コードには一切触れていない。**
+
+### 決定事項
+
+- **t_encflow 派生型**: 従来 m_main_all のローカル変数だった全モジュール
+  状態(t_sysparam〜t_swflow の 20 成分)+ ierror + initialized を
+  束ねる。型もインスタンス(`type(t_encflow), save :: enc`)も
+  **m_main の private**。外部(将来の BMI アダプタ含む)には公開手続き
+  だけを見せる — 内部構成を変えても外部 API に波及させないため。
+  単一インスタンス(1プロセス=1モデル)。複数インスタンスが必要に
+  なったら型を公開せず handle 方式へ拡張する(bmi_plan.md §5)。
+- **公開手続き**: m_main_initialize(fn_sysparam)(optional。省略時は
+  従来どおりコマンドライン引数)/ m_main_update / m_main_finished /
+  m_main_finalize。m_main_all はこれらの合成に書き換え(main.f90 は
+  不変)。
+- **旧 run_main の3分割**: ループ前(par_info ヘッダ〜初期出力〜
+  output_chk_geoinfo)= run_init → initialize 末尾で呼ぶ。ループ本体
+  1回分 = run_step → update。ループ後(output_state 9998 /
+  output_summary 9999 / record_summary)= run_close → finalize 先頭。
+  private の引数渡し手続きとして残し、本文は従来コードをそのまま維持
+  (公開手続き側は associate で enc 成分に別名を付けて呼ぶ)。
+- **進行位置の正本は s%it**(m_state_updatetime が更新)。run_step は
+  `it = s%it + 1` で従来のループ変数を再現する。終了判定は
+  m_main_finished = (ierror > 0 .or. s%it >= p%nt)。判定材料は全ランク
+  集約済みの値のみなので全ランク同一 = collective 安全(§5)。
+- **エラー時の stop 1 は m_main_all に残す**(finalize はエラーでも
+  stop しない)。将来の BMI アダプタが return code で返すための分離。
+
+### 落とし穴(実装時に対処)
+
+- 旧コードの pr_updated はループ外のローカルで反復間に値が持ち越されて
+  いた。読まれるのは makepre 実行ステップのみ(`mod(it,idt)==0 .and.
+  pr_updated` の第1項が偽なら値は使われない)だが、Fortran の .and. は
+  短絡評価が保証されず未定義値の参照になり得るため、run_step では
+  ステップ頭で .false. に初期化した(挙動不変)。
+- par_init → get_fn_param の順序は維持が必須(get_fn_param の usage
+  エラーが par_stop = MPI 初期化後でないと collective に落とせない)。
+  initialize の optional 引数省略時もこの順序を保っている。
+
+### 検証(2026-08-28。gfortran 13.3 / Open MPI 4.1.6)
+
+等価リファクタにつき規律2で検証。すべて既存 reference と一致:
+
+- 逐次: test/wave, test/chichibu ビット一致(identical)PASS
+- MPI: wave np=1,2,4、chichibu np=2,4 いずれも identical PASS
+- トップレベル make(utils/ 追随)クリーン(§10)
+- 確保範囲(jsh/jeh)には触れていないため規律3の -fcheck=all は対象外
+
+### 残作業(段2以降。bmi_plan.md §6)
+
+BMI アダプタ(bmi/)、変数アクセサ、MPI 所有権ガード(owns_mpi)は
+段2〜4 で。m_main の公開 API はその際 get_time / get_value 系の
+アクセサを追加していく。
