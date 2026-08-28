@@ -435,3 +435,32 @@ NextGen 系エコシステムとの相互運用)を追記する節目になる�
 「専門の隣の現象をまず試す」(§0 目的3)導線として、Python から
 `initialize → update → get_value` で回せることは導入障壁の低減にも
 合致する。
+
+### 10.1 認知経路(BMI 対応を各コミュニティに知らせる場所・方法)
+
+労力の小さい順に。上の3つは対応完了とほぼ同時にできる:
+
+1. **bmi-tester 合格の明示**: CSDMS 公式の適合性テスト(csdms/
+   bmi-tester)に通し、合格を README・docs に記載する。準拠の客観的
+   証明であり、以降のすべての経路の前提になる。
+2. **CSDMS Model Repository への登録**: CSDMS のモデル台帳
+   (csdms.colorado.edu。数百モデル規模)にフォームで登録すると、
+   メタデータ付きのモデルページができ DOI も付与される。エコシステム
+   全体からの発見可能性はまずここで決まる。無料。既存の CITATION.cff・
+   LICENSE がそのまま登録要件に使える。
+3. **README/リポジトリ側の表示**: BMI 対応の節を README に設け、
+   GitHub topics(basic-model-interface, csdms 等)を付ける。
+   CSDMS の help-desk(GitHub)で対応を知らせるのも一手。
+4. **連携実例の notebook を作って個別コミュニティへ**: 認知は登録より
+   実例が効く。§8.1 の Landlab 連携 notebook を tutorials/ に置き
+   Landlab コミュニティ(GitHub Discussions)へ、GLOFRIM には
+   「ENCflow を局所氾濫エンジンとして追加できる」ことを issue で提案、
+   eWaterCycle にはコンテナ+grpc4bmi のプラグイン追加を打診(§4.4
+   形態3)。
+5. **pymt 公式 component 化**: babelize して conda-forge に
+   pymt_encflow を置くと、pymt のモデル一覧に載り「インストールして
+   すぐ使える形」で露出する(§4.3 のとおり重いので、需要を見てから)。
+6. **学術経路**: JOSS(研究ソフトウェア短報)か GMD(モデル記述論文)
+   で BMI 対応を明記して引用可能にする。CSDMS Annual Meeting
+   (毎年5月、Boulder)のクリニック・ポスターはエコシステム中心人物に
+   直接届く場。AGU/EGU の model coupling セッションも同様。
