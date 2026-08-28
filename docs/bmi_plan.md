@@ -244,6 +244,10 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
    有効とするか(gather 先が rank0 のため自然)、全ランクへ bcast
    するか。呼び出しは全ランク collective とし、有効値の所在だけを
    規約化する(§8 の利用イメージ参照)。
+9. **set_value 後の整合処理**: 変数によっては配列コピーで済まない
+   (例: z の更新は e 回復・ハロ交換を伴う。m_geomorph が z 更新後に
+   済ませている契約と同じ処理を set_value 側も負う)。変数ごとに
+   「set 可否と付随処理」をマッピング表(論点5)に含める。
 
 ## 8. 利用イメージ(Python サンプル。設計スケッチ)
 
@@ -314,6 +318,72 @@ fig.savefig("result.png", dpi=150)
   なり、get_value の全域配列は rank0 のみ有効という規約になる見込み
   (描画・保存は rank0 で行う)。非 rank0 での get_value の返り値の
   意味論は §7 の設計論点に追加する。
+
+### 8.1 Landlab との連携
+
+BMI 化の具体的な効用の代表例。**可能で、しかも相性が良い**。ただし
+BMI は通信規約であって自動結合ではなく、仲介するのは利用者の Python
+スクリプト(または pymt)である。接続形態は3つ:
+
+1. **素の Python ループ**(軽量ルートで成立): Landlab は Python
+   ネイティブ(grid.at_node + run_one_step)でそのまま回せるため、
+   **BMI が要るのは ENCflow 側だけ**。numpy 配列の受け渡しで繋がる。
+2. **pymt 経由**(babelize 後): 時間同期・単位変換・格子マッピングの
+   支援を得る公式ルート。
+3. **BMI 同士に揃える**: Landlab component を `landlab.bmi.wrap_as_bmi`
+   で BMI 化し、両者を同じ流儀で駆動する(枠組み統一が目的の場合)。
+
+技術的な相性(確認済み):
+
+- **配列の並びが一致する見込み**: Landlab の RasterModelGrid はノードを
+  「左下起点・x 方向が最速」の 1D 配列で持つ。ENCflow h(nx,ny) の
+  column-major flatten も x 最速で、reshape なしに 1:1 対応する
+  (y の向き = j の増加方向の規約合わせのみ §7-5 のマッピング設計で確認)。
+- **名前規約が同族**: Landlab のフィールド名(surface_water__depth,
+  topographic__elevation 等)は CSDMS 流の二重アンダースコア規約
+  そのもので、マッピング表が素直に書ける。
+- **時間刻みの分担が自然**: ENCflow の小さい dt(水理)と Landlab の
+  大きい dt(侵食・地形進化)は update_until による operator splitting
+  でそのまま繋がる。
+
+スケッチ(ENCflow の氾濫水理 × Landlab の斜面拡散。設計イメージ):
+
+```python
+from encflow import ENCflow
+from landlab import RasterModelGrid
+from landlab.components import LinearDiffuser
+
+enc = ENCflow("param_run.txt")
+nx, ny = enc.grid_shape("surface_water__depth")
+dx, _  = enc.grid_spacing("surface_water__depth")
+
+grid = RasterModelGrid((ny, nx), xy_spacing=dx)
+z = grid.add_field("topographic__elevation",
+                   enc.get("land_surface__elevation"), at="node")
+diffuser = LinearDiffuser(grid, linear_diffusivity=0.01)
+
+dt_couple = 3600.0
+while enc.time() < tt:
+    enc.update_until(enc.time() + dt_couple)   # 氾濫水理を進める
+    grid.at_node["surface_water__depth"][:] = enc.get("surface_water__depth")
+    diffuser.run_one_step(dt_couple)           # Landlab 側で地形を進める
+    enc.set("land_surface__elevation", z)      # 更新地形を戻す(双方向)
+```
+
+注意点(設計論点への反映):
+
+- **一方向(get のみ)なら第2段の範囲で可能**。双方向(z を戻す等)は
+  set_value が必要で、§4.2 で後続段に回した課題そのもの。Landlab 連携は
+  set_value を実装する具体的動機になる。
+- **set_value は配列コピーでは済まない場合がある**: z の更新は e 回復・
+  ハロ交換等の整合処理を伴う(m_geomorph が z 更新後に済ませている
+  契約と同じ)。§7 に論点として追加(論点9)。
+- **プロセスの所有権を決める**: ENCflow の geomorph と Landlab の侵食を
+  同時に有効にすると二重計上になる。「Landlab に任せる場は ENCflow 側で
+  有効化しない」(fn_* を作らない = 方針7 の流儀)が自然な分担。
+- **同一格子が前提**。異格子は pymt の regridding か前処理で吸収。
+- Landlab は serial Python のため、まずは **serial ENCflow との組合せ**が
+  素直(MPI 版は rank0 規約で可能だが初期段の対象外)。
 
 ## 9. 位置づけへの影響
 
