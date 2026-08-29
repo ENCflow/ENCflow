@@ -368,9 +368,10 @@ through the standard initialize / update / get_value / set_value calls.
   the regular builds (encflow / encflow_mpi) remain dependency-free as
   before.
 
-See [bmi/README.md](bmi/README.md) for usage, exposed variables, and how
-to reproduce the conformance check, and
-[docs/bmi_plan.md](docs/bmi_plan.md) for the design history and roadmap.
+See [bmi/README.en.md](bmi/README.en.md) for usage, exposed variables,
+and how to reproduce the conformance check, and
+[docs/bmi_plan.md](docs/bmi_plan.md) (in Japanese) for the design
+history and roadmap.
 
 ## Who it is for
 

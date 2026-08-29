@@ -1,5 +1,7 @@
 # bmi/ — CSDMS Basic Model Interface (BMI 2.0) アダプタ
 
+[English README](README.en.md)
+
 ENCflow を **Python や他モデルから操作するための標準インターフェース**
 です。ENCflow 全体がひとつの BMI component となり、
 initialize / update / get_value / set_value という共通の操作で、
