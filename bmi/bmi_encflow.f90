@@ -16,8 +16,9 @@
 !     consumer が origin + index*spacing で座標復元できる)。内部の
 !     j=1 = 北とは行が逆順のため、get(将来は set も)のコピー時に
 !     反転する。x は内部と同じ西→東(index = i + (ny-j)*nx)。
-!   - 現段階は逐次専用。出力3変数 + 入力1変数(降水。set_value は
-!     降水未設定 = prtype=0 のケースでのみ受理される持続強制)。
+!   - 現段階は逐次専用。入出力3変数(h, z, pre)。set_value の受理
+!     条件と意味論は変数ごとに異なる(Setters 節と developer.md
+!     §56・§57 を参照)。
 !   - 該当機能がない問い合わせは BMI_FAILURE を返す(仕様が許容)。
 !   - 本ファイルは計算本体(src/)の外の optional アダプタであり、
 !     src/ のビルドはこのファイルに依存しない(方針10 追記 2026-08-28)
@@ -35,9 +36,11 @@ module bmi_encflow
 
   ! 公開変数表(CSDMS Standard Name ↔ m_main 内部名)。
   ! 追加するときは n_outputs / n_inputs と var_internal() と
-  ! get_var_units() を同時に更新すること。降水は入出力の両方
-  ! (set は降水未設定 = prtype=0 のときのみ受理。bmi_plan.md §4.2)
-  integer, parameter :: n_inputs = 1
+  ! get_var_units() を同時に更新すること。3変数とも入出力の両方だが
+  ! set の受理条件は変数ごとに異なる(m_main_set_value が判定。
+  ! developer.md §56: 降水は prtype=0 のときのみ。§57: z は z 更新
+  ! プロセス無効時のみ、h は常時 = データ同化型の状態置換)
+  integer, parameter :: n_inputs = 3
   integer, parameter :: n_outputs = 3
 
   character(len=BMI_MAX_COMPONENT_NAME), target :: &
@@ -51,6 +54,8 @@ module bmi_encflow
 
   character(len=BMI_MAX_VAR_NAME), target :: &
     input_items(n_inputs) = [ character(len=BMI_MAX_VAR_NAME) :: &
+      "surface_water__depth", &
+      "land_surface__elevation", &
       "atmosphere_water__precipitation_leq-volume_flux" ]
 
   type, extends(bmi) :: encflow_bmi
@@ -510,9 +515,10 @@ contains
   end function
 
   !========================= Setters, by type ==========================
-  ! 対応は降水(input_items)のみ。値はステージングされ、次の update
-  ! 冒頭で適用される(持続強制。所有権規則は m_main_set_value が判定:
-  ! 降水がファイル駆動(prtype /= 0)なら FAILURE。bmi_plan.md §4.2)
+  ! 対応は input_items の3変数。値はステージングされ、次の update
+  ! 冒頭で適用される(pre は持続強制、z・h は置換の一回適用)。受理
+  ! 条件は m_main_set_value が判定(pre: prtype=0 のみ、z: z 更新
+  ! プロセス無効時のみ、h: 常時。developer.md §56・§57)
 
   !--------------------------------------------------------------------
   ! set 共通処理: 標準形 1 次元(要素0=南西)→ 内部行順に反転して
@@ -527,7 +533,7 @@ contains
     double precision :: dx, dy, x0, y0
     real, allocatable :: buf(:,:)
     call var_internal(name, iname, ierr)
-    if (ierr /= 0 .or. trim(iname) /= "pre") then
+    if (ierr /= 0) then
       bmi_status = BMI_FAILURE
       return
     end if

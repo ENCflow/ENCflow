@@ -64,18 +64,18 @@ python3 ../../bmi/python/live_view.py param.txt --save frames   # PNG 連番(ヘ
 
 ## 公開変数
 
-| CSDMS Standard Name | 内部 | 単位 | 入出力 |
+| CSDMS Standard Name | 内部 | 単位 | set の受理条件と意味論 |
 | --- | --- | --- | --- |
-| `surface_water__depth` | s%h | m | 出力 |
-| `land_surface__elevation` | s%z | m | 出力 |
-| `atmosphere_water__precipitation_leq-volume_flux` | s%pre | m s-1 | 出力・**入力** |
+| `surface_water__depth` | s%h | m | 常時受理。**状態の置換**(データ同化型。加算ではない。運動量は非更新) |
+| `land_surface__elevation` | s%z | m | **z 更新プロセス(geomorph 等)無効時のみ**。地形の置換(h 保存・e 回復。海セル除外) |
+| `atmosphere_water__precipitation_leq-volume_flux` | s%pre | m s-1 | **降水未設定(prtype=0)のみ**。持続強制(次の set まで有効) |
 
-降水の set_value は**降水未設定(prtype=0)のケースでのみ**受理される
-(生産者は変数ごとに一人 = ファイル強制との併用不可。developer.md §56)。
-設定値は次の update 冒頭で適用され、次に set するまで持続する。
-Python では `model.set(VAR_PRECIP, arr)`(m/s。1 次元標準形か
+3変数とも get/set 可。set は次の update 冒頭で適用される(受理規則の
+正本は developer.md §56(降水)・§57(z, h)。共通原則は「生産者は
+変数ごとに一人」)。Python では `model.set(名前, arr)`(1 次元標準形か
 (ny, nx) の 2 次元)。受け入れ試験は `bmi/python/test_set_value.py`
-(test/wave で実行 — ファイル強制と set_value 強制の Log 全行一致)。
+(test/wave で実行 — 降水はファイル強制と set_value 強制の Log 全行
+一致、h・z は「同値 set の不変性」= 無介入ランと Log 全行一致)。
 
 **交換間隔の指針**: get/set は場のコピーであり、毎ステップの交換は
 コピー方式のモデル連携一般に共通のオーバーヘッドを生む。結合間隔は

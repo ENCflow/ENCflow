@@ -2,8 +2,10 @@
 
 対象: ENCflow を CSDMS Basic Model Interface (BMI) 2.0 に対応させる
 ことの実現可能性・工事規模・推奨構成の見通し。
-経緯: 2026-08-28 の検討。**まだ検討段階であり、設計・実装は未着手**。
-具体的な設計(関数一覧・変数名マッピング・コード案)は次の段階で行う。
+経緯: 2026-08-28 の検討として起草。同日中に段1(ライフサイクル化 =
+developer.md §53)・段2(bmi/ アダプタ = §54)・bind(c)+Python
+(§55)・set_value(§56 降水・§57 z/h)まで実装済み。実装済み事項の
+正本は developer.md の各 § で、本書は検討の経緯と全体計画の記録。
 
 参考: BMI 2.0 仕様 <https://bmi.csdms.io/>、Fortran binding
 <https://github.com/csdms/bmi-fortran>(MIT)。
@@ -205,10 +207,13 @@ set_value で与えた場合の結果一致**(強制の等価性テスト)。MPI
 増えるのは scatter・ハロ交換・z の帯下限問題(§54)のみで、所有権の
 設計は逐次と共通。
 
-> **実装記録(2026-08-28)**: 上記 1(降水)を逐次で実装。正本は
-> **developer.md §56**。受け入れ試験 bmi/python/test_set_value.py で
+> **実装記録(2026-08-28)**: 上記 1(降水)を逐次で実装(正本は
+> **developer.md §56**)。受け入れ試験 bmi/python/test_set_value.py で
 > ファイル強制と set_value 強制の Log 全行一致を確認(誤用検査込み)。
-> 機能無効時は逐次・MPI・BMI 経由ともビット一致 PASS。
+> 続けて z・h の set も設計合意の上で実装(正本は **§57**。z = 生産者
+> 一人ルール+海セル除外、h = DA 型置換。同値 set 不変性テストで
+> wave・chichibu とも Log 全行一致)。機能無効時は逐次・MPI・BMI 経由
+> ともビット一致 PASS。
 
 ## 5. 推奨構成
 
@@ -318,6 +323,12 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
    (例: z の更新は e 回復・ハロ交換を伴う。m_geomorph が z 更新後に
    済ませている契約と同じ処理を set_value 側も負う)。変数ごとに
    「set 可否と付随処理」をマッピング表(論点5)に含める。
+   → **解決(2026-08-28)**: z・h の set を実装(developer.md §57)。
+   z は z 更新プロセス無効時のみ受理・海セル除外で tide と共存、
+   h は DA 型の状態置換として常時受理・運動量非更新。適用は update
+   冒頭で e = z + h 一括回復+ z ハロ交換(geomorph と同一契約)。
+   同値 set の不変性テストで wave・chichibu(河道セル含む)とも
+   Log 全行一致を確認。
 
 ## 8. 利用イメージ(Python サンプル。設計スケッチ)
 

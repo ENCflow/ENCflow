@@ -81,6 +81,14 @@ module m_main
     logical :: extpre_active = .false.  ! 外部降水供給モードか
     logical :: extpre_fresh = .false.   ! 未適用の新しい場があるか
     real, allocatable :: extpre(:,:)    ! ステージング場 (m/s。帯形状)
+    ! BMI 外部状態(z, h)のステージング(§57)。強制(pre)と違い
+    ! 「置換の一回適用」の意味論(z は準静的な共有状態の外部更新、
+    ! h はデータ同化型の状態上書き)。適用は update 冒頭で z → h →
+    ! e = z + h 一括回復 + z ハロ交換(m_geomorph と同一契約)
+    logical :: extz_fresh = .false.     ! 未適用の z があるか
+    real, allocatable :: extz(:,:)      ! ステージング場 (m。帯形状)
+    logical :: exth_fresh = .false.     ! 未適用の h があるか
+    real, allocatable :: exth(:,:)      ! ステージング場 (m。帯形状)
   end type t_encflow
 
   type(t_encflow), save :: enc
@@ -237,7 +245,9 @@ subroutine m_main_update()
 
     call run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, &
                   wq, dw, sn, gl, lv, si, &
-                  enc%extpre_active, enc%extpre_fresh, enc%extpre, enc%ierror)
+                  enc%extpre_active, enc%extpre_fresh, enc%extpre, &
+                  enc%extz_fresh, enc%extz, enc%exth_fresh, enc%exth, &
+                  enc%ierror)
 
   end associate
 
@@ -388,14 +398,20 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! アクセサ: 強制場の設定(BMI set_value 用)
-!   name は内部名(現在は 'pre' のみ)。src は全域 (1:nx, 1:ny)・
+! アクセサ: 強制場・状態の設定(BMI set_value 用)
+!   name は内部名('pre', 'z', 'h')。src は全域 (1:nx, 1:ny)・
 !   内部行順(j=1 が北)。値はステージングに格納するだけで、適用は
-!   次の update 冒頭で行う(bmi_plan.md §4.2: 生産者は変数ごとに
-!   一人 — 降水がファイル駆動(prtype /= 0)のときは受け付けない)。
-!   設定された場は次に set されるまで持続する(定常強制)。
+!   次の update 冒頭で行う(bmi_plan.md §4.2、developer.md §56・§57)。
+!   - 'pre': 強制。降水がファイル駆動(prtype /= 0)のときは受理しない
+!     (生産者は変数ごとに一人)。次に set されるまで持続する。
+!   - 'z':   準静的な共有状態の外部更新。ENCflow 側の z 更新プロセス
+!     (geomorph・glacier・lavaflow)がすべて無効のときのみ受理。
+!     海セルは適用除外(tide の水位表現 s%z と共存)。一回適用。
+!   - 'h':   データ同化型の状態上書き(置換であり加算ではない。水を
+!     足すなら 'pre' を使う)。常に受理。運動量(u,v,m,n)は触らない。
+!     一回適用。
 !   ierr: 0 = 成功、1 = 未対応の変数名、2 = 許可されない(生産者が
-!   既に存在)、3 = 不正値(負の降水強度)
+!   既に存在)、3 = 不正値(負の降水強度・負の水深)
 !----------------------------------------------------------------------
 subroutine m_main_set_value(name, src, ierr)
   character(len=*), intent(in) :: name
@@ -418,6 +434,26 @@ subroutine m_main_set_value(name, src, ierr)
     enc%extpre(:, dcp%js:dcp%je) = src(:, dcp%js:dcp%je)
     enc%extpre_active = .true.
     enc%extpre_fresh = .true.
+  case ('z')
+    if (enc%gm%enabled .or. enc%gl%enabled .or. enc%lv%enabled) then
+      ierr = 2
+      return
+    end if
+    if (.not. allocated(enc%extz)) then
+      allocate(enc%extz(1:size(src, 1), dcp%jsh:dcp%jeh), source = 0.0)
+    end if
+    enc%extz(:, dcp%js:dcp%je) = src(:, dcp%js:dcp%je)
+    enc%extz_fresh = .true.
+  case ('h')
+    if (any(src < 0.)) then
+      ierr = 3
+      return
+    end if
+    if (.not. allocated(enc%exth)) then
+      allocate(enc%exth(1:size(src, 1), dcp%jsh:dcp%jeh), source = 0.0)
+    end if
+    enc%exth(:, dcp%js:dcp%je) = src(:, dcp%js:dcp%je)
+    enc%exth_fresh = .true.
   case default
     ierr = 1
   end select
@@ -486,7 +522,8 @@ end subroutine
 !   ierror に累積し、継続判定は呼び出し側(m_main_finished)が行う
 !----------------------------------------------------------------------
 subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, sn, gl, lv, si, &
-                    extpre_active, extpre_fresh, extpre, ierror)
+                    extpre_active, extpre_fresh, extpre, &
+                    extz_fresh, extz, exth_fresh, exth, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
@@ -511,6 +548,10 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, s
   logical, intent(inout) :: extpre_fresh  ! 未適用の新しい場があるか(適用で消す)
   real, allocatable, intent(in) :: extpre(:,:)  ! ステージング場 (m/s。帯形状。
                                                 ! active のときのみ確保・参照)
+  logical, intent(inout) :: extz_fresh    ! 未適用の外部 z があるか(適用で消す)
+  real, allocatable, intent(in) :: extz(:,:)    ! ステージング場 (m。帯形状)
+  logical, intent(inout) :: exth_fresh    ! 未適用の外部 h があるか(適用で消す)
+  real, allocatable, intent(in) :: exth(:,:)    ! ステージング場 (m。帯形状)
   integer, intent(inout) :: ierror
   integer :: it            ! このステップの時間カウント(= s%it + 1)
   integer :: i, j          ! 外部降水の適用ループ用
@@ -527,6 +568,47 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, s
 
   ! 時刻情報を更新
   call m_state_updatetime(s, p, it)
+
+  ! BMI 外部状態(z, h)の適用(§57。set_value された場の一回適用)。
+  ! 契約は m_geomorph の z 更新と同一: 陸セルのみ(z は海セル除外 =
+  ! tide の水位表現と共存)、h を保存する側の量から e = z + h を一括
+  ! 回復し、z はハロ交換まで済ませる(h のハロは swflow のステップ頭
+  ! 交換が運ぶ)。運動量(u,v,m,n)は触らない(§57 の契約)
+  if (extz_fresh .or. exth_fresh) then
+    if (extz_fresh) then
+      !$omp parallel do
+      do j = dcp%js, dcp%je
+        do i = g%wx(1,j), g%wx(2,j)
+          if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
+          s%z(i,j) = extz(i,j)
+        end do
+      end do
+      !$omp end parallel do
+    end if
+    if (exth_fresh) then
+      !$omp parallel do
+      do j = dcp%js, dcp%je
+        do i = g%wx(1,j), g%wx(2,j)
+          if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
+          s%h(i,j) = exth(i,j)
+        end do
+      end do
+      !$omp end parallel do
+    end if
+    ! e の整合回復(m_geomorph と同じ範囲 = x > 0 の全セル。海セルは
+    ! z = η−hsea0, h = hsea0 のため e = η となり正しい)
+    !$omp parallel do
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        s%e(i,j) = s%z(i,j) + s%h(i,j)
+      end do
+    end do
+    !$omp end parallel do
+    if (extz_fresh) call par_halo_cell(s%z)
+    extz_fresh = .false.
+    exth_fresh = .false.
+  end if
 
   if (extpre_active) then
     ! BMI 外部供給(bmi_plan.md §4.2)。set_value された場を makepre の

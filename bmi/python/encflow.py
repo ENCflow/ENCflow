@@ -225,13 +225,20 @@ class ENCflow:
         return dest
 
     def set(self, name, values):
-        """強制場を設定する(現在は VAR_PRECIP のみ。単位 m/s)。
+        """強制場・状態を設定する(VAR_PRECIP / VAR_ELEVATION / VAR_DEPTH)。
 
         values は長さ nx*ny の 1 次元(BMI 標準形 = 要素 0 が南西)か、
-        (ny, nx) の 2 次元(行 0 = 南。get2d と同じ向き)。設定値は
-        次の update の冒頭で適用され、次に set するまで持続する。
-        降水がパラメータファイル駆動(prtype != 0)のケースでは
-        BmiError になる(生産者は一人の規則)。
+        (ny, nx) の 2 次元(行 0 = 南。get2d と同じ向き)。いずれも
+        次の update の冒頭で適用される。変数ごとの意味論:
+        - VAR_PRECIP (m/s): 持続強制(次の set まで有効)。降水が
+          パラメータファイル駆動(prtype != 0)のケースでは BmiError
+          (生産者は一人の規則)。
+        - VAR_ELEVATION (m): 地形の置換(一回適用。h は保存され水位
+          e = z + h が回復される)。geomorph 等の地形更新プロセスが
+          有効なケースでは BmiError。海セルには適用されない。
+        - VAR_DEPTH (m): 水深の置換(一回適用。データ同化型の状態
+          上書き。加算ではない — 水を足すなら VAR_PRECIP を使う)。
+          運動量(u, v)は変更されない。負値は BmiError。
         """
         arr = np.ascontiguousarray(values, dtype=np.float64).ravel()
         n = self.nx * self.ny
