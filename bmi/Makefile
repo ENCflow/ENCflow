@@ -12,22 +12,31 @@
 #   - コンパイラ・精度(PREC)は ../make.inc に従う。src/ 側の
 #     MODE / PREC を切り替えたときはここでも make clean すること
 #     (libencflow.a・.mod と整合しない .o の混在リンクを防ぐ)。
-#   - 現段階は逐次(MODE=serial)専用。
+#   - MODE=mpi では検証ドライバは test_encflow_bmi_mpi になる
+#     (mpirun -np N ./test_encflow_bmi_mpi param.txt [set])。
+#     共有ライブラリ(Python 用)は現段階では serial のみ生成する。
 
 include ../make.inc
 
 SRCDIR	= ../src
 LIB	= $(SRCDIR)/libencflow.a
 
-TARGET	= test_encflow_bmi
 SHLIB	= libencflow_bmi.so
 OBJS	= bmi.o bmi_encflow.o test_bmi.o
+
+ifeq ($(MODE),mpi)
+TARGET	= test_encflow_bmi_mpi
+SHLIBS	=
+else
+TARGET	= test_encflow_bmi
+SHLIBS	= $(SHLIB)
+endif
 
 # bmi/ の全オブジェクトは -fPIC 付きでビルドする(共有ライブラリと
 # 実行形式の両方に使うため。実行形式側への実害はない)
 PICFLAG	= -fPIC
 
-all: $(TARGET) $(SHLIB)
+all: $(TARGET) $(SHLIBS)
 
 $(TARGET): $(OBJS) $(LIB)
 	$(FRT) -o $@ $(FFLAGS) $(OBJS) $(LIB) $(LDFLAGS)

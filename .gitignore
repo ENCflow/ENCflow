@@ -78,3 +78,5 @@ test/*/frames_bmi/
 test/*/param_seteq*.txt
 test/*/result_seteq_pre.npy
 __pycache__/
+bmi/test_encflow_bmi_mpi
+test/*/test_encflow_bmi_mpi

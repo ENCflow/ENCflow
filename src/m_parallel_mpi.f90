@@ -91,11 +91,26 @@ module m_parallel
    ! 実数通信用データ型(par_init が既定 real の実サイズから確定する)
    type(MPI_Datatype), protected, save :: MPI_WP = MPI_DATATYPE_NULL
 
+   ! MPI の所有権: par_init が MPI を初期化したか(BMI 等のライブラリ
+   ! 利用では呼び出し側(mpi4py 等)が初期化済みのことがある。その場合
+   ! 終了処理(MPI_Finalize)も呼び出し側の責務とし、こちらは行わない。
+   ! bmi_plan.md §6 段3、developer.md §58)
+   logical, save :: owns_mpi = .true.
+
 contains
 
    subroutine par_init()
       integer :: iprov
-      call MPI_Init_thread(MPI_THREAD_FUNNELED, iprov)
+      logical :: already
+      call MPI_Initialized(already)
+      if (already) then
+         ! 呼び出し側が初期化済み(ライブラリモード)。スレッド水準だけ検査
+         owns_mpi = .false.
+         call MPI_Query_thread(iprov)
+      else
+         owns_mpi = .true.
+         call MPI_Init_thread(MPI_THREAD_FUNNELED, iprov)
+      end if
       if (iprov < MPI_THREAD_FUNNELED) then
          write(error_unit,'(a,i0)') &
             'ERROR: MPI thread support insufficient: ', iprov
@@ -561,7 +576,9 @@ contains
    end subroutine par_bcast_edge
 
    subroutine par_finalize()
-      call MPI_Finalize()
+      ! 自分が初期化した場合のみ finalize する(ライブラリモードでは
+      ! 呼び出し側の MPI を勝手に閉じない)
+      if (owns_mpi) call MPI_Finalize()
    end subroutine par_finalize
 
    subroutine par_info(msg)
@@ -590,7 +607,7 @@ contains
          flush(error_unit)
       end if
       call MPI_Barrier(MPI_COMM_WORLD)
-      call MPI_Finalize()
+      if (owns_mpi) call MPI_Finalize()
       stop 1
    end subroutine par_stop
 

@@ -4,8 +4,9 @@
 ことの実現可能性・工事規模・推奨構成の見通し。
 経緯: 2026-08-28 の検討として起草。同日中に段1(ライフサイクル化 =
 developer.md §53)・段2(bmi/ アダプタ = §54)・bind(c)+Python
-(§55)・set_value(§56 降水・§57 z/h)まで実装済み。実装済み事項の
-正本は developer.md の各 § で、本書は検討の経緯と全体計画の記録。
+(§55)・set_value(§56 降水・§57 z/h)・段3(MPI 対応 = §58)まで
+実装済み。実装済み事項の正本は developer.md の各 § で、本書は検討の
+経緯と全体計画の記録。残る将来枠は段4のみ(§6)。
 
 参考: BMI 2.0 仕様 <https://bmi.csdms.io/>、Fortran binding
 <https://github.com/csdms/bmi-fortran>(MIT)。
@@ -261,6 +262,14 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
 > 判明事項: 内部 j は北→南。当初は Landlab 連携で行反転が必要と
 > 記したが、§7-5 案A(BMI 層で行順を標準形 = 要素0が南西に正規化。
 > 同日実装)により**連結相手側の反転は不要**になった。
+> **段3(同日・§58)実装済み** = MPI 対応: owns_mpi ガード
+> (MPI_Initialized 検査。ライブラリモードでは finalize しない)、
+> set_value の scatter 化(src は rank0 のみ有効・値検査は allreduce で
+> 全ランク同一判定)、MPI 実行規約(全ランク collective・rank0 有効)。
+> §54 の「z の帯下限問題」は誤解と判明(s%z は帯確保の通常配列。
+> 全域保持は g%z)— 規律3 の -fcheck=all np=2 が検証で実効。
+> 残る将来枠は段4(par_comm 抽象化・par_stop の return code 化・
+> MPI 版 .so、複数インスタンス)のみ。
 
 | 段 | 内容 | 規模感 | 検証 |
 | --- | --- | --- | --- |

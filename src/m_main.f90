@@ -384,9 +384,10 @@ subroutine m_main_get_value(name, dest, ierr)
   case ('h')
     call par_gather_to(dest, enc%s%h)
   case ('z')
-    call par_gather_to(dest, enc%s%z)   ! 注意: MPI では rank0 の z が全域確保
-                                        ! のため帯下限の再解釈が必要(段3で対処。
-                                        ! 逐次は確保=全域・下限1で一致し問題ない)
+    ! s%z は h 等と同じ帯確保の通常配列なので素直に gather できる
+    ! (§11 の「z のみ rank0 が全域保持」は geoinfo の g%z の話で
+    ! s%z ではない。§54 の帯下限の懸念は誤解だった — §58 に記録)
+    call par_gather_to(dest, enc%s%z)
   case ('e')
     call par_gather_to(dest, enc%s%e)
   case ('pre')
@@ -414,6 +415,10 @@ end subroutine
 !   既に存在)、3 = 不正値(負の降水強度・負の水深)
 !----------------------------------------------------------------------
 subroutine m_main_set_value(name, src, ierr)
+  ! MPI では全ランク collective に呼ぶこと。src は rank0 のみ有効
+  ! (get と対称。rank0 以外はサイズ1のダミーでよい = par_scatter_cell
+  ! の契約)。値検査は rank0 で行い、結果を全ランク集約してから
+  ! 帯+ハロへ scatter する(§58)
   character(len=*), intent(in) :: name
   real, intent(in) :: src(:,:)
   integer, intent(out) :: ierr
@@ -424,14 +429,15 @@ subroutine m_main_set_value(name, src, ierr)
       ierr = 2
       return
     end if
-    if (any(src < 0.)) then
-      ierr = 3
-      return
+    if (is_root) then
+      if (any(src < 0.)) ierr = 3
     end if
+    call par_allreduce_maxi(ierr)   ! 判定を全ランク同一に(§5)
+    if (ierr > 0) return
     if (.not. allocated(enc%extpre)) then
-      allocate(enc%extpre(1:size(src, 1), dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(enc%extpre(1:enc%g%nx, dcp%jsh:dcp%jeh), source = 0.0)
     end if
-    enc%extpre(:, dcp%js:dcp%je) = src(:, dcp%js:dcp%je)
+    call par_scatter_cell(src, enc%extpre)
     enc%extpre_active = .true.
     enc%extpre_fresh = .true.
   case ('z')
@@ -440,19 +446,20 @@ subroutine m_main_set_value(name, src, ierr)
       return
     end if
     if (.not. allocated(enc%extz)) then
-      allocate(enc%extz(1:size(src, 1), dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(enc%extz(1:enc%g%nx, dcp%jsh:dcp%jeh), source = 0.0)
     end if
-    enc%extz(:, dcp%js:dcp%je) = src(:, dcp%js:dcp%je)
+    call par_scatter_cell(src, enc%extz)
     enc%extz_fresh = .true.
   case ('h')
-    if (any(src < 0.)) then
-      ierr = 3
-      return
+    if (is_root) then
+      if (any(src < 0.)) ierr = 3
     end if
+    call par_allreduce_maxi(ierr)   ! 判定を全ランク同一に(§5)
+    if (ierr > 0) return
     if (.not. allocated(enc%exth)) then
-      allocate(enc%exth(1:size(src, 1), dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(enc%exth(1:enc%g%nx, dcp%jsh:dcp%jeh), source = 0.0)
     end if
-    enc%exth(:, dcp%js:dcp%je) = src(:, dcp%js:dcp%je)
+    call par_scatter_cell(src, enc%exth)
     enc%exth_fresh = .true.
   case default
     ierr = 1

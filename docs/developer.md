@@ -5301,3 +5301,60 @@ MPI 対応(scatter 経路)、h・z の set(整合処理 = e 回復が必要。
   水深ガードが次ステップで処理する(geomorph の侵食と同じ扱い)。
 - MPI は staging の scatter が未実装(§56 と同じく段3)。ハロ交換は
   適用側に既に入っているため、scatter 経路の追加のみで動く見込み。
+
+
+## 58. BMI の MPI 対応(段3。2026-08-28 実装)
+
+bmi_plan.md §6 段3。BMI のライフサイクル・get/set を MPI で成立させた。
+アダプタ(bmi/)は無変更で、改修は m_parallel_mpi と m_main のみ。
+
+### 決定事項
+
+- **MPI 所有権ガード(owns_mpi)**: par_init は MPI_Initialized を
+  検査し、未初期化なら従来どおり MPI_Init_thread(owns_mpi=.true.)、
+  初期化済みなら MPI_Query_thread でスレッド水準だけ検査して
+  owns_mpi=.false.(mpi4py 等の呼び出し側が所有するライブラリモード)。
+  par_finalize / par_stop の MPI_Finalize は owns_mpi のときのみ。
+  par_abort の MPI_Abort は所有に関わらず呼ぶ(外部 MPI でも正当)。
+- **set_value の scatter 化**: m_main_set_value は全ランク collective に
+  呼ぶ規約(get と対称)。src は rank0 のみ有効(他ランクはサイズ1の
+  ダミー可 = par_scatter_cell の契約)。値検査(負値)は rank0 で行い、
+  par_allreduce_maxi で ierr を全ランク同一にしてから(§5)、
+  par_scatter_cell でステージングを帯+ハロへ配布する。適用側は §56・
+  §57 のまま(z のハロ交換は §57 実装時から入っている)。
+- **BMI の MPI 実行規約**(bmi/README.md に利用者向け記載):
+  update / update_until / get / set は全ランク collective に呼ぶ。
+  get の有効値と set の供給元は rank0。MPI 版検証ドライバは
+  test_encflow_bmi_mpi(bmi/Makefile が MODE=mpi で切替)。共有
+  ライブラリ(Python 用)は現段階 serial のみ(mpiexec + python は
+  段4。grpc4bmi 型の別プロセス経路も §4.4 に記録済み)。
+
+### §54 の「z の帯下限問題」は誤解だった(規律3の実効例)
+
+§54 で「rank0 の s%z が全域確保のため gather が行ずれする」と注記して
+いたが、**全域保持されるのは geoinfo の g%z であり、s%z は h 等と同じ
+帯確保の通常配列**(m_state_init は s%z を (1:nx, jsh:jeh) で確保)。
+つまり get_value('z') の gather は最初から MPI 正当だった。段3で
+「修正」として入れた rank0 直接コピーの方がバグ(帯確保の s%z を全域
+添字で参照)であり、**規律3の gfortran -fcheck=all np=2 が最適化
+ビルド前にこれを検出**して差し戻した。§54 の当該注記は本節で訂正する。
+
+### 検証(2026-08-28。gfortran 13.3 / Open MPI 4.1.6)
+
+- 規律3: -fcheck=all の np=2(chichibu、BMI ドライバ+同値 set 込み)
+  で全検査通過(上記バグの検出・修正後)。
+- CLI 回帰: MPI wave np=1,2,4・chichibu np=2 いずれも PASS。
+  逐次 wave/chichibu ビット一致 PASS(owns_mpi は逐次版に存在せず、
+  MPI 版でも従来経路は MPI_Initialized=false で完全同一)。
+- BMI 経由完走(MPI): test_encflow_bmi_mpi の 'set' オプション
+  (中間時点の h・z の同値 set = 不変性検査)付きで wave np=2,4・
+  chichibu np=2 が reference と PASS(ULP=1 の MPI 規準)。
+- 逐次 BMI: ドライバ(set 付き)・Python 受け入れ試験(pre 等価性、
+  h/z 同値 set 不変性)すべて PASS。
+
+### 残作業(段4)
+
+MPI_COMM_WORLD → par_comm 抽象化(サブコミュニケータ結合)、
+par_stop の return code 化(library モード)、MPI 版 .so + mpiexec
+python の検証、複数インスタンス(handle 方式)。いずれも需要が
+具体化してから。

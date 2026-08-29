@@ -6,8 +6,10 @@ ENCflow 全体をひとつの BMI component として外部(Python・結合
 ディレクトリに一切依存しない(developer.md §0 方針10 追記)。
 
 - 全体像・設計の正本: **docs/bmi_plan.md**(段階計画は §6)
-- ライフサイクル API(m_main)の設計記録: developer.md §53
-- 現段階(段2): 逐次専用。出力変数(get_value)のみ。
+- 実装記録: developer.md §53(ライフサイクル API)・§54(アダプタ)・
+  §55(bind(c)+Python)・§56/§57(set_value)・§58(MPI)
+- 現段階: 逐次・MPI とも get/set 対応(3変数)。Python 用の共有
+  ライブラリは逐次のみ。
 
 ## 構成
 
@@ -31,6 +33,21 @@ ln -sf ../../bmi/test_encflow_bmi .
 ./test_encflow_bmi param.txt        # BMI 経由でケースを完走
 SKIPCOLS=4 ULP=0 ../Scripts/Compare_ref.sh Log.txt   # reference とビット一致
 ```
+
+## MPI で使う(段3)
+
+```sh
+cd bmi && make clean && make MODE=mpi      # → test_encflow_bmi_mpi
+cd ../test/chichibu
+ln -sf ../../bmi/test_encflow_bmi_mpi .
+mpirun -np 4 ./test_encflow_bmi_mpi param.txt [set]
+```
+
+実行規約: update / update_until / get / set は**全ランクが collective に
+呼ぶ**。get の有効値と set の供給元は **rank0**(他ランクの配列は
+参照されない)。MPI が呼び出し側(mpi4py 等)で初期化済みなら
+ENCflow は finalize しない(所有権ガード。developer.md §58)。
+共有ライブラリ(Python 用)は現段階では serial のみ生成する。
 
 ## Python から使う(逐次)
 

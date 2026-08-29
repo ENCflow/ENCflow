@@ -13,7 +13,11 @@
 !   - 誤用が BMI_FAILURE になること(未知変数・サイズ不一致・過去への
 !     update_until・終了後の update)
 !
-!   使い方:  ./test_encflow_bmi param.txt
+!   使い方:  ./test_encflow_bmi param.txt [set]
+!     第2引数 set: 中間時点で get した h・z をそのまま set して継続する
+!     (同値 set の不変性 = Log は set なしと一致するはず。z の set は
+!     z 更新プロセスが無効なケースでのみ使えることに注意)。
+!     MPI 版(test_encflow_bmi_mpi)は mpirun で全ランク起動する。
 !======================================================================
 program test_bmi
   use bmif_2_0
@@ -26,6 +30,7 @@ program test_bmi
   character(len=BMI_MAX_VAR_NAME), pointer :: onames(:)
   character(len=BMI_MAX_UNITS_NAME) :: units
   integer :: i, nx, ny, gsize, nstep, nhalf, icount, ocount
+  logical :: do_set        ! 同値 set の不変性検査を行うか(第2引数 'set')
   integer :: shp(2)
   double precision :: t, t0, tend, dt
   double precision :: spacing(2), origin(2)
@@ -33,10 +38,18 @@ program test_bmi
   double precision, allocatable :: hbad(:)
 
   if (command_argument_count() < 1) then
-    write(*, '(a)') "usage: test_encflow_bmi parameterfile"
+    write(*, '(a)') "usage: test_encflow_bmi parameterfile [set]"
     stop 2
   end if
   call get_command_argument(1, fn)
+  do_set = .false.
+  if (command_argument_count() >= 2) then
+    getopt: block
+      character(len=16) :: arg2
+      call get_command_argument(2, arg2)
+      do_set = (trim(arg2) == "set")
+    end block getopt
+  end if
 
   ! ---- initialize と基本情報 ----
   call chk(model%initialize(trim(fn)), "initialize")
@@ -90,6 +103,17 @@ program test_bmi
   call chk(model%get_value_double("surface_water__depth", h), "get_value h")
   write(*, '(a,f10.3,a,es13.6,a,i0)') &
     "bmi: t = ", t, "  max h = ", maxval(h), "  at flat index ", maxloc(h, dim=1)
+
+  ! ---- 同値 set の不変性(第2引数 'set' 指定時のみ) ----
+  ! いま get した h・z をそのまま set して継続する。結果(Log)は
+  ! set なしの実行と一致するはず。MPI では get の有効値は rank0 のみ、
+  ! set の scatter 元も rank0 なので、このまま全ランクで呼べばよい
+  if (do_set) then
+    call chk(model%get_value_double("land_surface__elevation", z), "get_value z (half)")
+    call chk(model%set_value_double("land_surface__elevation", z), "set z (same value)")
+    call chk(model%set_value_double("surface_water__depth", h), "set h (same value)")
+    write(*, '(a)') "bmi: same-value set of h and z staged (invariance check)"
+  end if
 
   do
     call chk(model%get_current_time(t), "get_current_time")
