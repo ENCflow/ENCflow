@@ -360,13 +360,17 @@ through the standard initialize / update / get_value / set_value calls.
   level, and flow speed, so you can render results live while the model
   runs, or sweep through many scenarios from a script.
 - **Combine it with other models** — BMI is a common socket adopted by
-  models across hydrology, geomorphology, snow and ice, and beyond, for
-  plugging models into one another. With ENCflow as one of the parts,
-  you can feed it the output of a rainfall–runoff model and solve the
-  flooding, exchange terrain with a landscape-evolution model so that
-  floods reshape the terrain and the next flood flows over the new one,
-  or pull observations into a running simulation (data assimilation) —
-  it opens the door to coupled simulations that span disciplines.
+  models across hydrology, geomorphology, oceanography, snow and ice,
+  and beyond, for plugging models into one another. It is a door to
+  going beyond ENCflow's own limits: physics that ENCflow deliberately
+  leaves out — deep three-dimensional groundwater, wind waves — can be
+  solved in one connected system by exchanging state with the
+  specialist model of that field. And the direction reverses: external
+  systems can call on ENCflow's flood hydraulics as an engine — a
+  continental-scale hydrology model dispatching ENCflow to resolve
+  high-resolution inundation just in the basins at risk, or a
+  forecasting system that assimilates observations while it runs,
+  with ENCflow as its flood component.
 - **The core is untouched** — BMI lives in the optional `bmi/` adapter;
   the regular builds (encflow / encflow_mpi) remain dependency-free as
   before.
