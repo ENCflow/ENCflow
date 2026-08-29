@@ -15,7 +15,7 @@ site before citing.
 
 | Model | Developer | Cost | Code | Notes |
 |---|---|---|---|---|
-| **ENCflow** | (this project) | Free (policy) | Fully open (policy) | Basic policy is developer.md Sec. 0. Ships agent-oriented groundwork (Sec. 3) |
+| **ENCflow** | (this project) | Free (policy) | Fully open (policy) | Basic policy is developer.md Sec. 0. Ships agent-oriented groundwork (Sec. 3). Implements CSDMS BMI 2.0 (passes bmi-tester; optional adapter, core stays dependency-free; 2026-08-29) |
 | RRI | ICHARM/PWRI | Free | Open (own terms) | Copyright-notice obligation; commercial use by permission. iRIC-version solver also published |
 | iRIC (Nays2DFlood etc.) | iRIC organization | Free | Main solvers open | Platform of GUI + solver suite |
 | Morpho2DH | Takebayashi (DPRI, Kyoto Univ.) / iRIC | Free | Closed (distributed via iRIC) | Morpho2D (2D bed deformation) + debris/mud flow. Considers structures such as sabo dams |
@@ -175,3 +175,10 @@ Sources (confirmed 2026-08-10):
   integration in a single code and a single time evolution: processes
   can be added without coupling work, at the price of keeping each
   process at the screening level — the two routes are complementary.
+  (Added 2026-08-29) That complementarity is now an actual connection:
+  ENCflow itself behaves as a BMI 2.0 component (passes bmi-tester;
+  see bmi/), so the in-house integrated process chain can be offered
+  as a single component to CSDMS-side coupling (Landlab, pymt,
+  GLOFRIM-style chains). "In-house integration vs. coupling framework"
+  is no longer either-or: the former can serve as a building block of
+  the latter (history in docs/bmi_plan.md).
