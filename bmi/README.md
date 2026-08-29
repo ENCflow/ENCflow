@@ -1,43 +1,103 @@
 # bmi/ — CSDMS Basic Model Interface (BMI 2.0) アダプタ
 
-ENCflow 全体をひとつの BMI component として外部(Python・結合
-フレームワーク等)から操作するための **optional アダプタ**。
-`src/` の既定ビルド(encflow / encflow_mpi / libencflow.a)は本
-ディレクトリに一切依存しない(developer.md §0 方針10 追記)。
+ENCflow を **Python や他モデルから操作するための標準インターフェース**
+です。ENCflow 全体がひとつの BMI component となり、
+initialize / update / get_value / set_value という共通の操作で、
+計算を任意の時点で止めて状態を取り出したり、外部から強制を与えたり
+できます。CSDMS 公式の適合性テスト(bmi-tester)に合格しています。
 
-- 全体像・設計の正本: **docs/bmi_plan.md**(段階計画は §6)
-- 実装記録: developer.md §53(ライフサイクル API)・§54(アダプタ)・
-  §55(bind(c)+Python)・§56/§57(set_value)・§58(MPI)
-- 現段階: 逐次・MPI とも get/set 対応(3変数)。Python 用の共有
-  ライブラリは逐次のみ。
+BMI はオプション機能です。通常のビルド(encflow / encflow_mpi)は
+本ディレクトリに依存せず、従来どおり外部ライブラリなしで動きます。
+BMI を使う場合も、必要な追加ソフトは Python 側の numpy だけです
+(BMI 仕様ファイルは同梱しており、CMake 等のツールは不要です)。
 
-## 構成
-
-| ファイル | 役割 |
-| --- | --- |
-| `vendor/bmi.f90` | BMI 2.0 仕様(bmif_2_0 モジュール)。CSDMS bmi-fortran 由来の同梱(MIT。`vendor/LICENSE`・NOTICE 参照) |
-| `bmi_encflow.f90` | アダプタ本体。`type(encflow_bmi)` が bmif_2_0 を実装し、m_main の公開手続きへ翻訳する |
-| `bmi_encflow_c.f90` | bind(c) の C 相互運用層(Python 等から呼ぶための C 互換シンボル。iso_c_binding のみ・外部依存なし) |
-| `test_bmi.f90` | 検証ドライバ。ケースを BMI 経由で完走させる(Log.txt が既存 reference とビット一致することを回帰テストに使う) |
-| `python/encflow.py` | ctypes 最小ラッパー(サンプル)。`ENCflow` クラスと numpy での状態量取得 |
-| `python/live_view.py` | 計算しながら水深分布とハイドログラフを順次表示するサンプル |
-
-## ビルドと検証
+## クイックスタート(Python から使う)
 
 ```sh
-cd bmi
-make                # test_encflow_bmi と libencflow_bmi.so を生成
-                    # (../src が未ビルドなら先にビルドされる)
-cd ../test/wave
-ln -sf ../../bmi/test_encflow_bmi .
-./test_encflow_bmi param.txt        # BMI 経由でケースを完走
-SKIPCOLS=4 ULP=0 ../Scripts/Compare_ref.sh Log.txt   # reference とビット一致
+cd bmi && make        # libencflow_bmi.so を生成(初回は ../src もビルド)
 ```
 
-## 適合性確認(bmi-tester)
+```python
+import sys; sys.path.insert(0, "path/to/ENCflow/bmi/python")
+from encflow import ENCflow, VAR_DEPTH
 
-CSDMS 公式の適合性テストに合格している(47 passed / 0 failed。skip は
-非構造格子系など構造的に正当なもののみ。developer.md §59):
+with ENCflow("param.txt") as model:          # 通常のケースをそのまま使える
+    while model.time < model.end_time:
+        model.update_until(model.time + 600.0)   # 10 分ずつ進める
+        h = model.get2d(VAR_DEPTH)               # 水深 (ny, nx) の numpy 配列
+        print(model.time, h.max())
+```
+
+パラメータファイル・入力データ・結果出力はスタンドアロン実行と
+まったく同じです(BMI は操作口が増えるだけで、dt_file のファイル出力や
+Log.txt もこれまでどおり書かれます)。
+
+計算しながら水深分布とハイドログラフを順次表示するサンプル:
+
+```sh
+cd test/chichibu
+python3 ../../bmi/python/live_view.py param.txt --probe 479 36
+python3 ../../bmi/python/live_view.py param.txt --save frames   # PNG 連番(画面なし環境)
+```
+
+表示間隔は `--interval` 秒で指定できます。省略時は param の dt_file を
+読んで、ファイル出力と同じタイミングで表示します。
+
+## 公開変数(get / set)
+
+| CSDMS Standard Name | 内容 | 単位 | set(外部からの設定) |
+| --- | --- | --- | --- |
+| `surface_water__depth` | 水深 | m | 可(**置換**。加算ではない。流速は変更されない) |
+| `land_surface__elevation` | 標高 | m | 地形変化系の機能(geomorph 等)が**無効のケースのみ**可。水深は保存され水位が追随。海セルには適用されない |
+| `atmosphere_water__precipitation_leq-volume_flux` | 降水強度 | m/s | 降水を**パラメータで設定していないケースのみ**可。次に set するまで持続する強制 |
+
+3変数とも get できます。set した値は次の update の冒頭で適用されます。
+set の「〜のみ可」は、**同じ量の与え方は一つ**(ファイル強制と外部
+供給を併用しない)という原則によるもので、条件を満たさない set は
+エラー(BMI_FAILURE)になります。Python では
+`model.set(名前, 配列)`(下記の 1 次元標準形か、(ny, nx) の 2 次元)。
+
+**交換間隔の目安**: get/set は場のコピーなので、交換はモデルの
+時間刻みごとではなく、**交換する量の時間スケール**で行ってください
+(降雨なら分オーダー)。細かすぎる交換は無駄なだけですが、粗すぎる
+交換は結合誤差になります。
+
+## 配列と格子の規約
+
+- 配列は BMI 仕様どおり flatten した 1 次元で、**要素 0 = 南西隅、
+  行は南→北**(格子の origin = 左下隅・spacing 正と整合)。
+  Landlab の RasterModelGrid ノード配列とは無変換で 1:1 対応します。
+- Python の `get2d()` は (ny, nx) を返します(行 0 = 南。matplotlib
+  では `origin='lower'` で地図の向きどおりに表示されます)。
+- 格子は grid 0 = uniform_rectilinear、shape は [ny, nx] 順。
+  georef(hdr)を使うケースでは origin に実座標が入ります。
+- 参照渡し(get_value_ptr)と非構造格子系の問い合わせは非対応です
+  (BMI 仕様が認める BMI_FAILURE / NotImplementedError を返します)。
+
+## MPI で使う
+
+```sh
+cd bmi && make clean && make MODE=mpi      # → 検証ドライバ test_encflow_bmi_mpi
+mpirun -np 4 ./test_encflow_bmi_mpi param.txt
+```
+
+- update / update_until / get / set は**全ランクが揃って呼びます**。
+  get で得られる全域配列と、set に与える配列は **rank 0 のみ有効**です
+  (他ランクの配列は参照されません)。
+- MPI が呼び出し側(mpi4py 等)で初期化済みの場合、ENCflow は
+  MPI を横取り・終了しません。
+- Python 用の共有ライブラリは現在は逐次版のみです。MPI で使えるのは
+  Fortran からの呼び出し(上記ドライバが例)です。
+
+## 検証ツール
+
+| ツール | 内容 |
+| --- | --- |
+| `test_encflow_bmi [param] [set]` | ケースを BMI 経由で完走させる検証ドライバ(結果はスタンドアロン実行と一致する。`set` を付けると同値 set の無害性も検査) |
+| `python/test_set_value.py` | set_value の等価性テスト(ファイル強制と外部供給で結果が一致すること等。test/wave で実行) |
+| `python/check_bmi.sh` | CSDMS 公式適合性テスト bmi-tester の実行スクリプト |
+
+適合性テストの再現手順:
 
 ```sh
 pip install bmi-tester bmipy 'pytest<8' 'gimli.units==0.3.*'
@@ -45,78 +105,28 @@ cd test/wave
 ../../bmi/python/check_bmi.sh param.txt
 ```
 
-検査対象は bmipy 準拠クラス `python/encflow_bmi.py`(EncflowBmi)。
-日常利用には `python/encflow.py` の ENCflow クラスの方が便利。
+## ファイル構成
 
-## MPI で使う(段3)
+| ファイル | 役割 |
+| --- | --- |
+| `vendor/bmi.f90` | BMI 2.0 仕様(CSDMS bmi-fortran 由来の同梱。MIT。`vendor/LICENSE`・NOTICE 参照) |
+| `bmi_encflow.f90` | アダプタ本体(Fortran から BMI で使う場合はこれを use する) |
+| `bmi_encflow_c.f90` | C 互換シンボル層(共有ライブラリの口) |
+| `python/encflow.py` | Python ラッパー。`ENCflow` クラス(日常利用はこちら) |
+| `python/encflow_bmi.py` | bmipy 準拠クラス `EncflowBmi`(bmi-tester・pymt 系ツール用) |
+| `python/live_view.py` | ライブ表示サンプル |
 
-```sh
-cd bmi && make clean && make MODE=mpi      # → test_encflow_bmi_mpi
-cd ../test/chichibu
-ln -sf ../../bmi/test_encflow_bmi_mpi .
-mpirun -np 4 ./test_encflow_bmi_mpi param.txt [set]
-```
+## 制約・注意
 
-実行規約: update / update_until / get / set は**全ランクが collective に
-呼ぶ**。get の有効値と set の供給元は **rank0**(他ランクの配列は
-参照されない)。MPI が呼び出し側(mpi4py 等)で初期化済みなら
-ENCflow は finalize しない(所有権ガード。developer.md §58)。
-共有ライブラリ(Python 用)は現段階では serial のみ生成する。
+- 1 プロセスにつき 1 モデルです(同時に2つの ENCflow を持てません。
+  finalize 後の再 initialize は逐次では可能です)。
+- 共有ライブラリ(.so)経由の実行は、コンパイル条件の違いにより
+  スタンドアロン実行とビットまでは一致しないことがあります(物理量の
+  出力は表示桁で一致します)。厳密なビット再現が必要な検証には
+  静的な `test_encflow_bmi` を使ってください。
 
-## Python から使う(逐次)
+## 開発者向け
 
-必要なのは Python3 + numpy(+ 表示するなら matplotlib)だけ。
-
-```python
-import sys; sys.path.insert(0, "path/to/ENCflow/bmi/python")
-from encflow import ENCflow, VAR_DEPTH
-
-with ENCflow("param.txt") as model:
-    while model.time < model.end_time:
-        model.update_until(model.time + 600.0)   # 10 分ずつ進める
-        h = model.get2d(VAR_DEPTH)               # (ny, nx) numpy 配列
-        print(model.time, h.max())
-```
-
-計算しながら分布を順次表示するサンプル(表示間隔は `--interval`。
-省略時は param の dt_file を読んでファイル出力と同期):
-
-```sh
-cd test/chichibu
-python3 ../../bmi/python/live_view.py param.txt --probe 479 36
-python3 ../../bmi/python/live_view.py param.txt --save frames   # PNG 連番(ヘッドレス)
-```
-
-注意: 共有ライブラリ経由はコンパイルフラグ(-fPIC)の異なる別
-バイナリになる(gfortran の LTO がリンク時に再コード生成する)。
-物理量の出力は一致するが、比較除外列(適応 RK 発動率)がまれに
-±0.1% 変わり得る(developer.md §55)。get/get2d の行順は標準形
-(行0=南)。
-
-## 公開変数
-
-| CSDMS Standard Name | 内部 | 単位 | set の受理条件と意味論 |
-| --- | --- | --- | --- |
-| `surface_water__depth` | s%h | m | 常時受理。**状態の置換**(データ同化型。加算ではない。運動量は非更新) |
-| `land_surface__elevation` | s%z | m | **z 更新プロセス(geomorph 等)無効時のみ**。地形の置換(h 保存・e 回復。海セル除外) |
-| `atmosphere_water__precipitation_leq-volume_flux` | s%pre | m s-1 | **降水未設定(prtype=0)のみ**。持続強制(次の set まで有効) |
-
-3変数とも get/set 可。set は次の update 冒頭で適用される(受理規則の
-正本は developer.md §56(降水)・§57(z, h)。共通原則は「生産者は
-変数ごとに一人」)。Python では `model.set(名前, arr)`(1 次元標準形か
-(ny, nx) の 2 次元)。受け入れ試験は `bmi/python/test_set_value.py`
-(test/wave で実行 — 降水はファイル強制と set_value 強制の Log 全行
-一致、h・z は「同値 set の不変性」= 無介入ランと Log 全行一致)。
-
-**交換間隔の指針**: get/set は場のコピーであり、毎ステップの交換は
-コピー方式のモデル連携一般に共通のオーバーヘッドを生む。結合間隔は
-**交換する量の時間スケール**で選ぶこと(降雨なら分オーダー。数値 dt
-より細かい交換に物理的な意味はない)。粗すぎる間隔は結合の時間分割
-誤差になる。詳細は docs/bmi_plan.md §8.0。
-
-配列は BMI 仕様どおり flatten した 1 次元。行順は **BMI 標準形に
-正規化**して受け渡す: 要素 0 = 南西隅、行は南→北(origin = 左下・
-spacing 正と整合。内部の j=1=北 とは逆順で、変換は BMI 層が行う。
-bmi_plan.md §7-5 案A)。Landlab の RasterModelGrid ノード配列とは
-無変換で 1:1 対応する。格子は grid 0 = uniform_rectilinear、
-shape は [ny, nx] 順。
+設計の経緯・全体計画は [docs/bmi_plan.md](../docs/bmi_plan.md)、
+決定事項と検証記録の正本は
+[docs/developer.md](../docs/developer.md) の §53〜§59 にあります。
