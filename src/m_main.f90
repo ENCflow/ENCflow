@@ -132,6 +132,19 @@ subroutine m_main_initialize(fn_sysparam)
   character(len=*), intent(in), optional :: fn_sysparam
   character(len=256) :: fn_param
 
+  ! 再 initialize(同一プロセスでの finalize → initialize。bmi-tester が
+  ! この使い方をする)対応: 前インスタンスの残留状態を消す(§59)。
+  ! 各モジュールの配列は dispose が解放済み、スカラは各 init が設定する
+  ! ため、ここで消すのは t_encflow 自身が持つ分だけでよい
+  enc%ierror = 0
+  enc%extpre_active = .false.
+  enc%extpre_fresh = .false.
+  enc%extz_fresh = .false.
+  enc%exth_fresh = .false.
+  if (allocated(enc%extpre)) deallocate(enc%extpre)  ! 格子サイズが変わり得る
+  if (allocated(enc%extz)) deallocate(enc%extz)
+  if (allocated(enc%exth)) deallocate(enc%exth)
+
   ! MPIを初期化
   call par_init()
 

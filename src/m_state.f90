@@ -717,6 +717,11 @@ subroutine m_state_dispose(s, p)
 
   if (p%f_state_save > 0) call save_state(p, s)
 
+  ! ログファイルを閉じる(単体実行ではプロセス終了が閉じるため実害が
+  ! なかったが、同一プロセスでの再 initialize(BMI ライブラリ利用)では
+  ! 開いたままの装置が次回の open と衝突する。§59)
+  if (is_root) close(s%un_log)
+
   s%t = 0
   s%it = 0
   s%ctime = ""
