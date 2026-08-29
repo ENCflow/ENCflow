@@ -280,8 +280,9 @@ ENCflow は CSDMS の [Basic Model Interface (BMI) 2.0](https://bmi.csdms.io/)
 set_value という共通の操作で外部から制御できます。
 
 - **Python から直接駆動** — 追加ツールは不要です(numpy だけ)。計算を
-  任意の間隔で止めて水深などの分布を取り出せるので、matplotlib で
-  計算しながら順次表示するといった使い方ができます(サンプル:
+  任意の間隔で止めて水深・水位・流速・比流量などの分布を取り出せる
+  ので、matplotlib で計算しながら順次表示するといった使い方が
+  できます(サンプル:
   [bmi/python/live_view.py](bmi/python/live_view.py))。
 - **他モデル・枠組みとの結合** — Landlab や pymt など BMI エコシステムに
   接続できます。降雨(外部強制)と地形・水深(状態の交換)の get/set に

@@ -356,9 +356,10 @@ becomes a single BMI component that can be controlled from outside
 through the standard initialize / update / get_value / set_value calls.
 
 - **Drive it from Python** — no extra tooling beyond numpy. You can pause
-  the run at any interval and pull out fields such as water depth, so the
-  evolving inundation map can be rendered live with matplotlib while the
-  model runs (sample: [bmi/python/live_view.py](bmi/python/live_view.py)).
+  the run at any interval and pull out fields such as water depth, water
+  level, flow speed, and unit discharge, so the evolving inundation map
+  can be rendered live with matplotlib while the model runs
+  (sample: [bmi/python/live_view.py](bmi/python/live_view.py)).
 - **Couple with other models** — connects to the BMI ecosystem such as
   Landlab and pymt. Rainfall (external forcing) and terrain / water depth
   (state exchange) can be set as well as read, and array layout and grid

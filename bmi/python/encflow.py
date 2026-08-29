@@ -30,6 +30,11 @@ _BMI_SUCCESS = 0
 VAR_DEPTH = "surface_water__depth"
 VAR_ELEVATION = "land_surface__elevation"
 VAR_PRECIP = "atmosphere_water__precipitation_leq-volume_flux"
+VAR_WSE = "surface_water__elevation"                        # 水位 (m)。get のみ
+VAR_SPEED = "surface_water_flow__speed"                     # 速さ (m/s)。get のみ
+VAR_UNIT_DISCHARGE = "surface_water_flow__unit_width_volume_flow_rate"  # 比流量 (m2/s)。get のみ
+VAR_VELOCITY_X = "surface_water__x_component_of_velocity"   # 流速 x=東成分 (m/s)。get のみ
+VAR_VELOCITY_Y = "surface_water__y_component_of_velocity"   # 流速 y=北成分 (m/s)。get のみ
 
 
 def _find_library(explicit=None):

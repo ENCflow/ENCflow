@@ -152,4 +152,4 @@ cd test/wave
 The design history and roadmap are in
 [docs/bmi_plan.md](../docs/bmi_plan.md) (in Japanese), and the
 authoritative records of decisions and verification are in
-[docs/developer.md](../docs/developer.md) Secs. 53–59 (in Japanese).
+[docs/developer.md](../docs/developer.md) Secs. 53–60 (in Japanese).

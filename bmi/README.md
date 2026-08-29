@@ -138,4 +138,4 @@ cd test/wave
 
 設計の経緯・全体計画は [docs/bmi_plan.md](../docs/bmi_plan.md)、
 決定事項と検証記録の正本は
-[docs/developer.md](../docs/developer.md) の §53〜§59 にあります。
+[docs/developer.md](../docs/developer.md) の §53〜§60 にあります。
