@@ -7,8 +7,8 @@ message: >-
   the article below.
 title: "ENCflow"
 type: software
-version: "1.4.0"
-date-released: "2026-08-26"
+version: "1.5.0"
+date-released: "2026-08-29"
 license: Apache-2.0
 authors:
   - family-names: "Tada"

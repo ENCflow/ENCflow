@@ -272,6 +272,28 @@ OS は Linux / macOS / WSL を想定しています。詳細は
 [docs/developer.md](docs/developer.md)(設計思想と規約の正本)、
 [docs/comparison.md](docs/comparison.md)(他モデルとの比較)へ。
 
+## 外部連携(BMI)
+
+ENCflow は CSDMS の [Basic Model Interface (BMI) 2.0](https://bmi.csdms.io/)
+に対応しています(公式適合性テスト bmi-tester に合格)。モデル全体が
+ひとつの BMI component となり、initialize / update / get_value /
+set_value という共通の操作で外部から制御できます。
+
+- **Python から直接駆動** — 追加ツールは不要です(numpy だけ)。計算を
+  任意の間隔で止めて水深などの分布を取り出せるので、matplotlib で
+  計算しながら順次表示するといった使い方ができます(サンプル:
+  [bmi/python/live_view.py](bmi/python/live_view.py))。
+- **他モデル・枠組みとの結合** — Landlab や pymt など BMI エコシステムに
+  接続できます。降雨(外部強制)と地形・水深(状態の交換)の get/set に
+  対応し、配列の並びと格子情報は BMI 標準形で自己記述されるため、
+  相手側での行順の変換は不要です。
+- **本体は不変** — BMI は `bmi/` の optional アダプタとして実装されて
+  おり、通常のビルド(encflow / encflow_mpi)は従来どおり外部依存
+  ゼロのままです。
+
+使い方・公開変数・適合性確認の再現手順は [bmi/README.md](bmi/README.md)、
+設計の経緯と全体計画は [docs/bmi_plan.md](docs/bmi_plan.md) へ。
+
 ## 想定ユーザー
 
 - **学生・教育** — コンパイラだけで動く・入力がテキスト1枚・

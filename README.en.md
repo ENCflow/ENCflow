@@ -348,6 +348,30 @@ design philosophy and conventions) and
 [docs/comparison.md](docs/en/comparison.md) (comparison with other
 models). Developer documentation is currently in Japanese.
 
+## Interoperability (BMI)
+
+ENCflow implements the CSDMS [Basic Model Interface (BMI) 2.0](https://bmi.csdms.io/)
+and passes the official conformance test (bmi-tester). The whole model
+becomes a single BMI component that can be controlled from outside
+through the standard initialize / update / get_value / set_value calls.
+
+- **Drive it from Python** — no extra tooling beyond numpy. You can pause
+  the run at any interval and pull out fields such as water depth, so the
+  evolving inundation map can be rendered live with matplotlib while the
+  model runs (sample: [bmi/python/live_view.py](bmi/python/live_view.py)).
+- **Couple with other models** — connects to the BMI ecosystem such as
+  Landlab and pymt. Rainfall (external forcing) and terrain / water depth
+  (state exchange) can be set as well as read, and array layout and grid
+  metadata are self-describing in the BMI standard convention, so the
+  partner never needs to flip row order.
+- **The core is untouched** — BMI lives in the optional `bmi/` adapter;
+  the regular builds (encflow / encflow_mpi) remain dependency-free as
+  before.
+
+See [bmi/README.md](bmi/README.md) for usage, exposed variables, and how
+to reproduce the conformance check, and
+[docs/bmi_plan.md](docs/bmi_plan.md) for the design history and roadmap.
+
 ## Who it is for
 
 - **Students and educators** — runs with nothing but a compiler, takes
