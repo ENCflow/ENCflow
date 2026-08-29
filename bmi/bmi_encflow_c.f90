@@ -19,7 +19,7 @@
 module bmi_encflow_c
   use, intrinsic :: iso_c_binding, only : c_char, c_int, c_double, c_null_char
   use bmif_2_0, only : BMI_SUCCESS, BMI_FAILURE, BMI_MAX_COMPONENT_NAME, &
-                       BMI_MAX_VAR_NAME
+                       BMI_MAX_VAR_NAME, BMI_MAX_TYPE_NAME, BMI_MAX_UNITS_NAME
   use bmi_encflow, only : encflow_bmi
   implicit none
   private
@@ -129,6 +129,142 @@ contains
     end if
     status = int(model%get_output_var_names(names), c_int)
     if (status == BMI_SUCCESS) call f_to_c_string(names(i), dest, n)
+  end function
+
+  function ebmi_get_input_item_count(count) &
+      bind(c, name="encflow_bmi_get_input_item_count") result(status)
+    integer(c_int), intent(out) :: count
+    integer(c_int) :: status
+    integer :: c
+    status = int(model%get_input_item_count(c), c_int)
+    count = int(c, c_int)
+  end function
+
+  function ebmi_get_input_var_name(i, dest, n) &
+      bind(c, name="encflow_bmi_get_input_var_name") result(status)
+    ! i 番目(1 始まり)の入力変数名を返す
+    integer(c_int), value :: i
+    character(kind=c_char), intent(out) :: dest(*)
+    integer(c_int), value :: n
+    integer(c_int) :: status
+    character(len=BMI_MAX_VAR_NAME), pointer :: names(:)
+    integer :: c
+    status = int(model%get_input_item_count(c), c_int)
+    if (status /= BMI_SUCCESS) return
+    if (i < 1 .or. i > c) then
+      status = int(BMI_FAILURE, c_int)
+      return
+    end if
+    status = int(model%get_input_var_names(names), c_int)
+    if (status == BMI_SUCCESS) call f_to_c_string(names(i), dest, n)
+  end function
+
+  !======================== Variable information =======================
+
+  function ebmi_get_var_grid(name, grid) &
+      bind(c, name="encflow_bmi_get_var_grid") result(status)
+    character(kind=c_char), intent(in) :: name(*)
+    integer(c_int), intent(out) :: grid
+    integer(c_int) :: status
+    character(len=:), allocatable :: fname
+    integer :: gid
+    call c_to_f_string(name, fname)
+    status = int(model%get_var_grid(fname, gid), c_int)
+    grid = int(gid, c_int)
+  end function
+
+  function ebmi_get_var_type(name, dest, n) &
+      bind(c, name="encflow_bmi_get_var_type") result(status)
+    character(kind=c_char), intent(in) :: name(*)
+    character(kind=c_char), intent(out) :: dest(*)
+    integer(c_int), value :: n
+    integer(c_int) :: status
+    character(len=:), allocatable :: fname
+    character(len=BMI_MAX_TYPE_NAME) :: buf
+    call c_to_f_string(name, fname)
+    status = int(model%get_var_type(fname, buf), c_int)
+    if (status == BMI_SUCCESS) call f_to_c_string(buf, dest, n)
+  end function
+
+  function ebmi_get_var_units(name, dest, n) &
+      bind(c, name="encflow_bmi_get_var_units") result(status)
+    character(kind=c_char), intent(in) :: name(*)
+    character(kind=c_char), intent(out) :: dest(*)
+    integer(c_int), value :: n
+    integer(c_int) :: status
+    character(len=:), allocatable :: fname
+    character(len=BMI_MAX_UNITS_NAME) :: buf
+    call c_to_f_string(name, fname)
+    status = int(model%get_var_units(fname, buf), c_int)
+    if (status == BMI_SUCCESS) call f_to_c_string(buf, dest, n)
+  end function
+
+  function ebmi_get_var_itemsize(name, size) &
+      bind(c, name="encflow_bmi_get_var_itemsize") result(status)
+    character(kind=c_char), intent(in) :: name(*)
+    integer(c_int), intent(out) :: size
+    integer(c_int) :: status
+    character(len=:), allocatable :: fname
+    integer :: isz
+    call c_to_f_string(name, fname)
+    status = int(model%get_var_itemsize(fname, isz), c_int)
+    size = int(isz, c_int)
+  end function
+
+  function ebmi_get_var_nbytes(name, nbytes) &
+      bind(c, name="encflow_bmi_get_var_nbytes") result(status)
+    character(kind=c_char), intent(in) :: name(*)
+    integer(c_int), intent(out) :: nbytes
+    integer(c_int) :: status
+    character(len=:), allocatable :: fname
+    integer :: nb
+    call c_to_f_string(name, fname)
+    status = int(model%get_var_nbytes(fname, nb), c_int)
+    nbytes = int(nb, c_int)
+  end function
+
+  function ebmi_get_var_location(name, dest, n) &
+      bind(c, name="encflow_bmi_get_var_location") result(status)
+    character(kind=c_char), intent(in) :: name(*)
+    character(kind=c_char), intent(out) :: dest(*)
+    integer(c_int), value :: n
+    integer(c_int) :: status
+    character(len=:), allocatable :: fname
+    character(len=BMI_MAX_UNITS_NAME) :: buf
+    call c_to_f_string(name, fname)
+    status = int(model%get_var_location(fname, buf), c_int)
+    if (status == BMI_SUCCESS) call f_to_c_string(buf, dest, n)
+  end function
+
+  function ebmi_get_grid_rank(grid, rank) &
+      bind(c, name="encflow_bmi_get_grid_rank") result(status)
+    integer(c_int), value :: grid
+    integer(c_int), intent(out) :: rank
+    integer(c_int) :: status
+    integer :: r
+    status = int(model%get_grid_rank(int(grid), r), c_int)
+    rank = int(r, c_int)
+  end function
+
+  function ebmi_get_grid_type(grid, dest, n) &
+      bind(c, name="encflow_bmi_get_grid_type") result(status)
+    integer(c_int), value :: grid
+    character(kind=c_char), intent(out) :: dest(*)
+    integer(c_int), value :: n
+    integer(c_int) :: status
+    character(len=BMI_MAX_TYPE_NAME) :: buf
+    status = int(model%get_grid_type(int(grid), buf), c_int)
+    if (status == BMI_SUCCESS) call f_to_c_string(buf, dest, n)
+  end function
+
+  function ebmi_get_time_units(dest, n) &
+      bind(c, name="encflow_bmi_get_time_units") result(status)
+    character(kind=c_char), intent(out) :: dest(*)
+    integer(c_int), value :: n
+    integer(c_int) :: status
+    character(len=BMI_MAX_UNITS_NAME) :: buf
+    status = int(model%get_time_units(buf), c_int)
+    if (status == BMI_SUCCESS) call f_to_c_string(buf, dest, n)
   end function
 
   !========================= Time information ==========================

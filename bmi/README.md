@@ -34,6 +34,20 @@ ln -sf ../../bmi/test_encflow_bmi .
 SKIPCOLS=4 ULP=0 ../Scripts/Compare_ref.sh Log.txt   # reference とビット一致
 ```
 
+## 適合性確認(bmi-tester)
+
+CSDMS 公式の適合性テストに合格している(47 passed / 0 failed。skip は
+非構造格子系など構造的に正当なもののみ。developer.md §59):
+
+```sh
+pip install bmi-tester bmipy 'pytest<8' 'gimli.units==0.3.*'
+cd test/wave
+../../bmi/python/check_bmi.sh param.txt
+```
+
+検査対象は bmipy 準拠クラス `python/encflow_bmi.py`(EncflowBmi)。
+日常利用には `python/encflow.py` の ENCflow クラスの方が便利。
+
 ## MPI で使う(段3)
 
 ```sh

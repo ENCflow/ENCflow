@@ -5358,3 +5358,58 @@ MPI_COMM_WORLD → par_comm 抽象化(サブコミュニケータ結合)、
 par_stop の return code 化(library モード)、MPI 版 .so + mpiexec
 python の検証、複数インスタンス(handle 方式)。いずれも需要が
 具体化してから。
+
+
+## 59. bmi-tester 適合性確認と再 initialize 対応(2026-08-28 実施)
+
+CSDMS 公式の適合性テスト bmi-tester(0.5 系 + bmipy 2.0.1)に合格した:
+**47 passed / 0 failed / 11 skipped**(test/wave、逐次)。skip は全て
+構造的に正当なもの(非構造格子系の条件 skip 7、上流の恒常 skip 2、
+上流の旧 API 探索系 2)。再現は bmi/python/check_bmi.sh。
+
+### 再 initialize 対応(前提修正)
+
+bmi-tester は同一プロセスで initialize → finalize → initialize を複数回
+行う(§7 論点7 が現実の要件になった)。対応2点:
+
+- **m_main_initialize 冒頭で t_encflow の残留をリセット**(ierror・
+  BMI ステージング。各モジュールの配列は dispose が解放済み・スカラは
+  各 init が設定するため、これで足りる)。
+- **m_state_dispose で Log 装置を close**。単体実行ではプロセス終了が
+  閉じるため潜在化していた資源リークで、再 initialize 時に
+  「File already opened in another unit」で顕在化した。CLI 経路の
+  出力・Log 内容は不変(逐次・MPI 回帰ビット一致で確認)。
+- 制約: 再 initialize が使えるのは**逐次のみ**。MPI は owns_mpi で
+  finalize 済みの MPI を再初期化できない(MPI 標準の制約。§58)。
+
+### 適合層(bmi-tester が要求する形)
+
+- bmi-tester の検査対象は「Python の bmipy 準拠クラス」であるため、
+  **bmi/python/encflow_bmi.py** に EncflowBmi(bmipy.Bmi 準拠の薄い
+  アダプタ。標準シグネチャそのまま・型名は float64 系に翻訳)を追加。
+  日常利用は従来の encflow.py(ENCflow クラス)のままでよい。
+- C 層(bmi_encflow_c.f90)にメタデータ問い合わせを追加:
+  var_grid / var_type / var_units / var_itemsize / var_nbytes /
+  var_location / grid_rank / grid_type / time_units / input_item_count /
+  input_var_name。
+- 非対応(get_value_ptr・at_indices・非構造格子系)は
+  NotImplementedError で、bmi-tester は適切に skip する。
+
+### 上流(インストール版 bmi-tester)の粗と回避
+
+- bmi-test CLI はステージごとに pytest を起動し、共有 conftest が
+  rootdir の外になって fixture が見つからない(pytest 7 でも 9 でも
+  再現)。回避: rootdir をパッケージに固定し全ステージを1セッションで
+  直接 pytest 実行(check_bmi.sh に恒久化)。
+- bootstrap の依存名不一致(has_initialize 等)は
+  --ignore-unknown-dependency で回避。
+- 単位検査は gimli.units が必要で、bmi-tester が期待する旧レイアウトは
+  0.3 系(0.4.0 は gimli.units モジュールが消えて検出されない)。
+  'm', 'm s-1', 's' はいずれも valid / time を確認。
+
+### 検証(2026-08-28)
+
+- bmi-tester: 47 passed / 0 failed(単位検査含む)。
+- 再 initialize 対応後の回帰: 逐次 wave/chichibu ビット一致、
+  MPI np=2 両ケース identical、BMI ドライバ(set 付き)identical、
+  Python 受け入れ試験 PASS。

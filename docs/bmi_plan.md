@@ -561,6 +561,8 @@ NextGen 系エコシステムとの相互運用)を追記する節目になる�
 1. **bmi-tester 合格の明示**: CSDMS 公式の適合性テスト(csdms/
    bmi-tester)に通し、合格を README・docs に記載する。準拠の客観的
    証明であり、以降のすべての経路の前提になる。
+   → **達成(2026-08-28)**: 47 passed / 0 failed(developer.md §59。
+   再現は bmi/python/check_bmi.sh)。bmi/README.md に記載済み。
 2. **CSDMS Model Repository への登録**: CSDMS のモデル台帳
    (csdms.colorado.edu。数百モデル規模)にフォームで登録すると、
    メタデータ付きのモデルページができ DOI も付与される。エコシステム
