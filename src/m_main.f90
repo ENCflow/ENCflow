@@ -405,6 +405,37 @@ subroutine m_main_get_value(name, dest, ierr)
     call par_gather_to(dest, enc%s%e)
   case ('pre')
     call par_gather_to(dest, enc%s%pre)
+  case ('vv')
+    call par_gather_to(dest, enc%s%vv)
+  case ('qq')
+    call par_gather_to(dest, enc%s%qq)
+  case ('ux', 'uy')
+    ! 流速のセル中心成分(導出量。vv = 速さ、qdir = x 軸からの流向角
+    ! から合成する。座標系は内部規約 = +x 東、+y は j 増加方向 = 南。
+    ! 標準形(+y 北)への符号変換は BMI 層の責務。§60)
+    derive: block
+      real, allocatable :: wk(:,:)
+      integer :: i, j
+      allocate(wk(1:enc%g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+      if (trim(name) == 'ux') then
+        !$omp parallel do
+        do j = dcp%js, dcp%je
+          do i = 1, enc%g%nx
+            wk(i,j) = enc%s%vv(i,j) * cos(enc%s%qdir(i,j))
+          end do
+        end do
+        !$omp end parallel do
+      else
+        !$omp parallel do
+        do j = dcp%js, dcp%je
+          do i = 1, enc%g%nx
+            wk(i,j) = enc%s%vv(i,j) * sin(enc%s%qdir(i,j))
+          end do
+        end do
+        !$omp end parallel do
+      end if
+      call par_gather_to(dest, wk)
+    end block derive
   case default
     ierr = 1
   end select

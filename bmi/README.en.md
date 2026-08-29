@@ -56,9 +56,17 @@ file output.
 | `surface_water__depth` | water depth | m | Allowed (**replacement**, not addition; velocities are left unchanged) |
 | `land_surface__elevation` | elevation | m | Allowed **only when no terrain-evolution feature (geomorph etc.) is enabled** in the case. Water depth is preserved and the water level follows. Sea cells are not touched |
 | `atmosphere_water__precipitation_leq-volume_flux` | precipitation rate | m/s | Allowed **only when the case sets no precipitation in its parameters**. Persists as a forcing until the next set |
+| `surface_water__elevation` | water level (= elevation + depth) | m | No (get only) |
+| `surface_water_flow__speed` | flow speed (magnitude) | m/s | No (get only) |
+| `surface_water_flow__unit_width_volume_flow_rate` | unit-width discharge (magnitude) | m²/s | No (get only) |
+| `surface_water__x_component_of_velocity` | x (eastward) velocity component | m/s | No (get only) |
+| `surface_water__y_component_of_velocity` | y (northward) velocity component | m/s | No (get only) |
 
-All three variables can be read with get. A set value is applied at the
-start of the next update. The "only when" conditions come from one
+All eight variables can be read with get (the velocity components are
+cell-centered derived quantities composed from the internal edge-based
+fields, in the conventional orientation x = east, y = north). The first
+three can also be set; a set value is applied at the start of the next
+update. The "only when" conditions come from one
 principle — **each quantity has a single source** (file forcing and
 external supply are never combined) — and a set that violates them
 returns an error (BMI_FAILURE). In Python:

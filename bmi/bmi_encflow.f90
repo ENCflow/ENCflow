@@ -16,9 +16,11 @@
 !     consumer が origin + index*spacing で座標復元できる)。内部の
 !     j=1 = 北とは行が逆順のため、get(将来は set も)のコピー時に
 !     反転する。x は内部と同じ西→東(index = i + (ny-j)*nx)。
-!   - 現段階は逐次専用。入出力3変数(h, z, pre)。set_value の受理
-!     条件と意味論は変数ごとに異なる(Setters 節と developer.md
-!     §56・§57 を参照)。
+!   - 公開変数は出力8(h, z, pre, e, 速さ, 比流量, 流速成分 x/y)・
+!     入力3(h, z, pre)。set_value の受理条件と意味論は変数ごとに
+!     異なる(Setters 節と developer.md §56・§57 を参照)。流速成分は
+!     vv・qdir からの導出量で、y 成分は標準形(+y=北)へ符号変換して
+!     返す(§60)。
 !   - 該当機能がない問い合わせは BMI_FAILURE を返す(仕様が許容)。
 !   - 本ファイルは計算本体(src/)の外の optional アダプタであり、
 !     src/ のビルドはこのファイルに依存しない(方針10 追記 2026-08-28)
@@ -41,7 +43,7 @@ module bmi_encflow
   ! developer.md §56: 降水は prtype=0 のときのみ。§57: z は z 更新
   ! プロセス無効時のみ、h は常時 = データ同化型の状態置換)
   integer, parameter :: n_inputs = 3
-  integer, parameter :: n_outputs = 3
+  integer, parameter :: n_outputs = 8
 
   character(len=BMI_MAX_COMPONENT_NAME), target :: &
     component_name = "ENCflow"
@@ -50,7 +52,12 @@ module bmi_encflow
     output_items(n_outputs) = [ character(len=BMI_MAX_VAR_NAME) :: &
       "surface_water__depth", &
       "land_surface__elevation", &
-      "atmosphere_water__precipitation_leq-volume_flux" ]
+      "atmosphere_water__precipitation_leq-volume_flux", &
+      "surface_water__elevation", &
+      "surface_water_flow__speed", &
+      "surface_water_flow__unit_width_volume_flow_rate", &
+      "surface_water__x_component_of_velocity", &
+      "surface_water__y_component_of_velocity" ]
 
   character(len=BMI_MAX_VAR_NAME), target :: &
     input_items(n_inputs) = [ character(len=BMI_MAX_VAR_NAME) :: &
@@ -130,6 +137,16 @@ contains
       iname = "z"
     case ("atmosphere_water__precipitation_leq-volume_flux")
       iname = "pre"
+    case ("surface_water__elevation")
+      iname = "e"
+    case ("surface_water_flow__speed")
+      iname = "vv"
+    case ("surface_water_flow__unit_width_volume_flow_rate")
+      iname = "qq"
+    case ("surface_water__x_component_of_velocity")
+      iname = "ux"
+    case ("surface_water__y_component_of_velocity")
+      iname = "uy"
     case default
       iname = ""
       ierr = 1
@@ -290,8 +307,10 @@ contains
       return
     end if
     select case (trim(iname))
-    case ("pre")
+    case ("pre", "vv", "ux", "uy")
       units = "m s-1"
+    case ("qq")
+      units = "m2 s-1"
     case default
       units = "m"
     end select
@@ -428,6 +447,8 @@ contains
       bmi_status = BMI_FAILURE
       return
     end if
+    ! y 成分は符号変換(内部 +y = j 増加方向 = 南 → 標準形 +y = 北)
+    if (trim(iname) == "uy") buf = -buf
     ! flatten + 行反転(内部 j=1=北 → BMI 標準形 要素0=南西。ヘッダ参照)
     dest = reshape(buf(:, ny:1:-1), [nx*ny])
     bmi_status = BMI_SUCCESS
@@ -458,6 +479,8 @@ contains
       bmi_status = BMI_FAILURE
       return
     end if
+    ! y 成分は符号変換(内部 +y = j 増加方向 = 南 → 標準形 +y = 北)
+    if (trim(iname) == "uy") buf = -buf
     ! flatten + 行反転(内部 j=1=北 → BMI 標準形 要素0=南西。ヘッダ参照)
     dest = reshape(dble(buf(:, ny:1:-1)), [nx*ny])
     bmi_status = BMI_SUCCESS

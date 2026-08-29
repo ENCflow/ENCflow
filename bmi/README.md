@@ -52,8 +52,15 @@ python3 ../../bmi/python/live_view.py param.txt --save frames   # PNG 連番(画
 | `surface_water__depth` | 水深 | m | 可(**置換**。加算ではない。流速は変更されない) |
 | `land_surface__elevation` | 標高 | m | 地形変化系の機能(geomorph 等)が**無効のケースのみ**可。水深は保存され水位が追随。海セルには適用されない |
 | `atmosphere_water__precipitation_leq-volume_flux` | 降水強度 | m/s | 降水を**パラメータで設定していないケースのみ**可。次に set するまで持続する強制 |
+| `surface_water__elevation` | 水位(= 標高 + 水深) | m | 不可(get のみ) |
+| `surface_water_flow__speed` | 流速の大きさ(速さ) | m/s | 不可(get のみ) |
+| `surface_water_flow__unit_width_volume_flow_rate` | 比流量の大きさ(単位幅流量) | m²/s | 不可(get のみ) |
+| `surface_water__x_component_of_velocity` | 流速の x(東)成分 | m/s | 不可(get のみ) |
+| `surface_water__y_component_of_velocity` | 流速の y(北)成分 | m/s | 不可(get のみ) |
 
-3変数とも get できます。set した値は次の update の冒頭で適用されます。
+8変数すべて get できます(流速成分はセル中心の導出量で、内部の
+エッジ配置量から合成されます。x=東・y=北の標準的な向きです)。
+set できるのは上3つで、値は次の update の冒頭で適用されます。
 set の「〜のみ可」は、**同じ量の与え方は一つ**(ファイル強制と外部
 供給を併用しない)という原則によるもので、条件を満たさない set は
 エラー(BMI_FAILURE)になります。Python では

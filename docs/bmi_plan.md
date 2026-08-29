@@ -316,7 +316,9 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
        多くの consumer が想定しない)。
      - 案C: 現状のまま注記運用(ad-hoc 連携では動くが自動処理で
        南北逆のリスクを相手に残す)。
-     - **決定(2026-08-28)**: 案Aを採用し実装済み。get のコピー時に
+     - **決定(2026-08-28)**: 案Aを採用し実装済み。流向の扱いも同じ
+       原則で解決(2026-08-29・§60): 角度を生で出さず、流速成分に
+       合成して y 成分を標準形へ符号変換する。get のコピー時に
        行反転(将来の set も同様)。検証: chichibu の DEM 入力
        (1行目=北)と BMI 取得 z の照合で「要素0行=南」を確認、
        wave/chichibu の Log は reference と identical のまま。

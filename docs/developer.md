@@ -5413,3 +5413,29 @@ bmi-tester は同一プロセスで initialize → finalize → initialize を�
 - 再 initialize 対応後の回帰: 逐次 wave/chichibu ビット一致、
   MPI np=2 両ケース identical、BMI ドライバ(set 付き)identical、
   Python 受け入れ試験 PASS。
+
+
+## 60. BMI 公開変数の第2弾: 常時確保のセル量(2026-08-29 実装)
+
+get 専用の出力5変数を追加した(合意: 常時確保のセル量のみ。
+機能有効時のみ確保される変数(hg・swe 等)は動的変数リストの設計
+(§59 系の残課題)を決めてから)。
+
+- 追加: e(surface_water__elevation)、vv(…flow__speed)、
+  qq(…flow__unit_width_volume_flow_rate)、流速成分 ux/uy
+  (…__x/y_component_of_velocity)。いずれも無条件確保のセル量。
+- **流向は角度(qdir)を生で公開せず、成分に合成して公開する**。
+  qdir の角度規約(x 軸から、符号は内部 j 方向)は利用者に説明困難で、
+  consumer(Landlab・quiver 描画等)には成分の方が直接使えるため。
+  m_main が内部座標系(+x 東・+y = j 増加方向 = 南)の成分
+  ux = vv·cos(qdir)、uy = vv·sin(qdir) を導出して gather し、
+  BMI 層が標準形(+y = 北)へ uy の符号を反転する(行反転と同じく
+  「向きの吸収は翻訳層の責務」)。
+- エッジ配置の u,v,m,n は非公開のまま(エッジ量は内部実装。§54)。
+
+検証(2026-08-29): wave(中心からの放射流)で hypot(ux,uy) = vv が
+湿潤セル全域で一致、e = z + h 一致、中心の北側で uy > 0・南側で
+uy < 0 の対称(符号変換の物理的正しさ)。機能無効時: 逐次
+wave/chichibu ビット一致、MPI np=2 両ケース + BMI ドライバ(set 付き。
+speed/ux の gather 経路を含む)PASS。bmi-tester は 8 出力で
+92 passed / 0 failed(m2 s-1 等の単位検査含む)。

@@ -129,6 +129,13 @@ program test_bmi
   write(*, '(a,f10.3)') "bmi: final t = ", t
   write(*, '(a,es13.6,a,es13.6)') "bmi: final max h = ", maxval(h), &
     ",  max z = ", maxval(z)
+  ! 速さと流速成分(導出量)の整合: max|(ux,uy)| <= max vv(+丸め)
+  call chk(model%get_value_double("surface_water_flow__speed", z), "get_value speed")
+  call chk(model%get_value_double("surface_water__x_component_of_velocity", h), &
+           "get_value ux")
+  write(*, '(a,es13.6,a,es13.6)') "bmi: final max speed = ", maxval(z), &
+    ",  max |ux| = ", maxval(abs(h))
+  if (maxval(abs(h)) > maxval(z) * (1.0d0 + 1.0d-12)) call die("|ux| exceeds speed")
 
   call chk(model%finalize(), "finalize")
   write(*, '(a)') "bmi: all checks passed"
