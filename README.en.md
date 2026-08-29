@@ -357,14 +357,16 @@ through the standard initialize / update / get_value / set_value calls.
 
 - **Drive it from Python** — no extra tooling beyond numpy. You can pause
   the run at any interval and pull out fields such as water depth, water
-  level, flow speed, and unit discharge, so the evolving inundation map
-  can be rendered live with matplotlib while the model runs
-  (sample: [bmi/python/live_view.py](bmi/python/live_view.py)).
-- **Couple with other models** — connects to the BMI ecosystem such as
-  Landlab and pymt. Rainfall (external forcing) and terrain / water depth
-  (state exchange) can be set as well as read, and array layout and grid
-  metadata are self-describing in the BMI standard convention, so the
-  partner never needs to flip row order.
+  level, and flow speed, so you can render results live while the model
+  runs, or sweep through many scenarios from a script.
+- **Combine it with other models** — BMI is a common socket adopted by
+  models across hydrology, geomorphology, snow and ice, and beyond, for
+  plugging models into one another. With ENCflow as one of the parts,
+  you can feed it the output of a rainfall–runoff model and solve the
+  flooding, exchange terrain with a landscape-evolution model so that
+  floods reshape the terrain and the next flood flows over the new one,
+  or pull observations into a running simulation (data assimilation) —
+  it opens the door to coupled simulations that span disciplines.
 - **The core is untouched** — BMI lives in the optional `bmi/` adapter;
   the regular builds (encflow / encflow_mpi) remain dependency-free as
   before.
