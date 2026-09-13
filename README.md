@@ -19,7 +19,7 @@ ENCflow aims to:
 
 Replacing each field's specialist models is not the goal.
 
-[日本語 README](README.jp.md) /
+[日本語 README](README.ja.md) /
 [Installation](docs/en/install.md) /
 [Tutorial](docs/en/tutorial.md) /
 [User's Guide](docs/en/users_guide.md) /

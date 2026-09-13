@@ -3636,8 +3636,8 @@ Cn_max)→ 場の最大値**。
   日本語のみ**(解説の役割は users_guide・tutorials が担う。§35)。
 - **トップレベル README の例外(2026-09-13 決定)**: リポジトリ直下の
   README のみ、GitHub のランディング表示を国際公開向けにするため
-  **英語版を無印(README.md)、日本語版を README.jp.md** とする。
-  正本は引き続き日本語版(README.jp.md)であり、英語版は派生物の
+  **英語版を無印(README.md)、日本語版を README.ja.md** とする。
+  正本は引き続き日本語版(README.ja.md)であり、英語版は派生物の
   ままである点は変わらない。接尾辞方式(X.en.md)と `en/` ミラー方式は
   他の全ファイル(bmi/README.en.md、CONTRIBUTING.en.md 等)で従来どおり。
 - **名称・商標ポリシー(2026-09-13 設置)**: TRADEMARKS.md(**正本は
