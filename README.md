@@ -3,54 +3,69 @@
 [![CI](https://github.com/ENCflow/ENCflow/actions/workflows/ci.yml/badge.svg)](https://github.com/ENCflow/ENCflow/actions/workflows/ci.yml)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.22042847-blue)](https://doi.org/10.5281/zenodo.22042847)
 
-**地表の水に関わる現象を、ひとつの格子の上でシームレスに解く**
-— 洪水・高潮・津波の遡上から、降雨流出・地下水・土砂・水質・積雪融雪・
-氷河・地形変化まで、単一の Fortran プログラムで。
+**Solving surface-water phenomena seamlessly on a single grid** —
+from river flooding, storm surge, and tsunami run-up to rainfall–runoff,
+groundwater, sediment, water quality, snow, glaciers, and landscape
+evolution, all in one Fortran program.
 
-ENCflow が目指すのは、
+ENCflow aims to:
 
-1. **地球表層のプロセス連鎖を一つのモデルとして表現すること**
-2. **気になった現象をすぐ数値実験できる「実験室」であること**
-3. **研究者や学生が専門の隣へ最初の一歩を踏み出しやすくすること**
+1. **represent the process chains of the Earth's surface as one
+   model,**
+2. **be a laboratory where whatever catches your interest can be put
+   to a numerical experiment right away, and**
+3. **make it easier for researchers and students to take a first step
+   into the field next door.**
 
-個々の分野の専用モデルを置き換えることは目的ではありません。
+Replacing each field's specialist models is not the goal.
 
-[English README](README.en.md) /
-[インストール](docs/install.md) /
-[チュートリアル](docs/tutorial.md) /
-[ユーザーガイド](docs/users_guide.md) /
-[他モデルとの比較](docs/comparison.md)
+[日本語 README](README.jp.md) /
+[Installation](docs/en/install.md) /
+[Tutorial](docs/en/tutorial.md) /
+[User's Guide](docs/en/users_guide.md) /
+[Comparison with other models](docs/en/comparison.md)
+
+*The Japanese documentation is the authoritative version; the English
+pages are derived mirrors. The user-facing documentation — README,
+installation, tutorials, user's guide, use-case gallery, comparison,
+and the AI guide — is fully mirrored in English (docs/en/); developer
+documentation (developer.md etc.) is currently Japanese only.*
 
 ---
 
-## ENCflow とは
+## What is ENCflow?
 
-ENCflow は、平面2次元の浅水方程式(力学波)を核に、地表面の水の流れに
-関連する多くのプロセスを**同じラスタ格子の上で同時に**計算する
-シミュレーションプログラムです。格子には独自の**八近傍連結コロケート格子
-(ENC格子)**([Tada, 2026](https://doi.org/10.3178/hrl.25-00052))を
-用い、斜め方向を含む8方向の流れで格子方向依存の偽くぼ地・流れの
-遮断を抑えています — 名前の由来でもあります。
+ENCflow is a simulation program that computes many processes related to
+overland water flow **simultaneously on the same raster grid**, built
+around the two-dimensional shallow water equations (dynamic wave). It
+uses an original **eight-neighborhood connected collocated grid (ENC
+grid)** ([Tada, 2026](https://doi.org/10.3178/hrl.25-00052)), in which
+flow along all eight directions — including the diagonals — suppresses
+the grid-direction-dependent spurious depressions and flow blockages of
+conventional four-neighbor rasters. This grid is where the name comes
+from.
 
-ふつう、洪水氾濫・流域水文・土砂輸送・水質・雪氷はそれぞれ別のソフトで
-計算し、結果を受け渡して組み合わせます。ENCflow はこれらを1つの
-プログラム・1つの入力体系で扱います。使わないプロセスはただ
-「有効化しない」だけ — 設定ファイルを1枚置くごとに、モデルが1段ずつ
-賢くなっていきます。
+Ordinarily, river flooding, catchment hydrology, sediment transport,
+water quality, and snow/ice are computed with separate software packages,
+passing results from one to the next. ENCflow handles all of them in a
+single program with a single input system. Processes you do not need
+are simply left unactivated — and each additional configuration file
+you drop in makes the model one step smarter.
 
-ENCflow はまた、**専門外の現象にも「まず一度計算してみる」ことを
-容易にする**ことを目指しています。河川の研究者が地下水を、地形の
-研究者が洪水を、水文の研究者が土砂や水質を試したいとき、新しい
-ソフトウェア体系を一から習得する必要はありません — 同じ格子・同じ
-入力体系のまま、必要なプロセスを1つずつ足すだけです。
+ENCflow is also designed to **lower the barrier to running a first
+computation outside your own field**. When a river engineer wants to
+try groundwater, a geomorphologist wants to try floods, or a
+hydrologist wants to try sediment or water quality, there is no need
+to learn an entirely new modeling system — you keep the same grid and
+the same input system, and add the processes you need one at a time.
 
-**必要なものは Fortran コンパイラ1つだけ。** 外部ライブラリはゼロ。
-学生のノートパソコンでも、研究室のワークステーションでも、
-スーパーコンピューターでも、同じソースコードがそのまま動きます。
-ノート PC では OpenMP がコアを自動で使い切り、大型計算機では
-OpenMP×MPI のハイブリッド並列でノードをまたいでスケールします。
+**All you need is a Fortran compiler.** Zero external libraries. The
+same source code runs unchanged on a student's laptop, a lab
+workstation, or a supercomputer. On a laptop, OpenMP automatically uses
+every core; on large machines, hybrid OpenMP×MPI parallelism scales
+across nodes.
 
-## 5分で最初の計算
+## Your first simulation in five minutes
 
 ```bash
 git clone https://github.com/ENCflow/ENCflow.git
@@ -58,274 +73,351 @@ cd ENCflow/src && make install
 cd ../test/wave && ./Run.sh
 ```
 
-**インストールなしで試すこともできます** — ブラウザだけで動く
-[Colab ノートブック](https://colab.research.google.com/github/ENCflow/ENCflow/blob/main/docs/colab_quickstart.ipynb)
-を用意しています(Windows で Unix がはじめての方は
-[Windows での使い方](docs/windows.md) へ)。
+**You can also try it without installing anything** — a
+[Colab notebook](https://colab.research.google.com/github/ENCflow/ENCflow/blob/main/docs/en/colab_quickstart.ipynb)
+runs entirely in the browser (Windows users new to Unix: see
+[Using ENCflow on Windows](docs/en/windows.md)).
 
-最初の例題は「水面に立てた水の山が崩れて広がる」だけの計算です。
-入力は数十行のテキストファイル1枚。ここから、降雨を足す、地形を
-実データにする、河道を通す、地下水を足す…と1行ずつ設定を足して
-成長させていくのが ENCflow の使い方です
-([チュートリアル](docs/tutorial.md))。
+The first example is nothing more than a mound of water collapsing and
+spreading over a still surface. The input is a single text file a few
+dozen lines long. From there, the ENCflow way is to grow the model one
+line at a time: add rainfall, switch to real terrain, thread a river
+channel, add groundwater… ([Tutorial](docs/en/tutorial.md)).
 
-## こんなことができます
+## What it can do
 
-それぞれ独立した研究テーマ・実務課題に対応しますが、すべて同じ入力
-体系・同じ格子・同じ実行方法です。しかも切り替え式ではありません —
-**好きな組み合わせで同時に有効化**でき、プロセス間の相互作用
-(降雨→融雪→流出→侵食→氾濫…)も同じ時間発展の中で解けます。
-全てを理解する必要はありません。**興味のある行だけ
-読んでください。**
+Each item below corresponds to an independent research topic or
+practical application, yet all share the same input system, the same
+grid, and the same way of running. They are not mutually exclusive
+modes — **any combination can be activated at once**, and interactions
+between processes (rainfall → snowmelt → runoff → erosion →
+inundation…) are solved within the same time evolution. You do not
+need to understand all of it — **feel free to read only the lines you
+care about.**
 
-- **洪水・氾濫**: 力学波の浅水方程式(ENC格子)。サブグリッド河道
-  (断面形・河道幅)、破堤、ポンプ・樋門・カルバート・分水・ダム操作
-  までの構造物群。
-- **高潮・津波の遡上**: 海域セルに潮位・水位の時系列を与えた沿岸氾濫
-  解析。乾湿処理を含む力学波なので遡上先端まで追えます。高潮+河川
-  洪水+豪雨の**複合災害(compound flooding)を1つのモデルで**。
-  伊勢湾台風型の「貯木場から市街地への材木流入」も流木機能との
-  組み合わせで扱えます。
-- **降雨流出・流域水文**: 降雨(一様/分布)、樹冠遮断、蒸発散
-  (Hamon/Thornthwaite、気温減率)、Green-Ampt 浸透、2層地下水
-  (土層 Boussinesq +風化基岩層)による基底流と逓減。井戸揚水・
-  地下水取水のシンク(セル+時系列)による水位低下解析も。
-- **海水浸入・塩水くさび**: 淡塩2層(鋭利界面)近似で、帯水層への
-  海水の浸入・後退(Ghyben-Herzberg)、淡水レンズ、揚水誘引の海水
-  浸入・井戸の塩水化、高潮・津波で遡上した海水の行き先までを、
-  地表水・地下水と同じ格子で扱います。
-- **都市の内水(下水道の排水・噴出)**: 下水道網をセル別容量+8方向
-  通水能の等価連続体(人工の被圧層)として、地表氾濫と単一の時間発展で
-  連成。雨水枡の呑み込み、満管の圧力流(サーチャージ)、マンホールから
-  の噴出、海への吐口放流と機場(ポンプの管路直接取水)まで扱います。
-  岩盤亀裂網・カルスト・農地暗渠・カナート(横坑集水)にも同じ
-  仕組みが使えます。
-- **土砂・斜面災害**: 掃流砂・浮遊砂による河床変動、斜面侵食・
-  斜面崩壊(安定判定)・土石流。地形と土層厚が計算中に変化し、
-  流れへフィードバックします。**流木**の発生(立木の流失・侵食に
-  よる根こそぎの連行)・輸送・堆積の面的評価も扱えます(土石流との
-  混合流れは同時有効化するだけ)。危険度の出力(安全率 Fs マップ・
-  最大流動深・流体力・流木到達量)と、警戒実務の**土壌雨量指数**
-  (気象庁3段タンク。専用ラン)も備えます。
-- **火山災害(密度流系)**: 山体崩壊(岩屑なだれ)・火砕流・火山泥流
-  (ラハール)と、その堆積・天然ダム形成の等価流体解析(Voellmy 則・
-  一定停止応力則 — 専用モデルと同じ定式化の水準)。噴火供給→流下→
-  堆積→天然ダム→決壊洪水→降雨による二次泥流化までの連鎖を
-  **1つの計算で**追えます。
-- **溶岩流**: 噴火口セル群からの湧き出し(噴出率の時系列)、
-  Bingham 粘性流動(粘度・降伏応力を直接入力)による流下・停止、
-  固化による溶岩原の地形化。固化した溶岩は地盤になるため、
-  **その後の降雨・洪水・土砂流出が新地形の上を流れる**ところまで
-  同じ計算で続きます。
-- **水質・物質輸送**: 点源・面源・土地利用別原単位・湿性沈着からの
-  負荷流出、移流輸送、減衰・沈降、蓄積・洗い出し(L-Q 非線形)。
-  重金属など吸着性物質の **Kd 二相分配**(浮遊砂と連動)、
-  **地下水経由の輸送**(浸透 → 側方流動 → 湧出。吸着遅延つき)、
-  **貯水池・ため池の完全混合**まで、地表・地下・貯留水体を跨ぐ
-  物質収支が一連で閉じます。都市内水(下水道)と連携した**下水噴出の
-  衛生リスク(大腸菌が氾濫水で広がる)評価**、放射性核種の
-  流出解析にも。
-- **積雪・融雪**: 度日法。気温の標高減率で雪線が自動的に現れます。
-  凍土による浸透抑制(気温連動の凍結指数)で「凍った地面の上を融雪水が
-  流れる」融雪期の出水も表せます。**流れ型雪崩**のランアウト・堆積
-  解析も、火山流動と同じ等価流体(Voellmy 則)で扱えます。
-- **氷河**: 多年性の雪の氷化(涵養)と氷面の融解、浅氷近似(SIA)に
-  よる氷体流動、底面滑動と氷河侵食、雪崩による雪の再配分。氷河融解水
-  が流出・洪水計算に入り、長期実験ではカール(圏谷)などの氷河地形の
-  形成まで扱えます。
-- **長期地形変化**: 基岩の風化(土層生成)、隆起、代表水文の反復に
-  よる千年スケールの地形進化実験(実水理駆動の景観発達モデル)。
+- **River flooding and inundation**: dynamic-wave shallow water
+  equations on the ENC grid. Subgrid channels (cross-section shape and
+  width), levee breach, and a family of structures up to pumps, sluice
+  gates, culverts, diversions, and dam operation.
+- **Storm surge and tsunami run-up**: coastal inundation driven by
+  tide/sea-level time series on sea cells. The dynamic wave with
+  wetting-and-drying tracks the run-up front. Storm surge + river flood
+  + heavy rainfall — **compound flooding in a single model**. Combined
+  with the driftwood feature it also handles Isewan-typhoon-style
+  timber influx from coastal log yards into urban areas.
+- **Rainfall–runoff and catchment hydrology**: rainfall (uniform or
+  distributed), canopy interception, evapotranspiration
+  (Hamon/Thornthwaite with temperature lapse rate), Green–Ampt
+  infiltration, and two-layer groundwater (soil-layer Boussinesq plus a
+  weathered-bedrock layer) providing baseflow and recession. Well
+  pumping / groundwater abstraction sinks (cells + time series) for
+  drawdown analysis.
+- **Seawater intrusion and salt wedges**: with a fresh/salt two-layer
+  (sharp interface) approximation, seawater intrusion into and retreat
+  from aquifers (Ghyben-Herzberg), freshwater lenses, pumping-induced
+  intrusion and well salinization, and where the seawater that ran up
+  in a storm surge or tsunami ends up - on the same grid as the
+  surface and ground water.
+- **Urban pluvial flooding (sewer drainage and surcharge)**: the sewer
+  network is represented as an equivalent continuum (an artificial
+  confined layer) with per-cell capacity and 8-direction conveyances,
+  fully coupled with the surface inundation in a single time evolution
+  - from inlet uptake through pipe-full pressurized flow (surcharge) to
+  manhole eruption, sea outfalls, and pump stations (pumps drawing
+  directly from the conduit layer). The same machinery applies to
+  fractured bedrock, karst, farmland tile drains, and qanats
+  (groundwater-collecting galleries).
+- **Sediment and slope hazards**: riverbed evolution by bedload and
+  suspended load, hillslope erosion, slope failure (stability
+  analysis), and debris flow. Terrain and soil depth evolve during the
+  computation and feed back into the flow. **Driftwood** — its
+  generation (washout of standing trees, uprooting entrainment by
+  erosion), transport and deposition — can be assessed as maps (a
+  mixed debris-flow-and-driftwood surge only needs both features
+  enabled). Hazard outputs (safety factor Fs maps, maximum flow depth,
+  fluid force and driftwood arrival) and the operational **Soil Water
+  Index** (JMA 3-tank model; dedicated runs) are included.
+- **Volcanic hazards (density flows)**: sector collapse (debris
+  avalanches), pyroclastic flows, and lahars, with their deposition
+  and natural dam formation, as equivalent-fluid analyses (Voellmy and
+  constant-retarding-stress laws — the same formulation level as
+  dedicated models). The chain from eruption supply through runout,
+  deposition, natural damming, dam-break flooding, and
+  rainfall-triggered secondary lahars can be followed **in a single
+  run**.
+- **Lava flows**: effusion from a set of vent cells (an effusion-rate
+  time series), Bingham viscous spreading and stopping (viscosity and
+  yield stress given directly), and solidification into lava-field
+  topography. Because solidified lava becomes the bed, **subsequent
+  rainfall, floods, and sediment transport flow over the new
+  topography** in the same run.
+- **Water quality and mass transport**: load runoff from point sources,
+  areal sources, land-use-specific unit loads, and wet deposition;
+  advective transport, decay and settling, buildup–washoff (nonlinear
+  L–Q). **Kd two-phase partitioning** of sorbing substances such as
+  heavy metals (tied to suspended sediment), **transport through
+  groundwater** (infiltration → lateral flow → seepage, with sorption
+  retardation) and **completely mixed reservoirs and ponds** close the
+  mass budget across surface, subsurface and impounded water in one
+  run. Coupled with the urban sewer layer, it assesses the
+  **sanitation risk of sewage eruption (E. coli spreading with the
+  floodwater)**; also suited to radionuclide runoff analysis.
+- **Snow accumulation and melt**: degree-day method. With the
+  temperature lapse rate, the snow line emerges automatically.
+  Infiltration suppression by frozen ground (a temperature-driven
+  freezing index) captures snowmelt floods running over frozen soil.
+  Runout and deposition of **dense-flow snow avalanches** can also be
+  analyzed with the same equivalent fluid (Voellmy law) as the
+  volcanic flows.
+- **Glaciers**: firnification of perennial snow (accumulation) and
+  ice-surface melt, ice flow by the shallow ice approximation (SIA),
+  basal sliding with glacial erosion, and avalanche redistribution of
+  snow. Glacier meltwater feeds the runoff and flood computation, and
+  long-term experiments can form glacial landforms such as cirques.
+- **Long-term landscape evolution**: bedrock weathering (soil
+  production), uplift, and repeated representative hydrology for
+  millennium-scale landscape evolution experiments (a landscape
+  evolution model driven by real hydraulics).
 
-どのプロセスも**使わなければメモリも計算時間も一切消費しません**。
-最小構成の ENCflow は、ただの速くて素直な2次元洪水モデルです。
+Any process that is not used **consumes no memory and no CPU time at
+all**. In its minimal configuration, ENCflow is simply a fast,
+well-behaved 2-D flood model.
 
-計算したい現象(ため池決壊、霞堤・遊水地、干拓地の機場排水、降雨で
-誘発される斜面崩壊、氷河湖決壊洪水 など)から機能の組み合わせと設定の
-要点を引くには、**[用途集](docs/users_guide/usecases.md)** を
-参照してください。さらに [AI エージェントと使う](docs/ai_guide.md)
-なら、自分で調べなくても、**現象の言葉で指示して
-模式ケースの作成から始める**ことができます。
+To look up the feature combination and key settings from the
+phenomenon you want to compute (farm-pond breach, open levees and
+detention basins, polder drainage, rainfall-induced slope failure,
+glacial lake outburst floods, and more), see the
+**[use-case gallery](docs/en/users_guide/usecases.md)**. And
+[with an AI agent](docs/en/ai_guide.md) you can **start from a model
+case described in the words of the phenomenon**, without looking
+anything up yourself.
 
-ENCflow と各分野の関係は、Excel と経理の関係に似ています。
-Excel があっても経理の専門家になれるわけではないように、ENCflow が
-あっても各分野の専門家になれるわけではありません。しかし、経理の
-専門家が Excel を使えば、専用の会計ソフトほど最適化されていなくても
-かなりの仕事ができるように、各分野の専門家にとって ENCflow は有力な
-道具になります。経理を学び始める人に Excel が役立つように、隣の分野を
-学び始める研究者・学生には、まず現象を計算して理解するための入口に
-なります([AI エージェントによるサポート](docs/ai_guide.md)も
-受けられます)。そして Excel が経理専用ではないように、ENCflow は分野を
-またいで共有できる数値実験の共通基盤であることを目指しています。
+The relationship between ENCflow and each field resembles the one
+between Excel and accounting. Just as having Excel does not make you
+an accountant, having ENCflow does not make you an expert in any of
+these fields. But just as an accountant with Excel can get remarkably
+far even without software optimized for the purpose, ENCflow is a
+powerful tool in the hands of each field's experts. Just as Excel
+serves those beginning to learn accounting, ENCflow serves
+researchers and students entering a neighboring field as the entry
+point where they first compute and understand its phenomena (with
+[support from an AI agent](docs/en/ai_guide.md) available as well). And just
+as Excel is not dedicated to accounting, ENCflow aims to be a common
+platform for numerical experiments shared across disciplines.
 
-## できないこと(設計上の非対象)
+## What it deliberately does not do
 
-ENCflow は平面2次元(深さ平均・密度一定・静水圧)の世界に意図的に
-踏みとどまっています。次のものは原理的に対象外で、専用モデルの
-領域です([他モデルとの比較](docs/comparison.md)):
+ENCflow intentionally stays within the two-dimensional
+(depth-averaged, constant-density, hydrostatic) world. The following
+are out of scope by design and belong to specialized models
+([comparison](docs/en/comparison.md)):
 
-- **波浪** — 風波・うねり・砕波などの短周期波。高潮・津波は長波なので
-  解けますが、波浪の計算は波浪推算の専用モデルの領域です。
-- **火砕サージ・噴煙・降灰の大気輸送** — 圧縮性・3次元の大気現象で、
-  浅水近似の外です(火山の「密度流」系は上記のとおり扱えます。降灰の
-  堆積分布は前処理で地形・土層に与えれば、降雨による二次泥流化を
-  解析できます)。
-- **水温** — エネルギー収支を解かないため、水温そのものの予測は
-  できません(気温からの推算で融雪・蒸発散・水質の温度補正は扱います)。
-- **密度流・成層の力学** — 運動方程式は密度一定のままです。淡塩の
-  2層(塩水くさび・海水浸入・淡水レンズ)は鋭利界面近似で扱えますが、
-  混合・連行(汽水の生成)・内部波・貯水池の水温成層は再現できません。
-  湾曲部の二次流など鉛直構造の詳細も同様です。
-- **下水道管網の個別管路・制御運転** — 管路 1 本 1 本の追跡や、
-  ポンプ・堰・吐口・CSO など**運転規則で動く制御構造物を含む管網解析**は
-  管網モデル(1次元管路網の専用モデル)の領域です(構造物単体は内部水理構造物で、
-  枝管が密な市街地の面的な排水能力・圧力流・噴出は管路連続体層で
-  扱えます。ただし連続体近似なので、噴出の面的な分布は出ても
-  「どのマンホールか」の特定はできません。幹線 1 本が支配する系も
-  網モデルの領域です)。
-- **深部地下水** — ENCflow の地下水は流出解析のための浅層2層
-  (+管路連続体層)です。管路連続体層の「被圧」は満管管路の圧力流を
-  表す人工被圧で、天然の広域被圧帯水層の水理は3次元地下水モデルの
-  領域です。揚水はセル単位のシンクとして与えるもので、井戸孔単位の
-  水理(井戸径・スキン・部分貫入・揚程)は表しません。
+- **Wind waves** — short-period waves (wind waves, swell, breaking).
+  Storm surge and tsunami are long waves and can be solved; wave
+  computation is the realm of dedicated wave models.
+- **Pyroclastic surges, eruption plumes, and atmospheric ash
+  transport** — compressible, three-dimensional atmospheric phenomena
+  outside the shallow-water approximation (the volcanic *density
+  flows* above are covered; give ash-fall deposit distributions to the
+  terrain and soil layer in preprocessing and their
+  rainfall-triggered secondary lahars can be analyzed).
+- **Water temperature** — no energy balance is solved, so water
+  temperature itself is not predicted (temperature-based corrections
+  for snowmelt, evapotranspiration, and water quality are handled via
+  air temperature).
+- **The dynamics of density currents and stratification** — the
+  momentum equations keep a constant density. Fresh/salt two-layer
+  phenomena (salt wedges, seawater intrusion, freshwater lenses) are
+  handled with a sharp-interface approximation, but mixing and
+  entrainment (brackish water generation), internal waves, and
+  reservoir thermal stratification cannot be reproduced; nor can
+  vertical structure such as secondary flow in bends.
+- **Individual sewer pipes and operational control** — tracking
+  individual pipes, and network analyses involving **control structures
+  driven by operating rules** (pumps, weirs, outfalls, CSOs), are the
+  realm of network models (dedicated 1-D pipe-network models;
+  standalone structures are
+  covered by the internal hydraulic structures; the areal drainage
+  capacity, pressurized flow, and eruption of dense street-level
+  networks are covered by the conduit continuum layer. Being a
+  continuum approximation, it reproduces the spatial pattern of
+  surcharge but cannot identify *which* manhole erupts. Systems
+  dominated by a single trunk main also belong to network models).
+- **Deep groundwater** — ENCflow's groundwater is a shallow two-layer
+  system (plus the conduit continuum layer) for runoff analysis. The
+  "confined" state of the conduit layer is an artificial confinement
+  representing pipe-full pressurized flow; the hydraulics of natural
+  regional confined aquifers belong to 3-D groundwater models. Pumping
+  is given as a cell-scale sink; borehole-scale hydraulics (well
+  radius, skin, partial penetration, lift) are not represented.
 
-## ENCflow を選ぶ理由
+## Why choose ENCflow
 
-- **ゼロ依存の絶対的ポータビリティ** — 依存は言語標準と OpenMP/MPI
-  (標準規格)のみ。GeoTIFF の読み書きも圧縮展開も自前実装です。
-  「ビルドできない」で挫折することがありません。
-- **ノート PC からスパコンまで単一ソース** — パソコン単体でも OpenMP の
-  スレッド並列がマルチコアをそのまま活用(何も設定しなくても並列で
-  動きます)。ワークステーション・スパコンでは make の設定1行で
-  OpenMP×MPI のハイブリッド並列に切替 — ノード内はスレッド、ノード間は
-  MPI で、同じ入力ファイルのまま大規模計算にスケールします。
-- **結果が再現する** — スレッド数・MPI ランク数をどう変えてもビット単位で
-  同じ答え。リスタートは中断なし実行と厳密一致。研究の再現性・実務の
-  説明責任にそのまま応えます。
-- **段階的に精緻化する設計** — 「とりあえず動く」最小パラメータから、
-  入手できるデータに合わせて1段ずつ精緻化。全機能がこの思想で
-  作られています。
-- **専門の隣へ踏み出す入口** — まず簡潔なモデルで「このプロセスは
-  効きそうか」を見積もり、効くと分かってから必要に応じて各分野の
-  専門モデルへ進む。ENCflow はその最初の一歩のための共通基盤でも
-  あります(下げるのは「試す」障壁です。結果の解釈には、その分野の
-  知識が引き続き必要です)。
-- **入出力は単純なテキスト** — 行列テキスト・namelist・CSV(+実務用に
-  GeoTIFF)。GIS でも Python でも Excel でも、好きな道具で前後処理
-  できます。
-- **スクリプト自動化との高い親和性** — パラメータファイルがプレーン
-  テキスト(namelist)なので、sed や Python でケースを機械生成して
-  一括実行 → テキスト出力を diff・集計、という自動化がシェル
-  スクリプトだけで組めます。感度分析・キャリブレーション・多数
-  シナリオの一括計算に向きます。同じ性質は **AI による高度な自動化**
-  にも直結します — 入出力がテキストで完結しているため、AI
-  エージェントがケース生成・実行・検証・結果解析までを直接操作
-  できます。実際に、ENCflow 自身の回帰テスト(test/*/Run.sh:
-  派生ケースの生成と基準との自動照合)がこの仕組みの上で動き、
-  このプロジェクト自体の開発・検証の多くも AI エージェントとの
-  協働で行われています — どちらもその**実証**です。
-- **全ソース公開** — 中身を確かめられ、検証できます。計算コードは
-  すべて書き下ろしで、**第三者のコードを一切含みません**(依存ゼロは、
-  著作権の出所が明確ということでもあります)。Apache-2.0 で
-  **商用利用も可能**です。
-- **プロジェクトとしての持続性** — 設計判断の理由と経緯
-  ([docs/developer.md](docs/developer.md))から全体像
-  ([docs/architecture.md](docs/architecture.md))までが文書化され、
-  変更の正しさは回帰テスト(ビット再現)と CI が機械的に検証します。
-  開発の知識がリポジトリ自体に外在化されているため、全ソース公開
-  (Apache-2.0)と合わせて、現在の開発主体が継続しない場合でも
-  **第三者による開発の継続が可能**です(AI エージェントの活用も
-  容易 — このプロジェクト自体がその実証です)。
+- **Absolute portability with zero dependencies** — the only
+  dependencies are the language standard and OpenMP/MPI (open
+  standards). Even GeoTIFF reading/writing and decompression are
+  implemented in-house. You will never be defeated by "it won't build."
+- **A single source from laptop to supercomputer** — on a single
+  machine, OpenMP threading uses all cores with no configuration. On
+  workstations and supercomputers, one line in the make configuration
+  switches to hybrid OpenMP×MPI — threads within a node, MPI across
+  nodes — scaling to large runs with the same input files.
+- **Reproducible results** — bit-identical answers regardless of the
+  number of threads or MPI ranks. Restarts match uninterrupted runs
+  exactly. This directly serves research reproducibility and
+  professional accountability.
+- **Progressive refinement by design** — start from minimal "it just
+  runs" parameters and refine step by step as data becomes available.
+  Every feature is built with this philosophy.
+- **A gateway to the field next door** — estimate with a simple model
+  whether a process matters, and move on to a specialist model of that
+  field only once you know it does. ENCflow is also a common ground
+  for that first step (what it lowers is the barrier to *trying*:
+  interpreting the results still takes the knowledge of the field).
+- **Simple text input and output** — matrix text, namelists, and CSV
+  (plus GeoTIFF for practical work). Pre- and post-process with GIS,
+  Python, Excel — whatever you prefer.
+- **High affinity with script automation** — because the parameter
+  files are plain text (namelists), you can generate cases
+  mechanically with sed or Python, run them in batch, and diff or
+  aggregate the text outputs, all from shell scripts alone. This suits
+  sensitivity analysis, calibration, and bulk scenario runs. The same
+  property extends directly to **advanced automation by AI**: since
+  the input and output are pure text, AI agents can drive case
+  generation, execution, verification, and analysis directly. In
+  practice, ENCflow's own regression tests (test/*/Run.sh: generating
+  derived cases and automatically comparing against references) run on
+  exactly this machinery, and much of the development and verification
+  of this very project is carried out in collaboration with AI agents
+  — both are working **demonstrations** of the claim.
+- **Full source code available** — inspect it, verify it. The
+  computational code is written entirely from scratch and **contains
+  no third-party code** (zero dependencies also means a clean,
+  unambiguous copyright provenance). Licensed under Apache-2.0,
+  **commercial use included**.
+- **Sustainability as a project** — everything from the reasoning
+  behind each design decision ([docs/developer.md](docs/developer.md),
+  in Japanese) to the overall map
+  ([docs/architecture.md](docs/architecture.md)) is documented, and
+  the correctness of changes is verified mechanically by the
+  regression tests (bit reproducibility) and CI. Because the
+  development knowledge lives in the repository itself, combined with
+  the fully open source code (Apache-2.0), **development can be
+  continued by third parties** even if the current developers do not
+  — and AI agents make that easier still (this project itself is the
+  demonstration).
 
-## 動作要件
+## Requirements
 
-| | 必須 | 備考 |
+| | Required | Notes |
 |---|---|---|
-| Fortran コンパイラ | ○ | gfortran / Intel ifx / NVIDIA / AMD / NEC で動作確認。OpenMP 並列は標準で有効 |
-| MPI | 任意 | ハイブリッド並列(OpenMP×MPI)でノードをまたぐ場合のみ(OpenMPI・MPICH 等) |
-| その他ライブラリ | **不要** | — |
+| Fortran compiler | Yes | Tested with gfortran / Intel ifx / NVIDIA / AMD / NEC. OpenMP enabled by default |
+| MPI | Optional | Only for hybrid (OpenMP×MPI) runs across nodes (OpenMPI, MPICH, etc.) |
+| Other libraries | **None** | — |
 
-OS は Linux / macOS / WSL を想定しています。詳細は
-[インストールガイド](docs/install.md) へ。Windows で Unix が
-はじめての方は [Windows での使い方](docs/windows.md) から
-どうぞ(ブラウザだけで試せる Colab ノートブックもあります)。
+Linux, macOS, and WSL are the assumed platforms. See the
+[installation guide](docs/en/install.md). Windows users new to Unix:
+start from [Using ENCflow on Windows](docs/en/windows.md) (a Colab
+notebook that runs in the browser alone is also available).
 
-## 使い方を学ぶ
+## Learning to use it
 
-1. [インストール](docs/install.md) — make install 一発です
-2. [チュートリアル](docs/tutorial.md) — 最小例から実地形の流域計算まで
-3. [ユーザーガイド](docs/users_guide.md) — 全設定項目のリファレンス
-4. [examples/](examples/) — 設定ファイルのサンプル集
-5. [test/](test/) — 検証済みの例題(回帰テストを兼ねています)
-6. [AI エージェントと使う](docs/ai_guide.md) — 「現象の言葉」で
-   ケース作成・実行・解析を AI に任せる方法
+1. [Installation](docs/en/install.md) — a single `make install`
+2. [Tutorial](docs/en/tutorial.md) — from the minimal example to real-terrain catchments
+3. [User's Guide](docs/en/users_guide.md) — reference for every setting
+4. [examples/](examples/) — sample configuration files
+5. [test/](test/) — verified examples (doubling as regression tests)
+6. [Using ENCflow with AI agents](docs/en/ai_guide.md) — delegating
+   case building, execution, and analysis to an AI in the words of the
+   phenomenon
 
-ドキュメントからはわからないアルゴリズムや実装の詳細を知りたい
-ときは、AI エージェントにソースコードを調べさせるのが早道です。
-計算本体は `src/` の Fortran だけで完結し、設計判断の理由と経緯も
-[docs/developer.md](docs/developer.md) に文書化されているので、
-「◯◯はどの式でどう計算していますか」という質問に、該当コードを
-根拠として答えさせることができます。
+When you want algorithm or implementation details that the
+documentation does not cover, the quickest route is to have an AI
+agent examine the source code for you. The entire computation lives
+in the Fortran under `src/`, and the reasons behind every design
+decision are documented in
+[docs/developer.md](docs/developer.md), so a question like "which
+equation computes X, and where?" can be answered with the actual
+code as evidence.
 
-開発に参加したい方・中身を知りたい方は
-[docs/architecture.md](docs/architecture.md)(全体像の案内図。
-最初に読む1枚)、
-[docs/developer.md](docs/developer.md)(設計思想と規約の正本)、
-[docs/comparison.md](docs/comparison.md)(他モデルとの比較)へ。
+Developers and the curious should head to
+[docs/architecture.md](docs/architecture.md) (in Japanese) (the
+one-page map of the architecture — read this first),
+[docs/developer.md](docs/developer.md) (in Japanese) (the authoritative source for
+design philosophy and conventions) and
+[docs/comparison.md](docs/en/comparison.md) (comparison with other
+models). Developer documentation is currently in Japanese.
 
-## 外部連携(BMI)
+## Interoperability (BMI)
 
-ENCflow は CSDMS の [Basic Model Interface (BMI) 2.0](https://bmi.csdms.io/)
-に対応しています(公式適合性テスト bmi-tester に合格)。モデル全体が
-ひとつの BMI component となり、initialize / update / get_value /
-set_value という共通の操作で外部から制御できます。
+ENCflow implements the CSDMS [Basic Model Interface (BMI) 2.0](https://bmi.csdms.io/)
+and passes the official conformance test (bmi-tester). The whole model
+becomes a single BMI component that can be controlled from outside
+through the standard initialize / update / get_value / set_value calls.
 
-- **Python から直接駆動** — 追加ツールは不要です(numpy だけ)。計算を
-  任意の間隔で止めて水深・水位・流速などの分布を取り出せるので、
-  計算しながら結果を順次表示したり、条件を変えた多数のケースを
-  スクリプトで回したりする使い方ができます。
-- **他のモデルと組み合わせる** — BMI は、世界中の水文・地形・海洋・
-  雪氷などのモデルが採用している「モデル同士をつなぐ共通の差し込み
-  口」です。これは ENCflow の限界を超えるための扉です: 単体では
-  対象外の物理(深部の3次元地下水、波浪 など)を、その分野の専用
-  モデルと状態をやり取りしながらひと続きに解く。あるいは逆に、
-  外部のシステムが ENCflow の氾濫水理をエンジンとして呼び出す —
-  大陸規模の水文モデルが危険な流域だけ ENCflow に高解像度の氾濫を
-  解かせる、観測データを取り込みながら走る予測システム(データ同化)
-  の部品になる、といった使われ方です。
-- **本体は不変** — BMI は `bmi/` の optional アダプタとして実装されて
-  おり、通常のビルド(encflow / encflow_mpi)は従来どおり外部依存
-  ゼロのままです。
+- **Drive it from Python** — no extra tooling beyond numpy. You can pause
+  the run at any interval and pull out fields such as water depth, water
+  level, and flow speed, so you can render results live while the model
+  runs, or sweep through many scenarios from a script.
+- **Combine it with other models** — BMI is a common socket adopted by
+  models across hydrology, geomorphology, oceanography, snow and ice,
+  and beyond, for plugging models into one another. It is a door to
+  going beyond ENCflow's own limits: physics that ENCflow deliberately
+  leaves out — deep three-dimensional groundwater, wind waves — can be
+  solved in one connected system by exchanging state with the
+  specialist model of that field. And the direction reverses: external
+  systems can call on ENCflow's flood hydraulics as an engine — a
+  continental-scale hydrology model dispatching ENCflow to resolve
+  high-resolution inundation just in the basins at risk, or a
+  forecasting system that assimilates observations while it runs,
+  with ENCflow as its flood component.
+- **The core is untouched** — BMI lives in the optional `bmi/` adapter;
+  the regular builds (encflow / encflow_mpi) remain dependency-free as
+  before.
 
-使い方・公開変数・適合性確認の再現手順は [bmi/README.md](bmi/README.md)、
-設計の経緯と全体計画は [docs/bmi_plan.md](docs/bmi_plan.md) へ。
+See [bmi/README.en.md](bmi/README.en.md) for usage, exposed variables,
+and how to reproduce the conformance check, and
+[docs/bmi_plan.md](docs/bmi_plan.md) (in Japanese) for the design
+history and roadmap.
 
-## 想定ユーザー
+## Who it is for
 
-- **学生・教育** — コンパイラだけで動く・入力がテキスト1枚・
-  結果がすぐ図にできる。水理学・水文学の演習教材として。
-- **研究者** — プロセス間の相互作用(例: 崩壊→土石流→河道閉塞→
-  氾濫、風化→土層→侵食)を単一モデルで。ビット再現性により
-  数値実験が厳密に比較できます。
-- **実務技術者** — 氾濫解析・構造物操作・土砂災害・水質と、案件ごとの
-  ツール切替なしに同じ入力体系で。スパコンでの大規模計算にも
-  そのまま移行できます。
+- **Students and educators** — runs with nothing but a compiler, takes
+  a single text file as input, and produces results that plot
+  immediately. Suited to hydraulics and hydrology coursework.
+- **Researchers** — process interactions (e.g., slope failure → debris
+  flow → channel blockage → inundation, or weathering → soil →
+  erosion) in a single model. Bit reproducibility makes numerical
+  experiments strictly comparable.
+- **Practitioners** — inundation analysis, structure operation,
+  sediment hazards, and water quality in one input system, with no
+  tool-switching between projects — and a direct path to large runs on
+  supercomputers.
 
-## ライセンス
+## License
 
-[Apache License 2.0](LICENSE) です。商用利用・改変・再配布が可能です
-(著作権表示と [NOTICE](NOTICE) の保持が条件。詳細は LICENSE 参照)。
-研究利用の引用方法は [CITATION.cff](CITATION.cff) を参照してください。
-各リリースは [Zenodo](https://doi.org/10.5281/zenodo.22042847) に
-アーカイブされ DOI が付与されるため、使用した版を特定した引用が
-できます。
+[Apache License 2.0](LICENSE). Commercial use, modification, and
+redistribution are permitted (retaining the copyright notice and
+[NOTICE](NOTICE); see LICENSE for details).
+For citation in research, see [CITATION.cff](CITATION.cff).
+Every release is archived on
+[Zenodo](https://doi.org/10.5281/zenodo.22042847) with a DOI, so you
+can cite the exact version you used.
+For the use of the ENCflow name and official logos, see the
+[ENCflow Name and Trademark Policy](TRADEMARKS.md)
+([日本語訳](TRADEMARKS.ja.md)).
 
-## 開発
+## Development
 
-- 防衛大学校 建設環境工学科 水工学研究室
-- 東北大学 工学部 水環境システム学研究室
+- Hydraulic Engineering Laboratory, Department of Civil and
+  Environmental Engineering, National Defense Academy of Japan
+- Hydro-Environmental System Laboratory, Department of Civil
+  Engineering, Tohoku University
 
-質問・相談は [Discussions](https://github.com/ENCflow/ENCflow/discussions) へ、
-明確なバグ報告・機能提案は [Issues](https://github.com/ENCflow/ENCflow/issues) へ
-(書き方とコード PR の現行方針は [CONTRIBUTING](CONTRIBUTING.md) を参照。
-迷ったら Discussions で構いません)。
-研究利用の引用方法は [CITATION.cff](CITATION.cff) を参照してください。
+Questions and consultations are welcome at
+[Discussions](https://github.com/ENCflow/ENCflow/discussions);
+clear bug reports and feature requests go to
+[Issues](https://github.com/ENCflow/ENCflow/issues)
+(see [CONTRIBUTING](CONTRIBUTING.en.md) for how to write them and the
+current policy on code pull requests — when in doubt, Discussions is fine).
+For citation in research, see [CITATION.cff](CITATION.cff).
