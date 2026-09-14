@@ -404,8 +404,7 @@ Every release is archived on
 [Zenodo](https://doi.org/10.5281/zenodo.22042847) with a DOI, so you
 can cite the exact version you used.
 For the use of the ENCflow name and official logos, see the
-[ENCflow Name and Trademark Policy](TRADEMARKS.md)
-([日本語訳](TRADEMARKS.ja.md)).
+[ENCflow Name and Trademark Policy](TRADEMARKS.md).
 
 ## Development
 
