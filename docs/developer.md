@@ -140,6 +140,16 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
 
 ## 3. ビルドシステム
 
+- **make は GNU make 前提**(2026-09-14 明記)。make.inc と src/Makefile は
+  GNU make 固有の構文 — `ifeq`/`else ifeq` 条件分岐、`$(error)`・`$(shell)`・
+  `$(findstring)`・`$(dir)` 関数、GNU 形式の `include` — を中核機構
+  (MODE/PREC 切替の検証、MODESTAMP、AR 自動選択)に使っており、
+  BSD make(FreeBSD/NetBSD/OpenBSD の make、bmake)では make.inc の
+  パースの時点で失敗する。BSD 系 OS では gmake をインストールして
+  使うこと(利用者向けの案内は install.md §1)。BSD make 両対応への
+  書き直しは、条件分岐・関数群の全面書き換えと二重保守を招くため
+  行わない。Linux・WSL・macOS(Xcode CLT)の標準 make はいずれも
+  GNU make なので、実用上の制約は BSD 系 OS のみ。
 - **実行ファイル名はモードごとに別名**(2026-08-13): serial(OpenMP)版
   = `encflow`、MPI ハイブリッド版 = `encflow_mpi`(区切りは LAMMPS 等の
   慣例に合わせアンダースコア)。`make install` で ../bin/ に置かれ、

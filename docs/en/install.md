@@ -38,6 +38,11 @@ sudo apt install -y git gfortran make
 brew install gcc    # gfortran ships with gcc
 ```
 
+Note that `make` here means **GNU make**. The standard `make` on
+Linux, WSL, and macOS is GNU make, so normally you need not think
+about it. On BSD-family systems such as FreeBSD, install GNU make
+(e.g. `pkg install gmake`) and read `make` as `gmake` throughout.
+
 Then, on any platform. `git clone` copies (clones) a repository
 published on GitHub — the whole project, with source code, examples,
 and documentation — onto your own PC:

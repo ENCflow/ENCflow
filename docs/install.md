@@ -35,6 +35,12 @@ sudo apt install -y git gfortran make
 brew install gcc    # gfortran は gcc に同梱されています
 ```
 
+なお `make` は **GNU make** を前提としています。Linux・WSL・macOS の
+標準 `make` はいずれも GNU make なので、通常は意識する必要は
+ありません。FreeBSD などの BSD 系 OS では GNU make をインストールし
+(`pkg install gmake` など)、以降の `make` を `gmake` と読み替えて
+ください。
+
 続いて共通です。`git clone` は、GitHub で公開されているリポジトリ
 (ソースコード・例題・文書を含むプロジェクト一式)を手元の PC に
 クローン(コピー)するコマンドです:
