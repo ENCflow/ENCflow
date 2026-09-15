@@ -498,6 +498,29 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
   確認する**。utils/ は一部(rerecord 等)を除き読み書きを独立実装しており、
   回帰テストの網の外にあるため、形式変更に黙って取り残される。libencflow を
   リンクするツールも再ビルドが必要(形式は共有するが自動追従はしない)。
+- **SKIPCOLS の列番号はケースの Log ヘッダに依存する(実バグ 2026-09-15)**:
+  Runge 列は S(m) 形式では4列目、S_surf/S_grnd/S_total 形式では**6列目**。
+  拡張ヘッダの8ケース(frost/pump/conduit/coastal_drain/gwseep/kdpart/
+  sewer_wq/splash)が SKIPCOLS=4 のままで、S_grnd を誤って除外し Runge を
+  比較していた(coastal_drain/gwseep/kdpart は np 実行時に Runge 差で FAIL、
+  他は偶然一致で潜伏)。SKIPCOLS=6 へ修正し、逐次+np=1,2,4 の PASS を確認
+  (gfortran 13.3/OpenMPI 4.1.6)。新ケースの Run スクリプトを雛形から
+  複製するときは Log ヘッダと列番号の対応を必ず確認すること。
+- **CI は二層構成(2026-09-15 導入)**: 毎 push の ci.yml(高速5ケース×
+  逐次/np=2)+夜間の nightly.yml(reference 全13ケースの逐次と
+  MPI np=1,2,4、トップレベル make による utils 追随漏れ検出、
+  -Og -fcheck=all ビルドの逐次=np2 一致検査、BMI 適合性 bmi-tester
+  92項目+BMI 経由実行の CLI ビット一致)。debug 層は release(-Ofast/
+  -flto)製のコミット済み reference と比較できないため、ランナー内で
+  debug 逐次の reference を作り直して MPI 結果と照合する(リポジトリの
+  reference は不変 — 消去・再生成はランナーの使い捨て作業領域のみ)。
+- **sewer_wq は同一バイナリ以外との ULP=0 比較が成立しない(既知
+  2026-09-15)**: release(-Ofast/-flto)では逐次/MPI 二つのバイナリの
+  ビルド差(演算並べ替え)が Runge サブステップ回数の閾値敏感性で増幅され、
+  S_surf と wq.csv(in_gwc_g 等)に相対 ~5e-6 の差が出る(np=1 でも同じ。
+  debug 逐次 vs release reference でも同型の差)。-Og ビルドでは逐次=np2 が
+  ビット一致であることを確認済み = MPI 実装のバグではなくビルド差起因。
+  nightly の release MPI 層からは当面除外(扱いの決定は handoff 参照)。
 
 ## 11. MPI 化の設計原則(分割実装の基準)
 

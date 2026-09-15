@@ -1,0 +1,167 @@
+# ENCflow Nightly: フル回帰+MPI np=1,2,4+debug(-fcheck=all)+BMI 適合性
+#   毎 push の CI(ci.yml: 高速 5 ケース×逐次/np=2)を補う夜間の全数検査。
+#   4 ジョブ構成:
+#     full-serial : release 逐次で reference 全 13 ケース(chichibu 含む)
+#                   +トップレベル make(utils の追随漏れ検出。developer.md §10)
+#     full-mpi    : release MPI np=1,2,4 で逐次 reference と照合
+#                   (sewer_wq は除外 — 下記コメント参照)
+#     debug-fcheck: -Og -fcheck=all ビルドで全ケースを実行し、
+#                   debug 逐次 reference と MPI np=2 のビット一致を検査
+#                   (確保範囲・FPE の実行時検査。developer.md §10)
+#     bmi         : CSDMS bmi-tester 適合性+BMI 経由実行の逐次 reference 一致
+#   手動実行は workflow_dispatch から。
+name: Nightly
+
+on:
+  schedule:
+    - cron: '30 17 * * *'   # 毎日 17:30 UTC = 2:30 JST
+  workflow_dispatch:
+
+# 実行が日をまたいで重なった場合は古い方を止める
+concurrency:
+  group: nightly
+  cancel-in-progress: true
+
+env:
+  # reference がコミットされている回帰ケース(比較込みで PASS/FAIL 判定)
+  REF_CASES: wave frost pump conduit salt coastal_drain damwq gwseep kdpart sewer_wq splash tide chichibu
+
+jobs:
+  full-serial:
+    name: full regression (serial, release)
+    # fork では夜間スケジュールを回さない
+    if: github.event_name != 'schedule' || github.repository_owner == 'ENCflow'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y gfortran make
+      - name: Build (src + utils; トップレベルで utils の追随漏れも検出)
+        run: make install
+      - name: Regression tests (serial, all reference cases)
+        run: |
+          set -e
+          for c in $REF_CASES; do
+            echo "===== test/$c ====="
+            (cd "test/$c" && ./Run.sh)
+          done
+
+  full-mpi:
+    name: full regression (MPI np=${{ matrix.np }}, release)
+    if: github.event_name != 'schedule' || github.repository_owner == 'ENCflow'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        np: [1, 2, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y gfortran make openmpi-bin libopenmpi-dev
+      - name: Build (MPI)
+        run: make -C src MODE=mpi install
+      - name: Regression tests (np=${{ matrix.np }})
+        run: |
+          set -e
+          export OMP_NUM_THREADS=1
+          # ランナーのコア数が np を下回っても起動できるよう保険
+          export OMPI_MCA_rmaps_base_oversubscribe=1
+          # sewer_wq は除外: release(-Ofast/-flto)では逐次/MPI のビルド差が
+          # Runge サブステップの閾値敏感性で増幅され ULP=0 を満たさない
+          # (docs/handoff.md 参照。逐次回帰は full-serial、逐次=MPI の
+          #  ビット一致は debug-fcheck ジョブでカバーしている)
+          for c in $REF_CASES; do
+            [ "$c" = sewer_wq ] && continue
+            echo "===== test/$c (np=${{ matrix.np }}) ====="
+            (cd "test/$c" && ./Run_MPI.sh ${{ matrix.np }})
+          done
+
+  debug-fcheck:
+    name: debug -fcheck=all (serial vs np=2 bit-identical)
+    if: github.event_name != 'schedule' || github.repository_owner == 'ENCflow'
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y gfortran make openmpi-bin libopenmpi-dev
+      # make.inc の gfortran debug 行と同一のフラグ(コマンドラインから上書き。
+      # $(RFLAG) は展開されないため PREC=double 相当の -fdefault-real-8 系を明記)
+      - name: Build (serial, debug)
+        run: >
+          make -C src install
+          FFLAGS="-g -Og -fcheck=all -fbacktrace -Wall
+          -ffpe-trap=invalid,zero,overflow -ffree-line-length-none
+          -fdefault-real-8 -fdefault-double-8 -Wno-conversion
+          -finit-real=snan -finit-integer=-88888888"
+      # release(-Ofast)で作られたコミット済み reference は -Og の結果と
+      # 一致しないため、ランナー内で debug 逐次の reference を作り直し、
+      # それに対して MPI np=2 のビット一致(ULP=0)を検査する。
+      # (-Og では fast-math/LTO の並べ替えが無く、決定的リダクション
+      #  par_sum_rows により逐次=MPI がビット一致するはず)
+      # リポジトリの reference は更新しない(絶対規律)— ここで消すのは
+      # 使い捨てのランナー作業領域のみ。
+      - name: Regenerate references with debug serial run
+        run: |
+          set -e
+          rm -rf test/*/reference
+          for c in $REF_CASES; do
+            echo "===== test/$c (debug serial; creates reference) ====="
+            (cd "test/$c" && ./Run.sh)
+          done
+      - name: Build (MPI, debug)
+        run: >
+          make -C src MODE=mpi install
+          FFLAGS="-g -Og -fcheck=all -fbacktrace -Wall
+          -ffpe-trap=invalid,zero,overflow -ffree-line-length-none
+          -fdefault-real-8 -fdefault-double-8 -Wno-conversion
+          -finit-real=snan -finit-integer=-88888888"
+      # 逐次と MPI は同一フラグ・同一ソースなので一致するはず(許容誤差は
+      # 各ケースのラッパー設定に従う。実測では全ケース identical)
+      - name: MPI np=2 under -fcheck=all, compare vs debug serial
+        run: |
+          set -e
+          export OMP_NUM_THREADS=1
+          export OMPI_MCA_rmaps_base_oversubscribe=1
+          for c in $REF_CASES; do
+            echo "===== test/$c (debug np=2) ====="
+            (cd "test/$c" && ./Run_MPI.sh 2)
+          done
+
+  bmi:
+    name: BMI conformance (bmi-tester) + equivalence
+    if: github.event_name != 'schedule' || github.repository_owner == 'ENCflow'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y gfortran make python3-venv
+      - name: Build (serial + BMI adapter)
+        run: make -C src install && make -C bmi
+      - name: Install bmi-tester
+        run: |
+          python3 -m venv "$HOME/bmi-venv"
+          . "$HOME/bmi-venv/bin/activate"
+          pip install numpy bmipy bmi-tester 'pytest<8' 'gimli.units==0.3.*'
+      # BMI 経由の実行(initialize→update×nt→finalize、同値 set 込み)が
+      # CLI 実行とビット一致すること(bmi/test_bmi.f90 ヘッダの検証手順)。
+      # 機械間差を排すため CLI の結果をランナー内 reference にして ULP=0 で
+      # 比較する。リポジトリの reference は更新しない(絶対規律)— 消すのは
+      # 使い捨てのランナー作業領域のみ。
+      - name: BMI equivalence vs CLI run (wave, bit-identical)
+        run: |
+          set -e
+          cd test/wave
+          rm -rf reference
+          ./Run.sh
+          ../../bmi/test_encflow_bmi param.txt set
+          ULP=0 SKIPCOLS=4 ../Scripts/Compare_ref.sh Log.txt
+      - name: BMI conformance (bmi-tester, wave)
+        run: |
+          set -e
+          . "$HOME/bmi-venv/bin/activate"
+          cd test/wave
+          ../../bmi/python/check_bmi.sh param.txt

@@ -1,6 +1,7 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
 #   高速な 5 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
 #   ローカルで test/chichibu/Run.sh を実行すること)
+#   フル回帰・MPI np=1,2,4・-fcheck=all・BMI 適合性は夜間の nightly.yml で回す
 name: CI
 
 on:
