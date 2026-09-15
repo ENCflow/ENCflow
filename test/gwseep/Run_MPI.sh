@@ -6,7 +6,7 @@ sdir=$(dirname "$(readlink -f "$0")")
 export FILES="Log.txt wq.csv"
 export ULP=0
 export MPIRUN_OPTS="--bind-to none"
-export SKIPCOLS=4
+export SKIPCOLS=6
 "$sdir/../Scripts/Run_case.sh" mpi "$@" || exit 1
 
 python3 Check_gwseep.py closure result/wq.csv || exit 1

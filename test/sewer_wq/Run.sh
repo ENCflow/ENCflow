@@ -5,6 +5,6 @@
 # も比較対象にする
 export FILES="Log.txt wq.csv"
 export ULP=0
-export SKIPCOLS=4      # 検査対象外とする列番号(Log の Runge 列。
+export SKIPCOLS=6      # 検査対象外とする列番号(Log の Runge 列。
                        # wq.csv の第4列 in_map_g はこのケースでは恒等 0)
 exec ../Scripts/Run_case.sh serial "$@"

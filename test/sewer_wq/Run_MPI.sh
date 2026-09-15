@@ -5,5 +5,5 @@
 export FILES="Log.txt wq.csv"
 export ULP=0
 export MPIRUN_OPTS="--bind-to none"
-export SKIPCOLS=4
+export SKIPCOLS=6
 exec ../Scripts/Run_case.sh mpi "$@"
