@@ -5665,3 +5665,6 @@ docs/landslide_tsunami_plan.md(§0 結論、§1 方式選定、§4 定式、
   汀線ローブ 1,488 → 87 m³、湖底堆積 16,015 → 17,930 m³、先頭波 x=298 で
   +1.23 → +1.40 m(湖底まで走る質量が増えた分)。リスタート往復
   (3 面の私有 save)はバイト一致。
+- 検証: -O2 厳密数学で逐次・np=2,4 の 4 構成が検定 PASS、save
+  (state.dat / 3 面の geomorph_bedslide.dat)が逐次とバイト一致。release
+  復帰後の wave / debris / volcano PASS。
