@@ -49,7 +49,10 @@
 !         安定条件(V_max・hb·dV/dS の allreduce_max → dt_sub。決定的)→
 !         パスB(エッジ流量。帯界面は je+1 行の書き手が冗長計算)→
 !         パスC(発散。hb・z・sd の共動更新。自帯のみ)→ hb・z のハロ交換
-!     (3) 停止: パス0 を再評価し V < bs_vstop のセルの hb を 0 に
+!     (3) 停止: パス0 を再評価し V < bs_vstop が bs_tstop 秒(= bs_nstop tick)
+!         続いたセルの hb を 0 に(一時的な失速 — 突入時の水の押し出しで
+!         汀線帯が離水し、水の盛り上がりが逆勾配を作る数秒〜十数秒 — で
+!         誤固定しない。bs_tstop=0 なら即時 = lavaflow の固化と同じ閉じ)
 !     e の回復と sd のハロ交換は m_geomorph_calc の末尾が行う
 !
 !   MPI 規約(developer.md §11): 更新は自帯 js..je のみ、エッジは
@@ -131,6 +134,8 @@ module subroutine init_bedslide(gm, p, g, s, list)
   gm%bs_nsubmax = list%bs_nsubmax
   gm%bs_reltime = list%bs_reltime
   gm%bs_hplunge = list%bs_hplunge
+  if (list%bs_tstop < 0.0) call par_stop("list_geomorph: bs_tstop must be >= 0")
+  gm%bs_nstop = max(1, nint(list%bs_tstop / (p%dt * gm%idt_geomorph)))
 
   ! --- 8近傍の幾何(m_gwflow_lateral / init_fluvial と同一の配分則) ---
   dr = sqrt(g%dx**2 + g%dy**2)
@@ -167,6 +172,7 @@ module subroutine init_bedslide(gm, p, g, s, list)
   allocate(bsl%qt(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(bsl%ws(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(bsl%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(bsl%nst(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
 
   ! --- 発火与件(崩壊深分布。全ランク冗長の全域読み。read_release と同じ流儀。
   !     未指定(プランジ引き渡しのみ)なら rel は未確保 = 発火なし) ---
@@ -452,13 +458,20 @@ module subroutine calc_bedslide(gm, g, s, dtw)
     do i = g%wx(1,j), g%wx(2,j)
       s%vb(i,j) = 0.0
       if (g%x(i,j) <= 0) cycle
-      if (s%hb(i,j) <= 0.0) cycle
-      if (bsl%vc(i,j) >= gm%bs_vstop) then
-        s%vb(i,j) = bsl%vc(i,j)
+      if (s%hb(i,j) <= 0.0) then
+        bsl%nst(i,j) = 0.0
         cycle
       end if
+      if (bsl%vc(i,j) >= gm%bs_vstop) then
+        s%vb(i,j) = bsl%vc(i,j)
+        bsl%nst(i,j) = 0.0                    ! 動いた: 低速の連続を打ち切る
+        cycle
+      end if
+      bsl%nst(i,j) = bsl%nst(i,j) + 1.0
+      if (bsl%nst(i,j) < real(gm%bs_nstop)) cycle   ! まだ持続時間に満たない
       vsum = vsum + s%hb(i,j)
       s%hb(i,j) = 0.0
+      bsl%nst(i,j) = 0.0
     end do
   end do
   !$omp end parallel do
@@ -556,6 +569,7 @@ module subroutine dispose_bedslide(gm, p, g, s)
   if (allocated(bsl%ws)) deallocate(bsl%ws)
   if (allocated(bsl%q)) deallocate(bsl%q)
   if (allocated(bsl%rel)) deallocate(bsl%rel)
+  if (allocated(bsl%nst)) deallocate(bsl%nst)
   bsl%nrelclip = 0
   bsl%vrel = 0.0
   bsl%vstop = 0.0
@@ -585,6 +599,11 @@ subroutine save_bedslide(p, g, s)
     open(newunit=un, file=trim(p%dir_save)//'/geomorph_bedslide.dat', form='unformatted', &
          status='replace')
     call fileio_write_rle(un, wk)
+  end if
+  ! 低速の連続 tick 数(bs_tstop の途中経過。書き並びは restore と同時に更新)
+  call par_gather_to(wk, bsl%nst)
+  if (is_root) then
+    call fileio_write_rle(un, wk)
     close(un)
   end if
 end subroutine
@@ -610,10 +629,13 @@ subroutine restore_bedslide(p, g, s)
     allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
     open(newunit=un, file=fname, form='unformatted', status='old')
     call fileio_read_rle(un, wk)
-    close(un)
     call par_scatter_cell(wk, s%hb)
+    call fileio_read_rle(un, wk)
+    close(un)
+    call par_scatter_cell(wk, bsl%nst)
   else
     call par_scatter_cell(dum, s%hb)
+    call par_scatter_cell(dum, bsl%nst)
   end if
 end subroutine
 

@@ -159,6 +159,9 @@ module list_geomorph
     real :: bs_diagratio = 0.5857864376  ! 8方向配分の対角比(0 = 4近傍。p_diagratio と同義)
     real :: bs_cfl = 0.4             ! サブサイクルの安全係数
     integer :: bs_nsubmax = 10000    ! サブサイクル数の上限(超過は停止)
+    real :: bs_tstop = 0.0           ! 停止(固定)に要求する低速の持続時間 (s)。V < bs_vstop が
+                                     ! この時間続いたセルだけ hb を地形に固定する。0 = 即時
+                                     ! (突入時の一時的な失速で誤固定しないための閉じ)
     real :: bs_hplunge = 0.0         ! 混合体(hs)から底層への引き渡し(プランジ)の滞水深
                                      ! 閾値 (m)。h >= bs_hplunge のセルの hs をかさ体積で
                                      ! hb・z・sd へ移す。0 = 引き渡しなし。f_debris=1 が必要
@@ -235,7 +238,7 @@ subroutine list_geomorph_read(p, list)
   integer :: f_bedslide, f_bsres, bs_nsubmax
   character(len=256) :: fn_bsinit
   real :: bs_reltime, bs_rho, bs_mu, bs_xi, bs_vstop, bs_eps_s, bs_diagratio, bs_cfl
-  real :: bs_hplunge
+  real :: bs_hplunge, bs_tstop
 
   namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
@@ -250,7 +253,7 @@ subroutine list_geomorph_read(p, list)
                            f_slide, slide_c, slide_phi, slide_gamma, &
                            f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0, &
                            f_bedslide, fn_bsinit, bs_reltime, bs_rho, f_bsres, bs_mu, bs_xi, &
-                           bs_vstop, bs_eps_s, bs_diagratio, bs_cfl, bs_nsubmax, bs_hplunge
+                           bs_vstop, bs_eps_s, bs_diagratio, bs_cfl, bs_nsubmax, bs_hplunge, bs_tstop
 
   ! 型宣言のデフォルトを namelist 変数の初期値にする
   dt_geomorph = list%dt_geomorph
@@ -326,6 +329,7 @@ subroutine list_geomorph_read(p, list)
   bs_cfl = list%bs_cfl
   bs_nsubmax = list%bs_nsubmax
   bs_hplunge = list%bs_hplunge
+  bs_tstop = list%bs_tstop
 
   call par_info("reading list_geomorph in " // trim(p%fn_geomorph))
   open(newunit=un, file=trim(p%fn_geomorph), status='old', action='read', iostat=ios)
@@ -407,6 +411,7 @@ subroutine list_geomorph_read(p, list)
   list%bs_cfl = bs_cfl
   list%bs_nsubmax = bs_nsubmax
   list%bs_hplunge = bs_hplunge
+  list%bs_tstop = bs_tstop
 
 end subroutine
 
