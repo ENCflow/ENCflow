@@ -1,0 +1,74 @@
+!======================================================================
+! bedslide(構成4 の対照: 混合体のみ。f_bedslide=0)
+!   構成3 と同じ幾何・同じ崩壊(体積 19,110 m3)を、陸上は土石流モデル
+!   (混合体 hs。等価流体 Voellmy、fn_dbinit で t=1 s に流動化)で流下させ、
+!   滞水深 h >= bs_hplunge = 2 m のセルで hs を底層 hb に引き渡す
+!   (landslide_tsunami_plan.md §4.7)。引き渡された底層は水中を走って
+!   湖底平坦部に堆積する。param_mix.txt(f_bedslide=0。混合体のみ)との
+!   対比で、引き渡しなしでは汀線付近に積み上がって湖底に達しないことを
+!   同時に検定する(Check_bedslide.py plunge)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.05
+  t0 = 0
+  tt = 60
+  dt_disp = 5
+  dt_file = 60
+  dt_recrd = 60
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_result = 'result_mix'
+  dir_save = 'save_mix'
+  f_state_save = 1
+  f_check_cfl = 0
+  f_out_e = 1
+  f_out_z = 1
+  f_disp_vv = 1
+/
+
+&list_enc
+  f_gravity_correction = 1
+/
+
+&list_initial
+  f_htype = 2               ! 初期水位固定(湖の静水面)
+  e0 = 0.0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 600.0
+  ly = 200.0
+  nx = 120
+  ny = 40
+  f_ztype = 1
+  fn_z = 'z.txt'            ! 斜面+湖(make_init.py z)
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 12.0                ! 土層厚(崩壊深の供給源)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  ! --- 陸上: 土石流モデル(等価流体 Voellmy。work/slide_tsunami と同じ)---
+  f_debris = 1
+  f_dbed = 0                ! 交換なし(等価流体モード)
+  f_dbres = 4               ! Voellmy
+  db_mu = 0.15
+  db_xi = 500.0
+  db_cmin = 0.02
+  db_vstop = 0.05
+  f_dbstop = 1              ! 低速凝集(停止分を z へ固定)
+  db_wstop = 0.05
+  fluv_porosity = 0.4
+  fn_dbinit = 'db.txt'      ! 平面すべりの崩壊深(make_init.py db)。混合体として流動化
+  db_reltime = 1.0
+  db_relsat = 0.2           ! 疑似間隙水(乾いた岩屑)
+  f_bedslide = 0            ! 引き渡しなし(混合体のみ。構成4 の対照)
+/

@@ -157,6 +157,7 @@ module m_geomorph
     real :: bs_cfl = 0.4             ! サブサイクルの安全係数
     integer :: bs_nsubmax = 10000    ! サブサイクル数の上限
     real :: bs_reltime = 0.0         ! 底層の発火時刻 (s)
+    real :: bs_hplunge = 0.0         ! 混合体 hs → 底層 hb の引き渡し滞水深 (m。0 = なし)
     logical :: initialized = .false.
   end type
 
@@ -221,6 +222,7 @@ module m_geomorph
     integer :: nrelclip = 0          ! 崩壊深 > sd でクリップしたセル数(dispose で報告)
     real :: vrel = 0.0               ! 発火した底層の体積 (m3。ランク局所)
     real :: vstop = 0.0              ! 停止して固定した体積 (m3。ランク局所)
+    real :: vplunge = 0.0            ! 混合体から引き渡された体積 (m3 かさ。ランク局所)
     integer :: nsubtot = 0           ! サブサイクル総数(ランク共通)
     integer :: ntick = 0             ! 底層が動いた更新回数
   end type

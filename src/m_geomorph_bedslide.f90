@@ -31,7 +31,17 @@
 !     ドナー律速 1 サブサイクルの総流出 ≤ hb·A(係数 f = min(1, hb·A/(dt·Q_c))
 !               を送り手の全エッジに一様に掛ける → hb ≥ 0 が構造的に成立)
 !
+!   【段階2: 混合体からの引き渡し(プランジ。bs_hplunge > 0 かつ f_debris=1)】
+!   滞水深 h ≥ bs_hplunge のセルで、水柱に混ざる固体 hs をかさ体積
+!   Δ = hs/(1−λ) に換算して hb・z・sd へ移す(hs → 0)。表面 z+h+hs は
+!   固体分だけ保存され、間隙分は f_dbwet=1 なら水柱から埋没(h −= λ·s_b·Δ。
+!   残量でクランプ)、f_dbwet=0 なら表面が間隙分だけ上がる(乾燥セルの
+!   全量繰り入れと同じ規約)。混合体の運動量は失われる(底層は慣性なし)。
+!   セル局所(近傍参照なし)。陸上を混合体で流下した土石流が滞水域に
+!   入った瞬間に底層へ変わり、水中を走る — landslide_tsunami_plan.md §4.7
+!
 !   【1 tick の処理】
+!     (0') プランジ引き渡し(自帯。上記)
 !     (0) hb の全域最大が 0 なら return(allreduce。全ランク同一)
 !     (1) z・h・hb のハロ交換(他プロセスの帯内 z 更新・swflow の h 更新・
 !         前 tick の停止を配布。§28.2 の実バグの教訓)
@@ -81,8 +91,13 @@ module subroutine init_bedslide(gm, p, g, s, list)
   if (gm%morfac /= 1.0) then
     call par_stop("list_geomorph: f_bedslide requires morfac=1 (event-scale computation)")
   end if
-  if (len_trim(list%fn_bsinit) == 0) then
-    call par_stop("list_geomorph: f_bedslide=1 requires fn_bsinit(崩壊深分布 = 発火与件)")
+  if (list%bs_hplunge < 0.0) call par_stop("list_geomorph: bs_hplunge must be >= 0")
+  if (list%bs_hplunge > 0.0 .and. gm%f_debris <= 0) then
+    call par_stop("list_geomorph: bs_hplunge > 0(混合体からの引き渡し)requires f_debris=1")
+  end if
+  if (len_trim(list%fn_bsinit) == 0 .and. list%bs_hplunge <= 0.0) then
+    call par_stop("list_geomorph: f_bedslide=1 requires fn_bsinit(崩壊深分布 = 発火与件)" &
+                  // " or bs_hplunge > 0(混合体からの引き渡し)")
   end if
   if (list%bs_rho <= bs_rhow) then
     call par_stop("list_geomorph: f_bedslide requires bs_rho > 1000 kg/m3" &
@@ -115,6 +130,7 @@ module subroutine init_bedslide(gm, p, g, s, list)
   gm%bs_cfl = list%bs_cfl
   gm%bs_nsubmax = list%bs_nsubmax
   gm%bs_reltime = list%bs_reltime
+  gm%bs_hplunge = list%bs_hplunge
 
   ! --- 8近傍の幾何(m_gwflow_lateral / init_fluvial と同一の配分則) ---
   dr = sqrt(g%dx**2 + g%dy**2)
@@ -152,16 +168,19 @@ module subroutine init_bedslide(gm, p, g, s, list)
   allocate(bsl%ws(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(bsl%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
 
-  ! --- 発火与件(崩壊深分布。全ランク冗長の全域読み。read_release と同じ流儀) ---
-  allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-  call fileio_read_matrix(trim(p%dir_data)//"/"//trim(list%fn_bsinit), g%nx, g%ny, wk, &
-                          p%f_input_mode)
-  if (minval(wk) < 0.0) then
-    call par_stop("list_geomorph: fn_bsinit release depth has negative values: " &
-                  // trim(list%fn_bsinit))
+  ! --- 発火与件(崩壊深分布。全ランク冗長の全域読み。read_release と同じ流儀。
+  !     未指定(プランジ引き渡しのみ)なら rel は未確保 = 発火なし) ---
+  if (len_trim(list%fn_bsinit) > 0) then
+    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
+    call fileio_read_matrix(trim(p%dir_data)//"/"//trim(list%fn_bsinit), g%nx, g%ny, wk, &
+                            p%f_input_mode)
+    if (minval(wk) < 0.0) then
+      call par_stop("list_geomorph: fn_bsinit release depth has negative values: " &
+                    // trim(list%fn_bsinit))
+    end if
+    allocate(bsl%rel(1:g%nx, dcp%js:dcp%je), source = wk(1:g%nx, dcp%js:dcp%je))
+    deallocate(wk)
   end if
-  allocate(bsl%rel(1:g%nx, dcp%js:dcp%je), source = wk(1:g%nx, dcp%js:dcp%je))
-  deallocate(wk)
 
   ! --- restore(私有ファイル。契約5) ---
   if (p%f_state_restore > 0) call restore_bedslide(p, g, s)
@@ -296,6 +315,9 @@ module subroutine calc_bedslide(gm, g, s, dtw)
   logical :: okc, last
 
   ainv = 1.0 / bsl%area
+
+  ! --- (0') 混合体からの引き渡し(プランジ。セル局所・自帯) ---
+  if (gm%bs_hplunge > 0.0) call plunge_cells(gm, g, s)
 
   ! --- (0) 動く底層があるか(全ランク同一の判定) ---
   w1(1) = 0.0
@@ -446,6 +468,45 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 混合体(hs)から底層(hb)への引き渡し(プランジ。ヘッダ参照)
+!   Δ = hs·poroi(かさ体積)。hs → 0、hb・z・sd += Δ。間隙水は f_dbwet=1 の
+!   ときだけ水柱から埋没(h −= λ·s_b·Δ、残量でクランプ)。e の回復は
+!   m_geomorph_calc の末尾(本モジュールの契約)
+!----------------------------------------------------------------------
+subroutine plunge_cells(gm, g, s)
+  type(t_geomorph), intent(in) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real :: dd, dhw, vsum
+
+  vsum = 0.0
+  !$omp parallel do schedule(static) private(i, j, dd, dhw) reduction(+: vsum)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      if (s%hs(i,j) <= 0.0) cycle
+      if (s%h(i,j) < gm%bs_hplunge) cycle
+      dd = s%hs(i,j) * gm%poroi
+      s%hs(i,j) = 0.0
+      s%hb(i,j) = s%hb(i,j) + dd
+      s%z(i,j) = s%z(i,j) + dd
+      s%sd(i,j) = s%sd(i,j) + dd
+      if (gm%f_dbwet == 1) then
+        dhw = -gm%db_lamsb * dd
+        dhw = max(dhw, -max(s%h(i,j), 0.0))
+        s%h(i,j) = s%h(i,j) + dhw
+      end if
+      vsum = vsum + dd
+    end do
+  end do
+  !$omp end parallel do
+  bsl%vplunge = bsl%vplunge + vsum * bsl%area
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 台帳の報告・私有 save・作業領域の解放
 !----------------------------------------------------------------------
 module subroutine dispose_bedslide(gm, p, g, s)
@@ -453,7 +514,7 @@ module subroutine dispose_bedslide(gm, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real :: vsum(1:3), hsum
+  real :: vsum(1:4), hsum
   integer :: i, j
   character(len=256) :: msg
 
@@ -472,11 +533,12 @@ module subroutine dispose_bedslide(gm, p, g, s)
   vsum(1) = bsl%vrel
   vsum(2) = bsl%vstop
   vsum(3) = hsum * bsl%area
+  vsum(4) = bsl%vplunge
   call par_allreduce_sumr(vsum)
   if (is_root) then
-    write(msg,'(a,es12.4,a,es12.4,a,es12.4,a)') &
-      " geomorph: bedslide released ", vsum(1), " m3, stopped ", vsum(2), &
-      " m3, still moving ", vsum(3), " m3"
+    write(msg,'(a,es12.4,a,es12.4,a,es12.4,a,es12.4,a)') &
+      " geomorph: bedslide released ", vsum(1), " m3, plunged ", vsum(4), &
+      " m3, stopped ", vsum(2), " m3, still moving ", vsum(3), " m3"
     call par_info(trim(msg))
   end if
   if (bsl%ntick > 0) then
@@ -497,6 +559,7 @@ module subroutine dispose_bedslide(gm, p, g, s)
   bsl%nrelclip = 0
   bsl%vrel = 0.0
   bsl%vstop = 0.0
+  bsl%vplunge = 0.0
   bsl%nsubtot = 0
   bsl%ntick = 0
 end subroutine

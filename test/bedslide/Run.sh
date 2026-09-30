@@ -4,6 +4,7 @@
 # 構成1: 格子沿い斜面の Voellmy 速度(重心移動 vs 解析解)
 # 構成2: 45° 回転斜面(構成1 との一致 = 8 近傍化の格子依存の検出器)
 # 構成3: 斜面→湖の突入・水中ランアウト・造波・台帳
+# 構成4: 段階2 プランジ引き渡し(混合体→底層)と混合体のみの対照
 # 合否は Check_bedslide.py。save は save*_serial にも複製(Run_MPI 比較用)
 
 sdir=$(dirname "$(readlink -f "$0")")
@@ -29,6 +30,14 @@ set +o pipefail
 echo ""
 python3 "$sdir/Check_bedslide.py" tsunami || rc=1
 rm -rf save_serial && cp -r save save_serial
+
+set -o pipefail
+./encflow param_plunge.txt | tee Screen_plunge.log || exit 1
+./encflow param_mix.txt | tee Screen_mix.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_bedslide.py" plunge || rc=1
+rm -rf save_plunge_serial && cp -r save_plunge save_plunge_serial
 
 if [ $rc -eq 0 ]; then
     echo "=== bedslide 検定 PASS ==="

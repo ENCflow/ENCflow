@@ -11,6 +11,11 @@
 #   tsunami: 構成3 の result
 #     (1) 台帳(同上)、(2) Σh 不変、(3) 平坦湖底への堆積、(4) 造波、
 #     (5) 発火体積 = 停止 + 移動中(Screen_tsunami.log)
+#   plunge : 構成4(混合体→引き渡し→底層)result_plunge と対照 result_mix
+#     (1) 固体台帳: Σhs + (1−λ)Σ(z−z0) = 0(save の倍精度。hb は z の内数)
+#     (2) 水の台帳: Σh − Σh0 = 疑似間隙水 λ·relsat·ΣD(f_dbwet=0 では引き渡しで h 不変)
+#     (3) 引き渡し体積 > 0(Screen_plunge.log)、平坦湖底(x≥300)へ堆積 > MIN_DEP
+#     (4) 対照(混合体のみ)は平坦湖底に達しない(堆積 < MIN_DEP)
 #   出力は分布テキスト(Z0000 / Z9998・Sd・Hb・H・E の最終フレーム)を読む
 import sys, math, re, struct
 
@@ -56,7 +61,7 @@ def read_rle_array(f, ntot):
     return out
 
 
-def load_save(savedir, nx, ny):
+def load_save(savedir, nx, ny, with_hs=False):
     """state.dat(h, z, hrs, hg, sd, hs)と geomorph_bedslide.dat(hb)を倍精度で読む"""
     ntot = nx * ny
     with open(savedir + "/state.dat", "rb") as f:
@@ -65,8 +70,14 @@ def load_save(savedir, nx, ny):
         read_rle_array(f, ntot)     # hrs
         read_rle_array(f, ntot)     # hg
         sd = read_rle_array(f, ntot)
-    with open(savedir + "/geomorph_bedslide.dat", "rb") as f:
-        hb = read_rle_array(f, ntot)
+        hs = read_rle_array(f, ntot)
+    try:
+        with open(savedir + "/geomorph_bedslide.dat", "rb") as f:
+            hb = read_rle_array(f, ntot)
+    except FileNotFoundError:
+        hb = [0.0] * ntot
+    if with_hs:
+        return h, z, sd, hb, hs
     return h, z, sd, hb
 
 
@@ -187,6 +198,40 @@ if mode == "bench":
     diff = abs(disp["rot"] - disp["bench"]) / disp["bench"]
     print("    (参考)45° 回転 / 格子沿い の通過速度 = %.3f / %.3f m/s (差 %.2f%%)"
           % (disp["rot"], disp["bench"], 100 * diff))
+elif mode == "plunge":
+    PORO, RELSAT = 0.4, 0.2                  # param_plunge / param_mix と対
+    zin = read_mat("z.txt"); D = read_mat("db.txt")
+    z0_of = lambda idx: zin[idx // NX3][idx % NX3]
+    ntot = NX3 * NY3
+    flat = [idx for idx in range(ntot) if (idx % NX3 + 0.5) * DX3 >= XFLAT]
+    dep = {}
+    for cfg in ("plunge", "mix"):
+        h, z, sd, hb, hs = load_save("save_" + cfg, NX3, NY3, with_hs=True)
+        sres = sum(hs) + (1.0 - PORO) * sum(z[idx] - z0_of(idx) for idx in range(ntot))
+        rock = max(abs((z[idx] - sd[idx]) - (z0_of(idx) - 12.0)) for idx in range(ntot))
+        ok1 = abs(sres) < TOL_SUM and rock < TOL_SUM
+        ok = ok1 and ok
+        print("(1) 固体台帳[%s]: sum(hs)+(1-λ)sum(dz) = %.2e, max|d(z-sd)| = %.2e (tol %.0e) : %s"
+              % (cfg, sres, rock, TOL_SUM, "PASS" if ok1 else "FAIL"))
+        h0 = [max(0.0 - z0_of(idx), 0.0) for idx in range(ntot)]
+        wres = sum(h) - sum(h0) - PORO * RELSAT * sum(map(sum, D))
+        ok2 = abs(wres) < TOL_SUM * 1.0e3
+        ok = ok2 and ok
+        print("(2) 水の台帳[%s]: sum(h) - sum(h0) - λ·relsat·ΣD = %.2e m*cell : %s"
+              % (cfg, wres, "PASS" if ok2 else "FAIL"))
+        dep[cfg] = max(z[idx] - z0_of(idx) for idx in flat)
+    txt = open("Screen_plunge.log").read()
+    mm = re.search(r"plunged\s+([0-9.E+-]+) m3", txt)
+    vpl = float(mm.group(1)) if mm else -1.0
+    vbulk = sum(map(sum, D)) * DX3 * DX3
+    ok3 = 0.0 < vpl <= vbulk * (1.0 + 1.0e-3) and dep["plunge"] > MIN_DEP
+    ok = ok3 and ok
+    print("(3) 引き渡し: plunged %.0f m3 (放出かさ体積 %.0f)、平坦湖底 max dz = %.3f m (tol %.2f) : %s"
+          % (vpl, vbulk, dep["plunge"], MIN_DEP, "PASS" if ok3 else "FAIL"))
+    ok4 = dep["mix"] < MIN_DEP
+    ok = ok4 and ok
+    print("(4) 対照(混合体のみ): 平坦湖底 max dz = %.3f m (< %.2f で湖底に達しない) : %s"
+          % (dep["mix"], MIN_DEP, "PASS" if ok4 else "FAIL"))
 else:
     d = load("result")
     z0_of = lambda idx: max(ST * (200.0 - (idx % NX3 + 0.5) * DX3), -40.0)
@@ -216,7 +261,7 @@ else:
     print("(4) 造波    : 平坦湖底部の水面最大 = %.3f m (tol %.2f) : %s"
           % (etamax, MIN_ETA, "PASS" if ok4 else "FAIL"))
     txt = open("Screen_tsunami.log").read()
-    mm = re.search(r"bedslide released\s+([0-9.E+-]+) m3, stopped\s+([0-9.E+-]+) m3, still moving\s+([0-9.E+-]+)", txt)
+    mm = re.search(r"bedslide released\s+([0-9.E+-]+) m3, plunged\s+[0-9.E+-]+ m3, stopped\s+([0-9.E+-]+) m3, still moving\s+([0-9.E+-]+)", txt)
     ok5 = False
     if mm:
         rel, stp, mov = (float(v) for v in mm.groups())

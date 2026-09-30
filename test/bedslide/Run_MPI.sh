@@ -41,4 +41,12 @@ set +o pipefail
 echo ""
 python3 "$sdir/Check_bedslide.py" tsunami || rc=1
 cmp_save save
+
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_plunge.txt | tee Screen_plunge.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_mix.txt | tee Screen_mix.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_bedslide.py" plunge || rc=1
+cmp_save save_plunge
 exit $rc
