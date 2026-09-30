@@ -1,0 +1,66 @@
+!======================================================================
+! bedslide(構成2: 45° 回転した等勾配斜面(格子依存の検出器))
+!   等勾配斜面(tanθ=0.4, 80m x 20m, dx=1)に厚さ D=1 m の帯
+!   (x∈[5,25], y∈[5,15])を t=0 で可動化し、慣性なし Voellmy 底層の
+!   平衡速度 V = √(ξ hb (tanθ − μ)) = √(200・1・0.3) = 7.746 m/s で
+!   帯が平行移動することを、hb の重心の移動速度で検定する。
+!   水なし(h=0 → Φ = z, b = 1)。閉領域(壁)。
+!   構成2(param_rot.txt)は同じ帯を 45° 回転した斜面に置き、重心の
+!   移動距離が構成1と一致することで 8 近傍化の格子依存を検出する。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.05
+  t0 = 0
+  tt = 1
+  dt_disp = 1
+  dt_file = 1
+  dt_recrd = 1
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_result = 'result_rot'
+  dir_save = 'save_rot'
+  f_state_save = 1
+  f_check_cfl = 0
+  f_out_z = 1
+/
+
+&list_enc
+  f_gravity_correction = 1
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 乾いた斜面
+/
+
+&list_geoinfo
+  lx = 60.0
+  ly = 60.0
+  nx = 60
+  ny = 60
+  f_ztype = 1
+  fn_z = 'zrot.txt'         ! 45° 回転した等勾配斜面(make_init.py zrot)
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 3.0                 ! 土層厚(可動化 D=1 の供給源)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_bedslide = 1            ! 動く底層
+  fn_bsinit = 'dbrot.txt'  ! 全域一様 D=1 m(make_init.py dbrot)
+  bs_reltime = 0.0          ! 最初の更新で可動化
+  bs_rho = 2000.0           ! かさ密度(乾燥なので浮力は効かない)
+  f_bsres = 1               ! Voellmy
+  bs_mu = 0.1
+  bs_xi = 200.0
+  bs_vstop = 0.01
+  bs_eps_s = 0.02
+  bs_cfl = 0.4
+/

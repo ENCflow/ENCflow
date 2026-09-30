@@ -141,6 +141,25 @@ module list_geomorph
                                      ! (例: 18000〜20000。湿潤・飽和の区別は
                                      ! 一律 γt の近似)
 
+    integer :: f_bedslide = 0        ! 動く底層(地滑り土塊の底層すべり。z・sd の内数
+                                     ! hb を慣性なし摩擦支配流で動かし、移動海底として
+                                     ! 水面を変位させる = 地滑り津波)(0:無効, 1:有効)。
+                                     ! docs/landslide_tsunami_plan.md
+    character(len=256) :: fn_bsinit = ""  ! 底層の崩壊深分布ファイル (m)。指定で発火機構が
+                                     ! 有効(f_bedslide=1 では必須)
+    real :: bs_reltime = 0.0         ! 底層の発火時刻 (s)。t0 以前なら最初の更新で発火
+    real :: bs_rho = 0.0             ! 土塊のかさ密度 ρs (kg/m3。間隙込み)。必須
+                                     ! (浮力 r = ρw/ρs。ρw = 1000 固定)
+    integer :: f_bsres = 1           ! 底層の抵抗則(1:Voellmy(慣性なし。速度
+                                     ! V = √(ξ hb (S − μ b))), 2:Bingham〔予約〕)
+    real :: bs_mu = 0.0              ! Voellmy 摩擦係数 μ。必須
+    real :: bs_xi = 0.0              ! Voellmy 乱流係数 ξ (m/s²)。必須
+    real :: bs_vstop = 0.0           ! 停止判定の速度閾値 (m/s)。必須(未満で hb を z に固定)
+    real :: bs_eps_s = 0.02          ! 降伏近傍の線形化幅(無次元勾配。安定条件の上限を決める)
+    real :: bs_diagratio = 0.5857864376  ! 8方向配分の対角比(0 = 4近傍。p_diagratio と同義)
+    real :: bs_cfl = 0.4             ! サブサイクルの安全係数
+    integer :: bs_nsubmax = 10000    ! サブサイクル数の上限(超過は停止)
+
     ! 将来のプロセス追加はここにフラグとパラメータを足す
     ! (例: f_badland 崩壊性浸食)
   end type
@@ -210,6 +229,9 @@ subroutine list_geomorph_read(p, list)
   real :: wthr_p0, wthr_sdstar
   integer :: f_uplift
   real :: uplift0
+  integer :: f_bedslide, f_bsres, bs_nsubmax
+  character(len=256) :: fn_bsinit
+  real :: bs_reltime, bs_rho, bs_mu, bs_xi, bs_vstop, bs_eps_s, bs_diagratio, bs_cfl
 
   namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
@@ -222,7 +244,9 @@ subroutine list_geomorph_read(p, list)
                            db_mu, db_xi, db_tauy, &
                            fn_dbinit, db_reltime, db_relsat, &
                            f_slide, slide_c, slide_phi, slide_gamma, &
-                           f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0
+                           f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0, &
+                           f_bedslide, fn_bsinit, bs_reltime, bs_rho, f_bsres, bs_mu, bs_xi, &
+                           bs_vstop, bs_eps_s, bs_diagratio, bs_cfl, bs_nsubmax
 
   ! 型宣言のデフォルトを namelist 変数の初期値にする
   dt_geomorph = list%dt_geomorph
@@ -285,6 +309,18 @@ subroutine list_geomorph_read(p, list)
   wthr_sdstar = list%wthr_sdstar
   f_uplift = list%f_uplift
   uplift0 = list%uplift0
+  f_bedslide = list%f_bedslide
+  fn_bsinit = list%fn_bsinit
+  bs_reltime = list%bs_reltime
+  bs_rho = list%bs_rho
+  f_bsres = list%f_bsres
+  bs_mu = list%bs_mu
+  bs_xi = list%bs_xi
+  bs_vstop = list%bs_vstop
+  bs_eps_s = list%bs_eps_s
+  bs_diagratio = list%bs_diagratio
+  bs_cfl = list%bs_cfl
+  bs_nsubmax = list%bs_nsubmax
 
   call par_info("reading list_geomorph in " // trim(p%fn_geomorph))
   open(newunit=un, file=trim(p%fn_geomorph), status='old', action='read', iostat=ios)
@@ -353,6 +389,18 @@ subroutine list_geomorph_read(p, list)
   list%slide_c = slide_c
   list%slide_phi = slide_phi
   list%slide_gamma = slide_gamma
+  list%f_bedslide = f_bedslide
+  list%fn_bsinit = fn_bsinit
+  list%bs_reltime = bs_reltime
+  list%bs_rho = bs_rho
+  list%f_bsres = f_bsres
+  list%bs_mu = bs_mu
+  list%bs_xi = bs_xi
+  list%bs_vstop = bs_vstop
+  list%bs_eps_s = bs_eps_s
+  list%bs_diagratio = bs_diagratio
+  list%bs_cfl = bs_cfl
+  list%bs_nsubmax = bs_nsubmax
 
 end subroutine
 

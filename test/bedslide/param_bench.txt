@@ -1,0 +1,69 @@
+!======================================================================
+! bedslide(構成1: 格子に沿った等勾配斜面の Voellmy 速度検定)
+!   等勾配斜面(tanθ=0.4, 100m x 20m, dx=1)の全域に厚さ D=1 m の層を
+!   t=0 で可動化し、慣性なし Voellmy 底層の平衡速度
+!   V = √(ξ hb (tanθ − μ)) = √(200・1・0.3) = 7.746 m/s で層が平行移動する
+!   ことを、断面 x=55 m を通過した体積 = D・V・Ly・t で検定する(tt=1 s。
+!   上流端のスカーへの逆流を伴う希薄化(~20 m/s で下流へ広がる)と
+!   下流壁の堆積の背水が断面に届く前に測る)。
+!   水なし(h=0 → Φ = z, b = 1)。閉領域(壁)。
+!   構成2(param_rot.txt)は同じ層を 45° 回転した斜面に置き、断面 u=45 m
+!   の単位幅通過体積が構成1と一致することで 8 近傍化の格子依存を検出する。
+!   注意: 有限の帯(ソケット付き)は検定に使えない — make_init.py 参照
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.05
+  t0 = 0
+  tt = 1
+  dt_disp = 1
+  dt_file = 1
+  dt_recrd = 1
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_result = 'result_bench'
+  dir_save = 'save_bench'
+  f_state_save = 1
+  f_check_cfl = 0
+  f_out_z = 1
+/
+
+&list_enc
+  f_gravity_correction = 1
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 乾いた斜面
+/
+
+&list_geoinfo
+  lx = 100.0
+  ly = 20.0
+  nx = 100
+  ny = 20
+  f_ztype = 1
+  fn_z = 'zbench.txt'       ! 等勾配斜面 tanθ=0.4(make_init.py zbench)
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 3.0                 ! 土層厚(可動化 D=1 の供給源)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_bedslide = 1            ! 動く底層
+  fn_bsinit = 'dbbench.txt' ! 全域一様 D=1 m(make_init.py dbbench)
+  bs_reltime = 0.0          ! 最初の更新で可動化
+  bs_rho = 2000.0           ! かさ密度(乾燥なので浮力は効かない)
+  f_bsres = 1               ! Voellmy
+  bs_mu = 0.1
+  bs_xi = 200.0
+  bs_vstop = 0.01
+  bs_eps_s = 0.02
+  bs_cfl = 0.4
+/

@@ -147,6 +147,16 @@ module m_geomorph
     real :: wsdinv = 0.0             ! 1 / sd*
     integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
     real :: uprate = 0.0             ! 隆起速度 (m/s。mm/yr から換算)
+    integer :: f_bedslide = 0        ! 動く底層(0:無効, 1:有効。landslide_tsunami_plan.md)
+    real :: bs_r = 0.0               ! 浮力比 r = ρw/ρs
+    integer :: f_bsres = 1           ! 底層の抵抗則(1:Voellmy, 2:Bingham〔予約〕)
+    real :: bs_mu = 0.0              ! Voellmy 摩擦係数 μ
+    real :: bs_xi = 0.0              ! Voellmy 乱流係数 ξ (m/s²)
+    real :: bs_vstop = 0.0           ! 停止判定の速度閾値 (m/s)
+    real :: bs_eps_s = 0.0           ! 降伏近傍の線形化幅(無次元勾配)
+    real :: bs_cfl = 0.4             ! サブサイクルの安全係数
+    integer :: bs_nsubmax = 10000    ! サブサイクル数の上限
+    real :: bs_reltime = 0.0         ! 底層の発火時刻 (s)
     logical :: initialized = .false.
   end type
 
@@ -196,10 +206,29 @@ module m_geomorph
     integer :: nclip = 0             ! spl_dzmax クリップの発生セル数(累計)
     real :: vout = 0.0               ! 系外排出した固体土砂体積 (m3)(ランク局所累計)
   end type
+  type t_bedslide
+    real :: wl(1:8) = 0.0            ! k軸方向フラックスの通過幅 (m)(bs_diagratio 配分)
+    real :: rdr(1:8) = 0.0           ! 1 / 近傍セル中心間距離 (1/m)
+    real :: area = 0.0               ! セル面積 (m2)
+    real :: rdx2 = 0.0               ! 1/dx² + 1/dy²(拡散型安定条件用)
+    real :: dxmin = 0.0              ! min(dx, dy)(移流型 CFL 用)
+    real, allocatable :: vc(:,:)     ! セルの底層速度 V (m/s)(1:nx, jsh:jeh。帯±1 行を評価)
+    real, allocatable :: qt(:,:)     ! セルの総流出 hb・V・ws/S_c (m3/s)(同上)
+    real, allocatable :: ws(:,:)     ! 下り方向の配分重みの和 Σ ΔΦ_k/dist_k・wl_k (同上)
+    real, allocatable :: q(:,:,:)    ! エッジ流量4成分 (m3/s)。本プロセス私有(共有 wrk%q は
+                                     !   fluvial が開境界面の k>=5 スロットを書くため使わない)
+    real, allocatable :: rel(:,:)    ! 発火前の崩壊深 (m)(1:nx, js:je)。発火後に解放
+    integer :: nrelclip = 0          ! 崩壊深 > sd でクリップしたセル数(dispose で報告)
+    real :: vrel = 0.0               ! 発火した底層の体積 (m3。ランク局所)
+    real :: vstop = 0.0              ! 停止して固定した体積 (m3。ランク局所)
+    integer :: nsubtot = 0           ! サブサイクル総数(ランク共通)
+    integer :: ntick = 0             ! 底層が動いた更新回数
+  end type
   type(t_creep) :: crp
   type(t_fluvial) :: flv
   type(t_debris) :: dbr
   type(t_splash) :: spl
+  type(t_bedslide) :: bsl
   type(t_gmwork) :: wrk
 
   ! プロセス実装(init/calc)は submodule に分割(m_geomorph_creep /
@@ -292,6 +321,31 @@ module m_geomorph
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
+    end subroutine
+    module subroutine init_bedslide(gm, p, g, s, list)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine release_bedslide(gm, p, g, s)
+      type(t_geomorph), intent(in) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+    end subroutine
+    module subroutine calc_bedslide(gm, g, s, dtw)
+      type(t_geomorph), intent(in) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dtw
+    end subroutine
+    module subroutine dispose_bedslide(gm, p, g, s)
+      type(t_geomorph), intent(in) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
     end subroutine
     ! 共有スクラッチの確保口(実装は m_geomorph_creep 側。gfortran は
     ! private なモジュール手続きをローカルシンボルにするため、submodule
@@ -392,8 +446,12 @@ subroutine m_geomorph_init(gm, p, g, s)
 
   ! --- 土砂プロセス(掃流・浮遊・斜面・乾式・土石流)の共有設定 ---
   ! (f_wash は f_suspend 必須なので条件には現れない — init_wash が検証)
+  gm%f_bedslide = list%f_bedslide
+  if (gm%f_bedslide /= 0 .and. gm%f_bedslide /= 1) then
+    call par_stop("list_geomorph: f_bedslide must be 0 or 1")
+  end if
   if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 &
-      .or. gm%f_splash > 0) then
+      .or. gm%f_splash > 0 .or. gm%f_bedslide > 0) then
     ! 河床の物性(共有)
     if (list%fluv_porosity < 0.0 .or. list%fluv_porosity >= 1.0) then
       call par_stop("list_geomorph: fluv_porosity must be in [0,1)")
@@ -422,7 +480,8 @@ subroutine m_geomorph_init(gm, p, g, s)
     gm%wp0 = list%wthr_p0 * 1.0e-3 / kyr_s          ! mm/kyr -> m/s
     gm%wsdstar = list%wthr_sdstar
     gm%wsdinv = 1.0 / list%wthr_sdstar
-    if (.not. (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0)) then
+    if (.not. (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 &
+               .or. gm%f_splash > 0 .or. gm%f_bedslide > 0)) then
       call setup_sd(p, g, s)                        ! 風化のみでも sd を確保・転記
     end if
   end if
@@ -442,6 +501,8 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_debris > 0) call init_debris(gm, p, g, list)
   ! 瞬時流動化(f_release)は f_debris の付属機構(fn_dbinit の有無で有効化。
   ! 検証・読み込みは init_debris 内)
+  ! 動く底層(f_bedslide。s%hb の確保・restore・発火与件の読み込みまで)
+  if (gm%f_bedslide > 0) call init_bedslide(gm, p, g, s, list)
 
   ! 浮遊砂輸送の有効化を通知(swflow_enc がステップ内で s%hs を移流する。
   ! 初期化順序: 本 init は m_swflow_init より前)。土石流(f_debris)も
@@ -603,6 +664,14 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
   if (gm%f_creep > 0) call calc_creep(gm, g, s, dts)
   if (gm%f_wthr > 0) call calc_wthr(gm, g, s, dts)
   if (gm%f_uplift > 0) call calc_uplift(gm, g, s, dts)
+  ! 動く底層(地滑り土塊。z 更新プロセス群の末尾 = 他プロセスの z 更新を
+  ! 見た上で動く。calc_bedslide は冒頭で z・h のハロを最新化し、
+  ! サブサイクルごとに hb・z を交換する。発火(release_bedslide)は
+  ! hb を可動化するだけで z・sd・h を変えない — landslide_tsunami_plan.md §4.1)
+  if (gm%f_bedslide > 0) then
+    call release_bedslide(gm, p, g, s)
+    call calc_bedslide(gm, g, s, p%dt * gm%idt_geomorph)
+  end if
   ! (将来のプロセスの適用をここに追加する)
 
   ! 瞬時流動化(時刻交差で1回だけ発火。プロセス群の後に置く理由:
@@ -625,7 +694,7 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
   ! 近傍参照が、この1回の交換で賄われる(developer.md §11)
   call par_halo_cell(s%z)
   if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 .or. gm%f_wthr > 0 &
-      .or. gm%f_splash > 0) then
+      .or. gm%f_splash > 0 .or. gm%f_bedslide > 0) then
     call par_halo_cell(s%sd)
   end if
   ! s%hs のハロは swflow_enc のステップ頭交換が担う(移流の直前に最新化)
@@ -729,8 +798,13 @@ end subroutine
 !   fluvial のガード発動(dzmax クリップ・岩盤床クリップ)を報告する
 !   (ランク局所の診断なので par_warn。stderr のため回帰比較には入らない)
 !----------------------------------------------------------------------
-subroutine m_geomorph_dispose(gm)
+subroutine m_geomorph_dispose(gm, p, g, s)
   type(t_geomorph), intent(inout) :: gm
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  ! 底層 hb の私有 save と台帳報告(契約5。無効時は何もしない)
+  if (gm%f_bedslide > 0) call dispose_bedslide(gm, p, g, s)
   if (flv%nclip > 0) then
     call par_warn("geomorph: fluvial dzmax clip fired on " &
                   // itoa(flv%nclip) // " edges" &
