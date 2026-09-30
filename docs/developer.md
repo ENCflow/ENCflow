@@ -5703,5 +5703,7 @@ docs/landslide_tsunami_plan.md(§0 結論、§1 方式選定、§4 定式、
   §47・§0-5 の判断どおり採らない。方針内の残る選択肢は底層の速度緩和
   (擬似慣性)だが、速度を質量とともに運ばない限り運動量方程式の劣化版に
   なるため、§0-5 の境界の議論が先(見送り)。
-- 検証: test/bedslide 構成4 を f_bsvplunge=1 で運用。-O2 厳密数学の
-  逐次・np=2,4 の検定と save のバイト一致は本項末尾の追記参照。
+- 検証: test/bedslide 構成4 を f_bsvplunge=1 で運用。-O2 厳密数学で
+  逐次・np=2,4 の 4 構成が検定 PASS、save(state.dat / 3 面の
+  geomorph_bedslide.dat)が逐次とバイト一致(引き渡し時速度 3.7 → 7.4 m/s)。
+  release 復帰後の wave / debris PASS。
