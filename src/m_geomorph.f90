@@ -56,6 +56,9 @@ module m_geomorph
   real, parameter :: yr_s = 365.25 * 86400.0        ! 1 年 (s)
   real, parameter :: kyr_s = 1000.0 * 365.25 * 86400.0  ! 1 千年 (s)
   public :: t_geomorph
+  ! gm_param は submodule の init が呼ぶ。private のままだと gfortran(LTO)が
+  ! シンボルを局所化しリンク不能(§22 の実バグと同型。swflow の sect_* と同じ対処)
+  public :: gm_param
   public :: m_geomorph_init
   public :: m_geomorph_calc
   public :: m_geomorph_dispose
@@ -371,6 +374,42 @@ module m_geomorph
 
 contains
 
+!----------------------------------------------------------------------
+! パラメータの既定値の適用と採用値の表示(developer.md §62)
+!   未指定(val == unset。通常 0)なら def を採用し、採用値を必ず 1 行
+!   表示する(既定なら "(default)" を付ける — 物性値を黙って使わない)。
+!   submodule の各 init が「そのプロセスで必要な値」だけに対して呼ぶ。
+!   値域の検証は呼び出し側で従来どおり行う(明示された不正値は停止)
+!----------------------------------------------------------------------
+function gm_param(name, val, def, unit, unset) result(eff)
+  character(len=*), intent(in) :: name     ! namelist 名(表示用)
+  real, intent(in) :: val                  ! namelist の値
+  real, intent(in) :: def                  ! 未指定時の既定値
+  character(len=*), intent(in) :: unit     ! 単位(先頭に空白。無次元は "")
+  real, intent(in), optional :: unset      ! 未指定の番兵(省略時 0.0)
+  real :: eff
+  real :: us
+  logical :: isdef
+  character(len=32) :: buf
+  character(len=:), allocatable :: str
+  us = 0.0
+  if (present(unset)) us = unset
+  isdef = (val == us)
+  eff = val
+  if (isdef) eff = def
+  if (abs(eff) >= 1.0e5 .or. (abs(eff) < 1.0e-3 .and. eff /= 0.0)) then
+    write(buf, '(es12.4)') eff
+  else
+    write(buf, '(f0.4)') eff
+  end if
+  buf = adjustl(buf)
+  if (buf(1:1) == '.') buf = '0'//trim(buf)      ! gfortran の f0 は先頭 0 を省く
+  if (buf(1:2) == '-.') buf = '-0'//trim(buf(2:))
+  str = "geomorph: "//name//" = "//trim(buf)//unit
+  if (isdef) str = str//" (default)"
+  call par_info(str)
+end function
+
 
 !----------------------------------------------------------------------
 ! 地形変化モジュールを初期化する
@@ -384,6 +423,7 @@ subroutine m_geomorph_init(gm, p, g, s)
   type(t_geoinfo), intent(inout) :: g
   type(t_state), intent(inout) :: s
   type(t_list_geomorph) :: list
+  real :: wp0                          ! wthr_p0 の有効値(既定適用後。§62)
 
   ! 設定ファイル未指定 = 地形変化なし(デフォルトの enabled = .false.)
   if (len_trim(p%fn_geomorph) == 0) then
@@ -426,10 +466,12 @@ subroutine m_geomorph_init(gm, p, g, s)
 
   gm%f_creep = list%f_creep
   if (gm%f_creep > 0) then
-    if (list%creep_d <= 0.0) then
+    ! 既定 0.005 m²/yr = 1.6e-10 m²/s(斜面拡散係数の文献域 0.001〜0.05 m²/yr。
+    ! 地形時間の量 — morfac と組で解釈する。§62)
+    gm%creep_d = gm_param("creep_d", list%creep_d, 0.005 / yr_s, " m2/s")
+    if (gm%creep_d <= 0.0) then
       call par_stop("list_geomorph: f_creep requires creep_d > 0")
     end if
-    gm%creep_d = list%creep_d
     call init_creep(gm, p, g)
   end if
 
@@ -487,11 +529,11 @@ subroutine m_geomorph_init(gm, p, g, s)
   !   dsd/dt = W0·exp(−sd/sd*)。s%sd を要する(土砂プロセス未使用でも確保)
   gm%f_wthr = list%f_wthr
   if (gm%f_wthr > 0) then
-    if (list%wthr_p0 <= -9998.0) call par_stop("list_geomorph: f_wthr=1 requires wthr_p0 " &
-                                               // "(mm/kyr)")
-    if (list%wthr_p0 <= 0.0) call par_stop("list_geomorph: wthr_p0 must be > 0")
+    ! 既定 50 mm/kyr(土層生成速度 0.01〜0.1 mm/yr の中央。§62)
+    wp0 = gm_param("wthr_p0", list%wthr_p0, 50.0, " mm/kyr", unset=-9999.0)
+    if (wp0 <= 0.0) call par_stop("list_geomorph: wthr_p0 must be > 0")
     if (list%wthr_sdstar <= 0.0) call par_stop("list_geomorph: wthr_sdstar must be > 0")
-    gm%wp0 = list%wthr_p0 * 1.0e-3 / kyr_s          ! mm/kyr -> m/s
+    gm%wp0 = wp0 * 1.0e-3 / kyr_s                   ! mm/kyr -> m/s
     gm%wsdstar = list%wthr_sdstar
     gm%wsdinv = 1.0 / list%wthr_sdstar
     if (.not. (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 &
@@ -503,9 +545,9 @@ subroutine m_geomorph_init(gm, p, g, s)
   ! --- 隆起(§32)---
   gm%f_uplift = list%f_uplift
   if (gm%f_uplift > 0) then
-    if (list%uplift0 <= -9998.0) call par_stop("list_geomorph: f_uplift=1 requires uplift0 " &
-                                               // "(mm/yr)")
-    gm%uprate = list%uplift0 * 1.0e-3 / yr_s        ! mm/yr -> m/s(負=沈降も可)
+    ! 既定 1 mm/yr(造山帯の代表値の下限。負 = 沈降も可。§62)
+    gm%uprate = gm_param("uplift0", list%uplift0, 1.0, " mm/yr", unset=-9999.0) &
+                * 1.0e-3 / yr_s                     ! mm/yr -> m/s
   end if
 
   if (gm%f_fluvial > 0) call init_fluvial(gm, p, g, list)

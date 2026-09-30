@@ -21,9 +21,11 @@ module subroutine init_fluvial(gm, p, g, list)
   type(t_geoinfo), intent(in) :: g
   type(t_list_geomorph), intent(in) :: list
   real :: lpx, lpy, ldx, ldy, dr
+  real :: d50                          ! 既定適用後の有効値(§62)
 
   ! --- パラメータ検証 ---
-  if (list%fluv_d50 <= 0.0) call par_stop("list_geomorph: f_fluvial requires fluv_d50 > 0")
+  d50 = gm_param("fluv_d50", list%fluv_d50, 0.01, " m")   ! 砂礫床の中庸(§62)
+  if (d50 <= 0.0) call par_stop("list_geomorph: f_fluvial requires fluv_d50 > 0")
   if (list%fluv_tausc <= 0.0) call par_stop("list_geomorph: fluv_tausc must be > 0")
   if (list%fluv_dzmax <= 0.0) call par_stop("list_geomorph: fluv_dzmax must be > 0")
   if (list%fluv_diagratio < 0.0 .or. list%fluv_diagratio > 1.0) then
@@ -38,7 +40,7 @@ module subroutine init_fluvial(gm, p, g, list)
   end if
 
   gm%f_qbform = list%f_qbform
-  gm%d50 = list%fluv_d50
+  gm%d50 = d50
   gm%tausc = list%fluv_tausc
   gm%dzmax = list%fluv_dzmax
   gm%f_bcfeed = list%fluv_bcfeed

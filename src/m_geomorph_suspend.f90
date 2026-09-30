@@ -16,14 +16,18 @@ module subroutine init_suspend(gm, p, list)
   type(t_sysparam), intent(in) :: p
   type(t_list_geomorph), intent(in) :: list
   character(len=256) :: msg
+  real :: d50, esa                     ! 既定適用後の有効値(§62)
 
-  if (list%susp_d50 <= 0.0) call par_stop("list_geomorph: f_suspend requires susp_d50 > 0")
+  esa = list%susp_esa
+  d50 = gm_param("susp_d50", list%susp_d50, 0.0002, " m")   ! 細砂(§62)
+  if (d50 <= 0.0) call par_stop("list_geomorph: f_suspend requires susp_d50 > 0")
   if (list%susp_tausc <= 0.0) call par_stop("list_geomorph: susp_tausc must be > 0")
   if (list%susp_beta <= 0.0) call par_stop("list_geomorph: susp_beta must be > 0")
   if (list%susp_wf < 0.0) call par_stop("list_geomorph: susp_wf must be >= 0")
   select case (list%f_esform)
-    case (1)      ! 超過掃流力線形(簡易式)。esa が必須
-      if (list%susp_esa <= 0.0) then
+    case (1)      ! 超過掃流力線形(簡易式)。esa は校正係数(既定 1e-4。§62)
+      esa = gm_param("susp_esa", list%susp_esa, 1.0e-4, "")
+      if (esa <= 0.0) then
         call par_stop("list_geomorph: f_esform=1 requires susp_esa > 0")
       end if
     case (2)      ! 板倉・岸(定数は原式固定。esa/tausc は不使用)
@@ -33,10 +37,10 @@ module subroutine init_suspend(gm, p, list)
   end select
 
   gm%f_esform = list%f_esform
-  gm%sd50 = list%susp_d50
+  gm%sd50 = d50
   gm%stausc = list%susp_tausc
   gm%beta = list%susp_beta
-  gm%esa = list%susp_esa
+  gm%esa = esa
   if (list%susp_wf > 0.0) then
     gm%wf = list%susp_wf
   else

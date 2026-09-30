@@ -5887,3 +5887,69 @@ f_bedslide=1 + fn_bsinit(+ geomorph 有効時に必須の sd0)。
 - **関係するパラメータ**: bs_cfl(0.4。両条件の安全係数)、bs_eps_s
   (0.02)、bs_nsubmax(10000)、bs_hbmin(内部定数 1e-4 m。極薄の裾を
   不動扱いにして D が暴れるのを防ぐ)。
+
+## 62. geomorph パラメータの既定値方針(2026-09-30 実装)
+
+「専門外の人がとりあえず動かせる」という全体方針(§0)に沿い、geomorph の
+各プロセスで**未指定なら停止**だった物性・校正値に無難な既定値を与えた
+(§61.9 の bs_* を geomorph 全体に展開。合意の上)。最小入力は各プロセスの
+スイッチ(f_xxx = 1)だけになる。
+
+### 62.1 仕組み
+
+- namelist の既定は未指定の番兵のまま(0.0。wthr_p0・uplift0 は −9999)。
+  各 init が「そのプロセスで必要な値」だけについて `gm_param(name, val, def,
+  unit[, unset])` を呼び、番兵なら既定を採用し、**採用値を必ず 1 行表示**
+  する(既定なら "(default)" 付き。物性値を黙って使わない = §0「物理量は
+  直接与える」との折り合い)。値域の検証は従来どおり呼び出し側で行うため、
+  明示された不正値(負値・範囲外)は停止する。
+- gm_param は m_geomorph の module procedure で、submodule の init が呼ぶ。
+  private のままだと gfortran(LTO)がシンボルを局所化しリンク不能になる
+  (§22 の実バグと同型)ため public。
+- 「どちらか > 0 が必須」だった対(wash_kr/kf、spl_kr/kt)は、**両方未指定
+  のときだけ両方に既定**を入れ、片方だけ指定したときは他方の 0 を「その
+  項なし」の明示として尊重する。
+- 表示は f0.4(先頭 0 を補う)、|値| ≥ 1e5 または < 1e-3 は指数表記。
+
+### 62.2 値と根拠
+
+| パラメータ | 既定 | 根拠 |
+|---|---|---|
+| creep_d | 0.005 m²/yr(= 1.58e-10 m²/s) | 斜面拡散係数の文献域 0.001〜0.05 m²/yr の中央(Fernandes & Dietrich 1997 系)。地形時間の量 — morfac と組で解釈 |
+| fluv_d50 | 0.01 m | 砂床(0.5 mm)〜山地礫床(5 cm)の幾何平均付近 |
+| susp_d50 | 0.0002 m | 細砂 = 浮遊砂の代表。沈降速度は Rubey で導出 |
+| susp_esa | 1e-4 | 簡易式の係数(文献値なし)。test/suspend の校正値 |
+| wash_kr / wash_kf | 0.01 / 1e-5 m/s | 経験係数。test/wash の値。校正前提 |
+| spl_kr / spl_kt | 0.0005 / 0.05 | 経験係数。tests の中央値。校正前提 |
+| db_phi | 35° | 礫質土砂の内部摩擦角の代表(高橋 tanφ ≈ 0.7)。tests 30〜35 |
+| db_wstop | 0.05 m/s | tests 0.05〜0.1 |
+| db_d50 | 0.05 m | 石礫型の代表粒径 d_L(数 cm〜dm)。tests 0.01〜0.05 |
+| db_erest | 0.85 | 江頭系の慣用値 |
+| db_mu / db_xi | 0.2 / 1000 m/s² | RAMMS の中庸(雪崩 0.15〜0.3 / 1000〜3000)。岩屑なだれは μ 0.1・ξ 200〜500 と小さめ。慣性ありの混合体は RAMMS と同じ土俵なのでこちら。慣性なし底層 bs_mu/bs_xi(0.15/500)とは別校正 |
+| db_tauy | 10 kPa | VolcFlow 系の火砕流適用例 5〜50 kPa の下寄り(tests 4 kPa) |
+| slide_phi / slide_gamma | 30° / 18000 N/m³ | 表層崩壊の安定解析の慣用値。slide_c は元々 0 可 |
+| wthr_p0 | 50 mm/kyr | 土層生成速度 0.01〜0.1 mm/yr の中央 |
+| uplift0 | 1 mm/yr | 造山帯の代表値の下限(日本の山地 1〜数 mm/yr) |
+| bs_rho / bs_mu / bs_xi / bs_vstop | 2000 / 0.15 / 500 / 0.05 | §61.9 |
+
+既定のまま残した「必須」: fn_dbinit・fn_bsinit(与件そのもの)、morfac=1
+制約、f_wash の f_suspend 依存、値域チェック。地形時間の 3 量(creep_d・
+wthr_p0・uplift0)は幅が 2 桁あり morfac の解釈も要るため、既定は置くが
+表示で必ず目に入る形にした(利用者ガイドに注意書き)。型ごとの推奨値は
+users_guide/geomorph.md「パターン別の推奨値」に集約した(出典は §28 と
+debris_plan.md)。
+
+### 62.3 検証(2026-09-30)
+
+- 既存 reference は全て明示指定なので不変: 全 30 ケース PASS(reference
+  ビット一致・自己検定とも)。
+- 同値検定: 各既定値について「既定値を明示指定した run」と「省いた run」の
+  state.dat(bedslide は私有ファイルも)がバイト一致することをスクリプトで
+  確認(creep_d は Python で同じ倍精度値を 17 桁で与える。f_wthr/f_uplift
+  は test/creep に sd0 を足して構成)。対象 13 組
+  (creep/wthr+uplift/fluvial/suspend/wash/splash/debris φ/江頭 d50・e/
+  高橋・中川 d50/avalanche μ・ξ・wstop/volcano τ_y/slide φ・γ/bedslide)。
+- 実装中に検出した実バグ(記録): 文字列置換で `gm_param("fluv_d50",
+  list%fluv_d50, …)` の第 2 引数まで局所変数名に置き換えてしまい、未初期化
+  値(−9999)が既定判定に入って fluvial/suspend 系 5 ケースが停止した。
+  回帰一式が検出。機械的な一括置換は引数位置を目視すること。

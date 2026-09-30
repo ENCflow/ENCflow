@@ -34,21 +34,27 @@ contains
 module subroutine init_wash(gm, list)
   type(t_geomorph), intent(inout) :: gm
   type(t_list_geomorph), intent(in) :: list
+  real :: kr, kf                       ! 既定適用後の有効値(§62)
 
   ! 浮遊砂が輸送を担う(注入先 hs の移流・沈降がないと土砂が動けない)
   if (gm%f_suspend <= 0) then
     call par_stop("list_geomorph: f_wash requires f_suspend=1 " &
                   // "(detached soil is transported as suspended sediment)")
   end if
-  if (list%wash_kr < 0.0) call par_stop("list_geomorph: wash_kr must be >= 0")
-  if (list%wash_kf < 0.0) call par_stop("list_geomorph: wash_kf must be >= 0")
-  if (list%wash_kr <= 0.0 .and. list%wash_kf <= 0.0) then
-    call par_stop("list_geomorph: f_wash requires wash_kr > 0 or wash_kf > 0")
+  ! どちらも未指定なら両方に既定(経験係数。校正前提。§62)。片方だけ指定なら
+  ! 他方の 0 は「その項なし」の明示として尊重する
+  kr = list%wash_kr
+  kf = list%wash_kf
+  if (kr < 0.0) call par_stop("list_geomorph: wash_kr must be >= 0")
+  if (kf < 0.0) call par_stop("list_geomorph: wash_kf must be >= 0")
+  if (kr == 0.0 .and. kf == 0.0) then
+    kr = gm_param("wash_kr", kr, 0.01, "")
+    kf = gm_param("wash_kf", kf, 1.0e-5, " m/s")
   end if
   if (list%wash_tausc <= 0.0) call par_stop("list_geomorph: wash_tausc must be > 0")
 
-  gm%wkr = list%wash_kr
-  gm%wkf = list%wash_kf
+  gm%wkr = kr
+  gm%wkf = kf
   gm%wtausc = list%wash_tausc
 end subroutine
 

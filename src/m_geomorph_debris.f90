@@ -62,15 +62,24 @@ module subroutine init_debris(gm, p, g, list)
   type(t_list_geomorph), intent(in) :: list
   integer :: k
   real, parameter :: deg2rad = acos(-1.0) / 180.0
+  real :: phi, wstop, d50, erest, mu, xi, tauy, sphi, sgam   ! 既定適用後の有効値(§62)
+
+  ! 既定を適用しない経路では namelist の値をそのまま持つ(従来と同値)
+  wstop = list%db_wstop
+  erest = list%db_erest
+  mu = list%db_mu
+  xi = list%db_xi
+  tauy = list%db_tauy
 
   ! 内部摩擦角 φ は平衡濃度系の E-D(f_dbed=1,2,3)と濃度依存の降伏抵抗
   ! (f_dbres=1,2)が使う。等価流体構成(f_dbed=0,4 + f_dbres=0,3,4,5)では不要
   if ((list%f_dbed >= 1 .and. list%f_dbed <= 3) &
       .or. list%f_dbres == 1 .or. list%f_dbres == 2) then
-    if (list%db_phi <= 0.0 .or. list%db_phi >= 90.0) then
+    phi = gm_param("db_phi", list%db_phi, 35.0, " deg")   ! 礫質土砂の代表(§62)
+    if (phi <= 0.0 .or. phi >= 90.0) then
       call par_stop("list_geomorph: f_debris requires db_phi in (0, 90) deg")
     end if
-    gm%db_tanphi = tan(list%db_phi * deg2rad)
+    gm%db_tanphi = tan(phi * deg2rad)
     ! 石礫型領域(tanθ > 0.138)で分母 tanφ − tanθ が定義されるための下限
     if (gm%db_tanphi <= db_tan1) then
       call par_stop("list_geomorph: db_phi is too small, tan(phi) > 0.138 is required " &
@@ -96,7 +105,8 @@ module subroutine init_debris(gm, p, g, list)
       if (list%db_vstop <= 0.0) then
         call par_stop("list_geomorph: f_dbstop=1 requires db_vstop > 0")
       end if
-      if (list%db_wstop <= 0.0) then
+      wstop = gm_param("db_wstop", list%db_wstop, 0.05, " m/s")
+      if (wstop <= 0.0) then
         call par_stop("list_geomorph: f_dbstop=1 requires db_wstop > 0")
       end if
     case default
@@ -104,7 +114,7 @@ module subroutine init_debris(gm, p, g, list)
   end select
   gm%f_dbstop = list%f_dbstop
   gm%db_vstop = list%db_vstop
-  gm%db_wstop = list%db_wstop
+  gm%db_wstop = wstop
 
   ! E-D 式の選択
   !   2 = 江頭・芦田1992: E = |V|・C*・tan(θ−θe)。追加パラメータなし。
@@ -112,11 +122,16 @@ module subroutine init_debris(gm, p, g, list)
   !   3 = 高橋・中川1991: 飽和床侵食(式12)+慣性係数付き堆積(式27)。
   !       レートは δe/δd・q_T/d_L(db_d50 必須)。
   !       典拠: 高橋・中川, 新砂防 44(3), 1991, 12-19
+  ! 代表粒径は f_dbed=3 / f_dbres=2,3 が使う(既定 0.05 m = 石礫型の d_L。§62)
+  d50 = list%db_d50
+  if (list%f_dbed == 3 .or. list%f_dbres == 2 .or. list%f_dbres == 3) then
+    d50 = gm_param("db_d50", list%db_d50, 0.05, " m")
+  end if
   select case (list%f_dbed)
     case (0, 1, 2)      ! 0 = 交換なし(等価流体モード: 移流・停止のみ)
       gm%f_dbed = list%f_dbed
     case (3)
-      if (list%db_d50 <= 0.0) then
+      if (d50 <= 0.0) then
         call par_stop("list_geomorph: f_dbed=3 requires db_d50 > 0(レート q_T/d_L の粒径)")
       end if
       gm%f_dbed = list%f_dbed
@@ -144,10 +159,11 @@ module subroutine init_debris(gm, p, g, list)
       if (list%db_vstop <= 0.0) then
         call par_stop("list_geomorph: f_dbres=2 requires db_vstop > 0(降伏判定の閾値)")
       end if
-      if (list%db_d50 <= 0.0) then
+      if (d50 <= 0.0) then
         call par_stop("list_geomorph: f_dbres=2 requires db_d50 > 0(層流抵抗の h/d)")
       end if
-      if (list%db_erest <= 0.0 .or. list%db_erest > 1.0) then
+      erest = gm_param("db_erest", list%db_erest, 0.85, "")   ! 江頭系の慣用値(§62)
+      if (erest <= 0.0 .or. erest > 1.0) then
         call par_stop("list_geomorph: f_dbres=2 requires db_erest in (0, 1]" &
                       // "(粒子の反発係数。材料固有値 — 文献に既定なし)")
       end if
@@ -158,17 +174,21 @@ module subroutine init_debris(gm, p, g, list)
       if (list%db_vstop <= 0.0) then
         call par_stop("list_geomorph: f_dbres=3 requires db_vstop > 0(降伏判定の閾値)")
       end if
-      if (list%db_d50 <= 0.0) then
+      if (d50 <= 0.0) then
         call par_stop("list_geomorph: f_dbres=3 requires db_d50 > 0(抵抗則の d_L/h)")
       end if
       if (list%db_cmin <= 0.0 .or. list%db_cmin >= gm%db_cstar) then
         call par_stop("list_geomorph: db_cmin must be in (0, C*)")
       end if
     case (4)      ! Voellmy 等価流体(降伏 μ + 乱流項 gV²/(ξh)。RAMMS/Titan2D 系)
-      if (list%db_mu <= 0.0) then
+      ! 既定 μ=0.2, ξ=1000(RAMMS の中庸。雪崩 0.15〜0.3/1000〜3000、岩屑なだれは
+      ! μ 0.1・ξ 200〜500 と小さめ。慣性なし底層 bs_mu/bs_xi とは別校正。§62)
+      mu = gm_param("db_mu", list%db_mu, 0.2, "")
+      xi = gm_param("db_xi", list%db_xi, 1000.0, " m/s2")
+      if (mu <= 0.0) then
         call par_stop("list_geomorph: f_dbres=4 requires db_mu > 0(Voellmy 摩擦係数)")
       end if
-      if (list%db_xi <= 0.0) then
+      if (xi <= 0.0) then
         call par_stop("list_geomorph: f_dbres=4 requires db_xi > 0(Voellmy 乱流係数 m/s²)")
       end if
       if (list%db_vstop <= 0.0) then
@@ -178,7 +198,8 @@ module subroutine init_debris(gm, p, g, list)
         call par_stop("list_geomorph: db_cmin must be in (0, C*)")
       end if
     case (5)      ! 一定停止応力 τ_y + マニング合成(VolcFlow 型)
-      if (list%db_tauy <= 0.0) then
+      tauy = gm_param("db_tauy", list%db_tauy, 10000.0, " Pa")  ! 火砕流 5〜50 kPa の下寄り(§62)
+      if (tauy <= 0.0) then
         call par_stop("list_geomorph: f_dbres=5 requires db_tauy > 0(停止応力 Pa)")
       end if
       if (list%db_vstop <= 0.0) then
@@ -207,12 +228,12 @@ module subroutine init_debris(gm, p, g, list)
       call par_stop("list_geomorph: f_dbcurv must be 0 or 1")
   end select
   gm%f_dbcurv = list%f_dbcurv
-  gm%db_mu = list%db_mu
-  gm%db_xi = list%db_xi
-  gm%db_tauy = list%db_tauy
+  gm%db_mu = mu
+  gm%db_xi = xi
+  gm%db_tauy = tauy
   gm%f_dbres = list%f_dbres
-  gm%db_d50v = list%db_d50
-  gm%db_erest = list%db_erest
+  gm%db_d50v = d50
+  gm%db_erest = erest
   gm%db_cmin = list%db_cmin
   call m_swflow_enc_set_debris(gm%f_dbres, gm%db_tanphi, gm%sgrav, gm%db_vstop, &
                                gm%db_cstar, gm%db_cmin, gm%db_d50v, gm%db_erest, &
@@ -270,10 +291,13 @@ module subroutine init_debris(gm, p, g, list)
       call par_stop("list_geomorph: f_slide must be 0, 1(judge+fluidize) or 2(judge only)")
     end if
     if (list%slide_c < 0.0) call par_stop("list_geomorph: slide_c must be >= 0")
-    if (list%slide_phi <= 0.0 .or. list%slide_phi >= 90.0) then
+    ! 既定 φs=30°, γt=18000 N/m³(表層崩壊の安定解析の慣用値。§62)
+    sphi = gm_param("slide_phi", list%slide_phi, 30.0, " deg")
+    sgam = gm_param("slide_gamma", list%slide_gamma, 18000.0, " N/m3")
+    if (sphi <= 0.0 .or. sphi >= 90.0) then
       call par_stop("list_geomorph: f_slide requires slide_phi in (0, 90) deg")
     end if
-    if (list%slide_gamma <= 0.0) then
+    if (sgam <= 0.0) then
       call par_stop("list_geomorph: f_slide requires slide_gamma > 0 (N/m3)")
     end if
     if (list%db_relsat < 0.0 .or. list%db_relsat > 1.0) then
@@ -281,8 +305,8 @@ module subroutine init_debris(gm, p, g, list)
     end if
     gm%f_slide = list%f_slide
     gm%sl_c = list%slide_c
-    gm%sl_tanphi = tan(list%slide_phi * deg2rad)
-    gm%sl_gamma = list%slide_gamma
+    gm%sl_tanphi = tan(sphi * deg2rad)
+    gm%sl_gamma = sgam
     gm%db_relsat = list%db_relsat      ! gwflow 無効時の間隙水付与(release と共有)
     if (.not. allocated(dbr%sld)) then
       allocate(dbr%sld(1:g%nx, dcp%js:dcp%je), source = .false.)

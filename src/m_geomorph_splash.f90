@@ -44,20 +44,26 @@ module subroutine init_splash(gm, g, list)
   type(t_geomorph), intent(inout) :: gm
   type(t_geoinfo), intent(in) :: g
   type(t_list_geomorph), intent(in) :: list
+  real :: kr, kt                       ! 既定適用後の有効値(§62)
 
-  if (list%spl_kr < 0.0) call par_stop("list_geomorph: spl_kr must be >= 0")
-  if (list%spl_kt < 0.0) call par_stop("list_geomorph: spl_kt must be >= 0")
-  if (list%spl_kr <= 0.0 .and. list%spl_kt <= 0.0) then
-    call par_stop("list_geomorph: f_splash requires spl_kr > 0 or spl_kt > 0")
+  ! どちらも未指定なら両方に既定(経験係数。校正前提。§62)。片方だけ指定なら
+  ! 他方の 0 は「その項なし」の明示として尊重する
+  kr = list%spl_kr
+  kt = list%spl_kt
+  if (kr < 0.0) call par_stop("list_geomorph: spl_kr must be >= 0")
+  if (kt < 0.0) call par_stop("list_geomorph: spl_kt must be >= 0")
+  if (kr == 0.0 .and. kt == 0.0) then
+    kr = gm_param("spl_kr", kr, 0.0005, "")
+    kt = gm_param("spl_kt", kt, 0.05, "")
   end if
   if (list%spl_ca < 0.0) call par_stop("list_geomorph: spl_ca must be >= 0")
   if (list%spl_cb < 0.0) call par_stop("list_geomorph: spl_cb must be >= 0")
   if (list%spl_h <= 0.0) call par_stop("list_geomorph: spl_h must be > 0")
   if (list%spl_dzmax < 0.0) call par_stop("list_geomorph: spl_dzmax must be >= 0")
 
-  gm%skr = list%spl_kr
+  gm%skr = kr
   gm%sca = list%spl_ca
-  gm%skt = list%spl_kt
+  gm%skt = kt
   gm%scb = list%spl_cb
   gm%shexp = list%spl_h
   gm%sdzmax = list%spl_dzmax

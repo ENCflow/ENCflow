@@ -17,11 +17,11 @@ module list_geomorph
     ! --- プロセス別フラグ(排他選択ではなく重ね合わせ。0:無効) ---
     ! 各プロセスは独立に有効化でき、calc は有効なものを順に適用する
     integer :: f_creep = 0           ! 斜面クリープ(線形拡散)(0:無効, 1:有効)
-    real :: creep_d = 0.0            ! クリープ拡散係数 (m2/s)
+    real :: creep_d = 0.0            ! クリープ拡散係数 (m2/s)。0 = 既定 0.005 m2/yr(§62)
 
     integer :: f_fluvial = 0         ! 掃流砂 Exner(河床の浸食・堆積)(0:無効, 1:有効)
     integer :: f_qbform = 1          ! 流砂量式(1:芦田・道上, 2:MPM)
-    real :: fluv_d50 = 0.0           ! 代表粒径 (m)。f_fluvial=1 で必須
+    real :: fluv_d50 = 0.0           ! 代表粒径 (m)。0 = 既定 0.01(§62)
     real :: fluv_tausc = 0.05        ! 限界無次元掃流力 τ*c
     real :: fluv_porosity = 0.4      ! 河床の空隙率 λ
     real :: fluv_sgrav = 1.65        ! 土粒子の水中比重 s = (ρs - ρ)/ρ
@@ -33,7 +33,7 @@ module list_geomorph
 
     integer :: f_suspend = 0         ! 浮遊砂(移流+浸食・沈降)(0:無効, 1:有効)
     integer :: f_esform = 1          ! 平衡濃度式(1:超過掃流力線形(簡易), 2:板倉・岸)
-    real :: susp_d50 = 0.0           ! 浮遊砂の代表粒径 (m)。f_suspend=1 で必須
+    real :: susp_d50 = 0.0           ! 浮遊砂の代表粒径 (m)。0 = 既定 0.0002(§62)
     real :: susp_wf = 0.0            ! 沈降速度 (m/s)。0 なら Rubey 式で d50 から導出
     real :: susp_tausc = 0.05        ! 浮遊の限界無次元掃流力 τ*c
     real :: susp_beta = 1.0          ! 沈降の底面濃度係数(c_b = β・C)
@@ -72,7 +72,7 @@ module list_geomorph
                                      ! 1:低速凝集 — vv<db_vstop で超過濃度を河床へ)
     real :: db_vstop = 0.05          ! 停止判定の速度閾値 (m/s)。f_dbstop=1 の凝集と
                                      ! f_dbres=1 の降伏判定(静止維持)が共有する
-    real :: db_wstop = 0.0           ! 低速凝集の河床転換レート (m/s)。f_dbstop=1 で必須
+    real :: db_wstop = 0.0           ! 低速凝集の河床転換レート (m/s)。f_dbstop=1 で使用。0 = 既定 0.05
     integer :: f_dbres = 1           ! 抵抗則 (0:マニングのみ, 1:クーロン+マニング合成,
                                      ! 2:江頭構成則(降伏応力+粒子衝突・間隙流体の
                                      ! 層流抵抗。江頭ら1989 式(25)/Morpho2DH 式(17)(19)),
@@ -93,8 +93,8 @@ module list_geomorph
                                      ! 4:速度比例連行 E = δe・|V| — 雪崩・岩屑なだれの
                                      ! 走路連行(連行のみ。堆積は f_dbstop。連行可能層は
                                      ! sd(雪崩では雪の厚さ)。C >= db_cmin のセルのみ))
-    real :: db_d50 = 0.0             ! 代表粒径 (m)。f_dbres=2,3 / f_dbed=3 で必須
-    real :: db_erest = 0.0           ! 粒子の反発係数 e(0〜1)。f_dbres=2 で必須
+    real :: db_d50 = 0.0             ! 代表粒径 (m)。f_dbres=2,3 / f_dbed=3 で使用。0 = 既定 0.05
+    real :: db_erest = 0.0           ! 粒子の反発係数 e(0〜1)。f_dbres=2 で使用。0 = 既定 0.85
                                      ! (材料固有値。文献に既定値なし)
     real :: db_cmin = 0.02           ! 江頭層流則を適用する濃度下限(これ未満は
                                      ! マニング則 = 希薄側の閉じ。層流則は C→0 で
@@ -109,13 +109,13 @@ module list_geomorph
     real :: db_satbed = 1.0          ! 堆積層の飽和度 s_b(0〜1)。f_dbwet=1 で使用
                                      ! (高橋・中川1991 式(5)の記号。洞谷適用値は
                                      ! 勾配 21°以上で 0.8、以下で 1.0)
-    real :: db_mu = 0.0              ! Voellmy 摩擦係数 μ(無次元)。f_dbres=4 で必須
+    real :: db_mu = 0.0              ! Voellmy 摩擦係数 μ(無次元)。f_dbres=4 で使用。0 = 既定 0.2
                                      ! (雪崩 0.1〜0.3、岩屑なだれは体積とともに低下。
                                      ! 見かけ摩擦 H/L を直接与える — 体積依存式は
                                      ! 内蔵しない(§0: 物理量は直接与える))
-    real :: db_xi = 0.0              ! Voellmy 乱流係数 ξ (m/s²)。f_dbres=4 で必須
+    real :: db_xi = 0.0              ! Voellmy 乱流係数 ξ (m/s²)。f_dbres=4 で使用。0 = 既定 1000
                                      ! (雪崩・土石流の慣用範囲 200〜1000)
-    real :: db_tauy = 0.0            ! 一定停止応力 τ_y (Pa)。f_dbres=5 で必須
+    real :: db_tauy = 0.0            ! 一定停止応力 τ_y (Pa)。f_dbres=5 で使用。0 = 既定 10000
                                      ! (火砕流の適用例 5〜50 kPa(VolcFlow 系文献))
     integer :: f_dbcurv = 0          ! 曲率項(遠心加速度による垂直応力の増減を
                                      ! 降伏項に乗じる。0:なし, 1:有効。f_dbres=1〜4
@@ -135,13 +135,13 @@ module list_geomorph
                                      ! 間隙水圧は gwflow の飽和厚 hg/sy0 から
                                      ! (gwflow 無効なら 0)。debris_plan.md §2.5
     real :: slide_c = 0.0            ! 有効粘着力 c' (Pa)。f_slide=1 で必須(0 可)
-    real :: slide_phi = 0.0          ! 土のせん断抵抗角 φs (deg)。f_slide=1 で必須
-    real :: slide_gamma = 0.0        ! 飽和単位体積重量 γt (N/m3)。f_slide=1 で必須
+    real :: slide_phi = 0.0          ! 土のせん断抵抗角 φs (deg)。0 = 既定 30(§62)
+    real :: slide_gamma = 0.0        ! 飽和単位体積重量 γt (N/m3)。0 = 既定 18000(§62)
     integer :: f_wthr = 0            ! 基岩風化=土層生成(0:無効, 1:有効。§32)
-    real :: wthr_p0 = -9999.0        ! 裸岩での土層生成速度 (mm/kyr)。f_wthr=1 で必須
+    real :: wthr_p0 = -9999.0        ! 裸岩での土層生成速度 (mm/kyr)。未指定 = 既定 50(§62)
     real :: wthr_sdstar = 0.5        ! 生成の減衰深 sd* (m)
     integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
-    real :: uplift0 = -9999.0        ! 隆起速度 (mm/yr)。f_uplift=1 で必須
+    real :: uplift0 = -9999.0        ! 隆起速度 (mm/yr)。未指定 = 既定 1.0(§62)
                                      ! (例: 18000〜20000。湿潤・飽和の区別は
                                      ! 一律 γt の近似)
 

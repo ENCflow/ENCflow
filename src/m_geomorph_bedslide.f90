@@ -114,18 +114,10 @@ module subroutine init_bedslide(gm, p, g, s, list)
   ! 物性・校正値の既定(§61.9): 0(未指定)なら「とりあえず崩壊深分布だけで
   ! 回す」ための無難な値を入れ、採用値を明示表示する(黙って使わない)。
   ! 負値や 1000 以下の密度など明示された不正値は従来どおり停止
-  rho = list%bs_rho
-  if (rho == 0.0) rho = bs_rho_def
-  mu = list%bs_mu
-  if (mu == 0.0) mu = bs_mu_def
-  xi = list%bs_xi
-  if (xi == 0.0) xi = bs_xi_def
-  vstop = list%bs_vstop
-  if (vstop == 0.0) vstop = bs_vstop_def
-  call par_info("bedslide: bs_rho   = "//fmt_val(rho, " kg/m3", list%bs_rho == 0.0))
-  call par_info("bedslide: bs_mu    = "//fmt_val(mu, "", list%bs_mu == 0.0))
-  call par_info("bedslide: bs_xi    = "//fmt_val(xi, " m/s2", list%bs_xi == 0.0))
-  call par_info("bedslide: bs_vstop = "//fmt_val(vstop, " m/s", list%bs_vstop == 0.0))
+  rho = gm_param("bs_rho", list%bs_rho, bs_rho_def, " kg/m3")
+  mu = gm_param("bs_mu", list%bs_mu, bs_mu_def, "")
+  xi = gm_param("bs_xi", list%bs_xi, bs_xi_def, " m/s2")
+  vstop = gm_param("bs_vstop", list%bs_vstop, bs_vstop_def, " m/s")
   if (rho <= bs_rhow) then
     call par_stop("list_geomorph: f_bedslide requires bs_rho > 1000 kg/m3" &
                   // "(土塊のかさ密度は水より大きい)")
@@ -746,19 +738,5 @@ subroutine restore_bedslide(p, g, s)
   end if
 end subroutine
 
-!----------------------------------------------------------------------
-! 採用値の表示用(既定値なら "(default)" を付ける。§61.9)
-!----------------------------------------------------------------------
-function fmt_val(v, unit, is_def) result(str)
-  real, intent(in) :: v
-  character(len=*), intent(in) :: unit
-  logical, intent(in) :: is_def
-  character(len=:), allocatable :: str
-  character(len=32) :: buf
-  write(buf, '(f0.4)') v
-  if (buf(1:1) == '.') buf = '0'//trim(buf)      ! gfortran の f0 は先頭 0 を省く
-  str = trim(buf)//unit
-  if (is_def) str = str//" (default)"
-end function
 
 end submodule
