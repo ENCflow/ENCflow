@@ -192,6 +192,21 @@ module subroutine init_debris(gm, p, g, list)
                     // " 2(Egashira), 3(Takahashi-Nakagawa 1991), 4(Voellmy)" &
                     // " or 5(constant retarding stress)")
   end select
+  ! 曲率項(§28.10): 降伏項 a_y = ge・(摩擦係数) に遠心加速度の倍率
+  ! max(0, 1 + a_c/g_n) を乗じる。垂直応力に比例する降伏則(f_dbres=1〜4)
+  ! だけが対象で、τ_y 一定(f_dbres=5)には物理的に掛ける理由がない
+  select case (list%f_dbcurv)
+    case (0)
+      continue
+    case (1)
+      if (list%f_dbres < 1 .or. list%f_dbres > 4) then
+        call par_stop("list_geomorph: f_dbcurv=1 requires f_dbres=1..4" &
+                      // "(降伏項が垂直応力に比例する抵抗則)")
+      end if
+    case default
+      call par_stop("list_geomorph: f_dbcurv must be 0 or 1")
+  end select
+  gm%f_dbcurv = list%f_dbcurv
   gm%db_mu = list%db_mu
   gm%db_xi = list%db_xi
   gm%db_tauy = list%db_tauy
@@ -201,7 +216,7 @@ module subroutine init_debris(gm, p, g, list)
   gm%db_cmin = list%db_cmin
   call m_swflow_enc_set_debris(gm%f_dbres, gm%db_tanphi, gm%sgrav, gm%db_vstop, &
                                gm%db_cstar, gm%db_cmin, gm%db_d50v, gm%db_erest, &
-                               gm%db_mu, gm%db_xi, gm%db_tauy)
+                               gm%db_mu, gm%db_xi, gm%db_tauy, gm%f_dbcurv)
 
   ! 間隙水の連行(f_dbwet。高橋・中川1991 式(5)の源泉 i{c*+(1−c*)s_b} 形)
   select case (list%f_dbwet)

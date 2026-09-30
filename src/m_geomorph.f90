@@ -131,6 +131,8 @@ module m_geomorph
     real :: db_mu = 0.0              ! Voellmy 摩擦係数 μ(f_dbres=4)
     real :: db_xi = 0.0              ! Voellmy 乱流係数 ξ (m/s²)(f_dbres=4)
     real :: db_tauy = 0.0            ! 一定停止応力 τ_y (Pa)(f_dbres=5)
+    integer :: f_dbcurv = 0          ! 曲率項(降伏項の垂直応力に遠心加速度を算入。
+                                     !   実体は m_swflow_enc。§28.10)
     integer :: f_dbwet = 0           ! 間隙水の連行(0:無視, 1:飽和床の連行)
     real :: db_lamsb = 0.0           ! λ・s_b(前計算。連行水深 = λ・s_b・|Δz|)
     integer :: f_release = 0         ! 瞬時流動化(0:無効, 1:有効 = fn_dbinit 指定)

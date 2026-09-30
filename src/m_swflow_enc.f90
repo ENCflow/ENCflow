@@ -91,6 +91,16 @@ module m_swflow_enc
   real :: db_tauy = 0.0                     ! 一定停止応力 τ_y (Pa)(db_res=5)
   real, parameter :: db_rhow = 1000.0       ! 清水密度 (kg/m³)(τ_y を加速度に落とす
                                             !   換算。混合密度 ρm = ρw(1+sC))
+  ! 曲率項(developer.md §28.10。RAMMS: Fischer ら 2012 と同じ扱い)
+  !   垂直応力に遠心加速度 a_c = uᵀHu/√(1+|∇z|²)(H = z の Hessian、u = セル
+  !   流速ベクトル)を算入し、降伏項に倍率 max(0, 1 + a_c/g_n) を乗じる
+  !   (g_n = 垂直方向の重力 = √(g・ge)。ge = g cos²θ の Ni 補正と整合)。
+  !   凹(谷底・屈曲部外側)で減速、凸(遷急点・尾根)で摩擦低下。1+a_c/g_n<0
+  !   (浮上条件)は 0 に切る。a_c はセルごとに時刻 n の u, v, z で前計算
+  !   (curv_prepare。RK 内不変。hs と同じ近似)し、辺では両セルの平均。
+  !   f_dbcurv=0 では配列未確保・パス未実行・aye 不変(ビット一致)
+  integer :: db_curv = 0                    ! 曲率項の有無(f_dbcurv)
+  real, allocatable :: acv(:,:)             ! セルの遠心加速度 a_c (m/s²)(1:nx, jsh:jeh)
   ! 江頭構成則の定数(原式固定。典拠: 江頭・芦田・矢島・高濱(1989)の
   ! 抵抗則 = 江頭(1993)講座 式(25)、Morpho2DH Solver Manual 式(17)(19)。
   ! k_f は 0.16〜0.25 の範囲が示されており Morpho2DH の 0.16 を採用)
@@ -456,6 +466,9 @@ subroutine m_swflow_enc_init(p, g, b, s)
   have_swall = g%swall_active
   f_swall_mode = g%f_swall_mode             ! 検証は geoinfo(setup_seawall)済み
   have_width = g%width_active
+  ! 曲率項の作業配列(f_dbcurv=1 のみ。set_debris は geomorph init から
+  ! swflow init より前に呼ばれる契約なので db_curv はここで確定済み)
+  if (db_curv > 0) allocate(acv(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (f_bank_mode < e_bank_weir .or. f_bank_mode > e_bank_pump) then
     call par_stop("list_channel: f_bank_mode must be 0(overtopping only), " &
                   //"1(one-way sluice) or 2(forced drainage)")
@@ -601,6 +614,9 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 拡散項を計算する
   call diff_prepare(p, g, s)
 
+  ! 曲率項の遠心加速度をセルごとに前計算する(f_dbcurv=1。§28.10)
+  if (db_curv > 0) call curv_prepare(g, s)
+
   ! 運動方程式を解いて流速を計算する
   call momentum(p, g, s, sx_mod, ierror)
 
@@ -666,7 +682,7 @@ end subroutine
 !   検証は呼び出し側(init_debris)が済ませている
 !----------------------------------------------------------------------
 subroutine m_swflow_enc_set_debris(fres, tanphi, sgrav, vstop, cstar, cmin, d50, erest, &
-                                   mu, xi, tauy)
+                                   mu, xi, tauy, fcurv)
   integer, intent(in) :: fres
   real, intent(in) :: tanphi, sgrav, vstop
   real, intent(in) :: cstar             ! 河床の充填濃度 C* = 1−λ
@@ -676,6 +692,7 @@ subroutine m_swflow_enc_set_debris(fres, tanphi, sgrav, vstop, cstar, cmin, d50,
   real, intent(in) :: mu                ! Voellmy 摩擦係数 μ(f_dbres=4)
   real, intent(in) :: xi                ! Voellmy 乱流係数 ξ (m/s²)(f_dbres=4)
   real, intent(in) :: tauy              ! 一定停止応力 τ_y (Pa)(f_dbres=5)
+  integer, intent(in) :: fcurv          ! 曲率項の有無(f_dbcurv。§28.10)
   db_res = fres
   db_tanphi = tanphi
   db_sgrav = sgrav
@@ -688,6 +705,7 @@ subroutine m_swflow_enc_set_debris(fres, tanphi, sgrav, vstop, cstar, cmin, d50,
   db_mu = mu
   db_xi = xi
   db_tauy = tauy
+  db_curv = fcurv
 end subroutine
 
 
@@ -705,6 +723,8 @@ subroutine m_swflow_enc_dispose(p)
   if (allocated(sdep)) deallocate(sdep)
   if (allocated(frw0)) deallocate(frw0)
   if (allocated(cwy)) deallocate(cwy)
+  if (allocated(acv)) deallocate(acv)
+  db_curv = 0
   call breach_dispose
   have_bopen = .false.
   have_width = .false.
@@ -972,6 +992,75 @@ subroutine momentum(p, g, s, sx, ierror)
     call par_info(" the run stops after this step")
     ierror = ierror + n_error
   end if
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 曲率項の前計算(f_dbcurv=1。developer.md §28.10)
+!   セルごとに a_c = (u²z_xx + 2uv z_xy + v²z_yy)/√(1+z_x²+z_y²) を求める。
+!   これは地表面の流向法線曲率 κ_n と表面速度 V_s の積 V_s²κ_n を、水平
+!   投影の流速 (u, v) と z の Hessian で書いたもの(z のグラフ曲面に対して
+!   厳密。1次元では u²z''/√(1+z'²) = V_s²κ)。
+!   ステンシルは 3×3(中心差分)。領域外・海域(x<=0, sw>0)を含む差分は
+!   その項を 0 とする(壁沿いのセルは壁法線方向の曲率を持たない扱い)。
+!   z, u, v はステップ頭で幅2交換済みなので js-1..je+1 の a_c が帯内で
+!   閉じて求まる(辺の両セル平均が js-1, je+1 を読む)
+!----------------------------------------------------------------------
+subroutine curv_prepare(g, s)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer :: i, j, j1, j2
+  real :: zc, zxx, zyy, zxy, zx, zy
+  real :: rdx, rdy
+  logical :: okw, oke, oks, okn
+
+  rdx = 1.0 / g%dx
+  rdy = 1.0 / g%dy
+  j1 = max(dcp%js - 1, 1)
+  j2 = min(dcp%je + 1, g%ny)
+  !$omp parallel do schedule(dynamic) private(i, j, zc, zxx, zyy, zxy, zx, zy, okw, oke, oks, okn)
+  do j = j1, j2
+    do i = 1, g%nx
+      acv(i,j) = 0.0
+      if (.not. valid(i, j)) cycle
+      if (s%vv(i,j) <= 0.0) cycle
+      zc = s%z(i,j)
+      okw = valid(i-1, j)
+      oke = valid(i+1, j)
+      oks = valid(i, j-1)
+      okn = valid(i, j+1)
+      zxx = 0.0; zyy = 0.0; zxy = 0.0; zx = 0.0; zy = 0.0
+      if (okw .and. oke) then
+        zxx = (s%z(i+1,j) - 2 * zc + s%z(i-1,j)) * rdx * rdx
+        zx = (s%z(i+1,j) - s%z(i-1,j)) * rdx / 2
+      end if
+      if (oks .and. okn) then
+        zyy = (s%z(i,j+1) - 2 * zc + s%z(i,j-1)) * rdy * rdy
+        zy = (s%z(i,j+1) - s%z(i,j-1)) * rdy / 2
+      end if
+      if (okw .and. oke .and. oks .and. okn) then
+        if (valid(i+1, j+1) .and. valid(i+1, j-1) .and. valid(i-1, j+1) .and. valid(i-1, j-1)) then
+          zxy = (s%z(i+1,j+1) - s%z(i+1,j-1) - s%z(i-1,j+1) + s%z(i-1,j-1)) * rdx * rdy / 4
+        end if
+      end if
+      acv(i,j) = (s%u(i,j)**2 * zxx + 2 * s%u(i,j) * s%v(i,j) * zxy + s%v(i,j)**2 * zyy) &
+                 / sqrt(1.0 + zx**2 + zy**2)
+    end do
+  end do
+  !$omp end parallel do
+
+contains
+
+  ! 計算対象セルか(領域内かつ海域でない)。x は番兵付き (0:nx+1, 0:ny+1)、
+  ! sw は (1:nx, 1:ny) 確保なので x で先に弾く(Fortran の .and. は短絡
+  ! 評価を保証しない)
+  pure logical function valid(ii, jj)
+    integer, intent(in) :: ii, jj
+    valid = .false.
+    if (g%x(ii,jj) <= 0) return
+    valid = g%sw(ii,jj) <= 0
+  end function
 
 end subroutine
 
@@ -1308,6 +1397,13 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
         end if
       end if
     end if
+  end if
+
+  ! 曲率項(§28.10): 垂直応力 g_n → g_n + a_c による降伏項の倍率。
+  !   a_c は辺の両セルの平均(c/n 対称)。g_n = √(g・ge)(ge = g cos²θ の
+  !   Ni 補正下で g cosθ。補正なしなら g)。浮上条件は 0 に切る
+  if (db_curv > 0 .and. aye > 0.0) then
+    aye = aye * max(0.0, 1.0 + (acv(i,j) + acv(in,jn)) / 2 / sqrt(p%gg * ge))
   end if
 
   ! ルンゲクッタの段数を初期化

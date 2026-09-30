@@ -117,6 +117,10 @@ module list_geomorph
                                      ! (雪崩・土石流の慣用範囲 200〜1000)
     real :: db_tauy = 0.0            ! 一定停止応力 τ_y (Pa)。f_dbres=5 で必須
                                      ! (火砕流の適用例 5〜50 kPa(VolcFlow 系文献))
+    integer :: f_dbcurv = 0          ! 曲率項(遠心加速度による垂直応力の増減を
+                                     ! 降伏項に乗じる。0:なし, 1:有効。f_dbres=1〜4
+                                     ! で使用(5 の τ_y は垂直応力に依らないため不可)。
+                                     ! RAMMS(Fischer ら 2012)と同じ扱い。developer.md §28.10
     character(len=256) :: fn_dbinit = ""  ! 瞬時流動化の崩壊深分布ファイル (m)。
                                      ! 指定で f_release 有効(fn_* の有無の慣例)。
                                      ! f_debris=1 が必須。debris_plan.md §2.5
@@ -230,6 +234,7 @@ subroutine list_geomorph_read(p, list)
   real :: db_mu
   real :: db_xi
   real :: db_tauy
+  integer :: f_dbcurv
   character(len=256) :: fn_dbinit
   real :: db_reltime
   real :: db_relsat
@@ -254,7 +259,7 @@ subroutine list_geomorph_read(p, list)
                            f_splash, spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
                            f_dbed, db_d50, db_erest, db_cmin, f_dbwet, db_satbed, &
-                           db_mu, db_xi, db_tauy, &
+                           db_mu, db_xi, db_tauy, f_dbcurv, &
                            fn_dbinit, db_reltime, db_relsat, &
                            f_slide, slide_c, slide_phi, slide_gamma, &
                            f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0, &
@@ -310,6 +315,7 @@ subroutine list_geomorph_read(p, list)
   db_mu = list%db_mu
   db_xi = list%db_xi
   db_tauy = list%db_tauy
+  f_dbcurv = list%f_dbcurv
   fn_dbinit = list%fn_dbinit
   db_reltime = list%db_reltime
   db_relsat = list%db_relsat
@@ -394,6 +400,7 @@ subroutine list_geomorph_read(p, list)
   list%db_mu = db_mu
   list%db_xi = db_xi
   list%db_tauy = db_tauy
+  list%f_dbcurv = f_dbcurv
   list%fn_dbinit = fn_dbinit
   list%db_reltime = db_reltime
   list%db_relsat = db_relsat
