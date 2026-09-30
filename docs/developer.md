@@ -5609,5 +5609,7 @@ docs/landslide_tsunami_plan.md(§0 結論、§1 方式選定、§4 定式、
   17,077 m³ が底層へ引き渡され湖底平坦部に 4.97 m 堆積。対照(混合体
   のみ、f_bedslide=0)は平坦部に達しない(max dz 0.000)。固体台帳
   Σhs+(1−λ)Σdz = −8e-12、水台帳(初期湖水+疑似間隙水)残差 −2e-10。
-  デバッグ(-Og -fcheck)・-O2 厳密数学の MPI np=2,4 と release の
-  回帰は §61.3 と同じ手順で確認(結果は同項目の追記参照)。
+  -Og -fcheck=all: 逐次・np=2,4 の 4 構成が検定 PASS かつ save がバイト
+  一致。-O2 厳密数学: np=2,4 とも 4 構成の save がバイト一致。release:
+  参照 13 ケース+volcano/avalanche/debris/slide の逐次 PASS、CI 集合+
+  chichibu の np=2 PASS、bedslide 逐次・np=2,4 PASS。
