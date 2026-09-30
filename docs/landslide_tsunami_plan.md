@@ -342,10 +342,10 @@ hb へ移す。
 | f_bedslide | 動く底層(0:無効, 1:有効) | 0 |
 | fn_bsinit | 崩壊深分布 D (m)。指定で発火機構が有効 | 必須(段階1) |
 | bs_reltime | 発火時刻 (s)。t0 以前なら最初の更新で発火 | 0 |
-| bs_rho | 土塊のかさ密度 ρs (kg/m³。間隙込み) | 必須(r = 1000/ρs) |
+| bs_rho | 土塊のかさ密度 ρs (kg/m³。間隙込み) | 2000(0 = 既定。r = 0.5。§61.9) |
 | f_bsres | 抵抗則(1: Voellmy, 2: Bingham〔予約〕) | 1 |
-| bs_mu, bs_xi | Voellmy μ・ξ (m/s²) | 必須 |
-| bs_vstop | 停止判定の速度閾値 (m/s) | 必須 |
+| bs_mu, bs_xi | Voellmy μ・ξ (m/s²) | 0.15 / 500(0 = 既定) |
+| bs_vstop | 停止判定の速度閾値 (m/s) | 0.05(0 = 既定) |
 | bs_eps_s | 降伏近傍の線形化幅(無次元勾配) | 1e-3 |
 | bs_diagratio | 8 方向配分の対角比(0 = 4 近傍。gw/salt_diagratio と同義) | p_diagratio と同値 2/(2+√2) |
 | bs_cfl, bs_nsubmax | サブサイクル安全係数・上限 | 0.4 / 10000 |

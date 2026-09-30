@@ -72,6 +72,12 @@ submodule(m_geomorph) m_geomorph_bedslide
   implicit none
 
   real, parameter :: bs_rhow = 1000.0     ! 水の密度 (kg/m3。浮力比 r = ρw/ρs)
+  ! 未指定(0)時の既定値(§61.9。「崩壊深分布だけを与えて回す」ための無難な値。
+  ! examples/landslide_tsunami・test/bedslide の校正値と同じ。init が採用値を表示)
+  real, parameter :: bs_rho_def = 2000.0  ! 飽和土塊・岩屑のかさ密度 → r = 0.5
+  real, parameter :: bs_mu_def = 0.15     ! 慣性なし Voellmy の μ
+  real, parameter :: bs_xi_def = 500.0    ! 同 ξ (m/s²)
+  real, parameter :: bs_vstop_def = 0.05  ! 停止判定の速度閾値 (m/s。db_vstop の既定と同じ)
   real, parameter :: bs_hbmin = 1.0e-4    ! 可動とみなす底層厚の下限 (m)。これ未満は V=0 として
                                           ! tick 末尾の停止で z に固定する(配分の裾が
                                           ! 非正規化数まで痩せて 0 除算になるのを防ぐ数値的閉じ。
@@ -90,6 +96,7 @@ module subroutine init_bedslide(gm, p, g, s, list)
   type(t_list_geomorph), intent(in) :: list
   integer :: k, i, j
   real :: lpx, lpy, ldx, ldy, dr
+  real :: rho, mu, xi, vstop           ! 既定値を反映した有効値(§61.9)
   real, allocatable :: wk(:,:)
 
   ! --- 検証 ---
@@ -104,21 +111,36 @@ module subroutine init_bedslide(gm, p, g, s, list)
     call par_stop("list_geomorph: f_bedslide=1 requires fn_bsinit(崩壊深分布 = 発火与件)" &
                   // " or bs_hplunge > 0(混合体からの引き渡し)")
   end if
-  if (list%bs_rho <= bs_rhow) then
+  ! 物性・校正値の既定(§61.9): 0(未指定)なら「とりあえず崩壊深分布だけで
+  ! 回す」ための無難な値を入れ、採用値を明示表示する(黙って使わない)。
+  ! 負値や 1000 以下の密度など明示された不正値は従来どおり停止
+  rho = list%bs_rho
+  if (rho == 0.0) rho = bs_rho_def
+  mu = list%bs_mu
+  if (mu == 0.0) mu = bs_mu_def
+  xi = list%bs_xi
+  if (xi == 0.0) xi = bs_xi_def
+  vstop = list%bs_vstop
+  if (vstop == 0.0) vstop = bs_vstop_def
+  call par_info("bedslide: bs_rho   = "//fmt_val(rho, " kg/m3", list%bs_rho == 0.0))
+  call par_info("bedslide: bs_mu    = "//fmt_val(mu, "", list%bs_mu == 0.0))
+  call par_info("bedslide: bs_xi    = "//fmt_val(xi, " m/s2", list%bs_xi == 0.0))
+  call par_info("bedslide: bs_vstop = "//fmt_val(vstop, " m/s", list%bs_vstop == 0.0))
+  if (rho <= bs_rhow) then
     call par_stop("list_geomorph: f_bedslide requires bs_rho > 1000 kg/m3" &
                   // "(土塊のかさ密度は水より大きい)")
   end if
   select case (list%f_bsres)
     case (1)
-      if (list%bs_mu <= 0.0) call par_stop("list_geomorph: f_bsres=1 requires bs_mu > 0")
-      if (list%bs_xi <= 0.0) call par_stop("list_geomorph: f_bsres=1 requires bs_xi > 0 (m/s2)")
+      if (mu <= 0.0) call par_stop("list_geomorph: f_bsres=1 requires bs_mu > 0")
+      if (xi <= 0.0) call par_stop("list_geomorph: f_bsres=1 requires bs_xi > 0 (m/s2)")
     case (2)
       call par_stop("list_geomorph: f_bsres=2 (Bingham) is reserved and not implemented yet" &
                     // " — landslide_tsunami_plan.md sec.4.3")
     case default
       call par_stop("list_geomorph: f_bsres must be 1(Voellmy) or 2(Bingham, reserved)")
   end select
-  if (list%bs_vstop <= 0.0) call par_stop("list_geomorph: f_bedslide requires bs_vstop > 0 (m/s)")
+  if (vstop <= 0.0) call par_stop("list_geomorph: f_bedslide requires bs_vstop > 0 (m/s)")
   if (list%bs_eps_s <= 0.0) call par_stop("list_geomorph: bs_eps_s must be > 0")
   if (list%bs_diagratio < 0.0 .or. list%bs_diagratio > 1.0) then
     call par_stop("list_geomorph: bs_diagratio must be in [0,1]")
@@ -126,11 +148,11 @@ module subroutine init_bedslide(gm, p, g, s, list)
   if (list%bs_cfl <= 0.0 .or. list%bs_cfl > 1.0) call par_stop("list_geomorph: bs_cfl must be in (0,1]")
   if (list%bs_nsubmax < 1) call par_stop("list_geomorph: bs_nsubmax must be >= 1")
 
-  gm%bs_r = bs_rhow / list%bs_rho
+  gm%bs_r = bs_rhow / rho
   gm%f_bsres = list%f_bsres
-  gm%bs_mu = list%bs_mu
-  gm%bs_xi = list%bs_xi
-  gm%bs_vstop = list%bs_vstop
+  gm%bs_mu = mu
+  gm%bs_xi = xi
+  gm%bs_vstop = vstop
   gm%bs_eps_s = list%bs_eps_s
   gm%bs_cfl = list%bs_cfl
   gm%bs_nsubmax = list%bs_nsubmax
@@ -720,5 +742,20 @@ subroutine restore_bedslide(p, g, s)
     call par_scatter_cell(dum, bsl%eref)
   end if
 end subroutine
+
+!----------------------------------------------------------------------
+! 採用値の表示用(既定値なら "(default)" を付ける。§61.9)
+!----------------------------------------------------------------------
+function fmt_val(v, unit, is_def) result(str)
+  real, intent(in) :: v
+  character(len=*), intent(in) :: unit
+  logical, intent(in) :: is_def
+  character(len=:), allocatable :: str
+  character(len=32) :: buf
+  write(buf, '(f0.4)') v
+  if (buf(1:1) == '.') buf = '0'//trim(buf)      ! gfortran の f0 は先頭 0 を省く
+  str = trim(buf)//unit
+  if (is_def) str = str//" (default)"
+end function
 
 end submodule

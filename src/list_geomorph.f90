@@ -152,13 +152,16 @@ module list_geomorph
     character(len=256) :: fn_bsinit = ""  ! 底層の崩壊深分布ファイル (m)。指定で発火機構が
                                      ! 有効(f_bedslide=1 では必須)
     real :: bs_reltime = 0.0         ! 底層の発火時刻 (s)。t0 以前なら最初の更新で発火
-    real :: bs_rho = 0.0             ! 土塊のかさ密度 ρs (kg/m3。間隙込み)。必須
-                                     ! (浮力 r = ρw/ρs。ρw = 1000 固定)
+    real :: bs_rho = 0.0             ! 土塊のかさ密度 ρs (kg/m3。間隙込み)。0 = 既定
+                                     ! 2000(飽和土塊・岩屑の代表値。r = 0.5。init が
+                                     ! 有効値を表示)。浮力 r = ρw/ρs、ρw = 1000 固定
     integer :: f_bsres = 1           ! 底層の抵抗則(1:Voellmy(慣性なし。速度
                                      ! V = √(ξ hb (S − μ b))), 2:Bingham〔予約〕)
-    real :: bs_mu = 0.0              ! Voellmy 摩擦係数 μ。必須
-    real :: bs_xi = 0.0              ! Voellmy 乱流係数 ξ (m/s²)。必須
-    real :: bs_vstop = 0.0           ! 停止判定の速度閾値 (m/s)。必須(未満で hb を z に固定)
+    real :: bs_mu = 0.0              ! Voellmy 摩擦係数 μ。0 = 既定 0.15(慣性なし底層の
+                                     ! 校正値。examples/landslide_tsunami と同じ)
+    real :: bs_xi = 0.0              ! Voellmy 乱流係数 ξ (m/s²)。0 = 既定 500
+    real :: bs_vstop = 0.0           ! 停止判定の速度閾値 (m/s)。0 = 既定 0.05(db_vstop と
+                                     ! 同じ)。未満で hb を z に固定
     real :: bs_eps_s = 0.02          ! 降伏近傍の線形化幅(無次元勾配。安定条件の上限を決める)
     real :: bs_diagratio = 0.5857864376  ! 8方向配分の対角比(0 = 4近傍。p_diagratio と同義)
     real :: bs_cfl = 0.4             ! サブサイクルの安全係数

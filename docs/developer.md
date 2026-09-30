@@ -5805,3 +5805,31 @@ docs/landslide_tsunami_plan.md(§0 結論、§1 方式選定、§4 定式、
   逐次・np=2,4 の 4 構成が検定 PASS、save(state.dat / 3 面の
   geomorph_bedslide.dat)が逐次とバイト一致(引き渡し時速度 3.7 → 7.4 m/s)。
   release 復帰後の wave / debris PASS。
+
+### 61.9 物性・校正値の既定値(2026-09-30 実装)
+
+「とりあえず崩壊深分布だけを与えて回してみたい」利用者のために、
+それまで必須だった 4 値に既定値を与えた(合意の上)。最小入力は
+f_bedslide=1 + fn_bsinit(+ geomorph 有効時に必須の sd0)。
+
+- **値**: bs_rho=2000 kg/m³(飽和土塊・岩屑の代表値。r=0.5)、
+  bs_mu=0.15、bs_xi=500 m/s²(慣性なし底層の校正値。examples/
+  landslide_tsunami と test/bedslide の全構成が使っていた値)、
+  bs_vstop=0.05 m/s(db_vstop の既定と同じ)
+- **仕組み**: namelist の既定は 0.0 のまま(= 未指定の番兵)で、
+  init_bedslide が 0 のときだけ module 定数 bs_*_def を採用する。
+  namelist は「既定と同値を明示した」ことと「未指定」を区別できない
+  ため、番兵方式にした。負値や 1000 以下の密度など明示された不正値は
+  従来どおり par_stop
+- **黙って使わない**: 採用した 4 値を init が par_info で 1 行ずつ表示し、
+  既定なら "(default)" を付ける(bs_rho は明確な物性値なので、
+  利用者が値を見ずに済ませられない形にする。§0「物理量は直接与える」
+  との折り合い)
+- **混合体側との非対称(記録)**: db_mu・db_xi・db_tauy 等は必須のまま。
+  混合体は 5 つの抵抗則に材料固有定数が混ざり「無難」を選びにくいのに
+  対し、底層は Voellmy 一択で慣性なし = 実質ランアウトの校正
+  パラメータなので既定値を置く理由を説明できる
+- **検証**: 既定値を明示指定した test/bedslide 4 構成の state.dat /
+  geomorph_bedslide.dat が導入前とバイト一致(逐次・np=2)。4 値を
+  省いた最小入力の津波構成が明示指定と state.dat・私有ファイルとも
+  バイト一致
