@@ -17,8 +17,9 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理)
   │    m_gwflow      地下水の切替器(鉛直は排他: bucket / greenampt。
   │                  加算: lateral / layer2 / conduit(管路連続体層)/
   │                  pump(井戸揚水シンク)/ frost(凍土の浸透抑制))
-  │    m_geomorph    土砂・地形変化(加算: creep / fluvial / suspend / wash / splash / debris。
-  │                  debris は土石流・地滑り・火山流動の抵抗則/E-D 切替を含む)
+  │    m_geomorph    土砂・地形変化(加算: creep / fluvial / suspend / wash / splash / debris /
+  │                  bedslide。debris は土石流・地滑り・火山流動の抵抗則/E-D 切替を含む。
+  │                  bedslide は z・sd の内数として動く底層 hb = 地滑り津波の移動海底源)
   │    m_driftwood   流木(材積のラスタ場3台帳: 立木 wst → 流動 s%hd → 堆積 s%wd。
   │                  発生・停止・再流動を担う。移流は swflow_enc の advect_scalar)
   │    m_glacier     氷河(加算: 質量収支(常時)/ flow / slide / ero / ava)
@@ -122,7 +123,7 @@ calcstat                      統計(S 台帳・max 類。決定的総和)
 |---|---|---|---|
 | p | t_sysparam | m_sysparam | 実行制御。init 後は全モジュール読み取り専用 |
 | g | t_geoinfo | m_geoinfo | 地形 z(入力)・粗度 rn・マスク x/sw/rw・格子。原則不変(例外: なし。動的な標高は s%z) |
-| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), cq/cg/crs(輸送物質の地表・地下・ため池プール), hd/wd(流動・堆積流木), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi 等のモジュール私有 save は各 dispose。契約5) |
+| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), hb(動く底層。z・sd の内数), cq/cg/crs(輸送物質の地表・地下・ため池プール), hd/wd(流動・堆積流木), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi・hb 等のモジュール私有 save は各 dispose。契約5) |
 | sx | t_enc_status | m_swflow_enc 私有 | エッジ流速 uv・流量 mn(前ステップ確定)・mn1(更新中)。他モジュールから不可視 |
 | r, b, … | 各 t_* | 各モジュール | モジュール私有。リスタートは各自の save ファイル(契約5) |
 

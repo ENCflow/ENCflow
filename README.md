@@ -144,7 +144,10 @@ care about.**
   dedicated models). The chain from eruption supply through runout,
   deposition, natural damming, dam-break flooding, and
   rainfall-triggered secondary lahars can be followed **in a single
-  run**.
+  run**. Sending the collapsed mass into a lake or the sea as a
+  "moving bed layer" extends the same run to **landslide tsunamis**
+  (including submarine slides): generation, propagation and run-up,
+  as a moving-bottom approximation.
 - **Lava flows**: effusion from a set of vent cells (an effusion-rate
   time series), Bingham viscous spreading and stopping (viscosity and
   yield stress given directly), and solidification into lava-field

@@ -308,15 +308,11 @@
      ビット不一致は -Ofast の fast-math ビルド間差と確定(§28.5。
      -O2 厳密数学 + make clean では両構成とも全一致)。debris/slide の
      Run_MPI.sh のビルド間比較は警告扱いに変更済み
-   - **地滑り津波(動く底層 hb。2026-09-30 設計提案。docs/landslide_tsunami_plan.md)**:
-     二層 SWE を採らず、土塊を「z・sd の内数として動く底層 hb」の
-     慣性なし Voellmy 流(駆動水頭 Φ = z + (ρw/ρs)h)で表し、移動海底
-     として水面を変位させる案。段階0(既存機能のみの疎通ケース
-     work/slide_tsunami)で「突入→造波→伝播」は成立するが水中ランアウトが
-     ないことを確認済み。**要合意事項は同書 §10**。合意後: 段階1a
-     (f_bedslide 実装)→ 1b(test 昇格・ガイド・developer.md 新§)→
-     段階2(hs→hb のプランジ引き渡し bs_hplunge)。離散化は 8 近傍+
-     速度と配分の分離(同書 §4.3。2026-09-30 合意)
+   - **地滑り津波(動く底層 f_bedslide。2026-09-30 段階1 実装・検証済み。
+     developer.md §61、docs/landslide_tsunami_plan.md、test/bedslide)**:
+     残るのは段階2(混合体 hs → 底層 hb のプランジ引き渡し bs_hplunge。
+     同書 §4.7)、Bingham 型 f_bsres=2、f_slide の発火先選択、擬似静的
+     地震係数、実事例・経験式との突合(§61.4)
    - **既存の拡散型モジュール(creep・glacier SIA・lavaflow Bingham)の
      8 近傍化**(landslide_tsunami_plan.md §11): creep は重みの正規化のみ、
      SIA/Bingham は係数を |∇s| で評価する真の Mahaffy 化が必要。
