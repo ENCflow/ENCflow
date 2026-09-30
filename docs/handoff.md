@@ -310,9 +310,9 @@
      Run_MPI.sh のビルド間比較は警告扱いに変更済み
    - **地滑り津波(動く底層 f_bedslide。2026-09-30 段階1 実装・検証済み。
      developer.md §61、docs/landslide_tsunami_plan.md、test/bedslide)**:
-     残るのは段階2(混合体 hs → 底層 hb のプランジ引き渡し bs_hplunge。
-     同書 §4.7)、Bingham 型 f_bsres=2、f_slide の発火先選択、擬似静的
-     地震係数、実事例・経験式との突合(§61.4)
+     段階2(混合体 hs → 底層 hb のプランジ引き渡し bs_hplunge)も同日
+     実装済み(§61.5)。残るのは Bingham 型 f_bsres=2、f_slide の発火先
+     選択、擬似静的地震係数、実事例・経験式との突合(§61.4)
    - **既存の拡散型モジュール(creep・glacier SIA・lavaflow Bingham)の
      8 近傍化**(landslide_tsunami_plan.md §11): creep は重みの正規化のみ、
      SIA/Bingham は係数を |∇s| で評価する真の Mahaffy 化が必要。

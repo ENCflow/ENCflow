@@ -5593,3 +5593,21 @@ docs/landslide_tsunami_plan.md(§0 結論、§1 方式選定、§4 定式、
   (同 §11。*_diagratio 既定 0 で導入すれば無効時ビット一致)。
 - 実事例(Lituya Bay・1792 眉山・Anak Krakatau・Storegga 系の縮小版)
   との桁の突合、Grilli–Watts 系経験式との比較。
+
+### 61.5 段階2: 混合体からの引き渡し bs_hplunge(2026-09-30 実装)
+
+- 滞水深 h ≥ bs_hplunge かつ hs > 0 のセルで、hs をかさ体積 Δ = hs/(1−λ)
+  に換算し hs → 0、hb・z・sd += Δ(セル局所。calc_bedslide の冒頭)。
+  表面 z+h+hs は固体分が保存される。間隙分は f_dbwet=1 なら水柱から
+  埋没(h −= λ·s_b·Δ、残量でクランプ = 堆積の埋没と同じ規則)、
+  f_dbwet=0 なら表面が間隙分だけ上がる(乾燥セル全量繰り入れと同じ規約)。
+  混合体の運動量は失われる(底層は慣性なし)。
+- f_debris=1 必須(hs の存在)。bs_hplunge > 0 なら fn_bsinit を省略でき、
+  発火は引き渡しのみになる(岩屑なだれは fn_bsinit で最初から底層に)。
+- 検証(release -Ofast 逐次): test/bedslide 構成4(陸上は混合体
+  等価流体 Voellmy、bs_hplunge=2 m)で、放出かさ体積 19,110 m³ のうち
+  17,077 m³ が底層へ引き渡され湖底平坦部に 4.97 m 堆積。対照(混合体
+  のみ、f_bedslide=0)は平坦部に達しない(max dz 0.000)。固体台帳
+  Σhs+(1−λ)Σdz = −8e-12、水台帳(初期湖水+疑似間隙水)残差 −2e-10。
+  デバッグ(-Og -fcheck)・-O2 厳密数学の MPI np=2,4 と release の
+  回帰は §61.3 と同じ手順で確認(結果は同項目の追記参照)。
