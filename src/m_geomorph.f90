@@ -159,6 +159,7 @@ module m_geomorph
     real :: bs_reltime = 0.0         ! 底層の発火時刻 (s)
     real :: bs_hplunge = 0.0         ! 混合体 hs → 底層 hb の引き渡し滞水深 (m。0 = なし)
     integer :: bs_nstop = 1          ! 固定に要する低速の連続 tick 数(= bs_tstop/dtw。1 = 即時)
+    integer :: f_bsplunge = 0        ! 引き渡し判定の水深(0: 現在の h、1: 静水深 = eref − z)
     logical :: initialized = .false.
   end type
 
@@ -222,6 +223,8 @@ module m_geomorph
     real, allocatable :: rel(:,:)    ! 発火前の崩壊深 (m)(1:nx, js:je)。発火後に解放
     real, allocatable :: nst(:,:)    ! V < bs_vstop の連続 tick 数(1:nx, jsh:jeh。実数で保持 =
                                      !   私有 save の RLE 面として hb と同じ経路で往復する)
+    real, allocatable :: eref(:,:)   ! f_bsplunge=1 の基準水面(初期の z+h。初期に乾いたセルは
+                                     !   -huge = 引き渡し対象外)(1:nx, jsh:jeh。私有 save の 3 面目)
     integer :: nrelclip = 0          ! 崩壊深 > sd でクリップしたセル数(dispose で報告)
     real :: vrel = 0.0               ! 発火した底層の体積 (m3。ランク局所)
     real :: vstop = 0.0              ! 停止して固定した体積 (m3。ランク局所)

@@ -162,6 +162,9 @@ module list_geomorph
     real :: bs_tstop = 0.0           ! 停止(固定)に要求する低速の持続時間 (s)。V < bs_vstop が
                                      ! この時間続いたセルだけ hb を地形に固定する。0 = 即時
                                      ! (突入時の一時的な失速で誤固定しないための閉じ)
+    integer :: f_bsplunge = 0        ! 引き渡し判定の水深(0: 現在の水深 h、1: 静水時の水深 =
+                                     ! 初期水面 − 現在の底面 z。初期に湿潤だったセルのみ。
+                                     ! 突入で一時的に離水した汀線帯でも引き渡す)
     real :: bs_hplunge = 0.0         ! 混合体(hs)から底層への引き渡し(プランジ)の滞水深
                                      ! 閾値 (m)。h >= bs_hplunge のセルの hs をかさ体積で
                                      ! hb・z・sd へ移す。0 = 引き渡しなし。f_debris=1 が必要
@@ -235,7 +238,7 @@ subroutine list_geomorph_read(p, list)
   real :: wthr_p0, wthr_sdstar
   integer :: f_uplift
   real :: uplift0
-  integer :: f_bedslide, f_bsres, bs_nsubmax
+  integer :: f_bedslide, f_bsres, bs_nsubmax, f_bsplunge
   character(len=256) :: fn_bsinit
   real :: bs_reltime, bs_rho, bs_mu, bs_xi, bs_vstop, bs_eps_s, bs_diagratio, bs_cfl
   real :: bs_hplunge, bs_tstop
@@ -253,7 +256,7 @@ subroutine list_geomorph_read(p, list)
                            f_slide, slide_c, slide_phi, slide_gamma, &
                            f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0, &
                            f_bedslide, fn_bsinit, bs_reltime, bs_rho, f_bsres, bs_mu, bs_xi, &
-                           bs_vstop, bs_eps_s, bs_diagratio, bs_cfl, bs_nsubmax, bs_hplunge, bs_tstop
+                           bs_vstop, bs_eps_s, bs_diagratio, bs_cfl, bs_nsubmax, bs_hplunge, bs_tstop, f_bsplunge
 
   ! 型宣言のデフォルトを namelist 変数の初期値にする
   dt_geomorph = list%dt_geomorph
@@ -330,6 +333,7 @@ subroutine list_geomorph_read(p, list)
   bs_nsubmax = list%bs_nsubmax
   bs_hplunge = list%bs_hplunge
   bs_tstop = list%bs_tstop
+  f_bsplunge = list%f_bsplunge
 
   call par_info("reading list_geomorph in " // trim(p%fn_geomorph))
   open(newunit=un, file=trim(p%fn_geomorph), status='old', action='read', iostat=ios)
@@ -412,6 +416,7 @@ subroutine list_geomorph_read(p, list)
   list%bs_nsubmax = bs_nsubmax
   list%bs_hplunge = bs_hplunge
   list%bs_tstop = bs_tstop
+  list%f_bsplunge = f_bsplunge
 
 end subroutine
 

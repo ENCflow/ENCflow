@@ -32,7 +32,9 @@
 !               を送り手の全エッジに一様に掛ける → hb ≥ 0 が構造的に成立)
 !
 !   【段階2: 混合体からの引き渡し(プランジ。bs_hplunge > 0 かつ f_debris=1)】
-!   滞水深 h ≥ bs_hplunge のセルで、水柱に混ざる固体 hs をかさ体積
+!   滞水深 ≥ bs_hplunge のセルで(滞水深は f_bsplunge=0: 現在の h、
+!   1: 静水深 = 初期水面 eref − 現在の底面 z。突入で一時的に離水した汀線帯
+!   でも引き渡す。初期に乾いたセルは対象外)、水柱に混ざる固体 hs をかさ体積
 !   Δ = hs/(1−λ) に換算して hb・z・sd へ移す(hs → 0)。表面 z+h+hs は
 !   固体分だけ保存され、間隙分は f_dbwet=1 なら水柱から埋没(h −= λ·s_b·Δ。
 !   残量でクランプ)、f_dbwet=0 なら表面が間隙分だけ上がる(乾燥セルの
@@ -86,7 +88,7 @@ module subroutine init_bedslide(gm, p, g, s, list)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   type(t_list_geomorph), intent(in) :: list
-  integer :: k
+  integer :: k, i, j
   real :: lpx, lpy, ldx, ldy, dr
   real, allocatable :: wk(:,:)
 
@@ -135,6 +137,10 @@ module subroutine init_bedslide(gm, p, g, s, list)
   gm%bs_reltime = list%bs_reltime
   gm%bs_hplunge = list%bs_hplunge
   if (list%bs_tstop < 0.0) call par_stop("list_geomorph: bs_tstop must be >= 0")
+  if (list%f_bsplunge /= 0 .and. list%f_bsplunge /= 1) then
+    call par_stop("list_geomorph: f_bsplunge must be 0(current depth h) or 1(still-water depth)")
+  end if
+  gm%f_bsplunge = list%f_bsplunge
   gm%bs_nstop = max(1, nint(list%bs_tstop / (p%dt * gm%idt_geomorph)))
 
   ! --- 8近傍の幾何(m_gwflow_lateral / init_fluvial と同一の配分則) ---
@@ -173,6 +179,16 @@ module subroutine init_bedslide(gm, p, g, s, list)
   allocate(bsl%ws(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(bsl%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
   allocate(bsl%nst(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  ! f_bsplunge=1 の基準水面 = 初期の水面 z+h(乾いたセルは -huge)。restore 時は
+  ! 私有 save の値が勝つ(初期状態でなく復元状態を読んでしまわないため)
+  allocate(bsl%eref(1:g%nx, dcp%jsh:dcp%jeh), source = -huge(1.0))
+  if (gm%f_bsplunge == 1) then
+    do j = dcp%jsh, dcp%jeh
+      do i = 1, g%nx
+        if (s%h(i,j) > p%dd) bsl%eref(i,j) = s%z(i,j) + s%h(i,j)
+      end do
+    end do
+  end if
 
   ! --- 発火与件(崩壊深分布。全ランク冗長の全域読み。read_release と同じ流儀。
   !     未指定(プランジ引き渡しのみ)なら rel は未確保 = 発火なし) ---
@@ -500,7 +516,11 @@ subroutine plunge_cells(gm, g, s)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%hs(i,j) <= 0.0) cycle
-      if (s%h(i,j) < gm%bs_hplunge) cycle
+      if (gm%f_bsplunge == 1) then
+        if (bsl%eref(i,j) - s%z(i,j) < gm%bs_hplunge) cycle    ! 静水深(初期水面 − 底面)
+      else
+        if (s%h(i,j) < gm%bs_hplunge) cycle                    ! 現在の水深
+      end if
       dd = s%hs(i,j) * gm%poroi
       s%hs(i,j) = 0.0
       s%hb(i,j) = s%hb(i,j) + dd
@@ -570,6 +590,7 @@ module subroutine dispose_bedslide(gm, p, g, s)
   if (allocated(bsl%q)) deallocate(bsl%q)
   if (allocated(bsl%rel)) deallocate(bsl%rel)
   if (allocated(bsl%nst)) deallocate(bsl%nst)
+  if (allocated(bsl%eref)) deallocate(bsl%eref)
   bsl%nrelclip = 0
   bsl%vrel = 0.0
   bsl%vstop = 0.0
@@ -602,6 +623,9 @@ subroutine save_bedslide(p, g, s)
   end if
   ! 低速の連続 tick 数(bs_tstop の途中経過。書き並びは restore と同時に更新)
   call par_gather_to(wk, bsl%nst)
+  if (is_root) call fileio_write_rle(un, wk)
+  ! f_bsplunge=1 の基準水面(3 面目。0 でも書く = 面数固定)
+  call par_gather_to(wk, bsl%eref)
   if (is_root) then
     call fileio_write_rle(un, wk)
     close(un)
@@ -631,11 +655,14 @@ subroutine restore_bedslide(p, g, s)
     call fileio_read_rle(un, wk)
     call par_scatter_cell(wk, s%hb)
     call fileio_read_rle(un, wk)
-    close(un)
     call par_scatter_cell(wk, bsl%nst)
+    call fileio_read_rle(un, wk)
+    close(un)
+    call par_scatter_cell(wk, bsl%eref)
   else
     call par_scatter_cell(dum, s%hb)
     call par_scatter_cell(dum, bsl%nst)
+    call par_scatter_cell(dum, bsl%eref)
   end if
 end subroutine
 
