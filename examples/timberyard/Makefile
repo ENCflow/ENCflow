@@ -20,7 +20,7 @@ links:
 install: all
 
 clean:
-	rm -rf result save
-	rm -f encflow encflow_mpi a.out Screen.log z.txt gv.txt sw.txt stock.txt
+	rm -rf result result_* save
+	rm -f encflow encflow_mpi a.out Screen.log Screen_*.log z.txt z_wall*.txt gv.txt sw.txt stock.txt
 
 .PHONY: all links install clean

@@ -9,8 +9,13 @@
 #                  = 流入が集中する低所)
 #     i=38..120  : 市街地(z=+0.5 → +2.0 m へ緩勾配。建物空隙率 gv=0.6)
 #   貯木場・市街地を海域マスクにしない理由: 海セルには材木ストックを
-#   置けず流木の移流も働かない(users_guide/driftwood.md の例題解説)。
+#   置けず流木の移流も働かない(解説は README.md)。
+#   引数で防潮壁の天端高を変えられる(感度ケース: python3 make_terrain.py 4.0
+#   → 地形だけを z_wall4.txt に書く。param_wall4.txt が参照)。
+import sys
 import numpy as np
+
+Z_WALL = float(sys.argv[1]) if len(sys.argv) > 1 else 1.5   # 防潮壁天端 (m)
 
 nx, ny = 120, 60
 z = np.zeros((ny, nx))
@@ -34,12 +39,17 @@ for j in range(ny):
             if 25 <= (j + 1) <= 36:
                 z[j, i] = 0.5
             else:
-                z[j, i] = 1.5
+                z[j, i] = Z_WALL
         else:
             # 市街地: +0.5 m から東端 +2.0 m へ緩勾配
             z[j, i] = 0.5 + 1.5 * (x - 38) / (nx - 38)
             gv[j, i] = 0.6             # 建物占有 40%(空隙率 0.6)
 
+if len(sys.argv) > 1:
+    fn = 'z_wall%g.txt' % Z_WALL
+    np.savetxt(fn, z, fmt='%.4f')
+    print('written: %s (seawall crest %.1f m)' % (fn, Z_WALL))
+    sys.exit(0)
 np.savetxt('z.txt', z, fmt='%.4f')
 np.savetxt('sw.txt', sw, fmt='%d')
 np.savetxt('gv.txt', gv, fmt='%.2f')
