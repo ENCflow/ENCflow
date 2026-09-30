@@ -236,6 +236,7 @@ module m_geomorph
     real :: pbed = 0.0               ! 引き渡し時の底層終端速度の体積重み和 (同上)
     integer :: nsubtot = 0           ! サブサイクル総数(ランク共通)
     integer :: ntick = 0             ! 底層が動いた更新回数
+    integer :: nsubpk = 0            ! 1 更新あたりのサブサイクル数の最大(診断)
   end type
   type(t_creep) :: crp
   type(t_fluvial) :: flv

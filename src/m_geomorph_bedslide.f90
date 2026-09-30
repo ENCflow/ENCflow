@@ -495,6 +495,7 @@ module subroutine calc_bedslide(gm, g, s, dtw)
     trem = trem - dtsub
   end do
   bsl%nsubtot = bsl%nsubtot + nsub
+  bsl%nsubpk = max(bsl%nsubpk, nsub)
 
   ! --- (3) 停止: 更新後の場で速度を再評価し、閾値未満の hb を固定。
   !         診断の速度場 s%vb(自帯)もここで更新する(停止セルは 0) ---
@@ -651,7 +652,8 @@ module subroutine dispose_bedslide(gm, p, g, s)
   end if
   if (bsl%ntick > 0) then
     call par_info(" geomorph: bedslide subcycles total = " // itoa(bsl%nsubtot) &
-                  // " over " // itoa(bsl%ntick) // " active updates")
+                  // " over " // itoa(bsl%ntick) // " active updates (max " &
+                  // itoa(bsl%nsubpk) // " per update; see developer.md sec.61.10)")
   end if
   if (bsl%nrelclip > 0) then
     call par_warn("geomorph: bedslide release depth exceeded soil depth sd " &
@@ -674,6 +676,7 @@ module subroutine dispose_bedslide(gm, p, g, s)
   bsl%pbed = 0.0
   bsl%nsubtot = 0
   bsl%ntick = 0
+  bsl%nsubpk = 0
 end subroutine
 
 
