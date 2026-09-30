@@ -5566,6 +5566,11 @@ docs/landslide_tsunami_plan.md(§0 結論、§1 方式選定、§4 定式、
   (3 構成とも)。
 - リスタート往復(津波構成 0→30 s save → restore → 60 s vs 0→60 s):
   state.dat 6 成分・hb とも max|diff| = 0(-Og)。
+- release(-Ofast)ビルド: 参照 13 ケース逐次 PASS、CI 集合+chichibu の
+  np=2 PASS、bedslide 逐次・np=2,4 検定 PASS(save は -Ofast の fast-math
+  ビルド間差で津波構成のみ不一致 = §28.5 の既知事項)。**-O2 厳密数学**
+  では np=2,4 とも 3 構成の state.dat / geomorph_bedslide.dat が逐次と
+  バイト一致。トップレベル make(utils)も通る。
 - **test/bedslide 新設**(volcano 型の自己検定。reference なし):
   構成1(格子沿い一様層)内部 100 セルの Vb = 7.7460 = 解析値(誤差 0.00%)、
   断面通過速度 7.519(壁行の 2.93% 減 = 2·ld/ny と一致)。
