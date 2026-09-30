@@ -308,11 +308,18 @@
      ビット不一致は -Ofast の fast-math ビルド間差と確定(§28.5。
      -O2 厳密数学 + make clean では両構成とも全一致)。debris/slide の
      Run_MPI.sh のビルド間比較は警告扱いに変更済み
-   - **地滑り津波(動く底層 f_bedslide。2026-09-30 段階1 実装・検証済み。
-     developer.md §61、docs/landslide_tsunami_plan.md、test/bedslide)**:
-     段階2(混合体 hs → 底層 hb のプランジ引き渡し bs_hplunge)も同日
-     実装済み(§61.5)。残るのは Bingham 型 f_bsres=2、f_slide の発火先
-     選択、擬似静的地震係数、実事例・経験式との突合(§61.4)
+   - **地滑り津波(動く底層 f_bedslide。2026-09-30 実装・検証済み。
+     developer.md §61、docs/landslide_tsunami_plan.md、test/bedslide、
+     examples/landslide_tsunami)**: 段階1(底層 hb・8 近傍・速度と配分の
+     分離)、段階2(混合体 hs → hb の引き渡し bs_hplunge)、突入時の
+     閉じ方(bs_tstop 持続時間停止・f_bsplunge 静水深判定・f_bsvplunge
+     減速後の引き渡し+引き渡し時速度の診断)まで完了。examples に
+     4 パターン(岩屑なだれ/土石流→引き渡し/混合体のみ/海底地滑り)
+     と解説・図。**残作業**(§61.4): Bingham 型 f_bsres=2、f_slide の
+     発火先選択、擬似静的地震係数による水中斜面の発生判定、水中の抗力
+     (水中用 ξ)の要否、実事例(眉山 1792 が第一候補: 九十九島の水中
+     堆積で hb の到達を独立検証できる。次いで Lituya Bay・Anak Krakatau)
+     と Grilli–Watts 系経験式との突合、LS-TSUNAMI との比較
    - **既存の拡散型モジュール(creep・glacier SIA・lavaflow Bingham)の
      8 近傍化**(landslide_tsunami_plan.md §11): creep は重みの正規化のみ、
      SIA/Bingham は係数を |∇s| で評価する真の Mahaffy 化が必要。
