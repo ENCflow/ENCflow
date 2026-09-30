@@ -74,6 +74,7 @@
   f_bedslide = 1
   bs_hplunge = 2.0          ! 滞水深 2 m 以上のセルで hs → hb
   f_bsplunge = 1            ! 滞水深は静水時(初期水面 − 現在の底面)で判定
+  f_bsvplunge = 1           ! 混合体の速度が底層の終端速度以下に落ちてから引き渡す
   bs_tstop = 10.0           ! 低速が 10 s 続いたセルだけ固定(突入時の一時的失速で誤固定しない)
   bs_rho = 2000.0
   f_bsres = 1

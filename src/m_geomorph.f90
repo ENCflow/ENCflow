@@ -160,6 +160,7 @@ module m_geomorph
     real :: bs_hplunge = 0.0         ! 混合体 hs → 底層 hb の引き渡し滞水深 (m。0 = なし)
     integer :: bs_nstop = 1          ! 固定に要する低速の連続 tick 数(= bs_tstop/dtw。1 = 即時)
     integer :: f_bsplunge = 0        ! 引き渡し判定の水深(0: 現在の h、1: 静水深 = eref − z)
+    integer :: f_bsvplunge = 0       ! 引き渡しの速度条件(0: なし、1: 混合体速度 ≤ 底層の終端速度)
     logical :: initialized = .false.
   end type
 
@@ -229,6 +230,8 @@ module m_geomorph
     real :: vrel = 0.0               ! 発火した底層の体積 (m3。ランク局所)
     real :: vstop = 0.0              ! 停止して固定した体積 (m3。ランク局所)
     real :: vplunge = 0.0            ! 混合体から引き渡された体積 (m3 かさ。ランク局所)
+    real :: pmix = 0.0               ! 引き渡し時の混合体速度の体積重み和 (m3・m/s。診断)
+    real :: pbed = 0.0               ! 引き渡し時の底層終端速度の体積重み和 (同上)
     integer :: nsubtot = 0           ! サブサイクル総数(ランク共通)
     integer :: ntick = 0             ! 底層が動いた更新回数
   end type

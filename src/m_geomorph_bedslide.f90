@@ -141,6 +141,10 @@ module subroutine init_bedslide(gm, p, g, s, list)
     call par_stop("list_geomorph: f_bsplunge must be 0(current depth h) or 1(still-water depth)")
   end if
   gm%f_bsplunge = list%f_bsplunge
+  if (list%f_bsvplunge /= 0 .and. list%f_bsvplunge /= 1) then
+    call par_stop("list_geomorph: f_bsvplunge must be 0(immediate) or 1(after deceleration)")
+  end if
+  gm%f_bsvplunge = list%f_bsvplunge
   gm%bs_nstop = max(1, nint(list%bs_tstop / (p%dt * gm%idt_geomorph)))
 
   ! --- 8近傍の幾何(m_gwflow_lateral / init_fluvial と同一の配分則) ---
@@ -338,8 +342,13 @@ module subroutine calc_bedslide(gm, g, s, dtw)
 
   ainv = 1.0 / bsl%area
 
-  ! --- (0') 混合体からの引き渡し(プランジ。セル局所・自帯) ---
-  if (gm%bs_hplunge > 0.0) call plunge_cells(gm, g, s)
+  ! --- (0') 混合体からの引き渡し(プランジ。自帯。終端速度の見積りが近傍の
+  !          z・h を読むため、先に z・h のハロを最新化する) ---
+  if (gm%bs_hplunge > 0.0) then
+    call par_halo_cell(s%z)
+    call par_halo_cell(s%h)
+    call plunge_cells(gm, g, s)
+  end if
 
   ! --- (0) 動く底層があるか(全ランク同一の判定) ---
   w1(1) = 0.0
@@ -506,11 +515,14 @@ subroutine plunge_cells(gm, g, s)
   type(t_geomorph), intent(in) :: gm
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  integer :: i, j
-  real :: dd, dhw, vsum
+  integer :: i, j, k, in, jn
+  real :: dd, dhw, vsum, psum1, psum2, hbq, hw, phic, phin, dphi, sl, smax, bb, sy, vb
 
   vsum = 0.0
-  !$omp parallel do schedule(static) private(i, j, dd, dhw) reduction(+: vsum)
+  psum1 = 0.0
+  psum2 = 0.0
+  !$omp parallel do schedule(static) reduction(+: vsum, psum1, psum2) &
+  !$omp   private(i, j, k, in, jn, dd, dhw, hbq, hw, phic, phin, dphi, sl, smax, bb, sy, vb)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -522,6 +534,35 @@ subroutine plunge_cells(gm, g, s)
         if (s%h(i,j) < gm%bs_hplunge) cycle                    ! 現在の水深
       end if
       dd = s%hs(i,j) * gm%poroi
+      ! 引き渡し後の底層の終端速度 V_b(eval_cells と同じ式。hb_eq = 既存 hb + Δ)。
+      ! f_bsvplunge=1 では、混合体の速度がこれ以下に落ちるまで引き渡さない
+      ! (速いうちは慣性のある混合体として水柱に運動量を渡す。引き渡しで
+      !  底層が混合体より遅くなることがない = 運動量に対して単調)。
+      ! 診断: 引き渡し時の混合体速度と V_b の体積重み平均を dispose で報告
+      hbq = s%hb(i,j) + dd
+      hw = max(s%h(i,j), 0.0)
+      phic = s%z(i,j) + gm%bs_r * hw
+      smax = 0.0
+      do k = 1, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        if (g%x(in,jn) <= 0) cycle
+        if (g%sw(in,jn) > 0) cycle
+        phin = s%z(in,jn) + gm%bs_r * max(s%h(in,jn), 0.0)
+        dphi = phic - phin
+        if (dphi <= 0.0) cycle
+        sl = dphi * bsl%rdr(k)
+        if (sl > smax) smax = sl
+      end do
+      bb = 1.0 - gm%bs_r * min(1.0, hw / hbq)
+      sy = smax - gm%bs_mu * bb
+      vb = 0.0
+      if (sy > 0.0) vb = sqrt(gm%bs_xi * hbq * sy)
+      if (gm%f_bsvplunge == 1) then
+        if (s%vv(i,j) > max(vb, gm%bs_vstop)) cycle           ! まだ速い: 混合体のまま
+      end if
+      psum1 = psum1 + dd * s%vv(i,j)
+      psum2 = psum2 + dd * vb
       s%hs(i,j) = 0.0
       s%hb(i,j) = s%hb(i,j) + dd
       s%z(i,j) = s%z(i,j) + dd
@@ -536,6 +577,8 @@ subroutine plunge_cells(gm, g, s)
   end do
   !$omp end parallel do
   bsl%vplunge = bsl%vplunge + vsum * bsl%area
+  bsl%pmix = bsl%pmix + psum1 * bsl%area
+  bsl%pbed = bsl%pbed + psum2 * bsl%area
 end subroutine
 
 
@@ -547,7 +590,7 @@ module subroutine dispose_bedslide(gm, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real :: vsum(1:4), hsum
+  real :: vsum(1:6), hsum
   integer :: i, j
   character(len=256) :: msg
 
@@ -567,12 +610,22 @@ module subroutine dispose_bedslide(gm, p, g, s)
   vsum(2) = bsl%vstop
   vsum(3) = hsum * bsl%area
   vsum(4) = bsl%vplunge
+  vsum(5) = bsl%pmix
+  vsum(6) = bsl%pbed
   call par_allreduce_sumr(vsum)
   if (is_root) then
     write(msg,'(a,es12.4,a,es12.4,a,es12.4,a,es12.4,a)') &
       " geomorph: bedslide released ", vsum(1), " m3, plunged ", vsum(4), &
       " m3, stopped ", vsum(2), " m3, still moving ", vsum(3), " m3"
     call par_info(trim(msg))
+    if (vsum(4) > 0.0) then
+      ! 引き渡し時の速度の対比(体積重み平均)。混合体 >> 底層なら、引き渡しで
+      ! 失う運動量が大きい(近地波の過小側の偏り。landslide_tsunami_plan.md §4.4)
+      write(msg,'(a,f8.3,a,f8.3,a)') &
+        " geomorph: bedslide plunge speeds (volume-weighted): mixture ", vsum(5) / vsum(4), &
+        " m/s -> bed layer ", vsum(6) / vsum(4), " m/s"
+      call par_info(trim(msg))
+    end if
   end if
   if (bsl%ntick > 0) then
     call par_info(" geomorph: bedslide subcycles total = " // itoa(bsl%nsubtot) &
@@ -595,6 +648,8 @@ module subroutine dispose_bedslide(gm, p, g, s)
   bsl%vrel = 0.0
   bsl%vstop = 0.0
   bsl%vplunge = 0.0
+  bsl%pmix = 0.0
+  bsl%pbed = 0.0
   bsl%nsubtot = 0
   bsl%ntick = 0
 end subroutine
