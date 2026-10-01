@@ -1601,7 +1601,7 @@ module subroutine m_boundary_dam_seed(b, p, g, s)
         i = b%struct(ist)%cin(1,k)
         j = b%struct(ist)%cin(2,k)
         if (j < dcp%js .or. j > dcp%je) cycle
-        s%hrs(i,j) = vshare / (g%gv(i,j) * g%dx * g%dy)
+        s%hrs(i,j) = vshare / (s%gv(i,j) * g%dx * g%dy)
       end do
     end if
 
@@ -1612,7 +1612,7 @@ module subroutine m_boundary_dam_seed(b, p, g, s)
       i = b%struct(ist)%cin(1,k)
       j = b%struct(ist)%cin(2,k)
       if (j < dcp%js .or. j > dcp%je) cycle
-      vrow(j) = vrow(j) + real(s%hrs(i,j) * g%gv(i,j) * g%dx * g%dy, r64)
+      vrow(j) = vrow(j) + real(s%hrs(i,j) * s%gv(i,j) * g%dx * g%dy, r64)
     end do
     call par_sum_rows(vrow, v8)
     b%struct(ist)%dv = real(v8)
@@ -1891,7 +1891,7 @@ module subroutine m_boundary_dam_gwforce(b, p, g, s, dts)
       if (j < dcp%js .or. j > dcp%je) cycle
       cap = s%sd(i,j) * g%sy0
       hf = min(max(g%sy0 * (hlake - (s%z(i,j) - s%sd(i,j))), 0.0), cap)
-      vrow(j) = vrow(j) + real((hf - s%hg(i,j)) * g%gv(i,j), r64) * real(acell, r64)
+      vrow(j) = vrow(j) + real((hf - s%hg(i,j)) * s%gv(i,j), r64) * real(acell, r64)
     end do
     call par_sum_rows(vrow, vdem8)
     vdem = real(vdem8)
@@ -1935,7 +1935,7 @@ module subroutine m_boundary_dam_gwforce(b, p, g, s, dts)
           i = b%struct(ist)%cin(1,k)
           j = b%struct(ist)%cin(2,k)
           if (j < dcp%js .or. j > dcp%je) cycle
-          s%hrs(i,j) = s%hrs(i,j) + vshare / (g%gv(i,j) * acell)
+          s%hrs(i,j) = s%hrs(i,j) + vshare / (s%gv(i,j) * acell)
         end do
       end if
       b%struct(ist)%dv = b%struct(ist)%dv - vap

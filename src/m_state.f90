@@ -71,6 +71,12 @@ module m_state
                                         !   h×af = 真の貯水体積/セル面積 となるよう
                                         !   swflow(complete)が毎ステップ更新する導出量
                                         !   (save 対象外。既定・非河道セルは gv と同値)
+    real, allocatable :: gv(:,:)        ! 家屋の空隙率(時間ループの正本。§63)。初期値は
+                                        !   入力 g%gv の帯写しで、g%gv/g%lm の帯は
+                                        !   band_shrink で解放される(z と同じ持ち主の移動)。
+                                        !   空隙率を変える機能は state_set_gv 経由で更新
+                                        !   する。無効時は入力と同値のため save 対象外
+    real, allocatable :: lm(:,:)        ! 有効慣性係数 gv+(1−gv)·cm(gv の導出量。同上)
     real, allocatable :: hg(:,:)        ! 地下貯留水深(柱状換算)(m)。どの地下水
                                         ! モデルも毎ステップここに反映する契約
     real, allocatable :: hs(:,:)        ! 浮遊砂柱状量(m。単位床面積あたりの固体
@@ -298,8 +304,11 @@ subroutine m_state_init(s, p, g)
   allocate(s%pre(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%prh(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hrs(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  ! 空隙率と有効慣性係数は入力係数(帯)の写しを状態として持つ(§63)
+  allocate(s%gv(1:g%nx,dcp%jsh:dcp%jeh), source = g%gv(1:g%nx,dcp%jsh:dcp%jeh))
+  allocate(s%lm(1:g%nx,dcp%jsh:dcp%jeh), source = g%lm(1:g%nx,dcp%jsh:dcp%jeh))
   allocate(s%af(1:g%nx,dcp%jsh:dcp%jeh), source = 1.0)
-  s%af(:,dcp%jsh:dcp%jeh) = g%gv(:,dcp%jsh:dcp%jeh)   ! 実効平面積率の初期値 = gv
+  s%af(:,dcp%jsh:dcp%jeh) = s%gv(:,dcp%jsh:dcp%jeh)   ! 実効平面積率の初期値 = gv
   allocate(s%hg(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   ! 土層厚 sd は利用モジュール(fn_geomorph / fn_gwflow)があるときのみ
   ! 確保する(§0 方針8: 有効化しないモデルはメモリを確保しない)。
@@ -475,7 +484,7 @@ subroutine m_state_calcstat(s, p, g)
       ! (h=0 のセルでも貯留は存在する。ゼロ加算はスキップ=従来ケースと
       !  総和のビット一致を保つ)
       if (s%hrs(i,j) > 0.0) then
-        hsum_j(j) = hsum_j(j) + real(s%hrs(i,j), real64) * g%gv(i,j)
+        hsum_j(j) = hsum_j(j) + real(s%hrs(i,j), real64) * s%gv(i,j)
       end if
       ! 積雪は乾燥セルにも存在するため h 判定より前に計上する(§31)
       if (allocated(s%swe)) then
@@ -743,6 +752,8 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%prh)) deallocate(s%prh)
   if (allocated(s%hrs)) deallocate(s%hrs)
   if (allocated(s%af)) deallocate(s%af)
+  if (allocated(s%gv)) deallocate(s%gv)
+  if (allocated(s%lm)) deallocate(s%lm)
   if (allocated(s%hg)) deallocate(s%hg)
   if (allocated(s%sd)) deallocate(s%sd)
   if (allocated(s%hs)) deallocate(s%hs)

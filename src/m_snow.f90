@@ -253,7 +253,7 @@ subroutine m_snow_calc(sn, p, g, s, mt, pr_fresh)
         s%swe(i,j) = s%swe(i,j) - w
         wf = 1.0
         if (have_width) wf = wfrac(i,j)
-        s%h(i,j) = s%h(i,j) + w / g%gv(i,j) / wf
+        s%h(i,j) = s%h(i,j) + w / s%gv(i,j) / wf
         s%e(i,j) = s%z(i,j) + s%h(i,j)
       end if
     end do

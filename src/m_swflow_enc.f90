@@ -1174,8 +1174,8 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   !   河道幅有効時はセルの平面積率 wfrac で水深換算を除算補正する
   dh = mne1 * mn2dh(k)    ! 家屋占有率がゼロの場合の中心セルの水深減少量
   if (have_frw) dh = dh * frw(k,ie,je)
-  dhc = dh / g%gv(i,j)
-  dhn = -dh / g%gv(in,jn)
+  dhc = dh / s%gv(i,j)
+  dhn = -dh / s%gv(in,jn)
   if (have_width) then
     dhc = dhc / wfrac(i,j)
     dhn = dhn / wfrac(in,jn)
@@ -1286,9 +1286,9 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   ! セル境界での物理量を求める
   vve = (s%vv(i,j) + s%vv(in,jn)) / 2       ! 速度の絶対値
   rne = (g%rn(i,j) + g%rn(in,jn)) / 2       ! 粗度係数
-  gve = (g%gv(i,j) + g%gv(in,jn)) / 2       ! 家屋の空隙率
+  gve = (s%gv(i,j) + s%gv(in,jn)) / 2       ! 家屋の空隙率
   bbe = (g%bb(i,j) + g%bb(in,jn)) / 2       ! 家屋の平均サイズ
-  lme = (g%lm(i,j) + g%lm(in,jn)) / 2       ! 有効慣性係数
+  lme = (s%lm(i,j) + s%lm(in,jn)) / 2       ! 有効慣性係数
   if (gve == 1) bbe = 1.e10                 ! 家屋なしの場合は家屋サイズは大きな値
 
   ! 摩擦項で使用する流速
@@ -1524,8 +1524,8 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
               fwc = frw(ke(kk),i+die(kk),j+dje(kk))
               fwn = frw(ke(kk),in+die(kk),jn+dje(kk))
             end if
-            dvc = dvc + mnec * mn2dh(kk) * fwc * winvc / g%gv(i,j) / a(l)
-            dvn = dvn + mnen * mn2dh(kk) * fwn * winvn / g%gv(in,jn) / a(l)
+            dvc = dvc + mnec * mn2dh(kk) * fwc * winvc / s%gv(i,j) / a(l)
+            dvn = dvn + mnen * mn2dh(kk) * fwn * winvn / s%gv(in,jn) / a(l)
           end do
           hc = sect_hinv(sect_v(hc0, sdep(i,j)) - dvc, sdep(i,j))
           hn = sect_hinv(sect_v(hn0, sdep(in,jn)) - dvn, sdep(in,jn))
@@ -1551,8 +1551,8 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
           fwn = frw(ke(kk),in+die(kk),jn+dje(kk))
         end if
         ! 仮の水深を更新
-        hc = hc - mnec * mn2dh(kk) * fwc * winvc / g%gv(i,j) / a(l)
-        hn = hn - mnen * mn2dh(kk) * fwn * winvn / g%gv(in,jn) / a(l)
+        hc = hc - mnec * mn2dh(kk) * fwc * winvc / s%gv(i,j) / a(l)
+        hn = hn - mnen * mn2dh(kk) * fwn * winvn / s%gv(in,jn) / a(l)
       end do
       end if
     end block
@@ -1659,7 +1659,7 @@ subroutine continuous(p, g, s, sx)
         ! 水深の減少量(m)に換算
         !   家屋占有率が0.0で無い場合はここで補正係数を乗じる。
         !   河道幅有効時は平面積率 wfrac の逆数 winv も乗じる
-        dh = mne * mn2dh(k) * fw * winv / g%gv(i,j)
+        dh = mne * mn2dh(k) * fw * winv / s%gv(i,j)
         ! 水深を更新
         sx%h1(i,j) = sx%h1(i,j) - dh
         ! セル中心の平均流速・流量への寄与分を加算
@@ -1888,7 +1888,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
         ! 通過幅係数(continuous と同一)
         fw = 1.0
         if (have_frw) fw = frw(ke(k),ie,je)
-        c1(i,j) = c1(i,j) - mne * cdon * sh * mn2dh(k) * fw * winv / g%gv(i,j)
+        c1(i,j) = c1(i,j) - mne * cdon * sh * mn2dh(k) * fw * winv / s%gv(i,j)
       end do
     end do
   end do
@@ -2232,7 +2232,7 @@ subroutine update_af(g, s)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
-      base = g%gv(i,j)
+      base = s%gv(i,j)
       if (have_width) base = base * wfrac(i,j)
       if (have_sect) then
         if (sdep(i,j) > 0.0) then

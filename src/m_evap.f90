@@ -229,14 +229,14 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
         w = min(s%hrs(i,j), dem)
         s%hrs(i,j) = s%hrs(i,j) - w
         dem = dem - w
-        ev%vrow(j,3) = ev%vrow(j,3) + real(w, real64) * real(g%gv(i,j), real64) * acell
+        ev%vrow(j,3) = ev%vrow(j,3) + real(w, real64) * real(s%gv(i,j), real64) * acell
         if (dem <= 0.0) cycle
       end if
       ! (4) 地下水 hg(gwflow 無効時は 0 のまま = 何も起きない)
       if (s%hg(i,j) > 0.0) then
         w = min(s%hg(i,j), dem)
         s%hg(i,j) = s%hg(i,j) - w
-        ev%vrow(j,4) = ev%vrow(j,4) + real(w, real64) * real(g%gv(i,j), real64) * acell
+        ev%vrow(j,4) = ev%vrow(j,4) + real(w, real64) * real(s%gv(i,j), real64) * acell
       end if
     end do
   end do

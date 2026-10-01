@@ -441,7 +441,7 @@ subroutine calc_melt(gl, p, g, s, mt)
       s%hi(i,j) = s%hi(i,j) - wm * gl%morfac * gl%ri
       wf = 1.0
       if (have_width) wf = wfrac(i,j)
-      s%h(i,j) = s%h(i,j) + wm / g%gv(i,j) / wf
+      s%h(i,j) = s%h(i,j) + wm / s%gv(i,j) / wf
       s%e(i,j) = s%z(i,j) + s%h(i,j)
     end do
   end do

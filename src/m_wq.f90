@@ -881,8 +881,8 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
         s%cq(i,j) = s%cq(i,j) - w
         ! cg は幾何面積基底 = cq 基底(gv×wfrac)から換算して積む
         ! (台帳 to_gw = mass_of(w) = Δcg×A と厳密整合。W3)
-        s%cg(i,j) = s%cg(i,j) + w * gwfac_of(g, i, j)
-        wq%vrow(j,3) = wq%vrow(j,3) + mass_of(g, i, j, w)
+        s%cg(i,j) = s%cg(i,j) + w * gwfac_of(s, i, j)
+        wq%vrow(j,3) = wq%vrow(j,3) + mass_of(g, s, i, j, w)
       end do
     end do
     !$omp end parallel do
@@ -900,7 +900,7 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
         fx = s%fxs(i,j)
         if (fx <= 0.0) cycle
         s%fxs(i,j) = 0.0
-        s%cq(i,j) = s%cq(i,j) + fx / gwfac_of(g, i, j)
+        s%cq(i,j) = s%cq(i,j) + fx / gwfac_of(s, i, j)
         wq%vrow(j,13) = wq%vrow(j,13) + real(fx, real64) * acell
       end do
     end do
@@ -923,8 +923,8 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
         if (s%cq(i,j) <= 0.0) cycle
         w = s%cq(i,j) * (fx / max(s%h(i,j) + fx, tiny(fx)))
         s%cq(i,j) = s%cq(i,j) - w
-        s%crs(i,j) = s%crs(i,j) + w * gwfac_of(g, i, j)
-        wq%vrow(j,15) = wq%vrow(j,15) + mass_of(g, i, j, w)
+        s%crs(i,j) = s%crs(i,j) + w * gwfac_of(s, i, j)
+        wq%vrow(j,15) = wq%vrow(j,15) + mass_of(g, s, i, j, w)
       end do
     end do
     !$omp end parallel do
@@ -952,7 +952,7 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
           s%fxco(i,j) = 0.0
           w = fx * wq%gwc_conc                       ! (m)×(g/m3) = g/m2 柱状
           s%cq(i,j) = s%cq(i,j) + w
-          wq%vrow(j,11) = wq%vrow(j,11) + mass_of(g, i, j, w)
+          wq%vrow(j,11) = wq%vrow(j,11) + mass_of(g, s, i, j, w)
         end do
       end do
       !$omp end parallel do
@@ -969,7 +969,7 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
           if (s%cq(i,j) <= 0.0) cycle
           w = s%cq(i,j) * (fx / max(s%h(i,j) + fx, tiny(fx)))
           s%cq(i,j) = s%cq(i,j) - w
-          wq%vrow(j,12) = wq%vrow(j,12) + mass_of(g, i, j, w)
+          wq%vrow(j,12) = wq%vrow(j,12) + mass_of(g, s, i, j, w)
         end do
       end do
       !$omp end parallel do
@@ -987,7 +987,7 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
     do m = 1, wq%pt(k)%nc
       i = wq%pt(k)%cells(1,m)
       j = wq%pt(k)%cells(2,m)
-      w = rate * p%dt / real(mass_of(g, i, j, 1.0))             ! g -> 柱状量
+      w = rate * p%dt / real(mass_of(g, s, i, j, 1.0))             ! g -> 柱状量
       s%cq(i,j) = s%cq(i,j) + w
       wq%vrow(j,1) = wq%vrow(j,1) + real(rate, real64) * real(p%dt, real64)
     end do
@@ -1003,7 +1003,7 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
       i = wq%ar(k)%cells(1,m)
       j = wq%ar(k)%cells(2,m)
       ! セルの負荷 = 原単位×セル面積。柱状量へは実効面積で除す
-      w = rate * real(acell) * p%dt / real(mass_of(g, i, j, 1.0))
+      w = rate * real(acell) * p%dt / real(mass_of(g, s, i, j, 1.0))
       s%cq(i,j) = s%cq(i,j) + w
       wq%vrow(j,2) = wq%vrow(j,2) + real(rate, real64) * acell * real(p%dt, real64)
     end do
@@ -1017,7 +1017,7 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
         if (wq%rmap(i,j) <= 0.0) cycle
-        w = wq%rmap(i,j) * real(acell) * p%dt / real(mass_of(g, i, j, 1.0))
+        w = wq%rmap(i,j) * real(acell) * p%dt / real(mass_of(g, s, i, j, 1.0))
         s%cq(i,j) = s%cq(i,j) + w
         wq%vrow(j,7) = wq%vrow(j,7) + real(wq%rmap(i,j), real64) * acell * real(p%dt, real64)
       end do
@@ -1043,7 +1043,7 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
           if (g%x(i,j) <= 0) cycle
           if (s%pre(i,j) <= 0.0) cycle
           ! セルの質量 = 濃度×雨量×面積。柱状量へは実効面積で除す
-          w = rate * s%pre(i,j) * p%dt * real(acell) / real(mass_of(g, i, j, 1.0))
+          w = rate * s%pre(i,j) * p%dt * real(acell) / real(mass_of(g, s, i, j, 1.0))
           s%cq(i,j) = s%cq(i,j) + w
           wq%vrow(j,8) = wq%vrow(j,8) &
                          + real(rate, real64) * real(s%pre(i,j), real64) &
@@ -1103,7 +1103,7 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
         if (rate <= 0.0) cycle
         w = s%bp(i,j) * (1.0 - exp(-rate * p%dt))          ! g/m2(幾何面積基底)
         s%bp(i,j) = s%bp(i,j) - w
-        s%cq(i,j) = s%cq(i,j) + w * real(acell) / real(mass_of(g, i, j, 1.0))
+        s%cq(i,j) = s%cq(i,j) + w * real(acell) / real(mass_of(g, s, i, j, 1.0))
         wq%vrow(j,10) = wq%vrow(j,10) + real(w, real64) * acell
       end do
     end do
@@ -1121,8 +1121,8 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
       i = wq%dam(nd)%cells(1,k)
       j = wq%dam(nd)%cells(2,k)
       if (s%cq(i,j) <= 0.0) cycle
-      wq%vrow(j,4) = wq%vrow(j,4) + mass_of(g, i, j, s%cq(i,j))
-      drow(j) = drow(j) + mass_of(g, i, j, s%cq(i,j))
+      wq%vrow(j,4) = wq%vrow(j,4) + mass_of(g, s, i, j, s%cq(i,j))
+      drow(j) = drow(j) + mass_of(g, s, i, j, s%cq(i,j))
       s%cq(i,j) = 0.0
     end do
     if (wq%dam(nd)%pooled) then
@@ -1175,7 +1175,7 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
       do k = 1, wq%dam(nd)%ncout
         i = wq%dam(nd)%cout(1,k)
         j = wq%dam(nd)%cout(2,k)
-        s%cq(i,j) = s%cq(i,j) + real(m8 / mass_of(g, i, j, 1.0))
+        s%cq(i,j) = s%cq(i,j) + real(m8 / mass_of(g, s, i, j, 1.0))
         wq%vrow(j,14) = wq%vrow(j,14) + m8
       end do
     end do
@@ -1194,7 +1194,7 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
           if (s%cq(i,j) > 0.0) then
             w = s%cq(i,j) * (1.0 - wq%fdec)
             s%cq(i,j) = s%cq(i,j) - w
-            wq%vrow(j,5) = wq%vrow(j,5) + mass_of(g, i, j, w)
+            wq%vrow(j,5) = wq%vrow(j,5) + mass_of(g, s, i, j, w)
           end if
           if (allocated(s%cg)) then
             if (s%cg(i,j) > 0.0) then
@@ -1239,9 +1239,9 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
               ! 行き先: 消失(河床外)かプール(再懸濁サイクル。f_wq_settle=1)。
               ! 台帳 settle は行き先によらず沈降量を数える(閉合の解釈は §30)
               if (wq%f_settle == 1) then
-                s%bp(i,j) = s%bp(i,j) + real(mass_of(g, i, j, w)) / real(acell)
+                s%bp(i,j) = s%bp(i,j) + real(mass_of(g, s, i, j, w)) / real(acell)
               end if
-              wq%vrow(j,6) = wq%vrow(j,6) + mass_of(g, i, j, w)
+              wq%vrow(j,6) = wq%vrow(j,6) + mass_of(g, s, i, j, w)
             end if
           end if
         end if
@@ -1318,11 +1318,11 @@ end function
 ! cg×A = 質量 となる基底に揃えることで、地下横輸送(柱状量の対称交換)の
 ! 質量収支が gv・wfrac の分布によらず厳密に閉じる(§30)
 !----------------------------------------------------------------------
-function gwfac_of(g, i, j) result(f)
-  type(t_geoinfo), intent(in) :: g
+function gwfac_of(s, i, j) result(f)
+  type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   real :: f
-  f = g%gv(i,j)
+  f = s%gv(i,j)
   if (have_width) f = f * wfrac(i,j)
 end function
 
@@ -1331,15 +1331,16 @@ end function
 ! セル (i,j) の柱状量 w に対応する質量 (g)(real64)。
 ! 質量 = w × gv × wfrac × A(幅無効時は wfrac=1 の乗算で厳密に不変)
 !----------------------------------------------------------------------
-function mass_of(g, i, j, w) result(mass)
+function mass_of(g, s, i, j, w) result(mass)
   type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   real, intent(in) :: w
   real(real64) :: mass
   real :: wf
   wf = 1.0
   if (have_width) wf = wfrac(i,j)
-  mass = real(w, real64) * real(g%gv(i,j), real64) * real(wf, real64) &
+  mass = real(w, real64) * real(s%gv(i,j), real64) * real(wf, real64) &
          * real(g%dx, real64) * real(g%dy, real64)
 end function
 
@@ -1389,7 +1390,7 @@ subroutine m_wq_record(wq, p, g, s)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
-      rows(j) = rows(j) + mass_of(g, i, j, s%cq(i,j))
+      rows(j) = rows(j) + mass_of(g, s, i, j, s%cq(i,j))
       ! cg は幾何面積基底(質量 = cg×A。W3)
       if (allocated(s%cg)) rows2(j) = rows2(j) + real(s%cg(i,j), real64) * acell
       if (wq%have_pool) rows3(j) = rows3(j) + real(s%bp(i,j), real64) * acell

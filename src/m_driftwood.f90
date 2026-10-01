@@ -408,7 +408,7 @@ subroutine m_driftwood_calc(dw, p, g, s, it)
         if (dw%zref(i,j) - s%z(i,j) > dw%droot) then
           w = dw%wst(i,j)
           dw%wst(i,j) = 0.0
-          s%hd(i,j) = s%hd(i,j) + w / colfac(g, i, j)
+          s%hd(i,j) = s%hd(i,j) + w / colfac(s, i, j)
           dw%vrow(j,2) = dw%vrow(j,2) + vol_geo(g, w)
         end if
       end if
@@ -419,7 +419,7 @@ subroutine m_driftwood_calc(dw, p, g, s, it)
         if (hh > dw%hrec .and. s%vv(i,j) > dw%vrec) then
           w = min(dw%wst(i,j), dw%wrec * p%dt)
           dw%wst(i,j) = dw%wst(i,j) - w
-          s%hd(i,j) = s%hd(i,j) + w / colfac(g, i, j)
+          s%hd(i,j) = s%hd(i,j) + w / colfac(s, i, j)
           dw%vrow(j,1) = dw%vrow(j,1) + vol_geo(g, w)
         end if
       end if
@@ -437,7 +437,7 @@ subroutine m_driftwood_calc(dw, p, g, s, it)
         if (w > 0.0) then
           s%hd(i,j) = s%hd(i,j) - w
           s%wd(i,j) = s%wd(i,j) + w
-          dw%vrow(j,3) = dw%vrow(j,3) + vol_col(g, i, j, w)
+          dw%vrow(j,3) = dw%vrow(j,3) + vol_col(g, s, i, j, w)
         end if
       end if
 
@@ -448,7 +448,7 @@ subroutine m_driftwood_calc(dw, p, g, s, it)
           w = min(s%wd(i,j), dw%wfloat * p%dt)
           s%wd(i,j) = s%wd(i,j) - w
           s%hd(i,j) = s%hd(i,j) + w
-          dw%vrow(j,4) = dw%vrow(j,4) + vol_col(g, i, j, w)
+          dw%vrow(j,4) = dw%vrow(j,4) + vol_col(g, s, i, j, w)
         end if
       end if
     end do
@@ -462,7 +462,7 @@ subroutine m_driftwood_calc(dw, p, g, s, it)
       i = dw%dam(nd)%cells(1,k)
       j = dw%dam(nd)%cells(2,k)
       if (s%hd(i,j) <= 0.0) cycle
-      dw%vrow(j,5) = dw%vrow(j,5) + vol_col(g, i, j, s%hd(i,j))
+      dw%vrow(j,5) = dw%vrow(j,5) + vol_col(g, s, i, j, s%hd(i,j))
       s%hd(i,j) = 0.0
     end do
   end do
@@ -488,21 +488,22 @@ end subroutine
 !   柱状量の材積 = w × gv × wfrac × A(h・hs と同じ実効面積基底)、
 !   幾何面積基底(wst)の材積 = w × A
 !----------------------------------------------------------------------
-function colfac(g, i, j) result(f)
-  type(t_geoinfo), intent(in) :: g
+function colfac(s, i, j) result(f)
+  type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   real :: f, wf
   wf = 1.0
   if (have_width) wf = wfrac(i,j)
-  f = g%gv(i,j) * wf
+  f = s%gv(i,j) * wf
 end function
 
-function vol_col(g, i, j, w) result(vol)
+function vol_col(g, s, i, j, w) result(vol)
   type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   real, intent(in) :: w
   real(real64) :: vol
-  vol = real(w, real64) * real(colfac(g, i, j), real64) &
+  vol = real(w, real64) * real(colfac(s, i, j), real64) &
         * real(g%dx, real64) * real(g%dy, real64)
 end function
 
@@ -541,8 +542,8 @@ subroutine m_driftwood_record(dw, p, g, s)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       rows(j) = rows(j) + vol_geo(g, dw%wst(i,j))
-      rows2(j) = rows2(j) + vol_col(g, i, j, s%hd(i,j))
-      rows3(j) = rows3(j) + vol_col(g, i, j, s%wd(i,j))
+      rows2(j) = rows2(j) + vol_col(g, s, i, j, s%hd(i,j))
+      rows3(j) = rows3(j) + vol_col(g, s, i, j, s%wd(i,j))
     end do
   end do
   call par_sum_rows(rows, vstk)

@@ -119,7 +119,7 @@ subroutine m_swflow_stg_init(p, g, b, s)
   ALLOCATE(N0(1:IG,dcp%jsh-1:dcp%jeh),SOURCE=0.0)
   ALLOCATE(N1(1:IG,dcp%jsh-1:dcp%jeh),SOURCE=0.0)
   ! 静的コピー(H/GV/DN/BB/X/R)と行別窓 I1/I2 は全域保持のまま
-  ! H/GV/DN/BB のコピー元(s%z, g%gv, g%rn, g%bb)は帯確保のため
+  ! H/GV/DN/BB のコピー元(s%z, s%gv, g%rn, g%bb)は帯確保のため
   ! 同じ帯で確保する(全域のままだと全配列代入が形状不一致で np>=2 で破綻)。
   ! X/R のコピー元(g%sw, g%rw)は init 時点(ゾーン2)では全域なので全域のまま
   ALLOCATE(H(1:IG,dcp%jsh:dcp%jeh),SOURCE=0.0)
@@ -148,7 +148,7 @@ subroutine m_swflow_stg_init(p, g, b, s)
   KK=p%kk             ! 抗力項補正係数
 
   H(:,:)=s%z(:,:)     ! H:標高
-  GV(:,:)=g%gv(:,:)   ! GV:1-家屋占有率
+  GV(:,:)=s%gv(:,:)   ! GV:1-家屋占有率(時間ループの正本 s%gv。§63)
   BB(:,:)=g%bb(:,:)   ! BB:家屋の平均寸法
   DN(:,:)=g%rn(:,:)   ! DN:合成粗度
   X(:,:)=g%sw(:,:)    ! X:海陸判別パラメータ
