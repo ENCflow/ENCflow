@@ -20,7 +20,7 @@ module list_evap
     !   3: Hamon 式(気温 = &list_meteo+可照時間。暦・緯度が必要)
     !   4: Thornthwaite 式(3 に加えて熱指数用の平年値が必要)
     integer :: f_evmodel = 0
-    real :: evap0 = -9999.0                        ! モード1: PET (mm/day)
+    real :: evap0 = -9999.0                        ! モード1: PET (mm/day。未指定なら既定 3。§66)
     real :: evap_monthly(1:12) = -9999.0           ! モード2: 月別 PET (mm/day)
     real :: evap_kc = 1.0                          ! 換算係数(パン係数・校正用。全モード共通)
     real :: lat = -9999.0                          ! 代表緯度 (deg。モード3,4で必須)

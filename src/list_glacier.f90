@@ -19,16 +19,16 @@ module list_glacier
                                              !   共通の「地形時間」。併用時は同値必須)
     real :: gl_dens = 900.0                  ! 氷の密度 (kg/m3)
     real :: gl_tfirn_yr = 10.0               ! 雪→氷変換(フィルン化)の e-folding 時間 (年)
-    real :: gl_ddfi = -9999.0                ! 氷面の度日係数 (mm/℃/day。必須)
+    real :: gl_ddfi = -9999.0                ! 氷面の度日係数 (mm/℃/day。未指定なら既定 8。§65)
     real :: gl_tmelt = 0.0                   ! 氷面融解の気温閾値 (℃)
     integer :: f_glflow = 1                  ! SIA 氷体流動 (0:流動なし, 1:有効)
     real :: gl_afl = 1.0e-16                 ! Glen 流動則の係数 A (Pa^-3 yr^-1)
     real :: gl_cfl = 0.4                     ! 陽解法サブサイクルの安全係数 (0-1)
     integer :: gl_nsubmax = 10000            ! 1回の更新のサブサイクル数上限(暴走ガード)
     integer :: f_glslide = 0                 ! Weertman 底面滑動 (0:なし, 1:有効)
-    real :: gl_as = -9999.0                  ! 滑動係数 As (m yr^-1 Pa^-3。f_glslide=1 で必須)
+    real :: gl_as = -9999.0                  ! 滑動係数 As (m yr^-1 Pa^-3。f_glslide=1 で未指定なら既定 1e-13)
     integer :: f_glero = 0                   ! 氷河侵食 (0:なし, 1:有効。f_glslide 必須)
-    real :: gl_kg = -9999.0                  ! 侵食係数 Kg(滑動速度べき乗則。f_glero=1 で必須。
+    real :: gl_kg = -9999.0                  ! 侵食係数 Kg(滑動速度べき乗則。f_glero=1 で未指定なら既定 1e-4。
                                              !   gl_lexp=1 なら無次元(us は m/yr で評価))
     real :: gl_lexp = 1.0                    ! 侵食則の滑動速度べき指数 l
     integer :: f_glava = 0                   ! 雪の重力再配分=雪崩 (0:なし, 1:有効)

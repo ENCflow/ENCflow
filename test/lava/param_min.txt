@@ -1,0 +1,56 @@
+!======================================================================
+! lava 構成3: 既定値の同値検定(developer.md §66)
+!   構成2(param_ty.txt)と同じ Bingham 停止・固化の設定で、lv_visc・lv_vsol を省略して既定に任せる。
+!   Run.sh が構成3 と構成3' の save(state.dat・lavaflow.dat)と Log.txt の
+!   バイト一致を検定する(h∞ の検定対象外。粘度が既定 1e4 のため構成2 より遅い)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.5
+  t0 = 0
+  tt = 4800
+  dt_disp = 800
+  dt_file = 4800
+  dt_recrd = 4800
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_lavaflow = '-'
+  dir_result = 'result_min'
+  dir_save = 'save_min'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 水なし(溶岩のみの検定)
+/
+
+&list_geoinfo
+  lx = 100.0
+  ly = 8.0
+  nx = 100
+  ny = 8
+  f_ztype = 1
+  fn_z = 'zinit.txt'        ! 等勾配斜面 tanθ=0.2(make_init.py)
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_lavaflow
+  lv_rho = 2600.0
+  lv_tauy = 2000.0          ! 降伏応力 (Pa)。h∞ = τ_y/(ρg tanθ) = 0.3925 m
+  lv_wsol = 0.005           ! 固化レート (m/s)
+  lv_cell(1:2,1,1) = 5, 1   ! 上流端の列噴火口(割れ目噴火の型)
+  lv_cell(1:2,2,1) = 5, 2
+  lv_cell(1:2,3,1) = 5, 3
+  lv_cell(1:2,4,1) = 5, 4
+  lv_cell(1:2,5,1) = 5, 5
+  lv_cell(1:2,6,1) = 5, 6
+  lv_cell(1:2,7,1) = 5, 7
+  lv_cell(1:2,8,1) = 5, 8
+  lv_val(1:2,1,1) = 0, 0.5  ! (時刻(min), 総噴出率(m3/s))
+  lv_val(1:2,2,1) = 5, 0.5
+  lv_val(1:2,3,1) = 5, 0.0  ! 重複時刻 = t=300s ちょうどで階段状に停止
+/

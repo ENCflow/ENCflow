@@ -96,8 +96,8 @@ subroutine adv_prepare_v1(p, g, s, sx, tx)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle   ! get_diffで陸から1セル外側まで参照することに注意
       if (s%h(i,j) < p%dd) cycle
-      tx%ulm(i,j) = s%u(i,j) * g%lm(i,j)
-      tx%vlm(i,j) = s%v(i,j) * g%lm(i,j)
+      tx%ulm(i,j) = s%u(i,j) * s%lm(i,j)
+      tx%vlm(i,j) = s%v(i,j) * s%lm(i,j)
     end do
   end do
   !$omp end parallel do
@@ -386,8 +386,8 @@ subroutine adv_prepare_v2(p, g, s, sx, tx)
         ! 勾配を計算
         call get_diff_v2(uu, vv, hh, p%dd, wwx, wwy, xx, 2, 2, 3, 3, dux, duy, dvx, dvy)
         ! 移流項を計算
-        tx%taxy(1,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy) * g%lm(i,j)
-        tx%taxy(2,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy) * g%lm(i,j)
+        tx%taxy(1,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy) * s%lm(i,j)
+        tx%taxy(2,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy) * s%lm(i,j)
       else
         ! 保存形
         ! uとvを並べてuu,vv,uvの形に整形して代入
@@ -403,8 +403,8 @@ subroutine adv_prepare_v2(p, g, s, sx, tx)
         ! 勾配を計算
         call get_diff2_v2(uu, vv, uv, hh, p%dd, wwx, wwy, xx, duux, dvvy, duvx, duvy)
         ! 移流項を計算
-        tx%taxy(1,i,j) = -(duux + duvy) * g%lm(i,j)
-        tx%taxy(2,i,j) = -(duvx + dvvy) * g%lm(i,j)
+        tx%taxy(1,i,j) = -(duux + duvy) * s%lm(i,j)
+        tx%taxy(2,i,j) = -(duvx + dvvy) * s%lm(i,j)
       end if
 
     end do

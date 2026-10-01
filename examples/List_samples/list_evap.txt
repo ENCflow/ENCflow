@@ -13,7 +13,8 @@
   !   4: Thornthwaite 式(3 に加えて temp_normal が必要)
   f_evmodel = 3
 
-  !evap0 = 3.0                  ! モード1: PET (mm/day)
+  !evap0 = 3.0                  ! モード1: PET (mm/day。未指定なら既定 3 =
+                                !   温帯湿潤気候の暖候期の下寄り。§66)
   !evap_monthly = 0.5, 0.7, 1.2, 2.0, 2.8, 3.2, 3.6, 3.8, 2.8, 1.8, 1.0, 0.6
                                 ! モード2: 月別 PET (mm/day)
   evap_kc = 1.0                 ! 換算係数(パン係数・校正用。全モード共通)

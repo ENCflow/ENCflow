@@ -38,12 +38,13 @@ land side are solved by the ordinary shallow-water computation).
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| ti0 | - | titype=1: uniform fixed tide level (m; same elevation datum as z) |
+| titype | 1 | Tide type (table above). When unspecified, 1 (uniform fixed level ti0) is adopted and printed with "(default)" |
+| ti0 | 0 | titype=1: uniform fixed tide level (m; same elevation datum as z). Default 0 = mean sea level |
 | tival | - | titype=2, 3: time series `(time (min), tide level (m) or multiplier)` |
 | fn_timap | "" | titype=3: tide level distribution file (m) |
 | fn_timaplist / dt_timaplist(_c) | "" / 60 | titype=4: list of distribution files and their time interval (min). Frame i is at time (i-1) x interval; outside the range the end values persist |
 | dt_tiupdate | 1 | Tide level update interval (min) |
-| hsea0 | - | Apparent water column thickness of sea cells (m) (see below) |
+| hsea0 | 1.0 | Apparent water column thickness of sea cells (m) (see below) |
 
 ## hsea0 - apparent water column thickness of sea cells
 
@@ -72,6 +73,28 @@ value and check.
   level ([the boundary conditions chapter](boundary.md)). When the
   domain contains a sea area, use fn_sw and fn_seaside for the sea
   surface initialization and the seaside test of breakwaters.
+
+## Recommended values by pattern
+
+The minimal input to "just try it" is the sea mask fn_sw and **an empty
+&list_tide in fn_tide** (= fixed tide level 0 m and hsea0 1 m: the
+simplest use of the sea as a "drain at level 0"; developer.md §67). Tide
+levels are given data, but guides by type:
+
+```
+&list_tide
+/
+```
+
+| Type | titype | Guide for the tide level | Used together with |
+|---|---|---|---|
+| Astronomical tide (tidal reach) | 2 | Semidiurnal sine of 12.42 h. Amplitude 0.5-1 m on the Pacific coast of Japan, 1.5-3 m in the Seto Inland Sea and Ariake Sea | Segment inflow (river), fresh/salt two-layer |
+| Storm surge | 2 | Superpose a typhoon surge of 1-3 m as a 3-6 h hump on the astronomical tide | Seawalls fn_seawall, building clusters fn_gv |
+| Drainage toward low tide | 2 or 1 | Lower to / fix at a low tide level (about -1 m) | Drainage pumps, sluice gates |
+| Steady warning tide level | 1 | ti0 = design high tide level | Seawalls |
+| Tsunami | - | Not the tide feature but boundary incidence ([boundary conditions](boundary.md)) | fn_seaside |
+
+Start hsea0 at several tens of the threshold depth dd (typically 1 m).
 
 ## Constraints and notes
 

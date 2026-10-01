@@ -103,7 +103,7 @@ Sources (confirmed 2026-08-10):
   limits and the commercial GUI-first products.
 - **Ease of adoption (self-teachability)**: as user-facing
   groundwork, it ships a
-  20-chapter user's guide plus a full parameter index (453 entries),
+  25-chapter user's guide plus a full parameter index (555 entries),
   annotated namelist samples for every feature
   (examples/List_samples), and 2 hands-on tutorials (minimal example
   wave, real terrain chichibu; from the pitfalls of real data --

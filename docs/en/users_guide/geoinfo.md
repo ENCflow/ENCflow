@@ -62,6 +62,21 @@ preprocessing (GIS etc.) to create the file and supply it with
 `f_rntype = 1` (the in-model conversion f_rntype=2 has been removed --
 developer.md Sec. 41).
 
+**Roughness guides** (Manning n by land use; customary values of the
+Japanese inundation-mapping manuals and Chow 1959; calibration
+quantities)
+
+| Land use | rn0 | Notes |
+|---|---|---|
+| Roads, pavement, concrete | 0.015-0.02 | The default 0.015 is a paved surface |
+| Channel (sand bed / gravel bed) | 0.025-0.035 / 0.035-0.05 | Via rn0_rw or fn_rn |
+| Residential (buildings handled by fn_gv/fn_bb) | 0.02-0.03 | Building drag is expressed through the void ratio |
+| Residential (equivalent roughness including buildings) | 0.04-0.07 | About 0.067 at a building occupancy of 30-50 % |
+| Paddy fields | 0.06 | Including the effect of levees between fields |
+| Upland fields | 0.05 | |
+| Grassland, parks | 0.03-0.05 | |
+| Forest | 0.1-0.15 | Understory and fallen trees |
+
 ## Domain mask (restricting the computed area)
 
 | Parameter | Default | Meaning |
@@ -135,7 +150,7 @@ full is never absorbed).
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_sdtype | 0 | 0: fixed value sd0, 1: file fn_sd |
-| sd0 / fn_sd | 0 / "" | soil depth (m) (uniform value / distribution) |
+| sd0 / fn_sd | 0 / "" | soil depth (m) (uniform value / distribution). When [groundwater](gwflow.md) needs it and sd0 is unspecified, 1 m is adopted as the default and printed (when geomorphology f_wthr etc. needs it, it remains required) |
 | sy0 | 0.2 | specific yield (effective porosity) |
 
 Read -- and memory allocated -- only when a groundwater model that

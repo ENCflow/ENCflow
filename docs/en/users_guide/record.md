@@ -26,6 +26,12 @@ northernmost row are 1). Rasters in GIS such as QGIS count from 0, so
 add +1 to both row and column numbers picked in a GIS
 ([the coordinate systems chapter](coordinates.md)).
 
+The minimal input is one probe (`pbxy(:,1) = ix, iy`). To compare with a
+real gauging station give real coordinates with pbxytype=1, and for
+discharge draw a transect crossing the channel from the right bank to
+the left bank 2-3 cells longer than the channel width (so that flow
+outside the channel during inundation is captured too).
+
 ## Probes (point time series)
 
 | Parameter | Default | Meaning |

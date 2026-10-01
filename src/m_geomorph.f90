@@ -48,7 +48,7 @@ module m_geomorph
   use list_geomorph, only : t_list_geomorph, list_geomorph_read
   use m_parallel, only : par_info, par_warn, par_stop, dcp, par_halo_cell, &
                          par_allreduce_max
-  use m_util, only : itoa, rtoa
+  use m_util, only : itoa, rtoa, param_default
   implicit none
   private
 
@@ -379,7 +379,9 @@ contains
 !   未指定(val == unset。通常 0)なら def を採用し、採用値を必ず 1 行
 !   表示する(既定なら "(default)" を付ける — 物性値を黙って使わない)。
 !   submodule の各 init が「そのプロセスで必要な値」だけに対して呼ぶ。
-!   値域の検証は呼び出し側で従来どおり行う(明示された不正値は停止)
+!   値域の検証は呼び出し側で従来どおり行う(明示された不正値は停止)。
+!   実体は m_util の param_default(§64。本関数は接頭辞 "geomorph" を
+!   与える薄い包み。submodule から呼ぶため public のまま)
 !----------------------------------------------------------------------
 function gm_param(name, val, def, unit, unset) result(eff)
   character(len=*), intent(in) :: name     ! namelist 名(表示用)
@@ -388,26 +390,7 @@ function gm_param(name, val, def, unit, unset) result(eff)
   character(len=*), intent(in) :: unit     ! 単位(先頭に空白。無次元は "")
   real, intent(in), optional :: unset      ! 未指定の番兵(省略時 0.0)
   real :: eff
-  real :: us
-  logical :: isdef
-  character(len=32) :: buf
-  character(len=:), allocatable :: str
-  us = 0.0
-  if (present(unset)) us = unset
-  isdef = (val == us)
-  eff = val
-  if (isdef) eff = def
-  if (abs(eff) >= 1.0e5 .or. (abs(eff) < 1.0e-3 .and. eff /= 0.0)) then
-    write(buf, '(es12.4)') eff
-  else
-    write(buf, '(f0.4)') eff
-  end if
-  buf = adjustl(buf)
-  if (buf(1:1) == '.') buf = '0'//trim(buf)      ! gfortran の f0 は先頭 0 を省く
-  if (buf(1:2) == '-.') buf = '-0'//trim(buf(2:))
-  str = "geomorph: "//name//" = "//trim(buf)//unit
-  if (isdef) str = str//" (default)"
-  call par_info(str)
+  eff = param_default("geomorph", name, val, def, unit, unset)
 end function
 
 

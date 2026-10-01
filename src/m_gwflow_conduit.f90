@@ -87,6 +87,7 @@ module m_gwflow_conduit
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : par_info, par_stop, dcp, is_root, par_halo_cell, &
                          par_gather_to, par_scatter_cell, par_sum_rows
+  use m_util, only : param_default
   implicit none
   private
   public :: gwflow_conduit_init
@@ -188,15 +189,29 @@ subroutine gwflow_conduit_init(p, g, s, dts)
   if (f_gwc_fluxlaw /= 1 .and. f_gwc_fluxlaw /= 2) then
     call par_stop("list_gwflow_conduit: f_gwc_fluxlaw must be 1(linear) or 2(sqrt)")
   end if
+  ! 既定値(マップ指定のない一様スカラーが未指定 = 0 なら採用し、採用値を
+  ! 表示。developer.md §64)。gwc_cnd_m2s・gwc_inlet・gwc_sat0・gwc_leak_layer
+  ! の 0 はそれぞれ「側方なし・地表交換なし・空・交換なし」の明示なので
+  ! 既定を置かない(最小入力は gwc_inlet か fn_gwc_inlet の 1 行)
+  if (len_trim(fn_gwc_cap) == 0) then
+    gwc_cap = param_default("gwflow", "gwc_cap", gwc_cap, 0.01, " m")
+  end if
+  if (len_trim(fn_gwc_bot) == 0) then
+    gwc_depth = param_default("gwflow", "gwc_depth", gwc_depth, 3.0, " m")
+  end if
   ! 貯留係数のスカラー検証はマップ指定がない側にのみ適用する
-  ! (マップ指定時はセル別検証 = 下の sy 節で行う。§46.5 (5))
+  ! (マップ指定時はセル別検証 = 下の sy 節で行う。§46.5 (5))。
+  ! slot_sy の既定は sy の 1/50(マップ指定の sy に対してもセル別に同じ比)
   if (len_trim(fn_gwc_sy) == 0) then
+    gwc_sy = param_default("gwflow", "gwc_sy", gwc_sy, 0.05, "")
     if (gwc_sy <= 0.0 .or. gwc_sy > 1.0) then
       call par_stop("list_gwflow_conduit: gwc_sy must be in (0,1]")
     end if
-    if (len_trim(fn_gwc_slot_sy) == 0 &
-        .and. (gwc_slot_sy <= 0.0 .or. gwc_slot_sy > gwc_sy)) then
-      call par_stop("list_gwflow_conduit: gwc_slot_sy must be in (0, gwc_sy]")
+    if (len_trim(fn_gwc_slot_sy) == 0) then
+      gwc_slot_sy = param_default("gwflow", "gwc_slot_sy", gwc_slot_sy, gwc_sy / 50.0, "")
+      if (gwc_slot_sy <= 0.0 .or. gwc_slot_sy > gwc_sy) then
+        call par_stop("list_gwflow_conduit: gwc_slot_sy must be in (0, gwc_sy]")
+      end if
     end if
   end if
   if (gwc_cap <= 0.0 .and. len_trim(fn_gwc_cap) == 0) then
@@ -242,10 +257,12 @@ subroutine gwflow_conduit_init(p, g, s, dts)
     case default
       call par_stop("list_gwflow_conduit: gwc_leak_layer must be 0(none), 1(soil) or 2(layer2)")
   end select
-  if (gwc_leak_layer > 0 .and. gwc_leak_mmh <= 0.0 &
-      .and. len_trim(fn_gwc_leak) == 0) then
-    call par_stop("list_gwflow_conduit: set gwc_leak_mmh > 0 or fn_gwc_leak " &
-                  // "when gwc_leak_layer > 0")
+  if (gwc_leak_layer > 0 .and. len_trim(fn_gwc_leak) == 0) then
+    gwc_leak_mmh = param_default("gwflow", "gwc_leak_mmh", gwc_leak_mmh, 10.0, " mm/h")
+    if (gwc_leak_mmh <= 0.0) then
+      call par_stop("list_gwflow_conduit: set gwc_leak_mmh > 0 or fn_gwc_leak " &
+                    // "when gwc_leak_layer > 0")
+    end if
   end if
   gwc%leak_layer = gwc_leak_layer
   gwc%cw = gwc_cw
@@ -298,6 +315,10 @@ subroutine gwflow_conduit_init(p, g, s, dts)
     end if
     if (len_trim(fn_gwc_slot_sy) > 0) then
       call read_map_scatter(p, g, fn_gwc_slot_sy, wkslot, "gwc_slot_sy")
+    else if (len_trim(fn_gwc_sy) > 0 .and. gwc_slot_sy == 0.0) then
+      ! sy がマップで slot が未指定: セル別に sy/50 を既定とする(§64)
+      call par_info("gwflow: gwc_slot_sy = gwc_sy / 50 per cell (default)")
+      wkslot(:,:) = wksy(:,:) / 50.0
     else
       wkslot(:,:) = gwc_slot_sy
     end if

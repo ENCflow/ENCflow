@@ -18,6 +18,7 @@ module m_state
   public :: m_state_dispose
   public :: m_state_updatetime
   public :: m_state_calcstat
+  public :: m_state_set_gv
   public :: m_state_printstate
 
 
@@ -71,6 +72,15 @@ module m_state
                                         !   h×af = 真の貯水体積/セル面積 となるよう
                                         !   swflow(complete)が毎ステップ更新する導出量
                                         !   (save 対象外。既定・非河道セルは gv と同値)
+    real, allocatable :: gv(:,:)        ! 家屋の空隙率(時間ループの正本。§63)。初期値は
+                                        !   入力 g%gv の帯写しで、g%gv/g%lm の帯は
+                                        !   band_shrink で解放される(z と同じ持ち主の移動)。
+                                        !   空隙率を変える機能は state_set_gv 経由で更新
+                                        !   する。無効時は入力と同値のため save 対象外
+    real, allocatable :: lm(:,:)        ! 有効慣性係数 gv+(1−gv)·cm(gv の導出量。同上)
+    logical :: gv_active = .false.      ! 空隙率が時間変化する機能の有効化(gv を変える
+                                        !   モジュールの init が立てる。swflow_enc が
+                                        !   update_af の呼び出し条件に加える。§63.1)
     real, allocatable :: hg(:,:)        ! 地下貯留水深(柱状換算)(m)。どの地下水
                                         ! モデルも毎ステップここに反映する契約
     real, allocatable :: hs(:,:)        ! 浮遊砂柱状量(m。単位床面積あたりの固体
@@ -174,6 +184,24 @@ module m_state
                                         ! (f_out_wd 指定時のみ確保。save 対象外。§7)
     logical :: dw_active = .false.      ! 流木輸送の有効化(m_driftwood_init が設定。
                                         ! swflow_enc がステップ内で s%hd を移流する)
+    real :: dw_sg = 0.0                 ! 流木の材比重(m_driftwood_init が設定。
+                                        ! m_bldgdebris が荷重の付加質量に使う。§63.3)
+    real, allocatable :: hbd(:,:)       ! 流動瓦礫柱状量 (m3/m2 = m。貯留の意味論は
+                                        ! h・hd と同一)。移流は swflow_enc がステップ
+                                        ! 内で行い(bd_active)、破壊・停止・再流動は
+                                        ! m_bldgdebris が担う。確保・保存は
+                                        ! m_bldgdebris_init(有効時のみ)。§63
+    real, allocatable :: wbd(:,:)       ! 堆積瓦礫 (m3/m2。柱状量。m_bldgdebris が
+                                        ! 確保・更新・保存し、m_output が Bd 場を書く)
+    real, allocatable :: wbdmax(:,:)    ! 瓦礫の期間最大到達量 max(hbd+wbd)
+                                        ! (f_out_wbd 指定時のみ確保。save 対象外。§7)
+    real, allocatable :: bds(:,:)       ! 家屋の破壊率 1 − wbs/wbs0(導出量。f_out_bds
+                                        ! 指定時のみ確保。m_output が Bs 場を書く)
+    real, allocatable :: fdmax(:,:)     ! 流木・瓦礫込み最大流体力 (h+(1+s)hs+sg_log·hd
+                                        ! +sg_bd·hbd)·V² (m3/s2。f_out_fdmax 指定時のみ
+                                        ! 確保。save 対象外。既存 F9999 の定義は不変)
+    logical :: bd_active = .false.      ! 瓦礫輸送の有効化(m_bldgdebris_init が設定。
+                                        ! swflow_enc がステップ内で s%hbd を移流する)
     real :: geo_morfac = 0.0 ! geomorph の地形時間加速係数(m_geomorph_init が設定。
                              ! 0 = geomorph 無効。m_glacier_init が「morfac は
                              ! 全プロセス共通の1個」の検査に使う。§45)
@@ -298,8 +326,11 @@ subroutine m_state_init(s, p, g)
   allocate(s%pre(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%prh(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hrs(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  ! 空隙率と有効慣性係数は入力係数(帯)の写しを状態として持つ(§63)
+  allocate(s%gv(1:g%nx,dcp%jsh:dcp%jeh), source = g%gv(1:g%nx,dcp%jsh:dcp%jeh))
+  allocate(s%lm(1:g%nx,dcp%jsh:dcp%jeh), source = g%lm(1:g%nx,dcp%jsh:dcp%jeh))
   allocate(s%af(1:g%nx,dcp%jsh:dcp%jeh), source = 1.0)
-  s%af(:,dcp%jsh:dcp%jeh) = g%gv(:,dcp%jsh:dcp%jeh)   ! 実効平面積率の初期値 = gv
+  s%af(:,dcp%jsh:dcp%jeh) = s%gv(:,dcp%jsh:dcp%jeh)   ! 実効平面積率の初期値 = gv
   allocate(s%hg(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   ! 土層厚 sd は利用モジュール(fn_geomorph / fn_gwflow)があるときのみ
   ! 確保する(§0 方針8: 有効化しないモデルはメモリを確保しない)。
@@ -427,6 +458,50 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 統計量を計算
+
+!----------------------------------------------------------------------
+! セル (i,j) の空隙率を gvnew に変える(§63.1 A2。空隙率を変える唯一の経路)
+!   空隙面積基底の柱状量(h, hs, hrs と、確保されていれば hd, wd, cq, hss,
+!   hbd, wbd。空隙面積基底の柱状量を新設するモジュールはここに追記する)に
+!   r = gv_old/gv_new を掛け、体積 = 柱状量 × gv × A を機械精度で保存する。s%lm = gv + (1−gv)·cm を再計算し、e = z + h と af(gv の因子
+!   だけ比例更新。wfrac・湿潤率の因子は不変)を追随させる。
+!   触れないもの: 幾何面積基底の量(swe, hi, hl, hb, cg, bp, wst 等)、地下
+!   貯留 hg 系(S 集計が幾何面積基底で扱い、浸透の契約は af/gv で換算する
+!   既存の扱いに従う = 家屋の破壊は地下水に影響しない)、線流量 m/n と
+!   流速(次ステップの運動量式が新しい h で更新する。運動量の保存は
+!   二次の効果として受容)。
+!   呼び出し側の契約: 自帯 js..je のセルだけを更新し、更新後に
+!   par_halo_cell(s%gv)・par_halo_cell(s%lm) を行うこと(運動量項が ±1 近傍の
+!   gv・lm を平均する)。gvnew >= gv_old のみ(第1段 = 破壊で空隙が増える
+!   方向)。gvnew == gv_old は no-op
+!----------------------------------------------------------------------
+subroutine m_state_set_gv(p, s, i, j, gvnew)
+  type(t_sysparam), intent(in) :: p      ! cm(家屋の付加質量力係数)
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: i, j
+  real, intent(in) :: gvnew
+  real :: r
+  if (gvnew == s%gv(i,j)) return
+  if (gvnew < s%gv(i,j) .or. gvnew > 1.0) then
+    call par_stop("m_state_set_gv: the void ratio may only increase towards 1 " &
+                  //"(gv_old <= gv_new <= 1)")
+  end if
+  r = s%gv(i,j) / gvnew
+  s%h(i,j) = s%h(i,j) * r
+  s%hs(i,j) = s%hs(i,j) * r
+  s%hrs(i,j) = s%hrs(i,j) * r
+  if (allocated(s%hd)) s%hd(i,j) = s%hd(i,j) * r
+  if (allocated(s%wd)) s%wd(i,j) = s%wd(i,j) * r
+  if (allocated(s%cq)) s%cq(i,j) = s%cq(i,j) * r
+  if (allocated(s%hss)) s%hss(i,j) = s%hss(i,j) * r
+  if (allocated(s%hbd)) s%hbd(i,j) = s%hbd(i,j) * r
+  if (allocated(s%wbd)) s%wbd(i,j) = s%wbd(i,j) * r
+  s%af(i,j) = s%af(i,j) / r
+  s%gv(i,j) = gvnew
+  s%lm(i,j) = gvnew + (1.0 - gvnew) * p%cm
+  s%e(i,j) = s%z(i,j) + s%h(i,j)
+end subroutine
+
 !----------------------------------------------------------------------
 subroutine m_state_calcstat(s, p, g)
   type(t_state), intent(inout) :: s
@@ -475,7 +550,7 @@ subroutine m_state_calcstat(s, p, g)
       ! (h=0 のセルでも貯留は存在する。ゼロ加算はスキップ=従来ケースと
       !  総和のビット一致を保つ)
       if (s%hrs(i,j) > 0.0) then
-        hsum_j(j) = hsum_j(j) + real(s%hrs(i,j), real64) * g%gv(i,j)
+        hsum_j(j) = hsum_j(j) + real(s%hrs(i,j), real64) * s%gv(i,j)
       end if
       ! 積雪は乾燥セルにも存在するため h 判定より前に計上する(§31)
       if (allocated(s%swe)) then
@@ -743,6 +818,8 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%prh)) deallocate(s%prh)
   if (allocated(s%hrs)) deallocate(s%hrs)
   if (allocated(s%af)) deallocate(s%af)
+  if (allocated(s%gv)) deallocate(s%gv)
+  if (allocated(s%lm)) deallocate(s%lm)
   if (allocated(s%hg)) deallocate(s%hg)
   if (allocated(s%sd)) deallocate(s%sd)
   if (allocated(s%hs)) deallocate(s%hs)
@@ -763,6 +840,11 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hb)) deallocate(s%hb)
   if (allocated(s%vb)) deallocate(s%vb)
   if (allocated(s%hd)) deallocate(s%hd)
+  if (allocated(s%hbd)) deallocate(s%hbd)
+  if (allocated(s%wbd)) deallocate(s%wbd)
+  if (allocated(s%wbdmax)) deallocate(s%wbdmax)
+  if (allocated(s%bds)) deallocate(s%bds)
+  if (allocated(s%fdmax)) deallocate(s%fdmax)
   if (allocated(s%wd)) deallocate(s%wd)
   if (allocated(s%wdmax)) deallocate(s%wdmax)
   if (allocated(s%fxg)) deallocate(s%fxg)

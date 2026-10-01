@@ -5119,6 +5119,29 @@ When do logs move in rivers?, Water Resources Research 36(2), 571-583。
   閾値 0.138/0.03 は指針解説にも現れない(高橋系成書の系譜のまま。
   handoff 1j)。
 
+### 50.6 既定値方針(2026-10-01 実装。§62 の展開)
+
+「専門外の人がとりあえず動かせる」(§0)に沿い、§62 と同じ仕組みで物性・
+校正値に既定を与えた。**最小入力は fn_driftwood(空の &list_driftwood)**。
+未指定(番兵 −9999)なら init が `dw_param(name, val, def, unit)` で既定を
+採用し、採用値を必ず 1 行表示する("(default)" 付き)。
+
+| パラメータ | 既定 | 根拠 |
+|---|---|---|
+| 立木ストック | 0.001 m³/m² を陸(海でない)の使用セル一様に | 針葉樹渓流の発生流木量の実績包絡 1,000 m³/km²(§50.5。広葉樹は 1/10)。森林の場所が分からないので一様 = 量水準の目安として採用。明示の dw_stock0 は従来どおり全セル |
+| dw_dlog / dw_sglog | 0.3 m / 0.5 | 指針の推定法「流木の平均直径 ≈ 上流立木の平均胸高直径」の代表値(0.2〜0.4 m)と材比重の中庸。喫水 0.15 m |
+| dw_wrec / dw_hrec / dw_vrec | 1e-5 m/s / 0.5 m / 1.0 m/s | 実務標準なし(§50.5)。List_samples の値 = 校正前提の中庸 |
+| dw_droot | 0.5 m | 表層崩壊深・渓床侵食深の程度に対する根系深の代表 |
+| dw_wstop | 0.01 m/s | List_samples の値。接地後は即時に近く堆積 |
+| dw_vstop / dw_wfloat | 0 / 0 | 従来どおり(水深判定のみ・再流動なし = 安全側) |
+| **発生 2 経路の対** | 両方未指定で両方に既定 | 侵食連行は地形が動かなければ発火しないため無害。片方だけ指定なら他方は無効 = 明示の尊重(§62.1 の wash_kr/kf、§63.9 の閾値の対と同型)。dw_wrec 指定で dw_hrec/dw_vrec 省略は閾値だけ既定 |
+
+検証(2026-10-01): test/driftwood 構成4(空の &list_driftwood。初期水深 1.5 m
+の一様水体が斜面を下って水理的流失)と構成4'(既定値をすべて明示)の
+state.dat・driftwood.dat がバイト一致。既存の構成1〜3 は全て明示指定のため
+不変(自己検定・リスタート PASS)。型ごとの推奨値は
+users_guide/driftwood.md「パターン別の推奨値」。
+
 ## 51. 溶岩流モジュール m_lavaflow(fn_lavaflow。2026-08-23 実装)
 
 噴火口セル群からの湧き出し・深さ平均 Bingham 粘性重力流・停止セルの
@@ -6014,3 +6037,407 @@ debris_plan.md)。
   list%fluv_d50, …)` の第 2 引数まで局所変数名に置き換えてしまい、未初期化
   値(−9999)が既定判定に入って fluvial/suspend 系 5 ケースが停止した。
   回帰一式が検出。機械的な一括置換は引数位置を目視すること。
+
+## 63. 家屋破壊・瓦礫モジュール m_bldgdebris と空隙率の状態化(2026-10-01 設計合意)
+
+津波・高潮・洪水の氾濫流による木造家屋の破壊 → 瓦礫化 → 流動・堆積 →
+瓦礫・流木を含む流れの破壊力増加、の連鎖を、流木モジュール(§50)と
+同型の**別の加算的プロセスモジュール**として概算する。設計は
+docs/housedebris_plan.md(2026-10-01 起草)で論点 10 件を推奨案で合意し、
+同日に A1〜B3 を実装・検証・文献照合して本 § に集約した(plan 文書は
+消し込み済み。論点の経緯は git 履歴 0721e58〜)。個別家屋の
+構造応答・個別瓦礫の軌跡・衝突力・幾何的閉塞は §0 方針2 により
+**対象外と明言**(衝撃荷重は従来どおり V9999 と代表径の後処理)。
+
+2 部構成で進める。**63.1 空隙率の状態化**は瓦礫と独立した汎用基盤
+(等価リファクタ A1 と適用手続き A2)、**63.2 以降**がモジュール本体
+(B1 片方向結合 → B2 空隙率への帰還 → B3 文書・例題)。
+
+### 63.1 空隙率の状態化(s%gv / s%lm。A1・A2)
+
+- **所有の移動(A1。等価リファクタ)**: 家屋の空隙率 gv と有効慣性係数
+  lm = gv + (1−gv)·cm を、時間ループでは t_state の **s%gv / s%lm** から
+  参照する。m_state_init が入力係数 g%gv / g%lm の帯を写して確保し、
+  g%gv / g%lm の帯は m_geoinfo_band_shrink で解放する(z と同じ「持ち主の
+  移動」。メモリ増なし)。初期化ゾーンの参照(init_culvert の捕捉帯面積、
+  s%af の初期値、STG の静的コピー)は band_shrink より前なので g%gv で
+  よい(STG は s%gv に揃えた)。置換は swflow_enc 系 35 箇所・他モジュール
+  16 箇所。m_wq の gwfac_of / mass_of、m_driftwood の colfac / vol_col は
+  s を取る(不要になった g は外した)。合否は全ケース逐次 ULP=0・
+  np=1,2,4 ULP=0(絶対規律2「等価リファクタ」)。
+- **適用手続き(A2)**: `m_state` の **state_set_gv(g, s, i, j, gvnew)** が
+  gv を変える唯一の経路。r = gv_old / gv_new を**空隙面積基底の柱状量
+  すべて**に掛けて体積 = 柱状量 × gv × A を保存し(h, hs, hd, wd, cq, hss,
+  hbd, wbd。hg 系は基底の監査結果による)、s%gv・s%lm を更新する。
+  e = z + h は h の縮小で下がる(同じ水が広い面積に広がる)= 破壊が
+  流れへ返る経路。呼び出し側の契約: 自帯 js..je のみ更新し、更新後に
+  par_halo_cell(s%gv)・(s%lm)(運動量項の ±1 近傍参照。geomorph の s%z と
+  同じステップ間の位置)。gv_new ≥ gv_old のみ(第1段)。
+- **s%gv_active**(logical。gv を変えるモジュールの init が立てる)を
+  update_af の呼び出し条件に加える(`have_width .or. have_sect .or.
+  s%gv_active`)。
+- **save**: s%gv は変えるモジュールの私有ファイルに保存(§7 契約C)。
+  無効時は入力と同値のため state.dat の形式・save_version は不変。
+- 呼び出し元がない段階(A2 単体)は全ケースビット一致で検証し、手続きの
+  単体検定は test/gvchange(静水池で gv を手動で上げ、Σh·af·A の不変と
+  水位低下 → 平衡回復を確認)。
+
+### 63.2 モジュール構成(合意事項の要約)
+
+- **3台帳**: 家屋ストック wbs(入力ラスタ fn_bdstock。瓦礫化可能材積
+  m³/m²。幾何面積基底。木造率込みで与える。不動・私有)→ 破壊 →
+  流動瓦礫 s%hbd(空隙面積基底。移流)→ 接地・低速 → 堆積瓦礫 s%wbd
+  (不動。再流動可)。総和が機械精度で閉じる(result/bldgdebris.csv、
+  par_sum_rows)。wbs0(初期値の写し)で破壊率 d = 1 − wbs/wbs0。
+- **構造種別の分布**: fn_bdstock(材積に木造率込み)と **fn_bdfrac**
+  (建物占有のうち破壊可能な割合 fw。0〜1。省略時 1)の 2 枚のラスタで
+  表す。RC 造・耐津波構造は破壊されず占有のまま残り、fw が空隙率帰還の
+  上限を決める。都市化・耐津波化のシナリオは fn_gv・fn_bdstock・fn_bdfrac
+  の差し替え(2ケース比較)。構造種別ごとの閾値(多クラス化)は将来。
+- **輸送は advect_scalar の流用**(hd の並びに bd_active 分岐を追加。
+  書き込み先 sx%hbd1、complete でコミット、ステップ頭ハロ交換)。
+- **破壊判定(§63.3)、停止・再流動(流木と同型)、空隙率への帰還
+  (§63.4)**。
+- **流木モジュールとの関係**: 本モジュールが s%hd を読む(dw_active で
+  分岐)だけの一方向依存。m_driftwood は無変更。両者の有効化は独立で
+  重ね合わせ。
+- **モジュール様式**: m_driftwood に倣う(fn_bldgdebris / &list_bldgdebris
+  / f_bd=0 で一時無効化 / ENC 格子のみ / 無効時ゼロコスト / 私有 save
+  bldgdebris.dat 契約C / ダム捕捉帯の全量吸収同伴 / morfac ≠ 1 は
+  par_stop)。calc は m_driftwood_calc の**後**(同一ステップの hd を
+  荷重に見る)。更新はセル局所(B2 の gv 更新後のハロ交換のみ例外)。
+- **命名**: m_bldgdebris / fn_bldgdebris / &list_bldgdebris / bd_* 接頭辞 /
+  s%hbd・s%wbd / 出力 Bf(流動)・Bd(堆積。Bd9999 = 期間最大到達量)・
+  Bs(破壊率)・Fd9999(荷重込み最大流体力)/ bldgdebris.dat。
+  hb・Hb は動く底層が使用済み。
+
+### 63.3 破壊判定
+
+- 判定量 X を f_bdcrit で選ぶ(既定 1):
+  - **1 浸水深**: X = h + hs(混合流動深)。閾値 bd_hcrit (m)。実務の
+    浸水深ベース被害関数(東北津波の木造家屋被害関数等)と直結。
+    流木・瓦礫の効果は入らない。
+  - **2 荷重**: X = (h + (1+s)·hs + sg_log·hd + sg_bd·hbd)·V²(m³/s²。
+    F9999 の清水規格化と同じ基底。hs 項は既存 F9999 と同一、hd は流木
+    モジュール有効時のみ)。閾値 bd_fcrit。浮遊物を「水に同伴する付加
+    質量」として混合密度に足す構造で、単位面積あたりの運動量流束
+    ρ·hd·V² の加算と等価。**個別衝突の衝撃荷重ではない**(平均荷重)。
+- **レート**: X > 閾値のセルで wbs → hbd を bd_wdes (m³/m²/s) で移す
+  (流木の dw_wrec と同型の数値的閉包【独自】。閾値は【要文献照合】)。
+- **2 閾値ランプ(任意)**: bd_hcrit2 / bd_fcrit2 を与えたとき、閾値1で
+  0・閾値2で 1 の線形係数をレートに掛ける(被害関数の幅の近似。中央値を
+  閾値1〜2 の中点と読む)。省略時は単一閾値。
+- **沈下率 bd_fsink**(0〜1。既定 0): 破壊量のうちこの比率をその場で
+  wbd へ直接移す(瓦・基礎など沈む瓦礫の抽象化。0 = 全量浮遊 = 到達
+  範囲の上限側)。
+- 喫水は bd_dlog・bd_sg(< 1)から流木と同じ円柱浮力平衡(§50.4 の関数を
+  共用)。接地・低速堆積 bd_wstop / bd_vstop、再流動 bd_wfloat /
+  bd_rfloat / bd_vfloat は流木と同型・同既定。堆積瓦礫は z に足さない。
+
+### 63.4 空隙率への帰還(B2。f_bdgv。既定 1 = 帰還あり)
+
+- 破壊率 d に応じ gv_new = gv0 + (1 − gv0)·fw·d を state_set_gv で適用
+  (gv0 は init 時 s%gv の私有写し)。破壊率が変わったセルだけ呼び、
+  自帯更新後に s%gv・s%lm のハロ交換。
+- 第1段 B1 はこの帰還を持たない片方向結合(流木の「運動量に算入しない」
+  と同じ流儀)。B2 で f_bdgv により同一ケースで帰還あり/なしを比較できる。
+- 堆積瓦礫が空隙を再び塞ぐ効果・復旧は対象外(gv は単調増加)。
+
+### 63.5 パラメータ(&list_bldgdebris)と出力
+
+| パラメータ | 既定 | 意味 |
+|---|---|---|
+| f_bd | 1 | 0 で一時無効化 |
+| bd_stock0 / fn_bdstock | 0.3 を gv<1 のセルに | 家屋ストック(一様 / 分布 m³/m²。排他。木造率込み。両方未指定なら建物セルに既定。§63.9) |
+| fn_bdfrac | なし(= 1) | 破壊可能割合 fw(空隙率帰還の上限) |
+| bd_dlog, bd_sg | 0.3, 0.5 | 瓦礫の代表寸法 (m)・見かけ比重 (0,1)。喫水は m_driftwood_draft |
+| f_bdcrit | 1 | 判定量 1: h+hs、2: 荷重 (h+(1+s)hs+sg_log·hd+sg_bd·hbd)·V² |
+| bd_hcrit / bd_hcrit2 | 1.0 / 3.0 | 浸水深閾値と第2閾値(線形ランプ。両方未指定で既定の対、閾値1 だけならランプなし) |
+| bd_fcrit / bd_fcrit2 | 2.0 / 6.0 | 荷重閾値と第2閾値(同上) |
+| bd_wdes | 5e-4 | 破壊レート (m/s) |
+| bd_fsink | 0 | 沈下率(破壊量のうち堆積へ直行) |
+| bd_wstop, bd_vstop | 0.01, 0.05 | 接地堆積レート・低速堆積の流速閾値 |
+| bd_wfloat, bd_rfloat, bd_vfloat | 0, 1.5, — | 再流動(流木と同型) |
+| f_bdgv | 1 | 空隙率への帰還(B2) |
+
+出力スイッチ(&list_sysparam): f_out_hbd(Bf)、f_out_wbd(Bd + Bd9999)、
+f_out_bds(Bs)、f_out_fdmax(Fd9999)。診断 result/bldgdebris.csv
+(time_s, destroy_float_m3, destroy_sink_m3, deposit_m3, refloat_m3,
+to_dam_m3, vol_stock_m3, vol_float_m3, vol_deposit_m3)。私有 save
+bldgdebris.dat(hbd, wbd, wbs, wbs0, gv0, s%gv の 6 成分固定)。
+t_state への追加: hbd, wbd, wbdmax, bds, fdmax, bd_active, dw_sg
+(m_driftwood_init が設定。荷重の付加質量係数)。
+
+### 63.6 検証計画と記録
+
+- A1: 全ケース逐次 ULP=0、np=1,2,4 ULP=0、-fcheck np=2 先行(規律3)。
+- A2: 呼び出し元なしで全ケースビット一致、test/gvchange の保存則。
+- B1: fn_bldgdebris 未指定で全ケースビット一致、保存則(閉領域)、流木
+  同時有効化で流木台帳が不変、リスタート往復、np=1,2,4。
+- B2: B1 と同じ+水体積保存(gv 変化込み)+-fcheck np=2。
+- 例題: examples/tsunami_town(timberyard の地形を流用。流木なし/あり、
+  f_bdcrit=1/2、f_bdgv=0/1 の比較)。
+- 記録は各段階の実施時に本節へ追記する。
+
+**A1 検証記録(2026-10-01, gfortran 13.3 / OpenMPI 4.1, -Ofast)**:
+全 30 ケースの逐次回帰が baseline と同一結果(reference ビット一致。
+coastal_drain は従来どおり tolerance 内)。-fcheck=all の MPI np=2 で
+chichibu / wave / damwq PASS(規律3)。最適化 MPI の np=1, 2, 4 で全 29
+ケース PASS(state.dat の逐次ビット一致を検定するケースは全て一致。
+Log.txt は各ケースの Run_MPI.sh の設定 ULP=1 で比較)。
+既存の観察(A1 起因でないことを A1 前のソースで確認): -fcheck=all
+(-march/-flto なし)の MPI ビルドでは test/driftwood 構成1(土石流+流木)
+が m_swflow_enc の江頭層流則の摩擦項 tfe = −fbe·vve/(rme·hte)·gve で
+SIGFPE(hte = 0 の除算)になる。最適化ビルドでは発現しない潜在不具合
+として記録 → **同日修正**: 原因は -Ofast の if 変換が fbe > 0 の分岐の除算を
+投機評価すること(fbe = 0 の経路では hte = 0 のまま)。分母を
+max(hte, dv) にして値を変えずに除算を安全にした(-O2 厳密数学で修正前後の
+test/driftwood 出力がバイト一致。-fcheck MPI np=2 の driftwood も PASS)。
+-Ofast の最終桁は再び動いたため、sewer_wq の reference を許可の上で更新。
+
+**A2 検証記録(2026-10-01)**: 呼び出し元なしで全 30 ケースの逐次回帰が
+A1 と同一結果。test/gvchange(体積保存・導出量・no-op)PASS。
+
+**B1 検証記録(2026-10-01)**: test/bldgdebris の構成1(浸水深判定)・構成2
+(流木+瓦礫、荷重判定)で材積保存 1e-13、活性・到達確認 PASS。構成2 と
+構成2'(流木のみ)の state.dat・driftwood.dat がバイト一致(片方向結合の
+証明)。リスタート往復バイト一致。fn_bldgdebris 未指定の全 30 ケースは
+A1 と同一結果 — ただし **sewer_wq(ULP=0 の wq.csv/Log 比較)と coastal_drain
+の最終桁が -Ofast ビルド間で動いた**。-O2 厳密数学では B1 前後の sewer_wq
+出力(Log.txt・wq.csv)がバイト一致するため、挙動変更ではなく fast-math
+のコード配置依存(b333f3e で同ケースの reference を同じ理由で更新した
+前例あり)。reference は更新していない(規律1。人間の確認待ち)。
+-fcheck=all の MPI np=2: test/bldgdebris 構成1・2 PASS、chichibu PASS
+(規律3。新帯配列 hbd/wbd/wbdmax/bds/fdmax)。最適化 MPI の np=2 と np=4 は
+state.dat・bldgdebris.dat が互いにバイト一致(ランク数不変)。-O2 厳密数学
+では逐次 = MPI np=2 がバイト一致(§28.3 の流儀。-Ofast では逐次↔MPI
+ビルド間差の警告が出るが、これは driftwood 等の既存ケースと同じ)。
+
+**B2 検証記録(2026-10-01)**: test/bldgdebris 構成4(平坦部 gv=0.6、
+f_bdgv=1)で材積保存(柱状量×gv の重み付き)1e-13、活性・到達 PASS。構成4'
+(同一設定で f_bdgv=0)と Log の総貯水量 S(t)(f_disp_debug=1 の全有効桁)が
+一致 = 空隙率の変更が水体積を保存する。リスタート往復一致(gv0・s%gv を
+含む 6 成分)。-fcheck=all の MPI np=2 PASS(gv/lm のハロ交換経路)。
+最適化 MPI の np=2 と np=4 は state.dat・bldgdebris.dat が互いにバイト一致。
+無効時の全ケース逐次回帰は B1 と同一結果。
+
+**B3(2026-10-01)**: users_guide/bldgdebris.md(日英)、io.md・params_index
+(日英。+24 項目)・usecases・目次・comparison・architecture、List_samples
+(日英)、examples/tsunami_town(本体+片方向+荷重+荷重・流木の 4 ケース、
+README に図 6 枚と数表)。例題の知見: 浸水深判定では帰還ありが 94 %・
+帰還なしが全壊(帰還で内陸の水位が下がる)。荷重への流木算入は材木が
+浸水域に拡散する構成では数 %(Fd/F ≤ 1.05)で破壊率 +0.4 ポイントに留まる
+= 流木の「集中」(閉塞)を表現しないラスタ方式の帰結として README に明記。
+
+### 63.7 文献照合(2026-10-01 実施。§19.8 の方針の適用)
+
+閾値の実務値の当たりを次の文献で照合した(数値の読み取りは各文献の
+図表による。本モジュールの閾値は校正パラメータのまま = 【独自】の
+数値的閉包に実務値の目安を添える位置づけ)。
+
+- **首藤 (1993) "Tsunami intensity and disasters"(Tsunamis in the World,
+  Kluwer)**: 津波強度と家屋被害の対応表。木造家屋は浸水深 2 m 超で全壊
+  (倒壊・流失)、1 m 程度で部分破壊。奥尻(1993)の被害データでも浸水深
+  2 m 超で破壊・流失確率が非常に高い。→ f_bdcrit=1 の bd_hcrit〜bd_hcrit2 を
+  1〜2 m 前後に置く根拠(例題は 1.0〜3.0 m)。
+- **Suppasri et al. (2013) Natural Hazards 66(2), 319-341**: 東北地方
+  太平洋沖地震津波の国交省被害データ(約 25 万棟)による構造種別・階数別の
+  被害関数(無被害〜流失の 7 段階)。木造は浸水深 2 m 前後で流失確率が
+  急増し、4 m 超で大半が流失・全壊。RC 造は同じ浸水深でも流失確率が
+  著しく低い。→ 構造種別を fn_bdstock(木造率)と fn_bdfrac(破壊可能割合)で
+  表す §63.2 の方式の根拠。ランプ(bd_hcrit2)は曲線の幅の近似。
+- **Koshimura et al. (2009) Coastal Engineering Journal 51(3), 243-273**:
+  バンダアチェ(2004)の被害関数を浸水深・流速・**単位幅あたりの流体力**
+  F = ½ρ C_D u²h の 3 指標で構築(破壊確率 50 % は浸水深 3 m 前後)。
+  → f_bdcrit=2 の判定量 X = h·V²(清水規格化)は F/(½ρC_D) に対応し、
+  同論文の流体力ベースの曲線から bd_fcrit を換算できる(X = F/(500·C_D)
+  [m³/s²]。C_D は同論文の値)。
+- **FEMA P-646 (2012)**: 津波避難ビルの設計荷重。流体力 F = ½ρ_s C_D B
+  k_s (hu²)_max に、**流れに含まれる瓦礫を見込む係数 k_s(推奨 1.25)**を
+  乗じる。瓦礫衝突力・瓦礫堰き止め力は個別荷重として別途算定。→ 本
+  モジュールの荷重 (h + (1+s)hs + sg_log·hd + sg_bd·hbd)·V² は k_s の
+  「瓦礫を含む流れの流体力増」を一律係数でなく浮遊物の柱状量から計算する
+  形で、FEMA の瓦礫衝突力・堰き止め力(個別荷重)には対応しない
+  (従来どおり後処理。§63.3)。
+- 国総研資料 905 §4.3(流木の衝撃力。§50.5)は個別衝突式で、本モジュール
+  の平均荷重とは別物であることを再確認。
+
+これをもって §63 の文献照合を完了(残るのは実流域での校正 = 感度解析の
+領域)。housedebris_plan.md は消し込んだ。
+
+### 63.8 将来課題
+
+構造種別ごとの閾値(多クラス化)、確率曲線(対数正規)の直接指定、
+両閾値の重ね合わせ、沈む瓦礫の独立台帳、堆積瓦礫の地形固定・再閉塞、
+瓦礫の抵抗則への算入、境界流入の瓦礫時系列。
+
+### 63.9 既定値方針(2026-10-01 実装。§62 の展開)
+
+「専門外の人がとりあえず動かせる」(§0)に沿い、§62 と同じ仕組みで
+物性・校正値に既定を与えた。**最小入力は fn_bldgdebris(空の
+&list_bldgdebris)+ fn_gv**。未指定(番兵 −9999)なら init が
+`bd_param(name, val, def, unit)` で既定を採用し、採用値を必ず 1 行表示する
+("(default)" 付き)。値域の検証は従来どおり(明示の不正値は停止)。
+
+| パラメータ | 既定 | 根拠 |
+|---|---|---|
+| 家屋ストック | 0.3 m³/m² を**建物のあるセル(gv < 1)**にだけ | 建物占有 0.4 × 階数 1.5 × 木造の構造材積原単位(延床あたり 0.5 m³/m² 程度)→ 0.3 m³/m²(例題 tsunami_town と同じ)。gv が全域 1(建物の場所が不明)なら停止して fn_gv か bd_stock0/fn_bdstock を促す。明示の bd_stock0 は従来どおり全セル |
+| bd_dlog / bd_sg | 0.3 m / 0.5 | 木造の構造材(柱・梁)の寸法級と比重。喫水 0.15 m |
+| bd_hcrit / bd_hcrit2 | 1.0 / 3.0 m | 首藤(1993)の木造 2 m 全壊を中央値に、Suppasri ほか(2013)の流失曲線の幅をランプ 1〜3 m で近似(§63.7)。**対の扱い**: 両方未指定なら両方に既定(ランプあり)、閾値1 だけ指定ならランプなし = 明示の尊重(§62.1 の wash_kr/kf と同型) |
+| bd_fcrit / bd_fcrit2 | 2.0 / 6.0 m³/s² | 浸水深 2 m・流速 1〜1.7 m/s の h·V² に相当(Koshimura ほか 2009 の流体力曲線から換算できる校正値)。水のみの F9999 の分布で置き直す前提 |
+| bd_wdes | 5e-4 m/s | 既定ストック 0.3 m³/m² が 10 分(津波の押し波 1 回の継続時間)で全壊 |
+| bd_wstop | 0.01 m/s | 流木の List_samples と同じ。接地後は即時に近く堆積 |
+| bd_vstop | 0.05 m/s | 湛水して流れが止まった瓦礫はその場に残る(例題の値)。流木の既定 0 と異なるのは、市街地の瓦礫は停滞で残る方が実態に近いため |
+| bd_fsink / bd_wfloat | 0 / 0 | 従来どおり(到達範囲の上限側・堆積は動かない = 安全側) |
+| f_bdgv | 1 | §63.4 |
+
+検証(2026-10-01): test/bldgdebris 構成5(空の &list_bldgdebris + gv.txt。
+初期水深 1.5 m の一様水体が斜面を下って平坦部で破壊)と構成5'(既定値を
+すべて明示。ストックは bdstock_min.txt)の state.dat・bldgdebris.dat が
+バイト一致。既存の構成1〜4 は全て明示指定のため不変(自己検定 PASS)。
+型ごとの推奨値は users_guide/bldgdebris.md「パターン別の推奨値」。
+
+## 64. gwflow パラメータの既定値方針(2026-10-01 実装。§62 の展開)
+
+「専門外の人がとりあえず動かせる」(§0)に沿い、§62 と同じ仕組みで
+地下水の各モデルで**未指定なら停止**だった物性・校正値に無難な既定値を
+与えた。**最小入力は fn_gwflow + &list_gwflow のモデル選択子**
+(f_gwvertical=2 / f_gwlateral=1 など。固有グループは空でよい)。
+管路連続体層だけは「枡がどこにあるか」が与件なので gwc_inlet(か
+fn_gwc_inlet)の 1 行を足す。
+
+### 64.1 仕組み
+
+- 既定の適用と表示は **m_util の `param_default(prefix, name, val, def,
+  unit[, unset])`**(gm_param・dw_param・bd_param と同じ書式の共通版。
+  gwflow のサブモジュールは m_geomorph の submodule と違い独立モジュール
+  なので、最下層の m_util に置いた。gm_param・dw_param・bd_param は
+  2026-10-01 に param_default を呼ぶ薄い包みに統合した — 等価リファクタ、
+  全ケース逐次回帰ビット一致で検証。名前は各モジュールの呼び出し側を
+  変えないために残し、gm_param は submodule から呼ぶため public のまま)。
+  番兵は従来の init 既定(0.0)。
+  採用値は "gwflow: name = value unit (default)" で必ず 1 行表示する。
+- **0 に明示の意味がある値には既定を置かない**(§62.1 の「明示の尊重」):
+  gw_psif(0 = 一定浸透能に退化)、gw2_ksh_mmh(0 = 層2 側方なし)、
+  gw2_sat0・gwc_sat0(0 = 空)、gwc_cnd_m2s(0 = 側方通水なし)、
+  gwc_inlet(0 = 地表交換なし)、gwc_leak_layer(0 = 交換なし)、
+  fro_fmin/fro_tf/fro_swe0/fro_fimax/fro_fi0(0 = なし)。
+- **マップ指定があるスカラーには既定を置かない**(fn_gw_ksv・fn_gwc_cap・
+  fn_gwc_bot・fn_gwc_sy・fn_gwc_slot_sy・fn_gwc_leak が指定されていれば
+  対応するスカラーは読まれない。従来どおり)。
+- **gwc_slot_sy の既定は gwc_sy の 1/50**(スカラー sy に対しては
+  sy_eff/50、fn_gwc_sy のマップに対してはセル別に sy(i,j)/50。後者は
+  "gwc_slot_sy = gwc_sy / 50 per cell (default)" と表示)。
+- **土層厚 sd0 の既定(1 m)は gwflow が要求するときだけ**:
+  `m_geoinfo_require_sd(g, sd_default)` に optional 引数を足し、m_gwflow_init
+  が 1.0 を渡す。geomorph からの呼び出し(f_wthr/f_slide 等)は従来どおり
+  sd0 未指定で停止する(土層生成は sd=0 から始める用途があり、既定を
+  置くと意味が変わる)。表示は "geoinfo: sd0 = 1.0000 m (default)"。
+  負の sd0 は従来どおり停止。公開インターフェースの変更(optional 追加)
+  なのでトップレベル make で utils の追随を確認した(§10)。
+- 値域の検証は従来どおり呼び出し側(明示された不正値は停止)。
+
+### 64.2 値と根拠
+
+| パラメータ | 既定 | 根拠 |
+|---|---|---|
+| gw_infil_mmh(バケツ)/ gw_ksv_mmh(Green-Ampt) | 10 mm/h | Rawls, Brakensiek & Miller (1983) の土性別 Green-Ampt パラメータ: K_s は砂 117.8・ローム質砂 29.9・**砂壌土 10.9**・壌土 3.4・シルト質壌土 6.5・粘土 0.3 mm/h。砂壌土の値を丸めた。日本の森林土壌の浸透能(100 mm/h 超が普通)より小さく、洪水の浸透損失を過大評価しない側。既存の List_samples(バケツ 10)・test/conduit param_lat(10)と同じ |
+| gw_capacity(バケツ) | 0.2 m | 既定の土層厚 1 m × 比湧水量 sy0 の既定 0.2 = Green-Ampt の既定容量と同じ(モデルを切り替えても貯留量が変わらない) |
+| sd0(gwflow が要するとき) | 1.0 m | 森林斜面の土層厚の代表(Tani 1997 の薄い土層 0.5〜1 m、RRI 等の分布型モデルの慣用値 1 m)。List_samples・test/frost の値 |
+| gw_ksh_mmh(側方) | 360 mm/h = 1e-4 m/s | handoff_gwflow_tani.md §3.2 の設計時典型値 K_sh = 1e-4 m/s。基質の K_s(砂壌土 1e-5 m/s)の 10 倍 = マクロポア・パイプ流による側方の実効透水係数は基質の 1〜2 桁大(Beven & Germann 1982; Mosley 1979 の実測流速 1e-3 m/s 級)。List_samples の値 |
+| gw2_depth / gw2_sy / gw2_infil_mmh(風化基岩層) | 3 m / 0.05 / 1 mm/h | 花崗岩源流域の風化帯: 厚さ数 m、有効間隙率は数 %、飽和透水係数 1e-8〜1e-6 m/s の報告(Kosugi ほか 2006 WRR 42 W02414; Katsura ほか 2008 WRR 44 W09430)。1 mm/h = 2.8e-7 m/s はこの幅の上寄り(基底流が出る側)。gw2_ksh_mmh の 0(側方なし = 容量バッファ)は明示として据え置き |
+| fro_fifull(凍土) | 20 °C·day | Stefan 式(Andersland & Ladanyi 2004)で含水率 0.3 程度の土の凍結深 ≈ 0.06·√FI m → FI = 20 で 0.25 m。表層 20〜30 cm が凍結した湿った土では浸透がほぼ止まる(Zhao & Gray 1999)。List_samples の値。試験 test/frost の 0.36 は解析検証用の人工値 |
+| gwc_cap / gwc_depth(管路) | 0.01 m / 3 m | examples/sewer_hybrid の枝管セル(D=0.4 m・cap 0.0126 m)と同程度の市街地枝管網。管底 3 m = 土被り 2〜2.5 m + 管高。List_samples の値 |
+| gwc_sy / gwc_slot_sy | 0.05 / sy/50 | sy = cap/管高(0.01/0.2)。疑似スロットは不圧の 1/50(test/conduit の値。被圧時の水頭応答が十分硬く、自動サブサイクル数が過大にならない中庸。sewer_hybrid の 1/5 は硬さより速度を優先した値) |
+| gwc_leak_mmh(gwc_leak_layer > 0 のとき) | 10 mm/h | 浸入水・漏水の交換能の上限は管周囲の土の鉛直透水係数 → gw_ksv_mmh の既定と同じ値 |
+
+既定のまま残した「必須」: モデル選択子、gwc_inlet(与件)、fn_gwp_*
+(井戸は位置と流量が与件)、分布ファイル、値域チェック。
+
+### 64.3 検証(2026-10-01)
+
+- 既存 reference は全て明示指定なので不変: 全ケースの逐次回帰 PASS。
+- 同値検定: test/gwdefault(新設)の構成 a(バケツ)・b(Green-Ampt+側方+
+  層2。sd0 も省略)・c(Green-Ampt+凍土)・d(管路連続体層+浸入水)で、
+  最小入力の run と既定値をすべて明示した run の save の全ファイル
+  (state.dat・gwflow_layer2.dat・gwflow_frost.dat・gwflow_conduit.dat)と
+  Log.txt がバイト一致。"(default)" の表示行数(18)も検定。Run_MPI.sh は
+  同じ対を np ランクで実行して同じ比較を行う(np=2, 4 でバイト一致)。
+  逐次の save との比較は -Ofast のビルド間差(§28.3)があり得るため警告に
+  留める(実測: S 列 14 桁は一致、Runge 列のみ既知の逐次/MPI 差)。
+- 既存の MPI 回帰: gwseep・frost・conduit の np=2 が逐次 reference に
+  ULP=0(gwseep は Runge 列除外の既定許容)。
+- 環境メモ: コンテナの root 実行では OMPI_ALLOW_RUN_AS_ROOT(_CONFIRM)=1
+  が要る。OpenMP と MPI の併用で 4 コアを超えると著しく遅くなるため
+  MPI 検証は OMP_NUM_THREADS=1 で行った。
+
+## 65. snow・glacier パラメータの既定値方針(2026-10-01 実装。§62・§64 の展開)
+
+§64 の `param_default`(m_util)をそのまま使い、積雪・融雪と氷河で
+**未指定なら停止**だった 4 値に既定を与えた(番兵 −9999 は従来どおり。
+`unset=-9999.0` で「それ以下」判定)。最小入力は **fn_snow(空の
+&list_snow)+ fn_meteo**、氷河は **fn_glacier(空の &list_glacier)+
+fn_snow + fn_meteo**。閾値気温・密度・フィルン化時定数・Glen の A・
+雪崩勾配は既に既定を持っていた。
+
+| パラメータ | 既定 | 根拠 |
+|---|---|---|
+| snow_ddf | 4 mm/°C/day | Hock (2003) J. Hydrol. 282: 104–115 の度日係数の集計(雪 2.5〜6 が多数、森林で小・開放地で大)の中央。日本の山地流域の融雪出水の慣用値 3〜5 の中庸。List_samples の値。test/glacier の 3 は検定用 |
+| gl_ddfi | 8 mm/°C/day | 同じく Hock (2003) の氷の集計(5.5〜20。アルベドが低いため雪の 1.5〜2 倍)の下寄り。List_samples・test/glacier の値 |
+| gl_as(f_glslide=1 のとき) | 1e-13 m yr⁻¹ Pa⁻³ | Weertman 則 u_s = A_s τ_b³ で τ_b = 100 kPa(Cuffey & Paterson 2010 の典型 50〜150 kPa)のとき 100 m/yr = 山岳氷河の滑動速度の速い側(10〜100 m/yr)。カール形成の試験(test/glacier 構成2)の値 |
+| gl_kg(f_glero=1 のとき) | 1e-4(l=1) | Humphrey & Raymond (1994) J. Glaciol. 40: 539–552、Variegated 氷河の実測: 侵食速度 ≈ 1e-4 × 滑動速度。l=2 の場合(Herman ほか 2015)は別校正で 1e-7〜1e-6 |
+
+- snow_swe0 / fn_snow_swe0 は従来どおり省略で無雪(§31)。gl_morfac・
+  t_cycle・dt_glacier_c は「地形時間をいくら稼ぐか」の実験設計の量なので
+  既定(1・なし・1 day)のまま利用者が決める。
+- 検証(2026-10-01): test/glacier 構成3(param_cirque と同じ設定で 4 値を
+  省略)と構成3'(明示)の save(state.dat・snow.dat・glacier.dat)と
+  Log.txt がバイト一致、"(default)" 4 行。既存の構成1・2 は明示指定で不変。
+  型ごとの推奨値は users_guide/forcing.md(積雪)・glacier.md(氷河)。
+
+## 66. intercept・evap・lavaflow の既定値と wq の代表値表(2026-10-01 実装。§62・§64 の展開)
+
+§64 の `param_default` で、残っていた「未指定なら停止」の物性・校正値に
+既定を与えた。番兵は各モジュールの従来値(intercept は −1、evap・lavaflow は
+−9999)。最小入力は intercept が f_icmodel + 空の固有グループ、evap が
+f_evmodel=1 のみ、lavaflow が噴火口のセルと噴出率のみ。
+
+| パラメータ | 既定 | 根拠 |
+|---|---|---|
+| ic_alpha(固定遮断率) | 0.15 | Crockford & Richardson (2000) Hydrol. Process. 14: 2903–2920 のレビュー: 遮断損失は針葉樹林 20〜40 %、広葉樹林 10〜25 %、草地 5〜10 %。広葉樹・混交林の代表 |
+| ic_smax_mm(初期損失) | 1.5 mm | 同レビューの樹冠貯留容量 S = 0.3〜3 mm(Rutter/Gash 系。針葉樹 1.5〜3、広葉樹 0.8〜1.5)。市街地の不透水面の窪地貯留(SWMM の慣用値 1.3〜2.5 mm)とも同程度 |
+| evap0(f_evmodel=1) | 3 mm/day | FAO-56(Allen ほか 1998)の基準蒸発散 ET₀: 温帯湿潤の暖候期 3〜5 mm/day。日本の年平均(2〜2.5)と夏季(4〜5)の中庸。季節を通す計算はモード 2〜4(与件なので既定なし) |
+| lv_visc | 1e4 Pa·s | 玄武岩質アア溶岩の流下中の粘度(エトナ 1e3〜1e4: Pinkerton & Norton 1995 J. Volcanol. Geotherm. Res. 68: 307–323)。lava_plan.md の η = 1e2〜1e7 の中で玄武岩の上限・安山岩の下限。List_samples の値 |
+| lv_vsol(lv_wsol > 0 のとき) | 5e-4 m/s | ガイドの目安 1e-4〜1e-3 の中庸。List_samples・test/lava の値 |
+
+- 既定を置かなかったもの: lv_tauy(0 = Newton 流体の明示)、lv_wsol(0 =
+  固化なし)、噴火口、evap の月別値・緯度・平年気温(与件)、fn_icalpha・
+  fn_icsmax(分布)。
+- **wq は既定を置かない**(物質ごとに桁で異なる物性に既定を置くと「黙って
+  使う」ことになる。減衰・沈降・分配を書かなければ保存性トレーサとして
+  動くので最小入力は既に成立)。代わりに users_guide/wq.md「物質別の代表値」
+  の表を置いた。出典: 大腸菌の T90(§63 既存の表)、BOD の脱酸素係数
+  0.1〜0.5 /day(Streeter & Phelps 1925; Chapra 1997 Surface Water-Quality
+  Modeling)、Stokes 沈降速度、重金属・Cs の Kd(Sheppard & Thibault 1990
+  Health Phys. 59: 471–482; IAEA TRS-472 2010; US EPA 402-R-99-004A 1999)、
+  Cs-137 半減期 30.17 年、農薬の Koc と半減期(Wauchope ほか 1992 の
+  SCS/ARS/CES pesticide properties database)。
+- 検証(2026-10-01): test/icevap(新設。構成 e 固定遮断率 / f 初期損失 /
+  g 一定蒸発散)と test/lava 構成3(param_ty と同じ Bingham 設定で lv_visc・
+  lv_vsol を省略)で、最小入力と既定値明示の save 全ファイルと Log.txt が
+  バイト一致。既存ケースは明示指定のため不変。
+
+## 67. 潮位・海面(m_tide)の最小入力(2026-10-01 実装。§62 の展開)
+
+titype 未指定(namelist 既定 0)は従来「1〜4 を指定せよ」で停止していたが、
+**1(一様固定潮位 ti0)を採用**して "tide: titype = 1 (default: uniform
+fixed tide level ti0 = ... m)" と表示するようにした。ti0(既定 0 = 平均潮位)
+と hsea0(既定 1 m。§23)は元から namelist 既定を持つので、**最小入力は
+fn_tide + 空の &list_tide**(海域 fn_sw は与件)。海を「水位 0 m の排水先」
+にする最簡の使い方(干潮排水・流域の海への出口)が 1 行で書ける。ti0 の 0 は
+平均潮位の明示と区別できないため、既定の表示は titype が既定のときに ti0 を
+併記する形。tival・fn_timap 等(時系列・分布)は与件のまま。
+
+検証(2026-10-01): test/tide 構成2(空の &list_tide)と構成2'(titype=1・
+ti0=0・hsea0=1 を明示)の result(Log.txt と出力場)がバイト一致。構成1
+(titype=2 の時系列)は不変で reference PASS。

@@ -98,6 +98,15 @@ subroutine m_tide_init(ti, p, g, s)
   !---- 設定ファイルを読み込む ----
   call list_tide_read(p, list)
 
+  !---- 既定(developer.md §67): titype 未指定(0)は「一様固定潮位 ti0」。
+  !     ti0(既定 0 = 平均潮位)・hsea0(既定 1 m)は namelist 既定のまま
+  !     採用し、採用値を表示する(最小入力 = fn_tide + 空の &list_tide) ----
+  if (list%titype == 0) then
+    list%titype = 1
+    call par_info("tide: titype = 1 (default: uniform fixed tide level ti0 = " // &
+                  rtoa(list%ti0) // " m)")
+  end if
+
   !---- 検証 ----
   if (list%titype < 1 .or. list%titype > 4) then
     call par_stop("list_tide: titype must be 1(uniform fixed), 2(uniform series), " // &

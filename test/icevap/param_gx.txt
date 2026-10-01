@@ -1,0 +1,52 @@
+!======================================================================
+! icevap 構成g: 蒸発散(f_evmodel=1)の最小入力(既定値の明示)
+!   evap0 を省略 = 既定 3 mm/day。初期湛水 5 cm から蒸発。
+!   developer.md §66。Run.sh が構成g'(既定値を明示した param_gx.txt)と
+!   save の全ファイル・Log.txt のバイト一致を検定する。
+!   閉領域の一様斜面(勾配 0.1。gwdefault と同じ地形)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.2
+  t0 = 0
+  tt = 900
+  dt_disp = 300
+  dt_file = 900
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_evap = '-'
+  dir_data = 'data_icevap'
+  dir_result = 'result_gx'
+  dir_save = 'save_gx'
+  f_state_save = 1
+  f_disp_debug = 1          ! S 列を全有効桁で表示(Log のバイト比較用)
+  f_check_cfl = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.05
+/
+
+&list_geoinfo
+  nx = 40
+  ny = 20
+  dx = 1.0
+  dy = 1.0
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound
+/
+
+&list_evap
+  f_evmodel = 1
+  evap0 = 3.0               ! 既定の明示(developer.md §66 の表と対で保守)
+/

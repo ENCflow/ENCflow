@@ -71,7 +71,7 @@ module m_glacier
   use m_parallel, only : par_info, par_warn, par_stop, par_abort, dcp, is_root, &
                          par_halo_cell, par_allreduce_max, par_gather_to, &
                          par_scatter_cell
-  use m_util, only : itoa, rtoa, str2sec
+  use m_util, only : itoa, rtoa, str2sec, param_default
   implicit none
   private
 
@@ -210,7 +210,10 @@ subroutine m_glacier_init(gl, p, g, s, mt)
   s%gl_ir = gl%ir              ! m_state の himean(水当量換算)用
   if (list%gl_tfirn_yr <= 0.0) call par_stop("list_glacier: gl_tfirn_yr must be > 0")
   gl%tfirn = list%gl_tfirn_yr * yr_s
-  if (list%gl_ddfi <= -9998.0) call par_stop("list_glacier: gl_ddfi is required (mm/deg-C/day)")
+  ! 氷面度日係数の既定(未指定 = 番兵 −9999 なら採用し、採用値を表示。
+  ! developer.md §65)
+  list%gl_ddfi = param_default("glacier", "gl_ddfi", list%gl_ddfi, 8.0, &
+                               " mm/degC/day", unset=-9999.0)
   if (list%gl_ddfi <= 0.0) call par_stop("list_glacier: gl_ddfi must be > 0")
   gl%ddfi = list%gl_ddfi * mm2m / secday          ! mm/℃/day -> m/℃/s(水当量)
   gl%tmelt = list%gl_tmelt
@@ -234,8 +237,9 @@ subroutine m_glacier_init(gl, p, g, s, mt)
   gl%f_slide = list%f_glslide
   if (gl%f_slide > 0) then
     if (gl%f_flow <= 0) call par_stop("list_glacier: f_glslide requires f_glflow=1")
-    if (list%gl_as <= -9998.0) call par_stop("list_glacier: f_glslide=1 requires gl_as " &
-                                             // "(m yr^-1 Pa^-3)")
+    ! 滑動係数の既定(f_glslide=1 のときだけ読む。§65)
+    list%gl_as = param_default("glacier", "gl_as", list%gl_as, 1.0e-13, &
+                               " m/yr/Pa^3", unset=-9999.0)
     if (list%gl_as <= 0.0) call par_stop("list_glacier: gl_as must be > 0")
     gl%as_si = list%gl_as / yr_s                  ! m yr^-1 Pa^-3 -> m s^-1 Pa^-3
     gl%gams = gl%as_si * gl%rhogi**3
@@ -246,7 +250,8 @@ subroutine m_glacier_init(gl, p, g, s, mt)
   if (gl%f_ero > 0) then
     if (gl%f_slide <= 0) call par_stop("list_glacier: f_glero requires f_glslide=1 " &
                                        // "(erosion is driven by basal sliding)")
-    if (list%gl_kg <= -9998.0) call par_stop("list_glacier: f_glero=1 requires gl_kg")
+    ! 侵食係数の既定(f_glero=1 のときだけ読む。§65)
+    list%gl_kg = param_default("glacier", "gl_kg", list%gl_kg, 1.0e-4, "", unset=-9999.0)
     if (list%gl_kg <= 0.0) call par_stop("list_glacier: gl_kg must be > 0")
     if (list%gl_lexp <= 0.0) call par_stop("list_glacier: gl_lexp must be > 0")
     gl%kg = list%gl_kg
@@ -441,7 +446,7 @@ subroutine calc_melt(gl, p, g, s, mt)
       s%hi(i,j) = s%hi(i,j) - wm * gl%morfac * gl%ri
       wf = 1.0
       if (have_width) wf = wfrac(i,j)
-      s%h(i,j) = s%h(i,j) + wm / g%gv(i,j) / wf
+      s%h(i,j) = s%h(i,j) + wm / s%gv(i,j) / wf
       s%e(i,j) = s%z(i,j) + s%h(i,j)
     end do
   end do

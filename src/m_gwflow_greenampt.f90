@@ -43,6 +43,7 @@ module m_gwflow_greenampt
   use m_state, only : t_state
   use m_fileio, only : fileio_read_matrix
   use m_parallel, only : par_info, par_stop, dcp, is_root, par_scatter_cell
+  use m_util, only : param_default
   implicit none
   private
   public :: gwflow_greenampt_init
@@ -89,10 +90,15 @@ subroutine gwflow_greenampt_init(p, g, s)
   if (ios /= 0) call par_stop("list_gwflow_greenampt: cannot read namelist")
   close(un)
 
-  ! 一様スカラーは従来どおり > 0 を要求(マップ指定時は 0 = 不浸透を
-  ! 許すため、マップ側の検査は read_map_scatter の非負検査のみ)
-  if (len_trim(fn_gw_ksv) == 0 .and. gw_ksv_mmh <= 0.0) then
-    call par_stop("list_gwflow_greenampt: gw_ksv_mmh must be > 0 (or give fn_gw_ksv)")
+  ! 一様スカラーは未指定(0)なら既定を採用し(developer.md §64)、
+  ! 明示値は従来どおり > 0 を要求(マップ指定時は 0 = 不浸透を
+  ! 許すため、マップ側の検査は read_map_scatter の非負検査のみ)。
+  ! gw_psif の 0 は「一定浸透能に退化」の明示なので既定を置かない
+  if (len_trim(fn_gw_ksv) == 0) then
+    gw_ksv_mmh = param_default("gwflow", "gw_ksv_mmh", gw_ksv_mmh, 10.0, " mm/h")
+    if (gw_ksv_mmh <= 0.0) then
+      call par_stop("list_gwflow_greenampt: gw_ksv_mmh must be > 0 (or give fn_gw_ksv)")
+    end if
   end if
   if (gw_psif < 0.0) call par_stop("list_gwflow_greenampt: gw_psif must be >= 0")
   if (g%sy0 <= 0.0 .or. g%sy0 > 1.0) then
@@ -196,7 +202,7 @@ subroutine gwflow_greenampt_calc(p, g, s, it, dts)
       s%h(i,j) = s%h(i,j) - fx
       ! 地下側は実効平面積率で体積整合させる(§26。河道幅・断面 σ の
       ! 有効セルのみ af/gv < 1。無効時は af=gv で係数 1.0 =従来とビット一致)
-      s%hg(i,j) = s%hg(i,j) + fx * (s%af(i,j) / g%gv(i,j))
+      s%hg(i,j) = s%hg(i,j) + fx * (s%af(i,j) / s%gv(i,j))
       ! 浸透フラックスの記録(水質の濃度同伴用。m_wq が読んでゼロ戻し。§30)
       if (allocated(s%fxg)) s%fxg(i,j) = s%fxg(i,j) + fx
       s%e(i,j) = s%z(i,j) + s%h(i,j)

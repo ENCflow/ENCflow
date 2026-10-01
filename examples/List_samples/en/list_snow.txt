@@ -26,9 +26,10 @@
 
   ! ---- Degree-day snowmelt ----
   snow_t_melt = 0.0         ! snowmelt threshold (degC)
-  snow_ddf = 4.0            ! degree-day factor (mm/degC/day. Literature values
-                            !   about 3-5. Smaller in forests, larger in open
-                            !   land and in the late melt season)
+  snow_ddf = 4.0            ! degree-day factor (mm/degC/day; default 4 = open
+                            !   land. Literature values about 3-5. Smaller in
+                            !   forests, larger in open land and in the late
+                            !   melt season; developer.md §65)
 
   ! ---- Initial snow cover (if unspecified, 0 = start without snow) ----
   !snow_swe0 = 100.0        ! uniform initial SWE (mm)

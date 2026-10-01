@@ -53,6 +53,16 @@ through rainfall runoff or river inflow, that is often sufficient.
   require the channel mask fn_rw. None of them fill depressions that
   can drain to the sea.
 
+## How to give it by pattern
+
+| Type | Setting | Notes |
+|---|---|---|
+| Catchment rainfall runoff | nothing (dry); with coarse terrain, f_fill_depres=2-3 to fill channel pits | h0_rw 0.1-0.5 wets the channel at base flow for a natural rise |
+| River flood inundation | h0_rw 0.3-1 m, or a warmed-up field run at base flow (below) | Inflow via segment inflow of [boundary conditions](boundary.md) |
+| Lake, reservoir, tidal reach | f_htype=2, e0 = water level | Ground above the water surface stays dry |
+| Tsunami (sea solved as ordinary cells) | f_htype=2, e0 = mean sea level | Incidence via prescribed levels on the seaward edge or an initial waveform in fn_hinit |
+| Dam break, bore | fn_hinit (f_htype=1) or f_user_routine | The wave tutorial's user routine is the model for idealized experiments |
+
 ## Using a warmed-up field as the initial condition
 
 When you want to start from a realistic "flowing field" beyond what the

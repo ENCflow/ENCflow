@@ -29,6 +29,28 @@ points. The table at the end of each section lists all parameters --
 "mandatory" items stop with an error when omitted; all others are
 optional, with the behavior when omitted given in the "default" column.
 
+## Just try it (minimal input)
+
+The minimal input is one drainage pump (intake cell + constant rate;
+omitting the outlet drains out of the domain):
+
+```
+&list_struct_pump
+  pump_cell(:,1,1) = 120, 45     ! intake cell (i, j)
+  pump_q0(1) = 5.0               ! pumping rate (m3/s)
+/
+```
+
+**Guides by type** (dimensions are given data; as a starting point)
+
+| Type | Structure type | Guide |
+|---|---|---|
+| Urban pumping station | pump (outlet omitted = out of the domain, or into a channel cell) | Specific pumping rate 1-3 m³/s/km² (10-20 % of a 50 mm/h storm; the rest is storage and sewers). Start level via pump_rule |
+| Sluice gate / pipe (two-way with the river level) | culvert | Diameter 0.6-1.5 m; backflow prevention by the flap |
+| Diversion channel, split | diversion | Split ratio or fixed discharge; rules are polylines |
+| Dam, reservoir | dam (the pattern guide below) | HV curve and operation rule from the design documents |
+| Pond | fn_rscap of [geographic information](geoinfo.md) | Critical storage height 1-3 m |
+
 ## Drainage pumps (&list_struct_pump)
 
 Forced transfer (mechanical drainage) from an intake cell set to an

@@ -22,16 +22,17 @@
 
   ! ---- rheology (given directly; one set per run) ----
   lv_rho = 2600.0           ! density rho (kg/m3)
-  lv_visc = 1.0e4           ! viscosity eta (Pa s; required; basaltic
-                            !   1e2-1e4, andesitic and up >= 1e5. Smaller
-                            !   eta means more explicit subcycles - plan Sec. 6)
+  lv_visc = 1.0e4           ! viscosity eta (Pa s; default 1e4 = basaltic
+                            !   aa lava; basaltic 1e2-1e4, andesitic and up
+                            !   >= 1e5. Smaller eta means more explicit
+                            !   subcycles - plan Sec. 6)
   lv_tauy = 2000.0          ! yield stress tau_y (Pa; 0 = Newtonian.
                             !   stopping thickness on slope = tau_y/(rho g tan))
 
   ! ---- solidification (stopped cells: hl -> z; 0 = none) ----
   lv_wsol = 0.005           ! solidification rate (m/s)
   lv_vsol = 5.0e-4          ! stop-detection velocity threshold (m/s;
-                            !   required if lv_wsol > 0; typically
+                            !   read if lv_wsol > 0; default 5e-4; typically
                             !   1e-4-1e-3. Smaller values approach the
                             !   theoretical h-inf but take longer to trigger)
 

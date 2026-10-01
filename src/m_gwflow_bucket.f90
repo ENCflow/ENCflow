@@ -27,6 +27,7 @@ module m_gwflow_bucket
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
   use m_parallel, only : par_info, par_stop, dcp
+  use m_util, only : param_default
   implicit none
   private
   public :: gwflow_bucket_init
@@ -68,6 +69,9 @@ subroutine gwflow_bucket_init(p, g, s)
   if (ios /= 0) call par_stop("list_gwflow_bucket: cannot read namelist")
   close(un)
 
+  ! 既定値(未指定 = 0 なら採用し、採用値を表示。developer.md §64)
+  gw_infil_mmh = param_default("gwflow", "gw_infil_mmh", gw_infil_mmh, 10.0, " mm/h")
+  gw_capacity = param_default("gwflow", "gw_capacity", gw_capacity, 0.2, " m")
   if (gw_infil_mmh <= 0.0) call par_stop("list_gwflow_bucket: gw_infil_mmh must be > 0")
   if (gw_capacity <= 0.0) call par_stop("list_gwflow_bucket: gw_capacity must be > 0")
 
@@ -109,7 +113,7 @@ subroutine gwflow_bucket_calc(p, g, s, it, dts)
       s%h(i,j) = s%h(i,j) - fx
       ! 地下側は実効平面積率で体積整合させる(§26。河道幅・断面 σ の
       ! 有効セルのみ af/gv < 1。無効時は af=gv で係数 1.0 =従来とビット一致)
-      s%hg(i,j) = s%hg(i,j) + fx * (s%af(i,j) / g%gv(i,j))
+      s%hg(i,j) = s%hg(i,j) + fx * (s%af(i,j) / s%gv(i,j))
       ! 浸透フラックスの記録(水質の濃度同伴用。m_wq が読んでゼロ戻し。§30)
       if (allocated(s%fxg)) s%fxg(i,j) = s%fxg(i,j) + fx
       s%e(i,j) = s%z(i,j) + s%h(i,j)

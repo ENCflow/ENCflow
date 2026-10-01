@@ -80,6 +80,10 @@ module m_sysparam
     integer :: f_out_fmax                      ! ファイル出力(最大流体力F9999)
     integer :: f_out_hd                        ! ファイル出力(流動流木Hd0001。§50)
     integer :: f_out_wd                        ! ファイル出力(堆積流木Wd0001/Wd9999)
+    integer :: f_out_hbd                       ! ファイル出力(流動瓦礫Bf0001。§63)
+    integer :: f_out_wbd                       ! ファイル出力(堆積瓦礫Bd0001/Bd9999)
+    integer :: f_out_bds                       ! ファイル出力(家屋の破壊率Bs0001)
+    integer :: f_out_fdmax                     ! ファイル出力(流木・瓦礫込み最大流体力Fd9999)
     integer :: f_disp_debug                    ! 画面表示(S 系列を全有効桁で表示)
     integer :: f_disp_h                        ! 画面表示(最大水深 h_max)
     integer :: f_disp_vv                       ! 画面表示(最大流速 V_max)
@@ -106,6 +110,7 @@ module m_sysparam
     character(:), allocatable :: fn_salt       ! 淡塩2層設定ファイル
     character(:), allocatable :: fn_swi        ! 土壌雨量指数設定ファイル(§49)
     character(:), allocatable :: fn_driftwood  ! 流木設定ファイル(§50)
+    character(:), allocatable :: fn_bldgdebris ! 家屋破壊・瓦礫設定ファイル(§63)
     real :: t_cycle = 0.0                      ! 強制の反復周期 (s。0=なし。§32.4)
     character(:), allocatable :: fn_channel    ! 河道条件設定ファイル
     character(:), allocatable :: fn_enc        ! ENC設定ファイル
@@ -213,6 +218,10 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%f_out_fmax = list%f_out_fmax               ! ファイル出力(最大流体力F9999)
   p%f_out_hd = list%f_out_hd                   ! ファイル出力(流動流木Hd0001)
   p%f_out_wd = list%f_out_wd                   ! ファイル出力(堆積流木Wd0001/Wd9999)
+  p%f_out_hbd = list%f_out_hbd                 ! ファイル出力(流動瓦礫Bf0001)
+  p%f_out_wbd = list%f_out_wbd                 ! ファイル出力(堆積瓦礫Bd0001/Bd9999)
+  p%f_out_bds = list%f_out_bds                 ! ファイル出力(家屋の破壊率Bs0001)
+  p%f_out_fdmax = list%f_out_fdmax             ! ファイル出力(瓦礫込み最大流体力Fd9999)
   p%f_disp_debug = list%f_disp_debug           ! 画面表示(S 系列を全有効桁で表示)
   p%f_disp_h = list%f_disp_h                   ! 画面表示(最大水深 h_max)
   p%f_disp_vv = list%f_disp_vv                 ! 画面表示(最大流速 V_max)
@@ -238,6 +247,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%fn_salt = list%fn_salt                     ! 淡塩2層設定ファイル
   p%fn_swi = list%fn_swi                       ! 土壌雨量指数設定ファイル
   p%fn_driftwood = list%fn_driftwood           ! 流木設定ファイル
+  p%fn_bldgdebris = list%fn_bldgdebris         ! 家屋破壊・瓦礫設定ファイル
   p%fn_channel = list%fn_channel               ! 河道条件設定ファイル
   p%fn_enc = list%fn_enc                       ! ENC設定ファイル
   p%fn_log = list%fn_log                       ! 状態ログファイル

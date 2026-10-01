@@ -22,6 +22,8 @@
   !   4: list of distribution files (fn_timaplist. The time of frame i is
   !      (i-1)*dt_timaplist. Two adjacent frames are linearly
   !      interpolated; end values held outside the range)
+  !   When unspecified, 1 (uniform fixed level ti0, default 0 m). The
+  !   minimal input is an empty &list_tide
   titype = 2
 
   ! Apparent water column thickness of sea cells (m). For flooding where
@@ -36,7 +38,7 @@
   ! uninterrupted run)
   dt_tiupdate = 1
 
-  ! titype=1: uniform fixed tide level (m)
+  ! titype=1: uniform fixed tide level (m; default 0 = mean sea level)
   !ti0 = 0.5
 
   ! titype=2, 3: time series (time (min), tide level (m) or factor)

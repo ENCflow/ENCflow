@@ -28,6 +28,21 @@ echo ""
 python3 "$sdir/Check_lava.py" save_ty bingham || rc=1
 rm -rf save_ty_serial && cp -r save_ty save_ty_serial
 
+# 構成3: 最小入力(既定値)と構成3'(既定値の明示)の同値検定(§66)
+set -o pipefail
+./encflow param_min.txt | tee Screen_min.log || exit 1
+./encflow param_minx.txt | tee Screen_minx.log || exit 1
+set +o pipefail
+echo ""
+if diff -r save_min save_minx > /dev/null && cmp -s result_min/Log.txt result_minx/Log.txt; then
+    echo "=== defaults: save/ and Log.txt are bit-identical between the minimal input and the explicit defaults ==="
+else
+    echo "FAIL: minimal input (defaults) and explicit defaults differ" >&2
+    rc=1
+fi
+ndef=$(grep -c "(default)" Screen_min.log)
+[ "$ndef" -eq 2 ] || { echo "FAIL: expected 2 '(default)' lines, got $ndef" >&2; rc=1; }
+
 if [ $rc -eq 0 ]; then
     echo "=== lava 検定 PASS ==="
 else

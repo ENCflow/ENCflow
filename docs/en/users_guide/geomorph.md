@@ -1,6 +1,6 @@
 # Sediment and Landform Change (&list_geomorph)
 
-> English mirror of docs/users_guide/geomorph.md (based on commit 6c5acfc). The Japanese file is the master copy.
+> English mirror of docs/users_guide/geomorph.md (based on commit c7e801e). The Japanese file is the master copy.
 
 [Back to the User's Guide index](../users_guide.md)
 
@@ -27,6 +27,15 @@ run and feed back into the flow.
 | dt_geomorph | 0 | Update interval of landform change (s). 0: every step |
 | morfac | 1.0 | Morphological acceleration factor. Multiplies only the landform change by morfac so that a short run represents a long period (for equilibrium landforms and year-order studies; use 1 in event runs) |
 
+**Policy on parameter defaults** - the material and calibration values of
+every process have safe defaults that make it "just run", so **the
+minimal input is the process switch (f_xxx = 1) alone**. Values adopted
+while unspecified (0) are printed at startup with a **(default)** mark,
+such as `geomorph: db_phi = 35.0000 deg (default)`, so they cannot go
+unnoticed. Always review them against your case (guides by type of
+phenomenon are in "[Recommended values by pattern](#recommended-values-by-pattern)"
+at the end of this chapter). The rationale is in developer.md §62.
+
 The evolving terrain can be output as `Z0001...` with `f_out_z = 1`
 ([the input/output chapter](io.md)). The probe CSV has columns for
 suspended sediment hs and soil depth sd
@@ -34,9 +43,12 @@ suspended sediment hs and soil depth sd
 
 ## Hillslope creep (f_creep)
 
-| Parameter | Meaning |
-|---|---|
-| creep_d | Creep diffusion coefficient (m^2/s) |
+| Parameter | Default | Meaning |
+|---|---|---|
+| creep_d | 1.6e-10 (= 0.005 m²/yr) | Creep diffusion coefficient (m²/s). Literature range 0.001-0.05 m²/yr. A geomorphic-time quantity, so interpret it together with morfac |
+
+The minimal input to "just smooth the slopes" is `f_creep = 1` alone (no
+soil depth needed; add morfac to see changes over years to millennia).
 
 ## Bedload (f_fluvial)
 
@@ -45,13 +57,18 @@ Riverbed erosion and deposition by a bedload transport formula.
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_qbform | 1 | Bedload formula. 1: Ashida-Michiue, 2: MPM |
-| fluv_d50 | - | Representative grain size (m). **Required** |
+| fluv_d50 | 0.01 | Representative grain size (m). The default is a middle value for sand-gravel beds (sand bed 0.0005 to mountain gravel bed 0.05) |
 | fluv_tausc | 0.05 | Critical dimensionless shear stress tau*c |
 | fluv_porosity | 0.4 | Riverbed porosity |
 | fluv_sgrav | 1.65 | Submerged specific gravity of sediment grains |
 | fluv_dzmax | 0.05 | Upper limit of bed change per update (m) (stabilization) |
 | fluv_bcfeed | 0 | Sediment feed at open boundaries. 0: no feed at inflow, 1: equilibrium feed (outflow is always at transport capacity) |
 | fluv_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
+
+The minimal input to "just move the bed" is `f_fluvial = 1` plus the
+thickness of the erodible soil `sd0` (&list_geoinfo). The grain size is
+the default 1 cm (the adopted value is printed at run time; guides for
+sand and gravel beds are in the recommendations at the end).
 
 Combined with the subgrid channel width (fn_width), bedload
 concentrates in the channel width and changes the riverbed there
@@ -66,11 +83,15 @@ and exchanges with the riverbed through entrainment (E) and settling
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_esform | 1 | Equilibrium concentration formula. 1: linear excess shear (simple), 2: Itakura-Kishi |
-| susp_d50 | - | Representative grain size (m). **Required** |
+| susp_d50 | 0.0002 | Representative grain size (m). The default is fine sand (representative of suspended load) |
 | susp_wf | 0 | Settling velocity (m/s). If 0, derived from d50 by the Rubey formula |
 | susp_tausc | 0.05 | Critical dimensionless shear stress for suspension |
 | susp_beta | 1.0 | Near-bed concentration coefficient for settling |
-| susp_esa | - | Equilibrium concentration coefficient (required for f_esform=1; a calibration parameter) |
+| susp_esa | 1e-4 | Equilibrium concentration coefficient (used by f_esform=1; a calibration parameter; not used by Itakura-Kishi) |
+
+The minimal input to "just carry some turbidity" is `f_suspend = 1` and
+`sd0` (grain size defaults to fine sand 0.2 mm; the settling velocity is
+derived automatically by the Rubey formula).
 
 Sediment inflow from the boundaries (time series of concentration and
 bedload discharge) is given by the segment inflows (inflow_cs /
@@ -132,11 +153,19 @@ Detaches sediment from hillslopes by raindrop erosion and sheet
 erosion and carries it as suspended sediment (**f_suspend is
 required**). Detachment reduces the soil depth sd.
 
-| Parameter | Meaning |
-|---|---|
-| wash_kr | Raindrop erosion coefficient (dimensionless; E = kr x rainfall intensity) |
-| wash_kf | Sheet erosion coefficient (m/s) |
-| wash_tausc | Critical dimensionless shear stress for sheet erosion |
+| Parameter | Default | Meaning |
+|---|---|---|
+| wash_kr | 0.01 | Raindrop erosion coefficient (dimensionless; E = kr x rainfall intensity) |
+| wash_kf | 1e-5 | Sheet erosion coefficient (m/s) |
+| wash_tausc | 0.05 | Critical dimensionless shear stress for sheet erosion |
+
+kr and kf are empirical coefficients (calibration assumed). When both
+are unspecified both get their defaults; when only one is given, the 0
+of the other is read as "no such term".
+
+The minimal input to "just erode the slopes" is `f_wash = 1` +
+`f_suspend = 1` (the carrier of the detached sediment) + `sd0` +
+rainfall (fn_precip).
 
 ## Dry-slope erosion (f_splash)
 
@@ -166,12 +195,17 @@ represent this.
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| spl_kr | 0 | Rainsplash coefficient (dimensionless); additive term that acts even on flat plateaus (S = 0) |
+| spl_kr | 0.0005 | Rainsplash coefficient (dimensionless); additive term that acts even on flat plateaus (S = 0). When both kr and kt are unspecified both get defaults; when only one is given the other stays 0 |
 | spl_ca | 0 | Hollow-amplification length of the splash term (m) |
-| spl_kt | 0 | Subgrid-rill coefficient (dimensionless); multiplies S^h |
+| spl_kt | 0.05 | Subgrid-rill coefficient (dimensionless); multiplies S^h |
 | spl_cb | 0 | Hollow-amplification length of the rill term (m); strength of the valley-deepening feedback |
 | spl_h | 1.0 | Slope exponent h of the rill term |
 | spl_dzmax | 0 | Erosion cap per cell per update (m) (0: off); safety valve against runaway feedback |
+
+The minimal input to "just carve valleys into a cliff" is `f_splash = 1`
++ `sd0` + rainfall (fn_precip) (kr and kt at their defaults; if the
+positive valley feedback is wanted, set spl_cb to a few to a few tens of
+meters).
 
 Working example: [examples/badland](../../../examples/badland/) (in
 Japanese; long-duration rain on a plateau-and-cliff terrain grows
@@ -191,11 +225,26 @@ recommend `f_gravity_correction = 1` in &list_enc.
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_dbed | 1 | E-D closure. 0: no exchange (equivalent fluid; see volcanic flows below), 1: relaxation to the equilibrium concentration (simplified), 2: Egashira-Ashida 1992, 3: Takahashi-Nakagawa 1991 (requires db_d50), 4: velocity-proportional entrainment E = δe·|V| (path entrainment for avalanches and debris avalanches; entrainment only — deposition via f_dbstop; see the snow-avalanche paragraph below) |
-| db_phi | - | Internal friction angle of the sediment (deg). **Required** when f_dbed>=1 or f_dbres=1,2 |
+| db_phi | 35 | Internal friction angle of the sediment (deg). Used by f_dbed=1-3 or f_dbres=1,2. The default is representative of gravelly debris (tan phi ≈ 0.7) |
 | db_delte / db_deltd | 0.0007 / 0.05 | Rate coefficients for erosion / deposition (calibration parameters of f_dbed=1,3) |
-| f_dbres | 1 | Resistance law. 0: Manning only, 1: Coulomb + Manning combined, 2: Egashira constitutive law (requires db_d50, db_erest), 3: Takahashi-Nakagawa 1991 stony type (requires db_d50), 4: Voellmy (requires db_mu, db_xi), 5: constant retarding stress (requires db_tauy) |
-| f_dbstop / db_vstop / db_wstop | 0 | Stopping condition by low-speed consolidation (stopped sediment is fixed to the bed elevation z; natural dam formation) |
+| f_dbres | 1 | Resistance law. 0: Manning only, 1: Coulomb + Manning combined, 2: Egashira constitutive law (db_d50, db_erest), 3: Takahashi-Nakagawa 1991 stony type (db_d50), 4: Voellmy (db_mu, db_xi), 5: constant retarding stress (db_tauy) |
+| f_dbcurv | 0 | Curvature term. 1 adds the centrifugal acceleration from the terrain curvature to the normal stress and scales the yield friction by (1 + a_c/g_n) (deceleration in hollows, reduced friction on convexities). Usable with f_dbres=1-4 (not 5). The same treatment as RAMMS; set it to 1 when importing mu and xi calibrated with RAMMS |
+| f_dbstop / db_vstop / db_wstop | 0 / 0.05 / 0.05 | Stopping condition by low-speed consolidation (stopped sediment is fixed to the bed elevation z; natural dam formation) |
+| db_d50 | 0.05 | Representative grain size (m). Used by f_dbed=3 and f_dbres=2,3. The default is the stony-type d_L (a few cm to dm) |
+| db_erest | 0.85 | Particle restitution coefficient e. Used by f_dbres=2. The customary Egashira value |
+| db_mu / db_xi | 0.2 / 1000 | Voellmy mu and xi (m/s²). Used by f_dbres=4. The defaults are mid-range RAMMS values (snow avalanches). Debris avalanches are smaller, mu 0.1 and xi 200-500 (recommendations below) |
+| db_tauy | 10000 | Constant retarding stress tau_y (Pa). Used by f_dbres=5. The lower side of the 5-50 kPa pyroclastic-flow applications |
 | f_dbwet / db_satbed | 0 / 1.0 | Pore-water entrainment (exchange of bed pore water with surface water on erosion/deposition; a first-order bulking effect where erosion dominates. Mutually exclusive with the groundwater computation) |
+
+The minimal input to "just run a debris flow" is `f_debris = 1` + `sd0`
+(the movable layer = erodible soil) + a source. The source is one of:
+a collapse-depth distribution `fn_dbinit` (instantaneous mobilization),
+a sediment-laden segment inflow at the upstream end
+([Boundary conditions](boundary.md)), or the slope stability test
+`f_slide = 1` (together with the groundwater computation). The
+resistance law and E-D closure run as the simple debris flow of the
+defaults (f_dbed=1, f_dbres=1, phi=35 deg). When the type is known, go
+to the recommendations at the end of the chapter.
 
 **Volcanic flows (debris avalanches, dense pyroclastic flows,
 lahars)** - density flows without bed erosion can be approximated with
@@ -215,6 +264,45 @@ and setup are the same as in the snow-avalanche paragraph below —
 only the reinterpretation of the entrainable layer differs). Dilute
 phenomena (pyroclastic surges, plumes, atmospheric ash transport) are
 out of scope by design (see debris_plan.md §5).
+
+**Lahars (volcanic mudflows)** - generated by eruption-driven snow and
+glacier melt or by the breach of a crater lake, they descend the valley
+taking up deposits and water (bulking), then dilute downstream and
+grade into a flood. They are treated not as an equivalent fluid but as a
+**mixture whose concentration changes** (this is where using ENCflow
+pays off).
+
+- **Typical setup**: `f_debris = 1`, `f_dbed = 2` + `f_dbres = 2`
+  (Egashira constitutive law; the typical fine-grained, high-concentration
+  lahar. phi 30-35 deg, d50 1-10 mm, e ≈ 0.85). For boulder-dominated
+  flows (sector-collapse origin, stony type descending a torrent) use
+  `f_dbed = 3` + `f_dbres = 3` (Takahashi-Nakagawa). For a rough
+  comparison with LAHARZ / RAMMS practice the equivalent fluid
+  `f_dbed = 0` + `f_dbres = 4` (mu 0.05-0.1, xi 500-1000) also works, but
+  it cannot represent the concentration change and the transition to a
+  flood. `f_dbwet = 1` (uptake of path pore water) is recommended as the
+  first-order bulking effect.
+- **How to initiate**: a **sediment-laden segment inflow** at the
+  upstream end (the supply hydrograph; inflow_cs of
+  [Boundary conditions](boundary.md)), or a **chain** in which deposits
+  from an earlier stage form a natural dam and breach (deposits fixed by
+  f_dbstop=1 → overtopping breach → entrainment of downstream deposits).
+  The collapse-depth distribution fn_dbinit is for sector-collapse
+  origins.
+- **Limits**: the thermal interaction of hot pyroclasts with snow and
+  ice (the melt volume) is out of scope; give the meltwater as an inflow
+  hydrograph. Dilute systems (pyroclastic surges) are out of scope
+  (debris_plan.md §5).
+
+**Curvature term (f_dbcurv)** - at bends, valley exits and knickpoints
+the centrifugal acceleration from terrain curvature raises or lowers the
+normal stress, changing the Coulomb friction (mu N). `f_dbcurv = 1` puts
+this effect into the yield term (deceleration in hollows, reduced
+friction on convexities; friction is cut to zero where the flow would
+leave the ground). RAMMS calibrates mu and xi with this term included,
+so set it to 1 in comparison runs that use those values. Curvature picks
+up fine DEM roughness, so match the grid resolution to the model you
+compare with. There is no effect on straight slopes (test/curvature).
 
 **Snow avalanches (dense flow)** - the same equivalent-fluid setup is
 also the standard formulation for dense-flow snow avalanches. The
@@ -289,9 +377,10 @@ formulation, not on appearances.
   instead).
 - **Slope stability test (f_slide=1)** - evaluates the infinite-slope
   safety factor Fs at every update and automatically mobilizes the
-  soil layer of cells with Fs < 1. `slide_c` (effective cohesion, Pa),
-  `slide_phi` (shear resistance angle, deg), and `slide_gamma`
-  (saturated unit weight, N/m^3) are required; the pore water pressure
+  soil layer of cells with Fs < 1. Strength is given by `slide_c`
+  (effective cohesion, Pa; default 0), `slide_phi` (shear resistance
+  angle, deg; default 30) and `slide_gamma` (saturated unit weight,
+  N/m^3; default 18000); the pore water pressure
   is taken from the saturated thickness of the groundwater computation
   (rainfall -> groundwater rise -> slope failure -> debris flow are
   linked in a single time evolution). `f_slide = 2` is a
@@ -353,16 +442,149 @@ numerical noise.
   trapping by member spacing vs. log length is out of scope of the
   driftwood module as well).
 
+## Moving bed layer / landslide tsunami (f_bedslide)
+
+Represents the failed mass as "a bed layer hb that moves as part of the
+terrain z (and the soil sd)" and runs it as an inertia-free,
+friction-dominated flow (Voellmy law) from land into water. When the
+layer moves, the bed z rises and falls while the water depth h is kept,
+so the water surface lifts (or draws down) - **generation, propagation
+and run-up of a landslide tsunami are chained without any extra
+settings** (the moving-seabed approach; design in
+docs/landslide_tsunami_plan.md). The difference from the debris-flow
+model above (a mixture bound to the water column) is that **it runs
+underwater even where the water surface is flat** (driving head
+Phi = z + (rho_w/rho_s) h; buoyancy reduces driving and friction
+together). Use it for debris avalanches and sector collapses plunging
+into lakes or the sea, and for prescribed submarine landslides.
+Represent the water body as a "solved sea" (no sea mask: real bathymetry
+plus an initial water level f_htype=2, long-wave radiation f_bc_*=2 on
+the edges).
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| f_bedslide | 0 | 1 enables it (morfac=1 required) |
+| fn_bsinit | - | Collapse-depth distribution (m). **Required** (the trigger is given data; z is unchanged and hb = min(D, sd) becomes movable) |
+| bs_reltime | 0 | Release time (s) |
+| bs_rho | 2000 | Bulk density of the mass (kg/m³, pores included; buoyancy ratio r = 1000/rho_s). The default is representative of saturated soil and rock debris (r = 0.5). 0 uses the default and init prints the adopted value with "(default)" |
+| f_bsres | 1 | Resistance law. 1: Voellmy (inertia-free; V = sqrt(xi hb (S - mu b))). 2 (Bingham) is reserved |
+| bs_mu / bs_xi | 0.15 / 500 | Voellmy mu and xi (m/s²). The defaults are the calibrated values of the inertia-free bed layer (as in examples/landslide_tsunami). Named separately from the mixture's db_mu/db_xi (calibration differs with and without inertia) |
+| bs_vstop | 0.05 | Velocity threshold for stopping (m/s; hb of cells below it is fixed to the terrain; irreversible) |
+| bs_tstop | 0 | Duration of slow motion required before fixing (s). 0 = immediate. To avoid false fixing during the ten-odd seconds in which the shoreline zone dewaters and the layer stalls on plunging, 10-15 s (longer than the dewatering) is recommended for plunging cases |
+| bs_eps_s | 0.02 | Linearization width near yield (dimensionless slope; smaller means more subcycles) |
+| bs_diagratio | 0.5858 | Diagonal share of the 8-direction partitioning (0 for 4 neighbors; for analytic comparisons) |
+| bs_cfl / bs_nsubmax | 0.4 / 10000 | Safety factor and cap of the subcycling |
+| bs_hplunge | 0 | Ponded-depth threshold (m) for the **handover** from the mixture (hs of the debris-flow model) to the bed layer. 0 = none. Needs f_debris=1. When given, fn_bsinit may be omitted (the trigger is the handover only) |
+| f_bsvplunge | 0 | Velocity condition of the handover. 1 hands over only after the mixture has slowed to the terminal velocity of the bed layer after handover (the momentum of a fast plunge is passed to the water column while still a mixture; recommended for fast plunges from land) |
+| f_bsplunge | 0 | Ponded depth used for the handover test. 0: the current depth h, 1: the still-water depth (initial surface minus the current bed z; only cells initially wet). Use 1 to hand over even when the shoreline zone dewaters temporarily on plunging |
+
+The minimal input to "just give a collapse-depth map and run" is
+`f_bedslide = 1` and `fn_bsinit` (material and calibration values at
+the defaults above; the adopted values are printed at run time, so
+always review them against your case. Make the soil depth sd0 at least
+the collapse depth).
+
+Working example: [examples/landslide_tsunami](../../../examples/landslide_tsunami/)
+(a debris avalanche, debris flow → handover, mixture only, and a
+submarine landslide on the same terrain, with figures and the reasons
+for the settings).
+
+Outputs Hb (layer thickness) and Vb (layer velocity; diagnostic) are
+added automatically. Restart uses the private file
+`geomorph_bedslide.dat`.
+
+**Run time**: the layer advances in small steps (subcycles) within the
+water time step to satisfy its stability conditions (advection and a
+diffusion-type condition near yield), so while the mass is moving the
+**total run time is about 1.5-2.5 times** (2.7 s → 4-6 s in
+examples/landslide_tsunami). This is not an anomaly. At the end,
+"bedslide subcycles total = ... (max ... per update)" reports the count.
+If the count is extreme or the run stops on exceeding bs_nsubmax, the
+first remedy is a larger bs_eps_s (0.02 → 0.05) (mechanism and order of
+remedies in developer.md §61.10).
+
+**How to give the failure surface**: give fn_bsinit as a "planar slip
+surface that daylights at the slope foot" (depth going to 0 toward the
+foot). A box of constant depth becomes a pit with a wall on the
+downstream side and the mass cannot leave it (a surface-slope-driven
+inertia-free flow cannot climb a step - the same holds for the
+debris-flow model).
+
+**Properties to be aware of (deliberate simplifications)**:
+- Inertia-free: it moves at terminal velocity right from release (the
+  10-20 s acceleration phase is omitted). **The direction of the bias
+  flips with the case**: for a submarine landslide released underwater
+  the near-field wave is on the high side; for a fast plunge from land
+  the layer drops at once to its underwater terminal velocity, so the
+  near-field wave is on the low side. For the latter, use the handover
+  route "on land = debris-flow model (mixture, with inertia), underwater
+  = bed layer" together with f_bsvplunge=1, and check the size of the
+  bias with the "plunge speeds" in the Log (mixture and layer velocities
+  at handover). Stopping is immediate on yield (bs_tstop can require a
+  duration).
+- The surface of a layer that has not stopped spreads until its slope
+  falls below mu (it also flows back into the scar under its own
+  weight). A small mu spreads thin.
+- No water drag or added mass (fold them into xi). No non-hydrostatic
+  or dispersive effects (SWE).
+- Along walls, the 8-direction partitioning produces a boundary layer of
+  reduced throughput (closed within the row for grid-aligned walls,
+  spreading inward for 45-degree walls). Harmless at the edges of real
+  terrain, but mind the section location in narrow idealized flumes.
+- **Combination with the debris-flow model (handover)**: run the flow on
+  land with the debris-flow model (mixture hs) and, in cells with
+  ponded depth h >= bs_hplunge, convert hs to bulk volume hs/(1-lambda)
+  and move it to the bed layer hb (the surface height conserves the
+  solids; the pore fraction is buried from the water column with
+  f_dbwet=1, or raises the surface with 0). The mixture's momentum is
+  lost (the layer has no inertia). Right after plunging, the water of
+  the shoreline zone is pushed offshore and dewaters temporarily, and
+  the layer stalls. With bs_tstop=0 it is fixed there and a lobe is left
+  on the shoreline, so combine with bs_tstop (10-15 s). The part of the
+  mixture arriving during dewatering that is left behind because it is
+  below bs_hplunge can be reduced with f_bsplunge=1 (test with the
+  still-water depth). A dry large-scale collapse is more naturally given
+  as a bed layer from the start with fn_bsinit. In test/bedslide
+  configuration 4, without handover (mixture only) the material piles up
+  near the shoreline and never reaches the lake bottom, whereas with
+  handover it runs to the flat lake bottom and deposits there.
+
 ## Long-term landform evolution (f_wthr / f_uplift)
 
 Processes for millennial-scale landform evolution experiments (used in
 combination with morfac and restart chains).
 
-| Parameter | Meaning |
-|---|---|
-| wthr_p0 | Soil production rate on bare bedrock (mm/kyr). **Required** |
-| wthr_sdstar | Decay depth of production (m) (an exponential law: the thicker the soil, the slower the weathering) |
-| uplift0 | Uplift rate (mm/yr). **Required** |
+| Parameter | Default | Meaning |
+|---|---|---|
+| wthr_p0 | 50 | Soil production rate on bare bedrock (mm/kyr). The middle of the literature range 0.01-0.1 mm/yr |
+| wthr_sdstar | 0.5 | Decay depth of production (m) (an exponential law: the thicker the soil, the slower the weathering) |
+| uplift0 | 1.0 | Uplift rate (mm/yr). Negative for subsidence. The lower end of representative orogenic values |
+
+The minimal input to "just let the landscape evolve" is `f_wthr = 1`
+(+ `sd0`) and `f_uplift = 1`, with `f_creep = 1` for the slopes,
+`f_fluvial = 1` for the rivers, and `morfac` (acceleration of geomorphic
+time). The defaults are quantities on year-to-millennium scales, so first
+decide how many years the run time tt x morfac represents.
+
+## Recommended values by pattern
+
+The defaults are middle-of-the-road values that make the model "run".
+When the type of phenomenon is known, start from the following
+(calibration quantities; sources in developer.md §28 and §62).
+
+| Type | Resistance / E-D | mu | xi (m/s²) | tau_y (kPa) | d50 (m) | phi (deg) | Notes |
+|---|---|---|---|---|---|---|---|
+| Dense-flow snow avalanche | f_dbed=4 + f_dbres=4 | 0.15-0.3 | 1000-3000 | - | - | - | Larger events: smaller mu, larger xi (Swiss guideline tables) |
+| Debris avalanche (sector collapse) | f_dbed=0 or 4 + f_dbres=4 | 0.05-0.15 | 200-500 | - | - | - | The apparent friction H/L falls with volume → give it directly through mu |
+| Dense pyroclastic flow | f_dbed=0 + f_dbres=5 | - | - | 5-50 | - | - | VolcFlow-type applications |
+| Stony debris flow (Japanese type) | f_dbed=3 + f_dbres=3 | - | - | - | 0.05-0.3 | 35 | Takahashi-Nakagawa 1991. Grain size = representative boulders of the front |
+| Mudflow, fine sediment flow | f_dbed=2 + f_dbres=2 | - | - | - | 0.001-0.01 | 30-35 | Egashira constitutive law. e ≈ 0.85 |
+| Lahar (volcanic mudflow) | f_dbed=2 + f_dbres=2 (3+3 when boulder-dominated) | (0.05-0.1 for a rough estimate) | (500-1000 for a rough estimate) | - | 0.001-0.01 | 30-35 | Initiated by a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended. See the "Lahars" paragraph above |
+| Simple debris flow (calibration-driven) | f_dbed=1 + f_dbres=1 | - | - | - | - | 30-35 | Calibrate the runout with delta_e and delta_d |
+| Bed change of a sand-bed river | f_fluvial (+ f_suspend) | - | - | - | 0.0003-0.001 | - | Large contribution of suspended load |
+| Bed change of a gravel-bed river | f_fluvial | - | - | - | 0.02-0.1 | - | Bedload dominates |
+| Long-term landform evolution | f_creep + f_wthr + f_uplift | - | - | - | - | - | creep_d 0.001-0.05 m²/yr, p0 10-100 mm/kyr, uplift 0.1-5 mm/yr. Together with morfac |
+| Landslide tsunami (bed layer) | f_bedslide | 0.1-0.2 | 300-1000 | - | - | - | mu and xi of the inertia-free bed layer (bs_mu/bs_xi). Calibrated separately from the mixture values |
 
 ## Examples
 
@@ -373,4 +595,7 @@ Verified test cases exist per process:
 [test/fluvial](../../../test/fluvial/), [test/suspend](../../../test/suspend/),
 [test/wash](../../../test/wash/), [test/debris](../../../test/debris/),
 [test/slide](../../../test/slide/), [test/avalanche](../../../test/avalanche/),
-[test/sedinflow](../../../test/sedinflow/) (boundary sediment supply).
+[test/sedinflow](../../../test/sedinflow/) (boundary sediment supply),
+[test/bedslide](../../../test/bedslide/) (moving bed layer: analytic
+velocity, grid-dependence detection on a 45-degree slope, plunge into a
+lake and wave generation).

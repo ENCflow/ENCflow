@@ -40,14 +40,24 @@ name in the main parameters, and write `&list_lavaflow`:
 
 ```
 &list_lavaflow
-  lv_rho  = 2600.0          ! density (kg/m3)
-  lv_visc = 1.0e4           ! viscosity (Pa s)
-  lv_tauy = 2000.0          ! yield stress (Pa)
   lv_cell(1:2,1,1) = 55, 40 ! cells (i, j) of vent 1
   lv_cell(1:2,2,1) = 55, 41
   lv_q0(1) = 10.0           ! constant effusion rate (m3/s)
 /
 ```
+
+The vent location and effusion rate are given data; the rheology has
+defaults (density 2600 kg/m³, viscosity 1e4 Pa s, yield stress 0 =
+Newtonian; printed with "(default)" when unspecified; rationale in
+developer.md §66). When the lava type is known, start from the
+following (calibration quantities):
+
+| Type | lv_visc (Pa s) | lv_tauy (Pa) | Notes |
+|---|---|---|---|
+| Basaltic, hot pahoehoe (Hawaiian type) | 1e2-1e3 | 0-500 | Smaller eta means more subcycles |
+| Basaltic aa lava (Etna / Izu-Oshima type; default) | 1e3-1e4 | 1e3-5e3 | Crystallization during flow raises eta by an order of magnitude |
+| Andesitic (Fuji / Asama type) | 1e5-1e7 | 1e4-1e5 | Thick flows; stopping thickness tau_y/(rho g tan) of several m to 10 m |
+| Dacite to rhyolite lava domes | >=1e9 | >=1e5 | Flow nearly stops; outside the scope of this module (lava_plan.md Sec. 2) |
 
 ## Parameters
 
@@ -56,10 +66,10 @@ name in the main parameters, and write `&list_lavaflow`:
 | f_lavaflow | 1 | 0 disables temporarily while keeping the file |
 | dt_lavaflow_c | "" (every step) | update interval (duration string like "10 s") |
 | lv_rho | 2600 | lava density ρ (kg/m³) |
-| lv_visc | (required) | viscosity η (Pa s); basaltic 10²–10⁴, andesitic and up ≥10⁵ |
+| lv_visc | 1e4 | viscosity η (Pa s); basaltic 10²–10⁴, andesitic and up ≥10⁵ |
 | lv_tauy | 0 | yield stress τ_y (Pa); 0 = Newtonian |
 | lv_wsol | 0 | solidification rate of stopped cells (m/s); 0 = none |
-| lv_vsol | (required if lv_wsol>0) | stop-detection velocity threshold (m/s); typically 10⁻⁴–10⁻³ |
+| lv_vsol | 5e-4 | stop-detection velocity threshold (m/s); typically 10⁻⁴–10⁻³; read only when lv_wsol>0 |
 | lv_cfl | 0.4 | safety factor of the explicit subcycling (0–1) |
 | lv_nsubmax | 10000 | cap on subcycles per update (runaway guard) |
 | lv_cell(1:2,k,n) | — | cell k (i, j) of vent n; vent numbers n are consecutive from 1 |

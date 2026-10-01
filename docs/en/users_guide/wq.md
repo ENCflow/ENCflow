@@ -1,6 +1,6 @@
 # Water Quality and Load Runoff (&list_wq)
 
-> English mirror of docs/users_guide/wq.md (based on commit 6c5acfc). The Japanese file is the master copy.
+> English mirror of docs/users_guide/wq.md (based on commit c7e801e). The Japanese file is the master copy.
 
 [Back to the User's Guide index](../users_guide.md)
 
@@ -20,6 +20,16 @@ transport, tracer experiments, and so on. Enable it with `fn_wq`.
 /
 ```
 
+The minimal input to "just try it" is **fn_wq with one initial
+concentration or one load** (without decay, settling or partitioning the
+substance is a conservative tracer = extent and dilution).
+
+```
+&list_wq
+  wq_c0 = 100.0                  ! a 100 mg/L tracer on the initial water everywhere
+/
+```
+
 ## Substance properties
 
 | Parameter | Default | Meaning |
@@ -32,6 +42,25 @@ transport, tracer experiments, and so on. Enable it with `fn_wq`.
 | f_wq_settle | 0 | Destination of settling. 0: lost to the riverbed, 1: to the surface buildup pool (resuspension cycle) |
 | f_wq_infil | 1 | Behavior at infiltration. 0: remains on the surface (for particulate substances), 1: entrained at the current concentration into the subsurface pool (for dissolved substances) |
 | wq_rg | 1 | Retardation factor R (>= 1) for subsurface transport. Reduces the effective concentration of groundwater advection and seepage return to 1/R (see "Transport through groundwater" below) |
+
+**Representative values by substance (a starting point)** - because
+water-quality properties differ by orders of magnitude between
+substances, ENCflow sets no defaults (with no decay, settling or
+partitioning the substance runs as a conservative tracer) and lists
+representative values instead. All of them span 1-2 orders of
+magnitude, so bracketing with a low and a high case is the practical
+approach (sources in developer.md §66).
+
+| Substance type | Decay | Settling / partitioning | Subsurface | Notes |
+|---|---|---|---|---|
+| Conservative tracer (salinity, dye, turbidity index) | none | none | f_wq_infil=1, wq_rg=1 | Extent and dilution; the first thing to run |
+| Coliforms / pathogen indicators (sewer surcharge, CSO) | wq_k20 1-5 /day (T90 0.5-2 days; fast in sunny summer, slow in cloudy / winter conditions) | none (wq_kd 1e3-1e4 to see attachment to turbidity) | f_wq_infil=0 (stays on the surface) | Concentrations in "Sanitary risk of sewer surcharge" below |
+| Organic pollution (BOD), ammonia | wq_k20 0.1-0.5 /day (Streeter-Phelps deoxygenation coefficient) | none | f_wq_infil=1 | Dissolved oxygen is not solved |
+| Nutrients (nitrate), dissolved salts | none to 0.01 /day | none | f_wq_infil=1, wq_rg=1 | Returns through groundwater seepage |
+| Turbidity / SS (particulate) | none | wq_vs 0.5-10 m/day (clay 2 um 0.3, silt 10 um 8; Stokes) | f_wq_infil=0 | f_wq_settle=1 for the resuspension cycle |
+| Heavy metals (Zn, Cu, Pb; mainly particulate) | none | wq_kd 1e3-1e5 L/kg (Zn 1e3, Cu 3e3, Pb 1e4-1e5; requires f_suspend) | f_wq_infil=1, wq_rg 1e2-1e4 | Two-phase partitioning (below) |
+| Radiocesium (Cs-137) | wq_thalf 11019 day (30.17 yr) | wq_kd 1e3-1e4 L/kg (strong sorption to clay; requires f_suspend) | f_wq_infil=1, wq_rg 1e3-1e4 (R = 1 + rho_b Kd / theta) | Long-term catchment behavior |
+| Pesticides, dissolved organics | wq_thalf 10-60 day | wq_kd 1-100 L/kg (Koc x organic-carbon fraction) | f_wq_infil=1, wq_rg 2-100 | Degradation rate depends on temperature and radiation |
 
 ## How loads are given (superposable)
 
@@ -189,6 +218,120 @@ L-Q relation between discharge and load, and first flush.
 | wq_bd0 / fn_wq_bd0 | Initial pool (kg/ha) (uniform value / distribution; mutually exclusive) |
 | wq_wash_kr | Raindrop washoff coefficient (1/m; corresponds to 1000 x the exponential washoff coefficient c1 [1/mm] customary in urban drainage models) |
 | wq_wash_kf / wq_wash_tauc | Shear washoff coefficient (1/s) and critical shear stress (N/m^2) (required with kf) |
+
+## Sanitary risk of sewer surcharge (with the conduit continuum layer)
+
+Evaluates the **spatial distribution of the sanitary risk (fecal
+indicators such as coliforms)** when sewage erupting from manholes and
+outfalls during pluvial flooding spreads through the town together with
+the flood water. It serves to prioritize post-flood disinfection, public
+information and evacuation guidance, and to compare countermeasures such
+as storage pipes and outfall improvements.
+
+The mechanism is a **"fixed supply-side concentration" approximation**:
+the budget of bacteria inside the pipes is not solved; the water that
+comes out of the sewer onto the surface (surcharge and landside outfall
+discharge) is regarded as sewage of a constant concentration, and the
+load of that volume times concentration is injected onto the surface.
+Once on the surface it follows the ordinary water-quality computation
+(advected with the flood water and dying off by first-order decay).
+Dilution and transport inside the pipes are not solved, but since the
+sewage concentration itself varies over 1-2 orders of magnitude, this
+approximation is adequate for the practical questions "where, when, and
+at what order of magnitude is the contamination".
+
+### Setup steps
+
+**Step 1 - build the sewer network as a conduit continuum layer** (the
+conduit continuum layer of [the groundwater chapter](gwflow.md); the
+urban preset: inlet density given, no interlayer exchange). We recommend
+running without water quality first and checking that the location and
+magnitude of the surcharge are reasonable (the hydraulics dominate the
+result).
+
+**Step 2 - enable water quality and give the sewage concentration**:
+
+```
+&list_sysparam
+  fn_wq = '-'               ! enable water quality (settings in the same file)
+/
+&list_wq
+  wq_gwc_conc = 1.0e4       ! concentration of surcharge / outfall water (see the unit reading below)
+  f_wq_gwc_in = 1           ! load of flood water swallowed by inlets is removed to the conduit side (default)
+  wq_k20 = 2.303            ! first-order decay = ln(10)/T90 (example: T90 = 1 day)
+/
+```
+
+That is all: the concentration accompanies the surcharge and landside
+outfall water (the run stops with an error if the conduit continuum
+layer is not enabled).
+
+### Reading the units (the coliform case)
+
+The units of the water-quality module are nominally "g" and "mg/L", but
+since it is a linear transport of a single substance **they can be
+reinterpreted as any quantity**. For coliforms, the convenient
+convention is "g = 10^6 CFU":
+
+| Actual quantity | Reading | Value of wq_gwc_conc |
+|---|---|---|
+| Sewage 10^6 CFU/100mL | = 10^10 CFU/m3 = 10^4 units/m3 | 1.0e4 |
+| Sewage 10^5 CFU/100mL | | 1.0e3 |
+| Sewage 10^7 CFU/100mL | | 1.0e5 |
+
+To convert the output concentration field C (nominal mg/L = units/m3)
+back to CFU/100mL, use **C x 100** (1 unit/m3 = 10^6 CFU/m3 =
+100 CFU/100mL). For example C = 50 means 5x10^3 CFU/100mL - compared
+with bathing-water standards (e.g. fecal coliforms at or below
+100 CFU/100mL) this reads as "water to avoid contact with".
+
+### Representative values (a starting point)
+
+| Quantity | Guide | Notes |
+|---|---|---|
+| Coliforms in dry-weather sewage | 10^5-10^7 CFU/100mL | Raw sewage. Sanitary sewers of separate systems are at the upper end |
+| Wet weather (combined sewer overflow) | 10^4-10^6 CFU/100mL | About an order lower by stormwater dilution. Use this for combined-system assessments |
+| T90 (90 % die-off time) | Sunny summer daytime: hours to 1 day / cloudy, rainy or winter: 1 to several days | Varies strongly with radiation, water temperature and turbidity. For flood assessments a longer, conservative value (1-2 days) is recommended |
+| Conversion to the decay coefficient | k (1/day) = ln(10) / T90 (day) | T90 = 1 day → wq_k20 = 2.303 |
+
+Both the concentration and T90 are uncertain by 1-2 orders of magnitude,
+so the practical approach is **not to commit to one value but to bracket
+with a low and a high case** (the result is nearly linear in the
+concentration).
+
+### Reading the output
+
+- **Concentration fields C0001...** (nominal mg/L): the spatial
+  distribution of contamination. Convert to CFU/100mL as above and map
+  to risk classes. To capture "the area that was ever covered by
+  contaminated water" after the flood recedes, use the period maximum
+  (as with H9999; refine dt_file if needed).
+- **result/wq.csv**: the mass ledger. `in_gwc_g` = input from the sewer
+  (surcharge and outfalls), `to_gwc_g` = removed to the conduit side by
+  inlets, `decay_g` = die-off. **Use it to verify that the budget closes
+  (residual ≈ 0).**
+- The concentration column C of the probe CSVs monitors the time series
+  at specific points (shelters, wells, ...).
+
+### What this approximation cannot do
+
+- **Transport and dilution inside the pipes**: "sewage swallowed at an
+  upstream inlet comes out at a downstream outfall" is not represented
+  (the swallowed load is only removed in the ledger). Wet-weather
+  dilution inside the pipes is not solved either, so for combined
+  systems give the concentration of the overflow water directly in
+  wq_gwc_conc.
+- **Environmental dependence of the decay coefficient**: the time
+  variation of T90 with radiation and water temperature is approximated
+  by a constant coefficient (bracketing with low and high cases is
+  recommended).
+- The concentration is fully mixed (no vertical profile) and a single
+  substance (to include viruses etc., run each substance separately).
+
+Example: [test/sewer_wq](../../../test/sewer_wq/) (a town with trunk and
+branch sewers under 100 mm/h x 30 min of rain - the chain of surcharge →
+flooding → spreading → decay, and the budget check of wq.csv. How the
+network was built: [examples/sewer_hybrid](../../../examples/sewer_hybrid/)).
 
 ## Output and monitoring
 

@@ -1,0 +1,73 @@
+!======================================================================
+! gwdefault 構成b: Green-Ampt+側方+風化基岩層の最小入力(既定値の明示)
+!   土層厚 sd0 も省略(既定 1 m)。greenampt/lateral/layer2 の各グループは空。
+!   developer.md §64。Run.sh が構成b'(既定値をすべて明示した
+!   param_bx.txt)と save の全ファイル・Log.txt のバイト一致を検定する。
+!   閉領域の一様斜面(勾配 0.1。gwseep と同じ地形)に初期湛水 5 cm。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.2
+  t0 = 0
+  tt = 900
+  dt_disp = 300
+  dt_file = 900
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_gwflow = '-'
+  dir_data = 'data_gwdefault'
+  dir_result = 'result_bx'
+  dir_save = 'save_bx'
+  f_state_save = 1
+  f_out_hg = 1
+  f_disp_debug = 1          ! S 列を全有効桁で表示(Log のバイト比較用)
+  f_check_cfl = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.05
+/
+
+&list_geoinfo
+  nx = 40
+  ny = 20
+  dx = 1.0
+  dy = 1.0
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 1.0                 ! 既定の明示
+  sy0 = 0.2
+/
+
+&list_bound
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt
+  f_gwlateral = 1           ! 非線形 Boussinesq 側方流動
+  f_gwlayer2 = 1            ! 風化基岩層
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 10.0         ! 既定の明示(developer.md §64 の表と対で保守)
+  gw_psif = 0.0
+/
+
+&list_gwflow_lateral
+  gw_ksh_mmh = 360.0
+/
+
+&list_gwflow_layer2
+  gw2_depth = 3.0
+  gw2_sy = 0.05
+  gw2_infil_mmh = 1.0
+  gw2_ksh_mmh = 0.0
+  gw2_sat0 = 0.0
+/

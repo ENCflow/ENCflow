@@ -7,7 +7,7 @@ module m_geoinfo
   use m_fileio, only : fileio_read_matrix, e_fmt_bil, e_fmt_gtif
   use m_georef, only : t_georef, georef_hdr_name, georef_read_hdr, georef_est_cellsize_m
   use m_geotiff, only : t_gtif_info, gtif_inquire
-  use m_util, only : itoa
+  use m_util, only : itoa, param_default
   use m_parallel, only : par_info, par_stop, par_abort, dcp, is_root, nproc, &
                        par_scatter_cell, &
                        par_bcast_cell, par_bcast_cell_i
@@ -37,9 +37,10 @@ module m_geoinfo
     type(t_georef) :: gr                              ! 地理座標参照(hdr 由来。未管理なら active=.false.)
     real, allocatable :: z(:,:)                       ! 標高(m)
     real, allocatable :: rn(:,:)                      ! 粗度係数
-    real, allocatable :: gv(:,:)                      ! 家屋の空隙率
+    real, allocatable :: gv(:,:)                      ! 家屋の空隙率(入力。初期化ゾーンまで。
+                                                      ! 時間ループの正本は s%gv。§63)
     real, allocatable :: bb(:,:)                      ! 家屋の平均寸法
-    real, allocatable :: lm(:,:)                      ! 有効慣性係数
+    real, allocatable :: lm(:,:)                      ! 有効慣性係数(入力。同上。正本は s%lm)
     real, allocatable :: rscap(:,:)                   ! ため池の限界貯留高(m)
     real, allocatable :: sd(:,:)                      ! 土層厚(m)。gwflow が必要とする
                                                       ! ときだけ確保(m_geoinfo_require_sd)
@@ -290,9 +291,14 @@ end subroutine
 ! 確保しない、の遅延確保口。通信はなく判定材料は全ランク同一の
 ! namelist 値のみ(collective 安全)
 !----------------------------------------------------------------------
-subroutine m_geoinfo_require_sd(g)
+subroutine m_geoinfo_require_sd(g, sd_default)
   type(t_geoinfo), intent(inout) :: g
+  real, intent(in), optional :: sd_default   ! 未指定(sd0 = 0)時の既定(呼び出し側の方針)
   if (allocated(g%sd)) return
+  if (g%sd0 == 0.0 .and. present(sd_default)) then
+    ! 既定の採用と表示(developer.md §64。負値は従来どおり停止)
+    g%sd0 = param_default("geoinfo", "sd0", g%sd0, sd_default, " m")
+  end if
   if (g%sd0 <= 0.0) then
     call par_stop("list_geoinfo: soil depth is required by gwflow/geomorph " // &
                   "(set sd0 > 0 or f_sdtype=1/fn_sd)")
@@ -333,10 +339,15 @@ end subroutine
 !  rank0 直接書きのルーチンを m_output に復元する。git 履歴の
 !  output_matrix_full 参照)。
 ! 時間ループでの sw/rw/gv の近傍参照(momentum, rivermouth の ±1)は
-! ハロ幅2の帯確保で全て範囲内に収まることを監査済み
+! ハロ幅2の帯確保で全て範囲内に収まることを監査済み。
+! gv / lm の帯は m_state_init が s%gv / s%lm へ写した後は時間ループで
+! 参照されないため、ここで解放する(z と同じ「持ち主の移動」。§63。
+! 初期化ゾーンの参照(init_culvert の捕捉帯面積等)はこの呼び出しより前)
 !----------------------------------------------------------------------
 subroutine m_geoinfo_band_shrink(g)
   type(t_geoinfo), intent(inout) :: g
+  if (allocated(g%gv)) deallocate(g%gv)
+  if (allocated(g%lm)) deallocate(g%lm)
   call shrink_band_i(g%x,  dcp%jsh - 1, dcp%jeh + 1)
   call shrink_band_i(g%sw, dcp%jsh, dcp%jeh)
   if (g%swall_active) call shrink_band_i(g%ssw, dcp%jsh, dcp%jeh)

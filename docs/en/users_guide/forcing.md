@@ -87,6 +87,18 @@ Worked examples of the format for all four types are in
 The rainfall intensity distribution can be output as `Pr0001` with
 `f_out_pre = 1`.
 
+**Rainfall type guides** (rainfall is given data; as a starting point.
+Values vary by about a factor of 2 with region and return period)
+
+| Type | Intensity (mm/h) | Duration | Total (mm) | How to give it |
+|---|---|---|---|---|
+| Prolonged frontal rain (Baiu) | 10-30 | 6-24 h | 100-300 | prtype=1 trapezoid |
+| Typhoon | 20-50 (peak 50-80) | 12-24 h | 200-600 | prtype=1 hump, or prtype=3 analyzed rainfall |
+| Stationary rain band | 50-100 | 3-6 h | 200-400 | prtype=1 rectangle |
+| Urban design storm (5-10 yr, 60 min) | 50-80 | 1 h | 50-80 | prtype=1 rectangle (pluvial flooding, sewers) |
+| Inundation mapping (maximum assumed scale) | 100+ (peak) | several hours | 300-1000 | prtype=1 hyetograph |
+| Snowmelt runoff | 0 (no rain) to 10 | daily | - | air temperature 5-10 degC via fn_meteo + fn_snow |
+
 ## Rainfall interception (&list_intercept)
 
 Gives rainfall losses due to the canopy etc. as a reduction before the
@@ -101,12 +113,27 @@ Model-specific settings go in dedicated groups within the same file.
 **Fixed interception ratio (f_icmodel = 1, &list_intercept_fixed)** -
 intercepts a constant fraction alpha of rainfall and delivers the
 effective rainfall (1-alpha)P to the surface. Use `ic_alpha` (uniform
-value) or `fn_icalpha` (distribution; ic_alpha is ignored when given).
+value; default 0.15) or `fn_icalpha` (distribution; ic_alpha is ignored
+when given).
 
 **Initial loss (f_icmodel = 2, &list_intercept_initloss)** - stores
 the first part of the rainfall up to a maximum storage, then passes
 everything through once the storage is full. Use `ic_smax_mm` (uniform
-value, mm) or `fn_icsmax` (distribution).
+value, mm; default 1.5) or `fn_icsmax` (distribution).
+
+When the uniform value is unspecified the default is adopted and
+printed with "(default)" (the minimal input is f_icmodel and an empty
+model group; rationale in developer.md §66). Guide values by
+vegetation (review of Crockford & Richardson 2000; calibration
+quantities):
+
+| Type | ic_alpha (interception ratio) | ic_smax_mm (canopy storage, mm) |
+|---|---|---|
+| Dense conifer forest | 0.25-0.4 | 1.5-3 |
+| Broadleaf / mixed forest (default) | 0.1-0.2 | 0.8-1.5 |
+| Leafless deciduous forest | 0.05-0.1 | 0.3-0.8 |
+| Grassland / cropland | 0.05-0.1 | 0.3-0.5 |
+| Urban (initial loss as depression storage) | - | 1-2.5 (depression storage of impervious surfaces; SWMM convention) |
 
 ## Meteorological forcing field (&list_meteo)
 
@@ -152,7 +179,7 @@ Select how potential evapotranspiration (PET) is given with `f_evmodel`.
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| evap0 | - | Mode 1: PET (mm/day) |
+| evap0 | 3.0 | Mode 1: PET (mm/day). When unspecified the default is adopted and printed with "(default)" |
 | evap_monthly | - | Mode 2: monthly PET (mm/day). 12 months |
 | evap_kc | 1.0 | Conversion coefficient (pan coefficient / calibration; common to all modes) |
 | lat | - | Representative latitude (deg). Required for modes 3, 4 |
@@ -162,7 +189,12 @@ Evapotranspiration is subtracted from surface water (supply-limited),
 and the totals are output to `evap.csv` in the result directory. A
 configuration missing its requirements (e.g. mode 2 without a
 calendar) stops at initialization with a message stating what is
-missing.
+missing. The mode-1 default of 3 mm/day is the lower side of the
+warm-season reference evapotranspiration of a humid temperate climate
+(FAO-56 ET0 of 3-5 mm/day): larger than the annual mean of Japan
+(2-2.5 mm/day) and smaller than summer (4-5). Use modes 2-4 for runs
+spanning seasons (monthly values, latitude and normal temperatures are
+given data and have no default).
 
 ## Snowpack and snowmelt (&list_snow)
 
@@ -175,13 +207,24 @@ required.**
 | snow_t_snow | 0.0 | Temperature threshold below which all precipitation is snow (deg C) |
 | snow_t_rain | 2.0 | Temperature threshold above which all precipitation is rain (deg C). In between, rain and snow mix linearly |
 | snow_t_melt | 0.0 | Temperature threshold for snowmelt (deg C) |
-| snow_ddf | - | Degree-day factor (mm/degC/day). **Required** |
-| snow_swe0 / fn_snow_swe0 | - / "" | Initial snow water equivalent (mm) (uniform value / distribution; mutually exclusive) |
+| snow_ddf | 4.0 | Degree-day factor (mm/degC/day). When unspecified the default is adopted and printed with "(default)" (rationale in developer.md §65) |
+| snow_swe0 / fn_snow_swe0 | - / "" | Initial snow water equivalent (mm) (uniform value / distribution; mutually exclusive; omit both to start without snow) |
 
 Snowfall is stored as snow water equivalent (SWE) and melts into
 surface water by the degree-days above snow_t_melt. Combined with the
 temperature lapse rate (&list_meteo), snowpack and snowmelt are
 represented per elevation band.
+
+The minimal input to "just try it" is **an empty &list_snow in
+fn_snow** (plus the air temperature of fn_meteo). Guide values of the
+degree-day factor (compilation of Hock 2003; a calibration quantity):
+
+| Type | snow_ddf (mm/degC/day) | Notes |
+|---|---|---|
+| Forest (under a conifer canopy) | 2-3 | Small because radiation is shaded |
+| Open land / sparse forest (default) | 3.5-5 | The observed range of snowmelt floods in Japanese mountain basins |
+| Late melt season, open high elevation | 5-7 | Larger with dirty snow and stronger radiation (no seasonal variation is implemented, so give a period average) |
+| Snow on a glacier | 3-5 | The ice surface uses gl_ddfi ([Glaciers](glacier.md)) |
 
 ## Summary of combination requirements
 

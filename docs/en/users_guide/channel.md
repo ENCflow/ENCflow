@@ -15,6 +15,19 @@ incision `depth_rw`, channel roughness `rn0_rw`) are settings of the
 **conveyance structure** between cells (levees = virtual walls, channel
 width, hydraulic modes). Specifying levees requires fn_rw.
 
+## Just try it (minimal input)
+
+A channel runs as a "resolved channel" with only the channel mask fn_rw
+and the incision depth_rw of the [geographic information](geoinfo.md)
+(fn_channel is not needed). The minimal input that adds levees is one
+line with a uniform height:
+
+```
+&list_channel
+  bank0 = 2.0                   ! levee height above the landside cell elevation (m)
+/
+```
+
 ## Levees (virtual walls)
 
 Erects a virtual wall, without widening cells, on the boundary between
@@ -138,9 +151,13 @@ channel.
 
 A one-parameter cross-section shape with the conveyance ratio
 sigma(h) = (h/D)^m; m = 0 corresponds to the conventional rectangle,
-0.5 to a roughly parabolic, and 1 to a roughly triangular section. The
-transition depth D is "crest - bed" on levee-active cells, otherwise
-the incision depth (with neither, p_sect_m > 0 is an error); at h >= D
+0.5 to a roughly parabolic, and 1 to a roughly triangular section. Here
+D is the transition depth, which is not specified directly: on cells
+with an active levee it is "crest - bed" (with f_bank_datum=1, bank0 +
+landside elevation - bed; bank0 + depth_rw when the channel cell and
+the landside have the same ground level), and on cells without a levee
+the incision depth depth_rw is D itself (with neither, p_sect_m > 0 is
+an error); at h >= D
 it degenerates to the conventional rectangular dynamics.
 
 The channel width (fn_width) is not required for using sigma. **On
@@ -191,6 +208,48 @@ a failure (levees must be enabled).
   [coordinates chapter](coordinates.md)).
 - A failure spanning several cells is specified as multiple sites (the
   breach width is per edge).
+
+## Recommended values by pattern
+
+| Type | Configuration | depth_rw (m) | bank0 (m) | rn0_rw | Width / section | Notes |
+|---|---|---|---|---|---|---|
+| Mountain stream (width < cell) | fn_rw + fn_width + p_sect_m | 0.5-1 | not needed (a zero-height levee is enabled automatically with the width) | 0.04-0.06 | width 2-10 m, m 0.5 | Not for streams meandering within one cell |
+| Small / medium river (width 10-50 m, cell 10-25 m) | fn_rw + depth_rw + bank0 | 1-3 | 1-3 (f_bank_datum=1) | 0.03-0.04 | fn_width not needed when width >= cell | Overtopping by the Honma formula |
+| Large river (width > 100 m) | resolved channel + levees | 3-6 | 3-8 | 0.025-0.035 | p_sect_m 0.3-0.5 for low-water recession | Floodplain roughness via fn_rn |
+| Urban incised channel, concrete flume | fn_rw + depth_rw | 2-4 | none | 0.015-0.025 | - | Sluice gates and pumping stations are [structures](structure.md) |
+| Breach scenario | the above + &list_channel_breach | as above | as above | as above | - | br_series ramps to a remaining ratio of 0 over 10-30 min |
+
+Roughness guides are the customary Manning n values (Japanese river
+technical standards; Chow 1959): concrete 0.015-0.02, sand-bed low-water
+channel 0.025-0.035, gravel bed 0.035-0.05, vegetated floodplain 0.05-0.1.
+
+**When one run spans several channel types, from mountain streams to the
+river mouth**, you do not have to pick a single value from the table.
+rn0_rw, depth_rw and bank0 are shortcuts that give every channel cell the
+same value, so for large-scale runs with mixed types leave rn0_rw
+unspecified (negative) and put the per-cell n of the channel cells into
+the roughness distribution fn_rn (f_rntype=1) of the
+[geographic information](geoinfo.md) (likewise fn_depth_rw and fn_bank
+distributions for the incision and the levee height). Painting the
+table values reach by reach in GIS preprocessing is the way the policy
+"conversions belong to preprocessing" intends.
+
+**Guide for the cross-section shape sigma (p_sect_m)** - sets the
+conveyance ratio sigma = (h/D)^m at depths below the transition depth D.
+The larger m, the higher the low-water level and the slower the
+recession. D is not a value you specify directly: on cells with an
+active levee it is "crest - bed" (about bank0 + depth_rw), and on cells
+without a levee depth_rw is D itself. The column "Settings that set D"
+gives the combination of depth_rw ([geographic information](geoinfo.md))
+and bank0 (this chapter) that realizes that D.
+
+| Channel type | p_sect_m | Settings that set D | Notes |
+|---|---|---|---|
+| Concrete flume, rectangular section | 0 (default) | - | The conventional rectangle (D is not used) |
+| Large compound-section river (low-water channel + floodplain) | 0.3-0.5 | With levees: bank0 + depth_rw of 3-8 m (e.g. bank0 3 + depth_rw 3) | Larger when the low-water channel is narrow relative to the full width |
+| Single-section natural channel (gentle sand/gravel bed) | 0.5 | No levee: depth_rw 1-3 m is D itself | Parabolic. Works in the simplest configuration without width data |
+| V-shaped mountain stream, steep gorge | 0.7-1 | No levee: depth_rw 0.5-1 m is D itself | Triangular. Combine with fn_width to narrow the thalweg |
+| Calibrating low-water levels to observations | sweep 0.3-1 | unchanged | If the base-flow level is too high, raise m (smaller sigma raises the level for the same discharge) |
 
 ## Examples and related topics
 

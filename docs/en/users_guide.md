@@ -38,6 +38,7 @@ input; individual topics are split into per-chapter pages.
 - [Fresh and salt water layers](users_guide/salt.md) (&list_salt) -- salt wedges, seawater intrusion, freshwater lenses (sharp-interface approximation)
 - [Sediment and landform change](users_guide/geomorph.md) (&list_geomorph) -- bedload, suspended sediment, hillslope erosion, debris flow, long-term landscape evolution
 - [Driftwood](users_guide/driftwood.md) (&list_driftwood) -- wood recruitment (hydraulic washout / erosion entrainment), transport and deposition (raster-field estimate)
+- [Building destruction and debris](users_guide/bldgdebris.md) (&list_bldgdebris) -- destruction of wooden houses by inundation flows and driftwood, debris transport and deposition, feedback to the void ratio (raster-field estimate)
 - [Glaciers](users_guide/glacier.md) (&list_glacier) -- accumulation, melt, ice flow, glacial erosion, avalanche redistribution
 - [Lava flows](users_guide/lavaflow.md) (&list_lavaflow) -- vent effusion, Bingham viscous spreading, stopping and solidification (lava fields as topography)
 - [Water quality](users_guide/wq.md) (&list_wq) -- load input, transport, decay, washoff, Kd two-phase partitioning, groundwater pathway, reservoirs
@@ -46,7 +47,7 @@ input; individual topics are split into per-chapter pages.
 - [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 497 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 555 parameter names to their chapters
 
 ---
 
@@ -85,6 +86,7 @@ memory and no computation time at all**.
 | Fresh and salt water layers | `fn_salt` | &list_salt |
 | Sediment and landform change | `fn_geomorph` | &list_geomorph |
 | Driftwood | `fn_driftwood` | &list_driftwood |
+| Building destruction and debris | `fn_bldgdebris` | &list_bldgdebris |
 | Water quality (load runoff) | `fn_wq` | &list_wq |
 | Soil Water Index | `fn_swi` | &list_swi |
 | Measurement (probes, transects) | `fn_record` | &list_record |
@@ -206,6 +208,7 @@ settings, including unsupported phenomena), see
 | Seawater intrusion, salt wedges, freshwater lenses | [Fresh and salt water layers](users_guide/salt.md) + [Tide and sea level](users_guide/tide.md) |
 | Sediment transport / debris flow | [Sediment and landform change](users_guide/geomorph.md) |
 | Floods and debris flows with driftwood | [Driftwood](users_guide/driftwood.md) (+ sediment and landform change) |
+| House destruction and debris by tsunami or storm surge | [Building destruction and debris](users_guide/bldgdebris.md) (+ driftwood, tide) |
 | Rainfall-induced slope failure and debris flow | [Sediment and landform change](users_guide/geomorph.md) + [Groundwater](users_guide/gwflow.md) (infiltration -> pore pressure) |
 | Reservoir sedimentation and flushing | [Sediment and landform change](users_guide/geomorph.md) + [Structures](users_guide/structure.md) |
 | Pollutant loads / mass transport | [Water quality](users_guide/wq.md) |

@@ -231,6 +231,8 @@ module m_swflow_enc
                                      ! s%salt_active のときだけ確保。§47)
     real, allocatable :: hd1(:,:)    ! 流動流木柱状量の書き込み先(同上の意味論。
                                      ! s%dw_active のときだけ確保。§50)
+    real, allocatable :: hbd1(:,:)   ! 流動瓦礫柱状量の書き込み先(同上の意味論。
+                                     ! s%bd_active のときだけ確保。§63)
     logical :: initialized = .false.
   end type
   type(t_enc_status) :: sx_mod
@@ -525,8 +527,9 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! σ の遷移深さ D の構築(zbank/drw は帯配布済み)
   if (have_sect) call build_sdep(g, b, s)
   ! 実効平面積率 af(§25/§26)。restore 後の統計・gwflow が最初のステップ
-  ! 前に読むため init でも埋める(既定は m_state_init の gv のまま)
-  if (have_width .or. have_sect) call update_af(g, s)
+  ! 前に読むため init でも埋める(既定は m_state_init の gv のまま。
+  ! 空隙率が時間変化する機能(s%gv_active。§63.1)も毎ステップ更新の対象)
+  if (have_width .or. have_sect .or. s%gv_active) call update_af(g, s)
 
   ! 破堤サイトの解釈・検証・行バケット構築(zbank の帯と s%z を読むため
   ! この位置。have_breach を設定する)
@@ -601,6 +604,7 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 輸送物質柱状量(浮遊砂と同じ理由でステップ頭交換。§30)
   if (s%wq_active) call par_halo_cell(s%cq)
   if (s%dw_active) call par_halo_cell(s%hd)
+  if (s%bd_active) call par_halo_cell(s%hbd)
   ! 地表塩水層厚(同上。§47)
   if (s%salt_active) call par_halo_cell(s%hss)
 
@@ -663,6 +667,10 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 近似。境界流入は清水 = cbin なし。発生・停止は m_driftwood。§50)
   if (s%dw_active) then
     call advect_scalar(p, g, s, sx_mod, s%hd, sx_mod%hd1)
+  end if
+  ! 流動瓦礫柱状量を移流する(同上。破壊・停止は m_bldgdebris。§63)
+  if (s%bd_active) then
+    call advect_scalar(p, g, s, sx_mod, s%hbd, sx_mod%hbd1)
   end if
 
   ! ダムの適用(捕捉帯吸収→運転→放流。時間ループのみ。§22)
@@ -870,6 +878,11 @@ subroutine init_enc_status(p, g, s, sx)
     allocate(sx%hd1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
     sx%hd1(:,:) = s%hd(:,:)
   end if
+  ! 流動瓦礫の書き込みバッファ(同上。§63)
+  if (s%bd_active) then
+    allocate(sx%hbd1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+    sx%hbd1(:,:) = s%hbd(:,:)
+  end if
 
   ! 流速の初期条件を設定する
   !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, ue, ve)
@@ -932,6 +945,7 @@ subroutine del_enc_status(sx)
   if (allocated(sx%hs1)) deallocate(sx%hs1)
   if (allocated(sx%cq1)) deallocate(sx%cq1)
   if (allocated(sx%hd1)) deallocate(sx%hd1)
+  if (allocated(sx%hbd1)) deallocate(sx%hbd1)
 end subroutine
 
 
@@ -1174,8 +1188,8 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   !   河道幅有効時はセルの平面積率 wfrac で水深換算を除算補正する
   dh = mne1 * mn2dh(k)    ! 家屋占有率がゼロの場合の中心セルの水深減少量
   if (have_frw) dh = dh * frw(k,ie,je)
-  dhc = dh / g%gv(i,j)
-  dhn = -dh / g%gv(in,jn)
+  dhc = dh / s%gv(i,j)
+  dhn = -dh / s%gv(in,jn)
   if (have_width) then
     dhc = dhc / wfrac(i,j)
     dhn = dhn / wfrac(in,jn)
@@ -1288,9 +1302,9 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   vve = (s%vv(i,j) + s%vv(in,jn)) / 2       ! 速度の絶対値
   vv0e = vve
   rne = (g%rn(i,j) + g%rn(in,jn)) / 2       ! 粗度係数
-  gve = (g%gv(i,j) + g%gv(in,jn)) / 2       ! 家屋の空隙率
+  gve = (s%gv(i,j) + s%gv(in,jn)) / 2       ! 家屋の空隙率
   bbe = (g%bb(i,j) + g%bb(in,jn)) / 2       ! 家屋の平均サイズ
-  lme = (g%lm(i,j) + g%lm(in,jn)) / 2       ! 有効慣性係数
+  lme = (s%lm(i,j) + s%lm(in,jn)) / 2       ! 有効慣性係数
   if (gve == 1) bbe = 1.e10                 ! 家屋なしの場合は家屋サイズは大きな値
 
   ! 摩擦項で使用する流速
@@ -1450,8 +1464,12 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     !   摩擦項は半陰解法で計算するため、次元が他の項と異なる(値は常に正)。
     !   江頭層流則が有効なエッジ(fbe > 0)ではマニング則を置き換える:
     !   減速度 = f_b・V²/((1+sC)・h_t) → 半陰形 f_b・vve/((1+sC)・h_t)
+    !   分母の max(hte, dv) は fbe > 0 のとき恒等(hte は dv 以上で設定済み)。
+    !   fbe = 0 の経路では hte = 0 のままで、-Ofast の if 変換が両分岐を
+    !   投機評価すると 0 除算の浮動小数点例外(-ffpe-trap=zero)を起こす
+    !   ため、値を変えずに除算を安全にする(§63.6 の A1 記録。2026-10-01)
     if (fbe > 0.0) then
-      tfe = -fbe * vve / (rme * hte) * gve
+      tfe = -fbe * vve / (rme * max(hte, p%dv)) * gve
     else
       tfe = -ge * rne**2 * vve * m_ffactor_calc(hhe) * gve
     end if
@@ -1531,8 +1549,8 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
               fwc = frw(ke(kk),i+die(kk),j+dje(kk))
               fwn = frw(ke(kk),in+die(kk),jn+dje(kk))
             end if
-            dvc = dvc + mnec * mn2dh(kk) * fwc * winvc / g%gv(i,j) / a(l)
-            dvn = dvn + mnen * mn2dh(kk) * fwn * winvn / g%gv(in,jn) / a(l)
+            dvc = dvc + mnec * mn2dh(kk) * fwc * winvc / s%gv(i,j) / a(l)
+            dvn = dvn + mnen * mn2dh(kk) * fwn * winvn / s%gv(in,jn) / a(l)
           end do
           hc = sect_hinv(sect_v(hc0, sdep(i,j)) - dvc, sdep(i,j))
           hn = sect_hinv(sect_v(hn0, sdep(in,jn)) - dvn, sdep(in,jn))
@@ -1558,8 +1576,8 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
           fwn = frw(ke(kk),in+die(kk),jn+dje(kk))
         end if
         ! 仮の水深を更新
-        hc = hc - mnec * mn2dh(kk) * fwc * winvc / g%gv(i,j) / a(l)
-        hn = hn - mnen * mn2dh(kk) * fwn * winvn / g%gv(in,jn) / a(l)
+        hc = hc - mnec * mn2dh(kk) * fwc * winvc / s%gv(i,j) / a(l)
+        hn = hn - mnen * mn2dh(kk) * fwn * winvn / s%gv(in,jn) / a(l)
       end do
       end if
     end block
@@ -1666,7 +1684,7 @@ subroutine continuous(p, g, s, sx)
         ! 水深の減少量(m)に換算
         !   家屋占有率が0.0で無い場合はここで補正係数を乗じる。
         !   河道幅有効時は平面積率 wfrac の逆数 winv も乗じる
-        dh = mne * mn2dh(k) * fw * winv / g%gv(i,j)
+        dh = mne * mn2dh(k) * fw * winv / s%gv(i,j)
         ! 水深を更新
         sx%h1(i,j) = sx%h1(i,j) - dh
         ! セル中心の平均流速・流量への寄与分を加算
@@ -1812,8 +1830,22 @@ subroutine complete(p, g, s, sx, initial)
     !$omp end parallel do
   end if
 
-  ! 実効平面積率 af の更新(§25/§26。幅・σ とも無効なら af=gv のまま不変)
-  if (have_width .or. have_sect) call update_af(g, s)
+  ! 流動瓦礫柱状量のコミット(同上。§63)
+  if (s%bd_active) then
+    !$omp parallel do schedule(dynamic) private(i, j)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        if (g%sw(i,j) > 0) cycle
+        s%hbd(i,j) = sx%hbd1(i,j)
+      end do
+    end do
+    !$omp end parallel do
+  end if
+
+  ! 実効平面積率 af の更新(§25/§26。幅・σ・可動 gv のいずれも無効なら
+  ! af=gv のまま不変)
+  if (have_width .or. have_sect .or. s%gv_active) call update_af(g, s)
 
 end subroutine
 
@@ -1895,7 +1927,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
         ! 通過幅係数(continuous と同一)
         fw = 1.0
         if (have_frw) fw = frw(ke(k),ie,je)
-        c1(i,j) = c1(i,j) - mne * cdon * sh * mn2dh(k) * fw * winv / g%gv(i,j)
+        c1(i,j) = c1(i,j) - mne * cdon * sh * mn2dh(k) * fw * winv / s%gv(i,j)
       end do
     end do
   end do
@@ -2239,7 +2271,7 @@ subroutine update_af(g, s)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
-      base = g%gv(i,j)
+      base = s%gv(i,j)
       if (have_width) base = base * wfrac(i,j)
       if (have_sect) then
         if (sdep(i,j) > 0.0) then

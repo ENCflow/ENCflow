@@ -25,6 +25,21 @@ rc=0
 python3 "$sdir/Check_halfar.py" result Screen.log || rc=1
 python3 "$sdir/Check_cirque.py" result_cirque || rc=1
 
+# 構成3: 最小入力(既定値)と構成3'(既定値の明示)の同値検定(§65)
+set -o pipefail
+./encflow param_min.txt | tee Screen_min.log || exit 1
+./encflow param_minx.txt | tee Screen_minx.log || exit 1
+set +o pipefail
+echo ""
+if diff -r save_min save_minx > /dev/null && cmp -s result_min/Log.txt result_minx/Log.txt; then
+    echo "=== defaults: save/ and Log.txt are bit-identical between the minimal input and the explicit defaults ==="
+else
+    echo "FAIL: minimal input (defaults) and explicit defaults differ" >&2
+    rc=1
+fi
+ndef=$(grep -c "(default)" Screen_min.log)
+[ "$ndef" -eq 4 ] || { echo "FAIL: expected 4 '(default)' lines, got $ndef" >&2; rc=1; }
+
 if [ $rc -eq 0 ]; then
     echo "=== glacier verification PASS ==="
 else

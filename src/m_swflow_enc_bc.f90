@@ -144,9 +144,9 @@ module subroutine boundary_h(p, g, b, s, sx)
       !   河道幅有効時は平面積率 wfrac でも除す(セル全面の雨が河道断面へ
       !   集中する。gv の建物集中と同じ意味論。§18)
       if (have_width) then
-        sx%h1(i,j) = sx%h1(i,j) + s%pre(i,j) * p%dt / g%gv(i,j) / wfrac(i,j)
+        sx%h1(i,j) = sx%h1(i,j) + s%pre(i,j) * p%dt / s%gv(i,j) / wfrac(i,j)
       else
-        sx%h1(i,j) = sx%h1(i,j) + s%pre(i,j) * p%dt / g%gv(i,j)
+        sx%h1(i,j) = sx%h1(i,j) + s%pre(i,j) * p%dt / s%gv(i,j)
       end if
 
     end do
@@ -164,9 +164,9 @@ module subroutine boundary_h(p, g, b, s, sx)
       if (j < dcp%js .or. j > dcp%je) cycle
       ! 河道幅有効時は平面積率 wfrac でも除す(体積→水深換算の統一。§18)
       if (have_width) then
-        sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q / g%gv(i,j) / wfrac(i,j)
+        sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q / s%gv(i,j) / wfrac(i,j)
       else
-        sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q / g%gv(i,j)
+        sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q / s%gv(i,j)
       end if
       ! 吸い込み(負の流量)でセルを負水深にしない(不足分は汲めない)
       if (sx%h1(i,j) < 0) sx%h1(i,j) = 0
@@ -215,9 +215,9 @@ module subroutine boundary_h(p, g, b, s, sx)
           cycle
         end if
         if (have_width) then
-          dht = qcell / g%gv(i,j) / wfrac(i,j)
+          dht = qcell / s%gv(i,j) / wfrac(i,j)
         else
-          dht = qcell / g%gv(i,j)
+          dht = qcell / s%gv(i,j)
         end if
         ! ため池セル(rscap>0)は場の水面でなく貯留 s%hrs から汲む
         ! (前池排水。§22)。汲んで空いた容量への地表水の再吸収は
@@ -232,9 +232,9 @@ module subroutine boundary_h(p, g, b, s, sx)
           sx%h1(i,j) = sx%h1(i,j) - dh
         end if
         if (have_width) then
-          vst(ip) = vst(ip) + dh * g%gv(i,j) * wfrac(i,j) * g%dx * g%dy
+          vst(ip) = vst(ip) + dh * s%gv(i,j) * wfrac(i,j) * g%dx * g%dy
         else
-          vst(ip) = vst(ip) + dh * g%gv(i,j) * g%dx * g%dy
+          vst(ip) = vst(ip) + dh * s%gv(i,j) * g%dx * g%dy
         end if
       end do
     end do
@@ -259,9 +259,9 @@ module subroutine boundary_h(p, g, b, s, sx)
         end if
         if (j < dcp%js .or. j > dcp%je) cycle
         if (have_width) then
-          sx%h1(i,j) = sx%h1(i,j) + qcell / g%gv(i,j) / wfrac(i,j)
+          sx%h1(i,j) = sx%h1(i,j) + qcell / s%gv(i,j) / wfrac(i,j)
         else
-          sx%h1(i,j) = sx%h1(i,j) + qcell / g%gv(i,j)
+          sx%h1(i,j) = sx%h1(i,j) + qcell / s%gv(i,j)
         end if
       end do
     end do
@@ -333,7 +333,7 @@ module subroutine dam_apply(p, g, b, s, sx)
           i = b%struct(ip)%cout(1,k)
           j = b%struct(ip)%cout(2,k)
           if (j < dcp%js .or. j > dcp%je) cycle
-          sx%h1(i,j) = sx%h1(i,j) + qcell / g%gv(i,j)
+          sx%h1(i,j) = sx%h1(i,j) + qcell / s%gv(i,j)
         end do
       end if
       cycle
@@ -346,7 +346,7 @@ module subroutine dam_apply(p, g, b, s, sx)
         j = b%struct(ip)%cin(2,k)
         if (j < dcp%js .or. j > dcp%je) cycle
         if (sx%h1(i,j) > 0.0) then
-          vabs_row(j) = vabs_row(j) + real(sx%h1(i,j) * g%gv(i,j) * g%dx * g%dy, r64)
+          vabs_row(j) = vabs_row(j) + real(sx%h1(i,j) * s%gv(i,j) * g%dx * g%dy, r64)
           sx%h1(i,j) = 0.0
         end if
       end do
@@ -358,12 +358,12 @@ module subroutine dam_apply(p, g, b, s, sx)
       j = b%struct(ip)%cin(2,k)
       if (j < dcp%js .or. j > dcp%je) cycle
       if (sx%h1(i,j) > 0.0) then
-        vola = sx%h1(i,j) * g%gv(i,j) * g%dx * g%dy
+        vola = sx%h1(i,j) * s%gv(i,j) * g%dx * g%dy
         s%hrs(i,j) = s%hrs(i,j) + sx%h1(i,j)
         sx%h1(i,j) = 0.0
         vabs_row(j) = vabs_row(j) + real(vola, r64)
       end if
-      vrow(j) = vrow(j) + real(s%hrs(i,j) * g%gv(i,j) * g%dx * g%dy, r64)
+      vrow(j) = vrow(j) + real(s%hrs(i,j) * s%gv(i,j) * g%dx * g%dy, r64)
     end do
     call dam_operate(b, ip, p, g, s, vabs_row, vrow, vdraw)
     if (vdraw > 0.0) then
@@ -372,7 +372,7 @@ module subroutine dam_apply(p, g, b, s, sx)
         i = b%struct(ip)%cout(1,k)
         j = b%struct(ip)%cout(2,k)
         if (j < dcp%js .or. j > dcp%je) cycle
-        sx%h1(i,j) = sx%h1(i,j) + qcell / g%gv(i,j)
+        sx%h1(i,j) = sx%h1(i,j) + qcell / s%gv(i,j)
       end do
     end if
   end do
@@ -638,7 +638,7 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
       end select
       ! 過大な流出の抑制(流出方向のみ。momentum の抑制と同型で、
       ! 境界面ではフラグによらず適用)
-      dh = mne1 * mn2dh(k) / g%gv(i,j)
+      dh = mne1 * mn2dh(k) / s%gv(i,j)
       if (have_width) dh = dh / wfrac(i,j)
       if (dh > 0 .and. h - dh <= 0) then
         cor = max(h - p%dd, 0.0) / dh

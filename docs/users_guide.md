@@ -35,6 +35,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [淡塩2層](users_guide/salt.md)(&list_salt)— 塩水くさび・海水浸入・淡水レンズ(鋭利界面近似)
 - [土砂・地形変化](users_guide/geomorph.md)(&list_geomorph)— 掃流砂・浮遊砂・斜面浸食・土石流・長期地形発達
 - [流木](users_guide/driftwood.md)(&list_driftwood)— 流木化(水理的流失・侵食連行)・輸送・堆積(ラスタ場の概算)
+- [家屋破壊・瓦礫](users_guide/bldgdebris.md)(&list_bldgdebris)— 氾濫流・流木による木造家屋の破壊・瓦礫の輸送・堆積・空隙率への帰還(ラスタ場の概算)
 - [氷河](users_guide/glacier.md)(&list_glacier)— 涵養・融解・氷体流動・氷河侵食・雪崩再配分
 - [溶岩流](users_guide/lavaflow.md)(&list_lavaflow)— 噴火口からの湧き出し・Bingham 粘性流動・停止・固化(溶岩原の地形化)
 - [水質](users_guide/wq.md)(&list_wq)— 負荷投入・輸送・減衰・洗い出し・Kd 二相分配・地下水経由・貯水池
@@ -43,7 +44,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [用途集](users_guide/usecases.md)— 現象名から機能の組み合わせを引く(未対応の現象も明示)
 
 **付録**
-- [全パラメータ索引](users_guide/params_index.md) — 全497パラメータの名前→章の逆引き
+- [全パラメータ索引](users_guide/params_index.md) — 全 555 パラメータの名前→章の逆引き
 
 ---
 
@@ -80,6 +81,7 @@ ENCflow は、1本の時間発展ループの上に機能(プロセスモジュ�
 | 淡塩2層 | `fn_salt` | &list_salt |
 | 土砂・地形変化 | `fn_geomorph` | &list_geomorph |
 | 流木 | `fn_driftwood` | &list_driftwood |
+| 家屋破壊・瓦礫 | `fn_bldgdebris` | &list_bldgdebris |
 | 水質(負荷流出) | `fn_wq` | &list_wq |
 | 土壌雨量指数 | `fn_swi` | &list_swi |
 | 計測(プローブ・測線) | `fn_record` | &list_record |
@@ -188,6 +190,7 @@ ENCflow は、1本の時間発展ループの上に機能(プロセスモジュ�
 | 海水浸入・塩水くさび・淡水レンズ | [淡塩2層](users_guide/salt.md)+[潮位・海面](users_guide/tide.md) |
 | 土砂輸送・土石流 | [土砂・地形変化](users_guide/geomorph.md) |
 | 流木を伴う洪水・土石流 | [流木](users_guide/driftwood.md)(+土砂・地形変化) |
+| 津波・高潮による家屋の破壊と瓦礫の流動・堆積 | [家屋破壊・瓦礫](users_guide/bldgdebris.md)(+流木・潮位) |
 | 降雨で誘発される斜面崩壊・土石流 | [土砂・地形変化](users_guide/geomorph.md)+[地下水](users_guide/gwflow.md)(浸透→間隙水圧) |
 | 貯水池の堆砂・排砂 | [土砂・地形変化](users_guide/geomorph.md)+[構造物](users_guide/structure.md) |
 | 汚濁負荷・物質輸送 | [水質](users_guide/wq.md) |

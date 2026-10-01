@@ -40,6 +40,7 @@ module m_gwflow_layer2
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : par_info, par_stop, dcp, is_root, par_halo_cell, &
                          par_gather_to, par_scatter_cell
+  use m_util, only : param_default
   implicit none
   private
   public :: gwflow_layer2_init
@@ -89,6 +90,12 @@ subroutine gwflow_layer2_init(p, g, s, dts)
   if (ios /= 0) call par_stop("list_gwflow_layer2: cannot read namelist")
   close(un)
 
+  ! 既定値(未指定 = 0 なら採用し、採用値を表示。developer.md §64)。
+  ! gw2_ksh_mmh の 0 は「側方なし」、gw2_sat0 の 0 は「空」の明示なので
+  ! 既定を置かない
+  gw2_depth = param_default("gwflow", "gw2_depth", gw2_depth, 3.0, " m")
+  gw2_sy = param_default("gwflow", "gw2_sy", gw2_sy, 0.05, "")
+  gw2_infil_mmh = param_default("gwflow", "gw2_infil_mmh", gw2_infil_mmh, 1.0, " mm/h")
   if (gw2_depth <= 0.0) call par_stop("list_gwflow_layer2: gw2_depth must be > 0")
   if (gw2_sy <= 0.0 .or. gw2_sy > 1.0) then
     call par_stop("list_gwflow_layer2: gw2_sy must be in (0,1]")

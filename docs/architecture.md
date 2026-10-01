@@ -22,6 +22,9 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理)
   │                  bedslide は z・sd の内数として動く底層 hb = 地滑り津波の移動海底源)
   │    m_driftwood   流木(材積のラスタ場3台帳: 立木 wst → 流動 s%hd → 堆積 s%wd。
   │                  発生・停止・再流動を担う。移流は swflow_enc の advect_scalar)
+  │    m_bldgdebris  家屋破壊・瓦礫(家屋ストック wbs → 流動 s%hbd → 堆積 s%wbd。
+  │                  破壊判定(浸水深/荷重に流木・瓦礫を算入)・停止・再流動と
+  │                  空隙率 s%gv への帰還。移流は advect_scalar。§63)
   │    m_glacier     氷河(加算: 質量収支(常時)/ flow / slide / ero / ava)
   │    m_lavaflow    溶岩流(噴火口ソース+Bingham 粘性重力流+固化→z。等温)
   │    m_intercept   降雨遮断(排他: fixed / initloss)
@@ -63,13 +66,15 @@ par_init → sysparam → geoinfo(全域読込・全域前処理)
   → boundary → state(← geoinfo, boundary より後)
   → wq → record → precip → intercept → geomorph
   → driftwood(← geomorph より後: morfac 検査に s%geo_morfac を参照)
+  → bldgdebris(← driftwood より後: s%dw_active・s%dw_sg を荷重の評価に参照)
   → gwflow
   → saltwater(← gwflow より後: 層1側方の係数を参照)
   → tide → swflow → meteo → evap(← meteo より後) → snow
   → glacier(← meteo・snow より後: 気温と涵養源が必須)
   → lavaflow(← geomorph より後: morfac=1 検査)
   → swi(← 最後: 排他検査に他モジュールの fn_* を参照)
-  → output_init → geoinfo_band_shrink(マスク類・z を帯に縮小)
+  → output_init → geoinfo_band_shrink(マスク類・z を帯に縮小。g%gv/g%lm の帯は
+                     state_init が s%gv/s%lm へ写した後なのでここで解放。§63.1)
   → run_main(時間ループ)
 ```
 
@@ -77,6 +82,10 @@ par_init → sysparam → geoinfo(全域読込・全域前処理)
 初期化中は全域配列 → scatter/band_shrink を経て → 時間ループ中は
 帯配列(rank0 のみ g%z の全域を出力・集約用に保持)。
 「どの配列がどのゾーンで全域か」の正確な契約は §11 を参照。
+時間変化しうる物性は「入力は g、時間ループの正本は s」の型で扱います
+(標高 z と空隙率 gv・有効慣性係数 lm がその実例。gv を変えるのは
+m_state_set_gv だけで、空隙面積基底の柱状量を再スケールして体積を
+保存する。§63.1)。
 
 ### 2.2 1 タイムステップ(run_main。この順序が結合の正本)
 
@@ -106,6 +115,9 @@ geomorph_calc                 地形変化(s%z, s%e 更新+z のハロ交換)
 driftwood_calc                流木(発生・停止・再流動・ダム捕捉。← geomorph の後 =
                                 同一ステップの z 更新を見た侵食連行。移流自体は
                                 swflow_calc 内の advect_scalar が hs/cq と同様に実行)
+bldgdebris_calc               家屋破壊・瓦礫(破壊・停止・再流動・ダム捕捉・空隙率の
+                                帰還+gv/lm のハロ交換。← driftwood の後 = 同一ステップの
+                                hd を荷重に見る。移流は swflow_calc 内)
 lavaflow_calc                 溶岩流(噴火口ソース→Bingham 拡散流動→固化。固化時は
                                 s%z 更新と e 回復・ハロ交換まで。z 更新プロセスの末尾)
 calcstat                      統計(S 台帳・max 類。決定的総和)
@@ -122,8 +134,8 @@ calcstat                      統計(S 台帳・max 類。決定的総和)
 | 記号 | 型 | 所有者 | 内容と規約 |
 |---|---|---|---|
 | p | t_sysparam | m_sysparam | 実行制御。init 後は全モジュール読み取り専用 |
-| g | t_geoinfo | m_geoinfo | 地形 z(入力)・粗度 rn・マスク x/sw/rw・格子。原則不変(例外: なし。動的な標高は s%z) |
-| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), hb(動く底層。z・sd の内数), cq/cg/crs(輸送物質の地表・地下・ため池プール), hd/wd(流動・堆積流木), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi・hb 等のモジュール私有 save は各 dispose。契約5) |
+| g | t_geoinfo | m_geoinfo | 地形 z(入力)・粗度 rn・家屋 gv/bb/lm(入力)・マスク x/sw/rw・格子。原則不変(動的な標高は s%z、動的な空隙率は s%gv/s%lm。g%gv/g%lm の帯は band_shrink で解放) |
+| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), hb(動く底層。z・sd の内数), cq/cg/crs(輸送物質の地表・地下・ため池プール), hd/wd(流動・堆積流木), hbd/wbd(流動・堆積瓦礫), gv/lm(空隙率と有効慣性係数。§63), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi・hb 等のモジュール私有 save は各 dispose。契約5) |
 | sx | t_enc_status | m_swflow_enc 私有 | エッジ流速 uv・流量 mn(前ステップ確定)・mn1(更新中)。他モジュールから不可視 |
 | r, b, … | 各 t_* | 各モジュール | モジュール私有。リスタートは各自の save ファイル(契約5) |
 
@@ -163,6 +175,11 @@ s%h を変更するモジュールは同じループで s%e = s%z + s%h を回�
 5. 検証は CLAUDE.md の規律で: 等価変換 = ULP=0、機能追加 = 無効時に
    既存 reference とビット一致、MPI に触れたら np=1,2,4 一致、確保に
    触れたら -fcheck=all np≥2 を先に。reference の更新は人間の目視後のみ。
+6. **物性・校正値には「とりあえず動かす」既定値を置き、採用した既定は
+   実行開始時に "(default)" 付きで必ず表示する**(gm_param / dw_param /
+   bd_param の型。§62・§50.6・§63.9)。与件そのもの(地形・崩壊深分布・
+   建物の場所)は既定にしない。対になる閾値は「両方未指定で両方に既定、
+   片方だけなら他方は無効」で明示を尊重する。
 
 ## 6. データの流れ(単位・形式の約束)
 
@@ -182,10 +199,11 @@ s%h を変更するモジュールは同じループで s%e = s%z + s%h を回�
 | 設計判断の理由・経緯・実バグ | docs/developer.md(§0 方針 12 箇条から) |
 | 変更時の検証手順・禁止事項 | CLAUDE.md |
 | 未完了の作業・中期の道標 | docs/handoff.md |
-| パラメータの意味(482 項目) | docs/users_guide/params_index.md と各章 |
+| パラメータの意味(555 項目) | docs/users_guide/params_index.md と各章 |
 | namelist の書き方の見本 | examples/List_samples/ |
 | 使い方(利用者視点) | docs/users_guide.md・tutorials/ |
 | 他モデルとの立ち位置 | docs/comparison.md |
-| 個別機能の設計文書 | docs/*_plan.md(geomorph・debris・splash・glacier・boundary・geotiff・gwconduit・swi・driftwood・lava〔実装済み〕、landslide_tsunami〔設計提案〕)・channel_model.md |
+| 個別機能の設計文書 | docs/*_plan.md(geomorph・debris・splash・glacier・boundary・geotiff・gwconduit・swi・driftwood・lava〔実装済み〕、landslide_tsunami〔設計提案〕)・channel_model.md。家屋破壊・瓦礫は plan を消し込み済みで developer.md §63 が正本 |
+| 「まず動かしてみる」最小入力と型別の推奨値 | users_guide/geomorph.md・driftwood.md・bldgdebris.md・gwflow.md・forcing.md(遮断・蒸発散・積雪)・glacier.md・lavaflow.md の各「パターン別の推奨値」、wq.md「物質別の代表値」(根拠は developer.md §62・§50.6・§63.9・§64〜§67。共通ヘルパは m_util の param_default)。既定値を置かない章(浅水流・河道・境界・潮位・初期条件・地理情報の粗度・淡塩・SWI・構造物・計測・降雨)にも「とりあえず動かしてみる」最小入力と型別の目安表がある |
 | モジュール実装の作法 | src/m_gwflow_bucket.f90 のヘッダ |
 | ビルドの仕組み | make.inc・docs/install.md・§1/§3 |

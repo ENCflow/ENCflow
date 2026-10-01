@@ -32,6 +32,7 @@ module m_intercept_initloss
   use m_state, only : t_state
   use m_fileio, only : fileio_read_matrix, fileio_write_rle, fileio_read_rle
   use m_sysdep_util, only : sysdep_mkdir
+  use m_util, only : param_default
   use m_parallel, only : par_info, par_stop, par_abort, dcp, is_root, &
                        par_scatter_cell, par_gather_to
   implicit none
@@ -81,7 +82,8 @@ subroutine intercept_initloss_init(p, g)
     ! 分布指定: 最大貯留量マップ (mm) を読み、m に換算して帯で保持
     call read_smax_map(p, g, trim(fn_icsmax))
   else
-    ! 一様指定
+    ! 一様指定(未指定 = 番兵 −1 なら既定を採用し表示。developer.md §66)
+    ic_smax_mm = param_default("intercept", "ic_smax_mm", ic_smax_mm, 1.5, " mm", unset=-1.0)
     if (ic_smax_mm <= 0.0) then
       call par_stop("list_intercept_initloss: ic_smax_mm must be > 0 (or specify fn_icsmax)")
     end if
