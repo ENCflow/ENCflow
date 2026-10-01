@@ -223,6 +223,17 @@ Roughness guides are the customary Manning n values (Japanese river
 technical standards; Chow 1959): concrete 0.015-0.02, sand-bed low-water
 channel 0.025-0.035, gravel bed 0.035-0.05, vegetated floodplain 0.05-0.1.
 
+**When one run spans several channel types, from mountain streams to the
+river mouth**, you do not have to pick a single value from the table.
+rn0_rw, depth_rw and bank0 are shortcuts that give every channel cell the
+same value, so for large-scale runs with mixed types leave rn0_rw
+unspecified (negative) and put the per-cell n of the channel cells into
+the roughness distribution fn_rn (f_rntype=1) of the
+[geographic information](geoinfo.md) (likewise fn_depth_rw and fn_bank
+distributions for the incision and the levee height). Painting the
+table values reach by reach in GIS preprocessing is the way the policy
+"conversions belong to preprocessing" intends.
+
 **Guide for the cross-section shape sigma (p_sect_m)** - sets the
 conveyance ratio sigma = (h/D)^m at depths below the transition depth D.
 The larger m, the higher the low-water level and the slower the
