@@ -201,6 +201,6 @@ Bs(家屋の破壊率)**、期間最大(H9999・V9999・F9999・**Bd9999 = 瓦�
 
 - 機能の説明・パラメータ表: docs/users_guide/bldgdebris.md、流木: users_guide/driftwood.md、潮位: users_guide/tide.md
 - 適用事例の一覧: docs/users_guide/usecases.md
-- 設計と検証: docs/developer.md §63(家屋破壊・瓦礫モジュールと空隙率の状態化)、docs/housedebris_plan.md
+- 設計と検証・文献照合: docs/developer.md §63(家屋破壊・瓦礫モジュールと空隙率の状態化)
 - 自己検定テスト: test/bldgdebris(保存則・片方向結合・帰還の体積保存・リスタート)、test/gvchange(空隙率変更の単体検定)
 - 同型の例題: examples/timberyard(高潮による貯木場からの材木流入)

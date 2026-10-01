@@ -88,21 +88,32 @@ destruction and stopping parameters:
 | f_bdgv | 1 | 1 = raise the void ratio with the destroyed fraction (feedback), 0 = one-way coupling |
 
 **Guidance on thresholds** (all calibration parameters; the literature
-check is recorded in developer.md §63, Japanese):
+check is recorded in developer.md §63.7, Japanese):
 
-- **Depth threshold (f_bdcrit=1)**: fragility functions of wooden
-  houses from the 2011 Tohoku tsunami show washout rising steeply
-  around 2 m of inundation depth. Since fragility functions are
+- **Depth threshold (f_bdcrit=1)**: Shuto (1993) relates tsunami
+  intensity to house damage: wooden houses are destroyed above about
+  2 m of inundation depth and partially damaged around 1 m. The
+  fragility functions of the 2011 Tohoku tsunami (Suppasri et al.
+  2013, by structural type and storeys) also show the washout
+  probability of wooden houses rising steeply around 2 m and most
+  houses washed away above 4 m. Since fragility functions are
   probability curves while this module uses a threshold plus rate (or
   a two-threshold linear ramp), read "the median of the curve as the
   midpoint of bd_hcrit to bd_hcrit2, and the width of the curve as the
-  ramp width".
+  ramp width" (the example uses 1.0-3.0 m). RC buildings are far less
+  likely to be washed away at the same depth, which is why the stock
+  (wooden fraction) and fn_bdfrac represent them.
 - **Load threshold (f_bdcrit=2)**: the unit is that of F9999, m³/s²
-  (freshwater-normalised; ×ρw gives N/m). In practice, compare the
-  water-only F9999 map with observed damage to set it. The driftwood
-  and debris terms are "the average destructive force of a flow
-  carrying floating matter", not a replacement of the impact load of a
-  single log (NILIM No. 905 §4.3, FEMA P-646).
+  (freshwater-normalised; ×ρw gives N/m). Convert it from the
+  force-based fragility functions of Koshimura et al. (2009),
+  F = ½ρ C_D u²h, or compare the water-only F9999 map with observed
+  damage. FEMA P-646 multiplies the hydrodynamic force of a
+  debris-laden flow by a factor k_s (1.25 recommended); this module
+  computes the same effect from the floating-matter columns (the
+  driftwood and debris terms). These terms are "the average
+  destructive force of a flow carrying floating matter", not a
+  replacement of the impact or damming load of individual logs and
+  debris (NILIM No. 905 §4.3, the individual loads of FEMA P-646).
 - **Building stock**: floor area × structural volume per floor area ×
   wooden fraction, aggregated per cell (aggregation from building
   inventories is preprocessing). Conversion to building counts or
