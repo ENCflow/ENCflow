@@ -1,5 +1,5 @@
 !======================================================================
-! timberyard: 高潮による貯木場からの材木流入デモ(伊勢湾台風型)
+! timberyard(感度ケース c): 防潮壁天端 +4.0 m(高潮を越えない。流入は開口部のみ)。本体は param.txt、解説は README.md
 !   海岸の貯木場に浮かぶ材木が、高潮の水位上昇で係留を失って流出し、
 !   防潮壁を越えた氾濫流に乗って市街地へ流入・堆積する現象の理想化
 !   実験。組み方の理由・結果の図表・感度ケースの解説は README.md
@@ -39,7 +39,7 @@
   fn_tide = '-'
   fn_driftwood = '-'
   fn_enc = '-'
-  dir_result = 'result'
+  dir_result = 'result_wall4'
   f_out_h = 1
   f_out_vv = 1
   f_out_hd = 1              ! 流動材木の柱状材積 Hd0001…
@@ -71,7 +71,7 @@
   dx = 10.0
   dy = 10.0
   f_ztype = 1
-  fn_z = 'z.txt'
+  fn_z = 'z_wall4.txt'      ! 防潮壁天端 +4.0 m(make_terrain.py 4.0)
   f_rntype = 0
   rn0 = 0.03
   fn_gv = 'gv.txt'          ! 市街地の建物空隙率 0.6(建物占有 40%)
