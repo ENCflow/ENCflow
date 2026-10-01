@@ -1282,9 +1282,11 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   real :: fbe                     ! 江頭層流則の抵抗係数 f_b(db_res=2 かつ C>=cmin)
   real :: hte                     ! エッジの混合流動深(時刻 n。層流則用)
   real :: rme                     ! 1 + s・C(混合密度比 ρm/ρ)
+  real :: vv0e                    ! 辺の速さ |V|(下限 p%vv 適用前。降伏停止判定用。§28.11)
 
   ! セル境界での物理量を求める
   vve = (s%vv(i,j) + s%vv(in,jn)) / 2       ! 速度の絶対値
+  vv0e = vve
   rne = (g%rn(i,j) + g%rn(in,jn)) / 2       ! 粗度係数
   gve = (g%gv(i,j) + g%gv(in,jn)) / 2       ! 家屋の空隙率
   bbe = (g%bb(i,j) + g%bb(in,jn)) / 2       ! 家屋の平均サイズ
@@ -1473,9 +1475,14 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
 
     ! 土石流の降伏判定(動き出し・停止): 低速かつ駆動(移流+重力)が
     ! 降伏減速度以下なら静止を維持する(半陰解法の漸近だけでは完全静止に
-    ! ならないための明示的な零化。debris_plan.md §2.3)
+    ! ならないための明示的な零化。debris_plan.md §2.3)。
+    !   低速の判定は辺の**速さ** |V|(vv0e)で行う。辺の法線成分 uve0 で
+    !   判定すると、速い一方向流の横断方向の辺(法線成分 ≈ 0、横断駆動 <
+    !   a_y)が毎ステップ零化され、行間の質量交換が凍結して横断方向に
+    !   一様にならない(§28.11 の実バグ)。Coulomb 降伏は速度ベクトルの
+    !   大きさに対する条件で、動いている流れの一成分には掛からない
     if (aye > 0.0) then
-      if (abs(uve0) < db_vstop .and. abs(tae + tge) <= aye) then
+      if (vv0e < db_vstop .and. abs(tae + tge) <= aye) then
         uve1 = 0.0
         mne1 = 0.0
       end if
