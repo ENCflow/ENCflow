@@ -6405,3 +6405,18 @@ f_evmodel=1 のみ、lavaflow が噴火口のセルと噴出率のみ。
   g 一定蒸発散)と test/lava 構成3(param_ty と同じ Bingham 設定で lv_visc・
   lv_vsol を省略)で、最小入力と既定値明示の save 全ファイルと Log.txt が
   バイト一致。既存ケースは明示指定のため不変。
+
+## 67. 潮位・海面(m_tide)の最小入力(2026-10-01 実装。§62 の展開)
+
+titype 未指定(namelist 既定 0)は従来「1〜4 を指定せよ」で停止していたが、
+**1(一様固定潮位 ti0)を採用**して "tide: titype = 1 (default: uniform
+fixed tide level ti0 = ... m)" と表示するようにした。ti0(既定 0 = 平均潮位)
+と hsea0(既定 1 m。§23)は元から namelist 既定を持つので、**最小入力は
+fn_tide + 空の &list_tide**(海域 fn_sw は与件)。海を「水位 0 m の排水先」
+にする最簡の使い方(干潮排水・流域の海への出口)が 1 行で書ける。ti0 の 0 は
+平均潮位の明示と区別できないため、既定の表示は titype が既定のときに ti0 を
+併記する形。tival・fn_timap 等(時系列・分布)は与件のまま。
+
+検証(2026-10-01): test/tide 構成2(空の &list_tide)と構成2'(titype=1・
+ti0=0・hsea0=1 を明示)の result(Log.txt と出力場)がバイト一致。構成1
+(titype=2 の時系列)は不変で reference PASS。

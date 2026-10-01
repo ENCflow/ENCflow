@@ -15,7 +15,7 @@ module list_tide
   type t_list_tide
     ! 潮位タイプ (0:なし, 1:一様固定値, 2:一様時系列,
     !             3:分布×倍率時系列, 4:分布ファイルリスト)
-    integer :: titype = 0
+    integer :: titype = 0                          ! 潮位タイプ(0 = 未指定 → 1 の一様固定潮位。§67)
     real :: ti0 = 0.0                              ! 一様固定潮位 (m。titype=1)
     real :: hsea0 = 1.0                            ! 海セルの見かけ水柱厚 (m)
     real :: dt_tiupdate = 1                        ! 潮位更新時間間隔 (min)
