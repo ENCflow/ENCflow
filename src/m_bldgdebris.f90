@@ -57,7 +57,7 @@ module m_bldgdebris
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : dcp, is_root, par_info, par_stop, par_abort, par_sum_rows, &
                          par_gather_to, par_scatter_cell, par_halo_cell, par_allreduce_sumi
-  use m_util, only : itoa
+  use m_util, only : itoa, param_default
   implicit none
   private
   public :: t_bldgdebris
@@ -335,7 +335,8 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 未指定(番兵)なら既定値を採用し、採用値を必ず 1 行表示する
-! (m_geomorph の gm_param と同じ流儀。§62.1。既定なら "(default)" 付き)
+! (m_geomorph の gm_param と同じ流儀。§62.1。既定なら "(default)" 付き。
+!  実体は m_util の param_default(§64)— 接頭辞 "bldgdebris" の薄い包み)
 !----------------------------------------------------------------------
 function bd_param(name, val, def, unit, unset) result(eff)
   character(len=*), intent(in) :: name     ! namelist 名(表示用)
@@ -345,25 +346,9 @@ function bd_param(name, val, def, unit, unset) result(eff)
   real, intent(in), optional :: unset      ! 未指定の番兵(省略時 -9999.0)
   real :: eff
   real :: us
-  logical :: isdef
-  character(len=32) :: buf
-  character(len=:), allocatable :: str
   us = -9999.0
   if (present(unset)) us = unset
-  isdef = (val <= us + 1.0)
-  eff = val
-  if (isdef) eff = def
-  if (abs(eff) >= 1.0e5 .or. (abs(eff) < 1.0e-3 .and. eff /= 0.0)) then
-    write(buf, '(es12.4)') eff
-  else
-    write(buf, '(f0.4)') eff
-  end if
-  buf = adjustl(buf)
-  if (buf(1:1) == '.') buf = '0'//trim(buf)
-  if (buf(1:2) == '-.') buf = '-0'//trim(buf(2:))
-  str = "bldgdebris: "//name//" = "//trim(buf)//unit
-  if (isdef) str = str//" (default)"
-  call par_info(str)
+  eff = param_default("bldgdebris", name, val, def, unit, unset=us)
 end function
 
 

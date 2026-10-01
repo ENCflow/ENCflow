@@ -6290,8 +6290,11 @@ fn_gwc_inlet)の 1 行を足す。
 - 既定の適用と表示は **m_util の `param_default(prefix, name, val, def,
   unit[, unset])`**(gm_param・dw_param・bd_param と同じ書式の共通版。
   gwflow のサブモジュールは m_geomorph の submodule と違い独立モジュール
-  なので、最下層の m_util に置いた。既存 3 つの *_param は等価のまま残して
-  ある — 統合は別の等価リファクタ)。番兵は従来の init 既定(0.0)。
+  なので、最下層の m_util に置いた。gm_param・dw_param・bd_param は
+  2026-10-01 に param_default を呼ぶ薄い包みに統合した — 等価リファクタ、
+  全ケース逐次回帰ビット一致で検証。名前は各モジュールの呼び出し側を
+  変えないために残し、gm_param は submodule から呼ぶため public のまま)。
+  番兵は従来の init 既定(0.0)。
   採用値は "gwflow: name = value unit (default)" で必ず 1 行表示する。
 - **0 に明示の意味がある値には既定を置かない**(§62.1 の「明示の尊重」):
   gw_psif(0 = 一定浸透能に退化)、gw2_ksh_mmh(0 = 層2 側方なし)、
