@@ -284,23 +284,29 @@ contains
       end if
    end subroutine par_halo_cell
 
-   subroutine par_halo_edge(a)
-      ! エッジ配列の行ハロ交換(幅1)。
+   subroutine par_halo_edge(a, width)
+      ! エッジ配列の行ハロ交換(幅 width。既定 1)。
       ! コミット済みの有効エッジ行は js-1..je(共有行 js-1 と je は
-      ! 界面補完により南北で同値)。RK の参照のために js-2 を南から、
+      ! 界面補完により南北で同値)。幅1: RK の参照のために js-2 を南から、
       ! je+1 を北から受け取る。送りは相手にとっての同位置
-      ! (南へ js、北へ je-1)。
+      ! (南へ js、北へ je-1)。幅2: 運動量保存形移流(§68)が線 k 上の
+      ! ±2 エッジを読むため js-3..js-2 / je+1..je+2 を受け取る(送りは
+      ! js..js+1 / je-2..je-1。帯は最低 2 行なのでいずれも自帯の
+      ! 確定行)。確保範囲 jsh-1..jeh は幅2でちょうど収まる。
       real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
-      integer :: n
-      n = size(a, 1) * size(a, 2)
+      integer, intent(in), optional :: width
+      integer :: n, w
+      w = 1
+      if (present(width)) w = width
+      n = size(a, 1) * size(a, 2) * w
       if (dcp%rank_s >= 0) then
-         call MPI_Sendrecv(a(:, :, dcp%js),   n, MPI_WP, dcp%rank_s, 13, &
-                           a(:, :, dcp%js-2), n, MPI_WP, dcp%rank_s, 14, &
+         call MPI_Sendrecv(a(:, :, dcp%js:dcp%js+w-1),     n, MPI_WP, dcp%rank_s, 13, &
+                           a(:, :, dcp%js-1-w:dcp%js-2),   n, MPI_WP, dcp%rank_s, 14, &
                            MPI_COMM_WORLD, MPI_STATUS_IGNORE)
       end if
       if (dcp%rank_n >= 0) then
-         call MPI_Sendrecv(a(:, :, dcp%je-1), n, MPI_WP, dcp%rank_n, 14, &
-                           a(:, :, dcp%je+1), n, MPI_WP, dcp%rank_n, 13, &
+         call MPI_Sendrecv(a(:, :, dcp%je-w:dcp%je-1),     n, MPI_WP, dcp%rank_n, 14, &
+                           a(:, :, dcp%je+1:dcp%je+w),     n, MPI_WP, dcp%rank_n, 13, &
                            MPI_COMM_WORLD, MPI_STATUS_IGNORE)
       end if
    end subroutine par_halo_edge

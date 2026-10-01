@@ -24,6 +24,7 @@ module m_swflow_enc
                                       ! init_debris が呼ぶ。swflow init より前)
 
   ! nvfortran の submodule バグ回避(TPR #27323 系)。修正され次第 private に戻す
+  public :: f_advection_scheme
   public :: f_advection_tvd
   public :: p_adv_upwind_index
   public :: n8x, n8y
@@ -50,7 +51,9 @@ module m_swflow_enc
   integer :: f_hcap_upwind != 1              ! 上流側水深によるセル境界水深の制限
   integer :: f_adaptive_runge != 1           ! 適応的ルンゲクッタ
   integer :: f_friction_fastmath != 0        ! 摩擦項計算の高速化
-  integer :: f_advection_tvd != 9            ! 移流項にTVDスキームを使用　
+  integer :: f_advection_scheme             ! 移流項のスキーム (1: セル中心勾配 v1,
+                                            !   2: 運動量保存形・1次風上, 3: 同+MUSCL。§68)
+  integer :: f_advection_tvd != 9            ! 移流項にTVDスキームを使用(スキーム1のみ)
   integer :: f_advection_runge != 0          ! 移流項のルンゲクッタでの更新
   integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
   integer :: f_bank_mode                    ! 堤防の水理モード(下の e_bank_*)
@@ -427,8 +430,19 @@ subroutine m_swflow_enc_init(p, g, b, s)
   f_hcap_upwind = list%f_hcap_upwind
   f_adaptive_runge = list%f_adaptive_runge
   f_friction_fastmath = list%f_friction_fastmath
+  f_advection_scheme = list%f_advection_scheme
   f_advection_tvd = list%f_advection_tvd
   f_advection_runge = list%f_advection_runge
+  select case (f_advection_scheme)
+    case (1)      ! セル中心勾配(v1。既定)
+    case (2)      ! 運動量保存形(Stelling & Duinmeijer)・1次風上
+      call par_info("swflow_enc: f_advection_scheme = 2 (momentum-conservative, 1st-order upwind)")
+    case (3)      ! 運動量保存形+MUSCL(van Leer)
+      call par_info("swflow_enc: f_advection_scheme = 3 (momentum-conservative, MUSCL van Leer)")
+    case default
+      call par_stop("list_enc: f_advection_scheme must be 1(cell-gradient), " // &
+                    "2(momentum-conservative upwind) or 3(momentum-conservative MUSCL)")
+  end select
   f_rivermouth_drop = list%f_rivermouth_drop
   f_diffusion_term = list%f_diffusion_term
   ! 河口の強制段落ちは潮位(fn_tide)と両立しない(高潮位時の背水を
@@ -598,6 +612,15 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   call par_halo_cell(s%z)
   call par_halo_cell(s%vv)
   call par_halo_edge(sx_mod%mn)
+  ! 運動量保存形移流(§68.6)は線 k 上の ±2 エッジ流速と、両セル・側方
+  ! セルの流量 m, n を読む: uv をエッジ幅2、m, n をセル幅2で交換する
+  ! (スキーム1では呼ばない=通信ゼロ追加。判定は namelist 由来で
+  ! 全ランク同一 → collective 安全)
+  if (f_advection_scheme >= 2) then
+    call par_halo_edge(sx_mod%uv, 2)
+    call par_halo_cell(s%m)
+    call par_halo_cell(s%n)
+  end if
   ! 浮遊砂柱状量(移流の風上濃度がハロ行の hs/h を読む。E-D による帯の
   ! 更新は前ステップの geomorph なので、ここで交換すれば最新)
   if (s%sed_active) call par_halo_cell(s%hs)

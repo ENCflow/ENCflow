@@ -69,9 +69,10 @@ The Runge column on the screen shows the application rate.
 
 | Parameter | Default | Meaning |
 |---|---|---|
+| f_advection_scheme | 1 | scheme of the advection term. 1: cell-centre gradient (default; a weighted 3×3 gradient projected onto the edge by averaging both cells), 2: momentum-conservative, first-order upwind, 3: momentum-conservative + MUSCL (van Leer). Schemes 2 and 3 extend the staggered-grid formulation of Stelling & Duinmeijer (2003) to the 8-direction ENC edges and give the correct speed of bores and hydraulic jumps (wet-bed dam break: bore position error 1%, versus a 15% lag with the default 1). p_adv_upwind_index and f_advection_tvd act on scheme 1 only |
 | f_advection_runge | 0 | also update the advection term in the recomputation stages of the adaptive Runge-Kutta. 0: no update (default; the advection term stays fixed at its explicit-Euler value), 1: update it in proportion to each stage's updated velocity |
-| f_advection_tvd | 0 | use a TVD scheme for the advection term (**experimental; enabling it is currently not recommended**) |
-| p_adv_upwind_index | 0.5 | upwinding index of the advection term (0-1). 0: central difference, 1: first-order upwind difference |
+| f_advection_tvd | 0 | use a TVD scheme for the advection term (scheme 1 only; **experimental; enabling it is currently not recommended**) |
+| p_adv_upwind_index | 0.5 | upwinding index of the advection term (0-1; scheme 1 only). 0: central difference, 1: first-order upwind difference |
 | f_diffusion_term | 0 | diffusion term. 0: none (default), 1: constant viscosity, 2: zero-equation model (nu = nu0 + alpha * u_star * h) |
 | p_diffusion_nu | -- | kinematic eddy viscosity nu0 (m^2/s). **For model 1 a positive value must be specified explicitly** (unset is an error stop). For model 2 an optional background viscosity |
 | p_diffusion_alpha | 0.41/6 | coefficient alpha of the zero-equation model (default is the Elder type) |
@@ -109,6 +110,7 @@ safe combination for tsunamis, inundation and flood runoff alike.
 | Urban inundation (building clusters) | Defaults + fn_gv/fn_bb ([geographic information](geoinfo.md)); cm/cd/kk at the defaults | Storage loss and drag are expressed on the geographic side |
 | Wide-area / long runs (cost first) | p_adprunge_thresh 2-3, f_friction_fastmath 3-5, f_govequation=1 (diffusive wave) if needed | Cuts the recomputation rate and the friction cost. The diffusive wave ignores inertia, so not for inundation fronts or tsunamis |
 | Accuracy checks, numerical experiments | p_adprunge_thresh 1.1, p_adv_upwind_index 0.5, f_friction_fastmath 0 | High-accuracy side; a few tens of percent more cost |
+| Bores, hydraulic jumps, tsunami run-up (flows with discontinuities) | f_advection_scheme 3 | Momentum-conservative advection: correct bore speed and no oscillations behind the bore. The default 1 lags the bore and oscillates behind it |
 
 ## Format examples
 

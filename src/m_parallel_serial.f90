@@ -96,10 +96,12 @@ contains
       if (size(a) > 0) continue
    end subroutine par_halo_cell
 
-   subroutine par_halo_edge(a)
-      ! エッジ配列の行ハロ交換。逐次では何もしない。
+   subroutine par_halo_edge(a, width)
+      ! エッジ配列の行ハロ交換(幅 width。既定 1)。逐次では何もしない。
       real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      integer, intent(in), optional :: width
       if (size(a) > 0) continue
+      if (present(width)) continue
    end subroutine par_halo_edge
 
    subroutine par_edge_merge(a, take_s, take_n)
