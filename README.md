@@ -104,7 +104,13 @@ care about.**
   wetting-and-drying tracks the run-up front. Storm surge + river flood
   + heavy rainfall — **compound flooding in a single model**. Combined
   with the driftwood feature it also handles Isewan-typhoon-style
-  timber influx from coastal log yards into urban areas.
+  timber influx from coastal log yards into urban areas. **Destruction
+  of wooden houses and the resulting debris** — fragility-type
+  destruction by inundation depth or fluid force, the added destructive
+  force of driftwood and debris, and the feedback of destroyed
+  buildings' void space on the flow — are estimated in the same time
+  evolution as the tsunami or surge run-up, giving damage-ratio maps
+  and debris arrival/deposit maps.
 - **Rainfall–runoff and catchment hydrology**: rainfall (uniform or
   distributed), canopy interception, evapotranspiration
   (Hamon/Thornthwaite with temperature lapse rate), Green–Ampt
