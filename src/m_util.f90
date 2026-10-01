@@ -1,9 +1,10 @@
 module m_util
-  use m_parallel, only : par_stop
+  use m_parallel, only : par_stop, par_info
   implicit none
   private
 
   public :: str2sec
+  public :: param_default
   public :: itoa
   public :: rtoa
   public :: ymd_to_jdn
@@ -11,6 +12,49 @@ module m_util
   public :: parse_datetime
 
 contains
+!=======================================================================
+! パラメータの既定値の適用と採用値の表示(developer.md §62・§64)
+!   未指定(val == unset。省略時 0.0。unset が −9998 以下なら「それ以下」
+!   = §50.6/§63.9 の −9999 番兵)なら def を採用し、採用値を必ず 1 行
+!   表示する(既定なら "(default)" を付ける — 物性値を黙って使わない)。
+!   各モジュールの init が「そのモデルで必要な値」だけに対して呼ぶ。
+!   値域の検証は呼び出し側で従来どおり行う(明示された不正値は停止)。
+!   m_geomorph の gm_param・m_driftwood の dw_param・m_bldgdebris の
+!   bd_param と同じ書式(prefix で呼び出し元を示す)
+!=======================================================================
+function param_default(prefix, name, val, def, unit, unset) result(eff)
+  character(len=*), intent(in) :: prefix   ! 表示の接頭辞(例 "gwflow")
+  character(len=*), intent(in) :: name     ! namelist 名(表示用)
+  real, intent(in) :: val                  ! namelist の値
+  real, intent(in) :: def                  ! 未指定時の既定値
+  character(len=*), intent(in) :: unit     ! 単位(先頭に空白。無次元は "")
+  real, intent(in), optional :: unset      ! 未指定の番兵(省略時 0.0)
+  real :: eff
+  real :: us
+  logical :: isdef
+  character(len=32) :: buf
+  character(len=:), allocatable :: str
+  us = 0.0
+  if (present(unset)) us = unset
+  if (us <= -9998.0) then
+    isdef = (val <= us + 1.0)
+  else
+    isdef = (val == us)
+  end if
+  eff = val
+  if (isdef) eff = def
+  if (abs(eff) >= 1.0e5 .or. (abs(eff) < 1.0e-3 .and. eff /= 0.0)) then
+    write(buf, '(es12.4)') eff
+  else
+    write(buf, '(f0.4)') eff
+  end if
+  buf = adjustl(buf)
+  if (buf(1:1) == '.') buf = '0'//trim(buf)      ! gfortran の f0 は先頭 0 を省く
+  if (buf(1:2) == '-.') buf = '-0'//trim(buf(2:))
+  str = prefix//": "//name//" = "//trim(buf)//unit
+  if (isdef) str = str//" (default)"
+  call par_info(str)
+end function
 !=======================================================================
 !=======================================================================
 function str2sec(str, message) result(t)

@@ -107,18 +107,18 @@ m_gwflow.o: m_sysparam.o list_gwflow.o m_state.o m_geoinfo.o m_gwflow_bucket.o \
 	m_gwflow_greenampt.o m_gwflow_lateral.o m_gwflow_layer2.o m_gwflow_conduit.o \
 	m_gwflow_pump.o m_gwflow_frost.o m_meteo.o m_util.o $(PAR_OBJ)
 m_gwflow_frost.o: m_sysparam.o m_state.o m_geoinfo.o m_meteo.o m_fileio.o \
-	m_sysdep_util.o $(PAR_OBJ)
+	m_sysdep_util.o m_util.o $(PAR_OBJ)
 m_gwflow_pump.o: m_sysparam.o m_state.o m_geoinfo.o m_boundary.o m_gwflow_layer2.o \
 	m_util.o $(PAR_OBJ)
 m_gwflow_conduit.o: m_sysparam.o m_state.o m_geoinfo.o m_gwflow_lateral.o \
-	m_gwflow_layer2.o m_fileio.o m_sysdep_util.o $(PAR_OBJ)
+	m_gwflow_layer2.o m_fileio.o m_sysdep_util.o m_util.o $(PAR_OBJ)
 m_saltwater.o: m_sysparam.o m_state.o m_geoinfo.o m_gwflow_lateral.o \
 	m_fileio.o m_sysdep_util.o $(PAR_OBJ)
 m_gwflow_layer2.o: m_sysparam.o m_state.o m_geoinfo.o m_gwflow_lateral.o \
-	m_fileio.o m_sysdep_util.o $(PAR_OBJ)
-m_gwflow_bucket.o: m_sysparam.o m_state.o m_geoinfo.o $(PAR_OBJ)
-m_gwflow_greenampt.o: m_sysparam.o m_state.o m_geoinfo.o $(PAR_OBJ)
-m_gwflow_lateral.o: m_sysparam.o m_state.o m_geoinfo.o $(PAR_OBJ)
+	m_fileio.o m_sysdep_util.o m_util.o $(PAR_OBJ)
+m_gwflow_bucket.o: m_sysparam.o m_state.o m_geoinfo.o m_util.o $(PAR_OBJ)
+m_gwflow_greenampt.o: m_sysparam.o m_state.o m_geoinfo.o m_util.o $(PAR_OBJ)
+m_gwflow_lateral.o: m_sysparam.o m_state.o m_geoinfo.o m_util.o $(PAR_OBJ)
 list_gwflow.o: m_sysparam.o $(PAR_OBJ)
 m_evap.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o m_intercept.o m_meteo.o \
 	list_evap.o m_util.o $(PAR_OBJ)

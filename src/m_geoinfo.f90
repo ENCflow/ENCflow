@@ -7,7 +7,7 @@ module m_geoinfo
   use m_fileio, only : fileio_read_matrix, e_fmt_bil, e_fmt_gtif
   use m_georef, only : t_georef, georef_hdr_name, georef_read_hdr, georef_est_cellsize_m
   use m_geotiff, only : t_gtif_info, gtif_inquire
-  use m_util, only : itoa
+  use m_util, only : itoa, param_default
   use m_parallel, only : par_info, par_stop, par_abort, dcp, is_root, nproc, &
                        par_scatter_cell, &
                        par_bcast_cell, par_bcast_cell_i
@@ -291,9 +291,14 @@ end subroutine
 ! 確保しない、の遅延確保口。通信はなく判定材料は全ランク同一の
 ! namelist 値のみ(collective 安全)
 !----------------------------------------------------------------------
-subroutine m_geoinfo_require_sd(g)
+subroutine m_geoinfo_require_sd(g, sd_default)
   type(t_geoinfo), intent(inout) :: g
+  real, intent(in), optional :: sd_default   ! 未指定(sd0 = 0)時の既定(呼び出し側の方針)
   if (allocated(g%sd)) return
+  if (g%sd0 == 0.0 .and. present(sd_default)) then
+    ! 既定の採用と表示(developer.md §64。負値は従来どおり停止)
+    g%sd0 = param_default("geoinfo", "sd0", g%sd0, sd_default, " m")
+  end if
   if (g%sd0 <= 0.0) then
     call par_stop("list_geoinfo: soil depth is required by gwflow/geomorph " // &
                   "(set sd0 > 0 or f_sdtype=1/fn_sd)")

@@ -1,0 +1,70 @@
+!======================================================================
+! gwdefault 構成c: Green-Ampt+凍土の最小入力(既定値の明示)
+!   一様定数気温 −8.64 ℃(test/frost と同じ)。fro_fifull と sd0 が既定。
+!   developer.md §64。Run.sh が構成c'(既定値をすべて明示した
+!   param_cx.txt)と save の全ファイル・Log.txt のバイト一致を検定する。
+!   閉領域の一様斜面(勾配 0.1。gwseep と同じ地形)に初期湛水 5 cm。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.2
+  t0 = 0
+  tt = 900
+  dt_disp = 300
+  dt_file = 900
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_gwflow = '-'
+  fn_meteo = '-'
+  dir_data = 'data_gwdefault'
+  dir_result = 'result_cx'
+  dir_save = 'save_cx'
+  f_state_save = 1
+  f_out_hg = 1
+  f_disp_debug = 1          ! S 列を全有効桁で表示(Log のバイト比較用)
+  f_check_cfl = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.05
+/
+
+&list_geoinfo
+  nx = 40
+  ny = 20
+  dx = 1.0
+  dy = 1.0
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 1.0                 ! 既定の明示
+  sy0 = 0.2
+/
+
+&list_bound
+/
+
+&list_meteo
+  temp0 = -8.64             ! 一様定数気温 (℃)。減率なし
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt
+  f_gwfrost = 1             ! 凍土による浸透抑制
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 10.0         ! 既定の明示(developer.md §64 の表と対で保守)
+  gw_psif = 0.0
+/
+
+&list_gwflow_frost
+  fro_fifull = 20.0
+  fro_fmin = 0.0
+/

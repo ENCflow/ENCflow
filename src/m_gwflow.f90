@@ -229,7 +229,9 @@ subroutine m_gwflow_init(gw, p, g, s)
   ! s%sd を読む。g%sd は入力係数として init 検証にのみ残る。
   ! geomorph_plan.md §2.5: 浸食・堆積は s%sd を z と共動更新する)
   if (needs_sd) then
-    call m_geoinfo_require_sd(g)
+    ! 一様土層厚の未指定は既定 1 m(developer.md §64。分布指定 f_sdtype=1
+    ! では require_sd は何もしない)
+    call m_geoinfo_require_sd(g, sd_default = 1.0)
     if (p%f_state_restore > 0) then
       ! restore 時は転記しない(復元値が勝つ。「保存状態を初期条件に
       ! 使う」意味論。sd の入力係数を変えても restore には効かない)。

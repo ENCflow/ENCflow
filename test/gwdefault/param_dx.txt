@@ -1,0 +1,71 @@
+!======================================================================
+! gwdefault 構成d: 管路連続体層(都市下水道+浸入水)の最小入力(既定値の明示)
+!   枡密度・通水能・層間交換の相手だけ指定。cap/depth/sy/slot_sy/leak_mmh と sd0 が既定。
+!   developer.md §64。Run.sh が構成d'(既定値をすべて明示した
+!   param_dx.txt)と save の全ファイル・Log.txt のバイト一致を検定する。
+!   閉領域の一様斜面(勾配 0.1。gwseep と同じ地形)に初期湛水 5 cm。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.2
+  t0 = 0
+  tt = 900
+  dt_disp = 300
+  dt_file = 900
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_gwflow = '-'
+  dir_data = 'data_gwdefault'
+  dir_result = 'result_dx'
+  dir_save = 'save_dx'
+  f_state_save = 1
+  f_out_hg = 1
+  f_disp_debug = 1          ! S 列を全有効桁で表示(Log のバイト比較用)
+  f_check_cfl = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.05
+/
+
+&list_geoinfo
+  nx = 40
+  ny = 20
+  dx = 1.0
+  dy = 1.0
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 1.0                 ! 既定の明示
+  sy0 = 0.2
+/
+
+&list_bound
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt(浸入水の相手 = 土層)
+  f_gwconduit = 1           ! 管路連続体層
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 10.0         ! 既定の明示(developer.md §64 の表と対で保守)
+  gw_psif = 0.0
+/
+
+&list_gwflow_conduit
+  gwc_inlet = 0.01
+  gwc_cnd_m2s = 0.002
+  gwc_leak_layer = 1
+  gwc_cap = 0.01
+  gwc_depth = 3.0
+  gwc_sy = 0.05
+  gwc_slot_sy = 1.0e-3      ! = gwc_sy / 50
+  gwc_leak_mmh = 10.0
+/

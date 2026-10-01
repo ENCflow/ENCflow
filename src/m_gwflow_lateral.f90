@@ -113,6 +113,7 @@ module m_gwflow_lateral
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
   use m_parallel, only : par_info, par_stop, dcp, par_halo_cell, par_allreduce_max
+  use m_util, only : param_default
   implicit none
   private
   public :: gwflow_lateral_init
@@ -314,6 +315,8 @@ subroutine gwflow_lateral_init(p, g, s, dts)
   if (ios /= 0) call par_stop("list_gwflow_lateral: cannot read namelist")
   close(un)
 
+  ! 既定値(未指定 = 0 なら採用し、採用値を表示。developer.md §64)
+  gw_ksh_mmh = param_default("gwflow", "gw_ksh_mmh", gw_ksh_mmh, 360.0, " mm/h")
   if (gw_ksh_mmh <= 0.0) call par_stop("list_gwflow_lateral: gw_ksh_mmh must be > 0")
   if (gw_eps <= 0.0) call par_stop("list_gwflow_lateral: gw_eps must be > 0")
   if (gw_diagratio < 0.0 .or. gw_diagratio > 1.0) then

@@ -27,6 +27,14 @@
 !   Memory is allocated only when a model that needs the soil depth
 !   (Green-Ampt) is selected.
 !
+!   The material and calibration values have defaults ("default x" in
+!   each item; rationale in developer.md §64). When unspecified, the
+!   default is adopted and printed on screen with "(default)". The
+!   minimal input is just the model selectors of &list_gwflow (the
+!   model-specific groups may be empty; sd0 defaults to 1 m too).
+!   Values for which 0 has a meaning (gw_psif, gw2_ksh_mmh,
+!   gwc_cnd_m2s, gwc_inlet, ...) have no default.
+!
 !======================================================================
 ! Groundwater common settings
 !======================================================================
@@ -91,12 +99,13 @@
 !   use Green-Ampt with gw_psif=0).
 !======================================================================
 &list_gwflow_bucket
-  ! Infiltration capacity (mm/h). Must be greater than 0
+  ! Infiltration capacity (mm/h). Must be greater than 0 (default 10 =
+  ! saturated conductivity of a sandy loam)
   gw_infil_mmh = 10.0
 
   ! Subsurface storage capacity (column-equivalent water depth) (m).
-  ! Must be greater than 0
-  gw_capacity = 0.5
+  ! Must be greater than 0 (default 0.2 = 1 m of soil x specific yield 0.2)
+  gw_capacity = 0.2
 
 /
 
@@ -112,8 +121,10 @@
 !   the excess is handled by the shallow water side as surface water.
 !======================================================================
 &list_gwflow_greenampt
-  ! Vertical saturated hydraulic conductivity (mm/h). Must be greater than 0
-  gw_ksv_mmh = 36.0
+  ! Vertical saturated hydraulic conductivity (mm/h). Must be greater
+  ! than 0 (default 10 = sandy loam; values by texture in the user's
+  ! guide "Recommended values by pattern")
+  gw_ksv_mmh = 10.0
 
   ! Capillary pressure head at the wetting front (m). 0 or more (0
   ! degenerates to the constant infiltration capacity K_sv)
@@ -143,7 +154,9 @@
 !   displayed and the run stops.
 !======================================================================
 &list_gwflow_lateral
-  ! Lateral saturated hydraulic conductivity (mm/h). Must be greater than 0
+  ! Lateral saturated hydraulic conductivity (mm/h). Must be greater
+  ! than 0 (default 360 = 1e-4 m/s; the effective value including
+  ! macropore / pipe flow is 1-2 orders above the matrix)
   gw_ksh_mmh = 360.0
 
   ! Regularization thickness for the dryness judgment and the suppression
@@ -178,14 +191,17 @@
 !   time).
 !======================================================================
 &list_gwflow_layer2
-  ! Layer thickness (m). Must be greater than 0
-  gw2_depth = 2.0
+  ! Layer thickness (m). Must be greater than 0 (default 3 =
+  ! representative weathered zone of a granitic headwater)
+  gw2_depth = 3.0
 
-  ! Specific yield (effective porosity). (0,1]
+  ! Specific yield (effective porosity). (0,1] (default 0.05)
   gw2_sy = 0.05
 
-  ! Infiltration capacity from layer 1 to layer 2 (mm/h). Must be greater than 0
-  gw2_infil_mmh = 5.0
+  ! Infiltration capacity from layer 1 to layer 2 (mm/h). Must be
+  ! greater than 0 (default 1 = saturated conductivity of weathered
+  ! rock, 2.8e-7 m/s)
+  gw2_infil_mmh = 1.0
 
   ! Lateral saturated hydraulic conductivity of layer 2 (mm/h). 0 for no
   ! lateral flow (acts as a capacity buffer)
@@ -233,18 +249,20 @@
 
   ! Storage capacity (columnar m = total pipe volume / cell area).
   ! Uniform value or a map. Cells with 0 have no conduits (storage,
-  ! conveyance, and exchanges are all disabled)
+  ! conveyance, and exchanges are all disabled) (default 0.01 = about
+  ! an urban branch-sewer network)
   gwc_cap = 0.01
   !fn_gwc_cap = "gwc_cap.txt"
 
   ! Head datum (invert) elevation: uniform burial depth
-  ! (zbot = z - gwc_depth) or an elevation map
+  ! (zbot = z - gwc_depth; default 3) or an elevation map
   gwc_depth = 3.0
   !fn_gwc_bot = "gwc_bot.txt"
 
-  ! Storage coefficients: unconfined branch (in-pipe filling; (0,1])
-  ! and confined branch (pseudo slot; <= gwc_sy. Smaller = stiffer
-  ! pressure response but a stricter dt limit)
+  ! Storage coefficients: unconfined branch (in-pipe filling; (0,1];
+  ! default 0.05 = cap / pipe height) and confined branch (pseudo slot;
+  ! <= gwc_sy; default gwc_sy/50. Smaller = stiffer pressure response
+  ! but a stricter dt limit, which subcycling absorbs automatically)
   gwc_sy = 0.05
   gwc_slot_sy = 0.001
 
@@ -267,9 +285,10 @@
   ! infiltration/exfiltration of sewers, 2: with the weathered bedrock
   ! layer = recharge/leakage of bedrock conduits; requires f_gwlayer2=1)
   gwc_leak_layer = 0
-  ! Interlayer exchange capacity (mm/h). Required when
-  ! gwc_leak_layer > 0
-  !gwc_leak_mmh = 5.0
+  ! Interlayer exchange capacity (mm/h). Read when gwc_leak_layer > 0
+  ! (or a map; default 10 = about the vertical conductivity of the
+  ! soil around the pipes)
+  !gwc_leak_mmh = 10.0
 
   ! Numerical parameters (normally no need to change)
   gwc_eps = 1.0e-3          ! regularization amount for the dry test (m)
@@ -328,7 +347,7 @@
 !======================================================================
 &list_gwflow_frost
   ! Freezing index at which the factor reaches its minimum (degC.day).
-  ! Must be greater than 0 (required)
+  ! Must be greater than 0 (default 20 = freezing of the top 20-30 cm)
   fro_fifull = 20.0
 
   ! Lower bound of the reduction factor [0,1) (default 0 = fully

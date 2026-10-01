@@ -135,7 +135,7 @@ full is never absorbed).
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_sdtype | 0 | 0: fixed value sd0, 1: file fn_sd |
-| sd0 / fn_sd | 0 / "" | soil depth (m) (uniform value / distribution) |
+| sd0 / fn_sd | 0 / "" | soil depth (m) (uniform value / distribution). When [groundwater](gwflow.md) needs it and sd0 is unspecified, 1 m is adopted as the default and printed (when geomorphology f_wthr etc. needs it, it remains required) |
 | sy0 | 0.2 | specific yield (effective porosity) |
 
 Read -- and memory allocated -- only when a groundwater model that

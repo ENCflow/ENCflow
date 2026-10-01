@@ -34,6 +34,7 @@ module m_gwflow_frost
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : par_info, par_stop, dcp, is_root, &
                          par_gather_to, par_scatter_cell
+  use m_util, only : param_default
   implicit none
   private
   public :: gwflow_frost_init
@@ -87,6 +88,9 @@ subroutine gwflow_frost_init(p, g, s)
                               // "(f_gwfrost=1 requires &list_gwflow_frost)")
   close(un)
 
+  ! 既定値(未指定 = 0 なら採用し、採用値を表示。developer.md §64)。
+  ! 他の fro_* の 0 はいずれも「なし」の明示なので既定を置かない
+  fro_fifull = param_default("gwflow", "fro_fifull", fro_fifull, 20.0, " degC.day")
   if (fro_fifull <= 0.0) call par_stop("list_gwflow_frost: fro_fifull must be > 0")
   if (fro_fmin < 0.0 .or. fro_fmin >= 1.0) then
     call par_stop("list_gwflow_frost: fro_fmin must be in [0,1)")

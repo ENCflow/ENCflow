@@ -6275,3 +6275,75 @@ README に図 6 枚と数表)。例題の知見: 浸水深判定では帰還あ�
 すべて明示。ストックは bdstock_min.txt)の state.dat・bldgdebris.dat が
 バイト一致。既存の構成1〜4 は全て明示指定のため不変(自己検定 PASS)。
 型ごとの推奨値は users_guide/bldgdebris.md「パターン別の推奨値」。
+
+## 64. gwflow パラメータの既定値方針(2026-10-01 実装。§62 の展開)
+
+「専門外の人がとりあえず動かせる」(§0)に沿い、§62 と同じ仕組みで
+地下水の各モデルで**未指定なら停止**だった物性・校正値に無難な既定値を
+与えた。**最小入力は fn_gwflow + &list_gwflow のモデル選択子**
+(f_gwvertical=2 / f_gwlateral=1 など。固有グループは空でよい)。
+管路連続体層だけは「枡がどこにあるか」が与件なので gwc_inlet(か
+fn_gwc_inlet)の 1 行を足す。
+
+### 64.1 仕組み
+
+- 既定の適用と表示は **m_util の `param_default(prefix, name, val, def,
+  unit[, unset])`**(gm_param・dw_param・bd_param と同じ書式の共通版。
+  gwflow のサブモジュールは m_geomorph の submodule と違い独立モジュール
+  なので、最下層の m_util に置いた。既存 3 つの *_param は等価のまま残して
+  ある — 統合は別の等価リファクタ)。番兵は従来の init 既定(0.0)。
+  採用値は "gwflow: name = value unit (default)" で必ず 1 行表示する。
+- **0 に明示の意味がある値には既定を置かない**(§62.1 の「明示の尊重」):
+  gw_psif(0 = 一定浸透能に退化)、gw2_ksh_mmh(0 = 層2 側方なし)、
+  gw2_sat0・gwc_sat0(0 = 空)、gwc_cnd_m2s(0 = 側方通水なし)、
+  gwc_inlet(0 = 地表交換なし)、gwc_leak_layer(0 = 交換なし)、
+  fro_fmin/fro_tf/fro_swe0/fro_fimax/fro_fi0(0 = なし)。
+- **マップ指定があるスカラーには既定を置かない**(fn_gw_ksv・fn_gwc_cap・
+  fn_gwc_bot・fn_gwc_sy・fn_gwc_slot_sy・fn_gwc_leak が指定されていれば
+  対応するスカラーは読まれない。従来どおり)。
+- **gwc_slot_sy の既定は gwc_sy の 1/50**(スカラー sy に対しては
+  sy_eff/50、fn_gwc_sy のマップに対してはセル別に sy(i,j)/50。後者は
+  "gwc_slot_sy = gwc_sy / 50 per cell (default)" と表示)。
+- **土層厚 sd0 の既定(1 m)は gwflow が要求するときだけ**:
+  `m_geoinfo_require_sd(g, sd_default)` に optional 引数を足し、m_gwflow_init
+  が 1.0 を渡す。geomorph からの呼び出し(f_wthr/f_slide 等)は従来どおり
+  sd0 未指定で停止する(土層生成は sd=0 から始める用途があり、既定を
+  置くと意味が変わる)。表示は "geoinfo: sd0 = 1.0000 m (default)"。
+  負の sd0 は従来どおり停止。公開インターフェースの変更(optional 追加)
+  なのでトップレベル make で utils の追随を確認した(§10)。
+- 値域の検証は従来どおり呼び出し側(明示された不正値は停止)。
+
+### 64.2 値と根拠
+
+| パラメータ | 既定 | 根拠 |
+|---|---|---|
+| gw_infil_mmh(バケツ)/ gw_ksv_mmh(Green-Ampt) | 10 mm/h | Rawls, Brakensiek & Miller (1983) の土性別 Green-Ampt パラメータ: K_s は砂 117.8・ローム質砂 29.9・**砂壌土 10.9**・壌土 3.4・シルト質壌土 6.5・粘土 0.3 mm/h。砂壌土の値を丸めた。日本の森林土壌の浸透能(100 mm/h 超が普通)より小さく、洪水の浸透損失を過大評価しない側。既存の List_samples(バケツ 10)・test/conduit param_lat(10)と同じ |
+| gw_capacity(バケツ) | 0.2 m | 既定の土層厚 1 m × 比湧水量 sy0 の既定 0.2 = Green-Ampt の既定容量と同じ(モデルを切り替えても貯留量が変わらない) |
+| sd0(gwflow が要するとき) | 1.0 m | 森林斜面の土層厚の代表(Tani 1997 の薄い土層 0.5〜1 m、RRI 等の分布型モデルの慣用値 1 m)。List_samples・test/frost の値 |
+| gw_ksh_mmh(側方) | 360 mm/h = 1e-4 m/s | handoff_gwflow_tani.md §3.2 の設計時典型値 K_sh = 1e-4 m/s。基質の K_s(砂壌土 1e-5 m/s)の 10 倍 = マクロポア・パイプ流による側方の実効透水係数は基質の 1〜2 桁大(Beven & Germann 1982; Mosley 1979 の実測流速 1e-3 m/s 級)。List_samples の値 |
+| gw2_depth / gw2_sy / gw2_infil_mmh(風化基岩層) | 3 m / 0.05 / 1 mm/h | 花崗岩源流域の風化帯: 厚さ数 m、有効間隙率は数 %、飽和透水係数 1e-8〜1e-6 m/s の報告(Kosugi ほか 2006 WRR 42 W02414; Katsura ほか 2008 WRR 44 W09430)。1 mm/h = 2.8e-7 m/s はこの幅の上寄り(基底流が出る側)。gw2_ksh_mmh の 0(側方なし = 容量バッファ)は明示として据え置き |
+| fro_fifull(凍土) | 20 °C·day | Stefan 式(Andersland & Ladanyi 2004)で含水率 0.3 程度の土の凍結深 ≈ 0.06·√FI m → FI = 20 で 0.25 m。表層 20〜30 cm が凍結した湿った土では浸透がほぼ止まる(Zhao & Gray 1999)。List_samples の値。試験 test/frost の 0.36 は解析検証用の人工値 |
+| gwc_cap / gwc_depth(管路) | 0.01 m / 3 m | examples/sewer_hybrid の枝管セル(D=0.4 m・cap 0.0126 m)と同程度の市街地枝管網。管底 3 m = 土被り 2〜2.5 m + 管高。List_samples の値 |
+| gwc_sy / gwc_slot_sy | 0.05 / sy/50 | sy = cap/管高(0.01/0.2)。疑似スロットは不圧の 1/50(test/conduit の値。被圧時の水頭応答が十分硬く、自動サブサイクル数が過大にならない中庸。sewer_hybrid の 1/5 は硬さより速度を優先した値) |
+| gwc_leak_mmh(gwc_leak_layer > 0 のとき) | 10 mm/h | 浸入水・漏水の交換能の上限は管周囲の土の鉛直透水係数 → gw_ksv_mmh の既定と同じ値 |
+
+既定のまま残した「必須」: モデル選択子、gwc_inlet(与件)、fn_gwp_*
+(井戸は位置と流量が与件)、分布ファイル、値域チェック。
+
+### 64.3 検証(2026-10-01)
+
+- 既存 reference は全て明示指定なので不変: 全ケースの逐次回帰 PASS。
+- 同値検定: test/gwdefault(新設)の構成 a(バケツ)・b(Green-Ampt+側方+
+  層2。sd0 も省略)・c(Green-Ampt+凍土)・d(管路連続体層+浸入水)で、
+  最小入力の run と既定値をすべて明示した run の save の全ファイル
+  (state.dat・gwflow_layer2.dat・gwflow_frost.dat・gwflow_conduit.dat)と
+  Log.txt がバイト一致。"(default)" の表示行数(18)も検定。Run_MPI.sh は
+  同じ対を np ランクで実行して同じ比較を行う(np=2, 4 でバイト一致)。
+  逐次の save との比較は -Ofast のビルド間差(§28.3)があり得るため警告に
+  留める(実測: S 列 14 桁は一致、Runge 列のみ既知の逐次/MPI 差)。
+- 既存の MPI 回帰: gwseep・frost・conduit の np=2 が逐次 reference に
+  ULP=0(gwseep は Runge 列除外の既定許容)。
+- 環境メモ: コンテナの root 実行では OMPI_ALLOW_RUN_AS_ROOT(_CONFIRM)=1
+  が要る。OpenMP と MPI の併用で 4 コアを超えると著しく遅くなるため
+  MPI 検証は OMP_NUM_THREADS=1 で行った。
+

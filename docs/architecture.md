@@ -204,6 +204,6 @@ s%h を変更するモジュールは同じループで s%e = s%z + s%h を回�
 | 使い方(利用者視点) | docs/users_guide.md・tutorials/ |
 | 他モデルとの立ち位置 | docs/comparison.md |
 | 個別機能の設計文書 | docs/*_plan.md(geomorph・debris・splash・glacier・boundary・geotiff・gwconduit・swi・driftwood・lava〔実装済み〕、landslide_tsunami〔設計提案〕)・channel_model.md。家屋破壊・瓦礫は plan を消し込み済みで developer.md §63 が正本 |
-| 「まず動かしてみる」最小入力と型別の推奨値 | users_guide/geomorph.md・driftwood.md・bldgdebris.md の各「パターン別の推奨値」(根拠は developer.md §62・§50.6・§63.9) |
+| 「まず動かしてみる」最小入力と型別の推奨値 | users_guide/geomorph.md・driftwood.md・bldgdebris.md・gwflow.md の各「パターン別の推奨値」(根拠は developer.md §62・§50.6・§63.9・§64。共通ヘルパは m_util の param_default) |
 | モジュール実装の作法 | src/m_gwflow_bucket.f90 のヘッダ |
 | ビルドの仕組み | make.inc・docs/install.md・§1/§3 |

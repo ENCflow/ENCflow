@@ -50,15 +50,46 @@ when a model that needs soil depth (Green-Ampt or lateral) is selected.
 | Urban pluvial flooding (sewer drainage and surcharge) | f_gwconduit=1 (alone where imperviousness dominates; add f_gwvertical=2 to include infiltration) |
 | Simplest loss model | f_gwvertical=1 (bucket) |
 
+## Just try it (minimal input)
+
+The material and calibration values have defaults (the "Default"
+column of the tables; the rationale is in developer.md §64). When a
+value is unspecified, the default is adopted and the adopted value is
+printed on screen with "(default)". The minimal input is **just the
+model selectors of &list_gwflow in fn_gwflow** (the model-specific
+groups may be empty; the soil depth sd0 defaults to 1 m when
+unspecified):
+
+```
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt
+  f_gwlateral = 1           ! lateral flow (to include interflow)
+/
+&list_gwflow_greenampt
+/
+&list_gwflow_lateral
+/
+```
+
+The defaults are middle-of-the-road values that make the model "run"
+(infiltration capacity of a sandy loam, soil depth of a forested
+hillslope). When the type of problem is known, start from
+[Recommended values by pattern](#recommended-values-by-pattern) and
+calibrate against observations. Values for which 0 has a meaning
+(gw_psif=0 constant infiltration capacity, gw2_ksh_mmh=0 no lateral
+flow, gwc_inlet=0 no surface exchange, and so on) have no default.
+Only the conduit continuum layer needs the inlet density gwc_inlet
+(or fn_gwc_inlet).
+
 ## Bucket model (f_gwvertical=1, &list_gwflow_bucket)
 
 The simplest model: moves surface water into per-cell subsurface
 storage at a constant infiltration capacity.
 
-| Parameter | Meaning |
-|---|---|
-| gw_infil_mmh | Infiltration capacity (mm/h) |
-| gw_capacity | Subsurface storage capacity (columnar water depth, m) |
+| Parameter | Default | Meaning |
+|---|---|---|
+| gw_infil_mmh | 10 | Infiltration capacity (mm/h). Representative saturated conductivity of a sandy loam |
+| gw_capacity | 0.2 | Subsurface storage capacity (columnar water depth, m). Equivalent to 1 m of soil x specific yield 0.2 |
 
 The infiltration in each step is the minimum of "infiltration capacity
 x time", the surface water depth, and the remaining capacity.
@@ -75,18 +106,20 @@ f_v = K_sv (1 + psi_f n_e / F). The storage capacity is soil depth x
 specific yield. Saturated cells stop infiltrating, and the excess is
 handled by the shallow-water side as surface water.
 
-| Parameter | Meaning |
-|---|---|
-| gw_ksv_mmh | Vertical saturated hydraulic conductivity K_sv (mm/h) |
-| gw_psif | Capillary pressure head at the wetting front psi_f (m). 0 degenerates to a constant infiltration capacity K_sv |
-| fn_gw_ksv | Distribution map of K_sv (mm/h; if omitted, the uniform value gw_ksv_mmh is used) |
-| fn_gw_psif | Distribution map of psi_f (m; if omitted, the uniform value gw_psif is used) |
+| Parameter | Default | Meaning |
+|---|---|---|
+| gw_ksv_mmh | 10 | Vertical saturated hydraulic conductivity K_sv (mm/h). Representative of a sandy loam (values by soil texture in the recommendation table below) |
+| gw_psif | 0 | Capillary pressure head at the wetting front psi_f (m). 0 degenerates to a constant infiltration capacity K_sv (the default = degenerate) |
+| fn_gw_ksv | "" | Distribution map of K_sv (mm/h; if omitted, the uniform value gw_ksv_mmh is used) |
+| fn_gw_psif | "" | Distribution map of psi_f (m; if omitted, the uniform value gw_psif is used) |
 
 K_sv and psi_f can be given as areal distributions by maps, following
 the land use (permeable pavement, infiltration facilities,
 bare/paved-surface distinctions, and so on). The map K_sv may be 0;
 cells with 0 are impervious (fully paved). The uniform specification
-(gw_ksv_mmh) still requires a positive value.
+(gw_ksv_mmh) requires a positive value (default 10 mm/h when
+unspecified). The soil depth sd0 (&list_geoinfo) defaults to 1 m when
+unspecified.
 
 ## Lateral flow (f_gwlateral=1, &list_gwflow_lateral)
 
@@ -98,7 +131,7 @@ cells exceeding the saturation capacity exfiltrates to the surface
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| gw_ksh_mmh | - | Lateral saturated hydraulic conductivity (mm/h) |
+| gw_ksh_mmh | 360 | Lateral saturated hydraulic conductivity (mm/h). 1e-4 m/s = 10 x the matrix value (effective value with macropore / pipe flow) |
 | gw_eps | 1e-3 | Regularization thickness for the dry test and suppression of excessive outflow (m) |
 | gw_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change; 0 is equivalent to 4 neighbors) |
 
@@ -122,9 +155,9 @@ exfiltrates to the surface.
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| gw2_depth | - | Layer thickness (m) |
-| gw2_sy | - | Specific yield (effective porosity) |
-| gw2_infil_mmh | - | Infiltration capacity from layer 1 to layer 2 (mm/h) |
+| gw2_depth | 3 | Layer thickness (m). Representative weathered zone of a granitic headwater |
+| gw2_sy | 0.05 | Specific yield (effective porosity). A few percent in weathered rock |
+| gw2_infil_mmh | 1 | Infiltration capacity from layer 1 to layer 2 (mm/h). Upper side of the saturated conductivity of weathered rock |
 | gw2_ksh_mmh | - | Lateral saturated hydraulic conductivity of layer 2 (mm/h). 0 disables lateral flow (a capacity buffer) |
 | gw2_sat0 | 0 | Initial saturation [0,1]. In event runs, a calibration parameter that sets the baseflow discharge |
 
@@ -153,16 +186,16 @@ Applications are expressed by parameter combinations:
 |---|---|---|
 | f_gwc_fluxlaw | 2 | Lateral flux law. 1: linear, 2: sqrt (turbulent conduit flow, q proportional to the square root of the gradient) |
 | gwc_cnd_m2s / fn_gwc_cnd | 0 / - | Conveyance density (m2/s; pipe-full discharge per unit width at unit hydraulic gradient). Uniform value or a map. 0 disables lateral flow |
-| gwc_cap / fn_gwc_cap | - | Storage capacity (columnar m; total pipe volume / cell area). Cells with 0 have no conduits |
-| gwc_depth / fn_gwc_bot | - | Head datum (invert) elevation. Uniform burial depth (z - gwc_depth) or an elevation map |
-| gwc_sy | - | Storage coefficient while unconfined (in-pipe filling; (0,1]) |
-| gwc_slot_sy | - | Pseudo-slot storage coefficient while confined (<= gwc_sy; smaller = stiffer pressure response) |
+| gwc_cap / fn_gwc_cap | 0.01 / - | Storage capacity (columnar m; total pipe volume / cell area). Cells with 0 have no conduits. The default is about an urban branch-sewer network |
+| gwc_depth / fn_gwc_bot | 3 / - | Head datum (invert) elevation. Uniform burial depth (z - gwc_depth) or an elevation map |
+| gwc_sy | 0.05 | Storage coefficient while unconfined (in-pipe filling; (0,1]). cap / pipe height |
+| gwc_slot_sy | gwc_sy/50 | Pseudo-slot storage coefficient while confined (<= gwc_sy; smaller = stiffer pressure response). Also 1/50 per cell for a mapped sy |
 | gwc_sat0 | 0 | Initial filling ratio [0,1] |
 | gwc_inlet / fn_gwc_inlet | 0 / - | Density of stormwater inlets / manholes / sinkholes (1/m2). Specifying it enables surface exchange |
 | gwc_cw | 2.66 | Weir coefficient for inflow (per inlet, q = cw h^1.5 m3/s) |
 | gwc_co | 0.15 | Orifice coefficient Cd A (m2). Used for pipe-full inflow and pressurized eruption |
 | gwc_leak_layer | 0 | Interlayer exchange partner. 0: none, 1: soil layer, 2: weathered bedrock layer |
-| gwc_leak_mmh | - | Interlayer exchange capacity (mm/h). From the higher head to the lower |
+| gwc_leak_mmh | 10 | Interlayer exchange capacity (mm/h). From the higher head to the lower. Read only when gwc_leak_layer > 0 |
 | gwc_eps | 1e-3 | Regularization amount for the dry test (m) |
 | gwc_eps_h | 1e-2 | Linearization width of the sqrt law (head difference, m) |
 | gwc_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
@@ -265,7 +298,7 @@ reduction factor is applied to the vertical infiltration capacity
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| fro_fifull | - | Freezing index at which the reduction factor reaches its minimum (degC.day). The practical calibration point |
+| fro_fifull | 20 | Freezing index at which the reduction factor reaches its minimum (degC.day). The practical calibration point. The default corresponds to freezing of the top 20-30 cm |
 | fro_fmin | 0 | Lower bound of the reduction factor [0,1). 0 = fully frozen ground is impervious |
 | fro_tf | 0 | Freeze/thaw threshold air temperature (degC) |
 | fro_ct | 1 | Thawing efficiency (multiplier on thawing degree-days). Smaller values delay the spring thaw |
@@ -283,6 +316,44 @@ reduction factor is applied to the vertical infiltration capacity
   [Suspend and restart](restart.md) it is carried automatically by the
   private file gwflow_frost.dat (f_gwfrost must have been enabled at
   save time).
+
+## Recommended values by pattern
+
+The defaults are middle-of-the-road values that make the model run.
+When the target is known, start from the following (these are
+calibration quantities; sources in developer.md §64).
+
+**Green-Ampt parameters by soil texture** (Rawls, Brakensiek & Miller
+1983; guides for gw_ksv_mmh, gw_psif and sy0. Tillage, compaction and
+vegetation shift them by an order of magnitude)
+
+| Texture | K_s (mm/h) | psi_f (m) | Effective porosity |
+|---|---|---|---|
+| Sand | 118 | 0.05 | 0.42 |
+| Loamy sand | 30 | 0.06 | 0.40 |
+| Sandy loam (default) | 11 | 0.11 | 0.41 |
+| Loam | 3.4 | 0.09 | 0.43 |
+| Silt loam | 6.5 | 0.17 | 0.49 |
+| Clay loam | 1.0 | 0.21 | 0.31 |
+| Clay | 0.3 | 0.32 | 0.39 |
+
+(sy0 corresponds to the moisture deficit at the wetting front =
+effective porosity minus the initial water content, so in a moist soil
+it is smaller than the table, about 0.1-0.2)
+
+**Configuration and values by target**
+
+| Type | Configuration | sd0 (m) | K_sv (mm/h) | K_sh (mm/h) | Layer 2 | Notes |
+|---|---|---|---|---|---|---|
+| Event flood in a forested catchment | Green-Ampt + lateral | 0.5-1.5 | 50-300 | 1000-10000 | - | Forest soils infiltrate strongly; runoff is mainly lateral (interflow). K_sh is 1-2 orders above the matrix because of pipe flow |
+| Forested catchment down to low flow / baseflow | The above + layer 2 | as above | as above | as above | thickness 2-10 m, sy 0.02-0.1, infiltration 0.1-1 mm/h, lateral 10-100 mm/h | Lateral flow of layer 2 defaults to 0 (capacity only). For baseflow set gw2_ksh_mmh > 0 and gw2_sat0 (or spin up) |
+| Infiltration loss on farmland / grassland | Green-Ampt only | 0.5-1 | texture table | - | - | psi_f also from the texture table. Compacted fields: 1/3-1/10 |
+| Urban pluvial flooding (sewers) | Conduit layer (+ Green-Ampt) | 0.5-1 | 10 on green space only (0 on pavement via fn_gw_ksv) | - | - | gwc_inlet 0.005-0.02 /m2; cnd and cap converted from pipe data in preprocessing (see "Converting pipe data to parameters" above) |
+| Sewer infiltration / inflow | Conduit layer + Green-Ampt + gwc_leak_layer=1 | as above | as above | - | - | leak 1-10 mm/h (larger for aged pipes) |
+| Bedrock / karst | Conduit layer + layer 2 + gwc_leak_layer=2 | 0.5-1 | 10-50 | - | thickness 10-50 m, sy 0.01-0.05 | gwc_inlet only at sinkholes; cnd is the conveyance of the fracture network |
+| Snowmelt runoff over frozen ground | Green-Ampt + frost + fn_snow | 0.5-1 | 10-50 | - | - | fifull 10-40 degC.day (smaller for moist soils), fro_swe0 0.05-0.2 m |
+| Coastal aquifer saltwater wedge | Lateral + [fresh/salt two-layer](salt.md) | 5-20 | - | 3600-36000 | - | Sandy aquifer K 1e-3-1e-2 m/s, sy0 0.2-0.3 |
+| Simplest loss (calibration-driven) | Bucket | - | 5-50 (infil) | - | - | capacity 0.05-0.3 m. The SCS S (0.06-0.17 m for CN 60-80) is a guide |
 
 ## Output and monitoring
 
