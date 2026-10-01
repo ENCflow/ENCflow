@@ -272,17 +272,24 @@ grade into a flood. They are treated not as an equivalent fluid but as a
 **mixture whose concentration changes** (this is where using ENCflow
 pays off).
 
-- **Typical setup**: `f_debris = 1`, `f_dbed = 2` + `f_dbres = 2`
-  (Egashira constitutive law; the typical fine-grained, high-concentration
-  lahar. phi 30-35 deg, d50 1-10 mm, e ≈ 0.85). For boulder-dominated
-  flows (sector-collapse origin, stony type descending a torrent) use
-  `f_dbed = 3` + `f_dbres = 3` (Takahashi-Nakagawa). For a rough
-  comparison with LAHARZ / RAMMS practice the equivalent fluid
-  `f_dbed = 0` + `f_dbres = 4` (mu 0.05-0.1, xi 500-1000) also works, but
-  it cannot represent the concentration change and the transition to a
-  flood. `f_dbwet = 1` (uptake of path pore water) is recommended as the
-  first-order bulking effect.
-- **How to initiate**: a **sediment-laden segment inflow** at the
+- **Typical setup**: `f_debris = 1`; for the E-D use `f_dbed = 1`
+  (Takahashi-type relaxation; delta_d sets how fast it deposits) or
+  `f_dbed = 2` (Egashira-Ashida); for the resistance law use
+  **`f_dbres = 4` (Voellmy, mu 0.05-0.1, xi 500) for fine ash slurries**
+  or `f_dbres = 1` (Coulomb + Manning, phi 30-35 deg). The laminar
+  resistance of the Egashira law (`f_dbres = 2`) scales with (h/d)^-2, so
+  **with d50 of a millimetre or less the resistance vanishes and the
+  velocity blows up** (it suits stony flows with d50 of centimetres or
+  more). For boulder-dominated flows (sector-collapse origin, stony type
+  descending a torrent) use `f_dbed = 3` + `f_dbres = 3`
+  (Takahashi-Nakagawa). `f_dbwet = 1` (uptake of path pore water) is
+  recommended as the first-order bulking effect. Working example:
+  [examples/ashfall_lahar](../../../examples/ashfall_lahar/) (ash-thickness
+  distribution → rainfall → mudflow → fan deposition).
+- **How to initiate**: **erosion of an ash layer given as soil depth sd**
+  (rain runoff on a steep slope picks up the ash to the equilibrium
+  concentration — no source needs to be specified; examples/ashfall_lahar),
+  a **sediment-laden segment inflow** at the
   upstream end (the supply hydrograph; inflow_cs of
   [Boundary conditions](boundary.md)), or a **chain** in which deposits
   from an earlier stage form a natural dam and breach (deposits fixed by
@@ -579,7 +586,7 @@ When the type of phenomenon is known, start from the following
 | Dense pyroclastic flow | f_dbed=0 + f_dbres=5 | - | - | 5-50 | - | - | VolcFlow-type applications |
 | Stony debris flow (Japanese type) | f_dbed=3 + f_dbres=3 | - | - | - | 0.05-0.3 | 35 | Takahashi-Nakagawa 1991. Grain size = representative boulders of the front |
 | Mudflow, fine sediment flow | f_dbed=2 + f_dbres=2 | - | - | - | 0.001-0.01 | 30-35 | Egashira constitutive law. e ≈ 0.85 |
-| Lahar (volcanic mudflow) | f_dbed=2 + f_dbres=2 (3+3 when boulder-dominated) | (0.05-0.1 for a rough estimate) | (500-1000 for a rough estimate) | - | 0.001-0.01 | 30-35 | Initiated by a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended. See the "Lahars" paragraph above |
+| Lahar (volcanic mudflow) | f_dbed=1 or 2 + f_dbres=4 (fine) / 1; 3+3 when boulder-dominated | 0.05-0.1 | 500-1000 | - | 0.001-0.01 | 30-35 | Initiated by erosion of the ash layer (sd), a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended. The Egashira laminar law is not usable for fine material. See the "Lahars" paragraph above and examples/ashfall_lahar |
 | Simple debris flow (calibration-driven) | f_dbed=1 + f_dbres=1 | - | - | - | - | 30-35 | Calibrate the runout with delta_e and delta_d |
 | Bed change of a sand-bed river | f_fluvial (+ f_suspend) | - | - | - | 0.0003-0.001 | - | Large contribution of suspended load |
 | Bed change of a gravel-bed river | f_fluvial | - | - | - | 0.02-0.1 | - | Bedload dominates |
