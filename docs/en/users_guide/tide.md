@@ -73,6 +73,22 @@ value and check.
   domain contains a sea area, use fn_sw and fn_seaside for the sea
   surface initialization and the seaside test of breakwaters.
 
+## Recommended values by pattern
+
+The minimal input to "just try it" is the sea mask fn_sw and
+`&list_tide titype = 1, ti0 = 0.0 /` (fixed at mean sea level; hsea0 has
+no default, so add 1.0). Tide levels are given data, but guides by type:
+
+| Type | titype | Guide for the tide level | Used together with |
+|---|---|---|---|
+| Astronomical tide (tidal reach) | 2 | Semidiurnal sine of 12.42 h. Amplitude 0.5-1 m on the Pacific coast of Japan, 1.5-3 m in the Seto Inland Sea and Ariake Sea | Segment inflow (river), fresh/salt two-layer |
+| Storm surge | 2 | Superpose a typhoon surge of 1-3 m as a 3-6 h hump on the astronomical tide | Seawalls fn_seawall, building clusters fn_gv |
+| Drainage toward low tide | 2 or 1 | Lower to / fix at a low tide level (about -1 m) | Drainage pumps, sluice gates |
+| Steady warning tide level | 1 | ti0 = design high tide level | Seawalls |
+| Tsunami | - | Not the tide feature but boundary incidence ([boundary conditions](boundary.md)) | fn_seaside |
+
+Start hsea0 at several tens of the threshold depth dd (typically 1 m).
+
 ## Constraints and notes
 
 - ENC grid system only (not available in the legacy STG).

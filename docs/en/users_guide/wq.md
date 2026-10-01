@@ -20,6 +20,16 @@ transport, tracer experiments, and so on. Enable it with `fn_wq`.
 /
 ```
 
+The minimal input to "just try it" is **fn_wq with one initial
+concentration or one load** (without decay, settling or partitioning the
+substance is a conservative tracer = extent and dilution).
+
+```
+&list_wq
+  wq_c0 = 100.0                  ! a 100 mg/L tracer on the initial water everywhere
+/
+```
+
 ## Substance properties
 
 | Parameter | Default | Meaning |

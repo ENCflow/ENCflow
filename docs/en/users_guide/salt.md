@@ -52,6 +52,35 @@ with a stably stratified state, which the model reproduces).
 | salt_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
 | salt_nsubmax | 200 | Upper bound of the adaptive subcycling of the surface gravity current |
 
+## Just try it (minimal input)
+
+Every parameter has a default, so **an empty &list_salt in fn_salt** is
+enough to run (seawater 1025 and freshwater 1000 kg/m³ = 2.5 % density
+difference). What it needs alongside: the sea mask fn_sw and the tide
+fn_tide that make the sea the prescribed salt-water head
+([the tide chapter](tide.md)), and f_gwlateral=1 when the subsurface
+salt zone (f_salt_gw=1) is used ([the groundwater chapter](gwflow.md);
+the lateral K and specific yield are shared).
+
+```
+&list_salt
+/
+```
+
+## Recommended values by pattern
+
+The defaults are middle-of-the-road values that make the two layers
+"run". When the target is known, start from the following (calibration
+quantities).
+
+| Type | f_salt_surf / f_salt_gw | salt_rhos (kg/m³) | Initial salt water | Used together with | Notes |
+|---|---|---|---|---|---|
+| Coastal aquifer salt wedge (Ghyben-Herzberg) | 0 / 1 | 1025 | fn_salt_hgs0 with the existing salt-water surface along the coast, or start fresh and wait for intrusion | f_gwlateral=1, K_sh 3600-36000 mm/h (sandy aquifer 1e-3 to 1e-2 m/s), sy0 0.2-0.3, sd0 = aquifer thickness 5-20 m | With recharge (rainfall + Green-Ampt) a freshwater lens appears |
+| Estuary / tidal-river salt wedge | 1 / 0 | 1025 (brackish inner bay 1005-1015) | 0 | fn_tide + segment inflow (river discharge) | Calibrate the wedge position with salt_ni 0.02-0.03 and salt_alpha 0.5-1 |
+| Where storm-surge / tsunami seawater goes | 1 / 0 | 1025 | 0 | Tide (surge) or boundary incidence (tsunami) + seawalls | Mixing is not solved = extent of the salt-water run-up and where it drains |
+| Salinization of reclaimed lowland (intrusion and drainage) | 1 / 1 | 1025 | fn_salt_hgs0 with the existing salt-water surface | Drainage pumps ([structures](structure.md)) | Fresh/salt split of infiltration is not implemented (see constraints) |
+| Stratified brackish lake / reservoir (halocline position) | 1 / 0 | 1010-1020 | salt_hss0 = lower-layer thickness | - | Sharp interface: no mixed layer or entrainment |
+
 ## Connection to the sea
 
 Sea cells (the sea mask of [Tide and sea level](tide.md)) automatically

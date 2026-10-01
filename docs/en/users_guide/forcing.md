@@ -87,6 +87,18 @@ Worked examples of the format for all four types are in
 The rainfall intensity distribution can be output as `Pr0001` with
 `f_out_pre = 1`.
 
+**Rainfall type guides** (rainfall is given data; as a starting point.
+Values vary by about a factor of 2 with region and return period)
+
+| Type | Intensity (mm/h) | Duration | Total (mm) | How to give it |
+|---|---|---|---|---|
+| Prolonged frontal rain (Baiu) | 10-30 | 6-24 h | 100-300 | prtype=1 trapezoid |
+| Typhoon | 20-50 (peak 50-80) | 12-24 h | 200-600 | prtype=1 hump, or prtype=3 analyzed rainfall |
+| Stationary rain band | 50-100 | 3-6 h | 200-400 | prtype=1 rectangle |
+| Urban design storm (5-10 yr, 60 min) | 50-80 | 1 h | 50-80 | prtype=1 rectangle (pluvial flooding, sewers) |
+| Inundation mapping (maximum assumed scale) | 100+ (peak) | several hours | 300-1000 | prtype=1 hyetograph |
+| Snowmelt runoff | 0 (no rain) to 10 | daily | - | air temperature 5-10 degC via fn_meteo + fn_snow |
+
 ## Rainfall interception (&list_intercept)
 
 Gives rainfall losses due to the canopy etc. as a reduction before the

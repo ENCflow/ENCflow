@@ -91,6 +91,25 @@ becomes silently inactive).
 |---|---|---|
 | f_rivermouth_drop | 0 | free overfall from the river mouth to the sea (legacy scheme; cannot be combined with the tide feature fn_tide -- using [tide](tide.md) + [boundary conditions](boundary.md) is now recommended) |
 
+## Just try it (minimal input)
+
+Everything in this chapter **runs with the defaults** - fn_enc need not be
+written. The defaults enable the wet/dry front stabilization
+(f_exflux_reduction), the steep-slope gravity correction
+(f_gravity_correction) and the adaptive Runge-Kutta (threshold 1.5), a
+safe combination for tsunamis, inundation and flood runoff alike.
+
+## Recommended values by pattern
+
+| Type | Recommended settings | Why |
+|---|---|---|
+| Tsunami / storm-surge run-up | Defaults (p_adprunge_thresh 1.2-1.5); f_check_cfl=1 to watch Cn | The default stabilization handles both the front over dry ground and the reflected waves |
+| Steep mountain floods, debris flows | f_gravity_correction=1 (default); dt such that Cn_max stays below about 0.5 | Corrects the slope-direction gravity term. Sediment is in [landform change](geomorph.md) |
+| River low flow, velocity distribution of gentle flow | f_diffusion_term=2 (no coefficient needed) | Flow-scaled eddy viscosity smooths the transverse velocity distribution |
+| Urban inundation (building clusters) | Defaults + fn_gv/fn_bb ([geographic information](geoinfo.md)); cm/cd/kk at the defaults | Storage loss and drag are expressed on the geographic side |
+| Wide-area / long runs (cost first) | p_adprunge_thresh 2-3, f_friction_fastmath 3-5, f_govequation=1 (diffusive wave) if needed | Cuts the recomputation rate and the friction cost. The diffusive wave ignores inertia, so not for inundation fronts or tsunamis |
+| Accuracy checks, numerical experiments | p_adprunge_thresh 1.1, p_adv_upwind_index 0.5, f_friction_fastmath 0 | High-accuracy side; a few tens of percent more cost |
+
 ## Format examples
 
 Annotated list of all parameters (with the defaults spelled out):

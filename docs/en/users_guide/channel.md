@@ -15,6 +15,33 @@ incision `depth_rw`, channel roughness `rn0_rw`) are settings of the
 **conveyance structure** between cells (levees = virtual walls, channel
 width, hydraulic modes). Specifying levees requires fn_rw.
 
+## Just try it (minimal input)
+
+A channel runs as a "resolved channel" with only the channel mask fn_rw
+and the incision depth_rw of the [geographic information](geoinfo.md)
+(fn_channel is not needed). The minimal input that adds levees is one
+line with a uniform height:
+
+```
+&list_channel
+  bank0 = 2.0                   ! levee height above the landside cell elevation (m)
+/
+```
+
+## Recommended values by pattern
+
+| Type | Configuration | depth_rw (m) | bank0 (m) | rn0_rw | Width / section | Notes |
+|---|---|---|---|---|---|---|
+| Mountain stream (width < cell) | fn_rw + fn_width + p_sect_m | 0.5-1 | not needed (a zero-height levee is enabled automatically with the width) | 0.04-0.06 | width 2-10 m, m 0.5 | Not for streams meandering within one cell |
+| Small / medium river (width 10-50 m, cell 10-25 m) | fn_rw + depth_rw + bank0 | 1-3 | 1-3 (f_bank_datum=1) | 0.03-0.04 | fn_width not needed when width >= cell | Overtopping by the Honma formula |
+| Large river (width > 100 m) | resolved channel + levees | 3-6 | 3-8 | 0.025-0.035 | p_sect_m 0.3-0.5 for low-water recession | Floodplain roughness via fn_rn |
+| Urban incised channel, concrete flume | fn_rw + depth_rw | 2-4 | none | 0.015-0.025 | - | Sluice gates and pumping stations are [structures](structure.md) |
+| Breach scenario | the above + &list_channel_breach | as above | as above | as above | - | br_series ramps to a remaining ratio of 0 over 10-30 min |
+
+Roughness guides are the customary Manning n values (Japanese river
+technical standards; Chow 1959): concrete 0.015-0.02, sand-bed low-water
+channel 0.025-0.035, gravel bed 0.035-0.05, vegetated floodplain 0.05-0.1.
+
 ## Levees (virtual walls)
 
 Erects a virtual wall, without widening cells, on the boundary between

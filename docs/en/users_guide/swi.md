@@ -27,6 +27,19 @@ definition):
 /
 ```
 
+The minimal input to "just try it" is **fn_swi = "-" with an empty
+&list_swi** (f_swi=1 and swi0=0 are the defaults) plus rainfall
+([Rainfall and meteorology](forcing.md)).
+
+**Usage patterns**
+
+| Type | Rainfall | Settings | What to look at |
+|---|---|---|---|
+| Reproducing the warning product (same conditions as the official one) | prtype=3 with 1 km analyzed rainfall | dx=dy=1 km, dt <= 600 s | Compare Swi9999 (period maximum) with the CL line |
+| Checking a design / assumed rainfall | prtype=1 rectangular pulse (double the end point) | defaults | Swi time series (probe) and its maximum |
+| Antecedent rainfall | either of the above | give the preceding index in swi0 (a few dry days later tank 1 is nearly empty and the rest sits in tanks 2 and 3) | Difference in the rise |
+| Comparison with the physical model | the same rainfall | a separate run (groundwater saturation Hg/(sy0 sd), soil depth, ...) side by side | Correspondence between the index and saturation |
+
 ## Contract (dedicated runs)
 
 To keep the index faithful to its official definition (input = ground

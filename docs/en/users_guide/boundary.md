@@ -23,6 +23,30 @@ outside the range. Cell coordinates (i, j) are **1-based** (add +1 when
 picking numbers from the 0-based numbering of GIS such as QGIS;
 [coordinates chapter](coordinates.md)).
 
+## Just try it (minimal input)
+
+Rainfall runoff of a closed catchment **needs no fn_boundary** (all four
+edges default to walls). The minimal input that lets water out or in is
+one group:
+
+```
+&list_bound_edge
+  f_bc_w = 1, f_bc_e = 1, f_bc_n = 1, f_bc_s = 1   ! free outflow on all four edges
+/
+```
+
+**Configuration by pattern** (discharges and levels are given data; guides
+are added)
+
+| Type | Edges | Inflow | Outflow | Guides / notes |
+|---|---|---|---|---|
+| Catchment rainfall runoff | 0 (default) | rainfall | stage_eta = -999 at the outlet cell (complete drain) | Edge boundaries do not act on catchment terrain surrounded by nodata |
+| River flood inundation | 0 (the downstream edge may be 1) | segment inflow Q(t), inflow_dist=2 | prescribed level (time series) or free outflow at the downstream end | Specific discharge guide: annual maximum 1-5, design flood 5-20 m³/s/km² (catchments of 10-100 km²) |
+| Tsunami | 2 (long-wave radiation) on the seaward edges | initial level e0 + prescribed level stage_val on the seaward edge (incident waveform) | 2 | Inland edges 0 or 1 |
+| Storm surge | - | the sea is fn_tide ([tide](tide.md)) | same | No edge boundary is needed inside the sea mask |
+| Pluvial (urban) flooding | 0 | rainfall | drainage pumps ([structures](structure.md)); sewers via the [conduit layer](gwflow.md) | Omitting the outlet drains out of the domain |
+| Dam break, bore | 0 | initial level (fn_hinit) | downstream edge 1 | Check the initial Cn_max |
+
 ## Edge boundaries (&list_bound_edge)
 
 Assigns a boundary condition type to each of the four outer edges
