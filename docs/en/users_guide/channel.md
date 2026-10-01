@@ -151,9 +151,13 @@ channel.
 
 A one-parameter cross-section shape with the conveyance ratio
 sigma(h) = (h/D)^m; m = 0 corresponds to the conventional rectangle,
-0.5 to a roughly parabolic, and 1 to a roughly triangular section. The
-transition depth D is "crest - bed" on levee-active cells, otherwise
-the incision depth (with neither, p_sect_m > 0 is an error); at h >= D
+0.5 to a roughly parabolic, and 1 to a roughly triangular section. Here
+D is the transition depth, which is not specified directly: on cells
+with an active levee it is "crest - bed" (with f_bank_datum=1, bank0 +
+landside elevation - bed; bank0 + depth_rw when the channel cell and
+the landside have the same ground level), and on cells without a levee
+the incision depth depth_rw is D itself (with neither, p_sect_m > 0 is
+an error); at h >= D
 it degenerates to the conventional rectangular dynamics.
 
 The channel width (fn_width) is not required for using sigma. **On
@@ -220,17 +224,21 @@ technical standards; Chow 1959): concrete 0.015-0.02, sand-bed low-water
 channel 0.025-0.035, gravel bed 0.035-0.05, vegetated floodplain 0.05-0.1.
 
 **Guide for the cross-section shape sigma (p_sect_m)** - sets the
-conveyance ratio sigma = (h/D)^m at depths below the transition depth D
-(crest minus bed where levees exist, otherwise the incision depth). The
-larger m, the higher the low-water level and the slower the recession.
+conveyance ratio sigma = (h/D)^m at depths below the transition depth D.
+The larger m, the higher the low-water level and the slower the
+recession. D is not a value you specify directly: on cells with an
+active levee it is "crest - bed" (about bank0 + depth_rw), and on cells
+without a levee depth_rw is D itself. The column "Settings that set D"
+gives the combination of depth_rw ([geographic information](geoinfo.md))
+and bank0 (this chapter) that realizes that D.
 
-| Channel type | p_sect_m | Guide for D | Notes |
+| Channel type | p_sect_m | Settings that set D | Notes |
 |---|---|---|---|
-| Concrete flume, rectangular section | 0 (default) | - | The conventional rectangle |
-| Large compound-section river (low-water channel + floodplain) | 0.3-0.5 | crest minus bed (3-8 m) | Larger when the low-water channel is narrow relative to the full width |
-| Single-section natural channel (gentle sand/gravel bed) | 0.5 | incision depth (1-3 m) | Parabolic. Works in the simplest configuration without width data |
-| V-shaped mountain stream, steep gorge | 0.7-1 | incision depth (0.5-1 m) | Triangular. Combine with fn_width to narrow the thalweg |
-| Calibrating low-water levels to observations | sweep 0.3-1 | fixed | If the base-flow level is too high, raise m (smaller sigma raises the level for the same discharge) |
+| Concrete flume, rectangular section | 0 (default) | - | The conventional rectangle (D is not used) |
+| Large compound-section river (low-water channel + floodplain) | 0.3-0.5 | With levees: bank0 + depth_rw of 3-8 m (e.g. bank0 3 + depth_rw 3) | Larger when the low-water channel is narrow relative to the full width |
+| Single-section natural channel (gentle sand/gravel bed) | 0.5 | No levee: depth_rw 1-3 m is D itself | Parabolic. Works in the simplest configuration without width data |
+| V-shaped mountain stream, steep gorge | 0.7-1 | No levee: depth_rw 0.5-1 m is D itself | Triangular. Combine with fn_width to narrow the thalweg |
+| Calibrating low-water levels to observations | sweep 0.3-1 | unchanged | If the base-flow level is too high, raise m (smaller sigma raises the level for the same discharge) |
 
 ## Examples and related topics
 
