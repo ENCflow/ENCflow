@@ -1,6 +1,6 @@
 # ENCflow 作業引き継ぎメモ(チャット移行用)
 
-設計・規約・実バグの記録の正本は developer.md(§0〜§66)。全体の案内図は
+設計・規約・実バグの記録の正本は developer.md(§0〜§67)。全体の案内図は
 architecture.md。このメモは「現在進行中・未完了の項目」だけを書く。
 完了したら消してよい。
 
@@ -31,7 +31,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   型別の目安表を置いた(2026-10-01。日英)。潮位は titype 未指定 = 固定
   潮位 0 m の既定(§67)で空の &list_tide が最小入力。
 - 利用者向け文書: ユーザーガイド 25 章(日英ミラー)+全パラメータ索引
-  548 項目+注釈付き namelist 見本(List_samples 日英)+チュートリアル+
+  555 項目+注釈付き namelist 見本(List_samples 日英)+チュートリアル+
   例題(landslide_tsunami・timberyard・tsunami_town 等は README に図と数表)。
 
 ## 未完了・検証待ち

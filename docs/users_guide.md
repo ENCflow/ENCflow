@@ -44,7 +44,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [用途集](users_guide/usecases.md)— 現象名から機能の組み合わせを引く(未対応の現象も明示)
 
 **付録**
-- [全パラメータ索引](users_guide/params_index.md) — 全497パラメータの名前→章の逆引き
+- [全パラメータ索引](users_guide/params_index.md) — 全 555 パラメータの名前→章の逆引き
 
 ---
 

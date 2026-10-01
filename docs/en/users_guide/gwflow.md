@@ -1,6 +1,6 @@
 # Groundwater (&list_gwflow and model-specific settings)
 
-> English mirror of docs/users_guide/gwflow.md (based on commit 6c5acfc). The Japanese file is the master copy.
+> English mirror of docs/users_guide/gwflow.md (based on commit c7e801e). The Japanese file is the master copy.
 
 [Back to the User's Guide index](../users_guide.md)
 
@@ -190,12 +190,16 @@ Applications are expressed by parameter combinations:
 | gwc_depth / fn_gwc_bot | 3 / - | Head datum (invert) elevation. Uniform burial depth (z - gwc_depth) or an elevation map |
 | gwc_sy | 0.05 | Storage coefficient while unconfined (in-pipe filling; (0,1]). cap / pipe height |
 | gwc_slot_sy | gwc_sy/50 | Pseudo-slot storage coefficient while confined (<= gwc_sy; smaller = stiffer pressure response). Also 1/50 per cell for a mapped sy |
+| fn_gwc_sy / fn_gwc_slot_sy | "" | Maps of the storage coefficients (take precedence over the scalars). Give them per cell when trunk and branch pipes of different section height coexist (sy = cap / pipe height) |
 | gwc_sat0 | 0 | Initial filling ratio [0,1] |
 | gwc_inlet / fn_gwc_inlet | 0 / - | Density of stormwater inlets / manholes / sinkholes (1/m2). Specifying it enables surface exchange |
 | gwc_cw | 2.66 | Weir coefficient for inflow (per inlet, q = cw h^1.5 m3/s) |
 | gwc_co | 0.15 | Orifice coefficient Cd A (m2). Used for pipe-full inflow and pressurized eruption |
 | gwc_leak_layer | 0 | Interlayer exchange partner. 0: none, 1: soil layer, 2: weathered bedrock layer |
 | gwc_leak_mmh | 10 | Interlayer exchange capacity (mm/h). From the higher head to the lower. Read only when gwc_leak_layer > 0 |
+| fn_gwc_leak | "" | Map of the interlayer exchange capacity (mm/h). Takes precedence over the scalar. Cells with 0 do not exchange (lined reaches, sound pipes) |
+| fn_gwc_outfall | "" | Map of the orifice coefficient Cd A (m2) of outfalls. Cells with a value are outfalls (conduits required). Discharges to the sea when adjacent to a sea cell, otherwise free outflow onto the surface of the cell itself |
+| gwc_nsubmax | 100 | Cap on the number of lateral-conveyance subcycles (runaway guard of the automatic subdivision) |
 | gwc_eps | 1e-3 | Regularization amount for the dry test (m) |
 | gwc_eps_h | 1e-2 | Linearization width of the sqrt law (head difference, m) |
 | gwc_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |

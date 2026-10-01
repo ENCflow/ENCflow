@@ -1,0 +1,39 @@
+!======================================================================
+! English mirror of examples/List_samples/list_swi.txt (based on commit c7e801e).
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of Soil Water Index settings &list_swi
+!
+!   Use this file by specifying, in the system parameters &list_sysparam,
+!     fn_swi = "list_swi.txt"
+!   (if fn_swi is not specified, the feature is completely inactive).
+!
+!   Computes the Soil Water Index (SWI) used by the JMA for sediment-
+!   disaster warnings, with the three-stage series tank model of
+!   Ishihara and Kobatake (1979) and the nationwide standard constants.
+!   The tank constants are fixed (not changeable) to keep the official
+!   definition.
+!
+!   Contract (users_guide/swi.md, developer.md Sec. 49):
+!     - dedicated run: the only feature that may be combined is the
+!       fixed-ratio interception (f_icmodel=1). Enabling any other
+!       process module stops the run
+!     - dt <= 600 s (the JMA computation interval of 10 min). Larger
+!       values stop the run
+!     - dx,dy are arbitrary (a warning that the conditions differ from
+!       the official product is issued unless 1 km)
+!
+!   Output is automatic: Swi (distribution), Swi9999 (period maximum),
+!   Swit9999 (time of the maximum)
+!
+!======================================================================
+&list_swi
+  ! Temporary disabling (0 with fn_swi still written = completely inactive)
+  f_swi = 1
+
+  ! Initial storage of the tanks S1, S2, S3 (mm) (effect of antecedent
+  ! rainfall. Default 0 = dry start. Not needed across suspend/restart,
+  ! which continues exactly from swi.dat)
+  swi0 = 0.0, 0.0, 0.0
+/

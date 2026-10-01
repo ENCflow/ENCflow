@@ -1,5 +1,5 @@
 !======================================================================
-! English mirror of examples/List_samples/list_geomorph.txt (based on commit c664f1c).
+! English mirror of examples/List_samples/list_geomorph.txt (based on commit c7e801e).
 ! The Japanese file is the master copy; edit it first.
 !======================================================================
 !
@@ -17,7 +17,7 @@
 !   The time-evolving terrain can be output with f_out_z = 1 of
 !   &list_sysparam.
 !   Verified examples: test/creep, fluvial, suspend, wash, debris, slide,
-!   sedinflow. Explanations in docs/users_guide/geomorph.md.
+!   avalanche, sedinflow. Explanations in docs/users_guide/geomorph.md.
 !
 !======================================================================
 &list_geomorph
@@ -29,14 +29,22 @@
                             !   landforms and long-term studies. Keep 1 in event
                             !   runs. f_debris requires morfac = 1)
 
+  ! Policy on defaults: material and calibration values left unspecified
+  ! (0) take a "just run" default, and the adopted values are printed at
+  ! startup with a "(default)" mark. The minimal input is the switch of
+  ! each process alone. Guides by type are in users_guide/geomorph.md
+  ! "Recommended values by pattern"; the rationale is developer.md Sec. 62
+
   ! ---- Hillslope creep (linear diffusion) ----
   f_creep = 1
-  creep_d = 1.0e-6          ! creep diffusion coefficient (m2/s)
+  creep_d = 1.0e-6          ! creep diffusion coefficient (m2/s). 0 = default
+                            !   1.6e-10 (0.005 m2/yr)
 
   ! ---- Bedload (Exner. Bed erosion and deposition) ----
   !f_fluvial = 1
   !f_qbform = 1             ! bedload formula (1: Ashida-Michiue, 2: MPM)
-  !fluv_d50 = 0.001         ! representative grain size (m). Mandatory
+  !fluv_d50 = 0.001         ! representative grain size (m). 0 = default 0.01
+                            !   (middle of sand-gravel beds)
   !fluv_tausc = 0.05        ! critical dimensionless shear stress tau*c
   !fluv_porosity = 0.4      ! bed porosity
   !fluv_sgrav = 1.65        ! submerged specific gravity of sediment grains
@@ -51,19 +59,22 @@
   !f_suspend = 1
   !f_esform = 1             ! equilibrium concentration formula (1: linear in
                             !   excess shear stress (simple), 2: Itakura-Kishi)
-  !susp_d50 = 0.0001        ! representative grain size (m). Mandatory
+  !susp_d50 = 0.0001        ! representative grain size (m). 0 = default 0.0002
+                            !   (fine sand)
   !susp_wf = 0.0            ! settling velocity (m/s). 0: derived from d50 by
                             !   the Rubey formula
   !susp_tausc = 0.05        ! critical dimensionless shear stress for suspension
   !susp_beta = 1.0          ! near-bed concentration factor for settling
                             !   (c_b = beta*C)
-  !susp_esa = 0.001         ! equilibrium concentration coefficient (mandatory
-                            !   for f_esform=1. A calibration parameter)
+  !susp_esa = 0.001         ! equilibrium concentration coefficient (f_esform=1.
+                            !   0 = default 1e-4. A calibration parameter)
 
   ! ---- Hillslope erosion (rainsplash + sheetwash. Requires f_suspend) ----
   !f_wash = 1
   !wash_kr = 0.001          ! rainsplash erosion coefficient (dimensionless.
-                            !   E = kr x rainfall intensity)
+                            !   E = kr x rainfall intensity). When both kr and
+                            !   kf are unspecified, defaults 0.01 / 1e-5 (when
+                            !   only one is given the other stays 0)
   !wash_kf = 1.0e-6         ! sheetwash erosion coefficient (m/s)
   !wash_tausc = 0.05        ! critical dimensionless shear stress of sheetwash
 
@@ -76,7 +87,9 @@
   !   (open system). developer.md sec. 48
   !f_splash = 1
   !spl_kr = 0.001           ! rainsplash coefficient (dimensionless; additive
-                            !   term that acts even on flat plateaus)
+                            !   term that acts even on flat plateaus). When both
+                            !   kr and kt are unspecified, defaults 0.0005 / 0.05
+                            !   (when only one is given the other stays 0)
   !spl_ca = 0.0             ! hollow-amplification length of the splash term (m)
   !spl_kt = 0.01            ! subgrid-rill coefficient (dimensionless; multiplies S^h)
   !spl_cb = 5.0             ! hollow-amplification length of the rill term (m)
@@ -85,22 +98,112 @@
   !spl_dzmax = 0.0          ! erosion cap per cell per update (m) (0: off;
                             !   safety valve against runaway feedback)
 
-  ! ---- Debris flow (Takahashi-type E-D. Exclusive with f_suspend;
-  !      morfac=1 required) ----
-  !f_debris = 1
-  !db_phi = 35.0            ! internal friction angle of the sediment (deg).
-                            !   Mandatory
-  !db_delte = 0.0007        ! erosion rate coefficient delta_e (default is a
-                            !   common literature value)
-  !db_deltd = 0.05          ! deposition rate coefficient delta_d
-  !f_dbres = 1              ! resistance law (0: Manning only,
-                            !   1: Coulomb + Manning combined = recommended)
-  !f_dbstop = 0             ! stopping condition (0: none, 1: low-speed
-                            !   solidification)
-  !db_vstop = 0.05          ! velocity threshold of the stopping judgment (m/s)
-                            !   (f_dbstop=1)
-  !db_wstop = 0.01          ! bed conversion rate of low-speed solidification
-                            !   (m/s) (mandatory for f_dbstop=1)
+  ! Debris flow / landslide (Takahashi-type equilibrium-concentration E-D)
+  ! (0: off, 1: on)
+  !   Represents a debris flow as a single-layer mixture of surface water
+  !   h and sediment column hs (docs/debris_plan.md, developer.md Sec. 28).
+  !   When enabled, the flow computation includes hs in the momentum
+  !   (flow depth = h+hs) and the resistance law is switched by f_dbres.
+  !   Exclusive with f_suspend (avoids double-counting E-D on the same hs).
+  !   morfac=1 required. The movable extent and depth are given by the
+  !   soil depth (sd0/f_sdtype/fn_sd of &list_geoinfo; sd=0 = non-erodible
+  !   bedrock). Porosity and specific gravity are shared with fluv_*.
+  !   Recommended: combine with f_gravity_correction = 1 of &list_enc on
+  !   steep terrain
+  f_debris = 0
+  db_phi = 0.0             ! internal friction angle of the sediment (deg).
+                           !   0 = default 35 (representative of gravelly
+                           !   debris. Used by f_dbed=1-3 / f_dbres=1,2)
+  f_dbed = 1               ! E-D closure (0: no exchange - equivalent-fluid mode
+                           !   (advection and stopping only; for pyroclastic
+                           !   flows and debris avalanches without bed erosion.
+                           !   With f_dbstop=1 the equilibrium concentration is
+                           !   treated as 0 = all hs of slow cells is fixed to
+                           !   the bed at the db_wstop rate),
+                           !   1: relaxation to the equilibrium concentration
+                           !   (simple form; delta_e/delta_d.|V| rates),
+                           !   2: Egashira-Ashida 1992 - E = |V|.C*.tan(theta-theta_e).
+                           !   No flow-direction slope or extra parameters
+                           !   (checked against the literature),
+                           !   3: Takahashi-Nakagawa 1991 - saturated-bed erosion
+                           !   (eq. 12) + deposition with inertia coefficient
+                           !   (eq. 27). Rates delta_e/delta_d.|V|h/d (checked
+                           !   against the literature. db_d50 required. Horadani
+                           !   values delta_e=0.0001, delta_d=0.5),
+                           !   4: velocity-proportional entrainment E = delta_e.|V| -
+                           !   path entrainment for avalanches and debris
+                           !   avalanches (entrainment only; deposition via
+                           !   f_dbstop. The entrainable layer is sd (for
+                           !   avalanches, the snow depth along the path). Cells
+                           !   with C >= db_cmin only. See the avalanche
+                           !   paragraph of users_guide/geomorph.md))
+  db_delte = 0.0007        ! erosion rate coefficient delta_e (f_dbed=1,3;
+                           !   calibration parameter)
+  db_deltd = 0.05          ! deposition rate coefficient delta_d (f_dbed=1,3;
+                           !   calibration parameter)
+  f_dbres = 1              ! resistance law (0: Manning only, 1: Coulomb +
+                           !   Manning combined,
+                           !   2: Egashira constitutive law (yield stress +
+                           !   laminar resistance; checked against the
+                           !   literature. db_d50/db_erest required),
+                           !   3: Takahashi-Nakagawa 1991 stony type (yield
+                           !   tan(alpha')=0.45 + dilatant term. Switches
+                           !   automatically between stony / immature / mud
+                           !   types by concentration and relative depth;
+                           !   checked against the literature. db_d50 required),
+                           !   4: Voellmy equivalent fluid (yield mu + turbulent
+                           !   term gV^2/(xi h). The operational standard for
+                           !   debris avalanches and pyroclastic flows.
+                           !   db_mu/db_xi required. Typically combined with
+                           !   f_dbed=0),
+                           !   5: constant retarding stress tau_y + Manning
+                           !   combined (proven for runout and deposition of
+                           !   pyroclastic flows. db_tauy required))
+  db_d50 = 0.0             ! representative grain size (m). Used by f_dbres=2,3 /
+                           !   f_dbed=3. 0 = default 0.05
+  db_erest = 0.0           ! particle restitution coefficient e (0-1]. Used by
+                           !   f_dbres=2. 0 = default 0.85
+  db_cmin = 0.02           ! lower concentration bound of the Egashira laminar
+                           !   law (below it, closed with Manning)
+  f_dbstop = 0             ! stopping condition (0: none, 1: low-speed
+                           !   consolidation - in cells with vv<db_vstop, the
+                           !   sediment above equilibrium is fixed to the bed
+                           !   (elevation z) at the db_wstop rate. Represents
+                           !   natural-dam formation by stopped sediment)
+  db_vstop = 0.05          ! velocity threshold of the stopping judgment (m/s)
+                           !   (shared by f_dbstop=1 and the yield test of
+                           !   f_dbres>=1)
+  db_wstop = 0.0           ! bed conversion rate of low-speed consolidation (m/s).
+                           !   Used with f_dbstop=1. 0 = default 0.05
+  f_dbwet = 0              ! pore-water entrainment (0: ignore, 1: exchange the
+                           !   pore water of the bed change dz with the surface
+                           !   water - erosion: h += lambda.s_b.|dz|, deposition:
+                           !   h -= lambda.s_b.dz (clamped by the remaining h).
+                           !   The same ledger as i{c*+(1-c*)s_b} of
+                           !   Takahashi-Nakagawa 1991 eq. (5). A first-order
+                           !   bulking effect where erosion dominates.
+                           !   Exclusive with gwflow (double counting with the
+                           !   hg ledger))
+  db_satbed = 1.0          ! saturation of the deposit layer s_b (0-1. Used with
+                           !   f_dbwet=1. Horadani values: 0.8 on slopes above
+                           !   21 deg, 1.0 below)
+  db_mu = 0.0              ! Voellmy friction coefficient mu (dimensionless).
+                           !   Used by f_dbres=4. 0 = default 0.2 (avalanches
+                           !   0.1-0.3. The reduced apparent friction (H/L) of
+                           !   large collapses is given directly through mu)
+  db_xi = 0.0              ! Voellmy turbulence coefficient xi (m/s2). Used by
+                           !   f_dbres=4. 0 = default 1000 (customary range
+                           !   200-1000)
+  db_tauy = 0.0            ! constant retarding stress tau_y (Pa). Used by
+                           !   f_dbres=5. 0 = default 10000 (pyroclastic-flow
+                           !   applications 5-50 kPa)
+  f_dbcurv = 0             ! curvature term (0: none, 1: add the centrifugal
+                           !   acceleration from terrain curvature to the normal
+                           !   stress and scale the yield friction by
+                           !   (1+a_c/g_n). Deceleration in hollows, reduced
+                           !   friction on convexities. The same treatment as
+                           !   RAMMS. Usable with f_dbres=1-4 (not with 5, whose
+                           !   tau_y does not depend on the normal stress))
 
   ! Triggering method 1: instantaneous fluidization (give a distribution
   ! of collapse depth)
@@ -116,17 +219,63 @@
   ! over its full depth. Pore pressure from the saturated thickness of
   ! gwflow)
   !f_slide = 1
-  !slide_c = 1000.0         ! effective cohesion c (Pa). Mandatory (0 allowed)
-  !slide_phi = 30.0         ! shear resistance angle of the soil (deg). Mandatory
-  !slide_gamma = 18000.0    ! saturated unit weight (N/m3). Mandatory
+  !slide_c = 1000.0         ! effective cohesion c' (Pa). Default 0
+  !slide_phi = 30.0         ! shear resistance angle of the soil (deg). 0 = default 30
+  !slide_gamma = 18000.0    ! saturated unit weight (N/m3). 0 = default 18000
+
+  ! ---- Moving bed layer (basal sliding of a landslide mass, landslide
+  !      tsunami. morfac=1 required) ----
+  !   Moves the failed mass as a layer hb within z and sd by an
+  !   inertia-free Voellmy flow. It runs underwater even where the water
+  !   surface is flat (driving head z + (rho_w/rho_s)h), and the rise and
+  !   fall of the bed displaces the water surface (a moving-seabed tsunami
+  !   source). docs/landslide_tsunami_plan.md
+  !f_bedslide = 1
+  !fn_bsinit = "slide_depth.txt"  ! collapse depth distribution (m). Required
+                            !   (give it as a planar slip surface that daylights
+                            !   at the slope foot. A box becomes a pit the mass
+                            !   cannot leave)
+  !bs_reltime = 0.0         ! release time (s)
+  !bs_rho = 2000.0          ! bulk density of the mass (kg/m3, pores included.
+                            !   > 1000). 0 = default 2000 (the adopted value is
+                            !   printed by init with "(default)")
+  !f_bsres = 1              ! resistance law (1: Voellmy (inertia-free),
+                            !   2: Bingham [reserved])
+  !bs_mu = 0.15             ! Voellmy friction coefficient mu. 0 = default 0.15
+  !bs_xi = 500.0            ! Voellmy turbulence coefficient xi (m/s2). 0 = default 500
+  !bs_vstop = 0.05          ! velocity threshold for stopping (m/s). 0 = default
+                            !   0.05 (fixed to the terrain below it)
+  !bs_tstop = 0.0           ! duration of slow motion required before fixing (s).
+                            !   0 = immediate. 10-15 s for plunges into water
+                            !   (avoids false fixing during the temporary stall
+                            !   on plunging)
+  !bs_eps_s = 0.02          ! linearization width near yield (dimensionless slope)
+  !bs_diagratio = 0.5857864376  ! diagonal share of the 8-direction partitioning
+                            !   (0 for 4 neighbors)
+  !bs_cfl = 0.4             ! safety factor of the subcycling
+  !bs_nsubmax = 10000       ! cap on the number of subcycles
+  !f_bsvplunge = 0         ! velocity condition of the handover (0: immediate,
+                            !   1: after the mixture has slowed to the terminal
+                            !   velocity of the bed layer. Passes the momentum
+                            !   of a fast plunge to the water column)
+  !f_bsplunge = 0          ! ponded depth used for the handover test (0: current
+                            !   depth h, 1: still-water depth = initial surface
+                            !   minus current bed. Hands over even in a
+                            !   dewatered shoreline zone)
+  !bs_hplunge = 0.0         ! ponded-depth threshold (m) for the handover from
+                            !   the mixture (hs) to the bed layer. hs of cells
+                            !   with h >= threshold is moved to hb as bulk
+                            !   volume. 0 = none. Needs f_debris=1. When given,
+                            !   fn_bsinit may be omitted
 
   ! ---- Long-term landform development (millennial scale. Combine with
   !      morfac and restart chains) ----
   !f_wthr = 1               ! bedrock weathering = soil production
   !wthr_p0 = 100.0          ! soil production rate on bare rock (mm/kyr).
-                            !   Mandatory
+                            !   Unspecified = default 50
   !wthr_sdstar = 0.5        ! decay depth of the production (m)
   !f_uplift = 1             ! uplift
-  !uplift0 = 1.0            ! uplift rate (mm/yr). Mandatory
+  !uplift0 = 1.0            ! uplift rate (mm/yr). Unspecified = default 1.0
+                            !   (negative = subsidence)
 
 /
