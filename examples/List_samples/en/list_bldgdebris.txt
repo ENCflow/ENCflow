@@ -1,0 +1,69 @@
+!======================================================================
+! Building destruction and debris sample (&list_bldgdebris. developer.md §63)
+!   Enable with fn_bldgdebris = "this file" or "-" in the main parameter file.
+!   Treats wooden houses as a "destructible stock" raster field and
+!   estimates destruction by inundation flows -> debris -> transport and
+!   deposition as a debris volume column (m3/m2) per cell (individual
+!   houses or debris pieces, impact forces and geometric blockage are
+!   out of scope).
+!   Ledgers: building stock -> (destruction; the sinking part deposits on
+!   the spot) -> floating debris -> (grounding / slow flow) -> deposited
+!   debris (refloat optional).
+!   Enabled together with the driftwood module (fn_driftwood), floating
+!   driftwood counts towards the destructive force under the load
+!   criterion (driftwood -> house destruction -> debris chain).
+!   Output: f_out_hbd (floating Bf0001...), f_out_wbd (deposited Bd0001...
+!   + maximum arrival Bd9999), f_out_bds (destroyed fraction Bs0001...),
+!   f_out_fdmax (maximum fluid force incl. driftwood/debris Fd9999),
+!   result/bldgdebris.csv (volume ledger).
+!   * Thresholds and rates are calibration parameters (literature check
+!     in developer.md §63)
+!======================================================================
+&list_bldgdebris
+  f_bd = 1                          ! 0 disables temporarily while keeping the file
+
+  ! ---- building stock (uniform or map, exclusive; one is required) ----
+  !bd_stock0 = 0.3                  ! uniform building stock (m3/m2, destructible volume)
+  fn_bdstock = "bdstock.txt"        ! stock map (m3/m2, same matrix format as the terrain;
+                                    !   floor area x structural volume x wooden fraction
+                                    !   aggregated in preprocessing)
+  !fn_bdfrac = "bdfrac.txt"         ! destructible share fw of the building footprint (0-1,
+                                    !   default 1; bounds the void-ratio feedback at
+                                    !   gv0 + (1-gv0)*fw where RC / tsunami-resistant
+                                    !   structures remain)
+
+  ! ---- representative debris properties (required) ----
+  bd_dlog = 0.2                     ! representative size (m)
+  bd_sg = 0.5                       ! apparent specific gravity (0-1); the draft (floating /
+                                    !   grounding switch depth) is derived from the cylinder
+                                    !   buoyancy balance as for driftwood
+
+  ! ---- destruction criterion ----
+  f_bdcrit = 1                      ! 1: inundation depth h+hs (matches fragility functions)
+                                    ! 2: load (h+(1+s)hs+sg_log*hd+sg_deb*hbd)*V^2
+                                    !    (same basis as F9999; driftwood and debris add to it)
+  bd_hcrit = 2.0                    ! depth threshold (m; required for f_bdcrit=1)
+  !bd_hcrit2 = 3.0                  ! second depth threshold (m; optional. Linear ramp from 0 at
+                                    !   threshold 1 to 1 at threshold 2 multiplies the rate =
+                                    !   width of the fragility curve)
+  !bd_fcrit = 2.0                   ! load threshold (m3/s2; required for f_bdcrit=2)
+  !bd_fcrit2 = 5.0                  ! second load threshold (m3/s2; optional)
+  bd_wdes = 1.0e-4                  ! destruction rate (m/s = m3/m2/s; time = stock / rate)
+  bd_fsink = 0.0                    ! sinking fraction (0-1; share of destroyed volume that
+                                    !   deposits on the spot)
+
+  ! ---- stopping and deposition (required) ----
+  bd_wstop = 0.01                   ! grounding deposition rate (m/s)
+  bd_vstop = 0.0                    ! velocity threshold of slow-flow deposition (m/s; 0 = depth only)
+
+  ! ---- refloat (default bd_wfloat=0 = deposited debris never moves) ----
+  bd_wfloat = 0.0                   ! refloat rate (m/s; 0 = none)
+  bd_rfloat = 1.5                   ! buoyancy margin (refloat depth = rfloat x draft; > 1)
+  !bd_vfloat = 0.5                  ! velocity threshold of refloat (m/s; required with
+                                    !   bd_wfloat>0; >= bd_vstop)
+
+  ! ---- feedback to the void ratio ----
+  f_bdgv = 1                        ! 1: gv = gv0 + (1-gv0)*fw*d with the destroyed fraction d
+                                    !    (the same water spreads over a larger area = feedback)
+                                    ! 0: one-way coupling (damage and debris maps only)
+/

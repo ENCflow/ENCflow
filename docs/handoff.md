@@ -15,10 +15,13 @@
 
 ## 未完了・検証待ち
 
-0. **家屋破壊・瓦礫モデル(docs/housedebris_plan.md。2026-10-01 合意)**
-   - 合意済み(論点 10 件)。正本は developer.md §63。段階: A1 空隙率の
-     状態化(等価リファクタ)→ A2 state_set_gv → B1 m_bldgdebris(片方向)
-     → B2 空隙率帰還 → B3 文書・例題。進捗は plan §5 の表。
+0. **家屋破壊・瓦礫モデル(developer.md §63。2026-10-01 実装)**
+   - A1〜B3 実装・検証済み(plan §5)。残作業: (a) §63.3 の閾値の文献照合
+     (浸水深ベース被害関数・FEMA P-646。housedebris_plan.md §2)と消し込み、
+     (b) test/sewer_wq の reference が -Ofast ビルド間差(B1 以降。-O2 では
+     前後バイト一致)で ULP=0 不一致 — 人間の確認の上で更新(b333f3e と
+     同じ扱い)、(c) 既存の潜在不具合: -fcheck ビルドの test/driftwood 構成1
+     で江頭層流則の摩擦項が hte=0 で SIGFPE(§63.6 の A1 記録)。
 
 1. **gwflow 導入コミットの検証(直近の宿題)**
    - fn_gwflow 未指定で全ケース既存 reference とビット一致(逐次・np=1,2,4)

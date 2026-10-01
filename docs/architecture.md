@@ -22,6 +22,9 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理)
   │                  bedslide は z・sd の内数として動く底層 hb = 地滑り津波の移動海底源)
   │    m_driftwood   流木(材積のラスタ場3台帳: 立木 wst → 流動 s%hd → 堆積 s%wd。
   │                  発生・停止・再流動を担う。移流は swflow_enc の advect_scalar)
+  │    m_bldgdebris  家屋破壊・瓦礫(家屋ストック wbs → 流動 s%hbd → 堆積 s%wbd。
+  │                  破壊判定(浸水深/荷重に流木・瓦礫を算入)・停止・再流動と
+  │                  空隙率 s%gv への帰還。移流は advect_scalar。§63)
   │    m_glacier     氷河(加算: 質量収支(常時)/ flow / slide / ero / ava)
   │    m_lavaflow    溶岩流(噴火口ソース+Bingham 粘性重力流+固化→z。等温)
   │    m_intercept   降雨遮断(排他: fixed / initloss)
@@ -63,6 +66,7 @@ par_init → sysparam → geoinfo(全域読込・全域前処理)
   → boundary → state(← geoinfo, boundary より後)
   → wq → record → precip → intercept → geomorph
   → driftwood(← geomorph より後: morfac 検査に s%geo_morfac を参照)
+  → bldgdebris(← driftwood より後: s%dw_active・s%dw_sg を荷重の評価に参照)
   → gwflow
   → saltwater(← gwflow より後: 層1側方の係数を参照)
   → tide → swflow → meteo → evap(← meteo より後) → snow
@@ -106,6 +110,9 @@ geomorph_calc                 地形変化(s%z, s%e 更新+z のハロ交換)
 driftwood_calc                流木(発生・停止・再流動・ダム捕捉。← geomorph の後 =
                                 同一ステップの z 更新を見た侵食連行。移流自体は
                                 swflow_calc 内の advect_scalar が hs/cq と同様に実行)
+bldgdebris_calc               家屋破壊・瓦礫(破壊・停止・再流動・ダム捕捉・空隙率の
+                                帰還+gv/lm のハロ交換。← driftwood の後 = 同一ステップの
+                                hd を荷重に見る。移流は swflow_calc 内)
 lavaflow_calc                 溶岩流(噴火口ソース→Bingham 拡散流動→固化。固化時は
                                 s%z 更新と e 回復・ハロ交換まで。z 更新プロセスの末尾)
 calcstat                      統計(S 台帳・max 類。決定的総和)
@@ -123,7 +130,7 @@ calcstat                      統計(S 台帳・max 類。決定的総和)
 |---|---|---|---|
 | p | t_sysparam | m_sysparam | 実行制御。init 後は全モジュール読み取り専用 |
 | g | t_geoinfo | m_geoinfo | 地形 z(入力)・粗度 rn・マスク x/sw/rw・格子。原則不変(例外: なし。動的な標高は s%z) |
-| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), hb(動く底層。z・sd の内数), cq/cg/crs(輸送物質の地表・地下・ため池プール), hd/wd(流動・堆積流木), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi・hb 等のモジュール私有 save は各 dispose。契約5) |
+| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), hb(動く底層。z・sd の内数), cq/cg/crs(輸送物質の地表・地下・ため池プール), hd/wd(流動・堆積流木), hbd/wbd(流動・堆積瓦礫), gv/lm(空隙率と有効慣性係数。§63), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi・hb 等のモジュール私有 save は各 dispose。契約5) |
 | sx | t_enc_status | m_swflow_enc 私有 | エッジ流速 uv・流量 mn(前ステップ確定)・mn1(更新中)。他モジュールから不可視 |
 | r, b, … | 各 t_* | 各モジュール | モジュール私有。リスタートは各自の save ファイル(契約5) |
 
@@ -186,6 +193,6 @@ s%h を変更するモジュールは同じループで s%e = s%z + s%h を回�
 | namelist の書き方の見本 | examples/List_samples/ |
 | 使い方(利用者視点) | docs/users_guide.md・tutorials/ |
 | 他モデルとの立ち位置 | docs/comparison.md |
-| 個別機能の設計文書 | docs/*_plan.md(geomorph・debris・splash・glacier・boundary・geotiff・gwconduit・swi・driftwood・lava〔実装済み〕、landslide_tsunami〔設計提案〕)・channel_model.md |
+| 個別機能の設計文書 | docs/*_plan.md(geomorph・debris・splash・glacier・boundary・geotiff・gwconduit・swi・driftwood・lava・housedebris〔実装済み〕、landslide_tsunami〔設計提案〕)・channel_model.md |
 | モジュール実装の作法 | src/m_gwflow_bucket.f90 のヘッダ |
 | ビルドの仕組み | make.inc・docs/install.md・§1/§3 |

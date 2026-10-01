@@ -1,9 +1,10 @@
 # 家屋破壊・瓦礫モデルの設計(housedebris_plan.md)
 
-**状態: 設計合意済み(2026-10-01 起草・同日合意)・実装中**。
-§6 の論点 10 件はすべて推奨案で合意した。確定事項は developer.md §63 に
-転記済み。実装完了・文献照合の消化とともに本書を消し込む
-(driftwood_plan.md と同じ運用)。
+**状態: 設計合意済み(2026-10-01 起草・同日合意)・実装済み(同日)**。
+§6 の論点 10 件はすべて推奨案で合意し、A1〜B3 を実装・検証した(§5)。
+確定事項と検証記録の正本は developer.md §63。残るのは §2 の文献照合
+(閾値の実務値)で、その消化とともに本書を消し込む(driftwood_plan.md と
+同じ運用)。
 
 対象現象: 津波・高潮・洪水の氾濫流による木造家屋の破壊、瓦礫化、
 瓦礫の流動・堆積、および流木・瓦礫を含む流れによる破壊力の増加
@@ -282,11 +283,11 @@ s%z = 時間発展する状態、geomorph が更新後にハロ交換)。
 | 段階 | 内容 | 検証 | 状態 |
 |---|---|---|---|
 | C1 | 本設計文書の合意(§6 の論点消化)・developer.md §63 起草 | — | 済(2026-10-01) |
-| A1 | s%gv・s%lm の状態化(等価リファクタ。参照 49 箇所の置換、帯解放、af 初期化) | 全ケース ULP=0、np=1,2,4、-fcheck np=2 | 未 |
-| A2 | state_set_gv + gv_active フラグ + update_af 条件 + test/gvchange | 全ケースビット一致、単体検定の保存則 | 未 |
-| B1 | list_bldgdebris + m_bldgdebris(破壊・停止・再流動・台帳・save)+ s%hbd 移流 + 出力(Bf/Bd/Bs/Fd9999) | 無効時ビット一致、保存則、リスタート、np=1,2,4 | 未 |
-| B2 | 空隙率への反映(§3.5)+ ハロ交換 | B1 と同じ+水体積保存+-fcheck np=2 | 未 |
-| B3 | test/bldgdebris・users_guide 章(日英)・params_index・List_samples・comparison・examples/tsunami_town | 全回帰 PASS | 未 |
+| A1 | s%gv・s%lm の状態化(等価リファクタ。参照 51 箇所の置換、帯解放、af 初期化) | 全ケース ULP=0、np=1,2,4、-fcheck np=2 | 済(2026-10-01。eb35f48) |
+| A2 | m_state_set_gv + gv_active フラグ + update_af 条件 + test/gvchange | 全ケースビット一致、単体検定の保存則 | 済(2026-10-01。cf7a4c6) |
+| B1 | list_bldgdebris + m_bldgdebris(破壊・停止・再流動・台帳・save)+ s%hbd 移流 + 出力(Bf/Bd/Bs/Fd9999) | 無効時ビット一致、保存則、リスタート、np=1,2,4 | 済(2026-10-01。91ba74a。sewer_wq の -Ofast ビルド間差を報告) |
+| B2 | 空隙率への反映(§3.5)+ ハロ交換 | B1 と同じ+水体積保存+-fcheck np=2 | 済(2026-10-01。5cddf5d) |
+| B3 | test/bldgdebris・users_guide 章(日英)・params_index・List_samples・comparison・examples/tsunami_town | 全回帰 PASS | 済(2026-10-01) |
 
 A1 は等価リファクタ、A2・B1・B2 は機能追加で、コミットを分ける
 (絶対規律4)。A1・A2 は瓦礫モジュールを作らない場合でも単独で価値が
