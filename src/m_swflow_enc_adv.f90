@@ -168,7 +168,7 @@ function adv_edge_v1(s, sx, tx, i, j, k, in, jn, ie, je) result(ta)
   integer :: inn, jnn, ino, jno
   real :: unn, vnn, uno, vno
   real :: duvc, duvr, duvl, duv0
-  real :: rr, rl, phir, phil, phi
+  real :: rr, phi
   real :: uve
 
   uve = sx%uv(k,ie,je)
@@ -178,13 +178,18 @@ function adv_edge_v1(s, sx, tx, i, j, k, in, jn, ie, je) result(ta)
   taye = (tx%taxy(2,i,j) + tx%taxy(2,in,jn)) / 2  ! 移流項(y方向, 符合は座標軸方向が正)
   ta = taxe * n8x(k) + taye * n8y(k)             ! 移流項(符合は中心セルから近傍セルに向かい正)
   !ta = ta * 1.5
-  ! TVD(風上差分と中心差分の混合)
+  ! TVD(風上差分と中心差分の混合。developer.md §68.3 段 1)
+  !   旧実装は両側の比 rl, rr の minmod(どちらかが負なら 0)で φ を決め、
+  !   中心差分側に ×1.5 を掛けていたため、ほぼ全域で φ→0(風上一色)かつ
+  !   長波で反拡散になっていた(§68.2)。ここでは風上側 1 本の比 r と
+  !   van Leer 限定器(1 で頭打ち)に改める。v1 の構造上、限定器は
+  !   「2 つの微分推定の混合比」としてしか働かない(面値の再構成は
+  !   段 2 の運動量保存形移流が担う)
   if (f_advection_tvd > 0) then
     ! 中心差分による移流項
     taxe2 = (tx%taxy(3,i,j) + tx%taxy(3,in,jn)) / 2
     taye2 = (tx%taxy(4,i,j) + tx%taxy(4,in,jn)) / 2
     tae2 = taxe2 * n8x(k) + taye2 * n8y(k)
-    tae2 = tae2 * 1.5
     inn = in + din(k)  ! k近傍のさらに外側のセル
     jnn = jn + djn(k)  ! k近傍のさらに外側のセル
     ino = i + din(9-k) ! k近傍の反対側のセル
@@ -206,36 +211,23 @@ function adv_edge_v1(s, sx, tx, i, j, k, in, jn, ie, je) result(ta)
       uno = 0
       vno = 0
     end if
+    ! 線 k 上の投影流速の差分(o→c, c→n, n→nn)
     duvr = (unn - s%u(in ,jn )) * n8x(k) + (vnn - s%v(in ,jn )) * n8y(k)
     duvc = (s%u(in ,jn ) - s%u(i  ,j  )) * n8x(k) + (s%v(in ,jn ) - s%v(i  ,j  )) * n8y(k)
     duvl = (s%u(i  ,j  ) - uno) * n8x(k) + (s%v(i  ,j  ) - vno) * n8y(k)
     duv0 = duvc + sign(1.E-5, duvc)
-    rr = duvr / duv0
-    rl = duvl / duv0
-
-    phil = max(0.0, min(1.0, rl))
-    phir = max(0.0, min(1.0, rr))
-
-    !phir = max(0.0, min(1.0, 2 * rr))
-    !phil = max(0.0, min(1.0, 2 * rl))
-
-    if (phil >= 0 .and. phir >= 0) then
-      phi = min(1.0, min(phir, phil))
+    ! 風上側 1 本の勾配比 r(uve>0: c が風上 → o→c の差分、uve<0: n が風上)
+    if (uve > 0) then
+      rr = duvl / duv0
+    else if (uve < 0) then
+      rr = duvr / duv0
     else
-      phi = 0.0
+      rr = 0.0
     end if
-
-    !if (uve > 0) then
-    !  phi = phil
-    !else if (uve < 0) then
-    !  phi = phir
-    !else
-    !  phi = min(phir, phil)
-    !end if
-
+    ! van Leer 限定器 φ(r) = (r+|r|)/(1+|r|) を 1 で頭打ち(1 = 中心差分)
+    phi = min(1.0, (rr + abs(rr)) / (1 + abs(rr)))
     ! 風上差分と中心差分の混合
     ta = ta + phi * (tae2 - ta)
-    !ta = (ta + tae2) / 2
   end if
 end function
 
