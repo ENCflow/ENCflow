@@ -47,18 +47,35 @@ building stock wbs --destroy--> floating debris hbd --ground/slow--> deposit wbd
 
 ## Enabling and configuration
 
-Specify `fn_bldgdebris` in `&list_sysparam`. The minimum configuration
-is the building stock, the representative debris properties, and the
-destruction and stopping parameters:
+Specify `fn_bldgdebris` in `&list_sysparam`.
+
+**The minimum input to "just try moving debris" is an empty
+`&list_bldgdebris` on a terrain that has the building void ratio
+`fn_gv`** (every item takes its default). A uniform building stock of
+0.3 m³/m² is placed on the cells with buildings (gv < 1), and the
+debris properties, the destruction criterion (a linear ramp from 1 m
+to 3 m of inundation depth) and the rates all run with their
+defaults. Defaults that were adopted are printed at start-up as
+`bldgdebris: bd_hcrit = 1.0000 m (default)`, so they cannot go
+unnoticed; review them for your case (type-specific starting values
+are in "Recommended values by pattern" at the end of this chapter).
+
+```
+&list_bldgdebris
+/
+```
+
+In practice give the stock map and the thresholds:
 
 ```
 &list_bldgdebris
   fn_bdstock = 'bdstock.txt' ! building stock (m3/m2, destructible volume incl. wooden fraction)
-  bd_dlog = 0.2             ! representative debris size (m)
+  bd_dlog = 0.3             ! representative debris size (m)
   bd_sg = 0.5               ! apparent specific gravity of debris (0-1; draft derived automatically)
   f_bdcrit = 1              ! criterion (1: inundation depth, 2: load)
-  bd_hcrit = 2.0            ! depth threshold (m)
-  bd_wdes = 1.0e-4          ! destruction rate (m/s)
+  bd_hcrit = 1.0            ! depth threshold (m; destruction starts)
+  bd_hcrit2 = 3.0           ! second threshold (m; destructible fraction 1)
+  bd_wdes = 5.0e-4          ! destruction rate (m/s)
   bd_wstop = 0.01           ! grounding deposition rate (m/s)
 /
 ```
@@ -68,20 +85,20 @@ destruction and stopping parameters:
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_bd | 1 | 0 disables temporarily while keeping the file |
-| bd_stock0 | — | uniform building stock (m³/m²). Exclusive with fn_bdstock; one of them is **required** |
+| bd_stock0 | (0.3 on building cells) | uniform building stock (m³/m², all cells). Exclusive with fn_bdstock. **If neither is given, 0.3 m³/m² is placed only on cells with buildings (gv < 1)** (the run stops if there are no such cells, e.g. without fn_gv) |
 | fn_bdstock | — | building stock (destructible volume) map (m³/m², same matrix format as the terrain). Fold the wooden fraction into it (a cell with 30% wooden houses gets 30% of a fully wooden cell) |
 | fn_bdfrac | — | map of the destructible share fw (0-1) of the building footprint. Default 1. Where RC or tsunami-resistant structures remain, it bounds the void-ratio feedback at gv0 + (1−gv0)·fw |
-| bd_dlog | — | representative debris size (m). **Required** |
-| bd_sg | — | apparent specific gravity of debris (0-1). **Required**. The draft is the exact cylinder buoyancy solution as for driftwood |
+| bd_dlog | 0.3 | representative debris size (m) |
+| bd_sg | 0.5 | apparent specific gravity of debris (0-1). The draft is the exact cylinder buoyancy solution as for driftwood (0.15 m for 0.5 × 0.3 m) |
 | f_bdcrit | 1 | criterion: 1 = inundation depth h+hs, 2 = load (h+(1+s)hs+sg_log·hd+sg_deb·hbd)·V² |
-| bd_hcrit | — | depth threshold (m; required for f_bdcrit=1) |
-| bd_hcrit2 | none | second depth threshold (m; optional. A linear destructible fraction, 0 at threshold 1 and 1 at threshold 2, multiplies the rate = approximation of the fragility-curve width) |
-| bd_fcrit | — | load threshold (m³/s²; required for f_bdcrit=2) |
-| bd_fcrit2 | none | second load threshold (m³/s²; optional, ditto) |
-| bd_wdes | — | destruction rate (m/s = m³/m²/s). **Required**. Time to destroy = stock ÷ rate |
+| bd_hcrit | 1.0 | depth threshold (m; f_bdcrit=1) |
+| bd_hcrit2 | 3.0 | second depth threshold (m). A linear destructible fraction, 0 at threshold 1 and 1 at threshold 2, multiplies the rate (approximation of the fragility-curve width). **With both omitted the 1.0-3.0 m ramp applies; giving bd_hcrit alone means a single threshold without ramp** |
+| bd_fcrit | 2.0 | load threshold (m³/s²; f_bdcrit=2) |
+| bd_fcrit2 | 6.0 | second load threshold (m³/s²; ditto. bd_fcrit alone means no ramp) |
+| bd_wdes | 5.0e-4 | destruction rate (m/s = m³/m²/s). Time to destroy = stock ÷ rate (default: 0.3 m³/m² destroyed in 10 min) |
 | bd_fsink | 0 | sinking fraction (0-1): this share of the destroyed amount deposits on the spot (abstraction of sinking debris such as tiles and foundations; 0 = all floats = upper bound of reach) |
-| bd_wstop | — | grounding deposition rate (m/s). **Required** |
-| bd_vstop | 0 | velocity threshold of slow-flow deposition (m/s; 0 = depth (draft) criterion only) |
+| bd_wstop | 0.01 | grounding deposition rate (m/s) |
+| bd_vstop | 0.05 | velocity threshold of slow-flow deposition (m/s; 0 = depth (draft) criterion only; the default deposits once the ponded flow stagnates) |
 | bd_wfloat | 0 | refloat rate (m/s; 0 = deposited debris never moves again (conservative)) |
 | bd_rfloat | 1.5 | refloat buoyancy margin (refloat when depth > rfloat×draft; must be > 1) |
 | bd_vfloat | — | velocity threshold of refloat (m/s; required with bd_wfloat > 0; must be >= bd_vstop) |
@@ -118,6 +135,23 @@ check is recorded in developer.md §63.7, Japanese):
   wooden fraction, aggregated per cell (aggregation from building
   inventories is preprocessing). Conversion to building counts or
   monetary values is postprocessing.
+
+The rationale of the defaults is recorded in developer.md §63.9.
+
+## Recommended values by pattern
+
+The defaults are a middle ground that "runs". When the type of event is
+known, start from the following (calibration quantities; sources in
+developer.md §63.7):
+
+| Type | Criterion | Thresholds | Stock and properties | Rates and deposition | Notes |
+|---|---|---|---|---|---|
+| Tsunami run-up into a dense wooden town | f_bdcrit=1 | bd_hcrit 1.0 / bd_hcrit2 3.0 m (Shuto 1993: destroyed above 2 m; width of the wooden washout curves of Suppasri et al. 2013) | 0.2-0.4 m³/m² × wooden fraction; bd_dlog 0.3, bd_sg 0.5 | bd_wdes 5e-4 (destroyed within a 10-min surge), bd_fsink 0.2-0.4, bd_vstop 0.05 | feedback on; example tsunami_town |
+| Tsunami, chain with driftwood and debris | f_bdcrit=2 | bd_fcrit 2 / bd_fcrit2 6 m³/s² (2 m depth at 1-1.7 m/s; convert from the force-based curves of Koshimura et al. 2009) | as above; enable fn_driftwood too | as above | re-place the thresholds after looking at the water-only F9999 map |
+| Storm surge or river flood in a lowland town (slow flow) | f_bdcrit=1 | bd_hcrit 2.0 / bd_hcrit2 4.0 m (deep but slow inundation destroys less than a tsunami) | 0.2-0.3 × wooden fraction | bd_wdes 1e-4 (gradual over tens of minutes to hours), bd_vstop 0.02 | non-destructive flood damage is out of scope: only collapse/washout is counted |
+| Debris flow or flood hitting a mountain village | f_bdcrit=2 | bd_fcrit 1 / bd_fcrit2 4 m³/s² (the mixed depth h+hs and density 1+sC enter the load) | 0.2-0.3 × wooden fraction; bd_sg 0.5 | bd_wdes 1e-3 (minutes), bd_fsink 0.5 (buried in sediment) | enable with f_debris; debris moves with the mixture |
+| Upper-bound reach (hazard map) | per case | per case | as above | bd_fsink 0, bd_vstop 0, bd_wfloat 0 | use Bd9999; the remaining amount is sensitive to bd_vstop and bd_wfloat (example README) |
+| Scenarios of tsunami-proofing / urbanisation | per case | per case | swap fn_bdstock (wooden fraction included) and fn_bdfrac | as above | two-case comparison, no code change |
 
 ## Output
 

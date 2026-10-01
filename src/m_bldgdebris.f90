@@ -25,6 +25,10 @@ module m_bldgdebris
   !           乾燥セル(h≤dd)は全量。再流動は流木と同型(既定なし)
   !   流木:   s%hd・s%dw_sg を読むだけの一方向依存(dw_active で分岐)。
   !           m_driftwood は本モジュールを知らない
+  !   既定:   物性・校正値は未指定なら無難な既定を採用し、採用値を必ず 1 行
+  !           表示する(§62 の gm_param と同じ流儀。bd_param)。家屋ストックは
+  !           両方未指定なら建物のあるセル(gv < 1)に 0.3 m3/m2。最小入力は
+  !           fn_bldgdebris(空の &list_bldgdebris)+ fn_gv(§63.9)
   !   帰還:   f_bdgv=1(既定)で破壊率 d に応じて空隙率を gv = gv0 + (1−gv0)·fw·d
   !           に上げる(m_state_set_gv 経由 = 空隙面積基底の柱状量を再スケール
   !           して体積保存。§63.1)。自帯更新後に s%gv・s%lm のハロ交換(毎
@@ -52,7 +56,8 @@ module m_bldgdebris
   use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : dcp, is_root, par_info, par_stop, par_abort, par_sum_rows, &
-                         par_gather_to, par_scatter_cell, par_halo_cell
+                         par_gather_to, par_scatter_cell, par_halo_cell, par_allreduce_sumi
+  use m_util, only : itoa
   implicit none
   private
   public :: t_bldgdebris
@@ -123,7 +128,9 @@ subroutine m_bldgdebris_init(bd, p, g, b, s)
   type(t_boundary), intent(in) :: b      ! ダム捕捉台帳の構築
   type(t_state), intent(inout) :: s      ! hbd/wbd の確保と bd_active
   type(t_list_bldgdebris) :: list
-  integer :: i, j
+  integer :: i, j, nb
+  integer :: nbv(1)
+  real :: dlog
 
   if (len_trim(p%fn_bldgdebris) == 0) then
     ! 瓦礫出力は本モジュールが前提(f_out_hd と同じ様式)
@@ -146,62 +153,69 @@ subroutine m_bldgdebris_init(bd, p, g, b, s)
     return
   end if
 
-  ! --- 瓦礫の代表諸元(喫水の実体。必須) ---
-  if (list%bd_dlog <= -9998.0) call par_stop("list_bldgdebris: bd_dlog (m) is required")
-  if (list%bd_dlog <= 0.0) call par_stop("list_bldgdebris: bd_dlog must be > 0")
-  if (list%bd_sg <= -9998.0) call par_stop("list_bldgdebris: bd_sg is required")
-  if (list%bd_sg <= 0.0 .or. list%bd_sg >= 1.0) then
+  ! --- 瓦礫の代表諸元(喫水の実体。既定あり。§63.9) ---
+  dlog = bd_param("bd_dlog", list%bd_dlog, 0.3, " m")
+  if (dlog <= 0.0) call par_stop("list_bldgdebris: bd_dlog must be > 0")
+  bd%sg = bd_param("bd_sg", list%bd_sg, 0.5, "")
+  if (bd%sg <= 0.0 .or. bd%sg >= 1.0) then
     call par_stop("list_bldgdebris: bd_sg must be in (0,1) — floatable debris; sinking " &
                   //"debris is represented by bd_fsink")
   end if
-  bd%sg = list%bd_sg
-  bd%hf = m_driftwood_draft(list%bd_sg, list%bd_dlog)
+  bd%hf = m_driftwood_draft(bd%sg, dlog)
 
   ! --- 破壊判定 ---
+  ! 閾値の対(閾値1, 閾値2 = ランプ上端)は、両方未指定なら両方に既定
+  ! (ランプあり)、閾値1 だけ指定ならランプなし(明示の尊重。§62.1 と同型)
   select case (list%f_bdcrit)
   case (1)
-    if (list%bd_hcrit <= -9998.0) call par_stop("list_bldgdebris: bd_hcrit (m) is required " &
-                                                //"for f_bdcrit=1")
-    if (list%bd_hcrit < 0.0) call par_stop("list_bldgdebris: bd_hcrit must be >= 0")
-    bd%hcrit = list%bd_hcrit
-    if (list%bd_hcrit2 > -9998.0) then
-      if (list%bd_hcrit2 <= list%bd_hcrit) then
-        call par_stop("list_bldgdebris: bd_hcrit2 must be > bd_hcrit (ramp upper end)")
-      end if
-      bd%hcrit2 = list%bd_hcrit2
+    if (list%bd_hcrit <= -9998.0 .and. list%bd_hcrit2 <= -9998.0) then
+      bd%hcrit = bd_param("bd_hcrit", list%bd_hcrit, 1.0, " m", unset=-9999.0)
+      bd%hcrit2 = bd_param("bd_hcrit2", list%bd_hcrit2, 3.0, " m", unset=-9999.0)
       bd%have_hramp = .true.
+    else
+      bd%hcrit = bd_param("bd_hcrit", list%bd_hcrit, 1.0, " m", unset=-9999.0)
+      if (list%bd_hcrit2 > -9998.0) then
+        bd%hcrit2 = list%bd_hcrit2
+        bd%have_hramp = .true.
+      end if
+    end if
+    if (bd%hcrit < 0.0) call par_stop("list_bldgdebris: bd_hcrit must be >= 0")
+    if (bd%have_hramp .and. bd%hcrit2 <= bd%hcrit) then
+      call par_stop("list_bldgdebris: bd_hcrit2 must be > bd_hcrit (ramp upper end)")
     end if
   case (2)
-    if (list%bd_fcrit <= -9998.0) call par_stop("list_bldgdebris: bd_fcrit (m3/s2) is " &
-                                                //"required for f_bdcrit=2")
-    if (list%bd_fcrit < 0.0) call par_stop("list_bldgdebris: bd_fcrit must be >= 0")
-    bd%fcrit = list%bd_fcrit
-    if (list%bd_fcrit2 > -9998.0) then
-      if (list%bd_fcrit2 <= list%bd_fcrit) then
-        call par_stop("list_bldgdebris: bd_fcrit2 must be > bd_fcrit (ramp upper end)")
-      end if
-      bd%fcrit2 = list%bd_fcrit2
+    if (list%bd_fcrit <= -9998.0 .and. list%bd_fcrit2 <= -9998.0) then
+      bd%fcrit = bd_param("bd_fcrit", list%bd_fcrit, 2.0, " m3/s2", unset=-9999.0)
+      bd%fcrit2 = bd_param("bd_fcrit2", list%bd_fcrit2, 6.0, " m3/s2", unset=-9999.0)
       bd%have_framp = .true.
+    else
+      bd%fcrit = bd_param("bd_fcrit", list%bd_fcrit, 2.0, " m3/s2", unset=-9999.0)
+      if (list%bd_fcrit2 > -9998.0) then
+        bd%fcrit2 = list%bd_fcrit2
+        bd%have_framp = .true.
+      end if
+    end if
+    if (bd%fcrit < 0.0) call par_stop("list_bldgdebris: bd_fcrit must be >= 0")
+    if (bd%have_framp .and. bd%fcrit2 <= bd%fcrit) then
+      call par_stop("list_bldgdebris: bd_fcrit2 must be > bd_fcrit (ramp upper end)")
     end if
   case default
     call par_stop("list_bldgdebris: f_bdcrit must be 1 (inundation depth) or 2 (load)")
   end select
   bd%crit = list%f_bdcrit
-  if (list%bd_wdes <= -9998.0) call par_stop("list_bldgdebris: bd_wdes (m/s) is required")
-  if (list%bd_wdes <= 0.0) call par_stop("list_bldgdebris: bd_wdes must be > 0")
-  bd%wdes = list%bd_wdes
+  bd%wdes = bd_param("bd_wdes", list%bd_wdes, 5.0e-4, " m/s")
+  if (bd%wdes <= 0.0) call par_stop("list_bldgdebris: bd_wdes must be > 0")
   if (list%bd_fsink < 0.0 .or. list%bd_fsink > 1.0) then
     call par_stop("list_bldgdebris: bd_fsink must be in [0,1]")
   end if
   bd%fsink = list%bd_fsink
   bd%need_load = (bd%crit == 2 .or. p%f_out_fdmax > 0)
 
-  ! --- 停止・堆積(必須)---
-  if (list%bd_wstop <= -9998.0) call par_stop("list_bldgdebris: bd_wstop (m/s) is required")
-  if (list%bd_wstop <= 0.0) call par_stop("list_bldgdebris: bd_wstop must be > 0")
-  bd%wstop = list%bd_wstop
-  if (list%bd_vstop < 0.0) call par_stop("list_bldgdebris: bd_vstop must be >= 0")
-  bd%vstop = list%bd_vstop
+  ! --- 停止・堆積(既定あり)---
+  bd%wstop = bd_param("bd_wstop", list%bd_wstop, 0.01, " m/s")
+  if (bd%wstop <= 0.0) call par_stop("list_bldgdebris: bd_wstop must be > 0")
+  bd%vstop = bd_param("bd_vstop", list%bd_vstop, 0.05, " m/s")
+  if (bd%vstop < 0.0) call par_stop("list_bldgdebris: bd_vstop must be >= 0")
 
   ! --- 再流動(既定 bd_wfloat=0 = なし。ヒステリシスの検証つき)---
   if (list%bd_wfloat < 0.0) call par_stop("list_bldgdebris: bd_wfloat must be >= 0")
@@ -234,22 +248,42 @@ subroutine m_bldgdebris_init(bd, p, g, b, s)
                   //"(event-scale computation)")
   end if
 
-  ! --- 家屋ストック(一様 bd_stock0 か分布 fn_bdstock の排他でどちらか
-  !     必須。分布は rank0 読み+帯 scatter。方式2) ---
+  ! --- 家屋ストック(一様 bd_stock0 か分布 fn_bdstock の排他。両方未指定
+  !     なら建物のあるセル(gv < 1)に既定 0.3 m3/m2 = 「とりあえず動かす」の
+  !     最小入力(§63.9)。分布は rank0 読み+帯 scatter。方式2) ---
   if (len_trim(list%fn_bdstock) > 0 .and. list%bd_stock0 > -9998.0) then
     call par_stop("list_bldgdebris: specify the building stock by either bd_stock0 " &
                   //"(uniform) or fn_bdstock (map), not both")
   end if
-  if (len_trim(list%fn_bdstock) == 0 .and. list%bd_stock0 <= -9998.0) then
-    call par_stop("list_bldgdebris: the building stock is required — specify " &
-                  //"bd_stock0 (uniform, m3/m2) or fn_bdstock (map)")
-  end if
   allocate(bd%wbs(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (len_trim(list%fn_bdstock) > 0) then
     call read_map_scatter(p, g, list%fn_bdstock, "fn_bdstock", 0.0, -1.0, bd%wbs)
-  else
+  else if (list%bd_stock0 > -9998.0) then
     if (list%bd_stock0 < 0.0) call par_stop("list_bldgdebris: bd_stock0 must be >= 0")
     bd%wbs(:,:) = list%bd_stock0
+  else
+    ! 既定: 建物占有のあるセル(fn_gv による gv < 1)だけに置く。建物の
+    ! 場所が分からない(gv が全域 1)なら停止して入力を促す
+    nb = 0
+    do j = dcp%jsh, dcp%jeh
+      do i = 1, g%nx
+        if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
+        if (s%gv(i,j) < 1.0) then
+          bd%wbs(i,j) = 0.3
+          if (j >= dcp%js .and. j <= dcp%je) nb = nb + 1
+        end if
+      end do
+    end do
+    nbv(1) = nb
+    call par_allreduce_sumi(nbv)        ! 全ランクで同一の判定(collective)
+    nb = nbv(1)
+    if (nb == 0) then
+      call par_stop("list_bldgdebris: no building cells (gv < 1) found for the default " &
+                    //"stock — give fn_gv (building void ratio), or specify bd_stock0 / " &
+                    //"fn_bdstock")
+    end if
+    call par_info("bldgdebris: bd_stock0 = 0.3 m3/m2 on building cells (gv < 1) (default; " &
+                  //itoa(nb)//" cells)")
   end if
   ! 域外セル・海セルには家屋を置かない(台帳集計・出力と整合。ゾーン2 =
   ! sw は全域)
@@ -297,6 +331,40 @@ subroutine m_bldgdebris_init(bd, p, g, b, s)
   bd%initialized = .true.
   call par_info("building-debris module enabled")
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 未指定(番兵)なら既定値を採用し、採用値を必ず 1 行表示する
+! (m_geomorph の gm_param と同じ流儀。§62.1。既定なら "(default)" 付き)
+!----------------------------------------------------------------------
+function bd_param(name, val, def, unit, unset) result(eff)
+  character(len=*), intent(in) :: name     ! namelist 名(表示用)
+  real, intent(in) :: val                  ! namelist の値
+  real, intent(in) :: def                  ! 未指定時の既定値
+  character(len=*), intent(in) :: unit     ! 単位(先頭に空白。無次元は "")
+  real, intent(in), optional :: unset      ! 未指定の番兵(省略時 -9999.0)
+  real :: eff
+  real :: us
+  logical :: isdef
+  character(len=32) :: buf
+  character(len=:), allocatable :: str
+  us = -9999.0
+  if (present(unset)) us = unset
+  isdef = (val <= us + 1.0)
+  eff = val
+  if (isdef) eff = def
+  if (abs(eff) >= 1.0e5 .or. (abs(eff) < 1.0e-3 .and. eff /= 0.0)) then
+    write(buf, '(es12.4)') eff
+  else
+    write(buf, '(f0.4)') eff
+  end if
+  buf = adjustl(buf)
+  if (buf(1:1) == '.') buf = '0'//trim(buf)
+  if (buf(1:2) == '-.') buf = '-0'//trim(buf(2:))
+  str = "bldgdebris: "//name//" = "//trim(buf)//unit
+  if (isdef) str = str//" (default)"
+  call par_info(str)
+end function
 
 
 !----------------------------------------------------------------------

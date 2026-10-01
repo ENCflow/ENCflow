@@ -4,7 +4,7 @@
 # 合否は Check_bldgdebris.py(材積保存・破壊/堆積の活性・平坦部到達)と、
 # 構成2(流木+瓦礫)と構成2'(流木のみ)の state.dat/driftwood.dat バイト一致
 # (片方向結合 = 瓦礫モジュールは流れと流木を変えない)、リスタート往復、
-# 空隙率帰還あり/なしの総貯水量 S(t) の一致(体積保存)。
+# 空隙率帰還あり/なしの総貯水量 S(t) の一致(体積保存)、最小入力(既定値)の同値。
 # 実行後の save 系は save*_serial/ にも複製する(Run_MPI.sh のバイト比較用)
 
 sdir=$(dirname "$(readlink -f "$0")")
@@ -68,6 +68,22 @@ else
     rc=1
 fi
 rm -rf save_gv_serial && cp -r save_gv save_gv_serial
+
+# 構成5: 最小入力(既定値)と構成5'(既定値の明示)の同値検定
+set -o pipefail
+./encflow param_min.txt | tee -a Screen.log || exit 1
+./encflow param_minx.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_bldgdebris.py" save_min || rc=1
+for f in state.dat bldgdebris.dat; do
+    if cmp -s save_min/$f save_minx/$f; then
+        echo "=== defaults: $f is bit-identical between the minimal input and the explicit defaults ==="
+    else
+        echo "FAIL: $f differs between the minimal input (defaults) and the explicit defaults" >&2
+        rc=1
+    fi
+done
 
 if [ $rc -eq 0 ]; then
     echo "=== bldgdebris verification PASS ==="

@@ -15,28 +15,31 @@ module list_bldgdebris
   type t_list_bldgdebris
     integer :: f_bd = 1                            ! 0 でファイルを残したまま一時無効化
     character(len=maxpathlen) :: fn_bdstock = ""   ! 家屋ストック分布 (m3/m2。瓦礫化可能
-                                                   !   材積。木造率込み。bd_stock0 と排他で
-                                                   !   どちらか必須)
-    real :: bd_stock0 = -9999.0                    ! 一様な家屋ストック (m3/m2)
+                                                   !   材積。木造率込み。bd_stock0 と排他。
+                                                   !   両方未指定なら建物のあるセル(gv<1)
+                                                   !   に既定 0.3 m3/m2)
+    real :: bd_stock0 = -9999.0                    ! 一様な家屋ストック (m3/m2。全セル)
     character(len=maxpathlen) :: fn_bdfrac = ""    ! 建物占有のうち破壊可能な割合 fw の
                                                    !   分布 (0〜1。省略時 1。空隙率帰還の
                                                    !   上限 = 残る RC 造・耐津波構造。§63.4)
-    real :: bd_dlog = -9999.0                      ! 瓦礫の代表寸法 (m。喫水の導出。必須)
-    real :: bd_sg = -9999.0                        ! 瓦礫の見かけ比重 (0<sg<1。必須)
+    real :: bd_dlog = -9999.0                      ! 瓦礫の代表寸法 (m。喫水の導出。既定 0.3)
+    real :: bd_sg = -9999.0                        ! 瓦礫の見かけ比重 (0<sg<1。既定 0.5)
     ! ---- 破壊判定 ----
     integer :: f_bdcrit = 1                        ! 判定量 1:浸水深 h+hs、2:荷重
                                                    !   (h+(1+s)hs+sg_log·hd+sg_bd·hbd)V²
-    real :: bd_hcrit = -9999.0                     ! 浸水深閾値 (m。f_bdcrit=1 で必須)
-    real :: bd_hcrit2 = -9999.0                    ! 浸水深の第2閾値 (m。任意。線形ランプの
-                                                   !   上端 = 破壊可能率 1 になる水深)
-    real :: bd_fcrit = -9999.0                     ! 荷重閾値 (m3/s2。f_bdcrit=2 で必須)
-    real :: bd_fcrit2 = -9999.0                    ! 荷重の第2閾値 (m3/s2。任意。同上)
-    real :: bd_wdes = -9999.0                      ! 破壊レート (m/s = m3/m2/s。必須)
+    real :: bd_hcrit = -9999.0                     ! 浸水深閾値 (m。f_bdcrit=1。既定 1.0)
+    real :: bd_hcrit2 = -9999.0                    ! 浸水深の第2閾値 (m。線形ランプの上端 =
+                                                   !   破壊可能率 1 になる水深。両方未指定なら
+                                                   !   既定 3.0、bd_hcrit だけ指定ならランプなし)
+    real :: bd_fcrit = -9999.0                     ! 荷重閾値 (m3/s2。f_bdcrit=2。既定 2.0)
+    real :: bd_fcrit2 = -9999.0                    ! 荷重の第2閾値 (m3/s2。同上。既定 6.0)
+    real :: bd_wdes = -9999.0                      ! 破壊レート (m/s = m3/m2/s。既定 5e-4)
     real :: bd_fsink = 0.0                         ! 沈下率 (0〜1。破壊量のうちその場で
                                                    !   堆積に直行する比率。0 = 全量浮遊)
     ! ---- 停止・堆積 ----
-    real :: bd_wstop = -9999.0                     ! 接地堆積レート (m/s。必須)
-    real :: bd_vstop = 0.0                         ! 低速堆積の流速閾値 (m/s。0=水深のみ)
+    real :: bd_wstop = -9999.0                     ! 接地堆積レート (m/s。既定 0.01)
+    real :: bd_vstop = -9999.0                     ! 低速堆積の流速閾値 (m/s。0=水深のみ。
+                                                   !   既定 0.05)
     ! ---- 再流動(既定 bd_wfloat=0 = なし)----
     real :: bd_wfloat = 0.0                        ! 再流動レート (m/s。0=再流動なし)
     real :: bd_rfloat = 1.5                        ! 浮遊余裕率(再流動水深 = rfloat×喫水)
