@@ -1,6 +1,6 @@
 # ENCflow 作業引き継ぎメモ(チャット移行用)
 
-設計・規約・実バグの記録の正本は developer.md(§0〜§63)。全体の案内図は
+設計・規約・実バグの記録の正本は developer.md(§0〜§66)。全体の案内図は
 architecture.md。このメモは「現在進行中・未完了の項目」だけを書く。
 完了したら消してよい。
 
@@ -40,6 +40,22 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - 既存の観察: -Ofast ビルドの最終桁は swflow_enc の変更でコード配置
      依存に動く(sewer_wq の reference を 2026-10-01 に許可の上で更新。
      -O2 では変更前後バイト一致)。ULP=0 のケースはこの性質を前提に扱う。
+
+0b. **既定値方針(§62・§64〜§66。2026-10-01 全モジュール展開済み)の残項目**
+   - 等価リファクタ候補: gm_param(§62)・dw_param(§50.6)・bd_param(§63.9)を
+     m_util の param_default に統合(表示書式は既に同一。逐次ビット一致で検証)
+   - 全ケース回帰ループ中に test/gwdefault が 1 回だけ FAIL(どの構成かは
+     ループの tail 出力に残らず不明)。直後の単独実行 4 回(CPU 負荷下を含む)
+     は全て PASS で再現せず。再発したら Run.sh の各構成の差分を保全して原因特定
+   - test/glacier の Run_MPI.sh は逐次 result と Log.txt を cmp するため、
+     既知の Runge 列の逐次/MPI 差で「MISMATCH」が出る(検定自体は PASS)。
+     SKIPCOLS 相当の比較に揃えるか警告に格下げする
+   - 環境メモ: root コンテナでの mpirun は OMPI_ALLOW_RUN_AS_ROOT(_CONFIRM)=1
+     が必要、OpenMP 併用で物理コア数を超えると著しく遅い(MPI 検証は
+     OMP_NUM_THREADS=1。§64.3)
+   - 既定値を置いていない与件(強制場・境界・構造物諸元・分布ファイル・噴火口・
+     井戸・evap のモード 2〜4)は方針として確定。利用者ガイドの各「パターン
+     別の推奨値」は校正例が蓄積したら実流域の当たり値で更新する
 
 1. **gwflow 導入コミットの検証(直近の宿題)**
    - fn_gwflow 未指定で全ケース既存 reference とビット一致(逐次・np=1,2,4)
@@ -134,7 +150,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      ビット一致(gfortran では一様sd・拘束的分布sd・薄層飽和の3ケースで
      確認済み)、-check all np=2
    - **解析解のある Boussinesq 拡散問題との定量比較(1Dベンチマーク)は
-     未実施**(§9 の 2 の残)。恒常テストケース化(test/ 配下)も未着手
+     未実施**(§9 の 2 の残)。恒常テストケースは test/gwseep(側方+湧出の
+     台帳閉合)と test/gwdefault 構成 b(Green-Ampt+側方+層2 の既定値
+     同値検定。2026-10-01)があるが、解析解検定のケースはまだない
    - 側方有効時のリスタート往復ビット一致の確認(私有状態なしの想定の
      実証。s%hg は m_state 経由)
    - 谷型シナリオテスト(§9 の 6)はこれから
@@ -172,21 +190,20 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      修正済み(2026-08-14。§36 検証記録)。他の utils に m_record/dcp
      依存はないことを確認済み
 
-2. **developer.md への gwflow/geomorph の項の追記**(検証完了後)
-   - 切替器 vs 重ね合わせの使い分け原則、s%hg 柱状換算契約、S 台帳、
-     モデル実装5箇条(m_gwflow_bucket ヘッダが正本)
+2. (消し込み 2026-10-01)developer.md の gwflow/geomorph の項は §16・§19・
+   §62・§64 と CLAUDE.md「新しい物理モジュールの追加様式」に記載済み
 3. developer.md の日付プレースホルダ(2026-xx)の実日付化(残があれば)
 4. **降雨遮断モジュール(m_intercept)の残検証**
    (無効時ビット一致と wave 疎通((1-α) 倍・np=1,2,4 ULP=0)は確認済み
     2026-08-04)
    - prtype=3 かつ dt_prupdate < dt_maplist の設定で二重減衰しないこと
      (updated ガードの検証。Pr 出力が分布更新のたびに一定率か目視)
-   - developer.md への追記(gwflow/geomorph の項と併せて。上記2参照)
    - **第2弾(分布ファイル+初期損失モデル。2026-08-06)の検証**:
-     - 無効時ビット一致の再確認(fn_intercept 未指定で全ケース。
-       run_main に m_intercept_step の毎ステップ呼び出しが増えたため)
-     - 固定率+一様値が第1弾と同値のままであること(乗算値は同一なので
-       ビット一致のはず。wave 一発で可)
+     - 無効時ビット一致: 2026-10-01 の全 33 ケース逐次回帰(fn_intercept
+       未指定)で PASS を確認済み
+     - 固定率+一様値・初期損失+一様値の疎通: test/icevap 構成 e・f
+       (既定値の同値検定。逐次・np=2 で save と Log がバイト一致。
+       §66)で恒常化済み。既定は ic_alpha 0.15 / ic_smax_mm 1.5 mm
      - 固定率+分布: 一様値と同値を敷き詰めたマップで一様指定と
        ビット一致(np=1,2,4)
      - 初期損失の疎通: wave 一定雨+一様 smax で、遮断総量が
@@ -459,7 +476,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   §51、設計解説は docs/lava_plan.md、利用者向けは
   users_guide/lavaflow.md 日英)。test/lava(Huppert 相似解・Bingham
   停止厚 h∞)で解析解検定済み、無効時ビット一致・-fcheck np=2・
-  np=1,2,4 バイト一致・リスタート往復まで確認。残(将来枠):
+  np=1,2,4 バイト一致・リスタート往復まで確認。既定値(lv_visc 1e4 Pa·s・
+  lv_vsol 5e-4 m/s。§66)により最小 namelist は噴火口のセルと噴出率だけ
+  (test/lava 構成3 で同値検定)。残(将来枠):
   (i) 段階2 = 温度1変数(移流+放射・対流冷却+η(T)・τ_y(T)・
   噴火口毎の噴出温度。lava_plan.md §8)、(ii) 固化セルの浸透カット・
   粗度変更(必要が生じたら fn_gw_ksv 系のマップで)、(iii) 雪氷融解
@@ -679,6 +698,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - gfortran 検証済み(実装コミット参照): 無効時ビット一致、一定速度の
      収支厳密性(wave)、式の Python 対照、統合(σ+遮断+日界+リスタート)、
      MPI np=1,2,4 / -fcheck np=2
+   - 一定速度の既定 evap0 = 3 mm/day(§66。test/icevap 構成 g で同値検定)
    - 残: FAO Penman-Monteith 等の上位式(f_evmodel の追加枠)、
      分布気温×標高減率の併用(現状は排他)、土壌水分による蒸発抑制
      (現状は供給制限のみ)、evap.csv 累積の restore 継続、
@@ -700,6 +720,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      実ケース検証(wq.csv 4 列追加に伴う gwseep/kdpart/sewer_wq の
      reference は許可を得て更新済み — 差は全行 0 の列挿入のみを
      機械確認)
+   - 既定値方針(§66): 物質依存のため既定は置かず(未指定 = 保存性
+     トレーサ)、users_guide/wq.md に「物質別の代表値」表を追加済み
    - 温度補正 k(T)=k20·θ^(T−20)(m_meteo の気温を水温プロキシに)
    - 粒子吸着系の Kd 平衡二相分配(K1): **実装済み(2026-08-26。
      wq_kd / §30.6 / test/kdpart。浸透 fd・沈降 fp×浮遊砂 wf)**。
@@ -711,6 +733,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      同定できる)、d2/K2 の地質分布化(read_map_scatter 流用)、
      層2からの深部損失(系外)オプション
 1m. **積雪・融雪 m_snow(§31。2026-08-10 実装)の残項目**
+   - 既定値 snow_ddf = 4 mm/°C/day(§65。最小入力は空の &list_snow +
+     fn_meteo。型別の度日係数表は users_guide/forcing.md)
    - ddf の季節正弦変化(HBV 流)、エネルギー収支法(m_meteo に放射・
      風速の枠が前提)、昇華、rain-on-snow の雪内保持・再凍結
    - 雪面沈着プール(降雪時の湿性沈着を SWE 内質量に持ち、融雪で
@@ -769,4 +793,5 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      (Gruber 型)、有効圧依存滑動、GLOF、cold-based 閾値、分布 A
    - ユーザーガイド: 氷河章(users_guide/glacier.md 日英)・params_index
      (+24 項目)・forcing 章の気象拡張・README 日英を整備済み
-     (2026-08-16)
+     (2026-08-16)。既定値 gl_ddfi 8 / gl_as 1e-13 / gl_kg 1e-4(§65。
+     test/glacier 構成3 で同値検定)と型別の推奨値表を追加済み(2026-10-01)
