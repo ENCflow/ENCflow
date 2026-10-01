@@ -6105,7 +6105,11 @@ Log.txt は各ケースの Run_MPI.sh の設定 ULP=1 で比較)。
 (-march/-flto なし)の MPI ビルドでは test/driftwood 構成1(土石流+流木)
 が m_swflow_enc の江頭層流則の摩擦項 tfe = −fbe·vve/(rme·hte)·gve で
 SIGFPE(hte = 0 の除算)になる。最適化ビルドでは発現しない潜在不具合
-として記録(修正は別コミット。§28 の f_dbres=2 の範囲)。
+として記録 → **同日修正**: 原因は -Ofast の if 変換が fbe > 0 の分岐の除算を
+投機評価すること(fbe = 0 の経路では hte = 0 のまま)。分母を
+max(hte, dv) にして値を変えずに除算を安全にした(-O2 厳密数学で修正前後の
+test/driftwood 出力がバイト一致。-fcheck MPI np=2 の driftwood も PASS)。
+-Ofast の最終桁は再び動いたため、sewer_wq の reference を許可の上で更新。
 
 **A2 検証記録(2026-10-01)**: 呼び出し元なしで全 30 ケースの逐次回帰が
 A1 と同一結果。test/gvchange(体積保存・導出量・no-op)PASS。

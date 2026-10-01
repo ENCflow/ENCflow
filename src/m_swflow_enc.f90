@@ -1462,8 +1462,12 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     !   摩擦項は半陰解法で計算するため、次元が他の項と異なる(値は常に正)。
     !   江頭層流則が有効なエッジ(fbe > 0)ではマニング則を置き換える:
     !   減速度 = f_b・V²/((1+sC)・h_t) → 半陰形 f_b・vve/((1+sC)・h_t)
+    !   分母の max(hte, dv) は fbe > 0 のとき恒等(hte は dv 以上で設定済み)。
+    !   fbe = 0 の経路では hte = 0 のままで、-Ofast の if 変換が両分岐を
+    !   投機評価すると 0 除算の浮動小数点例外(-ffpe-trap=zero)を起こす
+    !   ため、値を変えずに除算を安全にする(§63.6 の A1 記録。2026-10-01)
     if (fbe > 0.0) then
-      tfe = -fbe * vve / (rme * hte) * gve
+      tfe = -fbe * vve / (rme * max(hte, p%dv)) * gve
     else
       tfe = -ge * rne**2 * vve * m_ffactor_calc(hhe) * gve
     end if
