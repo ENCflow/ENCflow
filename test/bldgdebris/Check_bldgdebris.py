@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # bldgdebris(家屋破壊・瓦礫ラスタ場)疎通・保存則検定
 #   <savedir>/bldgdebris.dat(ゼロ抑制 RLE。developer.md §7)から
-#   hbd, wbd, wbs, wbs0 を読み、
-#     (1) 材積保存: |Σhbd + Σwbd + Σwbs − Σwbs0| < TOL
-#         (閉領域・ダムなし・gv=wfrac=1 の平地格子が前提)
+#   hbd, wbd, wbs, wbs0, gv0, gv を読み、
+#     (1) 材積保存: |Σ(hbd + wbd)·gv + Σwbs − Σwbs0| < TOL
+#         (閉領域・ダムなし・wfrac=1 が前提。hbd・wbd は空隙面積基底なので
+#          現在の空隙率 gv で重み付けする = 空隙率帰還の再スケールも検定)
 #     (2) 活性確認: 破壊の発生(Σwbs < Σwbs0 − MIN_DES)と
 #         堆積(Σwbd > MIN_DEP)
 #     (3) 到達確認: 平坦部(i >= IREACH)の瓦礫 max(hbd+wbd) > 0
@@ -51,9 +52,11 @@ with open(savedir + "/bldgdebris.dat", "rb") as f:
     wbd = read_rle_array(f, ntot)
     wbs = read_rle_array(f, ntot)
     wbs0 = read_rle_array(f, ntot)
+    gv0 = read_rle_array(f, ntot)
+    gv = read_rle_array(f, ntot)
 
 total0 = sum(wbs0)
-total = sum(hbd) + sum(wbd) + sum(wbs)
+total = sum((hbd[i] + wbd[i]) * gv[i] for i in range(ntot)) + sum(wbs)
 des = total0 - sum(wbs)
 dep = sum(wbd)
 reach = max(hbd[i] + wbd[i] for i in range(ntot) if (i % NX + 1) >= IREACH)
@@ -61,7 +64,7 @@ reach = max(hbd[i] + wbd[i] for i in range(ntot) if (i % NX + 1) >= IREACH)
 ok1 = abs(total - total0) < TOL
 ok2 = des > MIN_DES and dep > MIN_DEP
 ok3 = reach > 0.0
-print("(1) 材積保存  : sum(hbd+wbd+wbs) - sum(wbs0) = %.3e m*cell (tol %.0e) : %s"
+print("(1) 材積保存  : sum((hbd+wbd)*gv+wbs) - sum(wbs0) = %.3e m*cell (tol %.0e) : %s"
       % (total - total0, TOL, "PASS" if ok1 else "FAIL"))
 print("(2) 活性確認  : 破壊 %.3e m*cell (要 > %.0e), 堆積 %.3e m*cell (要 > %.0e) : %s"
       % (des, MIN_DES, dep, MIN_DEP, "PASS" if ok2 else "FAIL"))

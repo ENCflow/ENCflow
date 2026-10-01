@@ -25,11 +25,15 @@ module m_bldgdebris
   !           乾燥セル(h≤dd)は全量。再流動は流木と同型(既定なし)
   !   流木:   s%hd・s%dw_sg を読むだけの一方向依存(dw_active で分岐)。
   !           m_driftwood は本モジュールを知らない
-  !   帰還:   空隙率への帰還(f_bdgv。§63.4)は B2 で実装。本版は f_bdgv=0
-  !           のみ受理(片方向結合 = 流れは変わらない)
+  !   帰還:   f_bdgv=1(既定)で破壊率 d に応じて空隙率を gv = gv0 + (1−gv0)·fw·d
+  !           に上げる(m_state_set_gv 経由 = 空隙面積基底の柱状量を再スケール
+  !           して体積保存。§63.1)。自帯更新後に s%gv・s%lm のハロ交換(毎
+  !           ステップ。全ランク同一の判定 = collective 安全)。f_bdgv=0 は
+  !           片方向結合(流れは変わらない)
   !   ダム:   捕捉帯セルの流動瓦礫はダム台帳へ(m_driftwood と同じ契約)
-  !   save:   s%hbd, s%wbd, wbs, wbs0 を私有ファイル bldgdebris.dat で保存
-  !           (§7 の契約C。state.dat の形式は不変)
+  !   save:   s%hbd, s%wbd, wbs, wbs0, gv0, s%gv の 6 成分を私有ファイル
+  !           bldgdebris.dat で保存(§7 の契約C。state.dat の形式は不変。
+  !           f_bdgv=0 でも成分数は固定)
   !   診断:   result/bldgdebris.csv(破壊(浮遊・沈下)・堆積・再流動・
   !           ダム捕捉の累積と現在貯留。rank0、dt_recrd 間隔。par_sum_rows)
   !   出力:   f_out_hbd(流動 Bf0001…)、f_out_wbd(堆積 Bd0001… + 期間
@@ -40,7 +44,7 @@ module m_bldgdebris
   use iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
-  use m_state, only : t_state
+  use m_state, only : t_state, m_state_set_gv
   use m_boundary, only : t_boundary, e_struct_dam
   use list_bldgdebris, only : t_list_bldgdebris, list_bldgdebris_read
   use m_driftwood, only : m_driftwood_draft
@@ -48,7 +52,7 @@ module m_bldgdebris
   use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : dcp, is_root, par_info, par_stop, par_abort, par_sum_rows, &
-                         par_gather_to, par_scatter_cell
+                         par_gather_to, par_scatter_cell, par_halo_cell
   implicit none
   private
   public :: t_bldgdebris
@@ -86,11 +90,13 @@ module m_bldgdebris
     real :: hfloat = 0.0                 ! 再流動の水深閾値 (m) = bd_rfloat·hf
     real :: vfloat = 0.0                 ! 再流動の流速閾値 (m/s)
     logical :: need_load = .false.       ! 荷重 X を毎セル評価するか(crit=2 または fdmax)
+    logical :: gvfb = .false.            ! 空隙率への帰還(f_bdgv=1)
     real, allocatable :: wbs(:,:)        ! 家屋ストック (m3/m2。幾何面積基底。帯 jsh:jeh で
                                          !   確保するが更新・参照は js:je のみ)
     real, allocatable :: wbs0(:,:)       ! 家屋ストックの初期値(破壊率の分母)
     real, allocatable :: fw(:,:)         ! 破壊可能割合 fw(fn_bdfrac 指定時のみ確保。
-                                         !   空隙率帰還 B2 が使う)
+                                         !   未確保 = 1)
+    real, allocatable :: gv0(:,:)        ! 空隙率の初期値(init 時 s%gv の写し。帰還の基準)
     integer :: ndam = 0
     type(t_bddam), allocatable :: dam(:)
     ! 診断(行部分和 real64。材積 m3)
@@ -216,11 +222,11 @@ subroutine m_bldgdebris_init(bd, p, g, b, s)
     bd%have_flt = .true.
   end if
 
-  ! --- 空隙率への帰還は B2 で実装(本版は片方向結合のみ) ---
-  if (list%f_bdgv /= 0) then
-    call par_stop("list_bldgdebris: f_bdgv=1 (feedback to the void ratio) is not " &
-                  //"available in this version — set f_bdgv=0 (one-way coupling)")
+  ! --- 空隙率への帰還(§63.4) ---
+  if (list%f_bdgv /= 0 .and. list%f_bdgv /= 1) then
+    call par_stop("list_bldgdebris: f_bdgv must be 0 (one-way) or 1 (feedback to gv)")
   end if
+  bd%gvfb = (list%f_bdgv == 1)
 
   ! --- 瓦礫はイベント量であり地形時間の加速と整合しない(流木と同じ) ---
   if (s%geo_morfac /= 0.0 .and. s%geo_morfac /= 1.0) then
@@ -266,6 +272,9 @@ subroutine m_bldgdebris_init(bd, p, g, b, s)
   if (p%f_out_wbd > 0) allocate(s%wbdmax(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (p%f_out_bds > 0) allocate(s%bds(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (p%f_out_fdmax > 0) allocate(s%fdmax(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  ! 空隙率の初期値(帰還の基準。restore 時は保存値が上書きする)
+  allocate(bd%gv0(1:g%nx, dcp%jsh:dcp%jeh), source = s%gv(1:g%nx, dcp%jsh:dcp%jeh))
+  if (bd%gvfb) s%gv_active = .true.    ! swflow_enc が af を毎ステップ更新する
 
   ! --- ダム捕捉台帳(全ダム・湖沼が対象。m_driftwood と同型) ---
   call setup_dams(bd, b)
@@ -457,6 +466,15 @@ subroutine m_bldgdebris_calc(bd, p, g, s, it)
             bd%vrow(j,1) = bd%vrow(j,1) + vol_geo(g, wf)
             bd%vrow(j,2) = bd%vrow(j,2) + vol_geo(g, ws)
             if (allocated(s%bds)) s%bds(i,j) = 1.0 - bd%wbs(i,j) / bd%wbs0(i,j)
+            ! 空隙率への帰還: gv = gv0 + (1−gv0)·fw·d(体積保存の再スケール込み。
+            ! セル局所 = OpenMP 安全。ハロ交換はループ後)
+            if (bd%gvfb) then
+              fac = 1.0
+              if (allocated(bd%fw)) fac = bd%fw(i,j)
+              x = 1.0 - bd%wbs(i,j) / bd%wbs0(i,j)
+              call m_state_set_gv(p, s, i, j, &
+                                  min(1.0, bd%gv0(i,j) + (1.0 - bd%gv0(i,j)) * fac * x))
+            end if
           end if
         end if
       end if
@@ -489,6 +507,13 @@ subroutine m_bldgdebris_calc(bd, p, g, s, it)
     end do
   end do
   !$omp end parallel do
+
+  ! 空隙率の帰還があるときは gv・lm のハロを毎ステップ揃える(運動量項の
+  ! ±1 近傍参照。変化の有無によらず全ランクで同一に呼ぶ = collective 安全)
+  if (bd%gvfb) then
+    call par_halo_cell(s%gv)
+    call par_halo_cell(s%lm)
+  end if
 
   ! (4) ダム捕捉帯の吸収(流動瓦礫はダム台帳へ。堆積 wbd は接地済みのため残す)
   do nd = 1, bd%ndam
@@ -593,8 +618,9 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 内部状態の保存・復元(モジュール私有ファイル bldgdebris.dat。契約C。§7)
-!   保存対象: s%hbd, s%wbd, wbs, wbs0(4成分固定)。wbdmax・fdmax は統計、
-!   bds は導出量 = 対象外(restore 後に update_damage で再構成)
+!   保存対象: s%hbd, s%wbd, wbs, wbs0, gv0, s%gv(6成分固定。f_bdgv=0 でも
+!   同じ)。wbdmax・fdmax は統計、bds・lm は導出量 = 対象外(restore 後に
+!   update_damage / lm の再計算で再構成)
 !----------------------------------------------------------------------
 subroutine save_state(bd, p, g, s)
   type(t_bldgdebris), intent(in) :: bd
@@ -620,6 +646,10 @@ subroutine save_state(bd, p, g, s)
   call par_gather_to(wk, bd%wbs)
   if (is_root) call fileio_write_rle(un, wk)
   call par_gather_to(wk, bd%wbs0)
+  if (is_root) call fileio_write_rle(un, wk)
+  call par_gather_to(wk, bd%gv0)
+  if (is_root) call fileio_write_rle(un, wk)
+  call par_gather_to(wk, s%gv)
   if (is_root) then
     call fileio_write_rle(un, wk)
     close(un)
@@ -636,7 +666,7 @@ subroutine restore_state(bd, p, g, s)
   real :: dum(1,1)
   character(:), allocatable :: fname
   logical :: found
-  integer :: un
+  integer :: un, i, j
 
   ! 版・格子・精度の検証は m_state(check_save_info)が済ませている。
   ! 自ファイルの有無のみ確認(無ければ停止 — 意図しない材積消失を防ぐ)
@@ -670,10 +700,29 @@ subroutine restore_state(bd, p, g, s)
   if (is_root) then
     call fileio_read_rle(un, wk)
     call par_scatter_cell(wk, bd%wbs0)
-    close(un)
   else
     call par_scatter_cell(dum, bd%wbs0)
   end if
+  if (is_root) then
+    call fileio_read_rle(un, wk)
+    call par_scatter_cell(wk, bd%gv0)
+  else
+    call par_scatter_cell(dum, bd%gv0)
+  end if
+  if (is_root) then
+    call fileio_read_rle(un, wk)
+    call par_scatter_cell(wk, s%gv)
+    close(un)
+  else
+    call par_scatter_cell(dum, s%gv)
+  end if
+  ! 導出量の再構成(lm は帯全体。af は swflow init の update_af が埋める)
+  call par_halo_cell(s%gv)
+  do j = dcp%jsh, dcp%jeh
+    do i = 1, g%nx
+      s%lm(i,j) = s%gv(i,j) + (1.0 - s%gv(i,j)) * p%cm
+    end do
+  end do
 end subroutine
 
 
@@ -692,6 +741,7 @@ subroutine m_bldgdebris_dispose(bd, p, g, s)
   if (allocated(bd%wbs)) deallocate(bd%wbs)
   if (allocated(bd%wbs0)) deallocate(bd%wbs0)
   if (allocated(bd%fw)) deallocate(bd%fw)
+  if (allocated(bd%gv0)) deallocate(bd%gv0)
   if (allocated(bd%dam)) deallocate(bd%dam)
   if (allocated(bd%vrow)) deallocate(bd%vrow)
   bd%enabled = .false.

@@ -39,6 +39,13 @@ echo ""
 python3 "$sdir/Check_bldgdebris.py" save_dw || rc=1
 compare_serial save_dw "構成2"
 
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_gv.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_bldgdebris.py" save_gv || rc=1
+compare_serial save_gv "構成4"
+
 if [ $rc -eq 0 ]; then
     echo "=== bldgdebris MPI verification PASS ==="
 else
