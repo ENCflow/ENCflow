@@ -36,9 +36,26 @@ standing stock wst --recruit--> floating wood hd --ground/dry--> deposit wd
 
 ## Enabling and configuration
 
-Specify `fn_driftwood` in `&list_sysparam`. The minimum configuration
-is the standing stock, the representative log properties, and the
-recruitment and stopping parameters:
+Specify `fn_driftwood` in `&list_sysparam`.
+
+**The minimum input to "just try moving driftwood" is an empty
+`&list_driftwood`** (every item takes its default). A uniform standing
+stock of 0.001 m³/m² is placed on land cells (the observed envelope of
+generated driftwood in conifer torrents), and the log properties,
+recruitment (both hydraulic washout and erosion entrainment) and
+stopping run with their defaults. Adopted defaults are printed at
+start-up as `driftwood: dw_hrec = 0.5000 m (default)`, so they cannot
+go unnoticed; review them for your case (type-specific starting values
+are in "Recommended values by pattern" at the end of this chapter; the
+rationale is in developer.md §50.6, Japanese).
+
+```
+&list_driftwood
+/
+```
+
+In practice give the stock map and the recruitment and stopping
+parameters:
 
 ```
 &list_driftwood
@@ -59,21 +76,40 @@ recruitment and stopping parameters:
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_dw | 1 | 0 disables temporarily while keeping the file |
-| dw_stock0 | — | uniform standing stock (m³/m²). Exclusive with fn_dwstock; one of them is **required** |
+| dw_stock0 | (0.001 on land cells) | uniform standing stock (m³/m²). Exclusive with fn_dwstock. **With neither given, 0.001 m³/m² is placed uniformly on land (non-sea) cells** |
 | fn_dwstock | — | standing stock map (m³/m², same matrix format as the terrain) |
-| dw_dlog | — | representative log diameter (m). **Required** |
-| dw_sglog | — | wood specific gravity ρwood/ρwater (0-1). **Required**. The draft (buoyant depth) is derived automatically as the exact solution of the cylinder buoyancy balance (Braudrick & Grant, 2000; sg=0.5 gives exactly half submergence = 0.5×dw_dlog) |
-| dw_wrec | none | hydraulic recruitment rate (m/s = m³/m²/s). Specifying it enables hydraulic recruitment |
-| dw_hrec | — | depth threshold of recruitment (m; with debris flow the mixed flow depth h+sediment is used. Required with dw_wrec) |
-| dw_vrec | — | velocity threshold of recruitment (m/s; ditto) |
-| dw_droot | none | rooting depth (m). Specifying it enables erosion entrainment (full washout when cumulative erosion > dw_droot) |
-| dw_wstop | — | grounding deposition rate (m/s). **Required** |
+| dw_dlog | 0.3 | representative log diameter (m) |
+| dw_sglog | 0.5 | wood specific gravity ρwood/ρwater (0-1). The draft (buoyant depth) is derived automatically as the exact solution of the cylinder buoyancy balance (Braudrick & Grant, 2000; sg=0.5 gives exactly half submergence = 0.5×dw_dlog) |
+| dw_wrec | 1e-5 | hydraulic recruitment rate (m/s = m³/m²/s). Specifying it enables hydraulic recruitment |
+| dw_hrec | 0.5 | depth threshold of recruitment (m; with debris flow the mixed flow depth h+sediment is used) |
+| dw_vrec | 1.0 | velocity threshold of recruitment (m/s) |
+| dw_droot | 0.5 | rooting depth (m). Specifying it enables erosion entrainment (full washout when cumulative erosion > dw_droot) |
+| dw_wstop | 0.01 | grounding deposition rate (m/s) |
 | dw_vstop | 0 | velocity threshold of slow-flow deposition (m/s; 0 = depth (draft) criterion only) |
 | dw_wfloat | 0 | refloat rate (m/s; 0 = deposited wood never moves again (conservative)) |
 | dw_rfloat | 1.5 | refloat buoyancy margin (refloat when depth > rfloat×draft; must be > 1) |
 | dw_vfloat | — | velocity threshold of refloat (m/s; required with dw_wfloat > 0; must be >= dw_vstop) |
 
-At least one recruitment path (dw_wrec / dw_droot) must be specified.
+For the two recruitment paths (dw_wrec / dw_droot), **both take their
+defaults when neither is given (erosion entrainment never fires unless
+the terrain moves, so it is harmless), and giving only one disables the
+other** (explicit intent is respected). Giving dw_wrec without
+dw_hrec / dw_vrec takes the default thresholds.
+
+## Recommended values by pattern
+
+The defaults are a middle ground that "runs". When the type of event is
+known, start from the following (calibration quantities; sources in
+developer.md §50.4 and §50.5):
+
+| Type | Recruitment | Stock and properties | Thresholds and rates | Stopping | Notes |
+|---|---|---|---|---|---|
+| Torrent debris flow with driftwood (sabo planning) | erosion entrainment (dw_droot 0.3-1.0 m) + hydraulic | conifer 1e-3, broadleaf 1e-4 m³/m² (observed envelopes); dw_dlog = mean DBH (0.2-0.4 m), sg 0.5 | dw_hrec 0.3-0.5 m, dw_vrec 1-2 m/s, dw_wrec 1e-5 | dw_wstop 0.01, dw_vstop 0.02-0.05 (stop at the slope break) | enable with f_debris; check with an outflow ratio of 0.8-0.9 |
+| River flood through riparian forest / floodplain | hydraulic only | fn_dwstock on riparian strips (1e-3 to 1e-2); dlog 0.3, sg 0.5 | dw_hrec 1.0 m, dw_vrec 1.0-1.5 m/s, dw_wrec 1e-5 to 1e-4 | dw_wstop 0.01, dw_vstop 0.02 | add f_fluvial for root undercutting via erosion entrainment |
+| Storm-surge log yard (Isewan-typhoon type) | hydraulic as "mooring loss" | 0.5 m³/m² on yard cells; dlog 0.6 (logs), sg 0.5 | dw_hrec = normal depth + 1 m, dw_vrec 0, dw_wrec 2e-4 (full release within the surge) | dw_wstop 0.005, dw_vstop 0.02 | example timberyard |
+| Tsunami through coastal forest / log yard | as above | coastal forest 1e-3 to 1e-2, log yard 0.5-1.0 m³/m² | dw_hrec = normal depth + 1-2 m, dw_vrec 0, dw_wrec 5e-4 (within the surge) | dw_wstop 0.005, dw_vstop 0.05 | example tsunami_town (chain with house destruction) |
+| Upper-bound reach (hazard map) | per case | as above | as above | dw_vstop 0, dw_wfloat 0 | use Wd9999; the remaining amount is sensitive to dw_vstop and dw_wfloat (timberyard README) |
+| Trapping by works (two-case comparison) | per case | as above | as above | as above | difference of Wd9999 with and without dams, sand basins or culverts |
 
 **Practical guidance** (from NILIM Technical Note No. 904, the
 Japanese national sabo planning manual for debris flow and driftwood,

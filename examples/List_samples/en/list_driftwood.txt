@@ -12,24 +12,28 @@
 !   ledger).
 !   NOTE: thresholds and rates are calibration parameters (no
 !   established standard values).
+!   Properties, thresholds and rates have defaults: an empty
+!   &list_driftwood runs (stock 0.001 m3/m2 uniformly on land cells;
+!   adopted defaults are printed with a "(default)" mark at start-up;
+!   rationale in developer.md §50.6, Japanese).
 !======================================================================
 &list_driftwood
   f_dw = 1                          ! 0 disables temporarily, keeping the file
 
-  ! ---- standing stock (uniform or map; exactly one is required) ----
+  ! ---- standing stock (uniform or map; with neither given, 0.001 on land) ----
   dw_stock0 = 0.01                  ! uniform standing stock (m3/m2)
   !fn_dwstock = "stock.txt"         ! stock map (m3/m2, same matrix format as
                                     !   the terrain; convert forest inventory
                                     !   data in preprocessing)
 
-  ! ---- representative log properties (required) ----
+  ! ---- representative log properties (defaults 0.3 m / 0.5) ----
   dw_dlog = 0.3                     ! representative diameter (m)
   dw_sglog = 0.5                    ! wood specific gravity (0-1); the draft
                                     !   (float/ground switch depth) is derived from
                                     !   the cylinder buoyancy balance
                                     !   (Braudrick & Grant 2000; half submerged at 0.5)
 
-  ! ---- recruitment; at least one path is required ----
+  ! ---- recruitment; both default when neither is given, one given disables the other ----
   dw_wrec = 1.0e-5                  ! hydraulic washout rate (m/s = m3/m2/s; enables it)
   dw_hrec = 0.5                     ! depth threshold (m; mixed flow depth with debris flow)
   dw_vrec = 1.0                     ! velocity threshold (m/s)
@@ -39,7 +43,7 @@
                                     !   debris-flow and slope-failure erosion)
 
   ! ---- stopping / deposition ----
-  dw_wstop = 0.01                   ! grounding deposition rate (m/s; required)
+  dw_wstop = 0.01                   ! grounding deposition rate (m/s; default 0.01)
   !dw_vstop = 0.05                  ! slow-flow deposition threshold (m/s; default 0
                                     !   = draft criterion only)
 

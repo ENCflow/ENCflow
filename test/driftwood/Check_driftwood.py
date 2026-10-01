@@ -9,7 +9,7 @@
 #     (3) 到達確認: 平坦部(i >= IREACH)への流木到達 max(hd+wd) > 0
 #   を検定する。初期ストック総量 = dw_stock0 × nx × ny は param と対で
 #   保守する。
-#   使い方: Check_driftwood.py <savedir>
+#   使い方: Check_driftwood.py <savedir> [stock0]   (stock0 省略時 0.01)
 import sys, struct
 
 NX, NY = 60, 20
@@ -47,6 +47,8 @@ def read_rle_array(f, ntot):
 
 
 savedir = sys.argv[1]
+if len(sys.argv) > 2:
+    STOCK0 = float(sys.argv[2])
 ntot = NX * NY
 with open(savedir + "/driftwood.dat", "rb") as f:
     hd = read_rle_array(f, ntot)

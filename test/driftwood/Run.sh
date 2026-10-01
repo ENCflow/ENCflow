@@ -43,6 +43,22 @@ for f in driftwood.dat state.dat; do
     fi
 done
 
+# 構成4: 最小入力(既定値)と構成4'(既定値の明示)の同値検定
+set -o pipefail
+./encflow param_min.txt | tee -a Screen.log || exit 1
+./encflow param_minx.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_driftwood.py" save_min 0.001 || rc=1
+for f in state.dat driftwood.dat; do
+    if cmp -s save_min/$f save_minx/$f; then
+        echo "=== defaults: $f is bit-identical between the minimal input and the explicit defaults ==="
+    else
+        echo "FAIL: $f differs between the minimal input (defaults) and the explicit defaults" >&2
+        rc=1
+    fi
+done
+
 if [ $rc -eq 0 ]; then
     echo "=== driftwood verification PASS ==="
 else

@@ -24,6 +24,12 @@ module m_driftwood
   !           (f_dbstop=1 と同型の数値的閉包)。乾燥セル(h≤dd)は全量。
   !           再流動は h+hs > dw_rfloat・hf かつ vv > dw_vfloat で wd→hd
   !           レート dw_wfloat(既定 0 = なし)。wd は z に足さない
+  !   既定:   物性・校正値は未指定なら既定を採用し、採用値を必ず 1 行表示する
+  !           (§62 の gm_param と同じ流儀。dw_param)。立木ストックは両方未指定
+  !           なら陸のセル一様に 0.001 m3/m2(針葉樹渓流の発生流木量の包絡
+  !           §50.5)。発生は両方未指定なら水理的流失・侵食連行とも既定で有効、
+  !           片方だけ指定なら他方は無効(明示の尊重)。最小入力は fn_driftwood
+  !           (空の &list_driftwood)だけ(§50.6)
   !   運動量: 流木の運動量・抵抗への算入はしない(第1段。§50)
   !   ダム:   捕捉帯セルは毎ステップ全量吸収されるため、流動流木 hd も
   !           同伴してダム別台帳へ移す(m_wq と同じ契約。放流流木 0 =
@@ -46,7 +52,8 @@ module m_driftwood
   use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : dcp, is_root, par_info, par_stop, par_abort, par_sum_rows, &
-                         par_gather_to, par_scatter_cell
+                         par_gather_to, par_scatter_cell, par_allreduce_sumi
+  use m_util, only : itoa
   implicit none
   private
   public :: t_driftwood
@@ -111,7 +118,9 @@ subroutine m_driftwood_init(dw, p, g, b, s)
   type(t_boundary), intent(in) :: b      ! ダム捕捉台帳の構築
   type(t_state), intent(inout) :: s      ! hd/wd の確保と dw_active
   type(t_list_driftwood) :: list
-  integer :: j
+  integer :: j, nb
+  integer :: nbv(1)
+  real :: dlog, sg
 
   if (len_trim(p%fn_driftwood) == 0) then
     ! 流木出力は本モジュールが前提(§28.9 の f_out_hs と同じ様式)
@@ -135,44 +144,46 @@ subroutine m_driftwood_init(dw, p, g, b, s)
     return
   end if
 
-  ! --- 代表諸元(喫水の実体。必須) ---
-  if (list%dw_dlog <= -9998.0) call par_stop("list_driftwood: dw_dlog (m) is required")
-  if (list%dw_dlog <= 0.0) call par_stop("list_driftwood: dw_dlog must be > 0")
-  if (list%dw_sglog <= -9998.0) call par_stop("list_driftwood: dw_sglog is required")
-  if (list%dw_sglog <= 0.0 .or. list%dw_sglog >= 1.0) then
+  ! --- 代表諸元(喫水の実体。既定あり。§50.6) ---
+  dlog = dw_param("dw_dlog", list%dw_dlog, 0.3, " m")
+  if (dlog <= 0.0) call par_stop("list_driftwood: dw_dlog must be > 0")
+  sg = dw_param("dw_sglog", list%dw_sglog, 0.5, "")
+  if (sg <= 0.0 .or. sg >= 1.0) then
     call par_stop("list_driftwood: dw_sglog must be in (0,1) — the module assumes " &
                   //"floatable wood (sinking logs are out of scope)")
   end if
   ! 喫水(浮遊限界水深)は円柱の浮力平衡の厳密解(m_driftwood_draft。§50.4)
-  dw%hf = m_driftwood_draft(list%dw_sglog, list%dw_dlog)
+  dw%hf = m_driftwood_draft(sg, dlog)
 
-  ! --- 発生(少なくとも一方が必須) ---
-  if (list%dw_wrec > -9998.0) then
-    if (list%dw_wrec <= 0.0) call par_stop("list_driftwood: dw_wrec must be > 0")
-    if (list%dw_hrec <= -9998.0 .or. list%dw_vrec <= -9998.0) then
-      call par_stop("list_driftwood: dw_wrec requires dw_hrec (m) and dw_vrec (m/s)")
-    end if
-    if (list%dw_hrec < 0.0) call par_stop("list_driftwood: dw_hrec must be >= 0")
-    if (list%dw_vrec < 0.0) call par_stop("list_driftwood: dw_vrec must be >= 0")
-    dw%wrec = list%dw_wrec
-    dw%hrec = list%dw_hrec
-    dw%vrec = list%dw_vrec
+  ! --- 発生: 両方未指定なら水理的流失・侵食連行とも既定で有効(侵食連行は
+  !     地形が動かなければ発火しない = 無害)。片方だけ指定なら他方は無効 ---
+  if (list%dw_wrec <= -9998.0 .and. list%dw_droot <= -9998.0) then
+    dw%wrec = dw_param("dw_wrec", list%dw_wrec, 1.0e-5, " m/s")
+    dw%hrec = dw_param("dw_hrec", list%dw_hrec, 0.5, " m")
+    dw%vrec = dw_param("dw_vrec", list%dw_vrec, 1.0, " m/s")
     dw%have_hyd = .true.
-  end if
-  if (list%dw_droot > -9998.0) then
-    if (list%dw_droot <= 0.0) call par_stop("list_driftwood: dw_droot must be > 0")
-    dw%droot = list%dw_droot
+    dw%droot = dw_param("dw_droot", list%dw_droot, 0.5, " m")
     dw%have_ero = .true.
-  end if
-  if (.not. (dw%have_hyd .or. dw%have_ero)) then
-    call par_stop("list_driftwood: no recruitment process — specify dw_wrec " &
-                  //"(hydraulic) and/or dw_droot (erosion entrainment)")
+  else
+    if (list%dw_wrec > -9998.0) then
+      if (list%dw_wrec <= 0.0) call par_stop("list_driftwood: dw_wrec must be > 0")
+      dw%wrec = list%dw_wrec
+      dw%hrec = dw_param("dw_hrec", list%dw_hrec, 0.5, " m")
+      dw%vrec = dw_param("dw_vrec", list%dw_vrec, 1.0, " m/s")
+      if (dw%hrec < 0.0) call par_stop("list_driftwood: dw_hrec must be >= 0")
+      if (dw%vrec < 0.0) call par_stop("list_driftwood: dw_vrec must be >= 0")
+      dw%have_hyd = .true.
+    end if
+    if (list%dw_droot > -9998.0) then
+      if (list%dw_droot <= 0.0) call par_stop("list_driftwood: dw_droot must be > 0")
+      dw%droot = list%dw_droot
+      dw%have_ero = .true.
+    end if
   end if
 
-  ! --- 停止・堆積(必須)---
-  if (list%dw_wstop <= -9998.0) call par_stop("list_driftwood: dw_wstop (m/s) is required")
-  if (list%dw_wstop <= 0.0) call par_stop("list_driftwood: dw_wstop must be > 0")
-  dw%wstop = list%dw_wstop
+  ! --- 停止・堆積(既定あり)---
+  dw%wstop = dw_param("dw_wstop", list%dw_wstop, 0.01, " m/s")
+  if (dw%wstop <= 0.0) call par_stop("list_driftwood: dw_wstop must be > 0")
   if (list%dw_vstop < 0.0) call par_stop("list_driftwood: dw_vstop must be >= 0")
   dw%vstop = list%dw_vstop
 
@@ -201,22 +212,33 @@ subroutine m_driftwood_init(dw, p, g, b, s)
                   //"(event-scale computation)")
   end if
 
-  ! --- 立木ストック(一様 dw_stock0 か分布 fn_dwstock の排他でどちらか
-  !     必須。分布は rank0 読み+帯 scatter。方式2) ---
+  ! --- 立木ストック(一様 dw_stock0 か分布 fn_dwstock の排他。両方未指定なら
+  !     陸のセル一様に既定 0.001 m3/m2 = 「とりあえず動かす」の最小入力(§50.6)。
+  !     分布は rank0 読み+帯 scatter。方式2) ---
   if (len_trim(list%fn_dwstock) > 0 .and. list%dw_stock0 > -9998.0) then
     call par_stop("list_driftwood: specify the standing stock by either dw_stock0 " &
                   //"(uniform) or fn_dwstock (map), not both")
-  end if
-  if (len_trim(list%fn_dwstock) == 0 .and. list%dw_stock0 <= -9998.0) then
-    call par_stop("list_driftwood: the standing stock is required — specify " &
-                  //"dw_stock0 (uniform, m3/m2) or fn_dwstock (map)")
   end if
   allocate(dw%wst(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (len_trim(list%fn_dwstock) > 0) then
     call read_stock_scatter(p, g, list%fn_dwstock, dw%wst)
   else
-    if (list%dw_stock0 < 0.0) call par_stop("list_driftwood: dw_stock0 must be >= 0")
-    dw%wst(:,:) = list%dw_stock0
+    if (list%dw_stock0 > -9998.0) then
+      if (list%dw_stock0 < 0.0) call par_stop("list_driftwood: dw_stock0 must be >= 0")
+      dw%wst(:,:) = list%dw_stock0
+    else
+      ! 既定: 陸(海でない)の使用セル一様。針葉樹渓流の発生流木量の実績
+      ! 包絡 1,000 m3/km2(§50.5)。採用セル数を表示する
+      dw%wst(:,:) = 0.001
+      nb = 0
+      do j = dcp%js, dcp%je
+        nb = nb + count(g%x(1:g%nx,j) > 0 .and. g%sw(1:g%nx,j) == 0)
+      end do
+      nbv(1) = nb
+      call par_allreduce_sumi(nbv)
+      call par_info("driftwood: dw_stock0 = 0.001 m3/m2 on land cells (default; " &
+                    //itoa(nbv(1))//" cells)")
+    end if
     ! 域外セルにはストックを置かない(台帳集計・出力と整合)
     block
       integer :: i3, j3
@@ -299,6 +321,36 @@ function m_driftwood_draft(sg, d) result(hf)
     end if
   end do
   hf = 0.5 * (xlo + xhi) * d
+end function
+
+
+!----------------------------------------------------------------------
+! 未指定(番兵 −9999)なら既定値を採用し、採用値を必ず 1 行表示する
+! (m_geomorph の gm_param と同じ流儀。§62.1。既定なら "(default)" 付き)
+!----------------------------------------------------------------------
+function dw_param(name, val, def, unit) result(eff)
+  character(len=*), intent(in) :: name     ! namelist 名(表示用)
+  real, intent(in) :: val                  ! namelist の値(番兵 -9999 = 未指定)
+  real, intent(in) :: def                  ! 未指定時の既定値
+  character(len=*), intent(in) :: unit     ! 単位(先頭に空白。無次元は "")
+  real :: eff
+  logical :: isdef
+  character(len=32) :: buf
+  character(len=:), allocatable :: str
+  isdef = (val <= -9998.0)
+  eff = val
+  if (isdef) eff = def
+  if (abs(eff) >= 1.0e5 .or. (abs(eff) < 1.0e-3 .and. eff /= 0.0)) then
+    write(buf, '(es12.4)') eff
+  else
+    write(buf, '(f0.4)') eff
+  end if
+  buf = adjustl(buf)
+  if (buf(1:1) == '.') buf = '0'//trim(buf)
+  if (buf(1:2) == '-.') buf = '-0'//trim(buf(2:))
+  str = "driftwood: "//name//" = "//trim(buf)//unit
+  if (isdef) str = str//" (default)"
+  call par_info(str)
 end function
 
 
