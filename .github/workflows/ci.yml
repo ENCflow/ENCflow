@@ -1,5 +1,5 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
-#   高速な 5 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
+#   高速な 6 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
 #   ローカルで test/chichibu/Run.sh を実行すること)
 #   フル回帰・MPI np=1,2,4・-fcheck=all・BMI 適合性は夜間の nightly.yml で回す
 name: CI
@@ -24,7 +24,7 @@ jobs:
       - name: Regression tests
         run: |
           set -e
-          for c in wave frost pump conduit salt; do
+          for c in wave dambreak frost pump conduit salt; do
             echo "===== test/$c ====="
             (cd "test/$c" && ./Run.sh)
           done
@@ -43,7 +43,7 @@ jobs:
         run: |
           set -e
           export OMP_NUM_THREADS=1
-          for c in wave frost pump conduit salt; do
+          for c in wave dambreak frost pump conduit salt; do
             echo "===== test/$c (np=2) ====="
             (cd "test/$c" && ./Run_MPI.sh 2)
           done

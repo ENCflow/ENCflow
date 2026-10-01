@@ -1,7 +1,7 @@
 # ENCflow Nightly: フル回帰+MPI np=1,2,4+debug(-fcheck=all)+BMI 適合性
 #   毎 push の CI(ci.yml: 高速 5 ケース×逐次/np=2)を補う夜間の全数検査。
 #   4 ジョブ構成:
-#     full-serial : release 逐次で reference 全 13 ケース(chichibu 含む)
+#     full-serial : release 逐次で reference 全 14 ケース(chichibu 含む)
 #                   +トップレベル make(utils の追随漏れ検出。developer.md §10)
 #     full-mpi    : release MPI np=1,2,4 で逐次 reference と照合
 #                   (sewer_wq は除外 — 下記コメント参照)
@@ -24,7 +24,7 @@ concurrency:
 
 env:
   # reference がコミットされている回帰ケース(比較込みで PASS/FAIL 判定)
-  REF_CASES: wave frost pump conduit salt coastal_drain damwq gwseep kdpart sewer_wq splash tide chichibu
+  REF_CASES: wave dambreak frost pump conduit salt coastal_drain damwq gwseep kdpart sewer_wq splash tide chichibu
 
 jobs:
   full-serial:

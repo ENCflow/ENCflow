@@ -1,6 +1,6 @@
 # ENCflow 作業引き継ぎメモ(チャット移行用)
 
-設計・規約・実バグの記録の正本は developer.md(§0〜§67)。全体の案内図は
+設計・規約・実バグの記録の正本は developer.md(§0〜§68)。全体の案内図は
 architecture.md。このメモは「現在進行中・未完了の項目」だけを書く。
 完了したら消してよい。
 
@@ -35,6 +35,13 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   例題(landslide_tsunami・timberyard・tsunami_town 等は README に図と数表)。
 
 ## 未完了・検証待ち
+
+00. **移流項の改良(developer.md §68。2026-10-01 設計合意・段 0 完了)**
+   - 段 0 完了: test/dambreak(Stoker 解析解)と現行スキームの基準値表
+     (段波 11〜24% 遅れ・背後の 2Δx 振動)。ci.yml/nightly.yml に登録。
+   - 段 1(案 B: TVD 分岐の MUSCL 面値再構成化)・段 2(案 C: S&D 運動量
+     保存形移流+MUSCL の新変種。m, n のステップ頭交換追加)を順に実装し、
+     dambreak の数値で判定する。既定の変更(reference 更新)は人間の目視後。
 
 0. **家屋破壊・瓦礫モデル(developer.md §63。2026-10-01 実装・文献照合・
    既定値まで完了)**

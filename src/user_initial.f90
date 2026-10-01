@@ -31,9 +31,10 @@ submodule(m_state) user_initial
 
   ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
   ! 更新すること(乖離は defined/run が「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:2) = [ character(len=32) :: &
-      "wave_hump",   &   ! 波例題: 円形コサイン型の初期水位
-      "template"     ]   ! 新規ルーチンの雛形(空)
+  character(len=*), parameter :: routine_names(1:3) = [ character(len=32) :: &
+      "wave_hump",     & ! 波例題: 円形コサイン型の初期水位
+      "dambreak_step", & ! ダム破壊例題: x 方向の段状初期水深(Stoker 解析解の検証用)
+      "template"       ] ! 新規ルーチンの雛形(空)
 
 contains
 
@@ -94,6 +95,8 @@ function resolve(name) result(fp)
   select case (trim(name))
     case ("wave_hump")
       fp => initial_wave_hump
+    case ("dambreak_step")
+      fp => initial_dambreak_step
     case ("template")
       fp => initial_template
     case default
@@ -144,6 +147,38 @@ subroutine initial_wave_hump(p, g, s)
       !else
       !  d(i,j) = 0.0
       !end if
+    end do
+  end do
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! ダム破壊例題: x 方向の段状初期水深(湿潤床。Stoker 解析解の検証用)
+!   x < lx/2 を上流側水深 hl、それ以外を下流側水深 hr とする。
+!   h0 等の namelist 値は使わず固定値(wave_hump と同じ流儀)。
+!   nx が偶数なら段差はセル境界に厳密に一致する。
+!   解析解との比較は test/dambreak/Check_stoker.py(hl, hr は同期して
+!   変更すること)
+!----------------------------------------------------------------------
+subroutine initial_dambreak_step(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+
+  integer :: i, j
+  real, parameter :: hl = 10.0, hr = 1.0
+  real :: xx
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+
+  do j = 1, g%ny
+    do i = 1, g%nx
+      xx = (i - 0.5) * g%dx
+      if (xx < g%lx / 2) then
+        s%h(i,j) = max(hl - g%z(i,j), 0.0)
+      else
+        s%h(i,j) = max(hr - g%z(i,j), 0.0)
+      end if
     end do
   end do
 
