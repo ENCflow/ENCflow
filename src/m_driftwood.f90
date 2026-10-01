@@ -54,6 +54,7 @@ module m_driftwood
   public :: m_driftwood_calc
   public :: m_driftwood_record
   public :: m_driftwood_dispose
+  public :: m_driftwood_draft
 
   ! ダム捕捉台帳(m_wq の t_wqdam と同型)
   type t_dwdam
@@ -142,27 +143,8 @@ subroutine m_driftwood_init(dw, p, g, b, s)
     call par_stop("list_driftwood: dw_sglog must be in (0,1) — the module assumes " &
                   //"floatable wood (sinking logs are out of scope)")
   end if
-  ! 喫水(浮遊限界水深)d_b: 円柱の浮力平衡 ρlog・πD²/4 = ρw・A_sub(d_b)
-  ! (Braudrick & Grant 2000, WRR 36(2), 式(23)(6))。A_sub は円形断面の
-  ! 水没セグメント面積で、面積率 f(x) = (θ − sinθ)/(2π)、θ = 2acos(1−2x)、
-  ! x = d/D。f(x) = sg を二分法で解く(単調増加。全ランク同一演算 =
-  ! 決定的。sg=0.5 は x=0.5 の厳密対称解)
-  block
-    real :: xlo, xhi, xm, th
-    integer :: k2
-    xlo = 0.0
-    xhi = 1.0
-    do k2 = 1, 60
-      xm = 0.5 * (xlo + xhi)
-      th = 2.0 * acos(1.0 - 2.0 * xm)
-      if ((th - sin(th)) / (2.0 * acos(-1.0)) < list%dw_sglog) then
-        xlo = xm
-      else
-        xhi = xm
-      end if
-    end do
-    dw%hf = 0.5 * (xlo + xhi) * list%dw_dlog
-  end block
+  ! 喫水(浮遊限界水深)は円柱の浮力平衡の厳密解(m_driftwood_draft。§50.4)
+  dw%hf = m_driftwood_draft(list%dw_sglog, list%dw_dlog)
 
   ! --- 発生(少なくとも一方が必須) ---
   if (list%dw_wrec > -9998.0) then
@@ -288,6 +270,35 @@ subroutine m_driftwood_init(dw, p, g, b, s)
   dw%initialized = .true.
   call par_info("driftwood module enabled")
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 喫水(浮遊限界水深)d_b を返す(m)。円柱の浮力平衡 ρlog・πD²/4 =
+! ρw・A_sub(d_b)(Braudrick & Grant 2000, WRR 36(2), 式(23)(6))。A_sub は
+! 円形断面の水没セグメント面積で、面積率 f(x) = (θ − sinθ)/(2π)、
+! θ = 2acos(1−2x)、x = d/D。f(x) = sg を二分法で解く(単調増加。全ランク
+! 同一演算 = 決定的。sg=0.5 は x=0.5 の厳密対称解)。瓦礫モジュール(§63)も
+! 同じ関数で喫水を導く
+!----------------------------------------------------------------------
+function m_driftwood_draft(sg, d) result(hf)
+  real, intent(in) :: sg    ! 材(瓦礫)の見かけ比重 (0<sg<1)
+  real, intent(in) :: d     ! 代表直径(寸法)(m)
+  real :: hf
+  real :: xlo, xhi, xm, th
+  integer :: k2
+  xlo = 0.0
+  xhi = 1.0
+  do k2 = 1, 60
+    xm = 0.5 * (xlo + xhi)
+    th = 2.0 * acos(1.0 - 2.0 * xm)
+    if ((th - sin(th)) / (2.0 * acos(-1.0)) < sg) then
+      xlo = xm
+    else
+      xhi = xm
+    end if
+  end do
+  hf = 0.5 * (xlo + xhi) * d
+end function
 
 
 !----------------------------------------------------------------------
