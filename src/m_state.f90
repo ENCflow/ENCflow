@@ -184,6 +184,24 @@ module m_state
                                         ! (f_out_wd 指定時のみ確保。save 対象外。§7)
     logical :: dw_active = .false.      ! 流木輸送の有効化(m_driftwood_init が設定。
                                         ! swflow_enc がステップ内で s%hd を移流する)
+    real :: dw_sg = 0.0                 ! 流木の材比重(m_driftwood_init が設定。
+                                        ! m_bldgdebris が荷重の付加質量に使う。§63.3)
+    real, allocatable :: hbd(:,:)       ! 流動瓦礫柱状量 (m3/m2 = m。貯留の意味論は
+                                        ! h・hd と同一)。移流は swflow_enc がステップ
+                                        ! 内で行い(bd_active)、破壊・停止・再流動は
+                                        ! m_bldgdebris が担う。確保・保存は
+                                        ! m_bldgdebris_init(有効時のみ)。§63
+    real, allocatable :: wbd(:,:)       ! 堆積瓦礫 (m3/m2。柱状量。m_bldgdebris が
+                                        ! 確保・更新・保存し、m_output が Bd 場を書く)
+    real, allocatable :: wbdmax(:,:)    ! 瓦礫の期間最大到達量 max(hbd+wbd)
+                                        ! (f_out_wbd 指定時のみ確保。save 対象外。§7)
+    real, allocatable :: bds(:,:)       ! 家屋の破壊率 1 − wbs/wbs0(導出量。f_out_bds
+                                        ! 指定時のみ確保。m_output が Bs 場を書く)
+    real, allocatable :: fdmax(:,:)     ! 流木・瓦礫込み最大流体力 (h+(1+s)hs+sg_log·hd
+                                        ! +sg_bd·hbd)·V² (m3/s2。f_out_fdmax 指定時のみ
+                                        ! 確保。save 対象外。既存 F9999 の定義は不変)
+    logical :: bd_active = .false.      ! 瓦礫輸送の有効化(m_bldgdebris_init が設定。
+                                        ! swflow_enc がステップ内で s%hbd を移流する)
     real :: geo_morfac = 0.0 ! geomorph の地形時間加速係数(m_geomorph_init が設定。
                              ! 0 = geomorph 無効。m_glacier_init が「morfac は
                              ! 全プロセス共通の1個」の検査に使う。§45)
@@ -443,8 +461,8 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! セル (i,j) の空隙率を gvnew に変える(§63.1 A2。空隙率を変える唯一の経路)
-!   空隙面積基底の柱状量(h, hs, hrs と、確保されていれば hd, wd, cq, hss。
-!   空隙面積基底の柱状量を新設するモジュールはここに追記する)に
+!   空隙面積基底の柱状量(h, hs, hrs と、確保されていれば hd, wd, cq, hss,
+!   hbd, wbd。空隙面積基底の柱状量を新設するモジュールはここに追記する)に
 !   r = gv_old/gv_new を掛け、体積 = 柱状量 × gv × A を機械精度で保存する。s%lm = gv + (1−gv)·cm を再計算し、e = z + h と af(gv の因子
 !   だけ比例更新。wfrac・湿潤率の因子は不変)を追随させる。
 !   触れないもの: 幾何面積基底の量(swe, hi, hl, hb, cg, bp, wst 等)、地下
@@ -476,6 +494,8 @@ subroutine m_state_set_gv(p, s, i, j, gvnew)
   if (allocated(s%wd)) s%wd(i,j) = s%wd(i,j) * r
   if (allocated(s%cq)) s%cq(i,j) = s%cq(i,j) * r
   if (allocated(s%hss)) s%hss(i,j) = s%hss(i,j) * r
+  if (allocated(s%hbd)) s%hbd(i,j) = s%hbd(i,j) * r
+  if (allocated(s%wbd)) s%wbd(i,j) = s%wbd(i,j) * r
   s%af(i,j) = s%af(i,j) / r
   s%gv(i,j) = gvnew
   s%lm(i,j) = gvnew + (1.0 - gvnew) * p%cm
@@ -820,6 +840,11 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hb)) deallocate(s%hb)
   if (allocated(s%vb)) deallocate(s%vb)
   if (allocated(s%hd)) deallocate(s%hd)
+  if (allocated(s%hbd)) deallocate(s%hbd)
+  if (allocated(s%wbd)) deallocate(s%wbd)
+  if (allocated(s%wbdmax)) deallocate(s%wbdmax)
+  if (allocated(s%bds)) deallocate(s%bds)
+  if (allocated(s%fdmax)) deallocate(s%fdmax)
   if (allocated(s%wd)) deallocate(s%wd)
   if (allocated(s%wdmax)) deallocate(s%wdmax)
   if (allocated(s%fxg)) deallocate(s%fxg)

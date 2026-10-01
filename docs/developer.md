@@ -6058,7 +6058,32 @@ debris_plan.md)。
   と同じ流儀)。B2 で f_bdgv により同一ケースで帰還あり/なしを比較できる。
 - 堆積瓦礫が空隙を再び塞ぐ効果・復旧は対象外(gv は単調増加)。
 
-### 63.5 検証計画と記録
+### 63.5 パラメータ(&list_bldgdebris)と出力
+
+| パラメータ | 既定 | 意味 |
+|---|---|---|
+| f_bd | 1 | 0 で一時無効化 |
+| bd_stock0 / fn_bdstock | — | 家屋ストック(一様 / 分布 m³/m²。排他で必須。木造率込み) |
+| fn_bdfrac | なし(= 1) | 破壊可能割合 fw(空隙率帰還の上限) |
+| bd_dlog, bd_sg | — | 瓦礫の代表寸法 (m)・見かけ比重 (0,1)。喫水は m_driftwood_draft |
+| f_bdcrit | 1 | 判定量 1: h+hs、2: 荷重 (h+(1+s)hs+sg_log·hd+sg_bd·hbd)·V² |
+| bd_hcrit / bd_hcrit2 | — / なし | 浸水深閾値と第2閾値(線形ランプ) |
+| bd_fcrit / bd_fcrit2 | — / なし | 荷重閾値と第2閾値 |
+| bd_wdes | — | 破壊レート (m/s) |
+| bd_fsink | 0 | 沈下率(破壊量のうち堆積へ直行) |
+| bd_wstop, bd_vstop | —, 0 | 接地堆積レート・低速堆積の流速閾値 |
+| bd_wfloat, bd_rfloat, bd_vfloat | 0, 1.5, — | 再流動(流木と同型) |
+| f_bdgv | 1 | 空隙率への帰還(B2) |
+
+出力スイッチ(&list_sysparam): f_out_hbd(Bf)、f_out_wbd(Bd + Bd9999)、
+f_out_bds(Bs)、f_out_fdmax(Fd9999)。診断 result/bldgdebris.csv
+(time_s, destroy_float_m3, destroy_sink_m3, deposit_m3, refloat_m3,
+to_dam_m3, vol_stock_m3, vol_float_m3, vol_deposit_m3)。私有 save
+bldgdebris.dat(hbd, wbd, wbs, wbs0, gv0, s%gv の 6 成分固定)。
+t_state への追加: hbd, wbd, wbdmax, bds, fdmax, bd_active, dw_sg
+(m_driftwood_init が設定。荷重の付加質量係数)。
+
+### 63.6 検証計画と記録
 
 - A1: 全ケース逐次 ULP=0、np=1,2,4 ULP=0、-fcheck np=2 先行(規律3)。
 - A2: 呼び出し元なしで全ケースビット一致、test/gvchange の保存則。
@@ -6081,7 +6106,25 @@ Log.txt は各ケースの Run_MPI.sh の設定 ULP=1 で比較)。
 SIGFPE(hte = 0 の除算)になる。最適化ビルドでは発現しない潜在不具合
 として記録(修正は別コミット。§28 の f_dbres=2 の範囲)。
 
-### 63.6 将来課題
+**A2 検証記録(2026-10-01)**: 呼び出し元なしで全 30 ケースの逐次回帰が
+A1 と同一結果。test/gvchange(体積保存・導出量・no-op)PASS。
+
+**B1 検証記録(2026-10-01)**: test/bldgdebris の構成1(浸水深判定)・構成2
+(流木+瓦礫、荷重判定)で材積保存 1e-13、活性・到達確認 PASS。構成2 と
+構成2'(流木のみ)の state.dat・driftwood.dat がバイト一致(片方向結合の
+証明)。リスタート往復バイト一致。fn_bldgdebris 未指定の全 30 ケースは
+A1 と同一結果 — ただし **sewer_wq(ULP=0 の wq.csv/Log 比較)と coastal_drain
+の最終桁が -Ofast ビルド間で動いた**。-O2 厳密数学では B1 前後の sewer_wq
+出力(Log.txt・wq.csv)がバイト一致するため、挙動変更ではなく fast-math
+のコード配置依存(b333f3e で同ケースの reference を同じ理由で更新した
+前例あり)。reference は更新していない(規律1。人間の確認待ち)。
+-fcheck=all の MPI np=2: test/bldgdebris 構成1・2 PASS、chichibu PASS
+(規律3。新帯配列 hbd/wbd/wbdmax/bds/fdmax)。最適化 MPI の np=2 と np=4 は
+state.dat・bldgdebris.dat が互いにバイト一致(ランク数不変)。-O2 厳密数学
+では逐次 = MPI np=2 がバイト一致(§28.3 の流儀。-Ofast では逐次↔MPI
+ビルド間差の警告が出るが、これは driftwood 等の既存ケースと同じ)。
+
+### 63.7 将来課題
 
 構造種別ごとの閾値(多クラス化)、確率曲線(対数正規)の直接指定、
 両閾値の重ね合わせ、沈む瓦礫の独立台帳、堆積瓦礫の地形固定・再閉塞、

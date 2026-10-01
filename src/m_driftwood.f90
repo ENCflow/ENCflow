@@ -266,6 +266,7 @@ subroutine m_driftwood_init(dw, p, g, b, s)
   end if
 
   s%dw_active = .true.
+  s%dw_sg = list%dw_sglog              ! 荷重評価用に公開(m_bldgdebris が読む。§63.3)
   dw%enabled = .true.
   dw%initialized = .true.
   call par_info("driftwood module enabled")

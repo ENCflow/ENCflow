@@ -138,6 +138,11 @@ subroutine output_state(p, g, s, k)
   ! m_driftwood_init。§50)
   if (p%f_out_hd > 0 .and. allocated(s%hd)) call output_matrix(p, g, "Hd", s%hd, k)
   if (p%f_out_wd > 0 .and. allocated(s%wd)) call output_matrix(p, g, "Wd", s%wd, k)
+  ! 流動瓦礫・堆積瓦礫・家屋の破壊率(fn_bldgdebris 有効時のみ = 前提検証は
+  ! m_bldgdebris_init。§63)
+  if (p%f_out_hbd > 0 .and. allocated(s%hbd)) call output_matrix(p, g, "Bf", s%hbd, k)
+  if (p%f_out_wbd > 0 .and. allocated(s%wbd)) call output_matrix(p, g, "Bd", s%wbd, k)
+  if (p%f_out_bds > 0 .and. allocated(s%bds)) call output_matrix(p, g, "Bs", s%bds, k)
   ! 斜面安全率 Fs(-1 = 評価対象外。slide_pass1 が dt_geomorph 周期で
   ! 更新するため t=0 フレームは全域 -1。§28.9)
   if (p%f_out_fs > 0 .and. allocated(s%fs)) call output_matrix(p, g, "Fs", s%fs, k)
@@ -186,6 +191,11 @@ subroutine output_summary(p, g, s, k)
   ! 流木の期間最大到達量 max(hd+wd)(f_out_wd。§50)
   if (p%f_out_wd > 0 .and. allocated(s%wdmax)) &
     call output_matrix(p, g, "Wd", s%wdmax, k)
+  ! 瓦礫の期間最大到達量 max(hbd+wbd)と流木・瓦礫込み最大流体力(§63)
+  if (p%f_out_wbd > 0 .and. allocated(s%wbdmax)) &
+    call output_matrix(p, g, "Bd", s%wbdmax, k)
+  if (p%f_out_fdmax > 0 .and. allocated(s%fdmax)) &
+    call output_matrix(p, g, "Fd", s%fdmax, k)
   ! 土壌雨量指数の期間最大と発生時刻(fn_swi 有効時のみ。§49)
   if (allocated(s%swimax)) call output_matrix(p, g, "Swi", s%swimax, k)
   if (allocated(s%swimaxt)) call output_matrix(p, g, "Swit", s%swimaxt, k)
