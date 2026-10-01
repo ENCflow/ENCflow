@@ -421,9 +421,13 @@ subroutine set_params(p, g, list)
   if (g%sd_dist .and. len_trim(list%fn_sd) == 0) then
     call par_stop('list_geoinfo: f_sdtype=1 but fn_sd=""')
   end if
-  if (g%sd_dist .and. len_trim(p%fn_gwflow) == 0) then
-    ! gwflow 無効なら土層厚は読み込みも確保もしない(メモリを使わない)
-    call par_info("list_geoinfo: f_sdtype=1 but fn_gwflow is not set; skipping soil depth")
+  if (g%sd_dist .and. len_trim(p%fn_gwflow) == 0 .and. len_trim(p%fn_geomorph) == 0) then
+    ! gwflow も geomorph も無効なら土層厚は読み込みも確保もしない(メモリを
+    ! 使わない)。geomorph は土砂プロセスの可動層として sd の分布を使う
+    ! (以前は gwflow だけで判定しており、geomorph 単独 + fn_sd が黙って
+    ! 読み飛ばされ require_sd で停止する実バグ。§28.12)
+    call par_info("list_geoinfo: f_sdtype=1 but neither fn_gwflow nor fn_geomorph is set;" &
+                  // " skipping soil depth")
     g%sd_dist = .false.
   end if
 

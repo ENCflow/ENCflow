@@ -3170,6 +3170,27 @@ Titan2D / RAMMS との比較検討(comparison.md)で、ENCflow の等価流体�
   低速凝集(セルの vv で判定 — 問題なし)と bedslide の停止(セルの V —
   問題なし)。
 
+### 28.12 【実バグ】geomorph 単独 + fn_sd で土層厚分布が読み飛ばされる(2026-10-01 修正)
+
+- **現象**: f_sdtype=1(fn_sd の分布)を与えて f_debris を使うと、
+  「f_sdtype=1 but fn_gwflow is not set; skipping soil depth」と出た後、
+  require_sd が「soil depth is required by gwflow/geomorph」で停止する。
+  examples/ashfall_lahar(降灰厚 = sd の分布)の作成時に検出。
+- **原因**: m_geoinfo の読み飛ばし判定が gwflow の有無だけを見ていた
+  (sd 分布の読み手が gwflow だけだった時代の名残。geomorph が sd を
+  可動層として読むようになった後も追随していなかった)。一様値 sd0 の
+  経路(require_sd の遅延確保)しか検証されていなかった。
+- **修正**: fn_gwflow と fn_geomorph の両方が空のときだけ読み飛ばす。
+  geomorph 有効なら分布を読んで scatter する(creep だけの構成でも読む =
+  わずかなメモリ増。sd0 の経路は不変)。
+- **検証**: 既存ケースは sd 分布 + geomorph 単独の組合せを含まないため
+  全て不変(reference ビット一致は全 30 ケースの回帰で確認)。
+  examples/ashfall_lahar が分布を読んで動くことを確認。
+- **教訓**: 「誰が読むか」で入力をスキップする最適化は、読み手が増えた
+  ときに追随漏れを起こす。読み飛ばしの条件は読み手の列挙でなく
+  「必要とするモジュールがひとつも無い」で書き、init 側の require で
+  不足を検出する現行の遅延確保口と対にする。
+
 ## 29. 気象強制場 m_meteo と暦の正本化(2026-08-09 分離)
 
 - **暦**: &list_sysparam の date0_c(t=0 の暦)を正本とし、
