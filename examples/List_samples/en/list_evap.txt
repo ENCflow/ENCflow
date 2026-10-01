@@ -18,7 +18,9 @@
   !   4: Thornthwaite formula (temp_normal required in addition to 3)
   f_evmodel = 3
 
-  !evap0 = 3.0                  ! mode 1: PET (mm/day)
+  !evap0 = 3.0                  ! mode 1: PET (mm/day; default 3 = lower side
+                                !   of the warm season in a humid temperate
+                                !   climate; Sec. 66)
   !evap_monthly = 0.5, 0.7, 1.2, 2.0, 2.8, 3.2, 3.6, 3.8, 2.8, 1.8, 1.0, 0.6
                                 ! mode 2: monthly PET (mm/day)
   evap_kc = 1.0                 ! conversion factor (pan coefficient / for

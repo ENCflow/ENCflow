@@ -31,7 +31,7 @@ module m_evap
   use m_meteo, only : t_meteo, meteo_temp_set, meteo_temp_cell, meteo_temp_mean
   use list_evap, only : t_list_evap, list_evap_read
   use m_parallel, only : dcp, is_root, par_info, par_stop, par_sum_rows
-  use m_util, only : itoa, jdn_to_ymd, ymd_to_jdn
+  use m_util, only : itoa, jdn_to_ymd, ymd_to_jdn, param_default
   implicit none
   private
   public :: t_evap
@@ -110,6 +110,9 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
   ! --- モード別の必須パラメータ ---
   select case (ev%model)
     case (1)
+      ! 未指定(番兵 −9999)なら既定 3 mm/day を採用し表示(developer.md §66)。
+      ! 月別値・緯度・平年気温(モード 2〜4)は与件なので既定なし
+      list%evap0 = param_default("evap", "evap0", list%evap0, 3.0, " mm/day", unset=-9999.0)
       if (list%evap0 < 0.0) call par_stop("list_evap: f_evmodel=1 requires " &
                                           //"evap0 >= 0 (mm/day)")
       ev%pet0 = list%evap0

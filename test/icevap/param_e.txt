@@ -1,0 +1,62 @@
+!======================================================================
+! icevap 構成e: 固定遮断率(f_icmodel=1)の最小入力
+!   &list_intercept_fixed を空にする = ic_alpha が既定。降雨 36 mm/h。
+!   developer.md §66。Run.sh が構成e'(既定値を明示した param_ex.txt)と
+!   save の全ファイル・Log.txt のバイト一致を検定する。
+!   閉領域の一様斜面(勾配 0.1。gwdefault と同じ地形)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.2
+  t0 = 0
+  tt = 900
+  dt_disp = 300
+  dt_file = 900
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_precip = '-'
+  fn_intercept = '-'
+  dir_data = 'data_icevap'
+  dir_result = 'result_e'
+  dir_save = 'save_e'
+  f_state_save = 1
+  f_disp_debug = 1          ! S 列を全有効桁で表示(Log のバイト比較用)
+  f_check_cfl = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 40
+  ny = 20
+  dx = 1.0
+  dy = 1.0
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound
+/
+
+&list_precip
+  prtype = 1                ! 一様時系列 (分, mm/h)
+  dt_prupdate = 60.0
+  prval(1:2,1) = 0.0, 36.0
+  prval(1:2,2) = 1440.0, 36.0
+/
+
+&list_intercept
+  f_icmodel = 1
+/
+
+&list_intercept_fixed
+/

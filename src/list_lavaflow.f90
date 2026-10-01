@@ -27,10 +27,10 @@ module list_lavaflow
     integer :: f_lavaflow = 1                ! 0 でファイルを残したまま一時無効化
     character(len=80) :: dt_lavaflow_c = ""  ! 溶岩更新間隔(時間文字列。空 = 毎ステップ)
     real :: lv_rho = 2600.0                  ! 溶岩の密度 ρ (kg/m3)
-    real :: lv_visc = -9999.0                ! 粘度 η (Pa s。必須)
+    real :: lv_visc = -9999.0                ! 粘度 η (Pa s。未指定なら既定 1e4。§66)
     real :: lv_tauy = 0.0                    ! 降伏応力 τ_y (Pa。0 = Newton 流体)
     real :: lv_wsol = 0.0                    ! 停止セルの固化レート (m/s。0 = 固化なし)
-    real :: lv_vsol = -9999.0                ! 停止判定の速度閾値 (m/s。lv_wsol>0 で必須)
+    real :: lv_vsol = -9999.0                ! 停止判定の速度閾値 (m/s。lv_wsol>0 で未指定なら既定 5e-4)
     real :: lv_cfl = 0.4                     ! 陽解法サブサイクルの安全係数 (0-1)
     integer :: lv_nsubmax = 10000            ! 1回の更新のサブサイクル数上限(暴走ガード)
     real :: lv_q0(1:lvmax) = -9999.0         ! 一定噴出率 (m3/s。時系列の代わり)

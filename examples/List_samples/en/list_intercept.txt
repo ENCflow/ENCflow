@@ -44,9 +44,10 @@
 !   distribution file.
 !======================================================================
 &list_intercept_fixed
-  ! Uniform interception ratio. Must satisfy 0 < ic_alpha < 1
-  ! (guide: roughly 0.1-0.4 for forested land)
-  ic_alpha = 0.2
+  ! Uniform interception ratio. Must satisfy 0 < ic_alpha < 1 (default
+  ! 0.15 = broadleaf / mixed forest; guide: conifer 0.25-0.4, grassland
+  ! 0.05-0.1; developer.md §66)
+  ic_alpha = 0.15
 
   ! Interception ratio distribution file (relative path from dir_data;
   ! format follows f_input_mode). If specified, ic_alpha is not used.
@@ -68,10 +69,11 @@
 !   (save file: save/intercept_initloss.dat).
 !======================================================================
 &list_intercept_initloss
-  ! Uniform maximum storage (mm). Must be greater than 0
-  ! (guide: grassland 0.5-2 mm, broadleaf forest 1-3 mm, conifer forest
-  !  2-5 mm)
-  ic_smax_mm = 2.0
+  ! Uniform maximum storage (mm). Must be greater than 0 (default 1.5 =
+  ! canopy storage of a broadleaf forest; guide: grassland 0.3-0.5,
+  ! broadleaf 0.8-1.5, conifer 1.5-3, urban depression storage 1-2.5;
+  ! developer.md §66)
+  ic_smax_mm = 1.5
 
   ! Maximum storage distribution file (mm) (relative path from dir_data;
   ! format follows f_input_mode). If specified, ic_smax_mm is not used.

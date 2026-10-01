@@ -57,7 +57,7 @@ module m_lavaflow
   use m_parallel, only : par_info, par_stop, dcp, is_root, &
                          par_halo_cell, par_allreduce_max, par_allreduce_sumr, &
                          par_gather_to, par_scatter_cell
-  use m_util, only : itoa, rtoa, str2sec
+  use m_util, only : itoa, rtoa, str2sec, param_default
   implicit none
   private
 
@@ -168,7 +168,9 @@ subroutine m_lavaflow_init(lv, p, g, s)
 
   ! --- レオロジー(ラン全体で1組。直接入力 — lava_plan.md §3) ---
   if (list%lv_rho <= 0.0) call par_stop("list_lavaflow: lv_rho must be > 0 (kg/m3)")
-  if (list%lv_visc <= -9998.0) call par_stop("list_lavaflow: lv_visc is required (Pa s)")
+  ! 粘度の既定(未指定 = 番兵 −9999 なら採用し表示。developer.md §66)。
+  ! lv_tauy の 0 は「Newton 流体」、lv_wsol の 0 は「固化なし」の明示なので既定なし
+  list%lv_visc = param_default("lavaflow", "lv_visc", list%lv_visc, 1.0e4, " Pa.s", unset=-9999.0)
   if (list%lv_visc <= 0.0) call par_stop("list_lavaflow: lv_visc must be > 0 (Pa s)")
   if (list%lv_tauy < 0.0) call par_stop("list_lavaflow: lv_tauy must be >= 0 (Pa)")
   lv%rhog = list%lv_rho * p%gg
@@ -179,10 +181,8 @@ subroutine m_lavaflow_init(lv, p, g, s)
   if (list%lv_wsol < 0.0) call par_stop("list_lavaflow: lv_wsol must be >= 0 (m/s)")
   lv%wsol = list%lv_wsol
   if (lv%wsol > 0.0) then
-    if (list%lv_vsol <= -9998.0) then
-      call par_stop("list_lavaflow: lv_wsol > 0 requires lv_vsol " &
-                    // "(stop-detection velocity threshold, m/s)")
-    end if
+    ! 停止判定の速度閾値の既定(lv_wsol > 0 のときだけ読む。§66)
+    list%lv_vsol = param_default("lavaflow", "lv_vsol", list%lv_vsol, 5.0e-4, " m/s", unset=-9999.0)
     if (list%lv_vsol <= 0.0) call par_stop("list_lavaflow: lv_vsol must be > 0 (m/s)")
     lv%vsol = list%lv_vsol
   end if

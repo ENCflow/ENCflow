@@ -149,8 +149,8 @@ m_lavaflow.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o list_lavaflow.o \
 list_lavaflow.o: m_sysparam.o $(PAR_OBJ)
 m_intercept.o: m_sysparam.o list_intercept.o m_state.o m_geoinfo.o m_intercept_fixed.o \
 	m_intercept_initloss.o m_util.o $(PAR_OBJ)
-m_intercept_fixed.o: m_sysparam.o m_state.o m_geoinfo.o m_fileio.o $(PAR_OBJ)
-m_intercept_initloss.o: m_sysparam.o m_state.o m_geoinfo.o m_fileio.o m_sysdep_util.o $(PAR_OBJ)
+m_intercept_fixed.o: m_sysparam.o m_state.o m_geoinfo.o m_fileio.o m_util.o $(PAR_OBJ)
+m_intercept_initloss.o: m_sysparam.o m_state.o m_geoinfo.o m_fileio.o m_sysdep_util.o m_util.o $(PAR_OBJ)
 list_intercept.o: m_sysparam.o $(PAR_OBJ)
 m_tide.o: m_sysparam.o list_tide.o m_geoinfo.o m_state.o m_fileio.o m_util.o $(PAR_OBJ)
 m_boundary.o: m_sysparam.o m_geoinfo.o m_state.o list_boundary.o $(PAR_OBJ)

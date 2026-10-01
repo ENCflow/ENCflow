@@ -6370,3 +6370,35 @@ fn_snow + fn_meteo**。閾値気温・密度・フィルン化時定数・Glen �
   省略)と構成3'(明示)の save(state.dat・snow.dat・glacier.dat)と
   Log.txt がバイト一致、"(default)" 4 行。既存の構成1・2 は明示指定で不変。
   型ごとの推奨値は users_guide/forcing.md(積雪)・glacier.md(氷河)。
+
+## 66. intercept・evap・lavaflow の既定値と wq の代表値表(2026-10-01 実装。§62・§64 の展開)
+
+§64 の `param_default` で、残っていた「未指定なら停止」の物性・校正値に
+既定を与えた。番兵は各モジュールの従来値(intercept は −1、evap・lavaflow は
+−9999)。最小入力は intercept が f_icmodel + 空の固有グループ、evap が
+f_evmodel=1 のみ、lavaflow が噴火口のセルと噴出率のみ。
+
+| パラメータ | 既定 | 根拠 |
+|---|---|---|
+| ic_alpha(固定遮断率) | 0.15 | Crockford & Richardson (2000) Hydrol. Process. 14: 2903–2920 のレビュー: 遮断損失は針葉樹林 20〜40 %、広葉樹林 10〜25 %、草地 5〜10 %。広葉樹・混交林の代表 |
+| ic_smax_mm(初期損失) | 1.5 mm | 同レビューの樹冠貯留容量 S = 0.3〜3 mm(Rutter/Gash 系。針葉樹 1.5〜3、広葉樹 0.8〜1.5)。市街地の不透水面の窪地貯留(SWMM の慣用値 1.3〜2.5 mm)とも同程度 |
+| evap0(f_evmodel=1) | 3 mm/day | FAO-56(Allen ほか 1998)の基準蒸発散 ET₀: 温帯湿潤の暖候期 3〜5 mm/day。日本の年平均(2〜2.5)と夏季(4〜5)の中庸。季節を通す計算はモード 2〜4(与件なので既定なし) |
+| lv_visc | 1e4 Pa·s | 玄武岩質アア溶岩の流下中の粘度(エトナ 1e3〜1e4: Pinkerton & Norton 1995 J. Volcanol. Geotherm. Res. 68: 307–323)。lava_plan.md の η = 1e2〜1e7 の中で玄武岩の上限・安山岩の下限。List_samples の値 |
+| lv_vsol(lv_wsol > 0 のとき) | 5e-4 m/s | ガイドの目安 1e-4〜1e-3 の中庸。List_samples・test/lava の値 |
+
+- 既定を置かなかったもの: lv_tauy(0 = Newton 流体の明示)、lv_wsol(0 =
+  固化なし)、噴火口、evap の月別値・緯度・平年気温(与件)、fn_icalpha・
+  fn_icsmax(分布)。
+- **wq は既定を置かない**(物質ごとに桁で異なる物性に既定を置くと「黙って
+  使う」ことになる。減衰・沈降・分配を書かなければ保存性トレーサとして
+  動くので最小入力は既に成立)。代わりに users_guide/wq.md「物質別の代表値」
+  の表を置いた。出典: 大腸菌の T90(§63 既存の表)、BOD の脱酸素係数
+  0.1〜0.5 /day(Streeter & Phelps 1925; Chapra 1997 Surface Water-Quality
+  Modeling)、Stokes 沈降速度、重金属・Cs の Kd(Sheppard & Thibault 1990
+  Health Phys. 59: 471–482; IAEA TRS-472 2010; US EPA 402-R-99-004A 1999)、
+  Cs-137 半減期 30.17 年、農薬の Koc と半減期(Wauchope ほか 1992 の
+  SCS/ARS/CES pesticide properties database)。
+- 検証(2026-10-01): test/icevap(新設。構成 e 固定遮断率 / f 初期損失 /
+  g 一定蒸発散)と test/lava 構成3(param_ty と同じ Bingham 設定で lv_visc・
+  lv_vsol を省略)で、最小入力と既定値明示の save 全ファイルと Log.txt が
+  バイト一致。既存ケースは明示指定のため不変。

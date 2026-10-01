@@ -101,12 +101,27 @@ Model-specific settings go in dedicated groups within the same file.
 **Fixed interception ratio (f_icmodel = 1, &list_intercept_fixed)** -
 intercepts a constant fraction alpha of rainfall and delivers the
 effective rainfall (1-alpha)P to the surface. Use `ic_alpha` (uniform
-value) or `fn_icalpha` (distribution; ic_alpha is ignored when given).
+value; default 0.15) or `fn_icalpha` (distribution; ic_alpha is ignored
+when given).
 
 **Initial loss (f_icmodel = 2, &list_intercept_initloss)** - stores
 the first part of the rainfall up to a maximum storage, then passes
 everything through once the storage is full. Use `ic_smax_mm` (uniform
-value, mm) or `fn_icsmax` (distribution).
+value, mm; default 1.5) or `fn_icsmax` (distribution).
+
+When the uniform value is unspecified the default is adopted and
+printed with "(default)" (the minimal input is f_icmodel and an empty
+model group; rationale in developer.md §66). Guide values by
+vegetation (review of Crockford & Richardson 2000; calibration
+quantities):
+
+| Type | ic_alpha (interception ratio) | ic_smax_mm (canopy storage, mm) |
+|---|---|---|
+| Dense conifer forest | 0.25-0.4 | 1.5-3 |
+| Broadleaf / mixed forest (default) | 0.1-0.2 | 0.8-1.5 |
+| Leafless deciduous forest | 0.05-0.1 | 0.3-0.8 |
+| Grassland / cropland | 0.05-0.1 | 0.3-0.5 |
+| Urban (initial loss as depression storage) | - | 1-2.5 (depression storage of impervious surfaces; SWMM convention) |
 
 ## Meteorological forcing field (&list_meteo)
 
@@ -152,7 +167,7 @@ Select how potential evapotranspiration (PET) is given with `f_evmodel`.
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| evap0 | - | Mode 1: PET (mm/day) |
+| evap0 | 3.0 | Mode 1: PET (mm/day). When unspecified the default is adopted and printed with "(default)" |
 | evap_monthly | - | Mode 2: monthly PET (mm/day). 12 months |
 | evap_kc | 1.0 | Conversion coefficient (pan coefficient / calibration; common to all modes) |
 | lat | - | Representative latitude (deg). Required for modes 3, 4 |
@@ -162,7 +177,12 @@ Evapotranspiration is subtracted from surface water (supply-limited),
 and the totals are output to `evap.csv` in the result directory. A
 configuration missing its requirements (e.g. mode 2 without a
 calendar) stops at initialization with a message stating what is
-missing.
+missing. The mode-1 default of 3 mm/day is the lower side of the
+warm-season reference evapotranspiration of a humid temperate climate
+(FAO-56 ET0 of 3-5 mm/day): larger than the annual mean of Japan
+(2-2.5 mm/day) and smaller than summer (4-5). Use modes 2-4 for runs
+spanning seasons (monthly values, latitude and normal temperatures are
+given data and have no default).
 
 ## Snowpack and snowmelt (&list_snow)
 

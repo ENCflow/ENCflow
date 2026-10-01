@@ -33,6 +33,25 @@ transport, tracer experiments, and so on. Enable it with `fn_wq`.
 | f_wq_infil | 1 | Behavior at infiltration. 0: remains on the surface (for particulate substances), 1: entrained at the current concentration into the subsurface pool (for dissolved substances) |
 | wq_rg | 1 | Retardation factor R (>= 1) for subsurface transport. Reduces the effective concentration of groundwater advection and seepage return to 1/R (see "Transport through groundwater" below) |
 
+**Representative values by substance (a starting point)** - because
+water-quality properties differ by orders of magnitude between
+substances, ENCflow sets no defaults (with no decay, settling or
+partitioning the substance runs as a conservative tracer) and lists
+representative values instead. All of them span 1-2 orders of
+magnitude, so bracketing with a low and a high case is the practical
+approach (sources in developer.md §66).
+
+| Substance type | Decay | Settling / partitioning | Subsurface | Notes |
+|---|---|---|---|---|
+| Conservative tracer (salinity, dye, turbidity index) | none | none | f_wq_infil=1, wq_rg=1 | Extent and dilution; the first thing to run |
+| Coliforms / pathogen indicators (sewer surcharge, CSO) | wq_k20 1-5 /day (T90 0.5-2 days; fast in sunny summer, slow in cloudy / winter conditions) | none (wq_kd 1e3-1e4 to see attachment to turbidity) | f_wq_infil=0 (stays on the surface) | Concentrations in "Sanitary risk of sewer surcharge" below |
+| Organic pollution (BOD), ammonia | wq_k20 0.1-0.5 /day (Streeter-Phelps deoxygenation coefficient) | none | f_wq_infil=1 | Dissolved oxygen is not solved |
+| Nutrients (nitrate), dissolved salts | none to 0.01 /day | none | f_wq_infil=1, wq_rg=1 | Returns through groundwater seepage |
+| Turbidity / SS (particulate) | none | wq_vs 0.5-10 m/day (clay 2 um 0.3, silt 10 um 8; Stokes) | f_wq_infil=0 | f_wq_settle=1 for the resuspension cycle |
+| Heavy metals (Zn, Cu, Pb; mainly particulate) | none | wq_kd 1e3-1e5 L/kg (Zn 1e3, Cu 3e3, Pb 1e4-1e5; requires f_suspend) | f_wq_infil=1, wq_rg 1e2-1e4 | Two-phase partitioning (below) |
+| Radiocesium (Cs-137) | wq_thalf 11019 day (30.17 yr) | wq_kd 1e3-1e4 L/kg (strong sorption to clay; requires f_suspend) | f_wq_infil=1, wq_rg 1e3-1e4 (R = 1 + rho_b Kd / theta) | Long-term catchment behavior |
+| Pesticides, dissolved organics | wq_thalf 10-60 day | wq_kd 1-100 L/kg (Koc x organic-carbon fraction) | f_wq_infil=1, wq_rg 2-100 | Degradation rate depends on temperature and radiation |
+
 ## How loads are given (superposable)
 
 The input paths are **superposed**, not mutually exclusive (they can

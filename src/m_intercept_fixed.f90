@@ -30,6 +30,7 @@ module m_intercept_fixed
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
   use m_fileio, only : fileio_read_matrix
+  use m_util, only : param_default
   use m_parallel, only : par_info, par_stop, par_abort, dcp, is_root, &
                        par_scatter_cell
   implicit none
@@ -74,7 +75,8 @@ subroutine intercept_fixed_init(p, g)
     ! 分布指定: 遮断率マップを読み、通過率 1-α の帯配列にして保持
     call read_alpha_map(p, g, trim(fn_icalpha))
   else
-    ! 一様指定
+    ! 一様指定(未指定 = 番兵 −1 なら既定を採用し表示。developer.md §66)
+    ic_alpha = param_default("intercept", "ic_alpha", ic_alpha, 0.15, "", unset=-1.0)
     if (ic_alpha <= 0.0 .or. ic_alpha >= 1.0) then
       call par_stop("list_intercept_fixed: ic_alpha must be 0 < ic_alpha < 1 (or specify fn_icalpha)")
     end if
