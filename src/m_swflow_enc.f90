@@ -525,8 +525,9 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! σ の遷移深さ D の構築(zbank/drw は帯配布済み)
   if (have_sect) call build_sdep(g, b, s)
   ! 実効平面積率 af(§25/§26)。restore 後の統計・gwflow が最初のステップ
-  ! 前に読むため init でも埋める(既定は m_state_init の gv のまま)
-  if (have_width .or. have_sect) call update_af(g, s)
+  ! 前に読むため init でも埋める(既定は m_state_init の gv のまま。
+  ! 空隙率が時間変化する機能(s%gv_active。§63.1)も毎ステップ更新の対象)
+  if (have_width .or. have_sect .or. s%gv_active) call update_af(g, s)
 
   ! 破堤サイトの解釈・検証・行バケット構築(zbank の帯と s%z を読むため
   ! この位置。have_breach を設定する)
@@ -1805,8 +1806,9 @@ subroutine complete(p, g, s, sx, initial)
     !$omp end parallel do
   end if
 
-  ! 実効平面積率 af の更新(§25/§26。幅・σ とも無効なら af=gv のまま不変)
-  if (have_width .or. have_sect) call update_af(g, s)
+  ! 実効平面積率 af の更新(§25/§26。幅・σ・可動 gv のいずれも無効なら
+  ! af=gv のまま不変)
+  if (have_width .or. have_sect .or. s%gv_active) call update_af(g, s)
 
 end subroutine
 

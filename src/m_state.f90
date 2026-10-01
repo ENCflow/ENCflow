@@ -18,6 +18,7 @@ module m_state
   public :: m_state_dispose
   public :: m_state_updatetime
   public :: m_state_calcstat
+  public :: m_state_set_gv
   public :: m_state_printstate
 
 
@@ -77,6 +78,9 @@ module m_state
                                         !   空隙率を変える機能は state_set_gv 経由で更新
                                         !   する。無効時は入力と同値のため save 対象外
     real, allocatable :: lm(:,:)        ! 有効慣性係数 gv+(1−gv)·cm(gv の導出量。同上)
+    logical :: gv_active = .false.      ! 空隙率が時間変化する機能の有効化(gv を変える
+                                        !   モジュールの init が立てる。swflow_enc が
+                                        !   update_af の呼び出し条件に加える。§63.1)
     real, allocatable :: hg(:,:)        ! 地下貯留水深(柱状換算)(m)。どの地下水
                                         ! モデルも毎ステップここに反映する契約
     real, allocatable :: hs(:,:)        ! 浮遊砂柱状量(m。単位床面積あたりの固体
@@ -436,6 +440,48 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 統計量を計算
+
+!----------------------------------------------------------------------
+! セル (i,j) の空隙率を gvnew に変える(§63.1 A2。空隙率を変える唯一の経路)
+!   空隙面積基底の柱状量(h, hs, hrs と、確保されていれば hd, wd, cq, hss。
+!   空隙面積基底の柱状量を新設するモジュールはここに追記する)に
+!   r = gv_old/gv_new を掛け、体積 = 柱状量 × gv × A を機械精度で保存する。s%lm = gv + (1−gv)·cm を再計算し、e = z + h と af(gv の因子
+!   だけ比例更新。wfrac・湿潤率の因子は不変)を追随させる。
+!   触れないもの: 幾何面積基底の量(swe, hi, hl, hb, cg, bp, wst 等)、地下
+!   貯留 hg 系(S 集計が幾何面積基底で扱い、浸透の契約は af/gv で換算する
+!   既存の扱いに従う = 家屋の破壊は地下水に影響しない)、線流量 m/n と
+!   流速(次ステップの運動量式が新しい h で更新する。運動量の保存は
+!   二次の効果として受容)。
+!   呼び出し側の契約: 自帯 js..je のセルだけを更新し、更新後に
+!   par_halo_cell(s%gv)・par_halo_cell(s%lm) を行うこと(運動量項が ±1 近傍の
+!   gv・lm を平均する)。gvnew >= gv_old のみ(第1段 = 破壊で空隙が増える
+!   方向)。gvnew == gv_old は no-op
+!----------------------------------------------------------------------
+subroutine m_state_set_gv(p, s, i, j, gvnew)
+  type(t_sysparam), intent(in) :: p      ! cm(家屋の付加質量力係数)
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: i, j
+  real, intent(in) :: gvnew
+  real :: r
+  if (gvnew == s%gv(i,j)) return
+  if (gvnew < s%gv(i,j) .or. gvnew > 1.0) then
+    call par_stop("m_state_set_gv: the void ratio may only increase towards 1 " &
+                  //"(gv_old <= gv_new <= 1)")
+  end if
+  r = s%gv(i,j) / gvnew
+  s%h(i,j) = s%h(i,j) * r
+  s%hs(i,j) = s%hs(i,j) * r
+  s%hrs(i,j) = s%hrs(i,j) * r
+  if (allocated(s%hd)) s%hd(i,j) = s%hd(i,j) * r
+  if (allocated(s%wd)) s%wd(i,j) = s%wd(i,j) * r
+  if (allocated(s%cq)) s%cq(i,j) = s%cq(i,j) * r
+  if (allocated(s%hss)) s%hss(i,j) = s%hss(i,j) * r
+  s%af(i,j) = s%af(i,j) / r
+  s%gv(i,j) = gvnew
+  s%lm(i,j) = gvnew + (1.0 - gvnew) * p%cm
+  s%e(i,j) = s%z(i,j) + s%h(i,j)
+end subroutine
+
 !----------------------------------------------------------------------
 subroutine m_state_calcstat(s, p, g)
   type(t_state), intent(inout) :: s

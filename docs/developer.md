@@ -6069,6 +6069,18 @@ debris_plan.md)。
   f_bdcrit=1/2、f_bdgv=0/1 の比較)。
 - 記録は各段階の実施時に本節へ追記する。
 
+**A1 検証記録(2026-10-01, gfortran 13.3 / OpenMPI 4.1, -Ofast)**:
+全 30 ケースの逐次回帰が baseline と同一結果(reference ビット一致。
+coastal_drain は従来どおり tolerance 内)。-fcheck=all の MPI np=2 で
+chichibu / wave / damwq PASS(規律3)。最適化 MPI の np=1, 2, 4 で全 29
+ケース PASS(state.dat の逐次ビット一致を検定するケースは全て一致。
+Log.txt は各ケースの Run_MPI.sh の設定 ULP=1 で比較)。
+既存の観察(A1 起因でないことを A1 前のソースで確認): -fcheck=all
+(-march/-flto なし)の MPI ビルドでは test/driftwood 構成1(土石流+流木)
+が m_swflow_enc の江頭層流則の摩擦項 tfe = −fbe·vve/(rme·hte)·gve で
+SIGFPE(hte = 0 の除算)になる。最適化ビルドでは発現しない潜在不具合
+として記録(修正は別コミット。§28 の f_dbres=2 の範囲)。
+
 ### 63.6 将来課題
 
 構造種別ごとの閾値(多クラス化)、確率曲線(対数正規)の直接指定、

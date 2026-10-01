@@ -82,3 +82,10 @@ test/*/result_seteq_pre.npy
 __pycache__/
 bmi/test_encflow_bmi_mpi
 test/*/test_encflow_bmi_mpi
+test/gvchange/test_setgv
+examples/tsunami_town/z.txt
+examples/tsunami_town/sw.txt
+examples/tsunami_town/gv.txt
+examples/tsunami_town/bdstock.txt
+examples/tsunami_town/bdfrac.txt
+examples/tsunami_town/dwstock.txt
