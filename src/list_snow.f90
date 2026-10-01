@@ -17,7 +17,7 @@ module list_snow
     real :: snow_t_snow = 0.0                ! 全て雪になる気温閾値 (℃)
     real :: snow_t_rain = 2.0                ! 全て雨になる気温閾値 (℃。間は線形混合)
     real :: snow_t_melt = 0.0                ! 融雪閾値 (℃)
-    real :: snow_ddf = -9999.0               ! 度日係数 (mm/℃/day。必須)
+    real :: snow_ddf = -9999.0               ! 度日係数 (mm/℃/day。未指定なら既定 4。§65)
     real :: snow_swe0 = -9999.0              ! 初期積雪水量 (mm。一様)
     character(len=maxpathlen) :: fn_snow_swe0 = ""  ! 初期積雪水量分布 (mm。swe0 と排他)
   end type

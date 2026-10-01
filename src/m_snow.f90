@@ -46,6 +46,7 @@ module m_snow
   use list_snow, only : t_list_snow, list_snow_read
   use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
   use m_sysdep_util, only : sysdep_mkdir
+  use m_util, only : param_default
   use m_parallel, only : par_info, par_stop, par_abort, dcp, is_root, &
                          par_gather_to, par_scatter_cell
   implicit none
@@ -101,7 +102,10 @@ subroutine m_snow_init(sn, p, g, s, mt)
   if (list%snow_t_rain < list%snow_t_snow) then
     call par_stop("list_snow: snow_t_rain must be >= snow_t_snow")
   end if
-  if (list%snow_ddf <= -9998.0) call par_stop("list_snow: snow_ddf is required")
+  ! 度日係数の既定(未指定 = 番兵 −9999 なら採用し、採用値を表示。
+  ! developer.md §65。閾値気温 3 つは既に既定を持つ)
+  list%snow_ddf = param_default("snow", "snow_ddf", list%snow_ddf, 4.0, &
+                                " mm/degC/day", unset=-9999.0)
   if (list%snow_ddf <= 0.0) call par_stop("list_snow: snow_ddf must be > 0")
   if (list%snow_swe0 > -9998.0 .and. list%snow_swe0 < 0.0) then
     call par_stop("list_snow: snow_swe0 must be >= 0")

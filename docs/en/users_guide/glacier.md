@@ -11,6 +11,16 @@ and snow accumulation/snowmelt (fn_snow) are required** (snowfall is
 the accumulation source). Like landform change, the processes are
 **stackable**: enable only what you need.
 
+The minimal input to "just try it" is **an empty &list_glacier in
+fn_glacier** (plus fn_meteo and fn_snow, both of which may be empty
+groups). The degree-day, sliding and erosion coefficients have
+defaults (the "Default" column; rationale in developer.md §65); when
+unspecified the default is adopted and printed with "(default)". The
+default configuration is "grow from no ice by snowfall, SIA flow on,
+no sliding or erosion". Set gl_morfac and t_cycle, which buy
+geomorphic time, to suit the problem (see the
+[configuration example](#configuration-example) below).
+
 | Process | Flag | Description |
 |---|---|---|
 | Mass balance | (always on) | Firnification of perennial snow (accumulation) and degree-day melt of the ice surface (ablation) |
@@ -62,7 +72,7 @@ and time acceleration** to cover geomorphic time.
 |---|---|---|
 | gl_dens | 900.0 | Ice density (kg/m³), used for the SWE ⇄ ice-thickness conversion |
 | gl_tfirn_yr | 10.0 | Time constant of snow-to-ice conversion (firnification) in years; a few to ~10 years for temperate glaciers |
-| gl_ddfi | — | Degree-day factor of the ice surface (mm/°C/day). **Required.** Larger than the snow value (snow_ddf); literature values are around 6–12 |
+| gl_ddfi | 8.0 | Degree-day factor of the ice surface (mm/°C/day). Larger than the snow value (snow_ddf); literature values are around 6–12 (Hock 2003) |
 | gl_tmelt | 0.0 | Air-temperature threshold for ice melt (°C) |
 
 - Snowfall accumulates as SWE through the snow feature, and **only
@@ -97,8 +107,8 @@ exactly).
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| gl_as | — | Weertman sliding coefficient As (m yr⁻¹ Pa⁻³). **Required** when f_glslide=1 |
-| gl_kg | — | Erosion coefficient Kg. **Required** when f_glero=1. Coefficient of the erosion law ė = Kg·usˡ with sliding speed us measured in m/yr (dimensionless for l=1; literature values around 1e-4) |
+| gl_as | 1e-13 | Weertman sliding coefficient As (m yr⁻¹ Pa⁻³). Read when f_glslide=1. The default gives 100 m/yr at a basal shear stress of 100 kPa (the fast side of mountain glaciers) |
+| gl_kg | 1e-4 | Erosion coefficient Kg. Read when f_glero=1. Coefficient of the erosion law ė = Kg·usˡ with sliding speed us measured in m/yr (dimensionless for l=1; the measured 1e-4 of Humphrey & Raymond 1994) |
 | gl_lexp | 1.0 | Power-law exponent l of the erosion law (1–2) |
 
 - Erosion occurs **only under sliding ice** (f_glero requires
@@ -150,20 +160,30 @@ experiments.
   prec_lapse = 5.0              ! +5%/100m
 /
 &list_snow
-  snow_ddf = 4.0
+  snow_ddf = 4.0                ! same as the default (may be omitted)
 /
 &list_glacier
   dt_glacier_c = "1 day"
   gl_morfac = 100.0             ! 1 computed year = 100 glacier/landform years
-  gl_ddfi = 8.0
+  gl_ddfi = 8.0                 ! same as the default (may be omitted)
   f_glflow = 1
   f_glslide = 1
-  gl_as = 1.0e-13
+  gl_as = 1.0e-13               ! same as the default (may be omitted)
   f_glero = 1
-  gl_kg = 1.0e-4
+  gl_kg = 1.0e-4                ! same as the default (may be omitted)
   f_glava = 1
 /
 ```
+
+**Recommended values by pattern** (calibration quantities; sources in
+developer.md §65)
+
+| Type | gl_ddfi | gl_afl (Pa⁻³ yr⁻¹) | gl_as (m yr⁻¹ Pa⁻³) | gl_kg | Notes |
+|---|---|---|---|---|---|
+| Temperate glacier (Alps; perennial snow patches to small glaciers in Japan) | 6-10 | 1e-16 | 1e-13 to 1e-12 | 1e-4 | Bed at the melting point, fast sliding. Erosion experiments: f_glslide + f_glero |
+| Cold / polar type (high latitude or altitude) | 4-7 | 1e-17 to 1e-16 | 0 (no sliding = f_glslide=0) | - | Frozen bed; deformation flow only |
+| Glacier hydrology (meltwater runoff) only | 6-10 | - | - | - | f_glflow=0 (a glacier that does not flow) + ice thickness from fn_glacier_hi0 |
+| Cirque / U-shaped valley formation experiments | 8 | 1e-16 | 1e-13 | 1e-4 (l=1) / 1e-7 to 1e-6 (l=2) | Millennia via gl_morfac x t_cycle. f_glava=1 |
 
 Long-period climate change (glacial cycles, warming trends) can be
 superimposed on the representative year with `tempofs` (an air

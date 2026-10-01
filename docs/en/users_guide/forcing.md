@@ -175,13 +175,24 @@ required.**
 | snow_t_snow | 0.0 | Temperature threshold below which all precipitation is snow (deg C) |
 | snow_t_rain | 2.0 | Temperature threshold above which all precipitation is rain (deg C). In between, rain and snow mix linearly |
 | snow_t_melt | 0.0 | Temperature threshold for snowmelt (deg C) |
-| snow_ddf | - | Degree-day factor (mm/degC/day). **Required** |
-| snow_swe0 / fn_snow_swe0 | - / "" | Initial snow water equivalent (mm) (uniform value / distribution; mutually exclusive) |
+| snow_ddf | 4.0 | Degree-day factor (mm/degC/day). When unspecified the default is adopted and printed with "(default)" (rationale in developer.md §65) |
+| snow_swe0 / fn_snow_swe0 | - / "" | Initial snow water equivalent (mm) (uniform value / distribution; mutually exclusive; omit both to start without snow) |
 
 Snowfall is stored as snow water equivalent (SWE) and melts into
 surface water by the degree-days above snow_t_melt. Combined with the
 temperature lapse rate (&list_meteo), snowpack and snowmelt are
 represented per elevation band.
+
+The minimal input to "just try it" is **an empty &list_snow in
+fn_snow** (plus the air temperature of fn_meteo). Guide values of the
+degree-day factor (compilation of Hock 2003; a calibration quantity):
+
+| Type | snow_ddf (mm/degC/day) | Notes |
+|---|---|---|
+| Forest (under a conifer canopy) | 2-3 | Small because radiation is shaded |
+| Open land / sparse forest (default) | 3.5-5 | The observed range of snowmelt floods in Japanese mountain basins |
+| Late melt season, open high elevation | 5-7 | Larger with dirty snow and stronger radiation (no seasonal variation is implemented, so give a period average) |
+| Snow on a glacier | 3-5 | The ice surface uses gl_ddfi ([Glaciers](glacier.md)) |
 
 ## Summary of combination requirements
 

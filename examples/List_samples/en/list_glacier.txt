@@ -33,7 +33,7 @@
                             !   (firnification) in years (~a few to 10 for
                             !   temperate glaciers)
   gl_ddfi = 8.0             ! degree-day factor of the ice surface
-                            !   (mm/degC/day; required; larger than the snow
+                            !   (mm/degC/day; default 8; larger than the snow
                             !   value, literature ~6-12; ice under snow cover
                             !   does not melt)
   gl_tmelt = 0.0            ! temperature threshold of ice melt (degC)
@@ -50,7 +50,7 @@
   ! ---- Weertman basal sliding (G3; requires f_glflow) ----
   f_glslide = 0             ! 1 to enable (us = As tau_b^3)
   !gl_as = 1.0e-13          ! sliding coefficient As (m yr^-1 Pa^-3;
-                            !   required when f_glslide=1)
+                            !   default 1e-13 = 100 m/yr at tau_b 100 kPa)
 
   ! ---- Glacial erosion (G3; requires f_glslide) ----
   !   edot = Kg * us^l (us measured in m/yr) lowers s%z. s%sd is reduced
@@ -60,7 +60,7 @@
   !   dispose; a documented simplification, glacier_plan.md Sec. 6)
   f_glero = 0               ! 1 to enable
   !gl_kg = 1.0e-4           ! erosion coefficient Kg (dimensionless for l=1;
-                            !   literature around 1e-4)
+                            !   default 1e-4 = measured by Humphrey & Raymond 1994)
   !gl_lexp = 1.0            ! sliding-speed exponent l (1-2)
 
   ! ---- Gravitational snow redistribution = avalanching (G4) ----

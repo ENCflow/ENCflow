@@ -136,7 +136,7 @@ m_bldgdebris.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o m_swflow_enc.o m
 	list_bldgdebris.o m_fileio.o m_sysdep_util.o $(PAR_OBJ)
 list_bldgdebris.o: m_sysparam.o $(PAR_OBJ)
 m_snow.o: m_sysparam.o m_geoinfo.o m_state.o m_meteo.o m_swflow_enc.o list_snow.o \
-	m_fileio.o m_sysdep_util.o $(PAR_OBJ)
+	m_fileio.o m_sysdep_util.o m_util.o $(PAR_OBJ)
 list_snow.o: m_sysparam.o $(PAR_OBJ)
 m_swi.o: m_sysparam.o m_geoinfo.o m_state.o list_swi.o list_intercept.o \
 	m_fileio.o m_sysdep_util.o $(PAR_OBJ)

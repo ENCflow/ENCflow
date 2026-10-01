@@ -6347,3 +6347,26 @@ fn_gwc_inlet)の 1 行を足す。
   が要る。OpenMP と MPI の併用で 4 コアを超えると著しく遅くなるため
   MPI 検証は OMP_NUM_THREADS=1 で行った。
 
+## 65. snow・glacier パラメータの既定値方針(2026-10-01 実装。§62・§64 の展開)
+
+§64 の `param_default`(m_util)をそのまま使い、積雪・融雪と氷河で
+**未指定なら停止**だった 4 値に既定を与えた(番兵 −9999 は従来どおり。
+`unset=-9999.0` で「それ以下」判定)。最小入力は **fn_snow(空の
+&list_snow)+ fn_meteo**、氷河は **fn_glacier(空の &list_glacier)+
+fn_snow + fn_meteo**。閾値気温・密度・フィルン化時定数・Glen の A・
+雪崩勾配は既に既定を持っていた。
+
+| パラメータ | 既定 | 根拠 |
+|---|---|---|
+| snow_ddf | 4 mm/°C/day | Hock (2003) J. Hydrol. 282: 104–115 の度日係数の集計(雪 2.5〜6 が多数、森林で小・開放地で大)の中央。日本の山地流域の融雪出水の慣用値 3〜5 の中庸。List_samples の値。test/glacier の 3 は検定用 |
+| gl_ddfi | 8 mm/°C/day | 同じく Hock (2003) の氷の集計(5.5〜20。アルベドが低いため雪の 1.5〜2 倍)の下寄り。List_samples・test/glacier の値 |
+| gl_as(f_glslide=1 のとき) | 1e-13 m yr⁻¹ Pa⁻³ | Weertman 則 u_s = A_s τ_b³ で τ_b = 100 kPa(Cuffey & Paterson 2010 の典型 50〜150 kPa)のとき 100 m/yr = 山岳氷河の滑動速度の速い側(10〜100 m/yr)。カール形成の試験(test/glacier 構成2)の値 |
+| gl_kg(f_glero=1 のとき) | 1e-4(l=1) | Humphrey & Raymond (1994) J. Glaciol. 40: 539–552、Variegated 氷河の実測: 侵食速度 ≈ 1e-4 × 滑動速度。l=2 の場合(Herman ほか 2015)は別校正で 1e-7〜1e-6 |
+
+- snow_swe0 / fn_snow_swe0 は従来どおり省略で無雪(§31)。gl_morfac・
+  t_cycle・dt_glacier_c は「地形時間をいくら稼ぐか」の実験設計の量なので
+  既定(1・なし・1 day)のまま利用者が決める。
+- 検証(2026-10-01): test/glacier 構成3(param_cirque と同じ設定で 4 値を
+  省略)と構成3'(明示)の save(state.dat・snow.dat・glacier.dat)と
+  Log.txt がバイト一致、"(default)" 4 行。既存の構成1・2 は明示指定で不変。
+  型ごとの推奨値は users_guide/forcing.md(積雪)・glacier.md(氷河)。
