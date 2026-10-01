@@ -1,0 +1,8 @@
+result_*/
+Screen_*.log
+encflow
+encflow_mpi
+z.txt
+z_noash.txt
+ash.txt
+__pycache__/

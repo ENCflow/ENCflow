@@ -1,0 +1,63 @@
+!======================================================================
+! ashfall_lahar 対照: 降灰なし(清水の洪水のみ)。param.txt と同じ地形・降雨
+!   元地形 z_noash.txt に同じ降雨を与え、土砂プロセスは使わない。
+!   降灰ケースとの差が「降灰があったから泥流になった」ことを示す。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1                  ! 時間刻み (s)。dx=5 m、流速 ~10 m/s で CFL ≈ 0.3
+  t0 = 0
+  tt = 5400                 ! 90 分(無降雨 10 分 + 降雨 60 分 + 減水 20 分)
+  dt_disp = 600
+  dt_file = 300             ! 出力 5 分おき(18 フレーム)
+  dt_recrd = 10             ! プローブ 10 s おき
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_precip = '-'
+  fn_geomorph = ''          ! 土砂プロセスなし
+  fn_boundary = '-'
+  fn_record = '-'
+  dir_result = 'result_noash'
+  f_out_z = 1               ! 地盤高 Z(侵食・堆積の時間発展)
+  f_check_cfl = 0
+/
+
+&list_enc
+  f_gravity_correction = 1  ! 急勾配の重力補正(土石流ケースの標準)
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 乾いた地表(水は降雨で供給)
+/
+
+&list_geoinfo
+  lx = 600.0
+  ly = 300.0
+  nx = 120
+  ny = 60
+  f_ztype = 1
+  fn_z = 'z_noash.txt'      ! 元地形(make_init.py z_noash)
+  f_rntype = 0
+  rn0 = 0.05                ! 降灰面の粗度(清水域のマニング)
+/
+
+&list_precip
+  prtype = 1                ! 一様分布の時系列(時刻 min, 強度 mm/h)
+  prval(1:2,1) =  0,  0
+  prval(1:2,2) = 10, 40     ! 10 分から 40 mm/h
+  prval(1:2,3) = 70,  0     ! 70 分で止む
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺(扇状地の末端): 自由流出
+/
+
+&list_record
+  pbxytype = 1              ! 実座標 (x, y) で指定
+  pbxy(:,1) = 202.5, 152.5  ! 斜面の谷筋(谷出口の 100 m 上流)
+  pbxy(:,2) = 302.5, 152.5  ! 谷出口(扇頂)
+  pbxy(:,3) = 452.5, 152.5  ! 扇状地の中ほど
+/
