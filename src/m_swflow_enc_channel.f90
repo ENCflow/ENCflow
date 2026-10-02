@@ -53,12 +53,14 @@ contains
 !   「塞がれた」= その側の河道セルが天端を持ち(zbank 有効)、斜め先が
 !   堤内地(x>0, sw=0, rw<=0)。bank_wall の発動条件と同一に保つこと。
 !   領域外(x<=0)は従来どおり無フラックスのままで振り替え対象にしない。
+!   斜めエッジ(成分1,3)には対称に、両端セルが共有する側方 2 セルの塞がれた
+!   軸開口シェア(d̂ 投影)を振り替える(diag_reassign。§68.11)。
 !
 ! [幅キャップ(have_width)]
 !   河道—河道の全成分エッジについて、両セルの河道幅の最小値 W_e
 !   (正の値のみ。両方幅情報なしなら対象外)から
 !     q = min(W_e / 面長, 1)   面長: 成分4=dy, 成分2=dx,
-!                              成分1,3=√(dx·dy)(dx=dy で横断合計が厳密)
+!                              成分1,3=dx·dy/dr(斜めの自然幅。§68.11)
 !   を frw に重畳する。直線河道では法線エッジが幅 W_e を担い、蛇行の
 !   屈曲では法線+斜めショートカットへ横断合計 W_e が按分される。
 !   W_e ≥ 面長では q = 1 で解像河道の表現と厳密一致(退化性)。
@@ -76,7 +78,12 @@ module subroutine build_channel_frw(g)
 
   jlo = max(dcp%jsh, 1)
   jhi = min(dcp%jeh, g%ny)
-  capd = sqrt(g%dx * g%dy)
+  ! 斜めエッジの幅キャップの分母 = 斜めの自然幅 dx·dy/dr(セル面積/対角
+  ! 路長。dx=dy で 0.707·dx)。旧 √(dx·dy) から変更(§68.11): 対角 1 セル
+  ! 河道で W = 自然幅のとき係数がちょうど 1 になり、貯留 wfrac = 1・流速
+  ! 正規化 1 と整合する。W がこれを超える対角河道は「解像」扱い(自然幅で
+  ! 頭打ち。より広い河道は 2 セル厚の階段で表す)
+  capd = g%dx * g%dy / sqrt(g%dx**2 + g%dy**2)
 
   ! x法線エッジ(成分4): セル (i,j)-(i+1,j) の間
   do j = jlo, jhi
@@ -101,6 +108,28 @@ module subroutine build_channel_frw(g)
       end if
     end do
   end do
+
+  ! 斜めエッジ(成分1: (i,j)-(i+1,j+1)、成分3: (i,j+1)-(i+1,j))への対称な
+  ! 振り替え(developer.md §68.11)。両端セルが共有する 2 つの側方セル
+  ! (成分1 なら (i+1,j) と (i,j+1))が堤防壁で塞がれた分を斜めエッジへ
+  ! 振り替え、2 つとも塞がれた直線の対角 1 セル河道で通過幅が斜めの自然幅
+  ! dx·dy/dr(dx=dy で 0.707·dx。4.14 → 7.07)になるようにする。軸の規則が
+  ! 直線の軸 1 セル河道で lpy·dy → dy(自然幅)にするのと対称。塞がり判定は
+  ! 両端セルから見た平均(軸の規則と同形)。屈曲部では開いた軸エッジと
+  ! 斜めエッジの両方が増強されるため横断合計が自然幅を超える
+  ! (channel_model.md §3)
+  if (have_bopen) then
+    do j = jlo, min(dcp%jeh - 1, g%ny - 1)
+      do i = 1, g%nx - 1
+        if (is_channel(g, i, j) .and. is_channel(g, i+1, j+1)) then
+          frw(1,i,j) = 1.0 + diag_reassign(g, i, j, i+1, j+1) / l8(1)
+        end if
+        if (is_channel(g, i, j+1) .and. is_channel(g, i+1, j)) then
+          frw(3,i,j) = 1.0 + diag_reassign(g, i, j+1, i+1, j) / l8(3)
+        end if
+      end do
+    end do
+  end if
 
   if (have_width) then
     ! セルの方向別通水率 cwx/cwy(u,v 正規化係数)を、幅キャップを
@@ -172,15 +201,7 @@ module subroutine build_wfrac(g)
       if (g%x(i,j) <= 0 .or. g%sw(i,j) /= 0 .or. g%rw(i,j) <= 0) cycle
       w = g%wrw(i,j)
       if (w <= 0.0) cycle                     ! 幅情報なし: 解像扱い
-      lch = 0.0
-      do k = 1, 8
-        in = i + din(k)
-        jn = j + djn(k)
-        if (g%x(in,jn) <= 0) cycle            ! x 番兵が領域外を弾く
-        if (g%sw(in,jn) /= 0 .or. g%rw(in,jn) <= 0) cycle
-        lch = lch + w8dr(k) / 2
-      end do
-      if (lch <= 0.0) lch = min(g%dx, g%dy)   ! 孤立河道セル
+      lch = lch_cell(g, i, j)
       wfrac(i,j) = min(w * lch / (g%dx * g%dy), 1.0)
       wfrac(i,j) = max(wfrac(i,j), g%min_gv)
     end do
@@ -607,8 +628,13 @@ subroutine build_cw(g, capd)
   real :: numx, denx, numy, deny
   real :: cap8(1:8)
 
-  ! k 方位ごとの幅キャップの分母(成分4系=dy, 成分2系=dx, 斜め=√(dx·dy))
-  cap8(1:8) = [ capd, g%dx, capd, g%dy, g%dy, capd, g%dx, capd ]
+  ! 流速正規化のキャップ分母はセルの自然幅 dx·dy/L_ch(軸 1 セル河道で
+  ! dy = 通過幅キャップの面長と同値、対角 1 セル河道で dx²/dr)。セル平均
+  ! 流量 (m, n) は自然幅に塗り広げた量なので、河道内流速 = (|q|/h)/(W/自然幅)。
+  ! 通過幅キャップ(frw)の分母 面長(成分別 cap8)とは別物(§68.11)。
+  ! 河道の端のセル(河道隣接 1 つ)は L_ch = dx/2 で自然幅が 2 倍になるため
+  ! L_ch の下限を min(dx,dy) にする(直線軸河道の全セルで dy に一致)
+  if (capd > 0.0) continue                  ! 引数未使用の警告を抑制(互換のため残す)
 
   allocate(cwx(1:g%nx, dcp%js:dcp%je), source = 1.0)
   allocate(cwy(1:g%nx, dcp%js:dcp%je), source = 1.0)
@@ -617,6 +643,7 @@ subroutine build_cw(g, capd)
     do ic = 1, g%nx
       if (.not. is_channel(g, ic, jc)) cycle
       if (g%wrw(ic,jc) <= 0.0) cycle        ! 幅情報なし: 正規化しない
+      cap8(1:8) = g%dx * g%dy / max(lch_cell(g, ic, jc), min(g%dx, g%dy))
       numx = 0.0
       denx = 0.0
       numy = 0.0
@@ -718,8 +745,8 @@ module subroutine cw_cell(g, i, j, sig, cx, cy)
   cy = 1.0
   if (.not. is_channel(g, i, j)) return
   if (g%wrw(i,j) <= 0.0) return
-  capd = sqrt(g%dx * g%dy)
-  cap8(1:8) = [ capd, g%dx, capd, g%dy, g%dy, capd, g%dx, capd ]
+  capd = g%dx * g%dy / max(lch_cell(g, i, j), min(g%dx, g%dy))   ! 自然幅(build_cw と同じ)
+  cap8(1:8) = capd
   numx = 0.0
   denx = 0.0
   numy = 0.0
@@ -752,6 +779,56 @@ end subroutine
 !----------------------------------------------------------------------
 ! 河道セル(陸)か
 !----------------------------------------------------------------------
+!----------------------------------------------------------------------
+! 斜めエッジ A(ia,ja)–B(ib,jb) へ振り替える塞がりシェアの合計(通過幅 m)
+!   側方セルは S1=(ib,ja)、S2=(ia,jb)。A から S1 は x 法線(ib = ia±1)、
+!   A から S2 は y 法線、B からはその逆。塞がり判定は各端セルの天端の
+!   有無を要する(nblk と同じ)。両端からの平均
+!----------------------------------------------------------------------
+function diag_reassign(g, ia, ja, ib, jb) result(sh)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: ia, ja, ib, jb
+  real :: sh, s1, ld
+  ! 側方 2 セルとも塞がれたとき通過幅が斜めの自然幅 dx·dy/dr(セル面積/
+  ! 対角路長)になるよう、塞がり 1 件あたり (dx·dy/dr − l8_d)/2 を振り替える
+  ! (dx=dy: 4.14 → 7.07 = 0.707·dx。軸の規則が lpy·dy → dy にするのと同じ
+  ! 「自然幅まで」の目標。W = 自然幅 ⇔ wfrac = 1 ⇔ 流速正規化 1 と整合)
+  ld = l8(1)
+  s1 = (g%dx * g%dy / sqrt(g%dx**2 + g%dy**2) - ld) / 2
+  sh = 0.0
+  if (g%zbank(ia,ja) > zbank_min) then
+    if (blocked(g, ib, ja)) sh = sh + s1
+    if (blocked(g, ia, jb)) sh = sh + s1
+  end if
+  if (g%zbank(ib,jb) > zbank_min) then
+    if (blocked(g, ib, ja)) sh = sh + s1
+    if (blocked(g, ia, jb)) sh = sh + s1
+  end if
+  sh = sh / 2                         ! 両端セルから見た塞がりの平均
+end function
+
+!----------------------------------------------------------------------
+! 河道セルのセル内河道長 L_ch(河道隣接 8 近傍への半距離 w8dr/2 の総和。
+!   直線 x 河道で dx、対角 1 セル河道で dr、孤立セルは min(dx,dy))。
+!   wfrac = W·L_ch/(dx·dy) の L_ch であり、dx·dy/L_ch はセルの「自然幅」
+!   (セル面積/路長。軸 1 セル河道で dy、対角で dx²/dr)。§18・§68.11
+!----------------------------------------------------------------------
+function lch_cell(g, i, j) result(lch)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i, j
+  real :: lch
+  integer :: k, in, jn
+  lch = 0.0
+  do k = 1, 8
+    in = i + din(k)
+    jn = j + djn(k)
+    if (g%x(in,jn) <= 0) cycle            ! x 番兵が領域外を弾く
+    if (g%sw(in,jn) /= 0 .or. g%rw(in,jn) <= 0) cycle
+    lch = lch + w8dr(k) / 2
+  end do
+  if (lch <= 0.0) lch = min(g%dx, g%dy)   ! 孤立河道セル
+end function
+
 function is_channel(g, ic, jc) result(res)
   type(t_geoinfo), intent(in) :: g
   integer, intent(in) :: ic, jc

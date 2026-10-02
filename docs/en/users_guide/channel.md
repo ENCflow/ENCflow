@@ -67,7 +67,7 @@ Notes when giving the height with a distribution file `fn_bank`:
 | f_bank_datum | 1 | datum of the height. 0: bed (after incision), 1: landside cell elevation (recommended), 2: absolute elevation |
 | f_bank_aggr | 0 | aggregation of the crest for datum=1. 0: mean of the adjacent landside cells (noise suppression), 1: minimum (faithful to overtopping onset), 2: maximum (conservative) |
 | f_bank_mode | 0 | hydraulic mode. 0: overtopping only (impermeable up to the crest in both directions), 1: sluice gate (check valve; passes landside -> channel only), 2: forced drainage (for compatibility and experiments; for real-world pumping stations use the pumps of the [structures chapter](structure.md)) |
-| f_bank_opening | 1 | opening correction that reallocates the passage width of diagonal openings to the channel's normal edges (corrects the under-conveyance of one-cell-wide channels; 0 is for comparison with the old behavior) |
+| f_bank_opening | 1 | opening correction that reallocates the passage width of openings blocked by levee walls to the open channel-channel edges of the same cross-section. In an axis-aligned one-cell channel the blocked diagonal openings go to the normal edge; in a diagonal (8-connected) one-cell channel the blocked axis openings go to the diagonal edge. Either way the passage width becomes the natural width of the cell (axis: the cell width, diagonal: cell area / diagonal path length = 0.707 cell width), so the under-conveyance of one-cell channels is corrected regardless of orientation (0 is for comparison with the old behavior) |
 
 ## Subgrid channel width
 

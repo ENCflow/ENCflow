@@ -13,3 +13,14 @@ param_width_s3.txt
 param_width_noadv.txt
 param_width_sect*.txt
 param_diag_s3.txt
+rw_diagw*.txt
+width_diagw*.txt
+param_diagw*_s3.txt
+param_width10*.txt
+param_diagw4*.txt
+param_zigzagw_s3.txt
+rw_width*.txt
+width_width*.txt
+z_zigzagw.txt
+rw_zigzagw.txt
+width_zigzagw.txt

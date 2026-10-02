@@ -16,18 +16,80 @@ import sys
 DX, S, Z0 = 10.0, 0.005, 100.0
 kind = sys.argv[1] if len(sys.argv) > 1 else "straight"
 
-if kind == "width":
+if kind.startswith("diagw"):
+    # 対角 1 セル河道 + サブグリッド幅(W = 7.07 m: 自然幅、diagw10: W = 10 m)。
+    # 最初の 3 セルは x 方向、以後 45°。堤内地は河床+3 m(高さ0堤防が自動有効)
+    W = float(kind[5:]) if len(kind) > 5 else DX / (2 ** 0.5)
+    nx, ny = 400, 405
+    # 両端の 3 セルは x 方向(流入・流出境界の面集合を軸河道と同じにする。
+    # 終点を対角のまま東辺に置くと、幅未補正の自由流出面が狭い河道の貯留を
+    # 抜き切って発散する。§18 制約 (5))
+    path = [(i, 5) for i in range(1, 4)] + [(3 + k, 5 + k) for k in range(1, 395)] \
+         + [(i, 399) for i in range(398, 401)]
+    z = [[0.0] * nx for _ in range(ny)]; rw = [[0] * nx for _ in range(ny)]; w = [[0.0] * nx for _ in range(ny)]
+    bed = {}
+    for k, (i, j) in enumerate(path):
+        bed[(i, j)] = Z0 - S * (sum(DX if (kk < 3 or kk >= 397) else DX * 2 ** 0.5 for kk in range(k)))
+    for j in range(ny):
+        for i in range(nx):
+            # 堤内地の標高: 最寄りの河道セル(同じ路長位置近傍)の河床 + 3 m で近似
+            kk = min(max(i - 1, 0), 399)
+            z[j][i] = bed[path[kk]] + 3.0
+    for (i, j), zb in bed.items():
+        z[j - 1][i - 1] = zb; rw[j - 1][i - 1] = 1; w[j - 1][i - 1] = W
+    for name, a, fmt in ((f"z_{kind}", z, "%.4f"), (f"rw_{kind}", rw, "%d"), (f"width_{kind}", w, "%.2f")):
+        with open(name + ".txt", "w") as f:
+            for row in a:
+                f.write(" ".join(fmt % v for v in row) + "\n")
+    with open(f"path_{kind}.csv", "w") as f:
+        f.write("k,i,j,s\n")
+        for k, (i, j) in enumerate(path): f.write(f"{k},{i},{j},0\n")
+    print(kind, nx, ny, "W =", W)
+    sys.exit(0)
+
+if kind.startswith("width"):
+    # 直線軸河道 + サブグリッド幅(width = 4 m、width10 = 10 m など)
+    W = float(kind[5:]) if len(kind) > 5 else 4.0
     nx, ny = 400, 5
     z = [[0.0] * nx for _ in range(ny)]; rw = [[0] * nx for _ in range(ny)]; w = [[0.0] * nx for _ in range(ny)]
     for i in range(nx):
         bed = Z0 - S * DX * i
         for j in range(ny):
             z[j][i] = bed + (0.0 if j == 2 else 3.0)
-        rw[2][i] = 1; w[2][i] = 4.0
-    for name, a, fmt in (("z_width", z, "%.4f"), ("rw_width", rw, "%d"), ("width_width", w, "%.2f")):
+        rw[2][i] = 1; w[2][i] = W
+    for name, a, fmt in ((f"z_{kind}", z, "%.4f"), (f"rw_{kind}", rw, "%d"), (f"width_{kind}", w, "%.2f")):
         with open(name + ".txt", "w") as f:
             for row in a:
                 f.write(" ".join(fmt % v for v in row) + "\n")
+    print(kind, nx, ny)
+    sys.exit(0)
+
+if kind == "zigzagw":
+    # 折れ線(zigzag と同じ経路)+ 堤内地セル(河床+3 m、マスクなし → 高さ0堤防)
+    # + サブグリッド幅 W = 10 m(軸区間の自然幅 = 解像)。屈曲部の挙動を測る
+    nx, ny = 240, 164
+    j0 = 2
+    path = [(i, j0) for i in range(1, 81)]
+    path += [(80, j) for j in range(j0 + 1, j0 + 81)]
+    path += [(i, j0 + 80) for i in range(81, 161)]
+    path += [(160, j) for j in range(j0 + 81, j0 + 161)]
+    path += [(i, j0 + 160) for i in range(161, 241)]
+    bed = {(i, j): Z0 - S * DX * k for k, (i, j) in enumerate(path)}
+    z = [[0.0] * nx for _ in range(ny)]; rw = [[0] * nx for _ in range(ny)]; w = [[0.0] * nx for _ in range(ny)]
+    for j in range(ny):
+        for i in range(nx):
+            # 堤内地: 最寄り(マンハッタン距離)の河道セルの河床 + 3 m
+            kk = min(range(len(path)), key=lambda k: abs(path[k][0] - (i + 1)) + abs(path[k][1] - (j + 1)))
+            z[j][i] = bed[path[kk]] + 3.0
+    for (i, j), zb in bed.items():
+        z[j - 1][i - 1] = zb; rw[j - 1][i - 1] = 1; w[j - 1][i - 1] = 10.0
+    for name, a, fmt in (("z_zigzagw", z, "%.4f"), ("rw_zigzagw", rw, "%d"), ("width_zigzagw", w, "%.2f")):
+        with open(name + ".txt", "w") as f:
+            for row in a:
+                f.write(" ".join(fmt % v for v in row) + "\n")
+    with open("path_zigzagw.csv", "w") as f:
+        f.write("k,i,j,s\n")
+        for k, (i, j) in enumerate(path): f.write(f"{k},{i},{j},{k * DX}\n")
     print(kind, nx, ny)
     sys.exit(0)
 
