@@ -1,0 +1,68 @@
+!======================================================================
+! サブグリッド河道幅 W = 4 m(wfrac = 0.4)の直線水路の定常流(§68.9)
+!   q_河道 = 40/4 = 10 m²/s → 等流水深 2.38 m、u = 4.2 m/s、Fr = 0.87
+!   S = 0.005, n = 0.03, Q = 40 m³/s(幅 10 m → q = 4 m²/s)
+!   等流水深 h_n = (q n / √S)^0.6 = 1.373 m, u = 2.91 m/s, Fr = 0.79
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.25
+  t0 = 0
+  tt = 7200
+  dt_disp = 600
+  dt_file = 3600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_precip = '-'
+  dir_result = 'result_zz_dynrain20_s1'
+  f_disp_debug = 1
+  f_disp_qq = 1
+  f_out_h = 1
+  f_out_u = 1
+  f_out_v = 1
+  f_out_m = 1
+  f_out_n = 1
+  f_out_hmax = 0
+/
+&list_enc
+  f_advection_scheme = 1
+  f_hcap_upwind = 1
+  f_opening_dynamic = 1
+  f_dry_head_cap = 1
+/
+&list_initial
+  f_htype = 0
+  f_uvtype = 0
+  h0 = 0.0
+  u0 = 0
+  v0 = 0
+/
+&list_geoinfo
+  lx = 2400.0
+  ly = 1640.0
+  nx = 240
+  ny = 164
+  f_ztype = 1
+  fn_z = 'z_zigzagw.txt'
+  fn_rw = 'rw_zigzagw.txt'
+  rn0_rw = 0.03
+  f_rntype = 0
+  rn0 = 0.03
+/
+&list_precip
+  prtype = 1
+  prval(:,1) = 0, 20.0
+  prval(:,2) = 600, 20.0
+/
+&list_bound_edge
+  f_bc_e = 1
+/
+&list_bound_inflow
+  inflow_cell(:,1,1) = 1, 2
+  inflow_val(:,1,1) = 0, 40.0
+  inflow_val(:,2,1) = 240, 40.0
+  inflow_dist(1) = 0
+/
