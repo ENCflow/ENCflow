@@ -216,6 +216,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_out_fmax | &list_sysparam | [入出力](io.md) |
 | f_out_fr | &list_sysparam | [入出力](io.md) |
 | f_out_fs | &list_sysparam | [入出力](io.md) |
+| f_opening_dynamic | &list_enc | [浅水流計算](swflow.md) |
 | f_out_h | &list_sysparam | [入出力](io.md) |
 | f_out_hbd | &list_sysparam | [入出力](io.md) |
 | f_out_hd | &list_sysparam | [入出力](io.md) |

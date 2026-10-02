@@ -52,6 +52,15 @@
                             !   hydraulic jumps (correct bore speed).
                             !   p_adv_upwind_index / f_advection_tvd below
                             !   act on scheme 1 only
+  !f_opening_dynamic = 0    ! dynamic reassignment of blocked openings
+                            !   (0: off = default, 1: edges between channel
+                            !   cells only (needs fn_rw), 2: all edges).
+                            !   Passage-width shares that cannot be used
+                            !   because the diagonal neighbour's ground is
+                            !   above the water surface are reassigned to
+                            !   the open edges every step (fixes the reduced
+                            !   conveyance of 1-cell channels / wall-side rows
+                            !   and the amplified damping of scheme 3)
   !f_advection_tvd = 0      ! use a TVD scheme for the advection term
   !p_adv_upwind_index = 0.5 ! upwinding index of the advection term (0-1.
                             !   0: central difference, 1: first-order upwind)

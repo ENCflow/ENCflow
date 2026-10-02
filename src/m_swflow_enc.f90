@@ -11,6 +11,7 @@ module m_swflow_enc
                        par_gather_edge_to, par_scatter_edge
   use m_sysdep_util, only : sysdep_mkdir
   use m_fileio, only : fileio_write_rle, fileio_read_rle
+  use m_util, only : itoa
   implicit none
   private
 
@@ -56,6 +57,8 @@ module m_swflow_enc
   integer :: f_advection_tvd != 9            ! 移流項にTVDスキームを使用(スキーム1のみ)
   integer :: f_advection_runge != 0          ! 移流項のルンゲクッタでの更新
   integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
+  integer :: f_opening_dynamic              ! 塞がれた開口の動的振り替え (0:なし, 1:河道
+                                            !   セル間のエッジのみ, 2:全エッジ。§68.14)
   integer :: f_bank_mode                    ! 堤防の水理モード(下の e_bank_*)
   integer :: f_diffusion_term               ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
   real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
@@ -166,6 +169,22 @@ module m_swflow_enc
                                             !   河道—河道の全成分に乗る
   real, allocatable :: wfrac(:,:)           ! セルの河道平面積率 (1:nx, jsh:jeh)。
                                             !   非河道・幅情報なしセルは 1
+  ! 塞がれた開口の動的振り替え(developer.md §68.14)
+  !   静的な frw(堤防壁)と同じ規則を、「隣接セルの地盤が水面より高い」
+  !   ことで塞がれた開口に毎ステップ適用する。塞がり率
+  !     s = clamp((z_n − z_c) / h_c, 0, 1)
+  !   (z_n: 斜め先セルの地盤、z_c, h_c: 自セルの地盤と水深。領域外・無効
+  !   セルは s = 1)は水位の連続関数で、平坦な開水面(z_n = z_c)では 0 =
+  !   既存スキームと厳密一致。振り替え先は軸エッジ(成分 2, 4: lp → lp +
+  !   nb·ld)と斜めエッジ(成分 1, 3: 自然幅 dx·dy/dr まで)で静的規則と同形。
+  !   自然幅までの振り替えなので Σ w8mx·fw = 1 となり u, v の正規化は不要。
+  !   表 fwd はステップ頭に h^n, z^n(ハロ幅 2)から各ランクが帯の必要
+  !   エッジ行を冗長構築し、frw と同じ読取点で乗じる(frw と併用時は積。
+  !   堤防壁で既に静的に振り替えた斜め先は数えない)。状態なし
+  !   (リスタートでは復元した h から再構築 → restore_uvmn の u,v,m,n は
+  !   保存時の値と最終桁で異なりうる。§68.14)
+  logical :: have_fwd = .false.             ! 動的振り替えが有効か
+  real, allocatable :: fwd(:,:,:)           ! 動的通過幅係数 (1:4, 0:nx, jsh-1:jeh)
   ! 破堤(developer.md §18。構築・更新は submodule m_swflow_enc_channel)
   !   サイト=セル対 (ic,jc)-(il,jl) で一意に決まるエッジ。実効天端を
   !   時系列 f(t)(1=天端高, 0=堤内地盤高)で変える:
@@ -439,6 +458,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   f_adaptive_runge = list%f_adaptive_runge
   f_friction_fastmath = list%f_friction_fastmath
   f_advection_scheme = list%f_advection_scheme
+  f_opening_dynamic = list%f_opening_dynamic
   f_advection_tvd = list%f_advection_tvd
   f_advection_runge = list%f_advection_runge
   select case (f_advection_scheme)
@@ -506,6 +526,20 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 有効判定は namelist 由来+geoinfo の構築結果で全ランク同一
   have_bopen = have_bank .and. f_bank_opening > 0
   have_frw = have_bopen .or. have_width
+  ! 塞がれた開口の動的振り替え(§68.14)。有効判定は namelist 由来で
+  ! 全ランク同一。河道限定(1)は河道マスク(rw)が必須
+  if (f_opening_dynamic < 0 .or. f_opening_dynamic > 2) then
+    call par_stop("list_enc: f_opening_dynamic must be 0(off), 1(channel edges) or 2(all edges)")
+  end if
+  have_fwd = f_opening_dynamic > 0
+  if (f_opening_dynamic == 1 .and. .not. any(g%rw > 0)) then
+    call par_stop("list_enc: f_opening_dynamic=1 requires a channel mask (fn_rw in list_geoinfo)")
+  end if
+  if (have_fwd) then
+    allocate(fwd(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 1.0)
+    call par_info("swflow: dynamic opening reassignment enabled (f_opening_dynamic=" &
+                  //itoa(f_opening_dynamic)//")")
+  end if
   adv_drop_rw = have_bank .and. f_channel_advection == 0
 
   ! システムパラメータから継承するENCパラメータをセットする
@@ -643,6 +677,10 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! t の純関数なので全ランクが同値を冗長計算する=通信不要)
   if (have_breach) call breach_update(s%t)
 
+  ! 塞がれた開口の動的振り替え表をステップ頭の h, z(ハロ交換済み)から
+  ! 構築する(§68.14。無効時は呼ばない=ゼロ追加)
+  if (have_fwd) call build_fwd(p, g, s)
+
   ! 移流項を計算する
   call adv_prepare(p, g, s, sx_mod)
 
@@ -757,6 +795,8 @@ subroutine m_swflow_enc_dispose(p)
   call bc_dispose
   call del_enc_status(sx_mod)
   if (allocated(frw)) deallocate(frw)
+  if (allocated(fwd)) deallocate(fwd)
+  have_fwd = .false.
   if (allocated(wfrac)) deallocate(wfrac)
   if (allocated(cwx)) deallocate(cwx)
   if (allocated(sdep)) deallocate(sdep)
@@ -956,6 +996,9 @@ subroutine init_enc_status(p, g, s, sx)
 
   if (p%f_state_restore > 0) then
     call restore_state(p, sx)
+    ! 動的振り替えの表は復元した h から作る(保存時はステップ頭の h^n で
+    ! 作っていたため u,v,m,n の再導出は最終桁で異なりうる。§68.14)
+    if (have_fwd) call build_fwd(p, g, s)
     call restore_uvmn(p, g, s, sx)
   end if
 
@@ -1219,6 +1262,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   !   河道幅有効時はセルの平面積率 wfrac で水深換算を除算補正する
   dh = mne1 * mn2dh(k)    ! 家屋占有率がゼロの場合の中心セルの水深減少量
   if (have_frw) dh = dh * frw(k,ie,je)
+  if (have_fwd) dh = dh * fwd(k,ie,je)
   dhc = dh / s%gv(i,j)
   dhn = -dh / s%gv(in,jn)
   if (have_width) then
@@ -1580,6 +1624,10 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
               fwc = frw(ke(kk),i+die(kk),j+dje(kk))
               fwn = frw(ke(kk),in+die(kk),jn+dje(kk))
             end if
+            if (have_fwd) then
+              fwc = fwc * fwd(ke(kk),i+die(kk),j+dje(kk))
+              fwn = fwn * fwd(ke(kk),in+die(kk),jn+dje(kk))
+            end if
             dvc = dvc + mnec * mn2dh(kk) * fwc * winvc / s%gv(i,j) / a(l)
             dvn = dvn + mnen * mn2dh(kk) * fwn * winvn / s%gv(in,jn) / a(l)
           end do
@@ -1605,6 +1653,10 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
         if (have_frw) then
           fwc = frw(ke(kk),i+die(kk),j+dje(kk))
           fwn = frw(ke(kk),in+die(kk),jn+dje(kk))
+        end if
+        if (have_fwd) then
+          fwc = fwc * fwd(ke(kk),i+die(kk),j+dje(kk))
+          fwn = fwn * fwd(ke(kk),in+die(kk),jn+dje(kk))
         end if
         ! 仮の水深を更新
         hc = hc - mnec * mn2dh(kk) * fwc * winvc / s%gv(i,j) / a(l)
@@ -1726,6 +1778,7 @@ subroutine continuous(p, g, s, sx)
         ! 乗算で厳密に不変。質量換算と平均量の重みを同時に補正する)
         fw = 1.0
         if (have_frw) fw = frw(ke(k),ie,je)
+        if (have_fwd) fw = fw * fwd(ke(k),ie,je)
         ! 水深の減少量(m)に換算
         !   家屋占有率が0.0で無い場合はここで補正係数を乗じる。
         !   河道幅有効時は平面積率 wfrac の逆数 winv も乗じる
@@ -1972,6 +2025,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
         ! 通過幅係数(continuous と同一)
         fw = 1.0
         if (have_frw) fw = frw(ke(k),ie,je)
+        if (have_fwd) fw = fw * fwd(ke(k),ie,je)
         c1(i,j) = c1(i,j) - mne * cdon * sh * mn2dh(k) * fw * winv / s%gv(i,j)
       end do
     end do
@@ -1990,6 +2044,135 @@ end subroutine
 !   momentum が同条件のエッジの uv/mn1 を 0 に零化しているため、
 !   無条件に総和しても寄与が 0 でスキップと同値になる
 !----------------------------------------------------------------------
+!----------------------------------------------------------------------
+! 塞がれた開口の動的振り替え表 fwd の構築(developer.md §68.14)
+!   静的 build_channel_frw(堤防壁)と同じ振り替え規則を、塞がり率
+!   s = clamp((z_n − z_c)/h_c, 0, 1) の実数版で毎ステップ適用する。
+!   エッジの格納: 成分4 (i,j)-(i+1,j)、成分2 (i,j)-(i,j+1)、
+!   成分1 (i,j)-(i+1,j+1)、成分3 (i,j+1)-(i+1,j)。
+!   読み手(連続式・運動量の仮水深・再構成)は帯セル js..je とその
+!   8近傍のエッジを読む → エッジ行 js-2..je+1(成分4は js-1..je+1)、
+!   斜め先セル行 js-2..je+2 = セルハロ幅 2(jsh..jeh)に収まる(frw と
+!   同じ確保範囲)。
+!   各 (k,ie,je) の書き手は 1 つ(行 je のループ)= OpenMP 競合なし。
+!   全ランクがハロ交換済みの h, z から同じ式で冗長構築する(決定的)。
+!----------------------------------------------------------------------
+subroutine build_fwd(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer :: i, j, jlo, jhi
+  real :: nb, sh, s1d
+  logical :: ok_c, ok_n
+
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  ! 斜めの振り替え量: 斜め先 1 つあたり (自然幅 − l8_d)/2(静的規則と同形)
+  s1d = (g%dx * g%dy / sqrt(g%dx**2 + g%dy**2) - l8(1)) / 2
+  jlo = max(dcp%js - 2, 1)
+  jhi = min(dcp%je + 1, g%ny)
+
+  !$omp parallel do schedule(static) private(j)
+  do j = dcp%jsh - 1, dcp%jeh
+    fwd(:, :, j) = 1.0
+  end do
+  !$omp end parallel do
+
+  !$omp parallel do schedule(dynamic) private(i, j, nb, sh, ok_c, ok_n)
+  do j = jlo, jhi
+    do i = 1, g%nx
+      ok_c = fwd_cell(g, i, j)
+      ! 成分4: (i,j)-(i+1,j)。斜め先は (i+1,j±1)(自セル側)と (i,j±1)(近傍側)
+      !   読み手が参照する成分4の行は js-1..je+1(行 js-2 の成分4は近傍セル
+      !   の 8 近傍にも含まれない)。行 js-2 で計算すると斜め先 js-3 が
+      !   セル確保範囲 jsh の外になるため除く
+      if (i < g%nx .and. j >= dcp%js - 1) then
+        ok_n = fwd_cell(g, i+1, j)
+        if (ok_c .and. ok_n .and. fwd_pair(g, i, j, i+1, j)) then
+          nb = (sblk(g, s, i, j, i+1, j-1) + sblk(g, s, i, j, i+1, j+1) &
+              + sblk(g, s, i+1, j, i, j-1) + sblk(g, s, i+1, j, i, j+1)) / 2
+          if (nb > 0) fwd(4,i,j) = (lpy + nb * ldy) / lpy
+        end if
+      end if
+      if (j < g%ny) then
+        ! 成分2: (i,j)-(i,j+1)。斜め先は (i±1,j+1) と (i±1,j)
+        ok_n = fwd_cell(g, i, j+1)
+        if (ok_c .and. ok_n .and. fwd_pair(g, i, j, i, j+1)) then
+          nb = (sblk(g, s, i, j, i-1, j+1) + sblk(g, s, i, j, i+1, j+1) &
+              + sblk(g, s, i, j+1, i-1, j) + sblk(g, s, i, j+1, i+1, j)) / 2
+          if (nb > 0) fwd(2,i,j) = (lpx + nb * ldx) / lpx
+        end if
+        if (i < g%nx) then
+          ! 成分1: (i,j)-(i+1,j+1)。両端が共有する側方セル (i+1,j), (i,j+1)
+          if (ok_c .and. fwd_cell(g, i+1, j+1) .and. fwd_pair(g, i, j, i+1, j+1)) then
+            sh = (sblk(g, s, i, j, i+1, j) + sblk(g, s, i, j, i, j+1) &
+                + sblk(g, s, i+1, j+1, i+1, j) + sblk(g, s, i+1, j+1, i, j+1)) / 2 * s1d
+            if (sh > 0) fwd(1,i,j) = 1.0 + sh / l8(1)
+          end if
+          ! 成分3: (i,j+1)-(i+1,j)。共有する側方セル (i+1,j+1), (i,j)
+          if (ok_n .and. fwd_cell(g, i+1, j) .and. fwd_pair(g, i, j+1, i+1, j)) then
+            sh = (sblk(g, s, i, j+1, i+1, j+1) + sblk(g, s, i, j+1, i, j) &
+                + sblk(g, s, i+1, j, i+1, j+1) + sblk(g, s, i+1, j, i, j)) / 2 * s1d
+            if (sh > 0) fwd(3,i,j) = 1.0 + sh / l8(3)
+          end if
+        end if
+      end if
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+! 動的振り替えの対象になりうるセルか(有効な陸セル)
+function fwd_cell(g, i, j) result(res)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i, j
+  logical :: res
+  res = g%x(i,j) > 0 .and. g%sw(i,j) == 0
+end function
+
+
+! エッジ (i1,j1)-(i2,j2) が適用範囲か(f_opening_dynamic=1 は両端が河道セル)
+function fwd_pair(g, i1, j1, i2, j2) result(res)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i1, j1, i2, j2
+  logical :: res
+  res = .true.
+  if (f_opening_dynamic == 1) res = g%rw(i1,j1) > 0 .and. g%rw(i2,j2) > 0
+end function
+
+
+!----------------------------------------------------------------------
+! セル (ic,jc) から見た斜め先セル (id,jd) の塞がり率 s(0〜1)
+!   領域外・無効セル = 壁(1)。海セル = 開水面(0)。堤防壁で静的に
+!   振り替え済みの堤内地セル(have_bopen)は数えない(0)。それ以外は
+!   s = clamp((z_d − z_c)/h_c, 0, 1): 水面が斜め先の地盤より低ければ 1、
+!   地盤を越えた分は斜めが運ぶので地盤より下の水柱の割合だけ塞がる
+!----------------------------------------------------------------------
+function sblk(g, s, ic, jc, id, jd) result(res)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: ic, jc, id, jd
+  real :: res
+  real :: dz, hc
+  res = 1.0
+  if (id < 1 .or. id > g%nx .or. jd < 1 .or. jd > g%ny) return
+  if (g%x(id,jd) <= 0) return
+  res = 0.0
+  if (g%sw(id,jd) > 0) return
+  if (have_bopen) then
+    if (g%rw(id,jd) <= 0 .and. g%zbank(ic,jc) > zbank_min) return
+  end if
+  dz = s%z(id,jd) - s%z(ic,jc)
+  if (dz <= 0.0) return
+  hc = s%h(ic,jc)
+  if (hc <= dz) then
+    res = 1.0
+  else
+    res = dz / hc
+  end if
+end function
+
+
 subroutine restore_uvmn(p, g, s, sx)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
@@ -2033,6 +2216,7 @@ subroutine restore_uvmn(p, g, s, sx)
         ! 通過幅係数は continuous と完全に一致させる(復元ビット一致の条件)
         fw = 1.0
         if (have_frw) fw = frw(ke(k),ie,je)
+        if (have_fwd) fw = fw * fwd(ke(k),ie,je)
         ! セル中心の平均流速・流量への寄与分を加算
         s%u(i,j) = s%u(i,j) + uve * (w8mx(k) * fw)
         s%v(i,j) = s%v(i,j) + uve * (w8my(k) * fw)
