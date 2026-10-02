@@ -34,6 +34,13 @@ if kind == "width":
 if kind == "straight":
     nx, ny = 400, 5
     path = [(i, 3) for i in range(1, 401)]
+elif kind == "diag":
+    # 45° の対角 1 セル水路(8 連結)。路長は 400·dr。始点 (1,1) は西辺、
+    # 終点 (400,400) は東辺・北辺に接する(自由流出は東辺・北辺)
+    # 流入境界の面集合(法線+斜め)を直線区間と同じにするため、最初の 3 セルは
+    # x 方向に進めてから 45° に折れる
+    nx, ny = 400, 405
+    path = [(i, 5) for i in range(1, 4)] + [(3 + k, 5 + k) for k in range(1, 398)]
 else:
     nx, ny = 240, 164
     j0 = 2
@@ -48,9 +55,9 @@ m = [[0] * nx for _ in range(ny)]
 with open(f"path_{kind}.csv", "w") as f:
     f.write("k,i,j,s\n")
     for k, (i, j) in enumerate(path):
-        z[j - 1][i - 1] = Z0 - S * DX * k
+        z[j - 1][i - 1] = Z0 - S * (DX * (2 ** 0.5) if kind == "diag" else DX) * k
         m[j - 1][i - 1] = 1
-        f.write(f"{k},{i},{j},{k * DX}\n")
+        f.write(f"{k},{i},{j},{k * (DX * (2 ** 0.5) if kind == 'diag' else DX)}\n")
 with open(f"z_{kind}.txt", "w") as f:
     for row in z:
         f.write(" ".join("%.4f" % v for v in row) + "\n")
