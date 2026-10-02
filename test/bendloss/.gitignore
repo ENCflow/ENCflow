@@ -7,3 +7,8 @@ param_*_s3h2.txt
 param_*_d0.txt
 encflow
 encflow_mpi
+rw_width.txt
+width_width.txt
+param_width_s3.txt
+param_width_noadv.txt
+param_width_sect*.txt

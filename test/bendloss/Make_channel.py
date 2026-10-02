@@ -3,6 +3,9 @@
 
   python3 Make_channel.py straight   → z_straight.txt, mask_straight.txt (402×5)
   python3 Make_channel.py zigzag     → z_zigzag.txt,   mask_zigzag.txt   (240×164)
+  python3 Make_channel.py width      → z_width.txt, rw_width.txt, width_width.txt (400×5。
+                                       サブグリッド河道幅 W = 4 m の直線水路。堤内地は河床+3 m、
+                                       マスクなし = 高さ0堤防が自動有効。§68.9)
 
 いずれも路長 400 セル(dx = 10 m)、河床勾配 S = 0.005(路長に沿って)、
 西辺の始点に区間流入 Q、終点は東辺(自由流出)。折れ線は 80 セルの
@@ -12,6 +15,21 @@ path_*.csv に路上のセル (i, j, 路長 s) を書く(解析用)。
 import sys
 DX, S, Z0 = 10.0, 0.005, 100.0
 kind = sys.argv[1] if len(sys.argv) > 1 else "straight"
+
+if kind == "width":
+    nx, ny = 400, 5
+    z = [[0.0] * nx for _ in range(ny)]; rw = [[0] * nx for _ in range(ny)]; w = [[0.0] * nx for _ in range(ny)]
+    for i in range(nx):
+        bed = Z0 - S * DX * i
+        for j in range(ny):
+            z[j][i] = bed + (0.0 if j == 2 else 3.0)
+        rw[2][i] = 1; w[2][i] = 4.0
+    for name, a, fmt in (("z_width", z, "%.4f"), ("rw_width", rw, "%d"), ("width_width", w, "%.2f")):
+        with open(name + ".txt", "w") as f:
+            for row in a:
+                f.write(" ".join(fmt % v for v in row) + "\n")
+    print(kind, nx, ny)
+    sys.exit(0)
 
 if kind == "straight":
     nx, ny = 400, 5

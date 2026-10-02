@@ -135,8 +135,9 @@ end subroutine
 !   - 側方面(±t): Q = q_t·w8dr、q_t は面中心のセル流量の t 方向投影
 !     (対角エッジは面中心のセル 1 つ、軸エッジは角を囲む 4 セル平均)。
 !     ū は 1 次風上(u_e か、平行な隣接エッジの流速)。
-!   - h̄_e = (h_c + h_n)/2(下限 dd/2)。lm は v1 と同じ流儀で乗じる
-!     (輸送項は dtl = dt/lme の減衰を相殺する。§20)。
+!   - h̄_e = (h_c + h_n)/2(下限 dd/2)。サブグリッド河道(§18・§26)では
+!     水量 h×wfrac(σ 有効時 sect_v(h)×wfrac)を使う(§68.9)。lm は v1 と
+!     同じ流儀で乗じる(輸送項は dtl = dt/lme の減衰を相殺する。§20)。
 !   - 確保範囲外のエッジ・セルは 0 として読む(領域外・無効セルの格納値
 !     と同じ扱い。線 k が壁に当たると風上値が 0 = 壁)。
 !   - 他エッジの uv・m・n はすべて時刻 n(ステップ頭でエッジ幅2・セル幅2
@@ -175,7 +176,12 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         hc = s%h(i,j)
         hn = s%h(in,jn)
         if (hc < p%dd .and. hn < p%dd) cycle
-        hb = (hc + hn) / 2
+        ! 検査体積の水量(単位面積あたり): サブグリッド河道では h×wfrac
+        ! (σ 有効時は矩形換算水深 sect_v(h)×wfrac)。連続式の水深換算
+        ! (dh/wfrac、sect_v)と同じ定義で、q(セル幅あたりの流量)と整合する。
+        ! gv(建物空隙率)は v1 と同様に乗じない(圧力項の ×gve と同じ流儀は
+        ! 採らず、移流は輸送項として gv 非依存。§68.9)
+        hb = (vol_depth(i, j) + vol_depth(in, jn)) / 2
 
         ! 線 k 上のエッジ流速(基準セルから k 方向。確保範囲外は 0)
         ue  = sx%uv(k,ie,je)
@@ -275,6 +281,18 @@ contains
     else
       u = sx%uv(kk,ei,ej)
     end if
+  end function
+
+  ! セルの単位面積あたり水量(水深換算)。河道幅 wfrac と断面形 σ を反映
+  pure function vol_depth(ci, cj) result(v)
+    integer, intent(in) :: ci, cj
+    real :: v
+    if (have_sect) then
+      v = sect_v(s%h(ci,cj), sdep(ci,cj))
+    else
+      v = s%h(ci,cj)
+    end if
+    if (have_width) v = v * wfrac(ci,cj)
   end function
 
   ! セルが運動量の供給元になれるか(確保範囲内・有効・移動限界以上の水深)
