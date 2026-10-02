@@ -429,30 +429,19 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 - **CI 二層化(2026-09-15 実施)**: nightly.yml を追加(フル回帰 13 ケース
   逐次+MPI np=1,2,4 / トップレベル make / -Og -fcheck=all の逐次=np2
   一致検査 / BMI 適合性+等価性。運用と根拠の記録は developer.md §10)。
-  残: **sewer_wq の release 逐次/MPI 差(相対 ~5e-6。Runge サブステップの
-  閾値敏感性がビルド差を増幅。§10 参照)の扱いの決定** — RTOL を明示して
-  nightly の MPI 層へ戻すか、閾値敏感性を抑えるパラメータ調整をするか。
-  決定まで release MPI 層から除外中(逐次回帰と -Og 一致検査ではカバー)。
-  **2026-10-02 追記: 同じ敏感性が release 逐次層にも波及した。** Nightly #18
-  (main 94d86b4)の full-serial が sewer_wq だけ FAIL(Log 相対差 4.9e-6、
-  wq.csv 52 行不一致。他 5 ジョブは成功)。一方、開発用 VM(gfortran 13.3、
-  AVX-512 あり)では同一コミットの逐次 release ビナリが reference と
-  ビット一致 = reference 生成環境と GitHub ランナーの **ビナリ差
-  (make.inc の -Ofast -march=native -flto がホスト CPU で異なるコードを
-  生成)** が原因で、MPI 実装や reference の生成手順の問題ではない
-  (BUILDINFO の mode 行は src の直近ビルドのスタンプで、実行ビナリの
-  モードではない)。VM で再生成しても同じ reference になるため、解消には
-  上記の決定(RTOL 明示 or 閾値敏感性の抑制)が必要。推奨は test/sewer_wq
-  の Run.sh/Run_MPI.sh に RTOL=1e-5 を明示し、同時に nightly の MPI 層へ
-  戻す(-Og -fcheck=all 層の逐次=np2 ビット一致検査は維持されるので、
-  実装バグの検出力は落ちない)。
+  sewer_wq の release 逐次/MPI 差(相対 ~5e-6。Runge サブステップの閾値
+  敏感性がビルド差を増幅)は **2026-10-02 に RTOL=1e-5 で判定すると決定**
+  (§10)。Nightly #18 で同じ敏感性が release 逐次層にも波及(開発 VM の
+  reference と GitHub ランナーのビナリ差。-Ofast -march=native -flto)した
+  ことが契機。Run.sh / Run_MPI.sh に RTOL を明示し nightly の MPI 層へ
+  戻した。Compare_ref.sh は CSV の区切りカンマ付きトークンを数値として
+  扱うよう修正(wq.csv に許容が効いていなかった)。残: なし。
 - **リリース v1.6.0(MINOR)の準備(2026-10-02)**: v1.5.0 以降の加算的
   新機能(§61〜§67、bldgdebris・bedslide・f_dbcurv・s%gv 状態化・
   既定値方針・Nightly CI・例題 3 件)を対象。CITATION.cff を 1.6.0 /
   2026-10-02 に更新するコミットとリリースノート草稿(日英)は用意済み。
-  **タグは上記 sewer_wq の Nightly 赤を解消し、workflow_dispatch で
-  Nightly 全ジョブ緑を確認してから打つ**(Release 作成が Zenodo DOI の
-  引き金)。数値結果に影響する修正 3 件(e31994b 江頭層流則の除算安全化、
+  **タグは workflow_dispatch で Nightly 全ジョブ緑を確認してから打つ**
+  (Release 作成が Zenodo DOI の引き金)。数値結果に影響する修正 3 件(e31994b 江頭層流則の除算安全化、
   fbaeb18 土石流の降伏停止判定、e491d16 geomorph 単独 + fn_sd の土層厚
   読み飛ばし)をノートで区別すること。
 - 国際化の節目: docs/en/ ミラー+日英同期の CI チェック導入。チェックの
