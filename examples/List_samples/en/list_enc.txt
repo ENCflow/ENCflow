@@ -52,6 +52,12 @@
                             !   hydraulic jumps (correct bore speed).
                             !   p_adv_upwind_index / f_advection_tvd below
                             !   act on scheme 1 only
+  !f_dry_head_cap = 0       ! cap the edge depth toward a dry cell by the
+                            !   energy head eta + u_n^2/2g - z_receiver
+                            !   (0: off = default, 1: on). Water cannot climb
+                            !   onto dry ground above the water surface plus
+                            !   velocity head (fixes leaks at bore fronts and
+                            !   in 1-2 cell wide incised channels)
   !f_opening_dynamic = 0    ! dynamic reassignment of blocked openings
                             !   (0: off = default, 1: edges between channel
                             !   cells only (needs fn_rw), 2: all edges).

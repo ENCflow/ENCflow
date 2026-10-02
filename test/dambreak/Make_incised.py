@@ -6,8 +6,8 @@
     → z_ch1.txt, z_ch2.txt      掘込水路(堤内地 z = 20 m、水路 z = 0)
       z_ch1z12.txt, z_ch2z12.txt 同(堤内地 z = 12 m)
       mask_m1.txt, mask_m2.txt   マスク壁(堤内地を無効セルに)
-      param_{ch1,ch2,ch1z12,ch2z12,m1,m2}_s{1,3}_d{0,2}.txt
-        s = f_advection_scheme、d = f_opening_dynamic(0 / 2)
+      param_{ch1,ch2,ch1z12,ch2z12,m1,m2}_s{1,3}_d{0,2}[_c1].txt
+        s = f_advection_scheme、d = f_opening_dynamic(0 / 2)、_c1 = f_dry_head_cap=1
   実行:  ./encflow param_m1_s3_d2.txt
   検証:  RESDIR=result_m1_s3_d2 PARAM=param_m1_s3_d2.txt python3 Check_stoker.py
 格子は param.txt と同じ dx = 2 m、nx = 500。ny は 1 セル水路で 5(水路は
@@ -44,4 +44,8 @@ for name, ny, ch, kind, zl in cases:
                               f"  f_ztype = 1\n  fn_z = 'z_{name}.txt'   ! 掘込水路: 堤内地 z={zl:g} m\n")
             assert f'f_opening_dynamic = {d}' in t and f'ny = {ny}' in t
             open(f'param_{name}_s{s}_d{d}.txt', 'w').write(t)
-print('generated', len(cases) * 4, 'parameter files')
+            # 同じケースで f_dry_head_cap = 1(§68.16)
+            tc = t.replace(f"dir_result = 'result_{name}_s{s}_d{d}'", f"dir_result = 'result_{name}_s{s}_d{d}_c1'")
+            tc = tc.replace("  f_opening_dynamic = ", "  f_dry_head_cap = 1\n  f_opening_dynamic = ", 1)
+            open(f'param_{name}_s{s}_d{d}_c1.txt', 'w').write(tc)
+print('generated', len(cases) * 8, 'parameter files')

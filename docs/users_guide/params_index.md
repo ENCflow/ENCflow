@@ -177,6 +177,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_disp_h | &list_sysparam | [入出力](io.md) |
 | f_disp_qq | &list_sysparam | [入出力](io.md) |
 | f_disp_vv | &list_sysparam | [入出力](io.md) |
+| f_dry_head_cap | &list_enc | [浅水流計算](swflow.md) |
 | f_dw | &list_driftwood | [流木](driftwood.md) |
 | f_esform | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_evmodel | &list_evap | [降雨・気象](forcing.md) |

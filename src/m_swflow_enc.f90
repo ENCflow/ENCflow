@@ -59,6 +59,10 @@ module m_swflow_enc
   integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
   integer :: f_opening_dynamic              ! 塞がれた開口の動的振り替え (0:なし, 1:河道
                                             !   セル間のエッジのみ, 2:全エッジ。§68.14)
+  integer :: f_dry_head_cap                 ! 乾燥セルへ向かうエッジ水深をエネルギー頭
+                                            !   η + u_n²/2g − z_受け手 で頭打ち (0:なし, 1:有効。
+                                            !   §68.16。水面+速度水頭より高い乾いた地盤へは
+                                            !   流さず、流せないエッジの流速も 0 にする)
   integer :: f_bank_mode                    ! 堤防の水理モード(下の e_bank_*)
   integer :: f_diffusion_term               ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
   real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
@@ -459,6 +463,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   f_friction_fastmath = list%f_friction_fastmath
   f_advection_scheme = list%f_advection_scheme
   f_opening_dynamic = list%f_opening_dynamic
+  f_dry_head_cap = list%f_dry_head_cap
   f_advection_tvd = list%f_advection_tvd
   f_advection_runge = list%f_advection_runge
   select case (f_advection_scheme)
@@ -532,6 +537,9 @@ subroutine m_swflow_enc_init(p, g, b, s)
     call par_stop("list_enc: f_opening_dynamic must be 0(off), 1(channel edges) or 2(all edges)")
   end if
   have_fwd = f_opening_dynamic > 0
+  if (f_dry_head_cap < 0 .or. f_dry_head_cap > 1) then
+    call par_stop("list_enc: f_dry_head_cap must be 0(off) or 1(cap edge depth toward dry cells by energy head)")
+  end if
   if (f_opening_dynamic == 1 .and. .not. any(g%rw > 0)) then
     call par_stop("list_enc: f_opening_dynamic=1 requires a channel mask (fn_rw in list_geoinfo)")
   end if
@@ -1564,6 +1572,24 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     !   摩擦項を半陰解法で計算する
     !   どちらも中心セルから近傍セルに向かい正
     uve1 = (uve0 + (tae + tge) * dtl) / (1 - tfe * dtl)
+
+    ! 乾燥セルへ向かうエッジ水深のエネルギー頭による頭打ち(§68.16)
+    !   受け手(流向の下流側)が乾燥(h < dd)のとき、運べる水深は送り手の
+    !   エネルギー頭 η + u_n²/2g が受け手の地盤 z を超える分まで
+    !   (Bernoulli。堰越流の越流水深と同じ考え方)。地盤が水面より低い
+    !   通常の前縁では頭打ちが効かず現状と厳密に同じ。超えられないエッジは
+    !   流速も 0 にして、再構成・移流に幻の流速が残らないようにする。
+    !   移流項が圧力項に勝って水面より高い乾いた地盤へ水が登る漏れ
+    !   (§68.15 の掘込水路の発散)を物理条件で塞ぐ
+    if (f_dry_head_cap > 0) then
+      if (uve1 > 0.0 .and. hn < p%dd) then
+        he = min(he, max(s%z(i,j) + hc + uve1**2 / (2 * p%gg) - s%z(in,jn), 0.0))
+        if (he <= 0.0) uve1 = 0.0
+      else if (uve1 < 0.0 .and. hc < p%dd) then
+        he = min(he, max(s%z(in,jn) + hn + uve1**2 / (2 * p%gg) - s%z(i,j), 0.0))
+        if (he <= 0.0) uve1 = 0.0
+      end if
+    end if
     mne1 = uve1 * he
 
     ! 土石流の降伏判定(動き出し・停止): 低速かつ駆動(移流+重力)が
