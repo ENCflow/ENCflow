@@ -4,6 +4,7 @@
 !   (src/user_initial.f90 の dambreak_step)。平坦・無摩擦・全周壁。
 !   解析解との比較: python3 Check_stoker.py(result/ を読む。別の結果
 !   ディレクトリは RESDIR=result_xxx で指定)
+!   図化: python3 Plot_dambreak.py(matplotlib。result と result_scheme2/3 を重ね描き)
 !   運動量保存形移流の比較用: ./encflow param_scheme3.txt →
 !   RESDIR=result_scheme3 python3 Check_stoker.py(§68.6)
 !======================================================================
