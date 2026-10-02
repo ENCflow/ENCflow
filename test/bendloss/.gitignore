@@ -24,3 +24,5 @@ width_width*.txt
 z_zigzagw.txt
 rw_zigzagw.txt
 width_zigzagw.txt
+rw_lat*.txt
+mask_lat*.txt
