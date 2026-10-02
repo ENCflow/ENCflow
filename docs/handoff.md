@@ -405,12 +405,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - 例題化は examples/timberyard(高潮の貯木場)・examples/tsunami_town
      (津波・家屋破壊との連鎖)で実施済み。残: 実流域ケースでの感度解析例と
      遊砂地あり/なしの流木捕捉比較の例題
-   - **リリース: v1.1.0(MINOR)の対象**。文献照合が完了したため
-     タグ付けの条件は成立(ユーザー決定 2026-08-21。§34.4 の 1.0 以降
-     ルールの初適用)。タグ時に CITATION.cff の version /
-     date-released を同一コミットで更新し、リリースノートは「数値結果
-     に影響する変更: なし(無効時ビット一致検証済み)/ 追加: 流木
-     モジュール」と区別して書く
+   - リリース: v1.1.0(2026-08-23)で公開済み(§34.4 の 1.0 以降ルールの
+     初適用)。
 
 ## 既知の壊れている例題
 
@@ -437,6 +433,28 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   閾値敏感性がビルド差を増幅。§10 参照)の扱いの決定** — RTOL を明示して
   nightly の MPI 層へ戻すか、閾値敏感性を抑えるパラメータ調整をするか。
   決定まで release MPI 層から除外中(逐次回帰と -Og 一致検査ではカバー)。
+  **2026-10-02 追記: 同じ敏感性が release 逐次層にも波及した。** Nightly #18
+  (main 94d86b4)の full-serial が sewer_wq だけ FAIL(Log 相対差 4.9e-6、
+  wq.csv 52 行不一致。他 5 ジョブは成功)。一方、開発用 VM(gfortran 13.3、
+  AVX-512 あり)では同一コミットの逐次 release ビナリが reference と
+  ビット一致 = reference 生成環境と GitHub ランナーの **ビナリ差
+  (make.inc の -Ofast -march=native -flto がホスト CPU で異なるコードを
+  生成)** が原因で、MPI 実装や reference の生成手順の問題ではない
+  (BUILDINFO の mode 行は src の直近ビルドのスタンプで、実行ビナリの
+  モードではない)。VM で再生成しても同じ reference になるため、解消には
+  上記の決定(RTOL 明示 or 閾値敏感性の抑制)が必要。推奨は test/sewer_wq
+  の Run.sh/Run_MPI.sh に RTOL=1e-5 を明示し、同時に nightly の MPI 層へ
+  戻す(-Og -fcheck=all 層の逐次=np2 ビット一致検査は維持されるので、
+  実装バグの検出力は落ちない)。
+- **リリース v1.6.0(MINOR)の準備(2026-10-02)**: v1.5.0 以降の加算的
+  新機能(§61〜§67、bldgdebris・bedslide・f_dbcurv・s%gv 状態化・
+  既定値方針・Nightly CI・例題 3 件)を対象。CITATION.cff を 1.6.0 /
+  2026-10-02 に更新するコミットとリリースノート草稿(日英)は用意済み。
+  **タグは上記 sewer_wq の Nightly 赤を解消し、workflow_dispatch で
+  Nightly 全ジョブ緑を確認してから打つ**(Release 作成が Zenodo DOI の
+  引き金)。数値結果に影響する修正 3 件(e31994b 江頭層流則の除算安全化、
+  fbaeb18 土石流の降伏停止判定、e491d16 geomorph 単独 + fn_sd の土層厚
+  読み飛ばし)をノートで区別すること。
 - 国際化の節目: docs/en/ ミラー+日英同期の CI チェック導入。チェックの
   中身は 2026-10-01 の監査で手動実施した 3 つの機械比較(namelist と索引の
   突合 / 日英の見出し数・表の行数 / List_samples 日英のパラメータ集合)を
