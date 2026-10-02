@@ -3,6 +3,8 @@
 
   python3 Make_channel.py straight   → z_straight.txt, mask_straight.txt (402×5)
   python3 Make_channel.py zigzag     → z_zigzag.txt,   mask_zigzag.txt   (240×164)
+  python3 Make_channel.py wave10     → z_wave10.txt, rw_width10.txt (400×5。直線 rw 河道、堤内地は
+                                       河床+10 m。洪水波 param_wave_*_s*.txt 用。§68.13)
   python3 Make_channel.py width      → z_width.txt, rw_width.txt, width_width.txt (400×5。
                                        サブグリッド河道幅 W = 4 m の直線水路。堤内地は河床+3 m、
                                        マスクなし = 高さ0堤防が自動有効。§68.9)
@@ -45,6 +47,23 @@ if kind.startswith("diagw"):
         f.write("k,i,j,s\n")
         for k, (i, j) in enumerate(path): f.write(f"{k},{i},{j},0\n")
     print(kind, nx, ny, "W =", W)
+    sys.exit(0)
+
+if kind == "wave10":
+    # 直線軸河道(rw マスク、幅なし)+ 堤内地 = 河床+10 m(洪水波のピーク h ≈ 4 m
+    # でも堤内地に溢れない)。param_wave_{nolev,o0,o1}_s*.txt(§68.13)で使う
+    nx, ny = 400, 5
+    z = [[0.0] * nx for _ in range(ny)]; rw = [[0] * nx for _ in range(ny)]
+    for i in range(nx):
+        bed = Z0 - S * DX * i
+        for j in range(ny):
+            z[j][i] = bed + (0.0 if j == 2 else 10.0)
+        rw[2][i] = 1
+    for name, a, fmt in (("z_wave10", z, "%.4f"), ("rw_width10", rw, "%d")):
+        with open(name + ".txt", "w") as f:
+            for row in a:
+                f.write(" ".join(fmt % v for v in row) + "\n")
+    print(kind, nx, ny)
     sys.exit(0)
 
 if kind.startswith("width"):
