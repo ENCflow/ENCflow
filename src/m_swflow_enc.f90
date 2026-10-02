@@ -48,7 +48,7 @@ module m_swflow_enc
   ! ---- ENCのパラメータファイルからセットする ---
   integer :: f_gravity_correction != 1       ! 重力の補正
   integer :: f_exflux_reduction != 1         ! reduction of excessive flux
-  integer :: f_hcap_upwind != 1              ! 上流側水深によるセル境界水深の制限
+  integer :: f_hcap_upwind != 1              ! セル境界水深 (0:両側平均, 1:上流側水深で頭打ち, 2:上流側水深)
   integer :: f_adaptive_runge != 1           ! 適応的ルンゲクッタ
   integer :: f_friction_fastmath != 0        ! 摩擦項計算の高速化
   integer :: f_advection_scheme             ! 移流項のスキーム (1: セル中心勾配 v1,
@@ -428,6 +428,14 @@ subroutine m_swflow_enc_init(p, g, b, s)
   f_gravity_correction = list%f_gravity_correction
   f_exflux_reduction = list%f_exflux_reduction
   f_hcap_upwind = list%f_hcap_upwind
+  select case (f_hcap_upwind)
+    case (0, 1)   ! なし / 上流側水深で頭打ち(既定)
+    case (2)      ! 上流側水深そのもの(§68.7)
+      call par_info("swflow_enc: f_hcap_upwind = 2 (edge depth = upwind cell depth)")
+    case default
+      call par_stop("list_enc: f_hcap_upwind must be 0(none), 1(cap by upwind depth) " // &
+                    "or 2(upwind depth)")
+  end select
   f_adaptive_runge = list%f_adaptive_runge
   f_friction_fastmath = list%f_friction_fastmath
   f_advection_scheme = list%f_advection_scheme
@@ -1614,10 +1622,24 @@ contains
   ! セル境界水深が上流側水深よりも深くならないよう調整
   function correct_he() result(he_corr)
     real :: he_corr
+    ! f_hcap_upwind=1: 両側平均を上流側水深で頭打ち(既定)
+    ! f_hcap_upwind=2: 上流側水深そのもの(Stelling & Duinmeijer の連続式。
+    !   段波先端で両側平均が小さくなり、平坦区間の流量を通すために前線
+    !   エッジの流速が過大になって手前の 1 セルに水が積み上がるスパイクを
+    !   防ぐ。乾湿前縁では乾側 h≈0 に対して湿側水深で流出するため前縁の
+    !   挙動が変わる。§68.7)
     if (uve0 > 0) then      ! 中心セルが上流側
-      he_corr = min(he, hc)      !   中心セルの水深より深くならないように
+      if (f_hcap_upwind == 2) then
+        he_corr = hc
+      else
+        he_corr = min(he, hc)    !   中心セルの水深より深くならないように
+      end if
     else if (uve0 < 0) then ! 近傍セルが上流側
-      he_corr = min(he, hn)      !   近傍セルの水深より深くならないように
+      if (f_hcap_upwind == 2) then
+        he_corr = hn
+      else
+        he_corr = min(he, hn)    !   近傍セルの水深より深くならないように
+      end if
     else
       he_corr = he
     end if

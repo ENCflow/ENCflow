@@ -12,7 +12,8 @@ module list_enc
     integer :: f_gravity_correction = 1       ! 重力の補正(急勾配地形での斜面方向
                                               !   重力の誤差を補正)
     integer :: f_exflux_reduction = 1         ! reduction of excessive flux
-    integer :: f_hcap_upwind = 1              ! 上流側水深によるセル境界水深の制限
+    integer :: f_hcap_upwind = 1              ! セル境界水深 (0:両側平均, 1:上流側水深で
+                                              !   頭打ち(既定), 2:上流側水深そのもの)
     integer :: f_adaptive_runge = 1           ! 適応的ルンゲクッタ
     integer :: f_friction_fastmath = 0        ! 摩擦項計算の高速化 (0:厳密,
                                               !   1~5:テーブル近似。大きいほど粗く速い)
