@@ -3,6 +3,7 @@
 
   python3 Make_channel.py straight   → z_straight.txt, mask_straight.txt (402×5)
   python3 Make_channel.py zigzag     → z_zigzag.txt,   mask_zigzag.txt   (240×164)
+  python3 Make_channel.py wave2      → z_wave2.txt, rw_wave2.txt(2 セル幅の直線 rw 河道)
   python3 Make_channel.py steep      → z_steep.txt(S0 = 0.03 の直線 rw 河道。rw は rw_width10.txt)
   python3 Make_channel.py sbreak     → z_sbreak.txt(0.03 → 0.003 の勾配変化点。同上)
   python3 Make_channel.py wave10     → z_wave10.txt, rw_width10.txt (400×5。直線 rw 河道、堤内地は
@@ -49,6 +50,23 @@ if kind.startswith("diagw"):
         f.write("k,i,j,s\n")
         for k, (i, j) in enumerate(path): f.write(f"{k},{i},{j},0\n")
     print(kind, nx, ny, "W =", W)
+    sys.exit(0)
+
+if kind == "wave2":
+    # 2 セル幅の直線 rw 河道(第 3・4 行が河床、堤内地 = 河床+10 m)。
+    # §68.17 の 2 セル幅洪水波(param_wave2_dyn_s*.txt)
+    nx, ny = 400, 6
+    z = [[0.0] * nx for _ in range(ny)]; rw = [[0] * nx for _ in range(ny)]
+    for i in range(nx):
+        bed = Z0 - S * DX * i
+        for j in range(ny):
+            z[j][i] = bed + (0.0 if j in (2, 3) else 10.0)
+        rw[2][i] = 1; rw[3][i] = 1
+    for name, a, fmt in (("z_wave2", z, "%.4f"), ("rw_wave2", rw, "%d")):
+        with open(name + ".txt", "w") as f:
+            for row in a:
+                f.write(" ".join(fmt % v for v in row) + "\n")
+    print(kind, nx, ny)
     sys.exit(0)
 
 if kind in ("steep", "sbreak"):
