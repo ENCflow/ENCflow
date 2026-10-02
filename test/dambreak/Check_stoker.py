@@ -18,6 +18,7 @@ import csv, math, os, sys
 G = 9.8            # m_sysparam の既定 gg と合わせる
 HL, HR = 10.0, 1.0 # dambreak_step と同期
 RESDIR = os.environ.get("RESDIR", "result")
+PARAM = os.environ.get("PARAM", "param.txt")   # 格子サイズ等を読むパラメータファイル
 
 
 def read_namelist_value(fname, key, default):
@@ -81,9 +82,9 @@ def stoker_profile(x, t, x0, hl, hr, hm, um, s):
 
 
 def main():
-    nx = int(read_namelist_value("param.txt", "nx", 0))
-    ny = int(read_namelist_value("param.txt", "ny", 0))
-    lx = read_namelist_value("param.txt", "lx", 0.0)
+    nx = int(read_namelist_value(PARAM, "nx", 0))
+    ny = int(read_namelist_value(PARAM, "ny", 0))
+    lx = read_namelist_value(PARAM, "lx", 0.0)
     dx = lx / nx
     x0 = lx / 2
 
