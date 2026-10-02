@@ -1,0 +1,9 @@
+z_*.txt
+mask_*.txt
+path_*.csv
+param_*_s3.txt
+param_*_h2.txt
+param_*_s3h2.txt
+param_*_d0.txt
+encflow
+encflow_mpi

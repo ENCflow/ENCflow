@@ -188,16 +188,29 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         qc = s%m(i,j) * n8x(k) + s%n(i,j) * n8y(k)
         qn = s%m(in,jn) * n8x(k) + s%n(in,jn) * n8y(k)
 
-        ! 流向面の風上化流速(面 c: 流入なら u_m 側、流出なら u_e 側)
+        ! 流向面の風上化流速(面 c: 流入なら u_m 側、流出なら u_e 側)。
+        ! 風上側の供給エッジが壁・領域外・乾燥セルに接する(cell_ok が偽)
+        ! ときは ū = u_e とする(壁・乾床は運動量を供給しない。これを 0 と
+        ! 読むと、ラスタ河道の屈曲セルで下流エッジが「壁側から流速 0 の
+        ! 水が流入する」扱いになり、屈曲ごとに人工的な損失水頭が生じる。
+        ! §68.8)。MUSCL の upup も同様に供給元が無効なら 1 次に退化
         if (qc >= 0) then
-          ubc = face_value(um, ue, umm)
+          if (cell_ok(i - din(k), j - djn(k))) then
+            ubc = face_value(um, ue, umm)
+          else
+            ubc = ue
+          end if
         else
           ubc = face_value(ue, um, up)
         end if
         if (qn >= 0) then
           ubn = face_value(ue, up, um)
         else
-          ubn = face_value(up, ue, upp)
+          if (cell_ok(in + din(k), jn + djn(k))) then
+            ubn = face_value(up, ue, upp)
+          else
+            ubn = ue
+          end if
         end if
         ta = -(qn * (ubn - ue) - qc * (ubc - ue)) / w8dr(k)
 
@@ -217,15 +230,23 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
                 + qproj(i - dti(k), j - dtj(k), thx, thy) &
                 + qproj(in - dti(k), jn - dtj(k), thx, thy)) / 4
         end if
+        ! 側方面も同様: 平行な隣接エッジの両セルが有効・湿潤のときだけ
+        ! その流速を流入値に使う(壁・乾床側からは ū = u_e)
         if (qtp >= 0) then
           ubtp = ue
-        else
+        else if (cell_ok(i + dti(k), j + dtj(k)) .and. &
+                 cell_ok(i + dti(k) + din(k), j + dtj(k) + djn(k))) then
           ubtp = utp
+        else
+          ubtp = ue
         end if
         if (qtm >= 0) then
           ubtm = ue
-        else
+        else if (cell_ok(i - dti(k), j - dtj(k)) .and. &
+                 cell_ok(i - dti(k) + din(k), j - dtj(k) + djn(k))) then
           ubtm = utm
+        else
+          ubtm = ue
         end if
         ta = ta - (qtp * (ubtp - ue) + qtm * (ubtm - ue)) / tx%w8lt(k)
 
@@ -254,6 +275,16 @@ contains
     else
       u = sx%uv(kk,ei,ej)
     end if
+  end function
+
+  ! セルが運動量の供給元になれるか(確保範囲内・有効・移動限界以上の水深)
+  pure function cell_ok(ci, cj) result(ok)
+    integer, intent(in) :: ci, cj
+    logical :: ok
+    ok = .false.
+    if (ci < 1 .or. ci > ubound(s%h, 1) .or. cj < dcp%jsh .or. cj > dcp%jeh) return
+    if (g%x(ci,cj) <= 0) return
+    ok = s%h(ci,cj) >= p%dd
   end function
 
   ! セル流量 (m, n) の単位ベクトル (tx_, ty_) 方向投影(確保範囲外は 0)
