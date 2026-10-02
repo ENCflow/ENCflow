@@ -3,6 +3,8 @@
 
   python3 Make_channel.py straight   → z_straight.txt, mask_straight.txt (402×5)
   python3 Make_channel.py zigzag     → z_zigzag.txt,   mask_zigzag.txt   (240×164)
+  python3 Make_channel.py steep      → z_steep.txt(S0 = 0.03 の直線 rw 河道。rw は rw_width10.txt)
+  python3 Make_channel.py sbreak     → z_sbreak.txt(0.03 → 0.003 の勾配変化点。同上)
   python3 Make_channel.py wave10     → z_wave10.txt, rw_width10.txt (400×5。直線 rw 河道、堤内地は
                                        河床+10 m。洪水波 param_wave_*_s*.txt 用。§68.13)
   python3 Make_channel.py width      → z_width.txt, rw_width.txt, width_width.txt (400×5。
@@ -47,6 +49,22 @@ if kind.startswith("diagw"):
         f.write("k,i,j,s\n")
         for k, (i, j) in enumerate(path): f.write(f"{k},{i},{j},0\n")
     print(kind, nx, ny, "W =", W)
+    sys.exit(0)
+
+if kind in ("steep", "sbreak"):
+    # 直線 rw 河道(堤内地 = 河床+10 m)の急勾配版: steep は S0 = 0.03 一様、
+    # sbreak は x < 2 km が 0.03、以後 0.003(勾配変化点の跳水)。§68.17 の
+    # 区間別診断の補助テスト(param_steep_s*.txt / param_sbreak_s*.txt)
+    nx, ny = 400, 5
+    slopes = [0.03] * nx if kind == "steep" else [0.03] * 200 + [0.003] * 200
+    bed = [Z0]
+    for i in range(1, nx):
+        bed.append(bed[-1] - slopes[i] * DX)
+    z = [[bed[i] + (0.0 if j == 2 else 10.0) for i in range(nx)] for j in range(ny)]
+    with open(f"z_{kind}.txt", "w") as f:
+        for row in z:
+            f.write(" ".join("%.4f" % v for v in row) + "\n")
+    print(kind, nx, ny)
     sys.exit(0)
 
 if kind == "wave10":
