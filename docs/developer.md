@@ -7310,8 +7310,8 @@ z = 20 m または 12 m)。Check_stoker.py は RESDIR / PARAM 環境変数で
 
 **検証(2026-10-02)**:
 - 無効時: wave(identical)/ dambreak / chichibu の Run.sh が reference に PASS。
-  -O2 厳密数学で前コミット(a52e66d)と wave / dambreak がバイト一致
-  (chichibu は続報)。
+  -O2 厳密数学で前コミット(a52e66d)と wave / dambreak / chichibu が
+  バイト一致。
 - 掘込ダム破壊(§68.15 の 24 ケースを f_dry_head_cap=1 で): **発散して
   いた 10 ケースがすべて完走し、z = 20 m・12 m の掘込とマスク壁が全組合せ
   (1・2 セル × スキーム 1・3 × 振り替え 0・2)で桁まで同じ値**になった
