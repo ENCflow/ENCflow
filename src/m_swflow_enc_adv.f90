@@ -208,7 +208,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 水が流入する」扱いになり、屈曲ごとに人工的な損失水頭が生じる。
         ! §68.8)。MUSCL の upup も同様に供給元が無効なら 1 次に退化
         if (qc >= 0) then
-          if (donor_ok(i - din(k), j - djn(k))) then
+          if (donor_ok(i - din(k), j - djn(k), donor_rw)) then
             ubc = face_value(um, ue, umm)
           else
             ubc = ue
@@ -219,7 +219,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         if (qn >= 0) then
           ubn = face_value(ue, up, um)
         else
-          if (donor_ok(in + din(k), jn + djn(k))) then
+          if (donor_ok(in + din(k), jn + djn(k), donor_rw)) then
             ubn = face_value(up, ue, upp)
           else
             ubn = ue
@@ -314,12 +314,16 @@ contains
 
   ! 流下方向の風上供給元になれるか: cell_ok に加え、河道セル間のエッジでは
   ! 河道セルに限る(f_advection_donor=1。§68.18)。側方面の供給元は対象外
-  ! (斜面からの横流入の運動量吸い込みは物理なので残す)
-  pure function donor_ok(ci, cj) result(ok)
+  ! (斜面からの横流入の運動量吸い込みは物理なので残す)。
+  ! drw(= 並列ループの private 変数 donor_rw)は必ず引数で受ける: 内部手続き
+  ! のホスト結合はスレッドの private 複製ではなく共有の元変数(未初期化)を
+  ! 読む(2026-10-03 の実バグ。§8)
+  pure function donor_ok(ci, cj, drw) result(ok)
     integer, intent(in) :: ci, cj
+    logical, intent(in) :: drw
     logical :: ok
     ok = cell_ok(ci, cj)
-    if (ok .and. donor_rw) ok = g%rw(ci,cj) > 0
+    if (ok .and. drw) ok = g%rw(ci,cj) > 0
   end function
 
   ! セル流量 (m, n) の単位ベクトル (tx_, ty_) 方向投影(確保範囲外は 0)
