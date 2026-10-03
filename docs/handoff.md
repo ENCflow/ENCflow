@@ -436,14 +436,20 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   ことが契機。Run.sh / Run_MPI.sh に RTOL を明示し nightly の MPI 層へ
   戻した。Compare_ref.sh は CSV の区切りカンマ付きトークンを数値として
   扱うよう修正(wq.csv に許容が効いていなかった)。残: なし。
-- **リリース v1.6.0(2026-10-03 タグ付け済み)**: v1.5.0 以降の加算的新機能
+- **リリース v1.6.0(2026-10-03 公開済み)**: v1.5.0 以降の加算的新機能
   (§61〜§67、bldgdebris・bedslide・f_dbcurv・s%gv 状態化・既定値方針・
   Nightly CI・例題 3 件)と sewer_wq の RTOL 決定(§10)を収載。Nightly #19
-  (全 6 ジョブ緑)を確認後、main を 5044f8c に進めて注釈付きタグ v1.6.0 を
-  push した。残: **GitHub Release の作成(Zenodo DOI の引き金)** — 本文は
-  日英の草稿を用意済み(数値結果に影響する修正 3 件を区別して記載)。
-  以後のタグは `git tag -a` の注釈付きで打つ(v1.5.0 までは Release UI 由来の
-  軽量タグ)。
+  (全 6 ジョブ緑)を確認後、main を 5044f8c(CITATION 1.6.0 / 2026-10-03)
+  に進め、GitHub Release「ENCflow v1.6.0」を公開(タグ v1.6.0 = 5044f8c、
+  Zenodo DOI は Release 連携で付与)。リリースノートは数値結果に影響する
+  修正 3 件(fbaeb18・e491d16・e31994b)を区別して記載。
+  **タグ作成の実務メモ**: Claude Code の cloud 環境からは refs/tags の push が
+  HTTP 403 で拒否される(ブランチは可)。利用者ローカルからの push も当日は
+  資格情報の 403 で失敗したため、5044f8c を指す一時ブランチ release/v1.6.0
+  を押して Release UI の「Create new tag on publish」の Target に指定し、
+  公開後に一時ブランチを削除した。結果としてタグは軽量(v1.5.0 までと同じ)。
+  §34.4 の「注釈付き」は、ローカルからタグを push できる資格情報を整えた
+  上で次回から適用する。
 - 国際化の節目: docs/en/ ミラー+日英同期の CI チェック導入。チェックの
   中身は 2026-10-01 の監査で手動実施した 3 つの機械比較(namelist と索引の
   突合 / 日英の見出し数・表の行数 / List_samples 日英のパラメータ集合)を
