@@ -15,12 +15,6 @@ submodule(m_swflow_enc) m_swflow_enc_adv
     ! adv_edge は読むだけ(uv は単一バッファで momentum 中に更新されるため、
     ! 他エッジの uv を momentum 内で読んではならない。§7・§8)
     real, allocatable :: tae(:,:,:)
-    ! エッジ流速に関する移流項の線形化係数 b = ∂adv/∂u_e(≤ 0。tae と同じ
-    ! 格納規約)。f_advection_runge > 0 のときだけ確保し、適応 RK の再計算段で
-    ! 移流項を tae0 + b (u − u_e^n) のアフィン形(Picard 線形化)で更新する
-    ! (§68.23)。流入面の流束 Q_f と風上値を凍結したときの u_e 依存のみを
-    ! 数え、流出面(ū = u_e)の寄与は 0。MUSCL の面値再構成の u_e 依存は無視
-    real, allocatable :: tbe(:,:,:)
     real :: w8lt(1:4) = 0.0          ! k 方向エッジの運動量検査体積の横断幅
   end type
   type(t_enc_adv) :: tx_mod
@@ -49,7 +43,6 @@ module subroutine adv_init(p, g)
   if (f_advection_scheme >= 2) then
     ! 運動量保存形: エッジ上の移流項だけを持つ(taxy/ulm/vlm は不要)
     allocate(tx_mod%tae(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
-    if (f_advection_runge > 0) allocate(tx_mod%tbe(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
     ! 検査体積の横断幅 = 平行な隣接エッジとの垂直距離
     !   軸エッジ: k=2(法線 y)は dx、k=4(法線 x)は dy
     !   対角エッジ: 2·dx·dy/dr(dx=dy なら √2·dx)
@@ -114,34 +107,7 @@ module subroutine adv_dispose()
   if (allocated(tx_mod%ulm)) deallocate(tx_mod%ulm)
   if (allocated(tx_mod%vlm)) deallocate(tx_mod%vlm)
   if (allocated(tx_mod%tae)) deallocate(tx_mod%tae)
-  if (allocated(tx_mod%tbe)) deallocate(tx_mod%tbe)
 end subroutine
-
-
-!----------------------------------------------------------------------
-! k番目の境界上の移流項の線形化係数 b = ∂adv/∂u_e を返す(f_advection_runge)
-!   スキーム 2・3: prepare が前計算した tbe(≤ 0)。
-!   スキーム 1: 移流項 ÷ エッジ流速(|u_e| > 1e-3 のとき。旧比例形と同値。
-!   符号は不定で、b > 0 のときは呼び出し側が陽的に扱う)
-!----------------------------------------------------------------------
-module function adv_edge_b(sx, k, ie, je, ta) result(tb)
-  type(t_enc_status), intent(in) :: sx
-  integer, intent(in) :: k, ie, je
-  real, intent(in) :: ta
-  real :: tb
-  real :: uve
-
-  if (f_advection_scheme >= 2) then
-    tb = tx_mod%tbe(k,ie,je)
-  else
-    uve = sx%uv(k,ie,je)
-    if (abs(uve) > 1.e-3) then
-      tb = ta / uve
-    else
-      tb = 0.0
-    end if
-  end if
-end function
 
 
 !======================================================================
@@ -188,14 +154,11 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
   real :: qc, qn, qtp, qtm
   real :: ubc, ubn, ubtp, ubtm
   real :: ta
-  real :: tb                        ! 線形化係数 ∂ta/∂u_e(流入面の凍結流束の和。≤ 0)
-  logical :: have_tb
   logical :: donor_rw               ! このエッジの流下方向の供給元を河道セルに限るか(§68.18)
 
-  have_tb = allocated(tx%tbe)
   !$omp parallel do schedule(dynamic) &
   !$omp private(i, j, k, in, jn, ie, je, hc, hn, hb, lme, ue, um, umm, up, upp, utp, utm, &
-  !$omp         qc, qn, qtp, qtm, ubc, ubn, ubtp, ubtm, ta, tb, donor_rw)
+  !$omp         qc, qn, qtp, qtm, ubc, ubn, ubtp, ubtm, ta, donor_rw)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -205,7 +168,6 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ie = i + die(k)
         je = j + dje(k)
         tx%tae(k,ie,je) = 0.0
-        if (have_tb) tx%tbe(k,ie,je) = 0.0
         ! momentum と同じ除外条件(無効近傍・通過幅ゼロ・両側乾燥)
         if (g%x(in,jn) <= 0) cycle
         if (skip8(k)) cycle
@@ -242,11 +204,9 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 読むと、ラスタ河道の屈曲セルで下流エッジが「壁側から流速 0 の
         ! 水が流入する」扱いになり、屈曲ごとに人工的な損失水頭が生じる。
         ! §68.8)。MUSCL の upup も同様に供給元が無効なら 1 次に退化
-        tb = 0.0
         if (qc >= 0) then
           if (donor_ok(i - din(k), j - djn(k), donor_rw)) then
             ubc = face_value(um, ue, umm)
-            tb = tb - qc / w8dr(k)
           else
             ubc = ue
           end if
@@ -258,7 +218,6 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         else
           if (donor_ok(in + din(k), jn + djn(k), donor_rw)) then
             ubn = face_value(up, ue, upp)
-            tb = tb + qn / w8dr(k)
           else
             ubn = ue
           end if
@@ -282,7 +241,6 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         else if (cell_ok(i + dti(k), j + dtj(k)) .and. &
                  cell_ok(i + dti(k) + din(k), j + dtj(k) + djn(k))) then
           ubtp = utp
-          tb = tb + qtp / tx%w8lt(k)
         else
           ubtp = ue
         end if
@@ -291,7 +249,6 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         else if (cell_ok(i - dti(k), j - dtj(k)) .and. &
                  cell_ok(i - dti(k) + din(k), j - dtj(k) + djn(k))) then
           ubtm = utm
-          tb = tb + qtm / tx%w8lt(k)
         else
           ubtm = ue
         end if
@@ -303,7 +260,6 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 遅れて段波速度を却って悪化させる(§68.6 の試行記録)
         lme = (s%lm(i,j) + s%lm(in,jn)) / 2
         tx%tae(k,ie,je) = ta / max(hb, p%dd / 2) * lme
-        if (have_tb) tx%tbe(k,ie,je) = tb / max(hb, p%dd / 2) * lme
       end do
     end do
   end do

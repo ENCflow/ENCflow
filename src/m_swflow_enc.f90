@@ -323,12 +323,6 @@ module m_swflow_enc
       integer, intent(in) :: i, j, k, in, jn, ie, je
       real :: ta
     end function
-    module function adv_edge_b(sx, k, ie, je, ta) result(tb)
-      type(t_enc_status), intent(in) :: sx
-      integer, intent(in) :: k, ie, je
-      real, intent(in) :: ta
-      real :: tb
-    end function
     module subroutine adv_dispose()
     end subroutine
   end interface
@@ -1203,7 +1197,6 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   real :: uve, mne
   real :: uve1, mne1
   real :: tae
-  real :: tbe                     ! 移流項の線形化係数(f_advection_runge)
   real :: dh
   real :: dhc, dhn
   real :: cor
@@ -1247,14 +1240,11 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   ! セル境界の移流項をセットする
   !   f_channel_advection=0 のときは河道セルを含むエッジで移流を落とす
   !   (サブグリッド幅の強い不均質下での安定化オプション。§18)
-  tbe = 0
   if (f_advection_term > 0) then
     tae = adv_edge(s, sx, i, j, k, in, jn, ie, je)
     if (adv_drop_rw) then
       if (g%rw(i,j) > 0 .or. g%rw(in,jn) > 0) tae = 0
     end if
-    ! 適応 RK の再計算段で移流項を更新する線形化係数(拡散項は含めない)
-    if (f_advection_runge > 0 .and. tae /= 0) tbe = adv_edge_b(sx, k, ie, je, tae)
   else
     tae = 0
   end if
@@ -1263,7 +1253,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   if (f_diffusion_term > 0) tae = tae + diff_edge(i, j, k, in, jn)
 
   ! 中心セルi,jからk近傍セルin,jnへの流速uv1と単位幅流量mn1を計算する
-  call calc_kth_flux(p, g, s, sx, uve, tae, tbe, i, j, k, in, jn, 0, uve1, mne1)
+  call calc_kth_flux(p, g, s, sx, uve, tae, i, j, k, in, jn, 0, uve1, mne1)
 
   ! 適応的ルンゲクッタ
   !   流速または流量がmaglim倍以上、1/maglim以下、逆方向に変化した場合はルンゲクッタで再計算
@@ -1273,7 +1263,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
     if ((mne >= 0 .and. (mne1 > mne * maglim .or. mne1 < mne * maglim_inv)) .or. &
         (mne < 0  .and. (mne1 < mne * maglim .or. mne1 > mne * maglim_inv))) then
       have_runge = .true.
-      call calc_kth_flux(p, g, s, sx, uve, tae, tbe, i, j, k, in, jn, 1, uve1, mne1)
+      call calc_kth_flux(p, g, s, sx, uve, tae, i, j, k, in, jn, 1, uve1, mne1)
     end if
   end if
 
@@ -1369,14 +1359,13 @@ end subroutine
 !----------------------------------------------------------------------
 ! 中心セルi,jからk近傍セルへin,jnの流速uve1と単位幅流量mne1を計算する
 !----------------------------------------------------------------------
-subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, tbe0, i, j, k, in, jn, f_runge, uve1, mne1)
+subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1, mne1)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   type(t_enc_status), intent(in) :: sx
   real, intent(in) :: uve0        ! セル境界での流速
   real, intent(in) :: tae0        ! セル境界での移流項
-  real, intent(in) :: tbe0        ! 移流項の線形化係数 ∂adv/∂u_e(f_advection_runge。0 なら固定)
   integer, intent(in) :: i, j     ! 中心セルのインデックス
   integer, intent(in) :: k        ! 近傍セルの方位
   integer, intent(in) :: in, jn   ! 近傍セルのインデックス
@@ -1386,8 +1375,8 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, tbe0, i, j, k, in, jn, f_runge
 
   real :: he                      ! セル境界の水深
   real :: ge                      ! セル境界での重力加速度
+  real :: tae0n                   ! セル境界での移流項をセル境界流速で正規化したもの
   real :: tae                     ! セル境界での移流項(更新後)
-  real :: taa, tfa                ! アフィン形移流の陽的定数項と半陰的係数(§68.23)
   real :: tg0e, tge, tfe          ! セル境界での重力項、摩擦項
   real :: rne, hhe, vve           ! セル境界での粗度係数、摩擦項用水深、摩擦項用絶対流速
   real :: gve, bbe                ! セル境界での家屋の空隙率、家屋の平均サイズ
@@ -1422,6 +1411,13 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, tbe0, i, j, k, in, jn, f_runge
   !   静止からの流動開始直後に流速が小さいために摩擦が過小となることを防ぐために
   !   (この現象は正攻法では時間刻みを極めて小さくしないと解消しない)
   vve = max(vve, p%vv)
+
+  ! セル境界流速で正規化した移流項
+  if (abs(uve0) > 1.e-3) then
+    tae0n = tae0 / uve0
+  else
+    tae0n = 0.0
+  end if
 
   ! セル境界での有効重力加速度を計算
   ge = p%gg                                 ! 重力加速度
@@ -1550,19 +1546,8 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, tbe0, i, j, k, in, jn, f_runge
     hhe = max(he + hse, p%dv)
 
     ! セル境界での移流項
-    !   f_advection_runge > 0: 時刻 n の値を基準にエッジ流速で線形化した
-    !   アフィン形 tae = tae0 + b (u − uve0)(Picard。§68.23)。b ≤ 0(運動量
-    !   保存形では流入面の凍結流束の和で常に非正 = 上流値への緩和)は
-    !   摩擦項と同じく半陰的に扱い、段内で無条件安定にする。b > 0(スキーム
-    !   1 の比例形で生じうる)は前段の流速で陽的に評価する
-    taa = 0.0
-    tfa = 0.0
-    if (f_advection_runge > 0 .and. tbe0 < 0.0) then
-      tae = tae0
-      taa = -tbe0 * uve0
-      tfa = tbe0
-    else if (f_advection_runge > 0) then
-      tae = tae0 + tbe0 * (uve1 - uve0)
+    if (f_advection_runge > 0) then
+      tae = tae0n * uve1      ! ルンゲクッタによる移流項の更新を有効化
     else
       tae = tae0              ! ルンゲクッタによる移流項の更新を無効化
     end if
@@ -1603,7 +1588,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, tbe0, i, j, k, in, jn, f_runge
     ! セル境界での流速(符合は中心セルから近傍セルに向かい正)を更新
     !   摩擦項を半陰解法で計算する
     !   どちらも中心セルから近傍セルに向かい正
-    uve1 = (uve0 + (tae + taa + tge) * dtl) / (1 - (tfe + tfa) * dtl)
+    uve1 = (uve0 + (tae + tge) * dtl) / (1 - tfe * dtl)
 
     ! 乾燥セルへ向かうエッジ水深のエネルギー頭による頭打ち(§68.16)
     !   受け手(流向の下流側)が乾燥(h < dd)のとき、運べる水深は送り手の
