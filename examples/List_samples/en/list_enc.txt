@@ -52,6 +52,13 @@
                             !   hydraulic jumps (correct bore speed).
                             !   p_adv_upwind_index / f_advection_tvd below
                             !   act on scheme 1 only
+  !f_advection_donor = 0    ! upwind momentum donors of the momentum-
+                            !   conservative advection (schemes 2, 3)
+                            !   (0: all wet cells = default, 1: on edges between
+                            !   channel cells the streamwise donors are channel
+                            !   cells only; needs fn_rw).
+                            !   Avoids the artificial loss when the donor on
+                            !   the edge line falls on a flooded valley cell
   !f_dry_head_cap = 0       ! cap the edge depth toward a dry cell by the
                             !   energy head eta + u_n^2/2g - z_receiver
                             !   (0: off = default, 1: on). Water cannot climb

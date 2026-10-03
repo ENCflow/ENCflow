@@ -21,6 +21,12 @@ module list_enc
                                               !   2: 運動量保存形・1次風上, 3: 運動量保存形+MUSCL)
     integer :: f_advection_tvd = 0            ! 移流項にTVDスキームを使用(スキーム1のみ)
     integer :: f_advection_runge = 0          ! 移流項をルンゲクッタで更新
+    integer :: f_advection_donor = 0          ! 運動量保存形移流(スキーム 2, 3)の風上供給元の
+                                              !   制限 (0:湿潤セルすべて(既定), 1:河道セル間の
+                                              !   エッジでは流下方向の供給元を河道セル(rw>0)に
+                                              !   限る。fn_rw 必須)。
+                                              !   屈曲で線上の供給元が浸水した非河道セルに落ちる
+                                              !   人工損失の対策(developer.md §68.18)
     integer :: f_dry_head_cap = 0             ! 乾燥セルへ向かうエッジ水深のエネルギー頭による
                                               !   頭打ち (0:なし(既定), 1:有効)。受け手が乾燥の
                                               !   とき he ≤ max(η + u_n²/2g − z_受け手, 0) とし、
@@ -66,6 +72,7 @@ subroutine list_enc_read(p, list)
   integer :: f_advection_runge          ! 移流項をルンゲクッタで更新
   integer :: f_opening_dynamic          ! 塞がれた開口の動的振り替え (0:なし, 1:河道, 2:全域)
   integer :: f_dry_head_cap             ! 乾燥セルへのエッジ水深のエネルギー頭による頭打ち (0/1)
+  integer :: f_advection_donor          ! 運動量保存形移流の供給元制限 (0:全湿潤セル, 1:河道セル)
   integer :: f_rivermouth_drop          ! 河口から海へ段落ち
   integer :: f_diffusion_term           ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
   real :: p_diagratio                   ! ratio of diagonal component
@@ -79,7 +86,7 @@ subroutine list_enc_read(p, list)
 
   namelist /list_enc/ f_gravity_correction, f_exflux_reduction, f_hcap_upwind, &
                       f_friction_fastmath, f_advection_scheme, f_advection_tvd, f_advection_runge, &
-                      f_rivermouth_drop, f_opening_dynamic, f_dry_head_cap, &
+                      f_rivermouth_drop, f_opening_dynamic, f_dry_head_cap, f_advection_donor, &
                       f_adaptive_runge, p_diagratio, p_adv_upwind_index, p_adprunge_thresh, &
                       f_diffusion_term, p_diffusion_nu, p_diffusion_alpha
 
@@ -94,6 +101,7 @@ subroutine list_enc_read(p, list)
   f_rivermouth_drop = list%f_rivermouth_drop
   f_opening_dynamic = list%f_opening_dynamic
   f_dry_head_cap = list%f_dry_head_cap
+  f_advection_donor = list%f_advection_donor
   f_diffusion_term = list%f_diffusion_term
   p_diffusion_alpha = list%p_diffusion_alpha
   p_diagratio = list%p_diagratio
@@ -121,6 +129,7 @@ subroutine list_enc_read(p, list)
   list%f_rivermouth_drop = f_rivermouth_drop
   list%f_opening_dynamic = f_opening_dynamic
   list%f_dry_head_cap = f_dry_head_cap
+  list%f_advection_donor = f_advection_donor
   list%f_diffusion_term = f_diffusion_term
   list%p_diagratio = min(max(p_diagratio, 0.0), 1.0)                ! 値を0.0~1.0に制限
   list%p_adv_upwind_index = min(max(p_adv_upwind_index, 0.0), 1.0)  ! 値を0.0~1.0に制限

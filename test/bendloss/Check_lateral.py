@@ -13,7 +13,7 @@ import glob, math, os, re, sys
 import numpy as np
 G, DX, S0, N = 9.8, 10.0, 0.02, 0.03
 kind = sys.argv[1]; sufs = sys.argv[2:] or ['_s1', '_s3']
-jc = {'lat1': 3, 'lat2': 11, 'lat1r': 3, 'lat2r': 11}[kind]
+jc = {'lat1': 3, 'lat2': 11, 'lat1r': 3, 'lat2r': 11, 'lat1r_s3': 3}[kind]
 
 def last(d, pre):
     fs = sorted(f for f in glob.glob(os.path.join(d, pre + "[0-9][0-9][0-9][0-9].txt")) if int(re.findall(r"(\d{4})\.txt", f)[0]) < 9000)

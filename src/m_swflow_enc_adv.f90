@@ -157,10 +157,11 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
   real :: ubc, ubn, ubtp, ubtm
   real :: thx, thy
   real :: ta
+  logical :: donor_rw               ! このエッジの流下方向の供給元を河道セルに限るか(§68.18)
 
   !$omp parallel do schedule(dynamic) &
   !$omp private(i, j, k, in, jn, ie, je, hc, hn, hb, lme, ue, um, umm, up, upp, utp, utm, &
-  !$omp         qc, qn, qtp, qtm, ubc, ubn, ubtp, ubtm, thx, thy, ta)
+  !$omp         qc, qn, qtp, qtm, ubc, ubn, ubtp, ubtm, thx, thy, ta, donor_rw)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -182,6 +183,12 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! gv(建物空隙率)は v1 と同様に乗じない(圧力項の ×gve と同じ流儀は
         ! 採らず、移流は輸送項として gv 非依存。§68.9)
         hb = (vol_depth(i, j) + vol_depth(in, jn)) / 2
+        ! 河道セル間のエッジでは流下方向の供給元を河道セルに限る
+        ! (f_advection_donor=1。屈曲・合流で線 k 上の風上エッジが浸水した
+        ! 谷底・斜面セルに落ちると、その遅い水が供給元になって運動量を失う
+        ! 人工損失の対策。側方面は対象外。§68.18)
+        donor_rw = .false.
+        if (f_advection_donor == 1) donor_rw = g%rw(i,j) > 0 .and. g%rw(in,jn) > 0
 
         ! 線 k 上のエッジ流速(基準セルから k 方向。確保範囲外は 0)
         ue  = sx%uv(k,ie,je)
@@ -201,7 +208,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 水が流入する」扱いになり、屈曲ごとに人工的な損失水頭が生じる。
         ! §68.8)。MUSCL の upup も同様に供給元が無効なら 1 次に退化
         if (qc >= 0) then
-          if (cell_ok(i - din(k), j - djn(k))) then
+          if (donor_ok(i - din(k), j - djn(k))) then
             ubc = face_value(um, ue, umm)
           else
             ubc = ue
@@ -212,7 +219,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         if (qn >= 0) then
           ubn = face_value(ue, up, um)
         else
-          if (cell_ok(in + din(k), jn + djn(k))) then
+          if (donor_ok(in + din(k), jn + djn(k))) then
             ubn = face_value(up, ue, upp)
           else
             ubn = ue
@@ -303,6 +310,16 @@ contains
     if (ci < 1 .or. ci > ubound(s%h, 1) .or. cj < dcp%jsh .or. cj > dcp%jeh) return
     if (g%x(ci,cj) <= 0) return
     ok = s%h(ci,cj) >= p%dd
+  end function
+
+  ! 流下方向の風上供給元になれるか: cell_ok に加え、河道セル間のエッジでは
+  ! 河道セルに限る(f_advection_donor=1。§68.18)。側方面の供給元は対象外
+  ! (斜面からの横流入の運動量吸い込みは物理なので残す)
+  pure function donor_ok(ci, cj) result(ok)
+    integer, intent(in) :: ci, cj
+    logical :: ok
+    ok = cell_ok(ci, cj)
+    if (ok .and. donor_rw) ok = g%rw(ci,cj) > 0
   end function
 
   ! セル流量 (m, n) の単位ベクトル (tx_, ty_) 方向投影(確保範囲外は 0)

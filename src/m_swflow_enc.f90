@@ -59,6 +59,9 @@ module m_swflow_enc
   integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
   integer :: f_opening_dynamic              ! 塞がれた開口の動的振り替え (0:なし, 1:河道
                                             !   セル間のエッジのみ, 2:全エッジ。§68.14)
+  integer :: f_advection_donor              ! 運動量保存形移流の風上供給元の制限 (0:湿潤セル
+                                            !   すべて, 1:河道セル間のエッジでは河道セルのみ。
+                                            !   §68.18)
   integer :: f_dry_head_cap                 ! 乾燥セルへ向かうエッジ水深をエネルギー頭
                                             !   η + u_n²/2g − z_受け手 で頭打ち (0:なし, 1:有効。
                                             !   §68.16。水面+速度水頭より高い乾いた地盤へは
@@ -464,6 +467,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   f_advection_scheme = list%f_advection_scheme
   f_opening_dynamic = list%f_opening_dynamic
   f_dry_head_cap = list%f_dry_head_cap
+  f_advection_donor = list%f_advection_donor
   f_advection_tvd = list%f_advection_tvd
   f_advection_runge = list%f_advection_runge
   select case (f_advection_scheme)
@@ -537,6 +541,15 @@ subroutine m_swflow_enc_init(p, g, b, s)
     call par_stop("list_enc: f_opening_dynamic must be 0(off), 1(channel edges) or 2(all edges)")
   end if
   have_fwd = f_opening_dynamic > 0
+  if (f_advection_donor < 0 .or. f_advection_donor > 1) then
+    call par_stop("list_enc: f_advection_donor must be 0(all wet cells) or 1(channel cells on channel edges)")
+  end if
+  if (f_advection_donor == 1 .and. .not. any(g%rw > 0)) then
+    call par_stop("list_enc: f_advection_donor=1 requires a channel mask (fn_rw in list_geoinfo)")
+  end if
+  if (f_advection_donor == 1 .and. f_advection_scheme < 2) then
+    call par_info("swflow: f_advection_donor=1 has no effect with f_advection_scheme=1")
+  end if
   if (f_dry_head_cap < 0 .or. f_dry_head_cap > 1) then
     call par_stop("list_enc: f_dry_head_cap must be 0(off) or 1(cap edge depth toward dry cells by energy head)")
   end if
