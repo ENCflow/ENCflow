@@ -2149,13 +2149,13 @@ subroutine build_fwd(p, g, s)
           if (ok_c .and. fwd_cell(g, i+1, j+1) .and. fwd_pair(g, i, j, i+1, j+1)) then
             sh = (sblk(g, s, i, j, i+1, j) + sblk(g, s, i, j, i, j+1) &
                 + sblk(g, s, i+1, j+1, i+1, j) + sblk(g, s, i+1, j+1, i, j+1)) / 2 * s1d
-            if (sh > 0) fwd(1,i,j) = 1.0 + sh / l8(1)
+            if (sh > 0 .and. l8(1) > 0) fwd(1,i,j) = 1.0 + sh / l8(1)
           end if
           ! 成分3: (i,j+1)-(i+1,j)。共有する側方セル (i+1,j+1), (i,j)
           if (ok_n .and. fwd_cell(g, i+1, j) .and. fwd_pair(g, i, j+1, i+1, j)) then
             sh = (sblk(g, s, i, j+1, i+1, j+1) + sblk(g, s, i, j+1, i, j) &
                 + sblk(g, s, i+1, j, i+1, j+1) + sblk(g, s, i+1, j, i, j)) / 2 * s1d
-            if (sh > 0) fwd(3,i,j) = 1.0 + sh / l8(3)
+            if (sh > 0 .and. l8(3) > 0) fwd(3,i,j) = 1.0 + sh / l8(3)
           end if
         end if
       end if
