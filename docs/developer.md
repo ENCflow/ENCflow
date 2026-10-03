@@ -8017,3 +8017,10 @@ u_e に比例して増える(助言が「無視している」とした u^n δu_
 固定移流で達成できており、移流項の段内更新は追わない。
 f_advection_runge=1(比例形)は非推奨のまま維持し、次の整理で除去を検討
 (§68.19 の方針どおり)。
+
+**除去(2026-10-03 同日)**: 利用者の指示で f_advection_runge を namelist・
+m_swflow_enc・ユーザーガイド・List_samples から除去した。RK 段内の移流項は
+時刻 n の値で固定(calc_kth_flux の tae = tae0)。既定 0 と同値のため
+wave・dambreak・chichibu の全出力は除去前とバイト一致。古いパラメータ
+ファイルに f_advection_runge が残っていると namelist 読み込みでエラーに
+なるので、行を削除すること。

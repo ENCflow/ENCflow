@@ -55,7 +55,6 @@ module m_swflow_enc
   integer :: f_advection_scheme             ! 移流項のスキーム (1: セル中心勾配 v1,
                                             !   2: 運動量保存形・1次風上, 3: 同+MUSCL。§68)
   integer :: f_advection_tvd != 9            ! 移流項にTVDスキームを使用(スキーム1のみ)
-  integer :: f_advection_runge != 0          ! 移流項のルンゲクッタでの更新
   integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
   integer :: f_opening_dynamic              ! 塞がれた開口の動的振り替え (0:なし, 1:河道
                                             !   セル間のエッジのみ, 2:全エッジ。§68.14)
@@ -469,7 +468,6 @@ subroutine m_swflow_enc_init(p, g, b, s)
   f_dry_head_cap = list%f_dry_head_cap
   f_advection_donor = list%f_advection_donor
   f_advection_tvd = list%f_advection_tvd
-  f_advection_runge = list%f_advection_runge
   select case (f_advection_scheme)
     case (1)      ! セル中心勾配(v1。既定)
     case (2)      ! 運動量保存形(Stelling & Duinmeijer)・1次風上
@@ -1375,7 +1373,6 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
 
   real :: he                      ! セル境界の水深
   real :: ge                      ! セル境界での重力加速度
-  real :: tae0n                   ! セル境界での移流項をセル境界流速で正規化したもの
   real :: tae                     ! セル境界での移流項(更新後)
   real :: tg0e, tge, tfe          ! セル境界での重力項、摩擦項
   real :: rne, hhe, vve           ! セル境界での粗度係数、摩擦項用水深、摩擦項用絶対流速
@@ -1411,13 +1408,6 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   !   静止からの流動開始直後に流速が小さいために摩擦が過小となることを防ぐために
   !   (この現象は正攻法では時間刻みを極めて小さくしないと解消しない)
   vve = max(vve, p%vv)
-
-  ! セル境界流速で正規化した移流項
-  if (abs(uve0) > 1.e-3) then
-    tae0n = tae0 / uve0
-  else
-    tae0n = 0.0
-  end if
 
   ! セル境界での有効重力加速度を計算
   ge = p%gg                                 ! 重力加速度
@@ -1545,12 +1535,9 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     !   (土石流有効時は混合流動深 h + hs。hse=0 なら厳密に従来と同値)
     hhe = max(he + hse, p%dv)
 
-    ! セル境界での移流項
-    if (f_advection_runge > 0) then
-      tae = tae0n * uve1      ! ルンゲクッタによる移流項の更新を有効化
-    else
-      tae = tae0              ! ルンゲクッタによる移流項の更新を無効化
-    end if
+    ! セル境界での移流項(時刻 n の値で固定。RK 段内の更新は比例形・
+    ! アフィン形とも評価のうえ不採用。developer.md §68.19, §68.23)
+    tae = tae0
 
     ! セル境界での重力項(符合は中心セルから近傍セルに向かい正)
     !   土石流有効時は水面勾配に hs を算入(z+h+hs。tgs は RK 内で不変)
