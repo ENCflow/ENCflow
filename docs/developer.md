@@ -7527,11 +7527,20 @@ f_advection_donor は利用者の判断で**残す**(2026-10-03)。
   スキーム 3 で問題ない。
 - 既存の校正済みケースの再現・回帰テスト: スキーム 1 + 現行既定(旧互換)。
 
-**既定昇格の手順(人間の判断後)**: list_enc の既定を f_advection_scheme=3、
-f_opening_dynamic=1(fn_rw なしの場合の扱い = 0 への自動退避か par_stop かを
-決める)、f_dry_head_cap=1 に変え、wave / dambreak / chichibu の reference を
-目視確認のうえ更新(CLAUDE.md 規律 1)。p_adv_upwind_index はスキーム 1 専用
-のまま。f_advection_tvd は非推奨表示のまま残し、次の整理で除去を検討。
+**既定昇格の実施(2026-10-03。利用者が案 A を採択)**: list_enc の既定を
+f_advection_scheme=3、f_opening_dynamic=1、f_dry_head_cap=1 に変更した。
+f_opening_dynamic=1 で河道マスク(fn_rw)がない場合は par_stop ではなく
+par_info で無効化する(対象エッジが存在しないため。fwd は確保せず追加コスト
+なし。全エッジに効かせたい場合は 2 を明示)。f_advection_donor は既定 0 のまま
+残す。p_adv_upwind_index・f_advection_tvd はスキーム 1 専用のまま(tvd は
+非推奨)。旧既定は f_advection_scheme=1、f_opening_dynamic=0、f_dry_head_cap=0
+を明示すれば再現できる(utils・tutorials の既存 param は変更していない)。
+検証: 旧既定を明示した wave / dambreak / chichibu が既存 reference にビット
+一致(等価経路)、新既定の np=1, 2, 4 が一致。**reference の更新は人間の目視
+確認後**(規律 1。差の大きさは本節末尾の検証記録)。利用者向け文書
+(users_guide/swflow.md JA/EN、List_samples JA/EN)を同時に更新。tutorials の
+README に載せた画面出力の数値は旧既定のもので、再実行して更新するのは
+次の作業(handoff)。
 
 ### 68.20 「移流項なし > スキーム 1 > スキーム 3」の機構: 段差での散逸と運動量交換(2026-10-03)
 

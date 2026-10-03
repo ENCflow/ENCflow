@@ -553,8 +553,12 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (f_dry_head_cap < 0 .or. f_dry_head_cap > 1) then
     call par_stop("list_enc: f_dry_head_cap must be 0(off) or 1(cap edge depth toward dry cells by energy head)")
   end if
+  ! 河道限定(1。既定)は河道マスクがなければ対象エッジが存在しないので無効化
+  ! (fwd を確保せず、メモリ・CPU とも追加なし。全エッジに効かせたい氾濫・
+  ! ダム破壊は 2 を明示する。§68.19)
   if (f_opening_dynamic == 1 .and. .not. any(g%rw > 0)) then
-    call par_stop("list_enc: f_opening_dynamic=1 requires a channel mask (fn_rw in list_geoinfo)")
+    call par_info("swflow: f_opening_dynamic=1 has no channel mask (fn_rw); dynamic opening disabled")
+    have_fwd = .false.
   end if
   if (have_fwd) then
     allocate(fwd(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 1.0)

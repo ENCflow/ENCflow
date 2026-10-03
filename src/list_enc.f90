@@ -17,9 +17,10 @@ module list_enc
     integer :: f_adaptive_runge = 1           ! 適応的ルンゲクッタ
     integer :: f_friction_fastmath = 0        ! 摩擦項計算の高速化 (0:厳密,
                                               !   1~5:テーブル近似。大きいほど粗く速い)
-    integer :: f_advection_scheme = 1         ! 移流項のスキーム (1: セル中心勾配(既定),
-                                              !   2: 運動量保存形・1次風上, 3: 運動量保存形+MUSCL)
-    integer :: f_advection_tvd = 0            ! 移流項にTVDスキームを使用(スキーム1のみ)
+    integer :: f_advection_scheme = 3         ! 移流項のスキーム (1: セル中心勾配(旧既定。非保存形),
+                                              !   2: 運動量保存形・1次風上, 3: 運動量保存形+MUSCL(既定。
+                                              !   2026-10-03 に 1 から昇格。developer.md §68.19))
+    integer :: f_advection_tvd = 0            ! 移流項にTVDスキームを使用(スキーム1のみ。非推奨)
     integer :: f_advection_runge = 0          ! 移流項をルンゲクッタで更新
     integer :: f_advection_donor = 0          ! 運動量保存形移流(スキーム 2, 3)の風上供給元の
                                               !   制限 (0:湿潤セルすべて(既定), 1:河道セル間の
@@ -27,13 +28,14 @@ module list_enc
                                               !   限る。fn_rw 必須)。
                                               !   屈曲で線上の供給元が浸水した非河道セルに落ちる
                                               !   人工損失の対策(developer.md §68.18)
-    integer :: f_dry_head_cap = 0             ! 乾燥セルへ向かうエッジ水深のエネルギー頭による
-                                              !   頭打ち (0:なし(既定), 1:有効)。受け手が乾燥の
+    integer :: f_dry_head_cap = 1             ! 乾燥セルへ向かうエッジ水深のエネルギー頭による
+                                              !   頭打ち (0:なし, 1:有効(既定))。受け手が乾燥の
                                               !   とき he ≤ max(η + u_n²/2g − z_受け手, 0) とし、
                                               !   水面+速度水頭より高い地盤へは流さない
                                               !   (developer.md §68.16)
-    integer :: f_opening_dynamic = 0          ! 塞がれた開口の動的振り替え (0:なし(既定),
-                                              !   1:河道セル間のエッジのみ(fn_rw 必須),
+    integer :: f_opening_dynamic = 1          ! 塞がれた開口の動的振り替え (0:なし,
+                                              !   1:河道セル間のエッジのみ(既定。河道マスク
+                                              !   fn_rw がなければ対象エッジがなく無効),
                                               !   2:全エッジ)。水面より高い隣接地盤で塞がれた
                                               !   斜め/軸の通過幅シェアを開いたエッジへ毎
                                               !   ステップ振り替える(developer.md §68.14)

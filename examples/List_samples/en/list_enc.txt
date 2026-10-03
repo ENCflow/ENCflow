@@ -45,11 +45,13 @@
                             !   (= 2/(2+sqrt(2)); normally no need to change)
 
   ! ---- Advection and diffusion terms ----
-  !f_advection_scheme = 1   ! advection scheme (1: cell-centre gradient =
-                            !   default, 2: momentum-conservative first-order
-                            !   upwind, 3: momentum-conservative + MUSCL).
-                            !   3 is recommended for flows with bores or
-                            !   hydraulic jumps (correct bore speed).
+  !f_advection_scheme = 3   ! advection scheme (1: cell-centre gradient =
+                            !   former default, 2: momentum-conservative
+                            !   first-order upwind, 3: momentum-conservative
+                            !   + MUSCL = default). Scheme 1 is non-
+                            !   conservative: bores lag and on real terrain
+                            !   the runoff gets faster and larger with grid
+                            !   refinement without converging.
                             !   p_adv_upwind_index / f_advection_tvd below
                             !   act on scheme 1 only
   !f_advection_donor = 0    ! upwind momentum donors of the momentum-
@@ -59,15 +61,16 @@
                             !   cells only; needs fn_rw).
                             !   Avoids the artificial loss when the donor on
                             !   the edge line falls on a flooded valley cell
-  !f_dry_head_cap = 0       ! cap the edge depth toward a dry cell by the
+  !f_dry_head_cap = 1       ! cap the edge depth toward a dry cell by the
                             !   energy head eta + u_n^2/2g - z_receiver
-                            !   (0: off = default, 1: on). Water cannot climb
+                            !   (0: off, 1: on = default). Water cannot climb
                             !   onto dry ground above the water surface plus
                             !   velocity head (fixes leaks at bore fronts and
                             !   in 1-2 cell wide incised channels)
-  !f_opening_dynamic = 0    ! dynamic reassignment of blocked openings
-                            !   (0: off = default, 1: edges between channel
-                            !   cells only (needs fn_rw), 2: all edges).
+  !f_opening_dynamic = 1    ! dynamic reassignment of blocked openings
+                            !   (0: off, 1: edges between channel cells only
+                            !   = default (inactive without fn_rw), 2: all
+                            !   edges).
                             !   Passage-width shares that cannot be used
                             !   because the diagonal neighbour's ground is
                             !   above the water surface are reassigned to
