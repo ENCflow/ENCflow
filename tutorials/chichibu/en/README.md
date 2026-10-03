@@ -13,8 +13,7 @@ computation with real terrain data, in the following order.
 - **Step 2**: GeoTIFF input/output, channel mask and roughness
 - **Step 3**: Measurement (probes and flux transects) and distributed
   output
-- **Step 4**: Parameter tuning -- how to read ex_flux, threshold depth,
-  upwinding of advection
+- **Step 4**: Parameter tuning -- how to read ex_flux, threshold depth
 - **Step 5**: Rainfall interception and subsurface infiltration (bucket
   model), the three water-storage columns
 - **Step 6**: Boundary condition at the catchment outlet; understanding
@@ -81,18 +80,19 @@ main: real precision: 64 bit
 main: number of valid cells: 17885
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000   0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0487  97.7%      0    0.3876    2.3735   10.3884
-  1:00:00.00  16.7%    0.1000   6.0%      0    0.6716    8.0311   18.2975
-  1:30:00.00  25.0%    0.1000   3.5%      1    0.7116    8.6295   19.6093
-  2:00:00.00  33.3%    0.1000   1.9%     15    0.6868   14.8529   18.9331
+  0:30:00.00   8.3%    0.0487  97.7%      0    0.1487    1.0481    3.2564
+  1:00:00.00  16.7%    0.1000  12.3%      0    0.3094    4.6692    6.8169
+  1:30:00.00  25.0%    0.1000   6.0%      0    0.3654    7.5746    6.8456
+  2:00:00.00  33.3%    0.1000   3.2%      0    0.3760    7.8556    7.1534
   ...
-  6:00:00.00 100.0%    0.1000   0.9%    190    0.5896   33.0043    6.7073
+  6:00:00.00 100.0%    0.1000   2.2%     59    0.4852   26.4711    4.1836
 main: program terminated normally
 ```
 
 The parameter file is structured almost identically to Step 1 of wave;
 the only differences are that `&list_geoinfo` reads the terrain and the
-catchment mask from files, and that `&list_precip` makes it rain.
+catchment mask from files and sets the roughness `rn0`, and that
+`&list_precip` makes it rain.
 
 ```
 &list_geoinfo
@@ -103,6 +103,7 @@ catchment mask from files, and that `&list_precip` makes it rain.
 
   f_ztype = 1          ! ground elevation type (0: default constant, 1: file)
   f_masktype = 1       ! domain mask (0: none, 1: catchment mask)
+  rn0 = 0.05           ! fixed roughness (typical of mountain slopes; the default 0.015 is for channels)
 
   fn_z = "Chichibu_200m_filled.txt"        ! ground elevation file name
   fn_mask = "Chichibu_200m_basin.txt"      ! domain mask file name
@@ -123,13 +124,19 @@ The screen output tells us the following.
   42,000 cells, but thanks to the catchment mask only 17,885 cells are
   actually computed. Cells outside the mask consume neither memory nor
   computation time.
+- `rn0 = 0.05` is Manning's roughness coefficient. The default 0.015
+  is a channel value; applied to whole mountain hillslopes it makes the
+  flow too fast (in this closed vessel with no outlet the water then
+  concentrates so much that the computation becomes unstable). Here we
+  give 0.05, typical of mountain slopes, and in Step 2 override it for
+  the channel cells only.
 - The S column grows with the rain and, at t = 1:00 when the rain ends,
   stops exactly at **0.1000** m (= 200 mm/h x 30 min = total rainfall
   of 100 mm averaged over the catchment), remaining constant
   afterwards. By default the outer rim of the computational domain is
   an impermeable wall, so this catchment is a **closed vessel with no
   water outlet**; the constant S column confirms mass conservation.
-- Meanwhile the h_max column keeps growing from 8 m to 33 m: the water
+- Meanwhile the h_max column keeps growing from 8 m to 26 m: the water
   that cannot get out keeps accumulating somewhere.
 
 The depth distribution at the final time (`result/H9998.txt`) shows
@@ -153,7 +160,7 @@ the northeast corner.
 ![Step 1: depth after 6 hours](figs/step1_hend.png)
 
 Just upstream of the catchment outlet (the northeast corner), ponded
-water over 30 m deep has grown. This ponding of runoff dammed by the
+water over 25 m deep has grown. This ponding of runoff dammed by the
 wall will be resolved in Step 6 by setting a boundary condition. Until
 then we proceed with the outlet ponding as a known artifact (it hardly
 affects the measurements further upstream).
@@ -176,7 +183,7 @@ downstream, gathering at the single ponded spot at the outlet (which is
 still a wall at this stage). With the raw DEM, color is scattered all
 over the catchment: the water gets trapped in depressions along the way
 and never reaches the outlet. The maximum velocity also drops to
-about 1.5 m/s toward the end, showing that the flow has died across the
+about 1.8 m/s toward the end, showing that the flow has died across the
 whole catchment.
 
 In general, when the terrain slope is steep and the cell size is large,
@@ -254,7 +261,7 @@ channel mask and roughness.
   ([users guide](../../../docs/en/users_guide.md)).
 
 When you run it, the numbers on screen change slightly from Step 1
-(because the roughness changed). The result directory now contains
+(because the channel roughness changed). The result directory now contains
 `H0001.tif` and friends.
 
 ## Step 3: Measurement and distributed output
@@ -342,7 +349,7 @@ with the same four-time layout.
 ## Step 4: Parameter tuning
 
 Looking closely at the screen output of Step 3, **the ex_flux column
-grows over time** (up to 190 counts per 30 minutes near the end).
+grows over time** (nearly 100 counts per 30 minutes near the end).
 ex_flux counts the events where "the outflow computed from the momentum
 equation was about to exceed the water volume of the cell and was
 therefore limited". It is a safety device, so mass is conserved, but
@@ -367,32 +374,25 @@ mean longer computation time. Choose them as a balance of accuracy and
 speed (in this example, running `en/param_step4.txt` brings ex_flux
 down to 0).
 
-The other adjustment is **upwinding of the advection term**.
-
-```
-&list_enc
-  p_adv_upwind_index = 0.0        ! upwind differencing fraction (0.0 ~ 1.0)
-  p_adprunge_thresh = 1.5         ! adaptive Runge-Kutta threshold (1.1 ~)
-/
-```
-
-In computations with large cells the contribution of the advection term
-becomes relatively small compared to the other terms, while the
-numerical diffusion of upwind differencing (the default is a
-`p_adv_upwind_index = 0.5` blend) blunts the flood waveform
-excessively. So we reduce the upwind fraction as far as stability
-allows (here 0 = central differencing). Solving with the diffusive wave
-(`f_govequation = 1` in `&list_sysparam`), which drops the advection
-term altogether, is another option.
+One more note: earlier versions of this tutorial also lowered the
+upwind fraction of the advection term, `p_adv_upwind_index`, at this
+point. With the current default advection scheme (momentum-conserving
+with MUSCL, `f_advection_scheme = 3`) this coefficient is not used (it
+belongs to scheme 1 only), so no upwinding adjustment is needed.
+Solving with the diffusive wave (`f_govequation = 1` in
+`&list_sysparam`), which drops the advection term altogether, remains
+an option ([the shallow-water flow chapter of the users
+guide](../../../docs/en/users_guide/swflow.md)).
 
 ![Step 4: effect of parameter tuning](figs/step4_hydro.png)
 
-After tuning (`en/param_step4.txt`), the peak stands up and the blunted
-waveform becomes sharp (an 18% difference in peak discharge at transect
-4). In real-terrain computations on coarse grids, **waveform blunting
-is sensitive to the numerical settings** like this. Before tuning
-roughness against observed hydrographs, it is important to remove the
-blunting that comes from the numerical settings.
+After tuning (`en/param_step4.txt`), the spurious bump that appeared on
+the recession limb at t = 220 min or so (in the period when ex_flux
+starts to occur) disappears and the waveform becomes smooth. The peak
+discharge differs by about 3%. In real-terrain computations on coarse
+grids, **artifacts of the numerical settings** ride on the waveform
+like this. Before tuning roughness against observed hydrographs, it is
+important to remove them.
 
 ## Step 5: Rainfall interception and subsurface infiltration
 
@@ -431,11 +431,11 @@ changes from one column to **three columns**.
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000     0.0000     0.0000    0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2246    0.8761    5.3816
-  1:00:00.00  16.7%    0.0751     0.0049     0.0800   11.5%      0    0.4056    4.2749   11.3883
-  1:30:00.00  25.0%    0.0728     0.0072     0.0800   26.3%  17319    0.4968    5.5541   12.6021
+  0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2653    0.9525    6.8056
+  1:00:00.00  16.7%    0.0751     0.0049     0.0800    9.7%      0    0.4797    5.0006   13.5299
+  1:30:00.00  25.0%    0.0728     0.0072     0.0800   26.0%  17235    0.5348    6.7023   13.5372
   ...
-  6:00:00.00 100.0%    0.0689     0.0111     0.0800   10.3%   7285    0.6518   27.0961   11.8937
+  6:00:00.00 100.0%    0.0690     0.0110     0.0800   10.1%   7170    0.5027   28.5067    5.6094
 ```
 
 - `S_surf` is surface water, `S_grnd` is subsurface storage, and
@@ -449,8 +449,8 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
 
 ![Step 5: effect of interception and infiltration](figs/step5_hydro.png)
 
-In the hydrograph the peak discharge roughly halves (6,080 to 2,970
-m^3/s). Interception cuts the total by 20%, and infiltration keeps
+In the hydrograph the peak discharge drops by a little over 20% (5,440
+to 4,210 m^3/s). Interception cuts the total by 20%, and infiltration keeps
 sucking up the thinly spread hillslope water, so both the rising limb
 and the recession drop.
 
@@ -460,7 +460,7 @@ hydrograph. These are explained together in the second half of Step 6.
 
 ## Step 6: Boundary condition at the catchment outlet
 
-We now resolve the outlet ponding (h_max of about 27 m) that we have
+We now resolve the outlet ponding (h_max of about 28 m) that we have
 been turning a blind eye to since Step 1. The catchment outlet is not
 on the outer rim (the four edges) of the computational domain but in
 its interior, so instead of an edge boundary condition we use
@@ -494,13 +494,13 @@ immediately). Running it gives:
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   ...
-  3:00:00.00  50.0%    0.0650     0.0095     0.0745   20.5%  14129    0.4305    5.8031    9.8904
-  6:00:00.00 100.0%    0.0317     0.0110     0.0428   10.3%   7278    0.3185    4.7565    5.6587
+  3:00:00.00  50.0%    0.0620     0.0095     0.0715   20.1%  13922    0.5128    6.4992   13.3706
+  6:00:00.00 100.0%    0.0242     0.0110     0.0352   10.1%   7171    0.3209    3.9349    6.9709
 ```
 
 - S_total now decreases -- that is the water that left the system
   through the outlet.
-- h_max drops from 27 m to 4.8 m. The disappearance of the ponding can
+- h_max drops from 28 m to 3.9 m. The disappearance of the ponding can
   also be confirmed in the depth distribution.
 
 | Step 5 (no outlet) | Step 6 (perfect drain) |

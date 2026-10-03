@@ -131,7 +131,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      に実施**: f_advection_scheme=3、f_opening_dynamic=1(fn_rw なしは自動
      無効)、f_dry_head_cap=1。残: (i) wave / dambreak / chichibu の reference
      を目視確認のうえ -u で更新(人間)、(ii) tutorials の README に載せた
-     画面出力・図を新既定で再生成(wave は 2026-10-03 完了)、(iii) 校正済み
+     画面出力・図を新既定で再生成(wave・chichibu とも 2026-10-03 完了)、(iii) 校正済み
      ケースの粗度の再校正。
      **tutorials/chichibu が新既定で 1 h 過ぎに破綻(2026-10-03 原因特定、
      同日修正 §68.21。以下は経緯)**: スキーム 2・3 の検査体積の側方面の質量流束を面中心
@@ -145,8 +145,13 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      ex_flux 95 → 0(出口 4857 → 4927)、np=2 一致 → src に採用済み。別件:
      Step 1 は出口に境界のない閉流域の池(30 m 超)で粗度既定 0.015 の噴流が
      24〜39 m/s の揺動を起こし dt 6 s で CFL 違反(5:12)。rn0 = 0.05 なら
-     完走(tutorials 更新で対応)。残: Step 3 の逓減期の 1 回の跳ね(10〜16%、
-     3.5〜3.7 h)の原因。「移流項なし > 1 > 3」の
+     完走(tutorials 更新で対応)。**tutorials/chichibu は 2026-10-03 に
+     新既定で再生成済み**(Step 1 に rn0=0.05、Step 4〜7 から無効になった
+     p_adv_upwind_index の &list_enc を除去、Step 4 の本文を書き換え、
+     Step 5 のピーク減は半減 → 2 割強)。Step 3 の逓減期の 1 回の跳ね(3.67 h、
+     ex_flux が出始める時間帯)は dd/dv = 1e-4 の Step 4 では出ない(本文で
+     安全装置由来の人工変動として説明)。4 近傍比較が p_diagratio=0 で
+     SIGFPE になる build_fwd の 0 除算も同日修正(§68.22)。「移流項なし > 1 > 3」の
      機構(段差での散逸と運動量交換。階段水路 test/bendloss stair3)は §68.20。
      本流河床を平滑化した chichibu(§68.20 末尾)では 3 者とも速く大きく
      なるが 1・3 の差は縮まらず(+41 → +48%)、差の主因は河床の階段では

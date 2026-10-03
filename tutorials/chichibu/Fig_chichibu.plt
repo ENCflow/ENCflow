@@ -101,7 +101,7 @@ plot 'result_step6/fluxes/flux0004.csv' using 2:3 with lines lc rgb "#4477aa" ti
 set output "figs/step6_osc_zoom.png"
 set title "同 拡大(120〜240 min)"
 set xrange [120:240]
-set yrange [1500:3200]
+set yrange [2000:4400]
 do for [i=1:N] { A[i] = 0.0 }
 plot 'result_step6/fluxes/flux0004.csv' using 2:3 with lines lc rgb "#4477aa" title "1 分値(生)", \
      ''                                 using ($2 - (N-1)/2.0):(ma($3)) with lines lw 2 lc rgb "#c04040" title sprintf("%d 分移動平均(中央寄せ)", N)

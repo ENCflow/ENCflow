@@ -19,7 +19,6 @@
   fn_geoinfo = "-"           ! geographic information settings file
   fn_precip  = "-"           ! precipitation settings file
   fn_record  = "-"           ! record settings file
-  fn_enc     = "-"           ! ENC settings file
 
   dir_data = "data_chichibu" ! input data directory
 
@@ -87,12 +86,4 @@
   flxy(:,2) = 107, 103,  107, 100
   flxy(:,3) = 147, 105,  147, 102
   flxy(:,4) = 216,  43,  216,  37
-/
-
-!======================================================================
-! ENC computation settings
-!======================================================================
-&list_enc
-  p_adv_upwind_index = 0.0        ! upwind differencing fraction (0.0 ~ 1.0)
-  p_adprunge_thresh = 1.5         ! adaptive Runge-Kutta threshold (1.1 ~)
 /

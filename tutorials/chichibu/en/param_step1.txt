@@ -30,6 +30,7 @@
 
   f_ztype = 1          ! ground elevation type (0: default constant, 1: file)
   f_masktype = 1       ! domain mask (0: none, 1: catchment mask)
+  rn0 = 0.05           ! fixed roughness (typical of mountain slopes; the default 0.015 is for channels)
 
   fn_z = "Chichibu_200m_filled.txt"        ! ground elevation file name
   fn_mask = "Chichibu_200m_basin.txt"      ! domain mask file name
