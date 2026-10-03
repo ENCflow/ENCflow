@@ -52,8 +52,8 @@
                             !   conservative: bores lag and on real terrain
                             !   the runoff gets faster and larger with grid
                             !   refinement without converging.
-                            !   p_adv_upwind_index / f_advection_tvd below
-                            !   act on scheme 1 only
+                            !   p_adv_upwind_index below acts on scheme 1
+                            !   only
   !f_advection_donor = 0    ! upwind momentum donors of the momentum-
                             !   conservative advection (schemes 2, 3)
                             !   (0: all wet cells = default, 1: on edges between
@@ -77,7 +77,6 @@
                             !   the open edges every step (fixes the reduced
                             !   conveyance of 1-cell channels / wall-side rows
                             !   and the amplified damping of scheme 3)
-  !f_advection_tvd = 0      ! use a TVD scheme for the advection term
   !p_adv_upwind_index = 0.5 ! upwinding index of the advection term (0-1.
                             !   0: central difference, 1: first-order upwind)
   !f_diffusion_term = 0     ! diffusion term (0: none, 1: constant viscosity,

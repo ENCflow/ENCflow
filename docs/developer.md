@@ -8023,4 +8023,8 @@ m_swflow_enc・ユーザーガイド・List_samples から除去した。RK 段�
 時刻 n の値で固定(calc_kth_flux の tae = tae0)。既定 0 と同値のため
 wave・dambreak・chichibu の全出力は除去前とバイト一致。古いパラメータ
 ファイルに f_advection_runge が残っていると namelist 読み込みでエラーに
-なるので、行を削除すること。
+なるので、行を削除すること。同日、同じく非推奨だった **f_advection_tvd
+(スキーム 1 の風上/中心差分混合。§68.3 段 1)も除去**した(taxy は 1:2 成分
+のみ、adv_edge_v1 の限定器分岐を削除。test/* の param から `f_advection_tvd
+= 0` の行を除去。reference/param.txt は基準作成時の記録として残す)。
+既定 0 と同値のため wave・dambreak・chichibu の全出力はバイト一致。

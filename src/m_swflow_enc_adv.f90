@@ -5,7 +5,7 @@ submodule(m_swflow_enc) m_swflow_enc_adv
 
   type t_enc_adv
     ! --- スキーム1(セル中心勾配 v1)の内部場 ---
-    ! セル中心での移流項(第1添字は1~4,それぞれ風上差分と中心差分のx,y成分)
+    ! セル中心での移流項(第1添字は 1:2 = x, y 成分。風上重み付き勾配)
     real, allocatable :: taxy(:,:,:)
     real, allocatable :: ulm(:,:)    ! セル中心でのu*lm (移流項計算用)
     real, allocatable :: vlm(:,:)    ! セル中心でのv*lm (移流項計算用)
@@ -50,11 +50,7 @@ module subroutine adv_init(p, g)
     tx_mod%w8lt(1:4) = [ 2 * g%dx * g%dy / dr, g%dx, 2 * g%dx * g%dy / dr, g%dy ]
     return
   end if
-  if (f_advection_tvd > 0) then
-    allocate(tx_mod%taxy(1:4,1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
-  else
-    allocate(tx_mod%taxy(1:2,1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
-  end if
+  allocate(tx_mod%taxy(1:2,1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   ! TODO(分割時): ulm/vlm/taxy はハロ行でも計算が必要(ステンシル幅2の源。developer.md §11)
   allocate(tx_mod%ulm(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(tx_mod%vlm(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
@@ -405,12 +401,6 @@ subroutine adv_prepare_v1(p, g, s, sx, tx)
       call get_diff_v1(tx%ulm, tx%vlm, s%h, p%dd, wwx, wwy, g%x, i, j, dux, duy, dvx, dvy)
       tx%taxy(1,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
       tx%taxy(2,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)
-      if (f_advection_tvd > 0) then
-        ! 中心差分による移流項の計算
-        call get_diff_v1(tx%ulm, tx%vlm, s%h, p%dd, w8x, w8y, g%x, i, j, dux, duy, dvx, dvy)
-        tx%taxy(3,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
-        tx%taxy(4,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)
-      end if
     end do
   end do
   !$omp end parallel do
@@ -448,71 +438,12 @@ function adv_edge_v1(s, sx, tx, i, j, k, in, jn, ie, je) result(ta)
   real :: ta
 
   real :: taxe, taye
-  real :: taxe2, taye2, tae2
-  integer :: inn, jnn, ino, jno
-  real :: unn, vnn, uno, vno
-  real :: duvc, duvr, duvl, duv0
-  real :: rr, phi
-  real :: uve
 
-  uve = sx%uv(k,ie,je)
-  if (uve > 0.0) continue
+  if (s%initialized .or. sx%initialized) continue  ! 引数未使用の警告を抑制
   ! 風上差分による移流項
   taxe = (tx%taxy(1,i,j) + tx%taxy(1,in,jn)) / 2  ! 移流項(x方向, 符合は座標軸方向が正)
   taye = (tx%taxy(2,i,j) + tx%taxy(2,in,jn)) / 2  ! 移流項(y方向, 符合は座標軸方向が正)
   ta = taxe * n8x(k) + taye * n8y(k)             ! 移流項(符合は中心セルから近傍セルに向かい正)
-  !ta = ta * 1.5
-  ! TVD(風上差分と中心差分の混合。developer.md §68.3 段 1)
-  !   旧実装は両側の比 rl, rr の minmod(どちらかが負なら 0)で φ を決め、
-  !   中心差分側に ×1.5 を掛けていたため、ほぼ全域で φ→0(風上一色)かつ
-  !   長波で反拡散になっていた(§68.2)。ここでは風上側 1 本の比 r と
-  !   van Leer 限定器(1 で頭打ち)に改める。v1 の構造上、限定器は
-  !   「2 つの微分推定の混合比」としてしか働かない(面値の再構成は
-  !   段 2 の運動量保存形移流が担う)
-  if (f_advection_tvd > 0) then
-    ! 中心差分による移流項
-    taxe2 = (tx%taxy(3,i,j) + tx%taxy(3,in,jn)) / 2
-    taye2 = (tx%taxy(4,i,j) + tx%taxy(4,in,jn)) / 2
-    tae2 = taxe2 * n8x(k) + taye2 * n8y(k)
-    inn = in + din(k)  ! k近傍のさらに外側のセル
-    jnn = jn + djn(k)  ! k近傍のさらに外側のセル
-    ino = i + din(9-k) ! k近傍の反対側のセル
-    jno = j + djn(9-k) ! k近傍の反対側のセル
-    ! ±2ステンシルは u/v の確保範囲(1:nx, jsh:jeh)の外に出うる
-    ! (格子枠に接したエッジ)。枠外は u=v=0 として扱う
-    ! (領域外・無効セル x=0 の格納値と同じ扱いに揃える)
-    if (inn >= 1 .and. inn <= dcp%nx_g .and. jnn >= dcp%jsh .and. jnn <= dcp%jeh) then
-      unn = s%u(inn,jnn)
-      vnn = s%v(inn,jnn)
-    else
-      unn = 0
-      vnn = 0
-    end if
-    if (ino >= 1 .and. ino <= dcp%nx_g .and. jno >= dcp%jsh .and. jno <= dcp%jeh) then
-      uno = s%u(ino,jno)
-      vno = s%v(ino,jno)
-    else
-      uno = 0
-      vno = 0
-    end if
-    ! 線 k 上の投影流速の差分(o→c, c→n, n→nn)
-    duvr = (unn - s%u(in ,jn )) * n8x(k) + (vnn - s%v(in ,jn )) * n8y(k)
-    duvc = (s%u(in ,jn ) - s%u(i  ,j  )) * n8x(k) + (s%v(in ,jn ) - s%v(i  ,j  )) * n8y(k)
-    duvl = (s%u(i  ,j  ) - uno) * n8x(k) + (s%v(i  ,j  ) - vno) * n8y(k)
-    duv0 = duvc + sign(1.E-5, duvc)
-    ! 風上側 1 本の勾配比 r(uve>0: c が風上 → o→c の差分、uve<0: n が風上)
-    if (uve > 0) then
-      rr = duvl / duv0
-    else if (uve < 0) then
-      rr = duvr / duv0
-    else
-      rr = 0.0
-    end if
-    ! van Leer 限定器 φ(r) = (r+|r|)/(1+|r|) を 1 で頭打ち(1 = 中心差分)
-    phi = min(1.0, (rr + abs(rr)) / (1 + abs(rr)))
-    ! 風上差分と中心差分の混合
-    ta = ta + phi * (tae2 - ta)
-  end if
 end function
 
 

@@ -20,7 +20,6 @@ module list_enc
     integer :: f_advection_scheme = 3         ! 移流項のスキーム (1: セル中心勾配(旧既定。非保存形),
                                               !   2: 運動量保存形・1次風上, 3: 運動量保存形+MUSCL(既定。
                                               !   2026-10-03 に 1 から昇格。developer.md §68.19))
-    integer :: f_advection_tvd = 0            ! 移流項にTVDスキームを使用(スキーム1のみ。非推奨)
     integer :: f_advection_donor = 0          ! 運動量保存形移流(スキーム 2, 3)の風上供給元の
                                               !   制限 (0:湿潤セルすべて(既定), 1:河道セル間の
                                               !   エッジでは流下方向の供給元を河道セル(rw>0)に
@@ -69,7 +68,6 @@ subroutine list_enc_read(p, list)
   integer :: f_adaptive_runge           ! 適応的簡易ルンゲクッタ
   integer :: f_friction_fastmath        ! 摩擦項計算の高速化
   integer :: f_advection_scheme         ! 移流項のスキーム
-  integer :: f_advection_tvd            ! 移流項にTVDスキームを使用(スキーム1のみ)
   integer :: f_opening_dynamic          ! 塞がれた開口の動的振り替え (0:なし, 1:河道, 2:全域)
   integer :: f_dry_head_cap             ! 乾燥セルへのエッジ水深のエネルギー頭による頭打ち (0/1)
   integer :: f_advection_donor          ! 運動量保存形移流の供給元制限 (0:全湿潤セル, 1:河道セル)
@@ -85,7 +83,7 @@ subroutine list_enc_read(p, list)
   character(len=1024) :: iom
 
   namelist /list_enc/ f_gravity_correction, f_exflux_reduction, f_hcap_upwind, &
-                      f_friction_fastmath, f_advection_scheme, f_advection_tvd, &
+                      f_friction_fastmath, f_advection_scheme, &
                       f_rivermouth_drop, f_opening_dynamic, f_dry_head_cap, f_advection_donor, &
                       f_adaptive_runge, p_diagratio, p_adv_upwind_index, p_adprunge_thresh, &
                       f_diffusion_term, p_diffusion_nu, p_diffusion_alpha
@@ -96,7 +94,6 @@ subroutine list_enc_read(p, list)
   f_adaptive_runge = list%f_adaptive_runge 
   f_friction_fastmath = list%f_friction_fastmath 
   f_advection_scheme = list%f_advection_scheme
-  f_advection_tvd = list%f_advection_tvd 
   f_rivermouth_drop = list%f_rivermouth_drop
   f_opening_dynamic = list%f_opening_dynamic
   f_dry_head_cap = list%f_dry_head_cap
@@ -123,7 +120,6 @@ subroutine list_enc_read(p, list)
   list%f_adaptive_runge = f_adaptive_runge 
   list%f_friction_fastmath = f_friction_fastmath 
   list%f_advection_scheme = f_advection_scheme
-  list%f_advection_tvd = f_advection_tvd 
   list%f_rivermouth_drop = f_rivermouth_drop
   list%f_opening_dynamic = f_opening_dynamic
   list%f_dry_head_cap = f_dry_head_cap

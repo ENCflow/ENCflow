@@ -26,7 +26,6 @@ module m_swflow_enc
 
   ! nvfortran の submodule バグ回避(TPR #27323 系)。修正され次第 private に戻す
   public :: f_advection_scheme
-  public :: f_advection_tvd
   public :: p_adv_upwind_index
   public :: n8x, n8y
   public :: have_width, have_frw, frw, wfrac   ! m_geomorph の掃流砂が読む(宣言部の注記参照)
@@ -54,7 +53,6 @@ module m_swflow_enc
   integer :: f_friction_fastmath != 0        ! 摩擦項計算の高速化
   integer :: f_advection_scheme             ! 移流項のスキーム (1: セル中心勾配 v1,
                                             !   2: 運動量保存形・1次風上, 3: 同+MUSCL。§68)
-  integer :: f_advection_tvd != 9            ! 移流項にTVDスキームを使用(スキーム1のみ)
   integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
   integer :: f_opening_dynamic              ! 塞がれた開口の動的振り替え (0:なし, 1:河道
                                             !   セル間のエッジのみ, 2:全エッジ。§68.14)
@@ -467,7 +465,6 @@ subroutine m_swflow_enc_init(p, g, b, s)
   f_opening_dynamic = list%f_opening_dynamic
   f_dry_head_cap = list%f_dry_head_cap
   f_advection_donor = list%f_advection_donor
-  f_advection_tvd = list%f_advection_tvd
   select case (f_advection_scheme)
     case (1)      ! セル中心勾配(v1。既定)
     case (2)      ! 運動量保存形(Stelling & Duinmeijer)・1次風上
