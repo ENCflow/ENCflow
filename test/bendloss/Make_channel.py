@@ -85,6 +85,28 @@ if kind in ("steep", "sbreak"):
     print(kind, nx, ny)
     sys.exit(0)
 
+if kind.startswith("stair"):
+    # 階段状河床(堤内地 +10 m)。stair: wave10 と同じ平均勾配 0.005 = 20 セル
+    # (200 m)ごとに 1.0 m の段差。stair3: 平均勾配 0.03 = 10 セル(100 m)ごとに
+    # 3.0 m の段差(chichibu 上流の 100 m 格子の段差に相当)。踏面は水平。
+    # 実 DEM の段差で移流項の有無が流出の速さに効く機構(段差での散逸)を
+    # 1 セル水路で切り分ける(§68.20)
+    nx, ny = 400, 5
+    step, per = (3.0, 10) if kind == "stair3" else (1.0, 20)
+    Z0 = 100.0 + step * (nx // per)
+    z = [[0.0] * nx for _ in range(ny)]; rw = [[0] * nx for _ in range(ny)]
+    for i in range(nx):
+        bed = Z0 - step * (i // per)
+        for j in range(ny):
+            z[j][i] = bed + (0.0 if j == 2 else 10.0)
+        rw[2][i] = 1
+    for name, a, fmt in ((f"z_{kind}", z, "%.4f"), ("rw_width10", rw, "%d")):
+        with open(name + ".txt", "w") as f:
+            for row in a:
+                f.write(" ".join(fmt % v for v in row) + "\n")
+    print(kind, nx, ny)
+    sys.exit(0)
+
 if kind == "wave10":
     # 直線軸河道(rw マスク、幅なし)+ 堤内地 = 河床+10 m(洪水波のピーク h ≈ 4 m
     # でも堤内地に溢れない)。param_wave_{nolev,o0,o1}_s*.txt(§68.13)で使う

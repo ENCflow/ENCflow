@@ -28,3 +28,7 @@ rw_lat*.txt
 mask_lat*.txt
 rw_wave2.txt
 param_*_s2.txt
+param_*_noadv.txt
+!param_lat1r_noadv.txt
+!param_stair_dyn_noadv.txt
+!param_stair3_dyn_noadv.txt
