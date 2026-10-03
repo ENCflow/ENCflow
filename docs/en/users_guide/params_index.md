@@ -145,6 +145,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | evap_kc | &list_evap | [Rainfall and meteorology](forcing.md) |
 | evap_monthly | &list_evap | [Rainfall and meteorology](forcing.md) |
 | f_adaptive_runge | &list_enc | [Shallow water flow computation](swflow.md) |
+| f_advection_donor | &list_enc | [Shallow water flow computation](swflow.md) |
 | f_advection_scheme | &list_enc | [Shallow water flow computation](swflow.md) |
 | f_bank_aggr | &list_channel | [Channels](channel.md) |
 | f_bank_datum | &list_channel | [Channels](channel.md) |
@@ -177,6 +178,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | f_disp_h | &list_sysparam | [Input/output](io.md) |
 | f_disp_qq | &list_sysparam | [Input/output](io.md) |
 | f_disp_vv | &list_sysparam | [Input/output](io.md) |
+| f_dry_head_cap | &list_enc | [Shallow water flow computation](swflow.md) |
 | f_dw | &list_driftwood | [Driftwood](driftwood.md) |
 | f_esform | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | f_evmodel | &list_evap | [Rainfall and meteorology](forcing.md) |
@@ -205,6 +207,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | f_input_mode | &list_sysparam | [Input/output](io.md) |
 | f_lavaflow | &list_lavaflow | [Lava flows](lavaflow.md) |
 | f_masktype | &list_geoinfo | [Geographic information](geoinfo.md) |
+| f_opening_dynamic | &list_enc | [Shallow water flow computation](swflow.md) |
 | f_out_bds | &list_sysparam | [Input and output](io.md) |
 | f_out_cn | &list_sysparam | [Input/output](io.md) |
 | f_out_dda | &list_sysparam | [Input/output](io.md) |
