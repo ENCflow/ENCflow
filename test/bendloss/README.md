@@ -34,7 +34,7 @@
 ## サブグリッド河道幅との整合(param_width.txt)
 
 `python3 Make_channel.py width` で W = 4 m(wfrac = 0.4)の直線河道
-(堤内地は河床+3 m、高さ0堤防が自動有効)を作り、`./encflow param_width.txt`
+(堤内地は河床+3 m、bank0 = 0 の高さ 0 堤防を明示)を作り、`./encflow param_width.txt`
 で定常流を計算する。q_河道 = 40/4 = 10 m²/s の等流水深は 2.380 m。
 2026-10-02 の結果(区間 20〜300 セルの平均):
 

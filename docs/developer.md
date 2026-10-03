@@ -1482,9 +1482,11 @@ conduit・salt・pump 全回帰 PASS(無効時ビット一致)。reference は
   **エッジの通水構造と水理モード= fn_channel(&list_channel)**。
   fn_channel は fn_* 慣習(未指定なら完全に不活性)で、fn_rw が必須。
   段階構造: fn_bank または bank0 → 堤防(§17)+開口補正 /
-  fn_width → サブグリッド幅(fn_bank / bank0 無指定なら
-  **高さ0・堤内地セル標高基準の堤防を自動有効化**。壁の存在が
-  開口補正・幅キャップの整合条件のため)。
+  fn_width → サブグリッド幅(fn_bank / bank0 無指定なら**壁なし =
+  自然河岸**。2026-10-03 改定(§68.24): 旧仕様は「高さ0・堤内地セル
+  標高基準の堤防を自動有効化」していたが、斜面が天端より高い自然河岸で
+  堰越流が落差流になり発散する(§68.12)。塞がれた開口の通水能は動的
+  振り替え f_opening_dynamic が担うため、壁は整合条件ではなくなった)。
   旧配置(list_geoinfo の fn_bank / f_bank_datum / f_bank_aggr、
   list_enc の f_bank_mode)は実運用前のため互換入力なしで移行
   (旧 param は namelist 読込エラーで検出される)。
@@ -8032,3 +8034,44 @@ wave・dambreak・chichibu の全出力は除去前とバイト一致。古い�
 adv_edge_v2 / get_ww_upw_v2 / get_diff2_v2 / get_diff_v2。呼び出しは
 コメントアウト済みだった)も削除し、adv_edge_v1 の未使用引数 ie, je を
 落とした(等価変換。3 ケースでバイト一致)。
+
+### 68.24 サブグリッド河道幅の「壁なし幅モード」(2026-10-03 設計改定・実装)
+
+**経緯**: §68.12 のとおり、fn_width のみの指定が自動有効化する高さ 0 堤防
+(§18 の「壁との併用が整合条件」)は、斜面が天端より高い自然河岸で堰越流
+bank_weir_flux の越流水深に地盤差が乗って落差流になり、chichibu では開口
+補正・幅・スキームによらず 1〜2 h で発散する。側方面流束の修正(§68.21)後の
+現行コードでも再現した(w100 / w50 / lev1 のスキーム 3 がいずれも 1 h 以内に
+V > 250 m/s。ex_flux 3.4 万回/50 分、Runge 22%)。原因は移流項ではなく堤防壁
+そのもので、天端の基準・集約の変更では解消しない(§68.12)。
+
+**設計(案 A。利用者決定)**: fn_bank / bank0 無指定の fn_width は**壁なし
+(自然河岸)**とする。
+- 通水は河道—河道エッジの幅キャップ q = min(W/面長, 1)、貯留は wfrac、
+  流速正規化 cwx/cwy はそのまま。河道—斜面の交換は通常の浅水方程式。
+- 塞がれた開口の通水能は動的振り替え f_opening_dynamic(既定 1。§68.13〜)
+  が担うため、§18 が壁を要求した理由(壁なし静的補正の二重計上)は消えた。
+  静的開口補正 frw の振り替え(nblk / diag_reassign)は have_bopen = 堤防
+  有効時のみで、壁なし幅モードでは働かない。
+- W ≥ 自然幅なら全係数 1 で幅なしの基準と一致(退化性は保たれる)。
+  築堤河道は従来どおり fn_bank / bank0 を明示する(旧挙動の再現は
+  bank0 = 0、f_bank_datum = 1)。
+- 不採用の案 B(自然河岸モード: エッジごとに天端 = max(天端, 堤内地地盤,
+  河床)とし斜面→河道の越流水深に落差を乗せない): 発散は止まるが、流域
+  規模の主過程である斜面→河道の交換が堰公式のままになる。築堤河道の
+  越流には現行で十分。ただし「天端が堤内地地盤を下回るエッジ」の落差
+  上乗せ自体は壁付きでも起こりうるので、エッジごとの天端の下限クランプ
+  (zc_e = max(zc, z_堤内地))は別途検討(handoff)。
+
+**実装**: m_geoinfo setup_bank の auto_zero を廃止(bank_active = fn_bank
+または bank0)。幅のみ指定時は par_info で自然河岸モードを通知。
+m_swflow_enc_channel の build_cw / cw_cell の壁エッジ除外判定を
+g%bank_active で囲む(zbank は堤防有効時だけ確保されるため、壁なし幅モード
+では未確保配列を読んで SIGSEGV になっていた)。list_channel・§18・
+ユーザーガイド channel.md(JA/EN)・List_samples(JA/EN)を改定。
+test/bendloss の幅ケース(16 ファイル)には bank0 = 0.0, f_bank_datum = 1 を
+明示して旧挙動を保存。test/chichibu の param_w* は壁なしに変更。
+
+**検証**: 既定経路(fn_channel なし)は wave / dambreak / chichibu が変更前の
+実行ファイルとバイト一致。bendloss の param_width / param_zigzagw(明示
+bank0=0)は旧自動有効化とバイト一致。

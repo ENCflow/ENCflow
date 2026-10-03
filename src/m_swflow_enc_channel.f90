@@ -653,8 +653,11 @@ subroutine build_cw(g, capd)
         jn = jc + djn(k)
         if (g%x(in,jn) <= 0) cycle          ! 領域外・無効(x 番兵)
         ! 壁エッジ(自セルが天端を持ち、相手が堤内地)は除外
-        if (g%zbank(ic,jc) > zbank_min .and. g%sw(in,jn) == 0 .and. &
-            g%rw(in,jn) <= 0) cycle
+        ! (zbank は堤防有効時だけ確保される。壁なし幅モードでは壁エッジなし)
+        if (g%bank_active) then
+          if (g%zbank(ic,jc) > zbank_min .and. g%sw(in,jn) == 0 .and. &
+              g%rw(in,jn) <= 0) cycle
+        end if
         f0 = frw(ke(k), ic+die(k), jc+dje(k))
         if (is_channel(g, in, jn)) then
           q = wcap(g, ic, jc, in, jn, cap8(k))
@@ -755,8 +758,10 @@ module subroutine cw_cell(g, i, j, sig, cx, cy)
     in = i + din(k)
     jn = j + djn(k)
     if (g%x(in,jn) <= 0) cycle
-    if (g%zbank(i,j) > zbank_min .and. g%sw(in,jn) == 0 .and. &
-        g%rw(in,jn) <= 0) cycle
+    if (g%bank_active) then
+      if (g%zbank(i,j) > zbank_min .and. g%sw(in,jn) == 0 .and. &
+          g%rw(in,jn) <= 0) cycle
+    end if
     f0 = frw0(ke(k), i+die(k), j+dje(k))
     if (is_channel(g, in, jn)) then
       q = wcap_s(g, i, j, in, jn, cap8(k), sig)

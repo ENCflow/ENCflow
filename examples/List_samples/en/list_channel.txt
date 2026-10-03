@@ -85,10 +85,11 @@
   !   cell size (rectangular section; a channel cell has a single water
   !   level, that of the in-channel water. Storage of the non-channel
   !   part of the cell is not represented). If fn_bank / bank0 is not
-  !   given, a levee of "height 0, landside cell elevation datum" is
-  !   enabled automatically. Cells whose width is at least the cell size
-  !   are automatically treated the same as a conventional resolved
-  !   channel (incision + walls)
+  !   given there is no wall (natural banks: the channel-hillslope
+  !   exchange is the ordinary shallow-water computation and blocked
+  !   openings are handled by f_opening_dynamic). Specify bank0 / fn_bank
+  !   explicitly for embanked rivers. Cells whose width is at least the
+  !   cell size are automatically treated the same as a resolved channel
   !fn_width = "channel_width.txt"  ! channel width distribution (m; effective on
                                    !   channel cells only. Values at or above
                                    !   the cell size all give the identical

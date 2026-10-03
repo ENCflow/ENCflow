@@ -129,6 +129,5 @@
 
 
 &list_channel
-  fn_width = "width_chichibu100.txt"   ! 河道幅 (m): 格子幅のサブグリッド河道(高さ0堤防を自動有効化)
-  f_bank_aggr = 1                      ! 天端 = 隣接堤内地セル標高の最小
+  fn_width = "width_chichibu100.txt"   ! 河道幅 (m): サブグリッド河道(壁なし=自然河岸)
 /

@@ -1043,7 +1043,7 @@ subroutine setup_bank(p, g, list, ch)
   real, parameter :: hb_none = -900.0           ! 入力の「堤防なし」判定しきい値
   real, allocatable :: hb(:,:)
   character(:), allocatable :: fname
-  logical :: bank_file, bank_fixed, auto_zero
+  logical :: bank_file, bank_fixed
   integer :: datum
   integer :: i, j, k, in, jn
   integer :: nedge, n_bank, n_low
@@ -1051,18 +1051,25 @@ subroutine setup_bank(p, g, list, ch)
   character(len=1024) :: msg
 
   ! 有効判定(namelist 由来で全ランク同一 = collective 安全)。
-  ! fn_width のみ指定の場合は「高さ0・堤内地セル標高基準」の堤防を
-  ! 自動有効化する(サブグリッド河道は壁との併用が定式化の前提。§18)
+  ! fn_width のみの指定では堤防を有効化しない(壁なし幅モード = 自然河岸。
+  ! 河道—斜面の交換は浅水方程式のまま、塞がれた開口は f_opening_dynamic が
+  ! 動的に扱う)。旧仕様の「高さ 0 堤防の自動有効化」は、斜面が天端より
+  ! 高い自然河岸で堰越流が落差流になり発散するため廃止(§18・§68.24)
   bank_file = len_trim(ch%fn_bank) > 0
   bank_fixed = ch%bank0 > hb_none
-  auto_zero = len_trim(ch%fn_width) > 0 .and. .not. (bank_file .or. bank_fixed)
-  g%bank_active = bank_file .or. bank_fixed .or. auto_zero
-  if (.not. g%bank_active) return
+  g%bank_active = bank_file .or. bank_fixed
+  if (.not. g%bank_active) then
+    if (len_trim(ch%fn_width) > 0) then
+      call par_info("geoinfo: subgrid channel width without levee (natural banks: " // &
+                    "channel-hillslope exchange by the shallow water equations)")
+    end if
+    return
+  end if
   if (bank_file .and. bank_fixed) then
     call par_stop("list_channel: specify only one of fn_bank and bank0")
   end if
   if (len_trim(list%fn_rw) <= 0) then
-    call par_stop("list_channel: levee (fn_bank / bank0 / fn_width) requires " // &
+    call par_stop("list_channel: levee (fn_bank / bank0) requires " // &
                   "fn_rw (channel mask) in list_geoinfo")
   end if
   if (ch%f_bank_datum < 0 .or. ch%f_bank_datum > 2) then
@@ -1074,17 +1081,12 @@ subroutine setup_bank(p, g, list, ch)
                   itoa(ch%f_bank_aggr))
   end if
   datum = ch%f_bank_datum
-  if (auto_zero) then
-    datum = 1        ! 高さ0は堤内地セル標高基準でのみ「自然河岸」の意味になる
-    call par_info("geoinfo: enabling zero-height levee (landside cell elevation datum) " // &
-                  "since only fn_width is given")
-  end if
   if (.not. is_root) return
 
   allocate(g%zbank(1:g%nx,1:g%ny), source = zbank_none)
-  if (bank_fixed .or. auto_zero) then
+  if (bank_fixed) then
     ! 一律固定値: 全河道セルに同じ「高さ」を与える(基準変換は分布と同じ)
-    allocate(hb(1:g%nx,1:g%ny), source = merge(0.0, ch%bank0, auto_zero))
+    allocate(hb(1:g%nx,1:g%ny), source = ch%bank0)
   else
     allocate(hb(1:g%nx,1:g%ny), source = hb_none)
     fname = trim(p%dir_data) // "/" // trim(ch%fn_bank)

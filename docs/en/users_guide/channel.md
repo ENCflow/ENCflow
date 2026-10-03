@@ -97,9 +97,14 @@ finer than the river width and move to a resolved channel.
                                   !   0 or below means no width information = treated as resolved)
 ```
 
-- If no levee is specified, a levee of "height 0, landside cell
-  elevation datum" is enabled automatically (the formulation of the
-  channel width presupposes combination with the wall).
+- If no levee is specified, the channel has **no wall (natural banks)**:
+  the exchange between the channel and the hillslopes stays the ordinary
+  shallow-water computation, and the conveyance of blocked diagonal
+  openings is corrected dynamically by f_opening_dynamic (on by default;
+  see [Shallow water flow computation](swflow.md)). For embanked rivers
+  specify bank0 / fn_bank explicitly (the former automatic zero-height
+  levee has been dropped: on natural banks whose hillslope is above the
+  crest its weir overflow became a drop flow and diverged).
 - Cells whose width is at or above the cell size are automatically
   treated the same as a conventional resolved channel (incision +
   wall) -- a single width dataset connects the thin upstream streams to
@@ -213,7 +218,7 @@ a failure (levees must be enabled).
 
 | Type | Configuration | depth_rw (m) | bank0 (m) | rn0_rw | Width / section | Notes |
 |---|---|---|---|---|---|---|
-| Mountain stream (width < cell) | fn_rw + fn_width + p_sect_m | 0.5-1 | not needed (a zero-height levee is enabled automatically with the width) | 0.04-0.06 | width 2-10 m, m 0.5 | Not for streams meandering within one cell |
+| Mountain stream (width < cell) | fn_rw + fn_width + p_sect_m | 0.5-1 | not needed (no wall = natural banks) | 0.04-0.06 | width 2-10 m, m 0.5 | Not for streams meandering within one cell |
 | Small / medium river (width 10-50 m, cell 10-25 m) | fn_rw + depth_rw + bank0 | 1-3 | 1-3 (f_bank_datum=1) | 0.03-0.04 | fn_width not needed when width >= cell | Overtopping by the Honma formula |
 | Large river (width > 100 m) | resolved channel + levees | 3-6 | 3-8 | 0.025-0.035 | p_sect_m 0.3-0.5 for low-water recession | Floodplain roughness via fn_rn |
 | Urban incised channel, concrete flume | fn_rw + depth_rw | 2-4 | none | 0.015-0.025 | - | Sluice gates and pumping stations are [structures](structure.md) |

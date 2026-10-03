@@ -52,6 +52,8 @@
 /
 &list_channel
   fn_width = 'width_width.txt'
+  bank0 = 0.0          ! 高さ 0 堤防(旧仕様で自動有効化されていたもの)
+  f_bank_datum = 1     ! 堤内地セル標高基準
 /
 &list_bound_edge
   f_bc_e = 1

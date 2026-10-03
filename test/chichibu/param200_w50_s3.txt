@@ -7,7 +7,7 @@
   !dt_c = "0.5 sec"            ! 時間刻み (h,m,s)
   !dt_c = "1.0 sec"            ! 時間刻み (h,m,s)
   !dt_c = "2.0 sec"            ! 時間刻み (h,m,s)
-  dt_c = "2.5 sec"            ! 時間刻み (h,m,s)
+  dt_c = "5.0 sec"            ! 時間刻み (h,m,s)
   !dt_c = "3.0 sec"            ! 時間刻み (h,m,s)
   !dt_c = "5.0 sec"            ! 時間刻み (h,m,s)
   t0_c = "0 sec"              ! 計算開始時刻 (h,m,s)
@@ -23,8 +23,8 @@
   fn_enc      = "-"
   fn_channel  = "-"
 
-  dir_data   = "data_chichibu"
-  dir_result = "result_w50_s3"
+  dir_data   = "data_chichibu_200m"
+  dir_result = "result200_w50_s3"
   f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
   f_disp_qq = 1             ! 回帰テスト用: Q_max 列も表示
 
@@ -42,19 +42,19 @@
 ! 地理情報設定
 !======================================================================
 &list_geoinfo
-  nx = 560
-  ny = 300
-  dx = 100.0
-  dy = 100.0
+  nx = 280
+  ny = 150
+  dx = 200.0
+  dy = 200.0
   f_ztype = 1     ! 地盤高タイプ (0:デフォルト固定値, 1:テキストファイル)
   f_rntype = 0    ! 粗度係数タイプ (0:デフォルト固定値, 1:テキストファイル)
   f_masktype = 1  ! 領域マスクの有無 (0:なし, 1:テキストファイル)
   z0 = 0.0        ! デフォルト地盤高(m)
   rn0 = 0.15      ! デフォルト粗度係数
 
-  fn_z = 'Chichibu_100m_filled2.txt'
-  fn_rw = 'Chichibu_100m_river.txt'
-  fn_mask = 'Chichibu_100m_basin.txt'
+  fn_z = 'Chichibu_200m_filled.txt'
+  fn_rw = 'Chichibu_200m_river.txt'
+  fn_mask = 'Chichibu_200m_basin.txt'
 
   ! Diffusion wave
   rn0_rw = 0.02   ! 河道セルの固定粗度係数
@@ -71,16 +71,16 @@
   ! プローブの位置のタイプ (0:セル番号, 1:実座標(m))
   ! プローブの位置 (x座標, y座標)
   pbxytype = 0
-  pbxy(:,1) = 165, 210
-  pbxy(:,2) = 215, 203
+  pbxy(:,1) = 83, 105
+  pbxy(:,2) = 108, 102
 
   ! フラックス測線の座標のタイプ (0:セル番号, 1:実座標(m))
   ! フラックス測線の始点終点 (右岸x, 左岸y, 右岸x, 左岸y)
   flxytype = 0
-  flxy(:,1) = 165, 212,  165, 208
-  flxy(:,2) = 215, 205,  215, 200
-  flxy(:,3) = 296, 207,  296, 204
-  flxy(:,4) = 433,  80,  433,  74
+  flxy(:,1) = 83, 107,   83, 103
+  flxy(:,2) = 108, 104,  108, 100
+  flxy(:,3) = 148, 105,  148, 101
+  flxy(:,4) = 216,  41,  216,  37
 
 /
 
@@ -121,13 +121,13 @@
   f_hcap_upwind = 1               ! セル境界水深の風上側水深による制限 (0:無効, 1:有効)
   f_friction_fastmath = 0         ! 摩擦項の高速計算 (0:無効, 1~5:高速化レベル)
   f_advection_scheme = 3
+  f_opening_dynamic = 1
   p_adv_upwind_index = 0.1        ! 風上差分の割合 (0.0 ~ 1.0)
   p_diagratio = 0.585786438       ! 斜め方向成分の割合 (0.0 ~ 1.0)
   f_adaptive_runge = 1            ! 適応的ルンゲクッタ (0:無効, 1:有効)
   p_adprunge_thresh = 1.5         ! 適応的ルンゲクッタの閾値 (1.1 ~)
 /
 
-
 &list_channel
-  fn_width = "width_chichibu50.txt"   ! 河道幅 (m): サブグリッド河道(壁なし=自然河岸)
+  fn_width = "width200_50.txt"   ! 河道幅 (m): サブグリッド河道(壁なし=自然河岸)
 /
