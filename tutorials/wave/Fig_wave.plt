@@ -1,11 +1,11 @@
 # チュートリアル本文(README.md)の図の描画(Fig_wave.sh から呼ばれる)
 # 入力は Fig_wave.sh が退避した wrk_*.txt。軸はセル添字を座標 (m) に換算
-# (dx = lx/nx = 1/3 m)。カラースケールは全図共通(壁セルの 1.5 は飽和)。
+# (dx = lx/nx = 0.286 m)。カラースケールは全図共通(壁セルの 1.5 は飽和)。
 
 set terminal pngcairo size 560,520 font ",13"
 set palette rgbformula 22,13,-31
 unset key
-dx = 100.0 / 300.0
+dx = 100.0 / 350.0
 
 # --- 初期水位(3D 表示) ---
 set output 'figs/step1_init.png'
@@ -18,6 +18,20 @@ set xtics 50 offset 0,-0.5
 set ytics 50
 set ztics 0.5
 splot 'wrk_step1_E0000.txt' matrix using ($1*dx):($2*dx):3 with pm3d
+
+# --- 最終水位の 3D 表示(dt と適応 RK の効果の比較。z・色の範囲を 3 図で共通) ---
+set zrange [0.85:1.25]
+set cbrange [0.85:1.25]
+set ztics 0.1
+set output 'figs/step1_dt001_3d.png'
+set title 'e (m),  t = 8 s,  dt = 0.01 s'
+splot 'wrk_step1_dt001_E9998.txt' matrix using ($1*dx):($2*dx):3 with pm3d
+set output 'figs/step1_dt005_3d.png'
+set title 'e (m),  t = 8 s,  dt = 0.05 s'
+splot 'wrk_step1_dt005_E9998.txt' matrix using ($1*dx):($2*dx):3 with pm3d
+set output 'figs/step2_adprunge_3d.png'
+set title 'e (m),  t = 8 s,  dt = 0.05 s,  thresh = 1.1'
+splot 'wrk_step2_E9998.txt' matrix using ($1*dx):($2*dx):3 with pm3d
 
 # --- 以降は平面図(共通設定) ---
 set view map

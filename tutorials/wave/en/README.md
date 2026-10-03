@@ -74,17 +74,17 @@ reading list_initial in en/param_step1.txt
 main: number of processes: 1
 main: number of threads: 4
 main: real precision: 64 bit
-main: number of valid cells: 90000
+main: number of valid cells: 122500
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
-  0:00:00.00   0.0%    1.0210   0.0%      0    0.1328    1.9994    0.0000
-  0:00:01.00  12.5%    1.0210   8.0%      0    0.1386    1.9993    0.8665
-  0:00:02.00  25.0%    1.0210   3.7%      0    0.1394    1.6615    1.0814
-  0:00:03.00  37.5%    1.0210   4.1%      0    0.1358    1.2632    1.0533
-  0:00:04.00  50.0%    1.0210   4.6%      0    0.1289    1.2380    0.8270
-  0:00:05.00  62.5%    1.0210   5.5%      0    0.1251    1.2190    0.7192
-  0:00:06.00  75.0%    1.0210   5.7%      0    0.1225    1.2044    0.6512
-  0:00:07.00  87.5%    1.0210   6.2%      0    0.1206    1.1967    0.6026
-  0:00:08.00 100.0%    1.0210   6.6%      0    0.1214    1.2093    0.6062
+  0:00:00.00   0.0%    1.0210   0.0%      0    0.1549    1.9996    0.0000
+  0:00:01.00  12.5%    1.0210   7.8%      0    0.1618    1.9995    0.8670
+  0:00:02.00  25.0%    1.0210   2.5%      0    0.1626    1.6616    1.0829
+  0:00:03.00  37.5%    1.0210   2.8%      0    0.1584    1.2631    1.0554
+  0:00:04.00  50.0%    1.0210   3.1%      0    0.1505    1.2379    0.8278
+  0:00:05.00  62.5%    1.0210   3.9%      0    0.1460    1.2188    0.7201
+  0:00:06.00  75.0%    1.0210   3.9%      0    0.1430    1.2041    0.6516
+  0:00:07.00  87.5%    1.0210   4.3%      0    0.1407    1.1922    0.6023
+  0:00:08.00 100.0%    1.0210   4.6%      0    0.1400    1.1967    0.5774
 main: program terminated normally
 ```
 
@@ -199,7 +199,7 @@ way and compare it with the text as you go.
 !======================================================================
 &list_geoinfo
   lx = 100.0, ly = 100.0    ! size of computational domain (m)
-  nx = 300, ny = 300        ! number of grid cells
+  nx = 350, ny = 350        ! number of grid cells
 /
 
 !======================================================================
@@ -222,7 +222,7 @@ comment. Three groups are used here.
   settings in a single file (in practical use, terrain data and the
   like can be split into separate files).
 - `&list_geoinfo` -- computational domain and grid. A 100 m square is
-  covered with a 300x300 grid (cell size about 33 cm).
+  covered with a 350x350 grid (cell size about 29 cm).
 - `&list_initial` -- initial conditions. Onto still water 1 m deep, the
   user routine `wave_hump` superimposes a circular cosine-shaped mound
   of water level.
@@ -240,32 +240,44 @@ comment `!` marks.
 
 ```
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
-  0:00:00.00   0.0%    1.0210   0.0%      0    0.6640    1.9994    0.0000
-  0:00:01.00  12.5%    1.0210   8.0%      0    0.6921    1.9974    0.8616
-  0:00:02.00  25.0%    1.0210   9.6%      0    0.6961    1.6338    1.0799
-  0:00:03.00  37.5%    1.0210  11.4%      0    0.6770    1.2628    1.0440
-  0:00:04.00  50.0%    1.0210  12.7%      0    0.6444    1.2387    0.8249
-  0:00:05.00  62.5%    1.0210  14.9%      0    0.6262    1.2205    0.7203
-  0:00:06.00  75.0%    1.0210  14.5%      0    0.6137    1.2067    0.6550
-  0:00:07.00  87.5%    1.0210  14.6%      0    0.6129    1.2194    0.6337
-  0:00:08.00 100.0%    1.0210  14.4%      0    0.6274    1.2475    0.6909
+  0:00:00.00   0.0%    1.0210   0.0%      0    0.7747    1.9996    0.0000
+  0:00:01.00  12.5%    1.0210   7.8%      0    0.8074    1.9976    0.8604
+  0:00:02.00  25.0%    1.0210   7.5%      0    0.8121    1.6356    1.0812
+  0:00:03.00  37.5%    1.0210   9.3%      0    0.7901    1.2628    1.0466
+  0:00:04.00  50.0%    1.0210  10.6%      0    0.7520    1.2387    0.8258
+  0:00:05.00  62.5%    1.0210  13.0%      0    0.7307    1.2205    0.7214
+  0:00:06.00  75.0%    1.0210  13.0%      0    0.7161    1.2065    0.6556
+  0:00:07.00  87.5%    1.0210  13.6%      0    0.7086    1.2112    0.6106
+  0:00:08.00 100.0%    1.0210  15.8%      0    0.7200    1.2281    0.6540
 ```
 
 Because the time step is now 5 times longer, the Courant numbers in the
-Cn_max column have grown from the 0.1 range to the 0.6 range. The plan
-view looks unchanged at first glance, but if you zoom in on the wave
-front and compare the water level profiles along the 0-degree direction
-(along the x axis) and the 45-degree direction (along the diagonal),
-the difference shows up clearly.
+Cn_max column have grown from about 0.15 to 0.7-0.8. The plan view
+looks unchanged at first glance, but a 3D view of the final water level
+(the first figure of `gnuplot Plot_wave.plt`) shows the difference at a
+glance.
+
+| dt = 0.01 | dt = 0.05 |
+|---|---|
+| ![3D water level (dt = 0.01)](../figs/step1_dt001_3d.png) | ![3D water level (dt = 0.05)](../figs/step1_dt005_3d.png) |
+
+With `dt = 0.01` the crest of the wave is a smooth ring; with
+`dt = 0.05` the crest is jagged and the whole wave is higher. The last
+line of the screen display shows the same thing: h_max has grown from
+1.1967 m to 1.2281 m, an **overestimate of 3%**. Zooming in on the wave
+front and comparing the water level profiles along the 0-degree
+direction (along the x axis) and the 45-degree direction (along the
+diagonal) makes the breakdown even clearer.
 
 ![zoomed comparison of the wave front (dt = 0.05)](../figs/step1_profile.png)
 
 With `dt = 0.01` (gray) the waveform is the same in every direction --
 clean concentric circles -- but with `dt = 0.05` numerical oscillations
-arise at the wave front, and their shape differs between the 0-degree
-direction (blue) and the 45-degree direction (red). The waveform that
-should be concentric is breaking down depending on the orientation of
-the computational grid.
+arise at the wave front, their shape differs by about 4 cm between the
+0-degree direction (blue) and the 45-degree direction (red), and the
+crest is 2-3 cm higher than the reference. The waveform that should be
+concentric is breaking down depending on the orientation of the
+computational grid, and the wave height is overestimated.
 
 The orthodox ways to reduce this kind of error are to shrink the time
 step or to switch the time integration to a higher-order scheme, but
@@ -322,29 +334,57 @@ A parameter file with these changes applied is provided as
 
 ```
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
-  0:00:00.00   0.0%    1.0210   0.0%      0    0.6640    1.9994    0.0000
-  0:00:01.00  12.5%    1.0210  10.8%      0    0.6907    1.9974    0.8448
-  0:00:02.00  25.0%    1.0210  15.5%      0    0.6952    1.6429    1.0749
-  0:00:03.00  37.5%    1.0210  20.4%      0    0.6773    1.2620    1.0442
-  0:00:04.00  50.0%    1.0210  25.2%      0    0.6442    1.2383    0.8252
-  0:00:05.00  62.5%    1.0210  33.0%      0    0.6262    1.2210    0.7198
-  0:00:06.00  75.0%    1.0210  37.2%      0    0.6141    1.2090    0.6556
-  0:00:07.00  87.5%    1.0210  41.8%      0    0.6089    1.2075    0.6218
-  0:00:08.00 100.0%    1.0210  45.6%      0    0.6074    1.2070    0.6134
+  0:00:00.00   0.0%    1.0210   0.0%      0    0.7747    1.9996    0.0000
+  0:00:01.00  12.5%    1.0210  10.4%      0    0.8051    1.9976    0.8380
+  0:00:02.00  25.0%    1.0210  13.2%      0    0.8106    1.6487    1.0738
+  0:00:03.00  37.5%    1.0210  17.7%      0    0.7905    1.2623    1.0462
+  0:00:04.00  50.0%    1.0210  21.9%      0    0.7517    1.2388    0.8245
+  0:00:05.00  62.5%    1.0210  29.3%      0    0.7300    1.2209    0.7182
+  0:00:06.00  75.0%    1.0210  32.9%      0    0.7158    1.2081    0.6514
+  0:00:07.00  87.5%    1.0210  37.1%      0    0.7060    1.2016    0.6084
+  0:00:08.00 100.0%    1.0210  41.2%      0    0.7021    1.1986    0.5875
 ```
 
 The Courant number is almost unchanged, but the Runge-Kutta application
-ratio in the Runge column has grown sharply from the 14% range up to
-45.6%, and the h_max and V_max values are approaching those of
-`dt = 0.01`. Zooming in on the wave front:
+ratio in the Runge column has grown sharply from 13-16% up to 41.2%,
+and the final h_max (1.1986 m) and V_max (0.5875 m/s) are close to the
+`dt = 0.01` values (1.1967 m, 0.5774 m/s). Putting the three 3D views
+side by side makes the effect obvious.
+
+| dt = 0.01 | dt = 0.05 | dt = 0.05, threshold 1.1 |
+|---|---|---|
+| ![3D water level (dt = 0.01)](../figs/step1_dt001_3d.png) | ![3D water level (dt = 0.05)](../figs/step1_dt005_3d.png) | ![3D water level (threshold 1.1)](../figs/step2_adprunge_3d.png) |
+
+The jagged crest of `dt = 0.05` is gone and the wave height is back to
+that of `dt = 0.01`. Zooming in on the wave front:
 
 ![zoomed comparison of the wave front (threshold 1.1)](../figs/step2_profile.png)
 
 The discrepancy between the 0-degree and 45-degree directions has
-shrunk, and the waveform is approaching the concentric circles of
-`dt = 0.01` (gray). The time step is still 5 times longer, and fewer
-than half of the cells are recomputed -- this is exactly what the
-adaptive Runge-Kutta method aims for.
+shrunk from 4 cm to 1 cm, so the waveform is concentric again, and the
+crest, which was 2-3 cm too high with `dt = 0.05`, now matches
+`dt = 0.01` (gray). **Both the direction dependence and the
+overestimated wave height are corrected.** The time step is still
+5 times longer, and fewer than half of the cells are recomputed -- this
+is exactly what the adaptive Runge-Kutta method aims for.
+
+On close inspection, however, the wave front (r = 38 m or so) sits
+0.1-0.2 m behind that of `dt = 0.01` and the crest is slightly
+smoothed. The cells near the front that were recomputed are replaced by
+a smoother (more damped) solution than the Euler step gives, so the
+sharper the front, the more it lags a little. This is the price of
+investing high-order accuracy selectively, and lowering the threshold
+does not remove it.
+
+The real purpose of the adaptive Runge-Kutta method is to **avoid
+shrinking the time step for the whole domain just because of a few
+extreme places** (a steep wave front, a wetting front climbing onto
+dry ground, and the like). This example lowers the threshold to an
+extreme value to show the effect, but a recomputation ratio as high as
+41% is really a sign that the time step is too coarse. In practice,
+choose the time step so that the Runge column stays within a few
+percent to about 10%, and let the adaptive Runge-Kutta method take care
+of the local problems that remain.
 
 ### Extending the computation time
 
@@ -357,14 +397,14 @@ the behavior after the wave reaches the edges of the domain.
 
 ```
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
-  0:00:11.00  78.6%    1.0210  40.3%      0    0.5974    1.1933    0.5656
-  0:00:12.00  85.7%    1.0210  33.9%      0    0.5923    1.3292    0.5425
-  0:00:13.00  92.9%    1.0210  27.4%      0    0.5871    1.3270    0.5196
-  0:00:14.00 100.0%    1.0210  24.0%      0    0.5945    1.3205    0.4956
+  0:00:11.00  78.6%    1.0210  38.2%      0    0.6851    1.1777    0.5210
+  0:00:12.00  85.7%    1.0210  32.3%      0    0.6783    1.3168    0.4947
+  0:00:13.00  92.9%    1.0210  26.4%      0    0.6771    1.3085    0.4715
+  0:00:14.00 100.0%    1.0210  23.1%      0    0.6895    1.2979    0.4505
 ```
 
 From t = 12 s on, h_max -- which should have kept decreasing -- jumps
-up to 1.33 m. Visualizing the result shows the wave reflecting off the
+up to 1.32 m. Visualizing the result shows the wave reflecting off the
 four sides of the computational domain.
 
 ![reflection at closed walls (t = 14 s)](../figs/step2_tt14.png)
@@ -424,10 +464,10 @@ A parameter file with these changes applied is provided as
 
 ```
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
-  0:00:11.00  78.6%    1.0210  40.3%      0    0.5974    1.1933    0.5656
-  0:00:12.00  85.7%    1.0183  33.9%      0    0.5923    1.1860    0.5495
-  0:00:13.00  92.9%    1.0106  26.2%      0    0.5871    1.1777    0.5401
-  0:00:14.00 100.0%    1.0019  20.7%      0    0.5821    1.1700    0.5196
+  0:00:11.00  78.6%    1.0210  38.2%      0    0.6851    1.1777    0.5210
+  0:00:12.00  85.7%    1.0187  32.3%      0    0.6783    1.1685    0.5242
+  0:00:13.00  92.9%    1.0112  25.2%      0    0.6742    1.1603    0.5107
+  0:00:14.00 100.0%    1.0026  20.4%      0    0.6677    1.1533    0.4846
 ```
 
 This time h_max does not jump after t = 12 s; instead, the total amount
@@ -461,7 +501,7 @@ degrees.
 ```
 &list_geoinfo
   lx = 100.0, ly = 100.0    ! size of computational domain (m)
-  nx = 300, ny = 300        ! number of grid cells
+  nx = 350, ny = 350        ! number of grid cells
 
   ! user routine identifier (no obstacle if unspecified)
   f_user_routine = "wave_solid_wall"   ! diagonal impermeable wall (2 cells thick)
@@ -478,8 +518,8 @@ provided.
 ./encflow en/param_step4.txt
 ```
 
-In the startup display, `number of valid cells` has dropped from 90000
-to 89550 -- the cells turned into the wall are excluded from the
+In the startup display, `number of valid cells` has dropped from 122500
+to 121976 -- the cells turned into the wall are excluded from the
 computation and consume neither memory nor computation time.
 
 ![impermeable wall (2 cells thick)](../figs/step4_solid.png)
