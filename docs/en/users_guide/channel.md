@@ -42,6 +42,11 @@ Notes when giving the height with a distribution file `fn_bank`:
   value). Beware that this is the opposite of the coastal seawall
   `fn_seawall`, which is held by the land-side cells
   ([geographic information chapter](geoinfo.md)).
+  The effective crest of each edge never falls below the landside
+  ground or the channel bed (where the crest is lower, the ground itself
+  is the wall, so the ground difference is never added to the overflow
+  head; this matters on natural banks in V-shaped valleys and when the
+  crest is given as an absolute elevation).
 - **Also give a height to channel cells that touch landside cells only
   at a corner (diagonally)**. Edges of a channel cell without a value
   (−900 or below) get no wall, and since the ENC grid exchanges water

@@ -329,6 +329,13 @@ module subroutine bank_wall(p, g, s, i, j, in, jn, uve1, mne1)
   ! サイトのない行は整数比較1回で素通り。§18)
   if (have_breach) zc = breach_crest(ic, jc, il, jl, zc)
 
+  ! エッジごとの実効天端: 天端は堤内地側の地盤と河道側の河床を下回れない
+  ! (セル 1 値の天端が堤内地地盤を下回るエッジでは、越流水深 h1 に地盤差が
+  ! 乗って斜面側の水量を超える落差流が立つ。§68.12 の発散機構。河床を
+  ! 下回る天端も同様に河道側で落差が乗るため河床で下限する。天端が両地盤
+  ! 以上のエッジでは恒等。§68.25)
+  zc = max(zc, s%z(il,jl), s%z(ic,jc))
+
   wsr = s%z(ic,jc) + max(s%h(ic,jc), 0.0)
   wsl = s%z(il,jl) + max(s%h(il,jl), 0.0)
 
