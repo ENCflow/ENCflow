@@ -4,6 +4,10 @@
   python3 Make_hillslope.py plane   → z_p05.txt, z_p20.txt, param_p{05,20}_s{1,3}.txt
       一様平面斜面(dx = dy = 100 m、2 km × 2 km、勾配 0.05 / 0.20、n = 0.15、
       降雨 200 mm/h)。運動学的波の解析解(q = α(Pt)^{5/3}、平衡 q_e = P·x)と比べる。
+  python3 Make_hillslope.py stairplane → z_sp05.txt, param_sp05_{noadv,s1,s3}.txt(plane の後に実行)
+      横断方向一様な階段斜面(2 セルごとに 10 m の段差、平均勾配 0.05、n = 0.15、
+      降雨 200 mm/h)。段差での散逸が斜面流(薄い・粗い・低フルード数)では
+      効かないことの確認(developer.md §68.20)。
   python3 Make_hillslope.py vcat    → z_{c100,f10}.txt, rn_{c100,f10}.txt, param_{c100,f10}_s{1,3}.txt
       V 字集水域(両側 800 m の斜面が勾配 0.05 で中央 100 m の河道帯に集まり、
       縦断勾配 0.02。斜面 n = 0.015、河道 n = 0.15、降雨 10.8 mm/h × 90 分)。
@@ -91,3 +95,18 @@ elif kind == "vcat":
                 rn=f"  f_rntype = 1\n  fn_rn = 'rn_{name}.txt'\n",
                 rain="  prval(:,1) = 0, 10.8\n  prval(:,2) = 90, 10.8\n  prval(:,3) = 90.0001, 0.0\n  prval(:,4) = 600, 0.0\n", ix=nx - 1))
     print("vcat: 4 parameter files")
+
+if kind == "stairplane":
+    nx = ny = 20
+    z = np.zeros((ny, nx))
+    for i in range(nx):
+        z[:, i] = 100.0 - 10.0 * (i // 2)     # 2 セルごとに 10 m の段差(平均勾配 0.05)
+    np.savetxt("z_sp05.txt", z, fmt="%.3f")
+    base = open("param_p05_s1.txt").read()
+    for tag, rep in (("noadv", [("f_govequation = 0", "f_govequation = 1")]), ("s1", []),
+                     ("s3", [("f_advection_scheme = 1", "f_advection_scheme = 3")])):
+        t = base.replace("result_p05_s1", f"result_sp05_{tag}").replace("z_p05.txt", "z_sp05.txt")
+        for a, b in rep:
+            t = t.replace(a, b)
+        open(f"param_sp05_{tag}.txt", "w").write(t)
+    print("stairplane: z_sp05.txt, param_sp05_{noadv,s1,s3}.txt")

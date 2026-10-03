@@ -1,0 +1,54 @@
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 5.0
+  t0 = 0
+  tt = 14400
+  dt_recrd = 60
+  fn_record = '-'
+  dt_disp = 1800
+  dt_file = 14400
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_precip = '-'
+  dir_result = 'result_sp05_s1'
+  f_disp_debug = 1
+  f_disp_qq = 1
+  f_out_h = 1
+  f_out_hmax = 0
+/
+&list_enc
+  f_advection_scheme = 1
+  f_hcap_upwind = 1
+/
+&list_initial
+  f_htype = 0
+  f_uvtype = 0
+  h0 = 0.0
+  u0 = 0
+  v0 = 0
+/
+&list_geoinfo
+  lx = 2000.0
+  ly = 2000.0
+  nx = 20
+  ny = 20
+  f_ztype = 1
+  fn_z = 'z_sp05.txt'
+  f_rntype = 0
+  rn0 = 0.15
+/
+&list_precip
+  prtype = 1
+  prval(:,1) = 0, 200.0
+  prval(:,2) = 600, 200.0
+/
+&list_bound_edge
+  f_bc_e = 1
+/
+&list_record
+  flxytype = 0
+  flxy(:,1) = 19, 20, 19, 1
+/

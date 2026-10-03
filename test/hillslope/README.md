@@ -20,3 +20,9 @@ developer.md §68.18。chichibu のスキーム 1・3 の差が河道でなく�
 
 滑らかな斜面では両スキームは 3 桁まで一致する。chichibu の差は実 DEM の
 粗さ(セル間の段差・窪地・流れの収束)での移流の扱いの差による。
+
+## 階段斜面(Make_hillslope.py stairplane、param_sp05_{noadv,s1,s3}.txt)
+
+横断方向一様な階段斜面(2 セルごとに 10 m 段差、平均勾配 0.05、n = 0.15、
+降雨 200 mm/h)。移流項なし(f_govequation=1)・スキーム 1・3 で出口流量と
+立ち上がり時刻が一致する(速度水頭 0.01 m ≪ 段差 10 m。developer.md §68.20)。
