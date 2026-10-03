@@ -24,16 +24,12 @@ submodule(m_swflow_enc) m_swflow_enc_adv
   ! に平行な隣接エッジの基準セルのオフセット δ+:
   !   k=1 d=(-1,-1) → δ+=( 1,-1)   k=2 d=(0,-1) → δ+=(1, 0)
   !   k=3 d=( 1,-1) → δ+=( 1, 1)   k=4 d=(-1,0) → δ+=(0,-1)
+  integer, parameter :: ke8(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1 ]      ! 8 近傍番号 → エッジ成分
+  real, parameter :: sgn8(1:8) = [ 1., 1., 1., 1., -1., -1., -1., -1. ]
+  integer, parameter :: kkp(1:4) = [ 3, 5, 8, 2 ]   ! +t 側に隣接するセルの 8 近傍番号
+  integer, parameter :: kkm(1:4) = [ 6, 4, 1, 7 ]   ! -t 側
   integer, parameter :: dti(1:4) = [ 1, 1, 1, 0 ]
   integer, parameter :: dtj(1:4) = [ -1, 0, 1, -1 ]
-  ! 対角エッジ(k=1,3)の側方面は中心を通るセルが1つに定まる:
-  !   面の中心 = c + (δ± + d)/2。k=1: +側 (0,-1) / -側 (-1,0)、
-  !   k=3: +側 (1,0) / -側 (0,-1)。軸エッジ(k=2,4)は面の中心がセルの
-  !   角になるため、角を囲む4セル(c, n, c+δ, n+δ)の平均を使う
-  integer, parameter :: dfpi(1:4) = [ 0, 0, 1, 0 ]
-  integer, parameter :: dfpj(1:4) = [ -1, 0, 0, 0 ]
-  integer, parameter :: dfmi(1:4) = [ -1, 0, 0, 0 ]
-  integer, parameter :: dfmj(1:4) = [ 0, 0, -1, 0 ]
 
 contains
 !----------------------------------------------------------------------
@@ -132,8 +128,10 @@ end subroutine
 !     k 方向投影(ENC の連続式が見るセル平均流量と同じ定義)。
 !     ū は線 k 上のエッジ流速 u_mm, u_m, u_e, u_p, u_pp から風上側を取る
 !     (スキーム2: 1 次風上、スキーム3: MUSCL + van Leer の面値再構成)。
-!   - 側方面(±t): Q = q_t·w8dr、q_t は面中心のセル流量の t 方向投影
-!     (対角エッジは面中心のセル 1 つ、軸エッジは角を囲む 4 セル平均)。
+!   - 側方面(±t): Q = q_t·w8dr、q_t は面を横切る ENC エッジ(c → c+δ、
+!     n → n+δ)の実流量 mn の平均(流出が正。§68.21。2026-10-03 までは
+!     面中心のセル流量の t 方向投影を使っていたが、地形で遮られた面でも
+!     非ゼロになり薄いエッジで発散した)。
 !     ū は 1 次風上(u_e か、平行な隣接エッジの流速)。
 !   - h̄_e = (h_c + h_n)/2(下限 dd/2)。サブグリッド河道(§18・§26)では
 !     水量 h×wfrac(σ 有効時 sect_v(h)×wfrac)を使う(§68.9)。lm は v1 と
@@ -155,13 +153,12 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
   real :: ue, um, umm, up, upp, utp, utm
   real :: qc, qn, qtp, qtm
   real :: ubc, ubn, ubtp, ubtm
-  real :: thx, thy
   real :: ta
   logical :: donor_rw               ! このエッジの流下方向の供給元を河道セルに限るか(§68.18)
 
   !$omp parallel do schedule(dynamic) &
   !$omp private(i, j, k, in, jn, ie, je, hc, hn, hb, lme, ue, um, umm, up, upp, utp, utm, &
-  !$omp         qc, qn, qtp, qtm, ubc, ubn, ubtp, ubtm, thx, thy, ta, donor_rw)
+  !$omp         qc, qn, qtp, qtm, ubc, ubn, ubtp, ubtm, ta, donor_rw)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -228,21 +225,15 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ta = -(qn * (ubn - ue) - qc * (ubc - ue)) / w8dr(k)
 
         ! 側方面(±t。t = (-n8y, n8x))。流出が正
-        thx = -n8y(k)
-        thy = n8x(k)
         utp = uvk(i + dti(k), j + dtj(k), k)
         utm = uvk(i - dti(k), j - dtj(k), k)
-        if (k == 1 .or. k == 3) then
-          qtp =  qproj(i + dfpi(k), j + dfpj(k), thx, thy)
-          qtm = -qproj(i + dfmi(k), j + dfmj(k), thx, thy)
-        else
-          qtp =  (qproj(i, j, thx, thy) + qproj(in, jn, thx, thy) &
-                + qproj(i + dti(k), j + dtj(k), thx, thy) &
-                + qproj(in + dti(k), jn + dtj(k), thx, thy)) / 4
-          qtm = -(qproj(i, j, thx, thy) + qproj(in, jn, thx, thy) &
-                + qproj(i - dti(k), j - dtj(k), thx, thy) &
-                + qproj(in - dti(k), jn - dtj(k), thx, thy)) / 4
-        end if
+        ! 側方面(±t)の流束は、面を横切る ENC エッジの実流量(mn。時刻 n、
+        ! 流出が正)の c 側・n 側の平均。面中心のセル平均流量 (m, n) の投影で
+        ! 与えると、面の向こうのセルが地形で遮られて実際には水が通らない場合
+        ! でも非ゼロになり、薄い検査体積(h̄ ≈ dd)で 1/h̄ 倍に増幅された移流項が
+        ! 深い池に接する薄いエッジに生じて発散する(§68.21。2026-10-03 修正)
+        qtp = 0.5 * (mnk(i, j, kkp(k)) + mnk(in, jn, kkp(k)))
+        qtm = 0.5 * (mnk(i, j, kkm(k)) + mnk(in, jn, kkm(k)))
         ! 側方面も同様: 平行な隣接エッジの両セルが有効・湿潤のときだけ
         ! その流速を流入値に使う(壁・乾床側からは ū = u_e)
         if (qtp >= 0) then
@@ -326,15 +317,18 @@ contains
     if (ok .and. drw) ok = g%rw(ci,cj) > 0
   end function
 
-  ! セル流量 (m, n) の単位ベクトル (tx_, ty_) 方向投影(確保範囲外は 0)
-  pure function qproj(ci, cj, tx_, ty_) result(q)
-    integer, intent(in) :: ci, cj
-    real, intent(in) :: tx_, ty_
+  ! セル (ci, cj) からその kk 近傍(kk = 1..8)へ向かう ENC エッジの単位幅流量
+  ! (時刻 n の mn。流出が正。確保範囲外は 0)
+  pure function mnk(ci, cj, kk) result(q)
+    integer, intent(in) :: ci, cj, kk
     real :: q
-    if (ci < 1 .or. ci > ubound(s%m, 1) .or. cj < dcp%jsh .or. cj > dcp%jeh) then
+    integer :: ei, ej
+    ei = ci + die(kk)
+    ej = cj + dje(kk)
+    if (ei < 0 .or. ei > ubound(sx%mn, 2) .or. ej < dcp%jsh - 1 .or. ej > dcp%jeh) then
       q = 0.0
     else
-      q = s%m(ci,cj) * tx_ + s%n(ci,cj) * ty_
+      q = sgn8(kk) * sx%mn(ke8(kk), ei, ej)
     end if
   end function
 
