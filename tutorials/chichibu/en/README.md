@@ -170,8 +170,10 @@ affects the measurements further upstream).
 If you replace `fn_z` in `&list_geoinfo` with `Chichibu_200m_raw.tif`,
 you can run on the original DEM without depression filling (since this
 reads a GeoTIFF, the easiest way is to try it in Step 2's
-`en/param_step2.txt`). Comparing the depth distributions at the final
-time:
+`en/param_step2.txt`). Extending the computation to 12 hours
+(`tt_c = "12 hour"`) so that the channel water has almost all gathered
+in the outlet pond, and comparing the depth distributions after 12
+hours:
 
 | Depression-filled (filled) | Unprocessed (raw) |
 |---|---|
@@ -183,7 +185,7 @@ downstream, gathering at the single ponded spot at the outlet (which is
 still a wall at this stage). With the raw DEM, color is scattered all
 over the catchment: the water gets trapped in depressions along the way
 and never reaches the outlet. The maximum velocity also drops to
-about 1.8 m/s toward the end, showing that the flow has died across the
+about 0.9 m/s toward the end, showing that the flow has died across the
 whole catchment.
 
 In general, when the terrain slope is steep and the cell size is large,
@@ -215,9 +217,9 @@ You can confirm this by experiment. Specifying `fn_enc = "-"` and
 `p_diagratio = 0.0` in `&list_enc` closes the diagonal exchange of the
 ENC grid, giving a "4-neighbor" computation. Even on the same
 depression-filled DEM, the water now gets stuck on diagonal flow paths:
-the final depth distribution is chopped up all over the catchment just
-like with the raw DEM, and the water never reaches the outlet (the
-maximum velocity also drops to about 0.9 m/s toward the end — the flow
+the depth distribution after 12 hours is chopped up all over the
+catchment just like with the raw DEM, and the water never reaches the
+outlet (the maximum velocity also drops to about 0.7 m/s toward the end — the flow
 dies).
 
 ![Step 1: filled DEM computed with 4-neighbor exchange](figs/step1_hend_4nb.png)

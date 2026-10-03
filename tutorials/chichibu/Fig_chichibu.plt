@@ -1,6 +1,6 @@
 # チュートリアル本文(README.md)の図を figs/*.png に描画する。
 # 事前に Fig_chichibu.sh が各 Step の計算を実行し、結果を
-# result_step1 〜 result_step6, result_raw に、前処理済みデータを
+# result_step1 〜 result_step6, result_cmp_* に、前処理済みデータを
 # wrk_* に用意していることを前提とする(単体では実行しない)。
 
 set datafile separator whitespace
@@ -38,19 +38,19 @@ set output "figs/step1_hend.png"
 set title "Step 1: 6 時間後の水深(出口に湛水)"
 plot 'result_step1/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
-# ---- Step 1: 窪地除去の有無(最終時刻の水深の比較) ----
+# ---- Step 1: 窪地除去の有無(12 時間後の水深の比較。計算時間を延長した比較計算) ----
 set output "figs/step1_hend_filled.png"
-set title "最終時刻の水深: 窪地除去済み DEM(filled)"
-plot 'result_step2/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
+set title "12 時間後の水深: 窪地除去済み DEM(filled)"
+plot 'result_cmp_filled/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
 set output "figs/step1_hend_raw.png"
-set title "最終時刻の水深: 未処理 DEM(raw)"
-plot 'result_raw/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
+set title "12 時間後の水深: 未処理 DEM(raw)"
+plot 'result_cmp_raw/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
 # ---- Step 1: 4近傍計算との比較(D8 窪地除去と 8 方向交換の相性) ----
 set output "figs/step1_hend_4nb.png"
-set title "最終時刻の水深: filled DEM を 4 近傍で計算(p_diagratio = 0)" noenhanced
-plot 'result_4nb/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
+set title "12 時間後の水深: filled DEM を 4 近傍で計算(p_diagratio = 0)" noenhanced
+plot 'result_cmp_4nb/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
 # ---- Step 6: 湛水の解消(最終時刻の水深) ----
 set output "figs/step6_hend_step5.png"

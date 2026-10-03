@@ -40,17 +40,17 @@ plot 'result_step1/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN :
 
 # ---- Step 1: 窪地除去の有無(最終時刻の水深の比較) ----
 set output "en/figs/step1_hend_filled.png"
-set title "Final depth: depression-filled DEM (filled)"
-plot 'result_step2/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
+set title "Depth after 12 hours: depression-filled DEM (filled)"
+plot 'result_cmp_filled/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
 set output "en/figs/step1_hend_raw.png"
-set title "Final depth: unprocessed DEM (raw)"
-plot 'result_raw/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
+set title "Depth after 12 hours: unprocessed DEM (raw)"
+plot 'result_cmp_raw/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
 # ---- Step 1: 4近傍計算との比較(D8 窪地除去と 8 方向交換の相性) ----
 set output "en/figs/step1_hend_4nb.png"
-set title "Final depth: filled DEM with 4-neighbor exchange (p_diagratio = 0)" noenhanced
-plot 'result_4nb/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
+set title "Depth after 12 hours: filled DEM with 4-neighbor exchange (p_diagratio = 0)" noenhanced
+plot 'result_cmp_4nb/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
 # ---- Step 6: 湛水の解消(最終時刻の水深) ----
 set output "en/figs/step6_hend_step5.png"
