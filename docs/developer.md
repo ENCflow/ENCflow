@@ -8028,3 +8028,7 @@ wave・dambreak・chichibu の全出力は除去前とバイト一致。古い�
 のみ、adv_edge_v1 の限定器分岐を削除。test/* の param から `f_advection_tvd
 = 0` の行を除去。reference/param.txt は基準作成時の記録として残す)。
 既定 0 と同値のため wave・dambreak・chichibu の全出力はバイト一致。
+同日、m_swflow_enc_adv に残っていた未使用の局所型 v2(adv_prepare_v2 /
+adv_edge_v2 / get_ww_upw_v2 / get_diff2_v2 / get_diff_v2。呼び出しは
+コメントアウト済みだった)も削除し、adv_edge_v1 の未使用引数 ie, je を
+落とした(等価変換。3 ケースでバイト一致)。
