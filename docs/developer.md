@@ -7499,12 +7499,14 @@ namelist 由来で全ランク同一、rw は全域データ → 通信・メモ
 スキーム 1 では無効果(par_info)。
 
 **検証(2026-10-03)**:
-- 無効時: wave(identical)/ dambreak の Run.sh が reference に PASS(chichibu と
-  最終バイナリでの再回帰は続報)。
+- 無効時: 最終バイナリで wave(identical)/ dambreak(tolerance 内)/ chichibu
+  (identical)の Run.sh が reference に PASS。
 - bendloss: 乾燥堤内地の洪水波(wave_dyn_s3)は有効化しても Log がバイト
   一致(乾燥セルは cell_ok で元から除外)。横流入 lat1r は流下方向限定版で
   水深比 0.992 のまま(側方面にも適用した最初の版は 0.975)。
-- chichibu(スキーム 3 + 動的振り替え + f_advection_donor=1)と MPI np=2: 続報。
+- chichibu(スキーム 3 + 動的振り替え + f_advection_donor=1): Log がスキーム 3
+  とバイト一致(無効果。下記の続報のとおり、河道セル間のエッジに湿潤な
+  非河道の供給元が現れない)。MPI np=2 は逐次と Log 全列一致(Runge 除く)。
 
 **続報(2026-10-03)**: chichibu で f_advection_donor=1 は**スキーム 3 と桁まで
 同一**(測線 4: 4857、ex_flux 219。側方面にも適用した最初の版も同じ)。
