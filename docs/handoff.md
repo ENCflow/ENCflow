@@ -436,14 +436,14 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   ことが契機。Run.sh / Run_MPI.sh に RTOL を明示し nightly の MPI 層へ
   戻した。Compare_ref.sh は CSV の区切りカンマ付きトークンを数値として
   扱うよう修正(wq.csv に許容が効いていなかった)。残: なし。
-- **リリース v1.6.0(MINOR)の準備(2026-10-02)**: v1.5.0 以降の加算的
-  新機能(§61〜§67、bldgdebris・bedslide・f_dbcurv・s%gv 状態化・
-  既定値方針・Nightly CI・例題 3 件)を対象。CITATION.cff を 1.6.0 /
-  2026-10-02 に更新するコミットとリリースノート草稿(日英)は用意済み。
-  **タグは workflow_dispatch で Nightly 全ジョブ緑を確認してから打つ**
-  (Release 作成が Zenodo DOI の引き金)。数値結果に影響する修正 3 件(e31994b 江頭層流則の除算安全化、
-  fbaeb18 土石流の降伏停止判定、e491d16 geomorph 単独 + fn_sd の土層厚
-  読み飛ばし)をノートで区別すること。
+- **リリース v1.6.0(2026-10-03 タグ付け済み)**: v1.5.0 以降の加算的新機能
+  (§61〜§67、bldgdebris・bedslide・f_dbcurv・s%gv 状態化・既定値方針・
+  Nightly CI・例題 3 件)と sewer_wq の RTOL 決定(§10)を収載。Nightly #19
+  (全 6 ジョブ緑)を確認後、main を 5044f8c に進めて注釈付きタグ v1.6.0 を
+  push した。残: **GitHub Release の作成(Zenodo DOI の引き金)** — 本文は
+  日英の草稿を用意済み(数値結果に影響する修正 3 件を区別して記載)。
+  以後のタグは `git tag -a` の注釈付きで打つ(v1.5.0 までは Release UI 由来の
+  軽量タグ)。
 - 国際化の節目: docs/en/ ミラー+日英同期の CI チェック導入。チェックの
   中身は 2026-10-01 の監査で手動実施した 3 つの機械比較(namelist と索引の
   突合 / 日英の見出し数・表の行数 / List_samples 日英のパラメータ集合)を
