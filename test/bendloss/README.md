@@ -98,6 +98,7 @@ z_width.txt rw_width.txt z_width_sect.txt 0.1`、width10 も同様)を使う。�
 河床 +3)。2026-10-04 以前は堤内地 = 天端(河床 +3)の地形で、天端と同じ高さの
 地盤を壁として扱っていた(width_sect の 2.95〜3.07 はその値)。
 | 折れ線+堤防 zigzagw | 10 m | 区間平均 1.373 | 1.373 |
+| 折れ線 W=4(width_zigzagw4.txt = width_zigzagw の 10 → 4。§68.32) | 4 m | 直線 2.380(壁付き)/ 1.970(壁なし = 流速正規化の不整合) | 2.380 |
 
 ## スキーム × 開口補正(幅なし)の 2×2(param_{wave,zz}_{nolev,o0,o1}_s*.txt)
 
