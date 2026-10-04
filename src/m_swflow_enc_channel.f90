@@ -392,6 +392,25 @@ module subroutine seawall_wall(p, g, s, i, j, in, jn, uve1, mne1)
 end subroutine
 
 
+!----------------------------------------------------------------------
+! エッジ (i,j)-(in,jn) が堤防壁エッジか(bank_wall が流速・流量を上書き
+! するエッジ。bank_wall の対象判定と同一に保つこと)
+!----------------------------------------------------------------------
+module function bank_edge(g, s, i, j, in, jn) result(res)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, in, jn
+  logical :: res
+  if (s%t < 0.0) continue                   ! 引数未使用の警告を抑制(B で s%z を使う)
+  res = .false.
+  if (g%sw(i,j) > 0 .or. g%sw(in,jn) > 0) return
+  if (g%rw(i,j) > 0 .and. g%rw(in,jn) <= 0) then
+    res = g%zbank(i,j) > zbank_min
+  else if (g%rw(in,jn) > 0 .and. g%rw(i,j) <= 0) then
+    res = g%zbank(in,jn) > zbank_min
+  end if
+end function
+
 module subroutine bank_wall(p, g, s, i, j, in, jn, uve1, mne1)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g

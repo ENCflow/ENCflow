@@ -416,6 +416,12 @@ module m_swflow_enc
       integer, intent(in) :: i, j, in, jn
       real, intent(inout) :: uve1, mne1
     end subroutine
+    module function bank_edge(g, s, i, j, in, jn) result(res)
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+      integer, intent(in) :: i, j, in, jn
+      logical :: res
+    end function
     module subroutine breach_init(p, g, s, ch)
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
@@ -1201,6 +1207,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   real :: dhc, dhn
   real :: cor
   real :: maglim, maglim_inv
+  logical :: wall                 ! 堤防壁エッジ(bank_wall が上書きする)
 
   ! この文はこの場所になければならない
   have_exflux = .false.
@@ -1257,9 +1264,14 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
 
   ! 適応的ルンゲクッタ
   !   流速または流量がmaglim倍以上、1/maglim以下、逆方向に変化した場合はルンゲクッタで再計算
+  !   堤防壁エッジは bank_wall が結果を上書きするため判定しない(前ステップ値
+  !   が堰流量なので毎ステップ閾値超になり、RK の再計算が無駄になるうえ
+  !   Runge 列が壁エッジ数で埋まる。§68.29 原因 2)
   maglim = p_adprunge_thresh
   maglim_inv = 1.0 / maglim
-  if (f_adaptive_runge > 0) then
+  wall = .false.
+  if (have_bank) wall = bank_edge(g, s, i, j, in, jn)
+  if (f_adaptive_runge > 0 .and. .not. wall) then
     if ((mne >= 0 .and. (mne1 > mne * maglim .or. mne1 < mne * maglim_inv)) .or. &
         (mne < 0  .and. (mne1 < mne * maglim .or. mne1 > mne * maglim_inv))) then
       have_runge = .true.
