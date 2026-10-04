@@ -8729,6 +8729,17 @@ reference は不変(辺境界が壁)。diagwe4 の np=1, 2 が互いに・逐次
 kdpart / tide / coastal_drain / salt が逐次・np=2 とも reference に identical
 (dambreak は Runge 列のみ差 = §9 のビルド依存クラス)。
 
+**追補(2026-10-04 マージ前点検)**: この零化は nightly の参照ケースのうち
+damwq・gwseep・sewer_wq の Log の Runge 列・ex_flux 列を変える(例: damwq の
+0:45〜1:00 で ex_flux 58 → 0、Runge 2.1% → 0.2%。乾いた送り手のエッジが
+毎ステップ ex_flux 経路で零化されていた計数の汚れそのもの)。物理量は
+damwq の wq.csv が identical、gwseep の wq.csv は 5e-8、sewer_wq(旧既定を
+明示)の wq.csv は 2e-5(RK 再計算の除去による丸め差。sewer_wq は許容
+RTOL=1e-5 をわずかに超える)。bisect(f82c80c → b12ca1f → 8b53574 → bb069b8)
+で bb069b8 が原因と確定。基準の更新は利用者判断(handoff)。sewer_wq は
+これとは別に 10-03 の既定昇格(§68.34 の kdpart と同じ)で wq.csv が 17%
+変わっており、こちらも基準が古い。
+
 ### 68.32 屈曲部の横断合計と、壁なし幅モードの流速正規化の不整合(2026-10-04 確認)
 
 **屈曲部の横断合計(test/bendloss zigzagw、frw·fwd の表を計測ビルドで出力)**:

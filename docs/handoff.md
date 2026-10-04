@@ -43,6 +43,17 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 未完了・検証待ち
 
+00a. **マージ前点検(2026-10-04)で見つかった古い回帰基準(利用者判断待ち)**:
+   nightly の REF_CASES のうち damwq・gwseep・sewer_wq が FAIL。原因は 2 つで
+   いずれも意図した変更: (1) bb069b8(§68.31 追補)の乾いた送り手の零化で
+   Log の ex_flux・Runge 計数が変わる(damwq は wq.csv identical、gwseep は
+   5e-8、sewer_wq は 2e-5)。(2) sewer_wq は 10-03 の既定昇格で wq.csv が 17%
+   変わる(§68.34 の kdpart と同型。旧既定を明示すると (1) だけ残る)。
+   他の 11 ケース(wave dambreak frost pump conduit salt coastal_drain kdpart
+   splash tide chichibu)は PASS(逐次。CI の 6 ケースは np=2 も PASS)。
+   対応は -u 更新(利用者承認後)。更新後に nightly が緑になることを確認して
+   からリリースのタグを打つ。
+
 00. **移流項の改良(developer.md §68。2026-10-01 段 0〜2 完了)**
    - 段 0: test/dambreak(Stoker 解析解。幅 400 m)。段 1: 旧 TVD 分岐の
      限定器修正(効果は限定的)。段 2: f_advection_scheme=2,3(運動量保存形
