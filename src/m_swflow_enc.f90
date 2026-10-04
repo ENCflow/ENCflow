@@ -35,6 +35,7 @@ module m_swflow_enc
   ! sect_* は submodule(enc_bc の水位規定変換)も呼ぶ。private のままだと
   ! gfortran がシンボルを局所化しリンク不能(§22 の実バグと同型)
   public :: sect_v, sect_hinv, sect_sigma
+  public :: have_sect, sdep                    ! m_geomorph の浮遊砂 E-D が読む(濃度 hs/vh と湿潤幅率。§26)
   public :: m_swflow_enc_post            ! ステップ末尾の u,v 正規化パス(§26)
   public :: m_swflow_enc_sdep_update     ! 河床変動後の σ 遷移深さ D の更新(§26)
   public :: swflow_vh                    ! 矩形換算水深 vh の照会(§26/§30。
@@ -2093,12 +2094,27 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
         if (mne == 0.0) cycle
         ! 風上(donor)セルの濃度。境界面からの流入は cbin(区間流入の
         ! 濃度時系列等)があればセル値、なければ清水 = 0
+        ! 濃度は水の体積あたり = 柱状量 / 矩形換算水深 vh(σ 非適用セルは
+        ! vh = h で従来と同値。面流束が u·vh なので、供給元濃度を c/vh に
+        ! すると流束が u·c = 「スカラーは水と同じ速度で動く」になる。§26)
         cdon = 0.0
         if (mne > 0.0) then
-          if (s%h(i,j) > 0.0) cdon = c(i,j) / s%h(i,j)
+          if (s%h(i,j) > 0.0) then
+            if (have_sect) then
+              cdon = c(i,j) / sect_v(s%h(i,j), sdep(i,j))
+            else
+              cdon = c(i,j) / s%h(i,j)
+            end if
+          end if
         else
           if (g%x(in,jn) > 0) then
-            if (s%h(in,jn) > 0.0) cdon = c(in,jn) / s%h(in,jn)
+            if (s%h(in,jn) > 0.0) then
+              if (have_sect) then
+                cdon = c(in,jn) / sect_v(s%h(in,jn), sdep(in,jn))
+              else
+                cdon = c(in,jn) / s%h(in,jn)
+              end if
+            end if
           else
             if (has_cbin) cdon = cbin(i,j)
           end if

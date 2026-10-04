@@ -6,6 +6,7 @@
 !======================================================================
 submodule(m_geomorph) m_geomorph_suspend
   use m_parallel, only : par_info, par_stop, dcp
+  use m_swflow_enc, only : have_sect, sdep, sect_v, sect_sigma   ! σ 断面の濃度解釈(§26)
   implicit none
 
 contains
@@ -83,10 +84,22 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
           ! 板倉・岸(ceq = q_su / wf)
           ceq = ceq_itakura(gm, p%gg, taus)
         end if
+        ! 濃度は水の体積あたり = hs / vh(vh = σ の矩形換算水深。swflow の
+        ! 移流の供給元濃度・水質の cqc と同じ解釈。σ 非適用セルは vh = h)
         cc = 0.0
-        if (s%hs(i,j) > 0.0) cc = s%hs(i,j) / s%h(i,j)
-        ! 正味の交換(>0: 浸食で hs へ、<0: 沈降で河床へ)
+        if (s%hs(i,j) > 0.0) then
+          if (have_sect) then
+            cc = s%hs(i,j) / sect_v(s%h(i,j), sdep(i,j))
+          else
+            cc = s%hs(i,j) / s%h(i,j)
+          end if
+        end if
+        ! 正味の交換(>0: 浸食で hs へ、<0: 沈降で河床へ)。σ 有効セルでは
+        ! 水に接する河床の幅が湿潤幅率 σ(h) 倍なので、河道平面積あたりの
+        ! 交換量に σ(h) を掛ける(満杯以上・矩形では 1)。河床変動 Δz は
+        ! 平面積平均のまま(§26 の近似)
         fx = gm%wf * (ceq - gm%beta * cc) * dtw
+        if (have_sect) fx = fx * sect_sigma(s%h(i,j), sdep(i,j))
         if (fx > 0.0) then
           ! 可動層クランプ(河床側は ×morfac・poroi で減るため換算して制限)
           fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
