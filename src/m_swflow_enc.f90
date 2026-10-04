@@ -36,6 +36,7 @@ module m_swflow_enc
   ! gfortran がシンボルを局所化しリンク不能(§22 の実バグと同型)
   public :: sect_v, sect_hinv, sect_sigma
   public :: m_swflow_enc_post            ! ステップ末尾の u,v 正規化パス(§26)
+  public :: m_swflow_enc_sdep_update     ! 河床変動後の σ 遷移深さ D の更新(§26)
   public :: swflow_vh                    ! 矩形換算水深 vh の照会(§26/§30。
                                          ! 水質の濃度換算 conc = cq/vh 用)
   public :: have_open_bc, bc_open_face         ! 開境界の面判定(m_geomorph の
@@ -243,6 +244,12 @@ module m_swflow_enc
   real :: sect_rmp1 = 1.0                   ! 1/(m+1)
   real :: sect_mfac = 0.0                   ! m/(m+1)
   real, parameter :: sect_sgmin = 0.01      ! σ の下限(乾燥近傍の感度増幅の抑制)
+  ! σ 断面の天端標高(1:nx, jsh:jeh)。D(t) = screst − s%z(t) で、河床変動
+  ! (geomorph・溶岩・外部 z)に D が追従する(§26 の 2026-10-04 改定)。静的
+  ! データ(zbank または g%z + drw)から決まるため保存状態は不要(リスタート
+  ! では build_sdep が復元した s%z から同じ D を再現)。非適用セルは screst_none
+  real, allocatable :: screst(:,:)
+  real, parameter :: screst_none = -1.0e30
   real, allocatable :: sdep(:,:)            ! 断面遷移深さ D (1:nx, jsh:jeh)。
                                             !   0 = σ 非適用セル(恒等写像)
   real, allocatable :: frw0(:,:,:)          ! 幅キャップ「前」の frw のコピー
@@ -843,6 +850,7 @@ subroutine m_swflow_enc_dispose(p)
   if (allocated(wfrac)) deallocate(wfrac)
   if (allocated(cwx)) deallocate(cwx)
   if (allocated(sdep)) deallocate(sdep)
+  if (allocated(screst)) deallocate(screst)
   if (allocated(frw0)) deallocate(frw0)
   if (allocated(cwy)) deallocate(cwy)
   if (allocated(acv)) deallocate(acv)
@@ -2584,16 +2592,28 @@ subroutine build_sdep(g, b, s)
   real :: d
 
   allocate(sdep(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(screst(1:g%nx, dcp%jsh:dcp%jeh), source = screst_none)
   do j = dcp%jsh, dcp%jeh
     do i = 1, g%nx
       if (g%x(i,j) <= 0) cycle
       if (g%rw(i,j) <= 0) cycle
       if (g%rscap(i,j) > 0.0) cycle
+      ! 天端: 堤防の天端が河床より上ならそれ、なければ掘り込み指定の
+      ! 元地盤 g%z + drw(g%z は入力地形 = 初期河床。河床が動いても天端は
+      ! 動かない = 河床低下で D が増え、堆積で減る。天端まで埋まれば D = 0 で
+      ! 矩形に退化)。初期(s%z = g%z)の D は従来の定義と同値
       d = 0.0
       if (g%bank_active) then
         if (g%zbank(i,j) > zbank_min) d = max(g%zbank(i,j) - s%z(i,j), 0.0)
       end if
-      if (d <= 0.0 .and. g%drw_active) d = max(g%drw(i,j), 0.0)
+      if (d > 0.0) then
+        screst(i,j) = g%zbank(i,j)
+      else if (g%drw_active) then
+        if (g%drw(i,j) > 0.0) then
+          screst(i,j) = g%z(i,j) + g%drw(i,j)
+          d = max(screst(i,j) - s%z(i,j), 0.0)
+        end if
+      end if
       sdep(i,j) = d
     end do
   end do
@@ -2606,9 +2626,51 @@ subroutine build_sdep(g, b, s)
       j = b%struct(ist)%cin(2,k)
       if (j < dcp%jsh .or. j > dcp%jeh) cycle
       sdep(i,j) = 0.0
+      screst(i,j) = screst_none
     end do
   end do
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 河床変動後の σ 遷移深さ D の更新(§26。2026-10-04)
+!   D(t) = 天端 screst − s%z(t)。D が変わったセルは保存量の矩形換算水深
+!   vh = ∫σ dh を保ったまま真の水深 h を読み替える(体積は sect_v/hinv の
+!   往復精度 1 ULP で保存)。e = z + h も回復する。
+!   呼び出しは z を更新するプロセス(geomorph・溶岩・外部 z)の後、統計・
+!   出力の前(run_step)。z のハロは各プロセスが交換済みなので sdep は
+!   帯+ハロで更新できる。h の読み替えは自帯のみ(ハロ h は次ステップ頭の
+!   交換で最新化)。σ 無効なら no-op。D が変わらなければ何も書かない
+!----------------------------------------------------------------------
+subroutine m_swflow_enc_sdep_update(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real :: dnew, vh
+  logical :: changed
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  if (.not. have_sect) return
+  changed = .false.
+  !$omp parallel do schedule(dynamic) private(i, j, dnew, vh) reduction(.or.:changed)
+  do j = dcp%jsh, dcp%jeh
+    do i = 1, g%nx
+      if (screst(i,j) <= screst_none) cycle
+      dnew = max(screst(i,j) - s%z(i,j), 0.0)
+      if (dnew == sdep(i,j)) cycle
+      if (j >= dcp%js .and. j <= dcp%je) then
+        vh = sect_v(s%h(i,j), sdep(i,j))
+        s%h(i,j) = sect_hinv(vh, dnew)
+        s%e(i,j) = s%z(i,j) + s%h(i,j)
+        changed = .true.
+      end if
+      sdep(i,j) = dnew
+    end do
+  end do
+  !$omp end parallel do
+  ! af(実効平面積率)は σ(h, D) を含むため更新する(帯のみ)
+  if (changed) call update_af(g, s)
 end subroutine
 
 

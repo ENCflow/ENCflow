@@ -26,7 +26,8 @@ module m_main
   use m_lavaflow, only : t_lavaflow, m_lavaflow_init, m_lavaflow_calc, m_lavaflow_dispose
   use m_intercept, only : t_intercept, m_intercept_init, m_intercept_calc, m_intercept_step, &
                         m_intercept_has_step, m_intercept_dispose
-  use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc, m_swflow_post
+  use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc, m_swflow_post, &
+                       m_swflow_sdep_update
   use m_output, only : output_init, output_dispose, output_chk_geoinfo, output_state, output_summary
   use m_util, only : itoa
   use m_sysdep_util, only : sysdep_mkdir, sysdep_copy_to_dir
@@ -789,6 +790,13 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   ! まで済ませる。z 更新プロセスの末尾 = geomorph・driftwood の後。
   ! lava_plan.md)
   call m_lavaflow_calc(lv, p, g, s, it)
+
+  ! 河床が動くとき σ 断面の遷移深さ D を天端固定で更新する(§26。z を
+  ! 更新するプロセスの後、統計・出力の前。σ 無効なら no-op。z が静的な
+  ! 計算では呼ばない = ゼロ追加)
+  if (gm%enabled .or. gl%enabled .or. lv%enabled .or. allocated(extz)) then
+    call m_swflow_sdep_update(sw, p, g, s)
+  end if
 
   ! 統計情報を計算
   call m_state_calcstat(s, p, g)

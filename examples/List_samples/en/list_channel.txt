@@ -113,7 +113,9 @@
                                  !   crest - bed on levee-enabled cells,
                                  !   otherwise the incision depth
                                  !   depth_rw/fn_depth_rw (with neither present,
-                                 !   p_sect_m>0 stops with an error). Improves
+                                 !   p_sect_m>0 stops with an error; when the
+                                 !   bed moves, D follows it with the crest
+                                 !   fixed, Sec. 26). Improves
                                  !   the reproduction of level and recession at
                                  !   low to medium flows; for h>=D it reduces to
                                  !   the conventional rectangular dynamics

@@ -4,6 +4,7 @@ module m_swflow
   use m_boundary, only : t_boundary
   use m_state, only : t_state
   use m_swflow_enc, only : m_swflow_enc_init, m_swflow_enc_calc, m_swflow_enc_post, &
+                           m_swflow_enc_sdep_update, &
                            m_swflow_enc_dispose
   use m_swflow_stg, only : m_swflow_stg_init, m_swflow_stg_calc, m_swflow_stg_dispose
   use m_parallel, only : par_stop
@@ -14,6 +15,7 @@ module m_swflow
   public :: m_swflow_init
   public :: m_swflow_calc
   public :: m_swflow_post
+  public :: m_swflow_sdep_update
   public :: m_swflow_dispose
 
 
@@ -71,6 +73,8 @@ module m_swflow
     procedure(procedure_swflow_init),    pointer, nopass :: init    => null()
     procedure(procedure_swflow_calc),    pointer, nopass :: calc    => null()
     procedure(procedure_swflow_post),    pointer, nopass :: post    => null()
+    ! 河床変動後の σ 遷移深さ D の更新(§26。同じ引数型。持たない実装は束縛しない)
+    procedure(procedure_swflow_post),    pointer, nopass :: sdep_update => null()
     procedure(procedure_swflow_dispose), pointer, nopass :: dispose => null()
     logical :: initialized = .false.
   end type
@@ -97,6 +101,7 @@ subroutine m_swflow_init(sw, p, g, b, s)
     sw%init    => m_swflow_enc_init
     sw%calc    => m_swflow_enc_calc
     sw%post    => m_swflow_enc_post
+    sw%sdep_update => m_swflow_enc_sdep_update
     sw%dispose => m_swflow_enc_dispose
   else if (p%f_gridsystem == 1) then
     sw%init    => m_swflow_stg_init
@@ -136,6 +141,19 @@ subroutine m_swflow_post(sw, p, g, s)
   type(t_state), intent(inout) :: s
   if (.not. associated(sw%post)) return
   call sw%post(p, g, s)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 河床変動後の σ 遷移深さ D の更新(§26。z を更新するプロセスの後に呼ぶ)
+!----------------------------------------------------------------------
+subroutine m_swflow_sdep_update(sw, p, g, s)
+  type(t_swflow), intent(in) :: sw
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  if (.not. associated(sw%sdep_update)) return
+  call sw%sdep_update(p, g, s)
 end subroutine
 
 
