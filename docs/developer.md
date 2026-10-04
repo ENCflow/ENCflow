@@ -537,7 +537,20 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
   S_surf と wq.csv(in_gwc_g 等)に相対 ~5e-6 の差が出る(np=1 でも同じ。
   debug 逐次 vs release reference でも同型の差)。-Og ビルドでは逐次=np2 が
   ビット一致であることを確認済み = MPI 実装のバグではなくビルド差起因。
-  nightly の release MPI 層からは当面除外(扱いの決定は handoff 参照)。
+  **2026-10-02 決定: RTOL=1e-5 で判定する。** 同じ敏感性が release 逐次層
+  にも波及した(Nightly #18: 開発 VM で作った reference と GitHub ランナーの
+  逐次 release ビナリが相対 4.9e-6 で不一致。VM 上の同一コミットの逐次
+  release はビット一致 = make.inc の -Ofast -march=native -flto がホスト CPU
+  で異なるコードを生成するビナリ差)。reference を作り直しても生成環境
+  以外では再発するため、test/sewer_wq の Run.sh / Run_MPI.sh に RTOL=1e-5
+  (環境変数で上書き可)を明示し、nightly の release MPI 層へ戻した。
+  実装バグの検出(逐次=np2 のビット一致)は -Og -fcheck=all 層が RTOL=0 を
+  与えて担うので検出力は落ちない。あわせて
+  Compare_ref.sh が CSV の区切りカンマ付きトークン("値,")を数値として
+  扱うようにした(従来は文字列比較に落ち、wq.csv には RTOL/ULP の許容が
+  効いていなかった。既存ケースは全て ULP=0・RTOL=0 なので合否は不変)。
+  reference の BUILDINFO.txt の mode 行は src の直近ビルドのスタンプで
+  あり、実行したビナリのモードではない(誤読注意)。
 
 ## 11. MPI 化の設計原則(分割実装の基準)
 
@@ -4065,6 +4078,11 @@ Cn_max)→ 場の最大値**。
 - SemVer(vMAJOR.MINOR.PATCH)の **git 注釈付きタグ**で打つ。初版は
   v0.9.0(公開整備が一巡した時点。CI・CONTRIBUTING・Discussions・
   実地形データの出典整備まで完了)。
+  (実態の注記 2026-10-03: v0.9.0〜v1.6.0 は GitHub Release UI で作成した
+  軽量タグ。Claude Code の cloud 環境からは refs/tags の push が 403 で
+  通らないため、タグは Release UI か利用者ローカルから打つ。対象コミットを
+  main 先頭以外にしたいときは、そのコミットを指す一時ブランチを Target に
+  指定する。handoff の v1.6.0 の項に手順。)
 - **v1.0.0 はライセンス確定(§34.3 の保留解除)をもって打つ**。同時に
   Zenodo 連携を有効化し、以後はリリース=DOI 付与(§34.1)。
   → **実施済み(2026-08-21)**: 風間の著者掲載承諾を受けて CITATION.cff を

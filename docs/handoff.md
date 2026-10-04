@@ -580,12 +580,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - 例題化は examples/timberyard(高潮の貯木場)・examples/tsunami_town
      (津波・家屋破壊との連鎖)で実施済み。残: 実流域ケースでの感度解析例と
      遊砂地あり/なしの流木捕捉比較の例題
-   - **リリース: v1.1.0(MINOR)の対象**。文献照合が完了したため
-     タグ付けの条件は成立(ユーザー決定 2026-08-21。§34.4 の 1.0 以降
-     ルールの初適用)。タグ時に CITATION.cff の version /
-     date-released を同一コミットで更新し、リリースノートは「数値結果
-     に影響する変更: なし(無効時ビット一致検証済み)/ 追加: 流木
-     モジュール」と区別して書く
+   - リリース: v1.1.0(2026-08-23)で公開済み(§34.4 の 1.0 以降ルールの
+     初適用)。
 
 ## 既知の壊れている例題
 
@@ -608,10 +604,27 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 - **CI 二層化(2026-09-15 実施)**: nightly.yml を追加(フル回帰 13 ケース
   逐次+MPI np=1,2,4 / トップレベル make / -Og -fcheck=all の逐次=np2
   一致検査 / BMI 適合性+等価性。運用と根拠の記録は developer.md §10)。
-  残: **sewer_wq の release 逐次/MPI 差(相対 ~5e-6。Runge サブステップの
-  閾値敏感性がビルド差を増幅。§10 参照)の扱いの決定** — RTOL を明示して
-  nightly の MPI 層へ戻すか、閾値敏感性を抑えるパラメータ調整をするか。
-  決定まで release MPI 層から除外中(逐次回帰と -Og 一致検査ではカバー)。
+  sewer_wq の release 逐次/MPI 差(相対 ~5e-6。Runge サブステップの閾値
+  敏感性がビルド差を増幅)は **2026-10-02 に RTOL=1e-5 で判定すると決定**
+  (§10)。Nightly #18 で同じ敏感性が release 逐次層にも波及(開発 VM の
+  reference と GitHub ランナーのビナリ差。-Ofast -march=native -flto)した
+  ことが契機。Run.sh / Run_MPI.sh に RTOL を明示し nightly の MPI 層へ
+  戻した。Compare_ref.sh は CSV の区切りカンマ付きトークンを数値として
+  扱うよう修正(wq.csv に許容が効いていなかった)。残: なし。
+- **リリース v1.6.0(2026-10-03 公開済み)**: v1.5.0 以降の加算的新機能
+  (§61〜§67、bldgdebris・bedslide・f_dbcurv・s%gv 状態化・既定値方針・
+  Nightly CI・例題 3 件)と sewer_wq の RTOL 決定(§10)を収載。Nightly #19
+  (全 6 ジョブ緑)を確認後、main を 5044f8c(CITATION 1.6.0 / 2026-10-03)
+  に進め、GitHub Release「ENCflow v1.6.0」を公開(タグ v1.6.0 = 5044f8c、
+  Zenodo DOI は Release 連携で付与)。リリースノートは数値結果に影響する
+  修正 3 件(fbaeb18・e491d16・e31994b)を区別して記載。
+  **タグ作成の実務メモ**: Claude Code の cloud 環境からは refs/tags の push が
+  HTTP 403 で拒否される(ブランチは可)。利用者ローカルからの push も当日は
+  資格情報の 403 で失敗したため、5044f8c を指す一時ブランチ release/v1.6.0
+  を押して Release UI の「Create new tag on publish」の Target に指定し、
+  公開後に一時ブランチを削除した。結果としてタグは軽量(v1.5.0 までと同じ)。
+  §34.4 の「注釈付き」は、ローカルからタグを push できる資格情報を整えた
+  上で次回から適用する。
 - 国際化の節目: docs/en/ ミラー+日英同期の CI チェック導入。チェックの
   中身は 2026-10-01 の監査で手動実施した 3 つの機械比較(namelist と索引の
   突合 / 日英の見出し数・表の行数 / List_samples 日英のパラメータ集合)を

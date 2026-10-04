@@ -4,7 +4,7 @@
 #     full-serial : release 逐次で reference 全 14 ケース(chichibu 含む)
 #                   +トップレベル make(utils の追随漏れ検出。developer.md §10)
 #     full-mpi    : release MPI np=1,2,4 で逐次 reference と照合
-#                   (sewer_wq は除外 — 下記コメント参照)
+#                   (sewer_wq は Run スクリプト側で RTOL=1e-5。developer.md §10)
 #     debug-fcheck: -Og -fcheck=all ビルドで全ケースを実行し、
 #                   debug 逐次 reference と MPI np=2 のビット一致を検査
 #                   (確保範囲・FPE の実行時検査。developer.md §10)
@@ -68,12 +68,11 @@ jobs:
           export OMP_NUM_THREADS=1
           # ランナーのコア数が np を下回っても起動できるよう保険
           export OMPI_MCA_rmaps_base_oversubscribe=1
-          # sewer_wq は除外: release(-Ofast/-flto)では逐次/MPI のビルド差が
-          # Runge サブステップの閾値敏感性で増幅され ULP=0 を満たさない
-          # (docs/handoff.md 参照。逐次回帰は full-serial、逐次=MPI の
-          #  ビット一致は debug-fcheck ジョブでカバーしている)
+          # sewer_wq は release のビルド差(逐次/MPI、ホスト CPU)が Runge
+          # サブステップの閾値敏感性で増幅され ULP=0 を満たさないため、
+          # Run_MPI.sh 側で RTOL=1e-5 を明示している(developer.md §10。
+          # 逐次=MPI のビット一致は debug-fcheck ジョブで検査)
           for c in $REF_CASES; do
-            [ "$c" = sewer_wq ] && continue
             echo "===== test/$c (np=${{ matrix.np }}) ====="
             (cd "test/$c" && ./Run_MPI.sh ${{ matrix.np }})
           done
@@ -118,13 +117,15 @@ jobs:
           -ffpe-trap=invalid,zero,overflow -ffree-line-length-none
           -fdefault-real-8 -fdefault-double-8 -Wno-conversion
           -finit-real=snan -finit-integer=-88888888"
-      # 逐次と MPI は同一フラグ・同一ソースなので一致するはず(許容誤差は
-      # 各ケースのラッパー設定に従う。実測では全ケース identical)
+      # 逐次と MPI は同一フラグ・同一ソースなので一致するはず(実測では
+      # 全ケース identical)。RTOL=0 を明示して、release 用に RTOL を持つ
+      # ケース(sewer_wq)でもここではビット一致(ULP=0)を要求する
       - name: MPI np=2 under -fcheck=all, compare vs debug serial
         run: |
           set -e
           export OMP_NUM_THREADS=1
           export OMPI_MCA_rmaps_base_oversubscribe=1
+          export RTOL=0
           for c in $REF_CASES; do
             echo "===== test/$c (debug np=2) ====="
             (cd "test/$c" && ./Run_MPI.sh 2)

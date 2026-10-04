@@ -24,6 +24,8 @@
 #            ULP 個を含む)は一致、超えたら不一致」と判定する。
 #            並列数・コンパイラ・マシン間の比較では ULP=1 を推奨
 #            (判定式: d <= ATOL + RTOL*max(|a|,|b|) または 量子数 <= ULP)
+#            数値トークンは末尾の % と CSV の区切りカンマを除いて判定する
+#            (wq.csv のような "値," の並びも数値として許容誤差が効く)
 #     SKIPCOLS : 比較から除外する列番号(空白区切りトークンの番号)。
 #            カンマ区切りで複数指定可 (例: SKIPCOLS=4 → Runge列を除外)。
 #            事象カウント系など閾値に敏感な列を外し、他の列の
@@ -184,7 +186,11 @@ for f in "$@"; do
                 if (i in skipset) continue
                 a = ref[FNR, i]; b = t[i]
                 ga = a; gb = b
+                # 末尾の % と CSV の区切りカンマは数値判定の前に除く
+                # (wq.csv の "5.6583419E+01," が文字列比較に落ちて
+                #  RTOL/ULP の許容が効かなくなるのを防ぐ)
                 sub(/%$/, "", ga); sub(/%$/, "", gb)
+                sub(/,$/, "", ga); sub(/,$/, "", gb)
                 if (isnum(ga) && isnum(gb)) {
                     qa = tokquantum(ga); qb = tokquantum(gb)
                     q = (qa < qb ? qa : qb)   # 表示桁数が違えば細かい方を採用
