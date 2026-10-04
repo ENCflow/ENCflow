@@ -8857,3 +8857,8 @@ kdpart・tide・coastal_drain・gwseep・damwq の reference(2026-08-28 作成)�
 バイナリと現行が一致(いずれも 10-04 の変更が原因ではない)ことを確認の
 うえ、利用者承認で -u 更新した(逐次・np=2 とも新基準に identical、各ケース
 の検定 PASS)。基準更新の判断は人間が行う(CLAUDE.md 絶対規律 1)。
+
+**追補(2026-10-04 マージ前点検)**: damwq・gwseep・sewer_wq も利用者承認で
+-u 更新した。原因は §68.31 追補の計数変更(damwq は wq.csv identical、gwseep
+5e-8、sewer_wq 2e-5)と、sewer_wq の 10-03 既定昇格による失効(wq.csv 17%)。
+更新後は逐次・np=2 とも新基準に PASS。

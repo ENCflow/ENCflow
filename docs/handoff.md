@@ -43,17 +43,6 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 未完了・検証待ち
 
-00a. **マージ前点検(2026-10-04)で見つかった古い回帰基準(利用者判断待ち)**:
-   nightly の REF_CASES のうち damwq・gwseep・sewer_wq が FAIL。原因は 2 つで
-   いずれも意図した変更: (1) bb069b8(§68.31 追補)の乾いた送り手の零化で
-   Log の ex_flux・Runge 計数が変わる(damwq は wq.csv identical、gwseep は
-   5e-8、sewer_wq は 2e-5)。(2) sewer_wq は 10-03 の既定昇格で wq.csv が 17%
-   変わる(§68.34 の kdpart と同型。旧既定を明示すると (1) だけ残る)。
-   他の 11 ケース(wave dambreak frost pump conduit salt coastal_drain kdpart
-   splash tide chichibu)は PASS(逐次。CI の 6 ケースは np=2 も PASS)。
-   対応は -u 更新(利用者承認後)。更新後に nightly が緑になることを確認して
-   からリリースのタグを打つ。
-
 00. **移流項の改良(developer.md §68。2026-10-01 段 0〜2 完了)**
    - 段 0: test/dambreak(Stoker 解析解。幅 400 m)。段 1: 旧 TVD 分岐の
      限定器修正(効果は限定的)。段 2: f_advection_scheme=2,3(運動量保存形
@@ -604,6 +593,20 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   いる。掃除するか .gitignore の対象にするか要判断。
 
 ## 公開準備(方針の正本は developer.md §34)
+
+- **リリース v2.0.0(2026-10-04 準備。タグは利用者が Release UI で)**: main を
+  claude/epic-hawking-kfj04n の先頭(CITATION 2.0.0 / 2026-10-04)に
+  fast-forward。MAJOR の根拠(§34.4): f_advection_tvd / f_advection_runge の
+  namelist 除去、&list_channel の互換入力なしの再編、既定の昇格(スキーム 3・
+  動的開口・乾燥頭打ち)による既存入力の結果変化、リスタート形式
+  save_version 2026-08-26 → 2026-10-04b。回帰基準は wave・dambreak・chichibu・
+  kdpart・tide・coastal_drain・gwseep・damwq・sewer_wq を更新済み(§68.34、
+  §68.31 追補。いずれも利用者承認)。CI 6 ケースは逐次・np=2 PASS、nightly の
+  14 ケースは逐次 PASS(マージ前点検)。**残**: Release UI で main 先頭を Target
+  に v2.0.0 を作成(cloud 環境からタグは push 不可。v1.6.0 の実務メモ)、
+  Nightly の緑を確認、Zenodo DOI の付与確認。リリースノート草案は
+  リリース時のチャットに提示(数値結果に影響する変更と等価・加算的変更を
+  区別)。
 
 - **GitHub Organization「ENCflow」作成・移管・URL 確定済み(2026-08-13)**。
   残: owner の複数化(両研究室の代表を追加)。(Zenodo DOI は
