@@ -52,7 +52,7 @@
 /
 &list_channel
   fn_width = 'width_zigzagw.txt'
-  bank0 = 0.0          ! 高さ 0 堤防(旧仕様で自動有効化されていたもの)
+  bank0 = 1.0          ! 堤内地 +1 m の堤防(壁。越流しない。天端が地盤以下の高さ 0 堤防は壁にならない: §68.29)
   f_bank_datum = 1     ! 堤内地セル標高基準
 /
 &list_bound_edge

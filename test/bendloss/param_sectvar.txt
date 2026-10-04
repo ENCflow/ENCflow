@@ -44,7 +44,7 @@
   nx = 400
   ny = 5
   f_ztype = 1
-  fn_z = 'z_width10.txt'
+  fn_z = 'z_width10_sect.txt'   ! 堤内地は河床 +2.9 m(D = 3 の天端より下。Make_channel.py lower)
   fn_rw = 'rw_width10.txt'
   rn0_rw = 0.03
   f_rntype = 0

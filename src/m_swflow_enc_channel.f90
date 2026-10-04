@@ -401,21 +401,52 @@ module function bank_edge(g, s, i, j, in, jn) result(res)
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j, in, jn
   logical :: res
-  if (s%t < 0.0) continue                   ! 引数未使用の警告を抑制(B で s%z を使う)
   res = .false.
   if (g%sw(i,j) > 0 .or. g%sw(in,jn) > 0) return
   if (g%rw(i,j) > 0 .and. g%rw(in,jn) <= 0) then
-    res = g%zbank(i,j) > zbank_min
+    res = is_wall(g%zbank(i,j), s%z(i,j), s%z(in,jn))
   else if (g%rw(in,jn) > 0 .and. g%rw(i,j) <= 0) then
-    res = g%zbank(in,jn) > zbank_min
+    res = is_wall(g%zbank(in,jn), s%z(in,jn), s%z(i,j))
   end if
 end function
 
-module subroutine bank_wall(p, g, s, i, j, in, jn, uve1, mne1)
+
+!----------------------------------------------------------------------
+! セルごとの堤防壁エッジ本数 nwall(帯+ハロ)。bank_wall が参照するのは
+! 自帯セルとその近傍(js-1..je+1)で、その 8 近傍は jsh..jeh に収まる
+! (ハロ 2)。壁判定は静的(g%z)。§68.29 (C')
+!----------------------------------------------------------------------
+module subroutine bank_init(g)
+  type(t_geoinfo), intent(in) :: g
+  integer :: i, j, k, in, jn, jlo, jhi
+  if (allocated(nwall)) deallocate(nwall)
+  allocate(nwall(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
+  jlo = max(dcp%jsh, 1)
+  jhi = min(dcp%jeh, g%ny)
+  do j = jlo, jhi
+    do i = 1, g%nx
+      if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
+      do k = 1, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        if (in < 1 .or. in > g%nx .or. jn < jlo .or. jn > jhi) cycle
+        if (g%x(in,jn) <= 0 .or. g%sw(in,jn) > 0) cycle
+        if (g%rw(i,j) > 0 .and. g%rw(in,jn) <= 0) then
+          if (is_wall(g%zbank(i,j), g%z(i,j), g%z(in,jn))) nwall(i,j) = nwall(i,j) + 1
+        else if (g%rw(in,jn) > 0 .and. g%rw(i,j) <= 0) then
+          if (is_wall(g%zbank(in,jn), g%z(in,jn), g%z(i,j))) nwall(i,j) = nwall(i,j) + 1
+        end if
+      end do
+    end do
+  end do
+end subroutine
+
+module subroutine bank_wall(p, g, s, i, j, k, in, jn, uve1, mne1)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j     ! 中心セルのインデックス
+  integer, intent(in) :: k        ! 近傍方向(mn2dh の添字)
   integer, intent(in) :: in, jn   ! 近傍セルのインデックス
   real, intent(inout) :: uve1, mne1  ! エッジの流速・流量(中心→近傍が正)
   integer :: ic, jc               ! 河道側セルのインデックス
@@ -437,7 +468,9 @@ module subroutine bank_wall(p, g, s, i, j, in, jn, uve1, mne1)
     return
   end if
   zc = g%zbank(ic,jc)
-  if (zc <= zbank_min) return     ! この河道セルは堤防なし(通常計算のまま)
+  ! 天端が両側地盤より高いエッジだけが壁(§68.29 (B)。天端なし、または
+  ! 天端が河床・堤内地地盤以下のエッジは通常計算のまま = 地盤が段差)
+  if (.not. is_wall(zc, s%z(ic,jc), s%z(il,jl))) return
 
   ! 破堤サイトのエッジなら実効天端に差し替える(行バケットで
   ! サイトのない行は整数比較1回で素通り。§18)
@@ -461,6 +494,7 @@ module subroutine bank_wall(p, g, s, i, j, in, jn, uve1, mne1)
     ! 堤防が機能している水位域でのみ意味を持つため)
     if (max(wsr, wsl) > zc) then
       call bank_weir_flux(p%gg, wsr, wsl, zc, sgn, uve1, mne1)
+      call cap_overshoot
     else
       h = max(s%h(il,jl), 0.0)
       u = ((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)
@@ -478,6 +512,7 @@ module subroutine bank_wall(p, g, s, i, j, in, jn, uve1, mne1)
       end if
     else if (wsr > zc) then
       call bank_weir_flux(p%gg, wsr, wsl, zc, sgn, uve1, mne1)
+      call cap_overshoot
     else
       uve1 = 0
       mne1 = 0
@@ -486,11 +521,34 @@ module subroutine bank_wall(p, g, s, i, j, in, jn, uve1, mne1)
     ! 越流のみ(単純堤防): 双方向とも天端までは不透過、超えたら堰越流
     if (max(wsr, wsl) > zc) then
       call bank_weir_flux(p%gg, wsr, wsl, zc, sgn, uve1, mne1)
+      call cap_overshoot
     else
       uve1 = 0
       mne1 = 0
     end if
   end select
+
+contains
+  !--------------------------------------------------------------------
+  ! 堰流量の追い越し禁止(§68.29 (C')): 堰公式は慣性のない代数則で、潜り
+  ! 越流の流量が天端上水深 h2 に比例するため、天端が水面より十分下
+  ! (深い湛水)では 1 ステップで移る水量が水位差を追い越して 2Δt 振動に
+  ! なる(追い越し条件 Δws < 0.01·h2²)。両セルの水位差の半分までしか
+  ! 1 ステップで縮めないよう流量に上限を掛ける。セルの壁エッジ本数 nwall
+  ! で按分する(全壁エッジが同時に同じ上限まで流しても追い越さない)。
+  ! 水位の応答は実効平面積率 af(gv·wfrac·σ 比)で換算する。上限が効くのは
+  ! 追い越し域だけで、天端近くの本来の堰流れでは恒等
+  !--------------------------------------------------------------------
+  subroutine cap_overshoot
+    real :: qcap, cor
+    qcap = 0.5 * abs(wsr - wsl) / (mn2dh(k) * (real(nwall(ic,jc)) / s%af(ic,jc) &
+                                              + real(nwall(il,jl)) / s%af(il,jl)))
+    if (abs(mne1) > qcap) then
+      cor = qcap / abs(mne1)
+      mne1 = mne1 * cor
+      uve1 = uve1 * cor
+    end if
+  end subroutine
 end subroutine
 
 
@@ -789,8 +847,8 @@ subroutine build_cw(g, capd)
           ! 壁エッジ(自セルが天端を持ち、相手が堤内地)は除外
           ! (zbank は堤防有効時だけ確保される。壁なし幅モードでは壁エッジなし)
           if (g%bank_active) then
-            if (g%zbank(ic,jc) > zbank_min .and. g%sw(in,jn) == 0 .and. &
-                g%rw(in,jn) <= 0) cycle
+            if (g%sw(in,jn) == 0 .and. g%rw(in,jn) <= 0 .and. &
+                is_wall(g%zbank(ic,jc), g%z(ic,jc), g%z(in,jn))) cycle
           end if
           f0 = frw(ke(k), ic+die(k), jc+dje(k))
           if (is_channel(g, in, jn)) then
@@ -887,8 +945,8 @@ module subroutine cw_cell(g, i, j, sig, cx, cy)
     else
       if (g%x(in,jn) <= 0) cycle
       if (g%bank_active) then
-        if (g%zbank(i,j) > zbank_min .and. g%sw(in,jn) == 0 .and. &
-            g%rw(in,jn) <= 0) cycle
+        if (g%sw(in,jn) == 0 .and. g%rw(in,jn) <= 0 .and. &
+            is_wall(g%zbank(i,j), g%z(i,j), g%z(in,jn))) cycle
       end if
       f0 = frw0(ke(k), i+die(k), j+dje(k))
       if (is_channel(g, in, jn)) then
@@ -930,14 +988,10 @@ function diag_reassign(g, ia, ja, ib, jb) result(sh)
   ld = l8(1)
   s1 = (g%dx * g%dy / sqrt(g%dx**2 + g%dy**2) - ld) / 2
   sh = 0.0
-  if (g%zbank(ia,ja) > zbank_min) then
-    if (blocked(g, ib, ja)) sh = sh + s1
-    if (blocked(g, ia, jb)) sh = sh + s1
-  end if
-  if (g%zbank(ib,jb) > zbank_min) then
-    if (blocked(g, ib, ja)) sh = sh + s1
-    if (blocked(g, ia, jb)) sh = sh + s1
-  end if
+  if (blocked(g, ia, ja, ib, ja)) sh = sh + s1
+  if (blocked(g, ia, ja, ia, jb)) sh = sh + s1
+  if (blocked(g, ib, jb, ib, ja)) sh = sh + s1
+  if (blocked(g, ib, jb, ia, jb)) sh = sh + s1
   sh = sh / 2                         ! 両端セルから見た塞がりの平均
 end function
 
@@ -979,9 +1033,8 @@ function nblk(g, ic, jc, id) result(n)
   integer, intent(in) :: ic, jc, id
   integer :: n, jd
   n = 0
-  if (g%zbank(ic,jc) <= zbank_min) return   ! 天端なし: 壁もなし
   do jd = jc - 1, jc + 1, 2
-    if (blocked(g, id, jd)) n = n + 1
+    if (blocked(g, ic, jc, id, jd)) n = n + 1
   end do
 end function
 
@@ -994,24 +1047,26 @@ function nblk_y(g, ic, jc, jd) result(n)
   integer, intent(in) :: ic, jc, jd
   integer :: n, id
   n = 0
-  if (g%zbank(ic,jc) <= zbank_min) return   ! 天端なし: 壁もなし
   do id = ic - 1, ic + 1, 2
-    if (blocked(g, id, jd)) n = n + 1
+    if (blocked(g, ic, jc, id, jd)) n = n + 1
   end do
 end function
 
 
 !----------------------------------------------------------------------
-! 斜め先セルが堤防壁の相手(堤内地)か。x 番兵が領域外を弾くため
-! sw/rw の添字は番兵通過後のみ触る
+! 河道セル (ic,jc) から見た斜め先セル (id,jd) が堤防壁で塞がれているか
+! (相手が堤内地で、天端が両側地盤より高い。is_wall = bank_wall と同じ
+! 述語。静的表なので g%z)。x 番兵が領域外を弾くため sw/rw の添字は
+! 番兵通過後のみ触る
 !----------------------------------------------------------------------
-function blocked(g, id, jd) result(res)
+function blocked(g, ic, jc, id, jd) result(res)
   type(t_geoinfo), intent(in) :: g
-  integer, intent(in) :: id, jd
+  integer, intent(in) :: ic, jc, id, jd
   logical :: res
   res = .false.
   if (g%x(id,jd) <= 0) return               ! 領域外・無効: 元々無フラックス
-  res = g%sw(id,jd) == 0 .and. g%rw(id,jd) <= 0
+  if (g%sw(id,jd) /= 0 .or. g%rw(id,jd) > 0) return
+  res = is_wall(g%zbank(ic,jc), g%z(ic,jc), g%z(id,jd))
 end function
 
 end submodule

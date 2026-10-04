@@ -21,6 +21,8 @@ module m_swflow_enc
   public :: m_swflow_enc_init
   public :: m_swflow_enc_calc
   public :: m_swflow_enc_dispose
+  public :: is_wall                   ! 堤防壁の述語(submodule から参照。private だと
+                                      !   gfortran の LTO でシンボル未解決になるため公開)
   public :: m_swflow_enc_set_debris   ! 土石流抵抗則の設定口(m_geomorph の
                                       ! init_debris が呼ぶ。swflow init より前)
 
@@ -129,6 +131,9 @@ module m_swflow_enc
   !   天端の絶対標高は geoinfo が河道セルごとに構築済み(g%zbank)。
   !   水理モード f_bank_mode は fn_channel の &list_channel から読む
   logical :: have_bank = .false.            ! 堤防天端が有効か
+  ! セルの堤防壁エッジ本数(堰流量の追い越し禁止上限の分母。§68.29 (C')。
+  ! have_bank のときだけ bank_init が帯+ハロで構築。状態は親、構築は submodule)
+  integer, allocatable :: nwall(:,:)
   logical :: have_swall = .false.           ! 海岸堤防天端が有効か(§17 一般化)
   integer :: f_swall_mode = 0               ! 海岸堤防の水理モード(e_bank_* と同義)
   integer, parameter :: e_bank_weir = 0     ! 越流のみ(単純堤防): 双方向とも天端まで不透過
@@ -409,12 +414,15 @@ module m_swflow_enc
       real, intent(inout) :: uve1, mne1
     end subroutine
 
-    module subroutine bank_wall(p, g, s, i, j, in, jn, uve1, mne1)
+    module subroutine bank_wall(p, g, s, i, j, k, in, jn, uve1, mne1)
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(in) :: s
-      integer, intent(in) :: i, j, in, jn
+      integer, intent(in) :: i, j, k, in, jn
       real, intent(inout) :: uve1, mne1
+    end subroutine
+    module subroutine bank_init(g)
+      type(t_geoinfo), intent(in) :: g
     end subroutine
     module function bank_edge(g, s, i, j, in, jn) result(res)
       type(t_geoinfo), intent(in) :: g
@@ -521,6 +529,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
 
   ! 堤防(仮想壁面)・河道幅の有効判定は geoinfo の構築結果に従う
   have_bank = g%bank_active
+  if (have_bank) call bank_init(g)
   have_swall = g%swall_active
   f_swall_mode = g%f_swall_mode             ! 検証は geoinfo(setup_seawall)済み
   have_width = g%width_active
@@ -836,6 +845,7 @@ subroutine m_swflow_enc_dispose(p)
   if (allocated(acv)) deallocate(acv)
   db_curv = 0
   call breach_dispose
+  if (allocated(nwall)) deallocate(nwall)
   have_bopen = .false.
   have_width = .false.
   have_sect = .false.
@@ -1288,7 +1298,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   if (f_rivermouth_drop > 0) call rivermouth_drop
 
   ! 堤防(仮想壁面)エッジの流速・流量の上書き(submodule m_swflow_enc_channel)
-  if (have_bank) call bank_wall(p, g, s, i, j, in, jn, uve1, mne1)
+  if (have_bank) call bank_wall(p, g, s, i, j, k, in, jn, uve1, mne1)
 
   ! 海岸堤防(仮想壁面)エッジの流速・流量の上書き(同 submodule。
   ! bank_wall は sw エッジに触れないため干渉しない)
@@ -2215,7 +2225,7 @@ function sblk(g, s, ic, jc, id, jd) result(res)
   res = 0.0
   if (g%sw(id,jd) > 0) return
   if (have_bopen) then
-    if (g%rw(id,jd) <= 0 .and. g%zbank(ic,jc) > zbank_min) return
+    if (g%rw(id,jd) <= 0 .and. is_wall(g%zbank(ic,jc), s%z(ic,jc), s%z(id,jd))) return
   end if
   dz = s%z(id,jd) - s%z(ic,jc)
   if (dz <= 0.0) return
@@ -2225,6 +2235,20 @@ function sblk(g, s, ic, jc, id, jd) result(res)
   else
     res = dz / hc
   end if
+end function
+
+
+!----------------------------------------------------------------------
+! 河道セルの天端 zb が地盤 zc(河床)と zl(堤内地)の両方より高いとき
+! だけ、そのエッジに堤防壁がある(§68.29 (B))。天端が地盤以下の部分は
+! 地盤そのものが段差として通常計算(SWE)に入り、堤防としては非実体。
+! bank_wall(動的 s%z)・静的開口表(g%z)・動的開口 sblk(s%z)・
+! 通水率 build_cw/cw_cell(g%z)の壁判定はすべてこの述語を使う
+!----------------------------------------------------------------------
+pure function is_wall(zb, zc, zl) result(res)
+  real, intent(in) :: zb, zc, zl
+  logical :: res
+  res = zb > zbank_min .and. zb > max(zc, zl)
 end function
 
 

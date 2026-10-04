@@ -12,6 +12,12 @@
                                        サブグリッド河道幅 W = 4 m の直線水路。堤内地は河床+3 m、
                                        マスクなし = 高さ0堤防が自動有効。§68.9)
 
+  python3 Make_channel.py lower z_width.txt rw_width.txt z_width_sect.txt 0.1
+                                     → 既存の地形の堤内地(rw=0)だけを 0.1 m 下げる。σ 断面の
+                                       ケース(width_sect*, sectvar)用: 天端(= 河床 + D)が堤内地
+                                       より高くないと壁にならない(§68.29 (B))ため、D = 3 の天端
+                                       (河床 + 3)の下に堤内地を置く
+
 いずれも路長 400 セル(dx = 10 m)、河床勾配 S = 0.005(路長に沿って)、
 西辺の始点に区間流入 Q、終点は東辺(自由流出)。折れ線は 80 セルの
 直線区間 5 本(東→北→東→北→東)で 90° 屈曲 4 回。水路外はマスク 0(壁)。
@@ -20,6 +26,16 @@ path_*.csv に路上のセル (i, j, 路長 s) を書く(解析用)。
 import sys
 DX, S, Z0 = 10.0, 0.005, 100.0
 kind = sys.argv[1] if len(sys.argv) > 1 else "straight"
+
+if kind == "lower":
+    zin, rwin, zout, dz = sys.argv[2], sys.argv[3], sys.argv[4], float(sys.argv[5])
+    z = [[float(v) for v in l.split()] for l in open(zin)]
+    rw = [[int(float(v)) for v in l.split()] for l in open(rwin)]
+    with open(zout, "w") as f:
+        for zr, rr in zip(z, rw):
+            f.write(" ".join("%.4f" % (v - (dz if r <= 0 else 0.0)) for v, r in zip(zr, rr)) + "\n")
+    print(zout, "lowered non-channel cells by", dz)
+    sys.exit(0)
 
 if kind.startswith("diagw"):
     # 対角 1 セル河道 + サブグリッド幅(W = 7.07 m: 自然幅、diagw10: W = 10 m)。

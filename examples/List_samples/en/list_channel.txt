@@ -44,7 +44,9 @@
                                 !   channel cells only. -900 or below = no
                                 !   levee. Exclusive with bank0)
   bank0 = 1.0                   ! single fixed levee height (-900 or below =
-                                !   treated as unspecified)
+                                !   treated as unspecified. A wall exists only
+                                !   on edges where the crest is above both the
+                                !   bed and the landside ground; 0 = no levee)
 
   f_bank_datum = 1              ! datum of the levee height
                                 !   0: river bed (z after incision)
