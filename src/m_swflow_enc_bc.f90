@@ -600,6 +600,8 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
   if (g%x(i,j) <= 0) return
   if (g%sw(i,j) > 0) return    ! 海セルは continuous が更新しないため対象外
   h = s%h(i,j)
+
+
   do m = 1, 3
     k = kf(m)
     in = i + din(k)
@@ -637,8 +639,10 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
         mne1 = uve1 * h
       end select
       ! 過大な流出の抑制(流出方向のみ。momentum の抑制と同型で、
-      ! 境界面ではフラグによらず適用)
+      ! 境界面ではフラグによらず適用。河道幅有効時は境界面の通過幅係数
+      ! frw(§68.26。連続式が同じ係数を乗じる)と平面積率 wfrac で換算)
       dh = mne1 * mn2dh(k) / s%gv(i,j)
+      if (have_frw) dh = dh * frw(ke(k), ie, je)
       if (have_width) dh = dh / wfrac(i,j)
       if (dh > 0 .and. h - dh <= 0) then
         cor = max(h - p%dd, 0.0) / dh
@@ -669,6 +673,35 @@ module function bc_open_face(in, jn) result(op)
   if (in > dcp%nx_g .and. bc_face_type(e_side_e, jn) == e_bc_wall) op = .false.
   if (jn < 1        .and. bc_face_type(e_side_n, in) == e_bc_wall) op = .false.
   if (jn > dcp%ny_g .and. bc_face_type(e_side_s, in) == e_bc_wall) op = .false.
+end function
+
+
+!----------------------------------------------------------------------
+! 枠外近傍 (in,jn) への面が区間流入の法線面か(1 軸だけ枠外で、その辺の
+! セル別面型が e_bc_inflow)。通過幅係数の構築が流入面を除外するため
+! (規定流量は面幅で按分した mn1 のまま連続式が取り込む。§68.26)
+!----------------------------------------------------------------------
+module function bc_inflow_face(in, jn) result(r)
+  integer, intent(in) :: in, jn
+  logical :: r
+  logical :: ox, oy
+  r = .false.
+  ox = (in < 1 .or. in > dcp%nx_g)
+  oy = (jn < 1 .or. jn > dcp%ny_g)
+  if (ox .eqv. oy) return                   ! 枠内、または角の斜め面
+  if (ox) then
+    if (in < 1) then
+      r = bc_face_type(e_side_w, jn) == e_bc_inflow
+    else
+      r = bc_face_type(e_side_e, jn) == e_bc_inflow
+    end if
+  else
+    if (jn < 1) then
+      r = bc_face_type(e_side_n, in) == e_bc_inflow
+    else
+      r = bc_face_type(e_side_s, in) == e_bc_inflow
+    end if
+  end if
 end function
 
 

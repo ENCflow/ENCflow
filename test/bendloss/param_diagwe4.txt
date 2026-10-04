@@ -1,0 +1,69 @@
+!======================================================================
+! サブグリッド河道幅 W = 4 m(wfrac = 0.4)の直線水路の定常流(§68.9)
+!   q_河道 = 40/4 = 10 m²/s → 等流水深 2.38 m、u = 4.2 m/s、Fr = 0.87
+!   S = 0.005, n = 0.03, Q = 40 m³/s(幅 10 m → q = 4 m²/s)
+!   等流水深 h_n = (q n / √S)^0.6 = 1.373 m, u = 2.91 m/s, Fr = 0.79
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 7200
+  dt_disp = 600
+  dt_file = 3600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_channel = '-'
+  dir_result = 'result_diagwe4'
+  f_disp_debug = 1
+  f_disp_qq = 1
+  f_out_h = 1
+  f_out_u = 1
+  f_out_v = 1
+  f_out_m = 1
+  f_out_n = 1
+  f_out_hmax = 0
+/
+&list_enc
+  f_advection_scheme = 3
+  f_hcap_upwind = 1
+/
+&list_initial
+  f_htype = 0
+  f_uvtype = 0
+  h0 = 0.0
+  h0_rw = 1.9
+  u0 = 0
+  v0 = 0
+/
+&list_geoinfo
+  lx = 4000.0
+  ly = 4050.0
+  nx = 400
+  ny = 405
+  f_ztype = 1
+  fn_z = 'z_diagwe4.txt'
+  fn_rw = 'rw_diagwe4.txt'
+  rn0_rw = 0.03
+  f_rntype = 0
+  rn0 = 0.03
+/
+&list_channel
+  fn_width = 'width_diagwe4.txt'
+  bank0 = 0.0          ! 高さ 0 堤防(旧仕様で自動有効化されていたもの)
+  f_bank_datum = 1     ! 堤内地セル標高基準
+/
+&list_bound_edge
+  f_bc_e = 1
+  f_bc_n = 1
+/
+&list_bound_inflow
+  inflow_cell(:,1,1) = 1, 5
+  inflow_val(:,1,1) = 0, 0.0
+  inflow_val(:,3,1) = 10, 28.28
+  inflow_val(:,2,1) = 240, 28.28
+  inflow_dist(1) = 0
+/

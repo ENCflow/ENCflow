@@ -375,6 +375,10 @@ module m_swflow_enc
       integer, intent(in) :: in, jn
       logical :: op
     end function
+    module function bc_inflow_face(in, jn) result(r)
+      integer, intent(in) :: in, jn
+      logical :: r
+    end function
     module subroutine bc_dispose()
     end subroutine
   end interface
@@ -597,6 +601,11 @@ subroutine m_swflow_enc_init(p, g, b, s)
     sect_mfac = sect_m * sect_rmp1
   end if
 
+  ! 境界条件の適用層を初期化する(辺型・面型・基準水位・流入区間の
+  ! 開口幅の構築。開口幅が l8 を使うため init_weights より後に。
+  ! 通過幅係数の構築が境界面の開閉(bc_open_face)を読むためその前に)
+  call bc_init(p, g, b)
+
   if (have_frw) call build_channel_frw(g)
   if (have_width) call build_wfrac(g)
 
@@ -610,10 +619,6 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 破堤サイトの解釈・検証・行バケット構築(zbank の帯と s%z を読むため
   ! この位置。have_breach を設定する)
   call breach_init(p, g, s, chlist)
-
-  ! 境界条件の適用層を初期化する(辺型・面型・基準水位・流入区間の
-  ! 開口幅の構築。開口幅が l8 を使うため init_weights より後に)
-  call bc_init(p, g, b)
 
   ! 初期条件を設定する
   call init_enc_status(p, g, s, sx_mod)

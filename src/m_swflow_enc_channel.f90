@@ -71,7 +71,7 @@ contains
 !----------------------------------------------------------------------
 module subroutine build_channel_frw(g)
   type(t_geoinfo), intent(in) :: g
-  integer :: i, j, jlo, jhi
+  integer :: i, j, jlo, jhi, k, in, jn, ie, je
   real :: nb, capd
 
   allocate(frw(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 1.0)
@@ -174,7 +174,55 @@ module subroutine build_channel_frw(g)
         end if
       end do
     end do
+    ! 開いた辺境界の面(developer.md §68.26): 幅情報を持つ河道セルの
+    ! 枠外近傍への面は「同じ幅の河道が外側へ続く」として、内部の
+    ! 河道—河道エッジと同じ幅キャップ q = min(W/面長, 1) を与える。
+    ! 係数なし(=1)のままだと、連続式の流出が自然幅あたりになって狭い
+    ! 河道の貯留を抜き切るうえ、セル流速の再構成(Σ uve·w·frw / cwx)で
+    ! 境界面の流速だけが 1/cwx 倍に増幅される正帰還になり発散する
+    ! (対角 W=4 の東辺終端で毎ステップ ×1.26)。build_cw / cw_cell も
+    ! 同じ面を同じ q で開口和に含める(境界セルの cwx が内部と同じ比に
+    ! なる条件)。閉じた辺(壁)は無フラックスで対象外。区間流入の法線面
+    ! (bc_inflow_face)は係数 1 のまま: 規定流量は面幅で按分した mn1 を
+    ! 連続式がそのまま取り込む(質量厳密)。build_cw も同じ面を q=1 で
+    ! 数えるので整合する
+    if (have_open_bc) then
+      do j = max(dcp%jsh, 1), min(dcp%jeh, g%ny)
+        do i = 1, g%nx
+          if (i /= 1 .and. i /= g%nx .and. j /= 1 .and. j /= g%ny) cycle
+          if (.not. is_channel(g, i, j)) cycle
+          if (g%wrw(i,j) <= 0.0) cycle
+          do k = 1, 8
+            in = i + din(k)
+            jn = j + djn(k)
+            if (in >= 1 .and. in <= g%nx .and. jn >= 1 .and. jn <= g%ny) cycle
+            if (.not. bc_open_face(in, jn)) cycle
+            if (bc_inflow_face(in, jn)) cycle
+            ie = i + die(k)
+            je = j + dje(k)
+            if (je < dcp%jsh - 1 .or. je > dcp%jeh) cycle
+            frw(ke(k), ie, je) = min(g%wrw(i,j) / face_len(k), 1.0)
+          end do
+        end do
+      end do
+    end if
   end if
+
+contains
+
+  ! 面 k の面長(幅キャップの分母。軸: 直交辺の長さ、斜め: 斜めの自然幅)
+  pure function face_len(kk) result(c)
+    integer, intent(in) :: kk
+    real :: c
+    select case (kk)
+      case (4, 5)
+        c = g%dy
+      case (2, 7)
+        c = g%dx
+      case default
+        c = capd
+    end select
+  end function
 end subroutine
 
 
@@ -658,18 +706,32 @@ subroutine build_cw(g, capd)
       do k = 1, 8
         in = ic + din(k)
         jn = jc + djn(k)
-        if (g%x(in,jn) <= 0) cycle          ! 領域外・無効(x 番兵)
-        ! 壁エッジ(自セルが天端を持ち、相手が堤内地)は除外
-        ! (zbank は堤防有効時だけ確保される。壁なし幅モードでは壁エッジなし)
-        if (g%bank_active) then
-          if (g%zbank(ic,jc) > zbank_min .and. g%sw(in,jn) == 0 .and. &
-              g%rw(in,jn) <= 0) cycle
-        end if
-        f0 = frw(ke(k), ic+die(k), jc+dje(k))
-        if (is_channel(g, in, jn)) then
-          q = wcap(g, ic, jc, in, jn, cap8(k))
+        if (in < 1 .or. in > g%nx .or. jn < 1 .or. jn > g%ny) then
+          ! 枠外近傍: 開いた辺境界の面は「同じ幅の河道の続き」として
+          ! 内部の河道—河道エッジと同じ q で開口和に含める(§68.26)。
+          ! 閉じた辺は無フラックス
+          if (.not. have_open_bc) cycle
+          if (.not. bc_open_face(in, jn)) cycle
+          f0 = 1.0
+          if (bc_inflow_face(in, jn)) then
+            q = 1.0                         ! 流入面は係数なし(frw も 1)
+          else
+            q = min(g%wrw(ic,jc) / cap8(k), 1.0)
+          end if
         else
-          q = 1.0                           ! 河道—河道以外はキャップなし
+          if (g%x(in,jn) <= 0) cycle        ! 無効セル(x 番兵)
+          ! 壁エッジ(自セルが天端を持ち、相手が堤内地)は除外
+          ! (zbank は堤防有効時だけ確保される。壁なし幅モードでは壁エッジなし)
+          if (g%bank_active) then
+            if (g%zbank(ic,jc) > zbank_min .and. g%sw(in,jn) == 0 .and. &
+                g%rw(in,jn) <= 0) cycle
+          end if
+          f0 = frw(ke(k), ic+die(k), jc+dje(k))
+          if (is_channel(g, in, jn)) then
+            q = wcap(g, ic, jc, in, jn, cap8(k))
+          else
+            q = 1.0                         ! 河道—河道以外はキャップなし
+          end if
         end if
         sx_ = l8y(k) / 2
         sy_ = l8x(k) / 2
@@ -764,16 +826,29 @@ module subroutine cw_cell(g, i, j, sig, cx, cy)
   do k = 1, 8
     in = i + din(k)
     jn = j + djn(k)
-    if (g%x(in,jn) <= 0) cycle
-    if (g%bank_active) then
-      if (g%zbank(i,j) > zbank_min .and. g%sw(in,jn) == 0 .and. &
-          g%rw(in,jn) <= 0) cycle
-    end if
-    f0 = frw0(ke(k), i+die(k), j+dje(k))
-    if (is_channel(g, in, jn)) then
-      q = wcap_s(g, i, j, in, jn, cap8(k), sig)
+    if (in < 1 .or. in > g%nx .or. jn < 1 .or. jn > g%ny) then
+      ! 枠外近傍: build_cw と同じ扱い(開いた辺境界の面は同じ幅の続き。
+      ! sig=1 で build_cw とビット同値)
+      if (.not. have_open_bc) cycle
+      if (.not. bc_open_face(in, jn)) cycle
+      f0 = 1.0
+      if (bc_inflow_face(in, jn)) then
+        q = 1.0
+      else
+        q = min(g%wrw(i,j) * sig / cap8(k), 1.0)
+      end if
     else
-      q = 1.0
+      if (g%x(in,jn) <= 0) cycle
+      if (g%bank_active) then
+        if (g%zbank(i,j) > zbank_min .and. g%sw(in,jn) == 0 .and. &
+            g%rw(in,jn) <= 0) cycle
+      end if
+      f0 = frw0(ke(k), i+die(k), j+dje(k))
+      if (is_channel(g, in, jn)) then
+        q = wcap_s(g, i, j, in, jn, cap8(k), sig)
+      else
+        q = 1.0
+      end if
     end if
     sx_ = l8y(k) / 2
     sy_ = l8x(k) / 2

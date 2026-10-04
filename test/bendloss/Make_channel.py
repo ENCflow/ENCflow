@@ -23,18 +23,23 @@ kind = sys.argv[1] if len(sys.argv) > 1 else "straight"
 
 if kind.startswith("diagw"):
     # 対角 1 セル河道 + サブグリッド幅(W = 7.07 m: 自然幅、diagw10: W = 10 m)。
-    # 最初の 3 セルは x 方向、以後 45°。堤内地は河床+3 m(高さ0堤防が自動有効)
-    W = float(kind[5:]) if len(kind) > 5 else DX / (2 ** 0.5)
+    # 最初の 3 セルは x 方向、以後 45°。堤内地は河床+3 m(param で bank0 = 0 の
+    # 高さ 0 堤防を明示)
+    # diagwe<W>: 終点を対角のまま東辺に置く(境界面の幅補正の検証。§68.26。
+    # 補正前は幅未補正の自由流出面が狭い河道の貯留を抜き切って数秒で発散した)
+    diag_end = kind.startswith("diagwe")
+    W = float(kind[6:] if diag_end else kind[5:]) if len(kind) > (6 if diag_end else 5) else DX / (2 ** 0.5)
     nx, ny = 400, 405
-    # 両端の 3 セルは x 方向(流入・流出境界の面集合を軸河道と同じにする。
-    # 終点を対角のまま東辺に置くと、幅未補正の自由流出面が狭い河道の貯留を
-    # 抜き切って発散する。§18 制約 (5))
-    path = [(i, 5) for i in range(1, 4)] + [(3 + k, 5 + k) for k in range(1, 395)] \
-         + [(i, 399) for i in range(398, 401)]
+    # 両端の 3 セルは x 方向(流入・流出境界の面集合を軸河道と同じにする)
+    if diag_end:
+        path = [(i, 5) for i in range(1, 4)] + [(3 + k, 5 + k) for k in range(1, 398)]
+    else:
+        path = [(i, 5) for i in range(1, 4)] + [(3 + k, 5 + k) for k in range(1, 395)] \
+             + [(i, 399) for i in range(398, 401)]
     z = [[0.0] * nx for _ in range(ny)]; rw = [[0] * nx for _ in range(ny)]; w = [[0.0] * nx for _ in range(ny)]
     bed = {}
     for k, (i, j) in enumerate(path):
-        bed[(i, j)] = Z0 - S * (sum(DX if (kk < 3 or kk >= 397) else DX * 2 ** 0.5 for kk in range(k)))
+        bed[(i, j)] = Z0 - S * (sum(DX if (kk < 3 or (kk >= 397 and not diag_end)) else DX * 2 ** 0.5 for kk in range(k)))
     for j in range(ny):
         for i in range(nx):
             # 堤内地の標高: 最寄りの河道セル(同じ路長位置近傍)の河床 + 3 m で近似

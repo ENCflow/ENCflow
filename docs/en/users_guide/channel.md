@@ -110,6 +110,10 @@ finer than the river width and move to a resolved channel.
   specify bank0 / fn_bank explicitly (the former automatic zero-height
   levee has been dropped: on natural banks whose hillslope is above the
   crest its weir overflow became a drop flow and diverged).
+- Where the channel reaches the domain edge, the free-outflow and
+  long-wave-radiation boundary faces are scaled to the channel width
+  (the boundary cannot drain the small storage of a narrow channel).
+  Inflow segments deliver the prescribed discharge as before.
 - Cells whose width is at or above the cell size are automatically
   treated the same as a conventional resolved channel (incision +
   wall) -- a single width dataset connects the thin upstream streams to
