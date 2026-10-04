@@ -72,7 +72,7 @@ contains
 module subroutine build_channel_frw(g)
   type(t_geoinfo), intent(in) :: g
   integer :: i, j, jlo, jhi, k, in, jn, ie, je
-  real :: nb, capd
+  real :: nb, capd, qb
 
   allocate(frw(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 1.0)
 
@@ -192,6 +192,10 @@ module subroutine build_channel_frw(g)
           if (i /= 1 .and. i /= g%nx .and. j /= 1 .and. j /= g%ny) cycle
           if (.not. is_channel(g, i, j)) cycle
           if (g%wrw(i,j) <= 0.0) cycle
+          ! 開面に共通の係数 q_b(流向への投影幅で正規化。合計流出 = W·u·h。
+          ! 2026-10-04 に面ごとの min(W/面長, 1) から変更: 軸終端で 1.24 W、
+          ! 対角終端で 0.88 W になり終端セルの水深が下がる/盛り上がった)
+          qb = qb_bound(g, i, j)
           do k = 1, 8
             in = i + din(k)
             jn = j + djn(k)
@@ -201,29 +205,72 @@ module subroutine build_channel_frw(g)
             ie = i + die(k)
             je = j + dje(k)
             if (je < dcp%jsh - 1 .or. je > dcp%jeh) cycle
-            frw(ke(k), ie, je) = min(g%wrw(i,j) / face_len(k), 1.0)
+            frw(ke(k), ie, je) = qb
           end do
         end do
       end do
     end if
   end if
-
-contains
-
-  ! 面 k の面長(幅キャップの分母。軸: 直交辺の長さ、斜め: 斜めの自然幅)
-  pure function face_len(kk) result(c)
-    integer, intent(in) :: kk
-    real :: c
-    select case (kk)
-      case (4, 5)
-        c = g%dy
-      case (2, 7)
-        c = g%dx
-      case default
-        c = capd
-    end select
-  end function
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 境界セルの開面に共通の幅係数 q_b = min(W / Wn, 1)(§68.26)
+!   Wn = Σ_open l8_k·max(n̂_k·d̂, 0) は開面(流入面を除く)の河道流向 d̂ への
+!   投影幅(軸河道の終端で dx、対角河道で dx·dy/dr = 斜めの自然幅)。d̂ は
+!   河道マスク上の河道近傍セルから自セルへ向かうベクトルの和(終端セルでは
+!   上流側近傍 1 つ = 流下方向)。河道近傍がない孤立セルは辺の外向き法線。
+!   開面すべてに同じ q_b を与えると、流向 d̂ の流れに対する合計流出が
+!   ちょうど W·u·h になる(ENC の配分 Σ l8·n̂ が自然幅になる性質)。
+!   静的(マスク幾何のみ)なので cwx との整合が保てる。build_cw / cw_cell
+!   も同じ値を使う
+!----------------------------------------------------------------------
+function qb_bound(g, i, j) result(q)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i, j
+  real :: q
+  integer :: k, in, jn
+  real :: ux, uy, vn, wn
+  q = 1.0
+  ux = 0.0
+  uy = 0.0
+  do k = 1, 8
+    in = i + din(k)
+    jn = j + djn(k)
+    if (in < 1 .or. in > g%nx .or. jn < 1 .or. jn > g%ny) cycle
+    if (is_channel(g, in, jn)) then
+      ux = ux - real(din(k)) * g%dx
+      uy = uy - real(djn(k)) * g%dy
+    end if
+  end do
+  vn = sqrt(ux**2 + uy**2)
+  if (vn > 0.0) then
+    ux = ux / vn
+    uy = uy / vn
+  else
+    ! 河道近傍なし(孤立セル)または対称: 辺の外向き法線(角は合成)
+    ux = 0.0
+    uy = 0.0
+    if (i == 1) ux = -1.0
+    if (i == g%nx) ux = 1.0
+    if (j == 1) uy = -1.0
+    if (j == g%ny) uy = 1.0
+    vn = sqrt(ux**2 + uy**2)
+    if (vn <= 0.0) return
+    ux = ux / vn
+    uy = uy / vn
+  end if
+  wn = 0.0
+  do k = 1, 8
+    in = i + din(k)
+    jn = j + djn(k)
+    if (in >= 1 .and. in <= g%nx .and. jn >= 1 .and. jn <= g%ny) cycle
+    if (.not. bc_open_face(in, jn)) cycle
+    if (bc_inflow_face(in, jn)) cycle
+    wn = wn + l8(k) * max(n8x(k) * ux + n8y(k) * uy, 0.0)
+  end do
+  if (wn > 0.0) q = min(g%wrw(i,j) / wn, 1.0)
+end function
 
 
 !----------------------------------------------------------------------
@@ -716,7 +763,7 @@ subroutine build_cw(g, capd)
           if (bc_inflow_face(in, jn)) then
             q = 1.0                         ! 流入面は係数なし(frw も 1)
           else
-            q = min(g%wrw(ic,jc) / cap8(k), 1.0)
+            q = qb_bound(g, ic, jc)         ! 境界面の frw と同じ係数
           end if
         else
           if (g%x(in,jn) <= 0) cycle        ! 無効セル(x 番兵)
@@ -816,7 +863,7 @@ module subroutine cw_cell(g, i, j, sig, cx, cy)
       if (bc_inflow_face(in, jn)) then
         q = 1.0
       else
-        q = min(g%wrw(i,j) / cap8(k), 1.0)
+        q = qb_bound(g, i, j)               ! 境界面の frw と同じ係数
       end if
     else
       if (g%x(in,jn) <= 0) cycle
