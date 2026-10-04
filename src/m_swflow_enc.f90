@@ -8,7 +8,7 @@ module m_swflow_enc
   use list_channel, only : t_list_channel, list_channel_read
   use m_parallel, only : par_info, par_stop, dcp, is_root, &
                        par_halo_cell, par_halo_edge, par_edge_merge, &
-                       par_gather_edge_to, par_scatter_edge
+                       par_gather_edge_to, par_scatter_edge, par_allreduce_sumi
   use m_sysdep_util, only : sysdep_mkdir
   use m_fileio, only : fileio_write_rle, fileio_read_rle
   use m_util, only : itoa
@@ -193,6 +193,7 @@ module m_swflow_enc
   !   (リスタートでは復元した h から再構築 → restore_uvmn の u,v,m,n は
   !   保存時の値と最終桁で異なりうる。§68.14)
   logical :: have_fwd = .false.             ! 動的振り替えが有効か
+  logical :: fwd_restored = .false.         ! 保存状態から fwd を復元したか(restore_state が設定)
   real, allocatable :: fwd(:,:,:)           ! 動的通過幅係数 (1:4, 0:nx, jsh-1:jeh)
   ! 破堤(developer.md §18。構築・更新は submodule m_swflow_enc_channel)
   !   サイト=セル対 (ic,jc)-(il,jl) で一意に決まるエッジ。実効天端を
@@ -837,6 +838,7 @@ subroutine m_swflow_enc_dispose(p)
   if (allocated(frw)) deallocate(frw)
   if (allocated(fwd)) deallocate(fwd)
   have_fwd = .false.
+  fwd_restored = .false.
   if (allocated(wfrac)) deallocate(wfrac)
   if (allocated(cwx)) deallocate(cwx)
   if (allocated(sdep)) deallocate(sdep)
@@ -1037,9 +1039,15 @@ subroutine init_enc_status(p, g, s, sx)
 
   if (p%f_state_restore > 0) then
     call restore_state(p, sx)
-    ! 動的振り替えの表は復元した h から作る(保存時はステップ頭の h^n で
-    ! 作っていたため u,v,m,n の再導出は最終桁で異なりうる。§68.14)
-    if (have_fwd) call build_fwd(p, g, s)
+    ! 動的振り替えの表は保存状態から復元する(最終ステップの連続式が使った
+    ! ステップ頭 h^n の表。これで u,v,m,n の再導出が保存時とビット一致する。
+    ! §68.14)。表なしで保存された状態からの復元は復元した h から作る
+    ! (再導出が最終桁で異なりうる旧挙動)
+    if (have_fwd .and. .not. fwd_restored) then
+      call build_fwd(p, g, s)
+      call par_info("swflow_enc: dynamic opening table rebuilt from the restored h " &
+                    //"(state saved without the table; u,v,m,n may differ in the last digit)")
+    end if
     call restore_uvmn(p, g, s, sx)
   end if
 
@@ -2341,8 +2349,8 @@ end subroutine
 subroutine save_state(p, sx)
   type(t_sysparam), intent(in) :: p
   type(t_enc_status), intent(in) :: sx
-  integer :: un
-  real, allocatable :: wuv(:,:,:), wmn(:,:,:)
+  integer :: un, ifwd
+  real, allocatable :: wuv(:,:,:), wmn(:,:,:), wfd(:,:,:)
   ! 全域バッファに集約してから rank0 のみが書く。
   ! バッファ形状・帯外ゼロとも旧形式(全域確保時)とバイト互換
   if (is_root) then
@@ -2354,6 +2362,19 @@ subroutine save_state(p, sx)
   end if
   call par_gather_edge_to(wuv, sx%uv)
   call par_gather_edge_to(wmn, sx%mn)
+  ! 動的振り替えの表 fwd(最終ステップの連続式が使ったステップ頭 h^n の表)。
+  ! 復元時の u,v,m,n 再導出をビット一致にするために保存する(§68.14。
+  ! 有効判定は namelist 由来で全ランク同一 = collective 安全)
+  ifwd = 0
+  if (have_fwd) then
+    ifwd = 1
+    if (is_root) then
+      allocate(wfd(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 1.0)
+    else
+      allocate(wfd(1, 1, 1), source = 1.0)
+    end if
+    call par_gather_edge_to(wfd, fwd)
+  end if
   if (.not. is_root) return
   ! swflow の dispose は m_state より先に走るため、save ディレクトリは
   ! ここでも作る(sysdep_mkdir は冪等・rank0 限定)
@@ -2362,6 +2383,9 @@ subroutine save_state(p, sx)
   ! ゼロ抑制 RLE で書く(乾燥エッジ・海域エッジのゼロを圧縮。§7)
   call fileio_write_rle(un, wuv)
   call fileio_write_rle(un, wmn)
+  ! 動的振り替えの表の有無(0/1)と表(2026-10-04 の形式。§7)
+  write(un) ifwd
+  if (ifwd == 1) call fileio_write_rle(un, wfd)
   close(un)
 end subroutine
 
@@ -2372,8 +2396,9 @@ end subroutine
 subroutine restore_state(p, sx)
   type(t_sysparam), intent(in) :: p
   type(t_enc_status), intent(inout) :: sx
-  integer :: un
-  real, allocatable :: wuv(:,:,:), wmn(:,:,:)
+  integer :: un, ios
+  integer :: nfl(1)
+  real, allocatable :: wuv(:,:,:), wmn(:,:,:), wfd(:,:,:)
   character(:), allocatable :: fname
   logical :: found
 
@@ -2391,13 +2416,17 @@ subroutine restore_state(p, sx)
   ! エッジ確保範囲(jsh-1:jeh)へ直接配布する(旧 Bcast 方式の置き換え。
   ! 非 root は全域一時を確保しない。全域一時が rank0 に残るのは
   ! RLE ストリームが先頭からの逐次展開のため。developer.md §7)
+  nfl(1) = 0
   if (is_root) then
     allocate(wuv(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
     allocate(wmn(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
     open(newunit=un, file=fname, form='unformatted', status='old')
     call fileio_read_rle(un, wuv)
     call fileio_read_rle(un, wmn)
-    close(un)
+    ! 動的振り替えの表の有無フラグ(2026-10-04 の形式。版検査済みのため
+    ! 欠如はないはずだが、読めなければ「なし」として復元した h から作る)
+    read(un, iostat=ios) nfl(1)
+    if (ios /= 0) nfl(1) = 0
   else
     allocate(wuv(1, 1, 1), source = 0.0)   ! 参照されないダミー
     allocate(wmn(1, 1, 1), source = 0.0)
@@ -2405,6 +2434,22 @@ subroutine restore_state(p, sx)
   call par_scatter_edge(wuv, sx%uv)
   call par_scatter_edge(wmn, sx%mn)
   sx%mn1(:,:,:) = sx%mn(:,:,:)   ! 書き込みバッファも正準状態で初期化する
+  ! フラグを全ランクで共有する(rank0 以外は 0 を持ち寄るので和 = フラグ)。
+  ! 表は復元側で動的振り替えが有効なときだけ読んで配布する(無効なら
+  ! 読まずに捨てる = ファイル末尾の余りは無害)
+  call par_allreduce_sumi(nfl)
+  fwd_restored = .false.
+  if (have_fwd .and. nfl(1) == 1) then
+    if (is_root) then
+      allocate(wfd(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 1.0)
+      call fileio_read_rle(un, wfd)
+    else
+      allocate(wfd(1, 1, 1), source = 1.0)
+    end if
+    call par_scatter_edge(wfd, fwd)
+    fwd_restored = .true.
+  end if
+  if (is_root) close(un)
 end subroutine
 
 
