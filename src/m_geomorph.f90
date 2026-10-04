@@ -36,8 +36,9 @@ module m_geomorph
   !   - STG(f_gridsystem=1)は非対応(init 時コピーのため z の時間発展に
   !     追従しない。init で par_stop)
   ! サブグリッド河道幅(fn_width)との併用(2026-08-07 対応):
-  !   掃流砂はエッジ流量に frw(水と同じ開口・幅キャップ)、Δz 換算に
-  !   1/wfrac(河道底のみ変動)を乗じる。浮遊砂は移流・E-D とも無修正で
+  !   掃流砂はエッジ流量に frw(水と同じ開口・幅キャップ)と動的振り替えの
+  !   表 fwd(§68.14。2026-10-04 反映)、Δz 換算に 1/wfrac(河道底のみ変動)を
+  !   乗じる。浮遊砂は移流・E-D とも無修正で
   !   整合(calc_suspend ヘッダ参照)。堤防(§17)エッジ=河道—非河道の
   !   境界では掃流砂を運ばない(掃流砂は河道内に閉じる。越流時の土砂は
   !   浮遊砂が壁込みの実フラックス mn1 で運ぶ)
@@ -499,7 +500,7 @@ subroutine m_geomorph_init(gm, p, g, s)
     gm%poroi = 1.0 / (1.0 - list%fluv_porosity)
     gm%sgrav = list%fluv_sgrav
     ! サブグリッド河道幅(fn_width)併用時の扱い(geomorph_plan.md §2.1):
-    !   掃流砂 = frw(水と同じ開口)× Δz の 1/wfrac(河道底のみ変動)。
+    !   掃流砂 = frw·fwd(水と同じ開口)× Δz の 1/wfrac(河道底のみ変動)。
     !   浮遊砂 = 移流が continuous のミラーで自動整合、E-D は hs・Δz とも
     !   河道断面あたりの量なので wfrac が相殺し無修正(calc_suspend 参照)。
     !   注意: gwflow 併用時の容量 sd*sy0 はセル全面の土層解釈のままで、

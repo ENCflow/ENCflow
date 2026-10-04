@@ -8,7 +8,7 @@
 !======================================================================
 submodule(m_geomorph) m_geomorph_fluvial
   use m_parallel, only : par_stop, dcp, par_halo_cell
-  use m_swflow_enc, only : have_width, have_frw, frw, wfrac, &
+  use m_swflow_enc, only : have_width, have_frw, frw, have_fwd, fwd, wfrac, &
                            have_open_bc, bc_open_face
   implicit none
 
@@ -163,8 +163,12 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                   qb = qbs * flv%qbcoef            ! 固体体積の単位幅流砂量 (m2/s)
                   ! 流向射影(|ue|/vve <= 1)× 通過幅でエッジ流量に
                   gq = qb * (ue / vve) * flv%wl(k)
-                  ! 通過幅係数(水と同じ開口・幅キャップ。無効時は乗算なし)
+                  ! 通過幅係数(水と同じ開口・幅キャップ。無効時は乗算なし)。
+                  ! 動的振り替えの表 fwd(§68.14)も水と同じく乗じる: geomorph は
+                  ! swflow の後に走り、fwd はこのステップの頭で作られて連続式が
+                  ! 使った表のまま(次ステップ頭で作り直される)
                   if (have_frw) gq = gq * frw(k, i+die(k), j+dje(k))
+                  if (have_fwd) gq = gq * fwd(k, i+die(k), j+dje(k))
                   ! 可動層クランプ: 供給側(風上)セルの土層厚を超える
                   ! 浸食をこのエッジ単独で起こさない(複数エッジの同時
                   ! 流出による僅かな超過はループ2の床クリップが受ける)。

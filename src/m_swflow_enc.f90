@@ -31,6 +31,7 @@ module m_swflow_enc
   public :: p_adv_upwind_index
   public :: n8x, n8y
   public :: have_width, have_frw, frw, wfrac   ! m_geomorph の掃流砂が読む(宣言部の注記参照)
+  public :: have_fwd, fwd                      ! 同上(動的振り替えの表。§68.14)
   ! sect_* は submodule(enc_bc の水位規定変換)も呼ぶ。private のままだと
   ! gfortran がシンボルを局所化しリンク不能(§22 の実バグと同型)
   public :: sect_v, sect_hinv, sect_sigma
