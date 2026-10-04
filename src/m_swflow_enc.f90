@@ -8,7 +8,8 @@ module m_swflow_enc
   use list_channel, only : t_list_channel, list_channel_read
   use m_parallel, only : par_info, par_stop, dcp, is_root, &
                        par_halo_cell, par_halo_edge, par_edge_merge, &
-                       par_gather_edge_to, par_scatter_edge, par_allreduce_sumi
+                       par_gather_edge_to, par_scatter_edge, par_allreduce_sumi, &
+                       par_gather_to, par_scatter_cell
   use m_sysdep_util, only : sysdep_mkdir
   use m_fileio, only : fileio_write_rle, fileio_read_rle
   use m_util, only : itoa
@@ -21,6 +22,7 @@ module m_swflow_enc
   public :: m_swflow_enc_init
   public :: m_swflow_enc_calc
   public :: m_swflow_enc_dispose
+  public :: sblk                      ! 塞がり率(submodule の build_cwd が参照。同下)
   public :: is_wall                   ! 堤防壁の述語(submodule から参照。private だと
                                       !   gfortran の LTO でシンボル未解決になるため公開)
   public :: m_swflow_enc_set_debris   ! 土石流抵抗則の設定口(m_geomorph の
@@ -224,6 +226,15 @@ module m_swflow_enc
   integer, allocatable :: ibr0(:), ibr1(:)  ! (jsh:jeh)
   integer, allocatable :: ibrs(:)           ! 行順に整列したサイト番号
 
+  ! 動的な通水率(壁なし幅モード = 幅 + 動的開口 fwd のとき。§68.32)。
+  ! 非河道近傍のエッジを塞がり率 s(sblk。fwd と同じ)の重み (1 − s) で開口和に
+  ! 入れる: 乾いて高い側方は壁と同値(除外)、湿った氾濫原は開いた面。静的
+  ! cwx は乾いた側方を q = 1 で数えて希釈され、W < 自然幅のセル流速が過小に
+  ! なっていた。ステップ頭に fwd と一緒に構築し、リスタート状態にも保存する
+  ! (最終ステップの正規化が使った表を restore_uvmn が再現する条件)
+  logical :: have_cwd = .false.
+  logical :: cwd_restored = .false.
+  real, allocatable :: cwxd(:,:), cwyd(:,:)   ! (1:nx, jsh:jeh)。使うのは js:je
   real, allocatable :: cwx(:,:), cwy(:,:)   ! セルの方向別通水率 (1:nx, js:je)。
                                             !   幅キャップによるセル開口の減衰率
                                             !   (キャップ後/キャップ前の開口和の比)。
@@ -410,6 +421,10 @@ module m_swflow_enc
     end subroutine
     ! セル方向別通水率をスケール sig 付きで計算する(§26。sig=1 が静的
     ! cwx/cwy と厳密同値になるよう build_channel_frw と実装を共有)
+    module subroutine build_cwd(g, s)
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+    end subroutine
     module subroutine cw_cell(g, i, j, sig, cx, cy)
       type(t_geoinfo), intent(in) :: g
       integer, intent(in) :: i, j
@@ -592,6 +607,11 @@ subroutine m_swflow_enc_init(p, g, b, s)
   end if
   if (have_fwd) then
     allocate(fwd(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 1.0)
+    if (have_width) then
+      have_cwd = .true.
+      allocate(cwxd(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
+      allocate(cwyd(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
+    end if
     call par_info("swflow: dynamic opening reassignment enabled (f_opening_dynamic=" &
                   //itoa(f_opening_dynamic)//")")
   end if
@@ -736,6 +756,7 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 塞がれた開口の動的振り替え表をステップ頭の h, z(ハロ交換済み)から
   ! 構築する(§68.14。無効時は呼ばない=ゼロ追加)
   if (have_fwd) call build_fwd(p, g, s)
+  if (have_cwd) call build_cwd(g, s)
 
   ! 移流項を計算する
   call adv_prepare(p, g, s, sx_mod)
@@ -854,6 +875,10 @@ subroutine m_swflow_enc_dispose(p)
   if (allocated(fwd)) deallocate(fwd)
   have_fwd = .false.
   fwd_restored = .false.
+  if (allocated(cwxd)) deallocate(cwxd)
+  if (allocated(cwyd)) deallocate(cwyd)
+  have_cwd = .false.
+  cwd_restored = .false.
   if (allocated(wfrac)) deallocate(wfrac)
   if (allocated(cwx)) deallocate(cwx)
   if (allocated(sdep)) deallocate(sdep)
@@ -1063,6 +1088,11 @@ subroutine init_enc_status(p, g, s, sx)
       call build_fwd(p, g, s)
       call par_info("swflow_enc: dynamic opening table rebuilt from the restored h " &
                     //"(state saved without the table; u,v,m,n may differ in the last digit)")
+    end if
+    if (have_cwd .and. .not. cwd_restored) then
+      call build_cwd(g, s)
+      call par_info("swflow_enc: dynamic conveyance ratio rebuilt from the restored h " &
+                    //"(state saved without it; u,v may differ in the last digit)")
     end if
     call restore_uvmn(p, g, s, sx)
   end if
@@ -1904,8 +1934,13 @@ subroutine continuous(p, g, s, sx)
       ! (u,v と h の時刻整合、かつ restore_uvmn が保存 h から厳密に
       ! 再現できる条件。§26)
       if (have_width .and. .not. have_sect) then
-        s%u(i,j) = s%u(i,j) / cwx(i,j)
-        s%v(i,j) = s%v(i,j) / cwy(i,j)
+        if (have_cwd) then
+          s%u(i,j) = s%u(i,j) / cwxd(i,j)
+          s%v(i,j) = s%v(i,j) / cwyd(i,j)
+        else
+          s%u(i,j) = s%u(i,j) / cwx(i,j)
+          s%v(i,j) = s%v(i,j) / cwy(i,j)
+        end if
       end if
     end do
   end do
@@ -2355,7 +2390,10 @@ subroutine restore_uvmn(p, g, s, sx)
       ! 確定水深 h(n+1) の σ で行う。保存された s%h は最終ステップの
       ! h(n+1) なので、ここでの σ(s%h) 再評価は保存時の正規化と厳密に
       ! 同一の式・同一の引数になる(§26)
-      if (have_width) then
+      if (have_width .and. have_cwd) then
+        s%u(i,j) = s%u(i,j) / cwxd(i,j)
+        s%v(i,j) = s%v(i,j) / cwyd(i,j)
+      else if (have_width) then
         if (have_sect) then
           if (sdep(i,j) > 0.0) then
             ! 2026-10-04(§68.28): 面流束を断面積ベース u·vh にしたため、
@@ -2389,8 +2427,8 @@ end subroutine
 subroutine save_state(p, sx)
   type(t_sysparam), intent(in) :: p
   type(t_enc_status), intent(in) :: sx
-  integer :: un, ifwd
-  real, allocatable :: wuv(:,:,:), wmn(:,:,:), wfd(:,:,:)
+  integer :: un, ifwd, icw
+  real, allocatable :: wuv(:,:,:), wmn(:,:,:), wfd(:,:,:), wcx(:,:), wcy(:,:)
   ! 全域バッファに集約してから rank0 のみが書く。
   ! バッファ形状・帯外ゼロとも旧形式(全域確保時)とバイト互換
   if (is_root) then
@@ -2415,6 +2453,19 @@ subroutine save_state(p, sx)
     end if
     call par_gather_edge_to(wfd, fwd)
   end if
+  icw = 0
+  if (have_cwd) then
+    icw = 1
+    if (is_root) then
+      allocate(wcx(1:dcp%nx_g, 1:dcp%ny_g), source = 1.0)
+      allocate(wcy(1:dcp%nx_g, 1:dcp%ny_g), source = 1.0)
+    else
+      allocate(wcx(1, 1), source = 1.0)
+      allocate(wcy(1, 1), source = 1.0)
+    end if
+    call par_gather_to(wcx, cwxd)
+    call par_gather_to(wcy, cwyd)
+  end if
   if (.not. is_root) return
   ! swflow の dispose は m_state より先に走るため、save ディレクトリは
   ! ここでも作る(sysdep_mkdir は冪等・rank0 限定)
@@ -2426,6 +2477,12 @@ subroutine save_state(p, sx)
   ! 動的振り替えの表の有無(0/1)と表(2026-10-04 の形式。§7)
   write(un) ifwd
   if (ifwd == 1) call fileio_write_rle(un, wfd)
+  ! 動的通水率 cwxd/cwyd の有無(0/1)と表(§68.32。2026-10-04b の形式)
+  write(un) icw
+  if (icw == 1) then
+    call fileio_write_rle(un, wcx)
+    call fileio_write_rle(un, wcy)
+  end if
   close(un)
 end subroutine
 
@@ -2437,8 +2494,8 @@ subroutine restore_state(p, sx)
   type(t_sysparam), intent(in) :: p
   type(t_enc_status), intent(inout) :: sx
   integer :: un, ios
-  integer :: nfl(1)
-  real, allocatable :: wuv(:,:,:), wmn(:,:,:), wfd(:,:,:)
+  integer :: nfl(1), ncw(1)
+  real, allocatable :: wuv(:,:,:), wmn(:,:,:), wfd(:,:,:), wcx(:,:), wcy(:,:)
   character(:), allocatable :: fname
   logical :: found
 
@@ -2489,6 +2546,34 @@ subroutine restore_state(p, sx)
     call par_scatter_edge(wfd, fwd)
     fwd_restored = .true.
   end if
+  ! 動的通水率(§68.32)。fwd と同じ手順(rank0 が読み、フラグを和で共有、
+  ! 有効時だけ配布)。fwd の表がファイルにあって復元側で無効なら読み飛ばす
+  ! ために、フラグの前に表を読まずに済むよう順序は fwd → cw
+  ncw(1) = 0
+  if (is_root) then
+    if (nfl(1) == 1 .and. .not. have_fwd) then
+      allocate(wfd(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 1.0)
+      call fileio_read_rle(un, wfd)       ! 読み飛ばし
+    end if
+    read(un, iostat=ios) ncw(1)
+    if (ios /= 0) ncw(1) = 0
+  end if
+  call par_allreduce_sumi(ncw)
+  cwd_restored = .false.
+  if (have_cwd .and. ncw(1) == 1) then
+    if (is_root) then
+      allocate(wcx(1:dcp%nx_g, 1:dcp%ny_g), source = 1.0)
+      allocate(wcy(1:dcp%nx_g, 1:dcp%ny_g), source = 1.0)
+      call fileio_read_rle(un, wcx)
+      call fileio_read_rle(un, wcy)
+    else
+      allocate(wcx(1, 1), source = 1.0)
+      allocate(wcy(1, 1), source = 1.0)
+    end if
+    call par_scatter_cell(wcx, cwxd)
+    call par_scatter_cell(wcy, cwyd)
+    cwd_restored = .true.
+  end if
   if (is_root) close(un)
 end subroutine
 
@@ -2529,7 +2614,10 @@ subroutine m_swflow_enc_post(p, g, s)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
       if (g%x(i,j) <= 0) cycle
-      if (sdep(i,j) > 0.0) then
+      if (have_cwd) then
+        cxv = cwxd(i,j)
+        cyv = cwyd(i,j)
+      else if (sdep(i,j) > 0.0) then
         call cw_cell(g, i, j, sect_sigma(s%h(i,j), sdep(i,j)), cxv, cyv)
       else
         cxv = cwx(i,j)

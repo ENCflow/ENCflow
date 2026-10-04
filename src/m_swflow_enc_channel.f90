@@ -141,9 +141,10 @@ module subroutine build_channel_frw(g)
     ! 和から除外する(含めると比が 1 に希釈され正規化が失われる)
     call build_cw(g, capd)
 
-    ! σ 有効時はキャップ前の frw を保存する(cw_cell の h 依存再評価が
-    ! build_cw と同じ分母・分子を再構成するため。§26)
-    if (have_sect) then
+    ! σ 有効時と動的通水率(壁なし幅モード。§68.32)はキャップ前の frw を
+    ! 保存する(cw_cell / build_cwd が build_cw と同じ分母・分子を再構成する
+    ! ため。§26)
+    if (have_sect .or. have_cwd) then
       allocate(frw0, source = frw)
     end if
 
@@ -891,6 +892,76 @@ subroutine build_cw(g, capd)
   end do
 end subroutine
 
+
+
+!----------------------------------------------------------------------
+! 動的な通水率 cwxd/cwyd(§68.32。壁なし幅モード = 幅 + 動的開口)。
+!   build_cw と同じ巡回・同じ式で、非河道の近傍エッジに塞がり率 s(sblk。
+!   fwd と同じ定義)の重み (1 − s) を掛けて開口和に入れる。壁エッジは除外
+!   (build_cw と同じ)。重みが 1 のエッジ(河道—河道、開いた辺境界)と
+!   除外エッジだけのセルでは静的 cwx とビット同値(1.0 の乗算と 0 の加算)。
+!   ステップ頭(h, z はハロ交換済み)に自帯セルについて構築する
+!----------------------------------------------------------------------
+module subroutine build_cwd(g, s)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer :: ic, jc, k, in, jn
+  real :: f0, q, wgt, sx_, sy_
+  real :: numx, denx, numy, deny
+  real :: cap8(1:8)
+
+  !$omp parallel do schedule(dynamic) private(ic, jc, k, in, jn, f0, q, wgt, sx_, sy_, numx, denx, numy, deny, cap8)
+  do jc = dcp%js, dcp%je
+    do ic = 1, g%nx
+      if (.not. is_channel(g, ic, jc)) cycle
+      if (g%wrw(ic,jc) <= 0.0) cycle
+      cap8(1:8) = g%dx * g%dy / max(lch_cell(g, ic, jc), min(g%dx, g%dy))
+      numx = 0.0
+      denx = 0.0
+      numy = 0.0
+      deny = 0.0
+      do k = 1, 8
+        in = ic + din(k)
+        jn = jc + djn(k)
+        wgt = 1.0
+        if (in < 1 .or. in > g%nx .or. jn < 1 .or. jn > g%ny) then
+          if (.not. have_open_bc) cycle
+          if (.not. bc_open_face(in, jn)) cycle
+          f0 = 1.0
+          if (bc_inflow_face(in, jn)) then
+            q = 1.0
+          else
+            q = qb_bound(g, ic, jc)
+          end if
+        else
+          if (g%x(in,jn) <= 0) cycle
+          if (g%bank_active) then
+            if (g%sw(in,jn) == 0 .and. g%rw(in,jn) <= 0 .and. &
+                is_wall(g%zbank(ic,jc), g%z(ic,jc), g%z(in,jn))) cycle
+          end if
+          f0 = frw0(ke(k), ic+die(k), jc+dje(k))   ! キャップ前(build_cw と同じ)
+          if (is_channel(g, in, jn)) then
+            q = wcap(g, ic, jc, in, jn, cap8(k))
+          else
+            q = 1.0
+            wgt = 1.0 - sblk(g, s, ic, jc, in, jn)   ! 乾いて高い側方 = 0、開いた氾濫原 = 1
+          end if
+        end if
+        sx_ = l8y(k) / 2
+        sy_ = l8x(k) / 2
+        numx = numx + sx_ * f0 * q * wgt
+        denx = denx + sx_ * f0 * wgt
+        numy = numy + sy_ * f0 * q * wgt
+        deny = deny + sy_ * f0 * wgt
+      end do
+      cwxd(ic,jc) = 1.0
+      cwyd(ic,jc) = 1.0
+      if (denx > 0.0) cwxd(ic,jc) = numx / denx
+      if (deny > 0.0) cwyd(ic,jc) = numy / deny
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
 
 !----------------------------------------------------------------------
 ! 幅キャップ係数 q = min(W_e / cap, 1)。W_e は両セルの正の幅の最小値。
