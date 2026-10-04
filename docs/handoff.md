@@ -36,6 +36,19 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 未完了・検証待ち
 
+00a. **古い回帰基準(2026-10-04 発見。人間の目視確認のうえ -u で更新)**:
+   test/kdpart・tide・coastal_drain・gwseep・damwq の reference(2026-08-28
+   作成)が現行で FAIL する。kdpart・tide は 10-03 の既定昇格(スキーム 3・
+   動的開口・乾燥頭打ち)が原因で、旧既定(f_advection_scheme=1、
+   f_opening_dynamic=0、f_dry_head_cap=0)を明示すると現行バイナリで基準に
+   一致(Runge 列以外。kdpart は wq.csv も)。coastal_drain・gwseep・damwq は
+   10-04 の作業開始時点のバイナリと現行が一致(Runge 列以外)しており、
+   10-04 の変更が原因ではない(10-01〜03 の既定値追加・既定昇格のいずれか)。
+   kdpart の閉合・単調検定は現行で PASS。conduit・frost・pump・splash・salt・
+   sewer_wq・wave・dambreak・chichibu は PASS。dambreak は Runge 列のみ
+   ビルド差(-O2 厳密数学で一致)。
+
+
 00. **移流項の改良(developer.md §68。2026-10-01 段 0〜2 完了)**
    - 段 0: test/dambreak(Stoker 解析解。幅 400 m)。段 1: 旧 TVD 分岐の
      限定器修正(効果は限定的)。段 2: f_advection_scheme=2,3(運動量保存形
