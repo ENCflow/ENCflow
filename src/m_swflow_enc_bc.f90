@@ -598,10 +598,67 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
   integer, intent(in) :: sd
   integer :: m, k, in, jn, ie, je
   real :: h, hv, un, uc, eta_r, uve1, mne1, dh, cor
+  real :: spd, dx_, dy_, wn, uch, wsum, ex, ey, cs
+  logical :: chan
 
   if (g%x(i,j) <= 0) return
   if (g%sw(i,j) > 0) return    ! 海セルは continuous が更新しないため対象外
   h = s%h(i,j)
+
+  ! 自由流出の流向 d̂ と、面に立てる速度の元(§68.30):
+  !  - 幅河道の境界セル(幅情報あり): d̂ は河道マスクの流向(chan_dir。
+  !    qb_bound と同じ)、速度は上流側の河道エッジの流速 u_ch(d̂ への射影
+  !    重み平均)。出口合計 = max(u_ch, uc)·h·W で一様流が不動点になる。
+  !    再構成したセル流速を使うと、終端セルの流速が開面側へ回転して流向に
+  !    垂直な面にも流出が立ち、最終セルの水深が下がる(自己強化)
+  !  - それ以外: d̂ はセル流速の向き(静止水は辺の外向き法線 = kf の軸面)。
+  !    段落ち速度 uc を d̂ 向きのベクトルとして各面の法線に射影する
+  chan = .false.
+  uch = 0.0
+  if (have_width .and. g%rw(i,j) > 0) then
+    if (g%wrw(i,j) > 0.0) chan = chan_dir(g, i, j, dx_, dy_)
+  end if
+  if (chan) then
+    wsum = 0.0
+    do k = 1, 8
+      in = i + din(k)
+      jn = j + djn(k)
+      if (in < 1 .or. in > dcp%nx_g .or. jn < 1 .or. jn > dcp%ny_g) cycle
+      if (g%x(in,jn) <= 0 .or. g%sw(in,jn) > 0 .or. g%rw(in,jn) <= 0) cycle
+      ex = -n8x(k)                        ! 近傍 → 自セルの向き
+      ey = -n8y(k)
+      cs = ex * dx_ + ey * dy_
+      if (cs <= 0.0) cycle                ! 上流側(流向に沿う近傍)だけ
+      ie = i + die(k)
+      je = j + dje(k)
+      if (je < dcp%jsh - 1 .or. je > dcp%jeh) cycle
+      ! エッジ流速(自セル → 近傍が正)の逆符号 = 近傍から自セルへの流速
+      uch = uch - sign_e(k) * sx%uv(ke(k), ie, je) * cs
+      wsum = wsum + cs
+    end do
+    if (wsum > 0.0) then
+      uch = uch / wsum
+    else
+      chan = .false.
+    end if
+  end if
+  if (.not. chan) then
+    spd = sqrt(s%u(i,j)**2 + s%v(i,j)**2)
+    if (spd > 0.0) then
+      dx_ = s%u(i,j) / spd
+      dy_ = s%v(i,j) / spd
+    else
+      dx_ = 0.0
+      dy_ = 0.0
+      do m = 1, 3
+        k = kf(m)
+        if (din(k) == 0 .or. djn(k) == 0) then
+          dx_ = n8x(k)
+          dy_ = n8y(k)
+        end if
+      end do
+    end if
+  end if
 
 
   do m = 1, 3
@@ -623,9 +680,20 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
         ! (段落ち式が射流を絞って堰き止めるのを防ぐ)、滞留水は
         ! 段落ち(自由越流。rivermouth_drop と同式)で抜く。
         ! max により流入は起きない(uc > 0)
-        un = s%u(i,j) * n8x(k) + s%v(i,j) * n8y(k)   ! セル流速の面法線成分
+        ! 段落ち速度 uc は流向 d̂ のベクトル uc·d̂ として面法線に射影する
+        ! (max(n̂·d̂, 0)。流向に垂直・逆向きの面には段落ちを立てない)。
+        ! ENC の配分 Σ l8·n̂ = dx により 3 面の合計が uc·h·dx(自然幅)になる
+        ! (以前は 3 面すべてに uc を置き、軸方向の静止水で 1.24 dx、対角
+        ! 河道の終端では流向に垂直な面の段落ちで最終セルの水深が下がって
+        ! いた。§68.26 追補・§68.30)
         uc = ((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)  ! 段落ち速度
-        uve1 = max(un, uc)
+        wn = max(n8x(k) * dx_ + n8y(k) * dy_, 0.0)
+        if (chan) then
+          uve1 = max(uch, uc) * wn               ! 幅河道の終端: 河道流速の射影
+        else
+          un = s%u(i,j) * n8x(k) + s%v(i,j) * n8y(k)   ! セル流速の面法線成分
+          uve1 = max(un, uc * wn)
+        end if
         mne1 = uve1 * h
         if (have_sect) mne1 = uve1 * sect_v(h, sdep(i,j))   ! 断面積ベース(§68.28)
       case default   ! e_bc_radiation

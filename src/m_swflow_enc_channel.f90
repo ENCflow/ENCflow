@@ -225,13 +225,20 @@ end subroutine
 !   静的(マスク幾何のみ)なので cwx との整合が保てる。build_cw / cw_cell
 !   も同じ値を使う
 !----------------------------------------------------------------------
-function qb_bound(g, i, j) result(q)
+!----------------------------------------------------------------------
+! 境界河道セルの流向 d̂(河道マスク上の河道近傍から自セルへのベクトル和の
+! 向き。終端セルでは上流側近傍 = 流下方向)。近傍なし・対称なら辺の
+! 外向き法線(角は合成)。それも無ければ偽。qb_bound と put_bc_faces
+! (幅河道の終端セルの出口流束。§68.30)が同じ d̂ を使う
+!----------------------------------------------------------------------
+module function chan_dir(g, i, j, ux, uy) result(ok)
   type(t_geoinfo), intent(in) :: g
   integer, intent(in) :: i, j
-  real :: q
+  real, intent(out) :: ux, uy
+  logical :: ok
   integer :: k, in, jn
-  real :: ux, uy, vn, wn
-  q = 1.0
+  real :: vn
+  ok = .true.
   ux = 0.0
   uy = 0.0
   do k = 1, 8
@@ -256,10 +263,24 @@ function qb_bound(g, i, j) result(q)
     if (j == 1) uy = -1.0
     if (j == g%ny) uy = 1.0
     vn = sqrt(ux**2 + uy**2)
-    if (vn <= 0.0) return
+    if (vn <= 0.0) then
+      ok = .false.
+      return
+    end if
     ux = ux / vn
     uy = uy / vn
   end if
+end function
+
+
+function qb_bound(g, i, j) result(q)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i, j
+  real :: q
+  integer :: k, in, jn
+  real :: ux, uy, wn
+  q = 1.0
+  if (.not. chan_dir(g, i, j, ux, uy)) return
   wn = 0.0
   do k = 1, 8
     in = i + din(k)

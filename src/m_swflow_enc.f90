@@ -434,6 +434,12 @@ module m_swflow_enc
     module subroutine bank_init(g)
       type(t_geoinfo), intent(in) :: g
     end subroutine
+    module function chan_dir(g, i, j, ux, uy) result(ok)
+      type(t_geoinfo), intent(in) :: g
+      integer, intent(in) :: i, j
+      real, intent(out) :: ux, uy
+      logical :: ok
+    end function
     module function bank_edge(g, s, i, j, in, jn) result(res)
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(in) :: s
