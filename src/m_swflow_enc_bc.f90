@@ -598,12 +598,23 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
   integer, intent(in) :: sd
   integer :: m, k, in, jn, ie, je
   real :: h, hv, un, uc, eta_r, uve1, mne1, dh, cor
-  real :: spd, dx_, dy_, wn, uch, wsum, ex, ey, cs
+  real :: spd, dx_, dy_, wn, uch, wsum, ex, ey, cs, nsx, nsy, rx, ry
   logical :: chan
 
   if (g%x(i,j) <= 0) return
   if (g%sw(i,j) > 0) return    ! 海セルは continuous が更新しないため対象外
   h = s%h(i,j)
+
+  ! 辺の外向き法線(kf の軸面の法線)
+  nsx = 0.0
+  nsy = 0.0
+  do m = 1, 3
+    k = kf(m)
+    if (din(k) == 0 .or. djn(k) == 0) then
+      nsx = n8x(k)
+      nsy = n8y(k)
+    end if
+  end do
 
   ! 自由流出の流向 d̂ と、面に立てる速度の元(§68.30):
   !  - 幅河道の境界セル(幅情報あり): d̂ は河道マスクの流向(chan_dir。
@@ -648,16 +659,19 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
       dx_ = s%u(i,j) / spd
       dy_ = s%v(i,j) / spd
     else
-      dx_ = 0.0
-      dy_ = 0.0
-      do m = 1, 3
-        k = kf(m)
-        if (din(k) == 0 .or. djn(k) == 0) then
-          dx_ = n8x(k)
-          dy_ = n8y(k)
-        end if
-      end do
+      dx_ = nsx
+      dy_ = nsy
     end if
+  end if
+  ! 長波放射の向き: 辺の外向き法線(幅河道の境界セルは q_b と同じ河道の
+  ! 流向 d̂)。3 面に同じ値を置くと自然幅の 1.24 倍で透過するため、自由
+  ! 流出と同じく法線に射影する(§68.30)
+  if (chan) then
+    rx = dx_
+    ry = dy_
+  else
+    rx = nsx
+    ry = nsy
   end if
 
 
@@ -706,7 +720,8 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
         else
           eta_r = bc_eta_cell(i, sd)
         end if
-        uve1 = sqrt(p%gg / max(h, p%dv)) * (s%z(i,j) + h - eta_r)
+        wn = max(n8x(k) * rx + n8y(k) * ry, 0.0)
+        uve1 = sqrt(p%gg / max(h, p%dv)) * (s%z(i,j) + h - eta_r) * wn
         mne1 = uve1 * h
         if (have_sect) mne1 = uve1 * sect_v(h, sdep(i,j))   ! 断面積ベース(§68.28)
       end select
