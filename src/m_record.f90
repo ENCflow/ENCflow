@@ -41,6 +41,7 @@ module m_record
   use m_sysdep_util, only : sysdep_mkdir
   use list_record, only : t_list_record, list_record_read
   use m_parallel, only : is_root, par_info, par_abort, dcp, par_reduce_points
+  use m_swflow_enc, only : have_edge_flux, m_swflow_enc_edge_flux   ! 観測口(§24.1/§24.2)
   implicit none
   private
 
@@ -754,7 +755,10 @@ subroutine m_record_flux(r, p, s)
   integer :: i, k, ix, iy
   real :: q, lq
   real :: hmax, vmax, b
-  real, allocatable :: wk(:,:)   ! 点集約バッファ: (5, ncell) = m, n, h, |V|, C(mg/L)
+  real :: sgn
+  real, allocatable :: wk(:,:)   ! 点集約バッファ: (9, ncell) = m, n, h, |V|, C(mg/L),
+                                 !   エッジ流量方式(§24.2)の階段横断流量 (A 側セル
+                                 !   e=1, 2)、同 負荷流量 (e=1, 2)
   character(len=10) :: ffmt
   character(len=80) :: afmt
   type(t_flux) :: flx
@@ -768,7 +772,7 @@ subroutine m_record_flux(r, p, s)
     ncell = flx%ncell
 
     ! --- 全ランク: 測線上の所有セルの値を詰めて rank0 に点集約(collective) ---
-    allocate(wk(5, ncell), source = 0.0)
+    allocate(wk(9, ncell), source = 0.0)
     do i = 1, ncell
       ix = flx%ixy(1,i)
       iy = flx%ixy(2,i)
@@ -780,6 +784,8 @@ subroutine m_record_flux(r, p, s)
         if (s%wq_active) wk(5,i) = s%cqc(ix,iy)
       end if
     end do
+    ! ENC: 階段面を横切るエッジ流量の符号付き和(§24.2。全ランクで同じ判定)
+    if (flx%mode == 0 .and. have_edge_flux) call flux_edges(flx, s, wk)
     call par_reduce_points(wk)
 
     ! --- 以下は従来の逐次ロジック(セル値の参照だけ wk 経由) ---
@@ -796,7 +802,23 @@ subroutine m_record_flux(r, p, s)
     hmax = 0.0
     vmax = 0.0
     b = 0.
-    if (flx%mode == 1) then
+    if (flx%mode == 0 .and. have_edge_flux) then
+      ! エッジ流量方式(§24.2): A 側(踏面セルとその短手負側)から B 側
+      ! (短手正側)へ向かうエッジ流量の和。符号は踏面係数 ct と同じ規約
+      ! (x 長手: +y 向きが sign(Δx)、y 長手: +x 向きが −sign(Δy))。
+      ! 各要素は所有ランクただ 1 つが値を持ち、rank0 が固定順で足す
+      if (flx%major == 1) then
+        sgn = real(sign(1, flx%ixy0(3) - flx%ixy0(1)))
+      else
+        sgn = -real(sign(1, flx%ixy0(4) - flx%ixy0(2)))
+      end if
+      do i = 1, ncell
+        q = q + sgn * (wk(6,i) + wk(7,i))
+        lq = lq + sgn * (wk(8,i) + wk(9,i))
+        hmax = max(wk(3,i), hmax)
+        vmax = max(wk(4,i), vmax)
+      end do
+    else if (flx%mode == 1) then
       ! 実座標指定(§36): セル内線分成分の係数 am, an で積算
       do i = 1, ncell
         q = q + flx%am(i) * wk(1,i) + flx%an(i) * wk(2,i)
@@ -858,6 +880,77 @@ subroutine m_record_flux(r, p, s)
       r%flux(ifl)%hmax = hmax
     end if
   end do
+
+
+contains
+
+  !--------------------------------------------------------------------
+  ! エッジ流量方式(§24.2): 階段面を横切る 8 方向エッジの流量を、A 側
+  ! セルの所有ランクが集計する。階段面は踏面セル列の短手正側の面
+  ! (踏面セル=A 側、短手番号がそれより大きい側=B 側。長手の範囲は
+  ! 踏面列の範囲)。A 側で B 側に接し得るのは各踏面セル (e=1) と、その
+  ! 短手負側の隣 (e=2。隣の列の踏面が 1 段手前のとき斜めで接する)だけ
+  ! (DDA の段差は ±1 以下)。e=1,2 を別要素に置くのは、x 長手で 2 行が
+  ! 別ランクの所有になり得るため(1 要素 1 所有ランクの集約規約)。
+  ! 負荷は水フラックス×送り出し側(A 側)セル濃度(従来と同じ近似)
+  !--------------------------------------------------------------------
+  subroutine flux_edges(flx, s, wk)
+    type(t_flux), intent(in) :: flx
+    type(t_state), intent(in) :: s
+    real, intent(inout) :: wk(:,:)
+    integer :: c, e, ia, ja, in, jn, di, dj
+    real :: qe, cc
+    do c = 1, flx%ncell
+      do e = 1, 2
+        ia = flx%ixy(1,c)
+        ja = flx%ixy(2,c)
+        if (e == 2) then
+          if (flx%major == 1) then
+            ja = ja - 1
+          else
+            ia = ia - 1
+          end if
+        end if
+        if (ja < dcp%js .or. ja > dcp%je) cycle   ! 所有行だけ(ハロは読まない)
+        if (ia < 1) cycle                         ! 枠外の列(B 側に接しない)
+        cc = 0.0
+        if (s%wq_active) cc = s%cqc(ia,ja)
+        do dj = -1, 1
+          do di = -1, 1
+            if (di == 0 .and. dj == 0) cycle
+            in = ia + di
+            jn = ja + dj
+            if (side(flx, in, jn) /= 1) cycle     ! B 側の近傍だけ
+            qe = m_swflow_enc_edge_flux(ia, ja, in, jn)
+            wk(5+e,c) = wk(5+e,c) + qe
+            wk(7+e,c) = wk(7+e,c) + qe * cc
+          end do
+        end do
+      end do
+    end do
+  end subroutine
+
+  !--------------------------------------------------------------------
+  ! セル (in,jn) の階段面に対する側: 0 = A 側(踏面セルとその短手負側)、
+  ! 1 = B 側(短手正側)、-1 = 踏面列の長手範囲の外
+  !--------------------------------------------------------------------
+  integer function side(flx, in, jn)
+    type(t_flux), intent(in) :: flx
+    integer, intent(in) :: in, jn
+    integer :: c, sd
+    side = -1
+    if (flx%major == 1) then
+      sd = sign(1, flx%ixy0(3) - flx%ixy0(1))
+      c = (in - flx%ixy0(1)) * sd + 1
+      if (c < 1 .or. c > flx%ncell) return
+      side = merge(1, 0, jn > flx%ixy(2,c))
+    else
+      sd = sign(1, flx%ixy0(4) - flx%ixy0(2))
+      c = (jn - flx%ixy0(2)) * sd + 1
+      if (c < 1 .or. c > flx%ncell) return
+      side = merge(1, 0, in > flx%ixy(1,c))
+    end if
+  end function
 
 end subroutine
 

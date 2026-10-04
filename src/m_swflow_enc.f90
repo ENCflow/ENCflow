@@ -40,6 +40,8 @@ module m_swflow_enc
   public :: have_sect, sdep                    ! m_geomorph の浮遊砂 E-D が読む(濃度 hs/vh と湿潤幅率。§26)
   public :: m_swflow_enc_post            ! ステップ末尾の u,v 正規化パス(§26)
   public :: m_swflow_enc_sdep_update     ! 河床変動後の σ 遷移深さ D の更新(§26)
+  public :: have_edge_flux, m_swflow_enc_edge_flux   ! 測線計測のエッジ流量の観測口
+                                         ! (m_record 専用・読み取り専用。§24.1/§24.2)
   public :: swflow_vh                    ! 矩形換算水深 vh の照会(§26/§30。
                                          ! 水質の濃度換算 conc = cq/vh 用)
   public :: have_open_bc, bc_open_face         ! 開境界の面判定(m_geomorph の
@@ -251,6 +253,8 @@ module m_swflow_enc
                                             !   (コンパイル時切替。.false. = RK 中は
                                             !    矩形近似=従来の加算式。コスト比較用。§26)
   logical :: have_sect = .false.            ! σ が有効か(p_sect_m>0 かつ遷移深さ源あり)
+  logical, protected :: have_edge_flux = .false.  ! エッジ流量の観測口が使えるか
+                                            ! (ENC の init 後 true。STG では false のまま。§24.2)
   real :: sect_m = 0.0                      ! 形状指数 m(0=矩形)
   real :: sect_mp1 = 1.0                    ! m+1(前計算)
   real :: sect_rmp1 = 1.0                   ! 1/(m+1)
@@ -707,6 +711,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 変数を更新して次のタイムステップの準備をする(initial: σ 適用セルの
   ! h は正準のまま保ち、u,v の再正規化もしない。§26)
   call complete(p, g, s, sx_mod, initial=.true.)
+  have_edge_flux = .true.
 
 end subroutine
 
@@ -892,6 +897,7 @@ subroutine m_swflow_enc_dispose(p)
   have_bopen = .false.
   have_width = .false.
   have_sect = .false.
+  have_edge_flux = .false.
   sect_m = 0.0
   have_frw = .false.
   db_res = 0
@@ -2636,6 +2642,40 @@ end subroutine
 ! 矩形換算水深 vh の照会(§26/§30)。σ 非適用セル・σ 無効時は h を返す。
 ! 水質の体積平均濃度 conc = cq/vh の分母(m_wq が使う)
 !----------------------------------------------------------------------
+!----------------------------------------------------------------------
+! 測線計測用のエッジ流量の観測口(§24.1 観測者規律。m_record 専用・
+! 読み取り専用。2026-10-04)
+!   セル (i,j) から 8 近傍セル (in,jn) へ向かうエッジの流量 [m³/s]
+!   (中心セルから出る向きが正)。直前ステップで確定したエッジの単位幅
+!   流量 sx_mod%mn に通過幅 l8 と通過幅係数 frw·fwd を乗じたもので、
+!   連続式が水深変化に換算する体積 mne·l8·fw·dt を dt で割った量に等しい
+!   (サブグリッド幅・動的開口・σ の面積ベース流束がそのまま乗る)。
+!   (i,j) は自帯(js..je)のセルであること(エッジ添字 je は確定済み範囲
+!   js-1..je に収まる。ハロは読まない)。(in,jn) が 8 近傍でなければ 0。
+!   閉じた境界面・乾いた対・通過幅ゼロのエッジは momentum/boundary_uvmn が
+!   mn を 0 にしているので、ここでは判定しない(continuous と同じ集合)。
+!----------------------------------------------------------------------
+function m_swflow_enc_edge_flux(i, j, in, jn) result(q)
+  integer, intent(in) :: i, j, in, jn
+  real :: q
+  integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
+  real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
+  integer :: k, ie, je
+  real :: fw
+  q = 0.0
+  do k = 1, 8
+    if (in - i == din(k) .and. jn - j == djn(k)) exit
+  end do
+  if (k > 8) return
+  ie = i + die(k)
+  je = j + dje(k)
+  fw = 1.0
+  if (have_frw) fw = frw(ke(k),ie,je)
+  if (have_fwd) fw = fw * fwd(ke(k),ie,je)
+  q = sign_e(k) * sx_mod%mn(ke(k),ie,je) * l8(k) * fw
+end function
+
+
 function swflow_vh(i, j, h) result(vh)
   integer, intent(in) :: i, j
   real, intent(in) :: h
