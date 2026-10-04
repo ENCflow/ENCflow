@@ -1,8 +1,8 @@
-date      : 2026-10-04 11:30:14
+date      : 2026-10-04 23:50:28
 host      : vm
 user      : 
 pwd       : /home/user/ENCflow/test/damwq
 exe       : /home/user/ENCflow/bin/encflow
 mode      : mpi__a452c4d1_double
 modules   : (no modules)
-lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007fa78d600000)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f6be2800000)
