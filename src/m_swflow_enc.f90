@@ -1345,11 +1345,13 @@ contains
       h = max(s%h(i,j), 0.0)      ! 中心セルの水深
       uve1 = ((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)
       mne1 = uve1 * h
+      if (have_sect) mne1 = uve1 * sect_v(h, sdep(i,j))   ! 断面積ベース(§68.28)
     else if (g%rw(in,jn) > 0 .and. g%sw(i,j) > 0) then
       ! 近傍から中心に段落ち
       h = max(s%h(in,jn), 0.0)    ! 近傍セルの水深
       uve1 = -((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)
       mne1 = uve1 * h
+      if (have_sect) mne1 = uve1 * sect_v(h, sdep(in,jn))
     end if
   end subroutine
 
@@ -1596,7 +1598,16 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
         if (he <= 0.0) uve1 = 0.0
       end if
     end if
-    mne1 = uve1 * he
+    ! 面流束 = 流速 × 断面積(単位幅あたり)。σ(断面形 §26)有効時は矩形
+    ! 換算水深 vh = ∫σ dh(断面積/W)を使う(両セルの D で評価した平均。
+    ! σ 非適用セルは sect_v が恒等)。真の水深 h で流すと貯留 W·vh に対して
+    ! 通水能が (m+1) 倍になり、段落ち・自由流出で終端セルが抜け切って
+    ! 発散する(§68.27・§68.28。2026-10-04 に u·h から変更)
+    if (have_sect) then
+      mne1 = uve1 * 0.5 * (sect_v(he, sdep(i,j)) + sect_v(he, sdep(in,jn)))
+    else
+      mne1 = uve1 * he
+    end if
 
     ! 土石流の降伏判定(動き出し・停止): 低速かつ駆動(移流+重力)が
     ! 降伏減速度以下なら静止を維持する(半陰解法の漸近だけでは完全静止に
@@ -2263,6 +2274,9 @@ subroutine restore_uvmn(p, g, s, sx)
       if (have_width) then
         if (have_sect) then
           if (sdep(i,j) > 0.0) then
+            ! 2026-10-04(§68.28): 面流束を断面積ベース u·vh にしたため、
+            ! エッジ流速 = 河道内流速で、正規化の通水率は静的 cw と同じ
+            ! (cw_cell は sig を無視して静的 cwx/cwy と同値を返す)
             call cw_cell(g, i, j, sect_sigma(s%h(i,j), sdep(i,j)), cxv, cyv)
           else
             cxv = cwx(i,j)

@@ -97,9 +97,10 @@
                                    !   not be the real width (to saturate even
                                    !   channel-end cells use 2x the cell size
                                    !   or more, e.g. 9999). But with the
-                                   !   cross-section sigma (p_sect_m>0) the
-                                   !   actual value matters at low flow as
-                                   !   W*sigma(h) -- give the real width then.
+                                   !   cross-section sigma (p_sect_m>0) the same
+                                   !   holds (sigma acts on the area-based
+                                   !   flux; the width only sets the plan-area
+                                   !   fraction and the conveyance cap).
                                    !   0 or below = no
                                    !   width information = resolved)
   f_channel_advection = 1       ! advection term on edges involving channel cells

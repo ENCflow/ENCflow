@@ -772,29 +772,6 @@ function wcap(g, i1, j1, i2, j2, cap) result(q)
 end function
 
 
-!----------------------------------------------------------------------
-! スケール付き幅キャップ q = min(W_e·sig / cap, 1)(§26)。
-! sig=1 のとき we*1.0 はビット恒等のため wcap と厳密同値
-!----------------------------------------------------------------------
-function wcap_s(g, i1, j1, i2, j2, cap, sig) result(q)
-  type(t_geoinfo), intent(in) :: g
-  integer, intent(in) :: i1, j1, i2, j2
-  real, intent(in) :: cap, sig
-  real :: q, w1, w2, we
-  q = 1.0
-  w1 = g%wrw(i1,j1)
-  w2 = g%wrw(i2,j2)
-  if (w1 > 0.0 .and. w2 > 0.0) then
-    we = min(w1, w2)
-  else if (w1 > 0.0) then
-    we = w1
-  else if (w2 > 0.0) then
-    we = w2
-  else
-    return
-  end if
-  q = min(we * sig / cap, 1.0)
-end function
 
 
 !----------------------------------------------------------------------
@@ -815,6 +792,10 @@ module subroutine cw_cell(g, i, j, sig, cx, cy)
 
   cx = 1.0
   cy = 1.0
+  ! 2026-10-04(§68.28): 面流束を断面積ベース u·vh に統一したため、エッジ
+  ! 流速はそのまま河道内流速であり、通水率の σ 縮尺(q = W·σ/面長)は
+  ! 行わない(sig は互換のため受け取るが無視。静的 cwx/cwy と厳密同値)
+  if (sig > 0.0) continue
   if (.not. is_channel(g, i, j)) return
   if (g%wrw(i,j) <= 0.0) return
   capd = g%dx * g%dy / max(lch_cell(g, i, j), min(g%dx, g%dy))   ! 自然幅(build_cw と同じ)
@@ -835,7 +816,7 @@ module subroutine cw_cell(g, i, j, sig, cx, cy)
       if (bc_inflow_face(in, jn)) then
         q = 1.0
       else
-        q = min(g%wrw(i,j) * sig / cap8(k), 1.0)
+        q = min(g%wrw(i,j) / cap8(k), 1.0)
       end if
     else
       if (g%x(in,jn) <= 0) cycle
@@ -845,7 +826,7 @@ module subroutine cw_cell(g, i, j, sig, cx, cy)
       end if
       f0 = frw0(ke(k), i+die(k), j+dje(k))
       if (is_channel(g, in, jn)) then
-        q = wcap_s(g, i, j, in, jn, cap8(k), sig)
+        q = wcap(g, i, j, in, jn, cap8(k))
       else
         q = 1.0
       end if

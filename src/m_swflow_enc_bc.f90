@@ -554,6 +554,8 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
       ! 簡易代替。boundary_plan.md)
       hc = (qwm**2 / p%gg)**(1.0 / 3.0)
       he = max(h, hc, p%dv)
+      ! σ 有効時は断面積(矩形換算水深)で流速に換算する(§68.28)
+      if (have_sect) he = max(sect_v(he, sdep(i,j)), p%dv)
       uve1 = -qwm / he           ! 外向き正の負値=流入
       mne1 = -qwm
       sx%uv(ke(k), ie, je) = sign_e(k) * uve1
@@ -625,6 +627,7 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
         uc = ((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)  ! 段落ち速度
         uve1 = max(un, uc)
         mne1 = uve1 * h
+        if (have_sect) mne1 = uve1 * sect_v(h, sdep(i,j))   ! 断面積ベース(§68.28)
       case default   ! e_bc_radiation
         ! 長波放射(津波向け): 静水(η=η_ref)ではフラックスゼロ、
         ! 水位偏差に比例して透過。負値=流入(引き波)も許す。
@@ -637,6 +640,7 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
         end if
         uve1 = sqrt(p%gg / max(h, p%dv)) * (s%z(i,j) + h - eta_r)
         mne1 = uve1 * h
+        if (have_sect) mne1 = uve1 * sect_v(h, sdep(i,j))   ! 断面積ベース(§68.28)
       end select
       ! 過大な流出の抑制(流出方向のみ。momentum の抑制と同型で、
       ! 境界面ではフラグによらず適用。河道幅有効時は境界面の通過幅係数

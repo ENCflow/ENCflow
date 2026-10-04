@@ -128,12 +128,12 @@ finer than the river width and move to a resolved channel.
   of a channel need twice the cell size to saturate the plan-area
   fraction, so to be certain use at least 2x the cell size, e.g.
   9999).
-- **Exception: when combined with the cross-section shape sigma
-  (p_sect_m > 0)**, the effective width at low flow depends on the
-  actual value as "width x sigma(h)", so "any large value is the same"
-  does not strictly hold (though even an overstated width remains
-  interpretable and does not break the model badly -- see the note in
-  the cross-section section below).
+- The same holds when combined with the cross-section shape sigma
+  (p_sect_m > 0): sigma acts on the fluxes and the stage through the
+  rectangular-equivalent depth vh (area / width), and the width value is
+  used only for the plan-area fraction of storage and the conveyance cap
+  (changed 2026-10-04; before that the effective width was "width x
+  sigma(h)", so the actual width mattered at low flow).
 - `f_channel_advection = 0` drops the advection term on edges involving
   channel cells (a stabilization option under strong width
   heterogeneity; the default is 1 = normal).
@@ -180,14 +180,14 @@ width (= the cell size)**. Enabling sigma alone, without preparing any
 width data, is the simplest configuration.
 
 **Inaccurate channel widths do not break the model badly**. With sigma
-active, the low-flow regime depends on the width value through the
-effective width = width x sigma(h); but even when the width is
-overstated (e.g., set to the cell size or a uniform convenience
-value), the low-flow state admits an equivalent interpretation as a
-multi-thread section -- many thin braided threads flowing across the
-overly wide bed -- and at high flow (h >= D) the dynamics degenerate
-to the rectangle, so the difference from the real width nearly
-vanishes. In line with this program's policy that simple data should
+active the flux is velocity x section area (width x vh, vh = ∫sigma dh)
+and the width enters only the plan-area fraction of storage and the
+conveyance cap; even when the width is overstated (e.g., set to the
+cell size or a uniform convenience value), the low-flow state admits an
+equivalent interpretation as a multi-thread section -- many thin
+braided threads flowing across the overly wide bed -- and at high flow
+(h >= D) the dynamics degenerate to the rectangle, so the difference
+from the real width nearly vanishes. In line with this program's policy that simple data should
 just work, refining the width data gradually is enough -- start
 refining to real widths in the reaches where the low-flow stage and
 velocity matter.
