@@ -595,7 +595,7 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
   integer, intent(in) :: kf(1:3)
   integer, intent(in) :: sd
   integer :: m, k, in, jn, ie, je
-  real :: h, un, uc, eta_r, uve1, mne1, dh, cor
+  real :: h, hv, un, uc, eta_r, uve1, mne1, dh, cor
 
   if (g%x(i,j) <= 0) return
   if (g%sw(i,j) > 0) return    ! 海セルは continuous が更新しないため対象外
@@ -644,8 +644,13 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
       dh = mne1 * mn2dh(k) / s%gv(i,j)
       if (have_frw) dh = dh * frw(ke(k), ie, je)
       if (have_width) dh = dh / wfrac(i,j)
-      if (dh > 0 .and. h - dh <= 0) then
-        cor = max(h - p%dd, 0.0) / dh
+      ! σ 有効時は矩形換算水深(体積)で判定する(momentum の抑制と同じ。
+      ! 真の水深 h で判定すると σ < 1 の分だけ抜きすぎて負の水深になり、
+      ! 自由流出の終端セルが発散する。§68.27)
+      hv = h
+      if (have_sect) hv = sect_v(h, sdep(i,j))
+      if (dh > 0 .and. hv - dh <= 0) then
+        cor = max(hv - p%dd, 0.0) / dh
         uve1 = uve1 * cor
         mne1 = mne1 * cor
       end if
