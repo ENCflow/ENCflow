@@ -1,4 +1,4 @@
-# test/nhcurrent — 一様流上の線形波の分散関係(暫定。非静水圧補正の Phase 5 Test 2)
+# test/nhcurrent — 一様流上の線形波の分散関係(非静水圧補正の Phase 5 Test 2)
 
 docs/nonhydrostatic_plan.md §11 Phase 5 Test 2、developer.md §69.8。水路
 200 m × 8 m(Δx = 0.25 m = H/4、32 行)、H = 1 m。河床勾配 S = 2.25e-4
@@ -13,9 +13,11 @@ docs/nonhydrostatic_plan.md §11 Phase 5 Test 2、developer.md §69.8。水路
 - param.txt: 順流 NH(`./Run.sh` で走る)。param_c.txt: 逆流 NH、
   param_0.txt: 静水(平坦床、U₀ = 0、東端の振動)、param_h.txt / param_hc.txt:
   静水圧の順流 / 逆流。
-- **reference は作らない**: 下記の境界の発振のため基底流が安定でない。
-- f_advection_scheme = 1(旧スキーム)を使う。保存形移流(3、既定)では
-  規定境界を貫く一様流の発振が速く、t ≈ 30 s で発散する(§69.8)。
+- 規定境界を貫く一様流が発振して発散する問題(§69.8)は、MUSCL 移流の
+  upup が領域外の 0 を読む実バグ(§69.9)で、修正後は既定の保存形移流で
+  等流が定常に保たれる。`param_osc.txt`(両端水位規定・波なし)はその
+  再現用、`param_osc_inflow.txt` は区間流入の角セルに起因する別の緩い
+  発振(未解決。§69.9)の再現用。
 
 ## 所見(2026-10-05。窓: 順流 45〜95 s、逆流・静水 65〜100 s)
 
