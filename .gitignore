@@ -96,3 +96,6 @@ test/nhwave/scan/
 
 # --- test/nhbreak の切り分け実験(Diag.py --run が生成・削除する一時パラメータ)---
 test/nhbreak/param_x_*.txt
+
+# --- 回帰一括実行が各ケースに一時的に置く作業用バイナリ ---
+test/*/encflow_new
