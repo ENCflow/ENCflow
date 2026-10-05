@@ -86,6 +86,21 @@ is no universally recommended value and an explicit value is mandatory
 (forgetting to set it stops the run at initialization, so it never
 becomes silently inactive).
 
+**Non-hydrostatic correction (research option)**
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| f_nonhydrostatic | 0 | one-layer non-hydrostatic correction. 0: hydrostatic (default), 1: on. The hydrostatic step (adaptive RK, advection, friction, levees and structures included) is kept as the predictor; at the end of the step a cell-wise non-hydrostatic potential φ is solved and the edge velocities and fluxes are corrected (one-layer model with β = h²/4; the linear dispersion relation is ω² = gHk²/(1 + (kH)²/4), equivalent to the one-layer SWASH). Intended for phenomena governed by frequency dispersion -- soliton fission and undular bores of tsunamis running up rivers, near-field generation by landslide tsunamis, solitary waves in reservoirs -- and not needed for rainfall runoff, flood inundation or ordinary long-wave tsunamis. **The grid should be finer than half the depth (Δx ≲ H/2)**: on coarser grids the numerical dispersion of the grid exceeds the physical dispersion and the correction is meaningless. When off there is no extra computation, memory or communication and the results are bit-identical to before (docs/nonhydrostatic_plan.md) |
+| nh_hmin | 0.1 | cells shallower than this depth (m) stay hydrostatic (wet/dry fronts, very shallow water and bores after breaking are handled hydrostatically). Must exceed dd. Sea-mask (sw), levee-wall, sub-grid channel-width, σ-section and building-occupied (gv < 1) cells and edges also stay hydrostatic |
+| nh_solver | 2 | iterative solver for φ. 1: Jacobi, 2: CG (default; the inner products use the deterministic row sum, so results are bit-identical for any thread or rank count). Jacobi converges slowly when Δx ≪ H and is kept for comparison |
+| nh_itmax | 500 | maximum number of iterations (a warning is printed and the run continues when exceeded) |
+| nh_tol | 1e-6 | relative convergence criterion (CG: residual norm / right-hand-side norm, Jacobi: max residual / max right-hand side) |
+
+With standing waves in a closed basin (test/nhwave_nh) the periods for
+kH = 0.25-2 agree with the one-layer theory within 0.2% (hydrostatic
+periods are 12-42% shorter). CG takes 10-90 iterations per step (more
+for smaller Δx/H).
+
 **Others**
 
 | Parameter | Default | Meaning |

@@ -1,0 +1,8 @@
+date      : 2026-10-05 03:15:18
+host      : vm
+user      : 
+pwd       : /home/user/ENCflow/test/nhwave_nh
+exe       : /home/user/ENCflow/bin/encflow
+mode      : mpi__a452c4d1_double
+modules   : (no modules)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f864f800000)

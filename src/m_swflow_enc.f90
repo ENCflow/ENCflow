@@ -74,6 +74,17 @@ module m_swflow_enc
                                             !   流さず、流せないエッジの流速も 0 にする)
   integer :: f_bank_mode                    ! 堤防の水理モード(下の e_bank_*)
   integer :: f_diffusion_term               ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
+  ! 非静水圧(1 層 NH)補正(submodule m_swflow_enc_nh。docs/nonhydrostatic_plan.md)
+  integer :: f_nonhydrostatic = 0           ! 0: 静水圧(既定), 1: 1 層 NH 補正
+  real :: nh_hmin = 0.1                     ! NH を適用する最小水深 (m)
+  integer :: nh_solver = 2                  ! 反復ソルバ (1: Jacobi, 2: CG(既定))
+  integer :: nh_itmax = 500                 ! 反復回数の上限
+  real :: nh_tol = 1.0e-6                   ! 相対収束判定
+  logical :: nh_active = .false.            ! NH ON(init が f_nonhydrostatic から設定)
+  real, allocatable :: nh_he(:,:,:)         ! momentum が面流束に使ったエッジ水深 he
+                                            !   (1:4, 0:nx, jsh-1:jeh)。NH ON のときだけ確保。
+                                            !   calc_kth_momentum が書き、nh_project が
+                                            !   mn1 = uv·he の再構成に読む
   real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
   real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
   real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
@@ -373,6 +384,26 @@ module m_swflow_enc
     end subroutine
   end interface
 
+  ! 非静水圧補正 submodule(m_swflow_enc_nh)の分離インターフェース
+  interface
+    module subroutine nh_init(p, g, s)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+    end subroutine
+    module subroutine nh_prepare(sx)
+      type(t_enc_status), intent(in) :: sx
+    end subroutine
+    module subroutine nh_project(p, g, s, sx)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+      type(t_enc_status), intent(inout) :: sx
+    end subroutine
+    module subroutine nh_dispose()
+    end subroutine
+  end interface
+
   ! 境界条件の適用層(submodule m_swflow_enc_bc)
   interface
     module subroutine bc_init(p, g, b)
@@ -541,6 +572,11 @@ subroutine m_swflow_enc_init(p, g, b, s)
   p_adprunge_thresh = list%p_adprunge_thresh
   p_diffusion_nu = list%p_diffusion_nu
   p_diffusion_alpha = list%p_diffusion_alpha
+  f_nonhydrostatic = list%f_nonhydrostatic
+  nh_hmin = list%nh_hmin
+  nh_solver = list%nh_solver
+  nh_itmax = list%nh_itmax
+  nh_tol = list%nh_tol
   select case (f_diffusion_term)
     case (0)      ! 無効
     case (1)      ! 定数モデル
@@ -685,6 +721,10 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! init_weights より後に)
   call diff_init(p, g)
 
+  ! 非静水圧補正サブモジュールを初期化する(f_nonhydrostatic=0 なら
+  ! 何も確保しない。l8/w8dr を使うため init_weights より後に)
+  call nh_init(p, g, s)
+
   ! 高速摩擦計算ルーチンを初期化する
   call m_ffactor_init(f_friction_fastmath, p%dd, 30.0, 'UV')
 
@@ -763,6 +803,9 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   if (have_fwd) call build_fwd(p, g, s)
   if (have_cwd) call build_cwd(g, s)
 
+  ! 非静水圧補正: ステップ頭のエッジ流速 u^n を複製する(NH ON のみ)
+  if (nh_active) call nh_prepare(sx_mod)
+
   ! 移流項を計算する
   call adv_prepare(p, g, s, sx_mod)
 
@@ -783,6 +826,10 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! エッジの流速・流量への強制条件をセットする(辺境界の流出、
   ! 区間流入など。各条件の有効判定は boundary_uvmn 内の節ごとに行う)
   call boundary_uvmn(p, g, b, s, sx_mod)
+
+  ! 非静水圧補正(NH ON のみ): 静水圧 predictor の全加速度に 1 層 NH の
+  ! 射影を掛けてエッジ流速・流量を補正する(docs/nonhydrostatic_plan.md §5)
+  if (nh_active) call nh_project(p, g, s, sx_mod)
 
   ! 連続式を解いて水深を更新する
   call continuous(p, g, s, sx_mod)
@@ -914,6 +961,7 @@ subroutine m_swflow_enc_dispose(p)
   call m_ffactor_dispose
   call adv_dispose
   call diff_dispose
+  call nh_dispose
 end subroutine
 
 
@@ -1410,6 +1458,10 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
     end if
   end if
   end if
+
+  ! 非静水圧補正のためにエッジ水深を記録する(NH ON のみ。書き込み先は
+  ! (k, ie, je) ごとに一意で競合なし)
+  if (nh_active) nh_he(k,ie,je) = hee
 
   ! セル境界の流速を更新する
   !   uvは単一バッファ(自エッジread-then-writeのみ。developer.md §7の例外)

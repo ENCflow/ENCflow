@@ -687,25 +687,19 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 中期の道標(着手順は実測次第)
 
-- **非静水圧(1 層 NH)拡張(設計検討済み・未着手 2026-10-05)**:
-  docs/nonhydrostatic_plan.md が正本(本書だけで完結する形に書き直し済み
-  2026-10-05)。候補の線形解析では、エッジ局所の陰的補正(単一掃引)は
-  目標の 1 層分散関係を再現できず(Jacobi 反復の 1 回目に相当。必要解像度
-  Δx ≲ H/2 で補正の 1/3〜1/9)、推奨は「ステップ末尾の射影+セルスカラー
-  1 個の反復解(Jacobi → CG。恒等項支配で 10〜30 掃引)」。適応 RK と同じ
-  「必要な場所だけ」は活性集合(検出 χ ≈ (kH)²/4 + 数 H の縁。plan §6)
-  で載る。反復内の MPI 通信は「固定回数 Chebyshev + 幅 m ハロ 1 回」で
-  ゼロにできる(plan §7。並列層に幅指定つきセル交換 1 本の追加が要る。
-  **計測後の Phase 4c** に後回し)。先行研究調査(plan §9。2026-10-05):
-  同じ骨格は Firdaus & Behrens(IJNMF 2026 / arXiv 2606.27562)が実証済み
-  の実用路線で、概念の新規性は主張しない。改訂 5 点 = 既存ハロの
-  Jacobi から始める・検出量は χ 既定で振幅型を比較用・砕波スイッチなしで
-  先に検証・線形圧力分布のまま・動く底面は Firdaus/Jeschke の定式。
-  momentum/RK/移流/continuous は無変更、hook は
-  m_swflow_enc_calc の 1 箇所、NH OFF でゼロ追加。**実装前に決める事項**(plan §10 D1〜D6): §0-5(SWE 上限)への
-  研究用例外の追記、反復ソルバの許容(plan §5.7・D2)、補正の
-  時点、パラメータ置き場、Phase 1(静水圧 ENC の数値分散計測 test/nhwave)
-  先行、海域マスクの扱い。段階計画は plan §11(0〜8 段)。
+- **非静水圧(1 層 NH)拡張(Phase 0〜4 実装・検証済み 2026-10-05。
+  developer.md §69、設計の正本 docs/nonhydrostatic_plan.md)**:
+  f_nonhydrostatic=1(list_enc)で、静水圧ステップを predictor にした
+  ステップ末尾の射影(セルスカラー φ の楕円型方程式を CG/Jacobi で反復。
+  submodule m_swflow_enc_nh)。NH OFF は全 reference ビット一致、
+  test/nhwave(静水圧の分散計測)と test/nhwave_nh(NH)の定在波で
+  kH = 0.25〜2 の周期が 1 層理論に 0.2% 以内、np=1,2,4 一致、-fcheck np=2
+  正常。**残**: (a) Phase 4b 活性集合の適応化(plan §6。χ 検出・縁・
+  ヒステリシス。現状はマスク内全域で解く)、(b) Phase 4c 通信回避
+  (plan §7。計測後)、(c) Phase 5 非線形(孤立波・一様流上の波・ソリトン
+  分裂)、(d) Phase 6 砕波をスイッチなしで検証、(e) Phase 7 底面勾配項、
+  (f) Phase 8 動く底面。(g) comparison.md の非静水圧の行の更新。
+
 - **溶岩流モジュール(m_lavaflow。段階1 実装・検証済み 2026-08-23)**:
   fn_lavaflow + &list_lavaflow。等温の深さ平均 Bingham 粘性重力流+
   噴火口私有ソース+速度閾値の固化 → s%z(規約の正本は developer.md

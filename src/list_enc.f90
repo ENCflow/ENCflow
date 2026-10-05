@@ -47,6 +47,12 @@ module list_enc
                                               !   加算のバックグラウンド粘性)
     real :: p_diffusion_alpha = 0.41 / 6      ! ゼロ方程式モデルの係数 α (ν=ν0+α·u*·h。
                                               !   既定はカルマン定数/6 = Elder 型)
+    ! --- 非静水圧(1 層 NH)補正(研究用。docs/nonhydrostatic_plan.md、developer.md §69) ---
+    integer :: f_nonhydrostatic = 0           ! 0: 静水圧(既定), 1: 1 層 NH 補正(β = h²/4)
+    real :: nh_hmin = 0.1                     ! この水深未満のセルは静水圧に退化 (m)
+    integer :: nh_solver = 2                  ! 反復ソルバ (1: Jacobi, 2: CG(既定))
+    integer :: nh_itmax = 500                 ! 反復回数の上限
+    real :: nh_tol = 1.0e-6                   ! 相対収束判定(Jacobi: 残差最大/右辺最大、CG: ||r||/||b||)
   end type
 
 
@@ -78,6 +84,11 @@ subroutine list_enc_read(p, list)
   real :: p_adprunge_thresh             ! threshold of adaptive Runge-Kutta (1.1~)
   real :: p_diffusion_nu                ! 拡散項の動粘性係数 (m2/s)
   real :: p_diffusion_alpha             ! ゼロ方程式モデルの係数 α
+  integer :: f_nonhydrostatic           ! 非静水圧補正 (0:静水圧, 1:1 層 NH)
+  real :: nh_hmin                       ! NH を適用する最小水深 (m)
+  integer :: nh_solver                  ! NH の反復ソルバ (1:Jacobi, 2:CG)
+  integer :: nh_itmax                   ! NH の反復回数上限
+  real :: nh_tol                        ! NH の相対収束判定
   integer :: un
   integer :: ios
   character(len=1024) :: iom
@@ -86,7 +97,8 @@ subroutine list_enc_read(p, list)
                       f_friction_fastmath, f_advection_scheme, &
                       f_rivermouth_drop, f_opening_dynamic, f_dry_head_cap, f_advection_donor, &
                       f_adaptive_runge, p_diagratio, p_adv_upwind_index, p_adprunge_thresh, &
-                      f_diffusion_term, p_diffusion_nu, p_diffusion_alpha
+                      f_diffusion_term, p_diffusion_nu, p_diffusion_alpha, &
+                      f_nonhydrostatic, nh_hmin, nh_solver, nh_itmax, nh_tol
 
   f_gravity_correction = list%f_gravity_correction 
   f_exflux_reduction = list%f_exflux_reduction 
@@ -105,6 +117,11 @@ subroutine list_enc_read(p, list)
   p_adv_upwind_index = list%p_adv_upwind_index
   p_adprunge_thresh = list%p_adprunge_thresh
   p_diffusion_nu = list%p_diffusion_nu
+  f_nonhydrostatic = list%f_nonhydrostatic
+  nh_hmin = list%nh_hmin
+  nh_solver = list%nh_solver
+  nh_itmax = list%nh_itmax
+  nh_tol = list%nh_tol
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -130,6 +147,11 @@ subroutine list_enc_read(p, list)
   list%p_adprunge_thresh = max(p_adprunge_thresh, 1.1)              ! 値を1.1以上に制限
   list%p_diffusion_nu = max(p_diffusion_nu, 0.0)                    ! 値を0.0以上に制限
   list%p_diffusion_alpha = max(p_diffusion_alpha, 0.0)              ! 値を0.0以上に制限
+  list%f_nonhydrostatic = f_nonhydrostatic
+  list%nh_hmin = nh_hmin
+  list%nh_solver = nh_solver
+  list%nh_itmax = nh_itmax
+  list%nh_tol = nh_tol
 
 end subroutine
 

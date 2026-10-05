@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 556 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 561 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -205,6 +205,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_input_mode | &list_sysparam | [入出力](io.md) |
 | f_lavaflow | &list_lavaflow | [溶岩流](lavaflow.md) |
 | f_masktype | &list_geoinfo | [地理情報](geoinfo.md) |
+| f_nonhydrostatic | &list_enc | [浅水流計算](swflow.md) |
 | f_out_bds | &list_sysparam | [入出力](io.md) |
 | f_out_cn | &list_sysparam | [入出力](io.md) |
 | f_out_dda | &list_sysparam | [入出力](io.md) |
@@ -453,6 +454,10 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | min_bb | &list_geoinfo | [地理情報](geoinfo.md) |
 | min_gv | &list_geoinfo | [地理情報](geoinfo.md) |
 | morfac | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| nh_hmin | &list_enc | [浅水流計算](swflow.md) |
+| nh_itmax | &list_enc | [浅水流計算](swflow.md) |
+| nh_solver | &list_enc | [浅水流計算](swflow.md) |
+| nh_tol | &list_enc | [浅水流計算](swflow.md) |
 | nx | &list_geoinfo | [地理情報](geoinfo.md) |
 | ny | &list_geoinfo | [地理情報](geoinfo.md) |
 | outfn_suffix | &list_sysparam | [入出力](io.md) |

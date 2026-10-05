@@ -8900,3 +8900,34 @@ kdpart・tide・coastal_drain・gwseep・damwq の reference(2026-08-28 作成)�
   型スイッチを保険として入れる(plan §8.2)。
 - **検証規律**: f_nonhydrostatic=0 で全 reference ULP=0、np=1,2,4、
   確保に触れる段は -fcheck=all np≥2 を先に。各段の合否基準は plan §11。
+
+### 69.1 実装と検証記録(Phase 0〜4。2026-10-05)
+
+- **実装**: submodule m_swflow_enc_nh(nh_init / nh_prepare / nh_project /
+  nh_dispose)。親の hook は init・ステップ頭(u^n の複製)・boundary_uvmn
+  の直後(射影)・dispose の 4 箇所と、calc_kth_momentum がエッジ水深 he を
+  nh_he に記録する 1 行(NH ON のみ)。calc_kth_flux に he を返す出力引数
+  hee を追加(等価変換。先行コミット)。list_enc に f_nonhydrostatic・
+  nh_hmin・nh_solver(1 Jacobi / 2 CG 既定)・nh_itmax・nh_tol。
+- **Phase 1(test/nhwave。静水圧の数値分散)**: 閉じた 100×100 水槽の
+  定在波(モード (4,0)・(4,4)、h0 で kH を走査)。計測周期は 8 近傍 ENC の
+  半離散固有値(壁つき Rayleigh 商)に 0.1% 以内で一致、数値分散は
+  0.3〜0.8%(kΔx 0.13〜0.18)。適応 RK の有無の差 0.05% 以下、dt = 0.05
+  (Courant 0.44)で +0.6%。1 層 NH の目標との差(kH = 1 で 12%)と明確に
+  区別できる。表は test/nhwave/Dispersion_result.md。
+- **Phase 3(NH OFF の不変性)**: reference を持つ 13 ケース + nhwave が
+  逐次ですべて PASS(identical)。
+- **Phase 4(test/nhwave_nh。NH ON、CG)**: kH = 0.25 / 1.0 / 1.4 / 2.0 の
+  周期が ω² = gHΛ/(1+(H²/4)Λ) に対し −0.18 / −0.10 / −0.01 / +0.18%
+  (静水圧は −1 / −12 / −18 / −29%)。適応 RK なし・dt = 0.005 でも同じ。
+  振幅の増減は静水圧の長時間走行と同じ(壁でのモード間の移り変わり)で
+  不安定ではない。CG の反復は 12〜85 回/ステップ(Δx/H = 1/2〜1/16)。
+  Jacobi は Δx = H/8(ε ≈ 45)で 500 掃引でも収束せず → CG を既定に
+  (plan §4.3 の見積もりどおり Jacobi は Δx ≪ H で実用にならない)。
+- **並列**: nhwave_nh の np=1, 2, 4 が逐次 reference と identical、
+  OMP_NUM_THREADS=1 と 4 も identical。-Og -fcheck=all の MPI np=2 は
+  NH ON / OFF とも実行時エラーなし(結果は最適化差の許容内)。
+- **コスト**: nhwave_nh(10⁴ セル、CG 45 回/ステップ)で壁時計は静水圧の
+  約 3 倍。実ケースの計測は Phase 4c の前提(活性集合 Phase 4b で縮む)。
+- **未実装**: 活性集合の適応化(plan §6)、通信回避(§7)、非線形・砕波・
+  底面勾配・動く底面(§11 Phase 5〜8)。
