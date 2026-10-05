@@ -695,9 +695,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   test/nhwave(静水圧の分散計測)と test/nhwave_nh(NH)の定在波で
   kH = 0.25〜2 の周期が 1 層理論に 0.2% 以内、np=1,2,4 一致、-fcheck np=2
   正常。Phase 4b 活性集合(f_nh_adaptive=1。χ 検出+縁、種の下限
-  nh_amin/nh_arel)も実装・検証済み(§69.2)。**残**: (b) Phase 4c 通信回避
-  (plan §7。計測後)、(c) Phase 5 非線形(孤立波・一様流上の波・ソリトン
-  分裂)、(d) Phase 6 砕波をスイッチなしで検証、(e) Phase 7 底面勾配項、
+  nh_amin/nh_arel)も実装・検証済み(§69.2)。Phase 5 の孤立波
+  (test/nhsolitary。§69.3: 形を保ち速度 −0.9%、静水圧は段波化)も検証
+  済み。**残**: (b) Phase 4c 通信回避(plan §7。計測後)、(c) Phase 5 の
+  残り(一様流上の波 = 区間流入+放射境界の構成、ソリトン分裂 = 棚への
+  入射)、(d) Phase 6 砕波をスイッチなしで検証、(e) Phase 7 底面勾配項、
   (f) Phase 8 動く底面。(g) comparison.md の非静水圧の行の更新。
 
 - **溶岩流モジュール(m_lavaflow。段階1 実装・検証済み 2026-08-23)**:

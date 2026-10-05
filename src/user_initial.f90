@@ -31,11 +31,12 @@ submodule(m_state) user_initial
 
   ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
   ! 更新すること(乖離は defined/run が「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:5) = [ character(len=32) :: &
+  character(len=*), parameter :: routine_names(1:6) = [ character(len=32) :: &
       "wave_hump",        & ! 波例題: 円形コサイン型の初期水位
       "dambreak_step",    & ! ダム破壊例題: x 方向の段状初期水深(Stoker 解析解の検証用)
       "wave_standing_x",  & ! 定在波例題: 閉じた水槽の x 方向モード (4, 0)(分散関係の検証用)
       "wave_standing_xy", & ! 定在波例題: 閉じた水槽の対角モード (4, 4)(同上。45° 方向)
+      "wave_solitary",    & ! 孤立波例題: x 方向に進む sech² 孤立波(非静水圧の非線形検証用)
       "template"          ] ! 新規ルーチンの雛形(空)
 
 contains
@@ -103,6 +104,8 @@ function resolve(name) result(fp)
       fp => initial_wave_standing_x
     case ("wave_standing_xy")
       fp => initial_wave_standing_xy
+    case ("wave_solitary")
+      fp => initial_wave_solitary
     case ("template")
       fp => initial_template
     case default
@@ -233,6 +236,38 @@ subroutine initial_wave_standing_xy(p, g, s)
       xx = (i - 0.5) * g%dx
       yy = (j - 0.5) * g%dy
       s%h(i,j) = s%h(i,j) * (1.0 + arel * cos(m * pi * xx / g%lx) * cos(m * pi * yy / g%ly))
+    end do
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 孤立波例題: x 方向に進む Boussinesq 型の孤立波(docs/nonhydrostatic_plan.md
+!   §11 Phase 5。test/nhsolitary)
+!   η = a·sech²(k_s (x − x0)),  k_s = √(3a/(4H³)),  u = c·η/(H + η),
+!   c = √(g(H + a))。a = 0.1·H(h0 から)、x0 = 50 m 固定。
+!   静水圧(f_nonhydrostatic=0)では分散がなく前面が急峻化して段波になり、
+!   1 層 NH では形を保って c で進む(KdV の解は 1 層モデルの厳密解では
+!   ないので、わずかな形の調整と後続波が出る)
+!----------------------------------------------------------------------
+subroutine initial_wave_solitary(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real, parameter :: arel = 0.1, x0 = 50.0
+  real :: hh, aa, ks, cc, xx, eta
+  do j = 1, g%ny
+    do i = 1, g%nx
+      hh = s%h(i,j)
+      aa = arel * hh
+      ks = sqrt(3.0 * aa / (4.0 * hh**3))
+      cc = sqrt(p%gg * (hh + aa))
+      xx = (i - 0.5) * g%dx - x0
+      eta = aa / cosh(ks * xx)**2
+      s%h(i,j) = hh + eta
+      s%u(i,j) = cc * eta / (hh + eta)
+      s%v(i,j) = 0.0
     end do
   end do
 end subroutine

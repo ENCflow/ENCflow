@@ -1,0 +1,70 @@
+!======================================================================
+! nhsolitary: x 方向に進む孤立波(1 層非静水圧補正の非線形検証。
+!   docs/nonhydrostatic_plan.md §11 Phase 5)
+!   平坦床・無摩擦・壁境界の長い水路。H = 1 m、a/H = 0.1、x0 = 50 m
+!   (user routine wave_solitary)。Δx = H/4。
+!   静水圧との比較・活性集合は Solitary.py(param_h.txt, param_a.txt)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02                 ! 時間刻み (s)(Courant ≈ 0.27)
+  t0 = 0
+  tt = 60                   ! 計算終了時刻 (s)(c ≈ 3.3 m/s で約 200 m 進む)
+  dt_disp = 1
+  dt_file = 5               ! 水深分布の出力間隔 (s)
+  dt_recrd = 0.02
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_record = '-'
+  dir_result = 'result_a'
+  f_disp_debug = 1
+  f_disp_qq = 1
+  f_check_cfl = 0
+  f_out_h = 1
+/
+
+&list_enc
+  f_gravity_correction = 0
+  f_exflux_reduction = 0
+  f_hcap_upwind = 0
+  f_friction_fastmath = 0
+  f_adaptive_runge = 1
+  p_adprunge_thresh = 1.2
+  f_nonhydrostatic = 1             ! 1 層非静水圧補正
+  nh_solver = 2                    ! CG
+  nh_tol = 1.0e-6
+  f_nh_adaptive = 1                ! 活性集合
+  nh_margin = 8
+/
+
+&list_initial
+  f_htype = 0
+  f_uvtype = 0
+  h0 = 1.0                ! 水深 H (m)
+  u0 = 0
+  v0 = 0
+  f_user_routine = "wave_solitary"
+/
+
+&list_geoinfo
+  lx = 300.0
+  ly = 8.0                ! 幅 8 m(32 行。壁で対角エッジが欠ける影響を 1% 未満にする)
+  nx = 1200               ! Δx = 0.25 m = H/4
+  ny = 32
+  f_ztype = 0
+  f_rntype = 0
+  z0 = 0.0
+  rn0 = 0.0
+/
+
+&list_bound
+/
+
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 400, 16     ! x = 100 m
+  pbxy(:,2) = 800, 16     ! x = 200 m
+  pbxy(:,3) = 1000, 16     ! x = 250 m
+/
