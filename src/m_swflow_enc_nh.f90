@@ -542,6 +542,7 @@ subroutine breaking_switch(p, g, s, sx)
       nh_mod%phi1(i,j) = 0.0                   ! 候補は接していなければ 0 に戻す
       do kk = 1, 8
         if (i+din(kk) < 1 .or. i+din(kk) > g%nx) cycle
+        if (j+djn(kk) < dcp%jsh .or. j+djn(kk) > dcp%jeh) cycle   ! 全域の端の行(確保範囲外)
         if (nh_mod%brk(i+din(kk), j+djn(kk)) == 1.0) then
           nh_mod%phi1(i,j) = 1.0
           exit
@@ -585,6 +586,7 @@ subroutine breaking_switch(p, g, s, sx)
         if (nh_mod%cmask(i,j) == 0 .or. nh_mod%brk(i,j) == 1.0) cycle
         do kk = 1, 8
           if (i+din(kk) < 1 .or. i+din(kk) > g%nx) cycle
+          if (j+djn(kk) < dcp%jsh .or. j+djn(kk) > dcp%jeh) cycle   ! 全域の端の行(確保範囲外)
           if (nh_mod%brk(i+din(kk), j+djn(kk)) == 1.0) then
             nh_mod%phi1(i,j) = 1.0
             exit
@@ -759,6 +761,7 @@ subroutine active_set(p, g, s, sx)
         end if
         do kk = 1, 8
           if (i+din(kk) < 1 .or. i+din(kk) > g%nx) cycle
+          if (j+djn(kk) < dcp%jsh .or. j+djn(kk) > dcp%jeh) cycle   ! 全域の端の行(確保範囲外)
           if (nh_mod%work(i+din(kk), j+djn(kk)) > 0.5) then
             nh_mod%phi1(i,j) = 1.0
             exit
