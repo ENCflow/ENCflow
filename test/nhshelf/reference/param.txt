@@ -1,0 +1,71 @@
+!======================================================================
+! nhshelf: 棚に乗り上げる孤立波のソリトン分裂(docs/nonhydrostatic_plan.md
+!   §11 Phase 5 のソリトン分裂、Phase 7 の底面勾配項の検証)
+!   水深 H = 1 m の平坦部 → 1:20 の斜面(x 120〜130 m)→ 水深 0.5 m の棚
+!   (user_geoinfo shelf_slope)。孤立波 a/H = 0.1、x0 = 50 m(wave_solitary)。
+!   Δx = H/4、32 行。底面勾配項あり(f_nh_slope = 1、Version 2)。
+!   比較: param_v1.txt(勾配項なし)、param_h.txt(静水圧)。解析は Fission.py
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02
+  t0 = 0
+  tt = 120                  ! 棚(c ≈ 2.4 m/s)で 200 m 進む
+  dt_disp = 1
+  dt_file = 10
+  dt_recrd = 0.02
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_record = '-'
+  dir_result = 'result'
+  f_disp_debug = 1
+  f_disp_qq = 1
+  f_check_cfl = 0
+  f_out_h = 1
+/
+
+&list_enc
+  f_gravity_correction = 0
+  f_exflux_reduction = 0
+  f_hcap_upwind = 2                ! 上流側水深(段波化する静水圧比較のため)
+  f_friction_fastmath = 0
+  f_adaptive_runge = 1
+  p_adprunge_thresh = 1.2
+  f_nonhydrostatic = 1
+  nh_solver = 2
+  nh_tol = 1.0e-6
+  f_nh_slope = 1                   ! 底面勾配項(Version 2)
+/
+
+&list_initial
+  f_htype = 0
+  f_uvtype = 0
+  h0 = 1.0
+  u0 = 0
+  v0 = 0
+  f_user_routine = "wave_solitary"
+/
+
+&list_geoinfo
+  lx = 400.0
+  ly = 8.0
+  nx = 1600
+  ny = 32
+  f_ztype = 0
+  f_rntype = 0
+  z0 = 0.0
+  rn0 = 0.0
+  f_user_routine = "shelf_slope"
+/
+
+&list_bound
+/
+
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 440, 16     ! x = 110 m(斜面の手前)
+  pbxy(:,2) = 800, 16     ! x = 200 m(棚)
+  pbxy(:,3) = 1200, 16    ! x = 300 m(棚)
+/

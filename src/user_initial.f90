@@ -31,13 +31,14 @@ submodule(m_state) user_initial
 
   ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
   ! 更新すること(乖離は defined/run が「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:7) = [ character(len=32) :: &
+  character(len=*), parameter :: routine_names(1:8) = [ character(len=32) :: &
       "wave_hump",        & ! 波例題: 円形コサイン型の初期水位
       "dambreak_step",    & ! ダム破壊例題: x 方向の段状初期水深(Stoker 解析解の検証用)
       "wave_standing_x",  & ! 定在波例題: 閉じた水槽の x 方向モード (4, 0)(分散関係の検証用)
       "wave_standing_xy", & ! 定在波例題: 閉じた水槽の対角モード (4, 4)(同上。45° 方向)
       "wave_solitary",    & ! 孤立波例題: x 方向に進む sech² 孤立波 a/H = 0.1(非静水圧の非線形検証用)
       "wave_solitary28",  & ! 孤立波例題: 同上で a/H = 0.28(Synolakis 1987 の砕波遡上ケース)
+      "wave_solitary0185",& ! 孤立波例題: 同上で a/H = 0.0185(Synolakis 1987 の非砕波遡上ケース)
       "template"          ] ! 新規ルーチンの雛形(空)
 
 contains
@@ -109,6 +110,8 @@ function resolve(name) result(fp)
       fp => initial_wave_solitary
     case ("wave_solitary28")
       fp => initial_wave_solitary28
+    case ("wave_solitary0185")
+      fp => initial_wave_solitary0185
     case ("template")
       fp => initial_template
     case default
@@ -267,6 +270,13 @@ subroutine initial_wave_solitary28(p, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   call solitary_profile(p, g, s, 0.28)
+end subroutine
+
+subroutine initial_wave_solitary0185(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  call solitary_profile(p, g, s, 0.0185)
 end subroutine
 
 subroutine solitary_profile(p, g, s, arel)

@@ -27,3 +27,12 @@ docs/nonhydrostatic_plan.md §11 Phase 6、developer.md §69.4。Synolakis (1987
   推奨(developer.md §69.4)。
 - np=2 は逐次と Log・プローブ・水深分布でビット一致(-O2 厳密ビルド。
   init の界面エッジ行の補完漏れを修正後)。
+
+## 底面勾配項と非砕波の遡上(2026-10-05)
+
+- f_nh_slope=1(Version 2)でも砕波スイッチつきの R_max/H は 0.618 で不変
+  (砕波遡上の過大は底面勾配項によるものではない)。
+- 非砕波 a/H = 0.0185(`param_nb.txt`、`wave_solitary0185`、70 s): 静水圧・
+  V1・V2 とも R_max/H = 0.064(前縁 h > 1 mm)。非砕波の遡上則
+  2.831√cotβ (a/H)^{5/4} = 0.086(実験 ≈ 0.09)の 75%。NH の寄与はなく、
+  Δx = H/4 での乾湿前縁(数 mm の舌)の表現の問題。

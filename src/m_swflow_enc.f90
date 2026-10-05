@@ -93,6 +93,7 @@ module m_swflow_enc
   real :: nh_break_fr = 0.6                 ! フルード数判定の閾値
   real :: nh_break_slope = 0.3              ! 水面勾配判定の閾値
   integer :: nh_break_margin = 0            ! 砕波セルの縁の幅(セル数。0: 2H/Δx から自動)
+  integer :: f_nh_slope = 0                 ! 底面勾配項 (0: Version 1 平坦床, 1: Version 2)
   logical :: nh_active = .false.            ! NH ON(init が f_nonhydrostatic から設定)
   real, allocatable :: nh_he(:,:,:)         ! momentum が面流束に使ったエッジ水深 he
                                             !   (1:4, 0:nx, jsh-1:jeh)。NH ON のときだけ確保。
@@ -603,6 +604,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   nh_break_fr = list%nh_break_fr
   nh_break_slope = list%nh_break_slope
   nh_break_margin = list%nh_break_margin
+  f_nh_slope = list%f_nh_slope
   select case (f_diffusion_term)
     case (0)      ! 無効
     case (1)      ! 定数モデル

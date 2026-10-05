@@ -1,0 +1,8 @@
+date      : 2026-10-05 05:51:09
+host      : vm
+user      : 
+pwd       : /home/user/ENCflow/test/nhshelf
+exe       : /home/user/ENCflow/bin/encflow
+mode      : serial__double
+modules   : (no modules)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007fc9a6c00000)

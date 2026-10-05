@@ -25,6 +25,14 @@
 !     allreduce)、2 CG(対称形 (1/β)φ + Lφ = Da*。内積は行部分和 →
 !     par_sum_rows の決定的総和)。いずれもスレッド数・ランク数に依らず
 !     ビット一致する。反復回数は全ランク同一(collective を同じ回数)。
+!   - 底面勾配項(f_nh_slope=1。Version 2): 鉛直速度に底面の運動学条件
+!     w_b = u·∇z_b を加え、圧力項に (φ/h)∇(h + 2z_b) を含める。
+!         φ_i = (h_i/4) Σ_k wd_k (h_i − Δz_k) a_k^out
+!         a_e = a*_e + (φ_n − φ_c)/d + (φ_c + φ_n)·σ_e,  σ_e = Δ(h+2z)/(2 h_e d)
+!     (8 方向の重み Σ_k l8 d_k n_k n_kᵀ/(2A) = I により a·∇z_b を離散化)。
+!     作用素が非対称になるため、CG は平坦部分を解き勾配項を Picard 反復で
+!     回す(warm start)。Jacobi は全項をそのまま回す。f_nh_slope=0 では
+!     Version 1 と演算が同一。
 !   - NH OFF(f_nonhydrostatic=0)では配列を確保せず、何も呼ばない
 !     (メモリ・CPU・通信ゼロ追加 = 既存 reference とビット一致)。
 !   - リスタート状態なし(φ はステップ内の診断量。cold start)。
@@ -41,7 +49,9 @@ submodule(m_swflow_enc) m_swflow_enc_nh
     real, allocatable :: uv0(:,:,:)       ! ステップ頭のエッジ流速 u^n (1:4, 0:nx, jsh-1:jeh)
     real, allocatable :: phi(:,:)         ! NH ポテンシャル φ (1:nx, jsh:jeh)
     real, allocatable :: phi1(:,:)        ! Jacobi の書き込み先 / CG の方向ベクトル p
-    real, allocatable :: rhs(:,:)         ! Jacobi: β D a*、CG: D a*
+    real, allocatable :: rhs(:,:)         ! Jacobi: β D a*、CG: D a*(Version 2 では Picard ごとに更新)
+    real, allocatable :: rhs0(:,:)        ! Version 2: Σ_k c_k a*_k(勾配項つきの右辺の a* 部分)
+    real, allocatable :: work2(:,:)       ! Version 2: Picard の前回の φ
     real, allocatable :: beta(:,:)        ! h²/4(NH セル以外 0)
     real, allocatable :: diag(:,:)        ! Jacobi: 1 + β Σ w、CG: 1/β + Σ w
     real, allocatable :: rr(:,:)          ! CG 残差
@@ -121,6 +131,13 @@ module subroutine nh_init(p, g, s)
     case default
       call par_stop("list_enc: f_nh_adaptive must be 0(whole mask) or 1(active set)")
   end select
+  select case (f_nh_slope)
+    case (0)
+    case (1)
+      call par_info("  bottom-slope terms ON (Version 2: w_b = u.grad z_b, (phi/h) grad(h + 2 z_b))")
+    case default
+      call par_stop("list_enc: f_nh_slope must be 0(flat, Version 1) or 1(bottom-slope terms)")
+  end select
   select case (f_nh_breaking)
     case (0)
     case (1)
@@ -158,6 +175,10 @@ module subroutine nh_init(p, g, s)
   allocate(nh_mod%dast(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (f_nh_adaptive == 1) allocate(nh_mod%work(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (f_nh_breaking == 1) allocate(nh_mod%brk(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  if (f_nh_slope == 1) then
+    allocate(nh_mod%rhs0(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(nh_mod%work2(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  end if
   allocate(nh_mod%emask(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = .false.)
   if (nh_solver == 2) then
     allocate(nh_mod%rr(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
@@ -207,10 +228,11 @@ module subroutine nh_project(p, g, s, sx)
   type(t_state), intent(in) :: s
   type(t_enc_status), intent(inout) :: sx
   integer :: i, j, k, kk, in, jn, ie, je
-  integer :: nact, iters
-  real :: da, wsum, dtinv
+  integer :: nact, iters, m, it2
+  real :: da, wsum, dtinv, r0, ck, sig, ae, rr, dphimax, phimax
   real :: phic, phin
-  logical :: ok
+  real :: vmax2(2)
+  logical :: ok, ok2
 
   dtinv = 1.0 / p%dt
 
@@ -289,22 +311,51 @@ module subroutine nh_project(p, g, s, sx)
   !$omp end parallel do
 
   ! --- 3b. 右辺と対角(担当帯 js..je) ---
+  !   Version 1: rhs = β D a*(Jacobi)/ D a*(CG)、diag = 1 + β Σ w / 1/β + Σ w。
+  !   Version 2(f_nh_slope=1): rhs0 = Σ_k c_k a*_k(c_k = (h/4) wd_k (h − Δz_k))を
+  !   Jacobi の右辺、diag = 1 + Σ_NH c_k (1/d_k − σ_k)。CG は平坦部分の
+  !   diag のまま、勾配項を Picard で右辺に回す(4. を参照)
   nact = 0
-  !$omp parallel do schedule(static) private(i, j, kk, wsum) reduction(+:nact)
+  !$omp parallel do schedule(static) private(i, j, kk, wsum, r0, ck, sig, ae) reduction(+:nact)
   do j = dcp%js, dcp%je
     do i = 1, g%nx
       if (nh_mod%cmask(i,j) == 0) cycle
       nact = nact + 1
       wsum = 0.0
-      do kk = 1, 8
-        if (nh_mod%emask(ke8(kk), i+die(kk), j+dje(kk))) wsum = wsum + nh_mod%wl(kk)
-      end do
-      if (nh_solver == 1) then
-        nh_mod%rhs(i,j) = nh_mod%beta(i,j) * nh_mod%dast(i,j)
-        nh_mod%diag(i,j) = 1.0 + nh_mod%beta(i,j) * wsum
+      if (f_nh_slope == 0) then
+        do kk = 1, 8
+          if (nh_mod%emask(ke8(kk), i+die(kk), j+dje(kk))) wsum = wsum + nh_mod%wl(kk)
+        end do
+        if (nh_solver == 1) then
+          nh_mod%rhs(i,j) = nh_mod%beta(i,j) * nh_mod%dast(i,j)
+          nh_mod%diag(i,j) = 1.0 + nh_mod%beta(i,j) * wsum
+        else
+          nh_mod%rhs(i,j) = nh_mod%dast(i,j)
+          nh_mod%diag(i,j) = 1.0 / nh_mod%beta(i,j) + wsum
+        end if
       else
-        nh_mod%rhs(i,j) = nh_mod%dast(i,j)
-        nh_mod%diag(i,j) = 1.0 / nh_mod%beta(i,j) + wsum
+        r0 = 0.0
+        do kk = 1, 8
+          call slope_coef(g, s, i, j, kk, ck, sig)
+          ae = sgn8(kk) * (sx%uv(ke8(kk), i+die(kk), j+dje(kk)) &
+                           - nh_mod%uv0(ke8(kk), i+die(kk), j+dje(kk))) * dtinv
+          r0 = r0 + ck * ae
+          if (nh_mod%emask(ke8(kk), i+die(kk), j+dje(kk))) then
+            if (nh_solver == 1) then
+              wsum = wsum + ck * (1.0 / w8dr(kk) - sig)
+            else
+              wsum = wsum + nh_mod%wl(kk)
+            end if
+          end if
+        end do
+        nh_mod%rhs0(i,j) = r0
+        if (nh_solver == 1) then
+          nh_mod%rhs(i,j) = r0
+          nh_mod%diag(i,j) = 1.0 + wsum
+        else
+          nh_mod%rhs(i,j) = r0 / nh_mod%beta(i,j)
+          nh_mod%diag(i,j) = 1.0 / nh_mod%beta(i,j) + wsum
+        end if
       end if
     end do
   end do
@@ -312,9 +363,57 @@ module subroutine nh_project(p, g, s, sx)
 
   ! --- 4. 反復解 ---
   if (nh_solver == 1) then
-    call solve_jacobi(g, iters, ok)
+    call solve_jacobi(g, s, iters, ok)
+  else if (f_nh_slope == 0) then
+    call solve_cg(g, iters, ok, .false.)
   else
-    call solve_cg(g, iters, ok)
+    ! Picard: 平坦部分 (1/β)φ + Lφ = [rhs0 + R(φ)]/β を CG(warm start)で解き、
+    ! 勾配項 R(φ) = Σ_NH [(c_k − β wd_k)(φ_n − φ_i)/d_k + c_k (φ_i + φ_n) σ_k] を
+    ! 更新して収束まで繰り返す。収束判定は max|Δφ| ≤ nh_tol·max|φ|(allreduce)
+    iters = 0
+    ok = .false.
+    do m = 1, nh_itmax
+      call par_halo_cell(nh_mod%phi)
+      dphimax = 0.0
+      phimax = 0.0
+      !$omp parallel do schedule(static) private(i, j, kk, rr, ck, sig, phic, phin) reduction(max:phimax)
+      do j = dcp%js, dcp%je
+        do i = 1, g%nx
+          if (nh_mod%cmask(i,j) == 0) cycle
+          phic = nh_mod%phi(i,j)
+          phimax = max(phimax, abs(phic))
+          rr = 0.0
+          do kk = 1, 8
+            if (.not. nh_mod%emask(ke8(kk), i+die(kk), j+dje(kk))) cycle
+            call slope_coef(g, s, i, j, kk, ck, sig)
+            phin = nh_mod%phi(i+din(kk), j+djn(kk))
+            rr = rr + (ck - nh_mod%beta(i,j) * nh_mod%wd(kk)) * (phin - phic) / w8dr(kk) &
+                    + ck * (phic + phin) * sig
+          end do
+          nh_mod%rhs(i,j) = (nh_mod%rhs0(i,j) + rr) / nh_mod%beta(i,j)
+          nh_mod%work2(i,j) = phic
+        end do
+      end do
+      !$omp end parallel do
+      call solve_cg(g, it2, ok2, m > 1)
+      iters = iters + it2
+      !$omp parallel do schedule(static) private(i, j) reduction(max:dphimax)
+      do j = dcp%js, dcp%je
+        do i = 1, g%nx
+          if (nh_mod%cmask(i,j) == 0) cycle
+          dphimax = max(dphimax, abs(nh_mod%phi(i,j) - nh_mod%work2(i,j)))
+        end do
+      end do
+      !$omp end parallel do
+      vmax2(1) = dphimax
+      vmax2(2) = phimax
+      call par_allreduce_max(vmax2)
+      if (vmax2(1) <= nh_tol * max(vmax2(2), tiny(1.0))) then
+        ok = ok2
+        exit
+      end if
+    end do
+    if (.not. ok) call par_warn("swflow_enc_nh: Picard (bottom-slope terms) did not converge")
   end if
   nh_mod%nstep = nh_mod%nstep + 1
   nh_mod%itsum = nh_mod%itsum + iters
@@ -336,7 +435,12 @@ module subroutine nh_project(p, g, s, sx)
         in = i + din(k)
         jn = j + djn(k)
         phin = nh_mod%phi(in,jn)
-        sx%uv(k,ie,je) = sx%uv(k,ie,je) + p%dt * (phin - phic) / w8dr(k)
+        if (f_nh_slope == 0) then
+          sx%uv(k,ie,je) = sx%uv(k,ie,je) + p%dt * (phin - phic) / w8dr(k)
+        else
+          call slope_coef(g, s, i, j, k, ck, sig)
+          sx%uv(k,ie,je) = sx%uv(k,ie,je) + p%dt * ((phin - phic) / w8dr(k) + (phic + phin) * sig)
+        end if
         sx%mn1(k,ie,je) = sx%uv(k,ie,je) * nh_he(k,ie,je)
       end do
     end do
@@ -633,17 +737,50 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 底面勾配項の係数(Version 2)。セル (i,j) の方向 kk について
+!   ck  = (h_i/4) wd_k max(h_i − Δz_k, 0)   (Δz_k = z_n − z_i。φ_i = Σ_k ck a_k^out)
+!   sig = Δ(h + 2z) / (2 h_e d_k)           (圧力項 (φ/h)∇(h+2z_b) の係数。
+!         (φ_c + φ_n)·sig。|Δ(h+2z)/(2h_e)| ≤ 1/2 にクランプして対角優位を保つ)
+!   近傍の h, z は確保範囲(x の番兵 0..nx+1、行 jsh..jeh)の中で読む
+!----------------------------------------------------------------------
+subroutine slope_coef(g, s, i, j, kk, ck, sig)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, kk
+  real, intent(out) :: ck, sig
+  integer :: in, jn
+  real :: hi, hn, dz, he, sd
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
+  in = i + din(kk)
+  jn = j + djn(kk)
+  hi = s%h(i,j)
+  hn = s%h(in,jn)
+  dz = s%z(in,jn) - s%z(i,j)
+  ck = 0.25 * hi * nh_mod%wd(kk) * max(hi - dz, 0.0)
+  he = 0.5 * (hi + hn)
+  if (he > 0.0) then
+    sd = (hn + 2.0 * s%z(in,jn)) - (hi + 2.0 * s%z(i,j))
+    sd = max(-he, min(he, sd))          ! |sd/(2 he)| ≤ 1/2
+    sig = sd / (2.0 * he * w8dr(kk))
+  else
+    sig = 0.0
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! Jacobi 反復: φ_new = (rhs + β Σ_k w_k φ_n) / diag(NH セルのみ)
 !   収束判定は残差 |diag·(φ_new − φ)| の最大(allreduce。max は順序不変)
 !   が nh_tol × max|rhs| 以下。全ランクが同じ回数だけ halo と allreduce を
 !   呼ぶ(collective 規律 §5)
 !----------------------------------------------------------------------
-subroutine solve_jacobi(g, iters, ok)
+subroutine solve_jacobi(g, s, iters, ok)
   type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
   integer, intent(out) :: iters
   logical, intent(out) :: ok
   integer :: i, j, kk, it
-  real :: rsum, resmax, rhsmax, pnew
+  real :: rsum, resmax, rhsmax, pnew, ck, sig
   real :: vmax(1)
 
   rhsmax = 0.0
@@ -664,17 +801,27 @@ subroutine solve_jacobi(g, iters, ok)
   do it = 1, nh_itmax
     call par_halo_cell(nh_mod%phi)
     resmax = 0.0
-    !$omp parallel do schedule(static) private(i, j, kk, rsum, pnew) reduction(max:resmax)
+    !$omp parallel do schedule(static) private(i, j, kk, rsum, pnew, ck, sig) reduction(max:resmax)
     do j = dcp%js, dcp%je
       do i = 1, g%nx
         if (nh_mod%cmask(i,j) == 0) cycle
         rsum = 0.0
-        do kk = 1, 8
-          if (nh_mod%emask(ke8(kk), i+die(kk), j+dje(kk))) then
-            rsum = rsum + nh_mod%wl(kk) * nh_mod%phi(i+din(kk), j+djn(kk))
-          end if
-        end do
-        pnew = (nh_mod%rhs(i,j) + nh_mod%beta(i,j) * rsum) / nh_mod%diag(i,j)
+        if (f_nh_slope == 0) then
+          do kk = 1, 8
+            if (nh_mod%emask(ke8(kk), i+die(kk), j+dje(kk))) then
+              rsum = rsum + nh_mod%wl(kk) * nh_mod%phi(i+din(kk), j+djn(kk))
+            end if
+          end do
+          pnew = (nh_mod%rhs(i,j) + nh_mod%beta(i,j) * rsum) / nh_mod%diag(i,j)
+        else
+          do kk = 1, 8
+            if (nh_mod%emask(ke8(kk), i+die(kk), j+dje(kk))) then
+              call slope_coef(g, s, i, j, kk, ck, sig)
+              rsum = rsum + ck * (1.0 / w8dr(kk) + sig) * nh_mod%phi(i+din(kk), j+djn(kk))
+            end if
+          end do
+          pnew = (nh_mod%rhs(i,j) + rsum) / nh_mod%diag(i,j)
+        end if
         resmax = max(resmax, abs(nh_mod%diag(i,j) * (pnew - nh_mod%phi(i,j))))
         nh_mod%phi1(i,j) = pnew
       end do
@@ -701,27 +848,54 @@ end subroutine
 !   対称正定値)。内積は行部分和 → par_sum_rows(決定的総和)。
 !   収束判定は ||r|| ≤ nh_tol·||b||
 !----------------------------------------------------------------------
-subroutine solve_cg(g, iters, ok)
+subroutine solve_cg(g, iters, ok, warm)
   type(t_geoinfo), intent(in) :: g
   integer, intent(out) :: iters
   logical, intent(out) :: ok
+  logical, intent(in) :: warm     ! .true.: 現在の φ を初期値にする(r = b − Mφ)
   integer :: i, j, kk, it
   real(real64) :: bb, rr0, rr1, pap, alpha, bet
   real :: lsum
 
-  ! x = φ = 0, r = b, p = r
-  !$omp parallel do schedule(static) private(j)
-  do j = dcp%jsh, dcp%jeh
-    nh_mod%rr(:,j) = nh_mod%rhs(:,j)
-    nh_mod%phi1(:,j) = nh_mod%rhs(:,j)
-    nh_mod%ap(:,j) = 0.0
-  end do
-  !$omp end parallel do
-  bb = dot(nh_mod%rr, nh_mod%rr)
+  if (warm) then
+    ! x = φ(現在値), r = b − M φ, p = r
+    call par_halo_cell(nh_mod%phi)
+    !$omp parallel do schedule(static) private(i, j, kk, lsum)
+    do j = dcp%jsh, dcp%jeh
+      nh_mod%rr(:,j) = 0.0
+      nh_mod%phi1(:,j) = 0.0
+      nh_mod%ap(:,j) = 0.0
+      if (j < dcp%js .or. j > dcp%je) cycle
+      do i = 1, g%nx
+        if (nh_mod%cmask(i,j) == 0) cycle
+        lsum = 0.0
+        do kk = 1, 8
+          if (nh_mod%emask(ke8(kk), i+die(kk), j+dje(kk))) then
+            lsum = lsum + nh_mod%wl(kk) * nh_mod%phi(i+din(kk), j+djn(kk))
+          end if
+        end do
+        nh_mod%rr(i,j) = nh_mod%rhs(i,j) - (nh_mod%diag(i,j) * nh_mod%phi(i,j) - lsum)
+        nh_mod%phi1(i,j) = nh_mod%rr(i,j)
+      end do
+    end do
+    !$omp end parallel do
+    bb = dot(nh_mod%rhs, nh_mod%rhs)
+  else
+    ! x = φ = 0, r = b, p = r
+    !$omp parallel do schedule(static) private(j)
+    do j = dcp%jsh, dcp%jeh
+      nh_mod%rr(:,j) = nh_mod%rhs(:,j)
+      nh_mod%phi1(:,j) = nh_mod%rhs(:,j)
+      nh_mod%ap(:,j) = 0.0
+    end do
+    !$omp end parallel do
+    bb = dot(nh_mod%rr, nh_mod%rr)
+  end if
   ok = .true.
   iters = 0
   if (bb <= 0.0_real64) return
-  rr0 = bb
+  rr0 = dot(nh_mod%rr, nh_mod%rr)
+  if (rr0 <= 0.0_real64) return
 
   do it = 1, nh_itmax
     call par_halo_cell(nh_mod%phi1)
@@ -819,6 +993,8 @@ module subroutine nh_dispose()
   if (allocated(nh_mod%dast)) deallocate(nh_mod%dast)
   if (allocated(nh_mod%work)) deallocate(nh_mod%work)
   if (allocated(nh_mod%brk)) deallocate(nh_mod%brk)
+  if (allocated(nh_mod%rhs0)) deallocate(nh_mod%rhs0)
+  if (allocated(nh_mod%work2)) deallocate(nh_mod%work2)
   if (allocated(nh_mod%emask)) deallocate(nh_mod%emask)
   nh_active = .false.
 end subroutine

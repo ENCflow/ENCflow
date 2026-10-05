@@ -31,13 +31,14 @@ submodule(m_geoinfo) user_geoinfo
 
   ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
   ! 更新すること(乖離は defined/run が「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:7) = [ character(len=32) :: &
+  character(len=*), parameter :: routine_names(1:8) = [ character(len=32) :: &
       "wave_solid_wall",  &   ! 波例題: 斜めの不透過壁(2セル厚)
       "wave_leaky_wall",  &   ! 波例題: 斜めの半透過壁(1セル厚)
       "tohoku_flood",     &   ! 東北大氾濫計算(スタブ)
       "gaussian_hill",    &   ! クリープ例題: 中央のガウス丘(解析解ベンチマーク)
       "slope_break",      &   ! 土石流例題: 遷緩点付き斜面(test/debris, test/slide)
       "beach_slope",      &   ! 孤立波遡上例題: 平坦部 + 1:19.85 の海浜斜面(test/nhbreak)
+      "shelf_slope",      &   ! ソリトン分裂例題: 平坦部 → 1:20 の斜面 → 半分の水深の棚(test/nhshelf)
       "template"          ]   ! 新規ルーチンの雛形(空)
 
 contains
@@ -108,6 +109,8 @@ function resolve(name) result(fp)
       fp => geoinfo_slope_break
     case ("beach_slope")
       fp => geoinfo_beach_slope
+    case ("shelf_slope")
+      fp => geoinfo_shelf_slope
     case ("template")
       fp => geoinfo_template
     case default
@@ -243,6 +246,27 @@ subroutine geoinfo_beach_slope(p, g)
     do i = 1, g%nx
       x = (i - 0.5) * g%dx
       g%z(i,j) = max(0.0, (x - xt) / cot)
+    end do
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! ソリトン分裂例題: x < x1 は平坦(z = 0)、x1..x2 は 1:20 の斜面、以降は
+!   z = zs の棚(静水深が半分になる構成。x1 = 120 m、x2 = 130 m、zs = 0.5 m)。
+!   test/nhshelf の param.txt と Fission.py の式と対で保守すること
+!----------------------------------------------------------------------
+subroutine geoinfo_shelf_slope(p, g)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(inout) :: g
+  integer :: i, j
+  real :: x
+  real, parameter :: x1 = 120.0, x2 = 130.0, zs = 0.5
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  do j = 1, g%ny
+    do i = 1, g%nx
+      x = (i - 0.5) * g%dx
+      g%z(i,j) = zs * min(max((x - x1) / (x2 - x1), 0.0), 1.0)
     end do
   end do
 end subroutine

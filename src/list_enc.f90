@@ -67,6 +67,8 @@ module list_enc
     real :: nh_break_fr = 0.6                 ! フルード数判定の閾値
     real :: nh_break_slope = 0.3              ! 水面勾配判定の閾値(8 近傍の最大 |Δη|/距離)
     integer :: nh_break_margin = 0            ! 砕波セルの周りを静水圧にする縁の幅(セル数。0: 2H/Δx から自動)
+    integer :: f_nh_slope = 0                 ! 底面勾配項 (0: 平坦床の線形 NH(Version 1), 1: 底面の運動学条件 w_b = u·∇z_b と
+                                              !   圧力項 (φ/h)∇(h+2z_b) を含む(Version 2))
   end type
 
 
@@ -116,6 +118,7 @@ subroutine list_enc_read(p, list)
   real :: nh_break_fr                   ! フルード数判定の閾値
   real :: nh_break_slope                ! 水面勾配判定の閾値
   integer :: nh_break_margin            ! 砕波セルの縁の幅(セル数)
+  integer :: f_nh_slope                 ! NH の底面勾配項 (0/1)
   integer :: un
   integer :: ios
   character(len=1024) :: iom
@@ -128,7 +131,7 @@ subroutine list_enc_read(p, list)
                       f_nonhydrostatic, nh_hmin, nh_solver, nh_itmax, nh_tol, &
                       f_nh_adaptive, nh_detector, nh_chi_on, nh_margin, nh_amin, nh_arel, &
                       f_nh_breaking, nh_break_alpha, nh_break_beta, nh_break_type, nh_break_fr, &
-                      nh_break_slope, nh_break_margin
+                      nh_break_slope, nh_break_margin, f_nh_slope
 
   f_gravity_correction = list%f_gravity_correction 
   f_exflux_reduction = list%f_exflux_reduction 
@@ -165,6 +168,7 @@ subroutine list_enc_read(p, list)
   nh_break_fr = list%nh_break_fr
   nh_break_slope = list%nh_break_slope
   nh_break_margin = list%nh_break_margin
+  f_nh_slope = list%f_nh_slope
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -208,6 +212,7 @@ subroutine list_enc_read(p, list)
   list%nh_break_fr = nh_break_fr
   list%nh_break_slope = nh_break_slope
   list%nh_break_margin = nh_break_margin
+  list%f_nh_slope = f_nh_slope
 
 end subroutine
 

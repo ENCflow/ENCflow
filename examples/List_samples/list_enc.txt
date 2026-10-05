@@ -106,6 +106,9 @@
   !nh_break_fr = 0.6        ! 判定 2 のフルード数の閾値
   !nh_break_slope = 0.3     ! 判定 3 の水面勾配の閾値
   !nh_break_margin = 0      ! 砕波セルの周りを静水圧にする縁(セル数。0: 2H/Δx)
+  !f_nh_slope = 0           ! 底面勾配項(0: 平坦床の線形 NH(Version 1), 1: 底面の
+                            !   運動学条件 w_b = u·∇z_b と圧力項 (φ/h)∇(h+2z_b) を
+                            !   含む Version 2。斜面・棚の上の波で使う)
 
   ! ---- その他 ----
   !f_rivermouth_drop = 0    ! 河口から海への段落ち(旧方式。fn_tide とは

@@ -108,6 +108,7 @@ becomes silently inactive).
 | nh_break_fr | 0.6 | Froude threshold of detector 2 |
 | nh_break_slope | 0.3 | surface-slope threshold of detector 3 (0.15-0.3 give nearly the same run-up for the solitary wave) |
 | nh_break_margin | 0 | width of the hydrostatic margin around breaking cells (cells; 0 = automatic 2H/Δx). Turns the crest as well as the front hydrostatic so the NH pressure does not keep pushing the breaking front |
+| f_nh_slope | 0 | bottom-slope terms (Version 2). 0: flat-bottom linear NH (φ = (h²/4)∇·a; default), 1: adds the bottom kinematic condition w_b = u·∇z_b to the vertical velocity and the pressure term (φ/h)∇(h + 2z_b) (φ_i = (h/4)Σ_k wd_k (h − Δz_k) a_k). For waves over slopes, shelves and abrupt bathymetry. The operator becomes non-symmetric, so CG iterates the slope terms with a Picard loop and takes about twice the iterations. On a flat bottom, a 1:20 slope and a shelf the difference from Version 1 is within a few percent (developer.md §69.5) |
 
 With standing waves in a closed basin (test/nhwave_nh) the periods for
 kH = 0.25-2 agree with the one-layer theory within 0.2% (hydrostatic
@@ -124,6 +125,12 @@ hydrostatic ENC gets close by breaking early on the flat part and losing
 energy, whereas NH reaches the breaking point unbroken and runs up
 higher. For run-up with breaking, hydrostatic (or NH only in deep water)
 is recommended for now; NH plus the switch is a research option.
+
+For a solitary wave climbing onto a shelf (test/nhshelf, depth 1 m →
+1:20 slope → 0.5 m, a/H = 0.1) NH reproduces the fission into a leading
+soliton and a trailing train (leading η/H₂ = 0.16, six crests on the
+shelf) while hydrostatic gives a bore (two crests). The bottom-slope
+terms (f_nh_slope=1) change the leading soliton by 2%.
 
 **Others**
 
