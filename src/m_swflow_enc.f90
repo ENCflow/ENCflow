@@ -96,6 +96,7 @@ module m_swflow_enc
   real :: nh_break_visc = 0.0               ! 砕波域の渦粘性係数 δ_b²(0: なし。plan §15)
   integer :: nh_bc_margin = 0               ! 強制境界から静水圧のままにするセル数(0: 2H/Δx から自動)
   integer :: f_nh_slope = 0                 ! 底面勾配項 (0: Version 1 平坦床, 1: Version 2)
+  integer :: f_nh_bottom = 0                ! 動く底面の加速度項 (0: なし, 1: z̈_b を NH の源項に。plan §16)
   logical :: have_diff = .false.            ! 拡散項を計算する(f_diffusion_term > 0 または
                                             !   nh_break_visc > 0。init が設定)
   real, allocatable :: nh_nub(:,:)          ! 砕波域の渦粘性 ν_b (1:nx, jsh:jeh)。nh_break_visc > 0
@@ -616,6 +617,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   nh_break_visc = list%nh_break_visc
   nh_bc_margin = list%nh_bc_margin
   f_nh_slope = list%f_nh_slope
+  f_nh_bottom = list%f_nh_bottom
   select case (f_diffusion_term)
     case (0)      ! 無効
     case (1)      ! 定数モデル

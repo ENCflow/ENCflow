@@ -99,3 +99,7 @@ test/nhbreak/param_x_*.txt
 
 # --- 回帰一括実行が各ケースに一時的に置く作業用バイナリ ---
 test/*/encflow_new
+test/nhbottom/uplift
+test/nhbottom/uplift_mpi
+test/nhbottom/z.txt
+test/nhbottom/submarine.txt

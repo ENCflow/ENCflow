@@ -73,6 +73,8 @@ module list_enc
                                               !   ν_b = nh_break_visc·B·h·√(gh)·|∇η| を運動量の拡散項に加える。plan §15)
     integer :: f_nh_slope = 0                 ! 底面勾配項 (0: 平坦床の線形 NH(Version 1), 1: 底面の運動学条件 w_b = u·∇z_b と
                                               !   圧力項 (φ/h)∇(h+2z_b) を含む(Version 2))
+    integer :: f_nh_bottom = 0                ! 動く底面の加速度項 (0: なし, 1: 底面の鉛直加速度 z̈_b を NH の源項に加える。
+                                              !   bedslide・geomorph・lavaflow・API の z 更新に効く。plan §16)
   end type
 
 
@@ -125,6 +127,7 @@ subroutine list_enc_read(p, list)
   real :: nh_break_visc                 ! 砕波域の渦粘性係数 δ_b²
   integer :: nh_bc_margin               ! 強制境界から静水圧のままにするセル数
   integer :: f_nh_slope                 ! NH の底面勾配項 (0/1)
+  integer :: f_nh_bottom                ! NH の動く底面の加速度項 (0/1)
   integer :: un
   integer :: ios
   character(len=1024) :: iom
@@ -137,7 +140,8 @@ subroutine list_enc_read(p, list)
                       f_nonhydrostatic, nh_hmin, nh_solver, nh_itmax, nh_tol, &
                       f_nh_adaptive, nh_detector, nh_chi_on, nh_margin, nh_amin, nh_arel, &
                       f_nh_breaking, nh_break_alpha, nh_break_beta, nh_break_type, nh_break_fr, &
-                      nh_break_slope, nh_break_margin, nh_break_visc, nh_bc_margin, f_nh_slope
+                      nh_break_slope, nh_break_margin, nh_break_visc, nh_bc_margin, f_nh_slope, &
+                      f_nh_bottom
 
   f_gravity_correction = list%f_gravity_correction 
   f_exflux_reduction = list%f_exflux_reduction 
@@ -177,6 +181,7 @@ subroutine list_enc_read(p, list)
   nh_break_visc = list%nh_break_visc
   nh_bc_margin = list%nh_bc_margin
   f_nh_slope = list%f_nh_slope
+  f_nh_bottom = list%f_nh_bottom
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -223,6 +228,7 @@ subroutine list_enc_read(p, list)
   list%nh_break_visc = nh_break_visc
   list%nh_bc_margin = nh_bc_margin
   list%f_nh_slope = f_nh_slope
+  list%f_nh_bottom = f_nh_bottom
 
 end subroutine
 

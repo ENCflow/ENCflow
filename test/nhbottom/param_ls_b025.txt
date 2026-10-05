@@ -1,0 +1,102 @@
+!======================================================================
+! nhbottom: 海底地滑り(examples/landslide_tsunami の C と同じ設定)で、
+!   動く底層 f_bedslide の造波を 静水圧 / NH(f_nh_slope=1)/ NH + 加速度項
+!   (f_nh_bottom=1)で比較する(docs/nonhydrostatic_plan.md §16.4-2)。
+!   入力 z.txt・submarine.txt は examples/landslide_tsunami/make_init.py
+!   (make inputs)。プローブは例題と同じ(dt_recrd を 0.25 s に細かく)。
+!   このファイル = NH + 加速度項、dt = 0.025 s(一段遅れの影響)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! ENC 格子
+  f_govequation = 0         ! 完全な動的浅水方程式
+  dt = 0.025                 ! 時間刻み (s)(一段遅れの影響の定量用に半分)
+  t0 = 0
+  tt = 120                  ! 計算時間 (s)
+  dt_disp = 5               ! 画面表示間隔 (s)
+  dt_file = 5               ! 分布ファイル出力間隔 (s)
+  dt_recrd = 0.25            ! プローブ出力間隔 (s)
+  fn_geoinfo = '-'          ! 同一ファイルから読む
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'         ! 土砂・地形変化(土石流モデル)を有効化
+  fn_boundary = '-'         ! 辺境界(放射)を有効化
+  fn_record = '-'           ! プローブを有効化
+  dir_result = 'result_ls_b025'
+  f_check_cfl = 0           ! CFL 超過で止めない(突入時の一時的な超過を許す)
+  f_out_e = 1               ! 水位 E
+  f_out_z = 1               ! 地盤高 Z(堆積の時間発展)
+  f_out_vv = 1              ! 流速 V
+  f_disp_vv = 1             ! 画面に最大流速
+  f_disp_cn = 1             ! 画面に最大クーラン数
+/
+
+&list_enc
+  f_gravity_correction = 1  ! 急斜面(tanθ=0.4)なので重力項の勾配補正を有効に
+  f_nonhydrostatic = 1      ! 1 層非静水圧
+  nh_solver = 2
+  nh_tol = 1.0e-6
+  f_nh_slope = 1            ! 底面勾配項(水中斜面 tanθ=0.4)
+  f_nh_bottom = 1           ! 動く底面の加速度項
+/
+
+&list_initial
+  f_htype = 2               ! 初期水位固定(湖の静水面)
+  e0 = 0.0                  ! 静水面標高 (m)。z<0 のセルが湖
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 600.0
+  ly = 200.0
+  nx = 120
+  ny = 40
+  f_ztype = 1
+  fn_z = 'z.txt'            ! 斜面+湖(make_init.py z)
+  f_rntype = 0
+  rn0 = 0.03                ! 清水のマニング粗度
+  sd0 = 12.0                ! 土層厚(崩壊深 D=10 の供給源。f_dbed=0 では交換なし)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0         ! 毎ステップ
+  morfac = 1.0              ! イベント計算(f_bedslide は 1 必須)
+  fluv_porosity = 0.4       ! λ(かさ体積の間隙率。台帳の表示に使用)
+  f_bedslide = 1            ! 動く底層
+  fn_bsinit = 'submarine.txt' ! 水中の崩壊深分布(make_init.py submarine)
+  bs_reltime = 1.0          ! t=1 s に可動化
+  bs_rho = 2000.0           ! 土塊のかさ密度 → r = ρw/ρs = 0.5
+  f_bsres = 1               ! Voellmy(慣性なし)
+  bs_mu = 0.15              ! 摩擦係数 μ
+  bs_xi = 500.0             ! 乱流係数 ξ (m/s²)
+  bs_vstop = 0.05           ! 停止判定の速度閾値 (m/s)
+  bs_tstop = 15.0           ! 低速が 15 s 続いたセルだけ固定
+  bs_eps_s = 0.02
+  bs_cfl = 0.4
+/
+
+!======================================================================
+! 辺境界: 西=山側(壁)、東・北・南=長波放射(基準水位は e0 から自動導出)
+!======================================================================
+&list_bound_edge
+  f_bc_w = 0
+  f_bc_e = 2
+  f_bc_n = 2
+  f_bc_s = 2
+/
+
+!======================================================================
+! プローブ(セル番号)。y 中央 j=20(y=97.5 m)
+!   1: 汀線直前の陸(x=187.5, z=5)  2: 汀線直後の湖(x=212.5, 水深 5)
+!   3: 斜面下端付近(x=297.5, 水深 39)  4: 湖央(x=397.5)  5: 対岸側(x=547.5)
+!   6: 北寄り湖央(x=397.5, y=27.5): 波の横方向の広がり
+!======================================================================
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 38, 20
+  pbxy(:,2) = 43, 20
+  pbxy(:,3) = 60, 20
+  pbxy(:,4) = 80, 20
+  pbxy(:,5) = 110, 20
+  pbxy(:,6) = 80, 6
+/

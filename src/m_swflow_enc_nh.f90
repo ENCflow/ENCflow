@@ -33,6 +33,17 @@
 !     作用素が非対称になるため、CG は平坦部分を解き勾配項を Picard 反復で
 !     回す(warm start)。Jacobi は全項をそのまま回す。f_nh_slope=0 では
 !     Version 1 と演算が同一。
+!   - 動く底面の加速度項(f_nh_bottom=1。plan §16): w̄ に ż_b が加わり
+!     φ に底面の鉛直加速度の源項が入る。z̈_b は射影時に見える s%z と
+!     私有の z_prev・ż_prev の 2 階差分(一段遅れ。セル局所・通信なし。
+!     bedslide・geomorph・lavaflow・API の z 更新のすべてに効く)。源項は
+!     −(h/4)(z̈ + z̈_s)、z̈_s = (1 + βL)⁻¹ z̈(同じ作用素で 1 回余分に解く
+!     Helmholtz 平滑化)。これで底面変位→水面のフィルタが 1/(1 + βk²)²
+!     (Kajiura の 1/cosh(kH) に k⁴ まで一致、全波数で非負、格子スケールで 0)
+!     になる。素朴な −(h/2) z̈ は (1 − βk²)/(1 + βk²) で kH > 2 で符号が
+!     反転し、慣性なしの底層(f_bedslide)と格子スケールの正帰還で発散した
+!     (§69.10)。init 後の最初の射影は z̈ = 0(restart で衝撃を作らない)。
+!     底面が静止のステップ(max|z̈| = 0。allreduce)は余分な解を省く。
 !   - NH OFF(f_nonhydrostatic=0)では配列を確保せず、何も呼ばない
 !     (メモリ・CPU・通信ゼロ追加 = 既存 reference とビット一致)。
 !   - リスタート状態なし(φ はステップ内の診断量。cold start)。
@@ -65,6 +76,12 @@ submodule(m_swflow_enc) m_swflow_enc_nh
                                           !   持つセル。規定流束・規定水位と射影が干渉して
                                           !   発散するため常に静水圧(init で静的に構築)
     logical, allocatable :: emask(:,:,:)  ! NH エッジ (1:4, 0:nx, jsh-1:jeh)
+    real, allocatable :: zprev(:,:)       ! f_nh_bottom: 前の射影で見た z (1:nx, jsh:jeh)
+    real, allocatable :: wb(:,:)          ! f_nh_bottom: 前の射影で得た底面速度 ż_b (m/s)
+    real, allocatable :: zdd(:,:)         ! f_nh_bottom: 底面加速度 z̈_b(担当帯。NH セル以外 0)
+    real, allocatable :: zsrc(:,:)        ! f_nh_bottom: 源項 −(h/4)(z̈_b + z̈_s)(担当帯)
+    real, allocatable :: rhsb(:,:)        ! f_nh_bottom: 平滑化の解の間、主系の右辺の退避
+    logical :: bot_first = .true.         ! f_nh_bottom: init 後の最初の射影(z̈ = 0)
     real :: wd(1:8) = 0.0                 ! 発散の重み l8(k)/(dx·dy)
     real :: wl(1:8) = 0.0                 ! ラプラシアンの重み l8(k)/(dx·dy·w8dr(k))
     ! 統計(dispose で表示)
@@ -145,6 +162,13 @@ module subroutine nh_init(p, g, b, s)
       call par_info("  bottom-slope terms ON (Version 2: w_b = u.grad z_b, (phi/h) grad(h + 2 z_b))")
     case default
       call par_stop("list_enc: f_nh_slope must be 0(flat, Version 1) or 1(bottom-slope terms)")
+  end select
+  select case (f_nh_bottom)
+    case (0)
+    case (1)
+      call par_info("  moving-bottom acceleration term ON (source -(h/4)(z'' + (1+bL)^-1 z''), one-step lag)")
+    case default
+      call par_stop("list_enc: f_nh_bottom must be 0(off) or 1(bottom acceleration term)")
   end select
   select case (f_nh_breaking)
     case (0)
@@ -250,6 +274,18 @@ module subroutine nh_init(p, g, b, s)
     allocate(nh_mod%rhs0(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(nh_mod%work2(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   end if
+  if (f_nh_bottom == 1) then
+    ! z_prev は restore 後の s%z(m_state_init が先)。最初の射影は z̈ = 0
+    allocate(nh_mod%zprev(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(nh_mod%wb(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(nh_mod%zdd(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(nh_mod%zsrc(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(nh_mod%rhsb(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    do j = dcp%jsh, dcp%jeh
+      nh_mod%zprev(:,j) = s%z(1:g%nx,j)
+    end do
+    nh_mod%bot_first = .true.
+  end if
   allocate(nh_mod%emask(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = .false.)
   if (nh_solver == 2) then
     allocate(nh_mod%rr(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
@@ -301,7 +337,7 @@ module subroutine nh_project(p, g, s, sx)
   integer :: i, j, k, kk, in, jn, ie, je
   integer :: nact, iters, m, it2
   real :: da, wsum, dtinv, r0, ck, sig, ae, rr, dphimax, phimax
-  real :: phic, phin
+  real :: phic, phin, wbn, bedmax
   real :: vmax2(2)
   logical :: ok, ok2
 
@@ -334,6 +370,38 @@ module subroutine nh_project(p, g, s, sx)
     end do
   end do
   !$omp end parallel do
+
+  ! --- 1a. 動く底面の加速度項(f_nh_bottom=1): 底面加速度 z̈_b(担当帯)。
+  !   ż = (z − z_prev)/Δt、z̈_b = (ż − ż_prev)/Δt。init 後の最初の射影は z̈ = 0。
+  !   z_prev・ż_prev はここでだけ更新する = ステップごとに 1 回。zsrc には
+  !   検出用の素朴な源 −(h/2) z̈ を置き、3c で平滑化した源に置き換える。
+  !   (底面速度の時間緩和は試して捨てた: plan §16.6) ---
+  bedmax = 0.0
+  if (f_nh_bottom == 1) then
+    !$omp parallel do schedule(static) private(i, j, wbn) reduction(max:bedmax)
+    do j = dcp%js, dcp%je
+      do i = 1, g%nx
+        wbn = (s%z(i,j) - nh_mod%zprev(i,j)) * dtinv
+        if (nh_mod%bot_first) then
+          nh_mod%zdd(i,j) = 0.0
+          nh_mod%wb(i,j) = wbn
+        else
+          nh_mod%zdd(i,j) = (wbn - nh_mod%wb(i,j)) * dtinv
+          nh_mod%wb(i,j) = wbn
+        end if
+        nh_mod%zprev(i,j) = s%z(i,j)
+        if (nh_mod%cmask(i,j) == 0) nh_mod%zdd(i,j) = 0.0
+        nh_mod%zsrc(i,j) = -0.5 * s%h(i,j) * nh_mod%zdd(i,j)
+        bedmax = max(bedmax, abs(nh_mod%zdd(i,j)))
+      end do
+    end do
+    !$omp end parallel do
+    nh_mod%bot_first = .false.
+    vmax2(1) = bedmax
+    vmax2(2) = 0.0
+    call par_allreduce_max(vmax2)        ! 底面が動いたか(全ランク同一の判定)
+    bedmax = vmax2(1)
+  end if
 
   ! --- 1b. 砕波スイッチ(f_nh_breaking=1): 水面が速く上昇するセルを静水圧に ---
   if (f_nh_breaking == 1) call breaking_switch(p, g, s, sx)
@@ -433,16 +501,72 @@ module subroutine nh_project(p, g, s, sx)
   end do
   !$omp end parallel do
 
+  ! --- 3c. 動く底面の源項(f_nh_bottom=1。底面が動いたステップのみ):
+  !   z̈_s = (1 + βL)⁻¹ z̈ を主系と同じ作用素・同じソルバで解き(Jacobi: 右辺 z̈、
+  !   CG: 右辺 z̈/β。Version 2 の Jacobi は勾配項込みの作用素で平滑化)、
+  !   源項 −(h/4)(z̈ + z̈_s) を右辺に加える。主系の右辺は rhsb に退避 ---
+  iters = 0
+  if (f_nh_bottom == 1 .and. bedmax > 0.0) then
+    !$omp parallel do schedule(static) private(i, j)
+    do j = dcp%js, dcp%je
+      do i = 1, g%nx
+        nh_mod%rhsb(i,j) = nh_mod%rhs(i,j)
+        nh_mod%rhs(i,j) = 0.0
+        if (nh_mod%cmask(i,j) == 0) cycle
+        if (nh_solver == 1) then
+          nh_mod%rhs(i,j) = nh_mod%zdd(i,j)
+        else
+          nh_mod%rhs(i,j) = nh_mod%zdd(i,j) / nh_mod%beta(i,j)
+        end if
+      end do
+    end do
+    !$omp end parallel do
+    if (nh_solver == 1) then
+      call solve_jacobi(g, s, it2, ok2)
+    else
+      call solve_cg(g, it2, ok2, .false.)
+    end if
+    iters = it2
+    if (.not. ok2) call par_warn("swflow_enc_nh: bottom-acceleration smoothing did not converge")
+    !$omp parallel do schedule(static) private(i, j)
+    do j = dcp%jsh, dcp%jeh
+      do i = 1, g%nx
+        nh_mod%zsrc(i,j) = -0.25 * s%h(i,j) * (nh_mod%zdd(i,j) + nh_mod%phi(i,j))
+        nh_mod%phi(i,j) = 0.0
+        nh_mod%phi1(i,j) = 0.0
+        if (j < dcp%js .or. j > dcp%je) cycle
+        nh_mod%rhs(i,j) = nh_mod%rhsb(i,j)
+        if (nh_mod%cmask(i,j) == 0) cycle
+        if (f_nh_slope == 0) then
+          if (nh_solver == 1) then
+            nh_mod%rhs(i,j) = nh_mod%rhs(i,j) + nh_mod%zsrc(i,j)
+          else
+            nh_mod%rhs(i,j) = nh_mod%rhs(i,j) + nh_mod%zsrc(i,j) / nh_mod%beta(i,j)
+          end if
+        else
+          nh_mod%rhs0(i,j) = nh_mod%rhs0(i,j) + nh_mod%zsrc(i,j)
+          if (nh_solver == 1) then
+            nh_mod%rhs(i,j) = nh_mod%rhs0(i,j)
+          else
+            nh_mod%rhs(i,j) = nh_mod%rhs0(i,j) / nh_mod%beta(i,j)
+          end if
+        end if
+      end do
+    end do
+    !$omp end parallel do
+  end if
+
   ! --- 4. 反復解 ---
   if (nh_solver == 1) then
-    call solve_jacobi(g, s, iters, ok)
+    call solve_jacobi(g, s, it2, ok)
+    iters = iters + it2
   else if (f_nh_slope == 0) then
-    call solve_cg(g, iters, ok, .false.)
+    call solve_cg(g, it2, ok, .false.)
+    iters = iters + it2
   else
     ! Picard: 平坦部分 (1/β)φ + Lφ = [rhs0 + R(φ)]/β を CG(warm start)で解き、
     ! 勾配項 R(φ) = Σ_NH [(c_k − β wd_k)(φ_n − φ_i)/d_k + c_k (φ_i + φ_n) σ_k] を
     ! 更新して収束まで繰り返す。収束判定は max|Δφ| ≤ nh_tol·max|φ|(allreduce)
-    iters = 0
     ok = .false.
     do m = 1, nh_itmax
       call par_halo_cell(nh_mod%phi)
@@ -772,7 +896,11 @@ subroutine active_set(p, g, s, sx)
     do i = 1, g%nx
       if (nh_mod%cmask(i,j) == 0) cycle
       hmax = max(hmax, s%h(i,j))
-      bmax = max(bmax, abs(nh_mod%beta(i,j) * nh_mod%dast(i,j)))
+      if (f_nh_bottom == 1) then
+        bmax = max(bmax, abs(nh_mod%beta(i,j) * nh_mod%dast(i,j) + nh_mod%zsrc(i,j)))
+      else
+        bmax = max(bmax, abs(nh_mod%beta(i,j) * nh_mod%dast(i,j)))
+      end if
     end do
   end do
   !$omp end parallel do
@@ -788,7 +916,11 @@ subroutine active_set(p, g, s, sx)
     do i = 1, g%nx
       nh_mod%work(i,j) = 0.0
       if (nh_mod%cmask(i,j) == 0) cycle
-      bda = abs(nh_mod%beta(i,j) * nh_mod%dast(i,j))
+      if (f_nh_bottom == 1) then
+        bda = abs(nh_mod%beta(i,j) * nh_mod%dast(i,j) + nh_mod%zsrc(i,j))
+      else
+        bda = abs(nh_mod%beta(i,j) * nh_mod%dast(i,j))
+      end if
       if (bda < floor) cycle
       if (nh_detector == 1) then
         a2 = 0.0
@@ -1119,6 +1251,11 @@ module subroutine nh_dispose()
   if (allocated(nh_mod%brk)) deallocate(nh_mod%brk)
   if (allocated(nh_mod%rhs0)) deallocate(nh_mod%rhs0)
   if (allocated(nh_mod%work2)) deallocate(nh_mod%work2)
+  if (allocated(nh_mod%zprev)) deallocate(nh_mod%zprev)
+  if (allocated(nh_mod%wb)) deallocate(nh_mod%wb)
+  if (allocated(nh_mod%zdd)) deallocate(nh_mod%zdd)
+  if (allocated(nh_mod%zsrc)) deallocate(nh_mod%zsrc)
+  if (allocated(nh_mod%rhsb)) deallocate(nh_mod%rhsb)
   if (allocated(nh_mod%emask)) deallocate(nh_mod%emask)
   nh_active = .false.
 end subroutine

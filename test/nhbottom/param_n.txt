@@ -1,0 +1,74 @@
+!======================================================================
+! nhbottom: 動く底面の加速度項(f_nh_bottom。docs/nonhydrostatic_plan.md §16)
+!   Hammack 型の区間隆起(uplift ドライバ: ./uplift param.txt uplift.txt)。
+!   H = 10 m・平坦・無摩擦の 1 次元水路(幅 40 m = 32 行。壁で対角エッジが
+!   欠ける影響を 1% 未満にする)。|x − 500| < 20 m を 1 s で 0.2 m 持ち上げ、
+!   両側へ出る波を線形理論(Theory.py。静水圧 / NH 加速度項なし / NH
+!   加速度項あり / 厳密)と比較する。
+!   このファイル = NH、加速度項なし(比較用。param.txt から派生)。
+!   param_h.txt = 静水圧、param_n.txt = NH(加速度項なし)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.0125               ! Courant ≈ 0.1(√(gH) = 9.9 m/s, Δx = 1.25 m)
+  t0 = 0
+  tt = 40                   ! 先頭波が x = 500 ± 400 m まで(壁 ±500 m の反射前)
+  dt_disp = 1
+  dt_file = 1               ! E の分布(断面図用)
+  dt_recrd = 0.05
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_record = '-'
+  dir_result = 'result_n'
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_disp_qq = 1
+  f_check_cfl = 0
+  f_out_h = 0
+  f_out_e = 1
+/
+
+&list_enc
+  f_gravity_correction = 0
+  f_exflux_reduction = 0
+  f_hcap_upwind = 0
+  f_friction_fastmath = 0
+  f_adaptive_runge = 1
+  p_adprunge_thresh = 1.2
+  f_nonhydrostatic = 1      ! 1 層非静水圧
+  nh_solver = 2
+  nh_tol = 1.0e-6
+  f_nh_bottom = 0           ! 加速度項なし(底面運動は水面の持ち上げとしてだけ入る)
+/
+
+&list_initial
+  f_htype = 0
+  f_uvtype = 0
+  h0 = 10.0                 ! 水深 H (m)
+  u0 = 0
+  v0 = 0
+/
+
+&list_geoinfo
+  lx = 1000.0
+  ly = 40.0
+  nx = 800                  ! Δx = 1.25 m = H/8
+  ny = 32
+  f_ztype = 0
+  z0 = 0.0                  ! 底面 z = 0(隆起で +0.2 m)
+  f_rntype = 0
+  rn0 = 0.0
+/
+
+&list_bound
+/
+
+! プローブ: 隆起中心(x = 499.4)、+100、+200、+300 m
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 400, 16
+  pbxy(:,2) = 480, 16
+  pbxy(:,3) = 560, 16
+  pbxy(:,4) = 640, 16
+/

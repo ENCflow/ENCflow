@@ -713,7 +713,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   と Δx = H/4 での孤立波の数値散逸のスキーム側の調査、判定 (1) の brk の
   私有 save、
   (e) Phase 7 底面勾配項は実装・検証済み(f_nh_slope。test/nhshelf の
-  ソリトン分裂。§69.5)、(f) Phase 8 動く底面。undular bore(test/nhbore)
+  ソリトン分裂。§69.5)、(f) Phase 8 動く底面は実装・検証済み(f_nh_bottom。
+  plan §16、§69.10、test/nhbottom: 規定隆起で厳密解の +4%、海底地滑りとの
+  結合は素朴な源項で発散 → Helmholtz 平滑化で安定。残: 1 層 NH の遮断
+  周波数に捕捉される底層との自励振動 ±0.6 m(§69.10。多層化か底層の
+  慣性が本筋)、restart 往復の z̈ 1 ステップ分の差)。undular bore(test/nhbore)
   済、一様流上の波(test/nhcurrent)済(§69.8)。規定境界を貫く一様流の
   発振は MUSCL の upup が領域外の 0 を読む実バグ(§69.9。修正済み。
   壁行の対角エッジで面値が変わるため既存 reference が変わり、目視確認の

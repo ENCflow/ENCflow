@@ -111,6 +111,7 @@ becomes silently inactive).
 | nh_break_visc | 0 | breaking eddy-viscosity coefficient delta_b^2 (0: off). Cells flagged as breaking (margin included) get nu_b = nh_break_visc * B * h * sqrt(gh) * \|grad eta\| (B = clip((\|grad eta\| - s)/s, 0, 1), s = nh_break_slope), dissipated through the momentum diffusion term div(nu grad u). This is the Kennedy et al. (2000) nu = B delta_b^2 h d(eta)/dt made local and stateless by the kinematics of a progressive wave; 1.44 (delta_b = 1.2) matches the literature. Use it when the breaking switch alone (bore jump conditions only) overpredicts run-up of plunging breakers (section 69.6). Can be combined with f_diffusion_term (nu adds up). nu above the explicit stability limit dx^2/(dt*sum w) is clamped with a warning (not reached at Courant <= 0.1). Zero overhead when off |
 | nh_bc_margin | 0 | width (cells; 0: 2H/dx automatically) of the band kept hydrostatic next to forced boundaries (stage cell groups and frame cells with inflow / free-outflow / radiation faces). Prevents the prescribed flux or level from interfering with the projection and diverging at the boundary. No effect in cases bounded by walls only |
 | f_nh_slope | 0 | bottom-slope terms (Version 2). 0: flat-bottom linear NH (φ = (h²/4)∇·a; default), 1: adds the bottom kinematic condition w_b = u·∇z_b to the vertical velocity and the pressure term (φ/h)∇(h + 2z_b) (φ_i = (h/4)Σ_k wd_k (h − Δz_k) a_k). For waves over slopes, shelves and abrupt bathymetry. The operator becomes non-symmetric, so CG iterates the slope terms with a Picard loop and takes about twice the iterations. On a flat bottom, a 1:20 slope and a shelf the difference from Version 1 is within a few percent (developer.md §69.5) |
+| f_nh_bottom | 0 | moving-bottom acceleration term. 1: adds the vertical acceleration of the bed z̈_b (second difference of the bed elevation seen at the previous steps, private to the NH module; acts on every process that moves z: landslide tsunami f_bedslide, morphological change, lava flow and the library API; the forcing lags one step) as a source of the NH projection. The source is smoothed with the same operator, −(h/4)(z̈_b + (1 + βL)⁻¹z̈_b), so that the short-wave attenuation of the bed-to-surface transfer becomes 1/(1 + βk²)², which approximates Kajiura's 1/cosh(kH) up to k⁴ (the naive −(h/2)z̈_b reverses sign beyond kH > 2 and diverges in positive feedback with the inertialess bed layer). Matters for short slides (b/H ≲ 2) in the near field. About twice the iterations while the bed moves. Works with f_nh_slope 0 or 1. Zero cost when off (developer.md §69.10) |
 
 With standing waves in a closed basin (test/nhwave_nh) the periods for
 kH = 0.25-2 agree with the one-layer theory within 0.2% (hydrostatic
@@ -142,6 +143,13 @@ For a solitary wave climbing onto a shelf (test/nhshelf, depth 1 m →
 soliton and a trailing train (leading η/H₂ = 0.16, six crests on the
 shelf) while hydrostatic gives a bore (two crests). The bottom-slope
 terms (f_nh_slope=1) change the leading soliton by 2%.
+For a moving bottom (test/nhbottom: a Hammack-type uplift of 0.2 m in 1 s
+over |x − x_c| < 20 m in 10 m of water) the leading crest 200 m away agrees
+with the linear theory of each model within −2.5% (hydrostatic) and ±0.7%
+(NH), and the acceleration term (f_nh_bottom=1) reduces the difference from
+the exact potential-flow solution from +16% to +4% (hydrostatic: +40%; the
+surface shape over the uplift coincides with the exact solution). It also
+runs stably coupled with a submarine landslide (f_bedslide).
 
 **Others**
 

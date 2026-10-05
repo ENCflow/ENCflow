@@ -15,6 +15,9 @@
 #     FILES  : reference と比較するファイル。RESDIR 内のベース名で
 #              指定する (既定 Log.txt = result/Log.txt を比較)
 #     RESDIR : 計算結果ディレクトリ (既定 result)
+#     EXE    : 実行ファイルのベース名 (既定 encflow。MPI は <EXE>_mpi)。
+#              ライブラリ API を使うドライバ型のケース(test/nhbottom の
+#              uplift)が上書きする
 #              画面出力の保存先は Screen.log(比較には使わない)
 #     NP     : MPI ランク数の既定値 (既定 2)
 #     RTOL   : 相対許容誤差 (既定 serial:0, mpi:1e-5)
@@ -55,6 +58,7 @@ fi
 
 PARAM=${PARAM:-param.txt}
 FILES=${FILES:-Log.txt}
+EXE=${EXE:-encflow}
 
 # --- ビルドモードの整合性確認 ---
 "$sdir/Check_mode.sh" "$mode" || exit 1
@@ -64,14 +68,14 @@ FILES=${FILES:-Log.txt}
 # Compare_ref.sh の環境記録にも同じものを伝える
 set -o pipefail
 if [ "$mode" = mpi ]; then
-    export ENCFLOW_EXE=./encflow_mpi
+    export ENCFLOW_EXE=./${EXE}_mpi
     # 期待ランク数をバイナリに伝え、シングルトン化(PMI 不整合で全プロセス
     # が nproc=1 で独立起動する事故)を par_init で検出させる
     export ENCFLOW_EXPECT_NP="$NP"
-    time mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi "$PARAM" | tee Screen.log
+    time mpirun -np "$NP" $MPIRUN_OPTS ./${EXE}_mpi "$PARAM" | tee Screen.log
 else
-    export ENCFLOW_EXE=./encflow
-    time ./encflow "$PARAM" | tee Screen.log
+    export ENCFLOW_EXE=./$EXE
+    time ./$EXE "$PARAM" | tee Screen.log
 fi
 rc=$?
 set +o pipefail
