@@ -93,3 +93,6 @@ examples/tsunami_town/dwstock.txt
 
 # --- test/nhwave の走査結果 ---
 test/nhwave/scan/
+
+# --- test/nhbreak の切り分け実験(Diag.py --run が生成・削除する一時パラメータ)---
+test/nhbreak/param_x_*.txt
