@@ -139,5 +139,6 @@ python3 Landslide.py          # figs/landslide.png と数表
 
 `./Run.sh` / `./Run_MPI.sh N` は構成 1 の param.txt(NH + 加速度項)を
 uplift ドライバで実行して reference/Log.txt と比較する(列 4 = Runge は
-除外)。np = 1, 2, 4 で Log が一致。構成 2 は比較用(reference なし。
+除外)。np = 2, 4 は逐次 reference と、全有効桁の S 列が 3 行で最終桁 1 だけ
+異なる(総和の順序。nhwave_nh と同じ)ほかは一致。構成 2 は比較用(reference なし。
 test/bedslide が bedslide 本体の検定)。

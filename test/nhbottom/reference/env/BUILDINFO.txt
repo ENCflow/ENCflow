@@ -1,8 +1,8 @@
-date      : 2026-10-05 22:34:45
+date      : 2026-10-05 23:22:03
 host      : vm
 user      : 
 pwd       : /home/user/ENCflow/test/nhbottom
 exe       : /home/user/ENCflow/test/nhbottom/uplift
 mode      : serial__double
 modules   : (no modules)
-lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f2be5e00000)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f8d7be00000)
