@@ -31,10 +31,12 @@ submodule(m_state) user_initial
 
   ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
   ! 更新すること(乖離は defined/run が「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:3) = [ character(len=32) :: &
-      "wave_hump",     & ! 波例題: 円形コサイン型の初期水位
-      "dambreak_step", & ! ダム破壊例題: x 方向の段状初期水深(Stoker 解析解の検証用)
-      "template"       ] ! 新規ルーチンの雛形(空)
+  character(len=*), parameter :: routine_names(1:5) = [ character(len=32) :: &
+      "wave_hump",        & ! 波例題: 円形コサイン型の初期水位
+      "dambreak_step",    & ! ダム破壊例題: x 方向の段状初期水深(Stoker 解析解の検証用)
+      "wave_standing_x",  & ! 定在波例題: 閉じた水槽の x 方向モード (4, 0)(分散関係の検証用)
+      "wave_standing_xy", & ! 定在波例題: 閉じた水槽の対角モード (4, 4)(同上。45° 方向)
+      "template"          ] ! 新規ルーチンの雛形(空)
 
 contains
 
@@ -97,6 +99,10 @@ function resolve(name) result(fp)
       fp => initial_wave_hump
     case ("dambreak_step")
       fp => initial_dambreak_step
+    case ("wave_standing_x")
+      fp => initial_wave_standing_x
+    case ("wave_standing_xy")
+      fp => initial_wave_standing_xy
     case ("template")
       fp => initial_template
     case default
@@ -182,6 +188,53 @@ subroutine initial_dambreak_step(p, g, s)
     end do
   end do
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 定在波例題: 閉じた矩形水槽の固有モードの初期水位(初期流速 0)
+!   η = a·cos(m π x/lx)(x モード)、η = a·cos(m π x/lx)·cos(m π y/ly)
+!   (対角モード)。m = 4 固定、振幅 a = 1e-3 × 初期水深(線形波)。
+!   セル中心 x = (i − 1/2)Δx の余弦は C 格子の離散 Neumann 固有関数
+!   なので、壁で反射しても形を保つ定在波になる。水深 h0(namelist)を
+!   変えると水深 H と kH が変わり、格子は不変のまま分散関係を走査できる
+!   (test/nhwave。docs/nonhydrostatic_plan.md §11 Phase 1)
+!----------------------------------------------------------------------
+subroutine initial_wave_standing_x(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  integer, parameter :: m = 4
+  real, parameter :: arel = 1.0e-3
+  real :: xx, pi
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  pi = acos(-1.0)
+  do j = 1, g%ny
+    do i = 1, g%nx
+      xx = (i - 0.5) * g%dx
+      s%h(i,j) = s%h(i,j) * (1.0 + arel * cos(m * pi * xx / g%lx))
+    end do
+  end do
+end subroutine
+
+subroutine initial_wave_standing_xy(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  integer, parameter :: m = 4
+  real, parameter :: arel = 1.0e-3
+  real :: xx, yy, pi
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  pi = acos(-1.0)
+  do j = 1, g%ny
+    do i = 1, g%nx
+      xx = (i - 0.5) * g%dx
+      yy = (j - 0.5) * g%dy
+      s%h(i,j) = s%h(i,j) * (1.0 + arel * cos(m * pi * xx / g%lx) * cos(m * pi * yy / g%ly))
+    end do
+  end do
 end subroutine
 
 

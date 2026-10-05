@@ -89,3 +89,6 @@ examples/tsunami_town/gv.txt
 examples/tsunami_town/bdstock.txt
 examples/tsunami_town/bdfrac.txt
 examples/tsunami_town/dwstock.txt
+
+# --- test/nhwave の走査結果 ---
+test/nhwave/scan/
