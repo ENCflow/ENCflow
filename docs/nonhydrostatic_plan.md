@@ -806,3 +806,24 @@ handoff.md の消し込み。
 - Muñoz-Moncayo, C. & Ketcheson, D.I. (2026) Adaptive, efficient, and
   scalable water wave modeling with dispersive hyperbolic systems. arXiv
   2606.12162(GeoClaw 上の双曲型緩和 + AMR。同上)。
+
+---
+
+## 14. 実施状況(2026-10-05)
+
+| 段 | 状態 | 記録 |
+|---|---|---|
+| 0 | 合意・§0 改定済み | developer.md §0-5 例外、§69 |
+| 1 | 済(test/nhwave、Dispersion.py) | §69.1 |
+| 2 | 済(calc_kth_flux の he 出力) | コミット 7344fb5 |
+| 3・4 | 済(m_swflow_enc_nh、CG 既定。test/nhwave_nh) | §69.1 |
+| 4b | 済(活性集合 f_nh_adaptive。種の下限 nh_amin/nh_arel を追加) | §69.2 |
+| 4c | 未(この規模では通信が律速でない) | §7 |
+| 5 | 孤立波 済(test/nhsolitary)。一様流上の波・ソリトン分裂は未 | §69.3 |
+| 6 | 済(test/nhbreak。砕波スイッチ 3 種、f_hcap_upwind=2 必須。NH + スイッチの遡上は実験則の 1.5 倍で、砕波を含む遡上は静水圧を推奨) | §69.4 |
+| 7・8 | 未 | — |
+
+実装中に見つかった設計からの逸脱は §6(種の下限、stateless)・§8.2
+(勾配判定を既定、hcap 2)に追記した。init の界面エッジ行の補完漏れ
+(実バグ)は §69.4。
+
