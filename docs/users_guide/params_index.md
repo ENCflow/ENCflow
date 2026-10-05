@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 567 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 574 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -206,6 +206,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_lavaflow | &list_lavaflow | [溶岩流](lavaflow.md) |
 | f_masktype | &list_geoinfo | [地理情報](geoinfo.md) |
 | f_nh_adaptive | &list_enc | [浅水流計算](swflow.md) |
+| f_nh_breaking | &list_enc | [浅水流計算](swflow.md) |
 | f_nonhydrostatic | &list_enc | [浅水流計算](swflow.md) |
 | f_out_bds | &list_sysparam | [入出力](io.md) |
 | f_out_cn | &list_sysparam | [入出力](io.md) |
@@ -457,6 +458,12 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | morfac | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | nh_amin | &list_enc | [浅水流計算](swflow.md) |
 | nh_arel | &list_enc | [浅水流計算](swflow.md) |
+| nh_break_alpha | &list_enc | [浅水流計算](swflow.md) |
+| nh_break_beta | &list_enc | [浅水流計算](swflow.md) |
+| nh_break_fr | &list_enc | [浅水流計算](swflow.md) |
+| nh_break_margin | &list_enc | [浅水流計算](swflow.md) |
+| nh_break_slope | &list_enc | [浅水流計算](swflow.md) |
+| nh_break_type | &list_enc | [浅水流計算](swflow.md) |
 | nh_chi_on | &list_enc | [浅水流計算](swflow.md) |
 | nh_detector | &list_enc | [浅水流計算](swflow.md) |
 | nh_hmin | &list_enc | [浅水流計算](swflow.md) |

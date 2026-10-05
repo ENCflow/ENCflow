@@ -48,6 +48,7 @@ submodule(m_swflow_enc) m_swflow_enc_nh
     real, allocatable :: ap(:,:)          ! CG の M p
     real, allocatable :: dast(:,:)        ! D a*(NH 候補セル。検出と右辺に使う)
     real, allocatable :: work(:,:)        ! 活性集合の膨張用(0/1。halo 交換のため実数)
+    real, allocatable :: brk(:,:)         ! 砕波セル(0/1。halo 交換のため実数)
     integer, allocatable :: cmask(:,:)    ! NH セル (1:nx, jsh:jeh)
     logical, allocatable :: emask(:,:,:)  ! NH エッジ (1:4, 0:nx, jsh-1:jeh)
     real :: wd(1:8) = 0.0                 ! 発散の重み l8(k)/(dx·dy)
@@ -57,6 +58,7 @@ submodule(m_swflow_enc) m_swflow_enc_nh
     integer(8) :: itsum = 0
     integer :: itmax_seen = 0
     integer(8) :: actsum = 0              ! 活性セル数の累計(ランク局所)
+    integer(8) :: brksum = 0              ! 砕波セル数の累計(ランク局所)
     integer :: nfail = 0                  ! 不収束のステップ数
   end type
   type(t_enc_nh) :: nh_mod
@@ -119,6 +121,31 @@ module subroutine nh_init(p, g, s)
     case default
       call par_stop("list_enc: f_nh_adaptive must be 0(whole mask) or 1(active set)")
   end select
+  select case (f_nh_breaking)
+    case (0)
+    case (1)
+      select case (nh_break_type)
+        case (1)
+          if (nh_break_alpha <= 0.0 .or. nh_break_beta <= 0.0 .or. nh_break_beta > nh_break_alpha) then
+            call par_stop("list_enc: nh_break_alpha > nh_break_beta > 0 is required")
+          end if
+          call par_info("  breaking switch: hydrostatic where d(eta)/dt > alpha sqrt(gh), alpha = " &
+                        //trim(rtoa(nh_break_alpha))//", beta = "//trim(rtoa(nh_break_beta)))
+        case (2)
+          if (nh_break_fr <= 0.0) call par_stop("list_enc: nh_break_fr must be > 0")
+      if (nh_break_margin < 0) call par_stop("list_enc: nh_break_margin must be >= 0")
+          call par_info("  breaking switch: hydrostatic where Froude number |V|/sqrt(gh) > " &
+                        //trim(rtoa(nh_break_fr)))
+        case (3)
+          if (nh_break_slope <= 0.0) call par_stop("list_enc: nh_break_slope must be > 0")
+          call par_info("  breaking switch: hydrostatic where surface slope |grad eta| > " &
+                        //trim(rtoa(nh_break_slope)))
+        case default
+          call par_stop("list_enc: nh_break_type must be 1(d(eta)/dt), 2(Froude) or 3(surface slope)")
+      end select
+    case default
+      call par_stop("list_enc: f_nh_breaking must be 0(off) or 1(on)")
+  end select
 
   allocate(nh_mod%uv0(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
   allocate(nh_he(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
@@ -130,6 +157,7 @@ module subroutine nh_init(p, g, s)
   allocate(nh_mod%cmask(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
   allocate(nh_mod%dast(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (f_nh_adaptive == 1) allocate(nh_mod%work(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  if (f_nh_breaking == 1) allocate(nh_mod%brk(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(nh_mod%emask(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = .false.)
   if (nh_solver == 2) then
     allocate(nh_mod%rr(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
@@ -143,6 +171,7 @@ module subroutine nh_init(p, g, s)
   nh_mod%itsum = 0
   nh_mod%itmax_seen = 0
   nh_mod%actsum = 0
+  nh_mod%brksum = 0
   nh_mod%nfail = 0
 
 contains
@@ -211,6 +240,9 @@ module subroutine nh_project(p, g, s, sx)
     end do
   end do
   !$omp end parallel do
+
+  ! --- 1b. 砕波スイッチ(f_nh_breaking=1): 水面が速く上昇するセルを静水圧に ---
+  if (f_nh_breaking == 1) call breaking_switch(p, g, s, sx)
 
   ! --- 2. 静水圧加速度の発散 D a*(担当帯。エッジ行 js-1..je は merge 済み) ---
   !   全 8 エッジの寄与(非 NH エッジも含む。momentum が触らなかったエッジは
@@ -313,6 +345,172 @@ module subroutine nh_project(p, g, s, sx)
   call par_edge_merge(sx%uv,  esync_s, esync_n)
   call par_edge_merge(sx%mn1, esync_s, esync_n)
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 砕波スイッチ(plan §8.2。SWASH 型): 水面の上昇速度 ∂η/∂t が α√(gh) を
+!   超えるセルを砕波(静水圧)とし、砕波セルに 8 近傍で接して β√(gh) を
+!   超えるセルも砕波(前線の伝播)とする。砕波セルは NH マスクから外れ、
+!   接するエッジは補正されない(段波として静水圧 ENC が扱う)。
+!   ∂η/∂t は predictor の流束 mn1* から (h^{n+1*} − h^n)/Δt として求める
+!   ので、ステップ間の状態を持たない(リスタート往復はビット一致)。
+!   SWASH の「波頂が通過するまで砕波を維持」はこの stateless 版にはない。
+!----------------------------------------------------------------------
+subroutine breaking_switch(p, g, s, sx)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(in) :: sx
+  integer :: i, j, kk, nbrk, m, margin
+  real :: dhdt, bb, hmax
+  real :: vmax(1)
+
+  ! 判定(担当帯)。brk = 1: 砕波、0.5: 候補(β を超える)、0: なし
+  !   前ステップに砕波だったセルは、水面が上昇している間(波頂が通過する
+  !   まで)砕波を維持する(SWASH の規則。brk はステップ間で保持する状態。
+  !   リスタート時は 0 から始まるため、復元直後の 1 ステップだけ履歴がない)
+  !$omp parallel do schedule(static) private(i, j, kk, dhdt, bb)
+  do j = dcp%js, dcp%je
+    do i = 1, g%nx
+      if (nh_mod%cmask(i,j) == 0) then
+        nh_mod%brk(i,j) = 0.0
+        cycle
+      end if
+      if (nh_break_type == 2) then
+        ! フルード数判定(stateless。遡上の舌・射流は静水圧)
+        if (s%vv(i,j) > nh_break_fr * sqrt(p%gg * s%h(i,j))) then
+          nh_mod%brk(i,j) = 1.0
+        else
+          nh_mod%brk(i,j) = 0.0
+        end if
+        cycle
+      else if (nh_break_type == 3) then
+        ! 水面勾配判定(stateless・Galilean 不変。8 近傍への |Δη|/距離の最大。
+        ! 乾いた近傍は水面が定義できないので除く)
+        bb = 0.0
+        do kk = 1, 8
+          if (i+din(kk) < 1 .or. i+din(kk) > g%nx) cycle
+          if (g%x(i+din(kk), j+djn(kk)) <= 0) cycle
+          if (s%h(i+din(kk), j+djn(kk)) < p%dd) cycle
+          bb = max(bb, abs(s%z(i+din(kk), j+djn(kk)) + s%h(i+din(kk), j+djn(kk)) &
+                           - s%z(i,j) - s%h(i,j)) / w8dr(kk))
+        end do
+        if (bb > nh_break_slope) then
+          nh_mod%brk(i,j) = 1.0
+        else
+          nh_mod%brk(i,j) = 0.0
+        end if
+        cycle
+      end if
+      dhdt = 0.0
+      do kk = 1, 8
+        dhdt = dhdt - sgn8(kk) * sx%mn1(ke8(kk), i+die(kk), j+dje(kk)) * nh_mod%wd(kk)
+      end do
+      bb = dhdt / sqrt(p%gg * s%h(i,j))
+      if (bb > nh_break_alpha) then
+        nh_mod%brk(i,j) = 1.0
+      else if (nh_mod%brk(i,j) == 1.0 .and. dhdt > 0.0) then
+        nh_mod%brk(i,j) = 1.0
+      else if (bb > nh_break_beta) then
+        nh_mod%brk(i,j) = 0.5
+      else
+        nh_mod%brk(i,j) = 0.0
+      end if
+    end do
+  end do
+  !$omp end parallel do
+
+  ! 前線の伝播: 候補セル(0.5)が砕波セルに 8 近傍で接していれば砕波(1 回)
+  call par_halo_cell(nh_mod%brk)
+  !$omp parallel do schedule(static) private(i, j, kk)
+  do j = dcp%js, dcp%je
+    do i = 1, g%nx
+      nh_mod%phi1(i,j) = nh_mod%brk(i,j)
+      if (nh_mod%brk(i,j) /= 0.5) cycle
+      nh_mod%phi1(i,j) = 0.0                   ! 候補は接していなければ 0 に戻す
+      do kk = 1, 8
+        if (i+din(kk) < 1 .or. i+din(kk) > g%nx) cycle
+        if (nh_mod%brk(i+din(kk), j+djn(kk)) == 1.0) then
+          nh_mod%phi1(i,j) = 1.0
+          exit
+        end if
+      end do
+    end do
+  end do
+  !$omp end parallel do
+  !$omp parallel do schedule(static) private(j)
+  do j = dcp%js, dcp%je
+    nh_mod%brk(:,j) = nh_mod%phi1(:,j)
+    nh_mod%phi1(:,j) = 0.0
+  end do
+  !$omp end parallel do
+
+  ! 縁: 砕波セルの周り margin セル(候補セルの中)も静水圧にする。砕波した
+  ! 波の前面だけでなく波頂まで含めて静水圧に落とし、NH の圧力が砕波
+  ! 前線を押し続けないようにする(hybrid Boussinesq 系の「波全体を NSWE」
+  ! に相当)。膨張は活性集合と同じ 8 近傍の論理和(walk 順に依らない)
+  if (nh_break_margin > 0) then
+    margin = nh_break_margin
+  else
+    hmax = 0.0
+    !$omp parallel do schedule(static) private(i, j) reduction(max:hmax)
+    do j = dcp%js, dcp%je
+      do i = 1, g%nx
+        if (nh_mod%cmask(i,j) == 1) hmax = max(hmax, s%h(i,j))
+      end do
+    end do
+    !$omp end parallel do
+    vmax(1) = hmax
+    call par_allreduce_max(vmax)
+    margin = max(2, ceiling(2.0 * vmax(1) / min(g%dx, g%dy)))
+  end if
+  do m = 1, margin
+    call par_halo_cell(nh_mod%brk)
+    !$omp parallel do schedule(static) private(i, j, kk)
+    do j = dcp%js, dcp%je
+      do i = 1, g%nx
+        nh_mod%phi1(i,j) = nh_mod%brk(i,j)
+        if (nh_mod%cmask(i,j) == 0 .or. nh_mod%brk(i,j) == 1.0) cycle
+        do kk = 1, 8
+          if (i+din(kk) < 1 .or. i+din(kk) > g%nx) cycle
+          if (nh_mod%brk(i+din(kk), j+djn(kk)) == 1.0) then
+            nh_mod%phi1(i,j) = 1.0
+            exit
+          end if
+        end do
+      end do
+    end do
+    !$omp end parallel do
+    !$omp parallel do schedule(static) private(j)
+    do j = dcp%js, dcp%je
+      nh_mod%brk(:,j) = nh_mod%phi1(:,j)
+      nh_mod%phi1(:,j) = 0.0
+    end do
+    !$omp end parallel do
+  end do
+  call par_halo_cell(nh_mod%brk)
+
+  ! 砕波セルを NH マスクから外す(ハロ行も交換済みの値で同じ判定)
+  !$omp parallel do schedule(static) private(i, j)
+  do j = dcp%jsh, dcp%jeh
+    do i = 1, g%nx
+      if (nh_mod%brk(i,j) == 1.0) then
+        nh_mod%cmask(i,j) = 0
+        nh_mod%beta(i,j) = 0.0
+      end if
+    end do
+  end do
+  !$omp end parallel do
+  nbrk = 0
+  !$omp parallel do schedule(static) private(i, j) reduction(+:nbrk)
+  do j = dcp%js, dcp%je
+    do i = 1, g%nx
+      if (nh_mod%brk(i,j) == 1.0) nbrk = nbrk + 1
+    end do
+  end do
+  !$omp end parallel do
+  nh_mod%brksum = nh_mod%brksum + nbrk
 end subroutine
 
 
@@ -594,17 +792,19 @@ end subroutine
 ! 終了処理: 統計の表示と解放
 !----------------------------------------------------------------------
 module subroutine nh_dispose()
-  integer :: ivals(2)
+  integer :: ivals(3)
   if (.not. nh_active) return
   if (nh_mod%nstep > 0) then
     ivals(1) = int(min(nh_mod%actsum, int(huge(1), 8)))
-    ivals(2) = nh_mod%nfail
-    call par_allreduce_sumi(ivals(1:1))
+    ivals(2) = int(min(nh_mod%brksum, int(huge(1), 8)))
+    ivals(3) = nh_mod%nfail
+    call par_allreduce_sumi(ivals(1:2))
     call par_info("swflow_enc_nh: steps "//itoa(nh_mod%nstep)// &
                   ", iterations avg "//itoa(int(nh_mod%itsum / nh_mod%nstep))// &
                   " max "//itoa(nh_mod%itmax_seen)// &
                   ", active cells avg "//itoa(ivals(1) / nh_mod%nstep)// &
-                  ", not converged "//itoa(ivals(2)))
+                  ", breaking cells avg "//itoa(ivals(2) / nh_mod%nstep)// &
+                  ", not converged "//itoa(ivals(3)))
   end if
   if (allocated(nh_mod%uv0)) deallocate(nh_mod%uv0)
   if (allocated(nh_he)) deallocate(nh_he)
@@ -618,6 +818,7 @@ module subroutine nh_dispose()
   if (allocated(nh_mod%cmask)) deallocate(nh_mod%cmask)
   if (allocated(nh_mod%dast)) deallocate(nh_mod%dast)
   if (allocated(nh_mod%work)) deallocate(nh_mod%work)
+  if (allocated(nh_mod%brk)) deallocate(nh_mod%brk)
   if (allocated(nh_mod%emask)) deallocate(nh_mod%emask)
   nh_active = .false.
 end subroutine

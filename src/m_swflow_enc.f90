@@ -86,6 +86,13 @@ module m_swflow_enc
   integer :: nh_margin = 0                  ! 縁の幅(セル数。0: 2H/Δx から自動)
   real :: nh_amin = 1.0e-5                  ! 検出の下限 |βDa*| (m/s²)
   real :: nh_arel = 1.0e-3                  ! 検出の相対下限(領域最大の |βDa*| に対する比)
+  integer :: f_nh_breaking = 0              ! 砕波スイッチ (0: なし, 1: ∂η/∂t > α√(gh) のセルを静水圧に)
+  real :: nh_break_alpha = 0.6              ! 砕波開始の閾値 α
+  real :: nh_break_beta = 0.3               ! 砕波前線の伝播の閾値 β
+  integer :: nh_break_type = 3              ! 砕波の判定量 (1: ∂η/∂t, 2: フルード数, 3: 水面勾配)
+  real :: nh_break_fr = 0.6                 ! フルード数判定の閾値
+  real :: nh_break_slope = 0.3              ! 水面勾配判定の閾値
+  integer :: nh_break_margin = 0            ! 砕波セルの縁の幅(セル数。0: 2H/Δx から自動)
   logical :: nh_active = .false.            ! NH ON(init が f_nonhydrostatic から設定)
   real, allocatable :: nh_he(:,:,:)         ! momentum が面流束に使ったエッジ水深 he
                                             !   (1:4, 0:nx, jsh-1:jeh)。NH ON のときだけ確保。
@@ -589,6 +596,13 @@ subroutine m_swflow_enc_init(p, g, b, s)
   nh_margin = list%nh_margin
   nh_amin = list%nh_amin
   nh_arel = list%nh_arel
+  f_nh_breaking = list%f_nh_breaking
+  nh_break_alpha = list%nh_break_alpha
+  nh_break_beta = list%nh_break_beta
+  nh_break_type = list%nh_break_type
+  nh_break_fr = list%nh_break_fr
+  nh_break_slope = list%nh_break_slope
+  nh_break_margin = list%nh_break_margin
   select case (f_diffusion_term)
     case (0)      ! 無効
     case (1)      ! 定数モデル
@@ -759,6 +773,16 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (p%f_state_restore <= 0) then
     call boundary_uvmn(p, g, b, s, sx_mod)
   end if
+
+  ! 界面エッジ行(js-1, je)の所有成分を南北で補完し合う(時間ループの
+  ! momentum 直後と同じ)。init_enc_status は担当帯の基準セルのエッジだけを
+  ! 書くため、初回ステップが読む界面行の他ランク所有成分(北ランクから見た
+  ! 行 js-1 の k=4 等)はこれがないと 0 のまま: 初期流速が非零のケースで
+  ! 非静水圧補正の u^n の複製(nh_prepare)がランク依存になる実バグ
+  ! (test/nhbreak の np=2。2026-10-05)。逐次では no-op、静水圧の経路は
+  ! 自エッジしか読まないので結果不変
+  call par_edge_merge(sx_mod%uv,  esync_s, esync_n)
+  call par_edge_merge(sx_mod%mn1, esync_s, esync_n)
 
   ! 変数を更新して次のタイムステップの準備をする(initial: σ 適用セルの
   ! h は正準のまま保ち、u,v の再正規化もしない。§26)

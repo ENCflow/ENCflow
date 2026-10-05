@@ -101,6 +101,13 @@ becomes silently inactive).
 | nh_margin | 0 | width of the margin (cells). 0 = automatic 2H/Δx (four times the decay length H/2) |
 | nh_amin | 1e-5 | absolute floor (m/s²): cells whose correction \|βDa*\| is below it are never seeds |
 | nh_arel | 1e-3 | relative floor: cells whose \|βDa*\| is below this fraction of the domain maximum of the step are never seeds (the ratio detector is amplitude-independent, so this keeps round-off precursors of the explicit scheme from being flagged) |
+| f_nh_breaking | 0 | breaking switch. 0: off, 1: cells detected as breaking (plus nh_break_margin cells around them) become hydrostatic, so the front dissipates as a bore in the hydrostatic ENC (momentum-conservative advection). **Required for breaking waves running up a slope**: without it the one-layer NH carries the wave unbroken as a thin tongue and the run-up follows the non-breaking law (3-4 times the measured). Use together with f_hcap_upwind=2 to avoid the bore-front spike (§68.7) |
+| nh_break_type | 3 | breaking detector. 1: surface rise rate ∂η/∂t > nh_break_alpha·√(gh) (SWASH type; neighbours with nh_break_beta; keeps the state until the crest passes, so the first step after a restart has no history), 2: Froude number \|V\|/√(gh) > nh_break_fr, 3: surface slope \|∇η\| > nh_break_slope (maximum over the 8 neighbours; default; local, Galilean-invariant, stateless). On this grid type 1 fires too late (∂η/∂t does not reach α√(gh) before the front hits the shoreline); 2 and 3 give similar results |
+| nh_break_alpha | 0.6 | onset threshold α of detector 1 |
+| nh_break_beta | 0.3 | threshold β of detector 1 for cells adjacent to breaking cells |
+| nh_break_fr | 0.6 | Froude threshold of detector 2 |
+| nh_break_slope | 0.3 | surface-slope threshold of detector 3 (0.15-0.3 give nearly the same run-up for the solitary wave) |
+| nh_break_margin | 0 | width of the hydrostatic margin around breaking cells (cells; 0 = automatic 2H/Δx). Turns the crest as well as the front hydrostatic so the NH pressure does not keep pushing the breaking front |
 
 With standing waves in a closed basin (test/nhwave_nh) the periods for
 kH = 0.25-2 agree with the one-layer theory within 0.2% (hydrostatic
@@ -108,6 +115,15 @@ periods are 12-42% shorter). CG takes 10-90 iterations per step (more
 for smaller Δx/H). With the active set (f_nh_adaptive=1) an isolated hump
 in a 200 m basin differs from the full solve by 0.1-0.3% of the
 correction (margins of 4-16 cells) with 40-60% of the cells active.
+
+For a breaking solitary wave running up a beach (test/nhbreak, Synolakis
+1987, a/H = 0.28, slope 1:19.85) the maximum run-up R/H is 0.39
+hydrostatic, 0.62 NH with the breaking switch and 0.81 NH alone
+(f_hcap_upwind=2), against the empirical 0.42: NH overpredicts. The
+hydrostatic ENC gets close by breaking early on the flat part and losing
+energy, whereas NH reaches the breaking point unbroken and runs up
+higher. For run-up with breaking, hydrostatic (or NH only in deep water)
+is recommended for now; NH plus the switch is a research option.
 
 **Others**
 

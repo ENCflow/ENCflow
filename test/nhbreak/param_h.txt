@@ -1,0 +1,79 @@
+!======================================================================
+! nhbreak: 海浜斜面を遡上する砕波性の孤立波(docs/nonhydrostatic_plan.md
+!   §11 Phase 6: 砕波スイッチなしの非静水圧 + 乾湿退化の検証)
+!   Synolakis (1987) の構成: 水深 H = 1 m、a/H = 0.28、斜面 1:19.85
+!   (脚 x = 150 m。user_geoinfo beach_slope)。孤立波は x0 = 50 m
+!   (user_initial wave_solitary28)。h < nh_hmin(0.05 m)は静水圧、
+!   水面勾配 > 0.2 のセルと周り 8 セルは砕波スイッチで静水圧(段波)。
+!   段波先端のスパイクを避けるため f_hcap_upwind = 2(§68.7)。
+!   遡上高の解析は Runup.py(param_h.txt = 静水圧との比較)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02                 ! 時間刻み (s)
+  t0 = 0
+  tt = 60                   ! 計算終了時刻 (s)(脚まで ≈ 28 s、遡上の最大 ≈ 40 s)
+  dt_disp = 1
+  dt_file = 2               ! 水深分布の出力間隔 (s)
+  dt_recrd = 0.02
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_record = '-'
+  dir_result = 'result_h'
+  f_disp_debug = 1
+  f_disp_qq = 1
+  f_check_cfl = 0
+  f_out_h = 1
+  f_out_hmax = 1
+/
+
+&list_enc
+  f_gravity_correction = 0
+  f_exflux_reduction = 1           ! 乾湿前縁の保護(既定)
+  f_hcap_upwind = 2                ! 上流側水深(段波先端のスパイク防止。§68.7)
+  f_dry_head_cap = 1               ! 既定
+  f_friction_fastmath = 0
+  f_adaptive_runge = 1
+  p_adprunge_thresh = 1.2
+  f_nonhydrostatic = 0             ! 静水圧(比較用)
+  nh_hmin = 0.05                   ! この水深未満は静水圧
+  nh_solver = 2
+  nh_tol = 1.0e-6
+  f_nh_breaking = 1                ! 砕波スイッチ
+  nh_break_type = 3                ! 水面勾配判定
+  nh_break_slope = 0.2             ! |∇η| > 0.2 で砕波
+  nh_break_margin = 8              ! 砕波セルの周り 8 セルも静水圧
+/
+
+&list_initial
+  f_htype = 0
+  f_uvtype = 0
+  h0 = 1.0                ! 静水面の標高 = 平坦部の水深 H (m)
+  u0 = 0
+  v0 = 0
+  f_user_routine = "wave_solitary28"
+/
+
+&list_geoinfo
+  lx = 260.0
+  ly = 8.0
+  nx = 1040               ! Δx = 0.25 m = H/4
+  ny = 32
+  f_ztype = 0
+  f_rntype = 0
+  z0 = 0.0
+  rn0 = 0.0
+  f_user_routine = "beach_slope"   ! 平坦部 + 1:19.85 斜面(脚 x = 150 m)
+/
+
+&list_bound
+/
+
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 560, 16     ! x = 140 m(斜面の脚の手前)
+  pbxy(:,2) = 640, 16     ! x = 160 m(z = 0.5 m)
+  pbxy(:,3) = 680, 16     ! x = 170 m(z = 1.0 m = 静水汀線)
+/

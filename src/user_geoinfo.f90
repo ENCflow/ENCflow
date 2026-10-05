@@ -31,12 +31,13 @@ submodule(m_geoinfo) user_geoinfo
 
   ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
   ! 更新すること(乖離は defined/run が「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:6) = [ character(len=32) :: &
+  character(len=*), parameter :: routine_names(1:7) = [ character(len=32) :: &
       "wave_solid_wall",  &   ! 波例題: 斜めの不透過壁(2セル厚)
       "wave_leaky_wall",  &   ! 波例題: 斜めの半透過壁(1セル厚)
       "tohoku_flood",     &   ! 東北大氾濫計算(スタブ)
       "gaussian_hill",    &   ! クリープ例題: 中央のガウス丘(解析解ベンチマーク)
       "slope_break",      &   ! 土石流例題: 遷緩点付き斜面(test/debris, test/slide)
+      "beach_slope",      &   ! 孤立波遡上例題: 平坦部 + 1:19.85 の海浜斜面(test/nhbreak)
       "template"          ]   ! 新規ルーチンの雛形(空)
 
 contains
@@ -105,6 +106,8 @@ function resolve(name) result(fp)
       fp => geoinfo_gaussian_hill
     case ("slope_break")
       fp => geoinfo_slope_break
+    case ("beach_slope")
+      fp => geoinfo_beach_slope
     case ("template")
       fp => geoinfo_template
     case default
@@ -218,6 +221,28 @@ subroutine geoinfo_slope_break(p, g)
       else
         g%z(i,j) = 0.0
       end if
+    end do
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 孤立波遡上例題: x < xt は平坦(z = 0)、以降は勾配 1:19.85(Synolakis
+!   1987 の実験斜面)で上る海浜。z(x) = max(0, (x − xt)/19.85)、xt = 150 m。
+!   test/nhbreak の param.txt と Runup.py の斜面式と対で保守すること
+!----------------------------------------------------------------------
+subroutine geoinfo_beach_slope(p, g)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(inout) :: g
+  integer :: i, j
+  real :: x
+  real, parameter :: xt = 150.0      ! 斜面の脚の x 座標 (m)
+  real, parameter :: cot = 19.85     ! 斜面の cotθ
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  do j = 1, g%ny
+    do i = 1, g%nx
+      x = (i - 0.5) * g%dx
+      g%z(i,j) = max(0.0, (x - xt) / cot)
     end do
   end do
 end subroutine
