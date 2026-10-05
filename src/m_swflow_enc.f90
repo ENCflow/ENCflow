@@ -1272,6 +1272,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   integer :: ie, je
   real :: uve, mne
   real :: uve1, mne1
+  real :: hee                     ! 面流束に使ったエッジ水深(calc_kth_flux が返す)
   real :: tae
   real :: dh
   real :: dhc, dhn
@@ -1330,7 +1331,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   if (f_diffusion_term > 0) tae = tae + diff_edge(i, j, k, in, jn)
 
   ! 中心セルi,jからk近傍セルin,jnへの流速uv1と単位幅流量mn1を計算する
-  call calc_kth_flux(p, g, s, sx, uve, tae, i, j, k, in, jn, 0, uve1, mne1)
+  call calc_kth_flux(p, g, s, sx, uve, tae, i, j, k, in, jn, 0, uve1, mne1, hee)
 
   ! 適応的ルンゲクッタ
   !   流速または流量がmaglim倍以上、1/maglim以下、逆方向に変化した場合はルンゲクッタで再計算
@@ -1345,7 +1346,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
     if ((mne >= 0 .and. (mne1 > mne * maglim .or. mne1 < mne * maglim_inv)) .or. &
         (mne < 0  .and. (mne1 < mne * maglim .or. mne1 > mne * maglim_inv))) then
       have_runge = .true.
-      call calc_kth_flux(p, g, s, sx, uve, tae, i, j, k, in, jn, 1, uve1, mne1)
+      call calc_kth_flux(p, g, s, sx, uve, tae, i, j, k, in, jn, 1, uve1, mne1, hee)
     end if
   end if
 
@@ -1443,7 +1444,7 @@ end subroutine
 !----------------------------------------------------------------------
 ! 中心セルi,jからk近傍セルへin,jnの流速uve1と単位幅流量mne1を計算する
 !----------------------------------------------------------------------
-subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1, mne1)
+subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1, mne1, hee)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
@@ -1456,6 +1457,10 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   integer, intent(in) :: f_runge  ! ルンゲクッタのフラグ
   real, intent(out) :: uve1       ! 中心セルから近傍セルに向かう流速
   real, intent(out) :: mne1       ! 中心セルから近傍セルに向かう単位幅流量
+  real, intent(out) :: hee        ! 最終段で面流束に使ったセル境界の水深 he
+                                  !   (mne1 = uve1·he の he。非静水圧補正が流速を
+                                  !   変えたあと同じ he で mn1 を再構成するため。
+                                  !   σ 有効時は he そのもので、断面積換算は含まない)
 
   real :: he                      ! セル境界の水深
   real :: ge                      ! セル境界での重力加速度
@@ -1802,6 +1807,9 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     ! 段数を更新して次の段へ
     l = l + 1
   end do
+
+  ! 最終段のエッジ水深を返す(mne1 = uve1·he の he)
+  hee = he
 
 contains
   !--------------------------------------------------------------------
