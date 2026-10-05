@@ -130,10 +130,11 @@ of energy loss at breaking (the jump conditions of a hydrostatic bore do
 not dissipate as much as a plunging breaker); with bottom friction
 n = 0.01 (smooth slope) +10 to 20% is expected to remain. The hydrostatic
 0.39 is a coincidence: the wave bores early on the 100 m flat and loses
-energy (converged 0.34; placed near the slope it gives 0.42). **Treat
-quantitative run-up with breaking as uncertain by 20% or more even after
-checking convergence (Courant <= 0.1, dx <= H/8) and giving friction**
-(developer.md section 69.6).
+energy (converged 0.34; placed near the slope it gives 0.42). Adding the
+breaking eddy viscosity nh_break_visc = 1.44 gives 0.452 (+8% of the
+empirical law) at dx = H/8, Courant 0.07 and n = 0.01. **For quantitative
+run-up with breaking, check convergence (Courant <= 0.1, dx <= H/8) and
+give both friction and nh_break_visc** (developer.md sections 69.6, 69.7).
 
 For a solitary wave climbing onto a shelf (test/nhshelf, depth 1 m →
 1:20 slope → 0.5 m, a/H = 0.1) NH reproduces the fission into a leading
