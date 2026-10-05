@@ -9228,14 +9228,15 @@ test/nhcurrent の構成(水路 200 m × 8 m、U0 = 0.5 m/s、静水圧)で切�
   一致しなかった(最初の修正の実バグ。far_ok で np=2 一致を回復)。修正後、
   両端水位規定の等流は 40 s で h − 1 = 0(4 桁)の定常。壁境界だけのケースでも、壁から
   流れ出す斜めの線(壁行の対角エッジ)や乾燥セルの向こうが upup になる
-  乾湿前縁でも面値が変わるため reference が変わる。全ケースの回帰(修正版、
-  reference は未更新): identical = conduit, frost, kdpart, pump, salt, splash,
-  wave, nhcurrent(新規)、許容内 = nhwave, nhwave_nh。不一致 = chichibu
-  (最大相対差 4e-5)、nhsolitary(1e-3)、nhbore(2e-3)、nhshelf(5e-3)、
-  dambreak(9e-3。Q_max。Stoker 解の段波位置・中間水深・L1 は不変)、
-  coastal_drain(5e-2。h 0.024 → 0.026 m)、damwq(6e-2)、sewer_wq(整数列
-  22 → 18)、nhbreak(Runge 列の整数 4 → 0 と小差)、gwseep(0.33。微小値
-  0.0047 → 0.0070)、tide(V_max・Q_max が干潮末期に 2.27 → 1.48 m/s = −35%。
+  乾湿前縁でも面値が変わるため reference が変わる。全ケースの回帰(最終版 =
+  far_ok 判定 + 区間流入の端セル閉鎖。reference は未更新): identical =
+  conduit, frost, kdpart, pump, salt, splash, wave、許容内 = chichibu, nhwave,
+  nhwave_nh, nhcurrent(cell_ok 版で作った reference に対し ULP=1 が 2 件)、
+  sewer_wq(Log。wq.csv は 20 件の小差)。不一致 = nhsolitary(最大相対差
+  1e-3)、nhbore(2e-3)、nhshelf(5e-3)、dambreak(9e-3。Q_max。Stoker 解の
+  段波位置・中間水深・L1 は不変)、damwq(3e-2)、coastal_drain(5e-2。h 0.024
+  → 0.026 m)、nhbreak(Runge 列の整数 4 → 0 と小差)、gwseep(0.29。微小値
+  0.0047 → 0.0066)、tide(V_max・Q_max が干潮末期に 2.27 → 1.48 m/s = −35%。
   海側の規定境界から流れ出す最初のエッジの面値が完全風下だった分の過大が
   消えた。貯留 S・h_max の変化は 0.1〜0.8%)。**いずれも旧値が反拡散の
   面値を含む側で、reference の更新は人間が妥当性を確認してから**(規律 1)。
