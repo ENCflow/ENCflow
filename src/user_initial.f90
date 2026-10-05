@@ -31,7 +31,7 @@ submodule(m_state) user_initial
 
   ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
   ! 更新すること(乖離は defined/run が「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:13) = [ character(len=32) :: &
+  character(len=*), parameter :: routine_names(1:15) = [ character(len=32) :: &
       "wave_hump",        & ! 波例題: 円形コサイン型の初期水位
       "dambreak_step",    & ! ダム破壊例題: x 方向の段状初期水深(Stoker 解析解の検証用)
       "wave_standing_x",  & ! 定在波例題: 閉じた水槽の x 方向モード (4, 0)(分散関係の検証用)
@@ -44,6 +44,9 @@ submodule(m_state) user_initial
       "wave_solitary10_toe",& ! 孤立波例題: a/H = 0.10、x0 = 120 m(砕波遡上則の振幅系列。plan §15.5)
       "wave_solitary20_toe",& ! 孤立波例題: a/H = 0.20、x0 = 120 m(同上)
       "wave_solitary40_toe",& ! 孤立波例題: a/H = 0.40、x0 = 120 m(同上)
+      "wave_bore",        & ! 長波例題: x < x0 を a/H = 0.1 だけ高くした段差(tanh 遷移)。右へ進む
+                            !   単純波の流速。非静水圧では undular bore に分裂する(plan §11 Phase 5)
+      "wave_bore20",      & ! 長波例題: 同上で a/H = 0.2
       "template"          ] ! 新規ルーチンの雛形(空)
 
 contains
@@ -127,6 +130,10 @@ function resolve(name) result(fp)
       fp => initial_wave_solitary20_toe
     case ("wave_solitary40_toe")
       fp => initial_wave_solitary40_toe
+    case ("wave_bore")
+      fp => initial_wave_bore
+    case ("wave_bore20")
+      fp => initial_wave_bore20
     case ("template")
       fp => initial_template
     case default
@@ -320,6 +327,51 @@ subroutine initial_wave_solitary40_toe(p, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   call solitary_profile_x0(p, g, s, 0.40, 120.0)
+end subroutine
+
+!----------------------------------------------------------------------
+! 長波の段差(undular bore の初期条件): η = (a/2)(1 − tanh((x − x0)/L))、
+!   x < x0 が a だけ高い。流速は右へ進む単純波のリーマン不変量
+!   u = 2(√(g(H+η)) − √(gH))(前面は右へ進み、分散で波列に分裂する)。
+!   H = h0(静水面の標高 = 平坦部の水深)、x0 = 100 m、遷移幅 L = 4 m。
+!----------------------------------------------------------------------
+subroutine initial_wave_bore(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  call bore_profile(p, g, s, 0.1)
+end subroutine
+
+subroutine initial_wave_bore20(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  call bore_profile(p, g, s, 0.2)
+end subroutine
+
+subroutine bore_profile(p, g, s, arel)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: arel
+  integer :: i, j
+  real, parameter :: x0 = 100.0, lt = 4.0
+  real :: hh, aa, xx, eta
+  do j = 1, g%ny
+    do i = 1, g%nx
+      hh = s%h(i,j)
+      aa = arel * hh
+      xx = (i - 0.5) * g%dx - x0
+      eta = 0.5 * aa * (1.0 - tanh(xx / lt))
+      s%h(i,j) = max(hh + eta - g%z(i,j), 0.0)
+      if (s%h(i,j) > 0.0) then
+        s%u(i,j) = 2.0 * (sqrt(p%gg * (hh + eta)) - sqrt(p%gg * hh))
+      else
+        s%u(i,j) = 0.0
+      end if
+      s%v(i,j) = 0.0
+    end do
+  end do
 end subroutine
 
 subroutine initial_wave_solitary0185(p, g, s)

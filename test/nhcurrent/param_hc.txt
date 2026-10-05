@@ -1,0 +1,185 @@
+!======================================================================
+! nhcurrent: 一様流 U0 上の線形波の分散関係(1 層非静水圧補正。
+!   docs/nonhydrostatic_plan.md §11 Phase 5 Test 2)
+!   平坦床・無摩擦・壁側壁の水路 200 m × 8 m(Δx = 0.25 m = H/4、32 行)。
+!   H = 1 m。西辺の区間流入 Q(t) と東辺の水位規定セル群で一様流
+!   U0 = 0.5 m/s(初期流速 u0 も同じ)を作り、周期 T = 2.24 s(静水で
+!   kH ≈ 1)の微小波(a ≈ 1 cm)を流入量(順流)または下流水位(逆流)の
+!   正弦振動で発生させる。x = 60〜100 m のプローブ 41 点の位相から波数を
+!   測り、(ω − U0 k)² = gHΛ/(1 + βΛ) と比べる(Current.py)。
+!   param_hc.txt: 静水圧、逆流
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02                 ! 時間刻み (s)(Courant ≈ 0.3)
+  t0 = 0
+  tt = 110                  ! 計算終了時刻 (s)
+  dt_disp = 1
+  dt_file = 10              ! 水深分布の出力間隔 (s)
+  dt_recrd = 0.02
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_record = '-'
+  dir_result = 'result_hc'
+  f_disp_debug = 1
+  f_disp_qq = 1
+  f_check_cfl = 0
+  f_out_h = 1
+/
+
+&list_enc
+  f_gravity_correction = 0
+  f_exflux_reduction = 0
+  f_hcap_upwind = 0
+  f_friction_fastmath = 0
+  f_adaptive_runge = 1
+  p_adprunge_thresh = 1.2
+  f_nonhydrostatic = 0             ! 1 層非静水圧補正
+  nh_solver = 2                    ! CG
+  nh_tol = 1.0e-6
+/
+
+&list_initial
+  f_htype = 0
+  f_uvtype = 0
+  h0 = 1.0                ! 水深 H (m)
+  u0 = 0.5                ! 一様流 U0 (m/s)
+  v0 = 0
+  f_user_routine = ""
+/
+
+&list_geoinfo
+  lx = 200.0
+  ly = 8.0
+  nx = 800                ! Δx = 0.25 m = H/4
+  ny = 32
+  f_ztype = 0
+  f_rntype = 0
+  z0 = 0.0
+  rn0 = 0.0
+  f_user_routine = ""
+/
+
+&list_bound_edge
+/
+
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 1
+  inflow_cell(1:2,2,1) = 1, 2
+  inflow_cell(1:2,3,1) = 1, 3
+  inflow_cell(1:2,4,1) = 1, 4
+  inflow_cell(1:2,5,1) = 1, 5
+  inflow_cell(1:2,6,1) = 1, 6
+  inflow_cell(1:2,7,1) = 1, 7
+  inflow_cell(1:2,8,1) = 1, 8
+  inflow_cell(1:2,9,1) = 1, 9
+  inflow_cell(1:2,10,1) = 1, 10
+  inflow_cell(1:2,11,1) = 1, 11
+  inflow_cell(1:2,12,1) = 1, 12
+  inflow_cell(1:2,13,1) = 1, 13
+  inflow_cell(1:2,14,1) = 1, 14
+  inflow_cell(1:2,15,1) = 1, 15
+  inflow_cell(1:2,16,1) = 1, 16
+  inflow_cell(1:2,17,1) = 1, 17
+  inflow_cell(1:2,18,1) = 1, 18
+  inflow_cell(1:2,19,1) = 1, 19
+  inflow_cell(1:2,20,1) = 1, 20
+  inflow_cell(1:2,21,1) = 1, 21
+  inflow_cell(1:2,22,1) = 1, 22
+  inflow_cell(1:2,23,1) = 1, 23
+  inflow_cell(1:2,24,1) = 1, 24
+  inflow_cell(1:2,25,1) = 1, 25
+  inflow_cell(1:2,26,1) = 1, 26
+  inflow_cell(1:2,27,1) = 1, 27
+  inflow_cell(1:2,28,1) = 1, 28
+  inflow_cell(1:2,29,1) = 1, 29
+  inflow_cell(1:2,30,1) = 1, 30
+  inflow_cell(1:2,31,1) = 1, 31
+  inflow_cell(1:2,32,1) = 1, 32
+  inflow_val(1:2,1,1) = 0, 4.0
+  inflow_val(1:2,2,1) = 9999, 4.0
+  inflow_dist(1) = 0
+/
+
+&list_bound_stage
+  stage_cell(1:2,1,1) = 800, 1
+  stage_cell(1:2,2,1) = 800, 2
+  stage_cell(1:2,3,1) = 800, 3
+  stage_cell(1:2,4,1) = 800, 4
+  stage_cell(1:2,5,1) = 800, 5
+  stage_cell(1:2,6,1) = 800, 6
+  stage_cell(1:2,7,1) = 800, 7
+  stage_cell(1:2,8,1) = 800, 8
+  stage_cell(1:2,9,1) = 800, 9
+  stage_cell(1:2,10,1) = 800, 10
+  stage_cell(1:2,11,1) = 800, 11
+  stage_cell(1:2,12,1) = 800, 12
+  stage_cell(1:2,13,1) = 800, 13
+  stage_cell(1:2,14,1) = 800, 14
+  stage_cell(1:2,15,1) = 800, 15
+  stage_cell(1:2,16,1) = 800, 16
+  stage_cell(1:2,17,1) = 800, 17
+  stage_cell(1:2,18,1) = 800, 18
+  stage_cell(1:2,19,1) = 800, 19
+  stage_cell(1:2,20,1) = 800, 20
+  stage_cell(1:2,21,1) = 800, 21
+  stage_cell(1:2,22,1) = 800, 22
+  stage_cell(1:2,23,1) = 800, 23
+  stage_cell(1:2,24,1) = 800, 24
+  stage_cell(1:2,25,1) = 800, 25
+  stage_cell(1:2,26,1) = 800, 26
+  stage_cell(1:2,27,1) = 800, 27
+  stage_cell(1:2,28,1) = 800, 28
+  stage_cell(1:2,29,1) = 800, 29
+  stage_cell(1:2,30,1) = 800, 30
+  stage_cell(1:2,31,1) = 800, 31
+  stage_cell(1:2,32,1) = 800, 32
+  fn_stage_val(1) = 'stage.txt'
+/
+
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 241, 16
+  pbxy(:,2) = 245, 16
+  pbxy(:,3) = 249, 16
+  pbxy(:,4) = 253, 16
+  pbxy(:,5) = 257, 16
+  pbxy(:,6) = 261, 16
+  pbxy(:,7) = 265, 16
+  pbxy(:,8) = 269, 16
+  pbxy(:,9) = 273, 16
+  pbxy(:,10) = 277, 16
+  pbxy(:,11) = 281, 16
+  pbxy(:,12) = 285, 16
+  pbxy(:,13) = 289, 16
+  pbxy(:,14) = 293, 16
+  pbxy(:,15) = 297, 16
+  pbxy(:,16) = 301, 16
+  pbxy(:,17) = 305, 16
+  pbxy(:,18) = 309, 16
+  pbxy(:,19) = 313, 16
+  pbxy(:,20) = 317, 16
+  pbxy(:,21) = 321, 16
+  pbxy(:,22) = 325, 16
+  pbxy(:,23) = 329, 16
+  pbxy(:,24) = 333, 16
+  pbxy(:,25) = 337, 16
+  pbxy(:,26) = 341, 16
+  pbxy(:,27) = 345, 16
+  pbxy(:,28) = 349, 16
+  pbxy(:,29) = 353, 16
+  pbxy(:,30) = 357, 16
+  pbxy(:,31) = 361, 16
+  pbxy(:,32) = 365, 16
+  pbxy(:,33) = 369, 16
+  pbxy(:,34) = 373, 16
+  pbxy(:,35) = 377, 16
+  pbxy(:,36) = 381, 16
+  pbxy(:,37) = 385, 16
+  pbxy(:,38) = 389, 16
+  pbxy(:,39) = 393, 16
+  pbxy(:,40) = 397, 16
+  pbxy(:,41) = 401, 16
+/

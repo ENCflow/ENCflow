@@ -1,0 +1,72 @@
+!======================================================================
+! nhbore: 長波の段差から分裂する undular bore(1 層非静水圧補正のソリトン
+!   分裂の検証。docs/nonhydrostatic_plan.md §11 Phase 5、§1 の
+!   「河川遡上津波のソリトン分裂・undular bore」の素過程)
+!   平坦床・無摩擦・壁境界の長い水路。H = 1 m、x < 100 m を a/H = 0.1 だけ
+!   高くした段差(tanh 遷移 4 m。user routine wave_bore)に右へ進む単純波の
+!   流速を与える。前面が非線形で立ち、分散で先頭から波列(undular bore)に
+!   分裂する。Δx = H/4。静水圧(param_h.txt)は段波のまま。解析は Bore.py
+!   (先頭波の高さの推移 → 漸近値 2a(Gurevich & Pitaevskii 1974)、波列の
+!   数、段波速度)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02                 ! 時間刻み (s)(Courant ≈ 0.27)
+  t0 = 0
+  tt = 100                  ! 計算終了時刻 (s)(前面は c ≈ 3.3 m/s で約 330 m 進む)
+  dt_disp = 1
+  dt_file = 5               ! 水深分布の出力間隔 (s)
+  dt_recrd = 0.02
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_record = '-'
+  dir_result = 'result20'
+  f_disp_debug = 1
+  f_disp_qq = 1
+  f_check_cfl = 0
+  f_out_h = 1
+/
+
+&list_enc
+  f_gravity_correction = 0
+  f_exflux_reduction = 0
+  f_hcap_upwind = 0
+  f_friction_fastmath = 0
+  f_adaptive_runge = 1
+  p_adprunge_thresh = 1.2
+  f_nonhydrostatic = 1             ! 1 層非静水圧補正
+  nh_solver = 2                    ! CG
+  nh_tol = 1.0e-6
+/
+
+&list_initial
+  f_htype = 0
+  f_uvtype = 0
+  h0 = 1.0                ! 水深 H (m)
+  u0 = 0
+  v0 = 0
+  f_user_routine = "wave_bore20"   ! 段差 a/H = 0.1(x0 = 100 m)
+/
+
+&list_geoinfo
+  lx = 450.0
+  ly = 8.0                ! 幅 8 m(32 行。壁で対角エッジが欠ける影響を 1% 未満にする)
+  nx = 1800               ! Δx = 0.25 m = H/4
+  ny = 32
+  f_ztype = 0
+  f_rntype = 0
+  z0 = 0.0
+  rn0 = 0.0
+/
+
+&list_bound
+/
+
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 400, 16     ! x = 100 m
+  pbxy(:,2) = 800, 16     ! x = 200 m
+  pbxy(:,3) = 1000, 16     ! x = 250 m
+/
