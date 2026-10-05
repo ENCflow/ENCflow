@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""nhbore: README 用の図を figs/bore.png に描く(result = NH a/H 0.1、result20 = a/H 0.2、result_h = 静水圧)
+"""nhbore: README 用の図を figs/bore.png に描く(result = NH a/H 0.1、result_20 = a/H 0.2、result_h = 静水圧)
 
   使い方: ./Run.sh、./encflow param20.txt、./encflow param_h.txt の後に ./Fig.py
   左: 中央行の水面 η/a を 20 s ごとに縦にずらして並べる(NH 0.1 と静水圧)

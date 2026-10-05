@@ -22,6 +22,7 @@
   fn_initial = '-'
   fn_enc = '-'
   fn_record = '-'
+  fn_boundary = '-'          ! 境界条件の namelist はこのファイル内
   dir_result = 'result_h'
   f_disp_debug = 1
   f_disp_qq = 1

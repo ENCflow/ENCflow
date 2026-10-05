@@ -407,9 +407,10 @@ module m_swflow_enc
 
   ! 非静水圧補正 submodule(m_swflow_enc_nh)の分離インターフェース
   interface
-    module subroutine nh_init(p, g, s)
+    module subroutine nh_init(p, g, b, s)
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
+      type(t_boundary), intent(in) :: b
       type(t_state), intent(in) :: s
     end subroutine
     module subroutine nh_prepare(sx)
@@ -767,7 +768,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
 
   ! 非静水圧補正サブモジュールを初期化する(f_nonhydrostatic=0 なら
   ! 何も確保しない。l8/w8dr を使うため init_weights より後に)
-  call nh_init(p, g, s)
+  call nh_init(p, g, b, s)
 
   ! 高速摩擦計算ルーチンを初期化する
   call m_ffactor_init(f_friction_fastmath, p%dd, 30.0, 'UV')

@@ -60,6 +60,10 @@ submodule(m_swflow_enc) m_swflow_enc_nh
     real, allocatable :: work(:,:)        ! 活性集合の膨張用(0/1。halo 交換のため実数)
     real, allocatable :: brk(:,:)         ! 砕波セル(0/1。halo 交換のため実数)
     integer, allocatable :: cmask(:,:)    ! NH セル (1:nx, jsh:jeh)
+    integer, allocatable :: fmask(:,:)    ! 強制境界のセル (1:nx, jsh:jeh)。1: 水位規定セル、
+                                          !   または枠外に開いた面(区間流入・自由流出・放射)を
+                                          !   持つセル。規定流束・規定水位と射影が干渉して
+                                          !   発散するため常に静水圧(init で静的に構築)
     logical, allocatable :: emask(:,:,:)  ! NH エッジ (1:4, 0:nx, jsh-1:jeh)
     real :: wd(1:8) = 0.0                 ! 発散の重み l8(k)/(dx·dy)
     real :: wl(1:8) = 0.0                 ! ラプラシアンの重み l8(k)/(dx·dy·w8dr(k))
@@ -82,11 +86,12 @@ contains
 !----------------------------------------------------------------------
 ! 初期化: パラメータ検査と NH ON 時だけの確保
 !----------------------------------------------------------------------
-module subroutine nh_init(p, g, s)
+module subroutine nh_init(p, g, b, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
   type(t_state), intent(in) :: s
-  integer :: k
+  integer :: k, i, j, kk, istage
 
   nh_active = (f_nonhydrostatic > 0)
   if (.not. nh_active) return
@@ -178,6 +183,26 @@ module subroutine nh_init(p, g, s)
   allocate(nh_mod%beta(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(nh_mod%diag(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
   allocate(nh_mod%cmask(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
+  ! 強制境界のセル(静的): 水位規定セル群と、枠外に開いた面を持つセル
+  allocate(nh_mod%fmask(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
+  do istage = 1, b%nstage
+    do k = 1, b%stage(istage)%ncell
+      i = b%stage(istage)%cell(1,k)
+      j = b%stage(istage)%cell(2,k)
+      if (j >= dcp%jsh .and. j <= dcp%jeh) nh_mod%fmask(i,j) = 1
+    end do
+  end do
+  do j = dcp%jsh, dcp%jeh
+    do i = 1, g%nx
+      if (i > 1 .and. i < g%nx .and. j > 1 .and. j < dcp%ny_g) cycle
+      do kk = 1, 8
+        if (i+din(kk) >= 1 .and. i+din(kk) <= g%nx .and. j+djn(kk) >= 1 .and. j+djn(kk) <= dcp%ny_g) cycle
+        if (bc_open_face(i+din(kk), j+djn(kk))) nh_mod%fmask(i,j) = 1
+      end do
+    end do
+  end do
+  k = count(nh_mod%fmask(:, dcp%js:dcp%je) == 1)
+  if (k > 0) call par_info("  forced-boundary cells kept hydrostatic (stage / open faces): "//itoa(k)//" on this rank")
   allocate(nh_mod%dast(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (f_nh_adaptive == 1) allocate(nh_mod%work(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (f_nh_breaking == 1) allocate(nh_mod%brk(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
@@ -256,6 +281,7 @@ module subroutine nh_project(p, g, s, sx)
       nh_mod%diag(i,j) = 1.0
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
+      if (nh_mod%fmask(i,j) == 1) cycle
       if (s%h(i,j) < nh_hmin) cycle
       if (s%gv(i,j) < 1.0) cycle
       if (have_width) then
@@ -1048,6 +1074,7 @@ module subroutine nh_dispose()
   if (allocated(nh_mod%rr)) deallocate(nh_mod%rr)
   if (allocated(nh_mod%ap)) deallocate(nh_mod%ap)
   if (allocated(nh_mod%cmask)) deallocate(nh_mod%cmask)
+  if (allocated(nh_mod%fmask)) deallocate(nh_mod%fmask)
   if (allocated(nh_mod%dast)) deallocate(nh_mod%dast)
   if (allocated(nh_mod%work)) deallocate(nh_mod%work)
   if (allocated(nh_mod%brk)) deallocate(nh_mod%brk)
