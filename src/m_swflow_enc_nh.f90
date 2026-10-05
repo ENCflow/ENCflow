@@ -91,7 +91,10 @@ module subroutine nh_init(p, g, b, s)
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(in) :: b
   type(t_state), intent(in) :: s
-  integer :: k, i, j, kk, istage
+  integer :: k, i, j, kk, istage, m, i2, j2, i3, j3
+  real :: hmax
+  real :: vmax(1)
+  logical :: forced
 
   nh_active = (f_nonhydrostatic > 0)
   if (.not. nh_active) return
@@ -183,26 +186,62 @@ module subroutine nh_init(p, g, b, s)
   allocate(nh_mod%beta(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(nh_mod%diag(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
   allocate(nh_mod%cmask(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
-  ! 強制境界のセル(静的): 水位規定セル群と、枠外に開いた面を持つセル
+  ! 強制境界のセル(静的): 水位規定セル群と、枠外に開いた面(区間流入・
+  ! 自由流出・放射)を持つセル、およびそこから nh_bc_margin セル以内
+  ! (チェビシェフ距離)のセル。規定流束のセルに NH 候補が接すると、規定
+  ! 流束と射影の補正が干渉して境界から発散する(developer.md §69.8)ので、
+  ! 射影の境界を規定境界から離す。縁の幅の既定は砕波の縁と同じ 2H/Δx
+  ! (H = 初期の最大水深。楕円型作用素の影響距離)。強制セルは全域で既知
+  ! (規定セルの一覧と辺の面型)なので、確保範囲の各セルについて直接判定
+  ! する(halo 交換なし)
+  if (nh_bc_margin < 0) call par_stop("list_enc: nh_bc_margin must be >= 0")
+  if (nh_bc_margin > 0) then
+    m = nh_bc_margin
+  else
+    hmax = 0.0
+    do j = dcp%js, dcp%je
+      do i = 1, g%nx
+        if (g%x(i,j) > 0) hmax = max(hmax, s%h(i,j))
+      end do
+    end do
+    vmax(1) = hmax
+    call par_allreduce_max(vmax)
+    m = max(2, ceiling(2.0 * vmax(1) / min(g%dx, g%dy)))
+  end if
   allocate(nh_mod%fmask(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
   do istage = 1, b%nstage
     do k = 1, b%stage(istage)%ncell
       i = b%stage(istage)%cell(1,k)
       j = b%stage(istage)%cell(2,k)
-      if (j >= dcp%jsh .and. j <= dcp%jeh) nh_mod%fmask(i,j) = 1
+      do j2 = max(j - m, dcp%jsh), min(j + m, dcp%jeh)
+        do i2 = max(i - m, 1), min(i + m, g%nx)
+          nh_mod%fmask(i2,j2) = 1
+        end do
+      end do
     end do
   end do
   do j = dcp%jsh, dcp%jeh
     do i = 1, g%nx
-      if (i > 1 .and. i < g%nx .and. j > 1 .and. j < dcp%ny_g) cycle
-      do kk = 1, 8
-        if (i+din(kk) >= 1 .and. i+din(kk) <= g%nx .and. j+djn(kk) >= 1 .and. j+djn(kk) <= dcp%ny_g) cycle
-        if (bc_open_face(i+din(kk), j+djn(kk))) nh_mod%fmask(i,j) = 1
+      if (i > 1 + m .and. i < g%nx - m .and. j > 1 + m .and. j < dcp%ny_g - m) cycle
+      ! m 以内の辺上のセル (i3, j3) が枠外に開いた面を持つか
+      forced = .false.
+      do j3 = max(j - m, 1), min(j + m, dcp%ny_g)
+        do i3 = max(i - m, 1), min(i + m, g%nx)
+          if (i3 > 1 .and. i3 < g%nx .and. j3 > 1 .and. j3 < dcp%ny_g) cycle
+          do kk = 1, 8
+            if (i3+din(kk) >= 1 .and. i3+din(kk) <= g%nx .and. j3+djn(kk) >= 1 .and. j3+djn(kk) <= dcp%ny_g) cycle
+            if (bc_open_face(i3+din(kk), j3+djn(kk))) forced = .true.
+          end do
+          if (forced) exit
+        end do
+        if (forced) exit
       end do
+      if (forced) nh_mod%fmask(i,j) = 1
     end do
   end do
   k = count(nh_mod%fmask(:, dcp%js:dcp%je) == 1)
-  if (k > 0) call par_info("  forced-boundary cells kept hydrostatic (stage / open faces): "//itoa(k)//" on this rank")
+  if (k > 0) call par_info("  forced-boundary cells kept hydrostatic (stage / open faces + margin " &
+                           //itoa(m)//" cells): "//itoa(k)//" on this rank")
   allocate(nh_mod%dast(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (f_nh_adaptive == 1) allocate(nh_mod%work(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (f_nh_breaking == 1) allocate(nh_mod%brk(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)

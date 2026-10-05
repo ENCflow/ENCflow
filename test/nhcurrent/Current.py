@@ -3,6 +3,7 @@
 
   使い方: ./Current.py [result_dir ...]   既定は result(順流 NH)、result_c(逆流 NH)、result_0(静水 NH)、
                                           result_h(順流 静水圧)、result_hc(逆流 静水圧)
+  両端の水位規定セル群の一方を振動させて波を出す(順流: 西端、逆流・静水: 東端)。
   x = 60〜100 m のプローブ 41 点の h(t) から、波列が定常で反射が戻る前の窓(順流 45〜95 s、
   逆流・静水 65〜100 s)で複素振幅 A(x) = (2/Tw)∫ η e^{−iωt} dt を取り、位相の x 勾配から波数 k、
   |A| から振幅の減衰を得る。理論: (ω − U0 k)² = gH Λ(k)/(1 + βΛ(k))(ENC の半離散 Λ、β = H²/4)。
@@ -61,7 +62,7 @@ def analyze(resdir, u0, sgn, t1, t2):
         A.append(2.0 / sel.sum() * np.sum(eta * np.exp(-1j * OMEGA * t[sel])))
     A = np.array(A)
     phase = np.unwrap(np.angle(A))
-    k_meas = np.polyfit(x, phase, 1)[0]          # A ∝ e^{ikx} → φ = kx
+    k_meas = abs(np.polyfit(x, phase, 1)[0])     # |dφ/dx|(符号は進行方向の約束に依るので大きさで比べる)
     amp = np.abs(A)
     decay = np.polyfit(x, np.log(np.maximum(amp, 1e-12)), 1)[0]
     return x, k_meas, amp, decay
@@ -74,4 +75,5 @@ if __name__ == "__main__":
         u0, sgn, t1, t2 = CASES.get(d, (U0, +1, 45, 95))
         x, km, amp, dec = analyze(d, u0, sgn, t1, t2)
         knh, khy, kex = solve_k(u0, sgn, "nh"), solve_k(u0, sgn, "hydro"), solve_k(u0, sgn, "exact")
+        knh, khy, kex = abs(knh), abs(khy), abs(kex)
         print(f"{d:10s} {u0:5.2f} {'+x' if sgn > 0 else '-x':>3s} {km:8.4f} {knh:8.4f} {khy:8.4f} {kex:8.4f} {km/knh:7.4f} {km/khy:7.4f} {abs(km)*H:5.2f} {amp[0]*100:6.2f}cm {math.exp(dec*40)-1:+9.3f}")

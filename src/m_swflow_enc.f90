@@ -94,6 +94,7 @@ module m_swflow_enc
   real :: nh_break_slope = 0.3              ! 水面勾配判定の閾値
   integer :: nh_break_margin = 0            ! 砕波セルの縁の幅(セル数。0: 2H/Δx から自動)
   real :: nh_break_visc = 0.0               ! 砕波域の渦粘性係数 δ_b²(0: なし。plan §15)
+  integer :: nh_bc_margin = 0               ! 強制境界から静水圧のままにするセル数(0: 2H/Δx から自動)
   integer :: f_nh_slope = 0                 ! 底面勾配項 (0: Version 1 平坦床, 1: Version 2)
   logical :: have_diff = .false.            ! 拡散項を計算する(f_diffusion_term > 0 または
                                             !   nh_break_visc > 0。init が設定)
@@ -613,6 +614,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   nh_break_slope = list%nh_break_slope
   nh_break_margin = list%nh_break_margin
   nh_break_visc = list%nh_break_visc
+  nh_bc_margin = list%nh_bc_margin
   f_nh_slope = list%f_nh_slope
   select case (f_diffusion_term)
     case (0)      ! 無効
