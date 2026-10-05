@@ -22,7 +22,12 @@ submodule(m_swflow_enc) m_swflow_enc_bc
   integer, allocatable :: bt_cell(:,:)      ! 外縁面の型(セル別。(j,W/E)・(i,N/S)。
                                             !   辺の型を初期値とし流入区間が上書き)
   real, allocatable :: bc_eta_cell(:,:)     ! 放射境界の基準水位(セル別)
-  real, allocatable :: infl_wseg(:)         ! 各流入区間の開口幅の合計 (m)
+  real, allocatable :: infl_wseg(:)         ! 各流入区間の開口幅の合計 (m)(受け口係数込み)
+  real, allocatable :: infl_cfac(:,:)       ! 区間の面エントリ別の受け口係数 (1:ncell, 1:ninflow)。
+                                            !   流入セルが流量を渡せる内部エッジ(有効な近傍)の数を
+                                            !   区間内の最大数で正規化したもの(壁の角・nodata に接する
+                                            !   端のセルで < 1。直線区間の内部は厳密に 1.0)。均等按分と
+                                            !   重み按分の両方の重みに乗じる。§69.9 対策 (a)
   real, allocatable :: infl_hseg(:)         ! 区間の面エントリ別水深(重み按分の
                                             !   作業配列。全ランクが同値を共有)
   ! 辺の法線方向の方位(W, E, N, S)
@@ -41,7 +46,8 @@ module subroutine bc_init(p, g, b)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(in) :: b
-  integer :: ifl, ifl2, m
+  integer :: ifl, ifl2, m, i, j, k, in, jn
+  real :: cmax, ex, ey
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   ! 辺境界条件を写す(ホットループでの間接参照回避)
@@ -81,11 +87,52 @@ module subroutine bc_init(p, g, b)
     m = 0
     do ifl = 1, b%ninflow
       m = max(m, b%inflow(ifl)%ncell)
-      do ifl2 = 1, b%inflow(ifl)%ncell
-        infl_wseg(ifl) = infl_wseg(ifl) + l8(kn_side(b%inflow(ifl)%side(ifl2)))
-      end do
     end do
     allocate(infl_hseg(1:m), source = 0.0)
+    ! 受け口係数: 各流入セルが流入方向(辺の内向き法線 e)へ水を渡せる
+    ! 通過能力 Σ_k l8(k)·max(0, n8(k)·e)(有効な内部近傍 k だけ。確保範囲内・
+    ! x > 0。枠外は数えない)を、所有ランクだけが埋めるゼロ初期化ベクトル+
+    ! 全ランク実数和で全ランクに配り(1要素1寄与でビット決定的)、区間内の
+    ! 最大値で正規化する。壁の角で終わる区間の角セル(直線部の E・NE・SE に
+    ! 対し E・SE しかない。係数 ≈ 0.8)に直線部と同じ単位幅流量を押し込むと
+    ! 渡しきれずに溜めて吐く振動が立って成長する(§69.9)。直線区間の内部は
+    ! 係数 1.0 で従来と厳密に同じ
+    allocate(infl_cfac(1:m, 1:b%ninflow), source = 0.0)
+    do ifl = 1, b%ninflow
+      do ifl2 = 1, b%inflow(ifl)%ncell
+        i = b%inflow(ifl)%cell(1,ifl2)
+        j = b%inflow(ifl)%cell(2,ifl2)
+        if (j < dcp%js .or. j > dcp%je) cycle
+        select case (b%inflow(ifl)%side(ifl2))     ! 辺の内向き法線 e
+          case (e_side_w); ex = 1.0;  ey = 0.0
+          case (e_side_e); ex = -1.0; ey = 0.0
+          case (e_side_n); ex = 0.0;  ey = 1.0
+          case default;    ex = 0.0;  ey = -1.0
+        end select
+        do k = 1, 8
+          in = i + din(k)
+          jn = j + djn(k)
+          if (in < 1 .or. in > g%nx .or. jn < 1 .or. jn > dcp%ny_g) cycle
+          if (g%x(in,jn) <= 0) cycle
+          infl_cfac(ifl2,ifl) = infl_cfac(ifl2,ifl) + l8(k) * max(0.0, n8x(k) * ex + n8y(k) * ey)
+        end do
+      end do
+      call par_allreduce_sumr(infl_cfac(1:b%inflow(ifl)%ncell, ifl))
+      cmax = maxval(infl_cfac(1:b%inflow(ifl)%ncell, ifl))
+      if (cmax <= 0.0) call par_stop("list_bound_inflow: segment "//itoa(ifl)//" has no cell with a valid neighbour")
+      ! 通過能力が区間内の最大に満たないセル(壁の角・nodata に接する端)は
+      ! 流入面を閉じる(係数 0。面型は e_bc_inflow のまま、流量 0 の開いた面)。
+      ! 通過能力に比例した部分配分(エッジ数比 0.6、通過能力比 0.8)でも角から
+      ! 10〜14 cm の膨らみが出て、閉じたとき(±3 cm)が最も静かだった(§69.9)
+      do ifl2 = 1, b%inflow(ifl)%ncell
+        if (infl_cfac(ifl2,ifl) >= cmax * (1.0 - 1.0e-6)) then
+          infl_cfac(ifl2,ifl) = 1.0
+        else
+          infl_cfac(ifl2,ifl) = 0.0
+        end if
+        infl_wseg(ifl) = infl_wseg(ifl) + l8(kn_side(b%inflow(ifl)%side(ifl2))) * infl_cfac(ifl2,ifl)
+      end do
+    end do
   end if
 
 end subroutine
@@ -98,6 +145,7 @@ module subroutine bc_dispose()
   if (allocated(bc_eta_cell)) deallocate(bc_eta_cell)
   if (allocated(bt_cell)) deallocate(bt_cell)
   if (allocated(infl_wseg)) deallocate(infl_wseg)
+  if (allocated(infl_cfac)) deallocate(infl_cfac)
   if (allocated(infl_hseg)) deallocate(infl_hseg)
 end subroutine
 
@@ -504,12 +552,13 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
         h = infl_hseg(m)
         if (h < p%dd) cycle
         wsum = wsum + wgt_dist(h, b%inflow(ifl)%dist) &
-                      * l8(kn_side(b%inflow(ifl)%side(m)))
+                      * l8(kn_side(b%inflow(ifl)%side(m))) * infl_cfac(m,ifl)
       end do
       if (wsum > 0.0) then
         ! 最深セルに全面按分したときの流速比(フルード数)から α を決める
-        hmx = maxval(infl_hseg(1:ncseg))
-        frw = b%inflow(ifl)%q * wgt_dist(hmx, b%inflow(ifl)%dist) / wsum &
+        m = maxloc(infl_hseg(1:ncseg), 1)
+        hmx = infl_hseg(m)
+        frw = b%inflow(ifl)%q * wgt_dist(hmx, b%inflow(ifl)%dist) * infl_cfac(m,ifl) / wsum &
               / (hmx * sqrt(p%gg * hmx))
         alpha = min(1.0, max(0.0, 2.0 * (1.0 - frw)))
       end if
@@ -549,6 +598,8 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
         qwm = qw
         h = s%h(i,j)
       end if
+      ! 受け口係数(直線区間の内部は 1.0 で従来と厳密に同じ)
+      if (infl_cfac(m,ifl) /= 1.0) qwm = qwm * infl_cfac(m,ifl)
       ! エッジ水深: 内側セルの水深に限界水深の床を敷く(乾床への流入で
       ! uv1 = q/he が発散しないように。ネスティングが水深も渡す事情の
       ! 簡易代替。boundary_plan.md)
