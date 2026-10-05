@@ -44,6 +44,10 @@ CASES = {
     "finef_nh":  ("param.txt",   {"nx": 2080, "ny": 64, "dt": 0.01, "rn0": 0.01}, "NH + スイッチ、Δx/2、n = 0.01"),
     "fine0025_h":("param_h.txt", {"nx": 2080, "ny": 64, "dt": 0.0025}, "静水圧、Δx/2、dt/8(Courant 0.07)"),
     "fine0025_nh":("param.txt",  {"nx": 2080, "ny": 64, "dt": 0.0025}, "NH + スイッチ、Δx/2、dt/8(Courant 0.07)"),
+    "visc_nh":   ("param.txt",   {"nh_break_margin": "8\n  nh_break_visc = 1.44"}, "NH + スイッチ + 渦粘性 1.44"),
+    "visc005_nh":("param.txt",   {"dt": 0.005, "nh_break_margin": "8\n  nh_break_visc = 1.44"}, "NH + スイッチ + 渦粘性、dt/4"),
+    "viscf005_nh":("param.txt",  {"dt": 0.005, "rn0": 0.01, "nh_break_margin": "8\n  nh_break_visc = 1.44"}, "NH + スイッチ + 渦粘性、n = 0.01、dt/4"),
+    "viscfine_nh":("param.txt",  {"nx": 2080, "ny": 64, "dt": 0.0025, "rn0": 0.01, "nh_break_margin": "8\n  nh_break_visc = 1.44"}, "NH + スイッチ + 渦粘性、n = 0.01、Δx/2、dt/8"),
 }
 
 def make_param(name):

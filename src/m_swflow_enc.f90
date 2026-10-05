@@ -93,7 +93,14 @@ module m_swflow_enc
   real :: nh_break_fr = 0.6                 ! フルード数判定の閾値
   real :: nh_break_slope = 0.3              ! 水面勾配判定の閾値
   integer :: nh_break_margin = 0            ! 砕波セルの縁の幅(セル数。0: 2H/Δx から自動)
+  real :: nh_break_visc = 0.0               ! 砕波域の渦粘性係数 δ_b²(0: なし。plan §15)
   integer :: f_nh_slope = 0                 ! 底面勾配項 (0: Version 1 平坦床, 1: Version 2)
+  logical :: have_diff = .false.            ! 拡散項を計算する(f_diffusion_term > 0 または
+                                            !   nh_break_visc > 0。init が設定)
+  real, allocatable :: nh_nub(:,:)          ! 砕波域の渦粘性 ν_b (1:nx, jsh:jeh)。nh_break_visc > 0
+                                            !   のときだけ確保。nh_project(breaking_switch)が
+                                            !   担当帯に書いて halo 交換し、次ステップの
+                                            !   diff_prepare が ν に加える(1 ステップ遅れ)
   logical :: nh_active = .false.            ! NH ON(init が f_nonhydrostatic から設定)
   real, allocatable :: nh_he(:,:,:)         ! momentum が面流束に使ったエッジ水深 he
                                             !   (1:4, 0:nx, jsh-1:jeh)。NH ON のときだけ確保。
@@ -604,6 +611,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   nh_break_fr = list%nh_break_fr
   nh_break_slope = list%nh_break_slope
   nh_break_margin = list%nh_break_margin
+  nh_break_visc = list%nh_break_visc
   f_nh_slope = list%f_nh_slope
   select case (f_diffusion_term)
     case (0)      ! 無効
@@ -619,6 +627,14 @@ subroutine m_swflow_enc_init(p, g, b, s)
     case default
       call par_stop("list_enc: f_diffusion_term must be 0(off), 1(constant) or 2(zero-equation)")
   end select
+  ! 砕波域の渦粘性(plan §15)は NH の砕波スイッチが前提。拡散項の計算は
+  ! f_diffusion_term か nh_break_visc のどちらかが有効なら行う(どちらも
+  ! 無効なら従来どおりゼロ追加)
+  if (nh_break_visc < 0.0) call par_stop("list_enc: nh_break_visc must be >= 0")
+  if (nh_break_visc > 0.0 .and. (f_nonhydrostatic /= 1 .or. f_nh_breaking /= 1)) then
+    call par_stop("list_enc: nh_break_visc > 0 requires f_nonhydrostatic=1 and f_nh_breaking=1")
+  end if
+  have_diff = (f_diffusion_term > 0 .or. nh_break_visc > 0.0)
 
   ! 河道条件ファイルから堤防の水理モードを読む(未指定ならデフォルト値)
   if (len_trim(p%fn_channel) > 0) call list_channel_read(p, chlist)
@@ -1414,7 +1430,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   end if
 
   ! セル境界の拡散項を加算する(移流項と独立な重ね合わせ)
-  if (f_diffusion_term > 0) tae = tae + diff_edge(i, j, k, in, jn)
+  if (have_diff) tae = tae + diff_edge(i, j, k, in, jn)
 
   ! 中心セルi,jからk近傍セルin,jnへの流速uv1と単位幅流量mn1を計算する
   call calc_kth_flux(p, g, s, sx, uve, tae, i, j, k, in, jn, 0, uve1, mne1, hee)

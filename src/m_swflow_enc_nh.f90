@@ -160,6 +160,12 @@ module subroutine nh_init(p, g, s)
         case default
           call par_stop("list_enc: nh_break_type must be 1(d(eta)/dt), 2(Froude) or 3(surface slope)")
       end select
+      if (nh_break_visc > 0.0) then
+        if (nh_break_slope <= 0.0) call par_stop("list_enc: nh_break_visc > 0 requires nh_break_slope > 0 (ramp reference)")
+        call par_info("  breaking eddy viscosity: nu_b = "//trim(rtoa(nh_break_visc)) &
+                      //" B h sqrt(gh) |grad eta| in breaking cells (B ramps over |grad eta| = " &
+                      //trim(rtoa(nh_break_slope))//" .. "//trim(rtoa(2.0 * nh_break_slope))//")")
+      end if
     case default
       call par_stop("list_enc: f_nh_breaking must be 0(off) or 1(on)")
   end select
@@ -175,6 +181,7 @@ module subroutine nh_init(p, g, s)
   allocate(nh_mod%dast(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (f_nh_adaptive == 1) allocate(nh_mod%work(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (f_nh_breaking == 1) allocate(nh_mod%brk(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  if (nh_break_visc > 0.0) allocate(nh_nub(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (f_nh_slope == 1) then
     allocate(nh_mod%rhs0(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(nh_mod%work2(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
@@ -615,7 +622,54 @@ subroutine breaking_switch(p, g, s, sx)
   end do
   !$omp end parallel do
   nh_mod%brksum = nh_mod%brksum + nbrk
+
+  ! 砕波域の渦粘性(plan §15): 砕波セル(縁を含む)に
+  !   ν_b = nh_break_visc · B · h · √(gh) · |∇η|、B = clip((|∇η| − s_on)/s_on, 0, 1)
+  ! を与える(Kennedy et al. 2000 の ν = B δ_b² h ∂η/∂t を進行波の運動学
+  ! ∂η/∂t ≈ c|∂η/∂x| で局所・状態なしにした形。s_on = nh_break_slope)。
+  ! 縁のセルは勾配が小さいので B が自然に 0 へ落ちる(距離による減衰は
+  ! 持たない)。次ステップの diff_prepare が ν に加える(1 ステップ遅れ)。
+  ! td は近傍 ±1 の ν を読むので、ハロ 2 まで交換する
+  if (nh_break_visc > 0.0) then
+    !$omp parallel do schedule(static) private(i, j, bb)
+    do j = dcp%js, dcp%je
+      do i = 1, g%nx
+        nh_nub(i,j) = 0.0
+        if (nh_mod%brk(i,j) /= 1.0) cycle
+        if (s%h(i,j) < p%dd) cycle
+        bb = surface_slope(p, g, s, i, j)
+        if (bb <= nh_break_slope) cycle
+        nh_nub(i,j) = nh_break_visc * min((bb - nh_break_slope) / nh_break_slope, 1.0) &
+                    * s%h(i,j) * sqrt(p%gg * s%h(i,j)) * bb
+      end do
+    end do
+    !$omp end parallel do
+    call par_halo_cell(nh_nub)
+  end if
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 水面勾配 |∇η|(8 近傍への |Δη|/距離の最大。乾いた近傍・無効セルは除く)。
+!   判定 3 と同じ式(判定 3 のループは -Ofast のコード生成を変えないため
+!   そのまま残し、ここでは渦粘性用に別関数とする)
+!----------------------------------------------------------------------
+function surface_slope(p, g, s, i, j) result(bb)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  real :: bb
+  integer :: kk
+  bb = 0.0
+  do kk = 1, 8
+    if (i+din(kk) < 1 .or. i+din(kk) > g%nx) cycle
+    if (g%x(i+din(kk), j+djn(kk)) <= 0) cycle
+    if (s%h(i+din(kk), j+djn(kk)) < p%dd) cycle
+    bb = max(bb, abs(s%z(i+din(kk), j+djn(kk)) + s%h(i+din(kk), j+djn(kk)) &
+                     - s%z(i,j) - s%h(i,j)) / w8dr(kk))
+  end do
+end function
 
 
 !----------------------------------------------------------------------
@@ -982,6 +1036,7 @@ module subroutine nh_dispose()
   end if
   if (allocated(nh_mod%uv0)) deallocate(nh_mod%uv0)
   if (allocated(nh_he)) deallocate(nh_he)
+  if (allocated(nh_nub)) deallocate(nh_nub)
   if (allocated(nh_mod%phi)) deallocate(nh_mod%phi)
   if (allocated(nh_mod%phi1)) deallocate(nh_mod%phi1)
   if (allocated(nh_mod%rhs)) deallocate(nh_mod%rhs)
