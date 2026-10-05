@@ -31,7 +31,7 @@ submodule(m_state) user_initial
 
   ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
   ! 更新すること(乖離は defined/run が「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:8) = [ character(len=32) :: &
+  character(len=*), parameter :: routine_names(1:9) = [ character(len=32) :: &
       "wave_hump",        & ! 波例題: 円形コサイン型の初期水位
       "dambreak_step",    & ! ダム破壊例題: x 方向の段状初期水深(Stoker 解析解の検証用)
       "wave_standing_x",  & ! 定在波例題: 閉じた水槽の x 方向モード (4, 0)(分散関係の検証用)
@@ -39,6 +39,7 @@ submodule(m_state) user_initial
       "wave_solitary",    & ! 孤立波例題: x 方向に進む sech² 孤立波 a/H = 0.1(非静水圧の非線形検証用)
       "wave_solitary28",  & ! 孤立波例題: 同上で a/H = 0.28(Synolakis 1987 の砕波遡上ケース)
       "wave_solitary0185",& ! 孤立波例題: 同上で a/H = 0.0185(Synolakis 1987 の非砕波遡上ケース)
+      "wave_solitary28_toe",& ! 孤立波例題: a/H = 0.28 を斜面の脚の近く x0 = 120 m に置く(平坦部の影響の切り分け用)
       "template"          ] ! 新規ルーチンの雛形(空)
 
 contains
@@ -112,6 +113,8 @@ function resolve(name) result(fp)
       fp => initial_wave_solitary28
     case ("wave_solitary0185")
       fp => initial_wave_solitary0185
+    case ("wave_solitary28_toe")
+      fp => initial_wave_solitary28_toe
     case ("template")
       fp => initial_template
     case default
@@ -272,6 +275,13 @@ subroutine initial_wave_solitary28(p, g, s)
   call solitary_profile(p, g, s, 0.28)
 end subroutine
 
+subroutine initial_wave_solitary28_toe(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  call solitary_profile_x0(p, g, s, 0.28, 120.0)
+end subroutine
+
 subroutine initial_wave_solitary0185(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
@@ -306,6 +316,35 @@ subroutine solitary_profile(p, g, s, arel)
   end do
 end subroutine
 
+
+! 同上で波頂位置 x0 (m) を引数にとる(砕波遡上の原因切り分け用。既存の
+! solitary_profile を触らないのは、-Ofast のコード生成が変わって reference との
+! ビット一致が崩れるのを避けるため。developer.md §69.6)
+subroutine solitary_profile_x0(p, g, s, arel, x0)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: arel, x0
+  integer :: i, j
+  real :: hh, aa, ks, cc, xx, eta
+  do j = 1, g%ny
+    do i = 1, g%nx
+      hh = s%h(i,j)
+      aa = arel * hh
+      ks = sqrt(3.0 * aa / (4.0 * hh**3))
+      cc = sqrt(p%gg * (hh + aa))
+      xx = (i - 0.5) * g%dx - x0
+      eta = aa / cosh(ks * xx)**2
+      s%h(i,j) = max(hh + eta - g%z(i,j), 0.0)
+      if (s%h(i,j) > 0.0) then
+        s%u(i,j) = cc * eta / (hh + eta)
+      else
+        s%u(i,j) = 0.0
+      end if
+      s%v(i,j) = 0.0
+    end do
+  end do
+end subroutine
 
 !----------------------------------------------------------------------
 ! 新規ルーチンの雛形(空。複製して使う)

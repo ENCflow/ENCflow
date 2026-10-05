@@ -118,13 +118,18 @@ in a 200 m basin differs from the full solve by 0.1-0.3% of the
 correction (margins of 4-16 cells) with 40-60% of the cells active.
 
 For a breaking solitary wave running up a beach (test/nhbreak, Synolakis
-1987, a/H = 0.28, slope 1:19.85) the maximum run-up R/H is 0.39
-hydrostatic, 0.62 NH with the breaking switch and 0.81 NH alone
-(f_hcap_upwind=2), against the empirical 0.42: NH overpredicts. The
-hydrostatic ENC gets close by breaking early on the flat part and losing
-energy, whereas NH reaches the breaking point unbroken and runs up
-higher. For run-up with breaking, hydrostatic (or NH only in deep water)
-is recommended for now; NH plus the switch is a research option.
+1987, a/H = 0.28, slope 1:19.85) at dx = H/4 and dt = 0.02 s (Courant
+about 0.3) the maximum run-up R/H is 0.39 hydrostatic, 0.62 NH with the
+breaking switch and 0.81 NH alone (f_hcap_upwind=2), against the
+empirical 0.42. That dt is not converged (time-discretisation error of
+bore formation and of the wet/dry front): with dt/4 the values become
+0.50 (NH + switch) and 0.32 (hydrostatic). The hydrostatic 0.39 is a
+coincidence: the wave bores early on the 100 m flat and loses energy;
+placed near the slope, the hydrostatic run-up is also 0.42. The remaining
++20% of NH + switch is a deficit of energy loss at breaking; with bottom
+friction n = 0.01 (smooth slope) it is +8% of the empirical law. **For
+quantitative breaking/run-up work, check dt convergence at Courant <= 0.1
+and give bottom friction** (developer.md section 69.6).
 
 For a solitary wave climbing onto a shelf (test/nhshelf, depth 1 m →
 1:20 slope → 0.5 m, a/H = 0.1) NH reproduces the fission into a leading
