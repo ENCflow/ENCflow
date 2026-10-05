@@ -199,24 +199,27 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 水が流入する」扱いになり、屈曲ごとに人工的な損失水頭が生じる。
         ! §68.8)。MUSCL の upup も同様に供給元が無効なら 1 次に退化
         ! MUSCL の upup(さらに風上のエッジ)は、そのエッジの向こうのセルが
-        ! 無効(領域外・壁・乾燥)なら使わず 1 次に退化する。uvk が返す 0 を
-        ! upup に使うと r = (up − 0)/(dn − up) ≫ 1 → ψ = 2 で面値が完全風下
-        ! (dn)になり、規定境界(区間流入・水位規定)から流れ出す線 k の最初の
-        ! エッジが反拡散になって境界から指数的に発散する(§69.9。2026-10-05)
+        ! 領域外・無効(壁)なら使わず 1 次に退化する。uvk が返す 0 を upup に
+        ! 使うと r = (up − 0)/(dn − up) ≫ 1 → ψ = 2 で面値が完全風下(dn)に
+        ! なり、規定境界(区間流入・水位規定)から流れ出す線 k の最初の
+        ! エッジが反拡散になって境界から指数的に発散する(§69.9。2026-10-05)。
+        ! 判定は far_ok(全域で確保された g%x だけを見る): upp の向こうの
+        ! セルは行 j ± 3 で帯+ハロ 2 の外に出るため、h を見る cell_ok を使うと
+        ! ランク境界で判定が変わり np=1 と np=2 が一致しない
         if (qc >= 0) then
           if (donor_ok(i - din(k), j - djn(k), donor_rw)) then
-            ubc = face_value(um, ue, umm, cell_ok(i - 2 * din(k), j - 2 * djn(k)))
+            ubc = face_value(um, ue, umm, far_ok(i - 2 * din(k), j - 2 * djn(k)))
           else
             ubc = ue
           end if
         else
-          ubc = face_value(ue, um, up, cell_ok(in + din(k), jn + djn(k)))
+          ubc = face_value(ue, um, up, far_ok(in + din(k), jn + djn(k)))
         end if
         if (qn >= 0) then
-          ubn = face_value(ue, up, um, cell_ok(i - din(k), j - djn(k)))
+          ubn = face_value(ue, up, um, far_ok(i - din(k), j - djn(k)))
         else
           if (donor_ok(in + din(k), jn + djn(k), donor_rw)) then
-            ubn = face_value(up, ue, upp, cell_ok(in + 2 * din(k), jn + 2 * djn(k)))
+            ubn = face_value(up, ue, upp, far_ok(in + 2 * din(k), jn + 2 * djn(k)))
           else
             ubn = ue
           end if
@@ -290,6 +293,16 @@ contains
       v = s%h(ci,cj)
     end if
     if (have_width) v = v * wfrac(ci,cj)
+  end function
+
+  ! MUSCL の upup の向こうのセルが領域内で有効か(g%x は全域で確保されて
+  ! いるので全ランクで同じ判定。乾湿は見ない)
+  pure function far_ok(ci, cj) result(ok)
+    integer, intent(in) :: ci, cj
+    logical :: ok
+    ok = .false.
+    if (ci < 1 .or. ci > g%nx .or. cj < 1 .or. cj > dcp%ny_g) return
+    ok = g%x(ci,cj) > 0
   end function
 
   ! セルが運動量の供給元になれるか(確保範囲内・有効・移動限界以上の水深)
