@@ -80,6 +80,12 @@ module m_swflow_enc
   integer :: nh_solver = 2                  ! 反復ソルバ (1: Jacobi, 2: CG(既定))
   integer :: nh_itmax = 500                 ! 反復回数の上限
   real :: nh_tol = 1.0e-6                   ! 相対収束判定
+  integer :: f_nh_adaptive = 0              ! 活性集合 (0: マスク内全域, 1: 検出セル+縁)
+  integer :: nh_detector = 1                ! 検出量 (1: 分散型 χ, 2: 絶対型 |βDa*|/g)
+  real :: nh_chi_on = 0.06                  ! 検出の閾値
+  integer :: nh_margin = 0                  ! 縁の幅(セル数。0: 2H/Δx から自動)
+  real :: nh_amin = 1.0e-5                  ! 検出の下限 |βDa*| (m/s²)
+  real :: nh_arel = 1.0e-3                  ! 検出の相対下限(領域最大の |βDa*| に対する比)
   logical :: nh_active = .false.            ! NH ON(init が f_nonhydrostatic から設定)
   real, allocatable :: nh_he(:,:,:)         ! momentum が面流束に使ったエッジ水深 he
                                             !   (1:4, 0:nx, jsh-1:jeh)。NH ON のときだけ確保。
@@ -577,6 +583,12 @@ subroutine m_swflow_enc_init(p, g, b, s)
   nh_solver = list%nh_solver
   nh_itmax = list%nh_itmax
   nh_tol = list%nh_tol
+  f_nh_adaptive = list%f_nh_adaptive
+  nh_detector = list%nh_detector
+  nh_chi_on = list%nh_chi_on
+  nh_margin = list%nh_margin
+  nh_amin = list%nh_amin
+  nh_arel = list%nh_arel
   select case (f_diffusion_term)
     case (0)      ! 無効
     case (1)      ! 定数モデル

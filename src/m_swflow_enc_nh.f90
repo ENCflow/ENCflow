@@ -46,6 +46,8 @@ submodule(m_swflow_enc) m_swflow_enc_nh
     real, allocatable :: diag(:,:)        ! Jacobi: 1 + β Σ w、CG: 1/β + Σ w
     real, allocatable :: rr(:,:)          ! CG 残差
     real, allocatable :: ap(:,:)          ! CG の M p
+    real, allocatable :: dast(:,:)        ! D a*(NH 候補セル。検出と右辺に使う)
+    real, allocatable :: work(:,:)        ! 活性集合の膨張用(0/1。halo 交換のため実数)
     integer, allocatable :: cmask(:,:)    ! NH セル (1:nx, jsh:jeh)
     logical, allocatable :: emask(:,:,:)  ! NH エッジ (1:4, 0:nx, jsh-1:jeh)
     real :: wd(1:8) = 0.0                 ! 発散の重み l8(k)/(dx·dy)
@@ -92,6 +94,31 @@ module subroutine nh_init(p, g, s)
   if (nh_tol <= 0.0) call par_stop("list_enc: nh_tol must be > 0")
   call par_info("  nh_hmin = "//trim(rtoa(nh_hmin))//" m, nh_itmax = "//itoa(nh_itmax)// &
                 ", nh_tol = "//trim(rtoa(nh_tol)))
+  select case (f_nh_adaptive)
+    case (0)
+    case (1)
+      select case (nh_detector)
+        case (1)
+          call par_info("  adaptive active set: detector = dispersion chi = |bDa*|/(|a*|+|bDa*|), chi_on = " &
+                        //trim(rtoa(nh_chi_on)))
+        case (2)
+          call par_info("  adaptive active set: detector = |bDa*|/g, chi_on = "//trim(rtoa(nh_chi_on)))
+        case default
+          call par_stop("list_enc: nh_detector must be 1(dispersion chi) or 2(absolute)")
+      end select
+      if (nh_chi_on <= 0.0) call par_stop("list_enc: nh_chi_on must be > 0")
+      if (nh_amin < 0.0) call par_stop("list_enc: nh_amin must be >= 0")
+      if (nh_arel < 0.0 .or. nh_arel >= 1.0) call par_stop("list_enc: nh_arel must be in [0, 1)")
+      call par_info("  seed floor |bDa*| >= max("//trim(rtoa(nh_amin))//" m/s2, "// &
+                    trim(rtoa(nh_arel))//" x domain max)")
+      if (nh_margin > 0) then
+        call par_info("  margin = "//itoa(nh_margin)//" cells")
+      else
+        call par_info("  margin = automatic (2H/dx)")
+      end if
+    case default
+      call par_stop("list_enc: f_nh_adaptive must be 0(whole mask) or 1(active set)")
+  end select
 
   allocate(nh_mod%uv0(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
   allocate(nh_he(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
@@ -101,6 +128,8 @@ module subroutine nh_init(p, g, s)
   allocate(nh_mod%beta(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(nh_mod%diag(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
   allocate(nh_mod%cmask(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
+  allocate(nh_mod%dast(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  if (f_nh_adaptive == 1) allocate(nh_mod%work(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(nh_mod%emask(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = .false.)
   if (nh_solver == 2) then
     allocate(nh_mod%rr(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
@@ -156,9 +185,8 @@ module subroutine nh_project(p, g, s, sx)
 
   dtinv = 1.0 / p%dt
 
-  ! --- 1. NH セルのマスクと β(確保範囲 jsh..jeh で局所に決まる) ---
-  nact = 0
-  !$omp parallel do schedule(static) private(i, j) reduction(+:nact)
+  ! --- 1. NH 候補セルのマスクと β(確保範囲 jsh..jeh で局所に決まる) ---
+  !$omp parallel do schedule(static) private(i, j)
   do j = dcp%jsh, dcp%jeh
     do i = 1, g%nx
       nh_mod%cmask(i,j) = 0
@@ -166,6 +194,7 @@ module subroutine nh_project(p, g, s, sx)
       nh_mod%phi(i,j) = 0.0
       nh_mod%phi1(i,j) = 0.0
       nh_mod%rhs(i,j) = 0.0
+      nh_mod%dast(i,j) = 0.0
       nh_mod%diag(i,j) = 1.0
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
@@ -179,12 +208,31 @@ module subroutine nh_project(p, g, s, sx)
       end if
       nh_mod%cmask(i,j) = 1
       nh_mod%beta(i,j) = s%h(i,j)**2 / 4
-      if (j >= dcp%js .and. j <= dcp%je) nact = nact + 1
     end do
   end do
   !$omp end parallel do
 
-  ! --- 2. NH エッジ(基準セル jsh..jeh の k=1..4。両セルが NH、壁でない) ---
+  ! --- 2. 静水圧加速度の発散 D a*(担当帯。エッジ行 js-1..je は merge 済み) ---
+  !   全 8 エッジの寄与(非 NH エッジも含む。momentum が触らなかったエッジは
+  !   uv = uv0 で寄与 0)
+  !$omp parallel do schedule(static) private(i, j, kk, da)
+  do j = dcp%js, dcp%je
+    do i = 1, g%nx
+      if (nh_mod%cmask(i,j) == 0) cycle
+      da = 0.0
+      do kk = 1, 8
+        da = da + sgn8(kk) * (sx%uv(ke8(kk), i+die(kk), j+dje(kk)) &
+                              - nh_mod%uv0(ke8(kk), i+die(kk), j+dje(kk))) * dtinv * nh_mod%wd(kk)
+      end do
+      nh_mod%dast(i,j) = da
+    end do
+  end do
+  !$omp end parallel do
+
+  ! --- 2b. 活性集合(f_nh_adaptive=1): 検出セル + 縁だけを NH セルに絞る ---
+  if (f_nh_adaptive == 1) call active_set(p, g, s, sx)
+
+  ! --- 3. NH エッジ(基準セル jsh..jeh の k=1..4。両セルが NH、壁でない) ---
   !$omp parallel do schedule(static) private(i, j, k, in, jn, ie, je)
   do j = dcp%jsh, dcp%jeh
     do i = 1, g%nx
@@ -208,25 +256,22 @@ module subroutine nh_project(p, g, s, sx)
   end do
   !$omp end parallel do
 
-  ! --- 3. 右辺 D a* と対角(担当帯 js..je。エッジ行 js-1..je は merge 済み) ---
-  !$omp parallel do schedule(static) private(i, j, kk, da, wsum)
+  ! --- 3b. 右辺と対角(担当帯 js..je) ---
+  nact = 0
+  !$omp parallel do schedule(static) private(i, j, kk, wsum) reduction(+:nact)
   do j = dcp%js, dcp%je
     do i = 1, g%nx
       if (nh_mod%cmask(i,j) == 0) cycle
-      da = 0.0
+      nact = nact + 1
       wsum = 0.0
       do kk = 1, 8
-        ! 全 8 エッジの静水圧加速度の発散(非 NH エッジも含む。momentum が
-        ! 触らなかったエッジは uv = uv0 で寄与 0)
-        da = da + sgn8(kk) * (sx%uv(ke8(kk), i+die(kk), j+dje(kk)) &
-                              - nh_mod%uv0(ke8(kk), i+die(kk), j+dje(kk))) * dtinv * nh_mod%wd(kk)
         if (nh_mod%emask(ke8(kk), i+die(kk), j+dje(kk))) wsum = wsum + nh_mod%wl(kk)
       end do
       if (nh_solver == 1) then
-        nh_mod%rhs(i,j) = nh_mod%beta(i,j) * da
+        nh_mod%rhs(i,j) = nh_mod%beta(i,j) * nh_mod%dast(i,j)
         nh_mod%diag(i,j) = 1.0 + nh_mod%beta(i,j) * wsum
       else
-        nh_mod%rhs(i,j) = da
+        nh_mod%rhs(i,j) = nh_mod%dast(i,j)
         nh_mod%diag(i,j) = 1.0 / nh_mod%beta(i,j) + wsum
       end if
     end do
@@ -268,6 +313,124 @@ module subroutine nh_project(p, g, s, sx)
   call par_edge_merge(sx%uv,  esync_s, esync_n)
   call par_edge_merge(sx%mn1, esync_s, esync_n)
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 活性集合(plan §6): 検出量が閾値を超えるセルを種にし、8 近傍で
+!   nh_margin セルぶん膨張させた集合だけを NH セルに残す(残りは φ = 0 の
+!   静水圧)。楕円型作用素の影響距離は H/2 で減衰するので、縁を 2H
+!   程度取れば切り捨て誤差は exp(−2·縁幅/H) ≈ 2% 以下。
+!   検出量 1(分散型): χ = |β D a*| / (ā* + |β D a*| + ε)、ā* は 8 エッジの
+!     |a*| の RMS。長波では χ ≈ (kH)²/4 で振幅に依らない。
+!   検出量 2(絶対型): |β D a*| / g。
+!   膨張は 8 近傍の論理和(走査順に依らない)。各掃引で halo 交換するので
+!   ランク境界で連結が切れない。ステップ間の状態は持たない(stateless)。
+!----------------------------------------------------------------------
+subroutine active_set(p, g, s, sx)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(in) :: sx
+  integer :: i, j, kk, m, margin
+  real :: bda, a2, chi, dtinv, hmax, bmax, floor
+  real :: vmax(2)
+  real, parameter :: eps = 1.0e-30
+
+  dtinv = 1.0 / p%dt
+
+  ! 下限: 絶対値 nh_amin と、そのステップの領域最大 |βDa*| の nh_arel 倍
+  !   (比の検出量 χ は振幅に依らないため、陽解法の前駆ノイズ(丸め誤差
+  !   レベルの短波)まで拾ってしまう。補正量が無視できるセルを種から外す)
+  hmax = 0.0
+  bmax = 0.0
+  !$omp parallel do schedule(static) private(i, j) reduction(max:hmax, bmax)
+  do j = dcp%js, dcp%je
+    do i = 1, g%nx
+      if (nh_mod%cmask(i,j) == 0) cycle
+      hmax = max(hmax, s%h(i,j))
+      bmax = max(bmax, abs(nh_mod%beta(i,j) * nh_mod%dast(i,j)))
+    end do
+  end do
+  !$omp end parallel do
+  vmax(1) = hmax
+  vmax(2) = bmax
+  call par_allreduce_max(vmax)
+  hmax = vmax(1)
+  floor = max(nh_amin, nh_arel * vmax(2))
+
+  ! 種: 検出量 > nh_chi_on(担当帯。候補セルのみ)
+  !$omp parallel do schedule(static) private(i, j, kk, bda, a2, chi)
+  do j = dcp%js, dcp%je
+    do i = 1, g%nx
+      nh_mod%work(i,j) = 0.0
+      if (nh_mod%cmask(i,j) == 0) cycle
+      bda = abs(nh_mod%beta(i,j) * nh_mod%dast(i,j))
+      if (bda < floor) cycle
+      if (nh_detector == 1) then
+        a2 = 0.0
+        do kk = 1, 8
+          a2 = a2 + ((sx%uv(ke8(kk), i+die(kk), j+dje(kk)) &
+                      - nh_mod%uv0(ke8(kk), i+die(kk), j+dje(kk))) * dtinv)**2
+        end do
+        chi = bda / (sqrt(a2 / 8) + bda + eps)
+      else
+        chi = bda / p%gg
+      end if
+      if (chi > nh_chi_on) nh_mod%work(i,j) = 1.0
+    end do
+  end do
+  !$omp end parallel do
+
+  ! 縁の幅(自動なら 2H/Δx。hmax は全ランクで集約済み)
+  if (nh_margin > 0) then
+    margin = nh_margin
+  else
+    margin = max(2, ceiling(2.0 * hmax / min(g%dx, g%dy)))
+  end if
+
+  ! 膨張(各掃引: halo 交換 → 8 近傍の論理和。候補セルの中だけに広がる)
+  do m = 1, margin
+    call par_halo_cell(nh_mod%work)
+    !$omp parallel do schedule(static) private(i, j, kk)
+    do j = dcp%js, dcp%je
+      do i = 1, g%nx
+        nh_mod%phi1(i,j) = 0.0
+        if (nh_mod%cmask(i,j) == 0) cycle
+        if (nh_mod%work(i,j) > 0.5) then
+          nh_mod%phi1(i,j) = 1.0
+          cycle
+        end if
+        do kk = 1, 8
+          if (i+din(kk) < 1 .or. i+din(kk) > g%nx) cycle
+          if (nh_mod%work(i+din(kk), j+djn(kk)) > 0.5) then
+            nh_mod%phi1(i,j) = 1.0
+            exit
+          end if
+        end do
+      end do
+    end do
+    !$omp end parallel do
+    !$omp parallel do schedule(static) private(j)
+    do j = dcp%js, dcp%je
+      nh_mod%work(:,j) = nh_mod%phi1(:,j)
+      nh_mod%phi1(:,j) = 0.0
+    end do
+    !$omp end parallel do
+  end do
+  call par_halo_cell(nh_mod%work)
+
+  ! 候補セル ∧ 活性 → NH セル(ハロ行も交換済みの値で同じ判定)
+  !$omp parallel do schedule(static) private(i, j)
+  do j = dcp%jsh, dcp%jeh
+    do i = 1, g%nx
+      if (nh_mod%cmask(i,j) == 1 .and. nh_mod%work(i,j) < 0.5) then
+        nh_mod%cmask(i,j) = 0
+        nh_mod%beta(i,j) = 0.0
+      end if
+    end do
+  end do
+  !$omp end parallel do
 end subroutine
 
 
@@ -453,6 +616,8 @@ module subroutine nh_dispose()
   if (allocated(nh_mod%rr)) deallocate(nh_mod%rr)
   if (allocated(nh_mod%ap)) deallocate(nh_mod%ap)
   if (allocated(nh_mod%cmask)) deallocate(nh_mod%cmask)
+  if (allocated(nh_mod%dast)) deallocate(nh_mod%dast)
+  if (allocated(nh_mod%work)) deallocate(nh_mod%work)
   if (allocated(nh_mod%emask)) deallocate(nh_mod%emask)
   nh_active = .false.
 end subroutine

@@ -95,11 +95,19 @@ becomes silently inactive).
 | nh_solver | 2 | iterative solver for φ. 1: Jacobi, 2: CG (default; the inner products use the deterministic row sum, so results are bit-identical for any thread or rank count). Jacobi converges slowly when Δx ≪ H and is kept for comparison |
 | nh_itmax | 500 | maximum number of iterations (a warning is printed and the run continues when exceeded) |
 | nh_tol | 1e-6 | relative convergence criterion (CG: residual norm / right-hand-side norm, Jacobi: max residual / max right-hand side) |
+| f_nh_adaptive | 0 | active set. 0: solve on the whole NH mask (default), 1: solve only on the cells whose detector exceeds the threshold (seeds) plus a margin of nh_margin cells around them; the rest stays hydrostatic ("only where needed", like the adaptive RK). The elliptic correction decays by a factor e over half the depth, so a margin of about 2H keeps the difference from the full solve below 1% of the correction. Long waves, steady flow and inundation areas cost nothing. No state is kept between steps, so restarts are bit-reproducible |
+| nh_detector | 1 | detector. 1: dispersion type χ = \|βDa*\| / (\|a*\| + \|βDa*\|) (ratio of the non-hydrostatic correction to the hydrostatic acceleration a*; for long waves χ ≈ (kH)²/4, independent of the amplitude and zero for long waves and steady flow; default), 2: absolute type \|βDa*\|/g (for comparison) |
+| nh_chi_on | 0.06 | detection threshold (cells with χ > nh_chi_on are seeds; 0.06 corresponds to a 3% phase-speed difference from hydrostatic; for the absolute type a fraction of g) |
+| nh_margin | 0 | width of the margin (cells). 0 = automatic 2H/Δx (four times the decay length H/2) |
+| nh_amin | 1e-5 | absolute floor (m/s²): cells whose correction \|βDa*\| is below it are never seeds |
+| nh_arel | 1e-3 | relative floor: cells whose \|βDa*\| is below this fraction of the domain maximum of the step are never seeds (the ratio detector is amplitude-independent, so this keeps round-off precursors of the explicit scheme from being flagged) |
 
 With standing waves in a closed basin (test/nhwave_nh) the periods for
 kH = 0.25-2 agree with the one-layer theory within 0.2% (hydrostatic
 periods are 12-42% shorter). CG takes 10-90 iterations per step (more
-for smaller Δx/H).
+for smaller Δx/H). With the active set (f_nh_adaptive=1) an isolated hump
+in a 200 m basin differs from the full solve by 0.1-0.3% of the
+correction (margins of 4-16 cells) with 40-60% of the cells active.
 
 **Others**
 
