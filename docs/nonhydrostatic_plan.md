@@ -50,6 +50,16 @@ adv submodule、並列層)と developer.md §0 の方針に照らして検討し
 6. コストの支配要因はソルバではなく**空間解像度 Δx ≲ H/2** である
    (§2.3)。NH ケースは研究計算として深い水域を細かく切る前提で
    見積もる。
+7. **先行研究の調査(2026-10-05。§3.10)**: 「静水圧 predictor + 射影 +
+   判定領域だけの楕円型解」は Firdaus & Behrens(IJNMF 2026、arXiv
+   2606.27562)が 1 次元・2 次元で実証済みで、NEOWAVE・SWASH も同じ
+   predictor–corrector 構成。**本提案は実証済みの実用路線**であり、
+   概念の新規性は主張しない。調査を踏まえた実務的な改訂は、(a) 通信
+   回避ソルバ(§3.9)は既存ハロでの Jacobi で正しさを固めてから
+   Phase 4c で入れる、(b) 検出量は分散型 χ を既定、振幅型を比較用、
+   (c) 砕波スイッチは「なし」で先に検証し保険として残す、(d) 鉛直
+   圧力分布は線形(β = h²/4)のまま、(e) 動く底面は Firdaus/Jeschke の
+   定式を参照、の 5 点(§3.10)。
 
 ---
 
@@ -214,8 +224,11 @@ predictor–corrector。参考文献は §7)。
   内積 2 回。§2.4 のとおり 10 反復程度。
 - 反復回数上限・許容残差は namelist(nh_itmax, nh_tol)。不収束は
   par_warn + 継続(研究機能。発散は既存の 250 m/s 判定に掛かる)。
-- **反復内の通信を回避する形(固定回数の Chebyshev 加速 + 幅 m ハロ)
-  を第 1 候補とする。§3.9 参照**(本項の Jacobi/CG は比較用)。
+- **実装順序(2026-10-05 改訂)**: まず本項の Jacobi(既存の幅 2 ハロ
+  交換+収束判定の allreduce)で正しさと分散関係の再現を固める(並列層
+  は無変更)。反復内の通信を回避する形(固定回数の Chebyshev 加速 +
+  幅 m ハロ。§3.9)は、実ケースで通信が律速と計測されてから Phase 4c で
+  入れる。CG は比較用。
 
 ### 3.4 必要な追加状態(NH ON のときだけ確保)
 
@@ -301,25 +314,41 @@ NH ON のケースでも静水圧の領域にはコストが乗らない。活�
 切り捨てだけである。設計プラン §21 が懸念した「全格子の反復」では
 なく「検出した小領域の反復」になる。
 
-**実装例(要文献照合)**:
+**実装例・先行研究(2026-10-05 調査。要文献照合 = 本文未読)**:
 
+- **Firdaus, K. & Behrens, J.(ハンブルク大)** Locally Adaptive
+  Non-Hydrostatic Shallow Water Extension for Moving Bottom-Generated
+  Waves. IJNMF 2026(arXiv 2505.17025、1 次元)/ Two-Dimensional Locally
+  Adaptive Non-Hydrostatic Extension of Shallow Water Equations. arXiv
+  2606.27562(2026-06、2 次元)。**本節と同じ発想の最も近い先行研究**:
+  静水圧 SWE を predictor にし、射影法で楕円型問題を判定領域だけで
+  解き、砕波は Froude 数で局所的に SWE へ切り替える。2 次元で計算量
+  約 40% 削減。判定量は静水圧 predictor の |η/d| と流速の大きさで
+  閾値 0.001、判定領域を 1 要素広げる。離散化は RK-DG + 局所 DG、
+  鉛直圧力は 2 次分布(Jeschke et al. 2017)。MPI は検索で確認できず。
 - Berger, M.J. & LeVeque, R.J. (2024) Implicit adaptive mesh refinement
-  for dispersive tsunami propagation. SIAM J. Sci. Comput.(GeoClaw-Bouss。
-  Boussinesq の楕円型解を細分化パッチ上だけで解き、粗い格子と深さ閾値
-  未満の浅い領域は SWE。「必要な領域だけ楕円型を解く」構成)。
+  for dispersive tsunami propagation. SIAM J. Sci. Comput. 46:B554
+  (GeoClaw-Bouss。SGN の楕円型系を AMR のレベルごとに陰的に解く。
+  領域を限る発想は細分化パッチ経由)。
 - Yamazaki, Cheung & Kowalik (2011) NEOWAVE: ネスト格子内で NH、外側は
   粗い格子。
 - 分散項を局所的に**切る**方向の切替は多数(Tonelli & Petti 2009 の
-  hybrid Boussinesq/NSWE、Kazolea et al. 2014、FUNWAVE-TVD(Shi et al.
-  2012)、SWASH の砕波スイッチ)。機構(マスク境界で φ = 0 として
-  静水圧に落とす)は ON 方向にも同じ。
-- kH の強さで局所的に ON にする例は多くないため、検出量 χ・閾値・
-  縁幅は ENCflow の検証項目とする(§5 Phase 4b)。
+  hybrid Boussinesq/NSWE、Tissier et al. 2012、Kazolea & Ricchiuto 2018、
+  FUNWAVE-TVD(Shi et al. 2012)、SWASH の砕波スイッチ)。機構(マスク
+  境界で φ = 0 として静水圧に落とす)は ON 方向にも同じ。Kazolea &
+  Ricchiuto は H/NH 切替の安定性と格子依存を主要な難点として報告。
+
+**検出量の既定(2026-10-05 改訂)**: nh_detector で切り替える。
+
+| nh_detector | 検出量 | 性質 | 位置づけ |
+|---|---|---|---|
+| 1(既定) | χ_i = |β_i (D a*)_i| / (ā*_i + |β_i (D a*)_i| + ε)、長波で χ ≈ (kH)²/4 | 振幅に依らず「分散が効く場所」を測る。長波・定常流・一様流で 0 | ENCflow の主対象(背景流のある河川、洪水波と津波の重なり)で河川全体が常時活性にならない、という**実用上の理由**で既定 |
+| 2 | Firdaus & Behrens 型: |η̃/d| > k_nh または |ũ| > k_nh(k_nh = 0.001) | 振幅検出。静水と乾燥地以外はほぼ活性 | 海の津波には実用的。比較用(Phase 4b) |
 
 追加パラメータ: f_nh_adaptive(0: マスク内全域、1: 活性集合)、
-nh_chi_on、nh_chi_off、nh_margin(セル数。0 なら 2H/Δx から導出)。
-f_nh_adaptive=0 は検証の基準(活性集合の切り捨て誤差を測る比較対象)
-として残す。
+nh_detector、nh_chi_on、nh_chi_off、nh_margin(セル数。0 なら 2H/Δx
+から導出)。f_nh_adaptive=0 は検証の基準(活性集合の切り捨て誤差を
+測る比較対象)として残す。
 
 ### 3.8 設計プラン・引継ぎメモからの変更点
 
@@ -406,12 +435,68 @@ f_nh_adaptive=0 は検証の基準(活性集合の切り捨て誤差を測る比
 - 補正の更新頻度低減(数ステップに 1 回)は分散項のサブサイクリングに
   なるので、精度の裏付けなしには採らない。
 
-**ソルバの位置づけの改定**: §3.3 の「Jacobi(第 1)→ CG(第 2)」は
-「**Chebyshev 加速 Jacobi + 固定回数 + 幅 m ハロを第 1 候補**、
-素朴な Jacobi(毎掃引交換+収束判定)は検証時の比較用、CG は内積の
-通信を許せる場合の比較用」に改める。Phase 3 の骨組みに幅指定つき
-セル交換を含め、Phase 4 で Jacobi 比較版との ULP 差(固定回数の
-切り捨て)を記録する。
+**位置づけ(2026-10-05 改訂)**: 本節は**性能段階(Phase 4c)**の
+作業とする。まず §3.3 の Jacobi(既存の幅 2 ハロ+収束判定)で正しさを
+固め、実ケース(河川遡上津波・地滑り津波)で通信が律速と計測されて
+から、幅指定つきセル交換を並列層に足して固定回数 Chebyshev に移る。
+ノート PC〜ワークステーション規模では不要な可能性が高い。移行時は
+Jacobi 収束判定版との ULP 差(固定回数の切り捨て)を記録する。
+
+### 3.10 調査結果を踏まえた方針の改訂(2026-10-05)
+
+先行研究の調査(§3.7・§7)の結論: **骨格(ステップ末尾の射影 + 1 層
+β = h²/4 + 活性集合 + 局所反復)は Firdaus & Behrens・NEOWAVE・SWASH が
+実証済みの実用路線**で、変更しない。概念の新規性は主張しない(実用性
+優先)。差別化しうるのは検出量 χ、減衰距離に基づく縁幅、通信回避の
+固定回数 Chebyshev とビット再現性、ENC 格子と統合モデルへの組込み
+だが、採否はいずれも実用性で決める。改訂は次の 5 点。
+
+1. **通信回避ソルバは後回し**(§3.3・§3.9): 既存の並列層だけで
+   Jacobi + 収束判定から始め、Phase 4c で計測してから入れる。
+2. **検出量は χ(分散型)を既定、振幅型(Firdaus & Behrens 型)を
+   比較用**(§3.7 の表)。理由は新規性でなく、背景流のある河川で
+   河川全体が常時活性にならないこと。
+3. **砕波スイッチは「なし」で先に検証する**(§5 Phase 6): ENCflow は
+   運動量保存形移流(スキーム 3)で段波・跳水の速度を正しく出す。
+   NEOWAVE も保存形移流で砕波を bore として扱う構成(明示的な砕波
+   判定の要否は本文で要照合)。hybrid Boussinesq 系では H/NH 切替の
+   安定性と格子依存が主要な難点と報告されているため、切替は「保存形
+   移流 + NH で砕波が破綻する場合の保険」に格下げし、入れるなら SWASH
+   型(∂η/∂t > α√(gh)。運用実績あり)。
+4. **鉛直圧力分布は線形(β = h²/4)のまま**: 2 次分布(Jeschke et al.
+   2017 / Firdaus)は Green–Naghdi 相当 ω² = gHk²/(1 + (kH)²/3) で
+   O((kH)²) まで厳密だが、位相速度の誤差(厳密解 ω² = gk tanh kH
+   との比)を概算すると
+
+   | kH | 線形 1/(1+(kH)²/4) | 2 次 1/(1+(kH)²/3) |
+   |---:|---:|---:|
+   | 0.5 | +0.9% | −0.1% |
+   | 1.0 | +2.5% | −0.1% |
+   | 2.0 | +1.8% | −5.7% |
+   | 3.0 | −3.7% | −13% |
+
+   ソリトン分裂の後続波(kH 1〜2)では線形が劣らず、スカラー 1 個で
+   済む。2 次分布は射影法で時間微分の曖昧さが出る(Firdaus et al.
+   2025 が別形式で回避)ため、実用上の利点がない。
+5. **動く底面(Phase 8)は Firdaus/Jeschke の定式を参照**: 彼らの主題が
+   moving-bottom-generated waves なので、底面運動の源項
+   w_b = ∂z_b/∂t + u·∇z_b の扱いは自前導出でなく彼らの式を ENC に移す。
+
+**採らないもの**:
+
+- 双曲型緩和(Escalante, Dumbser & Castro 2019; Muñoz-Moncayo &
+  Ketcheson 2026): 反復も広いハロも不要で ENC の陽的構造に載るが、
+  人工圧力波速で dt が 3〜10 分の 1 になり、統合モデルでは全プロセスが
+  その dt を払う。活性領域だけサブサイクルすれば結局は反復法と同じ。
+  引継ぎメモ §30 の判断と同じ。
+- ネスト格子・AMR で NH 領域を限る(NEOWAVE・GeoClaw-Bouss): ENCflow は
+  単一格子が方針(§0-2・§0-9)。活性集合がその代替。
+- 引継ぎメモの RK 段内 NH・NH detector による RK 昇格・edge-local
+  単一掃引: §2・§3.8 のとおり撤回のまま。
+
+**変わらないこと**: §4 の D1(§0-5 の例外)と D2(反復ソルバの許容)は
+依然として実装前に必要。D2 は既存ハロでの Jacobi から始めるので、
+並列層の変更を伴わない形で判断できる。
 
 ## 4. 方針との整合と議論事項(実装前に決める)
 
@@ -435,10 +520,10 @@ f_nh_adaptive=0 は検証の基準(活性集合の切り捨て誤差を測る比
 - **D3. 補正の時点**: ステップ末尾(本提案)で合意するか。RK 段内に
   入れる案は反復解と両立しない。
 - **D4. パラメータ**: list_enc に f_nonhydrostatic(0/1)、nh_hmin(m)、
-  nh_nsweep(固定掃引数)、nh_halo(ハロ幅 w ≤ m)、nh_solver
-  (1 Chebyshev 固定回数 / 2 Jacobi 収束判定 / 3 CG。比較用)、
-  nh_itmax、nh_tol(2, 3 用)、適応化の
-  f_nh_adaptive、nh_chi_on、nh_chi_off、nh_margin(§3.7)。Phase 6 で
+  nh_solver(1 Jacobi 収束判定(既定・Phase 4)/ 2 CG(比較用)/
+  3 Chebyshev 固定回数(Phase 4c))、nh_itmax、nh_tol(1, 2 用)、
+  nh_nsweep・nh_halo(3 用)、適応化の f_nh_adaptive、nh_detector、
+  nh_chi_on、nh_chi_off、nh_margin(§3.7)。Phase 6 で
   f_nh_breaking、nh_break_alpha(0.6)、nh_break_beta(0.3)。既定値は
   "(default)" 表示(architecture.md §5-6)。
 - **D5. Phase 1(静水圧 ENC の数値分散計測)を先に行う**(設計プラン
@@ -461,13 +546,14 @@ np=1,2,4 ULP=0、確保に触れたら -fcheck=all np≥2 先行、等価変換�
 | 0 | 本書の議論(D1〜D6)。developer.md §0 と本書の改定 | 合意 | — |
 | 1 | **静水圧 ENC の数値分散計測**。test/nhwave: 閉じた正方水槽(平坦・無摩擦)の定在波。user_initial に "wave_standing"(モード (1,0) と (1,1) = 0° と 45° を壁の階段化なしに得る)。L 固定で h0 を変えて kH を走査(kΔx も変わる)。プローブ時系列から周期を測り c_num/c を kΔx・方向・dt・適応 RK・hcap 別に表にする。ENC 8 近傍の Λ(k_x, k_y) の閉形式を導出し比較 | 表と図(test/ 内の python。計算本体外)。reference は Log 列 | 1〜2 セッション |
 | 2 | **等価リファクタ**: edge_depth() の切り出し(§3.6)。必要なら uv0 複製の置き場 | 全 reference ULP=0、np=1,2,4 | 0.5 |
-| 3 | **骨組み**: m_swflow_enc_nh(nh_init/prepare/project/dispose の interface)、list_enc 項目、NH マスク、**並列層の幅指定つきセル交換**(§3.9)、nh_project は a* の集計と φ=0 のまま(補正ゼロ) | f_nonhydrostatic=0 で全 13 reference ULP=0・np=1,2,4。-fcheck=all np=2。幅指定交換は既存の幅 2 交換と同値(ULP=0) | 1〜1.5 |
-| 4 | **V1 ソルバ**: 固定回数 Chebyshev + 幅 m ハロ(§3.9)→ 補正 → merge。比較用に Jacobi 収束判定版。Test 1(静水中の定在波、Phase 1 と同じ水槽) | 周期が ω² = gHΛ_ENC/(1+βΛ_ENC) に対し kH = 0.3〜2(Δx = H/4〜H/2)で 1% 以内(目標値。Phase 1 の時間誤差を差し引く)。振幅減衰。固定回数版と収束判定版の差が nh_nsweep で指数的に減ること。スレッド数・np=1,2,4 のビット一致(-O2 厳密)、ハロ幅 w(1 回交換と分割交換)でビット一致 | 2〜3 |
-| 4b | **活性集合の適応化**(§3.7): 検出 χ、ヒステリシス、縁の膨張、活性セルだけの反復 | f_nh_adaptive=0 と比べた位相速度・振幅の差が縁幅 nh_margin で指数的に減ること(定在波・孤立波)。χ の単一エッジ正規化と RMS 正規化の比較。活性率と壁時計の比例。np=1,2,4・スレッド数でビット一致 | 1〜2 |
+| 3 | **骨組み**: m_swflow_enc_nh(nh_init/prepare/project/dispose の interface)、list_enc 項目、NH マスク、nh_project は a* の集計と φ=0 のまま(補正ゼロ)。**並列層は無変更** | f_nonhydrostatic=0 で全 13 reference ULP=0・np=1,2,4。-fcheck=all np=2 | 1 |
+| 4 | **V1 ソルバ**: Jacobi(既存の幅 2 ハロ交換+収束判定 allreduce。§3.3)→ 補正 → merge。Test 1(静水中の定在波、Phase 1 と同じ水槽) | 周期が ω² = gHΛ_ENC/(1+βΛ_ENC) に対し kH = 0.3〜2(Δx = H/4〜H/2)で 1% 以内(目標値。Phase 1 の時間誤差を差し引く)。振幅減衰、反復回数。スレッド数・np=1,2,4 のビット一致(-O2 厳密) | 2〜3 |
+| 4b | **活性集合の適応化**(§3.7): 検出 χ(既定)と振幅型(nh_detector=2)、ヒステリシス、縁の膨張、活性セルだけの反復 | f_nh_adaptive=0 と比べた位相速度・振幅の差が縁幅 nh_margin で指数的に減ること(定在波・孤立波)。χ と振幅型の活性率の比較(静水中の波・一様流上の波・背景流のある河川)。χ の単一エッジ正規化と RMS 正規化の比較。活性率と壁時計の比例。np=1,2,4・スレッド数でビット一致 | 1〜2 |
+| 4c | **通信回避(性能段階。§3.9)**: 実ケースで通信が律速と計測された場合のみ。並列層の幅指定つきセル交換、固定回数 Chebyshev + 幅 m ハロ | 幅指定交換は既存の幅 2 交換と同値(ULP=0)。固定回数版と収束判定版の差が nh_nsweep で指数的に減ること。ハロ幅 w(1 回交換と分割交換)でビット一致。np 増加時の壁時計 | 1〜2(必要時) |
 | 5 | **非線形**: Test 3 孤立波(1 層理論の波形・波速。長い閉水路)、Test 2 一様流上の線形波(区間流入+放射境界 f_bc=2 で可能か要確認)、ソリトン分裂(棚への入射。文献との定性比較) | 波速・波形保存・振幅減衰の表 | 2〜3 |
-| 6 | **退化・切替**: nh_hmin の乾湿退化、砕波スイッチ(設計プラン §12: ∂η/∂t > α√(gh)、二閾値、二重バッファ、8 近傍伝播)、静水圧 bore の事前確認(test/dambreak で済んでいる部分を流用) | f_nh_breaking=0 で Phase 4 と ULP=0。前線が走査順・ランク境界に依らない | 2 |
+| 6 | **退化・砕波(2026-10-05 改訂: スイッチなしで先に検証)**: (i) nh_hmin の乾湿退化。(ii) 砕波を**スイッチなし**で検証: 斜面に入射する孤立波の砕波・bore 化を保存形移流(スキーム 3)+ NH のまま走らせ、砕波位置・bore 速度・遡上高・格子依存を見る(静水圧 bore は test/dambreak で確認済み)。(iii) 破綻する場合だけ保険として砕波スイッチ(設計プラン §12: SWASH 型 ∂η/∂t > α√(gh)、二閾値、二重バッファ、8 近傍伝播)を入れる | f_nh_breaking=0 で Phase 4 と ULP=0。前線が走査順・ランク境界に依らない。切替の格子依存(Kazolea & Ricchiuto 2018 の難点)を 2 解像度で確認 | 2 |
 | 7 | **V2**: 底面勾配項(w_b = u·∇z_b、−(2q/h)∇z_b)、浅水化・遡上(Synolakis 型の非砕波遡上) | 遡上高の文献比較 | 3+ |
-| 8 | **動く底面**(bedslide との時間同期。設計プラン §15) | 地滑り津波例題の近地波形 | 2+ |
+| 8 | **動く底面**(bedslide との時間同期。設計プラン §15)。底面運動の源項は Firdaus & Behrens / Jeschke et al. の定式を ENC に移す(§3.10-5) | 地滑り津波例題の近地波形。Firdaus & Behrens の moving-bottom テストケースとの比較 | 2+ |
 
 文書更新: developer.md に新 §(設計決定と理由、§0 の改定)、
 comparison.md(非静水圧の行)、users_guide/swflow.md と params_index、
@@ -495,6 +581,10 @@ handoff.md の消し込み。
 9. 固定回数 Chebyshev の ρ の見積もり(活性領域の最大水深からの
    上限)と、変水深で ε が場所により大きく違うときの収束の一様性。
    ハロ幅 w < m の分割交換が結果を変えないこと(理論上は同値)。
+10. 線形圧力分布(1 + (kH)²/4)と 2 次分布(1 + (kH)²/3)の位相速度
+    誤差の比較(§3.10-4 の表)を、ENC の離散 Λ を含めて再評価する。
+    保存形移流 + NH で砕波を bore に移行させられる条件(スイッチなし
+    の成立範囲)。
 
 引継ぎメモ §36 の 5(混合 Euler/RK/RK+NH 界面)、6・7(処理順序・
 対称掃引)は本提案では消え、4(detector の正規化)は上記 8 に移る。
@@ -531,3 +621,28 @@ handoff.md の消し込み。
   A high-order adaptive time-stepping TVD solver for Boussinesq modeling
   of breaking waves and coastal inundation. Ocean Modelling 43–44:36–51
   (FUNWAVE-TVD)。
+- Firdaus, K. & Behrens, J. (2026) Locally Adaptive Non-Hydrostatic
+  Shallow Water Extension for Moving Bottom-Generated Waves. Int. J.
+  Numer. Meth. Fluids, doi:10.1002/fld.70021(arXiv 2505.17025)。
+- Firdaus, K. & Behrens, J. (2026) Two-Dimensional Locally Adaptive
+  Non-Hydrostatic Extension of Shallow Water Equations. arXiv 2606.27562。
+- Firdaus, K. et al. (2025) Non-Hydrostatic Model for Simulating Moving
+  Bottom-Generated Waves: A Shallow Water Extension With Quadratic
+  Vertical Pressure Profile. Int. J. Numer. Meth. Fluids,
+  doi:10.1002/fld.5393。
+- Jeschke, A., Pedersen, G.K., Vater, S. & Behrens, J. (2017)
+  Depth-averaged non-hydrostatic extension for shallow water equations
+  with quadratic vertical pressure profile: equivalence to
+  Boussinesq-type equations. Int. J. Numer. Meth. Fluids 84:569–583。
+- Kazolea, M. & Ricchiuto, M. (2018) On wave breaking for Boussinesq-type
+  models. Ocean Modelling 123:16–39。
+- Tissier, M., Bonneton, P., Marche, F., Chazel, F. & Lannes, D. (2012)
+  A new approach to handle wave breaking in fully non-linear Boussinesq
+  models. Coastal Eng. 67:54–66。
+- Escalante, C., Dumbser, M. & Castro, M.J. (2019) An efficient hyperbolic
+  relaxation system for dispersive non-hydrostatic water waves and its
+  solution with high order discontinuous Galerkin schemes. J. Comput.
+  Phys. 394:385–416(双曲型緩和。不採用の根拠 §3.10)。
+- Muñoz-Moncayo, C. & Ketcheson, D.I. (2026) Adaptive, efficient, and
+  scalable water wave modeling with dispersive hyperbolic systems. arXiv
+  2606.12162(GeoClaw 上の双曲型緩和 + AMR。同上)。
