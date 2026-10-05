@@ -206,7 +206,7 @@ def fig_visc():
     aa = np.linspace(0.05, 0.45, 50)
     ax3.plot(aa, 0.918 * aa ** 0.606, color=C_TH, ls=":", lw=1.2, label="実験則 0.918 (a/H)^0.606")
     ax3.set_xlim(0.05, 0.45); ax3.set_ylim(0.1, 0.8); ax3.set_xlabel("a / H"); ax3.set_ylabel("R_max / H")
-    ax3.set_title("振幅系列(Δx = H/4、dt 0.005、n = 0.01、x₀ = 120 m)", fontsize=9, loc="left")
+    ax3.set_title("振幅系列(Δx = H/4、dt 0.005、n = 0.01)", fontsize=10, loc="left")
     ax3.legend(loc="upper left", frameon=False, fontsize=7)
     fig.tight_layout(); fig.savefig("figs/runup_visc.png", dpi=150)
     print("written: figs/runup_visc.png")
@@ -220,5 +220,5 @@ if __name__ == "__main__":
         fig()
     if "--figvisc" in sys.argv:
         fig_visc()
-    if "--run" not in sys.argv and "--fig" not in sys.argv or args:
+    if not any(a in sys.argv for a in ("--run", "--fig", "--figvisc")) or args:
         table(args or list(CASES))
