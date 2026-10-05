@@ -198,20 +198,25 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 読むと、ラスタ河道の屈曲セルで下流エッジが「壁側から流速 0 の
         ! 水が流入する」扱いになり、屈曲ごとに人工的な損失水頭が生じる。
         ! §68.8)。MUSCL の upup も同様に供給元が無効なら 1 次に退化
+        ! MUSCL の upup(さらに風上のエッジ)は、そのエッジの向こうのセルが
+        ! 無効(領域外・壁・乾燥)なら使わず 1 次に退化する。uvk が返す 0 を
+        ! upup に使うと r = (up − 0)/(dn − up) ≫ 1 → ψ = 2 で面値が完全風下
+        ! (dn)になり、規定境界(区間流入・水位規定)から流れ出す線 k の最初の
+        ! エッジが反拡散になって境界から指数的に発散する(§69.9。2026-10-05)
         if (qc >= 0) then
           if (donor_ok(i - din(k), j - djn(k), donor_rw)) then
-            ubc = face_value(um, ue, umm)
+            ubc = face_value(um, ue, umm, cell_ok(i - 2 * din(k), j - 2 * djn(k)))
           else
             ubc = ue
           end if
         else
-          ubc = face_value(ue, um, up)
+          ubc = face_value(ue, um, up, cell_ok(in + din(k), jn + djn(k)))
         end if
         if (qn >= 0) then
-          ubn = face_value(ue, up, um)
+          ubn = face_value(ue, up, um, cell_ok(i - din(k), j - djn(k)))
         else
           if (donor_ok(in + din(k), jn + djn(k), donor_rw)) then
-            ubn = face_value(up, ue, upp)
+            ubn = face_value(up, ue, upp, cell_ok(in + 2 * din(k), jn + 2 * djn(k)))
           else
             ubn = ue
           end if
@@ -330,11 +335,12 @@ contains
   !   スキーム2: 1 次風上(up)
   !   スキーム3: MUSCL  up + ψ(r)/2·(dn - up)、r = (up - upup)/(dn - up)、
   !              ψ = van Leer (r+|r|)/(1+|r|)(r=1 で中心差分、極値で 0)
-  pure function face_value(up, dn, upup) result(f)
+  pure function face_value(up, dn, upup, upup_ok) result(f)
     real, intent(in) :: up, dn, upup
+    logical, intent(in) :: upup_ok       ! upup のエッジの向こうのセルが有効か(偽なら 1 次)
     real :: f
     real :: d, r, psi
-    if (f_advection_scheme == 2) then
+    if (f_advection_scheme == 2 .or. .not. upup_ok) then
       f = up
     else
       d = dn - up
