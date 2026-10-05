@@ -31,7 +31,7 @@ submodule(m_state) user_initial
 
   ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
   ! 更新すること(乖離は defined/run が「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:10) = [ character(len=32) :: &
+  character(len=*), parameter :: routine_names(1:13) = [ character(len=32) :: &
       "wave_hump",        & ! 波例題: 円形コサイン型の初期水位
       "dambreak_step",    & ! ダム破壊例題: x 方向の段状初期水深(Stoker 解析解の検証用)
       "wave_standing_x",  & ! 定在波例題: 閉じた水槽の x 方向モード (4, 0)(分散関係の検証用)
@@ -41,6 +41,9 @@ submodule(m_state) user_initial
       "wave_solitary0185",& ! 孤立波例題: 同上で a/H = 0.0185(Synolakis 1987 の非砕波遡上ケース)
       "wave_solitary28_toe",& ! 孤立波例題: a/H = 0.28 を斜面の脚の近く x0 = 120 m に置く(平坦部の影響の切り分け用)
       "wave_solitary28_x145",& ! 孤立波例題: 同上で x0 = 145 m(脚の 5 m 手前。Titov & Synolakis 1995 の初期配置)
+      "wave_solitary10_toe",& ! 孤立波例題: a/H = 0.10、x0 = 120 m(砕波遡上則の振幅系列。plan §15.5)
+      "wave_solitary20_toe",& ! 孤立波例題: a/H = 0.20、x0 = 120 m(同上)
+      "wave_solitary40_toe",& ! 孤立波例題: a/H = 0.40、x0 = 120 m(同上)
       "template"          ] ! 新規ルーチンの雛形(空)
 
 contains
@@ -118,6 +121,12 @@ function resolve(name) result(fp)
       fp => initial_wave_solitary28_toe
     case ("wave_solitary28_x145")
       fp => initial_wave_solitary28_x145
+    case ("wave_solitary10_toe")
+      fp => initial_wave_solitary10_toe
+    case ("wave_solitary20_toe")
+      fp => initial_wave_solitary20_toe
+    case ("wave_solitary40_toe")
+      fp => initial_wave_solitary40_toe
     case ("template")
       fp => initial_template
     case default
@@ -290,6 +299,27 @@ subroutine initial_wave_solitary28_x145(p, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   call solitary_profile_x0(p, g, s, 0.28, 145.0)
+end subroutine
+
+subroutine initial_wave_solitary10_toe(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  call solitary_profile_x0(p, g, s, 0.10, 120.0)
+end subroutine
+
+subroutine initial_wave_solitary20_toe(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  call solitary_profile_x0(p, g, s, 0.20, 120.0)
+end subroutine
+
+subroutine initial_wave_solitary40_toe(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  call solitary_profile_x0(p, g, s, 0.40, 120.0)
 end subroutine
 
 subroutine initial_wave_solitary0185(p, g, s)

@@ -48,6 +48,14 @@ CASES = {
     "visc005_nh":("param.txt",   {"dt": 0.005, "nh_break_margin": "8\n  nh_break_visc = 1.44"}, "NH + スイッチ + 渦粘性、dt/4"),
     "viscf005_nh":("param.txt",  {"dt": 0.005, "rn0": 0.01, "nh_break_margin": "8\n  nh_break_visc = 1.44"}, "NH + スイッチ + 渦粘性、n = 0.01、dt/4"),
     "viscfine_nh":("param.txt",  {"nx": 2080, "ny": 64, "dt": 0.0025, "rn0": 0.01, "nh_break_margin": "8\n  nh_break_visc = 1.44"}, "NH + スイッチ + 渦粘性、n = 0.01、Δx/2、dt/8"),
+    "amp10_v":   ("param.txt",   {"dt": 0.005, "rn0": 0.01, "tt": 40, "f_user_routine": '"wave_solitary10_toe"', "nh_break_margin": "8\n  nh_break_visc = 1.44"}, "振幅系列 a/H = 0.10(x0 = 120)、渦粘性 + n = 0.01、dt/4"),
+    "amp20_v":   ("param.txt",   {"dt": 0.005, "rn0": 0.01, "tt": 40, "f_user_routine": '"wave_solitary20_toe"', "nh_break_margin": "8\n  nh_break_visc = 1.44"}, "振幅系列 a/H = 0.20、同上"),
+    "amp28_v":   ("param.txt",   {"dt": 0.005, "rn0": 0.01, "tt": 40, "f_user_routine": '"wave_solitary28_toe"', "nh_break_margin": "8\n  nh_break_visc = 1.44"}, "振幅系列 a/H = 0.28、同上"),
+    "amp40_v":   ("param.txt",   {"dt": 0.005, "rn0": 0.01, "tt": 40, "f_user_routine": '"wave_solitary40_toe"', "nh_break_margin": "8\n  nh_break_visc = 1.44"}, "振幅系列 a/H = 0.40、同上"),
+    "amp10_0":   ("param.txt",   {"dt": 0.005, "rn0": 0.01, "tt": 40, "f_user_routine": '"wave_solitary10_toe"'}, "振幅系列 a/H = 0.10、渦粘性なし"),
+    "amp20_0":   ("param.txt",   {"dt": 0.005, "rn0": 0.01, "tt": 40, "f_user_routine": '"wave_solitary20_toe"'}, "振幅系列 a/H = 0.20、渦粘性なし"),
+    "amp28_0":   ("param.txt",   {"dt": 0.005, "rn0": 0.01, "tt": 40, "f_user_routine": '"wave_solitary28_toe"'}, "振幅系列 a/H = 0.28、渦粘性なし"),
+    "amp40_0":   ("param.txt",   {"dt": 0.005, "rn0": 0.01, "tt": 40, "f_user_routine": '"wave_solitary40_toe"'}, "振幅系列 a/H = 0.40、渦粘性なし"),
 }
 
 def make_param(name):
