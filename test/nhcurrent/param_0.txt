@@ -34,6 +34,7 @@
 &list_enc
   f_gravity_correction = 0
   f_exflux_reduction = 1
+  f_advection_scheme = 1           ! 保存形移流(3)は規定境界の貫流で発振する(§69.8)ため旧スキーム
   f_hcap_upwind = 0
   f_friction_fastmath = 0
   f_adaptive_runge = 1

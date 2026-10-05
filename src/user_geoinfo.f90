@@ -39,7 +39,7 @@ submodule(m_geoinfo) user_geoinfo
       "slope_break",      &   ! 土石流例題: 遷緩点付き斜面(test/debris, test/slide)
       "beach_slope",      &   ! 孤立波遡上例題: 平坦部 + 1:19.85 の海浜斜面(test/nhbreak)
       "shelf_slope",      &   ! ソリトン分裂例題: 平坦部 → 1:20 の斜面 → 半分の水深の棚(test/nhshelf)
-      "channel_slope",    &   ! 一様流例題: 勾配 S = 2.5e-5 の直線水路(西が高い。test/nhcurrent)
+      "channel_slope",    &   ! 一様流例題: 勾配 S = 2.25e-4 の直線水路(西が高い。test/nhcurrent)
       "template"          ]   ! 新規ルーチンの雛形(空)
 
 contains
@@ -275,15 +275,15 @@ subroutine geoinfo_shelf_slope(p, g)
 end subroutine
 
 !----------------------------------------------------------------------
-! 一様流例題(test/nhcurrent): 勾配 S = 2.5e-5 の直線水路。z = S (lx − x)
-!   (西端が高く東端が 0)。Manning n = 0.01、水深 1 m で等流速 0.5 m/s。
+! 一様流例題(test/nhcurrent): 勾配 S = 2.25e-4 の直線水路。z = S (lx − x)
+!   (西端が高く東端が 0)。Manning n = 0.03、水深 1 m で等流速 0.5 m/s。
 !----------------------------------------------------------------------
 subroutine geoinfo_channel_slope(p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   integer :: i, j
   real :: x
-  real, parameter :: slope = 2.5e-5
+  real, parameter :: slope = 2.25e-4
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   do j = 1, g%ny
     do i = 1, g%nx

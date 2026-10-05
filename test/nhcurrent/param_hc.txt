@@ -2,7 +2,7 @@
 ! nhcurrent: 一様流 U0 上の線形波の分散関係(1 層非静水圧補正。
 !   docs/nonhydrostatic_plan.md §11 Phase 5 Test 2)
 !   水路 200 m × 8 m(Δx = 0.25 m = H/4、32 行)、H = 1 m。河床勾配
-!   S = 2.5e-5(user_geoinfo channel_slope)と Manning n = 0.01 の等流
+!   S = 2.25e-4(user_geoinfo channel_slope)と Manning n = 0.03 の等流
 !   U0 = 0.5 m/s(h_n = 1 m)を、両端の水位規定セル群(等流の水位)で保つ
 !   (区間流入は使わない: 摩擦のない一様流で流入境界が発振する。§69.8)。
 !   周期 T = 2.24 s(静水で kH ≈ 1)の微小波(a = 1 cm)を西端(順流)または
@@ -34,6 +34,7 @@
 &list_enc
   f_gravity_correction = 0
   f_exflux_reduction = 1
+  f_advection_scheme = 1           ! 保存形移流(3)は規定境界の貫流で発振する(§69.8)ため旧スキーム
   f_hcap_upwind = 0
   f_friction_fastmath = 0
   f_adaptive_runge = 1
@@ -60,8 +61,8 @@
   f_ztype = 0
   f_rntype = 0
   z0 = 0.0
-  rn0 = 0.01              ! Manning n(等流: U0 = h^(2/3) S^(1/2) / n)
-  f_user_routine = "channel_slope"   ! 河床勾配 S = 2.5e-5(西が高い)
+  rn0 = 0.03              ! Manning n(等流: U0 = h^(2/3) S^(1/2) / n)
+  f_user_routine = "channel_slope"   ! 河床勾配 S = 2.25e-4(西が高い)
 /
 
 &list_bound_edge
@@ -100,7 +101,7 @@
   stage_cell(1:2,30,1) = 1, 30
   stage_cell(1:2,31,1) = 1, 31
   stage_cell(1:2,32,1) = 1, 32
-  stage_eta(1) = 1.0049969
+  stage_eta(1) = 1.0449719
   stage_cell(1:2,1,2) = 800, 1
   stage_cell(1:2,2,2) = 800, 2
   stage_cell(1:2,3,2) = 800, 3

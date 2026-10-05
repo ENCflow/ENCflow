@@ -713,7 +713,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   と Δx = H/4 での孤立波の数値散逸のスキーム側の調査、判定 (1) の brk の
   私有 save、
   (e) Phase 7 底面勾配項は実装・検証済み(f_nh_slope。test/nhshelf の
-  ソリトン分裂。§69.5)、(f) Phase 8 動く底面。
+  ソリトン分裂。§69.5)、(f) Phase 8 動く底面。undular bore(test/nhbore)
+  済、一様流上の波(test/nhcurrent)は暫定(§69.8)。**静水圧側の課題**:
+  規定境界(区間流入・水位規定)を貫く一様流が発振して成長する
+  (f_advection_scheme=3 で顕著。§69.8)。境界セルの流速・運動量流束の
+  離散化を調べること。
 
 - **溶岩流モジュール(m_lavaflow。段階1 実装・検証済み 2026-08-23)**:
   fn_lavaflow + &list_lavaflow。等温の深さ平均 Bingham 粘性重力流+
