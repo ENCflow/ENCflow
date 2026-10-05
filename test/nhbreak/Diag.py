@@ -130,12 +130,17 @@ def fig():
         pts = [(dt, history(n)[:, 3].max()) for dt, n in zip(dts, names) if n and os.path.isdir(f"result_x_{n}")]
         if pts:
             p = np.array(pts); ax1.plot(p[:, 0], p[:, 1], marker=mk, ls=ls, color=col, mec="white", mew=0.8, ms=7, label=lab)
+    for lab, names, col, mk in [("NH + スイッチ、Δx/2", ["fine_nh", "fine0025_nh"], C_NH, "o"),
+                                ("静水圧、Δx/2", ["fine_h", "fine0025_h"], C_HY, "o")]:
+        pts = [(dt, history(n)[:, 3].max()) for dt, n in zip([0.01, 0.0025], names) if os.path.isdir(f"result_x_{n}")]
+        if pts:
+            p = np.array(pts); ax1.plot(p[:, 0], p[:, 1], marker=mk, ls=":", color=col, mfc="white", mew=1.5, ms=7, label=lab)
     ax1.axhline(0.918 * 0.28 ** 0.606, color="#6b6a66", ls=":", lw=1.0, label="実験則 0.42")
-    ax1.set_xscale("log"); ax1.set_xticks(dts); ax1.set_xticklabels([str(d) for d in dts]); ax1.minorticks_off()
-    ax1.set_xlim(0.025, 0.004); ax1.set_ylim(0.2, 0.9)
-    ax1.set_xlabel("dt (s)  (Δx = 0.25 m)"); ax1.set_ylabel("R_max / H")
+    ax1.set_xscale("log"); ax1.set_xticks(dts + [0.0025]); ax1.set_xticklabels(["0.02", "0.01", "0.005", "0.0025"]); ax1.minorticks_off()
+    ax1.set_xlim(0.025, 0.002); ax1.set_ylim(0.0, 0.9)
+    ax1.set_xlabel("dt (s)  (実線: Δx = 0.25 m、白抜き: Δx = 0.125 m)"); ax1.set_ylabel("R_max / H")
     ax1.set_title("最大遡上高の dt 収束", fontsize=10, loc="left")
-    ax1.legend(loc="upper right", frameon=False, fontsize=7)
+    ax1.legend(loc="lower center", frameon=False, fontsize=6.5, ncol=2)
     for lab, n, col, ls in [("NH + スイッチ dt 0.02", "base_nh", C_NH, "-"), ("同 dt 0.005", "dt005_nh", C_NH, "--"),
                             ("静水圧 dt 0.02", "base_h", C_HY, "-"), ("同 dt 0.005", "dt005_h", C_HY, "--")]:
         if not os.path.isdir(f"result_x_{n}"): continue
