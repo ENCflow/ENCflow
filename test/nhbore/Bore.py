@@ -50,7 +50,7 @@ if __name__ == "__main__":
         print(f"=== {d}: a0/H = {a0/H:.3f}   (KdV undular bore: leading wave -> 2a, speed -> sqrt(gH)(1 + a/H) = {np.sqrt(G*H)*(1+a0/H):.3f} m/s)")
         print("    t(s)  x_front  x_lead  eta_1/a  n_peaks")
         for t, xf, x1, e1, n in r:
-            print(f"  {t:6.1f}  {xf:7.2f}  {x1:7.2f}  {e1:7.3f}  {n:4d}")
+            print(f"  {t:6.1f}  {xf:7.2f}  {x1:7.2f}  {e1:7.3f}  {int(n):4d}")
         sel = r[:, 0] >= r[-1, 0] * 0.5
         if np.isfinite(r[sel, 2]).sum() >= 3:
             c1 = np.polyfit(r[sel, 0][np.isfinite(r[sel, 2])], r[sel, 2][np.isfinite(r[sel, 2])], 1)[0]
