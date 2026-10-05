@@ -11,6 +11,22 @@ Phase 4 以降(1 層 NH の分散関係の検証)の共用ケース。
   (x モード: kH = 4π h0/100 = 0.126·h0)。
 - プローブ 1 = 南西隅のセル(両モードの腹)、プローブ 2 = 中央。
 
+## 図
+
+![定在波の水位(静水圧 vs 非静水圧、h0 = 8 m)](figs/standing_wave.png)
+
+h0 = 8 m(kH = 1.0)のプローブ 1 の水位。静水圧(周期 5.66 s)に対し
+非静水圧 1 層(test/nhwave_nh、周期 6.33 s)は分散で 12% 長い。
+
+![分散関係: 位相速度比 c/√(gH) 対 kH](figs/dispersion.png)
+
+走査(h0 = 1〜16 m、x モード・対角モード)で測った周期から求めた位相速度比。
+静水圧 ENC は kH によらず 1(数値分散 < 1%)、非静水圧 ENC は 1 層 NH の
+目標曲線 1/√(1 + k²H²/4) に乗り、厳密解 √(tanh kH / kH) に kH ≲ 2 で近い。
+
+図は `./Dispersion.py`(走査)と `../nhwave_nh/Run.sh` の後に `./Fig.py` で
+`figs/` に生成する(matplotlib)。
+
 ## 回帰テスト
 
 `./Run.sh` / `./Run_MPI.sh N`(param.txt = h0 8 m、x モード、dt 0.02 s、

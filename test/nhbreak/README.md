@@ -12,6 +12,16 @@ docs/nonhydrostatic_plan.md §11 Phase 6、developer.md §69.4。Synolakis (1987
   最大遡上高 R_max/H、波頂高さの推移を表にし、実験の砕波遡上則
   R/H = 0.918 (a/H)^0.606 = 0.42 と比べる。
 
+## 図
+
+![遡上高の推移と斜面付近の水面](figs/runup.png)
+
+上: 遡上高 R(t)/H(湿潤前縁の地盤高 − H)。静水圧 0.39、NH + 砕波スイッチ
+0.62、NH スイッチなし 0.81(実験則 0.42)。下: 斜面付近の水面と地盤
+(t = 28, 36, 42 s)。静水圧は斜面の手前で段波化し、NH は砕けずに斜面に
+乗る。`./Fig.py` で `figs/runup.png` に生成する(スイッチなしの曲線は
+param.txt の f_nh_breaking=0、dir_result='result_ns' の結果があれば描く)。
+
 ## 所見(2026-10-05)
 
 | 構成 | R_max/H | 備考 |

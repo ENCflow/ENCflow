@@ -53,6 +53,7 @@ Screen_*.log
 !examples/qanat/qanat_result.png
 !examples/sewer_hybrid/sewer_hybrid_result.png
 !examples/*/figs/*.png
+!test/*/figs/*.png
 
 # --- OS / editor ---
 .DS_Store
