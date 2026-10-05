@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """nhbore: 段差から分裂する undular bore を解析する(docs/nonhydrostatic_plan.md §11 Phase 5)
 
-  使い方: ./Bore.py [result_dir ...]   既定は result(NH、a/H = 0.1)、result20(a/H = 0.2)、result_h(静水圧)
+  使い方: ./Bore.py [result_dir ...]   既定は result(NH、a/H = 0.1)、result_20(a/H = 0.2)、result_h(静水圧)
   水深分布 H00NN.txt の中央行から、各時刻の先頭波(最前の極大)の位置と高さ η_1/a、
   波列の山の数(η > 1.1a の極大)、前面(η = a/2 を横切る位置)の速度を表にする。
   比較: KdV の undular bore(Gurevich & Pitaevskii 1974)では先頭波の高さが 2a に漸近し、
@@ -44,7 +44,7 @@ def analyze(resdir):
         rows.append((t, xf, x1, e1 / a0, len(pk)))
     return a0, np.array(rows)
 if __name__ == "__main__":
-    for d in (sys.argv[1:] or ["result", "result20", "result_h"]):
+    for d in (sys.argv[1:] or ["result", "result_20", "result_h"]):
         if not os.path.isdir(d): continue
         a0, r = analyze(d)
         print(f"=== {d}: a0/H = {a0/H:.3f}   (KdV undular bore: leading wave -> 2a, speed -> sqrt(gH)(1 + a/H) = {np.sqrt(G*H)*(1+a0/H):.3f} m/s)")

@@ -22,7 +22,7 @@
   fn_initial = '-'
   fn_enc = '-'
   fn_record = '-'
-  dir_result = 'result20'
+  dir_result = 'result_20'
   f_disp_debug = 1
   f_disp_qq = 1
   f_check_cfl = 0

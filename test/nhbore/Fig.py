@@ -35,7 +35,7 @@ if __name__ == "__main__":
     ax1.set_xlabel("x (m)"); ax1.set_ylabel("η / a(20 s ごとに 2.5 ずらす)")
     ax1.set_title("段差(x < 100 m、a/H = 0.1)から分裂する undular bore(中央行)", fontsize=10, loc="left")
     ax1.legend(loc="lower left", frameon=False, fontsize=8); ax1.grid(False)
-    for d, col, lab in [("result", C_NH, "非静水圧 a/H = 0.1"), ("result20", C_20, "非静水圧 a/H = 0.2"), ("result_h", C_HY, "静水圧 a/H = 0.1")]:
+    for d, col, lab in [("result", C_NH, "非静水圧 a/H = 0.1"), ("result_20", C_20, "非静水圧 a/H = 0.2"), ("result_h", C_HY, "静水圧 a/H = 0.1")]:
         if not os.path.isdir(d): continue
         a0, r = analyze(d)
         ok = np.isfinite(r[:, 3]) & (r[:, 1] < 440)
