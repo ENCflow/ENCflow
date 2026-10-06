@@ -717,15 +717,26 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   plan §16、§69.10、test/nhbottom: 規定隆起で厳密解の +4%、海底地滑りとの
   結合は素朴な源項で発散 → Helmholtz 平滑化で安定。残: 1 層 NH の遮断
   周波数に捕捉される底層との自励振動 ±0.6 m(§69.10。多層化か底層の
-  慣性が本筋)、restart 往復の z̈ 1 ステップ分の差)。断層津波の
-  発生機構 fn_bedmotion は段階 1(本体)実装・検証済み(§70、bedmotion_plan.md、
-  test/nhbottom 構成 3)。段階 2 の前処理 utils/fault2disp(Okada。Table 2 で検算)と
-  例題 examples/tsunami_fault も済み。窓付き(矩形限定)入力・経緯度入力(横メルカトル)も済み(§70)。undular bore(test/nhbore)
+  慣性が本筋)、restart 往復の z̈ 1 ステップ分の差)。undular bore(test/nhbore)
   済、一様流上の波(test/nhcurrent)済(§69.8)。規定境界を貫く一様流の
   発振は MUSCL の upup が領域外の 0 を読む実バグ(§69.9。修正済み。
   壁行の対角エッジで面値が変わるため既存 reference が変わり、目視確認の
   うえ 11 ケースを更新済み)。区間流入の角セルの緩い発振は受け口係数(§69.9
   対策 (a))で解消。
+
+- **断層津波の発生機構(fn_bedmotion + utils/fault2disp。2026-10-06 実装・
+  検証済み。developer.md §70、docs/bedmotion_plan.md、users_guide/bedmotion.md
+  日英、test/nhbottom 構成 3、examples/tsunami_fault)**: 地盤変位の時刻歴
+  (スナップショット表 + 累積変位ラスタ。窓付き可)を線形補間し増分で z へ
+  (h 不変で水面が持ち上がる。geomorph・bedslide と同居可、restart 無状態、
+  API の set_value('z') と排他)。前処理 fault2disp は Okada (1985)(Table 2 で
+  検算)、複数セグメント・時間差・立ち上がり関数、Tanioka & Satake の水平
+  成分、経緯度入力(横メルカトル。UTM・平面直角座標系)、bil hdr / GeoTIFF
+  からの地理参照の自動取得、平面直角座標系の並び f_jpr。例題は理想化
+  逆断層で静水圧 / 瞬時 / 非静水圧の比較(分散で沿岸 −24%)。**残**:
+  スナップショットの粗さと f_nh_bottom の z̈ パルスの定量(plan §8-4)、
+  初期水面変位方式との直接比較(§8-3)、横メルカトル以外の投影(利用者側)、
+  超広域での各ランク全域読みの一時メモリ(窓付き入力で回避)。
 
 - **溶岩流モジュール(m_lavaflow。段階1 実装・検証済み 2026-08-23)**:
   fn_lavaflow + &list_lavaflow。等温の深さ平均 Bingham 粘性重力流+

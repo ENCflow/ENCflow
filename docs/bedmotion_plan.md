@@ -1,9 +1,12 @@
 # 規定底面運動 fn_bedmotion 設計案(断層津波の発生機構)(bedmotion_plan.md)
 
-**状態: 段階 1(本体 fn_bedmotion)・段階 2(前処理 utils/fault2disp、例題
-examples/tsunami_fault)とも実装・検証済み(2026-10-06。要合意事項 §11 は
-推奨案どおり)。規約の正本は developer.md §70、利用者向けは
-users_guide/bedmotion.md。** 本書は設計解説として残す(lava_plan.md と同じ運用)。
+**状態(2026-10-06): 段階 1(本体 fn_bedmotion)・段階 2(前処理
+utils/fault2disp、例題 examples/tsunami_fault)とも実装・検証済み。その後の
+拡張 = 窓付き(矩形限定)入力、経緯度入力(横メルカトル)、地理参照の自動
+取得(bil hdr / GeoTIFF)、平面直角座標系の並び f_jpr も済み。要合意事項 §11 は
+推奨案どおり決定。規約の正本は developer.md §70、利用者向けは
+users_guide/bedmotion.md と utils/fault2disp/README.md。** 本書は設計解説と
+実績の記録として残す(lava_plan.md と同じ運用)。残項目は §12。
 
 ## 0. 結論(要約)
 
@@ -146,23 +149,32 @@ list_* は読むだけ、解釈・検証は m_bedmotion の init(§12)。
 - **OpenMP**: セル局所のループ。
 - **無効時**: 配列未確保、ステップの呼び出しは logical 1 つの分岐。
 
-## 6. 前処理ユーティリティ utils/fault2disp(段階2)
+## 6. 前処理ユーティリティ utils/fault2disp(段階 2。実装済み)
 
-- 入力: 格子情報(nx, ny, dx, dy、座標原点)と断層セグメント表
-  (各セグメントの上端中心の x, y [m、格子座標]、深さ、走向、傾斜、
-  すべり角、長さ、幅、すべり量、破壊開始時刻、立ち上がり時間、
-  立ち上がり関数 線形/半正弦)。経緯度→投影座標の変換は利用者側
-  (§0-2)。
-- 計算: Okada (1985) の半無限弾性体の地表変位(鉛直 u_z。オプションで
-  Tanioka & Satake 1996 の u_h·∇z を加えるため z ファイルも読める)。
-  セグメントごとの時間関数を重ね、指定の出力時刻列でスナップショットと
-  表を書く。
-- Fortran のみ・外部ライブラリなし(§0-9)。utils の他のユーティリティと
-  同じ Makefile の型。本体には依存しない独立ユーティリティ(FRT_UTIL)。
-- 検証: 既知の解析値(Okada 論文の数値例)と、点震源の遠方場。
+設計時の案と実装の差を含めて記す(詳細は utils/fault2disp/README.md)。
 
-段階1(本体の fn_bedmotion)は前処理なしでも test/nhbottom と同じ
-python 生成の変位で検証できるので、段階 2 は独立に進められる。
+- 入力: 格子情報(nx, ny, dx, dy、左下隅の外縁座標 x_ll, y_ll)と断層
+  セグメント表(≤ 50。各セグメントの上端中心の位置、上端深さ、走向、傾斜、
+  すべり角、長さ、幅、すべり量、破壊開始時刻、立ち上がり時間、立ち上がり
+  関数 線形/半正弦)。
+- 位置の与え方は 3 通り: (a) 格子と同じ投影座標(x_ll, y_ll を原点にすれば
+  絶対座標)、(b) 経緯度(f_lonlat=1。横メルカトル = Gauss–Krüger、Krüger 級数
+  n⁶。UTM・平面直角座標系を原点・k0・偽距で表す。走向は子午線収差で格子北
+  基準に補正)、(c) 平面直角座標系の並び f_jpr=1(X 北距, Y 東距)。
+- 地理参照の自動取得(f_georef=1 既定): fn_z が bil+hdr / GeoTIFF なら
+  本体と同じ m_georef / m_geotiff で nx, ny, dx, dy, x_ll, y_ll を取る。
+  このため**libencflow.a をリンクする型**(utils/rerecord と同じ)に変えた
+  (設計時の「本体非依存の独立ユーティリティ」から変更。読み方の解釈を本体と
+  揃えるため)。
+- 計算: Okada (1985) 式 (25)〜(30)(Poisson 比 1/4、Chinnery の記法)。
+  オプションで Tanioka & Satake (1996) の u_h·∇z。セグメントごとの時間
+  関数を重ね、出力時刻列でスナップショットと表を書く。f_window=1 で
+  |u_z| > d_min の外接矩形だけを書く(§9)。
+- 検証: `fault2disp -check` が Okada (1985) Table 2 の case 2(走向すべり・
+  傾斜すべり)を 4 桁で再現し、横メルカトルを UTM 54 帯・平面直角 IX 系の点で
+  Snyder (1987) の級数と 1 mm で照合する。実装時の実バグ: Okada の y 軸は
+  up-dip 方向(傾斜方向に取り違えて隆起が 2W cosδ ずれた。逆断層の隆起が
+  断層の投影上に来ることで検出)。
 
 ## 7. 出力・診断
 
@@ -171,28 +183,20 @@ python 生成の変位で検証できるので、段階 2 は独立に進めら�
 - Screen: init で表の行数・時刻範囲・最大変位、dispose で適用した累積
   変位の最大・最小(陸セル)。
 
-## 8. 検証計画(CLAUDE.md の規律)
+## 8. 検証計画と結果(CLAUDE.md の規律。結果は developer.md §70)
 
-1. **無効時ビット一致**: fn_bedmotion 未指定で全 reference 一致。
-2. **uplift ドライバとのビット一致**(test/nhbottom に構成 3 を追加):
-   同じ半正弦の隆起を毎ステップ(dt = 0.0125 s)のスナップショットで
-   与え、API ドライバの結果(reference/Log.txt)と**ビット一致**することを
-   確認する(適用位置・時刻の取り方が同じなら一致するはず。一致しなければ
-   契約の差を特定する)。np = 1, 2, 4。
-3. **初期水面変位方式との等価性**: 1 スナップショット(t = 0 で最終変位)
-   の fn_bedmotion と、f_htype で水面に同じ変位を与えた初期条件のランが
-   一致する(e の持ち上げの契約の確認)。
-4. **スナップショットの粗さ**: 表 10 s 刻みの線形補間と毎ステップ更新の
-   差を、静水圧と f_nh_bottom で比較(§5 の z̈ パルスの影響の定量)。
-5. **restart 往復**: 変位の途中で save → restore が中断なしランとビット
-   一致(§5 の d_prev 再評価)。
-6. **geomorph との同居**: f_bedslide を同時に有効にし、地震変位の増分と
-   底層の z 更新が衝突しない(質量台帳: Σ(z − z0) = Σ d + 底層の内部移転)。
-7. **例題**(examples/tsunami_fault): 理想化した矩形断層(例: 長さ 100 km、
-   幅 50 km、すべり 5 m、深さ 10 km、水深 2000 m の平坦海 + 1/50 の斜面と
-   陸)を utils/fault2disp で変位に換算し、静水圧 / NH / NH + f_nh_bottom の
-   近地・遠地波形を比較。比較対象は線形長波理論(初期変位の分裂と
-   伝播速度 √(gH))と、Kajiura フィルタの効果の有無。
+| # | 計画 | 結果(2026-10-06) |
+|---|---|---|
+| 1 | 無効時ビット一致 | ○ nhbottom・nhwave_nh・nhsolitary・wave・bedslide・chichibu・tide・dambreak・lava が reference と一致 |
+| 2 | uplift ドライバ(API)とのビット一致(test/nhbottom 構成 3、np = 1, 2, 4) | △ 全有効桁の S 列 5 行の最終桁(1e-15)以外一致。z0 = 0 でも増分の和と絶対値の丸めが違うためビット一致は構造的に出ない(物理量の印字桁では同一)。np = 2, 4 も同じ |
+| 3 | 初期水面変位方式との等価性 | △ 例題の瞬時変位ケース(1 スナップショット)で「開始時に瞬時に持ち上がる」ことを確認。f_htype で水面に同じ変位を与えたランとの直接比較は未(1 ステップの時刻差があるためビット一致にはならない) |
+| 4 | スナップショットの粗さ(z̈ パルス)の定量 | **未**。例題は 3 s 刻み(dt 2 s)で粗さの影響を見ていない |
+| 5 | restart 往復 | ○ 静水圧で Log 一致。NH + f_nh_bottom は Runge 列と S 列最終桁だけ異なる(§69.10 の z̈ 1 ステップ落ち) |
+| 6 | f_bedslide との同居 | ○ Σ(z − z0) = Σ d が出力精度(1e-4 m)の範囲で成立 |
+| 7 | 例題 | ○ examples/tsunami_fault(60 km × 30 km、すべり 5 m、30 s、水深 2000 m)。立ち上がり時間の効果は伝播後 2〜3%、非静水圧の分散で沿岸の先頭波高 −24%(加速度項の寄与 −2%) |
+| 8 | 窓付き入力 | ○ 窓付きと全域の Log がビット一致(窓 100% の経路検証)、np = 2, 4 も一致。d_min = 2 cm で窓は格子の 62%、水位への影響 ≤ 2 cm |
+| 9 | 地理参照の自動取得・f_jpr | ○ bil hdr・GeoTIFF(ENCflow の出力)から取った地理参照の結果がテキスト z + 明示格子とビット一致。f_jpr=1 は基準とビット一致 |
+| 10 | -fcheck=all の MPI np=2 | ○ 規定隆起・海底地滑り同居ともエラーなし |
 
 ## 9. 既知の割り切り
 
@@ -204,19 +208,20 @@ python 生成の変位で検証できるので、段階 2 は独立に進めら�
   行末に窓 `i1 j1 ni nj` を付けて変位がゼロでない矩形だけを持たせる
   (2026-10-06 実装。fault2disp の f_window。developer.md §70)。
 
-## 10. 実装の段取り
+## 10. 実装の段取り(実績)
 
-1. list_bedmotion.f90(読むだけ)+ m_bedmotion.f90(init: 表の読み込み・
-   検証、calc: 増分適用、dispose)。m_main の extz 適用を共有ルーチンに
-   切り出し(等価リファクタとして別コミット: 既存 reference ビット一致)、
-   bedmotion がそれを呼ぶ。API の set_value('z') は bedmotion 有効時に
-   ierr = 2。
-2. 検証 §8-1〜3、5。
-3. 文書: developer.md 新 §、users_guide/bedmotion.md(日英)、
-   params_index、examples/List_samples/list_bedmotion.txt、comparison.md。
-4. 段階2: utils/fault2disp と例題(§6、§8-7)。
+1. ○ list_bedmotion.f90 + m_bedmotion.f90(init / calc / dispose)。
+   **設計からの逸脱**: m_main の extz 適用を共有ルーチンに切り出す等価
+   リファクタは行わず、同じ契約(陸セル・h 不変・e 回復・z ハロ交換)を
+   m_bedmotion 内に書いた(15 行の重複。extz 側は不変 = 既存 reference に
+   触れない)。API の set_value('z') は bedmotion 有効時 ierr = 2。
+2. ○ 検証 §8。
+3. ○ 文書: developer.md §70、users_guide/bedmotion.md(日英)、params_index
+   (583 項目)、List_samples/list_bedmotion.txt、comparison.md、architecture.md。
+4. ○ 段階 2: utils/fault2disp と examples/tsunami_fault。
+5. ○ 窓付き入力、経緯度入力、地理参照の自動取得、f_jpr(§6、§9)。
 
-## 11. 要合意事項(実装前に決める)
+## 11. 要合意事項(2026-10-06 に推奨案どおり決定)
 
 | # | 論点 | 推奨 |
 |---|---|---|
@@ -229,3 +234,17 @@ python 生成の変位で検証できるので、段階 2 は独立に進めら�
 | D7 | API との排他 | fn_bedmotion 有効時は set_value('z') を拒否(生産者一人) |
 | D8 | 前処理の置き場 | utils/fault2disp(Fortran、本体非依存)。段階 2 として分離 |
 | D9 | 本体で立ち上がり関数(線形/半正弦)を持つか | **持たない**(前処理でスナップショット密度を上げる。本体を単純に) |
+
+## 12. 残項目と実装で分かったこと
+
+- **残**: §8-4(スナップショットの粗さと f_nh_bottom の z̈ パルスの定量)、
+  §8-3 の直接比較。横メルカトル以外の投影(ランベルト等)は利用者側で
+  変換。各ランクが全域 (nx, ny) の作業配列で読む(m_precip と同じ)ため、
+  超広域ではその一時メモリが要る(窓付き入力なら窓の大きさで済む)。
+- **実装で見つけた実バグ(修正済み)**: 表の list-directed 読みでファイル名の
+  '/' が入力終端になる(語の切り出しに変更)、init で復元時刻に s%it を使い
+  restore 後に変位を二重適用(init 時点で有効なのは s%it0)、fault2disp の
+  Okada の y 軸(up-dip)の取り違え。
+- **方針との関係**: fault2disp は当初「本体非依存」としたが、地理参照の解釈を
+  本体と揃えるために libencflow.a をリンクする型にした(§0-9 の範囲内:
+  Fortran のみ・外部ライブラリなし)。
