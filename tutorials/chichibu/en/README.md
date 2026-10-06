@@ -1,4 +1,4 @@
-> English mirror of tutorials/chichibu/README.md (based on commit fb00b2a). The Japanese file is the master copy.
+> English mirror of tutorials/chichibu/README.md (based on commit b853906). The Japanese file is the master copy.
 
 # Tutorial 2: chichibu -- rain on a real-terrain catchment
 
@@ -89,12 +89,33 @@ time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
 main: program terminated normally
 ```
 
-The parameter file is structured almost identically to Step 1 of wave;
-the only differences are that `&list_geoinfo` reads the terrain and the
-catchment mask from files and sets the roughness `rn0`, and that
-`&list_precip` makes it rain.
+The contents of `en/param_step1.txt` (the full file, apart from the
+title comment at the top) are shown below. It is structured almost
+identically to Step 1 of wave; the only differences are that
+`&list_geoinfo` reads the terrain and the catchment mask from files and
+sets the roughness `rn0`, and that `&list_precip` makes it rain
+(`dir_data` in `&list_sysparam` is the input data directory, and the
+file names below are relative to it).
 
 ```
+!======================================================================
+! System parameter settings
+!======================================================================
+&list_sysparam
+  dt = 6.0                       ! time step (s)
+  tt_c = "6 hour"                ! end time of the computation
+  dt_disp_c = "30 min"           ! screen display interval
+  dt_file_c = "30 min"           ! file output interval
+
+  fn_geoinfo = "-"               ! geographic information settings file
+  fn_precip  = "-"               ! precipitation settings file
+
+  dir_data   = "data_chichibu"   ! input data directory
+/
+
+!======================================================================
+! Geographic information settings
+!======================================================================
 &list_geoinfo
   nx = 280
   ny = 150
@@ -109,7 +130,11 @@ catchment mask from files and sets the roughness `rn0`, and that
   fn_mask = "Chichibu_200m_basin.txt"      ! domain mask file name
 /
 
+!======================================================================
+! Precipitation settings
+!======================================================================
 &list_precip
+  ! precipitation data type (0: no precipitation, 1: uniform, time series)
   prtype = 1
   ! precipitation time series (time (min), intensity (mm/h))
   prval(:,1) =   0,   0
@@ -262,6 +287,22 @@ channel mask and roughness.
   below the terrain (`depth_rw`) or subgrid channels (`fn_channel`)
   ([users guide](../../../docs/en/users_guide.md)).
 
+Drawn as figures, the two masks look like this (only cells with value
+1 are colored).
+
+| catchment mask `Chichibu_200m_basin` | channel mask `Chichibu_200m_river` |
+|---|---|
+| ![basin](figs/step2_mask_basin.png) | ![river](figs/step2_mask_river.png) |
+
+The colored cells of the catchment mask are the computed cells; the
+`number of valid cells: 17885` printed in Step 1 is the number of these
+cells. The channel mask gives the channel network as **lines one cell
+wide**, and only these cells get the roughness `rn0_rw`. Both are
+plain 1-or-0 rasters, passed on as they were made in a GIS (they carry
+no channel width or bed elevation: on a 200 m grid the channels are
+narrower than a cell, so we only say *which* cells are channel and
+express the channel through its roughness).
+
 When you run it, the numbers on screen change slightly from Step 1
 (because the channel roughness changed). The result directory now contains
 `H0001.tif` and friends.
@@ -312,6 +353,33 @@ left-bank direction makes downstream discharge positive. Specification
 in real coordinates (m) (`pbxytype = 1` / `flxytype = 1`) is also
 available ([the record chapter of the users
 guide](../../../docs/en/users_guide/record.md)).
+
+Overlaying the transects and probes on the channel mask of Step 2
+gives the following figure (top: whole catchment; bottom: close-ups
+around each transect. The axes of the close-ups are **cell numbers**,
+corresponding directly to the `flxy` / `pbxy` values above).
+
+![Step 3: transects and probes over the channel mask](figs/step3_map.png)
+
+- The transects (red) are 4 to 7 cells long so that they **straddle**
+  the main river, including the slope cells on both sides of the
+  channel cells. The channel mask is one cell wide, but flood water
+  spills into the neighboring cells too, so a transect restricted to
+  the channel cells alone would miss part of the discharge. The arrow
+  points from the right bank to the left bank; all four are drawn from
+  south to north (the main river flows roughly from west to east, so
+  the right bank, on your right when facing downstream, is the south
+  side).
+- The probes (circles) are points placed next to the transects. The
+  close-ups show that probes 1 and 2 sit on channel cells, while probes
+  3 and 4 sit one cell off the channel mask, on the slope side. Indeed,
+  after the run, the depths in `probes/probe0003.csv` and
+  `probe0004.csv` reach only a few centimeters at most: the channel
+  water never gets there. To observe channel depth and velocity, the
+  cell number has to be shifted by one onto the channel cell itself
+  (with cell-based specification, a one-cell difference matters this
+  much). **Checking the configured positions against the mask by eye,
+  as done here,** is the basic routine when placing measurements.
 
 When you run it, the numbers on screen match Step 2 **exactly**:
 measurement and file output have no effect whatsoever on the
@@ -551,7 +619,14 @@ Deal with it in stages.
    sufficient.** The oscillations do not harm the water balance of the
    computation and do not affect the time scales that matter in runoff
    analysis (tens of minutes and longer). Overlay a moving average when
-   plotting.
+   plotting. The bundled `Plot_ma.plt` is an example:
+
+   ```bash
+   gnuplot -p -c Plot_ma.plt result
+   ```
+
+   draws the 1-minute values at transect 4 together with their 11-minute
+   moving average. The script is just these few lines:
 
    ```gnuplot
    set datafile separator comma
@@ -562,11 +637,33 @@ Deal with it in stages.
         "" us ($2 - (N-1)/2.0):(ma($3)) w l lw 2 title "11-min moving average"
    ```
 
-   This works with the array feature of gnuplot 5.2 and later alone. A
-   ring buffer indexed by the row number `$0` takes the trailing N-point
-   average, and the x coordinate is shifted back by (N-1)/2 minutes to
-   center it (so the peak time does not shift). Drawing the raw values
-   on top also shows the reader what the smoothing removed.
+   It looks intimidating at first, but all it does is "average the most
+   recent N points and draw them". Line by line:
+
+   - `set datafile separator comma` -- the result CSV files are
+     comma-separated, so we tell gnuplot so (the default is whitespace).
+   - `N = 11` -- the width of the averaging window (in points). The
+     output is written every minute, so this is an 11-minute average.
+   - `array A[N]` -- a box (array) holding the most recent N values.
+     Arrays are available in gnuplot 5.2 and later.
+   - `ma(x)` -- the function that computes the average. gnuplot reads
+     the data one row at a time and updates `$0` (the row number,
+     counted from 0), so storing the value x at the position given by
+     the row number modulo N keeps the most recent N points in the
+     array at all times (a ring buffer). Until N points are available
+     (`$0 < N-1`) it returns NaN, so nothing is drawn; after that it
+     returns the sum of the N points divided by N.
+   - `plot ... us 2:3 w l` -- the raw 1-minute values, with column 2 of
+     the CSV (time in min) as x and column 3 (discharge in m³/s) as y,
+     drawn as a line (`w l` = with lines; `us` is short for `using`).
+   - `"" us ($2 - (N-1)/2.0):(ma($3))` -- reads the same file (`""`)
+     again and draws column 3 passed through `ma()`, i.e. the moving
+     average. The "average of the most recent N points" lags by
+     (N-1)/2 minutes, so the x coordinate is shifted back by that much
+     to center it (otherwise the peak would appear at the wrong time).
+
+   Drawing the raw values on top also shows the reader what the
+   smoothing removed.
 
    ![Same, zoomed](figs/step6_osc_zoom.png)
 
@@ -596,11 +693,27 @@ is GeoTIFF only (`f_output_mode = 4`). The smoothness of the animation
 is set by the output interval, so runs made for visualization use a
 finer one.
 
-### Running the conversion
+### Creating the data for the animation
+
+First, run the computation with this parameter file to produce the
+distributed output (GeoTIFF) every 2 minutes. This is the raw material
+of the animation.
+
+```bash
+./encflow en/param_step7.txt
+```
+
+Once `result/` holds the depth files `H0000.tif` to `H0120.tif` (121
+files: from t = 0, every 2 minutes for 4 hours) and the other GeoTIFFs,
+the data are ready.
+
+### Converting to VTK format
+
+ParaView cannot animate a GeoTIFF time series directly, so we convert
+it to VTK format with the bundled converter utility out2vtk.
 
 ```bash
 make -C ../../utils/out2vtk install   # first time only: build the converter
-./encflow en/param_step7.txt
 ../../bin/out2vtk en/param_step7.txt
 ```
 
