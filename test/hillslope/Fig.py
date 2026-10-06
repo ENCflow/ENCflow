@@ -39,7 +39,7 @@ def peak(d):
 # ---- 図 1: 一様平面斜面と運動学的波 ----
 P = 200.0 / 1000 / 3600          # 降雨強度 (m/s)
 W = 2000.0                       # 斜面幅 (m)
-L = 1850.0                       # 測線(ix = 19 のセル中心)までの斜面長 (m)
+L = 1900.0                       # 測線の面(ix = 19 と 20 の境界 x = 1900 m)までの斜面長 (m)
 n = 0.15
 fig, axes = plt.subplots(1, 2, figsize=(11, 4), sharey=True)
 for ax, (name, S0) in zip(axes, [("p05", 0.05), ("p20", 0.20)]):
@@ -124,7 +124,7 @@ for d in ["result_p05_s1", "result_p05_s3", "result_p20_s1", "result_p20_s3",
     qm = q.max()
     t50 = t[np.argmax(q >= 0.5 * qm)]
     t90 = t[np.argmax(q >= 0.9 * qm)]
-    vol = np.trapz(q, t * 60)
+    vol = np.trapezoid(q, t * 60)
     print("%-16s %10.3f %10.0f %10.0f %10.0f %14.0f" % (d, qm, t[q.argmax()], t50, t90, vol))
 for name, S0 in [("p05", 0.05), ("p20", 0.20)]:
     alpha = np.sqrt(S0) / n
