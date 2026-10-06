@@ -594,7 +594,18 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 公開準備(方針の正本は developer.md §34)
 
-- **リリース v2.0.0(2026-10-04 準備。タグは利用者が Release UI で)**: main を
+- **リリース v2.1.0(2026-10-06 準備)**: v2.0.0 以降の 67 コミット。MINOR の
+  根拠(§34.4): 加算的な新機能 = 1 層非静水圧補正 f_nonhydrostatic(§69。
+  活性集合・砕波スイッチ・渦粘性・底面勾配項・動く底面の加速度項)、規定
+  底面運動 fn_bedmotion(§70)と前処理 utils/fault2disp、例題 tsunami_fault・
+  tsunami_coast・landslide_tsunami 非静水圧版、検証ケース nh* 8 件。namelist は
+  追加のみ、save_version 不変。**数値結果に影響する修正**: MUSCL の upup が
+  領域外の 0 を読む反拡散(§69.9。7d5448d・6b77443・0e0688d。既定スキームで
+  規定境界・壁・乾湿前縁の面値が変わる。reference 11 ケース更新 32c0d9b、
+  利用者承認)。CI 6 ケース PASS(main 40f7813)。**残**: Nightly の緑を確認、
+  タグ v2.1.0(cloud 環境からは push 不可 → 一時ブランチ release/v2.1.0 を
+  Release UI の Target に)、Zenodo DOI の付与確認。
+- **リリース v2.0.0(2026-10-05 公開済み)**: main を
   claude/epic-hawking-kfj04n の先頭(CITATION 2.0.0 / 2026-10-04)に
   fast-forward。MAJOR の根拠(§34.4): f_advection_tvd / f_advection_runge の
   namelist 除去、&list_channel の互換入力なしの再編、既定の昇格(スキーム 3・
@@ -602,11 +613,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   save_version 2026-08-26 → 2026-10-04b。回帰基準は wave・dambreak・chichibu・
   kdpart・tide・coastal_drain・gwseep・damwq・sewer_wq を更新済み(§68.34、
   §68.31 追補。いずれも利用者承認)。CI 6 ケースは逐次・np=2 PASS、nightly の
-  14 ケースは逐次 PASS(マージ前点検)。**残**: Release UI で main 先頭を Target
-  に v2.0.0 を作成(cloud 環境からタグは push 不可。v1.6.0 の実務メモ)、
-  Nightly の緑を確認、Zenodo DOI の付与確認。リリースノート草案は
-  リリース時のチャットに提示(数値結果に影響する変更と等価・加算的変更を
-  区別)。
+  14 ケースは逐次 PASS(マージ前点検)。Release「ENCflow v2.0.0」(タグ
+  v2.0.0 = bc4d462)を 2026-10-05 に公開、Nightly #23 緑。
 
 - **GitHub Organization「ENCflow」作成・移管・URL 確定済み(2026-08-13)**。
   残: owner の複数化(両研究室の代表を追加)。(Zenodo DOI は
