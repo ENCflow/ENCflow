@@ -605,8 +605,8 @@ In real water, once the front is as steep as the depth, vertical
 accelerations can no longer be neglected and **frequency dispersion**
 acts: shorter waves travel more slowly. The hydrostatic shallow water
 equations leave this out, so however fine the grid they only converge
-to a bore. ENCflow has a one-layer non-hydrostatic correction (a
-research option) that can be tried by adding one line to `&list_enc`.
+to a bore. ENCflow's one-layer non-hydrostatic correction can be tried
+by adding one line to `&list_enc`.
 
 ```
   fn_enc = "-"              ! ENC parameter file
