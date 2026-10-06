@@ -117,3 +117,6 @@ examples/tsunami_fault/z.hdr
 examples/tsunami_fault/bm_bil/
 examples/tsunami_fault/bm_jpr/
 examples/tsunami_fault/bm_gtif/
+examples/tsunami_coast/bm/
+examples/tsunami_coast/bm_off/
+examples/tsunami_coast/z.txt
