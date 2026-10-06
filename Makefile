@@ -17,6 +17,7 @@
 #   順序が崩れても壊れはしないが、先に src を済ませる方が効率的)
 SUBDIRS	= src \
 	  utils/calc_catchmentarea \
+	  utils/fault2disp \
 	  utils/lu2mask \
 	  utils/modify_elevation \
 	  utils/modify_river \

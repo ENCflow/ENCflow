@@ -102,11 +102,23 @@ and in coexistence with a submarine landslide (f_bedslide) the ledger
 Σ(z − z0) = Σ d holds within the output precision (the bed layer's internal
 transfer sums to zero).
 
-## Preprocessing (fault parameters → displacement)
+## Preprocessing (fault parameters → displacement): utils/fault2disp
 
-A utility that converts fault parameters (position, strike, dip, rake,
-length, width, slip, rupture start time, rise time) into displacement
-snapshots with Okada's formulas is stage 2 of bedmotion_plan.md §6 (not
-implemented yet). For now build the displacement files on the user side
-(Python etc.); the conversion from longitude/latitude to projected
-coordinates is also the user's.
+A utility that converts fault parameters (centre of the top edge, top
+depth, strike, dip, rake, length, width, slip, rupture start time, rise
+time) into displacement snapshots and the snapshot table with Okada's
+(1985) formulas ([utils/fault2disp/README.md](../../utils/fault2disp/README.md)).
+It superposes several segments, each with its own start time and rise
+function (linear / half-sine), and optionally adds the contribution of the
+horizontal displacement u_h·∇z (Tanioka & Satake 1996) when a bed
+elevation file is given. Coordinates are the projected coordinates of the
+grid; the conversion from longitude/latitude is the user's.
+
+```
+cd utils/fault2disp && make && make check   # check against Okada (1985) Table 2
+./fault2disp fault2disp.txt                  # bm/disp_NNNN.txt and bm/bmlist.txt
+```
+
+See examples/tsunami_fault (an idealised reverse fault: strike N-S, dip
+15°, 60 km × 30 km, slip 5 m, 30 s rise; hydrostatic / instantaneous /
+non-hydrostatic with the acceleration term).

@@ -9379,6 +9379,15 @@ fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dt
   実バグ: init で s%it を復元時刻に使い restore 後に変位を二重適用した
   (init 時点で有効なのは s%it0。s%it は時間ループが設定する)。無効時は全 reference ビット一致。
   np = 2, 4 は逐次と(S 列の最終桁以外)一致、-fcheck=all np=2 エラーなし。
-- **残**(bedmotion_plan.md): 段階 2 の前処理 utils/fault2disp(Okada +
-  Tanioka & Satake の水平成分換算、セグメントの時間差・立ち上がり関数)と
-  理想化断層の例題。変位がゼロでない矩形だけを持つ入力形式(広域向け)。
+- **段階 2(2026-10-06)**: 前処理 utils/fault2disp(独立ユーティリティ。
+  FRT_UTIL、倍精度明示)。Okada (1985) 式 (25)〜(30) の矩形断層の地表変位
+  (Poisson 比 1/4)を Chinnery の記法で評価、複数セグメントの重ね合わせ、
+  セグメントごとの t_r・立ち上がり(線形 / 半正弦)、fn_z 指定で
+  u_h·∇z(Tanioka & Satake 1996)。参照点は上端中心(x_top, y_top, d_top)
+  で、Okada の原点(下端)へ W cosδ・W sinδ だけ移す。Okada の y 軸は
+  **up-dip 方向**(傾斜方向の逆)— 実装時に傾斜方向に取り違えて隆起が
+  2W cosδ ずれた実バグを、逆断層の隆起が断層の投影上に来ることで検出・
+  修正。検算は `fault2disp -check`(Okada Table 2 の case 2: 走向すべり・
+  傾斜すべりとも 4 桁一致)。例題 examples/tsunami_fault(README に図表)。
+- **残**: 変位がゼロでない矩形だけを持つ入力形式(広域向け)。経緯度
+  入力(投影は利用者側のまま)。

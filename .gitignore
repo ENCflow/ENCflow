@@ -107,3 +107,6 @@ test/nhbottom/bm/
 test/nhbottom/bm_ls/
 test/nhbottom/save_bm/
 test/nhbottom/save_bmh/
+examples/tsunami_fault/bm/
+examples/tsunami_fault/z.txt
+utils/fault2disp/fault2disp
