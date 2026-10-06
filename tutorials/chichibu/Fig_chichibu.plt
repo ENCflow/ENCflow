@@ -23,6 +23,95 @@ set cbrange [0:2600]
 set title "地形(流域マスク内)"
 splot 'wrk_zmask.txt' matrix using (kx($1)):(kx($2)):($3 < -9000 ? NaN : $3) with pm3d notitle
 
+# ---- Step 2: 流域マスクと河道マスク(入力データそのもの。計算結果は不要) ----
+# マスク値 1 のセルだけを塗り、0 は白抜き(NaN)にする。2 層を重ねる
+# 図では、流域を薄い灰色、河道を青で描く
+DIR = "data_chichibu"
+BASIN = DIR."/Chichibu_200m_basin.txt"
+RIVER = DIR."/Chichibu_200m_river.txt"
+set view map
+set size ratio -1
+set xlabel "x (km)"
+set ylabel "y (km)"
+set yrange [30:0]
+set xrange [0:56]
+unset colorbox
+set palette defined (1 '#c8d3dd', 2 '#1f5fbf')
+set cbrange [1:2]
+
+set output "figs/step2_mask_basin.png"
+set title "流域マスク Chichibu_200m_basin(1: 流域内 = 計算対象セル)" noenhanced
+plot BASIN matrix using (kx($1)):(kx($2)):($3 > 0 ? 1 : NaN) with image notitle
+
+set output "figs/step2_mask_river.png"
+set title "河道マスク Chichibu_200m_river(1: 河道セル。幅 1 セルの線)" noenhanced
+plot RIVER matrix using (kx($1)):(kx($2)):($3 > 0 ? 2 : NaN) with image notitle
+
+# ---- Step 3: 河道マスクに測線とプローブを重ねる ----
+# param_step3.txt の flxy / pbxy をそのまま書き写す(セル番号、1 スタート)。
+# 列: 測線番号, 右岸 ix, 右岸 iy, 左岸 ix, 左岸 iy, プローブ ix, プローブ iy
+$TR << EOD
+1   82 106   82 103    82 105
+2  107 103  107 100   107 102
+3  147 105  147 102   147 103
+4  216  43  216  37   216  40
+EOD
+# セル番号 → km(セル中心。matrix の添字は 0 始まりなので番号 −1)
+cx(i) = (i - 1) * 0.2
+cy(j) = (j - 1) * 0.2
+
+set terminal pngcairo size 900,640 font ",11"
+set output "figs/step3_map.png"
+set multiplot
+
+# 上段: 全体図
+set origin 0, 0.42
+set size 1, 0.58
+set xlabel "x (km)"
+set ylabel "y (km)"
+set yrange [30:0]
+set xrange [0:56]
+set xtics 10
+set ytics 5
+set title "Step 3: 河道マスクに重ねた測線(赤、右岸 → 左岸)とプローブ(○)" noenhanced
+plot BASIN matrix using (kx($1)):(kx($2)):($3 > 0 ? 1 : NaN) with image notitle, \
+     RIVER matrix using (kx($1)):(kx($2)):($3 > 0 ? 2 : NaN) with image notitle, \
+     $TR using (cx($2)):(cy($3)):(cx($4)-cx($2)):(cy($5)-cy($3)) with vectors nohead lw 3 lc rgb '#d02020' notitle, \
+     $TR using (cx($2)+1.0):(cy($3)+1.4):(sprintf("%d", $1)) with labels font ",12" tc rgb '#d02020' notitle
+
+# 下段: 各測線の拡大(軸はセル番号。param_step3.txt の数値と直接対応する)
+set size 0.25, 0.42
+set xlabel "ix(セル番号)"
+set ylabel "iy(セル番号)"
+set xtics 4
+set ytics 4
+# 拡大の中心(各測線の ix と、両端 iy の中点)
+array XC[4] = [ 82, 107, 147, 216 ]
+array YC[4] = [ 104.5, 101.5, 103.5, 40 ]
+do for [i=1:4] {
+  set origin (i-1) * 0.25, 0
+  set xrange [XC[i]-7.5:XC[i]+7.5]
+  set yrange [YC[i]+7.5:YC[i]-7.5]
+  set title sprintf("測線 %d・プローブ %d", i, i) noenhanced
+  plot BASIN matrix using ($1+1):($2+1):($3 > 0 ? 1 : NaN) with image notitle, \
+       RIVER matrix using ($1+1):($2+1):($3 > 0 ? 2 : NaN) with image notitle, \
+       $TR every ::i-1::i-1 using 2:3:($4-$2):($5-$3) with vectors head filled size 0.6,25 lw 3 lc rgb '#d02020' notitle, \
+       $TR every ::i-1::i-1 using 6:7 with points pt 6 ps 2 lw 2 lc rgb '#000000' notitle
+}
+unset multiplot
+
+# ---- マスク・測線図の設定を戻す(以降は 1 枚 760x440、カラーバーあり) ----
+set terminal pngcairo size 760,440 font ",11"
+set origin 0, 0
+set size ratio -1 1, 1
+set colorbox
+set xtics autofreq
+set ytics autofreq
+set xlabel "x (km)"
+set ylabel "y (km)"
+set xrange [0:56]
+set yrange [30:0]
+
 # ---- ここから水深図の共通設定 ----
 # 水深 0 を白とするパレット(水が無い場所を濃色にしない)。浅い水は
 # ほぼ白に沈み、湛水だけが色になる — 「水が出払った流域は真っ白、
