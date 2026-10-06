@@ -971,10 +971,144 @@ Peak discharge (m³/s) and its time (min) at transect 4 (near the basin outlet):
 | advection | 200 m | 100 m | 50 m |
 |---|---|---|---|
 | none (diffusion wave) | XXN200 | XXN100 | XXN50 |
-| scheme 1 (old) | XXS200 | XXS100 | XXS50 |
+| scheme 1 (old) | 5,714 @158 | 6,024 @169 | 6,261 @176 |
 | scheme 3 (default) | 5,434 @170 | 5,712 @178 | 6,232 @180 |
 
-XXDISCUSS
+For reference, the maximum velocity of each computation (V_max in the Log)
+on the 100 m grid was 41 m/s without advection, 25 m/s with scheme 1 and
+30 m/s with scheme 3. The 50 m case without advection diverged after 43
+minutes at dt = 0.75 s (the velocity reached 60 m/s at bed steps and the
+Courant number exceeded 1), so that one run uses dt = 0.4 s.
+
+#### Dropping the advection term makes the peak larger and earlier on finer grids
+
+Without the advection term (diffusion wave, local inertia equation), the peak
+at transect 4 goes XXNTREND from 200 m to 100 m to 50 m: **the finer the grid,
+the larger and earlier the peak**. The resolution dependence is an order of
+magnitude stronger than with the default scheme 3 (5,434 → 5,712 → 6,232,
+with the timing almost unchanged), and the values themselves are 2 to 3
+times larger. We read this as follows.
+
+- The velocity of a diffusion wave is set only by the local balance of
+  water-surface slope and friction (Manning), with no inertia (no time
+  needed to accelerate, no deceleration when fast water mixes with slow
+  water). The bed of a real DEM is a succession of grid-scale steps (on the
+  100 m grid the median drop between adjacent channel cells is a slope of
+  0.12; developer.md §68.20). A finer grid resolves more of these steps, so
+  the local slopes get steeper and the channel narrower and deeper. Manning
+  responds by raising the velocity (see V_max above), while nothing in the
+  equations represents the energy dissipated in reality by hydraulic jumps
+  and turbulence at the steps, so the wave becomes faster and steeper the
+  finer the grid (with no inertial limit, the flood wave grows into a bore;
+  §68.20). On a coarse grid the steps are averaged into a gentle slope close
+  to the mean, and the wave comes out slower and smaller.
+- In other words, the resolution dependence of the diffusion wave comes from
+  how much of the bed steps is resolved being passed straight into the
+  velocity, and it does not converge with refinement. Existing
+  diffusion-wave and kinematic-wave catchment models normally absorb this
+  into a **roughness coefficient calibrated for each resolution**.
+
+#### What is the advection term decelerating?
+
+From the diagnostic builds recorded in developer.md §68.17 to §68.20, what
+the advection term does to slow and flatten the wave in this case splits
+into three parts.
+
+1. **Dissipation at bed steps**: in a one-cell channel with a stepped bed
+   (stair3 in test/bendloss), the run without advection produces excessive
+   velocities at every step and the flood wave grows into a bore, whereas
+   the momentum-conserving advection term supplies a hydraulic-jump-like
+   dissipation that holds the wave down (a factor 2.3 in peak; §68.20). Since
+   the bed of a real DEM is such a succession of steps, we believe this
+   accounts for most of the difference from the run without advection.
+2. **Deceleration by lateral inflow**: in rainfall runoff most of the channel
+   discharge enters from the side, from hillslopes and tributaries, carrying
+   no streamwise momentum. The conservative form naturally contains the term
+   that mixes this water in and slows the channel flow (−u·q_L/h; it matches
+   the analytic solution of spatially varied flow within 1 to 2%; §68.17).
+   Intuitively this looks like the main braking mechanism, but its measured
+   share of the scheme 1 vs scheme 3 difference was about 20%.
+3. **Momentum exchange with the inundated valley floor**: on the 100 m grid
+   the flood cross-section of the main river spreads beyond the single
+   channel-mask cell onto valley-floor cells, and at bends and confluences
+   that slow water becomes the upwind donor and drains momentum. About 65%
+   of the scheme 1 vs scheme 3 difference is this; restricting the donor to
+   channel cells (`f_advection_donor = 1`) raises the 100 m peak by 16%
+   (§68.18, §68.19). On a finer grid the main river fits within the channel
+   cells and this loss shrinks, consistent with the gentle increase of the
+   scheme 3 peak with resolution.
+
+#### Why it is said that advection matters little in mountain runoff
+
+In steep channels the bed slope S₀ dominates the momentum equation over the
+changes of water-surface slope and velocity head, so the balance of bed slope
+and friction (kinematic wave), or the diffusion wave that adds the surface
+slope, reproduces **the propagation of the wave at the reach scale** well.
+Known quantitative criteria are the kinematic flow number of Woolhiser &
+Liggett (1967), k = S₀L/(h Fr²) > 20 for the kinematic approximation, and the
+condition of Ponce et al. (1978), T·S₀·√(g/h) ≥ 30 for the diffusion wave;
+mountain runoff, with steep slopes and a wave time scale T of hours much
+longer than the time scale of the flow depth, satisfies them.
+These statements, however, treat the bed and the flow as **smooth at the
+reach scale**. At the grid scale of a raster DEM the bed is a succession of
+steps, the flow is locally rapidly varied, and the inertia terms are not
+negligible. It helps to keep apart "advection matters little" as a statement
+about wave kinematics from the local energy balance at each step. Existing
+models fold this local dissipation into the roughness coefficient, which is a
+sound engineering practice (nothing here is meant to disparage them).
+
+#### Relation to one-dimensional channel models
+
+One-dimensional channel models are also often run without the advection
+term. Adding the lateral-inflow momentum term (−u·q_L/h) captures part 2
+above (about 20% of the difference here), but the step dissipation of part 1
+and the valley-floor exchange of part 3 would have to enter a 1-D model with
+prescribed cross-sections in other forms (roughness, local loss
+coefficients, compound-channel momentum exchange). We therefore expect a 1-D
+model with lateral-inflow momentum to **move toward, but not coincide with**,
+the ENCflow result with advection (untested).
+
+#### Does weak resolution dependence mean closeness to reality?
+
+No. A result that moves little under grid refinement is a property one
+wants from a model that claims to be physically based (convergence), but
+there is no guarantee that the converged value matches observations (the
+100 m peak moves by 16% with `f_advection_donor`, for instance). This
+tutorial catchment has no comparison with observations, and **closeness to
+reality is unverified**. Conversely, a diffusion wave calibrated with a
+roughness coefficient per resolution can surely be made to match
+observations. Still, a model that need not be recalibrated each time the
+resolution changes is **"convenient"**, because one can grasp the whole on a
+coarse grid and refine only where needed. Keep the distinction between
+"convenient" and "correct".
+
+#### Resolution dependence of scheme 1
+
+The old scheme 1 is non-conservative; it cannot represent the momentum
+exchange with lateral inflow and the valley floor consistently (§68.17), and
+the numerical viscosity of its upwind weighting (`p_adv_upwind_index`) scales
+with Δx and therefore with resolution. At transect 4 of this case, the
+scheme 1 peak goes 5,714 → 6,024 → 6,261 m³/s, only 5%, 5% and 0.5% larger
+than scheme 3 and 12 to 10 minutes earlier, and it approaches scheme 3 as
+the grid is refined. There is no tendency toward the diffusion wave, and the
+resolution dependence is almost the same as for scheme 3. With the settings
+of test/chichibu (hillslope roughness 0.15, upwind weight 0.1) scheme 1 is
+41% larger and 1.2 hours earlier than scheme 3 on the 100 m grid (§68.17),
+so **the size of the difference between the two schemes depends strongly on
+the case**. These data alone cannot isolate the resolution dependence of the
+numerical viscosity, but it is clear that the weak resolution dependence of
+ENCflow presupposes the default momentum-conserving scheme (and the dynamic
+opening correction).
+
+#### What is special about this case
+
+This case routes 100 mm of rain in one hour with no losses and produces
+5,000 to 6,000 m³/s near the basin outlet (a specific discharge close to
+10 m³/s/km²), an extreme flow. Both the step dissipation and the lateral
+inflow scale with discharge, so the influence of the advection term is
+probably larger here than in an ordinary flood. For a milder event the three
+computations should differ much less; checking this is left to the reader
+(change the rainfall in `param_supp_*.txt` and rerun `./Fig_supp.sh`).
 
 ### What to take away about the ENC grid
 
