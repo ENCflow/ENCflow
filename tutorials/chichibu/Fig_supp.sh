@@ -48,23 +48,26 @@ for r in 200m 100m; do
   fi
 done
 
-# --- 移流項なしの拡散波(局所慣性方程式。f_govequation = 1)と旧移流スキーム
-#     (f_advection_scheme = 1)。解像度依存の比較(補足の「移流項と解像度依存」)。
-#     200 m → 100 m → 50 m の順(50 m は 1 本 40 分前後) ---
+# --- 旧移流スキーム(f_advection_scheme = 1)と、移流項なしの拡散波(局所慣性
+#     方程式。f_govequation = 1)。解像度依存の比較(補足の「結果 3」)。
+#     200 m → 100 m → 50 m の順(50 m は 1 本 40〜70 分)。移流項なしの 50 m は
+#     dt 0.75 s では 43 分で発散する(慣性の制限がなく段差で流速が 60 m/s に達して
+#     Courant 数 1 を超える)ので dt = 0.4 s にする ---
 for r in 200m 100m 50m; do
-  if [ ! -d "result_supp_${r}_noadv" ]; then
-    sed -e 's/f_govequation = 0/f_govequation = 1/' "param_supp_$r.txt" > "wrk_supp_param_${r}_noadv.txt"
-    grep -q 'f_govequation = 1' "wrk_supp_param_${r}_noadv.txt"
-    rm -rf result
-    ./encflow "wrk_supp_param_${r}_noadv.txt"
-    mv result "result_supp_${r}_noadv"
-  fi
   if [ ! -d "result_supp_${r}_s1" ]; then
     sed -e '/dir_data/i\  fn_enc     = "-"           ! ENC条件設定ファイル' "param_supp_$r.txt" > "wrk_supp_param_${r}_s1.txt"
     printf '\n&list_enc\n  f_advection_scheme = 1   ! 旧移流スキーム(非保存形・風上重み)\n/\n' >> "wrk_supp_param_${r}_s1.txt"
     rm -rf result
     ./encflow "wrk_supp_param_${r}_s1.txt"
     mv result "result_supp_${r}_s1"
+  fi
+  if [ ! -d "result_supp_${r}_noadv" ]; then
+    sed -e 's/f_govequation = 0/f_govequation = 1/' "param_supp_$r.txt" > "wrk_supp_param_${r}_noadv.txt"
+    if [ "$r" = 50m ]; then sed -i 's/^  dt = 0.75 /  dt = 0.4  /' "wrk_supp_param_${r}_noadv.txt"; grep -q 'dt = 0.4' "wrk_supp_param_${r}_noadv.txt"; fi
+    grep -q 'f_govequation = 1' "wrk_supp_param_${r}_noadv.txt"
+    rm -rf result
+    ./encflow "wrk_supp_param_${r}_noadv.txt"
+    mv result "result_supp_${r}_noadv"
   fi
 done
 
