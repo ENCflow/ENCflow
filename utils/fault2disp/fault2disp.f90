@@ -42,6 +42,15 @@ program fault2disp
   real(dp) :: t_start = -1.0d0, t_end = -1.0d0
   integer :: f_window = 0               ! 1: |u_z| > d_min の外接矩形(全セグメントの和集合)だけを書く
   real(dp) :: d_min = 1.0d-3            ! 窓の閾値 (m)
+  ! --- 経緯度入力(f_lonlat = 1): 横メルカトル(Gauss–Krüger)投影で格子座標へ ---
+  integer :: f_lonlat = 0               ! 1: 断層位置を lon_top, lat_top(度)で与える
+  real(dp) :: lon_top(nsegmax) = 0, lat_top(nsegmax) = 0
+  real(dp) :: lon_ll = -999.0d0, lat_ll = -999.0d0   ! 格子左下隅の経緯度(与えると x_ll, y_ll を投影で求める)
+  real(dp) :: proj_lon0 = 0, proj_lat0 = 0           ! 投影原点(度)。UTM: 帯の中央子午線と 0、平面直角座標系: 系の原点
+  real(dp) :: proj_k0 = 0.9996d0                     ! 中央子午線の縮尺係数(UTM 0.9996、平面直角座標系 0.9999)
+  real(dp) :: proj_fe = 500000.0d0, proj_fn = 0.0d0  ! 偽東距・偽北距 (m)(UTM 北半球 500000, 0。平面直角 0, 0)
+  real(dp) :: ell_a = 6378137.0d0, ell_rf = 298.257222101d0  ! 楕円体(GRS80。WGS84 は 1/f = 298.257223563)
+  integer :: f_strike_conv = 1          ! 1: 走向を子午線収差 γ で格子北基準に補正(strike_grid = strike − γ)
   integer :: nseg = 0
   real(dp) :: x_top(nsegmax) = 0, y_top(nsegmax) = 0, d_top(nsegmax) = 0
   real(dp) :: strike(nsegmax) = 0, dip(nsegmax) = 0, rake(nsegmax) = 0
@@ -49,11 +58,13 @@ program fault2disp
   real(dp) :: t_r(nsegmax) = 0, t_rise(nsegmax) = 0
   integer :: f_rise(nsegmax) = 2
   namelist /list_fault2disp/ nx, ny, dx, dy, x_ll, y_ll, dir_out, prefix_list, fn_z, nout, t_start, t_end, f_window, d_min, &
-                             nseg, x_top, y_top, d_top, strike, dip, rake, flength, fwidth, slip, t_r, t_rise, f_rise
+                             nseg, x_top, y_top, d_top, strike, dip, rake, flength, fwidth, slip, t_r, t_rise, f_rise, &
+                             f_lonlat, lon_top, lat_top, lon_ll, lat_ll, proj_lon0, proj_lat0, proj_k0, proj_fe, proj_fn, &
+                             ell_a, ell_rf, f_strike_conv
   ! --- work ---
   character(len=256) :: fn, arg
   real(dp), allocatable :: uz(:,:,:), z(:,:), d(:,:)
-  real(dp) :: xc, yc, ux, uy, uzz, t, r, dzdx, dzdy, umax, umin
+  real(dp) :: xc, yc, ux, uy, uzz, t, r, dzdx, dzdy, umax, umin, gam
   integer :: un, ios, i, j, k, m, i1, i2, j1, j2
   character(len=64) :: wstr
   character(len=1024) :: iom
@@ -97,6 +108,20 @@ program fault2disp
       print '(a,i0)', "fault2disp: note: segment ", k, " reaches the surface (d_top = 0)"
     end if
   end do
+
+  ! --- 経緯度 → 格子座標(横メルカトル)。走向は子午線収差で格子北基準に ---
+  if (f_lonlat == 1) then
+    if (lon_ll > -999.0d0 .and. lat_ll > -999.0d0) then
+      call tm_forward(lon_ll, lat_ll, x_ll, y_ll, gam)
+      print '(a,f0.3,a,f0.3,a)', "fault2disp: grid lower-left corner projected to x_ll = ", x_ll, " m, y_ll = ", y_ll, " m"
+    end if
+    do k = 1, nseg
+      call tm_forward(lon_top(k), lat_top(k), x_top(k), y_top(k), gam)
+      if (f_strike_conv == 1) strike(k) = strike(k) - gam
+      print '(a,i0,a,f0.6,a,f0.6,a,f0.1,a,f0.1,a,f0.4,a,f0.3,a)', "fault2disp: segment ", k, ": lon ", lon_top(k), ", lat ", &
+            lat_top(k), " -> x ", x_top(k), " m, y ", y_top(k), " m; convergence ", gam, " deg, strike (grid) ", strike(k), " deg"
+    end do
+  end if
 
   ! --- 各セグメントの最終変位(鉛直 + 水平の ∇z 寄与)を格子で評価 ---
   allocate(uz(nx, ny, nseg), source = 0.0d0)
@@ -329,7 +354,95 @@ contains
     call okada85(2.0d0 - 1.5d0, 3.0d0, 4.0d0, 70.0d0 * deg, 3.0d0, 2.0d0, 0.0d0, 1.0d0, ux, uy, uz)
     print '(a,3es13.4)', "  dip-slip    U2=1: ux, uy, uz = ", ux, uy, uz
     print '(a)',         "  Okada Table 2     :              -4.682E-03  -3.527E-02  -3.564E-02"
+    ! 横メルカトル: Krüger 級数と Snyder 級数の照合(UTM 54 帯、東京駅付近)
+    proj_lon0 = 141.0d0; proj_lat0 = 0.0d0; proj_k0 = 0.9996d0; proj_fe = 500000.0d0; proj_fn = 0.0d0
+    call tm_forward(139.7671d0, 35.6812d0, ux, uy, uz)
+    print '(a)', "Transverse Mercator (UTM zone 54, GRS80) at lon 139.7671, lat 35.6812:"
+    print '(a,f0.3,a,f0.3,a,f0.5,a)', "  Krueger series : E = ", ux, " m, N = ", uy, " m, convergence = ", uz, " deg"
+    call tm_snyder(139.7671d0, 35.6812d0, ux, uy)
+    print '(a,f0.3,a,f0.3,a)', "  Snyder series  : E = ", ux, " m, N = ", uy, " m"
+    ! 日本の平面直角座標系 IX 系(原点 lon 139°50′, lat 36°、k0 = 0.9999)
+    proj_lon0 = 139.0d0 + 50.0d0/60.0d0; proj_lat0 = 36.0d0; proj_k0 = 0.9999d0; proj_fe = 0.0d0; proj_fn = 0.0d0
+    call tm_forward(139.7671d0, 35.6812d0, ux, uy, uz)
+    print '(a,f0.3,a,f0.3,a,f0.5,a)', "  JGD plane rectangular IX: Y(east) = ", ux, " m, X(north) = ", uy, " m, convergence = ", uz, " deg"
+    call tm_snyder(139.7671d0, 35.6812d0, ux, uy)
+    print '(a,f0.3,a,f0.3,a)', "  (Snyder)                : Y = ", ux, " m, X = ", uy, " m"
   end subroutine
+
+  !--------------------------------------------------------------------
+  ! 横メルカトル(Gauss–Krüger)順変換。Krüger の級数(n の 6 次。Karney 2011)。
+  !   (lon, lat) [度] → (x 東距, y 北距) [m]、γ = 子午線収差 [度](格子北の真北からの
+  !   方位。中央子午線の東・北半球で正)。原点 (proj_lon0, proj_lat0)、縮尺 k0、偽距。
+  !   UTM と日本の平面直角座標系はこの特殊形(平面直角座標系の X は北距、Y は東距
+  !   なので、ENCflow の x_ll = Y、y_ll = X)
+  !--------------------------------------------------------------------
+  subroutine tm_forward(lon, lat, x, y, gam)
+    real(dp), intent(in) :: lon, lat
+    real(dp), intent(out) :: x, y, gam
+    real(dp) :: f, n, a_, al(6), phi, lam, tt, xi, eta, sx, sy, p, q, n0, xi0, s0
+    integer :: jj
+    f = 1.0d0 / ell_rf
+    n = f / (2.0d0 - f)
+    a_ = ell_a / (1.0d0 + n) * (1.0d0 + n**2 / 4 + n**4 / 64 + n**6 / 256)
+    al(1) = n/2 - 2*n**2/3 + 5*n**3/16 + 41*n**4/180 - 127*n**5/288 + 7891*n**6/37800
+    al(2) = 13*n**2/48 - 3*n**3/5 + 557*n**4/1440 + 281*n**5/630 - 1983433*n**6/1935360
+    al(3) = 61*n**3/240 - 103*n**4/140 + 15061*n**5/26880 + 167603*n**6/181440
+    al(4) = 49561*n**4/161280 - 179*n**5/168 + 6601661*n**6/7257600
+    al(5) = 34729*n**5/80640 - 3418889*n**6/1995840
+    al(6) = 212378941*n**6/319334400
+    phi = lat * deg
+    lam = (lon - proj_lon0) * deg
+    tt = sinh(atanh(sin(phi)) - 2*sqrt(n)/(1+n) * atanh(2*sqrt(n)/(1+n) * sin(phi)))
+    xi = atan2(tt, cos(lam))
+    eta = atanh(sin(lam) / sqrt(1 + tt*tt))
+    sx = eta; sy = xi; p = 1.0d0; q = 0.0d0
+    do jj = 1, 6
+      sx = sx + al(jj) * cos(2*jj*xi) * sinh(2*jj*eta)
+      sy = sy + al(jj) * sin(2*jj*xi) * cosh(2*jj*eta)
+      p = p + 2*jj*al(jj) * cos(2*jj*xi) * cosh(2*jj*eta)
+      q = q + 2*jj*al(jj) * sin(2*jj*xi) * sinh(2*jj*eta)
+    end do
+    ! 原点緯度の子午線弧長(η = 0)
+    n0 = sinh(atanh(sin(proj_lat0*deg)) - 2*sqrt(n)/(1+n) * atanh(2*sqrt(n)/(1+n) * sin(proj_lat0*deg)))
+    xi0 = atan(n0)
+    s0 = xi0
+    do jj = 1, 6
+      s0 = s0 + al(jj) * sin(2*jj*xi0)
+    end do
+    x = proj_fe + proj_k0 * a_ * sx
+    y = proj_fn + proj_k0 * a_ * (sy - s0)
+    gam = (atan(tan(xi) * tanh(eta)) + atan2(q, p)) / deg
+  end subroutine
+
+  !--------------------------------------------------------------------
+  ! 横メルカトル順変換の別式(Snyder 1987, USGS PP 1395 の級数)。-check の照合用
+  !--------------------------------------------------------------------
+  subroutine tm_snyder(lon, lat, x, y)
+    real(dp), intent(in) :: lon, lat
+    real(dp), intent(out) :: x, y
+    real(dp) :: f, e2, ep2, phi, lam, nn, tt, cc, aa, mm, m0
+    f = 1.0d0 / ell_rf
+    e2 = 2*f - f*f
+    ep2 = e2 / (1 - e2)
+    phi = lat * deg
+    lam = (lon - proj_lon0) * deg
+    nn = ell_a / sqrt(1 - e2 * sin(phi)**2)
+    tt = tan(phi)**2
+    cc = ep2 * cos(phi)**2
+    aa = lam * cos(phi)
+    mm = marc_tm(phi, e2); m0 = marc_tm(proj_lat0 * deg, e2)
+    x = proj_fe + proj_k0 * nn * (aa + (1 - tt + cc) * aa**3 / 6 + (5 - 18*tt + tt*tt + 72*cc - 58*ep2) * aa**5 / 120)
+    y = proj_fn + proj_k0 * (mm - m0 + nn * tan(phi) * (aa**2 / 2 + (5 - tt + 9*cc + 4*cc*cc) * aa**4 / 24 &
+        + (61 - 58*tt + tt*tt + 600*cc - 330*ep2) * aa**6 / 720))
+  end subroutine
+
+  ! 子午線弧長(Snyder 3-21)
+  function marc_tm(ph, e2) result(mv)
+    real(dp), intent(in) :: ph, e2
+    real(dp) :: mv
+    mv = ell_a * ((1 - e2/4 - 3*e2**2/64 - 5*e2**3/256) * ph - (3*e2/8 + 3*e2**2/32 + 45*e2**3/1024) * sin(2*ph) &
+         + (15*e2**2/256 + 45*e2**3/1024) * sin(4*ph) - 35*e2**3/3072 * sin(6*ph))
+  end function
 
   function itoa(i) result(s)
     integer, intent(in) :: i

@@ -720,7 +720,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   慣性が本筋)、restart 往復の z̈ 1 ステップ分の差)。断層津波の
   発生機構 fn_bedmotion は段階 1(本体)実装・検証済み(§70、bedmotion_plan.md、
   test/nhbottom 構成 3)。段階 2 の前処理 utils/fault2disp(Okada。Table 2 で検算)と
-  例題 examples/tsunami_fault も済み。窓付き(矩形限定)入力も済み。残: 経緯度入力(投影は利用者側)。undular bore(test/nhbore)
+  例題 examples/tsunami_fault も済み。窓付き(矩形限定)入力・経緯度入力(横メルカトル)も済み(§70)。undular bore(test/nhbore)
   済、一様流上の波(test/nhcurrent)済(§69.8)。規定境界を貫く一様流の
   発振は MUSCL の upup が領域外の 0 を読む実バグ(§69.9。修正済み。
   壁行の対角エッジで面値が変わるため既存 reference が変わり、目視確認の

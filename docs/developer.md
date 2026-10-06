@@ -9397,4 +9397,12 @@ fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dt
   examples/tsunami_fault(fault2disp_w.txt、param_hw.txt)で窓付きと全域の
   Log がビット一致(d_min = 1e-3 m では Okada の遠方場が mm 級で領域全体に
   及ぶため窓は 100% = 窓経路の検証。実用の閾値は数 cm)。
-- **残**: 経緯度入力(投影は利用者側のまま)。
+- **経緯度入力(2026-10-06)**: fault2disp の f_lonlat=1 で lon_top/lat_top
+  (と任意で lon_ll/lat_ll)を横メルカトル(Gauss–Krüger。Krüger 級数 n⁶、
+  Karney 2011 の順変換)で格子座標へ。原点・k0・偽距・楕円体を namelist で
+  与え、UTM と平面直角座標系を特殊形として扱う。走向は子午線収差 γ
+  (級数から)で strike − γ に補正(f_strike_conv)。`-check` で UTM 54 帯と
+  平面直角 IX 系の点を Snyder (1987) の級数と照合(1 mm 一致)。窓付き
+  出力の実用閾値 d_min = 2 cm では tsunami_fault の窓が格子の 62%、
+  水位への切り捨ての影響は ≤ 2 cm(= d_min)。
+- **残**: なし(他の投影は利用者側で変換)。

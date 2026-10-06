@@ -108,8 +108,9 @@ test/nhbottom 構成 3: 水深 10 m の水路で |x − x_c| < 20 m を 1 s で 
 ([utils/fault2disp/README.md](../../utils/fault2disp/README.md))。
 複数セグメントの重ね合わせ、セグメントごとの時間差と立ち上がり関数
 (線形 / 半正弦)、水平変位の寄与 u_h·∇z(Tanioka & Satake 1996。地盤高
-ファイルを与えたとき)に対応します。座標は格子と同じ投影座標で、
-経緯度 → 投影座標の変換は利用者側です。
+ファイルを与えたとき)、広域向けの窓付き出力(f_window)に対応します。
+断層位置は格子と同じ投影座標か、経緯度(f_lonlat=1。横メルカトル投影 =
+UTM・平面直角座標系。走向は子午線収差で格子北基準に補正)で与えます。
 
 ```
 cd utils/fault2disp && make && make check   # Okada (1985) Table 2 の検算
