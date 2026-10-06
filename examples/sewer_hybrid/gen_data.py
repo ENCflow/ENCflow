@@ -96,4 +96,13 @@ write_mat(os.path.join(d, "sy_T.txt"),
 write_mat(os.path.join(d, "slot_T.txt"),
           lambda i, j: (sy_t if on_trunk(i, j) else sy_b) / 5.0)
 
+# --- ラン E 用: 幹線末端の開放吐口(§46.5 (8b)。fn_gwc_outfall) ---
+#     値はオリフィス係数 Cd·A [m2]。幹線 D=1.0 m の断面積 0.785 m2 × Cd 0.6。
+#     海域セルに隣接しないので「陸側開放吐口」= 受け水頭は自セルの地表水位
+#     (満管を待たずに自由流出し、放流水は地表流になる。質量は域内で保存)
+A_t = math.pi * 1.0 ** 2 / 4.0
+write_mat(os.path.join(d, "outfall_T.txt"),
+          lambda i, j: 0.6 * A_t if (i == i2 and j == jline) else 0.0)
+print("吐口 Cd·A = %.3f m2 at (i,j)=(%d,%d)" % (0.6 * A_t, i2, jline))
+
 print("maps written to data_sewer/")
