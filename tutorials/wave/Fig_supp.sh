@@ -1,8 +1,8 @@
 #!/bin/bash
 # 補足節(格子の細分と非静水圧補正)の図 figs/supp_*.png を再生成する。
 #   使い方: ./Fig_supp.sh   (要 gnuplot。実行ファイルは make で用意)
-# Fig_wave.sh とは別にしてある: nx = 1400 の 2 ケースを含むため、4 コアの
-# ノート PC で 1 時間前後かかる。param_step1.txt / param_step2.txt から
+# Fig_wave.sh とは別にしてある: 静水圧 nx = 1400 のケースを含むため、4 コアの
+# ノート PC で 30 分前後かかる。param_step1.txt / param_step2.txt から
 # 一時ファイル wrk_param_*.txt を sed で生成して実行する。
 set -eu
 
@@ -41,12 +41,11 @@ mkparam wrk_param_h1400.txt 1400 0.0025 0; run wrk_param_h1400.txt h1400
 # --- 静水圧: dt = 0.05 + 適応ルンゲクッタ閾値 1.1(Step 2 と同じ) ---
 run param_step2.txt s2
 
-# --- 非静水圧: nx = 350 / 700 / 1400 ---
+# --- 非静水圧: nx = 350 / 700(700 で既に収束しているので 1400 は走らせない) ---
 mkparam wrk_param_n350.txt  350  0.01   1; run wrk_param_n350.txt  n350
 mkparam wrk_param_n700.txt  700  0.005  1; run wrk_param_n700.txt  n700
-mkparam wrk_param_n1400.txt 1400 0.0025 1; run wrk_param_n1400.txt n1400
 
-for t in h350 h700 h1400 s2 n350 n700 n1400; do prof wrk_${t}_E9998.txt wrk_${t}_prof.txt; done
+for t in h350 h700 h1400 s2 n350 n700; do prof wrk_${t}_E9998.txt wrk_${t}_prof.txt; done
 
 gnuplot Fig_supp.plt
 rm -f wrk_*

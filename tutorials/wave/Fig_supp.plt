@@ -22,5 +22,4 @@ set output 'figs/supp_nh.png'
 set title 'wave front profile,  t = 8 s,  non-hydrostatic'
 plot 'wrk_h1400_prof.txt' with lines lc rgb 'gray60' lw 4 title 'hydrostatic,  nx = 1400', \
      'wrk_n350_prof.txt'  with lines lc rgb 'blue'   lw 2 title 'non-hydrostatic,  nx = 350', \
-     'wrk_n700_prof.txt'  with lines lc rgb 'red'    lw 2 title 'non-hydrostatic,  nx = 700', \
-     'wrk_n1400_prof.txt' with lines lc rgb 'black'  lw 2 title 'non-hydrostatic,  nx = 1400'
+     'wrk_n700_prof.txt'  with lines lc rgb 'red'    lw 2 title 'non-hydrostatic,  nx = 700'
