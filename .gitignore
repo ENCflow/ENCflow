@@ -112,3 +112,7 @@ examples/tsunami_fault/z.txt
 utils/fault2disp/fault2disp
 examples/tsunami_fault/bm_w/
 examples/tsunami_fault/bm_ll/
+examples/tsunami_fault/z.bil
+examples/tsunami_fault/z.hdr
+examples/tsunami_fault/bm_bil/
+examples/tsunami_fault/bm_jpr/

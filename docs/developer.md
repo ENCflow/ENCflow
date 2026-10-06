@@ -9405,4 +9405,13 @@ fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dt
   平面直角 IX 系の点を Snyder (1987) の級数と照合(1 mm 一致)。窓付き
   出力の実用閾値 d_min = 2 cm では tsunami_fault の窓が格子の 62%、
   水位への切り捨ての影響は ≤ 2 cm(= d_min)。
+- **地理参照の自動取得と平面直角座標系の並び(2026-10-06)**: fault2disp を
+  libencflow.a をリンクする型(rerecord と同じ。FRT/FFLAGS。z の作業配列は
+  本体の実数種別 `real` で受けて dp に写す)に変え、fn_z が bil+hdr /
+  GeoTIFF なら m_georef / m_geotiff で nx, ny, dx, dy, xul, yul を取り
+  x_ll = xul、y_ll = yul − ny·csy とする(f_georef。namelist の値は一致検査、
+  経緯度グリッドは stop)。f_jpr=1 で x_top/y_top・x_ll/y_ll を (X 北距, Y 東距)
+  の順で受けて入れ替える。tsunami_fault で bil の hdr から取った地理参照の
+  結果がテキスト z + 明示格子と、f_jpr=1 が基準とビット一致。x_ll, y_ll に
+  原点を入れれば f_lonlat=0 でも絶対座標になる(既定 0 は相対座標)。
 - **残**: なし(他の投影は利用者側で変換)。

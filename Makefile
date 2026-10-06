@@ -57,7 +57,7 @@ $(SUBDIRS):
 
 # utils/lu2mask, utils/out2vtk, utils/rerecord, utils/rmdepress_river は
 # src の成果物に依存
-utils/lu2mask utils/out2vtk utils/rerecord utils/rmdepress_river: src
+utils/lu2mask utils/out2vtk utils/rerecord utils/rmdepress_river utils/fault2disp: src
 
 
 install: all

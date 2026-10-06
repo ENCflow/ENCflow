@@ -1,30 +1,35 @@
 # ENCflow/utils/fault2disp/Makefile
 #   断層パラメータ → 地盤変位のスナップショット表(fn_bedmotion の入力)。
-#   src のモジュールを使わない独立ユーティリティ(FRT_UTIL / FFLAGS_UTIL)
+#   地理参照(hdr / GeoTIFF)を本体と同じ部品で読むため libencflow.a を
+#   リンクする(utils/rerecord と同じ型。FRT / FFLAGS は make.inc)
 TOPDIR	= ../..
 include $(TOPDIR)/make.inc
 
 BINDIR	= $(TOPDIR)/bin
-PROGS	= fault2disp
+SRCDIR	= $(TOPDIR)/src
+LIB	= $(SRCDIR)/libencflow.a
 
-all: $(PROGS)
+all: fault2disp
 
-fault2disp: fault2disp.o
-	$(FRT_UTIL) -o $@ $(FFLAGS_UTIL) fault2disp.o $(LDFLAGS)
+fault2disp: fault2disp.o $(LIB)
+	$(FRT) -o $@ $(FFLAGS) fault2disp.o $(LIB) $(LDFLAGS)
 
-.SUFFIXES:
-.SUFFIXES: .o .f90
-.f90.o:
-	$(FRT_UTIL) -c $(FFLAGS_UTIL) $<
+fault2disp.o: fault2disp.f90 $(LIB)
+	$(FRT) -c $(FFLAGS) -I$(SRCDIR) fault2disp.f90
+
+$(LIB): FORCE
+	$(MAKE) -C $(SRCDIR) libencflow.a
+
+FORCE:
 
 check: fault2disp
 	./fault2disp -check
 
 clean:
-	rm -f *.o *.mod gmon.out $(PROGS)
+	rm -f fault2disp *.o *.mod
 
-install: $(PROGS)
+install: fault2disp
 	mkdir -p $(BINDIR)
-	cp -f $(PROGS) $(BINDIR)
+	cp -f fault2disp $(BINDIR)
 
-.PHONY: all check clean install
+.PHONY: all check clean install FORCE

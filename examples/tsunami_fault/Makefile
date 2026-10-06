@@ -17,7 +17,10 @@ links:
 	    else rm -f $$b; fi; \
 	done
 
-inputs: z.txt bm/bmlist.txt bm/bmlist_inst.txt
+inputs: z.txt z.bil bm/bmlist.txt bm/bmlist_inst.txt
+
+z.bil: z.txt
+	python3 make_init.py bil
 
 z.txt:
 	python3 make_init.py > $@
@@ -33,6 +36,6 @@ bm/bmlist_inst.txt: bm/bmlist.txt
 
 clean:
 	rm -rf result_* bm
-	rm -f encflow encflow_mpi a.out Screen*.log z.txt
+	rm -f encflow encflow_mpi a.out Screen*.log z.txt z.bil z.hdr
 
 .PHONY: all links inputs clean

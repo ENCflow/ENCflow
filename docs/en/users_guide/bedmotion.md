@@ -127,7 +127,11 @@ elevation file is given, and can write windowed output for large domains
 (f_window). Fault positions are given either in the projected coordinates
 of the grid or in longitude/latitude (f_lonlat=1; Transverse Mercator =
 UTM and the Japanese plane rectangular systems; the strike is corrected
-for the meridian convergence to grid north).
+for the meridian convergence to grid north). With a georeferenced bed
+elevation (bil+hdr / GeoTIFF) as fn_z the grid origin, cell size and size
+are taken from the file, so fault positions can be written as absolute
+coordinates of that projected system (f_jpr=1 for the X/Y order of the
+Japanese plane rectangular systems).
 
 ```
 cd utils/fault2disp && make && make check   # check against Okada (1985) Table 2

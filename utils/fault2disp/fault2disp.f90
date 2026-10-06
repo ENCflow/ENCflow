@@ -25,10 +25,20 @@
 !   f_window = 1 なら |u_z| > d_min の外接矩形(全セグメントの和集合)だけを
 !   書き、表に窓の列・行・大きさを付ける(広域の計算でファイルを小さくする)。
 !
+!   地理参照: fn_z が bil+hdr または GeoTIFF(f_input_mode = 2 / 4)なら、
+!   f_georef = 1(既定)で格子(nx, ny, dx, dy, x_ll, y_ll)をファイルから取る
+!   (ENCflow 本体と同じ m_georef / m_geotiff で読む)。namelist の値は検査・
+!   上書き用。f_jpr = 1 で x_top/y_top・x_ll/y_ll を日本の平面直角座標系の
+!   順「X(北距) Y(東距)」で受け取る(内部で東・北に入れ替える)。
+!   本体のライブラリ libencflow.a をリンクする(utils/rerecord と同じ型)。
+!
 !   検算: Okada (1985) Table 2 の有限矩形断層のケース(x=2, y=3, d=4, δ=70°,
 !   L=3, W=2)を -check で再現する(fault2disp -check)。
 !======================================================================
 program fault2disp
+  use m_fileio, only : fileio_read_matrix, e_fmt_txt, e_fmt_bil, e_fmt_gtif
+  use m_georef, only : t_georef, georef_hdr_name, georef_read_hdr
+  use m_geotiff, only : t_gtif_info, gtif_inquire
   implicit none
   integer, parameter :: dp = kind(1.0d0)
   integer, parameter :: nsegmax = 50
@@ -51,6 +61,10 @@ program fault2disp
   real(dp) :: proj_fe = 500000.0d0, proj_fn = 0.0d0  ! 偽東距・偽北距 (m)(UTM 北半球 500000, 0。平面直角 0, 0)
   real(dp) :: ell_a = 6378137.0d0, ell_rf = 298.257222101d0  ! 楕円体(GRS80。WGS84 は 1/f = 298.257223563)
   integer :: f_strike_conv = 1          ! 1: 走向を子午線収差 γ で格子北基準に補正(strike_grid = strike − γ)
+  ! --- 地理参照と座標の並び ---
+  integer :: f_input_mode = 1           ! fn_z の形式(1: text, 2: bil+hdr, 4: GeoTIFF。ENCflow と同じ)
+  integer :: f_georef = 1               ! 1: fn_z の地理参照(bil の hdr / GeoTIFF)から nx, ny, dx, dy, x_ll, y_ll を取る
+  integer :: f_jpr = 0                  ! 1: x_top/y_top と x_ll/y_ll を「X(北距) Y(東距)」の順で与える(平面直角座標系)
   integer :: nseg = 0
   real(dp) :: x_top(nsegmax) = 0, y_top(nsegmax) = 0, d_top(nsegmax) = 0
   real(dp) :: strike(nsegmax) = 0, dip(nsegmax) = 0, rake(nsegmax) = 0
@@ -60,10 +74,17 @@ program fault2disp
   namelist /list_fault2disp/ nx, ny, dx, dy, x_ll, y_ll, dir_out, prefix_list, fn_z, nout, t_start, t_end, f_window, d_min, &
                              nseg, x_top, y_top, d_top, strike, dip, rake, flength, fwidth, slip, t_r, t_rise, f_rise, &
                              f_lonlat, lon_top, lat_top, lon_ll, lat_ll, proj_lon0, proj_lat0, proj_k0, proj_fe, proj_fn, &
-                             ell_a, ell_rf, f_strike_conv
+                             ell_a, ell_rf, f_strike_conv, f_input_mode, f_georef, f_jpr
   ! --- work ---
   character(len=256) :: fn, arg
   real(dp), allocatable :: uz(:,:,:), z(:,:), d(:,:)
+  real, allocatable :: zwk(:,:)         ! ライブラリの実数種別(PREC)で読む作業配列
+  type(t_georef) :: gr
+  type(t_gtif_info) :: tinfo
+  integer :: ncols, nrows, stat
+  character(len=512) :: msg
+  character(len=512) :: hname
+  logical :: ex
   real(dp) :: xc, yc, ux, uy, uzz, t, r, dzdx, dzdy, umax, umin, gam
   integer :: un, ios, i, j, k, m, i1, i2, j1, j2
   character(len=64) :: wstr
@@ -88,8 +109,64 @@ program fault2disp
     print '(a)', "fault2disp: cannot read namelist list_fault2disp: "//trim(iom); stop 1
   end if
   close(un)
+
+  ! --- 平面直角座標系の並び(X 北距, Y 東距)→ (x 東, y 北) ---
+  if (f_jpr == 1) then
+    do k = 1, nseg
+      t = x_top(k); x_top(k) = y_top(k); y_top(k) = t
+    end do
+    t = x_ll; x_ll = y_ll; y_ll = t
+    print '(a)', "fault2disp: f_jpr = 1: x_top/y_top and x_ll/y_ll were read as (X north, Y east)"
+  end if
+
+  ! --- 地理参照: fn_z の hdr / GeoTIFF から格子を取る ---
+  if (len_trim(fn_z) > 0 .and. f_georef == 1 .and. (f_input_mode == e_fmt_bil .or. f_input_mode == e_fmt_gtif)) then
+    ncols = 0; nrows = 0
+    if (f_input_mode == e_fmt_bil) then
+      hname = georef_hdr_name(trim(fn_z))
+      inquire(file=trim(hname), exist=ex)
+      if (.not. ex) then
+        print '(a)', "fault2disp: hdr not found for fn_z: "//trim(hname); stop 1
+      end if
+      call georef_read_hdr(trim(hname), gr, ncols, nrows)
+    else
+      call gtif_inquire(trim(fn_z), tinfo, stat, msg)
+      if (stat /= 0) then
+        print '(a)', "fault2disp: cannot probe GeoTIFF "//trim(fn_z)//": "//trim(msg); stop 1
+      end if
+      ncols = tinfo%nx; nrows = tinfo%ny
+      gr%active = tinfo%has_georef
+      gr%xul = tinfo%xul; gr%yul = tinfo%yul; gr%csx = tinfo%csx; gr%csy = tinfo%csy
+      gr%is_geog = tinfo%is_geog
+    end if
+    if (nx > 0 .and. nx /= ncols) then
+      print '(a,i0,a,i0,a)', "fault2disp: nx(", nx, ") does not match the file (", ncols, ")"; stop 1
+    end if
+    if (ny > 0 .and. ny /= nrows) then
+      print '(a,i0,a,i0,a)', "fault2disp: ny(", ny, ") does not match the file (", nrows, ")"; stop 1
+    end if
+    nx = ncols; ny = nrows
+    if (gr%active) then
+      if (gr%is_geog) then
+        print '(a)', "fault2disp: fn_z is georeferenced in degrees; project the grid to metres first"; stop 1
+      end if
+      if (dx > 0 .and. abs(dx - gr%csx) > 1.0d-6 * gr%csx) then
+        print '(a,f0.4,a,f0.4,a)', "fault2disp: dx(", dx, ") does not match the file cell size (", gr%csx, ")"; stop 1
+      end if
+      if (dy > 0 .and. abs(dy - gr%csy) > 1.0d-6 * gr%csy) then
+        print '(a,f0.4,a,f0.4,a)', "fault2disp: dy(", dy, ") does not match the file cell size (", gr%csy, ")"; stop 1
+      end if
+      dx = gr%csx; dy = gr%csy
+      x_ll = gr%xul
+      y_ll = gr%yul - dble(ny) * gr%csy
+      print '(a,i0,a,i0,a,f0.4,a,f0.4,a,f0.3,a,f0.3,a)', "fault2disp: georeference from "//trim(fn_z)//": nx = ", nx, &
+            ", ny = ", ny, ", dx = ", dx, " m, dy = ", dy, " m, x_ll = ", x_ll, " m, y_ll = ", y_ll, " m"
+    else
+      print '(a)', "fault2disp: note: fn_z has no georeference; using namelist dx, dy, x_ll, y_ll"
+    end if
+  end if
   if (nx < 1 .or. ny < 1 .or. dx <= 0 .or. dy <= 0) then
-    print '(a)', "fault2disp: nx, ny, dx, dy are required"; stop 1
+    print '(a)', "fault2disp: nx, ny, dx, dy are required (or a georeferenced fn_z)"; stop 1
   end if
   if (nseg < 1 .or. nseg > nsegmax) then
     print '(a,i0)', "fault2disp: nseg must be 1..", nsegmax; stop 1
@@ -126,18 +203,10 @@ program fault2disp
   ! --- 各セグメントの最終変位(鉛直 + 水平の ∇z 寄与)を格子で評価 ---
   allocate(uz(nx, ny, nseg), source = 0.0d0)
   if (len_trim(fn_z) > 0) then
-    allocate(z(nx, ny))
-    open(newunit=un, file=trim(fn_z), status='old', action='read', iostat=ios, iomsg=iom)
-    if (ios /= 0) then
-      print '(a)', "fault2disp: cannot open fn_z "//trim(fn_z)//": "//trim(iom); stop 1
-    end if
-    do j = 1, ny
-      read(un, *, iostat=ios) z(1:nx, j)
-      if (ios /= 0) then
-        print '(a,i0)', "fault2disp: cannot read fn_z row ", j; stop 1
-      end if
-    end do
-    close(un)
+    allocate(z(nx, ny), zwk(nx, ny))
+    call fileio_read_matrix(trim(fn_z), nx, ny, zwk, f_input_mode)
+    z = dble(zwk)
+    deallocate(zwk)
     print '(a)', "fault2disp: horizontal-displacement contribution u_h.grad(z) ON (Tanioka & Satake 1996)"
   end if
   do k = 1, nseg

@@ -68,6 +68,15 @@ python3 plot_results.py     # figs/*.png と数表
 (141.30°E, 34.68°N) を置いた例で、実行すると変換結果が表示される
 (x_ll ≈ −92.4 km、上端中心 x ≈ 27.5 km = 格子内 119.9 km、収差 +0.17°)。
 
+## 地理参照と平面直角座標系(fault2disp_bil.txt、fault2disp_jpr.txt)
+
+`make inputs` が z.txt から bil+hdr 版 z.bil / z.hdr も作る。fault2disp_bil.txt
+は fn_z = 'z.bil'(f_input_mode = 2)だけを与え、格子(nx, ny, dx, dy, x_ll,
+y_ll)を hdr の地理参照から取る(u_h·∇z の項も加わる)。fault2disp_jpr.txt は
+f_jpr = 1 で上端中心を (X 北距, Y 東距) の順に書いた例で、fault2disp.txt と
+同じ変位になる。地理参照つきの解析では x_ll, y_ll(= 投影座標系の原点)を
+ファイルから取るので、断層位置は平面直角座標系の絶対座標で書ける。
+
 ## 使い方のメモ
 
 - 実際の断層は fault2disp.txt のセグメント表(≤ 50)で与える。位置は格子の
