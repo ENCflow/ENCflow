@@ -1,4 +1,4 @@
-> English mirror of tutorials/chichibu/README.md (based on commit b853906). The Japanese file is the master copy.
+> English mirror of tutorials/chichibu/README.md (based on commit 2d95cff). The Japanese file is the master copy.
 
 # Tutorial 2: chichibu -- rain on a real-terrain catchment
 
@@ -780,6 +780,163 @@ For that procedure and for settings such as the water-film threshold
 [utils/out2vtk/README.md](../../../utils/out2vtk/README.md)
 (in Japanese).
 
+## Supplement: effect of resolution and the character of the ENC grid
+
+This tutorial has used a 200 m grid throughout. To see how the results
+change with a finer grid, we move the Step 4 configuration (no losses,
+no outlet) to 100 m and 50 m grids. The terrain data are the 100 m and
+50 m versions of the same area kept in `test/chichibu/` (text format),
+and the parameter files are `en/param_supp_200m.txt` /
+`en/param_supp_100m.txt` / `en/param_supp_50m.txt` (the 200 m one is
+the Step 4 configuration with text input only). We also run the
+**4-neighbor** computation mentioned at the end of Step 1
+(`p_diagratio = 0.0`, diagonal exchange closed) at the same three
+resolutions, to see what the 8-direction exchange of the ENC grid
+brings. These six runs (plus the two width-equalized runs described
+below) and the figures are reproduced in one go with `./Fig_supp.sh`
+from the case directory (it includes the 50 m grid, so it takes a
+little under an hour on a 4-core laptop).
+
+### Mapping the transects
+
+The four transects and probes are placed at the **same places** as in
+Step 3, re-specified as cell numbers of each grid (transect 1 at
+ix 82 on the 200 m grid becomes ix 164 on the 100 m grid and ix 327 on
+the 50 m grid; the lengths are kept at 1.0 to 1.4 km too). Since the
+channel mask is redrawn when the resolution changes, we always check
+that the transects straddle the channel. The figure below is that
+check: at every resolution each transect (red) crosses the channel
+(blue) exactly once and the probe (circle) sits on a channel cell.
+
+![Supplement: channel mask and transects at each resolution](figs/supp_transects.png)
+
+### Time step and computational cost
+
+The time step is 6 s at 200 m, 1.5 s at 100 m and 0.75 s at 50 m.
+Shrinking it only in proportion to the grid (3 s and 1.5 s) made the
+100 m run stop during the rainfall with a Courant number above 1. A
+finer grid resolves the valleys of steep tributaries and the maximum
+velocity grows (16 m/s at 200 m, 30 m/s at 100 m, 34 m/s at 50 m), so
+**the cost of a finer grid grows faster than "cells x steps"**, which
+is worth remembering when choosing a resolution.
+
+| grid | computed cells | dt | steps | run time (ENC, 4 threads) |
+|---|---|---|---|---|
+| 200 m | 17,885 | 6 s | 3,600 | 16 s |
+| 100 m | 71,486 | 1.5 s | 14,400 | 211 s |
+| 50 m | 285,843 | 0.75 s | 28,800 | 1,355 s |
+
+### Result 1: changing the resolution (ENC)
+
+![Supplement: effect of resolution (top ENC, bottom 4-neighbor)](figs/supp_hydro.png)
+
+The top row is ENC. The peak discharges (m³/s) at transects 1 to 4 are
+tabulated below (in parentheses: change from the next coarser grid).
+
+| transect (upstream to downstream) | 200 m | 100 m | 50 m |
+|---|---|---|---|
+| 1 (small catchment area) | 1,165 | 1,361 (+17%) | 1,384 (+2%) |
+| 2 | 2,815 | 3,244 (+15%) | 3,333 (+3%) |
+| 3 | 4,094 | 4,484 (+10%) | 5,165 (+15%) |
+| 4 (near the catchment outlet) | 5,434 | 5,712 (+5%) | 6,232 (+9%) |
+
+- **Upstream (transects 1 and 2)**: the coarser the grid, the smaller
+  the peak. It changes by 15 to 17% from 200 to 100 m but only by 2 to
+  3% from 100 to 50 m, i.e. it has converged at 100 m and below. We
+  attribute the smaller runoff on the coarse grid to two things: in a
+  200 m cell the valley floor and the hillslopes are mixed in one cell,
+  which blunts the concentration of water from the slopes into the
+  channel (the steps become larger and short tributaries collapse into
+  one or two cells); and the channel width becomes the cell width,
+  which increases channel storage and damps the short hydrographs of
+  small catchments the most.
+- **Downstream (transects 3 and 4)**: the change from 200 to 100 m is
+  5 to 10%, smaller than upstream, but the peaks still grow by another
+  9 to 15% from 100 to 50 m. The peak times hardly change across the
+  three resolutions (170 to 180 min at transect 4). On a raster the
+  channel width equals the cell width, so a finer grid makes the
+  channel narrower and deeper (the maximum depth at probe 4 is 7.3,
+  10.3 and 16.3 m), and we consider the reduced flattening of the
+  wave (channel storage) along the long main river to be the main
+  cause.
+  To test this, we equalized the channel width of the 200 m and
+  100 m grids to the 50 m of the 50 m grid with a subgrid channel
+  (`fn_channel`, [the channel chapter of the users
+  guide](../../../docs/en/users_guide/channel.md); `./Fig_supp.sh` runs
+  these as `result_supp_*_w50`). The peaks at transects 3 and 4 become
+  4,258 / 4,868 at 200 m and 4,063 / 4,756 at 100 m: **the difference
+  between 200 m and 100 m shrinks to within 5%**, so channel-cell
+  storage was indeed the main cause of the gap between the two coarse
+  grids. Neither, however, reaches the 50 m grid with its resolved
+  channel (5,165 / 6,232), and the peaks arrive 25 to 35 minutes later.
+  A 50 m subgrid channel squeezes the flow into a conveyance section of
+  1/4 to 1/2 of the cell width, so the storage decreases but the
+  conveyance hits its cap and the wave is delayed, whereas on the 50 m
+  grid the valley-floor cells on both sides of the channel cell join the
+  flow. Even with the channel representation equalized, **the
+  difference in how the valley floor and the slopes are resolved**
+  remains.
+- At every resolution the S column stays at 0.1000 m after the rain.
+  The total volume is the same; only **the distribution and the speed
+  of the water** differ. Check this yourself.
+
+### Result 2: the same computation with 4 neighbors
+
+The bottom row is the 4-neighbor case, with the following peaks.
+
+| transect | 200 m | 100 m | 50 m |
+|---|---|---|---|
+| 1 | 53 | 54 | 47 |
+| 2 | 40 | 51 | 61 |
+| 3 | 0 | 864 | 324 |
+| 4 | 4 | 30 | 402 |
+
+At 200 m only 4 m³/s (0.1% of ENC) reaches transect 4 near the
+catchment outlet; at 100 m it is 30 m³/s, and on the 50 m grid, where
+the channel cells are 50 m wide, it finally reaches 402 m³/s (6% of
+ENC). **Even with a grid four times finer, the channel network stays
+essentially cut into pieces with 4 neighbors.** The 864 m³/s at
+transect 3 on the 100 m grid appears because, just upstream of this
+transect, the channel runs straight east-west along a grid row for
+about 1 km: reaches aligned with the axes pass water, diagonal reaches
+stop it. Whether discharge appears is decided **by the orientation of
+the channel, not by the resolution**, which is the anisotropy of the
+4-neighbor scheme.
+
+![Supplement: depth after 6 hours (left ENC, right 4-neighbor)](figs/supp_hend.png)
+
+In the depth distributions after 6 hours, ENC (left) has gathered the
+channel water at the outlet at every resolution and the catchment is
+blank, whereas with 4 neighbors (right) spots of ponded water remain
+all over the channel network, stopped at every diagonal reach. These
+fragmented "ponds" are also a source of the discharge oscillations
+explained in Step 6, and the 4-neighbor hydrograph on the 50 m grid
+(transect 4) shows them.
+
+### What to take away about the ENC grid
+
+- **Weak grid dependence**: from 200 to 50 m (16 times the cells, 85
+  times the run time) the downstream peak changed by +15% and the
+  upstream one by +19%, with the peak times almost unchanged. For an
+  estimate of the flood wave over the whole catchment a 200 m grid is
+  enough; go to 100 m and below when the absolute values in small
+  upstream catchments matter.
+- **Flow is not obstructed even at coarse resolution**: most
+  structured-grid models exchange water along the axes only (4
+  neighbors) and cannot carry a one-cell-wide channel diagonally, so
+  the channel network has to be **coupled separately as a 1D channel
+  model**. The ENC grid carries the channel network as a raster through
+  its 8-direction exchange, so **no 1D channel model or flow-direction
+  (D8) data are needed** even on a 200 m grid. That a catchment
+  computation works with nothing but a D8-filled DEM and a channel
+  mask rests on this property.
+- **The price of resolution is computation**: halving the grid
+  multiplies the cells by 4 and, because dt must shrink with the
+  growing velocities, the steps by 2 to 4, so the run time grows 6 to
+  13 times. In
+  practice, first grasp the overall behavior at about 200 m, then
+  refine where the location and purpose require it.
+
 ## Closing remarks
 
 In this tutorial we went once around the standard workflow of a
@@ -803,4 +960,5 @@ directory (gnuplot is required; it runs the same computations as in
 the text, in order, and draws both the Japanese and the English
 figures). Only the 3D figures of Step 7 are outside its scope; they
 are regenerated with `Fig_step7.py`, which draws with the same VTK
-library that ParaView uses.
+library that ParaView uses. The figures of the supplement are
+regenerated separately with `./Fig_supp.sh`.
