@@ -44,14 +44,26 @@ names are relative to dir_data.
  60.0      bm/disp_0060.txt
 ```
 
-Each file holds the **cumulative** displacement d [m] over the whole
-domain (nx × ny), relative to the terrain at the start of the run (not an
-increment), in the same format and row order as the bed elevation z (text
-matrix / bil / GeoTIFF according to f_input_mode). Before the first time
-the first value holds, after the last time the last value holds. A table
-with a single line (final displacement at t = 0) is an instantaneous
-deformation at the start, equivalent to the initial-surface-displacement
-approach.
+Each file holds the **cumulative** displacement d [m], relative to the
+terrain at the start of the run (not an increment), in the same format and
+row order as the bed elevation z (text matrix / bil / GeoTIFF according to
+f_input_mode). Before the first time the first value holds, after the last
+time the last value holds. A table with a single line (final displacement
+at t = 0) is an instantaneous deformation at the start, equivalent to the
+initial-surface-displacement approach.
+
+For large domains, four integers `i1 j1 ni nj` at the end of a line make
+the file a **window**: an ni × nj matrix covering columns i1..i1+ni−1 and
+rows j1..j1+nj−1 of the full grid, with zero displacement outside
+(`f_window = 1` of utils/fault2disp writes this form). The model restricts
+the application to the union of the windows, so both the file size and the
+per-step work scale with the window, not the grid.
+
+```
+# time(s)  file               i1  j1  ni  nj
+  0.0      bm/disp_0000.txt   90  40  80  70
+ 30.0      bm/disp_0010.txt   90  40  80  70
+```
 
 ## Behaviour
 

@@ -110,3 +110,4 @@ test/nhbottom/save_bmh/
 examples/tsunami_fault/bm/
 examples/tsunami_fault/z.txt
 utils/fault2disp/fault2disp
+examples/tsunami_fault/bm_w/

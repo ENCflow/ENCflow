@@ -19,9 +19,11 @@
 !   鉛直変位 u_z に、オプションで水平変位の寄与 u_h·∇z(Tanioka & Satake
 !   1996。fn_z を与えたとき)を加える。
 !
-!   出力: dir_out/disp_NNNN.txt(nout + 1 枚。全域の累積変位。テキスト行列)
-!   と dir_out/bmlist.txt(「時刻 ファイル名」。ファイル名は dir_out 相対の
-!   前に prefix_list を付ける = ENCflow の dir_data からの相対にする)。
+!   出力: dir_out/disp_NNNN.txt(nout + 1 枚。累積変位のテキスト行列)と
+!   dir_out/bmlist.txt(「時刻 ファイル名 [i1 j1 ni nj]」。ファイル名は dir_out
+!   相対の前に prefix_list を付ける = ENCflow の dir_data からの相対にする)。
+!   f_window = 1 なら |u_z| > d_min の外接矩形(全セグメントの和集合)だけを
+!   書き、表に窓の列・行・大きさを付ける(広域の計算でファイルを小さくする)。
 !
 !   検算: Okada (1985) Table 2 の有限矩形断層のケース(x=2, y=3, d=4, δ=70°,
 !   L=3, W=2)を -check で再現する(fault2disp -check)。
@@ -38,19 +40,22 @@ program fault2disp
   character(len=256) :: dir_out = 'bm', prefix_list = 'bm/', fn_z = ''
   integer :: nout = 20
   real(dp) :: t_start = -1.0d0, t_end = -1.0d0
+  integer :: f_window = 0               ! 1: |u_z| > d_min の外接矩形(全セグメントの和集合)だけを書く
+  real(dp) :: d_min = 1.0d-3            ! 窓の閾値 (m)
   integer :: nseg = 0
   real(dp) :: x_top(nsegmax) = 0, y_top(nsegmax) = 0, d_top(nsegmax) = 0
   real(dp) :: strike(nsegmax) = 0, dip(nsegmax) = 0, rake(nsegmax) = 0
   real(dp) :: flength(nsegmax) = 0, fwidth(nsegmax) = 0, slip(nsegmax) = 0
   real(dp) :: t_r(nsegmax) = 0, t_rise(nsegmax) = 0
   integer :: f_rise(nsegmax) = 2
-  namelist /list_fault2disp/ nx, ny, dx, dy, x_ll, y_ll, dir_out, prefix_list, fn_z, nout, t_start, t_end, &
+  namelist /list_fault2disp/ nx, ny, dx, dy, x_ll, y_ll, dir_out, prefix_list, fn_z, nout, t_start, t_end, f_window, d_min, &
                              nseg, x_top, y_top, d_top, strike, dip, rake, flength, fwidth, slip, t_r, t_rise, f_rise
   ! --- work ---
   character(len=256) :: fn, arg
   real(dp), allocatable :: uz(:,:,:), z(:,:), d(:,:)
   real(dp) :: xc, yc, ux, uy, uzz, t, r, dzdx, dzdy, umax, umin
-  integer :: un, ios, i, j, k, m
+  integer :: un, ios, i, j, k, m, i1, i2, j1, j2
+  character(len=64) :: wstr
   character(len=1024) :: iom
 
   if (command_argument_count() < 1) then
@@ -129,6 +134,28 @@ program fault2disp
           " m, min ", minval(uz(:,:,k)), " m"
   end do
 
+  ! --- 窓(変位がゼロでない外接矩形。全域格子の列・行) ---
+  i1 = 1; i2 = nx; j1 = 1; j2 = ny
+  wstr = ''
+  if (f_window == 1) then
+    i1 = nx + 1; i2 = 0; j1 = ny + 1; j2 = 0
+    do k = 1, nseg
+      do j = 1, ny
+        do i = 1, nx
+          if (abs(uz(i, j, k)) > d_min) then
+            i1 = min(i1, i); i2 = max(i2, i); j1 = min(j1, j); j2 = max(j2, j)
+          end if
+        end do
+      end do
+    end do
+    if (i2 < i1) then
+      i1 = 1; i2 = 1; j1 = 1; j2 = 1          ! 変位なし: 1 セルの窓
+    end if
+    write(wstr, '(4(1x,i0))') i1, j1, i2 - i1 + 1, j2 - j1 + 1
+    print '(a,i0,a,i0,a,i0,a,i0,a,f0.1,a)', "fault2disp: window columns ", i1, "..", i2, ", rows ", j1, "..", j2, &
+          " (", 100.0d0 * dble(i2 - i1 + 1) * dble(j2 - j1 + 1) / (dble(nx) * dble(ny)), "% of the grid)"
+  end if
+
   ! --- 出力時刻列と書き出し ---
   if (t_start < 0) t_start = minval(t_r(1:nseg))
   if (t_end < 0) t_end = maxval(t_r(1:nseg) + t_rise(1:nseg))
@@ -150,8 +177,8 @@ program fault2disp
       if (r /= 0.0d0) d = d + r * uz(:,:,k)
     end do
     write(fn, '(a,i4.4,a)') "disp_", m, ".txt"
-    call write_matrix(trim(dir_out)//"/"//trim(fn), d)
-    write(un, '(f0.3,2x,a)') t, trim(prefix_list)//trim(fn)
+    call write_matrix(trim(dir_out)//"/"//trim(fn), d(i1:i2, j1:j2))
+    write(un, '(f0.3,2x,a,a)') t, trim(prefix_list)//trim(fn), trim(wstr)
   end do
   close(un)
   umax = maxval(d); umin = minval(d)

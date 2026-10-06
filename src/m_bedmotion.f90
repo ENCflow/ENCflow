@@ -2,10 +2,13 @@
 ! 規定底面運動(fn_bedmotion。断層津波などの地盤変位の時刻歴で s%z を強制)
 !   設計の正本は docs/bedmotion_plan.md、規約の記録は developer.md §70。
 !
-!   【入力】スナップショット表(fn_bmlist): 1 行に「時刻 ファイル名」。
-!   時刻は t0 からの相対(単位 bm_tscale 秒)、昇順。ファイルは全域 (nx, ny) の
-!   累積変位 d [m](初期地形からの変位。z と同じ形式・同じ行順)。
-!   表の最初の時刻より前は先頭の値、最後より後は末尾の値を保持する。
+!   【入力】スナップショット表(fn_bmlist): 1 行に「時刻 ファイル名 [i1 j1 ni nj]」。
+!   時刻は t0 からの相対(単位 bm_tscale 秒)、昇順。ファイルは累積変位 d [m]
+!   (初期地形からの変位。z と同じ形式・同じ行順)。4 整数を省略すると全域
+!   (nx, ny)、与えると全域格子の列 i1.. i1+ni−1・行 j1.. j1+nj−1 の窓だけを
+!   持つ ni × nj の行列で、窓の外は 0(広域の計算で変位がゼロでない矩形だけを
+!   書く。utils/fault2disp の f_window)。本体は適用ループを全窓の和集合に
+!   限定する。表の最初の時刻より前は先頭の値、最後より後は末尾の値を保持する。
 !
 !   【適用の契約】ステップ頭(API の extz と同じ位置 = swflow の前)で、
 !   そのステップ末尾の時刻 t^{n+1} の変位 d を時間補間し、前回適用した
@@ -54,6 +57,8 @@ module m_bedmotion
                                             ! 3: 最初の時刻まで待ち(先頭の値は適用済み)
     real, allocatable :: tsnap(:)           ! スナップショットの時刻 (s。絶対 = t0 + 表 × bm_tscale)
     character(len=maxpathlen), allocatable :: fsnap(:)  ! ファイル名(dir_data 相対)
+    integer, allocatable :: win(:,:)        ! 窓 (4, nsnap): i1, j1, ni, nj(i1 = 0 は全域)
+    integer :: iw1 = 1, iw2 = 0, jw1 = 1, jw2 = 0  ! 全スナップショットの窓の和集合(全域格子)
     real, allocatable :: da(:,:), db(:,:)   ! 直前・次のスナップショット (1:nx, jsh:jeh)
     real, allocatable :: dprev(:,:)         ! 適用済みの変位 (1:nx, jsh:jeh)
     integer :: nload = 0                    ! 読み込んだスナップショット数(統計)
@@ -74,8 +79,9 @@ subroutine m_bedmotion_init(bm, p, g, s)
   type(t_list_bedmotion) :: list
   character(:), allocatable :: fname
   character(len=1024) :: line
-  integer :: un, ios, n, k, ip
+  integer :: un, ios, n, k, ip, iq
   real :: tcur, tk
+  character(len=1024) :: rest
 
   if (len_trim(p%fn_bedmotion) == 0) return
 
@@ -103,7 +109,9 @@ subroutine m_bedmotion_init(bm, p, g, s)
     n = n + 1
   end do
   if (n < 1) call par_stop("list_bedmotion: snapshot list is empty: "//trim(fname))
-  allocate(bm%tsnap(n), bm%fsnap(n))
+  allocate(bm%tsnap(n), bm%fsnap(n), bm%win(4, n))
+  bm%win = 0
+  bm%iw1 = g%nx + 1; bm%iw2 = 0; bm%jw1 = g%ny + 1; bm%jw2 = 0
   rewind(un)
   k = 0
   do
@@ -121,8 +129,25 @@ subroutine m_bedmotion_init(bm, p, g, s)
     ios = 1
     if (ip > 1) read(line(1:ip-1), *, iostat=ios) tk
     if (ios /= 0) call par_stop("list_bedmotion: cannot parse line "//itoa(k)//" of "//trim(fname)//": "//trim(line))
-    bm%fsnap(k) = adjustl(line(ip+1:))
-    if (len_trim(bm%fsnap(k)) == 0) call par_stop("list_bedmotion: missing file name on line "//itoa(k)//" of "//trim(fname))
+    rest = adjustl(line(ip+1:))
+    if (len_trim(rest) == 0) call par_stop("list_bedmotion: missing file name on line "//itoa(k)//" of "//trim(fname))
+    iq = index(rest, ' ')
+    bm%fsnap(k) = rest(1:iq-1)
+    rest = adjustl(rest(iq+1:))
+    if (len_trim(rest) > 0) then
+      ! 窓 i1 j1 ni nj(全域格子の列・行。1 始まり)
+      read(rest, *, iostat=ios) bm%win(1:4, k)
+      if (ios /= 0) call par_stop("list_bedmotion: window must be 4 integers (i1 j1 ni nj) on line "// &
+                                  itoa(k)//" of "//trim(fname))
+      if (bm%win(1,k) < 1 .or. bm%win(2,k) < 1 .or. bm%win(3,k) < 1 .or. bm%win(4,k) < 1 .or. &
+          bm%win(1,k) + bm%win(3,k) - 1 > g%nx .or. bm%win(2,k) + bm%win(4,k) - 1 > g%ny) then
+        call par_stop("list_bedmotion: window outside the grid on line "//itoa(k)//" of "//trim(fname))
+      end if
+      bm%iw1 = min(bm%iw1, bm%win(1,k)); bm%iw2 = max(bm%iw2, bm%win(1,k) + bm%win(3,k) - 1)
+      bm%jw1 = min(bm%jw1, bm%win(2,k)); bm%jw2 = max(bm%jw2, bm%win(2,k) + bm%win(4,k) - 1)
+    else
+      bm%iw1 = 1; bm%iw2 = g%nx; bm%jw1 = 1; bm%jw2 = g%ny
+    end if
     bm%tsnap(k) = p%t0 + tk * list%bm_tscale
     if (k > 1) then
       if (bm%tsnap(k) <= bm%tsnap(k-1)) call par_stop("list_bedmotion: snapshot times must increase (line "//itoa(k)//")")
@@ -166,6 +191,10 @@ subroutine m_bedmotion_init(bm, p, g, s)
   bm%enabled = .true.
   call par_info("bedmotion enabled: "//itoa(n)//" snapshot(s), t = "//trim(rtoa(bm%tsnap(1)))//" .. "// &
                 trim(rtoa(bm%tsnap(n)))//" s, interpolation = "//merge("linear", "step  ", bm%f_interp == 1))
+  if (bm%iw1 > 1 .or. bm%iw2 < g%nx .or. bm%jw1 > 1 .or. bm%jw2 < g%ny) then
+    call par_info("  window of the displacement (union): columns "//itoa(bm%iw1)//".."//itoa(bm%iw2)// &
+                  ", rows "//itoa(bm%jw1)//".."//itoa(bm%jw2))
+  end if
 
 contains
 
@@ -190,12 +219,23 @@ subroutine load_snapshot(bm, p, g, k, d)
   integer, intent(in) :: k
   real, intent(out) :: d(1:, dcp%jsh:)
   real, allocatable :: wk(:,:)
-  integer :: j
-  allocate(wk(1:g%nx, 1:g%ny))
-  call fileio_read_matrix(trim(p%dir_data)//"/"//trim(bm%fsnap(k)), g%nx, g%ny, wk, p%f_input_mode)
-  do j = dcp%jsh, dcp%jeh
-    d(:,j) = wk(1:g%nx, j)
-  end do
+  integer :: j, i1, j1, ni, nj
+  if (bm%win(1,k) == 0) then
+    allocate(wk(1:g%nx, 1:g%ny))
+    call fileio_read_matrix(trim(p%dir_data)//"/"//trim(bm%fsnap(k)), g%nx, g%ny, wk, p%f_input_mode)
+    do j = dcp%jsh, dcp%jeh
+      d(:,j) = wk(1:g%nx, j)
+    end do
+  else
+    ! 窓だけのファイル: 外は 0。帯に掛かる行だけ写す
+    i1 = bm%win(1,k); j1 = bm%win(2,k); ni = bm%win(3,k); nj = bm%win(4,k)
+    allocate(wk(1:ni, 1:nj))
+    call fileio_read_matrix(trim(p%dir_data)//"/"//trim(bm%fsnap(k)), ni, nj, wk, p%f_input_mode)
+    do j = dcp%jsh, dcp%jeh
+      d(:,j) = 0.0
+      if (j >= j1 .and. j <= j1 + nj - 1) d(i1:i1+ni-1, j) = wk(1:ni, j - j1 + 1)
+    end do
+  end if
   bm%nload = bm%nload + 1
 end subroutine
 
@@ -259,9 +299,10 @@ subroutine m_bedmotion_calc(bm, p, g, s, it)
   allocate(d(1:g%nx, dcp%jsh:dcp%jeh))
   call interp(bm, t, d)
 
+  ! 適用は窓の和集合(全域なら帯全体)に限定する
   !$omp parallel do private(i, j, dd)
-  do j = dcp%js, dcp%je
-    do i = g%wx(1,j), g%wx(2,j)
+  do j = max(dcp%js, bm%jw1), min(dcp%je, bm%jw2)
+    do i = max(g%wx(1,j), bm%iw1), min(g%wx(2,j), bm%iw2)
       if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
       dd = d(i,j) - bm%dprev(i,j)
       if (dd /= 0.0) s%z(i,j) = s%z(i,j) + dd
@@ -269,10 +310,10 @@ subroutine m_bedmotion_calc(bm, p, g, s, it)
     end do
   end do
   !$omp end parallel do
-  ! e の整合回復(extz・geomorph と同じ範囲 = x > 0 の全セル)
+  ! e の整合回復(extz・geomorph と同じ範囲 = x > 0 のセル。窓の外は z が変わらない)
   !$omp parallel do private(i, j)
-  do j = dcp%js, dcp%je
-    do i = g%wx(1,j), g%wx(2,j)
+  do j = max(dcp%js, bm%jw1), min(dcp%je, bm%jw2)
+    do i = max(g%wx(1,j), bm%iw1), min(g%wx(2,j), bm%iw2)
       if (g%x(i,j) <= 0) cycle
       s%e(i,j) = s%z(i,j) + s%h(i,j)
     end do
@@ -313,7 +354,7 @@ subroutine m_bedmotion_dispose(bm, g)
   call par_allreduce_max(v)
   call par_info("bedmotion: applied displacement max "//trim(rtoa(v(1)))//" m, min "//trim(rtoa(-v(2)))// &
                 " m, snapshots read "//itoa(bm%nload)//", steps applied "//itoa(bm%napply))
-  deallocate(bm%tsnap, bm%fsnap, bm%da, bm%db, bm%dprev)
+  deallocate(bm%tsnap, bm%fsnap, bm%win, bm%da, bm%db, bm%dprev)
   bm%enabled = .false.
 end subroutine
 

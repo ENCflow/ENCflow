@@ -25,6 +25,8 @@ make && make check          # ビルドと Okada (1985) Table 2 の検算
 | nout | 出力時刻の分割数(スナップショットは nout + 1 枚。既定 20) |
 | t_start, t_end | 出力時刻の範囲 (s)。負なら自動(破壊開始の最小 〜 破壊終了の最大) |
 | fn_z | 地盤高ファイル(与えると u_h·∇z を加える) |
+| f_window | 1: \|u_z\| > d_min の外接矩形(全セグメントの和集合)だけを書き、表に窓 `i1 j1 ni nj` を付ける(既定 0 = 全域。広域の計算向け) |
+| d_min | 窓の閾値 (m。既定 1e-3) |
 | nseg | セグメント数(≤ 50) |
 | x_top(k), y_top(k) | 上端の中心 (m) |
 | d_top(k) | 上端の深さ (m。≥ 0) |
@@ -36,8 +38,9 @@ make && make check          # ビルドと Okada (1985) Table 2 の検算
 | t_r(k), t_rise(k) | 破壊開始時刻・立ち上がり時間 (s。0 = 瞬時) |
 | f_rise(k) | 立ち上がり関数 1: 線形、2: 半正弦 (1 − cos)/2(既定) |
 
-出力は dir_out/disp_NNNN.txt(全域の累積変位。ENCflow のテキスト行列形式、
-行順は北 → 南)と dir_out/bmlist.txt(「時刻 ファイル名」)。ENCflow の
-&list_bedmotion に `fn_bmlist = 'bm/bmlist.txt'` と書く。
+出力は dir_out/disp_NNNN.txt(累積変位。ENCflow のテキスト行列形式、行順は
+北 → 南。f_window=1 なら窓の部分だけ)と dir_out/bmlist.txt(「時刻 ファイル名
+[i1 j1 ni nj]」)。ENCflow の &list_bedmotion に `fn_bmlist = 'bm/bmlist.txt'`
+と書く。
 
 使用例は examples/tsunami_fault。
