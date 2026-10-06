@@ -1,5 +1,5 @@
 #!/bin/bash
-# 補足節(解像度の影響と 4 近傍との比較)の図 figs/supp_*.png を再生成する。
+# 補足節(解像度の影響・4 近傍との比較・移流項の扱い)の図 figs/supp_*.png を再生成する。
 #   使い方: ./Fig_supp.sh   (要 gnuplot。実行ファイルは make で用意)
 # Fig_chichibu.sh とは別にしてある: 50 m 格子(1120×600、dt 1.5 s)のケースを
 # 2 本含むため(dt 0.75 s)、4 コアのノート PC で 1 時間前後かかる。
@@ -45,6 +45,26 @@ for r in 200m 100m; do
     rm -rf result
     ./encflow "wrk_supp_param_${r}_w50.txt"
     mv result "result_supp_${r}_w50"
+  fi
+done
+
+# --- 移流項なしの拡散波(局所慣性方程式。f_govequation = 1)と旧移流スキーム
+#     (f_advection_scheme = 1)。解像度依存の比較(補足の「移流項と解像度依存」)。
+#     200 m → 100 m → 50 m の順(50 m は 1 本 40 分前後) ---
+for r in 200m 100m 50m; do
+  if [ ! -d "result_supp_${r}_noadv" ]; then
+    sed -e 's/f_govequation = 0/f_govequation = 1/' "param_supp_$r.txt" > "wrk_supp_param_${r}_noadv.txt"
+    grep -q 'f_govequation = 1' "wrk_supp_param_${r}_noadv.txt"
+    rm -rf result
+    ./encflow "wrk_supp_param_${r}_noadv.txt"
+    mv result "result_supp_${r}_noadv"
+  fi
+  if [ ! -d "result_supp_${r}_s1" ]; then
+    sed -e '/dir_data/i\  fn_enc     = "-"           ! ENC条件設定ファイル' "param_supp_$r.txt" > "wrk_supp_param_${r}_s1.txt"
+    printf '\n&list_enc\n  f_advection_scheme = 1   ! 旧移流スキーム(非保存形・風上重み)\n/\n' >> "wrk_supp_param_${r}_s1.txt"
+    rm -rf result
+    ./encflow "wrk_supp_param_${r}_s1.txt"
+    mv result "result_supp_${r}_s1"
   fi
 done
 

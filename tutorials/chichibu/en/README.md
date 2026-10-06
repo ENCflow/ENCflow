@@ -780,7 +780,41 @@ For that procedure and for settings such as the water-film threshold
 [utils/out2vtk/README.md](../../../utils/out2vtk/README.md)
 (in Japanese).
 
+## Closing remarks
+
+In this tutorial we went once around the standard workflow of a
+catchment computation with real terrain data: data preparation
+(depression filling) -> minimal configuration -> measurement -> tuning
+of numerical settings -> adding physical processes -> boundary
+conditions -> 3D visualization. From here:
+
+- Refining the groundwater model (Green-Ampt, lateral flow),
+  distributed roughness, subgrid channels, and more --
+  [users guide](../../../docs/en/users_guide.md)
+- How to write the namelists of each feature --
+  [examples/List_samples/](../../../examples/List_samples/)
+- To run a large computation in parallel with MPI:
+  `mpirun -np 4 ./encflow_mpi en/param_step6.txt` (the results match
+  the serial run bit for bit)
+
+The figures of this document (`figs/`, i.e. `en/figs/`) can be
+regenerated in one go with `./Fig_chichibu.sh` run from the case
+directory (gnuplot is required; it runs the same computations as in
+the text, in order, and draws both the Japanese and the English
+figures). Only the 3D figures of Step 7 are outside its scope; they
+are regenerated with `Fig_step7.py`, which draws with the same VTK
+library that ParaView uses. The figures of the supplement are
+regenerated separately with `./Fig_supp.sh`.
+
 ## Supplement: effect of resolution and the character of the ENC grid
+
+**Everything from here on is supplementary.** The tutorial procedure is
+complete at this point; the following is for readers who are curious about
+how the results change with a finer grid, what the 8-direction exchange of
+the ENC grid buys, and what the advection term does. Reproducing the
+computations takes one to two hours because they include 50 m grid cases.
+If you only want the conclusions, read the bold sentences at the end of each
+subsection and "What to take away about the ENC grid".
 
 This tutorial has used a 200 m grid throughout. To see how the results
 change with a finer grid, we move the Step 4 configuration (no losses,
@@ -920,6 +954,28 @@ fragmented "ponds" are also a source of the discharge oscillations
 explained in Step 6, and the 4-neighbor hydrograph on the 50 m grid
 (transect 4) shows them.
 
+### Result 3: the advection term and resolution dependence
+
+The computations so far used the default momentum-conserving advection
+scheme (`f_advection_scheme = 3`). We now run the same three resolutions
+with **the advection term dropped (diffusion wave, i.e. the local inertia
+equation, `f_govequation = 1`)** and with **the old advection scheme
+(`f_advection_scheme = 1`, non-conservative with upwind weighting)** to see
+how the treatment of advection changes the resolution dependence
+(`./Fig_supp.sh` runs them as `result_supp_*_noadv` / `result_supp_*_s1`).
+
+![Supplement: advection treatment and resolution dependence](figs/supp_hydro_adv.png)
+
+Peak discharge (m³/s) and its time (min) at transect 4 (near the basin outlet):
+
+| advection | 200 m | 100 m | 50 m |
+|---|---|---|---|
+| none (diffusion wave) | XXN200 | XXN100 | XXN50 |
+| scheme 1 (old) | XXS200 | XXS100 | XXS50 |
+| scheme 3 (default) | 5,434 @170 | 5,712 @178 | 6,232 @180 |
+
+XXDISCUSS
+
 ### What to take away about the ENC grid
 
 - **Weak grid dependence**: from 200 to 50 m (16 times the cells, 85
@@ -943,29 +999,3 @@ explained in Step 6, and the 4-neighbor hydrograph on the 50 m grid
   13 times. In
   practice, first grasp the overall behavior at about 200 m, then
   refine where the location and purpose require it.
-
-## Closing remarks
-
-In this tutorial we went once around the standard workflow of a
-catchment computation with real terrain data: data preparation
-(depression filling) -> minimal configuration -> measurement -> tuning
-of numerical settings -> adding physical processes -> boundary
-conditions -> 3D visualization. From here:
-
-- Refining the groundwater model (Green-Ampt, lateral flow),
-  distributed roughness, subgrid channels, and more --
-  [users guide](../../../docs/en/users_guide.md)
-- How to write the namelists of each feature --
-  [examples/List_samples/](../../../examples/List_samples/)
-- To run a large computation in parallel with MPI:
-  `mpirun -np 4 ./encflow_mpi en/param_step6.txt` (the results match
-  the serial run bit for bit)
-
-The figures of this document (`figs/`, i.e. `en/figs/`) can be
-regenerated in one go with `./Fig_chichibu.sh` run from the case
-directory (gnuplot is required; it runs the same computations as in
-the text, in order, and draws both the Japanese and the English
-figures). Only the 3D figures of Step 7 are outside its scope; they
-are regenerated with `Fig_step7.py`, which draws with the same VTK
-library that ParaView uses. The figures of the supplement are
-regenerated separately with `./Fig_supp.sh`.

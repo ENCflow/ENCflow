@@ -95,6 +95,33 @@ do for [s=1:2] {
 }
 unset multiplot
 
+# ---- 図 2c: 移流項の扱い(なし / スキーム 1 / スキーム 3)× 解像度。測線 1・4 ----
+reset
+set datafile separator comma
+set terminal pngcairo size 1000,900 font ",11"
+set output "figs/supp_hydro_adv.png"
+set multiplot layout 3,2 title "移流項の扱いと解像度依存: 上段 移流項なし(拡散波)、中段 スキーム 1(旧)、下段 スキーム 3(既定)" noenhanced
+set grid
+set xlabel "時間 (min)"
+set ylabel "流量 (m^3/s)"
+set key top right
+array RESA[3] = [ "200m", "100m", "50m" ]
+array RLBA[3] = [ "200 m", "100 m", "50 m" ]
+array SFXA[3] = [ "_noadv", "_s1", "" ]
+array SLBA[3] = [ "移流項なし", "スキーム 1", "スキーム 3(既定)" ]
+array TRNA[2] = [ 1, 4 ]
+array TLBA[2] = [ "上流(測線 1)", "下流(測線 4)" ]
+do for [s=1:3] {
+  do for [t=1:2] {
+    set title sprintf("%s: %s", SLBA[s], TLBA[t]) noenhanced
+    set xrange [0:(t == 1 ? 150 : 360)]
+    set yrange [0:(t == 1 ? 1800 : 12000)]
+    plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RESA[r], SFXA[s], TRNA[t]) \
+         using 2:3 with lines lw 1.5 title RLBA[r]
+  }
+}
+unset multiplot
+
 # ---- 図 2b: 河道幅を 50 m に揃えた ENC(測線 1・4)。幅なしを破線で重ねる ----
 reset
 set datafile separator comma
