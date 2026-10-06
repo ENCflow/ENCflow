@@ -14,7 +14,9 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理)
   ├─ 物理プロセス層(fn_* で個別に有効化。無効ならコスト・メモリゼロ)
   │    m_swflow      浅水流の切替器(排他: m_swflow_enc / m_swflow_stg)
   │      m_swflow_enc + submodule: _adv(移流) _bc(境界) _channel(河道・堤防) _diff(拡散)
-  │                     _nh(1 層非静水圧補正。f_nonhydrostatic。§69)
+  │                     _nh(1 層非静水圧補正。f_nonhydrostatic。静水圧ステップを predictor に
+  │                         した射影。活性集合・砕波スイッチ・底面勾配項・動く底面の加速度項
+  │                         f_nh_bottom を含む。状態・ソルバ・診断は submodule 私有。§69)
   │    m_gwflow      地下水の切替器(鉛直は排他: bucket / greenampt。
   │                  加算: lateral / layer2 / conduit(管路連続体層)/
   │                  pump(井戸揚水シンク)/ frost(凍土の浸透抑制))
@@ -28,7 +30,9 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理)
   │                  空隙率 s%gv への帰還。移流は advect_scalar。§63)
   │    m_glacier     氷河(加算: 質量収支(常時)/ flow / slide / ero / ava)
   │    m_lavaflow    溶岩流(噴火口ソース+Bingham 粘性重力流+固化→z。等温)
-  │    m_bedmotion   規定底面運動(地盤変位の時刻歴 → z の増分。断層津波の発生)
+  │    m_bedmotion   規定底面運動(地盤変位の時刻歴 → z の増分。断層津波の発生。入力は
+  │                  スナップショット表+累積変位ラスタ〔窓付き可〕、私有は前後 2 枚と
+  │                  適用済み変位のみ。断層パラメータ→変位は前処理 utils/fault2disp。§70)
   │    m_intercept   降雨遮断(排他: fixed / initloss)
   │    m_precip      降水    m_evap  蒸発散    m_snow  積雪・融雪
   │    m_tide        潮位    m_wq    水質      m_meteo 気象強制場・暦
@@ -94,6 +98,11 @@ m_state_set_gv だけで、空隙面積基底の柱状量を再スケールし�
 
 ```
 updatetime                    時刻更新
+BMI 外部状態の適用            set_value された z / h の一回適用(§57。陸セルのみ・e 回復・
+                                z ハロ交換。運動量は触らない)
+bedmotion_calc                規定底面運動(ステップ末尾時刻の変位を補間し増分を s%z へ。
+                                h 不変・e 回復・z ハロ交換。上と同じ契約・同じ位置 = swflow
+                                の前。無効なら no-op。§70)
 precip_makepre                降水分布の更新(更新時のみ)
   └ intercept_calc            遮断による有効雨量化(降水更新時のみ)
 intercept_step                貯留型遮断の毎ステップ処理
@@ -104,7 +113,9 @@ glacier_calc                  氷河(毎ステップ: 氷面融解 hi → h。dt
                                 更新と e 回復・z のハロ交換まで済ませる)
 boundary_makebdc              境界条件値の準備
 tide_calc                     潮位(海域セルの水位強制)
-swflow_calc                   ★浅水流本体(uv/mn 更新 → 連続式 → h,e,u,v,m,n 確定)
+swflow_calc                   ★浅水流本体(移流・拡散 → 運動方程式 → 境界強制 →
+                                [nh_project: 1 層 NH 射影で全加速度を補正。NH ON のみ] →
+                                連続式 → h,e,u,v,m,n 確定。§69)
   └ par_allreduce_maxi(ierror) 発散検出の全ランク集約
 gwflow_calc                   地下浸透・地下水(s%h から s%hg/s%hgc へ。冒頭で凍土係数の更新、末尾で井戸揚水シンク)
 saltwater_calc                淡塩2層(地表重力流・地下塩水 zone・海側境界)
@@ -139,8 +150,8 @@ calcstat                      統計(S 台帳・max 類。決定的総和)
 | p | t_sysparam | m_sysparam | 実行制御。init 後は全モジュール読み取り専用 |
 | g | t_geoinfo | m_geoinfo | 地形 z(入力)・粗度 rn・家屋 gv/bb/lm(入力)・マスク x/sw/rw・格子。原則不変(動的な標高は s%z、動的な空隙率は s%gv/s%lm。g%gv/g%lm の帯は band_shrink で解放) |
 | s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), hb(動く底層。z・sd の内数), cq/cg/crs(輸送物質の地表・地下・ため池プール), hd/wd(流動・堆積流木), hbd/wbd(流動・堆積瓦礫), gv/lm(空隙率と有効慣性係数。§63), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi・hb 等のモジュール私有 save は各 dispose。契約5) |
-| sx | t_enc_status | m_swflow_enc 私有 | エッジ流速 uv・流量 mn(前ステップ確定)・mn1(更新中)。他モジュールから不可視 |
-| r, b, … | 各 t_* | 各モジュール | モジュール私有。リスタートは各自の save ファイル(契約5) |
+| sx | t_enc_status | m_swflow_enc 私有 | エッジ流速 uv・流量 mn(前ステップ確定)・mn1(更新中)。他モジュールから不可視。NH の状態(圧力 φ・活性集合・砕波状態・zprev 等)も submodule 私有で、リスタート保存なし(φ は現在状態から再構築。f_nh_bottom の z̈ だけ再開直後の 1 ステップが異なる。§69) |
+| r, b, … | 各 t_* | 各モジュール | モジュール私有。リスタートは各自の save ファイル(契約5)。例外: m_bedmotion は私有 save を持たず、再開時刻の変位を表から求めて「適用済み」とする(§70) |
 
 プロセス間の結合は「s のフィールドを決まった順序で読み書きする」
 ことだけで成立しています。たとえば地下水と浅水流は互いを知らず、
@@ -148,7 +159,11 @@ gwflow_calc が swflow_calc の後に s%h を減らし s%hg を増やす、と�
 **実行順序が結合仕様**です(§2.2 の順序を変えることは物理の変更)。
 s%h を変更するモジュールは同じループで s%e = s%z + s%h を回復する
 こと(反対称適用・柱状換算などの契約 5 箇条は m_gwflow_bucket の
-ヘッダが正本の見本)。
+ヘッダが正本の見本)。s%z を書くのは geomorph・glacier・lavaflow・
+bedmotion と BMI の set_value('z') だけで、いずれも「h 不変で e を回復し
+z のハロ交換まで済ませる」同じ契約に従います。増分で与える bedmotion は
+他の z 更新と同じランで衝突しませんが、set_value('z') は bedmotion 有効時に
+拒否します(z の外部生産者は一人。§70)。
 
 ## 4. 並列化の型(なぜランク数でビット一致するか)
 
@@ -188,6 +203,11 @@ s%h を変更するモジュールは同じループで s%e = s%z + s%h を回�
 
 - 入力: namelist パラメータファイル+ dir_data 下のラスタ
   (text / bil+hdr / GeoTIFF。読み書きとも自前実装で外部ライブラリなし)。
+  時刻歴ラスタ(規定底面運動)は「時刻 ファイル名 [窓]」の表で与える。
+- 前処理ユーティリティ utils/ は本体の層ではなく libencflow.a をリンクする
+  独立プログラム(fault2disp: 断層パラメータ→地盤変位の時刻歴〔Okada、
+  経緯度・地理参照〕、rmdepress_river・calc_catchmentarea・lu2mask など)。
+  公開インターフェースを変えたらトップレベル make で追随漏れを検出(§10)。
 - 出力: result/ に分布(H0001 等+FILENUMBER.csv。領域マスク X0000 は
   常時出力 §44)、fluxes/・probes/ の CSV、Log.txt、パラメータ控え、
   save/(リスタート)。ParaView 可視化は後処理 utils/out2vtk(§43)。
@@ -202,11 +222,12 @@ s%h を変更するモジュールは同じループで s%e = s%z + s%h を回�
 | 設計判断の理由・経緯・実バグ | docs/developer.md(§0 方針 12 箇条から) |
 | 変更時の検証手順・禁止事項 | CLAUDE.md |
 | 未完了の作業・中期の道標 | docs/handoff.md |
-| パラメータの意味(555 項目) | docs/users_guide/params_index.md と各章 |
+| パラメータの意味(583 項目) | docs/users_guide/params_index.md と各章 |
 | namelist の書き方の見本 | examples/List_samples/ |
-| 使い方(利用者視点) | docs/users_guide.md・tutorials/ |
+| 使い方(利用者視点) | docs/users_guide.md・tutorials/・users_guide/usecases.md(現象→機能) |
+| 前処理・後処理の道具 | utils/*/README.md(fault2disp・out2vtk 等) |
 | 他モデルとの立ち位置 | docs/comparison.md |
-| 個別機能の設計文書 | docs/*_plan.md(geomorph・debris・splash・glacier・boundary・geotiff・gwconduit・swi・driftwood・lava〔実装済み〕、landslide_tsunami・nonhydrostatic〔設計提案〕)・channel_model.md。家屋破壊・瓦礫は plan を消し込み済みで developer.md §63 が正本 |
+| 個別機能の設計文書 | docs/*_plan.md(geomorph・debris・splash・glacier・boundary・geotiff・gwconduit・swi・driftwood・lava・landslide_tsunami・nonhydrostatic・bedmotion・bmi〔実装済み。設計解説と実績の記録として保持〕、lake・wq_metal〔検討メモ〕)・channel_model.md。家屋破壊・瓦礫は plan を消し込み済みで developer.md §63 が正本。非静水圧は developer.md §69、規定底面運動は §70 が規約の正本 |
 | 「まず動かしてみる」最小入力と型別の推奨値 | users_guide/geomorph.md・driftwood.md・bldgdebris.md・gwflow.md・forcing.md(遮断・蒸発散・積雪)・glacier.md・lavaflow.md の各「パターン別の推奨値」、wq.md「物質別の代表値」(根拠は developer.md §62・§50.6・§63.9・§64〜§67。共通ヘルパは m_util の param_default)。既定値を置かない章(浅水流・河道・境界・潮位・初期条件・地理情報の粗度・淡塩・SWI・構造物・計測・降雨)にも「とりあえず動かしてみる」最小入力と型別の目安表がある |
 | モジュール実装の作法 | src/m_gwflow_bucket.f90 のヘッダ |
 | ビルドの仕組み | make.inc・docs/install.md・§1/§3 |
