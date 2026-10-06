@@ -96,13 +96,36 @@ write_mat(os.path.join(d, "sy_T.txt"),
 write_mat(os.path.join(d, "slot_T.txt"),
           lambda i, j: (sy_t if on_trunk(i, j) else sy_b) / 5.0)
 
-# --- ラン E 用: 幹線末端の開放吐口(§46.5 (8b)。fn_gwc_outfall) ---
-#     値はオリフィス係数 Cd·A [m2]。幹線 D=1.0 m の断面積 0.785 m2 × Cd 0.6。
-#     海域セルに隣接しないので「陸側開放吐口」= 受け水頭は自セルの地表水位
-#     (満管を待たずに自由流出し、放流水は地表流になる。質量は域内で保存)
+# --- ラン E・F 用: 東端 2 列を「川」(海域セル)にした系(§46.5 (8b)) ---
+#     i = 39, 40 を海域マスク(sw)にし、潮位モジュールで水位 1.5 m に固定する
+#     (幹線末端 i = 38 の管底 1.125 m のすぐ上 = 吐口が川面の少し上にある構成)。
+#     海域セルの地盤は 0 m(水柱 1.5 m)、管路は置かない(cap = cnd = inlet = 0)。
+#     地表の氾濫水も崖から川へ落ちて系外に出る(川は水位固定の受け皿)。
+#     ラン F はさらに幹線末端 (38, 11) に開放吐口(fn_gwc_outfall)を置く。
+#     値はオリフィス係数 Cd·A [m2] = 幹線 D = 1.0 m の断面積 0.785 m2 × Cd 0.6。
+#     吐口セルが海域セルに隣接するので受け水頭は川の水位 1.5 m(フラップ付き)。
+i_river = 39
+is_river = lambda i, j: i >= i_river
+with open(os.path.join(d, "sw_R.txt"), "w") as f:          # マスクは整数で書く
+    for j in range(1, ny + 1):
+        f.write(" ".join("1" if is_river(i, j) else "0" for i in range(1, nx + 1)) + "\n")
+write_mat(os.path.join(d, "z_R.txt"), lambda i, j: 0.0 if is_river(i, j) else z_of(i))
+write_mat(os.path.join(d, "cap_R.txt"),
+          lambda i, j: 0.0 if is_river(i, j) else (cap_trunkcell if on_trunk(i, j) else cap_b))
+write_mat(os.path.join(d, "bot_R.txt"),
+          lambda i, j: 0.0 if is_river(i, j) else z_of(i) - (5.0 if on_trunk(i, j) else 2.0))
+write_mat(os.path.join(d, "cnd_R.txt"),
+          lambda i, j: 0.0 if is_river(i, j) else (dens_t if on_trunk(i, j) else dens_b))
+write_mat(os.path.join(d, "inlet_R.txt"),
+          lambda i, j: 0.0 if is_river(i, j) else (0.1 if (i == i2 and j == jline) else 0.01))
+write_mat(os.path.join(d, "sy_R.txt"),
+          lambda i, j: sy_b if is_river(i, j) else (sy_t if on_trunk(i, j) else sy_b))
+write_mat(os.path.join(d, "slot_R.txt"),
+          lambda i, j: (sy_b if is_river(i, j) else (sy_t if on_trunk(i, j) else sy_b)) / 5.0)
 A_t = math.pi * 1.0 ** 2 / 4.0
-write_mat(os.path.join(d, "outfall_T.txt"),
+write_mat(os.path.join(d, "outfall_R.txt"),
           lambda i, j: 0.6 * A_t if (i == i2 and j == jline) else 0.0)
-print("吐口 Cd·A = %.3f m2 at (i,j)=(%d,%d)" % (0.6 * A_t, i2, jline))
+print("川の系: 幹線末端の管底 = %.3f m、川の水位 1.5 m、吐口 Cd·A = %.3f m2 at (i,j)=(%d,%d)"
+      % (z_of(i2) - 5.0, 0.6 * A_t, i2, jline))
 
 print("maps written to data_sewer/")

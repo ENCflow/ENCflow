@@ -5,9 +5,9 @@
 #   (a) 地表の氾濫水量 S_surf の時系列 A/B/C/D
 #   (b) 降雨終了時 t=1h の地表水深マップ A/B/C/D
 #   (c) t=1h の管内充満率 hgc/cap の縦断(幹線 j=11 と枝管 j=5)A/B/D
-# sewer_hybrid_outfall.png(開放吐口のラン E と D の比較)
-#   (a) 管内貯留 S_grnd の時系列 D/E  (b) 地表貯留 S_surf D/E
-#   (c) 幹線 j=11 の充満率の縦断 t=1h / 3h D/E
+# sewer_hybrid_outfall.png(川と開放吐口のラン E・F と D の比較)
+#   (a) 管内貯留 S_grnd の時系列 D/E/F  (b) 地表貯留 S_surf D/E/F
+#   (c) 幹線 j=11 の充満率の縦断 t=1h / 3h D/E/F
 import os, re
 import numpy as np
 import matplotlib
@@ -99,7 +99,7 @@ print("saved sewer_hybrid_result.png")
 
 # ================= 図 2: D vs E(開放吐口) =================
 fig, axs = plt.subplots(1, 3, figsize=(14, 4.3), facecolor="white")
-for run, c, label in [("D", C_RED, "D: 吐口なし(枡からの噴出のみ)"), ("E", C_PURPLE, "E: 幹線末端に開放吐口(fn_gwc_outfall)")]:
+for run, c, label in [("D", C_RED, "D: 閉領域(川なし・吐口なし)"), ("E", C_AQUA, "E: 東端に川(受け皿)。吐口なし"), ("F", C_PURPLE, "F: 川 + 幹線末端の開放吐口")]:
     t, ss, sg = read_log(f"result_{run}/Log.txt"); final[run] = (ss[-1], sg[-1])
     axs[0].plot(t, sg, color=c, lw=2, label=label)
     axs[1].plot(t, ss, color=c, lw=2, label=label)
@@ -107,7 +107,7 @@ for run, c, label in [("D", C_RED, "D: 吐口なし(枡からの噴出のみ)"),
         hgc = read(f"result_{run}/Hgc{k:04d}.txt")
         axs[2].plot(xg[1:38], (hgc[10] / capT[10])[1:38], color=c, lw=2, ls=ls, label=f"{run}, {tl}")
 axs[2].axhline(1.0, color=C_MUTED, lw=1, ls="--"); axs[2].annotate("満管(= 1)", (20, 1.05), color=C_MUTED, fontsize=9)
-axs[2].set_xlim(0, 400); axs[2].legend(frameon=False, fontsize=9, ncol=2)
+axs[2].set_xlim(0, 400); axs[2].legend(frameon=False, fontsize=8, ncol=3)
 for ax in axs[:2]:
     ax.axvspan(0, 61.0 / 60.0, color="#eceae6", zorder=0); ax.set_xlim(0, 3); ax.set_xlabel("時間 (h)")
 for ax in axs: style(ax)
@@ -115,9 +115,9 @@ axs[0].set_ylabel("管内の貯留 S_grnd (mm)"); axs[0].set_title("(a) 管の�
 axs[1].set_ylabel("地表の氾濫水量 S_surf (mm)"); axs[1].set_title("(b) 地表にあふれた水", fontsize=11, loc="left")
 axs[2].set_ylabel("幹線の充満率 hgc / cap"); axs[2].set_xlabel("x (m)"); axs[2].set_title("(c) 幹線(j = 11)の充満率の縦断(吐口は x = 375 m)", fontsize=11, loc="left")
 axs[0].legend(frameon=False, fontsize=9)
-fig.suptitle("開放吐口の効果(ラン D と E。どちらもセル別 sy / slot_sy)", fontsize=13)
+fig.suptitle("受け皿の川と開放吐口の効果(ラン D・E・F。いずれもセル別 sy / slot_sy)", fontsize=13)
 fig.tight_layout()
 fig.savefig("sewer_hybrid_outfall.png", dpi=140, bbox_inches="tight")
 print("saved sewer_hybrid_outfall.png")
-for r in "ABCDE":
+for r in "ABCDEF":
     if r in final: print("run %s: final S_surf %.2f mm, S_grnd %.2f mm" % (r, *final[r]))

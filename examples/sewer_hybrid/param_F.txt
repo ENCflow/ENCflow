@@ -32,7 +32,7 @@
   fn_record = '-'
   fn_tide = '-'
   dir_data = 'data_sewer'
-  dir_result = 'result_E'
+  dir_result = 'result_F'
   f_disp_debug = 1          ! S 列を全有効桁で表示(水収支の照合用)
   f_out_e = 1
   f_out_hg = 1              ! Hgc 場の出力
@@ -92,6 +92,7 @@
   fn_gwc_bot = 'bot_R.txt'  ! 管底(幹線 z-5 / 枝管 z-2)
   fn_gwc_sy = 'sy_R.txt'         ! セル別 sy(幹線 0.0911 / 枝管 0.0314)
   fn_gwc_slot_sy = 'slot_R.txt'  ! セル別 slot(= sy/5。硬い圧力応答)
+  fn_gwc_outfall = 'outfall_R.txt'  ! 幹線末端 (38,11) の開放吐口(川に隣接 → 受け水頭 = 川の水位)
   gwc_slot_sy = 0.03        ! 疑似スロット(dt 上限との折り合い)
   gwc_sat0 = 0.0            ! 初期は空管
   fn_gwc_inlet = 'inlet_R.txt' ! 枡 1 個/セル、幹線末端は 10 個(吐口代用)
