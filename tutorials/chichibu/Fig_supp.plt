@@ -94,6 +94,30 @@ do for [s=1:2] {
 }
 unset multiplot
 
+# ---- 図 2b: 河道幅を 50 m に揃えた ENC(測線 1・4)。幅なしを破線で重ねる ----
+reset
+set datafile separator comma
+set terminal pngcairo size 1000,360 font ",11"
+set output "figs/supp_hydro_w50.png"
+set multiplot layout 1,2 title "河道幅を 50 m に揃えた比較(実線: W = 50 m のサブグリッド河道、破線: 幅なし、50 m 格子は解像河道)" noenhanced
+set grid
+set xlabel "時間 (min)"
+set ylabel "流量 (m^3/s)"
+set xrange [0:360]
+set key top right
+array TRNW[2] = [ 1, 4 ]
+array TLBW[2] = [ "上流(測線 1)", "下流(測線 4)" ]
+do for [t=1:2] {
+  set title TLBW[t] noenhanced
+  set yrange [0:(t == 1 ? 1600 : 6500)]
+  plot sprintf("result_supp_200m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m 幅なし", \
+       sprintf("result_supp_200m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#9467bd' title "200 m W = 50", \
+       sprintf("result_supp_100m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m 幅なし", \
+       sprintf("result_supp_100m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#2ca02c' title "100 m W = 50", \
+       sprintf("result_supp_50m/fluxes/flux000%d.csv", TRNW[t])      using 2:3 with lines lw 1.8      lc rgb '#1f9fd0' title "50 m(解像河道)"
+}
+unset multiplot
+
 # ---- 図 3: 6 時間後の水深分布。左 ENC、右 4 近傍(行: 200 / 100 / 50 m) ----
 # 水深 0 を白とするパレット(Fig_chichibu.plt と同じ)。4 近傍では河道網の
 # 至る所に点状の湛水が残り、斜めに走る区間ごとに水が寸断されることを見せる
