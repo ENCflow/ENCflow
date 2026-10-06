@@ -32,6 +32,7 @@
 /
 &list_enc
   f_advection_scheme = 1
+  f_opening_dynamic = 0            ! 開口補正なし(既定 1 を明示的に切る。§68.13 の実験条件)
   p_diagratio = 0.5857864376
   f_hcap_upwind = 1
 /
