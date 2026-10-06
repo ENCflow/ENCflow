@@ -10,8 +10,8 @@ set -e
 python3 Make_channel.py straight > /dev/null
 python3 Make_channel.py zigzag > /dev/null
 [ -e encflow ] || make -s
-sufs=${@:-""}
-for suf in $sufs; do
+sufs=("$@"); [ ${#sufs[@]} -eq 0 ] && sufs=("")   # 引数なし = 既定(空接尾辞)
+for suf in "${sufs[@]}"; do
   for kind in straight zigzag; do
     p=param_$kind.txt
     case $suf in
@@ -22,4 +22,4 @@ for suf in $sufs; do
     echo "=== $p"; ./encflow $p | tail -2 | head -1
   done
 done
-python3 Check_bendloss.py $sufs
+python3 Check_bendloss.py "${sufs[@]}"
