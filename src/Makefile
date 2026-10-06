@@ -89,7 +89,7 @@ $(MODESTAMP):
 # ---------------------------------------------------------------
 main.o: m_main.o
 m_main.o: m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o m_state.o m_geomorph.o m_gwflow.o \
-	m_saltwater.o \
+	m_saltwater.o m_util.o \
 	m_intercept.o m_evap.o m_meteo.o m_wq.o m_driftwood.o m_bldgdebris.o m_snow.o m_glacier.o m_lavaflow.o m_bedmotion.o m_swi.o m_record.o m_swflow.o m_output.o m_fileio.o m_sysdep_util.o $(PAR_OBJ)
 m_sysparam.o: list_sysparam.o m_fileio.o m_util.o $(PAR_OBJ)
 m_geoinfo.o: m_sysparam.o list_geoinfo.o list_channel.o m_fileio.o m_georef.o m_geotiff.o m_util.o $(PAR_OBJ)
@@ -97,11 +97,11 @@ m_precip.o: m_sysparam.o list_precip.o m_state.o m_geoinfo.o m_meteo.o m_util.o 
 m_geomorph.o: m_sysparam.o list_geomorph.o m_state.o m_geoinfo.o m_util.o $(PAR_OBJ)
 m_geomorph_creep.o: m_geomorph.o $(PAR_OBJ)
 m_geomorph_fluvial.o: m_geomorph.o m_swflow_enc.o $(PAR_OBJ)
-m_geomorph_suspend.o: m_geomorph.o $(PAR_OBJ)
+m_geomorph_suspend.o: m_geomorph.o m_swflow_enc.o $(PAR_OBJ)
 m_geomorph_wash.o: m_geomorph.o $(PAR_OBJ)
 m_geomorph_splash.o: m_geomorph.o $(PAR_OBJ)
-m_geomorph_debris.o: m_geomorph.o m_swflow_enc.o $(PAR_OBJ)
-m_geomorph_bedslide.o: m_geomorph.o m_fileio.o m_sysdep_util.o $(PAR_OBJ)
+m_geomorph_debris.o: m_geomorph.o m_swflow_enc.o m_fileio.o $(PAR_OBJ)
+m_geomorph_bedslide.o: m_geomorph.o m_fileio.o m_sysdep_util.o m_util.o $(PAR_OBJ)
 list_geomorph.o: m_sysparam.o $(PAR_OBJ)
 m_gwflow.o: m_sysparam.o list_gwflow.o m_state.o m_geoinfo.o m_gwflow_bucket.o \
 	m_gwflow_greenampt.o m_gwflow_lateral.o m_gwflow_layer2.o m_gwflow_conduit.o \
@@ -117,7 +117,7 @@ m_saltwater.o: m_sysparam.o m_state.o m_geoinfo.o m_gwflow_lateral.o \
 m_gwflow_layer2.o: m_sysparam.o m_state.o m_geoinfo.o m_gwflow_lateral.o \
 	m_fileio.o m_sysdep_util.o m_util.o $(PAR_OBJ)
 m_gwflow_bucket.o: m_sysparam.o m_state.o m_geoinfo.o m_util.o $(PAR_OBJ)
-m_gwflow_greenampt.o: m_sysparam.o m_state.o m_geoinfo.o m_util.o $(PAR_OBJ)
+m_gwflow_greenampt.o: m_sysparam.o m_state.o m_geoinfo.o m_util.o m_fileio.o $(PAR_OBJ)
 m_gwflow_lateral.o: m_sysparam.o m_state.o m_geoinfo.o m_util.o $(PAR_OBJ)
 list_gwflow.o: m_sysparam.o $(PAR_OBJ)
 m_evap.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o m_intercept.o m_meteo.o \
@@ -155,14 +155,16 @@ m_intercept_fixed.o: m_sysparam.o m_state.o m_geoinfo.o m_fileio.o m_util.o $(PA
 m_intercept_initloss.o: m_sysparam.o m_state.o m_geoinfo.o m_fileio.o m_sysdep_util.o m_util.o $(PAR_OBJ)
 list_intercept.o: m_sysparam.o $(PAR_OBJ)
 m_tide.o: m_sysparam.o list_tide.o m_geoinfo.o m_state.o m_fileio.o m_util.o $(PAR_OBJ)
-m_boundary.o: m_sysparam.o m_geoinfo.o m_state.o list_boundary.o $(PAR_OBJ)
-m_boundary_structure.o: m_boundary.o list_structure.o m_util.o m_gwflow_conduit.o $(PAR_OBJ)
+m_boundary.o: m_sysparam.o m_geoinfo.o m_state.o list_boundary.o m_util.o $(PAR_OBJ)
+m_boundary_structure.o: m_boundary.o list_structure.o m_util.o m_gwflow_conduit.o \
+	m_fileio.o m_sysdep_util.o $(PAR_OBJ)
 m_state.o: m_sysparam.o m_geoinfo.o list_initial.o m_util.o m_sysdep_util.o m_fileio.o
-m_record.o: m_sysparam.o list_record.o m_geoinfo.o m_state.o m_util.o m_sysdep_util.o $(PAR_OBJ)
+m_record.o: m_sysparam.o list_record.o m_geoinfo.o m_state.o m_util.o m_sysdep_util.o \
+	m_swflow_enc.o $(PAR_OBJ)
 m_swflow.o: m_sysparam.o m_geoinfo.o m_boundary.o m_state.o \
 	m_swflow_enc.o m_swflow_stg.o $(PAR_OBJ)
 m_swflow_enc.o: m_sysparam.o list_enc.o list_channel.o m_geoinfo.o m_boundary.o \
-	m_precip.o m_state.o m_ffactor.o m_sysdep_util.o m_fileio.o $(PAR_OBJ)
+	m_precip.o m_state.o m_ffactor.o m_sysdep_util.o m_fileio.o m_util.o $(PAR_OBJ)
 m_swflow_stg.o: m_sysparam.o m_geoinfo.o m_precip.o m_boundary.o m_state.o $(PAR_OBJ)
 m_swflow_enc_adv.o: m_swflow_enc.o m_state.o
 m_swflow_enc_diff.o: m_swflow_enc.o m_state.o $(PAR_OBJ)
