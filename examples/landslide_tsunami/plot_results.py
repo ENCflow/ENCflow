@@ -4,6 +4,7 @@
 #   figs/profiles.png : 各ケースの中央断面(y=97.5 m)。地盤の変化と自由表面 z+h+hs の時間発展
 #   figs/probes.png   : 湖内プローブ(x=298, 398, 548 m)の水面時系列の比較
 #   figs/deposit.png  : t=120 s の地形変化 z−z0(中央断面)の比較
+#   figs/nonhydro.png : A・C の静水圧と非静水圧(result_A_nh / result_C_nh)の比較(中央断面とプローブ)
 import os, numpy as np, matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -82,4 +83,46 @@ for rdir, lab, col in CASES:
         ex.append("%+.2f@%.0fs/%+.2f" % (s.max(), t[s.argmax()], s.min()))
     print("%-10s shore(200-275) %6.0f  floor(275-350) %6.0f m3  reach %.0f m | x=212 %s | 298 %s | 398 %s | 548 %s"
           % (rdir, bands[0], bands[1], reach, *ex))
-print("figs/profiles.png figs/probes.png figs/deposit.png")
+
+# --- 4. 非静水圧との比較(A と C) ---
+NH = [("result_A", "result_A_nh", "A: rockslide", "#2a78d6"), ("result_C", "result_C_nh", "C: submarine slide", "#2e9e5b")]
+if all(os.path.isdir(d) for _, d, _, _ in NH):
+    fig, axes = plt.subplots(3, 2, figsize=(13, 10))
+    for col_i, (rh, rn, lab, col) in enumerate(NH):
+        ax = axes[0][col_i]
+        tm = times(rh); z0 = rd(rh, "Z", 0)[J]
+        for k, ls in ((2, "-"), (4, "-"), (8, "-")):
+            if k not in tm: continue
+            for rdir, lw, alpha in ((rh, 1.0, 0.55), (rn, 1.4, 1.0)):
+                h = rd(rdir, "H", k)[J]; z = rd(rdir, "Z", k)[J]
+                s = np.where(h > 0.01, z + h, np.nan)
+                ax.plot(x, np.where(z0 < 0, s, np.nan), lw=lw, alpha=alpha, color=plt.cm.viridis(k / 10),
+                        label=("hydrostatic " if rdir == rh else "non-hydrostatic ") + "t=%.0f s" % tm[k])
+        ax.set_xlim(180, 600); ax.set_ylim(-3.5, 3.5); ax.grid(); ax.set_title(lab + ": lake surface (thin = hydrostatic, thick = NH)", fontsize=10)
+        ax.set_ylabel("surface (m)"); ax.legend(fontsize=6, ncol=2)
+        for row, n in ((1, 3), (2, 4)):
+            ax = axes[row][col_i]
+            for rdir, cl, lw in ((rh, "hydrostatic", 1.0), (rn, "non-hydrostatic (f_nh_slope=1, f_nh_bottom=1)", 1.3)):
+                f = "%s/probes/probe%04d.csv" % (rdir, n)
+                xx = float(open(f).readlines()[1].split(",")[1])
+                d = np.loadtxt(f, delimiter=",", comments="#")
+                ax.plot(d[:, 0] * 3600, d[:, 2] + d[:, 3] + d[:, 9], color=col if rdir == rn else "#8a8983", lw=lw, label=cl)
+            ax.set_ylabel("surface (m)\nx=%.0f m" % xx); ax.grid()
+            if row == 2: ax.set_xlabel("t (s)")
+        axes[1][col_i].legend(fontsize=7)
+    plt.tight_layout(); plt.savefig("figs/nonhydro.png", dpi=100); plt.close()
+    print("| ケース | x=212 m | x=298 m | x=398 m | x=548 m | 水中の底層: 停止 / 移動中 (m³) |")
+    print("|---|---|---|---|---|---|")
+    for rh, rn, lab, col in NH:
+        for rdir, cl in ((rh, "静水圧"), (rn, "非静水圧")):
+            ex = []
+            for n in (2, 3, 4, 5):
+                d = np.loadtxt("%s/probes/probe%04d.csv" % (rdir, n), delimiter=",", comments="#")
+                s = d[:, 2] + d[:, 3] + d[:, 9]; t = d[:, 0] * 3600
+                ex.append("%+.2f@%.0fs / %+.2f" % (s.max(), t[s.argmax()], s.min()))
+            mv = ""
+            for l in open(rdir.replace("result_", "Screen_") + ".log"):
+                if "still moving" in l:
+                    parts = l.split(); mv = "%s / %s" % (parts[parts.index("stopped") + 1], parts[-2])
+            print("| %s %s | %s | %s |" % (lab, cl, " | ".join(ex), mv))
+print("figs/profiles.png figs/probes.png figs/deposit.png figs/nonhydro.png")
