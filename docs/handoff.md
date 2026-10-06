@@ -717,7 +717,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   plan §16、§69.10、test/nhbottom: 規定隆起で厳密解の +4%、海底地滑りとの
   結合は素朴な源項で発散 → Helmholtz 平滑化で安定。残: 1 層 NH の遮断
   周波数に捕捉される底層との自励振動 ±0.6 m(§69.10。多層化か底層の
-  慣性が本筋)、restart 往復の z̈ 1 ステップ分の差)。undular bore(test/nhbore)
+  慣性が本筋)、restart 往復の z̈ 1 ステップ分の差)。**次**: 断層津波の
+  発生機構 fn_bedmotion(z の規定時刻歴強制。設計案 docs/bedmotion_plan.md、
+  要合意 §11。前処理 utils/fault2disp は段階 2)。undular bore(test/nhbore)
   済、一様流上の波(test/nhcurrent)済(§69.8)。規定境界を貫く一様流の
   発振は MUSCL の upup が領域外の 0 を読む実バグ(§69.9。修正済み。
   壁行の対角エッジで面値が変わるため既存 reference が変わり、目視確認の
