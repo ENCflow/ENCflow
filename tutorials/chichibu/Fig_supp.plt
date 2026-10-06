@@ -93,3 +93,33 @@ do for [s=1:2] {
   }
 }
 unset multiplot
+
+# ---- 図 3: 6 時間後の水深分布。左 ENC、右 4 近傍(行: 200 / 100 / 50 m) ----
+# 水深 0 を白とするパレット(Fig_chichibu.plt と同じ)。4 近傍では河道網の
+# 至る所に点状の湛水が残り、斜めに走る区間ごとに水が寸断されることを見せる
+reset
+set datafile separator whitespace
+set terminal pngcairo size 1000,900 font ",11"
+set output "figs/supp_hend.png"
+set multiplot layout 3,2 title "6 時間後の水深分布: 左 ENC、右 4 近傍" noenhanced
+set view map
+set size ratio -1
+set yrange [30:0]
+set xrange [0:56]
+set xlabel "x (km)"
+set ylabel "y (km)"
+set cblabel "水深 (m)"
+set palette defined ( -1 '#ffffff', 0 '#000090',1 '#000fff',2 '#0090ff',3 '#0fffee',4 '#90ff70',5 '#ffee00',6 '#ff7000',7 '#ee0000',8 '#7f0000')
+set cbrange [0:5]
+array RES3[3] = [ "200m", "100m", "50m" ]
+array DXK[3]  = [ 0.2, 0.1, 0.05 ]      # セル番号 → km
+array SFX3[2] = [ "", "_4nb" ]
+array SLB3[2] = [ "ENC", "4 近傍" ]
+do for [r=1:3] {
+  do for [s=1:2] {
+    set title sprintf("%s m %s", RES3[r][1:strlen(RES3[r])-1], SLB3[s]) noenhanced
+    plot sprintf("result_supp_%s%s/H9998.txt", RES3[r], SFX3[s]) matrix \
+         using ($1*DXK[r]):($2*DXK[r]):($3 <= 0.05 ? NaN : $3) with image notitle
+  }
+}
+unset multiplot
