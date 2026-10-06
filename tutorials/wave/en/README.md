@@ -585,16 +585,16 @@ stays the same (only `nx, ny` and `dt` change).
 ![Grid refinement (hydrostatic)](../figs/supp_grid.png)
 
 The front becomes sharper with each refinement and the overshoot at
-the crest shrinks, 1.195 → 1.184 → H1400PEAK m. The width of the
+the crest shrinks, 1.195 → 1.184 → 1.181 m. The width of the
 oscillation is always a few cells and shrinks with the grid -- the
 signature of numerical dispersion. The price is computing time: each
 doubling means 4 times the cells and twice the steps, 8 times in all
-(here 18 s → 134 s → H1400TIME s).
+(here 18 s → 134 s → 981 s).
 
 The lag of `dt = 0.05` with threshold 1.1 seen in Step 2 (green dashed)
 can now be placed in context. The mid-height of its front (e = 1.1 m)
 is at r = 37.8 m, behind the 38.1 m of `dt = 0.01` and the
-H1400FRONT m of nx = 1400. The run closer to the refined side is
+38.2 m of nx = 1400. The run closer to the refined side is
 `dt = 0.01`; the lag of threshold 1.1 is the amount by which the
 numerical damping of the recomputation has blunted the sharp front,
 moving it away from the solution of the hydrostatic equations.
@@ -634,7 +634,7 @@ Numerical error and missing physics are different things, so keep them
 apart.
 
 - The correct solution of the hydrostatic equations is the nx = 1400
-  result (a bore with its front at r ≈ H1400FRONT m); `dt = 0.01` is close
+  result (a bore with its front at r ≈ 38.2 m); `dt = 0.01` is close
   to it, and `dt = 0.05` with threshold 1.1 is away from it by the lag
   of its numerical damping.
 - The real front, with dispersion, is a gentle hill whose mid-height is
@@ -648,7 +648,7 @@ apart.
 - Dispersion matters only where the width of the front is comparable to
   the depth. In this example, a mound 15 m in radius and 1 m high on
   1 m of water, it matters at the front, while the back slope
-  (r < 33 m) coincides in every run. For an offshore tsunami (wavelength
+  (r < 32 m) coincides in every run. For an offshore tsunami (wavelength
   tens of kilometres, depth kilometres) or a flood, where the front is
   far wider than the depth, the converged hydrostatic solution is the
   right answer and the front oscillation is purely numerical. For the
