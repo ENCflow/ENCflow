@@ -19,7 +19,15 @@ os.makedirs("figs", exist_ok=True)
 
 sys.argv = [sys.argv[0], "save_off", "save_on"]
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import Check_curvature as cc          # noqa: E402  (検定を実行しつつ関数を借りる)
+# Check_curvature.py は読み込み時に検定を実行して sys.exit するので、exit を一時的に無効にして取り込む
+from types import SimpleNamespace
+_here = os.path.dirname(os.path.abspath(__file__))
+_ns = {"__name__": "Check_curvature", "__file__": os.path.join(_here, "Check_curvature.py")}
+_exit = sys.exit
+sys.exit = lambda *a: None
+exec(compile(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Check_curvature.py"), encoding="utf-8").read(), "Check_curvature.py", "exec"), _ns)
+sys.exit = _exit
+cc = SimpleNamespace(**_ns)
 import make_init as mi                # noqa: E402
 
 x = (np.arange(mi.NX) + 0.5) * mi.DX
