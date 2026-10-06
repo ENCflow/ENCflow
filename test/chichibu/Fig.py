@@ -52,7 +52,7 @@ yy, xx = np.nonzero(rw & mask)
 ax.plot((xx + 0.5) * DX / 1000, (yy + 0.5) * DX / 1000, ",", color="k", alpha=0.35)
 for n, (xr, yr, xl, yl) in enumerate(flx, 1):
     ax.plot([(xr - 0.5) * DX / 1000, (xl - 0.5) * DX / 1000], [(yr - 0.5) * DX / 1000, (yl - 0.5) * DX / 1000], "r-", lw=2)
-    ax.text((xr + 3) * DX / 1000, (yr + 2) * DX / 1000, f"測線{n}", color="r", fontsize=10, fontweight="bold")
+    ax.text((xr + 3) * DX / 1000, (yr + (2 if n != 1 else -8)) * DX / 1000, f"測線{n}", color="r", fontsize=10, fontweight="bold")
 for n, (xp, yp) in enumerate(pbs, 1):
     ax.plot((xp - 0.5) * DX / 1000, (yp - 0.5) * DX / 1000, "o", mfc="none", mec="darkorange", mew=2, ms=8)
 fig.colorbar(im, ax=ax, shrink=0.8, pad=0.02, label="6 時間の最大水深 (m)")
@@ -70,7 +70,8 @@ ax.set_xlabel("時間 (h)"); ax.set_ylabel("流量 Q (m³/s)")
 ax.set_xlim(0, 6); ax.grid(alpha=0.4); ax.legend(loc="upper left")
 ax2 = ax.twinx()
 ax2.bar([0.25], [200], width=0.5, color="steelblue", alpha=0.25, align="center")
-ax2.set_ylim(800, 0); ax2.set_ylabel("降雨強度 (mm/h)", color="steelblue")
+ax2.set_ylim(800, 0); ax2.set_yticks([0, 200]); ax2.tick_params(axis="y", colors="steelblue", labelsize=8)
+ax2.text(0.55, 100, "降雨 200 mm/h", color="steelblue", fontsize=9, va="center")
 ax.set_title("測線の流量(0.5 h × 200 mm/h)")
 
 ax = fig.add_subplot(gs[2])

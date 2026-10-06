@@ -4,7 +4,8 @@
   python3 Fig.py [result_dir]      既定 result → figs/sewer_wq.png
 
 左: wq.csv の台帳(噴出 in_gwc、枡再取込 to_gwc、死滅 decay、地表残存)。
-中: 最終の地表水の濃度 C(対数)。右: 最終の水深 h と管路。
+中: 降雨終了時(30 min)の管路のサーチャージ(hgc − cap。幹線 j = 11 と枝管網)。
+右: 最終の水深 h(東へ下る斜面の低地に噴出水が溜まる)と枡。
 """
 import glob, os, re, sys
 import numpy as np
@@ -49,20 +50,20 @@ ax.grid(alpha=0.4); ax.legend(fontsize=8.5); ax.set_title("水質台帳(降雨 1
 C = last("C"); H = last("H")
 ext = [0, nx * DX, 0, ny * DX]
 ax = axs[1]
-if C is not None:
-    Cm = np.where((C > 1e-3) & (H > 1e-4), C, np.nan)
-    im = ax.imshow(Cm, origin="lower", extent=ext, cmap="magma_r", norm=LogNorm(vmin=1e-2, vmax=1e4), interpolation="nearest")
-    fig.colorbar(im, ax=ax, shrink=0.85, label="濃度 C(g/m³ = 10⁶ CFU/m³)")
-yy, xx = np.nonzero(cnd); ax.plot((xx + 0.5) * DX, (yy + 0.5) * DX, "c.", ms=2)
-ax.set_xlabel("x (m)"); ax.set_ylabel("y (m)"); ax.set_title("最終の濃度(t = 1 h)")
+cap = np.loadtxt(os.path.join(data, "cap_T.txt"))
+fs = sorted(glob.glob(os.path.join(res, "Hgc[0-9][0-9][0-9][0-9].txt")))
+Hgc30 = np.loadtxt(fs[1]) if len(fs) > 2 else last("Hgc")      # t = 30 min(降雨終了時)
+sur = np.where(cnd, Hgc30 - cap, np.nan)
+im = ax.imshow(np.where(sur > 1e-4, sur, np.nan), origin="lower", extent=ext, cmap="magma_r", norm=LogNorm(vmin=1e-3, vmax=0.2), interpolation="nearest")
+fig.colorbar(im, ax=ax, shrink=0.85, label="管内水頭の余剰 hgc − cap (m)(> 0 = サーチャージ)")
+ax.set_xlabel("x (m)"); ax.set_ylabel("y (m)"); ax.set_title("t = 30 min の管路のサーチャージ(j = 11 が幹線)")
 
 ax = axs[2]
 im = ax.imshow(np.where(H > 1e-4, H, np.nan), origin="lower", extent=ext, cmap="Blues", interpolation="nearest")
 fig.colorbar(im, ax=ax, shrink=0.85, label="水深 h (m)")
-yy, xx = np.nonzero(cnd); ax.plot((xx + 0.5) * DX, (yy + 0.5) * DX, "k.", ms=2, label="管路")
-yy, xx = np.nonzero(inlet); ax.plot((xx + 0.5) * DX, (yy + 0.5) * DX, "r+", ms=5, label="枡")
-ax.legend(fontsize=8, loc="upper right")
-ax.set_xlabel("x (m)"); ax.set_ylabel("y (m)"); ax.set_title("最終の水深(幹線 + 枝管網)")
+ax.axhline(10.5 * DX, color="r", lw=1.5, ls="--", label="幹線(j = 11)")
+ax.legend(fontsize=8, loc="upper left")
+ax.set_xlabel("x (m)"); ax.set_ylabel("y (m)"); ax.set_title("最終の水深 h(全セルに枝管と枡)")
 fig.suptitle("test/sewer_wq — 下水噴出の衛生リスク(wq_gwc_conc = 1e4、サブサイクル N = 3)", fontsize=13)
 fig.tight_layout()
 fig.savefig(os.path.join(here, "figs", "sewer_wq.png"), dpi=110, bbox_inches="tight")
