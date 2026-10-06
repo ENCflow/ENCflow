@@ -87,6 +87,7 @@ array TLB[2] = [ "上流(測線 1)", "下流(測線 4)" ]
 do for [s=1:2] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLB[s], TLB[t]) noenhanced
+    set xrange [0:(t == 1 ? 150 : 360)]   # 上流は波形が短いので時間軸を縮める
     set yrange [0:(t == 1 ? 1600 : 6500)]
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RES[r], SFX[s], TRN[t]) \
          using 2:3 with lines lw 1.5 title RLB[r]
@@ -109,6 +110,7 @@ array TRNW[2] = [ 1, 4 ]
 array TLBW[2] = [ "上流(測線 1)", "下流(測線 4)" ]
 do for [t=1:2] {
   set title TLBW[t] noenhanced
+  set xrange [0:(t == 1 ? 150 : 360)]
   set yrange [0:(t == 1 ? 1600 : 6500)]
   plot sprintf("result_supp_200m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m 幅なし", \
        sprintf("result_supp_200m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#9467bd' title "200 m W = 50", \
