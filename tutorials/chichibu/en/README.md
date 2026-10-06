@@ -1,4 +1,4 @@
-> English mirror of tutorials/chichibu/README.md (based on commit 2d95cff). The Japanese file is the master copy.
+> English mirror of tutorials/chichibu/README.md (based on commit eb8f4d7). The Japanese file is the master copy.
 
 # Tutorial 2: chichibu -- rain on a real-terrain catchment
 
@@ -869,7 +869,14 @@ tabulated below (in parentheses: change from the next coarser grid).
   storage was indeed the main cause of the gap between the two coarse
   grids. Neither, however, reaches the 50 m grid with its resolved
   channel (5,165 / 6,232), and the peaks arrive 25 to 35 minutes later.
-  A 50 m subgrid channel squeezes the flow into a conveyance section of
+
+  ![Supplement: channel width equalized to 50 m](figs/supp_hydro_w50.png)
+
+  In the figure, the W = 50 curves of 200 m and 100 m (solid) nearly
+  coincide downstream, yet they are lower and later than the 50 m grid
+  (light blue) and even later than the no-width runs (dashed); at the
+  upstream transect 1 the width hardly matters. A 50 m subgrid channel
+  squeezes the flow into a conveyance section of
   1/4 to 1/2 of the cell width, so the storage decreases but the
   conveyance hits its cap and the wave is delayed, whereas on the 50 m
   grid the valley-floor cells on both sides of the channel cell join the
