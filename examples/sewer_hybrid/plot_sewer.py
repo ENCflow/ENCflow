@@ -100,9 +100,10 @@ print("saved sewer_hybrid_result.png")
 # ================= 図 2: D vs E(開放吐口) =================
 fig, axs = plt.subplots(1, 3, figsize=(14, 4.3), facecolor="white")
 for run, c, label in [("D", C_RED, "D: 閉領域(川なし・吐口なし)"), ("E", C_AQUA, "E: 東端に川(受け皿)。吐口なし"), ("F", C_PURPLE, "F: 川 + 幹線末端の開放吐口")]:
-    t, ss, sg = read_log(f"result_{run}/Log.txt"); final[run] = (ss[-1], sg[-1])
+    t, ss, sg = read_log(f"result_{run}/Log.txt"); final[run] = (ss[-1] - ss[0], sg[-1])
+    # Log の S_surf は川セルの水柱(固定水位 1.5 m)を含み陸地面積で割った値なので、t = 0 の値を引いて陸地の地表水にする
     axs[0].plot(t, sg, color=c, lw=2, label=label)
-    axs[1].plot(t, ss, color=c, lw=2, label=label)
+    axs[1].plot(t, ss - ss[0], color=c, lw=2, label=label)
     for k, ls, tl in [(2, "-", "t = 1 h"), (6, ":", "t = 3 h")]:
         hgc = read(f"result_{run}/Hgc{k:04d}.txt")
         axs[2].plot(xg[1:38], (hgc[10] / capT[10])[1:38], color=c, lw=2, ls=ls, label=f"{run}, {tl}")
@@ -112,7 +113,7 @@ for ax in axs[:2]:
     ax.axvspan(0, 61.0 / 60.0, color="#eceae6", zorder=0); ax.set_xlim(0, 3); ax.set_xlabel("時間 (h)")
 for ax in axs: style(ax)
 axs[0].set_ylabel("管内の貯留 S_grnd (mm)"); axs[0].set_title("(a) 管の中にある水", fontsize=11, loc="left")
-axs[1].set_ylabel("地表の氾濫水量 S_surf (mm)"); axs[1].set_title("(b) 地表にあふれた水", fontsize=11, loc="left")
+axs[1].set_ylabel("陸地の地表水 S_surf − S_surf(0) (mm)"); axs[1].set_title("(b) 陸地の地表にある水(川の水柱を除く)", fontsize=11, loc="left")
 axs[2].set_ylabel("幹線の充満率 hgc / cap"); axs[2].set_xlabel("x (m)"); axs[2].set_title("(c) 幹線(j = 11)の充満率の縦断(吐口は x = 375 m)", fontsize=11, loc="left")
 axs[0].legend(frameon=False, fontsize=9)
 fig.suptitle("受け皿の川と開放吐口の効果(ラン D・E・F。いずれもセル別 sy / slot_sy)", fontsize=13)
@@ -120,4 +121,4 @@ fig.tight_layout()
 fig.savefig("sewer_hybrid_outfall.png", dpi=140, bbox_inches="tight")
 print("saved sewer_hybrid_outfall.png")
 for r in "ABCDEF":
-    if r in final: print("run %s: final S_surf %.2f mm, S_grnd %.2f mm" % (r, *final[r]))
+    if r in final: print("run %s: final land S_surf %.2f mm, S_grnd %.2f mm" % (r, *final[r]))
