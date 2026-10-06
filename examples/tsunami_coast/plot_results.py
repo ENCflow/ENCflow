@@ -71,7 +71,7 @@ plt.tight_layout(); plt.savefig("figs/probes.png", dpi=100); plt.close()
 
 # --- 3. 水位分布(時刻歴あり)と湾奥の浸水 ---
 tm = times("result_full")
-fig, axes = plt.subplots(2, 3, figsize=(15, 9))
+fig, axes = plt.subplots(2, 3, figsize=(15, 9), constrained_layout=True)
 for ax, tsel in zip(axes.flat[:5], (120.0, 300.0, 600.0, 1200.0, 1800.0)):
     k = min(tm, key=lambda q: abs(tm[q] - tsel))
     h = field("result_full", "H", k); z = field("result_full", "Z", k)
@@ -79,7 +79,7 @@ for ax, tsel in zip(axes.flat[:5], (120.0, 300.0, 600.0, 1200.0, 1800.0)):
     im = ax.imshow(eta, extent=[0, 120, 0, 80], origin="upper", cmap="RdBu_r", vmin=-2, vmax=2)
     ax.contour(x, y, z0, levels=[0], colors="k", linewidths=0.6)
     ax.set_title("t = %.0f 分: 水位 (m)" % (tm[k] / 60), fontsize=10); ax.set_xlim(0, 120)
-plt.colorbar(im, ax=list(axes.flat[:5]), fraction=0.02, pad=0.02, location="bottom", aspect=60, label="水位 (m)")
+fig.colorbar(im, ax=list(axes.flat[:5]), location="bottom", shrink=0.5, aspect=50, label="水位 (m)")
 ax = axes.flat[5]
 hmax = np.zeros_like(z0)
 for k in tm:
@@ -90,8 +90,8 @@ fl = np.where(land & (hmax > 0.01), hmax, np.nan)
 im = ax.imshow(fl, extent=[0, 120, 0, 80], origin="upper", cmap="Blues", vmin=0, vmax=3)
 ax.contour(x, y, z0, levels=[0], colors="k", linewidths=0.6)
 ax.set_xlim(0, 30); ax.set_ylim(25, 55); ax.set_title("陸の最大浸水深 (m)。湾の周り(時刻歴あり)", fontsize=10)
-plt.colorbar(im, ax=ax, fraction=0.05, pad=0.03, label="最大浸水深 (m)")
-plt.savefig("figs/snapshots.png", dpi=100, bbox_inches="tight"); plt.close()
+fig.colorbar(im, ax=ax, shrink=0.8, label="最大浸水深 (m)")
+plt.savefig("figs/snapshots.png", dpi=100); plt.close()
 
 print("| プローブ | " + " | ".join("%s: 到達 (min) / 最高 / 最低 (m)" % c[1] for c in CASES) + " |  (到達 = 水深の変化が 0.1 m を超える時刻)")
 print("|---|" + "---:|" * len(CASES))
