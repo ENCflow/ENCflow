@@ -77,7 +77,7 @@
   ! flux transect coordinate type (0: cell indices, 1: real coordinates (m))
   ! flux transect endpoints (right-bank x, right-bank y, left-bank x, left-bank y)
   flxytype = 0
-  flxy(:,1) =  82, 106,   82, 103
+  flxy(:,1) =  82, 107,   82, 103
   flxy(:,2) = 107, 103,  107, 100
   flxy(:,3) = 147, 105,  147, 102
   flxy(:,4) = 216,  43,  216,  37

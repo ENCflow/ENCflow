@@ -51,7 +51,7 @@ plot RIVER matrix using (kx($1)):(kx($2)):($3 > 0 ? 2 : NaN) with image notitle
 # param_step3.txt の flxy / pbxy をそのまま書き写す(セル番号、1 スタート)。
 # 列: 測線番号, 右岸 ix, 右岸 iy, 左岸 ix, 左岸 iy, プローブ ix, プローブ iy
 $TR << EOD
-1   82 106   82 103    82 105
+1   82 107   82 103    82 105
 2  107 103  107 100   107 102
 3  147 105  147 102   147 104
 4  216  43  216  37   216  39
