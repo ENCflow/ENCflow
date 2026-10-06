@@ -9412,6 +9412,8 @@ fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dt
   x_ll = xul、y_ll = yul − ny·csy とする(f_georef。namelist の値は一致検査、
   経緯度グリッドは stop)。f_jpr=1 で x_top/y_top・x_ll/y_ll を (X 北距, Y 東距)
   の順で受けて入れ替える。tsunami_fault で bil の hdr から取った地理参照の
-  結果がテキスト z + 明示格子と、f_jpr=1 が基準とビット一致。x_ll, y_ll に
+  結果と、ENCflow が bil 入力から GeoTIFF 出力した Z0000.tif(f_output_mode=4)
+  から取った地理参照の結果が、テキスト z + 明示格子とビット一致。f_jpr=1 は
+  基準とビット一致。x_ll, y_ll に
   原点を入れれば f_lonlat=0 でも絶対座標になる(既定 0 は相対座標)。
 - **残**: なし(他の投影は利用者側で変換)。

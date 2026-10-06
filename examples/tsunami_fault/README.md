@@ -76,6 +76,9 @@ y_ll)を hdr の地理参照から取る(u_h·∇z の項も加わる)。fault2d
 f_jpr = 1 で上端中心を (X 北距, Y 東距) の順に書いた例で、fault2disp.txt と
 同じ変位になる。地理参照つきの解析では x_ll, y_ll(= 投影座標系の原点)を
 ファイルから取るので、断層位置は平面直角座標系の絶対座標で書ける。
+GeoTIFF は param_gtif.txt(bil を読んで f_output_mode = 4 で Z0000.tif を書く
+2 s のラン)で作った result_gtif/Z0000.tif を fault2disp_gtif.txt
+(f_input_mode = 4)が読み、同じく一致する。
 
 ## 使い方のメモ
 

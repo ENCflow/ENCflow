@@ -62,5 +62,5 @@ y_ll = X)はその特殊形。`-check` が UTM 54 帯と平面直角座標系 IX
 と書く。
 
 使用例は examples/tsunami_fault(fault2disp.txt: 投影座標、fault2disp_ll.txt:
-経緯度、fault2disp_bil.txt: bil の hdr から地理参照、fault2disp_jpr.txt: 平面
-直角座標系の並び)。
+経緯度、fault2disp_bil.txt: bil の hdr から地理参照、fault2disp_gtif.txt: GeoTIFF から
+地理参照、fault2disp_jpr.txt: 平面直角座標系の並び)。
