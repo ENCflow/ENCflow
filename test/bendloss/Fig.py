@@ -53,7 +53,8 @@ for d, lab, ls, col in [("result_wave_nolev_s1", "開口補正なし, スキー�
                         ("result_wave_dyn_s1", "動的開口補正, スキーム 1", "-", "C0"), ("result_wave_dyn_s3", "動的開口補正, スキーム 3", "-", "C3")]:
     f = os.path.join(here, d, "fluxes", "flux0003.csv")
     if not os.path.exists(f): continue
-    t, q = np.loadtxt(f, delimiter=",", comments="#", usecols=(1, 2), unpack=True)
+    t, q = np.loadtxt(f, delimiter=",", comments="#", usecols=(1, 2), unpack=True, ndmin=1)
+    if t.size < 2: continue
     ax.plot(t, q, ls, color=col, lw=1.6, label=lab); peaks[lab] = q.max()
 f0 = os.path.join(here, "result_wave_dyn_s1", "fluxes", "flux0001.csv")
 if os.path.exists(f0):
