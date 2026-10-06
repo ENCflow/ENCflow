@@ -83,8 +83,8 @@
   pbxytype = 0
   pbxy(:,1) =  82, 105
   pbxy(:,2) = 107, 102
-  pbxy(:,3) = 147, 103
-  pbxy(:,4) = 216,  40
+  pbxy(:,3) = 147, 104
+  pbxy(:,4) = 216,  39
 
   ! flux transect coordinate type (0: cell indices, 1: real coordinates (m))
   ! flux transect endpoints (right-bank x, right-bank y, left-bank x, left-bank y)

@@ -332,8 +332,8 @@ in advance with **probes** (points) and **flux transects** (lines).
   pbxytype = 0
   pbxy(:,1) =  82, 105
   pbxy(:,2) = 107, 102
-  pbxy(:,3) = 147, 103
-  pbxy(:,4) = 216,  40
+  pbxy(:,3) = 147, 104
+  pbxy(:,4) = 216,  39
 
   ! flux transect coordinate type (0: cell indices, 1: real coordinates (m))
   ! flux transect endpoints (right-bank x, right-bank y, left-bank x, left-bank y)
@@ -370,16 +370,14 @@ corresponding directly to the `flxy` / `pbxy` values above).
   south to north (the main river flows roughly from west to east, so
   the right bank, on your right when facing downstream, is the south
   side).
-- The probes (circles) are points placed next to the transects. The
-  close-ups show that probes 1 and 2 sit on channel cells, while probes
-  3 and 4 sit one cell off the channel mask, on the slope side. Indeed,
-  after the run, the depths in `probes/probe0003.csv` and
-  `probe0004.csv` reach only a few centimeters at most: the channel
-  water never gets there. To observe channel depth and velocity, the
-  cell number has to be shifted by one onto the channel cell itself
-  (with cell-based specification, a one-cell difference matters this
-  much). **Checking the configured positions against the mask by eye,
-  as done here,** is the basic routine when placing measurements.
+- The probes (circles) are placed on the cell where each transect
+  crosses the channel mask (check in the close-ups that the circles sit
+  on blue cells). A probe is a point measurement on a single cell, so
+  if it lands one cell off, on the slope side, it records almost none of
+  the channel depth and velocity (try setting `pbxy(:,3)` to `147, 103`
+  and running: the depth in `probes/probe0003.csv` then stays within
+  1 to 2 cm). **Checking the configured positions against the mask by
+  eye, as done here,** is the basic routine when placing measurements.
 
 When you run it, the numbers on screen match Step 2 **exactly**:
 measurement and file output have no effect whatsoever on the
