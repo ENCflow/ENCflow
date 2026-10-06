@@ -45,7 +45,7 @@ plt.tight_layout(); plt.savefig("figs/deformation.png", dpi=100); plt.close()
 
 # --- 2. 中央行の水面 ---
 fig, axes = plt.subplots(2, 2, figsize=(13, 7.5))
-for ax, tsel in zip(axes.flat, (60.0, 300.0, 600.0, 1200.0)):
+for ax, tsel in zip(axes.flat, (120.0, 300.0, 600.0, 1200.0)):
     for rdir, lab, col in CASES:
         tm = times(rdir); k = min(tm, key=lambda q: abs(tm[q] - tsel))
         ax.plot(x, surf(rdir, k)[J], color=col, lw=1.2, label=lab)
