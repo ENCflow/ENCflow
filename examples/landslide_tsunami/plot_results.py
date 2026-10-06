@@ -91,22 +91,24 @@ if all(os.path.isdir(d) for _, d, _, _ in NH):
     for col_i, (rh, rn, lab, col) in enumerate(NH):
         ax = axes[0][col_i]
         tm = times(rh); z0 = rd(rh, "Z", 0)[J]
-        for k, ls in ((2, "-"), (4, "-"), (8, "-")):
+        for k, cc in ((2, "#2a78d6"), (4, "#eb6834")):
             if k not in tm: continue
-            for rdir, lw, alpha in ((rh, 1.0, 0.55), (rn, 1.4, 1.0)):
+            for rdir, lw, ls in ((rh, 1.0, "--"), (rn, 1.5, "-")):
                 h = rd(rdir, "H", k)[J]; z = rd(rdir, "Z", k)[J]
                 s = np.where(h > 0.01, z + h, np.nan)
-                ax.plot(x, np.where(z0 < 0, s, np.nan), lw=lw, alpha=alpha, color=plt.cm.viridis(k / 10),
-                        label=("hydrostatic " if rdir == rh else "non-hydrostatic ") + "t=%.0f s" % tm[k])
-        ax.set_xlim(180, 600); ax.set_ylim(-3.5, 3.5); ax.grid(); ax.set_title(lab + ": lake surface (thin = hydrostatic, thick = NH)", fontsize=10)
-        ax.set_ylabel("surface (m)"); ax.legend(fontsize=6, ncol=2)
+                ax.plot(x, np.where(z0 < 0, s, np.nan), lw=lw, ls=ls, color=cc,
+                        label=("hydrostatic " if rdir == rh else "NH + bottom acc. ") + "t=%.0f s" % tm[k])
+        ax.set_xlim(180, 600); ax.set_ylim(-2.5, 2.5); ax.grid(); ax.set_title(lab + ": lake surface (dashed = hydrostatic, solid = NH)", fontsize=10)
+        ax.set_ylabel("surface (m)"); ax.legend(fontsize=7, ncol=2)
         for row, n in ((1, 3), (2, 4)):
             ax = axes[row][col_i]
-            for rdir, cl, lw in ((rh, "hydrostatic", 1.0), (rn, "non-hydrostatic (f_nh_slope=1, f_nh_bottom=1)", 1.3)):
+            for rdir, cl, lw, cc in ((rh, "hydrostatic", 1.0, "#8a8983"), (rn + "0", "non-hydrostatic, dispersion only (f_nh_bottom=0)", 1.0, "#eb6834"),
+                                     (rn, "non-hydrostatic + bottom acceleration (f_nh_bottom=1)", 1.3, col)):
+                if not os.path.isdir(rdir): continue
                 f = "%s/probes/probe%04d.csv" % (rdir, n)
                 xx = float(open(f).readlines()[1].split(",")[1])
                 d = np.loadtxt(f, delimiter=",", comments="#")
-                ax.plot(d[:, 0] * 3600, d[:, 2] + d[:, 3] + d[:, 9], color=col if rdir == rn else "#8a8983", lw=lw, label=cl)
+                ax.plot(d[:, 0] * 3600, d[:, 2] + d[:, 3] + d[:, 9], color=cc, lw=lw, label=cl)
             ax.set_ylabel("surface (m)\nx=%.0f m" % xx); ax.grid()
             if row == 2: ax.set_xlabel("t (s)")
         axes[1][col_i].legend(fontsize=7)
@@ -114,7 +116,8 @@ if all(os.path.isdir(d) for _, d, _, _ in NH):
     print("| ケース | x=212 m | x=298 m | x=398 m | x=548 m | 水中の底層: 停止 / 移動中 (m³) |")
     print("|---|---|---|---|---|---|")
     for rh, rn, lab, col in NH:
-        for rdir, cl in ((rh, "静水圧"), (rn, "非静水圧")):
+        for rdir, cl in ((rh, "静水圧"), (rn + "0", "非静水圧(加速度項なし)"), (rn, "非静水圧 + 加速度項")):
+            if not os.path.isdir(rdir): continue
             ex = []
             for n in (2, 3, 4, 5):
                 d = np.loadtxt("%s/probes/probe%04d.csv" % (rdir, n), delimiter=",", comments="#")
