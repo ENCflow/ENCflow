@@ -24,6 +24,7 @@ module m_main
   use m_swi, only : t_swi, m_swi_init, m_swi_calc, m_swi_dispose
   use m_glacier, only : t_glacier, m_glacier_init, m_glacier_calc, m_glacier_dispose
   use m_lavaflow, only : t_lavaflow, m_lavaflow_init, m_lavaflow_calc, m_lavaflow_dispose
+  use m_bedmotion, only : t_bedmotion, m_bedmotion_init, m_bedmotion_calc, m_bedmotion_dispose
   use m_intercept, only : t_intercept, m_intercept_init, m_intercept_calc, m_intercept_step, &
                         m_intercept_has_step, m_intercept_dispose
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc, m_swflow_post, &
@@ -74,6 +75,7 @@ module m_main
     type(t_swi) :: si
     type(t_glacier) :: gl
     type(t_lavaflow) :: lv
+    type(t_bedmotion) :: bm
     type(t_intercept) :: ic
     type(t_swflow) :: sw
     integer :: ierror = 0            ! 累積エラー数(>0 で時間ループ終了)
@@ -163,7 +165,7 @@ subroutine m_main_initialize(fn_sysparam)
              sl => enc%sl, b => enc%b, s => enc%s, r => enc%r, &
              gm => enc%gm, gw => enc%gw, ev => enc%ev, mt => enc%mt, &
              wq => enc%wq, dw => enc%dw, bd => enc%bd, sn => enc%sn, si => enc%si, &
-             gl => enc%gl, lv => enc%lv, ic => enc%ic, sw => enc%sw)
+             gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw)
 
     ! システムを初期化
     call m_sysparam_init(p, fn_param)       ! sysparam を初期化
@@ -234,6 +236,9 @@ subroutine m_main_initialize(fn_sysparam)
     call m_lavaflow_init(lv, p, g, s)       ! lavaflow を初期化(fn_lavaflow 指定時のみ
                                             ! 有効。morfac 検査(s%geo_morfac)のため
                                             ! geomorph init より後に。lava_plan.md)
+    call m_bedmotion_init(bm, p, g, s)      ! bedmotion を初期化(fn_bedmotion 指定時のみ
+                                            ! 有効。restore 時刻の変位を d_prev にするため
+                                            ! state init より後に。bedmotion_plan.md)
     call m_swi_init(si, p, g, s)            ! swi を初期化(fn_swi 指定時のみ有効。
                                             ! 排他検査に他モジュールの fn_* を使う。§49)
     call output_init(p, g)                  ! ファイル出力の準備(geoinfoより後に)
@@ -262,10 +267,10 @@ subroutine m_main_update()
              sl => enc%sl, b => enc%b, s => enc%s, r => enc%r, &
              gm => enc%gm, gw => enc%gw, ev => enc%ev, mt => enc%mt, &
              wq => enc%wq, dw => enc%dw, bd => enc%bd, sn => enc%sn, si => enc%si, &
-             gl => enc%gl, lv => enc%lv, ic => enc%ic, sw => enc%sw)
+             gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw)
 
     call run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, &
-                  wq, dw, bd, sn, gl, lv, si, &
+                  wq, dw, bd, sn, gl, lv, bm, si, &
                   enc%extpre_active, enc%extpre_fresh, enc%extpre, &
                   enc%extz_fresh, enc%extz, enc%exth_fresh, enc%exth, &
                   enc%ierror)
@@ -296,7 +301,7 @@ subroutine m_main_finalize()
              sl => enc%sl, b => enc%b, s => enc%s, r => enc%r, &
              gm => enc%gm, gw => enc%gw, ev => enc%ev, mt => enc%mt, &
              wq => enc%wq, dw => enc%dw, bd => enc%bd, sn => enc%sn, si => enc%si, &
-             gl => enc%gl, lv => enc%lv, ic => enc%ic, sw => enc%sw)
+             gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw)
 
     ! 最終出力(従来 run_main の末尾)
     call run_close(p, g, s, r)
@@ -318,6 +323,7 @@ subroutine m_main_finalize()
     call m_snow_dispose(sn, p, g, s)        ! save は dispose で(契約5)
     call m_glacier_dispose(gl, p, g, s)     ! save は dispose で(契約5)
     call m_lavaflow_dispose(lv, p, g, s)    ! save は dispose で(契約5)
+    call m_bedmotion_dispose(bm, g)
     call m_swi_dispose(si, p, g)            ! save は dispose で(契約5。§49)
     call m_record_dispose(r)
     call m_state_dispose(s, p)
@@ -494,7 +500,7 @@ subroutine m_main_set_value(name, src, ierr)
     enc%extpre_active = .true.
     enc%extpre_fresh = .true.
   case ('z')
-    if (enc%gm%enabled .or. enc%gl%enabled .or. enc%lv%enabled) then
+    if (enc%gm%enabled .or. enc%gl%enabled .or. enc%lv%enabled .or. enc%bm%enabled) then
       ierr = 2
       return
     end if
@@ -583,7 +589,7 @@ end subroutine
 !   進行位置は s%it が正本(m_state_updatetime が更新)。エラーは
 !   ierror に累積し、継続判定は呼び出し側(m_main_finished)が行う
 !----------------------------------------------------------------------
-subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, bd, sn, gl, lv, si, &
+subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, bd, sn, gl, lv, bm, si, &
                     extpre_active, extpre_fresh, extpre, &
                     extz_fresh, extz, exth_fresh, exth, ierror)
   type(t_sysparam), intent(in) :: p
@@ -606,6 +612,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   type(t_snow), intent(inout) :: sn    ! 積雪・融雪(SWE とスナップショットを保持)
   type(t_glacier), intent(in) :: gl    ! 氷河(氷厚 s%hi と作業台帳を保持)
   type(t_lavaflow), intent(in) :: lv   ! 溶岩流(溶岩厚 s%hl と作業台帳を保持)
+  type(t_bedmotion), intent(inout) :: bm  ! 規定底面運動(スナップショットの読み進みを保持)
   type(t_swi), intent(inout) :: si     ! 土壌雨量指数(タンク貯留を保持。§49)
   logical, intent(in) :: extpre_active    ! BMI 外部降水供給モードか
   logical, intent(inout) :: extpre_fresh  ! 未適用の新しい場があるか(適用で消す)
@@ -672,6 +679,11 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
     extz_fresh = .false.
     exth_fresh = .false.
   end if
+
+  ! 規定底面運動(fn_bedmotion 未指定なら no-op)。このステップ末尾の時刻の
+  ! 地盤変位を補間し、増分を z に加える(h 不変・e 回復・z ハロ交換まで。
+  ! 上の extz と同じ契約・同じ位置 = swflow の前。bedmotion_plan.md §4)
+  call m_bedmotion_calc(bm, p, g, s, it)
 
   if (extpre_active) then
     ! BMI 外部供給(bmi_plan.md §4.2)。set_value された場を makepre の
@@ -794,7 +806,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   ! 河床が動くとき σ 断面の遷移深さ D を天端固定で更新する(§26。z を
   ! 更新するプロセスの後、統計・出力の前。σ 無効なら no-op。z が静的な
   ! 計算では呼ばない = ゼロ追加)
-  if (gm%enabled .or. gl%enabled .or. lv%enabled .or. allocated(extz)) then
+  if (gm%enabled .or. gl%enabled .or. lv%enabled .or. bm%enabled .or. allocated(extz)) then
     call m_swflow_sdep_update(sw, p, g, s)
   end if
 
@@ -917,6 +929,7 @@ subroutine init_resultdir(p)
   call sysdep_copy_to_dir(p%fn_snow, p%dir_result)
   call sysdep_copy_to_dir(p%fn_glacier, p%dir_result)
   call sysdep_copy_to_dir(p%fn_lavaflow, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_bedmotion, p%dir_result)
   call sysdep_copy_to_dir(p%fn_salt, p%dir_result)
   call sysdep_copy_to_dir(p%fn_channel, p%dir_result)
   call sysdep_copy_to_dir(p%fn_enc, p%dir_result)

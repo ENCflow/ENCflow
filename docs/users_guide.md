@@ -38,6 +38,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [家屋破壊・瓦礫](users_guide/bldgdebris.md)(&list_bldgdebris)— 氾濫流・流木による木造家屋の破壊・瓦礫の輸送・堆積・空隙率への帰還(ラスタ場の概算)
 - [氷河](users_guide/glacier.md)(&list_glacier)— 涵養・融解・氷体流動・氷河侵食・雪崩再配分
 - [溶岩流](users_guide/lavaflow.md)(&list_lavaflow)— 噴火口からの湧き出し・Bingham 粘性流動・停止・固化(溶岩原の地形化)
+- [規定底面運動](users_guide/bedmotion.md)(&list_bedmotion)— 地盤変位の時刻歴で z を強制(断層津波の発生)
 - [水質](users_guide/wq.md)(&list_wq)— 負荷投入・輸送・減衰・洗い出し・Kd 二相分配・地下水経由・貯水池
 - [土壌雨量指数](users_guide/swi.md)(&list_swi)— 土砂災害警戒の実務指標(気象庁3段タンク。専用ラン)
 - [計測](users_guide/record.md)(&list_record)— プローブ・フラックス測線
@@ -77,6 +78,7 @@ ENCflow は、1本の時間発展ループの上に機能(プロセスモジュ�
 | 積雪・融雪 | `fn_snow` | &list_snow |
 | 氷河 | `fn_glacier` | &list_glacier |
 | 溶岩流 | `fn_lavaflow` | &list_lavaflow |
+| 規定底面運動 | `fn_bedmotion` | &list_bedmotion |
 | 地下水 | `fn_gwflow` | &list_gwflow(+ モデル固有) |
 | 淡塩2層 | `fn_salt` | &list_salt |
 | 土砂・地形変化 | `fn_geomorph` | &list_geomorph |

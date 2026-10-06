@@ -41,6 +41,7 @@ input; individual topics are split into per-chapter pages.
 - [Building destruction and debris](users_guide/bldgdebris.md) (&list_bldgdebris) -- destruction of wooden houses by inundation flows and driftwood, debris transport and deposition, feedback to the void ratio (raster-field estimate)
 - [Glaciers](users_guide/glacier.md) (&list_glacier) -- accumulation, melt, ice flow, glacial erosion, avalanche redistribution
 - [Lava flows](users_guide/lavaflow.md) (&list_lavaflow) -- vent effusion, Bingham viscous spreading, stopping and solidification (lava fields as topography)
+- [Prescribed bed motion](users_guide/bedmotion.md) (&list_bedmotion) -- forcing z with a time history of ground displacement (tsunami generation from faults)
 - [Water quality](users_guide/wq.md) (&list_wq) -- load input, transport, decay, washoff, Kd two-phase partitioning, groundwater pathway, reservoirs
 - [Soil Water Index](users_guide/swi.md) (&list_swi) - the operational sediment-disaster warning index (JMA 3-tank model; dedicated runs)
 - [Measurement](users_guide/record.md) (&list_record) -- probes, flux transects
@@ -82,6 +83,7 @@ memory and no computation time at all**.
 | Snow accumulation and snowmelt | `fn_snow` | &list_snow |
 | Glaciers | `fn_glacier` | &list_glacier |
 | Lava flows | `fn_lavaflow` | &list_lavaflow |
+| Prescribed bed motion | `fn_bedmotion` | &list_bedmotion |
 | Groundwater | `fn_gwflow` | &list_gwflow (+ model-specific) |
 | Fresh and salt water layers | `fn_salt` | &list_salt |
 | Sediment and landform change | `fn_geomorph` | &list_geomorph |

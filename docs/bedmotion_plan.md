@@ -1,8 +1,9 @@
 # 規定底面運動 fn_bedmotion 設計案(断層津波の発生機構)(bedmotion_plan.md)
 
-**状態: 設計案(2026-10-06)。未実装・未合意。** 要合意事項は §11。
-実装後は developer.md に規約の正本を置き、本書は設計解説として残す
-(lava_plan.md・landslide_tsunami_plan.md と同じ運用)。
+**状態: 段階 1(本体 fn_bedmotion)実装・検証済み(2026-10-06。要合意事項
+§11 は推奨案どおり)。規約の正本は developer.md §70、利用者向けは
+users_guide/bedmotion.md。** 段階 2(前処理 utils/fault2disp、例題)は未。
+本書は設計解説として残す(lava_plan.md と同じ運用)。
 
 ## 0. 結論(要約)
 

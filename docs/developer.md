@@ -9333,3 +9333,52 @@ test/nhcurrent の構成(水路 200 m × 8 m、U0 = 0.5 m/s、静水圧)で切�
   近地波形(土塊の長さ b/H ≲ 2)で使う。慣性なしの底層との結合では
   斜面下端の自励振動(±0.6 m)が残るので、堆積域直上の水位は使わない。
   長い地滑り・遠地では効かない(§16.1)。
+
+## 70. 規定底面運動 fn_bedmotion(地盤変位の時刻歴で z を強制。2026-10-06 実装)
+
+設計は docs/bedmotion_plan.md(要合意事項 §11 は推奨案どおり決定)、利用者
+向けは users_guide/bedmotion.md(日英)。Phase 8(§69.10)で検証した
+「外部から z を動かし、h を変えずに水面 e = z + h を持ち上げる」契約を
+fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dtopo 相当)。
+
+- **モジュール**: list_bedmotion(読むだけ)+ m_bedmotion(init / calc /
+  dispose)。有効化は fn_bedmotion。無効時は配列未確保・calc は logical 1 つ。
+- **入力**: スナップショット表 fn_bmlist(「時刻 ファイル名」。時刻は t0
+  相対 × bm_tscale、昇順。ファイル名は dir_data 相対)と、全域の累積変位
+  ラスタ(z と同じ形式。fileio_read_matrix)。表は list-directed で読まない
+  (ファイル名の '/' が入力終端になる実バグを実装時に検出)。各ランクが
+  全域を冗長に読んで自帯 jsh..jeh を切り出す(m_precip の分布リストと同じ。
+  §11)。帯形状 3 枚(da, db, dprev)。
+- **適用**(calc。run_step の extz 適用の直後 = swflow の前): ステップ末尾の
+  時刻 t^{n+1} = t0 + dt·it の変位を補間(線形 / 階段)し、増分 d − dprev を
+  陸セル(x > 0, sw = 0)の z に加え、e = z + h を x > 0 の全セルで回復、
+  par_halo_cell(s%z)。sd は不変(岩盤面が変位)。運動量は不変。
+  増分適用なので geomorph・lavaflow・bedslide と同居できる。
+- **段階**(stage): 0 未適用(フレッシュランの開始)→ 最初の calc で先頭の
+  値を適用。最初の時刻より前なら 3(待ち。tsnap(1) まで何もしない)、
+  変位中は 1(毎ステップ適用 + ハロ交換)、末尾の値を適用したら 2(以後
+  ゼロコスト)。スナップショットの進行判定は時刻だけに依存 = 全ランク同一
+  (collective 安全)。
+- **restart**: 私有状態を save しない。s%it0 > 0 なら dprev = d(t_r)
+  (save の z は t_r までの変位を含む)、段階も t_r から決める。フレッシュ
+  ランは dprev = 0。補間が時刻だけの関数なので中断なしランと同じ増分列
+  (test/nhbottom で 0.5 s 中断の往復が Log 一致)。
+- **API との排他**: fn_bedmotion 有効時は m_main_set_value('z') が ierr = 2
+  (生産者は変数ごとに一人。'pre' と同じ)。σ 遷移深さの更新
+  (m_swflow_sdep_update)の条件に bm%enabled を加えた。
+- **検証**(test/nhbottom 構成 3。param_bm.txt、Bedmotion_inputs.py):
+  構成 1 と同じ半正弦の隆起を毎ステップのスナップショット(81 枚)で与え、
+  uplift ドライバ(API)の reference/Log.txt と、全有効桁の S 列 5 行の
+  最終桁(1e-15)以外一致(z0 = 0 でも増分の和と絶対値の丸めが違うため
+  ビット一致は構造的に出ない。物理量の印字桁では同一)。restart 往復
+  (save 0.5 s → restore)は静水圧(param_bmh_s/r)で Log 一致、NH + f_nh_bottom
+  (param_bm_s/r)では Runge 列(適応 RK の割合)と S 列の最終桁だけ異なる
+  (§69.10 の z̈ 1 ステップ落ち。印字される物理量は同一)。海底地滑り(param_ls_b)
+  + 湖底の規定隆起(param_ls_bb.txt)の同居で Σ(z − z0) = Σ d が出力精度
+  (Z の印字 1e-4 m)の範囲で成立(bedslide の内部移転は総和 0)。実装時の
+  実バグ: init で s%it を復元時刻に使い restore 後に変位を二重適用した
+  (init 時点で有効なのは s%it0。s%it は時間ループが設定する)。無効時は全 reference ビット一致。
+  np = 2, 4 は逐次と(S 列の最終桁以外)一致、-fcheck=all np=2 エラーなし。
+- **残**(bedmotion_plan.md): 段階 2 の前処理 utils/fault2disp(Okada +
+  Tanioka & Satake の水平成分換算、セグメントの時間差・立ち上がり関数)と
+  理想化断層の例題。変位がゼロでない矩形だけを持つ入力形式(広域向け)。

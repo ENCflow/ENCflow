@@ -28,6 +28,7 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理)
   │                  空隙率 s%gv への帰還。移流は advect_scalar。§63)
   │    m_glacier     氷河(加算: 質量収支(常時)/ flow / slide / ero / ava)
   │    m_lavaflow    溶岩流(噴火口ソース+Bingham 粘性重力流+固化→z。等温)
+  │    m_bedmotion   規定底面運動(地盤変位の時刻歴 → z の増分。断層津波の発生)
   │    m_intercept   降雨遮断(排他: fixed / initloss)
   │    m_precip      降水    m_evap  蒸発散    m_snow  積雪・融雪
   │    m_tide        潮位    m_wq    水質      m_meteo 気象強制場・暦
@@ -73,6 +74,7 @@ par_init → sysparam → geoinfo(全域読込・全域前処理)
   → tide → swflow → meteo → evap(← meteo より後) → snow
   → glacier(← meteo・snow より後: 気温と涵養源が必須)
   → lavaflow(← geomorph より後: morfac=1 検査)
+  → bedmotion(← state より後: restore 時刻の変位を適用済みとする)
   → swi(← 最後: 排他検査に他モジュールの fn_* を参照)
   → output_init → geoinfo_band_shrink(マスク類・z を帯に縮小。g%gv/g%lm の帯は
                      state_init が s%gv/s%lm へ写した後なのでここで解放。§63.1)

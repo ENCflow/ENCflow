@@ -142,3 +142,21 @@ uplift ドライバで実行して reference/Log.txt と比較する(列 4 = Run
 除外)。np = 2, 4 は逐次 reference と、全有効桁の S 列が 3 行で最終桁 1 だけ
 異なる(総和の順序。nhwave_nh と同じ)ほかは一致。構成 2 は比較用(reference なし。
 test/bedslide が bedslide 本体の検定)。
+
+## 構成 3: fn_bedmotion(規定底面運動の本体機能)で同じ隆起を与える
+
+構成 1 の隆起を、ドライバでなく本体の [fn_bedmotion](../../docs/users_guide/bedmotion.md)
+(スナップショット表 + 累積変位ラスタ)で与える。`Bedmotion_inputs.py` が
+隆起中の毎ステップ(dt = 0.0125 s、81 枚)のスナップショットを bm/ に書く。
+
+```
+make inputs_bm                 # python3 Bedmotion_inputs.py(bm/bmlist.txt, bm/disp_*.txt)
+./Run_bm.sh                    # ./encflow param_bm.txt → reference/Log.txt(ドライバ)と比較
+```
+
+ドライバの reference と、全有効桁の S 列 5 行の最終桁(1e-15。増分の和と
+絶対値の丸めの違い)以外一致する。再開(0.5 s に save → restore)は静水圧(param_bmh_s/r.txt)で
+result_bmh と Log 一致、NH + f_nh_bottom(param_bm_s/r.txt)では Runge 列と
+S 列の最終桁だけ異なる(NH の z̈ 1 ステップ落ち。物理量は同一)。海底地滑りとの同居
+(param_ls_bb.txt = param_ls_b + 湖底の規定隆起 0.3 m)では
+Σ(z − z0) = Σ d が出力精度(1e-4 m)の範囲で成り立つ(bedslide の内部移転は総和 0)。

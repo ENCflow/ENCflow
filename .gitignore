@@ -103,3 +103,7 @@ test/nhbottom/uplift
 test/nhbottom/uplift_mpi
 test/nhbottom/z.txt
 test/nhbottom/submarine.txt
+test/nhbottom/bm/
+test/nhbottom/bm_ls/
+test/nhbottom/save_bm/
+test/nhbottom/save_bmh/

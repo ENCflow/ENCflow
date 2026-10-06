@@ -52,6 +52,7 @@
   !fn_evap = ""             ! 蒸発散
   !fn_snow = ""             ! 積雪・融雪
   !fn_glacier = ""          ! 氷河(涵養・流動・侵食)
+  !fn_bedmotion = ""        ! 規定底面運動(地盤変位の時刻歴で z を強制。断層津波)
   !fn_gwflow = ""           ! 地下水
   !fn_geomorph = ""         ! 土砂・地形変化
   !fn_wq = ""               ! 水質(負荷流出)
