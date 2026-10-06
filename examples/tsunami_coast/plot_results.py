@@ -27,15 +27,19 @@ def times(rdir):
     return {int(l.split(",")[0]): float(l.split(",")[2]) for l in open(rdir + "/FILENUMBER.csv") if not l.startswith("#")}
 def field(rdir, name, k):
     return np.loadtxt("%s/%s%04d.txt" % (rdir, name, k))
+DOFF = {"result_full": np.loadtxt("bm/disp_0010.txt"), "result_inst": np.loadtxt("bm/disp_0010.txt"),
+        "result_offshore": np.loadtxt("bm_off/disp_0010.txt")}
+PIJ = {1: (19, 80), 2: (40, 80), 3: (43, 30), 4: (43, 130), 5: (81, 80), 6: (181, 80), 7: (15, 80)}   # param の pbxy
 def probe(rdir, n):
     a = np.loadtxt("%s/probes/probe%04d.csv" % (rdir, n), delimiter=",", comments="#")
-    return a[:, 0] * 3600, a[:, 2] + a[:, 3], a[:, 3]
+    i, j = PIJ[n]
+    return a[:, 0] * 3600, a[:, 2] + a[:, 3], a[:, 3], float(DOFF[rdir][j - 1, i - 1])
 
 # --- 1. 変位と地形 ---
 fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(13, 4.8), gridspec_kw={"width_ratios": [1.3, 1]})
 im = ax0.imshow(d, extent=[0, 120, 0, 80], origin="upper", cmap="RdBu_r", vmin=-3.5, vmax=3.5)
 ax0.contour(x, y, z0, levels=[0], colors="k", linewidths=0.8)
-ax0.contour(x, y, z0, levels=[-200, -1000], colors="#52514e", linewidths=0.5, linestyles="--")
+ax0.contour(x, y, z0, levels=[-1000, -200], colors="#52514e", linewidths=0.5, linestyles="--")
 for n, _ in PR:
     pass
 ax0.set_xlabel("x (km)"); ax0.set_ylabel("y (km)"); ax0.set_title("最終地盤変位 (m)。黒 = 海岸線、破線 = 200・1000 m 等深線", fontsize=10)
@@ -52,11 +56,14 @@ rows = []
 for ax, (n, lab) in zip(axes, PR):
     vals = []
     for rdir, cl, col in CASES:
-        t, e, h = probe(rdir, n)
+        t, e, h, doff = probe(rdir, n)
         ax.plot(t / 60, e, color=col, lw=1.1, label=cl)
-        idx = np.where(np.abs(e) > 0.1)[0]
+        # 到達 = 水深の変化 |h(t) − h(0)| が 0.1 m を超える時刻(地盤と一緒に動く分は水深を変えないので、
+        #   波・流入だけを拾う。陸のプローブでは浸水開始)
+        idx = np.where(np.abs(h - h[0]) > 0.1)[0]
         ta = t[idx[0]] if len(idx) else np.nan
         vals.append((ta, e.max(), e.min(), h.max()))
+    ax.axhline(0, color="#8a8983", lw=0.5)
     rows.append((lab, vals))
     ax.set_ylabel("水位 (m)"); ax.grid(); ax.set_title(lab, fontsize=9, loc="left")
 axes[0].legend(fontsize=8); axes[-1].set_xlabel("t (min)")
@@ -64,7 +71,7 @@ plt.tight_layout(); plt.savefig("figs/probes.png", dpi=100); plt.close()
 
 # --- 3. 水位分布(時刻歴あり)と湾奥の浸水 ---
 tm = times("result_full")
-fig, axes = plt.subplots(2, 3, figsize=(15, 8))
+fig, axes = plt.subplots(2, 3, figsize=(15, 9))
 for ax, tsel in zip(axes.flat[:5], (120.0, 300.0, 600.0, 1200.0, 1800.0)):
     k = min(tm, key=lambda q: abs(tm[q] - tsel))
     h = field("result_full", "H", k); z = field("result_full", "Z", k)
@@ -72,7 +79,7 @@ for ax, tsel in zip(axes.flat[:5], (120.0, 300.0, 600.0, 1200.0, 1800.0)):
     im = ax.imshow(eta, extent=[0, 120, 0, 80], origin="upper", cmap="RdBu_r", vmin=-2, vmax=2)
     ax.contour(x, y, z0, levels=[0], colors="k", linewidths=0.6)
     ax.set_title("t = %.0f 分: 水位 (m)" % (tm[k] / 60), fontsize=10); ax.set_xlim(0, 120)
-plt.colorbar(im, ax=list(axes.flat[:5]), fraction=0.015)
+plt.colorbar(im, ax=list(axes.flat[:5]), fraction=0.02, pad=0.02, location="bottom", aspect=60, label="水位 (m)")
 ax = axes.flat[5]
 hmax = np.zeros_like(z0)
 for k in tm:
@@ -83,10 +90,10 @@ fl = np.where(land & (hmax > 0.01), hmax, np.nan)
 im = ax.imshow(fl, extent=[0, 120, 0, 80], origin="upper", cmap="Blues", vmin=0, vmax=3)
 ax.contour(x, y, z0, levels=[0], colors="k", linewidths=0.6)
 ax.set_xlim(0, 30); ax.set_ylim(25, 55); ax.set_title("陸の最大浸水深 (m)。湾の周り(時刻歴あり)", fontsize=10)
-plt.colorbar(im, ax=ax, fraction=0.04)
-plt.savefig("figs/snapshots.png", dpi=100); plt.close()
+plt.colorbar(im, ax=ax, fraction=0.05, pad=0.03, label="最大浸水深 (m)")
+plt.savefig("figs/snapshots.png", dpi=100, bbox_inches="tight"); plt.close()
 
-print("| プローブ | " + " | ".join("%s: 到達 (min) / 最高 / 最低 (m)" % c[1] for c in CASES) + " |")
+print("| プローブ | " + " | ".join("%s: 到達 (min) / 最高 / 最低 (m)" % c[1] for c in CASES) + " |  (到達 = 水深の変化が 0.1 m を超える時刻)")
 print("|---|" + "---:|" * len(CASES))
 for lab, vals in rows:
     print("| %s | " % lab + " | ".join("%.1f / %.2f / %.2f" % (v[0] / 60, v[1], v[2]) for v in vals) + " |")
