@@ -48,7 +48,7 @@ input; individual topics are split into per-chapter pages.
 - [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 555 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 583 parameter names to their chapters
 
 ---
 
@@ -205,6 +205,9 @@ settings, including unsupported phenomena), see
 | Open levees, detention basins, secondary levees | [Channels](users_guide/channel.md) (levees, openings) + [Structures](users_guide/structure.md) |
 | Polder / lowland drainage by pumping | [Structures](users_guide/structure.md) (pumps) + [Tide and sea surface](users_guide/tide.md) |
 | Storm surge / tsunami run-up | [Tide and sea surface](users_guide/tide.md) + [boundary conditions](users_guide/boundary.md) |
+| Tsunami generation by an earthquake (fault): generation, propagation, run-up, coastal uplift/subsidence | [Prescribed bed motion](users_guide/bedmotion.md) (+ utils/fault2disp) + [boundary conditions](users_guide/boundary.md) (radiation) |
+| Tsunamis from landslides, sector collapses, submarine slides | [Sediment and landform change](users_guide/geomorph.md) (moving bed layer) (+ the non-hydrostatic correction in [Shallow water flow](users_guide/swflow.md)) |
+| Dispersive tsunamis and waves (soliton fission of river-intruding tsunamis, undular bores, solitary waves) | [Shallow water flow](users_guide/swflow.md) (non-hydrostatic correction f_nonhydrostatic) |
 | Rainfall runoff (catchment hydrology) | [Rainfall and weather](users_guide/forcing.md) (+ groundwater) |
 | Urban pluvial flooding (sewer drainage and surcharge) | [Groundwater](users_guide/gwflow.md) (conduit continuum layer) + [Rainfall and weather](users_guide/forcing.md) |
 | Seawater intrusion, salt wedges, freshwater lenses | [Fresh and salt water layers](users_guide/salt.md) + [Tide and sea level](users_guide/tide.md) |

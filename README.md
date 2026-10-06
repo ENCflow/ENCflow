@@ -111,6 +111,20 @@ care about.**
   buildings' void space on the flow — are estimated in the same time
   evolution as the tsunami or surge run-up, giving damage-ratio maps
   and debris arrival/deposit maps.
+- **Tsunami generation from an earthquake, and dispersive waves**: a
+  prescribed bed-motion feature forces the bed elevation with a time
+  history of ground displacement, and the bundled utility
+  `utils/fault2disp` converts fault parameters (Okada's formulas,
+  several segments with their own rupture times and rise times,
+  longitude/latitude or projected coordinates, georeferenced grids)
+  into that history. Because land and sea cells move alike, coseismic
+  coastal uplift and subsidence, the waves they generate at the shore,
+  the flooding of subsided lowland and the offshore tsunami are all in
+  one run (examples `tsunami_fault`, `tsunami_coast`). An optional
+  one-layer non-hydrostatic correction adds frequency dispersion where
+  it matters — soliton fission of a tsunami intruding up a river,
+  undular bores, solitary waves, and the near field of landslide and
+  short-source tsunamis — while the default stays hydrostatic.
 - **Rainfall–runoff and catchment hydrology**: rainfall (uniform or
   distributed), canopy interception, evapotranspiration
   (Hamon/Thornthwaite with temperature lapse rate), Green–Ampt
@@ -153,7 +167,8 @@ care about.**
   run**. Sending the collapsed mass into a lake or the sea as a
   "moving bed layer" extends the same run to **landslide tsunamis**
   (including submarine slides): generation, propagation and run-up,
-  as a moving-bottom approximation.
+  as a moving-bottom approximation (hydrostatic, or with the
+  non-hydrostatic correction for the dispersive near field).
 - **Lava flows**: effusion from a set of vent cells (an effusion-rate
   time series), Bingham viscous spreading and stopping (viscosity and
   yield stress given directly), and solidification into lava-field
@@ -217,13 +232,16 @@ platform for numerical experiments shared across disciplines.
 ## What it deliberately does not do
 
 ENCflow intentionally stays within the two-dimensional
-(depth-averaged, constant-density, hydrostatic) world. The following
+(depth-averaged, constant-density, hydrostatic — with an optional
+one-layer non-hydrostatic correction) world. The following
 are out of scope by design and belong to specialized models
 ([comparison](docs/en/comparison.md)):
 
 - **Wind waves** — short-period waves (wind waves, swell, breaking).
-  Storm surge and tsunami are long waves and can be solved; wave
-  computation is the realm of dedicated wave models.
+  Storm surge and tsunami are long waves and can be solved, and the
+  one-layer non-hydrostatic correction covers the dispersion of long
+  waves (kH up to about 2); wave computation is the realm of dedicated
+  wave models.
 - **Pyroclastic surges, eruption plumes, and atmospheric ash
   transport** — compressible, three-dimensional atmospheric phenomena
   outside the shallow-water approximation (the volcanic *density

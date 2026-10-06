@@ -45,7 +45,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [用途集](users_guide/usecases.md)— 現象名から機能の組み合わせを引く(未対応の現象も明示)
 
 **付録**
-- [全パラメータ索引](users_guide/params_index.md) — 全 555 パラメータの名前→章の逆引き
+- [全パラメータ索引](users_guide/params_index.md) — 全 583 パラメータの名前→章の逆引き
 
 ---
 
@@ -187,6 +187,9 @@ ENCflow は、1本の時間発展ループの上に機能(プロセスモジュ�
 | 霞堤・遊水地・二線堤の治水効果 | [河道](users_guide/channel.md)(堤防・開口)+[構造物](users_guide/structure.md) |
 | 干拓地・低平地の機場排水 | [構造物](users_guide/structure.md)(ポンプ)+[潮位・海面](users_guide/tide.md) |
 | 高潮・津波の遡上 | [潮位・海面](users_guide/tide.md)+[境界条件](users_guide/boundary.md) |
+| 地震(断層)による津波の発生〜伝播〜遡上、沿岸の隆起・沈降 | [規定底面運動](users_guide/bedmotion.md)(+utils/fault2disp)+[境界条件](users_guide/boundary.md)(放射) |
+| 地滑り・山体崩壊・海底地滑りによる津波 | [土砂・地形変化](users_guide/geomorph.md)(動く底層)(+[浅水流計算](users_guide/swflow.md)の非静水圧補正) |
+| 分散性のある津波・波(河川遡上津波のソリトン分裂・undular bore・孤立波) | [浅水流計算](users_guide/swflow.md)(非静水圧補正 f_nonhydrostatic) |
 | 降雨流出(流域水文) | [降雨・気象](users_guide/forcing.md)(+地下水) |
 | 都市の内水氾濫(下水道の排水・噴出) | [地下水](users_guide/gwflow.md)(管路連続体層)+[降雨・気象](users_guide/forcing.md) |
 | 海水浸入・塩水くさび・淡水レンズ | [淡塩2層](users_guide/salt.md)+[潮位・海面](users_guide/tide.md) |
