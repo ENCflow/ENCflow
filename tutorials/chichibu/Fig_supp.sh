@@ -73,7 +73,10 @@ for r in 200m 100m 50m; do
       50m)  sed -i 's/^  dt = 0.75 /  dt = 0.5  /' "wrk_supp_param_${r}_s1u.txt"; grep -q 'dt = 0.5' "wrk_supp_param_${r}_s1u.txt" ;;
     esac
     rm -rf result
-    ./encflow "wrk_supp_param_${r}_s1u.txt"
+    # 風上化 0.1 のスキーム 1 は 100 m・50 m で減水期(4〜5 h。流出口の湛水が 30 m 超)に
+    # Courant 数 1 で停止する(dt を半分にしても同じ)。ピーク(2〜3 h)はその前なので、
+    # 途中までの結果をそのまま使う(図では曲線が途中で切れる)
+    ./encflow "wrk_supp_param_${r}_s1u.txt" || echo "(s1u $r: 途中停止。ピーク後の減水期)"
     mv result "result_supp_${r}_s1u"
   fi
   if [ ! -d "result_supp_${r}_noadv" ]; then

@@ -985,7 +985,7 @@ spans 2.5 times the others.** Peak discharge
 |---|---|---|---|
 | none (diffusion wave) | 9,611 @113 | 15,601 @102 | 17,996 @92 |
 | scheme 1 (old, upwind 0.5 = default) | 5,714 @158 | 6,024 @169 | 6,261 @176 |
-| scheme 1 (upwind 0.1) | 6,856 @135 | XXU100 | XXU50 |
+| scheme 1 (upwind 0.1) | 6,856 @135 | 7,884 @136 | XXU50 |
 | scheme 3 (default) | 5,434 @170 | 5,712 @178 | 6,232 @180 |
 
 For reference, the maximum velocity of each computation (V_max in the Log)
@@ -993,9 +993,14 @@ on the 100 m grid was 41 m/s without advection, 25 m/s with scheme 1
 (upwind 0.5) and 30 m/s with scheme 3. The 50 m case without advection
 diverged after 43 minutes at dt = 0.75 s (the velocity reached 60 m/s at bed
 steps and the Courant number exceeded 1), so that one run uses dt = 0.4 s.
-Scheme 1 with upwind 0.1 also diverged on the 100 m grid at dt = 1.5 s during
-the recession (4.6 h, with 33 m of ponded water at the outlet), so those runs
-use dt = 1.0 s at 100 m and 0.5 s at 50 m.
+Scheme 1 with upwind 0.1 stops on the 100 m and 50 m grids during the
+recession (4 to 5 hours, when the ponded water at the outlet exceeds 30 m):
+the velocity diverges in the ponded outlet cells. Halving dt from 1.5 to
+1.0 s does not change the time it stops (4.6 → 4.7 h), so this is not a
+time-step issue; we take it as an instability of the non-conservative,
+weakly upwinded scheme in deep still water. The peaks (2 to 3 hours) come
+before it, so the table lists the peaks of the partial runs and the curves
+end early in the figure.
 
 #### Dropping the advection term makes the peak larger and earlier on finer grids
 
@@ -1111,7 +1116,7 @@ great deal.
   m³/s, only 5%, 5% and 0.5% larger than scheme 3 and 12 to 10 minutes
   earlier. It approaches scheme 3 as the grid is refined, with the same
   trend of resolution dependence as scheme 3.
-- **Upwind 0.1**: 6,856 → XXU100 → XXU50 m³/s, XXUDIFF larger than scheme 3
+- **Upwind 0.1**: 6,856 → 7,884 → XXU50 m³/s, XXUDIFF larger than scheme 3
   and XXUTIME earlier. **The finer the grid, the further it moves away from
   scheme 3 toward the run without advection**, the same trend as recorded
   with the settings of test/chichibu (hillslope roughness 0.15, upwind 0.1):
