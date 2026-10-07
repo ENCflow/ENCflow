@@ -1,4 +1,4 @@
-> English mirror of tutorials/wave/README.md (based on commit 451e87a). The Japanese file is the master copy.
+> English mirror of tutorials/wave/README.md (based on commit 57f895a). The Japanese file is the master copy.
 
 # Tutorial 1: wave -- waves spreading over still water
 
@@ -601,12 +601,28 @@ moving it away from the solution of the hydrostatic equations.
 
 ### In reality there is physical dispersion
 
-In real water, once the front is as steep as the depth, vertical
-accelerations can no longer be neglected and **frequency dispersion**
-acts: shorter waves travel more slowly. The hydrostatic shallow water
-equations leave this out, so however fine the grid they only converge
-to a bore. ENCflow's one-layer non-hydrostatic correction can be tried
-by adding one line to `&list_enc`.
+The oscillations so far were discretization errors, but real water also has
+a mechanism, of a different kind, that keeps the front from becoming a
+bore. Step by step:
+
+1. Once the front is as steep as the depth, the water is accelerated not
+   only horizontally but also up and down: **the vertical acceleration can
+   no longer be neglected**.
+2. With vertical acceleration the pressure departs from hydrostatic, and
+   **frequency dispersion** acts: the speed of a wave depends on its
+   wavelength (shorter waves travel more slowly). The nonlinearity that
+   steepens the front and the dispersion that spreads it balance, and the
+   front settles into a gentle shape (eventually a train of waves).
+3. The hydrostatic shallow water equations assume hydrostatic pressure and
+   **leave out** the vertical acceleration. So however fine the grid, what
+   they converge to is a bore, not the real front. The nx = 1400 result of
+   the previous subsection is the "correct solution of the equations", but
+   not "reality".
+4. To reproduce this physical dispersion ENCflow has a **one-layer
+   non-hydrostatic correction** (the vertical acceleration is approximated
+   with one layer and the pressure corrected; see the non-hydrostatic
+   section of the [user guide](../../../docs/en/users_guide/swflow.md)).
+5. To use it, add one line to `&list_enc`.
 
 ```
   fn_enc = "-"              ! ENC parameter file
@@ -628,33 +644,51 @@ as long as the hydrostatic run on the same grid). Run longer, the front
 splits from its head into a train of waves, an undular bore
 (test/nhbore).
 
-### Which is closer to reality
+### Summary: converge the numerics first, add physics afterwards
 
-Numerical error and missing physics are different things, so keep them
-apart.
+What this supplement showed, arranged as an order of operations:
 
-- The correct solution of the hydrostatic equations is the nx = 1400
-  result (a bore with its front at r ≈ 38.2 m); `dt = 0.01` is close
-  to it, and `dt = 0.05` with threshold 1.1 is away from it by the lag
-  of its numerical damping.
-- The real front, with dispersion, is a gentle hill whose mid-height is
-  at r ≈ 37.1 m and whose toe reaches 39.3 m. The lagging front of
-  threshold 1.1 may look closer to the non-hydrostatic one in position,
-  but that is a coincidence with a different cause, and its shape (the
-  steepness) is still hydrostatic. **Do not use numerical settings to
-  mimic physics.** The order is: first converge the numerics with the
-  grid and the time step; if a difference still remains and it is
-  missing physics, add that physics.
-- Dispersion matters only where the width of the front is comparable to
-  the depth. In this example, a mound 15 m in radius and 1 m high on
-  1 m of water, it matters at the front, while the back slope
-  (r < 32 m) coincides in every run. For an offshore tsunami (wavelength
-  tens of kilometres, depth kilometres) or a flood, where the front is
-  far wider than the depth, the converged hydrostatic solution is the
-  right answer and the front oscillation is purely numerical. For the
-  conditions and settings of the non-hydrostatic correction see the
-  non-hydrostatic section of the
-  [User's Guide](../../../docs/en/users_guide/swflow.md).
+- **Solving the hydrostatic shallow water equations on a coarse grid with a
+  coarse time step** lets the oscillation of numerical dispersion grow
+  large. The maximum wave height is overestimated (h_max 3% too high with
+  `dt = 0.05` in Step 1), the anisotropy of a front that should be circular
+  but differs by 4 cm between the 0° and 45° directions becomes visible,
+  and in the worst case the computation breaks down.
+- **The proper remedy is to refine the grid and shrink the time step with
+  it.** With nx = 350 → 700 → 1400 the oscillation shrank with the grid and
+  the solution approached the correct solution of the equations (a bore with
+  its front at r ≈ 38.2 m). The cost is 8 times per doubling of the grid
+  (18 s → 134 s → 981 s).
+- **The adaptive Runge-Kutta method** (Step 2) recomputes only the steps in
+  which the oscillation grows, so it suppresses the oscillation and avoids
+  breakdown at little cost. On the other hand the numerical damping of the
+  recomputation blunts a sharp front, and can move the result away from the
+  correct solution, as with the lagging front of threshold 1.1 (r = 37.8 m).
+- **Whether the correct solution of the equations is close to reality is a
+  separate question.** As the previous subsection showed, the converged
+  hydrostatic solution is a bore, while the real front (with dispersion) is a
+  gentle hill with its mid-height at r ≈ 37.1 m and its toe out to 39.3 m.
+  The lagging front of threshold 1.1 happens to sit close to the
+  non-hydrostatic one in position, but for a different reason; its shape
+  (steepness) is still hydrostatic. **Do not try to imitate physics with
+  numerical settings.**
+- The order is therefore: **first converge the numerics with the grid and
+  time step; if a difference still remains and it is missing physics, add
+  that physics.**
+- In the first stage, use the adaptive Runge-Kutta method as a trade-off
+  against cost (a tool to suppress oscillation and breakdown on a grid that
+  cannot be refined, not a substitute for convergence). In the second stage
+  the non-hydrostatic correction is added, but it too costs 1.5 to 2 times
+  the computing time, so its applicability must be judged. Dispersion
+  matters only when the width of the front is comparable to the depth. This
+  example, a mound of radius 15 m and height 1 m on 1 m of water, meets that
+  at the front, while the back slope (r < 32 m) coincides in every run. For
+  tsunamis offshore (wavelengths of tens of km over depths of km) or flood
+  inundation, where the front is far wider than the depth, the converged
+  hydrostatic solution is the right answer and the front oscillation is
+  purely numerical. See the non-hydrostatic section of the
+  [user guide](../../../docs/en/users_guide/swflow.md) for the conditions and
+  settings.
 
 ## Closing
 
