@@ -1,4 +1,4 @@
-> English mirror of tutorials/wave/README.md (based on commit 87ddaae). The Japanese file is the master copy.
+> English mirror of tutorials/wave/README.md (based on commit 673cea9). The Japanese file is the master copy.
 
 # Tutorial 1: wave -- waves spreading over still water
 
@@ -614,7 +614,7 @@ bore. Step by step:
    steepens the front and the dispersion that spreads it balance, and the
    front settles into a gentle shape (eventually a train of waves).
 3. The hydrostatic shallow water equations assume hydrostatic pressure and
-   **leave out** the vertical acceleration. So however fine the grid, what
+   therefore **do not account for** the vertical acceleration. So however fine the grid, what
    they converge to is a bore, not the real front. The nx = 1400 result of
    the previous subsection is the "correct solution of the equations", but
    not "reality".
