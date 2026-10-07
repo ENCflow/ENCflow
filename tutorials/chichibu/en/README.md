@@ -1,4 +1,4 @@
-> English mirror of tutorials/chichibu/README.md (based on commit eb8f4d7). The Japanese file is the master copy.
+> English mirror of tutorials/chichibu/README.md (based on commit 30f400e). The Japanese file is the master copy.
 
 # Tutorial 2: chichibu -- rain on a real-terrain catchment
 
@@ -909,7 +909,13 @@ tabulated below (in parentheses: change from the next coarser grid).
   In the figure, the W = 50 curves of 200 m and 100 m (solid) nearly
   coincide downstream, yet they are lower and later than the 50 m grid
   (light blue) and even later than the no-width runs (dashed); at the
-  upstream transect 1 the width hardly matters. XXW50CHECK A 50 m subgrid channel
+  upstream transect 1 the width hardly matters. Giving the 50 m grid
+  W = 50 m (= the cell width; light-blue dashed line) coincides with the
+  resolved 50 m grid: the peaks differ by less than 0.01% and the discharge
+  by at most 1.4 m³/s (2 × 10⁻⁴). When the width equals the cell width, the
+  subgrid channel reduces to the resolved representation as designed (not to
+  the last digit; rounding differences such as the treatment of diagonal
+  edges remain). A 50 m subgrid channel
   squeezes the flow into a conveyance section of
   1/4 to 1/2 of the cell width, so the storage decreases but the
   conveyance hits its cap and the wave is delayed, whereas on the 50 m
