@@ -1,4 +1,4 @@
-> English mirror of tutorials/chichibu/README.md (based on commit 3a0b856). The Japanese file is the master copy.
+> English mirror of tutorials/chichibu/README.md (based on commit 957715e). The Japanese file is the master copy.
 
 # Tutorial 2: chichibu -- rain on a real-terrain catchment
 
@@ -1096,8 +1096,8 @@ coarse grid and refine only where needed. Keep the distinction between
 
 The old scheme 1 is non-conservative; it cannot represent the momentum
 exchange with lateral inflow and the valley floor consistently (§68.17), and
-the numerical viscosity of its upwind weighting (`p_adv_upwind_index`) scales
-with Δx and therefore with resolution. At transect 4 of this case, the
+the numerical viscosity of its upwind weighting (`p_adv_upwind_index`, here
+the default 0.5) scales with Δx and therefore with resolution. At transect 4 of this case, the
 scheme 1 peak goes 5,714 → 6,024 → 6,261 m³/s, only 5%, 5% and 0.5% larger
 than scheme 3 and 12 to 10 minutes earlier, and it approaches scheme 3 as
 the grid is refined. There is no tendency toward the diffusion wave, and the
