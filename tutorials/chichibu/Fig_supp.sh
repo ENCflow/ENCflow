@@ -66,6 +66,12 @@ for r in 200m 100m 50m; do
   if [ ! -d "result_supp_${r}_s1u" ]; then      # スキーム 1 + 風上化指数 0.1(test/chichibu と同じ値)
     sed -e '/dir_data/i\  fn_enc     = "-"           ! ENC条件設定ファイル' "param_supp_$r.txt" > "wrk_supp_param_${r}_s1u.txt"
     printf '\n&list_enc\n  f_advection_scheme = 1   ! 旧移流スキーム\n  p_adv_upwind_index = 0.1 ! 風上化指数(既定 0.5 より弱い風上化)\n/\n' >> "wrk_supp_param_${r}_s1u.txt"
+    # 風上化 0.1 は数値粘性が小さく、100 m は dt 1.5 s だと 4.6 h(減水期。流出口の湛水 33 m)で
+    # Courant 数 1 を超えて停止するので、100 m は dt 1.0 s、50 m は 0.5 s にする
+    case $r in
+      100m) sed -i 's/^  dt = 1.5 /  dt = 1.0 /' "wrk_supp_param_${r}_s1u.txt"; grep -q 'dt = 1.0' "wrk_supp_param_${r}_s1u.txt" ;;
+      50m)  sed -i 's/^  dt = 0.75 /  dt = 0.5  /' "wrk_supp_param_${r}_s1u.txt"; grep -q 'dt = 0.5' "wrk_supp_param_${r}_s1u.txt" ;;
+    esac
     rm -rf result
     ./encflow "wrk_supp_param_${r}_s1u.txt"
     mv result "result_supp_${r}_s1u"

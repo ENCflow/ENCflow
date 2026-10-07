@@ -967,28 +967,35 @@ The computations so far used the default momentum-conserving advection
 scheme (`f_advection_scheme = 3`). We now run the same three resolutions
 with **the advection term dropped (diffusion wave, i.e. the local inertia
 equation, `f_govequation = 1`)** and with **the old advection scheme
-(`f_advection_scheme = 1`, non-conservative with upwind weighting)** to see
-how the treatment of advection changes the resolution dependence
-(`./Fig_supp.sh` runs them as `result_supp_*_noadv` / `result_supp_*_s1`).
+(`f_advection_scheme = 1`, non-conservative with upwind weighting; the upwind
+index `p_adv_upwind_index` is tried at the default 0.5 and at 0.1, the value
+used in test/chichibu)** to see how the treatment of advection changes the
+resolution dependence (`./Fig_supp.sh` runs them as `result_supp_*_noadv` /
+`result_supp_*_s1` / `result_supp_*_s1u`).
 
 ![Supplement: advection treatment and resolution dependence](figs/supp_hydro_adv.png)
 
-Top row: no advection; middle: scheme 1; bottom: scheme 3 (default); left:
-upstream transect 1; right: downstream transect 4. **Note that the vertical
-axis of the top-right panel spans 2.5 times the others.** Peak discharge
+From top: no advection; scheme 1 (upwind index 0.5 = default); scheme 1
+(upwind index 0.1); scheme 3 (default). Left: upstream transect 1; right:
+downstream transect 4. **Note that the vertical axis of the top-right panel
+spans 2.5 times the others.** Peak discharge
 (m³/s) and its time (min) at transect 4 (near the basin outlet):
 
 | advection | 200 m | 100 m | 50 m |
 |---|---|---|---|
 | none (diffusion wave) | 9,611 @113 | 15,601 @102 | 17,996 @92 |
-| scheme 1 (old) | 5,714 @158 | 6,024 @169 | 6,261 @176 |
+| scheme 1 (old, upwind 0.5 = default) | 5,714 @158 | 6,024 @169 | 6,261 @176 |
+| scheme 1 (upwind 0.1) | 6,856 @135 | XXU100 | XXU50 |
 | scheme 3 (default) | 5,434 @170 | 5,712 @178 | 6,232 @180 |
 
 For reference, the maximum velocity of each computation (V_max in the Log)
-on the 100 m grid was 41 m/s without advection, 25 m/s with scheme 1 and
-30 m/s with scheme 3. The 50 m case without advection diverged after 43
-minutes at dt = 0.75 s (the velocity reached 60 m/s at bed steps and the
-Courant number exceeded 1), so that one run uses dt = 0.4 s.
+on the 100 m grid was 41 m/s without advection, 25 m/s with scheme 1
+(upwind 0.5) and 30 m/s with scheme 3. The 50 m case without advection
+diverged after 43 minutes at dt = 0.75 s (the velocity reached 60 m/s at bed
+steps and the Courant number exceeded 1), so that one run uses dt = 0.4 s.
+Scheme 1 with upwind 0.1 also diverged on the 100 m grid at dt = 1.5 s during
+the recession (4.6 h, with 33 m of ponded water at the outlet), so those runs
+use dt = 1.0 s at 100 m and 0.5 s at 50 m.
 
 #### Dropping the advection term makes the peak larger and earlier on finer grids
 
@@ -1092,23 +1099,39 @@ resolution changes is **"convenient"**, because one can grasp the whole on a
 coarse grid and refine only where needed. Keep the distinction between
 "convenient" and "correct".
 
-#### Resolution dependence of scheme 1
+#### Resolution dependence of scheme 1 and the upwind index
 
 The old scheme 1 is non-conservative; it cannot represent the momentum
 exchange with lateral inflow and the valley floor consistently (§68.17), and
-the numerical viscosity of its upwind weighting (`p_adv_upwind_index`, here
-the default 0.5) scales with Δx and therefore with resolution. At transect 4 of this case, the
-scheme 1 peak goes 5,714 → 6,024 → 6,261 m³/s, only 5%, 5% and 0.5% larger
-than scheme 3 and 12 to 10 minutes earlier, and it approaches scheme 3 as
-the grid is refined. There is no tendency toward the diffusion wave, and the
-resolution dependence is almost the same as for scheme 3. With the settings
-of test/chichibu (hillslope roughness 0.15, upwind weight 0.1) scheme 1 is
-41% larger and 1.2 hours earlier than scheme 3 on the 100 m grid (§68.17),
-so **the size of the difference between the two schemes depends strongly on
-the case**. These data alone cannot isolate the resolution dependence of the
-numerical viscosity, but it is clear that the weak resolution dependence of
-ENCflow presupposes the default momentum-conserving scheme (and the dynamic
-opening correction).
+the numerical viscosity of its upwind weighting (`p_adv_upwind_index`) scales
+with Δx and therefore with resolution. The upwind index changed the result a
+great deal.
+
+- **Upwind 0.5 (default)**: the transect 4 peak goes 5,714 → 6,024 → 6,261
+  m³/s, only 5%, 5% and 0.5% larger than scheme 3 and 12 to 10 minutes
+  earlier. It approaches scheme 3 as the grid is refined, with the same
+  trend of resolution dependence as scheme 3.
+- **Upwind 0.1**: 6,856 → XXU100 → XXU50 m³/s, XXUDIFF larger than scheme 3
+  and XXUTIME earlier. **The finer the grid, the further it moves away from
+  scheme 3 toward the run without advection**, the same trend as recorded
+  with the settings of test/chichibu (hillslope roughness 0.15, upwind 0.1):
+  "scheme 1 is 41% larger and 1.2 hours earlier than scheme 3 on the 100 m
+  grid" (§68.17).
+
+The difference is explained by the amount of numerical viscosity. A larger
+upwind weight means a numerical viscosity proportional to Δx·u that smooths
+velocity extremes and the accelerations at steps, which incidentally acts
+like the step dissipation (item 1 above). A smaller weight removes this
+"accidental dissipation", leaving the momentum losses that the
+non-conservative form cannot represent (items 2 and 3) missing, so the wave
+becomes faster and larger. Since the numerical viscosity itself shrinks with
+Δx, with upwind 0.1 the result approaches the diffusion wave as the grid is
+refined. The resolution dependence of scheme 1 thus comes both from the
+physical approximation (non-conservative form) and from the numerical
+viscosity (upwind weight × Δx), and the result moves with the choice of the
+upwind weight: a scheme that carries one extra calibration parameter. The
+weak resolution dependence of ENCflow presupposes the default
+momentum-conserving scheme (and the dynamic opening correction).
 
 #### What is special about this case
 
