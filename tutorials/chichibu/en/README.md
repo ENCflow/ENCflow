@@ -1134,9 +1134,9 @@ becomes faster and larger. Since the numerical viscosity itself shrinks with
 refined. The resolution dependence of scheme 1 thus comes both from the
 physical approximation (non-conservative form) and from the numerical
 viscosity (upwind weight × Δx), and the result moves with the choice of the
-upwind weight: a scheme that carries one extra calibration parameter. The
-weak resolution dependence of ENCflow presupposes the default
-momentum-conserving scheme (and the dynamic opening correction).
+upwind weight: a scheme that carries one extra calibration parameter.
+Therefore, the weak resolution dependence of ENCflow presupposes the
+default momentum-conserving scheme (and the dynamic opening correction).
 
 #### What is special about this case
 
