@@ -1,4 +1,4 @@
-> English mirror of tutorials/wave/README.md (based on commit 57f895a). The Japanese file is the master copy.
+> English mirror of tutorials/wave/README.md (based on commit 87ddaae). The Japanese file is the master copy.
 
 # Tutorial 1: wave -- waves spreading over still water
 
@@ -684,9 +684,13 @@ What this supplement showed, arranged as an order of operations:
   example, a mound of radius 15 m and height 1 m on 1 m of water, meets that
   at the front, while the back slope (r < 32 m) coincides in every run. For
   tsunamis offshore (wavelengths of tens of km over depths of km) or flood
-  inundation, where the front is far wider than the depth, the converged
-  hydrostatic solution is the right answer and the front oscillation is
-  purely numerical. See the non-hydrostatic section of the
+  inundation, where the front is far wider than the depth, physical
+  dispersion does not act and the converged hydrostatic solution is the
+  right answer. If an oscillation appears at the front there, it is
+  numerical dispersion (a discretization error), not physics, and it should
+  be removed with the grid and time step (and the adaptive Runge-Kutta
+  method), not by adding the non-hydrostatic correction. See the
+  non-hydrostatic section of the
   [user guide](../../../docs/en/users_guide/swflow.md) for the conditions and
   settings.
 
