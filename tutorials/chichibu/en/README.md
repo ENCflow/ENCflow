@@ -1,4 +1,4 @@
-> English mirror of tutorials/chichibu/README.md (based on commit 30f400e). The Japanese file is the master copy.
+> English mirror of tutorials/chichibu/README.md (based on commit 3a0b856). The Japanese file is the master copy.
 
 # Tutorial 2: chichibu -- rain on a real-terrain catchment
 
@@ -826,10 +826,11 @@ the Step 4 configuration with text input only). We also run the
 **4-neighbor** computation mentioned at the end of Step 1
 (`p_diagratio = 0.0`, diagonal exchange closed) at the same three
 resolutions, to see what the 8-direction exchange of the ENC grid
-brings. These six runs (plus the two width-equalized runs described
-below) and the figures are reproduced in one go with `./Fig_supp.sh`
-from the case directory (it includes the 50 m grid, so it takes a
-little under an hour on a 4-core laptop).
+brings. These six runs (plus the three width-equalized runs and the six
+runs with a different treatment of advection described below) and the
+figures are reproduced in one go with `./Fig_supp.sh` from the case
+directory (it includes five 50 m grid runs, so it takes about three hours
+on a 4-core laptop).
 
 ### Mapping the transects
 
