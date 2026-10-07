@@ -100,7 +100,7 @@ unset multiplot
 reset
 set datafile separator comma
 set terminal pngcairo size 1000,900 font ",11"
-set output "figs/supp_hydro_adv.png"
+set output "en/figs/supp_hydro_adv.png"
 set multiplot layout 3,2 title "Advection treatment and resolution dependence: top no advection (diffusion wave), middle scheme 1 (old), bottom scheme 3 (default)" noenhanced
 set grid
 set xlabel "time (min)"
