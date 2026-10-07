@@ -99,20 +99,20 @@ unset multiplot
 # ---- 図 2c: 移流項の扱い(なし / スキーム 1 / スキーム 3)× 解像度。測線 1・4 ----
 reset
 set datafile separator comma
-set terminal pngcairo size 1000,900 font ",11"
+set terminal pngcairo size 1000,1200 font ",11"
 set output "en/figs/supp_hydro_adv.png"
-set multiplot layout 3,2 title "Advection treatment and resolution dependence: top no advection (diffusion wave), middle scheme 1 (old), bottom scheme 3 (default)" noenhanced
+set multiplot layout 4,2 title "Advection treatment and resolution dependence: from top: no advection (diffusion wave), scheme 1 (old, upwind 0.5), scheme 1 (upwind 0.1), scheme 3 (default)" noenhanced
 set grid
 set xlabel "time (min)"
 set ylabel "discharge (m^3/s)"
 set key top right
 array RESA[3] = [ "200m", "100m", "50m" ]
 array RLBA[3] = [ "200 m", "100 m", "50 m" ]
-array SFXA[3] = [ "_noadv", "_s1", "" ]
-array SLBA[3] = [ "no advection", "scheme 1", "scheme 3 (default)" ]
+array SFXA[4] = [ "_noadv", "_s1", "_s1u", "" ]
+array SLBA[4] = [ "no advection", "scheme 1 (upwind 0.5)", "scheme 1 (upwind 0.1)", "scheme 3 (default)" ]
 array TRNA[2] = [ 1, 4 ]
 array TLBA[2] = [ "upstream (transect 1)", "downstream (transect 4)" ]
-do for [s=1:3] {
+do for [s=1:4] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLBA[s], TLBA[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]
