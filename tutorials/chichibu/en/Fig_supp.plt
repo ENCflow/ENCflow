@@ -116,7 +116,7 @@ do for [s=1:3] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLBA[s], TLBA[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]
-    set yrange [0:(t == 1 ? 1800 : 12000)]
+    set yrange [0:(t == 1 ? 1800 : (s == 1 ? 20000 : 8000))]   # 移流項なしの下流だけ縦軸の範囲が違う
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RESA[r], SFXA[s], TRNA[t]) \
          using 2:3 with lines lw 1.5 title RLBA[r]
   }
@@ -144,7 +144,8 @@ do for [t=1:2] {
        sprintf("result_supp_200m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#9467bd' title "200 m W = 50", \
        sprintf("result_supp_100m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m, no width", \
        sprintf("result_supp_100m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#2ca02c' title "100 m W = 50", \
-       sprintf("result_supp_50m/fluxes/flux000%d.csv", TRNW[t])      using 2:3 with lines lw 1.8      lc rgb '#1f9fd0' title "50 m (resolved channel)"
+       sprintf("result_supp_50m/fluxes/flux000%d.csv", TRNW[t])      using 2:3 with lines lw 1.8      lc rgb '#1f9fd0' title "50 m (resolved channel)", \
+       sprintf("result_supp_50m_w50/fluxes/flux000%d.csv", TRNW[t])  using 2:3 with lines lw 1.2 dt 2 lc rgb '#1f9fd0' title "50 m W = 50"
 }
 unset multiplot
 

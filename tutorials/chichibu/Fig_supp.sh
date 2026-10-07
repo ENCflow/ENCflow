@@ -31,13 +31,15 @@ for r in 200m 100m 50m; do
   fi
 done
 
-# --- 河道幅を 50 m に揃えたサブグリッド河道(壁なし)。200 m・100 m のみ
-#     (50 m 格子は河道セル自体が 50 m 幅)。幅データは test/chichibu/ のもの ---
-for r in 200m 100m; do
+# --- 河道幅を 50 m に揃えたサブグリッド河道(壁なし)。幅データは test/chichibu/ のもの。
+#     50 m 格子は河道セル自体が 50 m 幅なので、W = 50 m の指定が解像表現に退化する
+#     ことの確認用(結果 1 の末尾) ---
+for r in 200m 100m 50m; do
   if [ ! -d "result_supp_${r}_w50" ]; then
     case $r in
       200m) wdir="../../test/chichibu/data_chichibu_200m"; wfile="width200_50.txt" ;;
       100m) wdir="../../test/chichibu/data_chichibu";      wfile="width_chichibu50.txt" ;;
+      50m)  wdir="../../test/chichibu/data_chichibu_50m";  wfile="width50_50.txt" ;;
     esac
     sed -e '/dir_data/i\  fn_channel = "-"           ! 河道条件設定ファイル' \
         -e "s#^  dir_data = \".*\"#  dir_data = \"$wdir\"#" "param_supp_$r.txt" > "wrk_supp_param_${r}_w50.txt"

@@ -909,7 +909,7 @@ tabulated below (in parentheses: change from the next coarser grid).
   In the figure, the W = 50 curves of 200 m and 100 m (solid) nearly
   coincide downstream, yet they are lower and later than the 50 m grid
   (light blue) and even later than the no-width runs (dashed); at the
-  upstream transect 1 the width hardly matters. A 50 m subgrid channel
+  upstream transect 1 the width hardly matters. XXW50CHECK A 50 m subgrid channel
   squeezes the flow into a conveyance section of
   1/4 to 1/2 of the cell width, so the storage decreases but the
   conveyance hits its cap and the wave is delayed, whereas on the 50 m
@@ -966,11 +966,14 @@ how the treatment of advection changes the resolution dependence
 
 ![Supplement: advection treatment and resolution dependence](figs/supp_hydro_adv.png)
 
-Peak discharge (m³/s) and its time (min) at transect 4 (near the basin outlet):
+Top row: no advection; middle: scheme 1; bottom: scheme 3 (default); left:
+upstream transect 1; right: downstream transect 4. **Note that the vertical
+axis of the top-right panel spans 2.5 times the others.** Peak discharge
+(m³/s) and its time (min) at transect 4 (near the basin outlet):
 
 | advection | 200 m | 100 m | 50 m |
 |---|---|---|---|
-| none (diffusion wave) | XXN200 | XXN100 | XXN50 |
+| none (diffusion wave) | 9,611 @113 | 15,601 @102 | 17,996 @92 |
 | scheme 1 (old) | 5,714 @158 | 6,024 @169 | 6,261 @176 |
 | scheme 3 (default) | 5,434 @170 | 5,712 @178 | 6,232 @180 |
 
@@ -983,7 +986,7 @@ Courant number exceeded 1), so that one run uses dt = 0.4 s.
 #### Dropping the advection term makes the peak larger and earlier on finer grids
 
 Without the advection term (diffusion wave, local inertia equation), the peak
-at transect 4 goes XXNTREND from 200 m to 100 m to 50 m: **the finer the grid,
+at transect 4 goes 9,611 → 15,601 → 17,996 m³/s and 113 → 102 → 92 min from 200 m to 100 m to 50 m: **the finer the grid,
 the larger and earlier the peak**. The resolution dependence is an order of
 magnitude stronger than with the default scheme 3 (5,434 → 5,712 → 6,232,
 with the timing almost unchanged), and the values themselves are 2 to 3
