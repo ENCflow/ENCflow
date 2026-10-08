@@ -1,4 +1,4 @@
-> English mirror of tutorials/chichibu/README.md (based on commit 51fb362). The Japanese file is the master copy.
+> English mirror of tutorials/chichibu/README.md (based on commit ffa8fc0). The Japanese file is the master copy.
 
 # Tutorial 2: chichibu -- rain on a real-terrain catchment
 
@@ -1010,26 +1010,63 @@ at transect 4 goes 9,611 → 15,601 → 17,996 m³/s and 113 → 102 → 92 min 
 the larger and earlier the peak**. The resolution dependence is an order of
 magnitude stronger than with the default scheme 3 (5,434 → 5,712 → 6,232,
 with the timing almost unchanged), and the values themselves are 2 to 3
-times larger. We read this as follows.
+times larger. Let us follow the reasons step by step.
 
-- The velocity of a diffusion wave is set only by the local balance of
-  water-surface slope and friction (Manning), with no inertia (no time
-  needed to accelerate, no deceleration when fast water mixes with slow
-  water). The bed of a real DEM is a succession of grid-scale steps (on the
-  100 m grid the median drop between adjacent channel cells is a slope of
-  0.12; developer.md §68.20). A finer grid resolves more of these steps, so
-  the local slopes get steeper and the channel narrower and deeper. Manning
-  responds by raising the velocity (see V_max above), while nothing in the
-  equations represents the energy dissipated in reality by hydraulic jumps
-  and turbulence at the steps, so the wave becomes faster and steeper the
-  finer the grid (with no inertial limit, the flood wave grows into a bore;
-  §68.20). On a coarse grid the steps are averaged into a gentle slope close
-  to the mean, and the wave comes out slower and smaller.
-- In other words, the resolution dependence of the diffusion wave comes from
-  how much of the bed steps is resolved being passed straight into the
-  velocity, and it does not converge with refinement. Existing
-  diffusion-wave and kinematic-wave catchment models normally absorb this
-  into a **roughness coefficient calibrated for each resolution**.
+1. **The velocity of a diffusion wave is set by the local slope alone.** In
+   the diffusion wave (local inertia equation) the velocity follows from
+   the local balance of water-surface slope and friction (Manning), with no
+   inertia (no time needed to accelerate, no deceleration when fast water
+   mixes with slow water). On a uniform slope, therefore, refining the grid
+   changes neither the slope of any cell nor the velocity or the speed of
+   the wave (a straight channel shows no resolution dependence).
+2. **Resolving real terrain more finely widens the distribution of slopes
+   into "steep steps" and "gentle treads".** The bed of a real DEM is a
+   succession of grid-scale steps (on the 100 m grid the median drop
+   between adjacent channel cells is a slope of 0.12; developer.md §68.20).
+   A coarse grid averages the steps into a gentle slope close to the mean;
+   a finer grid resolves the large real steps. The mean slope is the same,
+   but the local slopes spread out.
+3. **"More steps, hence faster" is not an explanation by itself, however.**
+   The Manning velocity scales with the square root of the slope, so what is
+   gained at the steps is lost on the treads, and for the same mean slope a
+   wider distribution lowers the mean velocity if anything (the travel time
+   over the treads grows). Indeed, in a one-cell channel with a stepped bed
+   (stair3 in test/bendloss: 100 m treads with 3 m drops) the travel time
+   without advection was only 14% shorter than with scheme 3.
+4. **The main reason the wave becomes faster and larger is that the
+   acceleration at the steps, unrestrained by inertia, grows into a bore.**
+   In the same stair3 case the peak without advection was 2.3 times that
+   of scheme 3. The difference in peak (130%) is far larger than the
+   difference in travel time (14%): the main effect is the **sharpening of
+   the wave form**, not the mean speed. Without the advection term
+   (inertia) the velocity follows changes of the water-surface slope
+   instantly, and at a step, where the surface slope is large, the velocity
+   shoots up (V_max 41 m/s on the 100 m grid against 30 m/s with scheme 3).
+   In reality hydraulic jumps and turbulence dissipate this acceleration;
+   the equations have no term for it. Deeper water travels faster (wave
+   speed ≈ 5/3 u), so the front steepens into a bore, and a steeper front
+   means a larger surface slope and a still larger velocity, a
+   self-reinforcing loop.
+5. **Refining the grid adds three changes that feed this growth.** (a) The
+   large real steps are resolved, seeding more acceleration. (b) The
+   channel cells become narrower and deeper, raising the velocity for the
+   same discharge (Manning for a rectangular section gives u ∝ (Q/W)^0.4;
+   halving the width raises the velocity by 1.3). (c) The numerical
+   diffusion of the discretization (proportional to Δx) decreases, so the
+   bore stands sharper. On a coarse grid the steps are averaged and the
+   numerical diffusion is large, so the bore is blunted and the wave comes
+   out slower and smaller.
+
+In other words, the resolution dependence of the diffusion wave comes from
+how much of the bed steps is resolved and how sharply the bore can be
+represented being passed straight into the result, and it does not converge
+with refinement. Existing diffusion-wave and kinematic-wave catchment models
+normally absorb this into a **roughness coefficient calibrated for each
+resolution**. With the advection term, the acceleration at the steps is
+cancelled by a hydraulic-jump-like dissipation and by the momentum exchange
+with lateral inflow and the valley floor (next subsection), so resolving the
+steps more finely moves the result little. That is the explanation of the
+weak resolution dependence of scheme 3.
 
 #### What is the advection term decelerating?
 
