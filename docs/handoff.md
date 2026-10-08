@@ -695,6 +695,14 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 中期の道標(着手順は実測次第)
 
+- **津波の一方向ネスティング(設計案 docs/nesting_plan.md。2026-10-08 起案・
+  実装前)**: 同一プロセス内の複数インスタンス化は見送り(理由は
+  plan §1.1)。親 → 子の別ラン連鎖で、(1) 子側の Flather 型「入射+放射」
+  境界 `&list_bound_nest`(既存の長波放射の一般化)、(2) 親側のセル群
+  記録 fn_record の `fn_nest_cell`/`dt_nest`、(3) 前処理 utils/nest_bc
+  (prep/make)の 3 点。要合意事項は plan §12。合意後に plan §11 の
+  コミット分割で実装し、developer.md 新節へ規約を移す。
+
 - **非静水圧(1 層 NH)拡張(Phase 0〜4 実装・検証済み 2026-10-05。
   developer.md §69、設計の正本 docs/nonhydrostatic_plan.md)**:
   f_nonhydrostatic=1(list_enc)で、静水圧ステップを predictor にした
