@@ -21,8 +21,9 @@ developer.md の新節へ、利用者向けは users_guide の新章へ移す。
   **1 つの BMI component**として扱う(§3.9)。ファイル経由の結合はしない。
 - そのために、**同一プロセス内の複数インスタンス化**を基盤として先に
   実施する(§3.2)。v1 で見送った理由(モジュール変数の私有状態が多い)
-  は、計算カーネルに触れない「文脈の付け替え(bind/swap)」方式で解消
-  する。全 MPI ランクが全格子の帯を持つ JAGURS 型の配置とし、親子の
+  は、§12 の「状態は型・private 手続きは引数」を完成させる「所有の明示」を
+  主とし、ホットパスがホスト結合で読む 3 モジュールだけ「文脈の付け替え
+  (bind)」とすることで解消する(§3.2)。全 MPI ランクが全格子の帯を持つ JAGURS 型の配置とし、親子の
   逐次依存でランクが遊ばない。並列層のコミュニケータは従来のまま
   (段4 の par_comm 抽象化は不要)。
 - **受入基準を先に決める**: 格子比 1:1・時間比 1 の自己ネスト(子 =
@@ -60,8 +61,10 @@ v1 §1.1 の事実(物理モジュールの私有状態がモジュール変数�
 
 C の代償は複数インスタンス化の工事である。v1 では「全モジュール状態を
 派生型に包みカーネルの参照を書き換える」規模を懸念したが、§3.2 の
-bind/swap 方式なら **カーネルは一切変えず**、各モジュールに「私有状態を
-文脈へ退避/復帰する手続き」を足すだけで済む(等価リファクタとして
+大半のモジュールは §12 準拠(状態の参照が公開入口に集中)で、状態を型の
+成分に移して引数で渡す「所有の明示」が小さな差分で済む。ホットパスが
+ホスト結合で多数の変数を読む m_swflow_enc 等 3 モジュールだけを「文脈の
+付け替え(bind)」とし、カーネルに触れない(いずれも等価リファクタとして
 ULP=0 で検証できる)。developer.md §12 が既に「複数インスタンス化にも
 開いた構造」「submodule のモジュール変数は将来派生型に包む改修が要る」と
 記しており、その改修を最小形で行うものである。
@@ -120,50 +123,81 @@ ENCflow に実装するのは次の 7 つの基本操作で、各手法はその
 
 ### 3.2 複数インスタンス化の機構(Phase 0。等価リファクタ)
 
-#### 方式: 文脈の付け替え(bind/swap)
+#### 方針: 「所有の明示」を主、「文脈の付け替え(bind)」を従(2026-10-08 改訂)
 
-- 各モジュールは私有状態(モジュール変数)を**そのまま使い続ける**。
-  カーネルも公開手続きも変えない。
-- 各モジュールに「私有状態を格子ごとの文脈へ退避し、別の文脈を復帰する」
-  手続き `m_xxx_bind(ctx)` を足す。配列は `move_alloc`(O(1)、コピー
-  なし)、スカラーは代入。文脈型 `t_xxx_ctx` はそのモジュールが定義し
-  (成分 private)、`t_encflow` が格子ごとに 1 個ずつ持つ。
-- m_main の `enc_bind(k)` が「現在束縛中の格子の文脈を退避 → 格子 k の
-  文脈を復帰」を全モジュールについて行う。格子 k を進める間はその格子の
-  状態がモジュール変数に載っている。OpenMP 並列領域はカーネル内部に
-  閉じているので束縛の切替と干渉しない。
-- ng = 1 のとき bind は「自分を退避して自分を復帰」= 恒等で、従来と
-  ビット一致。
+複数インスタンス化は 2 つの手段を**モジュールの性格で使い分ける**。
+判断基準は人間にとっての可読性で、隠れた文脈(「いま束縛されている格子」
+という暗黙の状態)を持つモジュールを最小限に抑える。
 
-#### モジュール別の実装
+| 手段 | 内容 | 可読性への効果 | 適用先 |
+|---|---|---|---|
+| **A. 所有の明示** | モジュール変数だった私有状態を、そのモジュールの公開型 `t_*` の成分(allocatable。無効時は未確保)に移し、公開入口から private 手続きへ**引数で渡す**。§12 の「状態の実体は型、private 手続きは引数で受ける」をそのまま完成させる形 | **上がる**。依存が署名から読め、隠れた文脈がない。現状 private 手続きがモジュール変数を直接読んでいる箇所(§12 違反)も是正される | §12 準拠(または準拠に直せる)モジュール: 下表の A 群 |
+| **B. 文脈の付け替え(bind)** | 私有状態はモジュール変数のまま使い続け、格子を切り替えるときに `move_alloc`(配列。O(1))と代入(スカラー)で文脈型 `t_*_ctx` へ退避・復帰する。カーネルも公開 API も不変 | **下がる**(暗黙の文脈+宣言と鏡写しの定型コード)。そのぶん適用先を絞り、§3.2 末尾の規律で固定する | ホットパスが多数のモジュール変数をホスト結合で直接読む m_swflow_enc(+submodule)、ホットパスの関数 m_ffactor、並列層の dcp |
 
-| 区分 | 該当 | 実装 |
-|---|---|---|
-| 私有状態なし(状態は t_* 型で引数渡し) | m_precip, m_meteo, m_evap, m_snow, m_swi, m_wq, m_driftwood, m_bldgdebris, m_bedmotion, m_tide, m_boundary(本体), m_state, m_geoinfo, m_sysparam … | 変更なし(`t_encflow` の成分が既にインスタンス) |
-| 私有状態が**1 個の派生型変数** | m_gwflow_bucket(gwb), _greenampt(ga), _lateral(glt, lay1), _layer2(gl2), _conduit(gwc), _pump(gp, 名簿配列), _frost(fro), m_geomorph(crp, flv, dbr, spl, bsl, wrk), m_glacier(glw), m_lavaflow(lvw), m_saltwater(sw), m_intercept_fixed(icf), _initloss(ici) | 変数を `allocatable` 化し、bind は `move_alloc` 1 行ずつ。参照 `gwb%x` は不変 |
-| 私有状態が**多数の散在変数** | **m_swflow_enc**(フラグ・係数・配列 約 100 個)+ submodule の `tx_mod` `td_mod` `nh_mod`・`bc` の配列群、m_ffactor(テーブル)、m_output(wk_out, 装置番号)、m_record(装置番号)、m_boundary_structure(pump_src_checked) | 文脈型に全変数を列挙し、bind で move_alloc/代入。**漏れは §9 の twin テストで検出**する。m_swflow_enc は「状態は親、構築は submodule」の既存様式(§13)どおり、文脈型と bind を親モジュールに置く |
-| 並列層 | m_parallel の `dcp`(帯範囲)、`js_tab/je_tab` | `t_decomp` を格子ごとに保持し `par_decomp_bind(d)` で付け替える(protected のまま。書き手は m_parallel 内)。nrank/nproc/is_root/MPI_WP/owns_mpi は共通 |
+#### モジュール別の分類(2026-10-08 実査。参照箇所の所在で判定)
+
+| 群 | モジュール(状態) | 実査結果 | 作業 |
+|---|---|---|---|
+| 不要 | m_precip, m_meteo, m_evap, m_snow, m_swi, m_wq, m_driftwood, m_bldgdebris, m_bedmotion, m_tide, m_boundary 本体, m_state, m_geoinfo, m_sysparam, m_record | 私有状態なし(`t_*` が既にインスタンス。m_record の暗黙 SAVE 1 件は 0a で是正) | なし |
+| A-1 | m_gwflow_bucket(gwb), _greenampt(ga), _lateral(glt, lay1), _layer2(gl2), _pump(gp), m_geomorph(crp, flv, dbr, spl, bsl, wrk), m_intercept_fixed(icf) | 参照は**公開入口のみ**(private 手続きは引数で受けている) | 変数を `t_gwflow` / `t_geomorph` / `t_intercept` の allocatable 成分へ移し、入口で渡す。参照の書き換えは入口の数行 |
+| A-2 | m_gwflow_conduit(gwc: outfall_check 1 件), _frost(fro: save/restore_state), m_intercept_initloss(ici: 地図読込・save/restore), m_boundary_structure(pump_src_checked), m_output(wk_out, 装置番号) | private 手続きの参照が数件 | A-1 に加え、該当 private 手続きに引数を 1 つ足す。pump_src_checked は `t_boundary` の成分へ。m_output は `t_output`(スクラッチと装置番号)を新設して `t_encflow` に持たせ、output_* の引数に加える |
+| A-3 | m_glacier(glw: tick_avalanche/erosion/flow 22 件), m_lavaflow(lvw: tick_vent/flow/solidify 24 件), m_saltwater(sw: gw_salt_zone/gw_sea_exchange/surf_gravity_current 64 件) | private の tick 系がモジュール変数を直接読む(§12 違反) | 変数を `t_glacier` / `t_lavaflow` / `t_saltwater` の成分へ移し、tick 系の引数に加える。参照の字面は `glw%x` のまま(ダミー名を同じにする)なので差分は署名と入口に集中する |
+| B | m_swflow_enc(約 100 変数)+ m_swflow_enc_adv(tx_mod)/_diff(td_mod)/_nh(nh_mod)/_bc(境界配列)/_channel、m_ffactor(テーブル)、m_parallel(dcp, js_tab/je_tab) | ホストパスのカーネルが submodule からホスト結合で直接読む。m_ffactor はエッジごとに呼ばれる関数。dcp は全モジュールが読む実行コンテキスト | 文脈型 `t_enc_ctx` / `t_ffactor_ctx` / `t_decomp` と bind 手続き。m_swflow_enc は bind の導入と同時に散在変数を**用途別の数個の派生型に束ねる**(河道幅系 frw/wfrac/fwd/cwx/cwy/sdep/screst、堤防・破堤系 nwall/br/ibr*、断面 σ 系 sect_*、NH 系は既存の nh_mod、流束・方位の定数は不変の parameter 化)。束ねる書き換えは参照に及ぶので、bind とは**別コミットの等価リファクタ**として ULP=0 で切り分ける |
+
+m_parallel の dcp は protected のまま、書き手は m_parallel 内の
+`par_decomp_bind(d)` のみ。nrank/nproc/is_root/MPI_WP/owns_mpi は全格子
+共通で付け替えない。
+
+#### m_main と `t_encflow`
+
+- `t_encflow` は従来の 20 成分に加え、B 群の文脈(`t_enc_ctx`,
+  `t_ffactor_ctx`, `t_decomp`)と A-2 の `t_output` を持つ。A 群の状態は
+  既存成分(`gw`, `gm`, `gl`, `lv`, `sl`, `ic`, `b`)の中に入るので
+  `t_encflow` の見た目はほとんど変わらない。
+- m_main は `enc(:)` と `enc_bind(k)` を持つ。bind の対象は B 群だけ
+  (3 モジュール)。**ng = 1 では bind を呼ばない**。
+- 従来の run_step・run_init・run_close は不変(引数に `enc(k)` の成分を
+  渡すだけ)。
+
+#### bind の規律(developer.md 新節に書く)
+
+1. bind を呼ぶのは m_main の `enc_bind` だけ。ステップの外(格子の切替
+   時)でのみ呼び、物理手続きの内側では呼ばない。
+2. B 群の 3 モジュールの**宣言部にはヘッダ注記**を置き、「この変数群は
+   格子ごとの文脈で、追加時は `t_*_ctx` と bind にも登録する」ことを
+   明示する。登録漏れは静的検査スクリプト(§13.3)で止める。
+3. 新しいモジュールは A(所有の明示)で書く。B を新たに増やすのは、
+   ホットパスのホスト結合参照が多数ある場合に限り、developer.md に理由を
+   記す。
+4. 「束縛中の格子」の概念は architecture.md §3(状態の所有)に 1 行で
+   明記する: *dcp と m_swflow_enc の私有状態・m_ffactor のテーブルは
+   「現在 m_main が束縛している格子」のもので、ng = 1 では常に唯一の
+   格子である*。
 
 #### Phase 0 の監査項目
 
 - **手続き内の初期化付き宣言(暗黙 SAVE)**: 実査で `m_record.f90:137`
   (`flxy(...) = -9.999e33` 番兵)と `user_initial.f90:160`(`pi`)の
   2 件。前者は毎回代入に直す(挙動不変)。
-- 装置番号・開いたファイル(m_output, m_record, ダム CSV の `un`)は
-  格子ごとに異なるので文脈に含める。
+- 装置番号・開いたファイル(m_output、ダム CSV の `un`)は格子ごとに
+  異なるので A-2 の型に含める(ダム CSV は `t_structure%un` で既に型内)。
 - `save` 属性の明示変数は m_main の `enc` と m_parallel のみ(実査済み)。
 - 既知のコンパイラ落とし穴(§13)への適合: 文脈型の定義と変数は
   **親モジュール**に置き、submodule では allocate しない(flang の
-  型記述子・private ホスト結合の不具合を避ける)。move_alloc と
-  allocatable スカラーは F2003 の基本機能で、対象コンパイラ(gfortran /
-  ifx / nvfortran / flang / NEC)全てで実績がある。
+  型記述子・private ホスト結合の不具合を避ける)。allocatable 成分と
+  move_alloc は F2003 の基本機能で、対象コンパイラ(gfortran / ifx /
+  nvfortran / flang / NEC)全てで実績がある。
 
 #### 性能
 
-- bind の切替は配列 1 本につき記述子の移動だけで、ステップあたり格子数
-  × モジュール数回(数百回)。計算量に対して無視できる。
-- カーネルのコード生成は不変(モジュール変数のまま)。v1 で懸念した
-  「派生型成分参照への書換えによる性能変化」は起きない。
+- A 群: 入口で渡す引数が 1 つ増えるだけ。tick 系の引数追加もループの
+  外側(手続き単位)で、カーネル内のアクセスは `glw%x` のまま。
+- B 群: bind の切替は配列 1 本につき記述子の移動だけで、ステップあたり
+  格子数 × 3 モジュール分。無視できる。カーネルのコード生成は不変。
+- m_swflow_enc の派生型への束ね(B の付随作業)はモジュール変数の
+  派生型成分参照になるが、変数自体がモジュールスコープに留まる(ダミー
+  引数にしない)ので静的にアドレスでき、aliasing の仮定も変わらない。
+  ULP=0 と実行時間の計測で確認する。
 
 ### 3.3 格子木と幾何(P1・P2)
 
@@ -384,7 +418,7 @@ m_nest(ネスト系の木・幾何・時間進行・交換)
   nest_finalize : 逆順の dispose
 m_swflow_enc の公開フック: m_swflow_enc_nest_export(窓のエッジ量) / _import(帯のエッジ量)
 m_parallel: par_decomp_bind / par_decomp_init の整列引数 / 窓の allreduce は既存 par_allreduce_sumr
-m_main: enc(:)・enc_bind・ng=1 の従来経路
+m_main: enc(:)・enc_bind(B 群 3 モジュールのみ)・ng=1 の従来経路
 ```
 
 m_nest は m_main より下、物理モジュールより上の層(状態の所有は各
@@ -465,8 +499,10 @@ m_nest は m_main より下、物理モジュールより上の層(状態の所�
 
 | Phase | 内容 | 規模 | 合否 |
 |---|---|---|---|
-| 0a | 監査(暗黙 SAVE・装置番号・モジュール変数の台帳)と小修正 | 小 | 全 test ビット一致 |
-| 0b | 文脈型と bind: 並列層(dcp)、単一派生型モジュール(allocatable + move_alloc)、散在型(m_swflow_enc + submodule、m_ffactor、m_output、m_record)。m_main の `enc(:)` と enc_bind、ng=1 の従来経路 | **大**(機械的だが広い) | 全 test ビット一致、MPI np=1,2,4、BMI 完走、**twin テスト** |
+| 0a | 監査(暗黙 SAVE・装置番号・モジュール変数の台帳=§3.2 の分類表の確定)と小修正 | 小 | 全 test ビット一致 |
+| 0b | **所有の明示(A 群)**: gwflow サブモデル・geomorph・intercept(A-1/A-2)、conduit/frost/structure/output(A-2)、glacier/lavaflow/saltwater(A-3。tick 系の引数追加)。モジュールごとに 1 コミット | 中(機械的。モジュール数が多い) | 各コミットで全 test ビット一致 |
+| 0c | **bind(B 群)**: `t_decomp` の付け替え、`t_ffactor_ctx`、`t_enc_ctx`(散在変数を列挙)。静的検査スクリプト。m_main の `enc(:)`・`enc_bind`、ng=1 では呼ばない | 中 | 全 test ビット一致、MPI np=1,2,4、BMI 完走、**twin テスト** |
+| 0d | m_swflow_enc の散在変数を用途別の派生型に束ねる(可読性の回収。bind のリストが短くなる) | 中(参照の書き換え) | ULP=0、実行時間の不変 |
 | 1 | m_nest: 一覧・幾何・整列検査、par_decomp の整列、窓の gather、prolong(セル量+エッジ量。nest_bc=2)、再帰 advance(r_t=1)、格子別出力、一方向 | 大 | 無効時一致、-fcheck np=2、**比 1:1 恒等(一方向)**、np=1,2,4、restart |
 | 2 | restrict(nest_fb=1)、所有権整列、ハロ、Log 要約 | 中 | **比 1:1 恒等(双方向)**、反射率、例題 |
 | 3 | r_t > 1(時間補間、格子別 dt)、nest_bc=1 | 中 | 比 3・5 の収束、2 段の完走 |
@@ -481,8 +517,9 @@ Phase 0 は単体でも価値がある(§3.9 の独立複数モデル、アン�
 
 ## 12. 要合意事項
 
-1. **同一プロセス内の複数インスタンス化(bind/swap 方式)を基盤にする**
-   (v1 の見送りを撤回。理由は §1.2)。
+1. **同一プロセス内の複数インスタンス化を基盤にする**(v1 の見送りを撤回。
+   理由は §1.2)。手段は「所有の明示」を主、bind を B 群 3 モジュールに
+   限る(§3.2)。
 2. 時間進行は親先行の再帰(§3.4)。r_t は任意の整数(1 を含む)。
 3. 親 → 子の既定は「帯幅 2 の Dirichlet にセル量+エッジ量」(nest_bc=2)。
    水位のみ・Flather・スポンジは選択肢。
@@ -504,23 +541,29 @@ Phase 0 は単体でも価値がある(§3.9 の独立複数モデル、アン�
 
 - **ng = 1 では bind を呼ばない**(文脈の付け替えを通らない)。既存ランは
   従来と同じコード経路で、付け替えにバグがあっても発火しない。
-- 実コードの変化は「私有状態が 1 個の派生型変数のモジュールの allocatable
-  化」だけで、参照は不変。ULP=0 の全回帰で検証する。
+- 実コードの変化は、A 群では「状態を型の成分へ移し入口で渡す」(参照の
+  字面は不変)、B 群では bind 手続きの追加。いずれも ULP=0 の全回帰で
+  検証する。
 - 結論: Phase 0 の一回限りのリスクは全テストのビット一致で潰せる種類。
 
 ### 13.2 将来の修正に加わるコスト(本当のコスト)
 
-1. **新しい規則**: モジュール変数を足したら文脈型と bind にも登録する。
-   漏れは**ネスト実行時だけ**格子間の混線として現れ、単一格子のテストでは
-   見えない。新しいバグの種類が一つ増える。
+1. **新しい規則(B 群 3 モジュールに限る)**: モジュール変数を足したら
+   文脈型と bind にも登録する。漏れは**ネスト実行時だけ**格子間の混線と
+   して現れ、単一格子のテストでは見えない。新しいバグの種類が一つ増える
+   が、発生しうる場所は B 群に閉じる。A 群では型の成分なので漏れようがない。
+1b. **暗黙の文脈**: B 群と dcp は「束縛中の格子」のもの、という知識が
+   読み手に要る(§3.2 の規律 4 で文書に固定)。
 2. 新しいプロセスの追加者は「ネスト格子での振る舞い」を一度考える
    (既定は各格子で独立。追加作業はゼロだが問いは増える)。
 3. CI に twin テストと比 1:1 恒等テストが加わる。
 
 ### 13.3 緩和策(採用する)
 
-- **静的検査スクリプト**(test/Scripts): 各モジュールの宣言部の
+- **静的検査スクリプト**(test/Scripts): B 群モジュールの宣言部の
   モジュール変数と bind 手続きの登録を突き合わせ、漏れを機械的に止める。
+  あわせて A 群以外の src/ にモジュール変数が新設されていないかも検査する
+  (新しい状態は型に置く、という §12 の規約の機械化)。
   ソースの書式が規則的(§12 の様式)なので awk/Python の数十行で書ける。
 - **ネスト対応モジュール表**: 表にないモジュールが有効なネストラン
   (ng > 1)は init で par_stop する(黙って動かさない)。登録漏れが
