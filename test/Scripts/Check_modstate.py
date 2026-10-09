@@ -37,7 +37,8 @@ ALLOWED = {
     # 並列層(実行コンテキスト。dcp は B: par_decomp_bind で付け替え)
     "m_parallel_serial.f90": {"nrank": "X", "nproc": "X", "is_root": "X", "dcp": "B", "dcp_ctx": "X"},
     "m_parallel_mpi.f90": {"nrank": "X", "nproc": "X", "is_root": "X", "dcp": "B",
-                            "js_tab": "B", "je_tab": "B", "MPI_WP": "X", "owns_mpi": "X", "dcp_ctx": "X"},
+                            "js_tab": "B", "je_tab": "B", "MPI_WP": "X", "owns_mpi": "X", "par_init_done": "X",
+                            "dcp_ctx": "X"},
     # m_main のインスタンス格納(encs(:))と選択(enc => encs(kcur))
     "m_main.f90": {"encs": "X", "enc": "X", "ninst": "X", "kcur": "X"},
     # list_* の namelist 作業配列(読み込み時の一時領域。読んだ直後に型へ写す)

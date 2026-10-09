@@ -97,6 +97,12 @@ module m_parallel
    ! 終了処理(MPI_Finalize)も呼び出し側の責務とし、こちらは行わない。
    ! bmi_plan.md §6 段3、developer.md §58)
    logical, save :: owns_mpi = .true.
+   ! par_init を通過済みか。複数インスタンス(§71)では initialize ごとに
+   ! par_init が呼ばれるが、MPI はプロセスの資源なので 2 回目以降は何もしない
+   ! (2 回目に MPI_Initialized が真になるのを「呼び出し側が初期化済み」と
+   ! 誤認して owns_mpi を倒すと、最後の finalize が MPI_Finalize を呼ばず
+   ! mpirun が異常終了扱いにする実バグの是正。2026-10-09)
+   logical, save :: par_init_done = .false.
 
    ! 文脈の付け替え(複数インスタンス。developer.md §71)
    !   インスタンス k の分割情報を保持する枠。par_decomp_ctx_swap が
@@ -113,6 +119,8 @@ contains
    subroutine par_init()
       integer :: iprov
       logical :: already
+      if (par_init_done) return    ! 2 つ目以降のインスタンスの initialize
+      par_init_done = .true.
       call MPI_Initialized(already)
       if (already) then
          ! 呼び出し側が初期化済み(ライブラリモード)。スレッド水準だけ検査
