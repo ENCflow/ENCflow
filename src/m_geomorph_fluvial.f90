@@ -60,34 +60,34 @@ module subroutine init_fluvial(gm, p, g, list)
   end if
   ! 通過幅(k=1: 斜め, k=2: y法線, k=3: 斜め, k=4: x法線。k=5..8 は
   ! 対向方位で同幅。k>=5 は開境界面の書き手が使う)
-  flv%wl(1) = sqrt((ldy * g%dy)**2 + (ldx * g%dx)**2)
-  flv%wl(2) = lpx * g%dx
-  flv%wl(3) = flv%wl(1)
-  flv%wl(4) = lpy * g%dy
-  flv%wl(5) = flv%wl(4)
-  flv%wl(6) = flv%wl(3)
-  flv%wl(7) = flv%wl(2)
-  flv%wl(8) = flv%wl(1)
+  gm%flv%wl(1) = sqrt((ldy * g%dy)**2 + (ldx * g%dx)**2)
+  gm%flv%wl(2) = lpx * g%dx
+  gm%flv%wl(3) = gm%flv%wl(1)
+  gm%flv%wl(4) = lpy * g%dy
+  gm%flv%wl(5) = gm%flv%wl(4)
+  gm%flv%wl(6) = gm%flv%wl(3)
+  gm%flv%wl(7) = gm%flv%wl(2)
+  gm%flv%wl(8) = gm%flv%wl(1)
   ! k軸方向(中心→近傍)の単位ベクトル
-  flv%ex(1) = -g%dx / dr;  flv%ey(1) = -g%dy / dr
-  flv%ex(2) = 0.0;         flv%ey(2) = -1.0
-  flv%ex(3) = g%dx / dr;   flv%ey(3) = -g%dy / dr
-  flv%ex(4) = -1.0;        flv%ey(4) = 0.0
-  flv%ex(5) = 1.0;         flv%ey(5) = 0.0
-  flv%ex(6) = -g%dx / dr;  flv%ey(6) = g%dy / dr
-  flv%ex(7) = 0.0;         flv%ey(7) = 1.0
-  flv%ex(8) = g%dx / dr;   flv%ey(8) = g%dy / dr
+  gm%flv%ex(1) = -g%dx / dr;  gm%flv%ey(1) = -g%dy / dr
+  gm%flv%ex(2) = 0.0;         gm%flv%ey(2) = -1.0
+  gm%flv%ex(3) = g%dx / dr;   gm%flv%ey(3) = -g%dy / dr
+  gm%flv%ex(4) = -1.0;        gm%flv%ey(4) = 0.0
+  gm%flv%ex(5) = 1.0;         gm%flv%ey(5) = 0.0
+  gm%flv%ex(6) = -g%dx / dr;  gm%flv%ey(6) = g%dy / dr
+  gm%flv%ex(7) = 0.0;         gm%flv%ey(7) = 1.0
+  gm%flv%ex(8) = g%dx / dr;   gm%flv%ey(8) = g%dy / dr
 
   ! 流砂量の次元化係数(無次元流砂量 → m2/s)
-  flv%qbcoef = sqrt(gm%sgrav * p%gg * gm%d50**3)
+  gm%flv%qbcoef = sqrt(gm%sgrav * p%gg * gm%d50**3)
 
-  call require_work(g)
+  call require_work(gm, g)
 end subroutine
 
 
 !----------------------------------------------------------------------
 module subroutine calc_fluvial(gm, p, g, s, dts)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -145,8 +145,8 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
             vve = (s%vv(i,j) + s%vv(in,jn)) / 2
             hhe = (s%h(i,j) + s%h(in,jn)) / 2
             if (okbank .and. vve > 0.0 .and. hhe > p%dd) then
-              ue = (s%u(i,j) + s%u(in,jn)) / 2 * flv%ex(k) &
-                 + (s%v(i,j) + s%v(in,jn)) / 2 * flv%ey(k)
+              ue = (s%u(i,j) + s%u(in,jn)) / 2 * gm%flv%ex(k) &
+                 + (s%v(i,j) + s%v(in,jn)) / 2 * gm%flv%ey(k)
               if (ue /= 0.0) then
                 hhe = max(hhe, p%dv)         ! 極浅水深での τ* 発散を防ぐ
                 rne = (g%rn(i,j) + g%rn(in,jn)) / 2
@@ -160,9 +160,9 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                   else                             ! MPM
                     qbs = 8.0 * (taus - gm%tausc)**1.5
                   end if
-                  qb = qbs * flv%qbcoef            ! 固体体積の単位幅流砂量 (m2/s)
+                  qb = qbs * gm%flv%qbcoef            ! 固体体積の単位幅流砂量 (m2/s)
                   ! 流向射影(|ue|/vve <= 1)× 通過幅でエッジ流量に
-                  gq = qb * (ue / vve) * flv%wl(k)
+                  gq = qb * (ue / vve) * gm%flv%wl(k)
                   ! 通過幅係数(水と同じ開口・幅キャップ。無効時は乗算なし)。
                   ! 動的振り替えの表 fwd(§68.14)も水と同じく乗じる: geomorph は
                   ! swflow の後に走り、fwd はこのステップの頭で作られて連続式が
@@ -186,7 +186,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                       winvd = 1.0 / wfrac(in,jn)
                     end if
                   end if
-                  dze = abs(gq) * dts * wrk%ainv * winvd * gm%poroi
+                  dze = abs(gq) * dts * gm%wrk%ainv * winvd * gm%poroi
                   if (dze > sdup) then
                     gq = gq * (sdup / dze)         ! sdup=0(岩盤)なら 0
                     dze = sdup
@@ -202,7 +202,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
             end if
           end if
         end if
-        wrk%q(k, i+die(k), j+dje(k)) = gq
+        gm%wrk%q(k, i+die(k), j+dje(k)) = gq
       end do
 
       ! --- 開境界面の掃流フラックス(境界土砂供給・流出の第1段) ---
@@ -224,7 +224,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
           vve = s%vv(i,j)
           hhe = s%h(i,j)
           if (vve > 0.0 .and. hhe > p%dd) then
-            ue = s%u(i,j) * flv%ex(k) + s%v(i,j) * flv%ey(k)   ! 正 = 域外へ
+            ue = s%u(i,j) * gm%flv%ex(k) + s%v(i,j) * gm%flv%ey(k)   ! 正 = 域外へ
             if (ue > 0.0 .or. gm%f_bcfeed > 0) then
               hhe = max(hhe, p%dv)
               rne = g%rn(i,j)
@@ -236,11 +236,11 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                 else                             ! MPM
                   qbs = 8.0 * (taus - gm%tausc)**1.5
                 end if
-                qb = qbs * flv%qbcoef
-                gq = qb * (ue / vve) * flv%wl(k)
+                qb = qbs * gm%flv%qbcoef
+                gq = qb * (ue / vve) * gm%flv%wl(k)
                 winvd = 1.0
                 if (have_width) winvd = 1.0 / wfrac(i,j)
-                dze = abs(gq) * dts * wrk%ainv * winvd * gm%poroi
+                dze = abs(gq) * dts * gm%wrk%ainv * winvd * gm%poroi
                 if (gq > 0.0) then
                   ! 流出: 供給側 = 自セルの可動層クランプ
                   if (dze > s%sd(i,j)) then
@@ -258,7 +258,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
           end if
           ! 格納は所有者正準の向き(sign_e を乗じて格納すると、ループ2の
           ! sign_e(k) 倍の読み出しで gq = 域外向き正 が復元される)
-          wrk%q(ke(k), i+die(k), j+dje(k)) = sign_e(k) * gq
+          gm%wrk%q(ke(k), i+die(k), j+dje(k)) = sign_e(k) * gq
         end do
       end if
     end do
@@ -274,17 +274,17 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
       if (g%sw(i,j) > 0) cycle
       dv8 = 0.0
       do k = 1, 8
-        dv8 = dv8 + sign_e(k) * wrk%q(ke(k), i+die(k), j+dje(k))
+        dv8 = dv8 + sign_e(k) * gm%wrk%q(ke(k), i+die(k), j+dje(k))
       end do
       ! 河道幅有効時は体積発散を河道底面積 wfrac*dx*dy で厚さに換算
       ! (Δz の河道底集中。無効時は 1.0 の乗算で厳密に不変)
       winv = 1.0
       if (have_width) winv = 1.0 / wfrac(i,j)
-      dz = -dv8 * dts * wrk%ainv * winv * gm%poroi
+      dz = -dv8 * dts * gm%wrk%ainv * winv * gm%poroi
       ! 岩盤床クリップ(複数エッジの同時流出でエッジ別クランプを僅かに
       ! 超えた場合の最終防衛。失った体積は vleak に計上して黙らない)
       if (dz < -s%sd(i,j)) then
-        vleak = vleak + (-dz - s%sd(i,j)) / gm%poroi / wrk%ainv / winv
+        vleak = vleak + (-dz - s%sd(i,j)) / gm%poroi / gm%wrk%ainv / winv
         dz = -s%sd(i,j)
       end if
       ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
@@ -305,8 +305,8 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   !$omp end parallel do
 
   ! ガード発動の累計(dispose で報告)
-  flv%nclip = flv%nclip + nclip
-  flv%vleak = flv%vleak + vleak
+  gm%flv%nclip = gm%flv%nclip + nclip
+  gm%flv%vleak = gm%flv%vleak + vleak
 
 end subroutine
 

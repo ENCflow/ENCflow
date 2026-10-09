@@ -19,12 +19,12 @@
 !   海セルの z は勾配・曲率の近傍としては読む(海食崖の縁がまさに対象)。
 !
 !   剥離土砂は**系外排出**(開いた系): hs に注入せず(無流水なので
-!   移流できない)、体積を台帳 spl%vout に積んで dispose で報告する。
+!   移流できない)、体積を台帳 gm%spl%vout に積んで dispose で報告する。
 !   z と sd は共動更新(帯水層底 z − sd 不変)+ gwflow 容量引き渡しは
 !   wash と同一規約。sd=0 で岩盤露出・停止(風化 f_wthr と収支が閉じる)。
 !
 !   2パス構造(MPI 規約): eval_splash が時刻 n の z(近傍参照)から
-!   侵食深 spl%fx を評価し(debris の適用より前に呼ぶ=全プロセスが
+!   侵食深 gm%spl%fx を評価し(debris の適用より前に呼ぶ=全プロセスが
 !   時刻 n の z を見る)、apply_splash が局所適用する(debris の後)。
 !   これにより帯界面でランク数に依存しない。
 !
@@ -68,21 +68,21 @@ module subroutine init_splash(gm, g, list)
   gm%shexp = list%spl_h
   gm%sdzmax = list%spl_dzmax
 
-  if (.not. allocated(spl%fx)) then
-    allocate(spl%fx(1:g%nx, dcp%js:dcp%je), source = 0.0)
+  if (.not. allocated(gm%spl%fx)) then
+    allocate(gm%spl%fx(1:g%nx, dcp%js:dcp%je), source = 0.0)
   end if
 end subroutine
 
 
 !----------------------------------------------------------------------
-! 侵食深の評価(時刻 n の z から。書き込みは spl%fx のみ)
-!   帯の全セルの fx を 0 を含めて必ず上書きする(wrk%q と同じ契約)。
+! 侵食深の評価(時刻 n の z から。書き込みは gm%spl%fx のみ)
+!   帯の全セルの fx を 0 を含めて必ず上書きする(gm%wrk%q と同じ契約)。
 !   近傍 z の読み: x 方向は配列範囲と x>0 を検査(範囲外・領域外は
 !   自セル値で鏡像=寄与ゼロ)、y 方向はハロ行(常に確保済み)。
 !   海セル(sw>0)の z は実地形として読む(海食崖の縁の勾配が対象)
 !----------------------------------------------------------------------
 module subroutine eval_splash(gm, p, g, s, dts)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
@@ -100,7 +100,7 @@ module subroutine eval_splash(gm, p, g, s, dts)
   !$omp parallel do schedule(static) reduction(+:nclip) &
   !$omp   private(i, j, zc, ze, zw, zn, zs, kap, sx, sy, ss, er, fx)
   do j = dcp%js, dcp%je
-    spl%fx(:,j) = 0.0
+    gm%spl%fx(:,j) = 0.0
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
@@ -138,11 +138,11 @@ module subroutine eval_splash(gm, p, g, s, dts)
         nclip = nclip + 1
       end if
       fx = min(fx, s%sd(i,j))
-      spl%fx(i,j) = fx
+      gm%spl%fx(i,j) = fx
     end do
   end do
   !$omp end parallel do
-  spl%nclip = spl%nclip + nclip
+  gm%spl%nclip = gm%spl%nclip + nclip
 end subroutine
 
 
@@ -151,7 +151,7 @@ end subroutine
 !   排出体積の集計は行別部分和 → 逐次総和(スレッド数によらず決定的)
 !----------------------------------------------------------------------
 module subroutine apply_splash(gm, g, s)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j
@@ -162,7 +162,7 @@ module subroutine apply_splash(gm, g, s)
   do j = dcp%js, dcp%je
     rsum(j) = 0.0
     do i = g%wx(1,j), g%wx(2,j)
-      fx = spl%fx(i,j)
+      fx = gm%spl%fx(i,j)
       if (fx <= 0.0) cycle
       ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 z − sd 不変)
       s%z(i,j) = s%z(i,j) - fx
@@ -184,7 +184,7 @@ module subroutine apply_splash(gm, g, s)
 
   ! 系外排出の台帳(固体体積 = 河床変化 × (1−λ) × セル面積)
   do j = dcp%js, dcp%je
-    spl%vout = spl%vout + rsum(j) * g%dx * g%dy / gm%poroi
+    gm%spl%vout = gm%spl%vout + rsum(j) * g%dx * g%dy / gm%poroi
   end do
 end subroutine
 

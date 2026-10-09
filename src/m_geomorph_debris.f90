@@ -265,12 +265,12 @@ module subroutine init_debris(gm, p, g, list)
 
   ! 8近傍距離テーブル(最急降下勾配用)
   do k = 1, 8
-    dbr%dist8(k) = sqrt((din(k) * g%dx)**2 + (djn(k) * g%dy)**2)
+    gm%dbr%dist8(k) = sqrt((din(k) * g%dx)**2 + (djn(k) * g%dy)**2)
   end do
 
   ! E-D 交換量の作業領域(2パス構造。calc_debris ヘッダ参照)
-  if (.not. allocated(dbr%fx)) then
-    allocate(dbr%fx(1:g%nx, dcp%js:dcp%je), source = 0.0)
+  if (.not. allocated(gm%dbr%fx)) then
+    allocate(gm%dbr%fx(1:g%nx, dcp%js:dcp%je), source = 0.0)
   end if
 
   ! --- 瞬時流動化(f_release)。fn_dbinit の有無で有効化 ---
@@ -281,7 +281,7 @@ module subroutine init_debris(gm, p, g, list)
     gm%f_release = 1
     gm%db_reltime = list%db_reltime
     gm%db_relsat = list%db_relsat
-    call read_release(p, g, trim(list%fn_dbinit))
+    call read_release(gm, p, g, trim(list%fn_dbinit))
   end if
 
   ! --- 無限長斜面安定判定(f_slide。2 = 判定のみ = Fs 診断・危険度
@@ -308,8 +308,8 @@ module subroutine init_debris(gm, p, g, list)
     gm%sl_tanphi = tan(sphi * deg2rad)
     gm%sl_gamma = sgam
     gm%db_relsat = list%db_relsat      ! gwflow 無効時の間隙水付与(release と共有)
-    if (.not. allocated(dbr%sld)) then
-      allocate(dbr%sld(1:g%nx, dcp%js:dcp%je), source = .false.)
+    if (.not. allocated(gm%dbr%sld)) then
+      allocate(gm%dbr%sld(1:g%nx, dcp%js:dcp%je), source = .false.)
     end if
   end if
 end subroutine
@@ -319,7 +319,8 @@ end subroutine
 ! 崩壊深分布ファイルを読み帯を切り出す(全ランク冗長の全域読み。
 ! read_hinit と同じ流儀。負値は設定誤りとして停止)
 !----------------------------------------------------------------------
-subroutine read_release(p, g, fname)
+subroutine read_release(gm, p, g, fname)
+  type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: fname
@@ -329,21 +330,21 @@ subroutine read_release(p, g, fname)
   if (minval(wk) < 0.0) then
     call par_stop("list_geomorph: fn_dbinit release depth has negative values: "//fname)
   end if
-  allocate(dbr%rel(1:g%nx, dcp%js:dcp%je), source = wk(1:g%nx, dcp%js:dcp%je))
+  allocate(gm%dbr%rel(1:g%nx, dcp%js:dcp%je), source = wk(1:g%nx, dcp%js:dcp%je))
 end subroutine
 
 
 !----------------------------------------------------------------------
 ! 土石流の侵食・堆積(2パス構造)
 !   パス1: 時刻 n の z(自セル+近傍の最急降下勾配)から交換量 fx を
-!          dbr%fx に計算する(s への書き込みなし)
+!          gm%dbr%fx に計算する(s への書き込みなし)
 !   パス2: fx を適用する(書き込みは自セルに閉じる。近傍読みなし)
 !   1パスのその場更新は「slope8 の近傍 z 読み vs 他スレッドの z 書き」の
 !   OpenMP データ競合になる(np=4 の state.dat 非決定で実検出)。
 !   suspend/wash は近傍を読まないため1パスで安全 — この差に注意
 !----------------------------------------------------------------------
 module subroutine calc_debris(gm, p, g, s, dtw)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -371,7 +372,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   !$omp                                      tanthc, sinthc, vcr, fac)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
-      dbr%fx(i,j) = 0.0
+      gm%dbr%fx(i,j) = 0.0
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%h(i,j) <= p%dd) then
@@ -416,7 +417,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
             end if
           else
             ! 静止セルは E-D なし(E ∝ |V|)。停止判定用の勾配は地形勾配
-            tanth = slope8(g, s, i, j)
+            tanth = slope8(gm, g, s, i, j)
             fx = 0.0
           end if
           ! 停止条件(f_dbstop=1)の平衡濃度は同式の逆関数(勾配→濃度)
@@ -457,13 +458,13 @@ module subroutine calc_debris(gm, p, g, s, dtw)
             end if
           else
             ! 静止セルは E-D なし(レート ∝ q_T)。停止判定用の勾配は地形勾配
-            tanth = slope8(g, s, i, j)
+            tanth = slope8(gm, g, s, i, j)
             cinf = ceq_egashira(gm, tanth)
             fx = 0.0
           end if
         else
           ! 高橋型: 平衡濃度 C∞(θ) への緩和(最急降下勾配。時刻 n の z)
-          tanth = slope8(g, s, i, j)
+          tanth = slope8(gm, g, s, i, j)
           cinf = ceq_debris(gm, tanth)
           if (cc < cinf) then
             ! 侵食(C* − C∞ ≥ 0.1C* が上限 0.9C* により保証される)
@@ -488,7 +489,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
         end if
         if (fx < 0.0) fx = max(fx, -max(s%hs(i,j), 0.0))    ! 堆積は浮遊量まで
       end if
-      dbr%fx(i,j) = fx
+      gm%dbr%fx(i,j) = fx
     end do
   end do
   !$omp end parallel do
@@ -497,7 +498,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   !$omp parallel do schedule(static) private(i, j, fx, dzb, cap, fxg, dhw)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
-      fx = dbr%fx(i,j)
+      fx = gm%dbr%fx(i,j)
       if (fx == 0.0) cycle
       s%hs(i,j) = s%hs(i,j) + fx
       ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
@@ -545,7 +546,7 @@ end subroutine
 !   γw = 1000・g(淡水の単位体積重量)
 !----------------------------------------------------------------------
 subroutine slide_pass1(gm, p, g, s)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -563,12 +564,12 @@ subroutine slide_pass1(gm, p, g, s)
   !$omp reduction(min: fsmin_loc)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
-      dbr%sld(i,j) = .false.
+      gm%dbr%sld(i,j) = .false.
       if (dofs) s%fs(i,j) = -1.0
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%sd(i,j) <= 0.0) cycle
-      tanth = slope8(g, s, i, j)
+      tanth = slope8(gm, g, s, i, j)
       if (tanth <= 1.0e-6) cycle              ! 駆動なし(Fs=∞ 扱い)
       cos2 = 1.0 / (1.0 + tanth**2)
       w = gm%sl_gamma * s%sd(i,j)             ! 単位面積の土塊重量 (N/m2)
@@ -581,11 +582,11 @@ subroutine slide_pass1(gm, p, g, s)
         if (s%fsmin(i,j) < 0.0 .or. fs < s%fsmin(i,j)) s%fsmin(i,j) = fs
       end if
       if (fs < fsmin_loc) fsmin_loc = fs
-      if (fs < 1.0) dbr%sld(i,j) = .true.
+      if (fs < 1.0) gm%dbr%sld(i,j) = .true.
     end do
   end do
   !$omp end parallel do
-  if (fsmin_loc < dbr%fsmin) dbr%fsmin = fsmin_loc
+  if (fsmin_loc < gm%dbr%fsmin) gm%dbr%fsmin = fsmin_loc
 end subroutine
 
 
@@ -594,7 +595,7 @@ end subroutine
 !   転換は release_debris と同じ台帳整合の fluidize
 !----------------------------------------------------------------------
 subroutine slide_pass2(gm, g, s)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j
@@ -602,13 +603,13 @@ subroutine slide_pass2(gm, g, s)
 
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
-      if (.not. dbr%sld(i,j)) cycle
+      if (.not. gm%dbr%sld(i,j)) cycle
       dd = s%sd(i,j)
       if (dd <= 0.0) cycle
       s%hs(i,j) = s%hs(i,j) + dd / gm%poroi   ! 固体分 (1−λ)・D
       s%z(i,j) = s%z(i,j) - dd
       s%sd(i,j) = 0.0                          ! 岩盤露出(堆積で再生すれば再判定)
-      dbr%nslide = dbr%nslide + 1
+      gm%dbr%nslide = gm%dbr%nslide + 1
       if (s%gw_active) then
         ! 容量 0 になった帯水の全量を地表へ(容量超過引き渡しの極限)
         cap = 0.0
@@ -638,14 +639,14 @@ end subroutine
 !         無効なら h += λ・relsat・D(シナリオ的な間隙水付与)
 !----------------------------------------------------------------------
 module subroutine release_debris(gm, p, g, s)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j
   real :: tprev, dd, fx, cap, fxg
 
-  if (.not. allocated(dbr%rel)) return          ! この run で発火済み
+  if (.not. allocated(gm%dbr%rel)) return          ! この run で発火済み
   if (gm%db_reltime > s%t) return
   if (s%it - gm%idt_geomorph > 0) then
     tprev = p%t0 + p%dt * (s%it - gm%idt_geomorph)
@@ -657,11 +658,11 @@ module subroutine release_debris(gm, p, g, s)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
-      dd = dbr%rel(i,j)
+      dd = gm%dbr%rel(i,j)
       if (dd <= 0.0) cycle
       if (dd > s%sd(i,j)) then
         dd = s%sd(i,j)                          ! 可動層クランプ(dispose で報告)
-        dbr%nrelclip = dbr%nrelclip + 1
+        gm%dbr%nrelclip = gm%dbr%nrelclip + 1
         if (dd <= 0.0) cycle
       end if
       fx = dd / gm%poroi                        ! 固体分 (1−λ)・D
@@ -683,14 +684,15 @@ module subroutine release_debris(gm, p, g, s)
     end do
   end do
 
-  deallocate(dbr%rel)                           ! 発火は1回だけ
+  deallocate(gm%dbr%rel)                           ! 発火は1回だけ
 end subroutine
 
 
 !----------------------------------------------------------------------
 ! 8近傍への最急降下勾配 tanθ(下限 0。領域外・海近傍は対象外)
 !----------------------------------------------------------------------
-pure function slope8(g, s, i, j) result(tanth)
+pure function slope8(gm, g, s, i, j) result(tanth)
+  type(t_geomorph), intent(in) :: gm
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
@@ -703,7 +705,7 @@ pure function slope8(g, s, i, j) result(tanth)
     jn = j + djn(k)
     if (g%x(in,jn) <= 0) cycle
     if (g%sw(in,jn) > 0) cycle
-    sl = (s%z(i,j) - s%z(in,jn)) / dbr%dist8(k)
+    sl = (s%z(i,j) - s%z(in,jn)) / gm%dbr%dist8(k)
     if (sl > tanth) tanth = sl
   end do
 end function

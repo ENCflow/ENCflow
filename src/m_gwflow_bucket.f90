@@ -33,14 +33,16 @@ module m_gwflow_bucket
   public :: gwflow_bucket_init
   public :: gwflow_bucket_calc
   public :: gwflow_bucket_dispose
+  public :: t_bucket
 
-  ! モデル私有の設定(単一インスタンス前提。developer.md §12)
+  ! モデル私有の設定(実体は切替器 m_gwflow の t_gwflow が持ち、各手続きが引数で受ける(nesting_plan.md §3.2 A 群)。
+  ! 成分は本モジュール私有)
   type t_bucket
+    private
     real :: rate = 0.0               ! 浸透能 (m/s)
     real :: cap = 0.0                ! 貯留容量 (m)
     logical :: initialized = .false.
   end type
-  type(t_bucket) :: gwb
 
 contains
 
@@ -48,7 +50,8 @@ contains
 !----------------------------------------------------------------------
 ! バケツモデルの初期化(固有グループ &list_gwflow_bucket を自分で読む)
 !----------------------------------------------------------------------
-subroutine gwflow_bucket_init(p, g, s)
+subroutine gwflow_bucket_init(gwb, p, g, s)
+  type(t_bucket), intent(inout) :: gwb
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -85,7 +88,8 @@ end subroutine
 ! バケツモデルの計算(1回の呼び出しで実効時間刻み dts ぶんの鉛直交換。
 ! dt_gwflow による間引き時は dts = p%dt * idt_gwflow が渡される)
 !----------------------------------------------------------------------
-subroutine gwflow_bucket_calc(p, g, s, it, dts)
+subroutine gwflow_bucket_calc(gwb, p, g, s, it, dts)
+  type(t_bucket), intent(in) :: gwb
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -129,7 +133,8 @@ end subroutine
 !----------------------------------------------------------------------
 ! バケツモデルの破棄(内部状態を持たないため保存もなし。契約5)
 !----------------------------------------------------------------------
-subroutine gwflow_bucket_dispose(p)
+subroutine gwflow_bucket_dispose(gwb, p)
+  type(t_bucket), intent(inout) :: gwb
   type(t_sysparam), intent(in) :: p
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   gwb%initialized = .false.

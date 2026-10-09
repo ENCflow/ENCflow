@@ -28,9 +28,9 @@ module m_intercept
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
   use list_intercept, only : t_list_intercept, list_intercept_read
-  use m_intercept_fixed, only : intercept_fixed_init, intercept_fixed_calc, &
+  use m_intercept_fixed, only : t_icfix, intercept_fixed_init, intercept_fixed_calc, &
                                 intercept_fixed_dispose
-  use m_intercept_initloss, only : intercept_initloss_init, intercept_initloss_calc, &
+  use m_intercept_initloss, only : t_icinit, intercept_initloss_init, intercept_initloss_calc, &
                                 intercept_initloss_step, intercept_initloss_draw, &
                                 intercept_initloss_dispose
   use m_parallel, only : par_stop
@@ -45,33 +45,49 @@ module m_intercept
   public :: m_intercept_dispose
 
   !-------------------------------------------
+  ! サブモデルの状態の容器(排他切替なので有効なモデルの成分だけを確保する)。
+  ! 各モデルの私有状態はモジュール変数でなくここに置き、束縛した手続きへ
+  ! 第 1 引数で渡す(nesting_plan.md §3.2 A 群)。抽象インターフェースが
+  ! この型を受けるため、インターフェースより前に定義する
+  !-------------------------------------------
+  type t_icstate
+    type(t_icfix), allocatable :: fix      ! 固定遮断率(f_icmodel=1)
+    type(t_icinit), allocatable :: init    ! 初期損失(f_icmodel=2)
+  end type
+
+  !-------------------------------------------
   ! 遮断モデルのインターフェース
   ! (型成分で参照するため、型定義より前に置くこと)
   !-------------------------------------------
   abstract interface
-    subroutine procedure_intercept_init(p, g)
-      import :: t_sysparam, t_geoinfo
+    subroutine procedure_intercept_init(st, p, g)
+      import :: t_icstate, t_sysparam, t_geoinfo
+      type(t_icstate), intent(inout) :: st
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
     end subroutine
 
-    subroutine procedure_intercept_calc(p, g, s, it)
-      import :: t_sysparam, t_geoinfo, t_state
+    subroutine procedure_intercept_calc(st, p, g, s, it)
+      import :: t_icstate, t_sysparam, t_geoinfo, t_state
+      type(t_icstate), intent(inout) :: st
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
       integer, intent(in) :: it
     end subroutine
 
-    subroutine procedure_intercept_dispose(p)
-      import :: t_sysparam
+    subroutine procedure_intercept_dispose(st, p)
+      import :: t_icstate, t_sysparam
+      type(t_icstate), intent(inout) :: st
       type(t_sysparam), intent(in) :: p
     end subroutine
 
     ! 蒸発散による貯留の引き落とし口(m_evap が毎ステップ・セルごとに呼ぶ。
     ! §27)。需要 dem (m) のうち貯留から引けた量を返し、内部状態を減じる
     ! (=遮断容量の乾き戻り)。貯留を持つモデルのみ束縛する
-    function procedure_intercept_draw(i, j, dem) result(w)
+    function procedure_intercept_draw(st, i, j, dem) result(w)
+      import :: t_icstate
+      type(t_icstate), intent(inout) :: st
       integer, intent(in) :: i, j
       real, intent(in) :: dem
       real :: w
@@ -89,6 +105,7 @@ module m_intercept
     procedure(procedure_intercept_draw),    pointer, nopass :: draw    => null()
                                      ! 蒸発散の引き落とし口(貯留型のみ束縛。§27)
     procedure(procedure_intercept_dispose), pointer, nopass :: dispose => null()
+    type(t_icstate) :: st            ! 束縛したモデルの状態(手続きへ第 1 引数で渡す)
     logical :: enabled = .false.     ! fn_intercept の有無と f_icmodel で決まる
     logical :: initialized = .false.
   end type
@@ -113,24 +130,26 @@ subroutine m_intercept_init(ic, p, g)
   if (list%f_icmodel == 0) return    ! fn を書いたまま一時無効化する経路
 
   ! --- モデルの束縛(新モデルの追加はここに case を足す) ---
+  ! 束縛先は本モジュール末尾の薄いラッパ(容器 t_icstate から当該モデルの
+  ! 成分を取り出して実装へ渡す)
   select case (list%f_icmodel)
     case (1)
-      ic%init    => intercept_fixed_init
-      ic%calc    => intercept_fixed_calc
-      ic%dispose => intercept_fixed_dispose
+      ic%init    => bind_fixed_init
+      ic%calc    => bind_fixed_calc
+      ic%dispose => bind_fixed_dispose
     case (2)
-      ic%init    => intercept_initloss_init
-      ic%calc    => intercept_initloss_calc
-      ic%step    => intercept_initloss_step
-      ic%draw    => intercept_initloss_draw
-      ic%dispose => intercept_initloss_dispose
+      ic%init    => bind_initloss_init
+      ic%calc    => bind_initloss_calc
+      ic%step    => bind_initloss_step
+      ic%draw    => bind_initloss_draw
+      ic%dispose => bind_initloss_dispose
     case default
       call par_stop("list_intercept: f_icmodel must be 0(none), 1(fixed) or 2(initloss): " &
                     // itoa(list%f_icmodel))
   end select
 
   ic%enabled = .true.
-  call ic%init(p, g)
+  call ic%init(ic%st, p, g)
   ic%initialized = .true.
 end subroutine
 
@@ -141,14 +160,14 @@ end subroutine
 !   冒頭の return 判定は全ランクで同一(collective 安全)
 !----------------------------------------------------------------------
 subroutine m_intercept_calc(ic, p, g, s, it)
-  type(t_intercept), intent(in) :: ic
+  type(t_intercept), intent(inout) :: ic
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer, intent(in) :: it
 
   if (.not. ic%enabled) return
-  call ic%calc(p, g, s, it)
+  call ic%calc(ic%st, p, g, s, it)
 end subroutine
 
 
@@ -158,7 +177,7 @@ end subroutine
 !   冒頭の return 判定は全ランクで同一(collective 安全)
 !----------------------------------------------------------------------
 subroutine m_intercept_step(ic, p, g, s, it)
-  type(t_intercept), intent(in) :: ic
+  type(t_intercept), intent(inout) :: ic
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -166,7 +185,7 @@ subroutine m_intercept_step(ic, p, g, s, it)
 
   if (.not. ic%enabled) return
   if (.not. associated(ic%step)) return
-  call ic%step(p, g, s, it)
+  call ic%step(ic%st, p, g, s, it)
 end subroutine
 
 
@@ -187,7 +206,9 @@ end function
 subroutine m_intercept_dispose(ic, p)
   type(t_intercept), intent(inout) :: ic
   type(t_sysparam), intent(in) :: p
-  if (ic%enabled) call ic%dispose(p)
+  if (ic%enabled) call ic%dispose(ic%st, p)
+  if (allocated(ic%st%fix)) deallocate(ic%st%fix)
+  if (allocated(ic%st%init)) deallocate(ic%st%init)
   ic%init    => null()
   ic%calc    => null()
   ic%step    => null()
@@ -195,6 +216,75 @@ subroutine m_intercept_dispose(ic, p)
   ic%dispose => null()
   ic%enabled = .false.
   ic%initialized = .false.
+end subroutine
+
+!======================================================================
+!========================= PRIVATE ROUTINES ===========================
+!======================================================================
+! 手続きポインタの束縛先(容器から当該モデルの成分を取り出して渡すだけ)。
+! init は成分を確保する(排他切替なので有効なモデルの成分だけが確保される)
+
+subroutine bind_fixed_init(st, p, g)
+  type(t_icstate), intent(inout) :: st
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  if (.not. allocated(st%fix)) allocate(st%fix)
+  call intercept_fixed_init(st%fix, p, g)
+end subroutine
+
+subroutine bind_fixed_calc(st, p, g, s, it)
+  type(t_icstate), intent(inout) :: st
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: it
+  call intercept_fixed_calc(st%fix, p, g, s, it)
+end subroutine
+
+subroutine bind_fixed_dispose(st, p)
+  type(t_icstate), intent(inout) :: st
+  type(t_sysparam), intent(in) :: p
+  call intercept_fixed_dispose(st%fix, p)
+end subroutine
+
+subroutine bind_initloss_init(st, p, g)
+  type(t_icstate), intent(inout) :: st
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  if (.not. allocated(st%init)) allocate(st%init)
+  call intercept_initloss_init(st%init, p, g)
+end subroutine
+
+subroutine bind_initloss_calc(st, p, g, s, it)
+  type(t_icstate), intent(inout) :: st
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: it
+  call intercept_initloss_calc(st%init, p, g, s, it)
+end subroutine
+
+subroutine bind_initloss_step(st, p, g, s, it)
+  type(t_icstate), intent(inout) :: st
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: it
+  call intercept_initloss_step(st%init, p, g, s, it)
+end subroutine
+
+function bind_initloss_draw(st, i, j, dem) result(w)
+  type(t_icstate), intent(inout) :: st
+  integer, intent(in) :: i, j
+  real, intent(in) :: dem
+  real :: w
+  w = intercept_initloss_draw(st%init, i, j, dem)
+end function
+
+subroutine bind_initloss_dispose(st, p)
+  type(t_icstate), intent(inout) :: st
+  type(t_sysparam), intent(in) :: p
+  call intercept_initloss_dispose(st%init, p)
 end subroutine
 
 end module

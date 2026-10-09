@@ -30,7 +30,7 @@ module m_gwflow_pump
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
   use m_boundary, only : interp_series, read_cell_file2, read_val_file2
-  use m_gwflow_layer2, only : gwflow_layer2_active
+  use m_gwflow_layer2, only : t_gwl2, gwflow_layer2_active
   use m_parallel, only : par_info, par_stop, par_allreduce_sumr, dcp, is_root
   use m_util, only : itoa
   implicit none
@@ -38,6 +38,7 @@ module m_gwflow_pump
   public :: gwflow_pump_init
   public :: gwflow_pump_calc
   public :: gwflow_pump_dispose
+  public :: t_gwpump
 
   integer, parameter :: npmax = 50     ! 井戸の最大数
   integer, parameter :: npcmax = 99    ! 1井戸あたりの最大セル数(インライン。
@@ -54,13 +55,12 @@ module m_gwflow_pump
     real :: act = 0.0                  ! 累積取水(同上)
   end type
 
-  ! モデル私有の設定(単一インスタンス前提。developer.md §12)
+  ! モデル私有の設定(実体は切替器 m_gwflow の t_gwflow が持ち、各手続きが引数で受ける(nesting_plan.md §3.2 A 群))
   type t_gwpump
     integer :: nwell = 0
     type(t_well), allocatable :: well(:)
     logical :: initialized = .false.
   end type
-  type(t_gwpump) :: gp
 
   ! namelist 読み込み用の静的作業配列(スタックに置かないための措置。
   ! list_boundary と同じ実バグ対策。init のみ使用)
@@ -74,7 +74,9 @@ contains
 ! 井戸揚水の初期化(固有グループ &list_gwflow_pump を自分で読む)。
 ! gwp_layer=2 の検査があるため m_gwflow_init は層2 init より後に呼ぶこと
 !----------------------------------------------------------------------
-subroutine gwflow_pump_init(p, g, s)
+subroutine gwflow_pump_init(gp, gl2, p, g, s)
+  type(t_gwpump), intent(inout) :: gp
+  type(t_gwl2), intent(in) :: gl2        ! gwp_layer=2 の有効性を参照
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -176,7 +178,7 @@ subroutine gwflow_pump_init(p, g, s)
       call par_stop("list_gwflow_pump: well "//itoa(iw)//" gwp_layer must be " &
                     // "1(soil) or 2(weathered bedrock)")
     end if
-    if (gp%well(iw)%layer == 2 .and. .not. gwflow_layer2_active()) then
+    if (gp%well(iw)%layer == 2 .and. .not. gwflow_layer2_active(gl2)) then
       call par_stop("list_gwflow_pump: well "//itoa(iw)//" gwp_layer=2 requires " &
                     // "f_gwlayer2=1")
     end if
@@ -208,7 +210,8 @@ end subroutine
 ! 実行判定(井戸数・時系列)は namelist 由来で全ランク同一(collective
 ! 安全。ただし本手続きに collective はない)
 !----------------------------------------------------------------------
-subroutine gwflow_pump_calc(p, g, s, it, dts)
+subroutine gwflow_pump_calc(gp, p, g, s, it, dts)
+  type(t_gwpump), intent(inout) :: gp
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -261,7 +264,8 @@ end subroutine
 ! par_allreduce_sumr は collective — 全ランクが dispose を呼ぶ前提
 ! (m_gwflow_dispose 経由で成立)。診断のみで状態には関与しない
 !----------------------------------------------------------------------
-subroutine gwflow_pump_dispose(p, g)
+subroutine gwflow_pump_dispose(gp, p, g)
+  type(t_gwpump), intent(inout) :: gp
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   real, allocatable :: vsum(:)

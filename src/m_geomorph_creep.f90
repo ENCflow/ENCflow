@@ -12,17 +12,17 @@ contains
 
 !----------------------------------------------------------------------
 module subroutine init_creep(gm, p, g)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   real :: dts, dt_lim
   character(len=256) :: msg
 
   ! エッジ伝導度重み = 通過幅 / セル中心間距離(4近傍のみ)
-  crp%cw(1) = 0.0             ! 斜め(未使用)
-  crp%cw(2) = g%dx / g%dy     ! 法線 y 方向(通過幅 dx、距離 dy)
-  crp%cw(3) = 0.0             ! 斜め(未使用)
-  crp%cw(4) = g%dy / g%dx     ! 法線 x 方向(通過幅 dy、距離 dx)
+  gm%crp%cw(1) = 0.0             ! 斜め(未使用)
+  gm%crp%cw(2) = g%dx / g%dy     ! 法線 y 方向(通過幅 dx、距離 dy)
+  gm%crp%cw(3) = 0.0             ! 斜め(未使用)
+  gm%crp%cw(4) = g%dy / g%dx     ! 法線 x 方向(通過幅 dy、距離 dx)
 
   ! 陽解法(FTCS)の安定条件の静的検査: D*dts*(1/dx^2+1/dy^2) <= 1/2。
   ! D・格子・dts がすべて namelist 由来の静的量なので init で確定できる
@@ -37,13 +37,13 @@ module subroutine init_creep(gm, p, g)
                   // "(reduce dt_geomorph/morfac/creep_d)")
   end if
 
-  call require_work(g)
+  call require_work(gm, g)
 end subroutine
 
 
 !----------------------------------------------------------------------
 module subroutine calc_creep(gm, g, s, dts)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
@@ -65,13 +65,13 @@ module subroutine calc_creep(gm, g, s, dts)
         jn = j + djn(k)
         ! z は毎回変わるため、条件を満たさない場合も必ず 0 を代入する
         gq = 0.0
-        if (crp%cw(k) > 0.0 .and. okc .and. g%x(in,jn) > 0) then
+        if (gm%crp%cw(k) > 0.0 .and. okc .and. g%x(in,jn) > 0) then
           if (g%sw(in,jn) <= 0) then
             ! エッジ流量(書き手 c から k 近傍 n に向かい正)
-            gq = gm%creep_d * (s%z(i,j) - s%z(in,jn)) * crp%cw(k)
+            gq = gm%creep_d * (s%z(i,j) - s%z(in,jn)) * gm%crp%cw(k)
           end if
         end if
-        wrk%q(k, i+die(k), j+dje(k)) = gq
+        gm%wrk%q(k, i+die(k), j+dje(k)) = gq
       end do
     end do
   end do
@@ -87,9 +87,9 @@ module subroutine calc_creep(gm, g, s, dts)
       if (g%sw(i,j) > 0) cycle
       dv = 0.0
       do k = 1, 8
-        dv = dv + sign_e(k) * wrk%q(ke(k), i+die(k), j+dje(k))
+        dv = dv + sign_e(k) * gm%wrk%q(ke(k), i+die(k), j+dje(k))
       end do
-      s%z(i,j) = s%z(i,j) - dv * dts * wrk%ainv
+      s%z(i,j) = s%z(i,j) - dv * dts * gm%wrk%ainv
     end do
   end do
   !$omp end parallel do
@@ -104,11 +104,12 @@ end subroutine
 !   (m_swflow_enc の uv/mn と同形)。確保時 0: マスク起因で書かれない
 !   エッジは恒久 0(無フラックス)
 !----------------------------------------------------------------------
-module subroutine require_work(g)
+module subroutine require_work(gm, g)
+  type(t_geomorph), intent(inout) :: gm
   type(t_geoinfo), intent(in) :: g
-  if (allocated(wrk%q)) return
-  wrk%ainv = 1.0 / (g%dx * g%dy)
-  allocate(wrk%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+  if (allocated(gm%wrk%q)) return
+  gm%wrk%ainv = 1.0 / (g%dx * g%dy)
+  allocate(gm%wrk%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
 end subroutine
 
 end submodule

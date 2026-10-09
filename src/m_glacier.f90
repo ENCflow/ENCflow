@@ -95,6 +95,27 @@ module m_glacier
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
+  type t_glwork
+    real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離。4近傍のみ)
+    real :: dist(1:4) = 0.0          ! エッジ法線方向のセル中心間距離 (m)
+    real :: dist8(1:8) = 0.0         ! 8近傍セル中心までの距離 (m)(雪崩の勾配用)
+    real :: area = 0.0               ! セル面積 dx*dy (m2)
+    real :: ainv = 0.0               ! 1 / (dx*dy)
+    real :: rdx2 = 0.0               ! 1/dx^2 + 1/dy^2(安定条件用)
+    real, allocatable :: q(:,:,:)    ! エッジ氷フラックス4成分 (m3/s)
+    real, allocatable :: edz(:,:)    ! 侵食深の作業領域 (m)(1:nx, js:je)。
+                                     !   2パス構造用: パス1が時刻 n の z+hi
+                                     !   (近傍参照)から侵食深を計算し、
+                                     !   パス2が適用する。1パスのその場更新は
+                                     !   勾配の近傍読みと競合する(§28.2 の
+                                     !   OpenMP データ競合と同型。実検出)
+    real, allocatable :: am(:,:)     ! 雪崩の移送量 (m 水当量)(1:nx, jsh:jeh)
+    integer, allocatable :: ad(:,:)  ! 雪崩の移送方向 k=1..8(0=なし)(同上)
+    real :: vero = 0.0               ! 侵食で系外へ排出した体積 (m3)(ランク局所累計)
+    integer :: nsubtot = 0           ! サブサイクル総数(ランク共通。dispose で報告)
+    integer :: ntick = 0             ! 更新回数
+  end type
+
   type t_glacier
     ! init に早期 return 経路があるため全成分デフォルト初期化必須(§13)
     logical :: enabled = .false.
@@ -119,30 +140,10 @@ module m_glacier
     integer :: f_ava = 0             ! 雪崩再配分 (0:なし, 1:有効)
     real :: avatanc = 0.6            ! 雪崩の限界勾配 tanθc
     logical :: initialized = .false.
+    type(t_glwork) :: glw            ! 作業台帳(モジュール変数から成分へ。nesting_plan.md §3.2 A 群)
   end type
 
   ! モジュール私有の作業領域(単一インスタンス前提。developer.md §12)
-  type t_glwork
-    real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離。4近傍のみ)
-    real :: dist(1:4) = 0.0          ! エッジ法線方向のセル中心間距離 (m)
-    real :: dist8(1:8) = 0.0         ! 8近傍セル中心までの距離 (m)(雪崩の勾配用)
-    real :: area = 0.0               ! セル面積 dx*dy (m2)
-    real :: ainv = 0.0               ! 1 / (dx*dy)
-    real :: rdx2 = 0.0               ! 1/dx^2 + 1/dy^2(安定条件用)
-    real, allocatable :: q(:,:,:)    ! エッジ氷フラックス4成分 (m3/s)
-    real, allocatable :: edz(:,:)    ! 侵食深の作業領域 (m)(1:nx, js:je)。
-                                     !   2パス構造用: パス1が時刻 n の z+hi
-                                     !   (近傍参照)から侵食深を計算し、
-                                     !   パス2が適用する。1パスのその場更新は
-                                     !   勾配の近傍読みと競合する(§28.2 の
-                                     !   OpenMP データ競合と同型。実検出)
-    real, allocatable :: am(:,:)     ! 雪崩の移送量 (m 水当量)(1:nx, jsh:jeh)
-    integer, allocatable :: ad(:,:)  ! 雪崩の移送方向 k=1..8(0=なし)(同上)
-    real :: vero = 0.0               ! 侵食で系外へ排出した体積 (m3)(ランク局所累計)
-    integer :: nsubtot = 0           ! サブサイクル総数(ランク共通。dispose で報告)
-    integer :: ntick = 0             ! 更新回数
-  end type
-  type(t_glwork) :: glw
 
 contains
 
@@ -272,37 +273,37 @@ subroutine m_glacier_init(gl, p, g, s, mt)
   end if
 
   ! --- 作業領域 ---
-  glw%area = g%dx * g%dy
-  glw%ainv = 1.0 / glw%area
-  glw%rdx2 = 1.0 / g%dx**2 + 1.0 / g%dy**2
-  glw%cw(1) = 0.0             ! 斜め(未使用。calc_creep と同じ4近傍)
-  glw%cw(2) = g%dx / g%dy
-  glw%cw(3) = 0.0
-  glw%cw(4) = g%dy / g%dx
-  glw%dist(1) = 0.0
-  glw%dist(2) = g%dy
-  glw%dist(3) = 0.0
-  glw%dist(4) = g%dx
-  glw%dist8(1) = sqrt(g%dx**2 + g%dy**2)
-  glw%dist8(2) = g%dy
-  glw%dist8(3) = glw%dist8(1)
-  glw%dist8(4) = g%dx
-  glw%dist8(5) = g%dx
-  glw%dist8(6) = glw%dist8(1)
-  glw%dist8(7) = g%dy
-  glw%dist8(8) = glw%dist8(1)
+  gl%glw%area = g%dx * g%dy
+  gl%glw%ainv = 1.0 / gl%glw%area
+  gl%glw%rdx2 = 1.0 / g%dx**2 + 1.0 / g%dy**2
+  gl%glw%cw(1) = 0.0             ! 斜め(未使用。calc_creep と同じ4近傍)
+  gl%glw%cw(2) = g%dx / g%dy
+  gl%glw%cw(3) = 0.0
+  gl%glw%cw(4) = g%dy / g%dx
+  gl%glw%dist(1) = 0.0
+  gl%glw%dist(2) = g%dy
+  gl%glw%dist(3) = 0.0
+  gl%glw%dist(4) = g%dx
+  gl%glw%dist8(1) = sqrt(g%dx**2 + g%dy**2)
+  gl%glw%dist8(2) = g%dy
+  gl%glw%dist8(3) = gl%glw%dist8(1)
+  gl%glw%dist8(4) = g%dx
+  gl%glw%dist8(5) = g%dx
+  gl%glw%dist8(6) = gl%glw%dist8(1)
+  gl%glw%dist8(7) = g%dy
+  gl%glw%dist8(8) = gl%glw%dist8(1)
   if (gl%f_flow > 0) then
     ! j 範囲はセル j を挟むエッジが j-1 と j にあるため下限 jsh-1
     ! (m_geomorph の wrk%q と同形)。確保時 0: マスク起因で書かれない
     ! エッジは恒久 0(無フラックス)
-    allocate(glw%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+    allocate(gl%glw%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
   end if
   if (gl%f_ero > 0) then
-    allocate(glw%edz(1:g%nx, dcp%js:dcp%je), source = 0.0)
+    allocate(gl%glw%edz(1:g%nx, dcp%js:dcp%je), source = 0.0)
   end if
   if (gl%f_ava > 0) then
-    allocate(glw%am(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-    allocate(glw%ad(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
+    allocate(gl%glw%am(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(gl%glw%ad(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
   end if
 
   ! --- リスタート(復元値が hi0 に勝つ) ---
@@ -323,7 +324,7 @@ end subroutine
 !   注意: 冒頭の return とハロ交換の判定はすべて全ランクで同一
 !----------------------------------------------------------------------
 subroutine m_glacier_calc(gl, p, g, s, mt, it)
-  type(t_glacier), intent(in) :: gl
+  type(t_glacier), intent(inout) :: gl
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -343,7 +344,7 @@ subroutine m_glacier_calc(gl, p, g, s, mt, it)
 
   ! --- dt_glacier 間隔の更新 ---
   if (mod(it, gl%idt) /= 0) return
-  glw%ntick = glw%ntick + 1
+  gl%glw%ntick = gl%glw%ntick + 1
   dtw = p%dt * gl%idt              ! 水文時間の窓
   dts = dtw * gl%morfac            ! 氷河=地形時間の窓
 
@@ -394,19 +395,19 @@ subroutine m_glacier_dispose(gl, p, g, s)
   if (gl%f_ero > 0) then
     ! ランク局所の診断(帯内の侵食排出体積)
     call par_warn("glacier: eroded volume exported from the system = " &
-                  // rtoa(glw%vero) // " m3 (this rank)")
+                  // rtoa(gl%glw%vero) // " m3 (this rank)")
   end if
-  if (gl%f_flow > 0 .and. glw%ntick > 0) then
-    call par_warn("glacier: SIA subcycles total = " // itoa(glw%nsubtot) &
-                  // " over " // itoa(glw%ntick) // " updates")
+  if (gl%f_flow > 0 .and. gl%glw%ntick > 0) then
+    call par_warn("glacier: SIA subcycles total = " // itoa(gl%glw%nsubtot) &
+                  // " over " // itoa(gl%glw%ntick) // " updates")
   end if
-  if (allocated(glw%q)) deallocate(glw%q)
-  if (allocated(glw%edz)) deallocate(glw%edz)
-  if (allocated(glw%am)) deallocate(glw%am)
-  if (allocated(glw%ad)) deallocate(glw%ad)
-  glw%vero = 0.0
-  glw%nsubtot = 0
-  glw%ntick = 0
+  if (allocated(gl%glw%q)) deallocate(gl%glw%q)
+  if (allocated(gl%glw%edz)) deallocate(gl%glw%edz)
+  if (allocated(gl%glw%am)) deallocate(gl%glw%am)
+  if (allocated(gl%glw%ad)) deallocate(gl%glw%ad)
+  gl%glw%vero = 0.0
+  gl%glw%nsubtot = 0
+  gl%glw%ntick = 0
   gl%enabled = .false.
   gl%initialized = .false.
 end subroutine
@@ -424,7 +425,7 @@ end subroutine
 !   融解水は融雪と同型で h へ(gv・wfrac 換算+e 回復)
 !----------------------------------------------------------------------
 subroutine calc_melt(gl, p, g, s, mt)
-  type(t_glacier), intent(in) :: gl
+  type(t_glacier), intent(inout) :: gl
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -461,7 +462,7 @@ end subroutine
 !   ×morfac(地形時間の涵養。ヘッダの台帳分離)
 !----------------------------------------------------------------------
 subroutine tick_firn(gl, g, s, dtw)
-  type(t_glacier), intent(in) :: gl
+  type(t_glacier), intent(inout) :: gl
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dtw
@@ -495,7 +496,7 @@ end subroutine
 !   エッジ流量の反対称集計により氷体積は機械精度で厳密に保存される
 !----------------------------------------------------------------------
 subroutine tick_flow(gl, g, s, dts)
-  type(t_glacier), intent(in) :: gl
+  type(t_glacier), intent(inout) :: gl
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
@@ -536,7 +537,7 @@ subroutine tick_flow(gl, g, s, dts)
           sc = s%z(i,j) + s%hi(i,j)
           sn_ = s%z(in,jn) + s%hi(in,jn)
           ds = sc - sn_
-          gs2 = (ds / glw%dist(k))**2
+          gs2 = (ds / gl%glw%dist(k))**2
           dd = gl%gamd * he**5 * gs2 + gl%gams * he**4 * gs2
           dmax = max(dmax, dd)
         end do
@@ -550,7 +551,7 @@ subroutine tick_flow(gl, g, s, dts)
     last = .true.
     dtsub = trem
     if (dmax > 0.0) then
-      dlim = gl%cfl * 0.5 / (dmax * glw%rdx2)
+      dlim = gl%cfl * 0.5 / (dmax * gl%glw%rdx2)
       if (dlim < trem) then
         dtsub = dlim
         last = .false.
@@ -574,30 +575,30 @@ subroutine tick_flow(gl, g, s, dts)
           jn = j + djn(k)
           ! 状態は毎回変わるため、条件を満たさない場合も必ず 0 を代入する
           gq = 0.0
-          if (glw%cw(k) > 0.0 .and. okc .and. g%x(in,jn) > 0) then
+          if (gl%glw%cw(k) > 0.0 .and. okc .and. g%x(in,jn) > 0) then
             if (g%sw(in,jn) <= 0) then
               he = 0.5 * (s%hi(i,j) + s%hi(in,jn))
               if (he > 0.0) then
                 sc = s%z(i,j) + s%hi(i,j)
                 sn_ = s%z(in,jn) + s%hi(in,jn)
                 ds = sc - sn_
-                gs2 = (ds / glw%dist(k))**2
+                gs2 = (ds / gl%glw%dist(k))**2
                 dd = gl%gamd * he**5 * gs2 + gl%gams * he**4 * gs2
                 ! エッジ流量(書き手 c から k 近傍 n に向かい正)(m3/s)
-                gq = dd * ds * glw%cw(k)
+                gq = dd * ds * gl%glw%cw(k)
                 ! ドナー律速: 1エッジの持ち出し ≤ ドナー氷体積の 1/4
                 ! (4エッジ合計 ≤ 全量 → hi >= 0 が構造的に成立)
                 if (ds > 0.0) then
-                  qcap = 0.25 * s%hi(i,j) * glw%area / dtsub
+                  qcap = 0.25 * s%hi(i,j) * gl%glw%area / dtsub
                   gq = min(gq, qcap)
                 else
-                  qcap = 0.25 * s%hi(in,jn) * glw%area / dtsub
+                  qcap = 0.25 * s%hi(in,jn) * gl%glw%area / dtsub
                   gq = max(gq, -qcap)
                 end if
               end if
             end if
           end if
-          glw%q(k, i+die(k), j+dje(k)) = gq
+          gl%glw%q(k, i+die(k), j+dje(k)) = gq
         end do
       end do
     end do
@@ -611,9 +612,9 @@ subroutine tick_flow(gl, g, s, dts)
         if (g%sw(i,j) > 0) cycle
         dv = 0.0
         do k = 1, 8
-          dv = dv + sign_e(k) * glw%q(ke(k), i+die(k), j+dje(k))
+          dv = dv + sign_e(k) * gl%glw%q(ke(k), i+die(k), j+dje(k))
         end do
-        s%hi(i,j) = s%hi(i,j) - dv * dtsub * glw%ainv
+        s%hi(i,j) = s%hi(i,j) - dv * dtsub * gl%glw%ainv
       end do
     end do
     !$omp end parallel do
@@ -624,7 +625,7 @@ subroutine tick_flow(gl, g, s, dts)
     trem = trem - dtsub
   end do
 
-  glw%nsubtot = glw%nsubtot + nsub
+  gl%glw%nsubtot = gl%glw%nsubtot + nsub
 end subroutine
 
 
@@ -641,7 +642,7 @@ end subroutine
 !   読み(hi, z)はハロ最新(呼び出し順の契約)
 !----------------------------------------------------------------------
 subroutine tick_erosion(gl, g, s, dts)
-  type(t_glacier), intent(in) :: gl
+  type(t_glacier), intent(inout) :: gl
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
@@ -653,7 +654,7 @@ subroutine tick_erosion(gl, g, s, dts)
   !$omp parallel do schedule(static) private(i, j, gx, gy, cnt, se, sw2, tb, us, dz)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
-      glw%edz(i,j) = 0.0
+      gl%glw%edz(i,j) = 0.0
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%hi(i,j) <= 0.0) cycle
@@ -700,7 +701,7 @@ subroutine tick_erosion(gl, g, s, dts)
       us = gl%as_si * tb**3                              ! 滑動速度 (m/s)
       if (us <= 0.0) cycle
       dz = gl%kg * (us * yr_s)**gl%lexp / yr_s * dts     ! 侵食深 (m)
-      glw%edz(i,j) = dz
+      gl%glw%edz(i,j) = dz
     end do
   end do
   !$omp end parallel do
@@ -711,7 +712,7 @@ subroutine tick_erosion(gl, g, s, dts)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
-      dz = glw%edz(i,j)
+      dz = gl%glw%edz(i,j)
       if (dz <= 0.0) cycle
       s%z(i,j) = s%z(i,j) - dz
       if (allocated(s%sd)) s%sd(i,j) = max(s%sd(i,j) - dz, 0.0)
@@ -719,7 +720,7 @@ subroutine tick_erosion(gl, g, s, dts)
     end do
   end do
   !$omp end parallel do
-  glw%vero = glw%vero + vsum * glw%area
+  gl%glw%vero = gl%glw%vero + vsum * gl%glw%area
 end subroutine
 
 
@@ -734,7 +735,7 @@ end subroutine
 !   単一受け手+送り量 ≤ swe なので保存的(領域外・海へは送らない)
 !----------------------------------------------------------------------
 subroutine tick_avalanche(gl, g, s)
-  type(t_glacier), intent(in) :: gl
+  type(t_glacier), intent(inout) :: gl
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j, k, in, jn, jt0, jt1, kbest
@@ -751,8 +752,8 @@ subroutine tick_avalanche(gl, g, s)
   !$omp parallel do schedule(static) private(i, j, k, in, jn, sc, drop, tanmax, tanth, kbest, fr)
   do j = jt0, jt1
     do i = g%wx(1,j), g%wx(2,j)
-      glw%am(i,j) = 0.0
-      glw%ad(i,j) = 0
+      gl%glw%am(i,j) = 0.0
+      gl%glw%ad(i,j) = 0
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%swe(i,j) <= 0.0) cycle
@@ -766,7 +767,7 @@ subroutine tick_avalanche(gl, g, s)
         if (g%sw(in,jn) > 0) cycle
         drop = sc - (s%z(in,jn) + s%hi(in,jn))
         if (drop <= 0.0) cycle
-        tanth = drop / glw%dist8(k)
+        tanth = drop / gl%glw%dist8(k)
         if (tanth > tanmax) then
           tanmax = tanth
           kbest = k
@@ -775,8 +776,8 @@ subroutine tick_avalanche(gl, g, s)
       if (kbest == 0) cycle
       if (tanmax <= gl%avatanc) cycle
       fr = min(1.0, (tanmax - gl%avatanc) / gl%avatanc)
-      glw%am(i,j) = s%swe(i,j) * fr
-      glw%ad(i,j) = kbest
+      gl%glw%am(i,j) = s%swe(i,j) * fr
+      gl%glw%ad(i,j) = kbest
     end do
   end do
   !$omp end parallel do
@@ -788,13 +789,13 @@ subroutine tick_avalanche(gl, g, s)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
-      w = s%swe(i,j) - glw%am(i,j)
+      w = s%swe(i,j) - gl%glw%am(i,j)
       do k = 1, 8
         in = i + din(k)
         jn = j + djn(k)
         if (jn < jt0 .or. jn > jt1) cycle       ! パス1の計算範囲外(全域端)
         if (g%x(in,jn) <= 0) cycle
-        if (glw%ad(in,jn) == 9 - k) w = w + glw%am(in,jn)
+        if (gl%glw%ad(in,jn) == 9 - k) w = w + gl%glw%am(in,jn)
       end do
       s%swe(i,j) = w
     end do

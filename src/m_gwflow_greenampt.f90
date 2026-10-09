@@ -49,16 +49,17 @@ module m_gwflow_greenampt
   public :: gwflow_greenampt_init
   public :: gwflow_greenampt_calc
   public :: gwflow_greenampt_dispose
+  public :: t_greenampt
 
-  ! モデル私有の設定(単一インスタンス前提。developer.md §12)
+  ! モデル私有の設定(実体は切替器 m_gwflow の t_gwflow が持ち、各手続きが引数で受ける(nesting_plan.md §3.2 A 群)。成分は本モジュール私有)
   type t_greenampt
+    private
     real, allocatable :: ksv(:,:)    ! 鉛直飽和透水係数 (m/s。帯+ハロ。
                                      !   一様指定ならスカラー値で充填)
     real, allocatable :: psif(:,:)   ! 湿潤前線の毛管圧力水頭 (m。同上)
     real :: dtheta = 0.0             ! 水分不足量 Δθ(= g%sy0。init で転記)
     logical :: initialized = .false.
   end type
-  type(t_greenampt) :: ga
 
 contains
 
@@ -67,7 +68,8 @@ contains
 ! Green-Ampt モデルの初期化(固有グループ &list_gwflow_greenampt を
 ! 自分で読む)。g%sd は m_gwflow_init が m_geoinfo_require_sd で確保済み
 !----------------------------------------------------------------------
-subroutine gwflow_greenampt_init(p, g, s)
+subroutine gwflow_greenampt_init(ga, p, g, s)
+  type(t_greenampt), intent(inout) :: ga
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -166,7 +168,8 @@ end subroutine
 ! Green-Ampt モデルの計算(1回の呼び出しで実効時間刻み dts ぶんの
 ! 鉛直交換)
 !----------------------------------------------------------------------
-subroutine gwflow_greenampt_calc(p, g, s, it, dts)
+subroutine gwflow_greenampt_calc(ga, p, g, s, it, dts)
+  type(t_greenampt), intent(in) :: ga
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -219,7 +222,8 @@ end subroutine
 ! Green-Ampt モデルの破棄(現段階は F ≡ s%hg のため私有保存なし。
 ! 契約5とヘッダの昇格条件を参照)
 !----------------------------------------------------------------------
-subroutine gwflow_greenampt_dispose(p)
+subroutine gwflow_greenampt_dispose(ga, p)
+  type(t_greenampt), intent(inout) :: ga
   type(t_sysparam), intent(in) :: p
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (allocated(ga%ksv)) deallocate(ga%ksv)

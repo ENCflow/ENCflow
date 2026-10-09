@@ -59,7 +59,7 @@
 !
 !   MPI 規約(developer.md §11): 更新は自帯 js..je のみ、エッジは
 !   書き手一意(k=1..4 が所有成分)、collective の判定は全ランク同一。
-!   エッジ作業領域は本プロセス私有(bsl%q)。共有の wrk%q は fluvial が
+!   エッジ作業領域は本プロセス私有(gm%bsl%q)。共有の gm%wrk%q は fluvial が
 !   開境界面の k>=5 スロットを書くため、古い値を拾う危険がある
 !======================================================================
 submodule(m_geomorph) m_geomorph_bedslide
@@ -174,36 +174,36 @@ module subroutine init_bedslide(gm, p, g, s, list)
     lpx = 1 - (g%dy / g%dx)**2 * list%bs_diagratio
     ldx = list%bs_diagratio / 2 * (g%dy / g%dx)**2
   end if
-  bsl%wl(1) = sqrt((ldy * g%dy)**2 + (ldx * g%dx)**2)
-  bsl%wl(2) = lpx * g%dx
-  bsl%wl(3) = bsl%wl(1)
-  bsl%wl(4) = lpy * g%dy
-  bsl%wl(5) = bsl%wl(4)
-  bsl%wl(6) = bsl%wl(3)
-  bsl%wl(7) = bsl%wl(2)
-  bsl%wl(8) = bsl%wl(1)
+  gm%bsl%wl(1) = sqrt((ldy * g%dy)**2 + (ldx * g%dx)**2)
+  gm%bsl%wl(2) = lpx * g%dx
+  gm%bsl%wl(3) = gm%bsl%wl(1)
+  gm%bsl%wl(4) = lpy * g%dy
+  gm%bsl%wl(5) = gm%bsl%wl(4)
+  gm%bsl%wl(6) = gm%bsl%wl(3)
+  gm%bsl%wl(7) = gm%bsl%wl(2)
+  gm%bsl%wl(8) = gm%bsl%wl(1)
   do k = 1, 8
-    bsl%rdr(k) = 1.0 / sqrt((din(k) * g%dx)**2 + (djn(k) * g%dy)**2)
+    gm%bsl%rdr(k) = 1.0 / sqrt((din(k) * g%dx)**2 + (djn(k) * g%dy)**2)
   end do
-  bsl%area = g%dx * g%dy
-  bsl%rdx2 = 1.0 / g%dx**2 + 1.0 / g%dy**2
-  bsl%dxmin = min(g%dx, g%dy)
+  gm%bsl%area = g%dx * g%dy
+  gm%bsl%rdx2 = 1.0 / g%dx**2 + 1.0 / g%dy**2
+  gm%bsl%dxmin = min(g%dx, g%dy)
 
   ! --- 状態と作業領域(有効時のみ確保 = 無効時ゼロコスト) ---
   if (.not. allocated(s%hb)) allocate(s%hb(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   if (.not. allocated(s%vb)) allocate(s%vb(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(bsl%vc(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(bsl%qt(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(bsl%ws(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(bsl%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
-  allocate(bsl%nst(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(gm%bsl%vc(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(gm%bsl%qt(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(gm%bsl%ws(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(gm%bsl%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(gm%bsl%nst(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   ! f_bsplunge=1 の基準水面 = 初期の水面 z+h(乾いたセルは -huge)。restore 時は
   ! 私有 save の値が勝つ(初期状態でなく復元状態を読んでしまわないため)
-  allocate(bsl%eref(1:g%nx, dcp%jsh:dcp%jeh), source = -huge(1.0))
+  allocate(gm%bsl%eref(1:g%nx, dcp%jsh:dcp%jeh), source = -huge(1.0))
   if (gm%f_bsplunge == 1) then
     do j = dcp%jsh, dcp%jeh
       do i = 1, g%nx
-        if (s%h(i,j) > p%dd) bsl%eref(i,j) = s%z(i,j) + s%h(i,j)
+        if (s%h(i,j) > p%dd) gm%bsl%eref(i,j) = s%z(i,j) + s%h(i,j)
       end do
     end do
   end if
@@ -218,12 +218,12 @@ module subroutine init_bedslide(gm, p, g, s, list)
       call par_stop("list_geomorph: fn_bsinit release depth has negative values: " &
                     // trim(list%fn_bsinit))
     end if
-    allocate(bsl%rel(1:g%nx, dcp%js:dcp%je), source = wk(1:g%nx, dcp%js:dcp%je))
+    allocate(gm%bsl%rel(1:g%nx, dcp%js:dcp%je), source = wk(1:g%nx, dcp%js:dcp%je))
     deallocate(wk)
   end if
 
   ! --- restore(私有ファイル。契約5) ---
-  if (p%f_state_restore > 0) call restore_bedslide(p, g, s)
+  if (p%f_state_restore > 0) call restore_bedslide(gm, p, g, s)
 
   call par_info("geomorph: bedslide enabled (Voellmy mu=" // rtoa(gm%bs_mu) &
                 // ", xi=" // rtoa(gm%bs_xi) // ", r=rho_w/rho_s=" // rtoa(gm%bs_r) // ")")
@@ -235,14 +235,14 @@ end subroutine
 ! リスタート後に再発火しない)。hb = min(D, sd)。z・sd・h・e は不変
 !----------------------------------------------------------------------
 module subroutine release_bedslide(gm, p, g, s)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j
   real :: tprev, dd, vsum
 
-  if (.not. allocated(bsl%rel)) return          ! この run で発火済み
+  if (.not. allocated(gm%bsl%rel)) return          ! この run で発火済み
   if (gm%bs_reltime > s%t) return
   if (s%it - gm%idt_geomorph > 0) then
     tprev = p%t0 + p%dt * (s%it - gm%idt_geomorph)
@@ -254,19 +254,19 @@ module subroutine release_bedslide(gm, p, g, s)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
-      dd = bsl%rel(i,j)
+      dd = gm%bsl%rel(i,j)
       if (dd <= 0.0) cycle
       if (dd > s%sd(i,j)) then
         dd = s%sd(i,j)                          ! 可動層クランプ(dispose で報告)
-        bsl%nrelclip = bsl%nrelclip + 1
+        gm%bsl%nrelclip = gm%bsl%nrelclip + 1
         if (dd <= 0.0) cycle
       end if
       s%hb(i,j) = s%hb(i,j) + dd
       vsum = vsum + dd
     end do
   end do
-  bsl%vrel = bsl%vrel + vsum * bsl%area
-  deallocate(bsl%rel)                           ! 発火は1回だけ
+  gm%bsl%vrel = gm%bsl%vrel + vsum * gm%bsl%area
+  deallocate(gm%bsl%rel)                           ! 発火は1回だけ
   ! 帯の hb をハロへ(calc_bedslide の冒頭交換が担うのでここでは不要)
 end subroutine
 
@@ -276,7 +276,7 @@ end subroutine
 ! 作業配列のみ)。vmax・dmax は安定条件用の局所最大
 !----------------------------------------------------------------------
 subroutine eval_cells(gm, g, s, vmax, dmax)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   real, intent(out) :: vmax, dmax
@@ -291,9 +291,9 @@ subroutine eval_cells(gm, g, s, vmax, dmax)
   !$omp   private(i, j, k, in, jn, kmax, phic, phin, dphi, sl, smax, ws, hb, hw, bb, sy, vv, dvds)
   do j = j1, j2
     do i = g%wx(1,j), g%wx(2,j)
-      bsl%vc(i,j) = 0.0
-      bsl%qt(i,j) = 0.0
-      bsl%ws(i,j) = 0.0
+      gm%bsl%vc(i,j) = 0.0
+      gm%bsl%qt(i,j) = 0.0
+      gm%bsl%ws(i,j) = 0.0
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       hb = s%hb(i,j)
@@ -311,8 +311,8 @@ subroutine eval_cells(gm, g, s, vmax, dmax)
         phin = s%z(in,jn) + gm%bs_r * max(s%h(in,jn), 0.0)
         dphi = phic - phin
         if (dphi <= 0.0) cycle
-        sl = dphi * bsl%rdr(k)
-        ws = ws + sl * bsl%wl(k)
+        sl = dphi * gm%bsl%rdr(k)
+        ws = ws + sl * gm%bsl%wl(k)
         if (sl > smax) then
           smax = sl
           kmax = k
@@ -330,9 +330,9 @@ subroutine eval_cells(gm, g, s, vmax, dmax)
         vv = sqrt(gm%bs_xi * hb * sy)
         dvds = 0.5 * sqrt(gm%bs_xi * hb / sy)
       end if
-      bsl%vc(i,j) = vv
-      bsl%qt(i,j) = hb * vv * ws / smax     ! 総流出 = 配分重みの和 / セル勾配
-      bsl%ws(i,j) = ws
+      gm%bsl%vc(i,j) = vv
+      gm%bsl%qt(i,j) = hb * vv * ws / smax     ! 総流出 = 配分重みの和 / セル勾配
+      gm%bsl%ws(i,j) = ws
       vmax = max(vmax, vv)
       dmax = max(dmax, hb * dvds)
     end do
@@ -345,7 +345,7 @@ end subroutine
 ! 1 tick の底層流動(サブサイクル)+停止
 !----------------------------------------------------------------------
 module subroutine calc_bedslide(gm, g, s, dtw)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dtw
@@ -354,7 +354,7 @@ module subroutine calc_bedslide(gm, g, s, dtw)
   real :: phic, phin, dphi, gq, fdon, dv, dd, vsum
   logical :: okc, last
 
-  ainv = 1.0 / bsl%area
+  ainv = 1.0 / gm%bsl%area
 
   ! --- (0') 混合体からの引き渡し(プランジ。自帯。終端速度の見積りが近傍の
   !          z・h を読むため、先に z・h のハロを最新化する) ---
@@ -381,7 +381,7 @@ module subroutine calc_bedslide(gm, g, s, dtw)
   call par_halo_cell(s%h)
   call par_halo_cell(s%hb)
 
-  bsl%ntick = bsl%ntick + 1
+  gm%bsl%ntick = gm%bsl%ntick + 1
   jt = min(dcp%je + 1, dcp%jeh)
   trem = dtw
   nsub = 0
@@ -403,14 +403,14 @@ module subroutine calc_bedslide(gm, g, s, dtw)
     dtsub = trem
     last = .true.
     if (vmax > 0.0) then
-      dlim = gm%bs_cfl * bsl%dxmin / vmax
+      dlim = gm%bs_cfl * gm%bsl%dxmin / vmax
       if (dlim < dtsub) then
         dtsub = dlim
         last = .false.
       end if
     end if
     if (dmax > 0.0) then
-      dlim = gm%bs_cfl * 0.5 / (dmax * bsl%rdx2)
+      dlim = gm%bs_cfl * 0.5 / (dmax * gm%bsl%rdx2)
       if (dlim < dtsub) then
         dtsub = dlim
         last = .false.
@@ -435,27 +435,27 @@ module subroutine calc_bedslide(gm, g, s, dtw)
               dphi = phic - phin
               if (dphi > 0.0) then
                 ! 送り手 = 自セル(c → n が正)
-                if (bsl%qt(i,j) > 0.0) then
+                if (gm%bsl%qt(i,j) > 0.0) then
                   ! ドナー律速(除算は 総流出 > 保有量 のときだけ = 0 除算なし)
                   fdon = 1.0
-                  if (dtsub * bsl%qt(i,j) > s%hb(i,j) * bsl%area) then
-                    fdon = s%hb(i,j) * bsl%area / (dtsub * bsl%qt(i,j))
+                  if (dtsub * gm%bsl%qt(i,j) > s%hb(i,j) * gm%bsl%area) then
+                    fdon = s%hb(i,j) * gm%bsl%area / (dtsub * gm%bsl%qt(i,j))
                   end if
-                  gq = fdon * bsl%qt(i,j) * (dphi * bsl%rdr(k) * bsl%wl(k)) / bsl%ws(i,j)
+                  gq = fdon * gm%bsl%qt(i,j) * (dphi * gm%bsl%rdr(k) * gm%bsl%wl(k)) / gm%bsl%ws(i,j)
                 end if
               else if (dphi < 0.0) then
                 ! 送り手 = 近傍(n → c。格納は c→n 正なので負)
-                if (bsl%qt(in,jn) > 0.0) then
+                if (gm%bsl%qt(in,jn) > 0.0) then
                   fdon = 1.0
-                  if (dtsub * bsl%qt(in,jn) > s%hb(in,jn) * bsl%area) then
-                    fdon = s%hb(in,jn) * bsl%area / (dtsub * bsl%qt(in,jn))
+                  if (dtsub * gm%bsl%qt(in,jn) > s%hb(in,jn) * gm%bsl%area) then
+                    fdon = s%hb(in,jn) * gm%bsl%area / (dtsub * gm%bsl%qt(in,jn))
                   end if
-                  gq = -fdon * bsl%qt(in,jn) * (-dphi * bsl%rdr(k) * bsl%wl(k)) / bsl%ws(in,jn)
+                  gq = -fdon * gm%bsl%qt(in,jn) * (-dphi * gm%bsl%rdr(k) * gm%bsl%wl(k)) / gm%bsl%ws(in,jn)
                 end if
               end if
             end if
           end if
-          bsl%q(k, i+die(k), j+dje(k)) = gq
+          gm%bsl%q(k, i+die(k), j+dje(k)) = gq
         end do
       end do
     end do
@@ -469,7 +469,7 @@ module subroutine calc_bedslide(gm, g, s, dtw)
         if (g%sw(i,j) > 0) cycle
         dv = 0.0
         do k = 1, 8
-          dv = dv + sign_e(k) * bsl%q(ke(k), i+die(k), j+dje(k))
+          dv = dv + sign_e(k) * gm%bsl%q(ke(k), i+die(k), j+dje(k))
         end do
         if (dv == 0.0) cycle
         dd = -dv * dtsub * ainv
@@ -486,8 +486,8 @@ module subroutine calc_bedslide(gm, g, s, dtw)
     if (last) exit
     trem = trem - dtsub
   end do
-  bsl%nsubtot = bsl%nsubtot + nsub
-  bsl%nsubpk = max(bsl%nsubpk, nsub)
+  gm%bsl%nsubtot = gm%bsl%nsubtot + nsub
+  gm%bsl%nsubpk = max(gm%bsl%nsubpk, nsub)
 
   ! --- (3) 停止: 更新後の場で速度を再評価し、閾値未満の hb を固定。
   !         診断の速度場 s%vb(自帯)もここで更新する(停止セルは 0) ---
@@ -499,23 +499,23 @@ module subroutine calc_bedslide(gm, g, s, dtw)
       s%vb(i,j) = 0.0
       if (g%x(i,j) <= 0) cycle
       if (s%hb(i,j) <= 0.0) then
-        bsl%nst(i,j) = 0.0
+        gm%bsl%nst(i,j) = 0.0
         cycle
       end if
-      if (bsl%vc(i,j) >= gm%bs_vstop) then
-        s%vb(i,j) = bsl%vc(i,j)
-        bsl%nst(i,j) = 0.0                    ! 動いた: 低速の連続を打ち切る
+      if (gm%bsl%vc(i,j) >= gm%bs_vstop) then
+        s%vb(i,j) = gm%bsl%vc(i,j)
+        gm%bsl%nst(i,j) = 0.0                    ! 動いた: 低速の連続を打ち切る
         cycle
       end if
-      bsl%nst(i,j) = bsl%nst(i,j) + 1.0
-      if (bsl%nst(i,j) < real(gm%bs_nstop)) cycle   ! まだ持続時間に満たない
+      gm%bsl%nst(i,j) = gm%bsl%nst(i,j) + 1.0
+      if (gm%bsl%nst(i,j) < real(gm%bs_nstop)) cycle   ! まだ持続時間に満たない
       vsum = vsum + s%hb(i,j)
       s%hb(i,j) = 0.0
-      bsl%nst(i,j) = 0.0
+      gm%bsl%nst(i,j) = 0.0
     end do
   end do
   !$omp end parallel do
-  bsl%vstop = bsl%vstop + vsum * bsl%area
+  gm%bsl%vstop = gm%bsl%vstop + vsum * gm%bsl%area
   ! 停止後の hb のハロは次 tick 冒頭の交換が配布する(この後 hb を読む者はいない)
 end subroutine
 
@@ -527,7 +527,7 @@ end subroutine
 !   m_geomorph_calc の末尾(本モジュールの契約)
 !----------------------------------------------------------------------
 subroutine plunge_cells(gm, g, s)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j, k, in, jn
@@ -544,7 +544,7 @@ subroutine plunge_cells(gm, g, s)
       if (g%sw(i,j) > 0) cycle
       if (s%hs(i,j) <= 0.0) cycle
       if (gm%f_bsplunge == 1) then
-        if (bsl%eref(i,j) - s%z(i,j) < gm%bs_hplunge) cycle    ! 静水深(初期水面 − 底面)
+        if (gm%bsl%eref(i,j) - s%z(i,j) < gm%bs_hplunge) cycle    ! 静水深(初期水面 − 底面)
       else
         if (s%h(i,j) < gm%bs_hplunge) cycle                    ! 現在の水深
       end if
@@ -566,7 +566,7 @@ subroutine plunge_cells(gm, g, s)
         phin = s%z(in,jn) + gm%bs_r * max(s%h(in,jn), 0.0)
         dphi = phic - phin
         if (dphi <= 0.0) cycle
-        sl = dphi * bsl%rdr(k)
+        sl = dphi * gm%bsl%rdr(k)
         if (sl > smax) smax = sl
       end do
       bb = 1.0 - gm%bs_r * min(1.0, hw / hbq)
@@ -591,9 +591,9 @@ subroutine plunge_cells(gm, g, s)
     end do
   end do
   !$omp end parallel do
-  bsl%vplunge = bsl%vplunge + vsum * bsl%area
-  bsl%pmix = bsl%pmix + psum1 * bsl%area
-  bsl%pbed = bsl%pbed + psum2 * bsl%area
+  gm%bsl%vplunge = gm%bsl%vplunge + vsum * gm%bsl%area
+  gm%bsl%pmix = gm%bsl%pmix + psum1 * gm%bsl%area
+  gm%bsl%pbed = gm%bsl%pbed + psum2 * gm%bsl%area
 end subroutine
 
 
@@ -601,7 +601,7 @@ end subroutine
 ! 台帳の報告・私有 save・作業領域の解放
 !----------------------------------------------------------------------
 module subroutine dispose_bedslide(gm, p, g, s)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
@@ -610,7 +610,7 @@ module subroutine dispose_bedslide(gm, p, g, s)
   character(len=256) :: msg
 
   if (gm%f_bedslide <= 0) return
-  if (p%f_state_save > 0) call save_bedslide(p, g, s)
+  if (p%f_state_save > 0) call save_bedslide(gm, p, g, s)
 
   hsum = 0.0
   if (allocated(s%hb)) then
@@ -621,12 +621,12 @@ module subroutine dispose_bedslide(gm, p, g, s)
       end do
     end do
   end if
-  vsum(1) = bsl%vrel
-  vsum(2) = bsl%vstop
-  vsum(3) = hsum * bsl%area
-  vsum(4) = bsl%vplunge
-  vsum(5) = bsl%pmix
-  vsum(6) = bsl%pbed
+  vsum(1) = gm%bsl%vrel
+  vsum(2) = gm%bsl%vstop
+  vsum(3) = hsum * gm%bsl%area
+  vsum(4) = gm%bsl%vplunge
+  vsum(5) = gm%bsl%pmix
+  vsum(6) = gm%bsl%pbed
   call par_allreduce_sumr(vsum)
   if (is_root) then
     write(msg,'(a,es12.4,a,es12.4,a,es12.4,a,es12.4,a)') &
@@ -642,40 +642,41 @@ module subroutine dispose_bedslide(gm, p, g, s)
       call par_info(trim(msg))
     end if
   end if
-  if (bsl%ntick > 0) then
-    call par_info(" geomorph: bedslide subcycles total = " // itoa(bsl%nsubtot) &
-                  // " over " // itoa(bsl%ntick) // " active updates (max " &
-                  // itoa(bsl%nsubpk) // " per update; see developer.md sec.61.10)")
+  if (gm%bsl%ntick > 0) then
+    call par_info(" geomorph: bedslide subcycles total = " // itoa(gm%bsl%nsubtot) &
+                  // " over " // itoa(gm%bsl%ntick) // " active updates (max " &
+                  // itoa(gm%bsl%nsubpk) // " per update; see developer.md sec.61.10)")
   end if
-  if (bsl%nrelclip > 0) then
+  if (gm%bsl%nrelclip > 0) then
     call par_warn("geomorph: bedslide release depth exceeded soil depth sd " &
-                  // "and was clipped to sd in " // itoa(bsl%nrelclip) // " cells" &
+                  // "and was clipped to sd in " // itoa(gm%bsl%nrelclip) // " cells" &
                   // " (check consistency between fn_bsinit and the soil depth input)")
   end if
 
-  if (allocated(bsl%vc)) deallocate(bsl%vc)
-  if (allocated(bsl%qt)) deallocate(bsl%qt)
-  if (allocated(bsl%ws)) deallocate(bsl%ws)
-  if (allocated(bsl%q)) deallocate(bsl%q)
-  if (allocated(bsl%rel)) deallocate(bsl%rel)
-  if (allocated(bsl%nst)) deallocate(bsl%nst)
-  if (allocated(bsl%eref)) deallocate(bsl%eref)
-  bsl%nrelclip = 0
-  bsl%vrel = 0.0
-  bsl%vstop = 0.0
-  bsl%vplunge = 0.0
-  bsl%pmix = 0.0
-  bsl%pbed = 0.0
-  bsl%nsubtot = 0
-  bsl%ntick = 0
-  bsl%nsubpk = 0
+  if (allocated(gm%bsl%vc)) deallocate(gm%bsl%vc)
+  if (allocated(gm%bsl%qt)) deallocate(gm%bsl%qt)
+  if (allocated(gm%bsl%ws)) deallocate(gm%bsl%ws)
+  if (allocated(gm%bsl%q)) deallocate(gm%bsl%q)
+  if (allocated(gm%bsl%rel)) deallocate(gm%bsl%rel)
+  if (allocated(gm%bsl%nst)) deallocate(gm%bsl%nst)
+  if (allocated(gm%bsl%eref)) deallocate(gm%bsl%eref)
+  gm%bsl%nrelclip = 0
+  gm%bsl%vrel = 0.0
+  gm%bsl%vstop = 0.0
+  gm%bsl%vplunge = 0.0
+  gm%bsl%pmix = 0.0
+  gm%bsl%pbed = 0.0
+  gm%bsl%nsubtot = 0
+  gm%bsl%ntick = 0
+  gm%bsl%nsubpk = 0
 end subroutine
 
 
 !----------------------------------------------------------------------
 ! 内部状態の保存・復元(モデル私有ファイル geomorph_bedslide.dat。契約5。§7)
 !----------------------------------------------------------------------
-subroutine save_bedslide(p, g, s)
+subroutine save_bedslide(gm, p, g, s)
+  type(t_geomorph), intent(in) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
@@ -694,10 +695,10 @@ subroutine save_bedslide(p, g, s)
     call fileio_write_rle(un, wk)
   end if
   ! 低速の連続 tick 数(bs_tstop の途中経過。書き並びは restore と同時に更新)
-  call par_gather_to(wk, bsl%nst)
+  call par_gather_to(wk, gm%bsl%nst)
   if (is_root) call fileio_write_rle(un, wk)
   ! f_bsplunge=1 の基準水面(3 面目。0 でも書く = 面数固定)
-  call par_gather_to(wk, bsl%eref)
+  call par_gather_to(wk, gm%bsl%eref)
   if (is_root) then
     call fileio_write_rle(un, wk)
     close(un)
@@ -705,7 +706,8 @@ subroutine save_bedslide(p, g, s)
 end subroutine
 
 
-subroutine restore_bedslide(p, g, s)
+subroutine restore_bedslide(gm, p, g, s)
+  type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -727,14 +729,14 @@ subroutine restore_bedslide(p, g, s)
     call fileio_read_rle(un, wk)
     call par_scatter_cell(wk, s%hb)
     call fileio_read_rle(un, wk)
-    call par_scatter_cell(wk, bsl%nst)
+    call par_scatter_cell(wk, gm%bsl%nst)
     call fileio_read_rle(un, wk)
     close(un)
-    call par_scatter_cell(wk, bsl%eref)
+    call par_scatter_cell(wk, gm%bsl%eref)
   else
     call par_scatter_cell(dum, s%hb)
-    call par_scatter_cell(dum, bsl%nst)
-    call par_scatter_cell(dum, bsl%eref)
+    call par_scatter_cell(dum, gm%bsl%nst)
+    call par_scatter_cell(dum, gm%bsl%eref)
   end if
 end subroutine
 

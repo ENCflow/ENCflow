@@ -75,20 +75,6 @@ module m_lavaflow
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
-  type t_lavaflow
-    ! init に早期 return 経路があるため全成分デフォルト初期化必須(§13)
-    logical :: enabled = .false.
-    integer :: idt = 1               ! 更新間隔(ステップ数)
-    real :: rhog = 0.0               ! ρ g (Pa/m)
-    real :: coef = 0.0               ! ρ g / 6η(拡散係数の前置係数 1/(m s))
-    real :: tauy = 0.0               ! 降伏応力 τ_y (Pa。0 = Newton 流体)
-    real :: wsol = 0.0               ! 停止セルの固化レート (m/s。0 = 固化なし)
-    real :: vsol = 0.0               ! 停止判定の速度閾値 (m/s。wsol>0 で必須)
-    real :: cfl = 0.4                ! サブサイクルの安全係数
-    integer :: nsubmax = 10000       ! サブサイクル数の上限
-    logical :: initialized = .false.
-  end type
-
   type t_vent                        ! 噴火口1個
     integer :: ncell = 0             ! セル数
     integer, allocatable :: cell(:,:)  ! セル座標 (1:2, 1:ncell)
@@ -96,7 +82,6 @@ module m_lavaflow
     real, allocatable :: val(:,:)    ! 時系列 (1:2, 1:nval) (s, m3/s)
   end type
 
-  ! モジュール私有の作業領域(単一インスタンス前提。developer.md §12)
   type t_lvwork
     real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離。4近傍のみ)
     real :: dist(1:4) = 0.0          ! エッジ法線方向のセル中心間距離 (m)
@@ -114,7 +99,24 @@ module m_lavaflow
     integer :: nsubtot = 0           ! サブサイクル総数(ランク共通。dispose で報告)
     integer :: ntick = 0             ! 更新回数
   end type
-  type(t_lvwork) :: lvw
+
+  type t_lavaflow
+    ! init に早期 return 経路があるため全成分デフォルト初期化必須(§13)
+    logical :: enabled = .false.
+    integer :: idt = 1               ! 更新間隔(ステップ数)
+    real :: rhog = 0.0               ! ρ g (Pa/m)
+    real :: coef = 0.0               ! ρ g / 6η(拡散係数の前置係数 1/(m s))
+    real :: tauy = 0.0               ! 降伏応力 τ_y (Pa。0 = Newton 流体)
+    real :: wsol = 0.0               ! 停止セルの固化レート (m/s。0 = 固化なし)
+    real :: vsol = 0.0               ! 停止判定の速度閾値 (m/s。wsol>0 で必須)
+    real :: cfl = 0.4                ! サブサイクルの安全係数
+    integer :: nsubmax = 10000       ! サブサイクル数の上限
+    logical :: initialized = .false.
+    type(t_lvwork) :: lvw            ! 作業台帳(モジュール変数から成分へ。nesting_plan.md §3.2 A 群)
+  end type
+
+
+  ! モジュール私有の作業領域(単一インスタンス前提。developer.md §12)
 
 contains
 
@@ -203,66 +205,66 @@ subroutine m_lavaflow_init(lv, p, g, s)
                  .or. (len_trim(list%fn_lv_cell(iv)) > 0) &
                  .or. (len_trim(list%fn_lv_val(iv)) > 0)
   end do
-  lvw%nvent = count(active)
-  if (lvw%nvent <= 0) call par_stop("list_lavaflow: no vents defined " &
+  lv%lvw%nvent = count(active)
+  if (lv%lvw%nvent <= 0) call par_stop("list_lavaflow: no vents defined " &
                                     // "(give lv_cell and lv_q0/lv_val)")
-  if (.not. all(active(1:lvw%nvent))) then
+  if (.not. all(active(1:lv%lvw%nvent))) then
     call par_stop("list_lavaflow: vent numbers must be consecutive from 1")
   end if
 
-  allocate(lvw%vent(1:lvw%nvent))
-  do iv = 1, lvw%nvent
+  allocate(lv%lvw%vent(1:lv%lvw%nvent))
+  do iv = 1, lv%lvw%nvent
 
     !--- セル集合(ファイル指定が優先) ---
     if (len_trim(list%fn_lv_cell(iv)) > 0) then
       call read_cell_file2(trim(p%dir_data)//"/"//trim(list%fn_lv_cell(iv)), &
-                           lvw%vent(iv)%ncell, lvw%vent(iv)%cell)
+                           lv%lvw%vent(iv)%ncell, lv%lvw%vent(iv)%cell)
     else
       n = 0
       do k = 1, lvcmax
         if (lv_cell(1,k,iv) <= -9999) exit    ! 番兵で終端
         n = n + 1
       end do
-      allocate(lvw%vent(iv)%cell(1:2,1:max(n,1)))
-      lvw%vent(iv)%cell(1:2,1:n) = lv_cell(1:2,1:n,iv)
-      lvw%vent(iv)%ncell = n
+      allocate(lv%lvw%vent(iv)%cell(1:2,1:max(n,1)))
+      lv%lvw%vent(iv)%cell(1:2,1:n) = lv_cell(1:2,1:n,iv)
+      lv%lvw%vent(iv)%ncell = n
     end if
 
     !--- 噴出率(ファイル > インライン時系列 > 一定値。時刻は分→秒換算) ---
     if (len_trim(list%fn_lv_val(iv)) > 0) then
       call read_val_file2(trim(p%dir_data)//"/"//trim(list%fn_lv_val(iv)), &
-                          lvw%vent(iv)%nval, lvw%vent(iv)%val)
+                          lv%lvw%vent(iv)%nval, lv%lvw%vent(iv)%val)
     else if (lv_val(1,1,iv) > -9999.0) then
       n = 0
       do k = 1, lvvmax
         if (lv_val(1,k,iv) <= -9999.0) exit   ! 番兵で終端
         n = n + 1
       end do
-      allocate(lvw%vent(iv)%val(1:2,1:max(n,1)))
-      lvw%vent(iv)%val(1,1:n) = lv_val(1,1:n,iv) * 60   ! 分を秒に換算
-      lvw%vent(iv)%val(2,1:n) = lv_val(2,1:n,iv)
-      lvw%vent(iv)%nval = n
+      allocate(lv%lvw%vent(iv)%val(1:2,1:max(n,1)))
+      lv%lvw%vent(iv)%val(1,1:n) = lv_val(1,1:n,iv) * 60   ! 分を秒に換算
+      lv%lvw%vent(iv)%val(2,1:n) = lv_val(2,1:n,iv)
+      lv%lvw%vent(iv)%nval = n
     else if (list%lv_q0(iv) > -9999.0) then
-      allocate(lvw%vent(iv)%val(1:2,1:1))               ! 一定値は1点時系列に退化
-      lvw%vent(iv)%val(1,1) = 0.0
-      lvw%vent(iv)%val(2,1) = list%lv_q0(iv)
-      lvw%vent(iv)%nval = 1
+      allocate(lv%lvw%vent(iv)%val(1:2,1:1))               ! 一定値は1点時系列に退化
+      lv%lvw%vent(iv)%val(1,1) = 0.0
+      lv%lvw%vent(iv)%val(2,1) = list%lv_q0(iv)
+      lv%lvw%vent(iv)%nval = 1
     end if
 
     !--- 検証 ---
-    if (lvw%vent(iv)%ncell <= 0) then
+    if (lv%lvw%vent(iv)%ncell <= 0) then
       call par_stop("list_lavaflow: vent "//itoa(iv)//" has no cells")
     end if
-    if (lvw%vent(iv)%nval <= 0) then
+    if (lv%lvw%vent(iv)%nval <= 0) then
       call par_stop("list_lavaflow: vent "//itoa(iv)//" has no effusion rate " &
                     // "(give lv_q0, lv_val or fn_lv_val)")
     end if
-    if (any(lvw%vent(iv)%val(2,1:lvw%vent(iv)%nval) < 0.0)) then
+    if (any(lv%lvw%vent(iv)%val(2,1:lv%lvw%vent(iv)%nval) < 0.0)) then
       call par_stop("list_lavaflow: vent "//itoa(iv)//" has a negative effusion rate")
     end if
-    do k = 1, lvw%vent(iv)%ncell
-      i = lvw%vent(iv)%cell(1,k)
-      j = lvw%vent(iv)%cell(2,k)
+    do k = 1, lv%lvw%vent(iv)%ncell
+      i = lv%lvw%vent(iv)%cell(1,k)
+      j = lv%lvw%vent(iv)%cell(2,k)
       if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
         call par_stop("list_lavaflow: vent "//itoa(iv)//" cell (" &
                       //itoa(i)//","//itoa(j)//") is outside the domain")
@@ -282,23 +284,23 @@ subroutine m_lavaflow_init(lv, p, g, s)
   allocate(s%hl(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
 
   ! --- 作業領域(calc_creep / m_glacier と同じ4近傍) ---
-  lvw%area = g%dx * g%dy
-  lvw%ainv = 1.0 / lvw%area
-  lvw%rdx2 = 1.0 / g%dx**2 + 1.0 / g%dy**2
-  lvw%cw(1) = 0.0             ! 斜め(未使用)
-  lvw%cw(2) = g%dx / g%dy
-  lvw%cw(3) = 0.0
-  lvw%cw(4) = g%dy / g%dx
-  lvw%dist(1) = 0.0
-  lvw%dist(2) = g%dy
-  lvw%dist(3) = 0.0
-  lvw%dist(4) = g%dx
+  lv%lvw%area = g%dx * g%dy
+  lv%lvw%ainv = 1.0 / lv%lvw%area
+  lv%lvw%rdx2 = 1.0 / g%dx**2 + 1.0 / g%dy**2
+  lv%lvw%cw(1) = 0.0             ! 斜め(未使用)
+  lv%lvw%cw(2) = g%dx / g%dy
+  lv%lvw%cw(3) = 0.0
+  lv%lvw%cw(4) = g%dy / g%dx
+  lv%lvw%dist(1) = 0.0
+  lv%lvw%dist(2) = g%dy
+  lv%lvw%dist(3) = 0.0
+  lv%lvw%dist(4) = g%dx
   ! j 範囲はセル j を挟むエッジが j-1 と j にあるため下限 jsh-1
   ! (m_glacier の glw%q と同形)。確保時 0: マスク起因で書かれない
   ! エッジは恒久 0(無フラックス)
-  allocate(lvw%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(lv%lvw%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
   if (lv%wsol > 0.0) then
-    allocate(lvw%sdz(1:g%nx, dcp%js:dcp%je), source = 0.0)
+    allocate(lv%lvw%sdz(1:g%nx, dcp%js:dcp%je), source = 0.0)
   end if
 
   ! --- リスタート ---
@@ -307,7 +309,7 @@ subroutine m_lavaflow_init(lv, p, g, s)
   lv%enabled = .true.
   lv%initialized = .true.
   write(msg,'(a,i0,a,i0,a)') "lavaflow enabled (dt_lavaflow = ", lv%idt, &
-        " steps, ", lvw%nvent, " vent(s))"
+        " steps, ", lv%lvw%nvent, " vent(s))"
   call par_info(trim(msg))
 end subroutine
 
@@ -319,7 +321,7 @@ end subroutine
 ! 注意: 冒頭の return とハロ交換の判定はすべて全ランクで同一
 !----------------------------------------------------------------------
 subroutine m_lavaflow_calc(lv, p, g, s, it)
-  type(t_lavaflow), intent(in) :: lv
+  type(t_lavaflow), intent(inout) :: lv
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -328,11 +330,11 @@ subroutine m_lavaflow_calc(lv, p, g, s, it)
 
   if (.not. lv%enabled) return
   if (mod(it, lv%idt) /= 0) return
-  lvw%ntick = lvw%ntick + 1
+  lv%lvw%ntick = lv%lvw%ntick + 1
   dtw = p%dt * lv%idt
 
   ! (1) 噴火口ソース(owner-compute)
-  call tick_vent(s, dtw)
+  call tick_vent(lv, s, dtw)
 
   ! (2) 注入の帯更新を配布(流動のエッジ冗長計算の入力)
   call par_halo_cell(s%hl)
@@ -371,9 +373,9 @@ subroutine m_lavaflow_dispose(lv, p, g, s)
       hsum = hsum + s%hl(i,j)
     end do
   end do
-  vsum(1) = lvw%vin * lvw%area
-  vsum(2) = lvw%vsol * lvw%area
-  vsum(3) = hsum * lvw%area
+  vsum(1) = lv%lvw%vin * lv%lvw%area
+  vsum(2) = lv%lvw%vsol * lv%lvw%area
+  vsum(3) = hsum * lv%lvw%area
   call par_allreduce_sumr(vsum)
   if (is_root) then
     write(msg,'(a,es12.4,a,es12.4,a,es12.4,a)') &
@@ -381,19 +383,19 @@ subroutine m_lavaflow_dispose(lv, p, g, s)
       " m3, molten ", vsum(3), " m3"
     call par_info(trim(msg))
   end if
-  if (lvw%ntick > 0) then
-    call par_info(" lavaflow: subcycles total = " // itoa(lvw%nsubtot) &
-                  // " over " // itoa(lvw%ntick) // " updates")
+  if (lv%lvw%ntick > 0) then
+    call par_info(" lavaflow: subcycles total = " // itoa(lv%lvw%nsubtot) &
+                  // " over " // itoa(lv%lvw%ntick) // " updates")
   end if
 
-  if (allocated(lvw%q)) deallocate(lvw%q)
-  if (allocated(lvw%sdz)) deallocate(lvw%sdz)
-  if (allocated(lvw%vent)) deallocate(lvw%vent)
-  lvw%nvent = 0
-  lvw%vin = 0.0
-  lvw%vsol = 0.0
-  lvw%nsubtot = 0
-  lvw%ntick = 0
+  if (allocated(lv%lvw%q)) deallocate(lv%lvw%q)
+  if (allocated(lv%lvw%sdz)) deallocate(lv%lvw%sdz)
+  if (allocated(lv%lvw%vent)) deallocate(lv%lvw%vent)
+  lv%lvw%nvent = 0
+  lv%lvw%vin = 0.0
+  lv%lvw%vsol = 0.0
+  lv%lvw%nsubtot = 0
+  lv%lvw%ntick = 0
   lv%enabled = .false.
   lv%initialized = .false.
 end subroutine
@@ -408,23 +410,24 @@ end subroutine
 !   噴出率 Q(t) を時刻 s%t で補間し、セル集合へ均等分配(柱状 m)。
 !   指向性(運動量)は持たない。owner-compute のみでハロ交換は呼び出し側
 !----------------------------------------------------------------------
-subroutine tick_vent(s, dtw)
+subroutine tick_vent(lv, s, dtw)
+  type(t_lavaflow), intent(inout) :: lv
   type(t_state), intent(inout) :: s
   real, intent(in) :: dtw
   integer :: iv, k, i, j
   real :: q, dh
 
-  do iv = 1, lvw%nvent
-    q = interp_series(lvw%vent(iv)%val, lvw%vent(iv)%nval, s%t)
+  do iv = 1, lv%lvw%nvent
+    q = interp_series(lv%lvw%vent(iv)%val, lv%lvw%vent(iv)%nval, s%t)
     if (q <= 0.0) cycle
     ! セルあたりの注入(柱状 m。セル集合へ等分配)
-    dh = q * dtw / (lvw%vent(iv)%ncell * lvw%area)
-    do k = 1, lvw%vent(iv)%ncell
-      i = lvw%vent(iv)%cell(1,k)
-      j = lvw%vent(iv)%cell(2,k)
+    dh = q * dtw / (lv%lvw%vent(iv)%ncell * lv%lvw%area)
+    do k = 1, lv%lvw%vent(iv)%ncell
+      i = lv%lvw%vent(iv)%cell(1,k)
+      j = lv%lvw%vent(iv)%cell(2,k)
       if (j < dcp%js .or. j > dcp%je) cycle     ! owner-compute
       s%hl(i,j) = s%hl(i,j) + dh
-      lvw%vin = lvw%vin + dh
+      lv%lvw%vin = lv%lvw%vin + dh
     end do
   end do
 end subroutine
@@ -442,7 +445,7 @@ end subroutine
 !   エッジ流量の反対称集計により溶岩体積は機械精度で厳密に保存される
 !----------------------------------------------------------------------
 subroutine tick_flow(lv, g, s, dtw)
-  type(t_lavaflow), intent(in) :: lv
+  type(t_lavaflow), intent(inout) :: lv
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dtw
@@ -485,7 +488,7 @@ subroutine tick_flow(lv, g, s, dtw)
           sn_ = s%z(in,jn) + s%hl(in,jn)
           ds = sc - sn_
           if (ds == 0.0) cycle
-          ss = abs(ds) / lvw%dist(k)
+          ss = abs(ds) / lv%lvw%dist(k)
           h0 = 0.0
           if (lv%tauy > 0.0) h0 = lv%tauy / (lv%rhog * ss)
           hf = he - h0
@@ -503,7 +506,7 @@ subroutine tick_flow(lv, g, s, dtw)
     last = .true.
     dtsub = trem
     if (dmax > 0.0) then
-      dlim = lv%cfl * 0.5 / (dmax * lvw%rdx2)
+      dlim = lv%cfl * 0.5 / (dmax * lv%lvw%rdx2)
       if (dlim < trem) then
         dtsub = dlim
         last = .false.
@@ -527,7 +530,7 @@ subroutine tick_flow(lv, g, s, dtw)
           jn = j + djn(k)
           ! 状態は毎回変わるため、条件を満たさない場合も必ず 0 を代入する
           gq = 0.0
-          if (lvw%cw(k) > 0.0 .and. okc .and. g%x(in,jn) > 0) then
+          if (lv%lvw%cw(k) > 0.0 .and. okc .and. g%x(in,jn) > 0) then
             if (g%sw(in,jn) <= 0) then
               he = 0.5 * (s%hl(i,j) + s%hl(in,jn))
               if (he > 0.0) then
@@ -535,21 +538,21 @@ subroutine tick_flow(lv, g, s, dtw)
                 sn_ = s%z(in,jn) + s%hl(in,jn)
                 ds = sc - sn_
                 if (ds /= 0.0) then
-                  ss = abs(ds) / lvw%dist(k)
+                  ss = abs(ds) / lv%lvw%dist(k)
                   h0 = 0.0
                   if (lv%tauy > 0.0) h0 = lv%tauy / (lv%rhog * ss)
                   hf = he - h0
                   if (hf > 0.0) then
                     dd = lv%coef * hf * hf * (2.0 * he + h0)
                     ! エッジ流量(書き手 c から k 近傍 n に向かい正)(m3/s)
-                    gq = dd * ds * lvw%cw(k)
+                    gq = dd * ds * lv%lvw%cw(k)
                     ! ドナー律速: 1エッジの持ち出し ≤ ドナー溶岩体積の 1/4
                     ! (4エッジ合計 ≤ 全量 → hl >= 0 が構造的に成立)
                     if (ds > 0.0) then
-                      qcap = 0.25 * s%hl(i,j) * lvw%area / dtsub
+                      qcap = 0.25 * s%hl(i,j) * lv%lvw%area / dtsub
                       gq = min(gq, qcap)
                     else
-                      qcap = 0.25 * s%hl(in,jn) * lvw%area / dtsub
+                      qcap = 0.25 * s%hl(in,jn) * lv%lvw%area / dtsub
                       gq = max(gq, -qcap)
                     end if
                   end if
@@ -557,7 +560,7 @@ subroutine tick_flow(lv, g, s, dtw)
               end if
             end if
           end if
-          lvw%q(k, i+die(k), j+dje(k)) = gq
+          lv%lvw%q(k, i+die(k), j+dje(k)) = gq
         end do
       end do
     end do
@@ -571,9 +574,9 @@ subroutine tick_flow(lv, g, s, dtw)
         if (g%sw(i,j) > 0) cycle
         dv = 0.0
         do k = 1, 8
-          dv = dv + sign_e(k) * lvw%q(ke(k), i+die(k), j+dje(k))
+          dv = dv + sign_e(k) * lv%lvw%q(ke(k), i+die(k), j+dje(k))
         end do
-        s%hl(i,j) = s%hl(i,j) - dv * dtsub * lvw%ainv
+        s%hl(i,j) = s%hl(i,j) - dv * dtsub * lv%lvw%ainv
       end do
     end do
     !$omp end parallel do
@@ -584,7 +587,7 @@ subroutine tick_flow(lv, g, s, dtw)
     trem = trem - dtsub
   end do
 
-  lvw%nsubtot = lvw%nsubtot + nsub
+  lv%lvw%nsubtot = lv%lvw%nsubtot + nsub
 end subroutine
 
 
@@ -601,7 +604,7 @@ end subroutine
 !   (geomorph / glacier と同じ契約)
 !----------------------------------------------------------------------
 subroutine tick_solidify(lv, g, s, dtw)
-  type(t_lavaflow), intent(in) :: lv
+  type(t_lavaflow), intent(inout) :: lv
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dtw
@@ -615,7 +618,7 @@ subroutine tick_solidify(lv, g, s, dtw)
   !$omp                                      he, dd, ue)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
-      lvw%sdz(i,j) = 0.0
+      lv%lvw%sdz(i,j) = 0.0
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%hl(i,j) <= 0.0) cycle
@@ -623,7 +626,7 @@ subroutine tick_solidify(lv, g, s, dtw)
       vmax = 0.0
       sc = s%z(i,j) + s%hl(i,j)
       do k = 1, 8
-        if (lvw%cw(ke(k)) <= 0.0) cycle        ! 斜めは未使用
+        if (lv%lvw%cw(ke(k)) <= 0.0) cycle        ! 斜めは未使用
         in = i + din(k)
         jn = j + djn(k)
         if (g%x(in,jn) <= 0) cycle
@@ -633,7 +636,7 @@ subroutine tick_solidify(lv, g, s, dtw)
         sn_ = s%z(in,jn) + s%hl(in,jn)
         ds = sc - sn_
         if (ds == 0.0) cycle
-        ss = abs(ds) / lvw%dist(ke(k))
+        ss = abs(ds) / lv%lvw%dist(ke(k))
         h0 = 0.0
         if (lv%tauy > 0.0) h0 = lv%tauy / (lv%rhog * ss)
         hf = he - h0
@@ -643,7 +646,7 @@ subroutine tick_solidify(lv, g, s, dtw)
         vmax = max(vmax, ue)
       end do
       if (vmax >= lv%vsol) cycle
-      lvw%sdz(i,j) = min(s%hl(i,j), wcap)
+      lv%lvw%sdz(i,j) = min(s%hl(i,j), wcap)
     end do
   end do
   !$omp end parallel do
@@ -654,7 +657,7 @@ subroutine tick_solidify(lv, g, s, dtw)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
-      w = lvw%sdz(i,j)
+      w = lv%lvw%sdz(i,j)
       if (w <= 0.0) cycle
       s%hl(i,j) = s%hl(i,j) - w
       s%z(i,j) = s%z(i,j) + w
@@ -663,7 +666,7 @@ subroutine tick_solidify(lv, g, s, dtw)
     end do
   end do
   !$omp end parallel do
-  lvw%vsol = lvw%vsol + vsum
+  lv%lvw%vsol = lv%lvw%vsol + vsum
 
   ! 固化の有無はランク・tick で異なるが、collective の実行判定は
   ! 「lv_wsol > 0 の tick では常に交換」で全ランク同一(§5)。

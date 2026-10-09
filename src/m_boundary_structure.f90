@@ -18,7 +18,7 @@ submodule (m_boundary) m_boundary_structure
   use, intrinsic :: iso_fortran_env, only : r64 => real64
   use m_parallel, only : par_stop, par_info, is_root, dcp, &
                          par_allreduce_sumr, par_allreduce_maxi, par_sum_rows
-  use m_gwflow_conduit, only : gwflow_conduit_ready, gwflow_conduit_head_of, &
+  use m_gwflow_conduit, only : t_gwcond, gwflow_conduit_ready, gwflow_conduit_head_of, &
                                gwflow_conduit_cap_of
   use m_util, only : itoa
   use m_sysdep_util, only : sysdep_mkdir
@@ -194,11 +194,12 @@ end function
 !   collective は nstruct が namelist 由来で全ランク同一のため安全)。
 !   評価はステップ開始時点の状態(s%h)による(他族の時系列と同じ時相)
 !----------------------------------------------------------------------
-module subroutine structure_makebdc(b, p, g, s)
+module subroutine structure_makebdc(b, p, g, s, gwc)
   type(t_boundary), intent(inout) :: b
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
+  type(t_gwcond), intent(in) :: gwc
   real, allocatable :: refs(:)
   real :: deta, qcap
   integer :: ist, i, j
@@ -206,7 +207,7 @@ module subroutine structure_makebdc(b, p, g, s)
   ! 管路取水ポンプの遅延検査(f_gwconduit の有効性と取水セルの管路有無。
   ! boundary init は gwflow init より先のためここで 1 回だけ行う)
   if (.not. b%pump_src_checked) then
-    call check_pump_src(b)
+    call check_pump_src(b, gwc)
     b%pump_src_checked = .true.
   end if
 
@@ -226,7 +227,7 @@ module subroutine structure_makebdc(b, p, g, s)
             if (b%struct(ist)%f_ref == 1) then
               refs(2*ist-1) = max(s%hgc(i,j), 0.0)
             else
-              refs(2*ist-1) = gwflow_conduit_head_of(s, i, j)
+              refs(2*ist-1) = gwflow_conduit_head_of(gwc, s, i, j)
             end if
           else if (b%struct(ist)%f_ref == 1) then
             ! 水深基準: 代表セルがため池(rscap>0)なら貯留水深 hrs を読む
@@ -282,21 +283,22 @@ end subroutine
 ! 全ランク同時)。取水セルの管路有無(cap>0)は帯配列のため所有帯のみ
 ! 検査する(データ不良の owner 側 par_stop は既存の入力検査と同じ流儀)
 !----------------------------------------------------------------------
-subroutine check_pump_src(b)
+subroutine check_pump_src(b, gwc)
   type(t_boundary), intent(in) :: b
+  type(t_gwcond), intent(in) :: gwc
   integer :: ist, k, i, j
 
   do ist = 1, b%nstruct
     if (b%struct(ist)%kind /= e_struct_pump) cycle
     if (b%struct(ist)%src /= 1) cycle
-    if (.not. gwflow_conduit_ready()) then
+    if (.not. gwflow_conduit_ready(gwc)) then
       call par_stop("struct_pump: f_pump_src=1 (conduit intake) requires f_gwconduit=1")
     end if
     do k = 1, b%struct(ist)%ncin
       i = b%struct(ist)%cin(1,k)
       j = b%struct(ist)%cin(2,k)
       if (j < dcp%js .or. j > dcp%je) cycle
-      if (gwflow_conduit_cap_of(i, j) <= 0.0) then
+      if (gwflow_conduit_cap_of(gwc, i, j) <= 0.0) then
         call par_stop("struct_pump: conduit intake cell ("//itoa(i)//","//itoa(j) &
                       //") has no conduit (gwc cap=0)")
       end if

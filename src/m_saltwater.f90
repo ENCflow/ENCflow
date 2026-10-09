@@ -54,8 +54,8 @@ module m_saltwater
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
-  use m_gwflow_lateral, only : gwflow_lateral_geom_init, gwflow_lateral_geom_get, &
-                               gwflow_lateral_layer1_get
+  use m_gwflow_lateral, only : t_gwlat, t_latlayer, gwflow_lateral_geom_init, &
+                               gwflow_lateral_geom_get, gwflow_lateral_layer1_get
   use m_fileio, only : fileio_read_matrix, fileio_write_rle, fileio_read_rle
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : par_info, par_stop, dcp, is_root, par_halo_cell, &
@@ -67,21 +67,6 @@ module m_saltwater
   public :: m_saltwater_calc
   public :: m_saltwater_dispose
 
-  type t_saltwater
-    ! init に早期 return 経路があるため全成分デフォルト初期化必須(§13)
-    logical :: enabled = .false.
-    logical :: initialized = .false.
-  end type
-
-  ! 8近傍の規約(m_swflow_enc / m_gwflow_lateral と同一)
-  integer, parameter :: din(1:8) = [ -1,  0,  1, -1,  1, -1,  0,  1]
-  integer, parameter :: djn(1:8) = [ -1, -1, -1,  0,  0,  1,  1,  1]
-  integer, parameter :: die(1:8) = [ -1,  0,  0, -1,  0, -1,  0,  0]
-  integer, parameter :: dje(1:8) = [ -1, -1, -1,  0,  0,  0,  0,  0]
-  integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
-  real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
-
-  ! モジュール私有の設定・作業領域(単一インスタンス前提。developer.md §12)
   type t_salt
     real :: epsr = 0.0               ! ε = (ρs − ρf)/ρf
     logical :: surf = .false.        ! 地表塩水層の有効化
@@ -100,7 +85,23 @@ module m_saltwater
     real, allocatable :: qb(:,:,:)   ! 同(バロクリニック成分。gw のみ)
     logical :: initialized = .false.
   end type
-  type(t_salt) :: sw
+
+  type t_saltwater
+    ! init に早期 return 経路があるため全成分デフォルト初期化必須(§13)
+    logical :: enabled = .false.
+    logical :: initialized = .false.
+    type(t_salt) :: sw               ! 設定・係数・作業領域(モジュール変数から成分へ。nesting_plan.md §3.2 A 群)
+  end type
+
+  ! 8近傍の規約(m_swflow_enc / m_gwflow_lateral と同一)
+  integer, parameter :: din(1:8) = [ -1,  0,  1, -1,  1, -1,  0,  1]
+  integer, parameter :: djn(1:8) = [ -1, -1, -1,  0,  0,  1,  1,  1]
+  integer, parameter :: die(1:8) = [ -1,  0,  0, -1,  0, -1,  0,  0]
+  integer, parameter :: dje(1:8) = [ -1, -1, -1,  0,  0,  0,  0,  0]
+  integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
+  real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
+
+  ! モジュール私有の設定・作業領域(単一インスタンス前提。developer.md §12)
 
 contains
 
@@ -108,11 +109,13 @@ contains
 !----------------------------------------------------------------------
 ! 淡塩2層モジュールを初期化する(fn_salt 未指定なら何もしない)
 !----------------------------------------------------------------------
-subroutine m_saltwater_init(sl, p, g, s)
+subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   type(t_saltwater), intent(out) :: sl
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
+  type(t_gwlat), intent(inout) :: lat    ! gwflow の側方系の幾何(共有・冪等初期化。m_gwflow が所有)
+  type(t_latlayer), intent(in) :: lay1   ! 層1の側方係数(同一媒体の K_sh・sy)
   integer :: un, ios, i, j
   logical :: lat_active
   real :: sdmax(1), sum_ldr, dt_lim
@@ -178,30 +181,30 @@ subroutine m_saltwater_init(sl, p, g, s)
   end if
   if (salt_nsubmax < 1) call par_stop("list_salt: salt_nsubmax must be >= 1")
 
-  sw%surf = (f_salt_surf == 1)
-  sw%gw = (f_salt_gw == 1)
-  sw%epsr = (salt_rhos - salt_rhof) / salt_rhof
-  sw%rni = 0.0
-  if (sw%surf) sw%rni = 1.0 / salt_ni
-  sw%eps = salt_eps
-  sw%eps_h = salt_eps_h
-  sw%nsubmax = salt_nsubmax
+  sl%sw%surf = (f_salt_surf == 1)
+  sl%sw%gw = (f_salt_gw == 1)
+  sl%sw%epsr = (salt_rhos - salt_rhof) / salt_rhof
+  sl%sw%rni = 0.0
+  if (sl%sw%surf) sl%sw%rni = 1.0 / salt_ni
+  sl%sw%eps = salt_eps
+  sl%sw%eps_h = salt_eps_h
+  sl%sw%nsubmax = salt_nsubmax
 
   ! --- 層1側方流の前提(f_salt_gw=1)と係数の取得 ---
-  if (sw%gw) then
-    call gwflow_lateral_layer1_get(lat_active, sw%ksh, sw%sy)
+  if (sl%sw%gw) then
+    call gwflow_lateral_layer1_get(lat, lay1, lat_active, sl%sw%ksh, sl%sw%sy)
     if (.not. lat_active) then
       call par_stop("saltwater: f_salt_gw=1 requires f_gwlateral=1 " &
                     // "(the barotropic response and K_sh/sy0 come from layer-1 lateral flow)")
     end if
-    sw%syinv = 1.0 / sw%sy
+    sl%sw%syinv = 1.0 / sl%sw%sy
   end if
 
   ! --- 幾何(gwflow の側方系と共有・冪等)とエッジ作業領域 ---
-  call gwflow_lateral_geom_init(g, salt_diagratio, 1.0e-3)
-  call gwflow_lateral_geom_get(sw%rdr, sw%wl, sw%ainv)
-  allocate(sw%qs(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
-  if (sw%gw) allocate(sw%qb(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+  call gwflow_lateral_geom_init(lat, g, salt_diagratio, 1.0e-3)
+  call gwflow_lateral_geom_get(lat, sl%sw%rdr, sl%sw%wl, sl%sw%ainv)
+  allocate(sl%sw%qs(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+  if (sl%sw%gw) allocate(sl%sw%qb(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
 
   ! --- 状態の確保と初期値(海セル・無効セルには置かない) ---
   ! hss0 は既存 h のうち塩水と見なす厚(min クランプ)、hgs0 は塩水の
@@ -239,7 +242,7 @@ subroutine m_saltwater_init(sl, p, g, s)
   ! --- 地下塩水 zone の安定条件(静的検査。§47) ---
   ! 塩水 zone 流束の水頭感度は (1+ε)/sy(∇η と ε∇ζ の和)、厚さ上界は
   ! max(sd)。層1側方の検査と同型で dt(毎ステップ実行)を検査する
-  if (sw%gw) then
+  if (sl%sw%gw) then
     sdmax(1) = 0.0
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
@@ -251,11 +254,11 @@ subroutine m_saltwater_init(sl, p, g, s)
     call par_allreduce_max(sdmax)
     sum_ldr = 0.0
     do i = 1, 8
-      sum_ldr = sum_ldr + sw%wl(i) * sw%rdr(i)
+      sum_ldr = sum_ldr + sl%sw%wl(i) * sl%sw%rdr(i)
     end do
-    if (sw%ksh * sdmax(1) * sum_ldr > 0.0) then
-      dt_lim = 0.5 * sw%sy * g%dx * g%dy &
-               / (sw%ksh * (1.0 + sw%epsr) * sdmax(1) * sum_ldr)
+    if (sl%sw%ksh * sdmax(1) * sum_ldr > 0.0) then
+      dt_lim = 0.5 * sl%sw%sy * g%dx * g%dy &
+               / (sl%sw%ksh * (1.0 + sl%sw%epsr) * sdmax(1) * sum_ldr)
       write(msg,'(a,es10.3,a,es10.3,a)') "saltwater_gw: dt limit = ", dt_lim, &
                                          " s (dt = ", p%dt, " s)"
       call par_info(trim(msg))
@@ -270,10 +273,10 @@ subroutine m_saltwater_init(sl, p, g, s)
   if (p%f_state_restore > 0) call restore_state(p, g, s)
 
   ! --- 地表移流フックの有効化(swflow init より前に立てる契約) ---
-  s%salt_active = sw%surf
+  s%salt_active = sl%sw%surf
   s%salt_alpha = salt_alpha
 
-  sw%initialized = .true.
+  sl%sw%initialized = .true.
   sl%enabled = .true.
   sl%initialized = .true.
   call par_info("saltwater two-fluid (fresh/salt) layers enabled")
@@ -321,7 +324,7 @@ end subroutine
 ! 淡塩2層の計算(毎ステップ。ヘッダの (1)〜(5) の順で固定)
 !----------------------------------------------------------------------
 subroutine m_saltwater_calc(sl, p, g, s, it)
-  type(t_saltwater), intent(in) :: sl
+  type(t_saltwater), intent(inout) :: sl
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -346,24 +349,24 @@ subroutine m_saltwater_calc(sl, p, g, s, it)
   ! ステップ頭のハロ交換(h は swflow のステップ頭交換の後に gwflow 等が
   ! 帯のみ更新しているため、ここで再交換する。z は swflow 交換済み)
   call par_halo_cell(s%h)
-  if (sw%gw) then
+  if (sl%sw%gw) then
     call par_halo_cell(s%hg)
     call par_halo_cell(s%hgs)
   end if
 
   ! (2) 地表の底層重力流(適応サブサイクリング。hss のハロは
   !     サブサイクルごとに内部で交換する)
-  if (sw%surf) call surf_gravity_current(g, s, p%dt)
+  if (sl%sw%surf) call surf_gravity_current(sl, g, s, p%dt)
 
   ! (3) 地下の塩水 zone 側方流+(4) 海側境界
-  if (sw%gw) then
-    call gw_salt_zone(g, s, p%dt)
-    call gw_sea_exchange(g, s, p%dt)
+  if (sl%sw%gw) then
+    call gw_salt_zone(sl, g, s, p%dt)
+    call gw_sea_exchange(sl, g, s, p%dt)
   end if
 
   ! (5) 海域セルの hss 維持(次ステップの移流フックの風上濃度用。
   !     潮位更新に対して 1 ステップ遅れ = ヘッダ参照)
-  if (sw%surf) then
+  if (sl%sw%surf) then
     !$omp parallel do schedule(static) private(i, j)
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
@@ -383,7 +386,8 @@ end subroutine
 !   安定条件は ∂Φ/∂hss = ε の線形化枝で評価し、適応サブサイクリング
 !   (分割数は hss 最大値の allreduce から全ランク同一に決める)
 !----------------------------------------------------------------------
-subroutine surf_gravity_current(g, s, dts)
+subroutine surf_gravity_current(sl, g, s, dts)
+  type(t_saltwater), intent(inout) :: sl
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
@@ -402,20 +406,20 @@ subroutine surf_gravity_current(g, s, dts)
     end do
   end do
   call par_allreduce_max(hmax)
-  if (hmax(1) <= sw%eps) return
+  if (hmax(1) <= sl%sw%eps) return
   sum_fac = 0.0
   do k = 1, 8
-    sum_fac = sum_fac + sw%wl(k) * sqrt(sw%rdr(k) / sw%eps_h)
+    sum_fac = sum_fac + sl%sw%wl(k) * sqrt(sl%sw%rdr(k) / sl%sw%eps_h)
   end do
-  dcoef = sw%epsr * sw%rni * hmax(1)**(5.0/3.0) * sum_fac * sw%ainv
+  dcoef = sl%sw%epsr * sl%sw%rni * hmax(1)**(5.0/3.0) * sum_fac * sl%sw%ainv
   nsub = 1
   if (dcoef > 0.0) then
     dt_lim = 0.5 / dcoef
     nsub = max(1, ceiling(dts / dt_lim))
   end if
-  if (nsub > sw%nsubmax) then
+  if (nsub > sl%sw%nsubmax) then
     write(msg,'(a,i8,a,i8,a)') "saltwater_surf: required subcycles ", nsub, &
-                               " exceed salt_nsubmax ", sw%nsubmax, &
+                               " exceed salt_nsubmax ", sl%sw%nsubmax, &
                                " (reduce dt or increase salt_ni/salt_eps_h)"
     call par_stop(trim(msg))
   end if
@@ -432,44 +436,44 @@ subroutine surf_gravity_current(g, s, dts)
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
         zc = s%z(i,j) + s%hss(i,j)
-        pc = (s%z(i,j) + s%h(i,j)) + sw%epsr * zc
+        pc = (s%z(i,j) + s%h(i,j)) + sl%sw%epsr * zc
         do k = 1, 4
           in = i + din(k)
           jn = j + djn(k)
           gq = 0.0
           if (g%sw(i,j) <= 0 .and. g%x(in,jn) > 0) then
             if (g%sw(in,jn) <= 0) then
-              if (s%hss(i,j) > sw%eps .or. s%hss(in,jn) > sw%eps) then
+              if (s%hss(i,j) > sl%sw%eps .or. s%hss(in,jn) > sl%sw%eps) then
                 zn = s%z(in,jn) + s%hss(in,jn)
-                pn = (s%z(in,jn) + s%h(in,jn)) + sw%epsr * zn
+                pn = (s%z(in,jn) + s%h(in,jn)) + sl%sw%epsr * zn
                 if (pc /= pn) then
                   if (pc > pn) then
                     hup = s%hss(i,j)
                   else
                     hup = s%hss(in,jn)
                   end if
-                  if (hup > sw%eps) then
+                  if (hup > sl%sw%eps) then
                     hse = min(0.5 * (s%hss(i,j) + s%hss(in,jn)), hup)
                     dp = pc - pn
-                    if (abs(dp) >= sw%eps_h) then
-                      gq = sw%rni * hse**(5.0/3.0) &
-                           * sign(sqrt(abs(dp) * sw%rdr(k)), dp) * sw%wl(k)
+                    if (abs(dp) >= sl%sw%eps_h) then
+                      gq = sl%sw%rni * hse**(5.0/3.0) &
+                           * sign(sqrt(abs(dp) * sl%sw%rdr(k)), dp) * sl%sw%wl(k)
                     else
-                      gq = sw%rni * hse**(5.0/3.0) &
-                           * dp * sqrt(sw%rdr(k) / sw%eps_h) * sw%wl(k)
+                      gq = sl%sw%rni * hse**(5.0/3.0) &
+                           * dp * sqrt(sl%sw%rdr(k) / sl%sw%eps_h) * sl%sw%wl(k)
                     end if
                     ! 過大流出の抑制(上流側)と受け側容量(hss <= h)の制限
-                    dh_up = abs(gq) * dtsub * sw%ainv
-                    if (hup - dh_up <= sw%eps) then
-                      gq = gq * (max(hup - sw%eps, 0.0) / dh_up)
-                      dh_up = abs(gq) * dtsub * sw%ainv
+                    dh_up = abs(gq) * dtsub * sl%sw%ainv
+                    if (hup - dh_up <= sl%sw%eps) then
+                      gq = gq * (max(hup - sl%sw%eps, 0.0) / dh_up)
+                      dh_up = abs(gq) * dtsub * sl%sw%ainv
                     end if
                     if (gq > 0.0) then
                       cap_rcv = max(s%h(in,jn) - s%hss(in,jn), 0.0)
                     else
                       cap_rcv = max(s%h(i,j) - s%hss(i,j), 0.0)
                     end if
-                    dh_rcv = abs(gq) * dtsub * sw%ainv
+                    dh_rcv = abs(gq) * dtsub * sl%sw%ainv
                     if (dh_rcv > cap_rcv) then
                       gq = gq * (cap_rcv / dh_rcv)
                     end if
@@ -478,7 +482,7 @@ subroutine surf_gravity_current(g, s, dts)
               end if
             end if
           end if
-          sw%qs(k, i+die(k), j+dje(k)) = gq
+          sl%sw%qs(k, i+die(k), j+dje(k)) = gq
         end do
       end do
     end do
@@ -492,9 +496,9 @@ subroutine surf_gravity_current(g, s, dts)
         if (g%sw(i,j) > 0) cycle
         dhg = 0.0
         do k = 1, 8
-          dhg = dhg + sign_e(k) * sw%qs(ke(k), i+die(k), j+dje(k))
+          dhg = dhg + sign_e(k) * sl%sw%qs(ke(k), i+die(k), j+dje(k))
         end do
-        s%hss(i,j) = s%hss(i,j) - dhg * dtsub * sw%ainv
+        s%hss(i,j) = s%hss(i,j) - dhg * dtsub * sl%sw%ainv
       end do
     end do
     !$omp end parallel do
@@ -508,7 +512,8 @@ end subroutine
 !   ζ = z − sd + hgs/sy。qs = K·b_s·ΔΦs·rdr·wl(Φs = η + εζ)、
 !   qb = K·b_s·ε·Δζ·rdr·wl(合計 hg への追加分)。制限は両者に同率適用
 !----------------------------------------------------------------------
-subroutine gw_salt_zone(g, s, dts)
+subroutine gw_salt_zone(sl, g, s, dts)
+  type(t_saltwater), intent(inout) :: sl
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
@@ -523,11 +528,11 @@ subroutine gw_salt_zone(g, s, dts)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
-      bc = s%hgs(i,j) * sw%syinv
+      bc = s%hgs(i,j) * sl%sw%syinv
       zetac = s%z(i,j) - s%sd(i,j) + bc
-      etac = s%z(i,j) - s%sd(i,j) + s%hg(i,j) * sw%syinv
-      if (s%hg(i,j) >= s%sd(i,j) * sw%sy) etac = etac + s%h(i,j)
-      psc = etac + sw%epsr * zetac
+      etac = s%z(i,j) - s%sd(i,j) + s%hg(i,j) * sl%sw%syinv
+      if (s%hg(i,j) >= s%sd(i,j) * sl%sw%sy) etac = etac + s%h(i,j)
+      psc = etac + sl%sw%epsr * zetac
       do k = 1, 4
         in = i + din(k)
         jn = j + djn(k)
@@ -538,12 +543,12 @@ subroutine gw_salt_zone(g, s, dts)
             ! 乾燥判定は lateral_core と同じ飽和帯厚単位(柱状量単位だと
             ! sy 倍だけ保守的になり、前線で塩水輸送だけが削られて
             ! 見かけの淡水が残る系統誤差になる — 実検出 2026-08-18)
-            bn = s%hgs(in,jn) * sw%syinv
-            if (bc > sw%eps .or. bn > sw%eps) then
+            bn = s%hgs(in,jn) * sl%sw%syinv
+            if (bc > sl%sw%eps .or. bn > sl%sw%eps) then
               zetan = s%z(in,jn) - s%sd(in,jn) + bn
-              etan = s%z(in,jn) - s%sd(in,jn) + s%hg(in,jn) * sw%syinv
-              if (s%hg(in,jn) >= s%sd(in,jn) * sw%sy) etan = etan + s%h(in,jn)
-              psn = etan + sw%epsr * zetan
+              etan = s%z(in,jn) - s%sd(in,jn) + s%hg(in,jn) * sl%sw%syinv
+              if (s%hg(in,jn) >= s%sd(in,jn) * sl%sw%sy) etan = etan + s%h(in,jn)
+              psn = etan + sl%sw%epsr * zetan
               if (psc /= psn) then
                 ! 上流側(Φs の高い側)の塩水飽和帯厚
                 if (psc > psn) then
@@ -551,15 +556,15 @@ subroutine gw_salt_zone(g, s, dts)
                 else
                   bup = bn
                 end if
-                if (bup > sw%eps) then
+                if (bup > sl%sw%eps) then
                   bse = min(0.5 * (bc + bn), bup)
-                  gqs = sw%ksh * bse * (psc - psn) * sw%rdr(k) * sw%wl(k)
-                  gqb = sw%ksh * bse * sw%epsr * (zetac - zetan) * sw%rdr(k) * sw%wl(k)
+                  gqs = sl%sw%ksh * bse * (psc - psn) * sl%sw%rdr(k) * sl%sw%wl(k)
+                  gqb = sl%sw%ksh * bse * sl%sw%epsr * (zetac - zetan) * sl%sw%rdr(k) * sl%sw%wl(k)
                   ! 過大流出の抑制(上流側。厚さ単位 = lateral_core と同一)。
                   ! 同率を qb にも適用(zone 流束の成分なので一体で縮小)
-                  dh_up = abs(gqs) * dts * sw%ainv * sw%syinv
-                  if (bup - dh_up <= sw%eps) then
-                    r = max(bup - sw%eps, 0.0) / dh_up
+                  dh_up = abs(gqs) * dts * sl%sw%ainv * sl%sw%syinv
+                  if (bup - dh_up <= sl%sw%eps) then
+                    r = max(bup - sl%sw%eps, 0.0) / dh_up
                     gqs = gqs * r
                     gqb = gqb * r
                   end if
@@ -568,8 +573,8 @@ subroutine gw_salt_zone(g, s, dts)
             end if
           end if
         end if
-        sw%qs(k, i+die(k), j+dje(k)) = gqs
-        sw%qb(k, i+die(k), j+dje(k)) = gqb
+        sl%sw%qs(k, i+die(k), j+dje(k)) = gqs
+        sl%sw%qb(k, i+die(k), j+dje(k)) = gqb
       end do
     end do
   end do
@@ -584,15 +589,15 @@ subroutine gw_salt_zone(g, s, dts)
       dhs = 0.0
       dhb = 0.0
       do k = 1, 8
-        dhs = dhs + sign_e(k) * sw%qs(ke(k), i+die(k), j+dje(k))
-        dhb = dhb + sign_e(k) * sw%qb(ke(k), i+die(k), j+dje(k))
+        dhs = dhs + sign_e(k) * sl%sw%qs(ke(k), i+die(k), j+dje(k))
+        dhb = dhb + sign_e(k) * sl%sw%qb(ke(k), i+die(k), j+dje(k))
       end do
-      s%hgs(i,j) = s%hgs(i,j) - dhs * dts * sw%ainv
-      s%hg(i,j) = s%hg(i,j) - dhb * dts * sw%ainv
+      s%hgs(i,j) = s%hgs(i,j) - dhs * dts * sl%sw%ainv
+      s%hg(i,j) = s%hg(i,j) - dhb * dts * sl%sw%ainv
       ! 容量超過は地表へ湧出(層1の既存規則と同じ。湧出は下層 = 塩水を
       ! 先に持ち上げる…は追わず、湧出分だけ塩水を同伴させる近似:
       ! 溢れるのは水面直下の水 = 淡水優先が実態に近いので合計のみ動かす)
-      capc = s%sd(i,j) * sw%sy
+      capc = s%sd(i,j) * sl%sw%sy
       if (s%hg(i,j) > capc) then
         fx = s%hg(i,j) - capc
         s%hg(i,j) = capc
@@ -612,7 +617,8 @@ end subroutine
 !   海域セル = 全塩水・水位 = 潮位(s%e)。塩水は双方向(hg と hgs を
 !   同時更新)、淡水は流出のみ。行き過ぎ防止に等化量で制限する
 !----------------------------------------------------------------------
-subroutine gw_sea_exchange(g, s, dts)
+subroutine gw_sea_exchange(sl, g, s, dts)
+  type(t_saltwater), intent(inout) :: sl
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
@@ -636,13 +642,13 @@ subroutine gw_sea_exchange(g, s, dts)
         etasea = s%z(in,jn) + s%h(in,jn)              ! 潮位(m_tide が強制)
         base = s%z(i,j) - s%sd(i,j)                   ! 陸側の帯水層底
         if (etasea <= base) cycle                     ! 海が底より低い = 無接続
-        capc = s%sd(i,j) * sw%sy
-        bc = s%hgs(i,j) * sw%syinv
+        capc = s%sd(i,j) * sl%sw%sy
+        bc = s%hgs(i,j) * sl%sw%syinv
         zetac = base + bc
-        etac = base + s%hg(i,j) * sw%syinv
+        etac = base + s%hg(i,j) * sl%sw%syinv
         if (s%hg(i,j) >= capc) etac = etac + s%h(i,j)
-        psc = etac + sw%epsr * zetac
-        pssea = (1.0 + sw%epsr) * etasea              ! 海側 Φs(ζ_sea = η_sea)
+        psc = etac + sl%sw%epsr * zetac
+        pssea = (1.0 + sl%sw%epsr) * etasea              ! 海側 Φs(ζ_sea = η_sea)
         bsea = etasea - base                          ! 海側の塩水飽和厚
         ! 塩水交換(流入正)。界面厚は算術平均を上流側でキャップ
         if (pssea /= psc) then
@@ -652,9 +658,9 @@ subroutine gw_sea_exchange(g, s, dts)
             bse = min(0.5 * (bc + bsea), bc)
           end if
           if (bse > 0.0) then
-            fx = sw%ksh * bse * (pssea - psc) * sw%rdr(k) * sw%wl(k) * dts * sw%ainv
+            fx = sl%sw%ksh * bse * (pssea - psc) * sl%sw%rdr(k) * sl%sw%wl(k) * dts * sl%sw%ainv
             ! 等化量・在庫・容量の制限
-            fx = sign(min(abs(fx), abs(pssea - psc) * sw%sy / (1.0 + sw%epsr)), fx)
+            fx = sign(min(abs(fx), abs(pssea - psc) * sl%sw%sy / (1.0 + sl%sw%epsr)), fx)
             if (fx > 0.0) then
               fx = min(fx, max(capc - s%hg(i,j), 0.0))
             else
@@ -665,10 +671,10 @@ subroutine gw_sea_exchange(g, s, dts)
           end if
         end if
         ! 淡水流出(η_land > 潮位のとき。海に淡水は存在しないため流入なし)
-        bf = (s%hg(i,j) - s%hgs(i,j)) * sw%syinv
-        if (etac > etasea .and. bf > sw%eps) then
-          fx = sw%ksh * bf * (etac - etasea) * sw%rdr(k) * sw%wl(k) * dts * sw%ainv
-          fx = min(fx, (etac - etasea) * sw%sy, s%hg(i,j) - s%hgs(i,j))
+        bf = (s%hg(i,j) - s%hgs(i,j)) * sl%sw%syinv
+        if (etac > etasea .and. bf > sl%sw%eps) then
+          fx = sl%sw%ksh * bf * (etac - etasea) * sl%sw%rdr(k) * sl%sw%wl(k) * dts * sl%sw%ainv
+          fx = min(fx, (etac - etasea) * sl%sw%sy, s%hg(i,j) - s%hgs(i,j))
           if (fx > 0.0) s%hg(i,j) = s%hg(i,j) - fx
         end if
       end do
@@ -751,9 +757,9 @@ subroutine m_saltwater_dispose(sl, p, g, s)
   type(t_state), intent(in) :: s
   if (.not. sl%enabled) return
   if (p%f_state_save > 0) call save_state(p, g, s)
-  if (allocated(sw%qs)) deallocate(sw%qs)
-  if (allocated(sw%qb)) deallocate(sw%qb)
-  sw%initialized = .false.
+  if (allocated(sl%sw%qs)) deallocate(sl%sw%qs)
+  if (allocated(sl%sw%qb)) deallocate(sl%sw%qb)
+  sl%sw%initialized = .false.
   sl%enabled = .false.
   sl%initialized = .false.
 end subroutine

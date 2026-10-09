@@ -182,7 +182,7 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(in) :: b
   type(t_state), intent(inout) :: s
-  type(t_intercept), intent(in) :: ic
+  type(t_intercept), intent(inout) :: ic   ! 貯留型遮断の draw が樹冠貯留を減じる
   type(t_meteo), intent(inout) :: mt
   integer, intent(in) :: it
   integer :: i, j, day
@@ -212,7 +212,7 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
       if (dem <= 0.0) cycle
       ! (1) 樹冠保水(貯留型遮断モデルのみ。draw が状態を減じる)
       if (canopy) then
-        w = ic%draw(i, j, dem)
+        w = ic%draw(ic%st, i, j, dem)
         dem = dem - w
         ev%vrow(j,1) = ev%vrow(j,1) + real(w, real64) * acell
         if (dem <= 0.0) cycle

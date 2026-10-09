@@ -37,14 +37,17 @@ module m_intercept_initloss
                        par_scatter_cell, par_gather_to
   implicit none
   private
+  public :: t_icinit
   public :: intercept_initloss_init
   public :: intercept_initloss_calc
   public :: intercept_initloss_step
   public :: intercept_initloss_draw
   public :: intercept_initloss_dispose
 
-  ! モデル私有の設定と内部状態(単一インスタンス前提。developer.md §12)
+  ! モデル私有の設定と内部状態。実体は切替器 m_intercept の t_intercept が持ち、
+  ! 各手続きが第 1 引数で受ける(成分は本モジュール私有。nesting_plan.md §3.2 A 群)
   type t_icinit
+    private
     real :: smax = 0.0                     ! 最大貯留量 (m)(一様指定時)
     real, allocatable :: smaxmap(:,:)      ! 最大貯留量の分布 (m)(分布指定時のみ確保。帯)
     real, allocatable :: st(:,:)           ! 累積遮断量 (m)(内部状態。帯)
@@ -52,7 +55,6 @@ module m_intercept_initloss
     real, allocatable :: prh0(:,:)         ! 原雨量 (mm/h)(私有保管。帯)
     logical :: initialized = .false.
   end type
-  type(t_icinit) :: ici
 
 contains
 
@@ -60,7 +62,8 @@ contains
 !----------------------------------------------------------------------
 ! 初期損失モデルの初期化(固有グループ &list_intercept_initloss を自分で読む)
 !----------------------------------------------------------------------
-subroutine intercept_initloss_init(p, g)
+subroutine intercept_initloss_init(ici, p, g)
+  type(t_icinit), intent(inout) :: ici
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   integer :: un, ios
@@ -80,7 +83,7 @@ subroutine intercept_initloss_init(p, g)
 
   if (len_trim(fn_icsmax) > 0) then
     ! 分布指定: 最大貯留量マップ (mm) を読み、m に換算して帯で保持
-    call read_smax_map(p, g, trim(fn_icsmax))
+    call read_smax_map(ici, p, g, trim(fn_icsmax))
   else
     ! 一様指定(未指定 = 番兵 −1 なら既定を採用し表示。developer.md §66)
     ic_smax_mm = param_default("intercept", "ic_smax_mm", ic_smax_mm, 1.5, " mm", unset=-1.0)
@@ -96,7 +99,7 @@ subroutine intercept_initloss_init(p, g)
 
   ! 内部状態の復元(契約C)。m_state の門番(check_save_info)は
   ! m_state_init で通過済み
-  if (p%f_state_restore > 0) call restore_state(p)
+  if (p%f_state_restore > 0) call restore_state(ici, p)
 
   ici%initialized = .true.
 end subroutine
@@ -105,7 +108,8 @@ end subroutine
 !----------------------------------------------------------------------
 ! 最大貯留量の分布ファイルを読む(mm 単位。m_intercept_fixed の契約5と同型)
 !----------------------------------------------------------------------
-subroutine read_smax_map(p, g, fn)
+subroutine read_smax_map(ici, p, g, fn)
+  type(t_icinit), intent(inout) :: ici
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: fn
@@ -151,7 +155,8 @@ end subroutine
 !----------------------------------------------------------------------
 ! 降雨更新直後: 原雨量を私有配列に写し取る(契約A。s%pre は変更しない)
 !----------------------------------------------------------------------
-subroutine intercept_initloss_calc(p, g, s, it)
+subroutine intercept_initloss_calc(ici, p, g, s, it)
+  type(t_icinit), intent(inout) :: ici
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -171,7 +176,8 @@ end subroutine
 !   d = min(原雨量×dt, 残容量) を貯留に加え、通過率 f = (P*dt-d)/(P*dt)
 !   で pre / prh を同率で減じる(満杯なら素通し)
 !----------------------------------------------------------------------
-subroutine intercept_initloss_step(p, g, s, it)
+subroutine intercept_initloss_step(ici, p, g, s, it)
+  type(t_icinit), intent(inout) :: ici
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -219,7 +225,8 @@ end subroutine
 !   (=遮断容量の乾き戻り)。呼び出し側(m_evap)は自帯の使用セルのみを
 !   渡す契約(範囲検査はしない)。st は h と同じ柱状量基底 (m)
 !----------------------------------------------------------------------
-function intercept_initloss_draw(i, j, dem) result(w)
+function intercept_initloss_draw(ici, i, j, dem) result(w)
+  type(t_icinit), intent(inout) :: ici
   integer, intent(in) :: i, j
   real, intent(in) :: dem
   real :: w
@@ -231,7 +238,8 @@ end function
 !----------------------------------------------------------------------
 ! 内部状態 st の復元(契約C)。rank0 が全域一時に読み、帯へ scatter する
 !----------------------------------------------------------------------
-subroutine restore_state(p)
+subroutine restore_state(ici, p)
+  type(t_icinit), intent(inout) :: ici
   type(t_sysparam), intent(in) :: p
   real, allocatable :: wk(:,:)
   real :: dum(1,1)
@@ -262,7 +270,8 @@ end subroutine
 !----------------------------------------------------------------------
 ! 内部状態 st の保存(契約C)。帯を rank0 へ gather して RLE で書く
 !----------------------------------------------------------------------
-subroutine save_state(p)
+subroutine save_state(ici, p)
+  type(t_icinit), intent(in) :: ici
   type(t_sysparam), intent(in) :: p
   real, allocatable :: wk(:,:)
   integer :: un
@@ -286,9 +295,10 @@ end subroutine
 !----------------------------------------------------------------------
 ! 初期損失モデルの破棄(f_state_save 指定時は内部状態を保存してから)
 !----------------------------------------------------------------------
-subroutine intercept_initloss_dispose(p)
+subroutine intercept_initloss_dispose(ici, p)
+  type(t_icinit), intent(inout) :: ici
   type(t_sysparam), intent(in) :: p
-  if (p%f_state_save > 0) call save_state(p)
+  if (p%f_state_save > 0) call save_state(ici, p)
   if (allocated(ici%smaxmap)) deallocate(ici%smaxmap)
   if (allocated(ici%st)) deallocate(ici%st)
   if (allocated(ici%pr0)) deallocate(ici%pr0)

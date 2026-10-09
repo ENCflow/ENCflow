@@ -34,7 +34,7 @@ module m_gwflow_layer2
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
-  use m_gwflow_lateral, only : t_latlayer, gwflow_lateral_geom_init, &
+  use m_gwflow_lateral, only : t_latlayer, t_gwlat, gwflow_lateral_geom_init, &
                                gwflow_lateral_dtcheck, lateral_core
   use m_fileio, only : fileio_write_rle, fileio_read_rle
   use m_sysdep_util, only : sysdep_mkdir
@@ -48,8 +48,9 @@ module m_gwflow_layer2
   public :: gwflow_layer2_dispose
   public :: gwflow_layer2_active
   public :: gwflow_layer2_leakinfo
+  public :: t_gwl2
 
-  ! モデル私有の設定(単一インスタンス前提。developer.md §12)
+  ! モデル私有の設定(実体は切替器 m_gwflow の t_gwflow が持ち、各手続きが引数で受ける(nesting_plan.md §3.2 A 群))
   type t_gwl2
     real :: kv = 0.0                 ! 層1→2 浸透能 (m/s)
     real :: d2 = 0.0                 ! 層厚 (m)
@@ -59,7 +60,6 @@ module m_gwflow_layer2
     type(t_latlayer) :: lay          ! 側方カーネルの層係数
     logical :: initialized = .false.
   end type
-  type(t_gwl2) :: gl2
 
 contains
 
@@ -68,7 +68,9 @@ contains
 ! 風化基岩層の初期化(固有グループ &list_gwflow_layer2 を自分で読む)。
 ! g%sd は m_gwflow_init が m_geoinfo_require_sd で確保済み
 !----------------------------------------------------------------------
-subroutine gwflow_layer2_init(p, g, s, dts)
+subroutine gwflow_layer2_init(gl2, lat, p, g, s, dts)
+  type(t_gwl2), intent(inout) :: gl2
+  type(t_gwlat), intent(inout) :: lat    ! 層間共有の幾何・作業領域
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -136,8 +138,8 @@ subroutine gwflow_layer2_init(p, g, s, dts)
     gl2%lay%to_surface = .false.
     ! 層1側方が有効ならその diagratio/eps が既に設定済み(冪等口が勝つ)。
     ! 層2のみ有効の場合は既定値(m_swflow_enc の p_diagratio と同値)
-    call gwflow_lateral_geom_init(g, 2.0 / (2.0 + sqrt(2.0)), 1.0e-3)
-    call gwflow_lateral_dtcheck(g, "gwflow_layer2", gl2%lay%ksh, gl2%lay%sy, &
+    call gwflow_lateral_geom_init(lat, g, 2.0 / (2.0 + sqrt(2.0)), 1.0e-3)
+    call gwflow_lateral_dtcheck(lat, g, "gwflow_layer2", gl2%lay%ksh, gl2%lay%sy, &
                                 gl2%d2, dts)
   end if
 
@@ -152,7 +154,9 @@ end subroutine
 !----------------------------------------------------------------------
 ! 風化基岩層の計算(毎 gwflow ステップ。鉛直浸透→側方流動)
 !----------------------------------------------------------------------
-subroutine gwflow_layer2_calc(p, g, s, it, dts)
+subroutine gwflow_layer2_calc(gl2, lat, p, g, s, it, dts)
+  type(t_gwl2), intent(inout) :: gl2
+  type(t_gwlat), intent(inout) :: lat
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -181,7 +185,7 @@ subroutine gwflow_layer2_calc(p, g, s, it, dts)
   ! (2) 側方 Darcy 流(層2内。飽和超過はカーネルが層1→地表へ直列に渡す)
   if (gl2%lat) then
     call par_halo_cell(s%hg2)
-    call lateral_core(g, s, s%hg2, gl2%lay, dts)
+    call lateral_core(lat, g, s, s%hg2, gl2%lay, dts)
   end if
 end subroutine
 
@@ -191,12 +195,14 @@ end subroutine
 ! gwc_leak_layer=2 が水頭 H2 = (z − sd − d2) + hg2/sy2 と容量 cap2 を
 ! 計算するために使う。m_gwflow_conduit の init は layer2 init より後)
 !----------------------------------------------------------------------
-pure logical function gwflow_layer2_active()
+pure logical function gwflow_layer2_active(gl2)
+  type(t_gwl2), intent(in) :: gl2
   gwflow_layer2_active = gl2%initialized
 end function
 
 
-pure subroutine gwflow_layer2_leakinfo(d2, sy2, cap)
+pure subroutine gwflow_layer2_leakinfo(gl2, d2, sy2, cap)
+  type(t_gwl2), intent(in) :: gl2
   real, intent(out) :: d2            ! 層厚 (m)
   real, intent(out) :: sy2           ! 比湧水量
   real, intent(out) :: cap           ! 容量 d2·sy2 (m)
@@ -266,7 +272,8 @@ end subroutine
 !----------------------------------------------------------------------
 ! 風化基岩層の破棄(save は dispose で行う。契約5)
 !----------------------------------------------------------------------
-subroutine gwflow_layer2_dispose(p, g, s)
+subroutine gwflow_layer2_dispose(gl2, p, g, s)
+  type(t_gwl2), intent(inout) :: gl2
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s

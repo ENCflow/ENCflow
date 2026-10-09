@@ -32,6 +32,7 @@ module m_boundary
   use m_util, only : itoa
   use list_boundary, only : t_list_boundary, list_boundary_read, &
                             nbsrcmax, nsrccmax, nsrcvmax
+  use m_gwflow_conduit, only : t_gwcond      ! 機場の管路取水が参照する管路層の状態(型のみ)
   implicit none
   private
 
@@ -219,11 +220,12 @@ module m_boundary
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
     end subroutine
-    module subroutine structure_makebdc(b, p, g, s)
+    module subroutine structure_makebdc(b, p, g, s, gwc)
       type(t_boundary), intent(inout) :: b
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(in) :: s
+      type(t_gwcond), intent(in) :: gwc     ! 管路層(f_pump_src=1 の取水水頭。m_gwflow が所有)
     end subroutine
     ! ダムの初期貯留を s%hrs に投入する(m_state_init の後・フレッシュ
     ! ラン時のみ。restore 時は復元された hrs をそのまま使う)
@@ -334,11 +336,12 @@ end subroutine
 !----------------------------------------------------------------------
 ! 現時刻の境界条件値を用意する(毎ステップ、swflow より前に呼ぶ)
 !----------------------------------------------------------------------
-subroutine m_boundary_makebdc(b, p, g, s)
+subroutine m_boundary_makebdc(b, p, g, s, gwc)
   type(t_boundary), intent(inout) :: b
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
+  type(t_gwcond), intent(in) :: gwc      ! 管路層の状態(機場の管路取水が参照。m_gwflow が所有)
   integer :: isrc, istage, ifl
   real :: q
 
@@ -393,7 +396,7 @@ subroutine m_boundary_makebdc(b, p, g, s)
 
   !--- 各内部水理構造物の現時刻の目標流量を水理則から決める(§22。
   !    実装は submodule m_boundary_structure)---
-  if (b%nstruct > 0) call structure_makebdc(b, p, g, s)
+  if (b%nstruct > 0) call structure_makebdc(b, p, g, s, gwc)
 
 end subroutine
 

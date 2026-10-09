@@ -55,7 +55,7 @@ end subroutine
 
 !----------------------------------------------------------------------
 module subroutine calc_suspend(gm, p, g, s, dtw)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s

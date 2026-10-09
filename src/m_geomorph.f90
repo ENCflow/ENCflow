@@ -81,6 +81,81 @@ module m_geomorph
   real, parameter :: ik_bstar = 0.143    ! B*
   real, parameter :: ik_eta0 = 0.5       ! η0
 
+  type t_creep
+    real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離)
+  end type
+
+  type t_fluvial
+    real :: wl(1:8) = 0.0            ! k軸方向フラックスの通過幅 (m)
+    real :: ex(1:8) = 0.0            ! k軸方向の単位ベクトル x 成分
+    real :: ey(1:8) = 0.0            ! k軸方向の単位ベクトル y 成分
+    real :: qbcoef = 0.0             ! 流砂量の次元化係数 sqrt(s g d50^3)
+    integer :: nclip = 0             ! dzmax クリップの発生エッジ数(累計)
+    real :: vleak = 0.0              ! 岩盤床クリップで失った土砂体積 (m3)(累計)
+  end type
+
+  type t_gmwork
+    real :: ainv = 0.0               ! 1 / (dx*dy)
+    real, allocatable :: q(:,:,:)    ! エッジ流量4成分 (m3/s)。プロセス間で
+                                     ! 共有する一時作業領域(各プロセスの
+                                     ! ループ1は対象セルの4成分すべてを
+                                     ! 0 を含めて必ず上書きする契約)
+  end type
+
+  type t_debris
+    real :: dist8(1:8) = 0.0         ! 8近傍セル中心までの距離 (m)(最急降下勾配用)
+    real, allocatable :: fx(:,:)     ! E-D 交換量の作業領域 (1:nx, js:je)。
+                                     !   2パス構造用: パス1が時刻 n の z(近傍参照)
+                                     !   から fx を計算し、パス2が適用する。
+                                     !   1パスのその場更新は slope8 の近傍読みと
+                                     !   競合する(OpenMP データ競合の実バグ)
+    real, allocatable :: rel(:,:)    ! 瞬時流動化の崩壊深 (m)(1:nx, js:je)。
+                                     !   発火後に解放(発火は1回だけ)
+    integer :: nrelclip = 0          ! 崩壊深 > sd でクリップしたセル数(dispose で報告)
+    logical, allocatable :: sld(:,:) ! f_slide の崩壊フラグ (1:nx, js:je)。
+                                     !   Fs 評価(時刻 n の z)と適用を分離する
+                                     !   2パス用(fx と同じ理由)
+    integer :: nslide = 0            ! この run で流動化したセル数(dispose で報告)
+    real :: fsmin = huge(1.0)        ! この run の Fs 最小値(ランク局所の診断)
+  end type
+
+  type t_splash
+    real, allocatable :: fx(:,:)     ! 評価済みの侵食深(河床 Δz の絶対値, m)
+                                     !   (1:nx, js:je)。2パス構造用: eval_splash が
+                                     !   時刻 n の z(近傍参照)から計算し、
+                                     !   apply_splash が局所適用する(debris の
+                                     !   fx と同じ理由 = 近傍読みと更新の分離)
+    integer :: nclip = 0             ! spl_dzmax クリップの発生セル数(累計)
+    real :: vout = 0.0               ! 系外排出した固体土砂体積 (m3)(ランク局所累計)
+  end type
+
+  type t_bedslide
+    real :: wl(1:8) = 0.0            ! k軸方向フラックスの通過幅 (m)(bs_diagratio 配分)
+    real :: rdr(1:8) = 0.0           ! 1 / 近傍セル中心間距離 (1/m)
+    real :: area = 0.0               ! セル面積 (m2)
+    real :: rdx2 = 0.0               ! 1/dx² + 1/dy²(拡散型安定条件用)
+    real :: dxmin = 0.0              ! min(dx, dy)(移流型 CFL 用)
+    real, allocatable :: vc(:,:)     ! セルの底層速度 V (m/s)(1:nx, jsh:jeh。帯±1 行を評価)
+    real, allocatable :: qt(:,:)     ! セルの総流出 hb・V・ws/S_c (m3/s)(同上)
+    real, allocatable :: ws(:,:)     ! 下り方向の配分重みの和 Σ ΔΦ_k/dist_k・wl_k (同上)
+    real, allocatable :: q(:,:,:)    ! エッジ流量4成分 (m3/s)。本プロセス私有(共有 gm%wrk%q は
+                                     !   fluvial が開境界面の k>=5 スロットを書くため使わない)
+    real, allocatable :: rel(:,:)    ! 発火前の崩壊深 (m)(1:nx, js:je)。発火後に解放
+    real, allocatable :: nst(:,:)    ! V < bs_vstop の連続 tick 数(1:nx, jsh:jeh。実数で保持 =
+                                     !   私有 save の RLE 面として hb と同じ経路で往復する)
+    real, allocatable :: eref(:,:)   ! f_bsplunge=1 の基準水面(初期の z+h。初期に乾いたセルは
+                                     !   -huge = 引き渡し対象外)(1:nx, jsh:jeh。私有 save の 3 面目)
+    integer :: nrelclip = 0          ! 崩壊深 > sd でクリップしたセル数(dispose で報告)
+    real :: vrel = 0.0               ! 発火した底層の体積 (m3。ランク局所)
+    real :: vstop = 0.0              ! 停止して固定した体積 (m3。ランク局所)
+    real :: vplunge = 0.0            ! 混合体から引き渡された体積 (m3 かさ。ランク局所)
+    real :: pmix = 0.0               ! 引き渡し時の混合体速度の体積重み和 (m3・m/s。診断)
+    real :: pbed = 0.0               ! 引き渡し時の底層終端速度の体積重み和 (同上)
+    integer :: nsubtot = 0           ! サブサイクル総数(ランク共通)
+    integer :: ntick = 0             ! 底層が動いた更新回数
+    integer :: nsubpk = 0            ! 1 更新あたりのサブサイクル数の最大(診断)
+  end type
+
   type t_geomorph
     ! init に早期 return 経路があるため全成分デフォルト初期化必須(§13)
     logical :: enabled = .false.     ! fn_geomorph 指定の有無で決まる
@@ -168,86 +243,19 @@ module m_geomorph
     integer :: f_bsplunge = 0        ! 引き渡し判定の水深(0: 現在の h、1: 静水深 = eref − z)
     integer :: f_bsvplunge = 0       ! 引き渡しの速度条件(0: なし、1: 混合体速度 ≤ 底層の終端速度)
     logical :: initialized = .false.
+    ! --- 各過程の私有状態と共有作業領域(親のモジュール変数から成分へ移した。
+    !     submodule は引数 gm 経由で参照する。nesting_plan.md §3.2 A 群) ---
+    type(t_creep) :: crp             ! 斜面クリープ
+    type(t_fluvial) :: flv           ! 掃流砂
+    type(t_debris) :: dbr            ! 土石流 E-D
+    type(t_splash) :: spl            ! 乾式斜面侵食
+    type(t_bedslide) :: bsl          ! 動く底層(地滑り津波)
+    type(t_gmwork) :: wrk            ! 共有スクラッチ(require_work が確保)
   end type
 
   ! プロセス私有の作業領域(単一インスタンス前提。developer.md §12。
   ! t_geomorph は calc に intent(in) で渡るため、スクラッチは
   ! m_gwflow_lateral の glt と同じモジュール私有に置く)
-  type t_creep
-    real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離)
-  end type
-  type t_fluvial
-    real :: wl(1:8) = 0.0            ! k軸方向フラックスの通過幅 (m)
-    real :: ex(1:8) = 0.0            ! k軸方向の単位ベクトル x 成分
-    real :: ey(1:8) = 0.0            ! k軸方向の単位ベクトル y 成分
-    real :: qbcoef = 0.0             ! 流砂量の次元化係数 sqrt(s g d50^3)
-    integer :: nclip = 0             ! dzmax クリップの発生エッジ数(累計)
-    real :: vleak = 0.0              ! 岩盤床クリップで失った土砂体積 (m3)(累計)
-  end type
-  type t_gmwork
-    real :: ainv = 0.0               ! 1 / (dx*dy)
-    real, allocatable :: q(:,:,:)    ! エッジ流量4成分 (m3/s)。プロセス間で
-                                     ! 共有する一時作業領域(各プロセスの
-                                     ! ループ1は対象セルの4成分すべてを
-                                     ! 0 を含めて必ず上書きする契約)
-  end type
-  type t_debris
-    real :: dist8(1:8) = 0.0         ! 8近傍セル中心までの距離 (m)(最急降下勾配用)
-    real, allocatable :: fx(:,:)     ! E-D 交換量の作業領域 (1:nx, js:je)。
-                                     !   2パス構造用: パス1が時刻 n の z(近傍参照)
-                                     !   から fx を計算し、パス2が適用する。
-                                     !   1パスのその場更新は slope8 の近傍読みと
-                                     !   競合する(OpenMP データ競合の実バグ)
-    real, allocatable :: rel(:,:)    ! 瞬時流動化の崩壊深 (m)(1:nx, js:je)。
-                                     !   発火後に解放(発火は1回だけ)
-    integer :: nrelclip = 0          ! 崩壊深 > sd でクリップしたセル数(dispose で報告)
-    logical, allocatable :: sld(:,:) ! f_slide の崩壊フラグ (1:nx, js:je)。
-                                     !   Fs 評価(時刻 n の z)と適用を分離する
-                                     !   2パス用(fx と同じ理由)
-    integer :: nslide = 0            ! この run で流動化したセル数(dispose で報告)
-    real :: fsmin = huge(1.0)        ! この run の Fs 最小値(ランク局所の診断)
-  end type
-  type t_splash
-    real, allocatable :: fx(:,:)     ! 評価済みの侵食深(河床 Δz の絶対値, m)
-                                     !   (1:nx, js:je)。2パス構造用: eval_splash が
-                                     !   時刻 n の z(近傍参照)から計算し、
-                                     !   apply_splash が局所適用する(debris の
-                                     !   fx と同じ理由 = 近傍読みと更新の分離)
-    integer :: nclip = 0             ! spl_dzmax クリップの発生セル数(累計)
-    real :: vout = 0.0               ! 系外排出した固体土砂体積 (m3)(ランク局所累計)
-  end type
-  type t_bedslide
-    real :: wl(1:8) = 0.0            ! k軸方向フラックスの通過幅 (m)(bs_diagratio 配分)
-    real :: rdr(1:8) = 0.0           ! 1 / 近傍セル中心間距離 (1/m)
-    real :: area = 0.0               ! セル面積 (m2)
-    real :: rdx2 = 0.0               ! 1/dx² + 1/dy²(拡散型安定条件用)
-    real :: dxmin = 0.0              ! min(dx, dy)(移流型 CFL 用)
-    real, allocatable :: vc(:,:)     ! セルの底層速度 V (m/s)(1:nx, jsh:jeh。帯±1 行を評価)
-    real, allocatable :: qt(:,:)     ! セルの総流出 hb・V・ws/S_c (m3/s)(同上)
-    real, allocatable :: ws(:,:)     ! 下り方向の配分重みの和 Σ ΔΦ_k/dist_k・wl_k (同上)
-    real, allocatable :: q(:,:,:)    ! エッジ流量4成分 (m3/s)。本プロセス私有(共有 wrk%q は
-                                     !   fluvial が開境界面の k>=5 スロットを書くため使わない)
-    real, allocatable :: rel(:,:)    ! 発火前の崩壊深 (m)(1:nx, js:je)。発火後に解放
-    real, allocatable :: nst(:,:)    ! V < bs_vstop の連続 tick 数(1:nx, jsh:jeh。実数で保持 =
-                                     !   私有 save の RLE 面として hb と同じ経路で往復する)
-    real, allocatable :: eref(:,:)   ! f_bsplunge=1 の基準水面(初期の z+h。初期に乾いたセルは
-                                     !   -huge = 引き渡し対象外)(1:nx, jsh:jeh。私有 save の 3 面目)
-    integer :: nrelclip = 0          ! 崩壊深 > sd でクリップしたセル数(dispose で報告)
-    real :: vrel = 0.0               ! 発火した底層の体積 (m3。ランク局所)
-    real :: vstop = 0.0              ! 停止して固定した体積 (m3。ランク局所)
-    real :: vplunge = 0.0            ! 混合体から引き渡された体積 (m3 かさ。ランク局所)
-    real :: pmix = 0.0               ! 引き渡し時の混合体速度の体積重み和 (m3・m/s。診断)
-    real :: pbed = 0.0               ! 引き渡し時の底層終端速度の体積重み和 (同上)
-    integer :: nsubtot = 0           ! サブサイクル総数(ランク共通)
-    integer :: ntick = 0             ! 底層が動いた更新回数
-    integer :: nsubpk = 0            ! 1 更新あたりのサブサイクル数の最大(診断)
-  end type
-  type(t_creep) :: crp
-  type(t_fluvial) :: flv
-  type(t_debris) :: dbr
-  type(t_splash) :: spl
-  type(t_bedslide) :: bsl
-  type(t_gmwork) :: wrk
 
   ! プロセス実装(init/calc)は submodule に分割(m_geomorph_creep /
   ! m_geomorph_fluvial / m_geomorph_suspend。m_swflow_enc の adv/bc/channel と
@@ -258,12 +266,12 @@ module m_geomorph
   ! 直接 use する
   interface
     module subroutine init_creep(gm, p, g)
-      type(t_geomorph), intent(in) :: gm
+      type(t_geomorph), intent(inout) :: gm
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
     end subroutine
     module subroutine calc_creep(gm, g, s, dts)
-      type(t_geomorph), intent(in) :: gm
+      type(t_geomorph), intent(inout) :: gm
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
       real, intent(in) :: dts
@@ -275,7 +283,7 @@ module m_geomorph
       type(t_list_geomorph), intent(in) :: list
     end subroutine
     module subroutine calc_fluvial(gm, p, g, s, dts)
-      type(t_geomorph), intent(in) :: gm
+      type(t_geomorph), intent(inout) :: gm
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
@@ -287,7 +295,7 @@ module m_geomorph
       type(t_list_geomorph), intent(in) :: list
     end subroutine
     module subroutine calc_suspend(gm, p, g, s, dtw)
-      type(t_geomorph), intent(in) :: gm
+      type(t_geomorph), intent(inout) :: gm
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
@@ -298,7 +306,7 @@ module m_geomorph
       type(t_list_geomorph), intent(in) :: list
     end subroutine
     module subroutine calc_wash(gm, p, g, s, dtw)
-      type(t_geomorph), intent(in) :: gm
+      type(t_geomorph), intent(inout) :: gm
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
@@ -310,14 +318,14 @@ module m_geomorph
       type(t_list_geomorph), intent(in) :: list
     end subroutine
     module subroutine eval_splash(gm, p, g, s, dts)
-      type(t_geomorph), intent(in) :: gm
+      type(t_geomorph), intent(inout) :: gm
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(in) :: s
       real, intent(in) :: dts
     end subroutine
     module subroutine apply_splash(gm, g, s)
-      type(t_geomorph), intent(in) :: gm
+      type(t_geomorph), intent(inout) :: gm
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
     end subroutine
@@ -328,14 +336,14 @@ module m_geomorph
       type(t_list_geomorph), intent(in) :: list
     end subroutine
     module subroutine calc_debris(gm, p, g, s, dtw)
-      type(t_geomorph), intent(in) :: gm
+      type(t_geomorph), intent(inout) :: gm
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
       real, intent(in) :: dtw
     end subroutine
     module subroutine release_debris(gm, p, g, s)
-      type(t_geomorph), intent(in) :: gm
+      type(t_geomorph), intent(inout) :: gm
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
@@ -348,19 +356,19 @@ module m_geomorph
       type(t_list_geomorph), intent(in) :: list
     end subroutine
     module subroutine release_bedslide(gm, p, g, s)
-      type(t_geomorph), intent(in) :: gm
+      type(t_geomorph), intent(inout) :: gm
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
     end subroutine
     module subroutine calc_bedslide(gm, g, s, dtw)
-      type(t_geomorph), intent(in) :: gm
+      type(t_geomorph), intent(inout) :: gm
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
       real, intent(in) :: dtw
     end subroutine
     module subroutine dispose_bedslide(gm, p, g, s)
-      type(t_geomorph), intent(in) :: gm
+      type(t_geomorph), intent(inout) :: gm
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(in) :: s
@@ -368,7 +376,8 @@ module m_geomorph
     ! 共有スクラッチの確保口(実装は m_geomorph_creep 側。gfortran は
     ! private なモジュール手続きをローカルシンボルにするため、submodule
     ! から呼ぶ手続きは分離インターフェース+submodule 実装にする)
-    module subroutine require_work(g)
+    module subroutine require_work(gm, g)
+      type(t_geomorph), intent(inout) :: gm
       type(t_geoinfo), intent(in) :: g
     end subroutine
   end interface
@@ -609,7 +618,7 @@ end subroutine
 !   収支が閉じる。海セルは対象外
 !----------------------------------------------------------------------
 subroutine calc_wthr(gm, g, s, dts)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
@@ -636,7 +645,7 @@ end subroutine
 !   分布隆起(断層ブロック)は将来 fn_uplift で。§32)
 !----------------------------------------------------------------------
 subroutine calc_uplift(gm, g, s, dts)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
@@ -662,7 +671,7 @@ end subroutine
 !   注意: 冒頭の return 判定はすべて全ランクで同一(collective 安全)
 !----------------------------------------------------------------------
 subroutine m_geomorph_calc(gm, p, g, s, it)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -845,46 +854,46 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   type(t_state), intent(in) :: s
   ! 底層 hb の私有 save と台帳報告(契約5。無効時は何もしない)
   if (gm%f_bedslide > 0) call dispose_bedslide(gm, p, g, s)
-  if (flv%nclip > 0) then
+  if (gm%flv%nclip > 0) then
     call par_warn("geomorph: fluvial dzmax clip fired on " &
-                  // itoa(flv%nclip) // " edges" &
+                  // itoa(gm%flv%nclip) // " edges" &
                   // " (review dt_geomorph/morfac)")
   end if
-  if (flv%vleak > 0.0) then
+  if (gm%flv%vleak > 0.0) then
     call par_warn("geomorph: bedrock floor clip caused a sediment budget imbalance of " &
-                  // rtoa(flv%vleak) // " m3")
+                  // rtoa(gm%flv%vleak) // " m3")
   end if
-  if (dbr%nrelclip > 0) then
+  if (gm%dbr%nrelclip > 0) then
     call par_warn("geomorph: instantaneous release depth exceeded soil depth sd " &
-                  // "and was clipped to sd in " // itoa(dbr%nrelclip) // " cells" &
+                  // "and was clipped to sd in " // itoa(gm%dbr%nrelclip) // " cells" &
                   // " (check consistency between fn_dbinit and the soil depth input)")
   end if
   if (gm%f_slide > 0) then
     ! ランク局所の診断(帯内の最小 Fs と流動化セル数)
-    call par_warn("geomorph: slide min Fs = " // rtoa(dbr%fsmin) &
-                  // ", fluidized cells = " // itoa(dbr%nslide))
+    call par_warn("geomorph: slide min Fs = " // rtoa(gm%dbr%fsmin) &
+                  // ", fluidized cells = " // itoa(gm%dbr%nslide))
   end if
   if (gm%f_splash > 0) then
     ! ランク局所の診断(系外排出の台帳。開いた系の収支確認用)
     call par_warn("geomorph: splash exported sediment volume = " &
-                  // rtoa(spl%vout) // " m3 (solid)")
-    if (spl%nclip > 0) then
+                  // rtoa(gm%spl%vout) // " m3 (solid)")
+    if (gm%spl%nclip > 0) then
       call par_warn("geomorph: splash spl_dzmax clip fired on " &
-                    // itoa(spl%nclip) // " cells (review dt_geomorph/morfac)")
+                    // itoa(gm%spl%nclip) // " cells (review dt_geomorph/morfac)")
     end if
   end if
-  if (allocated(wrk%q)) deallocate(wrk%q)
-  if (allocated(dbr%fx)) deallocate(dbr%fx)
-  if (allocated(dbr%rel)) deallocate(dbr%rel)
-  if (allocated(dbr%sld)) deallocate(dbr%sld)
-  if (allocated(spl%fx)) deallocate(spl%fx)
-  spl%nclip = 0
-  spl%vout = 0.0
-  dbr%nrelclip = 0
-  dbr%nslide = 0
-  dbr%fsmin = huge(1.0)
-  flv%nclip = 0
-  flv%vleak = 0.0
+  if (allocated(gm%wrk%q)) deallocate(gm%wrk%q)
+  if (allocated(gm%dbr%fx)) deallocate(gm%dbr%fx)
+  if (allocated(gm%dbr%rel)) deallocate(gm%dbr%rel)
+  if (allocated(gm%dbr%sld)) deallocate(gm%dbr%sld)
+  if (allocated(gm%spl%fx)) deallocate(gm%spl%fx)
+  gm%spl%nclip = 0
+  gm%spl%vout = 0.0
+  gm%dbr%nrelclip = 0
+  gm%dbr%nslide = 0
+  gm%dbr%fsmin = huge(1.0)
+  gm%flv%nclip = 0
+  gm%flv%vleak = 0.0
   gm%enabled = .false.
   gm%initialized = .false.
 end subroutine

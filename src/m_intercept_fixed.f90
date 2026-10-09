@@ -35,17 +35,19 @@ module m_intercept_fixed
                        par_scatter_cell
   implicit none
   private
+  public :: t_icfix
   public :: intercept_fixed_init
   public :: intercept_fixed_calc
   public :: intercept_fixed_dispose
 
-  ! モデル私有の設定(単一インスタンス前提。developer.md §12)
+  ! モデル私有の設定。実体は切替器 m_intercept の t_intercept が持ち、各手続きが
+  ! 第 1 引数で受ける(成分は本モジュール私有。nesting_plan.md §3.2 A 群)
   type t_icfix
+    private
     real :: passrate = 1.0                 ! 通過率 1-α(一様指定時)
     real, allocatable :: passmap(:,:)      ! 通過率の分布(分布指定時のみ確保。帯)
     logical :: initialized = .false.
   end type
-  type(t_icfix) :: icf
 
 contains
 
@@ -53,7 +55,8 @@ contains
 !----------------------------------------------------------------------
 ! 固定遮断率モデルの初期化(固有グループ &list_intercept_fixed を自分で読む)
 !----------------------------------------------------------------------
-subroutine intercept_fixed_init(p, g)
+subroutine intercept_fixed_init(icf, p, g)
+  type(t_icfix), intent(inout) :: icf
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   integer :: un, ios
@@ -73,7 +76,7 @@ subroutine intercept_fixed_init(p, g)
 
   if (len_trim(fn_icalpha) > 0) then
     ! 分布指定: 遮断率マップを読み、通過率 1-α の帯配列にして保持
-    call read_alpha_map(p, g, trim(fn_icalpha))
+    call read_alpha_map(icf, p, g, trim(fn_icalpha))
   else
     ! 一様指定(未指定 = 番兵 −1 なら既定を採用し表示。developer.md §66)
     ic_alpha = param_default("intercept", "ic_alpha", ic_alpha, 0.15, "", unset=-1.0)
@@ -92,7 +95,8 @@ end subroutine
 !   rank0 が全域に読んで使用セルを検証し、通過率 1-α に変換してから
 !   par_scatter_cell で帯配布する。非 root は全域配列を確保しない
 !----------------------------------------------------------------------
-subroutine read_alpha_map(p, g, fn)
+subroutine read_alpha_map(icf, p, g, fn)
+  type(t_icfix), intent(inout) :: icf
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: fn
@@ -140,7 +144,8 @@ end subroutine
 !----------------------------------------------------------------------
 ! 固定遮断率モデルの適用(更新直後の s%pre / s%prh を有効雨量に減じる)
 !----------------------------------------------------------------------
-subroutine intercept_fixed_calc(p, g, s, it)
+subroutine intercept_fixed_calc(icf, p, g, s, it)
+  type(t_icfix), intent(in) :: icf
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -177,7 +182,8 @@ end subroutine
 !----------------------------------------------------------------------
 ! 固定遮断率モデルの破棄(内部状態を持たないため保存もなし。契約4)
 !----------------------------------------------------------------------
-subroutine intercept_fixed_dispose(p)
+subroutine intercept_fixed_dispose(icf, p)
+  type(t_icfix), intent(inout) :: icf
   type(t_sysparam), intent(in) :: p
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (allocated(icf%passmap)) deallocate(icf%passmap)

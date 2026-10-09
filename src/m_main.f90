@@ -213,7 +213,7 @@ subroutine m_main_initialize(fn_sysparam)
                                             ! より前、s%dw_active・s%dw_sg を読むため
                                             ! driftwood init より後に。§63)
     call m_gwflow_init(gw, p, g, s)         ! gwflow を初期化(fn_gwflow 指定時のみ有効)
-    call m_saltwater_init(sl, p, g, s)      ! saltwater を初期化(fn_salt 指定時のみ
+    call m_saltwater_init(sl, p, g, s, gw%lat, gw%lay1)  ! saltwater を初期化(fn_salt 指定時のみ
                                             ! 有効。s%salt_active を立てるため swflow init
                                             ! より前、層1側方の係数取得のため gwflow より後)
     call m_tide_init(ti, p, g, s)           ! tide を初期化(state より後・swflow より
@@ -542,7 +542,7 @@ subroutine run_init(p, g, b, pr, ic, s, r, ev, mt, wq, dw, bd, ou, ierror)
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
   type(t_precip), intent(in) :: pr
-  type(t_intercept), intent(in) :: ic
+  type(t_intercept), intent(inout) :: ic   ! 遮断(貯留型は calc/step/draw が状態を更新)
   type(t_state), intent(inout) :: s
   type(t_record), intent(inout) :: r
   type(t_evap), intent(inout) :: ev    ! 蒸発散(PET の日次更新・累積診断を保持)
@@ -602,12 +602,12 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   type(t_boundary), intent(inout) :: b
   type(t_precip), intent(in) :: pr
   type(t_tide), intent(inout) :: ti    ! titype=4 の分布バッファを更新するため inout
-  type(t_saltwater), intent(in) :: sl
-  type(t_intercept), intent(in) :: ic
+  type(t_saltwater), intent(inout) :: sl
+  type(t_intercept), intent(inout) :: ic   ! 遮断(貯留型は calc/step/draw が状態を更新)
   type(t_state), intent(inout) :: s
   type(t_record), intent(inout) :: r
-  type(t_geomorph), intent(in) :: gm
-  type(t_gwflow), intent(in) :: gw
+  type(t_geomorph), intent(inout) :: gm
+  type(t_gwflow), intent(inout) :: gw  ! 地下水(各モデルの私有状態を成分として持つ)
   type(t_swflow), intent(in) :: sw
   type(t_evap), intent(inout) :: ev    ! 蒸発散(PET の日次更新・累積診断を保持)
   type(t_meteo), intent(inout) :: mt   ! 気象強制場(分布気温の読み進みを保持)
@@ -615,8 +615,8 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   type(t_driftwood), intent(inout) :: dw  ! 流木(立木ストック・台帳を保持。§50)
   type(t_bldgdebris), intent(inout) :: bd ! 家屋瓦礫(家屋ストック・台帳を保持。§63)
   type(t_snow), intent(inout) :: sn    ! 積雪・融雪(SWE とスナップショットを保持)
-  type(t_glacier), intent(in) :: gl    ! 氷河(氷厚 s%hi と作業台帳を保持)
-  type(t_lavaflow), intent(in) :: lv   ! 溶岩流(溶岩厚 s%hl と作業台帳を保持)
+  type(t_glacier), intent(inout) :: gl    ! 氷河(氷厚 s%hi と作業台帳を保持)
+  type(t_lavaflow), intent(inout) :: lv   ! 溶岩流(溶岩厚 s%hl と作業台帳を保持)
   type(t_bedmotion), intent(inout) :: bm  ! 規定底面運動(スナップショットの読み進みを保持)
   type(t_swi), intent(inout) :: si     ! 土壌雨量指数(タンク貯留を保持。§49)
   type(t_output), intent(inout) :: ou  ! 分布出力(集約バッファ・装置番号)
@@ -744,7 +744,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   call m_glacier_calc(gl, p, g, s, mt, it)
 
   ! 境界条件を準備
-  call m_boundary_makebdc(b, p, g, s)
+  call m_boundary_makebdc(b, p, g, s, gw%cond)
 
   ! 潮位を更新して海セルへ適用(fn_tide 未指定なら no-op。更新間隔は
   ! dt_tiupdate。s%z の変更はステップ頭のハロ交換が運ぶので swflow より前に)
@@ -775,7 +775,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   ! 水質過程を適用(fn_wq 未指定なら no-op。境界流入濃度の更新・
   ! 浸透同伴・発生源投入・ダム捕捉。gwflow が記録した浸透量 fxg を
   ! 消費するため直後に置く。§30)
-  call m_wq_calc(wq, p, g, b, s, it)
+  call m_wq_calc(wq, p, g, b, s, gw%cond, it)
 
   ! 蒸発散を適用(fn_evap 未指定なら no-op。樹冠→地表水→hrs→地下水の
   ! 優先順位減算とダム湛水面蒸発。浸透後の状態に作用させる。§27)

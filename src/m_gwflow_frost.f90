@@ -40,10 +40,11 @@ module m_gwflow_frost
   public :: gwflow_frost_init
   public :: gwflow_frost_calc
   public :: gwflow_frost_dispose
+  public :: t_frost
 
   real, parameter :: secday = 86400.0
 
-  ! モデル私有の設定・状態(単一インスタンス前提。developer.md §12)
+  ! モデル私有の設定(実体は切替器 m_gwflow の t_gwflow が持ち、各手続きが引数で受ける(nesting_plan.md §3.2 A 群))
   type t_frost
     real, allocatable :: fi(:,:)     ! 凍結指数 FI (°C·day ≥ 0。帯+ハロ)
     real :: fifull = 0.0             ! fac が fro_fmin に達する FI (°C·day)
@@ -54,7 +55,6 @@ module m_gwflow_frost
     real :: fimax = 0.0              ! FI の上限 (°C·day。0 = 上限なし)
     logical :: initialized = .false.
   end type
-  type(t_frost) :: fro
 
 contains
 
@@ -63,7 +63,8 @@ contains
 ! 凍土モデルの初期化(固有グループ &list_gwflow_frost を自分で読む)。
 ! 気温入力の存在検査は m_main の m_gwflow_check_meteo(ヘッダ参照)
 !----------------------------------------------------------------------
-subroutine gwflow_frost_init(p, g, s)
+subroutine gwflow_frost_init(fro, p, g, s)
+  type(t_frost), intent(inout) :: fro
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -114,7 +115,7 @@ subroutine gwflow_frost_init(p, g, s)
   allocate(fro%fi(1:g%nx, dcp%jsh:dcp%jeh), source = fro_fi0)
   allocate(s%frofac(1:g%nx, dcp%jsh:dcp%jeh), &
            source = max(fro%fmin, 1.0 - fro_fi0 / fro%fifull))
-  if (p%f_state_restore > 0) call restore_state(p, g)
+  if (p%f_state_restore > 0) call restore_state(fro, p, g)
 
   fro%initialized = .true.
 end subroutine
@@ -124,7 +125,8 @@ end subroutine
 ! 凍結指数の更新と低減係数の供給(鉛直浸透モデルより前に呼ぶこと =
 ! m_gwflow_calc の実行順序が結合仕様)。meteo_temp_set は collective
 !----------------------------------------------------------------------
-subroutine gwflow_frost_calc(p, g, s, mt, dts)
+subroutine gwflow_frost_calc(fro, p, g, s, mt, dts)
+  type(t_frost), intent(inout) :: fro
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -164,7 +166,8 @@ end subroutine
 !----------------------------------------------------------------------
 ! リスタート保存(rank0 が全域を gather して RLE 保存。契約5)
 !----------------------------------------------------------------------
-subroutine save_state(p, g)
+subroutine save_state(fro, p, g)
+  type(t_frost), intent(in) :: fro
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   real, allocatable :: wk(:,:)
@@ -189,7 +192,8 @@ end subroutine
 ! リスタート復元(版・格子・精度の検証は m_state が済ませている。
 ! 自ファイルの有無のみ確認 — 無ければ設定齟齬として停止。契約5)
 !----------------------------------------------------------------------
-subroutine restore_state(p, g)
+subroutine restore_state(fro, p, g)
+  type(t_frost), intent(inout) :: fro
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   real, allocatable :: wk(:,:)
@@ -221,11 +225,12 @@ end subroutine
 ! 凍土モデルの破棄(save は dispose で行う。契約5。
 ! s%frofac の解放は m_state_dispose が行う)
 !----------------------------------------------------------------------
-subroutine gwflow_frost_dispose(p, g)
+subroutine gwflow_frost_dispose(fro, p, g)
+  type(t_frost), intent(inout) :: fro
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   if (.not. fro%initialized) return
-  if (p%f_state_save > 0) call save_state(p, g)
+  if (p%f_state_save > 0) call save_state(fro, p, g)
   if (allocated(fro%fi)) deallocate(fro%fi)
   fro%initialized = .false.
 end subroutine

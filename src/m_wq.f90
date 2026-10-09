@@ -72,7 +72,7 @@ module m_wq
   use m_state, only : t_state
   use m_boundary, only : t_boundary, e_struct_dam, interp_series, read_cell_file2
   use m_swflow_enc, only : swflow_vh, have_width, wfrac
-  use m_gwflow_conduit, only : gwflow_conduit_ready
+  use m_gwflow_conduit, only : t_gwcond, gwflow_conduit_ready
   use list_wq, only : t_list_wq, list_wq_read, nwqgmax, nwqcmax, nwqvmax, nwqfmax
   use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
   use m_sysdep_util, only : sysdep_mkdir
@@ -822,12 +822,13 @@ end subroutine
 !         (5) 導出濃度 cqc の更新
 !   無効時は no-op。冒頭の return 判定は全ランクで同一 = collective 安全
 !----------------------------------------------------------------------
-subroutine m_wq_calc(wq, p, g, b, s, it)
+subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
   type(t_wq), intent(inout) :: wq
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
   type(t_state), intent(inout) :: s
+  type(t_gwcond), intent(in) :: gwc    ! 管路層の状態(wq_gwc_conc の有効性検査。m_gwflow が所有)
   integer, intent(in) :: it
   integer :: i, j, k, m, nd, lk
   real :: w, rate, fx, fp
@@ -936,7 +937,7 @@ subroutine m_wq_calc(wq, p, g, b, s, it)
     if (.not. wq%gwc_checked) then
       ! f_gwconduit の有効性の遅延検査(wq init は gwflow init より先の
       ! ため。状態フラグは全ランク同一 = par_stop も同時)
-      if (.not. gwflow_conduit_ready()) then
+      if (.not. gwflow_conduit_ready(gwc)) then
         call par_stop("list_wq: wq_gwc_conc requires f_gwconduit=1 (conduit layer)")
       end if
       wq%gwc_checked = .true.

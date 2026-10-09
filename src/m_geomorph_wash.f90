@@ -63,7 +63,7 @@ end subroutine
 ! 斜面浸食(セル内の剥離→hs 注入のみ=エッジ・ハロ不要)
 !----------------------------------------------------------------------
 module subroutine calc_wash(gm, p, g, s, dtw)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s

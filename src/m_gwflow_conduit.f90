@@ -79,10 +79,10 @@ module m_gwflow_conduit
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
-  use m_gwflow_lateral, only : t_conduitlayer, conduit_head, conduit_core, &
+  use m_gwflow_lateral, only : t_conduitlayer, t_gwlat, conduit_head, conduit_core, &
                                conduit_build_cnd, gwflow_conduit_dtcheck, &
                                gwflow_lateral_geom_init
-  use m_gwflow_layer2, only : gwflow_layer2_active, gwflow_layer2_leakinfo
+  use m_gwflow_layer2, only : t_gwl2, gwflow_layer2_active, gwflow_layer2_leakinfo
   use m_fileio, only : fileio_read_matrix, fileio_write_rle, fileio_read_rle
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : par_info, par_stop, dcp, is_root, par_halo_cell, &
@@ -99,8 +99,9 @@ module m_gwflow_conduit
   public :: gwflow_conduit_ready
   public :: gwflow_conduit_head_of
   public :: gwflow_conduit_cap_of
+  public :: t_gwcond
 
-  ! モデル私有の設定(単一インスタンス前提。developer.md §12。
+  ! モデル私有の設定(実体は切替器 m_gwflow の t_gwflow が持ち、各手続きが引数で受ける(nesting_plan.md §3.2 A 群)。
   ! 多重インスタンス(下水道×岩盤の併用)が要る時はこの型を配列化する
   ! 昇格を等価リファクタとして行う。gwconduit_plan.md §10.3)
   type t_gwcond
@@ -122,7 +123,6 @@ module m_gwflow_conduit
     real :: cap2 = 0.0
     logical :: initialized = .false.
   end type
-  type(t_gwcond) :: gwc
 
 contains
 
@@ -130,7 +130,10 @@ contains
 !----------------------------------------------------------------------
 ! 管路連続体層の初期化(固有グループ &list_gwflow_conduit を自分で読む)
 !----------------------------------------------------------------------
-subroutine gwflow_conduit_init(p, g, s, dts)
+subroutine gwflow_conduit_init(gwc, lat, gl2, p, g, s, dts)
+  type(t_gwcond), intent(inout) :: gwc
+  type(t_gwlat), intent(inout) :: lat    ! 層間共有の幾何・作業領域
+  type(t_gwl2), intent(in) :: gl2        ! 層2(leak_layer=2 の有効性・定数を参照)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -249,10 +252,10 @@ subroutine gwflow_conduit_init(p, g, s, dts)
       end if
       gwc%syinv1 = 1.0 / g%sy0
     case (2)
-      if (.not. gwflow_layer2_active()) then
+      if (.not. gwflow_layer2_active(gl2)) then
         call par_stop("gwflow_conduit: gwc_leak_layer=2 requires f_gwlayer2=1")
       end if
-      call gwflow_layer2_leakinfo(gwc%d2, sy2, gwc%cap2)
+      call gwflow_layer2_leakinfo(gl2, gwc%d2, sy2, gwc%cap2)
       gwc%syinv2 = 1.0 / sy2
     case default
       call par_stop("list_gwflow_conduit: gwc_leak_layer must be 0(none), 1(soil) or 2(layer2)")
@@ -382,7 +385,7 @@ subroutine gwflow_conduit_init(p, g, s, dts)
   if (gwc%outf) then
     allocate(gwc%caout(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
     call read_map_scatter(p, g, fn_gwc_outfall, gwc%caout, "gwc_outfall")
-    call outfall_check(g)
+    call outfall_check(gwc, g)
     allocate(gwc%vout_row(dcp%js:dcp%je), source = 0.0_real64)
   end if
 
@@ -400,19 +403,19 @@ subroutine gwflow_conduit_init(p, g, s, dts)
 
   ! --- 側方通水: 幾何(層1/2 と共有・冪等)→ エッジ係数 → 安定条件 ---
   if (gwc%lat) then
-    call gwflow_lateral_geom_init(g, gwc_diagratio, 1.0e-3)
+    call gwflow_lateral_geom_init(lat, g, gwc_diagratio, 1.0e-3)
     allocate(dens(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
     if (len_trim(fn_gwc_cnd) > 0) then
       call read_map_scatter(p, g, fn_gwc_cnd, dens, "gwc_cnd")
     else
       dens(:,:) = gwc_cnd_m2s
     end if
-    call conduit_build_cnd(g, dens, gwc%cl)
+    call conduit_build_cnd(lat, g, dens, gwc%cl)
     deallocate(dens)
     ! 安定条件 → サブサイクル数 N の決定(§46.5 (4)。N = 1 なら従来と
     ! 演算列が厳密同一。上限超過は設定エラーとして停止)
     if (gwc_nsubmax < 1) call par_stop("list_gwflow_conduit: gwc_nsubmax must be >= 1")
-    call gwflow_conduit_dtcheck(g, "gwflow_conduit", gwc%cl, dts, gwc%nsub)
+    call gwflow_conduit_dtcheck(lat, g, "gwflow_conduit", gwc%cl, dts, gwc%nsub)
     if (gwc%nsub > gwc_nsubmax) then
       write(msg,'(a,i0,a,i0,a)') "gwflow_conduit: subcycle count ", gwc%nsub, &
           " exceeds gwc_nsubmax = ", gwc_nsubmax, &
@@ -534,7 +537,9 @@ end function
 !----------------------------------------------------------------------
 ! 管路連続体層の計算(毎 gwflow ステップ。地表交換→側方→層間の順で固定)
 !----------------------------------------------------------------------
-subroutine gwflow_conduit_calc(p, g, s, it, dts)
+subroutine gwflow_conduit_calc(gwc, lat, p, g, s, it, dts)
+  type(t_gwcond), intent(inout) :: gwc
+  type(t_gwlat), intent(inout) :: lat
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -602,7 +607,7 @@ subroutine gwflow_conduit_calc(p, g, s, it, dts)
   if (gwc%lat) then
     do isub = 1, gwc%nsub
       call par_halo_cell(s%hgc)
-      call conduit_core(g, s%hgc, gwc%cl, dts / gwc%nsub)
+      call conduit_core(lat, g, s%hgc, gwc%cl, dts / gwc%nsub)
     end do
   end if
 
@@ -738,12 +743,14 @@ end subroutine
 ! 機場向け公開口(§46.5 (8a)): 有効状態・管路水頭・容量。
 ! head/cap は帯内セル (i, 帯行 j) 前提(呼び手が所有ガードを掛ける)
 !----------------------------------------------------------------------
-pure logical function gwflow_conduit_ready()
+pure logical function gwflow_conduit_ready(gwc)
+  type(t_gwcond), intent(in) :: gwc
   gwflow_conduit_ready = gwc%initialized
 end function
 
 
-pure real function gwflow_conduit_head_of(s, i, j)
+pure real function gwflow_conduit_head_of(gwc, s, i, j)
+  type(t_gwcond), intent(in) :: gwc
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   gwflow_conduit_head_of = conduit_head(s%hgc(i,j), gwc%cl%cap(i,j), &
@@ -752,7 +759,8 @@ pure real function gwflow_conduit_head_of(s, i, j)
 end function
 
 
-pure real function gwflow_conduit_cap_of(i, j)
+pure real function gwflow_conduit_cap_of(gwc, i, j)
+  type(t_gwcond), intent(in) :: gwc
   integer, intent(in) :: i, j
   gwflow_conduit_cap_of = gwc%cl%cap(i,j)
 end function
@@ -764,7 +772,8 @@ end function
 ! 海域セル隣接の有無は吐口の受け先(海/自セル地表)を決めるだけで、
 ! どちらも正当(§46.5 (3) で陸側開放吐口を追加)
 !----------------------------------------------------------------------
-subroutine outfall_check(g)
+subroutine outfall_check(gwc, g)
+  type(t_gwcond), intent(inout) :: gwc
   type(t_geoinfo), intent(in) :: g
   integer :: i, j
   character(len=256) :: msg
@@ -843,7 +852,8 @@ end subroutine
 !----------------------------------------------------------------------
 ! 管路連続体層の破棄(save は dispose で行う。契約5)
 !----------------------------------------------------------------------
-subroutine gwflow_conduit_dispose(p, g, s)
+subroutine gwflow_conduit_dispose(gwc, p, g, s)
+  type(t_gwcond), intent(inout) :: gwc
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s

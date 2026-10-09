@@ -30,17 +30,17 @@ module m_gwflow
   use m_geoinfo, only : t_geoinfo, m_geoinfo_require_sd
   use m_state, only : t_state
   use list_gwflow, only : t_list_gwflow, list_gwflow_read
-  use m_gwflow_bucket, only : gwflow_bucket_init, gwflow_bucket_calc, gwflow_bucket_dispose
-  use m_gwflow_greenampt, only : gwflow_greenampt_init, gwflow_greenampt_calc, &
+  use m_gwflow_bucket, only : t_bucket, gwflow_bucket_init, gwflow_bucket_calc, gwflow_bucket_dispose
+  use m_gwflow_greenampt, only : t_greenampt, gwflow_greenampt_init, gwflow_greenampt_calc, &
                                  gwflow_greenampt_dispose
-  use m_gwflow_lateral, only : gwflow_lateral_init, gwflow_lateral_calc, &
+  use m_gwflow_lateral, only : t_gwlat, t_latlayer, gwflow_lateral_init, gwflow_lateral_calc, &
                                gwflow_lateral_dispose
-  use m_gwflow_layer2, only : gwflow_layer2_init, gwflow_layer2_calc, &
+  use m_gwflow_layer2, only : t_gwl2, gwflow_layer2_init, gwflow_layer2_calc, &
                               gwflow_layer2_dispose
-  use m_gwflow_conduit, only : gwflow_conduit_init, gwflow_conduit_calc, &
+  use m_gwflow_conduit, only : t_gwcond, gwflow_conduit_init, gwflow_conduit_calc, &
                                gwflow_conduit_dispose
-  use m_gwflow_pump, only : gwflow_pump_init, gwflow_pump_calc, gwflow_pump_dispose
-  use m_gwflow_frost, only : gwflow_frost_init, gwflow_frost_calc, gwflow_frost_dispose
+  use m_gwflow_pump, only : t_gwpump, gwflow_pump_init, gwflow_pump_calc, gwflow_pump_dispose
+  use m_gwflow_frost, only : t_frost, gwflow_frost_init, gwflow_frost_calc, gwflow_frost_dispose
   use m_meteo, only : t_meteo
   use m_parallel, only : par_stop, par_allreduce_max, dcp
   use m_util, only : itoa
@@ -53,19 +53,32 @@ module m_gwflow
   public :: m_gwflow_dispose
 
   !-------------------------------------------
+  ! 鉛直モデルの状態の容器(排他切替なので有効なモデルの成分だけを確保する)。
+  ! 各モデルの私有状態はモジュール変数でなくここに置き、束縛した手続きへ
+  ! 第 1 引数で渡す(nesting_plan.md §3.2 A 群)。抽象インターフェースが
+  ! この型を受けるため、インターフェースより前に定義する
+  !-------------------------------------------
+  type t_gwvert
+    type(t_bucket), allocatable :: bucket      ! バケツ(f_gwvertical=1)
+    type(t_greenampt), allocatable :: ga       ! Green-Ampt(f_gwvertical=2)
+  end type
+
+  !-------------------------------------------
   ! 地下水モデルのインターフェース
   ! (型成分で参照するため、型定義より前に置くこと)
   !-------------------------------------------
   abstract interface
-    subroutine procedure_gwflow_init(p, g, s)
-      import :: t_sysparam, t_geoinfo, t_state
+    subroutine procedure_gwflow_init(v, p, g, s)
+      import :: t_gwvert, t_sysparam, t_geoinfo, t_state
+      type(t_gwvert), intent(inout) :: v
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
     end subroutine
 
-    subroutine procedure_gwflow_calc(p, g, s, it, dts)
-      import :: t_sysparam, t_geoinfo, t_state
+    subroutine procedure_gwflow_calc(v, p, g, s, it, dts)
+      import :: t_gwvert, t_sysparam, t_geoinfo, t_state
+      type(t_gwvert), intent(inout) :: v
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
@@ -73,8 +86,9 @@ module m_gwflow
       real, intent(in) :: dts        ! 実効時間刻み(p%dt * idt_gwflow)(s)
     end subroutine
 
-    subroutine procedure_gwflow_dispose(p)
-      import :: t_sysparam
+    subroutine procedure_gwflow_dispose(v, p)
+      import :: t_gwvert, t_sysparam
+      type(t_gwvert), intent(inout) :: v
       type(t_sysparam), intent(in) :: p
     end subroutine
   end interface
@@ -88,6 +102,15 @@ module m_gwflow
     procedure(procedure_gwflow_init),    pointer, nopass :: init    => null()
     procedure(procedure_gwflow_calc),    pointer, nopass :: calc    => null()
     procedure(procedure_gwflow_dispose), pointer, nopass :: dispose => null()
+    ! --- 各モデルの私有状態(モジュール変数から成分へ。nesting_plan.md §3.2 A 群。
+    !     無効なモデルの成分は配列未確保のまま = メモリ追加ゼロ) ---
+    type(t_gwvert) :: vert           ! 鉛直モデル(束縛した手続きへ第 1 引数で渡す)
+    type(t_gwlat) :: lat             ! 側方系の幾何・エッジ作業領域(層1・層2・管路層・塩水で共有)
+    type(t_latlayer) :: lay1         ! 層1(土層)の側方係数
+    type(t_gwl2) :: l2               ! 風化基岩層
+    type(t_gwcond) :: cond           ! 管路連続体層(機場・水質が参照する)
+    type(t_gwpump) :: pump           ! 井戸揚水
+    type(t_frost) :: frost           ! 凍土
     logical :: enabled = .false.     ! モジュール有効(鉛直・側方・層2・管路層のいずれか)
     logical :: lat_enabled = .false. ! 側方流動の有効化(f_gwlateral=1)
     logical :: l2_enabled = .false.  ! 風化基岩層の有効化(f_gwlayer2=1)
@@ -202,13 +225,13 @@ subroutine m_gwflow_init(gw, p, g, s)
         call par_stop("list_gwflow: f_gwvertical=1(bucket) cannot be combined with " &
                       // "f_gwlayer2=1 (use f_gwvertical=2 greenampt)")
       end if
-      gw%init    => gwflow_bucket_init
-      gw%calc    => gwflow_bucket_calc
-      gw%dispose => gwflow_bucket_dispose
+      gw%init    => bind_bucket_init        ! 束縛先は末尾の薄いラッパ(容器から成分を取り出す)
+      gw%calc    => bind_bucket_calc
+      gw%dispose => bind_bucket_dispose
     case (2)
-      gw%init    => gwflow_greenampt_init
-      gw%calc    => gwflow_greenampt_calc
-      gw%dispose => gwflow_greenampt_dispose
+      gw%init    => bind_greenampt_init
+      gw%calc    => bind_greenampt_calc
+      gw%dispose => bind_greenampt_dispose
       needs_sd = .true.
     case default
       call par_stop("list_gwflow: f_gwvertical must be 0(none), 1(bucket) or 2(greenampt): " &
@@ -251,15 +274,15 @@ subroutine m_gwflow_init(gw, p, g, s)
 
   gw%enabled = .true.
   s%gw_active = .true.               ! 質量台帳(S_grnd/S_total)と Log 列の拡張を有効化
-  if (associated(gw%init)) call gw%init(p, g, s)
-  if (gw%lat_enabled) call gwflow_lateral_init(p, g, s, gw%dts)
-  if (gw%l2_enabled) call gwflow_layer2_init(p, g, s, gw%dts)
+  if (associated(gw%init)) call gw%init(gw%vert, p, g, s)
+  if (gw%lat_enabled) call gwflow_lateral_init(gw%lat, gw%lay1, p, g, s, gw%dts)
+  if (gw%l2_enabled) call gwflow_layer2_init(gw%l2, gw%lat, p, g, s, gw%dts)
   ! 管路層は層2より後(gwc_leak_layer=2 が層2の有効化・定数を参照する)
-  if (gw%c_enabled) call gwflow_conduit_init(p, g, s, gw%dts)
+  if (gw%c_enabled) call gwflow_conduit_init(gw%cond, gw%lat, gw%l2, p, g, s, gw%dts)
   ! 井戸揚水は層2より後(gwp_layer=2 が層2の有効化を参照する)
-  if (gw%pump_enabled) call gwflow_pump_init(p, g, s)
+  if (gw%pump_enabled) call gwflow_pump_init(gw%pump, gw%l2, p, g, s)
   ! 凍土(s%frofac の確保。気温の存在検査は m_gwflow_check_meteo)
-  if (gw%frost_enabled) call gwflow_frost_init(p, g, s)
+  if (gw%frost_enabled) call gwflow_frost_init(gw%frost, p, g, s)
   gw%initialized = .true.
 end subroutine
 
@@ -283,7 +306,7 @@ end subroutine
 !   冒頭の return 判定は全ランクで同一(collective 安全)
 !----------------------------------------------------------------------
 subroutine m_gwflow_calc(gw, p, g, s, mt, it)
-  type(t_gwflow), intent(in) :: gw
+  type(t_gwflow), intent(inout) :: gw
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -293,18 +316,18 @@ subroutine m_gwflow_calc(gw, p, g, s, mt, it)
   if (.not. gw%enabled) return
   if (mod(it, gw%idt_gwflow) /= 0) return
   ! 凍土(s%frofac の更新)は鉛直浸透モデルより前(実行順序が結合仕様)
-  if (gw%frost_enabled) call gwflow_frost_calc(p, g, s, mt, gw%dts)
+  if (gw%frost_enabled) call gwflow_frost_calc(gw%frost, p, g, s, mt, gw%dts)
   ! 鉛直(セル内)→ 側方(近傍結合)の順。側方 calc の冒頭で
   ! s%hg, s%h のハロを交換する(m_gwflow_lateral ヘッダ参照)
-  if (associated(gw%calc)) call gw%calc(p, g, s, it, gw%dts)
-  if (gw%lat_enabled) call gwflow_lateral_calc(p, g, s, it, gw%dts)
+  if (associated(gw%calc)) call gw%calc(gw%vert, p, g, s, it, gw%dts)
+  if (gw%lat_enabled) call gwflow_lateral_calc(gw%lat, gw%lay1, p, g, s, it, gw%dts)
   ! 風化基岩層(層1→2 の鉛直浸透と層2内の側方流動。加算的)
-  if (gw%l2_enabled) call gwflow_layer2_calc(p, g, s, it, gw%dts)
+  if (gw%l2_enabled) call gwflow_layer2_calc(gw%l2, gw%lat, p, g, s, it, gw%dts)
   ! 管路連続体層(地表交換→側方通水→層間交換。加算的。層2より後 =
   ! 上から下の順。この実行順序が結合仕様)
-  if (gw%c_enabled) call gwflow_conduit_calc(p, g, s, it, gw%dts)
+  if (gw%c_enabled) call gwflow_conduit_calc(gw%cond, gw%lat, p, g, s, it, gw%dts)
   ! 井戸揚水(輸送の後に取水 = 水位低下を次ステップの輸送が見る)
-  if (gw%pump_enabled) call gwflow_pump_calc(p, g, s, it, gw%dts)
+  if (gw%pump_enabled) call gwflow_pump_calc(gw%pump, p, g, s, it, gw%dts)
 end subroutine
 
 
@@ -316,13 +339,15 @@ subroutine m_gwflow_dispose(gw, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  if (gw%enabled .and. associated(gw%dispose)) call gw%dispose(p)
-  if (gw%l2_enabled) call gwflow_layer2_dispose(p, g, s)   ! save は dispose で(契約5)
-  if (gw%c_enabled) call gwflow_conduit_dispose(p, g, s)   ! save は dispose で(契約5)
-  if (gw%pump_enabled) call gwflow_pump_dispose(p, g)      ! 取水総括の表示(内部状態なし)
-  if (gw%frost_enabled) call gwflow_frost_dispose(p, g)    ! save は dispose で(契約5)
+  if (gw%enabled .and. associated(gw%dispose)) call gw%dispose(gw%vert, p)
+  if (allocated(gw%vert%bucket)) deallocate(gw%vert%bucket)
+  if (allocated(gw%vert%ga)) deallocate(gw%vert%ga)
+  if (gw%l2_enabled) call gwflow_layer2_dispose(gw%l2, p, g, s)      ! save は dispose で(契約5)
+  if (gw%c_enabled) call gwflow_conduit_dispose(gw%cond, p, g, s)    ! save は dispose で(契約5)
+  if (gw%pump_enabled) call gwflow_pump_dispose(gw%pump, p, g)       ! 取水総括の表示(内部状態なし)
+  if (gw%frost_enabled) call gwflow_frost_dispose(gw%frost, p, g)    ! save は dispose で(契約5)
   ! 幾何・エッジ作業領域は層間共有のため、どれかが使っていれば破棄する
-  if (gw%lat_enabled .or. gw%l2_enabled .or. gw%c_enabled) call gwflow_lateral_dispose(p)
+  if (gw%lat_enabled .or. gw%l2_enabled .or. gw%c_enabled) call gwflow_lateral_dispose(gw%lat, gw%lay1, p)
   gw%init    => null()
   gw%calc    => null()
   gw%dispose => null()
@@ -333,6 +358,63 @@ subroutine m_gwflow_dispose(gw, p, g, s)
   gw%pump_enabled = .false.
   gw%frost_enabled = .false.
   gw%initialized = .false.
+end subroutine
+
+!======================================================================
+!========================= PRIVATE ROUTINES ===========================
+!======================================================================
+! 鉛直モデルの手続きポインタの束縛先(容器から当該モデルの成分を取り出して
+! 実装へ渡すだけ)。init は成分を確保する(排他切替なので有効なモデルの
+! 成分だけが確保される)
+
+subroutine bind_bucket_init(v, p, g, s)
+  type(t_gwvert), intent(inout) :: v
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  if (.not. allocated(v%bucket)) allocate(v%bucket)
+  call gwflow_bucket_init(v%bucket, p, g, s)
+end subroutine
+
+subroutine bind_bucket_calc(v, p, g, s, it, dts)
+  type(t_gwvert), intent(inout) :: v
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: it
+  real, intent(in) :: dts
+  call gwflow_bucket_calc(v%bucket, p, g, s, it, dts)
+end subroutine
+
+subroutine bind_bucket_dispose(v, p)
+  type(t_gwvert), intent(inout) :: v
+  type(t_sysparam), intent(in) :: p
+  call gwflow_bucket_dispose(v%bucket, p)
+end subroutine
+
+subroutine bind_greenampt_init(v, p, g, s)
+  type(t_gwvert), intent(inout) :: v
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  if (.not. allocated(v%ga)) allocate(v%ga)
+  call gwflow_greenampt_init(v%ga, p, g, s)
+end subroutine
+
+subroutine bind_greenampt_calc(v, p, g, s, it, dts)
+  type(t_gwvert), intent(inout) :: v
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: it
+  real, intent(in) :: dts
+  call gwflow_greenampt_calc(v%ga, p, g, s, it, dts)
+end subroutine
+
+subroutine bind_greenampt_dispose(v, p)
+  type(t_gwvert), intent(inout) :: v
+  type(t_sysparam), intent(in) :: p
+  call gwflow_greenampt_dispose(v%ga, p)
 end subroutine
 
 end module

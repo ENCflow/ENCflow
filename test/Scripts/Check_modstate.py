@@ -46,20 +46,11 @@ ALLOWED = {
                            "culv_in_cell": "X", "culv_out_cell": "X", "culv_gate_rule": "X",
                            "div_in_cell": "X", "div_out_cell": "X", "div_rule": "X",
                            "dam_in_cell": "X", "dam_out_cell": "X", "dam_hv": "X", "dam_hq_rule": "X"},
-    # A 群
-    "m_gwflow_bucket.f90": {"gwb": "A"},
-    "m_gwflow_greenampt.f90": {"ga": "A"},
-    "m_gwflow_lateral.f90": {"glt": "A", "lay1": "A"},
-    "m_gwflow_layer2.f90": {"gl2": "A"},
-    "m_gwflow_conduit.f90": {"gwc": "A"},
-    "m_gwflow_pump.f90": {"gp": "A", "gwp_cell": "A", "gwp_val": "A"},
-    "m_gwflow_frost.f90": {"fro": "A"},
-    "m_geomorph.f90": {"crp": "A", "flv": "A", "dbr": "A", "spl": "A", "bsl": "A", "wrk": "A"},
-    "m_glacier.f90": {"glw": "A"},
-    "m_lavaflow.f90": {"lvw": "A"},
-    "m_saltwater.f90": {"sw": "A"},
-    "m_intercept_fixed.f90": {"icf": "A"},
-    "m_intercept_initloss.f90": {"ici": "A"},
+    # gwflow 族の私有状態(gwb, ga, glt, lay1, gl2, gwc, gp, fro)は Phase 0b で
+    # t_gwflow の成分へ。残るのは namelist 読み込みの静的作業配列(X)のみ
+    "m_gwflow_pump.f90": {"gwp_cell": "X", "gwp_val": "X"},
+    # m_intercept_fixed(icf)・m_intercept_initloss(ici)は Phase 0b で t_intercept%st へ、
+    # m_geomorph(crp..wrk)・m_glacier(glw)・m_lavaflow(lvw)・m_saltwater(sw)は各 t_* の成分へ
     # m_boundary_structure(pump_src_checked)・m_output(un_fnolist, wk_out, wk_out_i)は
     # Phase 0b で型の成分へ移した(t_boundary / t_output)
     # B 群(m_swflow_enc 本体は変数が多いので「全て B」として扱う)
@@ -160,7 +151,7 @@ def declared_names(decl):
         out.append(cur)
     result = []
     for item in out:
-        name = re.split(r"[=(\s*]", item.strip(), 1)[0]
+        name = re.split(r"[=(\s*]", item.strip(), maxsplit=1)[0]
         if name:
             result.append(name)
     return result, is_param

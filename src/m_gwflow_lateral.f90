@@ -120,6 +120,7 @@ module m_gwflow_lateral
   public :: gwflow_lateral_calc
   public :: gwflow_lateral_dispose
   public :: t_latlayer
+  public :: t_gwlat
   public :: gwflow_lateral_geom_init
   public :: gwflow_lateral_dtcheck
   public :: lateral_core
@@ -166,7 +167,7 @@ module m_gwflow_lateral
                                      !   q 配列と同形状・同格納規約。静的)
   end type
 
-  ! 幾何・作業領域(層間で共有。単一インスタンス前提。developer.md §12)
+  ! 幾何・作業領域(層間で共有。実体は切替器 m_gwflow の t_gwflow が持ち、各手続きが引数で受ける(nesting_plan.md §3.2 A 群))
   type t_gwlat
     real :: eps = 1.0e-3             ! 乾燥判定・過大流出抑制の正則化厚 (m)
     real :: ainv = 0.0               ! 1 / (dx*dy)
@@ -179,8 +180,6 @@ module m_gwflow_lateral
     logical :: geom_ready = .false.  ! 幾何・作業領域の初期化済み(冪等口)
     logical :: initialized = .false. ! 層1(土層)側方の有効化
   end type
-  type(t_gwlat) :: glt
-  type(t_latlayer) :: lay1           ! 層1(土層)の係数
 
 contains
 
@@ -189,7 +188,8 @@ contains
 ! 幾何(距離・通過幅)とエッジ作業領域の初期化(冪等。層間共有)。
 ! diagratio は最初の呼び手の値を採用する(層1・層2で同一が前提)
 !----------------------------------------------------------------------
-subroutine gwflow_lateral_geom_init(g, diagratio, eps)
+subroutine gwflow_lateral_geom_init(glt, g, diagratio, eps)
+  type(t_gwlat), intent(inout) :: glt
   type(t_geoinfo), intent(in) :: g
   real, intent(in) :: diagratio
   real, intent(in) :: eps
@@ -233,7 +233,8 @@ end subroutine
 ! モジュールが同一の 8 近傍幾何で独自カーネルを書くための読み取り口。
 ! geom_init 済みであること)
 !----------------------------------------------------------------------
-subroutine gwflow_lateral_geom_get(rdr, wl, ainv)
+subroutine gwflow_lateral_geom_get(glt, rdr, wl, ainv)
+  type(t_gwlat), intent(in) :: glt
   real, intent(out) :: rdr(1:8)
   real, intent(out) :: wl(1:8)
   real, intent(out) :: ainv
@@ -248,7 +249,9 @@ end subroutine
 ! 層1(土層)側方流の有効状態と係数の公開口(m_saltwater の塩水 zone が
 ! 同一媒体の K_sh・sy を使うため。gwflow_lateral_init より後に呼ぶこと)
 !----------------------------------------------------------------------
-subroutine gwflow_lateral_layer1_get(active, ksh, sy)
+subroutine gwflow_lateral_layer1_get(glt, lay1, active, ksh, sy)
+  type(t_gwlat), intent(in) :: glt
+  type(t_latlayer), intent(in) :: lay1
   logical, intent(out) :: active
   real, intent(out) :: ksh
   real, intent(out) :: sy
@@ -262,7 +265,8 @@ end subroutine
 ! 陽解法の安定条件の静的検査(層ごと。ヘッダ参照。h_gw <= 層厚上界)
 !   thick_max: 層厚の上界(層1 = max(sd) の allreduce、層2 = d2)
 !----------------------------------------------------------------------
-subroutine gwflow_lateral_dtcheck(g, label, ksh, sy, thick_max, dts)
+subroutine gwflow_lateral_dtcheck(glt, g, label, ksh, sy, thick_max, dts)
+  type(t_gwlat), intent(in) :: glt
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: label
   real, intent(in) :: ksh, sy, thick_max, dts
@@ -292,7 +296,9 @@ end subroutine
 ! g%sd は m_gwflow_init が m_geoinfo_require_sd で確保済み。
 ! dts は実効時間刻み(安定条件の静的検査に使う)
 !----------------------------------------------------------------------
-subroutine gwflow_lateral_init(p, g, s, dts)
+subroutine gwflow_lateral_init(glt, lay1, p, g, s, dts)
+  type(t_gwlat), intent(inout) :: glt
+  type(t_latlayer), intent(inout) :: lay1
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -335,7 +341,7 @@ subroutine gwflow_lateral_init(p, g, s, dts)
   lay1%cap_const = -1.0                     ! 動的 sd·sy0
   lay1%to_surface = .true.
 
-  call gwflow_lateral_geom_init(g, gw_diagratio, gw_eps)
+  call gwflow_lateral_geom_init(glt, g, gw_diagratio, gw_eps)
 
   ! 水質の同伴輸送(§30 W3): s%cg があるときだけ質量エッジ配列を確保する
   ! (m_wq_init は本 init より先に走る。未確保なら経路は完全に従来どおり)
@@ -353,7 +359,7 @@ subroutine gwflow_lateral_init(p, g, s, dts)
     end do
   end do
   call par_allreduce_max(sdmax)
-  call gwflow_lateral_dtcheck(g, "gwflow_lateral", lay1%ksh, lay1%sy, sdmax(1), dts)
+  call gwflow_lateral_dtcheck(glt, g, "gwflow_lateral", lay1%ksh, lay1%sy, sdmax(1), dts)
 
   glt%initialized = .true.
 end subroutine
@@ -362,7 +368,9 @@ end subroutine
 !----------------------------------------------------------------------
 ! Boussinesq 側方流の計算(層1=土層。従来どおりの公開口)
 !----------------------------------------------------------------------
-subroutine gwflow_lateral_calc(p, g, s, it, dts)
+subroutine gwflow_lateral_calc(glt, lay1, p, g, s, it, dts)
+  type(t_gwlat), intent(inout) :: glt
+  type(t_latlayer), intent(in) :: lay1
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
@@ -380,9 +388,9 @@ subroutine gwflow_lateral_calc(p, g, s, it, dts)
     ! 水質の同伴輸送(§30 W3)。帯界面エッジの冗長計算が風上 cg を
     ! ハロから読むため、cg も毎回交換する
     call par_halo_cell(s%cg)
-    call lateral_core(g, s, s%hg, lay1, dts, cg=s%cg, rginv=s%cg_rginv)
+    call lateral_core(glt, g, s, s%hg, lay1, dts, cg=s%cg, rginv=s%cg_rginv)
   else
-    call lateral_core(g, s, s%hg, lay1, dts)
+    call lateral_core(glt, g, s, s%hg, lay1, dts)
   end if
 end subroutine
 
@@ -394,7 +402,8 @@ end subroutine
 !   呼び手の責務: 対象層 hg(と to_surface 層では s%h)のハロ交換を
 !   済ませてから呼ぶこと
 !----------------------------------------------------------------------
-subroutine lateral_core(g, s, hg, lay, dts, cg, rginv)
+subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
+  type(t_gwlat), intent(inout) :: glt
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(inout) :: hg(1:, dcp%jsh:)
@@ -575,7 +584,8 @@ end function
 !   cap <= 0 のセル(管路なし)はエッジ 0 を書き、貯留も更新しない。
 !   呼び手の責務: hgc のハロ交換を済ませてから呼ぶこと
 !----------------------------------------------------------------------
-subroutine conduit_core(g, hgc, cl, dts)
+subroutine conduit_core(glt, g, hgc, cl, dts)
+  type(t_gwlat), intent(inout) :: glt
   type(t_geoinfo), intent(in) :: g
   real, intent(inout) :: hgc(1:, dcp%jsh:)
   type(t_conduitlayer), intent(in) :: cl
@@ -689,7 +699,8 @@ end subroutine
 !   書き手はループ1と同じ jt = je+1 まで(所有エッジの完全被覆。
 !   dens は帯+ハロ jsh:jeh に有効値が要る = par_scatter_cell の配布規約)
 !----------------------------------------------------------------------
-subroutine conduit_build_cnd(g, dens, cl)
+subroutine conduit_build_cnd(glt, g, dens, cl)
+  type(t_gwlat), intent(in) :: glt
   type(t_geoinfo), intent(in) :: g
   real, intent(in) :: dens(1:, dcp%jsh:)
   type(t_conduitlayer), intent(inout) :: cl
@@ -728,7 +739,8 @@ end subroutine
 !   cnd はエッジ別なのでセルごとに 8 近傍の入射エッジ係数を集計し、
 !   最大値を allreduce_max(順序不変で決定的)する
 !----------------------------------------------------------------------
-subroutine gwflow_conduit_dtcheck(g, label, cl, dts, nsub)
+subroutine gwflow_conduit_dtcheck(glt, g, label, cl, dts, nsub)
+  type(t_gwlat), intent(in) :: glt
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: label
   type(t_conduitlayer), intent(in) :: cl
@@ -781,7 +793,9 @@ end subroutine
 !----------------------------------------------------------------------
 ! Boussinesq 側方流の破棄(無履歴のため私有保存なし。ヘッダ【リスタート】)
 !----------------------------------------------------------------------
-subroutine gwflow_lateral_dispose(p)
+subroutine gwflow_lateral_dispose(glt, lay1, p)
+  type(t_gwlat), intent(inout) :: glt
+  type(t_latlayer), intent(inout) :: lay1
   type(t_sysparam), intent(in) :: p
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (allocated(glt%q)) deallocate(glt%q)
