@@ -14,13 +14,15 @@
                                                      # 不一致なら終了コード 1
 
 許可表(ALLOWED)は nesting_plan.md §3.2 の分類表の機械写し。
-  A 群: 所有の明示(型の成分へ移す予定。Phase 0b で消える)
-  B 群: 文脈の付け替え(bind)。宣言部に残る
-  X   : 実行コンテキスト・定数的な状態(共有でよい)
-Phase 0b 以降は、A 群の行が消えたら許可表からも消す(消し忘れは
---check が「許可表にあるが存在しない」として報告する)。
+  A 群: 所有の明示(型の成分へ移した。Phase 0b で消えた)
+  B 群: 文脈の付け替え(bind)。宣言部に残り、同じファイルの *_ctx_swap
+        で退避・復帰される(Phase 0c)。--check は B 群の各変数が
+        ctx_swap 本体に「%名前」として現れることも検査する(漏れ検出)
+  X   : 実行コンテキスト・定数的な状態(共有でよい。ctx の枠自身も X)
+ファイルの値が辞書なら変数名ごとの群、"*" キーは未記載の変数の既定群
+(m_swflow_enc.f90 は変数が多いので既定 B)。
 新しいモジュール変数は原則として型に置く(§12)。やむを得ず増やす場合は
-理由を developer.md に書き、ここに登録する。
+理由を developer.md に書き、ここに登録する(B なら ctx 型と swap にも足す)。
 """
 import re
 import sys
@@ -33,11 +35,11 @@ SRC = os.path.join(ROOT, "src")
 # 許可表: ファイル名 -> {変数名: 群}
 ALLOWED = {
     # 並列層(実行コンテキスト。dcp は B: par_decomp_bind で付け替え)
-    "m_parallel_serial.f90": {"nrank": "X", "nproc": "X", "is_root": "X", "dcp": "B"},
+    "m_parallel_serial.f90": {"nrank": "X", "nproc": "X", "is_root": "X", "dcp": "B", "dcp_ctx": "X"},
     "m_parallel_mpi.f90": {"nrank": "X", "nproc": "X", "is_root": "X", "dcp": "B",
-                            "js_tab": "B", "je_tab": "B", "MPI_WP": "X", "owns_mpi": "X"},
-    # m_main のインスタンス(Phase 0c で enc(:) になる)
-    "m_main.f90": {"enc": "X"},
+                            "js_tab": "B", "je_tab": "B", "MPI_WP": "X", "owns_mpi": "X", "dcp_ctx": "X"},
+    # m_main のインスタンス格納(encs(:))と選択(enc => encs(kcur))
+    "m_main.f90": {"encs": "X", "enc": "X", "ninst": "X", "kcur": "X"},
     # list_* の namelist 作業配列(読み込み時の一時領域。読んだ直後に型へ写す)
     "list_boundary.f90": {"src_cell": "X", "src_val": "X", "stage_cell": "X", "stage_val": "X",
                           "inflow_cell": "X", "inflow_val": "X", "inflow_cs": "X", "inflow_qs": "X"},
@@ -53,20 +55,18 @@ ALLOWED = {
     # m_geomorph(crp..wrk)・m_glacier(glw)・m_lavaflow(lvw)・m_saltwater(sw)は各 t_* の成分へ
     # m_boundary_structure(pump_src_checked)・m_output(un_fnolist, wk_out, wk_out_i)は
     # Phase 0b で型の成分へ移した(t_boundary / t_output)
-    # B 群(m_swflow_enc 本体は変数が多いので「全て B」として扱う)
-    "m_swflow_enc.f90": "B",
-    "m_swflow_enc_adv.f90": {"tx_mod": "B"},
-    "m_swflow_enc_diff.f90": {"td_mod": "B"},
-    "m_swflow_enc_nh.f90": {"nh_mod": "B"},
-    "m_swflow_enc_bc.f90": {"f_bc_side": "B", "bt_cell": "B", "bc_eta_cell": "B",
-                            "infl_wseg": "B", "infl_cfac": "B", "infl_hseg": "B"},
-    "m_ffactor.f90": {"powf": "B", "ff_nn": "B", "ff_h": "B", "ff_f": "B", "ff_a0": "B", "ff_a1": "B"},
+    # B 群(m_swflow_enc 本体は変数が多いので未記載は B。submodule の私有状態
+    # tx_mod, td_mod, nh_mod, f_bc_side.. は Phase 0c で親モジュールへ移した)
+    "m_swflow_enc.f90": {"*": "B", "enc_ctx": "X"},
+    "m_ffactor.f90": {"powf": "B", "ff_nn": "B", "ff_h": "B", "ff_f": "B", "ff_a0": "B", "ff_a1": "B",
+                      "p_ffactor": "B", "ff_ctx": "X"},
     # STG(凍結。ネスト非対応で par_stop)
     "m_swflow_stg.f90": "X",
 }
 
-DECL = re.compile(r"^\s*(real|integer|logical|character|double\s+precision|complex|type\s*\(|class\s*\()",
+DECL = re.compile(r"^\s*(real|integer|logical|character|double\s+precision|complex|type\s*\(|class\s*\(|procedure\s*\()",
                   re.I)
+CTXSWAP = re.compile(r"^\s*subroutine\s+(\w+_ctx_swap)\b.*?^\s*end\s+subroutine\b", re.I | re.M | re.S)
 PROC = re.compile(r"^\s*(?:(?:pure|elemental|recursive|impure|module)\s+)*(subroutine|function)\s+([A-Za-z_]\w*)",
                   re.I)
 ENDPROC = re.compile(r"^\s*end\s+(subroutine|function)\b", re.I)
@@ -213,6 +213,16 @@ def scan_file(path):
     return modvars, implicit_save
 
 
+def ctx_swap_refs(path):
+    """同じファイルの *_ctx_swap 手続き本体に現れる '%名前' の集合(小文字)"""
+    text = "\n".join(code for _, code in join_continuations(
+        open(path, encoding="utf-8", errors="replace").read().split("\n")))
+    refs = set()
+    for m in CTXSWAP.finditer(text):
+        refs |= {r.lower() for r in re.findall(r"%\s*([A-Za-z_]\w*)", m.group(0))}
+    return refs
+
+
 def main():
     check = "--check" in sys.argv
     files = sorted(glob.glob(os.path.join(SRC, "*.f90")))
@@ -222,22 +232,33 @@ def main():
         base = os.path.basename(path)
         modvars, implicit_save = scan_file(path)
         allowed = ALLOWED.get(base, {})
+        bnames = []
         if modvars:
             print(f"\n## {base}")
             for no, name, decl in modvars:
                 if allowed == "B" or allowed == "X":
                     grp = allowed
                 else:
-                    grp = allowed.get(name)
+                    grp = allowed.get(name, allowed.get("*"))
                 tag = grp if grp else "??"
                 print(f"  {no:5d}  [{tag}] {name:20s} {decl[:70]}")
                 if check and not grp:
                     problems.append(f"{base}:{no}: 許可表にないモジュール変数 {name}")
+                if grp == "B":
+                    bnames.append((no, name))
         if isinstance(allowed, dict):
             present = {n for _, n, _ in modvars}
             for n in allowed:
-                if n not in present:
+                if n != "*" and n not in present:
                     problems.append(f"{base}: 許可表にあるが存在しない {n}(表を更新すること)")
+        if bnames:
+            # B 群は同じファイルの *_ctx_swap で退避・復帰されていること
+            refs = ctx_swap_refs(path)
+            if not refs:
+                problems.append(f"{base}: B 群があるのに *_ctx_swap 手続きが見つからない")
+            for no, name in bnames:
+                if name.lower() not in refs:
+                    problems.append(f"{base}:{no}: B 群の {name} が *_ctx_swap に現れない(ctx 型と swap に追加すること)")
         for no, proc, decl in implicit_save:
             print(f"  {no:5d}  [SAVE!] {proc}: {decl[:70]}")
             problems.append(f"{base}:{no}: 手続き {proc} 内の初期化付き宣言(暗黙 SAVE)")
