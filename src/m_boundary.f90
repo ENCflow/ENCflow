@@ -206,6 +206,9 @@ module m_boundary
                                            !   流入の風上濃度として読む(未確保=全て清水)
     integer :: nstruct = 0                 ! 内部水理構造物の数
     type(t_structure), allocatable :: struct(:)  ! 内部水理構造物(§22)
+    logical :: pump_src_checked = .false.  ! 管路取水ポンプ(f_pump_src=1)の遅延検査済み
+                                           !   (boundary init は gwflow init より先のため
+                                           !   最初の makebdc で検査する。structure_makebdc)
     logical :: initialized = .false.
   end type
 
@@ -495,6 +498,7 @@ subroutine m_boundary_dispose(b)
   b%nstage = 0
   b%ninflow = 0
   b%nstruct = 0
+  b%pump_src_checked = .false.
   b%initialized = .false.
 end subroutine
 

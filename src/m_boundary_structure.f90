@@ -33,11 +33,6 @@ submodule (m_boundary) m_boundary_structure
   ! NaN を作らない有限値であることが要件。lake_plan.md §3.3)
   real, parameter :: vbig = 1.0e30
 
-  ! 管路取水ポンプ(f_pump_src=1。§46.5 (8a))の遅延検査済みフラグ。
-  ! boundary の init は gwflow より先に走るため、f_gwconduit の有効性と
-  ! 取水セルの管路有無(cap>0)は最初の makebdc で検査する(per-rank)
-  logical :: pump_src_checked = .false.
-
 contains
 
 !----------------------------------------------------------------------
@@ -210,9 +205,9 @@ module subroutine structure_makebdc(b, p, g, s)
 
   ! 管路取水ポンプの遅延検査(f_gwconduit の有効性と取水セルの管路有無。
   ! boundary init は gwflow init より先のためここで 1 回だけ行う)
-  if (.not. pump_src_checked) then
+  if (.not. b%pump_src_checked) then
     call check_pump_src(b)
-    pump_src_checked = .true.
+    b%pump_src_checked = .true.
   end if
 
   ! refs(2*ist-1) = 取水(上流)側代表セル、refs(2*ist) = 吐口(下流)側

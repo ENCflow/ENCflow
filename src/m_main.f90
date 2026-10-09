@@ -29,7 +29,7 @@ module m_main
                         m_intercept_has_step, m_intercept_dispose
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc, m_swflow_post, &
                        m_swflow_sdep_update
-  use m_output, only : output_init, output_dispose, output_chk_geoinfo, output_state, output_summary
+  use m_output, only : t_output, output_init, output_dispose, output_chk_geoinfo, output_state, output_summary
   use m_util, only : itoa
   use m_sysdep_util, only : sysdep_mkdir, sysdep_copy_to_dir
   use m_parallel
@@ -78,6 +78,7 @@ module m_main
     type(t_bedmotion) :: bm
     type(t_intercept) :: ic
     type(t_swflow) :: sw
+    type(t_output) :: ou             ! 分布出力の状態(集約バッファ・装置番号)
     integer :: ierror = 0            ! 累積エラー数(>0 で時間ループ終了)
     logical :: initialized = .false.
     ! BMI 外部強制のステージング(bmi_plan.md §4.2。降水が未設定
@@ -165,7 +166,8 @@ subroutine m_main_initialize(fn_sysparam)
              sl => enc%sl, b => enc%b, s => enc%s, r => enc%r, &
              gm => enc%gm, gw => enc%gw, ev => enc%ev, mt => enc%mt, &
              wq => enc%wq, dw => enc%dw, bd => enc%bd, sn => enc%sn, si => enc%si, &
-             gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw)
+             gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw, &
+             ou => enc%ou)
 
     ! システムを初期化
     call m_sysparam_init(p, fn_param)       ! sysparam を初期化
@@ -241,14 +243,14 @@ subroutine m_main_initialize(fn_sysparam)
                                             ! state init より後に。bedmotion_plan.md)
     call m_swi_init(si, p, g, s)            ! swi を初期化(fn_swi 指定時のみ有効。
                                             ! 排他検査に他モジュールの fn_* を使う。§49)
-    call output_init(p, g)                  ! ファイル出力の準備(geoinfoより後に)
+    call output_init(ou, p, g)              ! ファイル出力の準備(geoinfoより後に)
 
     ! 地理情報を各ランクに合わせて縮小
     call m_geoinfo_band_shrink(g)           ! マスク類(x,sw,rw)と z(rank0以外)を帯に縮小
 
     ! ==== 時間ループ: すべて帯確保(z のみ rank0 が全域を保持) ====
     ! ループ前の初期化・初期出力(従来 run_main の前半)
-    call run_init(p, g, b, pr, ic, s, r, ev, mt, wq, dw, bd, enc%ierror)
+    call run_init(p, g, b, pr, ic, s, r, ev, mt, wq, dw, bd, ou, enc%ierror)
 
   end associate
 
@@ -267,10 +269,11 @@ subroutine m_main_update()
              sl => enc%sl, b => enc%b, s => enc%s, r => enc%r, &
              gm => enc%gm, gw => enc%gw, ev => enc%ev, mt => enc%mt, &
              wq => enc%wq, dw => enc%dw, bd => enc%bd, sn => enc%sn, si => enc%si, &
-             gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw)
+             gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw, &
+             ou => enc%ou)
 
     call run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, &
-                  wq, dw, bd, sn, gl, lv, bm, si, &
+                  wq, dw, bd, sn, gl, lv, bm, si, ou, &
                   enc%extpre_active, enc%extpre_fresh, enc%extpre, &
                   enc%extz_fresh, enc%extz, enc%exth_fresh, enc%exth, &
                   enc%ierror)
@@ -301,13 +304,14 @@ subroutine m_main_finalize()
              sl => enc%sl, b => enc%b, s => enc%s, r => enc%r, &
              gm => enc%gm, gw => enc%gw, ev => enc%ev, mt => enc%mt, &
              wq => enc%wq, dw => enc%dw, bd => enc%bd, sn => enc%sn, si => enc%si, &
-             gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw)
+             gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw, &
+             ou => enc%ou)
 
     ! 最終出力(従来 run_main の末尾)
-    call run_close(p, g, s, r)
+    call run_close(p, g, s, r, ou)
 
     ! モジュールを破棄
-    call output_dispose()
+    call output_dispose(ou)
     call m_swflow_dispose(sw, p)
     call m_tide_dispose(ti)
     call m_saltwater_dispose(sl, p, g, s)   ! save は dispose で(契約5)
@@ -533,7 +537,7 @@ end subroutine
 !----------------------------------------------------------------------
 ! 時間ループ前の初期化・初期出力(従来 run_main の前半)
 !----------------------------------------------------------------------
-subroutine run_init(p, g, b, pr, ic, s, r, ev, mt, wq, dw, bd, ierror)
+subroutine run_init(p, g, b, pr, ic, s, r, ev, mt, wq, dw, bd, ou, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
@@ -546,6 +550,7 @@ subroutine run_init(p, g, b, pr, ic, s, r, ev, mt, wq, dw, bd, ierror)
   type(t_wq), intent(inout) :: wq      ! 水質(発生源・台帳を保持)
   type(t_driftwood), intent(inout) :: dw  ! 流木(立木ストック・台帳を保持。§50)
   type(t_bldgdebris), intent(inout) :: bd ! 家屋瓦礫(家屋ストック・台帳を保持。§63)
+  type(t_output), intent(inout) :: ou     ! 分布出力(集約バッファ・装置番号)
   integer, intent(out) :: ierror
   logical :: pr_updated    ! このコールで降雨分布が実際に更新されたか
 
@@ -568,7 +573,7 @@ subroutine run_init(p, g, b, pr, ic, s, r, ev, mt, wq, dw, bd, ierror)
   ! 初期状態の出力(ファイルへの書き込みはランク0のみ。番号 0 は
   ! 「このランの開始状態」の固定スロット: restore 時は復元状態が書かれる)
   call m_state_printstate(p, s)         ! 途中経過を画面に出力
-  call output_state(p, g, s, 0)         ! 初期状態をファイル出力(集約は output_matrix 内)
+  call output_state(ou, p, g, s, 0)     ! 初期状態をファイル出力(集約は output_matrix 内)
   call m_record_probe(r, p, s)          ! プローブの値を出力
   call m_record_flux(r, p, s)           ! フラックスの値を出力
   call m_boundary_dam_record(b, p, s)   ! ダム CSV(ダムがなければ no-op)
@@ -589,7 +594,7 @@ end subroutine
 !   進行位置は s%it が正本(m_state_updatetime が更新)。エラーは
 !   ierror に累積し、継続判定は呼び出し側(m_main_finished)が行う
 !----------------------------------------------------------------------
-subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, bd, sn, gl, lv, bm, si, &
+subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, bd, sn, gl, lv, bm, si, ou, &
                     extpre_active, extpre_fresh, extpre, &
                     extz_fresh, extz, exth_fresh, exth, ierror)
   type(t_sysparam), intent(in) :: p
@@ -614,6 +619,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   type(t_lavaflow), intent(in) :: lv   ! 溶岩流(溶岩厚 s%hl と作業台帳を保持)
   type(t_bedmotion), intent(inout) :: bm  ! 規定底面運動(スナップショットの読み進みを保持)
   type(t_swi), intent(inout) :: si     ! 土壌雨量指数(タンク貯留を保持。§49)
+  type(t_output), intent(inout) :: ou  ! 分布出力(集約バッファ・装置番号)
   logical, intent(in) :: extpre_active    ! BMI 外部降水供給モードか
   logical, intent(inout) :: extpre_fresh  ! 未適用の新しい場があるか(適用で消す)
   real, allocatable, intent(in) :: extpre(:,:)  ! ステージング場 (m/s。帯形状。
@@ -828,7 +834,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   ! save に記録され、restore 時は続き番号から再開する)
   if (do_file) then
     s%ifn = s%ifn + 1
-    call output_state(p, g, s, s%ifn)
+    call output_state(ou, p, g, s, s%ifn)
   end if
 
   ! dt_record 間隔でプローブとフラックスの値を出力
@@ -879,17 +885,18 @@ end subroutine
 !----------------------------------------------------------------------
 ! 時間ループ後の最終出力(従来 run_main の末尾)
 !----------------------------------------------------------------------
-subroutine run_close(p, g, s, r)
+subroutine run_close(p, g, s, r, ou)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   type(t_record), intent(inout) :: r
+  type(t_output), intent(inout) :: ou
 
   ! 最終状態を出力
-  call output_state(p, g, s, 9998)
+  call output_state(ou, p, g, s, 9998)
 
   ! 統計量を出力
-  call output_summary(p, g, s, 9999)
+  call output_summary(ou, p, g, s, 9999)
 
   ! 最大流量の一覧を出力
   call m_record_summary(r, p)

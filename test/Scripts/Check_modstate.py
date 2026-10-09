@@ -60,8 +60,8 @@ ALLOWED = {
     "m_saltwater.f90": {"sw": "A"},
     "m_intercept_fixed.f90": {"icf": "A"},
     "m_intercept_initloss.f90": {"ici": "A"},
-    "m_boundary_structure.f90": {"pump_src_checked": "A"},
-    "m_output.f90": {"un_fnolist": "A", "wk_out": "A", "wk_out_i": "A"},
+    # m_boundary_structure(pump_src_checked)・m_output(un_fnolist, wk_out, wk_out_i)は
+    # Phase 0b で型の成分へ移した(t_boundary / t_output)
     # B 群(m_swflow_enc 本体は変数が多いので「全て B」として扱う)
     "m_swflow_enc.f90": "B",
     "m_swflow_enc_adv.f90": {"tx_mod": "B"},
