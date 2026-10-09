@@ -215,14 +215,17 @@ m_parallel の dcp は protected のまま、書き手は m_parallel 内の
   4     1       port/param_port.txt     5  5
   ```
   r(空間比)・r_t(時間比)は省略可(地理参照と dt から導出し、整合を
-  検査)。
+  検査)。**実装(Phase 1)**: `id parent param_file [r r_t [i0 j0]]`。子は
+  i0 j0(子セル (1,1) が整列する親セル)を必須とし、地理参照からの導出は
+  未実装(Phase 2 以降。j は北から南へ増える = ファイルの行順)。
 - **整列条件**(init で検査、違反は par_stop): 子の dx = 親の dx / r
   (r は正の整数。3 または 5 を推奨)、子の原点が親のセル境界上、子の
   窓が親の内側に **nb + 1 親セル以上のマージン**で収まる、親の dt = r_t
   × 子の dt。格子の地理参照は既存の m_georef(hdr / GeoTIFF / 明示)で
   得る。
-- 子の外縁は**境界帯(幅 nb。既定 2 = ENC のハロ幅・ステンシル到達距離)**
-  で、帯のセルは親から与えられる(§3.5)。帯の外向き面は壁のまま
+- 子の外縁は**境界帯(幅 nb。既定は自動 = スキーム 1 で 2、運動量保存形移流
+  〔f_advection_scheme ≥ 2〕で 3。帯 2 では風上 2 本目のエッジが子の壁面に
+  掛かる。Phase 1 の恒等テストで確定)**で、帯のセルは親から与えられる(§3.5)。帯の外向き面は壁のまま
   (f_bc_* は 0 を要求。他を指定したら par_stop)。
 - 親側では子の窓に対応する矩形(iw1..iw2, jw1..jw2)を保持し、
   子 → 親の置換はその内側(帯を除く部分 = 子の計算内部)に限る。
@@ -240,8 +243,9 @@ advance(g):
   子がいれば g の窓の値を t^{n+1} で保存
   for each child c of g:
     for k = 1 .. r_t(c):
-      prolong(g → c, t^n + k·dt_c)  ! 親の n と n+1 の線形補間で c の帯を充填
-      advance(c)                    ! 再帰(c の子はこの中で進む)
+      prolong(g → c, t^n + (k−1)·dt_c)  ! サブステップ開始時刻の帯(親の n と n+1 の線形補間。
+                                        !   k=1 は t^n の実値 = 親が同じ更新に使った入力)
+      advance(c)                        ! 再帰(c の子はこの中で進む)
     if (双方向) restrict(c → g)     ! c の内部を g の窓へ平均置換(t^{n+1})
   halo exchange of g(置換した場合)
 ```
@@ -536,6 +540,7 @@ m_nest は m_main より下、物理モジュールより上の層(状態の所�
 | 0d | m_swflow_enc の散在変数を用途別の派生型に束ねる(可読性の回収。bind のリストが短くなる) | 中(参照の書き換え) | ULP=0、実行時間の不変 |
 |    | **実施記録(2026-10-09)**: 126 変数を 7 つの変数群(allocatable スカラー: opt, nhp, bcs, dbr, chn, sct, geo。成分名は元の変数名のまま)に束ね、t_enc_ctx / ctx_swap は 11 行(move_alloc)になった。参照の書き換えは約 930 箇所(親 465、submodule 433、他モジュール 29)。**検証**: reference 全 22 ケース PASS、厳密フラグ 38 ケース 0b 基準とビット一致、twin(逐次・MPI np=1,2,4)一致、MPI 8 ケース np=1,2,4 PASS。-fcheck=all/-finit-real=snan のクリーンビルドでも twin 一致。実行時間は基準バイナリとの交互計測で wave 0.997〜1.005 倍、chichibu 0.95〜0.96 倍(不変)。 付随して MPI の実バグ(2 つ目のインスタンスの par_init が owns_mpi を倒し MPI_Finalize が呼ばれない)を是正。規約は developer.md §71(0d) | | |
 | 1 | m_nest: 一覧・幾何・整列検査、par_decomp の整列、窓の gather、prolong(セル量+エッジ量。nest_bc=2)、再帰 advance(r_t=1)、格子別出力、一方向 | 大 | 無効時一致、-fcheck np=2、**比 1:1 恒等(一方向)**、np=1,2,4、restart |
+|    | **実施記録(2026-10-09)**: m_nest(t_nest / nest_read_list / nest_setup_child / nest_capture / nest_prolong)、list_nest(&list_nest)、fn_nest、m_swflow_enc の nest_export/import フック、par_decomp_init の align、m_main の grow_instances / nest_advance(再帰)。帯は t^n の窓で埋める(擬似コードを訂正)。**帯幅はステンシル依存**(スキーム 1 = 2、スキーム 2・3 = 3。既定 nest_nb = 0 = 自動)。比 1 は複写、比 > 1 の補間と乾湿規則は実装済みだが未検証(Phase 3)。受入: test/nest_identity(nestcheck ドライバ)で wave_s1(スキーム 1・帯 2)、wave(スキーム 3・帯 3)、chichibu 500 m 1 時間(降雨・乾湿・河道・動的開口。帯 3)の 3 ケースが全ステップで子の内部 == 親の足元(ビット一致)、restart 往復も一致。無効時: reference 22 PASS・厳密フラグ 38 ケース 0b 基準と一致。MPI(OpenMPI)np=1,2,4: 8 ケース PASS、twin、nest_identity(restart 含む)一致。-fcheck=all/-finit-real=snan のクリーンビルドで逐次・np=2 の nest_identity 一致(§9 の 3〜6 を充足)。 規約は developer.md §72 | | |
 | 2 | restrict(nest_fb=2 既定・1 選択)、所有権整列、ハロ、Log 要約 | 中 | **比 1:1 恒等(双方向。海岸線を含む)**、反射率、例題 |
 | 3 | r_t > 1(時間補間、格子別 dt)、nest_bc=1 | 中 | 比 3・5 の収束、2 段の完走 |
 | 4 | nest_bc=3(Flather)/4(スポンジ)、nest_fb=2/3(湿潤平均・保存修正)、NH の帯と φ、スカラー場の表、**陸上向け 3 点(§14: 乾湿対応の帯エッジ規則、河道セルの体積整合置換、地下水 hg の交換)** | 中〜大(選択肢ごと) | 選択肢ごとの無効時一致と物理検証。陸上は chichibu 系の比 3 で水収支と河道水位の連続 |
@@ -547,7 +552,7 @@ Phase 0 は単体でも価値がある(§3.9 の独立複数モデル、アン�
 ステンシルに対する補間の完全性を機械的に保証する唯一の方法なので、
 実装の前に試験ケースを作る。
 
-## 12. 要合意事項
+## 12. 要合意事項(**2026-10-09 全項目合意済み**。Phase 1 から順に実装)
 
 1. **同一プロセス内の複数インスタンス化を基盤にする**(v1 の見送りを撤回。
    理由は §1.2)。手段は「所有の明示」を主、bind を B 群 3 モジュールに

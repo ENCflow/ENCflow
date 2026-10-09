@@ -9,8 +9,10 @@
 ## 1. レイヤ構造(どのモジュールがどの層か)
 
 ```
-main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理)
-  │
+main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理。複数インスタンス encs(:) と
+  │          ネスト系の時間進行 nest_advance。§71・§72)
+  ├─ m_nest(多段ネスティング: 格子木・幾何・親の窓の写し・子の帯の Dirichlet。
+  │          状態は持たず各格子の t_encflow を参照して交換する。fn_nest で有効化。§72)
   ├─ 物理プロセス層(fn_* で個別に有効化。無効ならコスト・メモリゼロ)
   │    m_swflow      浅水流の切替器(排他: m_swflow_enc / m_swflow_stg)
   │      m_swflow_enc + submodule: _adv(移流) _bc(境界) _channel(河道・堤防) _diff(拡散)

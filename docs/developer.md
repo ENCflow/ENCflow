@@ -9595,3 +9595,105 @@ fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dt
   交互に実行、中央値): wave 1 スレッド 0.997 倍・4 スレッド 1.005 倍(各 8 回)、
   chichibu 500 m 6 h 1 スレッド 0.96 倍・4 スレッド 0.95 倍(各 5 回)= 不変
   (allocatable スカラー経由の間接参照はホットループで観測できない)。
+
+
+## 72. 多段ネスティング Phase 1: 一方向・同一 dt の帯 Dirichlet(2026-10-09 実装)
+
+設計の正本は docs/nesting_plan.md(§3.3〜3.7、§9、§11 の Phase 1 記録)。
+利用者向けは docs/users_guide/nest.md。本節は実装の規約と検証の記録。
+
+### 構成(nesting_plan §5 の実装名)
+
+- **m_nest**(新設。m_main の下、物理モジュールの上): 格子木 `t_nest`(格子ごとに
+  `t_nest_grid`: 親、r、r_t、原点 i0/j0、帯幅 nb、足元 pi1..pi2 × pj1..pj2、親の窓の
+  写し wc/we、子側の帯マスク inband と作業配列 ev)。公開手続きは
+  `nest_read_list`(一覧の読み込みと検証)、`nest_setup_child`(幾何の確定と整合
+  検査)、`nest_capture`(親の窓を t^n で写す)、`nest_prolong`(子の帯を埋める)、
+  `nest_dispose`。状態の所有は各格子の `t_encflow` のままで、m_nest は窓の写しと
+  作業配列だけを持つ。
+- **m_swflow_enc の公開フック**: `m_swflow_enc_nest_export(ie1, ie2, je1, je2, buf)`
+  (自帯のセルが所有するエッジのスロット (k, ie, je) の uv, mn を buf へ)と
+  `m_swflow_enc_nest_import(nx, ny, jlo, jhi, inband, vals)`(帯セルに接する全スロット
+  を vals で置換)。スロットの所有規約は m_swflow_enc_edge_flux と同じ
+  (スロット (k, ie, je) の所有セルは (ie−die(k), je−dje(k)))。
+- **m_main**: `nest`(t_nest。X 群)、`initialize` = ルートを `init_instance` →
+  `fn_nest` があれば `nest_read_list` → `grow_instances(ng)`(ルートの t_encflow を
+  深いコピーで広い枠へ移す。1 回限り)→ 子を順に `select` + `init_instance(fn, r)`
+  + `nest_setup_child`。`update` = `nest_advance(root)`(再帰)→ `select(root)`。
+  `finished` = どの格子かのエラーまたはルートの全ステップ完了。`finalize` = 子から
+  順に `finalize_instance`(MPI の終了はルートで)。ng = 1 の経路は分岐 1 つを
+  除いて不変(全 test ビット一致で確認)。
+- **m_parallel**: `par_decomp_init(..., align)`(帯境界を行 1 から align の倍数に
+  切り下げる。子格子では align = r。Phase 2 の子→親の平均を 1 ランクで閉じる
+  準備。r = 1 では無変更)。
+- **list_nest**(新設): 子のパラメータファイルの `&list_nest`(nest_bc, nest_fb,
+  nest_nb)を読むだけ。list_sysparam / m_sysparam に `fn_nest`。
+
+### 規約
+
+- **幾何**: 子セル (1,1) の左上隅(i, j の小さい側)が親セル (i0, j0) の左上隅に
+  一致し、子の dx·r = 親の dx(相対 1e-6)。子の全格子が足元(親セル
+  i0..i0+nx/r−1 × j0..j0+ny/r−1)を覆い、足元の外側に親セル 1 個以上の余裕
+  (補間用)を要求する。nx, ny は r の倍数。dt·r_t = 親の dt、t0 同一、
+  nt = 親の nt·r_t。子の外縁は壁(f_bc_* = 0、流入なし)。これらは
+  nest_setup_child が par_stop で止める(黙って動かさない)。
+- **帯(境界帯)**: 子の外周 nb セル。帯セルのセル量(h, u, v, vv, m, n。e = z + h で
+  回復)と、帯セルに接する全エッジ量(uv, mn)を親から置換する。**帯の幅は
+  有効な項のステンシルで決まる**: セル量のハロ幅 2 に対し、運動量保存形移流
+  (f_advection_scheme ≥ 2)は風上側 2 本目のエッジまで読むため帯 2 では帯の
+  外側(子の壁面)のエッジを読んでしまう。**nest_nb = 0(既定)= 自動で、
+  スキーム 1 は 2、スキーム 2・3 は 3**。明示値が必要幅未満なら par_stop。
+  (恒等テストで確認: chichibu〔スキーム 3〕は帯 2 で 278/288 ステップ不一致、
+  帯 3 で全一致。wave〔スキーム 1〕は帯 2 で全一致)。拡散項・NH を含む
+  ケースの必要幅は未検証(NH は非局所なので帯では閉じない。plan §3.8)。
+- **時間進行(r_t = 1)**: 親の 1 歩の**前**に親の窓を t^n で写し、親の 1 歩の**後**に
+  子の帯を **t^n の窓**で埋めて子を 1 歩進める(子の内部更新が読む入力 = 親が
+  同じ更新に使った t^n の値。plan §3.4 の擬似コードの「サブステップ開始時刻」)。
+  子の帯セル自身も子の 1 歩で更新されるが、次の prolong で上書きされる。
+- **比 1 は複写**(補間も乾湿規則も適用しない = 恒等テストの前提。e は z + h で
+  回復するので、親の e = h + z と可換律によりビット一致)。比 > 1 は η 基準の
+  双線形補間と plan §3.5 のセル単位の乾湿規則(親の 2×2 が湿っていれば
+  h = max(η − z_子, 0)、乾いていれば子セルは乾き、受け側が乾いたエッジは 0)を
+  実装したが**未検証**(Phase 3 で比 3・5 の収束試験)。
+- **MPI の決定性**: 窓の写しは「自帯の行(セル)/自帯のセルが所有するスロット
+  (エッジ)だけを埋めたゼロ初期化配列」の par_allreduce_sumr(1 要素 1 寄与)。
+  子の帯は各ランクが確保範囲 jsh..jeh の行を(ハロ行も)同じ値で書くので
+  通信なし。collective の判定は木の構造だけ(§5)。
+- **出力・restart**: 各格子は自分の dir_result / dir_save に従来どおり出力・保存
+  する(格子ごとに別のディレクトリを与える)。ルートの fn_nest も結果
+  ディレクトリに複写する。m_nest 自体に保存状態はない(窓は毎ステップ再構築)。
+- **一覧ファイルの形式**: `id parent param_file [r r_t [i0 j0]]`。id は行番号、親は
+  先に並ぶ(parent < id)。子は i0 j0 必須(地理参照からの導出は未実装。
+  nest_read_list が par_stop)。
+
+### 検証(test/nest_identity。nesting_plan §9 の 3〜6)
+
+- ドライバ `nestcheck`(libencflow.a をリンク): `cut` モードで単独格子の初期水深の
+  部分窓を 17 桁で書き出し(子の fn_hinit。list-directed 読みで同一ビット)、
+  `run` モードでネスト系を進めながら毎ステップ子の内部(帯を除く)の h, vv を
+  親の足元と全域配列で比較する(一方向では親は子の影響を受けないので、
+  子の内部 == 親の同領域が補間と帯の完全性の証明)。
+- ケース: wave_s1(スキーム 1、帯 2、子 121×121 = 親セル 133..253。波は t ≈ 4 s に
+  帯へ達し以後帯を横切る)、wave(スキーム 3、帯 3)、chichibu 500 m・1 時間
+  (スキーム 3、帯 3。降雨・乾湿・河道マスク・動的開口。子 60×40 = 親セル
+  20..79 × 10..49。地形類はテキストの字句を切り出す cut_chichibu.py)。
+  いずれも全ステップで max|dh| = max|dvv| = 0。
+- restart: wave_s1 を t = 4 s で保存(各格子の dir_save は別)し再開。再開後も
+  子の内部 == 親で、Log の各行(t > 4 s)は中断なしランと字句同一(再開時刻の
+  行は区間統計が未蓄積 = 単一格子の restart と同じ性質)。
+- 無効時(fn_nest なし): reference 全 22 ケース PASS(-Ofast)。厳密フラグで
+  全 38 ケースが 0b 基準とビット一致(分岐の追加のみで経路不変)。
+- MPI(OpenMPI、np = 1, 2, 4): 8 ケースの reference PASS、twin 一致、
+  nest_identity の 3 ケース + restart が全ランク数で一致(窓の allreduce と
+  帯の各ランク書き込みが決定的)。-O0 -fcheck=all -finit-real=snan
+  -ffpe-trap=invalid のクリーンビルドで逐次と np=2 の nest_identity が一致
+  (確保範囲外参照・未初期化実数の読み出しなし。plan §9 の 3)。
+
+### 落とし穴
+
+- 恒等テストは波が帯に達しなければ何も検査していない(最初の wave 設定は子が
+  大きすぎて tt = 8 s の間に波が帯へ達せず、帯 2 でも「一致」した)。ケースを
+  作るときは帯が実際に使われることを結果で確かめる(wave は H0004 以降で帯の
+  h が初期値から動く)。
+- `grow_instances` は t_encflow の組込み代入(深いコピー)に依存する。t_encflow に
+  自分自身を指すポインタ成分を足さないこと。
