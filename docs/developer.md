@@ -9465,9 +9465,45 @@ fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dt
 - **容器の成分は allocatable**(排他切替で有効なモデルだけ確保)、**加算的モデルの
   成分は非 allocatable**(内部の配列が未確保なら追加メモリはほぼゼロで、
   `allocated` 検査を散らさない)。
-- **B 群(bind。Phase 0c)**: m_swflow_enc(+submodule)、m_ffactor、m_parallel の dcp。
-  宣言部にヘッダ注記を置き、文脈型と bind 手続きへの登録を Check_modstate.py が
-  検査する。新しいモジュールは A 群で書く。
+- **B 群(文脈の付け替え = bind。Phase 0c 実装)**: m_swflow_enc(+submodule)、
+  m_ffactor、m_parallel の dcp。モジュール変数のまま残し、インスタンスごとの
+  **枠(ctx)**に退避・復帰する:
+  - 各モジュールに `t_*_ctx` 型(モジュール変数と 1 対 1 の成分。既定初期化も同じ)
+    と枠の配列(`enc_ctx(:)`, `ff_ctx(:)`, `dcp_ctx(:)`)、`*_ctx_alloc(n)` と
+    `*_ctx_swap(kout, kin)`(現在のモジュール変数を枠 kout へ、枠 kin の中身を
+    現在へ。allocatable は `move_alloc` 2 回、スカラ・固定長配列は代入)。
+    未使用の枠は型の既定値 = 起動直後と同じ状態を返すので、2 つ目以降の
+    インスタンスの init は従来と同じ前提で始まる。
+  - submodule の私有状態(`t_enc_adv`/tx_mod、`t_enc_diff`/td_mod、`t_enc_nh`/nh_mod、
+    bc の f_bc_side/bt_cell/bc_eta_cell/infl_*)は**型定義と実体を親モジュール
+    m_swflow_enc の宣言部へ移した**(§13 の「状態は親、構築は submodule」の様式。
+    swap は親の変数しか見られないため)。sx_mod/tx_mod/td_mod/nh_mod は
+    **allocatable スカラー**にし、m_swflow_enc_init が確保・dispose が解放する
+    (move_alloc 1 回で丸ごと付け替えるため)。
+  - m_ffactor の手続きポインタ `p_ffactor` も枠に含める。枠の成分の既定は
+    `null()` とし、swap で null なら `ffactor_uninitialized` へ写す(手続き
+    ポインタ成分の既定初期化に手続き名を書けない処理系への配慮)。
+  - m_parallel: serial / mpi とも `par_decomp_ctx_alloc/swap`(同一インターフェース)。
+    mpi 版は js_tab/je_tab も枠に含める。nrank/nproc/is_root/MPI_WP は
+    プロセスの資源なので共有(X)。
+  - **m_main**: `encs(:)`(allocatable, target)と現在のインスタンスを指す
+    ポインタ `enc`。`m_main_instances_alloc(n)`(initialize より前に 1 回。
+    呼ばなければ initialize が n=1 で呼ぶ = 従来動作)と `m_main_select(k)`
+    (A 群はポインタの付け替え、B 群は 3 つの ctx_swap)。**n = 1 では ctx の
+    確保も swap も行わない**(メモリ・CPU ゼロ追加。方針 6)。複数インスタンスは
+    ENC のみ(STG は凍結・共有のまま。initialize で par_stop)。
+    MPI の終了(par_finalize)は、生きているインスタンスがなくなった finalize で
+    行う(MPI はプロセスの資源)。
+  - **検査**: `Check_modstate.py --check` は B 群の各変数が同じファイルの
+    `*_ctx_swap` 本体に `%名前` として現れることを検査する(型・swap への
+    追加漏れを機械的に検出)。手続きポインタ(`procedure(...)`)も台帳に載せる。
+  - **受入試験 test/nest_twin**: ドライバ `twin`(libencflow.a をリンク)が
+    wave と chichibu(500 m・1 時間)の 2 インスタンスを同一プロセスで
+    1 ステップずつ交互に進め、結果ディレクトリ(Log.txt を含む全ファイル)が
+    製品バイナリ encflow の単独実行とビット一致することを `./Run.sh` /
+    `./Run_MPI.sh N` で確認する。文脈に入れ忘れた変数があれば破れる。
+  - 新しいモジュールは A 群で書く。B 群にモジュール変数を増やすときは ctx 型と
+    swap に同時に足す(--check が漏れを報告する)。
 - **台帳・検査**: `python3 test/Scripts/Check_modstate.py --check` は src/ の
   module/submodule 仕様部の変数を許可表と突き合わせ、手続き内の初期化付き宣言
   (暗黙 SAVE)も検出する。許可表はスクリプト内(nesting_plan.md §3.2 の写し)。
@@ -9495,3 +9531,17 @@ fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dt
   reference 全 22 ケース PASS。-Ofast では Runge 列のみ差(上記)。厳密フラグで
   全テストディレクトリ(Log を出す 38 ケース)を基準バイナリと比較しビット一致
   (結果は nesting_plan.md §11 の 0b 記録)。
+- 0c(B 群の ctx swap・m_main の複数インスタンス): reference 全 22 ケース PASS
+  (-Ofast)。厳密フラグで全 38 ケースが 0b 基準とビット一致。**twin テスト**
+  (test/nest_twin。wave + chichibu 500 m の交互実行 = 単独実行): -Ofast・厳密
+  -O2・-O0 -fcheck=all -finit-real=snan -ffpe-trap=invalid の各ビルドで結果
+  ディレクトリ全ファイル一致(確保範囲外参照・未初期化実数の読み出しなし)。
+  MPI(OpenMPI 4、gfortran 13)np=1,2,4 で wave・chichibu・tide・dambreak・
+  pump・conduit・coastal_drain・nhwave_nh の reference PASS と twin 一致。
+  BMI(libencflow_bmi.so + test_encflow_bmi)完走・単独実行と一致。
+  Check_modstate は swap から 1 変数を落とした負例を検出する。
+  **注意: Ubuntu 24.04 の mpich(hydra)では全ランクがシングルトン起動する
+  (par_init の ENCFLOW_EXPECT_NP 検査が止める)。MPI 検証は OpenMPI で行った。**
+  **make の再ビルド判定はフラグの変更を見ない**(タイムスタンプのみ)ので、
+  フラグを変えた等価性検証では必ず `make clean` から作る(今回、clean なしの
+  -fcheck ビルドが実は旧フラグのままだった)。

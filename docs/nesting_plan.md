@@ -156,6 +156,9 @@ m_parallel の dcp は protected のまま、書き手は m_parallel 内の
   `t_encflow` の見た目はほとんど変わらない。
 - m_main は `enc(:)` と `enc_bind(k)` を持つ。bind の対象は B 群だけ
   (3 モジュール)。**ng = 1 では bind を呼ばない**。
+  (実装名〔0c〕: `encs(:)` + 現在を指すポインタ `enc`、
+  `m_main_instances_alloc(n)`、`m_main_select(k)`。本書の `enc(:)`・
+  `enc_bind` はこれらを指す)
 - 従来の run_step・run_init・run_close は不変(引数に `enc(k)` の成分を
   渡すだけ)。
 
@@ -529,6 +532,7 @@ m_nest は m_main より下、物理モジュールより上の層(状態の所�
 | 0b | **所有の明示(A 群)**: gwflow サブモデル・geomorph・intercept(A-1/A-2)、conduit/frost/structure/output(A-2)、glacier/lavaflow/saltwater(A-3。tick 系の引数追加)。モジュールごとに 1 コミット | 中(機械的。モジュール数が多い) | 各コミットで全 test ビット一致 |
 |    | **実施記録(2026-10-09)**: 0b-1 = m_output(t_output)・m_boundary_structure(フラグを t_boundary へ)。0b-2 = m_intercept(容器 t_icstate + bind_* ラッパ。m_evap の draw も容器経由)、m_geomorph(6 変数を成分化。submodule は gm%…)、m_glacier・m_lavaflow・m_saltwater(台帳を成分化。private 手続きに所有型を追加)。0b-3 = gwflow 族(容器 t_gwvert、lat/lay1/l2/cond/pump/frost を成分化、境界構造物・水質・塩水の公開口に状態引数を追加、Makefile に m_boundary → m_gwflow_conduit 依存)。規約の正本は developer.md §71。**検証で分かったこと**: -Ofast(fast-math+LTO)では等価なソースでも引数追加でインライン判断が変わり、Runge 列(RK 発動率)だけが 0.1% 揺れる。厳密 IEEE フラグ(-O2、fast-math/LTO/march なし)で変更前後のバイナリを同一環境で作ると全ケースビット一致。以後の等価リファクタの ULP=0 判定はこの厳密フラグで行う(§9 の 1 に反映) | | |
 | 0c | **bind(B 群)**: `t_decomp` の付け替え、`t_ffactor_ctx`、`t_enc_ctx`(散在変数を列挙)。静的検査スクリプト。m_main の `enc(:)`・`enc_bind`、ng=1 では呼ばない | 中 | 全 test ビット一致、MPI np=1,2,4、BMI 完走、**twin テスト** |
+|    | **実施記録(2026-10-09)**: 枠(ctx)方式で実装。m_swflow_enc に `t_enc_ctx`(モジュール変数 126 個と 1 対 1)+ `m_swflow_enc_ctx_alloc/swap`、m_ffactor に `t_ffactor_ctx`(手続きポインタ p_ffactor を含む)、m_parallel(serial/mpi 同一 I/F)に `t_decomp_ctx`(mpi は js_tab/je_tab も)。submodule の私有状態(tx_mod, td_mod, nh_mod, bc の 6 変数)は型と実体を親へ移し、sx/tx/td/nh_mod は allocatable スカラー(init 確保・dispose 解放。move_alloc で丸ごと付け替え)。m_main は `encs(:)` + ポインタ `enc`、`m_main_instances_alloc(n)` / `m_main_select(k)`(n=1 では ctx を確保も swap もしない。STG は par_stop。par_finalize は最後のインスタンスで)。Check_modstate は手続きポインタを台帳に加え、B 群の各変数が `*_ctx_swap` に現れることを検査する。twin テストは `test/nest_twin`(ドライバ twin。wave + chichibu 500 m 1 時間を交互実行し、単独実行の結果ディレクトリと全ファイル比較)。**検証**: reference 全 22 ケース PASS、厳密フラグ 38 ケース 0b 基準とビット一致、twin は -Ofast / 厳密 -O2 / -O0 -fcheck=all -finit-real=snan の各ビルドで一致、MPI(OpenMPI)np=1,2,4 で 8 ケース PASS + twin 一致、BMI 完走。正本は developer.md §71 | | |
 | 0d | m_swflow_enc の散在変数を用途別の派生型に束ねる(可読性の回収。bind のリストが短くなる) | 中(参照の書き換え) | ULP=0、実行時間の不変 |
 | 1 | m_nest: 一覧・幾何・整列検査、par_decomp の整列、窓の gather、prolong(セル量+エッジ量。nest_bc=2)、再帰 advance(r_t=1)、格子別出力、一方向 | 大 | 無効時一致、-fcheck np=2、**比 1:1 恒等(一方向)**、np=1,2,4、restart |
 | 2 | restrict(nest_fb=2 既定・1 選択)、所有権整列、ハロ、Log 要約 | 中 | **比 1:1 恒等(双方向。海岸線を含む)**、反射率、例題 |
