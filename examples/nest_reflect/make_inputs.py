@@ -28,3 +28,6 @@ for r in (3, 5):
     nxc = NP_FOOT * r
     write("data/e_child_r%d.txt" % r, nxc, nxc, (I0 - 1) * DXP, (I0 - 1) * DXP, DXP / r)
 write("data/e_fine.txt", NXP * 3, NXP * 3, 0.0, 0.0, DXP / 3)
+# 2 段: 孫(比 3 の子の中の比 3)。子セル 61..141(81 セル)を覆う 243×243
+G0, NG_FOOT = 61, 81
+write("data/e_grand.txt", NG_FOOT * 3, NG_FOOT * 3, (I0 - 1) * DXP + (G0 - 1) * DXP / 3, (I0 - 1) * DXP + (G0 - 1) * DXP / 3, DXP / 9)

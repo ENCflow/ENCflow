@@ -34,7 +34,7 @@ core = np.zeros((385, 385), bool)
 core[I0 + 1:I0 - 1 + NF - 2, I0 + 1:I0 - 1 + NF - 2] = True
 outside = ~inside
 
-runs = {"coarse": "result_coarse", "root_r3": "result_root_r3", "root_r5": "result_root_r5"}
+runs = {k: "result_" + k for k in ("coarse", "coarse_dt05", "root_r3", "root_r5", "root_r3t3", "root_r5t5", "root_r3t3_bc1", "root_2lv")}
 print("time  run        RMS_in    MAX_in    RMS_out   MAX_out   (η − η_fine→parent, m)")
 for n in (2, 4, 6, 8, 10):
     ef = fine_to_parent(load("result_fine", n)) - H0
@@ -47,13 +47,13 @@ for n in (2, 4, 6, 8, 10):
         ro, mo = stats(de, outside)
         print("%4d  %-9s  %.2e  %.2e  %.2e  %.2e" % (n, name, ri, mi, ro, mo))
     # 子格子そのもの(細格子基準。子を親格子へ平均してから)
-    for r in (3, 5):
-        d = "result_child_r%d" % r
+    for cname, r in (("child_r3", 3), ("child_r5", 5), ("child_r3t3", 3), ("child_r5t5", 5), ("child_r3t3_bc1", 3), ("child_2lv", 3)):
+        d = "result_" + cname
         if not os.path.exists(os.path.join(d, "E%04d.txt" % n)):
             continue
         ec = child_to_parent(load(d, n) - H0, r)
         de = ec - ef[I0 - 1:I0 - 1 + NF, I0 - 1:I0 - 1 + NF]
-        print("%4d  child_r%d   %.2e  %.2e  (子の足元内。親格子へ平均して比較)" % (n, r, np.sqrt(np.mean(de ** 2)), np.max(np.abs(de))))
+        print("%4d  %-14s %.2e  %.2e  (子の足元内。親格子へ平均して比較)" % (n, cname, np.sqrt(np.mean(de ** 2)), np.max(np.abs(de))))
 print()
 # 界面(子の足元の外周 1 セル)での入射振幅: 基準ランの η の最大(時間方向にも最大)
 ring = inside.copy(); ring[I0:I0 - 2 + NF, I0:I0 - 2 + NF] = False

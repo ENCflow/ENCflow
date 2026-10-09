@@ -1,0 +1,4 @@
+# 2 段: ルート → 子(比 3, r_t 3)→ 孫(比 3, r_t 3。子セル 61..141)
+1 0 param_root_2lv.txt
+2 1 param_child_2lv.txt 3 3 160 160
+3 2 param_grand_2lv.txt 3 3 61 61
