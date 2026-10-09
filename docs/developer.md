@@ -746,10 +746,14 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
 
 ## 12. モジュール設計の規約
 
-- 状態の実体はモジュール変数として保持し(命名は `xx_mod` 等で引数と区別)、
-  **プライベートルーチンは引数で受け取る**。依存が署名から読め、OpenMP の
-  shared/private 判断が局所化し、複数インスタンス化にも開いた構造になる。
-  直接参照してよいのは不変の小定数(die/dje 等)のみ。
+- **状態の実体はそのモジュールの型 `t_*`(またはその成分)に置き、公開入口から
+  プライベートルーチンへ引数で渡す**(2026-10-09 改定。§71)。モジュール変数に
+  状態を持つのは §71 の B 群(m_swflow_enc と submodule、m_ffactor、m_parallel の
+  dcp)に限り、増やすときは §71 の規律に従う。旧規約(状態をモジュール変数
+  `xx_mod` に置き private 手続きは引数で受ける)は B 群に残る形。依存が署名から
+  読め、OpenMP の shared/private 判断が局所化し、複数インスタンス化(ネスト格子)
+  に開いた構造になる。直接参照してよいのは不変の小定数(die/dje 等)のみ。
+  台帳と検査は test/Scripts/Check_modstate.py(§71)。
 - 例外: **実行コンテキスト(is_root, nrank, nproc, dcp)は use 直接参照して
   よい**(protected により書き込みはコンパイル時に禁止される)。ただし
   **dcp の直接参照はフェーズの入口まで。計算カーネルには範囲(js, je 等)を
@@ -9424,3 +9428,70 @@ fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dt
   基準とビット一致。x_ll, y_ll に
   原点を入れれば f_lonlat=0 でも絶対座標になる(既定 0 は相対座標)。
 - **残**: なし(他の投影は利用者側で変換)。
+
+
+## 71. 複数インスタンス化 Phase 0: 私有状態の「所有の明示」と等価性検証のフラグ(2026-10-09 実装)
+
+設計の正本は docs/nesting_plan.md §3.2(多段ネスティングの基盤として、1 プロセス
+内に複数の格子 = 複数の `t_encflow` を持つための準備)。Phase 0 の方針は
+「所有の明示を主、文脈の付け替え(bind)を従」。
+
+### 決定事項
+
+- **A 群(所有の明示)**: モジュール変数だった私有状態を、そのモジュールの公開型の
+  成分に移し、公開入口から private 手続きへ引数で渡す。対象と形:
+  - m_output: `t_output`(集約バッファ・装置番号)。`t_encflow%ou`。
+  - m_boundary_structure: `pump_src_checked` → `t_boundary` の成分(dispose で初期化)。
+  - m_intercept: 切替器に **サブモデル状態の容器** `t_icstate`(fixed / initloss の
+    allocatable 成分)を置き、`t_intercept%st` が持つ。手続きポインタの抽象
+    インターフェースは容器を第 1 引数で受け、束縛先は切替器末尾の薄いラッパ
+    (`bind_*`。容器から当該成分を取り出して実装へ渡す)。サブモデルの実装は自分の
+    型(`t_icfix` / `t_icinit`。成分 private)を第 1 引数で受ける。m_evap の draw は
+    `ic%draw(ic%st, i, j, dem)`。
+  - m_gwflow: 同じ容器方式(`t_gwvert`: bucket / greenampt)。加算的なモデルの状態は
+    `t_gwflow` の成分(`lat`: 層間共有の幾何・エッジ作業領域、`lay1`、`l2`、`cond`、
+    `pump`、`frost`)。層2・管路層・揚水は必要な他モデルの成分(`lat`、`l2`)を引数で
+    受ける。**他モジュールへの公開口は状態を引数に取る**: m_boundary_makebdc /
+    structure_makebdc に `gwc`(機場の管路取水)、m_wq_calc に `gwc`、
+    m_saltwater_init に `lat, lay1`。m_boundary は型 `t_gwcond` のため m_gwflow_conduit
+    を use する(Makefile の依存に追加)。
+  - m_geomorph: `crp/flv/dbr/spl/bsl/wrk` → `t_geomorph` の成分。submodule は `gm%crp%…`
+    で参照する(型定義は t_geomorph より前へ移動)。gm を受けない補助手続き
+    (require_work、slope8、read_release、save/restore_bedslide)は gm を引数に加えた。
+  - m_glacier(`glw`)、m_lavaflow(`lvw`)、m_saltwater(`sw`): 各 `t_*` の成分。
+    tick 系・gw_* 系の private 手続きに所有型を引数で加えた(§12 違反の是正)。
+- **intent**: 状態を含む所有型を受ける手続きは `intent(inout)`(m_main の run_step の
+  宣言も)。`pure` 関数は `intent(in)` のまま(状態を読むだけ)。
+- **容器の成分は allocatable**(排他切替で有効なモデルだけ確保)、**加算的モデルの
+  成分は非 allocatable**(内部の配列が未確保なら追加メモリはほぼゼロで、
+  `allocated` 検査を散らさない)。
+- **B 群(bind。Phase 0c)**: m_swflow_enc(+submodule)、m_ffactor、m_parallel の dcp。
+  宣言部にヘッダ注記を置き、文脈型と bind 手続きへの登録を Check_modstate.py が
+  検査する。新しいモジュールは A 群で書く。
+- **台帳・検査**: `python3 test/Scripts/Check_modstate.py --check` は src/ の
+  module/submodule 仕様部の変数を許可表と突き合わせ、手続き内の初期化付き宣言
+  (暗黙 SAVE)も検出する。許可表はスクリプト内(nesting_plan.md §3.2 の写し)。
+
+### 等価性検証で分かったこと(落とし穴)
+
+- **-Ofast(fast-math + LTO + march=native)では、ソースが等価でも Log が
+  ビット一致しないことがある**。手続きの引数追加でインライン判断が変わると
+  fast-math の再結合順が変わり、最終桁の違いが適応 RK の発動判定(閾値近傍)に
+  現れて **Runge 列だけ**が 0.1% 揺れた(他の列は印字桁で一致)。
+  厳密 IEEE のフラグ(`-O2 -fopenmp`、fast-math・LTO・march なし)で両バイナリを
+  作ると全ケースがビット一致した。**等価リファクタの ULP=0 判定は、この厳密
+  フラグで変更前後のバイナリを同一環境で作って比較する**(reference との比較は
+  reference が別環境・別フラグ由来のため最終桁が合わないことがある)。
+- NH ソルバの OpenMP reduction(max・和)は実行間で非決定(nhshelf で確認)。
+  ビット比較は OMP_NUM_THREADS=1 で行う。
+- 手続き内の初期化付き宣言は暗黙 SAVE(m_record の flxy 番兵、user_initial の pi
+  の 2 件を実行文の代入に是正。Phase 0a)。
+
+### 検証(2026-10-09。gfortran 13、逐次)
+
+- 0b-1(m_output・構造物フラグ): reference を持つ全 22 ケース PASS、基準バイナリ
+  と -Ofast でもビット一致。
+- 0b-2(intercept・geomorph・glacier・lavaflow・saltwater)+ 0b-3(gwflow 族):
+  reference 全 22 ケース PASS。-Ofast では Runge 列のみ差(上記)。厳密フラグで
+  全テストディレクトリ(Log を出す 38 ケース)を基準バイナリと比較しビット一致
+  (結果は nesting_plan.md §11 の 0b 記録)。

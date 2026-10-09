@@ -479,7 +479,11 @@ m_nest は m_main より下、物理モジュールより上の層(状態の所�
 
 1. **無効時**: fn_nest なしで wave・chichibu ほか全 test/ の逐次ビット
    一致、MPI np=1,2,4 一致、BMI ドライバ完走(Phase 0 の bind 恒等、
-   Phase 1 以降の分岐追加のたびに)。
+   Phase 1 以降の分岐追加のたびに)。**ビット一致の判定は、変更前後の
+   バイナリを同一環境・厳密 IEEE フラグ(-O2、fast-math/LTO/march なし)・
+   OMP_NUM_THREADS=1 で作って Log を比較する**(0b の記録。-Ofast では
+   等価なソースでも最終桁が動く)。reference との比較(Run.sh)は別途 PASS を
+   確認する。
 2. **twin テスト(Phase 0 の合否)**: 同一ケースの 2 インスタンスを
    1 ステップずつ交互に進め(bind を切替)、それぞれの Log が単独ランと
    ビット一致。文脈に入れ忘れた変数があれば必ず破れる。異なるケース
@@ -523,6 +527,7 @@ m_nest は m_main より下、物理モジュールより上の層(状態の所�
 | 0a | 監査(暗黙 SAVE・装置番号・モジュール変数の台帳=§3.2 の分類表の確定)と小修正 | 小 | 全 test ビット一致 |
 |    | **実施記録(2026-10-09)**: 暗黙 SAVE 2 件(m_record の flxy 番兵、user_initial の pi)を実行文の代入に是正。台帳は `test/Scripts/Check_modstate.py` が機械生成し、`--check` で §3.2 の分類表(スクリプト内の許可表)との不一致と暗黙 SAVE を終了コード 1 で報告する。実査で表に追加: m_gwflow_pump の namelist 作業配列 gwp_cell/gwp_val(A)、m_output の un_fnolist/wk_out_i(A)。list_* の namelist 作業配列と STG は X(共有・凍結)。検証: gfortran 13 逐次で reference を持つ全 22 ケース PASS。reference が別環境(MPI ビルド)由来で最終桁が違う 4 ケースは、変更前バイナリを同一環境で作って Log を比較し、chichibu・nhwave・nhwave_nh はビット一致、nhshelf は同一バイナリの再実行でも Runge 列や Cn_max が揺れる(NH ソルバの OpenMP reduction〔max・和〕の順序非決定性。既存の性質)。OMP_NUM_THREADS=1 では同一バイナリの 2 回実行が一致し、変更前後のビルドもビット一致。**恒等テスト(§9-4)は NH を含む場合は単一スレッドで行う**(または NH の reduction を決定的にする課題を別に立てる) | | |
 | 0b | **所有の明示(A 群)**: gwflow サブモデル・geomorph・intercept(A-1/A-2)、conduit/frost/structure/output(A-2)、glacier/lavaflow/saltwater(A-3。tick 系の引数追加)。モジュールごとに 1 コミット | 中(機械的。モジュール数が多い) | 各コミットで全 test ビット一致 |
+|    | **実施記録(2026-10-09)**: 0b-1 = m_output(t_output)・m_boundary_structure(フラグを t_boundary へ)。0b-2 = m_intercept(容器 t_icstate + bind_* ラッパ。m_evap の draw も容器経由)、m_geomorph(6 変数を成分化。submodule は gm%…)、m_glacier・m_lavaflow・m_saltwater(台帳を成分化。private 手続きに所有型を追加)。0b-3 = gwflow 族(容器 t_gwvert、lat/lay1/l2/cond/pump/frost を成分化、境界構造物・水質・塩水の公開口に状態引数を追加、Makefile に m_boundary → m_gwflow_conduit 依存)。規約の正本は developer.md §71。**検証で分かったこと**: -Ofast(fast-math+LTO)では等価なソースでも引数追加でインライン判断が変わり、Runge 列(RK 発動率)だけが 0.1% 揺れる。厳密 IEEE フラグ(-O2、fast-math/LTO/march なし)で変更前後のバイナリを同一環境で作ると全ケースビット一致。以後の等価リファクタの ULP=0 判定はこの厳密フラグで行う(§9 の 1 に反映) | | |
 | 0c | **bind(B 群)**: `t_decomp` の付け替え、`t_ffactor_ctx`、`t_enc_ctx`(散在変数を列挙)。静的検査スクリプト。m_main の `enc(:)`・`enc_bind`、ng=1 では呼ばない | 中 | 全 test ビット一致、MPI np=1,2,4、BMI 完走、**twin テスト** |
 | 0d | m_swflow_enc の散在変数を用途別の派生型に束ねる(可読性の回収。bind のリストが短くなる) | 中(参照の書き換え) | ULP=0、実行時間の不変 |
 | 1 | m_nest: 一覧・幾何・整列検査、par_decomp の整列、窓の gather、prolong(セル量+エッジ量。nest_bc=2)、再帰 advance(r_t=1)、格子別出力、一方向 | 大 | 無効時一致、-fcheck np=2、**比 1:1 恒等(一方向)**、np=1,2,4、restart |
