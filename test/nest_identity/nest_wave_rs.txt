@@ -1,0 +1,3 @@
+# 再開テスト用(Run_nest.sh が rsA/rsB の root を順に使う。子の param は leg ごとに差し替える)
+1     0       param_wave_rs_root.txt
+2     1       param_wave_rs_child.txt  1  1    133  133

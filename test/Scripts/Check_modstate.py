@@ -40,7 +40,7 @@ ALLOWED = {
                             "js_tab": "B", "je_tab": "B", "MPI_WP": "X", "owns_mpi": "X", "par_init_done": "X",
                             "dcp_ctx": "X"},
     # m_main のインスタンス格納(encs(:))と選択(enc => encs(kcur))
-    "m_main.f90": {"encs": "X", "enc": "X", "ninst": "X", "kcur": "X"},
+    "m_main.f90": {"encs": "X", "enc": "X", "ninst": "X", "kcur": "X", "nest": "X"},
     # list_* の namelist 作業配列(読み込み時の一時領域。読んだ直後に型へ写す)
     "list_boundary.f90": {"src_cell": "X", "src_val": "X", "stage_cell": "X", "stage_val": "X",
                           "inflow_cell": "X", "inflow_val": "X", "inflow_cs": "X", "inflow_qs": "X"},

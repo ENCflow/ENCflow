@@ -1,0 +1,9 @@
+result_*
+data_chichibu_child/
+hinit_*.txt
+Screen*.log
+nestcheck
+nestcheck_mpi
+save_wave_rs_*/
+param_wave_rs_root.txt
+param_wave_rs_child.txt

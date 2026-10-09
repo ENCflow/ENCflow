@@ -1,0 +1,3 @@
+# id  parent  param_file               r  r_t  i0   j0
+1     0       param_wave_s1_root.txt
+2     1       param_wave_s1_child.txt  1  1    133  133
