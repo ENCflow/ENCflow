@@ -77,9 +77,13 @@ module m_nest
     integer :: pi1 = 0, pi2 = 0       ! 足元(親セル範囲)
     integer :: pj1 = 0, pj2 = 0
     real :: dd = 0.0                  ! 子の乾燥判定水深(p%dd)
-    ! 親の窓の写し(t^n。全ランク同値)
+    ! 親の窓の写し(全ランク同値)。wc0/we0 = t^n、wc1/we1 = t^{n+1}(親の 1 歩の
+    ! 前後に nest_capture が写す)、wc/we = prolong が読む「サブステップ開始時刻」の
+    ! 値(r_t = 1 または最初のサブステップでは wc0 の複写、以後は時間の線形補間。§3.4)
     real, allocatable :: wc(:,:,:)    ! セル量 (ncq, pi1-1:pi2+1, pj1-1:pj2+1)
     real, allocatable :: we(:,:,:,:)  ! エッジ量 (1:2 = uv,mn, 1:4, pi1-2:pi2+1, pj1-2:pj2+1)
+    real, allocatable :: wc0(:,:,:), wc1(:,:,:)
+    real, allocatable :: we0(:,:,:,:), we1(:,:,:,:)
     real, allocatable :: wr(:,:,:)    ! 子→親の作業配列(1:8, 足元。nest_restrict が使う)
     ! 子側の作業配列(自ランクの確保範囲の行)
     integer :: jlo = 1, jhi = 0       ! 子の確保範囲を 1..nyc に切った行範囲
@@ -203,20 +207,21 @@ subroutine nest_read_list(fn, fn_root, nt)
     nt%g(k)%nest_bc = lst%nest_bc
     nt%g(k)%nest_fb = lst%nest_fb
     if (lst%nest_nb /= 0 .and. lst%nest_nb < 2) call par_stop("list_nest: nest_nb must be 0 (auto) or >= 2")
-    if (lst%nest_bc /= 2) then
-      call par_stop("list_nest: nest_bc="//itoa(lst%nest_bc)//" is not implemented yet (Phase 1 supports 2)")
+    if (lst%nest_bc /= 1 .and. lst%nest_bc /= 2) then
+      call par_stop("list_nest: nest_bc="//itoa(lst%nest_bc)//" is not implemented (1: water level only, "// &
+                    "2: water level + edge fluxes; 3 = Flather and 4 = sponge are Phase 4)")
     end if
     if (lst%nest_fb < 0 .or. lst%nest_fb > 2) then
       call par_stop("list_nest: nest_fb="//itoa(lst%nest_fb)//" is not implemented (0: one-way, 1: area "// &
                     "average, 2: wet-aware average; 3 = conservative correction is Phase 4)")
     end if
-    if (nt%g(k)%rt /= 1) call par_stop("nest: r_t > 1 is not implemented yet (Phase 3); use r_t = 1")
   end do
   call par_info("nest: "//itoa(n)//" grids (root = 1)")
   do k = 2, n
     call par_info("nest:   grid "//itoa(k)//": parent "//itoa(nt%g(k)%parent)//", r = "//itoa(nt%g(k)%r)// &
                   ", r_t = "//itoa(nt%g(k)%rt)//", corner at parent cell ("//itoa(nt%g(k)%i0)//", "// &
-                  itoa(nt%g(k)%j0)//"), "//trim(fb_name(nt%g(k)%nest_fb))//", param "//trim(nt%g(k)%fn_param))
+                  itoa(nt%g(k)%j0)//"), "//trim(bc_name(nt%g(k)%nest_bc))//", "//trim(fb_name(nt%g(k)%nest_fb))// &
+                  ", param "//trim(nt%g(k)%fn_param))
   end do
 end subroutine
 
@@ -289,6 +294,9 @@ subroutine nest_setup_child(nt, c, pp, gp, pc, gc, bc)
     if (allocated(n%we)) deallocate(n%we)
     allocate(n%wc(ncq, n%pi1-1:n%pi2+1, n%pj1-1:n%pj2+1), source = 0.0)
     allocate(n%we(2, 4, n%pi1-2:n%pi2+1, n%pj1-2:n%pj2+1), source = 0.0)
+    if (allocated(n%wc0)) deallocate(n%wc0, n%wc1, n%we0, n%we1)
+    allocate(n%wc0, n%wc1, source = n%wc)
+    allocate(n%we0, n%we1, source = n%we)
     if (allocated(n%wr)) deallocate(n%wr)
     allocate(n%wr(8, n%pi1:n%pi2, n%pj1:n%pj2), source = 0.0)
     ! 子側の作業配列(自ランクの確保範囲)
@@ -313,36 +321,51 @@ subroutine nest_setup_child(nt, c, pp, gp, pc, gc, bc)
 end subroutine
 
 !----------------------------------------------------------------------
-! 格子 k(親。select 済み)の窓を t^n で写す(全ての子について)
+! 格子 k(親。select 済み)の窓を写す(全ての子について)。
+!   lev = 0: 親の 1 歩の前(t^n)→ wc0/we0、lev = 1: 1 歩の後(t^{n+1})→ wc1/we1
 !----------------------------------------------------------------------
-subroutine nest_capture(nt, k, s)
+subroutine nest_capture(nt, k, s, lev)
   type(t_nest), intent(inout) :: nt
-  integer, intent(in) :: k
+  integer, intent(in) :: k, lev
   type(t_state), intent(in) :: s
-  integer :: ic, c, i, j
+  integer :: ic, c
   do ic = 1, nt%g(k)%nchild
     c = nt%g(k)%child(ic)
     associate (n => nt%g(c))
-      n%wc = 0.0
-      do j = max(dcp%js, n%pj1 - 1), min(dcp%je, n%pj2 + 1)
-        do i = n%pi1 - 1, n%pi2 + 1
-          n%wc(q_h,  i, j) = s%h(i, j)
-          n%wc(q_e,  i, j) = s%e(i, j)
-          n%wc(q_u,  i, j) = s%u(i, j)
-          n%wc(q_v,  i, j) = s%v(i, j)
-          n%wc(q_vv, i, j) = s%vv(i, j)
-          n%wc(q_m,  i, j) = s%m(i, j)
-          n%wc(q_n,  i, j) = s%n(i, j)
-        end do
-      end do
-      n%we = 0.0
-      call m_swflow_enc_nest_export(n%pi1 - 2, n%pi2 + 1, n%pj1 - 2, n%pj2 + 1, n%we)
-      if (nproc > 1) then
-        call share(n%wc, size(n%wc))
-        call share(n%we, size(n%we))
+      if (lev == 0) then
+        call capture_one(n, s, n%wc0, n%we0)
+      else
+        if (n%rt == 1) cycle            ! r_t = 1 では t^{n+1} の写しは使わない
+        call capture_one(n, s, n%wc1, n%we1)
       end if
     end associate
   end do
+end subroutine
+
+subroutine capture_one(n, s, wc, we)
+  type(t_nest_grid), intent(in) :: n
+  type(t_state), intent(in) :: s
+  real, intent(inout) :: wc(:, n%pi1-1:, n%pj1-1:)
+  real, intent(inout) :: we(:, :, n%pi1-2:, n%pj1-2:)
+  integer :: i, j
+  wc = 0.0
+  do j = max(dcp%js, n%pj1 - 1), min(dcp%je, n%pj2 + 1)
+    do i = n%pi1 - 1, n%pi2 + 1
+      wc(q_h,  i, j) = s%h(i, j)
+      wc(q_e,  i, j) = s%e(i, j)
+      wc(q_u,  i, j) = s%u(i, j)
+      wc(q_v,  i, j) = s%v(i, j)
+      wc(q_vv, i, j) = s%vv(i, j)
+      wc(q_m,  i, j) = s%m(i, j)
+      wc(q_n,  i, j) = s%n(i, j)
+    end do
+  end do
+  we = 0.0
+  call m_swflow_enc_nest_export(n%pi1 - 2, n%pi2 + 1, n%pj1 - 2, n%pj2 + 1, we)
+  if (nproc > 1) then
+    call share(wc, size(wc))
+    call share(we, size(we))
+  end if
 end subroutine
 
 !----------------------------------------------------------------------
@@ -351,15 +374,24 @@ end subroutine
 !   η 基準の双線形補間と §3.5 のセル単位の乾湿規則(未検証。Phase 3 で
 !   比 3・5 の収束試験を行う)
 !----------------------------------------------------------------------
-subroutine nest_prolong(nt, c, g, s)
+subroutine nest_prolong(nt, c, g, s, alpha)
   type(t_nest), intent(inout) :: nt
   integer, intent(in) :: c
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
+  real, intent(in) :: alpha                 ! サブステップ開始時刻の位置 (t − t^n)/dt_親 ∈ [0, 1)
   integer :: i, j, k, kk, ie, je, ip, jp, in, jn
   real :: hc, hn
   associate (n => nt%g(c))
     if (.not. n%ready) call par_stop("nest_prolong: grid "//itoa(c)//" is not set up")
+    ! 窓の時間補間(alpha = 0 は t^n の複写 = r_t = 1 の経路と同一ビット)
+    if (alpha == 0.0) then
+      n%wc = n%wc0
+      n%we = n%we0
+    else
+      n%wc = (1.0 - alpha) * n%wc0 + alpha * n%wc1
+      n%we = (1.0 - alpha) * n%we0 + alpha * n%we1
+    end if
     ! --- セル量 ---
     do j = n%jlo, n%jhi
       do i = 1, n%nxc
@@ -369,17 +401,20 @@ subroutine nest_prolong(nt, c, g, s)
           ip = n%i0 + i - 1
           jp = n%j0 + j - 1
           s%h(i, j)  = n%wc(q_h,  ip, jp)
-          s%u(i, j)  = n%wc(q_u,  ip, jp)
-          s%v(i, j)  = n%wc(q_v,  ip, jp)
-          s%vv(i, j) = n%wc(q_vv, ip, jp)
-          s%m(i, j)  = n%wc(q_m,  ip, jp)
-          s%n(i, j)  = n%wc(q_n,  ip, jp)
+          if (n%nest_bc /= 1) then
+            s%u(i, j)  = n%wc(q_u,  ip, jp)
+            s%v(i, j)  = n%wc(q_v,  ip, jp)
+            s%vv(i, j) = n%wc(q_vv, ip, jp)
+            s%m(i, j)  = n%wc(q_m,  ip, jp)
+            s%n(i, j)  = n%wc(q_n,  ip, jp)
+          end if
           s%e(i, j)  = s%z(i, j) + s%h(i, j)
         else
-          call interp_cell(n, i, j, s)
+          call interp_cell(n, i, j, s, n%nest_bc /= 1)
         end if
       end do
     end do
+    if (n%nest_bc == 1) return       ! 水位のみ(TUNAMI 型): 流速・エッジ量は子が計算
     ! --- エッジ量(帯セルに接する全スロット)---
     do j = n%jlo, n%jhi
       do i = 1, n%nxc
@@ -579,6 +614,16 @@ end subroutine
 !========================== PRIVATE ROUTINES ==========================
 !======================================================================
 
+function bc_name(bc) result(name)
+  integer, intent(in) :: bc
+  character(len=40) :: name
+  select case (bc)
+  case (1); name = "band: water level"
+  case (2); name = "band: water level + edge fluxes"
+  case default; name = "band: ?"
+  end select
+end function
+
 function fb_name(fb) result(name)
   integer, intent(in) :: fb
   character(len=40) :: name
@@ -613,10 +658,11 @@ end subroutine
 ! 全て湿っていれば η を補間して h = max(η − z_子, 0)、u, v, m, n, vv も
 ! 双線形。親に乾きがあれば子セルは乾き(h = 0、速度・流量 0)
 !----------------------------------------------------------------------
-subroutine interp_cell(n, i, j, s)
+subroutine interp_cell(n, i, j, s, with_uv)
   type(t_nest_grid), intent(in) :: n
   integer, intent(in) :: i, j
   type(t_state), intent(inout) :: s
+  logical, intent(in) :: with_uv            ! .false. = 水位のみ(nest_bc = 1)
   real :: xc, yc, wx, wy, eta, hmin
   integer :: ia, ja
   real :: w(2,2)
@@ -635,7 +681,9 @@ subroutine interp_cell(n, i, j, s)
   if (hmin > n%dd) then
     eta = bil(q_e)
     s%h(i, j) = max(eta - s%z(i, j), 0.0)
-    if (s%h(i, j) > 0.0) then
+    if (.not. with_uv) then
+      continue
+    else if (s%h(i, j) > 0.0) then
       s%u(i, j)  = bil(q_u)
       s%v(i, j)  = bil(q_v)
       s%vv(i, j) = bil(q_vv)
@@ -646,7 +694,9 @@ subroutine interp_cell(n, i, j, s)
     end if
   else
     s%h(i, j) = 0.0
-    s%u(i, j) = 0.0; s%v(i, j) = 0.0; s%vv(i, j) = 0.0; s%m(i, j) = 0.0; s%n(i, j) = 0.0
+    if (with_uv) then
+      s%u(i, j) = 0.0; s%v(i, j) = 0.0; s%vv(i, j) = 0.0; s%m(i, j) = 0.0; s%n(i, j) = 0.0
+    end if
   end if
   s%e(i, j) = s%z(i, j) + s%h(i, j)
 contains

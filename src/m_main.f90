@@ -334,20 +334,23 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! ネスト系の時間進行(§3.4 の再帰。Phase 1: r_t = 1、一方向)
-!   親を 1 歩進める前に親の窓を t^n で写し、親の 1 歩の後に各子の帯を
-!   t^n の窓で埋めて子を 1 歩進める(子の子は再帰の中で進む)
+!   親を 1 歩進める前に親の窓を t^n で、後に t^{n+1} で写し、各子を r_t 回の
+!   サブステップで進める(各サブステップの開始時刻の帯は 2 枚の線形補間。
+!   子の子は再帰の中で進む)。最後に子→親の置換
 !----------------------------------------------------------------------
 recursive subroutine nest_advance(k)
   integer, intent(in) :: k
   integer :: ic, c, kk
   call m_main_select(k)
-  if (nest%g(k)%nchild > 0) call nest_capture(nest, k, enc%s)
+  if (nest%g(k)%nchild > 0) call nest_capture(nest, k, enc%s, 0)   ! t^n の窓
   call step_instance()
+  if (nest%g(k)%nchild > 0) call nest_capture(nest, k, enc%s, 1)   ! t^{n+1} の窓(r_t > 1 の子だけ)
   do ic = 1, nest%g(k)%nchild
     c = nest%g(k)%child(ic)
     do kk = 1, nest%g(c)%rt
       call m_main_select(c)
-      call nest_prolong(nest, c, enc%g, enc%s)
+      ! サブステップ開始時刻 t^n + (kk-1)·dt_c の帯(親の t^n と t^{n+1} の線形補間)
+      call nest_prolong(nest, c, enc%g, enc%s, real(kk - 1) / real(nest%g(c)%rt))
       call nest_advance(c)
     end do
     ! 子→親の置換(双方向。c の子は c の advance の中で c へ置換済み)。
