@@ -1,0 +1,3 @@
+# 双方向(nest_fb=2)の比 1:1 恒等: ルート全域が単独ランとビット一致すること
+1     0       param_wave_tw_root.txt
+2     1       param_wave_tw_child.txt  1  1    133  133

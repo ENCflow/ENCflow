@@ -7,11 +7,11 @@ sdir=$(dirname "$(readlink -f "$0")")
 "$sdir/../Scripts/Check_mode.sh" "$mode" || exit 1
 if [ "$mode" = mpi ]; then
     make -s MODE=mpi nestcheck_mpi links || exit 1
-    run="mpirun -np $NP $MPIRUN_OPTS"; exe=./nestcheck_mpi
+    run="mpirun -np $NP $MPIRUN_OPTS"; exe=./nestcheck_mpi; sfx=_mpi
     export ENCFLOW_EXPECT_NP="$NP"
 else
     make -s nestcheck links || exit 1
-    run=; exe=./nestcheck
+    run=; exe=./nestcheck; sfx=
 fi
 rm -rf result_*
 fail=0
@@ -65,4 +65,28 @@ if $run $exe run param_chichibu_root.txt 20 10 3 > Screen_chichibu.log 2>&1; the
 else
     echo "nest_identity chichibu: FAIL"; grep "nestcheck" Screen_chichibu.log | tail -5; fail=1
 fi
+# --- 双方向(nest_fb=2)の比 1:1 恒等(Phase 2): 子の内部 == 親(nestcheck)に加え、
+#     ルートの最終状態(save の state.dat / swflow_enc.dat)が単独ランとバイト一致すること
+#     (置換が恒等になる = 子→親の経路が親を乱さない)。wave_s1 と chichibu(乾湿あり)---
+rm -rf save_wave_tw_* save_chichibu_tw_*
+cp hinit_wave_s1_child.txt hinit_wave_tw_child.txt
+tw_ok=1
+for v in wave chichibu; do
+    if [ $v = wave ]; then args="133 133 2"; else args="20 10 3"; fi
+    $run ./encflow$sfx param_${v}_tw_single.txt > Screen_${v}_tw_single.log 2>&1 || { echo "ERROR: $v two-way single run failed"; tw_ok=0; continue; }
+    if $run $exe run param_${v}_tw_root.txt $args > Screen_${v}_tw.log 2>&1; then
+        grep "nestcheck: steps" Screen_${v}_tw.log
+    else
+        echo "nest_identity two-way $v: FAIL (child interior != parent)"; grep "nestcheck\|ERROR" Screen_${v}_tw.log | tail -5; tw_ok=0; continue
+    fi
+    for f in state.dat swflow_enc.dat; do
+        if cmp -s save_${v}_tw_single/$f save_${v}_tw_root/$f; then
+            echo "nest_identity two-way $v: root $f IDENTICAL to the single run"
+        else
+            echo "nest_identity two-way $v: root $f DIFFER from the single run"; tw_ok=0
+        fi
+    done
+    grep "nest:   grid 2 -> parent" Screen_${v}_tw.log
+done
+if [ $tw_ok -eq 1 ]; then echo "nest_identity two-way: PASS"; else echo "nest_identity two-way: FAIL"; fail=1; fi
 if [ $fail -eq 0 ]; then echo "nest_identity ($mode): verification PASS"; else echo "nest_identity ($mode): verification FAIL"; exit 1; fi
