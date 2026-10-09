@@ -1,7 +1,7 @@
 module m_swflow_enc
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo, zbank_min
-  use m_boundary, only : t_boundary, e_struct_dam
+  use m_boundary, only : t_boundary, e_struct_dam, e_bc_wall
   use m_state, only : t_state
   use m_ffactor, only : m_ffactor_init, m_ffactor_calc, m_ffactor_dispose
   use list_enc, only : t_list_enc, list_enc_read
@@ -22,6 +22,7 @@ module m_swflow_enc
   public :: m_swflow_enc_init
   public :: m_swflow_enc_calc
   public :: m_swflow_enc_dispose
+  public :: m_swflow_enc_ctx_alloc, m_swflow_enc_ctx_swap   ! 文脈の付け替え(複数インスタンス。§71)
   public :: sblk                      ! 塞がり率(submodule の build_cwd が参照。同下)
   public :: is_wall                   ! 堤防壁の述語(submodule から参照。private だと
                                       !   gfortran の LTO でシンボル未解決になるため公開)
@@ -325,7 +326,95 @@ module m_swflow_enc
                                      ! s%bd_active のときだけ確保。§63)
     logical :: initialized = .false.
   end type
-  type(t_enc_status) :: sx_mod
+  type(t_enc_status), allocatable :: sx_mod   ! エッジ状態(同上: init が確保、dispose が解放)
+
+  ! ---- submodule の私有状態(型と実体を親に置く。構築・使用は各 submodule。
+  !      developer.md §13「状態は親、構築は submodule」の様式。allocatable
+  !      スカラーにしてあるのは文脈の付け替え(ctx_swap)を move_alloc 1 回で
+  !      行うため。m_swflow_enc_init が確保し dispose が解放する)----
+  type t_enc_adv
+    ! --- スキーム1(セル中心勾配 v1)の内部場 ---
+    ! セル中心での移流項(第1添字は 1:2 = x, y 成分。風上重み付き勾配)
+    real, allocatable :: taxy(:,:,:)
+    real, allocatable :: ulm(:,:)    ! セル中心でのu*lm (移流項計算用)
+    real, allocatable :: vlm(:,:)    ! セル中心でのv*lm (移流項計算用)
+    ! --- スキーム2,3(運動量保存形。developer.md §68.6)の内部場 ---
+    ! エッジ上の移流項(1:4, 0:nx, jsh-1:jeh。uv/mn と同じ格納規約)。
+    ! prepare が時刻 n の uv/m/n/h から全エッジぶんを前計算し、momentum の
+    ! adv_edge は読むだけ(uv は単一バッファで momentum 中に更新されるため、
+    ! 他エッジの uv を momentum 内で読んではならない。§7・§8)
+    real, allocatable :: tae(:,:,:)
+    real :: w8lt(1:4) = 0.0          ! k 方向エッジの運動量検査体積の横断幅
+  end type
+  type(t_enc_adv), allocatable :: tx_mod    ! 移流項の私有状態(実装は submodule m_swflow_enc_adv)
+
+  type t_enc_diff
+    ! セル中心での拡散項(第1添字は1:2でx,y成分)
+    real, allocatable :: td(:,:,:)
+    ! セル中心での渦動粘性係数 (m2/s)
+    real, allocatable :: nu(:,:)
+    ! 方向別係数 l8(k)/(w8dr(k)·dx·dy)(diff_init が設定)
+    real :: wd8(1:8) = 0.0
+    ! 陽解法の安定上界 1/(dt·Σwd8)(diff_init が設定)
+    real :: nu_max = 0.0
+    ! ゼロ方程式モデルの係数 α·√g(diff_init が設定)
+    real :: cnu = 0.0
+    ! 安定上界クランプの警告を表示済みか(初回のみ表示)
+    logical :: clamp_warned = .false.
+  end type
+  type(t_enc_diff), allocatable :: td_mod   ! 拡散項の私有状態(実装は submodule m_swflow_enc_diff)
+
+  type t_enc_nh
+    real, allocatable :: uv0(:,:,:)       ! ステップ頭のエッジ流速 u^n (1:4, 0:nx, jsh-1:jeh)
+    real, allocatable :: phi(:,:)         ! NH ポテンシャル φ (1:nx, jsh:jeh)
+    real, allocatable :: phi1(:,:)        ! Jacobi の書き込み先 / CG の方向ベクトル p
+    real, allocatable :: rhs(:,:)         ! Jacobi: β D a*、CG: D a*(Version 2 では Picard ごとに更新)
+    real, allocatable :: rhs0(:,:)        ! Version 2: Σ_k c_k a*_k(勾配項つきの右辺の a* 部分)
+    real, allocatable :: work2(:,:)       ! Version 2: Picard の前回の φ
+    real, allocatable :: beta(:,:)        ! h²/4(NH セル以外 0)
+    real, allocatable :: diag(:,:)        ! Jacobi: 1 + β Σ w、CG: 1/β + Σ w
+    real, allocatable :: rr(:,:)          ! CG 残差
+    real, allocatable :: ap(:,:)          ! CG の M p
+    real, allocatable :: dast(:,:)        ! D a*(NH 候補セル。検出と右辺に使う)
+    real, allocatable :: work(:,:)        ! 活性集合の膨張用(0/1。halo 交換のため実数)
+    real, allocatable :: brk(:,:)         ! 砕波セル(0/1。halo 交換のため実数)
+    integer, allocatable :: cmask(:,:)    ! NH セル (1:nx, jsh:jeh)
+    integer, allocatable :: fmask(:,:)    ! 強制境界のセル (1:nx, jsh:jeh)。1: 水位規定セル、
+                                          !   または枠外に開いた面(区間流入・自由流出・放射)を
+                                          !   持つセル。規定流束・規定水位と射影が干渉して
+                                          !   発散するため常に静水圧(init で静的に構築)
+    logical, allocatable :: emask(:,:,:)  ! NH エッジ (1:4, 0:nx, jsh-1:jeh)
+    real, allocatable :: zprev(:,:)       ! f_nh_bottom: 前の射影で見た z (1:nx, jsh:jeh)
+    real, allocatable :: wb(:,:)          ! f_nh_bottom: 前の射影で得た底面速度 ż_b (m/s)
+    real, allocatable :: zdd(:,:)         ! f_nh_bottom: 底面加速度 z̈_b(担当帯。NH セル以外 0)
+    real, allocatable :: zsrc(:,:)        ! f_nh_bottom: 源項 −(h/4)(z̈_b + z̈_s)(担当帯)
+    real, allocatable :: rhsb(:,:)        ! f_nh_bottom: 平滑化の解の間、主系の右辺の退避
+    logical :: bot_first = .true.         ! f_nh_bottom: init 後の最初の射影(z̈ = 0)
+    real :: wd(1:8) = 0.0                 ! 発散の重み l8(k)/(dx·dy)
+    real :: wl(1:8) = 0.0                 ! ラプラシアンの重み l8(k)/(dx·dy·w8dr(k))
+    ! 統計(dispose で表示)
+    integer :: nstep = 0
+    integer(8) :: itsum = 0
+    integer :: itmax_seen = 0
+    integer(8) :: actsum = 0              ! 活性セル数の累計(ランク局所)
+    integer(8) :: brksum = 0              ! 砕波セル数の累計(ランク局所)
+    integer :: nfail = 0                  ! 不収束のステップ数
+  end type
+  type(t_enc_nh), allocatable :: nh_mod     ! NH の私有状態(実装は submodule m_swflow_enc_nh)
+
+  ! 境界条件の私有状態(bc_init が構築)
+  integer :: f_bc_side(1:4) = e_bc_wall     ! 外縁4辺の境界条件型(W,E,N,S)
+  integer, allocatable :: bt_cell(:,:)      ! 外縁面の型(セル別。(j,W/E)・(i,N/S)。
+                                            !   辺の型を初期値とし流入区間が上書き)
+  real, allocatable :: bc_eta_cell(:,:)     ! 放射境界の基準水位(セル別)
+  real, allocatable :: infl_wseg(:)         ! 各流入区間の開口幅の合計 (m)(受け口係数込み)
+  real, allocatable :: infl_cfac(:,:)       ! 区間の面エントリ別の受け口係数 (1:ncell, 1:ninflow)。
+                                            !   流入セルが流量を渡せる内部エッジ(有効な近傍)の数を
+                                            !   区間内の最大数で正規化したもの(壁の角・nodata に接する
+                                            !   端のセルで < 1。直線区間の内部は厳密に 1.0)。均等按分と
+                                            !   重み按分の両方の重みに乗じる。§69.9 対策 (a)
+  real, allocatable :: infl_hseg(:)         ! 区間の面エントリ別水深(重み按分の
+                                            !   作業配列。全ランクが同値を共有)
 
 
   !--------------------------------------------------------------------
@@ -367,6 +456,144 @@ module m_swflow_enc
   real :: mn2dh(1:8)             ! k軸の単位幅流量から中心セルの水深減少量への変換係数
 
 
+  !--------------------------------------------------------------------
+  ! 文脈の付け替え(複数インスタンス。developer.md §71・nesting_plan §3.2 B 群)
+  !   本モジュールのモジュール変数(parameter を除く全て。上の宣言と
+  !   1 対 1)をインスタンスごとに保持する枠。m_swflow_enc_ctx_swap が
+  !   現在のモジュール変数と枠の中身を入れ替える(allocatable は
+  !   move_alloc、スカラ・固定長配列は代入)。未使用の枠の成分は上の
+  !   既定値と同じ(= 起動直後の状態)。
+  !   モジュール変数を増減したら、この型と ctx_swap の両方を同時に更新
+  !   すること(test/Scripts/Check_modstate.py --check が漏れを検出する)。
+  !   単一インスタンスでは alloc も swap も呼ばれない(ゼロ追加)
+  !--------------------------------------------------------------------
+  type t_enc_ctx
+    integer :: f_advection_term
+    integer :: f_pressure_term
+    integer :: f_gravity_correction
+    integer :: f_exflux_reduction
+    integer :: f_hcap_upwind
+    integer :: f_adaptive_runge
+    integer :: f_friction_fastmath
+    integer :: f_advection_scheme
+    integer :: f_rivermouth_drop
+    integer :: f_opening_dynamic
+    integer :: f_advection_donor
+    integer :: f_dry_head_cap
+    integer :: f_bank_mode
+    integer :: f_diffusion_term
+    integer :: f_nonhydrostatic = 0
+    real :: nh_hmin = 0.1
+    integer :: nh_solver = 2
+    integer :: nh_itmax = 500
+    real :: nh_tol = 1.0e-6
+    integer :: f_nh_adaptive = 0
+    integer :: nh_detector = 1
+    real :: nh_chi_on = 0.06
+    integer :: nh_margin = 0
+    real :: nh_amin = 1.0e-5
+    real :: nh_arel = 1.0e-3
+    integer :: f_nh_breaking = 0
+    real :: nh_break_alpha = 0.6
+    real :: nh_break_beta = 0.3
+    integer :: nh_break_type = 3
+    real :: nh_break_fr = 0.6
+    real :: nh_break_slope = 0.3
+    integer :: nh_break_margin = 0
+    real :: nh_break_visc = 0.0
+    integer :: nh_bc_margin = 0
+    integer :: f_nh_slope = 0
+    integer :: f_nh_bottom = 0
+    logical :: have_diff = .false.
+    real, allocatable :: nh_nub(:,:)
+    logical :: nh_active = .false.
+    real, allocatable :: nh_he(:,:,:)
+    real :: p_diagratio
+    real :: p_adv_upwind_index
+    real :: p_adprunge_thresh
+    real :: p_diffusion_nu
+    real :: p_diffusion_alpha
+    logical :: have_open_bc = .false.
+    integer :: db_res = 0
+    real :: db_tanphi = 0.0
+    real :: db_sgrav = 0.0
+    real :: db_vstop = 0.0
+    real :: db_cstar = 0.0
+    real :: db_cmin = 0.0
+    real :: db_d50v = 0.0
+    real :: db_kcol = 0.0
+    real :: db_mu = 0.0
+    real :: db_xi = 0.0
+    real :: db_tauy = 0.0
+    integer :: db_curv = 0
+    real, allocatable :: acv(:,:)
+    logical :: have_bank = .false.
+    integer, allocatable :: nwall(:,:)
+    logical :: have_swall = .false.
+    integer :: f_swall_mode = 0
+    integer :: f_bank_opening
+    logical :: have_bopen = .false.
+    integer :: f_channel_advection
+    logical :: have_width = .false.
+    logical :: have_frw = .false.
+    logical :: adv_drop_rw = .false.
+    real, allocatable :: frw(:,:,:)
+    real, allocatable :: wfrac(:,:)
+    logical :: have_fwd = .false.
+    logical :: fwd_restored = .false.
+    real, allocatable :: fwd(:,:,:)
+    logical :: have_breach = .false.
+    integer :: nbr = 0
+    type(t_breach), allocatable :: br(:)
+    integer, allocatable :: ibr0(:), ibr1(:)
+    integer, allocatable :: ibrs(:)
+    logical :: have_cwd = .false.
+    logical :: cwd_restored = .false.
+    real, allocatable :: cwxd(:,:), cwyd(:,:)
+    real, allocatable :: cwx(:,:), cwy(:,:)
+    logical :: have_sect = .false.
+    logical :: have_edge_flux = .false.
+    real :: sect_m = 0.0
+    real :: sect_mp1 = 1.0
+    real :: sect_rmp1 = 1.0
+    real :: sect_mfac = 0.0
+    real, allocatable :: screst(:,:)
+    real, allocatable :: sdep(:,:)
+    real, allocatable :: frw0(:,:,:)
+    type(t_enc_status), allocatable :: sx_mod
+    type(t_enc_adv), allocatable :: tx_mod
+    type(t_enc_diff), allocatable :: td_mod
+    type(t_enc_nh), allocatable :: nh_mod
+    integer :: f_bc_side(1:4) = e_bc_wall
+    integer, allocatable :: bt_cell(:,:)
+    real, allocatable :: bc_eta_cell(:,:)
+    real, allocatable :: infl_wseg(:)
+    real, allocatable :: infl_cfac(:,:)
+    real, allocatable :: infl_hseg(:)
+    integer :: din2(1:8)
+    integer :: djn2(1:8)
+    real :: w8x(1:8)
+    real :: w8y(1:8)
+    real :: w8dr(1:8)
+    real :: w8dr2(1:8)
+    real :: l8x(1:8)
+    real :: l8y(1:8)
+    real :: l8(1:8)
+    logical :: skip8(1:8)
+    real :: lpx, lpy, ldx, ldy
+    real :: r8x(1:8)
+    real :: r8y(1:8)
+    real :: n8x(1:8)
+    real :: n8y(1:8)
+    real :: w8mx(1:8)
+    real :: w8my(1:8)
+    real :: mn2dh(1:8)
+  end type
+  type(t_enc_ctx), allocatable :: enc_ctx(:)
+
+  !--------------------------------------------------------------------
+  ! submodule 実装の手続きインターフェース
+  !--------------------------------------------------------------------
   interface
     module subroutine adv_init(p, g)
       type(t_sysparam), intent(in) :: p
@@ -550,7 +777,11 @@ subroutine m_swflow_enc_init(p, g, b, s)
   type(t_list_enc) :: list
   type(t_list_channel) :: chlist
 
-
+  ! 私有状態の実体を確保する(allocatable スカラー。文脈の付け替えの対象)
+  if (.not. allocated(sx_mod)) allocate(sx_mod)
+  if (.not. allocated(tx_mod)) allocate(tx_mod)
+  if (.not. allocated(td_mod)) allocate(td_mod)
+  if (.not. allocated(nh_mod)) allocate(nh_mod)
 
   ! ENCパラメータファイルを読み込む
   ! fn_enc 未指定なら既定値で続行(geoinfo/initial と異なり必須にしない)
@@ -1021,6 +1252,10 @@ subroutine m_swflow_enc_dispose(p)
   call adv_dispose
   call diff_dispose
   call nh_dispose
+  if (allocated(sx_mod)) deallocate(sx_mod)
+  if (allocated(tx_mod)) deallocate(tx_mod)
+  if (allocated(td_mod)) deallocate(td_mod)
+  if (allocated(nh_mod)) deallocate(nh_mod)
 end subroutine
 
 
@@ -2984,6 +3219,154 @@ subroutine update_af(g, s)
   end do
   !$omp end parallel do
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 文脈の付け替え(複数インスタンス。§71)
+!   alloc は m_main_instances_alloc が n > 1 のときだけ呼ぶ。swap は現在
+!   のモジュール変数を枠 kout に退避し、枠 kin の中身を現在にする。
+!   並びは宣言部の順(Check_modstate.py が名前の網羅を検査する)
+!----------------------------------------------------------------------
+subroutine m_swflow_enc_ctx_alloc(n)
+  integer, intent(in) :: n
+  if (allocated(enc_ctx)) call par_stop("m_swflow_enc_ctx_alloc: already allocated")
+  if (n < 1) call par_stop("m_swflow_enc_ctx_alloc: n must be >= 1")
+  allocate(enc_ctx(n))
+end subroutine
+
+subroutine m_swflow_enc_ctx_swap(kout, kin)
+  integer, intent(in) :: kout, kin
+  if (.not. allocated(enc_ctx)) call par_stop("m_swflow_enc_ctx_swap: not allocated")
+  if (kout == kin) return
+  associate (c => enc_ctx(kout), d => enc_ctx(kin))
+    c%f_advection_term = f_advection_term;          f_advection_term = d%f_advection_term
+    c%f_pressure_term = f_pressure_term;            f_pressure_term = d%f_pressure_term
+    c%f_gravity_correction = f_gravity_correction;  f_gravity_correction = d%f_gravity_correction
+    c%f_exflux_reduction = f_exflux_reduction;      f_exflux_reduction = d%f_exflux_reduction
+    c%f_hcap_upwind = f_hcap_upwind;                f_hcap_upwind = d%f_hcap_upwind
+    c%f_adaptive_runge = f_adaptive_runge;          f_adaptive_runge = d%f_adaptive_runge
+    c%f_friction_fastmath = f_friction_fastmath;    f_friction_fastmath = d%f_friction_fastmath
+    c%f_advection_scheme = f_advection_scheme;      f_advection_scheme = d%f_advection_scheme
+    c%f_rivermouth_drop = f_rivermouth_drop;        f_rivermouth_drop = d%f_rivermouth_drop
+    c%f_opening_dynamic = f_opening_dynamic;        f_opening_dynamic = d%f_opening_dynamic
+    c%f_advection_donor = f_advection_donor;        f_advection_donor = d%f_advection_donor
+    c%f_dry_head_cap = f_dry_head_cap;              f_dry_head_cap = d%f_dry_head_cap
+    c%f_bank_mode = f_bank_mode;                    f_bank_mode = d%f_bank_mode
+    c%f_diffusion_term = f_diffusion_term;          f_diffusion_term = d%f_diffusion_term
+    c%f_nonhydrostatic = f_nonhydrostatic;          f_nonhydrostatic = d%f_nonhydrostatic
+    c%nh_hmin = nh_hmin;                            nh_hmin = d%nh_hmin
+    c%nh_solver = nh_solver;                        nh_solver = d%nh_solver
+    c%nh_itmax = nh_itmax;                          nh_itmax = d%nh_itmax
+    c%nh_tol = nh_tol;                              nh_tol = d%nh_tol
+    c%f_nh_adaptive = f_nh_adaptive;                f_nh_adaptive = d%f_nh_adaptive
+    c%nh_detector = nh_detector;                    nh_detector = d%nh_detector
+    c%nh_chi_on = nh_chi_on;                        nh_chi_on = d%nh_chi_on
+    c%nh_margin = nh_margin;                        nh_margin = d%nh_margin
+    c%nh_amin = nh_amin;                            nh_amin = d%nh_amin
+    c%nh_arel = nh_arel;                            nh_arel = d%nh_arel
+    c%f_nh_breaking = f_nh_breaking;                f_nh_breaking = d%f_nh_breaking
+    c%nh_break_alpha = nh_break_alpha;              nh_break_alpha = d%nh_break_alpha
+    c%nh_break_beta = nh_break_beta;                nh_break_beta = d%nh_break_beta
+    c%nh_break_type = nh_break_type;                nh_break_type = d%nh_break_type
+    c%nh_break_fr = nh_break_fr;                    nh_break_fr = d%nh_break_fr
+    c%nh_break_slope = nh_break_slope;              nh_break_slope = d%nh_break_slope
+    c%nh_break_margin = nh_break_margin;            nh_break_margin = d%nh_break_margin
+    c%nh_break_visc = nh_break_visc;                nh_break_visc = d%nh_break_visc
+    c%nh_bc_margin = nh_bc_margin;                  nh_bc_margin = d%nh_bc_margin
+    c%f_nh_slope = f_nh_slope;                      f_nh_slope = d%f_nh_slope
+    c%f_nh_bottom = f_nh_bottom;                    f_nh_bottom = d%f_nh_bottom
+    c%have_diff = have_diff;                        have_diff = d%have_diff
+    call move_alloc(nh_nub, c%nh_nub);                call move_alloc(d%nh_nub, nh_nub)
+    c%nh_active = nh_active;                        nh_active = d%nh_active
+    call move_alloc(nh_he, c%nh_he);                 call move_alloc(d%nh_he, nh_he)
+    c%p_diagratio = p_diagratio;                    p_diagratio = d%p_diagratio
+    c%p_adv_upwind_index = p_adv_upwind_index;      p_adv_upwind_index = d%p_adv_upwind_index
+    c%p_adprunge_thresh = p_adprunge_thresh;        p_adprunge_thresh = d%p_adprunge_thresh
+    c%p_diffusion_nu = p_diffusion_nu;              p_diffusion_nu = d%p_diffusion_nu
+    c%p_diffusion_alpha = p_diffusion_alpha;        p_diffusion_alpha = d%p_diffusion_alpha
+    c%have_open_bc = have_open_bc;                  have_open_bc = d%have_open_bc
+    c%db_res = db_res;                              db_res = d%db_res
+    c%db_tanphi = db_tanphi;                        db_tanphi = d%db_tanphi
+    c%db_sgrav = db_sgrav;                          db_sgrav = d%db_sgrav
+    c%db_vstop = db_vstop;                          db_vstop = d%db_vstop
+    c%db_cstar = db_cstar;                          db_cstar = d%db_cstar
+    c%db_cmin = db_cmin;                            db_cmin = d%db_cmin
+    c%db_d50v = db_d50v;                            db_d50v = d%db_d50v
+    c%db_kcol = db_kcol;                            db_kcol = d%db_kcol
+    c%db_mu = db_mu;                                db_mu = d%db_mu
+    c%db_xi = db_xi;                                db_xi = d%db_xi
+    c%db_tauy = db_tauy;                            db_tauy = d%db_tauy
+    c%db_curv = db_curv;                            db_curv = d%db_curv
+    call move_alloc(acv, c%acv);                   call move_alloc(d%acv, acv)
+    c%have_bank = have_bank;                        have_bank = d%have_bank
+    call move_alloc(nwall, c%nwall);                 call move_alloc(d%nwall, nwall)
+    c%have_swall = have_swall;                      have_swall = d%have_swall
+    c%f_swall_mode = f_swall_mode;                  f_swall_mode = d%f_swall_mode
+    c%f_bank_opening = f_bank_opening;              f_bank_opening = d%f_bank_opening
+    c%have_bopen = have_bopen;                      have_bopen = d%have_bopen
+    c%f_channel_advection = f_channel_advection;    f_channel_advection = d%f_channel_advection
+    c%have_width = have_width;                      have_width = d%have_width
+    c%have_frw = have_frw;                          have_frw = d%have_frw
+    c%adv_drop_rw = adv_drop_rw;                    adv_drop_rw = d%adv_drop_rw
+    call move_alloc(frw, c%frw);                   call move_alloc(d%frw, frw)
+    call move_alloc(wfrac, c%wfrac);                 call move_alloc(d%wfrac, wfrac)
+    c%have_fwd = have_fwd;                          have_fwd = d%have_fwd
+    c%fwd_restored = fwd_restored;                  fwd_restored = d%fwd_restored
+    call move_alloc(fwd, c%fwd);                   call move_alloc(d%fwd, fwd)
+    c%have_breach = have_breach;                    have_breach = d%have_breach
+    c%nbr = nbr;                                    nbr = d%nbr
+    call move_alloc(br, c%br);                    call move_alloc(d%br, br)
+    call move_alloc(ibr0, c%ibr0);                  call move_alloc(d%ibr0, ibr0)
+    call move_alloc(ibr1, c%ibr1);                  call move_alloc(d%ibr1, ibr1)
+    call move_alloc(ibrs, c%ibrs);                  call move_alloc(d%ibrs, ibrs)
+    c%have_cwd = have_cwd;                          have_cwd = d%have_cwd
+    c%cwd_restored = cwd_restored;                  cwd_restored = d%cwd_restored
+    call move_alloc(cwxd, c%cwxd);                  call move_alloc(d%cwxd, cwxd)
+    call move_alloc(cwyd, c%cwyd);                  call move_alloc(d%cwyd, cwyd)
+    call move_alloc(cwx, c%cwx);                   call move_alloc(d%cwx, cwx)
+    call move_alloc(cwy, c%cwy);                   call move_alloc(d%cwy, cwy)
+    c%have_sect = have_sect;                        have_sect = d%have_sect
+    c%have_edge_flux = have_edge_flux;              have_edge_flux = d%have_edge_flux
+    c%sect_m = sect_m;                              sect_m = d%sect_m
+    c%sect_mp1 = sect_mp1;                          sect_mp1 = d%sect_mp1
+    c%sect_rmp1 = sect_rmp1;                        sect_rmp1 = d%sect_rmp1
+    c%sect_mfac = sect_mfac;                        sect_mfac = d%sect_mfac
+    call move_alloc(screst, c%screst);                call move_alloc(d%screst, screst)
+    call move_alloc(sdep, c%sdep);                  call move_alloc(d%sdep, sdep)
+    call move_alloc(frw0, c%frw0);                  call move_alloc(d%frw0, frw0)
+    call move_alloc(sx_mod, c%sx_mod);                call move_alloc(d%sx_mod, sx_mod)
+    call move_alloc(tx_mod, c%tx_mod);                call move_alloc(d%tx_mod, tx_mod)
+    call move_alloc(td_mod, c%td_mod);                call move_alloc(d%td_mod, td_mod)
+    call move_alloc(nh_mod, c%nh_mod);                call move_alloc(d%nh_mod, nh_mod)
+    c%f_bc_side = f_bc_side;                        f_bc_side = d%f_bc_side
+    call move_alloc(bt_cell, c%bt_cell);               call move_alloc(d%bt_cell, bt_cell)
+    call move_alloc(bc_eta_cell, c%bc_eta_cell);           call move_alloc(d%bc_eta_cell, bc_eta_cell)
+    call move_alloc(infl_wseg, c%infl_wseg);             call move_alloc(d%infl_wseg, infl_wseg)
+    call move_alloc(infl_cfac, c%infl_cfac);             call move_alloc(d%infl_cfac, infl_cfac)
+    call move_alloc(infl_hseg, c%infl_hseg);             call move_alloc(d%infl_hseg, infl_hseg)
+    c%din2 = din2;                                  din2 = d%din2
+    c%djn2 = djn2;                                  djn2 = d%djn2
+    c%w8x = w8x;                                    w8x = d%w8x
+    c%w8y = w8y;                                    w8y = d%w8y
+    c%w8dr = w8dr;                                  w8dr = d%w8dr
+    c%w8dr2 = w8dr2;                                w8dr2 = d%w8dr2
+    c%l8x = l8x;                                    l8x = d%l8x
+    c%l8y = l8y;                                    l8y = d%l8y
+    c%l8 = l8;                                      l8 = d%l8
+    c%skip8 = skip8;                                skip8 = d%skip8
+    c%lpx = lpx;                                    lpx = d%lpx
+    c%lpy = lpy;                                    lpy = d%lpy
+    c%ldx = ldx;                                    ldx = d%ldx
+    c%ldy = ldy;                                    ldy = d%ldy
+    c%r8x = r8x;                                    r8x = d%r8x
+    c%r8y = r8y;                                    r8y = d%r8y
+    c%n8x = n8x;                                    n8x = d%n8x
+    c%n8y = n8y;                                    n8y = d%n8y
+    c%w8mx = w8mx;                                  w8mx = d%w8mx
+    c%w8my = w8my;                                  w8my = d%w8my
+    c%mn2dh = mn2dh;                                mn2dh = d%mn2dh
+  end associate
 end subroutine
 
 end module

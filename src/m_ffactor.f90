@@ -15,6 +15,7 @@ module m_ffactor
   public :: m_ffactor_init
   public :: m_ffactor_calc
   public :: m_ffactor_dispose
+  public :: m_ffactor_ctx_alloc, m_ffactor_ctx_swap
 
 
   !--------------------------------------------------------------------
@@ -38,6 +39,20 @@ module m_ffactor
     end function
   end interface
   procedure(procedure_ffactor), pointer :: p_ffactor => ffactor_uninitialized
+
+  ! 文脈の付け替え(複数インスタンス。developer.md §71)
+  !   モジュール変数の全てをインスタンスごとに保持する枠。成分は上の
+  !   モジュール変数と 1 対 1(増やしたら必ずここと ctx_swap にも足す。
+  !   test/Scripts/Check_modstate.py --check が漏れを検出する)。
+  !   p_ffactor の既定は null にしておき、swap 時に未初期化へ写す
+  !   (手続きポインタ成分の既定初期化に手続き名を書けない処理系対策)
+  type t_ffactor_ctx
+    real :: powf = 0.0
+    integer :: ff_nn = 0
+    real, allocatable :: ff_h(:), ff_f(:), ff_a0(:), ff_a1(:)
+    procedure(procedure_ffactor), pointer, nopass :: p_ffactor => null()
+  end type
+  type(t_ffactor_ctx), allocatable :: ff_ctx(:)
 
 
 contains
@@ -99,6 +114,39 @@ subroutine m_ffactor_dispose
   if (allocated(ff_f)) deallocate(ff_f)
   if (allocated(ff_a0)) deallocate(ff_a0)
   if (allocated(ff_a1)) deallocate(ff_a1)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 文脈の付け替え(複数インスタンス。§71)
+!   alloc は m_main_instances_alloc が n > 1 のときだけ呼ぶ。swap は
+!   現在のモジュール変数を枠 kout に退避し、枠 kin の中身を現在にする
+!----------------------------------------------------------------------
+subroutine m_ffactor_ctx_alloc(n)
+  integer, intent(in) :: n
+  if (allocated(ff_ctx)) call par_stop("m_ffactor_ctx_alloc: already allocated")
+  if (n < 1) call par_stop("m_ffactor_ctx_alloc: n must be >= 1")
+  allocate(ff_ctx(n))
+end subroutine
+
+subroutine m_ffactor_ctx_swap(kout, kin)
+  integer, intent(in) :: kout, kin
+  if (.not. allocated(ff_ctx)) call par_stop("m_ffactor_ctx_swap: not allocated")
+  if (kout == kin) return
+  associate (c => ff_ctx(kout), d => ff_ctx(kin))
+    c%powf = powf;    powf = d%powf
+    c%ff_nn = ff_nn;  ff_nn = d%ff_nn
+    call move_alloc(ff_h, c%ff_h);    call move_alloc(d%ff_h, ff_h)
+    call move_alloc(ff_f, c%ff_f);    call move_alloc(d%ff_f, ff_f)
+    call move_alloc(ff_a0, c%ff_a0);  call move_alloc(d%ff_a0, ff_a0)
+    call move_alloc(ff_a1, c%ff_a1);  call move_alloc(d%ff_a1, ff_a1)
+    c%p_ffactor => p_ffactor
+    if (associated(d%p_ffactor)) then
+      p_ffactor => d%p_ffactor
+    else
+      p_ffactor => ffactor_uninitialized   ! 未使用の枠 = 起動直後と同じ
+    end if
+  end associate
 end subroutine
 
 

@@ -17,19 +17,8 @@ submodule(m_swflow_enc) m_swflow_enc_bc
   use m_parallel, only : dcp, par_stop, par_allreduce_sumr
   implicit none
 
-  ! 境界条件の私有状態(bc_init が構築)
-  integer :: f_bc_side(1:4) = e_bc_wall     ! 外縁4辺の境界条件型(W,E,N,S)
-  integer, allocatable :: bt_cell(:,:)      ! 外縁面の型(セル別。(j,W/E)・(i,N/S)。
-                                            !   辺の型を初期値とし流入区間が上書き)
-  real, allocatable :: bc_eta_cell(:,:)     ! 放射境界の基準水位(セル別)
-  real, allocatable :: infl_wseg(:)         ! 各流入区間の開口幅の合計 (m)(受け口係数込み)
-  real, allocatable :: infl_cfac(:,:)       ! 区間の面エントリ別の受け口係数 (1:ncell, 1:ninflow)。
-                                            !   流入セルが流量を渡せる内部エッジ(有効な近傍)の数を
-                                            !   区間内の最大数で正規化したもの(壁の角・nodata に接する
-                                            !   端のセルで < 1。直線区間の内部は厳密に 1.0)。均等按分と
-                                            !   重み按分の両方の重みに乗じる。§69.9 対策 (a)
-  real, allocatable :: infl_hseg(:)         ! 区間の面エントリ別水深(重み按分の
-                                            !   作業配列。全ランクが同値を共有)
+  ! 境界条件の私有状態(f_bc_side, bt_cell, bc_eta_cell, infl_*)は親モジュールに置く
+  ! (§13 の様式。文脈の付け替えの対象。構築は bc_init)
   ! 辺の法線方向の方位(W, E, N, S)
   integer, parameter :: kn_side(1:4) = [4, 5, 2, 7]
   ! エッジ格納スロットの k 成分と符号(親の continuous と同じ写像)

@@ -28,6 +28,7 @@ module m_parallel
    private
    public :: par_init, par_finalize
    public :: par_decomp_init
+   public :: par_decomp_ctx_alloc, par_decomp_ctx_swap
    public :: par_info, par_warn, par_stop, par_abort
    public :: par_barrier
    public :: par_allreduce_min
@@ -63,6 +64,15 @@ module m_parallel
 
    type(t_decomp), protected, save :: dcp
 
+   ! 文脈の付け替え(複数インスタンス。developer.md §71)
+   !   インスタンス k の分割情報を保持する枠。par_decomp_ctx_swap が
+   !   モジュール変数(dcp)と枠の中身を入れ替える。
+   !   単一インスタンスでは alloc も swap も呼ばれない(メモリ・CPU ゼロ追加)
+   type :: t_decomp_ctx
+      type(t_decomp) :: dcp
+   end type t_decomp_ctx
+   type(t_decomp_ctx), allocatable, save :: dcp_ctx(:)
+
 contains
 
    subroutine par_init()
@@ -89,6 +99,25 @@ contains
       dcp%rank_n = -1
       dcp%rank_s = -1
    end subroutine par_decomp_init
+
+   subroutine par_decomp_ctx_alloc(n)
+      ! 複数インスタンス用の枠を n 個確保する(m_main_instances_alloc が
+      ! n > 1 のときだけ呼ぶ)。par_decomp_init より前に 1 回だけ
+      integer, intent(in) :: n
+      if (allocated(dcp_ctx)) call par_stop("par_decomp_ctx_alloc: already allocated")
+      if (n < 1) call par_stop("par_decomp_ctx_alloc: n must be >= 1")
+      allocate(dcp_ctx(n))
+   end subroutine par_decomp_ctx_alloc
+
+   subroutine par_decomp_ctx_swap(kout, kin)
+      ! 現在の分割情報を枠 kout に退避し、枠 kin の分割情報を現在にする。
+      ! 未使用の枠は型の既定値(= 起動直後と同じ)を返す
+      integer, intent(in) :: kout, kin
+      if (.not. allocated(dcp_ctx)) call par_stop("par_decomp_ctx_swap: not allocated")
+      if (kout == kin) return
+      dcp_ctx(kout)%dcp = dcp
+      dcp = dcp_ctx(kin)%dcp
+   end subroutine par_decomp_ctx_swap
 
    subroutine par_halo_cell(a)
       ! セル配列の行ハロ交換。逐次では何もしない。

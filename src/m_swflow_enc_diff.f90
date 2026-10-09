@@ -22,21 +22,7 @@ submodule(m_swflow_enc) m_swflow_enc_diff
   !   砕波域の渦粘性(nh_break_visc > 0。plan §15): 親の nh_nub(前ステップの
   !   nh_project が書いて halo 交換済み)を ν に加える。f_diffusion_term = 0
   !   でも nh_break_visc > 0 なら拡散項を計算する(have_diff)。
-  type t_enc_diff
-    ! セル中心での拡散項(第1添字は1:2でx,y成分)
-    real, allocatable :: td(:,:,:)
-    ! セル中心での渦動粘性係数 (m2/s)
-    real, allocatable :: nu(:,:)
-    ! 方向別係数 l8(k)/(w8dr(k)·dx·dy)(diff_init が設定)
-    real :: wd8(1:8) = 0.0
-    ! 陽解法の安定上界 1/(dt·Σwd8)(diff_init が設定)
-    real :: nu_max = 0.0
-    ! ゼロ方程式モデルの係数 α·√g(diff_init が設定)
-    real :: cnu = 0.0
-    ! 安定上界クランプの警告を表示済みか(初回のみ表示)
-    logical :: clamp_warned = .false.
-  end type
-  type(t_enc_diff) :: td_mod
+  ! 私有状態 t_enc_diff / td_mod は親モジュールに置く(§13 の様式。文脈の付け替えの対象)
 
 contains
 !----------------------------------------------------------------------

@@ -3,21 +3,7 @@ submodule(m_swflow_enc) m_swflow_enc_adv
   use m_parallel, only : dcp   ! 親経由のホスト結合は nvfortran バグ回避のため直接 use
   implicit none
 
-  type t_enc_adv
-    ! --- スキーム1(セル中心勾配 v1)の内部場 ---
-    ! セル中心での移流項(第1添字は 1:2 = x, y 成分。風上重み付き勾配)
-    real, allocatable :: taxy(:,:,:)
-    real, allocatable :: ulm(:,:)    ! セル中心でのu*lm (移流項計算用)
-    real, allocatable :: vlm(:,:)    ! セル中心でのv*lm (移流項計算用)
-    ! --- スキーム2,3(運動量保存形。developer.md §68.6)の内部場 ---
-    ! エッジ上の移流項(1:4, 0:nx, jsh-1:jeh。uv/mn と同じ格納規約)。
-    ! prepare が時刻 n の uv/m/n/h から全エッジぶんを前計算し、momentum の
-    ! adv_edge は読むだけ(uv は単一バッファで momentum 中に更新されるため、
-    ! 他エッジの uv を momentum 内で読んではならない。§7・§8)
-    real, allocatable :: tae(:,:,:)
-    real :: w8lt(1:4) = 0.0          ! k 方向エッジの運動量検査体積の横断幅
-  end type
-  type(t_enc_adv) :: tx_mod
+  ! 私有状態 t_enc_adv / tx_mod は親モジュールに置く(§13 の様式。文脈の付け替えの対象)
 
   ! 運動量保存形の方位定数(k=1..4 のみ。prepare は基準セルから k=1..4 の
   ! エッジを書くため)。線 k の方向 d = (din, djn)、横断方向 +t = (-d_y, d_x)

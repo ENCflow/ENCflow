@@ -90,7 +90,7 @@ $(MODESTAMP):
 main.o: m_main.o
 m_main.o: m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o m_state.o m_geomorph.o m_gwflow.o \
 	m_saltwater.o m_util.o \
-	m_intercept.o m_evap.o m_meteo.o m_wq.o m_driftwood.o m_bldgdebris.o m_snow.o m_glacier.o m_lavaflow.o m_bedmotion.o m_swi.o m_record.o m_swflow.o m_output.o m_fileio.o m_sysdep_util.o $(PAR_OBJ)
+	m_intercept.o m_evap.o m_meteo.o m_wq.o m_driftwood.o m_bldgdebris.o m_snow.o m_glacier.o m_lavaflow.o m_bedmotion.o m_swi.o m_record.o m_swflow.o m_swflow_enc.o m_ffactor.o m_output.o m_fileio.o m_sysdep_util.o $(PAR_OBJ)
 m_sysparam.o: list_sysparam.o m_fileio.o m_util.o $(PAR_OBJ)
 m_geoinfo.o: m_sysparam.o list_geoinfo.o list_channel.o m_fileio.o m_georef.o m_geotiff.o m_util.o $(PAR_OBJ)
 m_precip.o: m_sysparam.o list_precip.o m_state.o m_geoinfo.o m_meteo.o m_util.o m_fileio.o $(PAR_OBJ)

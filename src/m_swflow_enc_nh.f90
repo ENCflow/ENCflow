@@ -56,43 +56,7 @@ submodule(m_swflow_enc) m_swflow_enc_nh
   use, intrinsic :: iso_fortran_env, only : real64
   implicit none
 
-  type t_enc_nh
-    real, allocatable :: uv0(:,:,:)       ! ステップ頭のエッジ流速 u^n (1:4, 0:nx, jsh-1:jeh)
-    real, allocatable :: phi(:,:)         ! NH ポテンシャル φ (1:nx, jsh:jeh)
-    real, allocatable :: phi1(:,:)        ! Jacobi の書き込み先 / CG の方向ベクトル p
-    real, allocatable :: rhs(:,:)         ! Jacobi: β D a*、CG: D a*(Version 2 では Picard ごとに更新)
-    real, allocatable :: rhs0(:,:)        ! Version 2: Σ_k c_k a*_k(勾配項つきの右辺の a* 部分)
-    real, allocatable :: work2(:,:)       ! Version 2: Picard の前回の φ
-    real, allocatable :: beta(:,:)        ! h²/4(NH セル以外 0)
-    real, allocatable :: diag(:,:)        ! Jacobi: 1 + β Σ w、CG: 1/β + Σ w
-    real, allocatable :: rr(:,:)          ! CG 残差
-    real, allocatable :: ap(:,:)          ! CG の M p
-    real, allocatable :: dast(:,:)        ! D a*(NH 候補セル。検出と右辺に使う)
-    real, allocatable :: work(:,:)        ! 活性集合の膨張用(0/1。halo 交換のため実数)
-    real, allocatable :: brk(:,:)         ! 砕波セル(0/1。halo 交換のため実数)
-    integer, allocatable :: cmask(:,:)    ! NH セル (1:nx, jsh:jeh)
-    integer, allocatable :: fmask(:,:)    ! 強制境界のセル (1:nx, jsh:jeh)。1: 水位規定セル、
-                                          !   または枠外に開いた面(区間流入・自由流出・放射)を
-                                          !   持つセル。規定流束・規定水位と射影が干渉して
-                                          !   発散するため常に静水圧(init で静的に構築)
-    logical, allocatable :: emask(:,:,:)  ! NH エッジ (1:4, 0:nx, jsh-1:jeh)
-    real, allocatable :: zprev(:,:)       ! f_nh_bottom: 前の射影で見た z (1:nx, jsh:jeh)
-    real, allocatable :: wb(:,:)          ! f_nh_bottom: 前の射影で得た底面速度 ż_b (m/s)
-    real, allocatable :: zdd(:,:)         ! f_nh_bottom: 底面加速度 z̈_b(担当帯。NH セル以外 0)
-    real, allocatable :: zsrc(:,:)        ! f_nh_bottom: 源項 −(h/4)(z̈_b + z̈_s)(担当帯)
-    real, allocatable :: rhsb(:,:)        ! f_nh_bottom: 平滑化の解の間、主系の右辺の退避
-    logical :: bot_first = .true.         ! f_nh_bottom: init 後の最初の射影(z̈ = 0)
-    real :: wd(1:8) = 0.0                 ! 発散の重み l8(k)/(dx·dy)
-    real :: wl(1:8) = 0.0                 ! ラプラシアンの重み l8(k)/(dx·dy·w8dr(k))
-    ! 統計(dispose で表示)
-    integer :: nstep = 0
-    integer(8) :: itsum = 0
-    integer :: itmax_seen = 0
-    integer(8) :: actsum = 0              ! 活性セル数の累計(ランク局所)
-    integer(8) :: brksum = 0              ! 砕波セル数の累計(ランク局所)
-    integer :: nfail = 0                  ! 不収束のステップ数
-  end type
-  type(t_enc_nh) :: nh_mod
+  ! 私有状態 t_enc_nh / nh_mod は親モジュールに置く(§13 の様式。文脈の付け替えの対象)
 
   ! 8 近傍番号 → エッジ成分・符号(continuous と同じ規約)
   integer, parameter :: ke8(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1 ]

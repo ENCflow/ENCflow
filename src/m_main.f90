@@ -29,6 +29,8 @@ module m_main
                         m_intercept_has_step, m_intercept_dispose
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc, m_swflow_post, &
                        m_swflow_sdep_update
+  use m_swflow_enc, only : m_swflow_enc_ctx_alloc, m_swflow_enc_ctx_swap
+  use m_ffactor, only : m_ffactor_ctx_alloc, m_ffactor_ctx_swap
   use m_output, only : t_output, output_init, output_dispose, output_chk_geoinfo, output_state, output_summary
   use m_util, only : itoa
   use m_sysdep_util, only : sysdep_mkdir, sysdep_copy_to_dir
@@ -47,13 +49,16 @@ module m_main
   public :: m_main_get_ierror
   public :: m_main_get_value
   public :: m_main_set_value
+  public :: m_main_instances_alloc
+  public :: m_main_select
 
   !----------------------------------------------------------------------
   ! ENCflow 全体を表す派生型(ライフサイクル API の内部状態)
   !   型もインスタンスも m_main の実装詳細として非公開。外部(将来の
   !   BMI アダプタ等)には m_main_* の公開手続きだけを見せる。
-  !   単一インスタンス(1プロセス=1モデル)。複数インスタンスが必要に
-  !   なったら型を公開せずに handle 方式へ拡張する(docs/bmi_plan.md §5)
+  !   複数インスタンス(ネスティング。docs/nesting_plan.md)は encs(:) に
+  !   並べ、m_main_select(k) で「現在のインスタンス」enc を切り替える。
+  !   型は公開せず、外部には番号 k だけを見せる(docs/bmi_plan.md §5)
   !----------------------------------------------------------------------
   type :: t_encflow
     type(t_sysparam) :: p
@@ -98,7 +103,15 @@ module m_main
     real, allocatable :: exth(:,:)      ! ステージング場 (m。帯形状)
   end type t_encflow
 
-  type(t_encflow), save :: enc
+  ! インスタンスの格納と選択(developer.md §71)
+  !   enc は常に encs(kcur) を指す。A 群(型の成分)はこのポインタの
+  !   付け替えだけで切り替わり、B 群(m_swflow_enc 系・m_ffactor・
+  !   m_parallel の dcp)は各 *_ctx_swap で退避・復帰する。
+  !   ninst == 1(従来の単一実行・BMI)では ctx の確保も swap も行わない
+  type(t_encflow), allocatable, target, save :: encs(:)
+  type(t_encflow), pointer, save :: enc => null()
+  integer, save :: ninst = 0        ! 確保済みインスタンス数(0 = 未確保)
+  integer, save :: kcur = 0         ! 選択中のインスタンス番号
 
 contains
 
@@ -139,6 +152,9 @@ subroutine m_main_initialize(fn_sysparam)
   character(len=*), intent(in), optional :: fn_sysparam
   character(len=256) :: fn_param
 
+  ! 単一インスタンス(従来動作): 明示の確保がなければここで 1 個確保する
+  if (ninst == 0) call m_main_instances_alloc(1)
+
   ! 再 initialize(同一プロセスでの finalize → initialize。bmi-tester が
   ! この使い方をする)対応: 前インスタンスの残留状態を消す(§59)。
   ! 各モジュールの配列は dispose が解放済み、スカラは各 init が設定する
@@ -171,6 +187,10 @@ subroutine m_main_initialize(fn_sysparam)
 
     ! システムを初期化
     call m_sysparam_init(p, fn_param)       ! sysparam を初期化
+    ! 複数インスタンスは ENC のみ(STG は凍結・モジュール変数を共有するため)
+    if (ninst > 1 .and. p%f_gridsystem /= 0) then
+      call par_stop("m_main: multiple instances require f_gridsystem=0 (ENC)")
+    end if
     ! 結果を保存するディレクトリを作成してパラメータファイルを保存
     call init_resultdir(p)
 
@@ -289,8 +309,50 @@ end subroutine
 !   判定材料(s%it, ierror)は全ランクで同一なので collective 安全(§5)
 !----------------------------------------------------------------------
 logical function m_main_finished()
+  if (ninst == 0) then
+    m_main_finished = .true.   ! 未初期化(従来も it=0 >= nt=0 で真)
+    return
+  end if
   m_main_finished = (enc%ierror > 0 .or. enc%s%it >= enc%p%nt)
 end function
+
+
+!----------------------------------------------------------------------
+! 複数インスタンス: 確保と選択(developer.md §71。nesting_plan Phase 0c)
+!   instances_alloc(n): インスタンス枠を n 個確保する。initialize より前に
+!     1 回だけ呼ぶ(呼ばなければ initialize が 1 個確保する = 従来動作)。
+!     n > 1 のときだけ B 群の文脈枠(dcp, ffactor, swflow_enc)も確保する。
+!   select(k): 「現在のインスタンス」を k にする。以後の initialize /
+!     update / finalize / get・set_value は k に対して働く。
+!     B 群のモジュール変数は kcur の枠へ退避し k の枠から復帰する。
+!     全ランクで同じ順序で呼ぶこと(collective の整合。§5)
+!----------------------------------------------------------------------
+subroutine m_main_instances_alloc(n)
+  integer, intent(in) :: n
+  if (ninst > 0) call par_stop("m_main_instances_alloc: already allocated")
+  if (n < 1) call par_stop("m_main_instances_alloc: n must be >= 1")
+  allocate(encs(n))
+  ninst = n
+  if (n > 1) then
+    call par_decomp_ctx_alloc(n)
+    call m_ffactor_ctx_alloc(n)
+    call m_swflow_enc_ctx_alloc(n)
+  end if
+  kcur = 1
+  enc => encs(1)
+end subroutine
+
+subroutine m_main_select(k)
+  integer, intent(in) :: k
+  if (ninst == 0) call par_stop("m_main_select: call m_main_instances_alloc first")
+  if (k < 1 .or. k > ninst) call par_stop("m_main_select: k out of range "//itoa(k))
+  if (k == kcur) return
+  call par_decomp_ctx_swap(kcur, k)
+  call m_ffactor_ctx_swap(kcur, k)
+  call m_swflow_enc_ctx_swap(kcur, k)
+  kcur = k
+  enc => encs(k)
+end subroutine
 
 
 !----------------------------------------------------------------------
@@ -345,10 +407,11 @@ subroutine m_main_finalize()
     call par_info("main: program terminated normally")
   end if
 
-  ! MPIを終了
-  call par_finalize()
-
   enc%initialized = .false.
+
+  ! MPIを終了。複数インスタンスでは MPI はプロセスの資源なので、
+  ! 最後に finalize されるインスタンスで終了する(他が生きている間は残す)
+  if (.not. any(encs(:)%initialized)) call par_finalize()
 
 end subroutine
 
