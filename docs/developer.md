@@ -9504,6 +9504,45 @@ fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dt
     `./Run_MPI.sh N` で確認する。文脈に入れ忘れた変数があれば破れる。
   - 新しいモジュールは A 群で書く。B 群にモジュール変数を増やすときは ctx 型と
     swap に同時に足す(--check が漏れを報告する)。
+- **Phase 0d(m_swflow_enc の散在変数を変数群に束ねる。2026-10-09 実装)**:
+  126 個あったモジュール変数を用途別の 7 つの派生型(allocatable スカラー)に
+  束ねた。成分名は元の変数名のまま(`opt%f_advection_scheme` のように読む。
+  機械的な置換で済み、文書・grep の追跡性を保つ)。
+  | 群 | 型 | 内容 | 主な書き手 |
+  |---|---|---|---|
+  | `opt` | t_enc_opt | スキームの選択肢・パラメータ(f_*, p_*, have_diff, have_edge_flux) | init |
+  | `nhp` | t_enc_nhopt | NH の選択肢(f_nonhydrostatic, nh_*)と親側の作業配列(nh_nub, nh_he)、nh_active | init / nh_init |
+  | `bcs` | t_enc_bcstate | 境界条件の私有状態(have_open_bc, f_bc_side, bt_cell, bc_eta_cell, infl_*) | bc_init |
+  | `dbr` | t_enc_debris | 土石流抵抗則(db_*, acv) | m_swflow_enc_set_debris(init より前) |
+  | `chn` | t_enc_channel | 堤防・河道幅・開口補正・動的振り替え・破堤・動的通水率(have_bank, nwall, frw, wfrac, fwd, br, cwx, …) | init / channel submodule |
+  | `sct` | t_enc_sect | 断面形 σ(have_sect, sect_*, screst, sdep, frw0) | init |
+  | `geo` | t_enc_geom | 8 近傍の幾何重み(w8*, l8*, lp*, ld*, n8*, mn2dh, …) | init |
+  これに submodule の私有状態 sx_mod / tx_mod / td_mod / nh_mod を加えた 11 個が
+  モジュール変数の全てで、`t_enc_ctx` と `ctx_swap` はこの 11 行(move_alloc)に
+  なった。規律:
+  - **全ての群は allocatable スカラー**(配列を持つ群を move_alloc で O(1) に
+    付け替えるため。非 allocatable の群を代入で退避すると allocatable 成分の
+    深いコピーになる)。実体は `ensure_groups`(init の冒頭と、init より前に呼ばれる
+    公開口 m_swflow_enc_set_debris)が確保する。dispose は `deallocate` →
+    `ensure_groups` で既定値へ戻し、実体は残す(dispose 後に他モジュールが
+    `chn%have_width` 等を読んでも安全。再 initialize は起動直後と同じ既定値から)。
+  - **新しい状態は既存の群の成分として足す**(ctx_swap は不変)。群を増やす
+    ときは t_enc_ctx・ctx_swap・ensure_groups・dispose を同時に更新する
+    (Check_modstate.py --check が ctx_swap への登録漏れを検出する)。
+  - 他モジュールへの公開は群単位(`public :: opt, geo, chn, sct, bcs`。
+    m_geomorph・m_wq・m_record 等は `chn%have_width`, `sct%sdep`,
+    `opt%have_edge_flux` と読む)。protected は付けない(submodule の構築を
+    nvfortran が use 結合とみなす §13 の制約。従来 have_width 等に付いていた
+    protected は外れた = 読み取り専用は規約で守る)。
+  - 手続き内のローカル変数が成分名と同じ名前のとき(bc の boundary_h の fwd、
+    boundary_uvmn の frw)はローカルが優先される(従来どおり)。
+  - **実バグ(MPI。0d の検証で発見・是正)**: m_parallel_mpi の par_init は
+    `MPI_Initialized` が真だと「呼び出し側が初期化済み(ライブラリモード)」と
+    みなして owns_mpi を倒していた。複数インスタンスでは 2 つ目の initialize の
+    par_init がこれに当たり、最後の finalize が MPI_Finalize を呼ばず mpirun が
+    異常終了扱いにした(OpenMPI。計算結果は正しい)。par_init は
+    `par_init_done` で 2 回目以降を no-op にした(MPI はプロセスの資源)。
+    0c の twin np=1,2,4 が通ったのは OpenMPI の検出が不定期だったため。
 - **台帳・検査**: `python3 test/Scripts/Check_modstate.py --check` は src/ の
   module/submodule 仕様部の変数を許可表と突き合わせ、手続き内の初期化付き宣言
   (暗黙 SAVE)も検出する。許可表はスクリプト内(nesting_plan.md §3.2 の写し)。
@@ -9544,4 +9583,15 @@ fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dt
   (par_init の ENCFLOW_EXPECT_NP 検査が止める)。MPI 検証は OpenMPI で行った。**
   **make の再ビルド判定はフラグの変更を見ない**(タイムスタンプのみ)ので、
   フラグを変えた等価性検証では必ず `make clean` から作る(今回、clean なしの
-  -fcheck ビルドが実は旧フラグのままだった)。
+  -fcheck ビルドが実は旧フラグのままだった)。**MODE を切り替えて同じツリーで
+  ビルドすると libencflow.a に両モードの m_parallel_*.o が残る**(ar は追加
+  だけ)。utils のリンクが MPI シンボル未定義で失敗したら `rm src/libencflow.a`
+  してから make する。
+- 0d(変数群への束ね): reference 全 22 ケース PASS(-Ofast)。厳密フラグで
+  全 38 ケースが 0b 基準とビット一致(0c と同じ基準ログ)。twin テスト(逐次
+  -Ofast、MPI OpenMPI np=1,2,4)一致。MPI np=1,2,4 で 8 ケース reference PASS。
+  クリーンビルドの -O0 -fcheck=all -finit-real=snan -ffpe-trap=invalid でも twin 一致
+  (確保範囲外・未初期化読み出しなし)。**実行時間**(同一機で基準バイナリと
+  交互に実行、中央値): wave 1 スレッド 0.997 倍・4 スレッド 1.005 倍(各 8 回)、
+  chichibu 500 m 6 h 1 スレッド 0.96 倍・4 スレッド 0.95 倍(各 5 回)= 不変
+  (allocatable スカラー経由の間接参照はホットループで観測できない)。

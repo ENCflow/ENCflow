@@ -696,9 +696,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 ## 中期の道標(着手順は実測次第)
 
 - **津波の多段ネスティング(設計案 docs/nesting_plan.md v2。2026-10-08 起案。
-  Phase 0a〜0c = 複数インスタンス化の基盤は 2026-10-09 実装済み: m_main の
-  `m_main_instances_alloc/select`、B 群の ctx_swap、受入試験 test/nest_twin。
-  次は 0d(m_swflow_enc の散在変数の型への束ね)→ Phase 1。plan §11)**:
+  Phase 0a〜0d = 複数インスタンス化の基盤は 2026-10-09 実装済み: m_main の
+  `m_main_instances_alloc/select`、B 群の ctx_swap(m_swflow_enc は 7 つの
+  変数群 + 私有状態 4 つの 11 行)、受入試験 test/nest_twin。
+  次は Phase 1(m_nest)。plan §11)**:
   同一プロセス内の複数インスタンス化(モジュール私有状態の
   bind/swap。カーネル不変の等価リファクタ)を基盤に、全ランクが全格子の
   帯を持つ JAGURS 型配置で親先行の再帰時間進行・帯 Dirichlet(セル量+
