@@ -134,11 +134,16 @@ subroutine m_record_init(r, p, g, s)
   real, allocatable :: pbxy(:,:)
   integer :: flxyfile
   integer :: flxytype
-  real :: flxy(1:4,1:nflmax) = -9.999e33   ! 未設定番兵(絶対座標の負値と衝突しない値)
+  real :: flxy(1:4,1:nflmax)               ! 測線の生値(4 座標 × 測線)。番兵は下で代入
 
   ! リスト構築・検証は全ランクが冗長に実行する(全ランクが所有セルを
   ! 判定できるようにするため。§11 の「静的データは全ランク保持」)。
   ! ファイルの open とヘッダ出力だけ rank0 に限定する(set_probe/set_flux 内)
+
+  ! 未設定番兵(絶対座標の負値と衝突しない値)。宣言時の初期化は暗黙 SAVE に
+  ! なり手続きの状態を呼び出し間で持ち越すため、毎回ここで代入する
+  ! (複数インスタンス化の監査 Phase 0a。nesting_plan.md §3.2)
+  flxy = -9.999e33
 
   if (len_trim(p%fn_record) > 0) then
     !---- 設定ファイルを読み込む ----

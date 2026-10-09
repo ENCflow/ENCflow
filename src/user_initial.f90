@@ -157,9 +157,10 @@ subroutine initial_wave_hump(p, g, s)
   real, parameter :: ll = 30., hh = 0.5
   real :: xx, yy, rr, dx, dy, eta
   real :: lx, ly
-  real :: pi = acos(-1.0)
+  real :: pi
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
+  pi = acos(-1.0)   ! 宣言時初期化は暗黙 SAVE になるため実行文で代入(Phase 0a)
   lx = g%lx
   ly = g%ly
 
