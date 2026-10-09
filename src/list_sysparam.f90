@@ -125,6 +125,7 @@ module list_sysparam
     character(len=maxpathlen) :: fn_bldgdebris = ""      ! 家屋破壊・瓦礫設定ファイル(§63)
     character(len=maxpathlen) :: fn_channel = ""         ! 河道条件設定ファイル
     character(len=maxpathlen) :: fn_enc = ""             ! ENC設定ファイル
+    character(len=maxpathlen) :: fn_nest = ""            ! ネスト格子一覧(ルートのみ。空=ネストなし。docs/nesting_plan.md)
 
     character(len=maxpathlen) :: fn_log = "Log.txt"      ! 状態ログファイル
     character(len=maxpathlen) :: dir_data = "."          ! 入力データディレクトリ
@@ -239,6 +240,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: fn_bldgdebris ! 家屋破壊・瓦礫設定ファイル
   character(:), allocatable :: fn_channel    ! 河道条件設定ファイル
   character(:), allocatable :: fn_enc        ! ENC設定ファイル
+  character(:), allocatable :: fn_nest       ! ネスト格子一覧
   character(:), allocatable :: fn_log        ! 状態ログファイル
   character(:), allocatable :: dir_data      ! 入力データディレクトリ
   character(:), allocatable :: dir_result    ! 結果出力ディレクトリ
@@ -263,7 +265,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_ddd, f_out_dda, f_out_pre, f_out_hrs, f_out_fr, f_out_cn, f_out_hg, &
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
                         fn_structure, &
-                        fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_evap, fn_meteo, fn_wq, fn_snow, fn_glacier, fn_lavaflow, fn_bedmotion, fn_salt, fn_swi, fn_driftwood, fn_bldgdebris, fn_channel, fn_enc, &
+                        fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_evap, fn_meteo, fn_wq, fn_snow, fn_glacier, fn_lavaflow, fn_bedmotion, fn_salt, fn_swi, fn_driftwood, fn_bldgdebris, fn_channel, fn_enc, fn_nest, &
                         fn_log, dir_data, dir_result, dir_save, outfn_suffix
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
@@ -368,6 +370,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   fn_bldgdebris = list%fn_bldgdebris
   fn_channel = list%fn_channel
   fn_enc = list%fn_enc
+  fn_nest = list%fn_nest
   fn_log = list%fn_log
   dir_data = list%dir_data
   dir_result = list%dir_result
@@ -480,6 +483,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%fn_bldgdebris = fn_bldgdebris
   list%fn_channel = fn_channel
   list%fn_enc = fn_enc
+  list%fn_nest = fn_nest
   list%fn_log = fn_log
   list%dir_data = dir_data
   list%dir_result = dir_result

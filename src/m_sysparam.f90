@@ -115,6 +115,7 @@ module m_sysparam
     real :: t_cycle = 0.0                      ! 強制の反復周期 (s。0=なし。§32.4)
     character(:), allocatable :: fn_channel    ! 河道条件設定ファイル
     character(:), allocatable :: fn_enc        ! ENC設定ファイル
+    character(:), allocatable :: fn_nest       ! ネスト格子一覧(ルートのみ。空=ネストなし)
     character(:), allocatable :: fn_log        ! 状態ログファイル
     character(:), allocatable :: dir_data      ! 入力データディレクトリ
     character(:), allocatable :: dir_result    ! 結果出力ディレクトリ
@@ -252,6 +253,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%fn_bldgdebris = list%fn_bldgdebris         ! 家屋破壊・瓦礫設定ファイル
   p%fn_channel = list%fn_channel               ! 河道条件設定ファイル
   p%fn_enc = list%fn_enc                       ! ENC設定ファイル
+  p%fn_nest = list%fn_nest                     ! ネスト格子一覧
   p%fn_log = list%fn_log                       ! 状態ログファイル
   p%dir_data = list%dir_data                   ! 入力データディレクトリ
   p%dir_result = list%dir_result               ! 結果出力ディレクトリ

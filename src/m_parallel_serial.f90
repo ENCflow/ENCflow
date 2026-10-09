@@ -79,7 +79,7 @@ contains
       ! 何もしない
    end subroutine par_init
 
-   subroutine par_decomp_init(nx, ny, jw1, jw2, rowwork)
+   subroutine par_decomp_init(nx, ny, jw1, jw2, rowwork, align)
       ! 領域分割の決定。格子サイズと有効窓の確定後
       ! (m_geoinfo_init の直後)に呼ぶこと。
       ! 逐次では計算範囲=全域窓、確保範囲=全域。rowwork(行重み)は
@@ -87,7 +87,9 @@ contains
       integer, intent(in) :: nx, ny
       integer, intent(in) :: jw1, jw2   ! 全域の有効窓(= g%wy(1:2))
       integer, intent(in), optional :: rowwork(:)
+      integer, intent(in), optional :: align        ! 帯境界の整列(MPI 版と I/F 一致。逐次では無用)
       if (present(rowwork)) continue    ! 未使用引数警告の抑制
+      if (present(align)) continue
       dcp%nx_g = nx
       dcp%ny_g = ny
       dcp%jw1 = jw1

@@ -170,7 +170,7 @@ contains
       end block check_np
    end subroutine par_init
 
-   subroutine par_decomp_init(nx, ny, jw1, jw2, rowwork)
+   subroutine par_decomp_init(nx, ny, jw1, jw2, rowwork, align)
       ! 領域分割の決定。格子サイズと有効窓の確定後
       ! (m_geoinfo_init の直後)に全ランクが揃って呼ぶこと(collective)。
       ! 全域窓 [jw1, jw2] をランク数で行分割し、自ランクの帯を決める。
@@ -184,6 +184,9 @@ contains
       integer, intent(in) :: nx, ny
       integer, intent(in) :: jw1, jw2   ! 全域の有効窓(= g%wy(1:2))
       integer, intent(in), optional :: rowwork(:)   ! 行重み(有効セル数)
+      integer, intent(in), optional :: align        ! 帯境界を行 1 から数えて align の倍数に
+                                                    ! 揃える(ネストの子格子: 親セル 1 個分の
+                                                    ! r 行ブロックを 1 ランクに収める。§3.7)
       integer :: nrows
       character(len=1024) :: buf
       dcp%nx_g = nx
@@ -203,6 +206,9 @@ contains
          end if
       end if
       call build_band_table(rowwork)
+      if (present(align)) then
+         if (align > 1) call align_band_table(align)
+      end if
       call band_range(nrank, dcp%js, dcp%je)
       ! 第二段: 配列確保範囲 = 担当帯 ± ハロ幅(全域端でクリップ)
       call band_range_h(nrank, dcp%jsh, dcp%jeh)
@@ -232,6 +238,28 @@ contains
       call move_alloc(dcp_ctx(kin)%js_tab, js_tab)
       call move_alloc(dcp_ctx(kin)%je_tab, je_tab)
    end subroutine par_decomp_ctx_swap
+
+   subroutine align_band_table(align)
+      ! 帯境界(ランク r の開始行)を「行 1 から数えて align の倍数 + 1」へ
+      ! 切り下げる(子格子の行 j は親セル (j-1)/align + j0 に属する。境界を
+      ! ブロック境界に置けば、親セル 1 個に対応する子セル群が 1 ランクに
+      ! 収まり、子→親の平均が通信なしで閉じる)。各帯最低 2 行の制約を
+      ! 満たさなくなったら par_stop(全ランク同一の判定)
+      integer, intent(in) :: align
+      integer :: r
+      character(len=256) :: buf
+      do r = 1, nproc - 1
+         js_tab(r) = 1 + ((js_tab(r) - 1) / align) * align
+         je_tab(r-1) = js_tab(r) - 1
+      end do
+      do r = 0, nproc - 1
+         if (je_tab(r) - js_tab(r) + 1 < 2) then
+            write(buf,'(a,i0,a,i0,a)') 'parallel: band alignment (align=', align, &
+               ') leaves rank ', r, ' with < 2 rows; use fewer ranks'
+            call par_stop(trim(buf))
+         end if
+      end do
+   end subroutine align_band_table
 
    subroutine build_band_table(rowwork)
       ! 全ランク分の帯境界表を構築する(分割規則の正本)。

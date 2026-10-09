@@ -41,6 +41,8 @@ module m_swflow_enc
   public :: m_swflow_enc_post            ! ステップ末尾の u,v 正規化パス(§26)
   public :: m_swflow_enc_sdep_update     ! 河床変動後の σ 遷移深さ D の更新(§26)
   public :: m_swflow_enc_edge_flux             ! 測線計測のエッジ流量の観測口(opt%have_edge_flux と対)
+  public :: m_swflow_enc_nest_export, m_swflow_enc_nest_import   ! ネスティングのエッジ量の窓・帯(nesting_plan §3.5)
+  public :: e_bc_wall                          ! m_nest が子の外縁条件(壁)を検査するため
                                          ! (m_record 専用・読み取り専用。§24.1/§24.2)
   public :: swflow_vh                    ! 矩形換算水深 vh の照会(§26/§30。
                                          ! 水質の濃度換算 conc = cq/vh 用)
@@ -2959,6 +2961,62 @@ function m_swflow_enc_edge_flux(i, j, in, jn) result(q)
   if (chn%have_fwd) fw = fw * chn%fwd(ke(k),ie,je)
   q = sign_e(k) * sx_mod%mn(ke(k),ie,je) * geo%l8(k) * fw
 end function
+
+
+!----------------------------------------------------------------------
+! ネスティング: エッジ量(uv, mn)の窓の書き出しと帯の書き込み
+! (docs/nesting_plan.md §3.5。m_nest 専用)
+!   エッジのスロット (k, ie, je)(k=1..4)はセル (ie-die(k), je-dje(k)) が
+!   所有し、その k 近傍との間のエッジを表す(m_swflow_enc_edge_flux と同じ
+!   規約)。export は自帯(js..je)のセルが所有するスロットだけを buf に
+!   書き、他は触らない(呼び出し側がゼロ初期化し、全ランクの和 =
+!   1 要素 1 寄与の allreduce で窓を共有する。§3.7)。import は帯セル
+!   (inband)に接するスロット = 所有セルか近傍セルが帯にあるものを
+!   vals で置換する(行は確保範囲 jsh-1..jeh 内に限る)。
+!----------------------------------------------------------------------
+subroutine m_swflow_enc_nest_export(ie1, ie2, je1, je2, buf)
+  integer, intent(in) :: ie1, ie2, je1, je2        ! buf のエッジ添字範囲
+  real, intent(inout) :: buf(1:, 1:, ie1:, je1:)   ! (1:2 = uv,mn, 1:4, ie1:ie2, je1:je2)
+  integer :: i, j, k, ie, je
+  do j = dcp%js, dcp%je
+    do k = 1, 4
+      je = j + dje(k)
+      if (je < je1 .or. je > je2) cycle
+      do i = 1, dcp%nx_g
+        ie = i + die(k)
+        if (ie < ie1 .or. ie > ie2) cycle
+        buf(1, k, ie, je) = sx_mod%uv(k, ie, je)
+        buf(2, k, ie, je) = sx_mod%mn(k, ie, je)
+      end do
+    end do
+  end do
+end subroutine
+
+subroutine m_swflow_enc_nest_import(nx, ny, jlo, jhi, inband, vals)
+  integer, intent(in) :: nx, ny                    ! 子格子の寸法
+  integer, intent(in) :: jlo, jhi                  ! inband の行範囲(1..ny に切った確保範囲)
+  logical, intent(in) :: inband(1:, jlo:)          ! 帯セルか (1:nx, jlo:jhi)
+  real, intent(in) :: vals(1:, 1:, 0:, jlo-1:)     ! (1:2 = uv,mn, 1:4, 0:nx, jlo-1:jhi)
+  integer :: i, j, k, ie, je, in, jn
+  logical :: band
+  do je = max(jlo - 1, dcp%jsh - 1), min(jhi, dcp%jeh)
+    do k = 1, 4
+      j = je - dje(k)
+      jn = j + djn(k)
+      do ie = 0, nx
+        i = ie - die(k)
+        in = i + din(k)
+        band = .false.
+        if (i >= 1 .and. i <= nx .and. j >= jlo .and. j <= jhi) band = inband(i, j)
+        if (.not. band .and. in >= 1 .and. in <= nx .and. jn >= jlo .and. jn <= jhi) band = inband(in, jn)
+        if (.not. band) cycle
+        sx_mod%uv(k, ie, je) = vals(1, k, ie, je)
+        sx_mod%mn(k, ie, je) = vals(2, k, ie, je)
+      end do
+    end do
+  end do
+  if (ny < 0) continue   ! 未使用引数警告の抑制(寸法の整合は呼び出し側)
+end subroutine
 
 
 function swflow_vh(i, j, h) result(vh)

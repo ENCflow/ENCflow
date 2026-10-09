@@ -31,6 +31,7 @@ module m_main
                        m_swflow_sdep_update
   use m_swflow_enc, only : m_swflow_enc_ctx_alloc, m_swflow_enc_ctx_swap
   use m_ffactor, only : m_ffactor_ctx_alloc, m_ffactor_ctx_swap
+  use m_nest, only : t_nest, nest_read_list, nest_setup_child, nest_capture, nest_prolong, nest_dispose
   use m_output, only : t_output, output_init, output_dispose, output_chk_geoinfo, output_state, output_summary
   use m_util, only : itoa
   use m_sysdep_util, only : sysdep_mkdir, sysdep_copy_to_dir
@@ -112,6 +113,10 @@ module m_main
   type(t_encflow), pointer, save :: enc => null()
   integer, save :: ninst = 0        ! 確保済みインスタンス数(0 = 未確保)
   integer, save :: kcur = 0         ! 選択中のインスタンス番号
+  ! ネスト系(docs/nesting_plan.md)。ルートのパラメータに fn_nest があれば
+  ! initialize が一覧を読み、格子 k をインスタンス k として並べる。
+  ! ng = 1(fn_nest なし)なら従来の単一格子の経路と完全に同一
+  type(t_nest), save :: nest
 
 contains
 
@@ -136,7 +141,7 @@ subroutine m_main_all()
 
   ! エラーがあった場合は異常終了コードを返して停止
   ! (error stop でなく、dispose と par_finalize を通してから stop する)
-  if (enc%ierror > 0) then
+  if (maxval(encs(1:ninst)%ierror) > 0) then
     stop 1
   end if
 
@@ -151,9 +156,48 @@ end subroutine
 subroutine m_main_initialize(fn_sysparam)
   character(len=*), intent(in), optional :: fn_sysparam
   character(len=256) :: fn_param
+  integer :: k
 
   ! 単一インスタンス(従来動作): 明示の確保がなければここで 1 個確保する
   if (ninst == 0) call m_main_instances_alloc(1)
+
+  ! システムパラメータファイル名を取得
+  if (present(fn_sysparam)) then
+    fn_param = fn_sysparam
+  else
+    call get_fn_param(fn_param)
+  end if
+
+  call init_instance(fn_param, 1)
+
+  ! ネスト系(fn_nest。ルート = いま初期化したインスタンス)。外部ドライバが
+  ! 複数インスタンスを確保している場合(twin 等)との併用は非対応
+  if (kcur == 1 .and. len_trim(enc%p%fn_nest) > 0) then
+    if (ninst > 1) call par_stop("m_main: fn_nest cannot be combined with externally allocated instances")
+    call nest_read_list(enc%p%fn_nest, fn_param, nest)
+    if (nest%ng > 1) then
+      call grow_instances(nest%ng)
+      do k = 2, nest%ng
+        call m_main_select(k)
+        call init_instance(nest%g(k)%fn_param, nest%g(k)%r)
+        ! 幾何の確定と整合検査(子を select した状態で。親の p, g は A 群なので参照できる)
+        call nest_setup_child(nest, k, encs(nest%g(k)%parent)%p, encs(nest%g(k)%parent)%g, &
+                              enc%p, enc%g, enc%b)
+      end do
+      call m_main_select(nest%root)
+    end if
+  end if
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 1 インスタンスの初期化(従来の initialize 本体)。align は帯分割の整列
+! (ネストの子格子では空間比 r。§3.7。1 = 従来どおり)
+!----------------------------------------------------------------------
+subroutine init_instance(fn_param, align)
+  character(len=*), intent(in) :: fn_param
+  integer, intent(in) :: align
 
   ! 再 initialize(同一プロセスでの finalize → initialize。bmi-tester が
   ! この使い方をする)対応: 前インスタンスの残留状態を消す(§59)。
@@ -168,15 +212,8 @@ subroutine m_main_initialize(fn_sysparam)
   if (allocated(enc%extz)) deallocate(enc%extz)
   if (allocated(enc%exth)) deallocate(enc%exth)
 
-  ! MPIを初期化
+  ! MPIを初期化(複数インスタンスでは 2 回目以降は何もしない)
   call par_init()
-
-  ! システムパラメータファイル名を取得
-  if (present(fn_sysparam)) then
-    fn_param = fn_sysparam
-  else
-    call get_fn_param(fn_param)
-  end if
 
   associate (p => enc%p, g => enc%g, pr => enc%pr, ti => enc%ti, &
              sl => enc%sl, b => enc%b, s => enc%s, r => enc%r, &
@@ -205,7 +242,7 @@ subroutine m_main_initialize(fn_sysparam)
       integer, allocatable :: rowwork(:)
       allocate(rowwork(1:g%ny))
       call m_geoinfo_row_ncells(g, rowwork)
-      call par_decomp_init(g%nx, g%ny, g%wy(1), g%wy(2), rowwork)
+      call par_decomp_init(g%nx, g%ny, g%wy(1), g%wy(2), rowwork, align)
     end block decomp
     call m_geoinfo_scatter_coeffs(g)        ! 物性係数を rank0 から帯+ハロへ配布
 
@@ -284,6 +321,41 @@ end subroutine
 !   従来 run_main の時間ループ本体1回分。終了判定は m_main_finished
 !----------------------------------------------------------------------
 subroutine m_main_update()
+  if (nest%ng > 1) then
+    call nest_advance(nest%root)       ! ルートの 1 歩(子はその中で進む)
+    call m_main_select(nest%root)      ! get/set_value はルートに対して働く
+  else
+    call step_instance()
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! ネスト系の時間進行(§3.4 の再帰。Phase 1: r_t = 1、一方向)
+!   親を 1 歩進める前に親の窓を t^n で写し、親の 1 歩の後に各子の帯を
+!   t^n の窓で埋めて子を 1 歩進める(子の子は再帰の中で進む)
+!----------------------------------------------------------------------
+recursive subroutine nest_advance(k)
+  integer, intent(in) :: k
+  integer :: ic, c, kk
+  call m_main_select(k)
+  if (nest%g(k)%nchild > 0) call nest_capture(nest, k, enc%s)
+  call step_instance()
+  do ic = 1, nest%g(k)%nchild
+    c = nest%g(k)%child(ic)
+    do kk = 1, nest%g(c)%rt
+      call m_main_select(c)
+      call nest_prolong(nest, c, enc%g, enc%s)
+      call nest_advance(c)
+    end do
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 現在のインスタンスを 1 ステップ進める(従来の update 本体)
+!----------------------------------------------------------------------
+subroutine step_instance()
 
   associate (p => enc%p, g => enc%g, pr => enc%pr, ti => enc%ti, &
              sl => enc%sl, b => enc%b, s => enc%s, r => enc%r, &
@@ -313,8 +385,34 @@ logical function m_main_finished()
     m_main_finished = .true.   ! 未初期化(従来も it=0 >= nt=0 で真)
     return
   end if
-  m_main_finished = (enc%ierror > 0 .or. enc%s%it >= enc%p%nt)
+  if (nest%ng > 1) then
+    ! ネスト系: どの格子かのエラー、またはルートの全ステップ完了
+    m_main_finished = (maxval(encs(1:ninst)%ierror) > 0 .or. &
+                       encs(nest%root)%s%it >= encs(nest%root)%p%nt)
+  else
+    m_main_finished = (enc%ierror > 0 .or. enc%s%it >= enc%p%nt)
+  end if
 end function
+
+
+!----------------------------------------------------------------------
+! インスタンス枠を n 個に広げる(ネスト系: ルートの初期化後に格子数が
+! 分かるため。ルートの状態は深いコピーで移す = 1 回限り)
+!----------------------------------------------------------------------
+subroutine grow_instances(n)
+  integer, intent(in) :: n
+  type(t_encflow), allocatable, target :: tmp(:)
+  if (n <= ninst) return
+  if (ninst /= 1) call par_stop("grow_instances: only from a single instance")
+  allocate(tmp(n))
+  tmp(1) = encs(1)
+  call move_alloc(tmp, encs)
+  ninst = n
+  enc => encs(kcur)
+  call par_decomp_ctx_alloc(n)
+  call m_ffactor_ctx_alloc(n)
+  call m_swflow_enc_ctx_alloc(n)
+end subroutine
 
 
 !----------------------------------------------------------------------
@@ -361,6 +459,23 @@ end subroutine
 !   エラー時の stop は行わない(呼び出し側 = m_main_all が行う)
 !----------------------------------------------------------------------
 subroutine m_main_finalize()
+  integer :: k
+  if (nest%ng > 1) then
+    do k = nest%ng, 1, -1          ! 子から順に(ルートが最後 = MPI の終了もここ)
+      call m_main_select(k)
+      call finalize_instance()
+    end do
+    call nest_dispose(nest)
+  else
+    call finalize_instance()
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 現在のインスタンスの終了処理(従来の finalize 本体)
+!----------------------------------------------------------------------
+subroutine finalize_instance()
 
   associate (p => enc%p, g => enc%g, pr => enc%pr, ti => enc%ti, &
              sl => enc%sl, b => enc%b, s => enc%s, r => enc%r, &
@@ -1003,6 +1118,7 @@ subroutine init_resultdir(p)
   call sysdep_copy_to_dir(p%fn_salt, p%dir_result)
   call sysdep_copy_to_dir(p%fn_channel, p%dir_result)
   call sysdep_copy_to_dir(p%fn_enc, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_nest, p%dir_result)
 end subroutine
 
 

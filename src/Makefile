@@ -22,6 +22,7 @@ LIBOBJS	= m_main.o m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o \
 	  m_gwflow_lateral.o m_gwflow_layer2.o m_gwflow_conduit.o m_gwflow_pump.o m_gwflow_frost.o m_saltwater.o m_evap.o m_meteo.o m_wq.o m_driftwood.o m_bldgdebris.o m_snow.o m_glacier.o m_lavaflow.o m_bedmotion.o m_swi.o \
 	  m_intercept.o m_intercept_fixed.o m_intercept_initloss.o \
 	  m_state.o m_record.o m_swflow.o m_swflow_enc.o m_swflow_enc_adv.o m_swflow_enc_bc.o \
+	  list_nest.o m_nest.o \
 	  m_swflow_enc_channel.o m_swflow_enc_diff.o m_swflow_enc_nh.o \
 	  m_output.o m_swflow_stg.o \
 	  $(PAR_OBJ) \
@@ -88,7 +89,7 @@ $(MODESTAMP):
 # モジュール依存関係
 # ---------------------------------------------------------------
 main.o: m_main.o
-m_main.o: m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o m_state.o m_geomorph.o m_gwflow.o \
+m_main.o: m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o m_state.o m_geomorph.o m_gwflow.o m_nest.o \
 	m_saltwater.o m_util.o \
 	m_intercept.o m_evap.o m_meteo.o m_wq.o m_driftwood.o m_bldgdebris.o m_snow.o m_glacier.o m_lavaflow.o m_bedmotion.o m_swi.o m_record.o m_swflow.o m_swflow_enc.o m_ffactor.o m_output.o m_fileio.o m_sysdep_util.o $(PAR_OBJ)
 m_sysparam.o: list_sysparam.o m_fileio.o m_util.o $(PAR_OBJ)
@@ -189,6 +190,8 @@ m_fileio.o: m_geotiff.o m_georef.o m_util.o $(PAR_OBJ)
 m_georef.o: m_util.o $(PAR_OBJ)
 m_geotiff.o: m_geotiff_codec.o m_geotiff_inflate.o
 m_ffactor.o: m_util.o $(PAR_OBJ)
+list_nest.o: $(PAR_OBJ)
+m_nest.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o m_swflow_enc.o list_nest.o m_util.o $(PAR_OBJ)
 m_util.o: $(PAR_OBJ)
 m_sysdep_util.o: $(PAR_OBJ)
 
