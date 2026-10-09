@@ -34,21 +34,21 @@ module subroutine diff_init(p, g)
   integer :: k
   character(len=256) :: msg
 
-  if (.not. have_diff) return
+  if (.not. opt%have_diff) return
   allocate(td_mod%td(1:2,1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
   allocate(td_mod%nu(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
-  forall(k=1:8) td_mod%wd8(k) = l8(k) / (w8dr(k) * g%dx * g%dy)
+  forall(k=1:8) td_mod%wd8(k) = geo%l8(k) / (geo%w8dr(k) * g%dx * g%dy)
 
   ! 陽解法の安定上界(Gershgorin による目安): dt ≦ 1/(ν·Σ_k wd8(k))
   td_mod%nu_max = 1.0 / (p%dt * sum(td_mod%wd8(1:8)))
-  td_mod%cnu = p_diffusion_alpha * sqrt(p%gg)
+  td_mod%cnu = opt%p_diffusion_alpha * sqrt(p%gg)
 
-  if (f_diffusion_term == 1) then
+  if (opt%f_diffusion_term == 1) then
     ! 定数モデル: ν 場は静的(ハロ行を含む全確保範囲を埋める)
-    td_mod%nu(:,:) = p_diffusion_nu
-    if (p_diffusion_nu > td_mod%nu_max) then
+    td_mod%nu(:,:) = opt%p_diffusion_nu
+    if (opt%p_diffusion_nu > td_mod%nu_max) then
       write(msg, '(a,g0.4,a,g0.4,a)') &
-        "list_enc: p_diffusion_nu=", p_diffusion_nu, &
+        "list_enc: p_diffusion_nu=", opt%p_diffusion_nu, &
         " exceeds the diffusion stability limit ", td_mod%nu_max, " (m2/s)"
       call par_info(trim(msg))
     end if
@@ -69,12 +69,12 @@ module subroutine diff_prepare(p, g, s)
   real, parameter :: r56 = 5.0 / 6.0
   character(len=256) :: msg
 
-  if (.not. have_diff) return
+  if (.not. opt%have_diff) return
 
   ! ゼロ方程式モデル: ν 場を毎ステップ更新する
   !   td の計算はセル±1近傍の ν を読むため、ν はハロ幅2まで構築する
   !   (rn は帯+ハロ2、h/vv は交換幅2で手元にある=追加のハロ交換なし)
-  if (f_diffusion_term == 2) then
+  if (opt%f_diffusion_term == 2) then
     any_clamp = .false.
     !$omp parallel do schedule(dynamic) private(i, j) reduction(.or.:any_clamp)
     do j = max(dcp%jw1, dcp%js - 2), min(dcp%jw2, dcp%je + 2)
@@ -85,7 +85,7 @@ module subroutine diff_prepare(p, g, s)
         if (g%sw(i,j) > 0) cycle
         if (s%h(i,j) < p%dd) cycle
         ! ν = ν0 + α·u*·h = ν0 + α·√g·n·|V|·h^(5/6)
-        td_mod%nu(i,j) = p_diffusion_nu &
+        td_mod%nu(i,j) = opt%p_diffusion_nu &
                        + td_mod%cnu * g%rn(i,j) * s%vv(i,j) * s%h(i,j)**r56
         ! 陽解法の安定上界でクランプする(発動は極端な条件のみ)
         if (td_mod%nu(i,j) > td_mod%nu_max) then
@@ -99,15 +99,15 @@ module subroutine diff_prepare(p, g, s)
 
   ! 砕波域の渦粘性 ν_b を加える(ν = ν_model + ν_b。定数モデルは静的な ν 場を
   ! 毎ステップ基底値から作り直す。範囲は td の近傍 ±1 が読むハロ 2 まで)
-  if (nh_break_visc > 0.0) then
-    if (f_diffusion_term /= 2) any_clamp = .false.
+  if (nhp%nh_break_visc > 0.0) then
+    if (opt%f_diffusion_term /= 2) any_clamp = .false.
     !$omp parallel do schedule(dynamic) private(i, j) reduction(.or.:any_clamp)
     do j = max(dcp%jw1, dcp%js - 2), min(dcp%jw2, dcp%je + 2)
       do i = g%wx(1,j), g%wx(2,j)
-        if (f_diffusion_term == 1) td_mod%nu(i,j) = p_diffusion_nu
-        if (f_diffusion_term == 0) td_mod%nu(i,j) = 0
-        if (nh_nub(i,j) <= 0.0) cycle
-        td_mod%nu(i,j) = td_mod%nu(i,j) + nh_nub(i,j)
+        if (opt%f_diffusion_term == 1) td_mod%nu(i,j) = opt%p_diffusion_nu
+        if (opt%f_diffusion_term == 0) td_mod%nu(i,j) = 0
+        if (nhp%nh_nub(i,j) <= 0.0) cycle
+        td_mod%nu(i,j) = td_mod%nu(i,j) + nhp%nh_nub(i,j)
         if (td_mod%nu(i,j) > td_mod%nu_max) then
           td_mod%nu(i,j) = td_mod%nu_max
           any_clamp = .true.
@@ -117,7 +117,7 @@ module subroutine diff_prepare(p, g, s)
     !$omp end parallel do
   end if
 
-  if (f_diffusion_term == 2 .or. nh_break_visc > 0.0) then
+  if (opt%f_diffusion_term == 2 .or. nhp%nh_break_visc > 0.0) then
     if (any_clamp .and. .not. td_mod%clamp_warned) then
       write(msg, '(a,g0.4,a)') &
         "swflow: diffusion eddy viscosity clamped to the stability limit ", td_mod%nu_max, &
@@ -158,7 +158,7 @@ module function diff_edge(i, j, k, in, jn) result(td_e)
 
   tdxe = (td_mod%td(1,i,j) + td_mod%td(1,in,jn)) / 2  ! 拡散項(x方向, 符合は座標軸方向が正)
   tdye = (td_mod%td(2,i,j) + td_mod%td(2,in,jn)) / 2  ! 拡散項(y方向, 符合は座標軸方向が正)
-  td_e = tdxe * n8x(k) + tdye * n8y(k)  ! 拡散項(符合は中心セルから近傍セルに向かい正)
+  td_e = tdxe * geo%n8x(k) + tdye * geo%n8y(k)  ! 拡散項(符合は中心セルから近傍セルに向かい正)
 end function
 
 

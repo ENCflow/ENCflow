@@ -48,7 +48,7 @@ module m_driftwood
   use m_state, only : t_state
   use m_boundary, only : t_boundary, e_struct_dam
   use list_driftwood, only : t_list_driftwood, list_driftwood_read
-  use m_swflow_enc, only : have_width, wfrac
+  use m_swflow_enc, only : chn
   use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : dcp, is_root, par_info, par_stop, par_abort, par_sum_rows, &
@@ -542,7 +542,7 @@ function colfac(s, i, j) result(f)
   integer, intent(in) :: i, j
   real :: f, wf
   wf = 1.0
-  if (have_width) wf = wfrac(i,j)
+  if (chn%have_width) wf = chn%wfrac(i,j)
   f = s%gv(i,j) * wf
 end function
 

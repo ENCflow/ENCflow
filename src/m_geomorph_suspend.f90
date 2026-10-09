@@ -6,7 +6,7 @@
 !======================================================================
 submodule(m_geomorph) m_geomorph_suspend
   use m_parallel, only : par_info, par_stop, dcp
-  use m_swflow_enc, only : have_sect, sdep, sect_v, sect_sigma   ! σ 断面の濃度解釈(§26)
+  use m_swflow_enc, only : sct, sect_v, sect_sigma   ! σ 断面の濃度解釈(sct%have_sect, sct%sdep。§26)
   implicit none
 
 contains
@@ -88,8 +88,8 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
         ! 移流の供給元濃度・水質の cqc と同じ解釈。σ 非適用セルは vh = h)
         cc = 0.0
         if (s%hs(i,j) > 0.0) then
-          if (have_sect) then
-            cc = s%hs(i,j) / sect_v(s%h(i,j), sdep(i,j))
+          if (sct%have_sect) then
+            cc = s%hs(i,j) / sect_v(s%h(i,j), sct%sdep(i,j))
           else
             cc = s%hs(i,j) / s%h(i,j)
           end if
@@ -99,7 +99,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
         ! 交換量に σ(h) を掛ける(満杯以上・矩形では 1)。河床変動 Δz は
         ! 平面積平均のまま(§26 の近似)
         fx = gm%wf * (ceq - gm%beta * cc) * dtw
-        if (have_sect) fx = fx * sect_sigma(s%h(i,j), sdep(i,j))
+        if (sct%have_sect) fx = fx * sect_sigma(s%h(i,j), sct%sdep(i,j))
         if (fx > 0.0) then
           ! 可動層クランプ(河床側は ×morfac・poroi で減るため換算して制限)
           fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))

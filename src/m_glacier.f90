@@ -64,7 +64,7 @@ module m_glacier
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
   use m_meteo, only : t_meteo, meteo_temp_set, meteo_temp_cell
-  use m_swflow_enc, only : have_width, wfrac
+  use m_swflow_enc, only : chn
   use list_glacier, only : t_list_glacier, list_glacier_read
   use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
   use m_sysdep_util, only : sysdep_mkdir
@@ -446,7 +446,7 @@ subroutine calc_melt(gl, p, g, s, mt)
       wm = min(gl%ddfi * (tc - gl%tmelt) * p%dt, s%hi(i,j) * gl%ir / gl%morfac)
       s%hi(i,j) = s%hi(i,j) - wm * gl%morfac * gl%ri
       wf = 1.0
-      if (have_width) wf = wfrac(i,j)
+      if (chn%have_width) wf = chn%wfrac(i,j)
       s%h(i,j) = s%h(i,j) + wm / s%gv(i,j) / wf
       s%e(i,j) = s%z(i,j) + s%h(i,j)
     end do

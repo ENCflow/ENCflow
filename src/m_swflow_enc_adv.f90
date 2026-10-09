@@ -26,7 +26,7 @@ module subroutine adv_init(p, g)
   type(t_geoinfo), intent(in) :: g
   real :: dr
   if (p%initialized) continue  ! 引数未使用の警告を抑制
-  if (f_advection_scheme >= 2) then
+  if (opt%f_advection_scheme >= 2) then
     ! 運動量保存形: エッジ上の移流項だけを持つ(taxy/ulm/vlm は不要)
     allocate(tx_mod%tae(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
     ! 検査体積の横断幅 = 平行な隣接エッジとの垂直距離
@@ -52,7 +52,7 @@ module subroutine adv_prepare(p, g, s, sx)
   type(t_state), intent(in) :: s
   type(t_enc_status), intent(in) :: sx
 
-  if (f_advection_scheme >= 2) then
+  if (opt%f_advection_scheme >= 2) then
     call adv_prepare_mc(p, g, s, sx, tx_mod)
   else
     call adv_prepare_v1(p, g, s, sx, tx_mod)
@@ -70,7 +70,7 @@ module function adv_edge(s, sx, i, j, k, in, jn, ie, je) result(ta)
   integer, intent(in) :: i, j, k, in, jn, ie, je
   real :: ta
 
-  if (f_advection_scheme >= 2) then
+  if (opt%f_advection_scheme >= 2) then
     ta = tx_mod%tae(k,ie,je)
   else
     ta = adv_edge_v1(s, sx, tx_mod, i, j, k, in, jn)
@@ -150,7 +150,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         tx%tae(k,ie,je) = 0.0
         ! momentum と同じ除外条件(無効近傍・通過幅ゼロ・両側乾燥)
         if (g%x(in,jn) <= 0) cycle
-        if (skip8(k)) cycle
+        if (geo%skip8(k)) cycle
         hc = s%h(i,j)
         hn = s%h(in,jn)
         if (hc < p%dd .and. hn < p%dd) cycle
@@ -165,7 +165,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 谷底・斜面セルに落ちると、その遅い水が供給元になって運動量を失う
         ! 人工損失の対策。側方面は対象外。§68.18)
         donor_rw = .false.
-        if (f_advection_donor == 1) donor_rw = g%rw(i,j) > 0 .and. g%rw(in,jn) > 0
+        if (opt%f_advection_donor == 1) donor_rw = g%rw(i,j) > 0 .and. g%rw(in,jn) > 0
 
         ! 線 k 上のエッジ流速(基準セルから k 方向。確保範囲外は 0)
         ue  = sx%uv(k,ie,je)
@@ -175,8 +175,8 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         upp = uvk(in + din(k), jn + djn(k), k)
 
         ! 流向面(c, n)を通る単位幅流量(k 方向投影。c→n が正)
-        qc = s%m(i,j) * n8x(k) + s%n(i,j) * n8y(k)
-        qn = s%m(in,jn) * n8x(k) + s%n(in,jn) * n8y(k)
+        qc = s%m(i,j) * geo%n8x(k) + s%n(i,j) * geo%n8y(k)
+        qn = s%m(in,jn) * geo%n8x(k) + s%n(in,jn) * geo%n8y(k)
 
         ! 流向面の風上化流速(面 c: 流入なら u_m 側、流出なら u_e 側)。
         ! 風上側の供給エッジが壁・領域外・乾燥セルに接する(cell_ok が偽)
@@ -210,7 +210,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
             ubn = ue
           end if
         end if
-        ta = -(qn * (ubn - ue) - qc * (ubc - ue)) / w8dr(k)
+        ta = -(qn * (ubn - ue) - qc * (ubc - ue)) / geo%w8dr(k)
 
         ! 側方面(±t。t = (-n8y, n8x))。流出が正
         utp = uvk(i + dti(k), j + dtj(k), k)
@@ -273,12 +273,12 @@ contains
   pure function vol_depth(ci, cj) result(v)
     integer, intent(in) :: ci, cj
     real :: v
-    if (have_sect) then
-      v = sect_v(s%h(ci,cj), sdep(ci,cj))
+    if (sct%have_sect) then
+      v = sect_v(s%h(ci,cj), sct%sdep(ci,cj))
     else
       v = s%h(ci,cj)
     end if
-    if (have_width) v = v * wfrac(ci,cj)
+    if (chn%have_width) v = v * chn%wfrac(ci,cj)
   end function
 
   ! MUSCL の upup の向こうのセルが領域内で有効か(g%x は全域で確保されて
@@ -339,7 +339,7 @@ contains
     logical, intent(in) :: upup_ok       ! upup のエッジの向こうのセルが有効か(偽なら 1 次)
     real :: f
     real :: d, r, psi
-    if (f_advection_scheme == 2 .or. .not. upup_ok) then
+    if (opt%f_advection_scheme == 2 .or. .not. upup_ok) then
       f = up
     else
       d = dn - up
@@ -370,7 +370,7 @@ subroutine adv_prepare_v1(p, g, s, sx, tx)
   real :: ww(1:8), wwx(1:8), wwy(1:8)
   if (sx%initialized) continue  ! 引数未使用の警告を抑制
 
-  if (f_advection_term == 0) return
+  if (opt%f_advection_term == 0) return
 
   !$omp parallel do schedule(dynamic) private(i, j)
   ! ハロ行の ulm/vlm も構築する(taxy のハロ再計算=案Aに必要。幅2)
@@ -399,8 +399,8 @@ subroutine adv_prepare_v1(p, g, s, sx, tx)
       if (s%h(i,j) < p%dd) cycle
       ! 風上差分による移流項の計算
       ww(:) = get_ww(s%u(i,j), s%v(i,j), s%vv(i,j))
-      forall(k=1:8) wwx(k) = w8x(k) * ww(k)
-      forall(k=1:8) wwy(k) = w8y(k) * ww(k)
+      forall(k=1:8) wwx(k) = geo%w8x(k) * ww(k)
+      forall(k=1:8) wwy(k) = geo%w8y(k) * ww(k)
       call get_diff_v1(tx%ulm, tx%vlm, s%h, p%dd, wwx, wwy, g%x, i, j, dux, duy, dvx, dvy)
       tx%taxy(1,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
       tx%taxy(2,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)
@@ -419,10 +419,10 @@ function get_ww(u, v, vv) result(ww_upw)
   integer :: k
   real :: ww_upw(1:8)
   real :: wk
-  if (p_adv_upwind_index > 0 .and. vv > 0) then
+  if (opt%p_adv_upwind_index > 0 .and. vv > 0) then
     do k = 1, 8
-      wk = -(u * n8x(k) + v * n8y(k)) / vv                    ! -1~1
-      wk = max(1 - (1 - wk) * p_adv_upwind_index / 2, 0.0)    ! 0～1
+      wk = -(u * geo%n8x(k) + v * geo%n8y(k)) / vv                    ! -1~1
+      wk = max(1 - (1 - wk) * opt%p_adv_upwind_index / 2, 0.0)    ! 0～1
       ww_upw(k) = wk
     end do
   else
@@ -446,7 +446,7 @@ function adv_edge_v1(s, sx, tx, i, j, k, in, jn) result(ta)
   ! 風上差分による移流項
   taxe = (tx%taxy(1,i,j) + tx%taxy(1,in,jn)) / 2  ! 移流項(x方向, 符合は座標軸方向が正)
   taye = (tx%taxy(2,i,j) + tx%taxy(2,in,jn)) / 2  ! 移流項(y方向, 符合は座標軸方向が正)
-  ta = taxe * n8x(k) + taye * n8y(k)             ! 移流項(符合は中心セルから近傍セルに向かい正)
+  ta = taxe * geo%n8x(k) + taye * geo%n8y(k)             ! 移流項(符合は中心セルから近傍セルに向かい正)
 end function
 
 
@@ -488,10 +488,10 @@ subroutine get_diff_v1(u, v, h, dd, wx, wy, x, i, j, dux, duy, dvx, dvy)
     wwy = x(in,jn) * wy(k)
     du = (u(in,jn) - u(i,j))
     dv = (v(in,jn) - v(i,j))
-    dux = dux + du * r8x(k) * wwx
-    dvx = dvx + dv * r8x(k) * wwx
-    duy = duy + du * r8y(k) * wwy
-    dvy = dvy + dv * r8y(k) * wwy
+    dux = dux + du * geo%r8x(k) * wwx
+    dvx = dvx + dv * geo%r8x(k) * wwx
+    duy = duy + du * geo%r8y(k) * wwy
+    dvy = dvy + dv * geo%r8y(k) * wwy
     swx = swx + wwx !* din2(k)
     swy = swy + wwy !* djn2(k)
   end do

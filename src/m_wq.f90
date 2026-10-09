@@ -71,7 +71,7 @@ module m_wq
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
   use m_boundary, only : t_boundary, e_struct_dam, interp_series, read_cell_file2
-  use m_swflow_enc, only : swflow_vh, have_width, wfrac
+  use m_swflow_enc, only : swflow_vh, chn
   use m_gwflow_conduit, only : t_gwcond, gwflow_conduit_ready
   use list_wq, only : t_list_wq, list_wq_read, nwqgmax, nwqcmax, nwqvmax, nwqfmax
   use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
@@ -1324,7 +1324,7 @@ function gwfac_of(s, i, j) result(f)
   integer, intent(in) :: i, j
   real :: f
   f = s%gv(i,j)
-  if (have_width) f = f * wfrac(i,j)
+  if (chn%have_width) f = f * chn%wfrac(i,j)
 end function
 
 
@@ -1340,7 +1340,7 @@ function mass_of(g, s, i, j, w) result(mass)
   real(real64) :: mass
   real :: wf
   wf = 1.0
-  if (have_width) wf = wfrac(i,j)
+  if (chn%have_width) wf = chn%wfrac(i,j)
   mass = real(w, real64) * real(s%gv(i,j), real64) * real(wf, real64) &
          * real(g%dx, real64) * real(g%dy, real64)
 end function

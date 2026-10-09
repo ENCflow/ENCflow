@@ -29,100 +29,135 @@ module m_swflow_enc
   public :: m_swflow_enc_set_debris   ! 土石流抵抗則の設定口(m_geomorph の
                                       ! init_debris が呼ぶ。swflow init より前)
 
-  ! nvfortran の submodule バグ回避(TPR #27323 系)。修正され次第 private に戻す
-  public :: f_advection_scheme
-  public :: p_adv_upwind_index
-  public :: n8x, n8y
-  public :: have_width, have_frw, frw, wfrac   ! m_geomorph の掃流砂が読む(宣言部の注記参照)
-  public :: have_fwd, fwd                      ! 同上(動的振り替えの表。§68.14)
+  ! 変数群(§71 0d)。opt/geo は nvfortran の submodule バグ回避(TPR #27323 系)で
+  ! 公開(修正され次第 private に戻す)。chn は m_geomorph の掃流砂・m_wq・流木・
+  ! 瓦礫・積雪・氷河が読む(have_width, wfrac, frw, fwd。読み取り専用の規約。
+  ! protected は付けられない: submodule 内の構築を nvfortran が use 結合とみなす。§13)
+  public :: opt, geo, chn
   ! sect_* は submodule(enc_bc の水位規定変換)も呼ぶ。private のままだと
   ! gfortran がシンボルを局所化しリンク不能(§22 の実バグと同型)
   public :: sect_v, sect_hinv, sect_sigma
-  public :: have_sect, sdep                    ! m_geomorph の浮遊砂 E-D が読む(濃度 hs/vh と湿潤幅率。§26)
+  public :: sct                                ! m_geomorph の浮遊砂 E-D が読む(have_sect, sdep。§26)
   public :: m_swflow_enc_post            ! ステップ末尾の u,v 正規化パス(§26)
   public :: m_swflow_enc_sdep_update     ! 河床変動後の σ 遷移深さ D の更新(§26)
-  public :: have_edge_flux, m_swflow_enc_edge_flux   ! 測線計測のエッジ流量の観測口
+  public :: m_swflow_enc_edge_flux             ! 測線計測のエッジ流量の観測口(opt%have_edge_flux と対)
                                          ! (m_record 専用・読み取り専用。§24.1/§24.2)
   public :: swflow_vh                    ! 矩形換算水深 vh の照会(§26/§30。
                                          ! 水質の濃度換算 conc = cq/vh 用)
-  public :: have_open_bc, bc_open_face         ! 開境界の面判定(m_geomorph の
+  public :: bcs, bc_open_face                  ! 開境界の面判定(m_geomorph の
                                                ! 開境界土砂フラックスが読む。読み取り専用)
 
   !--------------------------------------------------------------------
   ! モジュール内で共有される構造体と変数の宣言
+  !   本モジュールの状態は用途別の「変数群」(allocatable スカラー)に束ねる
+  !   (§71 0d): opt(選択肢)、nhp(NH)、bcs(境界条件)、dbr(土石流)、
+  !   chn(堤防・河道幅・破堤)、sct(断面形 σ)、geo(幾何重み)と、
+  !   submodule の私有状態 sx_mod / tx_mod / td_mod / nh_mod。実体は
+  !   init(ensure_groups)が確保し、dispose が既定値へ戻す。複数インスタンス
+  !   では m_swflow_enc_ctx_swap が move_alloc で丸ごと付け替える。
+  !   新しい状態は既存の群の成分として足す(群を増やすときは t_enc_ctx・
+  !   ctx_swap・ensure_groups・dispose も同時に更新。Check_modstate.py が検査)
   !--------------------------------------------------------------------
-  ! 制御フラグとパラメータの宣言
-  ! ---- システムのパラメータからセットする ---
-  integer :: f_advection_term               ! 移流項の計算の有無
-  integer :: f_pressure_term                ! 圧力項の計算の有無
-  ! ---- ENCのパラメータファイルからセットする ---
-  integer :: f_gravity_correction != 1       ! 重力の補正
-  integer :: f_exflux_reduction != 1         ! reduction of excessive flux
-  integer :: f_hcap_upwind != 1              ! セル境界水深 (0:両側平均, 1:上流側水深で頭打ち, 2:上流側水深)
-  integer :: f_adaptive_runge != 1           ! 適応的ルンゲクッタ
-  integer :: f_friction_fastmath != 0        ! 摩擦項計算の高速化
-  integer :: f_advection_scheme             ! 移流項のスキーム (1: セル中心勾配 v1,
+  !--------------------------------------------------------------------
+  ! 変数群 opt: スキームの選択肢とパラメータ(sysparam・list_enc・list_channel から init が設定)
+  !--------------------------------------------------------------------
+  type t_enc_opt
+    integer :: f_advection_term               ! 移流項の計算の有無
+    integer :: f_pressure_term                ! 圧力項の計算の有無
+    integer :: f_gravity_correction != 1       ! 重力の補正
+    integer :: f_exflux_reduction != 1         ! reduction of excessive flux
+    integer :: f_hcap_upwind != 1              ! セル境界水深 (0:両側平均, 1:上流側水深で頭打ち, 2:上流側水深)
+    integer :: f_adaptive_runge != 1           ! 適応的ルンゲクッタ
+    integer :: f_friction_fastmath != 0        ! 摩擦項計算の高速化
+    integer :: f_advection_scheme             ! 移流項のスキーム (1: セル中心勾配 v1,
                                             !   2: 運動量保存形・1次風上, 3: 同+MUSCL。§68)
-  integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
-  integer :: f_opening_dynamic              ! 塞がれた開口の動的振り替え (0:なし, 1:河道
+    integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
+    integer :: f_opening_dynamic              ! 塞がれた開口の動的振り替え (0:なし, 1:河道
                                             !   セル間のエッジのみ, 2:全エッジ。§68.14)
-  integer :: f_advection_donor              ! 運動量保存形移流の風上供給元の制限 (0:湿潤セル
+    integer :: f_advection_donor              ! 運動量保存形移流の風上供給元の制限 (0:湿潤セル
                                             !   すべて, 1:河道セル間のエッジでは河道セルのみ。
                                             !   §68.18)
-  integer :: f_dry_head_cap                 ! 乾燥セルへ向かうエッジ水深をエネルギー頭
+    integer :: f_dry_head_cap                 ! 乾燥セルへ向かうエッジ水深をエネルギー頭
                                             !   η + u_n²/2g − z_受け手 で頭打ち (0:なし, 1:有効。
                                             !   §68.16。水面+速度水頭より高い乾いた地盤へは
                                             !   流さず、流せないエッジの流速も 0 にする)
-  integer :: f_bank_mode                    ! 堤防の水理モード(下の e_bank_*)
-  integer :: f_diffusion_term               ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
-  ! 非静水圧(1 層 NH)補正(submodule m_swflow_enc_nh。docs/nonhydrostatic_plan.md)
-  integer :: f_nonhydrostatic = 0           ! 0: 静水圧(既定), 1: 1 層 NH 補正
-  real :: nh_hmin = 0.1                     ! NH を適用する最小水深 (m)
-  integer :: nh_solver = 2                  ! 反復ソルバ (1: Jacobi, 2: CG(既定))
-  integer :: nh_itmax = 500                 ! 反復回数の上限
-  real :: nh_tol = 1.0e-6                   ! 相対収束判定
-  integer :: f_nh_adaptive = 0              ! 活性集合 (0: マスク内全域, 1: 検出セル+縁)
-  integer :: nh_detector = 1                ! 検出量 (1: 分散型 χ, 2: 絶対型 |βDa*|/g)
-  real :: nh_chi_on = 0.06                  ! 検出の閾値
-  integer :: nh_margin = 0                  ! 縁の幅(セル数。0: 2H/Δx から自動)
-  real :: nh_amin = 1.0e-5                  ! 検出の下限 |βDa*| (m/s²)
-  real :: nh_arel = 1.0e-3                  ! 検出の相対下限(領域最大の |βDa*| に対する比)
-  integer :: f_nh_breaking = 0              ! 砕波スイッチ (0: なし, 1: ∂η/∂t > α√(gh) のセルを静水圧に)
-  real :: nh_break_alpha = 0.6              ! 砕波開始の閾値 α
-  real :: nh_break_beta = 0.3               ! 砕波前線の伝播の閾値 β
-  integer :: nh_break_type = 3              ! 砕波の判定量 (1: ∂η/∂t, 2: フルード数, 3: 水面勾配)
-  real :: nh_break_fr = 0.6                 ! フルード数判定の閾値
-  real :: nh_break_slope = 0.3              ! 水面勾配判定の閾値
-  integer :: nh_break_margin = 0            ! 砕波セルの縁の幅(セル数。0: 2H/Δx から自動)
-  real :: nh_break_visc = 0.0               ! 砕波域の渦粘性係数 δ_b²(0: なし。plan §15)
-  integer :: nh_bc_margin = 0               ! 強制境界から静水圧のままにするセル数(0: 2H/Δx から自動)
-  integer :: f_nh_slope = 0                 ! 底面勾配項 (0: Version 1 平坦床, 1: Version 2)
-  integer :: f_nh_bottom = 0                ! 動く底面の加速度項 (0: なし, 1: z̈_b を NH の源項に。plan §16)
-  logical :: have_diff = .false.            ! 拡散項を計算する(f_diffusion_term > 0 または
+    integer :: f_bank_mode                    ! 堤防の水理モード(下の e_bank_*)
+    integer :: f_diffusion_term               ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
+    logical :: have_diff = .false.            ! 拡散項を計算する(f_diffusion_term > 0 または
                                             !   nh_break_visc > 0。init が設定)
-  real, allocatable :: nh_nub(:,:)          ! 砕波域の渦粘性 ν_b (1:nx, jsh:jeh)。nh_break_visc > 0
+    real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
+    real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
+    real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
+    real :: p_diffusion_nu != 0.0              ! 拡散項の動粘性係数 (m2/s。モデル2では
+                                            !   加算のバックグラウンド粘性)
+    real :: p_diffusion_alpha != 0.41/6        ! ゼロ方程式モデルの係数 α (ν=ν0+α·u*·h)
+    integer :: f_bank_opening                 ! 開口補正 (0:なし, 1:振り替え)
+    integer :: f_channel_advection            ! 河道セルを含むエッジの移流項 (1:通常, 0:落とす)
+    logical :: have_edge_flux = .false.  ! エッジ流量の観測口が使えるか
+                                            ! (ENC の init 後 true。STG では false のまま。§24.2)
+  end type
+  type(t_enc_opt), allocatable :: opt
+  !--------------------------------------------------------------------
+  ! 変数群 nhp: 非静水圧(1 層 NH)補正の選択肢と親側の作業配列(submodule m_swflow_enc_nh。docs/nonhydrostatic_plan.md)
+  !--------------------------------------------------------------------
+  type t_enc_nhopt
+    integer :: f_nonhydrostatic = 0           ! 0: 静水圧(既定), 1: 1 層 NH 補正
+    real :: nh_hmin = 0.1                     ! NH を適用する最小水深 (m)
+    integer :: nh_solver = 2                  ! 反復ソルバ (1: Jacobi, 2: CG(既定))
+    integer :: nh_itmax = 500                 ! 反復回数の上限
+    real :: nh_tol = 1.0e-6                   ! 相対収束判定
+    integer :: f_nh_adaptive = 0              ! 活性集合 (0: マスク内全域, 1: 検出セル+縁)
+    integer :: nh_detector = 1                ! 検出量 (1: 分散型 χ, 2: 絶対型 |βDa*|/g)
+    real :: nh_chi_on = 0.06                  ! 検出の閾値
+    integer :: nh_margin = 0                  ! 縁の幅(セル数。0: 2H/Δx から自動)
+    real :: nh_amin = 1.0e-5                  ! 検出の下限 |βDa*| (m/s²)
+    real :: nh_arel = 1.0e-3                  ! 検出の相対下限(領域最大の |βDa*| に対する比)
+    integer :: f_nh_breaking = 0              ! 砕波スイッチ (0: なし, 1: ∂η/∂t > α√(gh) のセルを静水圧に)
+    real :: nh_break_alpha = 0.6              ! 砕波開始の閾値 α
+    real :: nh_break_beta = 0.3               ! 砕波前線の伝播の閾値 β
+    integer :: nh_break_type = 3              ! 砕波の判定量 (1: ∂η/∂t, 2: フルード数, 3: 水面勾配)
+    real :: nh_break_fr = 0.6                 ! フルード数判定の閾値
+    real :: nh_break_slope = 0.3              ! 水面勾配判定の閾値
+    integer :: nh_break_margin = 0            ! 砕波セルの縁の幅(セル数。0: 2H/Δx から自動)
+    real :: nh_break_visc = 0.0               ! 砕波域の渦粘性係数 δ_b²(0: なし。plan §15)
+    integer :: nh_bc_margin = 0               ! 強制境界から静水圧のままにするセル数(0: 2H/Δx から自動)
+    integer :: f_nh_slope = 0                 ! 底面勾配項 (0: Version 1 平坦床, 1: Version 2)
+    integer :: f_nh_bottom = 0                ! 動く底面の加速度項 (0: なし, 1: z̈_b を NH の源項に。plan §16)
+    real, allocatable :: nh_nub(:,:)          ! 砕波域の渦粘性 ν_b (1:nx, jsh:jeh)。nh_break_visc > 0
                                             !   のときだけ確保。nh_project(breaking_switch)が
                                             !   担当帯に書いて halo 交換し、次ステップの
                                             !   diff_prepare が ν に加える(1 ステップ遅れ)
-  logical :: nh_active = .false.            ! NH ON(init が f_nonhydrostatic から設定)
-  real, allocatable :: nh_he(:,:,:)         ! momentum が面流束に使ったエッジ水深 he
+    logical :: nh_active = .false.            ! NH ON(init が f_nonhydrostatic から設定)
+    real, allocatable :: nh_he(:,:,:)         ! momentum が面流束に使ったエッジ水深 he
                                             !   (1:4, 0:nx, jsh-1:jeh)。NH ON のときだけ確保。
                                             !   calc_kth_momentum が書き、nh_project が
                                             !   mn1 = uv·he の再構成に読む
-  real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
-  real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
-  real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
-  real :: p_diffusion_nu != 0.0              ! 拡散項の動粘性係数 (m2/s。モデル2では
-                                            !   加算のバックグラウンド粘性)
-  real :: p_diffusion_alpha != 0.41/6        ! ゼロ方程式モデルの係数 α (ν=ν0+α·u*·h)
-  ! ---- 境界条件(t_boundary)からセットする ---
-  ! 境界条件の私有状態(辺型・面型・基準水位等)は submodule
-  ! m_swflow_enc_bc が保持する(bc_init が構築)。親には continuous /
-  ! restore_uvmn のホットパスが読む判定フラグだけを置く
-  logical :: have_open_bc = .false.         ! 開いた面(不透過でない)があるか
+  end type
+  type(t_enc_nhopt), allocatable :: nhp
+  ! 境界条件(t_boundary)から bc_init が構築する私有状態(辺型・面型・基準
+  ! 水位等)。型と実体は親、構築は submodule m_swflow_enc_bc(§13 の様式)
+  !--------------------------------------------------------------------
+  ! 変数群 bcs: 境界条件の私有状態(submodule m_swflow_enc_bc の bc_init が構築)
+  !--------------------------------------------------------------------
+  type t_enc_bcstate
+    logical :: have_open_bc = .false.         ! 開いた面(不透過でない)があるか
                                             !   (bc_init が設定。protected 不可:
                                             !   nvfortran は submodule のホスト結合を
                                             !   use 結合扱いし書き込みを拒否する。§13)
+    integer :: f_bc_side(1:4) = e_bc_wall     ! 外縁4辺の境界条件型(W,E,N,S)
+    integer, allocatable :: bt_cell(:,:)      ! 外縁面の型(セル別。(j,W/E)・(i,N/S)。
+                                            !   辺の型を初期値とし流入区間が上書き)
+    real, allocatable :: bc_eta_cell(:,:)     ! 放射境界の基準水位(セル別)
+    real, allocatable :: infl_wseg(:)         ! 各流入区間の開口幅の合計 (m)(受け口係数込み)
+    real, allocatable :: infl_cfac(:,:)       ! 区間の面エントリ別の受け口係数 (1:ncell, 1:ninflow)。
+                                            !   流入セルが流量を渡せる内部エッジ(有効な近傍)の数を
+                                            !   区間内の最大数で正規化したもの(壁の角・nodata に接する
+                                            !   端のセルで < 1。直線区間の内部は厳密に 1.0)。均等按分と
+                                            !   重み按分の両方の重みに乗じる。§69.9 対策 (a)
+    real, allocatable :: infl_hseg(:)         ! 区間の面エントリ別水深(重み按分の
+                                            !   作業配列。全ランクが同値を共有)
+  end type
+  type(t_enc_bcstate), allocatable :: bcs
 
   ! 土石流モデルの結合(debris_plan.md §2.3-2.4)
   !   有効判定は s%debris_active(m_geomorph_init が設定)。パラメータは
@@ -130,19 +165,27 @@ module m_swflow_enc
   !   (namelist の所有は list_geomorph。swflow init より前に呼ばれる契約)。
   !   運動量への hs 算入(重力・圧力項の水面 = z+h+hs、摩擦水深 = h+hs)は
   !   debris_active で常時、クーロン抵抗と降伏判定は db_res=1 のとき有効
-  integer :: db_res = 0                     ! 抵抗則 (0:マニングのみ, 1:クーロン+マニング,
+  !--------------------------------------------------------------------
+  ! 変数群 dbr: 土石流抵抗則のパラメータと曲率項(m_geomorph が m_swflow_enc_set_debris で設定。swflow init より前)
+  !--------------------------------------------------------------------
+  type t_enc_debris
+    integer :: db_res = 0                     ! 抵抗則 (0:マニングのみ, 1:クーロン+マニング,
                                             !   2:江頭構成則, 3:高橋・中川1991,
                                             !   4:Voellmy, 5:一定停止応力)
-  real :: db_tanphi = 0.0                   ! tan(内部摩擦角)
-  real :: db_sgrav = 0.0                    ! 土粒子の水中比重 s
-  real :: db_vstop = 0.0                    ! 降伏判定の速度閾値 (m/s)
-  real :: db_cstar = 0.0                    ! 河床の充填濃度 C*(降伏応力の (C/C*)^{1/5})
-  real :: db_cmin = 0.0                     ! 江頭層流則の濃度下限(未満はマニング)
-  real :: db_d50v = 0.0                     ! 代表粒径 d (m)(層流則の (h/d)^{-2})
-  real :: db_kcol = 0.0                     ! 前計算 k_d・(σ/ρ)・(1−e²)(層流則第2項)
-  real :: db_mu = 0.0                       ! Voellmy 摩擦係数 μ(db_res=4)
-  real :: db_xi = 0.0                       ! Voellmy 乱流係数 ξ (m/s²)(db_res=4)
-  real :: db_tauy = 0.0                     ! 一定停止応力 τ_y (Pa)(db_res=5)
+    real :: db_tanphi = 0.0                   ! tan(内部摩擦角)
+    real :: db_sgrav = 0.0                    ! 土粒子の水中比重 s
+    real :: db_vstop = 0.0                    ! 降伏判定の速度閾値 (m/s)
+    real :: db_cstar = 0.0                    ! 河床の充填濃度 C*(降伏応力の (C/C*)^{1/5})
+    real :: db_cmin = 0.0                     ! 江頭層流則の濃度下限(未満はマニング)
+    real :: db_d50v = 0.0                     ! 代表粒径 d (m)(層流則の (h/d)^{-2})
+    real :: db_kcol = 0.0                     ! 前計算 k_d・(σ/ρ)・(1−e²)(層流則第2項)
+    real :: db_mu = 0.0                       ! Voellmy 摩擦係数 μ(db_res=4)
+    real :: db_xi = 0.0                       ! Voellmy 乱流係数 ξ (m/s²)(db_res=4)
+    real :: db_tauy = 0.0                     ! 一定停止応力 τ_y (Pa)(db_res=5)
+    integer :: db_curv = 0                    ! 曲率項の有無(f_dbcurv)
+    real, allocatable :: acv(:,:)             ! セルの遠心加速度 a_c (m/s²)(1:nx, jsh:jeh)
+  end type
+  type(t_enc_debris), allocatable :: dbr
   real, parameter :: db_rhow = 1000.0       ! 清水密度 (kg/m³)(τ_y を加速度に落とす
                                             !   換算。混合密度 ρm = ρw(1+sC))
   ! 曲率項(developer.md §28.10。RAMMS: Fischer ら 2012 と同じ扱い)
@@ -153,8 +196,6 @@ module m_swflow_enc
   !   (浮上条件)は 0 に切る。a_c はセルごとに時刻 n の u, v, z で前計算
   !   (curv_prepare。RK 内不変。hs と同じ近似)し、辺では両セルの平均。
   !   f_dbcurv=0 では配列未確保・パス未実行・aye 不変(ビット一致)
-  integer :: db_curv = 0                    ! 曲率項の有無(f_dbcurv)
-  real, allocatable :: acv(:,:)             ! セルの遠心加速度 a_c (m/s²)(1:nx, jsh:jeh)
   ! 江頭構成則の定数(原式固定。典拠: 江頭・芦田・矢島・高濱(1989)の
   ! 抵抗則 = 江頭(1993)講座 式(25)、Morpho2DH Solver Manual 式(17)(19)。
   ! k_f は 0.16〜0.25 の範囲が示されており Morpho2DH の 0.16 を採用)
@@ -172,12 +213,54 @@ module m_swflow_enc
   !   有効化は fn_channel の fn_bank / bank0 の有無(g%bank_active)。
   !   天端の絶対標高は geoinfo が河道セルごとに構築済み(g%zbank)。
   !   水理モード f_bank_mode は fn_channel の &list_channel から読む
-  logical :: have_bank = .false.            ! 堤防天端が有効か
-  ! セルの堤防壁エッジ本数(堰流量の追い越し禁止上限の分母。§68.29 (C')。
-  ! have_bank のときだけ bank_init が帯+ハロで構築。状態は親、構築は submodule)
-  integer, allocatable :: nwall(:,:)
-  logical :: have_swall = .false.           ! 海岸堤防天端が有効か(§17 一般化)
-  integer :: f_swall_mode = 0               ! 海岸堤防の水理モード(e_bank_* と同義)
+  !--------------------------------------------------------------------
+  ! 変数群 chn: 堤防(仮想壁面)・サブグリッド河道幅・開口補正・動的振り替え・破堤・動的通水率(submodule m_swflow_enc_channel が構築)
+  !--------------------------------------------------------------------
+  type t_breach
+    integer :: ic = 0, jc = 0               ! 河道セル
+    integer :: il = 0, jl = 0               ! 堤内地セル
+    integer :: nval = 0                     ! 時系列データ数
+    real, allocatable :: val(:,:)           ! 時系列 (1:2, 1:nval) = (s, 割合0〜1)
+    real :: zcrest0 = 0.0                   ! 初期天端(セル対を帯内に持つランクのみ有効)
+    real :: zgnd0 = 0.0                     ! 基準地盤(同上)
+    real :: zeff = 0.0                      ! 現時刻の実効天端(breach_update が更新)
+  end type
+  type t_enc_channel
+    logical :: have_bank = .false.            ! 堤防天端が有効か
+    integer, allocatable :: nwall(:,:)       ! セルの堤防壁エッジ本数(堰流量の追い越し禁止上限の分母。
+                                            !   §68.29 (C')。have_bank のとき bank_init が帯+ハロで構築)
+    logical :: have_swall = .false.           ! 海岸堤防天端が有効か(§17 一般化)
+    integer :: f_swall_mode = 0               ! 海岸堤防の水理モード(e_bank_* と同義)
+    logical :: have_bopen = .false.           ! 開口補正が有効か(have_bank との合成)
+    logical :: have_width = .false. ! サブグリッド河道幅が有効か(g%width_active)
+    logical :: have_frw = .false.  ! エッジ通過幅係数 frw が有効か
+                                            !   (have_bopen または have_width)
+    logical :: adv_drop_rw = .false.          ! 河道セルを含むエッジで移流項を落とすか
+    real, allocatable :: frw(:,:,:)           ! エッジ別通過幅係数 (1:4, 0:nx, jsh-1:jeh)。
+                                            !   開口補正は法線成分 2, 4 のみ、幅キャップは
+                                            !   河道—河道の全成分に乗る
+    real, allocatable :: wfrac(:,:)           ! セルの河道平面積率 (1:nx, jsh:jeh)。
+                                            !   非河道・幅情報なしセルは 1
+    logical :: have_fwd = .false.             ! 動的振り替えが有効か
+    logical :: fwd_restored = .false.         ! 保存状態から fwd を復元したか(restore_state が設定)
+    real, allocatable :: fwd(:,:,:)           ! 動的通過幅係数 (1:4, 0:nx, jsh-1:jeh)
+    logical :: have_breach = .false.          ! 破堤サイトがあるか(breach_init が設定)
+    integer :: nbr = 0                        ! 破堤サイト数
+    type(t_breach), allocatable :: br(:)      ! サイトリスト(全ランク同一)
+    integer, allocatable :: ibr0(:), ibr1(:)  ! (jsh:jeh)
+    integer, allocatable :: ibrs(:)           ! 行順に整列したサイト番号
+    logical :: have_cwd = .false.
+    logical :: cwd_restored = .false.
+    real, allocatable :: cwxd(:,:), cwyd(:,:)   ! (1:nx, jsh:jeh)。使うのは js:je
+    real, allocatable :: cwx(:,:), cwy(:,:)   ! セルの方向別通水率 (1:nx, js:je)。
+                                            !   幅キャップによるセル開口の減衰率
+                                            !   (キャップ後/キャップ前の開口和の比)。
+                                            !   continuous / restore_uvmn が u,v を
+                                            !   これで除算し、vv・摩擦・抗力・移流が
+                                            !   河道内流速を見る。m,n は正規化しない
+                                            !   (§18。フラックス測線の実流量の条件)
+  end type
+  type(t_enc_channel), allocatable :: chn
   integer, parameter :: e_bank_weir = 0     ! 越流のみ(単純堤防): 双方向とも天端まで不透過
   integer, parameter :: e_bank_oneway = 1   ! 樋門(逆止弁): 堤内→河道のみ透過、逆は天端まで不透過
   integer, parameter :: e_bank_pump = 2     ! 強制排水: 堤内→河道は河道水位によらず常時段落ち
@@ -190,8 +273,6 @@ module m_swflow_enc
   !   壁エッジ(越流の敷幅)は不変。塞がりゼロのエッジは係数1で
   !   現行と厳密一致(退化性)。frw は init で構築する静的テーブルで、
   !   時間ループでは読み取り専用(w8mx 等の重み定数と同格の扱い)
-  integer :: f_bank_opening                 ! 開口補正 (0:なし, 1:振り替え)
-  logical :: have_bopen = .false.           ! 開口補正が有効か(have_bank との合成)
 
   ! サブグリッド河道幅(developer.md §18)
   !   河道幅 W(g%wrw。セル属性)から2つの静的補正を導く:
@@ -203,23 +284,12 @@ module m_swflow_enc
   !   W ≥ 面長・平面積率 1 のセルでは係数がちょうど 1 となり、
   !   解像河道(掘り込み+壁)の表現と厳密に一致する(退化性)。
   !   セル内の非河道部の貯留は表現しない(河道セルの水位=河道内水位)
-  integer :: f_channel_advection            ! 河道セルを含むエッジの移流項 (1:通常, 0:落とす)
-  ! have_width/have_frw/frw/wfrac は公開: m_geomorph の掃流砂が
-  ! 「水と同じ開口・同じ貯留補正」で土砂を運ぶために読む(読み取り専用の
-  ! 規約。書き手は本モジュールと submodule m_swflow_enc_channel のみ)。
-  ! frw/wfrac に protected は付けられない: submodule 内の構築(allocate・
-  ! 代入)を nvfortran がホスト結合でなく use 結合とみなし 0155 エラーに
-  ! する(§13)。親モジュール本体だけが書く have_width/have_frw は
-  ! protected を維持する
-  logical, protected :: have_width = .false. ! サブグリッド河道幅が有効か(g%width_active)
-  logical, protected :: have_frw = .false.  ! エッジ通過幅係数 frw が有効か
-                                            !   (have_bopen または have_width)
-  logical :: adv_drop_rw = .false.          ! 河道セルを含むエッジで移流項を落とすか
-  real, allocatable :: frw(:,:,:)           ! エッジ別通過幅係数 (1:4, 0:nx, jsh-1:jeh)。
-                                            !   開口補正は法線成分 2, 4 のみ、幅キャップは
-                                            !   河道—河道の全成分に乗る
-  real, allocatable :: wfrac(:,:)           ! セルの河道平面積率 (1:nx, jsh:jeh)。
-                                            !   非河道・幅情報なしセルは 1
+  ! chn(have_width/have_frw/frw/wfrac/have_fwd/fwd)は公開: m_geomorph の
+  ! 掃流砂・m_wq・流木・瓦礫・積雪・氷河が「水と同じ開口・同じ貯留補正」で
+  ! 読む(読み取り専用の規約。書き手は本モジュールと submodule
+  ! m_swflow_enc_channel のみ)。protected は付けられない: submodule 内の
+  ! 構築(allocate・代入)を nvfortran がホスト結合でなく use 結合とみなし
+  ! 0155 エラーにする(§13)
   ! 塞がれた開口の動的振り替え(developer.md §68.14)
   !   静的な frw(堤防壁)と同じ規則を、「隣接セルの地盤が水面より高い」
   !   ことで塞がれた開口に毎ステップ適用する。塞がり率
@@ -234,9 +304,6 @@ module m_swflow_enc
   !   堤防壁で既に静的に振り替えた斜め先は数えない)。状態なし
   !   (リスタートでは復元した h から再構築 → restore_uvmn の u,v,m,n は
   !   保存時の値と最終桁で異なりうる。§68.14)
-  logical :: have_fwd = .false.             ! 動的振り替えが有効か
-  logical :: fwd_restored = .false.         ! 保存状態から fwd を復元したか(restore_state が設定)
-  real, allocatable :: fwd(:,:,:)           ! 動的通過幅係数 (1:4, 0:nx, jsh-1:jeh)
   ! 破堤(developer.md §18。構築・更新は submodule m_swflow_enc_channel)
   !   サイト=セル対 (ic,jc)-(il,jl) で一意に決まるエッジ。実効天端を
   !   時系列 f(t)(1=天端高, 0=堤内地盤高)で変える:
@@ -246,22 +313,8 @@ module m_swflow_enc
   !   zgnd0 は init 時の堤内地セルの s%z で静的(侵食に追従しない)。
   !   型と状態を親に置くのは frw/wfrac/cwx と同じ様式(submodule 内に
   !   置けない理由は §13 の classic flang 系不具合2件)
-  logical :: have_breach = .false.          ! 破堤サイトがあるか(breach_init が設定)
-  type t_breach
-    integer :: ic = 0, jc = 0               ! 河道セル
-    integer :: il = 0, jl = 0               ! 堤内地セル
-    integer :: nval = 0                     ! 時系列データ数
-    real, allocatable :: val(:,:)           ! 時系列 (1:2, 1:nval) = (s, 割合0〜1)
-    real :: zcrest0 = 0.0                   ! 初期天端(セル対を帯内に持つランクのみ有効)
-    real :: zgnd0 = 0.0                     ! 基準地盤(同上)
-    real :: zeff = 0.0                      ! 現時刻の実効天端(breach_update が更新)
-  end type
-  integer :: nbr = 0                        ! 破堤サイト数
-  type(t_breach), allocatable :: br(:)      ! サイトリスト(全ランク同一)
   ! 行バケット: 行 jc にあるサイトの並び ibrs(ibr0(jc):ibr1(jc))。
   ! bank_wall のゲート(サイトのない行は整数比較1回で素通り)
-  integer, allocatable :: ibr0(:), ibr1(:)  ! (jsh:jeh)
-  integer, allocatable :: ibrs(:)           ! 行順に整列したサイト番号
 
   ! 動的な通水率(壁なし幅モード = 幅 + 動的開口 fwd のとき。§68.32)。
   ! 非河道近傍のエッジを塞がり率 s(sblk。fwd と同じ)の重み (1 − s) で開口和に
@@ -269,16 +322,6 @@ module m_swflow_enc
   ! cwx は乾いた側方を q = 1 で数えて希釈され、W < 自然幅のセル流速が過小に
   ! なっていた。ステップ頭に fwd と一緒に構築し、リスタート状態にも保存する
   ! (最終ステップの正規化が使った表を restore_uvmn が再現する条件)
-  logical :: have_cwd = .false.
-  logical :: cwd_restored = .false.
-  real, allocatable :: cwxd(:,:), cwyd(:,:)   ! (1:nx, jsh:jeh)。使うのは js:je
-  real, allocatable :: cwx(:,:), cwy(:,:)   ! セルの方向別通水率 (1:nx, js:je)。
-                                            !   幅キャップによるセル開口の減衰率
-                                            !   (キャップ後/キャップ前の開口和の比)。
-                                            !   continuous / restore_uvmn が u,v を
-                                            !   これで除算し、vv・摩擦・抗力・移流が
-                                            !   河道内流速を見る。m,n は正規化しない
-                                            !   (§18。フラックス測線の実流量の条件)
 
   ! ---- 河道断面形の一般化 σ(h) = (h/D)^m(§26)----
   ! sx%h1 は σ 有効時「矩形換算水深 vh = ∫σdh'」として運用する
@@ -287,26 +330,30 @@ module m_swflow_enc
   logical, parameter :: f_sect_rk = .true.  ! RK 内の仮水深更新で σ を再評価する
                                             !   (コンパイル時切替。.false. = RK 中は
                                             !    矩形近似=従来の加算式。コスト比較用。§26)
-  logical :: have_sect = .false.            ! σ が有効か(p_sect_m>0 かつ遷移深さ源あり)
-  logical, protected :: have_edge_flux = .false.  ! エッジ流量の観測口が使えるか
-                                            ! (ENC の init 後 true。STG では false のまま。§24.2)
-  real :: sect_m = 0.0                      ! 形状指数 m(0=矩形)
-  real :: sect_mp1 = 1.0                    ! m+1(前計算)
-  real :: sect_rmp1 = 1.0                   ! 1/(m+1)
-  real :: sect_mfac = 0.0                   ! m/(m+1)
+  !--------------------------------------------------------------------
+  ! 変数群 sct: 河道断面形の一般化 σ(h) = (h/D)^m(§26)
+  !--------------------------------------------------------------------
+  type t_enc_sect
+    logical :: have_sect = .false.            ! σ が有効か(p_sect_m>0 かつ遷移深さ源あり)
+    real :: sect_m = 0.0                      ! 形状指数 m(0=矩形)
+    real :: sect_mp1 = 1.0                    ! m+1(前計算)
+    real :: sect_rmp1 = 1.0                   ! 1/(m+1)
+    real :: sect_mfac = 0.0                   ! m/(m+1)
+    real, allocatable :: screst(:,:)
+    real, allocatable :: sdep(:,:)            ! 断面遷移深さ D (1:nx, jsh:jeh)。
+                                            !   0 = σ 非適用セル(恒等写像)
+    real, allocatable :: frw0(:,:,:)          ! 幅キャップ「前」の frw のコピー
+                                            !   (σ 有効時のみ。cw_cell の h 依存
+                                            !    再評価が静的 cwx/cwy と同じ比の
+                                            !    分母・分子を作るための保存。§26)
+  end type
+  type(t_enc_sect), allocatable :: sct
   real, parameter :: sect_sgmin = 0.01      ! σ の下限(乾燥近傍の感度増幅の抑制)
   ! σ 断面の天端標高(1:nx, jsh:jeh)。D(t) = screst − s%z(t) で、河床変動
   ! (geomorph・溶岩・外部 z)に D が追従する(§26 の 2026-10-04 改定)。静的
   ! データ(zbank または g%z + drw)から決まるため保存状態は不要(リスタート
   ! では build_sdep が復元した s%z から同じ D を再現)。非適用セルは screst_none
-  real, allocatable :: screst(:,:)
   real, parameter :: screst_none = -1.0e30
-  real, allocatable :: sdep(:,:)            ! 断面遷移深さ D (1:nx, jsh:jeh)。
-                                            !   0 = σ 非適用セル(恒等写像)
-  real, allocatable :: frw0(:,:,:)          ! 幅キャップ「前」の frw のコピー
-                                            !   (σ 有効時のみ。cw_cell の h 依存
-                                            !    再評価が静的 cwx/cwy と同じ比の
-                                            !    分母・分子を作るための保存。§26)
 
   ! 状態変数の構造体の宣言と定義
   type t_enc_status
@@ -402,21 +449,6 @@ module m_swflow_enc
   end type
   type(t_enc_nh), allocatable :: nh_mod     ! NH の私有状態(実装は submodule m_swflow_enc_nh)
 
-  ! 境界条件の私有状態(bc_init が構築)
-  integer :: f_bc_side(1:4) = e_bc_wall     ! 外縁4辺の境界条件型(W,E,N,S)
-  integer, allocatable :: bt_cell(:,:)      ! 外縁面の型(セル別。(j,W/E)・(i,N/S)。
-                                            !   辺の型を初期値とし流入区間が上書き)
-  real, allocatable :: bc_eta_cell(:,:)     ! 放射境界の基準水位(セル別)
-  real, allocatable :: infl_wseg(:)         ! 各流入区間の開口幅の合計 (m)(受け口係数込み)
-  real, allocatable :: infl_cfac(:,:)       ! 区間の面エントリ別の受け口係数 (1:ncell, 1:ninflow)。
-                                            !   流入セルが流量を渡せる内部エッジ(有効な近傍)の数を
-                                            !   区間内の最大数で正規化したもの(壁の角・nodata に接する
-                                            !   端のセルで < 1。直線区間の内部は厳密に 1.0)。均等按分と
-                                            !   重み按分の両方の重みに乗じる。§69.9 対策 (a)
-  real, allocatable :: infl_hseg(:)         ! 区間の面エントリ別水深(重み按分の
-                                            !   作業配列。全ランクが同値を共有)
-
-
   !--------------------------------------------------------------------
   ! モジュール内で共有される重み係数の定義
   !--------------------------------------------------------------------
@@ -435,25 +467,30 @@ module m_swflow_enc
   logical, parameter :: esync_s(1:4) = [.false., .false., .false., .true. ]
   logical, parameter :: esync_n(1:4) = [.true.,  .true.,  .true.,  .false.]
 
-  ! 重み係数
-  integer :: din2(1:8)           ! din(:)**2
-  integer :: djn2(1:8)           ! djn(:)**2
-  real :: w8x(1:8)               ! 勾配モデルの重み係数
-  real :: w8y(1:8)               ! 勾配モデルの重み係数
-  real :: w8dr(1:8)              ! 近傍セル中心までの距離
-  real :: w8dr2(1:8)             ! 近傍セル中心までの距離の二乗
-  real :: l8x(1:8)               ! k軸方向のフラックス通過幅の重み
-  real :: l8y(1:8)               ! k軸方向のフラックス通過幅の重み
-  real :: l8(1:8)                ! k軸方向のフラックス通過幅の重み
-  logical :: skip8(1:8)          ! 通過幅ゼロのエッジ(p_diagratio=0/1 の対角・法線)
-  real :: lpx, lpy, ldx, ldy     ! 通過幅シェア(法線 lp・斜め ld。開口補正が使う)
-  real :: r8x(1:8)               ! din(:)/dx
-  real :: r8y(1:8)               ! djn(:)/dy
-  real :: n8x(1:8)               ! k軸の単位ベクトルのx方向成分
-  real :: n8y(1:8)               ! k軸の単位ベクトルのy方向成分
-  real :: w8mx(1:8)              ! k軸のフラックスからセル中心でのx方向平均量への寄与率
-  real :: w8my(1:8)              ! k軸のフラックスからセル中心でのy方向平均量への寄与率
-  real :: mn2dh(1:8)             ! k軸の単位幅流量から中心セルの水深減少量への変換係数
+  !--------------------------------------------------------------------
+  ! 変数群 geo: 8 近傍の幾何重み(init が格子寸法と p_diagratio から前計算。時間ループでは読み取り専用)
+  !--------------------------------------------------------------------
+  type t_enc_geom
+    integer :: din2(1:8)           ! din(:)**2
+    integer :: djn2(1:8)           ! djn(:)**2
+    real :: w8x(1:8)               ! 勾配モデルの重み係数
+    real :: w8y(1:8)               ! 勾配モデルの重み係数
+    real :: w8dr(1:8)              ! 近傍セル中心までの距離
+    real :: w8dr2(1:8)             ! 近傍セル中心までの距離の二乗
+    real :: l8x(1:8)               ! k軸方向のフラックス通過幅の重み
+    real :: l8y(1:8)               ! k軸方向のフラックス通過幅の重み
+    real :: l8(1:8)                ! k軸方向のフラックス通過幅の重み
+    logical :: skip8(1:8)          ! 通過幅ゼロのエッジ(p_diagratio=0/1 の対角・法線)
+    real :: lpx, lpy, ldx, ldy     ! 通過幅シェア(法線 lp・斜め ld。開口補正が使う)
+    real :: r8x(1:8)               ! din(:)/dx
+    real :: r8y(1:8)               ! djn(:)/dy
+    real :: n8x(1:8)               ! k軸の単位ベクトルのx方向成分
+    real :: n8y(1:8)               ! k軸の単位ベクトルのy方向成分
+    real :: w8mx(1:8)              ! k軸のフラックスからセル中心でのx方向平均量への寄与率
+    real :: w8my(1:8)              ! k軸のフラックスからセル中心でのy方向平均量への寄与率
+    real :: mn2dh(1:8)             ! k軸の単位幅流量から中心セルの水深減少量への変換係数
+  end type
+  type(t_enc_geom), allocatable :: geo
 
 
   !--------------------------------------------------------------------
@@ -467,127 +504,31 @@ module m_swflow_enc
   !   すること(test/Scripts/Check_modstate.py --check が漏れを検出する)。
   !   単一インスタンスでは alloc も swap も呼ばれない(ゼロ追加)
   !--------------------------------------------------------------------
+
+  !--------------------------------------------------------------------
+  ! 文脈の付け替え(複数インスタンス。developer.md §71・nesting_plan §3.2 B 群)
+  !   本モジュールのモジュール変数(= 上の変数群 7 つと私有状態 4 つ。
+  !   parameter を除く全て)をインスタンスごとに保持する枠。
+  !   m_swflow_enc_ctx_swap が現在のモジュール変数と枠の中身を move_alloc で
+  !   入れ替える(全て allocatable スカラーなので O(1))。未使用の枠は
+  !   未確保 = 起動直後の状態(init / ensure_groups が確保する)。
+  !   モジュール変数を増やすときは変数群の成分として増やす(swap は不変)。
+  !   新しい群を作るときは、この型と ctx_swap・ensure_groups・dispose を
+  !   同時に更新する(test/Scripts/Check_modstate.py --check が漏れを検出)。
+  !   単一インスタンスでは alloc も swap も呼ばれない(ゼロ追加)
+  !--------------------------------------------------------------------
   type t_enc_ctx
-    integer :: f_advection_term
-    integer :: f_pressure_term
-    integer :: f_gravity_correction
-    integer :: f_exflux_reduction
-    integer :: f_hcap_upwind
-    integer :: f_adaptive_runge
-    integer :: f_friction_fastmath
-    integer :: f_advection_scheme
-    integer :: f_rivermouth_drop
-    integer :: f_opening_dynamic
-    integer :: f_advection_donor
-    integer :: f_dry_head_cap
-    integer :: f_bank_mode
-    integer :: f_diffusion_term
-    integer :: f_nonhydrostatic = 0
-    real :: nh_hmin = 0.1
-    integer :: nh_solver = 2
-    integer :: nh_itmax = 500
-    real :: nh_tol = 1.0e-6
-    integer :: f_nh_adaptive = 0
-    integer :: nh_detector = 1
-    real :: nh_chi_on = 0.06
-    integer :: nh_margin = 0
-    real :: nh_amin = 1.0e-5
-    real :: nh_arel = 1.0e-3
-    integer :: f_nh_breaking = 0
-    real :: nh_break_alpha = 0.6
-    real :: nh_break_beta = 0.3
-    integer :: nh_break_type = 3
-    real :: nh_break_fr = 0.6
-    real :: nh_break_slope = 0.3
-    integer :: nh_break_margin = 0
-    real :: nh_break_visc = 0.0
-    integer :: nh_bc_margin = 0
-    integer :: f_nh_slope = 0
-    integer :: f_nh_bottom = 0
-    logical :: have_diff = .false.
-    real, allocatable :: nh_nub(:,:)
-    logical :: nh_active = .false.
-    real, allocatable :: nh_he(:,:,:)
-    real :: p_diagratio
-    real :: p_adv_upwind_index
-    real :: p_adprunge_thresh
-    real :: p_diffusion_nu
-    real :: p_diffusion_alpha
-    logical :: have_open_bc = .false.
-    integer :: db_res = 0
-    real :: db_tanphi = 0.0
-    real :: db_sgrav = 0.0
-    real :: db_vstop = 0.0
-    real :: db_cstar = 0.0
-    real :: db_cmin = 0.0
-    real :: db_d50v = 0.0
-    real :: db_kcol = 0.0
-    real :: db_mu = 0.0
-    real :: db_xi = 0.0
-    real :: db_tauy = 0.0
-    integer :: db_curv = 0
-    real, allocatable :: acv(:,:)
-    logical :: have_bank = .false.
-    integer, allocatable :: nwall(:,:)
-    logical :: have_swall = .false.
-    integer :: f_swall_mode = 0
-    integer :: f_bank_opening
-    logical :: have_bopen = .false.
-    integer :: f_channel_advection
-    logical :: have_width = .false.
-    logical :: have_frw = .false.
-    logical :: adv_drop_rw = .false.
-    real, allocatable :: frw(:,:,:)
-    real, allocatable :: wfrac(:,:)
-    logical :: have_fwd = .false.
-    logical :: fwd_restored = .false.
-    real, allocatable :: fwd(:,:,:)
-    logical :: have_breach = .false.
-    integer :: nbr = 0
-    type(t_breach), allocatable :: br(:)
-    integer, allocatable :: ibr0(:), ibr1(:)
-    integer, allocatable :: ibrs(:)
-    logical :: have_cwd = .false.
-    logical :: cwd_restored = .false.
-    real, allocatable :: cwxd(:,:), cwyd(:,:)
-    real, allocatable :: cwx(:,:), cwy(:,:)
-    logical :: have_sect = .false.
-    logical :: have_edge_flux = .false.
-    real :: sect_m = 0.0
-    real :: sect_mp1 = 1.0
-    real :: sect_rmp1 = 1.0
-    real :: sect_mfac = 0.0
-    real, allocatable :: screst(:,:)
-    real, allocatable :: sdep(:,:)
-    real, allocatable :: frw0(:,:,:)
+    type(t_enc_opt), allocatable :: opt
+    type(t_enc_nhopt), allocatable :: nhp
+    type(t_enc_debris), allocatable :: dbr
+    type(t_enc_channel), allocatable :: chn
+    type(t_enc_sect), allocatable :: sct
+    type(t_enc_geom), allocatable :: geo
+    type(t_enc_bcstate), allocatable :: bcs
     type(t_enc_status), allocatable :: sx_mod
     type(t_enc_adv), allocatable :: tx_mod
     type(t_enc_diff), allocatable :: td_mod
     type(t_enc_nh), allocatable :: nh_mod
-    integer :: f_bc_side(1:4) = e_bc_wall
-    integer, allocatable :: bt_cell(:,:)
-    real, allocatable :: bc_eta_cell(:,:)
-    real, allocatable :: infl_wseg(:)
-    real, allocatable :: infl_cfac(:,:)
-    real, allocatable :: infl_hseg(:)
-    integer :: din2(1:8)
-    integer :: djn2(1:8)
-    real :: w8x(1:8)
-    real :: w8y(1:8)
-    real :: w8dr(1:8)
-    real :: w8dr2(1:8)
-    real :: l8x(1:8)
-    real :: l8y(1:8)
-    real :: l8(1:8)
-    logical :: skip8(1:8)
-    real :: lpx, lpy, ldx, ldy
-    real :: r8x(1:8)
-    real :: r8y(1:8)
-    real :: n8x(1:8)
-    real :: n8y(1:8)
-    real :: w8mx(1:8)
-    real :: w8my(1:8)
-    real :: mn2dh(1:8)
   end type
   type(t_enc_ctx), allocatable :: enc_ctx(:)
 
@@ -777,7 +718,8 @@ subroutine m_swflow_enc_init(p, g, b, s)
   type(t_list_enc) :: list
   type(t_list_channel) :: chlist
 
-  ! 私有状態の実体を確保する(allocatable スカラー。文脈の付け替えの対象)
+  ! 変数群と私有状態の実体を確保する(allocatable スカラー。文脈の付け替えの対象)
+  call ensure_groups()
   if (.not. allocated(sx_mod)) allocate(sx_mod)
   if (.not. allocated(tx_mod)) allocate(tx_mod)
   if (.not. allocated(td_mod)) allocate(td_mod)
@@ -787,10 +729,10 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! fn_enc 未指定なら既定値で続行(geoinfo/initial と異なり必須にしない)
   if (len_trim(p%fn_enc) > 0) call list_enc_read(p, list)
 
-  f_gravity_correction = list%f_gravity_correction
-  f_exflux_reduction = list%f_exflux_reduction
-  f_hcap_upwind = list%f_hcap_upwind
-  select case (f_hcap_upwind)
+  opt%f_gravity_correction = list%f_gravity_correction
+  opt%f_exflux_reduction = list%f_exflux_reduction
+  opt%f_hcap_upwind = list%f_hcap_upwind
+  select case (opt%f_hcap_upwind)
     case (0, 1)   ! なし / 上流側水深で頭打ち(既定)
     case (2)      ! 上流側水深そのもの(§68.7)
       call par_info("swflow_enc: f_hcap_upwind = 2 (edge depth = upwind cell depth)")
@@ -798,13 +740,13 @@ subroutine m_swflow_enc_init(p, g, b, s)
       call par_stop("list_enc: f_hcap_upwind must be 0(none), 1(cap by upwind depth) " // &
                     "or 2(upwind depth)")
   end select
-  f_adaptive_runge = list%f_adaptive_runge
-  f_friction_fastmath = list%f_friction_fastmath
-  f_advection_scheme = list%f_advection_scheme
-  f_opening_dynamic = list%f_opening_dynamic
-  f_dry_head_cap = list%f_dry_head_cap
-  f_advection_donor = list%f_advection_donor
-  select case (f_advection_scheme)
+  opt%f_adaptive_runge = list%f_adaptive_runge
+  opt%f_friction_fastmath = list%f_friction_fastmath
+  opt%f_advection_scheme = list%f_advection_scheme
+  opt%f_opening_dynamic = list%f_opening_dynamic
+  opt%f_dry_head_cap = list%f_dry_head_cap
+  opt%f_advection_donor = list%f_advection_donor
+  select case (opt%f_advection_scheme)
     case (1)      ! セル中心勾配(v1。既定)
     case (2)      ! 運動量保存形(Stelling & Duinmeijer)・1次風上
       call par_info("swflow_enc: f_advection_scheme = 2 (momentum-conservative, 1st-order upwind)")
@@ -814,49 +756,49 @@ subroutine m_swflow_enc_init(p, g, b, s)
       call par_stop("list_enc: f_advection_scheme must be 1(cell-gradient), " // &
                     "2(momentum-conservative upwind) or 3(momentum-conservative MUSCL)")
   end select
-  f_rivermouth_drop = list%f_rivermouth_drop
-  f_diffusion_term = list%f_diffusion_term
+  opt%f_rivermouth_drop = list%f_rivermouth_drop
+  opt%f_diffusion_term = list%f_diffusion_term
   ! 河口の強制段落ちは潮位(fn_tide)と両立しない(高潮位時の背水を
   ! 無視して常時射流で流出させてしまう)。判定材料は namelist 由来で
   ! 全ランク同一(par_stop は collective 安全)
-  if (f_rivermouth_drop > 0 .and. len_trim(p%fn_tide) > 0) then
+  if (opt%f_rivermouth_drop > 0 .and. len_trim(p%fn_tide) > 0) then
     call par_stop("list_enc: f_rivermouth_drop cannot be used together with tide (fn_tide)")
   end if
-  p_diagratio = list%p_diagratio
-  p_adv_upwind_index = list%p_adv_upwind_index
-  p_adprunge_thresh = list%p_adprunge_thresh
-  p_diffusion_nu = list%p_diffusion_nu
-  p_diffusion_alpha = list%p_diffusion_alpha
-  f_nonhydrostatic = list%f_nonhydrostatic
-  nh_hmin = list%nh_hmin
-  nh_solver = list%nh_solver
-  nh_itmax = list%nh_itmax
-  nh_tol = list%nh_tol
-  f_nh_adaptive = list%f_nh_adaptive
-  nh_detector = list%nh_detector
-  nh_chi_on = list%nh_chi_on
-  nh_margin = list%nh_margin
-  nh_amin = list%nh_amin
-  nh_arel = list%nh_arel
-  f_nh_breaking = list%f_nh_breaking
-  nh_break_alpha = list%nh_break_alpha
-  nh_break_beta = list%nh_break_beta
-  nh_break_type = list%nh_break_type
-  nh_break_fr = list%nh_break_fr
-  nh_break_slope = list%nh_break_slope
-  nh_break_margin = list%nh_break_margin
-  nh_break_visc = list%nh_break_visc
-  nh_bc_margin = list%nh_bc_margin
-  f_nh_slope = list%f_nh_slope
-  f_nh_bottom = list%f_nh_bottom
-  select case (f_diffusion_term)
+  opt%p_diagratio = list%p_diagratio
+  opt%p_adv_upwind_index = list%p_adv_upwind_index
+  opt%p_adprunge_thresh = list%p_adprunge_thresh
+  opt%p_diffusion_nu = list%p_diffusion_nu
+  opt%p_diffusion_alpha = list%p_diffusion_alpha
+  nhp%f_nonhydrostatic = list%f_nonhydrostatic
+  nhp%nh_hmin = list%nh_hmin
+  nhp%nh_solver = list%nh_solver
+  nhp%nh_itmax = list%nh_itmax
+  nhp%nh_tol = list%nh_tol
+  nhp%f_nh_adaptive = list%f_nh_adaptive
+  nhp%nh_detector = list%nh_detector
+  nhp%nh_chi_on = list%nh_chi_on
+  nhp%nh_margin = list%nh_margin
+  nhp%nh_amin = list%nh_amin
+  nhp%nh_arel = list%nh_arel
+  nhp%f_nh_breaking = list%f_nh_breaking
+  nhp%nh_break_alpha = list%nh_break_alpha
+  nhp%nh_break_beta = list%nh_break_beta
+  nhp%nh_break_type = list%nh_break_type
+  nhp%nh_break_fr = list%nh_break_fr
+  nhp%nh_break_slope = list%nh_break_slope
+  nhp%nh_break_margin = list%nh_break_margin
+  nhp%nh_break_visc = list%nh_break_visc
+  nhp%nh_bc_margin = list%nh_bc_margin
+  nhp%f_nh_slope = list%f_nh_slope
+  nhp%f_nh_bottom = list%f_nh_bottom
+  select case (opt%f_diffusion_term)
     case (0)      ! 無効
     case (1)      ! 定数モデル
-      if (p_diffusion_nu <= 0) then
+      if (opt%p_diffusion_nu <= 0) then
         call par_stop("list_enc: f_diffusion_term=1 requires p_diffusion_nu > 0")
       end if
     case (2)      ! ゼロ方程式モデル
-      if (p_diffusion_alpha <= 0 .and. p_diffusion_nu <= 0) then
+      if (opt%p_diffusion_alpha <= 0 .and. opt%p_diffusion_nu <= 0) then
         call par_stop("list_enc: f_diffusion_term=2 requires p_diffusion_alpha > 0 "// &
                       "(or p_diffusion_nu > 0)")
       end if
@@ -866,88 +808,88 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 砕波域の渦粘性(plan §15)は NH の砕波スイッチが前提。拡散項の計算は
   ! f_diffusion_term か nh_break_visc のどちらかが有効なら行う(どちらも
   ! 無効なら従来どおりゼロ追加)
-  if (nh_break_visc < 0.0) call par_stop("list_enc: nh_break_visc must be >= 0")
-  if (nh_break_visc > 0.0 .and. (f_nonhydrostatic /= 1 .or. f_nh_breaking /= 1)) then
+  if (nhp%nh_break_visc < 0.0) call par_stop("list_enc: nh_break_visc must be >= 0")
+  if (nhp%nh_break_visc > 0.0 .and. (nhp%f_nonhydrostatic /= 1 .or. nhp%f_nh_breaking /= 1)) then
     call par_stop("list_enc: nh_break_visc > 0 requires f_nonhydrostatic=1 and f_nh_breaking=1")
   end if
-  have_diff = (f_diffusion_term > 0 .or. nh_break_visc > 0.0)
+  opt%have_diff = (opt%f_diffusion_term > 0 .or. nhp%nh_break_visc > 0.0)
 
   ! 河道条件ファイルから堤防の水理モードを読む(未指定ならデフォルト値)
   if (len_trim(p%fn_channel) > 0) call list_channel_read(p, chlist)
-  f_bank_mode = chlist%f_bank_mode
-  f_bank_opening = chlist%f_bank_opening
-  f_channel_advection = chlist%f_channel_advection
+  opt%f_bank_mode = chlist%f_bank_mode
+  opt%f_bank_opening = chlist%f_bank_opening
+  opt%f_channel_advection = chlist%f_channel_advection
 
   ! 堤防(仮想壁面)・河道幅の有効判定は geoinfo の構築結果に従う
-  have_bank = g%bank_active
-  if (have_bank) call bank_init(g)
-  have_swall = g%swall_active
-  f_swall_mode = g%f_swall_mode             ! 検証は geoinfo(setup_seawall)済み
-  have_width = g%width_active
+  chn%have_bank = g%bank_active
+  if (chn%have_bank) call bank_init(g)
+  chn%have_swall = g%swall_active
+  chn%f_swall_mode = g%f_swall_mode             ! 検証は geoinfo(setup_seawall)済み
+  chn%have_width = g%width_active
   ! 曲率項の作業配列(f_dbcurv=1 のみ。set_debris は geomorph init から
   ! swflow init より前に呼ばれる契約なので db_curv はここで確定済み)
-  if (db_curv > 0) allocate(acv(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  if (f_bank_mode < e_bank_weir .or. f_bank_mode > e_bank_pump) then
+  if (dbr%db_curv > 0) allocate(dbr%acv(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  if (opt%f_bank_mode < e_bank_weir .or. opt%f_bank_mode > e_bank_pump) then
     call par_stop("list_channel: f_bank_mode must be 0(overtopping only), " &
                   //"1(one-way sluice) or 2(forced drainage)")
   end if
-  if (f_bank_opening < 0 .or. f_bank_opening > 1) then
+  if (opt%f_bank_opening < 0 .or. opt%f_bank_opening > 1) then
     call par_stop("list_channel: f_bank_opening must be 0(none) or 1(reassign to normal edges)")
   end if
-  if (f_channel_advection < 0 .or. f_channel_advection > 1) then
+  if (opt%f_channel_advection < 0 .or. opt%f_channel_advection > 1) then
     call par_stop("list_channel: f_channel_advection must be 0(drop) or 1(normal)")
   end if
   ! 有効判定は namelist 由来+geoinfo の構築結果で全ランク同一
-  have_bopen = have_bank .and. f_bank_opening > 0
-  have_frw = have_bopen .or. have_width
+  chn%have_bopen = chn%have_bank .and. opt%f_bank_opening > 0
+  chn%have_frw = chn%have_bopen .or. chn%have_width
   ! 塞がれた開口の動的振り替え(§68.14)。有効判定は namelist 由来で
   ! 全ランク同一。河道限定(1)は河道マスク(rw)が必須
-  if (f_opening_dynamic < 0 .or. f_opening_dynamic > 2) then
+  if (opt%f_opening_dynamic < 0 .or. opt%f_opening_dynamic > 2) then
     call par_stop("list_enc: f_opening_dynamic must be 0(off), 1(channel edges) or 2(all edges)")
   end if
-  have_fwd = f_opening_dynamic > 0
-  if (f_advection_donor < 0 .or. f_advection_donor > 1) then
+  chn%have_fwd = opt%f_opening_dynamic > 0
+  if (opt%f_advection_donor < 0 .or. opt%f_advection_donor > 1) then
     call par_stop("list_enc: f_advection_donor must be 0(all wet cells) or 1(channel cells on channel edges)")
   end if
-  if (f_advection_donor == 1 .and. .not. any(g%rw > 0)) then
+  if (opt%f_advection_donor == 1 .and. .not. any(g%rw > 0)) then
     call par_stop("list_enc: f_advection_donor=1 requires a channel mask (fn_rw in list_geoinfo)")
   end if
-  if (f_advection_donor == 1 .and. f_advection_scheme < 2) then
+  if (opt%f_advection_donor == 1 .and. opt%f_advection_scheme < 2) then
     call par_info("swflow: f_advection_donor=1 has no effect with f_advection_scheme=1")
   end if
-  if (f_dry_head_cap < 0 .or. f_dry_head_cap > 1) then
+  if (opt%f_dry_head_cap < 0 .or. opt%f_dry_head_cap > 1) then
     call par_stop("list_enc: f_dry_head_cap must be 0(off) or 1(cap edge depth toward dry cells by energy head)")
   end if
   ! 河道限定(1。既定)は河道マスクがなければ対象エッジが存在しないので無効化
   ! (fwd を確保せず、メモリ・CPU とも追加なし。全エッジに効かせたい氾濫・
   ! ダム破壊は 2 を明示する。§68.19)
-  if (f_opening_dynamic == 1 .and. .not. any(g%rw > 0)) then
+  if (opt%f_opening_dynamic == 1 .and. .not. any(g%rw > 0)) then
     call par_info("swflow: f_opening_dynamic=1 has no channel mask (fn_rw); dynamic opening disabled")
-    have_fwd = .false.
+    chn%have_fwd = .false.
   end if
-  if (have_fwd) then
-    allocate(fwd(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 1.0)
-    if (have_width) then
-      have_cwd = .true.
-      allocate(cwxd(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
-      allocate(cwyd(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
+  if (chn%have_fwd) then
+    allocate(chn%fwd(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 1.0)
+    if (chn%have_width) then
+      chn%have_cwd = .true.
+      allocate(chn%cwxd(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
+      allocate(chn%cwyd(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
     end if
     call par_info("swflow: dynamic opening reassignment enabled (f_opening_dynamic=" &
-                  //itoa(f_opening_dynamic)//")")
+                  //itoa(opt%f_opening_dynamic)//")")
   end if
-  adv_drop_rw = have_bank .and. f_channel_advection == 0
+  chn%adv_drop_rw = chn%have_bank .and. opt%f_channel_advection == 0
 
   ! システムパラメータから継承するENCパラメータをセットする
   select case (p%f_govequation)
     case (0)      ! DynWE
-      f_advection_term = 1
-      f_pressure_term = 1
+      opt%f_advection_term = 1
+      opt%f_pressure_term = 1
     case (1)      ! DifWE
-      f_advection_term = 0
-      f_pressure_term = 1
+      opt%f_advection_term = 0
+      opt%f_pressure_term = 1
     case default  ! KinWE
-      f_advection_term = 0
-      f_pressure_term = 0
+      opt%f_advection_term = 0
+      opt%f_pressure_term = 0
   end select
 
   ! 重み係数をセットする
@@ -959,17 +901,17 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 全ランクが自分の帯+ハロ行を冗長構築する)
   ! 断面形一般化 σ(h)(§26)の有効判定は build_channel_frw より前に行う
   ! (キャップ前 frw の保存 frw0 の要否を build が参照するため)
-  sect_m = chlist%p_sect_m
-  if (sect_m < 0.0) call par_stop("list_channel: p_sect_m must be >= 0")
-  have_sect = sect_m > 0.0 .and. (g%bank_active .or. g%drw_active)
-  if (sect_m > 0.0 .and. .not. have_sect) then
+  sct%sect_m = chlist%p_sect_m
+  if (sct%sect_m < 0.0) call par_stop("list_channel: p_sect_m must be >= 0")
+  sct%have_sect = sct%sect_m > 0.0 .and. (g%bank_active .or. g%drw_active)
+  if (sct%sect_m > 0.0 .and. .not. sct%have_sect) then
     call par_stop("list_channel: p_sect_m > 0 requires a transition depth source " &
                   //"(levee crest via fn_bank/bank0, or incision depth via depth_rw/fn_depth_rw)")
   end if
-  if (have_sect) then
-    sect_mp1 = sect_m + 1.0
-    sect_rmp1 = 1.0 / sect_mp1
-    sect_mfac = sect_m * sect_rmp1
+  if (sct%have_sect) then
+    sct%sect_mp1 = sct%sect_m + 1.0
+    sct%sect_rmp1 = 1.0 / sct%sect_mp1
+    sct%sect_mfac = sct%sect_m * sct%sect_rmp1
   end if
 
   ! 境界条件の適用層を初期化する(辺型・面型・基準水位・流入区間の
@@ -977,15 +919,15 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 通過幅係数の構築が境界面の開閉(bc_open_face)を読むためその前に)
   call bc_init(p, g, b)
 
-  if (have_frw) call build_channel_frw(g)
-  if (have_width) call build_wfrac(g)
+  if (chn%have_frw) call build_channel_frw(g)
+  if (chn%have_width) call build_wfrac(g)
 
   ! σ の遷移深さ D の構築(zbank/drw は帯配布済み)
-  if (have_sect) call build_sdep(g, b, s)
+  if (sct%have_sect) call build_sdep(g, b, s)
   ! 実効平面積率 af(§25/§26)。restore 後の統計・gwflow が最初のステップ
   ! 前に読むため init でも埋める(既定は m_state_init の gv のまま。
   ! 空隙率が時間変化する機能(s%gv_active。§63.1)も毎ステップ更新の対象)
-  if (have_width .or. have_sect .or. s%gv_active) call update_af(g, s)
+  if (chn%have_width .or. sct%have_sect .or. s%gv_active) call update_af(g, s)
 
   ! 破堤サイトの解釈・検証・行バケット構築(zbank の帯と s%z を読むため
   ! この位置。have_breach を設定する)
@@ -1006,7 +948,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   call nh_init(p, g, b, s)
 
   ! 高速摩擦計算ルーチンを初期化する
-  call m_ffactor_init(f_friction_fastmath, p%dd, 30.0, 'UV')
+  call m_ffactor_init(opt%f_friction_fastmath, p%dd, 30.0, 'UV')
 
   ! 水深の境界条件をセットする
   !   init 時点で実効なのはため池の初期吸収だけ: 降雨は s%pre=0
@@ -1041,7 +983,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 変数を更新して次のタイムステップの準備をする(initial: σ 適用セルの
   ! h は正準のまま保ち、u,v の再正規化もしない。§26)
   call complete(p, g, s, sx_mod, initial=.true.)
-  have_edge_flux = .true.
+  opt%have_edge_flux = .true.
 
 end subroutine
 
@@ -1069,7 +1011,7 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! セルの流量 m, n を読む: uv をエッジ幅2、m, n をセル幅2で交換する
   ! (スキーム1では呼ばない=通信ゼロ追加。判定は namelist 由来で
   ! 全ランク同一 → collective 安全)
-  if (f_advection_scheme >= 2) then
+  if (opt%f_advection_scheme >= 2) then
     call par_halo_edge(sx_mod%uv, 2)
     call par_halo_cell(s%m)
     call par_halo_cell(s%n)
@@ -1086,15 +1028,15 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
 
   ! 破堤サイトの現時刻の実効天端を更新する(サイト数ぶんの時系列補間。
   ! t の純関数なので全ランクが同値を冗長計算する=通信不要)
-  if (have_breach) call breach_update(s%t)
+  if (chn%have_breach) call breach_update(s%t)
 
   ! 塞がれた開口の動的振り替え表をステップ頭の h, z(ハロ交換済み)から
   ! 構築する(§68.14。無効時は呼ばない=ゼロ追加)
-  if (have_fwd) call build_fwd(p, g, s)
-  if (have_cwd) call build_cwd(g, s)
+  if (chn%have_fwd) call build_fwd(p, g, s)
+  if (chn%have_cwd) call build_cwd(g, s)
 
   ! 非静水圧補正: ステップ頭のエッジ流速 u^n を複製する(NH ON のみ)
-  if (nh_active) call nh_prepare(sx_mod)
+  if (nhp%nh_active) call nh_prepare(sx_mod)
 
   ! 移流項を計算する
   call adv_prepare(p, g, s, sx_mod)
@@ -1103,7 +1045,7 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   call diff_prepare(p, g, s)
 
   ! 曲率項の遠心加速度をセルごとに前計算する(f_dbcurv=1。§28.10)
-  if (db_curv > 0) call curv_prepare(g, s)
+  if (dbr%db_curv > 0) call curv_prepare(g, s)
 
   ! 運動方程式を解いて流速を計算する
   call momentum(p, g, s, sx_mod, ierror)
@@ -1119,7 +1061,7 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
 
   ! 非静水圧補正(NH ON のみ): 静水圧 predictor の全加速度に 1 層 NH の
   ! 射影を掛けてエッジ流速・流量を補正する(docs/nonhydrostatic_plan.md §5)
-  if (nh_active) call nh_project(p, g, s, sx_mod)
+  if (nhp%nh_active) call nh_project(p, g, s, sx_mod)
 
   ! 連続式を解いて水深を更新する
   call continuous(p, g, s, sx_mod)
@@ -1189,19 +1131,20 @@ subroutine m_swflow_enc_set_debris(fres, tanphi, sgrav, vstop, cstar, cmin, d50,
   real, intent(in) :: xi                ! Voellmy 乱流係数 ξ (m/s²)(f_dbres=4)
   real, intent(in) :: tauy              ! 一定停止応力 τ_y (Pa)(f_dbres=5)
   integer, intent(in) :: fcurv          ! 曲率項の有無(f_dbcurv。§28.10)
-  db_res = fres
-  db_tanphi = tanphi
-  db_sgrav = sgrav
-  db_vstop = vstop
-  db_cstar = cstar
-  db_cmin = cmin
-  db_d50v = d50
+  call ensure_groups()                  ! swflow init より前に呼ばれる(dbr を確保)
+  dbr%db_res = fres
+  dbr%db_tanphi = tanphi
+  dbr%db_sgrav = sgrav
+  dbr%db_vstop = vstop
+  dbr%db_cstar = cstar
+  dbr%db_cmin = cmin
+  dbr%db_d50v = d50
   ! 層流則第2項の係数 k_d・(σ/ρ)・(1−e²)(σ/ρ = s+1)
-  db_kcol = db_kd * (sgrav + 1.0) * (1.0 - erest**2)
-  db_mu = mu
-  db_xi = xi
-  db_tauy = tauy
-  db_curv = fcurv
+  dbr%db_kcol = db_kd * (sgrav + 1.0) * (1.0 - erest**2)
+  dbr%db_mu = mu
+  dbr%db_xi = xi
+  dbr%db_tauy = tauy
+  dbr%db_curv = fcurv
 end subroutine
 
 
@@ -1213,49 +1156,37 @@ subroutine m_swflow_enc_dispose(p)
   if (p%f_state_save > 0) call save_state(p, sx_mod)
   call bc_dispose
   call del_enc_status(sx_mod)
-  if (allocated(frw)) deallocate(frw)
-  if (allocated(fwd)) deallocate(fwd)
-  have_fwd = .false.
-  fwd_restored = .false.
-  if (allocated(cwxd)) deallocate(cwxd)
-  if (allocated(cwyd)) deallocate(cwyd)
-  have_cwd = .false.
-  cwd_restored = .false.
-  if (allocated(wfrac)) deallocate(wfrac)
-  if (allocated(cwx)) deallocate(cwx)
-  if (allocated(sdep)) deallocate(sdep)
-  if (allocated(screst)) deallocate(screst)
-  if (allocated(frw0)) deallocate(frw0)
-  if (allocated(cwy)) deallocate(cwy)
-  if (allocated(acv)) deallocate(acv)
-  db_curv = 0
   call breach_dispose
-  if (allocated(nwall)) deallocate(nwall)
-  have_bopen = .false.
-  have_width = .false.
-  have_sect = .false.
-  have_edge_flux = .false.
-  sect_m = 0.0
-  have_frw = .false.
-  db_res = 0
-  db_tanphi = 0.0
-  db_sgrav = 0.0
-  db_vstop = 0.0
-  db_cstar = 0.0
-  db_cmin = 0.0
-  db_d50v = 0.0
-  db_kcol = 0.0
-  db_mu = 0.0
-  db_xi = 0.0
-  db_tauy = 0.0
   call m_ffactor_dispose
   call adv_dispose
   call diff_dispose
   call nh_dispose
+  ! 変数群を既定値へ戻す(解放して確保し直す = 配列成分の解放と既定初期化)。
+  ! 実体は残す: dispose の後に他モジュール(m_wq, m_record 等)が
+  ! chn%have_width 等を読んでも安全で、再 initialize は起動直後と同じ
+  ! 既定値から始まる(§71)
+  deallocate(opt, nhp, dbr, chn, sct, geo, bcs)
+  call ensure_groups()
   if (allocated(sx_mod)) deallocate(sx_mod)
   if (allocated(tx_mod)) deallocate(tx_mod)
   if (allocated(td_mod)) deallocate(td_mod)
   if (allocated(nh_mod)) deallocate(nh_mod)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 変数群の実体を確保する(未確保のものだけ。既定値で初期化される)。
+!   init の冒頭と、init より前に呼ばれる公開口(m_swflow_enc_set_debris)
+!   から呼ぶ。dispose は実体を残して既定値へ戻すので、2 回目以降は何もしない
+!----------------------------------------------------------------------
+subroutine ensure_groups()
+  if (.not. allocated(opt)) allocate(opt)
+  if (.not. allocated(nhp)) allocate(nhp)
+  if (.not. allocated(dbr)) allocate(dbr)
+  if (.not. allocated(chn)) allocate(chn)
+  if (.not. allocated(sct)) allocate(sct)
+  if (.not. allocated(geo)) allocate(geo)
+  if (.not. allocated(bcs)) allocate(bcs)
 end subroutine
 
 
@@ -1275,17 +1206,17 @@ subroutine init_weights(p, g)
 
   dr = sqrt(g%dx**2 + g%dy**2)
 
-  forall(k=1:8) din2(k) = din(k)**2
-  forall(k=1:8) djn2(k) = djn(k)**2
-  forall(k=1:8) r8x(k) = real(din(k)) / g%dx
-  forall(k=1:8) r8y(k) = real(djn(k)) / g%dy
+  forall(k=1:8) geo%din2(k) = din(k)**2
+  forall(k=1:8) geo%djn2(k) = djn(k)**2
+  forall(k=1:8) geo%r8x(k) = real(din(k)) / g%dx
+  forall(k=1:8) geo%r8y(k) = real(djn(k)) / g%dy
 
-  w8dr(1:8) = [ dr, g%dy, dr, g%dx, g%dx, dr, g%dy, dr ]
-  forall(k=1:8) w8dr2(k) = w8dr(k)**2
+  geo%w8dr(1:8) = [ dr, g%dy, dr, g%dx, g%dx, dr, g%dy, dr ]
+  forall(k=1:8) geo%w8dr2(k) = geo%w8dr(k)**2
 
   ! k軸の単位ベクトルのx, y方向成分
-  n8x(1:8) = [ -g%dx/dr,  0.0,  g%dx/dr, -1.0, 1.0, -g%dx/dr, 0.0, g%dx/dr ]
-  n8y(1:8) = [ -g%dy/dr, -1.0, -g%dy/dr,  0.0, 0.0,  g%dy/dr, 1.0, g%dy/dr ]
+  geo%n8x(1:8) = [ -g%dx/dr,  0.0,  g%dx/dr, -1.0, 1.0, -g%dx/dr, 0.0, g%dx/dr ]
+  geo%n8y(1:8) = [ -g%dy/dr, -1.0, -g%dy/dr,  0.0, 0.0,  g%dy/dr, 1.0, g%dy/dr ]
 
   ! フラックスの通過幅の割合
   !   lpy, ldyはy軸に投影したLの長さのΔyに対する割合(x方向フラックスが通過)
@@ -1293,46 +1224,46 @@ subroutine init_weights(p, g)
   !   lpy, lpxは斜め方向、ldy, ldxは軸方向
   !   ここで lpx + (ldx * 2) = 1, lpy + (ldy * 2) = 1 である
   if (g%dy > g%dx) then
-    lpy = 1 - (g%dx / g%dy)**2 * p_diagratio
-    ldy = p_diagratio / 2 * (g%dx / g%dy)**2
-    lpx = 1 - p_diagratio
-    ldx = p_diagratio / 2
+    geo%lpy = 1 - (g%dx / g%dy)**2 * opt%p_diagratio
+    geo%ldy = opt%p_diagratio / 2 * (g%dx / g%dy)**2
+    geo%lpx = 1 - opt%p_diagratio
+    geo%ldx = opt%p_diagratio / 2
   else
-    lpy = 1 - p_diagratio
-    ldy = p_diagratio / 2
-    lpx = 1 - (g%dy / g%dx)**2 * p_diagratio
-    ldx = p_diagratio / 2 * (g%dy / g%dx)**2
+    geo%lpy = 1 - opt%p_diagratio
+    geo%ldy = opt%p_diagratio / 2
+    geo%lpx = 1 - (g%dy / g%dx)**2 * opt%p_diagratio
+    geo%ldx = opt%p_diagratio / 2 * (g%dy / g%dx)**2
   end if
 
   ! k軸方向フラックスの通過幅の割合
   !   l8yはy軸に投影したLの長さのΔyに対する割合(x方向フラックスが通過)
   !   l8xはx軸に投影したLの長さのΔxに対する割合(y方向フラックスが通過)
-  l8y(1:8) = [ ldy, 0.0, ldy, lpy, lpy, ldy, 0.0, ldy ]
-  l8x(1:8) = [ ldx, lpx, ldx, 0.0, 0.0, ldx, lpx, ldx ]
+  geo%l8y(1:8) = [ geo%ldy, 0.0, geo%ldy, geo%lpy, geo%lpy, geo%ldy, 0.0, geo%ldy ]
+  geo%l8x(1:8) = [ geo%ldx, geo%lpx, geo%ldx, 0.0, 0.0, geo%ldx, geo%lpx, geo%ldx ]
 
   ! 勾配モデルの重み係数
-  w8x(1:8) = [ ldy, 0.0, ldy, lpy, lpy, ldy, 0.0, ldy ]
-  w8y(1:8) = [ ldx, lpx, ldx, 0.0, 0.0, ldx, lpx, ldx ]
+  geo%w8x(1:8) = [ geo%ldy, 0.0, geo%ldy, geo%lpy, geo%lpy, geo%ldy, 0.0, geo%ldy ]
+  geo%w8y(1:8) = [ geo%ldx, geo%lpx, geo%ldx, 0.0, 0.0, geo%ldx, geo%lpx, geo%ldx ]
 
 
   ! k軸方向フラックスの通過幅
-  forall(k=1:8) l8(k) = sqrt((l8y(k) * g%dy)**2 + (l8x(k) * g%dx)**2)
+  forall(k=1:8) geo%l8(k) = sqrt((geo%l8y(k) * g%dy)**2 + (geo%l8x(k) * g%dx)**2)
 
   ! 通過幅ゼロのエッジは運動方程式の対象外(質量交換が常にゼロのまま
   ! 流速の積分だけが続くと、大きな段差のエッジで発散判定に掛かるため)
-  forall(k=1:8) skip8(k) = (l8(k) <= 0)
+  forall(k=1:8) geo%skip8(k) = (geo%l8(k) <= 0)
 
   ! セル境界の流速・流量からセル中心の平均流速・平均流量の増分を計算するための係数
   !   セル中心から近傍に向かうフラックスuvをn8x, n8yで除して投影前のxとyの正の方向成分に戻す
   !   近傍の方向に応じた開口幅(辺長)をl8x, l8yで調整し、
   !   セルの左右(上下)の平均をとるために2で割る
-  w8mx(1:8) = [ 1/n8x(1), 0.0, 1/n8x(3), 1/n8x(4), 1/n8x(5), 1/n8x(6), 0.0, 1/n8x(8) ]
-  w8my(1:8) = [ 1/n8y(1), 1/n8y(2), 1/n8y(3), 0.0, 0.0, 1/n8y(6), 1/n8y(7), 1/n8y(8) ]
-  forall(k=1:8) w8mx(k) = w8mx(k) * l8y(k) / 2
-  forall(k=1:8) w8my(k) = w8my(k) * l8x(k) / 2
+  geo%w8mx(1:8) = [ 1/geo%n8x(1), 0.0, 1/geo%n8x(3), 1/geo%n8x(4), 1/geo%n8x(5), 1/geo%n8x(6), 0.0, 1/geo%n8x(8) ]
+  geo%w8my(1:8) = [ 1/geo%n8y(1), 1/geo%n8y(2), 1/geo%n8y(3), 0.0, 0.0, 1/geo%n8y(6), 1/geo%n8y(7), 1/geo%n8y(8) ]
+  forall(k=1:8) geo%w8mx(k) = geo%w8mx(k) * geo%l8y(k) / 2
+  forall(k=1:8) geo%w8my(k) = geo%w8my(k) * geo%l8x(k) / 2
 
   ! セル境界での単位幅流量から中心セルの1時間ステップでの水位減少量を計算するための係数
-  forall(k=1:8) mn2dh(k) = (l8(k) / (g%dx * g%dy)) * p%dt
+  forall(k=1:8) geo%mn2dh(k) = (geo%l8(k) / (g%dx * g%dy)) * p%dt
 
 end subroutine
 
@@ -1404,7 +1335,7 @@ subroutine init_enc_status(p, g, s, sx)
         ue = (s%u(i,j) + s%u(in,jn)) / 2
         ve = (s%v(i,j) + s%v(in,jn)) / 2
         ! セル境界流速の境界法線方向成分を計算する(中心から近傍方向が正)
-        sx%uv(k,ie,je) = ue * n8x(k) + ve * n8y(k)
+        sx%uv(k,ie,je) = ue * geo%n8x(k) + ve * geo%n8y(k)
       end do
     end do
   end do
@@ -1417,8 +1348,8 @@ subroutine init_enc_status(p, g, s, sx)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
-      if (have_sect) then
-        sx%h1(i,j) = sect_v(s%h(i,j), sdep(i,j))
+      if (sct%have_sect) then
+        sx%h1(i,j) = sect_v(s%h(i,j), sct%sdep(i,j))
       else
         sx%h1(i,j) = s%h(i,j)
       end if
@@ -1432,12 +1363,12 @@ subroutine init_enc_status(p, g, s, sx)
     ! ステップ頭 h^n の表。これで u,v,m,n の再導出が保存時とビット一致する。
     ! §68.14)。表なしで保存された状態からの復元は復元した h から作る
     ! (再導出が最終桁で異なりうる旧挙動)
-    if (have_fwd .and. .not. fwd_restored) then
+    if (chn%have_fwd .and. .not. chn%fwd_restored) then
       call build_fwd(p, g, s)
       call par_info("swflow_enc: dynamic opening table rebuilt from the restored h " &
                     //"(state saved without the table; u,v,m,n may differ in the last digit)")
     end if
-    if (have_cwd .and. .not. cwd_restored) then
+    if (chn%have_cwd .and. .not. chn%cwd_restored) then
       call build_cwd(g, s)
       call par_info("swflow_enc: dynamic conveyance ratio rebuilt from the restored h " &
                     //"(state saved without it; u,v may differ in the last digit)")
@@ -1553,7 +1484,7 @@ subroutine curv_prepare(g, s)
   !$omp parallel do schedule(dynamic) private(i, j, zc, zxx, zyy, zxy, zx, zy, okw, oke, oks, okn)
   do j = j1, j2
     do i = 1, g%nx
-      acv(i,j) = 0.0
+      dbr%acv(i,j) = 0.0
       if (.not. valid(i, j)) cycle
       if (s%vv(i,j) <= 0.0) cycle
       zc = s%z(i,j)
@@ -1575,7 +1506,7 @@ subroutine curv_prepare(g, s)
           zxy = (s%z(i+1,j+1) - s%z(i+1,j-1) - s%z(i-1,j+1) + s%z(i-1,j-1)) * rdx * rdy / 4
         end if
       end if
-      acv(i,j) = (s%u(i,j)**2 * zxx + 2 * s%u(i,j) * s%v(i,j) * zxy + s%v(i,j)**2 * zyy) &
+      dbr%acv(i,j) = (s%u(i,j)**2 * zxx + 2 * s%u(i,j) * s%v(i,j) * zxy + s%v(i,j)**2 * zyy) &
                  / sqrt(1.0 + zx**2 + zy**2)
     end do
   end do
@@ -1640,7 +1571,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   je = j + dje(k)
 
   ! 通過幅ゼロのエッジ(p_diagratio=0 の対角等)は流量流速ゼロ
-  if (skip8(k)) then
+  if (geo%skip8(k)) then
     sx%uv(k,ie,je) = 0
     sx%mn1(k,ie,je) = 0
     return
@@ -1660,9 +1591,9 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   ! セル境界の移流項をセットする
   !   f_channel_advection=0 のときは河道セルを含むエッジで移流を落とす
   !   (サブグリッド幅の強い不均質下での安定化オプション。§18)
-  if (f_advection_term > 0) then
+  if (opt%f_advection_term > 0) then
     tae = adv_edge(s, sx, i, j, k, in, jn, ie, je)
-    if (adv_drop_rw) then
+    if (chn%adv_drop_rw) then
       if (g%rw(i,j) > 0 .or. g%rw(in,jn) > 0) tae = 0
     end if
   else
@@ -1670,7 +1601,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   end if
 
   ! セル境界の拡散項を加算する(移流項と独立な重ね合わせ)
-  if (have_diff) tae = tae + diff_edge(i, j, k, in, jn)
+  if (opt%have_diff) tae = tae + diff_edge(i, j, k, in, jn)
 
   ! 中心セルi,jからk近傍セルin,jnへの流速uv1と単位幅流量mn1を計算する
   call calc_kth_flux(p, g, s, sx, uve, tae, i, j, k, in, jn, 0, uve1, mne1, hee)
@@ -1680,11 +1611,11 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   !   堤防壁エッジは bank_wall が結果を上書きするため判定しない(前ステップ値
   !   が堰流量なので毎ステップ閾値超になり、RK の再計算が無駄になるうえ
   !   Runge 列が壁エッジ数で埋まる。§68.29 原因 2)
-  maglim = p_adprunge_thresh
+  maglim = opt%p_adprunge_thresh
   maglim_inv = 1.0 / maglim
   wall = .false.
-  if (have_bank) wall = bank_edge(g, s, i, j, in, jn)
-  if (f_adaptive_runge > 0 .and. .not. wall) then
+  if (chn%have_bank) wall = bank_edge(g, s, i, j, in, jn)
+  if (opt%f_adaptive_runge > 0 .and. .not. wall) then
     if ((mne >= 0 .and. (mne1 > mne * maglim .or. mne1 < mne * maglim_inv)) .or. &
         (mne < 0  .and. (mne1 < mne * maglim .or. mne1 > mne * maglim_inv))) then
       have_runge = .true.
@@ -1698,41 +1629,41 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   end if
 
   ! 河口から海への段落ち強制
-  if (f_rivermouth_drop > 0) call rivermouth_drop
+  if (opt%f_rivermouth_drop > 0) call rivermouth_drop
 
   ! 堤防(仮想壁面)エッジの流速・流量の上書き(submodule m_swflow_enc_channel)
-  if (have_bank) call bank_wall(p, g, s, i, j, k, in, jn, uve1, mne1)
+  if (chn%have_bank) call bank_wall(p, g, s, i, j, k, in, jn, uve1, mne1)
 
   ! 海岸堤防(仮想壁面)エッジの流速・流量の上書き(同 submodule。
   ! bank_wall は sw エッジに触れないため干渉しない)
-  if (have_swall) call seawall_wall(p, g, s, i, j, in, jn, uve1, mne1)
+  if (chn%have_swall) call seawall_wall(p, g, s, i, j, in, jn, uve1, mne1)
 
   ! セル境界での単位幅流量から境界の両側のセルでの水深の減少量を計算する
   !   通過幅係数有効時はエッジ別係数 frw を乗じる(k<=4 は成分=k)。
   !   河道幅有効時はセルの平面積率 wfrac で水深換算を除算補正する
-  dh = mne1 * mn2dh(k)    ! 家屋占有率がゼロの場合の中心セルの水深減少量
-  if (have_frw) dh = dh * frw(k,ie,je)
-  if (have_fwd) dh = dh * fwd(k,ie,je)
+  dh = mne1 * geo%mn2dh(k)    ! 家屋占有率がゼロの場合の中心セルの水深減少量
+  if (chn%have_frw) dh = dh * chn%frw(k,ie,je)
+  if (chn%have_fwd) dh = dh * chn%fwd(k,ie,je)
   dhc = dh / s%gv(i,j)
   dhn = -dh / s%gv(in,jn)
-  if (have_width) then
-    dhc = dhc / wfrac(i,j)
-    dhn = dhn / wfrac(in,jn)
+  if (chn%have_width) then
+    dhc = dhc / chn%wfrac(i,j)
+    dhn = dhn / chn%wfrac(in,jn)
   end if
 
   ! 過大な流出の抑制
   !if ((dh > 0 .and. dhc + p%dd > s%h(i,j)) .or. (dh < 0 .and. dhn + p%dd > s%h(in,jn))) then
-  if (have_sect) then
+  if (sct%have_sect) then
     ! σ 有効時は矩形換算水深(体積)で判定・抑制する(dhc/dhn は vh 増分。
     ! 非適用セルは sect_v が恒等のため従来と同値。§26)
-    if ((dh > 0 .and. sect_v(s%h(i,j), sdep(i,j)) - dhc <= 0) .or. &
-        (dh < 0 .and. sect_v(s%h(in,jn), sdep(in,jn)) - dhn <= 0)) then
+    if ((dh > 0 .and. sect_v(s%h(i,j), sct%sdep(i,j)) - dhc <= 0) .or. &
+        (dh < 0 .and. sect_v(s%h(in,jn), sct%sdep(in,jn)) - dhn <= 0)) then
       have_exflux = .true.
-      if (f_exflux_reduction > 0) then
+      if (opt%f_exflux_reduction > 0) then
         if (dh > 0) then
-          cor = max(sect_v(s%h(i,j), sdep(i,j)) - p%dd, 0.0) / dhc
+          cor = max(sect_v(s%h(i,j), sct%sdep(i,j)) - p%dd, 0.0) / dhc
         else
-          cor = max(sect_v(s%h(in,jn), sdep(in,jn)) - p%dd, 0.0) / dhn
+          cor = max(sect_v(s%h(in,jn), sct%sdep(in,jn)) - p%dd, 0.0) / dhn
         end if
         uve1 = uve1 * cor
         mne1 = mne1 * cor
@@ -1741,7 +1672,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   else
   if ((dh > 0 .and. s%h(i,j) - dhc <= 0) .or. (dh < 0 .and. s%h(in,jn) - dhn <= 0)) then
     have_exflux = .true.
-    if (f_exflux_reduction > 0) then
+    if (opt%f_exflux_reduction > 0) then
       if (dh > 0) then
         cor = max(s%h(i,j) - p%dd, 0.0) / dhc
       else
@@ -1755,7 +1686,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
 
   ! 非静水圧補正のためにエッジ水深を記録する(NH ON のみ。書き込み先は
   ! (k, ie, je) ごとに一意で競合なし)
-  if (nh_active) nh_he(k,ie,je) = hee
+  if (nhp%nh_active) nhp%nh_he(k,ie,je) = hee
 
   ! セル境界の流速を更新する
   !   uvは単一バッファ(自エッジread-then-writeのみ。developer.md §7の例外)
@@ -1774,13 +1705,13 @@ contains
       h = max(s%h(i,j), 0.0)      ! 中心セルの水深
       uve1 = ((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)
       mne1 = uve1 * h
-      if (have_sect) mne1 = uve1 * sect_v(h, sdep(i,j))   ! 断面積ベース(§68.28)
+      if (sct%have_sect) mne1 = uve1 * sect_v(h, sct%sdep(i,j))   ! 断面積ベース(§68.28)
     else if (g%rw(in,jn) > 0 .and. g%sw(i,j) > 0) then
       ! 近傍から中心に段落ち
       h = max(s%h(in,jn), 0.0)    ! 近傍セルの水深
       uve1 = -((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)
       mne1 = uve1 * h
-      if (have_sect) mne1 = uve1 * sect_v(h, sdep(in,jn))
+      if (sct%have_sect) mne1 = uve1 * sect_v(h, sct%sdep(in,jn))
     end if
   end subroutine
 
@@ -1848,10 +1779,10 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
 
   ! セル境界での有効重力加速度を計算
   ge = p%gg                                 ! 重力加速度
-  if (f_gravity_correction > 0) ge = correct_ge()
+  if (opt%f_gravity_correction > 0) ge = correct_ge()
 
   ! セル境界での底面勾配項(符合は中心セルから近傍セルに向かい正)
-  tg0e = -ge * (s%z(in,jn) - s%z(i,j)) / w8dr(k) * gve
+  tg0e = -ge * (s%z(in,jn) - s%z(i,j)) / geo%w8dr(k) * gve
 
   ! セル境界でのuveと直交する流速成分の二乗を計算
   !   ルンゲクッタで流速の絶対値を更新する際に使用する
@@ -1878,60 +1809,60 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     hsn = max(s%hs(in,jn), 0.0)
     hse = (hsc + hsn) / 2
     ! 圧力項への hs 寄与(水面 = z + h + hs。f_pressure_term に整合)
-    if (f_pressure_term > 0) tgs = -ge * (hsn - hsc) / w8dr(k) * gve
-    if (db_res > 0) then
+    if (opt%f_pressure_term > 0) tgs = -ge * (hsn - hsc) / geo%w8dr(k) * gve
+    if (dbr%db_res > 0) then
       if (hsc + hsn > 0.0) then
         cme = (hsc + hsn) / (hc0 + hn0 + hsc + hsn)
-        rme = 1.0 + db_sgrav * cme
-        if (db_res == 4) then
+        rme = 1.0 + dbr%db_sgrav * cme
+        if (dbr%db_res == 4) then
           ! Voellmy 等価流体(RAMMS/Titan2D 系): 降伏 μ + 乱流項 ge・V²/(ξ・h_t)。
           ! μ は流動体全体の見かけ摩擦(濃度に依らず直接与える — §0)。
           ! 希薄側(C < db_cmin)はマニング+降伏なしに退化(数値的閉じ)
-          if (cme >= db_cmin) then
-            aye = ge * db_mu
+          if (cme >= dbr%db_cmin) then
+            aye = ge * dbr%db_mu
             hte = max((hc0 + hn0) / 2 + hse, p%dv)
             ! 乱流項 減速度 ge・V²/(ξ・h_t) を −fbe・vve/(rme・hte) 形に載せる
             ! (fbe = ge・rme/ξ で rme が相殺)。マニング則は置換される
-            fbe = ge * rme / db_xi
+            fbe = ge * rme / dbr%db_xi
           end if
-        else if (db_res == 5) then
+        else if (dbr%db_res == 5) then
           ! 一定停止応力(VolcFlow 型): a_y = τ_y/(ρm・h_t)+マニング合成。
           ! ρm = ρw(1+sC)。希薄側(C < db_cmin)は降伏なしに退化
-          if (cme >= db_cmin) then
-            aye = db_tauy / (db_rhow * rme * max((hc0 + hn0) / 2 + hse, p%dv))
+          if (cme >= dbr%db_cmin) then
+            aye = dbr%db_tauy / (db_rhow * rme * max((hc0 + hn0) / 2 + hse, p%dv))
           end if
         else
         ! 降伏減速度: a_y = ge・tanφ・sC/(1+sC)(水中固体重量の底面摩擦を
         ! 混合密度 ρ(1+sC) で除した加速度形。ge は correct_ge 済み =
         ! cos²θ を重力・圧力項と共有)。江頭構成則(db_res=2)はさらに
         ! (C/C*)^{1/5} を乗じる(Morpho2DH 式(17)。n=5 は原式固定)
-        aye = ge * db_tanphi * db_sgrav * cme / rme
-        if (db_res == 2) then
-          aye = aye * (cme / db_cstar)**db_yexp
+        aye = ge * dbr%db_tanphi * dbr%db_sgrav * cme / rme
+        if (dbr%db_res == 2) then
+          aye = aye * (cme / dbr%db_cstar)**db_yexp
           ! 江頭層流則(江頭ら1989 式(25)/Morpho2DH 式(19)):
           !   f_b = (25/4){k_f(1−C)^{5/3}/C^{2/3} + k_d(σ/ρ)(1−e²)C^{1/3}}(h/d)^{−2}
           ! C < cmin の希薄側はマニングで閉じる(層流則は C→0 で発散)。
           ! 混合流動深 hte は時刻 n で固定(RK 内不変。hse と同じ近似)
-          if (cme >= db_cmin) then
+          if (cme >= dbr%db_cmin) then
             hte = max((hc0 + hn0) / 2 + hse, p%dv)
             fbe = 6.25 * (db_kf * (1.0 - cme)**(5.0/3.0) / cme**(2.0/3.0) &
-                          + db_kcol * cme**(1.0/3.0)) * (db_d50v / hte)**2
+                          + dbr%db_kcol * cme**(1.0/3.0)) * (dbr%db_d50v / hte)**2
           end if
-        else if (db_res == 3) then
+        else if (dbr%db_res == 3) then
           ! 高橋・中川(1991)石礫型(式(22)-(25)。単一粒径 ρm=ρ):
           !   降伏項の摩擦係数は流動時の tanα' = 0.45(原式固定。tanφ でなく)
-          aye = ge * db_tana * db_sgrav * cme / rme
+          aye = ge * db_tana * dbr%db_sgrav * cme / rme
           hte = max((hc0 + hn0) / 2 + hse, p%dv)
           ! 流動型の自動切替(泥流域 C<cmin または h/d≥30 はマニング=式(4))
-          if (cme >= db_cmin .and. hte < db_hdmud * db_d50v) then
-            if (cme > db_cbl * db_cstar) then
+          if (cme >= dbr%db_cmin .and. hte < db_hdmud * dbr%db_d50v) then
+            if (cme > db_cbl * dbr%db_cstar) then
               ! 石礫型(式(22)第2項): A'・{(1−C)/C}^{2/3}・(dL/h)²
               !   減速度 = A'ρm{...}(dL/h)²V²/(ρT h) → fbe/(rme・hte) 形
-              fbe = db_apr * ((1.0 - cme) / cme)**(2.0/3.0) * (db_d50v / hte)**2
+              fbe = db_apr * ((1.0 - cme) / cme)**(2.0/3.0) * (dbr%db_d50v / hte)**2
             else
               ! 掃流状集合流動(式(24)): (ρT/0.49)(dL/h)。ρT/ρT が相殺する
               ! ため rme を fbe に含めて同じ −fbe・vve/(rme・hte) 形に載せる
-              fbe = rme * (db_d50v / hte) / db_c49
+              fbe = rme * (dbr%db_d50v / hte) / db_c49
             end if
           else
             hte = 0.0     ! マニング経路(fbe=0)へ
@@ -1945,8 +1876,8 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   ! 曲率項(§28.10): 垂直応力 g_n → g_n + a_c による降伏項の倍率。
   !   a_c は辺の両セルの平均(c/n 対称)。g_n = √(g・ge)(ge = g cos²θ の
   !   Ni 補正下で g cosθ。補正なしなら g)。浮上条件は 0 に切る
-  if (db_curv > 0 .and. aye > 0.0) then
-    aye = aye * max(0.0, 1.0 + (acv(i,j) + acv(in,jn)) / 2 / sqrt(p%gg * ge))
+  if (dbr%db_curv > 0 .and. aye > 0.0) then
+    aye = aye * max(0.0, 1.0 + (dbr%acv(i,j) + dbr%acv(in,jn)) / 2 / sqrt(p%gg * ge))
   end if
 
   ! ルンゲクッタの段数を初期化
@@ -1965,7 +1896,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     he = (hc + hn) / 2
 
     ! セル境界での水深が上流側水深よりも深くならない様に調整
-    if (f_hcap_upwind > 0) he = correct_he()
+    if (opt%f_hcap_upwind > 0) he = correct_he()
 
     ! 摩擦項で使用する水深
     !   水深が浅い場合に摩擦が過大となることを防ぐために水深の最小値を制限
@@ -1978,8 +1909,8 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
 
     ! セル境界での重力項(符合は中心セルから近傍セルに向かい正)
     !   土石流有効時は水面勾配に hs を算入(z+h+hs。tgs は RK 内で不変)
-    if (f_pressure_term > 0) then
-      tge = tg0e - ge * (hn - hc) / w8dr(k) * gve + tgs
+    if (opt%f_pressure_term > 0) then
+      tge = tg0e - ge * (hn - hc) / geo%w8dr(k) * gve + tgs
     else
       tge = tg0e
     end if
@@ -2022,7 +1953,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     !   流速も 0 にして、再構成・移流に幻の流速が残らないようにする。
     !   移流項が圧力項に勝って水面より高い乾いた地盤へ水が登る漏れ
     !   (§68.15 の掘込水路の発散)を物理条件で塞ぐ
-    if (f_dry_head_cap > 0) then
+    if (opt%f_dry_head_cap > 0) then
       if (uve1 > 0.0 .and. hn < p%dd) then
         he = min(he, max(s%z(i,j) + hc + uve1**2 / (2 * p%gg) - s%z(in,jn), 0.0))
         if (he <= 0.0) uve1 = 0.0
@@ -2045,8 +1976,8 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     ! σ 非適用セルは sect_v が恒等)。真の水深 h で流すと貯留 W·vh に対して
     ! 通水能が (m+1) 倍になり、段落ち・自由流出で終端セルが抜け切って
     ! 発散する(§68.27・§68.28。2026-10-04 に u·h から変更)
-    if (have_sect) then
-      mne1 = uve1 * 0.5 * (sect_v(he, sdep(i,j)) + sect_v(he, sdep(in,jn)))
+    if (sct%have_sect) then
+      mne1 = uve1 * 0.5 * (sect_v(he, sct%sdep(i,j)) + sect_v(he, sct%sdep(in,jn)))
     else
       mne1 = uve1 * he
     end if
@@ -2060,7 +1991,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     !   一様にならない(§28.11 の実バグ)。Coulomb 降伏は速度ベクトルの
     !   大きさに対する条件で、動いている流れの一成分には掛からない
     if (aye > 0.0) then
-      if (vv0e < db_vstop .and. abs(tae + tge) <= aye) then
+      if (vv0e < dbr%db_vstop .and. abs(tae + tge) <= aye) then
         uve1 = 0.0
         mne1 = 0.0
       end if
@@ -2084,14 +2015,14 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
       ! 河道幅有効時のセル平面積率の逆数(無効時は 1.0 の乗算で厳密に不変)
       winvc = 1.0
       winvn = 1.0
-      if (have_width) then
-        winvc = 1.0 / wfrac(i,j)
-        winvn = 1.0 / wfrac(in,jn)
+      if (chn%have_width) then
+        winvc = 1.0 / chn%wfrac(i,j)
+        winvn = 1.0 / chn%wfrac(in,jn)
       end if
 
       ! 仮の水深を更新
       !   式の詳細は連続式を解くルーチン内のコメントを参照のこと
-      if (have_sect .and. f_sect_rk) then
+      if (sct%have_sect .and. f_sect_rk) then
         ! σ 有効(かつ RK 再評価オン)時: vh 増分を積算してから逆変換する
         ! (§26。f_sect_rk=.false. なら下の従来経路=RK 中は矩形近似)
         block
@@ -2105,19 +2036,19 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
             if (kk == 9 - k) mnen = -mne1
             fwc = 1.0
             fwn = 1.0
-            if (have_frw) then
-              fwc = frw(ke(kk),i+die(kk),j+dje(kk))
-              fwn = frw(ke(kk),in+die(kk),jn+dje(kk))
+            if (chn%have_frw) then
+              fwc = chn%frw(ke(kk),i+die(kk),j+dje(kk))
+              fwn = chn%frw(ke(kk),in+die(kk),jn+dje(kk))
             end if
-            if (have_fwd) then
-              fwc = fwc * fwd(ke(kk),i+die(kk),j+dje(kk))
-              fwn = fwn * fwd(ke(kk),in+die(kk),jn+dje(kk))
+            if (chn%have_fwd) then
+              fwc = fwc * chn%fwd(ke(kk),i+die(kk),j+dje(kk))
+              fwn = fwn * chn%fwd(ke(kk),in+die(kk),jn+dje(kk))
             end if
-            dvc = dvc + mnec * mn2dh(kk) * fwc * winvc / s%gv(i,j) / a(l)
-            dvn = dvn + mnen * mn2dh(kk) * fwn * winvn / s%gv(in,jn) / a(l)
+            dvc = dvc + mnec * geo%mn2dh(kk) * fwc * winvc / s%gv(i,j) / a(l)
+            dvn = dvn + mnen * geo%mn2dh(kk) * fwn * winvn / s%gv(in,jn) / a(l)
           end do
-          hc = sect_hinv(sect_v(hc0, sdep(i,j)) - dvc, sdep(i,j))
-          hn = sect_hinv(sect_v(hn0, sdep(in,jn)) - dvn, sdep(in,jn))
+          hc = sect_hinv(sect_v(hc0, sct%sdep(i,j)) - dvc, sct%sdep(i,j))
+          hn = sect_hinv(sect_v(hn0, sct%sdep(in,jn)) - dvn, sct%sdep(in,jn))
         end block
       else
       hc = hc0       ! 中心セルの水深
@@ -2135,17 +2066,17 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
         ! 乗算で厳密に不変)
         fwc = 1.0
         fwn = 1.0
-        if (have_frw) then
-          fwc = frw(ke(kk),i+die(kk),j+dje(kk))
-          fwn = frw(ke(kk),in+die(kk),jn+dje(kk))
+        if (chn%have_frw) then
+          fwc = chn%frw(ke(kk),i+die(kk),j+dje(kk))
+          fwn = chn%frw(ke(kk),in+die(kk),jn+dje(kk))
         end if
-        if (have_fwd) then
-          fwc = fwc * fwd(ke(kk),i+die(kk),j+dje(kk))
-          fwn = fwn * fwd(ke(kk),in+die(kk),jn+dje(kk))
+        if (chn%have_fwd) then
+          fwc = fwc * chn%fwd(ke(kk),i+die(kk),j+dje(kk))
+          fwn = fwn * chn%fwd(ke(kk),in+die(kk),jn+dje(kk))
         end if
         ! 仮の水深を更新
-        hc = hc - mnec * mn2dh(kk) * fwc * winvc / s%gv(i,j) / a(l)
-        hn = hn - mnen * mn2dh(kk) * fwn * winvn / s%gv(in,jn) / a(l)
+        hc = hc - mnec * geo%mn2dh(kk) * fwc * winvc / s%gv(i,j) / a(l)
+        hn = hn - mnen * geo%mn2dh(kk) * fwn * winvn / s%gv(in,jn) / a(l)
       end do
       end if
     end block
@@ -2169,13 +2100,13 @@ contains
     !   防ぐ。乾湿前縁では乾側 h≈0 に対して湿側水深で流出するため前縁の
     !   挙動が変わる。§68.7)
     if (uve0 > 0) then      ! 中心セルが上流側
-      if (f_hcap_upwind == 2) then
+      if (opt%f_hcap_upwind == 2) then
         he_corr = hc
       else
         he_corr = min(he, hc)    !   中心セルの水深より深くならないように
       end if
     else if (uve0 < 0) then ! 近傍セルが上流側
-      if (f_hcap_upwind == 2) then
+      if (opt%f_hcap_upwind == 2) then
         he_corr = hn
       else
         he_corr = min(he, hn)    !   近傍セルの水深より深くならないように
@@ -2192,7 +2123,7 @@ contains
   function correct_ge() result(ge_corr)
     real :: ge_corr
     if (vve > 0) then
-      ge_corr = ge * w8dr2(k) / (w8dr2(k) + (s%z(in,jn) - s%z(i,j))**2)
+      ge_corr = ge * geo%w8dr2(k) / (geo%w8dr2(k) + (s%z(in,jn) - s%z(i,j))**2)
     else
       ge_corr = ge
     end if
@@ -2229,14 +2160,14 @@ subroutine continuous(p, g, s, sx)
       s%m(i,j) = 0
       s%n(i,j) = 0
       ! σ 有効時は h1 を矩形換算水深 vh で初期化(非適用セルは恒等。§26)
-      if (have_sect) then
-        sx%h1(i,j) = sect_v(s%h(i,j), sdep(i,j))
+      if (sct%have_sect) then
+        sx%h1(i,j) = sect_v(s%h(i,j), sct%sdep(i,j))
       else
         sx%h1(i,j) = s%h(i,j)
       end if
       ! 河道幅有効時のセル平面積率の逆数(無効時は 1.0 の乗算で厳密に不変)
       winv = 1.0
-      if (have_width) winv = 1.0 / wfrac(i,j)
+      if (chn%have_width) winv = 1.0 / chn%wfrac(i,j)
       mnmax = 0
       ! 対象セルi,jの8近傍全ての水の流出入を計算し平均流量・流速と水位を更新する
       s%ddir1(i,j) = 0
@@ -2252,7 +2183,7 @@ subroutine continuous(p, g, s, sx)
           ! 開いた辺の境界面は取り込む(流出が h1 と u,v,m,n に乗る)。
           ! 枠外近傍の s%h は確保範囲外のため dd 判定はしない
           ! (乾燥時は boundary_uvmn が 0 を書いており寄与も 0)
-          if (.not. have_open_bc) cycle
+          if (.not. bcs%have_open_bc) cycle
           if (.not. bc_open_face(in, jn)) cycle
         end if
         ! 中心セルi,jから見たk近傍の境界フラックスのインデックス
@@ -2265,19 +2196,19 @@ subroutine continuous(p, g, s, sx)
         ! 通過幅係数有効時はエッジ別係数を乗じる(無効時は 1.0 の
         ! 乗算で厳密に不変。質量換算と平均量の重みを同時に補正する)
         fw = 1.0
-        if (have_frw) fw = frw(ke(k),ie,je)
-        if (have_fwd) fw = fw * fwd(ke(k),ie,je)
+        if (chn%have_frw) fw = chn%frw(ke(k),ie,je)
+        if (chn%have_fwd) fw = fw * chn%fwd(ke(k),ie,je)
         ! 水深の減少量(m)に換算
         !   家屋占有率が0.0で無い場合はここで補正係数を乗じる。
         !   河道幅有効時は平面積率 wfrac の逆数 winv も乗じる
-        dh = mne * mn2dh(k) * fw * winv / s%gv(i,j)
+        dh = mne * geo%mn2dh(k) * fw * winv / s%gv(i,j)
         ! 水深を更新
         sx%h1(i,j) = sx%h1(i,j) - dh
         ! セル中心の平均流速・流量への寄与分を加算
-        s%u(i,j) = s%u(i,j) + uve * (w8mx(k) * fw)
-        s%v(i,j) = s%v(i,j) + uve * (w8my(k) * fw)
-        s%m(i,j) = s%m(i,j) + mne * (w8mx(k) * fw)
-        s%n(i,j) = s%n(i,j) + mne * (w8my(k) * fw)
+        s%u(i,j) = s%u(i,j) + uve * (geo%w8mx(k) * fw)
+        s%v(i,j) = s%v(i,j) + uve * (geo%w8my(k) * fw)
+        s%m(i,j) = s%m(i,j) + mne * (geo%w8mx(k) * fw)
+        s%n(i,j) = s%n(i,j) + mne * (geo%w8my(k) * fw)
         ! 流下方向を判定
         !if (mne > mnmax) s%ddir1(i,j) = 2**k             ! 最大流出方向
         if (mne > mnmax) then
@@ -2293,13 +2224,13 @@ subroutine continuous(p, g, s, sx)
       ! さらに更新するため、確定水深 h(n+1) の σ で complete が正規化する
       ! (u,v と h の時刻整合、かつ restore_uvmn が保存 h から厳密に
       ! 再現できる条件。§26)
-      if (have_width .and. .not. have_sect) then
-        if (have_cwd) then
-          s%u(i,j) = s%u(i,j) / cwxd(i,j)
-          s%v(i,j) = s%v(i,j) / cwyd(i,j)
+      if (chn%have_width .and. .not. sct%have_sect) then
+        if (chn%have_cwd) then
+          s%u(i,j) = s%u(i,j) / chn%cwxd(i,j)
+          s%v(i,j) = s%v(i,j) / chn%cwyd(i,j)
         else
-          s%u(i,j) = s%u(i,j) / cwx(i,j)
-          s%v(i,j) = s%v(i,j) / cwy(i,j)
+          s%u(i,j) = s%u(i,j) / chn%cwx(i,j)
+          s%v(i,j) = s%v(i,j) / chn%cwy(i,j)
         end if
       end if
     end do
@@ -2345,14 +2276,14 @@ subroutine complete(p, g, s, sx, initial)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       ! σ 有効時は矩形換算水深 vh から真の水深へ逆変換(非適用セルは恒等。§26)
-      if (have_sect) then
+      if (sct%have_sect) then
         if (linit) then
           ! init 呼び出し: σ 適用セルは h が正準(h1 は seeding 済みで
           ! boundary_h の init 時実効対象はため池 = sdep=0 のみ)。
           ! sdep=0 セルは従来通り h1 をコミット(ため池初期吸収の反映)
-          if (sdep(i,j) <= 0.0) s%h(i,j) = sx%h1(i,j)
+          if (sct%sdep(i,j) <= 0.0) s%h(i,j) = sx%h1(i,j)
         else
-          s%h(i,j) = sect_hinv(sx%h1(i,j), sdep(i,j))
+          s%h(i,j) = sect_hinv(sx%h1(i,j), sct%sdep(i,j))
           ! u,v の正規化はここでは行わない: complete の後に h を変える
           ! モジュール(gwflow/evap)があるため、最終確定 h の σ で
           ! ステップ末尾パス m_swflow_enc_post が1回だけ行う(§26。
@@ -2436,7 +2367,7 @@ subroutine complete(p, g, s, sx, initial)
 
   ! 実効平面積率 af の更新(§25/§26。幅・σ・可動 gv のいずれも無効なら
   ! af=gv のまま不変)
-  if (have_width .or. have_sect .or. s%gv_active) call update_af(g, s)
+  if (chn%have_width .or. sct%have_sect .or. s%gv_active) call update_af(g, s)
 
 end subroutine
 
@@ -2486,7 +2417,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
       c1(i,j) = c(i,j)
       ! 河道幅有効時のセル平面積率の逆数(無効時は 1.0 の乗算で厳密に不変)
       winv = 1.0
-      if (have_width) winv = 1.0 / wfrac(i,j)
+      if (chn%have_width) winv = 1.0 / chn%wfrac(i,j)
       do k = 1, 8
         in = i + din(k)
         jn = j + djn(k)
@@ -2495,7 +2426,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
           if (s%h(i,j) < p%dd .and. s%h(in,jn) < p%dd) cycle
         else
           ! 開いた辺の境界面は取り込む(continuous と同一)
-          if (.not. have_open_bc) cycle
+          if (.not. bcs%have_open_bc) cycle
           if (.not. bc_open_face(in, jn)) cycle
         end if
         ie = i + die(k)
@@ -2510,8 +2441,8 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
         cdon = 0.0
         if (mne > 0.0) then
           if (s%h(i,j) > 0.0) then
-            if (have_sect) then
-              cdon = c(i,j) / sect_v(s%h(i,j), sdep(i,j))
+            if (sct%have_sect) then
+              cdon = c(i,j) / sect_v(s%h(i,j), sct%sdep(i,j))
             else
               cdon = c(i,j) / s%h(i,j)
             end if
@@ -2519,8 +2450,8 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
         else
           if (g%x(in,jn) > 0) then
             if (s%h(in,jn) > 0.0) then
-              if (have_sect) then
-                cdon = c(in,jn) / sect_v(s%h(in,jn), sdep(in,jn))
+              if (sct%have_sect) then
+                cdon = c(in,jn) / sect_v(s%h(in,jn), sct%sdep(in,jn))
               else
                 cdon = c(in,jn) / s%h(in,jn)
               end if
@@ -2532,9 +2463,9 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
         if (cdon == 0.0) cycle
         ! 通過幅係数(continuous と同一)
         fw = 1.0
-        if (have_frw) fw = frw(ke(k),ie,je)
-        if (have_fwd) fw = fw * fwd(ke(k),ie,je)
-        c1(i,j) = c1(i,j) - mne * cdon * sh * mn2dh(k) * fw * winv / s%gv(i,j)
+        if (chn%have_frw) fw = chn%frw(ke(k),ie,je)
+        if (chn%have_fwd) fw = fw * chn%fwd(ke(k),ie,je)
+        c1(i,j) = c1(i,j) - mne * cdon * sh * geo%mn2dh(k) * fw * winv / s%gv(i,j)
       end do
     end do
   end do
@@ -2575,13 +2506,13 @@ subroutine build_fwd(p, g, s)
 
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   ! 斜めの振り替え量: 斜め先 1 つあたり (自然幅 − l8_d)/2(静的規則と同形)
-  s1d = (g%dx * g%dy / sqrt(g%dx**2 + g%dy**2) - l8(1)) / 2
+  s1d = (g%dx * g%dy / sqrt(g%dx**2 + g%dy**2) - geo%l8(1)) / 2
   jlo = max(dcp%js - 2, 1)
   jhi = min(dcp%je + 1, g%ny)
 
   !$omp parallel do schedule(static) private(j)
   do j = dcp%jsh - 1, dcp%jeh
-    fwd(:, :, j) = 1.0
+    chn%fwd(:, :, j) = 1.0
   end do
   !$omp end parallel do
 
@@ -2598,7 +2529,7 @@ subroutine build_fwd(p, g, s)
         if (ok_c .and. ok_n .and. fwd_pair(g, i, j, i+1, j)) then
           nb = (sblk(g, s, i, j, i+1, j-1) + sblk(g, s, i, j, i+1, j+1) &
               + sblk(g, s, i+1, j, i, j-1) + sblk(g, s, i+1, j, i, j+1)) / 2
-          if (nb > 0) fwd(4,i,j) = (lpy + nb * ldy) / lpy
+          if (nb > 0) chn%fwd(4,i,j) = (geo%lpy + nb * geo%ldy) / geo%lpy
         end if
       end if
       if (j < g%ny) then
@@ -2607,20 +2538,20 @@ subroutine build_fwd(p, g, s)
         if (ok_c .and. ok_n .and. fwd_pair(g, i, j, i, j+1)) then
           nb = (sblk(g, s, i, j, i-1, j+1) + sblk(g, s, i, j, i+1, j+1) &
               + sblk(g, s, i, j+1, i-1, j) + sblk(g, s, i, j+1, i+1, j)) / 2
-          if (nb > 0) fwd(2,i,j) = (lpx + nb * ldx) / lpx
+          if (nb > 0) chn%fwd(2,i,j) = (geo%lpx + nb * geo%ldx) / geo%lpx
         end if
         if (i < g%nx) then
           ! 成分1: (i,j)-(i+1,j+1)。両端が共有する側方セル (i+1,j), (i,j+1)
           if (ok_c .and. fwd_cell(g, i+1, j+1) .and. fwd_pair(g, i, j, i+1, j+1)) then
             sh = (sblk(g, s, i, j, i+1, j) + sblk(g, s, i, j, i, j+1) &
                 + sblk(g, s, i+1, j+1, i+1, j) + sblk(g, s, i+1, j+1, i, j+1)) / 2 * s1d
-            if (sh > 0 .and. l8(1) > 0) fwd(1,i,j) = 1.0 + sh / l8(1)
+            if (sh > 0 .and. geo%l8(1) > 0) chn%fwd(1,i,j) = 1.0 + sh / geo%l8(1)
           end if
           ! 成分3: (i,j+1)-(i+1,j)。共有する側方セル (i+1,j+1), (i,j)
           if (ok_n .and. fwd_cell(g, i+1, j) .and. fwd_pair(g, i, j+1, i+1, j)) then
             sh = (sblk(g, s, i, j+1, i+1, j+1) + sblk(g, s, i, j+1, i, j) &
                 + sblk(g, s, i+1, j, i+1, j+1) + sblk(g, s, i+1, j, i, j)) / 2 * s1d
-            if (sh > 0 .and. l8(3) > 0) fwd(3,i,j) = 1.0 + sh / l8(3)
+            if (sh > 0 .and. geo%l8(3) > 0) chn%fwd(3,i,j) = 1.0 + sh / geo%l8(3)
           end if
         end if
       end if
@@ -2645,7 +2576,7 @@ function fwd_pair(g, i1, j1, i2, j2) result(res)
   integer, intent(in) :: i1, j1, i2, j2
   logical :: res
   res = .true.
-  if (f_opening_dynamic == 1) res = g%rw(i1,j1) > 0 .and. g%rw(i2,j2) > 0
+  if (opt%f_opening_dynamic == 1) res = g%rw(i1,j1) > 0 .and. g%rw(i2,j2) > 0
 end function
 
 
@@ -2667,7 +2598,7 @@ function sblk(g, s, ic, jc, id, jd) result(res)
   if (g%x(id,jd) <= 0) return
   res = 0.0
   if (g%sw(id,jd) > 0) return
-  if (have_bopen) then
+  if (chn%have_bopen) then
     if (g%rw(id,jd) <= 0 .and. is_wall(g%zbank(ic,jc), s%z(ic,jc), s%z(id,jd))) return
   end if
   dz = s%z(id,jd) - s%z(ic,jc)
@@ -2725,7 +2656,7 @@ subroutine restore_uvmn(p, g, s, sx)
         if (g%x(in,jn) <= 0) then
           ! 開いた辺の境界面は continuous と同様に取り込む
           ! (取り込み条件は continuous と常に同時に更新すること)
-          if (.not. have_open_bc) cycle
+          if (.not. bcs%have_open_bc) cycle
           if (.not. bc_open_face(in, jn)) cycle
         end if
         ! 中心セルi,jから見たk近傍の境界フラックスのインデックス
@@ -2737,38 +2668,38 @@ subroutine restore_uvmn(p, g, s, sx)
         mne = sign_e(k) * sx%mn1(ke(k),ie,je)
         ! 通過幅係数は continuous と完全に一致させる(復元ビット一致の条件)
         fw = 1.0
-        if (have_frw) fw = frw(ke(k),ie,je)
-        if (have_fwd) fw = fw * fwd(ke(k),ie,je)
+        if (chn%have_frw) fw = chn%frw(ke(k),ie,je)
+        if (chn%have_fwd) fw = fw * chn%fwd(ke(k),ie,je)
         ! セル中心の平均流速・流量への寄与分を加算
-        s%u(i,j) = s%u(i,j) + uve * (w8mx(k) * fw)
-        s%v(i,j) = s%v(i,j) + uve * (w8my(k) * fw)
-        s%m(i,j) = s%m(i,j) + mne * (w8mx(k) * fw)
-        s%n(i,j) = s%n(i,j) + mne * (w8my(k) * fw)
+        s%u(i,j) = s%u(i,j) + uve * (geo%w8mx(k) * fw)
+        s%v(i,j) = s%v(i,j) + uve * (geo%w8my(k) * fw)
+        s%m(i,j) = s%m(i,j) + mne * (geo%w8mx(k) * fw)
+        s%n(i,j) = s%n(i,j) + mne * (geo%w8my(k) * fw)
       end do
       ! u,v の正規化は正規化の実施箇所と完全に一致させる(復元ビット一致の
       ! 条件): σ 無効時は continuous(静的 cw)、σ 有効時は complete が
       ! 確定水深 h(n+1) の σ で行う。保存された s%h は最終ステップの
       ! h(n+1) なので、ここでの σ(s%h) 再評価は保存時の正規化と厳密に
       ! 同一の式・同一の引数になる(§26)
-      if (have_width .and. have_cwd) then
-        s%u(i,j) = s%u(i,j) / cwxd(i,j)
-        s%v(i,j) = s%v(i,j) / cwyd(i,j)
-      else if (have_width) then
-        if (have_sect) then
-          if (sdep(i,j) > 0.0) then
+      if (chn%have_width .and. chn%have_cwd) then
+        s%u(i,j) = s%u(i,j) / chn%cwxd(i,j)
+        s%v(i,j) = s%v(i,j) / chn%cwyd(i,j)
+      else if (chn%have_width) then
+        if (sct%have_sect) then
+          if (sct%sdep(i,j) > 0.0) then
             ! 2026-10-04(§68.28): 面流束を断面積ベース u·vh にしたため、
             ! エッジ流速 = 河道内流速で、正規化の通水率は静的 cw と同じ
             ! (cw_cell は sig を無視して静的 cwx/cwy と同値を返す)
-            call cw_cell(g, i, j, sect_sigma(s%h(i,j), sdep(i,j)), cxv, cyv)
+            call cw_cell(g, i, j, sect_sigma(s%h(i,j), sct%sdep(i,j)), cxv, cyv)
           else
-            cxv = cwx(i,j)
-            cyv = cwy(i,j)
+            cxv = chn%cwx(i,j)
+            cyv = chn%cwy(i,j)
           end if
           s%u(i,j) = s%u(i,j) / cxv
           s%v(i,j) = s%v(i,j) / cyv
         else
-          s%u(i,j) = s%u(i,j) / cwx(i,j)
-          s%v(i,j) = s%v(i,j) / cwy(i,j)
+          s%u(i,j) = s%u(i,j) / chn%cwx(i,j)
+          s%v(i,j) = s%v(i,j) / chn%cwy(i,j)
         end if
       end if
       s%e(i,j) = s%h(i,j) + s%z(i,j)
@@ -2804,17 +2735,17 @@ subroutine save_state(p, sx)
   ! 復元時の u,v,m,n 再導出をビット一致にするために保存する(§68.14。
   ! 有効判定は namelist 由来で全ランク同一 = collective 安全)
   ifwd = 0
-  if (have_fwd) then
+  if (chn%have_fwd) then
     ifwd = 1
     if (is_root) then
       allocate(wfd(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 1.0)
     else
       allocate(wfd(1, 1, 1), source = 1.0)
     end if
-    call par_gather_edge_to(wfd, fwd)
+    call par_gather_edge_to(wfd, chn%fwd)
   end if
   icw = 0
-  if (have_cwd) then
+  if (chn%have_cwd) then
     icw = 1
     if (is_root) then
       allocate(wcx(1:dcp%nx_g, 1:dcp%ny_g), source = 1.0)
@@ -2823,8 +2754,8 @@ subroutine save_state(p, sx)
       allocate(wcx(1, 1), source = 1.0)
       allocate(wcy(1, 1), source = 1.0)
     end if
-    call par_gather_to(wcx, cwxd)
-    call par_gather_to(wcy, cwyd)
+    call par_gather_to(wcx, chn%cwxd)
+    call par_gather_to(wcy, chn%cwyd)
   end if
   if (.not. is_root) return
   ! swflow の dispose は m_state より先に走るため、save ディレクトリは
@@ -2895,23 +2826,23 @@ subroutine restore_state(p, sx)
   ! 表は復元側で動的振り替えが有効なときだけ読んで配布する(無効なら
   ! 読まずに捨てる = ファイル末尾の余りは無害)
   call par_allreduce_sumi(nfl)
-  fwd_restored = .false.
-  if (have_fwd .and. nfl(1) == 1) then
+  chn%fwd_restored = .false.
+  if (chn%have_fwd .and. nfl(1) == 1) then
     if (is_root) then
       allocate(wfd(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 1.0)
       call fileio_read_rle(un, wfd)
     else
       allocate(wfd(1, 1, 1), source = 1.0)
     end if
-    call par_scatter_edge(wfd, fwd)
-    fwd_restored = .true.
+    call par_scatter_edge(wfd, chn%fwd)
+    chn%fwd_restored = .true.
   end if
   ! 動的通水率(§68.32)。fwd と同じ手順(rank0 が読み、フラグを和で共有、
   ! 有効時だけ配布)。fwd の表がファイルにあって復元側で無効なら読み飛ばす
   ! ために、フラグの前に表を読まずに済むよう順序は fwd → cw
   ncw(1) = 0
   if (is_root) then
-    if (nfl(1) == 1 .and. .not. have_fwd) then
+    if (nfl(1) == 1 .and. .not. chn%have_fwd) then
       allocate(wfd(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 1.0)
       call fileio_read_rle(un, wfd)       ! 読み飛ばし
     end if
@@ -2919,8 +2850,8 @@ subroutine restore_state(p, sx)
     if (ios /= 0) ncw(1) = 0
   end if
   call par_allreduce_sumi(ncw)
-  cwd_restored = .false.
-  if (have_cwd .and. ncw(1) == 1) then
+  chn%cwd_restored = .false.
+  if (chn%have_cwd .and. ncw(1) == 1) then
     if (is_root) then
       allocate(wcx(1:dcp%nx_g, 1:dcp%ny_g), source = 1.0)
       allocate(wcy(1:dcp%nx_g, 1:dcp%ny_g), source = 1.0)
@@ -2930,9 +2861,9 @@ subroutine restore_state(p, sx)
       allocate(wcx(1, 1), source = 1.0)
       allocate(wcy(1, 1), source = 1.0)
     end if
-    call par_scatter_cell(wcx, cwxd)
-    call par_scatter_cell(wcy, cwyd)
-    cwd_restored = .true.
+    call par_scatter_cell(wcx, chn%cwxd)
+    call par_scatter_cell(wcy, chn%cwyd)
+    chn%cwd_restored = .true.
   end if
   if (is_root) close(un)
 end subroutine
@@ -2967,21 +2898,21 @@ subroutine m_swflow_enc_post(p, g, s)
   integer :: i, j
   real :: cxv, cyv
   if (p%initialized) continue  ! 引数未使用の警告を抑制
-  if (.not. have_sect) return
-  if (.not. have_width) return
+  if (.not. sct%have_sect) return
+  if (.not. chn%have_width) return
   !$omp parallel do schedule(dynamic) private(i, j, cxv, cyv)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
       if (g%x(i,j) <= 0) cycle
-      if (have_cwd) then
-        cxv = cwxd(i,j)
-        cyv = cwyd(i,j)
-      else if (sdep(i,j) > 0.0) then
-        call cw_cell(g, i, j, sect_sigma(s%h(i,j), sdep(i,j)), cxv, cyv)
+      if (chn%have_cwd) then
+        cxv = chn%cwxd(i,j)
+        cyv = chn%cwyd(i,j)
+      else if (sct%sdep(i,j) > 0.0) then
+        call cw_cell(g, i, j, sect_sigma(s%h(i,j), sct%sdep(i,j)), cxv, cyv)
       else
-        cxv = cwx(i,j)
-        cyv = cwy(i,j)
+        cxv = chn%cwx(i,j)
+        cyv = chn%cwy(i,j)
       end if
       s%u(i,j) = s%u(i,j) / cxv
       s%v(i,j) = s%v(i,j) / cyv
@@ -3024,9 +2955,9 @@ function m_swflow_enc_edge_flux(i, j, in, jn) result(q)
   ie = i + die(k)
   je = j + dje(k)
   fw = 1.0
-  if (have_frw) fw = frw(ke(k),ie,je)
-  if (have_fwd) fw = fw * fwd(ke(k),ie,je)
-  q = sign_e(k) * sx_mod%mn(ke(k),ie,je) * l8(k) * fw
+  if (chn%have_frw) fw = chn%frw(ke(k),ie,je)
+  if (chn%have_fwd) fw = fw * chn%fwd(ke(k),ie,je)
+  q = sign_e(k) * sx_mod%mn(ke(k),ie,je) * geo%l8(k) * fw
 end function
 
 
@@ -3034,8 +2965,8 @@ function swflow_vh(i, j, h) result(vh)
   integer, intent(in) :: i, j
   real, intent(in) :: h
   real :: vh
-  if (have_sect) then
-    vh = sect_v(h, sdep(i,j))
+  if (sct%have_sect) then
+    vh = sect_v(h, sct%sdep(i,j))
   else
     vh = h
   end if
@@ -3048,11 +2979,11 @@ pure function sect_v(h, d) result(v)
   if (d <= 0.0) then
     v = h
   else if (h >= d) then
-    v = h - d * sect_mfac
+    v = h - d * sct%sect_mfac
   else if (h <= 0.0) then
     v = h
   else
-    v = d * (h / d)**sect_mp1 * sect_rmp1
+    v = d * (h / d)**sct%sect_mp1 * sct%sect_rmp1
   end if
 end function
 
@@ -3064,13 +2995,13 @@ pure function sect_hinv(v, d) result(h)
   if (d <= 0.0) then
     h = v
   else
-    vd = d * sect_rmp1              ! 満杯遷移点(h=D)の vh
+    vd = d * sct%sect_rmp1              ! 満杯遷移点(h=D)の vh
     if (v >= vd) then
-      h = v + d * sect_mfac
+      h = v + d * sct%sect_mfac
     else if (v <= 0.0) then
       h = v
     else
-      h = d * (v * sect_mp1 / d)**sect_rmp1
+      h = d * (v * sct%sect_mp1 / d)**sct%sect_rmp1
     end if
   end if
 end function
@@ -3084,7 +3015,7 @@ pure function sect_sigma(h, d) result(sg)
   else if (h <= 0.0) then
     sg = sect_sgmin
   else
-    sg = max((h / d)**sect_m, sect_sgmin)
+    sg = max((h / d)**sct%sect_m, sect_sgmin)
   end if
 end function
 
@@ -3104,8 +3035,8 @@ subroutine build_sdep(g, b, s)
   integer :: i, j, ist, k
   real :: d
 
-  allocate(sdep(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(screst(1:g%nx, dcp%jsh:dcp%jeh), source = screst_none)
+  allocate(sct%sdep(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(sct%screst(1:g%nx, dcp%jsh:dcp%jeh), source = screst_none)
   do j = dcp%jsh, dcp%jeh
     do i = 1, g%nx
       if (g%x(i,j) <= 0) cycle
@@ -3120,14 +3051,14 @@ subroutine build_sdep(g, b, s)
         if (g%zbank(i,j) > zbank_min) d = max(g%zbank(i,j) - s%z(i,j), 0.0)
       end if
       if (d > 0.0) then
-        screst(i,j) = g%zbank(i,j)
+        sct%screst(i,j) = g%zbank(i,j)
       else if (g%drw_active) then
         if (g%drw(i,j) > 0.0) then
-          screst(i,j) = g%z(i,j) + g%drw(i,j)
-          d = max(screst(i,j) - s%z(i,j), 0.0)
+          sct%screst(i,j) = g%z(i,j) + g%drw(i,j)
+          d = max(sct%screst(i,j) - s%z(i,j), 0.0)
         end if
       end if
-      sdep(i,j) = d
+      sct%sdep(i,j) = d
     end do
   end do
 
@@ -3138,8 +3069,8 @@ subroutine build_sdep(g, b, s)
       i = b%struct(ist)%cin(1,k)
       j = b%struct(ist)%cin(2,k)
       if (j < dcp%jsh .or. j > dcp%jeh) cycle
-      sdep(i,j) = 0.0
-      screst(i,j) = screst_none
+      sct%sdep(i,j) = 0.0
+      sct%screst(i,j) = screst_none
     end do
   end do
 
@@ -3164,21 +3095,21 @@ subroutine m_swflow_enc_sdep_update(p, g, s)
   real :: dnew, vh
   logical :: changed
   if (p%initialized) continue  ! 引数未使用の警告を抑制
-  if (.not. have_sect) return
+  if (.not. sct%have_sect) return
   changed = .false.
   !$omp parallel do schedule(dynamic) private(i, j, dnew, vh) reduction(.or.:changed)
   do j = dcp%jsh, dcp%jeh
     do i = 1, g%nx
-      if (screst(i,j) <= screst_none) cycle
-      dnew = max(screst(i,j) - s%z(i,j), 0.0)
-      if (dnew == sdep(i,j)) cycle
+      if (sct%screst(i,j) <= screst_none) cycle
+      dnew = max(sct%screst(i,j) - s%z(i,j), 0.0)
+      if (dnew == sct%sdep(i,j)) cycle
       if (j >= dcp%js .and. j <= dcp%je) then
-        vh = sect_v(s%h(i,j), sdep(i,j))
+        vh = sect_v(s%h(i,j), sct%sdep(i,j))
         s%h(i,j) = sect_hinv(vh, dnew)
         s%e(i,j) = s%z(i,j) + s%h(i,j)
         changed = .true.
       end if
-      sdep(i,j) = dnew
+      sct%sdep(i,j) = dnew
     end do
   end do
   !$omp end parallel do
@@ -3204,11 +3135,11 @@ subroutine update_af(g, s)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       base = s%gv(i,j)
-      if (have_width) base = base * wfrac(i,j)
-      if (have_sect) then
-        if (sdep(i,j) > 0.0) then
+      if (chn%have_width) base = base * chn%wfrac(i,j)
+      if (sct%have_sect) then
+        if (sct%sdep(i,j) > 0.0) then
           if (s%h(i,j) > 0.0) then
-            base = base * (sect_v(s%h(i,j), sdep(i,j)) / s%h(i,j))
+            base = base * (sect_v(s%h(i,j), sct%sdep(i,j)) / s%h(i,j))
           else
             base = base * sect_sgmin
           end if
@@ -3221,12 +3152,11 @@ subroutine update_af(g, s)
 
 end subroutine
 
-
 !----------------------------------------------------------------------
 ! 文脈の付け替え(複数インスタンス。§71)
 !   alloc は m_main_instances_alloc が n > 1 のときだけ呼ぶ。swap は現在
-!   のモジュール変数を枠 kout に退避し、枠 kin の中身を現在にする。
-!   並びは宣言部の順(Check_modstate.py が名前の網羅を検査する)
+!   のモジュール変数を枠 kout に退避し、枠 kin の中身を現在にする
+!   (Check_modstate.py が名前の網羅を検査する)
 !----------------------------------------------------------------------
 subroutine m_swflow_enc_ctx_alloc(n)
   integer, intent(in) :: n
@@ -3240,132 +3170,17 @@ subroutine m_swflow_enc_ctx_swap(kout, kin)
   if (.not. allocated(enc_ctx)) call par_stop("m_swflow_enc_ctx_swap: not allocated")
   if (kout == kin) return
   associate (c => enc_ctx(kout), d => enc_ctx(kin))
-    c%f_advection_term = f_advection_term;          f_advection_term = d%f_advection_term
-    c%f_pressure_term = f_pressure_term;            f_pressure_term = d%f_pressure_term
-    c%f_gravity_correction = f_gravity_correction;  f_gravity_correction = d%f_gravity_correction
-    c%f_exflux_reduction = f_exflux_reduction;      f_exflux_reduction = d%f_exflux_reduction
-    c%f_hcap_upwind = f_hcap_upwind;                f_hcap_upwind = d%f_hcap_upwind
-    c%f_adaptive_runge = f_adaptive_runge;          f_adaptive_runge = d%f_adaptive_runge
-    c%f_friction_fastmath = f_friction_fastmath;    f_friction_fastmath = d%f_friction_fastmath
-    c%f_advection_scheme = f_advection_scheme;      f_advection_scheme = d%f_advection_scheme
-    c%f_rivermouth_drop = f_rivermouth_drop;        f_rivermouth_drop = d%f_rivermouth_drop
-    c%f_opening_dynamic = f_opening_dynamic;        f_opening_dynamic = d%f_opening_dynamic
-    c%f_advection_donor = f_advection_donor;        f_advection_donor = d%f_advection_donor
-    c%f_dry_head_cap = f_dry_head_cap;              f_dry_head_cap = d%f_dry_head_cap
-    c%f_bank_mode = f_bank_mode;                    f_bank_mode = d%f_bank_mode
-    c%f_diffusion_term = f_diffusion_term;          f_diffusion_term = d%f_diffusion_term
-    c%f_nonhydrostatic = f_nonhydrostatic;          f_nonhydrostatic = d%f_nonhydrostatic
-    c%nh_hmin = nh_hmin;                            nh_hmin = d%nh_hmin
-    c%nh_solver = nh_solver;                        nh_solver = d%nh_solver
-    c%nh_itmax = nh_itmax;                          nh_itmax = d%nh_itmax
-    c%nh_tol = nh_tol;                              nh_tol = d%nh_tol
-    c%f_nh_adaptive = f_nh_adaptive;                f_nh_adaptive = d%f_nh_adaptive
-    c%nh_detector = nh_detector;                    nh_detector = d%nh_detector
-    c%nh_chi_on = nh_chi_on;                        nh_chi_on = d%nh_chi_on
-    c%nh_margin = nh_margin;                        nh_margin = d%nh_margin
-    c%nh_amin = nh_amin;                            nh_amin = d%nh_amin
-    c%nh_arel = nh_arel;                            nh_arel = d%nh_arel
-    c%f_nh_breaking = f_nh_breaking;                f_nh_breaking = d%f_nh_breaking
-    c%nh_break_alpha = nh_break_alpha;              nh_break_alpha = d%nh_break_alpha
-    c%nh_break_beta = nh_break_beta;                nh_break_beta = d%nh_break_beta
-    c%nh_break_type = nh_break_type;                nh_break_type = d%nh_break_type
-    c%nh_break_fr = nh_break_fr;                    nh_break_fr = d%nh_break_fr
-    c%nh_break_slope = nh_break_slope;              nh_break_slope = d%nh_break_slope
-    c%nh_break_margin = nh_break_margin;            nh_break_margin = d%nh_break_margin
-    c%nh_break_visc = nh_break_visc;                nh_break_visc = d%nh_break_visc
-    c%nh_bc_margin = nh_bc_margin;                  nh_bc_margin = d%nh_bc_margin
-    c%f_nh_slope = f_nh_slope;                      f_nh_slope = d%f_nh_slope
-    c%f_nh_bottom = f_nh_bottom;                    f_nh_bottom = d%f_nh_bottom
-    c%have_diff = have_diff;                        have_diff = d%have_diff
-    call move_alloc(nh_nub, c%nh_nub);                call move_alloc(d%nh_nub, nh_nub)
-    c%nh_active = nh_active;                        nh_active = d%nh_active
-    call move_alloc(nh_he, c%nh_he);                 call move_alloc(d%nh_he, nh_he)
-    c%p_diagratio = p_diagratio;                    p_diagratio = d%p_diagratio
-    c%p_adv_upwind_index = p_adv_upwind_index;      p_adv_upwind_index = d%p_adv_upwind_index
-    c%p_adprunge_thresh = p_adprunge_thresh;        p_adprunge_thresh = d%p_adprunge_thresh
-    c%p_diffusion_nu = p_diffusion_nu;              p_diffusion_nu = d%p_diffusion_nu
-    c%p_diffusion_alpha = p_diffusion_alpha;        p_diffusion_alpha = d%p_diffusion_alpha
-    c%have_open_bc = have_open_bc;                  have_open_bc = d%have_open_bc
-    c%db_res = db_res;                              db_res = d%db_res
-    c%db_tanphi = db_tanphi;                        db_tanphi = d%db_tanphi
-    c%db_sgrav = db_sgrav;                          db_sgrav = d%db_sgrav
-    c%db_vstop = db_vstop;                          db_vstop = d%db_vstop
-    c%db_cstar = db_cstar;                          db_cstar = d%db_cstar
-    c%db_cmin = db_cmin;                            db_cmin = d%db_cmin
-    c%db_d50v = db_d50v;                            db_d50v = d%db_d50v
-    c%db_kcol = db_kcol;                            db_kcol = d%db_kcol
-    c%db_mu = db_mu;                                db_mu = d%db_mu
-    c%db_xi = db_xi;                                db_xi = d%db_xi
-    c%db_tauy = db_tauy;                            db_tauy = d%db_tauy
-    c%db_curv = db_curv;                            db_curv = d%db_curv
-    call move_alloc(acv, c%acv);                   call move_alloc(d%acv, acv)
-    c%have_bank = have_bank;                        have_bank = d%have_bank
-    call move_alloc(nwall, c%nwall);                 call move_alloc(d%nwall, nwall)
-    c%have_swall = have_swall;                      have_swall = d%have_swall
-    c%f_swall_mode = f_swall_mode;                  f_swall_mode = d%f_swall_mode
-    c%f_bank_opening = f_bank_opening;              f_bank_opening = d%f_bank_opening
-    c%have_bopen = have_bopen;                      have_bopen = d%have_bopen
-    c%f_channel_advection = f_channel_advection;    f_channel_advection = d%f_channel_advection
-    c%have_width = have_width;                      have_width = d%have_width
-    c%have_frw = have_frw;                          have_frw = d%have_frw
-    c%adv_drop_rw = adv_drop_rw;                    adv_drop_rw = d%adv_drop_rw
-    call move_alloc(frw, c%frw);                   call move_alloc(d%frw, frw)
-    call move_alloc(wfrac, c%wfrac);                 call move_alloc(d%wfrac, wfrac)
-    c%have_fwd = have_fwd;                          have_fwd = d%have_fwd
-    c%fwd_restored = fwd_restored;                  fwd_restored = d%fwd_restored
-    call move_alloc(fwd, c%fwd);                   call move_alloc(d%fwd, fwd)
-    c%have_breach = have_breach;                    have_breach = d%have_breach
-    c%nbr = nbr;                                    nbr = d%nbr
-    call move_alloc(br, c%br);                    call move_alloc(d%br, br)
-    call move_alloc(ibr0, c%ibr0);                  call move_alloc(d%ibr0, ibr0)
-    call move_alloc(ibr1, c%ibr1);                  call move_alloc(d%ibr1, ibr1)
-    call move_alloc(ibrs, c%ibrs);                  call move_alloc(d%ibrs, ibrs)
-    c%have_cwd = have_cwd;                          have_cwd = d%have_cwd
-    c%cwd_restored = cwd_restored;                  cwd_restored = d%cwd_restored
-    call move_alloc(cwxd, c%cwxd);                  call move_alloc(d%cwxd, cwxd)
-    call move_alloc(cwyd, c%cwyd);                  call move_alloc(d%cwyd, cwyd)
-    call move_alloc(cwx, c%cwx);                   call move_alloc(d%cwx, cwx)
-    call move_alloc(cwy, c%cwy);                   call move_alloc(d%cwy, cwy)
-    c%have_sect = have_sect;                        have_sect = d%have_sect
-    c%have_edge_flux = have_edge_flux;              have_edge_flux = d%have_edge_flux
-    c%sect_m = sect_m;                              sect_m = d%sect_m
-    c%sect_mp1 = sect_mp1;                          sect_mp1 = d%sect_mp1
-    c%sect_rmp1 = sect_rmp1;                        sect_rmp1 = d%sect_rmp1
-    c%sect_mfac = sect_mfac;                        sect_mfac = d%sect_mfac
-    call move_alloc(screst, c%screst);                call move_alloc(d%screst, screst)
-    call move_alloc(sdep, c%sdep);                  call move_alloc(d%sdep, sdep)
-    call move_alloc(frw0, c%frw0);                  call move_alloc(d%frw0, frw0)
-    call move_alloc(sx_mod, c%sx_mod);                call move_alloc(d%sx_mod, sx_mod)
-    call move_alloc(tx_mod, c%tx_mod);                call move_alloc(d%tx_mod, tx_mod)
-    call move_alloc(td_mod, c%td_mod);                call move_alloc(d%td_mod, td_mod)
-    call move_alloc(nh_mod, c%nh_mod);                call move_alloc(d%nh_mod, nh_mod)
-    c%f_bc_side = f_bc_side;                        f_bc_side = d%f_bc_side
-    call move_alloc(bt_cell, c%bt_cell);               call move_alloc(d%bt_cell, bt_cell)
-    call move_alloc(bc_eta_cell, c%bc_eta_cell);           call move_alloc(d%bc_eta_cell, bc_eta_cell)
-    call move_alloc(infl_wseg, c%infl_wseg);             call move_alloc(d%infl_wseg, infl_wseg)
-    call move_alloc(infl_cfac, c%infl_cfac);             call move_alloc(d%infl_cfac, infl_cfac)
-    call move_alloc(infl_hseg, c%infl_hseg);             call move_alloc(d%infl_hseg, infl_hseg)
-    c%din2 = din2;                                  din2 = d%din2
-    c%djn2 = djn2;                                  djn2 = d%djn2
-    c%w8x = w8x;                                    w8x = d%w8x
-    c%w8y = w8y;                                    w8y = d%w8y
-    c%w8dr = w8dr;                                  w8dr = d%w8dr
-    c%w8dr2 = w8dr2;                                w8dr2 = d%w8dr2
-    c%l8x = l8x;                                    l8x = d%l8x
-    c%l8y = l8y;                                    l8y = d%l8y
-    c%l8 = l8;                                      l8 = d%l8
-    c%skip8 = skip8;                                skip8 = d%skip8
-    c%lpx = lpx;                                    lpx = d%lpx
-    c%lpy = lpy;                                    lpy = d%lpy
-    c%ldx = ldx;                                    ldx = d%ldx
-    c%ldy = ldy;                                    ldy = d%ldy
-    c%r8x = r8x;                                    r8x = d%r8x
-    c%r8y = r8y;                                    r8y = d%r8y
-    c%n8x = n8x;                                    n8x = d%n8x
-    c%n8y = n8y;                                    n8y = d%n8y
-    c%w8mx = w8mx;                                  w8mx = d%w8mx
-    c%w8my = w8my;                                  w8my = d%w8my
-    c%mn2dh = mn2dh;                                mn2dh = d%mn2dh
+    call move_alloc(opt, c%opt);     call move_alloc(d%opt, opt)
+    call move_alloc(nhp, c%nhp);     call move_alloc(d%nhp, nhp)
+    call move_alloc(dbr, c%dbr);     call move_alloc(d%dbr, dbr)
+    call move_alloc(chn, c%chn);     call move_alloc(d%chn, chn)
+    call move_alloc(sct, c%sct);     call move_alloc(d%sct, sct)
+    call move_alloc(geo, c%geo);     call move_alloc(d%geo, geo)
+    call move_alloc(bcs, c%bcs);     call move_alloc(d%bcs, bcs)
+    call move_alloc(sx_mod, c%sx_mod);  call move_alloc(d%sx_mod, sx_mod)
+    call move_alloc(tx_mod, c%tx_mod);  call move_alloc(d%tx_mod, tx_mod)
+    call move_alloc(td_mod, c%td_mod);  call move_alloc(d%td_mod, td_mod)
+    call move_alloc(nh_mod, c%nh_mod);  call move_alloc(d%nh_mod, nh_mod)
   end associate
 end subroutine
 

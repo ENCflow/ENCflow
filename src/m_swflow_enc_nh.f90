@@ -77,13 +77,13 @@ module subroutine nh_init(p, g, b, s)
   real :: vmax(1)
   logical :: forced
 
-  nh_active = (f_nonhydrostatic > 0)
-  if (.not. nh_active) return
+  nhp%nh_active = (nhp%f_nonhydrostatic > 0)
+  if (.not. nhp%nh_active) return
 
-  if (f_nonhydrostatic /= 1) call par_stop("list_enc: f_nonhydrostatic must be 0(off) or 1(1-layer)")
+  if (nhp%f_nonhydrostatic /= 1) call par_stop("list_enc: f_nonhydrostatic must be 0(off) or 1(1-layer)")
   if (s%debris_active) call par_stop("list_enc: f_nonhydrostatic cannot be combined with debris flow")
-  if (nh_hmin <= p%dd) call par_stop("list_enc: nh_hmin must exceed dd (moving depth threshold)")
-  select case (nh_solver)
+  if (nhp%nh_hmin <= p%dd) call par_stop("list_enc: nh_hmin must exceed dd (moving depth threshold)")
+  select case (nhp%nh_solver)
     case (1)
       call par_info("swflow_enc: non-hydrostatic correction ON (1-layer, beta=h^2/4), solver=Jacobi")
     case (2)
@@ -91,83 +91,83 @@ module subroutine nh_init(p, g, b, s)
     case default
       call par_stop("list_enc: nh_solver must be 1(Jacobi) or 2(CG)")
   end select
-  if (nh_itmax < 1) call par_stop("list_enc: nh_itmax must be >= 1")
-  if (nh_tol <= 0.0) call par_stop("list_enc: nh_tol must be > 0")
-  call par_info("  nh_hmin = "//trim(rtoa(nh_hmin))//" m, nh_itmax = "//itoa(nh_itmax)// &
-                ", nh_tol = "//trim(rtoa(nh_tol)))
-  select case (f_nh_adaptive)
+  if (nhp%nh_itmax < 1) call par_stop("list_enc: nh_itmax must be >= 1")
+  if (nhp%nh_tol <= 0.0) call par_stop("list_enc: nh_tol must be > 0")
+  call par_info("  nh_hmin = "//trim(rtoa(nhp%nh_hmin))//" m, nh_itmax = "//itoa(nhp%nh_itmax)// &
+                ", nh_tol = "//trim(rtoa(nhp%nh_tol)))
+  select case (nhp%f_nh_adaptive)
     case (0)
     case (1)
-      select case (nh_detector)
+      select case (nhp%nh_detector)
         case (1)
           call par_info("  adaptive active set: detector = dispersion chi = |bDa*|/(|a*|+|bDa*|), chi_on = " &
-                        //trim(rtoa(nh_chi_on)))
+                        //trim(rtoa(nhp%nh_chi_on)))
         case (2)
-          call par_info("  adaptive active set: detector = |bDa*|/g, chi_on = "//trim(rtoa(nh_chi_on)))
+          call par_info("  adaptive active set: detector = |bDa*|/g, chi_on = "//trim(rtoa(nhp%nh_chi_on)))
         case default
           call par_stop("list_enc: nh_detector must be 1(dispersion chi) or 2(absolute)")
       end select
-      if (nh_chi_on <= 0.0) call par_stop("list_enc: nh_chi_on must be > 0")
-      if (nh_amin < 0.0) call par_stop("list_enc: nh_amin must be >= 0")
-      if (nh_arel < 0.0 .or. nh_arel >= 1.0) call par_stop("list_enc: nh_arel must be in [0, 1)")
-      call par_info("  seed floor |bDa*| >= max("//trim(rtoa(nh_amin))//" m/s2, "// &
-                    trim(rtoa(nh_arel))//" x domain max)")
-      if (nh_margin > 0) then
-        call par_info("  margin = "//itoa(nh_margin)//" cells")
+      if (nhp%nh_chi_on <= 0.0) call par_stop("list_enc: nh_chi_on must be > 0")
+      if (nhp%nh_amin < 0.0) call par_stop("list_enc: nh_amin must be >= 0")
+      if (nhp%nh_arel < 0.0 .or. nhp%nh_arel >= 1.0) call par_stop("list_enc: nh_arel must be in [0, 1)")
+      call par_info("  seed floor |bDa*| >= max("//trim(rtoa(nhp%nh_amin))//" m/s2, "// &
+                    trim(rtoa(nhp%nh_arel))//" x domain max)")
+      if (nhp%nh_margin > 0) then
+        call par_info("  margin = "//itoa(nhp%nh_margin)//" cells")
       else
         call par_info("  margin = automatic (2H/dx)")
       end if
     case default
       call par_stop("list_enc: f_nh_adaptive must be 0(whole mask) or 1(active set)")
   end select
-  select case (f_nh_slope)
+  select case (nhp%f_nh_slope)
     case (0)
     case (1)
       call par_info("  bottom-slope terms ON (Version 2: w_b = u.grad z_b, (phi/h) grad(h + 2 z_b))")
     case default
       call par_stop("list_enc: f_nh_slope must be 0(flat, Version 1) or 1(bottom-slope terms)")
   end select
-  select case (f_nh_bottom)
+  select case (nhp%f_nh_bottom)
     case (0)
     case (1)
       call par_info("  moving-bottom acceleration term ON (source -(h/4)(z'' + (1+bL)^-1 z''), one-step lag)")
     case default
       call par_stop("list_enc: f_nh_bottom must be 0(off) or 1(bottom acceleration term)")
   end select
-  select case (f_nh_breaking)
+  select case (nhp%f_nh_breaking)
     case (0)
     case (1)
-      select case (nh_break_type)
+      select case (nhp%nh_break_type)
         case (1)
-          if (nh_break_alpha <= 0.0 .or. nh_break_beta <= 0.0 .or. nh_break_beta > nh_break_alpha) then
+          if (nhp%nh_break_alpha <= 0.0 .or. nhp%nh_break_beta <= 0.0 .or. nhp%nh_break_beta > nhp%nh_break_alpha) then
             call par_stop("list_enc: nh_break_alpha > nh_break_beta > 0 is required")
           end if
           call par_info("  breaking switch: hydrostatic where d(eta)/dt > alpha sqrt(gh), alpha = " &
-                        //trim(rtoa(nh_break_alpha))//", beta = "//trim(rtoa(nh_break_beta)))
+                        //trim(rtoa(nhp%nh_break_alpha))//", beta = "//trim(rtoa(nhp%nh_break_beta)))
         case (2)
-          if (nh_break_fr <= 0.0) call par_stop("list_enc: nh_break_fr must be > 0")
-      if (nh_break_margin < 0) call par_stop("list_enc: nh_break_margin must be >= 0")
+          if (nhp%nh_break_fr <= 0.0) call par_stop("list_enc: nh_break_fr must be > 0")
+      if (nhp%nh_break_margin < 0) call par_stop("list_enc: nh_break_margin must be >= 0")
           call par_info("  breaking switch: hydrostatic where Froude number |V|/sqrt(gh) > " &
-                        //trim(rtoa(nh_break_fr)))
+                        //trim(rtoa(nhp%nh_break_fr)))
         case (3)
-          if (nh_break_slope <= 0.0) call par_stop("list_enc: nh_break_slope must be > 0")
+          if (nhp%nh_break_slope <= 0.0) call par_stop("list_enc: nh_break_slope must be > 0")
           call par_info("  breaking switch: hydrostatic where surface slope |grad eta| > " &
-                        //trim(rtoa(nh_break_slope)))
+                        //trim(rtoa(nhp%nh_break_slope)))
         case default
           call par_stop("list_enc: nh_break_type must be 1(d(eta)/dt), 2(Froude) or 3(surface slope)")
       end select
-      if (nh_break_visc > 0.0) then
-        if (nh_break_slope <= 0.0) call par_stop("list_enc: nh_break_visc > 0 requires nh_break_slope > 0 (ramp reference)")
-        call par_info("  breaking eddy viscosity: nu_b = "//trim(rtoa(nh_break_visc)) &
+      if (nhp%nh_break_visc > 0.0) then
+        if (nhp%nh_break_slope <= 0.0) call par_stop("list_enc: nh_break_visc > 0 requires nh_break_slope > 0 (ramp reference)")
+        call par_info("  breaking eddy viscosity: nu_b = "//trim(rtoa(nhp%nh_break_visc)) &
                       //" B h sqrt(gh) |grad eta| in breaking cells (B ramps over |grad eta| = " &
-                      //trim(rtoa(nh_break_slope))//" .. "//trim(rtoa(2.0 * nh_break_slope))//")")
+                      //trim(rtoa(nhp%nh_break_slope))//" .. "//trim(rtoa(2.0 * nhp%nh_break_slope))//")")
       end if
     case default
       call par_stop("list_enc: f_nh_breaking must be 0(off) or 1(on)")
   end select
 
   allocate(nh_mod%uv0(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
-  allocate(nh_he(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(nhp%nh_he(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
   allocate(nh_mod%phi(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(nh_mod%phi1(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(nh_mod%rhs(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
@@ -182,9 +182,9 @@ module subroutine nh_init(p, g, b, s)
   ! (H = 初期の最大水深。楕円型作用素の影響距離)。強制セルは全域で既知
   ! (規定セルの一覧と辺の面型)なので、確保範囲の各セルについて直接判定
   ! する(halo 交換なし)
-  if (nh_bc_margin < 0) call par_stop("list_enc: nh_bc_margin must be >= 0")
-  if (nh_bc_margin > 0) then
-    m = nh_bc_margin
+  if (nhp%nh_bc_margin < 0) call par_stop("list_enc: nh_bc_margin must be >= 0")
+  if (nhp%nh_bc_margin > 0) then
+    m = nhp%nh_bc_margin
   else
     hmax = 0.0
     do j = dcp%js, dcp%je
@@ -231,14 +231,14 @@ module subroutine nh_init(p, g, b, s)
   if (k > 0) call par_info("  forced-boundary cells kept hydrostatic (stage / open faces + margin " &
                            //itoa(m)//" cells): "//itoa(k)//" on this rank")
   allocate(nh_mod%dast(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  if (f_nh_adaptive == 1) allocate(nh_mod%work(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  if (f_nh_breaking == 1) allocate(nh_mod%brk(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  if (nh_break_visc > 0.0) allocate(nh_nub(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  if (f_nh_slope == 1) then
+  if (nhp%f_nh_adaptive == 1) allocate(nh_mod%work(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  if (nhp%f_nh_breaking == 1) allocate(nh_mod%brk(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  if (nhp%nh_break_visc > 0.0) allocate(nhp%nh_nub(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  if (nhp%f_nh_slope == 1) then
     allocate(nh_mod%rhs0(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(nh_mod%work2(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   end if
-  if (f_nh_bottom == 1) then
+  if (nhp%f_nh_bottom == 1) then
     ! z_prev は restore 後の s%z(m_state_init が先)。最初の射影は z̈ = 0
     allocate(nh_mod%zprev(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(nh_mod%wb(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
@@ -251,13 +251,13 @@ module subroutine nh_init(p, g, b, s)
     nh_mod%bot_first = .true.
   end if
   allocate(nh_mod%emask(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = .false.)
-  if (nh_solver == 2) then
+  if (nhp%nh_solver == 2) then
     allocate(nh_mod%rr(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(nh_mod%ap(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
   end if
   do k = 1, 8
-    nh_mod%wd(k) = l8(k) / (g%dx * g%dy)
-    nh_mod%wl(k) = l8(k) / (g%dx * g%dy * w8dr(k))
+    nh_mod%wd(k) = geo%l8(k) / (g%dx * g%dy)
+    nh_mod%wl(k) = geo%l8(k) / (g%dx * g%dy * geo%w8dr(k))
   end do
   nh_mod%nstep = 0
   nh_mod%itsum = 0
@@ -321,13 +321,13 @@ module subroutine nh_project(p, g, s, sx)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (nh_mod%fmask(i,j) == 1) cycle
-      if (s%h(i,j) < nh_hmin) cycle
+      if (s%h(i,j) < nhp%nh_hmin) cycle
       if (s%gv(i,j) < 1.0) cycle
-      if (have_width) then
-        if (wfrac(i,j) < 1.0) cycle
+      if (chn%have_width) then
+        if (chn%wfrac(i,j) < 1.0) cycle
       end if
-      if (have_sect) then
-        if (sdep(i,j) > 0.0) cycle
+      if (sct%have_sect) then
+        if (sct%sdep(i,j) > 0.0) cycle
       end if
       nh_mod%cmask(i,j) = 1
       nh_mod%beta(i,j) = s%h(i,j)**2 / 4
@@ -341,7 +341,7 @@ module subroutine nh_project(p, g, s, sx)
   !   検出用の素朴な源 −(h/2) z̈ を置き、3c で平滑化した源に置き換える。
   !   (底面速度の時間緩和は試して捨てた: plan §16.6) ---
   bedmax = 0.0
-  if (f_nh_bottom == 1) then
+  if (nhp%f_nh_bottom == 1) then
     !$omp parallel do schedule(static) private(i, j, wbn) reduction(max:bedmax)
     do j = dcp%js, dcp%je
       do i = 1, g%nx
@@ -368,7 +368,7 @@ module subroutine nh_project(p, g, s, sx)
   end if
 
   ! --- 1b. 砕波スイッチ(f_nh_breaking=1): 水面が速く上昇するセルを静水圧に ---
-  if (f_nh_breaking == 1) call breaking_switch(p, g, s, sx)
+  if (nhp%f_nh_breaking == 1) call breaking_switch(p, g, s, sx)
 
   ! --- 2. 静水圧加速度の発散 D a*(担当帯。エッジ行 js-1..je は merge 済み) ---
   !   全 8 エッジの寄与(非 NH エッジも含む。momentum が触らなかったエッジは
@@ -388,7 +388,7 @@ module subroutine nh_project(p, g, s, sx)
   !$omp end parallel do
 
   ! --- 2b. 活性集合(f_nh_adaptive=1): 検出セル + 縁だけを NH セルに絞る ---
-  if (f_nh_adaptive == 1) call active_set(p, g, s, sx)
+  if (nhp%f_nh_adaptive == 1) call active_set(p, g, s, sx)
 
   ! --- 3. NH エッジ(基準セル jsh..jeh の k=1..4。両セルが NH、壁でない) ---
   !$omp parallel do schedule(static) private(i, j, k, in, jn, ie, je)
@@ -399,13 +399,13 @@ module subroutine nh_project(p, g, s, sx)
         je = j + dje(k)
         nh_mod%emask(k,ie,je) = .false.
         if (nh_mod%cmask(i,j) == 0) cycle
-        if (skip8(k)) cycle
+        if (geo%skip8(k)) cycle
         in = i + din(k)
         jn = j + djn(k)
         if (in < 1 .or. in > g%nx) cycle
         if (jn < dcp%jsh .or. jn > dcp%jeh) cycle
         if (nh_mod%cmask(in,jn) == 0) cycle
-        if (have_bank) then
+        if (chn%have_bank) then
           if (bank_edge(g, s, i, j, in, jn)) cycle
         end if
         nh_mod%emask(k,ie,je) = .true.
@@ -426,11 +426,11 @@ module subroutine nh_project(p, g, s, sx)
       if (nh_mod%cmask(i,j) == 0) cycle
       nact = nact + 1
       wsum = 0.0
-      if (f_nh_slope == 0) then
+      if (nhp%f_nh_slope == 0) then
         do kk = 1, 8
           if (nh_mod%emask(ke8(kk), i+die(kk), j+dje(kk))) wsum = wsum + nh_mod%wl(kk)
         end do
-        if (nh_solver == 1) then
+        if (nhp%nh_solver == 1) then
           nh_mod%rhs(i,j) = nh_mod%beta(i,j) * nh_mod%dast(i,j)
           nh_mod%diag(i,j) = 1.0 + nh_mod%beta(i,j) * wsum
         else
@@ -445,15 +445,15 @@ module subroutine nh_project(p, g, s, sx)
                            - nh_mod%uv0(ke8(kk), i+die(kk), j+dje(kk))) * dtinv
           r0 = r0 + ck * ae
           if (nh_mod%emask(ke8(kk), i+die(kk), j+dje(kk))) then
-            if (nh_solver == 1) then
-              wsum = wsum + ck * (1.0 / w8dr(kk) - sig)
+            if (nhp%nh_solver == 1) then
+              wsum = wsum + ck * (1.0 / geo%w8dr(kk) - sig)
             else
               wsum = wsum + nh_mod%wl(kk)
             end if
           end if
         end do
         nh_mod%rhs0(i,j) = r0
-        if (nh_solver == 1) then
+        if (nhp%nh_solver == 1) then
           nh_mod%rhs(i,j) = r0
           nh_mod%diag(i,j) = 1.0 + wsum
         else
@@ -470,14 +470,14 @@ module subroutine nh_project(p, g, s, sx)
   !   CG: 右辺 z̈/β。Version 2 の Jacobi は勾配項込みの作用素で平滑化)、
   !   源項 −(h/4)(z̈ + z̈_s) を右辺に加える。主系の右辺は rhsb に退避 ---
   iters = 0
-  if (f_nh_bottom == 1 .and. bedmax > 0.0) then
+  if (nhp%f_nh_bottom == 1 .and. bedmax > 0.0) then
     !$omp parallel do schedule(static) private(i, j)
     do j = dcp%js, dcp%je
       do i = 1, g%nx
         nh_mod%rhsb(i,j) = nh_mod%rhs(i,j)
         nh_mod%rhs(i,j) = 0.0
         if (nh_mod%cmask(i,j) == 0) cycle
-        if (nh_solver == 1) then
+        if (nhp%nh_solver == 1) then
           nh_mod%rhs(i,j) = nh_mod%zdd(i,j)
         else
           nh_mod%rhs(i,j) = nh_mod%zdd(i,j) / nh_mod%beta(i,j)
@@ -485,7 +485,7 @@ module subroutine nh_project(p, g, s, sx)
       end do
     end do
     !$omp end parallel do
-    if (nh_solver == 1) then
+    if (nhp%nh_solver == 1) then
       call solve_jacobi(g, s, it2, ok2)
     else
       call solve_cg(g, it2, ok2, .false.)
@@ -501,15 +501,15 @@ module subroutine nh_project(p, g, s, sx)
         if (j < dcp%js .or. j > dcp%je) cycle
         nh_mod%rhs(i,j) = nh_mod%rhsb(i,j)
         if (nh_mod%cmask(i,j) == 0) cycle
-        if (f_nh_slope == 0) then
-          if (nh_solver == 1) then
+        if (nhp%f_nh_slope == 0) then
+          if (nhp%nh_solver == 1) then
             nh_mod%rhs(i,j) = nh_mod%rhs(i,j) + nh_mod%zsrc(i,j)
           else
             nh_mod%rhs(i,j) = nh_mod%rhs(i,j) + nh_mod%zsrc(i,j) / nh_mod%beta(i,j)
           end if
         else
           nh_mod%rhs0(i,j) = nh_mod%rhs0(i,j) + nh_mod%zsrc(i,j)
-          if (nh_solver == 1) then
+          if (nhp%nh_solver == 1) then
             nh_mod%rhs(i,j) = nh_mod%rhs0(i,j)
           else
             nh_mod%rhs(i,j) = nh_mod%rhs0(i,j) / nh_mod%beta(i,j)
@@ -521,10 +521,10 @@ module subroutine nh_project(p, g, s, sx)
   end if
 
   ! --- 4. 反復解 ---
-  if (nh_solver == 1) then
+  if (nhp%nh_solver == 1) then
     call solve_jacobi(g, s, it2, ok)
     iters = iters + it2
-  else if (f_nh_slope == 0) then
+  else if (nhp%f_nh_slope == 0) then
     call solve_cg(g, it2, ok, .false.)
     iters = iters + it2
   else
@@ -532,7 +532,7 @@ module subroutine nh_project(p, g, s, sx)
     ! 勾配項 R(φ) = Σ_NH [(c_k − β wd_k)(φ_n − φ_i)/d_k + c_k (φ_i + φ_n) σ_k] を
     ! 更新して収束まで繰り返す。収束判定は max|Δφ| ≤ nh_tol·max|φ|(allreduce)
     ok = .false.
-    do m = 1, nh_itmax
+    do m = 1, nhp%nh_itmax
       call par_halo_cell(nh_mod%phi)
       dphimax = 0.0
       phimax = 0.0
@@ -547,7 +547,7 @@ module subroutine nh_project(p, g, s, sx)
             if (.not. nh_mod%emask(ke8(kk), i+die(kk), j+dje(kk))) cycle
             call slope_coef(g, s, i, j, kk, ck, sig)
             phin = nh_mod%phi(i+din(kk), j+djn(kk))
-            rr = rr + (ck - nh_mod%beta(i,j) * nh_mod%wd(kk)) * (phin - phic) / w8dr(kk) &
+            rr = rr + (ck - nh_mod%beta(i,j) * nh_mod%wd(kk)) * (phin - phic) / geo%w8dr(kk) &
                     + ck * (phic + phin) * sig
           end do
           nh_mod%rhs(i,j) = (nh_mod%rhs0(i,j) + rr) / nh_mod%beta(i,j)
@@ -568,7 +568,7 @@ module subroutine nh_project(p, g, s, sx)
       vmax2(1) = dphimax
       vmax2(2) = phimax
       call par_allreduce_max(vmax2)
-      if (vmax2(1) <= nh_tol * max(vmax2(2), tiny(1.0))) then
+      if (vmax2(1) <= nhp%nh_tol * max(vmax2(2), tiny(1.0))) then
         ok = ok2
         exit
       end if
@@ -595,13 +595,13 @@ module subroutine nh_project(p, g, s, sx)
         in = i + din(k)
         jn = j + djn(k)
         phin = nh_mod%phi(in,jn)
-        if (f_nh_slope == 0) then
-          sx%uv(k,ie,je) = sx%uv(k,ie,je) + p%dt * (phin - phic) / w8dr(k)
+        if (nhp%f_nh_slope == 0) then
+          sx%uv(k,ie,je) = sx%uv(k,ie,je) + p%dt * (phin - phic) / geo%w8dr(k)
         else
           call slope_coef(g, s, i, j, k, ck, sig)
-          sx%uv(k,ie,je) = sx%uv(k,ie,je) + p%dt * ((phin - phic) / w8dr(k) + (phic + phin) * sig)
+          sx%uv(k,ie,je) = sx%uv(k,ie,je) + p%dt * ((phin - phic) / geo%w8dr(k) + (phic + phin) * sig)
         end if
-        sx%mn1(k,ie,je) = sx%uv(k,ie,je) * nh_he(k,ie,je)
+        sx%mn1(k,ie,je) = sx%uv(k,ie,je) * nhp%nh_he(k,ie,je)
       end do
     end do
   end do
@@ -641,15 +641,15 @@ subroutine breaking_switch(p, g, s, sx)
         nh_mod%brk(i,j) = 0.0
         cycle
       end if
-      if (nh_break_type == 2) then
+      if (nhp%nh_break_type == 2) then
         ! フルード数判定(stateless。遡上の舌・射流は静水圧)
-        if (s%vv(i,j) > nh_break_fr * sqrt(p%gg * s%h(i,j))) then
+        if (s%vv(i,j) > nhp%nh_break_fr * sqrt(p%gg * s%h(i,j))) then
           nh_mod%brk(i,j) = 1.0
         else
           nh_mod%brk(i,j) = 0.0
         end if
         cycle
-      else if (nh_break_type == 3) then
+      else if (nhp%nh_break_type == 3) then
         ! 水面勾配判定(stateless・Galilean 不変。8 近傍への |Δη|/距離の最大。
         ! 乾いた近傍は水面が定義できないので除く)
         bb = 0.0
@@ -658,9 +658,9 @@ subroutine breaking_switch(p, g, s, sx)
           if (g%x(i+din(kk), j+djn(kk)) <= 0) cycle
           if (s%h(i+din(kk), j+djn(kk)) < p%dd) cycle
           bb = max(bb, abs(s%z(i+din(kk), j+djn(kk)) + s%h(i+din(kk), j+djn(kk)) &
-                           - s%z(i,j) - s%h(i,j)) / w8dr(kk))
+                           - s%z(i,j) - s%h(i,j)) / geo%w8dr(kk))
         end do
-        if (bb > nh_break_slope) then
+        if (bb > nhp%nh_break_slope) then
           nh_mod%brk(i,j) = 1.0
         else
           nh_mod%brk(i,j) = 0.0
@@ -672,11 +672,11 @@ subroutine breaking_switch(p, g, s, sx)
         dhdt = dhdt - sgn8(kk) * sx%mn1(ke8(kk), i+die(kk), j+dje(kk)) * nh_mod%wd(kk)
       end do
       bb = dhdt / sqrt(p%gg * s%h(i,j))
-      if (bb > nh_break_alpha) then
+      if (bb > nhp%nh_break_alpha) then
         nh_mod%brk(i,j) = 1.0
       else if (nh_mod%brk(i,j) == 1.0 .and. dhdt > 0.0) then
         nh_mod%brk(i,j) = 1.0
-      else if (bb > nh_break_beta) then
+      else if (bb > nhp%nh_break_beta) then
         nh_mod%brk(i,j) = 0.5
       else
         nh_mod%brk(i,j) = 0.0
@@ -715,8 +715,8 @@ subroutine breaking_switch(p, g, s, sx)
   ! 波の前面だけでなく波頂まで含めて静水圧に落とし、NH の圧力が砕波
   ! 前線を押し続けないようにする(hybrid Boussinesq 系の「波全体を NSWE」
   ! に相当)。膨張は活性集合と同じ 8 近傍の論理和(walk 順に依らない)
-  if (nh_break_margin > 0) then
-    margin = nh_break_margin
+  if (nhp%nh_break_margin > 0) then
+    margin = nhp%nh_break_margin
   else
     hmax = 0.0
     !$omp parallel do schedule(static) private(i, j) reduction(max:hmax)
@@ -785,21 +785,21 @@ subroutine breaking_switch(p, g, s, sx)
   ! 縁のセルは勾配が小さいので B が自然に 0 へ落ちる(距離による減衰は
   ! 持たない)。次ステップの diff_prepare が ν に加える(1 ステップ遅れ)。
   ! td は近傍 ±1 の ν を読むので、ハロ 2 まで交換する
-  if (nh_break_visc > 0.0) then
+  if (nhp%nh_break_visc > 0.0) then
     !$omp parallel do schedule(static) private(i, j, bb)
     do j = dcp%js, dcp%je
       do i = 1, g%nx
-        nh_nub(i,j) = 0.0
+        nhp%nh_nub(i,j) = 0.0
         if (nh_mod%brk(i,j) /= 1.0) cycle
         if (s%h(i,j) < p%dd) cycle
         bb = surface_slope(p, g, s, i, j)
-        if (bb <= nh_break_slope) cycle
-        nh_nub(i,j) = nh_break_visc * min((bb - nh_break_slope) / nh_break_slope, 1.0) &
+        if (bb <= nhp%nh_break_slope) cycle
+        nhp%nh_nub(i,j) = nhp%nh_break_visc * min((bb - nhp%nh_break_slope) / nhp%nh_break_slope, 1.0) &
                     * s%h(i,j) * sqrt(p%gg * s%h(i,j)) * bb
       end do
     end do
     !$omp end parallel do
-    call par_halo_cell(nh_nub)
+    call par_halo_cell(nhp%nh_nub)
   end if
 end subroutine
 
@@ -822,7 +822,7 @@ function surface_slope(p, g, s, i, j) result(bb)
     if (g%x(i+din(kk), j+djn(kk)) <= 0) cycle
     if (s%h(i+din(kk), j+djn(kk)) < p%dd) cycle
     bb = max(bb, abs(s%z(i+din(kk), j+djn(kk)) + s%h(i+din(kk), j+djn(kk)) &
-                     - s%z(i,j) - s%h(i,j)) / w8dr(kk))
+                     - s%z(i,j) - s%h(i,j)) / geo%w8dr(kk))
   end do
 end function
 
@@ -860,7 +860,7 @@ subroutine active_set(p, g, s, sx)
     do i = 1, g%nx
       if (nh_mod%cmask(i,j) == 0) cycle
       hmax = max(hmax, s%h(i,j))
-      if (f_nh_bottom == 1) then
+      if (nhp%f_nh_bottom == 1) then
         bmax = max(bmax, abs(nh_mod%beta(i,j) * nh_mod%dast(i,j) + nh_mod%zsrc(i,j)))
       else
         bmax = max(bmax, abs(nh_mod%beta(i,j) * nh_mod%dast(i,j)))
@@ -872,7 +872,7 @@ subroutine active_set(p, g, s, sx)
   vmax(2) = bmax
   call par_allreduce_max(vmax)
   hmax = vmax(1)
-  floor = max(nh_amin, nh_arel * vmax(2))
+  floor = max(nhp%nh_amin, nhp%nh_arel * vmax(2))
 
   ! 種: 検出量 > nh_chi_on(担当帯。候補セルのみ)
   !$omp parallel do schedule(static) private(i, j, kk, bda, a2, chi)
@@ -880,13 +880,13 @@ subroutine active_set(p, g, s, sx)
     do i = 1, g%nx
       nh_mod%work(i,j) = 0.0
       if (nh_mod%cmask(i,j) == 0) cycle
-      if (f_nh_bottom == 1) then
+      if (nhp%f_nh_bottom == 1) then
         bda = abs(nh_mod%beta(i,j) * nh_mod%dast(i,j) + nh_mod%zsrc(i,j))
       else
         bda = abs(nh_mod%beta(i,j) * nh_mod%dast(i,j))
       end if
       if (bda < floor) cycle
-      if (nh_detector == 1) then
+      if (nhp%nh_detector == 1) then
         a2 = 0.0
         do kk = 1, 8
           a2 = a2 + ((sx%uv(ke8(kk), i+die(kk), j+dje(kk)) &
@@ -896,14 +896,14 @@ subroutine active_set(p, g, s, sx)
       else
         chi = bda / p%gg
       end if
-      if (chi > nh_chi_on) nh_mod%work(i,j) = 1.0
+      if (chi > nhp%nh_chi_on) nh_mod%work(i,j) = 1.0
     end do
   end do
   !$omp end parallel do
 
   ! 縁の幅(自動なら 2H/Δx。hmax は全ランクで集約済み)
-  if (nh_margin > 0) then
-    margin = nh_margin
+  if (nhp%nh_margin > 0) then
+    margin = nhp%nh_margin
   else
     margin = max(2, ceiling(2.0 * hmax / min(g%dx, g%dy)))
   end if
@@ -979,7 +979,7 @@ subroutine slope_coef(g, s, i, j, kk, ck, sig)
   if (he > 0.0) then
     sd = (hn + 2.0 * s%z(in,jn)) - (hi + 2.0 * s%z(i,j))
     sd = max(-he, min(he, sd))          ! |sd/(2 he)| ≤ 1/2
-    sig = sd / (2.0 * he * w8dr(kk))
+    sig = sd / (2.0 * he * geo%w8dr(kk))
   else
     sig = 0.0
   end if
@@ -1016,7 +1016,7 @@ subroutine solve_jacobi(g, s, iters, ok)
   iters = 0
   if (rhsmax <= 0.0) return        ! 補正の源がない(静止水など)
 
-  do it = 1, nh_itmax
+  do it = 1, nhp%nh_itmax
     call par_halo_cell(nh_mod%phi)
     resmax = 0.0
     !$omp parallel do schedule(static) private(i, j, kk, rsum, pnew, ck, sig) reduction(max:resmax)
@@ -1024,7 +1024,7 @@ subroutine solve_jacobi(g, s, iters, ok)
       do i = 1, g%nx
         if (nh_mod%cmask(i,j) == 0) cycle
         rsum = 0.0
-        if (f_nh_slope == 0) then
+        if (nhp%f_nh_slope == 0) then
           do kk = 1, 8
             if (nh_mod%emask(ke8(kk), i+die(kk), j+dje(kk))) then
               rsum = rsum + nh_mod%wl(kk) * nh_mod%phi(i+din(kk), j+djn(kk))
@@ -1035,7 +1035,7 @@ subroutine solve_jacobi(g, s, iters, ok)
           do kk = 1, 8
             if (nh_mod%emask(ke8(kk), i+die(kk), j+dje(kk))) then
               call slope_coef(g, s, i, j, kk, ck, sig)
-              rsum = rsum + ck * (1.0 / w8dr(kk) + sig) * nh_mod%phi(i+din(kk), j+djn(kk))
+              rsum = rsum + ck * (1.0 / geo%w8dr(kk) + sig) * nh_mod%phi(i+din(kk), j+djn(kk))
             end if
           end do
           pnew = (nh_mod%rhs(i,j) + rsum) / nh_mod%diag(i,j)
@@ -1054,10 +1054,10 @@ subroutine solve_jacobi(g, s, iters, ok)
     iters = it
     vmax(1) = resmax
     call par_allreduce_max(vmax)
-    if (vmax(1) <= nh_tol * rhsmax) return
+    if (vmax(1) <= nhp%nh_tol * rhsmax) return
   end do
   ok = .false.
-  call par_warn("swflow_enc_nh: Jacobi did not converge in "//itoa(nh_itmax)//" sweeps")
+  call par_warn("swflow_enc_nh: Jacobi did not converge in "//itoa(nhp%nh_itmax)//" sweeps")
 end subroutine
 
 
@@ -1115,7 +1115,7 @@ subroutine solve_cg(g, iters, ok, warm)
   rr0 = dot(nh_mod%rr, nh_mod%rr)
   if (rr0 <= 0.0_real64) return
 
-  do it = 1, nh_itmax
+  do it = 1, nhp%nh_itmax
     call par_halo_cell(nh_mod%phi1)
     !$omp parallel do schedule(static) private(i, j, kk, lsum)
     do j = dcp%js, dcp%je
@@ -1145,7 +1145,7 @@ subroutine solve_cg(g, iters, ok, warm)
     !$omp end parallel do
     rr1 = dot(nh_mod%rr, nh_mod%rr)
     iters = it
-    if (sqrt(rr1) <= nh_tol * sqrt(bb)) return
+    if (sqrt(rr1) <= nhp%nh_tol * sqrt(bb)) return
     bet = rr1 / rr0
     rr0 = rr1
     !$omp parallel do schedule(static) private(i, j)
@@ -1158,7 +1158,7 @@ subroutine solve_cg(g, iters, ok, warm)
     !$omp end parallel do
   end do
   ok = .false.
-  call par_warn("swflow_enc_nh: CG did not converge in "//itoa(nh_itmax)//" iterations")
+  call par_warn("swflow_enc_nh: CG did not converge in "//itoa(nhp%nh_itmax)//" iterations")
 
 contains
   ! 決定的内積: 行ごとの部分和(行内は逐次)→ par_sum_rows
@@ -1185,7 +1185,7 @@ end subroutine
 !----------------------------------------------------------------------
 module subroutine nh_dispose()
   integer :: ivals(3)
-  if (.not. nh_active) return
+  if (.not. nhp%nh_active) return
   if (nh_mod%nstep > 0) then
     ivals(1) = int(min(nh_mod%actsum, int(huge(1), 8)))
     ivals(2) = int(min(nh_mod%brksum, int(huge(1), 8)))
@@ -1199,8 +1199,8 @@ module subroutine nh_dispose()
                   ", not converged "//itoa(ivals(3)))
   end if
   if (allocated(nh_mod%uv0)) deallocate(nh_mod%uv0)
-  if (allocated(nh_he)) deallocate(nh_he)
-  if (allocated(nh_nub)) deallocate(nh_nub)
+  if (allocated(nhp%nh_he)) deallocate(nhp%nh_he)
+  if (allocated(nhp%nh_nub)) deallocate(nhp%nh_nub)
   if (allocated(nh_mod%phi)) deallocate(nh_mod%phi)
   if (allocated(nh_mod%phi1)) deallocate(nh_mod%phi1)
   if (allocated(nh_mod%rhs)) deallocate(nh_mod%rhs)
@@ -1221,7 +1221,7 @@ module subroutine nh_dispose()
   if (allocated(nh_mod%zsrc)) deallocate(nh_mod%zsrc)
   if (allocated(nh_mod%rhsb)) deallocate(nh_mod%rhsb)
   if (allocated(nh_mod%emask)) deallocate(nh_mod%emask)
-  nh_active = .false.
+  nhp%nh_active = .false.
 end subroutine
 
 end submodule

@@ -74,7 +74,7 @@ module subroutine build_channel_frw(g)
   integer :: i, j, jlo, jhi, k, in, jn, ie, je
   real :: nb, capd, qb
 
-  allocate(frw(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 1.0)
+  allocate(chn%frw(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 1.0)
 
   jlo = max(dcp%jsh, 1)
   jhi = min(dcp%jeh, g%ny)
@@ -89,9 +89,9 @@ module subroutine build_channel_frw(g)
   do j = jlo, jhi
     do i = 1, g%nx - 1
       if (.not. is_channel(g, i, j) .or. .not. is_channel(g, i+1, j)) cycle
-      if (have_bopen) then
+      if (chn%have_bopen) then
         nb = (real(nblk(g, i, j, i+1)) + real(nblk(g, i+1, j, i))) / 2
-        if (nb > 0) frw(4,i,j) = (lpy + nb * ldy) / lpy
+        if (nb > 0) chn%frw(4,i,j) = (geo%lpy + nb * geo%ldy) / geo%lpy
       end if
     end do
   end do
@@ -102,9 +102,9 @@ module subroutine build_channel_frw(g)
   do j = jlo, min(dcp%jeh - 1, g%ny - 1)
     do i = 1, g%nx
       if (.not. is_channel(g, i, j) .or. .not. is_channel(g, i, j+1)) cycle
-      if (have_bopen) then
+      if (chn%have_bopen) then
         nb = (real(nblk_y(g, i, j, j+1)) + real(nblk_y(g, i, j+1, j))) / 2
-        if (nb > 0) frw(2,i,j) = (lpx + nb * ldx) / lpx
+        if (nb > 0) chn%frw(2,i,j) = (geo%lpx + nb * geo%ldx) / geo%lpx
       end if
     end do
   end do
@@ -118,20 +118,20 @@ module subroutine build_channel_frw(g)
   ! 両端セルから見た平均(軸の規則と同形)。屈曲部では開いた軸エッジと
   ! 斜めエッジの両方が増強されるため横断合計が自然幅を超える
   ! (channel_model.md §3)
-  if (have_bopen) then
+  if (chn%have_bopen) then
     do j = jlo, min(dcp%jeh - 1, g%ny - 1)
       do i = 1, g%nx - 1
         if (is_channel(g, i, j) .and. is_channel(g, i+1, j+1)) then
-          frw(1,i,j) = 1.0 + diag_reassign(g, i, j, i+1, j+1) / l8(1)
+          chn%frw(1,i,j) = 1.0 + diag_reassign(g, i, j, i+1, j+1) / geo%l8(1)
         end if
         if (is_channel(g, i, j+1) .and. is_channel(g, i+1, j)) then
-          frw(3,i,j) = 1.0 + diag_reassign(g, i, j+1, i+1, j) / l8(3)
+          chn%frw(3,i,j) = 1.0 + diag_reassign(g, i, j+1, i+1, j) / geo%l8(3)
         end if
       end do
     end do
   end if
 
-  if (have_width) then
+  if (chn%have_width) then
     ! セルの方向別通水率 cwx/cwy(u,v 正規化係数)を、幅キャップを
     ! frw に乗せる「前」に構築する: 分子=キャップ後の開口和、
     ! 分母=キャップ前(振り替えのみ)の開口和。比の形にすることで
@@ -144,8 +144,8 @@ module subroutine build_channel_frw(g)
     ! σ 有効時と動的通水率(壁なし幅モード。§68.32)はキャップ前の frw を
     ! 保存する(cw_cell / build_cwd が build_cw と同じ分母・分子を再構成する
     ! ため。§26)
-    if (have_sect .or. have_cwd) then
-      allocate(frw0, source = frw)
+    if (sct%have_sect .or. chn%have_cwd) then
+      allocate(sct%frw0, source = chn%frw)
     end if
 
     ! 幅キャップ q を全成分の河道—河道エッジへ重畳する
@@ -153,13 +153,13 @@ module subroutine build_channel_frw(g)
     do j = jlo, jhi
       do i = 1, g%nx - 1
         if (.not. is_channel(g, i, j) .or. .not. is_channel(g, i+1, j)) cycle
-        frw(4,i,j) = frw(4,i,j) * wcap(g, i, j, i+1, j, g%dy)
+        chn%frw(4,i,j) = chn%frw(4,i,j) * wcap(g, i, j, i+1, j, g%dy)
       end do
     end do
     do j = jlo, min(dcp%jeh - 1, g%ny - 1)
       do i = 1, g%nx
         if (.not. is_channel(g, i, j) .or. .not. is_channel(g, i, j+1)) cycle
-        frw(2,i,j) = frw(2,i,j) * wcap(g, i, j, i, j+1, g%dx)
+        chn%frw(2,i,j) = chn%frw(2,i,j) * wcap(g, i, j, i, j+1, g%dx)
       end do
     end do
     ! 斜めエッジ: 成分1 は添字 (a,b) でセル (a,b)-(a+1,b+1) を、
@@ -168,10 +168,10 @@ module subroutine build_channel_frw(g)
     do j = jlo, min(dcp%jeh - 1, g%ny - 1)
       do i = 1, g%nx - 1
         if (is_channel(g, i, j) .and. is_channel(g, i+1, j+1)) then
-          frw(1,i,j) = frw(1,i,j) * wcap(g, i, j, i+1, j+1, capd)
+          chn%frw(1,i,j) = chn%frw(1,i,j) * wcap(g, i, j, i+1, j+1, capd)
         end if
         if (is_channel(g, i, j+1) .and. is_channel(g, i+1, j)) then
-          frw(3,i,j) = frw(3,i,j) * wcap(g, i, j+1, i+1, j, capd)
+          chn%frw(3,i,j) = chn%frw(3,i,j) * wcap(g, i, j+1, i+1, j, capd)
         end if
       end do
     end do
@@ -187,7 +187,7 @@ module subroutine build_channel_frw(g)
     ! (bc_inflow_face)は係数 1 のまま: 規定流量は面幅で按分した mn1 を
     ! 連続式がそのまま取り込む(質量厳密)。build_cw も同じ面を q=1 で
     ! 数えるので整合する
-    if (have_open_bc) then
+    if (bcs%have_open_bc) then
       do j = max(dcp%jsh, 1), min(dcp%jeh, g%ny)
         do i = 1, g%nx
           if (i /= 1 .and. i /= g%nx .and. j /= 1 .and. j /= g%ny) cycle
@@ -206,7 +206,7 @@ module subroutine build_channel_frw(g)
             ie = i + die(k)
             je = j + dje(k)
             if (je < dcp%jsh - 1 .or. je > dcp%jeh) cycle
-            frw(ke(k), ie, je) = qb
+            chn%frw(ke(k), ie, je) = qb
           end do
         end do
       end do
@@ -289,7 +289,7 @@ function qb_bound(g, i, j) result(q)
     if (in >= 1 .and. in <= g%nx .and. jn >= 1 .and. jn <= g%ny) cycle
     if (.not. bc_open_face(in, jn)) cycle
     if (bc_inflow_face(in, jn)) cycle
-    wn = wn + l8(k) * max(n8x(k) * ux + n8y(k) * uy, 0.0)
+    wn = wn + geo%l8(k) * max(geo%n8x(k) * ux + geo%n8y(k) * uy, 0.0)
   end do
   if (wn > 0.0) q = min(g%wrw(i,j) / wn, 1.0)
 end function
@@ -311,7 +311,7 @@ module subroutine build_wfrac(g)
   integer :: i, j, k, in, jn
   real :: w, lch
 
-  allocate(wfrac(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
+  allocate(chn%wfrac(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
 
   do j = max(dcp%jsh, 1), min(dcp%jeh, g%ny)
     do i = 1, g%nx
@@ -319,8 +319,8 @@ module subroutine build_wfrac(g)
       w = g%wrw(i,j)
       if (w <= 0.0) cycle                     ! 幅情報なし: 解像扱い
       lch = lch_cell(g, i, j)
-      wfrac(i,j) = min(w * lch / (g%dx * g%dy), 1.0)
-      wfrac(i,j) = max(wfrac(i,j), g%min_gv)
+      chn%wfrac(i,j) = min(w * lch / (g%dx * g%dy), 1.0)
+      chn%wfrac(i,j) = max(chn%wfrac(i,j), g%min_gv)
     end do
   end do
 end subroutine
@@ -375,7 +375,7 @@ module subroutine seawall_wall(p, g, s, i, j, in, jn, uve1, mne1)
   wsr = s%z(ic,jc) + max(s%h(ic,jc), 0.0)
   wsl = s%z(il,jl) + max(s%h(il,jl), 0.0)
 
-  select case (f_swall_mode)
+  select case (chn%f_swall_mode)
   case (e_bank_pump)
     ! 強制排水(排水機場): 天端以下では海側水位によらず陸側の全水深で
     ! 段落ち排水。どちらかの水位が天端を超えたら双方向の堰越流に切替
@@ -441,8 +441,8 @@ end function
 module subroutine bank_init(g)
   type(t_geoinfo), intent(in) :: g
   integer :: i, j, k, in, jn, jlo, jhi
-  if (allocated(nwall)) deallocate(nwall)
-  allocate(nwall(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
+  if (allocated(chn%nwall)) deallocate(chn%nwall)
+  allocate(chn%nwall(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
   jlo = max(dcp%jsh, 1)
   jhi = min(dcp%jeh, g%ny)
   do j = jlo, jhi
@@ -454,9 +454,9 @@ module subroutine bank_init(g)
         if (in < 1 .or. in > g%nx .or. jn < jlo .or. jn > jhi) cycle
         if (g%x(in,jn) <= 0 .or. g%sw(in,jn) > 0) cycle
         if (g%rw(i,j) > 0 .and. g%rw(in,jn) <= 0) then
-          if (is_wall(g%zbank(i,j), g%z(i,j), g%z(in,jn))) nwall(i,j) = nwall(i,j) + 1
+          if (is_wall(g%zbank(i,j), g%z(i,j), g%z(in,jn))) chn%nwall(i,j) = chn%nwall(i,j) + 1
         else if (g%rw(in,jn) > 0 .and. g%rw(i,j) <= 0) then
-          if (is_wall(g%zbank(in,jn), g%z(in,jn), g%z(i,j))) nwall(i,j) = nwall(i,j) + 1
+          if (is_wall(g%zbank(in,jn), g%z(in,jn), g%z(i,j))) chn%nwall(i,j) = chn%nwall(i,j) + 1
         end if
       end do
     end do
@@ -496,7 +496,7 @@ module subroutine bank_wall(p, g, s, i, j, k, in, jn, uve1, mne1)
 
   ! 破堤サイトのエッジなら実効天端に差し替える(行バケットで
   ! サイトのない行は整数比較1回で素通り。§18)
-  if (have_breach) zc = breach_crest(ic, jc, il, jl, zc)
+  if (chn%have_breach) zc = breach_crest(ic, jc, il, jl, zc)
 
   ! エッジごとの実効天端: 天端は堤内地側の地盤と河道側の河床を下回れない
   ! (セル 1 値の天端が堤内地地盤を下回るエッジでは、越流水深 h1 に地盤差が
@@ -508,7 +508,7 @@ module subroutine bank_wall(p, g, s, i, j, k, in, jn, uve1, mne1)
   wsr = s%z(ic,jc) + max(s%h(ic,jc), 0.0)
   wsl = s%z(il,jl) + max(s%h(il,jl), 0.0)
 
-  select case (f_bank_mode)
+  select case (opt%f_bank_mode)
   case (e_bank_pump)
     ! 強制排水: 天端以下では河道水位によらず堤内地の全水深で段落ち
     ! (rivermouth_drop と同式)。どちらかの水位が天端を超えたら
@@ -563,8 +563,8 @@ contains
   !--------------------------------------------------------------------
   subroutine cap_overshoot
     real :: qcap, cor
-    qcap = 0.5 * abs(wsr - wsl) / (mn2dh(k) * (real(nwall(ic,jc)) / s%af(ic,jc) &
-                                              + real(nwall(il,jl)) / s%af(il,jl)))
+    qcap = 0.5 * abs(wsr - wsl) / (geo%mn2dh(k) * (real(chn%nwall(ic,jc)) / s%af(ic,jc) &
+                                              + real(chn%nwall(il,jl)) / s%af(il,jl)))
     if (abs(mne1) > qcap) then
       cor = qcap / abs(mne1)
       mne1 = mne1 * cor
@@ -592,24 +592,24 @@ module subroutine breach_init(p, g, s, ch)
   integer, allocatable :: nrow(:)
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
-  have_breach = .false.
+  chn%have_breach = .false.
   if (.not. ch%present_breach) return
 
   ! サイト数(br_cell の第1成分が埋まっている数。先頭からの連続充填を要求)
-  nbr = 0
+  chn%nbr = 0
   do isite = 1, nbrsmax
     if (ch%br_cell(1,isite) == -9999) exit
-    nbr = nbr + 1
+    chn%nbr = chn%nbr + 1
   end do
-  if (nbr <= 0) then
+  if (chn%nbr <= 0) then
     call par_stop("list_channel_breach: br_cell is not specified")
   end if
-  if (.not. have_bank) then
+  if (.not. chn%have_bank) then
     call par_stop("list_channel_breach: breach requires a levee (fn_bank / bank0 / fn_width)")
   end if
 
-  allocate(br(nbr))
-  do isite = 1, nbr
+  allocate(chn%br(chn%nbr))
+  do isite = 1, chn%nbr
     ic = ch%br_cell(1,isite)
     jc = ch%br_cell(2,isite)
     il = ch%br_cell(3,isite)
@@ -632,10 +632,10 @@ module subroutine breach_init(p, g, s, ch)
       call par_stop("list_channel_breach: (il,jl) of site "//itoa(isite)// &
                     " is not a landside (non-channel) cell")
     end if
-    br(isite)%ic = ic
-    br(isite)%jc = jc
-    br(isite)%il = il
-    br(isite)%jl = jl
+    chn%br(isite)%ic = ic
+    chn%br(isite)%jc = jc
+    chn%br(isite)%il = il
+    chn%br(isite)%jl = jl
     ! --- 時系列(分→秒、単調増加、割合 0〜1)---
     n = 0
     do k = 1, nbrvmax
@@ -645,17 +645,17 @@ module subroutine breach_init(p, g, s, ch)
     if (n <= 0) then
       call par_stop("list_channel_breach: br_series of site "//itoa(isite)//" is missing")
     end if
-    br(isite)%nval = n
-    allocate(br(isite)%val(1:2, 1:n))
+    chn%br(isite)%nval = n
+    allocate(chn%br(isite)%val(1:2, 1:n))
     do k = 1, n
-      br(isite)%val(1,k) = ch%br_series(1,k,isite) * 60   ! 分を秒に換算
-      br(isite)%val(2,k) = ch%br_series(2,k,isite)
-      if (br(isite)%val(2,k) < 0.0 .or. br(isite)%val(2,k) > 1.0) then
+      chn%br(isite)%val(1,k) = ch%br_series(1,k,isite) * 60   ! 分を秒に換算
+      chn%br(isite)%val(2,k) = ch%br_series(2,k,isite)
+      if (chn%br(isite)%val(2,k) < 0.0 .or. chn%br(isite)%val(2,k) > 1.0) then
         call par_stop("list_channel_breach: breach fraction of site "//itoa(isite)// &
                       " must be in [0, 1]")
       end if
       if (k >= 2) then
-        if (br(isite)%val(1,k) <= br(isite)%val(1,k-1)) then
+        if (chn%br(isite)%val(1,k) <= chn%br(isite)%val(1,k-1)) then
           call par_stop("list_channel_breach: br_series times of site "//itoa(isite)// &
                         " must be strictly increasing")
         end if
@@ -665,17 +665,17 @@ module subroutine breach_init(p, g, s, ch)
 
   ! --- zbank の有効性検査と基準値の取得(帯を持つランクのみ)---
   ierr = 0
-  do isite = 1, nbr
-    ic = br(isite)%ic
-    jc = br(isite)%jc
+  do isite = 1, chn%nbr
+    ic = chn%br(isite)%ic
+    jc = chn%br(isite)%jc
     if (jc >= dcp%jsh .and. jc <= dcp%jeh) then
       if (g%zbank(ic,jc) <= zbank_min) ierr = max(ierr, isite)
     end if
     if (jc >= dcp%jsh .and. jc <= dcp%jeh .and. &
-        br(isite)%jl >= dcp%jsh .and. br(isite)%jl <= dcp%jeh) then
-      br(isite)%zcrest0 = g%zbank(ic,jc)
-      br(isite)%zgnd0 = s%z(br(isite)%il, br(isite)%jl)
-      br(isite)%zeff = br(isite)%zcrest0
+        chn%br(isite)%jl >= dcp%jsh .and. chn%br(isite)%jl <= dcp%jeh) then
+      chn%br(isite)%zcrest0 = g%zbank(ic,jc)
+      chn%br(isite)%zgnd0 = s%z(chn%br(isite)%il, chn%br(isite)%jl)
+      chn%br(isite)%zeff = chn%br(isite)%zcrest0
     end if
   end do
   call par_allreduce_maxi(ierr)
@@ -686,30 +686,30 @@ module subroutine breach_init(p, g, s, ch)
 
   ! --- 行バケットの構築(行 jc 順の安定整列。§18)---
   allocate(nrow(dcp%jsh:dcp%jeh), source = 0)
-  allocate(ibr0(dcp%jsh:dcp%jeh), source = 1)
-  allocate(ibr1(dcp%jsh:dcp%jeh), source = 0)
-  allocate(ibrs(1:nbr), source = 0)
-  do isite = 1, nbr
-    jc = br(isite)%jc
+  allocate(chn%ibr0(dcp%jsh:dcp%jeh), source = 1)
+  allocate(chn%ibr1(dcp%jsh:dcp%jeh), source = 0)
+  allocate(chn%ibrs(1:chn%nbr), source = 0)
+  do isite = 1, chn%nbr
+    jc = chn%br(isite)%jc
     if (jc >= dcp%jsh .and. jc <= dcp%jeh) nrow(jc) = nrow(jc) + 1
   end do
   n = 0
   do jc = dcp%jsh, dcp%jeh
-    ibr0(jc) = n + 1
-    ibr1(jc) = n + nrow(jc)
+    chn%ibr0(jc) = n + 1
+    chn%ibr1(jc) = n + nrow(jc)
     n = n + nrow(jc)
   end do
   nrow(:) = 0
-  do isite = 1, nbr
-    jc = br(isite)%jc
+  do isite = 1, chn%nbr
+    jc = chn%br(isite)%jc
     if (jc >= dcp%jsh .and. jc <= dcp%jeh) then
-      ibrs(ibr0(jc) + nrow(jc)) = isite
+      chn%ibrs(chn%ibr0(jc) + nrow(jc)) = isite
       nrow(jc) = nrow(jc) + 1
     end if
   end do
   deallocate(nrow)
 
-  have_breach = .true.
+  chn%have_breach = .true.
 end subroutine
 
 
@@ -722,14 +722,14 @@ module subroutine breach_update(t)
   real, intent(in) :: t
   integer :: isite
   real :: f
-  do isite = 1, nbr
-    f = interp_series(br(isite)%val, br(isite)%nval, t)
+  do isite = 1, chn%nbr
+    f = interp_series(chn%br(isite)%val, chn%br(isite)%nval, t)
     if (f >= 1.0) then
-      br(isite)%zeff = br(isite)%zcrest0
+      chn%br(isite)%zeff = chn%br(isite)%zcrest0
     else if (f <= 0.0) then
-      br(isite)%zeff = br(isite)%zgnd0
+      chn%br(isite)%zeff = chn%br(isite)%zgnd0
     else
-      br(isite)%zeff = br(isite)%zgnd0 + f * (br(isite)%zcrest0 - br(isite)%zgnd0)
+      chn%br(isite)%zeff = chn%br(isite)%zgnd0 + f * (chn%br(isite)%zcrest0 - chn%br(isite)%zgnd0)
     end if
   end do
 end subroutine
@@ -739,17 +739,17 @@ end subroutine
 !----------------------------------------------------------------------
 module subroutine breach_dispose()
   integer :: isite
-  if (allocated(br)) then
-    do isite = 1, nbr
-      if (allocated(br(isite)%val)) deallocate(br(isite)%val)
+  if (allocated(chn%br)) then
+    do isite = 1, chn%nbr
+      if (allocated(chn%br(isite)%val)) deallocate(chn%br(isite)%val)
     end do
-    deallocate(br)
+    deallocate(chn%br)
   end if
-  if (allocated(ibr0)) deallocate(ibr0)
-  if (allocated(ibr1)) deallocate(ibr1)
-  if (allocated(ibrs)) deallocate(ibrs)
-  nbr = 0
-  have_breach = .false.
+  if (allocated(chn%ibr0)) deallocate(chn%ibr0)
+  if (allocated(chn%ibr1)) deallocate(chn%ibr1)
+  if (allocated(chn%ibrs)) deallocate(chn%ibrs)
+  chn%nbr = 0
+  chn%have_breach = .false.
 end subroutine
 
 
@@ -766,11 +766,11 @@ function breach_crest(ic, jc, il, jl, zc) result(z)
   real :: z
   integer :: n, isite
   z = zc
-  if (jc < lbound(ibr0,1) .or. jc > ubound(ibr0,1)) return
-  do n = ibr0(jc), ibr1(jc)         ! この行のサイトだけ照合
-    isite = ibrs(n)
-    if (br(isite)%ic == ic .and. br(isite)%il == il .and. br(isite)%jl == jl) then
-      z = br(isite)%zeff
+  if (jc < lbound(chn%ibr0,1) .or. jc > ubound(chn%ibr0,1)) return
+  do n = chn%ibr0(jc), chn%ibr1(jc)         ! この行のサイトだけ照合
+    isite = chn%ibrs(n)
+    if (chn%br(isite)%ic == ic .and. chn%br(isite)%il == il .and. chn%br(isite)%jl == jl) then
+      z = chn%br(isite)%zeff
       return
     end if
   end do
@@ -837,8 +837,8 @@ subroutine build_cw(g, capd)
   ! L_ch の下限を min(dx,dy) にする(直線軸河道の全セルで dy に一致)
   if (capd > 0.0) continue                  ! 引数未使用の警告を抑制(互換のため残す)
 
-  allocate(cwx(1:g%nx, dcp%js:dcp%je), source = 1.0)
-  allocate(cwy(1:g%nx, dcp%js:dcp%je), source = 1.0)
+  allocate(chn%cwx(1:g%nx, dcp%js:dcp%je), source = 1.0)
+  allocate(chn%cwy(1:g%nx, dcp%js:dcp%je), source = 1.0)
 
   do jc = dcp%js, dcp%je
     do ic = 1, g%nx
@@ -856,7 +856,7 @@ subroutine build_cw(g, capd)
           ! 枠外近傍: 開いた辺境界の面は「同じ幅の河道の続き」として
           ! 内部の河道—河道エッジと同じ q で開口和に含める(§68.26)。
           ! 閉じた辺は無フラックス
-          if (.not. have_open_bc) cycle
+          if (.not. bcs%have_open_bc) cycle
           if (.not. bc_open_face(in, jn)) cycle
           f0 = 1.0
           if (bc_inflow_face(in, jn)) then
@@ -872,22 +872,22 @@ subroutine build_cw(g, capd)
             if (g%sw(in,jn) == 0 .and. g%rw(in,jn) <= 0 .and. &
                 is_wall(g%zbank(ic,jc), g%z(ic,jc), g%z(in,jn))) cycle
           end if
-          f0 = frw(ke(k), ic+die(k), jc+dje(k))
+          f0 = chn%frw(ke(k), ic+die(k), jc+dje(k))
           if (is_channel(g, in, jn)) then
             q = wcap(g, ic, jc, in, jn, cap8(k))
           else
             q = 1.0                         ! 河道—河道以外はキャップなし
           end if
         end if
-        sx_ = l8y(k) / 2
-        sy_ = l8x(k) / 2
+        sx_ = geo%l8y(k) / 2
+        sy_ = geo%l8x(k) / 2
         numx = numx + sx_ * f0 * q
         denx = denx + sx_ * f0
         numy = numy + sy_ * f0 * q
         deny = deny + sy_ * f0
       end do
-      if (denx > 0.0) cwx(ic,jc) = numx / denx
-      if (deny > 0.0) cwy(ic,jc) = numy / deny
+      if (denx > 0.0) chn%cwx(ic,jc) = numx / denx
+      if (deny > 0.0) chn%cwy(ic,jc) = numy / deny
     end do
   end do
 end subroutine
@@ -925,7 +925,7 @@ module subroutine build_cwd(g, s)
         jn = jc + djn(k)
         wgt = 1.0
         if (in < 1 .or. in > g%nx .or. jn < 1 .or. jn > g%ny) then
-          if (.not. have_open_bc) cycle
+          if (.not. bcs%have_open_bc) cycle
           if (.not. bc_open_face(in, jn)) cycle
           f0 = 1.0
           if (bc_inflow_face(in, jn)) then
@@ -939,7 +939,7 @@ module subroutine build_cwd(g, s)
             if (g%sw(in,jn) == 0 .and. g%rw(in,jn) <= 0 .and. &
                 is_wall(g%zbank(ic,jc), g%z(ic,jc), g%z(in,jn))) cycle
           end if
-          f0 = frw0(ke(k), ic+die(k), jc+dje(k))   ! キャップ前(build_cw と同じ)
+          f0 = sct%frw0(ke(k), ic+die(k), jc+dje(k))   ! キャップ前(build_cw と同じ)
           if (is_channel(g, in, jn)) then
             q = wcap(g, ic, jc, in, jn, cap8(k))
           else
@@ -947,17 +947,17 @@ module subroutine build_cwd(g, s)
             wgt = 1.0 - sblk(g, s, ic, jc, in, jn)   ! 乾いて高い側方 = 0、開いた氾濫原 = 1
           end if
         end if
-        sx_ = l8y(k) / 2
-        sy_ = l8x(k) / 2
+        sx_ = geo%l8y(k) / 2
+        sy_ = geo%l8x(k) / 2
         numx = numx + sx_ * f0 * q * wgt
         denx = denx + sx_ * f0 * wgt
         numy = numy + sy_ * f0 * q * wgt
         deny = deny + sy_ * f0 * wgt
       end do
-      cwxd(ic,jc) = 1.0
-      cwyd(ic,jc) = 1.0
-      if (denx > 0.0) cwxd(ic,jc) = numx / denx
-      if (deny > 0.0) cwyd(ic,jc) = numy / deny
+      chn%cwxd(ic,jc) = 1.0
+      chn%cwyd(ic,jc) = 1.0
+      if (denx > 0.0) chn%cwxd(ic,jc) = numx / denx
+      if (deny > 0.0) chn%cwyd(ic,jc) = numy / deny
     end do
   end do
   !$omp end parallel do
@@ -1026,7 +1026,7 @@ module subroutine cw_cell(g, i, j, sig, cx, cy)
     if (in < 1 .or. in > g%nx .or. jn < 1 .or. jn > g%ny) then
       ! 枠外近傍: build_cw と同じ扱い(開いた辺境界の面は同じ幅の続き。
       ! sig=1 で build_cw とビット同値)
-      if (.not. have_open_bc) cycle
+      if (.not. bcs%have_open_bc) cycle
       if (.not. bc_open_face(in, jn)) cycle
       f0 = 1.0
       if (bc_inflow_face(in, jn)) then
@@ -1040,15 +1040,15 @@ module subroutine cw_cell(g, i, j, sig, cx, cy)
         if (g%sw(in,jn) == 0 .and. g%rw(in,jn) <= 0 .and. &
             is_wall(g%zbank(i,j), g%z(i,j), g%z(in,jn))) cycle
       end if
-      f0 = frw0(ke(k), i+die(k), j+dje(k))
+      f0 = sct%frw0(ke(k), i+die(k), j+dje(k))
       if (is_channel(g, in, jn)) then
         q = wcap(g, i, j, in, jn, cap8(k))
       else
         q = 1.0
       end if
     end if
-    sx_ = l8y(k) / 2
-    sy_ = l8x(k) / 2
+    sx_ = geo%l8y(k) / 2
+    sy_ = geo%l8x(k) / 2
     numx = numx + sx_ * f0 * q
     denx = denx + sx_ * f0
     numy = numy + sy_ * f0 * q
@@ -1077,7 +1077,7 @@ function diag_reassign(g, ia, ja, ib, jb) result(sh)
   ! 対角路長)になるよう、塞がり 1 件あたり (dx·dy/dr − l8_d)/2 を振り替える
   ! (dx=dy: 4.14 → 7.07 = 0.707·dx。軸の規則が lpy·dy → dy にするのと同じ
   ! 「自然幅まで」の目標。W = 自然幅 ⇔ wfrac = 1 ⇔ 流速正規化 1 と整合)
-  ld = l8(1)
+  ld = geo%l8(1)
   s1 = (g%dx * g%dy / sqrt(g%dx**2 + g%dy**2) - ld) / 2
   sh = 0.0
   if (blocked(g, ia, ja, ib, ja)) sh = sh + s1
@@ -1104,7 +1104,7 @@ function lch_cell(g, i, j) result(lch)
     jn = j + djn(k)
     if (g%x(in,jn) <= 0) cycle            ! x 番兵が領域外を弾く
     if (g%sw(in,jn) /= 0 .or. g%rw(in,jn) <= 0) cycle
-    lch = lch + w8dr(k) / 2
+    lch = lch + geo%w8dr(k) / 2
   end do
   if (lch <= 0.0) lch = min(g%dx, g%dy)   ! 孤立河道セル
 end function

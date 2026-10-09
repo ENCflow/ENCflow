@@ -8,8 +8,7 @@
 !======================================================================
 submodule(m_geomorph) m_geomorph_fluvial
   use m_parallel, only : par_stop, dcp, par_halo_cell
-  use m_swflow_enc, only : have_width, have_frw, frw, have_fwd, fwd, wfrac, &
-                           have_open_bc, bc_open_face
+  use m_swflow_enc, only : chn, bcs, bc_open_face
   implicit none
 
 contains
@@ -167,8 +166,8 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                   ! 動的振り替えの表 fwd(§68.14)も水と同じく乗じる: geomorph は
                   ! swflow の後に走り、fwd はこのステップの頭で作られて連続式が
                   ! 使った表のまま(次ステップ頭で作り直される)
-                  if (have_frw) gq = gq * frw(k, i+die(k), j+dje(k))
-                  if (have_fwd) gq = gq * fwd(k, i+die(k), j+dje(k))
+                  if (chn%have_frw) gq = gq * chn%frw(k, i+die(k), j+dje(k))
+                  if (chn%have_fwd) gq = gq * chn%fwd(k, i+die(k), j+dje(k))
                   ! 可動層クランプ: 供給側(風上)セルの土層厚を超える
                   ! 浸食をこのエッジ単独で起こさない(複数エッジの同時
                   ! 流出による僅かな超過はループ2の床クリップが受ける)。
@@ -179,11 +178,11 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                     sdup = s%sd(in,jn)
                   end if
                   winvd = 1.0
-                  if (have_width) then
+                  if (chn%have_width) then
                     if (gq > 0.0) then
-                      winvd = 1.0 / wfrac(i,j)
+                      winvd = 1.0 / chn%wfrac(i,j)
                     else
-                      winvd = 1.0 / wfrac(in,jn)
+                      winvd = 1.0 / chn%wfrac(in,jn)
                     end if
                   end if
                   dze = abs(gq) * dts * gm%wrk%ainv * winvd * gm%poroi
@@ -213,7 +212,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
       ! 域外へ抜ける)、ue < 0(流入)は f_bcfeed=1 のとき容量供給
       ! (平衡給砂。上流端の河床が維持される)。境界面の通過幅補正 frw は
       ! 未適用(§18 制約(5) の辺開口と同じ扱い)
-      if (have_open_bc .and. okc) then
+      if (bcs%have_open_bc .and. okc) then
         do k = 1, 8
           in = i + din(k)
           jn = j + djn(k)
@@ -239,7 +238,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                 qb = qbs * gm%flv%qbcoef
                 gq = qb * (ue / vve) * gm%flv%wl(k)
                 winvd = 1.0
-                if (have_width) winvd = 1.0 / wfrac(i,j)
+                if (chn%have_width) winvd = 1.0 / chn%wfrac(i,j)
                 dze = abs(gq) * dts * gm%wrk%ainv * winvd * gm%poroi
                 if (gq > 0.0) then
                   ! 流出: 供給側 = 自セルの可動層クランプ
@@ -279,7 +278,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
       ! 河道幅有効時は体積発散を河道底面積 wfrac*dx*dy で厚さに換算
       ! (Δz の河道底集中。無効時は 1.0 の乗算で厳密に不変)
       winv = 1.0
-      if (have_width) winv = 1.0 / wfrac(i,j)
+      if (chn%have_width) winv = 1.0 / chn%wfrac(i,j)
       dz = -dv8 * dts * gm%wrk%ainv * winv * gm%poroi
       ! 岩盤床クリップ(複数エッジの同時流出でエッジ別クランプを僅かに
       ! 超えた場合の最終防衛。失った体積は vleak に計上して黙らない)

@@ -41,7 +41,7 @@ module m_record
   use m_sysdep_util, only : sysdep_mkdir
   use list_record, only : t_list_record, list_record_read
   use m_parallel, only : is_root, par_info, par_abort, dcp, par_reduce_points
-  use m_swflow_enc, only : have_edge_flux, m_swflow_enc_edge_flux   ! 観測口(§24.1/§24.2)
+  use m_swflow_enc, only : opt, m_swflow_enc_edge_flux   ! 観測口(opt%have_edge_flux。§24.1/§24.2)
   implicit none
   private
 
@@ -790,7 +790,7 @@ subroutine m_record_flux(r, p, s)
       end if
     end do
     ! ENC: 階段面を横切るエッジ流量の符号付き和(§24.2。全ランクで同じ判定)
-    if (flx%mode == 0 .and. have_edge_flux) call flux_edges(flx, s, wk)
+    if (flx%mode == 0 .and. opt%have_edge_flux) call flux_edges(flx, s, wk)
     call par_reduce_points(wk)
 
     ! --- 以下は従来の逐次ロジック(セル値の参照だけ wk 経由) ---
@@ -807,7 +807,7 @@ subroutine m_record_flux(r, p, s)
     hmax = 0.0
     vmax = 0.0
     b = 0.
-    if (flx%mode == 0 .and. have_edge_flux) then
+    if (flx%mode == 0 .and. opt%have_edge_flux) then
       ! エッジ流量方式(§24.2): A 側(踏面セルとその短手負側)から B 側
       ! (短手正側)へ向かうエッジ流量の和。符号は踏面係数 ct と同じ規約
       ! (x 長手: +y 向きが sign(Δx)、y 長手: +x 向きが −sign(Δy))。

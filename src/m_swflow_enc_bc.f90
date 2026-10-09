@@ -40,31 +40,31 @@ module subroutine bc_init(p, g, b)
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   ! 辺境界条件を写す(ホットループでの間接参照回避)
-  f_bc_side = b%edge%btype
-  have_open_bc = any(f_bc_side /= e_bc_wall) .or. (b%ninflow > 0)
-  if (any(f_bc_side == e_bc_radiation)) then
+  bcs%f_bc_side = b%edge%btype
+  bcs%have_open_bc = any(bcs%f_bc_side /= e_bc_wall) .or. (b%ninflow > 0)
+  if (any(bcs%f_bc_side == e_bc_radiation)) then
     ! 基準水位は m_boundary_set_etaref(m_state_init 直後)が確定済み
     if (.not. allocated(b%edge%eta_cell)) then
       call par_stop("swflow: reference water level for the radiation boundary is not set" &
                     //" (check the m_boundary_set_etaref wiring)")
     end if
-    bc_eta_cell = b%edge%eta_cell
+    bcs%bc_eta_cell = b%edge%eta_cell
   end if
 
   ! 外縁面の型をセル別に構築する(辺の型を初期値とし、流入区間の
   ! 法線面を e_bc_inflow で上書き。bc_open_face が参照する)
-  allocate(bt_cell(1:max(g%nx, g%ny), 1:4))
-  bt_cell(:,e_side_w) = f_bc_side(e_side_w)
-  bt_cell(:,e_side_e) = f_bc_side(e_side_e)
-  bt_cell(:,e_side_n) = f_bc_side(e_side_n)
-  bt_cell(:,e_side_s) = f_bc_side(e_side_s)
+  allocate(bcs%bt_cell(1:max(g%nx, g%ny), 1:4))
+  bcs%bt_cell(:,e_side_w) = bcs%f_bc_side(e_side_w)
+  bcs%bt_cell(:,e_side_e) = bcs%f_bc_side(e_side_e)
+  bcs%bt_cell(:,e_side_n) = bcs%f_bc_side(e_side_n)
+  bcs%bt_cell(:,e_side_s) = bcs%f_bc_side(e_side_s)
   do ifl = 1, b%ninflow
     do m = 1, b%inflow(ifl)%ncell
       select case (b%inflow(ifl)%side(m))
         case (e_side_w, e_side_e)
-          bt_cell(b%inflow(ifl)%cell(2,m), b%inflow(ifl)%side(m)) = e_bc_inflow
+          bcs%bt_cell(b%inflow(ifl)%cell(2,m), b%inflow(ifl)%side(m)) = e_bc_inflow
         case default
-          bt_cell(b%inflow(ifl)%cell(1,m), b%inflow(ifl)%side(m)) = e_bc_inflow
+          bcs%bt_cell(b%inflow(ifl)%cell(1,m), b%inflow(ifl)%side(m)) = e_bc_inflow
       end select
     end do
   end do
@@ -72,12 +72,12 @@ module subroutine bc_init(p, g, b)
   ! 各流入区間の開口幅(法線面の l8 の合計)を計算する
   ! (規定流量はこの幅で按分するため、総流入量は開口率によらず厳密)
   if (b%ninflow > 0) then
-    allocate(infl_wseg(1:b%ninflow), source = 0.0)
+    allocate(bcs%infl_wseg(1:b%ninflow), source = 0.0)
     m = 0
     do ifl = 1, b%ninflow
       m = max(m, b%inflow(ifl)%ncell)
     end do
-    allocate(infl_hseg(1:m), source = 0.0)
+    allocate(bcs%infl_hseg(1:m), source = 0.0)
     ! 受け口係数: 各流入セルが流入方向(辺の内向き法線 e)へ水を渡せる
     ! 通過能力 Σ_k l8(k)·max(0, n8(k)·e)(有効な内部近傍 k だけ。確保範囲内・
     ! x > 0。枠外は数えない)を、所有ランクだけが埋めるゼロ初期化ベクトル+
@@ -86,7 +86,7 @@ module subroutine bc_init(p, g, b)
     ! 対し E・SE しかない。係数 ≈ 0.8)に直線部と同じ単位幅流量を押し込むと
     ! 渡しきれずに溜めて吐く振動が立って成長する(§69.9)。直線区間の内部は
     ! 係数 1.0 で従来と厳密に同じ
-    allocate(infl_cfac(1:m, 1:b%ninflow), source = 0.0)
+    allocate(bcs%infl_cfac(1:m, 1:b%ninflow), source = 0.0)
     do ifl = 1, b%ninflow
       do ifl2 = 1, b%inflow(ifl)%ncell
         i = b%inflow(ifl)%cell(1,ifl2)
@@ -103,23 +103,23 @@ module subroutine bc_init(p, g, b)
           jn = j + djn(k)
           if (in < 1 .or. in > g%nx .or. jn < 1 .or. jn > dcp%ny_g) cycle
           if (g%x(in,jn) <= 0) cycle
-          infl_cfac(ifl2,ifl) = infl_cfac(ifl2,ifl) + l8(k) * max(0.0, n8x(k) * ex + n8y(k) * ey)
+          bcs%infl_cfac(ifl2,ifl) = bcs%infl_cfac(ifl2,ifl) + geo%l8(k) * max(0.0, geo%n8x(k) * ex + geo%n8y(k) * ey)
         end do
       end do
-      call par_allreduce_sumr(infl_cfac(1:b%inflow(ifl)%ncell, ifl))
-      cmax = maxval(infl_cfac(1:b%inflow(ifl)%ncell, ifl))
+      call par_allreduce_sumr(bcs%infl_cfac(1:b%inflow(ifl)%ncell, ifl))
+      cmax = maxval(bcs%infl_cfac(1:b%inflow(ifl)%ncell, ifl))
       if (cmax <= 0.0) call par_stop("list_bound_inflow: segment "//itoa(ifl)//" has no cell with a valid neighbour")
       ! 通過能力が区間内の最大に満たないセル(壁の角・nodata に接する端)は
       ! 流入面を閉じる(係数 0。面型は e_bc_inflow のまま、流量 0 の開いた面)。
       ! 通過能力に比例した部分配分(エッジ数比 0.6、通過能力比 0.8)でも角から
       ! 10〜14 cm の膨らみが出て、閉じたとき(±3 cm)が最も静かだった(§69.9)
       do ifl2 = 1, b%inflow(ifl)%ncell
-        if (infl_cfac(ifl2,ifl) >= cmax * (1.0 - 1.0e-6)) then
-          infl_cfac(ifl2,ifl) = 1.0
+        if (bcs%infl_cfac(ifl2,ifl) >= cmax * (1.0 - 1.0e-6)) then
+          bcs%infl_cfac(ifl2,ifl) = 1.0
         else
-          infl_cfac(ifl2,ifl) = 0.0
+          bcs%infl_cfac(ifl2,ifl) = 0.0
         end if
-        infl_wseg(ifl) = infl_wseg(ifl) + l8(kn_side(b%inflow(ifl)%side(ifl2))) * infl_cfac(ifl2,ifl)
+        bcs%infl_wseg(ifl) = bcs%infl_wseg(ifl) + geo%l8(kn_side(b%inflow(ifl)%side(ifl2))) * bcs%infl_cfac(ifl2,ifl)
       end do
     end do
   end if
@@ -131,11 +131,11 @@ end subroutine
 ! 境界条件の適用層の破棄
 !----------------------------------------------------------------------
 module subroutine bc_dispose()
-  if (allocated(bc_eta_cell)) deallocate(bc_eta_cell)
-  if (allocated(bt_cell)) deallocate(bt_cell)
-  if (allocated(infl_wseg)) deallocate(infl_wseg)
-  if (allocated(infl_cfac)) deallocate(infl_cfac)
-  if (allocated(infl_hseg)) deallocate(infl_hseg)
+  if (allocated(bcs%bc_eta_cell)) deallocate(bcs%bc_eta_cell)
+  if (allocated(bcs%bt_cell)) deallocate(bcs%bt_cell)
+  if (allocated(bcs%infl_wseg)) deallocate(bcs%infl_wseg)
+  if (allocated(bcs%infl_cfac)) deallocate(bcs%infl_cfac)
+  if (allocated(bcs%infl_hseg)) deallocate(bcs%infl_hseg)
 end subroutine
 
 
@@ -180,8 +180,8 @@ module subroutine boundary_h(p, g, b, s, sx)
       ! 降雨を加えて次ステップの水深を初期化
       !   河道幅有効時は平面積率 wfrac でも除す(セル全面の雨が河道断面へ
       !   集中する。gv の建物集中と同じ意味論。§18)
-      if (have_width) then
-        sx%h1(i,j) = sx%h1(i,j) + s%pre(i,j) * p%dt / s%gv(i,j) / wfrac(i,j)
+      if (chn%have_width) then
+        sx%h1(i,j) = sx%h1(i,j) + s%pre(i,j) * p%dt / s%gv(i,j) / chn%wfrac(i,j)
       else
         sx%h1(i,j) = sx%h1(i,j) + s%pre(i,j) * p%dt / s%gv(i,j)
       end if
@@ -200,8 +200,8 @@ module subroutine boundary_h(p, g, b, s, sx)
       j = b%src(isrc)%cell(2,k)
       if (j < dcp%js .or. j > dcp%je) cycle
       ! 河道幅有効時は平面積率 wfrac でも除す(体積→水深換算の統一。§18)
-      if (have_width) then
-        sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q / s%gv(i,j) / wfrac(i,j)
+      if (chn%have_width) then
+        sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q / s%gv(i,j) / chn%wfrac(i,j)
       else
         sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q / s%gv(i,j)
       end if
@@ -251,8 +251,8 @@ module subroutine boundary_h(p, g, b, s, sx)
           vst(ip) = vst(ip) + dh * g%dx * g%dy
           cycle
         end if
-        if (have_width) then
-          dht = qcell / s%gv(i,j) / wfrac(i,j)
+        if (chn%have_width) then
+          dht = qcell / s%gv(i,j) / chn%wfrac(i,j)
         else
           dht = qcell / s%gv(i,j)
         end if
@@ -268,8 +268,8 @@ module subroutine boundary_h(p, g, b, s, sx)
           dh = min(max(sx%h1(i,j), 0.0), dht)
           sx%h1(i,j) = sx%h1(i,j) - dh
         end if
-        if (have_width) then
-          vst(ip) = vst(ip) + dh * s%gv(i,j) * wfrac(i,j) * g%dx * g%dy
+        if (chn%have_width) then
+          vst(ip) = vst(ip) + dh * s%gv(i,j) * chn%wfrac(i,j) * g%dx * g%dy
         else
           vst(ip) = vst(ip) + dh * s%gv(i,j) * g%dx * g%dy
         end if
@@ -295,8 +295,8 @@ module subroutine boundary_h(p, g, b, s, sx)
           j = b%struct(ip)%cin(2,k)
         end if
         if (j < dcp%js .or. j > dcp%je) cycle
-        if (have_width) then
-          sx%h1(i,j) = sx%h1(i,j) + qcell / s%gv(i,j) / wfrac(i,j)
+        if (chn%have_width) then
+          sx%h1(i,j) = sx%h1(i,j) + qcell / s%gv(i,j) / chn%wfrac(i,j)
         else
           sx%h1(i,j) = sx%h1(i,j) + qcell / s%gv(i,j)
         end if
@@ -317,8 +317,8 @@ module subroutine boundary_h(p, g, b, s, sx)
       if (j < dcp%js .or. j > dcp%je) cycle
       ! σ 有効時は規定水位の水深を矩形換算水深へ変換して格納する
       ! (h1 は vh 運用。非適用セルは sect_v が恒等。§26)
-      if (have_sect) then
-        sx%h1(i,j) = sect_v(max(b%stage(istage)%eta - s%z(i,j), 0.0), sdep(i,j))
+      if (sct%have_sect) then
+        sx%h1(i,j) = sect_v(max(b%stage(istage)%eta - s%z(i,j), 0.0), sct%sdep(i,j))
       else
         sx%h1(i,j) = max(b%stage(istage)%eta - s%z(i,j), 0.0)
       end if
@@ -462,17 +462,17 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
   integer, parameter :: kfs(1:3) = [7, 6, 8]   ! 南辺(セル (i,ny))
 
   ! ==== 節1: 外縁4辺の辺境界(簡易流出) ====
-  if (have_open_bc) then
+  if (bcs%have_open_bc) then
 
     ! 西辺・東辺(全ランクが自帯+共有行のセル js-1..je+1 を走査。
     ! ハロ行のセルは共有行スロットの冗長計算のため。put 側のスロット行
     ! フィルタが書き込み範囲を js-1..je に制限する)
-    if (f_bc_side(e_side_w) /= e_bc_wall) then
+    if (bcs%f_bc_side(e_side_w) /= e_bc_wall) then
       do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
         call put_bc_faces(p, g, s, sx, 1, j, kfw, e_side_w)
       end do
     end if
-    if (f_bc_side(e_side_e) /= e_bc_wall) then
+    if (bcs%f_bc_side(e_side_e) /= e_bc_wall) then
       do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
         call put_bc_faces(p, g, s, sx, dcp%nx_g, j, kfe, e_side_e)
       end do
@@ -481,12 +481,12 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
     ! 北辺・南辺(行の所有ランクのみ。判定は全ランクが同一コードで実行)
     ! 角の斜め面は複数辺のループが書く(idempotent: 辺の条件が同型なら
     ! 同値。異なる場合は後に処理される N/S 辺の式が有効になる)
-    if (f_bc_side(e_side_n) /= e_bc_wall .and. dcp%js <= 1 .and. 1 <= dcp%je) then
+    if (bcs%f_bc_side(e_side_n) /= e_bc_wall .and. dcp%js <= 1 .and. 1 <= dcp%je) then
       do i = g%wx(1,1), g%wx(2,1)
         call put_bc_faces(p, g, s, sx, i, 1, kfn, e_side_n)
       end do
     end if
-    if (f_bc_side(e_side_s) /= e_bc_wall .and. dcp%js <= dcp%ny_g .and. dcp%ny_g <= dcp%je) then
+    if (bcs%f_bc_side(e_side_s) /= e_bc_wall .and. dcp%js <= dcp%ny_g .and. dcp%ny_g <= dcp%je) then
       do i = g%wx(1,dcp%ny_g), g%wx(2,dcp%ny_g)
         call put_bc_faces(p, g, s, sx, i, dcp%ny_g, kfs, e_side_s)
       end do
@@ -530,24 +530,24 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
     alpha = 0.0
     wsum = 0.0
     if (blend) then
-      infl_hseg(1:ncseg) = 0.0
+      bcs%infl_hseg(1:ncseg) = 0.0
       do m = 1, ncseg
         j = b%inflow(ifl)%cell(2,m)
         if (j < dcp%js .or. j > dcp%je) cycle       ! 所有ランクだけが埋める
-        infl_hseg(m) = s%h(b%inflow(ifl)%cell(1,m), j)
+        bcs%infl_hseg(m) = s%h(b%inflow(ifl)%cell(1,m), j)
       end do
-      call par_allreduce_sumr(infl_hseg(1:ncseg))
+      call par_allreduce_sumr(bcs%infl_hseg(1:ncseg))
       do m = 1, ncseg
-        h = infl_hseg(m)
+        h = bcs%infl_hseg(m)
         if (h < p%dd) cycle
         wsum = wsum + wgt_dist(h, b%inflow(ifl)%dist) &
-                      * l8(kn_side(b%inflow(ifl)%side(m))) * infl_cfac(m,ifl)
+                      * geo%l8(kn_side(b%inflow(ifl)%side(m))) * bcs%infl_cfac(m,ifl)
       end do
       if (wsum > 0.0) then
         ! 最深セルに全面按分したときの流速比(フルード数)から α を決める
-        m = maxloc(infl_hseg(1:ncseg), 1)
-        hmx = infl_hseg(m)
-        frw = b%inflow(ifl)%q * wgt_dist(hmx, b%inflow(ifl)%dist) * infl_cfac(m,ifl) / wsum &
+        m = maxloc(bcs%infl_hseg(1:ncseg), 1)
+        hmx = bcs%infl_hseg(m)
+        frw = b%inflow(ifl)%q * wgt_dist(hmx, b%inflow(ifl)%dist) * bcs%infl_cfac(m,ifl) / wsum &
               / (hmx * sqrt(p%gg * hmx))
         alpha = min(1.0, max(0.0, 2.0 * (1.0 - frw)))
       end if
@@ -556,7 +556,7 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
     if (b%inflow(ifl)%q <= 0.0) then
       qw = 0.0
     else
-      qw = b%inflow(ifl)%q / infl_wseg(ifl)     ! 均等按分の単位幅流量 (m2/s)
+      qw = b%inflow(ifl)%q / bcs%infl_wseg(ifl)     ! 均等按分の単位幅流量 (m2/s)
     end if
     do m = 1, ncseg
       i = b%inflow(ifl)%cell(1,m)
@@ -576,7 +576,7 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
       ! ブレンド時の h は共有ベクトルから引く(共有行の冗長書きが両ランク
       ! でビット同値になる条件。dist=0 は従来どおりハロの s%h)
       if (blend) then
-        h = infl_hseg(m)
+        h = bcs%infl_hseg(m)
         if (h < p%dd) then
           qwm = (1.0 - alpha) * qw
         else
@@ -588,14 +588,14 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
         h = s%h(i,j)
       end if
       ! 受け口係数(直線区間の内部は 1.0 で従来と厳密に同じ)
-      if (infl_cfac(m,ifl) /= 1.0) qwm = qwm * infl_cfac(m,ifl)
+      if (bcs%infl_cfac(m,ifl) /= 1.0) qwm = qwm * bcs%infl_cfac(m,ifl)
       ! エッジ水深: 内側セルの水深に限界水深の床を敷く(乾床への流入で
       ! uv1 = q/he が発散しないように。ネスティングが水深も渡す事情の
       ! 簡易代替。boundary_plan.md)
       hc = (qwm**2 / p%gg)**(1.0 / 3.0)
       he = max(h, hc, p%dv)
       ! σ 有効時は断面積(矩形換算水深)で流速に換算する(§68.28)
-      if (have_sect) he = max(sect_v(he, sdep(i,j)), p%dv)
+      if (sct%have_sect) he = max(sect_v(he, sct%sdep(i,j)), p%dv)
       uve1 = -qwm / he           ! 外向き正の負値=流入
       mne1 = -qwm
       sx%uv(ke(k), ie, je) = sign_e(k) * uve1
@@ -651,8 +651,8 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
   do m = 1, 3
     k = kf(m)
     if (din(k) == 0 .or. djn(k) == 0) then
-      nsx = n8x(k)
-      nsy = n8y(k)
+      nsx = geo%n8x(k)
+      nsy = geo%n8y(k)
     end if
   end do
 
@@ -666,7 +666,7 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
   !    段落ち速度 uc を d̂ 向きのベクトルとして各面の法線に射影する
   chan = .false.
   uch = 0.0
-  if (have_width .and. g%rw(i,j) > 0) then
+  if (chn%have_width .and. g%rw(i,j) > 0) then
     if (g%wrw(i,j) > 0.0) chan = chan_dir(g, i, j, dx_, dy_)
   end if
   if (chan) then
@@ -676,8 +676,8 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
       jn = j + djn(k)
       if (in < 1 .or. in > dcp%nx_g .or. jn < 1 .or. jn > dcp%ny_g) cycle
       if (g%x(in,jn) <= 0 .or. g%sw(in,jn) > 0 .or. g%rw(in,jn) <= 0) cycle
-      ex = -n8x(k)                        ! 近傍 → 自セルの向き
-      ey = -n8y(k)
+      ex = -geo%n8x(k)                        ! 近傍 → 自セルの向き
+      ey = -geo%n8y(k)
       cs = ex * dx_ + ey * dy_
       if (cs <= 0.0) cycle                ! 上流側(流向に沿う近傍)だけ
       ie = i + die(k)
@@ -728,7 +728,7 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
       uve1 = 0
       mne1 = 0
     else
-      select case (f_bc_side(sd))
+      select case (bcs%f_bc_side(sd))
       case (e_bc_outflow)
         ! 自由流出(洪水向け): 前進してきた流れは自速度のまま通過させ
         ! (段落ち式が射流を絞って堰き止めるのを防ぐ)、滞留水は
@@ -741,41 +741,41 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
         ! 河道の終端では流向に垂直な面の段落ちで最終セルの水深が下がって
         ! いた。§68.26 追補・§68.30)
         uc = ((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)  ! 段落ち速度
-        wn = max(n8x(k) * dx_ + n8y(k) * dy_, 0.0)
+        wn = max(geo%n8x(k) * dx_ + geo%n8y(k) * dy_, 0.0)
         if (chan) then
           uve1 = max(uch, uc) * wn               ! 幅河道の終端: 河道流速の射影
         else
-          un = s%u(i,j) * n8x(k) + s%v(i,j) * n8y(k)   ! セル流速の面法線成分
+          un = s%u(i,j) * geo%n8x(k) + s%v(i,j) * geo%n8y(k)   ! セル流速の面法線成分
           uve1 = max(un, uc * wn)
         end if
         mne1 = uve1 * h
-        if (have_sect) mne1 = uve1 * sect_v(h, sdep(i,j))   ! 断面積ベース(§68.28)
+        if (sct%have_sect) mne1 = uve1 * sect_v(h, sct%sdep(i,j))   ! 断面積ベース(§68.28)
       case default   ! e_bc_radiation
         ! 長波放射(津波向け): 静水(η=η_ref)ではフラックスゼロ、
         ! 水位偏差に比例して透過。負値=流入(引き波)も許す。
         ! 乾いたセルは上の h<dd 分岐でゼロ(境界からの再湿潤はしない)。
         ! 基準水位は境界セルごと(W/E は j、N/S は i で引く)
         if (sd == e_side_w .or. sd == e_side_e) then
-          eta_r = bc_eta_cell(j, sd)
+          eta_r = bcs%bc_eta_cell(j, sd)
         else
-          eta_r = bc_eta_cell(i, sd)
+          eta_r = bcs%bc_eta_cell(i, sd)
         end if
-        wn = max(n8x(k) * rx + n8y(k) * ry, 0.0)
+        wn = max(geo%n8x(k) * rx + geo%n8y(k) * ry, 0.0)
         uve1 = sqrt(p%gg / max(h, p%dv)) * (s%z(i,j) + h - eta_r) * wn
         mne1 = uve1 * h
-        if (have_sect) mne1 = uve1 * sect_v(h, sdep(i,j))   ! 断面積ベース(§68.28)
+        if (sct%have_sect) mne1 = uve1 * sect_v(h, sct%sdep(i,j))   ! 断面積ベース(§68.28)
       end select
       ! 過大な流出の抑制(流出方向のみ。momentum の抑制と同型で、
       ! 境界面ではフラグによらず適用。河道幅有効時は境界面の通過幅係数
       ! frw(§68.26。連続式が同じ係数を乗じる)と平面積率 wfrac で換算)
-      dh = mne1 * mn2dh(k) / s%gv(i,j)
-      if (have_frw) dh = dh * frw(ke(k), ie, je)
-      if (have_width) dh = dh / wfrac(i,j)
+      dh = mne1 * geo%mn2dh(k) / s%gv(i,j)
+      if (chn%have_frw) dh = dh * chn%frw(ke(k), ie, je)
+      if (chn%have_width) dh = dh / chn%wfrac(i,j)
       ! σ 有効時は矩形換算水深(体積)で判定する(momentum の抑制と同じ。
       ! 真の水深 h で判定すると σ < 1 の分だけ抜きすぎて負の水深になり、
       ! 自由流出の終端セルが発散する。§68.27)
       hv = h
-      if (have_sect) hv = sect_v(h, sdep(i,j))
+      if (sct%have_sect) hv = sect_v(h, sct%sdep(i,j))
       if (dh > 0 .and. hv - dh <= 0) then
         cor = max(hv - p%dd, 0.0) / dh
         uve1 = uve1 * cor
@@ -844,10 +844,10 @@ end function
 function bc_face_type(sd, idx) result(t)
   integer, intent(in) :: sd, idx
   integer :: t
-  if (allocated(bt_cell) .and. idx >= 1 .and. idx <= size(bt_cell, 1)) then
-    t = bt_cell(idx, sd)
+  if (allocated(bcs%bt_cell) .and. idx >= 1 .and. idx <= size(bcs%bt_cell, 1)) then
+    t = bcs%bt_cell(idx, sd)
   else
-    t = f_bc_side(sd)
+    t = bcs%f_bc_side(sd)
   end if
 end function
 
