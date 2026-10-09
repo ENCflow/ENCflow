@@ -489,7 +489,8 @@ m_nest は m_main より下、物理モジュールより上の層(状態の所�
 4. **格子比 1:1・r_t=1 の自己ネスト恒等(Phase 1・2 の合否)**: 子 =
    親の部分領域(同解像度)。一方向で子の内部が親の同領域とビット一致、
    双方向で親全体が単独ランとビット一致(置換が恒等になる)。静水圧・
-   拡散なし・NH なしの条件(非局所項を含まない)。**wave 系(湿潤水域)、
+   拡散なし・NH なしの条件(非局所項を含まない。NH を含めるときは OpenMP
+   reduction の非決定性を避けて単一スレッドで。§11 の 0a 記録)。**wave 系(湿潤水域)、
    tsunami_coast 系(海岸線を横切る側方境界と陸側境界を含む遡上)、
    chichibu 系(降雨あり・乾湿あり・サブグリッド河道あり)の 3 つで行う**。
    親子で z が同一なので乾湿の判定も一致し、§3.5 のセル単位規則のもとで
@@ -520,6 +521,7 @@ m_nest は m_main より下、物理モジュールより上の層(状態の所�
 | Phase | 内容 | 規模 | 合否 |
 |---|---|---|---|
 | 0a | 監査(暗黙 SAVE・装置番号・モジュール変数の台帳=§3.2 の分類表の確定)と小修正 | 小 | 全 test ビット一致 |
+|    | **実施記録(2026-10-09)**: 暗黙 SAVE 2 件(m_record の flxy 番兵、user_initial の pi)を実行文の代入に是正。台帳は `test/Scripts/Check_modstate.py` が機械生成し、`--check` で §3.2 の分類表(スクリプト内の許可表)との不一致と暗黙 SAVE を終了コード 1 で報告する。実査で表に追加: m_gwflow_pump の namelist 作業配列 gwp_cell/gwp_val(A)、m_output の un_fnolist/wk_out_i(A)。list_* の namelist 作業配列と STG は X(共有・凍結)。検証: gfortran 13 逐次で reference を持つ全 22 ケース PASS。reference が別環境(MPI ビルド)由来で最終桁が違う 4 ケースは、変更前バイナリを同一環境で作って Log を比較し、chichibu・nhwave・nhwave_nh はビット一致、nhshelf は同一バイナリの再実行でも Runge 列や Cn_max が揺れる(NH ソルバの OpenMP reduction〔max・和〕の順序非決定性。既存の性質)。OMP_NUM_THREADS=1 では同一バイナリの 2 回実行が一致し、変更前後のビルドもビット一致。**恒等テスト(§9-4)は NH を含む場合は単一スレッドで行う**(または NH の reduction を決定的にする課題を別に立てる) | | |
 | 0b | **所有の明示(A 群)**: gwflow サブモデル・geomorph・intercept(A-1/A-2)、conduit/frost/structure/output(A-2)、glacier/lavaflow/saltwater(A-3。tick 系の引数追加)。モジュールごとに 1 コミット | 中(機械的。モジュール数が多い) | 各コミットで全 test ビット一致 |
 | 0c | **bind(B 群)**: `t_decomp` の付け替え、`t_ffactor_ctx`、`t_enc_ctx`(散在変数を列挙)。静的検査スクリプト。m_main の `enc(:)`・`enc_bind`、ng=1 では呼ばない | 中 | 全 test ビット一致、MPI np=1,2,4、BMI 完走、**twin テスト** |
 | 0d | m_swflow_enc の散在変数を用途別の派生型に束ねる(可読性の回収。bind のリストが短くなる) | 中(参照の書き換え) | ULP=0、実行時間の不変 |
@@ -581,7 +583,7 @@ Phase 0 は単体でも価値がある(§3.9 の独立複数モデル、アン�
 
 ### 13.3 緩和策(採用する)
 
-- **静的検査スクリプト**(test/Scripts): B 群モジュールの宣言部の
+- **静的検査スクリプト**(test/Scripts/Check_modstate.py。0a で作成): B 群モジュールの宣言部の
   モジュール変数と bind 手続きの登録を突き合わせ、漏れを機械的に止める。
   あわせて A 群以外の src/ にモジュール変数が新設されていないかも検査する
   (新しい状態は型に置く、という §12 の規約の機械化)。
