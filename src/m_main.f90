@@ -31,7 +31,8 @@ module m_main
                        m_swflow_sdep_update
   use m_swflow_enc, only : m_swflow_enc_ctx_alloc, m_swflow_enc_ctx_swap
   use m_ffactor, only : m_ffactor_ctx_alloc, m_ffactor_ctx_swap
-  use m_nest, only : t_nest, nest_read_list, nest_setup_child, nest_capture, nest_prolong, nest_dispose
+  use m_nest, only : t_nest, nest_read_list, nest_setup_child, nest_record_band, nest_capture, nest_prolong, &
+                     nest_restrict, nest_summary, nest_dispose
   use m_output, only : t_output, output_init, output_dispose, output_chk_geoinfo, output_state, output_summary
   use m_util, only : itoa
   use m_sysdep_util, only : sysdep_mkdir, sysdep_copy_to_dir
@@ -177,6 +178,7 @@ subroutine m_main_initialize(fn_sysparam)
     call nest_read_list(enc%p%fn_nest, fn_param, nest)
     if (nest%ng > 1) then
       call grow_instances(nest%ng)
+      call nest_record_band(nest, 1)
       do k = 2, nest%ng
         call m_main_select(k)
         call init_instance(nest%g(k)%fn_param, nest%g(k)%r)
@@ -348,6 +350,10 @@ recursive subroutine nest_advance(k)
       call nest_prolong(nest, c, enc%g, enc%s)
       call nest_advance(c)
     end do
+    ! 子→親の置換(双方向。c の子は c の advance の中で c へ置換済み)。
+    ! 親を select して呼ぶ(統計の par_sum_rows が親の帯を前提にする)
+    call m_main_select(k)
+    call nest_restrict(nest, c, encs(c)%s, encs(k)%s, encs(k)%g)
   end do
 end subroutine
 
@@ -461,6 +467,7 @@ end subroutine
 subroutine m_main_finalize()
   integer :: k
   if (nest%ng > 1) then
+    call nest_summary(nest)
     do k = nest%ng, 1, -1          ! 子から順に(ルートが最後 = MPI の終了もここ)
       call m_main_select(k)
       call finalize_instance()

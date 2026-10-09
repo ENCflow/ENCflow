@@ -27,7 +27,7 @@
 !
 !**********************************************************************
 module m_nest
-  use m_parallel, only : dcp, nproc, par_info, par_stop, par_allreduce_sumr
+  use m_parallel, only : dcp, nproc, par_info, par_stop, par_allreduce_sumr, par_sum_rows
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
@@ -39,7 +39,8 @@ module m_nest
   private
 
   public :: t_nest, t_nest_grid
-  public :: nest_read_list, nest_setup_child, nest_capture, nest_prolong, nest_dispose
+  public :: nest_read_list, nest_setup_child, nest_record_band, nest_capture, nest_prolong, &
+            nest_restrict, nest_summary, nest_dispose
 
   ! 親→子で渡すセル量(窓の写しの第 1 添字)
   integer, parameter :: ncq = 7
@@ -64,7 +65,12 @@ module m_nest
     ! 子としての設定(&list_nest)
     integer :: nb = 0                 ! 境界帯の幅(セル。0 = 自動。nest_setup_child が確定)
     integer :: nest_bc = 2            ! 親→子の方式
-    integer :: nest_fb = 0            ! 子→親の方式(Phase 1 は 0 = 一方向のみ)
+    integer :: nest_fb = 0            ! 子→親の方式(0: なし, 1: 面積平均, 2: 湿潤判定付き平均〔既定〕)
+    integer :: js = 1, je = 0         ! この格子の自ランクの担当帯(nest_setup_* が記録。select に依らず参照するため)
+    ! 子→親の統計(Phase 2。全ランク同値)
+    integer(8) :: n_restrict = 0      ! 置換の回数
+    real(8) :: dvol_sum = 0.0d0       ! 置換による親の水柱体積の変化の累計 (m³。dx·dy·Σdh)
+    real(8) :: dvol_abs = 0.0d0       ! 同、絶対値の累計
     ! 子としての幾何(nest_setup_child が確定)
     logical :: ready = .false.
     integer :: nxc = 0, nyc = 0       ! 子格子の寸法
@@ -74,6 +80,7 @@ module m_nest
     ! 親の窓の写し(t^n。全ランク同値)
     real, allocatable :: wc(:,:,:)    ! セル量 (ncq, pi1-1:pi2+1, pj1-1:pj2+1)
     real, allocatable :: we(:,:,:,:)  ! エッジ量 (1:2 = uv,mn, 1:4, pi1-2:pi2+1, pj1-2:pj2+1)
+    real, allocatable :: wr(:,:,:)    ! 子→親の作業配列(1:8, 足元。nest_restrict が使う)
     ! 子側の作業配列(自ランクの確保範囲の行)
     integer :: jlo = 1, jhi = 0       ! 子の確保範囲を 1..nyc に切った行範囲
     logical, allocatable :: inband(:,:)   ! 帯セルか (1:nxc, jlo:jhi)
@@ -199,9 +206,9 @@ subroutine nest_read_list(fn, fn_root, nt)
     if (lst%nest_bc /= 2) then
       call par_stop("list_nest: nest_bc="//itoa(lst%nest_bc)//" is not implemented yet (Phase 1 supports 2)")
     end if
-    if (lst%nest_fb /= 0) then
-      call par_stop("list_nest: nest_fb="//itoa(lst%nest_fb)//" (two-way) is not implemented yet "// &
-                    "(Phase 2); set nest_fb = 0 for one-way nesting")
+    if (lst%nest_fb < 0 .or. lst%nest_fb > 2) then
+      call par_stop("list_nest: nest_fb="//itoa(lst%nest_fb)//" is not implemented (0: one-way, 1: area "// &
+                    "average, 2: wet-aware average; 3 = conservative correction is Phase 4)")
     end if
     if (nt%g(k)%rt /= 1) call par_stop("nest: r_t > 1 is not implemented yet (Phase 3); use r_t = 1")
   end do
@@ -209,7 +216,7 @@ subroutine nest_read_list(fn, fn_root, nt)
   do k = 2, n
     call par_info("nest:   grid "//itoa(k)//": parent "//itoa(nt%g(k)%parent)//", r = "//itoa(nt%g(k)%r)// &
                   ", r_t = "//itoa(nt%g(k)%rt)//", corner at parent cell ("//itoa(nt%g(k)%i0)//", "// &
-                  itoa(nt%g(k)%j0)//"), one-way, param "//trim(nt%g(k)%fn_param))
+                  itoa(nt%g(k)%j0)//"), "//trim(fb_name(nt%g(k)%nest_fb))//", param "//trim(nt%g(k)%fn_param))
   end do
 end subroutine
 
@@ -282,6 +289,8 @@ subroutine nest_setup_child(nt, c, pp, gp, pc, gc, bc)
     if (allocated(n%we)) deallocate(n%we)
     allocate(n%wc(ncq, n%pi1-1:n%pi2+1, n%pj1-1:n%pj2+1), source = 0.0)
     allocate(n%we(2, 4, n%pi1-2:n%pi2+1, n%pj1-2:n%pj2+1), source = 0.0)
+    if (allocated(n%wr)) deallocate(n%wr)
+    allocate(n%wr(8, n%pi1:n%pi2, n%pj1:n%pj2), source = 0.0)
     ! 子側の作業配列(自ランクの確保範囲)
     n%jlo = max(dcp%jsh, 1)
     n%jhi = min(dcp%jeh, gc%ny)
@@ -294,6 +303,8 @@ subroutine nest_setup_child(nt, c, pp, gp, pc, gc, bc)
         n%inband(i, j) = (i <= n%nb .or. i > gc%nx - n%nb .or. j <= n%nb .or. j > gc%ny - n%nb)
       end do
     end do
+    n%js = dcp%js
+    n%je = dcp%je
     n%ready = .true.
     call par_info(trim(tag)//": "//itoa(gc%nx)//" x "//itoa(gc%ny)//" cells, dx = "//trim(rtoa(gc%dx))// &
                   ", footprint in parent = cells "//itoa(n%pi1)//".."//itoa(n%pi2)//" x "// &
@@ -397,6 +408,166 @@ subroutine nest_prolong(nt, c, g, s)
   end associate
 end subroutine
 
+!----------------------------------------------------------------------
+! 格子 k(select 済み)の担当帯を記録する(ルート用。子は nest_setup_child が記録)
+!----------------------------------------------------------------------
+subroutine nest_record_band(nt, k)
+  type(t_nest), intent(inout) :: nt
+  integer, intent(in) :: k
+  nt%g(k)%js = dcp%js
+  nt%g(k)%je = dcp%je
+end subroutine
+
+!----------------------------------------------------------------------
+! 子 c の内部(帯を除く)を親 p のセルへ置換する(§3.6。子→親)
+!   親を select した状態で呼ぶ(状態は A 群だけを読み書きするが、統計の
+!   par_sum_rows が現在の dcp = 親の帯を前提にする。担当帯は setup で記録した
+!   js/je を使う)。
+!   nest_fb = 1: r×r の子セルの h, m, n の面積平均。u, v は m/h, n/h。
+!   nest_fb = 2: 湿潤(h > dd)な子セルの η と h の平均から
+!                h_p = min(h_av, max(η_av − z_p, 0))。m, n は湿潤セルの平均を
+!                h_p/h_av 倍に縮小、u, v は m/h, n/h(GeoClaw 型)。
+!                湿潤セルがなければ親は乾き。
+!   比 1 はどちらも複写(恒等テストの前提。e は z + h で回復)。
+!   MPI: 子の帯境界は r の倍数行に整列しているので(par_decomp_init の align)
+!   親セル 1 個分の子ブロックは 1 ランクに収まる。各ランクが自分の子帯の
+!   ブロックを平均してゼロ初期化の足元配列に書き、1 要素 1 寄与の allreduce
+!   で共有してから、自分の親帯の行だけを書き換える(決定的)。
+!   親のエッジ量(uv, mn)は置換しない(次ステップの冒頭で再計算される。
+!   界面の保存修正は Phase 4)。
+!----------------------------------------------------------------------
+subroutine nest_restrict(nt, c, sc, sp, gp)
+  type(t_nest), intent(inout) :: nt
+  integer, intent(in) :: c
+  type(t_state), intent(in) :: sc          ! 子の状態
+  type(t_state), intent(inout) :: sp       ! 親の状態
+  type(t_geoinfo), intent(in) :: gp        ! 親の地理情報(マスク・寸法)
+  ! 作業配列 wr の第 1 添字: 1 h(比 1)/h の平均, 2 η の平均, 3 m, 4 n, 5 u, 6 v, 7 vv, 8 書込み印
+  integer, parameter :: w_h = 1, w_e = 2, w_m = 3, w_n = 4, w_u = 5, w_v = 6, w_vv = 7, w_set = 8
+  integer :: ip, jp, i1, j1, i2, j2, r, nw, ic, jc, nin, ipa, ipb, jpa, jpb, pjs, pje
+  real :: hav, eav, mav, nav, hp
+  real(8) :: dv, dva
+  real(8), allocatable :: rowdv(:), rowdva(:)
+  associate (n => nt%g(c))
+    if (n%nest_fb == 0) return
+    r = n%r
+    ! 置換する親セルの範囲: 子の内部(帯を除く)に完全に含まれるブロック
+    nin = (n%nb + r - 1) / r          ! 帯を含む親セル数(切り上げ)
+    ipa = n%pi1 + nin
+    ipb = n%pi2 - nin
+    jpa = n%pj1 + nin
+    jpb = n%pj2 - nin
+    if (ipa > ipb .or. jpa > jpb) return
+    n%wr = 0.0
+    ! --- 子側: 自分の帯にあるブロックを平均する(1 ブロック = 1 ランク。整列による)---
+    do jp = jpa, jpb
+      j1 = (jp - n%j0) * r + 1
+      j2 = j1 + r - 1
+      if (j1 < n%js .or. j2 > n%je) cycle
+      do ip = ipa, ipb
+        i1 = (ip - n%i0) * r + 1
+        i2 = i1 + r - 1
+        n%wr(w_set, ip, jp) = 1.0
+        if (r == 1) then                        ! 比 1 は複写
+          n%wr(w_h,  ip, jp) = sc%h(i1, j1)
+          n%wr(w_m,  ip, jp) = sc%m(i1, j1)
+          n%wr(w_n,  ip, jp) = sc%n(i1, j1)
+          n%wr(w_u,  ip, jp) = sc%u(i1, j1)
+          n%wr(w_v,  ip, jp) = sc%v(i1, j1)
+          n%wr(w_vv, ip, jp) = sc%vv(i1, j1)
+          cycle
+        end if
+        nw = 0
+        do jc = j1, j2
+          do ic = i1, i2
+            if (n%nest_fb == 2 .and. sc%h(ic, jc) <= n%dd) cycle   ! 湿潤判定付き: 乾きは除く
+            n%wr(w_h, ip, jp) = n%wr(w_h, ip, jp) + sc%h(ic, jc)
+            n%wr(w_e, ip, jp) = n%wr(w_e, ip, jp) + sc%h(ic, jc) + sc%z(ic, jc)
+            n%wr(w_m, ip, jp) = n%wr(w_m, ip, jp) + sc%m(ic, jc)
+            n%wr(w_n, ip, jp) = n%wr(w_n, ip, jp) + sc%n(ic, jc)
+            nw = nw + 1
+          end do
+        end do
+        if (nw > 0) n%wr(w_h:w_n, ip, jp) = n%wr(w_h:w_n, ip, jp) / real(nw)
+        n%wr(w_u, ip, jp) = real(nw)            ! 湿潤セル数(親側の判定に使う)
+      end do
+    end do
+    if (nproc > 1) call share(n%wr, size(n%wr))
+    ! --- 親側: 自分の帯の行を書き換える(親の z は親側で読む)---
+    pjs = nt%g(n%parent)%js
+    pje = nt%g(n%parent)%je
+    allocate(rowdv(pjs:pje), source = 0.0d0)
+    allocate(rowdva(pjs:pje), source = 0.0d0)
+    do jp = max(jpa, pjs), min(jpb, pje)
+      do ip = ipa, ipb
+        if (n%wr(w_set, ip, jp) == 0.0) cycle
+        if (gp%x(ip, jp) <= 0) cycle
+        if (r == 1) then
+          hp = n%wr(w_h, ip, jp)
+          mav = n%wr(w_m, ip, jp); nav = n%wr(w_n, ip, jp)
+          sp%u(ip, jp) = n%wr(w_u, ip, jp); sp%v(ip, jp) = n%wr(w_v, ip, jp); sp%vv(ip, jp) = n%wr(w_vv, ip, jp)
+        else
+          nw = nint(n%wr(w_u, ip, jp))
+          hav = n%wr(w_h, ip, jp); eav = n%wr(w_e, ip, jp); mav = n%wr(w_m, ip, jp); nav = n%wr(w_n, ip, jp)
+          if (nw == 0) then
+            hp = 0.0; mav = 0.0; nav = 0.0                    ! 湿潤セルなし → 親は乾き
+          else if (n%nest_fb == 1) then
+            hp = hav                                          ! 面積平均(体積厳密)
+          else
+            hp = min(hav, max(eav - sp%z(ip, jp), 0.0))       ! 湿潤判定付き(GeoClaw 型)
+            if (hav > 0.0) then
+              mav = mav * (hp / hav); nav = nav * (hp / hav)
+            end if
+          end if
+          if (hp > n%dd) then
+            sp%u(ip, jp) = mav / hp; sp%v(ip, jp) = nav / hp
+            sp%vv(ip, jp) = sqrt(sp%u(ip, jp)**2 + sp%v(ip, jp)**2)
+          else
+            mav = 0.0; nav = 0.0
+            sp%u(ip, jp) = 0.0; sp%v(ip, jp) = 0.0; sp%vv(ip, jp) = 0.0
+          end if
+        end if
+        dv = real(hp, 8) - real(sp%h(ip, jp), 8)
+        rowdv(jp) = rowdv(jp) + dv
+        rowdva(jp) = rowdva(jp) + abs(dv)
+        sp%h(ip, jp) = hp
+        sp%m(ip, jp) = mav
+        sp%n(ip, jp) = nav
+        sp%e(ip, jp) = sp%z(ip, jp) + sp%h(ip, jp)
+      end do
+    end do
+    ! 統計(行和 → 決定的総和。par_sum_rows は親を select した状態で呼ばれる前提)
+    call par_sum_rows(rowdv, dv)
+    call par_sum_rows(rowdva, dva)
+    n%n_restrict = n%n_restrict + 1
+    n%dvol_sum = n%dvol_sum + dv * real(gp%dx, 8) * real(gp%dy, 8)
+    n%dvol_abs = n%dvol_abs + dva * real(gp%dx, 8) * real(gp%dy, 8)
+  end associate
+end subroutine
+
+!----------------------------------------------------------------------
+! ネスト系の要約を画面に出す(finalize 時。Log.txt の列は変えない)
+!----------------------------------------------------------------------
+subroutine nest_summary(nt)
+  type(t_nest), intent(in) :: nt
+  integer :: k
+  character(len=256) :: msg
+  if (nt%ng <= 1) return
+  call par_info("nest: summary")
+  do k = 2, nt%ng
+    associate (n => nt%g(k))
+      if (n%nest_fb == 0) then
+        write(msg, '(a,i0,a,i0,a)') "nest:   grid ", k, " <- parent ", n%parent, ": one-way (no feedback)"
+      else
+        write(msg, '(a,i0,a,i0,a,a,a,i0,a,es12.4,a,es12.4,a)') "nest:   grid ", k, " -> parent ", n%parent, &
+              ": ", trim(fb_name(n%nest_fb)), ", ", n%n_restrict, " replacements, volume change sum = ", &
+              n%dvol_sum, " m3, |sum| = ", n%dvol_abs, " m3"
+      end if
+      call par_info(trim(msg))
+    end associate
+  end do
+end subroutine
+
 subroutine nest_dispose(nt)
   type(t_nest), intent(inout) :: nt
   if (allocated(nt%g)) deallocate(nt%g)
@@ -407,6 +578,17 @@ end subroutine
 !======================================================================
 !========================== PRIVATE ROUTINES ==========================
 !======================================================================
+
+function fb_name(fb) result(name)
+  integer, intent(in) :: fb
+  character(len=40) :: name
+  select case (fb)
+  case (0); name = "one-way"
+  case (1); name = "two-way (area average)"
+  case (2); name = "two-way (wet-aware average)"
+  case default; name = "two-way (?)"
+  end select
+end function
 
 logical function is_blank(line)
   character(len=*), intent(in) :: line
