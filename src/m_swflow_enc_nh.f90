@@ -47,6 +47,12 @@
 !   - NH OFF(f_nonhydrostatic=0)では配列を確保せず、何も呼ばない
 !     (メモリ・CPU・通信ゼロ追加 = 既存 reference とビット一致)。
 !   - リスタート状態なし(φ はステップ内の診断量。cold start)。
+!   - ネスティングの帯(nesting_plan §16): 子格子では帯のセルを φ の Dirichlet
+!     既知セル(dmask / dval = 親の φ)にする。候補から外し、帯〜内部のエッジは
+!     NH エッジ(既知値が右辺に回る = CG は warm start、Jacobi は近傍を直接
+!     読む)。帯〜内部のエッジの補正は親が同じエッジに施した補正と一致するので、
+!     比 1:1 では子の内部の φ が親の制限に等しい(解の一意性。CG の反復列は
+!     領域依存なので一致は許容残差の精度)。have_dir が偽なら分岐なし。
 !======================================================================
 submodule(m_swflow_enc) m_swflow_enc_nh
   use m_state, only : t_state
@@ -196,6 +202,7 @@ module subroutine nh_init(p, g, b, s)
     call par_allreduce_max(vmax)
     m = max(2, ceiling(2.0 * vmax(1) / min(g%dx, g%dy)))
   end if
+  nh_mod%bcm = m
   allocate(nh_mod%fmask(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
   do istage = 1, b%nstage
     do k = 1, b%stage(istage)%ncell
@@ -321,6 +328,9 @@ module subroutine nh_project(p, g, s, sx)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (nh_mod%fmask(i,j) == 1) cycle
+      if (nh_mod%have_dir) then
+        if (nh_mod%dmask(i,j) == 1) cycle     ! 帯 = φ の既知セル(§16)
+      end if
       if (s%h(i,j) < nhp%nh_hmin) cycle
       if (s%gv(i,j) < 1.0) cycle
       if (chn%have_width) then
@@ -334,6 +344,7 @@ module subroutine nh_project(p, g, s, sx)
     end do
   end do
   !$omp end parallel do
+  if (nh_mod%have_dir) call apply_dirichlet()
 
   ! --- 1a. 動く底面の加速度項(f_nh_bottom=1): 底面加速度 z̈_b(担当帯)。
   !   ż = (z − z_prev)/Δt、z̈_b = (ż − ż_prev)/Δt。init 後の最初の射影は z̈ = 0。
@@ -398,13 +409,20 @@ module subroutine nh_project(p, g, s, sx)
         ie = i + die(k)
         je = j + dje(k)
         nh_mod%emask(k,ie,je) = .false.
-        if (nh_mod%cmask(i,j) == 0) cycle
+        if (nh_mod%cmask(i,j) == 0) then
+          if (.not. nh_mod%have_dir) cycle
+          if (nh_mod%dmask(i,j) == 0) cycle    ! 既知セルが持つエッジも対象(§16)
+        end if
         if (geo%skip8(k)) cycle
         in = i + din(k)
         jn = j + djn(k)
         if (in < 1 .or. in > g%nx) cycle
         if (jn < dcp%jsh .or. jn > dcp%jeh) cycle
-        if (nh_mod%cmask(in,jn) == 0) cycle
+        if (nh_mod%cmask(in,jn) == 0) then
+          if (.not. nh_mod%have_dir) cycle
+          if (nh_mod%dmask(in,jn) == 0) cycle
+          if (nh_mod%dmask(i,j) == 1) cycle    ! 既知〜既知(帯の内部)は補正しない
+        end if
         if (chn%have_bank) then
           if (bank_edge(g, s, i, j, in, jn)) cycle
         end if
@@ -518,6 +536,8 @@ module subroutine nh_project(p, g, s, sx)
       end do
     end do
     !$omp end parallel do
+    ! 平滑化解は帯 φ = 0 の補助解(§16.2 の近似)。主系の既知値を戻す
+    if (nh_mod%have_dir) call apply_dirichlet()
   end if
 
   ! --- 4. 反復解 ---
@@ -525,7 +545,9 @@ module subroutine nh_project(p, g, s, sx)
     call solve_jacobi(g, s, it2, ok)
     iters = iters + it2
   else if (nhp%f_nh_slope == 0) then
-    call solve_cg(g, it2, ok, .false.)
+    ! 既知セル(帯)があれば warm start: 初期値 = 内部 0・帯 φ_d、r = b − Mφ(既知値を
+    ! 右辺へ移した系と同値。§16)。なければ従来どおり x = 0 から
+    call solve_cg(g, it2, ok, nh_mod%have_dir)
     iters = iters + it2
   else
     ! Picard: 平坦部分 (1/β)φ + Lφ = [rhs0 + R(φ)]/β を CG(warm start)で解き、
@@ -555,7 +577,7 @@ module subroutine nh_project(p, g, s, sx)
         end do
       end do
       !$omp end parallel do
-      call solve_cg(g, it2, ok2, m > 1)
+      call solve_cg(g, it2, ok2, m > 1 .or. nh_mod%have_dir)
       iters = iters + it2
       !$omp parallel do schedule(static) private(i, j) reduction(max:dphimax)
       do j = dcp%js, dcp%je
@@ -586,7 +608,10 @@ module subroutine nh_project(p, g, s, sx)
   !$omp parallel do schedule(static) private(i, j, k, in, jn, ie, je, phic, phin)
   do j = dcp%js, dcp%je
     do i = 1, g%nx
-      if (nh_mod%cmask(i,j) == 0) cycle
+      if (nh_mod%cmask(i,j) == 0) then
+        if (.not. nh_mod%have_dir) cycle
+        if (nh_mod%dmask(i,j) == 0) cycle     ! 既知セルが持つ内部向きのエッジも補正(§16)
+      end if
       phic = nh_mod%phi(i,j)
       do k = 1, 4
         ie = i + die(k)
@@ -609,6 +634,21 @@ module subroutine nh_project(p, g, s, sx)
   call par_edge_merge(sx%uv,  esync_s, esync_n)
   call par_edge_merge(sx%mn1, esync_s, esync_n)
 
+contains
+  ! 帯の既知セルに φ_d を置く(φ と、Jacobi の書き込み先 φ1 の両方。CG の
+  ! 方向ベクトルとしての φ1 は solve_cg の warm start が改めて 0 にする)
+  subroutine apply_dirichlet()
+    integer :: i2, j2
+    !$omp parallel do schedule(static) private(i2, j2)
+    do j2 = dcp%jsh, dcp%jeh
+      do i2 = 1, g%nx
+        if (nh_mod%dmask(i2,j2) == 0) cycle
+        nh_mod%phi(i2,j2) = nh_mod%dval(i2,j2)
+        nh_mod%phi1(i2,j2) = nh_mod%dval(i2,j2)
+      end do
+    end do
+    !$omp end parallel do
+  end subroutine
 end subroutine
 
 
@@ -1181,6 +1221,69 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! ネスティングの帯の φ(nesting_plan §16)
+!   nh_export: 親側。自帯の行 js..je(と i1..i2 のうち 1..nx)の φ を buf に写す。
+!     NH 無効なら触らない(buf は呼び出し側がゼロ初期化 → 1 要素 1 寄与の allreduce)
+!   nh_import: 子側。dirichlet が真なら帯セルを既知セルにし φ_d を置く(毎サブ
+!     ステップ)。偽なら帯 + 余白 bcm(nh_bc_margin。他の強制境界と同じ)を fmask
+!     (静水圧。接するエッジも補正しない)にする。帯は外周 nb セルの枠なので余白は
+!     枠からの距離で判定する(全ランク同じ式・通信なし)。
+!     採らなかった 2 案(examples/nest_reflect の NH 版・test/nest_identity で確認。§75):
+!     「帯 φ = 0 の Dirichlet で帯〜内部のエッジを補正する」は親の prolong が上書き
+!     するエッジ量と毎サブステップ食い違って界面から成長し、「帯だけを fmask にして
+!     余白なし」は §69.8 の規定流束〜NH 候補の干渉で発散した
+!----------------------------------------------------------------------
+module subroutine nh_export(i1, i2, j1, j2, buf)
+  integer, intent(in) :: i1, i2, j1, j2
+  real, intent(inout) :: buf(i1:, j1:)
+  integer :: i, j
+  if (.not. nhp%nh_active) return
+  do j = max(dcp%js, j1), min(dcp%je, j2)
+    do i = max(i1, 1), min(i2, dcp%nx_g)
+      buf(i, j) = nh_mod%phi(i, j)
+    end do
+  end do
+end subroutine
+
+module subroutine nh_import(nx, ny, jlo, jhi, nb, inband, phival, dirichlet)
+  integer, intent(in) :: nx, ny, jlo, jhi, nb
+  logical, intent(in) :: inband(1:, jlo:)
+  real, intent(in) :: phival(1:, jlo:)
+  logical, intent(in) :: dirichlet
+  integer :: i, j, w
+  if (.not. nhp%nh_active) return
+  if (ny < 1) return
+  if (.not. dirichlet) then
+    ! 静水圧の帯(nest_nh = 0): 帯 + 余白を強制境界に加える(静的。初回だけ意味を持つ)
+    w = nb + nh_mod%bcm
+    do j = dcp%jsh, dcp%jeh
+      if (j < 1 .or. j > ny) cycle
+      do i = 1, nx
+        if (i <= w .or. i > nx - w .or. j <= w .or. j > ny - w) nh_mod%fmask(i, j) = 1
+      end do
+    end do
+    return
+  end if
+  if (.not. allocated(nh_mod%dmask)) then
+    allocate(nh_mod%dmask(1:nx, dcp%jsh:dcp%jeh), source = 0)
+    allocate(nh_mod%dval(1:nx, dcp%jsh:dcp%jeh), source = 0.0)
+  end if
+  do j = max(jlo, dcp%jsh), min(jhi, dcp%jeh)
+    do i = 1, nx
+      if (inband(i, j)) then
+        nh_mod%dmask(i, j) = 1
+        nh_mod%dval(i, j) = phival(i, j)
+      else
+        nh_mod%dmask(i, j) = 0
+        nh_mod%dval(i, j) = 0.0
+      end if
+    end do
+  end do
+  nh_mod%have_dir = .true.
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 終了処理: 統計の表示と解放
 !----------------------------------------------------------------------
 module subroutine nh_dispose()
@@ -1221,6 +1324,9 @@ module subroutine nh_dispose()
   if (allocated(nh_mod%zsrc)) deallocate(nh_mod%zsrc)
   if (allocated(nh_mod%rhsb)) deallocate(nh_mod%rhsb)
   if (allocated(nh_mod%emask)) deallocate(nh_mod%emask)
+  if (allocated(nh_mod%dmask)) deallocate(nh_mod%dmask)
+  if (allocated(nh_mod%dval)) deallocate(nh_mod%dval)
+  nh_mod%have_dir = .false.
   nhp%nh_active = .false.
 end subroutine
 

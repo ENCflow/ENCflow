@@ -16,6 +16,7 @@ module list_nest
     integer :: nest_fb = 2        ! 子→親 (0: なし=一方向, 1: h/m/n の面積平均, 2: 湿潤判定付き平均〔既定〕, 3: +保存修正)
     integer :: nest_nb = 0        ! 境界帯の幅(セル。0 = 自動: 移流スキームのステンシルから m_nest が決める)
     integer :: nest_ns = 4        ! スポンジの幅(セル。nest_bc = 4 のとき帯の内側に置く緩和帯)
+    integer :: nest_nh = 1        ! 非静水圧の帯 (1: 帯を親の φ の Dirichlet 既知セルに〔既定〕, 0: 帯 + 余白を静水圧。子が NH 有効のとき。§16)
   end type
 
 contains
@@ -27,15 +28,16 @@ contains
 subroutine list_nest_read(fn, list)
   character(len=*), intent(in) :: fn
   type(t_list_nest), intent(inout) :: list
-  integer :: nest_bc, nest_fb, nest_nb, nest_ns
+  integer :: nest_bc, nest_fb, nest_nb, nest_ns, nest_nh
   integer :: un, ios
   character(len=1024) :: iom
-  namelist /list_nest/ nest_bc, nest_fb, nest_nb, nest_ns
+  namelist /list_nest/ nest_bc, nest_fb, nest_nb, nest_ns, nest_nh
 
   nest_bc = list%nest_bc
   nest_fb = list%nest_fb
   nest_nb = list%nest_nb
   nest_ns = list%nest_ns
+  nest_nh = list%nest_nh
 
   call par_info("reading list_nest in "//trim(fn))
   open(newunit=un, file=trim(fn), status='old', iostat=ios, iomsg=iom)
@@ -48,6 +50,7 @@ subroutine list_nest_read(fn, list)
   list%nest_fb = nest_fb
   list%nest_nb = nest_nb
   list%nest_ns = nest_ns
+  list%nest_nh = nest_nh
 end subroutine
 
 end module

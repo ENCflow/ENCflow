@@ -34,7 +34,8 @@ module m_nest
   use m_boundary, only : t_boundary, m_boundary_ext_setup, e_ext_nest, e_bc_radiation, &
                          e_side_w, e_side_e, e_side_n, e_side_s
   use m_swflow_enc, only : m_swflow_enc_nest_export, m_swflow_enc_nest_import, m_swflow_enc_edge_flux, &
-                           m_swflow_enc_bc_ext_init, bcs, opt, e_bc_wall
+                           m_swflow_enc_bc_ext_init, m_swflow_enc_nh_export, m_swflow_enc_nh_import, &
+                           m_swflow_enc_nh_active, bcs, opt, e_bc_wall
   use list_nest, only : t_list_nest, list_nest_read
   use m_util, only : itoa, rtoa
   implicit none
@@ -81,6 +82,8 @@ module m_nest
     integer :: ns = 0                 ! スポンジの幅(nest_bc = 4 のとき帯の内側。0 = なし)
     integer :: nfld = 0               ! 交換する追加場の数(場の表)
     integer :: fld(nfld_max) = 0      ! その id(f_*)
+    integer :: nphi = 0               ! 窓に非静水圧の φ を載せるか(0/1。子が NH 有効で帯があるとき。§16)
+    integer :: nest_nh = 1            ! 帯の φ(1: 親の φ の Dirichlet 既知セル, 0: 帯 + 余白を静水圧。§16)
     ! 置換する親セルの範囲(子の内部に完全に含まれるブロック。setup が確定)
     integer :: ipa = 0, ipb = -1, jpa = 0, jpb = -1
     ! 帯の置換統計(子側。全ランク同値)
@@ -234,6 +237,10 @@ subroutine nest_read_list(fn, fn_root, nt)
     nt%g(k)%ns = lst%nest_ns
     nt%g(k)%nest_bc = lst%nest_bc
     nt%g(k)%nest_fb = lst%nest_fb
+    nt%g(k)%nest_nh = lst%nest_nh
+    if (lst%nest_nh < 0 .or. lst%nest_nh > 1) then
+      call par_stop("list_nest: nest_nh must be 0 (hydrostatic band + margin) or 1 (parent phi as Dirichlet)")
+    end if
     if (lst%nest_nb /= 0 .and. lst%nest_nb < 2) call par_stop("list_nest: nest_nb must be 0 (auto) or >= 2")
     if (lst%nest_bc < 1 .or. lst%nest_bc > 4) then
       call par_stop("list_nest: nest_bc="//itoa(lst%nest_bc)//" must be 1 (water level only), "// &
@@ -356,6 +363,17 @@ subroutine nest_setup_child(nt, c, pp, gp, sp, pc, gc, sc, bc)
       end do
       call par_info(trim(msg))
     end if
+    ! 非静水圧の帯の φ(§16): 子が NH 有効で帯があれば、窓に親の φ を 1 スカラー載せ、
+    ! 帯のセルを子の射影の Dirichlet 既知セルにする(nest_nh = 0 なら帯 + 余白を静水圧)
+    n%nphi = 0
+    if (n%nest_bc /= 3 .and. m_swflow_enc_nh_active()) then
+      n%nphi = 1
+      if (n%nest_nh == 1) then
+        call par_info(trim(tag)//": non-hydrostatic child: band cells are Dirichlet cells for phi (parent's phi)")
+      else
+        call par_info(trim(tag)//": non-hydrostatic child: band + margin kept hydrostatic (nest_nh = 0)")
+      end if
+    end if
     ! スポンジ(nest_bc = 4)
     if (n%nest_bc == 4) then
       if (n%ns < 1) call par_stop(trim(tag)//": nest_bc = 4 (sponge) needs nest_ns >= 1")
@@ -388,7 +406,7 @@ subroutine nest_setup_child(nt, c, pp, gp, sp, pc, gc, sc, bc)
     ! 親の窓の写し
     if (allocated(n%wc)) deallocate(n%wc)
     if (allocated(n%we)) deallocate(n%we)
-    allocate(n%wc(ncq + n%nfld, n%pi1-1:n%pi2+1, n%pj1-1:n%pj2+1), source = 0.0)
+    allocate(n%wc(ncq + n%nfld + n%nphi, n%pi1-1:n%pi2+1, n%pj1-1:n%pj2+1), source = 0.0)
     allocate(n%we(2, 4, n%pi1-2:n%pi2+1, n%pj1-2:n%pj2+1), source = 0.0)
     if (allocated(n%wc0)) deallocate(n%wc0, n%wc1, n%we0, n%we1)
     allocate(n%wc0, n%wc1, source = n%wc)
@@ -434,7 +452,7 @@ subroutine nest_capture(nt, k, s, lev)
       if (lev == 0) then
         call capture_one(n, s, n%wc0, n%we0)
       else
-        if (n%rt == 1) cycle            ! r_t = 1 では t^{n+1} の写しは使わない
+        if (n%rt == 1 .and. n%nphi == 0) cycle   ! r_t = 1 では t^{n+1} の写しは使わない(φ を載せるときは要る。§16)
         call capture_one(n, s, n%wc1, n%we1)
       end if
     end associate
@@ -468,6 +486,19 @@ subroutine capture_one(n, s, wc, we)
       end do
     end do
   end do
+  if (n%nphi > 0) then
+    ! 非静水圧の φ(親の private。フック経由。親が NH 無効なら 0 のまま。§16)
+    phiw: block
+      real, allocatable :: pw(:,:)
+      allocate(pw(n%pi1-1:n%pi2+1, n%pj1-1:n%pj2+1), source = 0.0)
+      call m_swflow_enc_nh_export(n%pi1 - 1, n%pi2 + 1, n%pj1 - 1, n%pj2 + 1, pw)
+      do j = max(dcp%js, n%pj1 - 1), min(dcp%je, n%pj2 + 1)
+        do i = n%pi1 - 1, n%pi2 + 1
+          wc(ncq + n%nfld + 1, i, j) = pw(i, j)
+        end do
+      end do
+    end block phiw
+  end if
   we = 0.0
   call m_swflow_enc_nest_export(n%pi1 - 2, n%pi2 + 1, n%pj1 - 2, n%pj2 + 1, we)
   if (nproc > 1) then
@@ -561,6 +592,9 @@ subroutine nest_prolong(nt, c, g, s, b, alpha)
         end do
       end do
     end if
+    ! --- 非静水圧の帯の φ(§16): 帯セルを Dirichlet 既知セルにし、親の φ をサブステップ
+    !     終了時刻 α_end = α + 1/r_t で補間した値を置く(nest_nh = 0 なら 0)---
+    if (n%nphi > 0) call fill_phi(n, g, alpha)
     if (n%nest_bc == 1) return       ! 水位のみ(TUNAMI 型): 流速・エッジ量は子が計算
     ! --- エッジ量(帯セルに接する全スロット)---
     do j = n%jlo, n%jhi
@@ -929,6 +963,65 @@ subroutine share(a, nelem)
   integer, intent(in) :: nelem
   real, intent(inout) :: a(nelem)      ! 並び結合(連続配列の全要素)
   call par_allreduce_sumr(a)
+end subroutine
+
+!----------------------------------------------------------------------
+! 非静水圧の帯の φ(§16.2): 帯セルごとに親の φ をサブステップ終了時刻
+! α_end = α + 1/r_t で線形補間(r_t = 1 では φ^{n+1} の複写 = 比 1 恒等の前提)、
+! 比 1 は複写・比 > 1 は親セル中心の双線形(親の 2×2 に乾きがあれば 0)。
+! nest_nh = 0 なら帯を強制境界(静水圧)にする。子の NH 層(nh_import)が帯を Dirichlet
+! 既知セル(または fmask)にする。
+! 全ランクが確保範囲の行を同じ窓から書く(通信なし)
+!----------------------------------------------------------------------
+subroutine fill_phi(n, g, alpha)
+  type(t_nest_grid), intent(in) :: n
+  type(t_geoinfo), intent(in) :: g
+  real, intent(in) :: alpha
+  integer :: i, j, ia, ja, ip, jp, q
+  real :: aend, xc, yc, wx, wy, hmin
+  real :: w(2,2)
+  real, allocatable :: pv(:,:)
+  allocate(pv(1:n%nxc, n%jlo:n%jhi), source = 0.0)
+  q = ncq + n%nfld + 1
+  aend = alpha + 1.0 / real(n%rt)
+  if (n%nest_nh == 1) then
+    do j = n%jlo, n%jhi
+      do i = 1, n%nxc
+        if (.not. n%inband(i, j)) cycle
+        if (g%x(i, j) <= 0) cycle
+        if (n%r == 1) then
+          ip = n%i0 + i - 1
+          jp = n%j0 + j - 1
+          pv(i, j) = pval(ip, jp)
+        else
+          xc = real(n%i0 - 1) + (real(i) - 0.5) / real(n%r)
+          yc = real(n%j0 - 1) + (real(j) - 0.5) / real(n%r)
+          ia = floor(xc + 0.5)
+          ja = floor(yc + 0.5)
+          wx = xc - (real(ia) - 0.5)
+          wy = yc - (real(ja) - 0.5)
+          w(1,1) = (1.0 - wx) * (1.0 - wy)
+          w(2,1) = wx * (1.0 - wy)
+          w(1,2) = (1.0 - wx) * wy
+          w(2,2) = wx * wy
+          hmin = min(n%wc(q_h, ia, ja), n%wc(q_h, ia+1, ja), n%wc(q_h, ia, ja+1), n%wc(q_h, ia+1, ja+1))
+          if (hmin > n%dd) then
+            pv(i, j) = w(1,1) * pval(ia, ja) + w(2,1) * pval(ia+1, ja) + w(1,2) * pval(ia, ja+1) + w(2,2) * pval(ia+1, ja+1)
+          end if
+        end if
+      end do
+    end do
+  end if
+  call m_swflow_enc_nh_import(n%nxc, n%nyc, n%jlo, n%jhi, n%nb, n%inband, pv, n%nest_nh == 1)
+contains
+  real function pval(ip, jp)
+    integer, intent(in) :: ip, jp
+    if (n%rt == 1) then
+      pval = n%wc1(q, ip, jp)                              ! φ^{n+1} の複写
+    else
+      pval = (1.0 - aend) * n%wc0(q, ip, jp) + aend * n%wc1(q, ip, jp)
+    end if
+  end function
 end subroutine
 
 !----------------------------------------------------------------------

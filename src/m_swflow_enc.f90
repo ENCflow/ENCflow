@@ -47,6 +47,7 @@ module m_swflow_enc
   public :: swflow_vh                    ! 矩形換算水深 vh の照会(§26/§30。
                                          ! 水質の濃度換算 conc = cq/vh 用)
   public :: m_swflow_enc_bc_ext_init            ! 外部データ付き放射境界の添字表の(再)構築(m_nest が呼ぶ。§15)
+  public :: m_swflow_enc_nh_export, m_swflow_enc_nh_import, m_swflow_enc_nh_active   ! ネスティングの帯の φ(§16)
   public :: bcs, bc_open_face                  ! 開境界の面判定(m_geomorph の
                                                ! 開境界土砂フラックスが読む。読み取り専用)
 
@@ -447,6 +448,11 @@ module m_swflow_enc
     real, allocatable :: zsrc(:,:)        ! f_nh_bottom: 源項 −(h/4)(z̈_b + z̈_s)(担当帯)
     real, allocatable :: rhsb(:,:)        ! f_nh_bottom: 平滑化の解の間、主系の右辺の退避
     logical :: bot_first = .true.         ! f_nh_bottom: init 後の最初の射影(z̈ = 0)
+    ! ネスティングの帯の φ Dirichlet(nesting_plan §16。子格子で nh_import が設定)
+    logical :: have_dir = .false.         ! 既知セルがあるか(偽なら以下は未確保・分岐なし)
+    integer :: bcm = 0                    ! 強制境界の静水圧の余白(セル数。nh_init が確定。nest_nh = 0 の帯も同じ余白)
+    integer, allocatable :: dmask(:,:)    ! 既知セル(帯)(1:nx, jsh:jeh)。候補から外し φ を固定
+    real, allocatable :: dval(:,:)        ! 既知セルの φ(親の φ をサブステップ終了時刻で補間)
     real :: wd(1:8) = 0.0                 ! 発散の重み l8(k)/(dx·dy)
     real :: wl(1:8) = 0.0                 ! ラプラシアンの重み l8(k)/(dx·dy·w8dr(k))
     ! 統計(dispose で表示)
@@ -603,6 +609,16 @@ module m_swflow_enc
       type(t_enc_status), intent(inout) :: sx
     end subroutine
     module subroutine nh_dispose()
+    end subroutine
+    module subroutine nh_export(i1, i2, j1, j2, buf)
+      integer, intent(in) :: i1, i2, j1, j2
+      real, intent(inout) :: buf(i1:, j1:)
+    end subroutine
+    module subroutine nh_import(nx, ny, jlo, jhi, nb, inband, phival, dirichlet)
+      integer, intent(in) :: nx, ny, jlo, jhi, nb
+      logical, intent(in) :: inband(1:, jlo:)
+      real, intent(in) :: phival(1:, jlo:)
+      logical, intent(in) :: dirichlet
     end subroutine
   end interface
 
@@ -3269,6 +3285,35 @@ subroutine m_swflow_enc_bc_ext_init(g, b)
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(in) :: b
   call bc_ext_init(g, b)
+end subroutine
+
+!----------------------------------------------------------------------
+! ネスティングの帯の φ(非静水圧。nesting_plan §16)
+!   nh_active: 現在のインスタンスで NH が有効か(m_nest が窓の φ スロットの
+!     要否を決める)。
+!   nh_export: 親側。自帯の行の φ(前回の射影の解 = 窓を写す時刻の φ)を
+!     buf(i1:i2, j1:j2) に写す(NH 無効なら触らない = 0 のまま。帯外は触らない)。
+!   nh_import: 子側。dirichlet が真なら帯セル(inband)を φ の Dirichlet 既知セルに
+!     し、その値を置く(毎サブステップ)。偽なら帯 + 余白(nh_bc_margin。他の強制
+!     境界と同じ)を強制境界(fmask)として静水圧に退化させる(nest_nh = 0)。
+!     NH 無効なら何もしない
+!----------------------------------------------------------------------
+logical function m_swflow_enc_nh_active()
+  m_swflow_enc_nh_active = nhp%nh_active
+end function
+
+subroutine m_swflow_enc_nh_export(i1, i2, j1, j2, buf)
+  integer, intent(in) :: i1, i2, j1, j2
+  real, intent(inout) :: buf(i1:, j1:)
+  call nh_export(i1, i2, j1, j2, buf)
+end subroutine
+
+subroutine m_swflow_enc_nh_import(nx, ny, jlo, jhi, nb, inband, phival, dirichlet)
+  integer, intent(in) :: nx, ny, jlo, jhi, nb     ! nb = 帯の幅(nest_nh = 0 の余白の基準)
+  logical, intent(in) :: inband(1:, jlo:)
+  real, intent(in) :: phival(1:, jlo:)
+  logical, intent(in) :: dirichlet
+  call nh_import(nx, ny, jlo, jhi, nb, inband, phival, dirichlet)
 end subroutine
 
 end module
