@@ -113,4 +113,21 @@ for v in wave_fb3 chichibu_fb3 chichibu_gw; do
     grep "nest:   grid 2" Screen_${v}.log | grep -v "<- parent 1, " | cut -c1-160
 done
 if [ $p4_ok -eq 1 ]; then echo "nest_identity phase4 (fb3, fields): PASS"; else echo "nest_identity phase4 (fb3, fields): FAIL"; fail=1; fi
+# --- Flather 放射(nest_bc = 3)の退化恒等(nesting_plan §15.5-2): 親 = 静水(385x385)、
+#     子 = 201x201(親セル 93..293)に自前の水の山、4 辺が放射(f_bc_* = 2)で一方向。
+#     親の値は η_e = 1・u_n,e = 0 なので、子の Log が単独ラン(現行の放射境界のみ)と
+#     ビット一致すること(拡張式が u_n,e = 0 で現行式に退化する)---
+rm -rf result_wave_fl_*
+fl_ok=1
+$run ./encflow$sfx param_wave_fl_single.txt > Screen_wave_fl_single.log 2>&1 || { echo "ERROR: flather single run failed"; fl_ok=0; }
+$run ./encflow$sfx param_wave_fl_root.txt > Screen_wave_fl.log 2>&1 || { echo "ERROR: flather nested run failed"; tail -3 Screen_wave_fl.log; fl_ok=0; }
+if [ $fl_ok -eq 1 ]; then
+    if cmp -s result_wave_fl_single/Log.txt result_wave_fl_child/Log.txt; then
+        echo "nest_identity flather: child Log IDENTICAL to the single run (radiation boundary)"
+    else
+        echo "nest_identity flather: child Log DIFFER from the single run"; fl_ok=0
+    fi
+    grep "Flather cells" Screen_wave_fl.log | cut -c1-140
+fi
+if [ $fl_ok -eq 1 ]; then echo "nest_identity flather: PASS"; else echo "nest_identity flather: FAIL"; fail=1; fi
 if [ $fail -eq 0 ]; then echo "nest_identity ($mode): verification PASS"; else echo "nest_identity ($mode): verification FAIL"; exit 1; fi

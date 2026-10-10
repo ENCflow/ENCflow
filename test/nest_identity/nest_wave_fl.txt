@@ -1,0 +1,7 @@
+# Flather 放射(nest_bc = 3)の退化恒等(nesting_plan §15.5-2): 親は静水(η = 1、u = 0)、
+# 子(201x201。親セル 93..293)は自前の水の山(wave_hump)を 4 辺の放射境界から外へ出す。
+# 親の値は η_e = 1・u_n,e = 0 なので、子の Log は単独ラン(param_wave_fl_single.txt =
+# 現行の放射境界のみ)とビット一致すること。一方向(nest_fb = 0)
+# id  parent  param_file               r  r_t  i0  j0
+1     0       param_wave_fl_root.txt
+2     1       param_wave_fl_child.txt  1  1    93  93
