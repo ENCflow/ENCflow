@@ -32,7 +32,8 @@ module m_nest
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
   use m_boundary, only : t_boundary
-  use m_swflow_enc, only : m_swflow_enc_nest_export, m_swflow_enc_nest_import, bcs, opt, e_bc_wall
+  use m_swflow_enc, only : m_swflow_enc_nest_export, m_swflow_enc_nest_import, m_swflow_enc_edge_flux, &
+                           bcs, opt, e_bc_wall
   use list_nest, only : t_list_nest, list_nest_read
   use m_util, only : itoa, rtoa
   implicit none
@@ -40,11 +41,18 @@ module m_nest
 
   public :: t_nest, t_nest_grid
   public :: nest_read_list, nest_setup_child, nest_record_band, nest_capture, nest_prolong, &
-            nest_restrict, nest_summary, nest_dispose
+            nest_restrict, nest_reflux_parent, nest_reflux_child, nest_summary, nest_dispose
 
-  ! 親→子で渡すセル量(窓の写しの第 1 添字)
+  ! 親→子で渡すセル量(窓の写しの第 1 添字)。ncq+1.. は「場の表」の追加場
   integer, parameter :: ncq = 7
   integer, parameter :: q_h = 1, q_e = 2, q_u = 3, q_v = 4, q_vv = 5, q_m = 6, q_n = 7
+  ! 場の表(§3.8・§14): 親子の両方で有効な場だけを交換する。
+  !   表面スカラー(水柱量。乾いたセルでは 0): hs, cq, hd, hbd, hss
+  !   地下量(乾湿に無関係): hg, hg2, hgc
+  integer, parameter :: nfld_max = 8
+  integer, parameter :: f_hs = 1, f_cq = 2, f_hd = 3, f_hbd = 4, f_hss = 5, f_hg = 6, f_hg2 = 7, f_hgc = 8
+  character(len=3), parameter :: fld_name(nfld_max) = ["hs ", "cq ", "hd ", "hbd", "hss", "hg ", "hg2", "hgc"]
+  logical, parameter :: fld_surface(nfld_max) = [.true., .true., .true., .true., .true., .false., .false., .false.]
 
   ! 8 近傍とエッジのスロット規約(m_swflow_enc と同一。§3.5)
   integer, parameter :: din(1:8) = [ -1,  0,  1, -1,  1, -1,  0,  1]
@@ -52,6 +60,11 @@ module m_nest
   integer, parameter :: die(1:8) = [ -1,  0,  0, -1,  0, -1,  0,  0]
   integer, parameter :: dje(1:8) = [ -1, -1, -1,  0,  0,  0,  0,  0]
   integer, parameter :: ke(1:8)  = [  1,  2,  3,  4,  4,  3,  2,  1]
+
+  ! 子→親の作業配列 wr の第 1 添字: 1 h(比 1)/h の平均, 2 η の平均, 3 m, 4 n, 5 u(比 1)/湿潤セル数,
+  ! 6 v, 7 vv, 8 書込み印, 9 Σh·af/r²(体積平均), 10 Σaf/r², 11.. 追加場の平均
+  integer, parameter :: w_h = 1, w_e = 2, w_m = 3, w_n = 4, w_u = 5, w_v = 6, w_vv = 7, w_set = 8, &
+                        w_hv = 9, w_af = 10, w_nbase = 10
 
   type t_nest_grid
     integer :: id = 0                 ! 格子番号(= 一覧の行順 = m_main のインスタンス番号)
@@ -64,6 +77,19 @@ module m_nest
     integer, allocatable :: child(:)
     ! 子としての設定(&list_nest)
     integer :: nb = 0                 ! 境界帯の幅(セル。0 = 自動。nest_setup_child が確定)
+    integer :: ns = 0                 ! スポンジの幅(nest_bc = 4 のとき帯の内側。0 = なし)
+    integer :: nfld = 0               ! 交換する追加場の数(場の表)
+    integer :: fld(nfld_max) = 0      ! その id(f_*)
+    ! 置換する親セルの範囲(子の内部に完全に含まれるブロック。setup が確定)
+    integer :: ipa = 0, ipb = -1, jpa = 0, jpb = -1
+    ! 帯の置換統計(子側。全ランク同値)
+    real(8) :: bvol_sum = 0.0d0       ! 帯の h の置換による子の水柱体積の変化の累計 (m³)
+    real(8) :: bvol_abs = 0.0d0
+    ! 保存修正(nest_fb = 3): 置換領域の外周 1 セル(リング)への流出入
+    real, allocatable :: fp(:,:)      ! 親の 1 歩で親が R へ流した体積 (ipa-1:ipb+1, jpa-1:jpb+1)
+    real, allocatable :: vc(:,:)      ! 子が r_t サブステップで R へ流した体積(同)
+    real(8) :: rflx_abs = 0.0d0       ! 修正量 |Δh|·A の累計 (m³)
+    integer(8) :: n_clamp = 0         ! 修正で負になり 0 に切った回数
     integer :: nest_bc = 2            ! 親→子の方式
     integer :: nest_fb = 0            ! 子→親の方式(0: なし, 1: 面積平均, 2: 湿潤判定付き平均〔既定〕)
     integer :: js = 1, je = 0         ! この格子の自ランクの担当帯(nest_setup_* が記録。select に依らず参照するため)
@@ -204,16 +230,17 @@ subroutine nest_read_list(fn, fn_root, nt)
     lst = t_list_nest()
     call list_nest_read(nt%g(k)%fn_param, lst)
     nt%g(k)%nb = lst%nest_nb
+    nt%g(k)%ns = lst%nest_ns
     nt%g(k)%nest_bc = lst%nest_bc
     nt%g(k)%nest_fb = lst%nest_fb
     if (lst%nest_nb /= 0 .and. lst%nest_nb < 2) call par_stop("list_nest: nest_nb must be 0 (auto) or >= 2")
-    if (lst%nest_bc /= 1 .and. lst%nest_bc /= 2) then
+    if (lst%nest_bc < 1 .or. lst%nest_bc > 4 .or. lst%nest_bc == 3) then
       call par_stop("list_nest: nest_bc="//itoa(lst%nest_bc)//" is not implemented (1: water level only, "// &
-                    "2: water level + edge fluxes; 3 = Flather and 4 = sponge are Phase 4)")
+                    "2: water level + edge fluxes, 4: 2 + sponge; 3 = Flather radiation is not implemented)")
     end if
-    if (lst%nest_fb < 0 .or. lst%nest_fb > 2) then
-      call par_stop("list_nest: nest_fb="//itoa(lst%nest_fb)//" is not implemented (0: one-way, 1: area "// &
-                    "average, 2: wet-aware average; 3 = conservative correction is Phase 4)")
+    if (lst%nest_fb < 0 .or. lst%nest_fb > 3) then
+      call par_stop("list_nest: nest_fb="//itoa(lst%nest_fb)//" must be 0 (one-way), 1 (area average), "// &
+                    "2 (wet-aware average) or 3 (2 + conservative correction)")
     end if
   end do
   call par_info("nest: "//itoa(n)//" grids (root = 1)")
@@ -229,14 +256,16 @@ end subroutine
 ! 子格子 c の幾何の確定と整合検査(親子とも initialize 済み。子を
 ! select した状態で呼ぶ: dcp と bcs が子のもの)
 !----------------------------------------------------------------------
-subroutine nest_setup_child(nt, c, pp, gp, pc, gc, bc)
+subroutine nest_setup_child(nt, c, pp, gp, sp, pc, gc, sc, bc)
   type(t_nest), intent(inout) :: nt
   integer, intent(in) :: c
   type(t_sysparam), intent(in) :: pp, pc      ! 親・子のパラメータ
   type(t_geoinfo), intent(in) :: gp, gc       ! 親・子の地理情報
+  type(t_state), intent(in) :: sp, sc         ! 親・子の状態(場の表の有効判定)
   type(t_boundary), intent(in) :: bc          ! 子の境界条件
-  integer :: r, i, j, nb_req
+  integer :: r, i, j, nb_req, f, nin
   character(len=32) :: tag
+  character(len=256) :: msg
   associate (n => nt%g(c))
     tag = "nest: grid "//itoa(c)
     r = n%r
@@ -289,16 +318,56 @@ subroutine nest_setup_child(nt, c, pp, gp, pc, gc, bc)
                     "the band receives the parent's values")
     end if
     n%dd = pc%dd
+    ! 場の表: 親子の両方で確保・有効な場だけ
+    n%nfld = 0
+    do f = 1, nfld_max
+      if (fld_active(sp, f) .and. fld_active(sc, f)) then
+        n%nfld = n%nfld + 1
+        n%fld(n%nfld) = f
+      else if (fld_active(sp, f) .neqv. fld_active(sc, f)) then
+        call par_info(trim(tag)//": field "//trim(fld_name(f))//" is active in only one of parent/child; not exchanged")
+      end if
+    end do
+    if (n%nfld > 0) then
+      msg = trim(tag)//": exchanged fields in addition to h,u,v,m,n:"
+      do f = 1, n%nfld
+        msg = trim(msg)//" "//trim(fld_name(n%fld(f)))
+      end do
+      call par_info(trim(msg))
+    end if
+    ! スポンジ(nest_bc = 4)
+    if (n%nest_bc == 4) then
+      if (n%ns < 1) call par_stop(trim(tag)//": nest_bc = 4 (sponge) needs nest_ns >= 1")
+    else
+      n%ns = 0
+    end if
+    if (gc%nx <= 2 * (n%nb + n%ns) + 2 .or. gc%ny <= 2 * (n%nb + n%ns) + 2) then
+      call par_stop(trim(tag)//": child grid too small for the band + sponge")
+    end if
+    ! 置換する親セルの範囲(帯〔とスポンジ〕を含む親セル数 nin を足元の内側に取る)
+    nin = (n%nb + n%ns + r - 1) / r
+    n%ipa = n%pi1 + nin
+    n%ipb = n%pi2 - nin
+    n%jpa = n%pj1 + nin
+    n%jpb = n%pj2 - nin
+    if (n%nest_fb > 0 .and. (n%ipa > n%ipb .or. n%jpa > n%jpb)) then
+      call par_stop(trim(tag)//": no parent cell is fully inside the child's interior; two-way needs a larger child")
+    end if
+    if (n%nest_fb == 3) then
+      if (allocated(n%fp)) deallocate(n%fp, n%vc)
+      allocate(n%fp(n%ipa-1:n%ipb+1, n%jpa-1:n%jpb+1), source = 0.0)
+      allocate(n%vc(n%ipa-1:n%ipb+1, n%jpa-1:n%jpb+1), source = 0.0)
+    end if
     ! 親の窓の写し
     if (allocated(n%wc)) deallocate(n%wc)
     if (allocated(n%we)) deallocate(n%we)
-    allocate(n%wc(ncq, n%pi1-1:n%pi2+1, n%pj1-1:n%pj2+1), source = 0.0)
+    allocate(n%wc(ncq + n%nfld, n%pi1-1:n%pi2+1, n%pj1-1:n%pj2+1), source = 0.0)
     allocate(n%we(2, 4, n%pi1-2:n%pi2+1, n%pj1-2:n%pj2+1), source = 0.0)
     if (allocated(n%wc0)) deallocate(n%wc0, n%wc1, n%we0, n%we1)
     allocate(n%wc0, n%wc1, source = n%wc)
     allocate(n%we0, n%we1, source = n%we)
     if (allocated(n%wr)) deallocate(n%wr)
-    allocate(n%wr(8, n%pi1:n%pi2, n%pj1:n%pj2), source = 0.0)
+    allocate(n%wr(w_nbase + n%nfld, n%pi1:n%pi2, n%pj1:n%pj2), source = 0.0)
     ! 子側の作業配列(自ランクの確保範囲)
     n%jlo = max(dcp%jsh, 1)
     n%jhi = min(dcp%jeh, gc%ny)
@@ -314,9 +383,11 @@ subroutine nest_setup_child(nt, c, pp, gp, pc, gc, bc)
     n%js = dcp%js
     n%je = dcp%je
     n%ready = .true.
-    call par_info(trim(tag)//": "//itoa(gc%nx)//" x "//itoa(gc%ny)//" cells, dx = "//trim(rtoa(gc%dx))// &
-                  ", footprint in parent = cells "//itoa(n%pi1)//".."//itoa(n%pi2)//" x "// &
-                  itoa(n%pj1)//".."//itoa(n%pj2)//", band width nb = "//itoa(n%nb))
+    msg = trim(tag)//": "//itoa(gc%nx)//" x "//itoa(gc%ny)//" cells, dx = "//trim(rtoa(gc%dx))// &
+          ", footprint in parent = cells "//itoa(n%pi1)//".."//itoa(n%pi2)//" x "// &
+          itoa(n%pj1)//".."//itoa(n%pj2)//", band width nb = "//itoa(n%nb)
+    if (n%ns > 0) msg = trim(msg)//", sponge ns = "//itoa(n%ns)
+    call par_info(trim(msg))
   end associate
 end subroutine
 
@@ -344,10 +415,11 @@ end subroutine
 
 subroutine capture_one(n, s, wc, we)
   type(t_nest_grid), intent(in) :: n
-  type(t_state), intent(in) :: s
+  type(t_state), intent(in), target :: s
   real, intent(inout) :: wc(:, n%pi1-1:, n%pj1-1:)
   real, intent(inout) :: we(:, :, n%pi1-2:, n%pj1-2:)
-  integer :: i, j
+  integer :: i, j, f
+  real, pointer :: a(:,:)
   wc = 0.0
   do j = max(dcp%js, n%pj1 - 1), min(dcp%je, n%pj2 + 1)
     do i = n%pi1 - 1, n%pi2 + 1
@@ -358,6 +430,14 @@ subroutine capture_one(n, s, wc, we)
       wc(q_vv, i, j) = s%vv(i, j)
       wc(q_m,  i, j) = s%m(i, j)
       wc(q_n,  i, j) = s%n(i, j)
+    end do
+  end do
+  do f = 1, n%nfld
+    a => fld_ptr(s, n%fld(f))
+    do j = max(dcp%js, n%pj1 - 1), min(dcp%je, n%pj2 + 1)
+      do i = n%pi1 - 1, n%pi2 + 1
+        wc(ncq + f, i, j) = a(i, j)
+      end do
     end do
   end do
   we = 0.0
@@ -378,10 +458,13 @@ subroutine nest_prolong(nt, c, g, s, alpha)
   type(t_nest), intent(inout) :: nt
   integer, intent(in) :: c
   type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(inout) :: s
+  type(t_state), intent(inout), target :: s
   real, intent(in) :: alpha                 ! サブステップ開始時刻の位置 (t − t^n)/dt_親 ∈ [0, 1)
-  integer :: i, j, k, kk, ie, je, ip, jp, in, jn
-  real :: hc, hn
+  integer :: i, j, k, kk, ie, je, ip, jp, in, jn, f, d
+  real :: hc, hn, hold, w
+  real(8) :: dv
+  real(8), allocatable :: rowdv(:), rowdva(:)
+  real, pointer :: a(:,:)
   associate (n => nt%g(c))
     if (.not. n%ready) call par_stop("nest_prolong: grid "//itoa(c)//" is not set up")
     ! 窓の時間補間(alpha = 0 は t^n の複写 = r_t = 1 の経路と同一ビット)
@@ -392,11 +475,14 @@ subroutine nest_prolong(nt, c, g, s, alpha)
       n%wc = (1.0 - alpha) * n%wc0 + alpha * n%wc1
       n%we = (1.0 - alpha) * n%we0 + alpha * n%we1
     end if
-    ! --- セル量 ---
+    ! --- セル量(帯の置換体積は自帯の行だけ数える → 行和の決定的総和)---
+    allocate(rowdv(dcp%js:dcp%je), source = 0.0d0)
+    allocate(rowdva(dcp%js:dcp%je), source = 0.0d0)
     do j = n%jlo, n%jhi
       do i = 1, n%nxc
         if (.not. n%inband(i, j)) cycle
         if (g%x(i, j) <= 0) cycle
+        hold = s%h(i, j)
         if (n%r == 1) then
           ip = n%i0 + i - 1
           jp = n%j0 + j - 1
@@ -409,11 +495,36 @@ subroutine nest_prolong(nt, c, g, s, alpha)
             s%n(i, j)  = n%wc(q_n,  ip, jp)
           end if
           s%e(i, j)  = s%z(i, j) + s%h(i, j)
+          do f = 1, n%nfld
+            a => fld_ptr(s, n%fld(f))
+            a(i, j) = n%wc(ncq + f, ip, jp)
+          end do
         else
-          call interp_cell(n, i, j, s, n%nest_bc /= 1)
+          call interp_cell(n, i, j, s, n%nest_bc /= 1, 1.0)
+        end if
+        if (j >= dcp%js .and. j <= dcp%je) then
+          rowdv(j) = rowdv(j) + real(s%h(i, j) - hold, 8) * real(s%af(i, j), 8)
+          rowdva(j) = rowdva(j) + abs(real(s%h(i, j) - hold, 8)) * real(s%af(i, j), 8)
         end if
       end do
     end do
+    call par_sum_rows(rowdv, dv)
+    n%bvol_sum = n%bvol_sum + dv * real(g%dx, 8) * real(g%dy, 8)
+    call par_sum_rows(rowdva, dv)
+    n%bvol_abs = n%bvol_abs + dv * real(g%dx, 8) * real(g%dy, 8)
+    ! --- スポンジ(nest_bc = 4): 帯の内側 ns セルを親の値へ向けて緩和(重みは
+    !     帯側 1 に近く内側で 0 に近づく 2 次。比 1 は複写値との混合)---
+    if (n%ns > 0) then
+      do j = n%jlo, n%jhi
+        do i = 1, n%nxc
+          if (n%inband(i, j) .or. g%x(i, j) <= 0) cycle
+          d = min(i - n%nb, n%nxc - n%nb + 1 - i, j - n%nb, n%nyc - n%nb + 1 - j)   ! 帯からの距離(1..)
+          if (d > n%ns) cycle
+          w = (1.0 - real(d) / real(n%ns + 1))**2
+          call interp_cell(n, i, j, s, .true., w)
+        end do
+      end do
+    end if
     if (n%nest_bc == 1) return       ! 水位のみ(TUNAMI 型): 流速・エッジ量は子が計算
     ! --- エッジ量(帯セルに接する全スロット)---
     do j = n%jlo, n%jhi
@@ -477,21 +588,15 @@ subroutine nest_restrict(nt, c, sc, sp, gp)
   type(t_state), intent(in) :: sc          ! 子の状態
   type(t_state), intent(inout) :: sp       ! 親の状態
   type(t_geoinfo), intent(in) :: gp        ! 親の地理情報(マスク・寸法)
-  ! 作業配列 wr の第 1 添字: 1 h(比 1)/h の平均, 2 η の平均, 3 m, 4 n, 5 u, 6 v, 7 vv, 8 書込み印
-  integer, parameter :: w_h = 1, w_e = 2, w_m = 3, w_n = 4, w_u = 5, w_v = 6, w_vv = 7, w_set = 8
-  integer :: ip, jp, i1, j1, i2, j2, r, nw, ic, jc, nin, ipa, ipb, jpa, jpb, pjs, pje
-  real :: hav, eav, mav, nav, hp
+  integer :: ip, jp, i1, j1, i2, j2, r, nw, ic, jc, ipa, ipb, jpa, jpb, pjs, pje, f
+  real :: hav, eav, mav, nav, hp, afp, dhc
   real(8) :: dv, dva
-  real(8), allocatable :: rowdv(:), rowdva(:)
+  real(8), allocatable :: rowdv(:), rowdva(:), rowrf(:)
+  real, pointer :: ac(:,:), ap(:,:)
   associate (n => nt%g(c))
     if (n%nest_fb == 0) return
     r = n%r
-    ! 置換する親セルの範囲: 子の内部(帯を除く)に完全に含まれるブロック
-    nin = (n%nb + r - 1) / r          ! 帯を含む親セル数(切り上げ)
-    ipa = n%pi1 + nin
-    ipb = n%pi2 - nin
-    jpa = n%pj1 + nin
-    jpb = n%pj2 - nin
+    ipa = n%ipa; ipb = n%ipb; jpa = n%jpa; jpb = n%jpb
     if (ipa > ipb .or. jpa > jpb) return
     n%wr = 0.0
     ! --- 子側: 自分の帯にあるブロックを平均する(1 ブロック = 1 ランク。整列による)---
@@ -510,11 +615,22 @@ subroutine nest_restrict(nt, c, sc, sp, gp)
           n%wr(w_u,  ip, jp) = sc%u(i1, j1)
           n%wr(w_v,  ip, jp) = sc%v(i1, j1)
           n%wr(w_vv, ip, jp) = sc%vv(i1, j1)
+          do f = 1, n%nfld
+            ac => fld_ptr(sc, n%fld(f))
+            n%wr(w_nbase + f, ip, jp) = ac(i1, j1)
+          end do
           cycle
         end if
         nw = 0
         do jc = j1, j2
           do ic = i1, i2
+            ! 体積(h·af)と有効面積率の平均、追加場の面積平均は全セルで取る(保存量)
+            n%wr(w_hv, ip, jp) = n%wr(w_hv, ip, jp) + sc%h(ic, jc) * sc%af(ic, jc)
+            n%wr(w_af, ip, jp) = n%wr(w_af, ip, jp) + sc%af(ic, jc)
+            do f = 1, n%nfld
+              ac => fld_ptr(sc, n%fld(f))
+              n%wr(w_nbase + f, ip, jp) = n%wr(w_nbase + f, ip, jp) + ac(ic, jc)
+            end do
             if (n%nest_fb == 2 .and. sc%h(ic, jc) <= n%dd) cycle   ! 湿潤判定付き: 乾きは除く
             n%wr(w_h, ip, jp) = n%wr(w_h, ip, jp) + sc%h(ic, jc)
             n%wr(w_e, ip, jp) = n%wr(w_e, ip, jp) + sc%h(ic, jc) + sc%z(ic, jc)
@@ -524,6 +640,9 @@ subroutine nest_restrict(nt, c, sc, sp, gp)
           end do
         end do
         if (nw > 0) n%wr(w_h:w_n, ip, jp) = n%wr(w_h:w_n, ip, jp) / real(nw)
+        n%wr(w_hv, ip, jp) = n%wr(w_hv, ip, jp) / real(r * r)
+        n%wr(w_af, ip, jp) = n%wr(w_af, ip, jp) / real(r * r)
+        n%wr(w_nbase+1:w_nbase+n%nfld, ip, jp) = n%wr(w_nbase+1:w_nbase+n%nfld, ip, jp) / real(r * r)
         n%wr(w_u, ip, jp) = real(nw)            ! 湿潤セル数(親側の判定に使う)
       end do
     end do
@@ -537,6 +656,10 @@ subroutine nest_restrict(nt, c, sc, sp, gp)
       do ip = ipa, ipb
         if (n%wr(w_set, ip, jp) == 0.0) cycle
         if (gp%x(ip, jp) <= 0) cycle
+        do f = 1, n%nfld
+          ap => fld_ptr(sp, n%fld(f))
+          ap(ip, jp) = n%wr(w_nbase + f, ip, jp)
+        end do
         if (r == 1) then
           hp = n%wr(w_h, ip, jp)
           mav = n%wr(w_m, ip, jp); nav = n%wr(w_n, ip, jp)
@@ -544,7 +667,15 @@ subroutine nest_restrict(nt, c, sc, sp, gp)
         else
           nw = nint(n%wr(w_u, ip, jp))
           hav = n%wr(w_h, ip, jp); eav = n%wr(w_e, ip, jp); mav = n%wr(w_m, ip, jp); nav = n%wr(w_n, ip, jp)
-          if (nw == 0) then
+          afp = sp%af(ip, jp)
+          if (afp /= 1.0 .or. n%wr(w_af, ip, jp) /= 1.0) then
+            ! 体積整合置換(§14.2): サブグリッド河道・空隙率のセルは、子の真の水量
+            ! Σh·af を親の有効面積率で矩形換算の h に戻す(河道水位の整合)
+            hp = n%wr(w_hv, ip, jp) / max(afp, 1.0e-6)
+            if (hav > 0.0 .and. nw > 0) then
+              mav = mav * (hp / hav); nav = nav * (hp / hav)
+            end if
+          else if (nw == 0) then
             hp = 0.0; mav = 0.0; nav = 0.0                    ! 湿潤セルなし → 親は乾き
           else if (n%nest_fb == 1) then
             hp = hav                                          ! 面積平均(体積厳密)
@@ -571,14 +702,109 @@ subroutine nest_restrict(nt, c, sc, sp, gp)
         sp%e(ip, jp) = sp%z(ip, jp) + sp%h(ip, jp)
       end do
     end do
+    ! --- 保存修正(nest_fb = 3): 置換領域 R の外周リングのセル A について、親が
+    !     自分の 1 歩で R へ流した体積 fp と、子が r_t サブステップで同じ界面を
+    !     横切って流した体積 vc の差を A の水深に戻す(GeoClaw の reflux に相当。
+    !     R の内部は置換済みなので、界面の外側の質量を子の流束に整合させる)---
+    allocate(rowrf(pjs:pje), source = 0.0d0)
+    if (n%nest_fb == 3) then
+      if (nproc > 1) then
+        call share(n%fp, size(n%fp))
+        call share(n%vc, size(n%vc))
+      end if
+      do jp = max(jpa - 1, pjs), min(jpb + 1, pje)
+        do ip = ipa - 1, ipb + 1
+          if (ip >= ipa .and. ip <= ipb .and. jp >= jpa .and. jp <= jpb) cycle   ! リングだけ
+          if (gp%x(ip, jp) <= 0) cycle
+          if (n%fp(ip, jp) == n%vc(ip, jp)) cycle                               ! 比 1 恒等: 修正 0
+          dhc = (n%fp(ip, jp) - n%vc(ip, jp)) / (gp%dx * gp%dy * max(sp%af(ip, jp), 1.0e-6))
+          if (sp%h(ip, jp) + dhc < 0.0) then
+            dhc = -sp%h(ip, jp)
+            n%n_clamp = n%n_clamp + 1
+          end if
+          sp%h(ip, jp) = sp%h(ip, jp) + dhc
+          sp%e(ip, jp) = sp%z(ip, jp) + sp%h(ip, jp)
+          rowrf(jp) = rowrf(jp) + abs(real(dhc, 8)) * real(sp%af(ip, jp), 8)
+        end do
+      end do
+      n%fp = 0.0
+      n%vc = 0.0
+    end if
     ! 統計(行和 → 決定的総和。par_sum_rows は親を select した状態で呼ばれる前提)
     call par_sum_rows(rowdv, dv)
     call par_sum_rows(rowdva, dva)
     n%n_restrict = n%n_restrict + 1
     n%dvol_sum = n%dvol_sum + dv * real(gp%dx, 8) * real(gp%dy, 8)
     n%dvol_abs = n%dvol_abs + dva * real(gp%dx, 8) * real(gp%dy, 8)
+    call par_sum_rows(rowrf, dv)
+    n%rflx_abs = n%rflx_abs + dv * real(gp%dx, 8) * real(gp%dy, 8)
   end associate
 end subroutine
+
+!----------------------------------------------------------------------
+! 保存修正(nest_fb = 3)の流束の集計
+!   nest_reflux_parent: 親 k(select 済み。1 歩の直後)の、リングのセル A から
+!     置換領域 R の近傍セルへのエッジ流量 × dt_親 を fp に足す(自帯の行)
+!   nest_reflux_child : 子 c(select 済み。サブステップの直後)の、リングの親
+!     セルの領域にある子セル C から R の領域の近傍セルへのエッジ流量 × dt_子を
+!     vc に足す(自帯の行。整列により A の子セル群は 1 ランクに収まる)
+!   エッジ流量は m_swflow_enc_edge_flux(中心セルから出る向きが正。[m³/s])。
+!   比 1・r_t 1 では両者が同じ式・同じ順序の和になり修正は厳密に 0
+!----------------------------------------------------------------------
+subroutine nest_reflux_parent(nt, k, dt)
+  type(t_nest), intent(inout) :: nt
+  integer, intent(in) :: k
+  real, intent(in) :: dt
+  integer :: ic, c, ip, jp, kk, in, jn
+  do ic = 1, nt%g(k)%nchild
+    c = nt%g(k)%child(ic)
+    associate (n => nt%g(c))
+      if (n%nest_fb /= 3) cycle
+      do jp = max(n%jpa - 1, dcp%js), min(n%jpb + 1, dcp%je)
+        do ip = n%ipa - 1, n%ipb + 1
+          if (in_region(n, ip, jp)) cycle
+          do kk = 1, 8
+            in = ip + din(kk); jn = jp + djn(kk)
+            if (.not. in_region(n, in, jn)) cycle
+            n%fp(ip, jp) = n%fp(ip, jp) + m_swflow_enc_edge_flux(ip, jp, in, jn) * dt
+          end do
+        end do
+      end do
+    end associate
+  end do
+end subroutine
+
+subroutine nest_reflux_child(nt, c, dt)
+  type(t_nest), intent(inout) :: nt
+  integer, intent(in) :: c
+  real, intent(in) :: dt
+  integer :: i, j, ip, jp, kk, in, jn, ipn, jpn
+  associate (n => nt%g(c))
+    if (n%nest_fb /= 3) return
+    do j = dcp%js, dcp%je
+      jp = n%j0 + (j - 1) / n%r
+      if (jp < n%jpa - 1 .or. jp > n%jpb + 1) cycle
+      do i = 1, n%nxc
+        ip = n%i0 + (i - 1) / n%r
+        if (ip < n%ipa - 1 .or. ip > n%ipb + 1) cycle
+        if (in_region(n, ip, jp)) cycle
+        do kk = 1, 8
+          in = i + din(kk); jn = j + djn(kk)
+          if (in < 1 .or. in > n%nxc .or. jn < 1 .or. jn > n%nyc) cycle
+          ipn = n%i0 + (in - 1) / n%r; jpn = n%j0 + (jn - 1) / n%r
+          if (.not. in_region(n, ipn, jpn)) cycle
+          n%vc(ip, jp) = n%vc(ip, jp) + m_swflow_enc_edge_flux(i, j, in, jn) * dt
+        end do
+      end do
+    end do
+  end associate
+end subroutine
+
+logical function in_region(n, ip, jp)
+  type(t_nest_grid), intent(in) :: n
+  integer, intent(in) :: ip, jp
+  in_region = (ip >= n%ipa .and. ip <= n%ipb .and. jp >= n%jpa .and. jp <= n%jpb)
+end function
 
 !----------------------------------------------------------------------
 ! ネスト系の要約を画面に出す(finalize 時。Log.txt の列は変えない)
@@ -591,6 +817,9 @@ subroutine nest_summary(nt)
   call par_info("nest: summary")
   do k = 2, nt%ng
     associate (n => nt%g(k))
+      write(msg, '(a,i0,a,i0,a,es12.4,a,es12.4,a)') "nest:   grid ", k, " <- parent ", n%parent, &
+            ": band replacement volume in the child, sum = ", n%bvol_sum, " m3, |sum| = ", n%bvol_abs, " m3"
+      call par_info(trim(msg))
       if (n%nest_fb == 0) then
         write(msg, '(a,i0,a,i0,a)') "nest:   grid ", k, " <- parent ", n%parent, ": one-way (no feedback)"
       else
@@ -599,6 +828,11 @@ subroutine nest_summary(nt)
               n%dvol_sum, " m3, |sum| = ", n%dvol_abs, " m3"
       end if
       call par_info(trim(msg))
+      if (n%nest_fb == 3) then
+        write(msg, '(a,i0,a,es12.4,a,i0)') "nest:   grid ", k, ": conservative correction |dh|*A sum = ", &
+              n%rflx_abs, " m3, clamped to zero ", n%n_clamp
+        call par_info(trim(msg))
+      end if
     end associate
   end do
 end subroutine
@@ -620,6 +854,7 @@ function bc_name(bc) result(name)
   select case (bc)
   case (1); name = "band: water level"
   case (2); name = "band: water level + edge fluxes"
+  case (4); name = "band: water level + edge fluxes + sponge"
   case default; name = "band: ?"
   end select
 end function
@@ -631,6 +866,7 @@ function fb_name(fb) result(name)
   case (0); name = "one-way"
   case (1); name = "two-way (area average)"
   case (2); name = "two-way (wet-aware average)"
+  case (3); name = "two-way (wet-aware average + conservative correction)"
   case default; name = "two-way (?)"
   end select
 end function
@@ -658,14 +894,16 @@ end subroutine
 ! 全て湿っていれば η を補間して h = max(η − z_子, 0)、u, v, m, n, vv も
 ! 双線形。親に乾きがあれば子セルは乾き(h = 0、速度・流量 0)
 !----------------------------------------------------------------------
-subroutine interp_cell(n, i, j, s, with_uv)
+subroutine interp_cell(n, i, j, s, with_uv, wt)
   type(t_nest_grid), intent(in) :: n
   integer, intent(in) :: i, j
-  type(t_state), intent(inout) :: s
+  type(t_state), intent(inout), target :: s
   logical, intent(in) :: with_uv            ! .false. = 水位のみ(nest_bc = 1)
-  real :: xc, yc, wx, wy, eta, hmin
-  integer :: ia, ja
+  real, intent(in) :: wt                    ! 置換の重み(1 = 置換、< 1 = スポンジの緩和)
+  real :: xc, yc, wx, wy, eta, hmin, hnew, unew, vnew, mnew, nnew
+  integer :: ia, ja, f
   real :: w(2,2)
+  real, pointer :: a(:,:)
   ! 子セル中心の親セル座標(親セル ip の中心を ip - 0.5 とする連続座標)
   xc = real(n%i0 - 1) + (real(i) - 0.5) / real(n%r)
   yc = real(n%j0 - 1) + (real(j) - 0.5) / real(n%r)
@@ -678,34 +916,86 @@ subroutine interp_cell(n, i, j, s, with_uv)
   w(1,2) = (1.0 - wx) * wy
   w(2,2) = wx * wy
   hmin = min(n%wc(q_h, ia, ja), n%wc(q_h, ia+1, ja), n%wc(q_h, ia, ja+1), n%wc(q_h, ia+1, ja+1))
+  unew = 0.0; vnew = 0.0; mnew = 0.0; nnew = 0.0
   if (hmin > n%dd) then
     eta = bil(q_e)
-    s%h(i, j) = max(eta - s%z(i, j), 0.0)
-    if (.not. with_uv) then
-      continue
-    else if (s%h(i, j) > 0.0) then
-      s%u(i, j)  = bil(q_u)
-      s%v(i, j)  = bil(q_v)
-      s%vv(i, j) = bil(q_vv)
-      s%m(i, j)  = bil(q_m)
-      s%n(i, j)  = bil(q_n)
-    else
-      s%u(i, j) = 0.0; s%v(i, j) = 0.0; s%vv(i, j) = 0.0; s%m(i, j) = 0.0; s%n(i, j) = 0.0
+    hnew = max(eta - s%z(i, j), 0.0)
+    if (hnew > 0.0) then
+      unew = bil(q_u); vnew = bil(q_v); mnew = bil(q_m); nnew = bil(q_n)
     end if
   else
-    s%h(i, j) = 0.0
-    if (with_uv) then
-      s%u(i, j) = 0.0; s%v(i, j) = 0.0; s%vv(i, j) = 0.0; s%m(i, j) = 0.0; s%n(i, j) = 0.0
-    end if
+    hnew = 0.0
+  end if
+  s%h(i, j) = blend(s%h(i, j), hnew)
+  if (with_uv) then
+    s%u(i, j) = blend(s%u(i, j), unew)
+    s%v(i, j) = blend(s%v(i, j), vnew)
+    s%m(i, j) = blend(s%m(i, j), mnew)
+    s%n(i, j) = blend(s%n(i, j), nnew)
+    s%vv(i, j) = sqrt(s%u(i, j)**2 + s%v(i, j)**2)
   end if
   s%e(i, j) = s%z(i, j) + s%h(i, j)
+  ! 場の表: 表面スカラーは子セルが乾けば 0、地下量は常に補間
+  do f = 1, n%nfld
+    a => fld_ptr(s, n%fld(f))
+    if (fld_surface(n%fld(f)) .and. s%h(i, j) <= 0.0) then
+      a(i, j) = blend(a(i, j), 0.0)
+    else
+      a(i, j) = blend(a(i, j), bil(ncq + f))
+    end if
+  end do
 contains
   real function bil(q)
     integer, intent(in) :: q
     bil = w(1,1) * n%wc(q, ia, ja) + w(2,1) * n%wc(q, ia+1, ja) + &
           w(1,2) * n%wc(q, ia, ja+1) + w(2,2) * n%wc(q, ia+1, ja+1)
   end function
+  real function blend(old, new)
+    real, intent(in) :: old, new
+    if (wt >= 1.0) then
+      blend = new
+    else
+      blend = (1.0 - wt) * old + wt * new
+    end if
+  end function
 end subroutine
+
+!----------------------------------------------------------------------
+! 場の表: 状態配列への参照と有効判定
+!----------------------------------------------------------------------
+function fld_ptr(s, id) result(a)
+  type(t_state), intent(in), target :: s
+  integer, intent(in) :: id
+  real, pointer :: a(:,:)
+  select case (id)
+  case (f_hs);  a => s%hs
+  case (f_cq);  a => s%cq
+  case (f_hd);  a => s%hd
+  case (f_hbd); a => s%hbd
+  case (f_hss); a => s%hss
+  case (f_hg);  a => s%hg
+  case (f_hg2); a => s%hg2
+  case (f_hgc); a => s%hgc
+  case default
+    call par_stop("nest: unknown field id "//itoa(id))
+  end select
+end function
+
+logical function fld_active(s, id)
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: id
+  select case (id)
+  case (f_hs);  fld_active = s%sed_active .and. allocated(s%hs)
+  case (f_cq);  fld_active = s%wq_active .and. allocated(s%cq)
+  case (f_hd);  fld_active = s%dw_active .and. allocated(s%hd)
+  case (f_hbd); fld_active = s%bd_active .and. allocated(s%hbd)
+  case (f_hss); fld_active = s%salt_active .and. allocated(s%hss)
+  case (f_hg);  fld_active = s%gw_active .and. allocated(s%hg)
+  case (f_hg2); fld_active = allocated(s%hg2)
+  case (f_hgc); fld_active = allocated(s%hgc)
+  case default; fld_active = .false.
+  end select
+end function
 
 !----------------------------------------------------------------------
 ! 比 > 1 のエッジ量の補間: 同方位 kk の親エッジの中点格子で双線形

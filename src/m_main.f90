@@ -32,7 +32,7 @@ module m_main
   use m_swflow_enc, only : m_swflow_enc_ctx_alloc, m_swflow_enc_ctx_swap
   use m_ffactor, only : m_ffactor_ctx_alloc, m_ffactor_ctx_swap
   use m_nest, only : t_nest, nest_read_list, nest_setup_child, nest_record_band, nest_capture, nest_prolong, &
-                     nest_restrict, nest_summary, nest_dispose
+                     nest_restrict, nest_reflux_parent, nest_reflux_child, nest_summary, nest_dispose
   use m_output, only : t_output, output_init, output_dispose, output_chk_geoinfo, output_state, output_summary
   use m_util, only : itoa
   use m_sysdep_util, only : sysdep_mkdir, sysdep_copy_to_dir
@@ -184,7 +184,7 @@ subroutine m_main_initialize(fn_sysparam)
         call init_instance(nest%g(k)%fn_param, nest%g(k)%r)
         ! 幾何の確定と整合検査(子を select した状態で。親の p, g は A 群なので参照できる)
         call nest_setup_child(nest, k, encs(nest%g(k)%parent)%p, encs(nest%g(k)%parent)%g, &
-                              enc%p, enc%g, enc%b)
+                              encs(nest%g(k)%parent)%s, enc%p, enc%g, enc%s, enc%b)
       end do
       call m_main_select(nest%root)
     end if
@@ -344,7 +344,11 @@ recursive subroutine nest_advance(k)
   call m_main_select(k)
   if (nest%g(k)%nchild > 0) call nest_capture(nest, k, enc%s, 0)   ! t^n の窓
   call step_instance()
-  if (nest%g(k)%nchild > 0) call nest_capture(nest, k, enc%s, 1)   ! t^{n+1} の窓(r_t > 1 の子だけ)
+  if (nest%g(k)%parent > 0) call nest_reflux_child(nest, k, enc%p%dt)   ! 保存修正: 子としての界面流束の累計
+  if (nest%g(k)%nchild > 0) then
+    call nest_capture(nest, k, enc%s, 1)                                ! t^{n+1} の窓(r_t > 1 の子だけ)
+    call nest_reflux_parent(nest, k, enc%p%dt)                          ! 保存修正: 親としての界面流束
+  end if
   do ic = 1, nest%g(k)%nchild
     c = nest%g(k)%child(ic)
     do kk = 1, nest%g(c)%rt
