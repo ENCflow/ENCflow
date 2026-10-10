@@ -708,8 +708,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   plan §11 の全 Phase が完了。**Flather 放射(nest_bc = 3)も plan §15 の設計で
   2026-10-10 に実装(F1 + F2。fn_boundary の「外部データ付き放射」族 t_bound_ext と
   その供給者としての m_nest。developer.md §74。test/nest_identity の flather ケース、
-  examples/nest_reflect の r3t3_ow2/ow3)**。保留: ファイル供給(plan §15.6。別モデルの
-  出力からの一方向ネスト。需要待ち)、NH の φ の帯、BMI の handle 方式(独立複数
+  examples/nest_reflect の r3t3_ow2/ow3)**。**NH の φ の帯は
+  設計案を plan §16 に起案(2026-10-10。帯のセルを親の φ の Dirichlet 既知セルに
+  する NEOWAVE 型。要合意事項 §16.6 の合意待ち)**。保留: ファイル供給(plan §15.6。
+  別モデルの出力からの一方向ネスト。需要待ち)、BMI の handle 方式(独立複数
   モデル)と機能有効時のみの変数(hg 等)の公開。残課題: 比 > 1 の補間の検証(Phase 3)、地理参照からの
   i0/j0 導出、拡散・NH を含む帯幅の必要条件)**:
   同一プロセス内の複数インスタンス化(モジュール私有状態の
