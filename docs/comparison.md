@@ -116,7 +116,7 @@ COMCOT・TUNAMI-N2・MOST の接続法は docs/nesting_plan.md §2.1(ソース�
 | 積雪・融雪 | ○ 度日法+凍土の浸透抑制 | MIKE SHE, GSSHA, SHETRAN | HEC-RAS は HMS 側 |
 | 氷河 | ○ 度日質量収支+SIA 流動+滑動+氷河侵食+雪崩再配分 | 汎用洪水モデルには皆無。精緻な氷力学は PISM, Elmer/Ice, OGGM | 洪水水理・流域水文・地形変動と氷河を併走させる構成は他に例がない |
 | 長期地形変動 | ○ 風化・隆起・周期強制 | CAESAR-Lisflood, Landlab, Badlands, FastScape | 実水理駆動では CAESAR-Lisflood と並ぶ。他はプロセス則 LEM で棲み分け |
-| ネスティング(多段格子) | ○ 静的ネスト。任意の深さ・一つの親に複数の子、空間比 r・時間比 r_t は任意整数。親→子は帯 Dirichlet(水位 / 水位+流速+エッジ流量)・Flather 放射・スポンジ、子→親は面積平均・湿潤判定付き平均・保存修正(reflux)。非静水圧の φ も帯で接続。浮遊砂・水質・流木・瓦礫・塩水・地下貯留も自動交換。ランク数によらずビット再現 | 津波: COMCOT, TUNAMI-N2, MOST(一方向), JAGURS, NEOWAVE, GeoClaw(AMR), FUNWAVE-TVD(2022 二方向)。津波以外の構造格子: MIKE 21 Classic(Multiple Grids), TUFLOW Classic(M2D), Delft3D 4(domain decomposition)。海洋・気象では標準(ROMS-AGRIF/CROCO, WRF) | 洪水の公開勢は非構造・四分木・非一様格子で局所細密化し、ネストを持たない(TELEMAC, Delft3D FM, HEC-RAS, TUFLOW HPC Quadtree, LISFLOOD-FP 8.1)。ENCflow はラスタ純化(方針)のため、静的ネストが局所細密化の手段。**分散波の接続**(非静水圧圧力を界面で連続にする)は JAGURS(Boussinesq)・NEOWAVE(非静水圧の Dirichlet。ENCflow と同型)・GeoClaw-Bouss(SGN+AMR、2024)・FUNWAVE-TVD(2022)の少数派で、洪水・水文系には皆無 |
+| ネスティング(多段格子) | ○ 静的ネスト(任意の深さ・比 r と r_t は任意整数)。帯 Dirichlet / Flather 放射 / スポンジ、置換は面積平均・湿潤判定・保存修正。非静水圧の φ と追加の場(土砂・水質・地下貯留等)も交換 | 津波: COMCOT, TUNAMI, MOST, JAGURS, NEOWAVE, GeoClaw(AMR), FUNWAVE-TVD。構造格子の MIKE 21 Classic, TUFLOW Classic, Delft3D 4。海洋・気象(ROMS-AGRIF, WRF) | 洪水の公開勢は非構造・四分木で局所細密化しネストを持たない。分散波の接続は JAGURS・NEOWAVE・GeoClaw-Bouss・FUNWAVE の少数派(§3) |
 | 並列化 | OpenMP+MPI。ランク数によらずビット再現 | TELEMAC, Delft3D(MPI。ビット再現は保証せず) | 決定的リダクションが差別化点 |
 | リスタート厳密性 | ○ モジュール私有 save 契約 | 商用勢は概ね対応 | 公開勢で徹底例は少ない |
 
