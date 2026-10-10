@@ -83,6 +83,10 @@ reference の更新(`-u`)は結果の妥当性を人間が確認してから行�
 | **氷河・溶岩** | | | |
 | [glacier/](glacier/) | SIA 氷体流動の Halfar ドーム、カール形成 | 氷河 | 解析 |
 | [lava/](lava/) | Bingham 溶岩流の Huppert 相似解、最小入力 | 溶岩流 | 解析 |
+| **ネスティング・BMI** | | | |
+| [nest_twin/](nest_twin/) | 2 ケースの交互実行が単独実行と一致(複数インスタンス化の基盤) | m_main の複数インスタンス | 一致(スクリプト) |
+| [nest_identity/](nest_identity/) | 比 1:1 自己ネストの恒等(子の内部 == 親、双方向はルート == 単独)。restart・保存修正・地下水 | ネスティング fn_nest | 一致(ドライバ) |
+| [bmi_nest/](bmi_nest/) | BMI の多格子公開(grid id・修飾名)。Python からの恒等・再 initialize・同値 set、bmi-tester | BMI・ネスティング | 一致(Python)・bmi-tester |
 | **入出力** | | | |
 | [gtif/](gtif/) | GeoTIFF リーダーの読みテスト資産(圧縮・座標系の各種) | GeoTIFF | 単体テスト |
 | Scripts/ | 共通の実行エンジンと比較スクリプト | — | — |

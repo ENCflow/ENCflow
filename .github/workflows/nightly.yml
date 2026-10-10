@@ -166,3 +166,11 @@ jobs:
           . "$HOME/bmi-venv/bin/activate"
           cd test/wave
           ../../bmi/python/check_bmi.sh param.txt
+      # ネスト系の多格子公開(developer.md §73): Python 受け入れ試験(比 1:1 の
+      # 恒等・再 initialize・同値 set)+ 静的ドライバ + bmi-tester
+      - name: BMI multi-grid (nesting) acceptance + bmi-tester (bmi_nest)
+        run: |
+          set -e
+          . "$HOME/bmi-venv/bin/activate"
+          cd test/bmi_nest
+          ./Run.sh

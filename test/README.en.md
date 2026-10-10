@@ -86,6 +86,10 @@ analytical-solution or conservation check by Check_*.py.
 | **Glaciers and lava** | | | |
 | [glacier/](glacier/) | Halfar dome of SIA ice flow, cirque formation | Glaciers | analytic |
 | [lava/](lava/) | Huppert similarity solution of a Bingham lava flow, minimal input | Lava flow | analytic |
+| **Nesting and BMI** | | | |
+| [nest_twin/](nest_twin/) | Alternating two cases in one process reproduces the standalone runs (basis of multiple instances) | Multiple m_main instances | identity (script) |
+| [nest_identity/](nest_identity/) | 1:1 self-nesting identity (child interior == parent; two-way: root == standalone). Restart, conservative correction, groundwater | Nesting fn_nest | identity (driver) |
+| [bmi_nest/](bmi_nest/) | Multi-grid BMI exposure (grid ids, qualified names). Identity, re-initialize and same-value set from Python; bmi-tester | BMI, nesting | identity (Python), bmi-tester |
 | **Input and output** | | | |
 | [gtif/](gtif/) | Test assets for the GeoTIFF reader (compression and coordinate-system variants) | GeoTIFF | unit test |
 | Scripts/ | Common run engine and comparison scripts | — | — |

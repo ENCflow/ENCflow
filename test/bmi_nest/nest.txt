@@ -1,0 +1,5 @@
+# test/bmi_nest: wave のルート(385x385)と比 1:1・双方向の子(121x121。親セル 133..253)。
+# 子の内部はルートの同領域とビット一致し、ルートは単独ラン(param_single.txt)と一致する
+# id  parent  param_file        r  r_t  i0   j0
+1     0       param_root.txt
+2     1       param_child.txt   1  1    133  133
