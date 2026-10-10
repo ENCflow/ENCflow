@@ -15,7 +15,7 @@ module m_ffactor
   public :: m_ffactor_init
   public :: m_ffactor_calc
   public :: m_ffactor_dispose
-  public :: m_ffactor_ctx_alloc, m_ffactor_ctx_swap
+  public :: m_ffactor_ctx_alloc, m_ffactor_ctx_swap, m_ffactor_ctx_dispose
 
 
   !--------------------------------------------------------------------
@@ -147,6 +147,11 @@ subroutine m_ffactor_ctx_swap(kout, kin)
       p_ffactor => ffactor_uninitialized   ! 未使用の枠 = 起動直後と同じ
     end if
   end associate
+end subroutine
+
+subroutine m_ffactor_ctx_dispose()
+  ! 枠を解放する(全インスタンスの finalize 後に m_main が呼ぶ)
+  if (allocated(ff_ctx)) deallocate(ff_ctx)
 end subroutine
 
 

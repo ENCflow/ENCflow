@@ -12,7 +12,9 @@
 !   - 文字列入力は NULL 終端の C 文字列。
 !   - 配列は flatten 1 次元・c_double(PREC=single ビルドでも受け渡しは
 !     c_double に統一し、内部で変換する)。
-!   - モデルは単一インスタンス(m_main の singleton に対応)。
+!   - モデルは 1 プロセス 1 component(ネスト系は全体で 1 component。
+!     格子は grid id で区別し、grid 系の関数は grid を第 1 引数に取る。
+!     developer.md §73)。
 !   - 公開するのは Python 利用に必要な実用サブセット。完全な BMI-C
 !     互換(babelizer 互換)が必要になったら拡張する。
 !======================================================================
@@ -307,42 +309,51 @@ contains
 
   !========================= Grid information ==========================
 
-  function ebmi_get_grid_shape(ny, nx) &
+  ! grid 系は grid id を第 1 引数に取る(0 = ルート、k = ネスト一覧の k+1 行目)
+
+  function ebmi_get_grid_shape(grid, ny, nx) &
       bind(c, name="encflow_bmi_get_grid_shape") result(status)
+    integer(c_int), value :: grid
     integer(c_int), intent(out) :: ny, nx
     integer(c_int) :: status
     integer :: shp(2)
-    status = int(model%get_grid_shape(0, shp), c_int)
+    shp = 0
+    status = int(model%get_grid_shape(int(grid), shp), c_int)
     ny = int(shp(1), c_int)
     nx = int(shp(2), c_int)
   end function
 
-  function ebmi_get_grid_spacing(dy, dx) &
+  function ebmi_get_grid_spacing(grid, dy, dx) &
       bind(c, name="encflow_bmi_get_grid_spacing") result(status)
+    integer(c_int), value :: grid
     real(c_double), intent(out) :: dy, dx
     integer(c_int) :: status
     double precision :: sp(2)
-    status = int(model%get_grid_spacing(0, sp), c_int)
+    sp = 0d0
+    status = int(model%get_grid_spacing(int(grid), sp), c_int)
     dy = real(sp(1), c_double)
     dx = real(sp(2), c_double)
   end function
 
-  function ebmi_get_grid_origin(y0, x0) &
+  function ebmi_get_grid_origin(grid, y0, x0) &
       bind(c, name="encflow_bmi_get_grid_origin") result(status)
+    integer(c_int), value :: grid
     real(c_double), intent(out) :: y0, x0
     integer(c_int) :: status
     double precision :: og(2)
-    status = int(model%get_grid_origin(0, og), c_int)
+    og = 0d0
+    status = int(model%get_grid_origin(int(grid), og), c_int)
     y0 = real(og(1), c_double)
     x0 = real(og(2), c_double)
   end function
 
-  function ebmi_get_grid_size(n) &
+  function ebmi_get_grid_size(grid, n) &
       bind(c, name="encflow_bmi_get_grid_size") result(status)
+    integer(c_int), value :: grid
     integer(c_int), intent(out) :: n
     integer(c_int) :: status
     integer :: sz
-    status = int(model%get_grid_size(0, sz), c_int)
+    status = int(model%get_grid_size(int(grid), sz), c_int)
     n = int(sz, c_int)
   end function
 

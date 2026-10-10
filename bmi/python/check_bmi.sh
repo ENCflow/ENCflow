@@ -3,7 +3,11 @@
 # ENCflow の BMI 適合性検査(CSDMS bmi-tester)を実行する
 #
 #   使い方(ケースディレクトリで。例: test/wave):
-#     ../../bmi/python/check_bmi.sh [param.txt]
+#     ../../bmi/python/check_bmi.sh [param.txt [追加ファイル ...]]
+#   追加ファイル = param が参照する入力(ネスト一覧・子の param・初期値
+#   ファイル等)。bmi-tester は manifest のファイルだけを作業ディレクトリに
+#   写して initialize するため、param 以外に読むものは全て列挙する
+#   (例: test/bmi_nest の Run.sh)。
 #
 #   事前準備:
 #     bmi/ で make(libencflow_bmi.so を生成)
@@ -18,12 +22,16 @@
 # =====================================================================
 set -e
 PARAM=${1:-param.txt}
+[ $# -gt 0 ] && shift
+MANIFEST="$PARAM"
+for f in "$@"; do MANIFEST="$MANIFEST
+$f"; done
 BMIDIR=$(cd "$(dirname "$0")" && pwd)
 TESTER=$(python3 -c "import bmi_tester, os; print(os.path.dirname(bmi_tester.__file__))")
 
 export BMITEST_CLASS='encflow_bmi:EncflowBmi'
 export BMITEST_INPUT_FILE="$PARAM"
-export BMITEST_MANIFEST="$PARAM"
+export BMITEST_MANIFEST="$MANIFEST"
 export BMI_VERSION_STRING=2.0
 export PYTHONPATH="$BMIDIR${PYTHONPATH:+:$PYTHONPATH}"
 

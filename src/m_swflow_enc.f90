@@ -22,7 +22,7 @@ module m_swflow_enc
   public :: m_swflow_enc_init
   public :: m_swflow_enc_calc
   public :: m_swflow_enc_dispose
-  public :: m_swflow_enc_ctx_alloc, m_swflow_enc_ctx_swap   ! 文脈の付け替え(複数インスタンス。§71)
+  public :: m_swflow_enc_ctx_alloc, m_swflow_enc_ctx_swap, m_swflow_enc_ctx_dispose   ! 文脈の付け替え(複数インスタンス。§71)
   public :: sblk                      ! 塞がり率(submodule の build_cwd が参照。同下)
   public :: is_wall                   ! 堤防壁の述語(submodule から参照。private だと
                                       !   gfortran の LTO でシンボル未解決になるため公開)
@@ -3240,6 +3240,11 @@ subroutine m_swflow_enc_ctx_swap(kout, kin)
     call move_alloc(td_mod, c%td_mod);  call move_alloc(d%td_mod, td_mod)
     call move_alloc(nh_mod, c%nh_mod);  call move_alloc(d%nh_mod, nh_mod)
   end associate
+end subroutine
+
+subroutine m_swflow_enc_ctx_dispose()
+  ! 枠を解放する(全インスタンスの finalize 後に m_main が呼ぶ)
+  if (allocated(enc_ctx)) deallocate(enc_ctx)
 end subroutine
 
 end module

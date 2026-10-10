@@ -8,10 +8,12 @@
 !   Compare_ref.sh で比較する)。
 !
 !   併せて以下を検査する(不合格なら非零終了):
-!   - 格子情報の整合(size = nx*ny、shape は [ny, nx] 順)
+!   - 格子情報の整合(size = nx*ny、shape は [ny, nx] 順)。ネスト系
+!     (fn_nest)では全格子(grid 0 = ルート、1.. = 一覧の順)について
+!     検査し、各格子の変数(object 部に ~grid<id>)の get と nbytes も確認
 !   - get_value の flatten 順序(2つの取得法の一致)と時間情報
 !   - 誤用が BMI_FAILURE になること(未知変数・サイズ不一致・過去への
-!     update_until・終了後の update)
+!     update_until・終了後の update・存在しない格子)
 !
 !   使い方:  ./test_encflow_bmi param.txt [set]
 !     第2引数 set: 中間時点で get した h・z をそのまま set して継続する
@@ -30,6 +32,7 @@ program test_bmi
   character(len=BMI_MAX_VAR_NAME), pointer :: onames(:)
   character(len=BMI_MAX_UNITS_NAME) :: units
   integer :: i, nx, ny, gsize, nstep, nhalf, icount, ocount
+  integer :: g, ng, gid, nbytes, gsz
   logical :: do_set        ! 同値 set の不変性検査を行うか(第2引数 'set')
   integer :: shp(2)
   double precision :: t, t0, tend, dt
@@ -59,10 +62,44 @@ program test_bmi
   call chk(model%get_output_var_names(onames), "get_output_var_names")
   write(*, '(a,a)') "bmi: component = ", trim(cname)
   write(*, '(a,i0,a,i0)') "bmi: input vars = ", icount, ", output vars = ", ocount
+  ng = 0
   do i = 1, ocount
     call chk(model%get_var_units(trim(onames(i)), units), "get_var_units")
-    write(*, '(a,a,a,a,a)') "bmi:   output: ", trim(onames(i)), " [", trim(units), "]"
+    call chk(model%get_var_grid(trim(onames(i)), gid), "get_var_grid")
+    write(*, '(a,a,a,a,a,i0)') "bmi:   output: ", trim(onames(i)), " [", trim(units), "]  grid ", gid
+    ng = max(ng, gid + 1)
   end do
+  write(*, '(a,i0)') "bmi: grids = ", ng
+
+  ! ---- 全格子の情報の整合(ネスト系では 2 格子以上) ----
+  do g = 0, ng - 1
+    call chk(model%get_grid_shape(g, shp), "get_grid_shape")
+    call chk(model%get_grid_size(g, gsz), "get_grid_size")
+    call chk(model%get_grid_spacing(g, spacing), "get_grid_spacing")
+    call chk(model%get_grid_origin(g, origin), "get_grid_origin")
+    write(*, '(a,i0,a,i0,a,i0,a,2f12.4,a,2f14.4)') "bmi: grid ", g, ": shape [ny, nx] = ", &
+      shp(1), " x ", shp(2), ", spacing [dy, dx] =", spacing, ", origin [y0, x0] =", origin
+    if (gsz /= shp(1) * shp(2)) call die("grid size /= nx*ny")
+    ! その格子の h: nbytes = 8 byte × size、get が通る(非ルートは修飾名)
+    varg: block
+      character(len=BMI_MAX_VAR_NAME) :: vname
+      double precision, allocatable :: hg(:)
+      if (g == 0) then
+        vname = "surface_water__depth"
+      else
+        vname = "surface_water~grid" // trim(adjustl(itoa_(g))) // "__depth"
+      end if
+      call chk(model%get_var_nbytes(trim(vname), nbytes), "get_var_nbytes")
+      if (nbytes /= gsz * 8) call die("var nbytes /= 8*size")
+      allocate(hg(gsz))
+      call chk(model%get_value_double(trim(vname), hg), "get_value h on grid")
+      write(*, '(a,i0,a,es13.6)') "bmi: grid ", g, ": initial max h = ", maxval(hg)
+    end block varg
+  end do
+  ! 存在しない格子の問い合わせは FAILURE
+  call chkf(model%get_grid_size(ng, gsz), "get_grid_size of a nonexistent grid")
+  call chkf(model%get_var_grid("surface_water~grid" // trim(adjustl(itoa_(ng))) // "__depth", gid), &
+            "get_var_grid of a nonexistent grid")
 
   ! ---- 格子情報の整合 ----
   call chk(model%get_grid_shape(0, shp), "get_grid_shape")
@@ -167,5 +204,11 @@ contains
     write(*, '(a,a)') "bmi: FAILED: ", what
     stop 1
   end subroutine die
+
+  function itoa_(n) result(str)
+    integer, intent(in) :: n
+    character(len=12) :: str
+    write(str, '(i0)') n
+  end function itoa_
 
 end program test_bmi

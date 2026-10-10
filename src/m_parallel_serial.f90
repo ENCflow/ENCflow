@@ -28,7 +28,7 @@ module m_parallel
    private
    public :: par_init, par_finalize
    public :: par_decomp_init
-   public :: par_decomp_ctx_alloc, par_decomp_ctx_swap
+   public :: par_decomp_ctx_alloc, par_decomp_ctx_swap, par_decomp_ctx_dispose
    public :: par_info, par_warn, par_stop, par_abort
    public :: par_barrier
    public :: par_allreduce_min
@@ -120,6 +120,12 @@ contains
       dcp_ctx(kout)%dcp = dcp
       dcp = dcp_ctx(kin)%dcp
    end subroutine par_decomp_ctx_swap
+
+   subroutine par_decomp_ctx_dispose()
+      ! 枠を解放する(全インスタンスの finalize 後に m_main が呼ぶ。
+      ! 再 initialize に備えて alloc を再び可能にする)
+      if (allocated(dcp_ctx)) deallocate(dcp_ctx)
+   end subroutine par_decomp_ctx_dispose
 
    subroutine par_halo_cell(a)
       ! セル配列の行ハロ交換。逐次では何もしない。

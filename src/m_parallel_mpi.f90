@@ -47,7 +47,7 @@ module m_parallel
    private
    public :: par_init, par_finalize
    public :: par_decomp_init
-   public :: par_decomp_ctx_alloc, par_decomp_ctx_swap
+   public :: par_decomp_ctx_alloc, par_decomp_ctx_swap, par_decomp_ctx_dispose
    public :: par_info, par_warn, par_stop, par_abort
    public :: par_barrier
    public :: par_allreduce_min
@@ -238,6 +238,12 @@ contains
       call move_alloc(dcp_ctx(kin)%js_tab, js_tab)
       call move_alloc(dcp_ctx(kin)%je_tab, je_tab)
    end subroutine par_decomp_ctx_swap
+
+   subroutine par_decomp_ctx_dispose()
+      ! 枠を解放する(全インスタンスの finalize 後に m_main が呼ぶ。
+      ! 再 initialize に備えて alloc を再び可能にする)
+      if (allocated(dcp_ctx)) deallocate(dcp_ctx)
+   end subroutine par_decomp_ctx_dispose
 
    subroutine align_band_table(align)
       ! 帯境界(ランク r の開始行)を「行 1 から数えて align の倍数 + 1」へ

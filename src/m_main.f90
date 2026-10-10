@@ -29,8 +29,8 @@ module m_main
                         m_intercept_has_step, m_intercept_dispose
   use m_swflow, only : t_swflow, m_swflow_init, m_swflow_dispose, m_swflow_calc, m_swflow_post, &
                        m_swflow_sdep_update
-  use m_swflow_enc, only : m_swflow_enc_ctx_alloc, m_swflow_enc_ctx_swap
-  use m_ffactor, only : m_ffactor_ctx_alloc, m_ffactor_ctx_swap
+  use m_swflow_enc, only : m_swflow_enc_ctx_alloc, m_swflow_enc_ctx_swap, m_swflow_enc_ctx_dispose
+  use m_ffactor, only : m_ffactor_ctx_alloc, m_ffactor_ctx_swap, m_ffactor_ctx_dispose
   use m_nest, only : t_nest, nest_read_list, nest_setup_child, nest_record_band, nest_capture, nest_prolong, &
                      nest_restrict, nest_reflux_parent, nest_reflux_child, nest_summary, nest_dispose
   use m_output, only : t_output, output_init, output_dispose, output_chk_geoinfo, output_state, output_summary
@@ -53,6 +53,7 @@ module m_main
   public :: m_main_set_value
   public :: m_main_instances_alloc
   public :: m_main_select
+  public :: m_main_get_ngrids
 
   !----------------------------------------------------------------------
   ! ENCflow 全体を表す派生型(ライフサイクル API の内部状態)
@@ -480,9 +481,30 @@ subroutine m_main_finalize()
       call finalize_instance()
     end do
     call nest_dispose(nest)
+    call shrink_instances()
   else
     call finalize_instance()
   end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! インスタンス枠を 1 個に戻す(grow_instances の逆。ネスト系の finalize の
+! 後に呼び、同一プロセスでの再 initialize(別のケース・別の格子数。
+! bmi-tester がこの使い方をする。§59)を可能にする。全インスタンスは
+! dispose 済みなので、枠の中身は捨ててよい)
+!----------------------------------------------------------------------
+subroutine shrink_instances()
+  if (ninst <= 1) return
+  if (any(encs(:)%initialized)) call par_stop("shrink_instances: an instance is still initialized")
+  call m_swflow_enc_ctx_dispose()
+  call m_ffactor_ctx_dispose()
+  call par_decomp_ctx_dispose()
+  deallocate(encs)
+  allocate(encs(1))
+  ninst = 1
+  kcur = 1
+  enc => encs(1)
 end subroutine
 
 
@@ -562,7 +584,8 @@ end subroutine
 !----------------------------------------------------------------------
 ! アクセサ: 格子情報
 !   論理全域格子(nx×ny、セル寸法 dx, dy)。x_ll, y_ll は左下隅セルの
-!   外縁座標(georef 管理時のみ。未管理なら 0)。MPI の帯分割・ハロは
+!   外縁座標(georef 管理時はその値。ネストの子で georef がなければ親の
+!   原点から導く = grid_origin。どちらもなければ 0)。MPI の帯分割・ハロは
 !   内部実装であり、ここには現れない(bmi_plan.md §6)
 !----------------------------------------------------------------------
 subroutine m_main_get_gridinfo(nx, ny, dx, dy, x_ll, y_ll)
@@ -572,14 +595,48 @@ subroutine m_main_get_gridinfo(nx, ny, dx, dy, x_ll, y_ll)
   ny = enc%g%ny
   dx = dble(enc%g%dx)
   dy = dble(enc%g%dy)
-  if (enc%g%gr%active) then
-    x_ll = enc%g%gr%xul
-    y_ll = enc%g%gr%yul - dble(enc%g%ny) * enc%g%gr%csy
-  else
-    x_ll = 0d0
-    y_ll = 0d0
-  end if
+  call grid_origin(kcur, x_ll, y_ll)
 end subroutine
+
+
+!----------------------------------------------------------------------
+! インスタンス k の左下隅の外縁座標。georef 管理ならその値、ネストの子で
+! georef がなければ親の原点と整列位置(i0, j0。子セル (1,1) が親セル
+! (i0, j0) の北西角に整列)から再帰的に導く = ネスト系の全格子が同じ座標系
+! (ルートの座標系。ルートに georef がなければ 0 原点)で自己記述される
+! (BMI の get_grid_origin。docs/nesting_plan.md §3.9)
+!----------------------------------------------------------------------
+recursive subroutine grid_origin(k, x_ll, y_ll)
+  integer, intent(in) :: k
+  double precision, intent(out) :: x_ll, y_ll
+  integer :: kp
+  double precision :: xp, yp
+  x_ll = 0d0
+  y_ll = 0d0
+  if (encs(k)%g%gr%active) then
+    x_ll = encs(k)%g%gr%xul
+    y_ll = encs(k)%g%gr%yul - dble(encs(k)%g%ny) * encs(k)%g%gr%csy
+    return
+  end if
+  ! ネストなしでは nest%g は未確保。Fortran の .and. は短絡評価が保証されない
+  ! ので、確保の判定と成分の参照は別の if に分ける(-fcheck で検出。§73)
+  if (nest%ng <= 1) return
+  if (nest%g(k)%parent <= 0) return
+  kp = nest%g(k)%parent
+  call grid_origin(kp, xp, yp)
+  x_ll = xp + dble(nest%g(k)%i0 - 1) * dble(encs(kp)%g%dx)
+  y_ll = yp + dble(encs(kp)%g%ny - (nest%g(k)%j0 - 1)) * dble(encs(kp)%g%dy) &
+            - dble(encs(k)%g%ny) * dble(encs(k)%g%dy)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! アクセサ: 格子(インスタンス)の数。ネスト系では一覧の格子数(1 = ルート、
+! k = 一覧の k 行目)。ネストなし・未初期化なら 1。BMI は grid id = k - 1
+!----------------------------------------------------------------------
+integer function m_main_get_ngrids()
+  m_main_get_ngrids = max(nest%ng, 1)
+end function
 
 
 !----------------------------------------------------------------------

@@ -11,9 +11,11 @@ ENCflow クラスの方が便利で、本クラスは適合性確認と pymt 系
     bmi-test encflow_bmi:EncflowBmi --config-file=param.txt --root-dir=. -vvv
 
 制約(実装どおり):
-- 1 プロセス 1 インスタンス(モデル状態は Fortran 側の singleton)。
+- 1 プロセス 1 component(モデル状態は Fortran 側)。ネスト系(fn_nest)は
+  全体で 1 component で、格子は grid id(0 = ルート、k = 一覧の k+1 行目)、
+  非ルート格子の変数は object 部に ~grid<k>(encflow.var_on_grid)。
   initialize → finalize → initialize の再初期化は逐次で可(bmi-tester が
-  この使い方をする)。
+  この使い方をする。ネスト系も可)。
 - get_value_ptr / at_indices / 非構造格子系は NotImplementedError。
 - 型は倍精度接口(float64)に統一(PREC=single ビルドでも交換は倍精度)。
 """
@@ -51,10 +53,10 @@ class EncflowBmi(Bmi):
                   "get_time_step"):
             getattr(L, f"encflow_bmi_{f}").argtypes = [pd]
         L.encflow_bmi_get_time_units.argtypes = [c_char_p, c_int]
-        L.encflow_bmi_get_grid_shape.argtypes = [pi, pi]
-        L.encflow_bmi_get_grid_spacing.argtypes = [pd, pd]
-        L.encflow_bmi_get_grid_origin.argtypes = [pd, pd]
-        L.encflow_bmi_get_grid_size.argtypes = [pi]
+        L.encflow_bmi_get_grid_shape.argtypes = [c_int, pi, pi]
+        L.encflow_bmi_get_grid_spacing.argtypes = [c_int, pd, pd]
+        L.encflow_bmi_get_grid_origin.argtypes = [c_int, pd, pd]
+        L.encflow_bmi_get_grid_size.argtypes = [c_int, pi]
         L.encflow_bmi_get_grid_rank.argtypes = [c_int, pi]
         L.encflow_bmi_get_grid_type.argtypes = [c_int, c_char_p, c_int]
         L.encflow_bmi_get_var_grid.argtypes = [c_char_p, pi]
@@ -218,10 +220,8 @@ class EncflowBmi(Bmi):
         return v.value
 
     def get_grid_size(self, grid):
-        if grid != 0:
-            _err("get_grid_size")
         v = ctypes.c_int()
-        if self._lib.encflow_bmi_get_grid_size(ctypes.byref(v)) != _OK:
+        if self._lib.encflow_bmi_get_grid_size(grid, ctypes.byref(v)) != _OK:
             _err("get_grid_size")
         return v.value
 
@@ -229,31 +229,25 @@ class EncflowBmi(Bmi):
         return self._str("encflow_bmi_get_grid_type", grid)
 
     def get_grid_shape(self, grid, shape):
-        if grid != 0:
-            _err("get_grid_shape")
         ny, nx = ctypes.c_int(), ctypes.c_int()
         if self._lib.encflow_bmi_get_grid_shape(
-                ctypes.byref(ny), ctypes.byref(nx)) != _OK:
+                grid, ctypes.byref(ny), ctypes.byref(nx)) != _OK:
             _err("get_grid_shape")
         shape[0], shape[1] = ny.value, nx.value
         return shape
 
     def get_grid_spacing(self, grid, spacing):
-        if grid != 0:
-            _err("get_grid_spacing")
         dy, dx = ctypes.c_double(), ctypes.c_double()
         if self._lib.encflow_bmi_get_grid_spacing(
-                ctypes.byref(dy), ctypes.byref(dx)) != _OK:
+                grid, ctypes.byref(dy), ctypes.byref(dx)) != _OK:
             _err("get_grid_spacing")
         spacing[0], spacing[1] = dy.value, dx.value
         return spacing
 
     def get_grid_origin(self, grid, origin):
-        if grid != 0:
-            _err("get_grid_origin")
         y0, x0 = ctypes.c_double(), ctypes.c_double()
         if self._lib.encflow_bmi_get_grid_origin(
-                ctypes.byref(y0), ctypes.byref(x0)) != _OK:
+                grid, ctypes.byref(y0), ctypes.byref(x0)) != _OK:
             _err("get_grid_origin")
         origin[0], origin[1] = y0.value, x0.value
         return origin
