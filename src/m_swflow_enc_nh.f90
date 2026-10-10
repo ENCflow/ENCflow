@@ -941,6 +941,32 @@ subroutine active_set(p, g, s, sx)
   end do
   !$omp end parallel do
 
+  ! 帯からの種(nesting_plan §16.2): ネストの子で帯のセルが親の φ の既知セルなら、
+  ! |φ_d| が下限以上の帯セルに接する内部候補セルを種に加える。子の検出器が親の
+  ! NH 活性に追いつかない局面(波の先端が帯から入る・後端が抜ける、振幅の小さい
+  ! 部分)で、帯〜内部のエッジが未補正(φ = 0 の輪で親の φ が遮断)になるのを防ぐ。
+  ! 読むのは確保範囲の既知セル(全ランク同じ窓から書かれる)だけ = 通信なし・決定的。
+  ! パラメータは増やさない(利用者は子でも f_nh_adaptive をそのまま使える)
+  if (nh_mod%have_dir) then
+    !$omp parallel do schedule(static) private(i, j, kk)
+    do j = dcp%js, dcp%je
+      do i = 1, g%nx
+        if (nh_mod%cmask(i,j) == 0) cycle
+        if (nh_mod%work(i,j) > 0.5) cycle
+        do kk = 1, 8
+          if (i+din(kk) < 1 .or. i+din(kk) > g%nx) cycle
+          if (j+djn(kk) < dcp%jsh .or. j+djn(kk) > dcp%jeh) cycle
+          if (nh_mod%dmask(i+din(kk), j+djn(kk)) == 0) cycle
+          if (abs(nh_mod%dval(i+din(kk), j+djn(kk))) >= floor) then
+            nh_mod%work(i,j) = 1.0
+            exit
+          end if
+        end do
+      end do
+    end do
+    !$omp end parallel do
+  end if
+
   ! 縁の幅(自動なら 2H/Δx。hmax は全ランクで集約済み)
   if (nhp%nh_margin > 0) then
     margin = nhp%nh_margin
