@@ -13,6 +13,10 @@ ENCflow の地下水は流出解析のための**浅層2層**です(土層+風�
 **管路連続体層**(f_gwconduit)と、**井戸揚水・地下水取水のシンク**
 (f_gwpump)を重ねられます。
 
+![地下水の層構成と各モジュール(断面)](../figs/gwflow_layers.png)
+
+断面の模式図です。土層(貯留 hg)への鉛直浸透(f_gwvertical)、飽和帯の側方流と湧出(f_gwlateral)、その下の風化基岩層(f_gwlayer2、貯留 hg2)、土層内に埋設した管路連続体層(f_gwconduit、貯留 hgc)の枡流入・噴出・層間交換・吐口、井戸揚水(f_gwpump)、凍土による浸透抑制(f_gwfrost)を一枚に示しています。図は docs/figs/make_guide_figs.py で生成します。
+
 ## 全体構成(&list_gwflow)
 
 鉛直(表面⇔地下の交換)と側方(地下の水平移動)を独立に選び、
