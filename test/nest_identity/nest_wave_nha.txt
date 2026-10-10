@@ -1,0 +1,3 @@
+# 活性集合の子(f_nh_adaptive = 1。親は全域解)。子の内部と親の差 = 活性集合の切り捨て誤差(帯からの種の効果を見る)
+1     0       param_wave_nha_root.txt
+2     1       param_wave_nha_child.txt  1  1    133  133

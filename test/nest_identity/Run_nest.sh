@@ -143,4 +143,9 @@ else
 fi
 OMP_NUM_THREADS=1 $run $exe run param_wave_nh0_root.txt 133 133 3 1e-10 > Screen_wave_nh0.log 2>&1 || true
 echo "nest_identity nh contrast (nest_nh = 0, hydrostatic band + margin): $(grep 'nestcheck: steps' Screen_wave_nh0.log | sed 's/nestcheck: //')"
+# 子だけ活性集合(f_nh_adaptive = 1。親は全域解): 差は活性集合の切り捨て誤差(帯からの種あり。
+# §16.2・§75。表示するだけ。種なしでは max|dh| 3.4e-4 m、種ありで 3.0e-4 m)
+rm -rf result_wave_nha_*
+OMP_NUM_THREADS=1 $run $exe run param_wave_nha_root.txt 133 133 3 1e-10 > Screen_wave_nha.log 2>&1 || true
+echo "nest_identity nh adaptive child (active set seeded from the band): $(grep 'nestcheck: steps' Screen_wave_nha.log | sed 's/nestcheck: //')"
 if [ $fail -eq 0 ]; then echo "nest_identity ($mode): verification PASS"; else echo "nest_identity ($mode): verification FAIL"; exit 1; fi
