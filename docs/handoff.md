@@ -705,7 +705,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   置換、保存修正 nest_fb=3、スポンジ nest_bc=4)**も同日実装済み。
   **Phase 5(BMI の多格子公開: grid id、`~grid<id>` 修飾名、動的変数表、
   test/bmi_nest、bmi-tester 合格。developer.md §73)**は 2026-10-10 実装済みで、
-  plan §11 の全 Phase が完了。保留: Flather 放射(fn_boundary の族として設計)、
+  plan §11 の全 Phase が完了。**Flather 放射(nest_bc = 3)は設計案を plan §15 に
+  起案(2026-10-10。fn_boundary の「外部データ付き放射」族として実装、nest_bc = 3 は
+  その供給者。要合意事項 §15.8 の合意待ち。段取り F1 → F2)**。保留:
   NH の φ の帯、BMI の handle 方式(独立複数モデル)と機能有効時のみの変数
   (hg 等)の公開。残課題: 比 > 1 の補間の検証(Phase 3)、地理参照からの
   i0/j0 導出、拡散・NH を含む帯幅の必要条件)**:
