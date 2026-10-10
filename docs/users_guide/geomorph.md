@@ -17,12 +17,26 @@
 | 土石流・崩壊 | f_debris / f_slide | 高橋型 E-D・斜面安定判定 |
 | 基岩風化・隆起 | f_wthr / f_uplift | 長期地形発達(千年スケール) |
 
+![地形変化のプロセスの配置](../figs/geomorph_processes.png)
+
+図は斜面〜河道〜水域の断面に各プロセスを置いたものです。斜面では f_creep・f_wash・
+f_splash(乾燥セル)・f_slide / fn_dbinit → f_debris、河道では f_fluvial と f_suspend、
+基岩側では f_wthr と f_uplift が働き、f_bedslide は崩壊土塊を底層 hb として水中まで
+走らせて水面を持ち上げます。すべて計算標高 z と土層 sd(可動層)を共有し、有効化した
+ものだけが重ね合わされます。図は docs/figs/make_guide_figs.py で生成します。
+
 ## 実行制御(全プロセス共通)
 
 | パラメータ | 既定値 | 意味 |
 |---|---|---|
 | dt_geomorph | 0 | 地形変化の更新間隔 (s)。0: 毎ステップ |
 | morfac | 1.0 | 地形加速係数。地形変化だけを morfac 倍して長期を短い計算で代表させる(平衡地形・年オーダーの検討用。イベント計算では 1) |
+
+![dt_geomorph と morfac の考え方](../figs/geomorph_morfac.png)
+
+流れは毎ステップ実時間で進み、地形変化は dt_geomorph ごとに更新されて、その 1 回分の
+Δz だけが morfac 倍されます。イベント計算(f_debris・f_bedslide)は morfac = 1、
+平衡地形・長期地形発達は morfac > 1 で、計算時間 tt × morfac が地形の年数になります。
 
 **パラメータの既定値の方針** — 各プロセスの物性・校正値には「とりあえず
 動かす」ための無難な既定値があり、**最小入力はプロセスのスイッチ

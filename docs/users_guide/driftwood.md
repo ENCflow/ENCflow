@@ -27,6 +27,14 @@
   速度で移流します。**土石流と流木の混合流れは、土砂・地形変化の
   f_debris と本機能を同時に有効化するだけで表現されます。**
 
+![流木の 3 つの台帳](../figs/driftwood_ledgers.png)
+
+立木ストック wst は、(a) 水理的流失(dw_hrec・dw_vrec を超えたセルで dw_wrec の
+レート)か (b) 侵食連行(累積侵食深 > dw_droot で全量)で流動流木 hd になり、水と
+同速で移流して、水深が喫水(dw_dlog・dw_sglog から導出)を下回るか低速(dw_vstop)の
+セルで dw_wstop のレートで堆積流木 wd に移ります(乾燥セルでは全量)。再流動
+(dw_wfloat)は既定で無効です。図は docs/figs/make_guide_figs.py で生成します。
+
 ## 有効化と設定
 
 `&list_sysparam` で `fn_driftwood` を指定します。
