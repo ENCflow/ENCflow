@@ -89,4 +89,28 @@ for v in wave chichibu; do
     grep "nest:   grid 2 -> parent" Screen_${v}_tw.log
 done
 if [ $tw_ok -eq 1 ]; then echo "nest_identity two-way: PASS"; else echo "nest_identity two-way: FAIL"; fail=1; fi
+# --- Phase 4 の選択肢の恒等: 保存修正(nest_fb = 3。比 1 では修正が厳密に 0)と
+#     場の表(chichibu + 地下水バケツ。hg を帯で与え置換で平均)。いずれもルートの
+#     最終状態が単独ランとバイト一致すること ---
+rm -rf save_wave_fb3_* save_chichibu_fb3_* save_chichibu_gw_*
+cp hinit_wave_s1_child.txt hinit_wave_fb3_child.txt
+p4_ok=1
+for v in wave_fb3 chichibu_fb3 chichibu_gw; do
+    case $v in wave*) args="133 133 2";; *) args="20 10 3";; esac
+    $run ./encflow$sfx param_${v}_single.txt > Screen_${v}_single.log 2>&1 || { echo "ERROR: $v single run failed"; p4_ok=0; continue; }
+    if $run $exe run param_${v}_root.txt $args > Screen_${v}.log 2>&1; then
+        grep "nestcheck: steps" Screen_${v}.log
+    else
+        echo "nest_identity $v: FAIL (child interior != parent)"; grep "nestcheck\|ERROR" Screen_${v}.log | tail -5; p4_ok=0; continue
+    fi
+    for f in state.dat swflow_enc.dat; do
+        if cmp -s save_${v}_single/$f save_${v}_root/$f; then
+            echo "nest_identity $v: root $f IDENTICAL to the single run"
+        else
+            echo "nest_identity $v: root $f DIFFER from the single run"; p4_ok=0
+        fi
+    done
+    grep "nest:   grid 2" Screen_${v}.log | grep -v "<- parent 1, " | cut -c1-160
+done
+if [ $p4_ok -eq 1 ]; then echo "nest_identity phase4 (fb3, fields): PASS"; else echo "nest_identity phase4 (fb3, fields): FAIL"; fail=1; fi
 if [ $fail -eq 0 ]; then echo "nest_identity ($mode): verification PASS"; else echo "nest_identity ($mode): verification FAIL"; exit 1; fi

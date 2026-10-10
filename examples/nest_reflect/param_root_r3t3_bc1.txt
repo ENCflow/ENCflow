@@ -14,6 +14,7 @@
   dir_result = 'result_root_r3t3_bc1'
   f_out_e = 1
   f_check_cfl = 0
+  f_disp_debug = 1          ! S 列を全有効桁で(体積保存の確認)
   fn_nest = 'nest_r3t3_bc1.txt'
 /
 &list_enc

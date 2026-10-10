@@ -1,0 +1,3 @@
+# 双方向 + 地下水(バケツ)の比 1:1 恒等: 場の表(hg)の交換を含む
+1 0 param_chichibu_gw_root.txt
+2 1 param_chichibu_gw_child.txt 1 1 20 10

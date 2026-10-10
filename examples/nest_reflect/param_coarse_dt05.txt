@@ -14,6 +14,7 @@
   dir_result = 'result_coarse_dt05'
   f_out_e = 1
   f_check_cfl = 0
+  f_disp_debug = 1          ! S 列を全有効桁で(体積保存の確認)
 /
 &list_enc
   f_friction_fastmath = 0

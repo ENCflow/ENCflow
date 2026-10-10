@@ -11,11 +11,11 @@
   fn_initial = '-'
   fn_enc = '-'
   dir_data = 'data'
-  dir_result = 'result_root_r3t3'
+  dir_result = 'result_root_r3t3_sp'
   f_out_e = 1
   f_check_cfl = 0
   f_disp_debug = 1          ! S 列を全有効桁で(体積保存の確認)
-  fn_nest = 'nest_r3t3.txt'
+  fn_nest = 'nest_r3t3_sp.txt'
 /
 &list_enc
   f_friction_fastmath = 0

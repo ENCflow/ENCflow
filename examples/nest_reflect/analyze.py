@@ -34,7 +34,7 @@ core = np.zeros((385, 385), bool)
 core[I0 + 1:I0 - 1 + NF - 2, I0 + 1:I0 - 1 + NF - 2] = True
 outside = ~inside
 
-runs = {k: "result_" + k for k in ("coarse", "coarse_dt05", "root_r3", "root_r5", "root_r3t3", "root_r5t5", "root_r3t3_bc1", "root_2lv")}
+runs = {k: "result_" + k for k in ("coarse", "coarse_dt05", "root_r3", "root_r5", "root_r3t3", "root_r5t5", "root_r3t3_bc1", "root_2lv", "root_r3t3_fb3", "root_r3t3_sp")}
 print("time  run        RMS_in    MAX_in    RMS_out   MAX_out   (η − η_fine→parent, m)")
 for n in (2, 4, 6, 8, 10):
     ef = fine_to_parent(load("result_fine", n)) - H0
@@ -67,3 +67,14 @@ for n in (6, 8, 10):
             continue
         e = load(d, n) - H0
         print("  t=%2d  %-9s  max|Δη|/a = %.4f   max|Δη|/入射振幅 = %.4f" % (n, name, np.max(np.abs((e - ef)[core])) / A, np.max(np.abs((e - ef)[core])) / amp))
+
+# 体積保存: ルートの Log の S 列(領域平均水深 (m))の時間変化(閉領域なので一定が正解)
+print()
+print("ルートの Log.txt の S(平均水深 m)の最大変化(|S(t) − S(0)|。閉領域では 0 が正解):")
+for name, d in runs.items():
+    fn = os.path.join(d, "Log.txt")
+    if not os.path.exists(fn):
+        continue
+    S_ = [float(l.split()[2]) for l in open(fn).readlines()[1:] if l.strip() and l.split()[1].endswith("%")]
+    if len(S_) > 1:
+        print("  %-14s max|dS| = %.3e m  (S0 = %.14f)" % (name, max(abs(x - S_[0]) for x in S_), S_[0]))
