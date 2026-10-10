@@ -673,7 +673,7 @@ Phase 0 は単体でも価値がある(§3.9 の独立複数モデル、アン�
 接続 = ネスティングがラスタ純化された唯一の接続手段である点が、他モデル
 との違いである。
 
-## 15. Flather 放射(nest_bc = 3)の設計(2026-10-10 起案。合意待ち)
+## 15. Flather 放射(nest_bc = 3)の設計(2026-10-10 起案・合意・F1/F2 実装)
 
 Phase 4 で保留した nest_bc = 3 の設計案。Phase 0〜5 が完了し、帯 Dirichlet
 (nest_bc = 1・2・4)と双方向(nest_fb = 1〜3)が揃った上で、**一方向で子の
@@ -798,11 +798,13 @@ u_n,e を外から与える口も、同じ族の配列をステージングに�
 | 段 | 内容 | 合否 |
 |---|---|---|
 | F1 | m_boundary の ext 族(供給者 A の受け口)+ m_swflow_enc_bc の拡張式 + 退化の恒等(15.5-2)の試験ドライバ | 無効時一致、退化の恒等ビット一致 |
+|    | **実施記録(2026-10-10)**: t_bound_ext(cell/side/eta/une/act/provider)と m_boundary_ext_setup、bcs の have_ext・bc_ext_idx・現時刻値の写し、bc_ext_init(公開ラッパ m_swflow_enc_bc_ext_init)、put_bc_faces の放射分岐の拡張式。退化の恒等は専用ドライバでなくネスト自体で行う(F2 と同じコミットで検証: test/nest_identity の flather ケース = 親が静水の比 1 一方向で、子の Log が単独ラン〔放射境界のみ〕とビット一致)。正本は developer.md §74 | | |
 | F2 | m_nest の nest_bc = 3(設定・境界セル登録・prolong の供給)+ 静水不変・透過の例題 + MPI・-fcheck | 15.5 の 3〜6 |
+|    | **実施記録(2026-10-10)**: setup(開いた辺 = 放射・他は壁、nb = 0、ns = 0、場の表なし、nin ≥ 1、ext の登録と添字表)、prolong の fill_ext(比 1 複写・比 > 1 双線形、親の乾きで act = 偽、全ランク冗長計算)。例題 examples/nest_reflect r3t3_ow2 / r3t3_ow3(一方向): 子の内部(core)の誤差は帯と同程度(RMS 1 割以内)、帯の 3 子セルが持つ粗い値の縁がなくなり足元全体の MAX 誤差は 1.2e-2 → 4e-4 m(t = 2 s)。一方向では nest_bc = 3 を推奨。検証の詳細は developer.md §74 | | |
 | 文書 | developer.md 新節、users_guide/nest.md・boundary.md、params_index、本節の実施記録 | — |
 | F3(保留) | ファイル供給・親側記録・utils/nest_bc(15.6) | 需要が出てから |
 
-### 15.8 要合意事項
+### 15.8 要合意事項(**2026-10-10 全項目合意済み**)
 
 1. Flather は **fn_boundary の放射境界の一般化(外部データ付き放射)として
    実装**し、nest_bc = 3 はその供給者の一つとする(ネスト専用コードは

@@ -705,11 +705,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   置換、保存修正 nest_fb=3、スポンジ nest_bc=4)**も同日実装済み。
   **Phase 5(BMI の多格子公開: grid id、`~grid<id>` 修飾名、動的変数表、
   test/bmi_nest、bmi-tester 合格。developer.md §73)**は 2026-10-10 実装済みで、
-  plan §11 の全 Phase が完了。**Flather 放射(nest_bc = 3)は設計案を plan §15 に
-  起案(2026-10-10。fn_boundary の「外部データ付き放射」族として実装、nest_bc = 3 は
-  その供給者。要合意事項 §15.8 の合意待ち。段取り F1 → F2)**。保留:
-  NH の φ の帯、BMI の handle 方式(独立複数モデル)と機能有効時のみの変数
-  (hg 等)の公開。残課題: 比 > 1 の補間の検証(Phase 3)、地理参照からの
+  plan §11 の全 Phase が完了。**Flather 放射(nest_bc = 3)も plan §15 の設計で
+  2026-10-10 に実装(F1 + F2。fn_boundary の「外部データ付き放射」族 t_bound_ext と
+  その供給者としての m_nest。developer.md §74。test/nest_identity の flather ケース、
+  examples/nest_reflect の r3t3_ow2/ow3)**。保留: ファイル供給(plan §15.6。別モデルの
+  出力からの一方向ネスト。需要待ち)、NH の φ の帯、BMI の handle 方式(独立複数
+  モデル)と機能有効時のみの変数(hg 等)の公開。残課題: 比 > 1 の補間の検証(Phase 3)、地理参照からの
   i0/j0 導出、拡散・NH を含む帯幅の必要条件)**:
   同一プロセス内の複数インスタンス化(モジュール私有状態の
   bind/swap。カーネル不変の等価リファクタ)を基盤に、全ランクが全格子の

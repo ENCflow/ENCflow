@@ -9944,3 +9944,78 @@ docs/nesting_plan.md §3.9、本節は決定事項と規約。bmi/ の既存規�
   単独ランの t0 の h から 17 桁で生成する(repr 相当。倍精度の往復は厳密)。
   nestcheck の cut と同じ内容なので、bmi_nest は Fortran 側のドライバを
   ビルドせずに Python だけで恒等を検査できる。
+
+
+## 74. 多段ネスティング: Flather 放射 nest_bc = 3(2026-10-10 実装)
+
+設計の正本は docs/nesting_plan.md §15(要合意事項 §15.8 は 2026-10-10 全項目
+合意)。本節は実装の規約と検証記録。
+
+### 構成(§15.3 の実装名)
+
+- **m_boundary の ext 族** `t_bound_ext`(t_boundary の成分 `ext`): 境界セル
+  (面エントリ。角は辺ごとに複製 = inflow と同じ)の cell/side と、現時刻の
+  外部水位 `eta`・辺の外向き法線流速 `une`・有効フラグ `act`(偽 = 面を閉じる)、
+  供給者 `provider`(e_ext_nest)。登録は `m_boundary_ext_setup(b, g, open, provider)`
+  (open(4) の辺の外縁セルを全て登録。その辺の型は放射でなければ par_stop。
+  無効セル・海セルも登録し、適用側が従来どおり読み飛ばす = 帯縮小後の g%x は
+  帯の行しか持たないため登録時に判定しない)。値は供給者が書き、makebdc は触らない。
+- **適用層(m_swflow_enc_bc)**: bcs に `have_ext`・`bc_ext_idx(添字, 辺)`
+  (0 = 静的基準水位の従来式)・現時刻値の写し `bc_ext_eta/une/act`。
+  `bc_ext_init(g, b)` が添字表を作る(bc_init が呼ぶほか、公開ラッパ
+  `m_swflow_enc_bc_ext_init` を供給者が登録後に呼ぶ: ネストの供給者は swflow
+  init より後の nest_setup_child で登録するため)。boundary_uvmn の節 1 冒頭で
+  b%ext の現時刻値を bcs へ写し(ncell 回。全ランク同値)、put_bc_faces の放射
+  分岐で idx > 0 なら
+  `uve1 = (une + sqrt(g/max(h,dv)) * (z + h − eta_e)) * wn`(括弧の内側で和を
+  とってから射影)、act が偽なら 0。idx = 0 の経路は従来式のまま(文の並びも
+  不変)。
+- **供給者 A = m_nest(nest_bc = 3)**: setup で辺の型を検査(開いた辺 = 放射、
+  他は壁。自由流出・流入区間は不可。放射辺が 1 つもなければ par_stop)、nb = 0
+  (nest_nb は無視して通知)、ns = 0、場の表は交換しない、置換の内側マージン
+  nin ≥ 1、`m_boundary_ext_setup` → `m_swflow_enc_bc_ext_init`。prolong は窓の
+  時間補間の後に `fill_ext` を呼んで return(帯の置換・エッジ量の import なし):
+  境界セルごとに親の窓から η_e・u_e・v_e を取り(比 1 は複写、比 > 1 は
+  interp_cell と同じ双線形)、u_n,e = u_e·n_x + v_e·n_y(内部座標系。北辺の
+  外向き法線は (0, −1))を書く。親の補間点に乾きがあれば act = 偽。全ランクが
+  全セルを冗長に計算する(窓は全ランク同値 = 通信なし・決定的)。
+- m_main: `nest_prolong(nest, c, g, s, b, alpha)`(子の t_boundary を渡す)、
+  nest_setup_child の bc は intent(inout)。
+- 退化の恒等(§15.5-2)は u_n,e = 0 で `0 + x = x`、η_e = 基準水位の同値、
+  比 1 の複写、の 3 点で成立する。親が静水なら η_e は親の e(= 1.0 の定数)
+  そのまま、u_e = v_e = 0 なので u_n,e = 0·n_x + 0·n_y = 0(−0.0 でも
+  −0.0 + x = x)。
+
+### 検証(2026-10-10。plan §15.5)
+
+- **無効時**: reference 22 ケース PASS(release。nhshelf は他ジョブと同時実行の
+  初回に ULP 2 の揺れで不一致、単独の再実行で PASS = NH ソルバの OpenMP reduction
+  の既知の非決定性〔plan §11 0a〕。厳密フラグ単一スレッドでは一致)、厳密フラグ
+  38 ケースが従来基準(sweep_base_strict)とビット一致(共通経路に触れるのは放射
+  分岐の if 1 個と t_boundary の成分追加のみ)。
+- **退化の恒等(test/nest_identity flather)**: 親 = 静水 385²、子 = 201²(親セル
+  93..293)に wave_hump、4 辺が放射(f_bc_* = 2)、nest_bc = 3・一方向。子の Log が
+  単独ラン(現行の放射境界のみ)とビット一致(release・厳密ビルドとも。
+  MPI np = 1, 2, 4 も一致)。山は 2 s 程度で境界に達して外へ抜け、平均水深は
+  1.011 → 0.980 m に減る(放射が効いている)。
+- **透過(examples/nest_reflect r3t3_ow2 / ow3。一方向)**: 子の内部(外周 2 親
+  セルを除く)の誤差は帯と Flather で同程度(RMS 1 割以内、MAX は Flather がやや
+  小さい時刻が多い。この例では入射波が一度通過するだけで帯の反射は小さい)。
+  差は縁: 帯は 3 子セル幅に親の粗い値を置くので足元全体の MAX 誤差が通過中
+  1.2e-2 m、Flather は境界セルまで子が計算するので 4e-4 m(core と同水準)で
+  子の全域が使える。一方向では nest_bc = 3 を推奨(README に表)。
+- **MPI(OpenMPI)np = 1, 2, 4**: 既存 8 ケース・twin・nest_identity(flather 含む)
+  PASS。r3t3_ow2 / ow3(tt = 2 s)のルート・子の Log がランク数不変(境界セル値の
+  全ランク冗長計算の決定性)。
+- **-O0 -fcheck=all -finit-real=snan の MPI クリーンビルド**: nest_identity np = 2
+  全ケース PASS、r3t3_ow3 np = 2 完走(実行時メッセージなし)。
+
+### 落とし穴
+
+- `m_boundary_ext_setup` は帯縮小後に呼ばれるため g%x で有効セルを判定できない。
+  無効セルも登録し、適用側(put_bc_faces の x <= 0 / sw > 0 の return)に任せる。
+- bc_init は swflow init の時点で b%ext を見るが、ネストの供給者はその後に登録する。
+  登録後に `m_swflow_enc_bc_ext_init` を呼び直すこと(子を select した状態で。
+  bcs は B 群)。
+- 退化の恒等は「親が静水」で成立する。親に流れがあれば u_n,e ≠ 0 で現行の放射
+  境界とは当然異なる(それが Flather の意味)。
