@@ -130,4 +130,17 @@ if [ $fl_ok -eq 1 ]; then
     grep "Flather cells" Screen_wave_fl.log | cut -c1-140
 fi
 if [ $fl_ok -eq 1 ]; then echo "nest_identity flather: PASS"; else echo "nest_identity flather: FAIL"; fail=1; fi
+# --- 非静水圧の比 1:1 恒等(plan §16.5): 親子とも NH(CG、nh_tol = 1e-12、全域解)、一方向。
+#     帯のセルを親の φ の Dirichlet 既知セルにすると子の内部が親の足元と許容差 1e-10 以内で
+#     一致する(CG の反復列が領域依存なのでビット一致ではない)。対照の nest_nh = 0(帯 + 余白を
+#     静水圧)は一致しない(不一致量を表示するだけ)。NH の reduction は単一スレッドで決定的 ---
+cp hinit_wave_child.txt hinit_wave_nh_child.txt
+rm -rf result_wave_nh_* result_wave_nh0_*
+if OMP_NUM_THREADS=1 $run $exe run param_wave_nh_root.txt 133 133 3 1e-10 > Screen_wave_nh.log 2>&1; then
+    grep "nestcheck: steps" Screen_wave_nh.log; echo "nest_identity nh (phi Dirichlet): PASS"
+else
+    echo "nest_identity nh (phi Dirichlet): FAIL"; grep "nestcheck\|ERROR" Screen_wave_nh.log | tail -5; fail=1
+fi
+OMP_NUM_THREADS=1 $run $exe run param_wave_nh0_root.txt 133 133 3 1e-10 > Screen_wave_nh0.log 2>&1 || true
+echo "nest_identity nh contrast (nest_nh = 0, hydrostatic band + margin): $(grep 'nestcheck: steps' Screen_wave_nh0.log | sed 's/nestcheck: //')"
 if [ $fail -eq 0 ]; then echo "nest_identity ($mode): verification PASS"; else echo "nest_identity ($mode): verification FAIL"; exit 1; fi

@@ -21,7 +21,7 @@ program nestcheck
   integer :: i0, j0, nxc, nyc, nb, ierr, un, i, j, nxp, nyp, nstep, nbad
   double precision :: dxp, dyp, xll, yll, t, t0, tend, dt
   real, allocatable :: hp(:,:), hc(:,:), vp(:,:), vc(:,:)
-  real :: dmax_h, dmax_v, worst_h, worst_v
+  real :: dmax_h, dmax_v, worst_h, worst_v, tol
   character(len=256) :: msg
 
   if (command_argument_count() < 2) then
@@ -59,6 +59,10 @@ program nestcheck
     call get_command_argument(3, arg); read(arg, *) i0
     call get_command_argument(4, arg); read(arg, *) j0
     call get_command_argument(5, arg); read(arg, *) nb
+    tol = 0.0
+    if (command_argument_count() >= 6) then
+      call get_command_argument(6, arg); read(arg, *) tol   ! 許容差(NH: CG の反復列が領域依存。plan §16.5)
+    end if
     call m_main_initialize(fn_param)          ! ルート + 子(fn_nest)
     call m_main_select(1)
     call m_main_get_gridinfo(nxp, nyp, dxp, dyp, xll, yll)
@@ -74,7 +78,7 @@ program nestcheck
       nstep = nstep + 1
       call compare(dmax_h, dmax_v)
       call m_main_get_timeinfo(t, t0, tend, dt)
-      if (dmax_h > 0.0 .or. dmax_v > 0.0) nbad = nbad + 1
+      if (dmax_h > tol .or. dmax_v > tol) nbad = nbad + 1
       worst_h = max(worst_h, dmax_h)
       worst_v = max(worst_v, dmax_v)
       if (mod(nstep, 20) == 0 .or. dmax_h > 0.0 .or. dmax_v > 0.0) call report(nstep, dmax_h, dmax_v)
@@ -84,7 +88,11 @@ program nestcheck
       write(msg, '(a,i0,a,i0,a,es10.3,a,es10.3)') "nestcheck: steps = ", nstep, ", steps with mismatch = ", nbad, &
             ", max |dh| = ", worst_h, ", max |dvv| = ", worst_v
       print '(a)', trim(msg)
-      if (nbad == 0) then
+      if (nbad == 0 .and. tol > 0.0) then
+        write(msg, '(a,es9.2,a)') "nestcheck: child interior == parent footprint at every step within tol ", tol, " (PASS)"
+        print '(a)', trim(msg)
+        print '(a)', "=== nest identity PASS ==="
+      else if (nbad == 0) then
         print '(a)', "nestcheck: child interior == parent footprint at every step (IDENTICAL)"
         print '(a)', "=== nest identity PASS ==="
       else

@@ -31,3 +31,8 @@ write("data/e_fine.txt", NXP * 3, NXP * 3, 0.0, 0.0, DXP / 3)
 # 2 段: 孫(比 3 の子の中の比 3)。子セル 61..141(81 セル)を覆う 243×243
 G0, NG_FOOT = 61, 81
 write("data/e_grand.txt", NG_FOOT * 3, NG_FOOT * 3, (I0 - 1) * DXP + (G0 - 1) * DXP / 3, (I0 - 1) * DXP + (G0 - 1) * DXP / 3, DXP / 9)
+# 非静水圧版(plan §16.5): σ = 2 m(kH ≈ 0.5 で分散が効く)。親・比 3 の子・一様細格子
+SIG = 2.0
+write("data/e_parent_s2.txt", NXP, NXP, 0.0, 0.0, DXP)
+write("data/e_child_r3_s2.txt", NP_FOOT * 3, NP_FOOT * 3, (I0 - 1) * DXP, (I0 - 1) * DXP, DXP / 3)
+write("data/e_fine_s2.txt", NXP * 3, NXP * 3, 0.0, 0.0, DXP / 3)

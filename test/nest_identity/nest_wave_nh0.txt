@@ -1,0 +1,3 @@
+# 対照: 帯 + 余白を静水圧(nest_nh = 0)。子の内部は親と一致しない(不一致量を記録する)
+1     0       param_wave_nh0_root.txt
+2     1       param_wave_nh0_child.txt  1  1    133  133

@@ -1,0 +1,3 @@
+# 非静水圧の比 1:1 恒等(plan §16.5): 親子とも NH(CG、nh_tol = 1e-12)。帯の φ は親の φ の Dirichlet
+1     0       param_wave_nh_root.txt
+2     1       param_wave_nh_child.txt  1  1    133  133
