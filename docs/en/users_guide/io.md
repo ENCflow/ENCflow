@@ -86,6 +86,16 @@ bil output, and the CRS is embedded in GeoTIFF output
 Outputs are written to `dir_result` (default `result/`) with names of
 the form **prefix + 4-digit number**.
 
+![Raster order and output file scheme](../../figs/io_files_en.png)
+
+(a) The first raster row is the northern edge (rows north to south, columns
+west to east), and txt, bil and GeoTIFF share the same order and values.
+(b) Distributed outputs are prefix + 4-digit number (0000 = state at start,
+0001 onward = every dt_file, 9998 = final step, 9999 = run statistics);
+Z0000, X0000, FILENUMBER.csv and Log.txt are always written, and probes/,
+fluxes/ and summary.csv appear when measurement (fn_record) is enabled. The
+figure is produced by docs/figs/make_guide_figs.py.
+
 **Meaning of the number**
 
 | Number | Meaning |

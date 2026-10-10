@@ -22,7 +22,7 @@ process is enabled on both parent and child. On a non-hydrostatic child
 (f_nonhydrostatic = 1) the band cells become known (Dirichlet) cells of the
 parent's non-hydrostatic potential φ (nest_nh, default).
 
-![Grid layout and exchange](../../figs/nest_layout.png)
+![Grid layout and exchange](../../figs/nest_layout_en.png)
 
 Where a child sits inside its parent is fixed by (i0, j0) in the list file
 (the parent cell whose north-west corner coincides with that of child cell
@@ -61,7 +61,7 @@ returned to the parent. The figure is produced by
 | r_t | time ratio = parent dt / child dt (positive integer; 1 if omitted; r_t = r is the usual choice) |
 | i0, j0 | the parent cell at which the corner of child cell (1,1) is aligned (required for children). j increases in file row order (north to south) |
 
-![Time stepping](../../figs/nest_time.png)
+![Time stepping](../../figs/nest_time_en.png)
 
 The parent takes its step first, and the child advances over that interval
 in r_t sub-steps. The band values are the linear interpolation between the
@@ -84,7 +84,7 @@ child → parent replacement (nest_fb) is applied.
 /
 ```
 
-![Parent-to-child methods](../../figs/nest_bc.png)
+![Parent-to-child methods](../../figs/nest_bc_en.png)
 
 The four parent → child methods. (1) The Dirichlet band is the default; (2)
 Flather radiation has no band and feeds the parent's values into the

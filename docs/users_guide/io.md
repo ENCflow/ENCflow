@@ -74,6 +74,15 @@
 出力は `dir_result`(既定 `result/`)に、**接頭辞+4桁番号**の名前で
 書き出されます。
 
+![ラスタの並びと出力ファイルの体系](../figs/io_files.png)
+
+(a) ラスタは先頭行が北端(行 = 北→南、列 = 西→東)で、txt・bil・GeoTIFF
+は同じ並び・同じ値です。(b) 分布出力は接頭辞 + 4 桁番号(0000 = 開始
+状態、0001〜 = dt_file ごと、9998 = 最終ステップ、9999 = 期間統計)で、
+Z0000・X0000・FILENUMBER.csv・Log.txt は常に、probes/・fluxes/・
+summary.csv は計測(fn_record)を有効にしたときに書かれます。図は
+docs/figs/make_guide_figs.py で生成します。
+
 **番号の意味**
 
 | 番号 | 意味 |

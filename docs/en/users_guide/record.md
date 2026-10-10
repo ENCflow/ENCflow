@@ -78,6 +78,18 @@ Columns of unused features stay 0.
 - Discharge transferred through structures such as culverts does not
   register on transects ([the structures chapter](structure.md)).
 
+![Probes and flux transects](../../figs/record_transect_en.png)
+
+(a) With cell numbers, a probe writes the time series of cell (ix, iy) to
+probes/, and a transect converts the line joining the right-bank (start)
+and left-bank (end) cell centres into a DDA staircase surface and writes the
+crossing discharge to fluxes/. Discharge is positive for flow passing to the
+right of start→end (right bank→left bank makes downstream positive). (b)
+With real coordinates (flxytype = 1) the flux component normal to the
+segment times the in-cell segment length is integrated in every cell the
+segment grazes, so even a short transect inside one cell can be measured.
+The figure is produced by docs/figs/make_guide_figs.py.
+
 ## Summary output
 
 With measurement enabled, aggregate statistics (maxima etc.) of all

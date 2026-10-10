@@ -58,6 +58,15 @@ When you want fine output only during a specific event period in a
 long run, combining the st/et windows with split execution via
 [the restart feature](restart.md) is practical.
 
+![Time axis and output intervals](../../figs/time_axis_en.png)
+
+A single axis of elapsed seconds runs from t0 to tt in steps of dt. Three
+output intervals sit on top of it: screen display (dt_disp), distributed
+files (dt_file; numbers 0000 onward and 9998) and probes / transects
+(dt_recrd, inside the window st_recrd to et_recrd). The calendar (date0_c)
+only says what calendar time t = 0 is, and a restart extends tt on the same
+axis. The figure is produced by docs/figs/make_guide_figs.py.
+
 ## Calendar (date and time)
 
 For features that depend on the season or the date (monthly

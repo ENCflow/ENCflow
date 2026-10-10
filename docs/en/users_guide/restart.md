@@ -21,6 +21,15 @@ discharges), and the private state of modules that hold internal
 state. The files are written with zero-suppressing lossless
 compression, so even wide-area computations stay at a realistic size.
 
+![Save and the two restore modes](../../figs/restart_modes_en.png)
+
+The saving run writes its state to save/ at the end of the computation.
+f_state_restore = 1 continues the same time axis from tt (0000 is the
+restored state, tt may be extended, and the results match an uninterrupted
+run bit for bit); f_state_restore = 2 carries over only the fields and
+starts several scenarios on a new time axis with a new t0 and date0_c (dt
+may change). The figure is produced by docs/figs/make_guide_figs.py.
+
 ## Restarting (f_state_restore = 1)
 
 Runs the continuation of a suspended run. **The time axis continues**,

@@ -53,6 +53,16 @@ ENCflow, **add +1 to both the row and the column**. An off-by-one-cell
 mistake is hard to notice with specifications that only take effect
 on exactly that cell, such as channel cells or levee cells.
 
+![Cell numbering and coordinate interpretation](../../figs/coordinates_cells_en.png)
+
+(a) Cell numbers (i, j) are 1-based; i increases west to east and j north
+to south (raster row order). Quantities live at cell centres, and 0-based
+GIS row/column numbers need +1. (b) Real coordinates (x, y) are positive
+east and north; without georeferencing they are local coordinates with the
+domain's southwest corner at (0, 0), with it they are absolute coordinates,
+and either way the point resolves to the cell that contains it. The figure
+is produced by docs/figs/make_guide_figs.py.
+
 ## Input data and coordinate systems
 
 Georeferencing is **obtained from the elevation file (fn_z)**. For

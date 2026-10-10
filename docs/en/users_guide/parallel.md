@@ -44,6 +44,16 @@ mpirun -np 4 ./encflow_mpi param.txt
 - `encflow` and `encflow_mpi` can coexist (both are placed in bin/,
   and each case's Makefile links to both).
 
+![Band decomposition and threads](../../figs/parallel_bands_en.png)
+
+(a) With MPI the domain is split automatically into bands of rows (j); each
+rank computes its band while exchanging copies of the neighbouring ranks'
+rows (halo rows) every step, and the output is aggregated automatically.
+(b) Inside each rank, OpenMP threads share the cells of the band. Sums are
+aggregated in a fixed order, so the results are bitwise identical for any
+number of threads or ranks. The figure is produced by
+docs/figs/make_guide_figs.py.
+
 ## Reproducibility of results (ENCflow's guarantee)
 
 **However you change the number of threads or MPI ranks, the results
