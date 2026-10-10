@@ -355,7 +355,7 @@ recursive subroutine nest_advance(k)
     do kk = 1, nest%g(c)%rt
       call m_main_select(c)
       ! サブステップ開始時刻 t^n + (kk-1)·dt_c の帯(親の t^n と t^{n+1} の線形補間)
-      call nest_prolong(nest, c, enc%g, enc%s, real(kk - 1) / real(nest%g(c)%rt))
+      call nest_prolong(nest, c, enc%g, enc%s, enc%b, real(kk - 1) / real(nest%g(c)%rt))
       call nest_advance(c)
     end do
     ! 子→親の置換(双方向。c の子は c の advance の中で c へ置換済み)。

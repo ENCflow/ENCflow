@@ -58,6 +58,8 @@ module subroutine bc_init(p, g, b)
   bcs%bt_cell(:,e_side_e) = bcs%f_bc_side(e_side_e)
   bcs%bt_cell(:,e_side_n) = bcs%f_bc_side(e_side_n)
   bcs%bt_cell(:,e_side_s) = bcs%f_bc_side(e_side_s)
+  ! 外部データ付き放射境界(Flather)の添字表(登録済みなら。nesting_plan §15)
+  call bc_ext_init(g, b)
   do ifl = 1, b%ninflow
     do m = 1, b%inflow(ifl)%ncell
       select case (b%inflow(ifl)%side(m))
@@ -418,6 +420,42 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 外部データ付き放射境界(Flather。nesting_plan §15.3)の添字表
+!   b%ext の各エントリ(セル・辺)を bc_ext_idx(添字, 辺) に写す。辺の型は
+!   放射でなければならない(供給者側の setup も検査するが、適用層でも確認)。
+!   現時刻値の配列は boundary_uvmn が毎回 b%ext から写す(供給者が書いた
+!   値を間接参照なしで put_bc_faces が読めるように)
+!----------------------------------------------------------------------
+module subroutine bc_ext_init(g, b)
+  type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
+  integer :: m, idx
+  bcs%have_ext = (b%ext%ncell > 0)
+  if (allocated(bcs%bc_ext_idx)) deallocate(bcs%bc_ext_idx)
+  if (allocated(bcs%bc_ext_eta)) deallocate(bcs%bc_ext_eta)
+  if (allocated(bcs%bc_ext_une)) deallocate(bcs%bc_ext_une)
+  if (allocated(bcs%bc_ext_act)) deallocate(bcs%bc_ext_act)
+  if (.not. bcs%have_ext) return
+  allocate(bcs%bc_ext_idx(1:max(g%nx, g%ny), 1:4), source = 0)
+  allocate(bcs%bc_ext_eta(1:b%ext%ncell), source = 0.0)
+  allocate(bcs%bc_ext_une(1:b%ext%ncell), source = 0.0)
+  allocate(bcs%bc_ext_act(1:b%ext%ncell), source = .false.)
+  do m = 1, b%ext%ncell
+    if (bcs%f_bc_side(b%ext%side(m)) /= e_bc_radiation) then
+      call par_stop("swflow: external-data radiation (Flather) cells must lie on a radiation side (f_bc_* = 2)")
+    end if
+    select case (b%ext%side(m))
+    case (e_side_w, e_side_e)
+      idx = b%ext%cell(2, m)
+    case default
+      idx = b%ext%cell(1, m)
+    end select
+    bcs%bc_ext_idx(idx, b%ext%side(m)) = m
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! エッジの流速・流量(uv/mn1)への強制条件の適用点
 !   momentum(内部面の計算)と continuous(h1 更新)の間、
 !   par_edge_merge の後に毎ステップ無条件に呼ばれる。強制条件の族を
@@ -463,6 +501,13 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
 
   ! ==== 節1: 外縁4辺の辺境界(簡易流出) ====
   if (bcs%have_open_bc) then
+
+    ! 外部データ付き放射(Flather)の現時刻値を供給者の配列から写す(全ランク同値。§15)
+    if (bcs%have_ext) then
+      bcs%bc_ext_eta = b%ext%eta
+      bcs%bc_ext_une = b%ext%une
+      bcs%bc_ext_act = b%ext%act
+    end if
 
     ! 西辺・東辺(全ランクが自帯+共有行のセル js-1..je+1 を走査。
     ! ハロ行のセルは共有行スロットの冗長計算のため。put 側のスロット行
@@ -640,6 +685,7 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
   real :: h, hv, un, uc, eta_r, uve1, mne1, dh, cor
   real :: spd, dx_, dy_, wn, uch, wsum, ex, ey, cs, nsx, nsy, rx, ry
   logical :: chan
+  integer :: idx, iext
 
   if (g%x(i,j) <= 0) return
   if (g%sw(i,j) > 0) return    ! 海セルは continuous が更新しないため対象外
@@ -756,12 +802,27 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
         ! 乾いたセルは上の h<dd 分岐でゼロ(境界からの再湿潤はしない)。
         ! 基準水位は境界セルごと(W/E は j、N/S は i で引く)
         if (sd == e_side_w .or. sd == e_side_e) then
-          eta_r = bcs%bc_eta_cell(j, sd)
+          idx = j
         else
-          eta_r = bcs%bc_eta_cell(i, sd)
+          idx = i
         end if
         wn = max(geo%n8x(k) * rx + geo%n8y(k) * ry, 0.0)
-        uve1 = sqrt(p%gg / max(h, p%dv)) * (s%z(i,j) + h - eta_r) * wn
+        iext = 0
+        if (bcs%have_ext) iext = bcs%bc_ext_idx(idx, sd)
+        if (iext > 0) then
+          ! 外部データ付き放射(Flather。nesting_plan §15.2): 外部の外向き法線流速
+          ! u_n,e と水位 η_e を供給者(ネスト)から受け、u_n = u_n,e + √(g/h)(η − η_e)
+          ! を面に射影する(括弧の内側で和をとってから射影。u_n,e = 0・η_e = 基準
+          ! 水位なら従来式と同値)。供給側が無効(親が乾いている等)なら面を閉じる
+          if (bcs%bc_ext_act(iext)) then
+            uve1 = (bcs%bc_ext_une(iext) + sqrt(p%gg / max(h, p%dv)) * (s%z(i,j) + h - bcs%bc_ext_eta(iext))) * wn
+          else
+            uve1 = 0.0
+          end if
+        else
+          eta_r = bcs%bc_eta_cell(idx, sd)
+          uve1 = sqrt(p%gg / max(h, p%dv)) * (s%z(i,j) + h - eta_r) * wn
+        end if
         mne1 = uve1 * h
         if (sct%have_sect) mne1 = uve1 * sect_v(h, sct%sdep(i,j))   ! 断面積ベース(§68.28)
       end select

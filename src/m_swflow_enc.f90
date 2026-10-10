@@ -46,6 +46,7 @@ module m_swflow_enc
                                          ! (m_record 専用・読み取り専用。§24.1/§24.2)
   public :: swflow_vh                    ! 矩形換算水深 vh の照会(§26/§30。
                                          ! 水質の濃度換算 conc = cq/vh 用)
+  public :: m_swflow_enc_bc_ext_init            ! 外部データ付き放射境界の添字表の(再)構築(m_nest が呼ぶ。§15)
   public :: bcs, bc_open_face                  ! 開境界の面判定(m_geomorph の
                                                ! 開境界土砂フラックスが読む。読み取り専用)
 
@@ -150,6 +151,13 @@ module m_swflow_enc
     integer, allocatable :: bt_cell(:,:)      ! 外縁面の型(セル別。(j,W/E)・(i,N/S)。
                                             !   辺の型を初期値とし流入区間が上書き)
     real, allocatable :: bc_eta_cell(:,:)     ! 放射境界の基準水位(セル別)
+    logical :: have_ext = .false.             ! 外部データ付き放射(Flather)の境界セルがあるか
+                                            !   (nesting_plan §15。bc_ext_init が設定)
+    integer, allocatable :: bc_ext_idx(:,:)   ! 外部データの添字(セル別。(j,W/E)・(i,N/S)。
+                                            !   0 = 静的基準水位の従来式)
+    real, allocatable :: bc_ext_eta(:)        ! 現時刻の外部水位 η_e(boundary_uvmn が b%ext から写す)
+    real, allocatable :: bc_ext_une(:)        ! 現時刻の外部流速の辺の外向き法線成分 u_n,e
+    logical, allocatable :: bc_ext_act(:)     ! 現時刻に有効か(偽 = 面を閉じる)
     real, allocatable :: infl_wseg(:)         ! 各流入区間の開口幅の合計 (m)(受け口係数込み)
     real, allocatable :: infl_cfac(:,:)       ! 区間の面エントリ別の受け口係数 (1:ncell, 1:ninflow)。
                                             !   流入セルが流量を渡せる内部エッジ(有効な近傍)の数を
@@ -630,6 +638,10 @@ module m_swflow_enc
       integer, intent(in) :: in, jn
       logical :: op
     end function
+    module subroutine bc_ext_init(g, b)
+      type(t_geoinfo), intent(in) :: g
+      type(t_boundary), intent(in) :: b
+    end subroutine
     module function bc_inflow_face(in, jn) result(r)
       integer, intent(in) :: in, jn
       logical :: r
@@ -3245,6 +3257,18 @@ end subroutine
 subroutine m_swflow_enc_ctx_dispose()
   ! 枠を解放する(全インスタンスの finalize 後に m_main が呼ぶ)
   if (allocated(enc_ctx)) deallocate(enc_ctx)
+end subroutine
+
+!----------------------------------------------------------------------
+! 外部データ付き放射境界(Flather)の適用層の添字表を b%ext から作り直す
+!   (nesting_plan §15.3)。bc_init も同じ手続きを呼ぶが、ネストの供給者は
+!   swflow の init より後(nest_setup_child)に b%ext を登録するため、登録後に
+!   これを呼ぶ。現在のインスタンス(select 済み)の bcs に対して働く
+!----------------------------------------------------------------------
+subroutine m_swflow_enc_bc_ext_init(g, b)
+  type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
+  call bc_ext_init(g, b)
 end subroutine
 
 end module

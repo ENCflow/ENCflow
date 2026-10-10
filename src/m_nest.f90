@@ -31,9 +31,10 @@ module m_nest
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
-  use m_boundary, only : t_boundary
+  use m_boundary, only : t_boundary, m_boundary_ext_setup, e_ext_nest, e_bc_radiation, &
+                         e_side_w, e_side_e, e_side_n, e_side_s
   use m_swflow_enc, only : m_swflow_enc_nest_export, m_swflow_enc_nest_import, m_swflow_enc_edge_flux, &
-                           bcs, opt, e_bc_wall
+                           m_swflow_enc_bc_ext_init, bcs, opt, e_bc_wall
   use list_nest, only : t_list_nest, list_nest_read
   use m_util, only : itoa, rtoa
   implicit none
@@ -234,9 +235,9 @@ subroutine nest_read_list(fn, fn_root, nt)
     nt%g(k)%nest_bc = lst%nest_bc
     nt%g(k)%nest_fb = lst%nest_fb
     if (lst%nest_nb /= 0 .and. lst%nest_nb < 2) call par_stop("list_nest: nest_nb must be 0 (auto) or >= 2")
-    if (lst%nest_bc < 1 .or. lst%nest_bc > 4 .or. lst%nest_bc == 3) then
-      call par_stop("list_nest: nest_bc="//itoa(lst%nest_bc)//" is not implemented (1: water level only, "// &
-                    "2: water level + edge fluxes, 4: 2 + sponge; 3 = Flather radiation is not implemented)")
+    if (lst%nest_bc < 1 .or. lst%nest_bc > 4) then
+      call par_stop("list_nest: nest_bc="//itoa(lst%nest_bc)//" must be 1 (water level only), "// &
+                    "2 (water level + edge fluxes), 3 (Flather radiation on open sides) or 4 (2 + sponge)")
     end if
     if (lst%nest_fb < 0 .or. lst%nest_fb > 3) then
       call par_stop("list_nest: nest_fb="//itoa(lst%nest_fb)//" must be 0 (one-way), 1 (area average), "// &
@@ -262,8 +263,9 @@ subroutine nest_setup_child(nt, c, pp, gp, sp, pc, gc, sc, bc)
   type(t_sysparam), intent(in) :: pp, pc      ! 親・子のパラメータ
   type(t_geoinfo), intent(in) :: gp, gc       ! 親・子の地理情報
   type(t_state), intent(in) :: sp, sc         ! 親・子の状態(場の表の有効判定)
-  type(t_boundary), intent(in) :: bc          ! 子の境界条件
+  type(t_boundary), intent(inout) :: bc       ! 子の境界条件(nest_bc = 3 は外部データ付き放射の境界セルを登録する)
   integer :: r, i, j, nb_req, f, nin
+  logical :: open(1:4)
   character(len=32) :: tag
   character(len=256) :: msg
   associate (n => nt%g(c))
@@ -301,21 +303,40 @@ subroutine nest_setup_child(nt, c, pp, gp, sp, pc, gc, sc, bc)
     ! 帯の外側(子の壁面)のエッジを読んでしまう → 3 が必要。
     ! 恒等テスト(test/nest_identity)で確認: wave(スキーム 1)= 2、
     ! chichibu(スキーム 3)= 3 で全ステップビット一致、2 では不一致
-    nb_req = 2
-    if (opt%f_advection_scheme >= 2) nb_req = 3
-    if (n%nb == 0) then
-      n%nb = nb_req
-    else if (n%nb < nb_req) then
-      call par_stop(trim(tag)//": nest_nb = "//itoa(n%nb)//" is too narrow for f_advection_scheme = "// &
-                    itoa(opt%f_advection_scheme)//" (needs >= "//itoa(nb_req)//"; 0 = auto)")
-    end if
-    if (gc%nx <= 2 * n%nb + 2 .or. gc%ny <= 2 * n%nb + 2) then
-      call par_stop(trim(tag)//": child grid too small for the boundary band (nb = "//itoa(n%nb)//")")
-    end if
-    ! 子の外縁は壁(帯の外向き面)。流入区間も不可
-    if (any(bcs%f_bc_side /= e_bc_wall) .or. bc%ninflow > 0) then
-      call par_stop(trim(tag)//": the child's outer boundary must be closed (f_bc_w/e/n/s = 0, no inflow); "// &
-                    "the band receives the parent's values")
+    if (n%nest_bc == 3) then
+      ! Flather 放射(§15): 帯なし。子の開いた辺(f_bc_* = 2)の外縁セルを外部データ付き
+      ! 放射境界として登録し、prolong が各サブステップの開始時刻の親の値を書く。
+      ! 壁(0)の辺は壁のまま。自由流出(1)と流入区間は不可
+      if (n%nb /= 0) call par_info(trim(tag)//": nest_nb is ignored for nest_bc = 3 (no band)")
+      n%nb = 0
+      if (bc%ninflow > 0) call par_stop(trim(tag)//": nest_bc = 3 does not allow inflow segments on the child")
+      do i = 1, 4
+        if (bcs%f_bc_side(i) /= e_bc_wall .and. bcs%f_bc_side(i) /= e_bc_radiation) then
+          call par_stop(trim(tag)//": nest_bc = 3 needs f_bc_w/e/n/s = 2 (radiation) on the open sides and 0 (wall)"// &
+                        " on the closed sides")
+        end if
+        open(i) = (bcs%f_bc_side(i) == e_bc_radiation)
+      end do
+      if (.not. any(open)) call par_stop(trim(tag)//": nest_bc = 3 needs at least one radiation side (f_bc_* = 2)")
+      call m_boundary_ext_setup(bc, gc, open, e_ext_nest)
+      call m_swflow_enc_bc_ext_init(gc, bc)
+    else
+      nb_req = 2
+      if (opt%f_advection_scheme >= 2) nb_req = 3
+      if (n%nb == 0) then
+        n%nb = nb_req
+      else if (n%nb < nb_req) then
+        call par_stop(trim(tag)//": nest_nb = "//itoa(n%nb)//" is too narrow for f_advection_scheme = "// &
+                      itoa(opt%f_advection_scheme)//" (needs >= "//itoa(nb_req)//"; 0 = auto)")
+      end if
+      if (gc%nx <= 2 * n%nb + 2 .or. gc%ny <= 2 * n%nb + 2) then
+        call par_stop(trim(tag)//": child grid too small for the boundary band (nb = "//itoa(n%nb)//")")
+      end if
+      ! 子の外縁は壁(帯の外向き面)。流入区間も不可
+      if (any(bcs%f_bc_side /= e_bc_wall) .or. bc%ninflow > 0) then
+        call par_stop(trim(tag)//": the child's outer boundary must be closed (f_bc_w/e/n/s = 0, no inflow); "// &
+                      "the band receives the parent's values")
+      end if
     end if
     n%dd = pc%dd
     ! 場の表: 親子の両方で確保・有効な場だけ
@@ -341,11 +362,17 @@ subroutine nest_setup_child(nt, c, pp, gp, sp, pc, gc, sc, bc)
     else
       n%ns = 0
     end if
+    ! 場の表は帯で交換する(nest_bc = 3 は帯がないので交換しない。§15.4)
+    if (n%nest_bc == 3 .and. n%nfld > 0) then
+      call par_info(trim(tag)//": nest_bc = 3 has no band; the additional fields are not exchanged")
+      n%nfld = 0
+    end if
     if (gc%nx <= 2 * (n%nb + n%ns) + 2 .or. gc%ny <= 2 * (n%nb + n%ns) + 2) then
       call par_stop(trim(tag)//": child grid too small for the band + sponge")
     end if
     ! 置換する親セルの範囲(帯〔とスポンジ〕を含む親セル数 nin を足元の内側に取る)
     nin = (n%nb + n%ns + r - 1) / r
+    if (n%nest_bc == 3) nin = max(nin, 1)   ! Flather の境界セルを含む親セルは置換しない(§15.4)
     n%ipa = n%pi1 + nin
     n%ipb = n%pi2 - nin
     n%jpa = n%pj1 + nin
@@ -387,6 +414,7 @@ subroutine nest_setup_child(nt, c, pp, gp, sp, pc, gc, sc, bc)
           ", footprint in parent = cells "//itoa(n%pi1)//".."//itoa(n%pi2)//" x "// &
           itoa(n%pj1)//".."//itoa(n%pj2)//", band width nb = "//itoa(n%nb)
     if (n%ns > 0) msg = trim(msg)//", sponge ns = "//itoa(n%ns)
+    if (n%nest_bc == 3) msg = trim(msg)//", Flather cells = "//itoa(bc%ext%ncell)
     call par_info(trim(msg))
   end associate
 end subroutine
@@ -454,11 +482,12 @@ end subroutine
 !   η 基準の双線形補間と §3.5 のセル単位の乾湿規則(未検証。Phase 3 で
 !   比 3・5 の収束試験を行う)
 !----------------------------------------------------------------------
-subroutine nest_prolong(nt, c, g, s, alpha)
+subroutine nest_prolong(nt, c, g, s, b, alpha)
   type(t_nest), intent(inout) :: nt
   integer, intent(in) :: c
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout), target :: s
+  type(t_boundary), intent(inout) :: b      ! 子の境界条件(nest_bc = 3 の外部データの受け口)
   real, intent(in) :: alpha                 ! サブステップ開始時刻の位置 (t − t^n)/dt_親 ∈ [0, 1)
   integer :: i, j, k, kk, ie, je, ip, jp, in, jn, f, d
   real :: hc, hn, hold, w
@@ -474,6 +503,13 @@ subroutine nest_prolong(nt, c, g, s, alpha)
     else
       n%wc = (1.0 - alpha) * n%wc0 + alpha * n%wc1
       n%we = (1.0 - alpha) * n%we0 + alpha * n%we1
+    end if
+    ! --- Flather 放射(nest_bc = 3): 帯の置換の代わりに、開いた辺の境界セルの外部
+    !     水位・外向き法線流速を親の窓から与える(§15.3)。全ランクが全セルを冗長に
+    !     計算する(窓は全ランク同値 = 通信なし・ビット決定的)---
+    if (n%nest_bc == 3) then
+      call fill_ext(n, b)
+      return
     end if
     ! --- セル量(帯の置換体積は自帯の行だけ数える → 行和の決定的総和)---
     allocate(rowdv(dcp%js:dcp%je), source = 0.0d0)
@@ -817,8 +853,13 @@ subroutine nest_summary(nt)
   call par_info("nest: summary")
   do k = 2, nt%ng
     associate (n => nt%g(k))
-      write(msg, '(a,i0,a,i0,a,es12.4,a,es12.4,a)') "nest:   grid ", k, " <- parent ", n%parent, &
-            ": band replacement volume in the child, sum = ", n%bvol_sum, " m3, |sum| = ", n%bvol_abs, " m3"
+      if (n%nest_bc == 3) then
+        write(msg, '(a,i0,a,i0,a)') "nest:   grid ", k, " <- parent ", n%parent, &
+              ": Flather radiation on the open sides (no band replacement)"
+      else
+        write(msg, '(a,i0,a,i0,a,es12.4,a,es12.4,a)') "nest:   grid ", k, " <- parent ", n%parent, &
+              ": band replacement volume in the child, sum = ", n%bvol_sum, " m3, |sum| = ", n%bvol_abs, " m3"
+      end if
       call par_info(trim(msg))
       if (n%nest_fb == 0) then
         write(msg, '(a,i0,a,i0,a)') "nest:   grid ", k, " <- parent ", n%parent, ": one-way (no feedback)"
@@ -854,6 +895,7 @@ function bc_name(bc) result(name)
   select case (bc)
   case (1); name = "band: water level"
   case (2); name = "band: water level + edge fluxes"
+  case (3); name = "Flather radiation on open sides"
   case (4); name = "band: water level + edge fluxes + sponge"
   case default; name = "band: ?"
   end select
@@ -887,6 +929,65 @@ subroutine share(a, nelem)
   integer, intent(in) :: nelem
   real, intent(inout) :: a(nelem)      ! 並び結合(連続配列の全要素)
   call par_allreduce_sumr(a)
+end subroutine
+
+!----------------------------------------------------------------------
+! Flather 放射(nest_bc = 3)の外部データ(§15.3): 子の開いた辺の境界セルごとに、
+! 親の窓(サブステップ開始時刻の値 wc)から水位 η_e と流速 (u_e, v_e) を取り、
+! 辺の外向き法線成分 u_n,e = u_e·n_x + v_e·n_y(内部座標系。v は j 増加 = 南が正)
+! を b%ext に書く。比 1 は複写(退化の恒等: 親が静水なら η_e = 基準水位・
+! u_n,e = 0 で現行の放射境界と同一ビット)、比 > 1 は親セル中心の格子で双線形
+! (interp_cell と同じ重み)。親の補間点に乾きがあれば act = 偽(面を閉じる。
+! §15.4)。全ランクが全セルを冗長に計算する(窓は全ランク同値)
+!----------------------------------------------------------------------
+subroutine fill_ext(n, b)
+  type(t_nest_grid), intent(in) :: n
+  type(t_boundary), intent(inout) :: b
+  integer :: m, i, j, ia, ja, ip, jp
+  real :: xc, yc, wx, wy, hmin, eta, ue, ve, nsx, nsy
+  real :: w(2,2)
+  do m = 1, b%ext%ncell
+    i = b%ext%cell(1, m)
+    j = b%ext%cell(2, m)
+    select case (b%ext%side(m))
+    case (e_side_w); nsx = -1.0; nsy = 0.0
+    case (e_side_e); nsx = 1.0;  nsy = 0.0
+    case (e_side_n); nsx = 0.0;  nsy = -1.0
+    case default;    nsx = 0.0;  nsy = 1.0
+    end select
+    if (n%r == 1) then
+      ip = n%i0 + i - 1
+      jp = n%j0 + j - 1
+      b%ext%act(m) = (n%wc(q_h, ip, jp) > n%dd)
+      eta = n%wc(q_e, ip, jp)
+      ue = n%wc(q_u, ip, jp)
+      ve = n%wc(q_v, ip, jp)
+    else
+      xc = real(n%i0 - 1) + (real(i) - 0.5) / real(n%r)
+      yc = real(n%j0 - 1) + (real(j) - 0.5) / real(n%r)
+      ia = floor(xc + 0.5)
+      ja = floor(yc + 0.5)
+      wx = xc - (real(ia) - 0.5)
+      wy = yc - (real(ja) - 0.5)
+      w(1,1) = (1.0 - wx) * (1.0 - wy)
+      w(2,1) = wx * (1.0 - wy)
+      w(1,2) = (1.0 - wx) * wy
+      w(2,2) = wx * wy
+      hmin = min(n%wc(q_h, ia, ja), n%wc(q_h, ia+1, ja), n%wc(q_h, ia, ja+1), n%wc(q_h, ia+1, ja+1))
+      b%ext%act(m) = (hmin > n%dd)
+      eta = bil(q_e)
+      ue = bil(q_u)
+      ve = bil(q_v)
+    end if
+    b%ext%eta(m) = eta
+    b%ext%une(m) = ue * nsx + ve * nsy
+  end do
+contains
+  real function bil(q)
+    integer, intent(in) :: q
+    bil = w(1,1) * n%wc(q, ia, ja) + w(2,1) * n%wc(q, ia+1, ja) + &
+          w(1,2) * n%wc(q, ia, ja+1) + w(2,2) * n%wc(q, ia+1, ja+1)
+  end function
 end subroutine
 
 !----------------------------------------------------------------------

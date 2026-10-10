@@ -17,6 +17,12 @@ module m_boundary
   !     規定する(河川流入等。複数)。適用は boundary_uvmn(区間の
   !     外縁法線面の mn1 規定=指向性の流入。辺の型を面単位で上書き)。
   !     流入は非負(流出は stage / source を使う)。
+  !   - 外部データ付き放射境界(ext): 放射辺(f_bc_* = 2)の境界セルごとに
+  !     外部の水位 η_e と外向き法線流速 u_n,e を保持し、放射境界を Flather
+  !     条件 u_n = u_n,e + √(g/h)(η − η_e) に一般化する(nesting_plan.md §15)。
+  !     値の供給者は差し替え可能: 同一プロセスのネスト(nest_bc = 3。m_nest が
+  !     毎サブステップ書く)。ファイル供給は将来。適用は boundary_uvmn の
+  !     放射分岐(bcs%bc_ext_*)。
   !   - 内部水理構造物(structure): ポンプ・カルバート等の共通骨格
   !     (2つのセル集合+水理則 Q+質量保存転送。§22)。設定は独立
   !     ファイル fn_structure、実装は submodule m_boundary_structure。
@@ -39,6 +45,7 @@ module m_boundary
   public :: t_boundary
   public :: m_boundary_init
   public :: m_boundary_set_etaref
+  public :: m_boundary_ext_setup
   public :: m_boundary_dispose
   public :: m_boundary_makebdc
   public :: m_boundary_dam_seed
@@ -47,6 +54,7 @@ module m_boundary
   public :: m_boundary_dam_gwforce
   public :: dam_operate, dam_sink, dam_draw, e_struct_dam
   public :: e_bc_wall, e_bc_outflow, e_bc_radiation, e_bc_inflow
+  public :: e_ext_none, e_ext_nest
   public :: e_side_w, e_side_e, e_side_n, e_side_s
   ! 共有補助手続き(submodule m_boundary_structure も使う)。private のままだと
   ! gfortran が全呼び出しをインライン化してシンボルを局所化・消去し、
@@ -61,6 +69,10 @@ module m_boundary
   integer, parameter :: e_bc_inflow = 3    ! 流量規定面(区間流入。面単位の内部型。
                                            !   f_bc_* の値としては指定不可)
 
+  ! 外部データ付き放射境界の供給者
+  integer, parameter :: e_ext_none = 0     ! 族なし
+  integer, parameter :: e_ext_nest = 1     ! 同一プロセスのネスト(nest_bc = 3。m_nest が書く)
+
   ! 辺番号(btype の添字)
   integer, parameter :: e_side_w = 1       ! 西 (i=1)
   integer, parameter :: e_side_e = 2       ! 東 (i=nx)
@@ -73,6 +85,16 @@ module m_boundary
     real :: eta_man(1:4) = -9999.0         ! 基準水位の明示指定値 (-9999=未指定)
     real, allocatable :: eta_cell(:,:)     ! 確定した基準水位(セル別。
                                            !   (j,W/E)・(i,N/S)。set_etaref が構築)
+  end type
+
+  type t_bound_ext                         ! 外部データ付き放射境界(Flather。nesting_plan §15)
+    integer :: ncell = 0                   ! 境界セル(面エントリ)数。0 = 族なし。角は辺ごとに複製
+    integer, allocatable :: cell(:,:)      ! セル座標 (1:2, 1:ncell)
+    integer, allocatable :: side(:)        ! 各エントリの辺 (e_side_*)
+    real, allocatable :: eta(:)            ! 現時刻の外部水位 η_e (m。z と同じ標高基準)
+    real, allocatable :: une(:)            ! 現時刻の外部流速の辺の外向き法線成分 u_n,e (m/s)
+    logical, allocatable :: act(:)         ! 現時刻に有効か(偽 = その面を閉じる。供給側が乾いている等)
+    integer :: provider = e_ext_none       ! 供給者(e_ext_*)
   end type
 
   type t_bound_src                         ! 湧き出し・吸い込み1個
@@ -192,6 +214,8 @@ module m_boundary
 
   type t_boundary
     type(t_bound_edge) :: edge             ! 辺境界
+    type(t_bound_ext) :: ext               ! 外部データ付き放射境界(nesting_plan §15。
+                                           !   供給者が m_boundary_ext_setup で登録する)
     integer :: nsrc = 0                    ! ソース数
     type(t_bound_src), allocatable :: src(:)  ! 湧き出し・吸い込み
     integer :: nstage = 0                  ! 水位規定セル群の数
@@ -463,9 +487,81 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 外部データ付き放射境界(Flather)の境界セルを登録する(nesting_plan §15.3)
+!   open(sd) が真の辺の外縁セルを全て登録する(W: i=1, E: i=nx, N: j=1,
+!   S: j=ny。角は辺ごとに複製 = inflow と同じ)。その辺の型は放射
+!   (f_bc_* = 2)でなければならない。無効セル(x <= 0・海セル)も登録する
+!   (適用側 put_bc_faces が従来どおり読み飛ばす。帯縮小後の g%x は帯の
+!   行しか持たないため、ここでは判定しない)。eta/une は供給者が書く
+!   (登録直後は eta = 0・une = 0・act = 偽 = 面を閉じる)。
+!   boundary init の後・swflow の bc_init の後に呼ばれ得るので、呼び出し側は
+!   m_swflow_enc_bc_ext_init で適用層の添字表を作り直すこと。
+!   MPI: 一覧は全ランク同一(通信なし)
+!----------------------------------------------------------------------
+subroutine m_boundary_ext_setup(b, g, open, provider)
+  type(t_boundary), intent(inout) :: b
+  type(t_geoinfo), intent(in) :: g
+  logical, intent(in) :: open(1:4)       ! 外部データを与える辺(e_side_* の順)
+  integer, intent(in) :: provider        ! e_ext_*
+  character(len=1), parameter :: side_name(1:4) = ['w', 'e', 'n', 's']
+  integer :: sd, n, m, i, j
+  n = 0
+  do sd = 1, 4
+    if (.not. open(sd)) cycle
+    if (b%edge%btype(sd) /= e_bc_radiation) then
+      call par_stop("boundary: external-data radiation (Flather) on side "//side_name(sd)// &
+                    " needs f_bc_"//side_name(sd)//" = 2 (radiation)")
+    end if
+    if (sd == e_side_w .or. sd == e_side_e) then
+      n = n + g%ny
+    else
+      n = n + g%nx
+    end if
+  end do
+  if (allocated(b%ext%cell)) deallocate(b%ext%cell, b%ext%side, b%ext%eta, b%ext%une, b%ext%act)
+  b%ext%ncell = n
+  b%ext%provider = provider
+  if (n == 0) then
+    b%ext%provider = e_ext_none
+    return
+  end if
+  allocate(b%ext%cell(1:2, 1:n), b%ext%side(1:n))
+  allocate(b%ext%eta(1:n), b%ext%une(1:n), source = 0.0)
+  allocate(b%ext%act(1:n), source = .false.)
+  m = 0
+  do sd = 1, 4
+    if (.not. open(sd)) cycle
+    select case (sd)
+    case (e_side_w, e_side_e)
+      i = 1
+      if (sd == e_side_e) i = g%nx
+      do j = 1, g%ny
+        m = m + 1
+        b%ext%cell(1, m) = i
+        b%ext%cell(2, m) = j
+        b%ext%side(m) = sd
+      end do
+    case default
+      j = 1
+      if (sd == e_side_s) j = g%ny
+      do i = 1, g%nx
+        m = m + 1
+        b%ext%cell(1, m) = i
+        b%ext%cell(2, m) = j
+        b%ext%side(m) = sd
+      end do
+    end select
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
 !----------------------------------------------------------------------
 subroutine m_boundary_dispose(b)
   type(t_boundary), intent(inout) :: b
+  if (allocated(b%ext%cell)) deallocate(b%ext%cell, b%ext%side, b%ext%eta, b%ext%une, b%ext%act)
+  b%ext%ncell = 0
+  b%ext%provider = e_ext_none
   if (allocated(b%src)) deallocate(b%src)
   if (allocated(b%stage)) deallocate(b%stage)
   if (allocated(b%inflow)) then
