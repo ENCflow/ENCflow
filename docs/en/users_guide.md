@@ -23,6 +23,7 @@ input; individual topics are split into per-chapter pages.
 - [Coordinate systems](users_guide/coordinates.md) -- absolute vs. local coordinates, EPSG, geographic (lat-lon) grids
 - [Input and output formats](users_guide/io.md) -- text / bil / GeoTIFF, output file organization
 - [Suspend and restart](users_guide/restart.md) -- state files, time continuation, use as initial conditions
+- [Nesting (multi-level grids)](users_guide/nest.md) (fn_nest, &list_nest) -- child grids solved inside a parent grid in the same run (multi-level, two-way, Flather radiation, non-hydrostatic band)
 - [Parallel execution](users_guide/parallel.md) -- OpenMP, MPI, reproducibility of results
 
 **Part III: Feature reference**
