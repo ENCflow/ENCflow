@@ -9763,6 +9763,56 @@ fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dt
   allreduce と時間補間が決定的)。-O0 -fcheck=all -finit-real=snan の MPI np=2 で
   r3t3・2 段が実行時メッセージなしで完走。
 
+### Phase 4(選択肢の拡充と陸上向け 3 点。2026-10-09 実装)
+
+- **場の表(§3.8・§14.2-3)**: h, u, v, vv, m, n に加え、親子の両方で有効な場だけを
+  交換する。表面スカラー(水柱量。hs, cq, hd, hbd, hss)は帯では親の双線形補間
+  (子セルが乾けば 0)、置換では r×r 全セルの面積平均(保存量)。地下量
+  (hg, hg2, hgc)は乾湿に無関係に補間・面積平均。有効判定は状態のフラグと
+  確保(sed_active, wq_active, dw_active, bd_active, salt_active, gw_active、
+  hg2/hgc は確保の有無)。片方だけ有効な場は交換せず画面に注記。実装は
+  `fld_ptr`(状態配列へのポインタ。t_state は target で受ける)と
+  `fld_active`、窓・作業配列の第 1 添字の ncq+f / w_nbase+f。
+  新しい場を足すときは nfld_max・fld_name・fld_surface・fld_ptr・fld_active の
+  5 か所(1 行ずつ)。
+- **帯の置換体積(§14.2-1)**: prolong が帯の h の置換による子の水柱体積の変化
+  (Σ(h_new − h_old)·af·dx·dy。自帯の行だけ → par_sum_rows)を累計し、要約に
+  出す。帯に降った雨が上書きで捨てられる量の目安(陸上の水収支の照合用)。
+- **体積整合置換(§14.2-2)**: 子→親で親セルの有効面積率 af_p ≠ 1 または子の
+  Σaf_c/r² ≠ 1(サブグリッド河道・空隙率)のときは、子の真の水量 Σh_c·af_c/r²
+  を af_p で割って矩形換算の h_p にする(河道水位の整合。乾湿規則より優先)。
+  af = 1 のセルでは従来どおり(nest_fb = 1 は面積平均、2 は湿潤判定付き)。
+- **保存修正(nest_fb = 3。GeoClaw の reflux に相当)**: 置換領域 R の外周リング
+  のセル A について、親の 1 歩で親が R へ流した体積 fp(A)(A から R 内の近傍へ
+  のエッジ流量 m_swflow_enc_edge_flux × dt_親の和)と、子の r_t サブステップで
+  リングの親セル領域にある子セルから R 領域の近傍へ流した体積 vc(A) の差を
+  A の水深に戻す: h_A += (fp − vc)/(dx·dy·af_A)(負になれば 0 に切り回数を
+  数える)。fp は親の 1 歩直後(親 select)、vc は子の各サブステップ直後
+  (子 select)に自帯の行で集計し、置換時に 1 要素 1 寄与の allreduce で共有
+  (リングの親セルの子セル群は整列により 1 ランク)。比 1・r_t 1 では fp と vc
+  が同じ式・同じ順序の和になり修正は厳密に 0(恒等テスト)。ENC の 8 方位
+  エッジ(軸+対角)をそのまま数えるので界面の流束の対応は完全。
+- **スポンジ(nest_bc = 4)**: 帯(Dirichlet)の内側 nest_ns セルを親の補間値へ
+  向けて緩和する(重み w = (1 − d/(ns+1))²、d = 帯からの距離)。置換領域は
+  帯+スポンジを除いた内側。
+- **実装しなかった選択肢**: nest_bc = 3(Flather 放射)は m_swflow_enc_bc の面型
+  境界に「外部データ付き放射」を足す必要があり、ネスト専用でなく fn_boundary の
+  1 族(plan §13.4 の v1 案)として設計するのが筋なので保留(指定すると par_stop)。
+  NH の φ の帯 Dirichlet(NEOWAVE 型)も保留: 帯は静水圧のままで、NH を有効に
+  した格子はそのまま動く(整合は未検証)。
+- 検証: 恒等(test/nest_identity): nest_fb = 3 の比 1:1 双方向(wave_s1・chichibu)
+  でルートの最終状態が単独ランとバイト一致・修正量 0.0(fp と vc が厳密に一致)、
+  chichibu + 地下水バケツ(hg を帯で与え置換で平均)でも一致。
+  examples/nest_reflect: r3t3 で fb3 は閉領域の体積のずれを fb2 の 1/200
+  (6.8e-4 m³ vs 0.14 m³。粗格子単独は厳密 0)に抑え、通過後の残差は同程度。
+  リングの個別補正で通過中に局所的な凹凸(MAX 3〜6e-3 m)。スポンジ(ns = 4)
+  は通過直後の残差を 2.8% → 2.1% に減らすが体積のずれは 1.5 倍。
+
+  無効時: reference 22 PASS、厳密フラグ 38 ケース 0b 基準と一致。MPI np=1,2,4:
+  既存 8 ケース・twin・nest_identity(fb3・hg を含む)一致、r3t3_fb3 と 2 段の
+  Log がランク数不変。-O0 -fcheck=all -finit-real=snan の MPI np=2 で nest_identity
+  全ケースと r3t3_fb3・r3t3_sp が完走。
+
 ### 落とし穴
 
 - 恒等テストは波が帯に達しなければ何も検査していない(最初の wave 設定は子が
@@ -9771,3 +9821,10 @@ fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dt
   h が初期値から動く)。
 - `grow_instances` は t_encflow の組込み代入(深いコピー)に依存する。t_encflow に
   自分自身を指すポインタ成分を足さないこと。
+- **MERGE の文字長**: `merge(", sponge ns = "//itoa(n), "", cond)` のように長さの
+  異なる文字列を MERGE に渡すのは規格違反(gfortran は -fcheck=all で実行時
+  エラー、最適化ビルドでは黙って動く)。Phase 4 の -fcheck 検証で発覚。if 文で
+  組み立てる。-fcheck のクリーンビルドを各 Phase で回す意味がここにもある。
+- **実行環境の CPU が変わると -march=native のビルド物は SIGILL で落ちる**
+  (クラウドのコンテナ移動で実発生: set_h の自動ベクトル化命令)。原因不明の
+  Illegal instruction は、まず `make clean` から作り直す。

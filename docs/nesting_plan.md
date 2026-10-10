@@ -546,6 +546,7 @@ m_nest は m_main より下、物理モジュールより上の層(状態の所�
 | 3 | r_t > 1(時間補間、格子別 dt)、nest_bc=1 | 中 | 比 3・5 の収束、2 段の完走 |
 |    | **実施記録(2026-10-09)**: 親の窓を t^n と t^{n+1} の 2 枚持ち、子のサブステップ開始時刻で線形補間(α = 0 は複写 = r_t = 1 と同一ビット)。子の dt = 親の dt / r_t を検査。nest_bc = 1(水位のみ)。examples/nest_reflect で r3t3 / r5t5 / bc1 / 2 段(比 3 の中の比 3)を完走。親 dt を自分の CFL に戻すと、通過後の残差は入射振幅の 1.4〜2.8%(同 dt の粗格子単独の 1.5〜2 倍)で時間補間した帯の擾乱が見える。比 3・5 の差は小さく収束は分離できず(残課題: 細い基準格子とバイナリ出力)。無効時: reference 22 PASS・厳密 38 一致。MPI np=1,2,4: 既存 8 ケース・twin・nest_identity 一致、r3t3 と 2 段の Log がランク数不変。-fcheck np=2 完走。 規約は developer.md §72(Phase 3) | | |
 | 4 | nest_bc=3(Flather)/4(スポンジ)、nest_fb=2/3(湿潤平均・保存修正)、NH の帯と φ、スカラー場の表、**陸上向け 3 点(§14: 乾湿対応の帯エッジ規則、河道セルの体積整合置換、地下水 hg の交換)** | 中〜大(選択肢ごと) | 選択肢ごとの無効時一致と物理検証。陸上は chichibu 系の比 3 で水収支と河道水位の連続 |
+|    | **実施記録(2026-10-09)**: 場の表(hs, cq, hd, hbd, hss, hg, hg2, hgc。親子で有効なものだけ)、帯の置換体積の累計、体積整合置換(af ≠ 1 のセル)、保存修正 nest_fb = 3(リングの親流束 fp と子流束 vc の差を戻す。比 1 では厳密 0)、スポンジ nest_bc = 4(nest_ns)。Flather(nest_bc = 3)は fn_boundary の族として別途設計するため保留、NH の φ も保留。恒等: fb3(修正 0.0)と hg 交換の比 1:1 双方向がバイト一致。例題: fb3 は体積のずれを 1/200 に、スポンジは通過直後の残差を 2.8% → 2.1%。無効時: reference 22 PASS・厳密 38 一致。MPI np=1,2,4 で nest_identity(fb3・hg 含む)一致、r3t3_fb3・2 段の Log がランク数不変。-fcheck np=2 完走(MERGE の文字長違反を 1 件検出・是正)。 規約は developer.md §72(Phase 4) | | |
 | 5 | BMI の多格子公開(grid id・変数名・動的リスト)、bmi-tester、Python 受け入れ試験 | 中 | bmi-tester、既存試験不変 |
 | 文書 | developer.md 新節(複数インスタンス化の規約+ネストの規約)、users_guide/nest.md、params_index、comparison.md、architecture.md、handoff | — | — |
 
