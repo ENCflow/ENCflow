@@ -6,8 +6,10 @@ This is the **standard interface for operating ENCflow from Python or
 from other models**. The whole of ENCflow becomes a single BMI
 component: through the common calls initialize / update / get_value /
 set_value you can pause the run at any point, pull out the model state,
-and feed forcings in from outside. It passes the official CSDMS
-conformance test (bmi-tester).
+and feed forcings in from outside. A multi-level nesting run (fn_nest) is
+also one component, with the grids told apart by BMI grid ids. It passes
+the official CSDMS conformance test (bmi-tester), for a single grid and
+for a nested system alike.
 
 BMI is an optional feature. The regular builds (encflow / encflow_mpi)
 do not depend on this directory and keep working with no external
@@ -78,6 +80,32 @@ exchange at the **time scale of the quantity being exchanged** (minutes
 for rainfall), not at every model time step. Exchanging too finely is
 merely wasteful; exchanging too coarsely becomes a coupling error.
 
+### Variables and grids of a nested system
+
+A case whose root parameter file has `fn_nest` (docs/users_guide/nest.md)
+becomes one component with all its grids. `update` is one step of the
+root (the children sub-step inside it) and the time is the root's. Grids
+are distinguished by **grid id**: grid 0 is the root and grid k is line
+k+1 of the nest list. A variable on a non-root grid carries the qualifier
+`~grid<k>` at the end of the object part of its name (within the CSDMS
+Standard Names grammar):
+
+| root (grid 0) | grid 2 |
+| --- | --- |
+| `surface_water__depth` | `surface_water~grid2__depth` |
+| `atmosphere_water__precipitation_leq-volume_flux` | `atmosphere_water~grid2__precipitation_leq-volume_flux` |
+
+The input/output variable lists grow with the number of grids (8 outputs
+and 3 inputs per grid). get / set have the same conditions and semantics
+on every grid; a set is applied at the start of that grid's next step.
+In Python, `var_on_grid(VAR_DEPTH, 2)` builds the name, `model.grids`
+lists the grid ids, `model.shape_of(k)` / `spacing_of(k)` /
+`origin_of(k)` describe a grid, and `get / get2d / set` infer the grid
+from the name. The origin of a child grid is derived from its parent's
+origin and alignment when no georeferencing is given, so all grids are
+self-described in the root's coordinate system (origin + index × spacing
+places a child on its parent).
+
 ## Array and grid conventions
 
 - Arrays are flattened 1-D as the BMI specification requires, with
@@ -87,9 +115,10 @@ merely wasteful; exchanging too coarsely becomes a coupling error.
   node arrays with no transformation.
 - Python's `get2d()` returns (ny, nx) with row 0 in the south (use
   `origin='lower'` in matplotlib for a map-oriented display).
-- The grid is grid 0 = uniform_rectilinear, shape in [ny, nx] order.
-  For cases with georeferencing (hdr), real coordinates appear in the
-  origin.
+- Grids are uniform_rectilinear (grid 0 only without nesting, one per
+  grid in a nested system), shape in [ny, nx] order. For cases with
+  georeferencing (hdr), real coordinates appear in the origin (a nested
+  child's origin is derived from its parent).
 - References (get_value_ptr) and the unstructured-grid queries are not
   supported (they return BMI_FAILURE / NotImplementedError, as the BMI
   specification permits).
@@ -116,7 +145,8 @@ mpirun -np 4 ./test_encflow_bmi_mpi param.txt
 | --- | --- |
 | `test_encflow_bmi [param] [set]` | Test driver that runs a case to completion through BMI (results match a standalone run; with `set`, also checks that a same-value set is harmless) |
 | `python/test_set_value.py` | Equivalence tests for set_value (e.g. file forcing and external supply give identical results; run in test/wave) |
-| `python/check_bmi.sh` | Runs the official CSDMS conformance test, bmi-tester |
+| `python/test_nest.py` | Acceptance test of the multi-grid exposure (grid information, variable lists, 1:1 self-nesting identity, re-initialize, same-value set; run in test/bmi_nest — `test/bmi_nest/Run.sh` also runs the static driver and bmi-tester) |
+| `python/check_bmi.sh` | Runs the official CSDMS conformance test, bmi-tester (list the input files the parameter file refers to after it) |
 
 To reproduce the conformance check:
 
@@ -124,6 +154,7 @@ To reproduce the conformance check:
 pip install bmi-tester bmipy 'pytest<8' 'gimli.units==0.3.*'
 cd test/wave
 ../../bmi/python/check_bmi.sh param.txt
+cd ../bmi_nest && ./Run.sh          # nested system (acceptance test + bmi-tester)
 ```
 
 ## Files
@@ -136,11 +167,17 @@ cd test/wave
 | `python/encflow.py` | Python wrapper: the `ENCflow` class (use this for everyday work) |
 | `python/encflow_bmi.py` | bmipy-conformant class `EncflowBmi` (for bmi-tester and pymt-style tools) |
 | `python/live_view.py` | Live visualization sample |
+| `python/test_set_value.py`, `python/test_nest.py` | Acceptance tests (above) |
 
 ## Limitations and notes
 
-- One model per process (two ENCflow instances cannot coexist;
-  re-initializing after finalize works in serial).
+- One model per process (two independent ENCflow instances cannot
+  coexist; a nested system is one model with all its grids.
+  Re-initializing after finalize works in serial).
+- The grid functions of the shared library's C interface
+  (`encflow_bmi_get_grid_shape` etc.) take the grid id as their first
+  argument (changed 2026-10-10; irrelevant when going through the Python
+  wrapper).
 - Runs through the shared library (.so) may not match a standalone run
   down to the last bit, because the compilation conditions differ (the
   physical outputs agree to the printed precision). For verification
@@ -152,4 +189,5 @@ cd test/wave
 The design history and roadmap are in
 [docs/bmi_plan.md](../docs/bmi_plan.md) (in Japanese), and the
 authoritative records of decisions and verification are in
-[docs/developer.md](../docs/developer.md) Secs. 53–60 (in Japanese).
+[docs/developer.md](../docs/developer.md) Secs. 53–60 and 73 (multi-grid;
+in Japanese).

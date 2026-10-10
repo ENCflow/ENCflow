@@ -9828,3 +9828,119 @@ fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dt
 - **実行環境の CPU が変わると -march=native のビルド物は SIGILL で落ちる**
   (クラウドのコンテナ移動で実発生: set_h の自動ベクトル化命令)。原因不明の
   Illegal instruction は、まず `make clean` から作り直す。
+
+
+## 73. 多段ネスティング Phase 5: BMI の多格子公開(2026-10-10 実装)
+
+ネスト系(fn_nest)を BMI から扱えるようにした。設計の正本は
+docs/nesting_plan.md §3.9、本節は決定事項と規約。bmi/ の既存規約(§53〜§60)
+はそのまま有効。
+
+### 構成と決定事項
+
+- **ネスト系全体が 1 つの BMI component**。`initialize(config)` の config は
+  ルートのパラメータファイル(fn_nest を含む)。`update()` はルートの 1 歩
+  (子はその中でサブステップ)、時間情報(current/start/end/time_step)は
+  ルートのもの。m_main_update がルートを select して戻るので、BMI 層は
+  「update の後はルートが選択済み」を前提にできる。
+- **格子は BMI の grid id で区別する**: grid 0 = ルート、grid k = 一覧の
+  k+1 行目(= m_main のインスタンス k+1。root は常に 1 なので写像は k−1 で
+  固定)。全格子 uniform_rectilinear、shape/spacing/origin は [y, x] 順。
+  ネストなしでは grid 0 のみ(従来と同一)。
+- **変数名**: 基本変数(出力 8・入力 3。§54・§60)の名前はルートの変数。
+  非ルート格子の変数は **object 部の末尾に修飾 `~grid<id>`** を付ける
+  (`surface_water__depth` → `surface_water~grid2__depth`)。plan §3.9 の例
+  (`@2` の接尾辞)から変えた理由: CSDMS Standard Names の文法は
+  `object~adjective__quantity` で `~` 修飾を許す(standard_names パッケージの
+  正規表現で valid)。`@` は文法外で、bmi-tester は warning、pymt の名前解釈
+  では落ちる可能性がある。grid 0 の名前を変えないので既存の利用側は無変更。
+  組み立ては `encflow_var_on_grid(base, grid)`(Fortran・公開)と
+  `encflow.var_on_grid(name, grid)`(Python)、解釈は `split_name`(object 部の
+  末尾の `~grid<数字>` だけを修飾と見る)。
+- **入出力変数表は動的生成**(`ensure_items`): 格子数 ng に応じて
+  出力 8·ng、入力 3·ng を「格子ごとに基本変数の順」で並べる。initialize の
+  後(格子数の確定後)に作り、問い合わせ時に格子数が変わっていれば作り直す
+  (finalize → 別ケースの initialize)。表は `target` のモジュール変数
+  (bmif の names はポインタで返す仕様)。§60 で保留した「機能有効時のみ
+  確保される変数」はこの表の拡張点: base_* に名前を足し var_internal に
+  内部名を加える。有効判定が要るなら m_main に問い合わせ口を加えて
+  ensure_items で除く(未実装。需要待ち)。
+- **get/set は変数の格子を select して m_main のアクセサを呼び、ルートに
+  戻す**(enter_grid/leave_grid。grid 0 では select を呼ばない = ネストなしの
+  経路は従来と同一命令列)。受理条件・意味論(§56・§57)は格子によらず同じ
+  で、set の適用は**その格子の次の 1 歩の冒頭**(子なら次のサブステップ)。
+  MPI では全ランクが同じ順序で呼ぶ既存規約(§58)のまま(select は通信を
+  含まない)。
+- **m_main の追加**:
+  - `m_main_get_ngrids()`: 格子数(ネストなし・未初期化は 1)。
+  - **子格子の原点**: `m_main_get_gridinfo` の x_ll, y_ll は、georef 管理なら
+    その値、**ネストの子で georef がなければ親の原点と整列位置から再帰的に
+    導く**(`grid_origin`: x = x_p + (i0−1)·dx_p、y = y_p + (ny_p−(j0−1))·dy_p
+    − ny_c·dy_c)。これで全格子がルートの座標系(ルートに georef がなければ
+    0 原点)で自己記述され、consumer は origin + index·spacing で子を親の上に
+    置ける。ネストなし・georef なしは従来どおり 0。
+  - **ネスト後の再 initialize**: bmi-tester は同一プロセスで initialize →
+    finalize → initialize を繰り返す(§59)。ネスト系の finalize 後に ninst > 1
+    が残ると次の initialize の fn_nest 検査(外部確保との併用禁止)で
+    par_stop になるため、`m_main_finalize` のネスト経路の最後に
+    `shrink_instances`(grow_instances の逆: B 群の枠を `*_ctx_dispose` で
+    解放し encs を 1 個に戻す)を置いた。`par_decomp_ctx_dispose` /
+    `m_ffactor_ctx_dispose` / `m_swflow_enc_ctx_dispose` を公開(serial/mpi
+    同一 I/F。§2)。twin のような外部確保(instances_alloc)の経路は触らない。
+- **C 層(bmi_encflow_c.f90)**: grid 系の関数 `encflow_bmi_get_grid_shape /
+  spacing / origin / size` は **grid id を第 1 引数に取る**(非互換変更。
+  C API の利用者は同梱の Python ラッパのみという前提で、互換関数は残さない)。
+- **Python(bmi/python/encflow.py)**: `grids`(格子 id の一覧)、
+  `shape_of / spacing_of / origin_of / size_of(grid)`、`var_grid(name)`、
+  `var_on_grid(name, grid)`。`get / get2d / set` は名前から格子を判別して
+  その格子の寸法で動く。`nx, ny, grid_shape, grid_spacing, grid_origin` は
+  ルートの値のまま(後方互換。live_view が使う)。bmipy クラス
+  (encflow_bmi.py)は grid 引数をそのまま C 層へ渡す。
+- **見送り**: (1) handle 方式(独立な複数モデルの同一プロセス実行。plan §3.9
+  副産物)は encflow_bmi 型にインスタンス番号を持たせれば実現できるが、
+  fn_nest との併用は非対応のままになる・需要が未確認なので保留。(2) Fortran
+  ドライバ `driver_encflow`(plan §3.9.1)は test_bmi.f90 がその最小形
+  (逐次・MPI の時間ループ)で、複数 component の交換が要るときに育てる。
+
+### 検証(test/bmi_nest。2026-10-10)
+
+- **受入試験 bmi/python/test_nest.py**(test/bmi_nest/Run.sh が呼ぶ): wave の
+  ルート + 比 1:1・双方向の子(121×121。親セル 133..253)。同一プロセスで
+  (A)単独ラン → 子の初期水深を BMI の get から切り出して書く、(B)ネスト:
+  grids = [0, 1]、形・刻み・原点(子 = 親原点 + 整列位置)、16 出力・6 入力、
+  var_grid、誤用(存在しない格子・サイズ不一致・負値)の FAILURE、**毎ステップ
+  子の内部(帯の外)の h と速さがルートの足元とビット一致**、最終のルート h と
+  Log が単独ランと一致、(C)ネストを再 initialize し半分の時点で子の h と
+  ルートの z を同値 set → 最終 h・Log が単独ランと一致。全て厳密一致で PASS。
+  静的ドライバ test_encflow_bmi でもネストのルート Log == 単独 Log。
+- **bmi-tester**: wave 92 passed / 11 skipped(従来どおり)、ネスト系
+  170 passed / 20 skipped(2 格子 × 16 変数。"not a valid standard name" の
+  warning なし = 修飾名が文法内)。bmi-tester は manifest のファイルだけを
+  作業ディレクトリに写すので、check_bmi.sh に追加ファイル引数(一覧・子の
+  param・初期値ファイル)を設けた。
+- 無効時(ネストなし): BMI 経由の wave(同値 set 込み)が reference と
+  identical。reference 22 ケース PASS、厳密フラグ 38 ケースが従来基準と
+  ビット一致。test_set_value.py PASS。
+- MPI(OpenMPI)np = 1, 2, 4: 既存 8 ケース・twin・nest_identity 一致。
+  test_encflow_bmi_mpi で wave(set 込み)が reference と identical、ネスト系の
+  ルート Log == 単独 Log、ルート・子の Log がランク数不変。
+- -O0 -fcheck=all -finit-real=snan の MPI クリーンビルドで nest_identity np=2
+  と BMI ドライバ(単独・ネスト。np=1, 2)が完走・一致。
+
+### 落とし穴
+
+- **bmi-tester の manifest**: param 以外に読むファイル(ネスト一覧・子の
+  param・fn_hinit 等)を全て列挙しないと、作業ディレクトリでの initialize が
+  「ファイルがない」で落ちる(bmi-tester 側のメッセージは RuntimeError のみ)。
+- **再 initialize は逐次のみ**(MPI は MPI_Finalize 後に再初期化できない。§59)。
+  ネスト後の再 initialize も同じ。
+- **`.and.` の短絡評価は保証されない**: `nest%ng > 1 .and. nest%g(k)%parent > 0`
+  は、ネストなし(nest%g 未確保)で第 2 項が評価されると未確保配列の参照になる。
+  最適化ビルドでは黙って動いたが -O0 -fcheck=all で「上限 0 の配列の添字 1」
+  として検出された(grid_origin。test_encflow_bmi と nestcheck が落ちた)。
+  確保の判定と成分の参照は別の if 文にする。-fcheck のクリーンビルドを
+  BMI ドライバにも回す意味がここにある。
+- 比 1:1 の受入試験は子の初期水深をファイルで与える必要があり、test_nest.py が
+  単独ランの t0 の h から 17 桁で生成する(repr 相当。倍精度の往復は厳密)。
+  nestcheck の cut と同じ内容なので、bmi_nest は Fortran 側のドライバを
+  ビルドせずに Python だけで恒等を検査できる。

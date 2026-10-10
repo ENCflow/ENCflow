@@ -297,6 +297,9 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
 4. **ENC 配置(staggered)量の公開**: セル中心量(h,e,z,pre,hg,…)を
    grid 0 で公開。エッジ配置の u,v,m,n は当面非公開とするか、別
    grid id とするかを決める(第1段はセル量のみで十分)。
+   → **多格子(2026-10-10)**: ネスト系(fn_nest)は grid id で格子を区別
+   (grid 0 = ルート、k = 一覧の k+1 行目)、非ルート格子の変数は object 部に
+   `~grid<k>`。developer.md §73。
 5. **変数名マッピング表**: CSDMS Standard Names ↔ t_state 成分の
    対応表と単位(内部は SI が基本)。PREC=double|single は
    get_var_type / get_var_itemsize で実精度を報告する。

@@ -6,7 +6,9 @@ ENCflow を **Python や他モデルから操作するための標準インタ�
 です。ENCflow 全体がひとつの BMI component となり、
 initialize / update / get_value / set_value という共通の操作で、
 計算を任意の時点で止めて状態を取り出したり、外部から強制を与えたり
-できます。CSDMS 公式の適合性テスト(bmi-tester)に合格しています。
+できます。多段ネスティング(fn_nest)のランも全体がひとつの component で、
+格子は BMI の grid id で区別します。CSDMS 公式の適合性テスト(bmi-tester)に
+合格しています(単一格子・ネスト系とも)。
 
 BMI はオプション機能です。通常のビルド(encflow / encflow_mpi)は
 本ディレクトリに依存せず、従来どおり外部ライブラリなしで動きます。
@@ -71,6 +73,29 @@ set の「〜のみ可」は、**同じ量の与え方は一つ**(ファイル�
 (降雨なら分オーダー)。細かすぎる交換は無駄なだけですが、粗すぎる
 交換は結合誤差になります。
 
+### ネスト系(多段格子)の変数と格子
+
+ルートのパラメータに `fn_nest` があるケース(docs/users_guide/nest.md)は、
+全格子がひとつの component になります。`update` はルートの 1 歩(子はその
+中でサブステップ)、時刻はルートのものです。格子は **grid id** で区別し、
+grid 0 = ルート、grid k = 一覧の k+1 行目です。非ルート格子の変数は、名前の
+object 部の末尾に `~grid<k>` を付けたものです(CSDMS Standard Names の
+修飾の文法内):
+
+| ルート(grid 0) | 格子 2(grid 2) |
+| --- | --- |
+| `surface_water__depth` | `surface_water~grid2__depth` |
+| `atmosphere_water__precipitation_leq-volume_flux` | `atmosphere_water~grid2__precipitation_leq-volume_flux` |
+
+入出力変数表は格子数に応じて自動的に増えます(出力 8 × 格子数、入力
+3 × 格子数)。get / set は格子ごとに同じ条件・同じ意味論で、set は
+その格子の次の 1 歩の冒頭で適用されます。Python では
+`var_on_grid(VAR_DEPTH, 2)` が名前を作り、`model.grids` が格子 id の一覧、
+`model.shape_of(k)` / `spacing_of(k)` / `origin_of(k)` が格子の情報、
+`get / get2d / set` は名前から格子を判別します。子格子の原点(origin)は、
+georef がなければ親の原点と整列位置から導かれるので、全格子がルートの
+座標系で自己記述されます(origin + index × spacing で子を親の上に置ける)。
+
 ## 配列と格子の規約
 
 - 配列は BMI 仕様どおり flatten した 1 次元で、**要素 0 = 南西隅、
@@ -78,8 +103,9 @@ set の「〜のみ可」は、**同じ量の与え方は一つ**(ファイル�
   Landlab の RasterModelGrid ノード配列とは無変換で 1:1 対応します。
 - Python の `get2d()` は (ny, nx) を返します(行 0 = 南。matplotlib
   では `origin='lower'` で地図の向きどおりに表示されます)。
-- 格子は grid 0 = uniform_rectilinear、shape は [ny, nx] 順。
-  georef(hdr)を使うケースでは origin に実座標が入ります。
+- 格子は uniform_rectilinear(ネストなしは grid 0 のみ、ネスト系は格子ごと)、
+  shape は [ny, nx] 順。georef(hdr)を使うケースでは origin に実座標が
+  入ります(ネストの子は親から導いた座標)。
 - 参照渡し(get_value_ptr)と非構造格子系の問い合わせは非対応です
   (BMI 仕様が認める BMI_FAILURE / NotImplementedError を返します)。
 
@@ -104,7 +130,8 @@ mpirun -np 4 ./test_encflow_bmi_mpi param.txt
 | --- | --- |
 | `test_encflow_bmi [param] [set]` | ケースを BMI 経由で完走させる検証ドライバ(結果はスタンドアロン実行と一致する。`set` を付けると同値 set の無害性も検査) |
 | `python/test_set_value.py` | set_value の等価性テスト(ファイル強制と外部供給で結果が一致すること等。test/wave で実行) |
-| `python/check_bmi.sh` | CSDMS 公式適合性テスト bmi-tester の実行スクリプト |
+| `python/test_nest.py` | 多格子公開の受け入れ試験(格子情報・変数表・比 1:1 自己ネストの恒等・再 initialize・同値 set。test/bmi_nest で実行。`test/bmi_nest/Run.sh` が静的ドライバと bmi-tester も含めて一括実行) |
+| `python/check_bmi.sh` | CSDMS 公式適合性テスト bmi-tester の実行スクリプト(param の後に、param が参照する入力ファイルを列挙) |
 
 適合性テストの再現手順:
 
@@ -112,6 +139,7 @@ mpirun -np 4 ./test_encflow_bmi_mpi param.txt
 pip install bmi-tester bmipy 'pytest<8' 'gimli.units==0.3.*'
 cd test/wave
 ../../bmi/python/check_bmi.sh param.txt
+cd ../bmi_nest && ./Run.sh          # ネスト系(受け入れ試験 + bmi-tester)
 ```
 
 ## ファイル構成
@@ -124,11 +152,14 @@ cd test/wave
 | `python/encflow.py` | Python ラッパー。`ENCflow` クラス(日常利用はこちら) |
 | `python/encflow_bmi.py` | bmipy 準拠クラス `EncflowBmi`(bmi-tester・pymt 系ツール用) |
 | `python/live_view.py` | ライブ表示サンプル |
+| `python/test_set_value.py`, `python/test_nest.py` | 受け入れ試験(上記) |
 
 ## 制約・注意
 
-- 1 プロセスにつき 1 モデルです(同時に2つの ENCflow を持てません。
-  finalize 後の再 initialize は逐次では可能です)。
+- 1 プロセスにつき 1 モデルです(同時に 2 つの独立な ENCflow を持てません。
+  ネスト系は全格子で 1 モデル。finalize 後の再 initialize は逐次では可能です)。
+- 共有ライブラリの C 関数のうち格子系(`encflow_bmi_get_grid_shape` 等)は
+  grid id を第 1 引数に取ります(2026-10-10 に変更。Python ラッパ経由なら無関係)。
 - 共有ライブラリ(.so)経由の実行は、コンパイル条件の違いにより
   スタンドアロン実行とビットまでは一致しないことがあります(物理量の
   出力は表示桁で一致します)。厳密なビット再現が必要な検証には
@@ -138,4 +169,4 @@ cd test/wave
 
 設計の経緯・全体計画は [docs/bmi_plan.md](../docs/bmi_plan.md)、
 決定事項と検証記録の正本は
-[docs/developer.md](../docs/developer.md) の §53〜§60 にあります。
+[docs/developer.md](../docs/developer.md) の §53〜§60 と §73(多格子)にあります。

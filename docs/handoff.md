@@ -702,9 +702,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   examples/nest_reflect で比 3・5 の界面通過を一様細格子と比較)**は
   2026-10-09 実装済み。**Phase 3(r_t > 1 の時間補間・格子別 dt、nest_bc=1、
   2 段ネスト)、Phase 4(場の表〔スカラー・地下水〕、帯の置換体積、体積整合
-  置換、保存修正 nest_fb=3、スポンジ nest_bc=4)**も同日実装済み。保留:
-  Flather 放射(fn_boundary の族として設計)、NH の φ の帯。次は Phase 5
-  (BMI の多格子公開。plan §11)。残課題: 比 > 1 の補間の検証(Phase 3)、地理参照からの
+  置換、保存修正 nest_fb=3、スポンジ nest_bc=4)**も同日実装済み。
+  **Phase 5(BMI の多格子公開: grid id、`~grid<id>` 修飾名、動的変数表、
+  test/bmi_nest、bmi-tester 合格。developer.md §73)**は 2026-10-10 実装済みで、
+  plan §11 の全 Phase が完了。保留: Flather 放射(fn_boundary の族として設計)、
+  NH の φ の帯、BMI の handle 方式(独立複数モデル)と機能有効時のみの変数
+  (hg 等)の公開。残課題: 比 > 1 の補間の検証(Phase 3)、地理参照からの
   i0/j0 導出、拡散・NH を含む帯幅の必要条件)**:
   同一プロセス内の複数インスタンス化(モジュール私有状態の
   bind/swap。カーネル不変の等価リファクタ)を基盤に、全ランクが全格子の
