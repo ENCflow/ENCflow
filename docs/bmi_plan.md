@@ -589,3 +589,177 @@ NextGen 系エコシステムとの相互運用)を追記する節目になる�
    で BMI 対応を明記して引用可能にする。CSDMS Annual Meeting
    (毎年5月、Boulder)のクリニック・ポスターはエコシステム中心人物に
    直接届く場。AGU/EGU の model coupling セッションも同様。
+
+## 11. 公開変数の拡張: 機能依存変数の get / set(検討案。2026-10-11 起案)
+
+§60 で「機能有効時のみ確保される変数(hg・swe 等)は動的変数リストの
+設計を決めてから」と保留し、§73 で拡張点(base_* と var_internal、
+有効判定は m_main への問い合わせ口)を指摘した件の設計案。**未合意**
+(§11.8 の要合意事項を決めてから実装する。CLAUDE.md「設計判断は実装前に
+議論する」)。合意後の決定事項と検証記録は developer.md に新節を立てる。
+
+### 11.1 現状と課題
+
+- 公開は出力 8・入力 3(§54・§60)で、いずれも m_state_init が無条件に
+  確保するセル量。機能(fn_*)に依存する状態量は一つも公開していない。
+- 名前の正本が散在している: `base_out / base_in`(表)、`var_internal`
+  (Standard Name → 内部名)、`get_var_units`(単位)、`m_main_get_value /
+  set_value` の `select case`(内部名の実装)、Python 定数 `VAR_*`、
+  bmi/README.md・README.en.md の表。1 変数の追加で 6 箇所を触る。
+- set は変数ごとに意味論・受理条件・適用処理が異なる(§56・§57)。
+  追加のたびに個別設計になるので、区分を先に決めておく。
+
+### 11.2 候補変数の棚卸し
+
+t_state の成分(m_state.f90)と m_output の出力条件から。「存在」は
+§11.3 の判定基準(= その量を生産するプロセスが有効)。Standard Name は
+CSDMS の既存名を優先し、無いものは文法(object~adjective__quantity)内で
+造語する(bmi-tester の名前検査は文法のみ。§73)。**名前は全て案**。
+
+| 内部名 | 内容 | 単位 | 確保 | 存在判定 | get | set 区分(§11.5) | Standard Name(案) |
+|---|---|---|---|---|---|---|---|
+| hg | 地下貯留(層1。柱状換算) | m | 常時 | gw%enabled | 第1弾 | S(bucket のみ受理) | soil_water__leq-depth |
+| swe | 積雪水量 | m | fn_snow | allocated | 第1弾 | S | snowpack__liquid-equivalent_depth(既存) |
+| sd | 土層厚 | m | fn_geomorph/fn_gwflow | allocated | 第1弾 | 不可(z−sd=岩盤面を動かす) | soil__thickness(既存) |
+| hs | 浮遊砂柱状量 | m | 常時 | s%sed_active | 第1弾 | 不可(第2弾で検討) | surface_water_sediment~suspended__volume-per-area |
+| cqc | 輸送物質濃度 | mg L-1 | fn_wq | s%wq_active | 第1弾 | 不可(導出量。cq は第2弾) | surface_water_solute__mass_concentration |
+| hi | 氷厚 | m | fn_glacier | allocated | 第1弾 | 不可(z と共動) | glacier_ice__thickness(既存) |
+| hl | 溶岩厚 | m | fn_lavaflow | allocated | 第1弾 | 不可(z と共動) | lava__thickness |
+| hmax / vvmax / qqmax | 期間最大 | m, m s-1, m2 s-1 | 常時 | 常に存在 | 第1弾(低優先) | 不可(統計) | surface_water__time_max_of_depth 等 |
+| hg2 / hgc | 層2・管路層の貯留 | m | f_gwlayer2 / f_gwconduit | allocated | 第2弾 | 不可 | bedrock~weathered_water__leq-depth 等 |
+| hss / hgs | 地表・地下の塩水層厚 | m | fn_salt | allocated | 第2弾 | 不可 | — |
+| swi | 土壌雨量指数 | mm | fn_swi | allocated | 第2弾 | 不可 | — |
+| hd / wd, hbd / wbd | 流動・堆積の流木・瓦礫 | m | fn_driftwood / fn_bldgdebris | allocated | 第2弾 | 不可 | driftwood~floating__volume-per-area 等 |
+| hb / vb, fs, frofac, bp | 動く底層・安全率・凍土係数・表面プール | — | 各フラグ | allocated | 需要待ち | 不可 | — |
+| u, v, m, n | エッジ配置の流速・線流量 | — | 常時 | — | **非公開のまま**(§54) | — | — |
+| prh, af, gv, lm, qdir, ddir* | 換算値・入力係数の写し・角度・整数フラグ | — | 常時 | — | 非公開(prh は pre の換算、qdir は §60 の方針で成分に合成済み) | — | — |
+
+入力候補(強制。F 区分)の将来枝: 気温(m_meteo。tsrc に「外部」を
+新設して受理)、ネスト境界の η_e・u_e(nesting_plan.md §15.6 の族)。
+いずれも需要待ち(第3弾)。
+
+### 11.3 論点1: 機能無効時の扱い(get)
+
+| 案 | 内容 | 評価 |
+|---|---|---|
+| (a) **動的変数表** | 無効な機能の変数は input/output の表に載せない。表にない名前の get/set/get_var_* は未知名と同じ BMI_FAILURE | m_output の「allocated なら書く」と同じ基準。BMI の変数表の意味(この component が実際に交換する量)に一致。bmi-tester は表にある名前だけを検査するので、載せた変数は必ず get できる状態になる。無効時のコストはゼロ(表に無いだけ)。**推奨** |
+| (b) 常時掲載・無効時はゼロ場 | 表は固定。無効なら 0 を返す | 「雪がない」と「雪モデルが無い」を consumer が区別できず、pymt 等の自動結合がゼロ場に黙って結合する。存在しない量を見せることになり、方針8 の精神に反する。却下 |
+| (c) 常時掲載・無効時は get が FAILURE | 表は固定 | output_var_names にあるのに get できないのは BMI の契約違反(bmi-tester の get_output_values が落ちる)。却下 |
+
+(a) の具体: 
+
+- **存在判定の正本は m_main**。`m_main_has_value(iname)`(logical)を
+  新設し、内部名ごとに「その量を生産するプロセスが有効か」を返す。
+  判定材料は原則 `allocated(s%…)`(swe, hi, hl, sd, hg2, …)だが、
+  **常時確保の hg・hs は確保ではなく有効フラグ**(gw%enabled、
+  s%sed_active)で判定する(無効時のゼロ場は「存在しない」)。既存の
+  8+3 変数は常に真(表は従来と同一になる = 後方互換)。判定材料は全
+  ランクで同一(param 由来)なので collective 安全(§5)。
+- `m_main_get_value / set_value` は、存在しない内部名に対して新しい
+  ierr(=4「機能無効」)を返す(1「未知名」と区別して利用者へ説明可能に)。
+- **ensure_items は格子ごとに判定する**(ネスト系は格子ごとに param が
+  異なり、子だけ雪が有効、ということがあり得る): 格子 g を select →
+  基本変数の順に `has_value` が真のものを並べる → ルートへ戻す。並びは
+  「格子ごと・基本変数の順」(§73)のまま。
+- **表の再生成は initialize ごと**にする。現状の「格子数が変わったら
+  作り直す」では、同じ格子数で機能構成が違うケースを再 initialize した
+  ときに古い表が残る。encflow_initialize で items を無効化(ng を 0 に
+  戻す)してから ensure_items を呼ぶ。
+- Python(encflow.py): `has(name)`(表にあるか)を追加。`VAR_*` 定数は
+  新変数分を足す(表に無ければ get/set は従来どおり BmiError)。
+  `__init__` の格子収集(output_var_names から)は無変更で動く。
+
+### 11.4 論点2: 名前表の一元化(等価リファクタ。先行コミット)
+
+bmi_encflow.f90 に 1 行 = 1 変数の表(派生型配列: Standard Name、
+内部名、単位、入力可否)を置き、`base_out / base_in`・`var_internal`・
+`get_var_units`・`ensure_items` をこの表から導く。変数追加は「表に 1 行
++ m_main に `case` 1 つ(+ has_value の 1 行)」になる。Python 定数と
+README の表は利用者向け文書として残す(表との照合は test_nest.py 系の
+受け入れ試験に 1 項目足せば機械検査できる)。既存 11 変数の並び・名前・
+単位は不変で、BMI 経由のラン・bmi-tester の結果(92 passed)が同一である
+ことが合否(規律4: 等価変換は追加と別コミット)。
+
+### 11.5 論点3: set の方針
+
+§56・§57 の 3 変数は実は 3 区分の見本になっている。区分ごとに受理条件・
+適用位置・整合処理を固定し、新変数はどれかの区分に当てはめる(当てはまら
+なければ公開しない):
+
+| 区分 | 意味論 | 受理条件 | 適用 | 既存 | 候補 |
+|---|---|---|---|---|---|
+| F 強制 | 持続(次の set まで) | 内部の生産者が無効 = 「外部」を宣言(pre は prtype=0 がその意味) | update 冒頭、内部の生成(makepre)の代わり | pre | 気温(tsrc=外部を新設)、境界 η_e・u_e |
+| Q 準静的共有状態 | 一回置換。生産者は一人 | 内部の更新プロセスが全て無効 | update 冒頭、h 保存で e 回復、ハロ交換 | z | (sd は岩盤面を動かすので不可) |
+| S DA 型状態置換 | 一回置換。常時受理 | 変数が存在(所有プロセス有効)+ 所有モデルが置換に整合できる + 非負 | update 冒頭、所有モジュールの calc の前 | h | hg、swe(第1弾)。hs・cq は第2弾で検討 |
+
+原則:
+
+1. **set 可能 ⟺ 表に存在**。入力表も動的(§11.3)。入力表に載る =
+   「この量は外部から与え得る」であり、受理の可否(生産者規則・
+   所有モデルの整合性)は set 時に判定する 2 層構造は現状(pre・z)と
+   同じ。bmi-tester(0.5.10)は入力変数に対して set_value を**実行しない**
+   (`test_set_input_values` が "too dangerous" で skip。stage_2/3 は
+   in∪out の名前に対するメタデータ問い合わせのみ)ことを配布物で確認
+   したので、入力表の掲載は適合性試験に影響しない。
+2. **整合処理は所有モジュールの契約に従う**(h → e=z+h の回復と同型)。
+   S 区分で置換してよいのは、所有モジュールが**その配列以外に私有の
+   状態を持たない**(置換後に不整合が残らない)場合に限る:
+   - hg: bucket(f_gwvertical=1)は私有状態なし → 受理。Green-Ampt
+     (=2)は累積浸透の私有状態と不整合になる → 拒否(ierr=2)。層2・
+     管路層は別変数(hg2・hgc)なので hg の置換は層1のみ。容量
+     (sd·sy0)超過は拒否せず次ステップのモデル処理に任せる(bucket の
+     溢流と同じ経路)— 実装時に bucket の契約を確認する。
+   - swe: m_snow の私有は降水スナップショット(pr0)のみ → 受理。
+   - hi・hl: z と共動(氷厚・溶岩厚は s%z に含まれる)ため置換は
+     z の再構成を伴う → 見送り。hs・cq: swflow のステップ内移流と
+     debris の運動量算入に関わる → 第2弾で個別検討。
+3. **適用マスクは h と同じ**(x>0 かつ海セル除外。swe は init が
+   海セルを 0 にしている契約に合わせる)。負値は ierr=3。NaN 検査は
+   置かない(§56)。
+4. **ステージングは当面「変数ごと」の現行様式を踏襲**(ext<name>_fresh +
+   ext<name>(:,:)。初回 set 時にのみ確保 = 未使用ならメモリゼロ)。
+   汎用化(名前付きステージの配列と適用ディスパッチャ)は set 変数が
+   さらに 3 つ以上増える段で等価リファクタとして行う。適用順は固定:
+   z → h → e 回復 → hg → swe → pre(現行の z → h → bedmotion → pre の
+   間に S 区分を挿入)。
+5. MPI は現行と同じ(全ランク collective、src は rank0 のみ有効、値検査は
+   rank0 → allreduce で判定を揃える → scatter。§58)。再 initialize の
+   残留リセット(init_instance)に新ステージを足す(§59)。
+6. save/restore: 未適用のステージは save されない(現行と同じ。文書化)。
+   ネスト系: 子格子への set はその格子の次のサブステップ冒頭で適用(§73)。
+
+### 11.6 段取りと検証(合意後)
+
+| 段 | 内容 | 合否(規律2) |
+|---|---|---|
+| 0 | 等価リファクタ: 名前表の一元化(§11.4)+ ensure_items の存在フィルタ基盤(`m_main_has_value`。既存変数は常に真)+ initialize ごとの表再生成 | BMI 経由 wave/chichibu が reference と identical。bmi-tester wave 92 passed・bmi_nest 170 passed 不変。test_set_value.py・test_nest.py PASS |
+| 1 | get の追加(第1弾: hg, swe, sd, hs, cqc, hi, hl、任意で hmax/vvmax/qqmax) | 無効時: reference 全ケース PASS。有効時: get の場と m_output の同時刻の出力(Hg・Sw(×1000)・Sd・Hs・C・Hi・Hl)が一致。機能の多いケース(例: test/gwseep・test/frost・雪のケース)で bmi-tester を新たに回し passed / 0 failed。ネスト系で親子の機能構成が違うケースの変数表が格子ごとに正しい。MPI np=1,2,4 で BMI ドライバ identical |
+| 2 | set 第1弾: hg(bucket)、swe | 同値 set の不変性(半分で get → set → 継続。Log 全行一致)を地下水・雪のケースで。誤用: Green-Ampt での hg set・無効時の set・負値が BmiError。無効時 reference 不変。MPI np=1,2,4 |
+| 3 | 需要待ち: 気温の外部供給(F)、hs・cq の S、境界 η_e(F) | 各自 |
+
+文書: bmi/README.md と README.en.md の変数表(存在条件の列を追加)、
+developer.md に決定事項の新節、architecture.md の BMI 行(§2 の実行順序に
+S 区分の適用、§3 の set_value の列挙)、handoff.md の保留項目の消し込み。
+
+### 11.7 検討で分かったこと
+
+- hg と hs は機能無効でも常時確保される(m_state_init)。「確保 = 存在」
+  では無効時にゼロ場が公開されるので、存在判定は「確保」ではなく
+  「生産プロセスの有効」で定義する必要がある(§11.3)。
+- 現行の ensure_items は格子数だけをキーに表をキャッシュしている。機能
+  依存の表にすると再 initialize で古い表が残り得るため、initialize ごとの
+  再生成に変える(§11.3)。
+- bmi-tester は set_value を実行しない(§11.5 原則1)。入力表の設計は
+  適合性試験ではなく利用者への意味の正しさで決めてよい。
+
+### 11.8 要合意事項
+
+1. 無効時の扱いは (a) 動的変数表(§11.3)でよいか。
+2. 存在判定の定義は「その量を生産するプロセスが有効」(hg・hs はフラグ、
+   他は allocated)でよいか。
+3. 第1弾 get の対象(§11.2 の「第1弾」行)。統計量(hmax 等)を含めるか。
+4. set 第1弾は hg(bucket のみ受理)と swe の 2 つ。hi・hl・sd は不可、
+   hs・cq は第2弾、でよいか。
+5. ステージングの汎用化は見送り(変数ごとの現行様式)でよいか。
+6. Standard Name の候補(CSDMS 既存名優先・文法内造語を許容)。
+7. 段 0 の等価リファクタ(名前表の一元化)を先行コミットとして行うか。

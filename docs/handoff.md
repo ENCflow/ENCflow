@@ -713,7 +713,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   nest_nh。developer.md §75。test/nest_identity の nh ケース、examples/nest_reflect の
   r3_nh1/nh0)**。活性集合の帯からの種(plan §16.2)も同日実装。利用者向け文書の図(docs/figs/nest_*.png = 配置・時間進行・親→子の方式、examples/nest_reflect/figs、test/nest_identity/figs)、test の README、英語ミラー docs/en/users_guide/nest.md、comparison.md のネスティング行も 2026-10-10 整備。同日、ユーザーガイドの全 24 章(索引の params_index・usecases を除く)に日英の説明図を追加(docs/figs/make_guide_figs.py + guide/fig_<章>.py、共通様式 guide/_style.py。データ不要の模式図で、章の記述の変更時は図も更新する)。保留: ファイル供給(plan §15.6。
   別モデルの出力からの一方向ネスト。需要待ち)、BMI の handle 方式(独立複数
-  モデル)と機能有効時のみの変数(hg 等)の公開。残課題: 比 > 1 の補間の検証(Phase 3)、地理参照からの
+  モデル)と機能有効時のみの変数(hg 等)の公開(**検討案は
+  docs/bmi_plan.md §11。2026-10-11 起案・未合意**)。残課題: 比 > 1 の補間の検証(Phase 3)、地理参照からの
   i0/j0 導出、拡散・NH を含む帯幅の必要条件)**:
   同一プロセス内の複数インスタンス化(モジュール私有状態の
   bind/swap。カーネル不変の等価リファクタ)を基盤に、全ランクが全格子の
