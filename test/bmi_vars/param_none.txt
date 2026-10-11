@@ -1,0 +1,51 @@
+!======================================================================
+! bmi_vars 構成 none: 機能なし(平坦・閉領域・一様降雨)。
+!   機能依存の BMI 変数(地下貯留・積雪)が変数表に載らないことの対照。
+!   developer.md §76、bmi/python/test_vars.py
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.5
+  t0 = 0
+  tt = 60
+  dt_disp = 10
+  dt_file = 30
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_precip = '-'
+  dir_result = 'result_none'
+  f_out_h = 1
+  f_out_hg = 1
+  f_disp_debug = 1          ! S 列を全有効桁で表示(Log の同一性検査用)
+  f_check_cfl = 0
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.05
+/
+
+&list_geoinfo
+  nx = 21
+  ny = 21
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 0
+  z0 = 0.0
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound
+/
+
+&list_precip
+  prtype = 1
+  dt_prupdate = 1.0
+  prval(1:2,1) = 0.0, 36.0
+  prval(1:2,2) = 100.0, 36.0
+/

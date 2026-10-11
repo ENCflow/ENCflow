@@ -74,7 +74,7 @@ module bmi_encflow
     logical :: input
   end type
 
-  integer, parameter :: n_vars = 8
+  integer, parameter :: n_vars = 18
   type(t_var), parameter :: vars(n_vars) = [ &
     t_var("surface_water__depth",                            "h",   "m",      .true.), &
     t_var("land_surface__elevation",                         "z",   "m",      .true.), &
@@ -83,7 +83,19 @@ module bmi_encflow
     t_var("surface_water_flow__speed",                       "vv",  "m s-1",  .false.), &
     t_var("surface_water_flow__unit_width_volume_flow_rate", "qq",  "m2 s-1", .false.), &
     t_var("surface_water__x_component_of_velocity",          "ux",  "m s-1",  .false.), &
-    t_var("surface_water__y_component_of_velocity",          "uy",  "m s-1",  .false.) ]
+    t_var("surface_water__y_component_of_velocity",          "uy",  "m s-1",  .false.), &
+    ! --- 第2弾以降(§76)。期間最大(常時存在)---
+    t_var("surface_water__time_max_of_depth",                "hmax",  "m",      .false.), &
+    t_var("surface_water_flow__time_max_of_speed",           "vvmax", "m s-1",  .false.), &
+    t_var("surface_water_flow__time_max_of_unit_width_volume_flow_rate", "qqmax", "m2 s-1", .false.), &
+    ! --- 機能依存(その量を生産するプロセスが有効な格子にだけ載る)---
+    t_var("soil_water__leq-depth",                           "hg",  "m",      .false.), &
+    t_var("snowpack__liquid-equivalent_depth",               "swe", "m",      .false.), &
+    t_var("soil__thickness",                                 "sd",  "m",      .false.), &
+    t_var("surface_water_sediment~suspended__volume-per-area", "hs", "m",     .false.), &
+    t_var("surface_water_solute__mass_concentration",        "cqc", "mg l-1", .false.), &
+    t_var("glacier_ice__thickness",                          "hi",  "m",      .false.), &
+    t_var("lava__thickness",                                 "hl",  "m",      .false.) ]
 
   character(len=BMI_MAX_COMPONENT_NAME), target :: &
     component_name = "ENCflow"

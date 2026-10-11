@@ -42,6 +42,18 @@ VAR_SPEED = "surface_water_flow__speed"                     # 速さ (m/s)。get
 VAR_UNIT_DISCHARGE = "surface_water_flow__unit_width_volume_flow_rate"  # 比流量 (m2/s)。get のみ
 VAR_VELOCITY_X = "surface_water__x_component_of_velocity"   # 流速 x=東成分 (m/s)。get のみ
 VAR_VELOCITY_Y = "surface_water__y_component_of_velocity"   # 流速 y=北成分 (m/s)。get のみ
+VAR_DEPTH_MAX = "surface_water__time_max_of_depth"          # 期間最大水深 (m)。get のみ
+VAR_SPEED_MAX = "surface_water_flow__time_max_of_speed"     # 期間最大速さ (m/s)。get のみ
+VAR_UNIT_DISCHARGE_MAX = "surface_water_flow__time_max_of_unit_width_volume_flow_rate"  # 期間最大比流量 (m2/s)。get のみ
+# 機能依存の変数(その量を生産する機能が有効なケース・格子にだけ存在する。
+# 無効なら変数表に載らず、get/set は BmiError。has(name) で確認できる)
+VAR_GW_STORAGE = "soil_water__leq-depth"                    # 地下貯留(層1。柱状換算 m)。fn_gwflow
+VAR_SWE = "snowpack__liquid-equivalent_depth"               # 積雪水量 (m)。fn_snow
+VAR_SOIL_THICKNESS = "soil__thickness"                      # 土層厚 (m)。get のみ
+VAR_SUSPENDED_SEDIMENT = "surface_water_sediment~suspended__volume-per-area"  # 浮遊砂柱状量 (m)。get のみ
+VAR_SOLUTE_CONC = "surface_water_solute__mass_concentration"  # 輸送物質濃度 (mg/L)。get のみ
+VAR_ICE_THICKNESS = "glacier_ice__thickness"                # 氷厚 (m)。get のみ
+VAR_LAVA_THICKNESS = "lava__thickness"                      # 溶岩厚 (m)。get のみ
 
 
 def var_on_grid(name, grid):
@@ -273,6 +285,14 @@ class ENCflow:
     def input_var_names(self):
         return self._names("encflow_bmi_get_input_item_count",
                            "encflow_bmi_get_input_var_name")
+
+    def has(self, name):
+        """変数 name(格子版も可)がこのケースの変数表に存在するか。
+
+        機能依存の変数(VAR_GW_STORAGE 等)は、その機能が有効な格子にだけ
+        存在する。存在しない名前の get / set は BmiError になる。
+        """
+        return name in self.output_var_names
 
     # ---- 状態量 ----
 

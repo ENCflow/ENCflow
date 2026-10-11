@@ -670,18 +670,46 @@ end function
 !----------------------------------------------------------------------
 integer function var_state(name)
   character(len=*), intent(in) :: name
+  logical :: ready
+  ! 機能依存の判定にはインスタンスが初期化済みであることが要る(未初期化・
+  ! finalize 後は「存在しない」)。.and. の短絡評価は保証されないので分ける(§73)
+  ready = (ninst > 0)
+  if (ready) ready = associated(enc)
+  if (ready) ready = enc%initialized
   select case (trim(name))
-  case ('h', 'z', 'e', 'pre', 'vv', 'qq', 'ux', 'uy')
+  case ('h', 'z', 'e', 'pre', 'vv', 'qq', 'ux', 'uy', 'hmax', 'vvmax', 'qqmax')
     var_state = 0                 ! 無条件確保のセル量(常に存在)
+  ! --- 機能依存(存在 = その量を生産するプロセスが有効。§76)---
+  case ('hg')                     ! 地下貯留(層1): 配列は常時確保だが gwflow が無効ならゼロ場
+    var_state = cond(ready, enc%gw%enabled)
+  case ('swe')                    ! 積雪水量(fn_snow)
+    var_state = cond(ready, allocated(enc%s%swe))
+  case ('sd')                     ! 土層厚(m_output の Sd と同じ条件)
+    var_state = cond(ready, allocated(enc%g%sd) .and. allocated(enc%s%sd))
+  case ('hs')                     ! 浮遊砂柱状量: 配列は常時確保だが輸送が無効ならゼロ場
+    var_state = cond(ready, enc%s%sed_active)
+  case ('cqc')                    ! 輸送物質濃度(fn_wq)
+    var_state = cond(ready, enc%s%wq_active)
+  case ('hi')                     ! 氷厚(fn_glacier)
+    var_state = cond(ready, allocated(enc%s%hi))
+  case ('hl')                     ! 溶岩厚(fn_lavaflow)
+    var_state = cond(ready, allocated(enc%s%hl))
   case default
     var_state = 1
   end select
+contains
+  integer function cond(ready, enabled)
+    logical, intent(in) :: ready, enabled
+    cond = 4
+    if (.not. ready) return
+    if (enabled) cond = 0
+  end function
 end function
 
 
 !----------------------------------------------------------------------
 ! アクセサ: 状態量の全域コピー取得
-!   name は内部名('h', 'z', 'e', 'pre')。CSDMS Standard Names への
+!   name は内部名('h', 'z', 'e', 'pre', … var_state の一覧)。CSDMS Standard Names への
 !   対応付けは BMI アダプタ側の責務(m_main は BMI を知らない)。
 !   dest は全域 (1:nx, 1:ny)。全域窓・担当帯の外は 0 で埋める。
 !   MPI では全ランク collective に呼び、有効な値は rank0 のみ
@@ -711,6 +739,27 @@ subroutine m_main_get_value(name, dest, ierr)
     call par_gather_to(dest, enc%s%vv)
   case ('qq')
     call par_gather_to(dest, enc%s%qq)
+  case ('hmax')
+    call par_gather_to(dest, enc%s%hmax)
+  case ('vvmax')
+    call par_gather_to(dest, enc%s%vvmax)
+  case ('qqmax')
+    call par_gather_to(dest, enc%s%qqmax)
+  ! --- 機能依存の状態量(存在は var_state が判定済み。§76)---
+  case ('hg')
+    call par_gather_to(dest, enc%s%hg)
+  case ('swe')
+    call par_gather_to(dest, enc%s%swe)
+  case ('sd')
+    call par_gather_to(dest, enc%s%sd)
+  case ('hs')
+    call par_gather_to(dest, enc%s%hs)
+  case ('cqc')
+    call par_gather_to(dest, enc%s%cqc)
+  case ('hi')
+    call par_gather_to(dest, enc%s%hi)
+  case ('hl')
+    call par_gather_to(dest, enc%s%hl)
   case ('ux', 'uy')
     ! 流速のセル中心成分(導出量。vv = 速さ、qdir = x 軸からの流向角
     ! から合成する。座標系は内部規約 = +x 東、+y は j 増加方向 = 南。
