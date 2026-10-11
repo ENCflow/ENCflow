@@ -59,14 +59,41 @@ python3 ../../bmi/python/live_view.py param.txt --save frames   # PNG 連番(画
 | `surface_water_flow__unit_width_volume_flow_rate` | 比流量の大きさ(単位幅流量) | m²/s | 不可(get のみ) |
 | `surface_water__x_component_of_velocity` | 流速の x(東)成分 | m/s | 不可(get のみ) |
 | `surface_water__y_component_of_velocity` | 流速の y(北)成分 | m/s | 不可(get のみ) |
+| `surface_water__time_max_of_depth` | 期間最大水深 | m | 不可(get のみ) |
+| `surface_water_flow__time_max_of_speed` | 期間最大の速さ | m/s | 不可(get のみ) |
+| `surface_water_flow__time_max_of_unit_width_volume_flow_rate` | 期間最大の比流量 | m²/s | 不可(get のみ) |
 
-8変数すべて get できます(流速成分はセル中心の導出量で、内部の
-エッジ配置量から合成されます。x=東・y=北の標準的な向きです)。
-set できるのは上3つで、値は次の update の冒頭で適用されます。
-set の「〜のみ可」は、**同じ量の与え方は一つ**(ファイル強制と外部
-供給を併用しない)という原則によるもので、条件を満たさない set は
-エラー(BMI_FAILURE)になります。Python では
+上の 11 変数はどのケースでも存在し、すべて get できます(流速成分は
+セル中心の導出量で、内部のエッジ配置量から合成されます。x=東・y=北の
+標準的な向きです)。set できるのは上 3 つで、値は次の update の冒頭で
+適用されます。set の「〜のみ可」は、**同じ量の与え方は一つ**(ファイル
+強制と外部供給を併用しない)という原則によるもので、条件を満たさない
+set はエラー(BMI_FAILURE)になります。Python では
 `model.set(名前, 配列)`(下記の 1 次元標準形か、(ny, nx) の 2 次元)。
+
+### 機能依存の変数(有効なケースにだけ存在する)
+
+次の変数は、**その量を生産する機能が有効なケース(ネスト系では格子)に
+だけ変数表に載ります**。無効なケースでは `get_output_var_names` に現れず、
+get / set / メタデータ問い合わせは未知の名前と同じエラーになります
+(「雪がない」と「雪モデルがない」を区別するためで、ゼロ場は返しません。
+無効時の追加メモリ・計算はゼロです)。Python では `model.has(名前)` で
+確認できます。
+
+| CSDMS Standard Name | 内容 | 単位 | 存在条件 | set |
+| --- | --- | --- | --- | --- |
+| `soil_water__leq-depth` | 地下貯留(層 1。柱状換算) | m | fn_gwflow(地下水モジュール有効) | 可(**置換**。鉛直モデルがバケツまたは無し〔側方のみ〕のとき。Green-Ampt は私有の累積浸透と不整合になるため不可) |
+| `snowpack__liquid-equivalent_depth` | 積雪水量 | m | fn_snow | 可(**置換**) |
+| `soil__thickness` | 土層厚 | m | 土層厚を使う機能(gwflow の側方・Green-Ampt、geomorph) | 不可(get のみ) |
+| `surface_water_sediment~suspended__volume-per-area` | 浮遊砂の柱状量 | m | geomorph の浮遊砂輸送 | 不可(get のみ) |
+| `surface_water_solute__mass_concentration` | 輸送物質の体積平均濃度 | mg/L | fn_wq | 不可(get のみ) |
+| `glacier_ice__thickness` | 氷厚 | m | fn_glacier | 不可(get のみ) |
+| `lava__thickness` | 溶岩厚 | m | fn_lavaflow | 不可(get のみ) |
+
+地下貯留と積雪水量の set は水深の set と同じ「データ同化型の置換」です
+(加算ではなく、次の update の冒頭で陸セルに一回適用。負値はエラー)。
+入力変数表に載ること(= 存在)と set が受理されること(= 上の条件)は
+別で、受理されない set はエラーになります。受け入れ試験は test/bmi_vars。
 
 **交換間隔の目安**: get/set は場のコピーなので、交換はモデルの
 時間刻みごとではなく、**交換する量の時間スケール**で行ってください
@@ -87,8 +114,9 @@ object 部の末尾に `~grid<k>` を付けたものです(CSDMS Standard Names 
 | `surface_water__depth` | `surface_water~grid2__depth` |
 | `atmosphere_water__precipitation_leq-volume_flux` | `atmosphere_water~grid2__precipitation_leq-volume_flux` |
 
-入出力変数表は格子数に応じて自動的に増えます(出力 8 × 格子数、入力
-3 × 格子数)。get / set は格子ごとに同じ条件・同じ意味論で、set は
+入出力変数表は格子数に応じて自動的に増えます(格子ごとに、常時存在の
+出力 11・入力 3 と、その格子で有効な機能の変数)。get / set は格子ごとに
+同じ条件・同じ意味論で、set は
 その格子の次の 1 歩の冒頭で適用されます。Python では
 `var_on_grid(VAR_DEPTH, 2)` が名前を作り、`model.grids` が格子 id の一覧、
 `model.shape_of(k)` / `spacing_of(k)` / `origin_of(k)` が格子の情報、
@@ -130,6 +158,7 @@ mpirun -np 4 ./test_encflow_bmi_mpi param.txt
 | --- | --- |
 | `test_encflow_bmi [param] [set]` | ケースを BMI 経由で完走させる検証ドライバ(結果はスタンドアロン実行と一致する。`set` を付けると同値 set の無害性も検査) |
 | `python/test_set_value.py` | set_value の等価性テスト(ファイル強制と外部供給で結果が一致すること等。test/wave で実行) |
+| `python/test_vars.py` | 機能依存の変数の受け入れ試験(変数表の内容・値・再 initialize・hg / swe の同値 set の不変性と受理条件。test/bmi_vars で実行。`test/bmi_vars/Run.sh` が静的ドライバと bmi-tester も含めて一括実行) |
 | `python/test_nest.py` | 多格子公開の受け入れ試験(格子情報・変数表・比 1:1 自己ネストの恒等・再 initialize・同値 set。test/bmi_nest で実行。`test/bmi_nest/Run.sh` が静的ドライバと bmi-tester も含めて一括実行) |
 | `python/check_bmi.sh` | CSDMS 公式適合性テスト bmi-tester の実行スクリプト(param の後に、param が参照する入力ファイルを列挙) |
 
@@ -152,7 +181,7 @@ cd ../bmi_nest && ./Run.sh          # ネスト系(受け入れ試験 + bmi-test
 | `python/encflow.py` | Python ラッパー。`ENCflow` クラス(日常利用はこちら) |
 | `python/encflow_bmi.py` | bmipy 準拠クラス `EncflowBmi`(bmi-tester・pymt 系ツール用) |
 | `python/live_view.py` | ライブ表示サンプル |
-| `python/test_set_value.py`, `python/test_nest.py` | 受け入れ試験(上記) |
+| `python/test_set_value.py`, `python/test_nest.py`, `python/test_vars.py` | 受け入れ試験(上記) |
 
 ## 制約・注意
 
@@ -169,4 +198,5 @@ cd ../bmi_nest && ./Run.sh          # ネスト系(受け入れ試験 + bmi-test
 
 設計の経緯・全体計画は [docs/bmi_plan.md](../docs/bmi_plan.md)、
 決定事項と検証記録の正本は
-[docs/developer.md](../docs/developer.md) の §53〜§60 と §73(多格子)にあります。
+[docs/developer.md](../docs/developer.md) の §53〜§60、§73(多格子)、
+§76(動的変数表と機能依存の変数)にあります。

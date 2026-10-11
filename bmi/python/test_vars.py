@@ -17,7 +17,8 @@ developer.md §76。変数表は「その量を生産する機能が有効な格
 同値 set の不変性(hg・swe の set。§76 段 2)は run_set_* が検査する:
   E. full を半分まで進めて get した hg・swe をそのまま set して継続したランの
      Log が、無介入ランの Log と全行一致。負値の set は BmiError
-  F. ga の hg set(私有の累積浸透と不整合)と none の hg set は BmiError
+  F. ga の hg set(私有の累積浸透と不整合。入力表には載る = 存在と受理の 2 層)と
+     none の hg set は BmiError
 """
 
 import os
@@ -177,8 +178,10 @@ def run_set_rejection():
     with ENCflow("param_ga.txt") as m:
         m.update_until(T_HALF)
         hg = m.get(VAR_GW_STORAGE)
-        if VAR_GW_STORAGE in m.input_var_names:
-            fail("ga: hg listed as input although Green-Ampt cannot accept a replacement")
+        # 入力表に載る(= 存在する)が受理されない: pre(ファイル駆動時)・z と同じ
+        # 2 層構造(存在は表、受理条件は set 時)
+        if VAR_GW_STORAGE not in m.input_var_names:
+            fail("ga: hg missing from input names (existence is the listing criterion)")
         expect_error("ga: set(hg)", lambda: m.set(VAR_GW_STORAGE, hg))
         m.set(VAR_SWE, m.get(VAR_SWE))
         m.update_until(m.end_time)
@@ -191,7 +194,7 @@ def main():
         shutil.rmtree(d, ignore_errors=True)
     run_none()
     run_full("param_full.txt", "full", extra_in=[VAR_GW_STORAGE, VAR_SWE] if "--set" in sys.argv else [])
-    run_full("param_ga.txt", "ga", extra_in=[VAR_SWE] if "--set" in sys.argv else [])
+    run_full("param_ga.txt", "ga", extra_in=[VAR_GW_STORAGE, VAR_SWE] if "--set" in sys.argv else [])
     run_reinit()
     if "--set" in sys.argv:
         run_set_invariance()

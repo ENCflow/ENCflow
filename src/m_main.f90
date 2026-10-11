@@ -12,7 +12,7 @@ module m_main
   use m_record, only : t_record, m_record_init, m_record_dispose, m_record_probe, m_record_flux, m_record_summary
   use m_geomorph, only : t_geomorph, m_geomorph_init, m_geomorph_calc, m_geomorph_dispose
   use m_gwflow, only : t_gwflow, m_gwflow_init, m_gwflow_check_meteo, &
-                       m_gwflow_calc, m_gwflow_dispose
+                       m_gwflow_calc, m_gwflow_dispose, m_gwflow_can_replace_hg
   use m_evap, only : t_evap, m_evap_init, m_evap_calc, m_evap_record, m_evap_dispose
   use m_meteo, only : t_meteo, m_meteo_init, m_meteo_dispose
   use m_wq, only : t_wq, m_wq_init, m_wq_calc, m_wq_derive, m_wq_record, m_wq_dispose
@@ -105,6 +105,14 @@ module m_main
     real, allocatable :: extz(:,:)      ! ステージング場 (m。帯形状)
     logical :: exth_fresh = .false.     ! 未適用の h があるか
     real, allocatable :: exth(:,:)      ! ステージング場 (m。帯形状)
+    ! BMI 外部状態(hg, swe)のステージング(§76。S 区分 = データ同化型の
+    ! 置換。h と同じ一回適用で、所有モジュールの calc の前に適用する。
+    ! 受理は所有モデルが置換に整合できるときのみ: hg は鉛直モデルが
+    ! Green-Ampt でないとき(m_gwflow_can_replace_hg)、swe は常時)
+    logical :: exthg_fresh = .false.    ! 未適用の hg があるか
+    real, allocatable :: exthg(:,:)     ! ステージング場 (m。帯形状)
+    logical :: extswe_fresh = .false.   ! 未適用の swe があるか
+    real, allocatable :: extswe(:,:)    ! ステージング場 (m。帯形状)
   end type t_encflow
 
   ! インスタンスの格納と選択(developer.md §71)
@@ -212,9 +220,13 @@ subroutine init_instance(fn_param, align)
   enc%extpre_fresh = .false.
   enc%extz_fresh = .false.
   enc%exth_fresh = .false.
+  enc%exthg_fresh = .false.
+  enc%extswe_fresh = .false.
   if (allocated(enc%extpre)) deallocate(enc%extpre)  ! 格子サイズが変わり得る
   if (allocated(enc%extz)) deallocate(enc%extz)
   if (allocated(enc%exth)) deallocate(enc%exth)
+  if (allocated(enc%exthg)) deallocate(enc%exthg)
+  if (allocated(enc%extswe)) deallocate(enc%extswe)
 
   ! MPIを初期化(複数インスタンスでは 2 回目以降は何もしない)
   call par_init()
@@ -383,6 +395,7 @@ subroutine step_instance()
                   wq, dw, bd, sn, gl, lv, bm, si, ou, &
                   enc%extpre_active, enc%extpre_fresh, enc%extpre, &
                   enc%extz_fresh, enc%extz, enc%exth_fresh, enc%exth, &
+                  enc%exthg_fresh, enc%exthg, enc%extswe_fresh, enc%extswe, &
                   enc%ierror)
 
   end associate
@@ -795,7 +808,7 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! アクセサ: 強制場・状態の設定(BMI set_value 用)
-!   name は内部名('pre', 'z', 'h')。src は全域 (1:nx, 1:ny)・
+!   name は内部名('pre', 'z', 'h', 'hg', 'swe')。src は全域 (1:nx, 1:ny)・
 !   内部行順(j=1 が北)。値はステージングに格納するだけで、適用は
 !   次の update 冒頭で行う(bmi_plan.md §4.2、developer.md §56・§57)。
 !   - 'pre': 強制。降水がファイル駆動(prtype /= 0)のときは受理しない
@@ -806,6 +819,12 @@ end subroutine
 !   - 'h':   データ同化型の状態上書き(置換であり加算ではない。水を
 !     足すなら 'pre' を使う)。常に受理。運動量(u,v,m,n)は触らない。
 !     一回適用。
+!   - 'hg':  地下貯留(層1)の置換(§76 の S 区分。h と同じ意味論)。
+!     存在(gwflow 有効)かつ鉛直モデルが置換に整合できるとき
+!     (m_gwflow_can_replace_hg: Green-Ampt 以外)のみ受理。一回適用、
+!     陸セルのみ、適用後ハロ交換。
+!   - 'swe': 積雪水量の置換(同上。fn_snow 有効時のみ存在)。一回適用、
+!     陸セルのみ。
 !   ierr: 0 = 成功、1 = 未対応の変数名、2 = 許可されない(生産者が
 !   既に存在)、3 = 不正値(負の降水強度・負の水深)、4 = 既知だが
 !   機能無効(var_state)
@@ -858,6 +877,34 @@ subroutine m_main_set_value(name, src, ierr)
     end if
     call par_scatter_cell(src, enc%exth)
     enc%exth_fresh = .true.
+  case ('hg')
+    ! S 区分(§76): 所有モデルが置換に整合できるときのみ(Green-Ampt は
+    ! 累積浸透の私有状態と不整合になるため拒否)。判定材料は全ランク同一
+    if (.not. m_gwflow_can_replace_hg(enc%gw)) then
+      ierr = 2
+      return
+    end if
+    if (is_root) then
+      if (any(src < 0.)) ierr = 3
+    end if
+    call par_allreduce_maxi(ierr)   ! 判定を全ランク同一に(§5)
+    if (ierr > 0) return
+    if (.not. allocated(enc%exthg)) then
+      allocate(enc%exthg(1:enc%g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    end if
+    call par_scatter_cell(src, enc%exthg)
+    enc%exthg_fresh = .true.
+  case ('swe')
+    if (is_root) then
+      if (any(src < 0.)) ierr = 3
+    end if
+    call par_allreduce_maxi(ierr)   ! 判定を全ランク同一に(§5)
+    if (ierr > 0) return
+    if (.not. allocated(enc%extswe)) then
+      allocate(enc%extswe(1:enc%g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    end if
+    call par_scatter_cell(src, enc%extswe)
+    enc%extswe_fresh = .true.
   case default
     ierr = 1
   end select
@@ -930,7 +977,8 @@ end subroutine
 !----------------------------------------------------------------------
 subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, bd, sn, gl, lv, bm, si, ou, &
                     extpre_active, extpre_fresh, extpre, &
-                    extz_fresh, extz, exth_fresh, exth, ierror)
+                    extz_fresh, extz, exth_fresh, exth, &
+                    exthg_fresh, exthg, extswe_fresh, extswe, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
@@ -962,6 +1010,10 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   real, allocatable, intent(in) :: extz(:,:)    ! ステージング場 (m。帯形状)
   logical, intent(inout) :: exth_fresh    ! 未適用の外部 h があるか(適用で消す)
   real, allocatable, intent(in) :: exth(:,:)    ! ステージング場 (m。帯形状)
+  logical, intent(inout) :: exthg_fresh   ! 未適用の外部 hg があるか(適用で消す。§76)
+  real, allocatable, intent(in) :: exthg(:,:)   ! ステージング場 (m。帯形状)
+  logical, intent(inout) :: extswe_fresh  ! 未適用の外部 swe があるか(適用で消す)
+  real, allocatable, intent(in) :: extswe(:,:)  ! ステージング場 (m。帯形状)
   integer, intent(inout) :: ierror
   integer :: it            ! このステップの時間カウント(= s%it + 1)
   integer :: i, j          ! 外部降水の適用ループ用
@@ -1018,6 +1070,35 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
     if (extz_fresh) call par_halo_cell(s%z)
     extz_fresh = .false.
     exth_fresh = .false.
+  end if
+
+  ! BMI 外部状態(hg, swe)の適用(§76。S 区分 = データ同化型の置換。h と
+  ! 同じマスク = 陸セルのみ、一回適用、所有モジュール(gwflow・snow)の calc
+  ! の前)。hg は近傍を読む側方モデルのためハロ交換まで済ませる(gwflow の
+  ! 契約3 と同じ)。swe はセル局所量なので不要。受理条件(存在・所有モデル
+  ! の整合・非負)は m_main_set_value が判定済み
+  if (exthg_fresh) then
+    !$omp parallel do
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
+        s%hg(i,j) = exthg(i,j)
+      end do
+    end do
+    !$omp end parallel do
+    call par_halo_cell(s%hg)
+    exthg_fresh = .false.
+  end if
+  if (extswe_fresh) then
+    !$omp parallel do
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
+        s%swe(i,j) = extswe(i,j)
+      end do
+    end do
+    !$omp end parallel do
+    extswe_fresh = .false.
   end if
 
   ! 規定底面運動(fn_bedmotion 未指定なら no-op)。このステップ末尾の時刻の

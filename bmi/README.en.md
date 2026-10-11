@@ -63,17 +63,48 @@ file output.
 | `surface_water_flow__unit_width_volume_flow_rate` | unit-width discharge (magnitude) | m²/s | No (get only) |
 | `surface_water__x_component_of_velocity` | x (eastward) velocity component | m/s | No (get only) |
 | `surface_water__y_component_of_velocity` | y (northward) velocity component | m/s | No (get only) |
+| `surface_water__time_max_of_depth` | maximum depth over the run | m | No (get only) |
+| `surface_water_flow__time_max_of_speed` | maximum speed over the run | m/s | No (get only) |
+| `surface_water_flow__time_max_of_unit_width_volume_flow_rate` | maximum unit-width discharge over the run | m²/s | No (get only) |
 
-All eight variables can be read with get (the velocity components are
-cell-centered derived quantities composed from the internal edge-based
-fields, in the conventional orientation x = east, y = north). The first
-three can also be set; a set value is applied at the start of the next
-update. The "only when" conditions come from one
+These eleven variables exist in every case and can all be read with get
+(the velocity components are cell-centered derived quantities composed
+from the internal edge-based fields, in the conventional orientation
+x = east, y = north). The first three can also be set; a set value is
+applied at the start of the next update. The "only when" conditions come from one
 principle — **each quantity has a single source** (file forcing and
 external supply are never combined) — and a set that violates them
 returns an error (BMI_FAILURE). In Python:
 `model.set(name, array)` (flattened standard form below, or a 2-D
 (ny, nx) array).
+
+### Feature-dependent variables (present only when the feature is enabled)
+
+The following variables are listed **only in cases (grids, in a nested
+system) where the process that produces them is enabled**. In other cases
+they do not appear in `get_output_var_names`, and get / set / metadata
+queries return the same error as for an unknown name (so that "no snow"
+and "no snow model" are distinguishable; no zero field is returned, and a
+disabled feature costs no memory or time). In Python, `model.has(name)`
+tells whether a variable exists.
+
+| CSDMS Standard Name | Quantity | Units | Exists when | set |
+| --- | --- | --- | --- | --- |
+| `soil_water__leq-depth` | subsurface storage (layer 1, column-equivalent) | m | fn_gwflow (groundwater module enabled) | Allowed (**replacement**) when the vertical model is the bucket or none (lateral only); rejected with Green-Ampt, whose private cumulative infiltration would become inconsistent |
+| `snowpack__liquid-equivalent_depth` | snow water equivalent | m | fn_snow | Allowed (**replacement**) |
+| `soil__thickness` | soil thickness | m | a feature that uses it (lateral / Green-Ampt groundwater, geomorph) | No (get only) |
+| `surface_water_sediment~suspended__volume-per-area` | suspended sediment (volume per unit area) | m | suspended-sediment transport of geomorph | No (get only) |
+| `surface_water_solute__mass_concentration` | volume-averaged solute concentration | mg/L | fn_wq | No (get only) |
+| `glacier_ice__thickness` | ice thickness | m | fn_glacier | No (get only) |
+| `lava__thickness` | lava thickness | m | fn_lavaflow | No (get only) |
+
+Setting the subsurface storage or the snow water equivalent has the same
+"data-assimilation-style replacement" semantics as setting the depth
+(not addition; applied once to land cells at the start of the next
+update; negative values are an error). Being listed as an input (=
+existing) and being accepted by set (= the conditions above) are
+separate: a rejected set returns an error. The acceptance test is
+test/bmi_vars.
 
 **Choosing the exchange interval**: get/set copy whole fields, so
 exchange at the **time scale of the quantity being exchanged** (minutes
@@ -95,8 +126,9 @@ Standard Names grammar):
 | `surface_water__depth` | `surface_water~grid2__depth` |
 | `atmosphere_water__precipitation_leq-volume_flux` | `atmosphere_water~grid2__precipitation_leq-volume_flux` |
 
-The input/output variable lists grow with the number of grids (8 outputs
-and 3 inputs per grid). get / set have the same conditions and semantics
+The input/output variable lists grow with the number of grids (per grid,
+the 11 always-present outputs and 3 inputs plus the variables of the
+features enabled on that grid). get / set have the same conditions and semantics
 on every grid; a set is applied at the start of that grid's next step.
 In Python, `var_on_grid(VAR_DEPTH, 2)` builds the name, `model.grids`
 lists the grid ids, `model.shape_of(k)` / `spacing_of(k)` /
@@ -145,6 +177,7 @@ mpirun -np 4 ./test_encflow_bmi_mpi param.txt
 | --- | --- |
 | `test_encflow_bmi [param] [set]` | Test driver that runs a case to completion through BMI (results match a standalone run; with `set`, also checks that a same-value set is harmless) |
 | `python/test_set_value.py` | Equivalence tests for set_value (e.g. file forcing and external supply give identical results; run in test/wave) |
+| `python/test_vars.py` | Acceptance test of the feature-dependent variables (variable lists, values, re-initialize, same-value set of hg / swe and its acceptance rules; run in test/bmi_vars. `test/bmi_vars/Run.sh` also runs the static driver and bmi-tester) |
 | `python/test_nest.py` | Acceptance test of the multi-grid exposure (grid information, variable lists, 1:1 self-nesting identity, re-initialize, same-value set; run in test/bmi_nest — `test/bmi_nest/Run.sh` also runs the static driver and bmi-tester) |
 | `python/check_bmi.sh` | Runs the official CSDMS conformance test, bmi-tester (list the input files the parameter file refers to after it) |
 
@@ -167,7 +200,7 @@ cd ../bmi_nest && ./Run.sh          # nested system (acceptance test + bmi-teste
 | `python/encflow.py` | Python wrapper: the `ENCflow` class (use this for everyday work) |
 | `python/encflow_bmi.py` | bmipy-conformant class `EncflowBmi` (for bmi-tester and pymt-style tools) |
 | `python/live_view.py` | Live visualization sample |
-| `python/test_set_value.py`, `python/test_nest.py` | Acceptance tests (above) |
+| `python/test_set_value.py`, `python/test_nest.py`, `python/test_vars.py` | Acceptance tests (above) |
 
 ## Limitations and notes
 

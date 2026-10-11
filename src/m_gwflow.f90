@@ -51,6 +51,7 @@ module m_gwflow
   public :: m_gwflow_check_meteo
   public :: m_gwflow_calc
   public :: m_gwflow_dispose
+  public :: m_gwflow_can_replace_hg
 
   !-------------------------------------------
   ! 鉛直モデルの状態の容器(排他切替なので有効なモデルの成分だけを確保する)。
@@ -123,6 +124,21 @@ module m_gwflow
   end type
 
 contains
+
+
+!----------------------------------------------------------------------
+! hg(層1の貯留)の外部置換(BMI set_value。developer.md §76 の S 区分)を
+! 受理できるか。条件 = 置換後に不整合が残らないこと = 鉛直モデルが hg 以外に
+! 私有の状態を持たないこと。バケツ(私有状態なし)と鉛直モデルなし(側方
+! のみ。水頭は毎ステップ hg から導く)は可、Green-Ampt は累積浸透を私有に
+! 持つため不可。層2(hg2)・管路層(hgc)は別のプールで hg の置換に関与しない
+!----------------------------------------------------------------------
+logical function m_gwflow_can_replace_hg(gw)
+  type(t_gwflow), intent(in) :: gw
+  m_gwflow_can_replace_hg = .false.
+  if (.not. gw%enabled) return
+  m_gwflow_can_replace_hg = .not. allocated(gw%vert%ga)
+end function
 
 
 !----------------------------------------------------------------------

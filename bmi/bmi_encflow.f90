@@ -64,7 +64,8 @@ module bmi_encflow
   !   iname = m_main の内部名、units = 単位(udunits 表記)
   !   input = set_value の対象か(受理条件は m_main_set_value が判定。
   !           §56: 降水は prtype=0 のときのみ。§57: z は z 更新プロセス
-  !           無効時のみ、h は常時 = データ同化型の状態置換)
+  !           無効時のみ、h は常時 = データ同化型の状態置換。§76: hg は
+  !           Green-Ampt 以外、swe は常時 = h と同じ置換)
   ! 並びがそのまま変数表の並び(格子ごとにこの順)。既存の利用側のため
   ! 先頭 8 行(出力)と入力 3 行(h, z, pre)の順は変えないこと
   type :: t_var
@@ -89,8 +90,8 @@ module bmi_encflow
     t_var("surface_water_flow__time_max_of_speed",           "vvmax", "m s-1",  .false.), &
     t_var("surface_water_flow__time_max_of_unit_width_volume_flow_rate", "qqmax", "m2 s-1", .false.), &
     ! --- 機能依存(その量を生産するプロセスが有効な格子にだけ載る)---
-    t_var("soil_water__leq-depth",                           "hg",  "m",      .false.), &
-    t_var("snowpack__liquid-equivalent_depth",               "swe", "m",      .false.), &
+    t_var("soil_water__leq-depth",                           "hg",  "m",      .true.), &
+    t_var("snowpack__liquid-equivalent_depth",               "swe", "m",      .true.), &
     t_var("soil__thickness",                                 "sd",  "m",      .false.), &
     t_var("surface_water_sediment~suspended__volume-per-area", "hs", "m",     .false.), &
     t_var("surface_water_solute__mass_concentration",        "cqc", "mg l-1", .false.), &
@@ -734,10 +735,11 @@ contains
   end function
 
   !========================= Setters, by type ==========================
-  ! 対応は input_items(基本 3 変数 × 格子)。値はステージングされ、その
-  ! 格子の次の 1 歩の冒頭で適用される(pre は持続強制、z・h は置換の
-  ! 一回適用)。受理条件は m_main_set_value が格子ごとに判定(pre:
-  ! prtype=0 のみ、z: z 更新プロセス無効時のみ、h: 常時。§56・§57)
+  ! 対応は input_items(vars の input 行 × 格子。存在するもののみ)。値は
+  ! ステージングされ、その格子の次の 1 歩の冒頭で適用される(pre は持続
+  ! 強制、z・h・hg・swe は置換の一回適用)。受理条件は m_main_set_value が
+  ! 格子ごとに判定(pre: prtype=0 のみ、z: z 更新プロセス無効時のみ、
+  ! h: 常時、hg: Green-Ampt 以外、swe: 常時。§56・§57・§76)
 
   !--------------------------------------------------------------------
   ! set 共通処理: 標準形 1 次元(要素0=南西)→ 内部行順に反転して

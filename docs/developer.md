@@ -10098,3 +10098,140 @@ docs/nesting_plan.md §3.9、本節は決定事項と規約。bmi/ の既存規�
 - 検証の過程で主ツリーの再ビルド後に install を忘れ、回帰のスタンプ検査
   (bin/encflow が .mode_* より古い)で 16 ケースが実行拒否になった。実際の不一致では
   なく、install してやり直した(§10 の検査が意図どおり働いた例)。
+
+
+## 76. BMI 公開変数の第3弾: 動的変数表と機能依存の状態量の get / set(2026-10-11 実装)
+
+§60 で保留し §73 で拡張点を示した「機能有効時のみ存在する変数」の公開を
+実装した。設計の経緯と比較は docs/bmi_plan.md §11(2026-10-11 起案・同日
+全項合意)。本節が決定事項と規約の正本。bmi/ の既存規約(§53〜§60・§73)は
+そのまま有効。
+
+### 決定事項
+
+- **動的変数表**: 機能(fn_*)に依存する変数は、**その量を生産するプロセスが
+  有効な格子にだけ** input / output の変数表に載る。表にない名前の get /
+  set / メタデータは未知名と同じ BMI_FAILURE。m_output の「確保されていれば
+  書く」と同じ基準で、BMI の変数表の意味(この component が実際に交換する量)
+  に一致し、bmi-tester は表にある名前だけを検査するので載せた変数は必ず get
+  できる。「常時掲載・無効時はゼロ場」は "雪がない" と "雪モデルがない" を
+  consumer が区別できないため、「常時掲載・無効時は get 失敗」は BMI の契約
+  違反のため、いずれも却下(plan §11.3)。
+- **存在判定の正本は m_main**(`m_main_has_value(iname)` / 私有 `var_state`。
+  0 = 存在、1 = 未知名、4 = 既知だが機能無効)。定義は「生産プロセスの有効」
+  であり確保の有無ではない: **常時確保の hg・hs はフラグ**(gw%enabled、
+  s%sed_active)で判定する(無効時のゼロ場は存在しない)。他は allocated
+  (swe, hi, hl)、sd は m_output の Sd と同条件(g%sd と s%sd の両確保)、cqc は
+  wq_active。無条件確保のセル量(h, z, e, pre, vv, qq, ux, uy, hmax, vvmax,
+  qqmax)は未初期化でも真(従来の固定表の並びを維持)。判定材料は param 由来で
+  全ランク同一 = collective 安全(§5)。get / set_value は冒頭で var_state を
+  ierr として返す(1 と 4 を区別して利用者へ伝える)。
+- **変数表は格子ごとに判定し、initialize ごとに作り直す**(`ensure_items`。
+  格子を select して has_value を問う)。従来の「格子数が変わったら作り直す」
+  では、同じ格子数で機能構成の違うケースを再 initialize したとき古い表が
+  残るため、`items_valid` を initialize / finalize で落とす方式に変えた。
+  並びは「格子ごとに vars の順」(§73 と同じ)。
+- **名前表の一元化**(段 0。等価リファクタとして先行コミット): bmi_encflow.f90
+  の `vars(:)`(Standard Name・内部名・単位・入力可否)1 本から base_* /
+  var_internal / get_var_units / ensure_items を導く。**変数の追加は表に 1 行 +
+  m_main の var_state と get_value(set なら set_value も)の case**。既存 8+3
+  変数の並び・名前・単位は不変(BMI 経由のラン・bmi-tester 92 passed が同一)。
+- **追加した変数**(段 1。get): 常時存在の期間最大 `surface_water__time_max_of_depth`
+  (hmax)・`surface_water_flow__time_max_of_speed`(vvmax)・
+  `surface_water_flow__time_max_of_unit_width_volume_flow_rate`(qqmax)。
+  機能依存: `soil_water__leq-depth`(hg。gw%enabled)、
+  `snowpack__liquid-equivalent_depth`(swe。CSDMS 既存名)、`soil__thickness`
+  (sd。既存名)、`surface_water_sediment~suspended__volume-per-area`(hs)、
+  `surface_water_solute__mass_concentration`(cqc。mg l-1)、
+  `glacier_ice__thickness`(hi。既存名)、`lava__thickness`(hl)。CSDMS に
+  既存名のないものは文法(object~adjective__quantity)内の造語(bmi-tester の
+  名前検査は文法のみ。警告なしを確認)。エッジ量 u, v, m, n は非公開のまま(§54)。
+- **set の 3 区分**(plan §11.5): 既存の 3 変数が見本。**F 強制**(pre。持続。
+  内部の生産者が無効 = 「外部」を宣言しているときのみ)、**Q 準静的共有状態**
+  (z。一回置換。内部の更新プロセスが全て無効のときのみ)、**S DA 型状態置換**
+  (h。一回置換。常時受理)。新変数はどれかに当てはめ、当てはまらなければ
+  公開しない。**S 区分で置換してよいのは、所有モジュールがその配列以外に
+  私有の状態を持たない(置換後に不整合が残らない)場合に限る。**
+- **set 第1弾(段 2): hg と swe を S 区分で追加。**
+  - hg: 層1のみ(hg2・hgc は別プール)。鉛直モデルが置換に整合できるときのみ
+    受理 = **`m_gwflow_can_replace_hg(gw)`**(新設・公開): バケツ(私有状態
+    なし)と鉛直モデルなし(側方のみ。水頭は毎ステップ hg から導く)は可、
+    **Green-Ampt は累積浸透を私有に持つため拒否(ierr=2)**。容量超過は拒否
+    せず次ステップのモデル処理(バケツの fx = min(…, cap − hg) は負にならない
+    よう max(fx, 0) 済み)に任せる。適用後に **par_halo_cell(s%hg)**(側方
+    モデルが近傍を読む。gwflow 契約3 と同じ)。
+  - swe: m_snow の私有は降水スナップショット(pr0)のみで整合 → 常時受理。
+    セル局所量なのでハロ交換は不要。
+  - 適用は update 冒頭、z → h → e 回復の直後・bedmotion の前、所有モジュール
+    (gwflow・snow)の calc の前。マスクは h と同じ(x>0 かつ海セル除外)。
+    負値は ierr=3。NaN 検査は置かない(§56)。
+  - **入力表に載る(= 存在)と受理(= 上の条件)は 2 層**: Green-Ampt の
+    ケースでも hg は入力表に載り、set が ierr=2 になる(ファイル駆動時の pre・
+    z 更新プロセス有効時の z と同じ構造)。bmi-tester 0.5.10 は入力変数の
+    set_value を実行しない(`test_set_input_values` が "too dangerous" で
+    skip。配布物で確認)ので、入力表の掲載は適合性試験に影響しない。
+  - ステージングは変数ごとの現行様式(ext<name>_fresh + ext<name>。初回 set
+    時にのみ確保 = 未使用ならメモリゼロ)。汎用化(名前付きステージの配列と
+    ディスパッチャ)は set 変数がさらに 3 つ以上増える段で等価リファクタと
+    して行う。init_instance の残留リセットに新ステージを追加(§59)。
+    MPI は現行と同じ(全ランク collective、src は rank0 のみ有効、値検査は
+    rank0 → allreduce → scatter。§58)。未適用のステージは save されない。
+- **見送り(理由付き)**: hi・hl の set(氷厚・溶岩厚は s%z に含まれ、置換は
+  z の再構成を伴う)、sd の set(z−sd = 岩盤面を動かす)、hs・cq の set
+  (swflow のステップ内移流と debris の運動量算入に関わる。第2弾で個別検討)、
+  hg2・hgc・hss・hgs・swi・流木・瓦礫の get(需要待ち。表に 1 行 + case で
+  追加できる)、気温の外部供給(F 区分。meteo の tsrc に「外部」を新設)、
+  ネスト境界 η_e・u_e(nesting_plan.md §15.6 の族)。
+- **Python**(bmi/python/encflow.py): `VAR_DEPTH_MAX / VAR_SPEED_MAX /
+  VAR_UNIT_DISCHARGE_MAX / VAR_GW_STORAGE / VAR_SWE / VAR_SOIL_THICKNESS /
+  VAR_SUSPENDED_SEDIMENT / VAR_SOLUTE_CONC / VAR_ICE_THICKNESS /
+  VAR_LAVA_THICKNESS` と `has(name)`。C 層・bmipy クラスは無変更(表は
+  Fortran 側)。test_nest.py の変数数は 22 出力・6 入力。静的ドライバ
+  test_bmi.f90 の `set` は、入力表に hg・swe があれば同値 set も行う。
+
+### 検証(2026-10-11。gfortran 13 / Open MPI、Ubuntu 24.04。規律2)
+
+- **段 0(等価変換)**: 逐次 wave / chichibu 回帰 PASS、BMI ドライバ wave(set
+  付き)の Log が reference と identical、test_set_value.py・bmi_nest PASS、
+  bmi-tester wave 92 passed(不変)。MPI np = 1, 2, 4: wave 回帰・BMI ドライバ
+  (set 付き)PASS、chichibu np = 2 PASS。トップレベル make で utils 追随漏れなし。
+- **段 1(get)**: 受け入れ試験 **test/bmi_vars**(bmi/python/test_vars.py。
+  平坦・閉領域・一様降雨 36 mm/h・初期水深 5 cm の 3 構成): none(機能なし。
+  hg・swe が表になく get / set が BmiError)、full(バケツ 10 mm/h + 気温 −5 ℃
+  + 積雪 100 mm。hg・swe が載り、t0 の swe = swe0・hg = 0 が厳密、半分時点の
+  hg = n·rate·dt、swe = swe0 + n·pre·dt が相対 1e-9 で一致、get の場が同時刻の
+  分布出力 Hg / Sw(×1000)/ H と 4 桁で一致 = 行順の整合、hmax ≥ h と
+  H9999 一致)、ga(Green-Ampt。hg・swe・sd が載る)、同一プロセスの再
+  initialize(none → full → none)で表が 11 → 13 → 11。bmi-tester: wave
+  119 passed、ネスト 224 passed(2 格子 × 22)、bmi_vars full 137 passed
+  (名前の警告なし)。無効時: wave / chichibu 回帰 PASS、BMI wave identical、
+  test_set_value・bmi_nest PASS。MPI np = 1, 2, 4: wave 回帰・BMI ドライバ
+  PASS、bmi_vars full の Log が逐次と identical。
+- **段 2(set)**: test_vars.py --set: full を半分まで進めて get した hg・swe を
+  そのまま set して継続したランの Log が無介入ランと全行一致(S 列に hg・swe
+  の総量が入るので意味のある検査)、負値 set が BmiError、ga の hg set が
+  BmiError で swe set は受理、none の set は BmiError。静的ドライバ(full)の
+  Log == Python ラン。無効時: 逐次 wave / chichibu 回帰 PASS、BMI wave(set 付き)
+  identical、test_set_value・bmi_nest・bmi-tester(wave 119 / ネスト 224 /
+  bmi_vars 137)PASS。
+- **段 2 の実施記録(最終状態で一括)**: reference 全 22 ケース(chichibu,
+  coastal_drain, conduit, dambreak, damwq, frost, gwseep, kdpart, nh* 8 ケース,
+  pump, salt, sewer_wq, splash, tide, wave)の逐次 Run.sh PASS。MPI(OpenMPI)
+  np = 1, 2, 4: wave 回帰・BMI ドライバ(set 付き)PASS、**bmi_vars full を
+  set 付き(h・z・hg・swe の同値 set)で走らせた Log が逐次の無介入ランと
+  identical**、chichibu np = 2 PASS。**-O0 -fcheck=all -finit-real=snan の MPI
+  クリーンビルド np = 2**: bmi_vars full(set 付き。Log identical)・ga・wave
+  (set 付き)・chichibu(set 付き)が完走(規律3。新設のステージング配列
+  exthg / extswe の確保範囲を含む)。トップレベル make で utils 追随漏れなし。
+
+### 落とし穴
+
+- **存在判定を「確保」で定義してはいけない**: hg と hs は無効でも常時確保
+  される(m_state_init)。確保基準だと無効時にゼロ場が公開される。
+- **表のキャッシュを格子数だけで持たない**: 機能構成が違う再 initialize で
+  古い表が残る(§59 の bmi-tester の使い方で現実に起きる)。
+- **`.and.` の短絡評価は保証されない**(§73 再掲): var_state の ready 判定は
+  ninst → associated(enc) → enc%initialized を別の if で評価する。
+- test_vars.py は 1 プロセス 1 モデルの制約下で with ブロックを連ねる。再
+  initialize で Log が上書きされるので、比較用の Log は各ランの直後に写す
+  (MPI 検証で「2 行しかない Log」と比較してしまった実例)。
