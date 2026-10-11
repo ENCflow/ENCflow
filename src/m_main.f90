@@ -49,6 +49,7 @@ module m_main
   public :: m_main_get_timeinfo
   public :: m_main_get_gridinfo
   public :: m_main_get_ierror
+  public :: m_main_has_value
   public :: m_main_get_value
   public :: m_main_set_value
   public :: m_main_instances_alloc
@@ -648,19 +649,52 @@ end function
 
 
 !----------------------------------------------------------------------
+! アクセサ: 変数の存在判定(BMI の動的変数表用。developer.md §76)
+!   name は内部名。「存在する」= その量を生産するプロセスが有効であること
+!   (確保の有無ではない: 常時確保でも無効ならゼロ場しかない hg・hs は
+!   有効フラグで判定する)。無条件確保のセル量(h, z, e, pre, vv, qq,
+!   ux, uy)は未初期化でも真(従来の固定表と同じ並びを維持するため)。
+!   判定材料は全ランクで同一(param 由来)なので collective 安全(§5)。
+!   ネスト系では現在選択中の格子について答える
+!----------------------------------------------------------------------
+logical function m_main_has_value(name)
+  character(len=*), intent(in) :: name
+  m_main_has_value = (var_state(name) == 0)
+end function
+
+
+!----------------------------------------------------------------------
+! 変数の状態: 0 = 存在、1 = 未知の内部名、4 = 既知だが機能無効(存在しない)
+!   get/set_value は冒頭でこれを ierr として返す(未知名と機能無効を
+!   利用者へ区別して伝えるため)
+!----------------------------------------------------------------------
+integer function var_state(name)
+  character(len=*), intent(in) :: name
+  select case (trim(name))
+  case ('h', 'z', 'e', 'pre', 'vv', 'qq', 'ux', 'uy')
+    var_state = 0                 ! 無条件確保のセル量(常に存在)
+  case default
+    var_state = 1
+  end select
+end function
+
+
+!----------------------------------------------------------------------
 ! アクセサ: 状態量の全域コピー取得
 !   name は内部名('h', 'z', 'e', 'pre')。CSDMS Standard Names への
 !   対応付けは BMI アダプタ側の責務(m_main は BMI を知らない)。
 !   dest は全域 (1:nx, 1:ny)。全域窓・担当帯の外は 0 で埋める。
 !   MPI では全ランク collective に呼び、有効な値は rank0 のみ
-!   (par_gather_to の契約)。ierr: 0 = 成功、1 = 未対応の変数名
+!   (par_gather_to の契約)。ierr: 0 = 成功、1 = 未対応の変数名、
+!   4 = 既知だが機能無効(var_state)
 !----------------------------------------------------------------------
 subroutine m_main_get_value(name, dest, ierr)
   character(len=*), intent(in) :: name
   real, intent(inout) :: dest(:,:)
   integer, intent(out) :: ierr
-  ierr = 0
   dest = 0.
+  ierr = var_state(name)          ! 1 = 未知名、4 = 機能無効(存在しない)
+  if (ierr /= 0) return
   select case (trim(name))
   case ('h')
     call par_gather_to(dest, enc%s%h)
@@ -724,7 +758,8 @@ end subroutine
 !     足すなら 'pre' を使う)。常に受理。運動量(u,v,m,n)は触らない。
 !     一回適用。
 !   ierr: 0 = 成功、1 = 未対応の変数名、2 = 許可されない(生産者が
-!   既に存在)、3 = 不正値(負の降水強度・負の水深)
+!   既に存在)、3 = 不正値(負の降水強度・負の水深)、4 = 既知だが
+!   機能無効(var_state)
 !----------------------------------------------------------------------
 subroutine m_main_set_value(name, src, ierr)
   ! MPI では全ランク collective に呼ぶこと。src は rank0 のみ有効
@@ -734,7 +769,8 @@ subroutine m_main_set_value(name, src, ierr)
   character(len=*), intent(in) :: name
   real, intent(in) :: src(:,:)
   integer, intent(out) :: ierr
-  ierr = 0
+  ierr = var_state(name)          ! 1 = 未知名、4 = 機能無効(存在しない)
+  if (ierr /= 0) return
   select case (trim(name))
   case ('pre')
     if (enc%pr%prtype /= 0) then

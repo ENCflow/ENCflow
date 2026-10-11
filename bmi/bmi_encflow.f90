@@ -30,9 +30,14 @@
 !     bmi-tester・pymt の名前検査を通る。入出力変数表は initialize 時に
 !     格子数に応じて生成する(ensure_items)。encflow_var_on_grid() が
 !     名前を組み立てる公開ヘルパ。
-!   - 基本変数は出力8(h, z, pre, e, 速さ, 比流量, 流速成分 x/y)・
-!     入力3(h, z, pre)。set_value の受理条件と意味論は変数ごとに
-!     異なり、格子によらず同じ(Setters 節と developer.md §56・§57)。
+!   - **変数表は vars(:) の 1 本**(名前・内部名・単位・入力可否。§76)。
+!     基本は出力8(h, z, pre, e, 速さ, 比流量, 流速成分 x/y)・入力3
+!     (h, z, pre)。set_value の受理条件と意味論は変数ごとに異なり、
+!     格子によらず同じ(Setters 節と developer.md §56・§57)。
+!   - **動的変数表**: 機能(fn_*)に依存する変数は、その量を生産する
+!     プロセスが有効な格子にだけ載る(m_main_has_value が正本。§76)。
+!     表に載らない名前は未知名と同じ(メタデータ・get・set は FAILURE)。
+!     表は initialize ごとに格子ごとの判定で作り直す(ensure_items)。
 !     流速成分は vv・qdir からの導出量で、y 成分は標準形(+y=北)へ符号
 !     変換して返す(§60)。
 !   - 該当機能がない問い合わせは BMI_FAILURE を返す(仕様が許容)。
@@ -45,7 +50,7 @@ module bmi_encflow
                      m_main_finalize, m_main_get_timeinfo, &
                      m_main_get_gridinfo, m_main_get_ierror, &
                      m_main_get_value, m_main_set_value, &
-                     m_main_select, m_main_get_ngrids
+                     m_main_select, m_main_get_ngrids, m_main_has_value
   use m_util, only : itoa
   implicit none
   private
@@ -53,40 +58,42 @@ module bmi_encflow
   public :: encflow_bmi
   public :: encflow_var_on_grid
 
-  ! 基本変数表(CSDMS Standard Name ↔ m_main 内部名)。
-  ! 追加するときは n_base_* と base_* と var_internal() と
-  ! get_var_units() を同時に更新すること。3変数は入出力の両方だが
-  ! set の受理条件は変数ごとに異なる(m_main_set_value が判定。
-  ! developer.md §56: 降水は prtype=0 のときのみ。§57: z は z 更新
-  ! プロセス無効時のみ、h は常時 = データ同化型の状態置換)
-  integer, parameter :: n_base_in = 3
-  integer, parameter :: n_base_out = 8
+  ! 公開変数表(1 行 = 1 変数。developer.md §76)。変数の追加は本表に
+  ! 1 行 + m_main の var_state / get_value(set なら set_value も)の case。
+  !   name  = CSDMS Standard Name(ルート格子の名前。非ルートは ~grid<id>)
+  !   iname = m_main の内部名、units = 単位(udunits 表記)
+  !   input = set_value の対象か(受理条件は m_main_set_value が判定。
+  !           §56: 降水は prtype=0 のときのみ。§57: z は z 更新プロセス
+  !           無効時のみ、h は常時 = データ同化型の状態置換)
+  ! 並びがそのまま変数表の並び(格子ごとにこの順)。既存の利用側のため
+  ! 先頭 8 行(出力)と入力 3 行(h, z, pre)の順は変えないこと
+  type :: t_var
+    character(len=BMI_MAX_VAR_NAME) :: name
+    character(len=8) :: iname
+    character(len=BMI_MAX_UNITS_NAME) :: units
+    logical :: input
+  end type
+
+  integer, parameter :: n_vars = 8
+  type(t_var), parameter :: vars(n_vars) = [ &
+    t_var("surface_water__depth",                            "h",   "m",      .true.), &
+    t_var("land_surface__elevation",                         "z",   "m",      .true.), &
+    t_var("atmosphere_water__precipitation_leq-volume_flux", "pre", "m s-1",  .true.), &
+    t_var("surface_water__elevation",                        "e",   "m",      .false.), &
+    t_var("surface_water_flow__speed",                       "vv",  "m s-1",  .false.), &
+    t_var("surface_water_flow__unit_width_volume_flow_rate", "qq",  "m2 s-1", .false.), &
+    t_var("surface_water__x_component_of_velocity",          "ux",  "m s-1",  .false.), &
+    t_var("surface_water__y_component_of_velocity",          "uy",  "m s-1",  .false.) ]
 
   character(len=BMI_MAX_COMPONENT_NAME), target :: &
     component_name = "ENCflow"
 
-  character(len=BMI_MAX_VAR_NAME), parameter :: &
-    base_out(n_base_out) = [ character(len=BMI_MAX_VAR_NAME) :: &
-      "surface_water__depth", &
-      "land_surface__elevation", &
-      "atmosphere_water__precipitation_leq-volume_flux", &
-      "surface_water__elevation", &
-      "surface_water_flow__speed", &
-      "surface_water_flow__unit_width_volume_flow_rate", &
-      "surface_water__x_component_of_velocity", &
-      "surface_water__y_component_of_velocity" ]
-
-  character(len=BMI_MAX_VAR_NAME), parameter :: &
-    base_in(n_base_in) = [ character(len=BMI_MAX_VAR_NAME) :: &
-      "surface_water__depth", &
-      "land_surface__elevation", &
-      "atmosphere_water__precipitation_leq-volume_flux" ]
-
-  ! 公開変数表(格子数 × 基本変数。ensure_items が生成する。names を
-  ! ポインタで返す仕様のため target のモジュール変数に置く)
+  ! 公開変数表(格子ごとに、存在する変数を vars の順で。ensure_items が
+  ! 生成する。names をポインタで返す仕様のため target のモジュール変数)
   character(len=BMI_MAX_VAR_NAME), allocatable, target, save :: output_items(:)
   character(len=BMI_MAX_VAR_NAME), allocatable, target, save :: input_items(:)
-  integer, save :: items_ngrids = 0    ! 表を生成したときの格子数(0 = 未生成)
+  logical, save :: items_valid = .false.   ! 表が現在のモデルに対して有効か
+                                           ! (initialize / finalize で無効化)
 
   type, extends(bmi) :: encflow_bmi
   contains
@@ -194,67 +201,98 @@ contains
   end subroutine split_name
 
   !--------------------------------------------------------------------
+  ! 変数名 → 基本変数名(~grid 修飾を外す。解釈不能ならそのまま)
+  !--------------------------------------------------------------------
+  function base_of(name) result(base)
+    character(len=*), intent(in) :: name
+    character(len=BMI_MAX_VAR_NAME) :: base
+    integer :: grid, ierr
+    call split_name(name, base, grid, ierr)
+  end function base_of
+
+  !--------------------------------------------------------------------
+  ! 基本変数名 → vars の行番号(0 = 表にない)
+  !--------------------------------------------------------------------
+  integer function var_index(base)
+    character(len=*), intent(in) :: base
+    integer :: k
+    var_index = 0
+    do k = 1, n_vars
+      if (trim(base) == trim(vars(k)%name)) then
+        var_index = k
+        return
+      end if
+    end do
+  end function var_index
+
+  !--------------------------------------------------------------------
+  ! 格子 grid で内部名 iname の変数が存在するか(m_main_has_value を
+  ! その格子を選んで問う。ネスト系は格子ごとに機能構成が異なり得る)
+  !--------------------------------------------------------------------
+  logical function has_value_on_grid(iname, grid)
+    character(len=*), intent(in) :: iname
+    integer, intent(in) :: grid
+    call enter_grid(grid)
+    has_value_on_grid = m_main_has_value(iname)
+    call leave_grid(grid)
+  end function has_value_on_grid
+
+  !--------------------------------------------------------------------
   ! Standard Name → m_main 内部名と grid id。ierr: 0 = 対応、1 = 未対応
-  ! (未知の変数、または存在しない格子)
+  ! (未知の変数、存在しない格子、またはその格子で機能が無効 = 表に
+  ! 載らない変数。いずれも利用側には同じ「その名前の変数はない」)
   !--------------------------------------------------------------------
   subroutine var_internal(name, iname, grid, ierr)
     character(len=*), intent(in) :: name
     character(len=8), intent(out) :: iname
     integer, intent(out) :: grid, ierr
     character(len=BMI_MAX_VAR_NAME) :: base
+    integer :: k
     call split_name(name, base, grid, ierr)
-    if (ierr /= 0 .or. grid >= m_main_get_ngrids()) then
-      iname = ""
-      grid = -1
-      ierr = 1
-      return
+    if (ierr == 0 .and. grid < m_main_get_ngrids()) then
+      k = var_index(base)
+      if (k > 0) then
+        iname = vars(k)%iname
+        if (has_value_on_grid(iname, grid)) return     ! ierr = 0
+      end if
     end if
-    ierr = 0
-    select case (trim(base))
-    case ("surface_water__depth")
-      iname = "h"
-    case ("land_surface__elevation")
-      iname = "z"
-    case ("atmosphere_water__precipitation_leq-volume_flux")
-      iname = "pre"
-    case ("surface_water__elevation")
-      iname = "e"
-    case ("surface_water_flow__speed")
-      iname = "vv"
-    case ("surface_water_flow__unit_width_volume_flow_rate")
-      iname = "qq"
-    case ("surface_water__x_component_of_velocity")
-      iname = "ux"
-    case ("surface_water__y_component_of_velocity")
-      iname = "uy"
-    case default
-      iname = ""
-      grid = -1
-      ierr = 1
-    end select
+    iname = ""
+    grid = -1
+    ierr = 1
   end subroutine var_internal
 
   !--------------------------------------------------------------------
-  ! 公開変数表を現在の格子数に合わせて(再)生成する。並びは格子ごとに
-  ! 基本変数の順(grid 0 の 8 個、grid 1 の 8 個、…)
+  ! 公開変数表を現在のモデルに合わせて(再)生成する。並びは格子ごとに
+  ! vars の順(grid 0 の存在する変数、grid 1 の存在する変数、…)。機能に
+  ! 依存する変数は存在する格子にだけ載る。initialize / finalize が
+  ! items_valid を落とし、次の問い合わせで作り直す(格子数が同じでも
+  ! 機能構成が違う再 initialize に備える。§76)
   !--------------------------------------------------------------------
   subroutine ensure_items()
-    integer :: ng, g, i
+    integer :: ng, g, i, no, ni
+    character(len=BMI_MAX_VAR_NAME), allocatable :: o(:), inp(:)
+    if (items_valid) return
     ng = m_main_get_ngrids()
-    if (items_ngrids == ng) return
-    if (allocated(output_items)) deallocate(output_items)
-    if (allocated(input_items)) deallocate(input_items)
-    allocate(output_items(n_base_out * ng))
-    allocate(input_items(n_base_in * ng))
+    allocate(o(n_vars * ng), inp(n_vars * ng))
+    no = 0
+    ni = 0
     do g = 0, ng - 1
-      do i = 1, n_base_out
-        output_items(g * n_base_out + i) = encflow_var_on_grid(trim(base_out(i)), g)
-      end do
-      do i = 1, n_base_in
-        input_items(g * n_base_in + i) = encflow_var_on_grid(trim(base_in(i)), g)
+      do i = 1, n_vars
+        if (.not. has_value_on_grid(vars(i)%iname, g)) cycle
+        no = no + 1
+        o(no) = encflow_var_on_grid(trim(vars(i)%name), g)
+        if (vars(i)%input) then
+          ni = ni + 1
+          inp(ni) = o(no)
+        end if
       end do
     end do
-    items_ngrids = ng
+    if (allocated(output_items)) deallocate(output_items)
+    if (allocated(input_items)) deallocate(input_items)
+    allocate(output_items(no), input_items(ni))
+    output_items(1:no) = o(1:no)
+    input_items(1:ni) = inp(1:ni)
+    items_valid = .true.
   end subroutine ensure_items
 
   !--------------------------------------------------------------------
@@ -300,7 +338,8 @@ contains
     character(len=*), intent(in) :: config_file
     integer :: bmi_status
     call m_main_initialize(config_file)
-    call ensure_items()               ! 格子数が確定したので変数表を生成
+    items_valid = .false.             ! 格子数・機能構成が確定したので変数表を作り直す
+    call ensure_items()
     bmi_status = BMI_SUCCESS
   end function
 
@@ -348,6 +387,7 @@ contains
     class(encflow_bmi), intent(inout) :: this
     integer :: bmi_status
     call m_main_finalize()
+    items_valid = .false.             ! 次の initialize(別ケース)で作り直す
     bmi_status = BMI_SUCCESS
   end function
 
@@ -450,14 +490,7 @@ contains
       bmi_status = BMI_FAILURE
       return
     end if
-    select case (trim(iname))
-    case ("pre", "vv", "ux", "uy")
-      units = "m s-1"
-    case ("qq")
-      units = "m2 s-1"
-    case default
-      units = "m"
-    end select
+    units = vars(var_index(base_of(name)))%units   ! 表の単位(var_internal 済みなので必ずある)
     bmi_status = BMI_SUCCESS
   end function
 
