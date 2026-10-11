@@ -152,11 +152,14 @@ program test_bmi
     write(*, '(a)') "bmi: same-value set of h and z staged (invariance check)"
     ! 機能依存の入力変数(hg・swe。§76)が表にあれば同じく同値 set する
     ! (入力表に載る = 存在する。受理はバケツ・側方のみ = ga 構成では
-    !  このドライバを set 付きで走らせない)
+    !  このドライバを set 付きで走らせない)。粗度 rn(P 区分。§77)も
+    ! 同値 set する(ENC 格子系のみ受理 = STG ではこのドライバを set
+    ! 付きで走らせない)
     call chk(model%get_input_var_names(onames), "get_input_var_names")
     do i = 1, size(onames)
       if (trim(onames(i)) == "soil_water__leq-depth" .or. &
-          trim(onames(i)) == "snowpack__liquid-equivalent_depth") then
+          trim(onames(i)) == "snowpack__liquid-equivalent_depth" .or. &
+          trim(onames(i)) == "land_surface_water_flow__manning_n_parameter") then
         call chk(model%get_value_double(trim(onames(i)), z), "get_value "//trim(onames(i)))
         call chk(model%set_value_double(trim(onames(i)), z), "set "//trim(onames(i))//" (same value)")
         write(*, '(a,a,a)') "bmi: same-value set of ", trim(onames(i)), " staged"

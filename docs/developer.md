@@ -10146,7 +10146,8 @@ docs/nesting_plan.md §3.9、本節は決定事項と規約。bmi/ の既存規�
   `glacier_ice__thickness`(hi。既存名)、`lava__thickness`(hl)。CSDMS に
   既存名のないものは文法(object~adjective__quantity)内の造語(bmi-tester の
   名前検査は文法のみ。警告なしを確認)。エッジ量 u, v, m, n は非公開のまま(§54)。
-- **set の 3 区分**(plan §11.5): 既存の 3 変数が見本。**F 強制**(pre。持続。
+- **set の 3 区分**(plan §11.5。§77 で P 区分 = パラメータの外部上書きを追加):
+  既存の 3 変数が見本。**F 強制**(pre。持続。
   内部の生産者が無効 = 「外部」を宣言しているときのみ)、**Q 準静的共有状態**
   (z。一回置換。内部の更新プロセスが全て無効のときのみ)、**S DA 型状態置換**
   (h。一回置換。常時受理)。新変数はどれかに当てはめ、当てはまらなければ
@@ -10235,3 +10236,97 @@ docs/nesting_plan.md §3.9、本節は決定事項と規約。bmi/ の既存規�
 - test_vars.py は 1 プロセス 1 モデルの制約下で with ブロックを連ねる。再
   initialize で Log が上書きされるので、比較用の Log は各ランの直後に写す
   (MPI 検証で「2 行しかない Log」と比較してしまった実例)。
+
+
+## 77. BMI set_value による粗度係数 rn の外部上書き: P 区分(パラメータ)の新設(2026-10-11 設計合意・実装)
+
+### 背景
+
+実行中に動的に変わる地理情報由来の量は、標高 z(s%z。geomorph・glacier・
+lavaflow・bedmotion と BMI の set_value('z'))、家屋の空隙率と有効慣性係数
+gv / lm(s%gv, s%lm。m_bldgdebris が m_state_set_gv 経由で**増加方向のみ**。
+§63.1)、土層厚 sd(geomorph)だけで、**粗度係数 rn は g%rn に読み込まれて
+以後は完全に静的**だった(時間ループで書く箇所なし・BMI に非掲載・
+save/restore の対象外)。累積流量や地形変化に応じた粗度の更新、季節植生、
+キャリブレーションの反復は「fn_rn を書き換えて再実行」以外に手段がなく、
+BMI 経由でも initialize のたびにファイルから読み直すしかなかった。
+
+### 決定事項
+
+- **P 区分(パラメータ)を §76 の F / Q / S に加える**。意味論: **物性
+  係数の外部上書き**。一回適用で、以後は次の set まで持続する(F と同じ
+  持続性だが、内部に生成過程がない点が違う)。状態ではないので保存則の
+  再スケール(gv の柱状量再スケール)も e の回復もなく、**save / restore の
+  対象外**(initialize 後は入力値に戻る → 利用側が再供給する。pre と同じ
+  「外部の生産者は再供給も外部の責務」)。受理条件は 3 つ: 変数が存在
+  (rn は常時確保 = 常に存在)、**更新が実際に効く実装である**(ENC 格子系
+  のみ。STG は m_swflow_stg_init が g%rn を私有 DN に写して以後 g%rn を
+  読まないため、黙って効かない set を受理しない = ierr=2)、非負(ierr=3)。
+- **格納先は g%rn のまま**とし、「入力は g、時間ループの正本は s」型
+  (§63.1。z・gv・lm)の**例外として明記**する。理由: (a) rn は状態では
+  ない(内部の生産者がなく、再スケールすべき保存量もない)ので s へ移す
+  動機がない、(b) s%rn を設けると機能無効時にも帯 1 枚分のメモリが増える
+  (方針 6)か、g%rn の帯解放と 7 箇所の読み手(swflow_enc・diff・geomorph
+  fluvial / suspend / wash・wq・stg)の改変が要る、(c) save 形式を変えずに
+  済む。**g を時間ループ中に書くのは P 区分の適用部だけ**(run_step の g は
+  intent(inout) になったが、書くのはこの 1 箇所。§11 の契約に追記)。
+- **内部規則(rn = f(累積流量, Δz) 等)は実装しない**。方針 10(計算で使う
+  物理量は直接与える。派生量の内部生成は明確な理由がある場合のみ)に
+  従い、規則は外部ドライバが get(rn・qq・z・…)から計算して set する。
+  溶岩の固化・瓦礫の堆積など物理過程としての粗度変更は、需要が生じた
+  ときに fn_* 過程として個別に設計する(§66 lavaflow の将来枠)。時系列の
+  fn_rn(BMI を使わない利用者向けの段階切替)は案 2 として保留(需要待ち)。
+- **適用**は update 冒頭、hg / swe の適用の直後・bedmotion の前(swflow の
+  前であればよく、他の外部場の適用位置に揃える)。**マスクは read_rn と
+  同じ有効セル全体(x>0。海セルも粗度を持つ**ので z の海セル除外とは
+  異なる)。適用後に **par_halo_cell(g%rn)**(運動量項がエッジで隣接セルと
+  平均する = 帯±ハロ 2 の契約)。geomorph の各過程・wq・拡散項も同じ
+  g%rn を読むので自動的に追随する。外部場は**粗度の全体**であり、
+  rn0_rw による河道上書きも置換される。現に効いている場は get('rn') で
+  得られるので、「get → 加工 → set」が基本形。
+- **名前**: `land_surface_water_flow__manning_n_parameter`(CSDMS 文法内。
+  TopoFlow 系の `*__manning_n_parameter` に倣う)、単位 `m-1/3 s`(同じく
+  TopoFlow の表記)、内部名 `rn`。変数表の位置は期間最大の後・機能依存の
+  前(常時存在の群)。基本の変数数は**出力 12・入力 4**(ネスト 2 格子は
+  24・8)になった。bmi-tester の入力変数の set は skip されるので(§76)、
+  適合性試験への影響は表の 1 行増のみ。
+- ステージングは現行様式(extrn_fresh + extrn。初回 set 時のみ確保)。
+  init_instance の残留リセットに追加(§59)。MPI は他と同じ(全ランク
+  collective、src は rank0 のみ有効、値検査 rank0 → allreduce → scatter。§58)。
+- **Python**: `VAR_MANNING_N`。静的ドライバ test_bmi.f90 の `set` は rn も
+  同値 set する(STG のケースでは set 付きで走らせない)。
+- **キャリブレーションでの使い方**: initialize → set(rn) → update の順で、
+  set は最初の update の冒頭で適用される。ファイルを書き換えずに
+  パラメータ探索(initialize / finalize の反復・各回 set)が組める。時間
+  変化(季節植生・累積流量依存)は update の合間に set する。
+
+### 検証(2026-10-11。gfortran 13 / Open MPI 4.1、Ubuntu 24.04。規律2)
+
+- **無効時(set しない)**: 逐次 wave / chichibu 回帰 PASS(identical)。
+  bmi_vars・bmi_nest・test_set_value の既存検査 PASS。MPI np = 1, 2, 4:
+  wave 回帰 PASS、BMI ドライバ wave(set 付き = h・z・rn の同値 set)の
+  Log が reference と identical、bmi_vars full を set 付き(h・z・hg・swe・
+  rn)で走らせた np = 2 の Log が逐次の無介入ランと identical。
+- **set の検査**(test_set_value.py D1 / D2 = test/wave。rn0 = 0 の無摩擦
+  ケース): D1 = 半分時点で get した rn の同値 set → C1(無介入)と Log
+  全行一致、負値の set は BmiError。D2 = 半分時点で一様に +0.03 を set →
+  次の 1 歩の後の get が設定値と厳密一致(有効セル)、終了時の h が D1 と
+  異なる(最大差 3.9e-3 m = 粗度が実際に効く)。test_vars.py A(none):
+  rn が変数表に載り get = rn0 が厳密、同値 set 受理・負値拒否。
+- **-O0 -fcheck=all -finit-real=snan の MPI クリーンビルド np = 2**(規律3。
+  新設のステージング配列 extrn と g%rn の帯書き込み・ハロ交換の確保範囲):
+  bmi_vars full(set 付き)・wave(set 付き)・chichibu(set 付き)が完走。
+- bmi-tester は本環境に未導入のため適合性試験は未実施(名前は CSDMS
+  文法内、単位は udunits 表記。次に bmi-tester を走らせる機会に確認する)。
+- トップレベル make で utils の追随漏れなし。
+
+### 落とし穴
+
+- **効かない set を受理しない**: STG は init で rn を私有配列へ写す。
+  「表に載る = 存在」「受理 = 効く実装」の 2 層は §76 と同じ構造。
+- **save されない**: restore 後の BMI ランで rn の外部場は入力値に戻る。
+  利用側が initialize 後に再 set する契約(pre と同じ)。
+- set 直後の get は旧値(適用は次の update 冒頭。他の set と同じ)。
+  無効セル(x<=0)は 0 のまま返る。
+- 外部場は全体置換なので、河道セルの rn0_rw を保ちたい場合は get した場を
+  加工して set する(マスクを作らなくてよい)。

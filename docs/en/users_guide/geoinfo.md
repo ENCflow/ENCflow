@@ -69,7 +69,10 @@ fn_rn distribution -- `rn0_rw` (below) can override it. To derive a
 roughness distribution from land-use codes, map the values in
 preprocessing (GIS etc.) to create the file and supply it with
 `f_rntype = 1` (the in-model conversion f_rntype=2 has been removed --
-developer.md Sec. 41).
+developer.md Sec. 41). When ENCflow is driven through BMI, the roughness
+field can be overridden during the run (parameter searches, updates from
+cumulative discharge or terrain change; bmi/README.en.md "Overriding
+roughness").
 
 **Roughness guides** (Manning n by land use; customary values of the
 Japanese inundation-mapping manuals and Chow 1959; calibration

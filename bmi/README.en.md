@@ -66,17 +66,39 @@ file output.
 | `surface_water__time_max_of_depth` | maximum depth over the run | m | No (get only) |
 | `surface_water_flow__time_max_of_speed` | maximum speed over the run | m/s | No (get only) |
 | `surface_water_flow__time_max_of_unit_width_volume_flow_rate` | maximum unit-width discharge over the run | m²/s | No (get only) |
+| `land_surface_water_flow__manning_n_parameter` | roughness coefficient (Manning's n) | s/m^(1/3) | Allowed (**parameter override**; persists until the next set; whole valid domain, including channel cells set by rn0_rw; ENC grid system only; not saved, so set again after a restart) |
 
-These eleven variables exist in every case and can all be read with get
+These twelve variables exist in every case and can all be read with get
 (the velocity components are cell-centered derived quantities composed
 from the internal edge-based fields, in the conventional orientation
-x = east, y = north). The first three can also be set; a set value is
+x = east, y = north). The first three and the roughness can also be set; a set value is
 applied at the start of the next update. The "only when" conditions come from one
 principle — **each quantity has a single source** (file forcing and
 external supply are never combined) — and a set that violates them
 returns an error (BMI_FAILURE). In Python:
 `model.set(name, array)` (flattened standard form below, or a 2-D
 (ny, nx) array).
+
+### Overriding roughness (calibration, time-varying roughness)
+
+Roughness is a parameter, not a state, so a set **replaces it and
+persists** (developer.md §77). This allows parameter searches without
+rewriting files, and lets a driver update roughness from cumulative
+discharge, terrain change or seasonal vegetation with a rule of its own
+(the model holds no such rule). The field currently in effect is
+available with get, so "get → modify → set" is the basic pattern.
+
+```python
+from encflow import ENCflow, VAR_MANNING_N, VAR_UNIT_DISCHARGE
+with ENCflow("param.txt") as m:
+    rn = m.get2d(VAR_MANNING_N)          # input values (rn0 / fn_rn / rn0_rw applied)
+    m.set(VAR_MANNING_N, rn * 1.2)       # +20 % everywhere (applied at the first update)
+    while m.time < m.end_time:
+        m.update()
+        if m.time % 3600 < m.time_step:  # hourly update from unit discharge, as an example
+            qq = m.get2d(VAR_UNIT_DISCHARGE)
+            m.set(VAR_MANNING_N, rn * (1.0 + 0.5 * (qq > 1.0)))
+```
 
 ### Feature-dependent variables (present only when the feature is enabled)
 

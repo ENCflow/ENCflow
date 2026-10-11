@@ -113,6 +113,11 @@ module m_main
     real, allocatable :: exthg(:,:)     ! ステージング場 (m。帯形状)
     logical :: extswe_fresh = .false.   ! 未適用の swe があるか
     real, allocatable :: extswe(:,:)    ! ステージング場 (m。帯形状)
+    ! BMI 外部パラメータ(rn)のステージング(§77。P 区分 = 物性係数の
+    ! 外部上書き。一回適用で以後は次の set まで持続する(状態ではないので
+    ! 保存則の再スケールも save もない)。適用先は g%rn の帯+ハロ)
+    logical :: extrn_fresh = .false.    ! 未適用の rn があるか
+    real, allocatable :: extrn(:,:)     ! ステージング場 (s m-1/3。帯形状)
   end type t_encflow
 
   ! インスタンスの格納と選択(developer.md §71)
@@ -222,11 +227,13 @@ subroutine init_instance(fn_param, align)
   enc%exth_fresh = .false.
   enc%exthg_fresh = .false.
   enc%extswe_fresh = .false.
+  enc%extrn_fresh = .false.
   if (allocated(enc%extpre)) deallocate(enc%extpre)  ! 格子サイズが変わり得る
   if (allocated(enc%extz)) deallocate(enc%extz)
   if (allocated(enc%exth)) deallocate(enc%exth)
   if (allocated(enc%exthg)) deallocate(enc%exthg)
   if (allocated(enc%extswe)) deallocate(enc%extswe)
+  if (allocated(enc%extrn)) deallocate(enc%extrn)
 
   ! MPIを初期化(複数インスタンスでは 2 回目以降は何もしない)
   call par_init()
@@ -396,7 +403,7 @@ subroutine step_instance()
                   enc%extpre_active, enc%extpre_fresh, enc%extpre, &
                   enc%extz_fresh, enc%extz, enc%exth_fresh, enc%exth, &
                   enc%exthg_fresh, enc%exthg, enc%extswe_fresh, enc%extswe, &
-                  enc%ierror)
+                  enc%extrn_fresh, enc%extrn, enc%ierror)
 
   end associate
 
@@ -692,6 +699,8 @@ integer function var_state(name)
   select case (trim(name))
   case ('h', 'z', 'e', 'pre', 'vv', 'qq', 'ux', 'uy', 'hmax', 'vvmax', 'qqmax')
     var_state = 0                 ! 無条件確保のセル量(常に存在)
+  case ('rn')                     ! 粗度係数(物性係数。常時確保 = 常に存在。§77)
+    var_state = 0
   ! --- 機能依存(存在 = その量を生産するプロセスが有効。§76)---
   case ('hg')                     ! 地下貯留(層1): 配列は常時確保だが gwflow が無効ならゼロ場
     var_state = cond(ready, enc%gw%enabled)
@@ -758,6 +767,11 @@ subroutine m_main_get_value(name, dest, ierr)
     call par_gather_to(dest, enc%s%vvmax)
   case ('qqmax')
     call par_gather_to(dest, enc%s%qqmax)
+  case ('rn')
+    ! 物性係数(P 区分。§77)。g%rn は方式2の帯配列(scatter_coeffs 後は
+    ! rank0 も帯)なので s の量と同じく gather できる。返すのは現に効いて
+    ! いる場(rn0_rw の河道上書き・外部 set を含む)
+    call par_gather_to(dest, enc%g%rn)
   ! --- 機能依存の状態量(存在は var_state が判定済み。§76)---
   case ('hg')
     call par_gather_to(dest, enc%s%hg)
@@ -825,9 +839,16 @@ end subroutine
 !     陸セルのみ、適用後ハロ交換。
 !   - 'swe': 積雪水量の置換(同上。fn_snow 有効時のみ存在)。一回適用、
 !     陸セルのみ。
+!   - 'rn':  粗度係数(Manning の n)の外部上書き(§77 の P 区分 =
+!     パラメータ。状態ではないので保存則の再スケールも save もなく、
+!     次の set まで持続する。利用側は initialize 後に再供給する)。
+!     有効セル(x>0。海セルを含む = read_rn と同じマスク)に一回適用し、
+!     g%rn のハロ交換まで行う(運動量項がエッジで隣接セルと平均する)。
+!     STG 格子系(f_gridsystem=1)は init で rn を私有配列へ写すため
+!     受理しない(ierr=2)。負値は ierr=3
 !   ierr: 0 = 成功、1 = 未対応の変数名、2 = 許可されない(生産者が
-!   既に存在)、3 = 不正値(負の降水強度・負の水深)、4 = 既知だが
-!   機能無効(var_state)
+!   既に存在)、3 = 不正値(負の降水強度・負の水深・負の粗度)、4 = 既知
+!   だが機能無効(var_state)
 !----------------------------------------------------------------------
 subroutine m_main_set_value(name, src, ierr)
   ! MPI では全ランク collective に呼ぶこと。src は rank0 のみ有効
@@ -905,6 +926,23 @@ subroutine m_main_set_value(name, src, ierr)
     end if
     call par_scatter_cell(src, enc%extswe)
     enc%extswe_fresh = .true.
+  case ('rn')
+    ! P 区分(§77)。STG は m_swflow_stg_init が g%rn を私有 DN に写して
+    ! 以後 g%rn を読まないため、更新が効かない set は受理しない
+    if (enc%p%f_gridsystem /= 0) then
+      ierr = 2
+      return
+    end if
+    if (is_root) then
+      if (any(src < 0.)) ierr = 3
+    end if
+    call par_allreduce_maxi(ierr)   ! 判定を全ランク同一に(§5)
+    if (ierr > 0) return
+    if (.not. allocated(enc%extrn)) then
+      allocate(enc%extrn(1:enc%g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    end if
+    call par_scatter_cell(src, enc%extrn)
+    enc%extrn_fresh = .true.
   case default
     ierr = 1
   end select
@@ -978,9 +1016,10 @@ end subroutine
 subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, bd, sn, gl, lv, bm, si, ou, &
                     extpre_active, extpre_fresh, extpre, &
                     extz_fresh, extz, exth_fresh, exth, &
-                    exthg_fresh, exthg, extswe_fresh, extswe, ierror)
+                    exthg_fresh, exthg, extswe_fresh, extswe, &
+                    extrn_fresh, extrn, ierror)
   type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
+  type(t_geoinfo), intent(inout) :: g  ! 原則不変。例外は BMI の P 区分(rn の外部上書き。§77)
   type(t_boundary), intent(inout) :: b
   type(t_precip), intent(in) :: pr
   type(t_tide), intent(inout) :: ti    ! titype=4 の分布バッファを更新するため inout
@@ -1014,6 +1053,8 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   real, allocatable, intent(in) :: exthg(:,:)   ! ステージング場 (m。帯形状)
   logical, intent(inout) :: extswe_fresh  ! 未適用の外部 swe があるか(適用で消す)
   real, allocatable, intent(in) :: extswe(:,:)  ! ステージング場 (m。帯形状)
+  logical, intent(inout) :: extrn_fresh   ! 未適用の外部 rn があるか(適用で消す。§77)
+  real, allocatable, intent(in) :: extrn(:,:)   ! ステージング場 (s m-1/3。帯形状)
   integer, intent(inout) :: ierror
   integer :: it            ! このステップの時間カウント(= s%it + 1)
   integer :: i, j          ! 外部降水の適用ループ用
@@ -1099,6 +1140,25 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
     end do
     !$omp end parallel do
     extswe_fresh = .false.
+  end if
+
+  ! BMI 外部パラメータ(rn)の適用(§77。P 区分 = 物性係数の外部上書き)。
+  ! マスクは read_rn と同じ有効セル全体(x>0。海セルも粗度を持つ)。
+  ! 状態ではないので e の回復や柱状量の再スケールはなく、g%rn を書き換えて
+  ! ハロ交換するだけ(運動量項が隣接セルとエッジ平均する。geomorph の
+  ! 各過程・wq・拡散項も同じ g%rn を読むので自動的に追随する)。
+  ! swflow の前であればよく、他の外部状態の適用と同じ位置に置く
+  if (extrn_fresh) then
+    !$omp parallel do
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        g%rn(i,j) = extrn(i,j)
+      end do
+    end do
+    !$omp end parallel do
+    call par_halo_cell(g%rn)
+    extrn_fresh = .false.
   end if
 
   ! 規定底面運動(fn_bedmotion 未指定なら no-op)。このステップ末尾の時刻の

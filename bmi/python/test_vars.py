@@ -3,8 +3,10 @@
 
 developer.md §76。変数表は「その量を生産する機能が有効な格子にだけ載る」:
 
-  A. 構成 none(機能なし): 出力 = 基本 11・入力 = 基本 3。地下貯留 hg・
+  A. 構成 none(機能なし): 出力 = 基本 12・入力 = 基本 4。地下貯留 hg・
      積雪 swe は変数表になく、get / set は BmiError(機能無効 = 未知名と同じ)。
+     粗度 rn(P 区分。§77)は常時存在し、get が rn0 と厳密一致、負値の set は
+     BmiError、同値の set は受理(効果の検査は test_set_value.py D1/D2 = wave)。
   B. 構成 full(バケツ地下水 + 気温 + 積雪): hg・swe が出力表に載り、
      - t0 の swe = snow_swe0、hg = 0(厳密)
      - 半分まで進めた hg・swe が解析値(毎ステップ一定増分)と一致
@@ -29,13 +31,14 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
 from encflow import (ENCflow, BmiError, VAR_DEPTH, VAR_DEPTH_MAX,  # noqa: E402
-                     VAR_GW_STORAGE, VAR_SWE, VAR_SOIL_THICKNESS)
+                     VAR_GW_STORAGE, VAR_SWE, VAR_SOIL_THICKNESS, VAR_MANNING_N)
 
-N_BASE_OUT = 11      # 無条件に存在する出力変数(h, z, pre, e, vv, qq, ux, uy, hmax, vvmax, qqmax)
-N_BASE_IN = 3        # 同 入力(h, z, pre)
+N_BASE_OUT = 12      # 無条件に存在する出力変数(h, z, pre, e, vv, qq, ux, uy, hmax, vvmax, qqmax, rn)
+N_BASE_IN = 4        # 同 入力(h, z, pre, rn)
 RATE = 10.0 / 3600.0 / 1000.0     # バケツの浸透能 (m/s。param_full の gw_infil_mmh)
 PRE = 36.0 / 3600.0 / 1000.0      # 降雨強度 (m/s。全て雪になる)
 SWE0 = 100.0e-3                   # 初期積雪水量 (m)
+RN0 = 0.03                        # 粗度係数(param_*.txt の rn0。P 区分の get の検査)
 DT = 0.5
 T_HALF = 30.0
 T_END = 60.0
@@ -85,8 +88,15 @@ def run_none():
         zeros = np.zeros(m.nx * m.ny)
         expect_error("none: set(hg)", lambda: m.set(VAR_GW_STORAGE, zeros))
         expect_error("none: set(swe)", lambda: m.set(VAR_SWE, zeros))
+        rn = m.get(VAR_MANNING_N)
+        if VAR_MANNING_N not in m.input_var_names or np.any(rn != RN0):
+            fail(f"none: rn: listed {VAR_MANNING_N in m.input_var_names}, {rn.min()}..{rn.max()} != {RN0}")
+        expect_error("none: set(rn < 0)", lambda: m.set(VAR_MANNING_N, rn - 1.0))
+        m.set(VAR_MANNING_N, rn)
         m.update_until(m.end_time)
-    print("test_vars: A (none): hg/swe absent, get/set rejected")
+        if np.any(m.get(VAR_MANNING_N) != RN0):
+            fail("none: rn changed after same-value set")
+    print("test_vars: A (none): hg/swe absent, get/set rejected; rn = rn0, set accepted")
 
 
 def run_full(param, tag, extra_in):

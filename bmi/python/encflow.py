@@ -45,6 +45,7 @@ VAR_VELOCITY_Y = "surface_water__y_component_of_velocity"   # 流速 y=北成分
 VAR_DEPTH_MAX = "surface_water__time_max_of_depth"          # 期間最大水深 (m)。get のみ
 VAR_SPEED_MAX = "surface_water_flow__time_max_of_speed"     # 期間最大速さ (m/s)。get のみ
 VAR_UNIT_DISCHARGE_MAX = "surface_water_flow__time_max_of_unit_width_volume_flow_rate"  # 期間最大比流量 (m2/s)。get のみ
+VAR_MANNING_N = "land_surface_water_flow__manning_n_parameter"  # 粗度係数 Manning の n (s/m^(1/3))。set はパラメータの上書き
 # 機能依存の変数(その量を生産する機能が有効なケース・格子にだけ存在する。
 # 無効なら変数表に載らず、get/set は BmiError。has(name) で確認できる)
 VAR_GW_STORAGE = "soil_water__leq-depth"                    # 地下貯留(層1。柱状換算 m)。fn_gwflow
@@ -332,6 +333,12 @@ class ENCflow:
         - VAR_DEPTH (m): 水深の置換(一回適用。データ同化型の状態
           上書き。加算ではない — 水を足すなら VAR_PRECIP を使う)。
           運動量(u, v)は変更されない。負値は BmiError。
+        - VAR_MANNING_N (s/m^(1/3)): 粗度係数の上書き(パラメータ。
+          一回適用で次の set まで持続。キャリブレーションや累積流量・
+          地形変化に応じた粗度の更新規則は利用側で計算して与える)。
+          有効セル全体に適用(河道セルの rn0_rw も上書きされる。現に
+          効いている場は get で得られる)。initialize 後は入力値に戻る
+          ので、再開時は再度 set する。STG 格子系と負値は BmiError。
         """
         ny, nx = self._shapes[self.var_grid(name)]
         arr = np.ascontiguousarray(values, dtype=np.float64).ravel()

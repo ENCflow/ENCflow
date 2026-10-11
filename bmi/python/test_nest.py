@@ -13,7 +13,7 @@
      子の足元(親セル 133..253)を切り出して子の初期水深ファイルを書く。
      最後まで進めて最終水深 hA と Log を保存。
   B: ネスト(param_root.txt)。格子情報(grids = [0, 1]、形・刻み・原点。
-     子の原点は親の原点 + 整列位置から導かれる)、変数表(22 出力・6 入力、
+     子の原点は親の原点 + 整列位置から導かれる)、変数表(24 出力・8 入力、
      ~grid1 の修飾名)、var_grid を検査。毎ステップ、子の内部(帯の外)の
      水深と速さがルートの足元とビット一致すること。最終のルート水深が hA と
      一致し、Log が A と全行一致すること(= 格子の区別と置換が正しい)。
@@ -94,7 +94,7 @@ with ENCflow("param_root.txt") as m:
     if abs(yc - y_exp) > 1e-9 or abs(xc - x_exp) > 1e-9:
         fail(f"nested run: child origin {(yc, xc)} != {(y_exp, x_exp)}")
     names = m.output_var_names
-    if len(names) != 22 or len(m.input_var_names) != 6:
+    if len(names) != 24 or len(m.input_var_names) != 8:
         fail(f"nested run: {len(names)} outputs, {len(m.input_var_names)} inputs")
     hc_name = var_on_grid(VAR_DEPTH, 1)
     if hc_name != "surface_water~grid1__depth" or hc_name not in names:

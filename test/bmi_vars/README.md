@@ -6,7 +6,7 @@ BMI の変数表は「その量を生産する機能が有効な格子にだけ�
 
 | 構成 | 内容 | 検査 |
 |---|---|---|
-| param_none.txt | 機能なし | 地下貯留 hg・積雪 swe が変数表になく、get / set が BmiError |
+| param_none.txt | 機能なし | 地下貯留 hg・積雪 swe が変数表になく、get / set が BmiError。粗度 rn(常時存在。§77)は get = rn0、同値 set 受理・負値拒否 |
 | param_full.txt | バケツ地下水(浸透能 10 mm/h)+ 気温 −5 ℃ + 積雪(初期 100 mm) | hg・swe が載る。値が解析値(毎ステップ一定増分)・分布出力(Hg/Sw/H)と一致。同値 set の不変性(Log 全行一致)。負値の set は BmiError |
 | param_ga.txt | 同上だが Green-Ampt(土層厚 1 m) | hg・swe・sd が載る。hg の set は拒否(私有の累積浸透と不整合)、swe の set は受理 |
 

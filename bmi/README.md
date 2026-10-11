@@ -62,14 +62,35 @@ python3 ../../bmi/python/live_view.py param.txt --save frames   # PNG 連番(画
 | `surface_water__time_max_of_depth` | 期間最大水深 | m | 不可(get のみ) |
 | `surface_water_flow__time_max_of_speed` | 期間最大の速さ | m/s | 不可(get のみ) |
 | `surface_water_flow__time_max_of_unit_width_volume_flow_rate` | 期間最大の比流量 | m²/s | 不可(get のみ) |
+| `land_surface_water_flow__manning_n_parameter` | 粗度係数(Manning の n) | s/m^(1/3) | 可(**パラメータの上書き**。次の set まで持続。有効セル全体〔河道セルの rn0_rw も置換〕。ENC 格子系のみ。save されないので再開時は再 set) |
 
-上の 11 変数はどのケースでも存在し、すべて get できます(流速成分は
+上の 12 変数はどのケースでも存在し、すべて get できます(流速成分は
 セル中心の導出量で、内部のエッジ配置量から合成されます。x=東・y=北の
-標準的な向きです)。set できるのは上 3 つで、値は次の update の冒頭で
-適用されます。set の「〜のみ可」は、**同じ量の与え方は一つ**(ファイル
-強制と外部供給を併用しない)という原則によるもので、条件を満たさない
-set はエラー(BMI_FAILURE)になります。Python では
+標準的な向きです)。set できるのは上 3 つと粗度で、値は次の update の
+冒頭で適用されます。set の「〜のみ可」は、**同じ量の与え方は一つ**
+(ファイル強制と外部供給を併用しない)という原則によるもので、条件を
+満たさない set はエラー(BMI_FAILURE)になります。Python では
 `model.set(名前, 配列)`(下記の 1 次元標準形か、(ny, nx) の 2 次元)。
+
+### 粗度の外部上書き(キャリブレーション・動的な粗度)
+
+粗度係数は状態ではなくパラメータなので、set は「置換して以後持続」
+です(developer.md §77)。ファイルを書き換えずにパラメータ探索ができ、
+累積流量や地形変化・季節植生に応じた粗度の更新規則は利用側で計算して
+与えます(モデル内に規則は持ちません)。現に効いている場は get で
+得られるので、「get → 加工 → set」が基本形です。
+
+```python
+from encflow import ENCflow, VAR_MANNING_N, VAR_UNIT_DISCHARGE
+with ENCflow("param.txt") as m:
+    rn = m.get2d(VAR_MANNING_N)          # 入力値(rn0 / fn_rn / rn0_rw 適用済み)
+    m.set(VAR_MANNING_N, rn * 1.2)       # 一括 20 % 増(最初の update の冒頭で適用)
+    while m.time < m.end_time:
+        m.update()
+        if m.time % 3600 < m.time_step:  # 1 時間ごとに比流量で粗度を更新する例
+            qq = m.get2d(VAR_UNIT_DISCHARGE)
+            m.set(VAR_MANNING_N, rn * (1.0 + 0.5 * (qq > 1.0)))
+```
 
 ### 機能依存の変数(有効なケースにだけ存在する)
 
@@ -157,7 +178,7 @@ mpirun -np 4 ./test_encflow_bmi_mpi param.txt
 | ツール | 内容 |
 | --- | --- |
 | `test_encflow_bmi [param] [set]` | ケースを BMI 経由で完走させる検証ドライバ(結果はスタンドアロン実行と一致する。`set` を付けると同値 set の無害性も検査) |
-| `python/test_set_value.py` | set_value の等価性テスト(ファイル強制と外部供給で結果が一致すること等。test/wave で実行) |
+| `python/test_set_value.py` | set_value の等価性テスト(ファイル強制と外部供給で結果が一致すること、h・z・rn の同値 set の不変性、rn の set が効くこと。test/wave で実行) |
 | `python/test_vars.py` | 機能依存の変数の受け入れ試験(変数表の内容・値・再 initialize・hg / swe の同値 set の不変性と受理条件。test/bmi_vars で実行。`test/bmi_vars/Run.sh` が静的ドライバと bmi-tester も含めて一括実行) |
 | `python/test_nest.py` | 多格子公開の受け入れ試験(格子情報・変数表・比 1:1 自己ネストの恒等・再 initialize・同値 set。test/bmi_nest で実行。`test/bmi_nest/Run.sh` が静的ドライバと bmi-tester も含めて一括実行) |
 | `python/check_bmi.sh` | CSDMS 公式適合性テスト bmi-tester の実行スクリプト(param の後に、param が参照する入力ファイルを列挙) |

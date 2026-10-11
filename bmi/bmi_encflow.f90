@@ -32,7 +32,8 @@
 !     名前を組み立てる公開ヘルパ。
 !   - **変数表は vars(:) の 1 本**(名前・内部名・単位・入力可否。§76)。
 !     基本は出力8(h, z, pre, e, 速さ, 比流量, 流速成分 x/y)・入力3
-!     (h, z, pre)。set_value の受理条件と意味論は変数ごとに異なり、
+!     (h, z, pre)。期間最大 3 と粗度 rn(P 区分。set 可。§77)は常時
+!     存在。set_value の受理条件と意味論は変数ごとに異なり、
 !     格子によらず同じ(Setters 節と developer.md §56・§57)。
 !   - **動的変数表**: 機能(fn_*)に依存する変数は、その量を生産する
 !     プロセスが有効な格子にだけ載る(m_main_has_value が正本。§76)。
@@ -65,7 +66,8 @@ module bmi_encflow
   !   input = set_value の対象か(受理条件は m_main_set_value が判定。
   !           §56: 降水は prtype=0 のときのみ。§57: z は z 更新プロセス
   !           無効時のみ、h は常時 = データ同化型の状態置換。§76: hg は
-  !           Green-Ampt 以外、swe は常時 = h と同じ置換)
+  !           Green-Ampt 以外、swe は常時 = h と同じ置換。§77: rn は
+  !           ENC 格子系のみ = パラメータの外部上書き)
   ! 並びがそのまま変数表の並び(格子ごとにこの順)。既存の利用側のため
   ! 先頭 8 行(出力)と入力 3 行(h, z, pre)の順は変えないこと
   type :: t_var
@@ -75,7 +77,7 @@ module bmi_encflow
     logical :: input
   end type
 
-  integer, parameter :: n_vars = 18
+  integer, parameter :: n_vars = 19
   type(t_var), parameter :: vars(n_vars) = [ &
     t_var("surface_water__depth",                            "h",   "m",      .true.), &
     t_var("land_surface__elevation",                         "z",   "m",      .true.), &
@@ -89,6 +91,8 @@ module bmi_encflow
     t_var("surface_water__time_max_of_depth",                "hmax",  "m",      .false.), &
     t_var("surface_water_flow__time_max_of_speed",           "vvmax", "m s-1",  .false.), &
     t_var("surface_water_flow__time_max_of_unit_width_volume_flow_rate", "qqmax", "m2 s-1", .false.), &
+    ! --- パラメータ(P 区分。常時存在。set = 物性係数の外部上書き。§77)---
+    t_var("land_surface_water_flow__manning_n_parameter",  "rn",    "m-1/3 s", .true.), &
     ! --- 機能依存(その量を生産するプロセスが有効な格子にだけ載る)---
     t_var("soil_water__leq-depth",                           "hg",  "m",      .true.), &
     t_var("snowpack__liquid-equivalent_depth",               "swe", "m",      .true.), &

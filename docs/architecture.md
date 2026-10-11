@@ -103,7 +103,9 @@ m_state_set_gv だけで、空隙面積基底の柱状量を再スケールし�
 updatetime                    時刻更新
 BMI 外部状態の適用            set_value された z / h の一回適用(§57。陸セルのみ・e 回復・
                                 z ハロ交換。運動量は触らない)、続いて hg / swe の一回適用
-                                (§76。陸セルのみ。hg はハロ交換まで。所有モジュールの calc の前)
+                                (§76。陸セルのみ。hg はハロ交換まで。所有モジュールの calc の前)、
+                                続いて粗度 rn の一回適用(§77。P 区分 = 物性係数の外部上書き。
+                                有効セル全体・g%rn のハロ交換まで。時間ループで g を書く唯一の箇所)
 bedmotion_calc                規定底面運動(ステップ末尾時刻の変位を補間し増分を s%z へ。
                                 h 不変・e 回復・z ハロ交換。上と同じ契約・同じ位置 = swflow
                                 の前。無効なら no-op。§70)
@@ -152,7 +154,7 @@ calcstat                      統計(S 台帳・max 類。決定的総和)
 | 記号 | 型 | 所有者 | 内容と規約 |
 |---|---|---|---|
 | p | t_sysparam | m_sysparam | 実行制御。init 後は全モジュール読み取り専用 |
-| g | t_geoinfo | m_geoinfo | 地形 z(入力)・粗度 rn・家屋 gv/bb/lm(入力)・マスク x/sw/rw・格子。原則不変(動的な標高は s%z、動的な空隙率は s%gv/s%lm。g%gv/g%lm の帯は band_shrink で解放) |
+| g | t_geoinfo | m_geoinfo | 地形 z(入力)・粗度 rn・家屋 gv/bb/lm(入力)・マスク x/sw/rw・格子。原則不変(動的な標高は s%z、動的な空隙率は s%gv/s%lm。g%gv/g%lm の帯は band_shrink で解放)。例外は BMI の P 区分: set_value('rn') が g%rn の帯を上書きする(§77) |
 | s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), hb(動く底層。z・sd の内数), cq/cg/crs(輸送物質の地表・地下・ため池プール), hd/wd(流動・堆積流木), hbd/wbd(流動・堆積瓦礫), gv/lm(空隙率と有効慣性係数。§63), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi・hb 等のモジュール私有 save は各 dispose。契約5) |
 | sx | t_enc_status | m_swflow_enc 私有 | エッジ流速 uv・流量 mn(前ステップ確定)・mn1(更新中)。他モジュールから不可視。NH の状態(圧力 φ・活性集合・砕波状態・zprev 等)も submodule 私有で、リスタート保存なし(φ は現在状態から再構築。f_nh_bottom の z̈ だけ再開直後の 1 ステップが異なる。§69) |
 | r, b, … | 各 t_* | 各モジュール | モジュール私有。各過程の作業台帳・サブモデルの状態も `t_*` の成分として持つ(モジュール変数に状態を置くのは m_swflow_enc 系(7 つの変数群 opt/nhp/bcs/dbr/chn/sct/geo と submodule の私有状態)・m_ffactor・dcp だけで、これらは複数インスタンス時に `*_ctx_swap` で枠へ退避・復帰する。§71)。リスタートは各自の save ファイル(契約5)。例外: m_bedmotion は私有 save を持たず、再開時刻の変位を表から求めて「適用済み」とする(§70) |
