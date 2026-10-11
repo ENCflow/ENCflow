@@ -25,60 +25,111 @@ T = {"ja": {
     "tide": "tide η_sea",
 }}
 
+from _schematic import (drawing_style, text, block, paragraph, line, curve,
+    arrow as flow_arrow, water as wet_water, monotone_cubic, export, INK, MUTED, RULE)
+import numpy as np
+
+COAST = 7.6
+TIDE = 2.0
+POND_LEVEL = 3.12
+POND_INTERFACE = 2.87
+POND_BOUNDS = (.6, 3.4)
+
+
+def profiles():
+    """Shared schematic curves, not a model run or an equilibrium solution.
+
+    The local surface depression is part of the ground. Bedrock follows the
+    broader coastal slope, so the illustrative soil thickness varies locally.
+    hgs is storage: no misleading geometric 'hgs' dimension line is drawn.
+    """
+    knots=np.array([0.,.6,2.,3.4,4.5,6.5,COAST,9.,11.6])
+    gvals=np.array([3.45,3.40,2.65,3.40,2.72,2.20,TIDE,1.55,1.4])
+    x=np.unique(np.r_[np.linspace(0,11.6,1601),knots,2.0])
+    ground=monotone_cubic(knots,gvals,x)
+    bx=np.array([0.,2.,4.5,6.5,COAST,9.,11.6])
+    bz=np.array([.9,.75,.45,.15,0.,-.45,-.6])
+    base=monotone_cubic(bx,bz,x)
+    land=x<=COAST
+    wx=np.array([0.,2.,4.5,6.5,COAST])
+    wz=np.array([2.65,2.43,2.35,2.10,TIDE])
+    wt=monotone_cubic(wx,wz,x[land])
+    fraction=np.clip((x[land]-2.0)/(COAST-2.0),0,1)**1.75
+    interface=base[land]+fraction*(wt-base[land])
+    return x,ground,base,land,wt,interface
+
+
+def build(lang):
+    if lang not in T: raise ValueError('lang must be ja or en')
+    t=T[lang];ja=lang=='ja'
+    fig=plt.figure(figsize=(13.2,9.2))
+    ax=fig.add_axes([.052,.045,.906,.910])
+    ax.set_xlim(-.10,11.80);ax.set_ylim(-3.88,4.52);ax.set_aspect('equal');ax.axis('off')
+    block(ax,0,4.42,t['title'],11.6,size=10.5,weight='bold')
+    x,g,b,land,wt,zi=profiles()
+    xl=x[land]
+    # Solid ground and aquifer; all shared boundaries use exactly these arrays.
+    ax.add_patch(Polygon(list(zip(x,b))+[(11.6,-.93),(0,-.93)],
+                          fc='#d9d8d3',ec='none',zorder=1))
+    ax.add_patch(Polygon(list(zip(x,g))+list(zip(x[::-1],b[::-1])),
+                          fc='#e0cba1',ec='none',zorder=2))
+    # Fresh water and salt do not overlap; the sharp interface is drawn once.
+    ax.add_patch(Polygon(list(zip(xl,wt))+list(zip(xl[::-1],zi[::-1])),
+                          fc=C_WATER_L,ec='none',zorder=3))
+    sx=np.r_[xl[xl>=2.],x[x>COAST]]
+    sz=np.r_[zi[xl>=2.],np.full(np.count_nonzero(x>COAST),TIDE)]
+    sb=np.interp(sx,x,b)
+    ax.add_patch(Polygon(list(zip(sx,sz))+list(zip(sx[::-1],sb[::-1])),
+                          fc=C_SEA,ec='none',zorder=3))
+    line(ax,list(zip(xl,wt)),C_C,1.15,z=5)
+    line(ax,list(zip(xl[xl>=2.],zi[xl>=2.])),'#1c4f8a',1.45,z=6)
+    line(ax,[(COAST,TIDE),(11.6,TIDE)],C_C,1.3,z=6)
+    # Pond: both water layers are clipped to the same depression, with exact roots.
+    wet_water(ax,x,g,POND_LEVEL,C_WATER_L,C_WATER,*POND_BOUNDS,zorder=4)
+    wet_water(ax,x,g,POND_INTERFACE,C_SEA,'#1c4f8a',*POND_BOUNDS,zorder=5)
+    line(ax,list(zip(x,g)),C_GROUND,1.25,z=7)
+    line(ax,list(zip(x,b)),MUTED,.90,z=5)
+    # Clear, short labels on the geometry. The full parameter text is below it.
+    text(ax,2.0,3.71,t['surf'],size=10,ha='center',color=C_C)
+    text(ax,2.0,2.785,'hss',size=9.0,ha='center',va='center',color='white')
+    text(ax,1.30,1.92,t['fresh'],size=10,color=C_C)
+    text(ax,5.65,.63,'hgs',size=10.5,color='white')
+    text(ax,9.45,.36,'hgs = hg',size=9.8,color='white')
+    text(ax,.05,3.29,t['land'],size=8.8,color=MUTED)
+    text(ax,4.13,3.39,t['ground'],size=9.2,color=C_GROUND)
+    line(ax,[(4.52,3.12),(4.57,float(np.interp(4.57,x,g)))],C_GROUND,.8,z=8)
+    text(ax,4.15,1.53,t['iface'],size=9.6,color='#1c4f8a')
+    xe=5.05;ze=float(np.interp(xe,xl,zi))
+    line(ax,[(4.87,1.30),(xe,ze)],'#1c4f8a',.8,z=8)
+    block(ax,8.77,3.58,t['sea'],2.7,size=9.4,color=C_C)
+    text(ax,11.46,TIDE+.12,t['tide'],size=9.1,ha='right',va='bottom',color=C_C)
+    # Exchange arrows show process directions, not computed trajectories.
+    flow_arrow(ax,curve((6.1,1.92),[
+        ('C',(6.65,1.98),(7.18,2.0),(COAST,TIDE)),
+        ('C',(7.94,TIDE),(8.14,1.87),(8.53,1.87))]),C_C,1.65,size=11)
+    flow_arrow(ax,[(8.25,.98),(7.03,.98)],C_X,1.75,size=11)
+    flow_arrow(ax,[(7.03,.64),(8.25,.64)],C_X,1.75,size=11)
+    flow_arrow(ax,curve((8.04,2.53),[
+        ('C',(7.44,2.86),(6.80,3.22),(5.35,3.23))]),C_X,1.45,ls='--',size=10)
+    text(ax,6.76,3.58,'海水の遡上' if ja else 'seawater run-up',
+         size=9.2,ha='center',color=C_X)
+    # Notes no longer cross soil, interface, shoreline or flow arrows.
+    line(ax,[(0,-1.14),(11.60,-1.14)],RULE,.75,z=1)
+    y=-1.43
+    left=paragraph(ax,0,y,t['hss'],3.60,size=8.7,color='#1c4f8a',gap=.22)
+    left=paragraph(ax,0,left,t['saltgw'],3.60,size=8.7,color='#1c4f8a',gap=.22)
+    paragraph(ax,0,left,t['soil'],3.60,size=8.5,color=MUTED,gap=.20)
+    middle=paragraph(ax,4.04,y,t['phi'],3.66,size=8.7,gap=.22)
+    paragraph(ax,4.04,middle,t['gh'],3.66,size=8.5,color=MUTED)
+    right=paragraph(ax,8.11,y,t['ex_gw'],3.49,size=8.7,color=C_X,gap=.22)
+    paragraph(ax,8.11,right,t['ex_surf'],3.49,size=8.7,color=C_X)
+    paragraph(ax,0,-3.40,t['init'],11.60,size=8.4,color=MUTED)
+    text(ax,11.6,-3.83,'模式図：形状・縮尺は概念的（平衡解ではない）' if ja else
+         'Schematic geometry; not to scale or an equilibrium solution.',size=7.8,
+         color=MUTED,ha='right',va='bottom')
+    return fig
+
 
 def draw(lang):
-    t = T[lang]
-    fig, ax = plt.subplots(figsize=(10.5, 5.4), layout="constrained")
-    ax.axis("off"); ax.set_xlim(-0.2, 11.6); ax.set_ylim(-1.0, 5.6)
-    XS = 7.6                               # 海岸線
-    # 地表: 左高 → 海岸で潮位、海底
-    gx = [0, 2.0, 4.5, 6.5, XS, 9.0, 11.6]
-    gz = [2.9, 2.75, 2.45, 2.15, 2.0, 1.55, 1.4]
-    SD = 2.0
-    tide = 2.0
-    # 土層(帯水層)
-    ax.add_patch(Polygon(list(zip(gx, gz)) + [(x, z - SD) for x, z in zip(gx[::-1], gz[::-1])], fc=C_SOIL, ec=C_GROUND, lw=0.8, alpha=0.7, zorder=1))
-    ax.add_patch(Polygon([(x, z - SD) for x, z in zip(gx, gz)] + [(11.6, -1.0), (0, -1.0)], fc="#d9d8d3", ec="none", hatch="///", zorder=0.5))
-    # 地下水面(淡水): 陸で地表近く、海岸で潮位
-    wx = [0, 2.0, 4.5, 6.5, XS]
-    wz = [2.65, 2.55, 2.35, 2.12, tide]
-    bot = [z - SD for z in [2.9, 2.75, 2.45, 2.15, 2.0]]
-    # 塩水 zone: くさび(海側で厚く、陸側で尖る)
-    zeta = [bot[0], bot[1], bot[2] + 0.25, bot[3] + 0.95, tide - 0.0]
-    ax.add_patch(Polygon(list(zip(wx, wz)) + list(zip(wx[::-1], bot[::-1])), fc=C_WATER_L, ec=C_WATER, lw=0.8, zorder=2))
-    ax.add_patch(Polygon(list(zip(wx, zeta)) + list(zip(wx[::-1], bot[::-1])), fc=C_SEA, ec=C_WATER, lw=0.8, alpha=0.7, zorder=2.5))
-    ax.plot(wx, zeta, color="#1c4f8a", lw=1.6, zorder=3)
-    # 海(右): 全塩水・潮位
-    ax.add_patch(Polygon([(XS, tide), (11.6, tide), (11.6, 1.4), (9.0, 1.55), (XS, 2.0)], fc=C_SEA, ec=C_WATER, lw=0.8, alpha=0.7, zorder=2.5))
-    ax.add_patch(Polygon([(XS, 2.0), (9.0, 1.55), (11.6, 1.4), (11.6, 1.4 - SD), (9.0, 1.55 - SD), (XS, 0.0)], fc=C_SEA, ec="none", alpha=0.5, zorder=2.6))
-    ax.plot([XS - 0.3, 11.6], [tide, tide], color=C_C, lw=1.2, ls="--", zorder=4)
-    label(ax, 11.5, tide + 0.1, t["tide"], color=C_C, fs=8, ha="right", va="bottom")
-    label(ax, 9.6, 3.1, t["sea"], color=C_C, fs=8.5)
-    label(ax, 9.6, 0.5, "hgs = hg", color="white", fs=8)
-    # 地表水(陸側のくぼみ): 合計 h に底層 hss
-    px = [0.8, 1.2, 3.0, 3.6]
-    ax.add_patch(Polygon([(0.8, 3.3), (1.2, 2.82), (3.0, 2.7), (3.6, 3.3)], fc=C_WATER_L, ec=C_WATER, lw=0.8, zorder=2))
-    ax.add_patch(Polygon([(1.08, 2.97), (1.2, 2.82), (3.0, 2.7), (3.36, 3.06)], fc=C_SEA, ec="none", alpha=0.75, zorder=2.5))
-    ax.plot([0.8, 3.6], [3.3, 3.3], color=C_C, lw=1, zorder=3)
-    label(ax, 2.2, 3.5, t["surf"], color=C_C, fs=8.5, va="bottom")
-    label(ax, 0.0, 4.55, t["hss"], color="#1c4f8a", fs=8, ha="left", va="center")
-    ax.plot([2.2, 2.2], [2.88, 4.25], color="#1c4f8a", lw=0.7, ls=":", zorder=5)
-    # ラベル(地下)
-    label(ax, 3.0, 2.0, t["fresh"], color=C_C, fs=8.5)
-    label(ax, 6.6, 0.6, t["saltgw"], color="white", fs=8, ha="right")
-    label(ax, 5.3, 1.45, t["iface"], color="#1c4f8a", fs=8.5, ha="right")
-    label(ax, 0.1, 1.3, t["soil"], color="#6b4f1d", fs=8, ha="left")
-    label(ax, 0.0, -0.7, t["phi"], color="k", fs=8, ha="left", va="center", box=True)
-    label(ax, 11.5, -0.6, t["gh"], color=C_P, fs=8, ha="right", va="center", box=True)
-    # 海との交換(地下)
-    arrow(ax, (XS + 0.1, 0.9), (XS - 0.9, 0.9), color=C_X, lw=2.0)
-    arrow(ax, (XS - 0.9, 0.6), (XS + 0.1, 0.6), color=C_X, lw=2.0)
-    arrow(ax, (XS - 0.9, 1.75), (XS + 0.1, 1.75), color=C_C, lw=2.0)
-    label(ax, XS + 0.35, 0.95, t["ex_gw"], color=C_X, fs=7.8, ha="left", va="center", box=True)
-    # 海との交換(地表): 遡上
-    arrow(ax, (XS + 0.4, 2.35), (5.2, 2.6), color=C_X, lw=1.8, ls="--")
-    label(ax, 7.3, 4.1, t["ex_surf"], color=C_X, fs=7.8, ha="center", va="center")
-    ax.plot([6.6, 7.0], [2.5, 3.75], color=C_X, lw=0.7, ls=":", zorder=5)
-    label(ax, 11.5, 5.4, t["init"], color=C_P, fs=7.8, ha="right", va="top")
-    ax.set_title(t["title"], loc="left", fontsize=9.2)
-    return save(fig, "salt_layers", lang)
+    with drawing_style():
+        return export(build(lang),out_path('salt_layers',lang))
