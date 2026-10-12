@@ -29,35 +29,15 @@ immobile. Deposited volume `wd` is not added to bed elevation `z`.
   `dw_wfloat` when `H > dw_rfloat × hf` and `V > dw_vfloat`.
   The default rate of zero disables refloating.
 
-Here `H = h + max(hs, 0)` and `V` is the cell speed. Distinguish the depth
-`H` used for thresholds from the water-only dry-cell test `h ≤ dd`.
-Without sediment, `H = h`. For each rate w (m³/m²/s) the transfer in one
-step is capped by the remaining amount S of the source ledger,
-
-```math
-\Delta = \min\left(w\,\Delta t,\; S\right).
-```
-
-Recruitment also converts
-the area basis from `wst` to `hd`, as described below.
-
-The draft `hf` of the representative log is the buoyancy balance of a
-horizontal cylinder of diameter D = `dw_dlog` and specific gravity
-sg = `dw_sglog` (submerged area fraction = specific gravity)[^braudrick00].
-With θ the central angle of the submerged segment,
-
-```math
-\frac{\theta - \sin\theta}{2\pi} = sg,\qquad
-h_f = \frac{D}{2}\left(1 - \cos\frac{\theta}{2}\right),
-```
-
-so sg = 0.5 gives θ = π and h_f = D/2 (half submerged). In general
-h_f ≠ sg·D (sg = 0.3 gives h_f ≈ 0.34 D).
-
-Numbers identify paths in the figure. After advection and landform updates,
-the local execution order is **② → ① → ③ → ④ → dam capture → period-maximum
-update**. A cell passing the dry-cell test is still tested subsequently
-for refloating in ④ if enabled, using the conditions on `H` and `V`.
+Here `H = h + max(hs, 0)` and `V` is the cell speed (`H = h` without
+sediment). Each rate transfer in one step is capped by the remaining
+amount of the source ledger, and the draft `hf` of the representative log
+is derived automatically from the buoyancy balance of a cylinder of
+diameter `dw_dlog` and specific gravity `dw_sglog` (half submerged for
+sg = 0.5). Numbers identify paths in the figure; the local execution order
+is **② → ① → ③ → ④ → dam capture → period-maximum update**. The transfer
+rules, the draft, the area conversion and the basis of the defaults are in
+[Driftwood models explained](driftwood_models.md).
 
 ![Three driftwood ledgers, transfer conditions, draft and volume accounting](../../figs/driftwood_ledgers_en.png)
 
@@ -85,7 +65,7 @@ stopping run with their defaults. Adopted defaults are printed at
 start-up as `driftwood: dw_hrec = 0.5000 m (default)`, so they cannot
 go unnoticed; review them for your case (type-specific starting values
 are in "Recommended values by pattern" at the end of this chapter; the
-rationale is in developer.md §50.6, Japanese).
+basis of the defaults is in [the explanation](driftwood_models.md) §5).
 
 ```
 &list_driftwood
@@ -116,16 +96,16 @@ parameters:
 | f_dw | 1 | 0 disables temporarily while keeping the file |
 | dw_stock0 | (0.001 on land cells) | uniform standing stock (m³/m²). Exclusive with fn_dwstock. **With neither given, 0.001 m³/m² is placed uniformly on land (non-sea) cells** |
 | fn_dwstock | — | standing stock map (m³/m², same matrix format as the terrain) |
-| dw_dlog | 0.3 | representative log diameter (m). The default is the middle of the 0.2-0.4 m range of the manual's estimate "mean driftwood diameter ≈ mean DBH of the standing trees upstream"[^nilim904] |
-| dw_sglog | 0.5 | wood specific gravity ρwood/ρwater (0 < sg < 1). The draft (buoyant depth) is derived automatically as the exact solution of the cylinder buoyancy balance above[^braudrick00] (sg=0.5 gives exactly half submergence = 0.5×dw_dlog). The default is a middle value for green wood (literature value) |
-| dw_wrec | 1e-5 | hydraulic recruitment rate (m/s = m³/m²/s). Specifying it enables hydraulic recruitment. Thresholds and rate are calibration values without a practical standard (empirical; sensitivity analysis recommended) |
+| dw_dlog | 0.3 | representative log diameter (m); the guide is the mean DBH of the standing trees upstream |
+| dw_sglog | 0.5 | wood specific gravity ρwood/ρwater (0 < sg < 1). The draft is derived automatically from the cylinder buoyancy balance (sg=0.5 gives exactly half submergence = 0.5×dw_dlog) |
+| dw_wrec | 1e-5 | hydraulic recruitment rate (m/s = m³/m²/s). Specifying it enables hydraulic recruitment. Thresholds and rate are calibration values (sensitivity analysis recommended) |
 | dw_hrec | 0.5 | depth threshold of recruitment (m; tested with H = h + max(hs, 0)) |
 | dw_vrec | 1.0 | velocity threshold of recruitment (m/s) |
-| dw_droot | 0.5 | rooting depth (m). Specifying it enables erosion entrainment (all remaining stock when reference-to-current lowering zref − z > dw_droot). The default is a representative rooting depth relative to shallow-failure and channel-scour depths (empirical) |
+| dw_droot | 0.5 | rooting depth (m). Specifying it enables erosion entrainment (all remaining stock when reference-to-current lowering zref − z > dw_droot) |
 | dw_wstop | 0.01 | grounding deposition rate (m/s) |
 | dw_vstop | 0 | velocity threshold of slow-flow deposition (m/s; 0 = depth (draft) criterion only) |
 | dw_wfloat | 0 | refloat rate (m/s; 0 = deposited wood never moves again (conservative)) |
-| dw_rfloat | 1.5 | refloat buoyancy margin (refloat when H > rfloat×draft and V > dw_vfloat; must be > 1). On the stable side of the flume onset of motion at ≈ 1.2×draft[^braudrick00] |
+| dw_rfloat | 1.5 | refloat buoyancy margin (refloat when H > rfloat×draft and V > dw_vfloat; must be > 1) |
 | dw_vfloat | — | velocity threshold of refloat (m/s; required with dw_wfloat > 0; must be >= dw_vstop) |
 
 For the two recruitment paths (dw_wrec / dw_droot), **both take their
@@ -137,8 +117,8 @@ dw_hrec / dw_vrec takes the default thresholds.
 ## Recommended values by pattern
 
 The defaults are a middle ground that "runs". When the type of event is
-known, start from the following (calibration quantities; practical values
-from the manual[^nilim904], source readings in developer.md §50.4 and §50.5):
+known, start from the following (calibration quantities; the sources of
+the practical values are in [the explanation](driftwood_models.md) §4):
 
 | Type | Recruitment | Stock and properties | Thresholds and rates | Stopping | Notes |
 |---|---|---|---|---|---|
@@ -149,35 +129,20 @@ from the manual[^nilim904], source readings in developer.md §50.4 and §50.5):
 | Upper-bound reach (hazard map) | per case | as above | as above | dw_vstop 0, dw_wfloat 0 | use Wd9999; the remaining amount is sensitive to dw_vstop and dw_wfloat (timberyard README) |
 | Trapping by works (two-case comparison) | per case | as above | as above | as above | difference of Wd9999 with and without dams, sand basins or culverts |
 
-**Practical guidance** (from NILIM Technical Note No. 904[^nilim904], the
-Japanese national sabo planning manual for debris flow and driftwood):
+**Practical guidance** (from the Japanese sabo planning manual; sources
+and conversion formulas in [the explanation](driftwood_models.md) §4):
 
-- **dw_dlog**: the manual estimates the mean driftwood diameter as
-  roughly equal to the **mean diameter at breast height (DBH)** of the
-  standing trees upstream — survey DBH values can be used directly.
-- **Standing stock**: from the single-tree volume
-  $`V_1 = \tfrac{\pi}{4} D_{bh}^2 H_t f_s`$ (D_bh breast-height diameter,
-  H_t tree height, f_s form factor 0.3-0.7) and the tree density N
-  (trees/m²), $`wst = N V_1`$, converted to m³/m² in preprocessing. Observed envelopes of generated driftwood volume in
-  torrents are about 1,000 m³/km² (= 0.001 m³/m²) for conifer forests
-  and about 100 m³/km² (= 0.0001 m³/m²) for broadleaf forests (a
-  guide for uniform stock values and for sanity-checking magnitudes).
-- **Validation metric**: the manual cites field evidence that, without
-  countermeasure works, 80-90% of the generated driftwood reached the
-  valley outlet (outflow ratio 0.8-0.9) — usable to check
-  torrent-scale results.
-- **Erosion entrainment (dw_droot)** follows the same idea as the
-  manual's generation estimate (standing trees within the
-  failure/debris-flow erosion area become driftwood).
-
-Thresholds and rates of hydraulic recruitment (dw_wrec/hrec/vrec) are
-calibration parameters (the manual has no depth/velocity washout
-criterion, so no standard values exist — sensitivity analysis is
-recommended). As guidance for refloat, flume experiments show that
-logs parallel to the flow or with rootwads move at about 1.2 times
-their buoyant depth, while logs oblique to the flow move below the
-buoyant depth by pivoting[^braudrick00] (the default
-dw_rfloat=1.5 is on the stable side).
+- **dw_dlog**: the mean driftwood diameter is roughly the mean DBH of the
+  standing trees upstream; survey DBH values can be used directly.
+- **Standing stock**: single-tree volume × tree density, converted to
+  m³/m² in preprocessing. Observed envelopes of generated driftwood in
+  torrents are 0.001 m³/m² for conifer and 0.0001 m³/m² for broadleaf
+  forests.
+- **Validation metric**: without countermeasure works, 80–90 % of the
+  generated driftwood reached the valley outlet (outflow ratio 0.8–0.9).
+- Thresholds and rates of hydraulic recruitment (dw_wrec/hrec/vrec) are
+  calibration parameters without a practical standard (sensitivity
+  analysis recommended).
 
 ## Outputs and volume accounting
 
@@ -192,18 +157,9 @@ processes and dam capture. It is neither cumulative passage volume nor
 the sum of separate maxima of `hd` and `wd` at different times.
 
 `wst` is wood volume per **geometric cell area**; `hd` and `wd` use the
-same **effective area** as water. With `A = dx × dy` and
-`f = gv × wfrac` (`wfrac = 1` without specified channel widths),
-the volume in the domain is
-
-```math
-Q = \sum_{i,j} A\left[wst_{i,j} + f_{i,j}(hd_{i,j}+wd_{i,j})\right].
-```
-
-Recruitment subtracts `Δw` from `wst` and adds `Δw / f` to `hd`.
-The rate `dw_wrec` uses geometric area; `dw_wstop` and `dw_wfloat`
-use effective area (m³/m²/s). A simple sum of `wst + hd + wd` represents
-the volume budget only when the area factor equals one.
+same **effective area** as water. A simple sum of `wst + hd + wd`
+represents the volume budget only when the area factor equals one
+(conversion formulas in [the explanation](driftwood_models.md) §3).
 
 `result/driftwood.csv` is written at `dt_recrd` intervals. Columns
 `rec_hyd_m3`, `rec_ero_m3`, `deposit_m3`, `refloat_m3` and `to_dam_m3` are
@@ -264,18 +220,10 @@ jamming at bridge piers and slit dams (log length vs. opening width),
 and impact forces are out of scope (an explicit limit of the raster
 representation policy). To examine the **effect** of blockage, give it
 as a scenario (narrowed openings or culverts) and compare two cases.
-**Impact forces** are evaluated in postprocessing: the Japanese design
-standard (NILIM No. 905[^nilim905] §4.3) applies the boulder impact formula with
-the flow velocity and the maximum log diameter, so feeding ENCflow's
-maximum velocity V9999 (or velocity frames) and the representative log
-properties into that formula (or the FEMA P-646 log impact formula)
-gives a standard-consistent impact-force map (worked through in the
-example README above). Use F9999 (= u²h) for the fluid force of the
-water itself.
-Implementation details: developer.md §50 (Japanese).
-
-## References
-
-[^braudrick00]: Braudrick, C. A. and Grant, G. E. (2000): When do logs move in rivers? *Water Resour. Res.*, 36(2), 571–583. (flume experiments on draft and onset of motion)
-[^nilim904]: NILIM (2016): Guidelines for sabo master planning (debris flow and driftwood), commentary. *NILIM Technical Note*, No. 904 (in Japanese; title translated). (practical values and generation mechanisms)
-[^nilim905]: NILIM (2016): Technical standard for the design of debris-flow and driftwood countermeasures, commentary. *NILIM Technical Note*, No. 905 (in Japanese; title translated). (log impact force, §4.3)
+**Impact forces** are evaluated in postprocessing: feeding the maximum
+velocity V9999 (or velocity frames) and the representative log properties
+into the practical impact formula gives a standard-consistent impact-force
+map (the source of the formula and the recipe are in
+[the explanation](driftwood_models.md) §4 and the example README). Use
+F9999 (= u²h) for the fluid force of the water itself. Implementation
+details: developer.md §50 (Japanese).
