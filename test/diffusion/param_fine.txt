@@ -25,7 +25,6 @@
 &list_enc
   f_diffusion_term = 1
   p_diffusion_nu = 4.0
-  f_adaptive_runge = 0      ! param.txt と同じ理由(README「既知の問題」)
 /
 
 &list_initial

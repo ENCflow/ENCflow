@@ -1310,6 +1310,7 @@ subroutine init_enc_status(p, g, s, sx)
   type(t_enc_status), intent(out) :: sx
 
   real :: ue, ve
+  real :: uve, hc, hn, he          ! 初期流量 mn1 = uv·he の評価用
   integer :: i, j, k, in, jn, ie, je
 
   ! メモリを確保する
@@ -1348,8 +1349,21 @@ subroutine init_enc_status(p, g, s, sx)
     sx%hbd1(:,:) = s%hbd(:,:)
   end if
 
-  ! 流速の初期条件を設定する
-  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, ue, ve)
+  ! 流速の初期条件を設定する(uv)。前ステップ流量 mn1 も同時に uv·he で
+  ! 整合させる(init 末尾の complete が mn1 → mn にコミットする)。
+  !   mn = 0 のまま時間ループに入ると、初回ステップの適応 RK が
+  !   「mn(前) = 0 かつ mn(新) ≠ 0 なら再計算」の規則で流速をもつエッジの
+  !   ほぼ全部を再計算し、段内の仮水深更新(自エッジだけ新流量、他エッジは
+  !   mn = 0)が両側セルに偽の水位差を作って、dt² に比例する 1 回限りの減速
+  !   (dt = 0.1 s で 3.5%)を入れていた(test/diffusion で検出。§7)。
+  !   初期流速が非零のケースだけが変わる(静止からの計算は mn1 = 0 のまま)。
+  !   he は calc_kth_flux の最終段と同じ規則で評価する: 両側平均 → 上流側
+  !   頭打ち(cap_he_upwind)→ 乾燥セルへのエネルギー頭の頭打ち → 送り手が
+  !   完全に乾いたエッジの零化 → σ の断面積換算。momentum が流速・流量を 0 に
+  !   するエッジ(通過幅ゼロ・両側乾燥)は mn1 = 0。uv 自体は従来どおり
+  !   (初期出力の u, v と移流項の読み値は不変)。規則を変えるときは
+  !   calc_kth_flux と同時に変えること
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, ue, ve, uve, hc, hn, he)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -1365,7 +1379,30 @@ subroutine init_enc_status(p, g, s, sx)
         ue = (s%u(i,j) + s%u(in,jn)) / 2
         ve = (s%v(i,j) + s%v(in,jn)) / 2
         ! セル境界流速の境界法線方向成分を計算する(中心から近傍方向が正)
-        sx%uv(k,ie,je) = ue * geo%n8x(k) + ve * geo%n8y(k)
+        uve = ue * geo%n8x(k) + ve * geo%n8y(k)
+        sx%uv(k,ie,je) = uve
+        ! 前ステップ流量 mn1 = uv·he(he の規則は calc_kth_flux と同じ)
+        hc = s%h(i,j)
+        hn = s%h(in,jn)
+        if (geo%skip8(k) .or. (hc < p%dd .and. hn < p%dd) .or. uve == 0.0) then
+          sx%mn1(k,ie,je) = 0.0
+          cycle
+        end if
+        he = (hc + hn) / 2
+        if (opt%f_hcap_upwind > 0) he = cap_he_upwind(he, hc, hn, uve)
+        if (opt%f_dry_head_cap > 0) then
+          if (uve > 0.0 .and. hn < p%dd) then
+            he = min(he, max(s%z(i,j) + hc + uve**2 / (2 * p%gg) - s%z(in,jn), 0.0))
+          else if (uve < 0.0 .and. hc < p%dd) then
+            he = min(he, max(s%z(in,jn) + hn + uve**2 / (2 * p%gg) - s%z(i,j), 0.0))
+          end if
+        end if
+        if ((uve > 0.0 .and. hc <= 0.0) .or. (uve < 0.0 .and. hn <= 0.0)) he = 0.0
+        if (sct%have_sect) then
+          sx%mn1(k,ie,je) = uve * 0.5 * (sect_v(he, sct%sdep(i,j)) + sect_v(he, sct%sdep(in,jn)))
+        else
+          sx%mn1(k,ie,je) = uve * he
+        end if
       end do
     end do
   end do
