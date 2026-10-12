@@ -272,7 +272,7 @@ $`\max(2, \lceil 2H_{\max}/\min(\Delta x,\Delta y)\rceil)`$ 回を自動設定�
 
 1 層モデルは波を砕きません。斜面を遡上する砕波性の孤立波
 (Synolakis 1987 の $`a/H = 0.28`$、[test/nhbreak](../../test/nhbreak/README.md))をスイッチなしで走らせると、
-波は形を保って汀線に達した後、薄い舌として遡上し、遡上高 $`R/H`$ が 1.59
+波は形を保って汀線に達した後、薄い舌として遡上し、遡上高 $`R/H`$ が 1.64
 (非砕波の遡上則に近い値。実験則 0.42)になります。そこで
 hybrid Boussinesq 系や SWASH と同じく、**砕波と判定した場所を静水圧に
 落とし、段波として運動量保存形移流に散逸させます**([移流項の
@@ -282,7 +282,7 @@ hybrid Boussinesq 系や SWASH と同じく、**砕波と判定した場所を�
 
 | 型 | 判定量 | 備考 |
 |---|---|---|
-| 1 | 水面上昇速度 $`\partial\eta/\partial t > \alpha\sqrt{gh}`$($`\alpha`$ = 0.6、接するセルは $`\beta`$ = 0.3、波頂通過まで維持) | SWASH 型(Smit et al. 2013)。この格子($`\Delta x = H/4`$)では砕波の開始に間に合わなかった |
+| 1 | 水面上昇速度 $`\partial\eta/\partial t > \alpha\sqrt{gh}`$($`\alpha`$ = 0.6、接するセルは $`\beta`$ = 0.3、波頂通過まで維持) | SWASH 型(Smit et al. 2013)。2026-10-05 の検証ではこの格子($`\Delta x = H/4`$)で砕波の開始に間に合わなかった(現在のコードでは発火する。test/nhbreak の注) |
 | 2 | フルード数 $`\lvert V\rvert/\sqrt{gh} >`$ `nh_break_fr`(0.6) | 局所・状態なし |
 | 3 | 水面勾配 $`\lvert\nabla\eta\rvert >`$ `nh_break_slope`(0.3。8 近傍の最大) | **既定**。局所・Galilean 不変・状態なし |
 
@@ -316,11 +316,11 @@ B = \mathrm{clip}\!\left(\frac{|\nabla\eta| - s}{s},\,0,\,1\right),
 | 構成 | $`\Delta x = H/4`$、dt 0.02 | $`\Delta x = H/8`$、Cr 0.07、$`n`$ = 0.01 |
 |---|---:|---:|
 | 静水圧 | 0.39(平坦部で早期に段波化) | 0.34 |
-| 非静水圧、スイッチなし | 0.81 | — |
-| 非静水圧+スイッチ | 0.62 | 0.51(無摩擦 0.63) |
-| 同+渦粘性 1.44 | — | **0.45**(+8%) |
+| 非静水圧、スイッチなし | 0.82 | — |
+| 非静水圧+スイッチ | 0.63 | 0.51(無摩擦 0.63) |
+| 同+渦粘性 1.44 | — | **0.45**(+5%) |
 
-試験設定の 0.62 は時間刻みの誤差(+22%)と平坦部の数値散逸(−18%)が
+試験設定の 0.63 は時間刻みの誤差(+25%)と平坦部の数値散逸(−20%)が
 打ち消し合った値です。**砕波・遡上を定量評価するときは Cr ≲ 0.1、
 $`\Delta x \lesssim H/8`$ で収束を確認し、摩擦 $`n \approx 0.01`$ と渦粘性
 1.44 を併用**してください。それでも砕波を含む遡上高には ±10〜20% の
@@ -402,10 +402,10 @@ $`z`$ との 2 階差分(1 ステップ遅れ。$`z`$ を動かすすべての�
 | ケース | 内容 | 要点 |
 |---|---|---|
 | [nhwave](../../test/nhwave/README.md) / [nhwave_nh](../../test/nhwave_nh/README.md) | 閉水槽の定在波 | 静水圧の数値分散 < 1%。非静水圧の周期が理論に ±0.2%($`kH`$ = 0.25〜2) |
-| [nhsolitary](../../test/nhsolitary/README.md) | 孤立波の伝播 | 60 s で波形 RMS 2.7%、速度 −0.9%。静水圧は段波化 |
+| [nhsolitary](../../test/nhsolitary/README.md) | 孤立波の伝播 | 60 s で波形 RMS 2.9%、速度 −0.8%。静水圧は段波化 |
 | [nhbore](../../test/nhbore/README.md) | 段差から分裂する undular bore | 先頭波が KdV の漸近値 $`2a`$ に単調に近づく(Gurevich & Pitaevskii 1974)。$`a/H = 0.2`$ では 2 を超える(El et al. 2006 と整合) |
-| [nhshelf](../../test/nhshelf/README.md) | 棚に乗り上げる孤立波 | 先頭ソリトン+後続 6 山に分裂。静水圧は段波 2 山 |
-| [nhcurrent](../../test/nhcurrent/README.md) | 一様流上の線形波 | $`(\omega - U_0k)^2`$ 型の分散関係を順流・逆流で確認(+1.4〜2.7%) |
+| [nhshelf](../../test/nhshelf/README.md) | 棚に乗り上げる孤立波 | 先頭ソリトン+後続 6 山に分裂。静水圧は段波 1 山 |
+| [nhcurrent](../../test/nhcurrent/README.md) | 一様流上の線形波 | $`(\omega - U_0k)^2`$ 型の分散関係を順流・逆流で確認(+1.4〜2.5%) |
 | [nhbreak](../../test/nhbreak/README.md) | 砕波性孤立波の遡上 | §6 の表 |
 | [nhbottom](../../test/nhbottom/README.md) | 規定隆起と海底地滑り | 先頭波高が厳密解に +3.9%。地滑りの近地波形で加速度項の効果が大きい |
 | [nest_identity](../../test/nest_identity/README.md) | ネストの親子一致 | 非静水圧の子(帯 = 親の $`\phi`$ の既知セル)の内部が親と 1e-10 以内で一致 |
