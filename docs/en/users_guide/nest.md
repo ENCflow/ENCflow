@@ -112,15 +112,33 @@ child → parent replacement (nest_fb) is applied.
 /
 ```
 
-![Parent-to-child methods](../../figs/nest_bc_en.png)
+![Nested-grid boundary methods and the non-hydrostatic option](../../figs/nest_bc_en.png)
 
-The four parent → child methods. (1) The Dirichlet band is the default; (2)
-Flather radiation has no band and feeds the parent's values into the
-radiation condition on the boundary faces (meant for one-way nests); (3) the
-sponge relaxes the cells inside the band towards the parent; (4) on a
-non-hydrostatic child the band cells are known cells of the parent's φ. The
-errors of each method against a uniform fine grid are compared, with
-figures, in the README of examples/nest_reflect.
+The figure shows a west-edge row excerpt of the child; the interior continues
+to the right. Panels (a)–(c) compare boundary methods selected by `nest_bc`.
+Panel (d) shows the additional `nest_nh` setting for a non-hydrostatic child
+with a band. The illustrated widths are nb=3 and nest_ns=4 child cells.
+
+- (a) `nest_bc=1` prescribes water level in the band; the child computes
+  velocity and discharge. `nest_bc=2` (default) transfers parent level,
+  velocity and edge discharge. The solid black line is the child's outer
+  wall (`f_bc_w=0` at the west edge).
+- (b) `nest_bc=3` uses Flather radiation with no band. The orange dashed line
+  is an open edge (`f_bc_w=2` at the west edge). The arrows show incoming
+  parent waves and outgoing child disturbances. Normal velocity in the
+  equation is **positive outward from the child**, to the left at this edge.
+- (c) `nest_bc=4` adds a sponge inside the same band as method 2. The numbers
+  in green cells are relaxation weights w, decreasing inward. Parent cells
+  containing the band or sponge are excluded from child-to-parent replacement.
+- (d) `nest_nh=1` (default) prescribes the parent's φ as known band values.
+  The example interior is wet and active in the projection. The orange
+  band–interior edges are corrected too. Ordinary boundary values are
+  interpolated to the sub-step **start**, while φ uses the sub-step **end**.
+  `nest_nh` is separate from `nest_bc` and does not apply to band-free method 3.
+
+Generate both languages as PNG and SVG with
+`python docs/figs/make_nest_figs.py bc`. For comparisons against a uniform
+fine grid, see the illustrated README in examples/nest_reflect.
 
 ## Conditions on a child grid (checked at initialization; the run stops if violated)
 
@@ -150,8 +168,8 @@ figures, in the README of examples/nest_reflect.
 
 ## Non-hydrostatic child grids (nest_nh)
 
-When the child is non-hydrostatic (f_nonhydrostatic = 1), the band cells are
-removed from the unknowns of the child's projection (the elliptic equation
+When a child with a band is non-hydrostatic (f_nonhydrostatic = 1), the band
+cells are removed from the unknowns of the child's projection (the elliptic equation
 for φ) and become known (Dirichlet) cells of φ. By default (nest_nh = 1) the
 parent's φ (interpolated to the end of the sub-step) is placed there, so the
 non-hydrostatic pressure of a dispersive wave coming from the parent is
@@ -166,9 +184,9 @@ non-hydrostatic, φ = 0 is placed even with the default.
 - Children with nest_bc = 1, 2 and 4 (with a band) are supported. It does
   not apply to Flather (nest_bc = 3), where the vicinity of the open faces
   keeps the hydrostatic margin nh_bc_margin.
-- The active set (f_nh_adaptive = 1) can be used as is. Interior cells next
-  to the band are seeded automatically from the magnitude of the parent's φ,
-  so no extra setting is needed for nesting.
+- The active set (f_nh_adaptive = 1) can be used as is. Interior candidates
+  adjacent in the eight-cell neighbourhood to band cells whose |φ_e| meets
+  the seed floor are also seeded. No extra setting is needed for nesting.
 - The auxiliary solve of the moving-bottom smoothing (f_nh_bottom) is done
   with φ = 0 in the band (an approximation).
 
@@ -182,13 +200,17 @@ boundary cell, and in time to the start of the sub-step). It generalizes the
 existing long-wave radiation boundary (`f_bc_* = 2`, where η_e = reference
 level and u_e = 0): waves coming from the parent pass in, and disturbances
 generated inside the child (reflections from the finer coast, the return
-flow of run-up) radiate out.
+flow of run-up) radiate out. Both u_n and u_n,e are positive outward from the
+child, and h is the child boundary-cell depth. The implementation uses
+max(h, dv) in the denominator, then projects the resulting edge-normal
+velocity onto the individual ENC boundary faces to compute discharge.
 
 - Meant for **one-way** nests (nest_fb = 0), when you do not want the
   child's reflections trapped inside the child. With a Dirichlet band
   (nest_bc = 2) the child's disturbances are overwritten by the parent's
-  values in the band and reflect; in two-way mode (nest_fb ≥ 1) the effect
-  is small, so use the default 2 normally and consider 3 for one-way nests.
+  values in the band, which can cause reflection. Two-way replacement
+  (nest_fb ≥ 1) can reduce this effect. Use the default 2 normally and
+  consider 3 for one-way nests.
 - In the child's `&list_bound_edge`, set the edges that receive the parent's
   values to `f_bc_* = 2` (it can be written inside the parameter file with
   `fn_boundary = '-'`). Edges with 0 (wall) stay walls (place the landward
@@ -207,6 +229,21 @@ flow of run-up) radiate out.
   to the existing radiation boundary (the flather case of
   test/nest_identity). The comparison with a band on a one-way r3t3 interface
   crossing is in examples/nest_reflect (README).
+
+## Sponge (nest_bc = 4)
+
+Inside the same boundary band as `nest_bc=2`, add a relaxation region
+`nest_ns` child cells wide. At each sub-step start, blend a cell quantity q
+towards its interpolated parent value q_parent as
+`q ← (1 − w) q + w q_parent`. For the shortest inward cell distance
+d=1…nest_ns from the band, `w = [1 − d/(nest_ns + 1)]²`. With nest_ns=4
+as illustrated, the weights from the band inward are 0.64, 0.36, 0.16 and 0.04.
+
+This applies to depth, velocity, cell discharge and enabled additional
+fields exchanged between parent and child. Edge quantities are not relaxed
+with these weights. The band is replaced by parent values; the sponge is
+relaxed towards them before advancing the child. Only complete r×r child
+blocks beyond both band and sponge contribute to child-to-parent replacement.
 
 ## Child-to-parent replacement (nest_fb)
 
