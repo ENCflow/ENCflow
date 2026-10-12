@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """ネスティングの説明図(docs/users_guide/nest.md、docs/en/users_guide/nest.md 用)を figs/ に描く。
 
-  使い方: python3 make_nest_figs.py        (docs/figs/ で実行。データ不要の模式図)
+  使い方: python3 docs/figs/make_nest_figs.py [layout|time|bc ...]
+  引数なしは従来どおり全3図。layout 指定は配置図だけを日英PNG・SVGで生成。
   nest_layout.png   親子格子の配置(i0, j0・比 r・帯 nb)と親→子・子→親の交換
   nest_time.png     時間進行(親先行・子の r_t サブステップ・帯の時間補間・置換の時機)
   nest_bc.png       親→子の 3 方式(帯 Dirichlet・Flather 放射・スポンジ)と非静水圧の帯の φ
@@ -22,17 +23,6 @@ C_P, C_C, C_B, C_X, C_G = "#6b6a66", "#2a78d6", "#f2b84b", "#eb6834", "#8fbf6a" 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 T = {"ja": {
-    # ---- layout
-    "corner": "子セル (1,1) の北西角 = 親セル (i0, j0) の北西角",
-    "child": "子: nx = ny = {n}(親セル {nfp} 個 × r = {r})",
-    "band": "境界帯 nb セル\n(自動: スキーム 1 は 2、\n 2・3 は 3)",
-    "parent": "親(ルート): nx × ny。外縁 1 セル(斜線)には子を置けない",
-    "jaxis": "j(行。北→南)", "iaxis": "i(列。西→東)",
-    "ta": "(a) 配置: 一覧ファイルの 1 行 = 1 格子(parent, r, r_t, i0, j0)",
-    "p2c": "親 → 子(各サブステップ)\n帯の子セルへ親の値を補間して置く\n(nest_bc: 水位 / 水位+流速+エッジ流量)",
-    "c2p": "子 → 親(親の 1 歩ごと)\n帯を除く内部の r×r 子セルの平均で\n親セルを置換(nest_fb: 0 = 一方向, 1 = 面積平均,\n2 = 湿潤判定付き〔既定〕, 3 = 2 + 保存修正)",
-    "pcell": "親セル", "bcell": "帯の\n子セル",
-    "tb": "(b) 交換(r = 3、nb = 3 子セル = 1 親セル)",
     # ---- time
     "tn": "tⁿ", "tn1": "tⁿ⁺¹ = tⁿ + Δt", "tparent": "親(格子 1)",
     "step1": "① 親が先に 1 歩進む(帯の窓 wc を tⁿ・tⁿ⁺¹ の 2 時刻で保持)",
@@ -57,17 +47,6 @@ T = {"ja": {
     "l4a": "φ_e = 親の φ(サブステップ終了時刻で補間)", "l4b": "子の射影(CG)の未知数。活性集合は帯に接するセルを |φ_e| で種に",
     "n4": "帯〜内部のエッジも補正される(既知セルの φ_e と未知セルの φ の差)。nest_nh = 0 は帯 + 余白 nh_bc_margin を静水圧にする(位相がずれる)",
 }, "en": {
-    # ---- layout
-    "corner": "NW corner of child cell (1,1) = NW corner of parent cell (i0, j0)",
-    "child": "child: nx = ny = {n} ({nfp} parent cells × r = {r})",
-    "band": "boundary band, nb cells\n(automatic: 2 for scheme 1,\n 3 for schemes 2 and 3)",
-    "parent": "parent (root): nx × ny. No child on the outer 1-cell rim (hatched)",
-    "jaxis": "j (rows, north→south)", "iaxis": "i (columns, west→east)",
-    "ta": "(a) Layout: one line of the list file = one grid (parent, r, r_t, i0, j0)",
-    "p2c": "parent → child (every sub-step)\nparent values interpolated into the band's child cells\n(nest_bc: level / level + velocity + edge discharge)",
-    "c2p": "child → parent (every parent step)\nparent cell replaced by the mean of the interior r×r\nchild cells excluding the band (nest_fb: 0 = one-way,\n1 = area mean, 2 = wet-cell mean [default],\n3 = 2 + conservation correction)",
-    "pcell": "parent\ncell", "bcell": "band\nchild cell",
-    "tb": "(b) Exchange (r = 3, nb = 3 child cells = 1 parent cell)",
     # ---- time
     "tn": "tⁿ", "tn1": "tⁿ⁺¹ = tⁿ + Δt", "tparent": "parent (grid 1)",
     "step1": "① parent steps first (band window wc kept at tⁿ and tⁿ⁺¹)",
@@ -109,66 +88,9 @@ def arrow(ax, p, q, color, text=None, lw=1.6, dxy=(0, 0), ha="center", fs=9):
 
 # ------------------------------------------------------------------ 配置
 def fig_layout(lang):
-    t = T[lang]; en = lang == "en"
-    fig, axs = plt.subplots(1, 2, figsize=(10.5, 5.0), gridspec_kw={"width_ratios": [1.15, 1]})
-    # (a) 親の中の子: 親 14x11 セル、子は親セル (5..10, 3..8) = 6x6 親セル、比 3 → 18x18
-    ax = axs[0]; ax.set_aspect("equal"); ax.axis("off")
-    if en: ax.set_anchor("N")
-    NXP, NYP, R = 14, 11, 3
-    I0, J0, NFP = 5, 3, 6                      # 子の足元の親セル(1 始まり)と足元の親セル数
-    grid(ax, 0, 0, NXP, NYP, 1, C_P, 0.7)
-    # 親の外縁 1 セル(子を置けない)
-    ax.add_patch(Rectangle((0, 0), NXP, NYP, fill=False, hatch="////", ec="#d9d8d3", lw=0, zorder=0))
-    ax.add_patch(Rectangle((1, 1), NXP - 2, NYP - 2, fc="white", ec="none", zorder=0.5))
-    # 子(y は上が北 = j 小。描画の y は北を上に: y_top = NYP、j 行は y = NYP - j)
-    xs, yt = I0 - 1, NYP - (J0 - 1)            # 子の北西角
-    fp = Rectangle((xs, yt - NFP), NFP, NFP, fc="#eaf2fc", ec="none", zorder=1.5); ax.add_patch(fp)
-    grid(ax, xs, yt - NFP, NFP * R, NFP * R, 1.0 / R, C_C, 0.35, z=2)
-    ax.add_patch(Rectangle((xs, yt - NFP), NFP, NFP, fill=False, ec=C_C, lw=1.8, zorder=4))
-    # 帯 nb = 3 子セル(= 1 親セル)
-    nb = 3.0 / R
-    for (x, y, w, h) in [(xs, yt - nb, NFP, nb), (xs, yt - NFP, NFP, nb), (xs, yt - NFP, nb, NFP), (xs + NFP - nb, yt - NFP, nb, NFP)]:
-        ax.add_patch(Rectangle((x, y), w, h, fc=C_B, ec="none", alpha=0.75, zorder=3))
-    ax.plot([xs], [yt], "o", color=C_X, ms=6, zorder=7)
-    ax.annotate(t["corner"], (xs, yt), (0.3, NYP + 0.9), fontsize=9, color=C_X,
-                arrowprops=dict(arrowstyle="-", color=C_X, lw=0.8))
-    ax.text(xs + NFP / 2, yt - NFP - 0.45, t["child"].format(n=NFP * R, nfp=NFP, r=R), ha="center", va="top", fontsize=9, color=C_C)
-    ax.text(xs + NFP + 0.35, yt - nb / 2 - 0.2, t["band"], va="center", fontsize=8.5, color="#8a6b17")
-    ax.text(NXP / 2 + 1, -0.9, t["parent"], ha="center", va="top", fontsize=9, color=C_P)
-    # 行番号の向き
-    ax.annotate("", (-0.6, NYP - 3), (-0.6, NYP), arrowprops=dict(arrowstyle="-|>", color=C_P, lw=1))
-    ax.text(-0.75, NYP - 1.5, t["jaxis"], fontsize=8.5, color=C_P, va="center", ha="right", rotation=90)
-    ax.annotate("", (3, -0.35), (0, -0.35), arrowprops=dict(arrowstyle="-|>", color=C_P, lw=1))
-    ax.text(1.5, -0.45, t["iaxis"], fontsize=8.5, color=C_P, ha="center", va="top")
-    ax.set_xlim(-1.6, NXP + 3.6); ax.set_ylim(-1.8, NYP + 1.6)
-    ax.set_title(t["ta"], loc="left", fontsize=10)
-    # (b) 交換の拡大図: 親 4x4 セル、子は右下 2x2 親セル… 子の西辺付近を拡大
-    ax = axs[1]; ax.set_aspect("equal"); ax.axis("off")
-    if en: ax.set_anchor("N")
-    grid(ax, 0, 0, 5, 4, 1, C_P, 0.8)
-    xs = 1.0
-    ax.add_patch(Rectangle((xs, 0), 4, 4, fc="#eaf2fc", ec="none", zorder=1))
-    grid(ax, xs, 0, 12, 12, 1 / 3, C_C, 0.4, z=2)
-    ax.add_patch(Rectangle((xs, 0), 1, 4, fc=C_B, ec="none", alpha=0.75, zorder=3))
-    ax.add_patch(Rectangle((xs, 0), 4, 4, fill=False, ec=C_C, lw=1.8, zorder=4))
-    ax.plot([xs + 0.5], [2.5], "s", color=C_P, ms=7, zorder=6)
-    ax.plot([xs + 0.5 - 1.0], [2.5], "s", color=C_P, ms=7, zorder=6, mfc="none")
-    arrow(ax, (xs - 0.35, 2.5), (xs + 0.3, 2.5), C_X, lw=2)
-    ax.text(xs - 0.1, 4.75, t["p2c"], fontsize=8.5, color=C_X, ha="left", va="center",
-            bbox=dict(fc="white", ec="none", alpha=0.85))
-    # 子→親: 内部の r×r → 親セル
-    cx, cy = xs + 2, 1.5
-    ax.add_patch(Rectangle((cx, cy), 1, 1, fill=False, ec=C_G, lw=2.2, zorder=6))
-    arrow(ax, (cx + 1.15, cy + 0.5), (cx + 1.85, cy + 0.5), C_G, lw=2)
-    ax.add_patch(Rectangle((cx + 2, cy), 1, 1, fill=False, ec=C_G, lw=2.2, ls="--", zorder=6))
-    ax.text(xs - 0.1, -1.0 if en else -0.85, t["c2p"], fontsize=8.5, color="#3f7a2a", ha="left", va="center",
-            bbox=dict(fc="white", ec="none", alpha=0.85))
-    ax.text(xs - 0.5, 1.95 if en else 2.1, t["pcell"], fontsize=8, color=C_P, ha="center", va="top" if en else "baseline")
-    ax.text(xs + 0.5, 2.1, t["bcell"], fontsize=8, color=C_P, ha="center", va="top")
-    ax.set_xlim(-0.3, 5.3); ax.set_ylim(-1.9 if en else -1.6, 5.4)
-    ax.set_title(t["tb"], loc="left", fontsize=10)
-    fig.tight_layout(); out = out_path("nest_layout", lang); fig.savefig(out, dpi=150); plt.close(fig)
-    return out
+    """Draw only the integer-aligned layout, as PNG and SVG."""
+    from guide.fig_nest_layout import draw as draw_layout
+    return draw_layout(lang)
 
 # ------------------------------------------------------------------ 時間進行
 def fig_time(lang):
@@ -273,7 +195,17 @@ def draw(lang):
     return [fig_layout(lang), fig_time(lang), fig_bc(lang)]
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("figures", nargs="*", metavar="FIGURE",
+                        help="layout, time or bc (default: all three)")
+    args = parser.parse_args()
+    drawers = {"layout": fig_layout, "time": fig_time, "bc": fig_bc}
+    names = args.figures or list(drawers)
+    for name in names:
+        if name not in drawers:
+            parser.error("unknown figure: " + name + " (choose layout, time or bc)")
     outs = []
     for lang in ("ja", "en"):
-        outs += draw(lang)
+        outs.extend(drawers[name](lang) for name in names)
     print("wrote " + " ".join(os.path.basename(o) for o in outs))

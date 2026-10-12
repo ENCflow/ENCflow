@@ -1,6 +1,6 @@
 # Nesting (multi-level grids)
 
-> English mirror of docs/users_guide/nest.md (based on commit e046400). The Japanese file is the master copy.
+> English mirror of docs/users_guide/nest.md. The Japanese file is the master copy.
 
 [Back to the User's Guide index](../users_guide.md)
 
@@ -24,13 +24,41 @@ parent's non-hydrostatic potential φ (nest_nh, default).
 
 ![Grid layout and exchange](../../figs/nest_layout_en.png)
 
-Where a child sits inside its parent is fixed by (i0, j0) in the list file
-(the parent cell whose north-west corner coincides with that of child cell
-(1,1)) and the ratio r. The outer nb cells of the child form the **boundary
-band** (cells filled with the parent's values); the inside of the band is
-the child's computational domain, and in two-way mode its r×r averages are
-returned to the parent. The figure is produced by
-`docs/figs/make_nest_figs.py`.
+(a) Align the north-west corner of child cell (1,1) with that of parent
+cell `(i0, j0)` specified in the grid list. i increases eastward and j
+southward. The example has a 14×11 parent, an 18×18 child,
+`(i0, j0) = (5, 3)` and spatial ratio `r = 3`. The child covers 6×6
+parent cells, i = 5…10 and j = 3…8, leaving at least one parent cell
+between its footprint and every parent edge.
+
+Yellow marks the child's outer **boundary band**. The example uses
+`nest_bc=2`, width `nb=3` child cells (one parent-cell width), and no
+sponge. For `nest_bc=1, 2, 4`, the parent supplies the band values while
+the child advances its interior. With `nest_nb=0`, the automatic width
+is nb=2 for advection scheme 1 and nb=3 for schemes 2 and 3. Flather
+(`nest_bc=3`) has no band and ignores `nest_nb`.
+
+(b) The upper view shows interpolation from surrounding parent-cell
+centres to the centre of child band cell (1,4). The spatial interpolation
+shown is for cell-centred quantities with all four parent cells wet.
+At each child sub-step start, values are interpolated in time between
+two parent states. `nest_bc=2` also transfers edge discharge as well as
+level and velocity; edge quantities use different spatial interpolation
+locations from cell-centred quantities.
+
+The lower view returns values from child cells i = 10…12, j = 10…12
+to parent cell (8,6), which covers exactly the same area. It illustrates
+the area average for `nest_fb=1` with effective area fraction equal to 1;
+the destination parent cell is drawn separately on the right. In this
+layout the replaced parent cells are i = 6…9, j = 4…7. Parent cells
+containing the boundary band are excluded; `nest_bc=4` also excludes
+those containing the sponge. A parent cell is replaced only when its
+**entire r×r child block** lies inside the child interior beyond both
+band and sponge. `nest_fb=0` disables child-to-parent replacement. See
+"Child-to-parent replacement" below for the averaging options.
+
+Generate both languages as PNG and SVG with
+`python docs/figs/make_nest_figs.py layout`.
 
 ## How to use
 
@@ -182,9 +210,11 @@ flow of run-up) radiate out.
 
 ## Child-to-parent replacement (nest_fb)
 
-- The parent cells corresponding to the child's interior (excluding the
-  band) are replaced, at every parent step, by the average of the r×r child
-  cells. nest_fb = 2 averages the level and depth over the wet child cells
+- Parent cells whose entire r×r child block lies inside the child interior,
+  excluding the band and sponge, are replaced by child averages at the end
+  of each parent step. Flather has no band, but the one-parent-cell rim
+  corresponding to the child's outer edges is excluded from replacement.
+  nest_fb = 2 averages the level and depth over the wet child cells
   only, and dries the parent cell if the parent's ground is above the mean
   level (for regions straddling the coastline; the water volume is not
   strictly conserved). nest_fb = 1 is a plain average of depth and discharge
