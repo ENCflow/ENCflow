@@ -75,7 +75,8 @@ flow, has no universal recommended value, and is treated as a calibration
 quantity.
 
 **Model 2: zero-equation model (Elder type).** The turbulence intensity is
-derived from the bed friction. From the Manning bed shear stress
+derived from the bed friction (in the classification of depth-averaged
+turbulence models this is a zero-equation model[^rodi93]). From the Manning bed shear stress
 $`\tau_b/\rho = g\,n^2\,|\mathbf{u}|^2 / h^{1/3}`$ the friction velocity
 $`u_* = \sqrt{\tau_b/\rho}`$ is formed, and the depth-averaged eddy
 viscosity is taken proportional to $`u_* h`$.
@@ -92,12 +93,12 @@ $`n`$ is the Manning roughness of each cell (`fn_rn` or `rn0`;
 [Geographic information](geoinfo.md)), $`|\mathbf{u}|`$ the magnitude of
 the cell velocity and $`h`$ the depth. The default of the coefficient
 $`\alpha`$ (`p_diffusion_alpha`), $`\kappa/6 = 0.41/6 \approx 0.068`$, is
-the value of Elder (1959) obtained by depth-averaging the logarithmic
+the value of Elder[^elder59] obtained by depth-averaging the logarithmic
 velocity profile with a parabolic eddy-viscosity distribution, the same
 convention as the zero-equation models of iRIC Nays2DH and others. To
 represent transverse mixing more strongly, calibrate within the measured
 range from $`0.15\,u_* h`$ in straight flumes to $`0.4`$–$`0.8\,u_* h`$ in
-natural rivers (Fischer et al. 1979). $`\nu_0`$ (`p_diffusion_nu`) is an
+natural rivers[^fischer79]. $`\nu_0`$ (`p_diffusion_nu`) is an
 additive background viscosity, default 0 (a pure zero-equation model); use
 it where $`\nu`$ should not vanish in quiescent regions, such as bay
 circulation. With roughness $`n = 0`$ the $`\alpha`$ term is identically 0.
@@ -107,6 +108,14 @@ $`|\mathbf{u}| = 1`$ m/s, $`\nu \approx 0.006`$ m²/s at $`h = 1`$ m and
 $`0.025`$ m²/s at $`h = 5`$ m; even with 3 m/s and $`\alpha = 0.3`$ it stays
 below 1 m²/s. To "just try the diffusion term", model 2 is recommended: it
 scales with the flow without any coefficient being specified.
+
+**Parameters and the basis of their defaults.**
+
+| Parameter | Default | Meaning | Basis |
+|---|---:|---|---|
+| f_diffusion_term | 0 | diffusion term (0: none, 1: constant viscosity, 2: zero-equation model) | off by default (bitwise identical to earlier results when off); model 2 is recommended when enabling it (§6) |
+| p_diffusion_nu | — | constant viscosity $`\nu_0`$, or the background viscosity of model 2 (m²/s) | calibration quantity; depends on the grid spacing and the scale of the flow, no universal value. Check the bound of §4 |
+| p_diffusion_alpha | $`\kappa/6 \approx 0.068`$ | coefficient $`\alpha`$ of the zero-equation model ($`\nu = \alpha u_* h`$) | literature value[^elder59] (depth average of the log law with a parabolic eddy viscosity); for stronger transverse mixing calibrate within the measured range 0.15–0.8[^fischer79] |
 
 ## 3. Discretisation: a nine-point Laplacian in edge-flux divergence form
 
@@ -216,7 +225,8 @@ the bound.
 
 The eddy viscosity `nh_break_visc` used with the breaking switch of the
 [non-hydrostatic correction](nonhydrostatic.md) adds $`\nu_b`$ of the cells
-detected as breaking to the $`\nu`$ of this diffusion term
+detected as breaking (a Kennedy-type breaking viscosity[^kennedy00] made
+local and stateless) to the $`\nu`$ of this diffusion term
 ($`\nu = \nu_{\rm model} + \nu_b`$) and dissipates through the same path.
 Even with `f_diffusion_term = 0` the diffusion term is computed when
 `nh_break_visc > 0`. The clamp and warning are those of §4.
@@ -284,16 +294,7 @@ The READMEs of the test cases are in Japanese.
 
 ## References
 
-- Elder, J. W. (1959): The dispersion of marked fluid in turbulent shear
-  flow. *J. Fluid Mech.*, 5, 544–560 (depth-averaged eddy viscosity
-  $`\kappa u_* h/6`$).
-- Fischer, H. B., List, E. J., Koh, R. C. Y., Imberger, J. and Brooks, N. H.
-  (1979): *Mixing in Inland and Coastal Waters*. Academic Press (measured
-  range of transverse mixing coefficients).
-- Rodi, W. (1993): *Turbulence Models and Their Application in Hydraulics*,
-  3rd ed. IAHR Monograph, Balkema (zero-equation and $`k`$–$`\varepsilon`$
-  models in depth-averaged computations).
-- Kennedy, A. B., Chen, Q., Kirby, J. T. and Dalrymple, R. A. (2000):
-  Boussinesq modeling of wave transformation, breaking, and runup. I: 1D.
-  *J. Waterw. Port Coast. Ocean Eng.*, 126, 39–47 (breaking eddy viscosity;
-  §5).
+[^elder59]: Elder, J. W. (1959): The dispersion of marked fluid in turbulent shear flow. *J. Fluid Mech.*, 5, 544–560. (depth-averaged eddy viscosity $`\kappa u_* h/6`$)
+[^fischer79]: Fischer, H. B., List, E. J., Koh, R. C. Y., Imberger, J. and Brooks, N. H. (1979): *Mixing in Inland and Coastal Waters*. Academic Press. (measured range of transverse mixing coefficients)
+[^rodi93]: Rodi, W. (1993): *Turbulence Models and Their Application in Hydraulics*, 3rd ed. IAHR Monograph, Balkema. (zero-equation and $`k`$–$`\varepsilon`$ models in depth-averaged computations)
+[^kennedy00]: Kennedy, A. B., Chen, Q., Kirby, J. T. and Dalrymple, R. A. (2000): Boussinesq modeling of wave transformation, breaking, and runup. I: 1D. *J. Waterw. Port Coast. Ocean Eng.*, 126, 39–47. (breaking eddy viscosity; §5)

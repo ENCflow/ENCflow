@@ -83,7 +83,7 @@ $`q(z)`$ the deviation from hydrostatic pressure (non-hydrostatic pressure).
 The one-layer model assumes **$`q`$ linear in the vertical** (0 at the
 surface, $`q_b`$ at the bottom) and represents the vertical velocity by the
 mean of its surface value $`w_s`$ and bottom value $`w_b`$ (the same
-approximation as the Keller-box one-layer model of Stelling & Zijlema 2003).
+approximation as the Keller-box one-layer model)[^sz03].
 
 **Vertical momentum.** The layer-averaged vertical acceleration is driven by
 the non-hydrostatic pressure at the bottom (density 1, advection omitted).
@@ -164,7 +164,7 @@ $`\partial\eta/\partial t = -H\,\partial u/\partial x`$ give
 
 Figure (a) compares this with the exact solution. The phase-speed error is
 +0.9 / +2.5 / +1.8 / −3.7% at $`kH = 0.5 / 1 / 2 / 3`$. A quadratic pressure
-profile (Green–Naghdi type, $`1/(1 + (kH)^2/3)`$; Jeschke et al. 2017) is
+profile (Green–Naghdi type, $`1/(1 + (kH)^2/3)`$)[^jeschke17] is
 more accurate for $`kH \le 1`$ (−0.1%) but degrades to −5.7 / −13% at
 $`kH = 2 / 3`$, and in a projection method its time derivative becomes
 ambiguous. For the trailing waves of soliton fission ($`kH`$ = 1–2) the linear
@@ -318,10 +318,10 @@ margin: in a hump-wave test (developer.md §69.2) it was 9.4e-4 / 4.0e-4 / 1.0e-
 ## 6. Wave breaking (`f_nh_breaking`, `nh_break_visc`)
 
 The one-layer model does not break waves. Run without a switch, a breaking
-solitary wave on a beach (Synolakis 1987, $`a/H = 0.28`$, [test/nhbreak](../../../test/nhbreak/README.md)) keeps
+solitary wave on a beach (the experiment of Synolakis[^synolakis87], $`a/H = 0.28`$, [test/nhbreak](../../../test/nhbreak/README.md)) keeps
 its shape to the shoreline, then runs up as a thin tongue, and the run-up
 $`R/H`$ becomes 1.64 (close to the non-breaking run-up law; the experimental
-law gives 0.42). As in hybrid Boussinesq models and SWASH, **cells detected
+law gives 0.42). As in hybrid Boussinesq models[^tonelli09][^tissier12] and SWASH[^smit13], **cells detected
 as breaking are therefore made hydrostatic, so the wave dissipates as a bore
 through the momentum-conservative advection** ([Advection
 schemes](advection.md)).
@@ -330,7 +330,7 @@ schemes](advection.md)).
 
 | Type | Criterion | Notes |
 |---|---|---|
-| 1 | surface rise rate $`\partial\eta/\partial t > \alpha\sqrt{gh}`$ ($`\alpha`$ = 0.6; neighbouring cells $`\beta`$ = 0.3; kept until the crest passes) | SWASH type (Smit et al. 2013). In the 2026-10-05 verification it did not fire in time for the onset of breaking on this grid ($`\Delta x = H/4`$); the current code does fire (note in test/nhbreak) |
+| 1 | surface rise rate $`\partial\eta/\partial t > \alpha\sqrt{gh}`$ ($`\alpha`$ = 0.6; neighbouring cells $`\beta`$ = 0.3; kept until the crest passes) | SWASH type[^smit13]. In the 2026-10-05 verification it did not fire in time for the onset of breaking on this grid ($`\Delta x = H/4`$); the current code does fire (note in test/nhbreak) |
 | 2 | Froude number $`\lvert V\rvert/\sqrt{gh} >`$ `nh_break_fr` (0.6) | local, stateless |
 | 3 | surface slope $`\lvert\nabla\eta\rvert >`$ `nh_break_slope` (0.3; maximum over the 8 neighbours) | **default**; local, Galilean invariant, stateless |
 
@@ -357,7 +357,7 @@ B = \mathrm{clip}\!\left(\frac{|\nabla\eta| - s}{s},\,0,\,1\right),
 
 which dissipates through the diffusion term $`\nabla\cdot(\nu\nabla\mathbf{u})`$
 of the momentum equation ([Diffusion term](diffusion.md)). It is the $`\nu = B\,\delta_b^2\,h\,\partial\eta/\partial t`$
-of Kennedy et al. (2000) made local and stateless with the kinematics of a
+of Kennedy et al.[^kennedy00] made local and stateless with the kinematics of a
 progressive wave, $`\partial\eta/\partial t \approx c\,|\partial\eta/\partial x|`$;
 1.44, corresponding to the literature constant $`\delta_b = 1.2`$, is the
 reference value (default 0 = off).
@@ -408,7 +408,7 @@ already handled by the hydrostatic part ("move $`z`$ without changing $`h`$, so
 the surface rises with it"). What the non-hydrostatic correction adds is the
 inertial reaction to accelerating the water column vertically, which gives
 the attenuation of short waves when a bottom displacement is mapped to the
-surface (the filter $`1/\cosh kH`$ of Kajiura 1963). With the naive source
+surface (the filter $`1/\cosh kH`$ of Kajiura[^kajiura63]). With the naive source
 $`-(h/2)\ddot z_b`$ the bottom-to-surface filter is
 
 ```math
@@ -434,7 +434,7 @@ non-negative at all wavenumbers and vanishes at the grid scale. $`\ddot z_b`$
 is a second difference against the previous step's $`z`$ kept privately by the
 module (one-step lag; it responds to every process that moves $`z`$), and one
 extra solve is done only in steps in which the bottom moved. For a
-Hammack-type prescribed uplift ([test/nhbottom](../../../test/nhbottom/README.md), configuration 1)
+Hammack-type[^hammack73] prescribed uplift ([test/nhbottom](../../../test/nhbottom/README.md), configuration 1)
 the leading wave height is
 within +3.9% of the exact (potential-flow) solution (hydrostatic +40%,
 without the acceleration term +16%). Coupled with an inertialess bed layer
@@ -460,6 +460,25 @@ water level directly above the deposit.
   nh configuration of [test/nest_identity](../../../test/nest_identity/README.md), and [examples/nest_reflect](../../../examples/nest_reflect/README.md)
   compares the treatments of the band).
 
+**Parameters and the basis of their defaults.** The full list is in the
+table of the [shallow water chapter](swflow.md); only the basis of the
+defaults is given here.
+
+| Parameter | Default | Meaning | Basis |
+|---|---:|---|---|
+| nh_hmin | 0.1 m | cells shallower than this stay hydrostatic | empirical; wet/dry fronts, very shallow water and bores after breaking are left to the momentum-conservative advection as bores (§4). Must exceed dd |
+| nh_solver | 2 (CG) | iterative solver | verification case: in [test/nhwave_nh](../../../test/nhwave_nh/README.md) CG converges in 10–80 iterations while Jacobi has not converged after 500 sweeps at $`\Delta x = H/8`$ (§3) |
+| nh_tol / nh_itmax | 1e-6 / 500 | convergence criterion and iteration cap | empirical; the condition number does not depend on the number of cells ($`\kappa \approx 1 + 2\varepsilon`$), so the cap is generous (§3) |
+| nh_bc_margin / nh_margin / nh_break_margin | 0 (automatic $`\lceil 2H/\Delta x\rceil`$) | margin around forced boundaries, seeds and breaking cells | four times the e-folding distance $`H/2`$ of the Green function (§5); in the hump-wave test the margins 4 / 8 / 16 cells differ by 9.4e-4 / 4.0e-4 / 1.0e-4 m |
+| nh_chi_on | 0.06 | detection threshold of the active set (dispersion ratio $`\chi`$) | derived from the dispersion relation of §2: the value of $`(kH)^2/4 / (1 + (kH)^2/4)`$ at a 3% phase-speed difference from hydrostatic |
+| nh_amin / nh_arel | 1e-5 m/s² / 1e-3 | absolute and relative floors of the detector | empirical; keeps the ratio detector from picking up round-off-level short waves (§5) |
+| nh_break_type / nh_break_slope | 3 / 0.3 | breaking detector (surface slope) | empirical (local, Galilean invariant, stateless); the run-up in [test/nhbreak](../../../test/nhbreak/README.md) converges to the experimental law (§6) |
+| nh_break_alpha / nh_break_beta | 0.6 / 0.3 | thresholds of detector 1 (surface rise rate) | literature value[^smit13] (SWASH defaults) |
+| nh_break_fr | 0.6 | threshold of detector 2 (Froude number) | empirical |
+| nh_break_visc | 0 (reference 1.44) | breaking eddy-viscosity coefficient $`\delta_b^2`$ | literature value[^kennedy00]: $`\delta_b = 1.2`$ → 1.44; $`R/H`$ = 0.45 in [test/nhbreak](../../../test/nhbreak/README.md) (experimental law 0.42; §6) |
+| f_nh_slope | 0 | bottom-slope terms (Version 2) | verification case: a few percent difference from Version 1 in [test/nhshelf](../../../test/nhshelf/README.md); off by default because the iterations double (§7) |
+| f_nh_bottom | 0 | moving-bottom acceleration term | verification case: leading wave height within +3.9% of the exact solution in [test/nhbottom](../../../test/nhbottom/README.md) (+16% without); off by default since it acts only when the bottom moves (§7) |
+
 **Verification cases** (figures, tables and the derived cases are in the
 READMEs, which are in Japanese):
 
@@ -467,7 +486,7 @@ READMEs, which are in Japanese):
 |---|---|---|
 | [nhwave](../../../test/nhwave/README.md) / [nhwave_nh](../../../test/nhwave_nh/README.md) | standing waves in a closed basin | hydrostatic numerical dispersion < 1%; non-hydrostatic periods within ±0.2% of theory ($`kH`$ = 0.25–2) |
 | [nhsolitary](../../../test/nhsolitary/README.md) | propagation of a solitary wave | after 60 s the shape RMS is 2.9%, speed −0.8%; hydrostatic turns into a bore |
-| [nhbore](../../../test/nhbore/README.md) | undular bore splitting from a step | the leading wave approaches the KdV asymptote $`2a`$ monotonically (Gurevich & Pitaevskii 1974); exceeds 2 for $`a/H = 0.2`$ (consistent with El et al. 2006) |
+| [nhbore](../../../test/nhbore/README.md) | undular bore splitting from a step | the leading wave approaches the KdV asymptote $`2a`$ monotonically[^gurevich74]; exceeds 2 for $`a/H = 0.2`$ (consistent with the fully nonlinear theory[^el06]) |
 | [nhshelf](../../../test/nhshelf/README.md) | solitary wave climbing onto a shelf | fission into a leading soliton plus a train of 6; hydrostatic gives a bore with 1 crest |
 | [nhcurrent](../../../test/nhcurrent/README.md) | linear waves on a uniform current | dispersion relation of the form $`(\omega - U_0k)^2`$ confirmed with and against the current (+1.4–2.5%) |
 | [nhbreak](../../../test/nhbreak/README.md) | run-up of a breaking solitary wave | table in §6 |
@@ -494,92 +513,48 @@ READMEs, which are in Japanese):
 No conceptual novelty is claimed for this feature. The design follows the
 practical line of existing one-layer non-hydrostatic models and of the prior
 work on local adaptivity. What is specific to ENCflow is the combination
-with the 8-direction ENC grid, the momentum-conservative advection and the
+with the 8-direction ENC grid, the momentum-conservative advection[^sd03] and the
 adaptive Runge–Kutta, the dispersion-based detector $`\chi`$ with a margin set
 from the decay distance, the deterministic bitwise-reproducible solver, and
 the zero-overhead integration when the option is off.
 
 | Model / study | What this implementation took from it | Differences |
 |---|---|---|
-| **SWASH** (Stelling & Zijlema 2003; Zijlema, Stelling & Smit 2011) | the one-layer approximation with a linear pressure profile (Keller box) and its dispersion relation $`\omega^2 = gHk^2/(1 + (kH)^2/4)`$; the idea of switching locally to hydrostatic at breaking and the thresholds $`\alpha`$ = 0.6, $`\beta`$ = 0.3 of criterion 1 (Smit, Zijlema & Stelling 2013) | SWASH is multi-layer and semi-implicit. ENCflow is one layer only, with an explicit hydrostatic predictor and an 8-direction grid; the default breaking criterion is the surface slope |
-| **NEOWAVE** (Yamazaki, Kowalik & Cheung 2009; Yamazaki, Cheung & Kowalik 2011) | the very architecture: one layer, staggered grid, conservative advection plus a pressure correction at the end of the step; treating the flow after breaking as a bore | NEOWAVE limits the non-hydrostatic region by grid nesting; ENCflow uses a single grid plus the active set |
-| the semi-implicit hydrostatic-predictor / non-hydrostatic-corrector splitting (Casulli & Stelling 1998; Casulli 1999) | the archetype of the fractional step "keep the hydrostatic step as the predictor and project the velocities with a pressure-Poisson-type correction" | three-dimensional and semi-implicit; here depth-averaged one layer with an explicit predictor |
-| **Firdaus & Behrens** (2026, IJNMF; arXiv 2606.27562) | the locally adaptive non-hydrostatic extension: solve the elliptic problem only in a detected region and switch to the SWE at breaking. The closest prior work to the active set of §5 | their detectors are the level ratio $`\lvert\eta/d\rvert`$ and the velocity (threshold 0.001, one-element extension), the discretisation is RK-DG and the vertical profile quadratic; ENCflow uses the dispersion ratio $`\chi`$ and a margin based on the Green-function decay distance |
-| quadratic pressure profile (Jeschke, Pedersen, Vater & Behrens 2017; Firdaus et al. 2025) | comparison with the Green–Naghdi-type dispersion relation (§2) | **not adopted**: worse for $`kH`$ = 1–2, and the time derivative becomes ambiguous in a projection method |
-| **GeoClaw-Bouss** (Berger & LeVeque 2024) | the idea of limiting the region where the dispersive terms are solved | per AMR refinement patch; ENCflow is single-grid |
-| hybrid Boussinesq/NSWE models (Tonelli & Petti 2009; Tissier et al. 2012; Kazolea & Ricchiuto 2018), **FUNWAVE-TVD** (Shi et al. 2012) | the mechanism of dropping the dispersive terms in the breaking zone and dissipating through the shallow-water bore (§6); the knowledge that the stability and grid dependence of the switch are the main difficulties | — |
-| breaking eddy viscosity (Kennedy, Chen, Kirby & Dalrymple 2000; Zelt 1991) | $`\nu = B\,\delta_b^2\,h\,\partial\eta/\partial t`$ and the constant $`\delta_b = 1.2`$ (§6) | $`\partial\eta/\partial t`$ replaced by $`\lvert\nabla\eta\rvert`$ through the kinematics of a progressive wave; stateless |
-| hyperbolic relaxation (Escalante, Dumbser & Castro 2019; Muñoz-Moncayo & Ketcheson 2026) | considered as an alternative that avoids the elliptic solve | **not adopted**: the artificial pressure wave speed cuts dt by a factor 3–10, and in an integrated model every process would pay for it |
+| **SWASH**[^sz03][^zijlema11] | the one-layer approximation with a linear pressure profile (Keller box) and its dispersion relation $`\omega^2 = gHk^2/(1 + (kH)^2/4)`$; the idea of switching locally to hydrostatic at breaking and the thresholds $`\alpha`$ = 0.6, $`\beta`$ = 0.3 of criterion 1[^smit13] | SWASH is multi-layer and semi-implicit. ENCflow is one layer only, with an explicit hydrostatic predictor and an 8-direction grid; the default breaking criterion is the surface slope |
+| **NEOWAVE**[^yamazaki09][^yamazaki11] | the very architecture: one layer, staggered grid, conservative advection plus a pressure correction at the end of the step; treating the flow after breaking as a bore | NEOWAVE limits the non-hydrostatic region by grid nesting; ENCflow uses a single grid plus the active set |
+| the semi-implicit hydrostatic-predictor / non-hydrostatic-corrector splitting[^casulli98][^casulli99] | the archetype of the fractional step "keep the hydrostatic step as the predictor and project the velocities with a pressure-Poisson-type correction" | three-dimensional and semi-implicit; here depth-averaged one layer with an explicit predictor |
+| **Firdaus & Behrens**[^firdaus26] | the locally adaptive non-hydrostatic extension: solve the elliptic problem only in a detected region and switch to the SWE at breaking. The closest prior work to the active set of §5 | their detectors are the level ratio $`\lvert\eta/d\rvert`$ and the velocity (threshold 0.001, one-element extension), the discretisation is RK-DG and the vertical profile quadratic; ENCflow uses the dispersion ratio $`\chi`$ and a margin based on the Green-function decay distance |
+| quadratic pressure profile[^jeschke17][^firdaus25] | comparison with the Green–Naghdi-type dispersion relation (§2) | **not adopted**: worse for $`kH`$ = 1–2, and the time derivative becomes ambiguous in a projection method |
+| **GeoClaw-Bouss**[^berger24] | the idea of limiting the region where the dispersive terms are solved | per AMR refinement patch; ENCflow is single-grid |
+| hybrid Boussinesq/NSWE models[^tonelli09][^tissier12][^kazolea18], **FUNWAVE-TVD**[^shi12] | the mechanism of dropping the dispersive terms in the breaking zone and dissipating through the shallow-water bore (§6); the knowledge that the stability and grid dependence of the switch are the main difficulties | — |
+| breaking eddy viscosity[^kennedy00][^zelt91] | $`\nu = B\,\delta_b^2\,h\,\partial\eta/\partial t`$ and the constant $`\delta_b = 1.2`$ (§6) | $`\partial\eta/\partial t`$ replaced by $`\lvert\nabla\eta\rvert`$ through the kinematics of a progressive wave; stateless |
+| hyperbolic relaxation[^escalante19][^munoz26] | considered as an alternative that avoids the elliptic solve | **not adopted**: the artificial pressure wave speed cuts dt by a factor 3–10, and in an integrated model every process would pay for it |
 
-Bibliography (taken from the list in the design document
-docs/nonhydrostatic_plan.md §13; check against the originals when citing):
+The bibliography follows the list in the design document
+docs/nonhydrostatic_plan.md §13 (check against the originals when citing).
 
-- Stelling, G. S. and Zijlema, M. (2003): An accurate and efficient
-  finite-difference algorithm for non-hydrostatic free-surface flow with
-  application to wave propagation. *Int. J. Numer. Meth. Fluids*, 43, 1–23.
-- Zijlema, M., Stelling, G. and Smit, P. (2011): SWASH: An operational public
-  domain code for simulating wave fields and rapidly varied flows in coastal
-  waters. *Coastal Eng.*, 58, 992–1012.
-- Smit, P., Zijlema, M. and Stelling, G. (2013): Depth-induced wave breaking
-  in a non-hydrostatic, near-shore wave model. *Coastal Eng.*, 76, 1–16.
-- Yamazaki, Y., Kowalik, Z. and Cheung, K. F. (2009): Depth-integrated,
-  non-hydrostatic model for wave breaking and run-up. *Int. J. Numer. Meth.
-  Fluids*, 61, 473–497.
-- Yamazaki, Y., Cheung, K. F. and Kowalik, Z. (2011): Depth-integrated,
-  non-hydrostatic model with grid nesting for tsunami generation,
-  propagation, and run-up. *Int. J. Numer. Meth. Fluids*, 67, 2081–2107.
-- Casulli, V. and Stelling, G. S. (1998): Numerical simulation of 3D
-  quasi-hydrostatic, free-surface flows. *J. Hydraul. Eng.*, 124, 678–686.
-- Casulli, V. (1999): A semi-implicit finite difference method for
-  non-hydrostatic, free-surface flows. *Int. J. Numer. Meth. Fluids*, 30,
-  425–440.
-- Firdaus, K. and Behrens, J. (2026): Locally adaptive non-hydrostatic shallow
-  water extension for moving bottom-generated waves. *Int. J. Numer. Meth.
-  Fluids*, doi:10.1002/fld.70021. Also: Two-dimensional locally adaptive
-  non-hydrostatic extension of shallow water equations. arXiv:2606.27562.
-- Firdaus, K. et al. (2025): Non-hydrostatic model for simulating moving
-  bottom-generated waves: a shallow water extension with quadratic vertical
-  pressure profile. *Int. J. Numer. Meth. Fluids*, doi:10.1002/fld.5393.
-- Jeschke, A., Pedersen, G. K., Vater, S. and Behrens, J. (2017):
-  Depth-averaged non-hydrostatic extension for shallow water equations with
-  quadratic vertical pressure profile: equivalence to Boussinesq-type
-  equations. *Int. J. Numer. Meth. Fluids*, 84, 569–583.
-- Berger, M. J. and LeVeque, R. J. (2024): Implicit adaptive mesh refinement
-  for dispersive tsunami propagation. *SIAM J. Sci. Comput.*, 46, B554–B578.
-- Tonelli, M. and Petti, M. (2009): Hybrid finite volume – finite difference
-  scheme for 2DH improved Boussinesq equations. *Coastal Eng.*, 56, 609–620.
-- Tissier, M., Bonneton, P., Marche, F., Chazel, F. and Lannes, D. (2012):
-  A new approach to handle wave breaking in fully non-linear Boussinesq
-  models. *Coastal Eng.*, 67, 54–66.
-- Kazolea, M. and Ricchiuto, M. (2018): On wave breaking for Boussinesq-type
-  models. *Ocean Modelling*, 123, 16–39.
-- Shi, F., Kirby, J. T., Harris, J. C., Geiman, J. D. and Grilli, S. T.
-  (2012): A high-order adaptive time-stepping TVD solver for Boussinesq
-  modeling of breaking waves and coastal inundation. *Ocean Modelling*,
-  43–44, 36–51.
-- Kennedy, A. B., Chen, Q., Kirby, J. T. and Dalrymple, R. A. (2000):
-  Boussinesq modeling of wave transformation, breaking, and runup. I: 1D.
-  *J. Waterw. Port Coast. Ocean Eng.*, 126, 39–47.
-- Zelt, J. A. (1991): The run-up of nonbreaking and breaking solitary waves.
-  *Coastal Eng.*, 15, 205–246.
-- Escalante, C., Dumbser, M. and Castro, M. J. (2019): An efficient
-  hyperbolic relaxation system for dispersive non-hydrostatic water waves
-  and its solution with high order discontinuous Galerkin schemes.
-  *J. Comput. Phys.*, 394, 385–416.
-- Muñoz-Moncayo, C. and Ketcheson, D. I. (2026): Adaptive, efficient, and
-  scalable water wave modeling with dispersive hyperbolic systems.
-  arXiv:2606.12162.
-- Kajiura, K. (1963): The leading wave of a tsunami. *Bull. Earthq. Res.
-  Inst.*, 41, 535–571.
-- Hammack, J. L. (1973): A note on tsunamis: their generation and propagation
-  in an ocean of uniform depth. *J. Fluid Mech.*, 60, 769–799.
-- Synolakis, C. E. (1987): The runup of solitary waves. *J. Fluid Mech.*,
-  185, 523–545.
-- Gurevich, A. V. and Pitaevskii, L. P. (1974): Nonstationary structure of a
-  collisionless shock wave. *Sov. Phys. JETP*, 38, 291–297.
-- El, G. A., Grimshaw, R. H. J. and Smyth, N. F. (2006): Unsteady undular
-  bores in fully nonlinear shallow-water theory. *Phys. Fluids*, 18, 027104.
-- Stelling, G. S. and Duinmeijer, S. P. A. (2003): A staggered conservative
-  scheme for every Froude number in rapidly varied shallow water flows.
-  *Int. J. Numer. Meth. Fluids*, 43, 1329–1354 (momentum-conservative
-  advection; [Advection schemes](advection.md)).
+[^sz03]: Stelling, G. S. and Zijlema, M. (2003): An accurate and efficient finite-difference algorithm for non-hydrostatic free-surface flow with application to wave propagation. *Int. J. Numer. Meth. Fluids*, 43, 1–23.
+[^zijlema11]: Zijlema, M., Stelling, G. and Smit, P. (2011): SWASH: An operational public domain code for simulating wave fields and rapidly varied flows in coastal waters. *Coastal Eng.*, 58, 992–1012.
+[^smit13]: Smit, P., Zijlema, M. and Stelling, G. (2013): Depth-induced wave breaking in a non-hydrostatic, near-shore wave model. *Coastal Eng.*, 76, 1–16.
+[^yamazaki09]: Yamazaki, Y., Kowalik, Z. and Cheung, K. F. (2009): Depth-integrated, non-hydrostatic model for wave breaking and run-up. *Int. J. Numer. Meth. Fluids*, 61, 473–497.
+[^yamazaki11]: Yamazaki, Y., Cheung, K. F. and Kowalik, Z. (2011): Depth-integrated, non-hydrostatic model with grid nesting for tsunami generation, propagation, and run-up. *Int. J. Numer. Meth. Fluids*, 67, 2081–2107.
+[^casulli98]: Casulli, V. and Stelling, G. S. (1998): Numerical simulation of 3D quasi-hydrostatic, free-surface flows. *J. Hydraul. Eng.*, 124, 678–686.
+[^casulli99]: Casulli, V. (1999): A semi-implicit finite difference method for non-hydrostatic, free-surface flows. *Int. J. Numer. Meth. Fluids*, 30, 425–440.
+[^firdaus26]: Firdaus, K. and Behrens, J. (2026): Locally adaptive non-hydrostatic shallow water extension for moving bottom-generated waves. *Int. J. Numer. Meth. Fluids*, doi:10.1002/fld.70021. Also: Two-dimensional locally adaptive non-hydrostatic extension of shallow water equations. arXiv:2606.27562.
+[^firdaus25]: Firdaus, K. et al. (2025): Non-hydrostatic model for simulating moving bottom-generated waves: a shallow water extension with quadratic vertical pressure profile. *Int. J. Numer. Meth. Fluids*, doi:10.1002/fld.5393.
+[^jeschke17]: Jeschke, A., Pedersen, G. K., Vater, S. and Behrens, J. (2017): Depth-averaged non-hydrostatic extension for shallow water equations with quadratic vertical pressure profile: equivalence to Boussinesq-type equations. *Int. J. Numer. Meth. Fluids*, 84, 569–583.
+[^berger24]: Berger, M. J. and LeVeque, R. J. (2024): Implicit adaptive mesh refinement for dispersive tsunami propagation. *SIAM J. Sci. Comput.*, 46, B554–B578.
+[^tonelli09]: Tonelli, M. and Petti, M. (2009): Hybrid finite volume – finite difference scheme for 2DH improved Boussinesq equations. *Coastal Eng.*, 56, 609–620.
+[^tissier12]: Tissier, M., Bonneton, P., Marche, F., Chazel, F. and Lannes, D. (2012): A new approach to handle wave breaking in fully non-linear Boussinesq models. *Coastal Eng.*, 67, 54–66.
+[^kazolea18]: Kazolea, M. and Ricchiuto, M. (2018): On wave breaking for Boussinesq-type models. *Ocean Modelling*, 123, 16–39.
+[^shi12]: Shi, F., Kirby, J. T., Harris, J. C., Geiman, J. D. and Grilli, S. T. (2012): A high-order adaptive time-stepping TVD solver for Boussinesq modeling of breaking waves and coastal inundation. *Ocean Modelling*, 43–44, 36–51.
+[^kennedy00]: Kennedy, A. B., Chen, Q., Kirby, J. T. and Dalrymple, R. A. (2000): Boussinesq modeling of wave transformation, breaking, and runup. I: 1D. *J. Waterw. Port Coast. Ocean Eng.*, 126, 39–47.
+[^zelt91]: Zelt, J. A. (1991): The run-up of nonbreaking and breaking solitary waves. *Coastal Eng.*, 15, 205–246.
+[^escalante19]: Escalante, C., Dumbser, M. and Castro, M. J. (2019): An efficient hyperbolic relaxation system for dispersive non-hydrostatic water waves and its solution with high order discontinuous Galerkin schemes. *J. Comput. Phys.*, 394, 385–416.
+[^munoz26]: Muñoz-Moncayo, C. and Ketcheson, D. I. (2026): Adaptive, efficient, and scalable water wave modeling with dispersive hyperbolic systems. arXiv:2606.12162.
+[^kajiura63]: Kajiura, K. (1963): The leading wave of a tsunami. *Bull. Earthq. Res. Inst.*, 41, 535–571.
+[^hammack73]: Hammack, J. L. (1973): A note on tsunamis: their generation and propagation in an ocean of uniform depth. *J. Fluid Mech.*, 60, 769–799.
+[^synolakis87]: Synolakis, C. E. (1987): The runup of solitary waves. *J. Fluid Mech.*, 185, 523–545.
+[^gurevich74]: Gurevich, A. V. and Pitaevskii, L. P. (1974): Nonstationary structure of a collisionless shock wave. *Sov. Phys. JETP*, 38, 291–297.
+[^el06]: El, G. A., Grimshaw, R. H. J. and Smyth, N. F. (2006): Unsteady undular bores in fully nonlinear shallow-water theory. *Phys. Fluids*, 18, 027104.
+[^sd03]: Stelling, G. S. and Duinmeijer, S. P. A. (2003): A staggered conservative scheme for every Froude number in rapidly varied shallow water flows. *Int. J. Numer. Meth. Fluids*, 43, 1329–1354. (momentum-conservative advection; [Advection schemes](advection.md))

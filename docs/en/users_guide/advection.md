@@ -165,7 +165,7 @@ A_e = \tfrac{1}{2}\left(\mathbf{T}_c + \mathbf{T}_n\right)\cdot\mathbf{n}_k
 
 - **Non-conservative.** Because it is not written as a momentum flux, it
   loses momentum at discontinuities. In the wet-bed dam break (Stoker's
-  analytical solution, [test/dambreak](../../../test/dambreak/README.md)) the bore position lags by 15%, an
+  analytical solution[^stoker57], [test/dambreak](../../../test/dambreak/README.md)) the bore position lags by 15%, an
   overshoot of 3 m (a 2Δx oscillation) appears behind the bore, and a
   standing hump remains at the dam site. Stronger upwinding ($`p \to 1`$)
   increases the lag.
@@ -182,13 +182,15 @@ A_e = \tfrac{1}{2}\left(\mathbf{T}_c + \mathbf{T}_n\right)\cdot\mathbf{n}_k
 - Kept for reproducing cases calibrated with older versions. Use the default
   scheme 3 for new computations.
 
-## 4. Schemes 2 and 3: momentum-conservative form (Stelling & Duinmeijer 2003)
+## 4. Schemes 2 and 3: momentum-conservative form
 
 ### 4.1 Idea: a momentum control volume around the edge
 
 Even on a staggered layout, if a control volume $`\Omega_e`$ is taken around
 edge $`e`$ and the conservative momentum equation is integrated over it, the
-advection term can be written as the momentum flux through its faces.
+advection term can be written as the momentum flux through its faces (the
+staggered conservative scheme of Stelling & Duinmeijer[^sd03], extended to
+the eight directions of the ENC grid).
 
 ```math
 \frac{d}{dt}\int_{\Omega_e} h\,u\;dA
@@ -220,7 +222,7 @@ form has two merits.
   continuity equation are used, so when summed over all edges the face
   fluxes cancel and no momentum is lost across a discontinuity. Without a
   Riemann solver, bores and hydraulic jumps travel at the correct speed for
-  every Froude number (S&D 2003; adopted by SWASH, D-Flow FM and 3Di).
+  every Froude number (adopted by SWASH, D-Flow FM and 3Di)[^sd03].
 - **The direction is intuitive.** With first-order upwinding ($`\bar u_f`$ =
   the velocity on the inflow side) an outflow face has $`\bar u_f = u_e`$ and
   contributes nothing; only the inflow faces pull $`u_e`$ toward the velocity
@@ -314,11 +316,11 @@ u_\mathrm{up} + \dfrac{\psi(r)}{2}\,\bigl(u_\mathrm{dn} - u_\mathrm{up}\bigr),
 \psi(r) = \frac{r + |r|}{1 + |r|}\quad\text{(van Leer)}
 ```
 
-The limiter $`\psi`$ is the curve in figure (b). At $`r = 1`$ (uniform slope)
+The limiter $`\psi`$ is van Leer's[^vanleer79], the curve in figure (b). At $`r = 1`$ (uniform slope)
 $`\psi = 1`$ and $`\bar u = (u_\mathrm{up} + u_\mathrm{dn})/2`$ is the
 second-order central value; for $`r \le 0`$ (e.g. opposite signs of adjacent slopes)
 $`\psi = 0`$ and the face value degrades to first-order upwind. The curve
-lies inside Sweby's TVD region, limiting slopes near extrema in accordance
+lies inside Sweby's TVD region[^sweby84], limiting slopes near extrema in accordance
 with a one-dimensional TVD design. The pale-blue area is a comparison band
 within that region. Schemes 2 and 3 differ in
 this one line of the face value only; the rest of the path is shared.
@@ -430,6 +432,15 @@ listed in the [shallow water chapter](swflow.md).
   water can pile up in the one cell behind it (a spike). Using the upwind
   depth removes the spike but increases the frontal outflow onto dry beds.
 
+**Parameters and the basis of their defaults.**
+
+| Parameter | Default | Meaning | Basis |
+|---|---:|---|---|
+| f_advection_scheme | 3 | scheme of the advection term (1: cell-centre gradient, 2: conservative + first-order upwind, 3: conservative + MUSCL) | verification cases: bore position error +1.1% in [test/dambreak](../../../test/dambreak/README.md), depth ratio 0.992 with lateral inflow in [test/bendloss](../../../test/bendloss/README.md), grid convergence in [test/chichibu](../../../test/chichibu/README.md) (table above) |
+| p_adv_upwind_index | 0.5 | upwinding index of scheme 1 (0: central, 1: first-order upwind) | empirical; halfway between central and first-order upwind. The bore lag grows with $`p`$ (§3) |
+| f_advection_donor | 0 | limit the donors of the flow-direction faces to channel cells on edges between channel cells | empirical (off by default); it cuts the momentum exchange between the main channel and the flooded valley floor, so judge against observations (§4.4, developer.md §68.18) |
+| limiter $`\psi`$ (fixed) | van Leer | flux limiter of scheme 3 | literature value[^vanleer79]; inside Sweby's TVD region[^sweby84] (§4.3) |
+
 ## 6. Verification cases
 
 - **[test/dambreak](../../../test/dambreak/README.md)** -- Stoker's wet-bed dam break (flat, frictionless;
@@ -460,11 +471,7 @@ The READMEs of the test cases are in Japanese.
 
 ## References
 
-- Stelling, G. S. and Duinmeijer, S. P. A. (2003): A staggered conservative
-  scheme for every Froude number in rapidly varied shallow water flows.
-  *Int. J. Numer. Meth. Fluids*, 43, 1329–1354.
-- van Leer, B. (1979): Towards the ultimate conservative difference scheme V.
-  A second-order sequel to Godunov's method. *J. Comput. Phys.*, 32, 101–136.
-- Sweby, P. K. (1984): High resolution schemes using flux limiters for
-  hyperbolic conservation laws. *SIAM J. Numer. Anal.*, 21, 995–1011.
-- Stoker, J. J. (1957): *Water Waves*. Interscience, New York.
+[^sd03]: Stelling, G. S. and Duinmeijer, S. P. A. (2003): A staggered conservative scheme for every Froude number in rapidly varied shallow water flows. *Int. J. Numer. Meth. Fluids*, 43, 1329–1354. (momentum-conservative advection; adopted by SWASH, D-Flow FM and 3Di)
+[^vanleer79]: van Leer, B. (1979): Towards the ultimate conservative difference scheme V. A second-order sequel to Godunov's method. *J. Comput. Phys.*, 32, 101–136. (MUSCL and the limiter)
+[^sweby84]: Sweby, P. K. (1984): High resolution schemes using flux limiters for hyperbolic conservation laws. *SIAM J. Numer. Anal.*, 21, 995–1011. (TVD region)
+[^stoker57]: Stoker, J. J. (1957): *Water Waves*. Interscience, New York. (analytical solution of the wet-bed dam break)
