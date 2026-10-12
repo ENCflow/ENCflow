@@ -1,6 +1,6 @@
 # Shallow water flow computation (&list_enc and numerical constants)
 
-> English mirror of docs/users_guide/swflow.md (based on commit e693e81). The Japanese file is the master copy.
+> English mirror of docs/users_guide/swflow.md (based on commit 47b5e6f). The Japanese file is the master copy.
 
 [Back to the user's guide index](../users_guide.md)
 
@@ -133,6 +133,10 @@ is no universally recommended value and an explicit value is mandatory
 becomes silently inactive).
 
 **Non-hydrostatic correction (research option)**
+
+The equations, the projection algorithm, the active set, breaking, the bottom
+terms, and the models and literature the implementation drew on are explained
+on a separate page, [Non-hydrostatic correction](nonhydrostatic.md).
 
 | Parameter | Default | Meaning |
 |---|---|---|
