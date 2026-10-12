@@ -9,6 +9,12 @@ and select processes in `&list_geomorph`. **Compatible processes can be
 superposed**, but suspended sediment (`f_suspend`) and debris flow (`f_debris`)
 cannot be combined. Terrain and soil updates feed back into the flow; different
 processes change different state variables.
+The equations, the basis of the defaults and the references are in two
+supplements: [Sediment transport, hillslope and long-term processes](sediment.md)
+(creep, bedload, suspended load, hillslope erosion, dry-slope erosion,
+weathering/uplift, MORFAC) and
+[Debris flow, slope failure and moving bed layer](massflow.md) (resistance
+laws, erosion/deposition laws, triggering, bed layer).
 
 | Process | Flag | Content |
 |---|---|---|
@@ -127,6 +133,8 @@ suspended sediment hs and soil depth sd
 
 ## Hillslope creep (f_creep)
 
+Equations and basis of the defaults: [supplement](sediment.md#2-hillslope-creep-f_creep).
+
 | Parameter | Default | Meaning |
 |---|---|---|
 | creep_d | 1.6e-10 (= 0.005 m²/yr) | Creep diffusion coefficient (m²/s). Literature range 0.001-0.05 m²/yr. A geomorphic-time quantity, so interpret it together with morfac |
@@ -139,6 +147,8 @@ acts even at `sd = 0` and shifts the soil base `z − sd`. This is a terrain
 diffusion approximation, not transport of a finite soil layer.
 
 ## Bedload (f_fluvial)
+
+Transport formulas, Exner equation and clamps: [supplement](sediment.md#3-bedload-f_fluvial).
 
 Riverbed erosion and deposition by a bedload transport formula.
 
@@ -163,6 +173,8 @@ concentrates in the channel width and changes the riverbed there
 ([the channel chapter](channel.md)).
 
 ## Suspended sediment (f_suspend)
+
+Entrainment, settling, equilibrium formulas and Rubey's formula: [supplement](sediment.md#4-suspended-sediment-f_suspend).
 
 Advects the concentration field (columnar equivalent hs) with the flow
 and exchanges with the riverbed through entrainment (E) and settling
@@ -237,6 +249,8 @@ place it offshore of the area of interest.
 
 ## Hillslope erosion (f_wash)
 
+Erosion law: [supplement](sediment.md#5-hillslope-erosion-f_wash).
+
 Detaches sediment from hillslopes by raindrop erosion and sheet
 erosion and carries it as suspended sediment (**f_suspend is
 required**). It acts in wet cells (`h > dd`) outside channels (`rw = 0`).
@@ -259,6 +273,8 @@ reaching the ground; the sheet-erosion term can act without rain if flow-induced
 shear exceeds its threshold.
 
 ## Dry-slope erosion (f_splash)
+
+Erosion law and valley-spacing selection: [supplement](sediment.md#6-dry-slope-erosion-f_splash).
 
 Erosion and valley formation on **slopes without overland flow**. On
 highly permeable slopes where all rainfall infiltrates (badlands,
@@ -306,6 +322,8 @@ cohesion contrast (whether valleys form at all) is in
 [test/splashslide](../../../test/splashslide/).
 
 ## Debris flow / landslide (f_debris / fn_dbinit / f_slide)
+
+Mixture equations, resistance laws, erosion/deposition laws, safety factor and basis of the defaults: [supplement](massflow.md).
 
 Handles debris flows as a single-layer mixture of surface water and
 sediment (flow depth = h + hs). The erosion-deposition (E-D) closure
@@ -544,6 +562,8 @@ numerical noise.
 
 ## Moving bed layer / landslide tsunami (f_bedslide)
 
+Driving head, buoyancy, Voellmy speed and flux distribution: [supplement](massflow.md#5-moving-bed-layer-f_bedslide).
+
 Represents the failed mass as "a bed layer hb that moves as part of the
 terrain z (and the soil sd)" and runs it as an inertia-free,
 friction-dominated flow (Voellmy law) from land into water. When the
@@ -657,6 +677,8 @@ debris-flow model).
   handover it runs to the flat lake bottom and deposits there.
 
 ## Long-term landform evolution (f_wthr / f_uplift)
+
+Soil production function and uplift: [supplement](sediment.md#7-bedrock-weathering-and-uplift-f_wthr--f_uplift).
 
 Processes for millennial-scale landform evolution experiments (used in
 combination with morfac and restart chains).
