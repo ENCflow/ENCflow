@@ -37,7 +37,7 @@ $`|\mathbf{V}|`$ the speed, and $`A_n`$, $`D_n`$ the advection and
 diffusion terms in the edge-normal direction. Keeping the momentum equation
 **only for the edge-normal components** and building the cell velocity
 vector by the reconstruction of §4 is what characterises the ENC
-(Eight-Neighbour Connected) grid. It extends to eight directions the
+(Eight-Neighbour Connected) grid[^tada26]. It extends to eight directions the
 "cell-centred depth, face flux" arrangement of the finite-difference flood
 models that are standard in Japan[^iwasa80], and it belongs to the same
 family as the conservative staggered schemes[^sd03].
@@ -51,7 +51,7 @@ diagonal neighbours $`k = 1\ldots 8`$. The edge length $`\Delta s_k`$ is
 $`\Delta x`$ or $`\Delta y`$ on the axes and
 $`\Delta r = \sqrt{\Delta x^2 + \Delta y^2}`$ on the diagonals. Each edge
 carries a **passage width** $`L_k`$ for its flux, and one side of the cell is
-shared between one normal edge and two diagonal edges (panel (a)).
+shared between one normal edge and two diagonal edges (panel (a))[^tada26].
 
 ```math
 L_{\text{axis}} = (1 - p_d)\,\Delta,
@@ -326,6 +326,7 @@ non-hydrostatic correction are in the tables of their own pages.
 
 ## References
 
+[^tada26]: Tada, T. (2026): An eight-neighborhood connected collocated grid scheme for overland flow simulation. *Hydrological Research Letters*, 20(2), 113–118. doi:10.3178/hrl.25-00052. (the original paper of the ENC grid: the eight-neighborhood connected collocated grid and the passage-width allocation)
 [^iwasa80]: Iwasa, Y., Inoue, K. and Mizutori, M. (1980): A study on the numerical analysis of the hydraulics of inundation flows (title translated; in Japanese). *Annuals of the Disaster Prevention Research Institute, Kyoto University*, 23 B-2, 305–317. (cell-centred depth / face-flux arrangement and the semi-implicit friction)
 [^sd03]: Stelling, G. S. and Duinmeijer, S. P. A. (2003): A staggered conservative scheme for every Froude number in rapidly varied shallow water flows. *Int. J. Numer. Meth. Fluids*, 43, 1329–1354. (conservative staggered scheme; upwind depth in the continuity equation)
 [^ni19]: Ni, Y., Cao, Z. and Liu, Q. (2019): Mathematical modeling of shallow-water flows on steep slopes. *J. Hydrol. Hydromech.*, 67(3), 252–259. doi:10.2478/johh-2019-0012. (effective gravity $`g\cos^2\theta`$ on steep slopes)

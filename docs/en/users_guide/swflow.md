@@ -25,6 +25,7 @@ axis-edge quantities; open squares mark diagonal-edge quantities. Cell-centre
 velocities u, v are reconstructed by combining edge velocities with geometric
 weights. p_diagratio controls the allocation of diagonal passage widths;
 its default makes the eight passage widths equal ([explanation](encgrid.md) §2 and §4).
+The formulation and verification of the grid are in the original paper[^tada26].
 
 **(b) STG grid.** This is a four-neighbour staggered grid for legacy comparisons.
 Depth and ground elevation are at cell centres (internal arrays D and H).
@@ -278,3 +279,7 @@ Annotated list of all parameters (with the defaults spelled out):
 Many of these switches change the computed results. The regression
 tests (reference in [test/](../../../test/)) were created with the defaults, so compare
 results obtained with modified settings against your own baseline.
+
+## References
+
+[^tada26]: Tada, T. (2026): An eight-neighborhood connected collocated grid scheme for overland flow simulation. *Hydrological Research Letters*, 20(2), 113–118. doi:10.3178/hrl.25-00052. (the original paper of the ENC grid: the eight-neighborhood connected collocated grid and the passage-width allocation)
