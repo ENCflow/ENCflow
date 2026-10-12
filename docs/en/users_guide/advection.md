@@ -1,6 +1,6 @@
 # Advection schemes (supplement to the shallow water chapter)
 
-> English mirror of docs/users_guide/advection.md (based on commit cd8f6ec). The Japanese file is the master copy.
+> English mirror of docs/users_guide/advection.md (based on commit 116c52b). The Japanese file is the master copy.
 
 [Back to the shallow water chapter](swflow.md) / [Back to the user's guide index](../users_guide.md)
 
@@ -161,7 +161,7 @@ A_e = \tfrac{1}{2}\left(\mathbf{T}_c + \mathbf{T}_n\right)\cdot\mathbf{n}_k
 
 - **Non-conservative.** Because it is not written as a momentum flux, it
   loses momentum at discontinuities. In the wet-bed dam break (Stoker's
-  analytical solution, test/dambreak) the bore position lags by 15%, an
+  analytical solution, [test/dambreak](../../../test/dambreak/README.md)) the bore position lags by 15%, an
   overshoot of 3 m (a 2Δx oscillation) appears behind the bore, and a
   standing hump remains at the dam site. Stronger upwinding ($`p \to 1`$)
   increases the lag.
@@ -325,7 +325,7 @@ on outflow $`u_e`$ (no contribution).
   takes $`\bar u = u_e`$ and contributes nothing. Reading the stored value 0
   instead would mean "still water flows in from the wall side", and in a
   one-cell-wide raster channel every bend would lose about 0.55 m of
-  artificial head (developer.md §68.8).
+  artificial head (developer.md §68.8; the bend cases of [test/bendloss](../../../test/bendloss/README.md)).
 - **The far donor of MUSCL.** If the cell beyond the $`u_\mathrm{upup}`$ edge
   is outside the domain or invalid, that face degrades to first-order
   upwind (reading 0 would give $`r \gg 1 \to \psi = 2`$, anti-diffusion, and
@@ -362,7 +362,8 @@ on outflow $`u_e`$ (no contribution).
   projection of the axis velocity.
 - The cost relative to scheme 1 is +12–20% for scheme 2 and +19–27% for
   scheme 3 (five edges on the line plus two lateral edges read per edge, and
-  the exchange at the start of the step). Memory is about the same.
+  the exchange at the start of the step; wall-clock of [test/dambreak](../../../test/dambreak/README.md),
+  [test/wave](../../../test/wave/README.md) and [test/chichibu](../../../test/chichibu/README.md)). Memory is about the same.
 
 ## 5. Properties and choice
 
@@ -379,6 +380,12 @@ The essentials of the numerical experiments of developer.md §68 (2026-10).
 | Stability | blows up on the 50 m DEM and in 1–2 cell incised channels | upwinding provides the stability | same |
 | Cost | 1.00 | 1.19 | 1.27 |
 | Role | legacy; reproducing existing calibrations | fallback for 3 (coarse problems that tolerate the overshoot at the bore front) | **default**; best for bores, jumps, lateral inflow, convergence and stability |
+
+Sources of the numbers: the bore from [test/dambreak](../../../test/dambreak/README.md), the smooth flood
+wave, lateral inflow and stepped bed from [test/bendloss](../../../test/bendloss/README.md), grid
+convergence, stability and cost on real terrain from [test/chichibu](../../../test/chichibu/README.md),
+the agreement on hillslopes from [test/hillslope](../../../test/hillslope/README.md) (each README, in
+Japanese, has the figures, tables and the list of derived cases).
 
 **Guidance.**
 
@@ -416,17 +423,31 @@ listed in the [shallow water chapter](swflow.md).
 
 ## 6. Verification cases
 
-- **test/dambreak** -- Stoker's wet-bed dam break (flat, frictionless;
+- **[test/dambreak](../../../test/dambreak/README.md)** -- Stoker's wet-bed dam break (flat, frictionless;
   $`h_l = 10`$ m, $`h_r = 1`$ m). Bore position, the depth and velocity of the
   intermediate state and the L1 error are compared with the analytical
   solution (`Check_stoker.py`). Source of the bore row in §5.
-- **test/bendloss** -- one-cell-wide channels: straight vs. bent (bend
+- **[test/bendloss](../../../test/bendloss/README.md)** -- one-cell-wide channels: straight vs. bent (bend
   loss), stepped beds (dissipation at steps), lateral inflow (physical
   solution of spatially varied flow). The README lists the cases.
-- **test/hillslope** -- smooth hillslope and V-shaped catchment. Confirms
+- **[test/hillslope](../../../test/hillslope/README.md)** -- smooth hillslope and V-shaped catchment. Confirms
   that schemes 1 and 3 agree.
-- **test/chichibu** -- real terrain (100 m). The place for grid convergence
+- **[test/chichibu](../../../test/chichibu/README.md)** -- real terrain (100 m). The place for grid convergence
   and comparison with observations.
+- **[test/wave](../../../test/wave/README.md)** -- spreading of a hump of water at rest (frictionless
+  closed basin). The reference case of the regression tests; shows the
+  sensitivity of the maximum depth and velocity to the scheme (0.1–0.5%) and
+  the preservation of the four-fold symmetry.
+
+The READMEs of the test cases are in Japanese.
+
+**Related examples and tutorials**
+
+- [tutorials/wave](../../../tutorials/wave/en/README.md) / [tutorials/chichibu](../../../tutorials/chichibu/en/README.md) --
+  step-by-step walkthroughs; how to read the sensitivity to the time step
+  and the adaptive Runge–Kutta, and how a real-terrain case is assembled.
+- [examples/List_samples/list_enc.txt](../../../examples/List_samples/en/list_enc.txt) --
+  annotated list of every `&list_enc` parameter with its default.
 
 ## References
 
