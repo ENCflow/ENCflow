@@ -16,8 +16,11 @@ can change depth and velocity (the same contract as the morphological
 modules). The design is in [docs/bedmotion_plan.md](../../bedmotion_plan.md),
 the implementation record in developer.md §70, and the preprocessing from
 fault parameters in the [fault2disp geometry diagram and setup guide](../../../utils/fault2disp/README.en.md#2-fault-parameter-conventions).
+The time interpolation of the displacement, the fault displacement field,
+the relation to the non-hydrostatic correction and the behaviour contract
+are in [Prescribed bed motion explained](bedmotion_models.md).
 
-## 1. Minimal setup
+## 1. Just try it (minimal setup)
 
 The steps to generate the tsunami of a single reverse fault in an
 idealised sea (no georeference). Three files are needed.
@@ -127,10 +130,10 @@ subsidence.
 
 Earthquake tsunamis use this pattern. From the fault position, strike,
 dip, rake, length, width, slip, rupture start time and rise time the
-utility computes the displacement field with Okada's formulas[^okada85] and
-writes the table. Several segments (with rupture-time lags) and the
-horizontal-displacement contribution $`u_h\cdot\nabla z`$[^tanioka96] (when
-a bed elevation is given) are supported. Coordinates can be given in three
+utility computes the displacement field with the elastic half-space
+solution (Okada's formulas) and writes the table. Several segments (with
+rupture-time lags) and the horizontal-displacement contribution (when a bed
+elevation is given) are supported ([the explanation](bedmotion_models.md) §2). Coordinates can be given in three
 ways, all absorbed on the fault2disp side, so the model settings do not
 change (details in fault2disp README §3).
 
@@ -166,9 +169,8 @@ This omits the rupture process; it does not guarantee the same result as
 changing only the initial water depth over fixed terrain. Bedmotion changes
 the terrain while keeping the depth during application.
 
-The time-history input differs in near-field arrival time and wave height.
-The existing example READMEs report 2–3% in maximum level for [examples/tsunami_fault](../../../examples/tsunami_fault/)
-and +24 to 40% at the bay mouth and shelf of [examples/tsunami_coast](../../../examples/tsunami_coast/).
+The time-history input differs in near-field arrival time and wave height
+(the sizes found in the examples are in [the explanation](bedmotion_models.md) §2).
 
 ### Large domains: windowed displacement files
 
@@ -224,41 +226,18 @@ Regenerate only this figure with `python docs/figs/make_guide_figs.py bedmotion`
 
 ## 5. Time handling, hydrostatic and non-hydrostatic
 
-```math
-d(t) = d_k + \frac{t - t_k}{t_{k+1} - t_k}\left(d_{k+1} - d_k\right)\ (\texttt{f\_bminterp} = 1),
-\qquad
-z^{\,n+1} = z^{\,n} + \left[d(t_{n+1}) - d_{prev}\right],
-\quad h\ \text{unchanged},\quad e = z + h
-```
-
-For a fault displacement field the initial sea-surface displacement is
-taken as the vertical displacement plus the product of the horizontal
-displacement and the bed slope, $`\eta_0 = u_z + u_h\cdot\nabla z`$
-[^tanioka96], which matters on steep sea floors; fault2disp computes it
-when a bed elevation is given.
-
-- At the head of each step the displacement at the end-of-step time is
-  interpolated and the **difference** from the previously applied
-  displacement is added to z. With linear interpolation the bed velocity
-  is constant between snapshots and jumps at their boundaries.
-- In the current stepwise implementation, normal time advancement switches
-  to the next snapshot only when the evaluation time **exceeds** its time.
-  At exact equality, the previous value is kept (the advance condition in
-  `m_bedmotion_calc`). The step line in panel (a) illustrates the interpolation
-  mode; it does not specify which side is used at an exact switch time.
-- In a hydrostatic run the bed uplift maps directly onto the surface.
-  This is sufficient for subduction-zone earthquakes whose source width is
-  much larger than the depth.
-- For short deformation whose width is comparable to the depth (splay
-  faults, narrow deep-sea slip, submarine slides) the inertia of the water
-  column attenuates the short waves (the Kajiura filter[^kajiura63]). The
-  [non-hydrostatic correction](swflow.md) with f_nonhydrostatic=1 and
-  f_nh_bottom=1 provides it in the one-layer approximation 1/(1 + βk²)²
-  (developer.md §69.10). The velocity jumps then enter as acceleration
-  pulses, so write the snapshots densely (increase nout of fault2disp;
-  [test/nhbottom](../../../test/nhbottom/) writes one per step). In [examples/tsunami_fault](../../../examples/tsunami_fault/) the
-  non-hydrostatic run lowers the coastal maximum level by 24% (dispersion),
-  and the acceleration term contributes a further −2%.
+At the head of each step the displacement at the end-of-step time is
+interpolated from the snapshots and the **difference** from the previously
+applied displacement is added to z (the water column h is unchanged;
+equations in [the explanation](bedmotion_models.md) §1). In a hydrostatic
+run the bed uplift maps directly onto the surface, which is sufficient for
+subduction-zone earthquakes whose source width is much larger than the
+depth. For short deformation whose width is comparable to the depth (splay
+faults, narrow deep-sea slip, submarine slides), use the
+[non-hydrostatic correction](swflow.md) with f_nonhydrostatic=1 and
+f_nh_bottom=1 and write the snapshots densely (increase nout of fault2disp);
+the reason and the size of the effect are in
+[the explanation](bedmotion_models.md) §3.
 
 ## 6. Parameters
 
@@ -278,41 +257,26 @@ the bed elevation.
 
 ## 7. Behaviour contract and interplay with other features
 
-- The increment is added to z of eligible cells (x > 0, sw = 0);
-  h is kept and e = z + h is recovered. Momentum is untouched. The
-  soil depth sd is unchanged (the bedrock surface z − sd moves).
+- The increment is added to z of eligible cells (x > 0, sw = 0); h is kept
+  and e = z + h is recovered. Momentum and the soil depth sd are untouched.
 - Because the displacement is applied incrementally, it does not conflict
   with sediment/landform change (including f_bedslide) or lava flow moving
-  z in the same run. An earthquake-triggered submarine slide (f_bedslide)
-  can share the run.
-- Restart: no private displacement history is saved. Mode 1 with a saved
-  step `it0 > 0` reconstructs the displacement at restart time from the same
-  table as “already applied”. However, the current stepwise initialization
-  selects snapshots using an equality-inclusive condition, unlike normal
-  advancement. Exact agreement is not guaranteed when saving and restarting
-  exactly at a switch time. Mode 2 starts the history at zero; supply a series
-  that does not reapply deformation already in the saved terrain. See
-  [Suspend and Restart](restart.md).
-- ENC only: initialization stops if bedmotion is enabled with STG.
-- The library API set_value('z') is refused while fn_bedmotion is active
-  (z has a single producer).
-- MPI: every rank reads the whole displacement file and cuts out its own
-  band (the file read is redundant, the application is per band). See
-  [Parallel Execution](parallel.md) for reproducibility conditions.
+  z in the same run.
+- A restart continues from the same table, treating the displacement at the
+  restart time as already applied (for the caveat about saving and
+  restarting exactly at a switch time of the step interpolation, see
+  [the explanation](bedmotion_models.md) §4).
+- ENC only. The library API set_value('z') is refused while fn_bedmotion is
+  active (z has a single producer).
 - Output: the bed elevation Z (f_out_z) shows the deformed terrain. At the
   end the maximum and minimum of the applied displacement are printed.
 
 ## 8. Tests and examples
 
-[test/nhbottom](../../../test/nhbottom/) configuration 3: a Hammack-type uplift of 0.2 m in 1 s over
-|x − x_c| < 20 m in a 10 m deep channel, given as a snapshot table with
-one entry per step, matches the driver that applies the same motion
-through the library API (identical except the last digit of the
-full-precision volume column of the Log). Restart (save → restore at
-0.5 s) matches the uninterrupted run (hydrostatic; with the non-hydrostatic
-f_nh_bottom it differs by one step of the acceleration term), and coexisting
-with a submarine slide (f_bedslide) Σ(z − z0) = Σ d holds within output
-precision (the internal transfer of the bed layer sums to zero).
+- [test/nhbottom](../../../test/nhbottom/) configuration 3: a Hammack-type
+  uplift given as a per-step snapshot table, checked against the same
+  motion through the library API, against a restart and together with a
+  submarine slide (details in [the explanation](bedmotion_models.md) §5).
 
 - [examples/tsunami_fault](../../../examples/tsunami_fault/README.md): an
   idealised reverse fault (strike N-S, dip 15°, 60 km × 30 km, slip 5 m,
@@ -326,9 +290,3 @@ precision (the internal transfer of the bed layer sums to zero).
   fault at the bay mouth (0.8 m uplift of the cape). The disturbance from
   the coastal deformation reaches the shore 10 minutes before the offshore
   tsunami, and the subsided plain at the bay head floods earlier.
-
-## References
-
-[^okada85]: Okada, Y. (1985): Surface deformation due to shear and tensile faults in a half-space. *Bull. Seismol. Soc. Am.*, 75, 1135–1154.
-[^tanioka96]: Tanioka, Y. and Satake, K. (1996): Tsunami generation by horizontal displacement of ocean bottom. *Geophys. Res. Lett.*, 23, 861–864.
-[^kajiura63]: Kajiura, K. (1963): The leading wave of a tsunami. *Bull. Earthq. Res. Inst. Univ. Tokyo*, 41, 535–571.

@@ -36,6 +36,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Input and output formats](users_guide/io.md) -- text / bil / GeoTIFF, output file organization
 - [Suspend and restart](users_guide/restart.md) -- state files, time continuation, use as initial conditions
 - [Nesting (multi-level grids)](users_guide/nest.md) (fn_nest, &list_nest) -- child grids solved inside a parent grid in the same run (multi-level, two-way, Flather radiation, non-hydrostatic band)
+  - [Nesting explained](users_guide/nest_models.md) -- time interpolation, boundary-band methods, the Flather condition, the sponge, child-to-parent replacement and the conservation correction, with the basis of the defaults (supplement to nesting)
 - [Parallel execution](users_guide/parallel.md) -- OpenMP, MPI, reproducibility of results
 
 **Part III: Feature reference**
@@ -51,7 +52,9 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Internal hydraulic structures](users_guide/structure.md) (&list_struct_pump/culvert/diversion/dam) -- pumps, culverts, diversions, dams and lakes
   - [Hydraulics of structures and boundaries](users_guide/hydraulics.md) -- Honma weir formula, the three culvert regimes, dam operation rules, free-outflow and radiation boundaries, inflow distribution, with equations and the basis of the coefficients (supplement)
 - [Channels](users_guide/channel.md) (&list_channel) -- levees, channel width, cross-section shape, breach
+  - [Channels explained](users_guide/channel_models.md) -- crest and opening correction of the virtual walls, plan-area fraction of the subgrid width, equivalent depth of the section shape σ, breach crest and the basis of the defaults (supplement to channels)
 - [Rainfall and weather](users_guide/forcing.md) (&list_precip / intercept / meteo / evap / snow) -- precipitation, interception, air temperature, evapotranspiration, snow accumulation and snowmelt
+  - [Rainfall and meteorology models explained](users_guide/forcing_models.md) -- interception models, elevation corrections, Hamon/Thornthwaite PET and the degree-day method, with the basis of the defaults (supplement to rainfall and weather)
 - [Groundwater](users_guide/gwflow.md) (&list_gwflow plus model-specific settings) -- infiltration, lateral flow, weathered bedrock layer, conduit continuum layer (sewer networks, fractured bedrock)
   - [Groundwater models](users_guide/gwflow_models.md) -- bucket, Green-Ampt, Boussinesq lateral flow, weathered bedrock layer, conduit continuum layer, pumping and frozen ground, with equations and the basis of the defaults (supplement)
 - [Fresh and salt water layers](users_guide/salt.md) (&list_salt) -- salt wedges, seawater intrusion, freshwater lenses (sharp-interface approximation)
@@ -59,10 +62,13 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
   - [Sediment transport, hillslope and long-term processes](users_guide/sediment.md) -- creep, bedload formulas, Exner, suspended-load exchange, hillslope erosion, dry-slope erosion, weathering/uplift, MORFAC, with equations and the basis of the defaults (supplement)
   - [Debris flow, slope failure and moving bed layer](users_guide/massflow.md) -- single-layer mixture, five resistance laws, erosion/deposition laws, curvature term, safety factor, moving bed layer, with equations and the models referred to (supplement)
 - [Driftwood](users_guide/driftwood.md) (&list_driftwood) -- wood recruitment (hydraulic washout / erosion entrainment), transport and deposition (raster-field estimate)
+  - [Driftwood models explained](users_guide/driftwood_models.md) -- transfer rules of the three ledgers, draft, area bases and volume budget, sources of the practical values and basis of the defaults (supplement to driftwood)
 - [Building destruction and debris](users_guide/bldgdebris.md) (&list_bldgdebris) -- destruction of wooden houses by inundation flows and driftwood, debris transport and deposition, feedback to the void ratio (raster-field estimate)
+  - [Building destruction and debris models explained](users_guide/bldgdebris_models.md) -- destruction criterion and ramp, destruction rate, void-ratio feedback, volume budget, thresholds versus the literature and the basis of the defaults (supplement to building destruction and debris)
 - [Glaciers](users_guide/glacier.md) (&list_glacier) -- accumulation, melt, ice flow, glacial erosion, avalanche redistribution
 - [Lava flows](users_guide/lavaflow.md) (&list_lavaflow) -- vent effusion, Bingham viscous spreading, stopping and solidification (lava fields as topography)
 - [Prescribed bed motion](users_guide/bedmotion.md) (&list_bedmotion) -- forcing z with a time history of ground displacement (tsunami generation from faults)
+  - [Prescribed bed motion explained](users_guide/bedmotion_models.md) -- time interpolation of the displacement, fault displacement field and initial sea surface, relation to the non-hydrostatic correction, restart and MPI contract (supplement to prescribed bed motion)
 - [Water quality](users_guide/wq.md) (&list_wq) -- load input, transport, decay, washoff, Kd two-phase partitioning, groundwater pathway, reservoirs
   - [Water-quality models](users_guide/wq_models.md) -- decay, settling, Kd partitioning, infiltration and groundwater transport, buildup/washoff, reservoirs and sewer surcharge, with equations and the sources of the representative values (supplement)
 - [Soil Water Index](users_guide/swi.md) (&list_swi) - the operational sediment-disaster warning index (JMA 3-tank model; dedicated runs)

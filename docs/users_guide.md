@@ -31,6 +31,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [入出力の形式](users_guide/io.md) — テキスト/bil/GeoTIFF・出力ファイル体系
 - [中断と再開](users_guide/restart.md) — 状態保存・時刻継続・初期条件としての利用
 - [ネスティング(多段格子)](users_guide/nest.md)(fn_nest、&list_nest)— 親格子の中の子格子を同時に解く(多段・双方向・Flather 放射・非静水圧の帯)
+  - [ネスティングの解説](users_guide/nest_models.md) — 時間補間・境界帯の方式・Flather 条件・スポンジ・子→親の置換と保存修正の定式と既定値の根拠(ネスティングの補足)
 - [並列実行](users_guide/parallel.md) — OpenMP・MPI・結果の再現性
 
 **第III部 機能別リファレンス**
@@ -46,7 +47,9 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [内部水理構造物](users_guide/structure.md)(&list_struct_pump/culvert/diversion/dam)— ポンプ・カルバート・分水・ダム・湖沼
   - [構造物と境界の水理則の解説](users_guide/hydraulics.md) — 本間公式・カルバートの 3 レジーム・ダム運転則・自由流出と放射境界・区間流入の配分の式と係数の根拠(構造物・境界条件・河道の補足)
 - [河道](users_guide/channel.md)(&list_channel)— 堤防・河道幅・断面形・破堤
+  - [河道の解説](users_guide/channel_models.md) — 仮想壁面の天端と開口補正・サブグリッド幅の平面積率・断面形 σ の矩形換算水深・破堤の天端と既定値の根拠(河道の補足)
 - [降雨・気象](users_guide/forcing.md)(&list_precip / intercept / meteo / evap / snow)— 降水・遮断・気温・蒸発散・積雪融雪
+  - [降雨・気象のモデルの解説](users_guide/forcing_models.md) — 遮断モデル・標高補正・Hamon/Thornthwaite の PET・度日法の式と既定値の根拠(降雨・気象の補足)
 - [地下水](users_guide/gwflow.md)(&list_gwflow とモデル固有設定)— 浸透・側方流動・風化基岩層・管路連続体層(下水道網・岩盤亀裂網)
   - [地下水モデルの解説](users_guide/gwflow_models.md) — バケツ・Green-Ampt・Boussinesq 側方流・風化基岩層・管路連続体層・揚水・凍土の式と既定値の根拠(地下水の補足)
 - [淡塩2層](users_guide/salt.md)(&list_salt)— 塩水くさび・海水浸入・淡水レンズ(鋭利界面近似)
@@ -54,10 +57,13 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
   - [土砂輸送と斜面・長期地形過程の解説](users_guide/sediment.md) — クリープ・流砂量式・Exner・浮遊砂の E-D・斜面浸食・乾式侵食・風化隆起・MORFAC の式と既定値の根拠(土砂・地形変化の補足)
   - [土石流・斜面崩壊・動く底層の解説](users_guide/massflow.md) — 単層混合体・5 つの抵抗則・侵食堆積則・曲率項・安全率・動く底層の式と参考にした他モデル(土砂・地形変化の補足)
 - [流木](users_guide/driftwood.md)(&list_driftwood)— 流木化(水理的流失・侵食連行)・輸送・堆積(ラスタ場の概算)
+  - [流木モデルの解説](users_guide/driftwood_models.md) — 3 台帳の移送則・喫水・面積基準と材積収支・実務値の出典・既定値の根拠(流木の補足)
 - [家屋破壊・瓦礫](users_guide/bldgdebris.md)(&list_bldgdebris)— 氾濫流・流木による木造家屋の破壊・瓦礫の輸送・堆積・空隙率への帰還(ラスタ場の概算)
+  - [家屋破壊・瓦礫モデルの解説](users_guide/bldgdebris_models.md) — 破壊判定量とランプ・破壊レート・空隙率への帰還・材積収支・閾値の文献対応と既定値の根拠(家屋破壊・瓦礫の補足)
 - [氷河](users_guide/glacier.md)(&list_glacier)— 涵養・融解・氷体流動・氷河侵食・雪崩再配分
 - [溶岩流](users_guide/lavaflow.md)(&list_lavaflow)— 噴火口からの湧き出し・Bingham 粘性流動・停止・固化(溶岩原の地形化)
 - [規定底面運動](users_guide/bedmotion.md)(&list_bedmotion)— 地盤変位の時刻歴で z を強制(断層津波の発生)
+  - [規定底面運動の解説](users_guide/bedmotion_models.md) — 変位の時間補間・断層変位場と初期水面・非静水圧との関係・再開と MPI の契約(規定底面運動の補足)
 - [水質](users_guide/wq.md)(&list_wq)— 負荷投入・輸送・減衰・洗い出し・Kd 二相分配・地下水経由・貯水池
   - [水質モデルの解説](users_guide/wq_models.md) — 減衰・沈降・Kd 分配・浸透同伴と地下輸送・蓄積洗い出し・貯水池・下水噴出の式と代表値の出典(水質の補足)
 - [土壌雨量指数](users_guide/swi.md)(&list_swi)— 土砂災害警戒の実務指標(気象庁3段タンク。専用ラン)
