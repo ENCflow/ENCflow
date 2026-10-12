@@ -9,11 +9,12 @@
 !   This group alone is the body of "the parameter file given at run
 !   time":
 !     ./encflow this_file_name
-!   The other features (&list_geoinfo and below) are enabled by the
-!   fn_XXX entries inside it.
-!   fn_XXX = "-" means "read from this same file", "" means "not used"
-!   (completely inactive; zero memory and computation time), and a file
-!   name means a separate file.
+!   Of the feature settings, only geographic input (fn_geoinfo) is required.
+!   Add the others as needed; you do not need to write fn_XXX="".
+!   Use "-" for settings in this file, or the file name for a separate file.
+!   Omitted: initial conditions / ENC use defaults; all four boundaries are walls.
+!   Other additional features stay disabled unless specified.
+!   Omitted fn_geoinfo defaults to "-", reading &list_geoinfo from this file.
 !
 !   The commented-out lines state the default values explicitly (not
 !   writing them gives those values).

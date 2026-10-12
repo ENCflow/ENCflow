@@ -59,27 +59,48 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 
 ## ENCflow の骨格
 
-ENCflow は、1本の時間発展ループの上に機能(プロセスモジュール)を
-重ねる構造をしています。核になるのは ENC 格子上の浅水方程式(力学波)
-による地表水の計算で、降雨・地下水・土砂・水質などのプロセスは、
-それぞれが独立のモジュールとして同じ格子・同じ時間ループの中で
-計算されます。
+ENCflow は地表の水の流れを計算するモデルです。必要に応じて、降雨・
+地下水・土砂などの計算を同じ格子上に追加できます。
 
-すべての機能は共通の様式で有効化されます。システムパラメータ
-`&list_sysparam` に設定ファイル名 `fn_XXX` を書くとその機能が目覚め、
-書かなければ**その機能はメモリも計算時間も一切消費しません**。
+## 機能の有効化 — fn_\* の原則
 
-| 機能 | 有効化 | namelist グループ |
+**必要な設定だけ書けば始められます。** 機能の設定で必須なのは
+[地理情報](users_guide/geoinfo.md)（`fn_geoinfo`）だけです。それ以外は
+書かなければ既定の動作になるか、その機能を使わない状態になります。
+**`fn_XXX=""` を書き並べる必要はありません。**
+
+初期条件や計算法を変えたいとき、降雨などの機能を追加したいときに、
+その `fn_XXX` を `&list_sysparam` に書き足します。
+
+- 設定を **同じファイル**に書くなら `fn_XXX="-"`
+- **別ファイル**に書くなら `fn_XXX="ファイル名"`
+
+![最小限の設定で始め、必要な機能を追加する](figs/config_structure.png)
+
+*左は平坦な地形で始める最小例。右は降雨を追加する例。使わない機能の設定は書かなくてよい。*
+[SVG](figs/config_structure.svg) · [生成コード](figs/guide/fig_config.py)
+
+**指定しないときの動作**
+
+| 設定 | 書かなかった場合 |
+|---|---|
+| 地理情報 `fn_geoinfo` | 同じファイルの `&list_geoinfo` を読む（地理情報の準備は必須） |
+| [初期条件](users_guide/initial.md) `fn_initial` | 乾いた状態から開始 |
+| [浅水流計算](users_guide/swflow.md) `fn_enc` | 既定の計算法で水の流れを計算 |
+| [境界条件](users_guide/boundary.md) `fn_boundary` | 計算領域の4辺は不透過（水を通さない壁） |
+
+これ以外の下表の追加機能は、`fn_XXX` を書かなければ有効になりません。
+
+<details>
+<summary>追加できる機能の一覧</summary>
+
+| 機能 | 設定ファイルの指定 | namelist グループ |
 |---|---|---|
-| 地理情報(格子・地形・粗度)| `fn_geoinfo`(必須) | &list_geoinfo |
-| 初期条件 | `fn_initial` | &list_initial |
-| 浅水流計算の調整(ENC) | `fn_enc` | &list_enc |
-| 境界条件 | `fn_boundary` | &list_bound_edge / source / stage / inflow |
 | 潮位・海面 | `fn_tide` | &list_tide |
 | 内部水理構造物 | `fn_structure` | &list_struct_pump / culvert / diversion / dam |
 | ため池 | `fn_reservoir` | (地理情報と併用) |
 | 河道 | `fn_channel` | &list_channel(+ breach) |
-| 降水 | `fn_precip` | &list_precip |
+| [降水](users_guide/forcing.md) | `fn_precip` | &list_precip |
 | 降雨遮断 | `fn_intercept` | &list_intercept(+ モデル固有) |
 | 気象強制場(気温ほか) | `fn_meteo` | &list_meteo |
 | 蒸発散 | `fn_evap` | &list_evap |
@@ -96,31 +117,10 @@ ENCflow は、1本の時間発展ループの上に機能(プロセスモジュ�
 | 土壌雨量指数 | `fn_swi` | &list_swi |
 | 計測(プローブ・測線) | `fn_record` | &list_record |
 
-「降水」と「気象強制場」が分かれているのは役割の違いによります。
-降水は水収支への質量入力(モデルの主入力)、気象強制場は気温など
-計算の背景となる場です。雨だけを使う計算では `fn_meteo` を意識する
-必要はありません。両方使うときに気象入力を1枚のファイルへまとめる
-書き方は[降雨・気象の章](users_guide/forcing.md)に示します。
+</details>
 
-## 機能の有効化 — fn_\* の原則
-
-`fn_XXX` の値は3通りの意味を持ちます。
-
-| 指定 | 意味 |
-|---|---|
-| `""`(空。既定) | 機能を使わない。設定は読まれず、資源も一切確保されない |
-| `"-"` | **同じファイルから読む**。パラメータを1枚にまとめたいとき |
-| `"ファイル名"` | 指定した別ファイルから読む。データと設定を分けたいとき |
-
-複数の `fn_*` に同じファイル名を指定してもかまいません。namelist の
-読み込みはグループ名で探すため、1つのファイルに複数のグループを
-同居させられます(例: 気象入力をまとめた forcing ファイル)。逆に、
-ファイル内に使われないグループが残っていても無視されるので、
-`&list_precip_案A` のように名前を変えて設定の変種を保存しておく
-使い方もできます([examples/List_samples](../examples/List_samples/)
-がこの流儀で書かれています)。&list_sysparam の全パラメータの注釈付き
-一覧は [list_sysparam.txt](../examples/List_samples/list_sysparam.txt)
-にあります(そのまま実行できる最小例を兼ねています)。
+書き方に迷ったら、[動く設定例（test/wave）](../test/wave/) や
+[全設定の記述例](../examples/List_samples/list_sysparam.txt) を参考にしてください。
 
 ## パラメータファイルの読み方
 

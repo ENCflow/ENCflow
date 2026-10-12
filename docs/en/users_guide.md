@@ -62,29 +62,48 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 
 ## The skeleton of ENCflow
 
-ENCflow is structured as features (process modules) stacked on top of
-a single time-evolution loop. At the core is the computation of
-surface water by the shallow water equations (dynamic wave) on the
-ENC grid; processes such as rainfall, groundwater, sediment, and water
-quality are each computed as independent modules on the same grid and
-within the same time loop.
+ENCflow computes surface water flow. You can add rainfall, groundwater,
+sediment and other processes on the same grid as you need them.
 
-All features are enabled in a common style. Writing a configuration
-file name `fn_XXX` in the system parameters `&list_sysparam` wakes
-that feature up; if you do not write it, **the feature consumes no
-memory and no computation time at all**.
+## Enabling features: the fn_\* principle
 
-| Feature | Enabled by | namelist group |
+**Start with just the settings you need.** Among feature settings, only
+[geographic input](users_guide/geoinfo.md) (`fn_geoinfo`) is required.
+Leave the others out to use their defaults or leave the feature disabled.
+**You do not need to write a list of `fn_XXX=""` entries.**
+
+To change the initial conditions or numerical settings, or add a feature
+such as rainfall, add its `fn_XXX` entry to `&list_sysparam`.
+
+- Settings in the **same file**: `fn_XXX="-"`
+- Settings in a **separate file**: `fn_XXX="filename"`
+
+![Start small and add features as needed](../figs/config_structure_en.png)
+
+*Left: a minimal setup with flat terrain. Right: adding rainfall. Leave out the settings for features you do not use.*
+[SVG](../figs/config_structure_en.svg) · [Generator](../figs/guide/fig_config.py)
+
+**What happens when you leave an entry out?**
+
+| Setting | When omitted |
+|---|---|
+| Geographic input `fn_geoinfo` | Read `&list_geoinfo` from the same file (geographic input must still be provided) |
+| [Initial conditions](users_guide/initial.md) `fn_initial` | Start dry |
+| [Shallow water computation](users_guide/swflow.md) `fn_enc` | Compute water flow with the default numerical settings |
+| [Boundary conditions](users_guide/boundary.md) `fn_boundary` | All four sides of the domain are impermeable walls (no water passes through) |
+
+The additional features below stay disabled unless you specify their `fn_XXX` entries.
+
+<details>
+<summary>Features you can add</summary>
+
+| Feature | Configuration-file entry | namelist group |
 |---|---|---|
-| Geographic information (grid, terrain, roughness) | `fn_geoinfo` (required) | &list_geoinfo |
-| Initial conditions | `fn_initial` | &list_initial |
-| Shallow water computation tuning (ENC) | `fn_enc` | &list_enc |
-| Boundary conditions | `fn_boundary` | &list_bound_edge / source / stage / inflow |
 | Tide and sea surface | `fn_tide` | &list_tide |
 | Internal hydraulic structures | `fn_structure` | &list_struct_pump / culvert / diversion / dam |
 | Ponds | `fn_reservoir` | (used together with geographic information) |
 | Channels | `fn_channel` | &list_channel (+ breach) |
-| Precipitation | `fn_precip` | &list_precip |
+| [Precipitation](users_guide/forcing.md) | `fn_precip` | &list_precip |
 | Rainfall interception | `fn_intercept` | &list_intercept (+ model-specific) |
 | Weather forcing fields (air temperature etc.) | `fn_meteo` | &list_meteo |
 | Evapotranspiration | `fn_evap` | &list_evap |
@@ -101,35 +120,10 @@ memory and no computation time at all**.
 | Soil Water Index | `fn_swi` | &list_swi |
 | Measurement (probes, transects) | `fn_record` | &list_record |
 
-"Precipitation" and "weather forcing fields" are separate because
-their roles differ. Precipitation is the mass input to the water
-balance (the main input of the model), while the weather forcing
-fields, such as air temperature, are background fields for the
-computation. In a run that uses only rain you never need to think
-about `fn_meteo`. How to combine the weather inputs into a single
-file when you use both is shown in the
-[rainfall and weather chapter](users_guide/forcing.md).
+</details>
 
-## Enabling features: the fn_\* principle
-
-The value of `fn_XXX` has three possible meanings.
-
-| Value | Meaning |
-|---|---|
-| `""` (empty; default) | The feature is not used. Its settings are never read and no resources are allocated |
-| `"-"` | **Read from the same file**. For keeping all parameters in one file |
-| `"filename"` | Read from the named separate file. For keeping data and settings apart |
-
-It is fine to give the same file name to several `fn_*` entries.
-Namelist reading looks groups up by name, so multiple groups can live
-together in one file (e.g. a forcing file that collects the weather
-inputs). Conversely, groups left unused in a file are simply ignored,
-so you can also keep variant configurations around by renaming them,
-e.g. `&list_precip_planA`
-([examples/List_samples](../../examples/List_samples/en/) is written
-in this style). An annotated list of all parameters of &list_sysparam
-is in [list_sysparam.txt](../../examples/List_samples/en/list_sysparam.txt)
-(which doubles as a minimal example that runs as-is).
+For examples to build on, see the [working setup in test/wave](../../test/wave/)
+or the [annotated parameter list](../../examples/List_samples/en/list_sysparam.txt).
 
 ## How to read a parameter file
 
