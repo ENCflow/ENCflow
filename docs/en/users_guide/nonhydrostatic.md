@@ -1,6 +1,6 @@
 # Non-hydrostatic correction (one-layer model) (supplement to the shallow water chapter)
 
-> English mirror of docs/users_guide/nonhydrostatic.md (based on commit cd8f6ec). The Japanese file is the master copy.
+> English mirror of docs/users_guide/nonhydrostatic.md (based on commit f69827a). The Japanese file is the master copy.
 
 [Back to the shallow water chapter](swflow.md) / [Back to the user's guide index](../users_guide.md)
 
@@ -278,22 +278,26 @@ $`(1 - \beta\nabla^2)\phi = s`$ is $`\exp(-r/\sqrt{\beta}) = \exp(-2r/H)`$, so
 **the e-folding distance is $`H/2`$** and cells more than a few depths away
 are effectively unaffected.
 
-1. **Detector.** The ratio of the correction to the hydrostatic acceleration
-   ```math
-   \chi_i = \frac{|\beta_i (D a^{*})_i|}{\bar a^{*}_i + |\beta_i (D a^{*})_i|}
-   \;\approx\; \frac{(kH)^2/4}{1 + (kH)^2/4}
-   ```
-   ($`\bar a^{*}_i`$ is the RMS of $`|a^{*}|`$ over the 8 edges). It does not
-   depend on the amplitude and vanishes for long waves and steady flow. Cells
-   with $`\chi >`$ `nh_chi_on` (default 0.06, the level of a 3% phase-speed
-   difference from hydrostatic) become **seeds**. Because a ratio also picks
-   up round-off-level short waves, an absolute floor `nh_amin` and a floor
-   `nh_arel` relative to the domain maximum of the correction are applied.
-   `nh_detector = 2` is the absolute form $`|\beta Da^{*}|/g`$ (for comparison).
-2. **Margin.** The seeds are dilated `nh_margin` times over the 8
-   neighbours (0: automatic, $`2H/\Delta x`$ = four times the decay distance).
-3. The iteration runs on seeds plus margin only; outside, $`\phi = 0`$. No
-   state is kept between steps, so a restart round trip is bitwise identical.
+**Detector.** The ratio of the correction to the hydrostatic acceleration
+
+```math
+\chi_i = \frac{|\beta_i (D a^{*})_i|}{\bar a^{*}_i + |\beta_i (D a^{*})_i|}
+\;\approx\; \frac{(kH)^2/4}{1 + (kH)^2/4}
+```
+
+($`\bar a^{*}_i`$ is the RMS of $`|a^{*}|`$ over the 8 edges). It does not
+depend on the amplitude and vanishes for long waves and steady flow. Cells
+with $`\chi >`$ `nh_chi_on` (default 0.06, the level of a 3% phase-speed
+difference from hydrostatic) become **seeds**. Because a ratio also picks
+up round-off-level short waves, an absolute floor `nh_amin` and a floor
+`nh_arel` relative to the domain maximum of the correction are applied.
+`nh_detector = 2` is the absolute form $`|\beta Da^{*}|/g`$ (for comparison).
+
+**Margin.** The seeds are dilated `nh_margin` times over the 8
+neighbours (0: automatic, $`2H/\Delta x`$ = four times the decay distance).
+
+**Iteration.** The iteration runs on seeds plus margin only; outside, $`\phi = 0`$. No
+state is kept between steps, so a restart round trip is bitwise identical.
 
 The difference from the whole-domain solution decays exponentially with the
 margin: in a hump-wave test it was 9.4e-4 / 4.0e-4 / 1.0e-4 m for margins of
