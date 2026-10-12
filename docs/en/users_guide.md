@@ -36,6 +36,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Input and output formats](users_guide/io.md) -- text / bil / GeoTIFF, output file organization
 - [Suspend and restart](users_guide/restart.md) -- state files, time continuation, use as initial conditions
 - [Nesting (multi-level grids)](users_guide/nest.md) (fn_nest, &list_nest) -- child grids solved inside a parent grid in the same run (multi-level, two-way, Flather radiation, non-hydrostatic band)
+  - [Nesting explained](users_guide/nest_models.md) -- time interpolation, boundary-band methods, the Flather condition, the sponge, child-to-parent replacement and the conservation correction, with the basis of the defaults (supplement to nesting)
 - [Parallel execution](users_guide/parallel.md) -- OpenMP, MPI, reproducibility of results
 
 **Part III: Feature reference**

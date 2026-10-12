@@ -31,6 +31,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [入出力の形式](users_guide/io.md) — テキスト/bil/GeoTIFF・出力ファイル体系
 - [中断と再開](users_guide/restart.md) — 状態保存・時刻継続・初期条件としての利用
 - [ネスティング(多段格子)](users_guide/nest.md)(fn_nest、&list_nest)— 親格子の中の子格子を同時に解く(多段・双方向・Flather 放射・非静水圧の帯)
+  - [ネスティングの解説](users_guide/nest_models.md) — 時間補間・境界帯の方式・Flather 条件・スポンジ・子→親の置換と保存修正の定式と既定値の根拠(ネスティングの補足)
 - [並列実行](users_guide/parallel.md) — OpenMP・MPI・結果の再現性
 
 **第III部 機能別リファレンス**
