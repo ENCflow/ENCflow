@@ -53,6 +53,11 @@ the basis of the defaults, detailed settings).
 | [Groundwater](users_guide/gwflow.md) | [Groundwater models](users_guide/gwflow_models.md) |
 | [Sediment and landform change](users_guide/geomorph.md) | [Sediment transport, hillslope and long-term processes](users_guide/sediment.md), [Debris flow, slope failure and moving bed layer](users_guide/massflow.md) |
 | [Water quality](users_guide/wq.md) | [Water-quality models](users_guide/wq_models.md) |
+| [Rainfall and meteorology](users_guide/forcing.md) | [Rainfall and meteorology models](users_guide/forcing_models.md) |
+| [Channels](users_guide/channel.md) | [Channels explained](users_guide/channel_models.md) |
+| [Nesting](users_guide/nest.md) | [Nesting explained](users_guide/nest_models.md) |
+| [Prescribed bed motion](users_guide/bedmotion.md) | [Prescribed bed motion explained](users_guide/bedmotion_models.md) |
+| [Driftwood](users_guide/driftwood.md), [Building destruction and debris](users_guide/bldgdebris.md) | [Driftwood models](users_guide/driftwood_models.md), [Building destruction and debris models](users_guide/bldgdebris_models.md) |
 
 Your reason for using ENCflow may be that you want to **chain several
 processes in one run** (rainfall → runoff → sediment → channel; tsunami
