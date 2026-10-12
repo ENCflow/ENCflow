@@ -1,4 +1,4 @@
-> English mirror of docs/tutorial.md (based on commit 6c5acfc). The Japanese file is the master copy.
+> English mirror of docs/tutorial.md. The Japanese file is the master copy.
 
 # ENCflow Tutorials
 

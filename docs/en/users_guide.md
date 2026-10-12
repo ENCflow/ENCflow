@@ -1,4 +1,4 @@
-> English mirror of docs/users_guide.md (based on commit e66dc06). The Japanese file is the master copy.
+> English mirror of docs/users_guide.md. The Japanese file is the master copy.
 
 # ENCflow User's Guide
 

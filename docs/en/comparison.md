@@ -1,4 +1,4 @@
-> English mirror of docs/comparison.md (based on commit 76b671c). The Japanese file is the master copy.
+> English mirror of docs/comparison.md. The Japanese file is the master copy.
 
 # Comparison with Other Simulation Software (comparison.md)
 

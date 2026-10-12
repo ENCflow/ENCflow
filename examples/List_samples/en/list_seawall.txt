@@ -1,5 +1,5 @@
 !======================================================================
-! English mirror of examples/List_samples/list_seawall.txt (based on commit c664f1c).
+! English mirror of examples/List_samples/list_seawall.txt.
 ! The Japanese file is the master copy; edit it first.
 !======================================================================
 ! Seawall (coastal application of virtual walls) settings sample

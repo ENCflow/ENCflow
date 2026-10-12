@@ -620,7 +620,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   残: owner の複数化(両研究室の代表を追加)。(Zenodo DOI は
   2026-08-21 付与済み。下記「ライセンス: 完了」)
 - **README.en.md の作成**(公開の節目。機械翻訳+レビュー、
-  「based on commit XXXX」刻印付き)。
+  冒頭に「English mirror of README.md」刻印)。
 - **実行時メッセージの英語化収斂**(触ったファイルから順に。
   Log 比較対象の文字列に触れる場合は reference への影響に注意)。
 - **CI 二層化(2026-09-15 実施)**: nightly.yml を追加(フル回帰 13 ケース

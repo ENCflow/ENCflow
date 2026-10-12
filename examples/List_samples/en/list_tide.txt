@@ -1,5 +1,5 @@
 !======================================================================
-! English mirror of examples/List_samples/list_tide.txt (based on commit c664f1c).
+! English mirror of examples/List_samples/list_tide.txt.
 ! The Japanese file is the master copy; edit it first.
 !======================================================================
 ! Sample of tide settings (m_tide)

@@ -1,5 +1,5 @@
 !======================================================================
-! English mirror of examples/List_samples/list_wq.txt (based on commit c664f1c).
+! English mirror of examples/List_samples/list_wq.txt.
 ! The Japanese file is the master copy; edit it first.
 !======================================================================
 ! Water quality (load runoff) settings sample (&list_wq; developer.md Sec. 30)

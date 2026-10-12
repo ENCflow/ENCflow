@@ -1,6 +1,6 @@
 # Channels (&list_channel / channel_breach)
 
-> English mirror of docs/users_guide/channel.md (based on commit 6c5acfc). The Japanese file is the master copy.
+> English mirror of docs/users_guide/channel.md. The Japanese file is the master copy.
 
 [Back to the user's guide index](../users_guide.md)
 

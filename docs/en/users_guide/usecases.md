@@ -1,6 +1,6 @@
 # Use cases (lookup by phenomenon)
 
-> English mirror of docs/users_guide/usecases.md (based on commit 6c5acfc). The Japanese file is the master copy.
+> English mirror of docs/users_guide/usecases.md. The Japanese file is the master copy.
 
 [Back to the User's Guide index](../users_guide.md)
 

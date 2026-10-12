@@ -1,5 +1,5 @@
 !======================================================================
-! English mirror of examples/List_samples/list_meteo.txt (based on commit c664f1c).
+! English mirror of examples/List_samples/list_meteo.txt.
 ! The Japanese file is the master copy; edit it first.
 !======================================================================
 ! Meteorological forcing settings sample (&list_meteo; developer.md Sec. 29)

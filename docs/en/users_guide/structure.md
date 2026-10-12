@@ -1,6 +1,6 @@
 # Internal hydraulic structures (&list_struct_pump / culvert / diversion / dam)
 
-> English mirror of docs/users_guide/structure.md (based on commit 583d100). The Japanese file is the master copy.
+> English mirror of docs/users_guide/structure.md. The Japanese file is the master copy.
 
 [Back to the user's guide index](../users_guide.md)
 

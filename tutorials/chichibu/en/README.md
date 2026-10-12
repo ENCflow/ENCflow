@@ -1,4 +1,4 @@
-> English mirror of tutorials/chichibu/README.md (based on commit ffa8fc0). The Japanese file is the master copy.
+> English mirror of tutorials/chichibu/README.md. The Japanese file is the master copy.
 
 # Tutorial 2: chichibu -- rain on a real-terrain catchment
 

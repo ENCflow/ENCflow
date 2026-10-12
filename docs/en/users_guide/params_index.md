@@ -1,6 +1,6 @@
 # Index of All Parameters
 
-> English mirror of docs/users_guide/params_index.md (based on commit c7e801e). The Japanese file is the master copy.
+> English mirror of docs/users_guide/params_index.md. The Japanese file is the master copy.
 
 [Back to the User's Guide index](../users_guide.md)
 

@@ -1,6 +1,6 @@
 # Groundwater (&list_gwflow and model-specific settings)
 
-> English mirror of docs/users_guide/gwflow.md (based on commit c7e801e). The Japanese file is the master copy.
+> English mirror of docs/users_guide/gwflow.md. The Japanese file is the master copy.
 
 [Back to the User's Guide index](../users_guide.md)
 

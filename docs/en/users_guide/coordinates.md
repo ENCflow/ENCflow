@@ -1,6 +1,6 @@
 # Coordinate System Management
 
-> English mirror of docs/users_guide/coordinates.md (based on commit 39bdba7). The Japanese file is the master copy.
+> English mirror of docs/users_guide/coordinates.md. The Japanese file is the master copy.
 
 [Back to the User's Guide index](../users_guide.md)
 

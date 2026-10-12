@@ -1,6 +1,6 @@
 # Fresh and salt water layers (&list_salt)
 
-> English mirror of docs/users_guide/salt.md (based on commit 6c5acfc). The Japanese file is the master copy.
+> English mirror of docs/users_guide/salt.md. The Japanese file is the master copy.
 
 [Back to the User's Guide index](../users_guide.md)
 
