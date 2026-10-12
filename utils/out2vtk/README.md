@@ -1,13 +1,34 @@
 # out2vtk — 計算結果を ParaView で 3D 可視化する
 
+[English](README.en.md)
+
 計算結果の分布出力(`result/` の txt / bil+hdr / GeoTIFF)を、
 [ParaView](https://www.paraview.org/) でそのまま開ける VTK 形式に変換する
 後処理ユーティリティです。地形の 3D 表示、水面の時系列アニメーション、
 QGIS で書き出した地図・衛星画像のドレープ(地形への貼り付け)ができます。
 
-計算本体には手を入れない方針です(可視化専用形式は本体の出力に足さず、
-変換は後処理で行う。developer.md §0)。閾値や対象変数を変えて何度でも
-変換をやり直せます。
+## まずは3手順
+
+初回のみ [out2vtk をビルド](#ビルド)しておきます。
+
+1. 計算ケースのディレクトリで `../../bin/out2vtk param.txt` を実行する。
+   `param.txt` は計算に使ったファイルです。変換用の設定ファイルは不要です。
+2. ParaView の **File → Open** で `result/vtk/terrain.vts` と
+   `result/vtk/flood.pvd` を開き、**Apply**。
+3. 水面の色分けを **H**（水深）にして、**▶ 再生**。
+
+![計算結果からParaViewでの表示まで](../../docs/figs/visualization_workflow.png)
+
+*地形と水面を重ねて表示する流れ。`flood.pvd` が各時刻の水面ファイルをまとめるので、
+水面ファイルを1枚ずつ開く必要はない。図は既定の出力先・接尾辞なしの場合。*
+[SVG](../../docs/figs/visualization_workflow.svg) · [生成コード](../../docs/figs/guide/fig_visualization.py)
+
+乾燥部の非表示や色の調整は、下の [ParaView クイックスタート](#paraview-クイックスタート)
+を参照してください。練習には [test/wave](../../test/wave/) の計算結果を使えます。
+水深・流量の折れ線グラフには、[計測](../../docs/users_guide/record.md)で出力する
+`probes/`・`fluxes/` の CSV を Python や表計算ソフトで利用できます。
+
+元の計算結果は変更しないので、表示の設定を変えて何度でも変換し直せます。
 
 ## 出力されるファイル
 
@@ -18,7 +39,7 @@ QGIS で書き出した地図・衛星画像のドレープ(地形への貼り�
 | `terrain.vts` | 地形面(Z0000 の標高で持ち上げた曲面)。テクスチャ座標付き |
 | `flood_XXXX.vts` | 各出力時刻の水面(標高+水深の曲面)。水深ほか点データ同梱 |
 | `flood.pvd` | 時系列コレクション。ParaView のタイムラインが実時刻 t(秒)になる |
-| `summary.vts` | 統計量(最大水深・最大流速など。番号 9999 の出力があるとき) |
+| `summary.vts` | 最大水深などの統計量(`H9999` があり、番号 9999 が時刻表に載るとき) |
 
 最終状態の再掲(番号 9998)は時系列と重複するため出力しません。
 
@@ -120,6 +141,11 @@ make install        # → リポジトリ直下の bin/ にコピーされます
 
 視点は水面と一緒に動かないので、先に地形だけ表示して構図を決めてから
 再生すると楽です。
+
+操作の詳細は ParaView 公式ガイドの
+[読み込みと時刻](https://docs.paraview.org/en/latest/UsersGuide/dataIngestion.html#dealing-with-time)・
+[色とNaNの表示](https://docs.paraview.org/en/latest/ReferenceManual/colorMapping.html#color-mapping-parameters)
+も参照できます。
 
 ## 地図・衛星画像のドレープ(QGIS との連携)
 

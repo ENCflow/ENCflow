@@ -184,8 +184,7 @@ as part of this configuration record.
 Georeferenced bil / GeoTIFF outputs can be opened in GIS (QGIS / ArcGIS), and
 **utils/out2vtk** converts them to VTK files for ParaView — 3D terrain
 views, time-animated water surfaces, and draping of satellite imagery
-(see [utils/out2vtk/README.md](../../../utils/out2vtk/README.md),
-in Japanese).
+(see the [out2vtk guide and workflow diagram](../../../utils/out2vtk/README.en.md)).
 If outputting many GeoTIFFs for an animation makes the data volume a
 concern, see the post-processing compression note in
 [the output format section](#output-format-f_output_mode).
