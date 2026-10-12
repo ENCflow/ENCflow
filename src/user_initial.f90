@@ -31,7 +31,7 @@ submodule(m_state) user_initial
 
   ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
   ! 更新すること(乖離は defined/run が「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:15) = [ character(len=32) :: &
+  character(len=*), parameter :: routine_names(1:16) = [ character(len=32) :: &
       "wave_hump",        & ! 波例題: 円形コサイン型の初期水位
       "dambreak_step",    & ! ダム破壊例題: x 方向の段状初期水深(Stoker 解析解の検証用)
       "wave_standing_x",  & ! 定在波例題: 閉じた水槽の x 方向モード (4, 0)(分散関係の検証用)
@@ -47,6 +47,7 @@ submodule(m_state) user_initial
       "wave_bore",        & ! 長波例題: x < x0 を a/H = 0.1 だけ高くした段差(tanh 遷移)。右へ進む
                             !   単純波の流速。非静水圧では undular bore に分裂する(plan §11 Phase 5)
       "wave_bore20",      & ! 長波例題: 同上で a/H = 0.2
+      "jet_gaussian",     & ! 拡散項例題: x 方向に一様なガウス形ジェット u(y)(渦動粘性による拡散の解析解検証用。test/diffusion)
       "template"          ] ! 新規ルーチンの雛形(空)
 
 contains
@@ -134,6 +135,8 @@ function resolve(name) result(fp)
       fp => initial_wave_bore
     case ("wave_bore20")
       fp => initial_wave_bore20
+    case ("jet_gaussian")
+      fp => initial_jet_gaussian
     case ("template")
       fp => initial_template
     case default
@@ -431,6 +434,37 @@ subroutine solitary_profile_x0(p, g, s, arel, x0)
       s%h(i,j) = max(hh + eta - g%z(i,j), 0.0)
       if (s%h(i,j) > 0.0) then
         s%u(i,j) = cc * eta / (hh + eta)
+      else
+        s%u(i,j) = 0.0
+      end if
+      s%v(i,j) = 0.0
+    end do
+  end do
+end subroutine
+
+!----------------------------------------------------------------------
+! x 方向に一様なガウス形ジェット(拡散項の解析解ベンチマーク。test/diffusion)
+!   u(y) = U0 exp(−(y − yc)²/(2σ²))、v = 0、水深は不変(h0 のまま)。
+!   yc = 水路の中央(ly/2)、σ = 10 m、U0 = 0.05 m/s。粗度 0・平坦床なら
+!   運動方程式は ∂u/∂t = ∇·(ν∇u) だけになり、定数 ν の解析解
+!     u(y, t) = U0 σ/√(σ² + 2νt) exp(−(y − yc)²/(2(σ² + 2νt)))
+!   と比較できる(x 方向の壁からの波が届く前の時間・中央列で評価)。
+!   U0・σ は test/diffusion/Check_analytic.py と対で保守すること。
+!----------------------------------------------------------------------
+subroutine initial_jet_gaussian(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real, parameter :: u0 = 0.05, sigma = 10.0
+  real :: yc, yy
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  yc = 0.5 * g%ny * g%dy
+  do j = 1, g%ny
+    yy = (j - 0.5) * g%dy - yc
+    do i = 1, g%nx
+      if (s%h(i,j) > 0.0) then
+        s%u(i,j) = u0 * exp(-yy**2 / (2.0 * sigma**2))
       else
         s%u(i,j) = 0.0
       end if

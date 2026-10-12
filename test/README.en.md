@@ -38,6 +38,7 @@ analytical-solution or conservation check by Check_*.py.
 | [dambreak/](dambreak/) | Wet-bed dam break. Verification of the advection schemes against the Stoker solution | Shallow water | ref, analytic |
 | [hillslope/](hillslope/) | Comparison of advection schemes for hillslope flow: analytical solution and grid convergence | Shallow water, rainfall | analytic (scripts) |
 | [bendloss/](bendloss/) | Isolating the artificial loss at a 90° bend of a one-cell-wide channel | Channels, advection schemes | analytic |
+| [diffusion/](diffusion/) | Gaussian-jet benchmark of the momentum diffusion term (analytical solution, grid convergence) | Shallow water f_diffusion_term | analytic |
 | **Non-hydrostatic correction** | | | |
 | [nhwave/](nhwave/) | Standing waves in a closed tank: measuring the numerical dispersion of the hydrostatic ENC scheme | Shallow water | ref |
 | [nhwave_nh/](nhwave_nh/) | The same tank with the one-layer non-hydrostatic correction | Non-hydrostatic | ref |
