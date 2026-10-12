@@ -191,8 +191,13 @@ nest_nh = 0 は帯とその内側 nh_bc_margin セル(他の強制境界と同�
 
 ## Flather 放射(nest_bc = 3)
 
-帯の代わりに、子の開いた辺の境界面に長波の特性線条件
-u_n = u_n,e + √(g/h)(η − η_e) を置きます(Flather 1976)。η_e・u_n,e は
+帯の代わりに、子の開いた辺の境界面に長波の特性線条件[^flather76]
+
+```math
+u_n = u_{n,e} + \sqrt{\frac{g}{h}}\,(\eta - \eta_e)
+```
+
+を置きます。η_e・u_{n,e} は
 親の水位と辺の外向き法線流速(境界セル中心で補間、サブステップ開始時刻で
 時間補間)。既存の長波放射境界(`f_bc_* = 2`。η_e = 基準水位・u_e = 0)の
 一般化で、親から来る波を通しつつ、子の内部で生じた擾乱(細かい海岸の
@@ -221,10 +226,18 @@ h は子の境界セルの水深です。実装では係数の分母を max(h, d
 ## スポンジ(nest_bc = 4)
 
 `nest_bc=2` と同じ境界帯の内側に、幅 `nest_ns` 子セルの緩和領域を置きます。
-各サブステップの開始時に、セル量 q を親の補間値 q_parent へ
-`q ← (1 − w) q + w q_parent` と混合します。帯から内側への最短セル数を
-d=1…nest_ns として、`w = [1 − d/(nest_ns + 1)]²` です。図の nest_ns=4
-では帯側から 0.64、0.36、0.16、0.04 となります。
+各サブステップの開始時に、セル量 q を親の補間値 q_parent へ混合します。
+帯から内側への最短セル数を d = 1…nest_ns として
+
+```math
+q \leftarrow (1-w)\,q + w\,q_{\mathrm{parent}},\qquad
+w = \left(1 - \frac{d}{n_s+1}\right)^2
+```
+
+です(n_s = nest_ns)。図の nest_ns=4 では帯側から 0.64、0.36、0.16、0.04 と
+なります。2 乗の重みは、境界で 1 に近く内側へ滑らかに 0 に落ちる緩和
+(Davies 型のスポンジ層[^davies83])の最も単純な形で、幅 nest_ns は
+校正値ではなく「子の波長の数分の一」程度を目安に選びます(経験値)。
 
 対象は水深・流速・セル流量と、親子で交換が有効な追加の場です。エッジ量を
 この重みで緩和する処理ではありません。帯は親の値で置換し、スポンジは
@@ -243,10 +256,18 @@ d=1…nest_ns として、`w = [1 − d/(nest_ns + 1)]²` です。図の nest_n
 - サブグリッド河道幅や空隙率で有効面積率が 1 でない親セルは、子の真の水量を
   親の有効面積率で矩形換算の水深に戻します(河道水位の整合)。
 - nest_fb = 3 は、置換領域の外周で親と子の界面流量の差を親の水深に戻し、
-  系全体の体積を保存します(GeoClaw の reflux に相当)。
+  系全体の体積を保存します(AMR の reflux[^berger98] に相当。GeoClaw が
+  同じ修正を使います[^berger11])。
 - 終了時に画面へ要約(帯の置換で子に加わった水柱体積、置換回数と親の水柱
   体積の変化の累計、保存修正の量)を出します。陸上では帯に降った雨が
   親の値で上書きされるので、子の水収支はこの帯の置換体積を加えて照合します。
+
+## 参考文献
+
+[^flather76]: Flather, R. A. (1976): A tidal model of the north-west European continental shelf. *Mém. Soc. R. Sci. Liège*, 6(10), 141–164.
+[^davies83]: Davies, H. C. (1983): Limitations of some common lateral boundary schemes used in regional NWP models. *Mon. Wea. Rev.*, 111, 1002–1012.
+[^berger98]: Berger, M. J. and LeVeque, R. J. (1998): Adaptive mesh refinement using wave-propagation algorithms for hyperbolic systems. *SIAM J. Numer. Anal.*, 35(6), 2298–2316.
+[^berger11]: Berger, M. J., George, D. L., LeVeque, R. J. and Mandli, K. T. (2011): The GeoClaw software for depth-averaged flows with adaptive refinement. *Adv. Water Resour.*, 34, 1195–1206.
 
 ## BMI から使う
 

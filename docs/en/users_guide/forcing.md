@@ -138,6 +138,10 @@ snow is inactive. It has no canopy storage. Use `ic_alpha` (uniform
 value; default 0.15) or `fn_icalpha` (distribution; ic_alpha is ignored
 when given).
 
+```math
+P_{out} = (1 - \alpha)\,P
+```
+
 **Initial loss (f_icmodel = 2, &list_intercept_initloss)** - stores
 the first part of the rainfall up to a maximum storage, then passes
 everything through once the storage is full. Use `ic_smax_mm` (uniform
@@ -146,11 +150,26 @@ water up to the spare capacity and passes the excess. ET through `fn_evap`
 reduces canopy storage, restoring capacity for later interception. Without
 ET, the spare capacity does not recover.
 
+```math
+\Delta S = \min\!\left(P\,\Delta t,\ S_{\max} - S\right),
+\qquad
+P_{out} = P - \frac{\Delta S}{\Delta t}
+```
+
+This is the simplest form of the storage-type interception models of the
+Rutter and Gash family[^crockford00] with a canopy storage $`S_{\max}`$
+(drainage and evaporation in time are left to the evapotranspiration
+module).
+
 When the uniform value is unspecified the default is adopted and
 printed with "(default)" (the minimal input is f_icmodel and an empty
-model group; rationale in developer.md §66). Guide values by
-vegetation (review of Crockford & Richardson 2000; calibration
-quantities):
+model group). The defaults $`\alpha`$ = 0.15 and $`S_{\max}`$ = 1.5 mm are
+the broadleaf/mixed-forest values of the review of Crockford &
+Richardson[^crockford00] (interception loss 20–40% for conifers, 10–25% for
+broadleaf forests, 5–10% for grassland; canopy storage 0.3–3 mm), and are
+also comparable with the depression storage of impervious urban surfaces
+(SWMM customary values 1.3–2.5 mm[^rossman15]). Guide values by
+vegetation (calibration quantities):
 
 | Type | ic_alpha (interception ratio) | ic_smax_mm (canopy storage, mm) |
 |---|---|---|
@@ -242,6 +261,31 @@ available water, passing only the remaining demand to the next store.
 There is no dry-soil suppression beyond this supply limit, and no
 sublimation from SWE. ET acts after surface-flow and groundwater updates.
 
+The formulas of modes 3 and 4 use the daylight hours $`N`$ (hours; solar
+declination by Cooper's approximation) and the daily mean temperature
+$`T`$ (°C):
+
+```math
+PET_{\text{Hamon}} = 0.1651\,\frac{N}{12}\,\frac{216.7\,e_s}{T + 273.3},
+\qquad
+e_s = 6.108\,\exp\!\left(\frac{17.27\,T}{T + 237.3}\right)\ [\mathrm{hPa}]
+```
+
+```math
+PET_{\text{Thornthwaite}} = \frac{16}{30}\left(\frac{10\,\max(T, 0)}{I}\right)^{a}\frac{N}{12},
+\qquad
+I = \sum_{m=1}^{12}\left(\frac{\max(T_m, 0)}{5}\right)^{1.514},
+\quad
+a = 6.75\times10^{-7}I^3 - 7.71\times10^{-5}I^2 + 1.792\times10^{-2}I + 0.49239
+```
+
+(mm/day). The Hamon formula[^hamon61] is a temperature method using only
+the saturation vapour density (Tetens formula) and the daylight hours; the
+Thornthwaite formula[^thornthwaite48] is a climatological one whose heat
+index $`I`$ comes from the monthly normal temperatures, the monthly value
+being divided by 30 for a daily rate. Neither uses radiation, wind or
+humidity; calibrate with `evap_kc`.
+
 Modes 3 and 4 use temperature at the start of the calendar day to evaluate
 PET, which remains constant within that day (a daily-mean temperature
 series is recommended). Cumulative evaporation volumes for canopy,
@@ -252,7 +296,7 @@ a calendar) stop initialization.
 
 The mode-1 default of 3 mm/day is the lower side of the
 warm-season reference evapotranspiration of a humid temperate climate
-(FAO-56 ET0 of 3-5 mm/day): larger than the annual mean of Japan
+(FAO-56[^allen98] ET0 of 3-5 mm/day): larger than the annual mean of Japan
 (2-2.5 mm/day) and smaller than summer (4-5). Use modes 2-4 for runs
 spanning seasons (monthly values, latitude and normal temperatures are
 given data and have no default).
@@ -287,6 +331,8 @@ melt expressed in mm and the time step `Δt` in seconds:
 \frac{\Delta t}{86400}\right).
 ```
 
+The degree-day method[^hock03] estimates melt from air temperature alone,
+folding radiation, wind and rain melt into the degree-day factor.
 Internally, melt is converted to metres and added directly to surface
 water `h`, with area conversion for void fraction and active channel
 width. It is not included in rainfall intensity `pre`. For example,
@@ -297,8 +343,14 @@ and sublimation are not represented. Initial SWE can melt without
 new precipitation.
 
 The minimal input to "just try it" is **an empty &list_snow in
-fn_snow** (plus the air temperature of fn_meteo). Guide values of the
-degree-day factor (compilation of Hock 2003; a calibration quantity):
+fn_snow** (plus the air temperature of fn_meteo). The default
+`snow_ddf` = 4 mm/°C/day is the middle of Hock's compilation[^hock03]
+(mostly 2.5–6 for snow; smaller under forest, larger in the open) and of
+the customary 3–5 of snowmelt floods in Japanese mountain basins. The
+rain/snow thresholds 0–2 °C are customary values after the observation
+that the transition occurs around a wet-bulb temperature of 1 °C, and the
+lapse rate 0.65 °C/100 m is that of the standard atmosphere. Guide values
+of the degree-day factor (a calibration quantity):
 
 | Type | snow_ddf (mm/degC/day) | Notes |
 |---|---|---|
@@ -328,3 +380,12 @@ list_meteo / list_evap / list_snow in
 - [test/chichibu](../../../test/chichibu/): uniform rainfall on a real-terrain catchment, with regression checks for runoff collection and flood-wave propagation.
 - [test/icevap](../../../test/icevap/): equivalence of minimal input and explicitly specified defaults for fixed-rate interception, initial loss and constant evapotranspiration.
 - [test/frost](../../../test/frost/): comparison with analytical values for the freezing index and infiltration suppression under constant air temperature.
+
+## References
+
+[^crockford00]: Crockford, R. H. and Richardson, D. P. (2000): Partitioning of rainfall into throughfall, stemflow and interception: effect of forest type, ground cover and climate. *Hydrol. Process.*, 14, 2903–2920.
+[^rossman15]: Rossman, L. A. (2015): Storm Water Management Model User's Manual Version 5.1. US EPA, EPA/600/R-14/413b. (customary depression storage)
+[^hamon61]: Hamon, W. R. (1961): Estimating potential evapotranspiration. *J. Hydraul. Div. ASCE*, 87(HY3), 107–120.
+[^thornthwaite48]: Thornthwaite, C. W. (1948): An approach toward a rational classification of climate. *Geogr. Rev.*, 38, 55–94.
+[^allen98]: Allen, R. G., Pereira, L. S., Raes, D. and Smith, M. (1998): Crop Evapotranspiration: Guidelines for Computing Crop Water Requirements. *FAO Irrigation and Drainage Paper*, 56.
+[^hock03]: Hock, R. (2003): Temperature index melt modelling in mountain areas. *J. Hydrol.*, 282, 104–115.

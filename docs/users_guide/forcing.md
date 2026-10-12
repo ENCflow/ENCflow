@@ -125,15 +125,31 @@
 積雪を使わない場合はそのまま地表への雨になります。樹冠貯留は持ちません。`ic_alpha`
 (一様値。既定 0.15)または `fn_icalpha`(分布。指定時は ic_alpha 不使用)。
 
+```math
+P_{out} = (1 - \alpha)\,P
+```
+
 **初期損失(f_icmodel = 2、&list_intercept_initloss)** — 降り始めの
 雨を最大貯留量まで蓄え、満たされた後は素通しにします。`ic_smax_mm`
 (一様値 mm。既定 1.5)または `fn_icsmax`(分布)。毎ステップ、残容量まで
 保水して余りを通します。`fn_evap` の蒸発散で樹冠保水が減ると再び遮断
 できるようになります。蒸発散を使わなければ空き容量は回復しません。
 
+```math
+\Delta S = \min\!\left(P\,\Delta t,\ S_{\max} - S\right),
+\qquad
+P_{out} = P - \frac{\Delta S}{\Delta t}
+```
+
+樹冠貯留 $`S_{\max}`$ で遮断を表す Rutter・Gash 系の貯留型モデル[^crockford00]の
+最簡形(排水と蒸発の時間発展は蒸発散モジュールに委ねる)です。
+
 一様値は未指定なら既定を採用し "(default)" 付きで表示します(最小入力は
-f_icmodel と空の固有グループ。根拠は developer.md §66)。植生別の目安
-(Crockford & Richardson 2000 のレビュー。校正で変わる量です):
+f_icmodel と空の固有グループ)。既定 $`\alpha`$ = 0.15、$`S_{\max}`$ = 1.5 mm は
+Crockford & Richardson のレビュー(遮断損失は針葉樹林
+20〜40 %、広葉樹林 10〜25 %、草地 5〜10 %。樹冠貯留 0.3〜3 mm)[^crockford00]の
+広葉樹・混交林の代表値で、市街地の不透水面の窪地貯留(SWMM の慣用値
+1.3〜2.5 mm[^rossman15])とも同程度です。植生別の目安(校正で変わる量です):
 
 | 型 | ic_alpha(遮断率) | ic_smax_mm(樹冠貯留 mm) |
 |---|---|---|
@@ -214,6 +230,29 @@ F_P = \max\left(0,\,1 + \beta (z-z_{P,\mathrm{ref}})\right),
 | lat | — | 代表緯度 (deg)。モード3, 4 で必須 |
 | temp_normal | — | 月平均気温の平年値 (℃)。モード4 で必須 |
 
+モード 3・4 の式は、可照時間 $`N`$(時間。太陽赤緯は Cooper の近似)と
+日平均気温 $`T`$(℃)から
+
+```math
+PET_{\text{Hamon}} = 0.1651\,\frac{N}{12}\,\frac{216.7\,e_s}{T + 273.3},
+\qquad
+e_s = 6.108\,\exp\!\left(\frac{17.27\,T}{T + 237.3}\right)\ [\mathrm{hPa}]
+```
+
+```math
+PET_{\text{Thornthwaite}} = \frac{16}{30}\left(\frac{10\,\max(T, 0)}{I}\right)^{a}\frac{N}{12},
+\qquad
+I = \sum_{m=1}^{12}\left(\frac{\max(T_m, 0)}{5}\right)^{1.514},
+\quad
+a = 6.75\times10^{-7}I^3 - 7.71\times10^{-5}I^2 + 1.792\times10^{-2}I + 0.49239
+```
+
+(mm/day)です。Hamon 式[^hamon61]は飽和水蒸気密度(Tetens 式)と
+可照時間だけで推算する気温法、Thornthwaite 式[^thornthwaite48]は月平均
+気温の平年値から熱指数 $`I`$ を作る気候学的な式で、月の値を 30 で割って
+日割りにしています。どちらも放射・風・湿度を使わない簡便法で、
+`evap_kc` で校正します。
+
 PET は `evap_kc` を掛けて日ごとに評価します。mm/day を内部の m/s に
 換算し、各計算ステップで `PET × dt` に相当する水深を、**樹冠保水(貯留型遮断のみ)→地表水 `h`→
 貯留 `hrs`(ため池・ダム／湖沼捕捉帯)→地下水 `hg`**の順に差し引きます。
@@ -228,7 +267,7 @@ PET は `evap_kc` を掛けて日ごとに評価します。mm/day を内部の 
 いない設定(暦なしのモード2など)は初期化時に停止します。
 
 モード1 の既定 3 mm/day は温帯湿潤気候の暖候期の
-基準蒸発散(FAO-56 の ET₀ で 3〜5 mm/day)の下寄りで、日本の年平均
+基準蒸発散(FAO-56[^allen98] の ET₀ で 3〜5 mm/day)の下寄りで、日本の年平均
 (2〜2.5 mm/day)より大きく夏季(4〜5)より小さい中庸です。季節を
 通す計算ではモード2〜4 を使ってください(月別値・緯度・平年気温は
 与件なので既定はありません)。
@@ -260,7 +299,8 @@ PET は `evap_kc` を掛けて日ごとに評価します。mm/day を内部の 
 \frac{\Delta t}{86400}\right).
 ```
 
-内部では m に換算し、空隙率と有効な河道幅の面積換算を経て地表水 `h` に
+度日法[^hock03]は気温だけで融雪を推算する簡便法で、放射・風・雨による
+融解は度日係数に押し込みます。内部では m に換算し、空隙率と有効な河道幅の面積換算を経て地表水 `h` に
 直接加えます。融雪水は降雨強度 `pre` には含めません。たとえば
 `snow_ddf=4`、融雪閾値より `3 ℃` 高い気温、`Δt=3600 s` なら融雪要求は
 `0.5 mm`、SWEが `0.2 mm` しかなければ融雪量は `0.2 mm` です。
@@ -268,8 +308,11 @@ PET は `evap_kc` を掛けて日ごとに評価します。mm/day を内部の 
 新たな降水がなくても気温に応じた融雪を計算できます。
 
 「とりあえず動かしてみる」最小入力は **fn_snow に空の &list_snow**
-(+ fn_meteo の気温)です。度日係数の目安(Hock 2003 の集計。校正で
-変わる量です):
+(+ fn_meteo の気温)です。既定 `snow_ddf` = 4 mm/℃/day は Hock の
+集計(雪 2.5〜6 が多数。森林で小、開放地で大)[^hock03]の中央で、日本の
+山地流域の融雪出水の慣用値 3〜5 の中庸です。雨雪の閾値 0〜2 ℃ は湿球
+温度 1 ℃ 前後で雨雪が切り替わる観測に基づく慣用値、気温減率 0.65 ℃/100 m は
+標準大気の値です。度日係数の目安(校正で変わる量です):
 
 | 型 | snow_ddf (mm/℃/day) | 備考 |
 |---|---|---|
@@ -299,3 +342,12 @@ PET は `evap_kc` を掛けて日ごとに評価します。mm/day を内部の 
 - [test/chichibu](../../test/chichibu/): 実地形流域への一様降雨と、斜面から河道への集水・洪水波の回帰ケース。
 - [test/icevap](../../test/icevap/): 固定遮断率・初期損失・一定蒸発散について、最小入力と既定値を明示した入力の同値を検定。
 - [test/frost](../../test/frost/): 一定気温による凍結指数の増加と浸透抑制を解析値と比較。
+
+## 参考文献
+
+[^crockford00]: Crockford, R. H. and Richardson, D. P. (2000): Partitioning of rainfall into throughfall, stemflow and interception: effect of forest type, ground cover and climate. *Hydrol. Process.*, 14, 2903–2920.
+[^rossman15]: Rossman, L. A. (2015): Storm Water Management Model User's Manual Version 5.1. US EPA, EPA/600/R-14/413b.(窪地貯留の慣用値)
+[^hamon61]: Hamon, W. R. (1961): Estimating potential evapotranspiration. *J. Hydraul. Div. ASCE*, 87(HY3), 107–120.
+[^thornthwaite48]: Thornthwaite, C. W. (1948): An approach toward a rational classification of climate. *Geogr. Rev.*, 38, 55–94.
+[^allen98]: Allen, R. G., Pereira, L. S., Raes, D. and Smith, M. (1998): Crop Evapotranspiration: Guidelines for Computing Crop Water Requirements. *FAO Irrigation and Drainage Paper*, 56.
+[^hock03]: Hock, R. (2003): Temperature index melt modelling in mountain areas. *J. Hydrol.*, 282, 104–115.

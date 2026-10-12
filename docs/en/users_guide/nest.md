@@ -233,9 +233,14 @@ non-hydrostatic, φ = 0 is placed even with the default.
 
 ## Flather radiation (nest_bc = 3)
 
-Instead of a band, the long-wave characteristic condition
-u_n = u_n,e + √(g/h)(η − η_e) is imposed on the boundary faces of the child's
-open edges (Flather 1976). η_e and u_n,e are the parent's water level and
+Instead of a band, the long-wave characteristic condition[^flather76]
+
+```math
+u_n = u_{n,e} + \sqrt{\frac{g}{h}}\,(\eta - \eta_e)
+```
+
+is imposed on the boundary faces of the child's
+open edges. η_e and u_{n,e} are the parent's water level and
 outward normal velocity on the edge (interpolated to the centre of the
 boundary cell, and in time to the start of the sub-step). It generalizes the
 existing long-wave radiation boundary (`f_bc_* = 2`, where η_e = reference
@@ -275,10 +280,20 @@ velocity onto the individual ENC boundary faces to compute discharge.
 
 Inside the same boundary band as `nest_bc=2`, add a relaxation region
 `nest_ns` child cells wide. At each sub-step start, blend a cell quantity q
-towards its interpolated parent value q_parent as
-`q ← (1 − w) q + w q_parent`. For the shortest inward cell distance
-d=1…nest_ns from the band, `w = [1 − d/(nest_ns + 1)]²`. With nest_ns=4
+towards its interpolated parent value q_parent. For the shortest inward cell
+distance d = 1…nest_ns from the band,
+
+```math
+q \leftarrow (1-w)\,q + w\,q_{\mathrm{parent}},\qquad
+w = \left(1 - \frac{d}{n_s+1}\right)^2
+```
+
+with n_s = nest_ns. With nest_ns=4
 as illustrated, the weights from the band inward are 0.64, 0.36, 0.16 and 0.04.
+The squared weight is the simplest relaxation that is close to 1 at the
+boundary and falls smoothly to 0 inward (a Davies-type sponge
+layer[^davies83]); the width nest_ns is not a calibration value but is chosen
+as a fraction of the child's wavelength (empirical).
 
 This applies to depth, velocity, cell discharge and enabled additional
 fields exchanged between parent and child. Edge quantities are not relaxed
@@ -303,13 +318,21 @@ blocks beyond both band and sponge contribute to child-to-parent replacement.
   levels).
 - nest_fb = 3 returns the difference between the parent's and the child's
   interface fluxes around the replaced region to the parent's depth, so the
-  whole system conserves volume (equivalent to GeoClaw's reflux).
+  whole system conserves volume (equivalent to the AMR reflux[^berger98]
+  used by GeoClaw[^berger11]).
 - A summary is printed at the end (water volume added to the child by the
   band replacement, the number of replacements and the cumulative change of
   the parent's water volume, the amount of the conservation correction). On
   land, rain falling in the band is overwritten by the parent's values, so
   the child's water balance is checked by adding this band replacement
   volume.
+
+## References
+
+[^flather76]: Flather, R. A. (1976): A tidal model of the north-west European continental shelf. *Mém. Soc. R. Sci. Liège*, 6(10), 141–164.
+[^davies83]: Davies, H. C. (1983): Limitations of some common lateral boundary schemes used in regional NWP models. *Mon. Wea. Rev.*, 111, 1002–1012.
+[^berger98]: Berger, M. J. and LeVeque, R. J. (1998): Adaptive mesh refinement using wave-propagation algorithms for hyperbolic systems. *SIAM J. Numer. Anal.*, 35(6), 2298–2316.
+[^berger11]: Berger, M. J., George, D. L., LeVeque, R. J. and Mandli, K. T. (2011): The GeoClaw software for depth-averaged flows with adaptive refinement. *Adv. Water Resour.*, 34, 1195–1206.
 
 ## Using it from BMI
 

@@ -167,7 +167,7 @@ $`Fr \ge 1`$ で均等配分に連続に移ります($`\alpha Fr \le 1/2`$ な�
 | culv_width / culv_height / culv_zin / culv_zout | 必須 | 断面と敷高(§2) | 与件 |
 | culv_length | 0 | 管路長 $`L`$ | 0 = 摩擦損失なし |
 | culv_manning | 0.02 | 管内粗度 $`n`$ | コンクリート管の上寄りの実用値(経験値) |
-| culv_ce | 0.5 | 流入損失係数 $`c_e`$ | 角の立った流入口の代表値[^fhwa12](経験値) |
+| culv_ce | 0.5 | 流入損失係数 $`c_e`$ | 角の立った流入口の代表値(経験値)[^fhwa12] |
 | culv_flap / culv_gate_rule / culv_gate_ref | 0 / なし / 1 | 逆止弁・開度折れ線・基準側 | 開度は流量の線形乗率(近似) |
 | pump_q0 / pump_rule / f_pump_ref | — | 一定流量 / 運転折れ線 / 基準(§3) | 与件 |
 | div_q0 / div_rule | — | 一定流量 / rating(§3) | 与件 |

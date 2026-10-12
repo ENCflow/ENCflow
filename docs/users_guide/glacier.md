@@ -66,14 +66,21 @@ developer.md §65)、未指定なら既定を採用して "(default)" 付きで
 
 | パラメータ | 既定値 | 意味 |
 |---|---|---|
-| gl_dens | 900.0 | 氷の密度 (kg/m³)。雪水量⇄氷厚の換算に使用 |
+| gl_dens | 900.0 | 氷の密度 $`\rho_i`$ (kg/m³)。雪水量⇄氷厚の換算に使用(氷河氷の標準値 900〜917) |
 | gl_tfirn_yr | 10.0 | 雪→氷の変換(フィルン化)の時定数 (年)。温暖氷河で数年〜10年程度 |
-| gl_ddfi | 8.0 | 氷面の度日係数 (mm/℃/day)。雪面(snow_ddf)より大きく、文献値 6〜12 程度(Hock 2003) |
+| gl_ddfi | 8.0 | 氷面の度日係数 $`d_i`$ (mm/℃/day)。雪面(snow_ddf)より大きく(アルベドが低い)、Hock の集計[^hock03]の氷 5.5〜20 の下寄り |
 | gl_tmelt | 0.0 | 氷面融解の気温閾値 (℃) |
 
+```math
+\Delta h_i = \frac{\rho_w}{\rho_i}\,\mathrm{SWE}\left(1 - e^{-\Delta t_w/\tau_{firn}}\right),
+\qquad
+\Delta h_{i,melt} = -\frac{\rho_w}{\rho_i}\,\min\!\left(h_i\frac{\rho_i}{\rho_w},\ d_i\max(T - T_{melt}, 0)\frac{\Delta t}{86400}\right)
+```
+
 - 降雪は積雪・融雪の機能(SWE)として積もり、**越年した雪だけが**
-  時定数 gl_tfirn_yr でゆっくり氷になります(季節の雪はそのまま
-  融けて流出します)。
+  時定数 $`\tau_{firn}`$(gl_tfirn_yr)でゆっくり氷になります(季節の雪は
+  そのまま融けて流出します)。指数緩和は水文時間 $`\Delta t_w`$ で評価
+  するので、季節雪はほとんど変換されません。
 - 氷は**雪に覆われていないときだけ**融けます(雪が先に融ける)。
 - 気温は**氷面の標高**(地面+氷厚)で評価されるため、気温減率
   (&list_meteo の f_temp_lapse)と併用すると、氷河が厚いほど表面が
@@ -82,8 +89,20 @@ developer.md §65)、未指定なら既定を採用して "(default)" 付きで
 
 ## 氷体流動(f_glflow)
 
-浅氷近似(SIA)により、氷は自重で変形しながら氷面の低い方へ
-流れます。
+浅氷近似(SIA)[^hutter83]により、氷は自重で変形しながら氷面の低い方へ
+流れます。氷面 $`s = z + h_i`$ の非線形拡散として解きます。
+
+```math
+\frac{\partial h_i}{\partial t} = \nabla\cdot\left(D\,\nabla s\right),
+\qquad
+D = \underbrace{\frac{2A}{5}(\rho_i g)^3\,h_i^{5}\,|\nabla s|^2}_{変形(Glen\ n = 3)}
+  + \underbrace{A_s(\rho_i g)^3\,h_i^{4}\,|\nabla s|^2}_{滑動(\texttt{f\_glslide})}
+```
+
+第 1 項は Glen の流動則[^glen55] $`\dot\varepsilon = A\tau^3`$ を鉛直積分した
+SIA の氷流束、第 2 項は §「底面滑動」の Weertman 滑動を同じ拡散形に
+載せたものです。既定 $`A`$ = 1e-16 Pa⁻³ yr⁻¹ は温暖氷(0 ℃)の推奨値
+[^cuffey10]です。
 
 | パラメータ | 既定値 | 意味 |
 |---|---|---|
@@ -103,6 +122,21 @@ developer.md §65)、未指定なら既定を採用して "(default)" 付きで
 | gl_kg | 1e-4 | 侵食係数 Kg。f_glero=1 のとき読まれる。滑動速度を m/yr で測った侵食則 ė = Kg・usˡ の係数(l=1 なら無次元。Humphrey & Raymond 1994 の実測 1e-4) |
 | gl_lexp | 1.0 | 侵食則のべき指数 l(1〜2) |
 
+```math
+u_s = A_s\,\tau_b^3,
+\qquad
+\tau_b = \rho_i g\,h_i\,|\nabla s|,
+\qquad
+\dot e = K_g\,u_s^{\,l}\ (u_s\ \text{は m/yr})
+```
+
+Weertman 型の滑動則($`m`$ = 3 固定)[^weertman57]と、滑動速度のべき乗に
+比例する氷河侵食則[^humphrey94]です。既定 $`A_s`$ = 1e-13 m yr⁻¹ Pa⁻³ は
+底面せん断応力 100 kPa(典型 50〜150 kPa[^cuffey10])で 100 m/yr、山岳
+氷河の滑動速度の速い側(10〜100 m/yr)に相当します。既定 $`K_g`$ = 1e-4
+($`l`$ = 1)は Variegated 氷河の実測(侵食速度 ≈ 1e-4 × 滑動速度)
+[^humphrey94]で、$`l`$ = 2 の場合[^herman15]は別校正で 1e-7〜1e-6 です。
+
 - 侵食は**滑動している氷の下だけ**で起き(f_glero は f_glslide が
   前提)、薄い氷はほとんど侵食しません。
 - 侵食は計算標高 z を下げ、土層厚 sd があれば共に減らします(土層が
@@ -117,8 +151,9 @@ developer.md §65)、未指定なら既定を採用して "(default)" 付きで
 |---|---|---|
 | gl_ava_tanc | 0.6 | 雪崩の限界勾配 tan θc(0.6 ≈ 31°) |
 
-氷面の最急勾配が閾値を超えるセルの雪を、最も急な下り方向の隣接
-セルへ移します。急崖が雪を保持できず、圏谷(カール)へ雪が集中する
+氷面の最急勾配 $`\tan\theta`$ が閾値を超えるセルの雪の割合
+$`\min(1, (\tan\theta - \tan\theta_c)/\tan\theta_c)`$ を、最も急な下り方向の隣接
+セルへ移します。閾値 0.6(≈ 31°)は乾雪の安息角付近の慣用値です。急崖が雪を保持できず、圏谷(カール)へ雪が集中する
 効果の簡便表現です。カール形成実験では有効化を推奨します。
 
 ## 初期条件
@@ -187,3 +222,13 @@ developer.md §65)、未指定なら既定を採用して "(default)" 付きで
 [test/glacier/](../../test/glacier/) にあり、設定書式の実例は
 [examples/List_samples/list_glacier.txt](../../examples/List_samples/list_glacier.txt)
 にあります。
+
+## 参考文献
+
+[^hock03]: Hock, R. (2003): Temperature index melt modelling in mountain areas. *J. Hydrol.*, 282, 104–115.
+[^hutter83]: Hutter, K. (1983): *Theoretical Glaciology*. Reidel, Dordrecht.(浅氷近似)
+[^glen55]: Glen, J. W. (1955): The creep of polycrystalline ice. *Proc. R. Soc. Lond. A*, 228, 519–538.
+[^cuffey10]: Cuffey, K. M. and Paterson, W. S. B. (2010): *The Physics of Glaciers*, 4th ed. Elsevier.(A の推奨値、底面せん断応力の典型値)
+[^weertman57]: Weertman, J. (1957): On the sliding of glaciers. *J. Glaciol.*, 3, 33–38.
+[^humphrey94]: Humphrey, N. F. and Raymond, C. F. (1994): Hydrology, erosion and sediment production in a surging glacier: Variegated Glacier, Alaska, 1982–83. *J. Glaciol.*, 40, 539–552.
+[^herman15]: Herman, F., Beyssac, O., Brughelli, M., Lane, S. N., Leprince, S., Adatte, T., Lin, J. Y. Y., Avouac, J.-P. and Cox, S. C. (2015): Erosion by an Alpine glacier. *Science*, 350, 193–195.
