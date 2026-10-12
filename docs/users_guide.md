@@ -47,6 +47,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
   - [構造物と境界の水理則の解説](users_guide/hydraulics.md) — 本間公式・カルバートの 3 レジーム・ダム運転則・自由流出と放射境界・区間流入の配分の式と係数の根拠(構造物・境界条件・河道の補足)
 - [河道](users_guide/channel.md)(&list_channel)— 堤防・河道幅・断面形・破堤
 - [降雨・気象](users_guide/forcing.md)(&list_precip / intercept / meteo / evap / snow)— 降水・遮断・気温・蒸発散・積雪融雪
+  - [降雨・気象のモデルの解説](users_guide/forcing_models.md) — 遮断モデル・標高補正・Hamon/Thornthwaite の PET・度日法の式と既定値の根拠(降雨・気象の補足)
 - [地下水](users_guide/gwflow.md)(&list_gwflow とモデル固有設定)— 浸透・側方流動・風化基岩層・管路連続体層(下水道網・岩盤亀裂網)
   - [地下水モデルの解説](users_guide/gwflow_models.md) — バケツ・Green-Ampt・Boussinesq 側方流・風化基岩層・管路連続体層・揚水・凍土の式と既定値の根拠(地下水の補足)
 - [淡塩2層](users_guide/salt.md)(&list_salt)— 塩水くさび・海水浸入・淡水レンズ(鋭利界面近似)
