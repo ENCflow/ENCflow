@@ -23,28 +23,50 @@ will be added over time. Beyond these, the configuration sample
 collection in [examples/](../../examples/) and the verified examples
 in [test/](../../test/) are useful references.
 
-## Learning path (by level)
+## Learning path
 
-A path from simple examples onward; each level assumes the one before
-it. The chapter pages of the user's guide are written in the order
-"overview → just try it (minimal input) → recommended values by pattern
-→ details → tests and examples", so **the first two sections are enough
-to get a run going**. The explanation pages ("... explained") collect
-the equations and the basis of the defaults for advanced readers and
-can be left for later.
+Not everyone needs to understand every field. Only the following three
+are required; they teach the principles (enabling features with
+fn_\*, writing the parameter file, running and reading the output).
 
-| Level | Read or run | What you learn |
-|---|---|---|
-| Beginner 1 | [tutorials/wave](../../tutorials/wave/en/README.md) Steps 1–3 | first run, structure of the parameter file, time step, boundary conditions |
-| Beginner 2 | [User's guide Part I](users_guide.md) (skeleton, the fn_\* principle, reading a parameter file) | how features are enabled, what goes into one file |
-| Beginner 3 | [test/wave](../../test/wave/), [test/dambreak](../../test/dambreak/), [examples/benchmark](../../examples/benchmark/) | reading comparisons with analytical solutions (bores, rainfall runoff); using `./Run.sh` and `Check_*.py` |
-| Intermediate 1 | [tutorials/chichibu](../../tutorials/chichibu/en/README.md) | real terrain data, channel mask, recording, interception and infiltration, water balance |
-| Intermediate 2 | the "just try it" sections of [Geographic information](users_guide/geoinfo.md), [Initial conditions](users_guide/initial.md), [Boundary conditions](users_guide/boundary.md) and [Rainfall and meteorology](users_guide/forcing.md) | the minimal input for assembling your own case |
-| Intermediate 3 | [test/tide](../../test/tide/), [test/pump](../../test/pump/), [test/culvert](../../test/culvert/), [examples/sewer_hybrid](../../examples/sewer_hybrid/), [examples/qanat](../../examples/qanat/) | minimal examples of tide, structures, groundwater and conduits (one feature each) |
-| Advanced 1 | [ENC grid and time integration](users_guide/encgrid.md) → [Advection](users_guide/advection.md) → [Diffusion](users_guide/diffusion.md) → [Non-hydrostatic correction](users_guide/nonhydrostatic.md) | equations, schemes and the basis of the defaults of the shallow-water computation |
-| Advanced 2 | [examples/nest_reflect](../../examples/nest_reflect/), [examples/landslide_tsunami](../../examples/landslide_tsunami/), [examples/tsunami_fault](../../examples/tsunami_fault/), [examples/tsunami_coast](../../examples/tsunami_coast/) | combining nesting, the non-hydrostatic correction, the moving bed layer and prescribed bed motion |
-| Advanced 3 | [examples/tsunami_town](../../examples/tsunami_town/), [examples/timberyard](../../examples/timberyard/), [examples/ashfall_lahar](../../examples/ashfall_lahar/), [examples/badland](../../examples/badland/) | chains of several processes (house destruction, driftwood, debris flow, landscape evolution) and how to set up two-case comparisons |
-| Development | [developer.md](../developer.md) §0 (policy, in Japanese) → [architecture.md](../architecture.md) | the design philosophy and the contract for adding a new process |
+1. [tutorials/wave](../../tutorials/wave/en/README.md) Steps 1–3 — first run, the parameter file, time step, boundary conditions
+2. [tutorials/chichibu](../../tutorials/chichibu/en/README.md) — real terrain data, rainfall, recording, water balance
+3. [User's guide Part I](users_guide.md) — skeleton, the fn_\* principle, reading a parameter file
+
+To assemble your own case, the "just try it (minimal input)" sections
+of [Geographic information](users_guide/geoinfo.md),
+[Initial conditions](users_guide/initial.md),
+[Boundary conditions](users_guide/boundary.md) and
+[Rainfall and meteorology](users_guide/forcing.md) are enough.
+
+Beyond that, read **only the chapters of the fields you are interested
+in**. The chapter pages give priority to "getting a run going casually":
+read them in the order "overview → just try it → recommended values by
+pattern → the sections you need". If you want more, go on to the
+**explanation pages** that hang under each chapter (theory, equations,
+the basis of the defaults, detailed settings).
+
+| Field (chapter page) | Explanation pages |
+|---|---|
+| [Shallow water computation](users_guide/swflow.md) | [ENC grid and time integration](users_guide/encgrid.md), [Advection](users_guide/advection.md), [Diffusion](users_guide/diffusion.md), [Non-hydrostatic correction](users_guide/nonhydrostatic.md) |
+| [Structures](users_guide/structure.md), [Boundary conditions](users_guide/boundary.md), [Channels](users_guide/channel.md) | [Hydraulic laws of structures and boundaries](users_guide/hydraulics.md) |
+| [Groundwater](users_guide/gwflow.md) | [Groundwater models](users_guide/gwflow_models.md) |
+| [Sediment and landform change](users_guide/geomorph.md) | [Sediment transport, hillslope and long-term processes](users_guide/sediment.md), [Debris flow, slope failure and moving bed layer](users_guide/massflow.md) |
+| [Water quality](users_guide/wq.md) | [Water-quality models](users_guide/wq_models.md) |
+
+A major reason to use ENCflow is to **chain several processes in one
+run** (rainfall → runoff → sediment → channel; tsunami → house
+destruction → debris; eruption → lava field → secondary flooding, and
+so on). Use the [use-case gallery](users_guide/usecases.md) to find the
+feature combination for a phenomenon and combine the relevant chapters.
+Specialised features such as nesting and the non-hydrostatic correction
+can wait until you need them.
+
+[test/](../../test/) and [examples/](../../examples/) are not teaching
+material for beginners; look at them after the chapters, as needed. The
+tests show how each feature is verified (against analytical solutions
+and conservation laws); the examples show namelist samples and set-ups
+that combine several processes.
 
 ## Roles of the directories
 
