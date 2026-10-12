@@ -1751,6 +1751,41 @@ end subroutine
 !----------------------------------------------------------------------
 ! 中心セルi,jからk近傍セルへin,jnの流速uve1と単位幅流量mne1を計算する
 !----------------------------------------------------------------------
+!----------------------------------------------------------------------
+! セル境界水深が上流側水深よりも深くならないよう調整(f_hcap_upwind)
+!   f_hcap_upwind=1: 両側平均 he を上流側水深で頭打ち(既定)
+!   f_hcap_upwind=2: 上流側水深そのもの(Stelling & Duinmeijer の連続式。
+!     段波先端で両側平均が小さくなり、平坦区間の流量を通すために前線
+!     エッジの流速が過大になって手前の 1 セルに水が積み上がるスパイクを
+!     防ぐ。乾湿前縁では乾側 h≈0 に対して湿側水深で流出するため前縁の
+!     挙動が変わる。§68.7)
+!   上流側は流速 uve の符号で決める(uve > 0: 中心セル c、< 0: 近傍セル n、
+!   0: 補正なし)。calc_kth_flux(RK の各段)と init_enc_status(初期流量
+!   mn1 = uv·he の整合。§7)が同じ関数を使う
+!----------------------------------------------------------------------
+pure function cap_he_upwind(he, hc, hn, uve) result(he_corr)
+  real, intent(in) :: he          ! 両側平均のセル境界水深
+  real, intent(in) :: hc, hn      ! 中心セル・近傍セルの水深
+  real, intent(in) :: uve         ! セル境界の流速(中心→近傍が正)
+  real :: he_corr
+  if (uve > 0) then       ! 中心セルが上流側
+    if (opt%f_hcap_upwind == 2) then
+      he_corr = hc
+    else
+      he_corr = min(he, hc)    !   中心セルの水深より深くならないように
+    end if
+  else if (uve < 0) then  ! 近傍セルが上流側
+    if (opt%f_hcap_upwind == 2) then
+      he_corr = hn
+    else
+      he_corr = min(he, hn)    !   近傍セルの水深より深くならないように
+    end if
+  else
+    he_corr = he
+  end if
+end function
+
+
 subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1, mne1, hee)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
@@ -1926,7 +1961,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     he = (hc + hn) / 2
 
     ! セル境界での水深が上流側水深よりも深くならない様に調整
-    if (opt%f_hcap_upwind > 0) he = correct_he()
+    if (opt%f_hcap_upwind > 0) he = cap_he_upwind(he, hc, hn, uve0)
 
     ! 摩擦項で使用する水深
     !   水深が浅い場合に摩擦が過大となることを防ぐために水深の最小値を制限
@@ -2119,32 +2154,6 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   hee = he
 
 contains
-  !--------------------------------------------------------------------
-  ! セル境界水深が上流側水深よりも深くならないよう調整
-  function correct_he() result(he_corr)
-    real :: he_corr
-    ! f_hcap_upwind=1: 両側平均を上流側水深で頭打ち(既定)
-    ! f_hcap_upwind=2: 上流側水深そのもの(Stelling & Duinmeijer の連続式。
-    !   段波先端で両側平均が小さくなり、平坦区間の流量を通すために前線
-    !   エッジの流速が過大になって手前の 1 セルに水が積み上がるスパイクを
-    !   防ぐ。乾湿前縁では乾側 h≈0 に対して湿側水深で流出するため前縁の
-    !   挙動が変わる。§68.7)
-    if (uve0 > 0) then      ! 中心セルが上流側
-      if (opt%f_hcap_upwind == 2) then
-        he_corr = hc
-      else
-        he_corr = min(he, hc)    !   中心セルの水深より深くならないように
-      end if
-    else if (uve0 < 0) then ! 近傍セルが上流側
-      if (opt%f_hcap_upwind == 2) then
-        he_corr = hn
-      else
-        he_corr = min(he, hn)    !   近傍セルの水深より深くならないように
-      end if
-    else
-      he_corr = he
-    end if
-  end function
   !--------------------------------------------------------------------
   ! 重力加速度を急勾配地形に合わせて調整
   !   Ni, Y., Cao, Z., & Liu, Q. (2019). 
