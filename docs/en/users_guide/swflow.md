@@ -9,7 +9,12 @@ water equations on the ENC grid). **The defaults are set so that the
 model runs reasonably as is** -- the settings in this chapter are for
 accuracy/cost tuning and numerical experiments; in ordinary
 computations the only one you may need to touch is the threshold of the
-adaptive Runge-Kutta scheme.
+adaptive Runge-Kutta scheme. The equations and the basis of the defaults for
+the grid geometry, the continuity equation, the cell-velocity reconstruction,
+the terms of the momentum equation, the adaptive Runge-Kutta scheme, the
+Courant number and the numerical constants are in
+[ENC grid and time integration](encgrid.md); the advection term, the
+diffusion term and the non-hydrostatic correction have their own pages.
 
 ![ENC grid and adaptive Runge-Kutta](../../figs/swflow_enc_en.png)
 
@@ -18,7 +23,8 @@ Edges to the eight surrounding cells (four axis and four diagonal directions)
 carry the normal velocity uv and flux per unit width mn. Filled squares mark
 axis-edge quantities; open squares mark diagonal-edge quantities. Cell-centre
 velocities u, v are reconstructed by combining edge velocities with geometric
-weights. p_diagratio controls the allocation of diagonal passage widths.
+weights. p_diagratio controls the allocation of diagonal passage widths;
+its default makes the eight passage widths equal ([explanation](encgrid.md) §2 and §4).
 
 **(b) STG grid.** This is a four-neighbour staggered grid for legacy comparisons.
 Depth and ground elevation are at cell centres (internal arrays D and H).
@@ -32,8 +38,8 @@ Panels (a)/(b) are square-cell schematics highlighting the connections and
 quantity locations associated with the central cell. **(c) Adaptive Runge-Kutta
 decision band.** The explicit candidate flux per unit width is compared with
 its previous-step value; edges outside the threshold band are recomputed with
-four RK stages. Zero previous flux, the exclusion of levee-wall edges and the
-Runge display statistic are explained under "Time integration" below.
+four RK stages. The decision rule, the stages and the Runge statistic are
+in [the explanation](encgrid.md) §6.
 Run `python docs/figs/make_guide_figs.py swflow` to generate the Japanese and
 English PNG/SVG figures.
 
@@ -43,7 +49,7 @@ English PNG/SVG figures.
 |---|---|---|
 | f_gridsystem | 0 | 0: ENC grid (default), 1: STG (staggered grid; legacy-compatible, for comparison only. New features and restart are not supported) |
 | f_govequation | 0 | 0: dynamic wave (advection + pressure; default), 1: diffusive wave (pressure only), 2: kinematic wave |
-| f_check_cfl | 1 | Courant number monitoring. 0: monitor only (no stop), 1: display the state and stop when Cn > 1 (default), 2: judge and stop on the advective Courant number ignoring the wave speed (the definition of the Cn column and Cn output also switches to the advective Cn) |
+| f_check_cfl | 1 | Courant number monitoring. 0: monitor only (no stop), 1: display the state and stop when Cn > 1 (default), 2: judge and stop on the advective Courant number ignoring the wave speed (the definition of the Cn column and Cn output also switches to the advective Cn) ([explanation](encgrid.md) §7) |
 
 The diffusive and kinematic waves are for sensitivity experiments and
 comparison with other models. For inundation and runup involving
@@ -51,13 +57,13 @@ wetting and drying, keep the dynamic wave.
 
 ## Numerical constants (&list_sysparam)
 
-| Parameter | Default | Meaning |
+| Parameter | Default | Meaning (basis in [the explanation](encgrid.md) §8) |
 |---|---|---|
-| dd | 0.001 | threshold depth (m). Water movement is computed on cells at or above this depth |
-| dv | 0.001 | virtual depth (m). Computational lower bound for depths below this |
-| vv | 0.01 | lower bound of the velocity in the friction term (m/s) |
+| dd | 0.001 | threshold depth (m). An edge whose two cells are both below it carries no flux |
+| dv | 0.001 | lower bound of the depth used in the friction term (m) |
+| vv | 0.01 | lower bound of the velocity used in the friction term (m/s) |
 | gg | 9.8 | gravitational acceleration (m/s^2) |
-| cm / cd / kk | 2.0 / 1.0 / 0.5 | added-mass coefficient, drag coefficient, and drag correction factor of building clusters (used together with gv/bb of the geographic information; [geographic information chapter](geoinfo.md)) |
+| cm / cd / kk | 2.0 / 1.0 / 0.5 | added-mass coefficient, drag coefficient and shielding factor of building clusters (used together with gv/bb of the geographic information; [geographic information chapter](geoinfo.md)) |
 
 ## Tuning the ENC computation (&list_enc)
 
@@ -70,42 +76,30 @@ defaults).
 /
 ```
 
-**Time integration (adaptive Runge-Kutta)**
+**Time integration (adaptive Runge-Kutta)** (details in [§6 of the explanation](encgrid.md#6-time-integration-and-the-adaptive-runge-kutta-scheme))
 
-| Parameter | Default | Meaning |
-|---|---|---|
-| f_adaptive_runge | 1 | adaptive Runge-Kutta (recompute eligible edges with four RK stages when the change in flux per unit width mn falls outside the decision band; the advection term stays at its time-level-n value during recomputation). Its purpose is to avoid shrinking dt for the whole domain because of a few extreme cells; if the Runge column reaches tens of percent, reducing dt is the proper remedy |
-| p_adprunge_thresh | 1.5 | threshold thr for recomputation based on the change in flux per unit width (at least 1.1; smaller values narrow the decision band and select more edges for recomputation) |
-
-When f_adaptive_runge is enabled, eligible edges other than levee-wall edges
-compare the explicit candidate mn(new) with the previous-step value mn(old).
-For mn(old) ≠ 0, recomputation occurs if the ratio r = mn(new) / mn(old) satisfies
-**r < 1/thr or r > thr**. Reversal (r < 0) is included; the endpoints r = 1/thr
-and r = thr are inside the band. If mn(old) = 0, no ratio is taken: nonzero
-mn(new) triggers recomputation, while two zero values do not. The implementation
-uses sign-dependent multiplication comparisons to make this decision.
-
-Virtual levee-wall edges are excluded because their weir flux is set later.
-During the RK updates of provisional depths, other edges contribute their
-previous-step fluxes, and the advection term remains at time level n.
-The **Runge column** reports the maximum, over the screen-output interval, of
-`100 × recomputed edge count / (valid cell count × 4)`.
-The band is a switching criterion based on flux changes; assess accuracy
-together with the time step dt.
-
-The meaning and effect of the threshold are demonstrated in
+Only the edges whose explicit flux per unit width leaves the band between
+1/thr and thr times the previous-step value (reversals included) are
+recomputed with four Runge-Kutta stages. The mechanism avoids shrinking dt
+for the whole domain because of a few extreme cells; if the **Runge column**
+on the screen (share of recomputed edges) reaches tens of percent, reducing
+dt is the proper remedy. The effect of the threshold is demonstrated in
 [tutorial Step 2](../../../tutorials/wave/en/README.md#step-2-setting-enc-parameters).
-The Runge column on the screen shows the application rate.
+
+| Parameter | Default | Meaning (details in the § of [the explanation](encgrid.md)) |
+|---|---|---|
+| f_adaptive_runge | 1 | adaptive Runge-Kutta: only edges whose flux leaves the band are recomputed with four RK stages (the advection term stays at time level n) (§6) |
+| p_adprunge_thresh | 1.5 | threshold thr of the recomputation (1.1 or more; smaller values recompute more edges. Accuracy is better gained by reducing dt) (§6) |
 
 **Flux and stabilization**
 
-| Parameter | Default | Meaning |
+| Parameter | Default | Meaning (details in the § of [the explanation](encgrid.md)) |
 |---|---|---|
-| f_gravity_correction | 1 | gravity correction (corrects the slope-direction gravity error on steep terrain) |
-| f_exflux_reduction | 1 | suppression of excessive outgoing fluxes. Prevents negative depths at fronts advancing over dry ground (recommended to keep on in computations with dry beds) |
-| f_hcap_upwind | 1 | depth at the cell interface (mass flux). 0: mean of both cells, 1: the mean capped by the upwind-side depth (default), 2: the upwind-side depth itself (as in the continuity equation of Stelling & Duinmeijer; removes the one-cell pile-up spike at a bore front. It increases the outflow of a front onto dry ground, so check ex_flux and the front propagation in inundation runs) |
-| f_friction_fastmath | 0 | fast evaluation of the friction term. 0: exact (default), 1-5: table approximation (larger = coarser and faster) |
-| p_diagratio | 2/(2+sqrt(2)) | weight of the diagonal components in the 8-direction fluxes (normally no need to change) |
+| f_gravity_correction | 1 | effective gravity g cos²θ on steep slopes (Ni et al. 2019); no effect on gentle slopes (§5) |
+| f_exflux_reduction | 1 | suppression of excessive outflow. Prevents negative depths at fronts advancing over dry ground (keep on in computations with dry beds) (§5) |
+| f_hcap_upwind | 1 | edge depth. 0: mean of both cells, 1: the mean capped by the upwind depth (default), 2: the upwind depth itself (removes the spike at a bore front; required in non-hydrostatic cases with breaking or bores. It increases the outflow onto dry ground, so check ex_flux in inundation runs) (§3, [advection](advection.md) §5) |
+| f_friction_fastmath | 0 | table approximation of h^(-4/3) in the friction term. 0: exact (default), 1-5: coarser and faster (relative error 2e-4 to 6%) (§8) |
+| p_diagratio | 2/(2+sqrt(2)) | share of the passage width given to the diagonal edges; the default makes the eight passage widths equal (normally no need to change) (§2) |
 
 **Advection and diffusion terms**
 
