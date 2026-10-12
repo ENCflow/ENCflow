@@ -1,6 +1,6 @@
 # The diffusion term of the momentum equation (supplement to the shallow water chapter)
 
-> English mirror of docs/users_guide/diffusion.md (based on commit e66dc06). The Japanese file is the master copy.
+> English mirror of docs/users_guide/diffusion.md (based on commit 28e1f98). The Japanese file is the master copy.
 
 [Back to the shallow water chapter](swflow.md) / [Back to the user's guide index](../users_guide.md)
 
@@ -235,16 +235,23 @@ Even with `f_diffusion_term = 0` the diffusion term is computed when
 
 ## 7. Verification and related cases
 
-There is no dedicated regression case yet that checks the diffusion term
-against an analytical solution (developer.md §20 holds the verification
-record of the implementation: bitwise identity with every reference when
-off; bitwise identity across rank and thread counts for model 1
-($`\nu_0`$ = 0.1 m²/s) and model 2 ($`n`$ = 0.02, default $`\alpha`$) in
-[test/wave](../../../test/wave/README.md) and for model 2 in
-[test/chichibu](../../../test/chichibu/README.md); exact mass conservation;
-preservation of the four-fold symmetry of the circular initial surface;
-smoothing of the velocity and depth peaks). Related checks:
-
+- [test/diffusion](../../../test/diffusion/README.md) -- **the analytical
+  benchmark of the diffusion term**. A Gaussian jet uniform in $`x`$,
+  $`u(y) = U_0\exp(-(y - y_c)^2/2\sigma^2)`$, in a flat frictionless channel
+  diffuses for 12.5 s with constant $`\nu`$ = 4 m²/s and is compared with
+  the analytical solution $`u = U_0\,\sigma/\sqrt{\sigma^2 + 2\nu t}\,\exp(-r^2/2(\sigma^2 + 2\nu t))`$.
+  The maximum error is 0.14% of $`U_0`$ ($`\Delta x`$ = 1 m) and 0.05%
+  (0.5 m), in both cases the size of the smoothing $`(p_d/4)\Delta^2 u''`$
+  of the cell-velocity reconstruction (the discretisation error of the
+  diffusion term itself is smaller). Bitwise identical with 2 and 4 MPI
+  ranks.
+- The verification record of the implementation (developer.md §20):
+  bitwise identity with every reference when off; bitwise identity across
+  rank and thread counts for model 1 ($`\nu_0`$ = 0.1 m²/s) and model 2
+  ($`n`$ = 0.02, default $`\alpha`$) in [test/wave](../../../test/wave/README.md)
+  and for model 2 in [test/chichibu](../../../test/chichibu/README.md);
+  exact mass conservation; preservation of the four-fold symmetry of the
+  circular initial surface; smoothing of the velocity and depth peaks.
 - [test/creep](../../../test/creep/README.md) -- the hillslope creep of the
   morphological module (isotropic linear diffusion
   $`\partial z/\partial t = D\nabla^2 z`$) checked against the analytical

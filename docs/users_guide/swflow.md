@@ -128,8 +128,9 @@ RK段内で仮の水深を更新するとき、他エッジの流量は前ステ
 - **検証ケース**: 段波 [test/dambreak](../../test/dambreak/README.md)、
   屈曲・階段・横流入 [test/bendloss](../../test/bendloss/README.md)、斜面流
   [test/hillslope](../../test/hillslope/README.md)、実地形
-  [test/chichibu](../../test/chichibu/README.md)。拡散項の解析解ベンチは
-  未整備(関連: [test/creep](../../test/creep/README.md))。
+  [test/chichibu](../../test/chichibu/README.md)。拡散項の解析解ベンチマーク
+  [test/diffusion](../../test/diffusion/README.md)(ガウス形ジェットの拡散。
+  誤差 0.14% 以下)。
 
 | パラメータ | 既定値 | 意味(詳細は解説ページの §) |
 |---|---|---|

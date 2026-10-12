@@ -1,0 +1,54 @@
+!======================================================================
+! diffusion: 格子を半分(Δx = Δy = 0.5 m、dt = 0.02 s)にした収束確認
+!   param.txt と同じ問題。ν_max = Δx²/(2.83 dt) = 4.4 m²/s > ν = 4。
+!   プローブは中央列 ix = 200 の iy = 101(y = 50.25 m、r = 0.25)、
+!   121(r = 9.75)、141(r = 19.75)、161(r = 29.75)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02
+  t0 = 0
+  tt = 12.5
+  dt_disp = 2.5
+  dt_file = 6.25
+  dt_recrd = 0.25
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_record = '-'
+  dir_result = 'result_fine'
+  f_check_cfl = 0
+  f_out_u = 1
+/
+
+&list_enc
+  f_diffusion_term = 1
+  p_diffusion_nu = 4.0
+  f_adaptive_runge = 0      ! param.txt と同じ理由(README「既知の問題」)
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 1.0
+  f_user_routine = "jet_gaussian"
+/
+
+&list_geoinfo
+  lx = 200.0
+  ly = 101.0
+  nx = 400
+  ny = 202
+  f_ztype = 0
+  f_rntype = 0
+  z0 = 0.0
+  rn0 = 0.0
+/
+
+&list_record
+  pbxytype = 0
+  pbxy(1:2,1) = 200, 101
+  pbxy(1:2,2) = 200, 121
+  pbxy(1:2,3) = 200, 141
+  pbxy(1:2,4) = 200, 161
+/

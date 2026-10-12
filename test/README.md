@@ -35,6 +35,7 @@ reference の更新(`-u`)は結果の妥当性を人間が確認してから行�
 | [dambreak/](dambreak/) | 湿潤床のダム破壊。Stoker 解析解による移流スキームの検証 | 浅水流 | ref・解析 |
 | [hillslope/](hillslope/) | 斜面流の移流スキーム比較。解析解と格子収束 | 浅水流・降雨 | 解析(スクリプト) |
 | [bendloss/](bendloss/) | 1 セル幅水路の 90° 屈曲で生じる人工的な損失の切り分け | 河道・移流スキーム | 解析 |
+| [diffusion/](diffusion/) | 運動方程式の拡散項のガウス形ジェット・ベンチマーク(解析解・格子収束) | 浅水流 f_diffusion_term | 解析 |
 | **非静水圧補正** | | | |
 | [nhwave/](nhwave/) | 閉じた水槽の定在波。静水圧 ENC の数値分散の計測 | 浅水流 | ref |
 | [nhwave_nh/](nhwave_nh/) | 同じ水槽に 1 層非静水圧補正を掛けた定在波 | 非静水圧 | ref |

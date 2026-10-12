@@ -1,6 +1,6 @@
 # Shallow water flow computation (&list_enc and numerical constants)
 
-> English mirror of docs/users_guide/swflow.md (based on commit 7f4b2ac). The Japanese file is the master copy.
+> English mirror of docs/users_guide/swflow.md (based on commit 28e1f98). The Japanese file is the master copy.
 
 [Back to the user's guide index](../users_guide.md)
 
@@ -150,8 +150,9 @@ the coefficient follows from the flow and the roughness).
   bends, steps and lateral inflow [test/bendloss](../../../test/bendloss/README.md),
   hillslope flow [test/hillslope](../../../test/hillslope/README.md), real
   terrain [test/chichibu](../../../test/chichibu/README.md) (READMEs in
-  Japanese). No analytical benchmark of the diffusion term exists yet
-  (related: [test/creep](../../../test/creep/README.md)).
+  Japanese); analytical benchmark of the diffusion term
+  [test/diffusion](../../../test/diffusion/README.md) (diffusion of a Gaussian
+  jet, error below 0.14%).
 
 | Parameter | Default | Meaning (details in the § of the explanation pages) |
 |---|---|---|
