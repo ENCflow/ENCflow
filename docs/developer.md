@@ -362,8 +362,8 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
     と整合する方向(わずかに速く・高く)。MPI np=2, 4 の Log.txt は逐次と
     バイト一致(nhsolitary・nhbore)、test/diffusion のプローブ CSV も np=4
     で一致。
-    -fcheck=all np=2(nhsolitary・chichibu)は異常なし。**reference の更新は
-    人間の目視確認後**(規律 1)。
+    -fcheck=all np=2(nhsolitary・chichibu)は異常なし。5 ケースの reference
+    は同日、上の数値を人間が確認したうえで更新(規律 1)。
 - mn は h と同じ二重バッファ方式に移行済み(2026-xx): **無印 mn = 時刻 n
   (読み取り専用の正準状態)、mn1 = 書き込みバッファ、complete でコミット**。
   コミットは行並列ループ(エッジ行 js-1..je)で行う。エッジの書き込み集合は
@@ -2170,7 +2170,7 @@ docs/users_guide/diffusion.md(英語版 docs/en/users_guide/diffusion.md)。
   始まるケースは mn1 = 0 のままで不変(reference と一致。-Ofast の ULP=1 の
   行は §28.3 のビルド差)。初期流速を
   与えるケース(nhsolitary・nhbore・nhcurrent・nhshelf・nhbreak)は結果が
-  変わる(差の大きさは §7 の記録。reference の更新は人間の目視確認後)。
+  変わる(差の大きさは §7 の記録。reference は人間の確認を得て同日更新)。
 
 ## 21. 移流項 taxy の乾湿遷移時の古い値の除去(2026-08-07 挙動変更)
 

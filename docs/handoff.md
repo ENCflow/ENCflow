@@ -43,10 +43,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 未完了・検証待ち
 
-000. **初期流量 mn の整合(2026-10-12 修正済み。developer.md §7・§20)**:
-   初期流速を与えるケース(nhsolitary・nhbore・nhcurrent・nhshelf・nhbreak)
-   は初回ステップの減速が消えて結果が変わる。**reference の更新は人間の
-   目視確認後**(差の大きさは developer.md §7 の記録)。
+000. **nh* ケースの README「所見」表の数値の更新(2026-10-12)**: 初期流量
+   mn の整合の修正(developer.md §7)で nhsolitary・nhbore・nhcurrent・
+   nhshelf・nhbreak の結果が変わり、reference は更新したが、README の所見表
+   (param.txt 以外の構成の行を含む)は修正前の数値のまま。param.txt の行の
+   新しい読み値は §7 に記録(例: nhsolitary a(60 s)/a0 1.035→1.049、
+   nhcurrent k/k_NH 1.027→1.025)。全構成を再実行して表を更新する。
 
 00. **移流項の改良(developer.md §68。2026-10-01 段 0〜2 完了)**
    - 段 0: test/dambreak(Stoker 解析解。幅 400 m)。段 1: 旧 TVD 分岐の

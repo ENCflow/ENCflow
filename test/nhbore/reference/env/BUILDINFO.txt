@@ -1,8 +1,8 @@
-date      : 2026-10-05 21:39:08
+date      : 2026-10-12 07:24:55
 host      : vm
 user      : 
 pwd       : /home/user/ENCflow/test/nhbore
 exe       : /home/user/ENCflow/bin/encflow
-mode      : mpi__a452c4d1_double
+mode      : serial__double
 modules   : (no modules)
-lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f2bb1400000)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f9e05000000)
