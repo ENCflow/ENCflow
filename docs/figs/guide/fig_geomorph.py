@@ -1,135 +1,253 @@
-"""土砂・地形変化(docs/users_guide/geomorph.md)の説明図。
+"""Illustrative geomorphic processes and the states they change.
 
-  geomorph_processes.png  斜面〜河道〜水域の断面に各プロセス(f_*)を配置
-  geomorph_morfac.png     実行制御(dt_geomorph・morfac)の考え方
-データ不要の模式図(matplotlib のみ)。draw(lang) は最初の図の path を返す。
+Not a simultaneous configuration or a computed terrain. Sediment branches
+that cannot coexist are explicitly distinguished in the key. Surface, soil,
+moving layer and water polygons share sampled boundaries; shoreline roots
+are inserted into both the water fill and the free-surface line.
+
+Generate only processes: python docs/figs/make_guide_figs.py geomorph
+Run control is independent: python docs/figs/make_guide_figs.py geomorph_morfac
 """
+from io import StringIO
+from pathlib import Path
 import numpy as np
-from _style import *
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
+from matplotlib.patches import Polygon, Rectangle, Circle
+from _schematic import drawing_style, text, block, line, arrow, monotone_cubic, INK, MUTED, RULE
+
+CANVAS, DPI = (1575, 1630), 150
+SOIL, ROCK, WATER = '#dfc58e', '#d4d1c9', '#d7eaf5'
+BLUE, SED, MOVING, GREEN = '#287ca5', '#ad5b29', '#da9760', '#52744b'
+BASE = -0.40
 
 T = {
-    "ja": dict(
-        title1="地形変化のプロセス(重ね合わせ。有効化は各 f_* = 1、全体は fn_geomorph)",
-        rain="降雨(fn_precip)",
-        splash="乾式斜面侵食 f_splash\n乾燥セル(h ≤ dd)のみ\n剥離分は系外へ排出",
-        wash="斜面浸食 f_wash\n雨滴+面状侵食 → 浮遊砂\n(f_suspend 必須)",
-        creep="斜面クリープ f_creep(線形拡散 creep_d)",
-        slide="斜面崩壊 f_slide(Fs < 1 で流動化)\n瞬時流動化 fn_dbinit(崩壊深 D)",
-        debris="土石流 f_debris(混合体 h + hs)\n停止分は f_dbstop で z へ固定",
-        fluvial="掃流砂 f_fluvial\n(Exner 式)",
-        suspend="浮遊砂 f_suspend\nhs の移流、E 巻き上げ・D 沈降",
-        wthr="基岩風化 f_wthr\n(裸岩 → 土層 sd)",
-        uplift="隆起 f_uplift(uplift0。負で沈降)",
-        bedslide="動く底層 f_bedslide(hb。fn_bsinit)\nz・sd の内数、水中でも走る\n→ 水面を持ち上げ地滑り津波",
-        sea="湖・海(通常セル+初期水位)",
-        lg_soil="土層 sd(可動層。sd = 0 は不侵食)", lg_rock="基岩 z − sd", lg_water="水 h", lg_z="z(計算標高)",
-    ),
-    "en": dict(
-        title1="Landform-change processes (superposed; each enabled by f_* = 1, module by fn_geomorph)",
-        rain="rainfall (fn_precip)",
-        splash="dry-slope erosion f_splash\ndry cells (h ≤ dd) only\ndetached material leaves the system",
-        wash="hillslope erosion f_wash\nrainsplash + sheet erosion → suspended\n(requires f_suspend)",
-        creep="hillslope creep f_creep (linear diffusion creep_d)",
-        slide="slope failure f_slide (fluidized when Fs < 1)\ninstant fluidization fn_dbinit (failure depth D)",
-        debris="debris flow f_debris (mixture h + hs)\nstopped part fixed into z by f_dbstop",
-        fluvial="bedload f_fluvial\n(Exner equation)",
-        suspend="suspended sediment f_suspend\nadvection of hs,\nentrainment E, settling D",
-        wthr="bedrock weathering f_wthr\n(bare rock → soil sd)",
-        uplift="uplift f_uplift (uplift0; negative = subsidence)",
-        bedslide="moving bed layer f_bedslide (fn_bsinit)\nhb inside z and sd, runs under water too\n→ lifts the surface: landslide tsunami",
-        sea="lake / sea (ordinary cells\n+ initial level)",
-        lg_soil="soil sd (mobile layer; sd = 0 is non-erodible)", lg_rock="bedrock z − sd", lg_water="water h", lg_z="z (computational elevation)",
-    ),
+ 'ja': {
+    'title':'地形変化過程  |  土砂の行き先と、変化する状態量',
+    'sub':'fn_geomorph / &list_geomorph  •  過程の概念配置。位置・形・厚さは説明用で、計算結果ではない。',
+    'rule1':'併用条件: f_wash は f_suspend が必須。f_suspend と f_debris は併用不可。',
+    'rule2':'f_slide（1: 判定＋流動化 / 2: 判定のみ）と fn_dbinit は f_debris が必須。',
+    'rule3':'土石流・動く底層は morfac = 1。すべての番号を同時に有効化する設定例ではない。',
+    'rain':'地表到達降雨 P', 'out':'系外排出', 'hillslope':'斜面', 'channel':'河道', 'lake':'湖・海: 通常セル＋初期水位',
+    'mixture':'混合体 h + hs', 'move':'hb', 'exchange':'E: 巻き上げ / D: 沈降',
+    'soil':'土層 sd', 'rock':'基岩（上面 z − sd）', 'water':'水 h（浮遊砂は hs）',
+    'bed':'地表・河床 z', 'mobile':'動く底層 hb（sd の内数）',
+    'cards':[
+       ('乾式斜面侵食','f_splash','乾燥セル h ≤ dd、河道外。\n土砂は hs へ入れず系外へ。\nz・sd が減る。'),
+       ('湿潤斜面の侵食','f_wash → f_suspend','湿潤セル h > dd、河道外。\n雨滴・面状侵食で hs へ供給。\nz・sd が減る。'),
+       ('斜面クリープ','f_creep / creep_d','標高 z を線形拡散で平滑化。\nsd は更新せず、sd = 0 でも作用。\n有限の土層輸送とは異なる近似。'),
+       ('掃流砂','f_fluvial','流砂量の収支（Exner 式）で\nz・sd を共に更新。\n侵食量は可動土層で制限。'),
+       ('浮遊砂','f_suspend','hs を水とともに移流。\nE・D で河床と交換し z・sd を更新。\n乾燥時は残る hs を河床へ。'),
+       ('土石流・斜面崩壊','f_debris / f_slide / fn_dbinit','混合体 h + hs と河床の交換。\nf_slide = 1: Fs < 1 で流動化。\nf_dbstop = 1: 低速時の固定を追加。'),
+       ('動く底層','f_bedslide / fn_bsinit','hb は z・sd の内側を移動。\n移送時は h を保ち、水面も上下。\n停止後も質量は z・sd に残る。'),
+       ('基岩風化・土層生成','f_wthr','z を保ち、sd を増やす。\n土層底 z − sd が下がる。\n土層が厚いほど生成は遅い。'),
+       ('隆起・沈降','f_uplift / uplift0','z を上下させ、sd は保つ。\n土層底も同じだけ上下する。\nuplift0 < 0 なら沈降。'),
+    ],
+    'foot1':'sd = 0 は、土層からの侵食・流動化を止める条件。全過程で z が固定される条件ではない。',
+    'foot2':'水域でも通常セルなら土砂過程を計算する。海域マスク sw > 0 では地形更新を行わない。',
+    'foot3':'図の1〜9は説明用の番号で、処理順ではない。併用条件・物性値・更新間隔は本文参照。',
+ },
+ 'en': {
+    'title':'Geomorphic processes  |  Sediment pathways and changing states',
+    'sub':'fn_geomorph / &list_geomorph  •  Conceptual placement; illustrative shapes and thicknesses, not computed results.',
+    'rule1':'Coupling: f_wash requires f_suspend. f_suspend and f_debris cannot be combined.',
+    'rule2':'f_slide (1: judge + mobilize / 2: judge only) and fn_dbinit both require f_debris.',
+    'rule3':'Debris flow and moving bed layer require morfac = 1. This is not an all-process configuration.',
+    'rain':'Rain reaching the ground P', 'out':'Leaves system', 'hillslope':'Hillslope', 'channel':'Channel', 'lake':'Lake / sea: ordinary cells + initial level',
+    'mixture':'Mixture h + hs', 'move':'hb', 'exchange':'E: entrainment / D: settling',
+    'soil':'Soil depth sd', 'rock':'Bedrock (top: z − sd)', 'water':'Water h (suspended load: hs)',
+    'bed':'Ground / bed z', 'mobile':'Moving layer hb (part of sd)',
+    'cards':[
+       ('Dry-slope erosion','f_splash','Dry cells h ≤ dd; outside channels.\nSediment leaves the system, not into hs.\nBoth z and sd decrease.'),
+       ('Wet-slope erosion','f_wash → f_suspend','Wet cells h > dd; outside channels.\nRain / sheet erosion supplies hs.\nBoth z and sd decrease.'),
+       ('Hillslope creep','f_creep / creep_d','Linear diffusion smooths z.\nsd is unchanged; acts even at sd = 0.\nNot transport of a finite soil layer.'),
+       ('Bedload','f_fluvial','Sediment-flux balance (Exner)\nupdates z and sd together.\nErosion is limited by available soil.'),
+       ('Suspended sediment','f_suspend','Advect hs with water; exchange E / D\nwith the bed updates z and sd.\nResidual hs deposits when cells dry.'),
+       ('Debris flow / slope failure','f_debris / f_slide / fn_dbinit','Mixture h + hs exchanges with the bed.\nf_slide = 1: mobilize where Fs < 1.\nf_dbstop = 1 adds low-speed fixing.'),
+       ('Moving bed layer','f_bedslide / fn_bsinit','hb moves within z and sd.\nTransport keeps h; the surface shifts.\nStopped mass remains in z and sd.'),
+       ('Weathering / soil production','f_wthr','Keep z, increase sd.\nThe soil base z − sd lowers.\nProduction slows under thicker soil.'),
+       ('Uplift / subsidence','f_uplift / uplift0','Shift z; keep sd unchanged.\nThe soil base shifts equally.\nuplift0 < 0 gives subsidence.'),
+    ],
+    'foot1':'sd = 0 stops erosion / mobilization of soil; it does not fix z for every process.',
+    'foot2':'Sediment processes act in ordinary submerged cells. Sea-mask cells (sw > 0) receive no landform updates.',
+    'foot3':'Numbers 1–9 identify explanations, not execution order. See text for coupling, parameters and update intervals.',
+ },
 }
 
 
-def _profile():
-    xs = [0, 1.0, 1.6, 2.6, 4.2, 5.2, 5.5, 6.1, 6.4, 7.0, 7.4, 7.9, 8.7, 9.6, 10.4]
-    zs = [4.0, 4.0, 2.9, 2.3, 1.45, 1.05, 0.8, 0.8, 1.05, 1.45, 1.6, 1.25, 0.45, 0.22, 0.2]
-    x = np.linspace(0, 10.4, 521)
-    z = np.interp(x, xs, zs)
-    th = np.full_like(x, 0.25)
-    th[(x > 1.02) & (x < 1.7)] = 0.08          # 崖面は土層が薄い
-    return x, z, th
+def profile():
+    x=np.unique(np.r_[np.linspace(0,10.4,1041),1.0,1.55])
+    knots=[1.55,2.6,4.3,5.1,5.55,5.9,6.3,6.9,7.4,7.9,8.6,9.4,10.4]
+    heights=[2.85,2.3,1.45,1.13,.76,.76,1.03,1.46,1.58,1.23,.45,.24,.22]
+    z=np.empty_like(x)
+    z[x<=1]=4
+    cliff=(x>1)&(x<1.55)
+    z[cliff]=4+(2.85-4)*(x[cliff]-1)/.55  # Deliberate cliff breaks.
+    z[x>=1.55]=monotone_cubic(knots,heights,x[x>=1.55])
+    sd=.30-.17*np.exp(-((x-1.38)/.27)**4)
+    # Illustrative weathering lowers the soil base below the plateau, not z.
+    sd+=.22*np.maximum(0,1-((x-.55)/.42)**2)**2
+    hb=np.zeros_like(x); mask=(x>=7.4)&(x<=9.25)
+    hb[mask]=.21*np.sin(np.pi*(x[mask]-7.4)/1.85)**.65
+    return x,z,sd,hb
+
+
+def xy(x,z):
+    return np.column_stack((60+139*np.asarray(x),770-110*np.asarray(z)))
+
+
+def layer(ax,key,x,bottom,top,face,edge='none',hatch=None,zorder=2):
+    polygon=Polygon(np.vstack([xy(x,top),xy(x[::-1],bottom[::-1])]),closed=True,
+        facecolor=face,edgecolor=edge,linewidth=.5,hatch=hatch,zorder=zorder)
+    polygon.set_gid(key); ax.add_patch(polygon)
+    return polygon
+
+
+def wet_sections(x,z,surface):
+    """Clip two piecewise-linear profiles at their exact shared intersections."""
+    groups=[]; part=[]
+    for a,b,za,zb,wa,wb in zip(x[:-1],x[1:],z[:-1],z[1:],surface[:-1],surface[1:]):
+        da,db=wa-za,wb-zb
+        if da<=0 and db<=0:
+            if part: groups.append(np.array(part)); part=[]
+            continue
+        left,right=(a,za,wa),(b,zb,wb)
+        if da<0 or db<0:
+            f=-da/(db-da); c=a+f*(b-a); v=za+f*(zb-za)
+            if da<0: left=(c,v,v)
+            else: right=(c,v,v)
+        if not part: part=[left]
+        part.append(right)
+        if db<0: groups.append(np.array(part)); part=[]
+    if part: groups.append(np.array(part))
+    return groups
+
+
+def along(ax,key,x,z,color=SED,lw=1.7):
+    a=arrow(ax,xy(x,z),color,lw=lw,size=10)
+    a.set_gid(key)
+    return a
+
+
+def badge(ax,n,cx,cy,target=None):
+    if target is not None:
+        direction=np.asarray(target)-[cx,cy]
+        start=np.asarray([cx,cy])+17*direction/np.linalg.norm(direction)
+        line(ax,[start,target],MUTED,.8,z=9).set_gid(f'leader_{n}')
+    p=Circle((cx,cy),17,facecolor='white',edgecolor=INK,linewidth=.9,zorder=15)
+    p.set_gid(f'badge_{"plot" if target is not None else "key"}_{n}'); ax.add_patch(p)
+    text(ax,cx,cy,str(n),size=9.3,weight='bold',ha='center',va='center')
+
+
+def build(lang):
+    t=T[lang]
+    fig=plt.figure(figsize=(CANVAS[0]/DPI,CANVAS[1]/DPI),dpi=DPI)
+    ax=fig.add_axes([0,0,1,1]); ax.set(xlim=(0,CANVAS[0]),ylim=(CANVAS[1],0)); ax.axis('off')
+    text(ax,35,22,t['title'],size=12,weight='bold')
+    text(ax,35,66,t['sub'],size=8.8,color=MUTED)
+    ax.add_patch(Rectangle((35,108),1505,123,facecolor='#f4f3ee',edgecolor='none',zorder=0))
+    for k in range(3): text(ax,55,124+k*34,t[f'rule{k+1}'],size=9)
+    x,z,sd,hb=profile()
+    layer(ax,'rock',x,np.full_like(x,BASE),z-sd,ROCK)
+    layer(ax,'soil',x,z-sd,z,SOIL)
+    line(ax,xy(x,z-sd),'#9d8a63',.65).set_gid('soil_base')
+    # The orange bed layer is wholly inside the same soil profile.
+    b=(x>=7.4)&(x<=9.25)
+    layer(ax,'moving_bed',x[b],z[b]-hb[b],z[b],MOVING,edge=SED,hatch='///',zorder=3)
+    surface=np.ones_like(x)
+    surface+=.15*np.exp(-((x-8.85)/.36)**2)  # Qualitative free-surface disturbance.
+    for k,p in enumerate(wet_sections(x,z,surface)):
+        layer(ax,f'water_{k}',p[:,0],p[:,1],p[:,2],WATER,zorder=4)
+        line(ax,xy(p[:,0],p[:,2]),BLUE,1.2,z=6).set_gid(f'water_surface_{k}')
+    # Wet-slope sheet water and debris mixture are separate conceptual patches.
+    for key,a,b,h,fill in [('sheet',2.4,3.55,.17,WATER),('mixture',3.8,5.15,.29,MOVING)]:
+        m=(x>=a)&(x<=b); xx=x[m]; zz=z[m]
+        depth=h*np.maximum(0,np.sin(np.pi*(xx-a)/(b-a)))**.65
+        layer(ax,key,xx,zz,zz+depth,fill,zorder=4)
+    line(ax,xy(x,z),INK,1.1,z=7).set_gid('ground_surface')
+    # Rain and local sediment movement.
+    for xr in np.arange(.12,.95,.17):
+        zr=float(np.interp(xr,x,z))
+        line(ax,xy([xr+.04,xr],[zr+.55,zr+.29]),BLUE,.9)
+    for xr in np.arange(2.5,3.5,.22):
+        zr=float(np.interp(xr,x,z))
+        line(ax,xy([xr+.04,xr],[zr+.68,zr+.45]),BLUE,.9)
+    text(ax,62,241,t['rain'],size=8.4,color=BLUE)
+    along(ax,'dry_export',[1.23,1.65],[float(np.interp(1.23,x,z)),3.83],SED)
+    text(ax,300,337,t['out'],size=8.2,color=SED)
+    xx=np.linspace(2.61,3.28,20); zz=np.interp(xx,x,z)+.07
+    along(ax,'sheet_sediment',xx,zz,SED,1.4)
+    xx=np.linspace(1.75,2.16,20); zz=np.interp(xx,x,z)-.13
+    along(ax,'creep_direction',xx,zz,GREEN,1.5)
+    xx=np.linspace(4.03,4.9,30); zz=np.interp(xx,x,z)+.12
+    along(ax,'debris_direction',xx,zz,SED)
+    text(ax,795,555,t['mixture'],size=8.4,color=SED)
+    xx=np.linspace(5.5,6.04,25); zz=np.interp(xx,x,z)+.04
+    along(ax,'bedload_direction',xx,zz,SED,1.4)
+    # E and D are exchanges at the lake bed; suspended particles lie in water.
+    for xr in [9.2,9.4,9.7,10.1]:
+        for height in [.46,.73,.88]:
+            ax.add_patch(Circle(tuple(xy([xr],[height])[0]),2.2,facecolor=SED,edgecolor='none',zorder=8))
+    along(ax,'entrainment',[9.55,9.55],[float(np.interp(9.55,x,z)),.92],SED,1.4)
+    along(ax,'deposition',[9.95,9.95],[.92,float(np.interp(9.95,x,z))],SED,1.4)
+    text(ax,1240,610,t['exchange'],size=8.3,color=SED)
+    xx=np.linspace(7.75,8.9,35); zz=np.interp(xx,x,z)-np.interp(xx,x,hb)*.5
+    along(ax,'bed_layer_direction',xx,zz,SED)
+    text(ax,1156,712,t['move'],size=8.6,color=SED)
+    # Weathering: old soil base is dashed, present base is deeper; z stays fixed.
+    xx=np.linspace(.2,.9,25)
+    line(ax,xy(xx,np.full_like(xx,3.7)),GREEN,1,ls='--',z=8).set_gid('weathering_old_base')
+    along(ax,'weathering',[.55,.55],[3.7,float(np.interp(.55,x,z-sd))],GREEN,1.5)
+    for xr in [2.8,4.5,6.8]: along(ax,f'uplift_{xr}',[xr,xr],[-.24,.18],GREEN,1.5)
+    text(ax,530,310,t['hillslope'],size=9,color=MUTED)
+    text(ax,807,615,t['channel'],size=8.8,color=BLUE)
+    text(ax,1150,475,t['lake'],size=8.8,color=BLUE)
+    # Badge positions are shared by both languages; long notes live below.
+    tags=[(1,284,305,1.27,float(np.interp(1.27,x,z))),(2,473,407,2.9,2.2),(3,338,573,1.95,2.48),
+          (4,858,746,5.75,.8),(5,1537,555,10.1,.73),(6,734,490,4.55,1.57),
+          (7,1212,548,8.3,.57),(8,120,443,.55,3.48),(9,492,776,4.5,-.04)]
+    for n,cx,cy,tx,tz in tags: badge(ax,n,cx,cy,tuple(xy([tx],[tz])[0]))
+    # Legend uses the same material palette and surface stroke as the section.
+    for lx,key,fill in [(40,'soil',SOIL),(410,'rock',ROCK),(840,'water',WATER)]:
+        ax.add_patch(Rectangle((lx,845),28,17,facecolor=fill,edgecolor='none'))
+        text(ax,lx+40,840,t[key],size=8.7)
+    line(ax,[(40,895),(68,895)],INK,1.1)
+    text(ax,80,882,t['bed'],size=8.7)
+    ax.add_patch(Rectangle((410,889),28,17,facecolor=MOVING,edgecolor=SED,hatch='///',linewidth=.5))
+    text(ax,450,882,t['mobile'],size=8.7)
+    # Nine keys preserve a landscape overview without crossing text leaders.
+    for k,(title,flag,body) in enumerate(t['cards']):
+        left=35+(k%3)*510; top=938+(k//3)*181
+        line(ax,[(left,top),(left+475,top)],RULE,.8)
+        badge(ax,k+1,left+18,top+32)
+        text(ax,left+47,top+18,title,size=9.5,weight='bold')
+        text(ax,left+47,top+58,flag,size=8.5,color=SED if k in [0,1,3,4,5,6] else GREEN)
+        block(ax,left+47,top+91,body,425,size=8.6)
+    for k in range(3): text(ax,35,1500+36*k,t[f'foot{k+1}'],size=8.6,color=MUTED)
+    return fig
 
 
 def fig_processes(lang):
-    t = T[lang]
-    en = lang == "en"
-    fig, ax = plt.subplots(figsize=(10.5, 5.9), layout="constrained")
-    ax.axis("off"); ax.set_xlim(-0.2, 10.5); ax.set_ylim(-1.05, 5.75)
-    x, z, th = _profile()
-    yb = -0.7
-    ax.fill_between(x, yb, z - th, color=C_ROCK, lw=0, zorder=1)
-    ax.fill_between(x, z - th, z, color=C_SOIL, lw=0, zorder=2)
-    ax.plot(x, z, color="k", lw=1.0, zorder=5)
-    # 水(河道と湖・海)。湖面には底層の突入による持ち上がり
-    wl = 1.0
-    chan = (x > 5.2) & (x < 6.2)
-    ax.fill_between(x, z, wl, where=chan & (z < wl), color=C_WATER_L, lw=0, zorder=3)
-    ax.plot(x[chan & (z < wl)], np.full(np.sum(chan & (z < wl)), wl), color=C_WATER, lw=1.2, zorder=4)
-    lake = x >= 8.15
-    surf = wl + 0.16 * np.exp(-((x - 8.75) / 0.3) ** 2)
-    ax.fill_between(x, z, surf, where=lake & (z < surf), color=C_WATER_L, lw=0, zorder=3)
-    ax.plot(x[lake], surf[lake], color=C_WATER, lw=1.2, zorder=4)
-    label(ax, 9.75, 0.8, t["sea"], color="#1f4f8f", fs=8)
-    # 雨
-    for xr in np.arange(0.25, 3.75, 0.22):
-        zr = np.interp(xr, x, z) + (0.3 if xr < 1.0 else 0.42)
-        ax.plot([xr, xr - 0.05], [zr + 0.18, zr], color=C_C, lw=0.9, alpha=0.8, zorder=4)
-    label(ax, 0.3, 4.6, t["rain"], color=C_C, fs=8, ha="left")
-    # 乾式斜面侵食(崖)・斜面浸食(斜面)・クリープ
-    ax.annotate(t["splash"], (1.3, 3.45), (0.0, 4.72), fontsize=8.5, ha="left", va="bottom",
-                arrowprops=dict(arrowstyle="-", color=C_P, lw=0.7), zorder=8)
-    ax.annotate(t["wash"], (3.0, 2.02), (1.95, 3.78), fontsize=8.5, ha="left", va="bottom",
-                arrowprops=dict(arrowstyle="-", color=C_P, lw=0.7), zorder=8)
-    ax.annotate(t["creep"], (2.3, 2.45), (4.05, 3.3), fontsize=8.5, ha="left", va="center",
-                arrowprops=dict(arrowstyle="-", color=C_P, lw=0.7), zorder=8)
-    # 崩壊(すべり面)と土石流
-    sx = np.linspace(2.75, 3.95, 40)
-    sz = np.interp(sx, x, z) - 0.2 - 0.12 * np.sin(np.pi * (sx - 2.75) / 1.2)
-    ax.plot(sx, sz, color=C_X, lw=1.4, ls="--", zorder=6)
-    ax.annotate(t["slide"], (3.35, 1.88), (4.1, 2.68), fontsize=8.5, ha="left", va="center",
-                arrowprops=dict(arrowstyle="-", color=C_P, lw=0.7), zorder=8)
-    arrow(ax, (3.0, 2.2), (5.05, 1.22), color=C_X, lw=2.2)
-    label(ax, 4.7 if en else 4.95, 2.12, t["debris"], color=C_X, fs=8.5)
-    # 河道: 掃流砂・浮遊砂
-    arrow(ax, (5.45, 0.86), (6.0, 0.86), color=C_X, lw=1.6)
-    label(ax, 5.72, 0.2, t["fluvial"], color="white", fs=8.5)
-    arrow(ax, (5.5, 0.83), (5.5, 0.98), color=C_X, lw=1.2)
-    arrow(ax, (5.95, 0.98), (5.95, 0.83), color=C_X, lw=1.2)
-    ax.annotate(t["suspend"], (5.75, 1.0), (7.1, 2.15) if en else (6.95, 2.15), fontsize=8.5, ha="center", va="center",
-                arrowprops=dict(arrowstyle="-", color=C_P, lw=0.7), zorder=8)
-    # 風化・隆起
-    arrow(ax, (0.9, 2.95), (0.9, 3.7), color=C_G, lw=1.8)
-    label(ax, 0.15, 2.5, t["wthr"], color="white", fs=8.5, ha="left")
-    for xu in (1.0, 3.5, 6.0):
-        arrow(ax, (xu, -0.62), (xu, -0.2), color=C_G, lw=1.8)
-    label(ax, 1.25, -0.42, t["uplift"], color="white", fs=8.5, ha="left")
-    # 動く底層(水中へ走る)
-    bx = (x > 7.45) & (x < 9.05)
-    ax.fill_between(x, z - 0.18, z, where=bx, color=C_X, alpha=0.55, hatch="///", lw=0, zorder=2.5)
-    arrow(ax, (7.75, 1.52), (8.95, 0.5), color=C_X, lw=2.2)
-    ax.annotate(t["bedslide"], (8.45, 1.1), (8.05, 2.8) if en else (7.95, 2.3), fontsize=8.5, ha="left", va="center",
-                arrowprops=dict(arrowstyle="-", color=C_P, lw=0.7), zorder=8)
-    # 凡例
-    from matplotlib.patches import Patch
-    from matplotlib.lines import Line2D
-    handles = [Line2D([], [], color="k", lw=1.0, label=t["lg_z"]), Patch(fc=C_SOIL, label=t["lg_soil"]),
-               Patch(fc=C_ROCK, label=t["lg_rock"]), Patch(fc=C_WATER_L, ec=C_WATER, label=t["lg_water"])]
-    ax.legend(handles=handles, loc="lower right", fontsize=8, frameon=True, framealpha=0.9, edgecolor="none",
-              bbox_to_anchor=(1.0, -0.02), ncol=2)
-    ax.set_title(t["title1"], loc="left", fontsize=10)
-    return save(fig, "geomorph_processes", lang)
+    if lang not in T: raise ValueError('lang must be ja or en')
+    out=Path(__file__).resolve().parents[1]/('geomorph_processes'+('' if lang=='ja' else '_en')+'.png')
+    with drawing_style():
+        fig=build(lang)
+        try:
+            fig.savefig(out,dpi=DPI)
+            svg=StringIO()
+            fig.savefig(svg,format='svg',metadata={'Date':None,
+                'Description':'Conceptual ENCflow geomorphic processes, not a computed terrain or an all-process configuration. Water, soil and moving-layer boundaries share coordinates. The key distinguishes state changes and incompatible sediment branches.'})
+            out.with_suffix('.svg').write_text('\n'.join(s.rstrip() for s in svg.getvalue().splitlines())+'\n',encoding='utf-8',newline='\n')
+        finally: plt.close(fig)
+    return str(out)
 
 
 def fig_morfac(lang):
-    # Keep the processes diagram independent of the run-control renderer.
+    """Retain the explicit legacy entry point without regenerating it in draw."""
     from fig_geomorph_morfac import draw as draw_morfac
     return draw_morfac(lang)
 
 
 def draw(lang):
-    p = fig_processes(lang)
-    fig_morfac(lang)
-    return p
+    return fig_processes(lang)
