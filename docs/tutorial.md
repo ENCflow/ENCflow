@@ -47,6 +47,11 @@ ENCflow の使い方を、実行できる例題つきで段階的に学ぶため
 | [地下水](users_guide/gwflow.md) | [地下水モデル](users_guide/gwflow_models.md) |
 | [土砂・地形変化](users_guide/geomorph.md) | [土砂輸送と斜面・長期地形過程](users_guide/sediment.md)、[土石流・斜面崩壊・動く底層](users_guide/massflow.md) |
 | [水質](users_guide/wq.md) | [水質モデル](users_guide/wq_models.md) |
+| [降雨・気象](users_guide/forcing.md) | [降雨・気象のモデル](users_guide/forcing_models.md) |
+| [河道](users_guide/channel.md) | [河道の解説](users_guide/channel_models.md) |
+| [ネスティング](users_guide/nest.md) | [ネスティングの解説](users_guide/nest_models.md) |
+| [規定底面運動](users_guide/bedmotion.md) | [規定底面運動の解説](users_guide/bedmotion_models.md) |
+| [流木](users_guide/driftwood.md)・[家屋破壊・瓦礫](users_guide/bldgdebris.md) | [流木モデル](users_guide/driftwood_models.md)、[家屋破壊・瓦礫モデル](users_guide/bldgdebris_models.md) |
 
 あなたが ENCflow を利用する理由は、**複数のプロセスを 1 つの計算の中で
 連鎖させたい**からかもしれません(降雨 → 流出 → 土砂 → 河道、
