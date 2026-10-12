@@ -1,6 +1,6 @@
 # Shallow water flow computation (&list_enc and numerical constants)
 
-> English mirror of docs/users_guide/swflow.md (based on commit 97edd21). The Japanese file is the master copy.
+> English mirror of docs/users_guide/swflow.md (based on commit 7f4b2ac). The Japanese file is the master copy.
 
 [Back to the user's guide index](../users_guide.md)
 
@@ -109,30 +109,60 @@ The Runge column on the screen shows the application rate.
 
 **Advection and diffusion terms**
 
-The advection schemes themselves (equations, the momentum control volume of the
-conservative form, stencils, the limiter) are explained on a separate page,
-[Advection schemes](advection.md).
-
-| Parameter | Default | Meaning |
-|---|---|---|
-| f_advection_scheme | 3 | scheme of the advection term. 1: cell-centre gradient (former default; a weighted 3×3 gradient projected onto the edge by averaging both cells. Non-conservative: bores lag and on real terrain the runoff gets faster and larger with grid refinement without converging), 2: momentum-conservative, first-order upwind, 3: momentum-conservative + MUSCL (van Leer; default). Schemes 2 and 3 extend the staggered-grid formulation of Stelling & Duinmeijer (2003) to the 8-direction ENC edges and give the correct speed of bores and hydraulic jumps (wet-bed dam break: bore position error 1%, versus a 15% lag with the former default 1). p_adv_upwind_index acts on scheme 1 only |
-| f_advection_donor | 0 | restriction of the upwind momentum donors of the momentum-conservative advection (f_advection_scheme 2, 3). 0: every wet cell (default), 1: on edges between channel cells (fn_rw mask, rw > 0) the donor in the flow direction is limited to channel cells (a flow-direction face whose donor is a non-channel cell uses ū = u_e; lateral faces are not affected, so the deceleration by lateral inflow from the hillslopes remains). Prevents the artificial loss that accumulates at bends, confluences and irregular 2-cell-wide reaches when the upwind edge on the control-volume line falls onto a flooded valley-floor or hillslope cell whose slow water then becomes the momentum donor (developer.md §68.18). In the real-terrain test (chichibu 100 m) the outlet peak rises by 16% and arrives 0.5 h earlier, closing about 40% of the gap to the non-conservative scheme 1. It also cuts the momentum exchange between the main channel and flooded valley-floor cells, so judge its validity against observations. Requires the channel mask; no effect with scheme 1 || f_dry_head_cap | 1 | cap the edge depth toward a dry cell by the energy head. 0: off, 1: on (default). When the receiving cell is dry (h < dd) the depth an edge can carry is capped at max(η + u_n²/2g − z_receiver, 0); an edge that cannot be overtopped gets zero velocity. Water never climbs onto dry ground above the water surface plus velocity head (leaks and blow-ups in 1–2 cell wide incised channels). Never triggers in the wave/dambreak/chichibu tests |
-| f_opening_dynamic | 1 | dynamic reassignment of blocked openings. 0: off, 1: edges between channel cells only (default; inactive without the channel mask fn_rw), 2: all edges. Passage-width shares that cannot be used because the diagonal neighbour's ground is above the water surface are reassigned to the open edges every step (edge velocity would otherwise be about 2.4× the cell velocity in a 1-cell channel, which amplifies the advection term). Use 2 for inundation, incised channels and dam breaks without a channel mask |
-| p_adv_upwind_index | 0.5 | upwinding index of the advection term (0-1; scheme 1 only, unused with the default scheme 3). 0: central difference, 1: first-order upwind difference |
-| f_diffusion_term | 0 | diffusion term. 0: none (default), 1: constant viscosity, 2: zero-equation model (nu = nu0 + alpha * u_star * h) |
-| p_diffusion_nu | -- | kinematic eddy viscosity nu0 (m^2/s). **For model 1 a positive value must be specified explicitly** (unset is an error stop). For model 2 an optional background viscosity |
-| p_diffusion_alpha | 0.41/6 | coefficient alpha of the zero-equation model (default is the Elder type) |
-
-If you just want to try adding a diffusion term, **model 2 is
-recommended** -- without specifying a single coefficient, a viscosity
-that scales physically with the flow, nu = alpha * u_star * h (alpha
-defaults to the Elder type), takes effect. The constant viscosity of
-model 1 depends on the grid spacing and the scale of the flow, so there
-is no universally recommended value and an explicit value is mandatory
-(forgetting to set it stops the run at initialization, so it never
-becomes silently inactive). The equations, eddy-viscosity models,
-discretisation and stability condition are explained on a separate page,
+The advection (inertia) term, with the default momentum-conservative
+scheme plus MUSCL (scheme 3), handles bores, hydraulic jumps and flood
+waves on real terrain correctly and normally needs no change. The
+diffusion term (horizontal diffusion of momentum by an eddy viscosity) is
+off by default and is not needed for numerical stability. The equations,
+schemes and stencils are explained in [Advection schemes](advection.md),
+the eddy-viscosity models, discretisation and stability condition in
 [Diffusion term](diffusion.md).
+
+To just try the diffusion term, one line is enough (zero-equation model;
+the coefficient follows from the flow and the roughness).
+
+```
+&list_enc
+  f_diffusion_term = 2    ! diffusion term (zero-equation model; advection stays at the default)
+/
+```
+
+**Practical points** (details in [§5 of the advection page](advection.md#5-properties-and-choice) and [§6 of the diffusion page](diffusion.md#6-where-to-use-it-and-cautions))
+
+- **Leave the advection term at the defaults** (scheme 3 +
+  `f_opening_dynamic = 1` + `f_dry_head_cap = 1`). Only to reproduce cases
+  calibrated with older versions use `f_advection_scheme = 1`,
+  `f_opening_dynamic = 0`, `f_dry_head_cap = 0` (the defaults before
+  2026-10-03; moving to scheme 3 needs a roughness recalibration).
+- **If real-terrain results are later and smaller than observed** (with a
+  channel mask) try `f_advection_donor = 1`. **Inundation, incised terrain
+  and dam breaks without a channel mask**: `f_opening_dynamic = 2`.
+- **The diffusion term is for** the transverse velocity distribution of
+  channels and circulation in bays. With `f_diffusion_term = 2` no
+  coefficient is needed; the roughness n sets the size of ν (typically
+  0.01–0.1 m²/s). The constant viscosity (model 1) requires an explicit
+  `p_diffusion_nu`, kept below the explicit bound Δx²/(2.83 dt) (a warning
+  is printed above it).
+- **Mass** is conserved exactly whatever the advection and diffusion
+  settings. Schemes 2 and 3 cost +12–27% over scheme 1; the diffusion term
+  costs nothing when off.
+- **Verification cases**: bores [test/dambreak](../../../test/dambreak/README.md),
+  bends, steps and lateral inflow [test/bendloss](../../../test/bendloss/README.md),
+  hillslope flow [test/hillslope](../../../test/hillslope/README.md), real
+  terrain [test/chichibu](../../../test/chichibu/README.md) (READMEs in
+  Japanese). No analytical benchmark of the diffusion term exists yet
+  (related: [test/creep](../../../test/creep/README.md)).
+
+| Parameter | Default | Meaning (details in the § of the explanation pages) |
+|---|---|---|
+| f_advection_scheme | 3 | scheme of the advection term. 3: momentum-conservative + MUSCL (default), 2: momentum-conservative, first-order upwind, 1: cell-centre gradient (former default; non-conservative, bores lag, no grid convergence on real terrain) ([advection](advection.md) §3–5) |
+| f_advection_donor | 0 | 1: on edges between channel cells, limit the upwind donor in the flow direction to channel cells (against the artificial loss at bends and confluences; requires the channel mask fn_rw; judge against observations) (§4.4) |
+| f_dry_head_cap | 1 | cap the edge depth toward a dry cell by the energy head (water does not climb onto dry ground above the water surface; prevents leaks and blow-ups at bore fronts and in incised channels; inactive at ordinary wet/dry fronts, identical to 0 there) (§5) |
+| f_opening_dynamic | 1 | dynamic reassignment of blocked diagonal openings. 1: edges between channel cells (default; inactive without the channel mask), 2: all edges, 0: off. Corrects the excessive edge velocity of the ENC grid in one-cell channels and along walls (§5) |
+| p_adv_upwind_index | 0.5 | upwinding index of scheme 1 only (0: central difference, 1: first-order upwind) (§3) |
+| f_diffusion_term | 0 | diffusion term. 0: none (default), 2: zero-equation model ν = ν0 + α·u*·h (recommended), 1: constant viscosity ([diffusion](diffusion.md) §2) |
+| p_diffusion_nu | -- | ν0 (m²/s). For model 1 a positive value must be given explicitly (unset is an error stop); for model 2 an optional background viscosity (§2) |
+| p_diffusion_alpha | 0.41/6 | coefficient α of the zero-equation model (default is the Elder type; calibrate within 0.15–0.6 for stronger transverse mixing) (§2) |
 
 **Non-hydrostatic correction (research option)**
 
