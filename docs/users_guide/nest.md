@@ -262,13 +262,6 @@ w = \left(1 - \frac{d}{n_s+1}\right)^2
   体積の変化の累計、保存修正の量)を出します。陸上では帯に降った雨が
   親の値で上書きされるので、子の水収支はこの帯の置換体積を加えて照合します。
 
-## 参考文献
-
-[^flather76]: Flather, R. A. (1976): A tidal model of the north-west European continental shelf. *Mém. Soc. R. Sci. Liège*, 6(10), 141–164.
-[^davies83]: Davies, H. C. (1983): Limitations of some common lateral boundary schemes used in regional NWP models. *Mon. Wea. Rev.*, 111, 1002–1012.
-[^berger98]: Berger, M. J. and LeVeque, R. J. (1998): Adaptive mesh refinement using wave-propagation algorithms for hyperbolic systems. *SIAM J. Numer. Anal.*, 35(6), 2298–2316.
-[^berger11]: Berger, M. J., George, D. L., LeVeque, R. J. and Mandli, K. T. (2011): The GeoClaw software for depth-averaged flows with adaptive refinement. *Adv. Water Resour.*, 34, 1195–1206.
-
 ## BMI から使う
 
 ネスト系はそのまま BMI の 1 つのモデルです(bmi/README.md)。`initialize` に
@@ -296,3 +289,16 @@ object 部に `~grid<k>` を付けます(`surface_water~grid1__depth` = 格子 1
 - 比 3・5 の双方向ネストで界面を横切る波の検証例は [examples/nest_reflect](../../examples/nest_reflect/)
   (一様細格子との比較。水位・誤差・一方向の帯と Flather・非静水圧の帯の
   図は同 README)。[test/nest_identity](../../test/nest_identity/) の README に恒等ケースの一覧があります。
+
+## 検証・例題
+
+- [test/nest_identity](../../test/nest_identity/): 比 1:1 の自己ネストの恒等テスト(帯の置換・双方向・Flather・非静水圧の各構成)。
+- [test/bmi_nest](../../test/bmi_nest/): BMI からのネスト系の受け入れ試験。
+- [examples/nest_reflect](../../examples/nest_reflect/): 比 3・5 の双方向ネストで界面を横切る波の検証(一様細格子との比較。README に図)。
+
+## 参考文献
+
+[^flather76]: Flather, R. A. (1976): A tidal model of the north-west European continental shelf. *Mém. Soc. R. Sci. Liège*, 6(10), 141–164.
+[^davies83]: Davies, H. C. (1983): Limitations of some common lateral boundary schemes used in regional NWP models. *Mon. Wea. Rev.*, 111, 1002–1012.
+[^berger98]: Berger, M. J. and LeVeque, R. J. (1998): Adaptive mesh refinement using wave-propagation algorithms for hyperbolic systems. *SIAM J. Numer. Anal.*, 35(6), 2298–2316.
+[^berger11]: Berger, M. J., George, D. L., LeVeque, R. J. and Mandli, K. T. (2011): The GeoClaw software for depth-averaged flows with adaptive refinement. *Adv. Water Resour.*, 34, 1195–1206.

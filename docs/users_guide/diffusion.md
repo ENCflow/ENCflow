@@ -1,6 +1,6 @@
 # 運動方程式の拡散項の解説(浅水流計算の補足)
 
-[浅水流計算の章へ](swflow.md) / [ユーザーガイド目次へ](../users_guide.md)
+[浅水流計算の章へ](swflow.md) | [ユーザーガイド目次へ](../users_guide.md)
 
 浅水流計算の運動方程式に加算できる拡散項(渦動粘性による運動量の水平
 拡散)の解説です。[浅水流計算の章](swflow.md)の `f_diffusion_term`・
@@ -8,7 +8,7 @@
 離散化・安定条件を、設定の意味がわかる程度に説明します。設計の経緯と
 検証の記録(開発者向け)は docs/developer.md §20 にあります。
 
-数式は GitHub の Markdown が描画する LaTeX 記法で書いています。図は
+図は
 `python3 docs/figs/make_guide_figs.py diffusion` で日英の PNG・SVG を生成します
 (`docs/figs/guide/fig_diffusion.py`)。
 
@@ -217,7 +217,7 @@ $`\nu_{\max}`$ が $`10^2`$〜$`10^4`$ m²/s と大きく、実用的な $`\nu`$
   拡散項の効果は格子依存です。横断流速分布を論じるなら幅 10 セル以上を
   目安にしてください。
 
-## 7. 検証と関連ケース
+## 7. 検証ケース
 
 - [test/diffusion](../../test/diffusion/README.md) — **拡散項の解析解
   ベンチマーク**。平坦・無摩擦の水路に x 方向に一様なガウス形ジェット

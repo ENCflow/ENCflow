@@ -218,10 +218,10 @@ $`\min(1, (\tan\theta - \tan\theta_c)/\tan\theta_c)`$ を、最も急な下り�
 | 氷河侵食(f_glero) | f_glslide(+ 長期実験では t_cycle・リスタート連鎖) |
 | 地形変化との併用 | fn_geomorph(morfac は同値に) |
 
-検証用の理想実験(SIA 解析解のベンチマークとカール形成テスト)が
-[test/glacier/](../../test/glacier/) にあり、設定書式の実例は
-[examples/List_samples/list_glacier.txt](../../examples/List_samples/list_glacier.txt)
-にあります。
+## 検証・例題
+
+- [test/glacier/](../../test/glacier/): SIA 解析解のベンチマークとカール形成テスト(検証用の理想実験)。
+- 設定書式の実例: [examples/List_samples/list_glacier.txt](../../examples/List_samples/list_glacier.txt)。
 
 ## 参考文献
 

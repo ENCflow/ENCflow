@@ -9,6 +9,9 @@ Kd 二相分配、浸透同伴と地下水経由の輸送、表面蓄積と洗�
 (`advect_scalar`)・`src/m_gwflow_lateral.f90`(地下の同伴輸送)で、
 設計の経緯は developer.md §30 と docs/wq_metal_plan.md にあります。
 
+図は `python3 docs/figs/make_guide_figs.py wq_models` で日英の PNG・SVG を生成します
+(`docs/figs/guide/fig_wq_models.py`)。
+
 ## 1. 状態量と輸送
 
 地表水の物質は**柱状量** $`c_q`$(g/m²。セル内質量 = $`c_q\,g_v\,w\,A`$)で
@@ -157,7 +160,7 @@ Manning 則で閉じた河床せん断応力(N/m²)です。蓄積の更新は�
 水質は物質ごとに物性が桁で異なるため**既定値を置きません**(減衰・沈降・
 分配を書かなければ保存性トレーサ)。根拠欄は代表値の出典です。
 
-| パラメータ | 既定 | 意味 | 根拠・代表値 |
+| パラメータ | 既定 | 意味 | 根拠 |
 |---|---:|---|---|
 | wq_c0 | 0 | 初期濃度 (mg/L) | 与件 |
 | wq_thalf / wq_k20 | — | 半減期 (day) / 一次減衰係数 (1/day)(§2) | BOD 0.1〜0.5 /day[^streeter25][^chapra97]、大腸菌 $`\ln 10/T_{90}`$、Cs-137 11019 day、農薬 10〜60 day[^wauchope92] |

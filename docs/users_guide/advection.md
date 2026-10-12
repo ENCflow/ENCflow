@@ -1,6 +1,6 @@
 # 移流項のスキーム(浅水流計算の補足)
 
-[浅水流計算の章へ](swflow.md) / [ユーザーガイド目次へ](../users_guide.md)
+[浅水流計算の章へ](swflow.md) | [ユーザーガイド目次へ](../users_guide.md)
 
 浅水流計算の運動方程式のうち、移流項(慣性項)をどう離散化して
 いるかの解説です。[浅水流計算の章](swflow.md)の `f_advection_scheme`・
@@ -8,7 +8,6 @@
 ステンシルを、設定の意味がわかる程度に説明します。設計の経緯と数値
 実験の記録(開発者向け)は docs/developer.md §68 にあります。
 
-数式は GitHub の Markdown が描画する LaTeX 記法で書いています。
 図は `python3 docs/figs/make_guide_figs.py advection` で日英の PNG・SVG を
 生成します(`docs/figs/guide/fig_advection.py`)。
 

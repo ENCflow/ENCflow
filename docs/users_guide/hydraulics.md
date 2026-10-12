@@ -9,6 +9,9 @@
 (辺境界・区間流入)、`src/m_swflow_enc_channel.f90`(堤防越流)で、
 設計の経緯は developer.md §17・§22・§68.30・§69.9 にあります。
 
+図は `python3 docs/figs/make_guide_figs.py hydraulics` で日英の PNG・SVG を生成します
+(`docs/figs/guide/fig_hydraulics.py`)。
+
 ## 1. 堰の式(本間公式)
 
 堤防の越流、カルバートの自由水面流れ、河口の段落ちに共通して、

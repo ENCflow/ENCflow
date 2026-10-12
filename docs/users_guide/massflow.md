@@ -12,6 +12,9 @@
 設計の経緯と文献照合の記録は docs/debris_plan.md、
 docs/landslide_tsunami_plan.md にあります。
 
+図は `python3 docs/figs/make_guide_figs.py sediment` で日英の PNG・SVG を生成します
+(`docs/figs/guide/fig_sediment.py`)。
+
 ## 1. 単層混合体モデル
 
 土石流は地表水 $`h`$ と土砂柱状量 $`h_s`$(固体体積の厚さ換算)の

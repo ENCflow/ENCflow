@@ -589,7 +589,7 @@ bs_eps_s を大きく(0.02 → 0.05)するのが第一の対処です(仕組み�
 | 長期地形発達 | f_creep + f_wthr + f_uplift | — | — | — | — | — | creep_d 0.001〜0.05 m²/yr、p0 10〜100 mm/kyr、隆起 0.1〜5 mm/yr。morfac と組で |
 | 地滑り津波(底層) | f_bedslide | 0.1〜0.2 | 300〜1000 | — | — | — | 慣性なし底層の μ・ξ(bs_mu/bs_xi)。混合体の値とは別校正 |
 
-## 例題
+## 検証・例題
 
 全パラメータの注釈付き一覧:
 [examples/List_samples/list_geomorph.txt](../../examples/List_samples/list_geomorph.txt)。
