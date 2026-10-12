@@ -144,7 +144,7 @@ A_e = \tfrac{1}{2}\left(\mathbf{T}_c + \mathbf{T}_n\right)\cdot\mathbf{n}_k
 **性質。**
 
 - **非保存形。** 運動量流束として書かれていないため、不連続で運動量を
-  失います。湿潤床のダム破壊(Stoker の解析解。[test/dambreak](../../test/dambreak/README.md))で段波
+  失います。湿潤床のダム破壊(Stoker の解析解[^stoker57]。[test/dambreak](../../test/dambreak/README.md))で段波
   位置が 15% 遅れ、段波背後に 3 m の過剰(2Δx の振動)と、ダム位置に
   静止したこぶが出ます。風上化を強める($`p \to 1`$)ほど遅れは増えます。
 - **5 エッジ幅の平滑化。** セル流速は両側エッジの平均なので、
@@ -158,13 +158,14 @@ A_e = \tfrac{1}{2}\left(\mathbf{T}_c + \mathbf{T}_n\right)\cdot\mathbf{n}_k
 - 旧版で校正したケースの再現用に残してあります。新しい計算では既定の
   スキーム 3 を使ってください。
 
-## 4. スキーム 2・3: 運動量保存形(Stelling & Duinmeijer 2003)
+## 4. スキーム 2・3: 運動量保存形
 
 ### 4.1 考え方 — エッジ周りの運動量検査体積
 
 スタガード配置でも、エッジ $`e`$ の周りに検査体積 $`\Omega_e`$ を取り、
 保存形の運動方程式をその上で積分すれば、移流項を「面を通る運動量流束」
-として書けます。
+として書けます(Stelling & Duinmeijer のスタガード保存形スキーム[^sd03]を
+ENC の 8 方向に拡張したものです)。
 
 ```math
 \frac{d}{dt}\int_{\Omega_e} h\,u\;dA
@@ -194,7 +195,7 @@ $`\bar h_e`$ は検査体積の水深、$`L_k W_k`$ はその面積です。こ�
 - **離散的に運動量が保存する。** 連続式と同じ質量流束 $`Q_f`$ を使うので、
   全エッジで足し上げると面の流束が打ち消し合い、不連続を横切っても
   運動量を失いません。Riemann 解法なしに、全フルード数で段波・跳水の
-  速度が正しく出ます(S&D 2003。SWASH・D-Flow FM・3Di が採用)。
+  速度が正しく出ます(SWASH・D-Flow FM・3Di が採用)[^sd03]。
 - **向きが直感的。** 1 次風上($`\bar u_f`$ = 流入側の流速)では、流出面は
   $`\bar u_f = u_e`$ で寄与 0、流入面だけが「流入してくる水の流速との差」
   の分だけ $`u_e`$ を引き寄せます。壁や乾いた床からは何も流入しない
@@ -279,10 +280,10 @@ u_\mathrm{up} + \dfrac{\psi(r)}{2}\,\bigl(u_\mathrm{dn} - u_\mathrm{up}\bigr),
 \psi(r) = \frac{r + |r|}{1 + |r|}\quad\text{(van Leer)}
 ```
 
-限定器 $`\psi`$ は図 (b) の曲線です。$`r = 1`$(勾配が一様)で $`\psi = 1`$
+限定器 $`\psi`$ は van Leer のもの[^vanleer79]で、図 (b) の曲線です。$`r = 1`$(勾配が一様)で $`\psi = 1`$
 となり $`\bar u = (u_\mathrm{up} + u_\mathrm{dn})/2`$ の中心差分(2 次精度)、
 $`r \le 0`$(勾配の符号反転など)で $`\psi = 0`$ となり 1 次風上に退化します。
-曲線は Sweby の TVD 領域内にあり、1次元TVDスキームの設計に沿って
+曲線は Sweby の TVD 領域[^sweby84]内にあり、1次元TVDスキームの設計に沿って
 極値付近の勾配を抑えます。図の薄青はその領域内の比較帯です。スキーム 2 と 3 は面値の 1 行だけが
 違い、他の経路は共通です。
 
@@ -379,6 +380,15 @@ README に図表と派生ケースの一覧)。
   積み上がるスパイクが出ることがあります。エッジ水深を風上側水深に
   すると消えますが、乾床への前縁流出が増えます。
 
+**パラメータと既定値の根拠。**
+
+| パラメータ | 既定 | 意味 | 根拠 |
+|---|---:|---|---|
+| f_advection_scheme | 3 | 移流項のスキーム(1: セル中心勾配、2: 保存形+1 次風上、3: 保存形+MUSCL) | 検証ケース: [test/dambreak](../../test/dambreak/README.md) の段波位置誤差 +1.1%、[test/bendloss](../../test/bendloss/README.md) の横流入の水深比 0.992、[test/chichibu](../../test/chichibu/README.md) の格子収束(上の表) |
+| p_adv_upwind_index | 0.5 | スキーム 1 の風上化指数(0: 中心差分、1: 1 次風上) | 経験値。中心差分と 1 次風上の中間。段波の遅れは $`p`$ とともに増える(§3) |
+| f_advection_donor | 0 | 河道セル同士のエッジで流向面の供給元を河道セルに限る | 経験値(既定は無効)。本流と浸水谷底の運動量交換を切るため、実測との照合で判断する(§4.4、developer.md §68.18) |
+| 限定器 $`\psi`$(固定) | van Leer | スキーム 3 の流束限定器 | 文献値[^vanleer79]。Sweby の TVD 領域内(§4.3)[^sweby84] |
+
 ## 6. 検証ケース
 
 - **[test/dambreak](../../test/dambreak/README.md)** — Stoker の湿潤床ダム破壊(平坦・無摩擦。
@@ -404,11 +414,7 @@ README に図表と派生ケースの一覧)。
 
 ## 参考文献
 
-- Stelling, G. S. and Duinmeijer, S. P. A. (2003): A staggered conservative
-  scheme for every Froude number in rapidly varied shallow water flows.
-  *Int. J. Numer. Meth. Fluids*, 43, 1329–1354.
-- van Leer, B. (1979): Towards the ultimate conservative difference scheme V.
-  A second-order sequel to Godunov's method. *J. Comput. Phys.*, 32, 101–136.
-- Sweby, P. K. (1984): High resolution schemes using flux limiters for
-  hyperbolic conservation laws. *SIAM J. Numer. Anal.*, 21, 995–1011.
-- Stoker, J. J. (1957): *Water Waves*. Interscience, New York.
+[^sd03]: Stelling, G. S. and Duinmeijer, S. P. A. (2003): A staggered conservative scheme for every Froude number in rapidly varied shallow water flows. *Int. J. Numer. Meth. Fluids*, 43, 1329–1354.(運動量保存形移流。SWASH・D-Flow FM・3Di が採用)
+[^vanleer79]: van Leer, B. (1979): Towards the ultimate conservative difference scheme V. A second-order sequel to Godunov's method. *J. Comput. Phys.*, 32, 101–136.(MUSCL と限定器)
+[^sweby84]: Sweby, P. K. (1984): High resolution schemes using flux limiters for hyperbolic conservation laws. *SIAM J. Numer. Anal.*, 21, 995–1011.(TVD 領域)
+[^stoker57]: Stoker, J. J. (1957): *Water Waves*. Interscience, New York.(湿潤床ダム破壊の解析解)

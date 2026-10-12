@@ -62,7 +62,8 @@ ENCflow の方針では、水平方向のプロセスは「浅水方程式+1 方
 依存するため普遍的な推奨値がなく、校正量として扱います。
 
 **モデル 2: ゼロ方程式モデル(Elder 型)。** 乱流の強さを底面摩擦から
-決めます。Manning 則の底面せん断応力 $`\tau_b/\rho = g\,n^2\,|\mathbf{u}|^2 / h^{1/3}`$
+決めます(水深平均モデルの乱流モデルの分類ではゼロ方程式モデルに
+当たります[^rodi93])。Manning 則の底面せん断応力 $`\tau_b/\rho = g\,n^2\,|\mathbf{u}|^2 / h^{1/3}`$
 から摩擦速度 $`u_* = \sqrt{\tau_b/\rho}`$ を作り、鉛直平均の渦動粘性を
 $`u_* h`$ に比例させます。
 
@@ -77,10 +78,10 @@ u_* = \sqrt{g}\;n\;|\mathbf{u}|\;h^{-1/6}
 $`n`$ は各セルの Manning 粗度(`fn_rn` または `rn0`。[地理情報](geoinfo.md))、
 $`|\mathbf{u}|`$ はセル流速の大きさ、$`h`$ は水深です。係数 $`\alpha`$
 (`p_diffusion_alpha`)の既定 $`\kappa/6 = 0.41/6 \approx 0.068`$ は、
-対数則の流速分布と放物線形の渦粘性分布を鉛直平均した Elder (1959) の値で、
+対数則の流速分布と放物線形の渦粘性分布を鉛直平均した Elder の値[^elder59]で、
 iRIC Nays2DH などのゼロ方程式モデルと同じ流儀です。横断方向の混合を
 強く表したい場合は、直線水路の実測 $`0.15\,u_* h`$ から自然河川の
-$`0.4`$〜$`0.8\,u_* h`$(Fischer et al. 1979)の範囲で校正します。
+$`0.4`$〜$`0.8\,u_* h`$ までの実測レンジ[^fischer79]で校正します。
 $`\nu_0`$(`p_diffusion_nu`)は加算のバックグラウンド粘性で、既定 0
 (純粋なゼロ方程式)。静穏域で $`\nu`$ が消えるのを避けたい湾内流動などで
 使います。粗度 $`n = 0`$ のケースでは $`\alpha`$ の項が恒等的に 0 になります。
@@ -89,6 +90,14 @@ $`\nu_0`$(`p_diffusion_nu`)は加算のバックグラウンド粘性で、既�
 $`\nu \approx 0.006`$、$`h = 5`$ m で $`0.025`$ m²/s と小さく、流速 3 m/s・
 $`\alpha = 0.3`$ でも 1 m²/s 以下です。「とりあえず拡散項を入れてみたい」
 ときは、係数を指定せずに流れに応じてスケールするモデル 2 を推奨します。
+
+**パラメータと既定値の根拠。**
+
+| パラメータ | 既定 | 意味 | 根拠 |
+|---|---:|---|---|
+| f_diffusion_term | 0 | 拡散項(0: なし、1: 定数粘性、2: ゼロ方程式モデル) | 既定は無効(無効時は既存結果とビット一致)。有効にするならモデル 2 を推奨(§6) |
+| p_diffusion_nu | — | 定数粘性 $`\nu_0`$、またはモデル 2 のバックグラウンド粘性 (m²/s) | 校正量。格子幅・流れの規模に依存し普遍値がない。§4 の上界を確認 |
+| p_diffusion_alpha | $`\kappa/6 \approx 0.068`$ | ゼロ方程式モデルの係数 $`\alpha`$($`\nu = \alpha u_* h`$) | 文献値(対数則+放物線形渦粘性の鉛直平均)[^elder59]。横断混合を強めるなら実測レンジ 0.15〜0.8[^fischer79]で校正 |
 
 ## 3. 離散化 — エッジフラックス発散形の 9 点ラプラシアン
 
@@ -183,7 +192,8 @@ $`\nu_{\max}`$ が $`10^2`$〜$`10^4`$ m²/s と大きく、実用的な $`\nu`$
 ## 5. 砕波域の渦粘性との共用
 
 [非静水圧補正](nonhydrostatic.md)の砕波スイッチと組み合わせる渦粘性
-`nh_break_visc` は、砕波と判定したセルの $`\nu_b`$ をこの拡散項の $`\nu`$ に
+`nh_break_visc` は、砕波と判定したセルの $`\nu_b`$(Kennedy 型の砕波
+渦粘性[^kennedy00]を局所・状態なしにした形)をこの拡散項の $`\nu`$ に
 加えて($`\nu = \nu_{\rm model} + \nu_b`$)同じ経路で散逸させます。
 `f_diffusion_term = 0` でも `nh_break_visc > 0` なら拡散項が計算されます。
 クランプと警告は §4 と共通です。
@@ -237,14 +247,7 @@ $`\nu_{\max}`$ が $`10^2`$〜$`10^4`$ m²/s と大きく、実用的な $`\nu`$
 
 ## 参考文献
 
-- Elder, J. W. (1959): The dispersion of marked fluid in turbulent shear
-  flow. *J. Fluid Mech.*, 5, 544–560(鉛直平均の渦粘性 $`\kappa u_* h/6`$)。
-- Fischer, H. B., List, E. J., Koh, R. C. Y., Imberger, J. and Brooks, N. H.
-  (1979): *Mixing in Inland and Coastal Waters*. Academic Press(横断混合
-  係数の実測レンジ)。
-- Rodi, W. (1993): *Turbulence Models and Their Application in Hydraulics*,
-  3rd ed. IAHR Monograph, Balkema(水深平均モデルのゼロ方程式・$`k`$–$`\varepsilon`$
-  の位置づけ)。
-- Kennedy, A. B., Chen, Q., Kirby, J. T. and Dalrymple, R. A. (2000):
-  Boussinesq modeling of wave transformation, breaking, and runup. I: 1D.
-  *J. Waterw. Port Coast. Ocean Eng.*, 126, 39–47(砕波域の渦粘性。§5)。
+[^elder59]: Elder, J. W. (1959): The dispersion of marked fluid in turbulent shear flow. *J. Fluid Mech.*, 5, 544–560.(鉛直平均の渦粘性 $`\kappa u_* h/6`$)
+[^fischer79]: Fischer, H. B., List, E. J., Koh, R. C. Y., Imberger, J. and Brooks, N. H. (1979): *Mixing in Inland and Coastal Waters*. Academic Press.(横断混合係数の実測レンジ)
+[^rodi93]: Rodi, W. (1993): *Turbulence Models and Their Application in Hydraulics*, 3rd ed. IAHR Monograph, Balkema.(水深平均モデルのゼロ方程式・$`k`$–$`\varepsilon`$ の位置づけ)
+[^kennedy00]: Kennedy, A. B., Chen, Q., Kirby, J. T. and Dalrymple, R. A. (2000): Boussinesq modeling of wave transformation, breaking, and runup. I: 1D. *J. Waterw. Port Coast. Ocean Eng.*, 126, 39–47.(砕波域の渦粘性。§5)
