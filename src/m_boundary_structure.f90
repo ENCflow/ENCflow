@@ -314,10 +314,15 @@ end subroutine
 !                (登り勾配の管は出口敷高を越えないと通せない)
 !   自由水面   : 本間公式(幅 B。堤防越流 §17 と同系)。下流水深比
 !                h2/h1 = 2/3 で自由/潜り切替
-!   管路(満管): オリフィス式 Qp = cp√Δη'。Δη' の下流側は
-!                max(下流水位, 出口管頂) — 出口非水没なら管頂基準。
-!                Q = min(堰, 管路) で連続に接続(浅水では堰支配、
-!                深い水没では管路容量が上限)
+!   管路(満管): 流入口が水没(h1 >= D)のとき、オリフィス式
+!                Qp = cp√Δη' を上限にする。Δη' の下流側は
+!                max(下流水位, 出口敷高 + (dc + D)/2)(FHWA HDS-5 の
+!                出口制御と同じ。dc = 堰流量に対する矩形断面の限界水深、
+!                D で上限)。Q = min(堰, 管路) で連続に接続(浅水では
+!                堰支配、深い水没では dc → D で管頂基準に戻り管路容量が
+!                上限)。2026-10-12 までは流入口の水没を問わず管頂基準で
+!                評価していたため、水位が管頂を超えた直後に Qp が 0 から
+!                立ち上がり流量が一時的に落ち込んだ(§22)
 ! 係数(cw_free/cw_sub/cp)は init_culvert が gg・形状・損失から前計算
 ! して geom に畳み込み済み(law の引数に p を持たないため)。
 ! 樋管・樋門のゲート(§22):
@@ -336,9 +341,9 @@ function law_culvert(rule, nrule, geom, refu, refd) result(q)
   real :: q, c
 
   if (refu >= refd) then
-    q = culv_q1(geom(1), geom(2), geom(3), geom(4), geom(5), geom(6), refu, refd)
+    q = culv_q1(geom(1), geom(2), geom(3), geom(4), geom(5), geom(6), geom(11), refu, refd)
   else
-    q = -culv_q1(geom(2), geom(1), geom(3), geom(4), geom(5), geom(6), refd, refu)
+    q = -culv_q1(geom(2), geom(1), geom(3), geom(4), geom(5), geom(6), geom(11), refd, refu)
   end if
   if (geom(10) > 0.5) then
     if (geom(9) > 0.5) then
@@ -356,12 +361,13 @@ end function
 !----------------------------------------------------------------------
 ! カルバートの片方向流量(上流水位 eh >= 下流水位 el を仮定)
 !   zh/zl: 流入側/流出側の敷高、d: 断面高、
-!   cwf/cws: 本間公式の自由/潜り係数(×B×√2g 済)、cp: 管路係数
+!   cwf/cws: 本間公式の自由/潜り係数(×B×√2g 済)、cp: 管路係数、
+!   gbb: g·B²(限界水深 dc = (Q²/gB²)^(1/3) 用)
 !----------------------------------------------------------------------
-function culv_q1(zh, zl, d, cwf, cws, cp, eh, el) result(q)
-  real, intent(in) :: zh, zl, d, cwf, cws, cp, eh, el
+function culv_q1(zh, zl, d, cwf, cws, cp, gbb, eh, el) result(q)
+  real, intent(in) :: zh, zl, d, cwf, cws, cp, gbb, eh, el
   real :: q
-  real :: h1, h2, detap, qw
+  real :: h1, h2, detap, qw, dc
 
   q = 0.0
   h1 = eh - zh
@@ -373,11 +379,14 @@ function culv_q1(zh, zl, d, cwf, cws, cp, eh, el) result(q)
   else
     qw = cws * h2 * sqrt(h1 - h2)              ! 潜り越流
   end if
-  detap = eh - max(el, zl + d)
-  if (detap > 0.0) then
-    q = min(qw, cp * sqrt(detap))              ! 満管容量が上限
-  else
-    q = qw                                     ! 満管に届かない=堰支配
+  q = qw                                       ! 流入口が水没しなければ堰支配
+  if (h1 >= d) then
+    ! 流入口が水没: 満管容量を上限にする。出口非水没時の下流水頭は
+    ! 出口敷高 + (dc + D)/2(FHWA HDS-5 の出口制御。dc は堰流量に対する
+    ! 矩形断面の限界水深で D が上限。満管に近づくと管頂基準に一致)
+    dc = min(d, (qw * qw / gbb)**(1.0 / 3.0))
+    detap = eh - max(el, zl + 0.5 * (dc + d))
+    if (detap > 0.0) q = min(qw, cp * sqrt(detap))
   end if
 
 end function
@@ -573,6 +582,7 @@ end subroutine
 !     (7)=Ah = 有効平面積(Σgv·dx·dy)の調和平均(均衡上限用。§22)
 !     (8)=フラップ (0/1)、(9)=ゲート基準側 (0:in/1:out)、
 !     (10)=ゲート有無 (0/1。1 なら rule = 開度折れ線)
+!     (11)=g B²(満管上限の限界水深 dc = (Q²/gB²)^(1/3) 用。2026-10-12)
 !   樋管・樋門はゲート付きカルバートとして表す(§22): フラップ
 !   (culv_flap=1)は逆流 out→in の遮断、開度ルール(culv_gate_rule)は
 !   基準側代表水位の折れ線 (η, 開度0-1) による流量乗率。
@@ -704,6 +714,7 @@ subroutine init_culvert(b, p, g, list, ofs, nculv)
     b%struct(ist)%geom(4) = 0.35 * bw * sqrt(2.0 * p%gg)
     b%struct(ist)%geom(5) = 0.91 * bw * sqrt(2.0 * p%gg)
     b%struct(ist)%geom(6) = a * sqrt(2.0 * p%gg / (1.0 + list%culv_ce(ic) + fric))
+    b%struct(ist)%geom(11) = p%gg * bw * bw     ! 限界水深 dc = (Q²/gB²)^(1/3) 用
 
     !--- 位置の検証(全域マスク。ゾーン2で全ランク冗長) ---
     do k = 1, b%struct(ist)%ncin + b%struct(ist)%ncout

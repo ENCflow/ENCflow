@@ -182,7 +182,7 @@ module m_boundary
                                            !   ポンプの一定流量 pump_q0 は1点折れ線に
                                            !   退化。線形補間・範囲外端値(=現在状態の
                                            !   純関数。履歴状態なし)
-    real :: geom(1:10) = 0.0               ! 形状等の定数(種別ごとの意味。ポンプは未使用)
+    real :: geom(1:11) = 0.0               ! 形状等の定数(種別ごとの意味。ポンプは未使用)
     procedure(i_struct_law), pointer, nopass :: law => null()  ! 水理則(ダムは不使用=null。
                                            !   評価は boundary_h のダム節 → dam_operate)
     real :: q = 0.0                        ! 現時刻の目標流量 (m3/s。makebdc が更新。
