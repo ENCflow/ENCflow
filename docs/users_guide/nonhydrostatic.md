@@ -53,7 +53,7 @@ C 格子では長波展開が $`\omega^2 = gHk^2\,[1 - (k\Delta x)^2/12 + \cdots
 格子が $`\Delta x > 1.7H`$ では非静水圧補正を入れても数値分散に埋もれて
 意味がなく、**実用は $`\Delta x \lesssim H/2`$ が前提**です(深さ 10 m の
 河川遡上津波なら $`\Delta x \approx`$ 2.5〜5 m)。計算コストはソルバより
-この解像度要件で決まります。ENC 格子の数値分散の実測(test/nhwave)は
+この解像度要件で決まります。ENC 格子の数値分散の実測([test/nhwave](../../test/nhwave/README.md))は
 0.3〜0.8%($`k\Delta x`$ = 0.13〜0.18)で、1 層モデルの目標($`kH = 1`$ で
 12%)と明確に区別できます。
 
@@ -140,7 +140,7 @@ $`1/(1 + (kH)^2/3)`$。Jeschke et al. 2017)は $`kH \le 1`$ では精度が高�
 劣らず、スカラー 1 個で済むため、**線形分布 $`\beta = h^2/4`$ を採って
 います**。一様流 $`U_0`$ の上では $`(\omega - U_0 k)^2 = gHk^2/(1 + (kH)^2/4)`$
 となり、移流を含む全加速度にフィルタを掛ける方針と整合します
-(test/nhcurrent で数値確認)。
+([test/nhcurrent](../../test/nhcurrent/README.md) で数値確認)。
 
 ## 3. アルゴリズム — ステップ末尾の射影(fractional step)
 
@@ -187,7 +187,7 @@ mn_e = u^{n+1}_e\,h_e
 $`h_e`$ は運動方程式が面流束に使ったエッジ水深そのものです。1 次元・
 平坦床の線形解析では、半離散の分散関係が $`\omega^2 = gH\Lambda/(1 + \beta\Lambda)`$
 ($`\Lambda`$: 離散ラプラシアンの固有値)に**厳密に**一致します
-(test/nhwave_nh で $`kH`$ = 0.25〜2 の周期が理論に ±0.2%)。
+([test/nhwave_nh](../../test/nhwave_nh/README.md) で $`kH`$ = 0.25〜2 の周期が理論に ±0.2%)。
 
 **ソルバ。** `nh_solver = 2`(CG。既定)と 1(Jacobi)。恒等項があるため
 条件数は $`\kappa \approx 1 + 2\varepsilon`$($`\varepsilon = \beta\Lambda_{\max} \approx 2.83\,\beta/\Delta x^2`$)で格子数に依存せず、CG は 10〜80 反復で
@@ -205,7 +205,7 @@ $`\Delta x \lesssim H/2`$ では目標の補正量の 1/3〜1/9 しか出ない(
 developer.md §69、plan §4)。楕円型の補正は 1 点の変化が近傍に同時に
 効くため、反復で解くしかありません。
 
-**コスト。** 全域で解く場合、定在波の試験($`10^4`$ セル、CG 45 反復/
+**コスト。** 全域で解く場合、定在波の試験([test/nhwave_nh](../../test/nhwave_nh/README.md)。$`10^4`$ セル、CG 45 反復/
 ステップ)で壁時計は静水圧の約 3 倍です。活性集合(§5)で解く範囲を
 限ると、長波・定常流・氾濫の領域にはコストが乗りません。
 
@@ -255,13 +255,13 @@ $`|\beta Da^{*}|/g`$(比較用)。
 **反復。** 種+縁だけで反復し、外は $`\phi = 0`$。ステップ間に状態を持たないので
 リスタートの往復はビット一致します。
 
-全域解との差は縁幅で指数的に減り、盛り上がり波の試験では縁 4 / 8 / 16
+全域解との差は縁幅で指数的に減り、盛り上がり波の試験(developer.md §69.2)では縁 4 / 8 / 16
 セルで 9.4e-4 / 4.0e-4 / 1.0e-4 m(補正量 0.47 m の 0.02〜0.2%)でした。
 
 ## 6. 砕波の扱い(`f_nh_breaking`、`nh_break_visc`)
 
 1 層モデルは波を砕きません。斜面を遡上する砕波性の孤立波
-(Synolakis 1987 の $`a/H = 0.28`$、test/nhbreak)をスイッチなしで走らせると、
+(Synolakis 1987 の $`a/H = 0.28`$、[test/nhbreak](../../test/nhbreak/README.md))をスイッチなしで走らせると、
 波は形を保って汀線に達した後、薄い舌として遡上し、遡上高 $`R/H`$ が 1.59
 (非砕波の遡上則に近い値。実験則 0.42)になります。そこで
 hybrid Boussinesq 系や SWASH と同じく、**砕波と判定した場所を静水圧に
@@ -301,7 +301,7 @@ B = \mathrm{clip}\!\left(\frac{|\nabla\eta| - s}{s},\,0,\,1\right),
 で局所・状態なしの形にしたもので、文献の定数 $`\delta_b = 1.2`$ に相当する
 1.44 が目安です(既定 0 = 無効)。
 
-**遡上高の到達点**(test/nhbreak、$`R/H`$。実験則 0.42):
+**遡上高の到達点**([test/nhbreak](../../test/nhbreak/README.md)、$`R/H`$。実験則 0.42):
 
 | 構成 | $`\Delta x = H/4`$、dt 0.02 | $`\Delta x = H/8`$、Cr 0.07、$`n`$ = 0.01 |
 |---|---:|---:|
@@ -333,7 +333,7 @@ a_e = a^{*}_e + \frac{\phi_n - \phi_c}{L_k} + (\phi_c + \phi_n)\,\sigma_e,
 
 とします(平坦なら $`\beta D a`$ に戻る)。作用素が非対称になるため、CG は
 平坦部分を解いて勾配項を Picard 反復で回し、反復回数が約 2 倍になります。
-1:20 の斜面と棚(test/nhshelf)では Version 1 との差が数%(先頭ソリトンで
+1:20 の斜面と棚([test/nhshelf](../../test/nhshelf/README.md))では Version 1 との差が数%(先頭ソリトンで
 2%)で、既定は 0。急な地形変化(棚の段差、海底地滑り)向けの研究
 オプションです。
 
@@ -366,8 +366,9 @@ F(k) = \frac{1}{(1 + \beta k^2)^2}
 格子スケールで 0 です。$`\ddot z_b`$ はモジュールが私有する前ステップの
 $`z`$ との 2 階差分(1 ステップ遅れ。$`z`$ を動かすすべてのプロセスに効く)で、
 底面が動くステップだけ余分に 1 回解きます。Hammack 型の規定隆起
-(test/nhbottom)では先頭波高が厳密解(ポテンシャル流)に +3.9%
-(静水圧 +40%、加速度項なし +16%)。慣性なしの底層との結合では斜面下端に
+([test/nhbottom](../../test/nhbottom/README.md) 構成 1)では先頭波高が厳密解(ポテンシャル流)に +3.9%
+(静水圧 +40%、加速度項なし +16%)。慣性なしの底層との結合(同 構成 2、
+[examples/landslide_tsunami](../../examples/landslide_tsunami/README.md) の C)では斜面下端に
 1 層モデルの遮断周波数 $`\sqrt{4g/H}`$ に捕捉された自励振動が残るため、
 堆積域直上の水位は使わないでください。
 
@@ -382,19 +383,34 @@ $`z`$ との 2 階差分(1 ステップ遅れ。$`z`$ を動かすすべての�
 - **制約**: 土石流(`f_debris`)とは併用不可。NH の私有状態は保存しない
   (再開は cold start。砕波判定 1 は復元直後の 1 ステップだけ履歴なし)。
 - **ネスティング**: 子格子の帯は親の $`\phi`$ を Dirichlet 既知値として
-  受け取ります([ネスティング](nest.md))。
+  受け取ります([ネスティング](nest.md)。親子の一致の検定は
+  [test/nest_identity](../../test/nest_identity/README.md) の nh 構成、帯の扱いの比較は
+  [examples/nest_reflect](../../examples/nest_reflect/README.md))。
 
-**検証ケース**(いずれも test/ 内。README に図表):
+**検証ケース**(README に図表と派生ケースの一覧):
 
 | ケース | 内容 | 要点 |
 |---|---|---|
-| nhwave / nhwave_nh | 閉水槽の定在波 | 静水圧の数値分散 < 1%。非静水圧の周期が理論に ±0.2%($`kH`$ = 0.25〜2) |
-| nhsolitary | 孤立波の伝播 | 60 s で波形 RMS 2.7%、速度 −0.9%。静水圧は段波化 |
-| nhbore | 段差から分裂する undular bore | 先頭波が KdV の漸近値 $`2a`$ に単調に近づく(Gurevich & Pitaevskii 1974)。$`a/H = 0.2`$ では 2 を超える(El et al. 2006 と整合) |
-| nhshelf | 棚に乗り上げる孤立波 | 先頭ソリトン+後続 6 山に分裂。静水圧は段波 2 山 |
-| nhcurrent | 一様流上の線形波 | $`(\omega - U_0k)^2`$ 型の分散関係を順流・逆流で確認(+1.4〜2.7%) |
-| nhbreak | 砕波性孤立波の遡上 | §6 の表 |
-| nhbottom | 規定隆起と海底地滑り | 先頭波高が厳密解に +3.9%。地滑りの近地波形で加速度項の効果が大きい |
+| [nhwave](../../test/nhwave/README.md) / [nhwave_nh](../../test/nhwave_nh/README.md) | 閉水槽の定在波 | 静水圧の数値分散 < 1%。非静水圧の周期が理論に ±0.2%($`kH`$ = 0.25〜2) |
+| [nhsolitary](../../test/nhsolitary/README.md) | 孤立波の伝播 | 60 s で波形 RMS 2.7%、速度 −0.9%。静水圧は段波化 |
+| [nhbore](../../test/nhbore/README.md) | 段差から分裂する undular bore | 先頭波が KdV の漸近値 $`2a`$ に単調に近づく(Gurevich & Pitaevskii 1974)。$`a/H = 0.2`$ では 2 を超える(El et al. 2006 と整合) |
+| [nhshelf](../../test/nhshelf/README.md) | 棚に乗り上げる孤立波 | 先頭ソリトン+後続 6 山に分裂。静水圧は段波 2 山 |
+| [nhcurrent](../../test/nhcurrent/README.md) | 一様流上の線形波 | $`(\omega - U_0k)^2`$ 型の分散関係を順流・逆流で確認(+1.4〜2.7%) |
+| [nhbreak](../../test/nhbreak/README.md) | 砕波性孤立波の遡上 | §6 の表 |
+| [nhbottom](../../test/nhbottom/README.md) | 規定隆起と海底地滑り | 先頭波高が厳密解に +3.9%。地滑りの近地波形で加速度項の効果が大きい |
+| [nest_identity](../../test/nest_identity/README.md) | ネストの親子一致 | 非静水圧の子(帯 = 親の $`\phi`$ の既知セル)の内部が親と 1e-10 以内で一致 |
+
+**参考になる例題**(非静水圧補正を実地形・理想地形で使う設定例):
+
+- [examples/landslide_tsunami](../../examples/landslide_tsunami/README.md) — 斜面崩壊(A)と海底地滑り(C)に
+  `f_nh_slope = 1`、さらに `f_nh_bottom = 1` を重ねた param_*_nh0 / param_*_nh。
+  静水圧との近地波形の比較と計算時間の目安。
+- [examples/tsunami_fault](../../examples/tsunami_fault/README.md) — 断層津波(規定底面運動)に非静水圧+
+  加速度項を重ねた param_nh.txt。水深 2000 m・幅 30 km の隆起($`kH`$ ≈ 0.4〜0.8)
+  でも伝播中の分散で先頭波高が 13〜24% 下がり、加速度項の寄与は震源直上で
+  −2% と小さい。
+- [examples/nest_reflect](../../examples/nest_reflect/README.md) — 非静水圧の親子格子で、帯を親の $`\phi`$ の
+  既知セルにする既定(`nest_nh = 1`)と静水圧にする場合の界面の違い。
 
 ## 9. 参考にした他モデルと文献
 

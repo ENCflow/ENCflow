@@ -140,7 +140,7 @@ A_e = \tfrac{1}{2}\left(\mathbf{T}_c + \mathbf{T}_n\right)\cdot\mathbf{n}_k
 **性質。**
 
 - **非保存形。** 運動量流束として書かれていないため、不連続で運動量を
-  失います。湿潤床のダム破壊(Stoker の解析解。test/dambreak)で段波
+  失います。湿潤床のダム破壊(Stoker の解析解。[test/dambreak](../../test/dambreak/README.md))で段波
   位置が 15% 遅れ、段波背後に 3 m の過剰(2Δx の振動)と、ダム位置に
   静止したこぶが出ます。風上化を強める($`p \to 1`$)ほど遅れは増えます。
 - **5 エッジ幅の平滑化。** セル流速は両側エッジの平均なので、
@@ -287,7 +287,7 @@ $`r \le 0`$(極値・不連続)で $`\psi = 0`$ となり 1 次風上に退化�
   (マスク外)または乾燥($`h < dd`$)なら、その面の $`\bar u = u_e`$ とし
   寄与 0 にします。格納値の 0 をそのまま読むと「壁側から流速 0 の水が
   流入する」扱いになり、1 セル幅のラスタ河道では屈曲 1 回あたり約
-  0.55 m の人工的な損失水頭が生じます(developer.md §68.8)。
+  0.55 m の人工的な損失水頭が生じます(developer.md §68.8、[test/bendloss](../../test/bendloss/README.md) の屈曲ケース)。
 - **MUSCL の遠い供給元。** $`u_\mathrm{upup}`$ のエッジの向こうのセルが
   領域外・無効なら、その面は 1 次風上に退化します(0 を読むと
   $`r \gg 1 \to \psi = 2`$ の反拡散になり、規定境界から流れ出す最初の
@@ -317,7 +317,8 @@ $`r \le 0`$(極値・不連続)で $`\psi = 0`$ となり 1 次風上に退化�
   更新式は同形になり、対角エッジ流速が軸エッジ流速の投影
   $`u_d = u_a\,n^x_k`$ である関係を保ちます。
 - 計算コストはスキーム 1 に対して 2 が +12〜20%、3 が +19〜27%
-  (エッジごとに線上 5 本+側方 2 本の読み出しと、ステップ先頭の交換)。
+  (エッジごとに線上 5 本+側方 2 本の読み出しと、ステップ先頭の交換。
+  [test/dambreak](../../test/dambreak/README.md)・[test/wave](../../test/wave/README.md)・[test/chichibu](../../test/chichibu/README.md) の壁時計)。
   メモリは同程度です。
 
 ## 5. 性質の比較と使い分け
@@ -335,6 +336,11 @@ developer.md §68 の数値実験(2026-10)の要点です。
 | 安定性 | 50 m 実 DEM・掘込 1〜2 セル水路で発散 | 風上化が安定性を担う | 同左 |
 | コスト | 1.00 | 1.19 | 1.27 |
 | 位置づけ | 旧互換・既存校正の再現用 | 3 の退避先(段波先端の過剰を許容できる粗い問題) | **既定**。段波・跳水・横流入・収束性・安定性のすべてで最良 |
+
+表の数値の出典: 段波は [test/dambreak](../../test/dambreak/README.md)、滑らかな洪水波・横流入・
+階段状河床は [test/bendloss](../../test/bendloss/README.md)、実地形の格子収束・安定性・コストは
+[test/chichibu](../../test/chichibu/README.md)、斜面流での一致は [test/hillslope](../../test/hillslope/README.md)(いずれも
+README に図表と派生ケースの一覧)。
 
 **使い分けの目安。**
 
@@ -367,15 +373,26 @@ developer.md §68 の数値実験(2026-10)の要点です。
 
 ## 6. 検証ケース
 
-- **test/dambreak** — Stoker の湿潤床ダム破壊(平坦・無摩擦。
+- **[test/dambreak](../../test/dambreak/README.md)** — Stoker の湿潤床ダム破壊(平坦・無摩擦。
   $`h_l = 10`$ m、$`h_r = 1`$ m)。段波位置・中間状態の水深と流速・L1 誤差を
   解析解と比較します(`Check_stoker.py`)。§5 の段波の行の出典。
-- **test/bendloss** — 1 セル幅水路の直線 vs 折れ線(屈曲損失)、階段状
+- **[test/bendloss](../../test/bendloss/README.md)** — 1 セル幅水路の直線 vs 折れ線(屈曲損失)、階段状
   河床(段差での散逸)、横流入(空間変化流の物理解)。README にケース
   一覧があります。
-- **test/hillslope** — 滑らかな斜面・V 字集水域。スキーム 1 と 3 が
+- **[test/hillslope](../../test/hillslope/README.md)** — 滑らかな斜面・V 字集水域。スキーム 1 と 3 が
   一致することの確認。
-- **test/chichibu** — 実地形(100 m)。格子収束と実測との照合の場。
+- **[test/chichibu](../../test/chichibu/README.md)** — 実地形(100 m)。格子収束と実測との照合の場。
+- **[test/wave](../../test/wave/README.md)** — 静水に立てた水の山の拡がり(無摩擦の閉水槽)。
+  回帰テストの基準ケースで、スキームを変えたときの最大水深・最大流速の
+  感度(0.1〜0.5%)と 4 回対称の維持を見ます。
+
+**参考になる例題・チュートリアル**
+
+- [tutorials/wave](../../tutorials/wave/README.md) / [tutorials/chichibu](../../tutorials/chichibu/README.md) — 利用者向けの
+  手順。時間刻み・適応的ルンゲクッタの感度の見方と、実地形ケースの
+  組み立て方。
+- [examples/List_samples/list_enc.txt](../../examples/List_samples/list_enc.txt) —
+  `&list_enc` の全パラメータの注釈付き一覧(既定値の明示)。
 
 ## 参考文献
 
