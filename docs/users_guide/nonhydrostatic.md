@@ -295,8 +295,8 @@ B = \mathrm{clip}\!\left(\frac{|\nabla\eta| - s}{s},\,0,\,1\right),
 \quad s = \texttt{nh\_break\_slope}
 ```
 
-を与え、運動方程式の拡散項 $`\nabla\cdot(\nu\nabla\mathbf{u})`$ で
-散逸させます。Kennedy et al. (2000) の $`\nu = B\,\delta_b^2\,h\,\partial\eta/\partial t`$
+を与え、運動方程式の拡散項 $`\nabla\cdot(\nu\nabla\mathbf{u})`$
+([拡散項の解説](diffusion.md))で散逸させます。Kennedy et al. (2000) の $`\nu = B\,\delta_b^2\,h\,\partial\eta/\partial t`$
 を、進行波の運動学 $`\partial\eta/\partial t \approx c\,|\partial\eta/\partial x|`$
 で局所・状態なしの形にしたもので、文献の定数 $`\delta_b = 1.2`$ に相当する
 1.44 が目安です(既定 0 = 無効)。
