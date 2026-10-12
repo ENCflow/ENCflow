@@ -51,6 +51,21 @@ Coastal section. The salt layer hss sits at the bottom of the surface water h an
   internal waves, and continuous concentration fields are **not
   handled** (the interface stays sharp).
 
+## Just try it (minimal input)
+
+Every parameter has a default, so **an empty &list_salt in fn_salt** is
+enough to run (seawater 1025 and freshwater 1000 kg/m³ = 2.5 % density
+difference). What it needs alongside: the sea mask fn_sw and the tide
+fn_tide that make the sea the prescribed salt-water head
+([the tide chapter](tide.md)), and f_gwlateral=1 when the subsurface
+salt zone (f_salt_gw=1) is used ([the groundwater chapter](gwflow.md);
+the lateral K and specific yield are shared).
+
+```
+&list_salt
+/
+```
+
 ## Overall configuration (&list_salt)
 
 | Parameter | Default | Meaning |
@@ -66,21 +81,6 @@ Coastal section. The salt layer hss sits at the bottom of the surface water h an
 | salt_eps_h | 1e-2 | Linearization width of the gravity-current sqrt law (head difference, m) |
 | salt_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
 | salt_nsubmax | 200 | Upper bound of the adaptive subcycling of the surface gravity current |
-
-## Just try it (minimal input)
-
-Every parameter has a default, so **an empty &list_salt in fn_salt** is
-enough to run (seawater 1025 and freshwater 1000 kg/m³ = 2.5 % density
-difference). What it needs alongside: the sea mask fn_sw and the tide
-fn_tide that make the sea the prescribed salt-water head
-([the tide chapter](tide.md)), and f_gwlateral=1 when the subsurface
-salt zone (f_salt_gw=1) is used ([the groundwater chapter](gwflow.md);
-the lateral K and specific yield are shared).
-
-```
-&list_salt
-/
-```
 
 ## Recommended values by pattern
 

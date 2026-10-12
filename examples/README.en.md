@@ -32,6 +32,13 @@ python3 plot_results.py   # plotting (where provided)
 | [sewer_hybrid/](sewer_hybrid/) | Urban drainage with a trunk main and a branch network in the same conduit continuum layer | Conduit continuum layer f_gwconduit |
 | [qanat/](qanat/) | An idealised qanat (groundwater-collecting gallery) | Conduit continuum layer, groundwater |
 
+## Suggested order by level
+
+- **Beginner**: [benchmark/](benchmark/) (shallow water and rainfall only; compared with analytical solutions).
+- **Intermediate** (one feature at a time): [sewer_hybrid/](sewer_hybrid/) and [qanat/](qanat/) (groundwater and conduits), [nest_reflect/](nest_reflect/) (nesting).
+- **Advanced** (chains of processes and comparisons): [tsunami_fault/](tsunami_fault/) → [tsunami_coast/](tsunami_coast/) → [landslide_tsunami/](landslide_tsunami/) (tsunami generation and the non-hydrostatic correction), [tsunami_town/](tsunami_town/) and [timberyard/](timberyard/) (house destruction and driftwood), [ashfall_lahar/](ashfall_lahar/) and [badland/](badland/) (sediment and landscape evolution).
+
+The full learning path by level is in the "Learning path" of [docs/en/tutorial.md](../docs/en/tutorial.md).
 To find the feature combination for a phenomenon, see the
 [use-case gallery](../docs/en/users_guide/usecases.md); for the settings of
 each feature, the [User's Guide](../docs/en/users_guide.md).

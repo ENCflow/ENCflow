@@ -31,6 +31,13 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [sewer_hybrid/](sewer_hybrid/) | 幹線 1 本と枝管網を同じ管路連続体層で表す都市排水の模式実験 | 管路連続体層 f_gwconduit |
 | [qanat/](qanat/) | カナート(横坑集水)の理想化ケース | 管路連続体層、地下水 |
 
+## 段階別の読む順
+
+- **入門**: [benchmark/](benchmark/)(浅水流+降雨だけ。解析解と比べる)。
+- **中級**(1 機能ずつ足す): [sewer_hybrid/](sewer_hybrid/)・[qanat/](qanat/)(地下水・管路)、[nest_reflect/](nest_reflect/)(ネスティング)。
+- **上級**(複数プロセスの連鎖・比較): [tsunami_fault/](tsunami_fault/) → [tsunami_coast/](tsunami_coast/) → [landslide_tsunami/](landslide_tsunami/)(津波の発生と非静水圧)、[tsunami_town/](tsunami_town/)・[timberyard/](timberyard/)(家屋破壊・流木)、[ashfall_lahar/](ashfall_lahar/)・[badland/](badland/)(土砂と地形発達)。
+
+段階別の全体の道筋は [docs/tutorial.md](../docs/tutorial.md) の「学習の道筋」にあります。
 計算したい現象から機能の組み合わせを引くには
 [用途集](../docs/users_guide/usecases.md)、各機能の設定は
 [ユーザーガイド](../docs/users_guide.md) を参照してください。

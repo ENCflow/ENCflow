@@ -33,6 +33,32 @@ spacing and arrow lengths are schematic.
 restart. Generate both languages as PNG and SVG with
 `python docs/figs/make_guide_figs.py swi`.
 
+## Enabling and settings
+
+Specify `fn_swi` in `&list_sysparam`. There is almost nothing to
+configure (the tank constants are fixed to preserve the official
+definition):
+
+```
+&list_swi
+  f_swi = 1                 ! 0 to disable temporarily
+  swi0 = 0.0, 0.0, 0.0      ! initial tank storages (mm) (antecedent rain)
+/
+```
+
+The minimal input to "just try it" is **fn_swi = "-" with an empty
+&list_swi** (f_swi=1 and swi0=0 are the defaults) plus rainfall
+([Rainfall and meteorology](forcing.md)).
+
+**Usage patterns**
+
+| Type | Rainfall | Settings | What to look at |
+|---|---|---|---|
+| Comparing with the official product | prtype=3 with 1 km analyzed rainfall | dx=dy=1 km, dt <= 600 s; also check rainfall processing, initial states and integration | Compare SWI at matching times; warning criteria also require 60-minute rainfall, etc. |
+| Checking a design / assumed rainfall | prtype=1 rectangular pulse (double the end point) | defaults | Time series extracted from the same cell in Swi maps, and its maximum |
+| Antecedent rainfall | either of the above | Set swi0 from the three preceding tank storages, or restart including swi.dat | Difference in the rise; total SWI alone cannot determine the three storages |
+| Comparison with the physical model | the same rainfall | a separate run (groundwater saturation Hg/(sy0 sd), soil depth, ...) side by side | Correspondence between the index and saturation |
+
 ## Discharge equations and units
 
 Storages `S1,S2,S3` and outlet heights `L` are in mm; α and β are in 1/h.
@@ -77,32 +103,6 @@ storage and the old tank-2 and tank-3 storages, then updates explicitly
 The sum after the update is the output SWI. This discretization differs
 from evaluating tank-1 discharge before adding rainfall; matching the
 official constants and grid alone does not guarantee identical values.
-
-## Enabling and settings
-
-Specify `fn_swi` in `&list_sysparam`. There is almost nothing to
-configure (the tank constants are fixed to preserve the official
-definition):
-
-```
-&list_swi
-  f_swi = 1                 ! 0 to disable temporarily
-  swi0 = 0.0, 0.0, 0.0      ! initial tank storages (mm) (antecedent rain)
-/
-```
-
-The minimal input to "just try it" is **fn_swi = "-" with an empty
-&list_swi** (f_swi=1 and swi0=0 are the defaults) plus rainfall
-([Rainfall and meteorology](forcing.md)).
-
-**Usage patterns**
-
-| Type | Rainfall | Settings | What to look at |
-|---|---|---|---|
-| Comparing with the official product | prtype=3 with 1 km analyzed rainfall | dx=dy=1 km, dt <= 600 s; also check rainfall processing, initial states and integration | Compare SWI at matching times; warning criteria also require 60-minute rainfall, etc. |
-| Checking a design / assumed rainfall | prtype=1 rectangular pulse (double the end point) | defaults | Time series extracted from the same cell in Swi maps, and its maximum |
-| Antecedent rainfall | either of the above | Set swi0 from the three preceding tank storages, or restart including swi.dat | Difference in the rise; total SWI alone cannot determine the three storages |
-| Comparison with the physical model | the same rainfall | a separate run (groundwater saturation Hg/(sy0 sd), soil depth, ...) side by side | Correspondence between the index and saturation |
 
 ## Contract (dedicated runs)
 

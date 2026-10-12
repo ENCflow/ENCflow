@@ -4,9 +4,13 @@
 
 This is the reference for configuring and running ENCflow. If you are
 new to ENCflow, we recommend running it once through the
-[tutorial](tutorial.md) before coming back here. This page (Part I)
-explains the overall structure of ENCflow and the conventions of its
-input; individual topics are split into per-chapter pages.
+[tutorial](tutorial.md) before coming back here (the "Learning path"
+there orders the material by level). This page (Part I) explains the
+overall structure of ENCflow and the conventions of its input;
+individual topics are split into per-chapter pages. Each chapter is
+written in the order "overview → just try it (minimal input) →
+recommended values by pattern → details → tests and examples", so its
+first two sections are enough to get a run going.
 
 See the [test catalogue](../../test/README.en.md) for checks and execution
 procedures, and the [examples catalogue](../../examples/README.en.md) for
