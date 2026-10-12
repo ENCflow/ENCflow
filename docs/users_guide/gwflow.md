@@ -220,7 +220,7 @@ K_sv・ψ_f は土地利用に応じた面的分布をマップで与えられ�
     地表流として扱われます(域内 = 質量保存)。カナートの出口・
     暗渠排水の吐口はこれを使います(枡密度の噴出 = 被圧時のみ、との
     違いに注意)。
-- 模式実験は test/conduit(解析平衡の検算つき)を参照してください。
+- 模式実験は [test/conduit](../../test/conduit/)(解析平衡の検算つき)を参照してください。
 
 **管諸元からのパラメータ換算(前処理)**
 
@@ -241,7 +241,7 @@ cap・cnd・sy は管網の諸元(管径 D・粗度 n・配置密度)から前�
 sy はどちらか一方の水頭応答を必ず歪めます(緩い slot_sy は被圧側の
 「幻の貯留」で氾濫を過小評価します。硬い slot_sy の dt 上界超過は
 サブサイクリングが自動で吸収します)。計算例のスクリプトは
-examples/sewer_hybrid/gen_data.py(幹線 D=1.0 m と枝管 D=0.4 m の換算・
+[examples/sewer_hybrid/gen_data.py](../../examples/sewer_hybrid/gen_data.py)(幹線 D=1.0 m と枝管 D=0.4 m の換算・
 セル別 sy マップの実演)を参照してください。
 
 **できること・できないこと(連続体近似の適用範囲)**
@@ -379,3 +379,11 @@ gw_ksv_mmh・gw_psif・sy0 の目安。耕起・圧密・植生で 1 桁動き�
 全グループの注釈付き実例:
 [examples/List_samples/list_gwflow.txt](../../examples/List_samples/list_gwflow.txt)。
 降雨と組み合わせた流出計算の全体像は[降雨・気象の章](forcing.md)へ。
+
+## 検証・例題
+
+- [test/gwdefault](../../test/gwdefault/): バケツ、Green-Ampt・層2、凍土、管路層の最小入力と、既定値を明示した入力の同値を検定。
+- [test/pump](../../test/pump/)・[test/frost](../../test/frost/): 井戸揚水の貯留減少、凍結指数に応じた浸透抑制をそれぞれ解析値と比較。
+- [test/gwseep](../../test/gwseep/): 浸透・地下側方輸送・湧出還元を、水質の質量収支とともに確認。
+- [examples/sewer_hybrid](../../examples/sewer_hybrid/): 幹線と枝管網を同じ管路層で表す設定・入力生成の例。
+- [examples/qanat](../../examples/qanat/): 管路層と層2を組み合わせ、地下横坑の集水・導水・出口湧出を表す例。

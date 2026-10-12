@@ -322,3 +322,9 @@ degree-day factor (compilation of Hock 2003; a calibration quantity):
 For worked examples of the settings, see list_precip / list_intercept /
 list_meteo / list_evap / list_snow in
 [examples/List_samples/](../../../examples/List_samples/en/).
+
+## Tests and examples
+
+- [test/chichibu](../../../test/chichibu/): uniform rainfall on a real-terrain catchment, with regression checks for runoff collection and flood-wave propagation.
+- [test/icevap](../../../test/icevap/): equivalence of minimal input and explicitly specified defaults for fixed-rate interception, initial loss and constant evapotranspiration.
+- [test/frost](../../../test/frost/): comparison with analytical values for the freezing index and infiltration suppression under constant air temperature.

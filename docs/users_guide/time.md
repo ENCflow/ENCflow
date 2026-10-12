@@ -136,3 +136,9 @@ tt を先へ延長します。`0000` はこの場合も「そのランの開始�
 反復して千年スケールの地形発達実験などに使えます(対象は開発文書
 [developer.md §32.4](../developer.md) を参照)。通常の計算では
 使いません。
+
+## 検証・例題
+
+- [test/wave](../../test/wave/): 時間刻み・計算終了時刻・分布出力間隔を指定する最小構成。
+- [test/nest_identity](../../test/nest_identity/): `restart` 構成で、同じ時間軸上の保存・再開を中断なしランと比較。
+- [examples/List_samples/list_sysparam.txt](../../examples/List_samples/list_sysparam.txt): 時刻・出力間隔・暦・周期強制を含む設定書式の注釈付き見本。

@@ -215,6 +215,12 @@ their cumulative values to current stocks would double count volume.
   in the CSV are not restored**. Combine the separate run segments when
   evaluating statistics and budgets over the complete period.
 
+## Verification case
+
+[test/driftwood](../../../test/driftwood/) checks volume conservation, transport and
+deposition for both erosion entrainment and hydraulic recruitment, and compares
+saved states from split and uninterrupted runs.
+
 ## Worked example: timber influx from a coastal log yard by storm surge
 
 An idealized experiment of the Isewan-typhoon type — timber floating in

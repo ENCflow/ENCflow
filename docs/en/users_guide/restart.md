@@ -133,3 +133,8 @@ consistent.
 State restore supports ENC. The legacy STG scheme stops when
 `f_state_restore > 0`. Thread and MPI rank counts may change under the
 reproducibility conditions above and in [Parallel Execution](parallel.md).
+
+## Tests and examples
+
+- [test/nest_identity](../../../test/nest_identity/): the `restart` configuration saves and resumes parent/child grids, checking identity after restart and log agreement with an uninterrupted run.
+- [test/driftwood](../../../test/driftwood/) and [test/bldgdebris](../../../test/bldgdebris/): byte comparison of saved states from a split run (`param_rt1.txt` → `param_rt2.txt`) and an uninterrupted run, including module-private state.

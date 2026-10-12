@@ -121,3 +121,8 @@
 状態復元は ENC が対象です。旧 STG では `f_state_restore > 0` を指定すると
 停止します。スレッド数・MPIランク数は、上記と[並列実行](parallel.md)の
 再現性条件を満たす範囲で変更できます。
+
+## 検証・例題
+
+- [test/nest_identity](../../test/nest_identity/): `restart` 構成で親子格子を保存・再開し、再開後の恒等性と中断なしランのログとの一致を確認。
+- [test/driftwood](../../test/driftwood/)・[test/bldgdebris](../../test/bldgdebris/): `param_rt1.txt` → `param_rt2.txt` の分割継続と通し計算の保存状態をバイト比較。各モジュールの内部状態を含む再開の設定例です。

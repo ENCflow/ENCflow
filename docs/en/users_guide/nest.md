@@ -179,7 +179,7 @@ with a band. The illustrated widths are nb=3 and nest_ns=4 child cells.
 
 Generate both languages as PNG and SVG with
 `python docs/figs/make_nest_figs.py bc`. For comparisons against a uniform
-fine grid, see the illustrated README in examples/nest_reflect.
+fine grid, see the illustrated README in [examples/nest_reflect](../../../examples/nest_reflect/).
 
 ## Conditions on a child grid (checked at initialization; the run stops if violated)
 
@@ -216,7 +216,7 @@ parent's φ (interpolated to the end of the sub-step) is placed there, so the
 non-hydrostatic pressure of a dispersive wave coming from the parent is
 continuous at the interface, and in a 1:1 self-nest the child's interior
 matches the parent (to the CG tolerance; maximum difference 2e-13 m in the
-nh case of test/nest_identity). nest_nh = 0 makes the band and the
+nh case of [test/nest_identity](../../../test/nest_identity/)). nest_nh = 0 makes the band and the
 nh_bc_margin cells inside it hydrostatic (the same margin as the other forced
 boundaries), which shifts the phase of dispersive waves at the interface
 (maximum difference 1.4e-2 m in the same case). If the parent is not
@@ -268,8 +268,8 @@ velocity onto the individual ENC boundary faces to compute discharge.
   boundary).
 - If the parent is at rest (constant η, u = 0) the result is bit-identical
   to the existing radiation boundary (the flather case of
-  test/nest_identity). The comparison with a band on a one-way r3t3 interface
-  crossing is in examples/nest_reflect (README).
+  [test/nest_identity](../../../test/nest_identity/)). The comparison with a band on a one-way r3t3 interface
+  crossing is in [examples/nest_reflect](../../../examples/nest_reflect/) (README).
 
 ## Sponge (nest_bc = 4)
 
@@ -324,7 +324,7 @@ non-root grids carry `~grid<k>` in the object part of the name
 there is no georeferencing, a child's origin is derived from the parent's
 origin and the alignment position, so all grids are expressed in the root's
 coordinate system. set (depth, terrain, precipitation) works per grid under
-the same conditions. The acceptance test is test/bmi_nest.
+the same conditions. The acceptance test is [test/bmi_nest](../../../test/bmi_nest/).
 
 ## Notes
 
@@ -337,10 +337,10 @@ the same conditions. The acceptance test is test/bmi_nest.
   boundary above the maximum run-up so that water never reaches it.
 - In a 1:1 self-nest (child = a subregion of the parent) the child's interior
   is bit-identical to the same region of the parent, and in two-way mode the
-  whole root is bit-identical to a stand-alone run (test/nest_identity; its
+  whole root is bit-identical to a stand-alone run ([test/nest_identity](../../../test/nest_identity/); its
   README lists the identity cases; useful for verifying the band and
   replacement design).
 - Verification of waves crossing the interface of two-way nests at ratios 3
   and 5 (comparison with a uniform fine grid; figures of the levels, errors,
   one-way band vs Flather and the non-hydrostatic band) is in
-  examples/nest_reflect.
+  [examples/nest_reflect](../../../examples/nest_reflect/).

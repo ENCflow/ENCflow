@@ -147,7 +147,7 @@ dir_data 相対です。内部で使う時刻は `t0 + 表の時刻 × bm_tscale
 bedmotion は地形も動かし、適用時の水深を保持します。
 
 時刻歴ありとの差は震源近傍の到達時刻と波高に現れます。既存の例題では
-examples/tsunami_fault の最高水位で2〜3%、tsunami_coast の湾口・棚で
+[examples/tsunami_fault](../../examples/tsunami_fault/) の最高水位で2〜3%、[examples/tsunami_coast](../../examples/tsunami_coast/) の湾口・棚で
 +24〜40%と報告されています(各例題READMEを参照)。
 
 ### 広域の計算: 窓付きの変位ファイル
@@ -189,7 +189,7 @@ examples/tsunami_fault の最高水位で2〜3%、tsunami_coast の湾口・棚�
 
 - 津波計算は**海域マスクを使わず**、初期水位 f_htype=2(静水面 e0。
   z < e0 のセルが海)で水域を表す「解く海」の型で行います
-  (examples/landslide_tsunami と同じ)。海域マスク(sw > 0)のセルは
+  ([examples/landslide_tsunami](../../examples/landslide_tsunami/) と同じ)。海域マスク(sw > 0)のセルは
   水位を規定される側なので、変位を与えても動きません。
 - 外洋に接する辺は長波放射(f_bc_* = 2)で反射を抑えます。
   あらゆる波に対する無反射を保証する境界ではありません。
@@ -214,8 +214,8 @@ examples/tsunami_fault の最高水位で2〜3%、tsunami_coast の湾口・棚�
   [非静水圧補正](swflow.md)の f_nonhydrostatic=1 と f_nh_bottom=1 が
   これを 1 層近似 1/(1 + βk²)² で与えます(developer.md §69.10)。
   このとき速度の跳びが加速度のパルスとして入るので、スナップショットを
-  細かく(fault2disp の nout を増やす。test/nhbottom は毎ステップ)
-  出してください。examples/tsunami_fault では非静水圧で沿岸の最高水位が
+  細かく(fault2disp の nout を増やす。[test/nhbottom](../../test/nhbottom/) は毎ステップ)
+  出してください。[examples/tsunami_fault](../../examples/tsunami_fault/) では非静水圧で沿岸の最高水位が
   −24%(分散)、加速度項の寄与はさらに −2% です。
 
 ## 6. パラメータ一覧
@@ -259,7 +259,7 @@ examples/tsunami_fault の最高水位で2〜3%、tsunami_coast の湾口・棚�
 
 ## 8. 検証と例題
 
-test/nhbottom 構成 3: 水深 10 m の水路で |x − x_c| < 20 m を 1 s で 0.2 m
+[test/nhbottom](../../test/nhbottom/) 構成 3: 水深 10 m の水路で |x − x_c| < 20 m を 1 s で 0.2 m
 持ち上げる Hammack 型の隆起を、毎ステップのスナップショット表で与え、
 ライブラリ API で同じ運動を与えたドライバの結果と一致します(Log の
 全有効桁の体積列の最終桁を除いて同一)。再開(0.5 s で save → restore)

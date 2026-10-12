@@ -185,6 +185,9 @@ B・C・D のセル集合と時系列は namelist に直接記入するほか、
 
 ## 例題・書式の実例
 
+- [test/sedinflow](../../test/sedinflow/): 区間流入の土砂濃度・流砂量指定と、流入総量に対する土砂台帳の検定。
+- [test/nhcurrent](../../test/nhcurrent/): 水位規定で一様流と正弦波を与える設定例。
+- [test/nest_identity](../../test/nest_identity/): `flather` 構成で、静水の親格子を使ったネスト境界と単独の放射境界を比較。
 - 全パラメータの注釈付き実例: [examples/List_samples/list_boundary.txt](../../examples/List_samples/list_boundary.txt)
 - 辺境界(放射): [tutorials/wave](../../tutorials/wave/) Step 3
 - 排水ポンプ・樋門などの構造物は fn_structure 側です([構造物の章](structure.md))。

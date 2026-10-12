@@ -221,6 +221,8 @@ fn_bank と同じ仕組みの海岸応用)。海側判定は `fn_seaside` と `s
 
 ## 例題・制約
 
+- [test/chichibu](../../test/chichibu/): 標高・流域マスク・河道マスク・粗度を組み合わせた実地形の回帰ケース。
+- [test/gtif](../../test/gtif/): 型・圧縮・配置・座標系の異なるGeoTIFF入力のテスト資産。
 - 全パラメータの注釈付き一覧: [examples/List_samples/list_geoinfo.txt](../../examples/List_samples/list_geoinfo.txt)
 - 最小構成: [tutorials/wave](../../tutorials/wave/)(格子のみ+ユーザールーチン)
 - 実地形: [tutorials/chichibu](../../tutorials/chichibu/)

@@ -124,6 +124,11 @@ R=(3,6) から L=(8,5) へ引いた橙破線から、薄橙色の6セルを選�
 全パラメータの注釈付き一覧:
 [examples/List_samples/list_record.txt](../../examples/List_samples/list_record.txt)。
 
+## 検証・例題
+
+- [test/chichibu](../../test/chichibu/): 本流の複数測線とプローブで流量・水深を記録。`record_reach.txt` は河道縦断の12測線の設定例です。
+- [test/bendloss](../../test/bendloss/): 直線・折れ線・対角水路の測線記録と洪水波の減衰比較。
+
 ## 分布データからの事後計測(utils/rerecord)
 
 `utils/rerecord` は、計算時のパラメータファイル、流向分布

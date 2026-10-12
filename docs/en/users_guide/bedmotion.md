@@ -167,8 +167,8 @@ changing only the initial water depth over fixed terrain. Bedmotion changes
 the terrain while keeping the depth during application.
 
 The time-history input differs in near-field arrival time and wave height.
-The existing example READMEs report 2–3% in maximum level for tsunami_fault
-and +24 to 40% at the bay mouth and shelf of tsunami_coast.
+The existing example READMEs report 2–3% in maximum level for [examples/tsunami_fault](../../../examples/tsunami_fault/)
+and +24 to 40% at the bay mouth and shelf of [examples/tsunami_coast](../../../examples/tsunami_coast/).
 
 ### Large domains: windowed displacement files
 
@@ -212,7 +212,7 @@ Regenerate only this figure with `python docs/figs/make_guide_figs.py bedmotion`
 - A tsunami run does **not** use the sea mask: the water body is given
   by the fixed initial level f_htype=2 (still water e0; cells with
   z < e0 are sea), the "solved sea" configuration (the same as
-  examples/landslide_tsunami). Cells in the sea mask (sw > 0) have their
+  [examples/landslide_tsunami](../../../examples/landslide_tsunami/)). Cells in the sea mask (sw > 0) have their
   level prescribed and therefore do not move when a displacement is given.
 - Open-ocean edges use long-wave radiation (f_bc_* = 2) to reduce reflection;
   it does not guarantee zero reflection for every wave. Landward edges use
@@ -243,7 +243,7 @@ Regenerate only this figure with `python docs/figs/make_guide_figs.py bedmotion`
   f_nh_bottom=1 provides it in the one-layer approximation 1/(1 + βk²)²
   (developer.md §69.10). The velocity jumps then enter as acceleration
   pulses, so write the snapshots densely (increase nout of fault2disp;
-  test/nhbottom writes one per step). In examples/tsunami_fault the
+  [test/nhbottom](../../../test/nhbottom/) writes one per step). In [examples/tsunami_fault](../../../examples/tsunami_fault/) the
   non-hydrostatic run lowers the coastal maximum level by 24% (dispersion),
   and the acceleration term contributes a further −2%.
 
@@ -291,7 +291,7 @@ the bed elevation.
 
 ## 8. Verification and examples
 
-test/nhbottom configuration 3: a Hammack-type uplift of 0.2 m in 1 s over
+[test/nhbottom](../../../test/nhbottom/) configuration 3: a Hammack-type uplift of 0.2 m in 1 s over
 |x − x_c| < 20 m in a 10 m deep channel, given as a snapshot table with
 one entry per step, matches the driver that applies the same motion
 through the library API (identical except the last digit of the

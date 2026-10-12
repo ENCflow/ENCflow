@@ -155,3 +155,7 @@ forecast values. See
 - References: Ishihara and Kobatake (1979); Okada et al. (2001,
   Sokkō-Jihō 68); [JMA's Soil Water Index explanation](https://www.jma.go.jp/jma/kishou/know/bosai/dojoshisu.html). See
   developer.md §49 for the implementation record.
+
+## Tests and examples
+
+- [test/swi](../../../test/swi/): comparison with a fine-step RK4 reference solution of the three tanks, checking the final value, period maximum, its time and spatial uniformity. The case also shows the short ramp in the rainfall table and the checks in `Check_swi.py`.

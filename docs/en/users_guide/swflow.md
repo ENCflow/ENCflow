@@ -282,5 +282,5 @@ Annotated list of all parameters (with the defaults spelled out):
 ## Relation to verification
 
 Many of these switches change the computed results. The regression
-tests (reference in test/) were created with the defaults, so compare
+tests (reference in [test/](../../../test/)) were created with the defaults, so compare
 results obtained with modified settings against your own baseline.

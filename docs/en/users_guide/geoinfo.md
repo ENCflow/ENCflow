@@ -254,6 +254,8 @@ Notes when giving the crest with a distribution file `fn_seawall`:
 
 ## Examples and constraints
 
+- [test/chichibu](../../../test/chichibu/): a real-terrain regression case combining elevation, catchment/channel masks and roughness.
+- [test/gtif](../../../test/gtif/): GeoTIFF input test assets covering data types, compression, layout and coordinate systems.
 - Annotated list of all parameters: [examples/List_samples/list_geoinfo.txt](../../../examples/List_samples/en/list_geoinfo.txt)
 - Minimal configuration: [tutorials/wave](../../../tutorials/wave/en/README.md) (grid only + a user routine)
 - Real terrain: [tutorials/chichibu](../../../tutorials/chichibu/en/README.md)

@@ -211,3 +211,8 @@ displayed at initialization like
 coordinate that lands exactly on a cell boundary can resolve to
 either side depending on rounding, so use coordinates that point to
 the interior of a cell.
+
+## Tests and examples
+
+- [test/gtif](../../../test/gtif/): GeoTIFF input and georeferencing test assets for projected and geographic coordinates.
+- [examples/tsunami_fault](../../../examples/tsunami_fault/): fault locations specified in longitude/latitude or projected coordinates, with bil/GeoTIFF georeferencing examples.

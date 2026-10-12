@@ -122,3 +122,5 @@ hsea0 は限界水深 dd の数十倍以上(標準 1 m)から始めてくださ�
   ビット一致します)。
 - 動く例題: [test/tide](../../test/tide/)(排水→上げ潮浸水)。
   書式の実例: [examples/List_samples/list_tide.txt](../../examples/List_samples/list_tide.txt)。
+- 管路層の海域吐口・排水機場と潮位の結合: [test/coastal_drain](../../test/coastal_drain/)。
+- 高潮による材木の流入・堆積の設定例: [examples/timberyard](../../examples/timberyard/)。

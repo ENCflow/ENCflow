@@ -257,6 +257,13 @@ the volume.
   over.** Distinguish outputs before and after restart and combine period
   statistics and budgets separately.
 
+## Verification cases
+
+[test/bldgdebris](../../../test/bldgdebris/) checks debris-volume conservation,
+one-way coupling with driftwood, water-volume conservation under void-ratio
+feedback, and split-run continuation. [test/gvchange](../../../test/gvchange/)
+provides unit checks of the void-ratio update procedure.
+
 ## Worked example: tsunami run-up into a town with house destruction and debris
 
 An idealized experiment of a tsunami running up into a coastal town,

@@ -169,3 +169,8 @@ j = floor(yi / dy) + 1
 停止します)。セル境界のちょうど上に載る座標は、丸めによって
 どちら側のセルにも解決されうるので、セルの内部を指す座標を
 使ってください。
+
+## 検証・例題
+
+- [test/gtif](../../test/gtif/): 投影座標・経緯度のGeoTIFF入力と地理参照のテスト資産。
+- [examples/tsunami_fault](../../examples/tsunami_fault/): 断層位置を経緯度・投影座標で与える設定と、bil・GeoTIFFの地理参照を使う例。

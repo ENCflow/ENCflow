@@ -146,7 +146,7 @@
   `nest_nh` は `nest_bc` とは別の設定で、帯のない3には適用しません。
 
 日英PNG・SVGは `python docs/figs/make_nest_figs.py bc` で生成します。
-各方式の誤差を一様細格子と比較した例は examples/nest_reflect のREADME
+各方式の誤差を一様細格子と比較した例は [examples/nest_reflect](../../examples/nest_reflect/) のREADME
 （図付き）を参照してください。
 
 ## 子格子の条件(初期化で検査し、満たさなければ停止します)
@@ -178,7 +178,7 @@
 既定(nest_nh = 1)では
 親の φ(サブステップ終了時刻で補間)を置くので、親から来る分散波の非静水圧
 圧力が界面で連続になり、比 1:1 の自己ネストでは子の内部が親と一致します
-(CG の許容残差の精度。test/nest_identity の nh ケースで最大差 2e-13 m)。
+(CG の許容残差の精度。[test/nest_identity](../../test/nest_identity/) の nh ケースで最大差 2e-13 m)。
 nest_nh = 0 は帯とその内側 nh_bc_margin セル(他の強制境界と同じ余白)を
 静水圧にする選択肢で、界面で分散波の位相がずれます(同ケースで最大差
 1.4e-2 m)。親が非静水圧でなければ既定でも φ = 0 が入ります。
@@ -215,8 +215,8 @@ h は子の境界セルの水深です。実装では係数の分母を max(h, d
   サブステップはその面を閉じ、子の境界セルが乾いていれば流束は 0 です
   (境界からの再湿潤はしません)。
 - 親が静水(η 一定・u = 0)なら現行の放射境界と同一ビットです
-  (test/nest_identity の flather ケース)。一方向 r3t3 の界面通過での
-  帯との比較は examples/nest_reflect(README)。
+  ([test/nest_identity](../../test/nest_identity/) の flather ケース)。一方向 r3t3 の界面通過での
+  帯との比較は [examples/nest_reflect](../../examples/nest_reflect/)(README)。
 
 ## スポンジ(nest_bc = 4)
 
@@ -259,7 +259,7 @@ object 部に `~grid<k>` を付けます(`surface_water~grid1__depth` = 格子 1
 `model.shape_of(k)`・`model.origin_of(k)` が格子の情報を返します。子格子の
 原点は、georef がなければ親の原点と整列位置から導かれ、全格子がルートの
 座標系で表されます。set(水深・地形・降水)も格子ごとに同じ条件で使えます。
-受け入れ試験は test/bmi_nest。
+受け入れ試験は [test/bmi_nest](../../test/bmi_nest/)。
 
 ## 注意
 
@@ -271,7 +271,7 @@ object 部に `~grid<k>` を付けます(`surface_water~grid1__depth` = 格子 1
   ないようにします。
 - 比 1:1 の自己ネスト(子 = 親の部分領域)では、子の内部は親の同領域と
   ビット一致し、双方向ではルート全体が単独ランとビット一致します
-  (test/nest_identity。帯と置換の設計の検証に使えます)。
-- 比 3・5 の双方向ネストで界面を横切る波の検証例は examples/nest_reflect
+  ([test/nest_identity](../../test/nest_identity/)。帯と置換の設計の検証に使えます)。
+- 比 3・5 の双方向ネストで界面を横切る波の検証例は [examples/nest_reflect](../../examples/nest_reflect/)
   (一様細格子との比較。水位・誤差・一方向の帯と Flather・非静水圧の帯の
-  図は同 README)。test/nest_identity の README に恒等ケースの一覧があります。
+  図は同 README)。[test/nest_identity](../../test/nest_identity/) の README に恒等ケースの一覧があります。

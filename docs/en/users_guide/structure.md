@@ -401,3 +401,8 @@ Annotated examples of all four types:
 [examples/List_samples/list_structure.txt](../../../examples/List_samples/en/list_structure.txt).
 For levee overtopping and breach and channel conveyance, see the
 [channel chapter](channel.md).
+
+## Tests and examples
+
+- [test/coastal_drain](../../../test/coastal_drain/): drainage with a pumping station drawing directly from the conduit layer (`f_pump_src=1`) and an outfall into sea cells.
+- [test/damwq](../../../test/damwq/): dam capture, constant release and reservoir storage coupled with water quality, checked against mass balances and analytical complete-mixing values.

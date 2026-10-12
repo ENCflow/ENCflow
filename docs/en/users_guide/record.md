@@ -137,6 +137,11 @@ probes and all transects are written together to `result/summary.csv`.
 Annotated list of all parameters:
 [examples/List_samples/list_record.txt](../../../examples/List_samples/en/list_record.txt).
 
+## Tests and examples
+
+- [test/chichibu](../../../test/chichibu/): discharge and depth records from multiple main-channel transects and probes; `record_reach.txt` provides a 12-transect longitudinal setup.
+- [test/bendloss](../../../test/bendloss/): transect records in straight, zigzag and diagonal channels, including flood-wave attenuation comparisons.
+
 ## Post-hoc measurement from distributed output (utils/rerecord)
 
 `utils/rerecord` takes three arguments: the simulation parameter file,

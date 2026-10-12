@@ -110,3 +110,9 @@ memory-constrained environments (`PREC = single` in `make.inc`).
 Single precision changes the result values themselves, so do not mix
 it with double precision in comparisons. The build system detects
 mode and precision switches and prevents inconsistencies.
+
+## Tests and examples
+
+- [test/wave](../../../test/wave/): minimal serial and MPI regression case, with `Run.sh` and `Run_MPI.sh N` examples.
+- [test/chichibu](../../../test/chichibu/): serial and MPI runs using real terrain, a catchment mask and a channel mask.
+- [test/README.en.md](../../../test/README.en.md): common execution and comparison procedures. Consult each case's README and scripts for the quantities compared and tolerances.

@@ -380,7 +380,7 @@ pays off).
   distribution → rainfall → mudflow → fan deposition).
 - **How to initiate**: **erosion of an ash layer given as soil depth sd**
   (rain runoff on a steep slope picks up the ash to the equilibrium
-  concentration — no source needs to be specified; examples/ashfall_lahar),
+  concentration — no source needs to be specified; [examples/ashfall_lahar](../../../examples/ashfall_lahar/)),
   a **sediment-laden segment inflow** at the
   upstream end (the supply hydrograph; inflow_cs of
   [Boundary conditions](boundary.md)), or a **chain** in which deposits
@@ -401,7 +401,7 @@ friction on convexities; friction is cut to zero where the flow would
 leave the ground). RAMMS calibrates mu and xi with this term included,
 so set it to 1 in comparison runs that use those values. Curvature picks
 up fine DEM roughness, so match the grid resolution to the model you
-compare with. There is no effect on straight slopes (test/curvature).
+compare with. There is no effect on straight slopes ([test/curvature](../../../test/curvature/)).
 
 **Snow avalanches (dense flow)** - the same equivalent-fluid setup is
 also the standard formulation for dense-flow snow avalanches. The
@@ -569,7 +569,7 @@ the edges).
 | bs_reltime | 0 | Release time (s) |
 | bs_rho | 2000 | Bulk density of the mass (kg/m³, pores included; buoyancy ratio r = 1000/rho_s). The default is representative of saturated soil and rock debris (r = 0.5). 0 uses the default and init prints the adopted value with "(default)" |
 | f_bsres | 1 | Resistance law. 1: Voellmy (inertia-free; V = sqrt(xi hb (S - mu b))). 2 (Bingham) is reserved |
-| bs_mu / bs_xi | 0.15 / 500 | Voellmy mu and xi (m/s²). The defaults are the calibrated values of the inertia-free bed layer (as in examples/landslide_tsunami). Named separately from the mixture's db_mu/db_xi (calibration differs with and without inertia) |
+| bs_mu / bs_xi | 0.15 / 500 | Voellmy mu and xi (m/s²). The defaults are the calibrated values of the inertia-free bed layer (as in [examples/landslide_tsunami](../../../examples/landslide_tsunami/)). Named separately from the mixture's db_mu/db_xi (calibration differs with and without inertia) |
 | bs_vstop | 0.05 | Velocity threshold for stopping (m/s; hb of cells below it is fixed to the terrain; irreversible) |
 | bs_tstop | 0 | Duration of slow motion required before fixing (s). 0 = immediate. To avoid false fixing during the ten-odd seconds in which the shoreline zone dewaters and the layer stalls on plunging, 10-15 s (longer than the dewatering) is recommended for plunging cases |
 | bs_eps_s | 0.02 | Linearization width near yield (dimensionless slope; smaller means more subcycles) |
@@ -604,7 +604,7 @@ added automatically. Restart uses the private file
 water time step to satisfy its stability conditions (advection and a
 diffusion-type condition near yield), so while the mass is moving the
 **total run time is about 1.5-2.5 times** (2.7 s → 4-6 s in
-examples/landslide_tsunami). This is not an anomaly. At the end,
+[examples/landslide_tsunami](../../../examples/landslide_tsunami/)). This is not an anomaly. At the end,
 "bedslide subcycles total = ... (max ... per update)" reports the count.
 If the count is extreme or the run stops on exceeding bs_nsubmax, the
 first remedy is a larger bs_eps_s (0.02 → 0.05) (mechanism and order of
@@ -651,7 +651,7 @@ debris-flow model).
   mixture arriving during dewatering that is left behind because it is
   below bs_hplunge can be reduced with f_bsplunge=1 (test with the
   still-water depth). A dry large-scale collapse is more naturally given
-  as a bed layer from the start with fn_bsinit. In test/bedslide
+  as a bed layer from the start with fn_bsinit. In [test/bedslide](../../../test/bedslide/)
   configuration 4, without handover (mixture only) the material piles up
   near the shoreline and never reaches the lake bottom, whereas with
   handover it runs to the flat lake bottom and deposits there.
@@ -693,7 +693,7 @@ When the type of phenomenon is known, start from the following
 | Dense pyroclastic flow | f_dbed=0 + f_dbres=5 | - | - | 5-50 | - | - | VolcFlow-type applications |
 | Stony debris flow (Japanese type) | f_dbed=3 + f_dbres=3 | - | - | - | 0.05-0.3 | 35 | Takahashi-Nakagawa 1991. Grain size = representative boulders of the front |
 | Mudflow, fine sediment flow | f_dbed=2 + f_dbres=2 | - | - | - | 0.001-0.01 | 30-35 | Egashira constitutive law. e ≈ 0.85 |
-| Lahar (volcanic mudflow) | f_dbed=1 or 2 + f_dbres=4 (fine) / 1; 3+3 when boulder-dominated | 0.05-0.1 | 500-1000 | - | 0.001-0.01 | 30-35 | Initiated by erosion of the ash layer (sd), a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended. The Egashira laminar law is not usable for fine material. See the "Lahars" paragraph above and examples/ashfall_lahar |
+| Lahar (volcanic mudflow) | f_dbed=1 or 2 + f_dbres=4 (fine) / 1; 3+3 when boulder-dominated | 0.05-0.1 | 500-1000 | - | 0.001-0.01 | 30-35 | Initiated by erosion of the ash layer (sd), a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended. The Egashira laminar law is not usable for fine material. See the "Lahars" paragraph above and [examples/ashfall_lahar](../../../examples/ashfall_lahar/) |
 | Simple debris flow (calibration-driven) | f_dbed=1 + f_dbres=1 | - | - | - | - | 30-35 | Calibrate the runout with delta_e and delta_d |
 | Bed change of a sand-bed river | f_fluvial (+ f_suspend) | - | - | - | 0.0003-0.001 | - | Large contribution of suspended load |
 | Bed change of a gravel-bed river | f_fluvial | - | - | - | 0.02-0.1 | - | Bedload dominates |
