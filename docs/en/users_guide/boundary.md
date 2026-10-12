@@ -68,6 +68,8 @@ are added)
 
 ## Edge boundaries (&list_bound_edge)
 
+Free outflow (critical-depth drop) and long-wave radiation (Sommerfeld, Flather): [supplement](hydraulics.md#5-edge-boundaries).
+
 Assigns a boundary condition type to each of the four outer edges
 (west = i=1, east = i=nx, north = j=1, south = j=ny; row order is north
 to south).
@@ -157,6 +159,8 @@ inflow volume is not preserved in that cell's budget.
   is large, review dt.
 
 ## Segment inflow (&list_bound_inflow)
+
+Distribution weights and the Froude blending: [supplement](hydraulics.md#5-edge-boundaries).
 
 A boundary through which a river or similar enters across the outer
 edge of the domain. Prescribes the **total discharge** Q(t) of the

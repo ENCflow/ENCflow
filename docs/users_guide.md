@@ -38,6 +38,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [境界条件](users_guide/boundary.md)(&list_bound_edge/source/stage/inflow)— 辺境界・ソース・水位規定・区間流入
 - [潮位・海面](users_guide/tide.md)(&list_tide)— 高潮・上げ潮浸水・排水
 - [内部水理構造物](users_guide/structure.md)(&list_struct_pump/culvert/diversion/dam)— ポンプ・カルバート・分水・ダム・湖沼
+  - [構造物と境界の水理則の解説](users_guide/hydraulics.md) — 本間公式・カルバートの 3 レジーム・ダム運転則・自由流出と放射境界・区間流入の配分の式と係数の根拠(構造物・境界条件・河道の補足)
 - [河道](users_guide/channel.md)(&list_channel)— 堤防・河道幅・断面形・破堤
 - [降雨・気象](users_guide/forcing.md)(&list_precip / intercept / meteo / evap / snow)— 降水・遮断・気温・蒸発散・積雪融雪
 - [地下水](users_guide/gwflow.md)(&list_gwflow とモデル固有設定)— 浸透・側方流動・風化基岩層・管路連続体層(下水道網・岩盤亀裂網)
