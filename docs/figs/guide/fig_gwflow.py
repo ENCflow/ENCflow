@@ -1,124 +1,262 @@
-"""地下水の鉛直構造(土層・風化基岩層・管路連続体層・揚水・凍土)の断面模式図(gwflow.md)。"""
+"""Groundwater storage and exchange: a shallow section and a conduit schematic.
+
+The section illustrates Green-Ampt + lateral flow + optional layer 2. The
+separate conduit panel is an equivalent-continuum connection diagram, not a
+third geological stratum or a resolved pipe/well network. See m_gwflow*.f90.
+"""
+from pathlib import Path as FilePath
+import numpy as np
 from _style import *
+from _schematic import (drawing_style, text, block, paragraph, line,
+                        arrow as flow_arrow, curve, export, INK, MUTED, RULE)
 
-T = {"ja": {
-    "title": "地下水の層構成と各モジュール(断面。土層 + 風化基岩層 + 管路連続体層。選択子は &list_gwflow)",
-    "surf": "地表水 h", "soil": "土層(厚さ sd、比湧水量 sy0: &list_geoinfo)", "hg": "地下貯留 hg(飽和帯)",
-    "vert": "鉛直 f_gwvertical\n1: バケツ(gw_infil_mmh, gw_capacity)\n2: Green-Ampt(gw_ksv_mmh, gw_psif\n   / fn_gw_ksv, fn_gw_psif)",
-    "frost": "f_gwfrost=1: 凍土\n鉛直浸透能 × fac(FI)\nFI: 凍結指数(気温 fn_meteo)\nfro_fifull, fro_fmin, fro_tf …",
-    "lat": "側方 f_gwlateral=1\nDarcy 流(8近傍)gw_ksh_mmh",
-    "seep": "飽和超過\n→ 湧出",
-    "l2": "風化基岩層 f_gwlayer2=1(gw2_depth, gw2_sy)", "l2in": "層1→2 浸透\ngw2_infil_mmh", "l2lat": "側方 gw2_ksh_mmh\n(0 = 容量のみ)", "l2up": "飽和超過\n→ 層1へ",
-    "bed": "不透水(基盤)",
-    "cond": "管路連続体層 f_gwconduit=1(下水道網・岩盤亀裂網)  貯留 hgc\ngwc_cap(容量), gwc_cnd(通水能), 管底 gwc_depth / fn_gwc_bot, gwc_sy・gwc_slot_sy",
-    "inlet": "枡 gwc_inlet\n流入(堰 gwc_cw / 満管はオリフィス gwc_co)",
-    "surcharge": "被圧(hgc > cap)\n→ 噴出", "clat": "8方向 f_gwc_fluxlaw\n(1: 線形, 2: sqrt)",
-    "leak": "層間交換 gwc_leak_layer\n1: 土層 / 2: 風化基岩層\n(gwc_leak_mmh)",
-    "outfall": "吐口 fn_gwc_outfall\n海隣接: 海へ(系外)\nなし: 自セル地表へ",
-    "pump": "井戸 f_gwpump=1\ngwp_q0 / gwp_val\ngwp_layer 1: 土層\n          2: 層2\n(系外へ除去)",
-    "sea": "海域 /\n河道",
-}, "en": {
-    "title": "Groundwater layers and modules (section: soil layer + weathered bedrock + conduit continuum; selectors in &list_gwflow)",
-    "surf": "surface water h", "soil": "soil layer (thickness sd, specific yield sy0: &list_geoinfo)", "hg": "storage hg (saturated zone)",
-    "vert": "vertical f_gwvertical\n1: bucket (gw_infil_mmh, gw_capacity)\n2: Green-Ampt (gw_ksv_mmh, gw_psif\n   / fn_gw_ksv, fn_gw_psif)",
-    "frost": "f_gwfrost=1: frozen ground\nvertical infiltration x fac(FI)\nFI: freezing index (air temp. fn_meteo)\nfro_fifull, fro_fmin, fro_tf ...",
-    "lat": "lateral f_gwlateral=1\nDarcy flow (8 neighbours) gw_ksh_mmh",
-    "seep": "saturation excess\n-> exfiltration",
-    "l2": "weathered bedrock layer f_gwlayer2=1 (gw2_depth, gw2_sy)", "l2in": "layer 1->2\ngw2_infil_mmh", "l2lat": "lateral gw2_ksh_mmh\n(0 = capacity only)", "l2up": "saturation excess\n-> back to layer 1",
-    "bed": "impermeable base",
-    "cond": "conduit continuum layer f_gwconduit=1 (sewer / fracture network)  storage hgc\ngwc_cap (capacity), gwc_cnd (conveyance), invert gwc_depth / fn_gwc_bot, gwc_sy, gwc_slot_sy",
-    "inlet": "inlets gwc_inlet\ninflow (weir gwc_cw / orifice gwc_co when full)",
-    "surcharge": "pressurized (hgc > cap)\n-> surcharge to surface", "clat": "8 directions f_gwc_fluxlaw\n(1: linear, 2: sqrt)",
-    "leak": "leakage gwc_leak_layer\n1: soil / 2: bedrock layer\n(gwc_leak_mmh)",
-    "outfall": "outfall fn_gwc_outfall\nnext to sea: to sea (removed)\nelse: to own cell surface",
-    "pump": "well f_gwpump=1\ngwp_q0 / gwp_val\ngwp_layer 1: soil\n          2: layer 2\n(removed from system)",
-    "sea": "sea /\nriver",
-}}
+T = {
+    'ja': dict(
+        title='地下水の貯留と交換経路',
+        subtitle='土層・任意の風化基岩層に、管路連続体と揚水を追加  |  fn_gwflow / &list_gwflow',
+        a='(a) 浅層地下水の断面例',
+        a_sub='Green-Ampt + 側方流 + 風化基岩層',
+        b='(b) 管路連続体の交換関係',
+        b_sub='f_gwconduit = 1（任意）',
+        surf='地表水 h', soil='土層', layer2='層2', base='基盤',
+        infil='鉛直浸透', lateral='側方流', down='層1 → 2',
+        up='容量超過\n層1へ戻る', seep='湧出', pump='揚水 → 系外\n（土層からの例）',
+        sat_depth='飽和帯厚',
+        surface_node='地表水 h', conduit_node='管路連続体 hgc',
+        neighbour='隣接セル', eight='8近傍', inlet='流入', surcharge='噴出',
+        leak='水頭差で\n双方向交換', selected='交換相手を選択\n土層 hg または 層2 hg2',
+        outlet='吐口の受け先\n海隣接: 海（系外）\nそれ以外: 自セル地表',
+        outflow='吐口放流',
+        store_head='1  貯留量と飽和帯の厚さ',
+        store='hg・hg2・hgc は水量をセル面積で割った柱状換算水深。\n飽和帯厚は hg / sy0、hg2 / gw2_sy。青い帯はこの厚さを示す。\n土層容量 = sd × sy0（sd・sy0 は &list_geoinfo）。',
+        soil_head='2  浸透・側方流と凍土',
+        soil_note='f_gwvertical=2: Green-Ampt。f_gwlateral=1: 水頭差で動く8近傍流。\n土層の容量超過分は地表へ湧出する。\nf_gwfrost=1: 気温から凍結指数を求め、鉛直浸透能だけを低減。\nバケツ（f_gwvertical=1）は側方流・層2と併用しない別構成。',
+        layer_head='3  風化基岩層・揚水（任意）',
+        layer_note='f_gwlayer2=1: 層1 → 2 に浸透し、層2の容量超過分は層1へ戻す。\n容量 = gw2_depth × gw2_sy。gw2_ksh_mmh=0 なら層2の側方流なし。\nf_gwpump=1: 井戸ごとに土層 / 層2 を選び、貯留量を上限に系外へ取水。\n井戸孔の水理は解かない。',
+        conduit_head='4  任意に重ねる等価連続体',
+        conduit_note='下水道網・岩盤亀裂網などをセル別の容量と通水能で表す。\n管路水頭 H_c は貯留 hgc、容量 cap（gwc_cap）、管底と貯留係数で決まる。\n容量超過分も層内に保持（被圧）。側方通水は8方向の水頭差で駆動。\nf_gwc_fluxlaw: 1 = 線形、2 = sqrt。',
+        exchange_head='5  枡・吸込穴からの地表交換',
+        exchange_note='gwc_inlet（または分布マップ）が正のセルで有効。\n流入: 地表に水があり H_s > H_c。不圧は堰式、満管はオリフィス式。\n噴出: hgc > cap かつ H_c > H_s（オリフィス式）。H_s = z + h。',
+        out_head='6  地下層との交換・吐口',
+        out_note='gwc_leak_layer=1 / 2 で交換相手の土層 / 層2 を選び、水頭差で双方向交換。\n吐口 fn_gwc_outfall は受け先より管路水頭が高いときだけ放流。\n海隣接なら海へ系外排出、それ以外は自セルの地表水へ戻す。\n吐口は不圧・被圧のどちらでも働く（逆流なし）。',
+        foot='模式図・縮尺任意。矢印は交換経路を示す。管路図の位置・大きさは、埋設深・実管径・必須の地層を意味しない。',
+    ),
+    'en': dict(
+        title='Groundwater storage and exchange pathways',
+        subtitle='Soil and optional weathered bedrock, with conduit storage and pumping  |  fn_gwflow / &list_gwflow',
+        a='(a) Example shallow-groundwater section',
+        a_sub='Green-Ampt + lateral flow + weathered bedrock',
+        b='(b) Conduit-continuum exchanges',
+        b_sub='f_gwconduit = 1 (optional)',
+        surf='surface water h', soil='soil', layer2='layer 2', base='base',
+        infil='infiltration', lateral='lateral flow', down='layer 1 → 2',
+        up='overflow\nto layer 1', seep='exfiltration', pump='pumping → outside\n(soil-layer example)',
+        sat_depth='saturated\nthickness',
+        surface_node='surface water h', conduit_node='conduit storage hgc',
+        neighbour='neighbour', eight='8 neighbours', inlet='inflow', surcharge='surcharge',
+        leak='head-driven\nexchange', selected='choose one partner\nsoil hg or layer 2 hg2',
+        outlet='outfall destination\nsea neighbour: sea (outside)\notherwise: own surface cell',
+        outflow='outfall',
+        store_head='1  Stored water versus saturated thickness',
+        store='hg, hg2 and hgc are water volume divided by cell area.\nSaturated thickness = hg / sy0 or hg2 / gw2_sy, shown by the blue bands.\nSoil capacity = sd × sy0 (sd and sy0 are set in &list_geoinfo).',
+        soil_head='2  Infiltration, lateral flow and frozen ground',
+        soil_note='f_gwvertical=2: Green-Ampt. f_gwlateral=1: head-driven, 8-neighbour flow.\nSoil storage above capacity returns to the surface.\nf_gwfrost=1: air-temperature freezing index reduces vertical infiltration only.\nThe bucket (f_gwvertical=1) is an alternative, incompatible with lateral flow / layer 2.',
+        layer_head='3  Weathered bedrock and pumping (optional)',
+        layer_note='f_gwlayer2=1: infiltration from layer 1; excess storage returns to layer 1.\nCapacity = gw2_depth × gw2_sy. gw2_ksh_mmh=0 disables layer-2 lateral flow.\nf_gwpump=1: each well abstracts from soil OR layer 2, limited by stored water.\nWater leaves the system; borehole-scale hydraulics are not resolved.',
+        conduit_head='4  An optional equivalent continuum',
+        conduit_note='Sewer or fracture networks are represented by cell capacity and conveyance.\nConduit head H_c depends on hgc, cap (gwc_cap), invert and storage coefficients.\nExcess storage is retained under pressure. Lateral flow follows head differences\nin 8 directions. f_gwc_fluxlaw: 1 = linear, 2 = sqrt.',
+        exchange_head='5  Surface exchange through inlets',
+        exchange_note='Active where gwc_inlet (or its map) is positive.\nInflow: surface water present and H_s > H_c; weir if unfilled, orifice if full.\nSurcharge: hgc > cap AND H_c > H_s (orifice). Surface head H_s = z + h.',
+        out_head='6  Groundwater exchange and outfalls',
+        out_note='gwc_leak_layer=1 / 2 selects soil / layer 2 for head-driven, two-way exchange.\nOutfalls (fn_gwc_outfall) discharge only when conduit head exceeds receiving head.\nWith a sea neighbour: water leaves to sea; otherwise: to its own surface cell.\nOutfalls work in both unpressurized and pressurized states; no reverse flow.',
+        foot='Schematic, not to scale. Arrows show exchange routes. Conduit-box positions and sizes do not represent burial depth, pipe diameter or required geological strata.',
+    ),
+}
 
-ROT = -10   # 層に沿う文字の回転(視覚上の勾配)
+# One geometric definition for all faces. Values are conceptual, not inputs.
+SOIL_DEPTH, ROCK_DEPTH, END = 1.35, 1.55, 9.6
+GREEN = '#51813b'
+SOIL_FILL, ROCK_FILL = '#dfcba3', '#d4d2cd'
+WATER2 = '#bcd3ee'
+
+
+def surface(x):
+    return 5.0-.20*np.asarray(x, float)
+
+
+def smoothstep(x):
+    u = np.clip(x, 0, 1)
+    return u*u*(3-2*u)
+
+
+def saturated_thickness(x):
+    # Saturation is reached before the upward/exfiltration arrows.
+    x = np.asarray(x, float)
+    return .50+.85*smoothstep(x/8.4), .70+.85*smoothstep(x/7.4)
+
+
+def profiles():
+    x = np.unique(np.round(np.r_[np.linspace(0, END, 961), 7.4, 7.85, 8.4, 8.9], 10))
+    ground = surface(x)
+    soil_bottom = ground-SOIL_DEPTH
+    rock_bottom = soil_bottom-ROCK_DEPTH
+    h1, h2 = saturated_thickness(x)
+    return x, ground, soil_bottom, rock_bottom, soil_bottom+h1, rock_bottom+h2
+
+
+def _axes(fig, box, xlim=(0, 1), ylim=(0, 1)):
+    ax = fig.add_axes(box)
+    ax.set(xlim=xlim, ylim=ylim)
+    ax.axis('off')
+    return ax
+
+
+def _dimension(ax, x, z0, z1, label):
+    ax.annotate('', (x, z1), (x, z0), arrowprops=dict(
+        arrowstyle='<->', color=C_C, lw=.8, shrinkA=0, shrinkB=0,
+        mutation_scale=8), zorder=10)
+    for z in (z0, z1):
+        line(ax, [(END, z), (x+.08, z)], C_C, .55)
+    text(ax, x+.23, (z0+z1)/2, label, size=8.4, color=C_C, va='center')
+
+
+def section(ax, t):
+    x, z, b1, b2, w1, w2 = profiles()
+    ax.fill_between(x, b1, z, color=SOIL_FILL, lw=0, zorder=1)
+    ax.fill_between(x, b2, b1, color=ROCK_FILL, lw=0, zorder=1)
+    ax.fill_between(x, b2-.25, b2, color='#b8b5ad', lw=0, zorder=1)
+    ax.fill_between(x, b1, w1, color=C_WATER_L, lw=0, zorder=2)
+    ax.fill_between(x, b2, w2, color=WATER2, lw=0, zorder=2)
+    ax.fill_between(x, z, z+.13, color=C_WATER_L, lw=0, zorder=3)
+    for y, color, width in [(z, INK, 1.15), (b1, C_GROUND, 1.0),
+                             (b2, C_GROUND, 1.0), (w1, C_C, .9), (w2, C_C, .9),
+                             (z+.13, C_C, 1.)]:
+        line(ax, np.c_[x, y], color, width)
+    text(ax, .12, 5.43, t['surf'], size=9, color=C_C)
+    text(ax, .13, 4.69, t['soil'], size=9.4, color='#70501f')
+    text(ax, .13, 3.31, t['layer2'], size=9.2, color=MUTED)
+    text(ax, .14, 1.70, t['base'], size=8.2, color=MUTED)
+    text(ax, .40, 3.82, 'hg', size=9.3, color=C_C)
+    text(ax, .42, 2.65, 'hg2', size=9.3, color=C_C)
+    # Infiltration crosses the surface into layer-1 storage.
+    xv = 1.15
+    h1, _ = saturated_thickness(xv)
+    flow_arrow(ax, [(xv, float(surface(xv))+.14),
+                    (xv, float(surface(xv))-SOIL_DEPTH+float(h1)*.65)], C_X, 1.8)
+    text(ax, 1.70, 5.07, t['infil'], size=9.1, color=C_X)
+    # Both lateral arrows lie inside their own saturated bands.
+    for depth, band in [(SOIL_DEPTH, 0), (SOIL_DEPTH+ROCK_DEPTH, 1)]:
+        fx = np.linspace(3.1, 5.6, 120)
+        h = saturated_thickness(fx)[band]
+        flow_arrow(ax, np.c_[fx, surface(fx)-depth+.45*h], C_C, 1.7)
+    text(ax, 3.20, 3.69, t['lateral'], size=8.8, color=C_C)
+    text(ax, 3.18, 2.25, t['lateral'], size=8.8, color=C_C)
+    # Downward percolation and capacity overflow have different rules.
+    xv = 1.85
+    boundary = float(surface(xv))-SOIL_DEPTH
+    flow_arrow(ax, [(xv, boundary+.12), (xv, boundary-.71)], C_X, 1.6)
+    text(ax, 2.10, 3.00, t['down'], size=8.6, color=C_X)
+    xv = 7.85
+    boundary = float(surface(xv))-SOIL_DEPTH
+    flow_arrow(ax, [(xv, boundary-.60), (xv, boundary+.25)], GREEN, 1.7)
+    text(ax, 7.60, 1.75, t['up'], size=8.6, color=GREEN, ha='right')
+    xv = 8.9
+    ground = float(surface(xv))
+    flow_arrow(ax, [(xv, ground-.78), (xv, ground+.47)], GREEN, 1.8)
+    text(ax, 8.25, 4.10, t['seep'], size=8.8, color=GREEN)
+    # A sink arrow, not a borehole with simultaneous screens in two layers.
+    xv = 6.45
+    h1, _ = saturated_thickness(xv)
+    intake = float(surface(xv))-SOIL_DEPTH+float(h1)*.42
+    ax.add_patch(Circle((xv, intake), .07, fc='white', ec=C_X, lw=1.1, zorder=11))
+    flow_arrow(ax, [(xv, intake+.09), (xv, float(surface(xv))+.82)], C_X, 1.6)
+    text(ax, 5.32, 5.17, t['pump'], size=8.8, color=C_X)
+    text(ax, 10.00, 3.90, t['sat_depth'], size=8.5, color=MUTED)
+    _dimension(ax, 9.96, b1[-1], w1[-1], 'hg / sy0')
+    _dimension(ax, 9.96, b2[-1], w2[-1], 'hg2 /\ngw2_sy')
+
+
+# A graph of storage/exchange, with explicit node rectangles and boundary ports.
+NODES = {
+    'surface': (.35, 4.90, 9.70, .80),
+    'conduit': (2.90, 2.65, 4.15, 1.10),
+    'neighbour': (8.02, 2.65, 2.03, 1.10),
+    'soil': (.35, .35, 4.50, 1.05),
+    'outlet': (5.25, .35, 4.80, 1.25),
+}
+
+
+def _node(ax, key, label, fill, color=INK, size=9.1):
+    x, y, w, h = NODES[key]
+    ax.add_patch(Rectangle((x, y), w, h, fc=fill, ec=RULE, lw=1., zorder=3))
+    text(ax, x+w/2, y+h/2, label, size=size, color=color, ha='center', va='center')
+
+
+def conduit(ax, t):
+    _node(ax, 'surface', t['surface_node']+'\n'+r'$H_s = z+h$', C_WATER_L, C_C, 9.2)
+    _node(ax, 'conduit', t['conduit_node']+'\n'+r'$H_c$', '#edf1f5', C_C, 9.2)
+    _node(ax, 'neighbour', t['neighbour']+'\nhgc', '#edf1f5', C_C, 8.4)
+    _node(ax, 'soil', t['selected'], '#f2ebdf', size=8.6)
+    _node(ax, 'outlet', t['outlet'], '#edf3e9', GREEN, 8.2)
+    # Two opposed arrows show alternative exchange directions.
+    flow_arrow(ax, [(3.60, 4.90), (3.60, 3.75)], C_X, 1.6)
+    text(ax, 2.22, 4.41, t['inlet'], size=8.6, color=C_X, ha='right')
+    flow_arrow(ax, [(6.15, 3.75), (6.15, 4.90)], GREEN, 1.6)
+    text(ax, 6.49, 4.41, t['surcharge'], size=8.6, color=GREEN)
+    ax.annotate('', (8.02, 3.20), (7.05, 3.20), arrowprops=dict(
+        arrowstyle='<->', color=C_C, lw=1.3, shrinkA=0, shrinkB=0), zorder=10)
+    text(ax, 8.02, 4.0, t['eight'], size=8.1, color=C_C, ha='center')
+    ax.annotate('', (3.30, 2.65), (3.30, 1.40), arrowprops=dict(
+        arrowstyle='<->', color=MUTED, lw=1.2, shrinkA=0, shrinkB=0), zorder=10)
+    text(ax, 2.79, 2.30, t['leak'], size=8.3, color=MUTED, ha='right')
+    flow_arrow(ax, curve((6.05, 2.65), [
+        ('C', (6.05, 2.13), (7.60, 2.13), (7.60, 1.60))]), GREEN, 1.5)
+    text(ax, 8.04, 2.23, t['outflow'], size=8.3, color=GREEN)
+
+
+def _heading(ax, y, s, color):
+    a = block(ax, 0, y, s, 1, size=9.4, color=color, weight='bold')
+    ax.figure.canvas.draw()
+    return ax.transData.inverted().transform(
+        (0, a.get_window_extent(ax.figure.canvas.get_renderer()).y0))[1]-.022
+
+
+def build(lang):
+    if lang not in T:
+        raise ValueError('lang must be ja or en')
+    t = T[lang]
+    fig = plt.figure(figsize=(13.6, 9.7))
+    header = _axes(fig, [.04, .931, .92, .056])
+    block(header, 0, 1, t['title'], 1, size=14.2, weight='bold')
+    text(header, 0, .36, t['subtitle'], size=8.7, color=MUTED)
+    for left, width, title, sub in [(.04, .54, 'a', 'a_sub'), (.625, .335, 'b', 'b_sub')]:
+        head = _axes(fig, [left, .858, width, .057])
+        block(head, 0, 1, t[title], 1, size=10.4, weight='bold')
+        text(head, 0, .39, t[sub], size=8.4, color=MUTED)
+    sec = _axes(fig, [.04, .445, .54, .403], (-.15, 12.7), (-.16, 6.40))
+    section(sec, t)
+    conn = _axes(fig, [.625, .445, .335, .403], (0, 10.5), (0, 6.40))
+    conduit(conn, t)
+    for left, entries in [
+            (.04, [('store_head', 'store', C_C), ('soil_head', 'soil_note', C_X),
+                   ('layer_head', 'layer_note', GREEN)]),
+            (.52, [('conduit_head', 'conduit_note', C_C), ('exchange_head', 'exchange_note', C_X),
+                   ('out_head', 'out_note', GREEN)])]:
+        notes = _axes(fig, [left, .074, .44, .334])
+        line(notes, [(0, 1.035), (1, 1.035)], RULE, .8, clip_on=False)
+        y = 1.
+        for title, body, color in entries:
+            y = _heading(notes, y, t[title], color)
+            y = paragraph(notes, 0, y, t[body], 1, size=8.6, gap=.038)
+    footer = _axes(fig, [.04, .018, .92, .035])
+    line(footer, [(0, 1.13), (1, 1.13)], RULE, .8, clip_on=False)
+    block(footer, 0, 1, t['foot'], 1, size=8., color=MUTED)
+    return fig
 
 
 def draw(lang):
-    t = T[lang]
-    fig, ax = plt.subplots(figsize=(10.5, 6.8), layout="constrained")
-    ax.axis("off"); ax.set_xlim(-0.2, 11.8); ax.set_ylim(-2.3, 7.6)
-    def zs(x):
-        return 5.2 - 0.25 * x
-    SD, D2 = 1.3, 1.5
-    def zb(x):
-        return zs(x) - SD - D2
-    xs = [0, 2, 4, 6, 8, 9.2]
-    surf = [zs(x) for x in xs]
-    base = [zb(x) for x in xs]
-    # 層2(風化基岩)・土層・基盤
-    ax.add_patch(Polygon([(x, z - SD) for x, z in zip(xs, surf)] + [(x, b) for x, b in zip(xs[::-1], base[::-1])], fc=C_ROCK, ec=C_GROUND, lw=0.8, alpha=0.55, zorder=1))
-    ax.add_patch(Polygon([(x, z) for x, z in zip(xs, surf)] + [(x, z - SD) for x, z in zip(xs[::-1], surf[::-1])], fc=C_SOIL, ec=C_GROUND, lw=0.8, alpha=0.75, zorder=1))
-    ax.add_patch(Polygon([(x, b) for x, b in zip(xs, base)] + [(11.8, base[-1]), (11.8, -2.3), (0, -2.3)], fc="#d9d8d3", ec="none", hatch="///", zorder=0.5))
-    # 飽和帯(層1・層2)
-    sat1 = [z - SD + 0.35 + 0.08 * x for x, z in zip(xs, surf)]
-    ax.add_patch(Polygon([(x, s) for x, s in zip(xs, sat1)] + [(x, z - SD) for x, z in zip(xs[::-1], surf[::-1])], fc=C_WATER_L, ec=C_WATER, lw=0.8, zorder=2))
-    sat2 = [b + 0.6 for b in base]
-    ax.add_patch(Polygon([(x, s) for x, s in zip(xs, sat2)] + [(x, b) for x, b in zip(xs[::-1], base[::-1])], fc="#bcd3ee", ec=C_WATER, lw=0.6, zorder=2))
-    # 海 / 河道(右端の水体のみ)
-    ax.add_patch(Rectangle((9.2, zb(9.2)), 1.0, zs(9.2) + 0.2 - zb(9.2), fc=C_SEA, ec="none", alpha=0.35, zorder=1.5))
-    label(ax, 9.7, zs(9.2) - 1.1, t["sea"], color=C_C, fs=8.5)
-    # 地表水(薄い帯)
-    ax.add_patch(Polygon([(x, z) for x, z in zip(xs, surf)] + [(x, z + 0.2) for x, z in zip(xs[::-1], surf[::-1])], fc=C_WATER_L, ec=C_WATER, lw=0.8, zorder=2))
-    label(ax, 0.1, zs(0) + 0.45, t["surf"], color=C_C, fs=8.5, ha="left")
-    # 層のラベル(勾配に沿わせる)
-    label(ax, 0.3, zs(0.3) - 0.42, t["soil"], color="#6b4f1d", fs=8, ha="left", rotation=ROT, rotation_mode="anchor")
-    label(ax, 0.3, zs(0.3) - SD + 0.12, t["hg"], color=C_C, fs=8, ha="left", rotation=ROT, rotation_mode="anchor")
-    label(ax, 0.3, zs(0.3) - SD - 0.85, t["l2"], color="#3f3d3a", fs=8, ha="left", rotation=ROT, rotation_mode="anchor")
-    label(ax, 0.4, zb(0.4) + 0.22, "hg2", color=C_C, fs=8, ha="left")
-    label(ax, 6.0, -2.0, t["bed"], color=C_P, fs=8, ha="center", box=True)
-    # --- 上段の説明: 鉛直・凍土・管路層
-    label(ax, 0.0, 7.5, t["vert"], color=C_X, fs=8, ha="left", va="top")
-    label(ax, 3.9, 7.5, t["frost"], color="#2f6fb3", fs=7.5, ha="left", va="top")
-    label(ax, 11.7, 7.5, t["cond"], color=C_P, fs=7.5, ha="right", va="top")
-    # 鉛直浸透
-    arrow(ax, (1.0, zs(1.0) + 0.2), (1.0, zs(1.0) - 0.6), color=C_X, lw=2.2)
-    # --- 側方流(層1)
-    arrow(ax, (2.6, zs(2.6) - SD + 0.4), (4.6, zs(4.6) - SD + 0.5), color=C_C, lw=2.2)
-    label(ax, 1.4, zs(1.4) + 0.95, t["lat"], color=C_C, fs=8, ha="left", va="bottom")
-    ax.plot([2.3, 2.9], [zs(1.4) + 0.95, zs(2.9) - SD + 0.65], color=C_C, lw=0.7, ls=":", zorder=5)
-    # --- 湧出(右の低地)
-    arrow(ax, (8.4, zs(8.4) - SD + 0.4), (8.4, zs(8.4) + 0.35), color=C_G, lw=2.2)
-    label(ax, 8.55, zs(8.4) + 0.75, t["seep"], color="#3f7a2a", fs=8, ha="left", va="center")
-    # --- 層2: 浸透・側方・戻り
-    arrow(ax, (2.3, zs(2.3) - SD + 0.05), (2.3, zs(2.3) - SD - 0.7), color=C_X, lw=1.8)
-    label(ax, 2.45, zs(2.3) - SD - 0.38, t["l2in"], color=C_X, fs=7.5, ha="left", va="center")
-    arrow(ax, (4.2, zb(4.2) + 0.32), (5.4, zb(5.4) + 0.32), color=C_C, lw=1.8)
-    label(ax, 4.1, zb(4.1) + 0.95, t["l2lat"], color=C_C, fs=7.5, ha="left", va="center")
-    arrow(ax, (6.3, zs(6.3) - SD - 0.7), (6.3, zs(6.3) - SD + 0.1), color=C_G, lw=1.8)
-    label(ax, 6.45, zs(6.3) - SD - 0.45, t["l2up"], color="#3f7a2a", fs=7.5, ha="left", va="center")
-    # --- 管路連続体層(右側の土層内、埋設深 gwc_depth)
-    cx0, cx1 = 6.0, 9.0
-    cz = [zs(x) - 0.55 for x in (cx0, cx1)]
-    ax.add_patch(Polygon([(cx0, cz[0]), (cx1, cz[1]), (cx1, cz[1] - 0.3), (cx0, cz[0] - 0.3)], fc="white", ec=C_P, lw=1.4, ls="--", zorder=3))
-    ax.add_patch(Polygon([(cx0, cz[0] - 0.05), (cx1, cz[1] - 0.05), (cx1, cz[1] - 0.3), (cx0, cz[0] - 0.3)], fc="#bcd3ee", ec="none", zorder=3.5))
-    label(ax, 6.35, zs(6.35) - 0.7, "hgc", color=C_C, fs=8)
-    # 枡流入(地表→管)・噴出(管→地表)
-    arrow(ax, (6.5, zs(6.5) + 0.2), (6.5, zs(6.5) - 0.5), color=C_X, lw=2.0)
-    arrow(ax, (7.1, zs(7.1) - 0.55), (7.1, zs(7.1) + 0.5), color=C_G, lw=2.0)
-    label(ax, 5.6, zs(5.6) + 1.3, t["inlet"], color=C_X, fs=7.5, ha="left", va="bottom")
-    label(ax, 6.3, zs(7.1) + 0.65, t["surcharge"], color="#3f7a2a", fs=7.5, ha="left", va="bottom")
-    # 側方(管)
-    arrow(ax, (6.9, zs(6.9) - 0.72), (8.7, zs(8.7) - 0.72), color=C_C, lw=1.4)
-    label(ax, 10.4, zs(9.2) - 1.1, t["clat"], color=C_C, fs=7.2, ha="left", va="center")
-    # 層間交換(管↔土層 / 層2)
-    arrow(ax, (7.9, zs(7.9) - 0.9), (7.9, zs(7.9) - 1.5), color=C_P, lw=1.4, ls="--")
-    arrow(ax, (8.1, zs(8.1) - 1.5), (8.1, zs(8.1) - 0.9), color=C_P, lw=1.4, ls="--")
-    label(ax, 10.4, zs(9.2) - 1.9, t["leak"], color=C_P, fs=7.2, ha="left", va="center")
-    ax.plot([8.2, 10.35], [zs(8.1) - 1.55, zs(9.2) - 1.9], color=C_P, lw=0.7, ls=":", zorder=5)
-    # 吐口
-    arrow(ax, (9.0, zs(9.0) - 0.7), (9.9, zs(9.0) - 0.7), color=C_G, lw=1.8)
-    label(ax, 10.4, zs(9.2) - 0.25, t["outfall"], color="#3f7a2a", fs=7.2, ha="left", va="center")
-    # --- 井戸揚水
-    wx = 3.9
-    ax.add_patch(Rectangle((wx - 0.08, zb(wx) + 0.3), 0.16, SD + D2 + 0.4, fc="white", ec="k", lw=1.0, zorder=4))
-    ax.add_patch(Rectangle((wx - 0.08, zs(wx) - SD + 0.1), 0.16, 0.55, fc=C_WATER_L, ec="k", lw=1.0, zorder=5))
-    ax.add_patch(Rectangle((wx - 0.08, zb(wx) + 0.3), 0.16, 0.5, fc="#bcd3ee", ec="k", lw=1.0, zorder=5))
-    arrow(ax, (wx, zs(wx) + 0.75), (wx, zs(wx) + 1.6), color=C_X, lw=2.0)
-    label(ax, wx + 0.2, zs(wx) + 1.4, t["pump"], color=C_X, fs=7.5, ha="left", va="center")
-    ax.set_title(t["title"], loc="left", fontsize=9.5)
-    return save(fig, "gwflow_layers", lang)
+    with drawing_style():
+        png = export(build(lang), out_path('gwflow_layers', lang))
+        svg = FilePath(png).with_suffix('.svg')
+        svg.write_bytes(svg.read_bytes().replace(b'\r\n', b'\n'))
+        return png
