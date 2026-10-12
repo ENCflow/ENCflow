@@ -9,8 +9,10 @@
 The coordinate system ENCflow computes in is a **planar orthogonal
 coordinate system in meters** (the scale of a projected coordinate
 system). On top of it sits the uniformly spaced computational grid.
-The grid is collocated (quantities live at cell centers), and cells
-carry **numbers (i, j) starting from 1**. Coordinate transformation
+Depth h, ground elevation z and other cell quantities are at cell centres,
+and cells carry **numbers (i, j) starting from 1**. Some velocity and flux
+quantities are handled on edges or cell faces (see [shallow-water flow](swflow.md)).
+Coordinate transformation
 and reprojection are not done on the model side (they are the job of
 the GIS side).
 
@@ -24,9 +26,10 @@ kinds of coordinate systems:
   Coordinates in meters with the domain's southwest corner at (0, 0);
   x is positive eastward and y is positive northward.
 
-In both cases, **the computation itself always runs on the local
-meter grid, and georeferencing never affects the computation**.
-Georeferencing plays exactly three roles:
+In both cases, **the computation runs on a planar grid in meters**.
+Georeferencing can supply grid geometry. Once that geometry and the physical
+conditions are fixed, the absolute origin and CRS label do not change the
+governing calculations. The three main roles of georeferencing are:
 
 1. Obtaining the grid geometry (nx, ny, dx, dy and the origin
    coordinates) from input files
@@ -47,21 +50,26 @@ column and increases eastward, 1..nx; j is 1 at the northernmost row
 and increases southward, 1..ny (the same direction as the raster row
 order, north to south; see [the input/output chapter](io.md)).
 
-**Rasters in QGIS and other GIS software count rows and columns from
-0**, so when you pick a cell position in a GIS and specify it to
-ENCflow, **add +1 to both the row and the column**. An off-by-one-cell
+If the row and column indices obtained from a GIS tool are **0-based**,
+specify **i = column + 1; j = row + 1** in ENCflow. Check the tool's index
+convention and the row/column order; do not add 1 to indices already based on 1.
+An off-by-one-cell
 mistake is hard to notice with specifications that only take effect
 on exactly that cell, such as channel cells or levee cells.
 
 ![Cell numbering and coordinate interpretation](../../figs/coordinates_cells_en.png)
 
-(a) Cell numbers (i, j) are 1-based; i increases west to east and j north
-to south (raster row order). Quantities live at cell centres, and 0-based
-GIS row/column numbers need +1. (b) Real coordinates (x, y) are positive
-east and north; without georeferencing they are local coordinates with the
-domain's southwest corner at (0, 0), with it they are absolute coordinates,
-and either way the point resolves to the cell that contains it. The figure
-is produced by docs/figs/make_guide_figs.py.
+**(a) Cell indices and cell centres.** i increases west to east and j north
+to south. The blue point is a cell centre, where depth h, ground elevation z
+and other cell quantities are located. **(b) Specifying a location by coordinates.**
+The example is a grid with nx = 7 and ny = 5, without georeferencing.
+x is positive eastward and y northward; (0, 0) is the southwest outer corner.
+The point P = (3.4 dx, 1.6 dy) resolves to cell (4, 4). It need not coincide
+with that cell's centre at (3.5 dx, 1.5 dy). Both panels highlight the same cell.
+When georeferencing is available, use the input raster's absolute coordinates
+instead of the local coordinates illustrated here.
+Run `python docs/figs/make_guide_figs.py coordinates` to generate both languages
+in PNG and SVG.
 
 ## Input data and coordinate systems
 
@@ -166,11 +174,35 @@ Locations of measurements (probes and flux transects;
   georeferencing:
   - **When georeferencing is available** — interpreted as **absolute
     coordinates**: meters for a projected grid, degrees (longitude,
-    latitude) for a geographic grid. You can write coordinates read
-    off in QGIS as they are (specifying in local coordinates is not
-    possible).
+    latitude) for a geographic grid. When reading coordinates in a GIS,
+    check that the coordinate system and units match the input raster
+    (local coordinates and automatic conversion from a different CRS
+    are not supported).
   - **When georeferencing is not available** — interpreted as **local
     coordinates (m) with the domain's southwest corner at (0, 0)**.
+
+### How coordinates resolve to cell indices
+
+For local input coordinates, let `ly = ny × dy` be the north-south domain
+length. Convert to distances east and south from the northwest outer corner,
+`xi = x`, `yi = ly - y`, then determine the cell indices as follows
+(`floor` rounds down toward negative infinity):
+
+```text
+i = floor(xi / dx) + 1
+j = floor(yi / dy) + 1
+```
+
+For P in the figure, `i = floor(3.4) + 1 = 4` and
+`j = floor(5 - 1.6) + 1 = 4`. A cell centre has local coordinates
+`((i - 0.5) × dx, (ny - j + 0.5) × dy)`.
+
+For absolute coordinates, use the input raster's northwest outer corner
+`(xul, yul)` and cell dimensions `csx, csy` (meters for a projected grid,
+degrees for a geographic grid). Convert to
+`xi = (x - xul) / csx × dx`, `yi = (yul - y) / csy × dy` and apply the same
+index formulas. This maps positions to cells; it does not reproject between
+CRSs. Computational `dx, dy` are in meters in both cases.
 
 Which interpretation was used, and the resolved cell number, are
 displayed at initialization like
