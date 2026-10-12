@@ -1,4 +1,4 @@
-# English mirror of tutorials/chichibu/Fig_chichibu.plt (based on commit 658e653).
+# English mirror of tutorials/chichibu/Fig_chichibu.plt.
 # The Japanese file is the master copy; edit it first.
 # 英語版 README(en/README.md)用の図を en/figs/*.png に描画する。
 # Fig_chichibu.sh が日本語版と一緒に呼び出す(単体では実行しない)。

@@ -1,4 +1,4 @@
-> English mirror of tutorials/wave/README.md (based on commit 8e50710). The Japanese file is the master copy.
+> English mirror of tutorials/wave/README.md. The Japanese file is the master copy.
 
 # Tutorial 1: wave -- waves spreading over still water
 

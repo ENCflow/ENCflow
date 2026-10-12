@@ -1,4 +1,4 @@
-! English mirror of tutorials/chichibu/param_supp_50m.txt (based on commit 3f76f22).
+! English mirror of tutorials/chichibu/param_supp_50m.txt.
 ! The Japanese file is the master copy; edit it first.
 !======================================================================
 !

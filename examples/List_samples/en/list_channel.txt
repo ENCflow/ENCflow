@@ -1,5 +1,5 @@
 !======================================================================
-! English mirror of examples/List_samples/list_channel.txt (based on commit c664f1c).
+! English mirror of examples/List_samples/list_channel.txt.
 ! The Japanese file is the master copy; edit it first.
 !======================================================================
 !

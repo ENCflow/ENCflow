@@ -1,4 +1,4 @@
-! English mirror of tutorials/chichibu/param_step2.txt (based on commit c664f1c).
+! English mirror of tutorials/chichibu/param_step2.txt.
 ! The Japanese file is the master copy; edit it first.
 !======================================================================
 !

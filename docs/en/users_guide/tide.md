@@ -1,6 +1,6 @@
 # Tide Level and Sea Surface (&list_tide)
 
-> English mirror of docs/users_guide/tide.md (based on commit 6c5acfc). The Japanese file is the master copy.
+> English mirror of docs/users_guide/tide.md. The Japanese file is the master copy.
 
 [Back to the User's Guide index](../users_guide.md)
 

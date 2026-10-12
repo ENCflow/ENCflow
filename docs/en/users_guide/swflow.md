@@ -1,6 +1,6 @@
 # Shallow water flow computation (&list_enc and numerical constants)
 
-> English mirror of docs/users_guide/swflow.md (based on commit 28e1f98). The Japanese file is the master copy.
+> English mirror of docs/users_guide/swflow.md. The Japanese file is the master copy.
 
 [Back to the user's guide index](../users_guide.md)
 

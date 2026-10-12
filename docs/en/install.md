@@ -1,4 +1,4 @@
-> English mirror of docs/install.md (based on commit a933140). The Japanese file is the master copy.
+> English mirror of docs/install.md. The Japanese file is the master copy.
 
 # Installation Guide
 
