@@ -1,6 +1,6 @@
 # Sediment and Landform Change (&list_geomorph)
 
-> English mirror of docs/users_guide/geomorph.md (based on commit c7e801e). The Japanese file is the master copy.
+> English mirror of docs/users_guide/geomorph.md. The Japanese file is the master copy.
 
 [Back to the User's Guide index](../users_guide.md)
 
@@ -33,16 +33,58 @@ soil depth sd (mobile layer), and only the enabled ones are superposed. The figu
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| dt_geomorph | 0 | Update interval of landform change (s). 0: every step |
-| morfac | 1.0 | Morphological acceleration factor. Multiplies only the landform change by morfac so that a short run represents a long period (for equilibrium landforms and year-order studies; use 1 in event runs) |
+| dt_geomorph | 0 | Requested landform-update interval (s). A positive value is rounded to `n = NINT(dt_geomorph / dt)` steps; the actual interval is `dtw = n × dt`. 0: every step (`n = 1`) |
+| morfac | 1.0 | Positive morphological acceleration factor. Landform processes use the effective time step `dts = dtw × morfac`. Hydraulic and forcing clocks are unchanged. See below for process-specific use and coupling restrictions |
 
-![The idea of dt_geomorph and morfac](../../figs/geomorph_morfac_en.png)
+![Landform update timing, where acceleration applies, and elapsed-time conversion](../../figs/geomorph_morfac_en.png)
 
-The flow advances every step in real time; the landform is updated every
-dt_geomorph, and only the Δz of that one update is multiplied by morfac. Event
-runs (f_debris, f_bedslide) use morfac = 1; equilibrium landforms and long-term
-evolution use morfac > 1, so that the run time tt × morfac is the number of
-landform years.
+Panel (a) illustrates a fresh run. With `dt = 10 s` and `dt_geomorph = 26 s`,
+`n = NINT(2.6) = 3`, so landform updates occur every 30 seconds. `NINT` rounds
+to the nearest integer, with positive half-ties rounded up. A rounded `n` of
+zero or less is rejected. Updates occur at step numbers divisible by `n`;
+there is no update at the initial state. Restarted runs retain this cadence
+based on the saved step number.
+
+With `morfac = 4`, panel (b) uses an effective time step `dts = 120 s` per
+update. Bedload `f_fluvial`, creep `f_creep`, dry-slope erosion `f_splash`,
+weathering `f_wthr` and uplift `f_uplift` evaluate their processes using `dts`.
+Uniform uplift alone gives `Δz = U × dts`, where `U` is the uplift rate
+converted to m/s. Weathering increases soil depth `sd` without changing
+elevation `z`. Sediment supply, erosion limits and nonlinear updates mean
+that this is not a universal multiplication of the final computed `Δz` by `morfac`.
+
+Suspended sediment `f_suspend` and hillslope erosion `f_wash` also run at
+these landform-update times, but evaluate exchange with water-column `hs`
+using unscaled `dtw` and multiply the corresponding bed change by `morfac`.
+The available-soil constraint also accounts for `morfac`. Advection of `hs`
+advances on hydraulic time steps, so `morfac > 1` approximates water-column
+and bed evolution on different time scales.
+
+In panel (c), the hydraulic duration from `t0 = 3600 s` to `tt = 3720 s` is
+120 seconds; four landform updates represent `4 × 120 = 480 s` (8 minutes).
+`tt` is the end time, not the run duration. For `Nupdate` landform updates,
+the accumulated landform time is `Nupdate × dts` seconds, or
+`Nupdate × dts / (365.25 × 86400)` years. For a fresh run with complete update
+intervals, `Nupdate × dts = (tt − t0) × morfac`. If a partial interval remains
+at the end, count the actual updates instead of using this equality.
+
+`morfac > 1` approximates long-term landform change using a shorter hydraulic
+run. Rainfall and boundary-condition clocks are not rescaled, so their
+history over the accelerated period is not reproduced. The update interval
+and acceleration factor must also satisfy process stability limits.
+For example, explicit creep requires
+`creep_d × dts × (1/dx² + 1/dy²) ≤ 0.5`.
+
+Event processes and coupled modules have the following restrictions.
+
+- Debris flow `f_debris` and the moving bed layer `f_bedslide` require `morfac = 1`.
+- Combining landform change with driftwood or building debris also requires `morfac = 1`.
+- Lava flow rejects a landform `morfac > 1`.
+- When glacier and landform modules are combined, glacier `gl_morfac` must equal landform `morfac`.
+
+The figure values illustrate the update procedure; they are neither recommended
+settings nor solver output. Regenerate only these Japanese/English PNG and SVG
+files with `python docs/figs/make_guide_figs.py geomorph_morfac`.
 
 **Policy on parameter defaults** - the material and calibration values of
 every process have safe defaults that make it "just run", so **the
@@ -588,7 +630,9 @@ The minimal input to "just let the landscape evolve" is `f_wthr = 1`
 (+ `sd0`) and `f_uplift = 1`, with `f_creep = 1` for the slopes,
 `f_fluvial = 1` for the rivers, and `morfac` (acceleration of geomorphic
 time). The defaults are quantities on year-to-millennium scales, so first
-decide how many years the run time tt x morfac represents.
+choose the landform duration to represent. For a fresh run with complete update
+intervals, it is `(tt − t0) × morfac / (365.25 × 86400)` years. See
+"[Run control](#run-control-common-to-all-processes)" for conversion using the actual update count.
 
 ## Recommended values by pattern
 

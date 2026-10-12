@@ -23,13 +23,6 @@ T = {
         bedslide="動く底層 f_bedslide(hb。fn_bsinit)\nz・sd の内数、水中でも走る\n→ 水面を持ち上げ地滑り津波",
         sea="湖・海(通常セル+初期水位)",
         lg_soil="土層 sd(可動層。sd = 0 は不侵食)", lg_rock="基岩 z − sd", lg_water="水 h", lg_z="z(計算標高)",
-        title2="実行制御: 流れは実時間、地形変化は dt_geomorph ごとに morfac 倍",
-        hyd="水理(毎ステップ Δt。実時間)", geo="地形変化の更新",
-        dtg="dt_geomorph(0 = 毎ステップ)",
-        dz="1 更新の Δz × morfac",
-        m1="morfac = 1: イベント計算(f_debris・f_bedslide は 1 が必須)",
-        mN="morfac > 1: 平衡地形・年〜千年(f_creep・f_fluvial・f_wthr・f_uplift)。計算時間 tt × morfac = 地形の年数",
-        zold="更新前の z", znew="更新後の z",
     ),
     "en": dict(
         title1="Landform-change processes (superposed; each enabled by f_* = 1, module by fn_geomorph)",
@@ -46,13 +39,6 @@ T = {
         bedslide="moving bed layer f_bedslide (fn_bsinit)\nhb inside z and sd, runs under water too\n→ lifts the surface: landslide tsunami",
         sea="lake / sea (ordinary cells\n+ initial level)",
         lg_soil="soil sd (mobile layer; sd = 0 is non-erodible)", lg_rock="bedrock z − sd", lg_water="water h", lg_z="z (computational elevation)",
-        title2="Run control: the flow runs in real time, landform change is applied every dt_geomorph, scaled by morfac",
-        hyd="hydraulics (every step Δt, real time)", geo="landform update",
-        dtg="dt_geomorph (0 = every step)",
-        dz="Δz of one update × morfac",
-        m1="morfac = 1: event runs (f_debris and f_bedslide require 1)",
-        mN="morfac > 1: equilibrium landforms, years to millennia (f_creep, f_fluvial, f_wthr, f_uplift). Run time tt × morfac = landform years",
-        zold="z before update", znew="z after update",
     ),
 }
 
@@ -138,39 +124,9 @@ def fig_processes(lang):
 
 
 def fig_morfac(lang):
-    t = T[lang]
-    fig, ax = plt.subplots(figsize=(10.5, 3.3), layout="constrained")
-    ax.axis("off"); ax.set_xlim(-0.2, 10.5); ax.set_ylim(-0.1, 3.3)
-    x0, x1 = 2.5, 7.0
-    yH, yG = 2.6, 1.75
-    ax.plot([x0, x1], [yH, yH], color=C_C, lw=2.2)
-    for xt in np.arange(x0, x1 + 1e-9, 0.1875):
-        ax.plot([xt, xt], [yH - 0.07, yH + 0.07], color=C_C, lw=0.9)
-    label(ax, x0 - 0.15, yH, t["hyd"], color=C_C, fs=9, ha="right")
-    ups = np.arange(x0, x1 + 1e-9, 1.125)
-    ax.plot([x0, x1], [yG, yG], color=C_P, lw=1.0, ls=":")
-    label(ax, x0 - 0.15, yG, t["geo"], color=C_X, fs=9, ha="right")
-    for xu in ups:
-        arrow(ax, (xu, yH - 0.1), (xu, yG + 0.08), color=C_X, lw=1.6)
-        ax.plot([xu], [yG], "o", color=C_X, ms=6, zorder=7)
-    ax.annotate("", (ups[2], yG - 0.25), (ups[1], yG - 0.25), arrowprops=dict(arrowstyle="<->", color=C_X, lw=1.0))
-    label(ax, (ups[1] + ups[2]) / 2, yG - 0.47, t["dtg"], color=C_X, fs=8.5)
-    # 地形の更新(右): 更新前と更新後の z
-    px = np.linspace(7.8, 10.3, 60)
-    z0 = 1.9 - 0.45 * (px - 7.8) + 0.25 * np.exp(-((px - 9.0) / 0.35) ** 2)
-    z1 = 1.9 - 0.45 * (px - 7.8) + 0.02 * np.exp(-((px - 9.0) / 0.35) ** 2)
-    ax.fill_between(px, 0.55, z1, color=C_GROUND_L, lw=0, zorder=1)
-    ax.plot(px, z0, color=C_P, lw=1.2, ls="--", zorder=3)
-    ax.plot(px, z1, color="k", lw=1.3, zorder=3)
-    arrow(ax, (9.0, z0[np.argmin(abs(px - 9.0))] + 0.02), (9.0, z1[np.argmin(abs(px - 9.0))] + 0.03), color=C_X, lw=1.8)
-    label(ax, 9.3, 2.15, t["dz"], color=C_X, fs=8.5)
-    label(ax, 7.85, z0[0] + 0.12, t["zold"], color=C_P, fs=8, ha="left")
-    label(ax, 10.25, z1[-1] - 0.14, t["znew"], color="k", fs=8, ha="right")
-    arrow(ax, (ups[-1] + 0.1, yG), (7.7, 1.5), color=C_X, lw=1.2, ls="--")
-    label(ax, 0.0, 0.75, t["m1"], color=C_C, fs=9, ha="left")
-    label(ax, 0.0, 0.35, t["mN"], color="#8a6b17", fs=9, ha="left")
-    ax.set_title(t["title2"], loc="left", fontsize=10)
-    return save(fig, "geomorph_morfac", lang)
+    # Keep the processes diagram independent of the run-control renderer.
+    from fig_geomorph_morfac import draw as draw_morfac
+    return draw_morfac(lang)
 
 
 def draw(lang):
