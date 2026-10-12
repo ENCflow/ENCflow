@@ -44,6 +44,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Channels](users_guide/channel.md) (&list_channel) -- levees, channel width, cross-section shape, breach
 - [Rainfall and weather](users_guide/forcing.md) (&list_precip / intercept / meteo / evap / snow) -- precipitation, interception, air temperature, evapotranspiration, snow accumulation and snowmelt
 - [Groundwater](users_guide/gwflow.md) (&list_gwflow plus model-specific settings) -- infiltration, lateral flow, weathered bedrock layer, conduit continuum layer (sewer networks, fractured bedrock)
+  - [Groundwater models](users_guide/gwflow_models.md) -- bucket, Green-Ampt, Boussinesq lateral flow, weathered bedrock layer, conduit continuum layer, pumping and frozen ground, with equations and the basis of the defaults (supplement)
 - [Fresh and salt water layers](users_guide/salt.md) (&list_salt) -- salt wedges, seawater intrusion, freshwater lenses (sharp-interface approximation)
 - [Sediment and landform change](users_guide/geomorph.md) (&list_geomorph) -- bedload, suspended sediment, hillslope erosion, debris flow, long-term landscape evolution
   - [Sediment transport, hillslope and long-term processes](users_guide/sediment.md) -- creep, bedload formulas, Exner, suspended-load exchange, hillslope erosion, dry-slope erosion, weathering/uplift, MORFAC, with equations and the basis of the defaults (supplement)
