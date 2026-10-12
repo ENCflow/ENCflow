@@ -31,13 +31,17 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [sewer_hybrid/](sewer_hybrid/) | 幹線 1 本と枝管網を同じ管路連続体層で表す都市排水の模式実験 | 管路連続体層 f_gwconduit |
 | [qanat/](qanat/) | カナート(横坑集水)の理想化ケース | 管路連続体層、地下水 |
 
-## 段階別の読む順
+## 複数プロセスの連鎖の例
 
-- **入門**: [benchmark/](benchmark/)(浅水流+降雨だけ。解析解と比べる)。
-- **中級**(1 機能ずつ足す): [sewer_hybrid/](sewer_hybrid/)・[qanat/](qanat/)(地下水・管路)、[nest_reflect/](nest_reflect/)(ネスティング)。
-- **上級**(複数プロセスの連鎖・比較): [tsunami_fault/](tsunami_fault/) → [tsunami_coast/](tsunami_coast/) → [landslide_tsunami/](landslide_tsunami/)(津波の発生と非静水圧)、[tsunami_town/](tsunami_town/)・[timberyard/](timberyard/)(家屋破壊・流木)、[ashfall_lahar/](ashfall_lahar/)・[badland/](badland/)(土砂と地形発達)。
+ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させる」設定の
+見本です(章を読んだ後の参考に)。
 
-段階別の全体の道筋は [docs/tutorial.md](../docs/tutorial.md) の「学習の道筋」にあります。
+- 津波 → 家屋破壊 → 瓦礫: [tsunami_town/](tsunami_town/)。高潮 → 流木 → 市街地: [timberyard/](timberyard/)。
+- 降灰 → 降雨 → 泥流: [ashfall_lahar/](ashfall_lahar/)。降雨 → 乾式侵食 → 地形発達: [badland/](badland/)。
+- 断層 → 津波 → 浸水: [tsunami_fault/](tsunami_fault/)、[tsunami_coast/](tsunami_coast/)。斜面崩壊 → 水域突入 → 津波: [landslide_tsunami/](landslide_tsunami/)。
+- 降雨 → 下水道(管路)→ 噴出・排水: [sewer_hybrid/](sewer_hybrid/)。地下水 → 横坑集水: [qanat/](qanat/)。
+- 1 機能だけの解析解ベンチマーク: [benchmark/](benchmark/)。格子の精緻化(ネスティング): [nest_reflect/](nest_reflect/)。
+
 計算したい現象から機能の組み合わせを引くには
 [用途集](../docs/users_guide/usecases.md)、各機能の設定は
 [ユーザーガイド](../docs/users_guide.md) を参照してください。

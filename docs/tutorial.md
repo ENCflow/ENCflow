@@ -19,26 +19,46 @@ ENCflow の使い方を、実行できる例題つきで段階的に学ぶため
 追加していきます。そのほかは [examples/](../examples/) の
 設定サンプル集と [test/](../test/) の検証済み例題が参考になります。
 
-## 学習の道筋(段階別)
+## 学習の道筋
 
-簡単な例から順に進む道筋です。各段階の教材は、前の段階の内容を前提に
-しています。ユーザーガイドの章ページは「概要 → とりあえず動かしてみる
-(最小入力)→ パターン別の推奨値 → 詳細 → 検証・例題」の順に書いて
-あるので、**先頭の 2 節だけ読めば動かせます**。解説ページ(「…の解説」)は
-式と根拠をまとめた上級者向けで、後回しで構いません。
+全員に全分野を理解してもらう必要はありません。必須は次の 3 つだけで、
+ここまでで原則(fn_\* による機能の有効化、パラメータファイルの書き方、
+実行と出力の読み方)が身につきます。
 
-| 段階 | 読む・動かすもの | 学べること |
-|---|---|---|
-| 入門 1 | [tutorials/wave](../tutorials/wave/README.md) Step 1〜3 | 最初の実行、パラメータファイルの構造、時間刻み、境界条件 |
-| 入門 2 | [ユーザーガイド 第I部](users_guide.md)(骨格・fn_\* の原則・パラメータファイルの読み方) | 機能の有効化の仕組み、1 枚のファイルに何を書くか |
-| 入門 3 | [test/wave](../test/wave/)、[test/dambreak](../test/dambreak/)、[examples/benchmark](../examples/benchmark/) | 解析解との比較の読み方(段波・降雨流出)。`./Run.sh` と `Check_*.py` の使い方 |
-| 中級 1 | [tutorials/chichibu](../tutorials/chichibu/README.md) | 実地形データ、河道マスク、計測、降雨遮断・浸透、水収支 |
-| 中級 2 | [地理情報](users_guide/geoinfo.md)・[初期条件](users_guide/initial.md)・[境界条件](users_guide/boundary.md)・[降雨・気象](users_guide/forcing.md)の「とりあえず動かしてみる」 | 自分のケースを組み立てる最小の入力 |
-| 中級 3 | [test/tide](../test/tide/)、[test/pump](../test/pump/)、[test/culvert](../test/culvert/)、[examples/sewer_hybrid](../examples/sewer_hybrid/)、[examples/qanat](../examples/qanat/) | 潮位・構造物・地下水・管路の最小例(各 1 機能) |
-| 上級 1 | [ENC 格子と時間積分の解説](users_guide/encgrid.md) → [移流項](users_guide/advection.md) → [拡散項](users_guide/diffusion.md) → [非静水圧補正](users_guide/nonhydrostatic.md) | 浅水計算の式・スキーム・既定値の根拠 |
-| 上級 2 | [examples/nest_reflect](../examples/nest_reflect/)、[examples/landslide_tsunami](../examples/landslide_tsunami/)、[examples/tsunami_fault](../examples/tsunami_fault/)、[examples/tsunami_coast](../examples/tsunami_coast/) | ネスティング、非静水圧、動く底層・規定底面運動の組合せ |
-| 上級 3 | [examples/tsunami_town](../examples/tsunami_town/)、[examples/timberyard](../examples/timberyard/)、[examples/ashfall_lahar](../examples/ashfall_lahar/)、[examples/badland](../examples/badland/) | 複数プロセスの連鎖(家屋破壊・流木・土石流・地形発達)と 2 ケース比較の組み方 |
-| 開発 | [developer.md](developer.md) §0(基本方針)→ [architecture.md](architecture.md) | 設計思想と、新しいプロセスを足すときの契約 |
+1. [tutorials/wave](../tutorials/wave/README.md) Step 1〜3 — 最初の実行、パラメータファイル、時間刻み、境界条件
+2. [tutorials/chichibu](../tutorials/chichibu/README.md) — 実地形データ、降雨、計測、水収支
+3. [ユーザーガイド 第I部](users_guide.md) — 骨格、fn_\* の原則、パラメータファイルの読み方
+
+自分のケースを組むときは、[地理情報](users_guide/geoinfo.md)・
+[初期条件](users_guide/initial.md)・[境界条件](users_guide/boundary.md)・
+[降雨・気象](users_guide/forcing.md)の各章の「とりあえず動かしてみる
+(最小入力)」の節だけ読めば足ります。
+
+その先は、**興味のある分野の章だけ**読んでください。章ページは
+「とりあえず(気軽に)動かすための説明」を優先して書いてあり、
+「概要 → とりあえず動かしてみる → パターン別の推奨値 → 必要な節」の順に
+読めば動かせます。さらに詳しく知りたい人は、その章の下にぶら下がる
+**詳説ページ**(理論・式・既定値の根拠・詳細な設定)へ進んでください。
+
+| 分野(章ページ) | 詳説ページ |
+|---|---|
+| [浅水流計算](users_guide/swflow.md) | [ENC 格子と時間積分](users_guide/encgrid.md)、[移流項](users_guide/advection.md)、[拡散項](users_guide/diffusion.md)、[非静水圧補正](users_guide/nonhydrostatic.md) |
+| [内部水理構造物](users_guide/structure.md)・[境界条件](users_guide/boundary.md)・[河道](users_guide/channel.md) | [構造物と境界の水理則](users_guide/hydraulics.md) |
+| [地下水](users_guide/gwflow.md) | [地下水モデル](users_guide/gwflow_models.md) |
+| [土砂・地形変化](users_guide/geomorph.md) | [土砂輸送と斜面・長期地形過程](users_guide/sediment.md)、[土石流・斜面崩壊・動く底層](users_guide/massflow.md) |
+| [水質](users_guide/wq.md) | [水質モデル](users_guide/wq_models.md) |
+
+ENCflow を使う大きな動機は、**複数のプロセスを 1 つの計算の中で連鎖させる**
+ことです(降雨 → 流出 → 土砂 → 河道、津波 → 家屋破壊 → 瓦礫、
+噴火 → 溶岩原 → 二次的な洪水、など)。現象から必要な機能の組合せを引く
+には[用途集](users_guide/usecases.md)を使い、関係する章を組み合わせて
+ください。ネスティングや非静水圧補正のような専門的な機能は、必要になった
+ときに読めば十分です。
+
+[test/](../test/) と [examples/](../examples/) は初学者向けの教材では
+なく、章を読んだ後に必要に応じて見るものです。test は各機能の検証の仕方
+(解析解・保存則との比較)、examples は namelist の実例と、複数プロセスを
+組み合わせた設定の見本です。
 
 ## ディレクトリの役割
 
