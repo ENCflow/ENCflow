@@ -1,6 +1,6 @@
 # Shallow water flow computation (&list_enc and numerical constants)
 
-> English mirror of docs/users_guide/swflow.md (based on commit e66dc06). The Japanese file is the master copy.
+> English mirror of docs/users_guide/swflow.md (based on commit 97edd21). The Japanese file is the master copy.
 
 [Back to the user's guide index](../users_guide.md)
 
@@ -136,72 +136,84 @@ discretisation and stability condition are explained on a separate page,
 
 **Non-hydrostatic correction (research option)**
 
-The equations, the projection algorithm, the active set, breaking, the bottom
-terms, and the models and literature the implementation drew on are explained
-on a separate page, [Non-hydrostatic correction](nonhydrostatic.md).
+The one-layer non-hydrostatic correction is a research option for
+phenomena in which frequency dispersion (shorter waves travel more slowly)
+is essential: soliton fission and undular bores of tsunamis running up
+rivers, near-field generation of landslide tsunamis, solitary waves in
+reservoirs. Rainfall runoff, flood inundation, storm surges and ordinary
+long-wave tsunamis do not need it, and the default is hydrostatic (when off
+there is no extra computation, memory or communication and the results are
+bit-identical to before). The equations, the projection algorithm, the
+active set, breaking, the bottom terms, and the models and literature the
+implementation drew on are explained on a separate page,
+[Non-hydrostatic correction](nonhydrostatic.md).
 
-| Parameter | Default | Meaning |
+To just try it, one line is enough (CG solver, whole-domain solve,
+flat-bed one-layer model).
+
+```
+&list_enc
+  f_nonhydrostatic = 1    ! one-layer non-hydrostatic correction (everything else at the defaults)
+/
+```
+
+**Practical points** (details in [§8 of the explanation](nonhydrostatic.md#8-range-of-validity-and-practical-points))
+
+- **Grid spacing at most half the depth** (Δx ≲ H/2; the verification used
+  H/4–H/8). On a coarser grid the correction is buried in the numerical
+  dispersion of the grid and meaningless. The cost is set by this
+  resolution requirement rather than by the solver.
+- **Add options step by step as needed**: `f_nh_adaptive = 1` to limit the
+  cost (solve only where dispersion matters). With breaking or bores,
+  `f_nh_breaking = 1` + `f_hcap_upwind = 2` (required); for quantitative
+  run-up add `nh_break_visc = 1.44` and friction n ≈ 0.01 and check
+  convergence at Courant ≲ 0.1 and Δx ≲ H/8. `f_nh_slope = 1` for abrupt
+  bathymetry (shelves, submarine landslides), `f_nh_bottom = 1` for the
+  near field of landslide tsunamis.
+- **Where it degrades to hydrostatic automatically**: depth below nh_hmin,
+  the sea mask, levee walls, sub-grid channel width and cross-section,
+  building-occupied cells, breaking cells, the neighbourhood of forced
+  boundaries (nh_bc_margin).
+- **Restrictions**: cannot be combined with debris flow (f_debris). A
+  restart is a cold start (the private non-hydrostatic state is not saved).
+  A nested child receives the parent's φ in the band
+  ([Nesting](nest.md), nest_nh).
+- **Cost**: solved on the whole domain, 2–3 times the hydrostatic run
+  (10–90 CG iterations per step). With the active set the regions of long
+  waves, steady flow and inundation carry no cost.
+- **Verification cases**: dispersion relation of standing waves
+  [test/nhwave_nh](../../../test/nhwave_nh/README.md), solitary wave
+  [test/nhsolitary](../../../test/nhsolitary/README.md), undular bore
+  [test/nhbore](../../../test/nhbore/README.md), soliton fission on a shelf
+  [test/nhshelf](../../../test/nhshelf/README.md), breaking run-up
+  [test/nhbreak](../../../test/nhbreak/README.md), moving bottom
+  [test/nhbottom](../../../test/nhbottom/README.md) (READMEs in Japanese; the
+  results are summarised in §8 of the explanation).
+
+| Parameter | Default | Meaning (details in the § of the [explanation](nonhydrostatic.md)) |
 |---|---|---|
-| f_nonhydrostatic | 0 | one-layer non-hydrostatic correction. 0: hydrostatic (default), 1: on. The hydrostatic step (adaptive RK, advection, friction, levees and structures included) is kept as the predictor; at the end of the step a cell-wise non-hydrostatic potential φ is solved and the edge velocities and fluxes are corrected (one-layer model with β = h²/4; the linear dispersion relation is ω² = gHk²/(1 + (kH)²/4), equivalent to the one-layer SWASH). Intended for phenomena governed by frequency dispersion -- soliton fission and undular bores of tsunamis running up rivers, near-field generation by landslide tsunamis, solitary waves in reservoirs -- and not needed for rainfall runoff, flood inundation or ordinary long-wave tsunamis. **The grid should be finer than half the depth (Δx ≲ H/2)**: on coarser grids the numerical dispersion of the grid exceeds the physical dispersion and the correction is meaningless. When off there is no extra computation, memory or communication and the results are bit-identical to before (docs/nonhydrostatic_plan.md) |
-| nh_hmin | 0.1 | cells shallower than this depth (m) stay hydrostatic (wet/dry fronts, very shallow water and bores after breaking are handled hydrostatically). Must exceed dd. Sea-mask (sw), levee-wall, sub-grid channel-width, σ-section and building-occupied (gv < 1) cells and edges also stay hydrostatic |
-| nh_solver | 2 | iterative solver for φ. 1: Jacobi, 2: CG (default; the inner products use the deterministic row sum, so results are bit-identical for any thread or rank count). Jacobi converges slowly when Δx ≪ H and is kept for comparison |
+| f_nonhydrostatic | 0 | 0: hydrostatic (default), 1: one-layer non-hydrostatic correction (β = h²/4, projection at the end of the step; §2–3) |
+| nh_hmin | 0.1 | cells shallower than this depth (m) stay hydrostatic; must exceed dd (§4) |
+| nh_solver | 2 | iterative solver. 2: CG (default), 1: Jacobi (for comparison; slow for Δx ≪ H) (§3) |
 | nh_itmax | 500 | maximum number of iterations (a warning is printed and the run continues when exceeded) |
-| nh_tol | 1e-6 | relative convergence criterion (CG: residual norm / right-hand-side norm, Jacobi: max residual / max right-hand side) |
-| f_nh_adaptive | 0 | active set. 0: solve on the whole NH mask (default), 1: solve only on the cells whose detector exceeds the threshold (seeds) plus a margin of nh_margin cells around them; the rest stays hydrostatic ("only where needed", like the adaptive RK). The elliptic correction decays by a factor e over half the depth, so a margin of about 2H keeps the difference from the full solve below 1% of the correction. Long waves, steady flow and inundation areas cost nothing. No state is kept between steps, so restarts are bit-reproducible |
-| nh_detector | 1 | detector. 1: dispersion type χ = \|βDa*\| / (\|a*\| + \|βDa*\|) (ratio of the non-hydrostatic correction to the hydrostatic acceleration a*; for long waves χ ≈ (kH)²/4, independent of the amplitude and zero for long waves and steady flow; default), 2: absolute type \|βDa*\|/g (for comparison) |
-| nh_chi_on | 0.06 | detection threshold (cells with χ > nh_chi_on are seeds; 0.06 corresponds to a 3% phase-speed difference from hydrostatic; for the absolute type a fraction of g) |
-| nh_margin | 0 | width of the margin (cells). 0 = automatic 2H/Δx (four times the decay length H/2) |
-| nh_amin | 1e-5 | absolute floor (m/s²): cells whose correction \|βDa*\| is below it are never seeds |
-| nh_arel | 1e-3 | relative floor: cells whose \|βDa*\| is below this fraction of the domain maximum of the step are never seeds (the ratio detector is amplitude-independent, so this keeps round-off precursors of the explicit scheme from being flagged) |
-| f_nh_breaking | 0 | breaking switch. 0: off, 1: cells detected as breaking (plus nh_break_margin cells around them) become hydrostatic, so the front dissipates as a bore in the hydrostatic ENC (momentum-conservative advection). **Required for breaking waves running up a slope**: without it the one-layer NH carries the wave unbroken as a thin tongue and the run-up follows the non-breaking law (3-4 times the measured). Use together with f_hcap_upwind=2 to avoid the bore-front spike (§68.7) |
-| nh_break_type | 3 | breaking detector. 1: surface rise rate ∂η/∂t > nh_break_alpha·√(gh) (SWASH type; neighbours with nh_break_beta; keeps the state until the crest passes, so the first step after a restart has no history), 2: Froude number \|V\|/√(gh) > nh_break_fr, 3: surface slope \|∇η\| > nh_break_slope (maximum over the 8 neighbours; default; local, Galilean-invariant, stateless). On this grid type 1 fires too late (∂η/∂t does not reach α√(gh) before the front hits the shoreline); 2 and 3 give similar results |
+| nh_tol | 1e-6 | relative convergence criterion |
+| nh_bc_margin | 0 | margin kept hydrostatic next to forced boundaries (prescribed stage, reach inflow, free outflow, radiation); cells, 0: automatic 2H/Δx (§4) |
+| f_nh_adaptive | 0 | active set. 1: solve only on the detected cells plus a margin (§5) |
+| nh_detector | 1 | detector. 1: dispersion ratio χ (default), 2: absolute form (for comparison) (§5) |
+| nh_chi_on | 0.06 | detection threshold (the level of a 3% phase-speed difference) (§5) |
+| nh_margin | 0 | width of the margin (cells; 0: automatic 2H/Δx) (§5) |
+| nh_amin | 1e-5 | absolute floor of the detector (m/s²) (§5) |
+| nh_arel | 1e-3 | relative floor of the detector (fraction of the domain maximum) (§5) |
+| f_nh_breaking | 0 | breaking switch. 1: breaking cells and their margin become hydrostatic and dissipate as a bore. Required for breaking waves running up a slope; use with f_hcap_upwind=2 (§6) |
+| nh_break_type | 3 | breaking detector. 1: surface rise rate (SWASH type), 2: Froude number, 3: surface slope (default) (§6) |
 | nh_break_alpha | 0.6 | onset threshold α of detector 1 |
 | nh_break_beta | 0.3 | threshold β of detector 1 for cells adjacent to breaking cells |
 | nh_break_fr | 0.6 | Froude threshold of detector 2 |
-| nh_break_slope | 0.3 | surface-slope threshold of detector 3 (0.15-0.3 give nearly the same run-up for the solitary wave) |
-| nh_break_margin | 0 | width of the hydrostatic margin around breaking cells (cells; 0 = automatic 2H/Δx). Turns the crest as well as the front hydrostatic so the NH pressure does not keep pushing the breaking front |
-| nh_break_visc | 0 | breaking eddy-viscosity coefficient delta_b^2 (0: off). Cells flagged as breaking (margin included) get nu_b = nh_break_visc * B * h * sqrt(gh) * \|grad eta\| (B = clip((\|grad eta\| - s)/s, 0, 1), s = nh_break_slope), dissipated through the momentum diffusion term div(nu grad u). This is the Kennedy et al. (2000) nu = B delta_b^2 h d(eta)/dt made local and stateless by the kinematics of a progressive wave; 1.44 (delta_b = 1.2) matches the literature. Use it when the breaking switch alone (bore jump conditions only) overpredicts run-up of plunging breakers (section 69.6). Can be combined with f_diffusion_term (nu adds up). nu above the explicit stability limit dx^2/(dt*sum w) is clamped with a warning (not reached at Courant <= 0.1). Zero overhead when off |
-| nh_bc_margin | 0 | width (cells; 0: 2H/dx automatically) of the band kept hydrostatic next to forced boundaries (stage cell groups and frame cells with inflow / free-outflow / radiation faces). Prevents the prescribed flux or level from interfering with the projection and diverging at the boundary. No effect in cases bounded by walls only |
-| f_nh_slope | 0 | bottom-slope terms (Version 2). 0: flat-bottom linear NH (φ = (h²/4)∇·a; default), 1: adds the bottom kinematic condition w_b = u·∇z_b to the vertical velocity and the pressure term (φ/h)∇(h + 2z_b) (φ_i = (h/4)Σ_k wd_k (h − Δz_k) a_k). For waves over slopes, shelves and abrupt bathymetry. The operator becomes non-symmetric, so CG iterates the slope terms with a Picard loop and takes about twice the iterations. On a flat bottom, a 1:20 slope and a shelf the difference from Version 1 is within a few percent (developer.md §69.5) |
-| f_nh_bottom | 0 | moving-bottom acceleration term. 1: adds the vertical acceleration of the bed z̈_b (second difference of the bed elevation seen at the previous steps, private to the NH module; acts on every process that moves z: landslide tsunami f_bedslide, morphological change, lava flow and the library API; the forcing lags one step) as a source of the NH projection. The source is smoothed with the same operator, −(h/4)(z̈_b + (1 + βL)⁻¹z̈_b), so that the short-wave attenuation of the bed-to-surface transfer becomes 1/(1 + βk²)², which approximates Kajiura's 1/cosh(kH) up to k⁴ (the naive −(h/2)z̈_b reverses sign beyond kH > 2 and diverges in positive feedback with the inertialess bed layer). Matters for short slides (b/H ≲ 2) in the near field. About twice the iterations while the bed moves. Works with f_nh_slope 0 or 1. Zero cost when off (developer.md §69.10) |
-
-With standing waves in a closed basin (test/nhwave_nh) the periods for
-kH = 0.25-2 agree with the one-layer theory within 0.2% (hydrostatic
-periods are 12-42% shorter). CG takes 10-90 iterations per step (more
-for smaller Δx/H). With the active set (f_nh_adaptive=1) an isolated hump
-in a 200 m basin differs from the full solve by 0.1-0.3% of the
-correction (margins of 4-16 cells) with 40-60% of the cells active.
-
-For a breaking solitary wave running up a beach (test/nhbreak, Synolakis
-1987, a/H = 0.28, slope 1:19.85) at dx = H/4 and dt = 0.02 s (Courant
-about 0.3) the maximum run-up R/H is 0.39 hydrostatic, 0.62 NH with the
-breaking switch and 0.81 NH alone (f_hcap_upwind=2), against the
-empirical 0.42. That setting is not converged (a +22% time-step error
-and an -18% numerical dissipation of the solitary wave at dx = H/4 cancel
-each other); at dx = H/8 and Courant 0.07 the converged values are 0.63
-(NH + switch) and 0.34 (hydrostatic). The +50% of NH + switch is a deficit
-of energy loss at breaking (the jump conditions of a hydrostatic bore do
-not dissipate as much as a plunging breaker); with bottom friction
-n = 0.01 (smooth slope) +10 to 20% is expected to remain. The hydrostatic
-0.39 is a coincidence: the wave bores early on the 100 m flat and loses
-energy (converged 0.34; placed near the slope it gives 0.42). Adding the
-breaking eddy viscosity nh_break_visc = 1.44 gives 0.452 (+8% of the
-empirical law) at dx = H/8, Courant 0.07 and n = 0.01. **For quantitative
-run-up with breaking, check convergence (Courant <= 0.1, dx <= H/8) and
-give both friction and nh_break_visc** (developer.md sections 69.6, 69.7).
-
-For a solitary wave climbing onto a shelf (test/nhshelf, depth 1 m →
-1:20 slope → 0.5 m, a/H = 0.1) NH reproduces the fission into a leading
-soliton and a trailing train (leading η/H₂ = 0.16, six crests on the
-shelf) while hydrostatic gives a bore (two crests). The bottom-slope
-terms (f_nh_slope=1) change the leading soliton by 2%.
-For a moving bottom (test/nhbottom: a Hammack-type uplift of 0.2 m in 1 s
-over |x − x_c| < 20 m in 10 m of water) the leading crest 200 m away agrees
-with the linear theory of each model within −2.5% (hydrostatic) and ±0.7%
-(NH), and the acceleration term (f_nh_bottom=1) reduces the difference from
-the exact potential-flow solution from +16% to +4% (hydrostatic: +40%; the
-surface shape over the uplift coincides with the exact solution). It also
-runs stably coupled with a submarine landslide (f_bedslide).
+| nh_break_slope | 0.3 | surface-slope threshold of detector 3 |
+| nh_break_margin | 0 | hydrostatic margin around breaking cells (cells; 0: automatic 2H/Δx) (§6) |
+| nh_break_visc | 0 | breaking eddy-viscosity coefficient δ_b² (0: off; 1.44 corresponds to the literature value). Dissipates through the [diffusion term](diffusion.md) (§6) |
+| f_nh_slope | 0 | bottom-slope terms (Version 2). 1: for waves over slopes, shelves and abrupt bathymetry; about twice the iterations (§7) |
+| f_nh_bottom | 0 | moving-bottom acceleration term. 1: for the near field of landslide tsunamis (one-layer approximation of the Kajiura filter); acts on f_bedslide, fn_bedmotion, morphological change and API updates of z (§7) |
 
 **Others**
 
