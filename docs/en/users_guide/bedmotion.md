@@ -127,9 +127,9 @@ subsidence.
 
 Earthquake tsunamis use this pattern. From the fault position, strike,
 dip, rake, length, width, slip, rupture start time and rise time the
-utility computes the displacement field with Okada's (1985) formulas and
+utility computes the displacement field with Okada's formulas[^okada85] and
 writes the table. Several segments (with rupture-time lags) and the
-horizontal-displacement contribution u_h·∇z (Tanioka & Satake 1996, when
+horizontal-displacement contribution $`u_h\cdot\nabla z`$[^tanioka96] (when
 a bed elevation is given) are supported. Coordinates can be given in three
 ways, all absorbed on the fault2disp side, so the model settings do not
 change (details in fault2disp README §3).
@@ -224,6 +224,19 @@ Regenerate only this figure with `python docs/figs/make_guide_figs.py bedmotion`
 
 ## 5. Time handling, hydrostatic and non-hydrostatic
 
+```math
+d(t) = d_k + \frac{t - t_k}{t_{k+1} - t_k}\left(d_{k+1} - d_k\right)\ (\texttt{f\_bminterp} = 1),
+\qquad
+z^{\,n+1} = z^{\,n} + \left[d(t_{n+1}) - d_{prev}\right],
+\quad h\ \text{unchanged},\quad e = z + h
+```
+
+For a fault displacement field the initial sea-surface displacement is
+taken as the vertical displacement plus the product of the horizontal
+displacement and the bed slope, $`\eta_0 = u_z + u_h\cdot\nabla z`$
+[^tanioka96], which matters on steep sea floors; fault2disp computes it
+when a bed elevation is given.
+
 - At the head of each step the displacement at the end-of-step time is
   interpolated and the **difference** from the previously applied
   displacement is added to z. With linear interpolation the bed velocity
@@ -238,7 +251,7 @@ Regenerate only this figure with `python docs/figs/make_guide_figs.py bedmotion`
   much larger than the depth.
 - For short deformation whose width is comparable to the depth (splay
   faults, narrow deep-sea slip, submarine slides) the inertia of the water
-  column attenuates the short waves (the Kajiura filter). The
+  column attenuates the short waves (the Kajiura filter[^kajiura63]). The
   [non-hydrostatic correction](swflow.md) with f_nonhydrostatic=1 and
   f_nh_bottom=1 provides it in the one-layer approximation 1/(1 + βk²)²
   (developer.md §69.10). The velocity jumps then enter as acceleration
@@ -313,3 +326,9 @@ precision (the internal transfer of the bed layer sums to zero).
   fault at the bay mouth (0.8 m uplift of the cape). The disturbance from
   the coastal deformation reaches the shore 10 minutes before the offshore
   tsunami, and the subsided plain at the bay head floods earlier.
+
+## References
+
+[^okada85]: Okada, Y. (1985): Surface deformation due to shear and tensile faults in a half-space. *Bull. Seismol. Soc. Am.*, 75, 1135–1154.
+[^tanioka96]: Tanioka, Y. and Satake, K. (1996): Tsunami generation by horizontal displacement of ocean bottom. *Geophys. Res. Lett.*, 23, 861–864.
+[^kajiura63]: Kajiura, K. (1963): The leading wave of a tsunami. *Bull. Earthq. Res. Inst. Univ. Tokyo*, 41, 535–571.

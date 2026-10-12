@@ -80,14 +80,22 @@ and time acceleration** to cover geomorphic time.
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| gl_dens | 900.0 | Ice density (kg/m³), used for the SWE ⇄ ice-thickness conversion |
+| gl_dens | 900.0 | Ice density $`\rho_i`$ (kg/m³), used for the SWE ⇄ ice-thickness conversion (standard glacier ice 900–917) |
 | gl_tfirn_yr | 10.0 | Time constant of snow-to-ice conversion (firnification) in years; a few to ~10 years for temperate glaciers |
-| gl_ddfi | 8.0 | Degree-day factor of the ice surface (mm/°C/day). Larger than the snow value (snow_ddf); literature values are around 6–12 (Hock 2003) |
+| gl_ddfi | 8.0 | Degree-day factor of the ice surface $`d_i`$ (mm/°C/day). Larger than the snow value (snow_ddf; lower albedo); the low end of the 5.5–20 of Hock's compilation for ice[^hock03] |
 | gl_tmelt | 0.0 | Air-temperature threshold for ice melt (°C) |
+
+```math
+\Delta h_i = \frac{\rho_w}{\rho_i}\,\mathrm{SWE}\left(1 - e^{-\Delta t_w/\tau_{firn}}\right),
+\qquad
+\Delta h_{i,melt} = -\frac{\rho_w}{\rho_i}\,\min\!\left(h_i\frac{\rho_i}{\rho_w},\ d_i\max(T - T_{melt}, 0)\frac{\Delta t}{86400}\right)
+```
 
 - Snowfall accumulates as SWE through the snow feature, and **only
   snow that survives the year** is slowly converted to ice with time
-  constant gl_tfirn_yr (seasonal snow simply melts and runs off).
+  constant $`\tau_{firn}`$ (gl_tfirn_yr); seasonal snow simply melts and
+  runs off. The exponential relaxation is evaluated with the hydraulic
+  time $`\Delta t_w`$, so seasonal snow is hardly converted.
 - Ice melts **only where it is not covered by snow** (snow melts
   first).
 - Air temperature is evaluated at the **ice-surface elevation**
@@ -99,8 +107,22 @@ and time acceleration** to cover geomorphic time.
 
 ## Ice flow (f_glflow)
 
-With the shallow ice approximation (SIA), ice deforms under its own
-weight and flows toward lower ice-surface elevations.
+With the shallow ice approximation (SIA)[^hutter83], ice deforms under its
+own weight and flows toward lower ice-surface elevations. It is solved as
+a nonlinear diffusion of the ice surface $`s = z + h_i`$:
+
+```math
+\frac{\partial h_i}{\partial t} = \nabla\cdot\left(D\,\nabla s\right),
+\qquad
+D = \underbrace{\frac{2A}{5}(\rho_i g)^3\,h_i^{5}\,|\nabla s|^2}_{\text{deformation (Glen } n = 3)}
+  + \underbrace{A_s(\rho_i g)^3\,h_i^{4}\,|\nabla s|^2}_{\text{sliding (}\texttt{f\_glslide})}
+```
+
+The first term is the SIA ice flux from the vertical integration of
+Glen's flow law[^glen55] $`\dot\varepsilon = A\tau^3`$; the second puts the
+Weertman sliding of the next section into the same diffusive form. The
+default $`A`$ = 1e-16 Pa⁻³ yr⁻¹ is the recommended value for temperate ice
+(0 °C)[^cuffey10].
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -121,6 +143,23 @@ exactly).
 | gl_kg | 1e-4 | Erosion coefficient Kg. Read when f_glero=1. Coefficient of the erosion law ė = Kg·usˡ with sliding speed us measured in m/yr (dimensionless for l=1; the measured 1e-4 of Humphrey & Raymond 1994) |
 | gl_lexp | 1.0 | Power-law exponent l of the erosion law (1–2) |
 
+```math
+u_s = A_s\,\tau_b^3,
+\qquad
+\tau_b = \rho_i g\,h_i\,|\nabla s|,
+\qquad
+\dot e = K_g\,u_s^{\,l}\ (u_s\ \text{in m/yr})
+```
+
+A Weertman-type sliding law[^weertman57] ($`m`$ = 3 fixed) and a glacial
+erosion law proportional to a power of the sliding speed[^humphrey94]. The
+default $`A_s`$ = 1e-13 m yr⁻¹ Pa⁻³ gives 100 m/yr at a basal shear stress
+of 100 kPa (typical 50–150 kPa[^cuffey10]), the fast side of mountain
+glaciers (10–100 m/yr). The default $`K_g`$ = 1e-4 ($`l`$ = 1) is the
+measurement at Variegated Glacier (erosion rate ≈ 1e-4 × sliding
+speed)[^humphrey94]; with $`l`$ = 2[^herman15] a separate calibration gives
+1e-7 to 1e-6.
+
 - Erosion occurs **only under sliding ice** (f_glero requires
   f_glslide); thin ice erodes almost nothing.
 - Erosion lowers the computed elevation z and, if a soil layer sd
@@ -137,8 +176,10 @@ exactly).
 |---|---|---|
 | gl_ava_tanc | 0.6 | Critical avalanche slope tan θc (0.6 ≈ 31°) |
 
-Snow on cells whose steepest ice-surface slope exceeds the threshold
-is moved to the steepest-descent neighbor. This is a simple
+On cells whose steepest ice-surface slope $`\tan\theta`$ exceeds the
+threshold, the fraction $`\min(1, (\tan\theta - \tan\theta_c)/\tan\theta_c)`$ of
+the snow is moved to the steepest-descent neighbour. The threshold 0.6
+(≈ 31°) is a customary value near the angle of repose of dry snow. This is a simple
 representation of cliffs shedding snow so that accumulation
 concentrates into cirques. Recommended for cirque-formation
 experiments.
@@ -213,3 +254,13 @@ Idealized verification experiments (an analytic SIA benchmark and a
 cirque-formation test) are in [test/glacier/](../../../test/glacier/),
 and an annotated configuration sample is in
 [examples/List_samples/en/list_glacier.txt](../../../examples/List_samples/en/list_glacier.txt).
+
+## References
+
+[^hock03]: Hock, R. (2003): Temperature index melt modelling in mountain areas. *J. Hydrol.*, 282, 104–115.
+[^hutter83]: Hutter, K. (1983): *Theoretical Glaciology*. Reidel, Dordrecht. (shallow ice approximation)
+[^glen55]: Glen, J. W. (1955): The creep of polycrystalline ice. *Proc. R. Soc. Lond. A*, 228, 519–538.
+[^cuffey10]: Cuffey, K. M. and Paterson, W. S. B. (2010): *The Physics of Glaciers*, 4th ed. Elsevier. (recommended A, typical basal shear stress)
+[^weertman57]: Weertman, J. (1957): On the sliding of glaciers. *J. Glaciol.*, 3, 33–38.
+[^humphrey94]: Humphrey, N. F. and Raymond, C. F. (1994): Hydrology, erosion and sediment production in a surging glacier: Variegated Glacier, Alaska, 1982–83. *J. Glaciol.*, 40, 539–552.
+[^herman15]: Herman, F., Beyssac, O., Brughelli, M., Lane, S. N., Leprince, S., Adatte, T., Lin, J. Y. Y., Avouac, J.-P. and Cox, S. C. (2015): Erosion by an Alpine glacier. *Science*, 350, 193–195.

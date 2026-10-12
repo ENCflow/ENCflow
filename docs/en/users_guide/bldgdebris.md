@@ -43,10 +43,18 @@ with `bd_dlog` and `bd_sg` (see the [driftwood draft diagram](driftwood.md)).
 
 ### Destruction rate, sinking share and porosity feedback
 
-With first threshold c1 and second threshold c2, the multiplier `a(X)` is
-zero at or below c1, rises linearly between them, and is one at or above c2.
+With first threshold c1 and second threshold c2, the multiplier is
+
+```math
+a(X) = \min\left(1,\ \max\left(0,\ \frac{X - c_1}{c_2 - c_1}\right)\right),
+```
+
+zero at or below c1, rising linearly between them, and one at or above c2.
 Explicitly specifying only the first threshold disables the ramp: the
-multiplier is one when `X > c1`. The destroyed amount in one step is
+multiplier is one when `X > c1`. The ramp is a piecewise-linear approximation
+of the fragility functions in the literature (cumulative washout probability
+against inundation depth[^suppasri13][^koshimura09]): read the median of the
+curve as (c1+c2)/2 and its width as c2 − c1. The destroyed amount in one step is
 
 ```math
 w = \min\left(wbs,\; bd\_wdes\,a(X)\,\Delta t\right).
@@ -135,14 +143,14 @@ In practice give the stock map and the thresholds:
 | bd_stock0 | (0.3 on building cells) | uniform building stock (m³/m², all cells). Exclusive with fn_bdstock. **If neither is given, 0.3 m³/m² is placed only on cells with buildings (gv < 1)** (the run stops if there are no such cells, e.g. without fn_gv) |
 | fn_bdstock | — | building stock (destructible volume) map (m³/m², same matrix format as the terrain). Fold the wooden fraction into it (a cell with 30% wooden houses gets 30% of a fully wooden cell) |
 | fn_bdfrac | — | map of the destructible share fw (0-1) of the building footprint. Default 1. Bounds porosity feedback at gv0 + (1−gv0)·fw; does not directly multiply stock or the destruction rate |
-| bd_dlog | 0.3 | representative debris size (m) |
-| bd_sg | 0.5 | apparent specific gravity of debris (0 < bd_sg < 1). The draft is the exact cylinder buoyancy solution as for driftwood (0.15 m for 0.5 × 0.3 m) |
+| bd_dlog | 0.3 | representative debris size (m). The default is the size class of wooden structural members (posts and beams; empirical) |
+| bd_sg | 0.5 | apparent specific gravity of debris (0 < bd_sg < 1). The draft is the exact cylinder buoyancy solution as for driftwood (equation in [driftwood](driftwood.md); 0.15 m for 0.5 × 0.3 m) |
 | f_bdcrit | 1 | criterion: 1 = inundation depth h+hs, 2 = load (h+(1+s)hs+sg_log·hd+sg_deb·hbd)·V² |
-| bd_hcrit | 1.0 | depth threshold (m; f_bdcrit=1) |
+| bd_hcrit | 1.0 | depth threshold (m; f_bdcrit=1). The default 1.0-3.0 m ramp is a literature value: wooden houses destroyed above 2 m[^shuto93] as the median, with the width of the wooden washout curves of the 2011 Tohoku tsunami[^suppasri13] |
 | bd_hcrit2 | 3.0 | second depth threshold (m). A linear destructible fraction, 0 at threshold 1 and 1 at threshold 2, multiplies the rate (approximation of the fragility-curve width). **With both omitted the 1.0-3.0 m ramp applies; giving bd_hcrit alone means a single threshold without ramp** |
-| bd_fcrit | 2.0 | load threshold (m³/s²; f_bdcrit=2) |
+| bd_fcrit | 2.0 | load threshold (m³/s²; f_bdcrit=2). The default 2.0-6.0 corresponds to hV² at 2 m depth and 1-1.7 m/s; a calibration value meant to be re-derived from force-based fragility functions[^koshimura09] |
 | bd_fcrit2 | 6.0 | second load threshold (m³/s²; ditto. bd_fcrit alone means no ramp) |
-| bd_wdes | 5.0e-4 | destruction rate (m/s = m³/m²/s). With sustained a=1, time to destroy = stock ÷ rate (10 min for the default 0.3 m³/m²); a<1 slows destruction |
+| bd_wdes | 5.0e-4 | destruction rate (m/s = m³/m²/s). With sustained a=1, time to destroy = stock ÷ rate (10 min for the default 0.3 m³/m², the duration of one tsunami surge; empirical); a<1 slows destruction |
 | bd_fsink | 0 | sinking fraction (0-1): this share of the destroyed amount deposits on the spot (abstraction of sinking debris such as tiles and foundations; 0 = all floats = upper bound of reach) |
 | bd_wstop | 0.01 | grounding deposition rate (m/s) |
 | bd_vstop | 0.05 | velocity threshold of slow-flow deposition (m/s; 0 = depth (draft) criterion only; the default deposits once the ponded flow stagnates) |
@@ -154,11 +162,11 @@ In practice give the stock map and the thresholds:
 **Guidance on thresholds** (all calibration parameters; the literature
 check is recorded in developer.md §63.7, Japanese):
 
-- **Depth threshold (f_bdcrit=1)**: Shuto (1993) relates tsunami
+- **Depth threshold (f_bdcrit=1)**: Shuto[^shuto93] relates tsunami
   intensity to house damage: wooden houses are destroyed above about
   2 m of inundation depth and partially damaged around 1 m. The
-  fragility functions of the 2011 Tohoku tsunami (Suppasri et al.
-  2013, by structural type and storeys) also show the washout
+  fragility functions of the 2011 Tohoku tsunami[^suppasri13] (by
+  structural type and storeys) also show the washout
   probability of wooden houses rising steeply around 2 m and most
   houses washed away above 4 m. Since fragility functions are
   probability curves while this module uses a threshold plus rate (or
@@ -169,15 +177,17 @@ check is recorded in developer.md §63.7, Japanese):
   (wooden fraction) and fn_bdfrac represent them.
 - **Load threshold (f_bdcrit=2)**: the unit is that of F9999, m³/s²
   (freshwater-normalised; ×ρw gives N/m). Convert it from the
-  force-based fragility functions of Koshimura et al. (2009),
-  F = ½ρ C_D u²h, or compare the water-only F9999 map with observed
-  damage. FEMA P-646 multiplies the hydrodynamic force of a
+  force-based fragility functions[^koshimura09]
+  $`F = \tfrac{1}{2}\rho C_D u^2 h`$ via
+  $`X = hV^2 = F/(\tfrac{1}{2}\rho C_D)`$, or compare the water-only F9999
+  map with observed
+  damage. FEMA P-646[^fema12] multiplies the hydrodynamic force of a
   debris-laden flow by a factor k_s (1.25 recommended); this module
   computes the same effect from the floating-matter columns (the
   driftwood and debris terms). These terms are "the average
   destructive force of a flow carrying floating matter", not a
   replacement of the impact or damming load of individual logs and
-  debris (NILIM No. 905 §4.3, the individual loads of FEMA P-646).
+  debris (NILIM No. 905[^nilim905] §4.3, the individual loads of FEMA P-646).
 - **Building stock**: floor area × structural volume per floor area ×
   wooden fraction, aggregated per cell (aggregation from building
   inventories is preprocessing). Conversion to building counts or
@@ -188,13 +198,13 @@ The rationale of the defaults is recorded in developer.md §63.9.
 ## Recommended values by pattern
 
 The defaults are a middle ground that "runs". When the type of event is
-known, start from the following (calibration quantities; sources in
-developer.md §63.7):
+known, start from the following (calibration quantities; source readings
+in developer.md §63.7):
 
 | Type | Criterion | Thresholds | Stock and properties | Rates and deposition | Notes |
 |---|---|---|---|---|---|
-| Tsunami run-up into a dense wooden town | f_bdcrit=1 | bd_hcrit 1.0 / bd_hcrit2 3.0 m (Shuto 1993: destroyed above 2 m; width of the wooden washout curves of Suppasri et al. 2013) | 0.2-0.4 m³/m² × wooden fraction; bd_dlog 0.3, bd_sg 0.5 | bd_wdes 5e-4 (destroyed within a 10-min surge), bd_fsink 0.2-0.4, bd_vstop 0.05 | feedback on; example tsunami_town |
-| Tsunami, chain with driftwood and debris | f_bdcrit=2 | bd_fcrit 2 / bd_fcrit2 6 m³/s² (2 m depth at 1-1.7 m/s; convert from the force-based curves of Koshimura et al. 2009) | as above; enable fn_driftwood too | as above | re-place the thresholds after looking at the water-only F9999 map |
+| Tsunami run-up into a dense wooden town | f_bdcrit=1 | bd_hcrit 1.0 / bd_hcrit2 3.0 m (destroyed above 2 m[^shuto93]; width of the wooden washout curves[^suppasri13]) | 0.2-0.4 m³/m² × wooden fraction; bd_dlog 0.3, bd_sg 0.5 | bd_wdes 5e-4 (destroyed within a 10-min surge), bd_fsink 0.2-0.4, bd_vstop 0.05 | feedback on; example tsunami_town |
+| Tsunami, chain with driftwood and debris | f_bdcrit=2 | bd_fcrit 2 / bd_fcrit2 6 m³/s² (2 m depth at 1-1.7 m/s; convert from the force-based curves[^koshimura09]) | as above; enable fn_driftwood too | as above | re-place the thresholds after looking at the water-only F9999 map |
 | Storm surge or river flood in a lowland town (slow flow) | f_bdcrit=1 | bd_hcrit 2.0 / bd_hcrit2 4.0 m (deep but slow inundation destroys less than a tsunami) | 0.2-0.3 × wooden fraction | bd_wdes 1e-4 (gradual over tens of minutes to hours), bd_vstop 0.02 | non-destructive flood damage is out of scope: only collapse/washout is counted |
 | Debris flow or flood hitting a mountain village | f_bdcrit=2 | bd_fcrit 1 / bd_fcrit2 4 m³/s² (the mixed depth h+hs and density 1+sC enter the load) | 0.2-0.3 × wooden fraction; bd_sg 0.5 | bd_wdes 1e-3 (minutes), bd_fsink 0.5 (buried in sediment) | enable with f_debris; debris moves with the mixture |
 | Upper-bound reach (hazard map) | per case | per case | as above | bd_fsink 0, bd_vstop 0, bd_wfloat 0 | use Bd9999; the remaining amount is sensitive to bd_vstop and bd_wfloat (example README) |
@@ -283,3 +293,11 @@ representation policy). RC and steel structures are represented as
 "non-destructible occupation" through fn_bdfrac; per-structure-type
 thresholds (multi-class) are a future topic. Implementation details:
 developer.md §63 (Japanese).
+
+## References
+
+[^shuto93]: Shuto, N. (1993): Tsunami intensity and disasters. In: Tinti, S. (ed.), *Tsunamis in the World*, Kluwer, 197–216. (tsunami intensity vs. house damage)
+[^suppasri13]: Suppasri, A., Mas, E., Charvet, I., Gunasekera, R., Imai, K., Fukutani, Y., Abe, Y. and Imamura, F. (2013): Building damage characteristics based on surveyed data and fragility curves of the 2011 Great East Japan tsunami. *Nat. Hazards*, 66(2), 319–341.
+[^koshimura09]: Koshimura, S., Oie, T., Yanagisawa, H. and Imamura, F. (2009): Developing fragility functions for tsunami damage estimation using numerical model and post-tsunami data from Banda Aceh, Indonesia. *Coastal Eng. J.*, 51(3), 243–273.
+[^fema12]: FEMA (2012): Guidelines for Design of Structures for Vertical Evacuation from Tsunamis, Second Edition. *FEMA P-646*. (debris factor k_s and individual impact loads)
+[^nilim905]: NILIM (2016): Technical standard for the design of debris-flow and driftwood countermeasures, commentary. *NILIM Technical Note*, No. 905 (in Japanese; title translated). (log impact force, §4.3)
