@@ -85,6 +85,17 @@ in (a). Generate the Japanese and English PNG/SVG files with
 PNG region at its original position and resolution, with the same image
 embedded in the SVG. Panels (b)(c) are vector drawings.
 
+## Just try it (minimal input)
+
+The minimal input is the sea mask fn_sw and **an empty &list_tide in
+fn_tide** (= fixed tide level 0 m and hsea0 1 m: the simplest use of the
+sea as a "drain at level 0"; developer.md §67).
+
+```
+&list_tide
+/
+```
+
 ## Usage patterns
 
 - **Flooding by storm surge / rising tide**: raise the tide level with
@@ -106,15 +117,7 @@ embedded in the SVG. Panels (b)(c) are vector drawings.
 
 ## Recommended values by pattern
 
-The minimal input to "just try it" is the sea mask fn_sw and **an empty
-&list_tide in fn_tide** (= fixed tide level 0 m and hsea0 1 m: the
-simplest use of the sea as a "drain at level 0"; developer.md §67). Tide
-levels are given data, but guides by type:
-
-```
-&list_tide
-/
-```
+Tide levels are given data, but guides by type:
 
 | Type | titype | Guide for the tide level | Used together with |
 |---|---|---|---|

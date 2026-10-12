@@ -44,6 +44,14 @@ in [the explanation](encgrid.md) §6.
 Run `python docs/figs/make_guide_figs.py swflow` to generate the Japanese and
 English PNG/SVG figures.
 
+## Just try it (minimal input)
+
+Everything in this chapter **runs with the defaults** - fn_enc need not be
+written. The defaults enable the wet/dry front stabilization
+(f_exflux_reduction), the steep-slope gravity correction
+(f_gravity_correction) and the adaptive Runge-Kutta (threshold 1.5), a
+safe combination for tsunamis, inundation and flood runoff alike.
+
 ## Choice of scheme (&list_sysparam)
 
 | Parameter | Default | Meaning |
@@ -246,14 +254,6 @@ flat-bed one-layer model).
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_rivermouth_drop | 0 | free overfall from the river mouth to the sea (legacy scheme; cannot be combined with the tide feature fn_tide -- using [tide](tide.md) + [boundary conditions](boundary.md) is now recommended) |
-
-## Just try it (minimal input)
-
-Everything in this chapter **runs with the defaults** - fn_enc need not be
-written. The defaults enable the wet/dry front stabilization
-(f_exflux_reduction), the steep-slope gravity correction
-(f_gravity_correction) and the adaptive Runge-Kutta (threshold 1.5), a
-safe combination for tsunamis, inundation and flood runoff alike.
 
 ## Recommended values by pattern
 
