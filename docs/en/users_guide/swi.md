@@ -7,7 +7,7 @@
 Computes the **Soil Water Index** (SWI) — the operational indicator
 used for sediment-disaster (landslide/debris-flow) early warning in
 Japan — for every cell. It implements the serial three-tank model of
-Ishihara and Kobatake (1979) with the **nationally uniform standard
+Ishihara and Kobatake[^ishihara79] with the **nationally uniform standard
 constants used by the Japan Meteorological Agency, unchanged** (they
 cannot be modified). Rain fills the tanks and drains through lateral
 outlets and bottom percolation. The index (mm) represents antecedent
@@ -38,7 +38,16 @@ restart. Generate both languages as PNG and SVG with
 Storages `S1,S2,S3` and outlet heights `L` are in mm; α and β are in 1/h.
 Lateral discharge `q` and bottom percolation `b` are in mm/h. Multiply
 by `Δt_h = dt / 3600` [h] to obtain the amount transferred in one step.
-These rates are not volumetric discharges [m³/s].
+These rates are not volumetric discharges [m³/s]. The general form of
+the lateral discharge and bottom percolation of tank $`i`$ is
+
+```math
+q_i = \sum_j \alpha_{ij}\,\max(S_i - L_{ij},\ 0),
+\qquad
+b_i = \beta_i\,S_i
+```
+
+and with the constants inserted it becomes the following table.
 
 | Tank | Lateral discharge q [mm/h] (leaves the tank system) | Bottom percolation b [mm/h] |
 |---|---|---|
@@ -152,10 +161,15 @@ forecast values. See
 - The rainfall time series table (prtype=1) is **linearly
   interpolated**. To give a rectangular rainfall pulse, repeat the end
   point (e.g., `(0,30),(180,30),(181,0)`).
-- References: Ishihara and Kobatake (1979); Okada et al. (2001,
-  Sokkō-Jihō 68); [JMA's Soil Water Index explanation](https://www.jma.go.jp/jma/kishou/know/bosai/dojoshisu.html). See
+- Sources of the model and constants: Ishihara and Kobatake[^ishihara79],
+  Okada et al.[^okada01] and [JMA's Soil Water Index explanation](https://www.jma.go.jp/jma/kishou/know/bosai/dojoshisu.html). See
   developer.md §49 for the implementation record.
 
 ## Tests and examples
 
 - [test/swi](../../../test/swi/): comparison with a fine-step RK4 reference solution of the three tanks, checking the final value, period maximum, its time and spatial uniformity. The case also shows the short ramp in the rainfall table and the checks in `Check_swi.py`.
+
+## References
+
+[^ishihara79]: Ishihara, Y. and Kobatake, S. (1979): Runoff model for flood forecasting. *Bull. Disaster Prev. Res. Inst., Kyoto Univ.*, 29, 27–43. (the serial three-tank model)
+[^okada01]: Okada, K. et al. (2001): Soil water index (title translated; in Japanese). *Sokkō-Jihō*, 68(5), 29–47. (JMA's standard constants and operation)

@@ -15,10 +15,9 @@ developer.md §51。
 
 - 状態はセル別の溶岩厚 `s%hl`(m)。分布 `Hl0001...` として毎出力時刻に
   書かれます。
-- 溶岩面 z+hl のエッジ勾配 S と、両セルの平均溶岩厚 h_e に対し、
-  基底せん断応力 ρg・h_e・S が降伏応力 τ_y を超えるエッジで流動します
-  (τ_y=0 なら Newton 粘性流)。τ_y>0 で溶岩面が一様斜面と平行な場合、
-  停止厚の目安は h∞ = τ_y/(ρg tanθ) です。
+- 溶岩面 $`s = z + h_l`$ のエッジ勾配 $`S`$ と、両セルの平均溶岩厚 $`h_e`$ に
+  対し、基底せん断応力 $`\rho g h_e S`$ が降伏応力 $`\tau_y`$ を超える
+  エッジで流動します(下の流動則。$`\tau_y = 0`$ なら Newton 粘性流)。
 - `lv_wsol > 0` のとき、周囲のエッジ深さ平均流速の最大値が閾値
   `lv_vsol` を下回った「停止セル」の溶岩を、レート `lv_wsol`(m/s)で
   z へ転換します(固化。不可逆)。固化面は土層厚 sd を増やさない
@@ -26,6 +25,21 @@ developer.md §51。
 - 等温モデルです(冷却・温度依存粘度は将来拡張。lava_plan.md §8)。
   粘度・降伏応力は**ラン全体で1組**です。噴火口ごとの粘度指定は
   ありません(粘度差の実体は温度・組成であり、温度拡張で扱う設計)。
+
+**流動則。** エッジの単位幅流量は、Bingham 流体の潤滑近似[^liu89]
+(溶岩ドームの粘塑性モデル[^balmforth00]と同じ形)です。
+
+```math
+q = \frac{\rho g S}{6\eta}\,(h_e - h_0)^2\,(2h_e + h_0),
+\qquad
+h_0 = \frac{\tau_y}{\rho g S}
+```
+
+$`h_e \le h_0`$ のエッジは流れません。$`\tau_y = 0`$ では Newton 流体の
+$`q = \rho g S h_e^3 / 3\eta`$ に戻り、平坦床の定率供給では粘性重力流の
+相似解[^huppert82]に従います([test/lava](../../test/lava/) で検定)。
+$`\tau_y > 0`$ で溶岩面が勾配 $`\tan\theta`$ の一様斜面と平行な場合、
+停止厚は $`h_\infty = \tau_y/(\rho g \tan\theta)`$ です。
 
 ![溶岩流の流下・停止・固化と固化後の水の流れ](../figs/lavaflow_profile.png)
 
@@ -51,7 +65,8 @@ developer.md §51。
 
 噴火口の位置と噴出率が与件で、レオロジーには既定値があります
 (密度 2600 kg/m³、粘度 1e4 Pa s、降伏応力 0 = Newton 流体。未指定なら
-"(default)" 付きで表示。根拠は developer.md §66)。溶岩の型が決まって
+"(default)" 付きで表示)。粘度の既定は、エトナの玄武岩質アア溶岩の流下中の
+実測 10³〜10⁴ Pa s[^pinkerton95]の上限で、校正前提の中庸です(developer.md §66)。溶岩の型が決まって
 いるときは次を出発点にしてください(校正で変わる量です):
 
 | 型 | lv_visc (Pa s) | lv_tauy (Pa) | 備考 |
@@ -95,7 +110,7 @@ developer.md §51。
   噴出・固化・残存の体積台帳は計算終了時に表示されます。
 - リスタートは私有ファイル save/lavaflow.dat(save/restore は自動)。
 
-## 例題
+## 検証・例題
 
 - 検定ケース: [test/lava](../../test/lava/) — Huppert 相似解
   (Newton 極限の軸対称拡がり)と Bingham 停止厚 h∞ の解析解検定。
@@ -116,3 +131,10 @@ developer.md §51。
   安定化します。流動性の高い玄武岩質(η ≤ 10² Pa s)ではサブサイクル
   数が大きくなり計算コストが立ちます(lv_nsubmax 超過で停止した場合は
   dt_lavaflow_c を短くするか η を見直してください。lava_plan.md §6)。
+
+## 参考文献
+
+[^liu89]: Liu, K. F. and Mei, C. C. (1989): Slow spreading of a sheet of Bingham fluid on an inclined plane. *J. Fluid Mech.*, 207, 505–529.(Bingham 流体の潤滑近似)
+[^balmforth00]: Balmforth, N. J., Burbidge, A. S., Craster, R. V., Salzig, J. and Shen, A. (2000): Visco-plastic models of isothermal lava domes. *J. Fluid Mech.*, 403, 37–65.(等温の粘塑性溶岩モデル)
+[^huppert82]: Huppert, H. E. (1982): The propagation of two-dimensional and axisymmetric viscous gravity currents over a rigid horizontal surface. *J. Fluid Mech.*, 121, 43–58.(Newton 極限の相似解。test/lava の検定解)
+[^pinkerton95]: Pinkerton, H. and Norton, G. (1995): Rheological properties of basaltic lavas at sub-liquidus temperatures: laboratory and field measurements on lavas from Mount Etna. *J. Volcanol. Geotherm. Res.*, 68, 307–323.(玄武岩質溶岩の粘度の実測)

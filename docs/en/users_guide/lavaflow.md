@@ -19,11 +19,11 @@ the implementation record is developer.md Sec. 51.
 
 - The state is the per-cell lava thickness `s%hl` (m), written as the
   distributed field `Hl0001...` at every output time.
-- Flow occurs across edges where the basal shear stress ρg·h_e·S exceeds
-  the yield stress τ_y: h_e is the mean lava thickness of the two cells,
-  and S is the edge gradient of the lava surface z+hl (τ_y = 0 gives
-  Newtonian viscous flow). For τ_y > 0 with a lava surface parallel to
-  a uniform slope, the reference stopping thickness is h∞ = τ_y/(ρg tanθ).
+- Flow occurs across edges where the basal shear stress $`\rho g h_e S`$
+  exceeds the yield stress $`\tau_y`$: $`h_e`$ is the mean lava thickness
+  of the two cells and $`S`$ the edge gradient of the lava surface
+  $`s = z + h_l`$ (the flow law below; $`\tau_y = 0`$ gives Newtonian
+  viscous flow).
 - When `lv_wsol > 0`, lava in "stopped" cells — where the maximum
   depth-averaged speed over the surrounding edges is below `lv_vsol` —
   is converted to z at the rate `lv_wsol` (m/s; irreversible). The solidified
@@ -33,6 +33,24 @@ the implementation record is developer.md Sec. 51.
   run; there is no per-vent viscosity (viscosity differences are really
   temperature/composition differences, to be handled by the temperature
   extension).
+
+**Flow law.** The flux per unit width across an edge is the lubrication
+approximation of a Bingham fluid[^liu89] (the same form as the
+visco-plastic lava-dome models[^balmforth00]).
+
+```math
+q = \frac{\rho g S}{6\eta}\,(h_e - h_0)^2\,(2h_e + h_0),
+\qquad
+h_0 = \frac{\tau_y}{\rho g S}
+```
+
+Edges with $`h_e \le h_0`$ do not flow. For $`\tau_y = 0`$ it reduces to
+the Newtonian $`q = \rho g S h_e^3 / 3\eta`$, and a constant supply on a
+flat bed follows the similarity solution of viscous gravity
+currents[^huppert82] (checked in [test/lava](../../../test/lava/)). For
+$`\tau_y > 0`$ with a lava surface parallel to a uniform slope of
+gradient $`\tan\theta`$, the stopping thickness is
+$`h_\infty = \tau_y/(\rho g \tan\theta)`$.
 
 ![Lava flow, stopping, solidification and the water flow afterwards](../../figs/lavaflow_profile_en.png)
 
@@ -60,8 +78,10 @@ name in the main parameters, and write `&list_lavaflow`:
 
 The vent location and effusion rate are given data; the rheology has
 defaults (density 2600 kg/m³, viscosity 1e4 Pa s, yield stress 0 =
-Newtonian; printed with "(default)" when unspecified; rationale in
-developer.md §66). When the lava type is known, start from the
+Newtonian; printed with "(default)" when unspecified). The default
+viscosity is the upper end of the 10³–10⁴ Pa s measured on flowing
+basaltic aa lava at Etna[^pinkerton95], a middle value meant for
+calibration (developer.md §66). When the lava type is known, start from the
 following (calibration quantities):
 
 | Type | lv_visc (Pa s) | lv_tauy (Pa) | Notes |
@@ -109,7 +129,7 @@ following (calibration quantities):
   solidified, molten) is reported at the end of the run.
 - Restart uses the private file save/lavaflow.dat (automatic).
 
-## Examples
+## Tests and examples
 
 - Verification case: [test/lava](../../../test/lava/) — the Huppert
   similarity solution (axisymmetric spreading in the Newtonian limit)
@@ -134,3 +154,10 @@ following (calibration quantities):
   by subcycling. Very fluid basalt (η ≤ 10² Pa s) makes the subcycle
   count — and cost — large (if the run stops on lv_nsubmax, shorten
   dt_lavaflow_c or reconsider η; lava_plan.md Sec. 6).
+
+## References
+
+[^liu89]: Liu, K. F. and Mei, C. C. (1989): Slow spreading of a sheet of Bingham fluid on an inclined plane. *J. Fluid Mech.*, 207, 505–529. (lubrication approximation of a Bingham fluid)
+[^balmforth00]: Balmforth, N. J., Burbidge, A. S., Craster, R. V., Salzig, J. and Shen, A. (2000): Visco-plastic models of isothermal lava domes. *J. Fluid Mech.*, 403, 37–65. (isothermal visco-plastic lava models)
+[^huppert82]: Huppert, H. E. (1982): The propagation of two-dimensional and axisymmetric viscous gravity currents over a rigid horizontal surface. *J. Fluid Mech.*, 121, 43–58. (similarity solution of the Newtonian limit; the check of test/lava)
+[^pinkerton95]: Pinkerton, H. and Norton, G. (1995): Rheological properties of basaltic lavas at sub-liquidus temperatures: laboratory and field measurements on lavas from Mount Etna. *J. Volcanol. Geotherm. Res.*, 68, 307–323. (measured viscosities of basaltic lava)

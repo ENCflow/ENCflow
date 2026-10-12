@@ -189,7 +189,7 @@ B・C・D のセル集合と時系列は namelist に直接記入するほか、
   `inflow_cs` または流砂量時系列 `inflow_qs`(排他)で与えられます
   ([土砂・地形変化の章](geomorph.md))。未指定なら清水流入です。
 
-## 例題・書式の実例
+## 検証・例題
 
 - [test/sedinflow](../../test/sedinflow/): 区間流入の土砂濃度・流砂量指定と、流入総量に対する土砂台帳の検定。
 - [test/nhcurrent](../../test/nhcurrent/): 水位規定で一様流と正弦波を与える設定例。

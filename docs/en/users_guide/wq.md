@@ -118,11 +118,11 @@ the group)
 **Distributed diffuse source (unit loads by land use)** - a cell-wise
 distribution over the whole domain
 
-| Parameter | Meaning |
-|---|---|
-| fn_wq_map | Distribution file of unit loads (kg/ha/day) |
-| wq_map_factor | Multiplier on the distribution (for calibration) |
-| f_wq_map | Interpretation of the distribution. 0: injected directly into surface water, 1: buildup rate into the surface buildup pool |
+| Parameter | Default | Meaning |
+|---|---|---|
+| fn_wq_map | "" | Distribution file of unit loads (kg/ha/day) |
+| wq_map_factor | 1 | Multiplier on the distribution (for calibration) |
+| f_wq_map | 0 | Interpretation of the distribution. 0: injected directly into surface water, 1: buildup rate into the surface buildup pool |
 
 **Rainfall concentration (wet deposition)** - domain-wide input as
 "rainfall reaching the surface x concentration": `wq_rain_conc`
@@ -268,13 +268,13 @@ A buildup-washoff mechanism where the load accumulated on the surface
 in dry weather is washed off by rainfall. It can represent a nonlinear
 L-Q relation between discharge and load, and first flush.
 
-| Parameter | Meaning |
-|---|---|
-| wq_bd_rate | Uniform buildup rate (kg/ha/day) (mutually exclusive with the distributed form f_wq_map=1) |
-| wq_bd_max | Buildup limit (kg/ha). Omit for linear, unlimited buildup |
-| wq_bd0 / fn_wq_bd0 | Initial pool (kg/ha) (uniform value / distribution; mutually exclusive) |
-| wq_wash_kr | Raindrop washoff coefficient (1/m; corresponds to 1000 x the exponential washoff coefficient c1 [1/mm] customary in urban drainage models) |
-| wq_wash_kf / wq_wash_tauc | Shear washoff coefficient (1/s) and critical shear stress (N/m^2) (required with kf) |
+| Parameter | Default | Meaning |
+|---|---|---|
+| wq_bd_rate | — | Uniform buildup rate (kg/ha/day) (mutually exclusive with the distributed form f_wq_map=1) |
+| wq_bd_max | — (unlimited) | Buildup limit (kg/ha). Omit for linear, unlimited buildup |
+| wq_bd0 / fn_wq_bd0 | — / "" | Initial pool (kg/ha) (uniform value / distribution; mutually exclusive) |
+| wq_wash_kr | — | Raindrop washoff coefficient (1/m; corresponds to 1000 x the exponential washoff coefficient c1 [1/mm] customary in urban drainage models) |
+| wq_wash_kf / wq_wash_tauc | — / — | Shear washoff coefficient (1/s) and critical shear stress (N/m^2) (required with kf) |
 
 ## Sanitary risk of sewer surcharge (with the conduit continuum layer)
 
@@ -428,9 +428,13 @@ columns for boundary inflow, boundary outflow or budget residual. When
 using open boundaries or inflow segments, include their substance transport
 separately in the budget check.
 
-## Worked examples and related chapters
+## Tests and examples
 
-- Examples: [examples/List_samples/list_wq.txt](../../../examples/List_samples/en/list_wq.txt)
+- [test/kdpart](../../../test/kdpart/): Kd two-phase partitioning in a suspended-sediment dam break with a point source.
+- [test/gwseep](../../../test/gwseep/): budget check of transport through infiltration and lateral groundwater flow.
+- [test/damwq](../../../test/damwq/): steady-state check of completely mixed dam release and pond entrainment.
+- [test/sewer_wq](../../../test/sewer_wq/): budget check of sewer surcharge in a town with a conduit network (how the network was built: [examples/sewer_hybrid](../../../examples/sewer_hybrid/)).
+- Worked example of the format: [examples/List_samples/en/list_wq.txt](../../../examples/List_samples/en/list_wq.txt)
 - Combined with groundwater, infiltration entrainment and the
   subsurface pool can be tracked
   ([the groundwater chapter](gwflow.md)).

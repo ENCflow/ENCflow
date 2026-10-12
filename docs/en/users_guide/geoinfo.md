@@ -95,7 +95,7 @@ cumulative discharge or terrain change; bmi/README.en.md "Overriding
 roughness").
 
 **Roughness guides** (Manning n by land use; customary values of the
-Japanese inundation-mapping manuals and Chow 1959; calibration
+Japanese inundation-mapping manuals and Chow's tables[^chow59]; calibration
 quantities)
 
 | Land use | rn0 | Notes |
@@ -252,7 +252,7 @@ Notes when giving the crest with a distribution file `fn_seawall`:
   Painting a **generous buffer along the coast** is therefore the safe
   side, and it automatically prevents the corner-contact leaks above.
 
-## Examples and constraints
+## Tests and examples
 
 - [test/chichibu](../../../test/chichibu/): a real-terrain regression case combining elevation, catchment/channel masks and roughness.
 - [test/gtif](../../../test/gtif/): GeoTIFF input test assets covering data types, compression, layout and coordinate systems.
@@ -261,3 +261,7 @@ Notes when giving the crest with a distribution file `fn_seawall`:
 - Real terrain: [tutorials/chichibu](../../../tutorials/chichibu/en/README.md)
 - For the format and coordinate system of distribution files, see the [input/output](io.md) and [coordinates](coordinates.md) chapters.
 - Subgrid channel elements such as channel width and levees are configured on the fn_channel side ([channel chapter](channel.md)).
+
+## References
+
+[^chow59]: Chow, V. T. (1959): *Open-Channel Hydraulics*. McGraw-Hill, New York. (tables of Manning's n by land cover)

@@ -104,7 +104,7 @@
 始める、といった使い方です。[中断と再開の章](restart.md)を参照して
 ください。
 
-## 例題
+## 検証・例題
 
 - 全パラメータの注釈付き一覧: [examples/List_samples/list_initial.txt](../../examples/List_samples/list_initial.txt)
 - 静水+ユーザールーチンの水位の山: [tutorials/wave](../../tutorials/wave/)

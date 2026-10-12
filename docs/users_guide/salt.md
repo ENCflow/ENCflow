@@ -6,11 +6,19 @@
 淡水レンズなどの淡水・塩水の相互作用を近似的に扱います。`fn_salt` で
 有効化します。
 
-モデルは地下水解析で実績のある鋭利界面法(2 zone)と同型の**準静的・鋭利界面近似**です:
+モデルは地下水解析で実績のある鋭利界面法(2 zone。MODFLOW の SWI2
+パッケージ[^bakker13]と同じ考え方)と同型の**準静的・鋭利界面近似**です:
 水深・地下貯留(h・Hg)は淡塩の**合計**のまま変わらず、その内数として
-「塩水層厚」(常に最下層)を追跡します。密度差 ε = (ρs−ρf)/ρf は
-塩水層の駆動水頭 Φs = 水位 + ε×界面標高 にだけ現れ、浅水流の運動方程式は
-変わりません。水位が水平でも、界面が傾いていれば低層の静水圧差が
+「塩水層厚」(常に最下層)を追跡します。密度差 $`\varepsilon`$ は
+塩水層の駆動水頭 $`\Phi_s`$ にだけ現れ、浅水流の運動方程式は変わりません
+($`\eta`$: 水位、$`\zeta`$: 界面標高)。
+
+```math
+\varepsilon = \frac{\rho_s - \rho_f}{\rho_f},
+\qquad
+\Phi_s = \eta + \varepsilon\,\zeta
+```
+水位が水平でも、界面が傾いていれば低層の静水圧差が
 塩水を動かします(プールの仕切りを外すと最終的に上下に成層する挙動を
 再現します)。
 
@@ -21,7 +29,9 @@
 ## 何ができるか
 
 - **海水浸入**: 海域セル(潮位つき)を塩水の規定水頭として、帯水層への
-  塩水の浸入・後退。平衡界面は Ghyben-Herzberg 関係に従います。
+  塩水の浸入・後退。平衡界面は Ghyben–Herzberg 関係[^bear79]
+  $`z_s = h_f/\varepsilon`$(海面下の界面深さは海面上の淡水頭の
+  $`1/\varepsilon`$ 倍。海水では約 40 倍)に従います。
 - **淡水レンズ**(涵養があるとき)、**塩水くさび**の準定常位置。
 - **高潮・津波の遡上と塩水の行き先**: 遡上した海水は塩水として地表を
   流れます(浅水流の移流に相乗り)。
@@ -98,5 +108,13 @@ f_gwlateral=1([地下水の章](gwflow.md)。側方 K と比湧水量を共有)�
 - 急速な浸入前線では、合計と塩水の時間分割に起因する小さな配分誤差
   (dt に比例)が生じえます。dt を小さくすると減ります
   (詳細は developer.md §47.2)。
-- 模式実験は [test/salt](../../test/salt/)(プール仕切り実験と海水浸入の解析検算)を
-  参照してください。
+
+## 検証・例題
+
+- [test/salt](../../test/salt/): プール仕切り実験(上下成層への到達)と海水浸入の解析検算。
+- 書式の実例: [examples/List_samples/list_salt.txt](../../examples/List_samples/list_salt.txt)。
+
+## 参考文献
+
+[^bear79]: Bear, J. (1979): *Hydraulics of Groundwater*. McGraw-Hill, New York.(鋭利界面近似と Ghyben–Herzberg 関係)
+[^bakker13]: Bakker, M., Schaars, F., Hughes, J. D., Langevin, C. D. and Dausman, A. M. (2013): Documentation of the Seawater Intrusion (SWI2) Package for MODFLOW. *U.S. Geological Survey Techniques and Methods*, 6-A46.(2 zone 鋭利界面法の実用実装)

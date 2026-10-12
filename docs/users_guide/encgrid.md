@@ -11,6 +11,9 @@
 `src/m_swflow_enc.f90`(`init_weights`、`calc_kth_momentum`、
 `calc_kth_flux`、`continuous`)と `src/m_ffactor.f90` です。
 
+図は `python3 docs/figs/make_guide_figs.py encgrid` で日英の PNG・SVG を生成します
+(`docs/figs/guide/fig_encgrid.py`)。
+
 ## 1. 方程式
 
 水深 $`h`$、地盤高 $`z`$、水位 $`\eta = z + h`$ の浅水方程式を、セル中心の
@@ -237,7 +240,7 @@ C_n = \frac{|\mathbf{V}| + \sqrt{g h}}{\min(\Delta x, \Delta y)}\,\Delta t
 
 ## 8. 数値定数の根拠
 
-| 定数 | 既定 | 役割 | 根拠・変えたときの影響 |
+| パラメータ | 既定 | 意味 | 根拠 |
 |---|---:|---|---|
 | dd | 0.001 m | 移動限界水深。両側がこれ未満のエッジは流量 0。ex_flux 抑制の残し水深 | 経験値(1 mm)。大きくすると薄い前縁が止まり、過大流出の抑制が増える。小さくすると薄い舌の計算が増えコストと摩擦の感度が上がる |
 | dv | 0.001 m | 摩擦項の水深の下限 $`h_f`$ | 経験値。$`h^{-4/3}`$ の発散を抑える。dd と同程度にする |

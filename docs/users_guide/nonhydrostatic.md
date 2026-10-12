@@ -1,6 +1,6 @@
 # 非静水圧補正(1 層モデル)の解説(浅水流計算の補足)
 
-[浅水流計算の章へ](swflow.md) / [ユーザーガイド目次へ](../users_guide.md)
+[浅水流計算の章へ](swflow.md) | [ユーザーガイド目次へ](../users_guide.md)
 
 浅水流計算の研究用オプション「1 層非静水圧補正」(`f_nonhydrostatic = 1`)
 の方程式・アルゴリズム・適用範囲の解説です。[浅水流計算の章](swflow.md)
@@ -10,7 +10,7 @@
 と docs/developer.md §69 にあります。実装にあたって参考にした他モデルと
 文献は §9 にまとめました。
 
-数式は GitHub の Markdown が描画する LaTeX 記法で書いています。図は
+図は
 `python3 docs/figs/make_guide_figs.py nonhydro` で日英の PNG・SVG を生成します
 (`docs/figs/guide/fig_nonhydro.py`)。
 

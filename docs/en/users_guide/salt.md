@@ -11,13 +11,21 @@ it with `fn_salt`.
 
 The model is a **quasi-static sharp-interface approximation** of the
 same type as the sharp-interface (two-zone) methods established in
-groundwater modeling: the depth and subsurface storage
+groundwater modeling (the idea of the SWI2 package of
+MODFLOW[^bakker13]): the depth and subsurface storage
 (h and Hg) remain the fresh+salt **totals**, and the "salt layer
 thickness" (always the lowest part of the column) is tracked as part of
-those totals. The density difference eps = (rho_s - rho_f)/rho_f
-appears only in the driving head of the salt layer,
-Phi_s = water level + eps x interface elevation; the momentum equation
-of the shallow-water flow is unchanged. Even with a horizontal water
+those totals. The density difference $`\varepsilon`$ appears only in the
+driving head $`\Phi_s`$ of the salt layer; the momentum equation of the
+shallow-water flow is unchanged ($`\eta`$: water level, $`\zeta`$:
+interface elevation).
+
+```math
+\varepsilon = \frac{\rho_s - \rho_f}{\rho_f},
+\qquad
+\Phi_s = \eta + \varepsilon\,\zeta
+```
+ Even with a horizontal water
 surface, a tilted interface produces a hydrostatic pressure difference
 at depth that moves the salt water (removing a partition in a pool ends
 with a stably stratified state, which the model reproduces).
@@ -30,7 +38,10 @@ Coastal section. The salt layer hss sits at the bottom of the surface water h an
 
 - **Seawater intrusion**: with sea cells (with tide) as a prescribed
   salt-water head, intrusion into and retreat from the aquifer. The
-  equilibrium interface follows the Ghyben-Herzberg relation.
+  equilibrium interface follows the Ghyben–Herzberg relation[^bear79]
+  $`z_s = h_f/\varepsilon`$ (the interface depth below sea level is
+  $`1/\varepsilon`$ times the freshwater head above it, about 40 for
+  seawater).
 - **Freshwater lenses** (with recharge) and the quasi-steady position
   of **salt wedges**.
 - **Storm-surge / tsunami run-up and where the seawater goes**: the
@@ -120,5 +131,13 @@ become an "all salt, water level = tide level" boundary:
 - At rapidly advancing intrusion fronts, a small partition error
   between the total and the salt (proportional to dt) can arise from
   time splitting; reducing dt reduces it (see developer.md sec. 47.2).
-- See [test/salt](../../../test/salt/) for schematic experiments (the pool-partition
-  experiment and seawater intrusion, with analytic checks).
+
+## Tests and examples
+
+- [test/salt](../../../test/salt/): the pool-partition experiment (approach to a stable stratification) and seawater intrusion with analytic checks.
+- Worked example of the format: [examples/List_samples/en/list_salt.txt](../../../examples/List_samples/en/list_salt.txt).
+
+## References
+
+[^bear79]: Bear, J. (1979): *Hydraulics of Groundwater*. McGraw-Hill, New York. (sharp-interface approximation and the Ghyben–Herzberg relation)
+[^bakker13]: Bakker, M., Schaars, F., Hughes, J. D., Langevin, C. D. and Dausman, A. M. (2013): Documentation of the Seawater Intrusion (SWI2) Package for MODFLOW. *U.S. Geological Survey Techniques and Methods*, 6-A46. (a practical implementation of the two-zone sharp-interface method)

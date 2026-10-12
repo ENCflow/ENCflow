@@ -139,6 +139,8 @@ Start hsea0 at several tens of the threshold depth dd (typically 1 m).
   a [restart](restart.md) updates occur at the same timing as an
   uninterrupted run (a restart round trip with tide enabled is also
   bit-identical).
+## Tests and examples
+
 - Working example: [test/tide](../../../test/tide/) (drainage -> rising-tide
   flooding). Worked examples of the format:
   [examples/List_samples/list_tide.txt](../../../examples/List_samples/en/list_tide.txt).

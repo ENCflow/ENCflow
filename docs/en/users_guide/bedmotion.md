@@ -302,7 +302,7 @@ the bed elevation.
 - Output: the bed elevation Z (f_out_z) shows the deformed terrain. At the
   end the maximum and minimum of the applied displacement are printed.
 
-## 8. Verification and examples
+## 8. Tests and examples
 
 [test/nhbottom](../../../test/nhbottom/) configuration 3: a Hammack-type uplift of 0.2 m in 1 s over
 |x − x_c| < 20 m in a 10 m deep channel, given as a snapshot table with
