@@ -142,3 +142,5 @@ Start hsea0 at several tens of the threshold depth dd (typically 1 m).
 - Working example: [test/tide](../../../test/tide/) (drainage -> rising-tide
   flooding). Worked examples of the format:
   [examples/List_samples/list_tide.txt](../../../examples/List_samples/en/list_tide.txt).
+- Coupling tide with a conduit outfall and pumping station: [test/coastal_drain](../../../test/coastal_drain/).
+- Storm-surge timber transport and deposition setup: [examples/timberyard](../../../examples/timberyard/).

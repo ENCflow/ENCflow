@@ -120,5 +120,5 @@ become an "all salt, water level = tide level" boundary:
 - At rapidly advancing intrusion fronts, a small partition error
   between the total and the salt (proportional to dt) can arise from
   time splitting; reducing dt reduces it (see developer.md sec. 47.2).
-- See test/salt for schematic experiments (the pool-partition
+- See [test/salt](../../../test/salt/) for schematic experiments (the pool-partition
   experiment and seawater intrusion, with analytic checks).

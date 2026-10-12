@@ -8,6 +8,10 @@ new to ENCflow, we recommend running it once through the
 explains the overall structure of ENCflow and the conventions of its
 input; individual topics are split into per-chapter pages.
 
+See the [test catalogue](../../test/README.en.md) for checks and execution
+procedures, and the [examples catalogue](../../examples/README.en.md) for
+phenomenon-specific setups. Individual chapters also link to relevant cases.
+
 ## Table of contents
 
 **Part I: The big picture** (this page)

@@ -356,3 +356,8 @@ A·dH/dt = Qin − Q(H) の貯留減衰として自然に表現されるため�
 [examples/List_samples/list_structure.txt](../../examples/List_samples/list_structure.txt)。
 堤防の越流・破堤や河道の通水は [河道の章](channel.md) を参照して
 ください。
+
+## 検証・例題
+
+- [test/coastal_drain](../../test/coastal_drain/): 管路から直接取水する機場(`f_pump_src=1`)と海域吐口を組み合わせた排水の検証ケース。
+- [test/damwq](../../test/damwq/): ダムの捕捉・一定放流とため池への貯留を水質と結合し、質量収支と完全混合の解析値を検定。

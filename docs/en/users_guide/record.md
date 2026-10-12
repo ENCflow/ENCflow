@@ -1,7 +1,5 @@
 # Measurement (&list_record)
 
-> English mirror of docs/users_guide/record.md (based on commit 6c5acfc). The Japanese file is the master copy.
-
 [Back to the User's Guide index](../users_guide.md)
 
 Sets up **probes** (point time series) and **flux transects** (time
@@ -36,59 +34,98 @@ outside the channel during inundation is captured too).
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| pbxytype | 0 | How coordinates are specified. 0: cell numbers (ix, iy) (**1-based**), 1: real coordinates (x positive east, y positive north; absolute coordinates if georeferencing exists, otherwise local coordinates with the origin at the southwest corner - [the coordinate systems chapter](coordinates.md)) |
-| pbxy | - | Probe positions `(x, y, number)`. Multiple probes allowed |
+| pbxytype | 0 | 0: cell indices (ix, iy), 1: real coordinates, x east and y north. Use absolute coordinates in the georeferenced system if available; otherwise use metres from the southwest corner. See [coordinate systems](coordinates.md) |
+| pbxy | - | Specify probe n as `pbxy(:,n) = x, y`. The number n is an array index, not a third input value |
 
-Output is written one file per point, e.g.
-`result/probes/probe0001.csv`. The columns are time (hour/min), ground
-elevation z, depth h, velocities u, v, |V|, discharge q, subsurface
-storage hg, suspended sediment hs, and soil depth sd (plus
-concentration C and surface load cq when water quality is enabled).
-Columns of unused features stay 0.
+Even with real coordinates, a probe records **the value of the cell containing
+the point**. It does not interpolate a point value from surrounding cells.
+
+Output is one file per point, e.g. `result/probes/probe0001.csv`. Columns are
+time (hour/min), ground elevation z, depth h, velocities u, v, |V|,
+**discharge per unit width q (m²/s)**, subsurface storage hg, suspended
+sediment hs, and soil depth sd. Water quality adds concentration C (mg/L)
+and surface load cq (g/m²). The cell value q differs from the total discharge
+Q (m³/s) crossing a transect.
 
 ## Flux transects (time series of crossing discharge)
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| flxytype | 0 | 0: cell-number specification (a DDA staircase surface connecting the two end-cell centers), 1: real-coordinate specification (coordinates interpreted as for probes; integrated over the in-cell segment portions of every cell the segment grazes) |
+| flxytype | 0 | 0: specify end cells and select a cell sequence by DDA, 1: split the specified real-coordinate segment into its portions within crossed cells and integrate. Coordinates are interpreted as for probes |
 | flxyfile | 0 | 0: specify directly with flxy, 1: read from the transect file fn_flxy |
-| flxy | - | Start and end points of a transect `(right-bank x, right-bank y, left-bank x, left-bank y, number)` |
-| fn_flxy | - | Transect file (one transect per line, comma- or space-separated: "right-bank x, right-bank y, left-bank x, left-bank y") |
+| flxy | - | Specify transect n as `flxy(:,n) = xR, yR, xL, yL`. The number n is an array index, not a fifth input value |
+| fn_flxy | - | One transect per line, with four comma- or space-separated values: "xR yR xL yL" |
 
-- The sign of the discharge is **positive for flow passing to the
-  right when going from the start point to the end point** (common to
-  cell-number and real-coordinate specification). In a river, taking
-  the right bank as the start and the left bank as the end makes the
-  downstream direction positive.
-- A diagonal transect specified by cell numbers is converted to a DDA
-  staircase surface (a stepped surface following cell interfaces), so
-  transects can be drawn at any angle. **The two ends must not be the
-  same cell** (with a single cell the orientation of the measured
-  surface is undetermined, so it is an error; use real-coordinate
-  specification to measure within one cell).
-- **With real-coordinate specification (flxytype=1), even a short
-  transect that does not span multiple cells can be measured** - the
-  orientation and length of the transect are determined from the real
-  coordinates, and the discharge corresponding to the in-cell segment
-  portion (component normal to the segment x segment length) is
-  integrated. If the transect is extended across multiple cells the
-  definition continues seamlessly, and in a uniform flow it is exact
-  for any position, inclination, and length.
-- Output is one file per transect, e.g. `result/fluxes/flux0001.csv`.
-- Discharge transferred through structures such as culverts does not
-  register on transects ([the structures chapter](structure.md)).
+Both modes count discharge as **positive for flow passing to the right of
+the direction from start R to end L**. In a river, label the banks while
+looking downstream: taking the right bank as R and the left bank as L
+makes downstream flow positive.
 
-![Probes and flux transects](../../figs/record_transect_en.png)
+### Cell indices (flxytype=0)
 
-(a) With cell numbers, a probe writes the time series of cell (ix, iy) to
-probes/, and a transect converts the line joining the right-bank (start)
-and left-bank (end) cell centres into a DDA staircase surface and writes the
-crossing discharge to fluxes/. Discharge is positive for flow passing to the
-right of start→end (right bank→left bank makes downstream positive). (b)
-With real coordinates (flxytype = 1) the flux component normal to the
-segment times the in-cell segment length is integrated in every cell the
-segment grazes, so even a short transect inside one cell can be measured.
-The figure is produced by docs/figs/make_guide_figs.py.
+Follow the line between the end-cell centres one cell at a time along the
+axis with the larger index difference (columns if tied), rounding the
+other index to the nearest cell (DDA). Both end cells are included, so the
+integration spans their outer edges along the major axis. **The two end
+cells must differ.**
+
+- **ENC:** Sum signed flows on the 8-neighbor edges crossing the positive
+  short-axis boundary of the selected cell sequence. In panel (a), columns
+  are the major axis and the short axis is row index j, so the integration
+  follows the south cell faces. For a row-major sequence it follows the
+  east faces. Only edges within the sequence's major-axis range are counted;
+  edges leading outside that range are excluded.
+- **STG:** Integrate cell values: the short-axis flux component times the
+  cell width for each tread, plus the average long-axis flux of the two
+  cells straddling each riser times its width, with the normal sign. This
+  integration passes through cell centres, unlike the blue ENC cell
+  boundary in panel (a).
+- For a one-cell-wide diagonal channel, a diagonal STG transect normal to
+  the flow can count the same cell's flow in both the tread and riser terms,
+  yielding twice the discharge. Use a horizontal or vertical transect for
+  this configuration. ENC cell-index integration avoids this duplication
+  by counting each crossing edge once.
+
+### Real coordinates (flxytype=1)
+
+Split the specified segment at cell interfaces and sum the **normal flux
+component times the in-cell segment length**, with its sign, using the
+flux vector of each cell. Both ENC and STG use this method. It does not
+directly sum intercell edge flows, so even in ENC its result need not
+always equal the cell-index measurement.
+
+Only the specified segment is measured; endpoints are not extended to cell
+edges. **A short transect entirely inside one cell is valid**, but identical
+start and end points cause an error. For a uniform flux vector, this gives
+the exact integral across the segment at any position, angle, and length.
+
+### Outputs and excluded transfers
+
+Output is one file per transect, e.g. `result/fluxes/flux0001.csv`. Columns
+are time (hour/min), Q (m³/s), Hmax (m) and Vmax (m/s) over the sampled
+cells, and B (m). B is `abs(Q / Hmax / Vmax)`, or zero if the product of
+Hmax and Vmax is zero; it is not a direct measurement of channel width.
+Water quality adds load flux L (g/s) and cumulative load Lcum (kg).
+
+Discharge transferred through structures such as culverts does not register
+on transects ([structures](structure.md)). These filenames assume the
+default result directory and no filename suffix.
+
+![Probes, ENC cell-index transects, and real-coordinate transects](../../figs/record_transect_en.png)
+
+(a) An illustrative 10-column, 8-row grid. P=(3,2) records that cell's time
+series. The dashed orange line from R=(3,6) to L=(8,5) selects the six pale
+orange cells. The solid blue line is the south boundary used for ENC
+integration, distinct from the path through cell centres used by STG.
+The channel occupies i=5,6 and flows south. (b) An illustrative 5-column,
+4-row grid with a southwest origin and 1 m cells. The segment from
+R=(0.6,0.7) to L=(3.6,2.6) m is split by crossed cell, with white circles
+marking intersections. The small diagram below shows a one-cell transect
+from (3.3,1.3) to (3.9,1.75) m. Cells have the same displayed size in both
+panels; green arrows indicate the positive side. These are placement
+examples, separate from the input example and from simulation results.
+Regenerate Japanese and English PNG/SVG with
+`python docs/figs/make_guide_figs.py record`.
 
 ## Summary output
 
@@ -100,10 +137,25 @@ probes and all transects are written together to `result/summary.csv`.
 Annotated list of all parameters:
 [examples/List_samples/list_record.txt](../../../examples/List_samples/en/list_record.txt).
 
+## Tests and examples
+
+- [test/chichibu](../../../test/chichibu/): discharge and depth records from multiple main-channel transects and probes; `record_reach.txt` provides a 12-transect longitudinal setup.
+- [test/bendloss](../../../test/bendloss/): transect records in straight, zigzag and diagonal channels, including flood-wave attenuation comparisons.
+
 ## Post-hoc measurement from distributed output (utils/rerecord)
 
-For the case "I want to add measurement points after the run has
-finished", the utility `utils/rerecord` reconstructs time series from
-the already-written distribution files (output of the flow direction
-`f_out_qd` is required; [the input/output chapter](io.md)). This
-avoids redoing a long computation.
+`utils/rerecord` takes three arguments: the simulation parameter file,
+a flow-direction distribution `QdXXXX.bil`, and the discharge distribution
+`QXXXX.bil` to measure. It writes probe and transect measurements for that
+one pair of distributions to CSV files with the suffix `_re`. Enable
+flow-direction output `f_out_qd` and discharge output `f_out_qq` beforehand
+([input/output](io.md)).
+
+It reconstructs cell flux vectors from discharge and direction, not the ENC
+edge flows used during a run. Cell-index transects therefore also use
+cell-value integration, including its limitation for narrow diagonal
+channels. The current utility records time as zero and does not reconstruct
+depth, velocity, or other state variables, so it does not reproduce the
+complete in-run measurement CSV. For a time series, measure each
+distribution separately and associate the results with the original output
+times.

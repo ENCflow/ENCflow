@@ -108,4 +108,6 @@
 
 - 全パラメータの注釈付き一覧: [examples/List_samples/list_initial.txt](../../examples/List_samples/list_initial.txt)
 - 静水+ユーザールーチンの水位の山: [tutorials/wave](../../tutorials/wave/)
-- 乾いた地表+降雨・流入から開始: 実地形の例題([examples/](../../examples/))
+- 静水上の水の山を初期場に与える回帰ケース: [test/wave](../../test/wave/)
+- 乾いた地表+降雨から開始する実地形のケース: [test/chichibu](../../test/chichibu/)
+- 海を通常セルとして解き、初期水位を `f_htype=2` で与える例: [examples/tsunami_fault](../../examples/tsunami_fault/)

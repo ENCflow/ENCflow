@@ -1,6 +1,6 @@
 # Input and Output Formats
 
-> English mirror of docs/users_guide/io.md (based on commit b9bee77). The Japanese file is the master copy.
+> English mirror of docs/users_guide/io.md. The Japanese file is the master copy.
 
 [Back to the User's Guide index](../users_guide.md)
 
@@ -13,8 +13,8 @@ etc.) supports three formats. All of them are selected in
 - The matrix order puts the **first row at the northern edge** (rows =
   y direction, north to south; columns = x direction, west to east).
   This is the same orientation as GIS rasters and paper maps.
-- All formats use the same order and the same values (the format is
-  merely a difference of container).
+- The mapping between cells and array entries is shared. Numerical
+  storage precision and georeferencing differ between formats.
 
 ## Input format (f_input_mode)
 
@@ -52,11 +52,19 @@ Multiple formats can be written at once as a **bit sum**.
 | 2 | bil only |
 | 3 | text + bil |
 | 4 | GeoTIFF only |
+| 5 | text + GeoTIFF |
+| 6 | bil + GeoTIFF |
 | 7 | text + bil + GeoTIFF |
 
-When the coordinate system is managed, a `.hdr` is written alongside
-bil output, and the CRS is embedded in GeoTIFF output
-(see [the coordinate systems chapter](coordinates.md)).
+Real fields are written as `f12.4` (four decimal places) in text and as
+float32 in bil / GeoTIFF. Values in different formats, or the internal
+real values, therefore need not agree bit for bit. Integer fields are
+written as integers.
+
+With an active georeference, bil gets a `.hdr` describing location,
+resolution and pixel type. GeoTIFF output requires an active georeference
+and embeds location and the configured CRS information. Text contains no georeference
+(see [Coordinate Systems](coordinates.md)).
 
 > **GeoTIFF output is uncompressed** (4 bytes per cell; unlike
 > reading, compressed writing is not supported). If you output many
@@ -74,7 +82,7 @@ bil output, and the CRS is embedded in GeoTIFF output
 > compressed GeoTIFFs open in GIS as usual, and are **also directly
 > usable as ENCflow input (f_input_mode=4) and by utils/out2vtk**
 > (reading Deflate with predictor 3 is supported, and agreement with
-> real GDAL outputs is checked in the regression tests — test/gtif).
+> real GDAL outputs is checked in the regression tests — [test/gtif](../../../test/gtif/)).
 > Running out2vtk right after the compression is fine (it assembles
 > exact file names, so the `_c` files are ignored and the originals
 > are used). If you delete the originals to save space and keep only
@@ -83,31 +91,45 @@ bil output, and the CRS is embedded in GeoTIFF output
 
 ## Output file scheme
 
-Outputs are written to `dir_result` (default `result/`) with names of
-the form **prefix + 4-digit number**.
+Distributed outputs go to `dir_result` (default `result/`) with names of
+the form **prefix + 4-digit number + outfn_suffix + extension**.
+The suffix is empty by default. For example, `H0001.txt` is a regular
+depth output; with `outfn_suffix="_A"`, it becomes `H0001_A.txt`.
 
-![Raster order and output file scheme](../../figs/io_files_en.png)
+![Raster order, storage formats and output file names](../../figs/io_files_en.png)
 
-(a) The first raster row is the northern edge (rows north to south, columns
-west to east), and txt, bil and GeoTIFF share the same order and values.
-(b) Distributed outputs are prefix + 4-digit number (0000 = state at start,
-0001 onward = every dt_file, 9998 = final step, 9999 = run statistics);
-Z0000, X0000, FILENUMBER.csv and Log.txt are always written, and probes/,
-fluxes/ and summary.csv appear when measurement (fn_record) is enabled. The
-figure is produced by docs/figs/make_guide_figs.py.
+(a) A 4-row by 5-column example is shown as matrix text and as
+a grid in the same orientation. Example values are abbreviated to one
+decimal place. The order is shared, but real-number precision differs
+between text and binary output. (b) The 4-digit raster number distinguishes
+starting state, regular output, final state and run statistics.
+(c) Auxiliary files and measurement CSVs. Their 4-digit measurement IDs
+identify points / transects, independently of raster output numbers.
+File examples use an empty suffix.
+An [SVG version](../../figs/io_files_en.svg) is also available.
+Run `python docs/figs/make_guide_figs.py io` to regenerate only this figure.
 
 **Meaning of the number**
 
 | Number | Meaning |
 |---|---|
 | 0000 | state at the start of this run (in a restart run, the restored state) |
-| 0001- | sequential numbers every dt_file (the mapping to times is in `FILENUMBER.csv`) |
+| 0001- | sequential outputs determined by `dt_file` and the raster output window (time mapping in `FILENUMBER.csv`) |
 | 9998 | state at the final time step |
-| 9999 | statistics such as maxima over the whole computation period |
+| 9999 | statistics such as maxima within this run |
 
-**Prefixes and output flags** (enabled with `f_out_XXX = 1`. By
-default only H, H9999, and the initial ground elevation Z0000 are
-written.)
+`0000`, `9998` and the end-of-run `9999` are written independently of
+the regular output window. See [Time and Output Intervals](time.md) for
+intervals and windows. Restart mode 1 continues the saved regular output
+number; mode 2 resets the counter to zero. Both write the restart run's
+starting state as `0000`. Maximum statistics are not saved in restart
+files: `9999` covers this run, including the restored starting state
+([Suspend and Restart](restart.md)).
+
+**Prefixes and output flags** (enabled with `f_out_XXX = 1`). Basic defaults
+are H and H9999, plus the always-written starting ground Z0000 and mask
+X0000. Active physical processes can add automatic outputs. The table
+lists the main outputs.
 
 | Flag | Default | File | Contents |
 |---|---|---|---|
@@ -131,6 +153,7 @@ written.)
 | f_out_hbd | 0 | Bf | floating building-debris volume (m³/m²) (requires [Building destruction and debris](bldgdebris.md)) |
 | f_out_wbd | 0 | Bd / Bd9999 | deposited debris (m³/m²) and the maximum arrival max(floating+deposited) over the run (the debris hazard map) |
 | f_out_bds | 0 | Bs | destroyed fraction of buildings 1 − remaining/initial stock (0-1; the final frame is the damage-ratio map) |
+| — (with f_bedslide) | — | Hb / Vb | moving basal-layer thickness (m) and diagnostic speed (m/s); automatic ([Sediment and landform change](geomorph.md)) |
 | f_out_fs | 0 | Fs / Fs9999 | slope safety factor Fs distribution and its period minimum (requires f_slide = 1 or 2; -1 = not evaluated; see [Sediment and landform change](geomorph.md)) |
 | f_out_hmax | 1 | H9999 | maximum depth |
 | f_out_hmaxt | 0 | Ht9999 | time of maximum depth |
@@ -142,10 +165,23 @@ written.)
 | — (with fn_swi) | — | Swi / Swi9999 / Swit9999 | Soil Water Index (mm) distribution, period maximum, and its time ([Soil Water Index](swi.md); automatic) |
 | — (always) | — | X0000 | domain mask (0: outside, 1: land, 2: sea); for visualization and checking the active domain in GIS |
 
-In addition, `Log.txt` (identical to the on-screen log) and a copy of
-the parameter file used are always saved.
+`FILENUMBER.csv` maps raster output numbers to calendar time, `t(s)`
+and step `it`. Its `9999` row records the final time when statistics were
+written, not the time of each cell's maximum. No separate row is added
+for X0000.
 
-Distributed outputs can be opened directly in GIS (QGIS / ArcGIS), and
+Points / transects configured in `fn_record` create time series such as
+`probes/probe0001.csv` / `fluxes/flux0001.csv`. Their 4-digit numbers are
+point / transect IDs. After recording the initial state, records are
+appended at `dt_recrd` / measurement-window checks. If any points or
+transects exist, `summary.csv` stores their measurement summary at the end
+([Flux Transects and Probes](record.md)).
+
+The state log named by `fn_log` (default `Log.txt`) and copies of all
+configuration files used are also saved. Input rasters are not copied
+as part of this configuration record.
+
+Georeferenced bil / GeoTIFF outputs can be opened in GIS (QGIS / ArcGIS), and
 **utils/out2vtk** converts them to VTK files for ParaView — 3D terrain
 views, time-animated water surfaces, and draping of satellite imagery
 (see [utils/out2vtk/README.md](../../../utils/out2vtk/README.md),
@@ -172,4 +208,9 @@ columns, see [Tutorial Step 1](../../../tutorials/wave/en/README.md#running).
 | dir_result | "result" | result output directory |
 | dir_save | "save" | directory for state files ([Suspend and Restart](restart.md)) |
 | fn_log | "Log.txt" | log file name |
-| outfn_suffix | "" | string appended to output file names (to avoid collisions when running scenarios side by side in the same directory) |
+| outfn_suffix | "" | string inserted just before the extension of rasters and measurement CSVs |
+
+`outfn_suffix` also applies to Z0000 / X0000, bil `.hdr` files, CSVs in
+probes/ and fluxes/, and summary.csv. It does not apply to
+`FILENUMBER.csv`, logs or configuration copies. Use separate `dir_result`
+directories to preserve results from separate runs.
