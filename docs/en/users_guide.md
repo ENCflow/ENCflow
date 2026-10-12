@@ -52,6 +52,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Internal hydraulic structures](users_guide/structure.md) (&list_struct_pump/culvert/diversion/dam) -- pumps, culverts, diversions, dams and lakes
   - [Hydraulics of structures and boundaries](users_guide/hydraulics.md) -- Honma weir formula, the three culvert regimes, dam operation rules, free-outflow and radiation boundaries, inflow distribution, with equations and the basis of the coefficients (supplement)
 - [Channels](users_guide/channel.md) (&list_channel) -- levees, channel width, cross-section shape, breach
+  - [Channels explained](users_guide/channel_models.md) -- crest and opening correction of the virtual walls, plan-area fraction of the subgrid width, equivalent depth of the section shape σ, breach crest and the basis of the defaults (supplement to channels)
 - [Rainfall and weather](users_guide/forcing.md) (&list_precip / intercept / meteo / evap / snow) -- precipitation, interception, air temperature, evapotranspiration, snow accumulation and snowmelt
   - [Rainfall and meteorology models explained](users_guide/forcing_models.md) -- interception models, elevation corrections, Hamon/Thornthwaite PET and the degree-day method, with the basis of the defaults (supplement to rainfall and weather)
 - [Groundwater](users_guide/gwflow.md) (&list_gwflow plus model-specific settings) -- infiltration, lateral flow, weathered bedrock layer, conduit continuum layer (sewer networks, fractured bedrock)
