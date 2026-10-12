@@ -8885,7 +8885,9 @@ kdpart・tide・coastal_drain・gwseep・damwq の reference(2026-08-28 作成)�
 ## 69. 非静水圧(1 層 NH)拡張の設計決定(2026-10-05 合意。実装は段階的)
 
 設計の正本は docs/nonhydrostatic_plan.md(本書だけで完結する形)。ここには
-決定事項と理由の要点だけを記す。
+決定事項と理由の要点だけを記す。利用者向けの解説(方程式・射影・活性集合・
+砕波・底面項の図と、参考にした他モデルの引用)は docs/users_guide/nonhydrostatic.md
+(英語版 docs/en/users_guide/nonhydrostatic.md)。
 
 - **方式**: 現行の静水圧ステップ(適応 RK・保存形移流・摩擦・堤防・
   構造物)を predictor にし、boundary_uvmn と continuous の間でセル
