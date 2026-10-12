@@ -1,43 +1,55 @@
 # Suspend and Restart
 
-> English mirror of docs/users_guide/restart.md (based on commit 6c5acfc). The Japanese file is the master copy.
+> English mirror of docs/users_guide/restart.md. The Japanese file is the master copy.
 
 [Back to the User's Guide index](../users_guide.md)
 
-Running a long computation in segments, or branching multiple
-scenarios from an intermediate state -- that is what the state save
-(save) and restore (restore) features are for. They are controlled by
-two flags in `&list_sysparam`.
+State save and restore let you run a long computation in segments or start
+several scenarios from a spun-up state. Set the directory and restore mode
+in `&list_sysparam`.
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| f_state_save | 0 | 1: save the state to dir_save (default `save/`) at the end of the computation |
-| f_state_restore | 0 | 1: **restart** from the saved state (time continues) / 2: **use the saved state as an initial condition** (new time axis) |
+| f_state_save | 0 | 1: save the state to dir_save during finalization |
+| f_state_restore | 0 | 0: no restore / 1: continue the same time axis / 2: use the saved state on a new time axis |
 | dir_save | "save" | directory used for saving and restoring |
 
-What is saved is the state of the fields such as depth and
-topography, the internal state of the dynamics (edge velocities and
-discharges), and the private state of modules that hold internal
-state. The files are written with zero-suppressing lossless
-compression, so even wide-area computations stay at a realistic size.
+## Saved contents and the two restore modes
 
-![Save and the two restore modes](../../figs/restart_modes_en.png)
+Both modes restore **the shared fields, the ENC dynamics, and the module
+state included in the save**. Mode 2 is not limited to depth and terrain.
 
-The saving run writes its state to save/ at the end of the computation.
-f_state_restore = 1 continues the same time axis from tt (0000 is the
-restored state, tt may be extended, and the results match an uninterrupted
-run bit for bit); f_state_restore = 2 carries over only the fields and
-starts several scenarios on a new time axis with a new t0 and date0_c (dt
-may change). The figure is produced by docs/figs/make_guide_figs.py.
+| File | Saved contents |
+|---|---|
+| `state.dat` | Six shared fields: `h, z, hrs, hg, sd, hs` (depth, terrain, storage, sediment, etc.) |
+| `swflow_enc.dat` | Edge velocity `uv` and discharge `mn`; dynamic allocation and conveyance tables when active |
+| Private files for individual features | State saved by groundwater, snow, driftwood, building debris, and other features |
+| `save_info.txt` | Format version, grid counts, real precision, field count, saved time `t`, step `it`, output counter `ifn`, `t0`, and `dt` |
+
+Derived quantities, including cell velocities and discharges, are recomputed
+from the restored state. Arrays use zero-suppressing lossless compression.
+Not every working array or history is saved; statistics and exceptions for
+specific features are described below.
+
+![State save and the two restore modes](../../figs/restart_modes_en.png)
+
+Figure: (a) The saving run writes its state to `dir_save` during finalization.
+The saved files feed either (b) mode 1, continuing the time axis, or (c) mode 2,
+branching into scenarios A and B. `t_s` is `t` in `save_info.txt`, the actual
+saved time. These are schematic timelines, not numerical results. Mode 1
+continues the saved step and output counters; mode 2 starts both counters at
+zero on a new time axis. **In either mode, `0000` is this run’s initial state.**
+Maxima and cumulative cell discharge are not saved; they are recomputed within
+the run. An [SVG version](../../figs/restart_modes_en.svg) is also available.
+Regenerate only this figure with `python docs/figs/make_guide_figs.py restart`.
 
 ## Restarting (f_state_restore = 1)
 
-Runs the continuation of a suspended run. **The time axis continues**,
-and the times, step numbers, and even the sequential numbers of
-output files are identical to a run without interruption.
-
-Usage is just "add `f_state_restore = 1` to the original parameter
-file". To extend the computation, also increase `tt`.
+Continue from the saved step on **the same time axis**, `t = t0 + dt × it`.
+Set `f_state_restore = 1` in the original parameters and extend `tt` beyond
+the saved time. The implementation requires `ceiling((tt - t0) / dt)` to
+exceed the saved step `it`. `tt` remains the end time on that axis, not an
+additional duration.
 
 ```
   f_state_save = 1          ! saving-side run: save to save/ at the end
@@ -47,49 +59,77 @@ file". To extend the computation, also increase `tt`.
   tt = 172800.0             ! (extend the end time if prolonging)
 ```
 
-- **The results match a run without interruption bit for bit**
-  (ENCflow's restart is not "roughly the same" but exactly the same).
-- Since the save destination equals the load source, a **restart
-  chain** of save -> restart -> save -> ... runs without editing
-  parameters (for long-term runs advanced one cycle at a time).
-- `t0` and `dt` must match the values at save time (a mismatch stops
-  the run; restarting with a changed dt is not possible).
-- On restore, the version, grid counts, and real-number precision are
-  checked, and a non-matching file stops with an explicit error
-  (accidentally reading the save of a different case cannot happen).
+- Keep `t0` and `dt` as at save time; mismatches stop the run. Also retain
+  `date0_c`, the inputs, physical settings, and output intervals.
+- The saved `it` and `ifn` are retained. Regular distributed outputs continue
+  the numbering and correspond to an uninterrupted run if output settings
+  are unchanged. `0000` is a fixed initial-state slot; after restart it
+  contains the state at the saved time.
+- With `f_state_save = 1` in the restarted run, finalization saves again to
+  the same `dir_save`. Advance `tt` for each save–restart–save cycle.
 
-**What does not continue across a restart**: the maximum-value
-statistics (the H9999 family) and the cumulative discharge are not
-saved; they are re-accumulated from zero within the restart run
-(becoming statistics of the restarted interval only). If you need
-through-run statistics, post-process the distributed outputs.
+### Agreement with an uninterrupted run
+
+Mode 1 is designed for bitwise agreement with an uninterrupted run when using
+the same executable, real precision, computing environment, grid, inputs, and
+physical settings, in a configuration whose required state is saved and
+restored. See [Parallel Execution](parallel.md) for comparisons between builds
+with different compiler or optimization settings. This is not an unconditional
+claim about statistics, entire logs, or every combination of features.
+
+- Enabling dynamic allocation or dynamic conveyance only at restore time
+  rebuilds the tables from the restored depth and may change the last digits
+  of derived quantities.
+- The nonhydrostatic bottom-acceleration term, `f_nh_bottom = 1`, does not
+  save its finite-difference history. The first projection after restart
+  uses zero bottom acceleration, so exact agreement with an uninterrupted
+  run is not guaranteed when the bed moves.
+
+The basis is [developer.md](../../developer.md) §7 and §69.10, together with
+`m_state.f90`, `m_swflow_enc.f90`, and `m_swflow_enc_nh.f90`.
 
 ## Using as an initial condition (f_state_restore = 2)
 
-Carries over **only the fields** from the saved state, and starts a
-new time axis (new `t0`, new calendar `date0_c`, and **dt may also be
-changed**) from the first step. The typical use is **spin-up
-(warm-up)**:
+Restore the same set of saved files and start with **`it = 0` and `ifn = 0`**
+at a new `t0` and calendar `date0_c`. `dt` may also change. Unlike mode 1,
+this mode does not check the new `t0`, `dt`, or end step against the saved
+axis. A typical use is branching after spin-up:
 
-1. Run for a while with, e.g., normal river discharge to let the
-   fields settle, and save
-2. Using those fields as the initial condition, run multiple flood
-   scenarios with a new reference date and time
+1. Let the fields settle under normal river discharge, for example, and save.
+2. Read those saved files as the initial state for each of scenarios A and B.
+3. Run each scenario with its new time axis and forcing.
 
-Unlike mode 1, there is no contract of "exact agreement with a run
-without interruption" (since the purpose is generating initial
-conditions). Also, **time-series forcings** such as tide, boundary
-inflow, and rainfall **are read from the beginning of the new time
-axis**, so making the forcing values at the start of a scenario
-consistent with the saved state is the user's responsibility (if they
-disagree, disturbances caused by the step change run through the
-early computation).
+Time-series forcing, such as tide, boundary inflow, and rain, is **read again
+using the new time axis**. Align the forcing at scenario start with the
+restored state; large discrepancies can cause initial disturbances. Mode 2
+provides initial conditions and does not promise exact agreement with an
+uninterrupted run.
 
-## Restrictions
+When using `bedmotion`, mode 2 also starts its applied-displacement history
+from zero. Set the reference for the new displacement series so that it does
+not reapply displacement already present in the saved terrain.
 
-- State save and restart apply to computations on the ENC grid (the
-  default). The legacy STG scheme kept for comparison cannot restart
-  (it stops with an explicit error).
-- The execution environment (number of threads, number of MPI ranks)
-  may differ from save time (the results do not change -- see
-  [Parallel Execution](parallel.md)).
+Use a separate `dir_result` for each scenario. If saving again, also give each
+scenario its own copy of `dir_save`. The save destination is the load source,
+so a new save must not overwrite the original branching state needed by the
+other scenario.
+
+## Statistics and restrictions shared by both modes
+
+**Maximum statistics (such as the H9999 family) and cumulative cell discharge
+`qcum` are not saved.** They are recomputed within the restored run; maxima
+also include its initial restored state. `9999` describes that run, not the
+whole computation from before the save. Post-process outputs from all intervals
+when whole-run statistics are needed. If reusing `dir_result`, retain the
+previous interval’s outputs: fixed slots such as `0000`, `9998`, and `9999`
+are replaced by the new run’s outputs.
+
+Restore checks the format version, grid counts, real precision, and field
+count, and checks for the required private files. **These checks do not detect
+every different case with the same grid counts, or establish that grid
+locations and inputs match.** The user must keep the case and settings
+consistent.
+
+State restore supports ENC. The legacy STG scheme stops when
+`f_state_restore > 0`. Thread and MPI rank counts may change under the
+reproducibility conditions above and in [Parallel Execution](parallel.md).
