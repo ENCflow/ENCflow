@@ -111,9 +111,9 @@ dir_data 相対です。内部で使う時刻は `t0 + 表の時刻 × bm_tscale
 ### パターン A: 断層パラメータから(utils/fault2disp)
 
 地震の津波はこのパターンです。断層の位置・走向・傾斜・すべり角・長さ・
-幅・すべり量・破壊開始時刻・立ち上がり時間から Okada (1985) の式で
+幅・すべり量・破壊開始時刻・立ち上がり時間から Okada の式[^okada85]で
 変位場を作り、表まで書き出します。複数セグメント(破壊の時間差つき)、
-水平変位の寄与 u_h·∇z(Tanioka & Satake 1996。地盤高を与えたとき)に
+水平変位の寄与 $`u_h\cdot\nabla z`$[^tanioka96](地盤高を与えたとき)に
 対応します。座標の与え方は 3 通りあり、どれも fault2disp 側で吸収する
 ので本体の設定は変わりません(詳細は fault2disp README §3)。
 
@@ -200,6 +200,17 @@ bedmotion は地形も動かし、適用時の水深を保持します。
 
 ## 5. 時間の扱いと静水圧・非静水圧
 
+```math
+d(t) = d_k + \frac{t - t_k}{t_{k+1} - t_k}\left(d_{k+1} - d_k\right)\ (\texttt{f\_bminterp} = 1),
+\qquad
+z^{\,n+1} = z^{\,n} + \left[d(t_{n+1}) - d_{prev}\right],
+\quad h\ \text{不変},\quad e = z + h
+```
+
+断層の変位場では、海底の鉛直変位に水平変位と海底勾配の積を加えた
+$`\eta_0 = u_z + u_h\cdot\nabla z`$[^tanioka96]を初期水面変位とみなすのが
+急斜面の海底で重要で、fault2disp が地盤高を与えられたときに計算します。
+
 - 各ステップの頭で、そのステップ末尾の時刻の変位を補間し、前回適用した
   変位との**差分**を z に加えます。線形補間のとき底面速度はスナップ
   ショット間で一定で、境界で速度が跳びます。
@@ -210,7 +221,7 @@ bedmotion は地形も動かし、適用時の水深を保持します。
 - 静水圧計算では底面の持ち上げがそのまま水面に写ります。震源の幅が
   水深に比べて十分広い海溝型地震はこれで十分です。
 - 震源の幅が水深と同程度の短い変位(分岐断層、深海の狭い滑り、海底
-  地滑り)では、水柱の慣性で短波が減衰します(Kajiura フィルタ)。
+  地滑り)では、水柱の慣性で短波が減衰します(Kajiura フィルタ[^kajiura63])。
   [非静水圧補正](swflow.md)の f_nonhydrostatic=1 と f_nh_bottom=1 が
   これを 1 層近似 1/(1 + βk²)² で与えます(developer.md §69.10)。
   このとき速度の跳びが加速度のパルスとして入るので、スナップショットを
@@ -277,3 +288,9 @@ bedmotion は地形も動かし、適用時の水深を保持します。
   湾口の分岐断層(岬が 0.8 m 隆起)の 3 セグメント。沿岸の地盤変動が
   起こす擾乱が沖の津波より 10 分早く海岸に現れ、沈降した湾奥の平野の
   浸水が早まる。
+
+## 参考文献
+
+[^okada85]: Okada, Y. (1985): Surface deformation due to shear and tensile faults in a half-space. *Bull. Seismol. Soc. Am.*, 75, 1135–1154.
+[^tanioka96]: Tanioka, Y. and Satake, K. (1996): Tsunami generation by horizontal displacement of ocean bottom. *Geophys. Res. Lett.*, 23, 861–864.
+[^kajiura63]: Kajiura, K. (1963): The leading wave of a tsunami. *Bull. Earthq. Res. Inst. Univ. Tokyo*, 41, 535–571.
