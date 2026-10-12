@@ -1,103 +1,254 @@
-"""潮位の章の図: 潮位時系列(tival)と、海セルの見かけ水柱厚 hsea0・上げ潮の浸水・干潮の排水の断面。"""
-from _style import *
+"""Tide boundary sections; the published time-series panel stays unchanged.
+
+Panel (a), including its title, axes and notes, is a lossless crop from
+f17ccad218822b7f19a776f4647f3ed84e6e34f6 at its original pixel position.
+Only (b)/(c) are drawn. They are illustrative, not computed A/B snapshots.
+See m_tide.f90 for the forced sea-column representation.
+"""
+from pathlib import Path as FilePath
+from io import BytesIO, StringIO
+import base64
+import hashlib
 import numpy as np
+from PIL import Image
+from _style import (plt, Rectangle, Polygon, FIGS, out_path, C_WATER, C_WATER_L,
+                    C_GROUND, C_GROUND_L, C_SEA, C_X, C_G)
+from _schematic import drawing_style, text, block, line, arrow, curve, INK, MUTED, RULE
 
-T = {"ja": {
-    "a": "(a) 潮位の時系列(titype = 2: tival)",
-    "b": "(b) 上げ潮・高潮(時刻 A): η が陸の地盤より高い → 陸側の浸水を浅水計算で解く",
-    "c": "(c) 干潮(時刻 B): η が下がり、陸側の滞留水が海へ抜ける",
-    "xlabel": "時刻 (min)", "ylabel": "潮位 η (m)",
-    "sea": "海セル(fn_sw = 1)\n潮位 η(t) を水位として強制\n流れは解かない",
-    "interp": "線形補間。範囲外は端値保持\n更新間隔 dt_tiupdate",
-    "hsea0": "見かけ水柱厚 hsea0\n(乾燥判定・エッジ水深・\n摩擦を賄う。標準 1 m、\ndd の数十倍以上)",
-    "land": "陸セル(通常の浅水計算)",
-    "flood": "浸水", "drain": "排水",
-    "datum": "標高基準 0(z と同じ)",
-    "pond": "滞留水",
-}, "en": {
-    "a": "(a) tide-level time series (titype = 2: tival)",
-    "b": "(b) rising tide / surge (time A): η above the land -> flooding on land is solved",
-    "c": "(c) low tide (time B): η drops and ponded water on land drains to the sea",
-    "xlabel": "time (min)", "ylabel": "tide level η (m)",
-    "sea": "sea cells (fn_sw = 1)\nη(t) forced as the water level\nno flow is solved",
-    "interp": "linear interpolation, end values\nheld outside; update dt_tiupdate",
-    "hsea0": "apparent water column hsea0\n(serves the dry test, edge depth\nand friction; typically 1 m,\nseveral tens of dd or more)",
-    "land": "land cells (ordinary shallow-water computation)",
-    "flood": "flooding", "drain": "drainage",
-    "datum": "elevation datum 0 (same as z)",
-    "pond": "ponded water",
-}}
-
-TIV = [(0, 0.0), (180, 0.8), (360, 0.0), (540, -0.8)]
-TA, TB = 180, 540
+CANVAS = (1575, 930)
+DPI = 150
+SERIES_BOX = (0, 0, 650, 930)
+SERIES_SHA256 = {
+    'ja': 'd005ae7b5950070b4c4dce2dfabdaedac14e876b053c8fe3b4c44df55a1c9210',
+    'en': '14d2987fa838ef744c0ae265a9f6c15bf8d357336bb50637e243894a740765e4',
+}
 HSEA = 1.0
-NSEA = 4
-XL = np.linspace(NSEA, 12, 300)
+SEA_EDGE = 4.0
+ETA_A, ETA_B = .8, -.8  # unchanged A/B values in the preserved time series
+POND_LEVEL = .26
+LAND_X = np.linspace(SEA_EDGE, 12.0, 1601)
+SECTION_BOXES = [(684, 98, 866, 255), (684, 545, 866, 255)]
+
+T = {
+    'ja': {
+        'b': '(b) 高潮位（時刻 A）: 海から陸への浸水',
+        'c': '(c) 低潮位（時刻 B）: 排水と低地の滞留',
+        'sea': '海セル: 水位を強制',
+        'land': '陸セル: 水深・流れを計算',
+        'flood': '浸水',
+        'front': '浸水前縁',
+        'drain': '海へ排水',
+        'ridge': '地形の高まり',
+        'pond': '低地に残る水',
+        'ground': '地盤 z',
+        'base': '計算上の z = η − hsea0',
+        'sea_note': 'h = hsea0（一定）、水面は η(t)。\n水柱の底は実際の海底ではない。',
+        'flux_note': '海陸境界の流量は通常のエッジ計算。\n陸側の水面と地盤の交点が浸水前縁。',
+        'drain_note': '海へ通じる流路がある水は、\n条件に応じて排水される。',
+        'pond_note': '高まりで隔てられた低地には水が残り得る。\n潮位の低下だけで全域が排水されるわけではない。',
+        'note': '断面・陸側の水面・矢印は模式図（A/Bの数値計算結果ではない）。',
+    },
+    'en': {
+        'b': '(b) High tide (time A): flooding from sea to land',
+        'c': '(c) Low tide (time B): drainage and retained water',
+        'sea': 'Sea cells: prescribed level',
+        'land': 'Land cells: solve depth and flow',
+        'flood': 'Flooding',
+        'front': 'Wetting front',
+        'drain': 'Drainage to sea',
+        'ridge': 'Topographic rise',
+        'pond': 'Water retained in a hollow',
+        'ground': 'Ground z',
+        'base': 'Computational z = η − hsea0',
+        'sea_note': 'h = hsea0 (constant); surface η(t).\nColumn base is not the physical seabed.',
+        'flux_note': 'Sea–land flux uses the usual edge calculation.\nThe land surface and water surface meet at the front.',
+        'drain_note': 'Water with a route to the sea can drain\nwhen the hydraulic conditions allow it.',
+        'pond_note': 'A rise can retain water in a low-lying hollow.\nLowering the tide need not drain all flooded land.',
+        'note': 'Sections, land-side water surfaces and arrows are schematic, not computed A/B snapshots.',
+    },
+}
 
 
 def land_z(x):
-    # 海岸で 0.3 まで上がり、内陸に浅い低地(0.1)をもつ地盤
-    return 0.3 + 0.25 * np.exp(-((x - 5.0) / 0.5) ** 2) - 0.2 * np.exp(-((x - 8.5) / 1.6) ** 2) + 0.06 * np.maximum(x - 10.5, 0) ** 2
+    """Shared smooth land profile: coastal rise and inland hollow."""
+    x = np.asarray(x)
+    return (.3 + .25*np.exp(-((x-5)/.5)**2)
+            - .2*np.exp(-((x-8.5)/1.6)**2) + .06*np.maximum(x-10.5, 0)**2)
 
 
-def section(ax, t, eta, title, mode):
-    ax.axis("off")
-    z = land_z(XL)
-    ax.fill_between(XL, -2.2, z, color=C_GROUND_L, zorder=1)
-    ax.plot(XL, z, color=C_GROUND, lw=1.4, zorder=2)
-    # 海セル: 上面 η、厚さ hsea0
-    for i in range(NSEA):
-        ax.add_patch(Rectangle((i, eta - HSEA), 1, HSEA, fc=C_SEA, ec="white", lw=0.8, alpha=0.85, zorder=2))
-    ax.add_patch(Rectangle((0, -2.2), NSEA, eta - HSEA + 2.2, fc="#d9d8d3", ec="none", zorder=1, hatch="..", alpha=0.6))
-    ax.plot([0, NSEA], [eta, eta], color=C_WATER, lw=1.6, zorder=3)
-    ax.plot([-0.4, 12], [0, 0], color=C_P, lw=0.6, ls=":", zorder=1.5)
-    ax.text(11.9, 0.03, t["datum"], fontsize=7.5, color=C_P, ha="right", va="bottom")
-    ax.text(NSEA / 2, eta + 0.08, "η(t)", color=C_WATER, fontsize=9, ha="center", va="bottom", zorder=4)
-    if mode == "flood":
-        # 陸へ浸水: 海岸〜低地に η までの水(低地側は進入途中)
-        m = (XL <= 9.4)
-        ax.fill_between(XL[m], z[m], np.minimum(eta, np.where(XL[m] < 6.0, eta, eta - 0.25 * (XL[m] - 6.0))), where=z[m] < eta, color=C_WATER_L, zorder=1.5)
-        arrow(ax, (4.6, eta + 0.25), (7.2, eta + 0.05), C_X, text=t["flood"], lw=2.0, dxy=(0, 0.3), fs=9)
-        # hsea0 の寸法線
-        ax.annotate("", (NSEA + 0.0 - 0.25, eta), (NSEA - 0.25, eta - HSEA), arrowprops=dict(arrowstyle="<->", color="k", lw=0.9))
-        ax.text(NSEA + 0.0 - 0.45, eta - HSEA / 2, "hsea0", fontsize=9, color="k", ha="right", va="center")
-        ax.text(0.15, eta - HSEA - 0.12, t["sea"], fontsize=8.5, color=C_WATER, ha="left", va="top", zorder=5,
-                bbox=dict(fc="white", ec="none", alpha=0.8, pad=1.5))
-        ax.text(6.3, -1.0, t["hsea0"], fontsize=8.5, color="k", ha="left", va="top")
-        ax.text(12.0, -0.45, t["land"], fontsize=8.5, color=C_GROUND, ha="right", va="center")
+def flood_surface(x):
+    """Smooth illustrative surface, clipped at its intersection with land."""
+    return ETA_A - .04*np.maximum(np.asarray(x)-5.5, 0)**2
+
+
+def wet_regions(x, bed, surface):
+    """Clip sampled profiles at shared linear intersections.
+
+    Each returned Nx3 array is (x, ground, water surface). Endpoints are exact
+    intersections except at open domain boundaries. No negative-depth fill.
+    """
+    x, bed, surface = (np.asarray(v, float) for v in (x, bed, surface))
+    if x.ndim != 1 or len(x) < 2 or bed.shape != x.shape or surface.shape != x.shape:
+        raise ValueError('Profiles must be equal-length 1D arrays')
+    if np.any(np.diff(x) <= 0) or not np.all(np.isfinite([x, bed, surface])):
+        raise ValueError('Profiles must be finite, with increasing x')
+    points = []
+    depth = surface-bed
+    for i in range(len(x)-1):
+        points.append((x[i], bed[i], surface[i]))
+        if depth[i]*depth[i+1] < 0:
+            f = depth[i]/(depth[i]-depth[i+1])
+            xx = x[i]+f*(x[i+1]-x[i])
+            zz = bed[i]+f*(bed[i+1]-bed[i])
+            points.append((xx, zz, zz))
+    points.append((x[-1], bed[-1], surface[-1]))
+    regions, part = [], []
+    for a, b in zip(points[:-1], points[1:]):
+        if (a[2]-a[1])+(b[2]-b[1]) > 1e-12:
+            if not part:
+                part.append(a)
+            part.append(b)
+        elif part:
+            regions.append(np.array(part)); part = []
+    if part:
+        regions.append(np.array(part))
+    return regions
+
+
+def geometry(mode):
+    z = land_z(LAND_X)
+    if mode == 'flood':
+        return wet_regions(LAND_X, z, flood_surface(LAND_X))
+    if mode == 'drain':
+        # Seaward residual film and inland pond separated by a dry rise.
+        coast = LAND_X <= 5.0
+        u = (LAND_X[coast]-SEA_EDGE)/(5.0-SEA_EDGE)
+        film = .13*(1-3*u*u+2*u*u*u)
+        coastal = wet_regions(LAND_X[coast], z[coast], z[coast]+film)
+        pond = wet_regions(LAND_X, z, np.full_like(z, POND_LEVEL))
+        return coastal+pond
+    raise ValueError('mode must be flood or drain')
+
+
+def _axes(fig, box, xlim, ylim):
+    left, top, width, height = box
+    ax = fig.add_axes([left/CANVAS[0], (CANVAS[1]-top-height)/CANVAS[1],
+                       width/CANVAS[0], height/CANVAS[1]])
+    ax.set(xlim=xlim, ylim=ylim)
+    ax.axis('off')
+    return ax
+
+
+def section(ax, lang, mode):
+    t = T[lang]
+    eta = ETA_A if mode == 'flood' else ETA_B
+    regions = geometry(mode)
+    x = np.unique(np.r_[LAND_X, np.concatenate([r[:, 0] for r in regions])])
+    z = np.interp(x, LAND_X, land_z(LAND_X))
+    ax.add_patch(Polygon(np.r_[np.c_[x, z], [[12, -1.96], [4, -1.96]]],
+                         fc=C_GROUND_L, ec='none', zorder=1))
+    # Neutral field below the computational column, not a physical seabed.
+    ax.add_patch(Rectangle((0, -1.96), SEA_EDGE, eta-HSEA+1.96,
+                           fc='#f1f0ec', ec='none', zorder=1))
+    ax.add_patch(Rectangle((0, eta-HSEA), SEA_EDGE, HSEA,
+                           fc=C_SEA, alpha=.85, ec='none', zorder=2))
+    for xx in (1, 2, 3):
+        line(ax, [(xx, eta-HSEA), (xx, eta)], 'white', .65, z=3)
+    line(ax, [(0, eta), (4, eta)], C_WATER, 1.5, z=5)
+    line(ax, [(0, eta-HSEA), (4, eta-HSEA)], MUTED, .95, ls='--', z=5)
+    line(ax, [(4, -1.96), (4, z[0])], C_GROUND, .9, z=5)
+    for region in regions:
+        xx, bottom, top = region.T
+        polygon = np.r_[np.c_[xx, bottom], np.c_[xx[::-1], top[::-1]]]
+        ax.add_patch(Polygon(polygon, closed=True, fc=C_WATER_L, ec='none', zorder=3))
+        line(ax, np.c_[xx, top], C_WATER, 1.25, z=6)
+    line(ax, np.c_[x, z], C_GROUND, 1.35, z=7)
+    from matplotlib.patches import FancyArrowPatch
+    ax.add_patch(FancyArrowPatch((3.0, eta-HSEA), (3.0, eta), arrowstyle='<->',
+                 color=INK, lw=1, mutation_scale=10, shrinkA=0, shrinkB=0, zorder=10))
+    text(ax, 2.82, eta-.5, 'hsea0', size=8.5, ha='right', va='center')
+    text(ax, .08, eta+.37, f'η = {eta:+.1f} m', size=8.5, color=C_WATER)
+    text(ax, .08, eta-HSEA-.11, t['base'], size=7.6, color=MUTED)
+    text(ax, 11.75, -.14, t['ground'], size=8.2, color=C_GROUND, ha='right')
+    if mode == 'flood':
+        arrow(ax, curve((4.68, 1.05), [('C', (5.35, 1.05), (6.35, .97), (7.28, .84))]), C_X, 1.7)
+        text(ax, 5.95, 1.43, t['flood'], size=8.7, ha='center', color=C_X)
+        front = regions[0][-1]
+        text(ax, 10.35, .88, t['front'], size=8.3, ha='center', color=C_WATER)
+        line(ax, [(10.13, .60), (front[0], front[1]+.015)], MUTED, .75, z=9)
     else:
-        # 低地に滞留水、海へ排水
-        m = (XL >= 6.3) & (XL <= 10.8)
-        lvl = 0.26
-        ax.fill_between(XL[m], z[m], lvl, where=z[m] < lvl, color=C_WATER_L, zorder=1.5)
-        ax.text(8.5, lvl + 0.08, t["pond"], fontsize=8.5, color=C_WATER, ha="center", va="bottom")
-        ax.fill_between(XL[XL <= 6.3], z[XL <= 6.3], z[XL <= 6.3] + 0.05, color=C_WATER_L, zorder=1.5)
-        arrow(ax, (6.0, 0.55), (3.6, 0.0), C_G, text=t["drain"], lw=2.0, dxy=(0.9, 0.55), fs=9)
-    ax.set_xlim(-0.4, 12.2); ax.set_ylim(-2.25, 1.75)
-    ax.set_title(title, loc="left", fontsize=9.5)
+        arrow(ax, curve((4.75, .79), [
+            ('C', (4.34, .79), (3.88, .71), (3.78, .30)),
+            ('C', (3.68, -.12), (3.30, -.48), (2.96, -.62))]), C_G, 1.8)
+        text(ax, .08, 1.30, t['drain'], size=8.5, color='#477a32')
+        text(ax, 5.80, 1.44, t['ridge'], size=8.3, color=C_GROUND, ha='center')
+        line(ax, [(5.7, 1.09), (5.12, float(land_z(5.12))+.025)], MUTED, .75, z=9)
+        text(ax, 9.1, .89, t['pond'], size=8.3, color=C_WATER, ha='center')
+        line(ax, [(9.1, .60), (9.1, POND_LEVEL+.02)], MUTED, .75, z=9)
+    return regions
+
+
+def build(lang):
+    """Draw only vectors on the right, leaving the protected strip blank."""
+    if lang not in T:
+        raise ValueError('lang must be ja or en')
+    t = T[lang]
+    fig = plt.figure(figsize=(CANVAS[0]/DPI, CANVAS[1]/DPI), dpi=DPI)
+    page = _axes(fig, (0, 0, *CANVAS), (0, CANVAS[0]), (CANVAS[1], 0))
+    for top, mode, box, notes in [(20, 'flood', SECTION_BOXES[0], ('sea_note', 'flux_note')),
+                                  (467, 'drain', SECTION_BOXES[1], ('drain_note', 'pond_note'))]:
+        text(page, 680, top, t['b' if mode=='flood' else 'c'], size=10.1, weight='bold')
+        text(page, 696, top+48, t['sea'], size=8.4, color=C_WATER)
+        text(page, 1000, top+48, t['land'], size=8.4, color=C_GROUND)
+        ax = _axes(fig, box, (-.15, 12.15), (-2.04, 1.58))
+        section(ax, lang, mode)
+        for xx, key, width in [(696, notes[0], 315), (1034, notes[1], 516)]:
+            block(page, xx, top+351, t[key], width, size=8.15)
+    line(page, [(680, 444), (1550, 444)], RULE, .8)
+    line(page, [(680, 889), (1550, 889)], RULE, .8)
+    text(page, 680, 901, t['note'], size=7.8, color=MUTED)
+    return fig
+
+
+def _series_asset(lang):
+    suffix = '' if lang == 'ja' else '_en'
+    path = FilePath(FIGS)/f'tide_series_preserved{suffix}.png'
+    data = path.read_bytes()
+    if hashlib.sha256(data).hexdigest() != SERIES_SHA256[lang]:
+        raise ValueError('Protected time series differs from published crop: '+str(path))
+    return data
 
 
 def draw(lang):
-    t = T[lang]
-    fig = plt.figure(figsize=(10.5, 6.2), layout="constrained")
-    gs = fig.add_gridspec(2, 2, width_ratios=[0.9, 1.5])
-    # (a) 時系列
-    ax = fig.add_subplot(gs[:, 0])
-    tt = [p[0] for p in TIV]; ee = [p[1] for p in TIV]
-    ax.plot(tt + [660], ee + [ee[-1]], color=C_WATER, lw=2.0)
-    ax.plot(tt, ee, "o", color=C_WATER, ms=6)
-    for (tm, lab, c) in [(TA, "A", C_X), (TB, "B", C_G)]:
-        ax.axvline(tm, color=c, lw=1.2, ls="--")
-        ax.text(tm, 1.02, lab, color=c, fontsize=10, ha="center", va="bottom", fontweight="bold")
-    for (tm, e) in TIV:
-        ax.text(tm + 8, e + (0.07 if e >= 0 else -0.07), f"({tm}, {e:+.1f})".replace("+0.0", "0.0"), fontsize=7.5, color=C_P,
-                ha="left", va="bottom" if e >= 0 else "top")
-    ax.axhline(0, color=C_P, lw=0.6, ls=":")
-    ax.text(330, -1.05, t["interp"], fontsize=8, color=C_P, ha="center", va="bottom")
-    ax.set_xlim(0, 680); ax.set_ylim(-1.15, 1.15)
-    ax.set_xlabel(t["xlabel"]); ax.set_ylabel(t["ylabel"])
-    ax.set_title(t["a"], loc="left", fontsize=9.5)
-    # (b)(c) 断面
-    section(fig.add_subplot(gs[0, 1]), t, 0.8, t["b"], "flood")
-    section(fig.add_subplot(gs[1, 1]), t, -0.8, t["c"], "drain")
-    return save(fig, "tide_section", lang)
+    if lang not in T:
+        raise ValueError('lang must be ja or en')
+    series_bytes = _series_asset(lang)
+    with Image.open(BytesIO(series_bytes)) as series:
+        series.load()
+        if series.size != (SERIES_BOX[2], SERIES_BOX[3]):
+            raise ValueError('Protected time series has an unexpected size')
+        with drawing_style():
+            fig = build(lang)
+            try:
+                png = FilePath(out_path('tide_section', lang))
+                png_buffer, svg_buffer = BytesIO(), StringIO()
+                fig.savefig(png_buffer, format='png', dpi=DPI)
+                fig.savefig(svg_buffer, format='svg', metadata={'Date': None,
+                    'Description': 'Tide boundary schematics; time series is the unchanged published raster. Sections are not numerical results.'})
+            finally:
+                plt.close(fig)
+        with Image.open(BytesIO(png_buffer.getvalue())) as rendered:
+            combined = rendered.convert('RGBA')
+        if combined.size != CANVAS:
+            raise ValueError('Schematic canvas has an unexpected size')
+        combined.paste(series, SERIES_BOX[:2])  # no resampling or alpha blending
+        combined.save(png, dpi=(DPI, DPI))
+    scale = 72/DPI
+    embedded = (f'<image id="preserved-tide-series" x="0" y="0" '
+                f'width="{SERIES_BOX[2]*scale:g}" height="{SERIES_BOX[3]*scale:g}" '
+                f'preserveAspectRatio="none" xlink:href="data:image/png;base64,'
+                +base64.b64encode(series_bytes).decode('ascii')+'"/>\n')
+    svg = svg_buffer.getvalue().replace('</svg>', embedded+'</svg>')
+    svg = '\n'.join(s.rstrip() for s in svg.splitlines())+'\n'
+    png.with_suffix('.svg').write_text(svg, encoding='utf-8', newline='\n')
+    return str(png)
