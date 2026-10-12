@@ -25,6 +25,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 
 **第III部 機能別リファレンス**
 - [浅水流計算](users_guide/swflow.md)(&list_enc、数値パラメータ)— 方式選択・適応的ルンゲクッタ・数値定数
+  - [移流項のスキーム](users_guide/advection.md) — 方程式・運動量保存形の検査体積・ステンシル・限定器(浅水流計算の補足)
 - [地理情報](users_guide/geoinfo.md)(&list_geoinfo)— 格子・地形・粗度・マスク・海岸堤防
 - [初期条件](users_guide/initial.md)(&list_initial)— 水深・水位・窪地充填
 - [境界条件](users_guide/boundary.md)(&list_bound_edge/source/stage/inflow)— 辺境界・ソース・水位規定・区間流入

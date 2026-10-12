@@ -1,6 +1,6 @@
 # Shallow water flow computation (&list_enc and numerical constants)
 
-> English mirror of docs/users_guide/swflow.md (based on commit b501c3c). The Japanese file is the master copy.
+> English mirror of docs/users_guide/swflow.md (based on commit e693e81). The Japanese file is the master copy.
 
 [Back to the user's guide index](../users_guide.md)
 
@@ -108,6 +108,10 @@ The Runge column on the screen shows the application rate.
 | p_diagratio | 2/(2+sqrt(2)) | weight of the diagonal components in the 8-direction fluxes (normally no need to change) |
 
 **Advection and diffusion terms**
+
+The advection schemes themselves (equations, the momentum control volume of the
+conservative form, stencils, the limiter) are explained on a separate page,
+[Advection schemes](advection.md).
 
 | Parameter | Default | Meaning |
 |---|---|---|
