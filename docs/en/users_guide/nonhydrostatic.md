@@ -1,6 +1,6 @@
 # Non-hydrostatic correction (one-layer model) (supplement to the shallow water chapter)
 
-> English mirror of docs/users_guide/nonhydrostatic.md (based on commit e66dc06). The Japanese file is the master copy.
+> English mirror of docs/users_guide/nonhydrostatic.md (based on commit ba7559a). The Japanese file is the master copy.
 
 [Back to the shallow water chapter](swflow.md) / [Back to the user's guide index](../users_guide.md)
 
@@ -308,7 +308,7 @@ margin: in a hump-wave test (developer.md §69.2) it was 9.4e-4 / 4.0e-4 / 1.0e-
 The one-layer model does not break waves. Run without a switch, a breaking
 solitary wave on a beach (Synolakis 1987, $`a/H = 0.28`$, [test/nhbreak](../../../test/nhbreak/README.md)) keeps
 its shape to the shoreline, then runs up as a thin tongue, and the run-up
-$`R/H`$ becomes 1.59 (close to the non-breaking run-up law; the experimental
+$`R/H`$ becomes 1.64 (close to the non-breaking run-up law; the experimental
 law gives 0.42). As in hybrid Boussinesq models and SWASH, **cells detected
 as breaking are therefore made hydrostatic, so the wave dissipates as a bore
 through the momentum-conservative advection** ([Advection
@@ -318,7 +318,7 @@ schemes](advection.md)).
 
 | Type | Criterion | Notes |
 |---|---|---|
-| 1 | surface rise rate $`\partial\eta/\partial t > \alpha\sqrt{gh}`$ ($`\alpha`$ = 0.6; neighbouring cells $`\beta`$ = 0.3; kept until the crest passes) | SWASH type (Smit et al. 2013). On this grid ($`\Delta x = H/4`$) it did not fire in time for the onset of breaking |
+| 1 | surface rise rate $`\partial\eta/\partial t > \alpha\sqrt{gh}`$ ($`\alpha`$ = 0.6; neighbouring cells $`\beta`$ = 0.3; kept until the crest passes) | SWASH type (Smit et al. 2013). In the 2026-10-05 verification it did not fire in time for the onset of breaking on this grid ($`\Delta x = H/4`$); the current code does fire (note in test/nhbreak) |
 | 2 | Froude number $`\lvert V\rvert/\sqrt{gh} >`$ `nh_break_fr` (0.6) | local, stateless |
 | 3 | surface slope $`\lvert\nabla\eta\rvert >`$ `nh_break_slope` (0.3; maximum over the 8 neighbours) | **default**; local, Galilean invariant, stateless |
 
@@ -355,12 +355,12 @@ reference value (default 0 = off).
 | Configuration | $`\Delta x = H/4`$, dt 0.02 | $`\Delta x = H/8`$, Cr 0.07, $`n`$ = 0.01 |
 |---|---:|---:|
 | hydrostatic | 0.39 (early bore formation on the flat part) | 0.34 |
-| non-hydrostatic, no switch | 0.81 | — |
-| non-hydrostatic + switch | 0.62 | 0.51 (frictionless 0.63) |
-| same + eddy viscosity 1.44 | — | **0.45** (+8%) |
+| non-hydrostatic, no switch | 0.82 | — |
+| non-hydrostatic + switch | 0.63 | 0.51 (frictionless 0.63) |
+| same + eddy viscosity 1.44 | — | **0.45** (+5%) |
 
-The 0.62 of the test setting is a cancellation of the time-step error (+22%)
-and the numerical dissipation on the flat part (−18%). **For a quantitative
+The 0.63 of the test setting is a cancellation of the time-step error (+25%)
+and the numerical dissipation on the flat part (−20%). **For a quantitative
 evaluation of breaking and run-up, check convergence at Cr ≲ 0.1 and
 $`\Delta x \lesssim H/8`$, and use friction $`n \approx 0.01`$ together with the
 eddy viscosity 1.44.** Even then, run-up heights with breaking carry an
@@ -454,10 +454,10 @@ READMEs, which are in Japanese):
 | Case | Content | Key result |
 |---|---|---|
 | [nhwave](../../../test/nhwave/README.md) / [nhwave_nh](../../../test/nhwave_nh/README.md) | standing waves in a closed basin | hydrostatic numerical dispersion < 1%; non-hydrostatic periods within ±0.2% of theory ($`kH`$ = 0.25–2) |
-| [nhsolitary](../../../test/nhsolitary/README.md) | propagation of a solitary wave | after 60 s the shape RMS is 2.7%, speed −0.9%; hydrostatic turns into a bore |
+| [nhsolitary](../../../test/nhsolitary/README.md) | propagation of a solitary wave | after 60 s the shape RMS is 2.9%, speed −0.8%; hydrostatic turns into a bore |
 | [nhbore](../../../test/nhbore/README.md) | undular bore splitting from a step | the leading wave approaches the KdV asymptote $`2a`$ monotonically (Gurevich & Pitaevskii 1974); exceeds 2 for $`a/H = 0.2`$ (consistent with El et al. 2006) |
-| [nhshelf](../../../test/nhshelf/README.md) | solitary wave climbing onto a shelf | fission into a leading soliton plus a train of 6; hydrostatic gives a bore with 2 crests |
-| [nhcurrent](../../../test/nhcurrent/README.md) | linear waves on a uniform current | dispersion relation of the form $`(\omega - U_0k)^2`$ confirmed with and against the current (+1.4–2.7%) |
+| [nhshelf](../../../test/nhshelf/README.md) | solitary wave climbing onto a shelf | fission into a leading soliton plus a train of 6; hydrostatic gives a bore with 1 crest |
+| [nhcurrent](../../../test/nhcurrent/README.md) | linear waves on a uniform current | dispersion relation of the form $`(\omega - U_0k)^2`$ confirmed with and against the current (+1.4–2.5%) |
 | [nhbreak](../../../test/nhbreak/README.md) | run-up of a breaking solitary wave | table in §6 |
 | [nhbottom](../../../test/nhbottom/README.md) | prescribed uplift and submarine landslide | leading wave height within +3.9% of the exact solution; the acceleration term matters in the near field of the landslide |
 | [nest_identity](../../../test/nest_identity/README.md) | parent–child identity of nested grids | the interior of a non-hydrostatic child (band = parent's $`\phi`$ as known cells) matches the parent within 1e-10 |
