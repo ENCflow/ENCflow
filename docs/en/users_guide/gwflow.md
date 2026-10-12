@@ -10,6 +10,8 @@ the common settings `&list_gwflow`, and write the chosen models'
 specific setting groups in the same file (groups for unused models may
 remain in the file and are ignored - A/B comparisons only require
 switching the selectors).
+The equations, the basis of the defaults and the references of every model
+are in [Groundwater models](gwflow_models.md).
 
 Groundwater in ENCflow is a **shallow-groundwater model** for runoff
 analysis, with a soil layer and an optional weathered bedrock layer
@@ -109,6 +111,8 @@ Only the conduit continuum layer needs the inlet density gwc_inlet
 
 ## Bucket model (f_gwvertical=1, &list_gwflow_bucket)
 
+Equations and basis of the defaults: [supplement](gwflow_models.md#2-bucket-model-f_gwvertical--1).
+
 The simplest model: moves surface water into per-cell subsurface
 storage at a constant infiltration capacity.
 
@@ -125,6 +129,8 @@ capacity with soil depth as the capacity, use Green-Ampt with
 gw_psif=0).
 
 ## Green-Ampt (f_gwvertical=2, &list_gwflow_greenampt)
+
+Infiltration formula, regularisation and basis of the defaults: [supplement](gwflow_models.md#3-green-ampt-f_gwvertical--2).
 
 Moves surface water into the soil layer at the infiltration capacity
 of the Green-Ampt formula (piston approximation)
@@ -148,6 +154,8 @@ unspecified). The soil depth sd0 (&list_geoinfo) defaults to 1 m when
 unspecified.
 
 ## Lateral flow (f_gwlateral=1, &list_gwflow_lateral)
+
+Total head, Darcy flux and stability condition: [supplement](gwflow_models.md#4-lateral-flow-f_gwlateral--1).
 
 Lateral Darcy flow in the saturated zone (2D, 8-neighbor; the same
 diagonal partitioning as the ENC core). Groundwater moves in response to
@@ -174,6 +182,8 @@ side).
 
 ## Weathered bedrock layer (f_gwlayer2=1, &list_gwflow_layer2)
 
+Equations and basis of the defaults: [supplement](gwflow_models.md#5-weathered-bedrock-layer-f_gwlayer2--1).
+
 Inserts a second layer directly below the soil layer to hold a
 slow-recession component (baseflow) with a long residence time. Water
 percolates down from layer 1, moves laterally within layer 2, the
@@ -195,6 +205,8 @@ exfiltrates to the surface.
 - Evapotranspiration does not touch layer 2.
 
 ## Conduit continuum layer (f_gwconduit=1, &list_gwflow_conduit)
+
+Piecewise head, flux law, surface exchange, stability and conversion from pipe data: [supplement](gwflow_models.md#6-conduit-continuum-layer-f_gwconduit--1).
 
 Represents **subgrid conduit networks** - sewer networks, fractured
 bedrock, karst, farmland tile drains - as an "artificial confined
@@ -275,6 +287,8 @@ Applications are expressed by parameter combinations:
 
 ## Well pumping / groundwater abstraction (f_gwpump=1, &list_gwflow_pump)
 
+Equation: [supplement](gwflow_models.md#7-well-pumping-f_gwpump--1).
+
 A sink that withdraws the specified pumping rate from subsurface
 storage at a set of cells and removes it from the system (the
 subsurface counterpart of the internal source &list_bound_source; for
@@ -309,6 +323,8 @@ consecutively from 1.
   radius, skin, partial penetration - are not represented).
 
 ## Infiltration suppression by frozen ground (f_gwfrost=1, &list_gwflow_frost)
+
+Freezing index, reduction factor and basis of the defaults: [supplement](gwflow_models.md#8-infiltration-suppression-by-frozen-ground-f_gwfrost--1).
 
 To represent meltwater and rain running over frozen ground (snowmelt
 floods, enhanced early-spring runoff), a **freezing index** FI
