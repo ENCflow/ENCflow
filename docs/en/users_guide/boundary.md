@@ -209,7 +209,7 @@ to reduce concentration of discharge into thin water layers.
   (mutually exclusive) ([sediment and geomorphic change
   chapter](geomorph.md)). If unspecified, the inflow is clear water.
 
-## Examples and format samples
+## Tests and examples
 
 - [test/sedinflow](../../../test/sedinflow/): sediment concentration/flux specifications for segment inflow, with a ledger check against the injected total.
 - [test/nhcurrent](../../../test/nhcurrent/): prescribed-stage settings that maintain a uniform current and generate a sinusoidal wave.

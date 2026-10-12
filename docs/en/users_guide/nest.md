@@ -327,13 +327,6 @@ blocks beyond both band and sponge contribute to child-to-parent replacement.
   the child's water balance is checked by adding this band replacement
   volume.
 
-## References
-
-[^flather76]: Flather, R. A. (1976): A tidal model of the north-west European continental shelf. *Mém. Soc. R. Sci. Liège*, 6(10), 141–164.
-[^davies83]: Davies, H. C. (1983): Limitations of some common lateral boundary schemes used in regional NWP models. *Mon. Wea. Rev.*, 111, 1002–1012.
-[^berger98]: Berger, M. J. and LeVeque, R. J. (1998): Adaptive mesh refinement using wave-propagation algorithms for hyperbolic systems. *SIAM J. Numer. Anal.*, 35(6), 2298–2316.
-[^berger11]: Berger, M. J., George, D. L., LeVeque, R. J. and Mandli, K. T. (2011): The GeoClaw software for depth-averaged flows with adaptive refinement. *Adv. Water Resour.*, 34, 1195–1206.
-
 ## Using it from BMI
 
 A nest system is one BMI model as it is (bmi/README.md). Passing the root's
@@ -367,3 +360,16 @@ the same conditions. The acceptance test is [test/bmi_nest](../../../test/bmi_ne
   and 5 (comparison with a uniform fine grid; figures of the levels, errors,
   one-way band vs Flather and the non-hydrostatic band) is in
   [examples/nest_reflect](../../../examples/nest_reflect/).
+
+## Tests and examples
+
+- [test/nest_identity](../../../test/nest_identity/): identity tests of 1:1 self-nesting (band replacement, two-way, Flather and non-hydrostatic configurations).
+- [test/bmi_nest](../../../test/bmi_nest/): acceptance test of a nested system driven through BMI.
+- [examples/nest_reflect](../../../examples/nest_reflect/): waves crossing the interface of two-way nests with ratios 3 and 5, compared with a uniform fine grid (figures in the README).
+
+## References
+
+[^flather76]: Flather, R. A. (1976): A tidal model of the north-west European continental shelf. *Mém. Soc. R. Sci. Liège*, 6(10), 141–164.
+[^davies83]: Davies, H. C. (1983): Limitations of some common lateral boundary schemes used in regional NWP models. *Mon. Wea. Rev.*, 111, 1002–1012.
+[^berger98]: Berger, M. J. and LeVeque, R. J. (1998): Adaptive mesh refinement using wave-propagation algorithms for hyperbolic systems. *SIAM J. Numer. Anal.*, 35(6), 2298–2316.
+[^berger11]: Berger, M. J., George, D. L., LeVeque, R. J. and Mandli, K. T. (2011): The GeoClaw software for depth-averaged flows with adaptive refinement. *Adv. Water Resour.*, 34, 1195–1206.

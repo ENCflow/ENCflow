@@ -250,10 +250,10 @@ temperature offset series) in &list_meteo
 | Glacial erosion (f_glero) | f_glslide (+ t_cycle and restart chaining for long experiments) |
 | Combined with landform change | fn_geomorph (with matching morfac) |
 
-Idealized verification experiments (an analytic SIA benchmark and a
-cirque-formation test) are in [test/glacier/](../../../test/glacier/),
-and an annotated configuration sample is in
-[examples/List_samples/en/list_glacier.txt](../../../examples/List_samples/en/list_glacier.txt).
+## Tests and examples
+
+- [test/glacier/](../../../test/glacier/): benchmark against the SIA analytical solution and the cirque-formation test (idealised verification experiments).
+- Worked example of the format: [examples/List_samples/en/list_glacier.txt](../../../examples/List_samples/en/list_glacier.txt).
 
 ## References
 

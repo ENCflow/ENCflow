@@ -116,7 +116,7 @@ the initial condition (`f_state_restore = 2`). A typical use is to run
 normal flow through the channel first and then start the flood
 scenario. See the [suspending and restarting chapter](restart.md).
 
-## Examples
+## Tests and examples
 
 - Annotated list of all parameters: [examples/List_samples/list_initial.txt](../../../examples/List_samples/en/list_initial.txt)
 - Still water + a water-level mound from a user routine: [tutorials/wave](../../../tutorials/wave/en/README.md)

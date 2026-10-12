@@ -722,7 +722,7 @@ When the type of phenomenon is known, start from the following
 | Long-term landform evolution | f_creep + f_wthr + f_uplift | - | - | - | - | - | creep_d 0.001-0.05 m²/yr, p0 10-100 mm/kyr, uplift 0.1-5 mm/yr. Together with morfac |
 | Landslide tsunami (bed layer) | f_bedslide | 0.1-0.2 | 300-1000 | - | - | - | mu and xi of the inertia-free bed layer (bs_mu/bs_xi). Calibrated separately from the mixture values |
 
-## Examples
+## Tests and examples
 
 Annotated list of all parameters:
 [examples/List_samples/list_geomorph.txt](../../../examples/List_samples/en/list_geomorph.txt).

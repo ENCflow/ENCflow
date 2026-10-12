@@ -234,7 +234,7 @@ their cumulative values to current stocks would double count volume.
   in the CSV are not restored**. Combine the separate run segments when
   evaluating statistics and budgets over the complete period.
 
-## Verification case
+## Verification cases
 
 [test/driftwood](../../../test/driftwood/) checks volume conservation, transport and
 deposition for both erosion entrainment and hydraulic recruitment, and compares

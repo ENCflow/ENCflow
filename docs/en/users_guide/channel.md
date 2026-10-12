@@ -279,7 +279,7 @@ and bank0 (this chapter) that realizes that D.
 | V-shaped mountain stream, steep gorge | 0.7-1 | No levee: depth_rw 0.5-1 m is D itself | Triangular. Combine with fn_width to narrow the thalweg |
 | Calibrating low-water levels to observations | sweep 0.3-1 | unchanged | If the base-flow level is too high, raise m (smaller sigma raises the level for the same discharge) |
 
-## Examples and related topics
+## Tests and examples
 
 - [test/bendloss](../../../test/bendloss/): straight, bent and diagonal channels, subgrid width and opening correction, assessed against Manning uniform flow or a straight-channel comparison.
 - [test/chichibu](../../../test/chichibu/): real-terrain examples comparing channel masks, roughness, width and levee settings through flood-wave behaviour.
