@@ -29,7 +29,7 @@ $`s`$ はエッジに沿う座標、$`n`$ は Manning の粗度係数、$`|\math
 流速の大きさ、$`A_n`$・$`D_n`$ はエッジ法線方向の移流項・拡散項です。
 運動方程式を**エッジの法線成分だけ**で持ち、セルの流速ベクトルは
 §4 の再構成で作る、という構成が ENC(Eight-Neighbour Connected)格子の
-特徴です。これは日本の氾濫解析で標準的な差分モデル[^iwasa80]の
+特徴です[^tada26]。これは日本の氾濫解析で標準的な差分モデル[^iwasa80]の
 「セル中心の水深とセル境界の流量」の配置を 8 方向に拡張したもので、
 スタガード格子の保存形スキーム[^sd03]と同じ系統です。
 
@@ -42,7 +42,7 @@ $`s`$ はエッジに沿う座標、$`n`$ は Manning の粗度係数、$`|\math
 $`\Delta x`$ または $`\Delta y`$、対角方向で
 $`\Delta r = \sqrt{\Delta x^2 + \Delta y^2}`$ です。エッジを横切る
 流量にはそれぞれ**通過幅** $`L_k`$ を割り当て、セルの一辺を法線エッジ
-1 本と斜めエッジ 2 本で分け合います(図 (a))。
+1 本と斜めエッジ 2 本で分け合います(図 (a))[^tada26]。
 
 ```math
 L_{\text{axis}} = (1 - p_d)\,\Delta,
@@ -289,6 +289,7 @@ $`x`$・$`y`$ 方向の単位幅流量を東西面・南北面に置く従来形
 
 ## 参考文献
 
+[^tada26]: Tada, T. (2026): An eight-neighborhood connected collocated grid scheme for overland flow simulation. *Hydrological Research Letters*, 20(2), 113–118. doi:10.3178/hrl.25-00052.(ENC 格子の原論文: 八近傍連結コロケート格子と通過幅の配分)
 [^iwasa80]: 岩佐義朗・井上和也・水鳥雅文 (1980): 氾濫水の水理の数値解析に関する研究. 京都大学防災研究所年報, 23 B-2, 305–317.(セル中心水深・セル境界流量の差分配置と摩擦項の半陰的扱い)
 [^sd03]: Stelling, G. S. and Duinmeijer, S. P. A. (2003): A staggered conservative scheme for every Froude number in rapidly varied shallow water flows. *Int. J. Numer. Meth. Fluids*, 43, 1329–1354.(保存形スタガードスキーム。連続式の上流側水深)
 [^ni19]: Ni, Y., Cao, Z. and Liu, Q. (2019): Mathematical modeling of shallow-water flows on steep slopes. *J. Hydrol. Hydromech.*, 67(3), 252–259. doi:10.2478/johh-2019-0012.(急斜面の有効重力 $`g\cos^2\theta`$)
