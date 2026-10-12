@@ -41,6 +41,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Boundary conditions](users_guide/boundary.md) (&list_bound_edge/source/stage/inflow) -- edge boundaries, sources, prescribed stages, reach inflow
 - [Tide and sea surface](users_guide/tide.md) (&list_tide) -- storm surge, rising-tide inundation, drainage
 - [Internal hydraulic structures](users_guide/structure.md) (&list_struct_pump/culvert/diversion/dam) -- pumps, culverts, diversions, dams and lakes
+  - [Hydraulics of structures and boundaries](users_guide/hydraulics.md) -- Honma weir formula, the three culvert regimes, dam operation rules, free-outflow and radiation boundaries, inflow distribution, with equations and the basis of the coefficients (supplement)
 - [Channels](users_guide/channel.md) (&list_channel) -- levees, channel width, cross-section shape, breach
 - [Rainfall and weather](users_guide/forcing.md) (&list_precip / intercept / meteo / evap / snow) -- precipitation, interception, air temperature, evapotranspiration, snow accumulation and snowmelt
 - [Groundwater](users_guide/gwflow.md) (&list_gwflow plus model-specific settings) -- infiltration, lateral flow, weathered bedrock layer, conduit continuum layer (sewer networks, fractured bedrock)

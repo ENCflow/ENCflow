@@ -1,0 +1,225 @@
+# Hydraulics of structures and boundaries (supplement to the structures, boundary and channel chapters)
+
+> English mirror of docs/users_guide/hydraulics.md. The Japanese file is the master copy.
+
+[Back to the structures chapter](structure.md) | [Back to the boundary chapter](boundary.md) | [Back to the channel chapter](channel.md) | [Back to the user's guide index](../users_guide.md)
+
+This page gives the discharge formulas and the basis of their coefficients
+for the [internal hydraulic structures](structure.md) (pumps, culverts,
+diversions, dams), the [boundary conditions](boundary.md) (free outflow,
+long-wave radiation, segment inflow) and the levee overtopping of the
+[channel chapter](channel.md). The implementation is in
+`src/m_boundary_structure.f90` (structures), `src/m_swflow_enc_bc.f90`
+(edge boundaries and inflow) and `src/m_swflow_enc_channel.f90` (levee
+overtopping); the design history is in developer.md §17, §22, §68.30 and
+§69.9.
+
+## 1. Weir formula (Honma)
+
+Levee overtopping, the free-surface regime of culverts and the drop at a
+river mouth all use Honma's weir formula[^honma40]. With the upstream
+overflow depth $`h_1`$ and the downstream one $`h_2`$ (both above the crest
+or invert):
+
+```math
+q = 0.35\,h_1\sqrt{2g\,h_1}\quad\left(\frac{h_2}{h_1} < \frac{2}{3},\ \text{free}\right),
+\qquad
+q = 0.91\,h_2\sqrt{2g\,(h_1 - h_2)}\quad\left(\frac{h_2}{h_1} \ge \frac{2}{3},\ \text{submerged}\right)
+```
+
+$`q`$ is the discharge per unit width and the two branches are continuous at
+the switch $`h_2/h_1 = 2/3`$. The coefficients 0.35 and 0.91 are Honma's
+experimental values for broad weirs and are the standard of Japanese river
+planning for levee overtopping and breach discharge. When both water
+levels exceed the crest with a small difference, a critical-flow drop
+formula gives too much discharge and oscillates, which is why the
+submerged branch is needed for levee overtopping ([channels](channel.md)).
+The flow goes from the higher to the lower level.
+
+![Weir formula and the three culvert regimes](../../figs/hydraulics_laws_en.png)
+
+## 2. Culverts (sluices)
+
+A box culvert $`B \times D`$ with inverts $`z_{in}`$, $`z_{out}`$ and length
+$`L`$ is evaluated with the higher side as upstream, and three regimes are
+joined continuously with $`\min`$:
+
+```math
+Q_w = B\,q(h_1, h_2)\ (\text{weir of §1}),
+\qquad
+Q_p = C_p\sqrt{\eta_u - \max(\eta_d,\ z_{out} + D)},
+\qquad
+C_p = BD\sqrt{\frac{2g}{1 + c_e + f_L}},
+\quad
+f_L = \frac{2g\,n^2 L}{R^{4/3}},\ R = \frac{BD}{2(B + D)}
+```
+
+```math
+Q = \begin{cases}
+0 & (h_1 \le 0\ \text{or}\ \eta_u \le z_{out})\\
+Q_w & (\eta_u \le \max(\eta_d, z_{out} + D):\ \text{not full})\\
+\min(Q_w,\ Q_p) & (\text{otherwise: the full-pipe capacity caps the flow})
+\end{cases}
+```
+
+$`h_1 = \eta_u - z_{in}`$ and $`h_2 = \max(\eta_d - z_{in}, 0)`$. The pipe
+formula is the energy equation combining an orifice (entrance loss
+$`c_e`$) with Manning pipe friction $`f_L`$, the same construction as the
+standard culvert design of the FHWA[^fhwa12]. The defaults $`c_e`$ = 0.5
+(square-edged entrance) and $`n`$ = 0.02 (upper practical value of concrete
+pipes with joints and deposits) are **empirical**. When the outlet is not
+submerged the downstream head is taken at the outlet crown (a pipe on a
+rising grade conveys nothing until the level exceeds the outlet invert).
+**Note**: because of this reference, $`Q_p \to 0`$ right after the upstream
+level passes the crown and the $`\min`$ lowers the discharge temporarily
+(the dip in panel (b)). The FHWA outlet control uses
+$`\max(\eta_d, (d_c + D)/2)`$ ($`d_c`$ = critical depth) for the downstream
+head and avoids the dip; this is recorded in handoff.md as a candidate
+revision. The gate opening (`culv_gate_rule`) is a linear multiplier of
+the discharge and the flap (`culv_flap`) blocks reverse flow; the order of
+evaluation is three regimes → opening → flap.
+
+## 3. Pumps and diversions
+
+Pumps and diversions have no hydraulic law: they are given as a
+piecewise-linear $`Q(\text{reference})`$ of a reference value (water level
+$`\eta`$ or depth $`h`$; linear interpolation, end values held outside) or as
+a constant. Every step caps the transfer by the water actually present on
+the intake side, so nothing is taken that is not there. A diversion is
+passive and stops when the receiving level is at or above the intake
+level (gravity cannot climb). A pump transfers forcibly to outside the
+domain or to outlet cells; with intake from the conduit layer
+(`f_pump_src = 1`) it draws from the storage of the conduit continuum. The
+specific capacity of urban pumping stations, 1–3 m³/s/km², corresponds to
+10–20% of a 50 mm/h rainfall and is a **practical rule of thumb**.
+
+## 4. Operation of dams and lakes
+
+The capture set of the lake surface absorbs all arriving water into the
+storage $`V`$ and releases it by the operation rule (a bucket model that
+does not solve the flow on the water surface). Level and storage are
+related by the HV curve (`dam_hv`) or the linear HV $`V = A(H - H_{\min})`$
+($`A`$ = number of captured cells × cell area).
+
+```math
+Q = Q_0\ (\text{mode 1}),
+\qquad
+Q = r\,Q_{in}\ (\text{mode 2}),
+\qquad
+Q = Q(H)\ (\text{mode 3: piecewise, orifice or square-root law})
+```
+
+```math
+Q_{ori} = BD\sqrt{\frac{2g}{1 + c_e}}\sqrt{H - z_b},
+\qquad
+Q_{\sqrt{}} = Q_{\max}\sqrt{\frac{H - z_b}{H_{sur} - z_b}}
+```
+
+Modes 1 and 2 carry the **emergency ramp** (above $`H_{tad}`$ the release
+grows linearly to the inflow up to the surcharge level $`H_{sur}`$); the
+excess over the surcharge is spilled and the storage below the minimum
+level is dead storage. This is a **practical approximation** of the flood
+operation of Japanese dam rules (emergency operation during exceptional
+floods) as a linear ramp in storage. The default $`H_{tad}`$ =
+minimum + 0.9 × (surcharge − minimum) is a placeholder when no rule value
+is known. The flood response of a storage lake appears as the storage
+attenuation $`A\,dH/dt = Q_{in} - Q(H)`$, so the pass-through setting
+(r = 1) is inappropriate for large lakes. The completely mixed water
+quality is in [Water-quality models](wq_models.md) §6.
+
+## 5. Edge boundaries
+
+**Free outflow (type 1).** Advancing flow passes with the normal component
+of the cell velocity, and standing water drains by a critical-depth drop:
+
+```math
+u_n = \max\!\left(\mathbf{u}\cdot\mathbf{n},\ u_c\,\max(\hat{\mathbf{d}}\cdot\mathbf{n}, 0)\right),
+\qquad
+u_c = \left(\frac{2}{3}\right)^{3/2}\sqrt{g\,h},
+\qquad
+q = u_n h
+```
+
+$`u_c h = (2/3)^{3/2}\sqrt{g}\,h^{3/2}`$ is the unit discharge of broad
+critical flow (free overfall)[^chow59]; the drop velocity is projected as a
+vector along the flow direction $`\hat{\mathbf{d}}`$ onto the three open
+faces (the ENC shares $`\sum L_k \mathbf{n}_k = \Delta x`$ make the total
+equal to the natural width). The $`\max`$ excludes inflow.
+
+**Long-wave radiation (type 2).** Only the deviation from the reference
+level $`\eta_{ref}`$ is transmitted:
+
+```math
+u_n = \sqrt{\frac{g}{h}}\,(\eta - \eta_{ref}),
+\qquad
+u_n = u_{n,e} + \sqrt{\frac{g}{h}}\,(\eta - \eta_e)\ (\text{Flather: child grid of a nest})
+```
+
+The first is a Sommerfeld-type radiation condition passing the outgoing
+characteristic $`\eta \pm u\sqrt{h/g}`$ of long waves; the second is the
+Flather condition[^flather76] with external level and velocity, used by
+`nest_bc = 3` of [nesting](nest.md). Still water gives zero flux and the
+inflow of a drawdown is allowed.
+
+**Segment inflow (family D).** The total discharge $`Q`$ of the segment is
+distributed over the open faces:
+
+```math
+q_m = \alpha\,\frac{Q\,w(h_m)}{\sum_k w(h_k)L_k} + (1 - \alpha)\frac{Q}{\sum_k L_k},
+\qquad
+w = 1,\ h,\ h^{5/3}\ (\texttt{inflow\_dist} = 0, 1, 2),
+\qquad
+\alpha = \mathrm{clamp}\!\left(2(1 - Fr_{\max}),\ 0,\ 1\right)
+```
+
+The weight $`h^{5/3}`$ is the conveyance distribution of a uniform-slope
+cross-section under the Manning law[^chow59], a river-like distribution in
+which deeper cells also flow faster. $`Fr_{\max}`$ is the Froude number of
+the deepest cell under the weighted distribution: weighted for
+$`Fr \le 0.5`$, uniform for $`Fr \ge 1`$, continuous in between (since
+$`\alpha Fr \le 1/2`$ the deepest cell never receives more than half the
+critical discharge, which stabilises dry cross-sections). Being a
+continuous function of $`h`$, the distribution has no switching
+oscillation and no memory, and restarts are exact. Faces of cells that
+touch a wall corner or nodata and lack the interior edge that would pass
+the inflow are closed automatically (developer.md §69.9).
+
+## 6. Parameters and basis of the defaults
+
+| Parameter | Default | Meaning | Basis |
+|---|---:|---|---|
+| culv_width / culv_height / culv_zin / culv_zout | required | section and inverts (§2) | given |
+| culv_length | 0 | pipe length $`L`$ | 0 = no friction loss |
+| culv_manning | 0.02 | pipe roughness $`n`$ | upper practical value of concrete pipes (empirical) |
+| culv_ce | 0.5 | entrance loss coefficient $`c_e`$ | square-edged entrance[^fhwa12] (empirical) |
+| culv_flap / culv_gate_rule / culv_gate_ref | 0 / none / 1 | flap, opening rule, reference side | the opening is a linear multiplier (approximation) |
+| pump_q0 / pump_rule / f_pump_ref | — | constant discharge / operation rule / reference (§3) | given |
+| div_q0 / div_rule | — | constant discharge / rating (§3) | given |
+| dam_hv / dam_hmin / dam_hsur | — | HV curve / linear HV floor and surcharge (§4) | project data; a lake of unknown depth: normal level − 5 m |
+| f_dam_mode / dam_q0 / dam_rate | — | operation mode and values | given |
+| dam_hq_rule / dam_ori_* / dam_qmax | — | natural-regulation rating / orifice / square-root law | given; the orifice $`c_e`$ default 0.5 is the culvert value |
+| dam_tadashigaki | min + 0.9(surcharge − min) | start level of the emergency ramp | practical placeholder |
+| f_bc_w/e/n/s | 0 | type of the edge boundary (§5) | 0: wall, 1: free outflow (critical drop), 2: radiation |
+| bc_eta_* | derived from the initial state | reference level of the radiation | zero flux at t = 0 for a uniform initial level |
+| inflow_dist | 0 | distribution of the segment inflow (§5) | 2 = Manning conveyance[^chow59]; use 2 for river cross-sections |
+
+The coefficients 0.35 and 0.91 of levee overtopping ([channels](channel.md))
+are the Honma values of §1 and are not user parameters.
+
+## 7. Verification cases
+
+| Case | Content | Point |
+|---|---|---|
+| [test/damwq](../../../test/damwq/README.md) | constant release of a dam and a pond | storage and release ledger agree with the analytical solution |
+| [test/coastal_drain](../../../test/coastal_drain/README.md) | pumping station from the conduit layer with a sea outfall | transfer of the pumping station |
+| [test/nhcurrent](../../../test/nhcurrent/README.md) | uniform flow and sine wave from prescribed levels | use of prescribed-level boundaries |
+| [test/sedinflow](../../../test/sedinflow/README.md) | total segment inflow with sediment | ledger closure of the inflow |
+| [test/nest_identity](../../../test/nest_identity/README.md) | Flather versus radiation boundary | both agree for a still parent grid |
+| [tutorials/wave](../../../tutorials/wave/en/README.md) Step 3 | radiation boundary | transmission and reflection of waves |
+
+## References
+
+[^honma40]: Honma, M. (1940): Coefficient of discharge of low overflow weirs. *J. Jpn. Soc. Civil Eng.*, 26(6), 635–645; 26(9), 849–862 (in Japanese). (Honma formula; coefficients 0.35 and 0.91)
+[^fhwa12]: Schall, J. D., Thompson, P. L., Zerges, S. M., Kilgore, R. T. and Morris, J. L. (2012): Hydraulic Design of Highway Culverts, 3rd ed. *FHWA Hydraulic Design Series*, 5 (HDS-5), FHWA-HIF-12-026. (entrance loss coefficients and pipe friction of culverts)
+[^chow59]: Chow, V. T. (1959): *Open-Channel Hydraulics*. McGraw-Hill. (critical-depth drop, Manning conveyance)
+[^flather76]: Flather, R. A. (1976): A tidal model of the north-west European continental shelf. *Mém. Soc. R. Sci. Liège*, Ser. 6, 10, 141–164. (Flather radiation condition)

@@ -102,6 +102,8 @@ system).
 
 ## Culverts (&list_struct_culvert)
 
+Three-regime discharge law and basis of the coefficients: [supplement](hydraulics.md#2-culverts-sluices).
+
 A buried conduit of rectangular cross section B x D crossing an
 embankment, road, or levee. It is **bidirectional**: flow goes from the
 higher water level side to the lower, and reverses automatically if the
@@ -190,6 +192,8 @@ set (intake weirs, diversion channels).
 | fn_div_in_cell(n) / fn_div_out_cell(n) | "" | File specification of the cell sets (from dir_data; each line "i j") |
 
 ## Dams and lakes (&list_struct_dam)
+
+Operation rules (constant, rate cut, rating, orifice, square-root law, emergency ramp): [supplement](hydraulics.md#4-operation-of-dams-and-lakes).
 
 A bucket model in which the cells of the **water surface (capture
 set)** absorb all arriving water every step into storage, and release

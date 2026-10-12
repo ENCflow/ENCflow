@@ -21,7 +21,7 @@ width, hydraulic modes). Specifying levees requires fn_rw.
 width W (fn_width) inside the cell; the levee is a virtual wall on the
 cell face (crest = landside elevation + bank0 with f_bank_datum = 1), and
 whatever exceeds the crest spills to the landside cell as Honma weir
-overtopping. The section shape σ(h) = (h/D)^m (p_sect_m) sets the
+overtopping ([hydraulics supplement](hydraulics.md) §1). The section shape σ(h) = (h/D)^m (p_sect_m) sets the
 conveyance ratio at depths below the transition depth D = crest − bed.
 (b) Wall edges are every edge (diagonals included) between channel and
 landside cells, and a breach site is a pair of a channel cell and a
