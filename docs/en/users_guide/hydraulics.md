@@ -47,7 +47,7 @@ joined continuously with $`\min`$:
 ```math
 Q_w = B\,q(h_1, h_2)\ (\text{weir of §1}),
 \qquad
-Q_p = C_p\sqrt{\eta_u - \max(\eta_d,\ z_{out} + D)},
+Q_p = C_p\sqrt{\eta_u - \max\!\left(\eta_d,\ z_{out} + \tfrac{d_c + D}{2}\right)},
 \qquad
 C_p = BD\sqrt{\frac{2g}{1 + c_e + f_L}},
 \quad
@@ -57,8 +57,8 @@ f_L = \frac{2g\,n^2 L}{R^{4/3}},\ R = \frac{BD}{2(B + D)}
 ```math
 Q = \begin{cases}
 0 & (h_1 \le 0\ \text{or}\ \eta_u \le z_{out})\\
-Q_w & (\eta_u \le \max(\eta_d, z_{out} + D):\ \text{not full})\\
-\min(Q_w,\ Q_p) & (\text{otherwise: the full-pipe capacity caps the flow})
+Q_w & (h_1 < D:\ \text{inlet not submerged, weir-controlled})\\
+\min(Q_w,\ Q_p) & (h_1 \ge D:\ \text{the full-pipe capacity caps the flow})
 \end{cases}
 ```
 
@@ -68,14 +68,18 @@ $`c_e`$) with Manning pipe friction $`f_L`$, the same construction as the
 standard culvert design of the FHWA[^fhwa12]. The defaults $`c_e`$ = 0.5
 (square-edged entrance) and $`n`$ = 0.02 (upper practical value of concrete
 pipes with joints and deposits) are **empirical**. When the outlet is not
-submerged the downstream head is taken at the outlet crown (a pipe on a
-rising grade conveys nothing until the level exceeds the outlet invert).
-**Note**: because of this reference, $`Q_p \to 0`$ right after the upstream
-level passes the crown and the $`\min`$ lowers the discharge temporarily
-(the dip in panel (b)). The FHWA outlet control uses
-$`\max(\eta_d, (d_c + D)/2)`$ ($`d_c`$ = critical depth) for the downstream
-head and avoids the dip; this is recorded in handoff.md as a candidate
-revision. The gate opening (`culv_gate_rule`) is a linear multiplier of
+submerged, the downstream head is taken at the outlet invert +
+$`(d_c + D)/2`$ as in the FHWA outlet control. $`d_c`$ is the critical depth
+of the rectangular barrel for the weir discharge $`Q_w`$,
+$`d_c = \min\!\left(D, (Q_w^2/gB^2)^{1/3}\right)`$, obtained explicitly
+without iteration. As the barrel approaches capacity $`d_c \to D`$ and the
+reference returns to the crown, and right after the inlet submerges
+(h₁ = D) $`Q_p \approx Q_w`$, so the three regimes join smoothly through
+$`\min`$ (panel (b); [test/culvert](../../../test/culvert/) checks that the
+recovered discharge is monotonic). Before 2026-10-12 the crown was used
+as the reference regardless of inlet submergence, so $`Q_p \to 0`$ right
+after the upstream level passed the crown and the discharge dipped
+temporarily (developer.md §22, Japanese). The gate opening (`culv_gate_rule`) is a linear multiplier of
 the discharge and the flap (`culv_flap`) blocks reverse flow; the order of
 evaluation is three regimes → opening → flap.
 

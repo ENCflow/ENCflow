@@ -8,15 +8,15 @@ T = {'ja': {'a': '(a) 本間公式: 単位幅流量 q と下流水深比 h₂/h�
             'xa': '下流水深比 h₂/h₁', 'ya': 'q (m²/s)',
             'free': '自由越流 0.35 h₁√(2g h₁)', 'sub': '潜り越流 0.91 h₂√(2g(h₁ − h₂))', 'sw': '切替 h₂/h₁ = 2/3',
             'xb': '上流水深 h₁ = η_u − z_in (m)(下流は乾燥)', 'yb': 'Q (m³/s)',
-            'weir': '堰 Q_w = B q(h₁, 0)', 'pipe': '管路 Q_p = C_p √(η_u − (z_out + D))', 'qq': 'Q = min(Q_w, Q_p)',
-            'note': '(a) 両式は h₂/h₁ = 2/3 で連続に接続する。(b) 浅いうちは堰支配、水位が管頂を超えると満管容量が上限になる。管頂直上で管路式が 0 から立ち上がる凹みは現行の接続の仕様(本文 §2 の注)。'},
+            'weir': '堰 Q_w = B q(h₁, 0)', 'pipe': '管路 Q_p = C_p √(η_u − z_out − (d_c + D)/2)', 'qq': 'Q = min(Q_w, Q_p)',
+            'note': '(a) 両式は h₂/h₁ = 2/3 で連続に接続する。(b) 流入口が水没するまで(h₁ < D)は堰支配、水没後は満管容量が上限になる。下流水頭を出口敷高 + (d_c + D)/2 にとるため、h₁ = D で管路式はほぼ堰流量から始まり、min の接続に凹みはない(本文 §2)。'},
      'en': {'a': '(a) Honma formula: unit discharge q versus the tailwater ratio h₂/h₁ (h₁ = 1 m)',
             'b': '(b) Three regimes of a culvert (B = D = 1 m, c_e = 0.5, L = 0)',
             'xa': 'tailwater ratio h₂/h₁', 'ya': 'q (m²/s)',
             'free': 'free overflow 0.35 h₁√(2g h₁)', 'sub': 'submerged 0.91 h₂√(2g(h₁ − h₂))', 'sw': 'switch at h₂/h₁ = 2/3',
             'xb': 'upstream depth h₁ = η_u − z_in (m) (dry tailwater)', 'yb': 'Q (m³/s)',
-            'weir': 'weir Q_w = B q(h₁, 0)', 'pipe': 'pipe Q_p = C_p √(η_u − (z_out + D))', 'qq': 'Q = min(Q_w, Q_p)',
-            'note': '(a) The two branches join continuously at h₂/h₁ = 2/3. (b) Weir-controlled while shallow; once the level exceeds the crown the full-pipe capacity caps the discharge. The dip just above the crown, where the pipe formula starts from zero, is how the current connection behaves (note in §2).'}}
+            'weir': 'weir Q_w = B q(h₁, 0)', 'pipe': 'pipe Q_p = C_p √(η_u − z_out − (d_c + D)/2)', 'qq': 'Q = min(Q_w, Q_p)',
+            'note': '(a) The two branches join continuously at h₂/h₁ = 2/3. (b) Weir-controlled until the inlet submerges (h₁ < D); afterwards the full-pipe capacity caps the discharge. With the downstream head at the outlet invert + (d_c + D)/2, the pipe formula starts near the weir discharge at h₁ = D and the min connection has no dip (§2).'}}
 
 
 def build(lang):
@@ -37,8 +37,10 @@ def build(lang):
     h = np.linspace(0.01, 3.0, 400)
     qw = B * 0.35 * h * np.sqrt(2 * g * h)
     cp = B * D * np.sqrt(2 * g / (1 + ce))
-    qp = np.where(h > D, cp * np.sqrt(np.maximum(h - (zout + D), 0)), np.nan)
-    q = np.where(h > D, np.minimum(qw, cp * np.sqrt(np.maximum(h - D, 0))), qw)
+    dc = np.minimum(D, (qw ** 2 / (g * B ** 2)) ** (1 / 3))          # 堰流量に対する限界水深
+    qpv = cp * np.sqrt(np.maximum(h - (zout + 0.5 * (dc + D)), 0))
+    qp = np.where(h >= D, qpv, np.nan)
+    q = np.where(h >= D, np.minimum(qw, qpv), qw)
     ax.plot(h, qw, color=BLUE, lw=1.2, ls='--', gid='weir'); ax.plot(h, qp, color=ORANGE, lw=1.2, ls='--', gid='pipe')
     ax.plot(h, q, color=INK, lw=2.2, gid='q')
     ax.set(xlim=(0, 3), ylim=(0, 6), xlabel=t['xb'], ylabel=t['yb'])

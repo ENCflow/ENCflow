@@ -51,6 +51,7 @@ analytical-solution or conservation check by Check_*.py.
 | **Coast and tide** | | | |
 | [tide/](tide/) | Smoke test of the tidal boundary | Tide | ref |
 | [coastal_drain/](coastal_drain/) | Drainage of a polder below sea level (outfalls and pump stations) | Conduit continuum layer, tide | ref |
+| [culvert/](culvert/) | Passage through the three culvert regimes (drainage test; monotonic recovered discharge) | Structures | ref, analytic |
 | [salt/](salt/) | Fresh/salt two-layer experiments (final state of a lock exchange, sea boundary) | Fresh/salt two-layer | ref |
 | **Groundwater and urban drainage** | | | |
 | [gwdefault/](gwdefault/) | Minimal input of each groundwater model and the display of defaults | Groundwater | screen output |
