@@ -37,7 +37,7 @@ To assemble your own case, the "just try it (minimal input)" sections
 of [Geographic information](users_guide/geoinfo.md),
 [Initial conditions](users_guide/initial.md),
 [Boundary conditions](users_guide/boundary.md) and
-[Rainfall and meteorology](users_guide/forcing.md) are enough.
+[Rainfall and meteorology](users_guide/forcing.md) are where to start.
 
 Beyond that, read **only the chapters of the fields you are interested
 in**. The chapter pages give priority to "getting a run going casually":
@@ -54,16 +54,16 @@ the basis of the defaults, detailed settings).
 | [Sediment and landform change](users_guide/geomorph.md) | [Sediment transport, hillslope and long-term processes](users_guide/sediment.md), [Debris flow, slope failure and moving bed layer](users_guide/massflow.md) |
 | [Water quality](users_guide/wq.md) | [Water-quality models](users_guide/wq_models.md) |
 
-A major reason to use ENCflow is to **chain several processes in one
-run** (rainfall → runoff → sediment → channel; tsunami → house
-destruction → debris; eruption → lava field → secondary flooding, and
-so on). Use the [use-case gallery](users_guide/usecases.md) to find the
+Your reason for using ENCflow may be that you want to **chain several
+processes in one run** (rainfall → runoff → sediment → channel; tsunami
+→ house destruction → debris; eruption → lava field → secondary
+flooding, and so on). Use the [use-case gallery](users_guide/usecases.md) to find the
 feature combination for a phenomenon and combine the relevant chapters.
 Specialised features such as nesting and the non-hydrostatic correction
 can wait until you need them.
 
 [test/](../../test/) and [examples/](../../examples/) are not teaching
-material for beginners; look at them after the chapters, as needed. The
+material for beginners, so look at them after the chapters, as needed. The
 tests show how each feature is verified (against analytical solutions
 and conservation laws); the examples show namelist samples and set-ups
 that combine several processes.
