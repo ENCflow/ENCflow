@@ -89,13 +89,54 @@ Generate both languages as PNG and SVG with
 | r_t | time ratio = parent dt / child dt (positive integer; 1 if omitted; r_t = r is the usual choice) |
 | i0, j0 | the parent cell at which the corner of child cell (1,1) is aligned (required for children). j increases in file row order (north to south) |
 
-![Time stepping](../../figs/nest_time_en.png)
+![Nested time stepping and boundary-value interpolation](../../figs/nest_time_en.png)
 
-The parent takes its step first, and the child advances over that interval
-in r_t sub-steps. The band values are the linear interpolation between the
-parent's two instants (tⁿ and tⁿ⁺¹); a grandchild repeats the same procedure
-inside each sub-step of the child. At the end of the parent's step the
-child → parent replacement (nest_fb) is applied.
+(a) One parent step Δt contains three child steps with `r_t=3`; each child
+step contains two grandchild steps with `r_t=2`, giving six in total.
+Each `r_t` is relative to the immediate parent and is independent of the
+spatial ratio `r`. The horizontal axis shows physical simulation time,
+not a schedule in which all grids advance concurrently. The parent takes
+its step first and retains the parent-window values needed for the child
+boundary at `tⁿ` and `tⁿ⁺¹`, before and after that step. The child then
+takes `r_t` sub-steps.
+
+(b) Number the child sub-steps `k=0…r_t−1`. The start time is
+`tⁿ + k Δt/r_t`, with interpolation weight `α=k/r_t`. A quantity Q
+stored in the parent window is interpolated as
+`Q(α)=(1−α)Qⁿ+αQⁿ⁺¹`, followed by spatial interpolation, wet/dry rules
+and other operations appropriate to the boundary method. This **start-time**
+interpolation supplies water level, velocity and related data. Flather
+(`nest_bc=3`) also uses the start time, supplying external level and
+velocity on open edges instead of overwriting a band. The illustrated
+weights are `0/3, 1/3, 2/3`.
+
+For a non-hydrostatic child with `nest_nh=1` and `nest_bc=1, 2, 4`, the
+known band values of φ are interpolated to the sub-step **end time**.
+The figure denotes this weight by `β=α+1/r_t`, giving `1/3, 2/3, 3/3`.
+Both ordinary boundary data and φ are prepared before advancing the child
+step, but they refer to different times. Even with `r_t=1`, ordinary
+boundary data use the parent at `tⁿ`, while φ uses `tⁿ⁺¹`. A parent
+without non-hydrostatic calculation supplies zero φ.
+
+A grandchild repeats the same procedure recursively inside each child
+step, interpolating between two states of its immediate parent. Green
+arrows mark replacement at synchronization for `nest_fb=1–3`. The example
+executes: parent step → [child step → two grandchild steps → replace into
+child]×3 → replace into parent. The end-time window used for interpolation
+is captured immediately after that grid's step, before replacement from
+its descendants. If one parent has several children, each child completes
+all its sub-steps and replacement into the parent before the next child
+is advanced.
+
+`nest_fb=0` skips child-to-parent replacement. Methods 1–3 average the
+eligible interior back into the parent; method 3 also applies interface
+flux conservation correction. Parent cells containing a boundary band or
+sponge are excluded. See "Child-to-parent replacement" below for averaging
+and wet/dry handling. The figure is an algorithm schematic, not a computed
+time series.
+
+Generate both languages as PNG and SVG with
+`python docs/figs/make_nest_figs.py time`.
 
 3. Write `&list_nest` in the child's parameter file (defaults apply if omitted):
 
