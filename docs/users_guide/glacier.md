@@ -130,7 +130,7 @@ u_s = A_s\,\tau_b^3,
 \dot e = K_g\,u_s^{\,l}\ (u_s\ \text{は m/yr})
 ```
 
-Weertman 型の滑動則[^weertman57]($`m`$ = 3 固定)と、滑動速度のべき乗に
+Weertman 型の滑動則($`m`$ = 3 固定)[^weertman57]と、滑動速度のべき乗に
 比例する氷河侵食則[^humphrey94]です。既定 $`A_s`$ = 1e-13 m yr⁻¹ Pa⁻³ は
 底面せん断応力 100 kPa(典型 50〜150 kPa[^cuffey10])で 100 m/yr、山岳
 氷河の滑動速度の速い側(10〜100 m/yr)に相当します。既定 $`K_g`$ = 1e-4
