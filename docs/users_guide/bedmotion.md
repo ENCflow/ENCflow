@@ -11,7 +11,7 @@
 計算では水深・流速が変化します(地形変化モジュールと同じ契約)。設計の
 全文は [docs/bedmotion_plan.md](../bedmotion_plan.md)、実装記録は
 developer.md §70、断層パラメータからの前処理は
-[utils/fault2disp/README.md](../../utils/fault2disp/README.md)。
+[fault2disp の断層形状図と設定方法](../../utils/fault2disp/README.md#2-断層パラメータの約束)。
 
 ## 1. 最小の設定例
 

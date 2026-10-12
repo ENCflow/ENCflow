@@ -1,5 +1,7 @@
 # fault2disp — 断層パラメータから地盤変位の時刻歴を作る
 
+[English](README.en.md)
+
 [fn_bedmotion](../../docs/users_guide/bedmotion.md)(規定底面運動)の入力
 (スナップショット表 + 累積変位ラスタ)を、断層パラメータから作る前処理
 ユーティリティです。Okada (1985) の半無限弾性体(Poisson 比 0.25)における
@@ -49,13 +51,24 @@ make check                  # Okada (1985) Table 2 と横メルカトル投影�
 
 ## 2. 断層パラメータの約束
 
+まずは、**上端の中心を置く → 走向と傾斜で面を向ける → 面に沿うすべりを決める**、
+の順に読むと整理できます。
+
+![fault2dispの断層形状：平面・断面・すべり角](../../docs/figs/fault_geometry.png)
+
+**(a)** 青点 P が `x_top, y_top`。長さ `flength` の半分ずつを走向の両側へ伸ばし、
+面は走向の右手側へ傾きます。**(b)** `dip` は水平からの傾斜、`fwidth` は面に沿う幅です。
+**(c)** 面を正面から見て、走向を右・上り傾斜を上に描いたすべり角。正の `rake` は
+走向から上り傾斜へ回ります。角度・寸法は説明用の模式例です。
+[SVG](../../docs/figs/fault_geometry.svg) · [生成コード](../../docs/figs/guide/fig_fault.py)
+
 セグメント k ごとに次を与えます(最大 50 セグメント。重ね合わせます)。
 
 | 項目 | 意味 |
 |---|---|
 | x_top(k), y_top(k) | **上端の中心**の位置 (m)。座標の与え方は §3。f_lonlat=1 のときは代わりに lon_top(k), lat_top(k)(度) |
-| d_top(k) | 上端の深さ (m。≥ 0。海底面・地表面からの深さ) |
-| strike(k) | 走向(度。北から時計回り)。**断層面は走向の右手側に下がる**(北向きの走向なら東へ傾斜) |
+| d_top(k) | 上端の深さ (m。≥ 0)。Okada 計算の平坦な基準面から下向きに測る |
+| strike(k) | 走向(度。格子北から時計回り)。**断層面は走向の右手側に下がる**。経緯度入力では真北基準を与え、既定で格子北へ補正する(§3) |
 | dip(k) | 傾斜(度。0 < dip ≤ 90) |
 | rake(k) | すべり角(度。断層面上で走向方向から反時計回り)。90 = 逆断層(上盤が上がる)、−90 = 正断層、0 = 左横ずれ、180 = 右横ずれ |
 | flength(k) | 長さ (m。走向方向) |
@@ -65,11 +78,12 @@ make check                  # Okada (1985) Table 2 と横メルカトル投影�
 | t_rise(k) | 立ち上がり時間 (s)。0 で瞬時 |
 | f_rise(k) | 立ち上がり関数。1: 線形、2: 半正弦 (1 − cos(πs))/2(既定) |
 
-幾何の読み方: 上端中心から走向の右手側へ fwidth·cos(dip) 離れ、深さ
-d_top + fwidth·sin(dip) に下端があります。逆断層では断層の投影の上
-(浅い端の近く)が隆起し、下端の先(傾斜方向)が沈降します。長さ・幅・
-位置はすべて同じ投影座標の m 単位で、投影面上の縮尺(k0〜1.0004)は
-掛けません(0.04% 以下)。
+下端中心は、上端中心から走向の右手側へ `fwidth × cos(dip)` 離れ、
+深さ `d_top + fwidth × sin(dip)` にあります。`d_top` はそのまま計算に使い、
+`fn_z` の地形標高を引いて深さを自動補正することはありません。
+長さ・幅・位置の単位は m、角度は度です。断層の長さ・幅に投影の縮尺係数を
+掛ける処理はありません。実際の変位分布は [examples/tsunami_fault](../../examples/tsunami_fault/)
+で確認できます。
 
 ## 3. 座標の与え方(3 つのパターン)
 
@@ -157,11 +171,12 @@ ell_rf = 298.257223563)。横メルカトル以外の投影(ランベルト等)�
   ファイルは**累積**変位(計算開始時の地形からの変位)で、ENCflow が
   スナップショット間を線形補間します。立ち上がりを滑らかに再現したい
   とき(特に非静水圧の f_nh_bottom)は nout を増やします。
-- 瞬時変位(初期水位方式と同じ)は t_rise = 0 にするか、最後の
-  スナップショットだけを表に書きます。
+- 瞬時変位(初期水位方式と同じ)には、生成済みの最終スナップショットを
+  時刻 0 の1行だけの表で与えます。`t_rise=0` で生成する場合は、
+  `t_r` より後の出力時刻を指定します(`t_r` ちょうどでは変位は0)。
 - `f_window = 1` で |u_z| > d_min の外接矩形(全セグメントの和集合)だけを
   書き、表に窓 `i1 j1 ni nj` を付けます(広域の計算でファイルを小さく
-  する。切り捨てる変位は d_min 以下)。Okada の遠方場は mm 級で広く
+  する。閾値は各セグメントに適用し、重ね合わせ後の変位の上限ではありません)。Okada の遠方場は mm 級で広く
   残るので、閾値は数 cm が実用的です。
 - fn_z を与えると水平変位の寄与 u_h·∇z(Tanioka & Satake 1996)を鉛直
   変位に加えます(急な海底地形の上の断層で効く)。
@@ -200,7 +215,9 @@ dip 70°, L=3, W=2)の走向すべり・傾斜すべりの変位を 4 桁で再�
 投影を UTM 54 帯と平面直角座標系 IX 系の点で Snyder (1987) の級数と 1 mm で
 照合します。
 
-examples/tsunami_fault に設定例があります: fault2disp.txt(パターン A)、
-fault2disp_bil.txt / fault2disp_gtif.txt(パターン B。bil / GeoTIFF から
-地理参照)、fault2disp_jpr.txt(平面直角座標系の並び)、fault2disp_ll.txt
-(パターン C)。
+[examples/tsunami_fault](../../examples/tsunami_fault/) に設定例があります:
+[fault2disp.txt](../../examples/tsunami_fault/fault2disp.txt)(パターン A)、
+[fault2disp_bil.txt](../../examples/tsunami_fault/fault2disp_bil.txt) /
+[fault2disp_gtif.txt](../../examples/tsunami_fault/fault2disp_gtif.txt)(パターン B)、
+[fault2disp_jpr.txt](../../examples/tsunami_fault/fault2disp_jpr.txt)(平面直角座標系の並び)、
+[fault2disp_ll.txt](../../examples/tsunami_fault/fault2disp_ll.txt)(パターン C)。

@@ -15,7 +15,7 @@ moved, so e = z + h moves by the same amount. The subsequent flow calculation
 can change depth and velocity (the same contract as the morphological
 modules). The design is in [docs/bedmotion_plan.md](../../bedmotion_plan.md),
 the implementation record in developer.md §70, and the preprocessing from
-fault parameters in [utils/fault2disp/README.md](../../../utils/fault2disp/README.md).
+fault parameters in the [fault2disp geometry diagram and setup guide](../../../utils/fault2disp/README.en.md#2-fault-parameter-conventions).
 
 ## 1. Minimal setup
 
