@@ -2037,6 +2037,9 @@ conduit・salt・pump 全回帰 PASS(無効時ビット一致)。reference は
 
 ## 20. 運動方程式の拡散項(f_diffusion_term。2026-08-07 実装)
 
+利用者向けの解説(方程式・渦動粘性モデル・9 点ラプラシアン・安定条件の図)は
+docs/users_guide/diffusion.md(英語版 docs/en/users_guide/diffusion.md)。
+
 平地氾濫や湾内流動で渦動粘性による運動量拡散を入れたいケースに応える
 加算的オプション項。有効化は &list_enc の f_diffusion_term
 (0=無効(既定)、1=定数モデル、2=ゼロ方程式モデル)。

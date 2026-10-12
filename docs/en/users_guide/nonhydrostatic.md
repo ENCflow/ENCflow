@@ -1,6 +1,6 @@
 # Non-hydrostatic correction (one-layer model) (supplement to the shallow water chapter)
 
-> English mirror of docs/users_guide/nonhydrostatic.md (based on commit 116c52b). The Japanese file is the master copy.
+> English mirror of docs/users_guide/nonhydrostatic.md (based on commit e66dc06). The Japanese file is the master copy.
 
 [Back to the shallow water chapter](swflow.md) / [Back to the user's guide index](../users_guide.md)
 
@@ -344,7 +344,7 @@ B = \mathrm{clip}\!\left(\frac{|\nabla\eta| - s}{s},\,0,\,1\right),
 ```
 
 which dissipates through the diffusion term $`\nabla\cdot(\nu\nabla\mathbf{u})`$
-of the momentum equation. It is the $`\nu = B\,\delta_b^2\,h\,\partial\eta/\partial t`$
+of the momentum equation ([Diffusion term](diffusion.md)). It is the $`\nu = B\,\delta_b^2\,h\,\partial\eta/\partial t`$
 of Kennedy et al. (2000) made local and stateless with the kinematics of a
 progressive wave, $`\partial\eta/\partial t \approx c\,|\partial\eta/\partial x|`$;
 1.44, corresponding to the literature constant $`\delta_b = 1.2`$, is the

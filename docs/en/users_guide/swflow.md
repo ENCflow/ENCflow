@@ -1,6 +1,6 @@
 # Shallow water flow computation (&list_enc and numerical constants)
 
-> English mirror of docs/users_guide/swflow.md (based on commit 47b5e6f). The Japanese file is the master copy.
+> English mirror of docs/users_guide/swflow.md (based on commit e66dc06). The Japanese file is the master copy.
 
 [Back to the user's guide index](../users_guide.md)
 
@@ -130,7 +130,9 @@ defaults to the Elder type), takes effect. The constant viscosity of
 model 1 depends on the grid spacing and the scale of the flow, so there
 is no universally recommended value and an explicit value is mandatory
 (forgetting to set it stops the run at initialization, so it never
-becomes silently inactive).
+becomes silently inactive). The equations, eddy-viscosity models,
+discretisation and stability condition are explained on a separate page,
+[Diffusion term](diffusion.md).
 
 **Non-hydrostatic correction (research option)**
 

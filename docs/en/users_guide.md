@@ -1,4 +1,4 @@
-> English mirror of docs/users_guide.md (based on commit 47b5e6f). The Japanese file is the master copy.
+> English mirror of docs/users_guide.md (based on commit e66dc06). The Japanese file is the master copy.
 
 # ENCflow User's Guide
 
@@ -30,6 +30,7 @@ input; individual topics are split into per-chapter pages.
 - [Shallow water computation](users_guide/swflow.md) (&list_enc, numerical parameters) -- scheme selection, adaptive Runge-Kutta, numerical constants
   - [Advection schemes](users_guide/advection.md) -- equations, the momentum control volume of the conservative form, stencils, the limiter (supplement to the shallow water chapter)
   - [Non-hydrostatic correction](users_guide/nonhydrostatic.md) -- equations of the one-layer model, projection algorithm, active set, breaking, moving bottom, the models it drew on (supplement to the shallow water chapter)
+  - [Diffusion term](users_guide/diffusion.md) -- eddy-viscosity models (constant, zero-equation), nine-point Laplacian, stability condition (supplement to the shallow water chapter)
 - [Geographic information](users_guide/geoinfo.md) (&list_geoinfo) -- grid, terrain, roughness, masks, seawalls
 - [Initial conditions](users_guide/initial.md) (&list_initial) -- depth, water level, depression filling
 - [Boundary conditions](users_guide/boundary.md) (&list_bound_edge/source/stage/inflow) -- edge boundaries, sources, prescribed stages, reach inflow
