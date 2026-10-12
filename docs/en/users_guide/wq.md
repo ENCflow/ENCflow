@@ -8,7 +8,9 @@ Handles load input, advective transport, decay, settling,
 infiltration entrainment, Kd two-phase partitioning, and transport
 through groundwater of a single substance. Usable for runoff analyses
 of pollutant loads, radionuclide migration, basin-scale heavy-metal
-transport, tracer experiments, and so on. Enable it with `fn_wq`.
+transport, tracer experiments, and so on. Enable it with `fn_wq`. The
+equations of each process and the sources of the representative values are
+in [Water-quality models](wq_models.md).
 
 ```
 &list_wq
@@ -54,6 +56,8 @@ boundary outflow or budget residual (see "Output and monitoring"). Generate
 both languages as PNG and SVG with `python docs/figs/make_guide_figs.py wq`.
 
 ## Substance properties
+
+Equations of decay, settling and partitioning and the sources of the representative values: [supplement](wq_models.md) §2–§4, §7.
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -130,6 +134,8 @@ distribution over the whole domain
 
 ## Single-phase settling (wq_vs)
 
+Equation: [supplement](wq_models.md#3-settling).
+
 `wq_vs` [m/day] applies settling to the total substance mass in surface water.
 The implementation converts it to `v_s = wq_vs / 86400` [m/s] and removes
 the fraction `min(v_s × Δt / v_h, 1)` of the column mass cq per step.
@@ -143,6 +149,8 @@ be added as a system loss when checking the combined mass in all stores.
 Specifying `wq_kd` at the same time is an error.
 
 ## Two-phase partitioning of sorbing substances (Kd; e.g. heavy metals)
+
+Dissolved fraction, particulate settling and sources of Kd: [supplement](wq_models.md#3-settling).
 
 Substances that sorb strongly onto suspended sediment, such as heavy
 metals, are treated as an equilibrium two-phase (dissolved +
@@ -182,6 +190,8 @@ sediment dam break plus a point source, with built-in checks of the
 ledger closure and the monotonic response to increasing Kd).
 
 ## Transport through groundwater (infiltration → lateral flow → seepage)
+
+Accompanying transport and retardation factor: [supplement](wq_models.md#4-infiltration-and-transport-through-groundwater).
 
 With `f_wq_infil=1` (the default), the mass entrained into the
 subsurface pool by infiltration **moves with the groundwater** when
@@ -251,6 +261,8 @@ of the ledger closure and the end-to-end preservation of a uniform
 concentration).
 
 ## Surface buildup + washoff (nonlinear L-Q)
+
+Buildup and washoff equations and the correspondence with SWMM: [supplement](wq_models.md#5-surface-buildup-and-washoff).
 
 A buildup-washoff mechanism where the load accumulated on the surface
 in dry weather is washed off by rainfall. It can represent a nonlinear
