@@ -69,7 +69,7 @@ C 格子では長波展開が $`\omega^2 = gHk^2\,[1 - (k\Delta x)^2/12 + \cdots
 $`\mathbf{u}`$: 水深平均の水平流速、$`q(z)`$: 静水圧からのずれ(非静水圧)。
 1 層モデルは **$`q`$ を鉛直に線形**(水面で 0、底面で $`q_b`$)と仮定し、
 鉛直速度を水面 $`w_s`$ と底面 $`w_b`$ の平均で代表させます
-(Stelling & Zijlema 2003 の Keller-box 型 1 層と同じ近似)。
+(Keller-box 型 1 層と同じ近似)[^sz03]。
 
 **鉛直の運動量。** 層平均の鉛直加速度は底面の非静水圧で駆動されます
 (密度 1、移流は省略)。
@@ -142,7 +142,7 @@ $`\partial\eta/\partial t = -H\,\partial u/\partial x`$ から
 
 図 (a) が厳密解との比較です。位相速度の誤差は $`kH = 0.5 / 1 / 2 / 3`$ で
 +0.9 / +2.5 / +1.8 / −3.7%。2 次の圧力分布(Green–Naghdi 相当、
-$`1/(1 + (kH)^2/3)`$。Jeschke et al. 2017)は $`kH \le 1`$ では精度が高い
+$`1/(1 + (kH)^2/3)`$)[^jeschke17]は $`kH \le 1`$ では精度が高い
 (−0.1%)ものの $`kH = 2 / 3`$ で −5.7 / −13% と悪化し、射影法では時間微分の
 扱いに曖昧さが出ます。ソリトン分裂の後続波($`kH`$ = 1〜2)で線形分布が
 劣らず、スカラー 1 個で済むため、**線形分布 $`\beta = h^2/4`$ を採って
@@ -271,10 +271,10 @@ $`\max(2, \lceil 2H_{\max}/\min(\Delta x,\Delta y)\rceil)`$ 回を自動設定�
 ## 6. 砕波の扱い(`f_nh_breaking`、`nh_break_visc`)
 
 1 層モデルは波を砕きません。斜面を遡上する砕波性の孤立波
-(Synolakis 1987 の $`a/H = 0.28`$、[test/nhbreak](../../test/nhbreak/README.md))をスイッチなしで走らせると、
+(Synolakis の実験[^synolakis87]の $`a/H = 0.28`$、[test/nhbreak](../../test/nhbreak/README.md))をスイッチなしで走らせると、
 波は形を保って汀線に達した後、薄い舌として遡上し、遡上高 $`R/H`$ が 1.64
 (非砕波の遡上則に近い値。実験則 0.42)になります。そこで
-hybrid Boussinesq 系や SWASH と同じく、**砕波と判定した場所を静水圧に
+hybrid Boussinesq 系[^tonelli09][^tissier12]や SWASH[^smit13] と同じく、**砕波と判定した場所を静水圧に
 落とし、段波として運動量保存形移流に散逸させます**([移流項の
 スキーム](advection.md))。
 
@@ -282,7 +282,7 @@ hybrid Boussinesq 系や SWASH と同じく、**砕波と判定した場所を�
 
 | 型 | 判定量 | 備考 |
 |---|---|---|
-| 1 | 水面上昇速度 $`\partial\eta/\partial t > \alpha\sqrt{gh}`$($`\alpha`$ = 0.6、接するセルは $`\beta`$ = 0.3、波頂通過まで維持) | SWASH 型(Smit et al. 2013)。2026-10-05 の検証ではこの格子($`\Delta x = H/4`$)で砕波の開始に間に合わなかった(現在のコードでは発火する。test/nhbreak の注) |
+| 1 | 水面上昇速度 $`\partial\eta/\partial t > \alpha\sqrt{gh}`$($`\alpha`$ = 0.6、接するセルは $`\beta`$ = 0.3、波頂通過まで維持) | SWASH 型[^smit13]。2026-10-05 の検証ではこの格子($`\Delta x = H/4`$)で砕波の開始に間に合わなかった(現在のコードでは発火する。test/nhbreak の注) |
 | 2 | フルード数 $`\lvert V\rvert/\sqrt{gh} >`$ `nh_break_fr`(0.6) | 局所・状態なし |
 | 3 | 水面勾配 $`\lvert\nabla\eta\rvert >`$ `nh_break_slope`(0.3。8 近傍の最大) | **既定**。局所・Galilean 不変・状態なし |
 
@@ -306,7 +306,7 @@ B = \mathrm{clip}\!\left(\frac{|\nabla\eta| - s}{s},\,0,\,1\right),
 ```
 
 を与え、運動方程式の拡散項 $`\nabla\cdot(\nu\nabla\mathbf{u})`$
-([拡散項の解説](diffusion.md))で散逸させます。Kennedy et al. (2000) の $`\nu = B\,\delta_b^2\,h\,\partial\eta/\partial t`$
+([拡散項の解説](diffusion.md))で散逸させます。Kennedy ら[^kennedy00]の $`\nu = B\,\delta_b^2\,h\,\partial\eta/\partial t`$
 を、進行波の運動学 $`\partial\eta/\partial t \approx c\,|\partial\eta/\partial x|`$
 で局所・状態なしの形にしたもので、文献の定数 $`\delta_b = 1.2`$ に相当する
 1.44 が目安です(既定 0 = 無効)。
@@ -352,7 +352,7 @@ a_e = a^{*}_e + \frac{\phi_n - \phi_c}{L_k} + (\phi_c + \phi_n)\,\sigma_e,
 $`\partial z_b/\partial t`$ 自体は静水圧部が既に扱っています(「$`h`$ を変えず
 $`z`$ を動かす → 水面がそのまま持ち上がる」)。非静水圧が付け加えるのは
 水柱を鉛直に加速することへの慣性反力で、これが底面変位を水面へ写すときの
-短波の減衰(Kajiura 1963 のフィルタ $`1/\cosh kH`$)を与えます。素朴に
+短波の減衰(Kajiura のフィルタ[^kajiura63] $`1/\cosh kH`$)を与えます。素朴に
 $`-(h/2)\ddot z_b`$ を源項に入れると、底面変位 → 水面のフィルタは
 
 ```math
@@ -375,7 +375,7 @@ F(k) = \frac{1}{(1 + \beta k^2)^2}
 を使います(分散関係・底面フィルタ図 (b))。$`1/\cosh kH`$ に $`k^4`$ の係数まで近く、全波数で非負、
 格子スケールで 0 です。$`\ddot z_b`$ はモジュールが私有する前ステップの
 $`z`$ との 2 階差分(1 ステップ遅れ。$`z`$ を動かすすべてのプロセスに効く)で、
-底面が動くステップだけ余分に 1 回解きます。Hammack 型の規定隆起
+底面が動くステップだけ余分に 1 回解きます。Hammack 型[^hammack73]の規定隆起
 ([test/nhbottom](../../test/nhbottom/README.md) 構成 1)では先頭波高が厳密解(ポテンシャル流)に +3.9%
 (静水圧 +40%、加速度項なし +16%)。慣性なしの底層との結合(同 構成 2、
 [examples/landslide_tsunami](../../examples/landslide_tsunami/README.md) の C)では斜面下端に
@@ -397,13 +397,31 @@ $`z`$ との 2 階差分(1 ステップ遅れ。$`z`$ を動かすすべての�
   [test/nest_identity](../../test/nest_identity/README.md) の nh 構成、帯の扱いの比較は
   [examples/nest_reflect](../../examples/nest_reflect/README.md))。
 
+**パラメータと既定値の根拠。** 一覧は[浅水流計算の章](swflow.md)の表に
+あります。ここでは既定値の根拠だけを示します。
+
+| パラメータ | 既定 | 意味 | 根拠 |
+|---|---:|---|---|
+| nh_hmin | 0.1 m | この水深未満は静水圧のまま | 経験値。乾湿前縁・極浅水・砕波後の段波を運動量保存形移流の段波として扱う(§4)。dd より大きい値 |
+| nh_solver | 2(CG) | 反復ソルバ | 検証ケース: [test/nhwave_nh](../../test/nhwave_nh/README.md) で CG は 10〜80 反復、Jacobi は $`\Delta x = H/8`$ で 500 掃引でも未収束(§3) |
+| nh_tol / nh_itmax | 1e-6 / 500 | 収束判定・反復上限 | 経験値。条件数が格子数に依らない($`\kappa \approx 1 + 2\varepsilon`$)ため余裕のある上限(§3) |
+| nh_bc_margin / nh_margin / nh_break_margin | 0(自動 $`\lceil 2H/\Delta x\rceil`$) | 強制境界・種・砕波セルの周りの縁幅 | Green 関数の e 倍減衰距離 $`H/2`$ の 4 倍(§5)。盛り上がり波の試験で縁 4 / 8 / 16 セルの差 9.4e-4 / 4.0e-4 / 1.0e-4 m |
+| nh_chi_on | 0.06 | 活性集合の検出閾値(分散比 $`\chi`$) | §2 の分散関係から導出: 静水圧との位相速度差 3% に相当する $`(kH)^2/4 / (1 + (kH)^2/4)`$ の値 |
+| nh_amin / nh_arel | 1e-5 m/s² / 1e-3 | 検出の絶対・相対下限 | 経験値。比の検出量が丸め誤差レベルの短波を拾うのを防ぐ(§5) |
+| nh_break_type / nh_break_slope | 3 / 0.3 | 砕波判定(水面勾配) | 経験値(局所・Galilean 不変・状態なし)。検証ケース [test/nhbreak](../../test/nhbreak/README.md) で遡上高が実験則に収束(§6) |
+| nh_break_alpha / nh_break_beta | 0.6 / 0.3 | 判定 1(水面上昇速度)の閾値 | 文献値(SWASH の既定)[^smit13] |
+| nh_break_fr | 0.6 | 判定 2(フルード数)の閾値 | 経験値 |
+| nh_break_visc | 0(目安 1.44) | 砕波域の渦粘性係数 $`\delta_b^2`$ | 文献値[^kennedy00]: $`\delta_b = 1.2`$ → 1.44。検証ケース [test/nhbreak](../../test/nhbreak/README.md) で $`R/H`$ = 0.45(実験則 0.42。§6) |
+| f_nh_slope | 0 | 底面勾配項(Version 2) | 検証ケース: [test/nhshelf](../../test/nhshelf/README.md) で Version 1 との差が数%。反復が約 2 倍になるため既定は無効(§7) |
+| f_nh_bottom | 0 | 動く底面の加速度項 | 検証ケース: [test/nhbottom](../../test/nhbottom/README.md) で先頭波高が厳密解に +3.9%(なしでは +16%)。底面が動かなければ効かないため既定は無効(§7) |
+
 **検証ケース**(README に図表と派生ケースの一覧):
 
 | ケース | 内容 | 要点 |
 |---|---|---|
 | [nhwave](../../test/nhwave/README.md) / [nhwave_nh](../../test/nhwave_nh/README.md) | 閉水槽の定在波 | 静水圧の数値分散 < 1%。非静水圧の周期が理論に ±0.2%($`kH`$ = 0.25〜2) |
 | [nhsolitary](../../test/nhsolitary/README.md) | 孤立波の伝播 | 60 s で波形 RMS 2.9%、速度 −0.8%。静水圧は段波化 |
-| [nhbore](../../test/nhbore/README.md) | 段差から分裂する undular bore | 先頭波が KdV の漸近値 $`2a`$ に単調に近づく(Gurevich & Pitaevskii 1974)。$`a/H = 0.2`$ では 2 を超える(El et al. 2006 と整合) |
+| [nhbore](../../test/nhbore/README.md) | 段差から分裂する undular bore | 先頭波が KdV の漸近値 $`2a`$ に単調に近づく[^gurevich74]。$`a/H = 0.2`$ では 2 を超える(完全非線形理論[^el06]と整合) |
 | [nhshelf](../../test/nhshelf/README.md) | 棚に乗り上げる孤立波 | 先頭ソリトン+後続 6 山に分裂。静水圧は段波 1 山 |
 | [nhcurrent](../../test/nhcurrent/README.md) | 一様流上の線形波 | $`(\omega - U_0k)^2`$ 型の分散関係を順流・逆流で確認(+1.4〜2.5%) |
 | [nhbreak](../../test/nhbreak/README.md) | 砕波性孤立波の遡上 | §6 の表 |
@@ -426,91 +444,47 @@ $`z`$ との 2 階差分(1 ステップ遅れ。$`z`$ を動かすすべての�
 
 本機能の概念に新規性は主張していません。設計は既存の 1 層非静水圧
 モデルと局所適応の先行研究の実用路線に乗せたもので、ENCflow 固有なのは
-8 方向 ENC 格子・運動量保存形移流・適応的ルンゲクッタとの組合せ、分散性に
+8 方向 ENC 格子・運動量保存形移流[^sd03]・適応的ルンゲクッタとの組合せ、分散性に
 基づく検出量 $`\chi`$ と減衰距離から決めた縁幅、ビット再現性のある決定的
 ソルバ、無効時ゼロ追加の組込み方です。
 
 | モデル・研究 | 本実装が参考にした点 | 違い |
 |---|---|---|
-| **SWASH**(Stelling & Zijlema 2003; Zijlema, Stelling & Smit 2011) | 線形圧力分布(Keller-box)の 1 層近似と分散関係 $`\omega^2 = gHk^2/(1 + (kH)^2/4)`$。砕波を局所的に静水圧へ切り替える考え方と判定 1 の閾値 $`\alpha`$ = 0.6、$`\beta`$ = 0.3(Smit, Zijlema & Stelling 2013) | SWASH は多層・半陰解法。ENCflow は 1 層のみ、陽的な静水圧予測子、8 方向格子。砕波判定の既定は水面勾配 |
-| **NEOWAVE**(Yamazaki, Kowalik & Cheung 2009; Yamazaki, Cheung & Kowalik 2011) | 1 層・スタガード格子・保存形移流+ステップ末尾の圧力補正という構成そのもの。砕波後を段波として扱う発想 | NEOWAVE はネスト格子で非静水圧領域を限る。ENCflow は単一格子+活性集合 |
-| 半陰的な静水圧予測子+非静水圧補正の分割(Casulli & Stelling 1998; Casulli 1999) | 「静水圧ステップをそのまま予測子にし、圧力ポアソン型の補正で流速を射影する」fractional step の原型 | 3 次元・半陰解法向け。本実装は水深平均 1 層・陽解法の予測子 |
-| **Firdaus & Behrens**(2026, IJNMF; arXiv 2606.27562) | 局所適応の非静水圧拡張 = 「判定した領域だけで楕円型問題を解き、砕波は SWE へ切り替える」。§5 の活性集合の最も近い先行研究 | 判定量は水位比 $`\lvert\eta/d\rvert`$ と流速(閾値 0.001、1 要素の拡張)、離散化は RK-DG、鉛直は 2 次分布。ENCflow は分散比 $`\chi`$、Green 関数の減衰距離に基づく縁幅 |
-| 2 次圧力分布(Jeschke, Pedersen, Vater & Behrens 2017; Firdaus et al. 2025) | Green–Naghdi 相当の分散関係との比較(§2) | **不採用**: $`kH`$ = 1〜2 で劣り、射影法で時間微分の扱いが曖昧になる |
-| **GeoClaw-Bouss**(Berger & LeVeque 2024) | 分散項を解く領域を限る発想 | AMR の細分化パッチ単位。ENCflow は単一格子 |
-| hybrid Boussinesq/NSWE(Tonelli & Petti 2009; Tissier et al. 2012; Kazolea & Ricchiuto 2018)、**FUNWAVE-TVD**(Shi et al. 2012) | 砕波域で分散項を切って浅水方程式の段波に散逸させる機構(§6)。切替の安定性・格子依存が難点という知見 | — |
-| 砕波の渦粘性(Kennedy, Chen, Kirby & Dalrymple 2000; Zelt 1991) | $`\nu = B\,\delta_b^2\,h\,\partial\eta/\partial t`$ と定数 $`\delta_b = 1.2`$(§6) | 進行波の運動学で $`\partial\eta/\partial t`$ を $`\lvert\nabla\eta\rvert`$ に置き換え、状態を持たない形 |
-| 双曲型緩和(Escalante, Dumbser & Castro 2019; Muñoz-Moncayo & Ketcheson 2026) | 楕円型解を避ける代替案として検討 | **不採用**: 人工圧力波速で dt が 3〜10 分の 1 になり、統合モデルでは全プロセスがその dt を払う |
+| **SWASH**[^sz03][^zijlema11] | 線形圧力分布(Keller-box)の 1 層近似と分散関係 $`\omega^2 = gHk^2/(1 + (kH)^2/4)`$。砕波を局所的に静水圧へ切り替える考え方と判定 1 の閾値 $`\alpha`$ = 0.6、$`\beta`$ = 0.3[^smit13] | SWASH は多層・半陰解法。ENCflow は 1 層のみ、陽的な静水圧予測子、8 方向格子。砕波判定の既定は水面勾配 |
+| **NEOWAVE**[^yamazaki09][^yamazaki11] | 1 層・スタガード格子・保存形移流+ステップ末尾の圧力補正という構成そのもの。砕波後を段波として扱う発想 | NEOWAVE はネスト格子で非静水圧領域を限る。ENCflow は単一格子+活性集合 |
+| 半陰的な静水圧予測子+非静水圧補正の分割[^casulli98][^casulli99] | 「静水圧ステップをそのまま予測子にし、圧力ポアソン型の補正で流速を射影する」fractional step の原型 | 3 次元・半陰解法向け。本実装は水深平均 1 層・陽解法の予測子 |
+| **Firdaus & Behrens**[^firdaus26] | 局所適応の非静水圧拡張 = 「判定した領域だけで楕円型問題を解き、砕波は SWE へ切り替える」。§5 の活性集合の最も近い先行研究 | 判定量は水位比 $`\lvert\eta/d\rvert`$ と流速(閾値 0.001、1 要素の拡張)、離散化は RK-DG、鉛直は 2 次分布。ENCflow は分散比 $`\chi`$、Green 関数の減衰距離に基づく縁幅 |
+| 2 次圧力分布[^jeschke17][^firdaus25] | Green–Naghdi 相当の分散関係との比較(§2) | **不採用**: $`kH`$ = 1〜2 で劣り、射影法で時間微分の扱いが曖昧になる |
+| **GeoClaw-Bouss**[^berger24] | 分散項を解く領域を限る発想 | AMR の細分化パッチ単位。ENCflow は単一格子 |
+| hybrid Boussinesq/NSWE[^tonelli09][^tissier12][^kazolea18]、**FUNWAVE-TVD**[^shi12] | 砕波域で分散項を切って浅水方程式の段波に散逸させる機構(§6)。切替の安定性・格子依存が難点という知見 | — |
+| 砕波の渦粘性[^kennedy00][^zelt91] | $`\nu = B\,\delta_b^2\,h\,\partial\eta/\partial t`$ と定数 $`\delta_b = 1.2`$(§6) | 進行波の運動学で $`\partial\eta/\partial t`$ を $`\lvert\nabla\eta\rvert`$ に置き換え、状態を持たない形 |
+| 双曲型緩和[^escalante19][^munoz26] | 楕円型解を避ける代替案として検討 | **不採用**: 人工圧力波速で dt が 3〜10 分の 1 になり、統合モデルでは全プロセスがその dt を払う |
 
-書誌(設計文書 docs/nonhydrostatic_plan.md §13 の一覧に基づく。原典との
-照合は利用時に行ってください):
+書誌は設計文書 docs/nonhydrostatic_plan.md §13 の一覧に基づきます(原典との
+照合は利用時に行ってください)。
 
-- Stelling, G. S. and Zijlema, M. (2003): An accurate and efficient
-  finite-difference algorithm for non-hydrostatic free-surface flow with
-  application to wave propagation. *Int. J. Numer. Meth. Fluids*, 43, 1–23.
-- Zijlema, M., Stelling, G. and Smit, P. (2011): SWASH: An operational public
-  domain code for simulating wave fields and rapidly varied flows in coastal
-  waters. *Coastal Eng.*, 58, 992–1012.
-- Smit, P., Zijlema, M. and Stelling, G. (2013): Depth-induced wave breaking
-  in a non-hydrostatic, near-shore wave model. *Coastal Eng.*, 76, 1–16.
-- Yamazaki, Y., Kowalik, Z. and Cheung, K. F. (2009): Depth-integrated,
-  non-hydrostatic model for wave breaking and run-up. *Int. J. Numer. Meth.
-  Fluids*, 61, 473–497.
-- Yamazaki, Y., Cheung, K. F. and Kowalik, Z. (2011): Depth-integrated,
-  non-hydrostatic model with grid nesting for tsunami generation,
-  propagation, and run-up. *Int. J. Numer. Meth. Fluids*, 67, 2081–2107.
-- Casulli, V. and Stelling, G. S. (1998): Numerical simulation of 3D
-  quasi-hydrostatic, free-surface flows. *J. Hydraul. Eng.*, 124, 678–686.
-- Casulli, V. (1999): A semi-implicit finite difference method for
-  non-hydrostatic, free-surface flows. *Int. J. Numer. Meth. Fluids*, 30,
-  425–440.
-- Firdaus, K. and Behrens, J. (2026): Locally adaptive non-hydrostatic shallow
-  water extension for moving bottom-generated waves. *Int. J. Numer. Meth.
-  Fluids*, doi:10.1002/fld.70021. 同: Two-dimensional locally adaptive
-  non-hydrostatic extension of shallow water equations. arXiv:2606.27562.
-- Firdaus, K. et al. (2025): Non-hydrostatic model for simulating moving
-  bottom-generated waves: a shallow water extension with quadratic vertical
-  pressure profile. *Int. J. Numer. Meth. Fluids*, doi:10.1002/fld.5393.
-- Jeschke, A., Pedersen, G. K., Vater, S. and Behrens, J. (2017):
-  Depth-averaged non-hydrostatic extension for shallow water equations with
-  quadratic vertical pressure profile: equivalence to Boussinesq-type
-  equations. *Int. J. Numer. Meth. Fluids*, 84, 569–583.
-- Berger, M. J. and LeVeque, R. J. (2024): Implicit adaptive mesh refinement
-  for dispersive tsunami propagation. *SIAM J. Sci. Comput.*, 46, B554–B578.
-- Tonelli, M. and Petti, M. (2009): Hybrid finite volume – finite difference
-  scheme for 2DH improved Boussinesq equations. *Coastal Eng.*, 56, 609–620.
-- Tissier, M., Bonneton, P., Marche, F., Chazel, F. and Lannes, D. (2012):
-  A new approach to handle wave breaking in fully non-linear Boussinesq
-  models. *Coastal Eng.*, 67, 54–66.
-- Kazolea, M. and Ricchiuto, M. (2018): On wave breaking for Boussinesq-type
-  models. *Ocean Modelling*, 123, 16–39.
-- Shi, F., Kirby, J. T., Harris, J. C., Geiman, J. D. and Grilli, S. T.
-  (2012): A high-order adaptive time-stepping TVD solver for Boussinesq
-  modeling of breaking waves and coastal inundation. *Ocean Modelling*,
-  43–44, 36–51.
-- Kennedy, A. B., Chen, Q., Kirby, J. T. and Dalrymple, R. A. (2000):
-  Boussinesq modeling of wave transformation, breaking, and runup. I: 1D.
-  *J. Waterw. Port Coast. Ocean Eng.*, 126, 39–47.
-- Zelt, J. A. (1991): The run-up of nonbreaking and breaking solitary waves.
-  *Coastal Eng.*, 15, 205–246.
-- Escalante, C., Dumbser, M. and Castro, M. J. (2019): An efficient
-  hyperbolic relaxation system for dispersive non-hydrostatic water waves
-  and its solution with high order discontinuous Galerkin schemes.
-  *J. Comput. Phys.*, 394, 385–416.
-- Muñoz-Moncayo, C. and Ketcheson, D. I. (2026): Adaptive, efficient, and
-  scalable water wave modeling with dispersive hyperbolic systems.
-  arXiv:2606.12162.
-- Kajiura, K. (1963): The leading wave of a tsunami. *Bull. Earthq. Res.
-  Inst.*, 41, 535–571.
-- Hammack, J. L. (1973): A note on tsunamis: their generation and propagation
-  in an ocean of uniform depth. *J. Fluid Mech.*, 60, 769–799.
-- Synolakis, C. E. (1987): The runup of solitary waves. *J. Fluid Mech.*,
-  185, 523–545.
-- Gurevich, A. V. and Pitaevskii, L. P. (1974): Nonstationary structure of a
-  collisionless shock wave. *Sov. Phys. JETP*, 38, 291–297.
-- El, G. A., Grimshaw, R. H. J. and Smyth, N. F. (2006): Unsteady undular
-  bores in fully nonlinear shallow-water theory. *Phys. Fluids*, 18, 027104.
-- Stelling, G. S. and Duinmeijer, S. P. A. (2003): A staggered conservative
-  scheme for every Froude number in rapidly varied shallow water flows.
-  *Int. J. Numer. Meth. Fluids*, 43, 1329–1354(運動量保存形移流。
-  [移流項のスキーム](advection.md))。
+[^sz03]: Stelling, G. S. and Zijlema, M. (2003): An accurate and efficient finite-difference algorithm for non-hydrostatic free-surface flow with application to wave propagation. *Int. J. Numer. Meth. Fluids*, 43, 1–23.
+[^zijlema11]: Zijlema, M., Stelling, G. and Smit, P. (2011): SWASH: An operational public domain code for simulating wave fields and rapidly varied flows in coastal waters. *Coastal Eng.*, 58, 992–1012.
+[^smit13]: Smit, P., Zijlema, M. and Stelling, G. (2013): Depth-induced wave breaking in a non-hydrostatic, near-shore wave model. *Coastal Eng.*, 76, 1–16.
+[^yamazaki09]: Yamazaki, Y., Kowalik, Z. and Cheung, K. F. (2009): Depth-integrated, non-hydrostatic model for wave breaking and run-up. *Int. J. Numer. Meth. Fluids*, 61, 473–497.
+[^yamazaki11]: Yamazaki, Y., Cheung, K. F. and Kowalik, Z. (2011): Depth-integrated, non-hydrostatic model with grid nesting for tsunami generation, propagation, and run-up. *Int. J. Numer. Meth. Fluids*, 67, 2081–2107.
+[^casulli98]: Casulli, V. and Stelling, G. S. (1998): Numerical simulation of 3D quasi-hydrostatic, free-surface flows. *J. Hydraul. Eng.*, 124, 678–686.
+[^casulli99]: Casulli, V. (1999): A semi-implicit finite difference method for non-hydrostatic, free-surface flows. *Int. J. Numer. Meth. Fluids*, 30, 425–440.
+[^firdaus26]: Firdaus, K. and Behrens, J. (2026): Locally adaptive non-hydrostatic shallow water extension for moving bottom-generated waves. *Int. J. Numer. Meth. Fluids*, doi:10.1002/fld.70021. 同: Two-dimensional locally adaptive non-hydrostatic extension of shallow water equations. arXiv:2606.27562.
+[^firdaus25]: Firdaus, K. et al. (2025): Non-hydrostatic model for simulating moving bottom-generated waves: a shallow water extension with quadratic vertical pressure profile. *Int. J. Numer. Meth. Fluids*, doi:10.1002/fld.5393.
+[^jeschke17]: Jeschke, A., Pedersen, G. K., Vater, S. and Behrens, J. (2017): Depth-averaged non-hydrostatic extension for shallow water equations with quadratic vertical pressure profile: equivalence to Boussinesq-type equations. *Int. J. Numer. Meth. Fluids*, 84, 569–583.
+[^berger24]: Berger, M. J. and LeVeque, R. J. (2024): Implicit adaptive mesh refinement for dispersive tsunami propagation. *SIAM J. Sci. Comput.*, 46, B554–B578.
+[^tonelli09]: Tonelli, M. and Petti, M. (2009): Hybrid finite volume – finite difference scheme for 2DH improved Boussinesq equations. *Coastal Eng.*, 56, 609–620.
+[^tissier12]: Tissier, M., Bonneton, P., Marche, F., Chazel, F. and Lannes, D. (2012): A new approach to handle wave breaking in fully non-linear Boussinesq models. *Coastal Eng.*, 67, 54–66.
+[^kazolea18]: Kazolea, M. and Ricchiuto, M. (2018): On wave breaking for Boussinesq-type models. *Ocean Modelling*, 123, 16–39.
+[^shi12]: Shi, F., Kirby, J. T., Harris, J. C., Geiman, J. D. and Grilli, S. T. (2012): A high-order adaptive time-stepping TVD solver for Boussinesq modeling of breaking waves and coastal inundation. *Ocean Modelling*, 43–44, 36–51.
+[^kennedy00]: Kennedy, A. B., Chen, Q., Kirby, J. T. and Dalrymple, R. A. (2000): Boussinesq modeling of wave transformation, breaking, and runup. I: 1D. *J. Waterw. Port Coast. Ocean Eng.*, 126, 39–47.
+[^zelt91]: Zelt, J. A. (1991): The run-up of nonbreaking and breaking solitary waves. *Coastal Eng.*, 15, 205–246.
+[^escalante19]: Escalante, C., Dumbser, M. and Castro, M. J. (2019): An efficient hyperbolic relaxation system for dispersive non-hydrostatic water waves and its solution with high order discontinuous Galerkin schemes. *J. Comput. Phys.*, 394, 385–416.
+[^munoz26]: Muñoz-Moncayo, C. and Ketcheson, D. I. (2026): Adaptive, efficient, and scalable water wave modeling with dispersive hyperbolic systems. arXiv:2606.12162.
+[^kajiura63]: Kajiura, K. (1963): The leading wave of a tsunami. *Bull. Earthq. Res. Inst.*, 41, 535–571.
+[^hammack73]: Hammack, J. L. (1973): A note on tsunamis: their generation and propagation in an ocean of uniform depth. *J. Fluid Mech.*, 60, 769–799.
+[^synolakis87]: Synolakis, C. E. (1987): The runup of solitary waves. *J. Fluid Mech.*, 185, 523–545.
+[^gurevich74]: Gurevich, A. V. and Pitaevskii, L. P. (1974): Nonstationary structure of a collisionless shock wave. *Sov. Phys. JETP*, 38, 291–297.
+[^el06]: El, G. A., Grimshaw, R. H. J. and Smyth, N. F. (2006): Unsteady undular bores in fully nonlinear shallow-water theory. *Phys. Fluids*, 18, 027104.
+[^sd03]: Stelling, G. S. and Duinmeijer, S. P. A. (2003): A staggered conservative scheme for every Froude number in rapidly varied shallow water flows. *Int. J. Numer. Meth. Fluids*, 43, 1329–1354.(運動量保存形移流。[移流項のスキーム](advection.md))
