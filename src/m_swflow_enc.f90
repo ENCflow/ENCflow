@@ -2602,19 +2602,22 @@ contains
     end if
   end function
 
-  ! MUSCL + van Leer の面値(流れの移流項 face_value と同じ式。§68.6・§78)
-  !   c_dn = c_up なら面値 = c_up(一様濃度は一様のまま)
+  ! MUSCL + van Leer の面値(流れの移流項 face_value と同じ限定器。§68.6・§78)
+  !   ψ(r) = (r + |r|)/(1 + |r|)、r = a/d(a = c_up − c_uu、d = c_dn − c_up)を
+  !   比 r を作らずに書く: a·d > 0 なら ψ/2·d = a·d/(a + d)、そうでなければ 0。
+  !   d が極小のとき r が オーバーフローして SIGFPE になるのを避ける
+  !   (濃度は 1e-300 級の値を取りうる)。a·d > 0 なら |a + d| >= max(|a|, |d|) で
+  !   割り算は安全。c_dn = c_up なら面値 = c_up(一様濃度は一様のまま)
   pure function muscl_face(cup, cdn, cuu) result(f)
     real, intent(in) :: cup, cdn, cuu
-    real :: f, d, r, psi
+    real :: f, a, d
+    a = cup - cuu
     d = cdn - cup
-    if (d == 0.0) then
+    if (a * d > 0.0) then
+      f = cup + a * d / (a + d)
+    else
       f = cup
-      return
     end if
-    r = (cup - cuu) / d
-    psi = (r + abs(r)) / (1.0 + abs(r))
-    f = cup + 0.5 * psi * d
   end function
 
 end subroutine
