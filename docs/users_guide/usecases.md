@@ -17,6 +17,7 @@
 | 河川洪水の氾濫(外水) | [地理情報](geoinfo.md)+[境界条件](boundary.md)(+[河道](channel.md)・[構造物](structure.md)) | 地形+流入時系列(bc_qin / inflow) | 実地形は窪地除去(utils/rmdepress_river)を前処理で。平坦河道区間の流量振動対策はチュートリアル参照 |
 | 降雨をそのまま載せる氾濫解析(rain-on-grid) | [降雨・気象](forcing.md) | fn_precip(一様/分布)を地形に直接載せる | 損失は流出係数でなく浸透([地下水](gwflow.md) の Green-Ampt)で物理的に表すのが流儀 |
 | ダム・ため池の決壊氾濫 | [河道](channel.md)の堤防+破堤(+初期条件) | 貯水域を河道セル(rw)+堤体を堤防(bank)で表し、決壊は破堤(&list_channel_breach)の天端時系列で与える | 決壊口の拡大過程は入力(時系列)で与える(侵食による自発拡大は予測しない) |
+| 河川堤防の破堤氾濫 | [河道](channel.md)の破堤(仮想壁面)、または[規定底面運動](bedmotion.md)(解像堤防) | 堤防が仮想壁面なら &list_channel_breach の天端時系列。高解像度 DEM に堤防が標高として入っている(解像堤防)なら、破堤口のセルの地盤高を時刻歴で下げる(make_breach.py で表と窓付き変位ファイルを生成)。実例: [examples/levee_breach](../../examples/levee_breach/) | 決壊口の幅・深さの進行は入力で与える(侵食による自発拡大は予測しない)。解像堤防の破堤は規定の形状変化で、土層厚は変えない |
 | 霞堤・越流堤・二線堤・輪中の治水効果 | [河道](channel.md)の堤防 | fn_bank / bank0+開口 f_bank_opening | 越流幅・天端高・開口位置はデータで与える |
 | 遊水地・調節池の効果検証 | 地形+[河道](channel.md)+[構造物](structure.md) | 越流堤(bank)+流入・排水ゲート(culvert/gate) | |
 | 越波・越流による市街地浸水 | [境界条件](boundary.md)のソース | 越波流量時系列を &list_bound_source で護岸背後セルに投入 | 波浪・越波流量そのものは計算しない(外部推算値を与える) |

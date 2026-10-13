@@ -62,7 +62,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
   - [家屋破壊・瓦礫モデルの解説](users_guide/bldgdebris_models.md) — 破壊判定量とランプ・破壊レート・空隙率への帰還・材積収支・閾値の文献対応と既定値の根拠(家屋破壊・瓦礫の補足)
 - [氷河](users_guide/glacier.md)(&list_glacier)— 涵養・融解・氷体流動・氷河侵食・雪崩再配分
 - [溶岩流](users_guide/lavaflow.md)(&list_lavaflow)— 噴火口からの湧き出し・Bingham 粘性流動・停止・固化(溶岩原の地形化)
-- [規定底面運動](users_guide/bedmotion.md)(&list_bedmotion)— 地盤変位の時刻歴で z を強制(断層津波の発生)
+- [規定底面運動](users_guide/bedmotion.md)(&list_bedmotion)— 地盤変位の時刻歴で z を強制(断層津波の発生・沿岸の隆起沈降・解像堤防の破堤)
   - [規定底面運動の解説](users_guide/bedmotion_models.md) — 変位の時間補間・断層変位場と初期水面・非静水圧との関係・再開と MPI の契約(規定底面運動の補足)
 - [水質](users_guide/wq.md)(&list_wq)— 負荷投入・輸送・減衰・洗い出し・Kd 二相分配・地下水経由・貯水池
   - [水質モデルの解説](users_guide/wq_models.md) — 減衰・沈降・Kd 分配・浸透同伴と地下輸送・蓄積洗い出し・貯水池・下水噴出の式と代表値の出典(水質の補足)
@@ -210,6 +210,7 @@ ENCflow は地表の水の流れを計算するモデルです。必要に応じ
 |---|---|
 | 洪水氾濫の計算 | [地理情報](users_guide/geoinfo.md)+[境界条件](users_guide/boundary.md)(+河道・構造物) |
 | ダム・ため池の決壊氾濫 | [河道](users_guide/channel.md)(堤防+破堤)+[用途集](users_guide/usecases.md) |
+| 河川堤防の破堤氾濫 | [河道](users_guide/channel.md)(仮想壁面の破堤)または[規定底面運動](users_guide/bedmotion.md)(解像堤防の破堤) |
 | 霞堤・遊水地・二線堤の治水効果 | [河道](users_guide/channel.md)(堤防・開口)+[構造物](users_guide/structure.md) |
 | 干拓地・低平地の機場排水 | [構造物](users_guide/structure.md)(ポンプ)+[潮位・海面](users_guide/tide.md) |
 | 高潮・津波の遡上 | [潮位・海面](users_guide/tide.md)+[境界条件](users_guide/boundary.md) |

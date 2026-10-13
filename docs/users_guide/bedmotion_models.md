@@ -26,6 +26,9 @@ z^{\,n+1} = z^{\,n} + \left[d(t_{n+1}) - d_{prev}\right],
   方式の概念図で、切替点での左右どちらの値を使うかを示していません。
 - 増分で与えるため、土砂・地形変化・動く底層・溶岩流が同じランで z を
   動かしていても衝突しません(各モジュールは自分の増分だけを加える)。
+- 乾いたセル(h = 0)も同じ式で動きます。解像堤防の破堤(章の §5)は
+  この性質を使い、乾いた天端セルの z を堤底まで下げて川の水を堤内地へ
+  通します。変位ファイルの作り方は examples/levee_breach/make_breach.py。
 
 ## 2. 断層変位場と初期水面
 
@@ -89,6 +92,7 @@ utils/fault2disp は、断層の位置・走向・傾斜・すべり角・長さ
 Σ(z − z0) = Σ d(底層の内部移転は総和 0)が出力精度の範囲で成り立ちます。
 - [examples/tsunami_fault](../../examples/tsunami_fault/README.md): 静水圧 / 瞬時変位 / 非静水圧 + 加速度項の比較。
 - [examples/tsunami_coast](../../examples/tsunami_coast/README.md): 沿岸の沈降・隆起と沖の津波の時間差。
+- [examples/levee_breach](../../examples/levee_breach/README.md): 解像堤防の破堤(仮想壁面の &list_channel_breach との比較)。
 
 ## 参考文献
 
