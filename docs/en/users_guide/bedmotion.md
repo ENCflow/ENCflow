@@ -5,25 +5,155 @@
 [Back to the User's Guide index](../users_guide.md)
 
 Forces the bed elevation z with a prescribed **time history** of ground
-displacement. The main use is tsunami generation from fault-derived
-seafloor deformation, following generation, propagation, run-up and
-inundation in a single run. Land cells move with the same displacement
-field, so coseismic coastal uplift and subsidence (flooding of subsided
-lowland, waves spreading from uplifted areas) are part of the same
-computation. During the local displacement update, h is kept and z is
-moved, so e = z + h moves by the same amount. The subsequent flow calculation
-can change depth and velocity (the same contract as the morphological
-modules). The design is in [docs/bedmotion_plan.md](../../bedmotion_plan.md),
-the implementation record in developer.md §70, and the preprocessing from
-fault parameters in the [fault2disp geometry diagram and setup guide](../../../utils/fault2disp/README.en.md#2-fault-parameter-conventions).
+displacement. There are three uses. (A) Generate a tsunami from the
+seafloor and coastal deformation computed from fault parameters and
+follow generation, propagation, run-up and inundation in a single run.
+(B) Give coseismic coastal uplift and subsidence (flooding of subsided
+lowland, waves spreading from uplifted areas) or a displacement field
+obtained from geodetic data or another model. (C) Lower a levee that is
+present as elevation in a high-resolution DEM (a **resolved levee**) at a
+chosen time, width and depth to represent a **breach**. During the local
+displacement update, h is kept and z is moved, so e = z + h moves by the
+same amount. The subsequent flow calculation changes depth and velocity
+(the same contract as the morphological modules). The design is in
+[docs/bedmotion_plan.md](../../bedmotion_plan.md), the implementation
+record in developer.md §70, and the preprocessing from fault parameters in
+the [fault2disp geometry diagram and setup guide](../../../utils/fault2disp/README.en.md#2-fault-parameter-conventions).
 The time interpolation of the displacement, the fault displacement field,
 the relation to the non-hydrostatic correction and the behaviour contract
 are in [Prescribed bed motion explained](bedmotion_models.md).
 
-## 1. Just try it (minimal setup)
+## 1. Just try it (minimal input)
 
+An example that only lifts part of the terrain by 0.5 m in 10 seconds.
+All it needs is **one snapshot table and two displacement files**; the
+displacement files are matrices in the same layout as the bed elevation
+z (row 1 is the northern edge).
+
+```
+# bm/bmlist.txt (time in s, file names relative to dir_data)
+  0.0   bm/d0.txt      ! zero displacement (all cells 0)
+ 10.0   bm/d1.txt      ! cumulative displacement after 10 s (0.5 on the lifted cells, 0 elsewhere)
+```
+
+Write the displacement files by hand or, for example, like this (a
+100 × 60 grid, lifting the central 10 × 10 cells by 0.5 m):
+
+```python
+import numpy as np
+nx, ny = 100, 60
+d = np.zeros((ny, nx)); np.savetxt('bm/d0.txt', d, fmt='%.3f')
+d[25:35, 45:55] = 0.5;   np.savetxt('bm/d1.txt', d, fmt='%.3f')
+```
+
+The model parameters are just `fn_bedmotion` and `&list_bedmotion`
+(terrain, initial level and boundaries as usual).
+
+```
+&list_sysparam
+  fn_bedmotion = '-'        ! read &list_bedmotion from the same file
+  f_out_z = 1               ! also output the deformed bed Z0001...
+  ...
+/
+&list_bedmotion
+  fn_bmlist = 'bm/bmlist.txt'
+/
+```
+
+Run `./encflow param.txt`. At the start the number of snapshots and
+their time range are printed; at the end the maximum and minimum applied
+displacement (+0.5 m and 0 in this example). Check in Z0001... that the
+bed rises linearly over 10 seconds and that, where there is water, the
+surface rises by the same amount (the depth does not change). After the
+last time in the table the last displacement is held. A negative
+displacement is subsidence.
+
+## 2. Input conventions (snapshot table and displacement files)
+
+The **table** has one line per snapshot, "time file" (blank lines and
+lines starting with `#` or `!` are ignored). Times are relative to the
+start t0 and **strictly increasing**; file names are relative to dir_data.
+The internal snapshot time is `t0 + table time × bm_tscale`.
+
+```
+# time(s)  file
+  0.0      bm/disp_0000.txt
+ 10.0      bm/disp_0010.txt
+ 60.0      bm/disp_0060.txt
+```
+
+Each **displacement file** holds the **cumulative** displacement d [m] at
+that time, relative to the terrain at the start of the run (not the
+increment since the previous time), in the same format and row order as
+the bed elevation z (text matrix / bil / GeoTIFF according to
+f_input_mode; row 1 is the northern edge). Positive is uplift, negative
+subsidence.
+
+- Before the first time the first value holds; after the last time the
+  last value holds. A zero-displacement line at t = 0 is the usual start
+  (fault2disp writes one).
+- Between snapshots the displacement is interpolated linearly
+  (f_bminterp=1, default) or held stepwise (f_bminterp=0, the previous
+  snapshot is kept).
+- Times are in seconds. A table written in minutes or hours is converted
+  with bm_tscale (60, 3600).
+- The model keeps two snapshots (previous and next) plus the applied
+  displacement, reading the next file as time advances. The number of stored
+  raster arrays is independent of table length, but the lists of times,
+  file names, and windows grow with the number of snapshots.
+- Eligible cells have `x > 0` and `sw = 0`. Land cells, dry cells and
+  initially submerged seabed all move with the same displacement field.
+  Cells in the sea mask (sw > 0) have their level prescribed and do not
+  move.
+
+### Windowed displacement files (when the deformation covers only part of the grid)
+
+When the full grid is large and the deformation covers only part of it,
+append four integers `i1 j1 ni nj` to the line. The file is then read as
+an ni × nj matrix covering only the **window** of columns i1..i1+ni−1 and
+rows j1..j1+nj−1 of the full grid, with zero displacement outside. The
+window indices are 1-based from the northwest. Align the window with cell
+edges, with `nj` file rows and `ni` columns. The z/e update loops scan the
+**bounding rectangle enclosing all snapshot windows**. Gaps between separate
+windows are included; this is not a scan of only their exact union. Each
+snapshot is zero outside its own window before temporal interpolation.
+
+Windowing reduces input files and read buffers, but the retained displacement
+arrays and temporal interpolation still span each MPI band. Total work and
+memory do not scale solely with window area. `f_window=1` in fault2disp
+writes this format, using `d_min` as the threshold for the discarded region.
+For the breach of §5 a window of the few breach cells is enough.
+
+```
+# time(s)  file               i1  j1  ni  nj
+  0.0      bm/disp_0000.txt   90  40  80  70
+ 30.0      bm/disp_0010.txt   90  40  80  70
+```
+
+![Time history, input patterns and windows of the prescribed bed motion](../../figs/bedmotion_patterns_en.png)
+
+Figure: (a) An example of cumulative displacement at one cell and the
+interpolation modes. See §7 for exact step-switch behavior at snapshot times.
+(b) A creates displacement from fault parameters (§3), B preprocesses existing
+rasters, and C uses a one-row table for the final field (§4); all feed a table to
+`fn_bmlist`. C can use the output from A or B. (c) The local update adds
+`Δd = d(tₙ₊₁) − d_prev` to the bed. Depth is the same immediately before and
+after that update; bed and surface move by the same Δd. The window illustrates
+`nx=16, ny=10, i1=5, j1=2, ni=7, nj=5`: 35 cells in columns 5–11 and rows
+2–6. This schematic is separate from the input example in the text.
+An [SVG version](../../figs/bedmotion_patterns_en.svg) is also available.
+Regenerate only this figure with `python docs/figs/make_guide_figs.py bedmotion`.
+
+## 3. Application A: tsunami from a fault (utils/fault2disp)
+
+Earthquake tsunamis use this pattern. From the fault position, strike,
+dip, rake, length, width, slip, rupture start time and rise time the
+utility computes the displacement field with the elastic half-space
+solution (Okada's formulas) and writes the table. Several segments (with
+rupture-time lags) and the horizontal-displacement contribution (when a bed
+elevation is given) are supported ([the explanation](bedmotion_models.md) §2).
 The steps to generate the tsunami of a single reverse fault in an
-idealised sea (no georeference). Three files are needed.
+idealised sea (no georeference) are as follows.
 
 **(1) Fault parameters to a displacement time history** (utils/fault2disp)
 
@@ -79,83 +209,42 @@ tsunami run are shown)
 /
 ```
 
-**(3) Run**
+**(3) Run** as usual, `./encflow param.txt` (the MPI build likewise).
+The complete example is
+[examples/tsunami_fault](../../../examples/tsunami_fault/README.md)
+(this setup itself). The water body and boundaries are discussed in §6.
 
-As usual, `./encflow param.txt` (the MPI build likewise). At the start
-the number of snapshots and their time range are printed; at the end the
-maximum and minimum applied displacement, the number of snapshots read
-and the number of steps applied. Complete examples:
-[examples/tsunami_fault](../../../examples/tsunami_fault/README.md) (this
-minimal setup itself) and
-[examples/tsunami_coast](../../../examples/tsunami_coast/README.md)
-(coastal subsidence/uplift and the offshore tsunami with their time lag).
-
-## 2. Input conventions (snapshot table and displacement files)
-
-The **table** has one line per snapshot, "time file" (blank lines and
-lines starting with `#` or `!` are ignored). Times are relative to the
-start t0 and **strictly increasing**; file names are relative to dir_data.
-The internal snapshot time is `t0 + table time × bm_tscale`.
-
-```
-# time(s)  file
-  0.0      bm/disp_0000.txt
- 10.0      bm/disp_0010.txt
- 60.0      bm/disp_0060.txt
-```
-
-Each **displacement file** holds the **cumulative** displacement d [m] at
-that time, relative to the terrain at the start of the run (not the
-increment since the previous time), in the same format and row order as
-the bed elevation z (text matrix / bil / GeoTIFF according to
-f_input_mode; row 1 is the northern edge). Positive is uplift, negative
-subsidence.
-
-- Before the first time the first value holds; after the last time the
-  last value holds. A zero-displacement line at t = 0 is the usual start
-  (fault2disp writes one).
-- Between snapshots the displacement is interpolated linearly
-  (f_bminterp=1, default) or held stepwise (f_bminterp=0, the previous
-  snapshot is kept).
-- Times are in seconds. A table written in minutes or hours is converted
-  with bm_tscale (60, 3600).
-- The model keeps two snapshots (previous and next) plus the applied
-  displacement, reading the next file as time advances. The number of stored
-  raster arrays is independent of table length, but the lists of times,
-  file names, and windows grow with the number of snapshots.
-
-## 3. Three ways to supply the displacement
-
-### Pattern A: from fault parameters (utils/fault2disp)
-
-Earthquake tsunamis use this pattern. From the fault position, strike,
-dip, rake, length, width, slip, rupture start time and rise time the
-utility computes the displacement field with the elastic half-space
-solution (Okada's formulas) and writes the table. Several segments (with
-rupture-time lags) and the horizontal-displacement contribution (when a bed
-elevation is given) are supported ([the explanation](bedmotion_models.md) §2). Coordinates can be given in three
-ways, all absorbed on the fault2disp side, so the model settings do not
-change (details in fault2disp README §3).
+Coordinates can be given in three ways, all absorbed on the fault2disp
+side, so the model settings do not change (details in fault2disp README §3).
 
 | How the coordinates are held | fault2disp setting |
 |---|---|
-| Idealised experiment (no georeference) | x_top, y_top as distances (m) from the lower-left corner of the grid (the example in §1) |
+| Idealised experiment (no georeference) | x_top, y_top as distances (m) from the lower-left corner of the grid (the example above) |
 | Georeferenced analysis in a projected system | give the bil+hdr / GeoTIFF bed elevation as fn_z: the grid and origin are taken from the file and x_top, y_top are absolute coordinates of that system. The Japanese plane rectangular order (X northing, Y easting) is f_jpr=1 |
 | Longitude/latitude | f_lonlat=1 with lon_top, lat_top and the grid's projection (proj_lon0 etc.; UTM or plane rectangular). The strike is corrected for grid convergence |
 
-### Pattern B: a displacement field of your own (geodetic data, slip inversions, other models)
+## 4. Application B: coastal uplift and subsidence, and displacement fields of your own
 
-When you already hold rasters of ground displacement without going
-through a fault model, write the table yourself following §2. Resample
-them to the same grid and format as z in preprocessing (ENCflow does not
-interpolate) and make each one cumulative. A field available at a single
-time (the final displacement only) can be used in the form of §3-C.
+Land cells move with the same displacement field, so when the fault
+deformation reaches the coast and the land (flooding of subsided lowland,
+waves spreading from uplifted areas, their superposition in bays) it is
+part of the same run with the settings of §3 unchanged. The example is
+[examples/tsunami_coast](../../../examples/tsunami_coast/README.md) (a deep
+fault under the coast subsides the shore by 0.6 m, and the disturbance
+reaches the coast 10 minutes before the offshore fault's tsunami).
 
-### Pattern C: a one-row table for the final displacement (instantaneous input)
+When you already hold **a displacement field of your own** (geodetic
+data, slip inversions, other models), write the table yourself following
+§2 without going through a fault model. Resample the rasters to the same
+grid and format as z in preprocessing (ENCflow does not interpolate) and
+make each one cumulative. The minimal example of §1 has this form. Slow
+deformation such as land subsidence is easier to handle with the table
+written in minutes or hours and converted with bm_tscale.
 
-To skip the rupture process, reduce the table to one line. The final
-displacement raster can come from A or B. The table value `0.0` corresponds
-to `t0`.
+An **instantaneous displacement** (a field available at a single time)
+uses a one-row table. This skips the rupture process and applies the
+final displacement; the final raster can come from A or B. The table value
+`0.0` corresponds to `t0`.
 
 ```
 # instantaneous: final displacement at t = 0
@@ -165,51 +254,102 @@ to `t0`.
 In a fresh run, the final displacement is applied **at the head of the first
 time step**, before solving the flow. Initial output `0000` precedes that
 application and therefore contains the undeformed terrain and surface.
-This omits the rupture process; it does not guarantee the same result as
-changing only the initial water depth over fixed terrain. Bedmotion changes
-the terrain while keeping the depth during application.
+It does not guarantee the same result as changing only the initial water
+depth over fixed terrain: bedmotion changes the terrain while keeping the
+depth during application. The time-history input differs in near-field
+arrival time and wave height (the sizes found in the examples are in
+[the explanation](bedmotion_models.md) §2).
 
-The time-history input differs in near-field arrival time and wave height
-(the sizes found in the examples are in [the explanation](bedmotion_models.md) §2).
+## 5. Application C: breaching a resolved levee
 
-### Large domains: windowed displacement files
+Levees can be represented in two ways: as [virtual walls](channel.md)
+standing on the boundary between channel cells and landside cells (a
+levee that does not thicken the cells; the breach is the crest time
+series of `&list_channel_breach`), or as **elevation itself in a
+high-resolution DEM** (cells of 5–10 m; called a **resolved levee** here,
+by analogy with a resolved channel). A resolved levee has no virtual
+wall, so `&list_channel_breach` cannot be used. Instead, the breach model
+is the prescribed bed motion **lowering the bed of the breach cells at a
+chosen time, width and depth**. Crest cells move even while dry (z drops
+with h = 0), so the river water flows over the lowered crest onto the
+floodplain.
 
-When the full grid is large and the deformation covers only part of it,
-append four integers `i1 j1 ni nj` to the line. The file is then read as
-an ni × nj matrix covering only the **window** of columns i1..i1+ni−1 and
-rows j1..j1+nj−1 of the full grid, with zero displacement outside. The
-window indices are 1-based from the northwest. Align the window with cell
-edges, with `nj` file rows and `ni` columns. The z/e update loops scan the
-**bounding rectangle enclosing all snapshot windows**. Gaps between separate
-windows are included; this is not a scan of only their exact union. Each
-snapshot is zero outside its own window before temporal interpolation.
+**Procedure** (the preprocessing script
+[examples/levee_breach/make_breach.py](../../../examples/levee_breach/make_breach.py)
+writes the table and the windowed displacement files):
 
-Windowing reduces input files and read buffers, but the retained displacement
-arrays and temporal interpolation still span each MPI band. Total work and
-memory do not scale solely with window area. `f_window=1` in fault2disp
-writes this format, using `d_min` as the threshold for the discarded region.
+1. **Choose the breach opening**: the rectangle of levee cells (columns
+   i1..i2 × rows j1..j2; both columns when the levee is two cells wide).
+   The final breach width is the number of cells along the long side.
+   Cell indices are 1-based ([coordinates chapter](coordinates.md)).
+2. **Choose the floor elevation**: a constant (`--floor`), or for each
+   row the ground of the landside toe column (`--floor-col`, a levee
+   running N–S), or for each column the ground of the toe row
+   (`--floor-row`, a levee running E–W). Lowering to the floodplain
+   ground is usual; give a lower value for scour down to the river bed.
+3. **Choose the schedule**: start t0, the time t1 at which the full width
+   is at full depth (minutes), and tdeep, the time for one cell to reach
+   the floor. With tdeep < t1 − t0 the central cells deepen first and the
+   outer cells start later (widening). Set the start at the time the
+   river level approaches the crest (from the probe output of an earlier
+   run or observed stages).
+4. **Generate and configure**:
 
 ```
-# time(s)  file               i1  j1  ni  nj
-  0.0      bm/disp_0000.txt   90  40  80  70
- 30.0      bm/disp_0010.txt   90  40  80  70
+python3 make_breach.py --z z.txt --cols 21 22 --rows 48 52 --floor-col 23 \
+    --t0 70 --t1 90 --tdeep 10 --out bm
 ```
 
-![Time history, input patterns and windows of the prescribed bed motion](../../figs/bedmotion_patterns_en.png)
+```
+&list_sysparam
+  fn_bedmotion = '-'
+  f_out_z = 1               ! to check the breached terrain
+  ...
+/
+&list_bedmotion
+  fn_bmlist = 'bm/bmlist.txt'   ! table times in seconds (bm_tscale default 1)
+/
+```
 
-Figure: (a) An example of cumulative displacement at one cell and the
-interpolation modes. See §5 for exact step-switch behavior at snapshot times.
-(b) A creates displacement from fault parameters, B preprocesses existing
-rasters, and C uses a one-row table for the final field; all feed a table to
-`fn_bmlist`. C can use the output from A or B. (c) The local update adds
-`Δd = d(tₙ₊₁) − d_prev` to the bed. Depth is the same immediately before and
-after that update; bed and surface move by the same Δd. The window illustrates
-`nx=16, ny=10, i1=5, j1=2, ni=7, nj=5`: 35 cells in columns 5–11 and rows
-2–6. This schematic is separate from the input example in the text.
-An [SVG version](../../figs/bedmotion_patterns_en.svg) is also available.
-Regenerate only this figure with `python docs/figs/make_guide_figs.py bedmotion`.
+The script writes the cumulative displacement of each cell
+$`d(t) = -(z_0 - z_{floor})\,p(t)`$ (the progress p is a piecewise-linear
+ramp from 0 to 1) at every break point, so linear interpolation
+(f_bminterp = 1) reproduces the schedule exactly. Each table line carries
+the window `i1 j1 ni nj` of the breach rectangle, and the files hold only
+that rectangle. The settings of the channels chapter (fn_rw, bank0) are
+not needed.
 
-## 4. Water body and boundaries
+5. **Check**: the minimum applied displacement printed at the end equals
+   "crest − floor", Z0001... shows the lowered opening, a
+   [flux transect](record.md) drawn on the landside of the opening
+   records the breach discharge, and a transect downstream in the river
+   shows the discharge dropping.
+
+The complete example is
+[examples/levee_breach](../../../examples/levee_breach/README.md) (a
+straight channel with a 20 m wide, 3 m high resolved levee, with a
+comparison case giving the same schedule to a virtual wall through
+`&list_channel_breach`).
+
+Notes:
+
+- Prescribed bed motion is a **prescribed change of shape**. It does not
+  represent the natural widening by erosion of the embankment or the
+  deposition of its material on the floodplain (the soil depth sd is not
+  changed). The progression of the breach width and depth is an input
+  (from observed breach geometries or empirical relations).
+- Sediment and landform change (geomorph) may move the breach cells in
+  the same run: the displacement is applied incrementally, so they do not
+  conflict. Bed scour and breaching can be handled together.
+- A breach one cell wide also passes flow through the diagonal links of
+  the ENC grid, so it is a more open shape than a virtual-wall breach
+  (one normal edge per site). See the README of examples/levee_breach
+  for a comparison of the widths.
+- An opening narrower than a cell cannot be represented (the resolution
+  of a resolved levee is the cell). On a coarse grid use the breach of the
+  virtual (subgrid) wall.
+
+## 6. Water body and boundaries (tsunami runs)
 
 - A tsunami run does **not** use the sea mask: the water body is given
   by the fixed initial level f_htype=2 (still water e0; cells with
@@ -219,12 +359,10 @@ Regenerate only this figure with `python docs/figs/make_guide_figs.py bedmotion`
 - Open-ocean edges use long-wave radiation (f_bc_* = 2) to reduce reflection;
   it does not guarantee zero reflection for every wave. Landward edges use
   walls (0).
-- Eligible cells have `x > 0` and `sw = 0`. Here “land cells” means outside
-  the sea mask, including initially submerged seabed. Inundation after
-  subsidence and drying after uplift are determined by subsequent flow and
-  the normal wetting/drying treatment.
+- Inundation after subsidence and drying after uplift are determined by
+  subsequent flow and the normal wetting/drying treatment.
 
-## 5. Time handling, hydrostatic and non-hydrostatic
+## 7. Time handling, hydrostatic and non-hydrostatic
 
 At the head of each step the displacement at the end-of-step time is
 interpolated from the snapshots and the **difference** from the previously
@@ -237,9 +375,10 @@ faults, narrow deep-sea slip, submarine slides), use the
 [non-hydrostatic correction](swflow.md) with f_nonhydrostatic=1 and
 f_nh_bottom=1 and write the snapshots densely (increase nout of fault2disp);
 the reason and the size of the effect are in
-[the explanation](bedmotion_models.md) §3.
+[the explanation](bedmotion_models.md) §3. Slow displacements such as a
+breach (§5) or land subsidence are fine in hydrostatic mode.
 
-## 6. Parameters
+## 8. Parameters
 
 Set `fn_bedmotion = "-"` (read from the same file) or a file name in the
 main parameters and write `&list_bedmotion`. When not specified there is
@@ -255,7 +394,7 @@ no memory or CPU cost.
 The displacement files follow the same f_input_mode (&list_geoinfo) as
 the bed elevation.
 
-## 7. Behaviour contract and interplay with other features
+## 9. Behaviour contract and interplay with other features
 
 - The increment is added to z of eligible cells (x > 0, sw = 0); h is kept
   and e = z + h is recovered. Momentum and the soil depth sd are untouched.
@@ -271,7 +410,7 @@ the bed elevation.
 - Output: the bed elevation Z (f_out_z) shows the deformed terrain. At the
   end the maximum and minimum of the applied displacement are printed.
 
-## 8. Tests and examples
+## 10. Tests and examples
 
 - [test/nhbottom](../../../test/nhbottom/) configuration 3: a Hammack-type
   uplift given as a per-step snapshot table, checked against the same
@@ -290,3 +429,9 @@ the bed elevation.
   fault at the bay mouth (0.8 m uplift of the cape). The disturbance from
   the coastal deformation reaches the shore 10 minutes before the offshore
   tsunami, and the subsided plain at the bay head floods earlier.
+- [examples/levee_breach](../../../examples/levee_breach/README.md): a
+  straight channel with a 20 m wide, 3 m high resolved levee. At the flood
+  peak, 5 rows × 2 columns of levee cells are lowered to the floodplain
+  ground over 20 minutes (the centre deepens first, then widens). With a
+  comparison case giving the same schedule to a virtual wall through
+  &list_channel_breach.
