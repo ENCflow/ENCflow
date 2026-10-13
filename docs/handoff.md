@@ -120,7 +120,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    対象は地表の全スカラー(hs・cq・hss・hd・hbd)と地下水の同伴輸送(cg)。
    → **f_scalar_scheme = 3(リンクごとの MUSCL)として実装済み(2026-10-13。
    developer.md §78)**。縦断 D が 1/3〜1/5、横断 Dy が 1/14 に下がり、
-   負値・行き過ぎなし。既定は 1(校正値の互換)。横断の斜め配分による拡散も、リンクごとの
+   負値・行き過ぎなし。**既定は 3(2026-10-13 に 1 から昇格。§78)**。横断の斜め配分による拡散も、リンクごとの
    MUSCL 再構成(斜めリンクの面値をそのリンク方向の風上・さらに風上の
    セルから再構成)で主要項が消える: 横断に線形な濃度場では、斜めリンクの
    面値がリンク中点の値になり、受け手セルの 0.414/0.293/0.293 の重み付き
@@ -132,14 +132,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    影響が実用上大きいのは、局所の濃度・密度のピークが判定を駆動する
    流木・瓦礫の荷重(fd)と家屋破壊判定、土石流の濃度依存レオロジー、
    水質のピーク濃度。総量・堆積量には効かない。
-   → **既定を 3 にする判断は保留(2026-10-13 影響調査済み。§78 検証)**。
-   全 test の自己検証は既定 3 で PASS、reference 差は wq.csv の台帳のみ
-   (tracer・gwseep・sewer_wq・kdpart。kdpart は settle_g −54 %)。既定を
-   変える場合: list_enc.f90 の既定値、上記 4 ケースの reference 更新
-   (人間の目視確認後に -u)、「既定 1」と記す文書(users_guide/advection.md
-   §7・swflow.md・wq_models.md、List_samples/list_enc.txt、params_index.md、
-   developer.md §78、test/tracer の README と param_*_m.txt の位置付け)の
-   改訂を同じ作業に含める。
+   → **既定を 3 に変更(2026-10-13。影響調査は §78 検証)**。全 test の
+   自己検証は既定 3 で PASS、reference 差は wq.csv の台帳のみ(gwseep・
+   sewer_wq・kdpart。kdpart は settle_g −54 %)で、承認を得て更新した。
+   test/tracer の無印 param は `f_scalar_scheme = 1` を明示して 1 次の計測を
+   保つ。examples の README の図表は既定 1 の時点のもので、再生成は任意。
 
 00c. **examples/tsunami_town・timberyard が現行コードで発散停止する
    (2026-10-13 発見。未解決)**: tsunami_town は param.txt・param_load_dw.txt
@@ -149,6 +146,13 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    結果(2026-10-01)を得た時点のコードまたは make_terrain.py の出力と
    現行が異なる可能性。ashfall_lahar・landslide_tsunami は完走する。
    bldgdebris の空隙率帰還(f_bdgv=1)と潮位強制の組合せを疑って切り分ける。
+
+00d. **test/gwdefault が分の境目で偽の FAIL になる(2026-10-13 発見)**:
+   Run.sh は save_<tag> と save_<tag>x を `diff -r` で比べるが、save_info.txt
+   の 1 行目に保存時刻(分単位)が入るため、2 本の実行が分をまたぐと
+   「config a differs」で落ちる(結果は同一)。`diff -r -I '^! ENCflow restart
+   save'` で時刻行を除外するか、save_info.txt を比較対象から外す。test の
+   変更のみで計算本体には触れない。
 
 00. **移流項の改良(developer.md §68。2026-10-01 段 0〜2 完了)**
    - 段 0: test/dambreak(Stoker 解析解。幅 400 m)。段 1: 旧 TVD 分岐の
