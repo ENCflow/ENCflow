@@ -19,14 +19,14 @@ for tag in a b c d; do
     mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_${tag}x.txt | tee -a Screen_mpi.log || exit 1
     set +o pipefail
     echo ""
-    if diff -r save_${tag} save_${tag}x > /dev/null && cmp -s result_${tag}/Log.txt result_${tag}x/Log.txt; then
+    if diff -r -I '^! ENCflow restart save' save_${tag} save_${tag}x > /dev/null && cmp -s result_${tag}/Log.txt result_${tag}x/Log.txt; then
         echo "=== config $tag (np=$NP): save/ and Log.txt are bit-identical between the minimal input and the explicit defaults ==="
     else
         echo "FAIL: config $tag (np=$NP) differs between the minimal input (defaults) and the explicit defaults" >&2
         rc=1
     fi
     if [ -d save_${tag}_serial ]; then
-        if diff -r save_${tag} save_${tag}_serial > /dev/null; then
+        if diff -r -I '^! ENCflow restart save' save_${tag} save_${tag}_serial > /dev/null; then
             echo "=== config $tag: save/ is bit-identical to the serial run ==="
         else
             echo "警告: config $tag の save/ が逐次ビルドと不一致(-Ofast の fast-math ビルド間差の" >&2

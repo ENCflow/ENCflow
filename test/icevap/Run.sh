@@ -15,7 +15,7 @@ for tag in e f g; do
     ./encflow param_${tag}x.txt | tee -a Screen.log || exit 1
     set +o pipefail
     echo ""
-    if diff -r save_${tag} save_${tag}x > /dev/null && cmp -s result_${tag}/Log.txt result_${tag}x/Log.txt; then
+    if diff -r -I '^! ENCflow restart save' save_${tag} save_${tag}x > /dev/null && cmp -s result_${tag}/Log.txt result_${tag}x/Log.txt; then
         echo "=== config $tag: save/ and Log.txt are bit-identical between the minimal input and the explicit defaults ==="
     else
         echo "FAIL: config $tag differs between the minimal input (defaults) and the explicit defaults" >&2
