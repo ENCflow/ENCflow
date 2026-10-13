@@ -9067,8 +9067,8 @@ hsea0 = 9 m(沖の水深に一致)にすると発散しないことで確認。v
   test/coastal_drain は V_max が序盤 +22 %・中盤 −18 %・終盤 +10 %、貯留は
   1 % 以内。
   test/salt(param.txt は海セルなし)は identical。いずれも海陸エッジの
-  移流項を落としたことによる差で、新基準は利用者の目視確認後に -u
-  (規律 1)。
+  移流項を落としたことによる差で、利用者承認(2026-10-13)で -u 更新した。
+  更新後は逐次・np=2・4 とも新基準に identical。
 - MPI: tide の np=2・4、tsunami_town の np=2 が逐次と Log・bldgdebris.csv・
   H9999 までビット一致。-Og -fcheck=all -finit-real=snan の np=2 が tide・
   tsunami_town とも完走(規律 3)。
