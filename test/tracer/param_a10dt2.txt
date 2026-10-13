@@ -31,6 +31,7 @@
 
 &list_enc
   f_advection_scheme = 1    ! 流れを一様に保つ(ヘッダ参照)
+  f_scalar_scheme = 1       ! 1 次風上の数値拡散を計測する(既定は 3 = MUSCL)
 /
 
 &list_initial

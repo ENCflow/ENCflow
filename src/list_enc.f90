@@ -20,10 +20,10 @@ module list_enc
     integer :: f_advection_scheme = 3         ! 移流項のスキーム (1: セル中心勾配(旧既定。非保存形),
                                               !   2: 運動量保存形・1次風上, 3: 運動量保存形+MUSCL(既定。
                                               !   2026-10-03 に 1 から昇格。developer.md §68.19))
-    integer :: f_scalar_scheme = 1            ! スカラー輸送(advect_scalar: 浮遊砂・水質・塩水層・
-                                              !   流木・瓦礫)の移流スキーム (1: 1 次風上(既定),
-                                              !   3: リンクごとの MUSCL + van Leer 面値再構成。
-                                              !   developer.md §78。2026-10-13)
+    integer :: f_scalar_scheme = 3            ! スカラー輸送(advect_scalar: 浮遊砂・水質・塩水層・
+                                              !   流木・瓦礫)の移流スキーム (1: 1 次風上(旧既定),
+                                              !   3: リンクごとの MUSCL + van Leer 面値再構成(既定。
+                                              !   2026-10-13 に 1 から昇格。developer.md §78))
     integer :: f_advection_donor = 0          ! 運動量保存形移流(スキーム 2, 3)の風上供給元の
                                               !   制限 (0:湿潤セルすべて(既定), 1:河道セル間の
                                               !   エッジでは流下方向の供給元を河道セル(rw>0)に

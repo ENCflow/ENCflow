@@ -478,14 +478,15 @@ equation times a face volumetric concentration $`c_{face}`$, so mass is
 conserved to machine precision and a uniform concentration stays uniform.
 The scheme is how the face value is taken.
 
-- **f_scalar_scheme = 1 (default)**: first-order upwind,
+- **f_scalar_scheme = 1 (former default)**: first-order upwind,
   $`c_{face} = c_{up}`$ (the upwind cell). Longitudinally the numerical
   diffusion is $`D \approx u\,\Delta x\,(1 - Cr)/2`$ (with the shallow-water
   dt, Cr = uΔt/Δx is 0.1–0.2, so effectively $`u\Delta x/2`$); laterally,
   even without lateral flow, the diagonal shares (0.293 each) of the
   eight-direction links average the two diagonal donors, a three-point
   smoothing that gives $`D_y \approx 0.29\,u\,\Delta y`$.
-- **f_scalar_scheme = 3**: link-wise MUSCL. Along each link the face value
+- **f_scalar_scheme = 3 (default since 2026-10-13)**: link-wise MUSCL.
+  Along each link the face value
   is reconstructed from the upwind $`c_{up}`$, downwind $`c_{dn}`$ and
   further-upwind $`c_{uu}`$ cells:
   $`c_{face} = c_{up} + \tfrac{1}{2}\psi(r)\,(c_{dn} - c_{up})`$,
