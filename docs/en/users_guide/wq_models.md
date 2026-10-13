@@ -26,7 +26,15 @@ the cross-section shape σ). The horizontal transport uses the same
 conservative kernel as suspended sediment, upwind with the same edge
 fluxes as the water inside the shallow water step
 ([ENC grid](encgrid.md) §3): a uniform concentration stays uniform and the
-mass is conserved to machine precision. A groundwater mass pool $`c_g`$
+mass is conserved to machine precision. Being first-order upwind it has
+numerical diffusion: longitudinally $`D \approx u\,\Delta x\,(1 - Cr)/2`$
+(with the shallow-water dt, Cr = uΔt/Δx is 0.1–0.2, so effectively
+$`u\Delta x/2`$: 4 m²/s for u = 1 m/s and Δx = 10 m), and laterally, even
+without any lateral flow, $`D_y \approx 0.29\,u\,\Delta y`$ from the diagonal
+shares of the eight-direction links (measured in
+[test/tracer](../../../test/tracer/README.md), within 5 % of the theory).
+Refine the grid where the arrival time or the peak of a concentration
+front matters; integrated quantities are unaffected. A groundwater mass pool $`c_g`$
 (geometric-area basis), a surface buildup pool $`B`$ (g/m²), reservoir
 pools and retention-pond pools exchange with the surface water. All
 sources (point g/s, areal and distributed kg/ha/day, rain concentration
@@ -215,6 +223,7 @@ sources of the representative values.
 | [test/kdpart](../../../test/kdpart/README.md) | Kd partitioning and particulate settling | ledger closure and monotonicity with increasing Kd |
 | [test/gwseep](../../../test/gwseep/README.md) | infiltration → lateral flow → seepage | to_gw − seep = mass_gw; immobile at $`R`$ = 1e12 |
 | [test/sewer_wq](../../../test/sewer_wq/README.md) | sanitary risk of sewer surcharge | ledger check of surcharge → inundation → spreading → decay |
+| [test/tracer](../../../test/tracer/README.md) | Numerical diffusion of the first-order upwind transport | Spreading of a clean-water front D = u·Δx·(1−Cr)/2 and lateral variance of a steady plume Dy = 0.29·u·Δy, both within 5 % of the theory |
 
 ## References
 
