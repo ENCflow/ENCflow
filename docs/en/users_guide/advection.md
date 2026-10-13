@@ -468,6 +468,58 @@ The READMEs of the test cases are in Japanese.
 - [examples/List_samples/list_enc.txt](../../../examples/List_samples/en/list_enc.txt) --
   annotated list of every `&list_enc` parameter with its default.
 
+## 7. Advection scheme of the scalar transport (f_scalar_scheme)
+
+The column quantities of suspended sediment, water quality, the salt
+layer, driftwood and debris are carried by a conservative transport
+kernel (`advect_scalar`) separate from the momentum advection. It is in
+flux form, the edge mass flux $`m_e`$ of the same step's continuity
+equation times a face volumetric concentration $`c_{face}`$, so mass is
+conserved to machine precision and a uniform concentration stays uniform.
+The scheme is how the face value is taken.
+
+- **f_scalar_scheme = 1 (default)**: first-order upwind,
+  $`c_{face} = c_{up}`$ (the upwind cell). Longitudinally the numerical
+  diffusion is $`D \approx u\,\Delta x\,(1 - Cr)/2`$ (with the shallow-water
+  dt, Cr = uΔt/Δx is 0.1–0.2, so effectively $`u\Delta x/2`$); laterally,
+  even without lateral flow, the diagonal shares (0.293 each) of the
+  eight-direction links average the two diagonal donors, a three-point
+  smoothing that gives $`D_y \approx 0.29\,u\,\Delta y`$.
+- **f_scalar_scheme = 3**: link-wise MUSCL. Along each link the face value
+  is reconstructed from the upwind $`c_{up}`$, downwind $`c_{dn}`$ and
+  further-upwind $`c_{uu}`$ cells:
+  $`c_{face} = c_{up} + \tfrac{1}{2}\psi(r)\,(c_{dn} - c_{up})`$,
+  $`r = (c_{up} - c_{uu})/(c_{dn} - c_{up})`$, ψ = van Leer (the same formula
+  as §4.3). Diagonal links are reconstructed along the diagonal, so for a
+  laterally linear field the face value is the link midpoint value and the
+  0.414/0.293/0.293 weighted sum at the receiver equals the central value:
+  the leading term of the lateral numerical diffusion disappears too. It
+  falls back to first order when the downwind cell is outside, a sea cell
+  or dry, when the further-upwind cell is invalid or dry, and for inflow
+  from a boundary face (concentration table): walls, dry beds and
+  prescribed boundaries supply no gradient (the reasoning of §4.4).
+
+Measured in [test/tracer](../../../test/tracer/README.md) (u ≈ 0.9 m/s):
+
+| Quantity | First-order upwind | MUSCL | Ratio |
+|---|---:|---:|---:|
+| Longitudinal D (Δx 10 m, dt 1 s, Cr 0.09) | 4.3 m²/s | 1.2 m²/s | 0.28 |
+| Longitudinal D (Δx 10 m, dt 2 s, Cr 0.18) | 3.9 | 0.8 | 0.20 |
+| Longitudinal D (Δx 20 m, dt 2 s, Cr 0.09) | 8.7 | 2.6 | 0.30 |
+| Lateral Dy (point-source plume, Δy 10 m) | 2.7 | 0.19 | 0.07 |
+| Plume σy 3 km downstream | 129 m | 38 m | |
+
+The remaining longitudinal diffusion is the limiter degrading to first
+order at the two ends of the front (extrema). No negative concentrations
+or overshoots above 100 % appear (checked in the same case). The kernel
+costs 2–3 times more per scalar, a few percent of the step. The default
+stays at 1 because calibrated values (destruction rates and thresholds of
+driftwood and debris, the concentration-dependent rheology of debris flows)
+fitted with the smeared first-order field would change; 3 is recommended
+where the arrival time or peak of a concentration front, or a load driven
+by a density peak, matters (design and verification in developer.md §78).
+Groundwater transport is not covered (it stays first-order upwind).
+
 ## References
 
 [^sd03]: Stelling, G. S. and Duinmeijer, S. P. A. (2003): A staggered conservative scheme for every Froude number in rapidly varied shallow water flows. *Int. J. Numer. Meth. Fluids*, 43, 1329–1354. (momentum-conservative advection; adopted by SWASH, D-Flow FM and 3Di)

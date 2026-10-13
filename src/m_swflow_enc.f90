@@ -78,6 +78,7 @@ module m_swflow_enc
     integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
     integer :: f_opening_dynamic              ! 塞がれた開口の動的振り替え (0:なし, 1:河道
                                             !   セル間のエッジのみ, 2:全エッジ。§68.14)
+    integer :: f_scalar_scheme                ! スカラー輸送の移流スキーム (1: 1 次風上, 3: MUSCL。§78)
     integer :: f_advection_donor              ! 運動量保存形移流の風上供給元の制限 (0:湿潤セル
                                             !   すべて, 1:河道セル間のエッジでは河道セルのみ。
                                             !   §68.18)
@@ -778,6 +779,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   opt%f_opening_dynamic = list%f_opening_dynamic
   opt%f_dry_head_cap = list%f_dry_head_cap
   opt%f_advection_donor = list%f_advection_donor
+  opt%f_scalar_scheme = list%f_scalar_scheme
   select case (opt%f_advection_scheme)
     case (1)      ! セル中心勾配(v1。既定)
     case (2)      ! 運動量保存形(Stelling & Duinmeijer)・1次風上
@@ -880,6 +882,9 @@ subroutine m_swflow_enc_init(p, g, b, s)
     call par_stop("list_enc: f_opening_dynamic must be 0(off), 1(channel edges) or 2(all edges)")
   end if
   chn%have_fwd = opt%f_opening_dynamic > 0
+  if (opt%f_scalar_scheme /= 1 .and. opt%f_scalar_scheme /= 3) then
+    call par_stop("list_enc: f_scalar_scheme must be 1(first-order upwind) or 3(MUSCL)")
+  end if
   if (opt%f_advection_donor < 0 .or. opt%f_advection_donor > 1) then
     call par_stop("list_enc: f_advection_donor must be 0(all wet cells) or 1(channel cells on channel edges)")
   end if
@@ -2478,16 +2483,19 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
                                                      !   底層スカラーの流速分担。§47)
   integer :: i, j, k
   integer :: in, jn, ie, je
-  real :: mne, fw, winv, cdon, sh
-  logical :: has_cbin
+  integer :: iu, ju, id, jd, iuu, juu   ! 風上・風下・さらに風上のセル(MUSCL。§78)
+  real :: mne, fw, winv, cdon, sh, cdn, cuu
+  logical :: has_cbin, muscl
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
   has_cbin = present(cbin)
   sh = 1.0
   if (present(share)) sh = share
+  muscl = opt%f_scalar_scheme == 3
 
-  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, mne, fw, winv, cdon)
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, mne, fw, winv, cdon, &
+  !$omp                                      iu, ju, id, jd, iuu, juu, cdn, cuu)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
@@ -2539,6 +2547,38 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
           end if
         end if
         if (cdon == 0.0) cycle
+        ! リンクごとの MUSCL 面値再構成(f_scalar_scheme = 3。§78): 風上セル
+        ! c_up・風下セル c_dn・リンク方向にさらに風上のセル c_uu の 3 点から
+        !   c_face = c_up + ψ(r)/2·(c_dn − c_up)、r = (c_up − c_uu)/(c_dn − c_up)、
+        !   ψ = van Leer (r + |r|)/(1 + |r|)
+        ! 斜めリンクではリンク方向(斜め)に沿って再構成するため、横断に線形な
+        ! 濃度場では面値がリンク中点の値になり、両斜めの供給元の平均が生む
+        ! 横断の数値拡散(1 次では Dy = 0.293·u·Δy。test/tracer)も主要項が消える。
+        ! 境界面からの流入(cbin)、風下が領域外・海セル・乾燥、さらに風上の
+        ! セルが確保範囲外・無効・海・乾燥のときは 1 次風上のまま(壁・乾床・
+        ! 規定境界は濃度勾配を供給しない。流れの移流項の far_ok と同じ理由)
+        ! 境界面(近傍が領域外。流入は cbin、流出は風下セルがない)は 1 次のまま。
+        ! 近傍が領域内のときだけ風上・風下を決め、風下が海・乾燥なら 1 次
+        ! (領域外のセルを添字にしないこと: -fcheck=all の np=2 で検出した
+        ! 実バグ。sw・h は全域+帯の範囲しか確保されていない)
+        if (muscl .and. g%x(in,jn) > 0) then
+          if (mne > 0.0) then
+            iu = i;  ju = j;  id = in; jd = jn
+          else
+            iu = in; ju = jn; id = i;  jd = j
+          end if
+          if (g%sw(id,jd) == 0 .and. s%h(id,jd) >= p%dd) then
+            iuu = 2 * iu - id
+            juu = 2 * ju - jd
+            if (iuu >= 1 .and. iuu <= g%nx .and. juu >= dcp%jsh .and. juu <= dcp%jeh) then
+              if (g%x(iuu,juu) > 0 .and. g%sw(iuu,juu) == 0 .and. s%h(iuu,juu) >= p%dd) then
+                cdn = conc(id, jd)
+                cuu = conc(iuu, juu)
+                cdon = muscl_face(cdon, cdn, cuu)
+              end if
+            end if
+          end if
+        end if
         ! 通過幅係数(continuous と同一)
         fw = 1.0
         if (chn%have_frw) fw = chn%frw(ke(k),ie,je)
@@ -2548,6 +2588,34 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
     end do
   end do
   !$omp end parallel do
+
+contains
+
+  ! セルの体積濃度 c/vh(σ 非適用セルは vh = h。供給元と同じ定義)
+  pure function conc(ci, cj) result(cv)
+    integer, intent(in) :: ci, cj
+    real :: cv
+    if (sct%have_sect) then
+      cv = c(ci,cj) / sect_v(s%h(ci,cj), sct%sdep(ci,cj))
+    else
+      cv = c(ci,cj) / s%h(ci,cj)
+    end if
+  end function
+
+  ! MUSCL + van Leer の面値(流れの移流項 face_value と同じ式。§68.6・§78)
+  !   c_dn = c_up なら面値 = c_up(一様濃度は一様のまま)
+  pure function muscl_face(cup, cdn, cuu) result(f)
+    real, intent(in) :: cup, cdn, cuu
+    real :: f, d, r, psi
+    d = cdn - cup
+    if (d == 0.0) then
+      f = cup
+      return
+    end if
+    r = (cup - cuu) / d
+    psi = (r + abs(r)) / (1.0 + abs(r))
+    f = cup + 0.5 * psi * d
+  end function
 
 end subroutine
 

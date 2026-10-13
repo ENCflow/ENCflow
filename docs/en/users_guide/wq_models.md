@@ -33,8 +33,10 @@ $`u\Delta x/2`$: 4 m²/s for u = 1 m/s and Δx = 10 m), and laterally, even
 without any lateral flow, $`D_y \approx 0.29\,u\,\Delta y`$ from the diagonal
 shares of the eight-direction links (measured in
 [test/tracer](../../../test/tracer/README.md), within 5 % of the theory).
-Refine the grid where the arrival time or the peak of a concentration
-front matters; integrated quantities are unaffected. A groundwater mass pool $`c_g`$
+Where the arrival time or the peak of a concentration front matters, use
+`f_scalar_scheme = 3` (link-wise MUSCL: longitudinal numerical diffusion
+1/3–1/5, lateral 1/14; [Advection](advection.md) §7) or refine the grid;
+integrated quantities are unaffected. A groundwater mass pool $`c_g`$
 (geometric-area basis), a surface buildup pool $`B`$ (g/m²), reservoir
 pools and retention-pond pools exchange with the surface water. All
 sources (point g/s, areal and distributed kg/ha/day, rain concentration

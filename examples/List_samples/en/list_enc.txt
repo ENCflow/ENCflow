@@ -54,6 +54,15 @@
                             !   refinement without converging.
                             !   p_adv_upwind_index below acts on scheme 1
                             !   only
+  !f_scalar_scheme = 1      ! advection scheme of the scalar transport
+                            !   (suspended sediment, water quality, salt
+                            !   layer, driftwood, debris): 1 = first-order
+                            !   upwind (default), 3 = link-wise MUSCL with
+                            !   van Leer. Numerical diffusion 1/3-1/5
+                            !   longitudinally, 1/14 laterally. Recommended
+                            !   where concentration fronts, peaks or
+                            !   density-driven loads matter
+                            !   (users_guide/advection.md section 7)
   !f_advection_donor = 0    ! upwind momentum donors of the momentum-
                             !   conservative advection (schemes 2, 3)
                             !   (0: all wet cells = default, 1: on edges between

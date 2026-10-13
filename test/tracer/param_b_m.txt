@@ -1,0 +1,67 @@
+!======================================================================
+! tracer: スカラー輸送(1 次風上)の数値拡散の計測 — 構成 B(横断。dx = 10 m、dt = 1 s)
+!   幅 61 セルの一様流水路(勾配 9e-4、n = 0.03、水深 1 m、u = 1 m/s)の
+!   中央列 (50, 31) に一定負荷 10 g/s を投入し、定常プルームの横断分散
+!   σy²(x) = 2·Dy·(x − x0)/u の勾配から横断の等価拡散係数 Dy を求める。
+!   流れは x 方向の一様流で横断流速はゼロなので、Dy は ENC の斜めリンクが
+!   運ぶ分(理論値 0.293·u·dy)だけの数値拡散(Check_tracer.py)。
+!   減衰・沈降・物理分散はなし(水質モジュールの既定)。流れの移流項は
+!   スキーム 1(セル中心勾配)で、区間流入 + 保存形移流の自励振動(handoff 00a)
+!   を避けて流れを一様に保つ。スカラーのスキームはこれと独立。
+!   回帰: Log.txt + wq.csv(reference)。検定: Check_tracer.py
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 1.0
+  t0 = 0
+  tt = 7200                 ! 120 分(x = 5 km まで定常)
+  dt_disp = 600
+  dt_file = 7200
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_enc = '-'
+  fn_wq = '-'
+  dir_result = 'result_m_b'
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_out_h = 1
+  f_check_cfl = 0
+/
+
+&list_enc
+  f_advection_scheme = 1    ! 流れを一様に保つ(ヘッダ参照)
+  f_scalar_scheme = 3       ! スカラー輸送をリンクごとの MUSCL に
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 1.0                  ! 等流水深(Q = 610 m3/s、B = 610 m)
+/
+
+&list_geoinfo
+  nx = 600
+  ny = 61
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1
+  fn_z = 'z_b.txt'
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺: 自由流出
+/
+&list_bound_inflow
+  fn_inflow_cell(1) = 'inflow_b.txt'   ! (1, 1..61)
+  inflow_val(:,1,1) =   0, 610.0
+  inflow_val(:,2,1) = 999, 610.0
+  inflow_dist(1) = 0
+/
+
+&list_wq
+  wq_c0 = 0.0
+  wq_pt_cell(:,1,1) = 50, 31   ! 点源: 上流の中央列
+  wq_pt_load(1) = 10.0         ! 一定負荷 (g/s)
+/
