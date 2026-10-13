@@ -187,9 +187,8 @@ with $`z_l`$ the landside ground elevation. A failure spanning several
 cells is specified as several sites; the breach width is per edge. Flow
 through a wall edge follows the Honma weir formula, and edges that are not
 sites (the diagonal links included) remain walls. The passing-width share
-of a normal edge is $`1 - p_{\mathrm{diag}} = 0.414`$, but the receiving
-landside cell adds its own constraint, so the measured effective width is
-about dx/4 per site (examples/levee_breach). The breach of a resolved
+of a normal edge is $`1 - p_{\mathrm{diag}} = 0.414`$, and the measured
+effective width is 0.38 dx per site (examples/levee_breach). The breach of a resolved
 levee (elevation in the DEM) lies outside the virtual walls and is handled
 by [prescribed bed motion](bedmotion.md) §5 (lowering the bed of the breach
 cells along a time history).
