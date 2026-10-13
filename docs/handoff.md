@@ -138,22 +138,6 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    test/tracer の無印 param は `f_scalar_scheme = 1` を明示して 1 次の計測を
    保つ。examples の README の図表は既定 1 の時点のもので、再生成は任意。
 
-00c. **examples/tsunami_town・timberyard が現行コードで発散停止する
-   (2026-10-13 発見。未解決)**: tsunami_town は param.txt・param_load_dw.txt
-   とも 0:10:48(V_max 74 m/s、h_max 32 m)、timberyard は param.txt が
-   1:10:00 で「velocity exceeded 250 m/s」で停止。f_scalar_scheme 1・3、
-   OMP スレッド 1・2、初期コミット a2e4d3c のビルドでも同じ。README の
-   結果(2026-10-01)を得た時点のコードまたは make_terrain.py の出力と
-   現行が異なる可能性。ashfall_lahar・landslide_tsunami は完走する。
-   bldgdebris の空隙率帰還(f_bdgv=1)と潮位強制の組合せを疑って切り分ける。
-
-00d. **test/gwdefault が分の境目で偽の FAIL になる(2026-10-13 発見)**:
-   Run.sh は save_<tag> と save_<tag>x を `diff -r` で比べるが、save_info.txt
-   の 1 行目に保存時刻(分単位)が入るため、2 本の実行が分をまたぐと
-   「config a differs」で落ちる(結果は同一)。`diff -r -I '^! ENCflow restart
-   save'` で時刻行を除外するか、save_info.txt を比較対象から外す。test の
-   変更のみで計算本体には触れない。
-
 00. **移流項の改良(developer.md §68。2026-10-01 段 0〜2 完了)**
    - 段 0: test/dambreak(Stoker 解析解。幅 400 m)。段 1: 旧 TVD 分岐の
      限定器修正(効果は限定的)。段 2: f_advection_scheme=2,3(運動量保存形

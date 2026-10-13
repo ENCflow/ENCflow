@@ -708,7 +708,7 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
   - ゾーン2(boundary/state/record/precip/swflow の init)= 地形と
     マスク類(z, x, sw, rw)のみ全域。fill_depression(sw/rw を全域窓で
     参照)、user_initial、record/boundary の検証がこの範囲で動く。
-  - m_geoinfo_band_shrink: x(番兵ごと)、sw, rw を帯へ。**z は rank0 のみ
+  - m_geoinfo_band_shrink: x(番兵ごと)、sw(x と同様に 1 行広く。§68.35)、rw を帯へ。**z は rank0 のみ
     全域を恒久保持**(Z 出力の直接書き。将来の浸食計算の初期地形の正本)。
   - 時間ループ = すべて帯。±1 の近傍参照(momentum の gv、rivermouth の
     rw/sw、adv の lm)はハロ幅2の余白内に収まることを監査済み。
@@ -9028,6 +9028,65 @@ kdpart・tide・coastal_drain・gwseep・damwq の reference(2026-08-28 作成)�
 -u 更新した。原因は §68.31 追補の計数変更(damwq は wq.csv identical、gwseep
 5e-8、sewer_wq 2e-5)と、sewer_wq の 10-03 既定昇格による失効(wq.csv 17%)。
 更新後は逐次・np=2 とも新基準に PASS。
+
+### 68.35 海セル(潮位規定境界)に接するエッジの移流項(2026-10-13 実バグ・修正)
+
+**症状**: examples/tsunami_town(param.txt・param_oneway・param_load・
+param_load_dw)と examples/timberyard が、押し波で水位が上がり始めて 5〜10 分
+(tsunami_town 0:10:48、timberyard 1:10:00)で「velocity exceeded 250 m/s」
+で停止する。f_advection_scheme = 1 では完走、2・3 で発散。発散の起点は
+潮位強制の海セル列(sw>0。西端 1 列)に隣接する最初の陸セル(沖の海底
+z = −5 m)で、V_max がそこだけ 5 → 6 → 38 m/s と伸びる。README の結果
+(2026-10-01)は既定昇格(10-03)前のスキーム 1 のもの。
+
+**原因**: 海セルは「解かない・水位を強制する」セルで、s%h = hsea0(見かけ
+水柱厚。一定)、s%z = η − hsea0、m = n = 0(§23、m_tide)。運動量保存形
+移流 adv_prepare_mc(§68.6)は海セルを普通の湿潤セルとして扱っていた:
+(1) 海陸エッジの検査体積の水量 h̄ = (hsea0 + h_陸)/2 と海側面の流束 q_c = 0 が
+実際の水柱・流束と無関係、(2) cell_ok/far_ok が海セルを運動量の供給元に
+認める。tsunami_town は沖の水深 9 m(潮位 +4 m)に対し hsea0 = 2 m なので
+海陸エッジの流速(エッジ水深 (2 + 9)/2 で定義)は陸側のセル流速の数倍の
+尺度になり、隣のエッジの検査体積にその流速が流入運動量 ū として読まれて
+加速 → 陸セルの流出増 → 水面勾配増 → 海陸エッジの流速増の正帰還になる。
+hsea0 = 9 m(沖の水深に一致)にすると発散しないことで確認。v1(スキーム 1)
+は海セルの taxy を 0 にしてエッジで平均するため影響が半分で表に出なかった。
+
+**修正**(m_swflow_enc_adv.f90): 海セルは規定境界 = 領域外と同じ扱いにする。
+(1) 海セルに接するエッジは tae = 0(境界面・区間流入面と同じ「規定境界は
+運動量を供給しない」原則。§68.8・§69.9)、(2) cell_ok・far_ok は sw>0 を
+偽(供給元にも MUSCL の upup にも使わない)。sw = 0 の格子では分岐が
+一度も真にならず結果は不変。hsea0 と沖の水深の整合は利用者の設定だが、
+不整合でも発散しないことがソルバの責務。
+
+**検証(2026-10-13。gfortran -Ofast)**:
+- 海セルなし: wave・dambreak・splash・bendloss・chichibu が既存 reference に
+  identical(非海ケースは分岐が真にならない)。
+- 海セルあり: tsunami_town の 4 ケース・timberyard の 4 ケースが完走
+  (README の図表を 10-13 の結果で更新)。test/tide は Log の V_max が序盤
+  +8 %(3.16 → 3.44 m/s)・終盤 −0.3 %、貯留 S は 2e-4 以内。
+  test/coastal_drain は V_max が序盤 +22 %・中盤 −18 %・終盤 +10 %、貯留は
+  1 % 以内。
+  test/salt(param.txt は海セルなし)は identical。いずれも海陸エッジの
+  移流項を落としたことによる差で、新基準は利用者の目視確認後に -u
+  (規律 1)。
+- MPI: tide の np=2・4、tsunami_town の np=2 が逐次と Log・bldgdebris.csv・
+  H9999 までビット一致。-Og -fcheck=all -finit-real=snan の np=2 が tide・
+  tsunami_town とも完走(規律 3)。
+- **far_ok の海判定と sw の確保範囲(途中で作った実バグ。修正済み)**: 海セルを
+  far_ok(MUSCL の upup の向こうのセル判定)でも除外する必要がある。除外
+  しないと、押し波で海側から流入する面の upup に海陸エッジの流速(hsea0 の
+  尺度)が入り、限定器が反拡散側に振れて timberyard の市街地で最大水深
+  4.95 m(潮位 +3.5 m を超える)・流体力 42.9 m³/s²(正しくは 3.11 m・
+  0.85 m³/s²)の偽のジェットが出る。ところが far_ok は行 j − 3 まで見るのに
+  対し g%sw の確保範囲は帯+ハロ 2(jsh:jeh)だったため、g%sw を読む版は
+  MPI で帯外読みになり tide の np=2・4 が逐次と不一致になった(-Ofast では
+  黙って通る。修正前 HEAD の一致を別ビルドで確認)。対処は
+  m_geoinfo_band_shrink で sw を x と同様に 1 行広く(max(1, jsh−1) ..
+  min(ny, jeh+1))持つこと。far_ok の参照行 j − 3 .. j + 2 はこの範囲に収まる。
+  sw を全体配列として使う箇所は帯縮小前(m_swflow_stg の X コピー)だけで、
+  帯縮小後は添字参照のみなので 1 行広くしても他は不変(§11 の表を更新)。
+  「全域で確保されている」と注釈にあっても m_geoinfo_band_shrink の対象
+  (x・sw・rw・ssw)はゾーン 3 では帯であること。
 
 ## 69. 非静水圧(1 層 NH)拡張の設計決定(2026-10-05 合意。実装は段階的)
 
