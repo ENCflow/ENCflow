@@ -431,6 +431,23 @@ listed in the [shallow water chapter](swflow.md).
   water can pile up in the one cell behind it (a spike). Using the upwind
   depth removes the spike but increases the frontal outflow onto dry beds.
 
+**Known numerical property (2026-10-13; developer.md §68.36).** The diagonal
+links of the ENC grid connect only cells of the same parity of $`i+j`$, so the
+control volume of a diagonal edge in the conservative schemes is built from
+cells and links of one parity only. A diagonal circulation that differs
+between the even and odd sub-lattices is therefore untouched by the advection
+term (and by the pressure term, since it is divergence-free) and decays by bed
+friction alone. In deep, slow stagnant areas (5 m, 0.1 m/s: decay time about
+3 h) a checkerboard in the velocity field (relative amplitude 0.4–0.6)
+persists and is imprinted on threshold-type deposition (`vstop` of debris and
+driftwood) and on the maximum fluid force (figures of examples/tsunami_town
+and timberyard). Depth, discharge and totals are unaffected. A constant
+viscosity of about 0.2 m²/s in the diffusion term removes it, but it is not a
+default because it adds a calibration quantity. A scheme-side coupling of the
+sub-lattices is under design and on hold until a conservative formulation is
+found. Scheme 1 does not show this mode (it shows irregular noise of the
+non-conservative form instead).
+
 **Parameters and the basis of their defaults.**
 
 | Parameter | Default | Meaning | Basis |
