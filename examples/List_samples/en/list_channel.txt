@@ -141,6 +141,10 @@
 !   its value at the start of the run (does not follow erosion)
 !----------------------------------------------------------------------
 !&list_channel_breach
+!  f_br_diag = 1                           ! diagonal-edge coupling (0: site edges only = default,
+!                                          !   1: also lower the diagonal edges touching the channel
+!                                          !   and landside cells of a normal site. Recommended.
+!                                          !   users_guide/channel_models.md section 4)
 !  br_cell(:,1) = 120, 45, 120, 44         ! site 1: ic, jc, il, jl
 !  br_series(:,1,1) = 0.0,  1.0            ! (time min, fraction 0-1)
 !  br_series(:,2,1) = 60.0, 1.0            !   no breach until 60 min

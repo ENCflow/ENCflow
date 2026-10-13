@@ -155,6 +155,7 @@ a failure (levees must be enabled).
 
 ```
 &list_channel_breach
+  f_br_diag = 1                     ! also lower the diagonal edges touching the sites (recommended)
   br_cell(:,1) = 120, 45, 120, 44   ! site 1: channel cell ic,jc and landside cell il,jl
   br_series(:,1,1) = 0.0,  1.0      ! (time min, remaining crest fraction 0-1)
   br_series(:,2,1) = 60.0, 1.0      !   no breach until 60 min
@@ -162,6 +163,12 @@ a failure (levees must be enabled).
   br_series(:,4,1) = 90.0, 0.0      !   full failure down to the landside ground at 90 min
 /
 ```
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| br_cell(:,n) | (required) | channel cell (ic, jc) and landside cell (il, jl) of site n, adjacent within the 8 neighbours |
+| br_series(:,k,n) | (required) | (time min, remaining crest fraction 0–1) of site n; linear interpolation, end values held |
+| f_br_diag | 0 | 1 also lowers, to the same effective crest, the diagonal edges touching the channel cell or landside cell of a normal site (including the diagonals leading outward at both ends of the opening). 0 lowers only the site edges (previous behaviour) |
 
 - A site is "a pair of adjacent channel and landside cells", and the
   crest of that single boundary edge varies as effective crest =
@@ -171,13 +178,16 @@ a failure (levees must be enabled).
   coordinates are **1-based** (beware the 0-based numbering of GIS;
   [coordinates chapter](coordinates.md)).
 - A failure spanning several cells is specified as multiple sites (the
-  breach width is per edge). The effective flow width of one site is about
-  0.4 dx (the passing-width share 0.414 of a normal edge; the diagonal
-  links between neighbouring sites stay walls; measured 3.8 m per site for
-  1 to 5 sites with 10 m cells and 1.7–1.9 m of head in
-  [examples/levee_breach](../../../examples/levee_breach/README.md)). For a
-  real breach width W use about W ÷ (0.4 dx) sites as a guide. Adding the
-  diagonal pairs as sites widens it (measurements in the same README).
+  breach width is per edge). **f_br_diag = 1 is recommended.** With the
+  previous behaviour (f_br_diag = 0) the diagonal links between
+  neighbouring sites stay walls, so one site passes only about 0.4 dx of
+  effective width (the passing-width share of a normal edge), 0.4 times
+  the discharge of a resolved levee (a levee present as DEM elevation;
+  [prescribed bed motion](bedmotion.md) §5). With f_br_diag = 1 the
+  diagonal edges touching the sites open as well, and a breach 2–3 cells
+  wide gives nearly the same discharge as the resolved levee (1.5 times
+  for one cell, 0.85 for five; measured with 10 m cells and 1.7–1.9 m of
+  head in [examples/levee_breach](../../../examples/levee_breach/README.md)).
 - **When the levee is present as elevation in the DEM (a resolved levee)**
   there is no virtual wall and this breach cannot be used. Use the
   procedure of [prescribed bed motion](bedmotion.md) §5, which lowers the

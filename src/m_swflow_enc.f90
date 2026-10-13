@@ -256,6 +256,8 @@ module m_swflow_enc
     logical :: fwd_restored = .false.         ! 保存状態から fwd を復元したか(restore_state が設定)
     real, allocatable :: fwd(:,:,:)           ! 動的通過幅係数 (1:4, 0:nx, jsh-1:jeh)
     logical :: have_breach = .false.          ! 破堤サイトがあるか(breach_init が設定)
+    integer :: br_diag = 0                    ! 斜めエッジの連動(f_br_diag。0: サイトのエッジだけ、
+                                              !   1: 法線サイトに触れる斜めエッジも同じ実効天端)
     integer :: nbr = 0                        ! 破堤サイト数
     type(t_breach), allocatable :: br(:)      ! サイトリスト(全ランク同一)
     integer, allocatable :: ibr0(:), ibr1(:)  ! (jsh:jeh)

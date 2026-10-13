@@ -30,6 +30,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | bm_tscale | &list_bedmotion | [規定底面運動](bedmotion.md) |
 | br_cell | &list_channel_breach | [河道](channel.md) |
 | br_series | &list_channel_breach | [河道](channel.md) |
+| f_br_diag | &list_channel_breach | [河道](channel.md) |
 | bs_cfl | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | bs_diagratio | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | bs_eps_s | &list_geomorph | [土砂・地形変化](geomorph.md) |
