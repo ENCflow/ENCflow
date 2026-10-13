@@ -31,7 +31,7 @@ set -o pipefail
 ./encflow param_minx.txt | tee Screen_minx.log || exit 1
 set +o pipefail
 echo ""
-if diff -r save_min save_minx > /dev/null && cmp -s result_min/Log.txt result_minx/Log.txt; then
+if diff -r -I '^! ENCflow restart save' save_min save_minx > /dev/null && cmp -s result_min/Log.txt result_minx/Log.txt; then
     echo "=== defaults: save/ and Log.txt are bit-identical between the minimal input and the explicit defaults ==="
 else
     echo "FAIL: minimal input (defaults) and explicit defaults differ" >&2

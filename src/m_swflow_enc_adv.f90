@@ -151,6 +151,13 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! momentum と同じ除外条件(無効近傍・通過幅ゼロ・両側乾燥)
         if (g%x(in,jn) <= 0) cycle
         if (geo%skip8(k)) cycle
+        ! 海セル(sw>0。水位を強制する規定境界。§23)に接するエッジは移流項を
+        ! 持たない。海セルの h は見かけ水柱厚 hsea0(一定)で m, n は 0 なので、
+        ! そのエッジの検査体積は水量 h̄ も海側面の流束も実際の水柱と無関係に
+        ! なる。沖の水深(9 m)に対し hsea0 = 2 m の examples/tsunami_town では
+        ! 海陸エッジの流速が陸側のセル流速の数倍の尺度になり、隣のエッジへの
+        ! 流入運動量として読まれて押し波の 10 分で発散した(§68.35)
+        if (g%sw(i,j) > 0 .or. g%sw(in,jn) > 0) cycle
         hc = s%h(i,j)
         hn = s%h(in,jn)
         if (hc < p%dd .and. hn < p%dd) cycle
@@ -281,23 +288,29 @@ contains
     if (chn%have_width) v = v * chn%wfrac(ci,cj)
   end function
 
-  ! MUSCL の upup の向こうのセルが領域内で有効か(g%x は全域で確保されて
-  ! いるので全ランクで同じ判定。乾湿は見ない)
+  ! MUSCL の upup の向こうのセルが領域内で有効か(乾湿は見ない)。海セルは
+  ! 領域外と同じ(海陸エッジの流速は見かけ水柱厚 hsea0 の尺度で、upup に
+  ! 使うと限定器が反拡散側に振れる。§68.35)。ここで見る行は j − 3 .. j + 2
+  ! で、g%x(jsh-1:jeh+1)・g%sw(max(1,jsh-1):min(ny,jeh+1)。
+  ! m_geoinfo_band_shrink)の確保範囲に収まるので全ランクで同じ判定になる。
+  ! sw を jsh:jeh のまま読むと行 j − 3 が帯外読みになり np=1 と np=2 が
+  ! 一致しない(2026-10-13 に実発生)
   pure function far_ok(ci, cj) result(ok)
     integer, intent(in) :: ci, cj
     logical :: ok
     ok = .false.
     if (ci < 1 .or. ci > g%nx .or. cj < 1 .or. cj > dcp%ny_g) return
-    ok = g%x(ci,cj) > 0
+    ok = g%x(ci,cj) > 0 .and. g%sw(ci,cj) == 0
   end function
 
-  ! セルが運動量の供給元になれるか(確保範囲内・有効・移動限界以上の水深)
+  ! セルが運動量の供給元になれるか(確保範囲内・有効・海セルでない・移動限界以上の水深)
   pure function cell_ok(ci, cj) result(ok)
     integer, intent(in) :: ci, cj
     logical :: ok
     ok = .false.
     if (ci < 1 .or. ci > ubound(s%h, 1) .or. cj < dcp%jsh .or. cj > dcp%jeh) return
     if (g%x(ci,cj) <= 0) return
+    if (g%sw(ci,cj) > 0) return      ! 海セルは運動量を供給しない(規定境界。§68.35)
     ok = s%h(ci,cj) >= p%dd
   end function
 

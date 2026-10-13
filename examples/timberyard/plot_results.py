@@ -169,9 +169,11 @@ reach = X[(wm > 0.01).any(axis=0)].max()
 print("max reach of timber (Wd9999 > 0.01): x = %.0f m; town cells reached %d / %d" % (reach, (wm[:, zn["town"]] > 0.01).sum(), zn["town"].sum() * NY))
 i = d[:, 7].argmax()
 t_rel = d[np.where(d[:, 6] < 1)[0][0], 0] / 60
-t_dep = d[np.where((d[:, 7] < 1) & (d[:, 0] > d[i, 0]))[0][0], 0] / 60
-print("peak floating volume %.0f m3 at t = %.0f min; release complete at t = %.0f min; all deposited by t = %.0f min"
-      % (d[i, 7], d[i, 0] / 60, t_rel, t_dep))
+k_dep = np.where((d[:, 7] < 1) & (d[:, 0] > d[i, 0]))[0]
+dep_txt = ("all deposited by t = %.0f min" % (d[k_dep[0], 0] / 60)) if len(k_dep) else \
+          ("%.0f m3 still afloat at the end (outflow to the sea %.0f m3)" % (d[-1, 7], total - d[-1, 6] - d[-1, 7] - d[-1, 8]))
+print("peak floating volume %.0f m3 at t = %.0f min; release complete at t = %.0f min; %s"
+      % (d[i, 7], d[i, 0] / 60, t_rel, dep_txt))
 print("town: max depth %.2f m, max velocity %.2f m/s, max fluid force %.2f m3/s2; opening: max velocity %.2f m/s"
       % (hmax[:, zn["town"]].max(), v[:, zn["town"]].max(), f[:, zn["town"]].max(), v[rows, I_WALL[0] - 1:I_WALL[1]].max()))
 
