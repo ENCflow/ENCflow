@@ -341,10 +341,12 @@ Notes:
 - Sediment and landform change (geomorph) may move the breach cells in
   the same run: the displacement is applied incrementally, so they do not
   conflict. Bed scour and breaching can be handled together.
-- A breach one cell wide also passes flow through the diagonal links of
-  the ENC grid, so it is a more open shape than a virtual-wall breach
-  (one normal edge per site). See the README of examples/levee_breach
-  for a comparison of the widths.
+- The effective width of a resolved-levee breach is close to the number
+  of cells × dx, while a virtual-wall breach (one normal edge per site;
+  the diagonal links stay walls) gives about dx/4 per site (measured in
+  examples/levee_breach: with 1.7–1.9 m of head, 1 to 5 cells give ratios
+  of 3.3–3.8). To represent the same real width with virtual walls, use
+  about (real width) ÷ (dx/4) sites as a guide.
 - An opening narrower than a cell cannot be represented (the resolution
   of a resolved levee is the cell). On a coarse grid use the breach of the
   virtual (subgrid) wall.

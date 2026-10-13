@@ -25,7 +25,7 @@ module list_channel
                                                !   -900 以下は堤防なし。bank0 と排他)
     real :: bank0 = -9999.0                    ! 堤防高さの一律固定値(-900 以下は未指定。
                                                !   fn_bank と排他。全河道セルに適用)
-    integer :: f_bank_datum = 0                ! 堤防高さの基準 (0:河床(掘込後), 1:堤内地セル標高, 2:絶対標高)
+    integer :: f_bank_datum = 1                ! 堤防高さの基準 (0:河床(掘込後), 1:堤内地セル標高(既定。2026-10-13 に 0 から変更), 2:絶対標高)
     integer :: f_bank_aggr = 0                 ! 天端の集約方法 (f_bank_datum=1 のみ。0:平均, 1:最小, 2:最大)
     integer :: f_bank_mode = 0                 ! 堤防の水理モード (0:越流のみ, 1:樋門(逆止弁), 2:強制排水)
     integer :: f_bank_opening = 1              ! 堤防時の開口補正 (0:なし, 1:塞がれた斜め開口の
