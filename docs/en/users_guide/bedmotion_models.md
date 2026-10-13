@@ -35,6 +35,10 @@ z^{\,n+1} = z^{\,n} + \left[d(t_{n+1}) - d_{prev}\right],
 - Because the displacement is applied as an increment, it does not conflict
   with sediment/landform change, the moving bed layer or lava flow moving z
   in the same run (each module adds only its own increment).
+- Dry cells (h = 0) move by the same equation. The breach of a resolved
+  levee (chapter §5) uses this: the dry crest cells are lowered to the
+  floor and the river flows onto the floodplain. The displacement files are
+  built by examples/levee_breach/make_breach.py.
 
 ## 2. Fault displacement field and initial sea surface
 
@@ -112,6 +116,7 @@ with a submarine slide (f_bedslide) Σ(z − z0) = Σ d holds within output
 precision (the internal transfer of the bed layer sums to zero).
 - [examples/tsunami_fault](../../../examples/tsunami_fault/README.md): comparison of hydrostatic / instantaneous / non-hydrostatic + acceleration term.
 - [examples/tsunami_coast](../../../examples/tsunami_coast/README.md): the time lag between coastal subsidence/uplift and the offshore tsunami.
+- [examples/levee_breach](../../../examples/levee_breach/README.md): breach of a resolved levee (compared with &list_channel_breach on a virtual wall).
 
 ## References
 

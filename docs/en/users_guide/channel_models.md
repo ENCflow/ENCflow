@@ -184,7 +184,12 @@ z_c^{\mathrm{eff}}(t) = z_l + r(t)\,\bigl(z_c - z_l\bigr)
 ```
 
 with $`z_l`$ the landside ground elevation. A failure spanning several
-cells is specified as several sites; the breach width is per edge.
+cells is specified as several sites; the breach width is per edge. Flow
+through a wall edge follows the Honma weir formula, and edges that are not
+sites (the diagonal links included) remain walls. The breach of a resolved
+levee (elevation in the DEM) lies outside the virtual walls and is handled
+by [prescribed bed motion](bedmotion.md) §5 (lowering the bed of the breach
+cells along a time history).
 
 ## 5. Parameters and the basis of their defaults
 

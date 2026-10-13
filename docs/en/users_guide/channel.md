@@ -172,6 +172,11 @@ a failure (levees must be enabled).
   [coordinates chapter](coordinates.md)).
 - A failure spanning several cells is specified as multiple sites (the
   breach width is per edge).
+- **When the levee is present as elevation in the DEM (a resolved levee)**
+  there is no virtual wall and this breach cannot be used. Use the
+  procedure of [prescribed bed motion](bedmotion.md) §5, which lowers the
+  bed of the breach cells along a time history (both methods are compared
+  in [examples/levee_breach](../../../examples/levee_breach/README.md)).
 
 ## Recommended values by pattern
 
