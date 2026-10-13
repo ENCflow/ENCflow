@@ -569,7 +569,15 @@ subroutine plunge_cells(gm, g, s)
         sl = dphi * gm%bsl%rdr(k)
         if (sl > smax) smax = sl
       end do
-      bb = 1.0 - gm%bs_r * min(1.0, hw / hbq)
+      ! hw / hbq は hbq が極小(hs がアンダーフロー寸前の正値で hb = 0)のとき
+      ! オーバーフローして SIGFPE になる(f_scalar_scheme = 3 の examples/
+      ! landslide_tsunami で発生)。hw >= hbq なら比は 1 なので割らずに分岐する
+      ! (値は min(1, hw/hbq) と同一 = 既存ケースとビット一致)
+      if (hw >= hbq) then
+        bb = 1.0 - gm%bs_r
+      else
+        bb = 1.0 - gm%bs_r * (hw / hbq)
+      end if
       sy = smax - gm%bs_mu * bb
       vb = 0.0
       if (sy > 0.0) vb = sqrt(gm%bs_xi * hbq * sy)

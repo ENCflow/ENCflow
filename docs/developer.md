@@ -10569,4 +10569,27 @@ Dy = 0.293·u·Δy(2.7 m²/s)。横断の拡散は ENC の 8 方向リンクで 
   流入・流出とも 1 次のままにし、近傍が領域内のときだけ MUSCL を適用する
   形に直した。確保範囲に触れる変更は -fcheck の np>=2 を先に回す規律 3 の
   とおり。
+- **オーバーフロー(SIGFPE)2 件(修正済み。2026-10-13)**: 既定を 3 にした
+  試行で examples/landslide_tsunami(param_debrisflow)が -ffpe-trap=overflow
+  で停止した。(1) muscl_face の比 r = (c_up − c_uu)/d は d が 1e-300 級の
+  とき溢れる。比を作らず、a·d > 0 のとき a·d/(a + d)(= ψ(r)·d/2 と数学的に
+  同値)、そうでなければ c_up と書き換えた。tracer 4 構成の結果は不変、
+  np=1・2・4 のビット一致も不変。(2) m_geomorph_bedslide の plunge_cells の
+  min(1, hw/hbq) は hbq が極小正値(hs がアンダーフロー寸前で hb = 0)の
+  とき溢れる。hw >= hbq なら 1 と分岐して割らない形に直した(値は同一。
+  test/bedslide・nhbottom は既存 reference と一致)。濃度の 1e-300 級の裾は
+  1 次でも生じるが、1 次は濃度の比を作らないので表に出なかった。
+- **既定を 3 にした場合の影響調査(2026-10-13。既定は 1 のまま)**: 全 test
+  を既定 3 のビルドで実行した。解析解・保存則の自己検証を持つケース
+  (avalanche・bedslide・bldgdebris・curvature・debris・driftwood・sedinflow・
+  slide・splashslide・suspend・volcano・wash、kdpart の閾値・閉合・単調性、
+  gwseep の閉合・不動)は全て PASS。既存 reference との差は wq.csv の台帳
+  のみで、damwq・salt は identical、tracer 6e-8、gwseep 1.5e-6、sewer_wq は
+  to_gwc −1.6e-4、kdpart は settle_g 1.470 → 0.675 g(−54 %。点源プルームの
+  ピーク濃度が 1 次より下がり、閾値型の沈降量が減る。to_gw +1.4 %)。
+  examples では ashfall_lahar・landslide_tsunami の水深・堆積の場が
+  2 枚目以降で変わり(landslide の probe 最大水深は最大 +9 %)、
+  tsunami_town・timberyard は既定 1・3 とも同じ時刻に発散停止する
+  (既定とは無関係の既存問題。handoff.md 00c)。既定を 3 に変える場合の
+  作業は handoff.md 00b。
 

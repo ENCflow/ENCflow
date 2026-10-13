@@ -132,6 +132,23 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    影響が実用上大きいのは、局所の濃度・密度のピークが判定を駆動する
    流木・瓦礫の荷重(fd)と家屋破壊判定、土石流の濃度依存レオロジー、
    水質のピーク濃度。総量・堆積量には効かない。
+   → **既定を 3 にする判断は保留(2026-10-13 影響調査済み。§78 検証)**。
+   全 test の自己検証は既定 3 で PASS、reference 差は wq.csv の台帳のみ
+   (tracer・gwseep・sewer_wq・kdpart。kdpart は settle_g −54 %)。既定を
+   変える場合: list_enc.f90 の既定値、上記 4 ケースの reference 更新
+   (人間の目視確認後に -u)、「既定 1」と記す文書(users_guide/advection.md
+   §7・swflow.md・wq_models.md、List_samples/list_enc.txt、params_index.md、
+   developer.md §78、test/tracer の README と param_*_m.txt の位置付け)の
+   改訂を同じ作業に含める。
+
+00c. **examples/tsunami_town・timberyard が現行コードで発散停止する
+   (2026-10-13 発見。未解決)**: tsunami_town は param.txt・param_load_dw.txt
+   とも 0:10:48(V_max 74 m/s、h_max 32 m)、timberyard は param.txt が
+   1:10:00 で「velocity exceeded 250 m/s」で停止。f_scalar_scheme 1・3、
+   OMP スレッド 1・2、初期コミット a2e4d3c のビルドでも同じ。README の
+   結果(2026-10-01)を得た時点のコードまたは make_terrain.py の出力と
+   現行が異なる可能性。ashfall_lahar・landslide_tsunami は完走する。
+   bldgdebris の空隙率帰還(f_bdgv=1)と潮位強制の組合せを疑って切り分ける。
 
 00. **移流項の改良(developer.md §68。2026-10-01 段 0〜2 完了)**
    - 段 0: test/dambreak(Stoker 解析解。幅 400 m)。段 1: 旧 TVD 分岐の
