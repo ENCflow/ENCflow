@@ -45,6 +45,9 @@ module list_channel
                                                !   (河道セル, 堤内地セル。8近傍で隣接)
     real, allocatable :: br_series(:,:,:)      ! 天端割合の時系列 (1:2, 点, サイト)
                                                !   = (時刻 min, 割合 0〜1)。1=天端高, 0=堤内地盤高
+    integer :: f_br_diag = 0                   ! 斜めエッジの連動 (0:サイトのエッジだけ=従来,
+                                               !   1:法線サイトの河道セル・堤内地セルに触れる斜め
+                                               !   エッジも同じ実効天端で下げる。§18。2026-10-13)
   end type
 
 
@@ -125,12 +128,14 @@ subroutine read_breach(un, list)
   type(t_list_channel), intent(inout) :: list
   integer :: br_cell(1:4, 1:nbrsmax)
   real :: br_series(1:2, 1:nbrvmax, 1:nbrsmax)
+  integer :: f_br_diag
   integer :: ios
   character(len=1024) :: iom
-  namelist /list_channel_breach/ br_cell, br_series
+  namelist /list_channel_breach/ br_cell, br_series, f_br_diag
 
   br_cell = -9999
   br_series = -9999.0
+  f_br_diag = list%f_br_diag
 
   rewind(un)
   read(un, nml=list_channel_breach, iostat=ios, iomsg=iom)
@@ -140,6 +145,7 @@ subroutine read_breach(un, list)
 
   list%br_cell = br_cell
   list%br_series = br_series
+  list%f_br_diag = f_br_diag
 
 end subroutine
 

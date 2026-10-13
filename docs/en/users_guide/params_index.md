@@ -33,6 +33,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | bd_wstop | &list_bldgdebris | [Building destruction and debris](bldgdebris.md) |
 | br_cell | &list_channel_breach | [Channels](channel.md) |
 | br_series | &list_channel_breach | [Channels](channel.md) |
+| f_br_diag | &list_channel_breach | [Channels](channel.md) |
 | bs_diagratio | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | bs_eps_s | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | bs_hplunge | &list_geomorph | [Sediment and landform change](geomorph.md) |
