@@ -125,3 +125,5 @@ examples/levee_breach/z.txt
 examples/levee_breach/z_vwall.txt
 examples/levee_breach/rn.txt
 examples/levee_breach/rw.txt
+test/tracer/z_*.txt
+test/tracer/inflow_b.txt
