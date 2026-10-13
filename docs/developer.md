@@ -10585,8 +10585,11 @@ Dy = 0.293·u·Δy(2.7 m²/s)。横断の拡散は ENC の 8 方向リンクで 
   slide・splashslide・suspend・volcano・wash、kdpart の閾値・閉合・単調性、
   gwseep の閉合・不動)は全て PASS。既存 reference との差は wq.csv の台帳
   のみで、damwq・salt は identical、tracer 6e-8、gwseep 1.5e-6、sewer_wq は
-  to_gwc −1.6e-4、kdpart は settle_g 1.470 → 0.675 g(−54 %。点源プルームの
-  ピーク濃度が 1 次より下がり、閾値型の沈降量が減る。to_gw +1.4 %)。
+  to_gwc −1.6e-4、kdpart は settle_g 1.470 → 0.675 g(−54 %。to_gw +1.4 %)。
+  kdpart は dt = 0.1 s・8 s のダムブレイクで、沈降 ∝ (1 − fd)·c、
+  fd = 1/(1 + Kd·Css) は Css に依存する。cq と hss の両方がスカラー輸送で
+  運ばれるので、数セル幅のプルームの分布が変わると台帳が大きく動く
+  (短時間・点源の試験の性質で、閉合・単調性の自己検証は PASS)。
   examples では ashfall_lahar・landslide_tsunami の水深・堆積の場が
   2 枚目以降で変わり(landslide の probe 最大水深は最大 +9 %)、
   tsunami_town・timberyard は既定 1・3 とも同じ時刻に発散停止する
