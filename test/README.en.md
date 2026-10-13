@@ -83,6 +83,7 @@ analytical-solution or conservation check by Check_*.py.
 | [gvchange/](gvchange/) | Unit test of the void-ratio change procedure (volume conservation; no time loop) | m_state_set_gv | unit test |
 | **Water quality** | | | |
 | [damwq/](damwq/) | Steady-state check of completely mixed dam release and pond entrainment | Water quality, dams | ref, analytic |
+| [tracer/](tracer/) | Numerical diffusion of the first-order upwind scalar transport: spreading of a clean-water front (longitudinal) and lateral variance of a steady plume, against the modified-equation values | Water quality (scalar advection) | ref, analytic |
 | [gwseep/](gwseep/) | Steady-state check of lateral groundwater transport and seepage return | Water quality, groundwater | ref, analytic |
 | [kdpart/](kdpart/) | Steady-state check of Kd equilibrium two-phase partitioning | Water quality, suspended sediment | ref, analytic |
 | **Glaciers and lava** | | | |
