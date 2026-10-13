@@ -12,7 +12,7 @@ from _schematic import (drawing_style, text, block, paragraph, line, curve,
 
 T = {"ja": {
     "a": "(a) 断面: 河道セル 1 つ(セル幅 dx)とその両側の堤内地セル",
-    "b": "(b) 平面: 壁エッジと破堤サイト",
+    "b": "(b) 平面: 壁エッジと破堤サイト(f_br_diag = 1)",
     "c": "(c) 破堤 &list_channel_breach",
     "W": "河道セル(fn_rw)の河道幅 W(fn_width、W < dx)",
     "rest": "セル内の非河道部分は\n扱わない(状態量は河道部分のみ)",
@@ -23,14 +23,14 @@ T = {"ja": {
     "sigma": "断面形 σ(h) = (h/D)^m(p_sect_m)\nm = 0 矩形(既定)、0.5 放物線的、1 三角形的\nh ≥ D では矩形に戻る",
     "land": "堤内地セル", "ch": "河道セル(fn_rw)",
     "edges": "壁エッジ = 河道セル × 堤内地セルの全エッジ(対角を含む)\n天端は河道側セルの値(fn_bank は河道セル位置に与える)",
-    "site": "破堤サイト = 隣接する河道セル (ic, jc) と\n堤内地セル (il, jl) の対(エッジ 1 本)\nbr_cell(:,n) = ic, jc, il, jl",
+    "site": "破堤サイト = 隣接する河道セル (ic, jc) と堤内地セル (il, jl) の対\n(法線エッジ 1 本。br_cell(:,n) = ic, jc, il, jl)。f_br_diag = 1 では\nサイトに触れる斜めエッジ 4 本(点線)も同じ実効天端で下がる",
     "xlabel": "時刻 (min)", "ylabel": "天端の残存割合 f",
     "eff": "実効天端 = 堤内地盤高\n + f × (天端 − 堤内地盤高)",
     "ws": "水位(河道部分の状態量)",
     "series": "br_series(:,k,n) = t, f",
 }, "en": {
     "a": "(a) Section: one channel cell (cell width dx) and the landside cells on both sides",
-    "b": "(b) Plan: wall edges and a breach site",
+    "b": "(b) Plan: wall edges and a breach site (f_br_diag = 1)",
     "c": "(c) Breach &list_channel_breach",
     "W": "width W of the channel cell (fn_rw) (fn_width, W < dx)",
     "rest": "non-channel part of the cell is\nnot represented (state = channel part only)",
@@ -41,7 +41,7 @@ T = {"ja": {
     "sigma": "section shape σ(h) = (h/D)^m (p_sect_m)\nm = 0 rectangle (default), 0.5 parabolic, 1 triangular\nback to the rectangle for h ≥ D",
     "land": "landside cells", "ch": "channel cells (fn_rw)",
     "edges": "wall edges = every edge between channel and landside cells (diagonals included)\ncrest = value of the channel-side cell (fn_bank is given at channel cells)",
-    "site": "breach site = pair of adjacent channel cell (ic, jc)\nand landside cell (il, jl) (one edge)\nbr_cell(:,n) = ic, jc, il, jl",
+    "site": "breach site = pair of adjacent channel cell (ic, jc) and landside cell (il, jl)\n(one normal edge; br_cell(:,n) = ic, jc, il, jl). With f_br_diag = 1 the four\ndiagonal edges touching the site (dotted) drop to the same effective crest",
     "xlabel": "time (min)", "ylabel": "remaining crest fraction f",
     "eff": "effective crest = landside ground\n + f × (crest − landside ground)",
     "ws": "water level (state of the channel part)",
@@ -171,11 +171,21 @@ def panel_plan(ax, t):
     grid(ax, 0, 0, NX, NY, 1, RULE, .65, z=2)
     for start, end in diagonal_edges():
         # Two equal dashes leave a clear gap at the shared corner/normal wall.
+        # The four diagonals touching the breach site (channel cell of the site
+        # to the landside neighbours of (il, jl), and the channel neighbours of
+        # (ic, jc) to (il, jl)) are drawn dotted: with f_br_diag = 1 they drop to
+        # the effective crest of the site together with its normal edge.
         d = end-start
+        i0 = int(round(start[0]-.5)); i1 = int(round(end[0]-.5))
+        lowered = (end[1] > start[1]) and (i0 == BREACH_COL or i1 == BREACH_COL)
         for lo, hi in ((.22, .43), (.57, .78)):
             a, b = start+lo*d, start+hi*d
-            ax.plot([a[0], b[0]], [a[1], b[1]], color=C_X, lw=1.15,
-                    solid_capstyle='butt', zorder=4)
+            if lowered:
+                ax.plot([a[0], b[0]], [a[1], b[1]], color=C_X, lw=1.0, ls=':',
+                        solid_capstyle='butt', zorder=4)
+            else:
+                ax.plot([a[0], b[0]], [a[1], b[1]], color=C_X, lw=1.15,
+                        solid_capstyle='butt', zorder=4)
     # The top normal wall is split at the breach rather than painted over.
     for p, q in [((0, CHANNEL_ROW), (NX, CHANNEL_ROW)),
                  ((0, CHANNEL_ROW+1), (BREACH_COL, CHANNEL_ROW+1)),
