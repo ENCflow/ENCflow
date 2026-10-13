@@ -343,10 +343,11 @@ Notes:
   conflict. Bed scour and breaching can be handled together.
 - The effective width of a resolved-levee breach is close to the number
   of cells × dx, while a virtual-wall breach (one normal edge per site;
-  the diagonal links stay walls) gives about dx/4 per site (measured in
-  examples/levee_breach: with 1.7–1.9 m of head, 1 to 5 cells give ratios
-  of 3.3–3.8). To represent the same real width with virtual walls, use
-  about (real width) ÷ (dx/4) sites as a guide.
+  the diagonal links stay walls) gives about 0.4 dx per site (the
+  passing-width share of a normal edge; measured in examples/levee_breach:
+  with 1.7–1.9 m of head, 1 to 5 cells give ratios of 2.3–2.6). To
+  represent the same real width with virtual walls, use about
+  (real width) ÷ (0.4 dx) sites as a guide.
 - An opening narrower than a cell cannot be represented (the resolution
   of a resolved levee is the cell). On a coarse grid use the breach of the
   virtual (subgrid) wall.

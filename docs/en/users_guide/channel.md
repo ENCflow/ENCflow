@@ -172,11 +172,12 @@ a failure (levees must be enabled).
   [coordinates chapter](coordinates.md)).
 - A failure spanning several cells is specified as multiple sites (the
   breach width is per edge). The effective flow width of one site is about
-  dx/4 (only the normal edge passes flow; the diagonal links between
-  neighbouring sites stay walls; measured 2.6 m per site for 1 to 5 sites
-  with 10 m cells and 1.7–1.9 m of head in
+  0.4 dx (the passing-width share 0.414 of a normal edge; the diagonal
+  links between neighbouring sites stay walls; measured 3.8 m per site for
+  1 to 5 sites with 10 m cells and 1.7–1.9 m of head in
   [examples/levee_breach](../../../examples/levee_breach/README.md)). For a
-  real breach width W use about W ÷ (dx/4) sites as a guide.
+  real breach width W use about W ÷ (0.4 dx) sites as a guide. Adding the
+  diagonal pairs as sites widens it (measurements in the same README).
 - **When the levee is present as elevation in the DEM (a resolved levee)**
   there is no virtual wall and this breach cannot be used. Use the
   procedure of [prescribed bed motion](bedmotion.md) §5, which lowers the
