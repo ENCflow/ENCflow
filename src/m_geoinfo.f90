@@ -1349,9 +1349,6 @@ subroutine calc_wxy(p, g)
   integer :: i, j, s
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
-  g%wy(1) = 1
-  g%wy(2) = g%ny
-
   g%wx(1,:) = g%nx + 1
   g%wx(2,:) = 0
 
@@ -1373,6 +1370,20 @@ subroutine calc_wxy(p, g)
         exit
       end if
     end do
+  end do
+
+  ! 行の計算対象範囲 wy = x 窓が空でない行(有効セルの行とその上下 1 行)の
+  ! 最小・最大。時間ループの行範囲(dcp%js..je)と MPI の帯分割はこの窓の
+  ! 中だけで行われ、マスク外の行は走査もしない(全域格子に小さなマスクを
+  ! 置く運用の計算負荷を窓の面積に比例させる。developer.md §79)。
+  ! 有効セルが 1 つもなければ wy(1) > wy(2)(空窓。n_valcells 検査で停止)
+  g%wy(1) = g%ny + 1
+  g%wy(2) = 0
+  do j = 1, g%ny
+    if (g%wx(1,j) <= g%wx(2,j)) then
+      g%wy(1) = min(g%wy(1), j)
+      g%wy(2) = max(g%wy(2), j)
+    end if
   end do
 
 end subroutine

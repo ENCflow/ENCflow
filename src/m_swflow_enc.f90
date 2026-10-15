@@ -1557,7 +1557,7 @@ subroutine curv_prepare(g, s)
   j2 = min(dcp%je + 1, g%ny)
   !$omp parallel do schedule(dynamic) private(i, j, zc, zxx, zyy, zxy, zx, zy, okw, oke, oks, okn)
   do j = j1, j2
-    do i = 1, g%nx
+    do i = g%wx(1,j), g%wx(2,j)   ! 窓外は valid が偽: acv は確保時の 0 のまま(§79)
       dbr%acv(i,j) = 0.0
       if (.not. valid(i, j)) cycle
       if (s%vv(i,j) <= 0.0) cycle
@@ -2324,6 +2324,34 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! エッジ行 j に書き込みが起こりうる列範囲 [i1, i2](空なら i1 > i2)
+!   エッジ行 j のスロットはセル行 j(k=4。dje=0)とセル行 j+1(k=1..3。
+!   dje=-1)が書き、die(k) ∈ {-1, 0} なので、列は各セル行の x 窓
+!   g%wx を西へ 1 列広げた範囲の和集合に収まる(境界条件・NH 射影・
+!   構造物の書き込みも有効セル由来なので同じ範囲)。行 0 と行 ny は
+!   片側のセル行しか持たない。x 窓が空の行(wx(1) = nx+1, wx(2) = 0)は
+!   寄与しない。die/dje を変えたらここも更新すること
+!----------------------------------------------------------------------
+pure subroutine edge_row_span(g, j, i1, i2)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: j
+  integer, intent(out) :: i1, i2
+  i1 = g%nx + 1
+  i2 = 0
+  if (j >= 1) then
+    i1 = g%wx(1,j) - 1
+    i2 = g%wx(2,j)
+  end if
+  if (j + 1 <= g%ny) then
+    i1 = min(i1, g%wx(1,j+1) - 1)
+    i2 = max(i2, g%wx(2,j+1))
+  end if
+  i1 = max(i1, 0)
+  i2 = min(i2, g%nx)
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 変数の更新
 !----------------------------------------------------------------------
 subroutine complete(p, g, s, sx, initial)
@@ -2338,7 +2366,7 @@ subroutine complete(p, g, s, sx, initial)
   !   復元水深が最大 D·m/(m+1) 膨張する実バグの対策(hs1 の複製初期化と
   !   同族の問題。§26)
   logical, intent(in), optional :: initial
-  integer :: i, j
+  integer :: i, j, i1, i2
   logical :: linit
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   linit = .false.
@@ -2347,10 +2375,14 @@ subroutine complete(p, g, s, sx, initial)
   ! 流量のコミット: 時刻n+1の値を正準状態へ(セルの h1→h と対をなす)
   !   エッジの書き込み集合はセル窓より i,j とも1つ外側(die/dje=-1)に
   !   張り出すため、セルループに畳み込まず、行範囲 js-1..je で行う。
-  !   ここでは行丸ごとメモリ転送するのでschedule(static)でよい
-  !$omp parallel do schedule(static)
+  !   列範囲は edge_row_span(エッジ行 j の書き手セル行 j, j+1 の x 窓の
+  !   和集合を西へ 1 列広げたもの)に限る。窓外のエッジは mn も mn1 も
+  !   確保時の 0 のまま(書き手がいない)なので複写不要(§79)。
+  !   行ごとの連続メモリ転送なので schedule(static) でよい
+  !$omp parallel do schedule(static) private(j, i1, i2)
   do j = dcp%js - 1, dcp%je
-    sx%mn(:,:,j) = sx%mn1(:,:,j)
+    call edge_row_span(g, j, i1, i2)
+    if (i1 <= i2) sx%mn(:, i1:i2, j) = sx%mn1(:, i1:i2, j)
   end do
   !$omp end parallel do
 
@@ -2659,15 +2691,16 @@ subroutine build_fwd(p, g, s)
   jlo = max(dcp%js - 2, 1)
   jhi = min(dcp%je + 1, g%ny)
 
-  !$omp parallel do schedule(static) private(j)
-  do j = dcp%jsh - 1, dcp%jeh
-    chn%fwd(:, :, j) = 1.0
-  end do
-  !$omp end parallel do
-
+  ! 走査はセル行 jlo..jhi の x 窓 g%wx に限る。書き込みスロット (k,i,j) は
+  ! すべて fwd_cell(i,j) または fwd_cell(i+1,j)(成分3)が真のときだけで、
+  ! どちらも x 窓の中(wx(1,j) <= i, i+1 <= wx(2,j))。窓外・行範囲外の
+  ! スロットは書き手がなく確保時の 1.0 のままなので、毎ステップの全域
+  ! 初期化は不要: 走査する各スロットを計算の直前に 1.0 へ戻す(書き手は
+  ! 行 j のループだけなので OpenMP の競合もない。§79)
   !$omp parallel do schedule(dynamic) private(i, j, nb, sh, ok_c, ok_n)
   do j = jlo, jhi
-    do i = 1, g%nx
+    do i = g%wx(1,j), g%wx(2,j)
+      chn%fwd(:, i, j) = 1.0
       ok_c = fwd_cell(g, i, j)
       ! 成分4: (i,j)-(i+1,j)。斜め先は (i+1,j±1)(自セル側)と (i,j±1)(近傍側)
       !   読み手が参照する成分4の行は js-1..je+1(行 js-2 の成分4は近傍セル
@@ -3304,7 +3337,7 @@ subroutine m_swflow_enc_sdep_update(p, g, s)
   changed = .false.
   !$omp parallel do schedule(dynamic) private(i, j, dnew, vh) reduction(.or.:changed)
   do j = dcp%jsh, dcp%jeh
-    do i = 1, g%nx
+    do i = g%wx(1,j), g%wx(2,j)   ! screst は有効セルにしかない(§79)
       if (sct%screst(i,j) <= screst_none) cycle
       dnew = max(sct%screst(i,j) - s%z(i,j), 0.0)
       if (dnew == sct%sdep(i,j)) cycle

@@ -939,7 +939,7 @@ module subroutine build_cwd(g, s)
 
   !$omp parallel do schedule(dynamic) private(ic, jc, k, in, jn, f0, q, wgt, sx_, sy_, numx, denx, numy, deny, cap8)
   do jc = dcp%js, dcp%je
-    do ic = 1, g%nx
+    do ic = g%wx(1,jc), g%wx(2,jc)   ! 河道セルは x 窓の中にしかない(§79)
       if (.not. is_channel(g, ic, jc)) cycle
       if (g%wrw(ic,jc) <= 0.0) cycle
       cap8(1:8) = g%dx * g%dy / max(lch_cell(g, ic, jc), min(g%dx, g%dy))
