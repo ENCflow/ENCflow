@@ -126,16 +126,21 @@ subroutine set_prmap
     call par_stop("list_precip: prtype=2 requires fn_prmap")
   end if
 
-  ! 降水分布の読み込み
-  ! 入力データ配列は全域確保のまま(全ランク冗長読み込み。developer.md §11)
-  allocate(pr%prmap(1:g%nx,1:g%ny))
+  ! 降水分布の読み込み: 全域一時に読み(全ランク冗長読み込み。developer.md §11)、
+  ! 時間ループで使う帯+ハロだけを常駐させる(§81。窓読みは D2 で)
   fname = trim(p%dir_data)//"/"//trim(list%fn_prmap)
-  call fileio_read_matrix(fname, g%nx, g%ny, pr%prmap, p%f_input_mode)
+  block
+    real, allocatable :: wk(:,:)
+    allocate(wk(1:g%nx, 1:g%ny))
+    call fileio_read_matrix(fname, g%nx, g%ny, wk, p%f_input_mode)
+    allocate(pr%prmap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh))
+    pr%prmap(:,:) = wk(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
+  end block
 
-  ! データにNaNが含まれている場合はゼロに修正
+  ! データにNaNが含まれている場合はゼロに修正(帯の中。計数は帯ごと)
   have_nan = 0
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = dcp%jsh, dcp%jeh
+    do i = dcp%ish, dcp%ieh
       if (ieee_is_nan(pr%prmap(i,j))) then
         pr%prmap(i,j) = 0
         have_nan = have_nan + 1

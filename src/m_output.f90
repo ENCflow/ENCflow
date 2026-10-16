@@ -2,7 +2,7 @@ module m_output
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
-  use m_fileio, only : fileio_write_matrix, e_fmt_txt, e_fmt_bil, e_fmt_gtif
+  use m_fileio, only : fileio_write_matrix, fileio_write_window, e_fmt_txt, e_fmt_bil, e_fmt_gtif
   use m_georef, only : georef_write_hdr, e_pix_float, e_pix_int
   use m_parallel
 
@@ -49,11 +49,12 @@ subroutine output_init(o, p, g)
   type(t_geoinfo), intent(in) :: g
   character(len=256) :: fname
 
-  ! 出力集約バッファの確保(rank0 のみ全域。帯外行はゼロで不変に保たれ、
-  ! 逐次出力(帯外=ゼロ)とバイト一致する)
+  ! 出力集約バッファの確保(rank0 のみ。窓形 (ish:ieh, jw1:jw2)。全ランクの帯が
+  ! 窓を覆うので全要素が gather で埋まる。窓外は書き出し時に p%out_fill で
+  ! 充填する(§81)。gather の集約先そのものなので全域の一時は持たない)
   if (is_root) then
-    allocate(o%wk_out(1:g%nx, 1:g%ny), source = 0.0)
-    allocate(o%wk_out_i(1:g%nx, 1:g%ny), source = 0)
+    allocate(o%wk_out(dcp%ish:dcp%ieh, dcp%jw1:dcp%jw2), source = 0.0)
+    allocate(o%wk_out_i(dcp%ish:dcp%ieh, dcp%jw1:dcp%jw2), source = 0)
   else
     allocate(o%wk_out(1, 1), source = 0.0)
     allocate(o%wk_out_i(1, 1), source = 0)
@@ -276,24 +277,27 @@ subroutine output_matrix_real(o, p, g, prefix, a, k)
   character(len=4) :: snum
   character(:), allocatable :: fn
 
-  call par_gather_to(o%wk_out, a)
+  call par_gather_win(o%wk_out, a)
   if (.not. is_root) return
 
   write(snum, '(i4.4)') k
   fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
 
-  ! f_output_mode はビット和(1:txt, 2:bil, 4:geotiff)。組合せ出力可
+  ! f_output_mode はビット和(1:txt, 2:bil, 4:geotiff)。組合せ出力可。
+  ! 窓つき書き出し: 全域の形式のまま窓外は p%out_fill(既定 0)で充填(§81)
+  associate (i1 => dcp%ish, i2 => dcp%ieh, j1 => dcp%jw1, j2 => dcp%jw2)
   if (iand(p%f_output_mode, e_fmt_txt) /= 0) then
-    call fileio_write_matrix(fn//".txt", g%nx, g%ny, o%wk_out, e_fmt_txt)
+    call fileio_write_window(fn//".txt", g%nx, g%ny, i1, i2, j1, j2, o%wk_out, p%out_fill, e_fmt_txt)
   end if
   if (iand(p%f_output_mode, e_fmt_bil) /= 0) then
-    call fileio_write_matrix(fn//".bil", g%nx, g%ny, o%wk_out, e_fmt_bil)
+    call fileio_write_window(fn//".bil", g%nx, g%ny, i1, i2, j1, j2, o%wk_out, p%out_fill, e_fmt_bil)
     ! 地理座標を管理している場合のみ hdr を併記
     if (g%gr%active) call georef_write_hdr(fn//".hdr", g%gr, g%nx, g%ny, e_pix_float)
   end if
   if (iand(p%f_output_mode, e_fmt_gtif) /= 0) then
-    call fileio_write_matrix(fn//".tif", g%nx, g%ny, o%wk_out, e_fmt_gtif, g%gr)
+    call fileio_write_window(fn//".tif", g%nx, g%ny, i1, i2, j1, j2, o%wk_out, p%out_fill, e_fmt_gtif, g%gr)
   end if
+  end associate
 
 end subroutine
 
@@ -312,22 +316,25 @@ subroutine output_matrix_int(o, p, g, prefix, a, k)
   character(len=4) :: snum
   character(:), allocatable :: fn
 
-  call par_gather_to_i(o%wk_out_i, a)
+  call par_gather_win_i(o%wk_out_i, a)
   if (.not. is_root) return
 
   write(snum, '(i4.4)') k
   fn = trim(p%dir_result)//"/"//trim(adjustl(prefix))//snum//trim(adjustl(p%outfn_suffix))
 
+  ! 窓外の充填値は nint(p%out_fill)(§81)
+  associate (i1 => dcp%ish, i2 => dcp%ieh, j1 => dcp%jw1, j2 => dcp%jw2, ifill => nint(p%out_fill))
   if (iand(p%f_output_mode, e_fmt_txt) /= 0) then
-    call fileio_write_matrix(fn//".txt", g%nx, g%ny, o%wk_out_i, e_fmt_txt)
+    call fileio_write_window(fn//".txt", g%nx, g%ny, i1, i2, j1, j2, o%wk_out_i, ifill, e_fmt_txt)
   end if
   if (iand(p%f_output_mode, e_fmt_bil) /= 0) then
-    call fileio_write_matrix(fn//".bil", g%nx, g%ny, o%wk_out_i, e_fmt_bil)
+    call fileio_write_window(fn//".bil", g%nx, g%ny, i1, i2, j1, j2, o%wk_out_i, ifill, e_fmt_bil)
     if (g%gr%active) call georef_write_hdr(fn//".hdr", g%gr, g%nx, g%ny, e_pix_int)
   end if
   if (iand(p%f_output_mode, e_fmt_gtif) /= 0) then
-    call fileio_write_matrix(fn//".tif", g%nx, g%ny, o%wk_out_i, e_fmt_gtif, g%gr)
+    call fileio_write_window(fn//".tif", g%nx, g%ny, i1, i2, j1, j2, o%wk_out_i, ifill, e_fmt_gtif, g%gr)
   end if
+  end associate
 end subroutine
 
 

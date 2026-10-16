@@ -39,6 +39,7 @@ module m_parallel
    public :: par_allreduce_sumr
    public :: par_sum_rows
    public :: par_gather_to, par_gather_to_i, par_gather_edge_to
+   public :: par_gather_win, par_gather_win_i
    public :: par_scatter_cell, par_scatter_cell_i, par_scatter_edge
    public :: par_reduce_points
    public :: par_bcast_cell, par_bcast_cell_i, par_bcast_edge
@@ -193,6 +194,21 @@ contains
       real(real64), intent(out) :: total
       total = sum(rowsum)
    end subroutine par_sum_rows
+
+   subroutine par_gather_win(buf, a)
+      ! 窓形バッファ (ish:ieh, jw1:jw2) への集約(出力用。§81)。
+      ! 逐次では帯(=全域窓)の行を複写する
+      real, intent(inout) :: buf(dcp%ish:, dcp%jw1:)
+      real, intent(in) :: a(dcp%ish:, dcp%jsh:)
+      buf(:, dcp%js:dcp%je) = a(:, dcp%js:dcp%je)
+   end subroutine par_gather_win
+
+   subroutine par_gather_win_i(buf, a)
+      ! par_gather_win の整数版
+      integer, intent(inout) :: buf(dcp%ish:, dcp%jw1:)
+      integer, intent(in) :: a(dcp%ish:, dcp%jsh:)
+      buf(:, dcp%js:dcp%je) = a(:, dcp%js:dcp%je)
+   end subroutine par_gather_win_i
 
    subroutine par_gather_to(buf, a)
       ! 全域バッファへの集約。逐次では帯(=全域窓)の行を複写する

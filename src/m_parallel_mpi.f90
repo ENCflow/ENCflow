@@ -58,6 +58,7 @@ module m_parallel
    public :: par_allreduce_sumr
    public :: par_sum_rows
    public :: par_gather_to, par_gather_to_i, par_gather_edge_to
+   public :: par_gather_win, par_gather_win_i
    public :: par_scatter_cell, par_scatter_cell_i, par_scatter_edge
    public :: par_reduce_points
    public :: par_bcast_cell, par_bcast_cell_i, par_bcast_edge
@@ -512,11 +513,27 @@ contains
       ! buf の帯外の行は変更しない(呼び出し側でゼロ初期化しておくこと)。
       ! rank0 以外の buf は参照されないためサイズ1のダミーでよい。
       ! 帯配列の列範囲 ish..ieh は全域バッファの第 1 次元(1..nx)より狭いので、
-      ! rank0 は窓形 (ish:ieh, jw1:jw2) の受信一時に受けてから buf へ写す
-      ! (Gatherv の受信域は連続でなければならない。§80)
+      ! rank0 は窓形 (ish:ieh, jw1:jw2) の受信一時に受けて(par_gather_win)から
+      ! buf へ写す(Gatherv の受信域は連続でなければならない。§80)
       real, intent(inout) :: buf(1:, 1:)
       real, intent(in) :: a(dcp%ish:, dcp%jsh:)
       real, allocatable :: wbuf(:, :)
+      if (is_root) then
+         allocate(wbuf(dcp%ish:dcp%ieh, dcp%jw1:dcp%jw2))
+      else
+         allocate(wbuf(1, 1))
+      end if
+      call par_gather_win(wbuf, a)
+      if (is_root) buf(dcp%ish:dcp%ieh, dcp%jw1:dcp%jw2) = wbuf
+   end subroutine par_gather_to
+
+   subroutine par_gather_win(buf, a)
+      ! 窓形バッファ (ish:ieh, jw1:jw2) への集約(出力用。§81)。
+      ! rank0 の buf は窓形ちょうどで確保しておくこと(帯 js..je の行を
+      ! Gatherv で受ける。全ランクの帯が窓を過不足なく覆うので全行が埋まる)。
+      ! rank0 以外の buf は参照されないためサイズ1のダミーでよい
+      real, intent(inout) :: buf(dcp%ish:, dcp%jw1:)
+      real, intent(in) :: a(dcp%ish:, dcp%jsh:)
       integer :: counts(0:nproc-1), displs(0:nproc-1)
       integer :: r, js_r, je_r, n1
       n1 = size(a, 1)
@@ -525,36 +542,37 @@ contains
          counts(r) = n1 * (je_r - js_r + 1)
          displs(r) = n1 * (js_r - dcp%jw1)
       end do
-      if (is_root) then
-         allocate(wbuf(dcp%ish:dcp%ieh, dcp%jw1:dcp%jw2))
-      else
-         allocate(wbuf(1, 1))
-      end if
       call MPI_Gatherv(a(:, dcp%js:dcp%je), counts(nrank), MPI_WP, &
-                       wbuf, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
-      if (is_root) buf(dcp%ish:dcp%ieh, dcp%jw1:dcp%jw2) = wbuf
-   end subroutine par_gather_to
+                       buf, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
+   end subroutine par_gather_win
+
+   subroutine par_gather_win_i(buf, a)
+      ! par_gather_win の整数版
+      integer, intent(inout) :: buf(dcp%ish:, dcp%jw1:)
+      integer, intent(in) :: a(dcp%ish:, dcp%jsh:)
+      integer :: counts(0:nproc-1), displs(0:nproc-1)
+      integer :: r, js_r, je_r, n1
+      n1 = size(a, 1)
+      do r = 0, nproc - 1
+         call band_range(r, js_r, je_r)
+         counts(r) = n1 * (je_r - js_r + 1)
+         displs(r) = n1 * (js_r - dcp%jw1)
+      end do
+      call MPI_Gatherv(a(:, dcp%js:dcp%je), counts(nrank), MPI_INTEGER, &
+                       buf, counts, displs, MPI_INTEGER, 0, MPI_COMM_WORLD)
+   end subroutine par_gather_win_i
 
    subroutine par_gather_to_i(buf, a)
       ! par_gather_to の整数版(流下方向フラグ等)
       integer, intent(inout) :: buf(1:, 1:)
       integer, intent(in) :: a(dcp%ish:, dcp%jsh:)
       integer, allocatable :: wbuf(:, :)
-      integer :: counts(0:nproc-1), displs(0:nproc-1)
-      integer :: r, js_r, je_r, n1
-      n1 = size(a, 1)
-      do r = 0, nproc - 1
-         call band_range(r, js_r, je_r)
-         counts(r) = n1 * (je_r - js_r + 1)
-         displs(r) = n1 * (js_r - dcp%jw1)
-      end do
       if (is_root) then
          allocate(wbuf(dcp%ish:dcp%ieh, dcp%jw1:dcp%jw2))
       else
          allocate(wbuf(1, 1))
       end if
-      call MPI_Gatherv(a(:, dcp%js:dcp%je), counts(nrank), MPI_INTEGER, &
-                       wbuf, counts, displs, MPI_INTEGER, 0, MPI_COMM_WORLD)
+      call par_gather_win_i(wbuf, a)
       if (is_root) buf(dcp%ish:dcp%ieh, dcp%jw1:dcp%jw2) = wbuf
    end subroutine par_gather_to_i
 

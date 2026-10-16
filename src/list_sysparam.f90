@@ -132,6 +132,7 @@ module list_sysparam
     character(len=maxpathlen) :: dir_result = "result"   ! 結果出力ディレクトリ
     character(len=maxpathlen) :: dir_save = "save"       ! 状態保存(save/restore)ディレクトリ
     character(len=maxpathlen) :: outfn_suffix = ""       ! 出力ファイル名のサフィックス
+    real :: out_fill = 0.0                               ! 分布ファイルの窓外(マスクの外接矩形の外)の充填値
   end type
 
 
@@ -246,6 +247,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: dir_result    ! 結果出力ディレクトリ
   character(:), allocatable :: dir_save      ! 状態保存(save/restore)ディレクトリ
   character(:), allocatable :: outfn_suffix  ! 出力ファイル名のサフィックス
+  real :: out_fill                           ! 分布ファイルの窓外の充填値
   integer :: un
   integer :: ios
   character(len=1024) :: iom
@@ -266,7 +268,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
                         fn_structure, &
                         fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_evap, fn_meteo, fn_wq, fn_snow, fn_glacier, fn_lavaflow, fn_bedmotion, fn_salt, fn_swi, fn_driftwood, fn_bldgdebris, fn_channel, fn_enc, fn_nest, &
-                        fn_log, dir_data, dir_result, dir_save, outfn_suffix
+                        fn_log, dir_data, dir_result, dir_save, outfn_suffix, out_fill
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -376,6 +378,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   dir_result = list%dir_result
   dir_save = list%dir_save
   outfn_suffix = list%outfn_suffix
+  out_fill = list%out_fill
 
   call par_info("reading list_sysparam in "//trim(fn_sysparam))
   open(newunit=un, file=trim(fn_sysparam), status='old')
@@ -489,6 +492,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%dir_result = dir_result
   list%dir_save = dir_save
   list%outfn_suffix = outfn_suffix
+  list%out_fill = out_fill
 
   if (trim(list%fn_geoinfo) == "-") list%fn_geoinfo = trim(fn_sysparam)
   if (trim(list%fn_initial) == "-") list%fn_initial = trim(fn_sysparam)

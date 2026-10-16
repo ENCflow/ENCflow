@@ -1,6 +1,6 @@
 module m_fileio
   use, intrinsic :: iso_fortran_env, only: real32, int8, int16, int32, int64
-  use m_geotiff, only : gtif_read, gtif_write, t_gtif_info
+  use m_geotiff, only : gtif_read, gtif_write, gtif_write_window, t_gtif_info
   use m_georef, only : t_georef, t_esri_hdr, georef_hdr_name, georef_parse_hdr
   use m_util, only : itoa
   use m_parallel, only : par_abort
@@ -10,6 +10,7 @@ module m_fileio
 
   public :: fileio_read_matrix
   public :: fileio_write_matrix
+  public :: fileio_write_window
   public :: fileio_un_open
   public :: fileio_un_read_matrix
   public :: fileio_write_rle
@@ -25,6 +26,11 @@ module m_fileio
   interface fileio_write_matrix
     procedure :: fileio_write_matrix_int
     procedure :: fileio_write_matrix_real
+  end interface
+
+  interface fileio_write_window
+    procedure :: fileio_write_window_int
+    procedure :: fileio_write_window_real
   end interface
 
   ! ゼロ抑制 RLE(save/restore 用。developer.md §7)
@@ -181,6 +187,78 @@ end subroutine
 
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
+!----------------------------------------------------------------------
+! 窓つき書き出し(全域 (nx, ny) の形式のファイルを、窓 (i1:i2, j1:j2) の配列と
+! 窓外の充填値 fill から行ストリーミングで書く。メモリは 1 行分。
+! 窓 = 全域・fill = 0 なら fileio_write_matrix とバイト一致。developer.md §81)
+!----------------------------------------------------------------------
+subroutine fileio_write_window_int(fname, nx, ny, i1, i2, j1, j2, a, fill, e_fmt, gr)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny, i1, i2, j1, j2
+  integer, intent(in) :: a(i1:, j1:)
+  integer, intent(in) :: fill
+  integer, intent(in) :: e_fmt
+  type(t_georef), intent(in), optional :: gr   ! e_fmt_gtif で必須(座標管理)
+  integer :: un, j
+  integer, allocatable :: row(:)
+
+  if (e_fmt == e_fmt_gtif) then
+    call write_gtif_window_int(fname, nx, ny, i1, i2, j1, j2, a, fill, gr)
+    return
+  end if
+  allocate(row(1:nx))
+  if (e_fmt == e_fmt_bil) then
+    un = open_new_stream(fname)
+  else
+    un = open_new_text(fname)
+  end if
+  do j = 1, ny
+    row(:) = fill
+    if (j >= j1 .and. j <= j2) row(i1:i2) = a(i1:i2, j)
+    if (e_fmt == e_fmt_bil) then
+      write(un) row
+    else
+      write(un,'(*(i8))') row
+    end if
+  end do
+  close(un)
+end subroutine
+
+subroutine fileio_write_window_real(fname, nx, ny, i1, i2, j1, j2, a, fill, e_fmt, gr)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny, i1, i2, j1, j2
+  real, intent(in) :: a(i1:, j1:)
+  real, intent(in) :: fill
+  integer, intent(in) :: e_fmt
+  type(t_georef), intent(in), optional :: gr
+  integer :: un, j
+  real, allocatable :: row(:)
+  real(real32), allocatable :: row32(:)
+
+  select case (e_fmt)
+    case (e_fmt_gtif)
+      call write_gtif_window_real(fname, nx, ny, i1, i2, j1, j2, a, fill, gr)
+    case (e_fmt_bil)
+      un = open_new_stream(fname)
+      allocate(row32(1:nx))
+      do j = 1, ny
+        row32(:) = real(fill, real32)
+        if (j >= j1 .and. j <= j2) row32(i1:i2) = real(a(i1:i2, j), real32)
+        write(un) row32
+      end do
+      close(un)
+    case default
+      un = open_new_text(fname)
+      allocate(row(1:nx))
+      do j = 1, ny
+        row(:) = fill
+        if (j >= j1 .and. j <= j2) row(i1:i2) = a(i1:i2, j)
+        write(un,'(*(f12.4))') row
+      end do
+      close(un)
+  end select
+end subroutine
+
 subroutine fileio_write_matrix_int(fname, nx, ny, a, e_fmt, gr)
   character(len=*), intent(in) :: fname
   integer, intent(in) :: nx, ny
@@ -372,6 +450,34 @@ subroutine write_gtif_int(fname, nx, ny, a, gr)
   character(len=512) :: msg
   call gr2info(gr, info)
   call gtif_write(fname, nx, ny, a, info, stat, msg)
+  if (stat /= 0) call par_abort("fileio: failed to write GeoTIFF as integer: "//trim(msg))
+end subroutine
+
+subroutine write_gtif_window_real(fname, nx, ny, i1, i2, j1, j2, a, fill, gr)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny, i1, i2, j1, j2
+  real, intent(in) :: a(i1:, j1:)
+  real, intent(in) :: fill
+  type(t_georef), intent(in), optional :: gr
+  type(t_gtif_info) :: info
+  integer :: stat
+  character(len=512) :: msg
+  call gr2info(gr, info)
+  call gtif_write_window(fname, nx, ny, i1, i2, j1, j2, a, fill, info, stat, msg)
+  if (stat /= 0) call par_abort("fileio: failed to write GeoTIFF as real: "//trim(msg))
+end subroutine
+
+subroutine write_gtif_window_int(fname, nx, ny, i1, i2, j1, j2, a, fill, gr)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny, i1, i2, j1, j2
+  integer, intent(in) :: a(i1:, j1:)
+  integer, intent(in) :: fill
+  type(t_georef), intent(in), optional :: gr
+  type(t_gtif_info) :: info
+  integer :: stat
+  character(len=512) :: msg
+  call gr2info(gr, info)
+  call gtif_write_window(fname, nx, ny, i1, i2, j1, j2, a, fill, info, stat, msg)
   if (stat /= 0) call par_abort("fileio: failed to write GeoTIFF as integer: "//trim(msg))
 end subroutine
 

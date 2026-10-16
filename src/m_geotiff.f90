@@ -28,6 +28,7 @@ module m_geotiff
   public :: gtif_inquire
   public :: gtif_read
   public :: gtif_write
+  public :: gtif_write_window
 
   ! 読み取りメタ情報(gtif_inquire / gtif_read が返す)
   type t_gtif_info
@@ -48,6 +49,11 @@ module m_geotiff
   interface gtif_read
     procedure :: gtif_read_real
     procedure :: gtif_read_int
+  end interface
+
+  interface gtif_write_window
+    procedure :: gtif_write_window_real
+    procedure :: gtif_write_window_int
   end interface
 
   interface gtif_write
@@ -180,6 +186,66 @@ subroutine gtif_write_real(fname, nx, ny, a, info, stat, msg)
   if (stat /= 0) return
   do j = 1, ny
     row(:) = real(a(1:nx,j), real32)
+    write(un, iostat=ios) row
+    if (ios /= 0) then
+      call set_err(stat, msg, "cannot write GeoTIFF pixel data: "//trim(fname))
+      close(un)
+      return
+    end if
+  end do
+  close(un)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 窓つき書き出し: 全域 (nx, ny) の形式のまま、窓 (i1:i2, j1:j2) の値と窓外の
+! 充填値 fill を行ごとに書く(メモリは 1 行分。developer.md §81)
+!----------------------------------------------------------------------
+subroutine gtif_write_window_real(fname, nx, ny, i1, i2, j1, j2, a, fill, info, stat, msg)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny, i1, i2, j1, j2
+  real, intent(in) :: a(i1:, j1:)
+  real, intent(in) :: fill
+  type(t_gtif_info), intent(in) :: info
+  integer, intent(out) :: stat
+  character(len=*), intent(out) :: msg
+
+  integer :: un, j, ios
+  real(real32) :: row(nx)
+
+  call write_meta(fname, nx, ny, 3, info, un, stat, msg)
+  if (stat /= 0) return
+  do j = 1, ny
+    row(:) = real(fill, real32)
+    if (j >= j1 .and. j <= j2) row(i1:i2) = real(a(i1:i2, j), real32)
+    write(un, iostat=ios) row
+    if (ios /= 0) then
+      call set_err(stat, msg, "cannot write GeoTIFF pixel data: "//trim(fname))
+      close(un)
+      return
+    end if
+  end do
+  close(un)
+end subroutine
+
+
+subroutine gtif_write_window_int(fname, nx, ny, i1, i2, j1, j2, a, fill, info, stat, msg)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny, i1, i2, j1, j2
+  integer, intent(in) :: a(i1:, j1:)
+  integer, intent(in) :: fill
+  type(t_gtif_info), intent(in) :: info
+  integer, intent(out) :: stat
+  character(len=*), intent(out) :: msg
+
+  integer :: un, j, ios
+  integer :: row(nx)
+
+  call write_meta(fname, nx, ny, 2, info, un, stat, msg)
+  if (stat /= 0) return
+  do j = 1, ny
+    row(:) = fill
+    if (j >= j1 .and. j <= j2) row(i1:i2) = a(i1:i2, j)
     write(un, iostat=ios) row
     if (ios /= 0) then
       call set_err(stat, msg, "cannot write GeoTIFF pixel data: "//trim(fname))

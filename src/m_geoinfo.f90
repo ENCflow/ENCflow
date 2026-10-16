@@ -337,11 +337,11 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 地形とマスク類を縮小する(全モジュールの初期化完了後、run_main の
-! 直前に呼ぶ)。x は番兵境界ごと帯へ、sw / rw は通常の帯へ。
-! z は「入力地形の正本」として rank0 のみ全域を保持し続ける
-! (将来の浸食計算で初期地形との比較に使う。全域出力が必要になったら
-!  rank0 直接書きのルーチンを m_output に復元する。git 履歴の
-!  output_matrix_full 参照)。
+! 直前に呼ぶ)。x は番兵境界ごと帯へ、sw / rw / z は通常の帯へ。
+! z は 2026-10-16 まで「入力地形の正本」として rank0 だけ全域を保持していたが、
+! 時間ループで全域の z を読む処理はなく(初期地形との比較が要るときはその
+! 処理が窓を読む)、rank0 の常駐メモリの主因だったので rank0 も帯へ縮める
+! (§81。全域出力の旧 output_matrix_full は git 履歴参照)。
 ! 時間ループでの sw/rw/gv の近傍参照(momentum, rivermouth の ±1)は
 ! ハロ幅2の帯確保で全て範囲内に収まることを監査済み。
 ! gv / lm の帯は m_state_init が s%gv / s%lm へ写した後は時間ループで
@@ -360,7 +360,7 @@ subroutine m_geoinfo_band_shrink(g)
                      max(1, dcp%jsh - 1), min(g%ny, dcp%jeh + 1))
   if (g%swall_active) call shrink_band_i(g%ssw, dcp%ish, dcp%ieh, dcp%jsh, dcp%jeh)
   call shrink_band_i(g%rw, dcp%ish, dcp%ieh, dcp%jsh, dcp%jeh)
-  if (.not. is_root) call shrink_band_r(g%z, dcp%ish, dcp%ieh, dcp%jsh, dcp%jeh)
+  call shrink_band_r(g%z, dcp%ish, dcp%ieh, dcp%jsh, dcp%jeh)
 end subroutine
 
 

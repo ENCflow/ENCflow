@@ -121,6 +121,7 @@ module m_sysparam
     character(:), allocatable :: dir_result    ! 結果出力ディレクトリ
     character(:), allocatable :: dir_save      ! 状態保存(save/restore)ディレクトリ
     character(:), allocatable :: outfn_suffix  ! 出力ファイル名のサフィックス
+    real :: out_fill = 0.0                     ! 分布ファイルの窓外(マスクの外接矩形の外)の充填値(§81)
     logical :: initialized = .false.           ! 初期化済みフラグ
   end type
 
@@ -259,6 +260,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%dir_result = list%dir_result               ! 結果出力ディレクトリ
   p%dir_save = list%dir_save                   ! 状態保存(save/restore)ディレクトリ
   p%outfn_suffix = list%outfn_suffix           ! 出力ファイル名のサフィックス
+  p%out_fill = list%out_fill                   ! 分布ファイルの窓外の充填値
 
   if (len(trim(list%t0_c)) > 0) p%t0 = str2sec(list%t0_c, "list_sysparam: bad t0_c")
   ! t=0 の暦(蒸発散・水質など暦を使う機能の正本。§27)
