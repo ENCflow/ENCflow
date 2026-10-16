@@ -662,7 +662,11 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
   - 検証: 1, 2, 4 ランク+スレッド数変更で同一 reference にビット一致(達成)。
 - **第二段(確保の縮小)実装・検証済み(2026-xx)**: MPI 版のみ
   jsh/jeh = 担当帯±nhalo に縮小(逐次版は全域確保のまま=縮小の複雑さを
-  MPI 側に閉じ込め、np=1 の MPI が縮小版の検証役)。要素:
+  MPI 側に閉じ込め、np=1 の MPI が縮小版の検証役)。**2026-10-15 に逐次版も
+  同じ規則(全域窓±nhalo。§79)に改めた**: 行窓 wy がマスクから決まる
+  ようになり、np=1 の MPI がその形で検証済みだったので、逐次版の例外を
+  残す理由がなくなった(確保・ダミー・gather/scatter は元から
+  dcp%jsh:dcp%jeh で書かれており、変更は par_decomp_init の 2 行)。要素:
   - 初期化: 全域一時状態 ts(h,u,v のみ確保)上で set_h / restore /
     user フック / fill_depression を全ランク冗長実行し、最後に帯+ハロを
     切り出す。**user フックのシグネチャと全域添字契約は無変更**。
@@ -10837,10 +10841,36 @@ Dy = 0.293·u·Δy(2.7 m²/s)。横断の拡散は ENC の 8 方向リンクで 
   境界検査なしで完走・Log と CSV が逐次 -Ofast と同一であることを確認した。
   トップレベル make(utils の追随)も通る。
 
-### 第二段以降(未実装。handoff.md 参照)
+### 第二段 (B): 逐次版の確保範囲を全域窓±ハロに(2026-10-15 実装)
 
-計算時間の次はメモリで、候補は (B) 逐次版の確保範囲を窓±ハロに(MPI 版の
-band_range_h と同じ規則。np=1 の MPI がすでにこの形で検証済み)、(C) x 方向
+par_decomp_init(逐次版)の jsh/jeh を MPI 版 band_range_h と同じ規則
+(`max(1, jw1 − nhalo)..min(ny, jw2 + nhalo)`)にした。確保・ダミー引数・
+gather/scatter・帯縮小は元から `dcp%jsh:dcp%jeh` で書かれている(単一
+ソース)ので本体の変更は 2 行で、「逐次では全域」と書いたコメントを
+整理しただけ。可読性は下がらず、逐次だけ別規則という例外が消えた。
+窓 = 全行のケース(回帰テストの大半)では従来と同じ確保になる。
+埋め込みケース(5600 × 3000、窓 280 行)の最大 RSS は 7.8 GB → 1.8 GB、
+所要時間は 73 s → 49 s(全域確保の零埋めが消えた分)、結果は分布ファイルを
+含めて同一。残る 1.8 GB は窓の行 × 全幅の帯配列(約 0.5 GB)と rank0 の
+全域配列(入力地形 g%z・出力バッファ)、入力読み込みの一時領域で、
+x 方向の確保範囲(第二段 (C))の対象。
+
+検証(2026-10-16): -O0 -fcheck=all の逐次ビルドで全ケース(reference 付き
+24 + 自己検証型。BMI の 2 ケースは -fPIC なしの試験ビルドでは共有ライブラリが
+組めないため release で実行)を走らせ、境界エラーなく完走することを確認した。
+同ビルドでは culvert・gwseep(最終桁 1 量子)、tracer・sewer_wq(wq.csv の
+台帳 1e-5〜1e-8 相対)、nest_identity の two-way wave・wave_fb3 の
+swflow_enc.dat と nest_twin wave が reference / single と一致しないが、
+いずれも §79 変更前のコミットを同じフラグで組んでも同じで、-O0 と -Ofast の
+丸めの違い(§28.3)または既存事象(handoff.md 00d)。release ビルドでは
+reference 付き 24 ケースと nest_identity・nest_twin・bmi_nest・bmi_vars・
+gvchange がすべて PASS(等価変換 = identical)。同ビルドの -fcheck 実行で
+test/nhshelf が m_swflow_enc_nh の slope_coef の範囲外読みで停止する
+既存バグも見つかった(本変更とは無関係。handoff.md 00d に記録)。
+
+### 第二段 (C) 以降(未実装。handoff.md 参照)
+
+残る候補は (C) x 方向
 の確保範囲 ish/ieh の導入(`1:g%nx` の確保 234 箇所を帯確保と同じ型
 `a(dcp%ish:, dcp%jsh:)` に置き換える機械的だが広い変更)、(D) 初期化の
 全域一時配列(rank0 の入力読み込み・ts)の窓化。前処理ユーティリティで
