@@ -15,8 +15,6 @@
 しかし、進めすぎると結果が不自然になったり、計算が止まったりします。
 その判断に役立つのが、**クーラン数**です。
 
-図は `python3 docs/figs/make_guide_figs.py courant` で生成します。
-
 [クーラン数の意味](#courant-number) · [時間刻みの設定手順](#choose-dt) · [流速・波速の概算表](#speed-table) · [Cn_max の読み方](#cn-max)
 
 <a id="grid-and-time"></a>

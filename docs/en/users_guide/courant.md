@@ -18,8 +18,6 @@ reduces the number of steps. Advance too far, however, and the result
 becomes unnatural or the computation stops. The **Courant number** is the
 quantity that helps you judge this.
 
-The figures are generated with `python3 docs/figs/make_guide_figs.py courant`.
-
 [What the Courant number means](#courant-number) · [Procedure for setting the time step](#choose-dt) · [Rough table of velocities and wave speeds](#speed-table) · [Reading Cn_max](#cn-max)
 
 <a id="grid-and-time"></a>
