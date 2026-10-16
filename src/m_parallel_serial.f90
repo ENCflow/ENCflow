@@ -18,7 +18,7 @@ module m_parallel
 !     (protected 属性により変更は本モジュール内に限定される)
 !   - 計算カーネルには dcp を見せず、範囲(js, je 等)を引数で渡す
 !   - js/je は「計算範囲(全域窓∩自ランク担当帯)」、jsh/jeh は
-!     「配列確保範囲(担当帯+ハロ。逐次版は全域 1..ny、MPI 版は帯±ハロ)」、
+!     「配列確保範囲(担当帯±ハロ。全域端でクリップ。逐次は帯=全域窓)」、
 !     jw1/jw2 は全域の有効窓(= g%wy。領域マスクの有効セルを含む行と
 !     その上下 1 行の範囲。窓外の行は時間ループで走査も分割もしない。
 !     developer.md §79)。全域窓の端で1行縮めるループは
@@ -57,7 +57,7 @@ module m_parallel
       integer :: jw2 = 0         ! 全域の有効窓の終了 j(= g%wy(2))
       integer :: js = 1          ! 自ランク計算範囲の開始 j(全域窓∩担当帯)
       integer :: je = 0          ! 自ランク計算範囲の終了 j
-      integer :: jsh = 1         ! 配列確保範囲の開始 j(担当帯+ハロ。現段階は全域)
+      integer :: jsh = 1         ! 配列確保範囲の開始 j(担当帯±ハロ。全域端でクリップ)
       integer :: jeh = 0         ! 配列確保範囲の終了 j
       integer :: rank_n = -1     ! j+側の隣接ランク(なければ負)
       integer :: rank_s = -1     ! j-側の隣接ランク(なければ負)
@@ -84,7 +84,10 @@ contains
    subroutine par_decomp_init(nx, ny, jw1, jw2, rowwork, align)
       ! 領域分割の決定。格子サイズと有効窓の確定後
       ! (m_geoinfo_init の直後)に呼ぶこと。
-      ! 逐次では計算範囲=全域窓、確保範囲=全域。rowwork(行重み)は
+      ! 逐次では計算範囲=全域窓、確保範囲=全域窓±ハロ(全域端でクリップ。
+      ! MPI 版 band_range_h と同じ規則 = np=1 の MPI と同じ形。窓の外の行は
+      ! 確保しないので、全域格子に小さなマスクを置く運用の常駐メモリが
+      ! 窓の行数に比例する。developer.md §79)。rowwork(行重み)は
       ! MPI 版とのインターフェース一致のために受け取るが使用しない。
       integer, intent(in) :: nx, ny
       integer, intent(in) :: jw1, jw2   ! 全域の有効窓(= g%wy(1:2))
@@ -98,8 +101,8 @@ contains
       dcp%jw2 = jw2
       dcp%js  = jw1
       dcp%je  = jw2
-      dcp%jsh = 1
-      dcp%jeh = ny
+      dcp%jsh = max(1, jw1 - dcp%nhalo)
+      dcp%jeh = min(ny, jw2 + dcp%nhalo)
       dcp%rank_n = -1
       dcp%rank_s = -1
    end subroutine par_decomp_init
@@ -186,7 +189,8 @@ contains
    end subroutine par_sum_rows
 
    subroutine par_gather_to(buf, a)
-      ! 全域バッファへの集約。逐次では帯(=全域窓)の行を複写する。
+      ! 全域バッファへの集約。逐次では帯(=全域窓)の行を複写する
+      ! (窓外の行はバッファの確保時の値のまま。MPI 版と同じ)。
       real, intent(inout) :: buf(1:, 1:)
       real, intent(in) :: a(1:, dcp%jsh:)
       buf(:, dcp%js:dcp%je) = a(:, dcp%js:dcp%je)
@@ -208,7 +212,7 @@ contains
 
    subroutine par_scatter_cell(buf, a)
       ! rank0 全域バッファからの帯配布(gather の逆向き)。
-      ! 逐次では確保範囲(=全域)を複写する。
+      ! 逐次では確保範囲(=全域窓±ハロ)を複写する。
       real, intent(in) :: buf(1:, 1:)
       real, intent(inout) :: a(1:, dcp%jsh:)
       a(:, dcp%jsh:dcp%jeh) = buf(:, dcp%jsh:dcp%jeh)
@@ -223,7 +227,7 @@ contains
 
    subroutine par_scatter_edge(buf, a)
       ! rank0 全域エッジバッファからの帯配布(par_gather_edge_to の
-      ! 逆向き)。逐次では確保範囲(=全域)を複写する。
+      ! 逆向き)。逐次では確保範囲(=全域窓±ハロ)を複写する。
       real, intent(in) :: buf(1:, 0:, 0:)
       real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
       a(:, :, dcp%jsh-1:dcp%jeh) = buf(:, :, dcp%jsh-1:dcp%jeh)
