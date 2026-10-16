@@ -156,7 +156,7 @@ lists the main outputs.
 | f_out_ddd / f_out_dda | 0 | Ddd / Dda | dominant / all downstream directions (needed by utils/rmdepress_river) |
 | f_out_pre | 0 | Pr | rainfall intensity (mm/h) |
 | f_out_fr / f_out_cn | 0 | Fr / Cn | Froude number / Courant number |
-| f_out_hg | 0 | Hg | subsurface storage depth (m) (when fn_gwflow is enabled; also Hg2 with the weathered bedrock layer, Hgc with the conduit continuum layer, and Hgs with the fresh/salt layers) |
+| f_out_hg | 0 | Hg | subsurface storage depth (m) (when fn_gwflow is enabled; also Hg2 with the weathered bedrock layer, Hgc with the conduit continuum layer, Hgs with the fresh/salt layers, and the subsurface mass pool Cg (g/m²) of water quality with f_wq_infil=1) |
 | f_out_hrs | 0 | Hrs | pond depth (m) (when fn_reservoir is enabled) |
 | f_out_hs | 0 | Hs | sediment column (m) (requires an active sediment process; for visualizing the concentration C = hs/(h+hs)) |
 | f_out_hd | 0 | Hd | floating driftwood volume (m³/m²) (requires [Driftwood](driftwood.md)) |
@@ -173,6 +173,8 @@ lists the main outputs.
 | f_out_dmax / f_out_dmaxt | 0 | D9999 / Dt9999 | maximum flow depth h+hs and its time (requires an active sediment process; for debris and volcanic flows the true "inundation depth" is the mixture depth) |
 | f_out_fmax | 0 | F9999 | maximum fluid force (ρm/ρw)·(h+hs)·V² (m³/s²; normalized by the freshwater density, so for water-only runs it equals the conventional u²h; for mixtures the density ratio 1+sC is included; multiply by ρw (1000) for the force per unit width in N/m) (a standard indicator for building damage) |
 | f_out_fdmax | 0 | Fd9999 | maximum fluid force including driftwood and debris (h+(1+s)hs+sg_log·hd+sg_deb·hbd)·V² (m³/s²; requires [Building destruction and debris](bldgdebris.md); F9999 keeps its definition) |
+| — (with fn_wq) | — | C / B | concentration of the transported substance (mg/L) and, with the buildup pool enabled, the surface buildup pool (kg/ha) ([Water Quality](wq.md); automatic; the subsurface mass pool Cg rides on f_out_hg) |
+| — (with fn_snow) | — | Sw | snow water equivalent SWE (mm) (automatic) |
 | — (with fn_swi) | — | Swi / Swi9999 / Swit9999 | Soil Water Index (mm) distribution, period maximum, and its time ([Soil Water Index](swi.md); automatic) |
 | — (always) | — | X0000 | domain mask (0: outside, 1: land, 2: sea); for visualization and checking the active domain in GIS |
 
@@ -199,6 +201,112 @@ views, time-animated water surfaces, and draping of satellite imagery
 If outputting many GeoTIFFs for an animation makes the data volume a
 concern, see the post-processing compression note in
 [the output format section](#output-format-f_output_mode).
+
+## How state variables are written
+
+Fields that can be written as rasters are of two kinds: **state variables
+that the model integrates in time** (depth h, sediment column hs,
+subsurface storage hg, substance column cq, ...) and **diagnostics derived
+from them every step** (water level E, speed V, Froude number Fr,
+concentration C, ...). The flags in the table above select which fields
+are written and when, but the table mixes three ways of enabling a field,
+so read it with the following grouping in mind.
+
+1. **Basic fields are selected by flags** (H, E, u/v, Hg, Hs, ...). Only H
+   and H9999 are on by default. Turning on just the fields you need keeps
+   the number of files and the data volume down.
+2. **Fields written automatically once a process is enabled** (C, B, Sw,
+   Swi, Hi, Hl, Hb/Vb, Sd). As soon as the corresponding fn_* is given
+   they are written at every `dt_file` without any flag. There is no
+   "off" setting: running a process without looking at its state is not a
+   supported workflow.
+3. **Fields that ride on a basic flag**. State variables of the same
+   family share one flag so that no new keys are added.
+   - `f_out_h` → H plus the surface salt-layer thickness Hss of the
+     fresh/salt layers
+   - `f_out_hg` → Hg plus the weathered bedrock layer Hg2, the conduit
+     continuum layer Hgc, the subsurface salt storage Hgs and the
+     subsurface mass pool Cg of water quality
+   - `f_out_wd` / `f_out_wbd` → deposits plus the run maxima Wd9999 / Bd9999
+
+   In short: "everything about the subsurface comes out with
+   `f_out_hg = 1`". When the process is disabled the field is simply not
+   written (no error).
+
+**Reading column quantities (area basis)**. Most state variables are held
+as "amount per cell area" (column quantities). There are two area bases,
+and the multiplication that recovers the total in a cell differs.
+
+| Basis | Fields | Total in the cell |
+|---|---|---|
+| Pore area (the part of the cell water can occupy) | H, Hs, Hrs, Hss, Hd, Wd, Bf, Bd, cq (probe column) | value × gv × wfrac × A |
+| Geometric area (the cell itself) | Sw, Hi, Hl, Hb, B, Cg, Hg (subsurface family) | value × A |
+
+A is the geometric cell area, gv the effective area fraction of
+[Geographic Information](geoinfo.md) and wfrac the
+[channel width](channel.md) factor (1 without the width feature). Without
+building occupancy or channel width the two bases coincide. To check a
+basin-wide total quickly, the S columns of `Log.txt` and the budget CSV
+of each process (`wq.csv`, ...) are more reliable than summing rasters.
+
+**Concentrations are derived**. The water-quality C (mg/L) and sediment
+concentrations are column quantities divided by depth, meaningful only in
+wet cells. The model does this conversion internally with the σ grid and
+channel width taken into account, so use the written concentration as it
+is rather than redoing the division from the written column and depth.
+Dry cells are written as concentration 0, which does not mean zero
+residual mass (check the column quantity or the budget CSV).
+
+**State not written as rasters**. Some internal states (the mass pool of
+retention ponds, the fully mixed pool of dams/lakes, the conduit ledger,
+...) are not written per cell; they appear as domain totals in the budget
+CSV of the process. Quantities needed as time series at a point (cq, ...)
+have columns in the [probes](record.md). Raster outputs are for
+visualization and analysis; a run cannot be restarted from them. Use the
+save files of [Suspend and Restart](restart.md) for that.
+
+**Relation to numbers 0000 / 9998 / 9999**. State fields are written in
+three series, `0000` (start), `0001-` (regular) and `9998` (final state);
+`9999` exists only for fields that have their own statistics flag such as
+H9999. Automatic and riding fields have no run statistics except where
+stated (Wd9999, Swi9999, ...). If you need the run maximum of such a
+field, refine `dt_file` and compute it in post-processing.
+
+### Quick reference: what you want to see and how to get it
+
+A reverse lookup from "I want to see this quantity". Three ways:
+**automatic** = written once the process is enabled, **flag** = set
+`f_out_*` to 1, **computed** = derived in post-processing from the raster
+files. Formulas operate cell by cell on rasters of the same time; times
+come from `FILENUMBER.csv`.
+
+| Quantity | How | File (flag) | Computation / notes |
+|---|---|---|---|
+| Inundation depth | flag (default on) | H (f_out_h) | depth on the pore-area basis (m) |
+| Maximum depth and its time | flag (H9999 default on) | H9999 (f_out_hmax), Ht9999 (f_out_hmaxt) | Ht9999 in minutes from the start |
+| Water level (elevation) | flag or computed | E (f_out_e) | E = Z + H, with Z from Z0000 (or the Z of the same time under morphodynamics) |
+| Flow speed | flag or computed | V (f_out_vv), components u / v (f_out_u / v) | V = √(u² + v²) |
+| Unit-width discharge | flag or computed | Q (f_out_qq), components m / n (f_out_m / n) | Q = √(m² + n²); Q ≈ H × V |
+| Flow direction | flag or computed | Qd (f_out_qd) | angle from the x axis (rad, −π to π); atan2(v, u) from u, v gives the same |
+| Maximum speed / discharge with time and direction | flag | V9999 (f_out_vvmax), Q9999 / Qt9999 / Qd9999 (f_out_qqmax family) | — |
+| Fluid force (building damage index) | flag or computed | F9999 (f_out_fmax), Fd9999 (f_out_fdmax) | run maximum is F9999; the instantaneous value is H × V² (clear water only; see the definitions of F9999 / Fd9999 for mixtures, driftwood and debris). × 1000 for force per unit width (N/m) |
+| Inundation duration / arrival time | computed | — (the H series) | duration = number of frames above a threshold (e.g. 0.01 m) × dt_file; arrival = time of the first frame above it. Use a fine dt_file |
+| Inundated area / extent | computed | — (H and X0000) | count cells with X0000 = 1 and H > threshold, × cell area. Maximum extent: the same test on H9999 |
+| Froude / Courant number | flag | Fr (f_out_fr), Cn (f_out_cn) | sub/supercritical regime, time-step check |
+| Rainfall intensity | flag | Pr (f_out_pre) | given precipitation × runoff_rate (mm/h), before interception and snow processing |
+| Ground elevation / morphological change | flag (Z0000 always) | Z (f_out_z) | erosion/deposition thickness = Z(time) − Z0000 (negative = erosion), with [Sediment and Morphodynamics](geomorph.md) enabled |
+| Subsurface storage / water table | flag | Hg (f_out_hg; also Hg2 / Hgc / Hgs / Cg) | Hg is a column-equivalent depth (m). Saturated thickness = Hg / sy0; water table ≈ ground − soil thickness + Hg / sy0 (lateral / Green-Ampt configurations; see the figure in [Groundwater](gwflow.md)) |
+| Soil thickness | automatic | Sd | only when a model that uses sd is enabled |
+| Snow water equivalent | automatic | Sw | mm of water ([Snow](forcing.md)) |
+| Soil Water Index | automatic | Swi / Swi9999 / Swit9999 | mm ([Soil Water Index](swi.md)) |
+| Sediment column / concentration / flow depth | flag or computed | Hs (f_out_hs), D9999 / Dt9999 (f_out_dmax family) | volume concentration = Hs / (H + Hs); instantaneous flow depth = H + Hs, run maximum D9999 |
+| Slope safety factor | flag | Fs / Fs9999 (f_out_fs) | −1 = not evaluated |
+| Driftwood / debris distribution and reach | flag | Hd / Wd / Wd9999 (f_out_hd, wd), Bf / Bd / Bd9999 / Bs (f_out_hbd, wbd, bds) | reach = Wd9999 / Bd9999 (run maximum of moving + deposited) |
+| Water-quality concentration / pools | automatic (Cg by flag) | C, B, Cg (f_out_hg) | run-maximum concentration from the C series in post-processing; total mass from `wq.csv`, point time series from probes ([Water Quality](wq.md)) |
+| Surface / subsurface salt water | flag | Hss (f_out_h), Hgs (f_out_hg) | with [Salt Water](salt.md) enabled |
+| Retention-pond depth | flag | Hrs (f_out_hrs) | — |
+| Glacier / lava thickness | automatic | Hi, Hl | [Glacier](glacier.md), [Lava Flow](lavaflow.md) |
+| Totals (storage, mass) | ledger rather than computed | S columns of `Log.txt`, the CSV of each process | more reliable than summing rasters (the area-basis differences are already handled) |
 
 ## Screen and log display columns (f_disp_\*)
 

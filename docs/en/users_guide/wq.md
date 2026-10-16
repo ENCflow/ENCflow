@@ -26,6 +26,13 @@ The minimal input to "just try it" is **fn_wq with one initial
 concentration or one load** (without decay, settling or partitioning the
 substance is a conservative tracer = extent and dilution).
 
+How to read the results is summarized in [Output and
+monitoring](#output-and-monitoring) at the end of this page (the
+concentration field C, the subsurface pool field Cg, the surface buildup
+pool field B, the mass budget ledger `result/wq.csv`, and the probe /
+transect columns). Each feature section below also ends with a short note
+on just the outputs that concern that feature.
+
 ```
 &list_wq
   wq_c0 = 100.0                  ! a 100 mg/L tracer on the initial water everywhere
@@ -88,6 +95,8 @@ approach (sources in developer.md §66).
 | Radiocesium (Cs-137) | wq_thalf 11019 day (30.17 yr) | wq_kd 1e3-1e4 L/kg (strong sorption to clay; requires f_suspend) | f_wq_infil=1, wq_rg 1e3-1e4 (R = 1 + rho_b Kd / theta) | Long-term catchment behavior |
 | Pesticides, dissolved organics | wq_thalf 10-60 day | wq_kd 1-100 L/kg (Koc x organic-carbon fraction) | f_wq_infil=1, wq_rg 2-100 | Degradation rate depends on temperature and radiation |
 
+**Outputs for this section**: the cumulative mass lost by decay is the `decay_g` column of `wq.csv`, by settling the `settle_g` column. The concentration field `C0001...` (mg/L) is the value after decay and settling and, with Kd partitioning, the sum of the dissolved and particulate phases ([Output and monitoring](#output-and-monitoring)).
+
 ## How loads are given (superposable)
 
 The input paths are **superposed**, not mutually exclusive (they can
@@ -131,6 +140,8 @@ distribution over the whole domain
 [Boundary conditions](boundary.md), `wq_in_conc(n)` (constant) or
 `wq_in_series(:,:,n)` (time series).
 
+**Outputs for this section**: the cumulative input of each route is recorded in the `in_point_g` (point), `in_area_g` (area), `in_map_g` (distributed) and `in_rain_g` (rain concentration) columns of `wq.csv`. Input through boundary inflow concentrations has no separate column, so account for it with the transect load columns (`L`, `Lcum`) when checking the budget. The spreading after input is seen in the concentration field `C0001...` ([Output and monitoring](#output-and-monitoring)).
+
 ## Single-phase settling (wq_vs)
 
 Equation: [supplement](wq_models.md#3-settling).
@@ -146,6 +157,8 @@ surface buildup pool. `settle_g` records cumulative settling for either
 destination. With destination 1, this is an internal transfer and must not
 be added as a system loss when checking the combined mass in all stores.
 Specifying `wq_kd` at the same time is an error.
+
+**Outputs for this section**: the cumulative settled mass is the `settle_g` column of `wq.csv`. With `f_wq_settle=1` the settled mass moves to the surface buildup pool, so it also appears in the pool field `B0001...` (kg/ha) and the `mass_pool_g` column ([Output and monitoring](#output-and-monitoring)).
 
 ## Two-phase partitioning of sorbing substances (Kd; e.g. heavy metals)
 
@@ -187,6 +200,8 @@ is given separately by `wq_rg` (below).
 Worked example: [test/kdpart](../../../test/kdpart/) (a suspended-
 sediment dam break plus a point source, with built-in checks of the
 ledger closure and the monotonic response to increasing Kd).
+
+**Outputs for this section**: the concentration field `C0001...` is the sum of the dissolved and particulate phases (there is no per-phase field). Particulate settling goes to the `settle_g` column; only the dissolved phase infiltrates, so the transfer to the subsurface is followed with the `to_gw_g` column and the subsurface pool field `Cg0001...` (needs `f_out_hg=1`) ([Output and monitoring](#output-and-monitoring)).
 
 ## Transport through groundwater (infiltration → lateral flow → seepage)
 
@@ -230,6 +245,8 @@ domain cycling infiltration → lateral groundwater flow → seepage →
 re-infiltration, with built-in checks of the ledger closure and the
 immobilization at wq_rg=1e12).
 
+**Outputs for this section**: the subsurface pool field `Cg0001...` (g/m²; written with Hg by `f_out_hg=1`) and the `to_gw_g`, `seep_g` and `mass_gw_g` columns of `wq.csv` ([Output and monitoring](#output-and-monitoring)).
+
 ## Reservoirs and retention ponds
 
 No extra setting is needed — this works automatically when
@@ -259,6 +276,8 @@ retention-pond patch and a constant-release dam, with built-in checks
 of the ledger closure and the end-to-end preservation of a uniform
 concentration).
 
+**Outputs for this section**: the fully mixed pool of dams/lakes and the retention-pond pool are lumped quantities, so there is no raster output; follow them with the `to_dam_g` (trapped), `rel_dam_g` (released), `mass_dam_g` (current lake pool mass), `to_rs_g` (absorbed by ponds) and `mass_rs_g` (current pond pool mass) columns of `wq.csv`. The concentration of released water is read from a probe C column downstream of the outlet cells ([Output and monitoring](#output-and-monitoring)).
+
 ## Surface buildup + washoff (nonlinear L-Q)
 
 Buildup and washoff equations and the correspondence with SWMM: [supplement](wq_models.md#5-surface-buildup-and-washoff).
@@ -274,6 +293,8 @@ L-Q relation between discharge and load, and first flush.
 | wq_bd0 / fn_wq_bd0 | — / "" | Initial pool (kg/ha) (uniform value / distribution; mutually exclusive) |
 | wq_wash_kr | — | Raindrop washoff coefficient (1/m; corresponds to 1000 x the exponential washoff coefficient c1 [1/mm] customary in urban drainage models) |
 | wq_wash_kf / wq_wash_tauc | — / — | Shear washoff coefficient (1/s) and critical shear stress (N/m^2) (required with kf) |
+
+**Outputs for this section**: the surface buildup pool field `B0001...` (kg/ha; automatic when the pool is enabled) shows the load still lying on the surface, and the `in_bldup_g` (cumulative buildup), `wash_g` (cumulative washoff) and `mass_pool_g` (current pool mass) columns of `wq.csv` give the budget. To check a first flush, overlay the transect load column `L` (g/s) with the discharge time series ([Output and monitoring](#output-and-monitoring)).
 
 ## Sanitary risk of sewer surcharge (with the conduit continuum layer)
 
@@ -395,6 +416,14 @@ network was built: [examples/sewer_hybrid](../../../examples/sewer_hybrid/)).
 - The concentration distribution `C0001` (mg/L) is output
   automatically (also the pool distribution `B0001` when the buildup
   pool is enabled).
+- The distribution of the subsurface mass pool `Cg0001` (g/m²; geometric
+  area basis = mass in the cell is Cg × A) is written together with the
+  subsurface storage depth Hg by `f_out_hg = 1` when infiltration
+  entrainment `f_wq_infil=1` (default) is on (the convention that
+  subsurface state rides on the Hg flag; see
+  [Input and Output Formats](io.md#how-state-variables-are-written)).
+  For a groundwater concentration divide Cg by the Hg of the same time
+  and the effective porosity θ (Cg / (Hg × θ) in mg/L = g/m³).
 - `result/wq.csv` contains time `time_s` [s] and the mass columns [g]
   listed below. `mass_*_g` values are current stores at the record time;
   the other mass columns are cumulative.

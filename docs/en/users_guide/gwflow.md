@@ -405,8 +405,10 @@ it is smaller than the table, about 0.1-0.2)
 ## Output and monitoring
 
 - The distribution of subsurface storage depth can be output as
-  `Hg0001` with `f_out_hg = 1` (also `Hg2` when layer 2 is enabled and
-  `Hgc` when the conduit continuum layer is enabled).
+  `Hg0001` with `f_out_hg = 1` (also `Hg2` when layer 2 is enabled,
+  `Hgc` when the conduit continuum layer is enabled, `Hgs` with the
+  fresh/salt layers, and the subsurface mass pool `Cg` of
+  [Water Quality](wq.md) with infiltration entrainment).
 - With groundwater enabled, the S column on the screen and in the log
   splits into three columns, **S_surf / S_grnd / S_total**, so the
   surface, subsurface, and total water budgets can be tracked
