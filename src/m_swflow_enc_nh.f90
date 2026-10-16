@@ -1025,7 +1025,11 @@ end subroutine
 !   ck  = (h_i/4) wd_k max(h_i − Δz_k, 0)   (Δz_k = z_n − z_i。φ_i = Σ_k ck a_k^out)
 !   sig = Δ(h + 2z) / (2 h_e d_k)           (圧力項 (φ/h)∇(h+2z_b) の係数。
 !         (φ_c + φ_n)·sig。|Δ(h+2z)/(2h_e)| ≤ 1/2 にクランプして対角優位を保つ)
-!   近傍の h, z は確保範囲(x の番兵 0..nx+1、行 jsh..jeh)の中で読む
+!   近傍が領域外・マスク外(g%x <= 0。番兵 0..nx+1 / jsh-1..jeh+1 で判定)の
+!   ときは近傍の h, z を自セルの値で外挿する(零勾配: Δz = 0、Δ(h+2z) = 0 →
+!   sig = 0、ck = (h²/4) wd_k)。壁のエッジは a*_k = 0 なので寄与せず、開境界面
+!   (辺境界)では平坦床と同じ係数で a*_k を取り込む(Version 1 の D a* と同じ
+!   扱い)。s%h, s%z には番兵がないので領域外は読まない(2026-10-16 修正。§69.5)
 !----------------------------------------------------------------------
 subroutine slope_coef(g, s, i, j, kk, ck, sig)
   type(t_geoinfo), intent(in) :: g
@@ -1033,17 +1037,23 @@ subroutine slope_coef(g, s, i, j, kk, ck, sig)
   integer, intent(in) :: i, j, kk
   real, intent(out) :: ck, sig
   integer :: in, jn
-  real :: hi, hn, dz, he, sd
-  if (g%initialized) continue  ! 引数未使用の警告を抑制
+  real :: hi, hn, zi, zn, dz, he, sd
   in = i + din(kk)
   jn = j + djn(kk)
   hi = s%h(i,j)
-  hn = s%h(in,jn)
-  dz = s%z(in,jn) - s%z(i,j)
+  zi = s%z(i,j)
+  if (g%x(in,jn) > 0) then
+    hn = s%h(in,jn)
+    zn = s%z(in,jn)
+  else
+    hn = hi
+    zn = zi
+  end if
+  dz = zn - zi
   ck = 0.25 * hi * nh_mod%wd(kk) * max(hi - dz, 0.0)
   he = 0.5 * (hi + hn)
   if (he > 0.0) then
-    sd = (hn + 2.0 * s%z(in,jn)) - (hi + 2.0 * s%z(i,j))
+    sd = (hn + 2.0 * zn) - (hi + 2.0 * zi)
     sd = max(-he, min(he, sd))          ! |sd/(2 he)| ≤ 1/2
     sig = sd / (2.0 * he * geo%w8dr(kk))
   else

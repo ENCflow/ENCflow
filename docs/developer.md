@@ -9337,6 +9337,23 @@ test/nhbreak(Synolakis 1987 の構成: H = 1 m、a/H = 0.28、斜面 1:19.85、
   研究オプションとする。
 - 残: 一様流上の線形波(区間流入+放射境界)、動く底面(Phase 8。w_b に
   ∂z_b/∂t を加える口は slope_coef の ck と同じ場所)。
+- **【実バグ】slope_coef の範囲外読み(2026-10-16 修正)**: 8 近傍の h, z を
+  有効性検査なしに読んでいたため、領域端のセル(i = 1 → in = 0、j = 1 →
+  jn = 0)で s%h(1:nx, jsh:jeh)・s%z の外を読んでいた(-fcheck=all で
+  test/nhshelf が停止。§79 の検証中に発見)。ヘッダは「x の番兵 0..nx+1 の
+  中で読む」としていたが番兵を持つのは g%x だけ。壁のエッジでは a*_k = 0
+  なので隣接メモリの値が有限である限り結果に影響せず(nhshelf の reference
+  は修正後も identical)、辺境界(放射・流入)の面では a*_k ≠ 0 で係数が
+  不定値だった。修正: g%x(in,jn) <= 0 の近傍は h, z を自セルの値で外挿
+  (零勾配。ck = (h²/4) wd_k、sig = 0 = Version 1 の D a* と同じ扱い)。
+  影響は f_nh_slope = 1 と辺境界の組合せ(test/nhbottom の param_ls_b 系。
+  reference 比較の対象外)のみ: param_ls_b(放射境界)の 2 分間で S が
+  最終桁(1e-4 m)、h_max が ±0.1 m、Cn_max が ±3e-4 程度動く(修正前の
+  係数は不定値だったので、修正後が正)。nhshelf を含む NH の reference 付き
+  8 ケースは修正後も PASS(ULP=1。nhshelf の修正前後の差は表示最終桁
+  1 量子以内で、reference と修正前のビルドの差と同じ大きさ = -Ofast ビルド間の
+  最終桁差 §28.3。reference は更新していない)。-O0 -fcheck=all で nhshelf と
+  param_ls_b が境界エラーなく完走することを確認した。
 
 ### 69.6 砕波遡上の過大(R/H 0.63 対 実験則 0.42)の原因切り分け(2026-10-05。数値は 2026-10-12 の mn 整合修正(§7)後の再実行値)
 
