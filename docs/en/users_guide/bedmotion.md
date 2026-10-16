@@ -141,7 +141,6 @@ rasters, and C uses a one-row table for the final field (§4); all feed a table 
 after that update; bed and surface move by the same Δd. The window illustrates
 `nx=16, ny=10, i1=5, j1=2, ni=7, nj=5`: 35 cells in columns 5–11 and rows
 2–6. This schematic is separate from the input example in the text.
-An [SVG version](../../figs/bedmotion_patterns_en.svg) is also available.
 
 ## 3. Application A: tsunami from a fault (utils/fault2disp)
 

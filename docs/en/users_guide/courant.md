@@ -68,8 +68,6 @@ without units.
 
 ![Distance a wave marker travels in one step and the Courant number](../../figs/courant_distance_en.png)
 
-An [SVG version](../../figs/courant_distance_en.svg) is also available.
-
 For the same flow, **halving the time step halves the Courant number**.
 Conversely, halving only the cell width doubles it.
 
@@ -121,8 +119,6 @@ $`3.13 - 2 = 1.13`$ m/s.
 
 ![Velocity, wave speed relative to the water, and wave speed seen from the ground](../../figs/courant_wave_en.png)
 
-An [SVG version](../../figs/courant_wave_en.svg) is also available.
-
 When choosing the time step, look at **the velocity plus the wave speed**.
 The default monitoring in ENCflow (`f_check_cfl = 1`) uses the following
 Courant number.[^encgrid][^state]
@@ -148,8 +144,6 @@ velocities at the next time. Those values are still unknown, so a system of
 equations is solved so that the related cells are mutually consistent.[^sundials]
 
 ![Explicit methods update from the known state; implicit methods couple the unknowns at the next time](../../figs/courant_methods_en.png)
-
-An [SVG version](../../figs/courant_methods_en.svg) is also available.
 
 | | explicit | implicit |
 |---|---|---|
@@ -181,8 +175,6 @@ cause trouble.
 
 ![Courant numbers differing from cell to cell, and their maximum](../../figs/courant_max_en.png)
 
-An [SVG version](../../figs/courant_max_en.svg) is also available.
-
 **`Cn_max` in the log is the maximum of the Courant number over the cells,
 further maximized over the display interval.** If the display is every
 60 s, the peak within those 60 s is recorded. It is not the maximum since
@@ -210,8 +202,6 @@ needed (the columns are explained in
 **Estimate from the cell width and the speed, then try and verify.**
 
 ![Choose the time step from the grid and the speed, then check the result and adjust](../../figs/courant_steps_en.png)
-
-An [SVG version](../../figs/courant_steps_en.svg) is also available.
 
 ### Step 1: check the shorter grid spacing
 
@@ -385,8 +375,6 @@ advance only the process that needs it five times at 0.2 s. This is
 **sub-cycling**.
 
 ![Surface flow at 1 s; a process that needs a finer step advances five times at 0.2 s](../../figs/courant_subcycle_en.png)
-
-An [SVG version](../../figs/courant_subcycle_en.svg) is also available.
 
 In ENCflow, for example, the lateral conveyance of the conduit continuum
 layer sub-cycles automatically. Not every module is subdivided

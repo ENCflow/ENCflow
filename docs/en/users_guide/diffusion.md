@@ -62,8 +62,6 @@ advection scheme and the wet/dry protections.
 
 **Figure: eddy viscosity and explicit stability bound.** (a) Zero-equation model examples with background viscosity ν₀ = 0 and gravity g = 9.81 m/s². (b) The bound for square cells and the default p_diagratio, using the approximate coefficient 2.83, on logarithmic axes. The pale-blue band marks 0.01–10 m²/s. Model 1 warns when the bound is exceeded; model 2 clamps. See §5 for the treatment when breaking viscosity is added.
 
-[SVG](../../figs/diffusion_nu_en.svg)
-
 **Model 1: constant viscosity.** $`\nu = \nu_0`$ (`p_diffusion_nu`; a
 positive value must be given explicitly, otherwise the initialisation
 stops with an error). It depends on the grid spacing and the scale of the
@@ -118,8 +116,6 @@ scales with the flow without any coefficient being specified.
 ![Stencil of the diffusion term and the no-flux closure](../../figs/diffusion_stencil_en.png)
 
 **Figure: eight-neighbour diffusion stencil and no-flux closure.** Square-cell examples: blue arrows indicate difference directions and orange segments passage widths. Grey dotted segments in (b) contribute zero for dry or invalid neighbours; the remaining weights are not renormalised. Edge viscosity is the arithmetic mean of the two cell values. Subscript 0 in this figure denotes the central cell. Non-negative spatial weights and the stability condition for a time update (§4) are separate requirements.
-
-[SVG](../../figs/diffusion_stencil_en.svg)
 
 The diffusion term of cell $`0`$ is evaluated in finite-volume form as the
 divergence over the cell area $`A = \Delta x\,\Delta y`$ of the diffusive

@@ -117,8 +117,6 @@ written even outside the window. `0000` is the starting state at t=0;
 the next instant on the axis. This is an output-procedure schematic,
 not a computed time series.
 
-A [vector SVG](../../figs/time_axis_en.svg) is also available.
-
 ## Calendar (date and time)
 
 For features that depend on the season or the date (monthly

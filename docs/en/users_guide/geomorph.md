@@ -55,8 +55,6 @@ other debris-flow processes. Debris flow and the moving bed layer require
 `z` against creep or uplift, and weathering can continue to produce soil.
 Sea-mask cells (`sw > 0`) receive no landform updates.
 
-An [SVG version](../../figs/geomorph_processes_en.svg) is available.
-
 ## Run control (common to all processes)
 
 | Parameter | Default | Meaning |

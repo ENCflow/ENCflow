@@ -40,7 +40,7 @@ saved time. These are schematic timelines, not numerical results. Mode 1
 continues the saved step and output counters; mode 2 starts both counters at
 zero on a new time axis. **In either mode, `0000` is this run’s initial state.**
 Maxima and cumulative cell discharge are not saved; they are recomputed within
-the run. An [SVG version](../../figs/restart_modes_en.svg) is also available.
+the run.
 
 ## Restarting (f_state_restore = 1)
 

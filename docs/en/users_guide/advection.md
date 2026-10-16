@@ -105,8 +105,6 @@ properties of scheme 1 (§3) follow from this fact.
 
 **Figure: advection stencils and control volumes.** (a) Cell-centre gradients and projection to the edge for scheme 1; (b)(c) axis and diagonal edges for schemes 2 and 3. Orange areas are momentum control volumes and orange markers are the updated edges. Arrows indicate positive flux directions: c → n on the streamwise faces, outward on the lateral faces. Dotted lines are the two ENC edges averaged for a lateral flux; green markers are parallel edges supplying the inflow velocity. For square cells, the control-volume areas are one and two cell areas, respectively.
 
-[SVG](../../figs/advection_cv_en.svg)
-
 **(a)** is the stencil of scheme 1. It is computed in three steps.
 
 **(1) Gradient at the cell centre.** At every wet cell $`c`$, $`\nabla u`$ and
@@ -282,8 +280,6 @@ in scheme 1.
 ![Face-value reconstruction and limiter](../../figs/advection_muscl_en.png)
 
 **Figure: streamwise face reconstruction and limiter.** (a) First-order upwind (2) and MUSCL (3) for inflow through face c. The five edge values are 0.35, 0.45, 0.95, 1.05 and 1.08, giving r = 0.2 and ψ = 1/3 at face c. (b) The van Leer limiter and the references ψ = 0, 1, r. The pale-blue comparison band lies between min(r, 1) and min(2r, 2) for r ≥ 0. Lateral faces use first-order upwinding.
-
-[SVG](../../figs/advection_muscl_en.svg)
 
 For the flow-direction faces, $`\bar u`$ is taken from the **upwind side** of
 the flow through the face, among the five edge velocities on line $`k`$,

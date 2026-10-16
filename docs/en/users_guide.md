@@ -103,7 +103,6 @@ such as rainfall, add its `fn_XXX` entry to `&list_sysparam`.
 ![Start small and add features as needed](../figs/config_structure_en.png)
 
 *Left: a minimal setup with flat terrain. Right: adding rainfall. Leave out the settings for features you do not use.*
-[SVG](../figs/config_structure_en.svg) · [Generator](../figs/guide/fig_config.py)
 
 **What happens when you leave an entry out?**
 
