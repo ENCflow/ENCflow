@@ -596,14 +596,15 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
 
 ## 11. MPI 化の設計原則(分割実装の基準)
 
-- **静的データは「初期化は全域・時間ループは帯」の二相で保持する**
-  (下記「静的データの帯化」参照)。地形・マスク類(z, x, sw, rw)は
-  初期化中は全ランクが全域を冗長構築するため、境界・湧き出し・プローブの
-  位置解決は従来どおり手元の全域情報で完結する(冗長計算=配布機構)。
-  **物性係数(rn, gv, bb, lm, rscap, lu)は方式2**: rank0 のみが全域を
+- **静的データは「初期化は全域(マスク)/窓形(実数ラスタ)・時間ループは
+  帯」の二相で保持する**(下記「静的データの帯化」参照)。マスク類
+  (x, sw, rw。int)は初期化中は全ランクが全域を冗長構築するため、境界・
+  湧き出し・プローブの位置解決は従来どおり手元の全域情報で完結する
+  (冗長計算=配布機構)。地形 z と状態の全域一時 ts は全ランクが**窓形**
+  (領域マスクの窓±ハロ、全域添字。g%iwh/jwh。§82)を構築する。
+  **物性係数(rn, gv, bb, lm, rscap, lu)は方式2**: rank0 のみが窓形を
   構築し、par_scatter_cell で各ランクの帯+ハロへ配布する(2026-07-31。
-  非 root の一過性メモリピーク削減の第1段。第2段=ゾーン2の rank0 化は
-  handoff の道標参照)。
+  非 root の一過性メモリピーク削減の第1段。窓形化は 2026-10-16 の §82)。
 - 数千ランク級で open 集中が問題化した場合の逃げ道は m_fileio の内側だけの
   改修(rank 0 が読んで Bcast。意味論は不変)。読み込みの入口は m_fileio に
   集約されているのでこれが単一差し替え点。ただし装置番号を外に出す un 系
@@ -617,11 +618,15 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
   **場を読むだけの診断・出力は gather して rank 0 で**(ファイル出力、
   プローブ、フラックス測線)。この二分法が判定基準。
   m_tide(未実装)は実装時に前者に該当する。分布ファイルは m_fileio 経由に。
-- user_geoinfo / user_initial フックは「全域添字で書く」契約。
+- user_geoinfo / user_initial フックは「**全域添字で、配列の確保範囲の中に
+  書く**」契約(§82。利用者向けの説明は docs/users_guide/user_routines.md)。
+  z・係数・ts は窓形なのでループは lbound/ubound で回す(窓が全域なら
+  1:nx, 1:ny と同じ)。マスク類は全域で、フックが x を窓の外で有効にする
+  変更は refit_window が par_stop で止める(読んでいない範囲)。
   **user_geoinfo は rank0 のみが実行する**(方式2: 係数は rank0 しか
   持たないため)。フックが地形・マスク類を変更した可能性に備え、実行後に
-  z, x, sw, rw を rank0 から再 bcast する(フック無指定なら通信なし)。
-  フック内のエラーは par_abort(par_stop は collective 不成立)。
+  z, x, sw, rw を rank0 から再 bcast し、窓を取り直す(フック無指定なら
+  通信なし)。フック内のエラーは par_abort(par_stop は collective 不成立)。
   user_initial(ゾーン2)は従来どおり全ランク冗長実行。
 - **ハロ交換の設計(第一段として実装・検証済み 2026-xx)**: 案A =
   「素の状態だけ交換し、導出量はハロ行で再計算」を採用。
@@ -709,9 +714,10 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
     範囲・値はともに旧方式と同一(非 root が全域を経由しなくなっただけ)。
     帯+ハロは隣接ランクと重なるため MPI_Scatterv でなく rank0 からの
     個別送信。確保範囲の規則は band_range_h(m_parallel)が正本。
-  - ゾーン2(boundary/state/record/precip/swflow の init)= 地形と
-    マスク類(z, x, sw, rw)のみ全域。fill_depression(sw/rw を全域窓で
-    参照)、user_initial、record/boundary の検証がこの範囲で動く。
+  - ゾーン2(boundary/state/record/precip/swflow の init)= マスク類
+    (x, sw, rw)のみ全域、z と ts は窓形(全域添字。§82)。fill_depression
+    (sw/rw を全域窓で参照)、user_initial、record/boundary の検証がこの
+    範囲で動く(z・ts を読む処理はすべて窓内の全域添字)。
   - m_geoinfo_band_shrink: x(番兵ごと)、sw(x と同様に 1 行広く。§68.35)、rw、z を帯へ。
     z は 2026-10-16 まで rank0 だけ全域を恒久保持していた(Z 出力の直接書き、
     将来の浸食計算の初期地形の正本)が、時間ループで全域の z を読む処理は
@@ -727,10 +733,10 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
     読み、np=2 で有効セルを1個誤除外して S が定数比 (n/(n-1)) でずれた。
     fill_depression の sw/rw 参照も同監査で発見し、遅い縮小組へ移した。
   - 初期化中の一過性ピークは方式2の第1段(係数の rank0 化)で
-    非 root から係数6配列ぶんを削減済み(2026-07-31)。残るのは
-    地形・マスク類(z, x, sw, rw)と ts(m_state の全域一時)で、
-    ゾーン2の冗長処理(fill_depression, user_initial, record/boundary の
-    検証)が使うため未対策。第2段の計画は handoff の道標を参照。
+    非 root から係数6配列ぶんを削減済み(2026-07-31)。z・係数・ts は
+    2026-10-16 に窓形化(§82)。全域で残るのはマスク類(int 3 枚)と、
+    各モジュールの読み込み一時 wk(1 枚ずつ。handoff)、save の gather
+    バッファ(D3)。
 - **計算標高の動的状態化(s%z。浸食計算の土台。2026-xx)**:
   - s%z は h と同じ動的状態(帯確保、ts で全域初期化→切り出し)。
     fill_depression は ts%z を埋める(g は intent(in) 化)。
@@ -11041,3 +11047,81 @@ D2 で改める。
 - 変更前後のバイナリ比較は、reference との比較が通らないケースではこの手順
   (同一環境・厳密フラグ・単一スレッドで新旧ソースを組んで全ファイル cmp)を
   正とする(§72 の運用則の再確認)。
+
+
+## 82. 第二段 (D2): 入力の窓読みと初期化一時の窓形化(2026-10-16 実装)
+
+設計は docs/xwindow_plan.md §7.2 の D2。初期化中の全域一時(z、物性係数、
+状態の全域一時 ts、各種分布の読み込み一時)を窓形にし、ファイルからも窓
+だけを読む。等価変換(出力はビット一致)。
+
+### 規約
+
+- **読む順序は「マスク類 → 窓確定 → 実数ラスタ」**。m_geoinfo_init は
+  allocate_masks → read_sw → read_mask → calc_wxy → allocate_window →
+  read_z → read_rw → 係数(rank0)→ adjust_rw → user フック → refit_window →
+  setup_bank/seawall/width → count_valcells。
+- **窓形の確保範囲** `g%iwh(1:2), g%jwh(1:2)` = 列窓・行窓 ± nhalo(全域端で
+  クリップ)。calc_wxy が決め、par_decomp_init は同じ規則で `dcp%ish/ieh`
+  (= iwh)と新設の `dcp%jwh1/jwh2`(= jwh)を導く。全ランク同形なので
+  par_bcast_cell(size 基準)がそのまま成立し、各ランクの帯+ハロ
+  (ish:ieh, jsh:jeh)は窓形に含まれる。par_scatter_cell の送信元ダミーは
+  `buf(dcp%ish:, dcp%jwh1:)`(全域形 (1:nx,1:ny) は窓=全域のときの特別な場合)。
+- **窓形になったもの**: g%z(全ランク)、rn/gv/bb/lm/rscap/sd/drw/zbank/
+  zswall/wrw とその読み込み一時 hb/dep(rank0)、ts の 8 枚(全ランク)、
+  fn_hinit の wk。prmap は各ランクが帯 (ish:ieh, jsh:jeh) を直接窓読み。
+  **全域のまま**: マスク類 x, sw, rw, ssw(int。窓を決めるのに全域が要る。
+  D4)、各モジュールの読み込み一時 wk(1:nx,1:ny)(41 箇所。1 枚ずつなので
+  ピークへの寄与は小さい。handoff)、save の gather バッファと restore の
+  復号一時(D3)。
+- **窓つき読み** `fileio_read_window(fname, nx, ny, i1, i2, j1, j2, a, e_fmt)`
+  (int/real。a(i1:, j1:))。text は 1 行バッファに行 j2 まで読んで窓の列を
+  写す(**j2 より後の行は読まない** = ファイル末尾の欠落は検出しない。
+  時間は窓の下端まで)。bil は hdr の型判定を全域読みと共有し、窓の行を
+  stream の pos= で読む(NBITS=8/16/32、符号、FLOAT32)。GeoTIFF は
+  `gtif_read_window` → decode_blocks(t, want_real, win, …) で、窓に重ならない
+  strip/tile は読まず復号もしない(win = (1,nx,1,ny) が全域読み)。
+  窓 = 全域なら全域読みと同値。
+- **user フックの契約**は「全域添字で、配列の確保範囲の中に書く」。既存
+  フックの `do i = 1, g%nx` 13 箇所を lbound/ubound に置換(窓が全域の
+  理想化ケースでは値不変)。フックが x を窓の外で有効にしたら refit_window
+  が par_stop(読んでいない範囲)、窓が狭まったら窓形配列を縮める
+  (scatter の受け渡し範囲 dcp%ish/ieh・jwh1/jwh2 と一致させるため)。
+  利用者向けの説明は docs/users_guide/user_routines.md(ja/en)。
+- **restore** は save 形式(全域 RLE)を変えないため、rank0 が全域 1 枚に
+  復号して窓を写す(一過性。D3 のストリーミング復号で撤去)。
+- ゾーン2の契約(§11)は「マスク類のみ全域、z・ts は窓形」に改めた。
+  ゾーン2で z・ts を読む処理(fill_depression・adjust_h0rw・set_h/set_uv・
+  probe の z・conduit の zbot・user_initial)はすべて窓内の全域添字で、
+  監査済み。
+
+### 計測と検証(2026-10-16)
+
+- 埋め込みケース(5600 × 3000、マスク 1/100、30 分、4 スレッド、release 逐次。
+  VmRSS を 1 s ごとに採取):
+
+  | | (C) | (D1) | (D2) |
+  |---|---|---|---|
+  | 最大 RSS(初期化ピーク) | 1.43 GB | 1.24 GB | 0.32 GB |
+  | 時間ループ中の RSS | 0.38 GB | 0.059 GB | 0.059 GB |
+
+  残る初期化ピークはマスク類 3 枚(int 全域 ≈ 200 MB)と text 読みの 1 行
+  バッファ程度で、全域 (nx·ny) に比例する実数配列は初期化中もなくなった。
+- 結果の同一性(等価変換): 埋め込みケース・秩父 30 分とも、(C) の結果と
+  Log・CSV・全分布ファイルがバイト同一(逐次、MPI np=2/4、-O0 -fcheck=all の
+  逐次・MPI の全組合せ)。
+- **入力形式の等価性**: 秩父 560×300(窓 76..501 列)の z・領域マスク・河道
+  マスクを bil(+hdr。float32 / int32)、GeoTIFF(strip 16 行)、GeoTIFF
+  (tile 64×64)に変換し(scratch の純 Python 変換器)、D1(HEAD)と D2 を
+  同じ厳密フラグ(-O2、LTO・fast-math なし)・単一スレッドで実行。
+  txt / bil / tif / tif_tiled の 4 形式すべてで D1 と D2 の全ファイルが
+  バイト一致(窓読み = 全域読み)。bil = tif = tif_tiled も一致
+  (txt だけは値の float32 化で他 3 形式と最終桁が異なる = 形式の性質)。
+- 回帰(規律 2・3): -O0 -fcheck=all の逐次(秩父 30 分・埋め込み・wave・
+  dambreak = user フック使用ケース)と MPI(埋め込み np=2・秩父 np=4)が
+  境界エラーなく完走。release で reference 付き 24 ケース中 23 PASS、
+  nest_identity・nest_twin・bmi_nest・bmi_vars・gvchange PASS(restart 往復を
+  含む)、MPI np=1, 2, 4 の 6 ケース PASS。トップレベル make OK。
+- nhshelf は §81 と同じ(release 4 スレッドで 1 要素 2 量子の FAIL = NH ソルバ
+  の実行間非決定)。厳密フラグ・単一スレッドで D1 と D2 の全ファイルが
+  バイト一致することを確認。**reference は更新していない**(規律 1)。

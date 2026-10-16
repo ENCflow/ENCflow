@@ -69,7 +69,7 @@ use せず、共有状態 s・g・p を介してだけ結合します(結合点�
 ### 2.1 初期化(m_main_all。順序に依存があるものは矢印で明記)
 
 ```
-par_init → sysparam → geoinfo(全域読込・全域前処理)
+par_init → sysparam → geoinfo(マスク全域読込 → 窓確定 → 実数ラスタの窓読み・前処理)
   → par_decomp_init(セル数重み付き帯分割)
   → geoinfo_scatter_coeffs(物性係数を rank0 から帯+ハロへ配布)
   → boundary → state(← geoinfo, boundary より後)
@@ -89,8 +89,8 @@ par_init → sysparam → geoinfo(全域読込・全域前処理)
 ```
 
 静的データは 3 ゾーンのライフサイクルを持ちます(§11):
-初期化中は全域配列 → scatter/band_shrink を経て → 時間ループ中は
-帯配列(rank0 のみ g%z の全域を出力・集約用に保持)。
+初期化中はマスク類が全域配列・実数ラスタが窓形(領域マスクの窓±ハロ。
+全域添字。§82)→ scatter/band_shrink を経て → 時間ループ中は帯配列。
 「どの配列がどのゾーンで全域か」の正確な契約は §11 を参照。
 時間変化しうる物性は「入力は g、時間ループの正本は s」の型で扱います
 (標高 z と空隙率 gv・有効慣性係数 lm がその実例。gv を変えるのは

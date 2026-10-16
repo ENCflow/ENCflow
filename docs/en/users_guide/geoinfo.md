@@ -73,7 +73,7 @@ stored in GeoTIFF is adopted or checked against an explicitly supplied `epsg`.
 | z0 | 0 | fixed ground elevation (m) |
 | fn_z | "" | ground elevation distribution file |
 | mag_z | 1 | multiplier applied to the ground elevation (for sensitivity experiments and unit conversion) |
-| f_user_routine | "" | identifier of a user routine that modifies the topography (for idealized experiments; [Part I](../users_guide.md#user-routines)) |
+| f_user_routine | "" | identifier of a user routine that modifies the topography (for idealized experiments; see [Writing user routines](user_routines.md)) |
 
 ## Roughness (Manning coefficient)
 

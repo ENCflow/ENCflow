@@ -32,7 +32,7 @@ through rainfall runoff or river inflow, that is often sufficient.
 | h0_rw | 0 | additional initial depth on channel mask cells (m); positive values are added after depth initialization and depression filling |
 | u0 / v0 | 0 | initial velocity (m/s) (f_uvtype=0: uniform value only) |
 | f_fill_depres | 0 | depression filling. 0: none, 1: water filling on land excluding sea, 2: water filling on channel cells only, 3: convert the fill water of 2 into bed elevation |
-| f_user_routine | "" | user routine that modifies the initial field (for idealized experiments) |
+| f_user_routine | "" | user routine that modifies the initial field (for idealized experiments; see [Writing user routines](user_routines.md)) |
 
 `f_htype=0` assigns the uniform depth `h0` to valid cells. On uneven
 terrain the surface follows the ground, so this does not define a

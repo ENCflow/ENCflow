@@ -41,6 +41,19 @@ etc.) supports three formats. All of them are selected in
   is used (in-house implementation).
 - The input format is a single choice (unlike output, it is not a
   bit sum).
+- **For a small domain mask placed in a large full-extent raster, use
+  bil or GeoTIFF.** Real-valued rasters (elevation, coefficients, initial
+  fields) are kept in memory only over the window derived from the domain
+  mask (the rows and columns containing valid cells, plus two cells), and
+  only that window is read from the file. bil reads just the window's
+  rows by position and GeoTIFF decodes only the strips/tiles overlapping
+  the window, so reading time also scales with the window. Text input has
+  to be parsed, every column, down to the last row of the window, so a
+  nation-scale text raster takes long just to read (with GDAL:
+  `gdal_translate -of EHdr -ot Float32 in.txt out.bil` or
+  `gdal_translate -of GTiff in.txt out.tif`). The masks (domain, sea,
+  channel) are read in full because the window is derived from them
+  (integers).
 
 ## Output format (f_output_mode)
 

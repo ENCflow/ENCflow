@@ -164,14 +164,13 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      - **D1 常駐の窓化(2026-10-16 実装済み。§81)**: g%z 帯化、出力バッファ
        窓形 + fileio_write_window(3 形式)+ out_fill、prmap 帯化。時間ループ中
        の RSS 0.38 → 0.06 GB(埋め込みケース)。
-     - **D2 窓読み(未着手)**: m_geoinfo_init の順序を「マスク類 → 窓確定 →
-       実数ラスタ」に入れ替え、fileio_read の窓つき版(text は行読み飛ばし、
-       bil は行シーク、GeoTIFF は strip/tile の部分復号)、ts と係数の全域一時を
-       窓形に、user_geoinfo / user_initial のループを lbound/ubound(契約
-       「全域添字で、配列の範囲の中に書く」)。**user 手続きの作成法の丁寧な
-       説明(新しい利用者向けページ、ja/en。users_guide.md・initial.md・
-       geoinfo.md からリンク)を同時に書く。** io.md に「大きな text 入力は
-       bil/GeoTIFF へ変換を推奨」を追記。初期化ピーク 1.24 GB → 0.2 GB 見込み。
+     - **D2 窓読み(2026-10-16 実装済み。§82)**: 読む順序の入れ替え、
+       fileio_read_window(text/bil/GeoTIFF)、z・係数・ts の窓形化、user
+       フックの契約「全域添字で、配列の確保範囲の中に書く」と利用者向け
+       ページ docs/users_guide/user_routines.md(ja/en)、io.md の推奨。
+       残り: 各モジュールの読み込み一時 `wk(1:nx,1:ny)`(41 箇所。初期分布・
+       パラメータ分布。1 枚ずつなのでピークへの寄与は小さい。帯を直接
+       fileio_read_window で読む形に置き換えれば消える。m_precip の prmap が見本)。
      - **D3 save/restore の RLE ストリーミング(未着手)**: 形式不変。restart
        往復のビット一致で検証。
      - D4 は需要が出てから。

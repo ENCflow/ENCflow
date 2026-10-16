@@ -34,6 +34,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Time management](users_guide/time.md) -- time axis, time step, output interval, calendar
 - [Coordinate systems](users_guide/coordinates.md) -- absolute vs. local coordinates, EPSG, geographic (lat-lon) grids
 - [Input and output formats](users_guide/io.md) -- text / bil / GeoTIFF, output file organization
+- [Writing user routines](users_guide/user_routines.md) — giving topography and initial conditions in code (procedure, index contract, pitfalls)
 - [Suspend and restart](users_guide/restart.md) -- state files, time continuation, use as initial conditions
 - [Nesting (multi-level grids)](users_guide/nest.md) (fn_nest, &list_nest) -- child grids solved inside a parent grid in the same run (multi-level, two-way, Flather radiation, non-hydrostatic band)
   - [Nesting explained](users_guide/nest_models.md) -- time interpolation, boundary-band methods, the Flather condition, the sponge, child-to-parent replacement and the conservation correction, with the basis of the defaults (supplement to nesting)
@@ -211,7 +212,11 @@ mechanism of user routines invoked by name.
 The registered identifiers are listed at the top of
 `src/user_geoinfo.f90` (terrain) and `src/user_initial.f90` (initial
 conditions). To write your own, duplicate the `template` at the end
-of each file, register an identifier, and rebuild. User routines are
+of each file, register an identifier, and rebuild. The procedure, the
+variables you can use and the **index contract** (arrays are allocated
+only over the window of the domain mask, so loops run over
+`lbound`/`ubound`) are explained step by step in
+[Writing user routines](users_guide/user_routines.md). User routines are
 not used in ordinary computations with real data.
 
 ## Finding features by task
