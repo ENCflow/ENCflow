@@ -111,8 +111,8 @@ subroutine gwflow_greenampt_init(ga, p, g, s)
 
   ! 係数の帯配列(ヘッダ【K_sv・ψf の面的分布】。一様なら充填、
   ! マップなら rank0 読み+scatter で上書き)
-  allocate(ga%ksv(1:g%nx, dcp%jsh:dcp%jeh), source = gw_ksv_mmh / 1000.0 / 3600.0)
-  allocate(ga%psif(1:g%nx, dcp%jsh:dcp%jeh), source = gw_psif)
+  allocate(ga%ksv(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = gw_ksv_mmh / 1000.0 / 3600.0)
+  allocate(ga%psif(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = gw_psif)
   if (len_trim(fn_gw_ksv) > 0) then
     call read_map_scatter(p, g, fn_gw_ksv, ga%ksv, "gw_ksv")
     ga%ksv(:,:) = ga%ksv(:,:) / 1000.0 / 3600.0   ! mm/h -> m/s
@@ -134,7 +134,7 @@ subroutine read_map_scatter(p, g, fn, a, label)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: fn
-  real, intent(inout) :: a(1:, dcp%jsh:)
+  real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
   character(len=*), intent(in) :: label
   real, allocatable :: wk(:,:)
   real :: dum(1,1)
@@ -152,7 +152,7 @@ subroutine read_map_scatter(p, g, fn, a, label)
     call par_scatter_cell(dum, a)
   end if
   do j = dcp%js, dcp%je
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (g%x(i,j) <= 0) cycle
       if (a(i,j) < 0.0) then
         write(msg,'(a,2i7,es12.4)') "gwflow_greenampt: negative " // label // " at", &

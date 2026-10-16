@@ -267,7 +267,7 @@ subroutine m_glacier_init(gl, p, g, s, mt)
   end if
 
   ! --- 状態の確保と初期値(海セル・無効セルには置かない) ---
-  allocate(s%hi(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%hi(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (len_trim(list%fn_glacier_hi0) > 0) then
     call setup_hi0_map(p, g, s, list%fn_glacier_hi0)
   end if
@@ -296,14 +296,14 @@ subroutine m_glacier_init(gl, p, g, s, mt)
     ! j 範囲はセル j を挟むエッジが j-1 と j にあるため下限 jsh-1
     ! (m_geomorph の wrk%q と同形)。確保時 0: マスク起因で書かれない
     ! エッジは恒久 0(無フラックス)
-    allocate(gl%glw%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+    allocate(gl%glw%q(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   end if
   if (gl%f_ero > 0) then
-    allocate(gl%glw%edz(1:g%nx, dcp%js:dcp%je), source = 0.0)
+    allocate(gl%glw%edz(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
   end if
   if (gl%f_ava > 0) then
-    allocate(gl%glw%am(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-    allocate(gl%glw%ad(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
+    allocate(gl%glw%am(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(gl%glw%ad(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0)
   end if
 
   ! --- リスタート(復元値が hi0 に勝つ) ---
@@ -842,7 +842,7 @@ subroutine setup_hi0_map(p, g, s, fn)
     call par_scatter_cell(dum, s%hi)
   end if
   do j = dcp%jsh, dcp%jeh
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (g%sw(i,j) > 0) s%hi(i,j) = 0.0
     end do
   end do

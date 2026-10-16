@@ -282,26 +282,26 @@ subroutine m_wq_init(wq, p, g, b, s)
   wq%have_rs = rsmax(1) > 0.0
 
   ! --- 状態の確保 ---
-  allocate(s%cq(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(s%cqc(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%cq(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%cqc(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (wq%have_rs) then
     ! ため池の吸収量記録場と質量プール(boundary_h が fxr に記録し、
     ! 本モジュールが消費して crs へ同伴する契約。§30.7)
-    allocate(s%fxr(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-    allocate(s%crs(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%fxr(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%crs(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   end if
   if (wq%f_infil == 1) then
-    allocate(s%fxg(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-    allocate(s%cg(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%fxg(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%cg(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     ! 湧出同伴質量の記録場(W3。gwflow_lateral が書き、本モジュールが
     ! 読んで cq へ還元しゼロ戻し。側方無効時は恒久 0 のまま)
-    allocate(s%fxs(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%fxs(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   end if
   if (wq%gwc_conc >= 0.0) then
     ! 管路連携の交換量記録場(fxg と同じ契約。conduit は allocated 判定で
     ! 記録するだけ = wq を知らない)
-    allocate(s%fxco(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-    if (wq%f_gwc_in == 1) allocate(s%fxci(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%fxco(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    if (wq%f_gwc_in == 1) allocate(s%fxci(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   end if
   ! 初期濃度(mg/L)から柱状量へ: cq = conc × vh。init 時点は swflow 未初期化
   ! (σ の sdep 未構築)だが、restore 前のフレッシュ初期 h に対する換算は
@@ -527,7 +527,7 @@ subroutine setup_inflow_conc(wq, g, b, list)
 
   ! 濃度テーブル(mg/L = g/m3。カーネルの風上濃度 cq/h と同じ単位系。
   ! 値の充填は m_wq_calc が毎ステップ行う)
-  allocate(b%cqin(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(b%cqin(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
 end subroutine
 
 
@@ -543,7 +543,7 @@ subroutine setup_map_source(wq, p, g, list)
   type(t_list_wq), intent(in) :: list
 
   if (list%wq_map_factor < 0.0) call par_stop("list_wq: wq_map_factor must be >= 0")
-  allocate(wq%rmap(1:g%nx, dcp%jsh:dcp%jeh))
+  allocate(wq%rmap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh))
   ! kg/ha/day -> g/s/m2 に倍率込みで換算(rank0 で乗じてから配布)
   call read_map_scatter(p, g, list%fn_wq_map, "fn_wq_map", &
                         unit2gsm2 * list%wq_map_factor, wq%rmap)
@@ -559,7 +559,7 @@ subroutine read_map_scatter(p, g, fn, label, factor, a)
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: fn, label
   real, intent(in) :: factor
-  real, intent(inout) :: a(1:, dcp%jsh:)
+  real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
   real, allocatable :: wk(:,:)
   real :: dum(1,1)
   character(:), allocatable :: fname
@@ -681,7 +681,7 @@ subroutine setup_pool(wq, p, g, s, list)
   end if
   if (.not. wq%have_pool) return
 
-  allocate(s%bp(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%bp(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (list%wq_bd0 > 0.0) then
     s%bp(:,:) = list%wq_bd0 * kgha2gm2
   else if (len_trim(list%fn_wq_bd0) > 0) then

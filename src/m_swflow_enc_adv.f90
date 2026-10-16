@@ -28,7 +28,7 @@ module subroutine adv_init(p, g)
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (opt%f_advection_scheme >= 2) then
     ! 運動量保存形: エッジ上の移流項だけを持つ(taxy/ulm/vlm は不要)
-    allocate(tx_mod%tae(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
+    allocate(tx_mod%tae(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
     ! 検査体積の横断幅 = 平行な隣接エッジとの垂直距離
     !   軸エッジ: k=2(法線 y)は dx、k=4(法線 x)は dy
     !   対角エッジ: 2·dx·dy/dr(dx=dy なら √2·dx)
@@ -36,10 +36,10 @@ module subroutine adv_init(p, g)
     tx_mod%w8lt(1:4) = [ 2 * g%dx * g%dy / dr, g%dx, 2 * g%dx * g%dy / dr, g%dy ]
     return
   end if
-  allocate(tx_mod%taxy(1:2,1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(tx_mod%taxy(1:2, dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   ! TODO(分割時): ulm/vlm/taxy はハロ行でも計算が必要(ステンシル幅2の源。developer.md §11)
-  allocate(tx_mod%ulm(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(tx_mod%vlm(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(tx_mod%ulm(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(tx_mod%vlm(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
 end subroutine
 
 
@@ -471,9 +471,9 @@ subroutine get_diff_v1(u, v, h, dd, wx, wy, x, i, j, dux, duy, dvx, dvy)
   ! 明示形状 (1:nx,1:ny) で受けると、帯確保の実引数が並び結合で再解釈され
   ! 行が jsh-1 だけずれて読まれる(第二段で実発生した実バグ)。
   ! 帯確保の配列を渡す手続きのダミーは必ず assumed-shape + 下限指定にすること
-  real, intent(in) :: u(1:, dcp%jsh:)
-  real, intent(in) :: v(1:, dcp%jsh:)
-  real, intent(in) :: h(1:, dcp%jsh:)
+  real, intent(in) :: u(dcp%ish:, dcp%jsh:)
+  real, intent(in) :: v(dcp%ish:, dcp%jsh:)
+  real, intent(in) :: h(dcp%ish:, dcp%jsh:)
   real, intent(in) :: dd
   real, intent(in) :: wx(1:8), wy(1:8)
   ! x も帯縮小後は下限指定が必須(§12。静的配列への適用第1号)

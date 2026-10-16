@@ -112,8 +112,8 @@ subroutine gwflow_frost_init(fro, p, g, s)
   fro%fimax = fro_fimax
 
   ! 凍結指数(私有状態)と低減係数(共有状態。消費者は鉛直浸透モデル)
-  allocate(fro%fi(1:g%nx, dcp%jsh:dcp%jeh), source = fro_fi0)
-  allocate(s%frofac(1:g%nx, dcp%jsh:dcp%jeh), &
+  allocate(fro%fi(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = fro_fi0)
+  allocate(s%frofac(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), &
            source = max(fro%fmin, 1.0 - fro_fi0 / fro%fifull))
   if (p%f_state_restore > 0) call restore_state(fro, p, g)
 

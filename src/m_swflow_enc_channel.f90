@@ -74,7 +74,7 @@ module subroutine build_channel_frw(g)
   integer :: i, j, jlo, jhi, k, in, jn, ie, je
   real :: nb, capd, qb
 
-  allocate(chn%frw(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 1.0)
+  allocate(chn%frw(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 1.0)
 
   jlo = max(dcp%jsh, 1)
   jhi = min(dcp%jeh, g%ny)
@@ -87,7 +87,7 @@ module subroutine build_channel_frw(g)
 
   ! x法線エッジ(成分4): セル (i,j)-(i+1,j) の間
   do j = jlo, jhi
-    do i = 1, g%nx - 1
+    do i = dcp%ish, dcp%ieh - 1
       if (.not. is_channel(g, i, j) .or. .not. is_channel(g, i+1, j)) cycle
       if (chn%have_bopen) then
         nb = (real(nblk(g, i, j, i+1)) + real(nblk(g, i+1, j, i))) / 2
@@ -100,7 +100,7 @@ module subroutine build_channel_frw(g)
   !   両セルの zbank / wrw(帯確保 jsh:jeh)を読むため上限は jeh-1
   !   (時間ループが参照するエッジ行は je+1 = jeh-1 まで。§11)
   do j = jlo, min(dcp%jeh - 1, g%ny - 1)
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (.not. is_channel(g, i, j) .or. .not. is_channel(g, i, j+1)) cycle
       if (chn%have_bopen) then
         nb = (real(nblk_y(g, i, j, j+1)) + real(nblk_y(g, i, j+1, j))) / 2
@@ -120,7 +120,7 @@ module subroutine build_channel_frw(g)
   ! (channel_model.md §3)
   if (chn%have_bopen) then
     do j = jlo, min(dcp%jeh - 1, g%ny - 1)
-      do i = 1, g%nx - 1
+      do i = dcp%ish, dcp%ieh - 1
         if (is_channel(g, i, j) .and. is_channel(g, i+1, j+1)) then
           chn%frw(1,i,j) = 1.0 + diag_reassign(g, i, j, i+1, j+1) / geo%l8(1)
         end if
@@ -151,13 +151,13 @@ module subroutine build_channel_frw(g)
     ! 幅キャップ q を全成分の河道—河道エッジへ重畳する
     ! (q の計算は build_cw と同じ wcap = 決定的に同値)
     do j = jlo, jhi
-      do i = 1, g%nx - 1
+      do i = dcp%ish, dcp%ieh - 1
         if (.not. is_channel(g, i, j) .or. .not. is_channel(g, i+1, j)) cycle
         chn%frw(4,i,j) = chn%frw(4,i,j) * wcap(g, i, j, i+1, j, g%dy)
       end do
     end do
     do j = jlo, min(dcp%jeh - 1, g%ny - 1)
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (.not. is_channel(g, i, j) .or. .not. is_channel(g, i, j+1)) cycle
         chn%frw(2,i,j) = chn%frw(2,i,j) * wcap(g, i, j, i, j+1, g%dx)
       end do
@@ -166,7 +166,7 @@ module subroutine build_channel_frw(g)
     !   成分3 はセル (a,b+1)-(a+1,b) を繋ぐ(die/dje の正準)。
     !   幅キャップのみ(開口補正は法線へ振り替える設計のため対象外)
     do j = jlo, min(dcp%jeh - 1, g%ny - 1)
-      do i = 1, g%nx - 1
+      do i = dcp%ish, dcp%ieh - 1
         if (is_channel(g, i, j) .and. is_channel(g, i+1, j+1)) then
           chn%frw(1,i,j) = chn%frw(1,i,j) * wcap(g, i, j, i+1, j+1, capd)
         end if
@@ -189,7 +189,7 @@ module subroutine build_channel_frw(g)
     ! 数えるので整合する
     if (bcs%have_open_bc) then
       do j = max(dcp%jsh, 1), min(dcp%jeh, g%ny)
-        do i = 1, g%nx
+        do i = dcp%ish, dcp%ieh
           if (i /= 1 .and. i /= g%nx .and. j /= 1 .and. j /= g%ny) cycle
           if (.not. is_channel(g, i, j)) cycle
           if (g%wrw(i,j) <= 0.0) cycle
@@ -311,10 +311,10 @@ module subroutine build_wfrac(g)
   integer :: i, j, k, in, jn
   real :: w, lch
 
-  allocate(chn%wfrac(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
+  allocate(chn%wfrac(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 1.0)
 
   do j = max(dcp%jsh, 1), min(dcp%jeh, g%ny)
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (g%x(i,j) <= 0 .or. g%sw(i,j) /= 0 .or. g%rw(i,j) <= 0) cycle
       w = g%wrw(i,j)
       if (w <= 0.0) cycle                     ! 幅情報なし: 解像扱い
@@ -442,11 +442,11 @@ module subroutine bank_init(g)
   type(t_geoinfo), intent(in) :: g
   integer :: i, j, k, in, jn, jlo, jhi
   if (allocated(chn%nwall)) deallocate(chn%nwall)
-  allocate(chn%nwall(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
+  allocate(chn%nwall(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0)
   jlo = max(dcp%jsh, 1)
   jhi = min(dcp%jeh, g%ny)
   do j = jlo, jhi
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
       do k = 1, 8
         in = i + din(k)
@@ -864,8 +864,8 @@ subroutine build_cw(g, capd)
   ! L_ch の下限を min(dx,dy) にする(直線軸河道の全セルで dy に一致)
   if (capd > 0.0) continue                  ! 引数未使用の警告を抑制(互換のため残す)
 
-  allocate(chn%cwx(1:g%nx, dcp%js:dcp%je), source = 1.0)
-  allocate(chn%cwy(1:g%nx, dcp%js:dcp%je), source = 1.0)
+  allocate(chn%cwx(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 1.0)
+  allocate(chn%cwy(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 1.0)
 
   do jc = dcp%js, dcp%je
     do ic = 1, g%nx

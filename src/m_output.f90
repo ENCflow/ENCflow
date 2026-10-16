@@ -272,7 +272,7 @@ subroutine output_matrix_real(o, p, g, prefix, a, k)
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: prefix
   integer, intent(in) :: k
-  real, intent(in) :: a(1:, dcp%jsh:)
+  real, intent(in) :: a(dcp%ish:, dcp%jsh:)
   character(len=4) :: snum
   character(:), allocatable :: fn
 
@@ -308,7 +308,7 @@ subroutine output_matrix_int(o, p, g, prefix, a, k)
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: prefix
   integer, intent(in) :: k
-  integer, intent(in) :: a(1:, dcp%jsh:)
+  integer, intent(in) :: a(dcp%ish:, dcp%jsh:)
   character(len=4) :: snum
   character(:), allocatable :: fn
 

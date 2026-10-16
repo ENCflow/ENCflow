@@ -270,7 +270,7 @@ module subroutine init_debris(gm, p, g, list)
 
   ! E-D 交換量の作業領域(2パス構造。calc_debris ヘッダ参照)
   if (.not. allocated(gm%dbr%fx)) then
-    allocate(gm%dbr%fx(1:g%nx, dcp%js:dcp%je), source = 0.0)
+    allocate(gm%dbr%fx(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
   end if
 
   ! --- 瞬時流動化(f_release)。fn_dbinit の有無で有効化 ---
@@ -309,7 +309,7 @@ module subroutine init_debris(gm, p, g, list)
     gm%sl_gamma = sgam
     gm%db_relsat = list%db_relsat      ! gwflow 無効時の間隙水付与(release と共有)
     if (.not. allocated(gm%dbr%sld)) then
-      allocate(gm%dbr%sld(1:g%nx, dcp%js:dcp%je), source = .false.)
+      allocate(gm%dbr%sld(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = .false.)
     end if
   end if
 end subroutine
@@ -330,7 +330,7 @@ subroutine read_release(gm, p, g, fname)
   if (minval(wk) < 0.0) then
     call par_stop("list_geomorph: fn_dbinit release depth has negative values: "//fname)
   end if
-  allocate(gm%dbr%rel(1:g%nx, dcp%js:dcp%je), source = wk(1:g%nx, dcp%js:dcp%je))
+  allocate(gm%dbr%rel(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = wk(dcp%ish:dcp%ieh, dcp%js:dcp%je))
 end subroutine
 
 

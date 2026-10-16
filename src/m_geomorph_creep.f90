@@ -109,7 +109,7 @@ module subroutine require_work(gm, g)
   type(t_geoinfo), intent(in) :: g
   if (allocated(gm%wrk%q)) return
   gm%wrk%ainv = 1.0 / (g%dx * g%dy)
-  allocate(gm%wrk%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(gm%wrk%q(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
 end subroutine
 
 end submodule

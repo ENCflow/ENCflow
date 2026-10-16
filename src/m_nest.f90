@@ -117,6 +117,7 @@ module m_nest
     real, allocatable :: wr(:,:,:)    ! 子→親の作業配列(1:8, 足元。nest_restrict が使う)
     ! 子側の作業配列(自ランクの確保範囲の行)
     integer :: jlo = 1, jhi = 0       ! 子の確保範囲を 1..nyc に切った行範囲
+    integer :: ilo = 1, ihi = 0       ! 子の列の確保範囲(= 子の dcp%ish..ieh。§80)
     logical, allocatable :: inband(:,:)   ! 帯セルか (1:nxc, jlo:jhi)
     real, allocatable :: ev(:,:,:,:)      ! 帯のエッジ量 (1:2, 1:4, 0:nxc, jlo-1:jhi)
   end type
@@ -416,12 +417,14 @@ subroutine nest_setup_child(nt, c, pp, gp, sp, pc, gc, sc, bc)
     ! 子側の作業配列(自ランクの確保範囲)
     n%jlo = max(dcp%jsh, 1)
     n%jhi = min(dcp%jeh, gc%ny)
+    n%ilo = dcp%ish
+    n%ihi = dcp%ieh
     if (allocated(n%inband)) deallocate(n%inband)
     if (allocated(n%ev)) deallocate(n%ev)
-    allocate(n%inband(1:gc%nx, n%jlo:n%jhi))
-    allocate(n%ev(2, 4, 0:gc%nx, n%jlo-1:n%jhi), source = 0.0)
+    allocate(n%inband(n%ilo:n%ihi, n%jlo:n%jhi))
+    allocate(n%ev(2, 4, n%ilo-1:n%ihi, n%jlo-1:n%jhi), source = 0.0)
     do j = n%jlo, n%jhi
-      do i = 1, gc%nx
+      do i = n%ilo, n%ihi
         n%inband(i, j) = (i <= n%nb .or. i > gc%nx - n%nb .or. j <= n%nb .or. j > gc%ny - n%nb)
       end do
     end do
@@ -467,8 +470,10 @@ subroutine capture_one(n, s, wc, we)
   integer :: i, j, f
   real, pointer :: a(:,:)
   wc = 0.0
+  ! 列は親の確保範囲 dcp%ish..ieh に収める(子の足場が親のマスク外へ張り出す
+  ! 分は 0 のまま = 子側でもマスク外。§80)
   do j = max(dcp%js, n%pj1 - 1), min(dcp%je, n%pj2 + 1)
-    do i = n%pi1 - 1, n%pi2 + 1
+    do i = max(dcp%ish, n%pi1 - 1), min(dcp%ieh, n%pi2 + 1)
       wc(q_h,  i, j) = s%h(i, j)
       wc(q_e,  i, j) = s%e(i, j)
       wc(q_u,  i, j) = s%u(i, j)
@@ -481,7 +486,7 @@ subroutine capture_one(n, s, wc, we)
   do f = 1, n%nfld
     a => fld_ptr(s, n%fld(f))
     do j = max(dcp%js, n%pj1 - 1), min(dcp%je, n%pj2 + 1)
-      do i = n%pi1 - 1, n%pi2 + 1
+      do i = max(dcp%ish, n%pi1 - 1), min(dcp%ieh, n%pi2 + 1)
         wc(ncq + f, i, j) = a(i, j)
       end do
     end do
@@ -546,7 +551,7 @@ subroutine nest_prolong(nt, c, g, s, b, alpha)
     allocate(rowdv(dcp%js:dcp%je), source = 0.0d0)
     allocate(rowdva(dcp%js:dcp%je), source = 0.0d0)
     do j = n%jlo, n%jhi
-      do i = 1, n%nxc
+      do i = n%ilo, n%ihi
         if (.not. n%inband(i, j)) cycle
         if (g%x(i, j) <= 0) cycle
         hold = s%h(i, j)
@@ -583,7 +588,7 @@ subroutine nest_prolong(nt, c, g, s, b, alpha)
     !     帯側 1 に近く内側で 0 に近づく 2 次。比 1 は複写値との混合)---
     if (n%ns > 0) then
       do j = n%jlo, n%jhi
-        do i = 1, n%nxc
+        do i = n%ilo, n%ihi
           if (n%inband(i, j) .or. g%x(i, j) <= 0) cycle
           d = min(i - n%nb, n%nxc - n%nb + 1 - i, j - n%nb, n%nyc - n%nb + 1 - j)   ! 帯からの距離(1..)
           if (d > n%ns) cycle
@@ -598,13 +603,13 @@ subroutine nest_prolong(nt, c, g, s, b, alpha)
     if (n%nest_bc == 1) return       ! 水位のみ(TUNAMI 型): 流速・エッジ量は子が計算
     ! --- エッジ量(帯セルに接する全スロット)---
     do j = n%jlo, n%jhi
-      do i = 1, n%nxc
+      do i = n%ilo, n%ihi
         if (.not. n%inband(i, j)) cycle
         do k = 1, 8
           kk = ke(k)
           ie = i + die(k)
           je = j + dje(k)
-          if (ie < 0 .or. ie > n%nxc .or. je < n%jlo - 1 .or. je > n%jhi) cycle
+          if (ie < n%ilo - 1 .or. ie > n%ihi .or. je < n%jlo - 1 .or. je > n%jhi) cycle
           if (n%r == 1) then
             n%ev(1:2, kk, ie, je) = n%we(1:2, kk, ie + n%i0 - 1, je + n%j0 - 1)
           else
@@ -614,13 +619,13 @@ subroutine nest_prolong(nt, c, g, s, b, alpha)
             jn = j + djn(k)
             hc = s%h(i, j)
             hn = hc
-            if (in >= 1 .and. in <= n%nxc .and. jn >= n%jlo .and. jn <= n%jhi) hn = s%h(in, jn)
+            if (in >= n%ilo .and. in <= n%ihi .and. jn >= n%jlo .and. jn <= n%jhi) hn = s%h(in, jn)
             if (min(hc, hn) < n%dd) n%ev(1:2, kk, ie, je) = 0.0
           end if
         end do
       end do
     end do
-    call m_swflow_enc_nest_import(n%nxc, n%nyc, n%jlo, n%jhi, n%inband, n%ev)
+    call m_swflow_enc_nest_import(n%ilo, n%ihi, n%jlo, n%jhi, n%inband, n%ev)
   end associate
 end subroutine
 
@@ -677,6 +682,7 @@ subroutine nest_restrict(nt, c, sc, sp, gp)
       do ip = ipa, ipb
         i1 = (ip - n%i0) * r + 1
         i2 = i1 + r - 1
+        if (i1 < n%ilo .or. i2 > n%ihi) cycle   ! 子の列の確保範囲外(マスク外)は置換しない(§80)
         n%wr(w_set, ip, jp) = 1.0
         if (r == 1) then                        ! 比 1 は複写
           n%wr(w_h,  ip, jp) = sc%h(i1, j1)
@@ -723,7 +729,7 @@ subroutine nest_restrict(nt, c, sc, sp, gp)
     allocate(rowdv(pjs:pje), source = 0.0d0)
     allocate(rowdva(pjs:pje), source = 0.0d0)
     do jp = max(jpa, pjs), min(jpb, pje)
-      do ip = ipa, ipb
+      do ip = max(ipa, dcp%ish), min(ipb, dcp%ieh)   ! 親の列の確保範囲(親を select 済み)
         if (n%wr(w_set, ip, jp) == 0.0) cycle
         if (gp%x(ip, jp) <= 0) cycle
         do f = 1, n%nfld
@@ -783,7 +789,7 @@ subroutine nest_restrict(nt, c, sc, sp, gp)
         call share(n%vc, size(n%vc))
       end if
       do jp = max(jpa - 1, pjs), min(jpb + 1, pje)
-        do ip = ipa - 1, ipb + 1
+        do ip = max(ipa - 1, dcp%ish), min(ipb + 1, dcp%ieh)
           if (ip >= ipa .and. ip <= ipb .and. jp >= jpa .and. jp <= jpb) cycle   ! リングだけ
           if (gp%x(ip, jp) <= 0) cycle
           if (n%fp(ip, jp) == n%vc(ip, jp)) cycle                               ! 比 1 恒等: 修正 0
@@ -831,7 +837,7 @@ subroutine nest_reflux_parent(nt, k, dt)
     associate (n => nt%g(c))
       if (n%nest_fb /= 3) cycle
       do jp = max(n%jpa - 1, dcp%js), min(n%jpb + 1, dcp%je)
-        do ip = n%ipa - 1, n%ipb + 1
+        do ip = max(n%ipa - 1, dcp%ish), min(n%ipb + 1, dcp%ieh)
           if (in_region(n, ip, jp)) cycle
           do kk = 1, 8
             in = ip + din(kk); jn = jp + djn(kk)
@@ -854,13 +860,13 @@ subroutine nest_reflux_child(nt, c, dt)
     do j = dcp%js, dcp%je
       jp = n%j0 + (j - 1) / n%r
       if (jp < n%jpa - 1 .or. jp > n%jpb + 1) cycle
-      do i = 1, n%nxc
+      do i = n%ilo, n%ihi
         ip = n%i0 + (i - 1) / n%r
         if (ip < n%ipa - 1 .or. ip > n%ipb + 1) cycle
         if (in_region(n, ip, jp)) cycle
         do kk = 1, 8
           in = i + din(kk); jn = j + djn(kk)
-          if (in < 1 .or. in > n%nxc .or. jn < 1 .or. jn > n%nyc) cycle
+          if (in < n%ilo .or. in > n%ihi .or. jn < n%jlo .or. jn > n%jhi) cycle   ! 子の確保範囲(§80)
           ipn = n%i0 + (in - 1) / n%r; jpn = n%j0 + (jn - 1) / n%r
           if (.not. in_region(n, ipn, jpn)) cycle
           n%vc(ip, jp) = n%vc(ip, jp) + m_swflow_enc_edge_flux(i, j, in, jn) * dt
@@ -981,12 +987,12 @@ subroutine fill_phi(n, g, alpha)
   real :: aend, xc, yc, wx, wy, hmin
   real :: w(2,2)
   real, allocatable :: pv(:,:)
-  allocate(pv(1:n%nxc, n%jlo:n%jhi), source = 0.0)
+  allocate(pv(n%ilo:n%ihi, n%jlo:n%jhi), source = 0.0)
   q = ncq + n%nfld + 1
   aend = alpha + 1.0 / real(n%rt)
   if (n%nest_nh == 1) then
     do j = n%jlo, n%jhi
-      do i = 1, n%nxc
+      do i = n%ilo, n%ihi
         if (.not. n%inband(i, j)) cycle
         if (g%x(i, j) <= 0) cycle
         if (n%r == 1) then
@@ -1012,7 +1018,7 @@ subroutine fill_phi(n, g, alpha)
       end do
     end do
   end if
-  call m_swflow_enc_nh_import(n%nxc, n%nyc, n%jlo, n%jhi, n%nb, n%inband, pv, n%nest_nh == 1)
+  call m_swflow_enc_nh_import(n%nxc, n%nyc, n%ilo, n%ihi, n%jlo, n%jhi, n%nb, n%inband, pv, n%nest_nh == 1)
 contains
   real function pval(ip, jp)
     integer, intent(in) :: ip, jp

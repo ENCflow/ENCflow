@@ -281,7 +281,7 @@ subroutine m_lavaflow_init(lv, p, g, s)
   end do
 
   ! --- 状態の確保 ---
-  allocate(s%hl(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%hl(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
 
   ! --- 作業領域(calc_creep / m_glacier と同じ4近傍) ---
   lv%lvw%area = g%dx * g%dy
@@ -298,9 +298,9 @@ subroutine m_lavaflow_init(lv, p, g, s)
   ! j 範囲はセル j を挟むエッジが j-1 と j にあるため下限 jsh-1
   ! (m_glacier の glw%q と同形)。確保時 0: マスク起因で書かれない
   ! エッジは恒久 0(無フラックス)
-  allocate(lv%lvw%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(lv%lvw%q(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   if (lv%wsol > 0.0) then
-    allocate(lv%lvw%sdz(1:g%nx, dcp%js:dcp%je), source = 0.0)
+    allocate(lv%lvw%sdz(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
   end if
 
   ! --- リスタート ---

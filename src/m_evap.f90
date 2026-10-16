@@ -156,7 +156,7 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
   end if
 
   ! --- 作業配列と診断 ---
-  allocate(ev%pet(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(ev%pet(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(ev%vrow(dcp%js:dcp%je, 1:4), source = 0.0_real64)
 
   ! --- 診断 CSV(rank0。累積はラン先頭からの積算 = restore でリセット) ---

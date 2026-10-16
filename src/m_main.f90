@@ -265,7 +265,7 @@ subroutine init_instance(fn_param, align)
       integer, allocatable :: rowwork(:)
       allocate(rowwork(1:g%ny))
       call m_geoinfo_row_ncells(g, rowwork)
-      call par_decomp_init(g%nx, g%ny, g%wy(1), g%wy(2), rowwork, align)
+      call par_decomp_init(g%nx, g%ny, g%wy(1), g%wy(2), g%wxg(1), g%wxg(2), rowwork, align)
     end block decomp
     call m_geoinfo_scatter_coeffs(g)        ! 物性係数を rank0 から帯+ハロへ配布
 
@@ -794,7 +794,7 @@ subroutine m_main_get_value(name, dest, ierr)
     derive: block
       real, allocatable :: wk(:,:)
       integer :: i, j
-      allocate(wk(1:enc%g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(wk(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
       if (trim(name) == 'ux') then
         !$omp parallel do
         do j = dcp%js, dcp%je
@@ -872,7 +872,7 @@ subroutine m_main_set_value(name, src, ierr)
     call par_allreduce_maxi(ierr)   ! 判定を全ランク同一に(§5)
     if (ierr > 0) return
     if (.not. allocated(enc%extpre)) then
-      allocate(enc%extpre(1:enc%g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(enc%extpre(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     end if
     call par_scatter_cell(src, enc%extpre)
     enc%extpre_active = .true.
@@ -883,7 +883,7 @@ subroutine m_main_set_value(name, src, ierr)
       return
     end if
     if (.not. allocated(enc%extz)) then
-      allocate(enc%extz(1:enc%g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(enc%extz(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     end if
     call par_scatter_cell(src, enc%extz)
     enc%extz_fresh = .true.
@@ -894,7 +894,7 @@ subroutine m_main_set_value(name, src, ierr)
     call par_allreduce_maxi(ierr)   ! 判定を全ランク同一に(§5)
     if (ierr > 0) return
     if (.not. allocated(enc%exth)) then
-      allocate(enc%exth(1:enc%g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(enc%exth(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     end if
     call par_scatter_cell(src, enc%exth)
     enc%exth_fresh = .true.
@@ -911,7 +911,7 @@ subroutine m_main_set_value(name, src, ierr)
     call par_allreduce_maxi(ierr)   ! 判定を全ランク同一に(§5)
     if (ierr > 0) return
     if (.not. allocated(enc%exthg)) then
-      allocate(enc%exthg(1:enc%g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(enc%exthg(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     end if
     call par_scatter_cell(src, enc%exthg)
     enc%exthg_fresh = .true.
@@ -922,7 +922,7 @@ subroutine m_main_set_value(name, src, ierr)
     call par_allreduce_maxi(ierr)   ! 判定を全ランク同一に(§5)
     if (ierr > 0) return
     if (.not. allocated(enc%extswe)) then
-      allocate(enc%extswe(1:enc%g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(enc%extswe(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     end if
     call par_scatter_cell(src, enc%extswe)
     enc%extswe_fresh = .true.
@@ -939,7 +939,7 @@ subroutine m_main_set_value(name, src, ierr)
     call par_allreduce_maxi(ierr)   ! 判定を全ランク同一に(§5)
     if (ierr > 0) return
     if (.not. allocated(enc%extrn)) then
-      allocate(enc%extrn(1:enc%g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(enc%extrn(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     end if
     call par_scatter_cell(src, enc%extrn)
     enc%extrn_fresh = .true.

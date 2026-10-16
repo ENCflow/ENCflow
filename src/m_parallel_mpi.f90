@@ -80,6 +80,9 @@ module m_parallel
       integer :: je = 0          ! 自ランク計算範囲の終了 j
       integer :: jsh = 1         ! 配列確保範囲の開始 j(担当帯±ハロ。全域端でクリップ)
       integer :: jeh = 0         ! 配列確保範囲の終了 j
+      integer :: ish = 1         ! 配列確保範囲の開始 i(全域の列窓±ハロ。全域端でクリップ。
+                                 !   x は分割しないので全ランク同一。developer.md §80)
+      integer :: ieh = 0         ! 配列確保範囲の終了 i
       integer :: rank_n = -1     ! j+側の隣接ランク(なければ負)
       integer :: rank_s = -1     ! j-側の隣接ランク(なければ負)
       integer :: nhalo = 2       ! ハロ幅(セル行。移流項のステンシル幅2による)
@@ -172,7 +175,7 @@ contains
       end block check_np
    end subroutine par_init
 
-   subroutine par_decomp_init(nx, ny, jw1, jw2, rowwork, align)
+   subroutine par_decomp_init(nx, ny, jw1, jw2, iw1, iw2, rowwork, align)
       ! 領域分割の決定。格子サイズと有効窓の確定後
       ! (m_geoinfo_init の直後)に全ランクが揃って呼ぶこと(collective)。
       ! 全域窓 [jw1, jw2] をランク数で行分割し、自ランクの帯を決める。
@@ -185,6 +188,7 @@ contains
       !         js-nhalo..je+nhalo へ縮小する)
       integer, intent(in) :: nx, ny
       integer, intent(in) :: jw1, jw2   ! 全域の有効窓(= g%wy(1:2))
+      integer, intent(in) :: iw1, iw2   ! 全域の列窓(= g%wxg(1:2)。窓の行の wx の最小・最大)
       integer, intent(in), optional :: rowwork(:)   ! 行重み(有効セル数)
       integer, intent(in), optional :: align        ! 帯境界を行 1 から数えて align の倍数に
                                                     ! 揃える(ネストの子格子: 親セル 1 個分の
@@ -214,6 +218,9 @@ contains
       call band_range(nrank, dcp%js, dcp%je)
       ! 第二段: 配列確保範囲 = 担当帯 ± ハロ幅(全域端でクリップ)
       call band_range_h(nrank, dcp%jsh, dcp%jeh)
+      ! 列の確保範囲 = 全域の列窓±ハロ(全域端でクリップ。全ランク同一)
+      dcp%ish = max(1, iw1 - dcp%nhalo)
+      dcp%ieh = min(nx, iw2 + dcp%nhalo)
       dcp%rank_s = nrank - 1                            ! nrank=0 では -1(隣なし)
       dcp%rank_n = merge(nrank + 1, -1, nrank < nproc - 1)
    end subroutine par_decomp_init
@@ -346,7 +353,7 @@ contains
       ! 自帯 js..je の値を正とし、js-w..js-1 を南から、je+1..je+w を
       ! 北から受け取る。ステップ頭に、前ステップ確定状態(h, u, v, vv)
       ! に対して呼ぶ。
-      real, intent(inout) :: a(1:, dcp%jsh:)
+      real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
       integer :: w, n1
       w  = dcp%nhalo
       n1 = size(a, 1)
@@ -371,7 +378,7 @@ contains
       ! ±2 エッジを読むため js-3..js-2 / je+1..je+2 を受け取る(送りは
       ! js..js+1 / je-2..je-1。帯は最低 2 行なのでいずれも自帯の
       ! 確定行)。確保範囲 jsh-1..jeh は幅2でちょうど収まる。
-      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      real, intent(inout) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
       integer, intent(in), optional :: width
       integer :: n, w
       w = 1
@@ -396,7 +403,7 @@ contains
       ! 行 je も北と対称。同一エッジのフラックスを南北で共有することで
       ! 質量保存がビットレベルで厳密になる(developer.md §11)。
       ! マスクは格子実装側がエッジ格納規約(dje)から与える。
-      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      real, intent(inout) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
       logical, intent(in) :: take_s(:)
       logical, intent(in) :: take_n(:)
       real :: buf(size(a, 1), size(a, 2))
@@ -504,53 +511,81 @@ contains
       ! 集約する(第二段: 帯確保の配列を出力するための経路)。
       ! buf の帯外の行は変更しない(呼び出し側でゼロ初期化しておくこと)。
       ! rank0 以外の buf は参照されないためサイズ1のダミーでよい。
+      ! 帯配列の列範囲 ish..ieh は全域バッファの第 1 次元(1..nx)より狭いので、
+      ! rank0 は窓形 (ish:ieh, jw1:jw2) の受信一時に受けてから buf へ写す
+      ! (Gatherv の受信域は連続でなければならない。§80)
       real, intent(inout) :: buf(1:, 1:)
-      real, intent(in) :: a(1:, dcp%jsh:)
+      real, intent(in) :: a(dcp%ish:, dcp%jsh:)
+      real, allocatable :: wbuf(:, :)
       integer :: counts(0:nproc-1), displs(0:nproc-1)
       integer :: r, js_r, je_r, n1
       n1 = size(a, 1)
       do r = 0, nproc - 1
          call band_range(r, js_r, je_r)
          counts(r) = n1 * (je_r - js_r + 1)
-         displs(r) = n1 * (js_r - 1)
+         displs(r) = n1 * (js_r - dcp%jw1)
       end do
+      if (is_root) then
+         allocate(wbuf(dcp%ish:dcp%ieh, dcp%jw1:dcp%jw2))
+      else
+         allocate(wbuf(1, 1))
+      end if
       call MPI_Gatherv(a(:, dcp%js:dcp%je), counts(nrank), MPI_WP, &
-                       buf, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
+                       wbuf, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
+      if (is_root) buf(dcp%ish:dcp%ieh, dcp%jw1:dcp%jw2) = wbuf
    end subroutine par_gather_to
 
    subroutine par_gather_to_i(buf, a)
       ! par_gather_to の整数版(流下方向フラグ等)
       integer, intent(inout) :: buf(1:, 1:)
-      integer, intent(in) :: a(1:, dcp%jsh:)
+      integer, intent(in) :: a(dcp%ish:, dcp%jsh:)
+      integer, allocatable :: wbuf(:, :)
       integer :: counts(0:nproc-1), displs(0:nproc-1)
       integer :: r, js_r, je_r, n1
       n1 = size(a, 1)
       do r = 0, nproc - 1
          call band_range(r, js_r, je_r)
          counts(r) = n1 * (je_r - js_r + 1)
-         displs(r) = n1 * (js_r - 1)
+         displs(r) = n1 * (js_r - dcp%jw1)
       end do
+      if (is_root) then
+         allocate(wbuf(dcp%ish:dcp%ieh, dcp%jw1:dcp%jw2))
+      else
+         allocate(wbuf(1, 1))
+      end if
       call MPI_Gatherv(a(:, dcp%js:dcp%je), counts(nrank), MPI_INTEGER, &
-                       buf, counts, displs, MPI_INTEGER, 0, MPI_COMM_WORLD)
+                       wbuf, counts, displs, MPI_INTEGER, 0, MPI_COMM_WORLD)
+      if (is_root) buf(dcp%ish:dcp%ieh, dcp%jw1:dcp%jw2) = wbuf
    end subroutine par_gather_to_i
 
    subroutine par_gather_edge_to(buf, a)
       ! エッジ配列の rank0 集約(save 用)。エッジ行 js..je を各ランクが送り、
       ! 行 jw1-1 は rank0 が自前の値で埋める(共有行は南北同値)。
       ! buf は rank0 のみ全域 (1:4, 0:nx, 0:ny)。帯外は変更しない。
+      ! 列範囲は ish-1..ieh(帯のエッジ確保範囲)。rank0 は窓形の受信一時
+      ! (:, ish-1:ieh, jw1-1:jw2) に受けてから buf へ写す(§80)
       real, intent(inout) :: buf(1:, 0:, 0:)
-      real, intent(in) :: a(1:, 0:, dcp%jsh-1:)
+      real, intent(in) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
+      real, allocatable :: wbuf(:, :, :)
       integer :: counts(0:nproc-1), displs(0:nproc-1)
       integer :: r, js_r, je_r, n12
       n12 = size(a, 1) * size(a, 2)
       do r = 0, nproc - 1
          call band_range(r, js_r, je_r)
          counts(r) = n12 * (je_r - js_r + 1)
-         displs(r) = n12 * js_r
+         displs(r) = n12 * (js_r - (dcp%jw1 - 1))
       end do
+      if (is_root) then
+         allocate(wbuf(size(a, 1), dcp%ish-1:dcp%ieh, dcp%jw1-1:dcp%jw2))
+      else
+         allocate(wbuf(1, 1, 1))
+      end if
       call MPI_Gatherv(a(:, :, dcp%js:dcp%je), counts(nrank), MPI_WP, &
-                       buf, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
-      if (is_root) buf(:, :, dcp%js-1) = a(:, :, dcp%js-1)
+                       wbuf, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
+      if (is_root) then
+         wbuf(:, :, dcp%js-1) = a(:, :, dcp%js-1)
+         buf(:, dcp%ish-1:dcp%ieh, dcp%jw1-1:dcp%jw2) = wbuf
+      end if
    end subroutine par_gather_edge_to
 
    subroutine par_scatter_cell(buf, a)
@@ -561,16 +596,16 @@ contains
       ! rank0 以外の buf は参照されないためサイズ1のダミーでよい。
       ! 受信側 a は確保範囲(jsh:jeh)ちょうどで確保しておくこと。
       real, intent(in) :: buf(1:, 1:)
-      real, intent(inout) :: a(1:, dcp%jsh:)
+      real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
       integer :: r, jsh_r, jeh_r, n1
       n1 = size(a, 1)
       if (is_root) then
          do r = 1, nproc - 1
             call band_range_h(r, jsh_r, jeh_r)
-            call MPI_Send(buf(:, jsh_r:jeh_r), n1 * (jeh_r - jsh_r + 1), &
-                          MPI_WP, r, 21, MPI_COMM_WORLD)
+            call MPI_Send(buf(dcp%ish:dcp%ieh, jsh_r:jeh_r), n1 * (jeh_r - jsh_r + 1), &
+                          MPI_WP, r, 21, MPI_COMM_WORLD)   ! 部分配列の copy-in(初期化の 1 回きり)
          end do
-         a(:, dcp%jsh:dcp%jeh) = buf(:, dcp%jsh:dcp%jeh)
+         a(:, dcp%jsh:dcp%jeh) = buf(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
       else
          call MPI_Recv(a, size(a), MPI_WP, 0, 21, MPI_COMM_WORLD, &
                        MPI_STATUS_IGNORE)
@@ -580,16 +615,16 @@ contains
    subroutine par_scatter_cell_i(buf, a)
       ! par_scatter_cell の整数版(マスク・土地利用等)
       integer, intent(in) :: buf(1:, 1:)
-      integer, intent(inout) :: a(1:, dcp%jsh:)
+      integer, intent(inout) :: a(dcp%ish:, dcp%jsh:)
       integer :: r, jsh_r, jeh_r, n1
       n1 = size(a, 1)
       if (is_root) then
          do r = 1, nproc - 1
             call band_range_h(r, jsh_r, jeh_r)
-            call MPI_Send(buf(:, jsh_r:jeh_r), n1 * (jeh_r - jsh_r + 1), &
+            call MPI_Send(buf(dcp%ish:dcp%ieh, jsh_r:jeh_r), n1 * (jeh_r - jsh_r + 1), &
                           MPI_INTEGER, r, 22, MPI_COMM_WORLD)
          end do
-         a(:, dcp%jsh:dcp%jeh) = buf(:, dcp%jsh:dcp%jeh)
+         a(:, dcp%jsh:dcp%jeh) = buf(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
       else
          call MPI_Recv(a, size(a), MPI_INTEGER, 0, 22, MPI_COMM_WORLD, &
                        MPI_STATUS_IGNORE)
@@ -604,16 +639,16 @@ contains
       ! rank0 以外の buf は参照されないためサイズ1のダミーでよい。
       ! 受信側 a はエッジ確保範囲(jsh-1:jeh)ちょうどで確保しておくこと。
       real, intent(in) :: buf(1:, 0:, 0:)
-      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      real, intent(inout) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
       integer :: r, jsh_r, jeh_r, n12
       n12 = size(a, 1) * size(a, 2)
       if (is_root) then
          do r = 1, nproc - 1
             call band_range_h(r, jsh_r, jeh_r)
-            call MPI_Send(buf(:, :, jsh_r-1:jeh_r), n12 * (jeh_r - jsh_r + 2), &
+            call MPI_Send(buf(:, dcp%ish-1:dcp%ieh, jsh_r-1:jeh_r), n12 * (jeh_r - jsh_r + 2), &
                           MPI_WP, r, 23, MPI_COMM_WORLD)
          end do
-         a(:, :, dcp%jsh-1:dcp%jeh) = buf(:, :, dcp%jsh-1:dcp%jeh)
+         a(:, :, dcp%jsh-1:dcp%jeh) = buf(:, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh)
       else
          call MPI_Recv(a, size(a), MPI_WP, 0, 23, MPI_COMM_WORLD, &
                        MPI_STATUS_IGNORE)

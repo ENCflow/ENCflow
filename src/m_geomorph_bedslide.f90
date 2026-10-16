@@ -190,19 +190,19 @@ module subroutine init_bedslide(gm, p, g, s, list)
   gm%bsl%dxmin = min(g%dx, g%dy)
 
   ! --- 状態と作業領域(有効時のみ確保 = 無効時ゼロコスト) ---
-  if (.not. allocated(s%hb)) allocate(s%hb(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  if (.not. allocated(s%vb)) allocate(s%vb(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(gm%bsl%vc(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(gm%bsl%qt(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(gm%bsl%ws(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(gm%bsl%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
-  allocate(gm%bsl%nst(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  if (.not. allocated(s%hb)) allocate(s%hb(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  if (.not. allocated(s%vb)) allocate(s%vb(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(gm%bsl%vc(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(gm%bsl%qt(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(gm%bsl%ws(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(gm%bsl%q(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(gm%bsl%nst(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   ! f_bsplunge=1 の基準水面 = 初期の水面 z+h(乾いたセルは -huge)。restore 時は
   ! 私有 save の値が勝つ(初期状態でなく復元状態を読んでしまわないため)
-  allocate(gm%bsl%eref(1:g%nx, dcp%jsh:dcp%jeh), source = -huge(1.0))
+  allocate(gm%bsl%eref(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = -huge(1.0))
   if (gm%f_bsplunge == 1) then
     do j = dcp%jsh, dcp%jeh
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (s%h(i,j) > p%dd) gm%bsl%eref(i,j) = s%z(i,j) + s%h(i,j)
       end do
     end do
@@ -218,7 +218,7 @@ module subroutine init_bedslide(gm, p, g, s, list)
       call par_stop("list_geomorph: fn_bsinit release depth has negative values: " &
                     // trim(list%fn_bsinit))
     end if
-    allocate(gm%bsl%rel(1:g%nx, dcp%js:dcp%je), source = wk(1:g%nx, dcp%js:dcp%je))
+    allocate(gm%bsl%rel(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = wk(dcp%ish:dcp%ieh, dcp%js:dcp%je))
     deallocate(wk)
   end if
 

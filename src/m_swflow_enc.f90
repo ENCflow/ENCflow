@@ -617,10 +617,10 @@ module m_swflow_enc
       integer, intent(in) :: i1, i2, j1, j2
       real, intent(inout) :: buf(i1:, j1:)
     end subroutine
-    module subroutine nh_import(nx, ny, jlo, jhi, nb, inband, phival, dirichlet)
-      integer, intent(in) :: nx, ny, jlo, jhi, nb
-      logical, intent(in) :: inband(1:, jlo:)
-      real, intent(in) :: phival(1:, jlo:)
+    module subroutine nh_import(nx, ny, ilo, ihi, jlo, jhi, nb, inband, phival, dirichlet)
+      integer, intent(in) :: nx, ny, ilo, ihi, jlo, jhi, nb
+      logical, intent(in) :: inband(ilo:, jlo:)
+      real, intent(in) :: phival(ilo:, jlo:)
       logical, intent(in) :: dirichlet
     end subroutine
   end interface
@@ -862,7 +862,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   chn%have_width = g%width_active
   ! 曲率項の作業配列(f_dbcurv=1 のみ。set_debris は geomorph init から
   ! swflow init より前に呼ばれる契約なので db_curv はここで確定済み)
-  if (dbr%db_curv > 0) allocate(dbr%acv(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  if (dbr%db_curv > 0) allocate(dbr%acv(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (opt%f_bank_mode < e_bank_weir .or. opt%f_bank_mode > e_bank_pump) then
     call par_stop("list_channel: f_bank_mode must be 0(overtopping only), " &
                   //"1(one-way sluice) or 2(forced drainage)")
@@ -905,11 +905,11 @@ subroutine m_swflow_enc_init(p, g, b, s)
     chn%have_fwd = .false.
   end if
   if (chn%have_fwd) then
-    allocate(chn%fwd(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 1.0)
+    allocate(chn%fwd(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 1.0)
     if (chn%have_width) then
       chn%have_cwd = .true.
-      allocate(chn%cwxd(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
-      allocate(chn%cwyd(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
+      allocate(chn%cwxd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 1.0)
+      allocate(chn%cwyd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 1.0)
     end if
     call par_info("swflow: dynamic opening reassignment enabled (f_opening_dynamic=" &
                   //itoa(opt%f_opening_dynamic)//")")
@@ -1322,37 +1322,37 @@ subroutine init_enc_status(p, g, s, sx)
 
   ! メモリを確保する
   ! エッジ配列の j 範囲: セル j を挟むエッジは j-1 と j なので下限は jsh-1
-  allocate(sx%uv(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
-  allocate(sx%h1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(sx%mn1(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
-  allocate(sx%mn(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(sx%uv(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(sx%h1(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(sx%mn1(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(sx%mn(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   ! 浮遊砂の書き込みバッファ(sed_active は m_geomorph_init が設定済み。
   ! 初期化順序: geomorph init → swflow init)。正準状態 s%hs の複製で
   ! 初期化する(mn1 = mn と同じ流儀): init 末尾の complete は移流を
   ! 経ずにコミットするため、0 のままだと restore 済みの hs を消す
   ! (リスタート往復ビット一致で実検出したバグ)
   if (s%sed_active) then
-    allocate(sx%hs1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(sx%hs1(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     sx%hs1(:,:) = s%hs(:,:)
   end if
   ! 輸送物質の書き込みバッファ(hs1 と同じ理由で正準状態の複製で初期化。§30)
   if (s%wq_active) then
-    allocate(sx%cq1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(sx%cq1(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     sx%cq1(:,:) = s%cq(:,:)
   end if
   ! 地表塩水層の書き込みバッファ(同上の理由で複製初期化。§47)
   if (s%salt_active) then
-    allocate(sx%hss1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(sx%hss1(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     sx%hss1(:,:) = s%hss(:,:)
   end if
   ! 流動流木の書き込みバッファ(同上の理由で複製初期化。§50)
   if (s%dw_active) then
-    allocate(sx%hd1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(sx%hd1(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     sx%hd1(:,:) = s%hd(:,:)
   end if
   ! 流動瓦礫の書き込みバッファ(同上。§63)
   if (s%bd_active) then
-    allocate(sx%hbd1(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(sx%hbd1(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     sx%hbd1(:,:) = s%hbd(:,:)
   end if
 
@@ -2346,8 +2346,8 @@ pure subroutine edge_row_span(g, j, i1, i2)
     i1 = min(i1, g%wx(1,j+1) - 1)
     i2 = max(i2, g%wx(2,j+1))
   end if
-  i1 = max(i1, 0)
-  i2 = min(i2, g%nx)
+  i1 = max(i1, dcp%ish - 1)   ! エッジ確保範囲 ish-1..ieh に収める(wx は窓の中なので実質不変)
+  i2 = min(i2, dcp%ieh)
 end subroutine
 
 
@@ -2508,9 +2508,9 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   type(t_enc_status), intent(in) :: sx
-  real, intent(in) :: c(1:, dcp%jsh:)
-  real, intent(inout) :: c1(1:, dcp%jsh:)
-  real, intent(in), optional :: cbin(1:, dcp%jsh:)   ! 境界流入濃度(セル別)
+  real, intent(in) :: c(dcp%ish:, dcp%jsh:)
+  real, intent(inout) :: c1(dcp%ish:, dcp%jsh:)
+  real, intent(in), optional :: cbin(dcp%ish:, dcp%jsh:)   ! 境界流入濃度(セル別)
   real, intent(in), optional :: share                ! 移流分担率(省略時 1.0。
                                                      !   底層スカラーの流速分担。§47)
   integer :: i, j, k
@@ -3162,7 +3162,7 @@ subroutine m_swflow_enc_nest_export(ie1, ie2, je1, je2, buf)
     do k = 1, 4
       je = j + dje(k)
       if (je < je1 .or. je > je2) cycle
-      do i = 1, dcp%nx_g
+      do i = dcp%ish, dcp%ieh              ! 列の確保範囲(エッジは ish-1..ieh)
         ie = i + die(k)
         if (ie < ie1 .or. ie > ie2) cycle
         buf(1, k, ie, je) = sx_mod%uv(k, ie, je)
@@ -3172,30 +3172,29 @@ subroutine m_swflow_enc_nest_export(ie1, ie2, je1, je2, buf)
   end do
 end subroutine
 
-subroutine m_swflow_enc_nest_import(nx, ny, jlo, jhi, inband, vals)
-  integer, intent(in) :: nx, ny                    ! 子格子の寸法
+subroutine m_swflow_enc_nest_import(ilo, ihi, jlo, jhi, inband, vals)
+  integer, intent(in) :: ilo, ihi                  ! inband の列範囲(子の確保範囲 ish..ieh。§80)
   integer, intent(in) :: jlo, jhi                  ! inband の行範囲(1..ny に切った確保範囲)
-  logical, intent(in) :: inband(1:, jlo:)          ! 帯セルか (1:nx, jlo:jhi)
-  real, intent(in) :: vals(1:, 1:, 0:, jlo-1:)     ! (1:2 = uv,mn, 1:4, 0:nx, jlo-1:jhi)
+  logical, intent(in) :: inband(ilo:, jlo:)        ! 帯セルか (ilo:ihi, jlo:jhi)
+  real, intent(in) :: vals(1:, 1:, ilo-1:, jlo-1:) ! (1:2 = uv,mn, 1:4, ilo-1:ihi, jlo-1:jhi)
   integer :: i, j, k, ie, je, in, jn
   logical :: band
   do je = max(jlo - 1, dcp%jsh - 1), min(jhi, dcp%jeh)
     do k = 1, 4
       j = je - dje(k)
       jn = j + djn(k)
-      do ie = 0, nx
+      do ie = max(ilo - 1, dcp%ish - 1), min(ihi, dcp%ieh)
         i = ie - die(k)
         in = i + din(k)
         band = .false.
-        if (i >= 1 .and. i <= nx .and. j >= jlo .and. j <= jhi) band = inband(i, j)
-        if (.not. band .and. in >= 1 .and. in <= nx .and. jn >= jlo .and. jn <= jhi) band = inband(in, jn)
+        if (i >= ilo .and. i <= ihi .and. j >= jlo .and. j <= jhi) band = inband(i, j)
+        if (.not. band .and. in >= ilo .and. in <= ihi .and. jn >= jlo .and. jn <= jhi) band = inband(in, jn)
         if (.not. band) cycle
         sx_mod%uv(k, ie, je) = vals(1, k, ie, je)
         sx_mod%mn(k, ie, je) = vals(2, k, ie, je)
       end do
     end do
   end do
-  if (ny < 0) continue   ! 未使用引数警告の抑制(寸法の整合は呼び出し側)
 end subroutine
 
 
@@ -3273,10 +3272,10 @@ subroutine build_sdep(g, b, s)
   integer :: i, j, ist, k
   real :: d
 
-  allocate(sct%sdep(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(sct%screst(1:g%nx, dcp%jsh:dcp%jeh), source = screst_none)
+  allocate(sct%sdep(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(sct%screst(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = screst_none)
   do j = dcp%jsh, dcp%jeh
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (g%x(i,j) <= 0) cycle
       if (g%rw(i,j) <= 0) cycle
       if (g%rscap(i,j) > 0.0) cycle
@@ -3460,12 +3459,12 @@ subroutine m_swflow_enc_nh_export(i1, i2, j1, j2, buf)
   call nh_export(i1, i2, j1, j2, buf)
 end subroutine
 
-subroutine m_swflow_enc_nh_import(nx, ny, jlo, jhi, nb, inband, phival, dirichlet)
-  integer, intent(in) :: nx, ny, jlo, jhi, nb     ! nb = 帯の幅(nest_nh = 0 の余白の基準)
-  logical, intent(in) :: inband(1:, jlo:)
-  real, intent(in) :: phival(1:, jlo:)
+subroutine m_swflow_enc_nh_import(nx, ny, ilo, ihi, jlo, jhi, nb, inband, phival, dirichlet)
+  integer, intent(in) :: nx, ny, ilo, ihi, jlo, jhi, nb   ! nb = 帯の幅(nest_nh = 0 の余白の基準)。ilo/ihi = 子の列の確保範囲
+  logical, intent(in) :: inband(ilo:, jlo:)
+  real, intent(in) :: phival(ilo:, jlo:)
   logical, intent(in) :: dirichlet
-  call nh_import(nx, ny, jlo, jhi, nb, inband, phival, dirichlet)
+  call nh_import(nx, ny, ilo, ihi, jlo, jhi, nb, inband, phival, dirichlet)
 end subroutine
 
 end module

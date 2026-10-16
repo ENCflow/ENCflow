@@ -69,7 +69,7 @@ module subroutine init_splash(gm, g, list)
   gm%sdzmax = list%spl_dzmax
 
   if (.not. allocated(gm%spl%fx)) then
-    allocate(gm%spl%fx(1:g%nx, dcp%js:dcp%je), source = 0.0)
+    allocate(gm%spl%fx(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
   end if
 end subroutine
 

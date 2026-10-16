@@ -255,7 +255,7 @@ subroutine m_bldgdebris_init(bd, p, g, b, s)
     call par_stop("list_bldgdebris: specify the building stock by either bd_stock0 " &
                   //"(uniform) or fn_bdstock (map), not both")
   end if
-  allocate(bd%wbs(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(bd%wbs(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (len_trim(list%fn_bdstock) > 0) then
     call read_map_scatter(p, g, list%fn_bdstock, "fn_bdstock", 0.0, -1.0, bd%wbs)
   else if (list%bd_stock0 > -9998.0) then
@@ -266,7 +266,7 @@ subroutine m_bldgdebris_init(bd, p, g, b, s)
     ! 場所が分からない(gv が全域 1)なら停止して入力を促す
     nb = 0
     do j = dcp%jsh, dcp%jeh
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
         if (s%gv(i,j) < 1.0) then
           bd%wbs(i,j) = 0.3
@@ -288,26 +288,26 @@ subroutine m_bldgdebris_init(bd, p, g, b, s)
   ! 域外セル・海セルには家屋を置かない(台帳集計・出力と整合。ゾーン2 =
   ! sw は全域)
   do j = dcp%jsh, dcp%jeh
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) bd%wbs(i,j) = 0.0
     end do
   end do
-  allocate(bd%wbs0(1:g%nx, dcp%jsh:dcp%jeh), source = bd%wbs)
+  allocate(bd%wbs0(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = bd%wbs)
 
   ! --- 破壊可能割合 fw(任意。空隙率帰還の上限。B2 が使う) ---
   if (len_trim(list%fn_bdfrac) > 0) then
-    allocate(bd%fw(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
+    allocate(bd%fw(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 1.0)
     call read_map_scatter(p, g, list%fn_bdfrac, "fn_bdfrac", 0.0, 1.0, bd%fw)
   end if
 
   ! --- 状態の確保 ---
-  allocate(s%hbd(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(s%wbd(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  if (p%f_out_wbd > 0) allocate(s%wbdmax(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  if (p%f_out_bds > 0) allocate(s%bds(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  if (p%f_out_fdmax > 0) allocate(s%fdmax(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%hbd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%wbd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  if (p%f_out_wbd > 0) allocate(s%wbdmax(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  if (p%f_out_bds > 0) allocate(s%bds(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  if (p%f_out_fdmax > 0) allocate(s%fdmax(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   ! 空隙率の初期値(帰還の基準。restore 時は保存値が上書きする)
-  allocate(bd%gv0(1:g%nx, dcp%jsh:dcp%jeh), source = s%gv(1:g%nx, dcp%jsh:dcp%jeh))
+  allocate(bd%gv0(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = s%gv(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh))
   if (bd%gvfb) s%gv_active = .true.    ! swflow_enc が af を毎ステップ更新する
 
   ! --- ダム捕捉台帳(全ダム・湖沼が対象。m_driftwood と同型) ---
@@ -361,7 +361,7 @@ subroutine read_map_scatter(p, g, fn, label, vmin, vmax, a)
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: fn, label
   real, intent(in) :: vmin, vmax
-  real, intent(inout) :: a(1:, dcp%jsh:)
+  real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
   real, allocatable :: wk(:,:)
   real :: dum(1,1)
   character(:), allocatable :: fname
@@ -446,7 +446,7 @@ subroutine update_damage(bd, g, s)
   type(t_state), intent(inout) :: s
   integer :: i, j
   do j = dcp%jsh, dcp%jeh
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (bd%wbs0(i,j) > 0.0) then
         s%bds(i,j) = 1.0 - bd%wbs(i,j) / bd%wbs0(i,j)
       else
@@ -772,7 +772,7 @@ subroutine restore_state(bd, p, g, s)
   ! 導出量の再構成(lm は帯全体。af は swflow init の update_af が埋める)
   call par_halo_cell(s%gv)
   do j = dcp%jsh, dcp%jeh
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       s%lm(i,j) = s%gv(i,j) + (1.0 - s%gv(i,j)) * p%cm
     end do
   end do

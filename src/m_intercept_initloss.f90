@@ -93,9 +93,9 @@ subroutine intercept_initloss_init(ici, p, g)
     ici%smax = ic_smax_mm / 1000.0         ! mm -> m
   end if
 
-  allocate(ici%st(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(ici%pr0(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(ici%prh0(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(ici%st(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(ici%pr0(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(ici%prh0(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
 
   ! 内部状態の復元(契約C)。m_state の門番(check_save_info)は
   ! m_state_init で通過済み
@@ -128,7 +128,7 @@ subroutine read_smax_map(ici, p, g, fn)
     call par_stop("list_intercept_initloss: fn_icsmax not found: " // fname)
   end if
 
-  allocate(ici%smaxmap(1:g%nx, dcp%jsh:dcp%jeh))
+  allocate(ici%smaxmap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh))
   if (is_root) then
     allocate(smap(1:g%nx, 1:g%ny))
     call par_info(" reading " // fname)

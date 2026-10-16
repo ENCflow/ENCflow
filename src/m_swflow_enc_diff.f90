@@ -35,8 +35,8 @@ module subroutine diff_init(p, g)
   character(len=256) :: msg
 
   if (.not. opt%have_diff) return
-  allocate(td_mod%td(1:2,1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(td_mod%nu(1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(td_mod%td(1:2, dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(td_mod%nu(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   forall(k=1:8) td_mod%wd8(k) = geo%l8(k) / (geo%w8dr(k) * g%dx * g%dy)
 
   ! 陽解法の安定上界(Gershgorin による目安): dt ≦ 1/(ν·Σ_k wd8(k))
@@ -177,10 +177,10 @@ end subroutine
 !----------------------------------------------------------------------
 subroutine get_diffusion(u, v, h, nu, dd, wd, x, i, j, tdx, tdy)
   ! 帯確保の配列を渡すダミーは assumed-shape+下限指定(§12)
-  real, intent(in) :: u(1:, dcp%jsh:)
-  real, intent(in) :: v(1:, dcp%jsh:)
-  real, intent(in) :: h(1:, dcp%jsh:)
-  real, intent(in) :: nu(1:, dcp%jsh:)
+  real, intent(in) :: u(dcp%ish:, dcp%jsh:)
+  real, intent(in) :: v(dcp%ish:, dcp%jsh:)
+  real, intent(in) :: h(dcp%ish:, dcp%jsh:)
+  real, intent(in) :: nu(dcp%ish:, dcp%jsh:)
   real, intent(in) :: dd
   real, intent(in) :: wd(1:8)
   integer, intent(in) :: x(0:, dcp%jsh-1:)

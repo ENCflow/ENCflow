@@ -124,11 +124,11 @@ subroutine m_snow_init(sn, p, g, s, mt)
   end if
 
   ! --- 状態の確保と初期値(海セル・無効セルには置かない) ---
-  allocate(s%swe(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%swe(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (list%snow_swe0 > 0.0) then
     ! ゾーン2 = x/sw は全域が使える(帯行 jsh:jeh は全域の有効行)
     do j = dcp%jsh, dcp%jeh
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (g%x(i,j) <= 0) cycle
         if (g%sw(i,j) > 0) cycle
         s%swe(i,j) = list%snow_swe0 * mm2m
@@ -139,8 +139,8 @@ subroutine m_snow_init(sn, p, g, s, mt)
   end if
 
   ! --- スナップショット作業領域 ---
-  allocate(sn%pr0(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(sn%prh0(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(sn%pr0(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(sn%prh0(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
 
   ! --- リスタート ---
   if (p%f_state_restore > 0) call restore_state(p, g, s)
@@ -190,7 +190,7 @@ subroutine setup_swe0_map(p, g, s, fn)
     call par_scatter_cell(dum, s%swe)
   end if
   do j = dcp%jsh, dcp%jeh
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (g%sw(i,j) > 0) s%swe(i,j) = 0.0
     end do
   end do

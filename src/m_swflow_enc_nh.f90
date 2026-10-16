@@ -172,14 +172,14 @@ module subroutine nh_init(p, g, b, s)
       call par_stop("list_enc: f_nh_breaking must be 0(off) or 1(on)")
   end select
 
-  allocate(nh_mod%uv0(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
-  allocate(nhp%nh_he(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
-  allocate(nh_mod%phi(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(nh_mod%phi1(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(nh_mod%rhs(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(nh_mod%beta(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(nh_mod%diag(1:g%nx, dcp%jsh:dcp%jeh), source = 1.0)
-  allocate(nh_mod%cmask(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
+  allocate(nh_mod%uv0(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(nhp%nh_he(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(nh_mod%phi(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(nh_mod%phi1(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(nh_mod%rhs(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(nh_mod%beta(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(nh_mod%diag(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 1.0)
+  allocate(nh_mod%cmask(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0)
   ! 強制境界のセル(静的): 水位規定セル群と、枠外に開いた面(区間流入・
   ! 自由流出・放射)を持つセル、およびそこから nh_bc_margin セル以内
   ! (チェビシェフ距離)のセル。規定流束のセルに NH 候補が接すると、規定
@@ -194,7 +194,7 @@ module subroutine nh_init(p, g, b, s)
   else
     hmax = 0.0
     do j = dcp%js, dcp%je
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (g%x(i,j) > 0) hmax = max(hmax, s%h(i,j))
       end do
     end do
@@ -203,7 +203,7 @@ module subroutine nh_init(p, g, b, s)
     m = max(2, ceiling(2.0 * vmax(1) / min(g%dx, g%dy)))
   end if
   nh_mod%bcm = m
-  allocate(nh_mod%fmask(1:g%nx, dcp%jsh:dcp%jeh), source = 0)
+  allocate(nh_mod%fmask(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0)
   do istage = 1, b%nstage
     do k = 1, b%stage(istage)%ncell
       i = b%stage(istage)%cell(1,k)
@@ -216,7 +216,7 @@ module subroutine nh_init(p, g, b, s)
     end do
   end do
   do j = dcp%jsh, dcp%jeh
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (i > 1 + m .and. i < g%nx - m .and. j > 1 + m .and. j < dcp%ny_g - m) cycle
       ! m 以内の辺上のセル (i3, j3) が枠外に開いた面を持つか
       forced = .false.
@@ -237,30 +237,30 @@ module subroutine nh_init(p, g, b, s)
   k = count(nh_mod%fmask(:, dcp%js:dcp%je) == 1)
   if (k > 0) call par_info("  forced-boundary cells kept hydrostatic (stage / open faces + margin " &
                            //itoa(m)//" cells): "//itoa(k)//" on this rank")
-  allocate(nh_mod%dast(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  if (nhp%f_nh_adaptive == 1) allocate(nh_mod%work(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  if (nhp%f_nh_breaking == 1) allocate(nh_mod%brk(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  if (nhp%nh_break_visc > 0.0) allocate(nhp%nh_nub(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(nh_mod%dast(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  if (nhp%f_nh_adaptive == 1) allocate(nh_mod%work(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  if (nhp%f_nh_breaking == 1) allocate(nh_mod%brk(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  if (nhp%nh_break_visc > 0.0) allocate(nhp%nh_nub(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (nhp%f_nh_slope == 1) then
-    allocate(nh_mod%rhs0(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-    allocate(nh_mod%work2(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(nh_mod%rhs0(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(nh_mod%work2(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   end if
   if (nhp%f_nh_bottom == 1) then
     ! z_prev は restore 後の s%z(m_state_init が先)。最初の射影は z̈ = 0
-    allocate(nh_mod%zprev(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-    allocate(nh_mod%wb(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-    allocate(nh_mod%zdd(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-    allocate(nh_mod%zsrc(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-    allocate(nh_mod%rhsb(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(nh_mod%zprev(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(nh_mod%wb(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(nh_mod%zdd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(nh_mod%zsrc(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(nh_mod%rhsb(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     do j = dcp%jsh, dcp%jeh
       nh_mod%zprev(:,j) = s%z(1:g%nx,j)
     end do
     nh_mod%bot_first = .true.
   end if
-  allocate(nh_mod%emask(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = .false.)
+  allocate(nh_mod%emask(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = .false.)
   if (nhp%nh_solver == 2) then
-    allocate(nh_mod%rr(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-    allocate(nh_mod%ap(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(nh_mod%rr(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(nh_mod%ap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   end if
   do k = 1, 8
     nh_mod%wd(k) = geo%l8(k) / (g%dx * g%dy)
@@ -317,7 +317,7 @@ module subroutine nh_project(p, g, s, sx)
   ! --- 1. NH 候補セルのマスクと β(確保範囲 jsh..jeh で局所に決まる) ---
   !$omp parallel do schedule(static) private(i, j)
   do j = dcp%jsh, dcp%jeh
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       nh_mod%cmask(i,j) = 0
       nh_mod%beta(i,j) = 0.0
       nh_mod%phi(i,j) = 0.0
@@ -355,7 +355,7 @@ module subroutine nh_project(p, g, s, sx)
   if (nhp%f_nh_bottom == 1) then
     !$omp parallel do schedule(static) private(i, j, wbn) reduction(max:bedmax)
     do j = dcp%js, dcp%je
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         wbn = (s%z(i,j) - nh_mod%zprev(i,j)) * dtinv
         if (nh_mod%bot_first) then
           nh_mod%zdd(i,j) = 0.0
@@ -386,7 +386,7 @@ module subroutine nh_project(p, g, s, sx)
   !   uv = uv0 で寄与 0)
   !$omp parallel do schedule(static) private(i, j, kk, da)
   do j = dcp%js, dcp%je
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (nh_mod%cmask(i,j) == 0) cycle
       da = 0.0
       do kk = 1, 8
@@ -404,7 +404,7 @@ module subroutine nh_project(p, g, s, sx)
   ! --- 3. NH エッジ(基準セル jsh..jeh の k=1..4。両セルが NH、壁でない) ---
   !$omp parallel do schedule(static) private(i, j, k, in, jn, ie, je)
   do j = dcp%jsh, dcp%jeh
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       do k = 1, 4
         ie = i + die(k)
         je = j + dje(k)
@@ -440,7 +440,7 @@ module subroutine nh_project(p, g, s, sx)
   nact = 0
   !$omp parallel do schedule(static) private(i, j, kk, wsum, r0, ck, sig, ae) reduction(+:nact)
   do j = dcp%js, dcp%je
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (nh_mod%cmask(i,j) == 0) cycle
       nact = nact + 1
       wsum = 0.0
@@ -491,7 +491,7 @@ module subroutine nh_project(p, g, s, sx)
   if (nhp%f_nh_bottom == 1 .and. bedmax > 0.0) then
     !$omp parallel do schedule(static) private(i, j)
     do j = dcp%js, dcp%je
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         nh_mod%rhsb(i,j) = nh_mod%rhs(i,j)
         nh_mod%rhs(i,j) = 0.0
         if (nh_mod%cmask(i,j) == 0) cycle
@@ -512,7 +512,7 @@ module subroutine nh_project(p, g, s, sx)
     if (.not. ok2) call par_warn("swflow_enc_nh: bottom-acceleration smoothing did not converge")
     !$omp parallel do schedule(static) private(i, j)
     do j = dcp%jsh, dcp%jeh
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         nh_mod%zsrc(i,j) = -0.25 * s%h(i,j) * (nh_mod%zdd(i,j) + nh_mod%phi(i,j))
         nh_mod%phi(i,j) = 0.0
         nh_mod%phi1(i,j) = 0.0
@@ -560,7 +560,7 @@ module subroutine nh_project(p, g, s, sx)
       phimax = 0.0
       !$omp parallel do schedule(static) private(i, j, kk, rr, ck, sig, phic, phin) reduction(max:phimax)
       do j = dcp%js, dcp%je
-        do i = 1, g%nx
+        do i = dcp%ish, dcp%ieh
           if (nh_mod%cmask(i,j) == 0) cycle
           phic = nh_mod%phi(i,j)
           phimax = max(phimax, abs(phic))
@@ -581,7 +581,7 @@ module subroutine nh_project(p, g, s, sx)
       iters = iters + it2
       !$omp parallel do schedule(static) private(i, j) reduction(max:dphimax)
       do j = dcp%js, dcp%je
-        do i = 1, g%nx
+        do i = dcp%ish, dcp%ieh
           if (nh_mod%cmask(i,j) == 0) cycle
           dphimax = max(dphimax, abs(nh_mod%phi(i,j) - nh_mod%work2(i,j)))
         end do
@@ -607,7 +607,7 @@ module subroutine nh_project(p, g, s, sx)
   call par_halo_cell(nh_mod%phi)
   !$omp parallel do schedule(static) private(i, j, k, in, jn, ie, je, phic, phin)
   do j = dcp%js, dcp%je
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (nh_mod%cmask(i,j) == 0) then
         if (.not. nh_mod%have_dir) cycle
         if (nh_mod%dmask(i,j) == 0) cycle     ! 既知セルが持つ内部向きのエッジも補正(§16)
@@ -676,7 +676,7 @@ subroutine breaking_switch(p, g, s, sx)
   !   リスタート時は 0 から始まるため、復元直後の 1 ステップだけ履歴がない)
   !$omp parallel do schedule(static) private(i, j, kk, dhdt, bb)
   do j = dcp%js, dcp%je
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (nh_mod%cmask(i,j) == 0) then
         nh_mod%brk(i,j) = 0.0
         cycle
@@ -729,7 +729,7 @@ subroutine breaking_switch(p, g, s, sx)
   call par_halo_cell(nh_mod%brk)
   !$omp parallel do schedule(static) private(i, j, kk)
   do j = dcp%js, dcp%je
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       nh_mod%phi1(i,j) = nh_mod%brk(i,j)
       if (nh_mod%brk(i,j) /= 0.5) cycle
       nh_mod%phi1(i,j) = 0.0                   ! 候補は接していなければ 0 に戻す
@@ -761,7 +761,7 @@ subroutine breaking_switch(p, g, s, sx)
     hmax = 0.0
     !$omp parallel do schedule(static) private(i, j) reduction(max:hmax)
     do j = dcp%js, dcp%je
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (nh_mod%cmask(i,j) == 1) hmax = max(hmax, s%h(i,j))
       end do
     end do
@@ -774,7 +774,7 @@ subroutine breaking_switch(p, g, s, sx)
     call par_halo_cell(nh_mod%brk)
     !$omp parallel do schedule(static) private(i, j, kk)
     do j = dcp%js, dcp%je
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         nh_mod%phi1(i,j) = nh_mod%brk(i,j)
         if (nh_mod%cmask(i,j) == 0 .or. nh_mod%brk(i,j) == 1.0) cycle
         do kk = 1, 8
@@ -800,7 +800,7 @@ subroutine breaking_switch(p, g, s, sx)
   ! 砕波セルを NH マスクから外す(ハロ行も交換済みの値で同じ判定)
   !$omp parallel do schedule(static) private(i, j)
   do j = dcp%jsh, dcp%jeh
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (nh_mod%brk(i,j) == 1.0) then
         nh_mod%cmask(i,j) = 0
         nh_mod%beta(i,j) = 0.0
@@ -811,7 +811,7 @@ subroutine breaking_switch(p, g, s, sx)
   nbrk = 0
   !$omp parallel do schedule(static) private(i, j) reduction(+:nbrk)
   do j = dcp%js, dcp%je
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (nh_mod%brk(i,j) == 1.0) nbrk = nbrk + 1
     end do
   end do
@@ -828,7 +828,7 @@ subroutine breaking_switch(p, g, s, sx)
   if (nhp%nh_break_visc > 0.0) then
     !$omp parallel do schedule(static) private(i, j, bb)
     do j = dcp%js, dcp%je
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         nhp%nh_nub(i,j) = 0.0
         if (nh_mod%brk(i,j) /= 1.0) cycle
         if (s%h(i,j) < p%dd) cycle
@@ -897,7 +897,7 @@ subroutine active_set(p, g, s, sx)
   bmax = 0.0
   !$omp parallel do schedule(static) private(i, j) reduction(max:hmax, bmax)
   do j = dcp%js, dcp%je
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (nh_mod%cmask(i,j) == 0) cycle
       hmax = max(hmax, s%h(i,j))
       if (nhp%f_nh_bottom == 1) then
@@ -917,7 +917,7 @@ subroutine active_set(p, g, s, sx)
   ! 種: 検出量 > nh_chi_on(担当帯。候補セルのみ)
   !$omp parallel do schedule(static) private(i, j, kk, bda, a2, chi)
   do j = dcp%js, dcp%je
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       nh_mod%work(i,j) = 0.0
       if (nh_mod%cmask(i,j) == 0) cycle
       if (nhp%f_nh_bottom == 1) then
@@ -950,7 +950,7 @@ subroutine active_set(p, g, s, sx)
   if (nh_mod%have_dir) then
     !$omp parallel do schedule(static) private(i, j, kk)
     do j = dcp%js, dcp%je
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (nh_mod%cmask(i,j) == 0) cycle
         if (nh_mod%work(i,j) > 0.5) cycle
         do kk = 1, 8
@@ -979,7 +979,7 @@ subroutine active_set(p, g, s, sx)
     call par_halo_cell(nh_mod%work)
     !$omp parallel do schedule(static) private(i, j, kk)
     do j = dcp%js, dcp%je
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         nh_mod%phi1(i,j) = 0.0
         if (nh_mod%cmask(i,j) == 0) cycle
         if (nh_mod%work(i,j) > 0.5) then
@@ -1009,7 +1009,7 @@ subroutine active_set(p, g, s, sx)
   ! 候補セル ∧ 活性 → NH セル(ハロ行も交換済みの値で同じ判定)
   !$omp parallel do schedule(static) private(i, j)
   do j = dcp%jsh, dcp%jeh
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (nh_mod%cmask(i,j) == 1 .and. nh_mod%work(i,j) < 0.5) then
         nh_mod%cmask(i,j) = 0
         nh_mod%beta(i,j) = 0.0
@@ -1080,7 +1080,7 @@ subroutine solve_jacobi(g, s, iters, ok)
   rhsmax = 0.0
   !$omp parallel do schedule(static) private(i, j) reduction(max:rhsmax)
   do j = dcp%js, dcp%je
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       rhsmax = max(rhsmax, abs(nh_mod%rhs(i,j)))
     end do
   end do
@@ -1097,7 +1097,7 @@ subroutine solve_jacobi(g, s, iters, ok)
     resmax = 0.0
     !$omp parallel do schedule(static) private(i, j, kk, rsum, pnew, ck, sig) reduction(max:resmax)
     do j = dcp%js, dcp%je
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (nh_mod%cmask(i,j) == 0) cycle
         rsum = 0.0
         if (nhp%f_nh_slope == 0) then
@@ -1160,7 +1160,7 @@ subroutine solve_cg(g, iters, ok, warm)
       nh_mod%phi1(:,j) = 0.0
       nh_mod%ap(:,j) = 0.0
       if (j < dcp%js .or. j > dcp%je) cycle
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (nh_mod%cmask(i,j) == 0) cycle
         lsum = 0.0
         do kk = 1, 8
@@ -1195,7 +1195,7 @@ subroutine solve_cg(g, iters, ok, warm)
     call par_halo_cell(nh_mod%phi1)
     !$omp parallel do schedule(static) private(i, j, kk, lsum)
     do j = dcp%js, dcp%je
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (nh_mod%cmask(i,j) == 0) cycle
         lsum = 0.0
         do kk = 1, 8
@@ -1212,7 +1212,7 @@ subroutine solve_cg(g, iters, ok, warm)
     alpha = rr0 / pap
     !$omp parallel do schedule(static) private(i, j)
     do j = dcp%js, dcp%je
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (nh_mod%cmask(i,j) == 0) cycle
         nh_mod%phi(i,j) = nh_mod%phi(i,j) + real(alpha) * nh_mod%phi1(i,j)
         nh_mod%rr(i,j) = nh_mod%rr(i,j) - real(alpha) * nh_mod%ap(i,j)
@@ -1226,7 +1226,7 @@ subroutine solve_cg(g, iters, ok, warm)
     rr0 = rr1
     !$omp parallel do schedule(static) private(i, j)
     do j = dcp%js, dcp%je
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (nh_mod%cmask(i,j) == 0) cycle
         nh_mod%phi1(i,j) = nh_mod%rr(i,j) + real(bet) * nh_mod%phi1(i,j)
       end do
@@ -1239,14 +1239,14 @@ subroutine solve_cg(g, iters, ok, warm)
 contains
   ! 決定的内積: 行ごとの部分和(行内は逐次)→ par_sum_rows
   function dot(a, b) result(tot)
-    real, intent(in) :: a(1:, dcp%jsh:), b(1:, dcp%jsh:)
+    real, intent(in) :: a(dcp%ish:, dcp%jsh:), b(dcp%ish:, dcp%jsh:)
     real(real64) :: tot
     real(real64) :: rowsum(dcp%js:dcp%je)
     integer :: i, j
     !$omp parallel do schedule(static) private(i, j)
     do j = dcp%js, dcp%je
       rowsum(j) = 0.0_real64
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         rowsum(j) = rowsum(j) + real(a(i,j), real64) * real(b(i,j), real64)
       end do
     end do
@@ -1275,16 +1275,16 @@ module subroutine nh_export(i1, i2, j1, j2, buf)
   integer :: i, j
   if (.not. nhp%nh_active) return
   do j = max(dcp%js, j1), min(dcp%je, j2)
-    do i = max(i1, 1), min(i2, dcp%nx_g)
+    do i = max(i1, dcp%ish), min(i2, dcp%ieh)
       buf(i, j) = nh_mod%phi(i, j)
     end do
   end do
 end subroutine
 
-module subroutine nh_import(nx, ny, jlo, jhi, nb, inband, phival, dirichlet)
-  integer, intent(in) :: nx, ny, jlo, jhi, nb
-  logical, intent(in) :: inband(1:, jlo:)
-  real, intent(in) :: phival(1:, jlo:)
+module subroutine nh_import(nx, ny, ilo, ihi, jlo, jhi, nb, inband, phival, dirichlet)
+  integer, intent(in) :: nx, ny, ilo, ihi, jlo, jhi, nb   ! ilo/ihi = 子の列の確保範囲(§80)
+  logical, intent(in) :: inband(ilo:, jlo:)
+  real, intent(in) :: phival(ilo:, jlo:)
   logical, intent(in) :: dirichlet
   integer :: i, j, w
   if (.not. nhp%nh_active) return
@@ -1294,18 +1294,18 @@ module subroutine nh_import(nx, ny, jlo, jhi, nb, inband, phival, dirichlet)
     w = nb + nh_mod%bcm
     do j = dcp%jsh, dcp%jeh
       if (j < 1 .or. j > ny) cycle
-      do i = 1, nx
+      do i = dcp%ish, dcp%ieh
         if (i <= w .or. i > nx - w .or. j <= w .or. j > ny - w) nh_mod%fmask(i, j) = 1
       end do
     end do
     return
   end if
   if (.not. allocated(nh_mod%dmask)) then
-    allocate(nh_mod%dmask(1:nx, dcp%jsh:dcp%jeh), source = 0)
-    allocate(nh_mod%dval(1:nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(nh_mod%dmask(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0)
+    allocate(nh_mod%dval(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   end if
   do j = max(jlo, dcp%jsh), min(jhi, dcp%jeh)
-    do i = 1, nx
+    do i = max(ilo, dcp%ish), min(ihi, dcp%ieh)
       if (inband(i, j)) then
         nh_mod%dmask(i, j) = 1
         nh_mod%dval(i, j) = phival(i, j)

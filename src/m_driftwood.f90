@@ -219,7 +219,7 @@ subroutine m_driftwood_init(dw, p, g, b, s)
     call par_stop("list_driftwood: specify the standing stock by either dw_stock0 " &
                   //"(uniform) or fn_dwstock (map), not both")
   end if
-  allocate(dw%wst(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(dw%wst(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (len_trim(list%fn_dwstock) > 0) then
     call read_stock_scatter(p, g, list%fn_dwstock, dw%wst)
   else
@@ -260,14 +260,14 @@ subroutine m_driftwood_init(dw, p, g, b, s)
   end block
 
   ! --- 状態の確保 ---
-  allocate(s%hd(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(s%wd(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%hd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%wd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (p%f_out_wd > 0) then
-    allocate(s%wdmax(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%wdmax(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   end if
   ! 侵食連行の基準地形(init 時 z の写し。海セルの潮位追随 z は
   ! 対象外セルのため影響しない)
-  allocate(dw%zref(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(dw%zref(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   do j = dcp%jsh, dcp%jeh
     dw%zref(:,j) = s%z(:,j)
   end do
@@ -347,7 +347,7 @@ subroutine read_stock_scatter(p, g, fn, a)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: fn
-  real, intent(inout) :: a(1:, dcp%jsh:)
+  real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
   real, allocatable :: wk(:,:)
   real :: dum(1,1)
   character(:), allocatable :: fname

@@ -53,7 +53,7 @@ subroutine m_rerecord_all(fn_sysparam, fn_qqdir, fn_qq)
   ! 帯分割情報を初期化する(m_main と同じ順序。逐次でも m_record の
   ! 点集約バッファの所有判定が dcp%js..je を参照するため必須 —
   ! 未初期化だと全セルが「所有外」になり計測値がすべて 0 になる実バグ)
-  call par_decomp_init(g%nx, g%ny, g%wy(1), g%wy(2))
+  call par_decomp_init(g%nx, g%ny, g%wy(1), g%wy(2), g%wxg(1), g%wxg(2))
 
   ! 最小限の状態変数を設定
   ! 注意: m_record_probe の点集約バッファが読む成分はすべて確保すること

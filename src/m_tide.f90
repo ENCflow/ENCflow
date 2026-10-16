@@ -183,7 +183,7 @@ contains
     if (len_trim(list%fn_timap) == 0) then
       call par_stop("list_tide: titype=3 requires fn_timap")
     end if
-    allocate(ti%timap(1:g%nx, dcp%jsh:dcp%jeh))
+    allocate(ti%timap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh))
     call read_map_band(p, g, trim(list%fn_timap), ti%timap)
   end subroutine
 
@@ -224,8 +224,8 @@ contains
     end do
     close(un)
     ti%nmap = n
-    allocate(ti%timap0(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-    allocate(ti%timap1(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(ti%timap0(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(ti%timap1(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   end subroutine
 
 end subroutine
@@ -373,14 +373,14 @@ subroutine read_map_band(p, g, fname, band)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: fname
-  real, intent(inout) :: band(1:, dcp%jsh:)
+  real, intent(inout) :: band(dcp%ish:, dcp%jsh:)
   real, allocatable :: wk(:,:)
   character(:), allocatable :: path
   path = trim(p%dir_data)//"/"//trim(fname)
   call par_info(" reading tide map "//path)
   allocate(wk(1:g%nx, 1:g%ny))
   call fileio_read_matrix(path, g%nx, g%ny, wk, p%f_input_mode)
-  band(:,:) = wk(1:g%nx, dcp%jsh:dcp%jeh)
+  band(:,:) = wk(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
 end subroutine
 
 

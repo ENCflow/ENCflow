@@ -258,7 +258,7 @@ subroutine m_precip_makepre(pr, p, g, s, mt, updated)
           real, allocatable :: wk(:,:)
           allocate(wk(1:g%nx, 1:g%ny))
           call fileio_un_read_matrix(un, g%nx, g%ny, wk, p%f_input_mode)
-          s%prh(:,:) = wk(1:g%nx, dcp%jsh:dcp%jeh)
+          s%prh(:,:) = wk(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
         end block
       else
         s%prh(:,:) = 0.0                         ! (mm/h)

@@ -268,7 +268,7 @@ subroutine setup_tmaplist(mt, p, g, list)
   close(un)
   mt%nmap = n
 
-  allocate(mt%tmap(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(mt%tmap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
 end subroutine
 
 

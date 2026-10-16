@@ -72,6 +72,7 @@ module m_geoinfo
     integer, allocatable :: wx(:,:)                   ! 行ごとの計算対象範囲
     integer :: n_valcells = 0                         ! 計算対象セル数(海域除く)
     integer :: wy(1:2)                                ! 行の計算対象範囲
+    integer :: wxg(1:2)                               ! 列の全域窓(窓の行の wx の最小・最大。確保範囲 ish/ieh の元)
     logical :: initialized = .false.
   end type
 
@@ -224,29 +225,31 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 静的配列の帯縮小(第2次元を jlo:jhi に切り詰める)
-!   確保範囲が全域(窓 = 全行)のときは自然に何もしない。
-!   x 方向(第1次元)は lbound/ubound を保つので、通常境界 (1:nx) にも
-!   番兵付き境界 (0:nx+1) にもそのまま使える
+! 静的配列の帯縮小(確保範囲を ilo:ihi, jlo:jhi に切り詰める)
+!   確保範囲が全域(窓 = 全域)のときは自然に何もしない。
+!   添字は全域のまま(下限を変えるだけ)。通常境界 (1:nx) の配列にも
+!   番兵付き境界 (0:nx+1) の配列にも、呼び出し側が範囲を与えて使う(§80)
 !----------------------------------------------------------------------
-subroutine shrink_band_r(a, jlo, jhi)
+subroutine shrink_band_r(a, ilo, ihi, jlo, jhi)
   real, allocatable, intent(inout) :: a(:,:)
-  integer, intent(in) :: jlo, jhi
+  integer, intent(in) :: ilo, ihi, jlo, jhi
   real, allocatable :: t(:,:)
-  if (lbound(a,2) == jlo .and. ubound(a,2) == jhi) return
-  allocate(t(lbound(a,1):ubound(a,1), jlo:jhi))
-  t(:,:) = a(:, jlo:jhi)
+  if (lbound(a,1) == ilo .and. ubound(a,1) == ihi .and. &
+      lbound(a,2) == jlo .and. ubound(a,2) == jhi) return
+  allocate(t(ilo:ihi, jlo:jhi))
+  t(:,:) = a(ilo:ihi, jlo:jhi)
   call move_alloc(t, a)
 end subroutine
 
 
-subroutine shrink_band_i(a, jlo, jhi)
+subroutine shrink_band_i(a, ilo, ihi, jlo, jhi)
   integer, allocatable, intent(inout) :: a(:,:)
-  integer, intent(in) :: jlo, jhi
+  integer, intent(in) :: ilo, ihi, jlo, jhi
   integer, allocatable :: t(:,:)
-  if (lbound(a,2) == jlo .and. ubound(a,2) == jhi) return
-  allocate(t(lbound(a,1):ubound(a,1), jlo:jhi))
-  t(:,:) = a(:, jlo:jhi)
+  if (lbound(a,1) == ilo .and. ubound(a,1) == ihi .and. &
+      lbound(a,2) == jlo .and. ubound(a,2) == jhi) return
+  allocate(t(ilo:ihi, jlo:jhi))
+  t(:,:) = a(ilo:ihi, jlo:jhi)
   call move_alloc(t, a)
 end subroutine
 
@@ -303,7 +306,7 @@ subroutine m_geoinfo_require_sd(g, sd_default)
     call par_stop("list_geoinfo: soil depth is required by gwflow/geomorph " // &
                   "(set sd0 > 0 or f_sdtype=1/fn_sd)")
   end if
-  allocate(g%sd(1:dcp%nx_g, dcp%jsh:dcp%jeh), source = g%sd0)
+  allocate(g%sd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = g%sd0)
 end subroutine
 
 
@@ -319,9 +322,10 @@ subroutine scatter_band_r(a)
   real, allocatable :: t(:,:)
   real :: dum(1,1)
   if (nproc == 1) then
-    if (lbound(a,2) == dcp%jsh .and. ubound(a,2) == dcp%jeh) return
+    if (lbound(a,1) == dcp%ish .and. ubound(a,1) == dcp%ieh .and. &
+        lbound(a,2) == dcp%jsh .and. ubound(a,2) == dcp%jeh) return
   end if
-  allocate(t(1:dcp%nx_g, dcp%jsh:dcp%jeh))
+  allocate(t(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh))
   if (is_root) then
     call par_scatter_cell(a, t)
   else
@@ -348,13 +352,15 @@ subroutine m_geoinfo_band_shrink(g)
   type(t_geoinfo), intent(inout) :: g
   if (allocated(g%gv)) deallocate(g%gv)
   if (allocated(g%lm)) deallocate(g%lm)
-  call shrink_band_i(g%x,  dcp%jsh - 1, dcp%jeh + 1)
+  ! 列も同じ規則(番兵つきは ish−1..ieh+1、通常は ish..ieh。§80)
+  call shrink_band_i(g%x,  dcp%ish - 1, dcp%ieh + 1, dcp%jsh - 1, dcp%jeh + 1)
   ! sw は x と同様に 1 行広く(帯+ハロ 2+1。領域内に収める)持つ: 運動量保存形
   ! 移流の far_ok が行 j − 3 = jsh − 1 の海マスクを見る(§68.35)
-  call shrink_band_i(g%sw, max(1, dcp%jsh - 1), min(g%ny, dcp%jeh + 1))
-  if (g%swall_active) call shrink_band_i(g%ssw, dcp%jsh, dcp%jeh)
-  call shrink_band_i(g%rw, dcp%jsh, dcp%jeh)
-  if (.not. is_root) call shrink_band_r(g%z, dcp%jsh, dcp%jeh)
+  call shrink_band_i(g%sw, max(1, dcp%ish - 1), min(g%nx, dcp%ieh + 1), &
+                     max(1, dcp%jsh - 1), min(g%ny, dcp%jeh + 1))
+  if (g%swall_active) call shrink_band_i(g%ssw, dcp%ish, dcp%ieh, dcp%jsh, dcp%jeh)
+  call shrink_band_i(g%rw, dcp%ish, dcp%ieh, dcp%jsh, dcp%jeh)
+  if (.not. is_root) call shrink_band_r(g%z, dcp%ish, dcp%ieh, dcp%jsh, dcp%jeh)
 end subroutine
 
 
@@ -1379,10 +1385,14 @@ subroutine calc_wxy(p, g)
   ! 有効セルが 1 つもなければ wy(1) > wy(2)(空窓。n_valcells 検査で停止)
   g%wy(1) = g%ny + 1
   g%wy(2) = 0
+  g%wxg(1) = g%nx + 1
+  g%wxg(2) = 0
   do j = 1, g%ny
     if (g%wx(1,j) <= g%wx(2,j)) then
       g%wy(1) = min(g%wy(1), j)
       g%wy(2) = max(g%wy(2), j)
+      g%wxg(1) = min(g%wxg(1), g%wx(1,j))
+      g%wxg(2) = max(g%wxg(2), g%wx(2,j))
     end if
   end do
 

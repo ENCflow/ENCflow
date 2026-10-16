@@ -278,27 +278,27 @@ subroutine gwflow_conduit_init(gwc, lat, gl2, p, g, s, dts)
   gwc%cl%eps_h = gwc_eps_h
 
   ! --- 静的場: 貯留容量 cap と水頭底 zbot(帯+ハロ) ---
-  allocate(gwc%cl%cap(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(gwc%cl%cap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (len_trim(fn_gwc_cap) > 0) then
     call read_map_scatter(p, g, fn_gwc_cap, gwc%cl%cap, "gwc_cap")
   else
     ! ゾーン2 = x/sw は全域が使える(帯行 jsh:jeh は全域の有効行)
     do j = dcp%jsh, dcp%jeh
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (g%x(i,j) <= 0) cycle
         if (g%sw(i,j) > 0) cycle
         gwc%cl%cap(i,j) = gwc_cap
       end do
     end do
   end if
-  allocate(gwc%cl%zbot(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(gwc%cl%zbot(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (len_trim(fn_gwc_bot) > 0) then
     ! 標高マップは負値可(海抜下の管底。一様埋設深 z-depth も負になり得る
     ! のと整合。§46.5 (7))
     call read_map_scatter(p, g, fn_gwc_bot, gwc%cl%zbot, "gwc_bot", signed=.true.)
   else
     ! 初期地形 z − 一様埋設深(静的。geomorph の z 変化には追随しない)
-    gwc%cl%zbot(:,:) = g%z(1:g%nx, dcp%jsh:dcp%jeh) - gwc_depth
+    gwc%cl%zbot(:,:) = g%z(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh) - gwc_depth
   end if
 
   ! --- 貯留係数(セル別。§46.5 (5)。一様指定はスカラー値充填 =
@@ -306,11 +306,11 @@ subroutine gwflow_conduit_init(gwc, lat, gl2, p, g, s, dts)
   !     セル別検証: 管路セル(cap>0)は sy ∈ (0,1] かつ slot ∈ (0, sy]。
   !     非管路セルの値は使われない(逆数は値 > 0 のセルのみ計算し、
   !     0 のセルは 0 のまま = 参照されない)---
-  allocate(gwc%cl%syinvc(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(gwc%cl%syinv_slot(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(gwc%cl%syinvc(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(gwc%cl%syinv_slot(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (len_trim(fn_gwc_sy) > 0 .or. len_trim(fn_gwc_slot_sy) > 0) then
-    allocate(wksy(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-    allocate(wkslot(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(wksy(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(wkslot(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     if (len_trim(fn_gwc_sy) > 0) then
       call read_map_scatter(p, g, fn_gwc_sy, wksy, "gwc_sy")
     else
@@ -326,7 +326,7 @@ subroutine gwflow_conduit_init(gwc, lat, gl2, p, g, s, dts)
       wkslot(:,:) = gwc_slot_sy
     end if
     do j = dcp%js, dcp%je
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (g%x(i,j) <= 0) cycle
         if (g%sw(i,j) > 0) cycle
         if (gwc%cl%cap(i,j) <= 0.0) cycle
@@ -344,7 +344,7 @@ subroutine gwflow_conduit_init(gwc, lat, gl2, p, g, s, dts)
     end do
     ! 逆数化は帯+ハロ全行(conduit_core が隣接セルの水頭を計算するため)
     do j = dcp%jsh, dcp%jeh
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (wksy(i,j) > 0.0) gwc%cl%syinvc(i,j) = 1.0 / wksy(i,j)
         if (wkslot(i,j) > 0.0) gwc%cl%syinv_slot(i,j) = 1.0 / wkslot(i,j)
       end do
@@ -356,10 +356,10 @@ subroutine gwflow_conduit_init(gwc, lat, gl2, p, g, s, dts)
   end if
 
   ! --- 状態の確保と初期値(海セル・無効セル・管路なしセルには置かない) ---
-  allocate(s%hgc(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%hgc(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (gwc_sat0 > 0.0) then
     do j = dcp%jsh, dcp%jeh
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (g%x(i,j) <= 0) cycle
         if (g%sw(i,j) > 0) cycle
         s%hgc(i,j) = gwc_sat0 * gwc%cl%cap(i,j)
@@ -369,7 +369,7 @@ subroutine gwflow_conduit_init(gwc, lat, gl2, p, g, s, dts)
 
   ! --- 地表交換の密度場 ---
   if (gwc%surf) then
-    allocate(gwc%dinlet(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(gwc%dinlet(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     if (len_trim(fn_gwc_inlet) > 0) then
       call read_map_scatter(p, g, fn_gwc_inlet, gwc%dinlet, "gwc_inlet")
     else
@@ -383,7 +383,7 @@ subroutine gwflow_conduit_init(gwc, lat, gl2, p, g, s, dts)
   !      init はゾーン2で g%sw の帯+ハロ行が有効)
   gwc%outf = (len_trim(fn_gwc_outfall) > 0)
   if (gwc%outf) then
-    allocate(gwc%caout(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(gwc%caout(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     call read_map_scatter(p, g, fn_gwc_outfall, gwc%caout, "gwc_outfall")
     call outfall_check(gwc, g)
     allocate(gwc%vout_row(dcp%js:dcp%je), source = 0.0_real64)
@@ -392,7 +392,7 @@ subroutine gwflow_conduit_init(gwc, lat, gl2, p, g, s, dts)
   ! --- 層間交換能(セル別。一様指定はスカラー値充填 = スカラーと
   !     ビット一致。マップの 0 セルは交換なし = ライニング。§46.5 (2)) ---
   if (gwc%leak_layer > 0) then
-    allocate(gwc%kleakc(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(gwc%kleakc(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     if (len_trim(fn_gwc_leak) > 0) then
       call read_map_scatter(p, g, fn_gwc_leak, gwc%kleakc, "gwc_leak")
       gwc%kleakc(:,:) = gwc%kleakc(:,:) / 1000.0 / 3600.0   ! mm/h -> m/s
@@ -404,7 +404,7 @@ subroutine gwflow_conduit_init(gwc, lat, gl2, p, g, s, dts)
   ! --- 側方通水: 幾何(層1/2 と共有・冪等)→ エッジ係数 → 安定条件 ---
   if (gwc%lat) then
     call gwflow_lateral_geom_init(lat, g, gwc_diagratio, 1.0e-3)
-    allocate(dens(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(dens(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     if (len_trim(fn_gwc_cnd) > 0) then
       call read_map_scatter(p, g, fn_gwc_cnd, dens, "gwc_cnd")
     else
@@ -442,7 +442,7 @@ subroutine read_map_scatter(p, g, fn, a, label, signed)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: fn
-  real, intent(inout) :: a(1:, dcp%jsh:)
+  real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
   character(len=*), intent(in) :: label
   logical, intent(in), optional :: signed
   real, allocatable :: wk(:,:)
@@ -465,7 +465,7 @@ subroutine read_map_scatter(p, g, fn, a, label, signed)
   end if
   if (.not. nonneg) return
   do j = dcp%js, dcp%je
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (g%x(i,j) <= 0) cycle
       if (a(i,j) < 0.0) then
         write(msg,'(a,2i7,es12.4)') "gwflow_conduit: negative " // label // " at", &
@@ -779,7 +779,7 @@ subroutine outfall_check(gwc, g)
   character(len=256) :: msg
 
   do j = dcp%js, dcp%je
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (gwc%caout(i,j) <= 0.0) cycle

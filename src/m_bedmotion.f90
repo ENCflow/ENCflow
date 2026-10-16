@@ -157,9 +157,9 @@ subroutine m_bedmotion_init(bm, p, g, s)
   bm%nsnap = n
 
   ! --- 帯形状の確保と、現在時刻を挟むスナップショットの読み込み ---
-  allocate(bm%da(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(bm%db(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(bm%dprev(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(bm%da(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(bm%db(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(bm%dprev(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   tcur = p%t0 + p%dt * s%it0                ! restore 時は復元時刻(init 時点で有効なのは it0。
                                             !   s%it は時間ループが設定する)
   bm%ia = 1
@@ -217,7 +217,7 @@ subroutine load_snapshot(bm, p, g, k, d)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   integer, intent(in) :: k
-  real, intent(out) :: d(1:, dcp%jsh:)
+  real, intent(out) :: d(dcp%ish:, dcp%jsh:)
   real, allocatable :: wk(:,:)
   integer :: j, i1, j1, ni, nj
   if (bm%win(1,k) == 0) then
@@ -246,7 +246,7 @@ end subroutine
 subroutine interp(bm, t, d)
   type(t_bedmotion), intent(in) :: bm
   real, intent(in) :: t
-  real, intent(out) :: d(1:, dcp%jsh:)
+  real, intent(out) :: d(dcp%ish:, dcp%jsh:)
   real :: w
   integer :: j
   if (bm%ia >= bm%nsnap .or. t <= bm%tsnap(bm%ia) .or. bm%f_interp == 0) then
@@ -296,7 +296,7 @@ subroutine m_bedmotion_calc(bm, p, g, s, it)
   end do
   last = (bm%ia == bm%nsnap)              ! 末尾の値(範囲外は端の値を保持)
 
-  allocate(d(1:g%nx, dcp%jsh:dcp%jeh))
+  allocate(d(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh))
   call interp(bm, t, d)
 
   ! 適用は窓の和集合(全域なら帯全体)に限定する

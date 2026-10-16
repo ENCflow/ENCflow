@@ -115,7 +115,7 @@ subroutine read_alpha_map(icf, p, g, fn)
     call par_stop("list_intercept_fixed: fn_icalpha not found: " // fname)
   end if
 
-  allocate(icf%passmap(1:g%nx, dcp%jsh:dcp%jeh))
+  allocate(icf%passmap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh))
   if (is_root) then
     allocate(amap(1:g%nx, 1:g%ny))
     call par_info(" reading " // fname)

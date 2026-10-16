@@ -116,11 +116,11 @@ subroutine gwflow_layer2_init(gl2, lat, p, g, s, dts)
   gl2%lat = (gw2_ksh_mmh > 0.0)
 
   ! --- 状態の確保と初期値(海セル・無効セルには置かない) ---
-  allocate(s%hg2(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%hg2(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (gw2_sat0 > 0.0) then
     ! ゾーン2 = x/sw は全域が使える(帯行 jsh:jeh は全域の有効行)
     do j = dcp%jsh, dcp%jeh
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (g%x(i,j) <= 0) cycle
         if (g%sw(i,j) > 0) cycle
         s%hg2(i,j) = gw2_sat0 * gl2%cap

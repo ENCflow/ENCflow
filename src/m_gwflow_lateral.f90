@@ -223,7 +223,7 @@ subroutine gwflow_lateral_geom_init(glt, g, diagratio, eps)
   ! エッジ流量4成分(一時作業領域)。j 範囲はセル j を挟むエッジが
   ! j-1 と j にあるため下限 jsh-1(m_swflow_enc の uv/mn と同形)。
   ! 確保時 0: マスク起因で書かれないエッジは恒久 0(無フラックス)
-  allocate(glt%q(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(glt%q(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   glt%geom_ready = .true.
 end subroutine
 
@@ -346,7 +346,7 @@ subroutine gwflow_lateral_init(glt, lay1, p, g, s, dts)
   ! 水質の同伴輸送(§30 W3): s%cg があるときだけ質量エッジ配列を確保する
   ! (m_wq_init は本 init より先に走る。未確保なら経路は完全に従来どおり)
   if (allocated(s%cg) .and. .not. allocated(glt%qm)) then
-    allocate(glt%qm(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+    allocate(glt%qm(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   end if
 
   ! 層1の安定条件(層厚上界 = max(sd) の allreduce = 決定的)
@@ -406,10 +406,10 @@ subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
   type(t_gwlat), intent(inout) :: glt
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  real, intent(inout) :: hg(1:, dcp%jsh:)
+  real, intent(inout) :: hg(dcp%ish:, dcp%jsh:)
   type(t_latlayer), intent(in) :: lay
   real, intent(in) :: dts
-  real, intent(inout), optional :: cg(1:, dcp%jsh:)  ! 同伴輸送するスカラー柱状量
+  real, intent(inout), optional :: cg(dcp%ish:, dcp%jsh:)  ! 同伴輸送するスカラー柱状量
                                                      !   (地下質量プール s%cg。§30 W3。
                                                      !   ハロ交換は呼び手の責務)
   real, intent(in), optional :: rginv                ! 移流分担率 1/R(省略時 1.0)
@@ -587,7 +587,7 @@ end function
 subroutine conduit_core(glt, g, hgc, cl, dts)
   type(t_gwlat), intent(inout) :: glt
   type(t_geoinfo), intent(in) :: g
-  real, intent(inout) :: hgc(1:, dcp%jsh:)
+  real, intent(inout) :: hgc(dcp%ish:, dcp%jsh:)
   type(t_conduitlayer), intent(in) :: cl
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt
@@ -702,14 +702,14 @@ end subroutine
 subroutine conduit_build_cnd(glt, g, dens, cl)
   type(t_gwlat), intent(in) :: glt
   type(t_geoinfo), intent(in) :: g
-  real, intent(in) :: dens(1:, dcp%jsh:)
+  real, intent(in) :: dens(dcp%ish:, dcp%jsh:)
   type(t_conduitlayer), intent(inout) :: cl
   integer :: i, j, k, in, jn, jt
   real :: cv
 
   if (.not. glt%geom_ready) call par_stop("conduit_build_cnd: geometry is not initialized")
   if (.not. allocated(cl%cnd)) then
-    allocate(cl%cnd(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+    allocate(cl%cnd(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   end if
   jt = min(dcp%je + 1, dcp%jeh)
   do j = dcp%js, jt

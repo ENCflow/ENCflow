@@ -59,6 +59,9 @@ module m_parallel
       integer :: je = 0          ! 自ランク計算範囲の終了 j
       integer :: jsh = 1         ! 配列確保範囲の開始 j(担当帯±ハロ。全域端でクリップ)
       integer :: jeh = 0         ! 配列確保範囲の終了 j
+      integer :: ish = 1         ! 配列確保範囲の開始 i(全域の列窓±ハロ。全域端でクリップ。
+                                 !   x は分割しないので全ランク同一。developer.md §80)
+      integer :: ieh = 0         ! 配列確保範囲の終了 i
       integer :: rank_n = -1     ! j+側の隣接ランク(なければ負)
       integer :: rank_s = -1     ! j-側の隣接ランク(なければ負)
       integer :: nhalo = 2       ! ハロ幅(セル行。移流項のステンシル幅2による)
@@ -81,7 +84,7 @@ contains
       ! 何もしない
    end subroutine par_init
 
-   subroutine par_decomp_init(nx, ny, jw1, jw2, rowwork, align)
+   subroutine par_decomp_init(nx, ny, jw1, jw2, iw1, iw2, rowwork, align)
       ! 領域分割の決定。格子サイズと有効窓の確定後
       ! (m_geoinfo_init の直後)に呼ぶこと。
       ! 逐次では計算範囲=全域窓、確保範囲=全域窓±ハロ(全域端でクリップ。
@@ -91,6 +94,7 @@ contains
       ! MPI 版とのインターフェース一致のために受け取るが使用しない。
       integer, intent(in) :: nx, ny
       integer, intent(in) :: jw1, jw2   ! 全域の有効窓(= g%wy(1:2))
+      integer, intent(in) :: iw1, iw2   ! 全域の列窓(= g%wxg(1:2)。窓の行の wx の最小・最大)
       integer, intent(in), optional :: rowwork(:)
       integer, intent(in), optional :: align        ! 帯境界の整列(MPI 版と I/F 一致。逐次では無用)
       if (present(rowwork)) continue    ! 未使用引数警告の抑制
@@ -103,6 +107,8 @@ contains
       dcp%je  = jw2
       dcp%jsh = max(1, jw1 - dcp%nhalo)
       dcp%jeh = min(ny, jw2 + dcp%nhalo)
+      dcp%ish = max(1, iw1 - dcp%nhalo)
+      dcp%ieh = min(nx, iw2 + dcp%nhalo)
       dcp%rank_n = -1
       dcp%rank_s = -1
    end subroutine par_decomp_init
@@ -134,13 +140,13 @@ contains
 
    subroutine par_halo_cell(a)
       ! セル配列の行ハロ交換。逐次では何もしない。
-      real, intent(inout) :: a(1:, dcp%jsh:)
+      real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
       if (size(a) > 0) continue
    end subroutine par_halo_cell
 
    subroutine par_halo_edge(a, width)
       ! エッジ配列の行ハロ交換(幅 width。既定 1)。逐次では何もしない。
-      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      real, intent(inout) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
       integer, intent(in), optional :: width
       if (size(a) > 0) continue
       if (present(width)) continue
@@ -148,7 +154,7 @@ contains
 
    subroutine par_edge_merge(a, take_s, take_n)
       ! 界面エッジ行の成分補完。逐次では何もしない。
-      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
+      real, intent(inout) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
       logical, intent(in) :: take_s(:)
       logical, intent(in) :: take_n(:)
       if (size(a) > 0 .and. size(take_s) > 0 .and. size(take_n) > 0) continue
@@ -192,45 +198,45 @@ contains
       ! 全域バッファへの集約。逐次では帯(=全域窓)の行を複写する
       ! (窓外の行はバッファの確保時の値のまま。MPI 版と同じ)。
       real, intent(inout) :: buf(1:, 1:)
-      real, intent(in) :: a(1:, dcp%jsh:)
-      buf(:, dcp%js:dcp%je) = a(:, dcp%js:dcp%je)
+      real, intent(in) :: a(dcp%ish:, dcp%jsh:)
+      buf(dcp%ish:dcp%ieh, dcp%js:dcp%je) = a(:, dcp%js:dcp%je)
    end subroutine par_gather_to
 
    subroutine par_gather_to_i(buf, a)
       ! 全域バッファへの集約(整数版)
       integer, intent(inout) :: buf(1:, 1:)
-      integer, intent(in) :: a(1:, dcp%jsh:)
-      buf(:, dcp%js:dcp%je) = a(:, dcp%js:dcp%je)
+      integer, intent(in) :: a(dcp%ish:, dcp%jsh:)
+      buf(dcp%ish:dcp%ieh, dcp%js:dcp%je) = a(:, dcp%js:dcp%je)
    end subroutine par_gather_to_i
 
    subroutine par_gather_edge_to(buf, a)
       ! エッジ配列の全域バッファへの集約(js-1 行を含めて複写)
       real, intent(inout) :: buf(1:, 0:, 0:)
-      real, intent(in) :: a(1:, 0:, dcp%jsh-1:)
-      buf(:, :, dcp%js-1:dcp%je) = a(:, :, dcp%js-1:dcp%je)
+      real, intent(in) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
+      buf(:, dcp%ish-1:dcp%ieh, dcp%js-1:dcp%je) = a(:, :, dcp%js-1:dcp%je)
    end subroutine par_gather_edge_to
 
    subroutine par_scatter_cell(buf, a)
       ! rank0 全域バッファからの帯配布(gather の逆向き)。
       ! 逐次では確保範囲(=全域窓±ハロ)を複写する。
       real, intent(in) :: buf(1:, 1:)
-      real, intent(inout) :: a(1:, dcp%jsh:)
-      a(:, dcp%jsh:dcp%jeh) = buf(:, dcp%jsh:dcp%jeh)
+      real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
+      a(:, dcp%jsh:dcp%jeh) = buf(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
    end subroutine par_scatter_cell
 
    subroutine par_scatter_cell_i(buf, a)
       ! par_scatter_cell の整数版
       integer, intent(in) :: buf(1:, 1:)
-      integer, intent(inout) :: a(1:, dcp%jsh:)
-      a(:, dcp%jsh:dcp%jeh) = buf(:, dcp%jsh:dcp%jeh)
+      integer, intent(inout) :: a(dcp%ish:, dcp%jsh:)
+      a(:, dcp%jsh:dcp%jeh) = buf(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
    end subroutine par_scatter_cell_i
 
    subroutine par_scatter_edge(buf, a)
       ! rank0 全域エッジバッファからの帯配布(par_gather_edge_to の
       ! 逆向き)。逐次では確保範囲(=全域窓±ハロ)を複写する。
       real, intent(in) :: buf(1:, 0:, 0:)
-      real, intent(inout) :: a(1:, 0:, dcp%jsh-1:)
-      a(:, :, dcp%jsh-1:dcp%jeh) = buf(:, :, dcp%jsh-1:dcp%jeh)
+      real, intent(inout) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
+      a(:, :, dcp%jsh-1:dcp%jeh) = buf(:, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh)
    end subroutine par_scatter_edge
 
    subroutine par_reduce_points(vals)

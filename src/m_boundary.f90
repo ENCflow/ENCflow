@@ -460,22 +460,26 @@ subroutine m_boundary_set_etaref(b, p, g, s)
       ! 境界セルの初期水位から導出
       select case (sd)
         case (e_side_w)
-          do j = dcp%jsh, dcp%jeh
-            b%edge%eta_cell(j,sd) = s%e(1,j)
-          end do
+          if (dcp%ish <= 1) then                        ! 列 1 が確保範囲にあるときだけ(§80)
+            do j = dcp%jsh, dcp%jeh
+              b%edge%eta_cell(j,sd) = s%e(1,j)
+            end do
+          end if
         case (e_side_e)
-          do j = dcp%jsh, dcp%jeh
-            b%edge%eta_cell(j,sd) = s%e(g%nx,j)
-          end do
+          if (dcp%ieh >= g%nx) then
+            do j = dcp%jsh, dcp%jeh
+              b%edge%eta_cell(j,sd) = s%e(g%nx,j)
+            end do
+          end if
         case (e_side_n)
           if (dcp%jsh <= 1 .and. 1 <= dcp%jeh) then
-            do i = 1, g%nx
+            do i = dcp%ish, dcp%ieh
               b%edge%eta_cell(i,sd) = s%e(i,1)
             end do
           end if
         case (e_side_s)
           if (dcp%jsh <= g%ny .and. g%ny <= dcp%jeh) then
-            do i = 1, g%nx
+            do i = dcp%ish, dcp%ieh
               b%edge%eta_cell(i,sd) = s%e(i,g%ny)
             end do
           end if
@@ -1074,7 +1078,7 @@ subroutine init_inflow(b, p, g, list)
   !    確保。値は makebdc が毎ステップ書く。未確保 = 全区間清水) ---
   do ifl = 1, b%ninflow
     if (b%inflow(ifl)%nsval > 0 .or. b%inflow(ifl)%nqsval > 0) then
-      allocate(b%csin(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(b%csin(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
       exit
     end if
   end do

@@ -126,16 +126,16 @@ subroutine m_swi_init(si, p, g, s)
   if (any(list%swi0 < 0.0)) call par_stop("list_swi: swi0 must be >= 0")
 
   ! --- 状態の確保と初期値(海セル・無効セルには置かない) ---
-  allocate(si%s1(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(si%s2(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(si%s3(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(s%swi(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(s%swimax(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(s%swimaxt(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(si%s1(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(si%s2(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(si%s3(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%swi(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%swimax(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%swimaxt(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (any(list%swi0 > 0.0)) then
     ! ゾーン2 = x/sw は全域が使える(帯行 jsh:jeh は全域の有効行)
     do j = dcp%jsh, dcp%jeh
-      do i = 1, g%nx
+      do i = dcp%ish, dcp%ieh
         if (g%x(i,j) <= 0) cycle
         if (g%sw(i,j) > 0) cycle
         si%s1(i,j) = list%swi0(1)
@@ -269,7 +269,7 @@ subroutine restore_state(p, g, si, s)
   end if
   ! 復元直後の表示・出力のために SWI を再構成(タンクの純関数)
   do j = dcp%jsh, dcp%jeh
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       s%swi(i,j) = si%s1(i,j) + si%s2(i,j) + si%s3(i,j)
     end do
   end do

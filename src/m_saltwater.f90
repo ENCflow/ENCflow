@@ -203,15 +203,15 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   ! --- 幾何(gwflow の側方系と共有・冪等)とエッジ作業領域 ---
   call gwflow_lateral_geom_init(lat, g, salt_diagratio, 1.0e-3)
   call gwflow_lateral_geom_get(lat, sl%sw%rdr, sl%sw%wl, sl%sw%ainv)
-  allocate(sl%sw%qs(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
-  if (sl%sw%gw) allocate(sl%sw%qb(1:4, 0:g%nx, dcp%jsh-1:dcp%jeh), source = 0.0)
+  allocate(sl%sw%qs(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
+  if (sl%sw%gw) allocate(sl%sw%qb(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
 
   ! --- 状態の確保と初期値(海セル・無効セルには置かない) ---
   ! hss0 は既存 h のうち塩水と見なす厚(min クランプ)、hgs0 は塩水の
   ! 追加投入(hgs と hg の両方に加算 = 塩水も水)。ゾーン2 = x/sw は
   ! 全域が使える(帯行 jsh:jeh は全域の有効行)
-  allocate(s%hss(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
-  allocate(s%hgs(1:g%nx, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%hss(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%hgs(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (len_trim(fn_salt_hss0) > 0) then
     call read_map_scatter(p, g, fn_salt_hss0, s%hss, "salt_hss0")
   else if (salt_hss0 > 0.0) then
@@ -223,7 +223,7 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
     s%hgs(:,:) = salt_hgs0
   end if
   do j = dcp%jsh, dcp%jeh
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (g%x(i,j) <= 0) then
         s%hss(i,j) = 0.0
         s%hgs(i,j) = 0.0
@@ -290,7 +290,7 @@ subroutine read_map_scatter(p, g, fn, a, label)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: fn
-  real, intent(inout) :: a(1:, dcp%jsh:)
+  real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
   character(len=*), intent(in) :: label
   real, allocatable :: wk(:,:)
   real :: dum(1,1)
@@ -308,7 +308,7 @@ subroutine read_map_scatter(p, g, fn, a, label)
     call par_scatter_cell(dum, a)
   end if
   do j = dcp%js, dcp%je
-    do i = 1, g%nx
+    do i = dcp%ish, dcp%ieh
       if (g%x(i,j) <= 0) cycle
       if (a(i,j) < 0.0) then
         write(msg,'(a,2i7,es12.4)') "saltwater: negative " // label // " at", &
