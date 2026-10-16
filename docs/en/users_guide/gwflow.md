@@ -38,7 +38,6 @@ pipe diameter. Surface exchange requires positive inlet density, and surcharge
 requires both hgc > cap and conduit head above surface head. Outfalls discharge
 only when conduit head exceeds receiving head: to the sea (outside the system)
 if a sea neighbour exists, or otherwise to the conduit cell's own surface water.
-Run `python docs/figs/make_guide_figs.py gwflow` to generate the Japanese and English PNG/SVG figures.
 
 The storage variables hg, hg2 and hgc represent **water volume divided by
 cell area** (equivalent water depth). The blue groundwater bands depict **saturated

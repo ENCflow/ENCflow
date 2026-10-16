@@ -32,6 +32,8 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 
 **Part II: Cross-cutting facilities**
 - [Time management](users_guide/time.md) -- time axis, time step, output interval, calendar
+  - [Courant number and how to choose the time step](users_guide/courant.md) -- primer for newcomers to numerical computation: grid and step, Courant number, velocity and wave speed, explicit vs implicit, reading Cn_max, procedure for estimating dt (primer for time management)
+  - [Time-step design policy](users_guide/timestep_policy.md) -- why mainly explicit with a fixed step, relation to variable steps and sub-cycling, solving the equations accurately vs reproducing the phenomenon (supplement to time management; intermediate to advanced)
 - [Coordinate systems](users_guide/coordinates.md) -- absolute vs. local coordinates, EPSG, geographic (lat-lon) grids
 - [Input and output formats](users_guide/io.md) -- text / bil / GeoTIFF, output file organization
 - [Writing user routines](users_guide/user_routines.md) — giving topography and initial conditions in code (procedure, index contract, pitfalls)
@@ -102,7 +104,6 @@ such as rainfall, add its `fn_XXX` entry to `&list_sysparam`.
 ![Start small and add features as needed](../figs/config_structure_en.png)
 
 *Left: a minimal setup with flat terrain. Right: adding rainfall. Leave out the settings for features you do not use.*
-[SVG](../figs/config_structure_en.svg) · [Generator](../figs/guide/fig_config.py)
 
 **What happens when you leave an entry out?**
 

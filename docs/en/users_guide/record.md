@@ -124,8 +124,6 @@ marking intersections. The small diagram below shows a one-cell transect
 from (3.3,1.3) to (3.9,1.75) m. Cells have the same displayed size in both
 panels; green arrows indicate the positive side. These are placement
 examples, separate from the input example and from simulation results.
-Regenerate Japanese and English PNG/SVG with
-`python docs/figs/make_guide_figs.py record`.
 
 ## Summary output
 

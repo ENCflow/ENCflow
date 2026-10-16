@@ -60,8 +60,7 @@ computed front thickness on this curved terrain. (b) An example in which the
 same lava thickness has fully solidified: hl decreases by the amount that z
 increases, and surface water follows the updated z. Solidification uses a speed
 threshold and a prescribed rate; cooling is not computed. Shapes, water depths
-and arrows are schematic, not simulation results. Generate the figure with
-the lavaflow argument to docs/figs/make_guide_figs.py.
+and arrows are schematic, not simulation results.
 
 ## Enabling (minimal namelist)
 

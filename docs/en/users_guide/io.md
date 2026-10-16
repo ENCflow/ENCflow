@@ -119,8 +119,6 @@ starting state, regular output, final state and run statistics.
 (c) Auxiliary files and measurement CSVs. Their 4-digit measurement IDs
 identify points / transects, independently of raster output numbers.
 File examples use an empty suffix.
-An [SVG version](../../figs/io_files_en.svg) is also available.
-Run `python docs/figs/make_guide_figs.py io` to regenerate only this figure.
 
 **Meaning of the number**
 

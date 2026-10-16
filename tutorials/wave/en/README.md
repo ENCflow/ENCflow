@@ -97,7 +97,7 @@ The columns of the table mean the following.
 | S(m) | total amount of water in the domain (expressed as depth averaged over the valid cells). In a closed domain it stays constant, which serves as a check of mass conservation |
 | Runge | fraction of flux computations recomputed by the Runge-Kutta method (explained in Step 2) |
 | ex_flux | number of times an excessive outflow flux was detected and suppressed (stays 0 in this example) |
-| Cn_max | maximum Courant number (an indicator of numerical stability) |
+| Cn_max | maximum Courant number (an indicator of numerical stability; its meaning and reading are explained in [Courant number and how to choose the time step](../../../docs/en/users_guide/courant.md)) |
 | h_max(m) | maximum water depth |
 | V_max(m/s) | maximum velocity |
 
@@ -285,6 +285,14 @@ either one inevitably increases the computational cost. The ENC
 computation module of ENCflow implements an **adaptive Runge-Kutta
 method** that keeps the loss of accuracy to a minimum at little
 computational cost. Let's try it in the next Step.
+
+> **New to the Courant number?** That it measures "how many cells per
+> step", that for a water surface the wave speed √(gh) is added to the
+> velocity, that `Cn_max` is the maximum over the display interval, and how
+> to estimate `dt` for your own case from the cell width, velocity and
+> depth are all explained in
+> [Courant number and how to choose the time step](../../../docs/en/users_guide/courant.md)
+> (a primer for newcomers to the numerical computation of flow).
 
 ## Step 2: setting ENC parameters
 
@@ -720,3 +728,7 @@ What this supplement showed, arranged as an order of operations:
   non-hydrostatic section of the
   [user guide](../../../docs/en/users_guide/swflow.md) for the conditions and
   settings.
+- This distinction between "solving the equations accurately" and
+  "reproducing the phenomenon accurately", and why ENCflow fixes the time
+  step and is mainly explicit, are summarized in the
+  [time-step design policy](../../../docs/en/users_guide/timestep_policy.md).

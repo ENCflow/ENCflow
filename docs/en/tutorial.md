@@ -33,6 +33,11 @@ fn_\*, writing the parameter file, running and reading the output).
 2. [tutorials/chichibu](../../tutorials/chichibu/en/README.md) — real terrain data, rainfall, recording, water balance
 3. [User's guide Part I](users_guide.md) — skeleton, the fn_\* principle, reading a parameter file
 
+If the Courant number (the `Cn_max` column) and the choice of the time step
+`dt` in Step 1 of wave puzzle you, read
+[Courant number and how to choose the time step](users_guide/courant.md)
+(a primer for newcomers to the numerical computation of flow).
+
 To assemble your own case, the "just try it (minimal input)" sections
 of [Geographic information](users_guide/geoinfo.md),
 [Initial conditions](users_guide/initial.md),
@@ -48,6 +53,7 @@ the basis of the defaults, detailed settings).
 
 | Field (chapter page) | Explanation pages |
 |---|---|
+| [Time management](users_guide/time.md) | [Courant number and how to choose the time step](users_guide/courant.md) (primer), [Time-step design policy](users_guide/timestep_policy.md) |
 | [Shallow water computation](users_guide/swflow.md) | [ENC grid and time integration](users_guide/encgrid.md), [Advection](users_guide/advection.md), [Diffusion](users_guide/diffusion.md), [Non-hydrostatic correction](users_guide/nonhydrostatic.md) |
 | [Structures](users_guide/structure.md), [Boundary conditions](users_guide/boundary.md), [Channels](users_guide/channel.md) | [Hydraulic laws of structures and boundaries](users_guide/hydraulics.md) |
 | [Groundwater](users_guide/gwflow.md) | [Groundwater models](users_guide/gwflow_models.md) |

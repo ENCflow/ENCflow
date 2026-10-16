@@ -49,10 +49,6 @@
 ありません。風化による土層生成も継続できます。海域マスク `sw > 0` では
 地形更新を行いません。
 
-[SVG版](../figs/geomorph_processes.svg)も利用できます。日英PNG・SVGは
-`python docs/figs/make_guide_figs.py geomorph` でこの図だけを再生成できます。
-以下の実行制御図は独立した `geomorph_morfac` を指定して生成します。
-
 ## 実行制御(全プロセス共通)
 
 | パラメータ | 既定値 | 意味 |
@@ -101,7 +97,6 @@
 - 氷河との併用では、氷河側の `gl_morfac` と地形側の `morfac` を一致させます。
 
 図の値は更新手順を説明するための例で、推奨設定でも計算結果でもありません。
-日英PNG・SVGは `python docs/figs/make_guide_figs.py geomorph_morfac` で対象だけを再生成できます。
 
 **パラメータの既定値の方針** — 各プロセスの物性・校正値には「とりあえず
 動かす」ための無難な既定値があり、**最小入力はプロセスのスイッチ

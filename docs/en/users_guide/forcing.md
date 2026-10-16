@@ -31,8 +31,7 @@ water-budget diagram. It assumes `runoff_rate=1`. Each file named by
 
 Without interception, precipitation passes through unchanged. Without
 snow processing, all precipitation is treated as rain. ET acts only when
-enabled. The [SVG version](../../figs/forcing_chain_en.svg) uses the same
-generator. Regenerate with `python docs/figs/make_guide_figs.py forcing`.
+enabled.
 The equations of each model and the basis of the defaults are in
 [Rainfall and meteorology models explained](forcing_models.md).
 

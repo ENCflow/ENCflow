@@ -27,6 +27,8 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 
 **第II部 横断機能**
 - [時刻の管理](users_guide/time.md) — 時間軸・時間刻み・出力間隔・暦
+  - [クーラン数と時間刻みの決め方](users_guide/courant.md) — 数値計算が初めての人向けの入門: 格子と刻み・クーラン数・流速と波速・陽解法と陰解法・Cn_max の読み方・dt を見積もる手順(時刻の管理の入門)
+  - [時間刻みの設計方針](users_guide/timestep_policy.md) — 陽解法主体と固定刻みの理由・可変刻みとサブサイクルとの関係・方程式の精度と現象の再現の区別(時刻の管理の補足。中級〜上級)
 - [座標系の管理](users_guide/coordinates.md) — 絶対座標とローカル座標・EPSG・経緯度格子
 - [入出力の形式](users_guide/io.md) — テキスト/bil/GeoTIFF・出力ファイル体系
 - [ユーザールーチンの作り方](users_guide/user_routines.md) — 地形・初期条件をコードで与える(手順・添字の契約・落とし穴)
@@ -97,7 +99,6 @@ ENCflow は地表の水の流れを計算するモデルです。必要に応じ
 ![最小限の設定で始め、必要な機能を追加する](figs/config_structure.png)
 
 *左は平坦な地形で始める最小例。右は降雨を追加する例。使わない機能の設定は書かなくてよい。*
-[SVG](figs/config_structure.svg) · [生成コード](figs/guide/fig_config.py)
 
 **指定しないときの動作**
 

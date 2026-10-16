@@ -68,8 +68,6 @@ The point P = (3.4 dx, 1.6 dy) resolves to cell (4, 4). It need not coincide
 with that cell's centre at (3.5 dx, 1.5 dy). Both panels highlight the same cell.
 When georeferencing is available, use the input raster's absolute coordinates
 instead of the local coordinates illustrated here.
-Run `python docs/figs/make_guide_figs.py coordinates` to generate both languages
-in PNG and SVG.
 
 ## Input data and coordinate systems
 

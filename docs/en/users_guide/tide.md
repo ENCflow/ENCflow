@@ -80,10 +80,7 @@ rise can retain water in a low-lying hollow.
 
 The terrain, land-side water surfaces and flow arrows in (b)(c) are
 schematic; they are not numerical results obtained from the time series
-in (a). Generate the Japanese and English PNG/SVG files with
-`python docs/figs/make_guide_figs.py tide`. Panel (a) retains the published
-PNG region at its original position and resolution, with the same image
-embedded in the SVG. Panels (b)(c) are vector drawings.
+in (a).
 
 ## Just try it (minimal input)
 

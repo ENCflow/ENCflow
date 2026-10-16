@@ -8,9 +8,6 @@
 まとめます。実装は `src/m_nest.f90` と `src/list_nest.f90` で、設計の経緯は
 docs/nesting_plan.md と developer.md にあります。
 
-図は `python3 docs/figs/make_nest_figs.py time`・`bc` で日英の PNG・SVG を
-生成します(`docs/figs/guide/fig_nest_time.py`、`fig_nest_bc.py`)。
-
 ## 1. 時間進行と境界値の時間補間
 
 ![親子格子の時間進行と境界値の時間補間](../figs/nest_time.png)
@@ -47,8 +44,6 @@ docs/nesting_plan.md と developer.md にあります。
 置換対象から除きます。各方式の平均・乾湿処理は下の「子→親の置換」を参照してください。
 図は時間進行の模式図で、計算結果の時系列ではありません。
 
-日英PNG・SVGは `python docs/figs/make_nest_figs.py time` で生成します。
-
 ## 2. 境界帯の方式(nest_bc)
 
 ![ネストの境界方式と非静水圧の設定](../figs/nest_bc.png)
@@ -71,7 +66,6 @@ docs/nesting_plan.md と developer.md にあります。
   通常の境界値はサブステップ**開始時刻**、φ は**終了時刻**へ時間補間します。
   `nest_nh` は `nest_bc` とは別の設定で、帯のない3には適用しません。
 
-日英PNG・SVGは `python docs/figs/make_nest_figs.py bc` で生成します。
 各方式の誤差を一様細格子と比較した例は [examples/nest_reflect](../../examples/nest_reflect/) のREADME
 （図付き）を参照してください。
 

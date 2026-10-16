@@ -23,8 +23,6 @@
 
 遮断を使わなければ降水はそのまま次へ渡り、積雪を使わなければ全量を
 雨として扱います。蒸発散は有効な場合だけ適用します。
-[SVG版](../figs/forcing_chain.svg)も同じ生成コードから出力します。
-再生成: `python docs/figs/make_guide_figs.py forcing`。
 各モデルの式と既定値の根拠は[降雨・気象のモデルの解説](forcing_models.md)に
 あります。
 

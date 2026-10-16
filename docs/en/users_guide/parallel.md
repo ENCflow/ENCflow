@@ -77,10 +77,6 @@ aggregation buffer use `real64` regardless of `PREC`. Field-file output also
 gathers owned rows to rank 0 for writing; halo copies are not included again.
 Maximum values and integer counts use separate aggregation procedures.
 
-An [SVG version](../../figs/parallel_bands_en.svg) is available. Regenerate only
-this figure in both languages and formats with
-`python docs/figs/make_guide_figs.py parallel`.
-
 ## Reproducibility and build conditions
 
 ENCflow's parallelization rule is **bitwise identical numerical results when

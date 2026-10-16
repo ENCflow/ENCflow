@@ -65,10 +65,7 @@ threshold names and curve are preserved pixel for pixel. (b) Solid orange
 arrows show the floating / sinking shares and stopping, solid green shows
 refloating, and dashed green shows damage-to-porosity feedback to the flow.
 Conditions sit beside their paths; the three ledgers identify their area
-bases. This is a schematic, not a simulation result. Regenerate Japanese
-and English PNG/SVG with `python docs/figs/make_guide_figs.py bldgdebris`.
-Only the original ramp is embedded as PNG in the SVG; the revised schematic
-is vector artwork.
+bases. This is a schematic, not a simulation result.
 
 ## Enabling and configuration
 

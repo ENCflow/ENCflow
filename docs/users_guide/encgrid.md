@@ -11,9 +11,6 @@
 `src/m_swflow_enc.f90`(`init_weights`、`calc_kth_momentum`、
 `calc_kth_flux`、`continuous`)と `src/m_ffactor.f90` です。
 
-図は `python3 docs/figs/make_guide_figs.py encgrid` で日英の PNG・SVG を生成します
-(`docs/figs/guide/fig_encgrid.py`)。
-
 ## 1. 方程式
 
 水深 $`h`$、地盤高 $`z`$、水位 $`\eta = z + h`$ の浅水方程式を、セル中心の
@@ -236,7 +233,10 @@ C_n = \frac{|\mathbf{V}| + \sqrt{g h}}{\min(\Delta x, \Delta y)}\,\Delta t
 決めてください(既定の `f_check_cfl = 1` は $`C_n > 1`$ で停止)。
 斜めエッジの距離 $`\Delta r`$ は軸より長いので、安定性は軸方向が決めます。
 拡散項を使うときは別に $`\nu \le \Delta x^2/(2.83\,\Delta t)`$ の条件が
-あります([拡散項の解説](diffusion.md) §4)。
+あります([拡散項の解説](diffusion.md) §4)。クーラン数の初歩と dt の
+見積もり手順は[クーラン数と時間刻みの決め方](courant.md)、固定刻み・
+陽解法主体の設計判断は[時間刻みの設計方針](timestep_policy.md)を参照して
+ください。
 
 ## 8. 数値定数の根拠
 

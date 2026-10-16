@@ -8,9 +8,6 @@
 土石流・斜面崩壊・動く底層は[土石流・斜面崩壊・動く底層の解説](massflow.md)
 にあります。実装は `src/m_geomorph*.f90`(プロセスごとの submodule)です。
 
-図は `python3 docs/figs/make_guide_figs.py sediment` で日英の PNG・SVG を生成します
-(`docs/figs/guide/fig_sediment.py`)。
-
 ## 1. 共通の枠組み
 
 **状態量。** 地盤高 $`z`$、侵食できる土層の厚さ $`s_d`$(`sd`。土層底

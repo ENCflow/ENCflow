@@ -40,8 +40,7 @@ B is the source set `(5, 4), (5, 5)`; C is the prescribed-level set
 `(12, 9), (13, 9), (13, 10)`. (b) The quantities and main conditions for each
 group. Arrows show permitted directions, not discharge magnitudes, computed
 results or the ENC flux stencil. These indices illustrate the drawing;
-the input examples below are separate. Generate with
-`python docs/figs/make_guide_figs.py boundary`.
+the input examples below are separate.
 
 ## Just try it (minimal input)
 

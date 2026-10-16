@@ -223,7 +223,9 @@ depression with no outlet the water depth keeps growing, and the wave
 speed of the shallow water equations (≈ √(gh)) grows with it, so the
 Courant number Cn (= wave speed × dt / cell size) increases and the
 stability condition (Cn ≲ 1) becomes easy to violate
-(see [the time-step chapter](../../../docs/en/users_guide/time.md)).
+(see [the time-step chapter](../../../docs/en/users_guide/time.md); the
+meaning of a Courant number that adds the wave speed to the velocity is in
+[Courant number and how to choose the time step](../../../docs/en/users_guide/courant.md#wave-speed)).
 This chain is a general troubleshooting rule beyond depressions:
 **when a computation blows up (diverges), first suspect "water depth
 grows somewhere → wave speed grows → stability condition breaks"**.
@@ -853,7 +855,11 @@ Shrinking it only in proportion to the grid (3 s and 1.5 s) made the
 finer grid resolves the valleys of steep tributaries and the maximum
 velocity grows (16 m/s at 200 m, 30 m/s at 100 m, 34 m/s at 50 m), so
 **the cost of a finer grid grows faster than "cells x steps"**, which
-is worth remembering when choosing a resolution.
+is worth remembering when choosing a resolution. The procedure for choosing
+`dt` from the cell width and the estimated maximum velocity and depth is in
+[Courant number and how to choose the time step](../../../docs/en/users_guide/courant.md#choose-dt);
+the design reasons for ENCflow's fixed step are in the
+[time-step design policy](../../../docs/en/users_guide/timestep_policy.md#fixed-time-step).
 
 | grid | computed cells | dt | steps | run time (ENC, 4 threads) |
 |---|---|---|---|---|

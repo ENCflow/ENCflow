@@ -32,6 +32,12 @@ computation. The guide is the Cn_max column (Courant number) on the
 screen; settings that greatly exceed 1 become unstable. For the actual
 relationship between accuracy and computational cost, see
 [Tutorial Steps 1-2](../../../tutorials/wave/en/README.md#coarsening-the-time-step).
+What the Courant number is and how to estimate `dt` from the cell width,
+velocity and depth are explained in
+[Courant number and how to choose the time step](courant.md) (primer);
+why ENCflow fixes `dt` and is mainly explicit, and how that relates to
+variable steps and sub-cycling, is in the
+[time-step design policy](timestep_policy.md).
 
 ## Specifying times as strings (`*_c`)
 
@@ -110,10 +116,6 @@ written even outside the window. `0000` is the starting state at t=0;
 `9998` is the final state at t=18. `9999` holds period statistics, not
 the next instant on the axis. This is an output-procedure schematic,
 not a computed time series.
-
-A [vector SVG](../../figs/time_axis_en.svg) is also available.
-Generate only this figure in both languages as PNG and SVG with
-`python docs/figs/make_guide_figs.py time`.
 
 ## Calendar (date and time)
 
