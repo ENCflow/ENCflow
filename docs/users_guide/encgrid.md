@@ -11,9 +11,6 @@
 `src/m_swflow_enc.f90`(`init_weights`、`calc_kth_momentum`、
 `calc_kth_flux`、`continuous`)と `src/m_ffactor.f90` です。
 
-図は `python3 docs/figs/make_guide_figs.py encgrid` で日英の PNG・SVG を生成します
-(`docs/figs/guide/fig_encgrid.py`)。
-
 ## 1. 方程式
 
 水深 $`h`$、地盤高 $`z`$、水位 $`\eta = z + h`$ の浅水方程式を、セル中心の

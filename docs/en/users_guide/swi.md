@@ -30,8 +30,7 @@ spacing and arrow lengths are schematic.
 
 (b) Tank parameters are fixed; `swi0(1:3)` sets the initial storages.
 (c) shows map and maximum-value outputs and the state carried over on
-restart. Generate both languages as PNG and SVG with
-`python docs/figs/make_guide_figs.py swi`.
+restart.
 
 ## Enabling and settings
 

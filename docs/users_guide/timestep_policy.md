@@ -196,7 +196,8 @@ C_n = \frac{\left(|\mathbf{V}| + \sqrt{g h}\right)\,\Delta t}{\min(\Delta x, \De
 
 ![静水圧計算の格子細分比較](../../tutorials/wave/figs/supp_grid.png)
 
-*図1　wave チュートリアルの計算結果(再掲)。格子と時間刻みの変更によって、同じ方程式の数値解がどう変わるかを調べています。*
+wave チュートリアルの計算結果の再掲です。格子と時間刻みの変更によって、
+同じ方程式の数値解がどう変わるかを調べています。
 
 一方、鉛直加速度による物理分散が重要になる条件では、静水圧モデルが省略
 している効果を考える必要があります。非静水圧補正を加えた計算との違いは、
@@ -204,7 +205,9 @@ C_n = \frac{\left(|\mathbf{V}| + \sqrt{g h}\right)\,\Delta t}{\min(\Delta x, \De
 
 ![静水圧計算と非静水圧補正を加えた計算の比較](../../tutorials/wave/figs/supp_nh.png)
 
-*図2　wave チュートリアルの計算結果(再掲)。物理モデルの違いによって波形が変化します。非静水圧計算も近似モデルの数値解であり、この比較自体が実験・観測による検証を意味するわけではありません。*
+こちらも wave チュートリアルの計算結果の再掲で、物理モデルの違いによって
+波形が変化します。非静水圧計算も近似モデルの数値解であり、この比較自体が
+実験・観測による検証を意味するわけではありません。
 
 重要なのは、数値減衰によって波面がなまった結果が、別のモデルや観測と偶然
 似て見えても、それを物理的に正しく再現したとは判断しないことです。
@@ -264,7 +267,7 @@ ENCflow では、すべての計算を、可能な限り細かい格子と時間
 [^time]: ENCflow, [時刻の管理](time.md)。整数ステップによる時刻・出力判定・再開時の制約。
 [^state]: ENCflow, `src/m_state.f90`(`m_state_calcstat`・`m_state_printstate`)。
 [^gwflow]: ENCflow, [地下水](gwflow.md)、管路連続体層。側方通水の自動サブサイクル。
-[^wave]: ENCflow, [wave チュートリアル](../../tutorials/wave/README.md), Step 2・補足。図1・2はこのチュートリアルに掲載されている計算結果。
+[^wave]: ENCflow, [wave チュートリアル](../../tutorials/wave/README.md), Step 2・補足。掲載した 2 図はこのチュートリアルの計算結果。
 [^sundials]: xSDK / ATPESC, [Time Integration with SUNDIALS](https://xsdk-project.github.io/MathPackagesTraining2020/lessons/time_integrators_sundials/)。陽・陰・IMEX、固定・可変刻み、精度と計算量の比較。
 [^clawpack]: Clawpack, [Specifying classic run-time parameters in setrun.py](https://www.clawpack.org/setrun.html)。CFL による可変時間刻み、`dt_max`、刻みの棄却・再試行。
 [^verif]: NASA Glenn / NPARC Alliance, [Verification Assessment](https://www.grc.nasa.gov/www/wind/valid/tutorial/verassess.html)。実装・数値解の誤差を確認する考え方。

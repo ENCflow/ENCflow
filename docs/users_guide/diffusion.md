@@ -8,10 +8,6 @@
 離散化・安定条件を、設定の意味がわかる程度に説明します。設計の経緯と
 検証の記録(開発者向け)は docs/developer.md §20 にあります。
 
-図は
-`python3 docs/figs/make_guide_figs.py diffusion` で日英の PNG・SVG を生成します
-(`docs/figs/guide/fig_diffusion.py`)。
-
 ## 1. 方程式と拡散項の位置づけ
 
 水深平均の運動方程式に、乱流による運動量の水平交換を表す拡散項を加えます

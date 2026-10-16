@@ -118,8 +118,6 @@ the next instant on the axis. This is an output-procedure schematic,
 not a computed time series.
 
 A [vector SVG](../../figs/time_axis_en.svg) is also available.
-Generate only this figure in both languages as PNG and SVG with
-`python docs/figs/make_guide_figs.py time`.
 
 ## Calendar (date and time)
 

@@ -55,10 +55,11 @@ If a wave travels at 5 m per second, after 1 s it is 5 m ahead, after 2 s
 10 m, after 3 s 15 m. With a cell width of 10 m these are **0.5 cells,
 1 cell and 1.5 cells**.
 
-The number that expresses "how many cells" is the Courant number.
+The number that expresses "how many cells" is the Courant number $`C_n`$
+(the `Cn_max` column on the ENCflow screen is its maximum).
 
 ```math
-C = \frac{a\,\Delta t}{\Delta x}
+C_n = \frac{a\,\Delta t}{\Delta x}
 ```
 
 The numerator $`a\Delta t`$ is the distance a change travels during one
@@ -67,8 +68,7 @@ without units.
 
 ![Distance a wave marker travels in one step and the Courant number](../../figs/courant_distance_en.png)
 
-*Figure 1. Speed 5 m/s, cell width 10 m. The dots mark the position of the wave.*
-[SVG](../../figs/courant_distance_en.svg)
+An [SVG version](../../figs/courant_distance_en.svg) is also available.
 
 For the same flow, **halving the time step halves the Courant number**.
 Conversely, halving only the cell width doubles it.
@@ -83,7 +83,7 @@ computation.
 **Keep the range over which the phenomenon transmits information within the
 range the method can handle.** This is the idea of the **CFL condition**
 (Courant–Friedrichs–Lewy condition). For typical explicit methods that use
-neighbouring cells, $`C \le 1`$ is the guideline.[^cfl]
+neighbouring cells, $`C_n \le 1`$ is the guideline.[^cfl]
 
 The limit, however, depends on the equations and the method. **It does not
 mean that "1 is the limit for every method" or that "anything below 1 is
@@ -121,15 +121,14 @@ $`3.13 - 2 = 1.13`$ m/s.
 
 ![Velocity, wave speed relative to the water, and wave speed seen from the ground](../../figs/courant_wave_en.png)
 
-*Figure 2. Velocity 2 m/s, depth 1 m. The wave and the water itself do not travel at the same speed.*
-[SVG](../../figs/courant_wave_en.svg)
+An [SVG version](../../figs/courant_wave_en.svg) is also available.
 
 When choosing the time step, look at **the velocity plus the wave speed**.
 The default monitoring in ENCflow (`f_check_cfl = 1`) uses the following
 Courant number.[^encgrid][^state]
 
 ```math
-C = \frac{\left(V + \sqrt{g h}\right)\,\Delta t}{\min(\Delta x, \Delta y)}
+C_n = \frac{\left(V + \sqrt{g h}\right)\,\Delta t}{\min(\Delta x, \Delta y)}
 ```
 
 $`V = \sqrt{u^2 + v^2}`$ is the magnitude of the horizontal velocity.
@@ -150,8 +149,7 @@ equations is solved so that the related cells are mutually consistent.[^sundials
 
 ![Explicit methods update from the known state; implicit methods couple the unknowns at the next time](../../figs/courant_methods_en.png)
 
-*Figure 3. Filled circles are known states, open circles unknown ones. The arrows are computational relations, not water flow.*
-[SVG](../../figs/courant_methods_en.svg)
+An [SVG version](../../figs/courant_methods_en.svg) is also available.
 
 | | explicit | implicit |
 |---|---|---|
@@ -183,8 +181,7 @@ cause trouble.
 
 ![Courant numbers differing from cell to cell, and their maximum](../../figs/courant_max_en.png)
 
-*Figure 4. An illustrative distribution. Most cells are around 0.2, but the maximum is 0.90.*
-[SVG](../../figs/courant_max_en.svg)
+An [SVG version](../../figs/courant_max_en.svg) is also available.
 
 **`Cn_max` in the log is the maximum of the Courant number over the cells,
 further maximized over the display interval.** If the display is every
@@ -214,8 +211,7 @@ needed (the columns are explained in
 
 ![Choose the time step from the grid and the speed, then check the result and adjust](../../figs/courant_steps_en.png)
 
-*Figure 5. Do not settle on the first estimate; check the result and adjust.*
-[SVG](../../figs/courant_steps_en.svg)
+An [SVG version](../../figs/courant_steps_en.svg) is also available.
 
 ### Step 1: check the shorter grid spacing
 
@@ -266,10 +262,10 @@ adding debris flow, groundwater and so on, check the
 [constraints of each process](#other-limits) as well as this clear-water
 table.
 
-### Step 3: compute the step at which the Courant number is 1
+### Step 3: compute the step at which $`C_n = 1`$
 
 ```math
-\Delta t_{C=1} = \frac{\Delta_{\min}}{a_{\mathrm{est}}}
+\Delta t_{C_n=1} = \frac{\Delta_{\min}}{a_{\mathrm{est}}}
 ```
 
 This is "the time to travel one cell at the estimated speed". It is not a
@@ -282,7 +278,7 @@ and maximum velocity of 3 m/s**,
 \begin{aligned}
 c &= \sqrt{9.81 \times 4} \simeq 6.26\ \mathrm{m/s}\\
 a_{\mathrm{est}} &= 3 + 6.26 = 9.26\ \mathrm{m/s}\\
-\Delta t_{C=1} &= 20 / 9.26 \simeq 2.16\ \mathrm{s}
+\Delta t_{C_n=1} &= 20 / 9.26 \simeq 2.16\ \mathrm{s}
 \end{aligned}
 ```
 
@@ -293,7 +289,7 @@ number of about 0.5**. Wet/dry fronts and steep slopes may need about 0.4
 or even less.[^encgrid]
 
 ```math
-\Delta t_{\mathrm{start}} \ \le\ C_{\mathrm{target}}\,\frac{\Delta_{\min}}{a_{\mathrm{est}}}
+\Delta t_{\mathrm{start}} \ \le\ C_{n,\mathrm{target}}\,\frac{\Delta_{\min}}{a_{\mathrm{est}}}
 ```
 
 With a target of 0.5 in the example above, $`0.5 \times 2.16 \simeq 1.08`$ s,
@@ -325,7 +321,7 @@ the flood peak and the period when water pools deeply**.
 If the Courant number is too large, assuming the flow stays similar,
 
 ```math
-\Delta t_{\mathrm{new}} \simeq \Delta t_{\mathrm{old}}\,\frac{C_{\mathrm{target}}}{C_{\mathrm{observed}}}
+\Delta t_{\mathrm{new}} \simeq \Delta t_{\mathrm{old}}\,\frac{C_{n,\mathrm{target}}}{C_{n,\mathrm{obs}}}
 ```
 
 gives a guideline for the change. For example with `dt = 2` (seconds),
@@ -390,8 +386,7 @@ advance only the process that needs it five times at 0.2 s. This is
 
 ![Surface flow at 1 s; a process that needs a finer step advances five times at 0.2 s](../../figs/courant_subcycle_en.png)
 
-*Figure 6. An example of sub-cycling. The fine step is not imposed on every process.*
-[SVG](../../figs/courant_subcycle_en.svg)
+An [SVG version](../../figs/courant_subcycle_en.svg) is also available.
 
 In ENCflow, for example, the lateral conveyance of the conduit continuum
 layer sub-cycles automatically. Not every module is subdivided

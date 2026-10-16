@@ -827,9 +827,57 @@ z
     </g>
    </g>
    <g id="text_4">
-    <!-- C = 0.5 -->
-    <g style="fill: #2a78d6" transform="translate(23.04 140.319219) scale(0.14 -0.14)">
+    <!-- $C_n$ = 0.5 -->
+    <g style="fill: #2a78d6" transform="translate(23.04 139.36) scale(0.14 -0.14)">
      <defs>
+      <path id="DejaVuSans-Oblique-26" d="M 4447 4306
+L 4319 3641
+Q 4019 3944 3683 4091
+Q 3347 4238 2956 4238
+Q 2422 4238 2017 3981
+Q 1613 3725 1319 3200
+Q 1131 2863 1032 2486
+Q 934 2109 934 1728
+Q 934 1091 1264 756
+Q 1594 422 2222 422
+Q 2656 422 3056 561
+Q 3456 700 3834 978
+L 3688 231
+Q 3316 72 2936 -9
+Q 2556 -91 2175 -91
+Q 1278 -91 773 396
+Q 269 884 269 1753
+Q 269 2309 461 2846
+Q 653 3384 1013 3828
+Q 1394 4300 1883 4525
+Q 2372 4750 3022 4750
+Q 3422 4750 3780 4639
+Q 4138 4528 4447 4306
+z
+" transform="scale(0.015625)"/>
+      <path id="DejaVuSans-Oblique-51" d="M 3566 2113
+L 3156 0
+L 2578 0
+L 2988 2091
+Q 3016 2238 3031 2350
+Q 3047 2463 3047 2528
+Q 3047 2791 2881 2937
+Q 2716 3084 2419 3084
+Q 1956 3084 1622 2776
+Q 1288 2469 1184 1941
+L 800 0
+L 225 0
+L 903 3500
+L 1478 3500
+L 1363 2950
+Q 1603 3253 1940 3418
+Q 2278 3584 2650 3584
+Q 3113 3584 3367 3334
+Q 3622 3084 3622 2631
+Q 3622 2519 3608 2391
+Q 3594 2263 3566 2113
+z
+" transform="scale(0.015625)"/>
       <path id="IPAGothic-d4" d="M 588 831
 L 1444 831
 L 1444 -25
@@ -838,13 +886,14 @@ L 588 831
 z
 " transform="scale(0.015625)"/>
      </defs>
-     <use xlink:href="#IPAGothic-e9"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(50 0)"/>
-     <use xlink:href="#IPAGothic-e3" transform="translate(100 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(150 0)"/>
-     <use xlink:href="#IPAGothic-d6" transform="translate(200 0)"/>
-     <use xlink:href="#IPAGothic-d4" transform="translate(250 0)"/>
-     <use xlink:href="#IPAGothic-db" transform="translate(300 0)"/>
+     <use xlink:href="#DejaVuSans-Oblique-26" transform="translate(0 0.90625)"/>
+     <use xlink:href="#DejaVuSans-Oblique-51" transform="translate(69.824219 -14.093701) scale(0.7)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(116.923828 0.90625)"/>
+     <use xlink:href="#IPAGothic-e3" transform="translate(166.923828 0.90625)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(216.923828 0.90625)"/>
+     <use xlink:href="#IPAGothic-d6" transform="translate(266.923828 0.90625)"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(316.923828 0.90625)"/>
+     <use xlink:href="#IPAGothic-db" transform="translate(366.923828 0.90625)"/>
     </g>
    </g>
    <g id="text_5">
@@ -967,13 +1016,14 @@ z
     </g>
    </g>
    <g id="text_12">
-    <!-- C = 1 -->
-    <g style="fill: #2a78d6" transform="translate(23.04 241.146563) scale(0.14 -0.14)">
-     <use xlink:href="#IPAGothic-e9"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(50 0)"/>
-     <use xlink:href="#IPAGothic-e3" transform="translate(100 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(150 0)"/>
-     <use xlink:href="#IPAGothic-d7" transform="translate(200 0)"/>
+    <!-- $C_n$ = 1 -->
+    <g style="fill: #2a78d6" transform="translate(23.04 240.02) scale(0.14 -0.14)">
+     <use xlink:href="#DejaVuSans-Oblique-26" transform="translate(0 0.90625)"/>
+     <use xlink:href="#DejaVuSans-Oblique-51" transform="translate(69.824219 -14.093701) scale(0.7)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(116.923828 0.90625)"/>
+     <use xlink:href="#IPAGothic-e3" transform="translate(166.923828 0.90625)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(216.923828 0.90625)"/>
+     <use xlink:href="#IPAGothic-d7" transform="translate(266.923828 0.90625)"/>
     </g>
    </g>
    <g id="text_13">
@@ -1046,15 +1096,16 @@ z
     </g>
    </g>
    <g id="text_20">
-    <!-- C = 1.5 -->
-    <g style="fill: #2a78d6" transform="translate(23.04 341.919219) scale(0.14 -0.14)">
-     <use xlink:href="#IPAGothic-e9"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(50 0)"/>
-     <use xlink:href="#IPAGothic-e3" transform="translate(100 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(150 0)"/>
-     <use xlink:href="#IPAGothic-d7" transform="translate(200 0)"/>
-     <use xlink:href="#IPAGothic-d4" transform="translate(250 0)"/>
-     <use xlink:href="#IPAGothic-db" transform="translate(300 0)"/>
+    <!-- $C_n$ = 1.5 -->
+    <g style="fill: #2a78d6" transform="translate(23.04 340.82) scale(0.14 -0.14)">
+     <use xlink:href="#DejaVuSans-Oblique-26" transform="translate(0 0.90625)"/>
+     <use xlink:href="#DejaVuSans-Oblique-51" transform="translate(69.824219 -14.093701) scale(0.7)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(116.923828 0.90625)"/>
+     <use xlink:href="#IPAGothic-e3" transform="translate(166.923828 0.90625)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(216.923828 0.90625)"/>
+     <use xlink:href="#IPAGothic-d7" transform="translate(266.923828 0.90625)"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(316.923828 0.90625)"/>
+     <use xlink:href="#IPAGothic-db" transform="translate(366.923828 0.90625)"/>
     </g>
    </g>
    <g id="text_21">

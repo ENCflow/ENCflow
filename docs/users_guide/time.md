@@ -105,7 +105,6 @@ t=5…16に1秒ごとです。記録列の白抜き丸は窓の外でも行う�
 図は出力手順の模式図であり、計算結果の時系列ではありません。
 
 [SVG版](../figs/time_axis.svg)もあります。
-日英PNG・SVGは `python docs/figs/make_guide_figs.py time` でこの図だけを生成します。
 
 ## 暦(カレンダー日時)
 

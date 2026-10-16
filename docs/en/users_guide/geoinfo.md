@@ -44,8 +44,6 @@ Align spatial files to the same cell counts, extent, location, resolution
 and CRS in preprocessing. Equal matrix dimensions alone do not ensure
 matching cells when origins or cell sizes differ. Rows run north to south,
 columns west to east ([input/output](io.md), [coordinates](coordinates.md)).
-Regenerate only the Japanese/English PNG and SVG files with
-`python docs/figs/make_guide_figs.py geoinfo`.
 
 ## Grid definition
 

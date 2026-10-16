@@ -50,7 +50,6 @@ cylinder to its specific gravity `sg`. The drawing shows half submergence
 for `sg = 0.5`; in general, `hf` is not `sg × diameter`.
 (d) Outputs and volume accounting with area conversion. The section, trees
 and logs are illustrative, not computed results or individual trajectories.
-Generate with `python docs/figs/make_guide_figs.py driftwood`.
 
 ## Enabling and configuration
 

@@ -221,7 +221,8 @@ bore solution those equations describe.[^wave]
 
 ![Grid refinement of the hydrostatic computation](../../../tutorials/wave/figs/supp_grid.png)
 
-*Figure 1. Result from the wave tutorial (reproduced). It examines how the numerical solution of the same equations changes with the grid and time step.*
+This is a result from the wave tutorial, reproduced here. It examines how the
+numerical solution of the same equations changes with the grid and time step.
 
 Where the physical dispersion due to vertical acceleration matters, on the
 other hand, the effect the hydrostatic model omits has to be considered. The
@@ -231,7 +232,10 @@ solved**.[^wave]
 
 ![Hydrostatic computation versus the non-hydrostatic correction](../../../tutorials/wave/figs/supp_nh.png)
 
-*Figure 2. Result from the wave tutorial (reproduced). The waveform changes with the physical model. The non-hydrostatic computation is also the numerical solution of an approximate model; this comparison is not a validation against experiment or observation.*
+This too is a result from the wave tutorial, reproduced here: the waveform
+changes with the physical model. The non-hydrostatic computation is also the
+numerical solution of an approximate model; this comparison is not a
+validation against experiment or observation.
 
 What matters is not to judge a result whose front has been smeared by
 numerical damping as a physically correct reproduction, even if it happens
@@ -303,7 +307,7 @@ and balances.[^time]
 [^time]: ENCflow, [Time management](time.md). Integer-step time, output decisions, restart constraints.
 [^state]: ENCflow, `src/m_state.f90` (`m_state_calcstat`, `m_state_printstate`).
 [^gwflow]: ENCflow, [Groundwater](gwflow.md), conduit continuum layer. Automatic sub-cycling of lateral conveyance.
-[^wave]: ENCflow, [wave tutorial](../../../tutorials/wave/en/README.md), Step 2 and supplement. Figures 1 and 2 are the results shown in that tutorial.
+[^wave]: ENCflow, [wave tutorial](../../../tutorials/wave/en/README.md), Step 2 and supplement. The two figures reproduced here are results shown in that tutorial.
 [^sundials]: xSDK / ATPESC, [Time Integration with SUNDIALS](https://xsdk-project.github.io/MathPackagesTraining2020/lessons/time_integrators_sundials/). Explicit, implicit and IMEX; fixed and variable steps; accuracy versus cost.
 [^clawpack]: Clawpack, [Specifying classic run-time parameters in setrun.py](https://www.clawpack.org/setrun.html). CFL-controlled variable step, `dt_max`, rejection and retry of steps.
 [^verif]: NASA Glenn / NPARC Alliance, [Verification Assessment](https://www.grc.nasa.gov/www/wind/valid/tutorial/verassess.html). Checking the error of the implementation and the numerical solution.

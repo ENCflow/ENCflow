@@ -48,10 +48,11 @@ $`\Delta t`$ を `dt` で指定します([時刻の管理](time.md))。
 15 m 先にあります。セル幅が 10 m なら、それぞれ **0.5 セル分、1 セル分、
 1.5 セル分**です。
 
-この「何セル分」を表す数がクーラン数です。
+この「何セル分」を表す数がクーラン数 $`C_n`$ です(ENCflow の画面の
+`Cn_max` 列はこの最大値)。
 
 ```math
-C = \frac{a\,\Delta t}{\Delta x}
+C_n = \frac{a\,\Delta t}{\Delta x}
 ```
 
 分子の $`a\Delta t`$ は、1 回の計算中に変化が伝わる距離です。距離をセル幅で
@@ -59,8 +60,7 @@ C = \frac{a\,\Delta t}{\Delta x}
 
 ![1 回の計算で波の目印が進む距離とクーラン数](../figs/courant_distance.png)
 
-*図1　速さ 5 m/s、セル幅 10 m の例。点は波の位置の目印です。*
-[SVG](../figs/courant_distance.svg)
+[SVG版](../figs/courant_distance.svg)もあります。
 
 同じ流れなら、**時間刻みを半分にするとクーラン数も半分**になります。逆に、
 格子幅だけを半分にすると、クーラン数は 2 倍になります。
@@ -73,7 +73,7 @@ C = \frac{a\,\Delta t}{\Delta x}
 
 **現象の情報が伝わる範囲を、計算法が扱える範囲に収める。** これが
 **CFL 条件**(Courant–Friedrichs–Lewy 条件)の考え方です。近隣セルを使う
-代表的な陽解法では、$`C \le 1`$ が目安になります。[^cfl]
+代表的な陽解法では、$`C_n \le 1`$ が目安になります。[^cfl]
 
 ただし、上限は方程式や計算法によって異なります。**「どの方法でも 1 が
 上限」「1 以下なら必ず正しい」という意味ではありません。**
@@ -108,15 +108,14 @@ $`3.13 - 2 = 1.13`$ m/s で上流へ進みます。
 
 ![流速と、水に対する波速と、地面から見た波の速さ](../figs/courant_wave.png)
 
-*図2　流速 2 m/s、水深 1 m の例。波と水自体は、同じ速さで進むわけではありません。*
-[SVG](../figs/courant_wave.svg)
+[SVG版](../figs/courant_wave.svg)もあります。
 
 時間刻みを決めるときには、**流速と波速を足した速さ**に注目します。
 ENCflow の既定の監視(`f_check_cfl = 1`)では、次のクーラン数を
 使います。[^encgrid][^state]
 
 ```math
-C = \frac{\left(V + \sqrt{g h}\right)\,\Delta t}{\min(\Delta x, \Delta y)}
+C_n = \frac{\left(V + \sqrt{g h}\right)\,\Delta t}{\min(\Delta x, \Delta y)}
 ```
 
 $`V = \sqrt{u^2 + v^2}`$ は平面内の流速の大きさです。$`\min`$ は小さい方を
@@ -136,8 +135,7 @@ $`V = \sqrt{u^2 + v^2}`$ は平面内の流速の大きさです。$`\min`$ は�
 
 ![陽解法では既知の状態から更新し、陰解法では次の時刻の未知量も結び付く](../figs/courant_methods.png)
 
-*図3　黒丸は既知、白丸は未知の状態。矢印は水の流れではなく、計算上の関係です。*
-[SVG](../figs/courant_methods.svg)
+[SVG版](../figs/courant_methods.svg)もあります。
 
 | | 陽解法 | 陰解法 |
 |---|---|---|
@@ -167,8 +165,7 @@ ENCflow の地表流は**陽解法を主体**としています。異なる物�
 
 ![セルごとに異なるクーラン数と、その最大値](../figs/courant_max.png)
 
-*図4　説明用の分布。ほとんどのセルが 0.2 前後でも、最大値は 0.90 です。*
-[SVG](../figs/courant_max.svg)
+[SVG版](../figs/courant_max.svg)もあります。
 
 ログの **`Cn_max` は、各セルのクーラン数の最大値を、さらに表示区間内で
 最大にした値**です。例えば 60 秒ごとに表示するなら、その間のピークが
@@ -197,8 +194,7 @@ ENCflow の地表流は**陽解法を主体**としています。異なる物�
 
 ![格子と速さから時間刻みを選び、計算結果を確認して調整する手順](../figs/courant_steps.png)
 
-*図5　最初の見積もりだけで決めず、結果を確認して調整します。*
-[SVG](../figs/courant_steps.svg)
+[SVG版](../figs/courant_steps.svg)もあります。
 
 ### 手順1: 短い方の格子間隔を確認する
 
@@ -244,10 +240,10 @@ a_{\mathrm{est}} = V_{\mathrm{est}} + \sqrt{g h_{\mathrm{est}}}
 足りなかった例を示しています)。土石流・地下水などを加える場合は、
 この清水の表だけでなく、[各プロセスの制約](#other-limits)も確認します。
 
-### 手順3: クーラン数が 1 になる刻みを計算する
+### 手順3: $`C_n = 1`$ になる刻みを計算する
 
 ```math
-\Delta t_{C=1} = \frac{\Delta_{\min}}{a_{\mathrm{est}}}
+\Delta t_{C_n=1} = \frac{\Delta_{\min}}{a_{\mathrm{est}}}
 ```
 
 これは「見積もった速さで 1 セル分進む時間」です。安定性が保証された上限
@@ -259,7 +255,7 @@ a_{\mathrm{est}} = V_{\mathrm{est}} + \sqrt{g h_{\mathrm{est}}}
 \begin{aligned}
 c &= \sqrt{9.81 \times 4} \simeq 6.26\ \mathrm{m/s}\\
 a_{\mathrm{est}} &= 3 + 6.26 = 9.26\ \mathrm{m/s}\\
-\Delta t_{C=1} &= 20 / 9.26 \simeq 2.16\ \mathrm{s}
+\Delta t_{C_n=1} &= 20 / 9.26 \simeq 2.16\ \mathrm{s}
 \end{aligned}
 ```
 
@@ -272,7 +268,7 @@ a_{\mathrm{est}} &= 3 + 6.26 = 9.26\ \mathrm{m/s}\\
 あります。[^encgrid]
 
 ```math
-\Delta t_{\mathrm{start}} \ \le\ C_{\mathrm{target}}\,\frac{\Delta_{\min}}{a_{\mathrm{est}}}
+\Delta t_{\mathrm{start}} \ \le\ C_{n,\mathrm{target}}\,\frac{\Delta_{\min}}{a_{\mathrm{est}}}
 ```
 
 先ほどの例で目標を 0.5 とすれば、$`0.5 \times 2.16 \simeq 1.08`$ 秒なので、
@@ -304,7 +300,7 @@ a_{\mathrm{est}} &= 3 + 6.26 = 9.26\ \mathrm{m/s}\\
 クーラン数が大きすぎる場合は、同程度の流れになると仮定して、
 
 ```math
-\Delta t_{\mathrm{new}} \simeq \Delta t_{\mathrm{old}}\,\frac{C_{\mathrm{target}}}{C_{\mathrm{observed}}}
+\Delta t_{\mathrm{new}} \simeq \Delta t_{\mathrm{old}}\,\frac{C_{n,\mathrm{target}}}{C_{n,\mathrm{obs}}}
 ```
 
 で変更の目安を求められます。例えば `dt = 2`(秒)で `Cn_max = 0.9`、
@@ -360,8 +356,7 @@ ENCflow は、指定した `dt` を計算中に自動変更しません。水深
 
 ![地表流は 1 秒、より細かい刻みが必要な処理は 0.2 秒ずつ 5 回進める](../figs/courant_subcycle.png)
 
-*図6　サブサイクルの例。細かい刻みを、すべての処理に強制せずに済みます。*
-[SVG](../figs/courant_subcycle.svg)
+[SVG版](../figs/courant_subcycle.svg)もあります。
 
 ENCflow では、例えば管路連続体層の側方通水で自動サブサイクルを使います。
 ただし、すべてのモジュールが自動で細分されるわけではありません。また、

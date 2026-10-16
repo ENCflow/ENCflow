@@ -52,8 +52,7 @@ double-count internal transfers as losses from the whole system.
 The `_g` names are mass columns [g] in `result/wq.csv`. Concentration `C`
 [mg/L] and `mass_surface_g` (current total surface mass [g]) are different
 quantities. The current CSV has no separate columns for boundary inflow,
-boundary outflow or budget residual (see "Output and monitoring"). Generate
-both languages as PNG and SVG with `python docs/figs/make_guide_figs.py wq`.
+boundary outflow or budget residual (see "Output and monitoring").
 
 ## Substance properties
 

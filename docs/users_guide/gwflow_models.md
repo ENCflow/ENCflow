@@ -8,9 +8,6 @@
 (モデルごとの submodule)で、設計の経緯は docs/handoff_gwflow_tani.md、
 docs/gwconduit_plan.md と developer.md §16・§46・§64 にあります。
 
-図は `python3 docs/figs/make_guide_figs.py gwflow_models` で日英の PNG・SVG を生成します
-(`docs/figs/guide/fig_gwflow_models.py`)。
-
 ## 1. 共通の枠組み
 
 **状態量。** 貯留 $`h_g`$(土層)、$`h_{g2}`$(風化基岩層)、$`h_{gc}`$

@@ -124,7 +124,6 @@ dir_data 相対です。内部で使う時刻は `t0 + 表の時刻 × bm_tscale
 右の窓は `nx=16, ny=10, i1=5, j1=2, ni=7, nj=5` の配置例で、
 列5〜11・行2〜6の35セルです。本文の入力例とは別の模式図です。
 [SVG版](../figs/bedmotion_patterns.svg)もあります。
-`python docs/figs/make_guide_figs.py bedmotion` でこの図だけを再生成できます。
 
 ## 3. 応用 A: 断層による津波(utils/fault2disp)
 

@@ -41,8 +41,6 @@ decision band.** The explicit candidate flux per unit width is compared with
 its previous-step value; edges outside the threshold band are recomputed with
 four RK stages. The decision rule, the stages and the Runge statistic are
 in [the explanation](encgrid.md) §6.
-Run `python docs/figs/make_guide_figs.py swflow` to generate the Japanese and
-English PNG/SVG figures.
 
 ## Just try it (minimal input)
 

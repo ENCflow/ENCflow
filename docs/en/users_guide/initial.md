@@ -95,8 +95,7 @@ filled with water (1 or 2) or with bed material (3). Hatching marks the
 converted fill and the dashed curve the original bed. Type 1 applies
 throughout land; types 2 and 3 apply only to channel cells. Panels (a) and
 (b) omit depression filling, while (c) shows the state before adding
-`h0_rw`. These are schematics, not simulation results. Generate both
-languages as PNG and SVG with `python docs/figs/make_guide_figs.py initial`.
+`h0_rw`. These are schematics, not simulation results.
 
 ## How to give it by pattern
 

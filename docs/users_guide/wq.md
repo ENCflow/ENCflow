@@ -45,7 +45,6 @@
 図中の `_g` は `result/wq.csv` の質量列 [g] です。濃度 `C` [mg/L] と
 `mass_surface_g`（地表の現在質量 [g]）は別の量です。現行CSVには境界流入・
 境界流出・収支残差の独立列はありません（下の「出力・監視」を参照）。
-日英PNG・SVGは `python docs/figs/make_guide_figs.py wq` で生成します。
 
 ## 物質の性質
 

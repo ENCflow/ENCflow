@@ -67,8 +67,7 @@ rank 2の値の写しで、所有ランクは変わりません。逆向きに�
 分布ファイルの出力も担当行をrank 0へ集約して書き込み、ハロの写しは重複して
 含めません。最大値・整数カウントの集約は別の手続きで行います。
 
-[SVG版](../figs/parallel_bands.svg)も利用できます。日英PNG・SVGは
-`python docs/figs/make_guide_figs.py parallel` でこの図だけを再生成できます。
+[SVG版](../figs/parallel_bands.svg)も利用できます。
 
 ## 結果の再現性とビルド条件
 

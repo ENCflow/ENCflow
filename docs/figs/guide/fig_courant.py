@@ -102,7 +102,7 @@ def build_distance(lang):
     for r, (dt, C) in enumerate([(1, .5), (2, 1), (3, 1.5)]):
         y = 200 + 210 * r
         text(ax, 48, y + 8, f'Δt = {dt} s', 12.5, weight='bold')
-        text(ax, 48, y + 60, f'C = {C:g}', 14, color=BLUE, weight='bold')
+        text(ax, 48, y + 60, f'$C_n$ = {C:g}', 14, color=BLUE, weight='bold')
         for j in range(4):
             x = x0 + 280 * j
             line(ax, [(x, y - 14), (x, y + 90)], GRID, 1.3)

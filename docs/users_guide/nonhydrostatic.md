@@ -10,10 +10,6 @@
 と docs/developer.md §69 にあります。実装にあたって参考にした他モデルと
 文献は §9 にまとめました。
 
-図は
-`python3 docs/figs/make_guide_figs.py nonhydro` で日英の PNG・SVG を生成します
-(`docs/figs/guide/fig_nonhydro.py`)。
-
 ## 1. なぜ非静水圧か — 周波数分散
 
 静水圧の浅水方程式(SWE)は、圧力が水面からの深さに比例する(鉛直加速度を

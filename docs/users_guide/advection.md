@@ -8,9 +8,6 @@
 ステンシルを、設定の意味がわかる程度に説明します。設計の経緯と数値
 実験の記録(開発者向け)は docs/developer.md §68 にあります。
 
-図は `python3 docs/figs/make_guide_figs.py advection` で日英の PNG・SVG を
-生成します(`docs/figs/guide/fig_advection.py`)。
-
 ## 1. 方程式と移流項の位置づけ
 
 ENCflow が解く平面 2 次元の浅水方程式は、連続式と運動方程式です

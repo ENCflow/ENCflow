@@ -9,9 +9,6 @@ Kd 二相分配、浸透同伴と地下水経由の輸送、表面蓄積と洗�
 (`advect_scalar`)・`src/m_gwflow_lateral.f90`(地下の同伴輸送)で、
 設計の経緯は developer.md §30 と docs/wq_metal_plan.md にあります。
 
-図は `python3 docs/figs/make_guide_figs.py wq_models` で日英の PNG・SVG を生成します
-(`docs/figs/guide/fig_wq_models.py`)。
-
 ## 1. 状態量と輸送
 
 地表水の物質は**柱状量** $`c_q`$(g/m²。セル内質量 = $`c_q\,g_v\,w\,A`$)で

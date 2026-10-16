@@ -55,10 +55,7 @@ other debris-flow processes. Debris flow and the moving bed layer require
 `z` against creep or uplift, and weathering can continue to produce soil.
 Sea-mask cells (`sw > 0`) receive no landform updates.
 
-An [SVG version](../../figs/geomorph_processes_en.svg) is available. Regenerate
-only this figure in both languages and formats with
-`python docs/figs/make_guide_figs.py geomorph`. The run-control figure below has
-its own independent target, `geomorph_morfac`.
+An [SVG version](../../figs/geomorph_processes_en.svg) is available.
 
 ## Run control (common to all processes)
 
@@ -114,8 +111,7 @@ Event processes and coupled modules have the following restrictions.
 - When glacier and landform modules are combined, glacier `gl_morfac` must equal landform `morfac`.
 
 The figure values illustrate the update procedure; they are neither recommended
-settings nor solver output. Regenerate only these Japanese/English PNG and SVG
-files with `python docs/figs/make_guide_figs.py geomorph_morfac`.
+settings nor solver output.
 
 **Policy on parameter defaults** - the material and calibration values of
 every process have safe defaults that make it "just run", so **the

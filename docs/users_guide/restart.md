@@ -38,7 +38,6 @@
 両番号を0から始めます。**どちらも `0000` はそのランの開始状態**です。
 最大値統計・積算線流量は保存対象外で、そのラン内で再集計します。
 [SVG版](../figs/restart_modes.svg)もあります。
-`python docs/figs/make_guide_figs.py restart` でこの図だけを再生成できます。
 
 ## 再開する(f_state_restore = 1)
 

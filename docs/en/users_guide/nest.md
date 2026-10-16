@@ -59,9 +59,6 @@ those containing the sponge. A parent cell is replaced only when its
 band and sponge. `nest_fb=0` disables child-to-parent replacement. See
 [the explanation](nest_models.md) §6 for the averaging options.
 
-Generate both languages as PNG and SVG with
-`python docs/figs/make_nest_figs.py layout`.
-
 ## How to use
 
 1. Name the list file in the parameter file of the root (the coarsest grid).
