@@ -44,7 +44,8 @@ module m_snow
   use m_meteo, only : t_meteo, meteo_temp_set, meteo_temp_cell
   use m_swflow_enc, only : chn
   use list_snow, only : t_list_snow, list_snow_read
-  use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
+  use m_fileio, only : fileio_read_matrix
+  use m_restart, only : restart_write_cell, restart_read_cell
   use m_sysdep_util, only : sysdep_mkdir
   use m_util, only : param_default
   use m_parallel, only : par_info, par_stop, par_abort, dcp, is_root, &
@@ -273,21 +274,15 @@ subroutine save_state(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real, allocatable :: wk(:,:)
   integer :: un
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-  else
-    allocate(wk(1, 1), source = 0.0)
-  end if
-  call par_gather_to(wk, s%swe)
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
   if (is_root) then
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/snow.dat', form='unformatted', &
          status='replace')
-    call fileio_write_rle(un, wk)
-    close(un)
   end if
+  call restart_write_cell(un, s%swe)       ! 帯を窓形に集約しながら RLE で書く(§83)
+  if (is_root) close(un)
 end subroutine
 
 
@@ -295,11 +290,10 @@ subroutine restore_state(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  real, allocatable :: wk(:,:)
-  real :: dum(1,1)
   character(:), allocatable :: fname
   logical :: found
   integer :: un
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
 
   fname = trim(p%dir_save)//'/snow.dat'
   inquire(file=fname, exist=found)
@@ -307,15 +301,9 @@ subroutine restore_state(p, g, s)
     call par_stop("snow: state file not found (was fn_snow enabled when saving): " &
                   //fname)
   end if
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-    open(newunit=un, file=fname, form='unformatted', status='old')
-    call fileio_read_rle(un, wk)
-    close(un)
-    call par_scatter_cell(wk, s%swe)
-  else
-    call par_scatter_cell(dum, s%swe)
-  end if
+  if (is_root) open(newunit=un, file=fname, form='unformatted', status='old')
+  call restart_read_cell(un, s%swe)
+  if (is_root) close(un)
 end subroutine
 
 

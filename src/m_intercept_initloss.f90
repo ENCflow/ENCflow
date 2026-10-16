@@ -30,7 +30,8 @@ module m_intercept_initloss
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
-  use m_fileio, only : fileio_read_matrix, fileio_write_rle, fileio_read_rle
+  use m_fileio, only : fileio_read_matrix
+  use m_restart, only : restart_write_cell, restart_read_cell
   use m_sysdep_util, only : sysdep_mkdir
   use m_util, only : param_default
   use m_parallel, only : par_info, par_stop, par_abort, dcp, is_root, &
@@ -241,8 +242,6 @@ end function
 subroutine restore_state(ici, p)
   type(t_icinit), intent(inout) :: ici
   type(t_sysparam), intent(in) :: p
-  real, allocatable :: wk(:,:)
-  real :: dum(1,1)
   character(:), allocatable :: fname
   logical :: found
   integer :: un
@@ -254,41 +253,26 @@ subroutine restore_state(ici, p)
                   //"enabled when saving): "//fname)
   end if
 
-  if (is_root) then
-    allocate(wk(1:dcp%nx_g, 1:dcp%ny_g), source = 0.0)
-    open(newunit=un, file=fname, form='unformatted', status='old')
-    call fileio_read_rle(un, wk)
-    close(un)
-    call par_scatter_cell(wk, ici%st)
-  else
-    call par_scatter_cell(dum, ici%st)
-  end if
+  if (is_root) open(newunit=un, file=fname, form='unformatted', status='old')
+  call restart_read_cell(un, ici%st)
+  if (is_root) close(un)
   call par_info("restoring interception storage (initial loss model) from "//fname)
 end subroutine
 
 
 !----------------------------------------------------------------------
-! 内部状態 st の保存(契約C)。帯を rank0 へ gather して RLE で書く
+! 内部状態 st の保存(契約C)。帯を窓形に集約しながら RLE で書く(§83)
 !----------------------------------------------------------------------
 subroutine save_state(ici, p)
   type(t_icinit), intent(in) :: ici
   type(t_sysparam), intent(in) :: p
-  real, allocatable :: wk(:,:)
   integer :: un
 
   call sysdep_mkdir(trim(p%dir_save))
-  if (is_root) then
-    allocate(wk(1:dcp%nx_g, 1:dcp%ny_g), source = 0.0)
-  else
-    allocate(wk(1, 1), source = 0.0)   ! 参照されないダミー
-  end if
-  call par_gather_to(wk, ici%st)
-  if (is_root) then
-    open(newunit=un, file=trim(p%dir_save)//'/intercept_initloss.dat', &
-         form='unformatted', status='replace')
-    call fileio_write_rle(un, wk)
-    close(un)
-  end if
+  if (is_root) open(newunit=un, file=trim(p%dir_save)//'/intercept_initloss.dat', &
+                    form='unformatted', status='replace')
+  call restart_write_cell(un, ici%st)
+  if (is_root) close(un)
 end subroutine
 
 

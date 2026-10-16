@@ -11,7 +11,8 @@ module m_swflow_enc
                        par_gather_edge_to, par_scatter_edge, par_allreduce_sumi, &
                        par_gather_to, par_scatter_cell
   use m_sysdep_util, only : sysdep_mkdir
-  use m_fileio, only : fileio_write_rle, fileio_read_rle
+  use m_restart, only : restart_write_cell, restart_read_cell, restart_write_edge, &
+                        restart_read_edge, restart_skip
   use m_util, only : itoa
   implicit none
   private
@@ -2901,62 +2902,34 @@ subroutine save_state(p, sx)
   type(t_sysparam), intent(in) :: p
   type(t_enc_status), intent(in) :: sx
   integer :: un, ifwd, icw
-  real, allocatable :: wuv(:,:,:), wmn(:,:,:), wfd(:,:,:), wcx(:,:), wcy(:,:)
-  ! 全域バッファに集約してから rank0 のみが書く。
-  ! バッファ形状・帯外ゼロとも旧形式(全域確保時)とバイト互換
-  if (is_root) then
-    allocate(wuv(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
-    allocate(wmn(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
-  else
-    allocate(wuv(1, 1, 1), source = 0.0)   ! 参照されないダミー
-    allocate(wmn(1, 1, 1), source = 0.0)
-  end if
-  call par_gather_edge_to(wuv, sx%uv)
-  call par_gather_edge_to(wmn, sx%mn)
-  ! 動的振り替えの表 fwd(最終ステップの連続式が使ったステップ頭 h^n の表)。
-  ! 復元時の u,v,m,n 再導出をビット一致にするために保存する(§68.14。
-  ! 有効判定は namelist 由来で全ランク同一 = collective 安全)
+  ! 帯配列を窓形に集約しながら rank0 がゼロ抑制 RLE で書く(乾燥エッジ・
+  ! 海域エッジのゼロを圧縮。§7。全域一時なし。§83)。窓外の値は旧実装の
+  ! 全域バッファの初期値(uv/mn は 0、fwd・cwxd/cwyd は 1.0)と同じにして
+  ! 旧形式とバイト互換。有効判定は namelist 由来で全ランク同一 = collective 安全
   ifwd = 0
-  if (chn%have_fwd) then
-    ifwd = 1
-    if (is_root) then
-      allocate(wfd(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 1.0)
-    else
-      allocate(wfd(1, 1, 1), source = 1.0)
-    end if
-    call par_gather_edge_to(wfd, chn%fwd)
-  end if
+  if (chn%have_fwd) ifwd = 1
   icw = 0
-  if (chn%have_cwd) then
-    icw = 1
-    if (is_root) then
-      allocate(wcx(1:dcp%nx_g, 1:dcp%ny_g), source = 1.0)
-      allocate(wcy(1:dcp%nx_g, 1:dcp%ny_g), source = 1.0)
-    else
-      allocate(wcx(1, 1), source = 1.0)
-      allocate(wcy(1, 1), source = 1.0)
-    end if
-    call par_gather_to(wcx, chn%cwxd)
-    call par_gather_to(wcy, chn%cwyd)
+  if (chn%have_cwd) icw = 1
+  if (is_root) then
+    ! swflow の dispose は m_state より先に走るため、save ディレクトリは
+    ! ここでも作る(sysdep_mkdir は冪等・rank0 限定)
+    call sysdep_mkdir(p%dir_save)
+    open(newunit=un, file=trim(p%dir_save)//'/swflow_enc.dat', form='unformatted', status='replace')
   end if
-  if (.not. is_root) return
-  ! swflow の dispose は m_state より先に走るため、save ディレクトリは
-  ! ここでも作る(sysdep_mkdir は冪等・rank0 限定)
-  call sysdep_mkdir(p%dir_save)
-  open(newunit=un, file=trim(p%dir_save)//'/swflow_enc.dat', form='unformatted', status='replace')
-  ! ゼロ抑制 RLE で書く(乾燥エッジ・海域エッジのゼロを圧縮。§7)
-  call fileio_write_rle(un, wuv)
-  call fileio_write_rle(un, wmn)
-  ! 動的振り替えの表の有無(0/1)と表(2026-10-04 の形式。§7)
-  write(un) ifwd
-  if (ifwd == 1) call fileio_write_rle(un, wfd)
+  call restart_write_edge(un, sx%uv)
+  call restart_write_edge(un, sx%mn)
+  ! 動的振り替えの表 fwd(最終ステップの連続式が使ったステップ頭 h^n の表)の
+  ! 有無(0/1)と表(2026-10-04 の形式。§7)。復元時の u,v,m,n 再導出を
+  ! ビット一致にするために保存する(§68.14)
+  if (is_root) write(un) ifwd
+  if (ifwd == 1) call restart_write_edge(un, chn%fwd, fill = 1.0)
   ! 動的通水率 cwxd/cwyd の有無(0/1)と表(§68.32。2026-10-04b の形式)
-  write(un) icw
+  if (is_root) write(un) icw
   if (icw == 1) then
-    call fileio_write_rle(un, wcx)
-    call fileio_write_rle(un, wcy)
+    call restart_write_cell(un, chn%cwxd, fill = 1.0)
+    call restart_write_cell(un, chn%cwyd, fill = 1.0)
   end if
-  close(un)
+  if (is_root) close(un)
 end subroutine
 
 
@@ -2968,7 +2941,6 @@ subroutine restore_state(p, sx)
   type(t_enc_status), intent(inout) :: sx
   integer :: un, ios
   integer :: nfl(1), ncw(1)
-  real, allocatable :: wuv(:,:,:), wmn(:,:,:), wfd(:,:,:), wcx(:,:), wcy(:,:)
   character(:), allocatable :: fname
   logical :: found
 
@@ -2982,27 +2954,19 @@ subroutine restore_state(p, sx)
                   //"(was the state saved with the ENC grid system): "//fname)
   end if
 
-  ! rank0 だけが全域一時配列に読み、par_scatter_edge で各ランクの
-  ! エッジ確保範囲(jsh-1:jeh)へ直接配布する(旧 Bcast 方式の置き換え。
-  ! 非 root は全域一時を確保しない。全域一時が rank0 に残るのは
-  ! RLE ストリームが先頭からの逐次展開のため。developer.md §7)
+  ! rank0 が全域の RLE ストリームから窓形に復号し、par_scatter_edge で
+  ! 各ランクのエッジ確保範囲(jsh-1:jeh)へ配布する(m_restart。全域一時なし。
+  ! developer.md §7・§83)
   nfl(1) = 0
+  if (is_root) open(newunit=un, file=fname, form='unformatted', status='old')
+  call restart_read_edge(un, sx%uv)
+  call restart_read_edge(un, sx%mn)
   if (is_root) then
-    allocate(wuv(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
-    allocate(wmn(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 0.0)
-    open(newunit=un, file=fname, form='unformatted', status='old')
-    call fileio_read_rle(un, wuv)
-    call fileio_read_rle(un, wmn)
     ! 動的振り替えの表の有無フラグ(2026-10-04 の形式。版検査済みのため
     ! 欠如はないはずだが、読めなければ「なし」として復元した h から作る)
     read(un, iostat=ios) nfl(1)
     if (ios /= 0) nfl(1) = 0
-  else
-    allocate(wuv(1, 1, 1), source = 0.0)   ! 参照されないダミー
-    allocate(wmn(1, 1, 1), source = 0.0)
   end if
-  call par_scatter_edge(wuv, sx%uv)
-  call par_scatter_edge(wmn, sx%mn)
   sx%mn1(:,:,:) = sx%mn(:,:,:)   ! 書き込みバッファも正準状態で初期化する
   ! フラグを全ランクで共有する(rank0 以外は 0 を持ち寄るので和 = フラグ)。
   ! 表は復元側で動的振り替えが有効なときだけ読んで配布する(無効なら
@@ -3010,13 +2974,7 @@ subroutine restore_state(p, sx)
   call par_allreduce_sumi(nfl)
   chn%fwd_restored = .false.
   if (chn%have_fwd .and. nfl(1) == 1) then
-    if (is_root) then
-      allocate(wfd(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 1.0)
-      call fileio_read_rle(un, wfd)
-    else
-      allocate(wfd(1, 1, 1), source = 1.0)
-    end if
-    call par_scatter_edge(wfd, chn%fwd)
+    call restart_read_edge(un, chn%fwd)
     chn%fwd_restored = .true.
   end if
   ! 動的通水率(§68.32)。fwd と同じ手順(rank0 が読み、フラグを和で共有、
@@ -3024,27 +2982,15 @@ subroutine restore_state(p, sx)
   ! ために、フラグの前に表を読まずに済むよう順序は fwd → cw
   ncw(1) = 0
   if (is_root) then
-    if (nfl(1) == 1 .and. .not. chn%have_fwd) then
-      allocate(wfd(1:4, 0:dcp%nx_g, 0:dcp%ny_g), source = 1.0)
-      call fileio_read_rle(un, wfd)       ! 読み飛ばし
-    end if
+    if (nfl(1) == 1 .and. .not. chn%have_fwd) call restart_skip(un)   ! 読み飛ばし
     read(un, iostat=ios) ncw(1)
     if (ios /= 0) ncw(1) = 0
   end if
   call par_allreduce_sumi(ncw)
   chn%cwd_restored = .false.
   if (chn%have_cwd .and. ncw(1) == 1) then
-    if (is_root) then
-      allocate(wcx(1:dcp%nx_g, 1:dcp%ny_g), source = 1.0)
-      allocate(wcy(1:dcp%nx_g, 1:dcp%ny_g), source = 1.0)
-      call fileio_read_rle(un, wcx)
-      call fileio_read_rle(un, wcy)
-    else
-      allocate(wcx(1, 1), source = 1.0)
-      allocate(wcy(1, 1), source = 1.0)
-    end if
-    call par_scatter_cell(wcx, chn%cwxd)
-    call par_scatter_cell(wcy, chn%cwyd)
+    call restart_read_cell(un, chn%cwxd)
+    call restart_read_cell(un, chn%cwyd)
     chn%cwd_restored = .true.
   end if
   if (is_root) close(un)

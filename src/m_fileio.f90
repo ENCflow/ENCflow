@@ -16,6 +16,10 @@ module m_fileio
   public :: fileio_un_read_matrix
   public :: fileio_write_rle
   public :: fileio_read_rle
+  public :: fileio_write_rle_win
+  public :: fileio_read_rle_win
+  public :: fileio_write_rle_zero
+  public :: fileio_skip_rle
 
 
 
@@ -48,6 +52,17 @@ module m_fileio
   interface fileio_read_rle
     procedure :: fileio_read_rle2
     procedure :: fileio_read_rle3
+  end interface
+
+  ! 窓形バッファからの RLE 書き出し・窓形バッファへの復号(§83)
+  interface fileio_write_rle_win
+    procedure :: fileio_write_rle_win2
+    procedure :: fileio_write_rle_win3
+  end interface
+
+  interface fileio_read_rle_win
+    procedure :: fileio_read_rle_win2
+    procedure :: fileio_read_rle_win3
   end interface
 
   ! RLE のゼロ判定に使う、既定 real と同サイズの整数 kind(PREC 連動)
@@ -1186,6 +1201,247 @@ subroutine fileio_read_rle3(un, a)
   real, pointer :: f(:)
   f(1:size(a)) => a
   call rle_read_decode(un, f)
+end subroutine
+
+
+!======================================================================
+! 窓形バッファと全域 RLE ストリームの相互変換(save/restore 用。§83)
+!   全域 (n1, n2, n3) の配列のフラット順(第 1 次元が最速。2 次元の場は
+!   n1 = 1、エッジ配列は n1 = 方向数)のストリームを、窓 a(:,:,:)(全域での
+!   位置が第 2 次元 o2..、第 3 次元 o3..)の値と窓外の値 fill から直接
+!   符号化・復号する。全域配列を作って fileio_write_rle / fileio_read_rle
+!   したものとバイト一致・値一致する(ファイル形式は不変)。
+!   メモリは runs とリテラル(窓の非ゼロ数。fill が非ゼロなら窓外の要素数も)
+!======================================================================
+
+!----------------------------------------------------------------------
+! 符号化(コア)。パス1で run 数とリテラル数を数え、パス2で詰める
+!----------------------------------------------------------------------
+subroutine rle_encode_win(un, a, n1, n2, n3, o2, o3, fill)
+  integer, intent(in) :: un
+  real, intent(in) :: a(:,:,:)
+  integer, intent(in) :: n1, n2, n3, o2, o3
+  real, intent(in) :: fill
+  integer(int64) :: n, nrun, nd, r, k
+  integer(int64), allocatable :: runs(:,:)
+  real, allocatable :: packed(:)
+  logical :: lit_open, fill_zero
+  integer :: pass, m2, m3, j2, j3
+
+  m2 = size(a, 2)
+  m3 = size(a, 3)
+  if (o2 < 1 .or. o2 + m2 - 1 > n2 .or. o3 < 1 .or. o3 + m3 - 1 > n3) then
+    call par_abort("fileio: RLE window is not inside the global array")
+  end if
+  n = int(n1, int64) * n2 * n3
+  fill_zero = rle_is_pzero(fill)
+  nrun = 0
+  nd = 0
+  do pass = 1, 2
+    r = 1
+    k = 0
+    lit_open = .false.
+    if (pass == 2) then
+      runs(1, 1) = 0
+      runs(2, 1) = 0
+    end if
+    call feed_fill(int(n1, int64) * n2 * (o3 - 1))              ! 窓より前の面
+    do j3 = 1, m3
+      call feed_fill(int(n1, int64) * (o2 - 1))                 ! 窓より前の列
+      do j2 = 1, m2
+        call feed_vals(a(:, j2, j3))
+      end do
+      call feed_fill(int(n1, int64) * (n2 - (o2 - 1) - m2))     ! 窓より後の列
+    end do
+    call feed_fill(int(n1, int64) * n2 * (n3 - (o3 - 1) - m3))  ! 窓より後の面
+    if (pass == 1) then
+      nrun = r
+      nd = k
+      allocate(runs(2, nrun))
+      allocate(packed(nd))
+    end if
+  end do
+
+  write(un) n, nrun
+  write(un) runs
+  write(un) packed                     ! nd=0 でも空レコードを書く(read と対)
+
+contains
+
+  subroutine feed_zeros(nz)
+    integer(int64), intent(in) :: nz
+    if (nz <= 0) return
+    if (lit_open) then                 ! リテラル連の後のゼロ = 新しい run
+      r = r + 1
+      lit_open = .false.
+      if (pass == 2) then
+        runs(1, r) = nz
+        runs(2, r) = 0
+      end if
+    else
+      if (pass == 2) runs(1, r) = runs(1, r) + nz
+    end if
+  end subroutine
+
+  subroutine feed_lits(nl, v)          ! 値 v を nl 個
+    integer(int64), intent(in) :: nl
+    real, intent(in) :: v
+    if (nl <= 0) return
+    if (pass == 2) then
+      packed(k+1:k+nl) = v
+      runs(2, r) = runs(2, r) + nl
+    end if
+    k = k + nl
+    lit_open = .true.
+  end subroutine
+
+  subroutine feed_fill(nf)
+    integer(int64), intent(in) :: nf
+    if (fill_zero) then
+      call feed_zeros(nf)
+    else
+      call feed_lits(nf, fill)
+    end if
+  end subroutine
+
+  subroutine feed_vals(v)
+    real, intent(in) :: v(:)
+    integer :: e
+    do e = 1, size(v)
+      if (rle_is_pzero(v(e))) then
+        call feed_zeros(1_int64)
+      else
+        call feed_lits(1_int64, v(e))
+      end if
+    end do
+  end subroutine
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 復号(コア)。窓に重なるリテラルだけを a に格納する(窓外は捨てる)
+!----------------------------------------------------------------------
+subroutine rle_decode_win(un, a, n1, n2, n3, o2, o3)
+  integer, intent(in) :: un
+  real, intent(out) :: a(:,:,:)
+  integer, intent(in) :: n1, n2, n3, o2, o3
+  integer(int64) :: n, n_total, nrun, nd, r, p, k, rem, q, cnt
+  integer(int64), allocatable :: runs(:,:)
+  real, allocatable :: packed(:)
+  integer :: e1, e2, e3, m2, m3
+
+  m2 = size(a, 2)
+  m3 = size(a, 3)
+  n = int(n1, int64) * n2 * n3
+  read(un) n_total, nrun
+  if (n_total /= n) then
+    call par_abort("fileio: RLE element count mismatch (in save: " &
+                   //itoa64(n_total)//" / target: "//itoa64(n)//")")
+  end if
+  allocate(runs(2, nrun))
+  read(un) runs
+  nd = sum(runs(2, :))
+  allocate(packed(nd))
+  read(un) packed                      ! nd=0 でも空レコードを読む(write と対)
+
+  a = 0.0                              ! ゼロ部は +0.0(圧縮対象は +0.0 のみ)
+  p = 1                                ! フラット位置(1 始まり)
+  k = 1
+  do r = 1, nrun
+    p = p + runs(1, r)
+    rem = runs(2, r)
+    do while (rem > 0)
+      q = p - 1
+      e1 = int(mod(q, int(n1, int64))) + 1
+      q = q / n1
+      e2 = int(mod(q, int(n2, int64))) + 1
+      e3 = int(q / n2) + 1
+      cnt = min(rem, int(n1 - e1 + 1, int64))      ! 第 1 次元の残り
+      if (e2 >= o2 .and. e2 <= o2 + m2 - 1 .and. e3 >= o3 .and. e3 <= o3 + m3 - 1) then
+        a(e1:e1+int(cnt)-1, e2-o2+1, e3-o3+1) = packed(k:k+cnt-1)
+      end if
+      p = p + cnt
+      k = k + cnt
+      rem = rem - cnt
+    end do
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 2 次元の場: 全域 (nx, ny)、窓 a の全域での左上 (i1, j1)。fill は窓外の値(既定 0)
+!----------------------------------------------------------------------
+subroutine fileio_write_rle_win2(un, a, nx, ny, i1, j1, fill)
+  integer, intent(in) :: un, nx, ny, i1, j1
+  real, intent(in), target, contiguous :: a(:,:)
+  real, intent(in), optional :: fill
+  real, pointer :: f3(:,:,:)
+  real :: fv
+  fv = 0.0
+  if (present(fill)) fv = fill
+  f3(1:1, 1:size(a, 1), 1:size(a, 2)) => a
+  call rle_encode_win(un, f3, 1, nx, ny, i1, j1, fv)
+end subroutine
+
+subroutine fileio_read_rle_win2(un, a, nx, ny, i1, j1)
+  integer, intent(in) :: un, nx, ny, i1, j1
+  real, intent(out), target, contiguous :: a(:,:)
+  real, pointer :: f3(:,:,:)
+  f3(1:1, 1:size(a, 1), 1:size(a, 2)) => a
+  call rle_decode_win(un, f3, 1, nx, ny, i1, j1)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 3 次元(エッジ配列 (k, i, j)): 全域 (nk, nx1, ny1)、窓 a の全域での位置
+! (第 2 次元 o2、第 3 次元 o3。いずれも 1 始まりのフラット添字)
+!----------------------------------------------------------------------
+subroutine fileio_write_rle_win3(un, a, nk, nx1, ny1, o2, o3, fill)
+  integer, intent(in) :: un, nk, nx1, ny1, o2, o3
+  real, intent(in) :: a(:,:,:)
+  real, intent(in), optional :: fill
+  real :: fv
+  fv = 0.0
+  if (present(fill)) fv = fill
+  if (size(a, 1) /= nk) call par_abort("fileio: RLE window leading dimension mismatch")
+  call rle_encode_win(un, a, nk, nx1, ny1, o2, o3, fv)
+end subroutine
+
+subroutine fileio_read_rle_win3(un, a, nk, nx1, ny1, o2, o3)
+  integer, intent(in) :: un, nk, nx1, ny1, o2, o3
+  real, intent(out) :: a(:,:,:)
+  if (size(a, 1) /= nk) call par_abort("fileio: RLE window leading dimension mismatch")
+  call rle_decode_win(un, a, nk, nx1, ny1, o2, o3)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 全要素 0 の場(n 要素)を書く(「未使用成分はゼロを書いて形式を固定」用。
+! 全域のゼロ配列を fileio_write_rle したものとバイト一致)
+!----------------------------------------------------------------------
+subroutine fileio_write_rle_zero(un, n)
+  integer, intent(in) :: un
+  integer(int64), intent(in) :: n
+  integer(int64) :: runs(2, 1)
+  real, allocatable :: packed(:)
+  runs(1, 1) = n
+  runs(2, 1) = 0
+  allocate(packed(0))
+  write(un) n, 1_int64
+  write(un) runs
+  write(un) packed
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 1 配列ぶんの RLE ストリーム(3 レコード)を読み飛ばす
+!----------------------------------------------------------------------
+subroutine fileio_skip_rle(un)
+  integer, intent(in) :: un
+  read(un)
+  read(un)
+  read(un)
 end subroutine
 
 

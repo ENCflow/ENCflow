@@ -58,7 +58,7 @@ module m_parallel
    public :: par_allreduce_sumr
    public :: par_sum_rows
    public :: par_gather_to, par_gather_to_i, par_gather_edge_to
-   public :: par_gather_win, par_gather_win_i
+   public :: par_gather_win, par_gather_win_i, par_gather_edge_win
    public :: par_scatter_cell, par_scatter_cell_i, par_scatter_edge
    public :: par_scatter_win, par_scatter_edge_win
    public :: par_reduce_points
@@ -583,15 +583,13 @@ contains
       if (is_root) buf(dcp%ish:dcp%ieh, dcp%jw1:dcp%jw2) = wbuf
    end subroutine par_gather_to_i
 
-   subroutine par_gather_edge_to(buf, a)
-      ! エッジ配列の rank0 集約(save 用)。エッジ行 js..je を各ランクが送り、
+   subroutine par_gather_edge_win(buf, a)
+      ! エッジ配列の rank0 集約(save 用。§83)。エッジ行 js..je を各ランクが送り、
       ! 行 jw1-1 は rank0 が自前の値で埋める(共有行は南北同値)。
-      ! buf は rank0 のみ全域 (1:4, 0:nx, 0:ny)。帯外は変更しない。
-      ! 列範囲は ish-1..ieh(帯のエッジ確保範囲)。rank0 は窓形の受信一時
-      ! (:, ish-1:ieh, jw1-1:jw2) に受けてから buf へ写す(§80)
-      real, intent(inout) :: buf(1:, 0:, 0:)
+      ! buf は rank0 のみ窓形 (:, ish-1:ieh, jw1-1:jw2) ちょうどで確保しておくこと。
+      ! rank0 以外の buf は参照されないためサイズ1のダミーでよい
+      real, intent(inout) :: buf(1:, dcp%ish-1:, dcp%jw1-1:)
       real, intent(in) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
-      real, allocatable :: wbuf(:, :, :)
       integer :: counts(0:nproc-1), displs(0:nproc-1)
       integer :: r, js_r, je_r, n12
       n12 = size(a, 1) * size(a, 2)
@@ -600,17 +598,24 @@ contains
          counts(r) = n12 * (je_r - js_r + 1)
          displs(r) = n12 * (js_r - (dcp%jw1 - 1))
       end do
+      call MPI_Gatherv(a(:, :, dcp%js:dcp%je), counts(nrank), MPI_WP, &
+                       buf, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
+      if (is_root) buf(:, :, dcp%js-1) = a(:, :, dcp%js-1)
+   end subroutine par_gather_edge_win
+
+   subroutine par_gather_edge_to(buf, a)
+      ! エッジ配列の全域バッファ buf(1:4, 0:nx, 0:ny) への集約(rank0 のみ)。
+      ! 窓形に受けて(par_gather_edge_win)から写す。帯外は変更しない
+      real, intent(inout) :: buf(1:, 0:, 0:)
+      real, intent(in) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
+      real, allocatable :: wbuf(:, :, :)
       if (is_root) then
          allocate(wbuf(size(a, 1), dcp%ish-1:dcp%ieh, dcp%jw1-1:dcp%jw2))
       else
          allocate(wbuf(1, 1, 1))
       end if
-      call MPI_Gatherv(a(:, :, dcp%js:dcp%je), counts(nrank), MPI_WP, &
-                       wbuf, counts, displs, MPI_WP, 0, MPI_COMM_WORLD)
-      if (is_root) then
-         wbuf(:, :, dcp%js-1) = a(:, :, dcp%js-1)
-         buf(:, dcp%ish-1:dcp%ieh, dcp%jw1-1:dcp%jw2) = wbuf
-      end if
+      call par_gather_edge_win(wbuf, a)
+      if (is_root) buf(:, dcp%ish-1:dcp%ieh, dcp%jw1-1:dcp%jw2) = wbuf
    end subroutine par_gather_edge_to
 
    subroutine par_scatter_cell(buf, a)

@@ -83,7 +83,8 @@ module m_gwflow_conduit
                                conduit_build_cnd, gwflow_conduit_dtcheck, &
                                gwflow_lateral_geom_init
   use m_gwflow_layer2, only : t_gwl2, gwflow_layer2_active, gwflow_layer2_leakinfo
-  use m_fileio, only : fileio_read_matrix, fileio_write_rle, fileio_read_rle
+  use m_fileio, only : fileio_read_matrix
+  use m_restart, only : restart_write_cell, restart_read_cell
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : par_info, par_stop, dcp, is_root, par_halo_cell, &
                          par_gather_to, par_scatter_cell, par_sum_rows
@@ -799,21 +800,15 @@ subroutine save_state(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real, allocatable :: wk(:,:)
   integer :: un
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-  else
-    allocate(wk(1, 1), source = 0.0)
-  end if
-  call par_gather_to(wk, s%hgc)
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
   if (is_root) then
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/gwflow_conduit.dat', form='unformatted', &
          status='replace')
-    call fileio_write_rle(un, wk)
-    close(un)
   end if
+  call restart_write_cell(un, s%hgc)       ! 帯を窓形に集約しながら RLE で書く(§83)
+  if (is_root) close(un)
 end subroutine
 
 
@@ -821,11 +816,10 @@ subroutine restore_state(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  real, allocatable :: wk(:,:)
-  real :: dum(1,1)
   character(:), allocatable :: fname
   logical :: found
   integer :: un
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
 
   ! 版・格子・精度の検証は m_state(check_save_info)が済ませている。
   ! 自ファイルの有無のみ確認(無ければ「保存時は管路層無効だった」として
@@ -837,15 +831,9 @@ subroutine restore_state(p, g, s)
                   // "(was f_gwconduit enabled when saving): "//fname)
   end if
 
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-    open(newunit=un, file=fname, form='unformatted', status='old')
-    call fileio_read_rle(un, wk)
-    close(un)
-    call par_scatter_cell(wk, s%hgc)
-  else
-    call par_scatter_cell(dum, s%hgc)
-  end if
+  if (is_root) open(newunit=un, file=fname, form='unformatted', status='old')
+  call restart_read_cell(un, s%hgc)
+  if (is_root) close(un)
 end subroutine
 
 

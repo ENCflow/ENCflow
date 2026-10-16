@@ -66,7 +66,8 @@ submodule(m_geomorph) m_geomorph_bedslide
   use m_parallel, only : par_info, par_warn, par_stop, dcp, is_root, par_halo_cell, &
                          par_allreduce_max, par_allreduce_sumr, par_gather_to, &
                          par_scatter_cell
-  use m_fileio, only : fileio_read_matrix, fileio_write_rle, fileio_read_rle
+  use m_fileio, only : fileio_read_matrix
+  use m_restart, only : restart_write_cell, restart_read_cell
   use m_sysdep_util, only : sysdep_mkdir
   use m_util, only : itoa, rtoa
   implicit none
@@ -688,29 +689,20 @@ subroutine save_bedslide(gm, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real, allocatable :: wk(:,:)
   integer :: un
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-  else
-    allocate(wk(1, 1), source = 0.0)
-  end if
-  call par_gather_to(wk, s%hb)
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
   if (is_root) then
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/geomorph_bedslide.dat', form='unformatted', &
          status='replace')
-    call fileio_write_rle(un, wk)
   end if
-  ! 低速の連続 tick 数(bs_tstop の途中経過。書き並びは restore と同時に更新)
-  call par_gather_to(wk, gm%bsl%nst)
-  if (is_root) call fileio_write_rle(un, wk)
+  ! 帯配列を窓形に集約しながら rank0 が RLE で書く(§83。書き並びは restore と同時に更新)
+  call restart_write_cell(un, s%hb)
+  ! 低速の連続 tick 数(bs_tstop の途中経過)
+  call restart_write_cell(un, gm%bsl%nst)
   ! f_bsplunge=1 の基準水面(3 面目。0 でも書く = 面数固定)
-  call par_gather_to(wk, gm%bsl%eref)
-  if (is_root) then
-    call fileio_write_rle(un, wk)
-    close(un)
-  end if
+  call restart_write_cell(un, gm%bsl%eref)
+  if (is_root) close(un)
 end subroutine
 
 
@@ -719,11 +711,10 @@ subroutine restore_bedslide(gm, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  real, allocatable :: wk(:,:)
-  real :: dum(1,1)
   character(:), allocatable :: fname
   logical :: found
   integer :: un
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
 
   fname = trim(p%dir_save)//'/geomorph_bedslide.dat'
   inquire(file=fname, exist=found)
@@ -731,21 +722,11 @@ subroutine restore_bedslide(gm, p, g, s)
     call par_stop("geomorph: bedslide state file not found (was f_bedslide enabled when saving): " &
                   // fname)
   end if
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-    open(newunit=un, file=fname, form='unformatted', status='old')
-    call fileio_read_rle(un, wk)
-    call par_scatter_cell(wk, s%hb)
-    call fileio_read_rle(un, wk)
-    call par_scatter_cell(wk, gm%bsl%nst)
-    call fileio_read_rle(un, wk)
-    close(un)
-    call par_scatter_cell(wk, gm%bsl%eref)
-  else
-    call par_scatter_cell(dum, s%hb)
-    call par_scatter_cell(dum, gm%bsl%nst)
-    call par_scatter_cell(dum, gm%bsl%eref)
-  end if
+  if (is_root) open(newunit=un, file=fname, form='unformatted', status='old')
+  call restart_read_cell(un, s%hb)
+  call restart_read_cell(un, gm%bsl%nst)
+  call restart_read_cell(un, gm%bsl%eref)
+  if (is_root) close(un)
 end subroutine
 
 

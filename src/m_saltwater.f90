@@ -56,7 +56,8 @@ module m_saltwater
   use m_state, only : t_state
   use m_gwflow_lateral, only : t_gwlat, t_latlayer, gwflow_lateral_geom_init, &
                                gwflow_lateral_geom_get, gwflow_lateral_layer1_get
-  use m_fileio, only : fileio_read_matrix, fileio_write_rle, fileio_read_rle
+  use m_fileio, only : fileio_read_matrix
+  use m_restart, only : restart_write_cell, restart_read_cell
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : par_info, par_stop, dcp, is_root, par_halo_cell, &
                          par_gather_to, par_scatter_cell, par_allreduce_max
@@ -692,25 +693,17 @@ subroutine save_state(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real, allocatable :: wk(:,:)
   integer :: un
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-  else
-    allocate(wk(1, 1), source = 0.0)
-  end if
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
   if (is_root) then
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/saltwater.dat', form='unformatted', &
          status='replace')
   end if
-  call par_gather_to(wk, s%hss)
-  if (is_root) call fileio_write_rle(un, wk)
-  call par_gather_to(wk, s%hgs)
-  if (is_root) then
-    call fileio_write_rle(un, wk)
-    close(un)
-  end if
+  ! 帯配列を窓形に集約しながら rank0 が RLE で書く(§83。読み並びは restore と対)
+  call restart_write_cell(un, s%hss)
+  call restart_write_cell(un, s%hgs)
+  if (is_root) close(un)
 end subroutine
 
 
@@ -718,11 +711,10 @@ subroutine restore_state(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  real, allocatable :: wk(:,:)
-  real :: dum(1,1)
   character(:), allocatable :: fname
   logical :: found
   integer :: un
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
 
   ! 版・格子・精度の検証は m_state(check_save_info)が済ませている
   fname = trim(p%dir_save)//'/saltwater.dat'
@@ -732,18 +724,10 @@ subroutine restore_state(p, g, s)
                   // "(was fn_salt enabled when saving): "//fname)
   end if
 
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-    open(newunit=un, file=fname, form='unformatted', status='old')
-    call fileio_read_rle(un, wk)
-    call par_scatter_cell(wk, s%hss)
-    call fileio_read_rle(un, wk)
-    call par_scatter_cell(wk, s%hgs)
-    close(un)
-  else
-    call par_scatter_cell(dum, s%hss)
-    call par_scatter_cell(dum, s%hgs)
-  end if
+  if (is_root) open(newunit=un, file=fname, form='unformatted', status='old')
+  call restart_read_cell(un, s%hss)
+  call restart_read_cell(un, s%hgs)
+  if (is_root) close(un)
 end subroutine
 
 

@@ -39,7 +39,7 @@ module m_parallel
    public :: par_allreduce_sumr
    public :: par_sum_rows
    public :: par_gather_to, par_gather_to_i, par_gather_edge_to
-   public :: par_gather_win, par_gather_win_i
+   public :: par_gather_win, par_gather_win_i, par_gather_edge_win
    public :: par_scatter_cell, par_scatter_cell_i, par_scatter_edge
    public :: par_scatter_win, par_scatter_edge_win
    public :: par_reduce_points
@@ -231,6 +231,14 @@ contains
       buf(dcp%ish:dcp%ieh, dcp%js:dcp%je) = a(:, dcp%js:dcp%je)
    end subroutine par_gather_to_i
 
+   subroutine par_gather_edge_win(buf, a)
+      ! エッジ配列の窓形バッファ (:, ish-1:ieh, jw1-1:jw2) への集約(§83。
+      ! js-1 行を含めて複写)
+      real, intent(inout) :: buf(1:, dcp%ish-1:, dcp%jw1-1:)
+      real, intent(in) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
+      buf(:, :, dcp%js-1:dcp%je) = a(:, :, dcp%js-1:dcp%je)
+   end subroutine par_gather_edge_win
+
    subroutine par_gather_edge_to(buf, a)
       ! エッジ配列の全域バッファへの集約(js-1 行を含めて複写)
       real, intent(inout) :: buf(1:, 0:, 0:)
@@ -264,8 +272,8 @@ contains
    end subroutine par_scatter_win
 
    subroutine par_scatter_edge(buf, a)
-      ! rank0 全域エッジバッファからの帯配布(par_gather_edge_to の
-      ! 逆向き)。逐次では確保範囲(=全域窓±ハロ)を複写する。
+      ! rank0 全域エッジバッファ buf(1:4, 0:nx, 0:ny) からの帯配布(par_gather_edge_to
+      ! の逆向き)。逐次では確保範囲(=全域窓±ハロ)を複写する。
       real, intent(in) :: buf(1:, 0:, 0:)
       real, intent(inout) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
       a(:, :, dcp%jsh-1:dcp%jeh) = buf(:, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh)
@@ -273,7 +281,7 @@ contains
 
    subroutine par_scatter_edge_win(buf, a)
       ! rank0 の窓形エッジバッファ (:, ish-1:ieh, jwh1-1:jwh2) からの帯配布
-      ! (窓形の gather の逆向き)。逐次では確保範囲を複写する
+      ! (par_gather_edge_win の逆向き)。逐次では確保範囲を複写する
       real, intent(in) :: buf(1:, dcp%ish-1:, dcp%jwh1-1:)
       real, intent(inout) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
       a(:, :, dcp%jsh-1:dcp%jeh) = buf(:, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh)

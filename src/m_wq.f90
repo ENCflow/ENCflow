@@ -74,7 +74,8 @@ module m_wq
   use m_swflow_enc, only : swflow_vh, chn
   use m_gwflow_conduit, only : t_gwcond, gwflow_conduit_ready
   use list_wq, only : t_list_wq, list_wq_read, nwqgmax, nwqcmax, nwqvmax, nwqfmax
-  use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
+  use m_fileio, only : fileio_read_matrix
+  use m_restart, only : restart_write_cell, restart_read_cell, restart_write_zero, restart_skip
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : dcp, is_root, par_info, par_stop, par_abort, par_sum_rows, &
                          par_gather_to, par_scatter_cell, par_allreduce_max, &
@@ -1428,48 +1429,38 @@ subroutine save_state(wq, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real, allocatable :: wk(:,:)
-  real :: dum(1,1)
   integer :: un, k
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-  else
-    allocate(wk(1, 1), source = 0.0)
-  end if
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
   if (is_root) then
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/wq.dat', form='unformatted', status='replace')
   end if
-  call par_gather_to(wk, s%cq)
-  if (is_root) call fileio_write_rle(un, wk)
+  ! 帯配列を窓形に集約しながら rank0 が RLE で書く(§83。読み並びは restore と対)
+  call restart_write_cell(un, s%cq)
   ! cg(f_wq_infil=0 では不使用 = ゼロを書いて形式を固定)
   if (allocated(s%cg)) then
-    call par_gather_to(wk, s%cg)
+    call restart_write_cell(un, s%cg)
   else
-    if (is_root) wk = 0.0
+    call restart_write_zero(un)
   end if
-  if (is_root) call fileio_write_rle(un, wk)
   ! bp(プール無効時もゼロを書いて形式を固定 = 常に4成分)
   if (wq%have_pool) then
-    call par_gather_to(wk, s%bp)
+    call restart_write_cell(un, s%bp)
   else
-    if (is_root) wk = 0.0
+    call restart_write_zero(un)
   end if
-  if (is_root) call fileio_write_rle(un, wk)
   ! crs(ため池無効時もゼロを書いて形式を固定。§30.7)
   if (wq%have_rs) then
-    call par_gather_to(wk, s%crs)
+    call restart_write_cell(un, s%crs)
   else
-    if (is_root) wk = 0.0
+    call restart_write_zero(un)
   end if
-  if (is_root) call fileio_write_rle(un, wk)
   ! ダムプール(基数+質量 real64。ダムなしでも基数 0 を書いて形式を固定)
   if (is_root) then
     write(un) wq%ndam
     if (wq%ndam > 0) write(un) (wq%dam(k)%mass, k = 1, wq%ndam)
     close(un)
   end if
-  if (dum(1,1) > huge(0.0)) continue  ! 引数未使用の警告を抑制
 end subroutine
 
 
@@ -1478,8 +1469,6 @@ subroutine restore_state(wq, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  real, allocatable :: wk(:,:)
-  real :: dum(1,1)
   real :: mv(max(wq%ndam, 1))
   real(real64) :: mv8(max(wq%ndam, 1))
   character(:), allocatable :: fname
@@ -1495,44 +1484,24 @@ subroutine restore_state(wq, p, g, s)
     call par_stop("wq: state file not found (was fn_wq enabled when saving): "//fname)
   end if
 
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-    open(newunit=un, file=fname, form='unformatted', status='old')
-    call fileio_read_rle(un, wk)
-    call par_scatter_cell(wk, s%cq)
-  else
-    call par_scatter_cell(dum, s%cq)
-  end if
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
+  if (is_root) open(newunit=un, file=fname, form='unformatted', status='old')
+  call restart_read_cell(un, s%cq)
   if (allocated(s%cg)) then
-    if (is_root) then
-      call fileio_read_rle(un, wk)
-      call par_scatter_cell(wk, s%cg)
-    else
-      call par_scatter_cell(dum, s%cg)
-    end if
+    call restart_read_cell(un, s%cg)
   else
-    if (is_root) call fileio_read_rle(un, wk)   ! cg 不使用 = 読み飛ばし
+    call restart_skip(un)                       ! cg 不使用 = 読み飛ばし
   end if
   if (wq%have_pool) then
-    if (is_root) then
-      call fileio_read_rle(un, wk)
-      call par_scatter_cell(wk, s%bp)
-    else
-      call par_scatter_cell(dum, s%bp)
-    end if
+    call restart_read_cell(un, s%bp)
   else
-    if (is_root) call fileio_read_rle(un, wk)   ! bp 不使用 = 読み飛ばし
+    call restart_skip(un)                       ! bp 不使用 = 読み飛ばし
   end if
   ! crs(常に4成分。§30.7)
   if (wq%have_rs) then
-    if (is_root) then
-      call fileio_read_rle(un, wk)
-      call par_scatter_cell(wk, s%crs)
-    else
-      call par_scatter_cell(dum, s%crs)
-    end if
+    call restart_read_cell(un, s%crs)
   else
-    if (is_root) call fileio_read_rle(un, wk)   ! crs 不使用 = 読み飛ばし
+    call restart_skip(un)                       ! crs 不使用 = 読み飛ばし
   end if
   ! ダムプール(基数の一致を検証し、rank0 の読み値を allreduce で共有。
   ! 「寄与ランクがちょうど1つ」の使い方 = ビット決定的。§11)

@@ -53,7 +53,8 @@ module m_bldgdebris
   use list_bldgdebris, only : t_list_bldgdebris, list_bldgdebris_read
   use m_driftwood, only : m_driftwood_draft
   use m_swflow_enc, only : chn
-  use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
+  use m_fileio, only : fileio_read_matrix
+  use m_restart, only : restart_write_cell, restart_read_cell
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : dcp, is_root, par_info, par_stop, par_abort, par_sum_rows, &
                          par_gather_to, par_scatter_cell, par_halo_cell, par_allreduce_sumi
@@ -680,33 +681,21 @@ subroutine save_state(bd, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real, allocatable :: wk(:,:)
   integer :: un
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-  else
-    allocate(wk(1, 1), source = 0.0)
-  end if
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
   if (is_root) then
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/bldgdebris.dat', form='unformatted', &
          status='replace')
   end if
-  call par_gather_to(wk, s%hbd)
-  if (is_root) call fileio_write_rle(un, wk)
-  call par_gather_to(wk, s%wbd)
-  if (is_root) call fileio_write_rle(un, wk)
-  call par_gather_to(wk, bd%wbs)
-  if (is_root) call fileio_write_rle(un, wk)
-  call par_gather_to(wk, bd%wbs0)
-  if (is_root) call fileio_write_rle(un, wk)
-  call par_gather_to(wk, bd%gv0)
-  if (is_root) call fileio_write_rle(un, wk)
-  call par_gather_to(wk, s%gv)
-  if (is_root) then
-    call fileio_write_rle(un, wk)
-    close(un)
-  end if
+  ! 帯配列を窓形に集約しながら rank0 が RLE で書く(§83。読み並びは restore と対)
+  call restart_write_cell(un, s%hbd)
+  call restart_write_cell(un, s%wbd)
+  call restart_write_cell(un, bd%wbs)
+  call restart_write_cell(un, bd%wbs0)
+  call restart_write_cell(un, bd%gv0)
+  call restart_write_cell(un, s%gv)
+  if (is_root) close(un)
 end subroutine
 
 
@@ -715,11 +704,10 @@ subroutine restore_state(bd, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  real, allocatable :: wk(:,:)
-  real :: dum(1,1)
   character(:), allocatable :: fname
   logical :: found
   integer :: un, i, j
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
 
   ! 版・格子・精度の検証は m_state(check_save_info)が済ませている。
   ! 自ファイルの有無のみ確認(無ければ停止 — 意図しない材積消失を防ぐ)
@@ -730,45 +718,14 @@ subroutine restore_state(bd, p, g, s)
                   //"when saving): "//fname)
   end if
 
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-    open(newunit=un, file=fname, form='unformatted', status='old')
-    call fileio_read_rle(un, wk)
-    call par_scatter_cell(wk, s%hbd)
-  else
-    call par_scatter_cell(dum, s%hbd)
-  end if
-  if (is_root) then
-    call fileio_read_rle(un, wk)
-    call par_scatter_cell(wk, s%wbd)
-  else
-    call par_scatter_cell(dum, s%wbd)
-  end if
-  if (is_root) then
-    call fileio_read_rle(un, wk)
-    call par_scatter_cell(wk, bd%wbs)
-  else
-    call par_scatter_cell(dum, bd%wbs)
-  end if
-  if (is_root) then
-    call fileio_read_rle(un, wk)
-    call par_scatter_cell(wk, bd%wbs0)
-  else
-    call par_scatter_cell(dum, bd%wbs0)
-  end if
-  if (is_root) then
-    call fileio_read_rle(un, wk)
-    call par_scatter_cell(wk, bd%gv0)
-  else
-    call par_scatter_cell(dum, bd%gv0)
-  end if
-  if (is_root) then
-    call fileio_read_rle(un, wk)
-    call par_scatter_cell(wk, s%gv)
-    close(un)
-  else
-    call par_scatter_cell(dum, s%gv)
-  end if
+  if (is_root) open(newunit=un, file=fname, form='unformatted', status='old')
+  call restart_read_cell(un, s%hbd)
+  call restart_read_cell(un, s%wbd)
+  call restart_read_cell(un, bd%wbs)
+  call restart_read_cell(un, bd%wbs0)
+  call restart_read_cell(un, bd%gv0)
+  call restart_read_cell(un, s%gv)
+  if (is_root) close(un)
   ! 導出量の再構成(lm は帯全体。af は swflow init の update_af が埋める)
   call par_halo_cell(s%gv)
   do j = dcp%jsh, dcp%jeh

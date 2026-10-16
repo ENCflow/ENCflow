@@ -7,7 +7,8 @@ module m_state
                        par_gather_to, par_bcast_cell
   use m_util, only : itoa, rtoa
   use m_sysdep_util, only : sysdep_mkdir
-  use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_window
+  use m_fileio, only : fileio_read_rle_win, fileio_read_window
+  use m_restart, only : restart_write_cell, restart_write_zero
   use iso_fortran_env, only : output_unit, real64
   implicit none
   private
@@ -1116,32 +1117,25 @@ subroutine save_state(p, s)
   type(t_sysparam), intent(in) :: p
   type(t_state), intent(in) :: s
   integer :: un
-  real, allocatable :: wk(:,:,:)
-  ! 全域バッファに集約してから rank0 のみが書く。
-  ! write(un) wk のレコードは h, z, hrs, hg, sd, hs の連結。
+  ! 帯配列を窓形に集約しながら rank0 が成分ごとにゼロ抑制 RLE で書く
+  ! (海域・乾燥域のゼロを圧縮。§7。全域一時なし。§83)。
+  ! 書き並びは h, z, hrs, hg, sd, hs(restore と同時に更新すること)。
   ! 運動量表現(uv/mn 等)はスキーム私有の保存(swflow_enc.dat)、
   ! u,v,m,n,vv,qq,e は復元時に再導出される導出量(§7 の線引き)
   call sysdep_mkdir(p%dir_save)
-  if (is_root) then
-    allocate(wk(1:dcp%nx_g, 1:dcp%ny_g, n_state_save), source = 0.0)
+  if (is_root) open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', &
+                    status='replace')
+  call restart_write_cell(un, s%h)
+  call restart_write_cell(un, s%z)
+  call restart_write_cell(un, s%hrs)
+  call restart_write_cell(un, s%hg)
+  if (allocated(s%sd)) then
+    call restart_write_cell(un, s%sd)
   else
-    allocate(wk(1, 1, n_state_save))          ! 参照されないダミー
+    call restart_write_zero(un)              ! 未確保時は 0(形式不変)
   end if
-  call par_gather_to(wk(:,:,1), s%h)
-  call par_gather_to(wk(:,:,2), s%z)
-  call par_gather_to(wk(:,:,3), s%hrs)
-  call par_gather_to(wk(:,:,4), s%hg)
-  if (allocated(s%sd)) call par_gather_to(wk(:,:,5), s%sd)   ! 未確保時は 0(形式不変)
-  call par_gather_to(wk(:,:,6), s%hs)
+  call restart_write_cell(un, s%hs)
   if (.not. is_root) return
-  open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', status='replace')
-  ! 成分ごとにゼロ抑制 RLE で書く(海域・乾燥域のゼロを圧縮。§7)
-  call fileio_write_rle(un, wk(:,:,1))   ! h
-  call fileio_write_rle(un, wk(:,:,2))   ! z
-  call fileio_write_rle(un, wk(:,:,3))   ! hrs
-  call fileio_write_rle(un, wk(:,:,4))   ! hg
-  call fileio_write_rle(un, wk(:,:,5))   ! sd
-  call fileio_write_rle(un, wk(:,:,6))   ! hs
   close(un)
 
   ! メタデータは最後に書く(save 一式の完成マーカーを兼ねる。
@@ -1156,8 +1150,7 @@ end subroutine
 subroutine restore_state(p, s)
   type(t_sysparam), intent(in) :: p
   type(t_state), intent(inout) :: s
-  integer :: un
-  real, allocatable :: wk(:,:)      ! 全域の復号一時(rank0 のみ。D3 で撤去)
+  integer :: un, i1, j1
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (s%initialized) continue  ! 引数未使用の警告を抑制
   ! 門番: メタデータを検証してから読む(不一致は par_stop)。
@@ -1167,21 +1160,20 @@ subroutine restore_state(p, s)
 
   ! rank0 が読み、全ランクへ配布する。受け取る s は窓形の全域一時状態 ts
   ! (全ランク同形)なので Bcast が成立する。帯への切り出しは呼び出し側。
-  ! save は全域の RLE なので、全域の一時 1 枚に復号してから窓を写す
-  ! (復号のストリーミング化 = 全域一時の撤去は D3。§82)
+  ! 全域の RLE ストリームから窓の部分だけを ts に復号する(全域一時なし。§83)
   if (is_root) then
-    allocate(wk(1:dcp%nx_g, 1:dcp%ny_g))
+    i1 = lbound(s%h, 1)
+    j1 = lbound(s%h, 2)
     open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', status='old')
     ! 読み並びは save_state の書き込み順(h, z, hrs, hg, sd, hs)と一致させること。
     ! 成分を足すときは save と restore を必ず同時に更新する
-    call read_one(s%h)
-    call read_one(s%z)
-    call read_one(s%hrs)
-    call read_one(s%hg)
-    call read_one(s%sd)
-    call read_one(s%hs)
+    call fileio_read_rle_win(un, s%h, dcp%nx_g, dcp%ny_g, i1, j1)
+    call fileio_read_rle_win(un, s%z, dcp%nx_g, dcp%ny_g, i1, j1)
+    call fileio_read_rle_win(un, s%hrs, dcp%nx_g, dcp%ny_g, i1, j1)
+    call fileio_read_rle_win(un, s%hg, dcp%nx_g, dcp%ny_g, i1, j1)
+    call fileio_read_rle_win(un, s%sd, dcp%nx_g, dcp%ny_g, i1, j1)
+    call fileio_read_rle_win(un, s%hs, dcp%nx_g, dcp%ny_g, i1, j1)
     close(un)
-    deallocate(wk)
   end if
   call par_bcast_cell(s%h)
   call par_bcast_cell(s%z)
@@ -1189,18 +1181,6 @@ subroutine restore_state(p, s)
   call par_bcast_cell(s%hg)
   call par_bcast_cell(s%sd)
   call par_bcast_cell(s%hs)
-
-contains
-
-  subroutine read_one(a)
-    real, intent(inout) :: a(:,:)     ! 窓形(下限は lbound で受ける)
-    integer :: i1, j1
-    call fileio_read_rle(un, wk)
-    i1 = lbound(s%h, 1)
-    j1 = lbound(s%h, 2)
-    a(:,:) = wk(i1:i1 + size(a, 1) - 1, j1:j1 + size(a, 2) - 1)
-  end subroutine
-
 end subroutine
 
 

@@ -30,7 +30,7 @@ module m_gwflow_frost
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
   use m_meteo, only : t_meteo, meteo_temp_set, meteo_temp_cell
-  use m_fileio, only : fileio_write_rle, fileio_read_rle
+  use m_restart, only : restart_write_cell, restart_read_cell
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : par_info, par_stop, dcp, is_root, &
                          par_gather_to, par_scatter_cell
@@ -170,21 +170,15 @@ subroutine save_state(fro, p, g)
   type(t_frost), intent(in) :: fro
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
-  real, allocatable :: wk(:,:)
   integer :: un
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-  else
-    allocate(wk(1, 1), source = 0.0)
-  end if
-  call par_gather_to(wk, fro%fi)
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
   if (is_root) then
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/gwflow_frost.dat', form='unformatted', &
          status='replace')
-    call fileio_write_rle(un, wk)
-    close(un)
   end if
+  call restart_write_cell(un, fro%fi)       ! 帯を窓形に集約しながら RLE で書く(§83)
+  if (is_root) close(un)
 end subroutine
 
 
@@ -196,11 +190,10 @@ subroutine restore_state(fro, p, g)
   type(t_frost), intent(inout) :: fro
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
-  real, allocatable :: wk(:,:)
-  real :: dum(1,1)
   character(:), allocatable :: fname
   logical :: found
   integer :: un
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
 
   fname = trim(p%dir_save)//'/gwflow_frost.dat'
   inquire(file=fname, exist=found)
@@ -209,15 +202,9 @@ subroutine restore_state(fro, p, g)
                   // "(was f_gwfrost enabled when saving): "//fname)
   end if
 
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-    open(newunit=un, file=fname, form='unformatted', status='old')
-    call fileio_read_rle(un, wk)
-    close(un)
-    call par_scatter_cell(wk, fro%fi)
-  else
-    call par_scatter_cell(dum, fro%fi)
-  end if
+  if (is_root) open(newunit=un, file=fname, form='unformatted', status='old')
+  call restart_read_cell(un, fro%fi)
+  if (is_root) close(un)
 end subroutine
 
 

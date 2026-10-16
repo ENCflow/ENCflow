@@ -34,7 +34,7 @@ module m_swi
   use list_intercept, only : t_list_intercept, list_intercept_read
   use m_parallel, only : is_root, par_info, par_warn, par_stop, dcp, &
                          par_gather_to, par_scatter_cell
-  use m_fileio, only : fileio_write_rle, fileio_read_rle
+  use m_restart, only : restart_write_cell, restart_read_cell
   use m_sysdep_util, only : sysdep_mkdir
   implicit none
   private
@@ -213,24 +213,17 @@ subroutine save_state(p, g, si)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_swi), intent(in) :: si
-  real, allocatable :: wk(:,:)
   integer :: un
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-  else
-    allocate(wk(1, 1), source = 0.0)
-  end if
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
   if (is_root) then
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/swi.dat', form='unformatted', &
          status='replace')
   end if
-  call par_gather_to(wk, si%s1)
-  if (is_root) call fileio_write_rle(un, wk)
-  call par_gather_to(wk, si%s2)
-  if (is_root) call fileio_write_rle(un, wk)
-  call par_gather_to(wk, si%s3)
-  if (is_root) call fileio_write_rle(un, wk)
+  ! 帯配列を窓形に集約しながら rank0 が RLE で書く(§83。読み並びは restore と対)
+  call restart_write_cell(un, si%s1)
+  call restart_write_cell(un, si%s2)
+  call restart_write_cell(un, si%s3)
   if (is_root) close(un)
 end subroutine
 
@@ -240,11 +233,10 @@ subroutine restore_state(p, g, si, s)
   type(t_geoinfo), intent(in) :: g
   type(t_swi), intent(inout) :: si
   type(t_state), intent(inout) :: s
-  real, allocatable :: wk(:,:)
-  real :: dum(1,1)
   character(:), allocatable :: fname
   logical :: found
   integer :: un, i, j
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
 
   fname = trim(p%dir_save)//'/swi.dat'
   inquire(file=fname, exist=found)
@@ -252,21 +244,11 @@ subroutine restore_state(p, g, si, s)
     call par_stop("swi: state file not found (was fn_swi enabled when saving): " &
                   //fname)
   end if
-  if (is_root) then
-    allocate(wk(1:g%nx, 1:g%ny), source = 0.0)
-    open(newunit=un, file=fname, form='unformatted', status='old')
-    call fileio_read_rle(un, wk)
-    call par_scatter_cell(wk, si%s1)
-    call fileio_read_rle(un, wk)
-    call par_scatter_cell(wk, si%s2)
-    call fileio_read_rle(un, wk)
-    call par_scatter_cell(wk, si%s3)
-    close(un)
-  else
-    call par_scatter_cell(dum, si%s1)
-    call par_scatter_cell(dum, si%s2)
-    call par_scatter_cell(dum, si%s3)
-  end if
+  if (is_root) open(newunit=un, file=fname, form='unformatted', status='old')
+  call restart_read_cell(un, si%s1)
+  call restart_read_cell(un, si%s2)
+  call restart_read_cell(un, si%s3)
+  if (is_root) close(un)
   ! 復元直後の表示・出力のために SWI を再構成(タンクの純関数)
   do j = dcp%jsh, dcp%jeh
     do i = dcp%ish, dcp%ieh
