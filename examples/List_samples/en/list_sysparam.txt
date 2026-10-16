@@ -126,6 +126,8 @@
   !fn_log = "Log.txt"       ! log file name
   !outfn_suffix = ""        ! string appended to output file names (avoids
                             !   collisions of runs in parallel)
+  !out_fill = 0.0           ! value written outside the computational window
+                            !   (bounding box of the region mask) in raster output
 
   ! ---- Computation scheme and numerical constants (normally no need to
   !      change. users_guide/swflow.md) ----
