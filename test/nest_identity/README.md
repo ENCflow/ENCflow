@@ -20,6 +20,12 @@
 
 本体は Run_nest.sh(nestcheck をビルドし、ケースを順に走らせる)。
 
+比較はバイト一致なので、nestcheck と本体(libencflow.a)は同じ FFLAGS で
+組むこと。src だけを `make FFLAGS=...`(例: -O0 -fcheck=all)で組み替えると、
+nestcheck は make.inc の -Ofast のままリンクされ、`-ffast-math` が設定する
+FTZ/DAZ(非正規化数のゼロ化)の有無が本体と食い違って一致しなくなる。
+最適化を変えて検証するときは make.inc の FFLAGS を変える(developer.md §72)。
+
 ## ケース
 
 | ケース | 親 / 子 | 何を見るか | 判定 |

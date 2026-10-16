@@ -10119,6 +10119,19 @@ fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dt
 - **実行環境の CPU が変わると -march=native のビルド物は SIGILL で落ちる**
   (クラウドのコンテナ移動で実発生: set_h の自動ベクトル化命令)。原因不明の
   Illegal instruction は、まず `make clean` から作り直す。
+- **恒等テストはドライバと本体を同じ浮動小数点環境で組むこと(2026-10-16)**:
+  nestcheck・twin は test 側の Makefile が make.inc の FFLAGS でリンクする。
+  src だけを `make FFLAGS=...` で -O0 に組み替えて検証すると、ドライバは
+  -Ofast のままで `-ffast-math` 由来の crtfastmath が起動時に FTZ/DAZ(非正規化
+  数のゼロ化)を設定し、encflow(-O0。非正規化数を保持)との比較で数値前線の
+  非正規化数の有無が違う → 適応 RK の「mn が厳密に 0 か」の判定が変わり、
+  湿潤域全体が ULP 差になる(§79 の検証で観察。nest_twin wave の Log 不一致・
+  nest_identity two-way の保存ファイル不一致はこれ)。-O0 で検証するなら
+  make.inc の FFLAGS を変えて本体とドライバの両方を組み直す。
+- **子の初期水深 hinit は同じビルドで切り出すこと**: 別ビルドの `nestcheck cut`
+  が書いた hinit(cos の丸めが -Ofast と -O0 で 1 ULP 違う)を流用すると、子の
+  初期値が親と 1 ULP ずれ、1 ステップ目から流量が相対 3e-12 違う。Run_nest.sh は
+  毎回 cut し直すので通常の実行では起きない(手作業の再現で踏んだ)。
 
 
 ## 73. 多段ネスティング Phase 5: BMI の多格子公開(2026-10-10 実装)
@@ -10879,7 +10892,10 @@ x 方向の確保範囲(第二段 (C))の対象。
 台帳 1e-5〜1e-8 相対)、nest_identity の two-way wave・wave_fb3 の
 swflow_enc.dat と nest_twin wave が reference / single と一致しないが、
 いずれも §79 変更前のコミットを同じフラグで組んでも同じで、-O0 と -Ofast の
-丸めの違い(§28.3)または既存事象(handoff.md 00d)。release ビルドでは
+丸めの違い(§28.3)。nest の 3 件は検証ドライバ nestcheck・twin だけが
+make.inc の -Ofast(FTZ/DAZ)のままだったことによる(2026-10-16 調査。§72
+落とし穴。本体とドライバを揃えて -O0 で組めば nest_identity・nest_twin とも
+一致する)。release ビルドでは
 reference 付き 24 ケースと nest_identity・nest_twin・bmi_nest・bmi_vars・
 gvchange がすべて PASS(等価変換 = identical)。同ビルドの -fcheck 実行で
 test/nhshelf が m_swflow_enc_nh の slope_coef の範囲外読みで停止する
