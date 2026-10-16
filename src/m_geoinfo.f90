@@ -9,7 +9,7 @@ module m_geoinfo
   use m_geotiff, only : t_gtif_info, gtif_inquire
   use m_util, only : itoa, param_default
   use m_parallel, only : par_info, par_stop, par_abort, dcp, is_root, nproc, &
-                       par_scatter_cell, &
+                       par_scatter_win, &
                        par_bcast_cell, par_bcast_cell_i
   implicit none
   private
@@ -335,9 +335,9 @@ subroutine scatter_band_r(a)
   end if
   allocate(t(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh))
   if (is_root) then
-    call par_scatter_cell(a, t)
+    call par_scatter_win(a, t)        ! a は窓形 (iwh, jwh)(§82)
   else
-    call par_scatter_cell(dum, t)
+    call par_scatter_win(dum, t)
   end if
   call move_alloc(t, a)
 end subroutine

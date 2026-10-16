@@ -41,6 +41,7 @@ module m_parallel
    public :: par_gather_to, par_gather_to_i, par_gather_edge_to
    public :: par_gather_win, par_gather_win_i
    public :: par_scatter_cell, par_scatter_cell_i, par_scatter_edge
+   public :: par_scatter_win, par_scatter_edge_win
    public :: par_reduce_points
    public :: par_bcast_cell, par_bcast_cell_i, par_bcast_edge
    public :: nrank, nproc, is_root
@@ -238,19 +239,29 @@ contains
    end subroutine par_gather_edge_to
 
    subroutine par_scatter_cell(buf, a)
-      ! rank0 の窓形バッファ buf(ish:ieh, jwh1:jwh2) からの帯配布(gather の
-      ! 逆向き)。逐次では確保範囲(=全域窓±ハロ)を複写する。
-      real, intent(in) :: buf(dcp%ish:, dcp%jwh1:)
+      ! rank0 の全域バッファ buf(1:nx, 1:ny) からの帯配布(gather の逆向き)。
+      ! 逐次では確保範囲(=全域窓±ハロ)を複写する。
+      ! 窓形バッファ (ish:ieh, jwh1:jwh2) からの配布は par_scatter_win(§82)
+      real, intent(in) :: buf(1:, 1:)
       real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
       a(:, dcp%jsh:dcp%jeh) = buf(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
    end subroutine par_scatter_cell
 
    subroutine par_scatter_cell_i(buf, a)
       ! par_scatter_cell の整数版
-      integer, intent(in) :: buf(dcp%ish:, dcp%jwh1:)
+      integer, intent(in) :: buf(1:, 1:)
       integer, intent(inout) :: a(dcp%ish:, dcp%jsh:)
       a(:, dcp%jsh:dcp%jeh) = buf(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
    end subroutine par_scatter_cell_i
+
+   subroutine par_scatter_win(buf, a)
+      ! rank0 の窓形バッファ buf(ish:ieh, jwh1:jwh2)(全域添字。窓±ハロ)からの
+      ! 帯配布(§82)。全域形 (1:nx, 1:ny) のバッファには par_scatter_cell を使う
+      ! (ダミーの下限が違うので取り違えると行・列がずれる)
+      real, intent(in) :: buf(dcp%ish:, dcp%jwh1:)
+      real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
+      a(:, dcp%jsh:dcp%jeh) = buf(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
+   end subroutine par_scatter_win
 
    subroutine par_scatter_edge(buf, a)
       ! rank0 全域エッジバッファからの帯配布(par_gather_edge_to の
@@ -259,6 +270,14 @@ contains
       real, intent(inout) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
       a(:, :, dcp%jsh-1:dcp%jeh) = buf(:, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh)
    end subroutine par_scatter_edge
+
+   subroutine par_scatter_edge_win(buf, a)
+      ! rank0 の窓形エッジバッファ (:, ish-1:ieh, jwh1-1:jwh2) からの帯配布
+      ! (窓形の gather の逆向き)。逐次では確保範囲を複写する
+      real, intent(in) :: buf(1:, dcp%ish-1:, dcp%jwh1-1:)
+      real, intent(inout) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
+      a(:, :, dcp%jsh-1:dcp%jeh) = buf(:, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh)
+   end subroutine par_scatter_edge_win
 
    subroutine par_reduce_points(vals)
       ! 点計測値の rank0 集約。逐次では何もしない

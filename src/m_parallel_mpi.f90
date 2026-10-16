@@ -60,6 +60,7 @@ module m_parallel
    public :: par_gather_to, par_gather_to_i, par_gather_edge_to
    public :: par_gather_win, par_gather_win_i
    public :: par_scatter_cell, par_scatter_cell_i, par_scatter_edge
+   public :: par_scatter_win, par_scatter_edge_win
    public :: par_reduce_points
    public :: par_bcast_cell, par_bcast_cell_i, par_bcast_edge
    public :: nrank, nproc, is_root
@@ -613,13 +614,34 @@ contains
    end subroutine par_gather_edge_to
 
    subroutine par_scatter_cell(buf, a)
-      ! rank0 の窓形バッファ buf(ish:ieh, jwh1:jwh2)(全域形 (1:nx, 1:ny) でも
-      ! よい = 窓が全域のとき)を各ランクの帯+ハロ a(:, jsh:jeh) へ配布する
-      ! (gather の逆向き。初期化・復元用。§82)。
+      ! rank0 の全域バッファ buf(1:nx, 1:ny) を各ランクの帯+ハロ
+      ! a(:, jsh:jeh) へ配布する(gather の逆向き。初期化・復元用)。
+      ! 窓形バッファ (ish:ieh, jwh1:jwh2) からの配布は par_scatter_win(§82)。
       ! 帯+ハロは隣接ランクと重なるため Scatterv は使えず、rank0 からの
       ! 個別送信で配る(初期化の1回きりで性能は問題にならない)。
       ! rank0 以外の buf は参照されないためサイズ1のダミーでよい。
       ! 受信側 a は確保範囲(jsh:jeh)ちょうどで確保しておくこと。
+      real, intent(in) :: buf(1:, 1:)
+      real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
+      if (is_root) then
+         call scatter_cell_core(buf(dcp%ish:dcp%ieh, dcp%jwh1:dcp%jwh2), a)   ! 窓形の部分配列を渡す
+      else
+         call scatter_cell_core(buf, a)
+      end if
+   end subroutine par_scatter_cell
+
+   subroutine par_scatter_win(buf, a)
+      ! rank0 の窓形バッファ buf(ish:ieh, jwh1:jwh2)(全域添字。窓±ハロ)からの
+      ! 帯配布(§82)。全域形 (1:nx, 1:ny) のバッファには par_scatter_cell を使う
+      ! (ダミーの下限が違うので取り違えると行・列がずれる)
+      real, intent(in) :: buf(dcp%ish:, dcp%jwh1:)
+      real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
+      call scatter_cell_core(buf, a)
+   end subroutine par_scatter_win
+
+   subroutine scatter_cell_core(buf, a)
+      ! par_scatter_cell / par_scatter_win の本体(buf は呼び出し側のダミーの
+      ! 下限で全域添字に揃っている)
       real, intent(in) :: buf(dcp%ish:, dcp%jwh1:)
       real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
       integer :: r, jsh_r, jeh_r, n1
@@ -635,11 +657,11 @@ contains
          call MPI_Recv(a, size(a), MPI_WP, 0, 21, MPI_COMM_WORLD, &
                        MPI_STATUS_IGNORE)
       end if
-   end subroutine par_scatter_cell
+   end subroutine scatter_cell_core
 
    subroutine par_scatter_cell_i(buf, a)
       ! par_scatter_cell の整数版(マスク・土地利用等)
-      integer, intent(in) :: buf(dcp%ish:, dcp%jwh1:)
+      integer, intent(in) :: buf(1:, 1:)
       integer, intent(inout) :: a(dcp%ish:, dcp%jsh:)
       integer :: r, jsh_r, jeh_r, n1
       n1 = size(a, 1)
@@ -665,6 +687,25 @@ contains
       ! 受信側 a はエッジ確保範囲(jsh-1:jeh)ちょうどで確保しておくこと。
       real, intent(in) :: buf(1:, 0:, 0:)
       real, intent(inout) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
+      if (is_root) then
+         call scatter_edge_core(buf(:, dcp%ish-1:dcp%ieh, dcp%jwh1-1:dcp%jwh2), a)   ! 窓形の部分配列を渡す
+      else
+         call scatter_edge_core(buf, a)
+      end if
+   end subroutine par_scatter_edge
+
+   subroutine par_scatter_edge_win(buf, a)
+      ! rank0 の窓形エッジバッファ (:, ish-1:ieh, jwh1-1:jwh2) からの帯配布
+      ! (par_gather_edge_win の逆向き。§83)
+      real, intent(in) :: buf(1:, dcp%ish-1:, dcp%jwh1-1:)
+      real, intent(inout) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
+      call scatter_edge_core(buf, a)
+   end subroutine par_scatter_edge_win
+
+   subroutine scatter_edge_core(buf, a)
+      ! par_scatter_edge / par_scatter_edge_win の本体
+      real, intent(in) :: buf(1:, dcp%ish-1:, dcp%jwh1-1:)
+      real, intent(inout) :: a(1:, dcp%ish-1:, dcp%jsh-1:)
       integer :: r, jsh_r, jeh_r, n12
       n12 = size(a, 1) * size(a, 2)
       if (is_root) then
@@ -678,7 +719,7 @@ contains
          call MPI_Recv(a, size(a), MPI_WP, 0, 23, MPI_COMM_WORLD, &
                        MPI_STATUS_IGNORE)
       end if
-   end subroutine par_scatter_edge
+   end subroutine scatter_edge_core
 
    subroutine par_reduce_points(vals)
       ! 点計測値の rank0 集約(m_record 用)。
