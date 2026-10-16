@@ -168,9 +168,15 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        fileio_read_window(text/bil/GeoTIFF)、z・係数・ts の窓形化、user
        フックの契約「全域添字で、配列の確保範囲の中に書く」と利用者向け
        ページ docs/users_guide/user_routines.md(ja/en)、io.md の推奨。
-       残り: 各モジュールの読み込み一時 `wk(1:nx,1:ny)`(41 箇所。初期分布・
-       パラメータ分布。1 枚ずつなのでピークへの寄与は小さい。帯を直接
-       fileio_read_window で読む形に置き換えれば消える。m_precip の prmap が見本)。
+       残り(2026-10-16 に**見送り**を決定): 各モジュールの読み込み一時
+       `wk(1:nx,1:ny)`(18 箇所。初期分布・パラメータ分布)。効果は分布ファイルを
+       使うときの rank0 一過性ピーク 1 枚ぶん(全国 250 m で約 0.44 GB)に限られ、
+       初期化ピークの主因はマスク類(D4)。やるなら rank0 読み+par_scatter_cell の
+       12 箇所を窓形 (iwh, jwh) 読み+par_scatter_win に揃えるだけに絞る(機械的・
+       低リスク)。bedslide/debris の `minval(wk)` と構造物の湖沼番号ラスタ
+       (`count(lmap == id)`)は全域で検査しているので窓化は挙動変更になり、
+       prtype=3 の順次読み(fileio_un_read_matrix)は text では時間が変わらず
+       un 系 API の例外を増やす。これらは手を付けない。
      - **D3 save/restore のストリーミング(2026-10-16 実装済み。§83)**:
        m_restart(restart_write/read_cell・_edge、_zero、_skip)に 15 モジュールの
        save/restore を載せ替え、rank0 の全域一時を撤去。形式不変。
