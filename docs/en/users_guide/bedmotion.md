@@ -393,7 +393,50 @@ no memory or CPU cost.
 The displacement files follow the same f_input_mode (&list_geoinfo) as
 the bed elevation.
 
-## 9. Behaviour contract and interplay with other features
+## 9. Output and monitoring
+
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields** (rasters in `result/`)
+
+| File | How | Contents |
+|---|---|---|
+| Z0001... | f_out_z = 1 | ground elevation after the displacement (m); `Z0000` is before (the initial output precedes the first application) |
+| H0001... / E0001... | f_out_h / f_out_e | the response of the water surface (tsunami generation and run-up); E − E0000 is the level anomaly |
+| H9999 | f_out_hmax (default on) | maximum inundation depth, including the effect of coastal uplift and subsidence |
+
+**Ledgers and log**
+
+- At the end "bedmotion: applied displacement max ... m, min ... m,
+  snapshots read ..., steps applied ..." is printed. Check here that the
+  extremes of the displacement and the number of snapshots read and steps
+  applied are as intended.
+- Lifting the bottom does not move water, so S in Log.txt is unchanged
+  (the level rises by the uplift with the depth kept).
+
+**Measurements** (probe and transect columns)
+
+- The probe column `z` changes with time (a check of the displacement
+  history). Offshore probes give `z + h` as the initial surface
+  displacement, coastal probes the run-up time series.
+
+**Restart**
+
+- No private displacement history is saved. The displacement at the
+  restart time is taken from the same table as "already applied" (for the
+  exact switching time of step interpolation see
+  [the explanation](bedmotion_models.md) §4).
+
+**How to read and check**
+
+- For a fault tsunami, `Z0001 − Z0000` is the seabed displacement and
+  `E0001 − E0000` the initial surface displacement. A difference between
+  them comes from the horizontal-displacement contribution (fault2disp)
+  or from non-hydrostatic attenuation ([the explanation](bedmotion_models.md) §2–3).
+- For a resolved levee breach (§5) check the time at which the crest
+  cells of `Z0001...` drop to the base and the Q of the landward transect.
+
+## 10. Behaviour contract and interplay with other features
 
 - The increment is added to z of eligible cells (x > 0, sw = 0); h is kept
   and e = z + h is recovered. Momentum and the soil depth sd are untouched.
@@ -409,7 +452,7 @@ the bed elevation.
 - Output: the bed elevation Z (f_out_z) shows the deformed terrain. At the
   end the maximum and minimum of the applied displacement are printed.
 
-## 10. Tests and examples
+## 11. Tests and examples
 
 - [test/nhbottom](../../../test/nhbottom/) configuration 3: a Hammack-type
   uplift given as a per-step snapshot table, checked against the same

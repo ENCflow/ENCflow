@@ -51,6 +51,8 @@ for `sg = 0.5`; in general, `hf` is not `sg × diameter`.
 (d) Outputs and volume accounting with area conversion. The section, trees
 and logs are illustrative, not computed results or individual trajectories.
 
+How to read the results (fields, ledgers, measurement columns, restart) is summarized in [Output and monitoring](#output-and-monitoring) on this page.
+
 ## Enabling and configuration
 
 Specify `fn_driftwood` in `&list_sysparam`.
@@ -143,32 +145,52 @@ and conversion formulas in [the explanation](driftwood_models.md) §4):
   calibration parameters without a practical standard (sensitivity
   analysis recommended).
 
-## Outputs and volume accounting
+## Output and monitoring
 
-| Switch | File | Content |
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields** (rasters in `result/`, every `dt_file`)
+
+| File | How | Contents |
 |---|---|---|
-| f_out_hd | Hd0001… | Moving wood `hd` (m³/m² of effective area, at dt_file intervals) |
-| f_out_wd | Wd0001… | Deposited wood `wd` (m³/m² of effective area) |
-| f_out_wd | Wd9999 | Per-cell period maximum `maxₜ(hd + wd)` (m³/m² of effective area) |
+| Hd0001... | f_out_hd = 1 | moving driftwood `hd` (m³/m² per effective area) |
+| Wd0001... | f_out_wd = 1 | deposited driftwood `wd` (m³/m² per effective area) |
+| Wd9999 | f_out_wd = 1 | per-cell run maximum `maxₜ(hd + wd)` (the driftwood hazard map) |
 
-`Wd9999` takes the maximum of instantaneous `hd + wd` after local
-processes and dam capture. It is neither cumulative passage volume nor
-the sum of separate maxima of `hd` and `wd` at different times.
+`Wd9999` is the maximum of `hd + wd` after the local processes and the dam
+capture of each step. It is neither the cumulative passing volume nor the
+sum of the maxima of `hd` and `wd` taken at different times. The standing
+stock `wst` is not written as a field.
 
-`wst` is wood volume per **geometric cell area**; `hd` and `wd` use the
-same **effective area** as water. A simple sum of `wst + hd + wd`
-represents the volume budget only when the area factor equals one
-(conversion formulas in [the explanation](driftwood_models.md) §3).
+**Ledgers and log** (budget checks)
 
-`result/driftwood.csv` is written at `dt_recrd` intervals. Columns
-`rec_hyd_m3`, `rec_ero_m3`, `deposit_m3`, `refloat_m3` and `to_dam_m3` are
-cumulative process volumes; `vol_stock_m3`, `vol_float_m3` and
-`vol_deposit_m3` are current stocks.
-All are converted to m³. In a closed domain without dam capture,
-the sum of current stocks `Q` preserves the initial volume, apart from
-numerical error. Account for outflow and dam capture separately.
-Recruitment, deposition and refloating are internal transfers; adding
-their cumulative values to current stocks would double count volume.
+- `result/driftwood.csv` records every `dt_recrd` the cumulative
+  `rec_hyd_m3` (hydraulic recruitment), `rec_ero_m3` (erosion entrainment),
+  `deposit_m3`, `refloat_m3` and `to_dam_m3` (dam capture), and the
+  current stores `vol_stock_m3` (standing), `vol_float_m3` (moving) and
+  `vol_deposit_m3` (deposited), all in m³ after the area conversion.
+- Log.txt has no driftwood column.
+
+**Measurements** (probe and transect columns)
+
+- No driftwood column. Read point or section volumes from the same cell
+  of `Hd0001...` or from the cumulative columns of `driftwood.csv`.
+
+**Restart**
+
+- Handled automatically by the private file `driftwood.dat` (fn_driftwood
+  must have been enabled at save time).
+
+**How to read and check**
+
+- `wst` is per **geometric** cell area, `hd` and `wd` per the same
+  **effective** area as the water. A plain sum `wst + hd + wd` closes only
+  when the area factor is 1 (conversion in [the explanation](driftwood_models.md) §3).
+- In a closed domain without dam capture the sum of the current stores
+  `vol_stock + vol_float + vol_deposit` conserves the initial volume (up to
+  numerical error). Account separately for outflow and dam capture.
+  Recruitment, deposition and refloat are internal transfers; adding their
+  cumulative values to the current stores double-counts.
 
 ## Combinations and restrictions
 

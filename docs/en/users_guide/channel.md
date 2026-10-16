@@ -34,6 +34,8 @@ passes a full cell width. (c) The effective crest is lowered by the
 remaining fraction of br_series. The formulation of each mechanism and the
 basis of the defaults are in [Channels explained](channel_models.md).
 
+How to read the results (fields, ledgers, measurement columns, restart) is summarized in [Output and monitoring](#output-and-monitoring) on this page. Each feature section also ends with a short note on just the outputs that concern it.
+
 ## Just try it (minimal input)
 
 A channel runs as a "resolved channel" with only the channel mask fn_rw
@@ -93,6 +95,8 @@ Notes when giving the height with a distribution file `fn_bank`:
 | f_bank_mode | 0 | hydraulic mode. 0: overtopping only (impermeable up to the crest in both directions), 1: sluice gate (check valve; passes landside -> channel only), 2: forced drainage (for compatibility and experiments; for real-world pumping stations use the pumps of the [structures chapter](structure.md)) |
 | f_bank_opening | 1 | opening correction that reallocates the passage width of openings blocked by levee walls to the open channel-channel edges of the same cross-section (corrects the under-conveyance of one-cell channels regardless of orientation; 0 is for comparison with the old behavior; [the explanation](channel_models.md) §1) |
 
+**Outputs for this section**: levee heights are not written. Check overtopping with the landward `H0001...` and the Q of a transect on the landward side ([Output and monitoring](#output-and-monitoring)).
+
 ## Subgrid channel width
 
 Represents the conveyance and storage of rivers narrower than the cell
@@ -129,6 +133,8 @@ rationale and accuracy limits in [the explanation](channel_models.md) §2).
   representation limits the accuracy (refine the cells at suspect
   locations).
 
+**Outputs for this section**: `H0001...` on width cells is the depth within the width. Check how the width acts by whether the transect column `B` (= Q / Hmax / Vmax) is close to the given width ([Output and monitoring](#output-and-monitoring)).
+
 ## Cross-section shape (sigma law)
 
 A generalization of the cross-section shape that improves the
@@ -151,6 +157,8 @@ sigma alone, without width data, is the simplest configuration, and
 inaccurate widths do not break the model badly (equations, the tracking of
 D on a moving bed and the interpretation of inaccurate widths are in
 [the explanation](channel_models.md) §3).
+
+**Outputs for this section**: the section shape shows in the relation between the channel stage E = Z + H and the transect Q (rating curve). H is the storage depth, not the rectangular-equivalent depth ([Output and monitoring](#output-and-monitoring)).
 
 ## Breach (&list_channel_breach)
 
@@ -198,6 +206,8 @@ a failure (levees must be enabled).
   bed of the breach cells along a time history (both methods are compared
   in [examples/levee_breach](../../../examples/levee_breach/README.md)).
 
+**Outputs for this section**: the breach width and depth are not written. Check with the landward transect Q, the spread of `H0001...` behind the levee and the drop of transect Q downstream in the channel ([Output and monitoring](#output-and-monitoring)).
+
 ## Recommended values by pattern
 
 | Type | Configuration | depth_rw (m) | bank0 (m) | rn0_rw | Width / section | Notes |
@@ -240,6 +250,49 @@ and bank0 (this chapter) that realizes that D.
 | Single-section natural channel (gentle sand/gravel bed) | 0.5 | No levee: depth_rw 1-3 m is D itself | Parabolic. Works in the simplest configuration without width data |
 | V-shaped mountain stream, steep gorge | 0.7-1 | No levee: depth_rw 0.5-1 m is D itself | Triangular. Combine with fn_width to narrow the thalweg |
 | Calibrating low-water levels to observations | sweep 0.3-1 | unchanged | If the base-flow level is too high, raise m (smaller sigma raises the level for the same discharge) |
+
+## Output and monitoring
+
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields** (rasters in `result/`)
+
+| File | How | Contents |
+|---|---|---|
+| H0001... / E0001... | f_out_h / f_out_e | on channel cells H is the depth within the channel width (pore-area basis); inundation of the protected land is the H on the far side of the levee |
+| Q0001... / Qd0001... | f_out_qq / f_out_qd | unit-width discharge and direction; within the width on width cells |
+| X0000 | always | domain mask; the channel mask fn_rw is not written (check the input) |
+
+Levee height, channel width, section shape and breach progress are not
+written as fields.
+
+**Ledgers and log**
+
+- No ledger for channels, levees or breaches. Water entering the protected
+  land by overtopping or breaching does not change S in Log.txt (a move
+  inside the domain).
+
+**Measurements** (probe and transect columns)
+
+- The Q of a [transect](record.md) across the channel is the channel
+  discharge. The `B` column (= Q / Hmax / Vmax) is a guide to the flow
+  width and approaches the given width on subgrid-width cells. A transect
+  on the landward side gives the overtopping or breach discharge.
+
+**Restart**
+
+- Width and section shape are re-read as geographic information. The
+  breach progress is derived again from the time series at the restart
+  time.
+
+**How to read and check**
+
+- Overtopping / breach check: the difference of transect Q upstream and
+  downstream in the channel = discharge into the protected land = the Q
+  of the landward transect.
+- H on width cells is the storage depth, not the rectangular-equivalent
+  depth of the σ section (derived quantities such as concentration are
+  converted inside the model). Read river stages as E = Z + H.
 
 ## Tests and examples
 

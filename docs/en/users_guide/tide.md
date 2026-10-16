@@ -28,6 +28,8 @@ flooding and drainage are computed together with the land-side flow.
 /
 ```
 
+How to read the results (fields, ledgers, measurement columns, restart) is summarized in [Output and monitoring](#output-and-monitoring) on this page.
+
 ## How the tide level is given (titype)
 
 | titype | How it is given | Parameters used |
@@ -125,6 +127,43 @@ Tide levels are given data, but guides by type:
 | Tsunami | - | Not the tide feature but boundary incidence ([boundary conditions](boundary.md)) | fn_seaside |
 
 Start hsea0 at several tens of the threshold depth dd (typically 1 m).
+
+## Output and monitoring
+
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields** (rasters in `result/`)
+
+| File | How | Contents |
+|---|---|---|
+| H0001... / E0001... | f_out_h (default on) / f_out_e | on sea cells the depth H = hsea0 and the level E = the given tide; read inundation and drainage on land from these |
+| X0000 | always | domain mask (2 = sea); check that the sea mask is as intended |
+
+**Ledgers and log**
+
+- The S column of Log.txt excludes sea cells. Water entering the land from
+  the sea appears as an increase of S, water drained to the sea as a
+  decrease.
+
+**Measurements** (probe and transect columns)
+
+- A [transect](record.md) across the coastline gives the inundation and
+  drainage discharge Q (m³/s; sign by the transect direction). Probe
+  columns `h` and `z + h` on land show how the water follows the tide.
+
+**Restart**
+
+- The tide update phase is tied to the absolute step number, so after a
+  restart it updates at the same times as an uninterrupted run (restart
+  round trips are bit-identical).
+
+**How to read and check**
+
+- The z of sea cells changes with the tide, so the sea part of `Z0001...`
+  is not topography (land topography does not change).
+- Check the sensitivity of the inundation flux to hsea0 by comparing
+  transect Q for different hsea0 under the same tide
+  ([Parameters and the basis of their defaults](#parameters-and-the-basis-of-their-defaults) above).
 
 ## Constraints and notes
 

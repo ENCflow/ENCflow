@@ -139,14 +139,46 @@ the conservation correction, the non-hydrostatic band) are in
 - The child is large enough compared with the band (nx, ny > 2·nb + 2).
 - The scheme is ENC (f_gridsystem = 0).
 
-## Output and restart
+## Output and monitoring
 
-- Every grid writes to its own `dir_result` as usual (distributions, probes,
-  transects, Log.txt). Give each grid a different directory.
-- State save / restore (f_state_save / f_state_restore) also works per grid.
-  Give each grid its own `dir_save`. Restarting the root restarts all grids.
-- The screen output alternates between grids (each root step is followed by
-  its children).
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields**
+
+- Each grid writes its fields to its own `dir_result` as usual (H, E, the
+  9999 statistics and so on; FILENUMBER.csv per grid). Give every grid a
+  separate directory. Child fields are written on the child's spacing and
+  extent.
+
+**Ledgers and log**
+
+- The screen shows the grids advancing in turn (each root step followed by
+  the children). The S column of each grid's Log.txt is that grid's
+  storage; the parent's S includes the values replaced by the child
+  (two-way).
+- At the end "nest: summary" prints, per grid, the boundary and feedback
+  methods and the total conservative correction Σ|Δh| × A. For two-way
+  nesting check that this total is negligible against the parent's S × area.
+
+**Measurements** (probe and transect columns)
+
+- Probes and transects are configured per grid and written to that grid's
+  `dir_result`. Placing the same point on both parent and child helps to
+  check the interface consistency.
+
+**Restart**
+
+- Saving and restarting (f_state_save / f_state_restore) also work per
+  grid; give every grid its own `dir_save`. Restarting the root restarts
+  all grids.
+
+**How to read and check**
+
+- Check parent–child consistency by overlaying H and E of parent and
+  child across the boundary band at the same time (a 1:1 self-nest is
+  bit-identical, [test/nest_identity](../../../test/nest_identity/)).
+  Look for interface reflections with a probe near the child boundary
+  ([explanation](nest_models.md) §5).
 
 ## Using it from BMI
 

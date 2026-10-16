@@ -35,6 +35,8 @@ enabled.
 The equations of each model and the basis of the defaults are in
 [Rainfall and meteorology models explained](forcing_models.md).
 
+How to read the results (fields, ledgers, measurement columns, restart) is summarized in [Output and monitoring](#output-and-monitoring) on this page. Each feature section also ends with a short note on just the outputs that concern it.
+
 ## Just try it (minimal input)
 
 For rain alone, `fn_precip` with a `&list_precip` time series (the example
@@ -121,6 +123,8 @@ Values vary by about a factor of 2 with region and return period)
 | Inundation mapping (maximum assumed scale) | 100+ (peak) | several hours | 300-1000 | prtype=1 hyetograph |
 | Snowmelt runoff | 0 (no rain) to 10 | daily | - | air temperature 5-10 degC via fn_meteo + fn_snow |
 
+**Outputs for this section**: the rainfall intensity field `Pr0001...` (`f_out_pre=1`; given precipitation × runoff rate). The total entering the domain is Σ(Pr × dt / 1000 × A), to be compared with the increase of S in the log ([Output and monitoring](#output-and-monitoring)).
+
 ## Rainfall interception (&list_intercept)
 
 Applies canopy interception to precipitation before the rain/snow
@@ -159,6 +163,8 @@ model group). The equations and the basis of the defaults are in
 | Leafless deciduous forest | 0.05-0.1 | 0.3-0.8 |
 | Grassland / cropland | 0.05-0.1 | 0.3-0.5 |
 | Urban (initial loss as depression storage) | - | 1-2.5 (depression storage of impervious surfaces; SWMM convention) |
+
+**Outputs for this section**: no field or ledger of interception. `Pr0001...` is the value before interception, so the loss follows by difference: total precipitation − increase of S_total − evaporation. The canopy storage of the initial-loss model is saved in `intercept_initloss.dat` ([Output and monitoring](#output-and-monitoring)).
 
 ## Meteorological forcing field (&list_meteo)
 
@@ -200,6 +206,8 @@ clamped to 0). The precipitation correction and the snow temperature use
 the ice-surface elevation `z + hi` when a glacier is active; ET uses the
 ground elevation `z`.
 
+**Outputs for this section**: no temperature field. Temperature shows up through snowmelt (decrease of `Sw0001...`) and PET (`pet_ref_mmday` of `evap.csv`) ([Output and monitoring](#output-and-monitoring)).
+
 ## Evapotranspiration (&list_evap)
 
 Select how potential evapotranspiration (PET) is given with `f_evmodel`.
@@ -239,6 +247,8 @@ reference evapotranspiration of a humid temperate climate (basis in
 seasons (monthly values, latitude and normal temperatures are given data
 and have no default).
 
+**Outputs for this section**: the reference PET and the cumulative evaporated volumes (m³, reset at restart) from canopy, surface water, storages and groundwater in `result/evap.csv`; the columns tell which store the water left ([Output and monitoring](#output-and-monitoring)).
+
 ## Snowpack and snowmelt (&list_snow)
 
 Degree-day snowpack and snowmelt. **Air temperature (fn_meteo) is
@@ -276,6 +286,57 @@ factor (a calibration quantity):
 | Open land / sparse forest (default) | 3.5-5 | The observed range of snowmelt floods in Japanese mountain basins |
 | Late melt season, open high elevation | 5-7 | Larger with dirty snow and stronger radiation (no seasonal variation is implemented, so give a period average) |
 | Snow on a glacier | 3-5 | The ice surface uses gl_ddfi ([Glaciers](glacier.md)) |
+
+**Outputs for this section**: snow water equivalent `Sw0001...` (mm, automatic), included in S_total of the log, restart in `snow.dat`. Melt = decrease of Sw × A; the melt runoff appears as an increase of S_surf and of transect Q ([Output and monitoring](#output-and-monitoring)).
+
+## Output and monitoring
+
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields** (rasters in `result/`, every `dt_file`)
+
+| File | How | Contents |
+|---|---|---|
+| Pr0001... | f_out_pre = 1 | rainfall intensity (mm/h) = given precipitation × runoff_rate; before interception and the rain/snow split |
+| Sw0001... | automatic (fn_snow) | snow water equivalent SWE (mm of water; geometric area basis) |
+
+Temperature, interception and evapotranspiration are not written as fields.
+
+**Ledgers and log** (budget checks)
+
+- With snow enabled the S column of Log.txt splits into S_surf / S_grnd /
+  S_total, and S_total includes the snow water (S_grnd is 0 without
+  groundwater).
+- With evapotranspiration, `result/evap.csv` records every `dt_recrd` the
+  time `time_s`, the reference PET `pet_ref_mmday` (mm/day) and the
+  cumulative evaporated volumes (m³) from the canopy `ev_canopy_m3`,
+  surface water `ev_surface_m3`, storages (ponds, dam capture zones)
+  `ev_pond_m3`, groundwater `ev_gw_m3` and the total `ev_total_m3`
+  (accumulated from the start of the run; reset at restart).
+- There is no ledger of interception or snowmelt; derive them by
+  difference as below.
+
+**Measurements** (probe and transect columns)
+
+- No forcing-specific column. Read the response to rainfall in the probe
+  `h` and the transect Q.
+
+**Restart**
+
+- Snow uses `snow.dat` and the canopy storage of the initial-loss
+  interception model `intercept_initloss.dat` automatically. Fixed-ratio
+  interception, temperature and evapotranspiration have no saved state.
+
+**How to read and check**
+
+- Precipitation check: water entering the domain = Σ(Pr × dt / 1000 × A).
+  In a closed domain it equals the increase of S_total × number of valid
+  cells × A plus `ev_total_m3` of evap.csv, apart from the interception
+  loss, which is the difference.
+- Check the rain/snow split by placing Sw next to Pr (between the
+  thresholds snow_t_snow / snow_t_rain the precipitation is split). Read
+  snowmelt as the decrease of Sw matched by the increase of S_surf; the
+  meltwater runs off as surface water.
 
 ## Summary of combination requirements
 

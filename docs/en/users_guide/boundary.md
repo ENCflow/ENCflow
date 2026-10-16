@@ -42,6 +42,8 @@ group. Arrows show permitted directions, not discharge magnitudes, computed
 results or the ENC flux stencil. These indices illustrate the drawing;
 the input examples below are separate.
 
+How to read the results (fields, ledgers, measurement columns, restart) is summarized in [Output and monitoring](#output-and-monitoring) on this page. Each feature section also ends with a short note on just the outputs that concern it.
+
 ## Just try it (minimal input)
 
 Rainfall runoff of a closed catchment **needs no fn_boundary** (all four
@@ -105,6 +107,8 @@ to south).
 - For a working example see
   [tutorial Step 3](../../../tutorials/wave/en/README.md#step-3-setting-boundary-conditions).
 
+**Outputs for this section**: no outflow ledger; read it as the decrease of S in the log and the Q of a transect along the edge. Check reflection at a radiation boundary with a probe level ([Output and monitoring](#output-and-monitoring)).
+
 ## Internal sources (&list_bound_source)
 
 Injection (Q > 0) or extraction (Q < 0) at an arbitrary cell set. The
@@ -125,6 +129,8 @@ third subscript is the source number (consecutive from 1).
   redistributed to other cells, so the actual total may be below the request.
 - The injection carries no directionality (momentum). For river inflow,
   use the segment inflow.
+
+**Outputs for this section**: check the input as the increase of S in the log (Σ q × Δt / domain area) and the routing with a downstream transect Q ([Output and monitoring](#output-and-monitoring)).
 
 ## Prescribed water level cells (&list_bound_stage)
 
@@ -156,6 +162,8 @@ inflow volume is not preserved in that cell's budget.
 - A large level difference between prescribed cells and their
   surroundings produces a local dam-break flow. If the initial Cn_max
   is large, review dt.
+
+**Outputs for this section**: a probe on a prescribed cell shows `h` and `z + h` equal to the given level; the water leaving the cells spreads in the surrounding `H0001...` ([Output and monitoring](#output-and-monitoring)).
 
 ## Segment inflow (&list_bound_inflow)
 
@@ -207,6 +215,52 @@ to reduce concentration of discharge into thin water layers.
   `inflow_cs` or a sediment discharge time series `inflow_qs`
   (mutually exclusive) ([sediment and geomorphic change
   chapter](geomorph.md)). If unspecified, the inflow is clear water.
+
+**Outputs for this section**: the transect Q just downstream equals the given discharge (a check of the distribution); the inflow peak is in Qmax of `summary.csv` ([Output and monitoring](#output-and-monitoring)).
+
+## Output and monitoring
+
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields** (rasters in `result/`)
+
+| File | How | Contents |
+|---|---|---|
+| H0001... / E0001... / Q0001... | f_out_h / f_out_e / f_out_qq | inflow and outflow at boundaries appear in the surface depth, level and discharge; boundary conditions themselves are not written |
+
+**Ledgers and log** (budget checks)
+
+- The S column of Log.txt (domain-mean storage depth) decreases with
+  outflow through edge boundaries and increases with internal sources and
+  segment inflow. With closed walls only (default), S changes only by
+  precipitation and evaporation.
+- The `ex_flux` column counts detections and suppressions of excessive
+  outflow fluxes; it is not the boundary outflow.
+
+**Measurements** (probe and transect columns)
+
+- A [transect](record.md) just downstream of a segment inflow or an
+  internal source returns the given discharge as Q (a check of the
+  distribution). Outflow through an edge is measured by a transect placed
+  along the edge.
+- On prescribed-level cells the probe `h` and `z + h` equal the given
+  level.
+
+**Restart**
+
+- Boundary time series are re-read from the restart time; there is no
+  saved state. The reference level of the radiation boundary is derived
+  again from the initial condition.
+
+**How to read and check**
+
+- Inflow check: compare the total segment inflow Σ(q × Δt) with the
+  integral of the downstream transect Q (the aggregates in `summary.csv`
+  help).
+- Check reflection at a radiation boundary (type 2) with a probe near the
+  edge (no returning level). When ponded water does not leave through a
+  free-outflow edge (type 1), check the ground slope towards the edge and
+  dd.
 
 ## Tests and examples
 

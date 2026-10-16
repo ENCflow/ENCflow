@@ -46,6 +46,8 @@ depth itself. The respective capacities are sd × sy0 and gw2_depth × gw2_sy.
 The bucket model is a separate configuration, incompatible with the lateral
 flow and second layer shown in panel (a).
 
+How to read the results (fields, ledgers, measurement columns, restart) is summarized in [Output and monitoring](#output-and-monitoring) on this page. Each feature section also ends with a short note on just the outputs that concern it.
+
 ## Overall configuration (&list_gwflow)
 
 Choose the vertical part (surface <-> subsurface exchange) and the
@@ -127,6 +129,8 @@ capacity would be doubly defined; if you need a constant infiltration
 capacity with soil depth as the capacity, use Green-Ampt with
 gw_psif=0).
 
+**Outputs for this section**: storage in `Hg0001...` (`f_out_hg=1`; read it as the capacity ratio Hg / gw_capacity), the domain mean in the `S_grnd` column of the log, point time series in the probe column `hg` ([Output and monitoring](#output-and-monitoring)).
+
 ## Green-Ampt (f_gwvertical=2, &list_gwflow_greenampt)
 
 Infiltration formula, regularisation and basis of the defaults: [supplement](gwflow_models.md#3-green-ampt-f_gwvertical--2).
@@ -151,6 +155,8 @@ cells with 0 are impervious (fully paved). The uniform specification
 (gw_ksv_mmh) requires a positive value (default 10 mm/h when
 unspecified). The soil depth sd0 (&list_geoinfo) defaults to 1 m when
 unspecified.
+
+**Outputs for this section**: storage in `Hg0001...` (saturated thickness = Hg / sy0); the total infiltration is the increase of `S_grnd`. The infiltration capacity itself is not written, so compare how `S_surf` and `S_grnd` grow under the same rainfall ([Output and monitoring](#output-and-monitoring)).
 
 ## Lateral flow (f_gwlateral=1, &list_gwflow_lateral)
 
@@ -179,6 +185,8 @@ surface water at their groundwater concentration where seepage
 occurs (sorption retardation is given by wq_rg on the water-quality
 side).
 
+**Outputs for this section**: the shape of the water table from the gradient of `Hg0001...`; seepage (return flow) from wet cells of `H0001...` during rainless periods. There is no seepage column; read it as the decrease of `S_grnd` matched by the increase of `S_surf` ([Output and monitoring](#output-and-monitoring)).
+
 ## Weathered bedrock layer (f_gwlayer2=1, &list_gwflow_layer2)
 
 Equations and basis of the defaults: [supplement](gwflow_models.md#5-weathered-bedrock-layer-f_gwlayer2--1).
@@ -202,6 +210,8 @@ exfiltrates to the surface.
   recommend **spin-up -> save -> reuse as the initial condition**
   (f_state_restore=2 in [Suspend and restart](restart.md)).
 - Evapotranspiration does not touch layer 2.
+
+**Outputs for this section**: the layer-2 storage in `Hg2` (rides on `f_out_hg`), restart in `gwflow_layer2.dat`. `S_grnd` is the sum of layers 1 and 2 ([Output and monitoring](#output-and-monitoring)).
 
 ## Conduit continuum layer (f_gwconduit=1, &list_gwflow_conduit)
 
@@ -284,6 +294,8 @@ Applications are expressed by parameter combinations:
     There is no exchange with sea cells except discharge through
     outfalls (fn_gwc_outfall).
 
+**Outputs for this section**: the conduit storage in `Hgc` (rides on `f_out_hg`) and the total outfall discharge printed at the end ("outfall discharge total"). Surcharge appears in the surface `H0001...`, discharge from sea outfalls as a decrease of `S_total`. Restart in `gwflow_conduit.dat` ([Output and monitoring](#output-and-monitoring)).
+
 ## Well pumping / groundwater abstraction (f_gwpump=1, &list_gwflow_pump)
 
 Equation: [supplement](gwflow_models.md#7-well-pumping-f_gwpump--1).
@@ -320,6 +332,8 @@ consecutively from 1.
   [Boundary conditions](boundary.md)).
 - A well is a cell-scale sink (borehole-scale hydraulics - well
   radius, skin, partial penetration - are not represented).
+
+**Outputs for this section**: the drawdown of `Hg0001...` around the well cells (cone of influence) and, at the end, the per-well "demand / pumped / %" line for the achieved abstraction ([Output and monitoring](#output-and-monitoring)).
 
 ## Infiltration suppression by frozen ground (f_gwfrost=1, &list_gwflow_frost)
 
@@ -364,6 +378,8 @@ reduction factor is applied to the vertical infiltration capacity
   private file gwflow_frost.dat (f_gwfrost must have been enabled at
   save time).
 
+**Outputs for this section**: the freezing index is not written as a raster (its state is saved in `gwflow_frost.dat`). Check the effect as `Hg0001...` ceasing to grow and `H0001...` responding more strongly to the same rain or snowmelt ([Output and monitoring](#output-and-monitoring)).
+
 ## Recommended values by pattern
 
 The defaults are middle-of-the-road values that make the model run.
@@ -404,18 +420,61 @@ it is smaller than the table, about 0.1-0.2)
 
 ## Output and monitoring
 
-- The distribution of subsurface storage depth can be output as
-  `Hg0001` with `f_out_hg = 1` (also `Hg2` when layer 2 is enabled,
-  `Hgc` when the conduit continuum layer is enabled, `Hgs` with the
-  fresh/salt layers, and the subsurface mass pool `Cg` of
-  [Water Quality](wq.md) with infiltration entrainment).
-- With groundwater enabled, the S column on the screen and in the log
-  splits into three columns, **S_surf / S_grnd / S_total**, so the
-  surface, subsurface, and total water budgets can be tracked
-  separately.
-- Restarting models with internal state is handled automatically
-  through private state files (the models enabled at save time must
-  also be enabled at restart time).
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields** (rasters in `result/`, every `dt_file`)
+
+| File | How | Contents |
+|---|---|---|
+| Hg0001... | f_out_hg = 1 | subsurface storage depth of the soil layer (m; water volume divided by cell area) |
+| Hg2 | rides on f_out_hg (f_gwlayer2=1) | storage depth of the weathered bedrock layer (m) |
+| Hgc | rides on f_out_hg (f_gwconduit=1) | storage of the conduit continuum layer (m per cell area) |
+| Hgs / Cg | rides on f_out_hg | subsurface salt storage of [Fresh and salt water](salt.md) / subsurface mass pool of [Water quality](wq.md) |
+| Sd0001... | automatic (when a model uses the soil thickness) | soil thickness (m) |
+
+**Ledgers and log** (budget checks)
+
+- With groundwater enabled the S column of the screen and Log.txt splits
+  into **S_surf / S_grnd / S_total** (domain-mean storage depth in m;
+  S_total also includes the water equivalent of snow and ice). Read the
+  change of S_grnd as infiltration − seepage − evaporation from the
+  subsurface − pumping − leakage to conduits.
+- The conduit layer prints the total outfall discharge at the end,
+  "gwflow_conduit: outfall discharge total = ... m3" (discharge to the sea
+  leaves the system = S_total decreases).
+- Well pumping prints per well at the end "demand ... m3, pumped ... m3
+  (... %)" (requested, actually pumped, achievement).
+- With evapotranspiration ([Rainfall and weather](forcing.md)) the column
+  `ev_gw_m3` of `evap.csv` is the cumulative evaporation from the subsurface.
+
+**Measurements** (probe and transect columns)
+
+- The probe CSV has the subsurface storage depth `hg` (m) and the soil
+  thickness `sd` (m) (always present; 0 without groundwater). Subsurface
+  flow does not cross a transect.
+
+**Restart**
+
+- The soil-layer hg is part of the core state save. The bedrock layer,
+  the conduit layer and frozen ground use the private files
+  `gwflow_layer2.dat`, `gwflow_conduit.dat` and `gwflow_frost.dat`
+  automatically (the models enabled at save time must be enabled at
+  restart).
+
+**How to read and check**
+
+- Hg is a column-equivalent depth, not a water table. Saturated thickness
+  = Hg / sy0; water table ≈ ground − soil thickness + Hg / sy0 (lateral
+  flow and Green-Ampt configurations; read the bucket model as the
+  capacity ratio Hg / gw_capacity). The saturation Hg / (sy0 × Sd) is a
+  precursor of slope failure ([Sediment and landform change](geomorph.md)).
+- Seepage (return flow) appears as an increase of the surface depth H.
+  Cells with H > 0 along valley floors of high Hg during rainless periods
+  are seepage.
+- In a closed domain without boundary outflow, S_total changes only by
+  precipitation − evapotranspiration. When S_total does not match the
+  precipitation (sum of Pr × dt), look for routes out of the system: edge
+  boundaries, sea cells, outfalls, pumping.
 
 ## Worked examples of the format
 

@@ -51,6 +51,8 @@ The design background (the SIA formulation, the time-acceleration
 concept, and the documented simplifications) is in the developer
 document [docs/glacier_plan.md](../../glacier_plan.md) (Japanese).
 
+How to read the results (fields, ledgers, measurement columns, restart) is summarized in [Output and monitoring](#output-and-monitoring) on this page. Each feature section also ends with a short note on just the outputs that concern it.
+
 ## Execution control and the notion of time
 
 Glaciers evolve far more slowly (years to millennia) than the
@@ -105,6 +107,8 @@ and time acceleration** to cover geomorphic time.
   are not prescribed; they **emerge** from temperature and
   precipitation.
 
+**Outputs for this section**: the ice thickness `Hi0001...` (automatic), the snow `Sw0001...`, and S_total in the log (with the ice water equivalent). There is no ledger of accumulation and melt; read them from the annual change of Hi and from Sw ([Output and monitoring](#output-and-monitoring)).
+
 ## Ice flow (f_glflow)
 
 With the shallow ice approximation (SIA)[^hutter83], ice deforms under its
@@ -134,6 +138,8 @@ You do not need to worry about the time step: the model checks the
 stability condition from the current ice thickness and slope at every
 update and subdivides internally as needed (ice volume is conserved
 exactly).
+
+**Outputs for this section**: the effect of flow is the spreading of `Hi0001...` (extending down the valley). "SIA subcycles total" is printed at the end; an extreme count is a hint to revisit gl_afl and gl_morfac ([Output and monitoring](#output-and-monitoring)).
 
 ## Basal sliding and glacial erosion (f_glslide / f_glero)
 
@@ -170,6 +176,8 @@ speed)[^humphrey94]; with $`l`$ = 2[^herman15] a separate calibration gives
   meltwater (depositional moraines are not yet represented; the total
   is reported at the end of the run).
 
+**Outputs for this section**: erosion appears as the drop of `Z0001...` (`f_out_z=1`) and `Sd0001...`, and in the end line "eroded volume exported from the system" (per rank under MPI) ([Output and monitoring](#output-and-monitoring)).
+
 ## Avalanche redistribution (f_glava)
 
 | Parameter | Default | Meaning |
@@ -183,6 +191,8 @@ the snow is moved to the steepest-descent neighbour. The threshold 0.6
 representation of cliffs shedding snow so that accumulation
 concentrates into cirques. Recommended for cirque-formation
 experiments.
+
+**Outputs for this section**: the redistribution shows in `Sw0001...` (0 on steep cliffs, concentrated in cirques) and later in where `Hi0001...` grows ([Output and monitoring](#output-and-monitoring)).
 
 ## Initial conditions
 
@@ -240,6 +250,54 @@ Long-period climate change (glacial cycles, warming trends) can be
 superimposed on the representative year with `tempofs` (an air
 temperature offset series) in &list_meteo
 ([rainfall and weather chapter](forcing.md)).
+
+## Output and monitoring
+
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields** (rasters in `result/`, every `dt_file`)
+
+| File | How | Contents |
+|---|---|---|
+| Hi0001... | automatic | ice thickness (m of ice; geometric area basis); water equivalent = × ρi/ρw |
+| Sw0001... | automatic (fn_snow) | snow water equivalent on the ice (mm); the part that survives the year becomes ice |
+| Z0001... / Sd0001... | f_out_z = 1 / automatic | ground lowered and soil thinned by glacial erosion |
+
+**Ledgers and log** (budget checks)
+
+- The S column of Log.txt splits into S_surf / S_grnd / S_total, and
+  S_total includes the water equivalent of the ice (domain mean of
+  Hi × ρi/ρw).
+- At the end "glacier: eroded volume exported from the system = ... m3
+  (this rank)" (rock volume removed by erosion; **per rank** under MPI)
+  and "SIA subcycles total = ... over ... updates" are printed.
+- Meltwater appears as surface water in `S_surf` and in transect Q (note
+  that only the loss of ice is multiplied by gl_morfac).
+
+**Measurements** (probe and transect columns)
+
+- No ice column. For a point time series pick the same cell of
+  `Hi0001...` at each output time; meltwater runoff is measured by a
+  transect Q.
+
+**Restart**
+
+- Handled automatically by the private file `glacier.dat` (fn_glacier
+  must have been enabled at save time; the saved thickness takes
+  precedence over fn_glacier_hi0).
+
+**How to read and check**
+
+- Ice budget (closed domain): the change of Σ(Hi × A × ρi/ρw) =
+  accumulation (firnification of perennial snow) − melt. Judge a steady
+  state by the difference of `Hi` between successive years becoming small
+  (morphological time = time of FILENUMBER.csv × gl_morfac).
+- The equilibrium line is not the lower edge of `Hi > 0` but the
+  elevation where the annual change of Hi is zero. With accelerated time,
+  choosing `dt_file` as a multiple of the representative year makes the
+  comparison easy.
+- Erosion is `Z0001... − Z0000` (negative); the exported volume at the
+  end corresponds to Σ(ΔZ × A) (apart from the part taken from the soil).
 
 ## Combination requirements
 

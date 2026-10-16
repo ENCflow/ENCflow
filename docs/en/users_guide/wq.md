@@ -413,48 +413,65 @@ network was built: [examples/sewer_hybrid](../../../examples/sewer_hybrid/)).
 
 ## Output and monitoring
 
-- The concentration distribution `C0001` (mg/L) is output
-  automatically (also the pool distribution `B0001` when the buildup
-  pool is enabled).
-- The distribution of the subsurface mass pool `Cg0001` (g/m²; geometric
-  area basis = mass in the cell is Cg × A) is written together with the
-  subsurface storage depth Hg by `f_out_hg = 1` when infiltration
-  entrainment `f_wq_infil=1` (default) is on (the convention that
-  subsurface state rides on the Hg flag; see
-  [Input and Output Formats](io.md#how-state-variables-are-written)).
-  For a groundwater concentration divide Cg by the Hg of the same time
-  and the effective porosity θ (Cg / (Hg × θ) in mg/L = g/m³).
-- `result/wq.csv` contains time `time_s` [s] and the mass columns [g]
-  listed below. `mass_*_g` values are current stores at the record time;
-  the other mass columns are cumulative.
-- Columns for concentration C and surface load cq are added to the
-  probe CSV ([the measurement chapter](record.md)).
-- Restart (save/restore) is handled automatically.
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
 
-Concentration `C = cq / v_h` [mg/L = g/m³] is a wet-cell quantity.
-cq is column substance mass [g/m²]; total surface mass is
-`Σ(cq × gv × wfrac × A)` [g]. A is geometric cell area, gv the effective
-area fraction, and wfrac the channel-width factor (1 with width disabled).
-Summing concentrations does not give total mass. Dry cells output C=0;
-use the storage ledger to check any remaining mass.
+**Fields** (rasters in `result/`, every `dt_file`)
+
+| File | How | Contents |
+|---|---|---|
+| C0001... | automatic | volume-averaged concentration (mg/L = g/m³); meaningful in wet cells only, 0 in dry cells |
+| B0001... | automatic (with the buildup pool) | surface buildup pool (kg/ha; geometric area basis) |
+| Cg0001... | rides on f_out_hg (with infiltration entrainment f_wq_infil=1) | subsurface mass pool (g/m²; geometric area basis = mass in the cell is Cg × A); groundwater concentration = Cg / (Hg × θ) |
+
+**Ledgers and log** (budget checks)
+
+- `result/wq.csv`: time `time_s` [s] and the mass columns [g] below.
+  `mass_*_g` are current stores at the record time; the others are
+  cumulative (every `dt_recrd`).
+- The screen and Log.txt have no water-quality column (the S water-budget
+  columns are unchanged).
 
 | Columns | Meaning |
 |---|---|
-| in_point_g, in_area_g, in_map_g, in_rain_g, in_gwc_g | Cumulative surface inputs from points, areas, maps, rain and sewer surcharge/outfalls |
-| in_bldup_g | Cumulative input to the buildup pool, excluding initial mass |
-| wash_g, to_gw_g, seep_g | Internal transfers by washoff, infiltration and seepage |
-| to_dam_g, rel_dam_g, to_rs_g | Dam/lake capture, release and pond absorption; to_dam_g also includes losses to fixed-level lakes |
-| to_gwc_g | Inlet removal to the conduit side; no substance pool is tracked inside pipes |
-| decay_g | Total cumulative decay in surface water, groundwater, buildup, dams and ponds |
-| settle_g | Cumulative surface settling; loss for f_wq_settle=0, internal transfer to the buildup pool for 1 |
-| mass_surface_g, mass_gw_g, mass_pool_g, mass_dam_g, mass_rs_g | Current mass in surface water, groundwater, buildup, storage-type dams/lakes and retention ponds |
+| in_point_g, in_area_g, in_map_g, in_rain_g, in_gwc_g | cumulative surface inputs from points, areas, maps, rain and sewer surcharge/outfalls |
+| in_bldup_g | cumulative input to the buildup pool, excluding the initial mass |
+| wash_g, to_gw_g, seep_g | internal transfers by washoff, infiltration and seepage |
+| to_dam_g, rel_dam_g, to_rs_g | dam/lake capture, release and pond absorption; to_dam_g also includes losses to fixed-level lakes |
+| to_gwc_g | inlet removal to the conduit side; no substance pool is tracked inside pipes |
+| decay_g | total cumulative decay in surface water, groundwater, buildup, dams and ponds |
+| settle_g | cumulative surface settling; loss for f_wq_settle=0, internal transfer to the buildup pool for 1 |
+| mass_surface_g, mass_gw_g, mass_pool_g, mass_dam_g, mass_rs_g | current mass in surface water, groundwater, buildup, storage-type dams/lakes and retention ponds |
 
-Total current mass is the sum of the five `mass_*_g` columns. For closure,
-start with initial mass plus external inputs, subtract removal and decay,
-while internal transfers cancel within this total. The current CSV has no separate
-columns for boundary inflow, boundary outflow or budget residual. When
-using open boundaries or inflow segments, include their substance transport
-separately in the budget check.
+**Measurements** (probe and transect columns)
+
+- The probe CSV gains the concentration `C` (mg/L) and the surface load
+  `cq` (g/m²).
+- The transect CSV gains the load `L` (g/s) and the cumulative load
+  `Lcum` (kg) ([the measurement chapter](record.md)). Like structure
+  transfers, transport through the conduit layer does not cross a transect.
+
+**Restart**
+
+- The surface, subsurface and pool masses are saved in the private file
+  `wq.dat`; save/restore is automatic (fn_wq must have been enabled at
+  save time).
+
+**How to read and check**
+
+- Concentration `C = cq / v_h` [mg/L = g/m³] is a wet-cell quantity. cq is
+  the column substance mass [g/m²]; the total surface mass is
+  `Σ(cq × gv × wfrac × A)` [g] (A geometric cell area, gv effective area
+  fraction, wfrac channel-width factor, 1 without the width feature).
+  Summing concentrations does not give mass. Dry cells write C = 0; check
+  residual mass in the ledger.
+- The current mass of the whole system is the sum of the five `mass_*_g`
+  columns. For closure, start from the initial mass plus external inputs
+  and subtract removals and decay; internal transfers cancel. There are no
+  separate columns for boundary inflow, outflow or residual, so with open
+  boundaries or segment inflow include their transport (transect L, Lcum)
+  in the check.
+- There is no run-maximum concentration field; if needed, refine
+  `dt_file` and take the maximum of the C series in post-processing.
 
 ## Tests and examples
 

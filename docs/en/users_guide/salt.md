@@ -34,6 +34,8 @@ with a stably stratified state, which the model reproduces).
 
 Coastal section. The salt layer hss sits at the bottom of the surface water h and the salt zone hgs at the bottom of the subsurface storage hg of the soil layer; the interface elevation ζ sets the driving head of the salt water, Φs = η + ε·ζ. Sea cells are an all-salt boundary at tide level: underground the salt water is exchanged in both directions while fresh water only discharges, and at the surface the run-up seawater is tracked as salt water.
 
+How to read the results (fields, ledgers, measurement columns, restart) is summarized in [Output and monitoring](#output-and-monitoring) on this page.
+
 ## What it can do
 
 - **Seawater intrusion**: with sea cells (with tide) as a prescribed
@@ -111,13 +113,39 @@ become an "all salt, water level = tide level" boundary:
 
 ## Output and monitoring
 
-- The surface salt-layer thickness `Hss` (shared with `f_out_h`) and
-  the subsurface salt storage `Hgs` (shared with `f_out_hg`) are
-  additionally output while enabled.
-- Salt water is still water, so the S columns (water budget) show the
-  totals as before.
-- Restart is handled automatically through the private file
-  saltwater.dat (fn_salt must have been enabled at save time).
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields** (rasters in `result/`, every `dt_file`)
+
+| File | How | Contents |
+|---|---|---|
+| Hss0001... | rides on f_out_h (f_salt_surf=1) | surface salt-layer thickness (m); part of the depth H (bottom layer) |
+| Hgs0001... | rides on f_out_hg (f_salt_gw=1) | subsurface salt storage (m, column equivalent); part of Hg |
+
+**Ledgers and log** (budget checks)
+
+- Salt water is water, so the S columns of Log.txt (S_surf / S_grnd /
+  S_total) show the fresh + salt total. There is no salt-only ledger.
+
+**Measurements** (probe and transect columns)
+
+- No salt-specific column. For a point time series pick the same cell of
+  `Hss0001...` at each output time.
+
+**Restart**
+
+- Handled automatically through the private file `saltwater.dat` (fn_salt
+  must have been enabled at save time).
+
+**How to read and check**
+
+- Fresh-layer thickness = H − Hss; subsurface fresh water = Hg − Hgs. The
+  subsurface interface elevation is ground − soil thickness + Hgs / sy0.
+- Check the quasi-steady intrusion against the Ghyben–Herzberg relation
+  $`z_s = h_f/\varepsilon`$ (about 40 times the fresh head) as a function of
+  distance from the coast (procedure of [test/salt](../../../test/salt/)).
+- Where the run-up sea water ended up is read from the last frame of
+  `Hss0001...` (salt water left after drainage).
 
 ## Constraints and notes
 

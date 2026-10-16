@@ -268,6 +268,57 @@ flat-bed one-layer model).
 | Inundation, incised channels, dam breaks without a channel mask | f_opening_dynamic 2 | the default 1 acts only on edges between channel cells; 2 corrects the conveyance along walls and in incised channels on every edge |
 | Reproducing cases calibrated with older versions | f_advection_scheme 1, f_opening_dynamic 0, f_dry_head_cap 0 | the defaults before 2026-10-03. Moving to scheme 3 needs a roughness recalibration (the momentum-conservative form resolves the jump losses and the momentum exchange with the valley floor, so it is slower and lower) |
 
+## Output and monitoring
+
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields** (rasters in `result/`, every `dt_file`)
+
+| File | How | Contents |
+|---|---|---|
+| H / E | f_out_h (default on) / f_out_e | depth (m, pore-area basis) / water level (m) |
+| u / v / V | f_out_u / v / vv | components and magnitude of the cell velocity (m/s) |
+| m / n / Q / Qd | f_out_m / n / qq / qd | components and magnitude of the unit-width discharge (m²/s) and direction (rad) |
+| Fr / Cn | f_out_fr / f_out_cn | Froude / Courant number fields |
+| H9999 / Ht9999 / V9999 / Q9999 / Qt9999 / Qd9999 | f_out_hmax (default on) and others | run maxima of depth, speed and discharge, their times (min) and direction |
+
+**Ledgers and log** (budget and numerical health)
+
+- Columns of Log.txt: `time, progress, S(m), Runge, ex_flux, Cn_max, h_max,
+  V_max` (with groundwater, snow or glaciers S splits into S_surf / S_grnd
+  / S_total; `f_disp_*` selects the displayed columns). S is the
+  domain-mean storage depth (m; with the gv conversion and pond/dam
+  storage, sea cells excluded), `Runge` the fraction of edges recomputed
+  by the adaptive Runge-Kutta, `ex_flux` the count of suppressed excessive
+  outflow fluxes, `Cn_max` the domain maximum Courant number.
+
+**Measurements** (probe and transect columns)
+
+- Probes: `z, h, u, v, |V|, q` (+ hg, hs, sd and the water-quality C, cq).
+  Transects: `Q, Hmax, Vmax, B` (+ the water-quality L, Lcum). At the end
+  `summary.csv` collects Qmax and Hmax of all points and transects
+  ([the measurement chapter](record.md)).
+
+**Restart**
+
+- Depth and discharge are in the core state save; the ENC edge quantities
+  (velocities, fluxes, dynamic re-assignment of openings) are handled
+  automatically by the private file `swflow_enc.dat`. The non-hydrostatic
+  correction cold-starts at restart.
+
+**How to read and check**
+
+- Time-step health: `Cn_max` must not exceed 1 (the run stops by default),
+  `Runge` should not stay above some tens of percent, `ex_flux` should not
+  keep growing. If any applies, reduce dt ([Courant number and time
+  step](courant.md)).
+- Water budget: in a closed domain without boundary conditions S is
+  constant (all significant digits with `f_disp_debug = 1`). If it
+  changes, look at boundaries, sea cells, structures and evapotranspiration.
+- The maximum statistics are updated every step, so they differ from
+  maxima picked from the `dt_file` frames. Use H9999 for inundation hazard
+  maps.
+
 ## Format examples
 
 Annotated list of all parameters (with the defaults spelled out):

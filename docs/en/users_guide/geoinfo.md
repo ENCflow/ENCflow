@@ -250,6 +250,47 @@ Notes when giving the crest with a distribution file `fn_seawall`:
   Painting a **generous buffer along the coast** is therefore the safe
   side, and it automatically prevents the corner-contact leaks above.
 
+## Output and monitoring
+
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section. Geographic information is input, but the result of reading it
+can be checked in the following outputs.
+
+**Fields** (rasters in `result/`)
+
+| File | How | Contents |
+|---|---|---|
+| Z0000 | always | the ground elevation as read (after mag_z, the channel excavation depth_rw and user routines) |
+| X0000 | always | domain mask (0: outside, 1: land, 2: sea); the result of fn_mask and fn_sw |
+| Sd0001... | automatic (when a model uses the soil thickness) | soil thickness (m) |
+| Hrs0001... | f_out_hrs = 1 | storage depth of ponds (rscap) (m) |
+| Z0001... | f_out_z = 1 | ground elevation moved by landform change, solidification or bed motion |
+
+Roughness, void ratio, building size, channel mask and seawalls are not
+written; check the input files directly in GIS.
+
+**Ledgers and log**
+
+- At initialization the "number of valid cells" and every quantity filled
+  with a default (marked "(default)") are printed. Check first here that
+  the masks do not cut more or less than intended.
+
+**Measurements** (probe and transect columns)
+
+- The header of a probe CSV carries the ground elevation `z` of the
+  point, a quick check of the terrain reading.
+
+**Restart**
+
+- Geographic information is re-read at restart (z and sd moved by
+  landform change are restored from the state save).
+
+**How to read and check**
+
+- Rows run from north to south, columns from west to east. A wrong
+  orientation is obvious when Z0000 is overlaid on the source DEM.
+- Check the sea and domain mask boundaries with the value 2 of X0000, and
+  the channel excavation as Z0000 − source DEM.
+
 ## Parameters and the basis of their defaults
 
 The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default). Most of the geographic information is given data

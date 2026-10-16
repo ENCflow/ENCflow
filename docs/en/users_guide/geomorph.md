@@ -55,6 +55,8 @@ other debris-flow processes. Debris flow and the moving bed layer require
 `z` against creep or uplift, and weathering can continue to produce soil.
 Sea-mask cells (`sw > 0`) receive no landform updates.
 
+How to read the results (fields, ledgers, measurement columns, restart) is summarized in [Output and monitoring](#output-and-monitoring) on this page. Each feature section also ends with a short note on just the outputs that concern it.
+
 ## Run control (common to all processes)
 
 | Parameter | Default | Meaning |
@@ -140,6 +142,8 @@ The implementation updates only `z`, leaving `sd` unchanged. Creep therefore
 acts even at `sd = 0` and shifts the soil base `z − sd`. This is a terrain
 diffusion approximation, not transport of a finite soil layer.
 
+**Outputs for this section**: landform change in `Z0001...` (`f_out_z=1`) and `Sd0001...`. The process is slow, so match the morphological acceleration morfac with `dt_file` ([Output and monitoring](#output-and-monitoring)).
+
 ## Bedload (f_fluvial)
 
 Transport formulas, Exner equation and clamps: [supplement](sediment.md#3-bedload-f_fluvial).
@@ -165,6 +169,8 @@ sand and gravel beds are in the recommendations at the end).
 Combined with the subgrid channel width (fn_width), bedload
 concentrates in the channel width and changes the riverbed there
 ([the channel chapter](channel.md)).
+
+**Outputs for this section**: bed change in `Z0001...` (`f_out_z=1`; Z − Z0000 is the scour/deposition thickness). How often the cap fluv_dzmax acted is in the end warning "fluvial dzmax clip fired", the volume lost at the bedrock floor in "bedrock floor clip" ([Output and monitoring](#output-and-monitoring)).
 
 ## Suspended sediment (f_suspend)
 
@@ -241,6 +247,8 @@ river-mouth terrace, the tsunami deposits above), represent that area
 as ordinary cells + an initial water level, and if you use a sea mask,
 place it offshore of the area of interest.
 
+**Outputs for this section**: sediment in transport in `Hs0001...` (`f_out_hs=1`), volume concentration Hs / (H + Hs), deposition in `Z0001...`. Point time series in the probe column `hs`; maximum flow depth and fluid force in `D9999` and `F9999` ([Output and monitoring](#output-and-monitoring)).
+
 ## Hillslope erosion (f_wash)
 
 Erosion law: [supplement](sediment.md#5-hillslope-erosion-f_wash).
@@ -265,6 +273,8 @@ The minimal input to "just erode the slopes" is `f_wash = 1` +
 sufficient to meet the wet-cell condition. The raindrop term needs rainfall
 reaching the ground; the sheet-erosion term can act without rain if flow-induced
 shear exceeds its threshold.
+
+**Outputs for this section**: detached sediment rides in the surface `Hs0001...`; the loss of soil appears in `Sd0001...` and `Z0001...` ([Output and monitoring](#output-and-monitoring)).
 
 ## Dry-slope erosion (f_splash)
 
@@ -314,6 +324,8 @@ Japanese; long-duration rain on a plateau-and-cliff terrain grows
 valleys from the cliff margin with zero surface runoff). The
 cohesion contrast (whether valleys form at all) is in
 [test/splashslide](../../../test/splashslide/).
+
+**Outputs for this section**: landform in `Z0001...` and `Sd0001...`; the volume exported from the domain is printed at the end as "splash exported sediment volume" ([Output and monitoring](#output-and-monitoring)).
 
 ## Debris flow / landslide (f_debris / fn_dbinit / f_slide)
 
@@ -554,6 +566,8 @@ numerical noise.
   trapping by member spacing vs. log length is out of scope of the
   driftwood module as well).
 
+**Outputs for this section**: the sediment of the mixture in `Hs0001...`, the run maximum of the flow depth h + hs in `D9999`, the fluid force in `F9999`, the safety factor in `Fs0001...` and its run minimum `Fs9999` (`f_out_fs=1`, f_slide=1 or 2). The post-failure landform in `Z0001...`, the run minimum safety factor in the end line "slide min Fs". Build hazard maps with f_slide=2 ([Output and monitoring](#output-and-monitoring)).
+
 ## Moving bed layer / landslide tsunami (f_bedslide)
 
 Driving head, buoyancy, Voellmy speed and flux distribution: [supplement](massflow.md#5-moving-bed-layer-f_bedslide).
@@ -670,6 +684,8 @@ debris-flow model).
   near the shoreline and never reaches the lake bottom, whereas with
   handover it runs to the flat lake bottom and deposits there.
 
+**Outputs for this section**: the layer thickness `Hb0001...` and speed `Vb0001...` are automatic. At the end "bedslide plunge speeds" (mixture and layer speeds at hand-over) and "subcycles total" are printed. Restart in `geomorph_bedslide.dat` ([Output and monitoring](#output-and-monitoring)).
+
 ## Long-term landform evolution (f_wthr / f_uplift)
 
 Soil production function and uplift: [supplement](sediment.md#7-bedrock-weathering-and-uplift-f_wthr--f_uplift).
@@ -695,6 +711,61 @@ time). The defaults are quantities on year-to-millennium scales, so first
 choose the landform duration to represent. For a fresh run with complete update
 intervals, it is `(tt − t0) × morfac / (365.25 × 86400)` years. See
 "[Run control](#run-control-common-to-all-processes)" for conversion using the actual update count.
+
+**Outputs for this section**: soil thickness `Sd0001...` (grows by weathering) and ground `Z0001...` (rises by uplift). Read them in morphological time: time of FILENUMBER.csv × morfac is the elapsed years ([Output and monitoring](#output-and-monitoring)).
+
+## Output and monitoring
+
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields** (rasters in `result/`, every `dt_file`)
+
+| File | How | Contents |
+|---|---|---|
+| Z0001... | f_out_z = 1 | evolving ground elevation (m); erosion/deposition thickness = Z − Z0000 (negative = erosion) |
+| Sd0001... | automatic | soil thickness (m); reduced by erosion, increased by weathering (f_wthr) |
+| Hs0001... | f_out_hs = 1 | sediment column (m, pore-area basis): sediment in transport by suspension, washoff and debris flow |
+| D9999 / Dt9999 | f_out_dmax / f_out_dmaxt | maximum flow depth h + hs and its time (the "inundation depth" of a debris flow) |
+| F9999 | f_out_fmax | maximum fluid force (ρm/ρw)(h + hs)V² (building damage index) |
+| Fs0001... / Fs9999 | f_out_fs = 1 (f_slide = 1 or 2) | slope safety factor and its run minimum (−1 = not evaluated) |
+| Hb0001... / Vb0001... | automatic (f_bedslide) | thickness (m) and speed (m/s, diagnostic) of the moving bed layer |
+
+**Ledgers and log** (budget checks)
+
+- The S column of Log.txt is water only; sediment columns are not included.
+- Budget anomalies appear as warnings at the end: "fluvial dzmax clip fired
+  on ..." (how often the bed-change cap acted), "bedrock floor clip caused a
+  sediment budget imbalance of ..." (volume lost at the bedrock floor),
+  "slide min Fs = ..." (run minimum safety factor), "splash exported
+  sediment volume = ..." (volume exported by dry erosion), "bedslide plunge
+  speeds ... / subcycles total ...".
+- There is no cumulative sediment CSV; derive the budget from the fields
+  as below.
+
+**Measurements** (probe and transect columns)
+
+- The probe CSV has the sediment column `hs` (m) and the soil thickness
+  `sd` (m). Transects carry no sediment discharge (water Q only).
+
+**Restart**
+
+- z, hs and sd are part of the core state save. The moving bed layer uses
+  the private file `geomorph_bedslide.dat` automatically. The update cycle
+  continues from the saved step number.
+
+**How to read and check**
+
+- Sediment budget: what stays on the bed and slopes is Σ(Z − Z0000) × A,
+  what is in transport is Σ(Hs × gv × wfrac × A). In a closed domain
+  without export their sum is constant (export through open boundaries
+  and capture by check dams are extra).
+- With accelerated morphological time (morfac), read `Z0001...` in
+  morphological time (time of FILENUMBER.csv × morfac).
+- Saturation Hg / (sy0 × Sd) (post-processed from the groundwater Hg and
+  Sd) is the failure precursor, Fs9999 the landslide hazard map, D9999 and
+  F9999 the reach and damage indices of debris flows. With f_slide = 1 the
+  Fs changes after failures, so build hazard maps with f_slide = 2
+  (judgement only).
 
 ## Recommended values by pattern
 

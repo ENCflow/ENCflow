@@ -15,6 +15,8 @@ run** (eruption → lava field → secondary hydrologic response as one
 chain). The full design is in [docs/lava_plan.md](../../lava_plan.md);
 the implementation record is developer.md Sec. 51.
 
+How to read the results (fields, ledgers, measurement columns, restart) is summarized in [Output and monitoring](#output-and-monitoring) on this page.
+
 ## What is computed
 
 - The state is the per-cell lava thickness `s%hl` (m), written as the
@@ -117,16 +119,45 @@ following (calibration quantities):
 - Time series are linearly interpolated. Writing the same time twice
   makes a step change (`(5,0.5),(5,0.0)` = shut off exactly at 5 min).
 
-## Effect on outputs
+## Output and monitoring
 
-- The distributed output gains `Hl` (lava thickness, m; always written
-  while enabled, no flag).
-- Solidified lava appears as an increase of the bed elevation `Z`
-  (set `f_out_z = 1` to write it at every output time).
-- It is not counted in the conserved-volume column S_total on the
-  screen/Log (it is not a water column). A volume ledger (erupted,
-  solidified, molten) is reported at the end of the run.
-- Restart uses the private file save/lavaflow.dat (automatic).
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields** (rasters in `result/`, every `dt_file`)
+
+| File | How | Contents |
+|---|---|---|
+| Hl0001... | automatic | lava thickness (m of lava; geometric area basis); flowing and stopped lava |
+| Z0001... | f_out_z = 1 | ground raised by solidification; solidified thickness = Z − Z0000 |
+
+**Ledgers and log** (budget checks)
+
+- At the end "lavaflow: erupted ... m3, solidified ... m3, molten ... m3"
+  (the volume ledger) and "subcycles total = ... over ... updates" are
+  printed.
+- Lava is not included in the S column of the screen and Log.txt (it is
+  not a water column).
+
+**Measurements** (probe and transect columns)
+
+- No lava column. For a point time series pick the same cell of
+  `Hl0001...` at each output time; water flowing over the solidified
+  terrain is measured by the usual columns.
+
+**Restart**
+
+- Handled automatically by the private file `lavaflow.dat` (fn_lavaflow
+  must have been enabled at save time).
+
+**How to read and check**
+
+- Budget: erupted = solidified + molten closes (molten = Σ Hl × A). With
+  an effusion time series, check the input by comparing erupted with
+  Σ(q × Δt).
+- The reach is the last frame (9998) of `Hl > 0`; there is no run-maximum
+  field, so refine `dt_file` if the maximum reach during the run matters.
+  Check the stop thickness by whether the front Hl is close to
+  τ_y/(ρg tanθ).
 
 ## Parameters and the basis of their defaults
 

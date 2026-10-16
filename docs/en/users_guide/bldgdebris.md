@@ -67,6 +67,8 @@ refloating, and dashed green shows damage-to-porosity feedback to the flow.
 Conditions sit beside their paths; the three ledgers identify their area
 bases. This is a schematic, not a simulation result.
 
+How to read the results (fields, ledgers, measurement columns, restart) is summarized in [Output and monitoring](#output-and-monitoring) on this page.
+
 ## Enabling and configuration
 
 Specify `fn_bldgdebris` in `&list_sysparam`.
@@ -161,32 +163,56 @@ known, start from the following (calibration quantities; sources in
 | Upper-bound reach (hazard map) | per case | per case | as above | bd_fsink 0, bd_vstop 0, bd_wfloat 0 | use Bd9999; the remaining amount is sensitive to bd_vstop and bd_wfloat (example README) |
 | Scenarios of tsunami-proofing / urbanisation | per case | per case | swap fn_bdstock (wooden fraction included) and fn_bdfrac | as above | two-case comparison, no code change |
 
-## Output
+## Output and monitoring
 
-| Switch | File | Contents |
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields** (rasters in `result/`, every `dt_file`)
+
+| File | How | Contents |
 |---|---|---|
-| f_out_hbd | Bf0001… | floating debris volume (m³/m²) distribution (dt_file interval) |
-| f_out_wbd | Bd0001… | deposited debris (m³/m²) distribution |
-| f_out_wbd | Bd9999 | **maximum arrival over the run** max(floating+deposited) — the debris hazard map |
-| f_out_bds | Bs0001… | destroyed fraction 1 − remaining stock/initial stock (0-1). The final frame is the damage-ratio map |
-| f_out_fdmax | Fd9999 | maximum fluid force including driftwood and debris (h+(1+s)hs+sg_log·hd+sg_deb·hbd)·V² (the existing F9999 keeps its water-and-sediment definition) |
+| Bf0001... | f_out_hbd = 1 | moving debris column (m³/m² per effective area) |
+| Bd0001... | f_out_wbd = 1 | deposited debris (m³/m² per effective area) |
+| Bd9999 | f_out_wbd = 1 | run maximum of the reach `maxₜ(hbd + wbd)` (the debris hazard map) |
+| Bs0001... | f_out_bds = 1 | destruction ratio of houses 1 − remaining stock / initial stock (0–1); the last frame is the damage-ratio map |
+| Fd9999 | f_out_fdmax = 1 | maximum fluid force including driftwood and debris (h + (1+s)hs + sg_wood·hd + sg_debris·hbd)·V² (the existing F9999 stays water and sediment only) |
 
-`Bd9999` is the per-cell `maxₜ(hbd+wbd)`: the period maximum of the
-instantaneous amount, not cumulative passage or the sum of separately
-maximised floating and deposited amounts.
+`Bd9999` is the per-cell `maxₜ(hbd + wbd)`, the run maximum of the volume
+present at a time; it is neither a cumulative passing volume nor the sum of
+separately taken maxima of moving and deposited debris.
 
-wbs is volume per **geometric cell area**, while hbd and wbd use the
-**effective area** (conversion formulas in
-[the explanation](bldgdebris_models.md) §3). `result/bldgdebris.csv` records cumulative destruction
-(floating / sinking), deposition, refloat and dam capture, plus current
-stock, floating and deposited volumes at dt_recrd intervals. These values
-are already area-weighted in m³.
+**Ledgers and log** (budget checks)
 
-In a **closed domain without dam capture**, current storage Q conserves
-the initial volume, apart from numerical error. Account for outflow and dam
-capture separately. Destruction, deposition and refloat are internal
-transfers; adding their cumulative values to current storage double counts
-the volume.
+- `result/bldgdebris.csv` records every `dt_recrd` the cumulative
+  `destroy_float_m3`, `destroy_sink_m3` (volume destroyed into floating and
+  sunk debris), `deposit_m3`, `refloat_m3` and `to_dam_m3`, and the current
+  `vol_stock_m3` (remaining stock), `vol_float_m3` and `vol_deposit_m3`,
+  all in m³ after the area conversion.
+- Log.txt has no debris column. The void ratio changed by destruction is
+  reflected in the water storage S (f_bdgv = 1).
+
+**Measurements** (probe and transect columns)
+
+- No debris column. Read point values from the same cell of `Bf0001...`
+  and `Bs0001...`.
+
+**Restart**
+
+- Handled automatically by the private file `bldgdebris.dat`
+  (fn_bldgdebris must have been enabled at save time).
+
+**How to read and check**
+
+- `wbs` (building stock) is per **geometric** cell area, `hbd` and `wbd`
+  per **effective** area (conversion in [the explanation](bldgdebris_models.md) §3).
+- In a closed domain without dam capture the sum of the current stores
+  `vol_stock + vol_float + vol_deposit` conserves the initial volume (up to
+  numerical error). Account separately for outflow and dam capture.
+  Destruction, deposition and refloat are internal transfers; adding their
+  cumulative values to the current stores double-counts.
+- Read the damage-ratio map from `Bs9998` (last frame), the debris reach
+  from `Bd9999`, and the damage indices `Fd9999` (with debris) and `F9999`
+  (water and sediment only) side by side.
 
 ## Combinations and restrictions
 

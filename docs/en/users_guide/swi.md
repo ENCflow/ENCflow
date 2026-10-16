@@ -125,26 +125,44 @@ separate the rainfall-driven diagnostic from physical model states:
 To compare with physical model states (e.g., groundwater saturation),
 run a separate case with the same rainfall.
 
-## Output
+## Output and monitoring
 
-Written automatically when enabled (no switches):
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
 
-| File | Contents |
-|---|---|
-| Swi0001... | Soil Water Index (mm) distribution (every dt_file) |
-| Swi9999 | **maximum SWI in this run segment**, evaluated after each update (mm) |
-| Swit9999 | time of the maximum (min) |
+**Fields** (rasters in `result/`)
 
-The current probe CSV has no SWI column. To obtain a point time series,
-extract the same cell from successive `Swi0001…` maps. Maximum-value
-statistics are updated every time step and can differ from a maximum
-sampled only from maps at `dt_file` intervals.
+| File | How | Contents |
+|---|---|---|
+| Swi0001... | automatic | distribution of the Soil Water Index SWI (mm), every `dt_file` |
+| Swi9999 | automatic | maximum over the computed interval of the SWI after each update (mm) |
+| Swit9999 | automatic | time of that maximum (min) |
 
-Save/restore writes the three tank storages to `swi.dat` and reconstructs
-the current SWI from their sum. **The maximum and its timing statistics
-are not saved**; they are evaluated anew for the resumed run segment.
-For the maximum across a split event, combine the segment maxima and
-their corresponding times separately.
+**Ledgers and log**
+
+- No SWI-specific ledger or log column (it is a diagnostic and not part
+  of the S water-budget column).
+
+**Measurements** (probe and transect columns)
+
+- The probe CSV has no SWI column; extract the same cell of `Swi0001...`
+  at each output time. The maximum statistics are updated every step, so
+  they can differ from a maximum picked from the `dt_file` frames.
+
+**Restart**
+
+- The three tank storages are saved to and restored from `swi.dat`, and
+  the current SWI is rebuilt from their sum. **The maximum and its time
+  are not saved** and restart from the resumed interval; for the maximum
+  over a split run, combine the per-interval maxima and times yourself.
+
+**How to read and check**
+
+- Warning levels combine the SWI with the 60-minute rainfall at the same
+  time (CL lines), so `Swi9999` alone cannot be used for a warning
+  ([Relation to warning criteria](#relation-to-warning-criteria) below).
+- When comparing with official values, check the rainfall processing,
+  the initial storages swi0 and the time integration
+  ([Contract](#contract-dedicated-runs)).
 
 ## Relation to warning criteria
 

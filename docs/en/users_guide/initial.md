@@ -115,6 +115,39 @@ the initial condition (`f_state_restore = 2`). A typical use is to run
 normal flow through the channel first and then start the flood
 scenario. See the [suspending and restarting chapter](restart.md).
 
+## Output and monitoring
+
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields** (rasters in `result/`)
+
+| File | How | Contents |
+|---|---|---|
+| H0000 / E0000 | f_out_h (default on) / f_out_e | depth and level of the starting state; the given initial condition and the depression filling as applied |
+| Z0000 | always | ground elevation of the starting state; the filling water converted to ground by `f_fill_depres = 3` appears here |
+| X0000 | always | domain mask (0: outside, 1: land, 2: sea) |
+
+**Ledgers and log**
+
+- The S of the first line (time 0) of Log.txt is the initial water
+  (domain-mean storage depth in m); with an initial level e0, S × number
+  of valid cells × cell area is the stored volume.
+
+**Measurements** (probe and transect columns)
+
+- The first row of a probe is the initial state (time 0).
+
+**Restart**
+
+- Using a warmed-up field as the initial condition is f_state_restore = 2
+  of [Suspend and restart](restart.md) (then `0000` is the restored state).
+
+**How to read and check**
+
+- Check the depression filling (f_fill_depres) in H0000. The initial
+  channel depth h0_rw is added on channel-mask cells only, so overlay
+  H0000 with fn_rw.
+
 ## Tests and examples
 
 - Annotated list of all parameters: [examples/List_samples/list_initial.txt](../../../examples/List_samples/en/list_initial.txt)

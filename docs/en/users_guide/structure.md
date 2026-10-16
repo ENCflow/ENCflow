@@ -33,6 +33,8 @@ points. The table at the end of each section lists all parameters --
 "mandatory" items stop with an error when omitted; all others are
 optional, with the behavior when omitted given in the "default" column.
 
+How to read the results (fields, ledgers, measurement columns, restart) is summarized in [Output and monitoring](#output-and-monitoring) on this page. Each feature section also ends with a short note on just the outputs that concern it.
+
 ## Just try it (minimal input)
 
 The minimal input is one drainage pump (intake cell + constant rate;
@@ -100,6 +102,8 @@ system).
 | f_pump_ref(n) | 0 | Reference of the operating rule. 0: water level eta of the representative (first) intake cell, 1: depth h of the same cell (only 1 is allowed for pond intake) |
 | fn_pump_in_cell(n) / fn_pump_out_cell(n) | "" | File specification of the cell sets (from dir_data; each line "i j") |
 
+**Outputs for this section**: no pump ledger, and the transfer does not cross a transect. Check the effect as the drop of `H0001...` upstream and, when draining out of the domain, the decrease of S in the log ([Output and monitoring](#output-and-monitoring)).
+
 ## Culverts (&list_struct_culvert)
 
 Three-regime discharge law and basis of the coefficients: [supplement](hydraulics.md#2-culverts-sluices).
@@ -161,6 +165,8 @@ diverge -- use realistic dimensions.
 | culv_gate_ref(n) | 1 | Reference cell of the opening rule (0: in-side representative, 1: out-side representative = river side) |
 | fn_culv_in_cell(n) / fn_culv_out_cell(n) | "" | File specification of the cell sets (from dir_data; each line "i j") |
 
+**Outputs for this section**: no throughput ledger, and nothing on transects. Use the difference of transect Q upstream and downstream, or the head difference between probes, to check the three regimes ([Output and monitoring](#output-and-monitoring)).
+
 ## Diversions (&list_struct_diversion)
 
 A **one-way, passive** withdrawal from an intake cell set to out of the
@@ -190,6 +196,8 @@ set (intake weirs, diversion channels).
 | div_q0(n) | -- | Constant discharge at all times (m3/s). Exactly one of this or div_rule is mandatory |
 | div_rule(:,k,n) | -- | Intake rating polyline (water level eta of the representative intake cell m, discharge m3/s). Exactly one of this or div_q0 is mandatory |
 | fn_div_in_cell(n) / fn_div_out_cell(n) | "" | File specification of the cell sets (from dir_data; each line "i j") |
+
+**Outputs for this section**: no diversion ledger, and nothing on transects. Place transects downstream of the source and of the destination and read the change of Q ([Output and monitoring](#output-and-monitoring)).
 
 ## Dams and lakes (&list_struct_dam)
 
@@ -398,6 +406,55 @@ The former `dam_area` (direct specification of the impounded area) was
 removed on 2026-08-20 (evaporation is unified to the cell-area
 evaluation; specifying it stops with a namelist read error -- delete
 it).
+
+**Outputs for this section**: the per-structure `result/dams/dam000n.csv` (H, V, Qin, Qout, Qspill, Qgw) and the capture-zone storage `Hrs0001...` (`f_out_hrs=1`). Check the budget as ΔV = (Qin − Qout − Qspill − Qgw) × Δt − evaporation ([Output and monitoring](#output-and-monitoring)).
+
+## Output and monitoring
+
+The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
+
+**Fields** (rasters in `result/`)
+
+| File | How | Contents |
+|---|---|---|
+| Hrs0001... | f_out_hrs = 1 | storage depth of ponds and of the capture zones of dams/lakes (m): the storage distributed over the capture set, not the lake level H |
+| H0001... / E0001... | f_out_h / f_out_e | the effect of structures (drainage, conveyance, diversion, release) appears in the surface depth and level |
+
+Structures themselves are not written as fields.
+
+**Ledgers and log** (budget checks)
+
+- Each dam/lake writes `result/dams/dam0001.csv` etc. at every record time:
+  `t(hour), t(min), H(m), V(m3), Qin(m3/s), Qout(m3/s), Qspill(m3/s),
+  Qgw(m3/s)` (header with number, operation mode and Vmin/Vmax; a
+  referencing structure has `# lake =` with the lake number; a fixed-level
+  lake records Qin = the lost volume; Qgw is the dam_gw exchange, 0 when
+  unused).
+- Pumps, culverts and diversions have no discharge ledger. Pumps draining
+  out of the domain and fixed-level lakes remove water from the system, so
+  S in Log.txt decreases; transfers inside the domain leave S unchanged.
+
+**Measurements** (probe and transect columns)
+
+- **Structure transfers do not cross a transect** (culverts, diversions and
+  pumps move clear water directly between cells). Read the throughput as
+  the difference of transect Q upstream and downstream of the structure,
+  or for dams as Qout in the CSV.
+
+**Restart**
+
+- The storage of ponds and capture zones (hrs) is part of the core state
+  save. Operation rules are functions of the current state without
+  history, so restart is unaffected.
+
+**How to read and check**
+
+- Dam budget: ΔV = (Qin − Qout − Qspill − Qgw) × Δt − evaporation. `Qspill`
+  is the forced spill above surcharge, `Qout` the rule-based release.
+- Check a pump by the levels downstream (a decrease of S when draining out
+  of the domain) and upstream; check the three culvert regimes (free,
+  submerged, full) by the relation between head difference and discharge
+  ([explanation](hydraulics.md) §2).
 
 ## Format samples
 
