@@ -686,7 +686,7 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
     セル成分(m_state の h/z/hrs/hg)は全ランク同形の全域一時 ts に
     Bcast → 帯切り出しのまま(ts は新規初期化も使うため、scatter 化は
     初期化第2段(a)= ts の rank0 化と同時に行う。handoff の道標)。
-    rank0 の全域一時は残る(RLE ストリームが先頭からの逐次展開のため。
+    rank0 の全域一時は 2026-10-16 の §83 で撤去した(旧: RLE ストリームが先頭からの逐次展開のため。
     解消するなら展開しながら帯を送るストリーミング配布)。
   - prtype3: 全域一時配列に読んで帯を切り出す(全ランク冗長読み)。
   - **par_bcast_cell/edge は全ランク同形の配列(全域一時)専用**。帯確保の
@@ -806,8 +806,15 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
   受けると並び結合(先頭からの詰め直し)で行が jsh-1 ずれて読まれる
   (get_diff_v1 で実発生: np=1 は帯=全域で偶然無害、np=2 で波形が歪んだ)。
   **静的配列も帯化後は同じ規則に従う**(get_diff_v1 の x(0:, dcp%jsh-1:) が
-  適用第1号)。恒久全域が保証されるのは wx, wy と rank0 の z のみで、
+  適用第1号)。恒久全域が保証されるのはマスク類(x, sw, rw)と wx, wy のみで、
   それ以外を明示形状で受けてはならない。
+  **rank0 バッファには全域形 `(1:, 1:)` と窓形 `(dcp%ish:, dcp%jwh1:)` の
+  2 系統があり、取り違えると行・列がずれる**(配布は par_scatter_cell =
+  全域形 / par_scatter_win = 窓形、エッジは par_scatter_edge / _edge_win)。
+  実バグ: D2(2026-10-16)で par_scatter_cell のダミーを窓形に変えたところ、
+  全域一時に読んだ分布(遮断率・初期積雪等 12 箇所)の配布が窓の原点ぶん
+  ずれた。窓が (1,1) から始まる既存テストでは検出できず、秩父+遮断率分布で
+  S が 20% ずれて発覚(§82 末尾)。
 - 公開ルーチンは実体の受け渡しのみ、変更はプライベート側 — 同一実体の
   二重可視(エイリアシング)による未定義動作を規律で回避する。
 - **格子幾何(nx, ny, dx, dy)の正本は g(t_geoinfo)**。p(t_sysparam)側は
@@ -11125,3 +11132,79 @@ D2 で改める。
 - nhshelf は §81 と同じ(release 4 スレッドで 1 要素 2 量子の FAIL = NH ソルバ
   の実行間非決定)。厳密フラグ・単一スレッドで D1 と D2 の全ファイルが
   バイト一致することを確認。**reference は更新していない**(規律 1)。
+
+### D2 の退行と修正(2026-10-16。コミット f24278b)
+
+D2 で par_scatter_cell の送信元ダミーを窓形 `buf(dcp%ish:, dcp%jwh1:)` に
+変えたが、各モジュールの init が全域一時 `wk(1:nx,1:ny)` に読んだ分布を
+par_scatter_cell で配る 12 箇所(intercept の α・smax、snow swe0、glacier hi0、
+conduit、greenampt、saltwater、wq、meteo、driftwood、bldgdebris、BMI set_value)
+はそのままだったため、窓が (1,1) から始まらないケースでは帯に (ish−1, jwh1−1)
+だけずれたセルが配られた。領域マスク+これらの分布を併用するテストがなく
+検出できなかった。修正: par_scatter_cell / _i / par_scatter_edge のダミーを
+全域形に戻し、窓形バッファ用の par_scatter_win / par_scatter_edge_win を新設
+(m_geoinfo scatter_band_r と m_restart が使う)。確認: 秩父(列窓 76..501)+
+固定遮断率の x 方向勾配マップで、D2 は D1 に対し S が +20%、修正後は D1 と
+バイト一致。**窓つきケース+分布ファイルの回帰テストを追加すべき**(handoff)。
+
+
+## 83. 第二段 (D3): save/restore のストリーミング(2026-10-16 実装)
+
+設計は docs/xwindow_plan.md §7.2 の D3。save/restore で rank0 が持っていた
+全域一時(状態 6 枚、swflow_enc のエッジ 2〜3 枚、各モジュールの wk)を撤去し、
+窓形バッファから全域形式の RLE ストリームを直接符号化・復号する。
+**ファイル形式(全域の要素数・run 表・packed)は不変 = 旧 save との互換を保つ。**
+等価変換(save ファイルはバイト一致、restore の結果はビット一致)。
+
+### 規約
+
+- **m_restart**(基盤層。m_parallel + m_fileio を使う)が save/restore の
+  集約・配布と RLE 入出力を束ねる。各モジュールは帯配列をそのまま渡す:
+  `restart_write_cell(un, a[, fill])` / `restart_read_cell(un, a)`
+  (セル a(ish:, jsh:))、`restart_write_edge` / `restart_read_edge`
+  (エッジ a(1:, ish−1:, jsh−1:))、`restart_write_zero(un)`(未使用成分の
+  形式固定用の全域ゼロ)、`restart_skip(un)`(復元側で使わない成分の読み飛ばし)。
+  すべて collective。un は rank0 でだけ有効。
+- rank0 の一時は窓形だけ: save は (ish:ieh, jw1:jw2) / (:, ish−1:ieh, jw1−1:jw2)
+  (par_gather_win / par_gather_edge_win)、restore は行を窓±ハロ
+  (ish:ieh, jwh1:jwh2) / (:, ish−1:ieh, jwh1−1:jwh2) にして par_scatter_win /
+  par_scatter_edge_win で配る。
+- **m_fileio の窓形 RLE** `fileio_write_rle_win(un, a, …, fill)` /
+  `fileio_read_rle_win`(2 次元: 全域 (nx, ny) と窓の左上 (i1, j1)。3 次元
+  (エッジ): 全域 (nk, nx+1, ny+1) と窓のフラット位置 (o2, o3))。符号化は
+  全域のフラット順(第 1 次元が最速)を「窓外 = fill」「窓内 = 値」として
+  2 パス(run 数・リテラル数の計数 → 充填)で走査し、全域配列を
+  fileio_write_rle したものとバイト一致する。復号は run を順に進め、窓に
+  重なるリテラルだけを格納する。メモリは run 表+リテラル(窓の非ゼロ数)。
+- **fill**: 旧実装が全域バッファを 1.0 で初期化していた表(swflow_enc の
+  fwd、cwxd/cwyd)は `fill = 1.0` を与えて旧形式とバイト互換にする。fill が
+  非ゼロの場はリテラルが窓外ぶんも入る(ファイル自体が O(N) なので同じ量)。
+  それ以外の場は fill 省略(= 0。窓外は長いゼロ連 1 本)。
+- m_state の restore は ts が窓形なので `fileio_read_rle_win` で ts に直接
+  復号してから par_bcast_cell(scatter ではない)。
+- par_gather_edge_to / par_scatter_cell / par_scatter_edge(全域形)は残す
+  (BMI get_value・各モジュールの分布読み・将来の全域出力のため)。
+- 旧 save との互換: 読む側は全域ストリームの任意の内容を受け付ける
+  (窓外にゼロ以外があっても捨てるだけ)。
+
+### 計測と検証(2026-10-16)
+
+- **save ファイルのバイト一致**: 秩父 560×300(列窓 76..501)を 30 分で save
+  した state.dat(1.5 MB)と swflow_enc.dat(10 MB)が、D2(修正済み)と D3 の
+  厳密ビルド(-O2、単一スレッド)でバイト一致(save_info.txt の差は日時のみ)。
+  -O0 -fcheck=all の逐次と MPI np=2 の save ファイルも互いにバイト一致。
+- **リスタート往復**(同ケース。A: 0→30 分で save、B: restore→60 分、C: 0→60 分
+  の直行): B と C の 60 分の分布(H0002)・summary.csv が D2・D3 とも一致し、
+  B の結果は D2 と D3 で全ファイル一致。B と C で違うのは H0000(開始時刻の
+  場)・H9999(ラン内最大値統計。復元対象外 = 既知)・Log・probe/flux の
+  時間範囲のみ。-fcheck=all の逐次と MPI np=2 でも同じ(境界エラーなし、
+  MPI の直行 C は逐次 C と全ファイル一致)。
+- 回帰(規律 2・3): -O0 -fcheck=all の逐次(秩父・埋め込み・往復)と MPI
+  (往復 np=2・埋め込み np=2)が完走し結果同一。release で reference 付き
+  24 ケース中 23 PASS(nhshelf は §81 と同じ非決定性。厳密単一スレッドで
+  D2 と D3 が全ファイル一致)、nest_identity・nest_twin・bmi_nest・bmi_vars・
+  gvchange PASS(restart 往復を含む)、MPI np=1, 2, 4 の 6 ケース PASS。
+  トップレベル make OK。秩父+遮断率分布(§82 末尾の退行ケース)は D1 と一致。
+- 常駐・ピーク(埋め込みケース): 変化なし(0.32 GB / 0.059 GB。save を含ま
+  ない計測)。save 時の rank0 一時は全域 6+2 枚(埋め込みで 1.1 GB)から
+  窓形(数十 MB)へ。

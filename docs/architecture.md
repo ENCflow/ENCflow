@@ -56,7 +56,8 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理。複数�
   │     リンク。逐次版は同名手続きの no-op/直結実装。§2)
   │
   └─ 基盤層(どこからでも使う道具)
-       m_fileio(text/bil 行列 I/O) m_geotiff + _codec + _inflate(自前 GeoTIFF)
+       m_fileio(text/bil 行列 I/O・RLE) m_restart(save/restore の集約+RLE。§83)
+       m_geotiff + _codec + _inflate(自前 GeoTIFF)
        m_georef(座標参照)  m_ffactor(摩擦テーブル)  m_util / m_sysdep_util
        user_geoinfo / user_initial(理想化実験用フック)
 ```

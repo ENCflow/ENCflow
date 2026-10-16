@@ -76,7 +76,10 @@ ENC 配置格子(独自スキーム)が主実装、STG は旧互換の比較用�
   z・係数・ts は窓形(窓±ハロ、全域添字。§11, §82)。
 - list_* は namelist を読むだけ。解釈・検証・導出は各 m_* の init(§12)。
 - save の write 並びと restore の read 並びは必ず同時に更新し、
-  形式変更時は save_version(仕様変更日の日付)も更新(§7)。
+  形式変更時は save_version(仕様変更日の日付)も更新(§7)。配列の
+  save/restore は m_restart(restart_write/read_cell・_edge)経由(§83)。
+- rank0 バッファは全域形 `(1:,1:)` と窓形 `(dcp%ish:, dcp%jwh1:)` の 2 系統。
+  配布は par_scatter_cell(全域形)/ par_scatter_win(窓形)を取り違えない(§12)。
 - 総和のリダクションは par_sum_rows(決定的)。max/整数和は allreduce 可(§11)。
 
 ## 作業の流儀
