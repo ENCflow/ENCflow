@@ -29,6 +29,10 @@ ENCflow の使い方を、実行できる例題つきで段階的に学ぶため
 2. [tutorials/chichibu](../tutorials/chichibu/README.md) — 実地形データ、降雨、計測、水収支
 3. [ユーザーガイド 第I部](users_guide.md) — 骨格、fn_\* の原則、パラメータファイルの読み方
 
+wave の Step 1 に出てくるクーラン数(`Cn_max` 列)と時間刻み `dt` の
+決め方に戸惑ったら、[クーラン数と時間刻みの決め方](users_guide/courant.md)
+(流れの数値計算が初めての人向けの入門)を読んでください。
+
 自分のケースを組むときは、[地理情報](users_guide/geoinfo.md)・
 [初期条件](users_guide/initial.md)・[境界条件](users_guide/boundary.md)・
 [降雨・気象](users_guide/forcing.md)の各章の「とりあえず動かしてみる
@@ -42,6 +46,7 @@ ENCflow の使い方を、実行できる例題つきで段階的に学ぶため
 
 | 分野(章ページ) | 詳説ページ |
 |---|---|
+| [時刻の管理](users_guide/time.md) | [クーラン数と時間刻みの決め方](users_guide/courant.md)(入門)、[時間刻みの設計方針](users_guide/timestep_policy.md) |
 | [浅水流計算](users_guide/swflow.md) | [ENC 格子と時間積分](users_guide/encgrid.md)、[移流項](users_guide/advection.md)、[拡散項](users_guide/diffusion.md)、[非静水圧補正](users_guide/nonhydrostatic.md) |
 | [内部水理構造物](users_guide/structure.md)・[境界条件](users_guide/boundary.md)・[河道](users_guide/channel.md) | [構造物と境界の水理則](users_guide/hydraulics.md) |
 | [地下水](users_guide/gwflow.md) | [地下水モデル](users_guide/gwflow_models.md) |

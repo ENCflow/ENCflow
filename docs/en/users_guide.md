@@ -32,6 +32,8 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 
 **Part II: Cross-cutting facilities**
 - [Time management](users_guide/time.md) -- time axis, time step, output interval, calendar
+  - [Courant number and how to choose the time step](users_guide/courant.md) -- primer for newcomers to numerical computation: grid and step, Courant number, velocity and wave speed, explicit vs implicit, reading Cn_max, procedure for estimating dt (primer for time management)
+  - [Time-step design policy](users_guide/timestep_policy.md) -- why mainly explicit with a fixed step, relation to variable steps and sub-cycling, solving the equations accurately vs reproducing the phenomenon (supplement to time management; intermediate to advanced)
 - [Coordinate systems](users_guide/coordinates.md) -- absolute vs. local coordinates, EPSG, geographic (lat-lon) grids
 - [Input and output formats](users_guide/io.md) -- text / bil / GeoTIFF, output file organization
 - [Suspend and restart](users_guide/restart.md) -- state files, time continuation, use as initial conditions

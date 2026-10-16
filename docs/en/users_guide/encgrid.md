@@ -270,6 +270,10 @@ default `f_check_cfl = 1` stops the run at $`C_n > 1`$). The diagonal
 distance $`\Delta r`$ is longer than the axis distance, so the axes decide
 the stability. With the diffusion term there is the separate condition
 $`\nu \le \Delta x^2/(2.83\,\Delta t)`$ ([Diffusion term](diffusion.md) §4).
+For the basics of the Courant number and the procedure for estimating dt see
+[Courant number and how to choose the time step](courant.md); for the design
+decisions behind the fixed step and the mainly explicit method see the
+[time-step design policy](timestep_policy.md).
 
 ## 8. Basis of the numerical constants
 
