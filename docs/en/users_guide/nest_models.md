@@ -211,13 +211,23 @@ blocks beyond both band and sponge contribute to child-to-parent replacement.
 
 ## 7. Parameters and the basis of their defaults
 
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
+
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| nest_bc | 2 | parent → child boundary method | verification case: passing level, velocity and edge discharge (2) gives the most consistent interface ([examples/nest_reflect](../../../examples/nest_reflect/); 1 is the TUNAMI-type level-only band) |
-| nest_fb | 2 | child → parent replacement | verification case: the wet-cell average keeps the parent's wet/dry state across a coastline (1:1 self-nesting is bit-identical in [test/nest_identity](../../../test/nest_identity/)) |
-| nest_nb | 0 (automatic) | width of the boundary band | derived from the stencil of the advection term: 2 for scheme 1, 3 for schemes 2 and 3 (the band covers ±2 edges along the line; [Advection](advection.md) §4.5) |
-| nest_ns | 4 | width of the sponge | empirical (a fraction of the child's wavelength; §5) |
-| nest_nh | 1 | treatment of the non-hydrostatic band | verification case: with the parent's φ as known values the interior of a 1:1 self-nest matches within 2e-13 m, against 1.4e-2 m when hydrostatic (§3) |
+| nest_bc | 2 | parent → child boundary method | **verification case** passing level, velocity and edge discharge (2) gives the most consistent interface ([examples/nest_reflect](../../../examples/nest_reflect/); 1 is the TUNAMI-type level-only band) |
+| nest_fb | 2 | child → parent replacement | **verification case** the wet-cell average keeps the parent's wet/dry state across a coastline (1:1 self-nesting is bit-identical in [test/nest_identity](../../../test/nest_identity/)) |
+| nest_nb | 0 (automatic) | width of the boundary band | **derived** from the stencil of the advection term: 2 for scheme 1, 3 for schemes 2 and 3 (the band covers ±2 edges along the line; [Advection](advection.md) §4.5) |
+| nest_ns | 4 | width of the sponge | **empirical** a fraction of the child's wavelength (§5) |
+| nest_nh | 1 | treatment of the non-hydrostatic band | **verification case** with the parent's φ as known values the interior of the 1:1 self-nest of [test/nest_identity](../../../test/nest_identity/) matches within 2e-13 m, against 1.4e-2 m when hydrostatic (§3) |
+
+**Where to look when revising the defaults**
+
+- Set the sponge width to about 1/4–1/2 of the shortest wavelength you
+  want resolved on the child (8–10 cells) and increase it until the
+  reflection at the interface disappears; the reflection can be
+  quantified with the procedure of
+  [examples/nest_reflect](../../../examples/nest_reflect/).
 
 ## 8. Verification cases
 

@@ -272,28 +272,46 @@ Long-term landscape evolution is meant to be run as "representative
 hydrology repeated × MORFAC × restart chains", the CAESAR-Lisflood style
 [^coulthard13] (developer.md §32).
 
-## 8. Parameters and basis of the defaults
+## 8. Parameters and the basis of their defaults
+
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| dt_geomorph / morfac | 0 / 1 | update interval (s) / acceleration of morphological time (§1) | MORFAC method[^roelvink06]; 1 for event runs |
-| creep_d | 0.005 m²/yr | creep diffusivity $`D`$ (§2) | middle of the published range 0.001–0.05 m²/yr[^fernandes97] |
-| f_qbform | 1 | bedload formula (§3) | 1: Ashida–Michiue[^ashida72], 2: MPM[^mpm48] |
-| fluv_d50 | 0.01 m | representative grain size of bedload | near the geometric mean of sand and gravel beds (empirical) |
-| fluv_tausc / susp_tausc / wash_tausc | 0.05 | critical dimensionless shear stress (§1) | representative value of the Shields curve for coarse sand to gravel[^shields36] |
-| fluv_porosity / fluv_sgrav | 0.4 / 1.65 | bed porosity / submerged specific gravity | standard values of sand and gravel |
-| fluv_dzmax | 0.05 m | bed change per update (§3) | numerical safety valve (Courant condition of bed waves) |
-| fluv_bcfeed | 0 | feeding at open boundaries (§3) | 0: no feeding, 1: capacity feeding |
-| f_esform | 1 | equilibrium concentration (§4) | 1: simple (calibration), 2: Itakura–Kishi[^itakura80] (recommended for sand) |
-| susp_d50 / susp_wf | 0.2 mm / 0 | grain size / settling velocity | fine sand; 0 derives it with Rubey[^rubey33] |
-| susp_beta | 1.0 | near-bed concentration factor $`\beta`$ | 1 = vertically uniform approximation |
-| susp_esa | 1e-4 | coefficient of the simple form | calibrated in test/suspend (empirical) |
-| wash_kr / wash_kf | 0.01 / 1e-5 m/s | raindrop / sheet erosion coefficients (§5) | values of test/wash (empirical, to be calibrated) |
-| spl_kr / spl_kt / spl_h | 5e-4 / 0.05 / 1 | dry-erosion coefficients and slope exponent (§6) | medians of the tests (empirical) |
-| spl_ca / spl_cb | 0 / 0 m | concavity amplification lengths | 0 = no amplification; a few to tens of metres to grow valleys |
-| spl_dzmax | 0 | erosion limit per update | 0 = off; safety valve against runaway |
-| wthr_p0 / wthr_sdstar | 50 mm/kyr / 0.5 m | soil production rate / decay depth (§7) | middle of the published range of the Heimsath function[^heimsath97] |
-| uplift0 | 1 mm/yr | uplift rate | lower end of orogenic belts |
+| dt_geomorph / morfac | 0 / 1 | update interval (s) / acceleration of morphological time (§1) | **method** MORFAC method[^roelvink06]; 1 for event runs |
+| creep_d | 0.005 m²/yr | creep diffusivity $`D`$ (§2) | **literature value** middle of the published range 0.001–0.05 m²/yr[^fernandes97] |
+| f_qbform | 1 | bedload formula (§3) | **method** 1: Ashida–Michiue[^ashida72], 2: MPM[^mpm48] |
+| fluv_d50 | 0.01 m | representative grain size of bedload | **empirical** near the geometric mean of sand and gravel beds |
+| fluv_tausc / susp_tausc / wash_tausc | 0.05 | critical dimensionless shear stress (§1) | **literature value** representative value of the Shields curve for coarse sand to gravel[^shields36] |
+| fluv_porosity / fluv_sgrav | 0.4 / 1.65 | bed porosity / submerged specific gravity | **customary value** standard values of sand and gravel |
+| fluv_dzmax | 0.05 m | bed change per update (§3) | **numerical** safety valve (Courant condition of bed waves) |
+| fluv_bcfeed | 0 | feeding at open boundaries (§3) | **method** 0: no feeding, 1: capacity feeding |
+| f_esform | 1 | equilibrium concentration (§4) | **method** 1: simple (calibration), 2: Itakura–Kishi[^itakura80] (recommended for sand) |
+| susp_d50 / susp_wf | 0.2 mm / 0 | grain size / settling velocity | **customary value** fine sand / **derived** 0 uses the Rubey formula[^rubey33] |
+| susp_beta | 1.0 | near-bed concentration factor $`\beta`$ | **method** 1 = vertically uniform approximation |
+| susp_esa | 1e-4 | coefficient of the simple form | **verification case** calibrated in [test/suspend](../../../test/suspend/) (weak basis) |
+| wash_kr / wash_kf | 0.01 / 1e-5 m/s | raindrop / sheet erosion coefficients (§5) | **empirical** values of [test/wash](../../../test/wash/); to be calibrated |
+| spl_kr / spl_kt / spl_h | 5e-4 / 0.05 / 1 | dry-erosion coefficients and slope exponent (§6) | **empirical** medians of the tests |
+| spl_ca / spl_cb | 0 / 0 m | concavity amplification lengths | **given** 0 = no amplification; a few to tens of metres to grow valleys |
+| spl_dzmax | 0 | erosion limit per update | **numerical** 0 = off; safety valve against runaway |
+| wthr_p0 / wthr_sdstar | 50 mm/kyr / 0.5 m | soil production rate / decay depth (§7) | **literature value** middle of the published range of the Heimsath function[^heimsath97] |
+| uplift0 | 1 mm/yr | uplift rate | **customary value** lower end of orogenic belts |
+
+**Where to look when revising the defaults**
+
+- Grain size (d50), porosity and specific gravity come directly from
+  bed-material surveys (sieve analysis); read the critical Shields stress
+  from the Shields curve[^shields36] at the grain Reynolds number
+  (0.03–0.06 for sand to gravel).
+- Choose the bedload formula and its coefficients from measured transport
+  rates when available; otherwise Ashida–Michiue[^ashida72] is customary
+  for sand–gravel beds and MPM[^mpm48] for coarse gravel.
+- Creep, soil production and uplift are long-term quantities: take them
+  from cosmogenic-nuclide erosion and soil-production studies[^heimsath97]
+  and from regional uplift rates (levelling, dated terraces).
+- Sheet and dry erosion coefficients have no universal value; calibrate
+  them on sediment-yield observations (turbidity, reservoir sedimentation)
+  or on the measured landform change of past events.
 
 ## 9. Verification cases
 

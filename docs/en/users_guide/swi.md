@@ -164,6 +164,29 @@ forecast values. See
   Okada et al.[^okada01] and [JMA's Soil Water Index explanation](https://www.jma.go.jp/jma/kishou/know/bosai/dojoshisu.html). See
   developer.md §49 for the implementation record.
 
+## Parameters and the basis of their defaults
+
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default). The tank constants are fixed and cannot be changed by the
+user, but they are listed here to show where the values come from.
+
+| Parameter | Default | Meaning | Basis |
+|---|---:|---|---|
+| swi0(1:3) | 0, 0, 0 mm | initial storage of the three tanks | **given** effect of antecedent rainfall; 0 to start dry |
+| outlet heights L (fixed) | 15, 60 / 15 / 15 mm | two outlets of tank 1 / tank 2 / tank 3 | **literature value** nationwide constants of the Japan Meteorological Agency[^okada01] |
+| outflow coefficients α (fixed) | 0.1, 0.15 / 0.05 / 0.01 /h | lateral outflow | **literature value** same[^okada01] |
+| percolation coefficients β (fixed) | 0.12 / 0.05 / 0.01 /h | bottom percolation | **literature value** same[^okada01] |
+| dt (&list_sysparam) | ≤ 600 s | time step of the run | **method** the JMA computation interval of 10 min or less is required (the run stops otherwise) |
+
+**Where to look when revising the defaults**
+
+- For initial storages that reflect antecedent rainfall, run the model on
+  official rainfall from 2–3 weeks before the target date and give the
+  three per-tank storages to swi0 (the total SWI alone does not fix the
+  split between tanks).
+- The constants and the model origin are in Ishihara & Kobatake[^ishihara79]
+  and Okada et al.[^okada01]; the official definition is on the
+  [JMA "Soil Water Index" page](https://www.jma.go.jp/jma/kishou/know/bosai/dojoshisu.html) (in Japanese).
+
 ## Tests and examples
 
 - [test/swi](../../../test/swi/): comparison with a fine-step RK4 reference solution of the three tanks, checking the final value, period maximum, its time and spatial uniformity. The case also shows the short ramp in the rainfall table and the checks in `Check_swi.py`.

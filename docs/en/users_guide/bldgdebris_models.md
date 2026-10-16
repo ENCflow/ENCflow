@@ -121,17 +121,30 @@ storages $`Q`$ conserves the initial volume (apart from numerical error).
 
 ## 5. Parameters and the basis of their defaults
 
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
+
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| building stock | 0.3 m³/m² (cells with buildings, gv < 1) | default when neither input is given | empirical: footprint 0.4 × 1.5 storeys × structural volume of wooden houses (about 0.5 m³/m² of floor area). The run stops when gv is 1 everywhere so that an input is given |
-| bd_dlog / bd_sg | 0.3 m / 0.5 | representative size and apparent specific gravity | empirical (size class and specific gravity of wooden structural members); draft 0.15 m |
-| bd_hcrit / bd_hcrit2 | 1.0 / 3.0 m | ramp of the depth threshold | literature value: wooden houses destroyed above 2 m[^shuto93] as the median, with the width of the wooden washout curves[^suppasri13]. Both default when neither is given (ramp on); the first threshold alone means no ramp (explicit intent respected) |
-| bd_fcrit / bd_fcrit2 | 2.0 / 6.0 m³/s² | ramp of the load threshold | corresponds to $`hV^2`$ at 2 m depth and 1–1.7 m/s (a calibration value convertible from the force-based curves[^koshimura09]); meant to be re-placed from the water-only F9999 map |
-| bd_wdes | 5e-4 m/s | destruction rate | empirical: the default stock of 0.3 m³/m² is destroyed in 10 min, the duration of one tsunami surge |
-| bd_wstop | 0.01 m/s | grounding deposition rate | empirical (same as driftwood) |
-| bd_vstop | 0.05 m/s | velocity threshold of slow-flow deposition | empirical: debris in stagnant ponded water stays where it is (the value of the example). It differs from the driftwood default of 0 because urban debris left by stagnation is closer to reality |
-| bd_fsink / bd_wfloat | 0 / 0 | sinking fraction and refloat | defaults are all floating and no refloat (upper bound of reach = conservative) |
-| f_bdgv | 1 | feedback to the void ratio | returns the added storage and reduced drag of destroyed houses to the flow (developer.md §63.4) |
+| building stock | 0.3 m³/m² (cells with buildings, gv < 1) | default when neither input is given | **empirical** footprint 0.4 × 1.5 storeys × structural volume of wooden houses (about 0.5 m³/m² of floor area). The run stops when gv is 1 everywhere so that an input is given |
+| bd_dlog / bd_sg | 0.3 m / 0.5 | representative size and apparent specific gravity | **empirical** size class and specific gravity of wooden structural members; draft 0.15 m |
+| bd_hcrit / bd_hcrit2 | 1.0 / 3.0 m | ramp of the depth threshold | **literature value** wooden houses destroyed above 2 m[^shuto93] as the median, with the width of the wooden washout curves[^suppasri13]. Both default when neither is given (ramp on); the first threshold alone means no ramp (explicit intent respected) |
+| bd_fcrit / bd_fcrit2 | 2.0 / 6.0 m³/s² | ramp of the load threshold | **calibration** corresponds to $`hV^2`$ at 2 m depth and 1–1.7 m/s (convertible from the force-based curves[^koshimura09]); meant to be re-placed from the water-only F9999 map |
+| bd_wdes | 5e-4 m/s | destruction rate | **empirical** the default stock of 0.3 m³/m² is destroyed in 10 min, the duration of one tsunami surge |
+| bd_wstop | 0.01 m/s | grounding deposition rate | **empirical** same as driftwood |
+| bd_vstop | 0.05 m/s | velocity threshold of slow-flow deposition | **empirical** debris in stagnant ponded water stays where it is (the value of the example). It differs from the driftwood default of 0 because urban debris left by stagnation is closer to reality |
+| bd_fsink / bd_wfloat | 0 / 0 | sinking fraction and refloat | **empirical** all floating and no refloat = upper bound of reach (conservative) |
+| f_bdgv | 1 | feedback to the void ratio | **method** returns the added storage and reduced drag of destroyed houses to the flow (§3) |
+
+**Where to look when revising the defaults**
+
+- The building stock can be replaced region by region from floor-area
+  statistics (urban planning surveys, property registers) × the structural
+  volume per floor area of wooden houses.
+- Read the thresholds off the fragility literature (depth vs. collapse
+  rate[^shuto93][^suppasri13], fluid force vs. damage rate[^koshimura09])
+  for the house types of your area. For the force threshold, a practical
+  way is to run water only once and place "the value where collapse
+  starts" on the F9999 map.
 
 Verification (developer.md §63.9): in [test/bldgdebris](../../../test/bldgdebris/)
 an empty &list_bldgdebris with gv.txt and a configuration with every

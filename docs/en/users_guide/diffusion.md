@@ -103,13 +103,22 @@ $`0.025`$ m²/s at $`h = 5`$ m; even with 3 m/s and $`\alpha = 0.3`$ it stays
 below 1 m²/s. To "just try the diffusion term", model 2 is recommended: it
 scales with the flow without any coefficient being specified.
 
-**Parameters and the basis of their defaults.**
+### Parameters and the basis of their defaults
+
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| f_diffusion_term | 0 | diffusion term (0: none, 1: constant viscosity, 2: zero-equation model) | off by default (bitwise identical to earlier results when off); model 2 is recommended when enabling it (§6) |
-| p_diffusion_nu | — | constant viscosity $`\nu_0`$, or the background viscosity of model 2 (m²/s) | calibration quantity; depends on the grid spacing and the scale of the flow, no universal value. Check the bound of §4 |
-| p_diffusion_alpha | $`\kappa/6 \approx 0.068`$ | coefficient $`\alpha`$ of the zero-equation model ($`\nu = \alpha u_* h`$) | literature value[^elder59] (depth average of the log law with a parabolic eddy viscosity); for stronger transverse mixing calibrate within the measured range 0.15–0.8[^fischer79] |
+| f_diffusion_term | 0 | diffusion term (0: none, 1: constant viscosity, 2: zero-equation model) | **compatibility** off by default (bitwise identical to earlier results when off); model 2 is recommended when enabling it (§6) |
+| p_diffusion_nu | — | constant viscosity $`\nu_0`$, or the background viscosity of model 2 (m²/s) | **calibration** depends on the grid spacing and the scale of the flow, no universal value. Check the bound of §4 |
+| p_diffusion_alpha | $`\kappa/6 \approx 0.068`$ | coefficient $`\alpha`$ of the zero-equation model ($`\nu = \alpha u_* h`$) | **literature value** depth average of the log law with a parabolic eddy viscosity[^elder59]; for stronger transverse mixing calibrate within the measured range 0.15–0.8[^fischer79] |
+
+**Where to look when revising the defaults**
+
+- Measured transverse mixing coefficients are compiled by river in
+  Fischer et al.[^fischer79]: about 0.15 in straight channels and 0.4–0.8 in
+  meandering rivers. They follow directly from the growth of a tracer
+  plume, $`\sigma^2 = 2\nu t`$.
 
 ## 3. Discretisation: a nine-point Laplacian in edge-flux divergence form
 

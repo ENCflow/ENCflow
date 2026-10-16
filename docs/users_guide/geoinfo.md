@@ -218,6 +218,29 @@ fn_bank と同じ仕組みの海岸応用)。海側判定は `fn_seaside` と `s
   計算には影響しません)。したがって海岸沿いに**バッファ状に広く
   塗っておく**のが安全側で、上記の角接触の漏れも自動的に防げます。
 
+## パラメータと既定値の根拠
+
+根拠欄の分類語の意味は[既定値の根拠の読み方](../users_guide.md#既定値の根拠の読み方)を参照してください。 地理情報の大半は与件(地形・マスク・分布ファイル)で、
+既定値を持つのは次の量だけです。土層厚・比湧水量の根拠は
+[地下水モデルの解説](gwflow_models.md) §9 にもあります。
+
+| パラメータ | 既定 | 意味 | 根拠 |
+|---|---:|---|---|
+| rn0 | 0.015 | 粗度係数の固定値 | **慣用値** 舗装面・コンクリートの Manning の n[^chow59]。土地利用別の目安は上の表 |
+| rn0_rw | −1(上書きなし) | 河道セルの固定粗度 | **与件** 正値で河道だけ上書き。目安は[河道の解説](channel_models.md) §5 |
+| mag_z | 1 | 地盤高の倍率 | **与件** 感度実験・単位換算用。通常 1 |
+| min_gv / min_bb | 0.001 | 空隙率・建物寸法の下限 | **数値設定** ゼロ割り防止 |
+| sd0 | 0(地下水が要するとき 1 m) | 土層厚 | **文献値** 森林斜面の薄い土層 0.5〜1.5 m[^tani97] |
+| sy0 | 0.2 | 比湧水量(有効間隙率) | **文献値** 砂壌土〜壌土の有効間隙率 − 初期含水率[^rawls83] |
+| f_seawall_datum / f_seawall_mode | 2 / 0 | 海岸堤防の天端基準・水理モード | **方式** 既定は絶対標高・越流のみ(堤防台帳の天端高をそのまま使える) |
+
+**既定値を見直すときの手がかり**
+
+- 粗度は土地利用図(国土数値情報の土地利用細分メッシュ等)に上の
+  目安表の値を対応付けて分布ファイルを作るのが標準的な手順です。
+  校正は実績浸水の到達時刻・浸水深で行います。
+- 土層厚・比湧水量は土性と地形から引きます([地下水モデルの解説](gwflow_models.md) §9 の手がかり)。
+
 ## 検証・例題
 
 - [test/chichibu](../../test/chichibu/): 標高・流域マスク・河道マスク・粗度を組み合わせた実地形の回帰ケース。
@@ -231,3 +254,5 @@ fn_bank と同じ仕組みの海岸応用)。海側判定は `fn_seaside` と `s
 ## 参考文献
 
 [^chow59]: Chow, V. T. (1959): *Open-Channel Hydraulics*. McGraw-Hill, New York.(土地被覆別の Manning の n の表)
+[^tani97]: Tani, M. (1997): Runoff generation processes estimated from hydrological observations on a steep forested hillslope with a thin soil layer. *J. Hydrol.*, 200, 84–109.
+[^rawls83]: Rawls, W. J., Brakensiek, D. L. and Miller, N. (1983): Green-Ampt infiltration parameters from soils data. *J. Hydraul. Eng. ASCE*, 109, 62–70.

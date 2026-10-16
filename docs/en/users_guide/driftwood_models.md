@@ -108,16 +108,29 @@ Guides based on the Japanese sabo planning manual[^nilim904].
 
 ## 5. Parameters and the basis of their defaults
 
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
+
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| standing stock | 0.001 m³/m² (uniform on land cells) | default when neither input is given | literature value[^nilim904] (envelope of generated driftwood in conifer torrents, 1,000 m³/km²; broadleaf 1/10); a magnitude guide when the forest location is unknown |
-| dw_dlog / dw_sglog | 0.3 m / 0.5 | representative diameter and specific gravity | middle of the manual's estimate[^nilim904] (mean DBH 0.2–0.4 m) and a middle specific gravity of green wood; draft 0.15 m |
-| dw_wrec / dw_hrec / dw_vrec | 1e-5 m/s / 0.5 m / 1.0 m/s | hydraulic recruitment | empirical (no practical standard; middle values meant for calibration) |
-| dw_droot | 0.5 m | rooting depth | empirical (representative rooting depth relative to shallow-failure and channel-scour depths) |
-| dw_wstop | 0.01 m/s | grounding deposition rate | empirical (near-immediate deposition after grounding) |
-| dw_vstop / dw_wfloat | 0 / 0 | slow-flow deposition and refloat | defaults are depth criterion only and no refloat (conservative = upper bound of reach) |
-| dw_rfloat | 1.5 | refloat buoyancy margin | on the stable side of the literature onset of motion ≈ 1.2 × draft[^braudrick00] |
-| the two recruitment paths | both default when neither is given | dw_wrec / dw_droot | erosion entrainment never fires unless the terrain moves, so it is harmless; giving only one disables the other (explicit intent respected) |
+| standing stock | 0.001 m³/m² (uniform on land cells) | default when neither input is given | **literature value** envelope of generated driftwood in conifer torrents, 1,000 m³/km² (broadleaf 1/10)[^nilim904]; a magnitude guide when the forest location is unknown |
+| dw_dlog / dw_sglog | 0.3 m / 0.5 | representative diameter and specific gravity | **literature value** middle of the manual's estimate (mean DBH 0.2–0.4 m)[^nilim904] and a middle specific gravity of green wood; draft 0.15 m |
+| dw_wrec / dw_hrec / dw_vrec | 1e-5 m/s / 0.5 m / 1.0 m/s | hydraulic recruitment | **empirical** no practical standard; middle values meant for calibration |
+| dw_droot | 0.5 m | rooting depth | **empirical** representative rooting depth relative to shallow-failure and channel-scour depths |
+| dw_wstop | 0.01 m/s | grounding deposition rate | **empirical** near-immediate deposition after grounding |
+| dw_vstop / dw_wfloat | 0 / 0 | slow-flow deposition and refloat | **empirical** depth criterion only and no refloat = upper bound of reach (conservative) |
+| dw_rfloat | 1.5 | refloat buoyancy margin | **literature value** on the stable side of the onset of motion ≈ 1.2 × draft[^braudrick00] |
+| the two recruitment paths | both default when neither is given | dw_wrec / dw_droot | **method** erosion entrainment never fires unless the terrain moves, so it is harmless; giving only one disables the other (explicit intent respected) |
+
+**Where to look when revising the defaults**
+
+- The most direct source for the standing stock is the stand volume
+  (m³/ha) of forest registers or forest-resource data, divided by
+  1 ha = 10⁴ m². The fraction that is actually recruited can be estimated
+  from the generation rates of the driftwood countermeasure
+  guideline[^nilim904].
+- The representative diameter and specific gravity depend on species
+  (conifer / broadleaf) and stand age; the same guideline tabulates them in
+  its estimation method.
 
 Verification (developer.md §50.6): in [test/driftwood](../../../test/driftwood/)
 an empty &list_driftwood and a configuration with every default written

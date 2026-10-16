@@ -389,23 +389,25 @@ $`z`$ との 2 階差分(1 ステップ遅れ。$`z`$ を動かすすべての�
   [test/nest_identity](../../test/nest_identity/README.md) の nh 構成、帯の扱いの比較は
   [examples/nest_reflect](../../examples/nest_reflect/README.md))。
 
-**パラメータと既定値の根拠。** 一覧は[浅水流計算の章](swflow.md)の表に
+### パラメータと既定値の根拠
+
+根拠欄の分類語の意味は[既定値の根拠の読み方](../users_guide.md#既定値の根拠の読み方)を参照してください。 一覧は[浅水流計算の章](swflow.md)の表に
 あります。ここでは既定値の根拠だけを示します。
 
 | パラメータ | 既定 | 意味 | 根拠 |
 |---|---:|---|---|
-| nh_hmin | 0.1 m | この水深未満は静水圧のまま | 経験値。乾湿前縁・極浅水・砕波後の段波を運動量保存形移流の段波として扱う(§4)。dd より大きい値 |
-| nh_solver | 2(CG) | 反復ソルバ | 検証ケース: [test/nhwave_nh](../../test/nhwave_nh/README.md) で CG は 10〜80 反復、Jacobi は $`\Delta x = H/8`$ で 500 掃引でも未収束(§3) |
-| nh_tol / nh_itmax | 1e-6 / 500 | 収束判定・反復上限 | 経験値。条件数が格子数に依らない($`\kappa \approx 1 + 2\varepsilon`$)ため余裕のある上限(§3) |
-| nh_bc_margin / nh_margin / nh_break_margin | 0(自動 $`\lceil 2H/\Delta x\rceil`$) | 強制境界・種・砕波セルの周りの縁幅 | Green 関数の e 倍減衰距離 $`H/2`$ の 4 倍(§5)。盛り上がり波の試験で縁 4 / 8 / 16 セルの差 9.4e-4 / 4.0e-4 / 1.0e-4 m |
-| nh_chi_on | 0.06 | 活性集合の検出閾値(分散比 $`\chi`$) | §2 の分散関係から導出: 静水圧との位相速度差 3% に相当する $`(kH)^2/4 / (1 + (kH)^2/4)`$ の値 |
-| nh_amin / nh_arel | 1e-5 m/s² / 1e-3 | 検出の絶対・相対下限 | 経験値。比の検出量が丸め誤差レベルの短波を拾うのを防ぐ(§5) |
-| nh_break_type / nh_break_slope | 3 / 0.3 | 砕波判定(水面勾配) | 経験値(局所・Galilean 不変・状態なし)。検証ケース [test/nhbreak](../../test/nhbreak/README.md) で遡上高が実験則に収束(§6) |
-| nh_break_alpha / nh_break_beta | 0.6 / 0.3 | 判定 1(水面上昇速度)の閾値 | 文献値(SWASH の既定)[^smit13] |
-| nh_break_fr | 0.6 | 判定 2(フルード数)の閾値 | 経験値 |
-| nh_break_visc | 0(目安 1.44) | 砕波域の渦粘性係数 $`\delta_b^2`$ | 文献値[^kennedy00]: $`\delta_b = 1.2`$ → 1.44。検証ケース [test/nhbreak](../../test/nhbreak/README.md) で $`R/H`$ = 0.45(実験則 0.42。§6) |
-| f_nh_slope | 0 | 底面勾配項(Version 2) | 検証ケース: [test/nhshelf](../../test/nhshelf/README.md) で Version 1 との差が数%。反復が約 2 倍になるため既定は無効(§7) |
-| f_nh_bottom | 0 | 動く底面の加速度項 | 検証ケース: [test/nhbottom](../../test/nhbottom/README.md) で先頭波高が厳密解に +3.9%(なしでは +16%)。底面が動かなければ効かないため既定は無効(§7) |
+| nh_hmin | 0.1 m | この水深未満は静水圧のまま | **経験値** 乾湿前縁・極浅水・砕波後の段波を運動量保存形移流の段波として扱う(§4)。dd より大きい値 |
+| nh_solver | 2(CG) | 反復ソルバ | **検証ケース** [test/nhwave_nh](../../test/nhwave_nh/README.md) で CG は 10〜80 反復、Jacobi は $`\Delta x = H/8`$ で 500 掃引でも未収束(§3) |
+| nh_tol / nh_itmax | 1e-6 / 500 | 収束判定・反復上限 | **数値設定** 条件数が格子数に依らない($`\kappa \approx 1 + 2\varepsilon`$)ため余裕のある上限(§3) |
+| nh_bc_margin / nh_margin / nh_break_margin | 0(自動 $`\lceil 2H/\Delta x\rceil`$) | 強制境界・種・砕波セルの周りの縁幅 | **導出** Green 関数の e 倍減衰距離 $`H/2`$ の 4 倍(§5)。盛り上がり波の試験で縁 4 / 8 / 16 セルの差 9.4e-4 / 4.0e-4 / 1.0e-4 m |
+| nh_chi_on | 0.06 | 活性集合の検出閾値(分散比 $`\chi`$) | **導出** §2 の分散関係から: 静水圧との位相速度差 3% に相当する $`(kH)^2/4 / (1 + (kH)^2/4)`$ の値 |
+| nh_amin / nh_arel | 1e-5 m/s² / 1e-3 | 検出の絶対・相対下限 | **数値設定** 比の検出量が丸め誤差レベルの短波を拾うのを防ぐ(§5) |
+| nh_break_type / nh_break_slope | 3 / 0.3 | 砕波判定(水面勾配) | **検証ケース** 局所・Galilean 不変・状態なしの判定。[test/nhbreak](../../test/nhbreak/README.md) で遡上高が実験則に収束(§6) |
+| nh_break_alpha / nh_break_beta | 0.6 / 0.3 | 判定 1(水面上昇速度)の閾値 | **文献値** SWASH の既定[^smit13] |
+| nh_break_fr | 0.6 | 判定 2(フルード数)の閾値 | **経験値** |
+| nh_break_visc | 0(目安 1.44) | 砕波域の渦粘性係数 $`\delta_b^2`$ | **文献値** $`\delta_b = 1.2`$ → 1.44[^kennedy00]。[test/nhbreak](../../test/nhbreak/README.md) で $`R/H`$ = 0.45(実験則 0.42。§6) |
+| f_nh_slope | 0 | 底面勾配項(Version 2) | **検証ケース** [test/nhshelf](../../test/nhshelf/README.md) で Version 1 との差が数%。反復が約 2 倍になるため既定は無効(§7) |
+| f_nh_bottom | 0 | 動く底面の加速度項 | **検証ケース** [test/nhbottom](../../test/nhbottom/README.md) で先頭波高が厳密解に +3.9%(なしでは +16%)。底面が動かなければ効かないため既定は無効(§7) |
 
 **検証ケース**(README に図表と派生ケースの一覧):
 

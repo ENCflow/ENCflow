@@ -163,17 +163,33 @@ the observation that the transition occurs around a wet-bulb temperature of
 
 ## 5. Parameters and the basis of their defaults
 
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
+
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| ic_alpha | 0.15 | fixed interception ratio $`\alpha`$ | literature value[^crockford00] (interception loss 10–25 % of broadleaf and mixed forests) |
-| ic_smax_mm | 1.5 mm | maximum storage $`S_{\max}`$ of the initial loss | literature value[^crockford00] (canopy storage 0.3–3 mm); comparable with the urban depression storage 1.3–2.5 mm[^rossman15] |
-| temp_lapse | 0.65 °C/100 m | temperature lapse rate | standard atmosphere (empirical) |
-| prec_lapse | 0 | precipitation gradient | given data (no correction by default) |
-| evap0 | 3 mm/day | constant PET | literature value[^allen98] (lower side of the warm-season $`ET_0`$ 3–5 of a humid temperate climate) |
-| evap_kc | 1 | PET conversion coefficient | calibration quantity (pan coefficient) |
-| snow_t_snow / snow_t_rain | 0 / 2 °C | rain/snow thresholds | empirical (customary values for the transition around a wet-bulb temperature of 1 °C) |
-| snow_t_melt | 0 °C | melt threshold | empirical |
-| snow_ddf | 4 mm/°C/day | degree-day factor | literature value[^hock03] (middle of 2.5–6 for snow); middle of the customary 3–5 of Japanese mountain basins |
+| ic_alpha | 0.15 | fixed interception ratio $`\alpha`$ | **literature value** interception loss 10–25 % of broadleaf and mixed forests[^crockford00] |
+| ic_smax_mm | 1.5 mm | maximum storage $`S_{\max}`$ of the initial loss | **literature value** canopy storage 0.3–3 mm[^crockford00]; comparable with the urban depression storage 1.3–2.5 mm[^rossman15] |
+| temp_lapse | 0.65 °C/100 m | temperature lapse rate | **customary value** lapse rate of the standard atmosphere |
+| prec_lapse | 0 | precipitation gradient | **given** no correction by default |
+| evap0 | 3 mm/day | constant PET | **literature value** lower side of the warm-season $`ET_0`$ 3–5 of a humid temperate climate[^allen98] |
+| evap_kc | 1 | PET conversion coefficient | **calibration** plays the role of a pan or crop coefficient |
+| snow_t_snow / snow_t_rain | 0 / 2 °C | rain/snow thresholds | **customary value** range based on the observed transition around a wet-bulb temperature of 1 °C |
+| snow_t_melt | 0 °C | melt threshold | **customary value** standard of the degree-day method |
+| snow_ddf | 4 mm/°C/day | degree-day factor | **literature value** middle of 2.5–6 for snow[^hock03]; middle of the customary 3–5 of Japanese mountain basins |
+
+**Where to look when revising the defaults**
+
+- Interception ratio and canopy storage vary with the forest type
+  (conifer / broadleaf / leafless season); the review by Crockford &
+  Richardson[^crockford00] gives ranges by type.
+- The lapse rate can be taken directly from two nearby weather stations
+  at different elevations (0.5–0.7 °C/100 m depending on season).
+- Set the constant PET from FAO-56[^allen98] Penman–Monteith evaluated with
+  monthly climate; when using Hamon or Thornthwaite (§3), adjust evap_kc to
+  close the water balance (annual runoff).
+- The degree-day factor is usually calibrated against snow-depth gauges or
+  the satellite-derived snow-covered area; Hock's review[^hock03] compiles
+  values by region.
 
 ## 6. Verification cases
 

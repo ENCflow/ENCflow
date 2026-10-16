@@ -192,27 +192,43 @@ the die-off rates of faecal indicators are within the range of standard
 water-quality textbooks[^chapra97]. Verification:
 [test/sewer_wq](../../../test/sewer_wq/README.md).
 
-## 7. Parameters and basis of the representative values
+## 7. Parameters and the basis of their defaults
 
-Water quality has **no defaults** because the properties differ by orders
-of magnitude between substances (without decay, settling or partitioning
-the substance is a conservative tracer). The basis column gives the
-sources of the representative values.
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default). Water quality has **no defaults for the substance
+properties** because they differ by orders of magnitude between substances
+(without decay, settling or partitioning the substance is a conservative
+tracer). For rows with default "—" the basis column gives the sources of
+representative values.
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| wq_c0 | 0 | initial concentration (mg/L) | given |
-| wq_thalf / wq_k20 | — | half-life (day) / first-order decay coefficient (1/day) (§2) | BOD 0.1–0.5 /day[^streeter25][^chapra97], coliforms $`\ln 10/T_{90}`$, Cs-137 11019 day, pesticides 10–60 day[^wauchope92] |
-| wq_vs | — | single-phase settling velocity (m/day) (§3) | Stokes' law: clay 2 µm 0.3, silt 10 µm 8 m/day |
-| wq_kd | — | partition coefficient (L/kg) (§3; needs f_suspend) | Pb 10⁴–10⁶, Cu, Zn, Cd 10³–10⁵, Cs 10³–10⁴[^sheppard90][^iaea10][^epa99] |
-| f_wq_settle | 0 | destination of settling. 0: lost, 1: surface pool | 1 when combining Kd with washoff |
-| f_wq_infil | 1 | accompanying infiltration. 1: dissolved, 0: stays on the surface (§4) | 0 for particulates and pathogen indicators |
-| wq_rg | 1 | retardation factor $`R`$ of the underground transport (§4) | $`1 + \rho_b K_d/\theta`$[^freeze79]; heavy metals and Cs 10²–10⁴ |
-| wq_bd_rate / wq_bd_max / wq_bd0 | — | buildup rate (kg/ha/day), cap and initial pool (kg/ha) (§5) | SWMM buildup[^rossman15]; a radionuclide deposition map goes in bd0 |
-| wq_wash_kr | — | raindrop washoff coefficient (1/m) | SWMM exponential washoff $`c_1`$ [1/mm] × 1000[^rossman15] |
-| wq_wash_kf / wq_wash_tauc | — | shear washoff coefficient (1/s) and critical shear stress (N/m²) | empirical (calibration) |
-| wq_gwc_conc / f_wq_gwc_in | — / 1 | fixed concentration of surcharge water (mg/L), removal at inlets (§6) | sewage 10⁵–10⁷ CFU/100 mL (table of the chapter) |
-| wq_rain_conc / wq_in_conc | — | rain and boundary-inflow concentrations (mg/L) | given |
+| wq_c0 | 0 | initial concentration (mg/L) | **given** |
+| wq_thalf / wq_k20 | — | half-life (day) / first-order decay coefficient (1/day) (§2) | **literature value** BOD 0.1–0.5 /day[^streeter25][^chapra97], coliforms $`\ln 10/T_{90}`$, Cs-137 11019 day, pesticides 10–60 day[^wauchope92] |
+| wq_vs | — | single-phase settling velocity (m/day) (§3) | **derived** Stokes' law: clay 2 µm 0.3, silt 10 µm 8 m/day |
+| wq_kd | — | partition coefficient (L/kg) (§3; needs f_suspend) | **literature value** Pb 10⁴–10⁶, Cu, Zn, Cd 10³–10⁵, Cs 10³–10⁴[^sheppard90][^iaea10][^epa99] |
+| f_wq_settle | 0 | destination of settling. 0: lost, 1: surface pool | **method** 1 when combining Kd with washoff |
+| f_wq_infil | 1 | accompanying infiltration. 1: dissolved, 0: stays on the surface (§4) | **method** 0 for particulates and pathogen indicators |
+| wq_rg | 1 | retardation factor $`R`$ of the underground transport (§4) | **derived** $`1 + \rho_b K_d/\theta`$[^freeze79]; heavy metals and Cs 10²–10⁴ |
+| wq_bd_rate / wq_bd_max / wq_bd0 | — | buildup rate (kg/ha/day), cap and initial pool (kg/ha) (§5) | **literature value** ranges of the SWMM buildup[^rossman15]; a radionuclide deposition map goes in bd0 |
+| wq_wash_kr | — | raindrop washoff coefficient (1/m) | **literature value** SWMM exponential washoff $`c_1`$ [1/mm] × 1000[^rossman15] |
+| wq_wash_kf / wq_wash_tauc | — | shear washoff coefficient (1/s) and critical shear stress (N/m²) | **calibration** no universal value |
+| wq_gwc_conc / f_wq_gwc_in | — / 1 | fixed concentration of surcharge water (mg/L), removal at inlets (§6) | **customary value** sewage 10⁵–10⁷ CFU/100 mL (table of the chapter) / **method** |
+| wq_rain_conc / wq_in_conc | — | rain and boundary-inflow concentrations (mg/L) | **given** |
+
+**Where to look when revising the defaults**
+
+- Take decay and partition coefficients from substance databases:
+  pesticides from Wauchope et al.[^wauchope92], radionuclide Kd from the
+  IAEA technical report[^iaea10] and Sheppard & Thibault[^sheppard90],
+  heavy metals from the EPA review[^epa99]. Kd varies by 1–2 orders of
+  magnitude with soil pH, organic matter and clay content, so pick values
+  for soils like those of your basin and bracket with a low and a high
+  case.
+- For buildup and washoff start from the land-use examples of the SWMM
+  user manual[^rossman15] and calibrate on local L-Q observations (event
+  loads vs. discharge).
+- Representative sewage concentrations and T90 values, with the unit
+  conversion, are tabulated in the chapter (sewer surcharge section).
 
 ## 8. Verification cases
 

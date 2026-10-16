@@ -441,14 +441,16 @@ sub-lattices is under design and on hold until a conservative formulation is
 found. Scheme 1 does not show this mode (it shows irregular noise of the
 non-conservative form instead).
 
-**Parameters and the basis of their defaults.**
+### Parameters and the basis of their defaults
+
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| f_advection_scheme | 3 | scheme of the advection term (1: cell-centre gradient, 2: conservative + first-order upwind, 3: conservative + MUSCL) | verification cases: bore position error +1.1% in [test/dambreak](../../../test/dambreak/README.md), depth ratio 0.992 with lateral inflow in [test/bendloss](../../../test/bendloss/README.md), grid convergence in [test/chichibu](../../../test/chichibu/README.md) (table above) |
-| p_adv_upwind_index | 0.5 | upwinding index of scheme 1 (0: central, 1: first-order upwind) | empirical; halfway between central and first-order upwind. The bore lag grows with $`p`$ (§3) |
-| f_advection_donor | 0 | limit the donors of the flow-direction faces to channel cells on edges between channel cells | empirical (off by default); it cuts the momentum exchange between the main channel and the flooded valley floor, so judge against observations (§4.4, developer.md §68.18) |
-| limiter $`\psi`$ (fixed) | van Leer | flux limiter of scheme 3 | literature value[^vanleer79]; inside Sweby's TVD region[^sweby84] (§4.3) |
+| f_advection_scheme | 3 | scheme of the advection term (1: cell-centre gradient, 2: conservative + first-order upwind, 3: conservative + MUSCL) | **verification case** bore position error +1.1% in [test/dambreak](../../../test/dambreak/README.md), depth ratio 0.992 with lateral inflow in [test/bendloss](../../../test/bendloss/README.md), grid convergence in [test/chichibu](../../../test/chichibu/README.md) (table above) |
+| p_adv_upwind_index | 0.5 | upwinding index of scheme 1 (0: central, 1: first-order upwind) | **empirical** halfway between central and first-order upwind. The bore lag grows with $`p`$ (§3) |
+| f_advection_donor | 0 | limit the donors of the flow-direction faces to channel cells on edges between channel cells | **method** off by default; it cuts the momentum exchange between the main channel and the flooded valley floor, so judge against observations (§4.4) |
+| limiter $`\psi`$ (fixed) | van Leer | flux limiter of scheme 3 | **literature value** van Leer[^vanleer79]; inside Sweby's TVD region[^sweby84] (§4.3) |
 
 ## 6. Verification cases
 

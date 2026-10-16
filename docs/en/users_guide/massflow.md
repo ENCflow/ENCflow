@@ -293,29 +293,44 @@ moves at its terminal speed from the start, so the near-field wave is
 biased high for a submarine release and low for a fast entry from land
 (mitigated by the hand-over path with `f_bsvplunge = 1`).
 
-## 6. Parameters and basis of the defaults
+## 6. Parameters and the basis of their defaults
+
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| f_dbres | 1 | resistance law (§2) | 1: Coulomb + Manning (no empirical constant) |
-| db_phi | 35° | internal friction angle $`\phi`$ | representative of gravelly debris (tanφ ≈ 0.7)[^takahashi07] |
-| db_d50 | 0.05 m | grain size (laws 2, 3; E-D 3) | representative $`d_L`$ of stony flows (cm to dm) |
-| db_erest | 0.85 | restitution coefficient $`e`$ (law 2) | customary value of the Egashira family[^egashira93] |
-| db_cmin | 0.02 | lower concentration of the granular laws | mud-flow rule of Takahashi–Nakagawa[^tn91] |
-| db_mu / db_xi | 0.2 / 1000 m/s² | Voellmy μ, ξ (law 4) | middle of the RAMMS avalanche range[^christen10]; smaller for rock debris |
-| db_tauy | 10 kPa | constant yield stress (law 5) | low end of the VolcFlow pyroclastic applications[^kelfoun05] |
-| f_dbcurv | 0 | curvature term (§2) | Fischer et al.[^fischer12]; 1 when comparing with RAMMS calibrations |
-| f_dbed | 1 | erosion/deposition law (§3) | 1: Takahashi relaxation, 2: Egashira–Ashida, 3: Takahashi–Nakagawa, 4: velocity-proportional, 0: none |
-| db_delte / db_deltd | 0.0007 / 0.05 | erosion / deposition rate coefficients | Takahashi's general value / Kanako customary value (calibration) |
-| f_dbstop / db_vstop / db_wstop | 0 / 0.05 m/s / 0.05 m/s | low-speed stopping | numerical closure; vstop also serves the yield test |
-| f_dbwet / db_satbed | 0 / 1.0 | pore-water entrainment / deposit saturation | total-volume continuity of Takahashi–Nakagawa[^tn91] |
-| db_reltime / db_relsat | 0 / 1.0 | release time / saturation of the failed mass (§4) | given data |
-| slide_c / slide_phi / slide_gamma | 0 / 30° / 18 kN/m³ | strength constants of the stability test (§4) | customary values of shallow landslides; c' = 0 is on the safe side |
-| bs_rho | 2000 kg/m³ | bulk density of the mass (§5) | representative of saturated soil and rock debris |
-| bs_mu / bs_xi | 0.15 / 500 m/s² | Voellmy μ, ξ of the layer | calibration values of the inertialess layer (test/bedslide) |
-| bs_vstop / bs_tstop | 0.05 m/s / 0 s | stopping speed and its duration | 10–15 s when entering water (longer than the temporary drawdown) |
-| bs_eps_s / bs_cfl / bs_nsubmax | 0.02 / 0.4 / 10000 | linearisation width / sub-cycle safety factor and limit | numerical settings; raise eps_s when sub-cycles are excessive |
-| bs_hplunge / f_bsvplunge / f_bsplunge | 0 / 0 / 0 | hand-over depth and conditions | vplunge = 1 for fast entries from land |
+| f_dbres | 1 | resistance law (§2) | **method** 1: Coulomb + Manning (no empirical constant) |
+| db_phi | 35° | internal friction angle $`\phi`$ | **literature value** representative of gravelly debris (tanφ ≈ 0.7)[^takahashi07] |
+| db_d50 | 0.05 m | grain size (laws 2, 3; E-D 3) | **customary value** representative $`d_L`$ of stony flows (cm to dm) |
+| db_erest | 0.85 | restitution coefficient $`e`$ (law 2) | **literature value** customary value of the Egashira family[^egashira93] |
+| db_cmin | 0.02 | lower concentration of the granular laws | **literature value** mud-flow rule of Takahashi–Nakagawa[^tn91] |
+| db_mu / db_xi | 0.2 / 1000 m/s² | Voellmy μ, ξ (law 4) | **literature value** middle of the RAMMS avalanche range[^christen10]; smaller for rock debris |
+| db_tauy | 10 kPa | constant yield stress (law 5) | **literature value** low end of the VolcFlow pyroclastic applications[^kelfoun05] |
+| f_dbcurv | 0 | curvature term (§2) | **method** Fischer et al.[^fischer12]; 1 when comparing with RAMMS calibrations |
+| f_dbed | 1 | erosion/deposition law (§3) | **method** 1: Takahashi relaxation, 2: Egashira–Ashida, 3: Takahashi–Nakagawa, 4: velocity-proportional, 0: none |
+| db_delte / db_deltd | 0.0007 / 0.05 | erosion / deposition rate coefficients | **calibration** Takahashi's general value / Kanako customary value |
+| f_dbstop / db_vstop / db_wstop | 0 / 0.05 m/s / 0.05 m/s | low-speed stopping | **numerical** vstop also serves the yield test |
+| f_dbwet / db_satbed | 0 / 1.0 | pore-water entrainment / deposit saturation | **method** total-volume continuity of Takahashi–Nakagawa[^tn91] |
+| db_reltime / db_relsat | 0 / 1.0 | release time / saturation of the failed mass (§4) | **given** |
+| slide_c / slide_phi / slide_gamma | 0 / 30° / 18 kN/m³ | strength constants of the stability test (§4) | **customary value** shallow-landslide values; c' = 0 is on the safe side |
+| bs_rho | 2000 kg/m³ | bulk density of the mass (§5) | **customary value** representative of saturated soil and rock debris |
+| bs_mu / bs_xi | 0.15 / 500 m/s² | Voellmy μ, ξ of the layer | **verification case** calibration of the inertialess layer ([test/bedslide](../../../test/bedslide/)) |
+| bs_vstop / bs_tstop | 0.05 m/s / 0 s | stopping speed and its duration | **numerical** 10–15 s when entering water (longer than the temporary drawdown) |
+| bs_eps_s / bs_cfl / bs_nsubmax | 0.02 / 0.4 / 10000 | linearisation width / sub-cycle safety factor and limit | **numerical** raise eps_s when sub-cycles are excessive |
+| bs_hplunge / f_bsvplunge / f_bsplunge | 0 / 0 / 0 | hand-over depth and conditions | **method** vplunge = 1 for fast entries from land |
+
+**Where to look when revising the defaults**
+
+- Take the friction angle and grain size from grain-size tests and the
+  angle of repose of the deposits on site; the strength constants
+  (c′, φ′, γ) from soil tests or back-analysis of nearby failures.
+- Voellmy μ and ξ are usually calibrated against the runout and deposit
+  shape of past events; the RAMMS calibration compilation[^christen10]
+  tabulates them by terrain and size, and practical debris-flow values are
+  collected in Takahashi[^takahashi07].
+- Move the erosion / deposition coefficients so that the traces of past
+  debris flows (scour depth, deposit thickness) are reproduced, checking
+  both runout and deposited volume.
 
 ## 7. Verification cases
 

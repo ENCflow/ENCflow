@@ -221,15 +221,27 @@ cells along a time history).
 
 ## 5. Parameters and the basis of their defaults
 
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
+
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| f_bank_datum | 1 | datum of the levee height | empirical; the landside-elevation datum is natural when building a levee-height map in GIS and rarely produces crests below the ground |
-| f_bank_aggr | 0 | aggregation of the crest for datum = 1 | empirical; the mean of the adjacent landside cells suppresses DEM noise. 1 is faithful to the onset of overtopping, 2 conservative |
-| f_bank_mode | 0 | hydraulic mode | overtopping only by default; the check valve (1) is a shortcut, real works are [structures](structure.md) |
-| f_bank_opening | 1 | opening correction | verification case: one-cell straight and diagonal channels follow Manning uniform flow in [test/bendloss](../../../test/bendloss/) (§1) |
-| p_sect_m | 0 | shape exponent of the section | rectangle by default (compatibility); the recommended 0.3–1 is empirical (table in the chapter) |
-| f_channel_advection | 1 | advection term on edges involving channel cells | normal by default; 0 is for stabilisation under strong width heterogeneity |
-| rn0_rw | — | channel roughness | customary Manning n values[^chow59] (concrete 0.015–0.02, sand bed 0.025–0.035, gravel bed 0.035–0.05, vegetated floodplain 0.05–0.1; the Japanese river technical standards give similar ranges) |
+| f_bank_datum | 1 | datum of the levee height | **method** the landside-elevation datum is natural when building a levee-height map in GIS and rarely produces crests below the ground |
+| f_bank_aggr | 0 | aggregation of the crest for datum = 1 | **method** the mean of the adjacent landside cells suppresses DEM noise. 1 is faithful to the onset of overtopping, 2 conservative |
+| f_bank_mode | 0 | hydraulic mode | **method** overtopping only by default; the check valve (1) is a shortcut, real works are [structures](structure.md) |
+| f_bank_opening | 1 | opening correction | **verification case** one-cell straight and diagonal channels follow Manning uniform flow in [test/bendloss](../../../test/bendloss/) (§1) |
+| p_sect_m | 0 | shape exponent of the section | **compatibility** rectangle by default; the recommended 0.3–1 is empirical (table in the chapter) |
+| f_channel_advection | 1 | advection term on edges involving channel cells | **method** normal by default; 0 is for stabilisation under strong width heterogeneity |
+| rn0_rw | — | channel roughness | **customary value** Manning n (concrete 0.015–0.02, sand bed 0.025–0.035, gravel bed 0.035–0.05, vegetated floodplain 0.05–0.1; Chow's tables[^chow59] and the Japanese river technical standards give similar ranges) |
+
+**Where to look when revising the defaults**
+
+- For the channel roughness, prefer the n used in the river
+  administrator's backwater computations (river improvement plans,
+  inundation-mapping reports); otherwise read it from the bed material and
+  vegetation with Chow's tables[^chow59].
+- The shape exponent p_sect_m can be fitted from surveyed cross-sections
+  as the depth–width relation $`B \propto h^{m}`$ (0 for a rectangle, 1 for
+  a triangle).
 
 ## 6. Verification cases
 

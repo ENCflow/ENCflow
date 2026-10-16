@@ -132,6 +132,33 @@ become an "all salt, water level = tide level" boundary:
   between the total and the salt (proportional to dt) can arise from
   time splitting; reducing dt reduces it (see developer.md sec. 47.2).
 
+## Parameters and the basis of their defaults
+
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
+
+| Parameter | Default | Meaning | Basis |
+|---|---:|---|---|
+| f_salt_surf / f_salt_gw | 1 / 1 | enable the surface and subsurface salt layers | **method** both by default; combinations by use are in "Recommended values by pattern" |
+| salt_rhof / salt_rhos | 1000 / 1025 kg/m³ | fresh and sea water densities (density difference $`\varepsilon`$ = 2.5 %) | **customary value** standard seawater (salinity 35); Ghyben–Herzberg 1/ε ≈ 40[^bear79] |
+| salt_alpha | 1.0 | barotropic advection share of the salt layer | **empirical** 1 = proportional to the layer thickness; calibrate within 0.5–1 for the bottom layer carrying less of the flow |
+| salt_ni | 0.025 | interfacial Manning roughness of the gravity current | **empirical** placeholder of the order of a bed roughness; calibrate on observed salt-wedge positions |
+| salt_hss0 / salt_hgs0 | 0 / 0 | initial salt-layer thickness and subsurface salt storage | **given** supply the existing salt-water surface (geoelectric surveys, well salinity) when known |
+| salt_eps / salt_eps_h | 1e-3 / 1e-2 m | regularisation of the dry test / linearisation width of the square-root law | **numerical** like dd of the shallow water solver and gwc_eps_h of the conduit layer |
+| salt_diagratio | 2/(2+√2) | diagonal share | **derived** same as the ENC core ([ENC grid](encgrid.md) §2) |
+| salt_nsubmax | 200 | sub-cycle cap of the gravity current | **numerical** |
+
+**Where to look when revising the defaults**
+
+- Salt-water density follows from salinity and temperature through the
+  equation of state of seawater (1026 at salinity 35 and 15 °C; 1005–1015
+  for brackish water at the head of a bay). The sharp-interface basis and
+  the Ghyben–Herzberg relation are in Bear[^bear79]; a practical
+  implementation of the same kind is MODFLOW SWI2[^bakker13].
+- Initialise the subsurface salt surface from well salinity profiles or
+  geoelectric sections interpolated in GIS into fn_salt_hgs0; without
+  them, start fresh and let the intrusion reach a quasi-steady state
+  (spin-up).
+
 ## Tests and examples
 
 - [test/salt](../../../test/salt/): the pool-partition experiment (approach to a stable stratification) and seawater intrusion with analytic checks.

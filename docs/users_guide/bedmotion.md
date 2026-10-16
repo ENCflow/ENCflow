@@ -362,7 +362,7 @@ python3 make_breach.py --z z.txt --cols 21 22 --rows 48 52 --floor-col 23 \
 
 - [test/nhbottom](../../test/nhbottom/) 構成 3: Hammack 型の隆起を毎ステップの
   スナップショット表で与え、ライブラリ API による同じ運動・再開・海底地滑りとの
-  同居を検定(内容は[解説](bedmotion_models.md) §5)。
+  同居を検定(内容は[解説](bedmotion_models.md) §6)。
 
 - [examples/tsunami_fault](../../examples/tsunami_fault/README.md):
   理想化した逆断層(走向 N-S、傾斜 15°、60 km × 30 km、すべり 5 m、

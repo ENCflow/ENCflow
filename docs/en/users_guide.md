@@ -44,7 +44,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 
 **Part III: Feature reference**
 - [Shallow water computation](users_guide/swflow.md) (&list_enc, numerical parameters) -- scheme selection, adaptive Runge-Kutta, numerical constants
-  - [ENC grid and time integration](users_guide/encgrid.md) -- passage widths of the eight-direction grid, continuity, cell-velocity reconstruction, pressure/friction/drag terms, adaptive Runge-Kutta, Courant number, basis of the numerical constants (supplement to the shallow water chapter)
+  - [ENC grid and time integration](users_guide/encgrid.md) -- passage widths of the eight-direction grid, continuity, cell-velocity reconstruction, pressure/friction/drag terms, adaptive Runge-Kutta, Courant number, parameters and the basis of their defaults (supplement to the shallow water chapter)
   - [Advection schemes](users_guide/advection.md) -- equations, the momentum control volume of the conservative form, stencils, the limiter (supplement to the shallow water chapter)
   - [Non-hydrostatic correction](users_guide/nonhydrostatic.md) -- equations of the one-layer model, projection algorithm, active set, breaking, moving bottom, the models it drew on (supplement to the shallow water chapter)
   - [Diffusion term](users_guide/diffusion.md) -- eddy-viscosity models (constant, zero-equation), nine-point Laplacian, stability condition (supplement to the shallow water chapter)
@@ -170,6 +170,32 @@ A parameter file is a text file in Fortran **namelist format**.
 - Error messages and runtime output are in English (we prioritize the
   ability of users worldwide to search and ask about them; Japanese
   explanations are the documentation's job).
+
+### How to read the basis of a default
+
+The explanation page of each chapter (or the chapter page where there is
+no explanation page) has a section "**Parameters and the basis of their
+defaults**". Each cell of its "Basis" column starts with one of the labels
+below. Use them to decide whether a default can be used as it is or must
+be calibrated. Literature values carry a footnote, and the bibliography is
+in the "References" section at the end of each page.
+
+| Label | Meaning | What to do |
+|---|---|---|
+| **literature value** | a value from the literature or another model (source in a footnote) | usable as is; when your case differs from the conditions of the source, replace it from the source's tables |
+| **customary value** | a standard value widely used in practice or textbooks (no single source) | usable as is; replace it when measurements exist |
+| **verification case** | a value chosen with this model's test / examples (linked) | a choice of numerical behaviour; normally left alone |
+| **derived** | follows from other parameters or from theory (the formula is given) | follows when the underlying quantity changes |
+| **method** | a model option (flag) whose default is the recommended method | pick the method for your case from the chapter's "recommended values by pattern" |
+| **empirical** | weak basis, a placeholder chosen during development | meant to be calibrated; check the sensitivity |
+| **calibration** | has no universal value and is calibrated case by case | the default is only a starting point |
+| **numerical** | a stabilisation, regularisation or iteration setting of the numerics | no physical meaning; normally unchanged |
+| **given** | a quantity you supply for your case (default 0 or "none") | always supply it |
+| **compatibility** | a default that keeps the earlier behaviour | for new runs, see the recommended values |
+
+Hints on where to look when revising a default (tables from soil texture
+to conductivity, from land use to roughness, and so on) follow each table
+as "Where to look when revising the defaults".
 
 ## Running a computation
 

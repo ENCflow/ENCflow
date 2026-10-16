@@ -14,7 +14,7 @@ the accumulation source). Like landform change, the processes are
 The minimal input to "just try it" is **an empty &list_glacier in
 fn_glacier** (plus fn_meteo and fn_snow, both of which may be empty
 groups). The degree-day, sliding and erosion coefficients have
-defaults (the "Default" column; rationale in developer.md §65); when
+defaults (the "Default" column; basis in [Parameters and the basis of their defaults](#parameters-and-the-basis-of-their-defaults) below); when
 unspecified the default is adopted and printed with "(default)". The
 default configuration is "grow from no ice by snowfall, SIA flow on,
 no sliding or erosion". Set gl_morfac and t_cycle, which buy
@@ -227,7 +227,7 @@ experiments.
 ```
 
 **Recommended values by pattern** (calibration quantities; sources in
-developer.md §65)
+[Parameters and the basis of their defaults](#parameters-and-the-basis-of-their-defaults) below)
 
 | Type | gl_ddfi | gl_afl (Pa⁻³ yr⁻¹) | gl_as (m yr⁻¹ Pa⁻³) | gl_kg | Notes |
 |---|---|---|---|---|---|
@@ -249,6 +249,40 @@ temperature offset series) in &list_meteo
 | Ice flow (f_glflow) | Same as above |
 | Glacial erosion (f_glero) | f_glslide (+ t_cycle and restart chaining for long experiments) |
 | Combined with landform change | fn_geomorph (with matching morfac) |
+
+## Parameters and the basis of their defaults
+
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
+
+| Parameter | Default | Meaning | Basis |
+|---|---:|---|---|
+| dt_glacier_c / gl_morfac | "1 day" / 1 | update interval / glacier-time acceleration | **method** intermittent execution and time acceleration (the same idea as morfac of [Sediment and landform change](geomorph.md)); no acceleration by default |
+| gl_dens | 900 kg/m³ | ice density $`\rho_i`$ | **customary value** low end of glacier ice 900–917[^cuffey10] |
+| gl_tfirn_yr | 10 yr | time constant of firnification | **literature value** firn–ice transition of temperate glaciers, a few to 10 years[^cuffey10] |
+| gl_ddfi | 8 mm/°C/day | degree-day factor of the ice surface $`d_i`$ | **literature value** low end of the 5.5–20 for ice in Hock's compilation[^hock03]; twice the snow value (snow_ddf 4) |
+| gl_tmelt | 0 °C | temperature threshold of ice melt | **customary value** standard of the degree-day method |
+| gl_afl | 1e-16 Pa⁻³ yr⁻¹ | Glen flow-law coefficient $`A`$ | **literature value** recommended value for temperate ice (0 °C)[^cuffey10]; Glen's $`n`$ = 3 fixed[^glen55] |
+| gl_cfl / gl_nsubmax | 0.4 / 10000 | sub-cycle safety factor and cap | **numerical** |
+| gl_as | 1e-13 m yr⁻¹ Pa⁻³ | Weertman sliding coefficient $`A_s`$ ($`m`$ = 3 fixed[^weertman57]) | **derived** 100 m/yr at a basal shear stress of 100 kPa (typical 50–150 kPa[^cuffey10]) = the fast side of mountain glaciers |
+| gl_kg / gl_lexp | 1e-4 / 1 | erosion coefficient $`K_g`$ and exponent $`l`$ | **literature value** Variegated Glacier measurement, erosion rate ≈ 1e-4 × sliding speed[^humphrey94]; 1e-7–1e-6 for $`l`$ = 2[^herman15] |
+| gl_ava_tanc | 0.6 | critical avalanche slope | **customary value** near the angle of repose of dry snow (≈ 31°) |
+| fn_glacier_hi0 | "" | initial ice thickness | **given** grown from no ice by default |
+
+**Where to look when revising the defaults**
+
+- The degree-day factor follows directly from ablation-stake measurements
+  and air temperature in the ablation zone of the target glacier; Hock's
+  review[^hock03] compiles values by region.
+- The flow-law $`A`$ changes by orders of magnitude with ice temperature
+  (about 1e-17 at −10 °C); for cold glaciers read it from the temperature
+  table of Cuffey & Paterson[^cuffey10].
+- Back-calculate the sliding coefficient from the observed surface
+  velocity minus the deformation part
+  ($`2A(\rho_i g)^3 h^4 \lvert\nabla s\rvert^3/5`$) against the basal shear
+  stress.
+- The erosion coefficient follows from the basin-average erosion rate
+  (suspended-sediment yield of the proglacial meltwater) divided by the
+  area-average sliding speed[^humphrey94].
 
 ## Tests and examples
 

@@ -188,24 +188,37 @@ oscillation and no memory, and restarts are exact. Faces of cells that
 touch a wall corner or nodata and lack the interior edge that would pass
 the inflow are closed automatically (developer.md §69.9).
 
-## 6. Parameters and basis of the defaults
+## 6. Parameters and the basis of their defaults
+
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| culv_width / culv_height / culv_zin / culv_zout | required | section and inverts (§2) | given |
-| culv_length | 0 | pipe length $`L`$ | 0 = no friction loss |
-| culv_manning | 0.02 | pipe roughness $`n`$ | upper practical value of concrete pipes (empirical) |
-| culv_ce | 0.5 | entrance loss coefficient $`c_e`$ | square-edged entrance[^fhwa12] (empirical) |
-| culv_flap / culv_gate_rule / culv_gate_ref | 0 / none / 1 | flap, opening rule, reference side | the opening is a linear multiplier (approximation) |
-| pump_q0 / pump_rule / f_pump_ref | — | constant discharge / operation rule / reference (§3) | given |
-| div_q0 / div_rule | — | constant discharge / rating (§3) | given |
-| dam_hv / dam_hmin / dam_hsur | — | HV curve / linear HV floor and surcharge (§4) | project data; a lake of unknown depth: normal level − 5 m |
-| f_dam_mode / dam_q0 / dam_rate | — | operation mode and values | given |
-| dam_hq_rule / dam_ori_* / dam_qmax | — | natural-regulation rating / orifice / square-root law | given; the orifice $`c_e`$ default 0.5 is the culvert value |
-| dam_tadashigaki | min + 0.9(surcharge − min) | start level of the emergency ramp | practical placeholder |
-| f_bc_w/e/n/s | 0 | type of the edge boundary (§5) | 0: wall, 1: free outflow (critical drop), 2: radiation |
-| bc_eta_* | derived from the initial state | reference level of the radiation | zero flux at t = 0 for a uniform initial level |
-| inflow_dist | 0 | distribution of the segment inflow (§5) | 2 = Manning conveyance[^chow59]; use 2 for river cross-sections |
+| culv_width / culv_height / culv_zin / culv_zout | required | section and inverts (§2) | **given** dimensions from the structure register |
+| culv_length | 0 | pipe length $`L`$ | **given** 0 = no friction loss |
+| culv_manning | 0.02 | pipe roughness $`n`$ | **customary value** upper practical value of concrete pipes |
+| culv_ce | 0.5 | entrance loss coefficient $`c_e`$ | **literature value** square-edged entrance[^fhwa12] |
+| culv_flap / culv_gate_rule / culv_gate_ref | 0 / none / 1 | flap, opening rule, reference side | **given** the opening is a linear multiplier (approximation) |
+| pump_q0 / pump_rule / f_pump_ref | — | constant discharge / operation rule / reference (§3) | **given** operation rule |
+| div_q0 / div_rule | — | constant discharge / rating (§3) | **given** |
+| dam_hv / dam_hmin / dam_hsur | — | HV curve / linear HV floor and surcharge (§4) | **given** project data; a lake of unknown depth: normal level − 5 m (empirical) |
+| f_dam_mode / dam_q0 / dam_rate | — | operation mode and values | **given** |
+| dam_hq_rule / dam_ori_* / dam_qmax | — | natural-regulation rating / orifice / square-root law | **given** the orifice $`c_e`$ default 0.5 is the culvert value |
+| dam_tadashigaki | min + 0.9(surcharge − min) | start level of the emergency ramp | **customary value** practical placeholder |
+| f_bc_w/e/n/s | 0 | type of the edge boundary (§5) | **method** 0: wall, 1: free outflow (critical drop), 2: radiation |
+| bc_eta_* | derived from the initial state | reference level of the radiation | **derived** zero flux at t = 0 for a uniform initial level |
+| inflow_dist | 0 | distribution of the segment inflow (§5) | **method** 2 = Manning conveyance[^chow59]; use 2 for river cross-sections |
+
+**Where to look when revising the defaults**
+
+- The culvert entrance loss coefficient ranges 0.2–0.9 with the inlet
+  shape; pick it from the tables of the FHWA design manual[^fhwa12]. Pipe
+  roughness: concrete 0.012–0.015 (new) to 0.02 (aged, with deposits),
+  corrugated steel 0.024.
+- Pump and dam operation rules come straight from the operator's rules
+  (release rules, emergency operation). The HV curve can be replaced by a
+  linear approximation (dam_hmin, dam_hsur) from the bathymetry or from the
+  gross and effective storage of the dam specifications.
 
 The coefficients 0.35 and 0.91 of levee overtopping ([channels](channel.md))
 are the Honma values of §1 and are not user parameters.

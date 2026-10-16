@@ -86,7 +86,7 @@ in (a).
 
 The minimal input is the sea mask fn_sw and **an empty &list_tide in
 fn_tide** (= fixed tide level 0 m and hsea0 1 m: the simplest use of the
-sea as a "drain at level 0"; developer.md §67).
+sea as a "drain at level 0"; see [Parameters and the basis of their defaults](#parameters-and-the-basis-of-their-defaults) below).
 
 ```
 &list_tide
@@ -139,6 +139,28 @@ Start hsea0 at several tens of the threshold depth dd (typically 1 m).
   a [restart](restart.md) updates occur at the same timing as an
   uninterrupted run (a restart round trip with tide enabled is also
   bit-identical).
+## Parameters and the basis of their defaults
+
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
+
+| Parameter | Default | Meaning | Basis |
+|---|---:|---|---|
+| titype | 1 (when unspecified) | how the tide is given | **method** the simplest default: an empty &list_tide makes the sea a "drain at level 0"; 2–4 for real events |
+| ti0 | 0 m | uniform fixed level | **given** 0 = mean sea level of the elevation datum |
+| tival / fn_timap / fn_timaplist | — | time series / distributions | **given** tide tables, tide-gauge records, storm-surge hindcasts |
+| dt_tiupdate | 1 min | update interval of the tide | **numerical** fine enough for tidal changes (periods of hours); shorter than the time step is meaningless |
+| dt_timaplist | 60 min | frame interval of the distribution list | **given** match the output interval of the surge model |
+| hsea0 | 1 m | apparent water column of sea cells | **empirical** tens of times the threshold depth dd (default 1 mm) or more, so that the sea-to-land flux becomes insensitive to hsea0; not the real sea depth |
+
+**Where to look when revising the defaults**
+
+- Build astronomical tides from official tide tables or a nearby tide
+  gauge, and storm surges from typhoon-scenario hindcasts (coastal
+  inundation studies of the local authority). Always match the datum of
+  the tide level and of the topography.
+- Check the sensitivity to hsea0 by comparing the inundation flux across
+  a transect for hsea0 = 0.5, 1 and 2 m under the same tide.
+
 ## Tests and examples
 
 - Working example: [test/tide](../../../test/tide/) (drainage -> rising-tide

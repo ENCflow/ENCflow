@@ -80,7 +80,7 @@ defaults (density 2600 kg/m³, viscosity 1e4 Pa s, yield stress 0 =
 Newtonian; printed with "(default)" when unspecified). The default
 viscosity is the upper end of the 10³–10⁴ Pa s measured on flowing
 basaltic aa lava at Etna[^pinkerton95], a middle value meant for
-calibration (developer.md §66). When the lava type is known, start from the
+calibration ([Parameters and the basis of their defaults](#parameters-and-the-basis-of-their-defaults) below). When the lava type is known, start from the
 following (calibration quantities):
 
 | Type | lv_visc (Pa s) | lv_tauy (Pa) | Notes |
@@ -127,6 +127,33 @@ following (calibration quantities):
   screen/Log (it is not a water column). A volume ledger (erupted,
   solidified, molten) is reported at the end of the run.
 - Restart uses the private file save/lavaflow.dat (automatic).
+
+## Parameters and the basis of their defaults
+
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
+
+| Parameter | Default | Meaning | Basis |
+|---|---:|---|---|
+| dt_lavaflow_c | "" (every step) | update interval of the lava | **method** same step as the water by default; viscous, slow flows can be run intermittently to save cost |
+| lv_rho | 2600 kg/m³ | lava density $`\rho`$ | **customary value** representative of basaltic lava with vesicles, 2500–2700 |
+| lv_visc | 1e4 Pa s | viscosity $`\eta`$ | **literature value** upper end of the field measurements 10³–10⁴ Pa s of flowing basaltic aa lava at Etna[^pinkerton95]; to be calibrated |
+| lv_tauy | 0 | yield stress $`\tau_y`$ | **compatibility** 0 = Newtonian (the form verifiable against the similarity solution[^huppert82]); real lavas take the values of the type table above |
+| lv_wsol / lv_vsol | 0 / 5e-4 m/s | solidification rate / stop-detection velocity | **given** 0 = no solidification / **empirical** stop criterion 10⁻⁴–10⁻³ m/s (advance below 10–100 m per day) |
+| lv_cfl / lv_nsubmax | 0.4 / 10000 | sub-cycle safety factor and cap | **numerical** |
+| lv_cell / lv_q0 / lv_val | — | vent cells and effusion rate | **given** eruption scenario (from total volume and duration) |
+
+**Where to look when revising the defaults**
+
+- Viscosity and yield stress are set by composition (SiO₂), temperature
+  and crystal content; the type table of the chapter is the starting
+  point. Calibrating on the runout, width and front thickness of past
+  flows (aerial photographs, DEM differences) gives $`\tau_y`$ from the stop
+  thickness $`h_\infty = \tau_y/(\rho g \tan\theta)`$ and $`\eta`$ from the advance
+  speed.
+- The effusion rate is best given as a time series from eruption
+  observations (volume growth of the lava field, thermal radiance); when
+  only the total is known, give a rectangular pulse and check the
+  sensitivity to its duration.
 
 ## Tests and examples
 

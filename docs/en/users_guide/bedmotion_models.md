@@ -103,7 +103,28 @@ the non-hydrostatic run lowers the coastal maximum level by 24 %
   interpolation cover the whole band of each rank. See
   [Parallel Execution](parallel.md) for the reproducibility conditions.
 
-## 5. Verification cases
+## 5. Parameters and the basis of their defaults
+
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
+
+| Parameter | Default | Meaning | Basis |
+|---|---:|---|---|
+| fn_bmlist | (required) | snapshot table | **given** a fault model (utils/fault2disp) or a displacement field of your own |
+| f_bminterp | 1 | time interpolation between snapshots | **method** linear by default; step (0) when the instant of an instantaneous displacement or of a breach must be exact |
+| bm_tscale | 1.0 | unit of the times in the table (s) | **given** 60 for minutes, 3600 for hours |
+| fault parameters (fault2disp) | — | location, strike, dip, rake, length, width, slip, rise time | **given** published source models; the displacement field is Okada's analytical solution[^okada85], the horizontal contribution follows Tanioka & Satake[^tanioka96] |
+
+**Where to look when revising the defaults**
+
+- Take the fault parameters from published finite-fault source models
+  (national seismological agencies, USGS). Use the rupture duration as a
+  guide for the rise time (tens of seconds to over a hundred seconds for
+  M8-class events).
+- For short-wavelength displacements (width comparable to the depth),
+  enable f_nh_bottom of the [non-hydrostatic correction](nonhydrostatic.md) §7
+  and write the snapshots finely (§3).
+
+## 6. Verification cases
 
 - [test/nhbottom](../../../test/nhbottom/) configuration 3: a Hammack-type uplift of 0.2 m in 1 s over
 |x − x_c| < 20 m in a 10 m deep channel, given as a snapshot table with

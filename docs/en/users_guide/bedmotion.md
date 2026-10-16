@@ -414,7 +414,7 @@ the bed elevation.
 - [test/nhbottom](../../../test/nhbottom/) configuration 3: a Hammack-type
   uplift given as a per-step snapshot table, checked against the same
   motion through the library API, against a restart and together with a
-  submarine slide (details in [the explanation](bedmotion_models.md) §5).
+  submarine slide (details in [the explanation](bedmotion_models.md) §6).
 
 - [examples/tsunami_fault](../../../examples/tsunami_fault/README.md): an
   idealised reverse fault (strike N-S, dip 15°, 60 km × 30 km, slip 5 m,

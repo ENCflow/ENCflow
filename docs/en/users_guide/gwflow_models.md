@@ -291,27 +291,46 @@ infiltration nearly stops in a wet soil whose top 20–30 cm are
 frozen[^zhao99]. Verification: [test/frost](../../../test/frost/README.md)
 (all 14 digits of the analytical value of the linear reduction).
 
-## 9. Parameters and basis of the defaults
+## 9. Parameters and the basis of their defaults
+
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| gw_infil_mmh / gw_capacity | 10 mm/h / 0.2 m | bucket capacity rate and storage (§2) | sandy-loam $`K_s`$[^rawls83] / 1 m soil × $`s_y`$ 0.2 |
-| gw_ksv_mmh | 10 mm/h | vertical saturated conductivity $`K_{sv}`$ (§3) | sandy loam 10.9 mm/h[^rawls83]; below forest soils |
-| gw_psif | 0 m | capillary pressure head $`\psi_f`$ at the wetting front | 0 = constant capacity; texture values in the recommended table[^rawls83] |
-| sd0 / sy0 (geographic information) | 1 m / 0.2 | soil thickness / specific yield | thin soil of forested slopes[^tani97]; $`s_y`$ = effective porosity − initial water content |
-| gw_ksh_mmh | 360 mm/h | lateral saturated conductivity $`K_{sh}`$ (§4) | ten times the matrix = macropores and pipe flow[^beven82][^mosley79] |
-| gw_eps | 1e-3 m | regularisation thickness of the dry test | numerical (like dd of the shallow water solver) |
-| gw_diagratio / gwc_diagratio | 2/(2+√2) | eight-direction share | same as the ENC core ([ENC grid](encgrid.md) §2) |
-| gw2_depth / gw2_sy / gw2_infil_mmh | 3 m / 0.05 / 1 mm/h | thickness, specific yield and infiltration capacity of the bedrock layer (§5) | upper end of the granitic weathered-zone observations[^kosugi06][^katsura08] |
-| gw2_ksh_mmh / gw2_sat0 | 0 / 0 | lateral $`K`$ / initial saturation of layer 2 | 0 = capacity only / calibration (spin-up for long runs) |
-| f_gwc_fluxlaw | 2 | flux law of the conduit layer (§6) | 2: square-root law of turbulent pipe flow (continuum of CFP Mode 2[^shoemaker08]) |
-| gwc_cap / gwc_depth / gwc_sy / gwc_slot_sy | 0.01 m / 3 m / 0.05 / sy/50 | capacity, invert depth, storage coefficient, pseudo-slot | urban branch network (sewer_hybrid, test/conduit) |
-| gwc_cnd_m2s | 0 | conductance density | given (converted from pipe data; 0 = no lateral flow) |
-| gwc_inlet / gwc_cw / gwc_co | 0 / 2.66 / 0.15 | inlet density, weir and orifice coefficients | given / weir 1.7 × perimeter 1.5 m / $`C_d`$ 0.6 × 0.25 m² (empirical) |
-| gwc_leak_layer / gwc_leak_mmh | 0 / 10 mm/h | partner layer and capacity of the leakage | same as the $`K_{sv}`$ of the surrounding soil |
-| gwc_eps_h / gwc_nsubmax | 1e-2 m / 100 | linearisation width of the square-root law / sub-cycle limit | numerical |
-| fro_fifull / fro_fmin / fro_tf / fro_ct | 20 °C·day / 0 / 0 °C / 1 | reduction factor of frozen ground (§8) | Stefan frost depth 0.25 m[^andersland04][^zhao99] |
-| fro_swe0 / fro_fimax / fro_fi0 | 0 / 0 / 0 | snow insulation, cap, initial value | 0 = none; calibration entry for snowmelt events |
+| gw_infil_mmh / gw_capacity | 10 mm/h / 0.2 m | bucket capacity rate and storage (§2) | **literature value** sandy-loam $`K_s`$[^rawls83] / **derived** 1 m soil × $`s_y`$ 0.2 |
+| gw_ksv_mmh | 10 mm/h | vertical saturated conductivity $`K_{sv}`$ (§3) | **literature value** sandy loam 10.9 mm/h[^rawls83]; below forest soils |
+| gw_psif | 0 m | capillary pressure head $`\psi_f`$ at the wetting front | **compatibility** 0 = constant capacity; texture values in the recommended table[^rawls83] |
+| sd0 / sy0 (geographic information) | 1 m / 0.2 | soil thickness / specific yield | **literature value** thin soil of forested slopes[^tani97]; $`s_y`$ = effective porosity − initial water content |
+| gw_ksh_mmh | 360 mm/h | lateral saturated conductivity $`K_{sh}`$ (§4) | **literature value** ten times the matrix = macropores and pipe flow[^beven82][^mosley79] |
+| gw_eps | 1e-3 m | regularisation thickness of the dry test | **numerical** like dd of the shallow water solver |
+| gw_diagratio / gwc_diagratio | 2/(2+√2) | eight-direction share | **derived** same as the ENC core ([ENC grid](encgrid.md) §2) |
+| gw2_depth / gw2_sy / gw2_infil_mmh | 3 m / 0.05 / 1 mm/h | thickness, specific yield and infiltration capacity of the bedrock layer (§5) | **literature value** upper end of the granitic weathered-zone observations[^kosugi06][^katsura08] |
+| gw2_ksh_mmh / gw2_sat0 | 0 / 0 | lateral $`K`$ / initial saturation of layer 2 | **given** 0 = capacity only / **calibration** spin-up for long runs |
+| f_gwc_fluxlaw | 2 | flux law of the conduit layer (§6) | **method** 2: square-root law of turbulent pipe flow (continuum of CFP Mode 2[^shoemaker08]) |
+| gwc_cap / gwc_depth / gwc_sy / gwc_slot_sy | 0.01 m / 3 m / 0.05 / sy/50 | capacity, invert depth, storage coefficient, pseudo-slot | **empirical** dimensions of an urban branch network (examples/sewer_hybrid, [test/conduit](../../../test/conduit/)) |
+| gwc_cnd_m2s | 0 | conductance density | **given** converted from pipe data; 0 = no lateral flow |
+| gwc_inlet / gwc_cw / gwc_co | 0 / 2.66 / 0.15 | inlet density, weir and orifice coefficients | **given** / **derived** weir 1.7 × perimeter 1.5 m / $`C_d`$ 0.6 × 0.25 m² |
+| gwc_leak_layer / gwc_leak_mmh | 0 / 10 mm/h | partner layer and capacity of the leakage | **derived** same as the $`K_{sv}`$ of the surrounding soil |
+| gwc_eps_h / gwc_nsubmax | 1e-2 m / 100 | linearisation width of the square-root law / sub-cycle limit | **numerical** |
+| fro_fifull / fro_fmin / fro_tf / fro_ct | 20 °C·day / 0 / 0 °C / 1 | reduction factor of frozen ground (§8) | **literature value** corresponds to a Stefan frost depth of 0.25 m[^andersland04][^zhao99] |
+| fro_swe0 / fro_fimax / fro_fi0 | 0 / 0 / 0 | snow insulation, cap, initial value | **given** 0 = none; calibration entry for snowmelt events |
+
+**Where to look when revising the defaults**
+
+- Conductivity, capillary head and effective porosity start from the
+  **soil texture** (the recommended table of the chapter = the 11 texture
+  classes of Rawls et al.[^rawls83]). Read the texture from soil maps and
+  allow for $`K`$ an order of magnitude larger in forest soils because of
+  macropores[^beven82].
+- For the soil thickness use landslide surveys (portable penetrometer) or
+  borehole logs when available; otherwise 0.5–1.5 m on forested
+  slopes[^tani97] is a guide.
+- The lateral $`K_{sh}`$ is in practice calibrated on the recession curve of
+  baseflow in dry periods (faster recession → larger value).
+- Outside granitic mountains[^kosugi06][^katsura08] the bedrock-layer
+  parameters vary strongly with geology; back-calculate capacity and
+  infiltration rate from the annual baseflow (precipitation − direct
+  runoff − evapotranspiration).
 
 ## 10. Verification cases
 

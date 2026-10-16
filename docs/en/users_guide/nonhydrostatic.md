@@ -452,24 +452,26 @@ water level directly above the deposit.
   nh configuration of [test/nest_identity](../../../test/nest_identity/README.md), and [examples/nest_reflect](../../../examples/nest_reflect/README.md)
   compares the treatments of the band).
 
-**Parameters and the basis of their defaults.** The full list is in the
+### Parameters and the basis of their defaults
+
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default). The full list is in the
 table of the [shallow water chapter](swflow.md); only the basis of the
 defaults is given here.
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| nh_hmin | 0.1 m | cells shallower than this stay hydrostatic | empirical; wet/dry fronts, very shallow water and bores after breaking are left to the momentum-conservative advection as bores (§4). Must exceed dd |
-| nh_solver | 2 (CG) | iterative solver | verification case: in [test/nhwave_nh](../../../test/nhwave_nh/README.md) CG converges in 10–80 iterations while Jacobi has not converged after 500 sweeps at $`\Delta x = H/8`$ (§3) |
-| nh_tol / nh_itmax | 1e-6 / 500 | convergence criterion and iteration cap | empirical; the condition number does not depend on the number of cells ($`\kappa \approx 1 + 2\varepsilon`$), so the cap is generous (§3) |
-| nh_bc_margin / nh_margin / nh_break_margin | 0 (automatic $`\lceil 2H/\Delta x\rceil`$) | margin around forced boundaries, seeds and breaking cells | four times the e-folding distance $`H/2`$ of the Green function (§5); in the hump-wave test the margins 4 / 8 / 16 cells differ by 9.4e-4 / 4.0e-4 / 1.0e-4 m |
-| nh_chi_on | 0.06 | detection threshold of the active set (dispersion ratio $`\chi`$) | derived from the dispersion relation of §2: the value of $`(kH)^2/4 / (1 + (kH)^2/4)`$ at a 3% phase-speed difference from hydrostatic |
-| nh_amin / nh_arel | 1e-5 m/s² / 1e-3 | absolute and relative floors of the detector | empirical; keeps the ratio detector from picking up round-off-level short waves (§5) |
-| nh_break_type / nh_break_slope | 3 / 0.3 | breaking detector (surface slope) | empirical (local, Galilean invariant, stateless); the run-up in [test/nhbreak](../../../test/nhbreak/README.md) converges to the experimental law (§6) |
-| nh_break_alpha / nh_break_beta | 0.6 / 0.3 | thresholds of detector 1 (surface rise rate) | literature value[^smit13] (SWASH defaults) |
-| nh_break_fr | 0.6 | threshold of detector 2 (Froude number) | empirical |
-| nh_break_visc | 0 (reference 1.44) | breaking eddy-viscosity coefficient $`\delta_b^2`$ | literature value[^kennedy00]: $`\delta_b = 1.2`$ → 1.44; $`R/H`$ = 0.45 in [test/nhbreak](../../../test/nhbreak/README.md) (experimental law 0.42; §6) |
-| f_nh_slope | 0 | bottom-slope terms (Version 2) | verification case: a few percent difference from Version 1 in [test/nhshelf](../../../test/nhshelf/README.md); off by default because the iterations double (§7) |
-| f_nh_bottom | 0 | moving-bottom acceleration term | verification case: leading wave height within +3.9% of the exact solution in [test/nhbottom](../../../test/nhbottom/README.md) (+16% without); off by default since it acts only when the bottom moves (§7) |
+| nh_hmin | 0.1 m | cells shallower than this stay hydrostatic | **empirical** wet/dry fronts, very shallow water and bores after breaking are left to the momentum-conservative advection as bores (§4). Must exceed dd |
+| nh_solver | 2 (CG) | iterative solver | **verification case** in [test/nhwave_nh](../../../test/nhwave_nh/README.md) CG converges in 10–80 iterations while Jacobi has not converged after 500 sweeps at $`\Delta x = H/8`$ (§3) |
+| nh_tol / nh_itmax | 1e-6 / 500 | convergence criterion and iteration cap | **numerical** the condition number does not depend on the number of cells ($`\kappa \approx 1 + 2\varepsilon`$), so the cap is generous (§3) |
+| nh_bc_margin / nh_margin / nh_break_margin | 0 (automatic $`\lceil 2H/\Delta x\rceil`$) | margin around forced boundaries, seeds and breaking cells | **derived** four times the e-folding distance $`H/2`$ of the Green function (§5); in the hump-wave test the margins 4 / 8 / 16 cells differ by 9.4e-4 / 4.0e-4 / 1.0e-4 m |
+| nh_chi_on | 0.06 | detection threshold of the active set (dispersion ratio $`\chi`$) | **derived** from the dispersion relation of §2: the value of $`(kH)^2/4 / (1 + (kH)^2/4)`$ at a 3% phase-speed difference from hydrostatic |
+| nh_amin / nh_arel | 1e-5 m/s² / 1e-3 | absolute and relative floors of the detector | **numerical** keeps the ratio detector from picking up round-off-level short waves (§5) |
+| nh_break_type / nh_break_slope | 3 / 0.3 | breaking detector (surface slope) | **verification case** a local, Galilean-invariant, stateless detector; the run-up in [test/nhbreak](../../../test/nhbreak/README.md) converges to the experimental law (§6) |
+| nh_break_alpha / nh_break_beta | 0.6 / 0.3 | thresholds of detector 1 (surface rise rate) | **literature value** SWASH defaults[^smit13] |
+| nh_break_fr | 0.6 | threshold of detector 2 (Froude number) | **empirical** |
+| nh_break_visc | 0 (reference 1.44) | breaking eddy-viscosity coefficient $`\delta_b^2`$ | **literature value** $`\delta_b = 1.2`$ → 1.44[^kennedy00]; $`R/H`$ = 0.45 in [test/nhbreak](../../../test/nhbreak/README.md) (experimental law 0.42; §6) |
+| f_nh_slope | 0 | bottom-slope terms (Version 2) | **verification case** a few percent difference from Version 1 in [test/nhshelf](../../../test/nhshelf/README.md); off by default because the iterations double (§7) |
+| f_nh_bottom | 0 | moving-bottom acceleration term | **verification case** leading wave height within +3.9% of the exact solution in [test/nhbottom](../../../test/nhbottom/README.md) (+16% without); off by default since it acts only when the bottom moves (§7) |
 
 **Verification cases** (figures, tables and the derived cases are in the
 READMEs, which are in Japanese):

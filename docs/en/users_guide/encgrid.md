@@ -272,15 +272,33 @@ For the basics of the Courant number and the procedure for estimating dt see
 decisions behind the fixed step and the mainly explicit method see the
 [time-step design policy](timestep_policy.md).
 
-## 8. Basis of the numerical constants
+## 8. Parameters and the basis of their defaults
+
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default). The entries here are the numerical constants of
+&list_sysparam; the basis of the method flags of &list_enc (advection,
+diffusion, non-hydrostatic) is on the pages [Advection](advection.md),
+[Diffusion](diffusion.md) and [Non-hydrostatic correction](nonhydrostatic.md).
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| dd | 0.001 m | threshold depth of movement; an edge with both cells below it carries no flux; depth left by the ex_flux reduction | empirical (1 mm). Larger values stop thin fronts and increase the outflow reduction; smaller values compute more thin tongues, raising the cost and the sensitivity to friction |
-| dv | 0.001 m | lower bound of the depth $`h_f`$ in the friction term | empirical; bounds the divergence of $`h^{-4/3}`$. Keep it comparable to dd |
-| vv | 0.01 m/s | lower bound of the velocity in the friction term | empirical; limits the one-step acceleration when the friction vanishes at the start of motion from rest. Being semi-implicit, a smaller value means less friction right after the start |
-| gg | 9.8 m/s² | gravitational acceleration | — |
-| cm / cd / kk | 2.0 / 1.0 / 0.5 | added mass, drag and shielding coefficients of buildings (§5) | empirical (within published ranges); calibrate with the roughness for urban inundation |
+| dd | 0.001 m | threshold depth of movement; an edge with both cells below it carries no flux; depth left by the ex_flux reduction | **numerical** 1 mm is empirical. Larger values stop thin fronts and increase the outflow reduction; smaller values compute more thin tongues, raising the cost and the sensitivity to friction |
+| dv | 0.001 m | lower bound of the depth $`h_f`$ in the friction term | **numerical** bounds the divergence of $`h^{-4/3}`$. Keep it comparable to dd |
+| vv | 0.01 m/s | lower bound of the velocity in the friction term | **numerical** limits the one-step acceleration when the friction vanishes at the start of motion from rest. Being semi-implicit, a smaller value means less friction right after the start |
+| gg | 9.8 m/s² | gravitational acceleration | **customary value** rounded standard gravity 9.80665 |
+| cm / cd / kk | 2.0 / 1.0 / 0.5 | added mass, drag and shielding coefficients of buildings (§5) | **empirical** placeholders within published ranges; calibrate with the roughness for urban inundation |
+| f_friction_fastmath | 0 | level of the table approximation of $`h^{-4/3}`$ in the friction term | **numerical** exact by default; the regression references use level 0 (below) |
+
+**Where to look when revising the defaults**
+
+- Revisit dd, dv and vv against the grid spacing and the depth scale of
+  the problem. For thin hillslope sheet flow (millimetres) keep dd at
+  1 mm; for coastal inundation of metres, raising it to a few mm–1 cm
+  changes little and makes the run cheaper. After a change, check the
+  sensitivity on a simple case such as [test/wave](../../../test/wave/).
+- For the building coefficients cm, cd and kk, experimental and numerical
+  studies of building-cluster resistance report added mass 1–2 and drag
+  1–2. Move them together with the roughness while comparing with
+  observed urban inundation.
 
 **Fast friction (`f_friction_fastmath`).** The evaluation of $`h^{-4/3}`$
 is replaced by a table equally spaced in $`\log h`$ between $`d_d`$ and 30 m
@@ -304,15 +322,15 @@ non-hydrostatic correction or the newer advection schemes.
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| p_diagratio | 2/(2+√2) | share $`p_d`$ of the passage width given to the diagonal edges (§2) | the value that makes the eight widths equal; 0 gives a four-neighbour grid |
-| f_gravity_correction | 1 | effective gravity $`g\cos^2\theta`$ on steep slopes (§5) | Ni et al.[^ni19]; no effect on gentle slopes |
-| f_exflux_reduction | 1 | suppression of excessive outflow (§5) | prevents negative depths at dry-bed fronts; keep on with dry beds |
-| f_hcap_upwind | 1 | upwind cap of the edge depth (§3) | 1: mean capped by the upwind depth. 2: the upwind depth itself = continuity of the conservative scheme[^sd03]; use 2 with bores and breaking |
-| f_friction_fastmath | 0 | table approximation of the friction (§8) | 0: exact; the regression tests use 0 |
-| f_adaptive_runge | 1 | adaptive Runge-Kutta (§6) | four-stage RK[^jst81] on the edges with abrupt changes only |
-| p_adprunge_thresh | 1.5 | threshold $`\theta`$ of the recomputation (§6) | empirical (tutorials/wave Step 2); 1.1 or more |
-| f_check_cfl | 1 | monitoring of the Courant number (§7) | 1: stop at $`C_n > 1`$; 2: advective Courant number |
-| dd, dv, vv, gg, cm, cd, kk | §8 | numerical constants (&list_sysparam) | table of §8 |
+| p_diagratio | 2/(2+√2) | share $`p_d`$ of the passage width given to the diagonal edges (§2) | **derived** the value that makes the eight widths equal; 0 gives a four-neighbour grid |
+| f_gravity_correction | 1 | effective gravity $`g\cos^2\theta`$ on steep slopes (§5) | **literature value** Ni et al.[^ni19]; no effect on gentle slopes |
+| f_exflux_reduction | 1 | suppression of excessive outflow (§5) | **method** prevents negative depths at dry-bed fronts; keep on with dry beds |
+| f_hcap_upwind | 1 | upwind cap of the edge depth (§3) | **method** 1: mean capped by the upwind depth. 2: the upwind depth itself = continuity of the conservative scheme[^sd03]; use 2 with bores and breaking |
+| f_friction_fastmath | 0 | table approximation of the friction (§8) | **numerical** 0: exact; the regression tests use 0 |
+| f_adaptive_runge | 1 | adaptive Runge-Kutta (§6) | **method** four-stage RK[^jst81] on the edges with abrupt changes only |
+| p_adprunge_thresh | 1.5 | threshold $`\theta`$ of the recomputation (§6) | **empirical** checked in tutorials/wave Step 2; 1.1 or more |
+| f_check_cfl | 1 | monitoring of the Courant number (§7) | **method** 1: stop at $`C_n > 1`$; 2: advective Courant number |
+| dd, dv, vv, gg, cm, cd, kk | §8 | numerical constants (&list_sysparam) | **numerical** table of §8 |
 
 The parameters of the advection term, the diffusion term and the
 non-hydrostatic correction are in the tables of their own pages.

@@ -250,6 +250,31 @@ Notes when giving the crest with a distribution file `fn_seawall`:
   Painting a **generous buffer along the coast** is therefore the safe
   side, and it automatically prevents the corner-contact leaks above.
 
+## Parameters and the basis of their defaults
+
+The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default). Most of the geographic information is given data
+(topography, masks, distribution files); only the quantities below have
+defaults. The basis of soil thickness and specific yield is also in
+[Groundwater models](gwflow_models.md) §9.
+
+| Parameter | Default | Meaning | Basis |
+|---|---:|---|---|
+| rn0 | 0.015 | fixed roughness | **customary value** Manning n of pavement and concrete[^chow59]; guides by land use in the table above |
+| rn0_rw | −1 (no override) | fixed roughness of channel cells | **given** a positive value overrides channel cells only; guides in [Channel models](channel_models.md) §5 |
+| mag_z | 1 | multiplier of the ground elevation | **given** for sensitivity runs and unit conversion; normally 1 |
+| min_gv / min_bb | 0.001 | floors of the void ratio and building size | **numerical** avoids division by zero |
+| sd0 | 0 (1 m when groundwater needs it) | soil thickness | **literature value** thin soil of forested slopes 0.5–1.5 m[^tani97] |
+| sy0 | 0.2 | specific yield (effective porosity) | **literature value** effective porosity − initial water content of sandy loam to loam[^rawls83] |
+| f_seawall_datum / f_seawall_mode | 2 / 0 | crest datum and hydraulic mode of seawalls | **method** absolute elevation and overtopping only by default (crest heights of the seawall register can be used as they are) |
+
+**Where to look when revising the defaults**
+
+- The standard procedure for roughness is to map the values of the guide
+  table onto a land-use map and write a distribution file; calibrate on
+  the arrival times and depths of observed inundation.
+- Read soil thickness and specific yield from texture and terrain (hints
+  in [Groundwater models](gwflow_models.md) §9).
+
 ## Tests and examples
 
 - [test/chichibu](../../../test/chichibu/): a real-terrain regression case combining elevation, catchment/channel masks and roughness.
@@ -263,3 +288,5 @@ Notes when giving the crest with a distribution file `fn_seawall`:
 ## References
 
 [^chow59]: Chow, V. T. (1959): *Open-Channel Hydraulics*. McGraw-Hill, New York. (tables of Manning's n by land cover)
+[^tani97]: Tani, M. (1997): Runoff generation processes estimated from hydrological observations on a steep forested hillslope with a thin soil layer. *J. Hydrol.*, 200, 84–109.
+[^rawls83]: Rawls, W. J., Brakensiek, D. L. and Miller, N. (1983): Green-Ampt infiltration parameters from soils data. *J. Hydraul. Eng. ASCE*, 109, 62–70.
