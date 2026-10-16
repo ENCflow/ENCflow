@@ -11145,7 +11145,8 @@ conduit、greenampt、saltwater、wq、meteo、driftwood、bldgdebris、BMI set_
 全域形に戻し、窓形バッファ用の par_scatter_win / par_scatter_edge_win を新設
 (m_geoinfo scatter_band_r と m_restart が使う)。確認: 秩父(列窓 76..501)+
 固定遮断率の x 方向勾配マップで、D2 は D1 に対し S が +20%、修正後は D1 と
-バイト一致。**窓つきケース+分布ファイルの回帰テストを追加すべき**(handoff)。
+バイト一致。この組合せを回帰ケース **test/chichibu_icmap**(秩父 1 時間+固定
+遮断率の x 方向勾配マップ。Log を ULP=1 で比較)として追加した。
 
 
 ## 83. 第二段 (D3): save/restore のストリーミング(2026-10-16 実装)
