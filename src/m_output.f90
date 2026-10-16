@@ -143,6 +143,9 @@ subroutine output_state(o, p, g, s, k)
   ! 地下塩水貯留(fn_salt 有効時のみ。フラグは Hg と共用。§47)
   if (p%f_out_hg > 0 .and. allocated(s%hgs)) call output_matrix(o, p, g, "Hgs", s%hgs, k)
   if (s%wq_active) call output_matrix(o, p, g, "C", s%cqc, k)          ! 輸送物質濃度 (mg/L。§30)
+  ! 地下質量プール (g/m2。幾何面積基底 = セル内質量 cg×A。f_wq_infil=1 の
+  ! ときのみ確保。フラグは Hg と共用 = 地下水の状態量の一員。§30 W3)
+  if (p%f_out_hg > 0 .and. allocated(s%cg)) call output_matrix(o, p, g, "Cg", s%cg, k)
   if (p%f_out_hs > 0) call output_matrix(o, p, g, "Hs", s%hs, k)       ! 土砂柱状量 (m。§28.9)
   ! 流動流木・堆積流木 (m3/m2。fn_driftwood 有効時のみ = 前提検証は
   ! m_driftwood_init。§50)
