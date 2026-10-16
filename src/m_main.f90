@@ -255,9 +255,9 @@ subroutine init_instance(fn_param, align)
     call init_resultdir(p)
 
     ! モジュールを初期化
-    ! ==== 初期化ゾーン1: 地形・マスク類(z,x,sw,rw)は全ランク全域、
-    !      物性係数(rn,gv,bb,lm,rscap,lu)は rank0 のみ全域(方式2)。
-    !      係数を使うフック・前処理は rank0 実行(m_geoinfo_init 内) ====
+    ! ==== 初期化ゾーン1: マスク類(x,sw,rw)は全ランク全域、地形 z は全ランク
+    !      窓形(窓±ハロ。§82)、物性係数(rn,gv,bb,lm,rscap)は rank0 のみ窓形
+    !      (方式2)。係数を使うフック・前処理は rank0 実行(m_geoinfo_init 内) ====
     call m_geoinfo_init(g, p)               ! geoinfo を初期化
     ! 全域窓を帯分割(行ごとの有効セル数を重みとして帯幅を調整。
     ! 列島形状の行間偏りによるランク間不均衡の対策。§11)
@@ -269,7 +269,7 @@ subroutine init_instance(fn_param, align)
     end block decomp
     call m_geoinfo_scatter_coeffs(g)        ! 物性係数を rank0 から帯+ハロへ配布
 
-    ! ==== 初期化ゾーン2: 地形とマスク類(z, x, sw, rw)のみ全域
+    ! ==== 初期化ゾーン2: マスク類(x, sw, rw)のみ全域、z と ts は窓形
     !      (fill_depression, user_initial, record/boundary の検証はこの範囲) ====
     call m_boundary_init(b, p, g)           ! boundary を初期化(geoinfoより後に)
     call m_state_init(s, p, g)              ! state を初期化(geoinfo, boundaryより後に)

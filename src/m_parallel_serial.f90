@@ -63,6 +63,9 @@ module m_parallel
       integer :: ish = 1         ! 配列確保範囲の開始 i(全域の列窓±ハロ。全域端でクリップ。
                                  !   x は分割しないので全ランク同一。developer.md §80)
       integer :: ieh = 0         ! 配列確保範囲の終了 i
+      integer :: jwh1 = 1        ! 全域の行窓±ハロの開始 j(= g%jwh(1)。rank0 の窓形配列の
+                                 !   確保範囲。全ランクの jsh..jeh を含む。developer.md §82)
+      integer :: jwh2 = 0        ! 同終了 j
       integer :: rank_n = -1     ! j+側の隣接ランク(なければ負)
       integer :: rank_s = -1     ! j-側の隣接ランク(なければ負)
       integer :: nhalo = 2       ! ハロ幅(セル行。移流項のステンシル幅2による)
@@ -110,6 +113,8 @@ contains
       dcp%jeh = min(ny, jw2 + dcp%nhalo)
       dcp%ish = max(1, iw1 - dcp%nhalo)
       dcp%ieh = min(nx, iw2 + dcp%nhalo)
+      dcp%jwh1 = dcp%jsh
+      dcp%jwh2 = dcp%jeh
       dcp%rank_n = -1
       dcp%rank_s = -1
    end subroutine par_decomp_init
@@ -233,16 +238,16 @@ contains
    end subroutine par_gather_edge_to
 
    subroutine par_scatter_cell(buf, a)
-      ! rank0 全域バッファからの帯配布(gather の逆向き)。
-      ! 逐次では確保範囲(=全域窓±ハロ)を複写する。
-      real, intent(in) :: buf(1:, 1:)
+      ! rank0 の窓形バッファ buf(ish:ieh, jwh1:jwh2) からの帯配布(gather の
+      ! 逆向き)。逐次では確保範囲(=全域窓±ハロ)を複写する。
+      real, intent(in) :: buf(dcp%ish:, dcp%jwh1:)
       real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
       a(:, dcp%jsh:dcp%jeh) = buf(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
    end subroutine par_scatter_cell
 
    subroutine par_scatter_cell_i(buf, a)
       ! par_scatter_cell の整数版
-      integer, intent(in) :: buf(1:, 1:)
+      integer, intent(in) :: buf(dcp%ish:, dcp%jwh1:)
       integer, intent(inout) :: a(dcp%ish:, dcp%jsh:)
       a(:, dcp%jsh:dcp%jeh) = buf(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
    end subroutine par_scatter_cell_i

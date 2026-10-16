@@ -4,7 +4,7 @@ module m_geoinfo
   use m_sysparam, only : t_sysparam
   use list_geoinfo, only : t_list_geoinfo, list_geoinfo_read
   use list_channel, only : t_list_channel, list_channel_read
-  use m_fileio, only : fileio_read_matrix, e_fmt_bil, e_fmt_gtif
+  use m_fileio, only : fileio_read_matrix, fileio_read_window, e_fmt_bil, e_fmt_gtif
   use m_georef, only : t_georef, georef_hdr_name, georef_read_hdr, georef_est_cellsize_m
   use m_geotiff, only : t_gtif_info, gtif_inquire
   use m_util, only : itoa, param_default
@@ -73,6 +73,10 @@ module m_geoinfo
     integer :: n_valcells = 0                         ! 計算対象セル数(海域除く)
     integer :: wy(1:2)                                ! 行の計算対象範囲
     integer :: wxg(1:2)                               ! 列の全域窓(窓の行の wx の最小・最大。確保範囲 ish/ieh の元)
+    integer :: iwh(1:2)                               ! 窓形配列の確保範囲 i = 列窓±ハロ(全域端でクリップ。
+                                                      !   dcp%ish/ieh と同値。z・係数・ts の全域添字の窓形。§82)
+    integer :: jwh(1:2)                               ! 窓形配列の確保範囲 j = 行窓±ハロ(全ランク同一。
+                                                      !   各ランクの帯+ハロ jsh..jeh を含む)
     logical :: initialized = .false.
   end type
 
@@ -120,14 +124,18 @@ subroutine m_geoinfo_init(g, p)
   if (len_trim(p%fn_channel) > 0) call list_channel_read(p, chlist)
   call set_params(p, g, list)
 
-  ! 方式2(rank0 読み込み+帯配布): 物性係数(rn, gv, bb, lm, rscap)は
-  ! rank0 のみが全域を確保・構築し、par_decomp_init 後に
-  ! m_geoinfo_scatter_coeffs で各ランクの帯+ハロへ配布する。
-  ! 地形・マスク類(z, x, sw, rw)はゾーン2の冗長処理が使うため、
-  ! 従来どおり全ランクが全域を構築する(ゾーン2の rank0 化は第2段。handoff 参照)
-  call allocate_arrays(g)
+  ! マスク類(x, sw, rw)は全ランクが全域(int)を構築する(窓を決めるのに
+  ! 全域が要る。ゾーン2の冗長処理もこれを全域添字で読む)。
+  ! 実数ラスタは「マスク類 → 窓確定 → 窓形で確保し窓だけ読む」の順(§82):
+  ! z は全ランクが窓形 (iwh, jwh) = 窓±ハロ、物性係数(rn, gv, bb, lm, rscap)は
+  ! 方式2で rank0 のみが窓形を構築し、par_decomp_init 後に
+  ! m_geoinfo_scatter_coeffs で各ランクの帯+ハロへ配布する
+  call allocate_masks(g)
   call read_sw(p, g, list)     ! read_maskよりも先に実行する
   call read_mask(p, g, list)
+  call calc_wxy(p, g)          ! 窓の確定(マスクから)
+  if (g%wy(1) > g%wy(2)) call par_stop("geoinfo: no valid cell in the entire domain")
+  call allocate_window(g)
   call read_z(p, g, list)
   call read_rw(p, g, list)
   if (is_root) then
@@ -139,11 +147,13 @@ subroutine m_geoinfo_init(g, p)
   call adjust_rw(p, g, list)
 
   ! user フック: 名前の検証は全ランク(par_stop は collective)。実行は
-  ! 係数を含む全配列を持つ rank0 のみで、「全域添字で書く」契約は無変更。
+  ! 係数を含む全配列を持つ rank0 のみ。契約は「全域添字で、配列の確保範囲
+  ! (窓形)の中に書く」(docs/users_guide/user_routines.md。§82)。
   ! 指定は f_user_routine(識別名。trim 後完全一致)。
   ! 個々のルーチンへの分岐は user_geoinfo submodule 内。
   ! フックが地形・マスク類を変更した可能性があるため、実行後に rank0 から
-  ! 再配布する(フック無指定なら通信なし)。
+  ! 再配布し(フック無指定なら通信なし)、マスクが変わっていれば窓を
+  ! 取り直す(窓が広がる変更 = 読んでいない範囲が有効になる変更は停止)。
   ! 注意: フック内から par_stop を呼んではならない(rank0 のみで実行される
   ! ため collective が成立しない。エラーは par_abort を使うこと)
   if (len_trim(list%f_user_routine) > 0) then
@@ -156,6 +166,7 @@ subroutine m_geoinfo_init(g, p)
     call par_bcast_cell_i(g%x)
     call par_bcast_cell_i(g%sw)
     call par_bcast_cell_i(g%rw)
+    call refit_window(p, g, list)
   end if
 
 
@@ -176,10 +187,7 @@ subroutine m_geoinfo_init(g, p)
                   //" not available (give location info via bil+hdr or GeoTIFF input)")
   end if
 
-  call calc_wxy(p, g)
   call count_valcells(p, g)
-
-
 
   g%initialized = .true.
 
@@ -262,9 +270,9 @@ end subroutine
 !   (帯内の大域添字はそのまま有効。旧 shrink_coeffs と同じ規約)。
 !   係数を使う全域前処理は m_geoinfo_init 内(=この呼び出しより前)の
 !   rank0 実行部に書くこと。
-!   注意: マスク類(x, sw, rw)と z はここで配布しない。fill_depression
-!   (海域 sw・河道 rw を全域窓で参照)など、ゾーン2の全域処理が
-!   使うため band_shrink まで全ランクが全域を保つ(n_valcells の教訓)。
+!   注意: マスク類(x, sw, rw。全域)と z(窓形)はここで配布しない。
+!   fill_depression(海域 sw・河道 rw を全域窓で参照)など、ゾーン2の
+!   冗長処理が使うため band_shrink まで全ランクが保つ(n_valcells の教訓)。
 !   行メタデータ wx, wy は微小なので恒久的に全域のまま保持する。
 !----------------------------------------------------------------------
 subroutine m_geoinfo_scatter_coeffs(g)
@@ -658,28 +666,77 @@ subroutine resolve_geometry(g)
 end subroutine
 
 !----------------------------------------------------------------------
-! 地理情報構造体中の配列を確保
+! マスク類(x, sw, rw)と行窓 wx を確保する(全ランクが全域。int)
 !----------------------------------------------------------------------
-subroutine allocate_arrays(g)
+subroutine allocate_masks(g)
   type(t_geoinfo), intent(inout) :: g
-  ! 地形・マスク類: 全ランクが全域を確保(ゾーン2の冗長処理が使う)
-  allocate(g%z(1:g%nx,1:g%ny), source = 0.0)
   allocate(g%x(0:g%nx+1,0:g%ny+1), source = 0)   ! 領域マスクは全て領域外で初期化
   allocate(g%sw(1:g%nx,1:g%ny), source = 0)
   allocate(g%rw(1:g%nx,1:g%ny), source = 0)
   allocate(g%wx(1:2,1:g%ny))
-  ! 物性係数: rank0 のみ全域を確保(方式2)。非 root は scatter_coeffs で
-  ! 帯確保するため、それまで係数に触れてはならない。
-  ! ファイル無指定時の既定値はこの source 値が正本(rank0 の値が配布される)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 窓形の実数ラスタを確保する(calc_wxy で iwh/jwh が決まった後。§82)
+!   z は全ランク(ゾーン2の冗長処理が窓内を全域添字で読む)。
+!   物性係数は rank0 のみ(方式2)。非 root は scatter_coeffs で帯確保する
+!   ため、それまで係数に触れてはならない。
+!   ファイル無指定時の既定値はこの source 値が正本(rank0 の値が配布される)
+!----------------------------------------------------------------------
+subroutine allocate_window(g)
+  type(t_geoinfo), intent(inout) :: g
+  associate (i1 => g%iwh(1), i2 => g%iwh(2), j1 => g%jwh(1), j2 => g%jwh(2))
+  allocate(g%z(i1:i2, j1:j2), source = 0.0)
   if (.not. is_root) return
-  allocate(g%rn(1:g%nx,1:g%ny), source = 0.0)
-  allocate(g%gv(1:g%nx,1:g%ny), source = 1.0)    ! 空隙率は1.0で初期化
-  allocate(g%bb(1:g%nx,1:g%ny), source = 1.e10)  ! 家屋サイズは大きな値で初期化
-  allocate(g%lm(1:g%nx,1:g%ny), source = 1.0)    ! 有効慣性係数は1.0で初期化
-  allocate(g%rscap(1:g%nx,1:g%ny), source = 0.0) ! ため池の深さは0.0で初期化
+  allocate(g%rn(i1:i2, j1:j2), source = 0.0)
+  allocate(g%gv(i1:i2, j1:j2), source = 1.0)    ! 空隙率は1.0で初期化
+  allocate(g%bb(i1:i2, j1:j2), source = 1.e10)  ! 家屋サイズは大きな値で初期化
+  allocate(g%lm(i1:i2, j1:j2), source = 1.0)    ! 有効慣性係数は1.0で初期化
+  allocate(g%rscap(i1:i2, j1:j2), source = 0.0) ! ため池の深さは0.0で初期化
   ! 土層厚は分布指定が有効なときだけ確保する(固定値運用の遅延確保は
   ! m_geoinfo_require_sd。gwflow が使わなければ一切確保しない)
-  if (g%sd_dist) allocate(g%sd(1:g%nx,1:g%ny), source = 0.0)
+  if (g%sd_dist) allocate(g%sd(i1:i2, j1:j2), source = 0.0)
+  end associate
+end subroutine
+
+
+!----------------------------------------------------------------------
+! user フックの後に窓を取り直す(§82)
+!   フックは x を書き換えてよいが、窓形で読み込み済みの範囲(iwh, jwh)の外を
+!   有効にすることはできない(その範囲の z・係数はファイルから読んでいない)。
+!   窓が狭まったときは窓形配列をその窓に合わせて縮める(scatter の受け渡し
+!   範囲 dcp%ish/ieh・jwh1/jwh2 と確保範囲を一致させるため)
+!----------------------------------------------------------------------
+subroutine refit_window(p, g, list)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(inout) :: g
+  type(t_list_geoinfo), intent(in) :: list
+  integer :: iwh0(1:2), jwh0(1:2)
+  iwh0 = g%iwh
+  jwh0 = g%jwh
+  call calc_wxy(p, g)
+  if (g%wy(1) > g%wy(2)) call par_stop("geoinfo: no valid cell after user routine " &
+                                       //trim(list%f_user_routine))
+  if (g%iwh(1) < iwh0(1) .or. g%iwh(2) > iwh0(2) .or. &
+      g%jwh(1) < jwh0(1) .or. g%jwh(2) > jwh0(2)) then
+    call par_stop("geoinfo: user routine "//trim(list%f_user_routine)// &
+                  " made cells valid outside the window read from the domain mask (" &
+                  //itoa(iwh0(1))//":"//itoa(iwh0(2))//", "//itoa(jwh0(1))//":"//itoa(jwh0(2)) &
+                  //"); extend the domain mask (fn_mask) to cover them instead")
+  end if
+  if (all(g%iwh == iwh0) .and. all(g%jwh == jwh0)) return
+  associate (i1 => g%iwh(1), i2 => g%iwh(2), j1 => g%jwh(1), j2 => g%jwh(2))
+  call shrink_band_r(g%z, i1, i2, j1, j2)
+  if (.not. is_root) return
+  call shrink_band_r(g%rn, i1, i2, j1, j2)
+  call shrink_band_r(g%gv, i1, i2, j1, j2)
+  call shrink_band_r(g%bb, i1, i2, j1, j2)
+  call shrink_band_r(g%lm, i1, i2, j1, j2)
+  call shrink_band_r(g%rscap, i1, i2, j1, j2)
+  if (allocated(g%sd)) call shrink_band_r(g%sd, i1, i2, j1, j2)
+  if (allocated(g%drw)) call shrink_band_r(g%drw, i1, i2, j1, j2)
+  end associate
 end subroutine
 
 
@@ -830,17 +887,30 @@ subroutine read_z(p, g, list)
   else
     fname = trim(p%dir_data) // "/" // trim(list%fn_z)
     call par_info(" reading "//fname)
-    call fileio_read_matrix(fname, g%nx, g%ny, g%z, p%f_input_mode)
+    call read_window(p, g, fname, g%z)
     g%z(:,:) = g%z(:,:) * list%mag_z
   end if
 
   ! 海域の標高を0に強制
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = g%jwh(1), g%jwh(2)
+    do i = g%iwh(1), g%iwh(2)
       if (g%sw(i,j) > 0) g%z(i,j) = 0
     end do
   end do
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 窓形の実数ラスタ a(iwh, jwh) をファイルの窓部分で埋める(§82)
+!----------------------------------------------------------------------
+subroutine read_window(p, g, fname, a)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  character(len=*), intent(in) :: fname
+  real, intent(inout) :: a(g%iwh(1):, g%jwh(1):)
+  call fileio_read_window(fname, g%nx, g%ny, g%iwh(1), g%iwh(2), g%jwh(1), g%jwh(2), &
+                          a, p%f_input_mode)
 end subroutine
 
 
@@ -874,17 +944,17 @@ subroutine read_gvbb(p, g, list)
   if (len_trim(list%fn_gv) > 0) then
     fname = trim(p%dir_data) // "/" // trim(list%fn_gv)
     call par_info(" reading "//fname)
-    call fileio_read_matrix(fname, g%nx, g%ny, g%gv, p%f_input_mode)
+    call read_window(p, g, fname, g%gv)
   end if
 
   if (len_trim(list%fn_bb) > 0) then
     fname = trim(p%dir_data) // "/" // trim(list%fn_bb)
     call par_info(" reading "//fname)
-    call fileio_read_matrix(fname, g%nx, g%ny, g%bb, p%f_input_mode)
+    call read_window(p, g, fname, g%bb)
   end if
 
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = g%jwh(1), g%jwh(2)
+    do i = g%iwh(1), g%iwh(2)
       g%gv(i,j) = max(g%gv(i,j), g%min_gv)
       g%bb(i,j) = max(g%bb(i,j), g%min_bb)
       g%lm(i,j) = g%gv(i,j) + (1 - g%gv(i,j)) * p%cm
@@ -906,7 +976,7 @@ subroutine read_rscap(p, g, list)
   if (len_trim(list%fn_rscap) > 0) then
     fname = trim(p%dir_data) // "/" // trim(list%fn_rscap)
     call par_info(" reading "//fname)
-    call fileio_read_matrix(fname, g%nx, g%ny, g%rscap, p%f_input_mode)
+    call read_window(p, g, fname, g%rscap)
   end if
 
 end subroutine
@@ -927,10 +997,10 @@ subroutine read_sd(p, g, list)
 
   fname = trim(p%dir_data) // "/" // trim(list%fn_sd)
   call par_info(" reading "//fname)
-  call fileio_read_matrix(fname, g%nx, g%ny, g%sd, p%f_input_mode)
+  call read_window(p, g, fname, g%sd)
 
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = g%jwh(1), g%jwh(2)
+    do i = g%iwh(1), g%iwh(2)
       if (g%x(i,j) <= 0) cycle
       if (g%sd(i,j) < 0.0) then
         write(msg,'(a,2i7,es12.4)') "geoinfo: negative soil depth at", i, j, g%sd(i,j)
@@ -959,12 +1029,12 @@ subroutine read_rn(p, g, list)
     ! f_rntype=1(値の検証は set_params が実施済み)
     fname = trim(p%dir_data) // "/" // trim(list%fn_rn)
     call par_info(" reading "//fname)
-    call fileio_read_matrix(fname, g%nx, g%ny, g%rn, p%f_input_mode)
+    call read_window(p, g, fname, g%rn)
   end if
 
   if (list%f_masktype > 0) then
-    do j = 1, g%ny
-      do i = 1, g%nx
+    do j = g%jwh(1), g%jwh(2)
+      do i = g%iwh(1), g%iwh(2)
         if (g%x(i,j) == 0) then
           g%rn(i,j) = 0
         end if
@@ -978,8 +1048,8 @@ end subroutine
 !----------------------------------------------------------------------
 ! 河道マスク部を掘り込む
 !   深さは fn_depth_rw(分布。負値は 0 として扱う)があれば分布、
-!   なければ一様値 depth_rw。分布ファイルは z と同様に全ランクが読む
-!   (z は全ランクが全域保持のため)
+!   なければ一様値 depth_rw。分布ファイルは z と同様に全ランクが窓形で読む
+!   (z は全ランクが窓形を保持のため)
 !----------------------------------------------------------------------
 subroutine adjust_rw(p, g, list)
   type(t_sysparam), intent(in) :: p             ! システムパラメータ構造体
@@ -1000,19 +1070,19 @@ subroutine adjust_rw(p, g, list)
   if (.not. set_dep .and. .not. set_rn) return
   if (set_dep) then
     ! 掘り込み深さを保持する(断面形一般化 σ の遷移深さ候補。§26)
-    allocate(g%drw(1:g%nx,1:g%ny), source = 0.0)
+    allocate(g%drw(g%iwh(1):g%iwh(2), g%jwh(1):g%jwh(2)), source = 0.0)
     g%drw_active = .true.
     if (dep_dist) then
-      allocate(dep(1:g%nx,1:g%ny), source = 0.0)
+      allocate(dep(g%iwh(1):g%iwh(2), g%jwh(1):g%jwh(2)), source = 0.0)
       fname = trim(p%dir_data) // "/" // trim(list%fn_depth_rw)
       call par_info(" reading "//fname)
-      call fileio_read_matrix(fname, g%nx, g%ny, dep, p%f_input_mode)
+      call read_window(p, g, fname, dep)
     end if
   end if
-  ! z の掘り込みは全ランク(z は全ランクが全域保持)、
+  ! z の掘り込みは全ランク(z は全ランクが窓形を保持)、
   ! rn の書き換えは rank0 のみ(rn は rank0 のみ保持。方式2)
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = g%jwh(1), g%jwh(2)
+    do i = g%iwh(1), g%iwh(2)
       if (g%x(i,j) > 0 .and. g%rw(i,j) > 0) then
         if (set_dep) then
           if (dep_dist) then
@@ -1091,21 +1161,23 @@ subroutine setup_bank(p, g, list, ch)
   datum = ch%f_bank_datum
   if (.not. is_root) return
 
-  allocate(g%zbank(1:g%nx,1:g%ny), source = zbank_none)
+  associate (i1 => g%iwh(1), i2 => g%iwh(2), j1 => g%jwh(1), j2 => g%jwh(2))
+  allocate(g%zbank(i1:i2, j1:j2), source = zbank_none)
   if (bank_fixed) then
     ! 一律固定値: 全河道セルに同じ「高さ」を与える(基準変換は分布と同じ)
-    allocate(hb(1:g%nx,1:g%ny), source = ch%bank0)
+    allocate(hb(i1:i2, j1:j2), source = ch%bank0)
   else
-    allocate(hb(1:g%nx,1:g%ny), source = hb_none)
+    allocate(hb(i1:i2, j1:j2), source = hb_none)
     fname = trim(p%dir_data) // "/" // trim(ch%fn_bank)
     call par_info(" reading "//fname)
-    call fileio_read_matrix(fname, g%nx, g%ny, hb, p%f_input_mode)
+    call read_window(p, g, fname, hb)
   end if
+  end associate
 
   n_bank = 0
   n_low = 0
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = g%jwh(1), g%jwh(2)
+    do i = g%iwh(1), g%iwh(2)
       if (g%x(i,j) <= 0 .or. g%rw(i,j) <= 0 .or. g%sw(i,j) /= 0) cycle
       if (hb(i,j) <= hb_none) cycle
       select case (datum)
@@ -1119,7 +1191,8 @@ subroutine setup_bank(p, g, list, ch)
         do k = 1, 8
           in = i + din(k)
           jn = j + djn(k)
-          if (in < 1 .or. in > g%nx .or. jn < 1 .or. jn > g%ny) cycle
+          ! 窓形配列の範囲検査(有効セルの隣は窓+1 の中なので全域端以外では常に真)
+          if (in < g%iwh(1) .or. in > g%iwh(2) .or. jn < g%jwh(1) .or. jn > g%jwh(2)) cycle
           if (g%x(in,jn) <= 0) cycle
           if (g%sw(in,jn) /= 0 .or. g%rw(in,jn) /= 0) cycle
           zk = g%z(in,jn) + hb(i,j)
@@ -1229,22 +1302,24 @@ subroutine setup_seawall(p, g, list)
   if (.not. is_root) return
 
   ! --- 天端(rank0 が全域を構築 → scatter_band_r で帯配布) ---
-  allocate(g%zswall(1:g%nx,1:g%ny), source = zbank_none)
+  associate (i1 => g%iwh(1), i2 => g%iwh(2), j1 => g%jwh(1), j2 => g%jwh(2))
+  allocate(g%zswall(i1:i2, j1:j2), source = zbank_none)
   if (sw_fixed) then
     ! 一律値: 海側に接する全ての陸側セルへ自動付与(海岸線全周の壁)
-    allocate(hb(1:g%nx,1:g%ny), source = list%seawall0)
+    allocate(hb(i1:i2, j1:j2), source = list%seawall0)
   else
-    allocate(hb(1:g%nx,1:g%ny), source = hb_none)
+    allocate(hb(i1:i2, j1:j2), source = hb_none)
     fname = trim(p%dir_data) // "/" // trim(list%fn_seawall)
     call par_info(" reading "//fname)
-    call fileio_read_matrix(fname, g%nx, g%ny, hb, p%f_input_mode)
+    call read_window(p, g, fname, hb)
   end if
+  end associate
 
   n_wall = 0
   n_orph = 0
   n_rw = 0
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = g%jwh(1), g%jwh(2)
+    do i = g%iwh(1), g%iwh(2)
       if (g%x(i,j) <= 0) cycle
       if (g%ssw(i,j) > 0) cycle                 ! 海側セル自身には置かない
       if (hb(i,j) <= hb_none) cycle
@@ -1319,14 +1394,14 @@ subroutine setup_width(p, g, list, ch)
   end if
   if (.not. is_root) return
 
-  allocate(g%wrw(1:g%nx,1:g%ny), source = 0.0)
+  allocate(g%wrw(g%iwh(1):g%iwh(2), g%jwh(1):g%jwh(2)), source = 0.0)
   fname = trim(p%dir_data) // "/" // trim(ch%fn_width)
   call par_info(" reading "//fname)
-  call fileio_read_matrix(fname, g%nx, g%ny, g%wrw, p%f_input_mode)
+  call read_window(p, g, fname, g%wrw)
 
   n_width = 0
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = g%jwh(1), g%jwh(2)
+    do i = g%iwh(1), g%iwh(2)
       if (g%x(i,j) <= 0 .or. g%rw(i,j) <= 0 .or. g%sw(i,j) /= 0) then
         g%wrw(i,j) = 0.0                        ! 非河道セルの値は無効化
       else if (g%wrw(i,j) > 0.0) then
@@ -1395,6 +1470,13 @@ subroutine calc_wxy(p, g)
       g%wxg(2) = max(g%wxg(2), g%wx(2,j))
     end if
   end do
+
+  ! 窓形配列の確保範囲 = 窓±ハロ(全域端でクリップ)。par_decomp_init が
+  ! 同じ規則で dcp%ish/ieh・jwh1/jwh2 を導く(全ランク同一。§82)
+  g%iwh(1) = max(1, g%wxg(1) - dcp%nhalo)
+  g%iwh(2) = min(g%nx, g%wxg(2) + dcp%nhalo)
+  g%jwh(1) = max(1, g%wy(1) - dcp%nhalo)
+  g%jwh(2) = min(g%ny, g%wy(2) + dcp%nhalo)
 
 end subroutine
 

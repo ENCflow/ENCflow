@@ -5,7 +5,7 @@ module m_precip
   use m_geoinfo, only : t_geoinfo
   use m_meteo, only : t_meteo, meteo_prec_factor
   use m_util, only : str2sec, itoa
-  use m_fileio, only : fileio_un_open, fileio_un_read_matrix, fileio_read_matrix
+  use m_fileio, only : fileio_un_open, fileio_un_read_matrix, fileio_read_window
   use list_precip, only : t_list_precip, list_precip_read
   use m_parallel, only : par_info, par_stop, dcp
   implicit none
@@ -126,16 +126,12 @@ subroutine set_prmap
     call par_stop("list_precip: prtype=2 requires fn_prmap")
   end if
 
-  ! 降水分布の読み込み: 全域一時に読み(全ランク冗長読み込み。developer.md §11)、
-  ! 時間ループで使う帯+ハロだけを常駐させる(§81。窓読みは D2 で)
+  ! 降水分布の読み込み: 各ランクが自分の帯+ハロだけをファイルから窓読みする
+  ! (§81・§82。全域一時を持たない)
   fname = trim(p%dir_data)//"/"//trim(list%fn_prmap)
-  block
-    real, allocatable :: wk(:,:)
-    allocate(wk(1:g%nx, 1:g%ny))
-    call fileio_read_matrix(fname, g%nx, g%ny, wk, p%f_input_mode)
-    allocate(pr%prmap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh))
-    pr%prmap(:,:) = wk(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
-  end block
+  allocate(pr%prmap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh))
+  call fileio_read_window(fname, g%nx, g%ny, dcp%ish, dcp%ieh, dcp%jsh, dcp%jeh, &
+                          pr%prmap, p%f_input_mode)
 
   ! データにNaNが含まれている場合はゼロに修正(帯の中。計数は帯ごと)
   have_nan = 0

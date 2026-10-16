@@ -27,6 +27,7 @@ module m_geotiff
   public :: t_gtif_info
   public :: gtif_inquire
   public :: gtif_read
+  public :: gtif_read_window
   public :: gtif_write
   public :: gtif_write_window
 
@@ -51,6 +52,10 @@ module m_geotiff
     procedure :: gtif_read_int
   end interface
 
+  interface gtif_read_window
+    procedure :: gtif_read_window_real
+    procedure :: gtif_read_window_int
+  end interface
   interface gtif_write_window
     procedure :: gtif_write_window_real
     procedure :: gtif_write_window_int
@@ -127,7 +132,55 @@ subroutine gtif_read_real(fname, nx, ny, a, stat, msg, info)
 
   call open_parse(fname, t, stat, msg)
   if (stat == 0) call check_dims(t, nx, ny, fname, stat, msg)
-  if (stat == 0) call decode_blocks(t, .true., a, idum, fname, stat, msg)
+  if (stat == 0) call decode_blocks(t, .true., [1, nx, 1, ny], a, idum, fname, stat, msg)
+  if (present(info)) info = t%info
+  if (t%un >= 0) close(t%un)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 窓読み(実数): 全域 (nx, ny) の形式のファイルから窓 (i1:i2, j1:j2) だけを
+! a(i1:i2, j1:j2) に読む。窓に重ならない strip/tile は読まず復号もしない
+! (developer.md §82)
+!----------------------------------------------------------------------
+subroutine gtif_read_window_real(fname, nx, ny, i1, i2, j1, j2, a, stat, msg, info)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny, i1, i2, j1, j2
+  real, intent(inout) :: a(i1:, j1:)
+  integer, intent(out) :: stat
+  character(len=*), intent(out) :: msg
+  type(t_gtif_info), intent(out), optional :: info
+
+  type(t_tif) :: t
+  integer :: idum(1,1)
+
+  call open_parse(fname, t, stat, msg)
+  if (stat == 0) call check_dims(t, nx, ny, fname, stat, msg)
+  if (stat == 0) call decode_blocks(t, .true., [i1, i2, j1, j2], a, idum, fname, stat, msg)
+  if (present(info)) info = t%info
+  if (t%un >= 0) close(t%un)
+end subroutine
+
+
+subroutine gtif_read_window_int(fname, nx, ny, i1, i2, j1, j2, a, stat, msg, info)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny, i1, i2, j1, j2
+  integer, intent(inout) :: a(i1:, j1:)
+  integer, intent(out) :: stat
+  character(len=*), intent(out) :: msg
+  type(t_gtif_info), intent(out), optional :: info
+
+  type(t_tif) :: t
+  real :: rdum(1,1)
+
+  call open_parse(fname, t, stat, msg)
+  if (stat == 0) call check_dims(t, nx, ny, fname, stat, msg)
+  if (stat == 0) then
+    if (t%sfmt == 3) then
+      call set_err(stat, msg, "float GeoTIFF cannot be read as integer input: "//trim(fname))
+    end if
+  end if
+  if (stat == 0) call decode_blocks(t, .false., [i1, i2, j1, j2], rdum, a, fname, stat, msg)
   if (present(info)) info = t%info
   if (t%un >= 0) close(t%un)
 end subroutine
@@ -154,7 +207,7 @@ subroutine gtif_read_int(fname, nx, ny, a, stat, msg, info)
       call set_err(stat, msg, "float GeoTIFF cannot be read as integer input: "//trim(fname))
     end if
   end if
-  if (stat == 0) call decode_blocks(t, .false., rdum, a, fname, stat, msg)
+  if (stat == 0) call decode_blocks(t, .false., [1, nx, 1, ny], rdum, a, fname, stat, msg)
   if (present(info)) info = t%info
   if (t%un >= 0) close(t%un)
 end subroutine
@@ -577,12 +630,14 @@ end subroutine
 !----------------------------------------------------------------------
 ! 全ブロック(strip/tile)を復号して出力配列に展開する
 !   want_real: .true. なら ar へ、.false. なら ai へ書く
+!   win: 読む窓 (i1, i2, j1, j2)(全域添字)。配列は窓を含む形で渡す
 !----------------------------------------------------------------------
-subroutine decode_blocks(t, want_real, ar, ai, fname, stat, msg)
+subroutine decode_blocks(t, want_real, win, ar, ai, fname, stat, msg)
   type(t_tif), intent(in) :: t
   logical, intent(in) :: want_real
-  real, intent(inout) :: ar(:,:)
-  integer, intent(inout) :: ai(:,:)
+  integer, intent(in) :: win(4)               ! 読む窓 (i1, i2, j1, j2)。全域なら (1, nx, 1, ny)
+  real, intent(inout) :: ar(win(1):, win(3):)
+  integer, intent(inout) :: ai(win(1):, win(3):)
   character(len=*), intent(in) :: fname
   integer, intent(out) :: stat
   character(len=*), intent(out) :: msg
@@ -626,6 +681,9 @@ subroutine decode_blocks(t, want_real, ar, ai, fname, stat, msg)
     by = (ib-1) / ntx
     cols = min(t%bw, t%nx - bx*t%bw)
     rows = min(t%bh, t%ny - by*t%bh)
+    ! 窓に重ならないブロックは読まない(窓読みの省力。全域窓では常に重なる)
+    if (bx*t%bw + 1 > win(2) .or. bx*t%bw + cols < win(1) .or. &
+        by*t%bh + 1 > win(4) .or. by*t%bh + rows < win(3)) cycle
     if (t%tiled) then
       need = int(t%bw, int64) * t%bh * bpb ! tile は端数でも常にフルサイズ
     else
@@ -681,8 +739,10 @@ subroutine decode_blocks(t, want_real, ar, ai, fname, stat, msg)
     ! 有効域を出力配列へ(TIFF の行 1 = 北端。既存 txt/bil と同じ並び)
     do r = 1, rows
       gy = by*t%bh + r
+      if (gy < win(3) .or. gy > win(4)) cycle
       do c = 1, cols
         gx = bx*t%bw + c
+        if (gx < win(1) .or. gx > win(2)) cycle
         pos = (int(r-1, int64)*t%bw + (c-1)) * bpb
         if (want_real) then
           call sample_real(ubuf, pos, t%bits, t%sfmt, be_eff, rv)

@@ -84,6 +84,9 @@ module m_parallel
       integer :: ish = 1         ! 配列確保範囲の開始 i(全域の列窓±ハロ。全域端でクリップ。
                                  !   x は分割しないので全ランク同一。developer.md §80)
       integer :: ieh = 0         ! 配列確保範囲の終了 i
+      integer :: jwh1 = 1        ! 全域の行窓±ハロの開始 j(= g%jwh(1)。rank0 の窓形配列の
+                                 !   確保範囲。全ランクの jsh..jeh を含む。developer.md §82)
+      integer :: jwh2 = 0        ! 同終了 j
       integer :: rank_n = -1     ! j+側の隣接ランク(なければ負)
       integer :: rank_s = -1     ! j-側の隣接ランク(なければ負)
       integer :: nhalo = 2       ! ハロ幅(セル行。移流項のステンシル幅2による)
@@ -222,6 +225,9 @@ contains
       ! 列の確保範囲 = 全域の列窓±ハロ(全域端でクリップ。全ランク同一)
       dcp%ish = max(1, iw1 - dcp%nhalo)
       dcp%ieh = min(nx, iw2 + dcp%nhalo)
+      ! 行窓±ハロ(rank0 の窓形配列の確保範囲。全ランクの帯+ハロを含む)
+      dcp%jwh1 = max(1, jw1 - dcp%nhalo)
+      dcp%jwh2 = min(ny, jw2 + dcp%nhalo)
       dcp%rank_s = nrank - 1                            ! nrank=0 では -1(隣なし)
       dcp%rank_n = merge(nrank + 1, -1, nrank < nproc - 1)
    end subroutine par_decomp_init
@@ -607,13 +613,14 @@ contains
    end subroutine par_gather_edge_to
 
    subroutine par_scatter_cell(buf, a)
-      ! rank0 の全域バッファ buf(1:nx, 1:ny) を各ランクの帯+ハロ
-      ! a(:, jsh:jeh) へ配布する(gather の逆向き。初期化・復元用)。
+      ! rank0 の窓形バッファ buf(ish:ieh, jwh1:jwh2)(全域形 (1:nx, 1:ny) でも
+      ! よい = 窓が全域のとき)を各ランクの帯+ハロ a(:, jsh:jeh) へ配布する
+      ! (gather の逆向き。初期化・復元用。§82)。
       ! 帯+ハロは隣接ランクと重なるため Scatterv は使えず、rank0 からの
       ! 個別送信で配る(初期化の1回きりで性能は問題にならない)。
       ! rank0 以外の buf は参照されないためサイズ1のダミーでよい。
       ! 受信側 a は確保範囲(jsh:jeh)ちょうどで確保しておくこと。
-      real, intent(in) :: buf(1:, 1:)
+      real, intent(in) :: buf(dcp%ish:, dcp%jwh1:)
       real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
       integer :: r, jsh_r, jeh_r, n1
       n1 = size(a, 1)
@@ -632,7 +639,7 @@ contains
 
    subroutine par_scatter_cell_i(buf, a)
       ! par_scatter_cell の整数版(マスク・土地利用等)
-      integer, intent(in) :: buf(1:, 1:)
+      integer, intent(in) :: buf(dcp%ish:, dcp%jwh1:)
       integer, intent(inout) :: a(dcp%ish:, dcp%jsh:)
       integer :: r, jsh_r, jeh_r, n1
       n1 = size(a, 1)

@@ -7,8 +7,14 @@
 !     user_geoinfo_run     : 識別名で該当ルーチンを実行(rank0 のみで呼ばれる)
 !   分岐(resolve)と識別名簿(routine_names)はこの submodule に閉じる。
 !
-!   ルーチンの追加手順(このファイルだけで完結する):
-!     1. geoinfo_template を複製して実装する(全域添字 1:nx, 1:ny で書く契約)
+!   ルーチンの追加手順(このファイルだけで完結する。利用者向けの丁寧な
+!   説明は docs/users_guide/user_routines.md):
+!     1. geoinfo_template を複製して実装する。契約は「全域添字で、配列の
+!        確保範囲の中に書く」: g%z と物性係数(g%rn 等)は窓形(領域マスクの
+!        窓±ハロ。全域添字。developer.md §82)なので、ループは
+!        lbound/ubound(g%z) で回す(窓が全域なら 1:nx, 1:ny と同じ)。
+!        マスク類 g%x, g%sw, g%rw は全域 (1:nx, 1:ny)。x を書き換えてよいが、
+!        窓の外のセルを有効 (x=1) にはできない(読んでいない範囲。本体が停止する)
 !     2. routine_names に識別名を登録する(snake_case)
 !     3. resolve の select case に分岐を1行追加する
 !
@@ -195,8 +201,8 @@ subroutine geoinfo_gaussian_hill(p, g)
   ic = (g%nx + 1) / 2
   jc = (g%ny + 1) / 2
   sigma2 = (10.0 * g%dx)**2
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = lbound(g%z, 2), ubound(g%z, 2)
+    do i = lbound(g%z, 1), ubound(g%z, 1)
       r2 = ((i - ic) * g%dx)**2 + ((j - jc) * g%dy)**2
       g%z(i,j) = amp * exp(-r2 / (2.0 * sigma2))
     end do
@@ -219,8 +225,8 @@ subroutine geoinfo_slope_break(p, g)
   real, parameter :: st = 0.4      ! 斜面勾配 tanθ
   real, parameter :: xb = 30.0     ! 遷緩点の x 座標 (m)
   if (p%initialized) continue  ! 引数未使用の警告を抑制
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = lbound(g%z, 2), ubound(g%z, 2)
+    do i = lbound(g%z, 1), ubound(g%z, 1)
       x = (i - 0.5) * g%dx
       if (x < xb) then
         g%z(i,j) = st * (xb - x)
@@ -245,8 +251,8 @@ subroutine geoinfo_beach_slope(p, g)
   real, parameter :: xt = 150.0      ! 斜面の脚の x 座標 (m)
   real, parameter :: cot = 19.85     ! 斜面の cotθ
   if (p%initialized) continue  ! 引数未使用の警告を抑制
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = lbound(g%z, 2), ubound(g%z, 2)
+    do i = lbound(g%z, 1), ubound(g%z, 1)
       x = (i - 0.5) * g%dx
       g%z(i,j) = max(0.0, (x - xt) / cot)
     end do
@@ -266,8 +272,8 @@ subroutine geoinfo_shelf_slope(p, g)
   real :: x
   real, parameter :: x1 = 120.0, x2 = 130.0, zs = 0.5
   if (p%initialized) continue  ! 引数未使用の警告を抑制
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = lbound(g%z, 2), ubound(g%z, 2)
+    do i = lbound(g%z, 1), ubound(g%z, 1)
       x = (i - 0.5) * g%dx
       g%z(i,j) = zs * min(max((x - x1) / (x2 - x1), 0.0), 1.0)
     end do
@@ -285,8 +291,8 @@ subroutine geoinfo_channel_slope(p, g)
   real :: x
   real, parameter :: slope = 2.25e-4
   if (p%initialized) continue  ! 引数未使用の警告を抑制
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = lbound(g%z, 2), ubound(g%z, 2)
+    do i = lbound(g%z, 1), ubound(g%z, 1)
       x = (i - 0.5) * g%dx
       g%z(i,j) = slope * (g%lx - x)
     end do

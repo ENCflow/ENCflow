@@ -7,9 +7,13 @@
 !     user_initial_run     : 識別名で該当ルーチンを実行(全ランクで呼ばれる)
 !   分岐(resolve)と識別名簿(routine_names)はこの submodule に閉じる。
 !
-!   ルーチンの追加手順(このファイルだけで完結する):
-!     1. initial_template を複製して実装する(全域一時状態 ts に
-!        全域添字 1:nx, 1:ny で書く契約)
+!   ルーチンの追加手順(このファイルだけで完結する。利用者向けの丁寧な
+!   説明は docs/users_guide/user_routines.md):
+!     1. initial_template を複製して実装する。契約は「全域添字で、配列の
+!        確保範囲の中に書く」: 受け取る s は窓形の全域一時状態 ts
+!        (領域マスクの窓±ハロ。全域添字。developer.md §82)なので、
+!        ループは lbound/ubound(s%h) で回す(窓が全域なら 1:nx, 1:ny と同じ)。
+!        g%z も同じ窓形。マスク類 g%x, g%sw, g%rw は全域 (1:nx, 1:ny)。
 !     2. routine_names に識別名を登録する(snake_case)
 !     3. resolve の select case に分岐を1行追加する
 !======================================================================
@@ -172,8 +176,8 @@ subroutine initial_wave_hump(p, g, s)
 
   !s%h = 1.0
 
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = lbound(s%h, 2), ubound(s%h, 2)
+    do i = lbound(s%h, 1), ubound(s%h, 1)
       xx = (i - 0.5) * dx - lx / 2
       yy = (j - 0.5) * dy - lx / 2
       rr = sqrt(xx**2 + yy**2)
@@ -212,8 +216,8 @@ subroutine initial_dambreak_step(p, g, s)
   real :: xx
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = lbound(s%h, 2), ubound(s%h, 2)
+    do i = lbound(s%h, 1), ubound(s%h, 1)
       xx = (i - 0.5) * g%dx
       if (xx < g%lx / 2) then
         s%h(i,j) = max(hl - g%z(i,j), 0.0)
@@ -245,8 +249,8 @@ subroutine initial_wave_standing_x(p, g, s)
   real :: xx, pi
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   pi = acos(-1.0)
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = lbound(s%h, 2), ubound(s%h, 2)
+    do i = lbound(s%h, 1), ubound(s%h, 1)
       xx = (i - 0.5) * g%dx
       s%h(i,j) = s%h(i,j) * (1.0 + arel * cos(m * pi * xx / g%lx))
     end do
@@ -263,8 +267,8 @@ subroutine initial_wave_standing_xy(p, g, s)
   real :: xx, yy, pi
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   pi = acos(-1.0)
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = lbound(s%h, 2), ubound(s%h, 2)
+    do i = lbound(s%h, 1), ubound(s%h, 1)
       xx = (i - 0.5) * g%dx
       yy = (j - 0.5) * g%dy
       s%h(i,j) = s%h(i,j) * (1.0 + arel * cos(m * pi * xx / g%lx) * cos(m * pi * yy / g%ly))
@@ -361,8 +365,8 @@ subroutine bore_profile(p, g, s, arel)
   integer :: i, j
   real, parameter :: x0 = 100.0, lt = 4.0
   real :: hh, aa, xx, eta
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = lbound(s%h, 2), ubound(s%h, 2)
+    do i = lbound(s%h, 1), ubound(s%h, 1)
       hh = s%h(i,j)
       aa = arel * hh
       xx = (i - 0.5) * g%dx - x0
@@ -393,8 +397,8 @@ subroutine solitary_profile(p, g, s, arel)
   integer :: i, j
   real, parameter :: x0 = 50.0
   real :: hh, aa, ks, cc, xx, eta
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = lbound(s%h, 2), ubound(s%h, 2)
+    do i = lbound(s%h, 1), ubound(s%h, 1)
       hh = s%h(i,j)                 ! h0 = 静水面の標高(z = 0 基準)
       aa = arel * hh
       ks = sqrt(3.0 * aa / (4.0 * hh**3))
@@ -423,8 +427,8 @@ subroutine solitary_profile_x0(p, g, s, arel, x0)
   real, intent(in) :: arel, x0
   integer :: i, j
   real :: hh, aa, ks, cc, xx, eta
-  do j = 1, g%ny
-    do i = 1, g%nx
+  do j = lbound(s%h, 2), ubound(s%h, 2)
+    do i = lbound(s%h, 1), ubound(s%h, 1)
       hh = s%h(i,j)
       aa = arel * hh
       ks = sqrt(3.0 * aa / (4.0 * hh**3))
@@ -460,9 +464,9 @@ subroutine initial_jet_gaussian(p, g, s)
   real :: yc, yy
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   yc = 0.5 * g%ny * g%dy
-  do j = 1, g%ny
+  do j = lbound(s%h, 2), ubound(s%h, 2)
     yy = (j - 0.5) * g%dy - yc
-    do i = 1, g%nx
+    do i = lbound(s%h, 1), ubound(s%h, 1)
       if (s%h(i,j) > 0.0) then
         s%u(i,j) = u0 * exp(-yy**2 / (2.0 * sigma**2))
       else

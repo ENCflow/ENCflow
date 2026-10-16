@@ -7,7 +7,7 @@ module m_state
                        par_gather_to, par_bcast_cell
   use m_util, only : itoa, rtoa
   use m_sysdep_util, only : sysdep_mkdir
-  use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_matrix
+  use m_fileio, only : fileio_write_rle, fileio_read_rle, fileio_read_window
   use iso_fortran_env, only : output_unit, real64
   implicit none
   private
@@ -383,14 +383,18 @@ subroutine m_state_init(s, p, g)
   ts%ini%fn_hinit = list%fn_hinit
 
   ! --- 初期条件は全域一時状態 ts 上で全ランク冗長に構築する ---
-  allocate(ts%h(1:g%nx,1:g%ny), source = 0.0)
-  allocate(ts%u(1:g%nx,1:g%ny), source = 0.0)
-  allocate(ts%v(1:g%nx,1:g%ny), source = 0.0)
-  allocate(ts%z(1:g%nx,1:g%ny), source = 0.0)
-  allocate(ts%hrs(1:g%nx,1:g%ny), source = 0.0)
-  allocate(ts%hg(1:g%nx,1:g%ny), source = 0.0)
-  allocate(ts%sd(1:g%nx,1:g%ny), source = 0.0)
-  allocate(ts%hs(1:g%nx,1:g%ny), source = 0.0)
+  ! 窓形(窓±ハロ。全域添字。全ランク同形なので par_bcast_cell が成立する。
+  ! 各ランクの帯+ハロを含む。§82)
+  associate (i1 => g%iwh(1), i2 => g%iwh(2), j1 => g%jwh(1), j2 => g%jwh(2))
+  allocate(ts%h(i1:i2, j1:j2), source = 0.0)
+  allocate(ts%u(i1:i2, j1:j2), source = 0.0)
+  allocate(ts%v(i1:i2, j1:j2), source = 0.0)
+  allocate(ts%z(i1:i2, j1:j2), source = 0.0)
+  allocate(ts%hrs(i1:i2, j1:j2), source = 0.0)
+  allocate(ts%hg(i1:i2, j1:j2), source = 0.0)
+  allocate(ts%sd(i1:i2, j1:j2), source = 0.0)
+  allocate(ts%hs(i1:i2, j1:j2), source = 0.0)
+  end associate
 
   call m_state_updatetime(s, p, 0)
   call set_z(p, g, ts)
@@ -885,28 +889,31 @@ end subroutine
 subroutine set_h(p, g, s)
   ! f_htype 0: 水深固定 h0 / 1: 水深ファイル / 2: 水位固定 e0 /
   ! 3: 水位ファイル。水位指定は h = max(η − z, 0)(z は set_z 済みの s%z)。
-  ! 分布ファイルは全ランク冗長の全域読み(ゾーン2。prtype3 と同じ流儀)
+  ! 分布ファイルは全ランク冗長の窓読み(ゾーン2)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   type(t_state), intent(inout) :: s
   real, allocatable :: wk(:,:)
   integer :: i, j
 
+  ! s は窓形の全域一時 ts(窓の外に有効セルはない。§82)
+  associate (i1 => g%iwh(1), i2 => g%iwh(2), j1 => g%jwh(1), j2 => g%jwh(2))
   select case (s%ini%f_htype)
     case (0)      ! 水深固定値
-      forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%h(i,j) = s%ini%h0
+      forall(i=i1:i2, j=j1:j2, g%x(i,j) > 0) s%h(i,j) = s%ini%h0
     case (1)      ! 水深ファイル
       call read_hinit(p, g, s%ini, wk)
-      forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%h(i,j) = max(wk(i,j), 0.0)
+      forall(i=i1:i2, j=j1:j2, g%x(i,j) > 0) s%h(i,j) = max(wk(i,j), 0.0)
     case (2)      ! 水位固定値
-      forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%h(i,j) = max(s%ini%e0 - s%z(i,j), 0.0)
+      forall(i=i1:i2, j=j1:j2, g%x(i,j) > 0) s%h(i,j) = max(s%ini%e0 - s%z(i,j), 0.0)
     case (3)      ! 水位ファイル
       call read_hinit(p, g, s%ini, wk)
-      forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%h(i,j) = max(wk(i,j) - s%z(i,j), 0.0)
+      forall(i=i1:i2, j=j1:j2, g%x(i,j) > 0) s%h(i,j) = max(wk(i,j) - s%z(i,j), 0.0)
     case default
       call par_stop("list_initial: f_htype must be 0(fixed depth), 1(depth file), " &
                     //"2(fixed water level) or 3(water level file): "//itoa(s%ini%f_htype))
   end select
+  end associate
   if (s%ini%f_fill_depres > 0)  call fill_depression(p, g, s)
   if (s%ini%h0_rw > 0.0) call adjust_h0rw(p, g, s)
 
@@ -914,7 +921,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 初期水深/水位の分布ファイルを読む(全ランク冗長。ゾーン2)
+! 初期水深/水位の分布ファイルを窓形で読む(全ランク冗長。ゾーン2。§82)
 !----------------------------------------------------------------------
 subroutine read_hinit(p, g, ini, wk)
   type(t_sysparam), intent(in) :: p
@@ -925,9 +932,9 @@ subroutine read_hinit(p, g, ini, wk)
     call par_stop("list_initial: f_htype="//itoa(ini%f_htype) &
                   //" requires fn_hinit")
   end if
-  allocate(wk(1:g%nx,1:g%ny), source = 0.0)
-  call fileio_read_matrix(trim(p%dir_data)//"/"//trim(ini%fn_hinit), &
-                          g%nx, g%ny, wk, p%f_input_mode)
+  allocate(wk(g%iwh(1):g%iwh(2), g%jwh(1):g%jwh(2)), source = 0.0)
+  call fileio_read_window(trim(p%dir_data)//"/"//trim(ini%fn_hinit), g%nx, g%ny, &
+                          g%iwh(1), g%iwh(2), g%jwh(1), g%jwh(2), wk, p%f_input_mode)
 end subroutine
 
 !----------------------------------------------------------------------
@@ -1070,8 +1077,8 @@ subroutine set_uv(p, g, s)
   type(t_state), intent(inout) :: s
   integer :: i, j
   if (p%initialized) continue  ! 引数未使用の警告を抑制
-  forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%u(i,j) = s%ini%u0
-  forall(i=1:g%nx, j=1:g%ny, g%x(i,j) > 0) s%v(i,j) = s%ini%v0
+  forall(i=g%iwh(1):g%iwh(2), j=g%jwh(1):g%jwh(2), g%x(i,j) > 0) s%u(i,j) = s%ini%u0
+  forall(i=g%iwh(1):g%iwh(2), j=g%jwh(1):g%jwh(2), g%x(i,j) > 0) s%v(i,j) = s%ini%v0
 end subroutine
 
 
@@ -1150,6 +1157,7 @@ subroutine restore_state(p, s)
   type(t_sysparam), intent(in) :: p
   type(t_state), intent(inout) :: s
   integer :: un
+  real, allocatable :: wk(:,:)      ! 全域の復号一時(rank0 のみ。D3 で撤去)
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (s%initialized) continue  ! 引数未使用の警告を抑制
   ! 門番: メタデータを検証してから読む(不一致は par_stop)。
@@ -1157,19 +1165,23 @@ subroutine restore_state(p, s)
   ! に取り込む(m_state_init が帯切り出し時に正準 s へ写す)
   call check_save_info(p, s)
 
-  ! rank0 が読み、全ランクへ配布する。受け取る s は全域一時状態 ts
-  ! (全ランク同形)なので Bcast が成立する。帯への切り出しは呼び出し側
+  ! rank0 が読み、全ランクへ配布する。受け取る s は窓形の全域一時状態 ts
+  ! (全ランク同形)なので Bcast が成立する。帯への切り出しは呼び出し側。
+  ! save は全域の RLE なので、全域の一時 1 枚に復号してから窓を写す
+  ! (復号のストリーミング化 = 全域一時の撤去は D3。§82)
   if (is_root) then
+    allocate(wk(1:dcp%nx_g, 1:dcp%ny_g))
     open(newunit=un, file=trim(p%dir_save)//'/state.dat', form='unformatted', status='old')
     ! 読み並びは save_state の書き込み順(h, z, hrs, hg, sd, hs)と一致させること。
     ! 成分を足すときは save と restore を必ず同時に更新する
-    call fileio_read_rle(un, s%h)
-    call fileio_read_rle(un, s%z)
-    call fileio_read_rle(un, s%hrs)
-    call fileio_read_rle(un, s%hg)
-    call fileio_read_rle(un, s%sd)
-    call fileio_read_rle(un, s%hs)
+    call read_one(s%h)
+    call read_one(s%z)
+    call read_one(s%hrs)
+    call read_one(s%hg)
+    call read_one(s%sd)
+    call read_one(s%hs)
     close(un)
+    deallocate(wk)
   end if
   call par_bcast_cell(s%h)
   call par_bcast_cell(s%z)
@@ -1177,6 +1189,18 @@ subroutine restore_state(p, s)
   call par_bcast_cell(s%hg)
   call par_bcast_cell(s%sd)
   call par_bcast_cell(s%hs)
+
+contains
+
+  subroutine read_one(a)
+    real, intent(inout) :: a(:,:)     ! 窓形(下限は lbound で受ける)
+    integer :: i1, j1
+    call fileio_read_rle(un, wk)
+    i1 = lbound(s%h, 1)
+    j1 = lbound(s%h, 2)
+    a(:,:) = wk(i1:i1 + size(a, 1) - 1, j1:j1 + size(a, 2) - 1)
+  end subroutine
+
 end subroutine
 
 

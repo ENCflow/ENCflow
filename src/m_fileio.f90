@@ -1,6 +1,6 @@
 module m_fileio
   use, intrinsic :: iso_fortran_env, only: real32, int8, int16, int32, int64
-  use m_geotiff, only : gtif_read, gtif_write, gtif_write_window, t_gtif_info
+  use m_geotiff, only : gtif_read, gtif_read_window, gtif_write, gtif_write_window, t_gtif_info
   use m_georef, only : t_georef, t_esri_hdr, georef_hdr_name, georef_parse_hdr
   use m_util, only : itoa
   use m_parallel, only : par_abort
@@ -9,6 +9,7 @@ module m_fileio
   private
 
   public :: fileio_read_matrix
+  public :: fileio_read_window
   public :: fileio_write_matrix
   public :: fileio_write_window
   public :: fileio_un_open
@@ -21,6 +22,11 @@ module m_fileio
   interface fileio_read_matrix
     procedure :: fileio_read_matrix_int
     procedure :: fileio_read_matrix_real
+  end interface
+
+  interface fileio_read_window
+    procedure :: fileio_read_window_int
+    procedure :: fileio_read_window_real
   end interface
 
   interface fileio_write_matrix
@@ -182,6 +188,270 @@ subroutine fileio_read_matrix_int(fname, nx, ny, a, e_fmt)
       close(un)
   end select
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+!----------------------------------------------------------------------
+!----------------------------------------------------------------------
+! 窓つき読み込み(全域 (nx, ny) の形式のファイルから、窓 (i1:i2, j1:j2) の
+! 部分だけを a(i1:i2, j1:j2) に読む。a の確保範囲は窓以上なら何でもよい。
+! メモリは 1 行分(text・bil)、または 1 ブロック分(GeoTIFF)。
+! text は窓の最終行 j2 までを 1 行ずつ読んで窓の列を写す(j2 より後の行は
+! 読まない)。bil は窓の行だけを位置指定で読む。GeoTIFF は窓に重なる
+! strip/tile だけを復号する。窓 = 全域なら fileio_read_matrix と同じ値。
+! developer.md §82)
+!----------------------------------------------------------------------
+subroutine fileio_read_window_int(fname, nx, ny, i1, i2, j1, j2, a, e_fmt)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny, i1, i2, j1, j2
+  integer, intent(inout) :: a(i1:, j1:)
+  integer, intent(in) :: e_fmt
+  integer :: un
+
+  call check_window(fname, nx, ny, i1, i2, j1, j2)
+  select case (e_fmt)
+    case (e_fmt_bil)
+      call read_bil_int_window(fname, nx, ny, i1, i2, j1, j2, a)
+    case (e_fmt_gtif)
+      call read_gtif_int_window(fname, nx, ny, i1, i2, j1, j2, a)
+    case default
+      un = open_old_text(fname)
+      call read_textwindow_int(un, nx, i1, i2, j1, j2, a)
+      close(un)
+  end select
+end subroutine
+
+
+subroutine fileio_read_window_real(fname, nx, ny, i1, i2, j1, j2, a, e_fmt)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny, i1, i2, j1, j2
+  real, intent(inout) :: a(i1:, j1:)
+  integer, intent(in) :: e_fmt
+  integer :: un
+
+  call check_window(fname, nx, ny, i1, i2, j1, j2)
+  select case (e_fmt)
+    case (e_fmt_bil)
+      call read_bil_real_window(fname, nx, ny, i1, i2, j1, j2, a)
+    case (e_fmt_gtif)
+      call read_gtif_real_window(fname, nx, ny, i1, i2, j1, j2, a)
+    case default
+      un = open_old_text(fname)
+      call read_textwindow_real(un, nx, i1, i2, j1, j2, a)
+      close(un)
+  end select
+end subroutine
+
+
+subroutine check_window(fname, nx, ny, i1, i2, j1, j2)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny, i1, i2, j1, j2
+  if (i1 < 1 .or. i2 > nx .or. j1 < 1 .or. j2 > ny .or. i1 > i2 .or. j1 > j2) then
+    call par_abort("fileio: window ("//itoa(i1)//":"//itoa(i2)//", "//itoa(j1)//":"//itoa(j2) &
+                   //") is not inside the "//itoa(nx)//"x"//itoa(ny)//" grid: "//trim(fname))
+  end if
+end subroutine
+
+
+! text の窓読み: 1 行バッファに行を読み、窓の列を写す。
+! 行 j2 まで読めば足りるので、残りの行は読まない(読み込み時間は窓の下端まで)
+subroutine read_textwindow_int(un, nx, i1, i2, j1, j2, a)
+  integer, intent(in) :: un, nx, i1, i2, j1, j2
+  integer, intent(inout) :: a(i1:, j1:)
+  integer, allocatable :: row(:)        ! ヒープ(§40)
+  integer :: j, ios
+  character(len=512) :: iom
+  allocate(row(1:nx))
+  do j = 1, j2
+    read(un, *, iostat=ios, iomsg=iom) row
+    if (ios /= 0) call abort_read(un, iom, j)
+    if (j >= j1) a(i1:i2, j) = row(i1:i2)
+  end do
+end subroutine
+
+
+subroutine read_textwindow_real(un, nx, i1, i2, j1, j2, a)
+  integer, intent(in) :: un, nx, i1, i2, j1, j2
+  real, intent(inout) :: a(i1:, j1:)
+  real, allocatable :: row(:)           ! ヒープ(§40)
+  integer :: j, ios
+  character(len=512) :: iom
+  allocate(row(1:nx))
+  do j = 1, j2
+    read(un, *, iostat=ios, iomsg=iom) row
+    if (ios /= 0) call abort_read(un, iom, j)
+    if (j >= j1) a(i1:i2, j) = row(i1:i2)
+  end do
+end subroutine
+
+
+! bil の窓読み(実数): hdr の型判定は read_bil_real_file と同じ。窓の行を
+! 位置指定(stream の pos=)で 1 行ずつ読む
+subroutine read_bil_real_window(fname, nx, ny, i1, i2, j1, j2, a)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny, i1, i2, j1, j2
+  real, intent(inout) :: a(i1:, j1:)
+  type(t_esri_hdr) :: h
+  character(:), allocatable :: hname
+  character(len=512) :: msg
+  integer :: stat
+  logical :: ex, is_float
+
+  hname = georef_hdr_name(fname)
+  inquire(file=hname, exist=ex)
+  is_float = .true.
+  if (ex) then
+    call georef_parse_hdr(hname, h, stat, msg)
+    if (stat /= 0) call par_abort(trim(msg))
+    call check_bil_hdr(fname, h, nx, ny)
+    is_float = trim(h%pixeltype) == "FLOAT" .or. &
+               (len_trim(h%pixeltype) == 0 .and. h%nbits == 32)
+    if (is_float .and. h%nbits /= 32) then
+      call par_abort("fileio: bil real input supports NBITS=32 only (NBITS=" &
+                     //itoa(h%nbits)//"; rewrite Float64 data as 32bit): "//trim(fname))
+    end if
+  end if
+
+  if (is_float) then
+    block
+      real(real32), allocatable :: r(:)
+      integer :: un, j, ios
+      integer(int64) :: pos
+      character(len=512) :: iom
+      allocate(r(i1:i2))
+      un = open_old_stream(fname)
+      do j = j1, j2
+        pos = (int(j - 1, int64) * nx + (i1 - 1)) * 4_int64 + 1_int64
+        read(un, pos=pos, iostat=ios, iomsg=iom) r
+        if (ios /= 0) call abort_read(un, iom, j)
+        a(i1:i2, j) = r(i1:i2)
+      end do
+      close(un)
+    end block
+  else
+    ! 整数型の bil → 実数へ変換(窓分の整数一時)
+    block
+      integer, allocatable :: b(:,:)
+      allocate(b(i1:i2, j1:j2))
+      call read_bil_int_typed_window(fname, h, nx, i1, i2, j1, j2, b)
+      a(i1:i2, j1:j2) = real(b(i1:i2, j1:j2))
+    end block
+  end if
+end subroutine
+
+
+! bil の窓読み(整数): hdr があれば型対応、無ければ既定 integer の生読み
+subroutine read_bil_int_window(fname, nx, ny, i1, i2, j1, j2, a)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny, i1, i2, j1, j2
+  integer, intent(inout) :: a(i1:, j1:)
+  type(t_esri_hdr) :: h
+  character(:), allocatable :: hname
+  character(len=512) :: msg
+  integer :: stat
+  logical :: ex
+
+  hname = georef_hdr_name(fname)
+  inquire(file=hname, exist=ex)
+  if (.not. ex) then
+    h%nbits = 32                            ! 従来動作: 既定 integer(32bit)の生読み
+    h%pixeltype = ""
+  else
+    call georef_parse_hdr(hname, h, stat, msg)
+    if (stat /= 0) call par_abort(trim(msg))
+    call check_bil_hdr(fname, h, nx, ny)
+    if (trim(h%pixeltype) == "FLOAT") then
+      call par_abort("fileio: bil with PIXELTYPE=FLOAT cannot be used as integer input: " &
+                     //trim(fname))
+    end if
+  end if
+  call read_bil_int_typed_window(fname, h, nx, i1, i2, j1, j2, a)
+end subroutine
+
+
+! 整数 bil の窓読み(NBITS=8/16/32。read_bil_int_typed の行ストリーミング版)
+subroutine read_bil_int_typed_window(fname, h, nx, i1, i2, j1, j2, a)
+  character(len=*), intent(in) :: fname
+  type(t_esri_hdr), intent(in) :: h
+  integer, intent(in) :: nx, i1, i2, j1, j2
+  integer, intent(inout) :: a(i1:, j1:)
+  integer :: un, ios, j, bpb
+  integer(int64) :: pos
+  logical :: unsigned
+  character(len=512) :: iom
+  integer(int8), allocatable :: b1(:)
+  integer(int16), allocatable :: b2(:)
+  integer, allocatable :: b4(:)
+
+  unsigned = bil_is_unsigned(h)
+  select case (h%nbits)
+    case (8)
+      bpb = 1
+      allocate(b1(i1:i2))
+    case (16)
+      bpb = 2
+      allocate(b2(i1:i2))
+    case (32)
+      bpb = 4
+      allocate(b4(i1:i2))
+    case default
+      call par_abort("fileio: bil integer input supports NBITS=8/16/32 only (NBITS=" &
+                     //itoa(h%nbits)//"): "//trim(fname))
+  end select
+  un = open_old_stream(fname)
+  do j = j1, j2
+    pos = (int(j - 1, int64) * nx + (i1 - 1)) * bpb + 1_int64
+    select case (bpb)
+      case (1)
+        read(un, pos=pos, iostat=ios, iomsg=iom) b1
+        if (ios /= 0) call abort_read(un, iom, j)
+        if (unsigned) then
+          a(i1:i2, j) = iand(int(b1(i1:i2)), 255)
+        else
+          a(i1:i2, j) = int(b1(i1:i2))
+        end if
+      case (2)
+        read(un, pos=pos, iostat=ios, iomsg=iom) b2
+        if (ios /= 0) call abort_read(un, iom, j)
+        if (unsigned) then
+          a(i1:i2, j) = iand(int(b2(i1:i2)), 65535)
+        else
+          a(i1:i2, j) = int(b2(i1:i2))
+        end if
+      case default
+        read(un, pos=pos, iostat=ios, iomsg=iom) b4
+        if (ios /= 0) call abort_read(un, iom, j)
+        if (unsigned .and. any(b4 < 0)) then
+          call par_abort("fileio: unsigned 32bit bil value exceeds the default integer " &
+                         //"range: "//trim(fname))
+        end if
+        a(i1:i2, j) = b4(i1:i2)
+    end select
+  end do
+  close(un)
+end subroutine
+
+
+subroutine read_gtif_real_window(fname, nx, ny, i1, i2, j1, j2, a)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny, i1, i2, j1, j2
+  real, intent(inout) :: a(i1:, j1:)
+  integer :: stat
+  character(len=512) :: msg
+  call gtif_read_window(fname, nx, ny, i1, i2, j1, j2, a, stat, msg)
+  if (stat /= 0) call par_abort("fileio: failed to read GeoTIFF as real: "//trim(msg))
+end subroutine
+
+
+subroutine read_gtif_int_window(fname, nx, ny, i1, i2, j1, j2, a)
+  character(len=*), intent(in) :: fname
+  integer, intent(in) :: nx, ny, i1, i2, j1, j2
+  integer, intent(inout) :: a(i1:, j1:)
+  integer :: stat
+  character(len=512) :: msg
+  call gtif_read_window(fname, nx, ny, i1, i2, j1, j2, a, stat, msg)
+  if (stat /= 0) call par_abort("fileio: failed to read GeoTIFF as integer: "//trim(msg))
 end subroutine
 
 
