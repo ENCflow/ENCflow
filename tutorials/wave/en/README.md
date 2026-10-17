@@ -78,13 +78,13 @@ main: number of valid cells: 122500
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    1.0210   0.0%      0    0.1549    1.9996    0.0000
   0:00:01.00  12.5%    1.0210   7.8%      0    0.1618    1.9995    0.8670
-  0:00:02.00  25.0%    1.0210   2.5%      0    0.1626    1.6616    1.0829
-  0:00:03.00  37.5%    1.0210   2.8%      0    0.1584    1.2631    1.0554
-  0:00:04.00  50.0%    1.0210   3.1%      0    0.1505    1.2379    0.8278
-  0:00:05.00  62.5%    1.0210   3.9%      0    0.1460    1.2188    0.7201
-  0:00:06.00  75.0%    1.0210   3.9%      0    0.1430    1.2041    0.6516
-  0:00:07.00  87.5%    1.0210   4.3%      0    0.1407    1.1922    0.6023
-  0:00:08.00 100.0%    1.0210   4.6%      0    0.1400    1.1967    0.5774
+  0:00:02.00  25.0%    1.0210   2.2%      0    0.1626    1.6616    1.0830
+  0:00:03.00  37.5%    1.0210   2.5%      0    0.1585    1.2631    1.0555
+  0:00:04.00  50.0%    1.0210   2.8%      0    0.1505    1.2377    0.8281
+  0:00:05.00  62.5%    1.0210   3.5%      0    0.1460    1.2187    0.7196
+  0:00:06.00  75.0%    1.0210   3.5%      0    0.1429    1.2039    0.6509
+  0:00:07.00  87.5%    1.0210   3.8%      0    0.1406    1.1921    0.6017
+  0:00:08.00 100.0%    1.0210   4.1%      0    0.1400    1.1963    0.5766
 main: program terminated normally
 ```
 
@@ -242,13 +242,13 @@ comment `!` marks.
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    1.0210   0.0%      0    0.7747    1.9996    0.0000
   0:00:01.00  12.5%    1.0210   7.8%      0    0.8074    1.9976    0.8604
-  0:00:02.00  25.0%    1.0210   7.5%      0    0.8121    1.6356    1.0812
-  0:00:03.00  37.5%    1.0210   9.3%      0    0.7901    1.2628    1.0466
-  0:00:04.00  50.0%    1.0210  10.6%      0    0.7520    1.2387    0.8258
-  0:00:05.00  62.5%    1.0210  13.0%      0    0.7307    1.2205    0.7214
-  0:00:06.00  75.0%    1.0210  13.0%      0    0.7161    1.2065    0.6556
-  0:00:07.00  87.5%    1.0210  13.6%      0    0.7086    1.2112    0.6106
-  0:00:08.00 100.0%    1.0210  15.8%      0    0.7200    1.2281    0.6540
+  0:00:02.00  25.0%    1.0210   7.3%      0    0.8122    1.6356    1.0812
+  0:00:03.00  37.5%    1.0210   9.0%      0    0.7901    1.2627    1.0466
+  0:00:04.00  50.0%    1.0210  10.3%      0    0.7519    1.2385    0.8260
+  0:00:05.00  62.5%    1.0210  12.6%      0    0.7305    1.2203    0.7205
+  0:00:06.00  75.0%    1.0210  12.6%      0    0.7159    1.2063    0.6548
+  0:00:07.00  87.5%    1.0210  13.1%      0    0.7082    1.2100    0.6100
+  0:00:08.00 100.0%    1.0210  15.2%      0    0.7192    1.2266    0.6501
 ```
 
 Because the time step is now 5 times longer, the Courant numbers in the
@@ -264,7 +264,7 @@ glance.
 With `dt = 0.01` the crest of the wave is a smooth ring; with
 `dt = 0.05` the crest is jagged and the whole wave is higher. The last
 line of the screen display shows the same thing: h_max has grown from
-1.1967 m to 1.2281 m, an **overestimate of 3%**. Zooming in on the wave
+1.1963 m to 1.2266 m, an **overestimate of 2.5%**. Zooming in on the wave
 front and comparing the water level profiles along the 0-degree
 direction (along the x axis) and the 45-degree direction (along the
 diagonal) makes the breakdown even clearer.
@@ -343,20 +343,20 @@ A parameter file with these changes applied is provided as
 ```
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    1.0210   0.0%      0    0.7747    1.9996    0.0000
-  0:00:01.00  12.5%    1.0210  10.4%      0    0.8051    1.9976    0.8380
-  0:00:02.00  25.0%    1.0210  13.2%      0    0.8106    1.6487    1.0738
-  0:00:03.00  37.5%    1.0210  17.7%      0    0.7905    1.2623    1.0462
-  0:00:04.00  50.0%    1.0210  21.9%      0    0.7517    1.2388    0.8245
-  0:00:05.00  62.5%    1.0210  29.3%      0    0.7300    1.2209    0.7182
-  0:00:06.00  75.0%    1.0210  32.9%      0    0.7158    1.2081    0.6514
-  0:00:07.00  87.5%    1.0210  37.1%      0    0.7060    1.2016    0.6084
-  0:00:08.00 100.0%    1.0210  41.2%      0    0.7021    1.1986    0.5875
+  0:00:01.00  12.5%    1.0210  10.4%      0    0.8051    1.9976    0.8379
+  0:00:02.00  25.0%    1.0210  12.9%      0    0.8106    1.6487    1.0737
+  0:00:03.00  37.5%    1.0210  17.4%      0    0.7905    1.2621    1.0461
+  0:00:04.00  50.0%    1.0210  21.6%      0    0.7515    1.2386    0.8245
+  0:00:05.00  62.5%    1.0210  28.9%      0    0.7298    1.2207    0.7174
+  0:00:06.00  75.0%    1.0210  32.5%      0    0.7156    1.2079    0.6510
+  0:00:07.00  87.5%    1.0210  36.6%      0    0.7058    1.2012    0.6072
+  0:00:08.00 100.0%    1.0210  40.7%      0    0.7018    1.1979    0.5860
 ```
 
 The Courant number is almost unchanged, but the Runge-Kutta application
-ratio in the Runge column has grown sharply from 13-16% up to 41.2%,
-and the final h_max (1.1986 m) and V_max (0.5875 m/s) are close to the
-`dt = 0.01` values (1.1967 m, 0.5774 m/s). Putting the three 3D views
+ratio in the Runge column has grown sharply from 13-15% up to 40.7%,
+and the final h_max (1.1979 m) and V_max (0.5860 m/s) are close to the
+`dt = 0.01` values (1.1963 m, 0.5766 m/s). Putting the three 3D views
 side by side makes the effect obvious.
 
 | dt = 0.01 | dt = 0.05 | dt = 0.05, threshold 1.1 |
@@ -405,10 +405,10 @@ the behavior after the wave reaches the edges of the domain.
 
 ```
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
-  0:00:11.00  78.6%    1.0210  38.2%      0    0.6851    1.1777    0.5210
-  0:00:12.00  85.7%    1.0210  32.3%      0    0.6783    1.3168    0.4947
-  0:00:13.00  92.9%    1.0210  26.4%      0    0.6771    1.3085    0.4715
-  0:00:14.00 100.0%    1.0210  23.1%      0    0.6895    1.2979    0.4505
+  0:00:11.00  78.6%    1.0210  37.8%      0    0.6849    1.1772    0.5206
+  0:00:12.00  85.7%    1.0210  32.0%      0    0.6782    1.3175    0.4936
+  0:00:13.00  92.9%    1.0210  26.2%      0    0.6771    1.3092    0.4701
+  0:00:14.00 100.0%    1.0210  22.9%      0    0.6888    1.2984    0.4495
 ```
 
 From t = 12 s on, h_max -- which should have kept decreasing -- jumps
@@ -472,10 +472,10 @@ A parameter file with these changes applied is provided as
 
 ```
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
-  0:00:11.00  78.6%    1.0210  38.2%      0    0.6851    1.1777    0.5210
-  0:00:12.00  85.7%    1.0187  32.3%      0    0.6783    1.1685    0.5242
-  0:00:13.00  92.9%    1.0112  25.2%      0    0.6742    1.1603    0.5107
-  0:00:14.00 100.0%    1.0026  20.4%      0    0.6677    1.1533    0.4846
+  0:00:11.00  78.6%    1.0210  37.8%      0    0.6849    1.1772    0.5206
+  0:00:12.00  85.7%    1.0189  32.0%      0    0.6782    1.1681    0.4936
+  0:00:13.00  92.9%    1.0121  25.0%      0    0.6718    1.1599    0.4759
+  0:00:14.00 100.0%    1.0043  20.2%      0    0.6668    1.1526    0.4613
 ```
 
 This time h_max does not jump after t = 12 s; instead, the total amount
@@ -609,7 +609,7 @@ cells, and there the short-wavelength components travel at the wrong
 speed, so fine oscillations appear behind the front. The coarser the
 time step, the larger the phase error and the oscillation -- that was
 the `dt = 0.05` figure of Step 1. Even with `dt = 0.01` a small
-overshoot remains at the crest (1.195 m at r = 37.6 m).
+overshoot remains at the crest (1.194 m at r = 37.6 m).
 
 ### Refining the grid
 
@@ -620,7 +620,7 @@ stays the same (only `nx, ny` and `dt` change).
 ![Grid refinement (hydrostatic)](../figs/supp_grid.png)
 
 The front becomes sharper with each refinement and the overshoot at
-the crest shrinks, 1.195 → 1.184 → 1.181 m. The width of the
+the crest shrinks, 1.194 → 1.183 → 1.181 m. The width of the
 oscillation is always a few cells and shrinks with the grid -- the
 signature of numerical dispersion. The price is computing time: each
 doubling means 4 times the cells and twice the steps, 8 times in all
@@ -685,7 +685,7 @@ What this supplement showed, arranged as an order of operations:
 
 - **Solving the hydrostatic shallow water equations on a coarse grid with a
   coarse time step** lets the oscillation of numerical dispersion grow
-  large. The maximum wave height is overestimated (h_max 3% too high with
+  large. The maximum wave height is overestimated (h_max 2.5% too high with
   `dt = 0.05` in Step 1), the anisotropy of a front that should be circular
   but differs by 4 cm between the 0° and 45° directions becomes visible,
   and in the worst case the computation breaks down.
