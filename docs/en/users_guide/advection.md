@@ -12,6 +12,11 @@ detail to understand what the settings mean. The design history and the
 numerical experiments (for developers) are in docs/developer.md §68
 (in Japanese).
 
+A detailed design note (control-volume geometry, one-dimensional consistency,
+the diagonal sub-lattice mode and the revised lateral faces, verification and
+open issues) is in [docs/advection_design.md](../../advection_design.md)
+(Japanese).
+
 ## 1. Equations and the role of the advection term
 
 ENCflow solves the two-dimensional shallow water equations, the continuity
@@ -228,13 +233,19 @@ form has two merits.
 The control volume is a rectangle centred on edge $`e`$: its length along
 line $`k`$ is $`L_k`$ (from the centre of cell $`c`$ to the centre of $`n`$) and its
 width across is $`W_k`$ (the perpendicular distance to the parallel
-neighbouring edges).
+neighbouring links).
 
 | Edge | $`L_k`$ | $`W_k`$ | Area $`L_k W_k`$ (square cells) |
 |---|---|---|---|
 | axis ($`x`$ normal) | $`\Delta x`$ | $`\Delta y`$ | one cell |
 | axis ($`y`$ normal) | $`\Delta y`$ | $`\Delta x`$ | one cell |
-| diagonal | $`\Delta r`$ | $`2\Delta x\Delta y/\Delta r`$ | two cells (a diamond with vertices at grid corners; c and n are the streamwise face centres) |
+| diagonal | $`\Delta r`$ | $`\Delta x\Delta y/\Delta r`$ | one cell (c and n are the streamwise face centres) |
+
+The diagonal links parallel to a diagonal edge are spaced
+$`\Delta x\Delta y/\Delta r`$ apart across it ($`\Delta x/\sqrt2`$ for square
+cells) with alternating parity of $`i+j`$; $`W_k`$ is that spacing (until
+2026-10-17 the distance $`2\Delta x\Delta y/\Delta r`$ to the link of the same
+parity was used; see the known property in §5).
 
 There are four faces, with the following mass fluxes ($`Q_f`$ is the flux per
 unit width $`q`$ times the length of the face).
@@ -248,7 +259,10 @@ unit width $`q`$ times the length of the face).
 - **Lateral faces $`\pm t`$** (parallel to line $`k`$): the mean $`q_{t\pm}`$ of
   the actual fluxes $`mn`$ of the two ENC edges that cross the face (c → c+δ
   and n → n+δ, the dotted lines in figure (c)), positive outward;
-  $`Q = q_{t\pm}\,L_k`$. Projecting the cell flux at the face centre instead
+  $`Q = q_{t\pm}\,L_k`$. The upwind velocity $`\bar u_{t\pm}`$ of an inflow face
+  is the value of the parallel neighbouring edge for axis edges, and for
+  diagonal edges the mean of the two parallel links of the opposite parity
+  that lie on either end of the face. Projecting the cell flux at the face centre instead
   gave a non-zero flux even on faces blocked by terrain where no water
   actually passes, and the advection term, amplified by $`1/\bar h_e`$ in a
   thin control volume, blew up; hence the actual edge fluxes
@@ -424,22 +438,23 @@ listed in the [shallow water chapter](swflow.md).
   water can pile up in the one cell behind it (a spike). Using the upwind
   depth removes the spike but increases the frontal outflow onto dry beds.
 
-**Known numerical property (2026-10-13; developer.md §68.36).** The diagonal
-links of the ENC grid connect only cells of the same parity of $`i+j`$, so the
-control volume of a diagonal edge in the conservative schemes is built from
-cells and links of one parity only. A diagonal circulation that differs
-between the even and odd sub-lattices is therefore untouched by the advection
-term (and by the pressure term, since it is divergence-free) and decays by bed
-friction alone. In deep, slow stagnant areas (5 m, 0.1 m/s: decay time about
-3 h) a checkerboard in the velocity field (relative amplitude 0.4–0.6)
-persists and is imprinted on threshold-type deposition (`vstop` of debris and
-driftwood) and on the maximum fluid force (figures of examples/tsunami_town
-and timberyard). Depth, discharge and totals are unaffected. A constant
-viscosity of about 0.2 m²/s in the diffusion term removes it, but it is not a
-default because it adds a calibration quantity. A scheme-side coupling of the
-sub-lattices is under design and on hold until a conservative formulation is
-found. Scheme 1 does not show this mode (it shows irregular noise of the
-non-conservative form instead).
+**Diagonal sub-lattice mode (found 2026-10-13, resolved 10-17; developer.md
+§68.36).** The diagonal links of the ENC grid connect only cells of the same
+parity of $`i+j`$. While the lateral faces of diagonal edges were evaluated
+with the parallel links of the same parity (distance $`\sqrt2\Delta x`$), a
+diagonal circulation rotating oppositely on the even and odd sub-lattices
+(divergence-free, so untouched by the pressure term) was untouched by the
+advection term as well, and a checkerboard in the velocity field (relative
+amplitude 0.4–0.6) persisted in deep, slow stagnant areas and was imprinted on
+threshold-type deposition (`vstop` of debris and driftwood) and on the maximum
+fluid force. With the lateral width set to the spacing $`\Delta x/\sqrt2`$ of
+the opposite-parity links and their mean as the upwind value, the mode now
+decays through the flux of the background flow
+([test/sublattice](../../../test/sublattice/README.md): the e-folding time of a
+sub-lattice mode superposed on a gyre drops from 1094 s to 87 s; the offshore
+checkerboard of tsunami_town from 0.43 to 0.01). The leading terms are
+unchanged for smooth fields, so the bore (Stoker), uniform-flow and bend-loss
+verification values are unchanged.
 
 ### Parameters and the basis of their defaults
 

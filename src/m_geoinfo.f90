@@ -146,6 +146,11 @@ subroutine m_geoinfo_init(g, p)
     call read_rscap(p, g, list)
     if (g%sd_dist) call read_sd(p, g, list)
   end if
+  ! 空隙率分布の有無は全ランクで同じ値にする(output_areafactor の collective
+  ! 判定に使う。read_gvbb は rank0 だけが呼ぶので、その中で立てた値は rank0
+  ! にしか残らず、np>=2 の初期出力で rank0 だけが gather に入って deadlock
+  ! した。2026-10-17 の実バグ。§5)
+  g%gv_active = len_trim(list%fn_gv) > 0
   call adjust_rw(p, g, list)
 
   ! user フック: 名前の検証は全ランク(par_stop は collective)。実行は
@@ -947,7 +952,6 @@ subroutine read_gvbb(p, g, list)
     fname = trim(p%dir_data) // "/" // trim(list%fn_gv)
     call par_info(" reading "//fname)
     call read_window(p, g, fname, g%gv)
-    g%gv_active = .true.
   end if
 
   if (len_trim(list%fn_bb) > 0) then
