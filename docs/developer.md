@@ -4239,6 +4239,12 @@ Cn_max)→ 場の最大値**。
   出力ファイル集合も含めて不変。t_geoinfo に gv_active(namelist 由来、
   全ランク同値)を追加。利用者向けの読み方は users_guide/io.md
   「河道幅・建物のあるセルの読み方」。
+  **実バグ(2026-10-17 修正)**: 当初 gv_active を rank0 だけが呼ぶ read_gvbb の
+  中で立てていたため rank0 以外では偽のままになり、np>=2 の初期出力で
+  rank0 だけが output_areafactor の gather に入って deadlock した
+  (examples/tsunami_town・timberyard。fn_gv のない test は無事)。m_geoinfo_init
+  の is_root ブロックの外で namelist(fn_gv の有無)から全ランクが設定する
+  形に直した。collective の実行判定は全ランクで同一に(§5)の再発例。
 - **「出力・確認」の統一様式(2026-10-16 決定)**: 物理・数値の機能を持つ
   全章ページに **「## 出力・確認」**(英 "## Output and monitoring")を
   置き(位置は「パラメータ → 出力・確認 → 制約 → 根拠 → 検証・例題」)、
