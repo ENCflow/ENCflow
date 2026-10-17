@@ -264,9 +264,11 @@ can be checked in the following outputs.
 | Sd0001... | automatic (when a model uses the soil thickness) | soil thickness (m) |
 | Hrs0001... | f_out_hrs = 1 | storage depth of ponds (rscap) (m) |
 | Z0001... | f_out_z = 1 | ground elevation moved by landform change, solidification or bed motion |
+| A0000 | automatic (when fn_gv or a channel width is active) | effective area factor gv × f_w (0–1), the factor that converts column quantities to cell averages, volumes and wet area ([Input and output formats](io.md#how-state-variables-are-written)) |
 
-Roughness, void ratio, building size, channel mask and seawalls are not
-written; check the input files directly in GIS.
+Roughness, building size, channel mask and seawalls are not written;
+check the input files directly in GIS. The void ratio appears in A0000 (as
+its product with the channel area fraction).
 
 **Ledgers and log**
 

@@ -755,10 +755,13 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 
 **How to read and check**
 
-- Sediment budget: what stays on the bed and slopes is Σ(Z − Z0000) × A,
-  what is in transport is Σ(Hs × gv × wfrac × A). In a closed domain
-  without export their sum is constant (export through open boundaries
-  and capture by check dams are extra).
+- Sediment budget: what stays on the bed and slopes is
+  Σ(Z − Z0000) × f_w × A (f_w the channel area fraction: on channel-width
+  cells the bed change is concentrated on the channel bed f_w × A; 1
+  without width), what is in transport is Σ(Hs × gv × f_w × A) (gv × f_w
+  is written as A0000). In a closed domain without export their sum is
+  constant (export through open boundaries and capture by check dams are
+  extra). Z and Sd on channel-width cells are channel-bed values.
 - With accelerated morphological time (morfac), read `Z0001...` in
   morphological time (time of FILENUMBER.csv × morfac).
 - Saturation Hg / (sy0 × Sd) (post-processed from the groundwater Hg and

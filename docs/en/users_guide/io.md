@@ -177,6 +177,7 @@ lists the main outputs.
 | — (with fn_snow) | — | Sw | snow water equivalent SWE (mm) (automatic) |
 | — (with fn_swi) | — | Swi / Swi9999 / Swit9999 | Soil Water Index (mm) distribution, period maximum, and its time ([Soil Water Index](swi.md); automatic) |
 | — (always) | — | X0000 | domain mask (0: outside, 1: land, 2: sea); for visualization and checking the active domain in GIS |
+| — (when the void ratio fn_gv or a channel width is active) | — | A0000 | effective area factor = void ratio gv × channel area fraction f_w (0–1); the factor that converts column quantities to cell averages, volumes and wet area (see "Reading cells with channel width or buildings" below) |
 
 `FILENUMBER.csv` maps raster output numbers to calendar time, `t(s)`
 and step `it`. Its `9999` row records the final time when statistics were
@@ -249,6 +250,31 @@ building occupancy or channel width the two bases coincide. To check a
 basin-wide total quickly, the S columns of `Log.txt` and the budget CSV
 of each process (`wq.csv`, ...) are more reliable than summing rasters.
 
+**Reading cells with channel width or buildings**. On cells with a
+subgrid channel width (f_w = min(W/Δ, 1) < 1) or a building void ratio
+(gv < 1), column quantities such as H, Hs and cq are **the values of the
+part of the cell that water can occupy** (inside the channel, outside the
+buildings), and only part of the cell is wet. The following conversions
+are then needed (gv and f_w are written together as A0000; the f_w in
+A0000 is the area fraction the model actually uses,
+min(W × L_ch / (Δx Δy), 1): W/Δ on straight-channel cells, and dependent
+on the in-cell channel length L_ch on diagonal and end cells;
+[Channel models](channel_models.md) §2).
+
+| Quantity wanted | Conversion |
+|---|---|
+| cell-average depth (to smooth an inundation map) | H × A0000 |
+| water volume of the cell | H × A0000 × A (on σ-section cells the rectangular-equivalent depth vh × gv × f_w × A, as in the S column of the log) |
+| wet area / inundated area | Σ A0000 × A over the cells with H > threshold |
+| eroded / deposited bed volume | (Z − Z0000) × f_w × A (bed changes by bedload and suspended sediment are concentrated on the channel bed f_w × A) |
+| Z and Sd on channel cells | elevation and soil thickness of the channel bed (not cell averages) |
+
+The run statistics (H9999, D9999, F9999) are likewise in-channel /
+outside-building values painted over the whole cell. To exclude channel
+cells narrower than the cell from an inundation hazard map, separate them
+with the channel mask (fn_rw). Concentrations (C, Hs/(H+Hs)) are per
+volume and need no conversion.
+
 **Concentrations are derived**. The water-quality C (mg/L) and sediment
 concentrations are column quantities divided by depth, meaningful only in
 wet cells. The model does this conversion internally with the σ grid and
@@ -282,7 +308,7 @@ come from `FILENUMBER.csv`.
 
 | Quantity | How | File (flag) | Computation / notes |
 |---|---|---|---|
-| Inundation depth | flag (default on) | H (f_out_h) | depth on the pore-area basis (m) |
+| Inundation depth | flag (default on) | H (f_out_h) | depth on the pore-area basis (m); on channel-width and building cells the in-channel / outside-building value (cell average = H × A0000) |
 | Maximum depth and its time | flag (H9999 default on) | H9999 (f_out_hmax), Ht9999 (f_out_hmaxt) | Ht9999 in minutes from the start |
 | Water level (elevation) | flag or computed | E (f_out_e) | E = Z + H, with Z from Z0000 (or the Z of the same time under morphodynamics) |
 | Flow speed | flag or computed | V (f_out_vv), components u / v (f_out_u / v) | V = √(u² + v²) |
@@ -291,10 +317,10 @@ come from `FILENUMBER.csv`.
 | Maximum speed / discharge with time and direction | flag | V9999 (f_out_vvmax), Q9999 / Qt9999 / Qd9999 (f_out_qqmax family) | — |
 | Fluid force (building damage index) | flag or computed | F9999 (f_out_fmax), Fd9999 (f_out_fdmax) | run maximum is F9999; the instantaneous value is H × V² (clear water only; see the definitions of F9999 / Fd9999 for mixtures, driftwood and debris). × 1000 for force per unit width (N/m) |
 | Inundation duration / arrival time | computed | — (the H series) | duration = number of frames above a threshold (e.g. 0.01 m) × dt_file; arrival = time of the first frame above it. Use a fine dt_file |
-| Inundated area / extent | computed | — (H and X0000) | count cells with X0000 = 1 and H > threshold, × cell area. Maximum extent: the same test on H9999 |
+| Inundated area / extent | computed | — (H, X0000, A0000) | Σ A0000 × cell area over cells with X0000 = 1 and H > threshold (cell count × cell area without A0000). Maximum extent: the same test on H9999 |
 | Froude / Courant number | flag | Fr (f_out_fr), Cn (f_out_cn) | sub/supercritical regime, time-step check |
 | Rainfall intensity | flag | Pr (f_out_pre) | given precipitation × runoff_rate (mm/h), before interception and snow processing |
-| Ground elevation / morphological change | flag (Z0000 always) | Z (f_out_z) | erosion/deposition thickness = Z(time) − Z0000 (negative = erosion), with [Sediment and Morphodynamics](geomorph.md) enabled |
+| Ground elevation / morphological change | flag (Z0000 always) | Z (f_out_z) | erosion/deposition thickness = Z(time) − Z0000 (negative = erosion); volume = × f_w × A (on channel-width cells the change of the channel bed), with [Sediment and Morphodynamics](geomorph.md) enabled |
 | Subsurface storage / water table | flag | Hg (f_out_hg; also Hg2 / Hgc / Hgs / Cg) | Hg is a column-equivalent depth (m). Saturated thickness = Hg / sy0; water table ≈ ground − soil thickness + Hg / sy0 (lateral / Green-Ampt configurations; see the figure in [Groundwater](gwflow.md)) |
 | Soil thickness | automatic | Sd | only when a model that uses sd is enabled |
 | Snow water equivalent | automatic | Sw | mm of water ([Snow](forcing.md)) |

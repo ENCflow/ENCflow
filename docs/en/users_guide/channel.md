@@ -261,6 +261,8 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 |---|---|---|
 | H0001... / E0001... | f_out_h / f_out_e | on channel cells H is the depth within the channel width (pore-area basis); inundation of the protected land is the H on the far side of the levee |
 | Q0001... / Qd0001... | f_out_qq / f_out_qd | unit-width discharge and direction; within the width on width cells |
+| Z0001... / Sd0001... | f_out_z / automatic | on width cells the elevation and soil thickness of the channel bed; bed-change volume = ΔZ × f_w × A |
+| A0000 | automatic (with a channel width or fn_gv) | effective area factor gv × f_w, the factor that converts H and the like to cell averages, volumes and wet area ([Input and output formats](io.md#how-state-variables-are-written)) |
 | X0000 | always | domain mask; the channel mask fn_rw is not written (check the input) |
 
 Levee height, channel width, section shape and breach progress are not
@@ -292,7 +294,12 @@ written as fields.
   of the landward transect.
 - H on width cells is the storage depth, not the rectangular-equivalent
   depth of the σ section (derived quantities such as concentration are
-  converted inside the model). Read river stages as E = Z + H.
+  converted inside the model). Read river stages as E = Z + H. For
+  cell-average depth, volume or wet area multiply by A0000 (H × A0000,
+  H × A0000 × A, Σ A0000 × A).
+- On channel cells narrower than the cell, run statistics such as H9999
+  are also in-channel values painted over the whole cell; separate them
+  with the channel mask for inundation hazard maps.
 
 ## Tests and examples
 
