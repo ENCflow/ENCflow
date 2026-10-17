@@ -278,8 +278,11 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                     end if
                   end if
                   dze = abs(gq) * dts * gm%wrk%ainv * winvd * gm%poroi
-                  if (dze > sdup) then
-                    gq = gq * (sdup / dze)         ! sdup=0(岩盤)なら 0
+                  if (sdup <= 0.0) then
+                    gq = 0.0                       ! 岩盤露出(sd <= 0。丸めの負値も)= 供給なし
+                    dze = 0.0
+                  else if (dze > sdup) then
+                    gq = gq * (sdup / dze)
                     dze = sdup
                   end if
                   ! 変動上限ガード(地形波の CFL 相当。morfac を上げた
@@ -412,7 +415,8 @@ module subroutine apply_edge_flux(gm, g, s, dts)
         winv = 1.0
         if (chn%have_width) winv = 1.0 / chn%wfrac(i,j)
         ! 供給可能量を流量に換算: sd = vcap * dts * ainv * winv * poroi
-        vcap = s%sd(i,j) / (dts * gm%wrk%ainv * winv * gm%poroi)
+        ! (sd の丸めの負値は 0 と見なす = 供給なし)
+        vcap = max(s%sd(i,j), 0.0) / (dts * gm%wrk%ainv * winv * gm%poroi)
         if (vout > vcap) then
           gm%flv%fdon(i,j) = vcap / vout         ! sd = 0(岩盤)なら 0
           nlim = nlim + 1

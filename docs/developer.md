@@ -11425,3 +11425,14 @@ plan §7)。実装した段から本節へ移し、plan を消し込む。
   河岸脚部の被覆効果、水中/陸上で安息角を分ける repose_phi_wet、
   幅河道(fn_width)併用時の崩落の面積換算。段 3(定着)は examples/meander
   (段 4 の例題)で「拡幅で止まるか」を見てから。
+
+### 84.5 段 4: 例題 examples/meander・examples/meander_cutoff と所見(2026-10-17)
+
+- **【実バグ】浮遊砂の E-D で土層を使い切ると sd が丸めで負になる**
+  (calc_suspend のクランプ fx = sd/(morfac·poroi) と dzb = −fx·morfac·poroi の
+  往復で sd + dzb = −1e-22)。負の sd は calc_fluvial の可動層クランプ
+  `gq*(sdup/dze)` で流砂の符号を反転させ、その後の FPE(-ffpe-trap)で停止した
+  (examples/meander_cutoff の岩盤露出帯で実検出)。修正: suspend 側は
+  dzb < −sd のとき dzb = −sd で厳密に 0 に止める、fluvial 側は sdup ≤ 0 を
+  「供給なし」(gq = 0)とし、供給量制限の vcap も max(sd, 0) で評価する。
+  岩盤露出のないケースは厳密数学でバイト一致(test/suspend・wash)。

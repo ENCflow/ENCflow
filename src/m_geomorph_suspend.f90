@@ -111,6 +111,10 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
       s%hs(i,j) = s%hs(i,j) + fx
       ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
       dzb = -fx * gm%morfac * gm%poroi
+      ! 土層を使い切るとき sd を厳密に 0 で止める(上のクランプ fx = sd/(morfac·poroi)
+      ! は往復の丸めで sd を −1e-22 にし得る。負の sd は掃流砂の可動層クランプで
+      ! 流砂の符号を反転させ FPE に至った実バグ。§84.5)
+      if (dzb < -s%sd(i,j)) dzb = -s%sd(i,j)
       s%z(i,j) = s%z(i,j) + dzb
       s%sd(i,j) = s%sd(i,j) + dzb
       ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
