@@ -703,7 +703,7 @@ bs_eps_s を大きく(0.02 → 0.05)するのが第一の対処です(仕組み�
 [examples/List_samples/list_geomorph.txt](../../examples/List_samples/list_geomorph.txt)。
 検証済みのテストケースがプロセスごとにあります:
 [test/creep](../../test/creep/)(解析解ベンチマーク)、
-[test/fluvial](../../test/fluvial/)、[test/bankface](../../test/bankface/)(河岸面の遮断・供給量制限)、[test/bendsed](../../test/bendsed/)(湾曲部の流砂方向補正)、[test/berode](../../test/berode/)(側岸侵食)、[test/repose](../../test/repose/)(安息角崩落)、[test/suspend](../../test/suspend/)、
+[test/fluvial](../../test/fluvial/)、[test/bankface](../../test/bankface/)(河岸面の遮断・供給量制限)、[test/bendsed](../../test/bendsed/)(湾曲部の流砂方向補正)、[test/berode](../../test/berode/)(側岸侵食)、[test/repose](../../test/repose/)(安息角崩落)、例題 [examples/meander](../../examples/meander/)・[examples/meander_cutoff](../../examples/meander_cutoff/)(蛇行河道の変形と頸部短絡)、[test/suspend](../../test/suspend/)、
 [test/wash](../../test/wash/)、[test/debris](../../test/debris/)、
 [test/slide](../../test/slide/)、[test/avalanche](../../test/avalanche/)、
 [test/sedinflow](../../test/sedinflow/)(境界土砂供給)、

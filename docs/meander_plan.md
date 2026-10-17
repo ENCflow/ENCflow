@@ -1,7 +1,10 @@
 # 蛇行河道の発達と河床変動管理への拡張 設計検討メモ(meander_plan.md)
 
 **状態: 2026-10-17 合意。段 0〜2 実装済み(developer.md §84.1〜§84.4、
-test/bankface・bendsed・berode・repose)。段 3〜5 は未着手。** 実装前の議論用資料。
+test/bankface・bendsed・berode・repose)、段 4 の例題 examples/meander・
+examples/meander_cutoff 作成済み(所見は §84.5: 湾曲の横断形状と頸部短絡は
+動くが蛇行の横移動は停滞)。段 3・5 は未着手で、段 3 は §84.5 の所見を受けて
+§3.3〜3.4 の改訂(外岸後退の駆動力)から。** 実装前の議論用資料。
 合意に至った決定は developer.md(新 § を起こす)へ移し、本書は段階ごとに
 消し込む(geomorph_plan.md・nonhydrostatic_plan.md と同じ運用)。
 発端は利用者の検討メモ(ChatGPT との問答 2026-10。「ENCflow で蛇行の発達から

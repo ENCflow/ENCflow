@@ -848,7 +848,7 @@ Annotated list of all parameters:
 [examples/List_samples/list_geomorph.txt](../../../examples/List_samples/en/list_geomorph.txt).
 Verified test cases exist per process:
 [test/creep](../../../test/creep/) (analytical-solution benchmark),
-[test/fluvial](../../../test/fluvial/), [test/bankface](../../../test/bankface/) (bank-face blocking and supply limiter), [test/bendsed](../../../test/bendsed/) (bed-load direction correction in a bend), [test/berode](../../../test/berode/) (bank erosion), [test/repose](../../../test/repose/) (angle-of-repose avalanching), [test/suspend](../../../test/suspend/),
+[test/fluvial](../../../test/fluvial/), [test/bankface](../../../test/bankface/) (bank-face blocking and supply limiter), [test/bendsed](../../../test/bendsed/) (bed-load direction correction in a bend), [test/berode](../../../test/berode/) (bank erosion), [test/repose](../../../test/repose/) (angle-of-repose avalanching), the examples [examples/meander](../../../examples/meander/) and [examples/meander_cutoff](../../../examples/meander_cutoff/) (deformation of a meandering channel and a neck cutoff), [test/suspend](../../../test/suspend/),
 [test/wash](../../../test/wash/), [test/debris](../../../test/debris/),
 [test/slide](../../../test/slide/), [test/avalanche](../../../test/avalanche/),
 [test/sedinflow](../../../test/sedinflow/) (boundary sediment supply),

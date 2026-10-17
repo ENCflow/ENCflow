@@ -1,0 +1,98 @@
+!======================================================================
+! meander: 氾濫原の中の正弦波状の初期河道が、固定格子上の掃流砂・流砂方向
+!   補正・安息角崩落でどう変形するかを見る例題(docs/meander_plan.md 段 4、
+!   developer.md §84.5)。入力は make_init.py(make が生成): 幅 20 m(10 セル)、
+!   初期振幅 10 m・波長 200 m の河道、両岸は河床 +1 m の氾濫原、上流端・
+!   下流端は非侵食(土層 0)で、上流端から 300 m は土層厚のランプ。
+!   西端の区間流入 Q = 15 m³/s 一定、東辺は自由流出。地形時間は morfac = 50 で
+!   加速(水理 2 h = 地形 100 h)。
+!   構成: 非粘着性の河岸(崩落のみ)。dir_result = result
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.2
+  t0 = 0
+  tt = 7200
+  dt_disp = 600
+  dt_file = 1800
+  dt_recrd = 1800
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result'
+  f_state_save = 0
+  f_check_cfl = 1
+  f_out_z = 1
+  f_out_vv = 1
+/
+
+&list_enc
+  f_advection_scheme = 1    ! セル中心勾配の移流項(運動量保存形 2・3 は斜め副格子の
+                            !   市松モード §68.36 と河岸沿いの流速低下が大きい。§84.5)
+/
+
+&list_initial
+  f_htype = 1               ! 河道内 0.8 m、氾濫原は乾燥
+  fn_hinit = 'h.txt'
+/
+
+&list_geoinfo
+  lx = 800.0
+  ly = 240.0
+  nx = 400
+  ny = 120
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 1
+  fn_sd = 'sd.txt'          ! 土層厚(両端 0 = 非侵食、上流 300 m はランプ)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 1.0         ! 地形更新は 1 s ごと(水理 5 ステップに 1 回)
+  morfac = 50.0             ! 地形時間の加速
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.001          ! 砂床(1 mm)
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+  fluv_slope = 1            ! 河床勾配項(長谷川型)
+  fluv_mus = 1.0            ! 文献照合待ちの値(§84.3)
+  fluv_muk = 0.45
+  f_secflow = 1             ! 平衡二次流項
+  sec_nstar = 7.0           ! 文献照合待ちの値
+  f_berode = 0              ! 側岸侵食則なし = 非粘着性の河岸
+  f_repose = 1              ! 安息角崩落(脚部洗掘 → 河岸面が安息角を超えて崩落)
+  repose_phi = 32.0         ! 安息角 (deg)。初期の河岸面(1 m / 2 m = 26.6°)は安定
+  repose_relax = 0.5
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺: 自由流出
+/
+
+!======================================================================
+! 区間流入(西端の河道 10 セル。一定 Q = 15 m³/s ≈ 水深 0.8 m の等流)
+!======================================================================
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 56
+  inflow_cell(1:2,2,1) = 1, 57
+  inflow_cell(1:2,3,1) = 1, 58
+  inflow_cell(1:2,4,1) = 1, 59
+  inflow_cell(1:2,5,1) = 1, 60
+  inflow_cell(1:2,6,1) = 1, 61
+  inflow_cell(1:2,7,1) = 1, 62
+  inflow_cell(1:2,8,1) = 1, 63
+  inflow_cell(1:2,9,1) = 1, 64
+  inflow_cell(1:2,10,1) = 1, 65
+  inflow_val(1:2,1,1) = 0, 15.0
+  inflow_val(1:2,2,1) = 9999, 15.0
+  inflow_dist(1) = 0
+/

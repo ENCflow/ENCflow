@@ -32,6 +32,8 @@ python3 plot_results.py   # plotting (where provided)
 | [timberyard/](timberyard/) | Timber influx from a log yard into a town by a storm surge (Isewan typhoon type) | Driftwood fn_driftwood, tide |
 | [sewer_hybrid/](sewer_hybrid/) | Urban drainage with a trunk main and a branch network in the same conduit continuum layer | Conduit continuum layer f_gwconduit |
 | [qanat/](qanat/) | An idealised qanat (groundwater-collecting gallery) | Conduit continuum layer, groundwater |
+| [meander/](meander/) | How a sinusoidal channel in a floodplain deforms under bed load, the direction correction and angle-of-repose avalanching (outer-bank pools, inner-bank bars, bank retreat). Stage 4 of the meander plan | bed load f_fluvial, fluv_slope, f_secflow, f_repose, f_berode |
+| [meander_cutoff/](meander_cutoff/) | A meander loop with a narrow neck is cut off by a flood; the old loop becomes slack water and its ends start to fill | same + inflow time series |
 
 ## Examples of chained processes
 
