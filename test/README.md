@@ -65,6 +65,8 @@ reference の更新(`-u`)は結果の妥当性を人間が確認してから行�
 | [fluvial/](fluvial/) | 掃流砂 Exner の疎通・保存則(閉領域ダムブレイク型) | 土砂 f_fluvial | 解析 |
 | [bankface/](bankface/) | 乾いた河岸をもつ水路のダム破壊流。河岸面の掃流遮断(乾いた河岸は不変)と薄い土層での供給量制限(体積保存) | 掃流砂 | 解析 |
 | [bendsed/](bendsed/) | 90° 湾曲水路の流砂方向補正。外岸洗掘・内岸堆積の向き、left/right の鏡像対称、補正なしとの対照 | 掃流砂 fluv_slope・f_secflow | 解析 |
+| [berode/](berode/) | 乾いた河岸をもつ水路の側岸侵食。水路に接する河岸だけが後退し、損失体積が K_b に比例、土砂保存 | 掃流砂 f_berode | 解析 |
+| [repose/](repose/) | 乾いた 45° の砂山が安息角 30° まで崩れる。終端勾配と体積保存 | f_repose | 解析 |
 | [suspend/](suspend/) | 浮遊砂(移流+浸食・沈降)の疎通・保存則 | 土砂 f_suspend | 解析 |
 | [wash/](wash/) | 斜面浸食(雨滴+面状)の疎通・保存則 | 土砂 f_wash | 保存則(Log) |
 | [splash/](splash/) | 乾式斜面侵食の解析検証 | 土砂 f_splash | ref |

@@ -153,6 +153,13 @@ developer.md §62。
 | sec_nstar | (必須) | N*(f_secflow = 1 で明示指定が必須。下の注意) |
 | sec_rmax | 1.0 | |r| の上限(急湾曲での h/R 比例則の打ち切り。1 = 45°) |
 | sec_vmin | 0.01 | 曲率を評価する最小流速 (m/s) |
+| f_berode | 0 | 側岸侵食。1: 湿潤セルの水面より高い隣接セル(河岸面)を脚部の掃流力で後退させ、削った土砂を脚部へ移す(f_fluvial = 1 が必須) |
+| berode_kb | (必須) | 河岸の侵食速度係数 K_b (m/s)。E_b = K_b (τ*/τ*c,b − 1)^m。校正値で既定なし |
+| berode_tausc | 0.05 | 河岸の限界無次元掃流力 τ*c,b |
+| berode_m | 1.0 | 超過掃流力のべき指数 m |
+| f_repose | 0 | 安息角崩落。1: 隣接セル間の勾配が tanφ_r を超えた分を高い側から低い側へ移す(乾湿を問わない。掃流砂なしでも使える) |
+| repose_phi | 30 | 安息角 φ_r (deg) |
+| repose_relax | 0.5 | 1 更新で緩和する超過勾配の割合(0〜1) |
 
 「とりあえず河床を動かしてみる」最小入力は `f_fluvial = 1` と、侵食できる
 土層の厚さ `sd0`(&list_geoinfo)です。粒径は既定の 1 cm(採用値は実行時に
@@ -172,7 +179,21 @@ developer.md §62。
 (長谷川 1981、Nays2DH)、N* = 7(Engelund 型、Nays2DH)で、
 [test/bendsed](../../test/bendsed/) はこの値で検定しています。掃流砂は
 水面より高い隣接セル(河岸面)へは運ばれず、乾いたセルから供給も
-されません(§84.2。河岸の後退は段 2 の側岸侵食が担う予定)。
+されません(§84.2)。
+
+**河岸の後退と崩落(側岸侵食・安息角)。** 河岸面(水面より高い隣接セル)は
+`f_berode = 1` で後退します: 脚部セルの掃流力が河岸の限界値を超えた分に
+比例する速度 E_b = K_b (τ*/τ*c,b − 1)^m で河岸セルの地盤を下げ、同じ体積を
+脚部セルに積みます(以後の掃流砂が運びます。土砂は保存)。`berode_kb` は
+校正値で既定がありません(粘着性河岸の侵食係数として、脚部の流れに対する
+後退速度を与える量)。堤防エッジ(河道マスク境界の壁)では河岸侵食も
+起きないので、護岸・築堤区間は `fn_rw` の壁で表せます。`f_repose = 1` は
+安息角 `repose_phi`(既定 30°)を超えた斜面を高い側から低い側へ崩す
+保存形の緩和で、河岸脚部の崩落土砂・掘削面・砂州側面の急斜面を扱います
+(非粘着性の局所崩落。乾いたセルにも働き、掃流砂なしでも使えます)。
+非粘着性の河岸では脚部洗掘+崩落だけで後退が出るので、同じ後退を
+`berode_kb` と二重に与えないでください。検証:
+[test/berode](../../test/berode/)、[test/repose](../../test/repose/)。
 
 **この節に関係する出力**: 河床変動は `Z0001…`(`f_out_z=1`。Z − Z0000 が洗掘・堆積厚)。河床変動上限 fluv_dzmax が働いた回数は終了時の警告「fluvial dzmax clip fired」で、土層厚による供給量制限の発動セル数は「fluvial supply limiter」で、岩盤床で失われた体積(通常はゼロ)は「bedrock floor clip」で確認します([出力・確認](#出力確認))。
 
@@ -682,7 +703,7 @@ bs_eps_s を大きく(0.02 → 0.05)するのが第一の対処です(仕組み�
 [examples/List_samples/list_geomorph.txt](../../examples/List_samples/list_geomorph.txt)。
 検証済みのテストケースがプロセスごとにあります:
 [test/creep](../../test/creep/)(解析解ベンチマーク)、
-[test/fluvial](../../test/fluvial/)、[test/bankface](../../test/bankface/)(河岸面の遮断・供給量制限)、[test/bendsed](../../test/bendsed/)(湾曲部の流砂方向補正)、[test/suspend](../../test/suspend/)、
+[test/fluvial](../../test/fluvial/)、[test/bankface](../../test/bankface/)(河岸面の遮断・供給量制限)、[test/bendsed](../../test/bendsed/)(湾曲部の流砂方向補正)、[test/berode](../../test/berode/)(側岸侵食)、[test/repose](../../test/repose/)(安息角崩落)、[test/suspend](../../test/suspend/)、
 [test/wash](../../test/wash/)、[test/debris](../../test/debris/)、
 [test/slide](../../test/slide/)、[test/avalanche](../../test/avalanche/)、
 [test/sedinflow](../../test/sedinflow/)(境界土砂供給)、

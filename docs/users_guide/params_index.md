@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 601 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 608 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -27,9 +27,13 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | bd_wdes | &list_bldgdebris | [家屋破壊・瓦礫](bldgdebris.md) |
 | bd_wfloat | &list_bldgdebris | [家屋破壊・瓦礫](bldgdebris.md) |
 | bd_wstop | &list_bldgdebris | [家屋破壊・瓦礫](bldgdebris.md) |
+| berode_kb | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| berode_m | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| berode_tausc | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | bm_tscale | &list_bedmotion | [規定底面運動](bedmotion.md) |
 | br_cell | &list_channel_breach | [河道](channel.md) |
 | br_series | &list_channel_breach | [河道](channel.md) |
+| f_berode | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_br_diag | &list_channel_breach | [河道](channel.md) |
 | bs_cfl | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | bs_diagratio | &list_geomorph | [土砂・地形変化](geomorph.md) |
@@ -146,6 +150,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | evap_monthly | &list_evap | [降雨・気象](forcing.md) |
 | f_adaptive_runge | &list_enc | [浅水流計算](swflow.md) |
 | f_advection_donor | &list_enc | [浅水流計算](swflow.md) |
+| f_repose | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_scalar_scheme | &list_enc | [浅水流計算](swflow.md) |
 | f_advection_scheme | &list_enc | [浅水流計算](swflow.md) |
 | f_bank_aggr | &list_channel | [河道](channel.md) |
@@ -513,6 +518,8 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | pump_out_cell | &list_struct_pump | [構造物](structure.md) |
 | pump_q0 | &list_struct_pump | [構造物](structure.md) |
 | pump_rule | &list_struct_pump | [構造物](structure.md) |
+| repose_phi | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| repose_relax | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | rn0 | &list_geoinfo | [地理情報](geoinfo.md) |
 | rn0_rw | &list_geoinfo | [地理情報](geoinfo.md) |
 | runoff_rate | &list_precip | [降雨・気象](forcing.md) |

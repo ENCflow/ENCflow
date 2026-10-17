@@ -109,6 +109,23 @@ module m_geomorph
     real :: vleak = 0.0              ! 岩盤床クリップで失った土砂体積 (m3)(累計)
   end type
 
+  type t_bank
+    ! 側岸侵食(f_berode)と安息角崩落(f_repose)。§84.4
+    real :: kb = 0.0                 ! 河岸の侵食速度係数 K_b (m/s)
+    real :: tausc = 0.05             ! 河岸の限界無次元掃流力
+    real :: pm = 1.0                 ! べき指数 m
+    real :: tanphi = 0.0             ! tan(安息角)
+    real :: relax = 0.5              ! 崩落の緩和率
+    real :: dist(1:4) = 0.0          ! k=1..4 の近傍セル中心間距離 (m)
+    real :: area = 0.0               ! セル面積 (m2)
+    integer :: nbank = 0             ! 侵食した河岸エッジ数(累計。ランク局所)
+    integer :: nbclip = 0            ! 河岸の dzmax クリップ数(累計)
+    real :: vbank = 0.0              ! 河岸から脚部へ移した体積 (m3 かさ。累計)
+    integer :: nrep = 0              ! 崩落したエッジ数(累計)
+    integer :: nrclip = 0            ! 崩落の dzmax クリップ数(累計)
+    real :: vrep = 0.0               ! 崩落で移した体積 (m3 かさ。累計)
+  end type
+
   type t_gmwork
     real :: ainv = 0.0               ! 1 / (dx*dy)
     real, allocatable :: q(:,:,:)    ! エッジ流量4成分 (m3/s)。プロセス間で
@@ -244,6 +261,8 @@ module m_geomorph
     integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
     real :: uprate = 0.0             ! 隆起速度 (m/s。mm/yr から換算)
     integer :: f_bedslide = 0        ! 動く底層(0:無効, 1:有効。landslide_tsunami_plan.md)
+    integer :: f_berode = 0          ! 側岸侵食(0:無効, 1:有効。§84.4)
+    integer :: f_repose = 0          ! 安息角崩落(0:無効, 1:有効。§84.4)
     real :: bs_r = 0.0               ! 浮力比 r = ρw/ρs
     integer :: f_bsres = 1           ! 底層の抵抗則(1:Voellmy, 2:Bingham〔予約〕)
     real :: bs_mu = 0.0              ! Voellmy 摩擦係数 μ
@@ -265,6 +284,7 @@ module m_geomorph
     type(t_debris) :: dbr            ! 土石流 E-D
     type(t_splash) :: spl            ! 乾式斜面侵食
     type(t_bedslide) :: bsl          ! 動く底層(地滑り津波)
+    type(t_bank) :: bnk              ! 側岸侵食・安息角崩落
     type(t_gmwork) :: wrk            ! 共有スクラッチ(require_work が確保)
   end type
 
@@ -403,6 +423,26 @@ module m_geomorph
       type(t_state), intent(inout) :: s
       real, intent(in) :: dts
     end subroutine
+    ! 側岸侵食・安息角崩落(m_geomorph_bank。§84.4)
+    module subroutine init_bank(gm, p, g, list)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine bank_edge_pass(gm, p, g, s, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+      real, intent(in) :: dts
+    end subroutine
+    module subroutine calc_repose(gm, g, s, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
   end interface
 
 contains
@@ -522,8 +562,15 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_bedslide /= 0 .and. gm%f_bedslide /= 1) then
     call par_stop("list_geomorph: f_bedslide must be 0 or 1")
   end if
+  gm%f_berode = list%f_berode
+  gm%f_repose = list%f_repose
+  if (gm%f_berode < 0 .or. gm%f_berode > 1) call par_stop("list_geomorph: f_berode must be 0 or 1")
+  if (gm%f_repose < 0 .or. gm%f_repose > 1) call par_stop("list_geomorph: f_repose must be 0 or 1")
+  if (gm%f_berode > 0 .and. gm%f_fluvial <= 0) then
+    call par_stop("list_geomorph: f_berode requires f_fluvial=1 (bank erosion feeds the bed-load path)")
+  end if
   if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 &
-      .or. gm%f_splash > 0 .or. gm%f_bedslide > 0) then
+      .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0) then
     ! 河床の物性(共有)
     if (list%fluv_porosity < 0.0 .or. list%fluv_porosity >= 1.0) then
       call par_stop("list_geomorph: fluv_porosity must be in [0,1)")
@@ -553,7 +600,7 @@ subroutine m_geomorph_init(gm, p, g, s)
     gm%wsdstar = list%wthr_sdstar
     gm%wsdinv = 1.0 / list%wthr_sdstar
     if (.not. (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 &
-               .or. gm%f_splash > 0 .or. gm%f_bedslide > 0)) then
+               .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0)) then
       call setup_sd(p, g, s)                        ! 風化のみでも sd を確保・転記
     end if
   end if
@@ -575,6 +622,8 @@ subroutine m_geomorph_init(gm, p, g, s)
   ! 検証・読み込みは init_debris 内)
   ! 動く底層(f_bedslide。s%hb の確保・restore・発火与件の読み込みまで)
   if (gm%f_bedslide > 0) call init_bedslide(gm, p, g, s, list)
+  ! 側岸侵食・安息角崩落(fluvial の後 = dzmax 等の共有値を参照する)
+  if (gm%f_berode > 0 .or. gm%f_repose > 0) call init_bank(gm, p, g, list)
 
   ! 浮遊砂輸送の有効化を通知(swflow_enc がステップ内で s%hs を移流する。
   ! 初期化順序: 本 init は m_swflow_init より前)。土石流(f_debris)も
@@ -731,6 +780,14 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
     if (gm%f_fluvial > 0) call par_halo_cell(s%sd)
   end if
   if (gm%f_fluvial > 0) call calc_fluvial(gm, p, g, s, dts)
+  ! 安息角崩落(§84.4): fluvial(・側岸侵食)が帯内の z を更新した後に、
+  ! 更新後の地形で勾配を見る。近傍参照のため z・sd のハロを先に最新化する
+  ! (splash と同じ理由。判定は全ランク同一 = collective 安全)
+  if (gm%f_repose > 0) then
+    call par_halo_cell(s%z)
+    call par_halo_cell(s%sd)
+    call calc_repose(gm, g, s, dts)
+  end if
   if (gm%f_suspend > 0) call calc_suspend(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_wash > 0) call calc_wash(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_creep > 0) call calc_creep(gm, g, s, dts)
@@ -766,7 +823,7 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
   ! 近傍参照が、この1回の交換で賄われる(developer.md §11)
   call par_halo_cell(s%z)
   if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 .or. gm%f_wthr > 0 &
-      .or. gm%f_splash > 0 .or. gm%f_bedslide > 0) then
+      .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0) then
     call par_halo_cell(s%sd)
   end if
   ! s%hs のハロは swflow_enc のステップ頭交換が担う(移流の直前に最新化)
@@ -893,6 +950,23 @@ subroutine m_geomorph_dispose(gm, p, g, s)
     call par_warn("geomorph: bedrock floor clip caused a sediment budget imbalance of " &
                   // rtoa(gm%flv%vleak) // " m3")
   end if
+  if (gm%f_berode > 0) then
+    ! ランク局所の台帳(河岸から脚部へ移した体積と、クリップの発動)
+    call par_warn("geomorph: bank erosion moved " // rtoa(gm%bnk%vbank) &
+                  // " m3 (bulk) from banks to toes over " // itoa(gm%bnk%nbank) // " edge-updates")
+    if (gm%bnk%nbclip > 0) then
+      call par_warn("geomorph: bank erosion dzmax clip fired on " // itoa(gm%bnk%nbclip) &
+                    // " edges (review dt_geomorph/morfac/berode_kb)")
+    end if
+  end if
+  if (gm%f_repose > 0) then
+    call par_warn("geomorph: angle-of-repose avalanching moved " // rtoa(gm%bnk%vrep) &
+                  // " m3 (bulk) over " // itoa(gm%bnk%nrep) // " edge-updates")
+    if (gm%bnk%nrclip > 0) then
+      call par_warn("geomorph: avalanching dzmax clip fired on " // itoa(gm%bnk%nrclip) &
+                    // " edges (review dt_geomorph/morfac/repose_relax)")
+    end if
+  end if
   if (gm%dbr%nrelclip > 0) then
     call par_warn("geomorph: instantaneous release depth exceeded soil depth sd " &
                   // "and was clipped to sd in " // itoa(gm%dbr%nrelclip) // " cells" &
@@ -927,6 +1001,8 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   gm%flv%nclip = 0
   gm%flv%nlim = 0
   gm%flv%vleak = 0.0
+  gm%bnk%nbank = 0; gm%bnk%nbclip = 0; gm%bnk%vbank = 0.0
+  gm%bnk%nrep = 0; gm%bnk%nrclip = 0; gm%bnk%vrep = 0.0
   gm%enabled = .false.
   gm%initialized = .false.
 end subroutine

@@ -69,6 +69,19 @@
   !sec_rmax = 1.0           ! upper bound of |r| (1 = 45 deg)
   !sec_vmin = 0.01          ! minimum velocity for evaluating the curvature (m/s)
 
+  ! ---- Bank erosion and angle-of-repose avalanching (with f_fluvial;
+  !      f_repose also works alone) ----
+  !f_berode = 1             ! bank erosion (a neighbour above the water surface
+                            !   retreats under the toe shear stress. Requires
+                            !   f_fluvial=1)
+  !berode_kb = 1.0e-5       ! bank erodibility K_b (m/s) (required; calibration)
+  !berode_tausc = 0.05      ! critical dimensionless shear stress of the bank
+  !berode_m = 1.0           ! exponent of the excess shear stress
+  !f_repose = 1             ! angle-of-repose avalanching (excess slope moved
+                            !   from the higher to the lower cell, wet or dry)
+  !repose_phi = 30.0        ! angle of repose (deg). 0 = default 30
+  !repose_relax = 0.5       ! fraction of the excess slope relaxed per update
+
   ! ---- Suspended sediment (advection + entrainment and settling) ----
   !f_suspend = 1
   !f_esform = 1             ! equilibrium concentration formula (1: linear in

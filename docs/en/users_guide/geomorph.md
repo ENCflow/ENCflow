@@ -167,6 +167,13 @@ Riverbed erosion and deposition by a bedload transport formula.
 | sec_nstar | (required) | N* (must be given explicitly with f_secflow = 1; see the note below) |
 | sec_rmax | 1.0 | Upper bound of |r| (cuts the h/R proportionality in sharp bends; 1 = 45°) |
 | sec_vmin | 0.01 | Minimum velocity (m/s) for evaluating the curvature |
+| f_berode | 0 | Bank erosion. 1: a neighbouring cell whose ground is above the water surface of a wet cell (a bank face) retreats under the shear stress of the toe cell, and the eroded volume is moved to the toe (requires f_fluvial = 1) |
+| berode_kb | (required) | Bank erodibility K_b (m/s). E_b = K_b (τ*/τ*c,b − 1)^m. A calibration value without default |
+| berode_tausc | 0.05 | Critical dimensionless shear stress of the bank τ*c,b |
+| berode_m | 1.0 | Exponent m of the excess shear stress |
+| f_repose | 0 | Angle-of-repose avalanching. 1: the part of the slope between neighbouring cells above tanφ_r is moved from the higher to the lower cell (wet or dry; usable without bed load) |
+| repose_phi | 30 | Angle of repose φ_r (deg) |
+| repose_relax | 0.5 | Fraction of the excess slope relaxed per update (0 to 1) |
 
 The minimal input to "just move the bed" is `f_fluvial = 1` plus the
 thickness of the erodible soil `sd0` (&list_geoinfo). The grain size is
@@ -192,8 +199,25 @@ from the literature are μs = 1.0, μk = 0.45 (Hasegawa 1981, Nays2DH) and
 N* = 7 (Engelund type, Nays2DH); [test/bendsed](../../../test/bendsed/)
 verifies with these values. Bed load is never carried onto a neighbouring
 cell whose ground is above the water surface (a bank face), and a dry cell
-never supplies bed load (§84.2; bank retreat is left to the bank-erosion
-process of stage 2).
+never supplies bed load (§84.2).
+
+**Bank retreat and collapse (bank erosion, angle of repose).** A bank face
+(a neighbouring cell above the water surface) retreats with
+`f_berode = 1`: the ground of the bank cell is lowered at the rate
+E_b = K_b (τ*/τ*c,b − 1)^m, proportional to the excess shear stress of the
+toe cell, and the same volume is deposited on the toe cell (the bed load
+carries it on; sediment is conserved). `berode_kb` is a calibration value
+without default (the erodibility of a cohesive bank, i.e. the retreat
+speed for a given flow at the toe). Levee edges (walls at the channel-mask
+boundary) do not erode, so revetted or embanked reaches are expressed by
+the walls of `fn_rw`. `f_repose = 1` is a conservative relaxation that
+collapses slopes steeper than the angle of repose `repose_phi` (default
+30°) from the higher to the lower cell; it handles the collapsed material
+at the toe, excavation faces and the flanks of bars (local non-cohesive
+collapse; it works on dry cells and without bed load). On non-cohesive
+banks toe scour plus collapse already gives the retreat, so do not add the
+same retreat again through `berode_kb`. Verification:
+[test/berode](../../../test/berode/), [test/repose](../../../test/repose/).
 
 **Outputs for this section**: bed change in `Z0001...` (`f_out_z=1`; Z − Z0000 is the scour/deposition thickness). How often the cap fluv_dzmax acted is in the end warning "fluvial dzmax clip fired", the number of cells where the soil-depth supply limiter acted in "fluvial supply limiter", and the volume lost at the bedrock floor (normally zero) in "bedrock floor clip" ([Output and monitoring](#output-and-monitoring)).
 
@@ -824,7 +848,7 @@ Annotated list of all parameters:
 [examples/List_samples/list_geomorph.txt](../../../examples/List_samples/en/list_geomorph.txt).
 Verified test cases exist per process:
 [test/creep](../../../test/creep/) (analytical-solution benchmark),
-[test/fluvial](../../../test/fluvial/), [test/bankface](../../../test/bankface/) (bank-face blocking and supply limiter), [test/bendsed](../../../test/bendsed/) (bed-load direction correction in a bend), [test/suspend](../../../test/suspend/),
+[test/fluvial](../../../test/fluvial/), [test/bankface](../../../test/bankface/) (bank-face blocking and supply limiter), [test/bendsed](../../../test/bendsed/) (bed-load direction correction in a bend), [test/berode](../../../test/berode/) (bank erosion), [test/repose](../../../test/repose/) (angle-of-repose avalanching), [test/suspend](../../../test/suspend/),
 [test/wash](../../../test/wash/), [test/debris](../../../test/debris/),
 [test/slide](../../../test/slide/), [test/avalanche](../../../test/avalanche/),
 [test/sedinflow](../../../test/sedinflow/) (boundary sediment supply),

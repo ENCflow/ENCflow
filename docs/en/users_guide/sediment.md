@@ -158,6 +158,28 @@ the effective shear stress: a fixed fraction of the total-resistance
 $`\tau_*`$ is passed to the transport formula. Verification:
 [test/bendsed](../../../test/bendsed/README.md).
 
+**Bank retreat and collapse.** A bank face (a neighbouring cell b whose
+ground is at or above the water surface $`z_w + h_w`$ of a wet cell w)
+retreats with `f_berode = 1` at
+
+```math
+E_b = K_b\,\max\!\left(\frac{\tau_{*w}}{\tau_{*c,b}} - 1,\,0\right)^{m},\qquad
+Q_{b\to w} = (1-\lambda)\,E_b\,h_w\,L_k
+```
+
+($`\tau_{*w}`$ is the dimensionless shear stress of the toe cell, $`h_w`$
+the submerged bank height, equal to the toe depth, and $`L_k`$ the passage
+width). The eroded volume is deposited on the toe cell and carried on by
+the bed load (applied as an edge flux through the same conservative path;
+the soil-depth supply limiter also bounds the erodible layer of the bank).
+The angle-of-repose avalanching of `f_repose = 1` moves, per update, a
+height $`\mathrm{relax}\cdot e/16`$ from the higher to the lower cell
+for the part $`e`$ of the height difference between neighbours that exceeds
+$`\tan\phi_r \cdot d_k`$ (a conservative relaxation that does not
+overshoot with eight directions at once; one sweep per update).
+Verification: [test/berode](../../../test/berode/README.md),
+[test/repose](../../../test/repose/README.md).
+
 **Defaults.** `fluv_d50` = 0.01 m lies near the geometric mean of a sand
 bed (0.5 mm) and a mountain gravel bed (5 cm); values for sand and gravel
 beds are in the recommended values at the end of the chapter.

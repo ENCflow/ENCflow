@@ -351,6 +351,9 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   end do
   !$omp end parallel do
 
+  ! --- 側岸侵食(§84.4): 河岸面エッジに河岸→脚部の流砂を加算する ---
+  if (gm%f_berode > 0) call bank_edge_pass(gm, p, g, s, dts)
+
   ! --- 供給量制限 → 発散 → z と sd の共動更新(共有の適用経路) ---
   call apply_edge_flux(gm, g, s, dts)
 
