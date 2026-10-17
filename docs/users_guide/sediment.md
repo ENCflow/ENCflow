@@ -108,6 +108,28 @@ Exner の河床連続式[^exner25]そのものです。数値的な行き過ぎ�
 掃流砂は河床面を転がるものとして、乾いたセルは供給せず、供給セルの水面
 より高い地盤(河岸面)へは運びません(developer.md §84.2)。
 
+**流砂の向き(湾曲部の補正)。** 既定の向きは水深平均流向 $`\hat{\mathbf t}`$
+です。`fluv_slope = 1` と `f_secflow = 1` を入れると
+
+```math
+\mathbf{q}_b = q_b\left(\hat{\mathbf t} + r\,\hat{\mathbf n} - \gamma\nabla z\right),\qquad
+\gamma = \sqrt{\frac{\tau_{*c}}{\mu_s\mu_k\tau_*}},\qquad
+r = N_* h\,\kappa
+```
+
+となります。$`\hat{\mathbf n}`$ は流向の左法線、$`\kappa`$ は水深平均流速場の
+流線曲率(左曲がり正。$`\kappa\hat{\mathbf n}`$ は曲率中心向きなので
+$`r\hat{\mathbf n}`$ は常に湾曲内側)、$`\gamma\nabla z`$ は斜面を下る向きの
+流砂(長谷川 1981 型。Nays2DH の河床勾配補正と同形)、$`r\hat{\mathbf n}`$ は
+河床近傍の二次流が湾曲内側へ向く効果(Engelund 型の平衡二次流)です。
+二次流が内岸へ運び、形成された横断斜面を勾配項が下へ戻す釣合いで、
+横断勾配 $`\partial z/\partial n \approx r/\gamma`$ の外岸深・内岸浅の断面が
+できます。曲率は 4 近傍がすべて湿潤のセルでだけ評価し(河岸沿い・境界列は
+$`r = 0`$)、河岸面の段差は $`\nabla z`$ に入れません。係数 $`\mu_s, \mu_k, N_*`$
+は既定を置かず明示指定します(文献照合待ち。§84.3)。`fluv_taufac` は
+流砂量式に渡す $`\tau_*`$ を全抵抗の $`\tau_*`$ の一定比にする簡略な
+有効掃流力の分離です。検証: [test/bendsed](../../test/bendsed/README.md)。
+
 **既定値。** `fluv_d50` = 0.01 m は砂床(0.5 mm)と山地礫床(5 cm)の
 幾何平均付近で、砂床・礫床の目安は章末の推奨値にあります。`fluv_porosity`
 = 0.4、`fluv_sgrav` = 1.65 は砂礫の標準値です。検証:

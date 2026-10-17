@@ -90,6 +90,16 @@ module m_geomorph
     real :: ex(1:8) = 0.0            ! k軸方向の単位ベクトル x 成分
     real :: ey(1:8) = 0.0            ! k軸方向の単位ベクトル y 成分
     real :: qbcoef = 0.0             ! 流砂量の次元化係数 sqrt(s g d50^3)
+    real :: taufac = 1.0             ! 有効掃流力の比 f_τ(§84.3)
+    logical :: f_dir = .false.       ! 流砂方向補正あり(f_slope か f_sec)
+    logical :: f_slope = .false.     ! 河床勾配項(長谷川型)
+    real :: gcoef = 0.0              ! 1/√(μs μk)(γ = gcoef·√(τ*c/τ*))
+    logical :: f_sec = .false.       ! 平衡二次流項
+    real :: nstar = 0.0              ! N*
+    real :: rmax = 1.0               ! |r| の上限
+    real :: vmin = 0.0               ! 曲率評価の最小流速 (m/s)
+    real, allocatable :: rsec(:,:)   ! 河床近傍の横断流速比 r = N* h κ(セル。帯±ハロ。
+                                     !   自帯で評価しハロ交換、エッジ値は両セル平均)
     real, allocatable :: fdon(:,:)   ! 供給量制限係数(0〜1。セルの総流出要求が可動層
                                      !   sd を超えるとき、そのセルを風上とする全エッジ
                                      !   流量に乗じる縮小率。帯±ハロ。自帯で評価し
@@ -896,6 +906,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   end if
   if (allocated(gm%wrk%q)) deallocate(gm%wrk%q)
   if (allocated(gm%flv%fdon)) deallocate(gm%flv%fdon)
+  if (allocated(gm%flv%rsec)) deallocate(gm%flv%rsec)
   if (allocated(gm%dbr%fx)) deallocate(gm%dbr%fx)
   if (allocated(gm%dbr%rel)) deallocate(gm%dbr%rel)
   if (allocated(gm%dbr%sld)) deallocate(gm%dbr%sld)

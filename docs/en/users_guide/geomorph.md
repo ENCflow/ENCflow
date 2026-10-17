@@ -160,6 +160,13 @@ Riverbed erosion and deposition by a bedload transport formula.
 | fluv_dzmax | 0.05 | Upper limit of bed change per update (m) (stabilization) |
 | fluv_bcfeed | 0 | Sediment feed at open boundaries. 0: no feed at inflow, 1: equilibrium feed (outflow is always at transport capacity) |
 | fluv_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
+| fluv_taufac | 1.0 | Effective shear-stress ratio f_τ (the τ* passed to the transport formula = f_τ × τ* of the total resistance; a simple separation of form drag by dunes or vegetation. 1 = no separation) |
+| fluv_slope | 0 | Bed-slope correction of the bed-load direction. 1: Hasegawa type (q⃗ = q_b(t̂ − γ∇z), γ = √(τ*c/(μs μk τ*))) |
+| fluv_mus / fluv_muk | (required) | Static and kinetic friction coefficients μs, μk (must be given explicitly with fluv_slope = 1; see the note below) |
+| f_secflow | 0 | Secondary-flow correction of the bed-load direction. 1: equilibrium type (near-bed transverse velocity ratio r = N* h κ, κ = streamline curvature of the velocity field) |
+| sec_nstar | (required) | N* (must be given explicitly with f_secflow = 1; see the note below) |
+| sec_rmax | 1.0 | Upper bound of |r| (cuts the h/R proportionality in sharp bends; 1 = 45°) |
+| sec_vmin | 0.01 | Minimum velocity (m/s) for evaluating the curvature |
 
 The minimal input to "just move the bed" is `f_fluvial = 1` plus the
 thickness of the erodible soil `sd0` (&list_geoinfo). The grain size is
@@ -169,6 +176,24 @@ sand and gravel beds are in the recommendations at the end).
 Combined with the subgrid channel width (fn_width), bedload
 concentrates in the channel width and changes the riverbed there
 ([the channel chapter](channel.md)).
+
+**Cross-sectional bed shape in bends (direction correction).** By default
+the bed load follows the depth-averaged flow direction, so bends do not
+scour the outer bank and deposit on the inner bank. With `fluv_slope = 1`
+(bed-slope term: transport down the transverse slope) and `f_secflow = 1`
+(equilibrium secondary-flow term: the near-bed flow points to the inside
+of the bend) a cross section with a deep outer side and a shallow inner
+side forms in bends (use the two together; one alone does not reach an
+equilibrium transverse slope). The equations are in the
+[explanation](sediment.md#3-bed-load-f_fluvial). The coefficients
+`fluv_mus`, `fluv_muk` and `sec_nstar` have **no defaults** (pending a
+check against the literature; developer.md §84.3). The values recalled
+from the literature are μs = 1.0, μk = 0.45 (Hasegawa 1981, Nays2DH) and
+N* = 7 (Engelund type, Nays2DH); [test/bendsed](../../../test/bendsed/)
+verifies with these values. Bed load is never carried onto a neighbouring
+cell whose ground is above the water surface (a bank face), and a dry cell
+never supplies bed load (§84.2; bank retreat is left to the bank-erosion
+process of stage 2).
 
 **Outputs for this section**: bed change in `Z0001...` (`f_out_z=1`; Z − Z0000 is the scour/deposition thickness). How often the cap fluv_dzmax acted is in the end warning "fluvial dzmax clip fired", the number of cells where the soil-depth supply limiter acted in "fluvial supply limiter", and the volume lost at the bedrock floor (normally zero) in "bedrock floor clip" ([Output and monitoring](#output-and-monitoring)).
 
@@ -799,7 +824,7 @@ Annotated list of all parameters:
 [examples/List_samples/list_geomorph.txt](../../../examples/List_samples/en/list_geomorph.txt).
 Verified test cases exist per process:
 [test/creep](../../../test/creep/) (analytical-solution benchmark),
-[test/fluvial](../../../test/fluvial/), [test/bankface](../../../test/bankface/) (bank-face blocking and supply limiter), [test/suspend](../../../test/suspend/),
+[test/fluvial](../../../test/fluvial/), [test/bankface](../../../test/bankface/) (bank-face blocking and supply limiter), [test/bendsed](../../../test/bendsed/) (bed-load direction correction in a bend), [test/suspend](../../../test/suspend/),
 [test/wash](../../../test/wash/), [test/debris](../../../test/debris/),
 [test/slide](../../../test/slide/), [test/avalanche](../../../test/avalanche/),
 [test/sedinflow](../../../test/sedinflow/) (boundary sediment supply),

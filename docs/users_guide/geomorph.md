@@ -146,6 +146,13 @@ developer.md §62。
 | fluv_dzmax | 0.05 | 1更新あたりの河床変動上限 (m)(安定化) |
 | fluv_bcfeed | 0 | 開境界の給砂。0: 流入は無給砂、1: 平衡給砂(流出は常に容量輸送) |
 | fluv_diagratio | 2/(2+√2) | 斜め方向の配分(通常変更不要) |
+| fluv_taufac | 1.0 | 有効掃流力の比 f_τ(流砂量式に渡す τ* = f_τ × 全抵抗の τ*。砂堆・植生の形状抵抗を除く簡略分離。1 = 分離なし) |
+| fluv_slope | 0 | 河床勾配による流砂方向補正。1: 長谷川型(q⃗ = q_b(t̂ − γ∇z)、γ = √(τ*c/(μs μk τ*))) |
+| fluv_mus / fluv_muk | (必須) | 静止・動摩擦係数 μs・μk(fluv_slope = 1 で明示指定が必須。下の注意) |
+| f_secflow | 0 | 二次流による流砂方向補正。1: 平衡型(河床近傍の横断流速比 r = N* h κ、κ は流速場の流線曲率) |
+| sec_nstar | (必須) | N*(f_secflow = 1 で明示指定が必須。下の注意) |
+| sec_rmax | 1.0 | |r| の上限(急湾曲での h/R 比例則の打ち切り。1 = 45°) |
+| sec_vmin | 0.01 | 曲率を評価する最小流速 (m/s) |
 
 「とりあえず河床を動かしてみる」最小入力は `f_fluvial = 1` と、侵食できる
 土層の厚さ `sd0`(&list_geoinfo)です。粒径は既定の 1 cm(採用値は実行時に
@@ -153,6 +160,19 @@ developer.md §62。
 
 サブグリッド河道幅(fn_width)と併用すると、掃流砂は河道幅に集中して
 河床を変動させます([河道の章](channel.md))。
+
+**湾曲部の横断河床形状(流砂方向補正)。** 既定では流砂は水深平均流向に
+運ばれ、湾曲部の外岸洗掘・内岸堆積は生じません。`fluv_slope = 1`(河床
+勾配項: 横断斜面を下る向きの流砂)と `f_secflow = 1`(平衡二次流項:
+河床近傍の流れが湾曲内側へ向く効果)を入れると、湾曲部で外岸側が深く
+内岸側が浅くなる横断形状が形成されます(両方を組で使うのが基本。片方だけ
+では横断勾配が平衡しません)。式は[解説](sediment.md#3-掃流砂f_fluvial)。
+係数 `fluv_mus`・`fluv_muk`・`sec_nstar` には**既定値を置いていません**
+(文献照合待ち。developer.md §84.3)。記憶上の文献値は μs = 1.0、μk = 0.45
+(長谷川 1981、Nays2DH)、N* = 7(Engelund 型、Nays2DH)で、
+[test/bendsed](../../test/bendsed/) はこの値で検定しています。掃流砂は
+水面より高い隣接セル(河岸面)へは運ばれず、乾いたセルから供給も
+されません(§84.2。河岸の後退は段 2 の側岸侵食が担う予定)。
 
 **この節に関係する出力**: 河床変動は `Z0001…`(`f_out_z=1`。Z − Z0000 が洗掘・堆積厚)。河床変動上限 fluv_dzmax が働いた回数は終了時の警告「fluvial dzmax clip fired」で、土層厚による供給量制限の発動セル数は「fluvial supply limiter」で、岩盤床で失われた体積(通常はゼロ)は「bedrock floor clip」で確認します([出力・確認](#出力確認))。
 
@@ -662,7 +682,7 @@ bs_eps_s を大きく(0.02 → 0.05)するのが第一の対処です(仕組み�
 [examples/List_samples/list_geomorph.txt](../../examples/List_samples/list_geomorph.txt)。
 検証済みのテストケースがプロセスごとにあります:
 [test/creep](../../test/creep/)(解析解ベンチマーク)、
-[test/fluvial](../../test/fluvial/)、[test/bankface](../../test/bankface/)(河岸面の遮断・供給量制限)、[test/suspend](../../test/suspend/)、
+[test/fluvial](../../test/fluvial/)、[test/bankface](../../test/bankface/)(河岸面の遮断・供給量制限)、[test/bendsed](../../test/bendsed/)(湾曲部の流砂方向補正)、[test/suspend](../../test/suspend/)、
 [test/wash](../../test/wash/)、[test/debris](../../test/debris/)、
 [test/slide](../../test/slide/)、[test/avalanche](../../test/avalanche/)、
 [test/sedinflow](../../test/sedinflow/)(境界土砂供給)、

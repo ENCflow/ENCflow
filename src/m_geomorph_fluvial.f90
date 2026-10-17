@@ -7,8 +7,9 @@
 !   ため ENC 私有への依存で問題ない)
 !======================================================================
 submodule(m_geomorph) m_geomorph_fluvial
-  use m_parallel, only : par_stop, dcp, par_halo_cell
+  use m_parallel, only : par_info, par_stop, dcp, par_halo_cell
   use m_swflow_enc, only : chn, bcs, bc_open_face
+  use m_util, only : rtoa
   implicit none
 
 contains
@@ -43,6 +44,45 @@ module subroutine init_fluvial(gm, p, g, list)
   gm%tausc = list%fluv_tausc
   gm%dzmax = list%fluv_dzmax
   gm%f_bcfeed = list%fluv_bcfeed
+
+  ! --- 有効掃流力の分離と流砂方向補正(§84.3) ---
+  if (list%fluv_taufac <= 0.0 .or. list%fluv_taufac > 1.0) then
+    call par_stop("list_geomorph: fluv_taufac must be in (0,1]")
+  end if
+  gm%flv%taufac = list%fluv_taufac
+  if (list%fluv_slope < 0 .or. list%fluv_slope > 1) then
+    call par_stop("list_geomorph: fluv_slope must be 0 or 1")
+  end if
+  if (list%f_secflow < 0 .or. list%f_secflow > 1) then
+    call par_stop("list_geomorph: f_secflow must be 0(none) or 1(equilibrium)")
+  end if
+  gm%flv%f_slope = (list%fluv_slope > 0)
+  gm%flv%f_sec = (list%f_secflow > 0)
+  gm%flv%f_dir = (gm%flv%f_slope .or. gm%flv%f_sec)
+  if (gm%flv%f_slope) then
+    ! 式固有の係数だが文献照合が済むまで既定は置かない(明示指定を要求。§84.3)
+    if (list%fluv_mus <= 0.0 .or. list%fluv_muk <= 0.0) then
+      call par_stop("list_geomorph: fluv_slope=1 requires fluv_mus > 0 and fluv_muk > 0 " &
+                    // "(static/kinetic friction coefficients of the Hasegawa-type slope term)")
+    end if
+    gm%flv%gcoef = 1.0 / sqrt(list%fluv_mus * list%fluv_muk)
+    call par_info("geomorph: bed-slope direction term on (mus = " // rtoa(list%fluv_mus) &
+                  // ", muk = " // rtoa(list%fluv_muk) // ")")
+  end if
+  if (gm%flv%f_sec) then
+    if (list%sec_nstar <= 0.0) then
+      call par_stop("list_geomorph: f_secflow=1 requires sec_nstar > 0 " &
+                    // "(coefficient of the near-bed transverse velocity ratio r = N* h kappa)")
+    end if
+    if (list%sec_rmax <= 0.0) call par_stop("list_geomorph: sec_rmax must be > 0")
+    if (list%sec_vmin < 0.0) call par_stop("list_geomorph: sec_vmin must be >= 0")
+    gm%flv%nstar = list%sec_nstar
+    gm%flv%rmax = list%sec_rmax
+    gm%flv%vmin = list%sec_vmin
+    call par_info("geomorph: equilibrium secondary-flow direction term on (N* = " &
+                  // rtoa(list%sec_nstar) // ", rmax = " // rtoa(list%sec_rmax) &
+                  // ", vmin = " // rtoa(list%sec_vmin) // " m/s)")
+  end if
 
   ! --- 8近傍の通過幅と方向余弦(m_gwflow_lateral と同一の配分則) ---
   dr = sqrt(g%dx**2 + g%dy**2)
@@ -83,6 +123,8 @@ module subroutine init_fluvial(gm, p, g, list)
   call require_work(gm, g)
   ! 供給量制限係数(帯±ハロ。1 = 制限なし。自帯以外は交換で埋まる)
   allocate(gm%flv%fdon(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 1.0)
+  ! 二次流の横断流速比(帯±ハロ。有効時のみ)
+  if (gm%flv%f_sec) allocate(gm%flv%rsec(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
 end subroutine
 
 
@@ -95,6 +137,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt
   real :: gq, ue, vve, hhe, rne, taus, qbs, qb, sdup, dze, winvd
+  real :: dirp, ubar, vbar, dxv, dyv, re, gam, zxc, zyc, zxn, zyn
   real :: dv8, dz, cap, fx, winv, qk, fd, vout, vcap
   integer :: nclip, nlim
   real :: vleak
@@ -116,11 +159,17 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   call par_halo_cell(s%v)
   call par_halo_cell(s%vv)
 
+  ! --- 平衡二次流の横断流速比 r = N* h κ(自帯で評価 → ハロ交換。§84.3) ---
+  if (gm%flv%f_sec) then
+    call eval_secflow(gm, p, g, s)
+    call par_halo_cell(gm%flv%rsec)
+  end if
+
   ! --- ループ1: エッジの掃流砂フラックス(各成分の書き手は一意) ---
   jt = min(dcp%je + 1, dcp%jeh)
   !$omp parallel do schedule(static) reduction(+: nclip) &
   !$omp   private(i, j, k, in, jn, okc, okbank, gq, ue, vve, hhe, rne, taus, qbs, qb, &
-  !$omp           sdup, dze, winvd)
+  !$omp           sdup, dze, winvd, dirp, ubar, vbar, dxv, dyv, re, gam, zxc, zyc, zxn, zyn)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -149,12 +198,40 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
             if (okbank .and. vve > 0.0 .and. hhe > p%dd) then
               ue = (s%u(i,j) + s%u(in,jn)) / 2 * gm%flv%ex(k) &
                  + (s%v(i,j) + s%v(in,jn)) / 2 * gm%flv%ey(k)
-              if (ue /= 0.0) then
-                hhe = max(hhe, p%dv)         ! 極浅水深での τ* 発散を防ぐ
-                rne = (g%rn(i,j) + g%rn(in,jn)) / 2
-                ! 無次元掃流力(マニング閉じ。g は分子分母で相殺)
-                taus = rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
-                if (taus > gm%tausc) then
+              hhe = max(hhe, p%dv)           ! 極浅水深での τ* 発散を防ぐ
+              rne = (g%rn(i,j) + g%rn(in,jn)) / 2
+              ! 無次元掃流力(マニング閉じ。g は分子分母で相殺)。taufac は
+              ! 有効掃流力の比(1 = 分離なし。1.0 の乗算は厳密に不変)
+              taus = gm%flv%taufac * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              if (taus > gm%tausc) then
+                ! 流砂方向の射影 dirp = (q⃗_b/q_b)·ê_k。補正なしは水深平均流向
+                ! ue/vve(|dirp| <= 1)。補正ありは q⃗_b/q_b = t̂ + r n̂ − γ∇z
+                ! (§84.3。t̂ = (ū, v̄)/vve、n̂ = (−v̄, ū)/vve = 左法線、
+                ! r = 両セル平均の rsec、γ = √(τ*c/(μs μk τ*))、∇z は両セルの
+                ! 中央差分勾配の平均)。水の法線流速がゼロのエッジでも横断
+                ! 流砂が通るため、入口条件は補正後の dirp で判定する
+                if (gm%flv%f_dir) then
+                  ubar = (s%u(i,j) + s%u(in,jn)) / 2
+                  vbar = (s%v(i,j) + s%v(in,jn)) / 2
+                  dxv = ubar / vve
+                  dyv = vbar / vve
+                  if (gm%flv%f_sec) then
+                    re = (gm%flv%rsec(i,j) + gm%flv%rsec(in,jn)) / 2
+                    dxv = dxv - re * vbar / vve
+                    dyv = dyv + re * ubar / vve
+                  end if
+                  if (gm%flv%f_slope) then
+                    gam = gm%flv%gcoef * sqrt(gm%tausc / taus)
+                    call cell_zgrad(g, s, i, j, zxc, zyc)
+                    call cell_zgrad(g, s, in, jn, zxn, zyn)
+                    dxv = dxv - gam * (zxc + zxn) / 2
+                    dyv = dyv - gam * (zyc + zyn) / 2
+                  end if
+                  dirp = dxv * gm%flv%ex(k) + dyv * gm%flv%ey(k)
+                else
+                  dirp = ue / vve
+                end if
+                if (dirp /= 0.0) then
                   ! 平衡流砂量(無次元)
                   if (gm%f_qbform == 1) then       ! 芦田・道上
                     qbs = 17.0 * taus**1.5 * (1.0 - gm%tausc / taus) &
@@ -163,8 +240,8 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                     qbs = 8.0 * (taus - gm%tausc)**1.5
                   end if
                   qb = qbs * gm%flv%qbcoef            ! 固体体積の単位幅流砂量 (m2/s)
-                  ! 流向射影(|ue|/vve <= 1)× 通過幅でエッジ流量に
-                  gq = qb * (ue / vve) * gm%flv%wl(k)
+                  ! 方向射影 × 通過幅でエッジ流量に
+                  gq = qb * dirp * gm%flv%wl(k)
                   ! 河岸面の遮断(§84.2): 掃流砂は河床面を転がる。
                   !   (R1) 風上(供給)セルは湿潤でなければ供給しない(乾いた
                   !        セルの τ* は両セル平均の見かけで、実体がない)
@@ -241,7 +318,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
             if (ue > 0.0 .or. gm%f_bcfeed > 0) then
               hhe = max(hhe, p%dv)
               rne = g%rn(i,j)
-              taus = rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              taus = gm%flv%taufac * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
               if (taus > gm%tausc) then
                 if (gm%f_qbform == 1) then       ! 芦田・道上
                   qbs = 17.0 * taus**1.5 * (1.0 - gm%tausc / taus) &
@@ -374,5 +451,126 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
 
 end subroutine
 
+
+!----------------------------------------------------------------------
+! セル中心の河床勾配 (∂z/∂x, ∂z/∂y)(中央差分。近傍が領域外・海、または
+! 河岸面(近傍の地盤が自セルの水面 z+h 以上 = 河床の続きではない段差)なら
+! 自セル値で代用 = 片側差分、両側とも無効なら 0。河岸の段差を勾配に
+! 入れると γ∇z が流向項を圧倒し、河岸沿いの列が一方的に削られる(実検出:
+! 幅 10 セルの直線水路で河岸沿いが 3.9 m 洗掘)。近傍マスクの読みは
+! x 番兵ガードの内側で — §12)
+!----------------------------------------------------------------------
+pure subroutine cell_zgrad(g, s, i, j, zx, zy)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  real, intent(out) :: zx, zy
+  real :: zl, zr, dl, ec
+
+  ec = s%z(i,j) + s%h(i,j)
+  zl = s%z(i,j); zr = s%z(i,j); dl = 0.0
+  if (g%x(i-1,j) > 0) then
+    if (g%sw(i-1,j) <= 0 .and. s%z(i-1,j) < ec) then
+      zl = s%z(i-1,j); dl = dl + g%dx
+    end if
+  end if
+  if (g%x(i+1,j) > 0) then
+    if (g%sw(i+1,j) <= 0 .and. s%z(i+1,j) < ec) then
+      zr = s%z(i+1,j); dl = dl + g%dx
+    end if
+  end if
+  zx = 0.0
+  if (dl > 0.0) zx = (zr - zl) / dl
+  zl = s%z(i,j); zr = s%z(i,j); dl = 0.0
+  if (g%x(i,j-1) > 0) then
+    if (g%sw(i,j-1) <= 0 .and. s%z(i,j-1) < ec) then
+      zl = s%z(i,j-1); dl = dl + g%dy
+    end if
+  end if
+  if (g%x(i,j+1) > 0) then
+    if (g%sw(i,j+1) <= 0 .and. s%z(i,j+1) < ec) then
+      zr = s%z(i,j+1); dl = dl + g%dy
+    end if
+  end if
+  zy = 0.0
+  if (dl > 0.0) zy = (zr - zl) / dl
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 平衡二次流の河床近傍横断流速比 r = N* h κ(§84.3)
+!   κ = n̂·[(t̂·∇)t̂] = (u² v_x − v² u_y + u v (v_y − u_x)) / |V|³ は水深平均
+!   流速場の幾何学的な流線曲率(左曲がり正。κ n̂ は曲率中心向きなので
+!   r n̂ は常に湾曲内側 = 座標系の向きによらない)。
+!   流速の勾配は 4 近傍がすべて有効な湿潤セル(x>0, sw<=0, h>dd)のときだけ
+!   中央差分で評価し、それ以外(河岸沿い・開境界列・水際)は r = 0 とする。
+!   片側差分や乾いた近傍(u=0)を使うと河岸沿い・境界列に偽の曲率が立ち、
+!   横断流砂の発散で穴が育つ(実検出: 直線水路の自由流出列で 4.8 m)。
+!   評価は湿潤(h > dd)かつ |V| > vmin のセルのみ、|r| <= rmax で打ち切る。
+!   書き: 自帯 js..je の rsec(全セル。不活性は 0)。ハロ交換は呼び出し側
+!----------------------------------------------------------------------
+subroutine eval_secflow(gm, p, g, s)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer :: i, j
+  real :: ux, uy, vx, vy, kap, r
+
+  !$omp parallel do schedule(static) private(i, j, ux, uy, vx, vy, kap, r)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      r = 0.0
+      if (g%x(i,j) > 0) then
+        if (g%sw(i,j) <= 0 .and. s%h(i,j) > p%dd .and. s%vv(i,j) > gm%flv%vmin) then
+          if (wet4(p, g, s, i, j)) then
+            ux = (s%u(i+1,j) - s%u(i-1,j)) / (2 * g%dx)
+            vx = (s%v(i+1,j) - s%v(i-1,j)) / (2 * g%dx)
+            uy = (s%u(i,j+1) - s%u(i,j-1)) / (2 * g%dy)
+            vy = (s%v(i,j+1) - s%v(i,j-1)) / (2 * g%dy)
+            kap = (s%u(i,j)**2 * vx - s%v(i,j)**2 * uy &
+                   + s%u(i,j) * s%v(i,j) * (vy - ux)) / s%vv(i,j)**3
+            r = gm%flv%nstar * s%h(i,j) * kap
+            r = max(-gm%flv%rmax, min(gm%flv%rmax, r))
+          end if
+        end if
+      end if
+      gm%flv%rsec(i,j) = r
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 4 近傍がすべて有効な湿潤セルか(近傍マスクの読みは x 番兵ガードの内側で)
+!----------------------------------------------------------------------
+pure function wet4(p, g, s, i, j) result(ok)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  logical :: ok
+  integer :: k, in, jn
+  ok = .true.
+  do k = 2, 7, 5               ! k = 2 (j-1), 7 (j+1)
+    in = i + din(k); jn = j + djn(k)
+    if (g%x(in,jn) <= 0) then
+      ok = .false.; return
+    end if
+    if (g%sw(in,jn) > 0 .or. s%h(in,jn) <= p%dd) then
+      ok = .false.; return
+    end if
+  end do
+  do k = 4, 5                  ! k = 4 (i-1), 5 (i+1)
+    in = i + din(k); jn = j + djn(k)
+    if (g%x(in,jn) <= 0) then
+      ok = .false.; return
+    end if
+    if (g%sw(in,jn) > 0 .or. s%h(in,jn) <= p%dd) then
+      ok = .false.; return
+    end if
+  end do
+end function
 
 end submodule

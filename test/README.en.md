@@ -67,6 +67,7 @@ analytical-solution or conservation check by Check_*.py.
 | [creep/](creep/) | Gaussian-hill benchmark of hillslope creep (linear diffusion) | Sediment f_creep | analytic |
 | [fluvial/](fluvial/) | Bedload Exner equation: smoke test and conservation (closed-domain dam break) | Sediment f_fluvial | analytic |
 | [bankface/](bankface/) | Dam-break flow in a channel with dry banks. Bed-load blocking on bank faces (dry banks stay unchanged) and the supply limiter on a thin soil layer (volume conservation) | bed load | analytic |
+| [bendsed/](bendsed/) | Bed-load direction correction in a 90° bend. Outer-bank scour and inner-bank deposition, left/right mirror symmetry, contrast with no correction | bed load fluv_slope, f_secflow | analytic |
 | [suspend/](suspend/) | Suspended load (advection, erosion, settling): smoke test and conservation | Sediment f_suspend | analytic |
 | [wash/](wash/) | Hillslope erosion (splash and sheet): smoke test and conservation | Sediment f_wash | conservation (Log) |
 | [splash/](splash/) | Analytical verification of dry hillslope erosion | Sediment f_splash | ref |

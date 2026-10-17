@@ -54,6 +54,20 @@
                             !   nothing, 1: equilibrium feed. Outflow is always
                             !   at transport capacity)
   !fluv_diagratio = 0.5857864376  ! diagonal share (normally no need to change)
+  !fluv_taufac = 1.0        ! effective shear-stress ratio f_tau (tau* passed to the
+                            !   transport formula = f_tau x tau* of the total
+                            !   resistance. 1 = no separation)
+  !fluv_slope = 1           ! bed-slope correction of the bed-load direction
+                            !   (1: Hasegawa type gamma*grad z)
+  !fluv_mus = 1.0           ! static friction coefficient mu_s (required with
+                            !   fluv_slope=1; literature value pending verification)
+  !fluv_muk = 0.45          ! kinetic friction coefficient mu_k (same)
+  !f_secflow = 1            ! secondary-flow correction of the bed-load direction
+                            !   (1: equilibrium type r = N* h kappa)
+  !sec_nstar = 7.0          ! N* (required with f_secflow=1; literature value
+                            !   pending verification)
+  !sec_rmax = 1.0           ! upper bound of |r| (1 = 45 deg)
+  !sec_vmin = 0.01          ! minimum velocity for evaluating the curvature (m/s)
 
   ! ---- Suspended sediment (advection + entrainment and settling) ----
   !f_suspend = 1

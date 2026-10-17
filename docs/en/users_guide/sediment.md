@@ -128,6 +128,36 @@ outflow is always at capacity and the inflow feeds at capacity when
 supplies it and it is never carried onto ground above the water surface
 of the supplying cell (a bank face; developer.md §84.2).
 
+**Direction of the bed load (correction in bends).** By default the
+direction is the depth-averaged flow direction $`\hat{\mathbf t}`$. With
+`fluv_slope = 1` and `f_secflow = 1` it becomes
+
+```math
+\mathbf{q}_b = q_b\left(\hat{\mathbf t} + r\,\hat{\mathbf n} - \gamma\nabla z\right),\qquad
+\gamma = \sqrt{\frac{\tau_{*c}}{\mu_s\mu_k\tau_*}},\qquad
+r = N_* h\,\kappa
+```
+
+where $`\hat{\mathbf n}`$ is the left normal of the flow direction and
+$`\kappa`$ the streamline curvature of the depth-averaged velocity field
+(positive for a left turn; $`\kappa\hat{\mathbf n}`$ points to the centre of
+curvature, so $`r\hat{\mathbf n}`$ always points to the inside of the bend).
+$`\gamma\nabla z`$ is the transport down the slope (Hasegawa 1981 type, the
+same form as the bed-slope correction of Nays2DH) and $`r\hat{\mathbf n}`$
+the effect of the near-bed secondary flow pointing to the inside of the
+bend (equilibrium secondary flow of the Engelund type). The secondary flow
+carries sediment to the inner bank and the slope term brings it back down
+the transverse slope that forms; the balance gives a cross section with a
+deep outer and a shallow inner side, $`\partial z/\partial n \approx
+r/\gamma`$. The curvature is evaluated only in cells whose four
+neighbours are all wet ($`r = 0`$ along banks and boundary columns), and
+bank-face steps are excluded from $`\nabla z`$. The coefficients
+$`\mu_s, \mu_k, N_*`$ have no defaults and must be given (pending a check
+against the literature; §84.3). `fluv_taufac` is a simple separation of
+the effective shear stress: a fixed fraction of the total-resistance
+$`\tau_*`$ is passed to the transport formula. Verification:
+[test/bendsed](../../../test/bendsed/README.md).
+
 **Defaults.** `fluv_d50` = 0.01 m lies near the geometric mean of a sand
 bed (0.5 mm) and a mountain gravel bed (5 cm); values for sand and gravel
 beds are in the recommended values at the end of the chapter.
