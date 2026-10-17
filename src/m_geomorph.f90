@@ -395,6 +395,14 @@ module m_geomorph
       type(t_geomorph), intent(inout) :: gm
       type(t_geoinfo), intent(in) :: g
     end subroutine
+    ! 共有エッジ流量 wrk%q の適用(供給量制限 → 発散 → z・sd の共動更新。
+    ! 実装は m_geomorph_fluvial。fluvial と bank(崩落)が共用する)
+    module subroutine apply_edge_flux(gm, g, s, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
   end interface
 
 contains

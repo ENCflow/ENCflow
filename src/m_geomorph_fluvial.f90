@@ -138,14 +138,10 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   integer :: i, j, k, in, jn, jt
   real :: gq, ue, vve, hhe, rne, taus, qbs, qb, sdup, dze, winvd
   real :: dirp, ubar, vbar, dxv, dyv, re, gam, zxc, zyc, zxn, zyn
-  real :: dv8, dz, cap, fx, winv, qk, fd, vout, vcap
-  integer :: nclip, nlim
-  real :: vleak
+  integer :: nclip
   logical :: okc, okbank
 
   nclip = 0
-  nlim = 0
-  vleak = 0.0
 
   ! --- ステップ頭のハロ交換(m_gwflow_lateral と同じ「冒頭に置く」理由) ---
   ! 界面エッジの冗長計算(ハロ行 je+1 の書き手)が読む u, v, vv, h は
@@ -355,6 +351,35 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   end do
   !$omp end parallel do
 
+  ! --- 供給量制限 → 発散 → z と sd の共動更新(共有の適用経路) ---
+  call apply_edge_flux(gm, g, s, dts)
+
+  ! ガード発動の累計(dispose で報告。nlim・vleak は apply_edge_flux が加算)
+  gm%flv%nclip = gm%flv%nclip + nclip
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 共有エッジ流量 wrk%q(固体体積の流量。k=1..4 の所有成分+開境界面の
+! k>=5 スロット)を河床に適用する: 供給量制限(ループ 1.5)→ 発散(ループ 2)
+! → z と sd の共動更新+地下水容量の整合。fluvial と bank(崩落)が共用
+! (§84.1)。書き手の契約: 呼び出し側は対象セルの 4 成分と、x<=0 の近傍に
+! 向く面スロットを 0 を含めて必ず上書きしてから呼ぶ
+!----------------------------------------------------------------------
+module subroutine apply_edge_flux(gm, g, s, dts)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: dts
+  integer :: i, j, k, in, jn
+  real :: dv8, dz, cap, fx, winv, qk, fd, vout, vcap
+  integer :: nlim
+  real :: vleak
+
+  nlim = 0
+  vleak = 0.0
+
   ! --- ループ1.5: 供給量制限(セルの総流出要求 > 可動層 sd なら縮小) ---
   ! エッジ別の可動層クランプは「このエッジ単独」の上限なので、複数エッジが
   ! 同時に流出すると合計が sd を超え、ループ2の岩盤床クリップ(保存則の
@@ -444,8 +469,6 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   end do
   !$omp end parallel do
 
-  ! ガード発動の累計(dispose で報告)
-  gm%flv%nclip = gm%flv%nclip + nclip
   gm%flv%nlim = gm%flv%nlim + nlim
   gm%flv%vleak = gm%flv%vleak + vleak
 
