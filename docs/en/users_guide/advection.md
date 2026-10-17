@@ -262,7 +262,8 @@ unit width $`q`$ times the length of the face).
   $`Q = q_{t\pm}\,L_k`$. The upwind velocity $`\bar u_{t\pm}`$ of an inflow face
   is the value of the parallel neighbouring edge for axis edges, and for
   diagonal edges the mean of the two parallel links of the opposite parity
-  that lie on either end of the face. Projecting the cell flux at the face centre instead
+  that lie on either end of the face (a face with only one such link is
+  treated like a wall, $`\bar u_t = u_e`$). Projecting the cell flux at the face centre instead
   gave a non-zero flux even on faces blocked by terrain where no water
   actually passes, and the advection term, amplified by $`1/\bar h_e`$ in a
   thin control volume, blew up; hence the actual edge fluxes
