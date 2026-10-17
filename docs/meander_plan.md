@@ -4,7 +4,8 @@
 test/bankface・bendsed・berode・repose)、段 4 の例題 examples/meander・
 examples/meander_cutoff 作成済み(§84.5)。段 3 は main の移流項修正
 (§68.36。2026-10-17)を受けて §3.4 を改訂し、内岸の定着 f_fixation として
-実装中。段 5 は未着手。** 実装前の議論用資料。
+実装済み(§84.6、test/fixation、examples/meander の param_fix.txt)。
+段 5 は未着手。** 実装前の議論用資料。
 合意に至った決定は developer.md(新 § を起こす)へ移し、本書は段階ごとに
 消し込む(geomorph_plan.md・nonhydrostatic_plan.md と同じ運用)。
 発端は利用者の検討メモ(ChatGPT との問答 2026-10。「ENCflow で蛇行の発達から

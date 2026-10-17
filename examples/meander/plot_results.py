@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# examples/meander の図化(result / result_cohesive を読んで figs/ に保存)
-#   figs/planform.png : 初期と終了時の水深(河道の位置)と河床変化 z−z0(2 構成)
+# examples/meander の図化(result / result_cohesive / result_varq / result_fix を読んで figs/ に保存)
+#   figs/planform.png : 初期と終了時の水深(河道の位置)と河床変化 z−z0(4 構成)
 #   figs/sections.png : 湾曲頂点(x = 350, 450 m)の横断面の時間発展(非粘着性)
 #   figs/metrics.png  : 頂点の河道中心の横移動と河幅の時間発展
+#   figs/fixation.png : 定着構成の定着度 Fx と終了時の河道(result_fix があるとき)
 # 数表(README 用)を標準出力に書く
 import os, numpy as np, matplotlib
 matplotlib.use("Agg")
@@ -13,7 +14,10 @@ import make_init as mi
 DX, NX, NY = mi.DX, mi.NX, mi.NY
 MORFAC = 50.0
 CASES = [("result", "non-cohesive banks (f_repose)", "#2a78d6"),
-         ("result_cohesive", "cohesive banks (f_berode + f_repose)", "#d6572a")]
+         ("result_cohesive", "cohesive banks (f_berode + f_repose)", "#d6572a"),
+         ("result_varq", "non-cohesive, Q 15/1.5 m3/s without fixation", "#8a6fd1"),
+         ("result_fix", "non-cohesive + fixation (f_fixation, Q 15/1.5 m3/s)", "#2a9d5a")]
+CASES = [c for c in CASES if os.path.isdir(c[0])]
 APEX = [250, 350, 450, 550, 650]                   # 頂点付近の x (m)
 x = (np.arange(NX) + 0.5) * DX
 y = (np.arange(NY) + 0.5) * DX
@@ -95,4 +99,27 @@ for rdir, label, col in CASES:
 axes[0].set_title("lateral shift of the channel centre at the apexes"); axes[0].set_xlabel("morphological time (h)"); axes[0].set_ylabel("dy (m)"); axes[0].grid(alpha=0.3); axes[0].legend(fontsize=8)
 axes[1].set_title("channel width at the apexes"); axes[1].set_xlabel("morphological time (h)"); axes[1].set_ylabel("width (m)"); axes[1].grid(alpha=0.3)
 plt.tight_layout(); plt.savefig("figs/metrics.png", dpi=100); plt.close()
-print("figures: figs/planform.png figs/sections.png figs/metrics.png")
+
+# --- 4. 定着度(result_fix) ---
+if os.path.isdir("result_fix"):
+    rdir = "result_fix"; tm = times(rdir); K = max(tm)
+    fx = rd(rdir, "Fx", K); h = rd(rdir, "H", K); z = rd(rdir, "Z", K)
+    fig, axes = plt.subplots(2, 1, figsize=(14, 6.4), sharex=True)
+    im = axes[0].imshow(np.where(fx > 0.01, fx, np.nan), origin="lower", extent=ext, cmap="YlGn", vmin=0, vmax=1)
+    axes[0].contour(x, y, h0 > 0.05, levels=[0.5], colors="k", linewidths=0.4)
+    axes[0].contour(x, y, h > 0.05, levels=[0.5], colors="#2a9d5a", linewidths=0.8)
+    axes[0].set_title("fixation degree a after %.0f h (black = initial banks, green = final channel at the output discharge)" % (tm[K] * MORFAC / 3600))
+    plt.colorbar(im, ax=axes[0], shrink=0.8)
+    im = axes[1].imshow(np.where(h > 0.05, h, np.nan), origin="lower", extent=ext, cmap="Blues", vmin=0, vmax=2)
+    axes[1].contour(x, y, h0 > 0.05, levels=[0.5], colors="k", linewidths=0.4)
+    axes[1].set_title("final depth (m) at the output time")
+    plt.colorbar(im, ax=axes[1], shrink=0.8)
+    for ax in axes:
+        ax.set_ylabel("y (m)")
+    axes[-1].set_xlabel("x (m)")
+    plt.tight_layout(); plt.savefig("figs/fixation.png", dpi=100); plt.close()
+    # 砂州の定着面積(a > 0.5 で初期河道の内側)
+    inside = h0 > 0.05
+    print("fixation: cells with a > 0.5 inside the initial channel = %d (%.0f m2), outside = %d" % (
+        ((fx > 0.5) & inside).sum(), ((fx > 0.5) & inside).sum() * DX * DX, ((fx > 0.5) & ~inside).sum()))
+print("figures: figs/planform.png figs/sections.png figs/metrics.png" + (" figs/fixation.png" if os.path.isdir("result_fix") else ""))
