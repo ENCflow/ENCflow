@@ -170,7 +170,7 @@ Combined with the subgrid channel width (fn_width), bedload
 concentrates in the channel width and changes the riverbed there
 ([the channel chapter](channel.md)).
 
-**Outputs for this section**: bed change in `Z0001...` (`f_out_z=1`; Z − Z0000 is the scour/deposition thickness). How often the cap fluv_dzmax acted is in the end warning "fluvial dzmax clip fired", the volume lost at the bedrock floor in "bedrock floor clip" ([Output and monitoring](#output-and-monitoring)).
+**Outputs for this section**: bed change in `Z0001...` (`f_out_z=1`; Z − Z0000 is the scour/deposition thickness). How often the cap fluv_dzmax acted is in the end warning "fluvial dzmax clip fired", the number of cells where the soil-depth supply limiter acted in "fluvial supply limiter", and the volume lost at the bedrock floor (normally zero) in "bedrock floor clip" ([Output and monitoring](#output-and-monitoring)).
 
 ## Suspended sediment (f_suspend)
 
@@ -734,8 +734,11 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 
 - The S column of Log.txt is water only; sediment columns are not included.
 - Budget anomalies appear as warnings at the end: "fluvial dzmax clip fired
-  on ..." (how often the bed-change cap acted), "bedrock floor clip caused a
-  sediment budget imbalance of ..." (volume lost at the bedrock floor),
+  on ..." (how often the bed-change cap acted), "fluvial supply limiter
+  (soil depth) fired in ..." (number of cells where the outflow was scaled
+  to the soil depth; conservation holds), "bedrock floor clip caused a
+  sediment budget imbalance of ..." (volume lost at the bedrock floor; only
+  round-off since the supply limiter was introduced),
   "slide min Fs = ..." (run minimum safety factor), "splash exported
   sediment volume = ..." (volume exported by dry erosion), "bedslide plunge
   speeds ... / subcycles total ...".

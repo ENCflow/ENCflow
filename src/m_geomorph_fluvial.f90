@@ -81,6 +81,8 @@ module subroutine init_fluvial(gm, p, g, list)
   gm%flv%qbcoef = sqrt(gm%sgrav * p%gg * gm%d50**3)
 
   call require_work(gm, g)
+  ! 供給量制限係数(帯±ハロ。1 = 制限なし。自帯以外は交換で埋まる)
+  allocate(gm%flv%fdon(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 1.0)
 end subroutine
 
 
@@ -93,12 +95,13 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt
   real :: gq, ue, vve, hhe, rne, taus, qbs, qb, sdup, dze, winvd
-  real :: dv8, dz, cap, fx, winv
-  integer :: nclip
+  real :: dv8, dz, cap, fx, winv, qk, fd, vout, vcap
+  integer :: nclip, nlim
   real :: vleak
   logical :: okc, okbank
 
   nclip = 0
+  nlim = 0
   vleak = 0.0
 
   ! --- ステップ頭のハロ交換(m_gwflow_lateral と同じ「冒頭に置く」理由) ---
@@ -264,24 +267,74 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   end do
   !$omp end parallel do
 
+  ! --- ループ1.5: 供給量制限(セルの総流出要求 > 可動層 sd なら縮小) ---
+  ! エッジ別の可動層クランプは「このエッジ単独」の上限なので、複数エッジが
+  ! 同時に流出すると合計が sd を超え、ループ2の岩盤床クリップ(保存則の
+  ! 破れ = vleak)に落ちていた。ここで風上セルごとに総流出要求を集計し、
+  ! 超過分を縮小率 fdon(0〜1)にして「そのセルを風上とする全エッジ」に
+  ! 乗じる(bedslide のドナー律速と同型)。評価は自帯のみ、ハロ交換で
+  ! 隣接ランクの帯界面セルの値を受け取り、ループ2の両側が同じ fdon を
+  ! 読む = 反対称性(土砂体積保存)は保たれる。制限が発動しないセルは
+  ! fdon = 1.0 の乗算で結果は厳密に不変(発動なしの既存ケースはビット一致)
+  !$omp parallel do schedule(static) reduction(+: nlim) private(i, j, k, qk, vout, vcap, winv)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      gm%flv%fdon(i,j) = 1.0
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      vout = 0.0
+      do k = 1, 8
+        qk = sign_e(k) * gm%wrk%q(ke(k), i+die(k), j+dje(k))   ! 正 = 流出
+        if (qk > 0.0) vout = vout + qk
+      end do
+      if (vout > 0.0) then
+        winv = 1.0
+        if (chn%have_width) winv = 1.0 / chn%wfrac(i,j)
+        ! 供給可能量を流量に換算: sd = vcap * dts * ainv * winv * poroi
+        vcap = s%sd(i,j) / (dts * gm%wrk%ainv * winv * gm%poroi)
+        if (vout > vcap) then
+          gm%flv%fdon(i,j) = vcap / vout         ! sd = 0(岩盤)なら 0
+          nlim = nlim + 1
+        end if
+      end if
+    end do
+  end do
+  !$omp end parallel do
+  call par_halo_cell(gm%flv%fdon)
+
   ! --- ループ2: 発散 → z と sd の共動更新 + 地下水容量の整合 ---
+  !   各エッジ流量に風上セルの fdon を乗じて集計する(風上が域外 = 開境界
+  !   からの流入は縮小なし。近傍の fdon 読みは x 番兵ガードの内側で — §12)
+  !   (集計式は従来の dv8 + sign_e(k)*(…) の形を保つ: fdon = 1 のとき
+  !   q*1.0 = q が厳密なので、-Ofast の積和縮約も従来と同じになり
+  !   ビット一致が保たれる — 縮小率を加算後に掛ける形に書き換えると
+  !   縮約の形が変わり最終桁が動く(実検出))
   !$omp parallel do schedule(static) reduction(+: vleak) &
-  !$omp   private(i, j, k, dv8, dz, cap, fx, winv)
+  !$omp   private(i, j, k, in, jn, dv8, dz, cap, fx, winv, qk, fd)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       dv8 = 0.0
       do k = 1, 8
-        dv8 = dv8 + sign_e(k) * gm%wrk%q(ke(k), i+die(k), j+dje(k))
+        qk = gm%wrk%q(ke(k), i+die(k), j+dje(k))
+        fd = 1.0
+        if (sign_e(k) * qk > 0.0) then
+          fd = gm%flv%fdon(i,j)
+        else if (sign_e(k) * qk < 0.0) then
+          in = i + din(k)
+          jn = j + djn(k)
+          if (g%x(in,jn) > 0) fd = gm%flv%fdon(in,jn)
+        end if
+        dv8 = dv8 + sign_e(k) * (qk * fd)
       end do
       ! 河道幅有効時は体積発散を河道底面積 wfrac*dx*dy で厚さに換算
       ! (Δz の河道底集中。無効時は 1.0 の乗算で厳密に不変)
       winv = 1.0
       if (chn%have_width) winv = 1.0 / chn%wfrac(i,j)
       dz = -dv8 * dts * gm%wrk%ainv * winv * gm%poroi
-      ! 岩盤床クリップ(複数エッジの同時流出でエッジ別クランプを僅かに
-      ! 超えた場合の最終防衛。失った体積は vleak に計上して黙らない)
+      ! 岩盤床クリップ(供給量制限の後は丸め誤差分しか残らないはずの
+      ! 最終防衛。失った体積は vleak に計上して黙らない)
       if (dz < -s%sd(i,j)) then
         vleak = vleak + (-dz - s%sd(i,j)) / gm%poroi / gm%wrk%ainv / winv
         dz = -s%sd(i,j)
@@ -305,6 +358,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
 
   ! ガード発動の累計(dispose で報告)
   gm%flv%nclip = gm%flv%nclip + nclip
+  gm%flv%nlim = gm%flv%nlim + nlim
   gm%flv%vleak = gm%flv%vleak + vleak
 
 end subroutine

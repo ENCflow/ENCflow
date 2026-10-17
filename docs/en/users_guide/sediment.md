@@ -112,16 +112,19 @@ equilibrium concentration of [the debris-flow page](massflow.md) §3.
 \Delta z_{i,j} = -\frac{\Delta t_s}{(1-\lambda)\,\Delta x\,\Delta y}\sum_{k=1}^{8} Q_k
 ```
 
-This is Exner's bed continuity equation[^exner25]. Three clamps prevent
-numerical overshoot: (1) an edge never erodes more than the soil thickness
-$`s_d`$ of its upwind cell, (2) the bed change per update is limited by
-`fluv_dzmax` (default 0.05 m; the analogue of a Courant condition for bed
-waves; the number of events is reported at the end), (3) the bedrock
-surface is never crossed by the simultaneous outflow through several edges
-and the clipped volume is reported. On open boundaries the outflow is
-always at capacity and the inflow feeds at capacity when
-`fluv_bcfeed = 1`.
-
+This is Exner's bed continuity equation[^exner25]. Numerical overshoot is
+prevented in this order: (1) an edge never erodes more than the soil
+thickness $`s_d`$ of its upwind cell, (2) the bed change per update is
+limited by `fluv_dzmax` (default 0.05 m; the analogue of a Courant
+condition for bed waves; the number of events is reported at the end),
+(3) where the simultaneous outflow through several edges would exceed the
+soil thickness of a cell, every bed-load flux leaving that cell is scaled
+down by the same factor (supply limiter; the sediment volume stays exactly
+conserved and the number of limited cells is reported at the end),
+(4) whatever still crosses the bedrock surface by round-off is clipped and
+the lost volume is reported (normally none). On open boundaries the
+outflow is always at capacity and the inflow feeds at capacity when
+`fluv_bcfeed = 1`. 
 **Defaults.** `fluv_d50` = 0.01 m lies near the geometric mean of a sand
 bed (0.5 mm) and a mountain gravel bed (5 cm); values for sand and gravel
 beds are in the recommended values at the end of the chapter.

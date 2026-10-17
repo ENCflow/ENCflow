@@ -90,7 +90,12 @@ module m_geomorph
     real :: ex(1:8) = 0.0            ! k軸方向の単位ベクトル x 成分
     real :: ey(1:8) = 0.0            ! k軸方向の単位ベクトル y 成分
     real :: qbcoef = 0.0             ! 流砂量の次元化係数 sqrt(s g d50^3)
+    real, allocatable :: fdon(:,:)   ! 供給量制限係数(0〜1。セルの総流出要求が可動層
+                                     !   sd を超えるとき、そのセルを風上とする全エッジ
+                                     !   流量に乗じる縮小率。帯±ハロ。自帯で評価し
+                                     !   ハロ交換して両側が同じ値を読む = 反対称性を保つ)
     integer :: nclip = 0             ! dzmax クリップの発生エッジ数(累計)
+    integer :: nlim = 0              ! 供給量制限の発動セル数(累計)
     real :: vleak = 0.0              ! 岩盤床クリップで失った土砂体積 (m3)(累計)
   end type
 
@@ -859,7 +864,14 @@ subroutine m_geomorph_dispose(gm, p, g, s)
                   // itoa(gm%flv%nclip) // " edges" &
                   // " (review dt_geomorph/morfac)")
   end if
-  if (gm%flv%vleak > 0.0) then
+  if (gm%flv%nlim > 0) then
+    ! ランク局所の診断(発動は正常動作。回数が多ければ dt_geomorph/morfac の見直し)
+    call par_warn("geomorph: fluvial supply limiter (soil depth) fired in " &
+                  // itoa(gm%flv%nlim) // " cell-updates")
+  end if
+  ! 供給量制限(§84.1)の後に残るのは丸め誤差だけなので、意味のある量
+  ! (1e-9 m3 超)のときだけ警告する(".00000 m3" の空警告を出さない)
+  if (gm%flv%vleak > 1.0e-9) then
     call par_warn("geomorph: bedrock floor clip caused a sediment budget imbalance of " &
                   // rtoa(gm%flv%vleak) // " m3")
   end if
@@ -883,6 +895,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
     end if
   end if
   if (allocated(gm%wrk%q)) deallocate(gm%wrk%q)
+  if (allocated(gm%flv%fdon)) deallocate(gm%flv%fdon)
   if (allocated(gm%dbr%fx)) deallocate(gm%dbr%fx)
   if (allocated(gm%dbr%rel)) deallocate(gm%dbr%rel)
   if (allocated(gm%dbr%sld)) deallocate(gm%dbr%sld)
@@ -893,6 +906,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   gm%dbr%nslide = 0
   gm%dbr%fsmin = huge(1.0)
   gm%flv%nclip = 0
+  gm%flv%nlim = 0
   gm%flv%vleak = 0.0
   gm%enabled = .false.
   gm%initialized = .false.

@@ -154,7 +154,7 @@ developer.md §62。
 サブグリッド河道幅(fn_width)と併用すると、掃流砂は河道幅に集中して
 河床を変動させます([河道の章](channel.md))。
 
-**この節に関係する出力**: 河床変動は `Z0001…`(`f_out_z=1`。Z − Z0000 が洗掘・堆積厚)。河床変動上限 fluv_dzmax が働いた回数は終了時の警告「fluvial dzmax clip fired」で、岩盤床で失われた体積は「bedrock floor clip」で確認します([出力・確認](#出力確認))。
+**この節に関係する出力**: 河床変動は `Z0001…`(`f_out_z=1`。Z − Z0000 が洗掘・堆積厚)。河床変動上限 fluv_dzmax が働いた回数は終了時の警告「fluvial dzmax clip fired」で、土層厚による供給量制限の発動セル数は「fluvial supply limiter」で、岩盤床で失われた体積(通常はゼロ)は「bedrock floor clip」で確認します([出力・確認](#出力確認))。
 
 ## 浮遊砂(f_suspend)
 
@@ -603,8 +603,10 @@ bs_eps_s を大きく(0.02 → 0.05)するのが第一の対処です(仕組み�
 
 - Log.txt の S 列は水だけで、土砂の柱状量は含みません。
 - 終了時の警告に収支の異常が出ます: 「fluvial dzmax clip fired on …」
-  (河床変動上限の作動回数)、「bedrock floor clip caused a sediment budget
-  imbalance of …」(岩盤床で失われた体積)、「slide min Fs = …」(期間
+  (河床変動上限の作動回数)、「fluvial supply limiter (soil depth) fired
+  in …」(土層厚による供給量制限の発動セル数。保存則は保たれる)、
+  「bedrock floor clip caused a sediment budget imbalance of …」(岩盤床で
+  失われた体積。供給量制限の導入後は丸め誤差分しか出ない)、「slide min Fs = …」(期間
   最小の安全率)、「splash exported sediment volume = …」(乾式侵食で
   系外へ出た体積)、「bedslide plunge speeds … / subcycles total …」。
 - 土砂の累積収支 CSV はありません。収支は下の「読み方」の式で
