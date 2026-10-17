@@ -183,7 +183,7 @@ subroutine get_diffusion(u, v, h, nu, dd, wd, x, i, j, tdx, tdy)
   real, intent(in) :: nu(dcp%ish:, dcp%jsh:)
   real, intent(in) :: dd
   real, intent(in) :: wd(1:8)
-  integer, intent(in) :: x(0:, dcp%jsh-1:)
+  integer, intent(in) :: x(dcp%ish-1:, dcp%jsh-1:)
   integer, intent(in) :: i, j
   real, intent(out) :: tdx, tdy
 

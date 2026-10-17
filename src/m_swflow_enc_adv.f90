@@ -524,8 +524,10 @@ subroutine get_diff_v1(u, v, h, dd, wx, wy, x, i, j, dux, duy, dvx, dvy)
   real, intent(in) :: h(dcp%ish:, dcp%jsh:)
   real, intent(in) :: dd
   real, intent(in) :: wx(1:8), wy(1:8)
-  ! x も帯縮小後は下限指定が必須(§12。静的配列への適用第1号)
-  integer, intent(in) :: x(0:, dcp%jsh-1:)
+  ! x も帯縮小後は下限指定が必須(§12。静的配列への適用第1号)。列も ish-1 から
+  ! (g%x は ish-1..ieh+1 で確保。0: のままだと窓が列 1 から始まらないケースで
+  ! 列が ish-1 だけずれて読まれる実バグ。§80)
+  integer, intent(in) :: x(dcp%ish-1:, dcp%jsh-1:)
   integer, intent(in) :: i, j
   real, intent(out) :: dux, duy
   real, intent(out) :: dvx, dvy
