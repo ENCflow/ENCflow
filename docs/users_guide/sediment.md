@@ -148,6 +148,19 @@ $`\mathrm{relax}\cdot e/16`$ の高さを高い側から低い側へ移します
 [test/berode](../../test/berode/README.md)、
 [test/repose](../../test/repose/README.md)。
 
+**定着。** `f_fixation = 1` のセル定着度 $`a`$ は、乾燥(h ≤ dd)の間
+
+```math
+a \leftarrow 1 - (1 - a)\,e^{-\Delta t_m / T_\mathrm{fix}}
+```
+
+で育ち($`\Delta t_m`$ は地形時間の更新間隔 = morfac 込み)、湿潤中は定着面
+(最後に乾いていたときの地盤高。堆積で押し上がる)からの累積浸食深が
+`fix_dzreset` を超えた時点で 0 に戻ります。効果は、そのセルを供給側とする
+掃流砂の閾値と流砂量式、およびそのセルを河岸とする側岸侵食の
+$`\tau_{*c}`$ を $`\tau_{*c}(1 + c_\tau a)`$ に置き換えることだけです
+(標高・体積には触れない)。検証: [test/fixation](../../test/fixation/README.md)。
+
 **既定値。** `fluv_d50` = 0.01 m は砂床(0.5 mm)と山地礫床(5 cm)の
 幾何平均付近で、砂床・礫床の目安は章末の推奨値にあります。`fluv_porosity`
 = 0.4、`fluv_sgrav` = 1.65 は砂礫の標準値です。検証:

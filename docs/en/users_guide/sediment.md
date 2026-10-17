@@ -180,6 +180,22 @@ overshoot with eight directions at once; one sweep per update).
 Verification: [test/berode](../../../test/berode/README.md),
 [test/repose](../../../test/repose/README.md).
 
+**Fixation.** The cell fixation degree $`a`$ of `f_fixation = 1` grows while
+the cell is dry (h ≤ dd) as
+
+```math
+a \leftarrow 1 - (1 - a)\,e^{-\Delta t_m / T_\mathrm{fix}}
+```
+
+($`\Delta t_m`$ is the morphological update interval, morfac included) and
+returns to 0 while submerged once the cumulative erosion below the fixation
+surface (the ground level when the cell was last dry, pushed up by
+deposition) exceeds `fix_dzreset`. Its only effect is to replace
+$`\tau_{*c}`$ by $`\tau_{*c}(1 + c_\tau a)`$ in the threshold and the
+transport formula of the bed load supplied by that cell and in the bank
+erosion of that cell as the bank (elevations and volumes are untouched).
+Verification: [test/fixation](../../../test/fixation/README.md).
+
 **Defaults.** `fluv_d50` = 0.01 m lies near the geometric mean of a sand
 bed (0.5 mm) and a mountain gravel bed (5 cm); values for sand and gravel
 beds are in the recommended values at the end of the chapter.

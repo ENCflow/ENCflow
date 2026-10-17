@@ -127,6 +127,16 @@ module m_geomorph
     real :: vrep = 0.0               ! 崩落で移した体積 (m3 かさ。累計)
   end type
 
+  type t_fixation
+    ! 定着(f_fixation)。§84.6。定着度 a は s%fx(出力 Fx)
+    real :: tfix = 0.0               ! 定着時間 T_fix (s。地形時間)
+    real :: ctau = 0.0               ! 定着時の限界掃流力の増分比 c_τ
+    real :: dzreset = 0.0            ! 定着面からの累積浸食深のリセット閾値 (m)
+    real, allocatable :: zref(:,:)   ! 定着面の基準高 (m)(帯±ハロ。私有 save の 2 面目)
+    integer :: nreset = 0            ! 浸食でリセットしたセル更新数(累計。ランク局所)
+    integer :: nfix = 0              ! τ*c,eff で流砂を止めた/減らしたエッジ数(累計)
+  end type
+
   type t_gmwork
     real :: ainv = 0.0               ! 1 / (dx*dy)
     real, allocatable :: q(:,:,:)    ! エッジ流量4成分 (m3/s)。プロセス間で
@@ -264,6 +274,7 @@ module m_geomorph
     integer :: f_bedslide = 0        ! 動く底層(0:無効, 1:有効。landslide_tsunami_plan.md)
     integer :: f_berode = 0          ! 側岸侵食(0:無効, 1:有効。§84.4)
     integer :: f_repose = 0          ! 安息角崩落(0:無効, 1:有効。§84.4)
+    integer :: f_fixation = 0        ! 定着(0:無効, 1:有効。§84.6)
     real :: bs_r = 0.0               ! 浮力比 r = ρw/ρs
     integer :: f_bsres = 1           ! 底層の抵抗則(1:Voellmy, 2:Bingham〔予約〕)
     real :: bs_mu = 0.0              ! Voellmy 摩擦係数 μ
@@ -286,6 +297,7 @@ module m_geomorph
     type(t_splash) :: spl            ! 乾式斜面侵食
     type(t_bedslide) :: bsl          ! 動く底層(地滑り津波)
     type(t_bank) :: bnk              ! 側岸侵食・安息角崩落
+    type(t_fixation) :: fix          ! 定着
     type(t_gmwork) :: wrk            ! 共有スクラッチ(require_work が確保)
   end type
 
@@ -444,6 +456,27 @@ module m_geomorph
       type(t_state), intent(inout) :: s
       real, intent(in) :: dts
     end subroutine
+    ! 定着(m_geomorph_fixation。§84.6)
+    module subroutine init_fixation(gm, p, g, s, list)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine update_fixation(gm, p, g, s, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
+    module subroutine dispose_fixation(gm, p, g, s)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+    end subroutine
   end interface
 
 contains
@@ -567,6 +600,11 @@ subroutine m_geomorph_init(gm, p, g, s)
   gm%f_repose = list%f_repose
   if (gm%f_berode < 0 .or. gm%f_berode > 1) call par_stop("list_geomorph: f_berode must be 0 or 1")
   if (gm%f_repose < 0 .or. gm%f_repose > 1) call par_stop("list_geomorph: f_repose must be 0 or 1")
+  gm%f_fixation = list%f_fixation
+  if (gm%f_fixation < 0 .or. gm%f_fixation > 1) call par_stop("list_geomorph: f_fixation must be 0 or 1")
+  if (gm%f_fixation > 0 .and. gm%f_fluvial <= 0) then
+    call par_stop("list_geomorph: f_fixation requires f_fluvial=1 (fixation acts on the bed-load threshold)")
+  end if
   if (gm%f_berode > 0 .and. gm%f_fluvial <= 0) then
     call par_stop("list_geomorph: f_berode requires f_fluvial=1 (bank erosion feeds the bed-load path)")
   end if
@@ -625,6 +663,8 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_bedslide > 0) call init_bedslide(gm, p, g, s, list)
   ! 側岸侵食・安息角崩落(fluvial の後 = dzmax 等の共有値を参照する)
   if (gm%f_berode > 0 .or. gm%f_repose > 0) call init_bank(gm, p, g, list)
+  ! 定着(fluvial の後。s%fx の確保・restore まで)
+  if (gm%f_fixation > 0) call init_fixation(gm, p, g, s, list)
 
   ! 浮遊砂輸送の有効化を通知(swflow_enc がステップ内で s%hs を移流する。
   ! 初期化順序: 本 init は m_swflow_init より前)。土石流(f_debris)も
@@ -802,6 +842,10 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
     call release_bedslide(gm, p, g, s)
     call calc_bedslide(gm, g, s, p%dt * gm%idt_geomorph)
   end if
+  ! 定着(§84.6): 全プロセスの z 更新の後に、このステップの乾湿と地盤高で
+  ! 定着度 a(s%fx)と基準高を更新し、a のハロを交換する(次の更新の
+  ! calc_fluvial が供給側の a をハロ込みで読む。判定は全ランク同一)
+  if (gm%f_fixation > 0) call update_fixation(gm, p, g, s, dts)
   ! (将来のプロセスの適用をここに追加する)
 
   ! 瞬時流動化(時刻交差で1回だけ発火。プロセス群の後に置く理由:
@@ -935,6 +979,8 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   type(t_state), intent(in) :: s
   ! 底層 hb の私有 save と台帳報告(契約5。無効時は何もしない)
   if (gm%f_bedslide > 0) call dispose_bedslide(gm, p, g, s)
+  ! 定着度 a・基準高の私有 save と台帳報告(契約5)
+  if (gm%f_fixation > 0) call dispose_fixation(gm, p, g, s)
   if (gm%flv%nclip > 0) then
     call par_warn("geomorph: fluvial dzmax clip fired on " &
                   // itoa(gm%flv%nclip) // " edges" &
@@ -990,6 +1036,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%wrk%q)) deallocate(gm%wrk%q)
   if (allocated(gm%flv%fdon)) deallocate(gm%flv%fdon)
   if (allocated(gm%flv%rsec)) deallocate(gm%flv%rsec)
+  if (allocated(gm%fix%zref)) deallocate(gm%fix%zref)
   if (allocated(gm%dbr%fx)) deallocate(gm%dbr%fx)
   if (allocated(gm%dbr%rel)) deallocate(gm%dbr%rel)
   if (allocated(gm%dbr%sld)) deallocate(gm%dbr%sld)

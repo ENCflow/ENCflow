@@ -174,6 +174,10 @@ Riverbed erosion and deposition by a bedload transport formula.
 | f_repose | 0 | Angle-of-repose avalanching. 1: the part of the slope between neighbouring cells above tanφ_r is moved from the higher to the lower cell (wet or dry; usable without bed load) |
 | repose_phi | 30 | Angle of repose φ_r (deg) |
 | repose_relax | 0.5 | Fraction of the excess slope relaxed per update (0 to 1) |
+| f_fixation | 0 | Fixation. 1: a fixation degree a grows on dry cells and raises the critical shear stress of the bed load supplied by that cell and of the bank erosion of that cell to τ*c (1 + c_τ a) (requires f_fluvial = 1) |
+| fix_tfix | (required) | Fixation time scale T_fix (h, morphological time including morfac). While dry, a → 1 − exp(−t/T_fix) |
+| fix_ctau | (required) | Increase ratio c_τ of the critical shear stress at full fixation |
+| fix_dzreset | 0.1 | Cumulative erosion below the fixation surface that resets a to 0 (m) |
 
 The minimal input to "just move the bed" is `f_fluvial = 1` plus the
 thickness of the erodible soil `sd0` (&list_geoinfo). The grain size is
@@ -218,6 +222,23 @@ collapse; it works on dry cells and without bed load). On non-cohesive
 banks toe scour plus collapse already gives the retreat, so do not add the
 same retreat again through `berode_kb`. Verification:
 [test/berode](../../../test/berode/), [test/repose](../../../test/repose/).
+
+**Fixation of inner-bank bars.** Bed load deposits only up to the water
+surface of the supplying cell, so under a constant discharge the inner-bank
+bar stays submerged and the channel only widens instead of migrating.
+`f_fixation = 1` represents the establishment of vegetation and the like on
+cells exposed at low flow (h ≤ dd) by a fixation degree a ∈ [0, 1] (output
+`Fx0001...`): while dry, a approaches 1 as 1 − exp(−t/T_fix) (`fix_tfix`,
+morphological time including morfac), and the critical shear stress of the
+bed load supplied by that cell and of the bank erosion of that cell rises to
+τ*c (1 + c_τ a) (`fix_ctau`). Deposition onto a fixed surface is not
+hindered and elevations and volumes are untouched. When a submerged cell is
+eroded by more than `fix_dzreset` (default 0.1 m) below the fixation surface,
+a returns to 0 (nothing becomes permanently unerodible). It does not act on
+the angle-of-repose avalanching or on suspended sediment. Use it with an
+inflow series that alternates floods and low flows
+([examples/meander](../../../examples/meander/), param_fix.txt). Restart in
+`geomorph_fixation.dat`. Verification: [test/fixation](../../../test/fixation/).
 
 **Outputs for this section**: bed change in `Z0001...` (`f_out_z=1`; Z − Z0000 is the scour/deposition thickness). How often the cap fluv_dzmax acted is in the end warning "fluvial dzmax clip fired", the number of cells where the soil-depth supply limiter acted in "fluvial supply limiter", and the volume lost at the bedrock floor (normally zero) in "bedrock floor clip" ([Output and monitoring](#output-and-monitoring)).
 
@@ -778,6 +799,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 | F9999 | f_out_fmax | maximum fluid force (ρm/ρw)(h + hs)V² (building damage index) |
 | Fs0001... / Fs9999 | f_out_fs = 1 (f_slide = 1 or 2) | slope safety factor and its run minimum (−1 = not evaluated) |
 | Hb0001... / Vb0001... | automatic (f_bedslide) | thickness (m) and speed (m/s, diagnostic) of the moving bed layer |
+| Fx0001... | automatic (f_fixation) | fixation degree a (0 to 1) |
 
 **Ledgers and log** (budget checks)
 

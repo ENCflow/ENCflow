@@ -192,6 +192,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_evmodel | &list_evap | [降雨・気象](forcing.md) |
 | f_exflux_reduction | &list_enc | [浅水流計算](swflow.md) |
 | f_fill_depres | &list_initial | [初期条件](initial.md) |
+| f_fixation | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_fluvial | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_friction_fastmath | &list_enc | [浅水流計算](swflow.md) |
 | f_glacier | &list_glacier | [氷河](glacier.md) |
@@ -289,6 +290,9 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_wq_settle | &list_wq | [水質](wq.md) |
 | f_wthr | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_ztype | &list_geoinfo | [地理情報](geoinfo.md) |
+| fix_ctau | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| fix_dzreset | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| fix_tfix | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fluv_bcfeed | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fluv_d50 | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fluv_diagratio | &list_geomorph | [土砂・地形変化](geomorph.md) |

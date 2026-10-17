@@ -99,7 +99,7 @@ module subroutine bank_edge_pass(gm, p, g, s, dts)
   type(t_state), intent(in) :: s
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt, iw, jw, ib, jb, nbank, nbclip
-  real :: sgn, hw, hhe, taus, eb, qs, dzb, vbank
+  real :: sgn, hw, hhe, taus, tscb, eb, qs, dzb, vbank
   logical :: okc, okbank
 
   nbank = 0
@@ -107,7 +107,7 @@ module subroutine bank_edge_pass(gm, p, g, s, dts)
   vbank = 0.0
   jt = min(dcp%je + 1, dcp%jeh)
   !$omp parallel do schedule(static) reduction(+: nbank, nbclip, vbank) &
-  !$omp   private(i, j, k, in, jn, iw, jw, ib, jb, okc, okbank, sgn, hw, hhe, taus, eb, qs, dzb)
+  !$omp   private(i, j, k, in, jn, iw, jw, ib, jb, okc, okbank, sgn, hw, hhe, taus, tscb, eb, qs, dzb)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -138,8 +138,14 @@ module subroutine bank_edge_pass(gm, p, g, s, dts)
         ! 脚部セルの無次元掃流力(calc_fluvial と同じマニング閉じ・有効掃流力比)
         taus = gm%flv%taufac * g%rn(iw,jw)**2 * s%vv(iw,jw)**2 &
                / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
-        if (taus <= gm%bnk%tausc) cycle
-        eb = gm%bnk%kb * (taus / gm%bnk%tausc - 1.0)**gm%bnk%pm   ! 後退速度 (m/s)
+        ! 定着(§84.6): 河岸セル b の定着度で限界掃流力を τ*c,b (1 + c_τ a_b) に
+        ! 上げる(a = 0 なら乗算せず厳密に不変)
+        tscb = gm%bnk%tausc
+        if (gm%f_fixation > 0) then
+          if (s%fx(ib,jb) > 0.0) tscb = tscb * (1.0 + gm%fix%ctau * s%fx(ib,jb))
+        end if
+        if (taus <= tscb) cycle
+        eb = gm%bnk%kb * (taus / tscb - 1.0)**gm%bnk%pm   ! 後退速度 (m/s)
         qs = eb * hw * gm%flv%wl(k) / gm%poroi                    ! 固体流量 (m3/s)
         ! 1 エッジ・1 更新の河岸の低下量を dzmax で頭打ち(流量段階 = 保存則は保つ)
         dzb = qs * dts * gm%wrk%ainv * gm%poroi

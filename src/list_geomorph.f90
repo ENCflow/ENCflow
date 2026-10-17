@@ -59,6 +59,14 @@ module list_geomorph
                                      ! (保存形。乾湿を問わない。1 更新 1 スイープ)。§84.4
     real :: repose_phi = 0.0         ! 安息角 φ_r (deg)。0 = 既定 30(§62。slide_phi と同じ)
     real :: repose_relax = 0.5       ! 1 更新で緩和する超過勾配の割合(0〜1)
+    integer :: f_fixation = 0        ! 定着(0:無効, 1:有効)。乾いたセルの定着度 a が
+                                     ! 1 − exp(−t/T_fix) で育ち、供給側の限界掃流力を
+                                     ! τ*c (1 + c_τ a) に上げる(標高・体積には触れない)。§84.6
+    real :: fix_tfix = 0.0           ! 定着時間 T_fix (h。地形時間 = morfac 込み)(必須 > 0。
+                                     ! 植生定着の時間尺度。文献照合待ちのため既定は置かない)
+    real :: fix_ctau = 0.0           ! 定着時の限界掃流力の増分比 c_τ(必須 > 0。既定は置かない)
+    real :: fix_dzreset = 0.0        ! 定着面からの累積浸食深がこれを超えると a = 0 (m)。
+                                     ! 0 = 既定 0.1(根系層の厚さの目安)
 
     integer :: f_suspend = 0         ! 浮遊砂(移流+浸食・沈降)(0:無効, 1:有効)
     integer :: f_esform = 1          ! 平衡濃度式(1:超過掃流力線形(簡易), 2:板倉・岸)
@@ -240,6 +248,8 @@ subroutine list_geomorph_read(p, list)
   integer :: fluv_slope, f_secflow
   integer :: f_berode, f_repose
   real :: berode_kb, berode_tausc, berode_m, repose_phi, repose_relax
+  integer :: f_fixation
+  real :: fix_tfix, fix_ctau, fix_dzreset
   integer :: f_suspend
   integer :: f_esform
   real :: susp_d50
@@ -294,6 +304,7 @@ subroutine list_geomorph_read(p, list)
                            f_secflow, sec_nstar, sec_rmax, sec_vmin, &
                            f_berode, berode_kb, berode_tausc, berode_m, &
                            f_repose, repose_phi, repose_relax, &
+                           f_fixation, fix_tfix, fix_ctau, fix_dzreset, &
                            f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_wash, wash_kr, wash_kf, wash_tausc, &
                            f_splash, spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, &
@@ -335,6 +346,10 @@ subroutine list_geomorph_read(p, list)
   f_repose = list%f_repose
   repose_phi = list%repose_phi
   repose_relax = list%repose_relax
+  f_fixation = list%f_fixation
+  fix_tfix = list%fix_tfix
+  fix_ctau = list%fix_ctau
+  fix_dzreset = list%fix_dzreset
   f_suspend = list%f_suspend
   f_esform = list%f_esform
   susp_d50 = list%susp_d50
@@ -435,6 +450,10 @@ subroutine list_geomorph_read(p, list)
   list%f_repose = f_repose
   list%repose_phi = repose_phi
   list%repose_relax = repose_relax
+  list%f_fixation = f_fixation
+  list%fix_tfix = fix_tfix
+  list%fix_ctau = fix_ctau
+  list%fix_dzreset = fix_dzreset
   list%f_suspend = f_suspend
   list%f_esform = f_esform
   list%susp_d50 = susp_d50

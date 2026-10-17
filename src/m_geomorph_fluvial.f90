@@ -142,10 +142,12 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   integer :: i, j, k, in, jn, jt
   real :: gq, ue, vve, hhe, rne, taus, qbs, qb, sdup, dze, winvd
   real :: dirp, ubar, vbar, dxv, dyv, re, gam
-  integer :: nclip
+  real :: afx, tsce
+  integer :: nclip, nfix
   logical :: okc, okbank
 
   nclip = 0
+  nfix = 0
 
   ! --- ステップ頭のハロ交換(m_gwflow_lateral と同じ「冒頭に置く」理由) ---
   ! 界面エッジの冗長計算(ハロ行 je+1 の書き手)が読む u, v, vv, h は
@@ -167,9 +169,9 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
 
   ! --- ループ1: エッジの掃流砂フラックス(各成分の書き手は一意) ---
   jt = min(dcp%je + 1, dcp%jeh)
-  !$omp parallel do schedule(static) reduction(+: nclip) &
+  !$omp parallel do schedule(static) reduction(+: nclip, nfix) &
   !$omp   private(i, j, k, in, jn, okc, okbank, gq, ue, vve, hhe, rne, taus, qbs, qb, &
-  !$omp           sdup, dze, winvd, dirp, ubar, vbar, dxv, dyv, re, gam)
+  !$omp           sdup, dze, winvd, dirp, ubar, vbar, dxv, dyv, re, gam, afx, tsce)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -254,6 +256,26 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                   else
                     if (s%h(in,jn) <= p%dd .or. s%z(i,j) >= s%z(in,jn) + s%h(in,jn)) gq = 0.0
                   end if
+                  ! 定着(§84.6): 供給(風上)側セルの定着度 a で限界掃流力を
+                  ! τ*c (1 + c_τ a) に上げ、閾値判定と流砂量式の両方に効かせる
+                  ! (受け手側の a は見ない = 定着面への堆積は妨げない。a = 0 の
+                  ! セルは分岐に入らず厳密に不変)
+                  if (gm%f_fixation > 0 .and. gq /= 0.0) then
+                    if (gq > 0.0) then
+                      afx = s%fx(i,j)
+                    else
+                      afx = s%fx(in,jn)
+                    end if
+                    if (afx > 0.0) then
+                      tsce = gm%tausc * (1.0 + gm%fix%ctau * afx)
+                      if (taus <= tsce) then
+                        gq = 0.0
+                      else
+                        gq = gq * (qbs_form(gm%f_qbform, taus, tsce) / qbs)
+                      end if
+                      nfix = nfix + 1
+                    end if
+                  end if
                   ! 通過幅係数(水と同じ開口・幅キャップ。無効時は乗算なし)。
                   ! 動的振り替えの表 fwd(§68.14)も水と同じく乗じる: geomorph は
                   ! swflow の後に走り、fwd はこのステップの頭で作られて連続式が
@@ -332,6 +354,19 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                 end if
                 qb = qbs * gm%flv%qbcoef
                 gq = qb * (ue / vve) * gm%flv%wl(k)
+                ! 定着(§84.6): 域外への流出は自セルが供給側(流入の給砂は不変)
+                if (gm%f_fixation > 0 .and. gq > 0.0) then
+                  afx = s%fx(i,j)
+                  if (afx > 0.0) then
+                    tsce = gm%tausc * (1.0 + gm%fix%ctau * afx)
+                    if (taus <= tsce) then
+                      gq = 0.0
+                    else
+                      gq = gq * (qbs_form(gm%f_qbform, taus, tsce) / qbs)
+                    end if
+                    nfix = nfix + 1
+                  end if
+                end if
                 winvd = 1.0
                 if (chn%have_width) winvd = 1.0 / chn%wfrac(i,j)
                 dze = abs(gq) * dts * gm%wrk%ainv * winvd * gm%poroi
@@ -367,6 +402,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
 
   ! ガード発動の累計(dispose で報告。nlim・vleak は apply_edge_flux が加算)
   gm%flv%nclip = gm%flv%nclip + nclip
+  gm%fix%nfix = gm%fix%nfix + nfix
 
 end subroutine
 
@@ -486,6 +522,20 @@ module subroutine apply_edge_flux(gm, g, s, dts)
 
 end subroutine
 
+
+!----------------------------------------------------------------------
+! 平衡流砂量(無次元)。ループ 1 の式と同じ形(定着の τ*c,eff で再評価する用)
+!----------------------------------------------------------------------
+pure function qbs_form(form, taus, tsc) result(qbs)
+  integer, intent(in) :: form
+  real, intent(in) :: taus, tsc
+  real :: qbs
+  if (form == 1) then                ! 芦田・道上
+    qbs = 17.0 * taus**1.5 * (1.0 - tsc / taus) * (1.0 - sqrt(tsc / taus))
+  else                               ! MPM
+    qbs = 8.0 * (taus - tsc)**1.5
+  end if
+end function
 
 !----------------------------------------------------------------------
 ! 平衡二次流の河床近傍横断流速比 r = N* h κ(§84.3)

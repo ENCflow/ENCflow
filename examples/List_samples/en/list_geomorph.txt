@@ -82,6 +82,16 @@
   !repose_phi = 30.0        ! angle of repose (deg). 0 = default 30
   !repose_relax = 0.5       ! fraction of the excess slope relaxed per update
 
+  ! ---- Fixation (with f_fluvial; bars exposed at low flow get fixed and
+  !      resist re-erosion) ----
+  !f_fixation = 1           ! fixation (a fixation degree a grows on dry cells and
+                            !   raises the supplying side's tau*c to tau*c (1 + c_tau a);
+                            !   elevations and volumes are untouched)
+  !fix_tfix = 10.0          ! fixation time scale T_fix (h, morphological time) (required)
+  !fix_ctau = 10.0          ! increase ratio c_tau of the critical shear stress (required)
+  !fix_dzreset = 0.1        ! cumulative erosion below the fixation surface that resets a (m).
+                            !   0 = default 0.1
+
   ! ---- Suspended sediment (advection + entrainment and settling) ----
   !f_suspend = 1
   !f_esform = 1             ! equilibrium concentration formula (1: linear in

@@ -194,6 +194,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | f_evmodel | &list_evap | [Rainfall and meteorology](forcing.md) |
 | f_exflux_reduction | &list_enc | [Shallow water flow computation](swflow.md) |
 | f_fill_depres | &list_initial | [Initial conditions](initial.md) |
+| f_fixation | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | f_fluvial | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | f_friction_fastmath | &list_enc | [Shallow water flow computation](swflow.md) |
 | f_glacier | &list_glacier | [Glaciers](glacier.md) |
@@ -291,6 +292,9 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | f_wq_settle | &list_wq | [Water quality](wq.md) |
 | f_wthr | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | f_ztype | &list_geoinfo | [Geographic information](geoinfo.md) |
+| fix_ctau | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| fix_dzreset | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| fix_tfix | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fluv_bcfeed | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fluv_d50 | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fluv_diagratio | &list_geomorph | [Sediment and landform change](geomorph.md) |
