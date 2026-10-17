@@ -66,6 +66,8 @@ module m_geoinfo
     logical :: drw_active = .false.                   ! 掘り込み深さ保持の有無
     logical :: width_active = .false.                 ! サブグリッド河道幅が有効(fn_channel の
                                                       ! fn_width 指定。全ランク同値)
+    logical :: gv_active = .false.                    ! 家屋の空隙率分布 fn_gv が与えられた(namelist
+                                                      ! 由来 = 全ランク同値。実効面積率 A0000 の出力判定)
     integer, allocatable :: x(:,:)                    ! 対象領域判別マスク
     integer, allocatable :: sw(:,:)                   ! 海域マスク
     integer, allocatable :: rw(:,:)                   ! 河道マスク
@@ -945,6 +947,7 @@ subroutine read_gvbb(p, g, list)
     fname = trim(p%dir_data) // "/" // trim(list%fn_gv)
     call par_info(" reading "//fname)
     call read_window(p, g, fname, g%gv)
+    g%gv_active = .true.
   end if
 
   if (len_trim(list%fn_bb) > 0) then

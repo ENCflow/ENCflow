@@ -2,6 +2,7 @@ module m_output
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
+  use m_swflow_enc, only : chn       ! 河道平面積率 wfrac(読み取り専用。実効面積率 A0000)
   use m_fileio, only : fileio_write_matrix, fileio_write_window, e_fmt_txt, e_fmt_bil, e_fmt_gtif
   use m_georef, only : georef_write_hdr, e_pix_float, e_pix_int
   use m_parallel
@@ -117,6 +118,11 @@ subroutine output_state(o, p, g, s, k)
   integer, intent(in) :: k
   ! output_matrix は collective(内部で gather)。ガードしないこと
   if (p%f_out_z > 0 .or. k == 0) call output_matrix(o, p, g, "Z", s%z, k)  ! 地盤高
+  ! 実効面積率 A0000(= 家屋空隙率 gv × 河道平面積率 wfrac。開始時のみ。
+  ! 分布出力の柱状量(H・Hs・cq 等)をセル平均・体積・濡れ面積に換算する
+  ! 係数。どちらかが有効なときだけ出す = それ以外は全セル 1 で情報がない。
+  ! 断面形 σ の体積比は水深依存なので含めない。users_guide/io.md)
+  if (k == 0 .and. (g%gv_active .or. chn%have_width)) call output_areafactor(o, p, g, s)
   if (p%f_out_h > 0) call output_matrix(o, p, g, "H", s%h, k)          ! 水深
   if (p%f_out_e > 0) call output_matrix(o, p, g, "E", s%e, k)          ! 水位
   if (p%f_out_u > 0) call output_matrix(o, p, g, "u", s%u, k)          ! x方向流速
@@ -177,6 +183,30 @@ subroutine output_state(o, p, g, s, k)
   ! 表面蓄積プール (kg/ha = g/m2 × 10。プール有効時のみ。§30)
   if (s%wq_active .and. allocated(s%bp)) call output_matrix(o, p, g, "B", 10.0*s%bp, k)
   if (is_root) write(o%un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 実効面積率 A0000 = gv × wfrac を帯で組み立てて書く(collective。
+! 計算対象外のセルは 0)
+!----------------------------------------------------------------------
+subroutine output_areafactor(o, p, g, s)
+  type(t_output), intent(inout) :: o
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  real, allocatable :: wk(:,:)
+  integer :: i, j
+  allocate(wk(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      wk(i,j) = s%gv(i,j)
+      if (chn%have_width) wk(i,j) = wk(i,j) * chn%wfrac(i,j)
+    end do
+  end do
+  call output_matrix(o, p, g, "A", wk, 0)
+  deallocate(wk)
 end subroutine
 
 
