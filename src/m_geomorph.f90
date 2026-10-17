@@ -89,6 +89,7 @@ module m_geomorph
     real :: wl(1:8) = 0.0            ! k軸方向フラックスの通過幅 (m)
     real :: ex(1:8) = 0.0            ! k軸方向の単位ベクトル x 成分
     real :: ey(1:8) = 0.0            ! k軸方向の単位ベクトル y 成分
+    real :: rdist(1:8) = 0.0         ! 1 / 近傍セル中心間距離 (1/m)(河床勾配項)
     real :: qbcoef = 0.0             ! 流砂量の次元化係数 sqrt(s g d50^3)
     real :: taufac = 1.0             ! 有効掃流力の比 f_τ(§84.3)
     logical :: f_dir = .false.       ! 流砂方向補正あり(f_slope か f_sec)

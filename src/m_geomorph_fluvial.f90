@@ -107,6 +107,10 @@ module subroutine init_fluvial(gm, p, g, list)
   gm%flv%wl(6) = gm%flv%wl(3)
   gm%flv%wl(7) = gm%flv%wl(2)
   gm%flv%wl(8) = gm%flv%wl(1)
+  ! k軸方向の近傍セル中心間距離の逆数(河床勾配項の直接差分用)
+  gm%flv%rdist(1) = 1.0 / dr;  gm%flv%rdist(2) = 1.0 / g%dy
+  gm%flv%rdist(3) = 1.0 / dr;  gm%flv%rdist(4) = 1.0 / g%dx
+  gm%flv%rdist(5:8) = gm%flv%rdist(4:1:-1)
   ! k軸方向(中心→近傍)の単位ベクトル
   gm%flv%ex(1) = -g%dx / dr;  gm%flv%ey(1) = -g%dy / dr
   gm%flv%ex(2) = 0.0;         gm%flv%ey(2) = -1.0
@@ -137,7 +141,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt
   real :: gq, ue, vve, hhe, rne, taus, qbs, qb, sdup, dze, winvd
-  real :: dirp, ubar, vbar, dxv, dyv, re, gam, zxc, zyc, zxn, zyn
+  real :: dirp, ubar, vbar, dxv, dyv, re, gam
   integer :: nclip
   logical :: okc, okbank
 
@@ -165,7 +169,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   jt = min(dcp%je + 1, dcp%jeh)
   !$omp parallel do schedule(static) reduction(+: nclip) &
   !$omp   private(i, j, k, in, jn, okc, okbank, gq, ue, vve, hhe, rne, taus, qbs, qb, &
-  !$omp           sdup, dze, winvd, dirp, ubar, vbar, dxv, dyv, re, gam, zxc, zyc, zxn, zyn)
+  !$omp           sdup, dze, winvd, dirp, ubar, vbar, dxv, dyv, re, gam)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -216,14 +220,15 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                     dxv = dxv - re * vbar / vve
                     dyv = dyv + re * ubar / vve
                   end if
-                  if (gm%flv%f_slope) then
-                    gam = gm%flv%gcoef * sqrt(gm%tausc / taus)
-                    call cell_zgrad(g, s, i, j, zxc, zyc)
-                    call cell_zgrad(g, s, in, jn, zxn, zyn)
-                    dxv = dxv - gam * (zxc + zxn) / 2
-                    dyv = dyv - gam * (zyc + zyn) / 2
-                  end if
                   dirp = dxv * gm%flv%ex(k) + dyv * gm%flv%ey(k)
+                  if (gm%flv%f_slope) then
+                    ! 射影に効くのは ∇z のリンク方向成分だけなので、エッジをまたぐ
+                    ! 直接差分 (z_n − z_c)/d_k で評価する(§84.3 の改訂: 中央差分は
+                    ! 2 セル周期の市松モードを見ない = 減衰せず、長時間計算で河床に
+                    ! 市松が育った実検出。直接差分は市松を拡散で抑える)
+                    gam = gm%flv%gcoef * sqrt(gm%tausc / taus)
+                    dirp = dirp - gam * (s%z(in,jn) - s%z(i,j)) * gm%flv%rdist(k)
+                  end if
                 else
                   dirp = ue / vve
                 end if
@@ -475,51 +480,6 @@ module subroutine apply_edge_flux(gm, g, s, dts)
   gm%flv%nlim = gm%flv%nlim + nlim
   gm%flv%vleak = gm%flv%vleak + vleak
 
-end subroutine
-
-
-!----------------------------------------------------------------------
-! セル中心の河床勾配 (∂z/∂x, ∂z/∂y)(中央差分。近傍が領域外・海、または
-! 河岸面(近傍の地盤が自セルの水面 z+h 以上 = 河床の続きではない段差)なら
-! 自セル値で代用 = 片側差分、両側とも無効なら 0。河岸の段差を勾配に
-! 入れると γ∇z が流向項を圧倒し、河岸沿いの列が一方的に削られる(実検出:
-! 幅 10 セルの直線水路で河岸沿いが 3.9 m 洗掘)。近傍マスクの読みは
-! x 番兵ガードの内側で — §12)
-!----------------------------------------------------------------------
-pure subroutine cell_zgrad(g, s, i, j, zx, zy)
-  type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(in) :: s
-  integer, intent(in) :: i, j
-  real, intent(out) :: zx, zy
-  real :: zl, zr, dl, ec
-
-  ec = s%z(i,j) + s%h(i,j)
-  zl = s%z(i,j); zr = s%z(i,j); dl = 0.0
-  if (g%x(i-1,j) > 0) then
-    if (g%sw(i-1,j) <= 0 .and. s%z(i-1,j) < ec) then
-      zl = s%z(i-1,j); dl = dl + g%dx
-    end if
-  end if
-  if (g%x(i+1,j) > 0) then
-    if (g%sw(i+1,j) <= 0 .and. s%z(i+1,j) < ec) then
-      zr = s%z(i+1,j); dl = dl + g%dx
-    end if
-  end if
-  zx = 0.0
-  if (dl > 0.0) zx = (zr - zl) / dl
-  zl = s%z(i,j); zr = s%z(i,j); dl = 0.0
-  if (g%x(i,j-1) > 0) then
-    if (g%sw(i,j-1) <= 0 .and. s%z(i,j-1) < ec) then
-      zl = s%z(i,j-1); dl = dl + g%dy
-    end if
-  end if
-  if (g%x(i,j+1) > 0) then
-    if (g%sw(i,j+1) <= 0 .and. s%z(i,j+1) < ec) then
-      zr = s%z(i,j+1); dl = dl + g%dy
-    end if
-  end if
-  zy = 0.0
-  if (dl > 0.0) zy = (zr - zl) / dl
 end subroutine
 
 
