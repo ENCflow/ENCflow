@@ -9,7 +9,9 @@
 実験の記録(開発者向け)は docs/developer.md §68 にあります。
 
 図は `python3 docs/figs/make_guide_figs.py advection` で日英の PNG・SVG を
-生成します(`docs/figs/guide/fig_advection.py`)。
+生成します(`docs/figs/guide/fig_advection.py`)。定式化の詳説(検査体積の
+幾何、1 次元の整合性、斜め副格子モードと側方面の改定、検証と未解決点)は
+[advection_design.md](../advection_design.md) にまとめています。
 
 ## 1. 方程式と移流項の位置づけ
 

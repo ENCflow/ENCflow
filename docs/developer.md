@@ -6806,6 +6806,9 @@ ti0=0・hsea0=1 を明示)の result(Log.txt と出力場)がバイト一致。�
 
 ## 68. 移流項の改良: 現行スキームの評価と段階的方針(2026-10-01 設計合意)
 
+(本節群の時系列記録を一つの解説にまとめた詳説は [advection_design.md](advection_design.md)。
+論文化の下準備を兼ねる)
+
 m_swflow_enc_adv の移流項(v1: セル中心 3×3 の重み付き勾配 → 両側セル
 平均でエッジへ投影。風上化は勾配重みの風上側偏り p_adv_upwind_index)に
 ついて、高精度化(Hessian/2 次曲面)・TVD・Godunov 型の 3 案を検討し、
@@ -9160,7 +9163,8 @@ mixed = 滑らかな渦(1)+副格子モード(0.5)(背景流下の線形減衰�
   culvert 6.6 %、tide 4.7 %、coastal_drain 4.6 %、damwq・gwseep(静止した
   貯水池の V_max 0.03 → 0.01 m/s 級 = 副格子モードの消失)、sewer_wq
   (wq.csv 8 %)、kdpart 1.7 %、wave 0.6 %、nhbore・nhbottom・nhbreak・
-  nhcurrent・nhshelf・nhsolitary(1 % 以下)。利用者承認で -u 更新する(規律 1)。
+  nhcurrent・nhshelf・nhsolitary(1 % 以下)。利用者承認(2026-10-17)で -u
+  更新し、16 ケースとも np=2 が新基準に identical(nhshelf は許容差内)。
 
 ## 69. 非静水圧(1 層 NH)拡張の設計決定(2026-10-05 合意。実装は段階的)
 
