@@ -165,6 +165,17 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                   qb = qbs * gm%flv%qbcoef            ! 固体体積の単位幅流砂量 (m2/s)
                   ! 流向射影(|ue|/vve <= 1)× 通過幅でエッジ流量に
                   gq = qb * (ue / vve) * gm%flv%wl(k)
+                  ! 河岸面の遮断(§84.2): 掃流砂は河床面を転がる。
+                  !   (R1) 風上(供給)セルは湿潤でなければ供給しない(乾いた
+                  !        セルの τ* は両セル平均の見かけで、実体がない)
+                  !   (R2) 受け手の地盤が供給セルの水面以上なら運ばない(土砂は
+                  !        水面より上へ登れない = そのエッジは河岸面であり、
+                  !        河岸面の交換は側岸侵食 f_berode の担当)
+                  if (gq > 0.0) then
+                    if (s%h(i,j) <= p%dd .or. s%z(in,jn) >= s%z(i,j) + s%h(i,j)) gq = 0.0
+                  else
+                    if (s%h(in,jn) <= p%dd .or. s%z(i,j) >= s%z(in,jn) + s%h(in,jn)) gq = 0.0
+                  end if
                   ! 通過幅係数(水と同じ開口・幅キャップ。無効時は乗算なし)。
                   ! 動的振り替えの表 fwd(§68.14)も水と同じく乗じる: geomorph は
                   ! swflow の後に走り、fwd はこのステップの頭で作られて連続式が

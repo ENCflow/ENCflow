@@ -662,7 +662,7 @@ bs_eps_s を大きく(0.02 → 0.05)するのが第一の対処です(仕組み�
 [examples/List_samples/list_geomorph.txt](../../examples/List_samples/list_geomorph.txt)。
 検証済みのテストケースがプロセスごとにあります:
 [test/creep](../../test/creep/)(解析解ベンチマーク)、
-[test/fluvial](../../test/fluvial/)、[test/suspend](../../test/suspend/)、
+[test/fluvial](../../test/fluvial/)、[test/bankface](../../test/bankface/)(河岸面の遮断・供給量制限)、[test/suspend](../../test/suspend/)、
 [test/wash](../../test/wash/)、[test/debris](../../test/debris/)、
 [test/slide](../../test/slide/)、[test/avalanche](../../test/avalanche/)、
 [test/sedinflow](../../test/sedinflow/)(境界土砂供給)、

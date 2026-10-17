@@ -124,7 +124,10 @@ conserved and the number of limited cells is reported at the end),
 (4) whatever still crosses the bedrock surface by round-off is clipped and
 the lost volume is reported (normally none). On open boundaries the
 outflow is always at capacity and the inflow feeds at capacity when
-`fluv_bcfeed = 1`. 
+`fluv_bcfeed = 1`. Bed load rolls on the bed surface: a dry cell never
+supplies it and it is never carried onto ground above the water surface
+of the supplying cell (a bank face; developer.md §84.2).
+
 **Defaults.** `fluv_d50` = 0.01 m lies near the geometric mean of a sand
 bed (0.5 mm) and a mountain gravel bed (5 cm); values for sand and gravel
 beds are in the recommended values at the end of the chapter.
