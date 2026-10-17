@@ -31,7 +31,7 @@ submodule(m_state) user_initial
 
   ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
   ! 更新すること(乖離は defined/run が「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:16) = [ character(len=32) :: &
+  character(len=*), parameter :: routine_names(1:19) = [ character(len=32) :: &
       "wave_hump",        & ! 波例題: 円形コサイン型の初期水位
       "dambreak_step",    & ! ダム破壊例題: x 方向の段状初期水深(Stoker 解析解の検証用)
       "wave_standing_x",  & ! 定在波例題: 閉じた水槽の x 方向モード (4, 0)(分散関係の検証用)
@@ -48,6 +48,9 @@ submodule(m_state) user_initial
                             !   単純波の流速。非静水圧では undular bore に分裂する(plan §11 Phase 5)
       "wave_bore20",      & ! 長波例題: 同上で a/H = 0.2
       "jet_gaussian",     & ! 拡散項例題: x 方向に一様なガウス形ジェット u(y)(渦動粘性による拡散の解析解検証用。test/diffusion)
+      "gyre_smooth",      & ! 副格子例題: 閉じた水槽の 1 セル渦(流れ関数 sin·sin。test/sublattice の対照)
+      "gyre_alternating", & ! 副格子例題: 同じ渦を (i+j) の偶奇で逆回転にした斜め副格子モード(test/sublattice)
+      "gyre_mixed",       & ! 副格子例題: 滑らかな渦(振幅 1)に副格子モード(振幅 0.5)を重ねる(背景流下の線形減衰率)
       "template"          ] ! 新規ルーチンの雛形(空)
 
 contains
@@ -137,6 +140,12 @@ function resolve(name) result(fp)
       fp => initial_wave_bore20
     case ("jet_gaussian")
       fp => initial_jet_gaussian
+    case ("gyre_smooth")
+      fp => initial_gyre_smooth
+    case ("gyre_alternating")
+      fp => initial_gyre_alternating
+    case ("gyre_mixed")
+      fp => initial_gyre_mixed
     case ("template")
       fp => initial_template
     case default
@@ -469,6 +478,72 @@ subroutine initial_jet_gaussian(p, g, s)
         s%u(i,j) = 0.0
       end if
       s%v(i,j) = 0.0
+    end do
+  end do
+end subroutine
+
+!----------------------------------------------------------------------
+! 閉じた水槽の 1 セル渦(斜め副格子モードの減衰率ベンチマーク。test/sublattice)
+!   流れ関数 ψ = A sin(πx/lx) sin(πy/ly)、u = ∂ψ/∂y、v = −∂ψ/∂x(壁で法線
+!   流速ゼロ)、最大流速 V0 = 0.2 m/s(A = V0·lx/π)。水深は不変(h0 のまま)。
+!   gyre_alternating は同じ渦に (−1)^(i+j) を乗じ、偶数・奇数の副格子で
+!   逆回転にする: 法線エッジの初期流速(両セル平均)は 0、斜めエッジだけが
+!   副格子ごとの渦を持つ = 移流項が作用しない斜め副格子モード
+!   (developer.md §68.36)。V0・形は test/sublattice/Check_sublattice.py と
+!   対で保守すること。
+!----------------------------------------------------------------------
+subroutine initial_gyre_smooth(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  call gyre(p, g, s, 1.0, 0.0)
+end subroutine
+
+subroutine initial_gyre_alternating(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  call gyre(p, g, s, 0.0, 1.0)
+end subroutine
+
+subroutine initial_gyre_mixed(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  call gyre(p, g, s, 1.0, 0.5)
+end subroutine
+
+! 渦の重ね合わせ: 係数 = a_smooth + a_alt·(−1)^(i+j)
+!   smooth = (1, 0)、alternating = (0, 1)、mixed = (1, 0.5)
+subroutine gyre(p, g, s, a_smooth, a_alt)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: a_smooth, a_alt
+  integer :: i, j
+  real, parameter :: v0 = 0.2
+  real, parameter :: pi = 3.14159265358979323846
+  real :: lx, ly, xx, yy, aa, sg
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  lx = g%nx * g%dx
+  ly = g%ny * g%dy
+  aa = v0 * lx / pi
+  do j = 1, g%ny
+    yy = (j - 0.5) * g%dy
+    do i = 1, g%nx
+      xx = (i - 0.5) * g%dx
+      if (mod(i + j, 2) == 0) then
+        sg = a_smooth + a_alt
+      else
+        sg = a_smooth - a_alt
+      end if
+      if (s%h(i,j) > 0.0) then
+        s%u(i,j) =  sg * aa * (pi / ly) * sin(pi * xx / lx) * cos(pi * yy / ly)
+        s%v(i,j) = -sg * aa * (pi / lx) * cos(pi * xx / lx) * sin(pi * yy / ly)
+      else
+        s%u(i,j) = 0.0
+        s%v(i,j) = 0.0
+      end if
     end do
   end do
 end subroutine
