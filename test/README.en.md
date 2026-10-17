@@ -71,6 +71,7 @@ analytical-solution or conservation check by Check_*.py.
 | [berode/](berode/) | Bank erosion in a channel with dry banks. Only the banks touching the channel retreat, the lost volume is linear in K_b, sediment is conserved | bed load f_berode | analytic |
 | [repose/](repose/) | A dry 45° sand cone collapses to the 30° angle of repose. Final slope and volume conservation | f_repose | analytic |
 | [fixation/](fixation/) | Fixation of a bar exposed at low flow. Analytic growth law, a fixed bar is not eroded by the flood, reset by cumulative erosion, restart round trip | bed load f_fixation | analytic, self-check |
+| [uniflow/](uniflow/) | Uniform flow in straight channels 1 and 5 cells wide between dry ground. Matches Manning with f_opening_dynamic = 2; without the reassignment the bank-adjacent rows carry too little flow (known property recorded) | ENC conveyance, f_opening_dynamic | analytic |
 | [suspend/](suspend/) | Suspended load (advection, erosion, settling): smoke test and conservation | Sediment f_suspend | analytic |
 | [wash/](wash/) | Hillslope erosion (splash and sheet): smoke test and conservation | Sediment f_wash | conservation (Log) |
 | [splash/](splash/) | Analytical verification of dry hillslope erosion | Sediment f_splash | ref |
