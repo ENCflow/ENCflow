@@ -29,11 +29,14 @@ module subroutine adv_init(p, g)
   if (opt%f_advection_scheme >= 2) then
     ! 運動量保存形: エッジ上の移流項だけを持つ(taxy/ulm/vlm は不要)
     allocate(tx_mod%tae(1:4,0:g%nx,dcp%jsh-1:dcp%jeh), source = 0.0)
-    ! 検査体積の横断幅 = 平行な隣接エッジとの垂直距離
+    ! 検査体積の横断幅 = 平行な隣接リンクとの垂直距離(偶奇を問わない)
     !   軸エッジ: k=2(法線 y)は dx、k=4(法線 x)は dy
-    !   対角エッジ: 2·dx·dy/dr(dx=dy なら √2·dx)
+    !   対角エッジ: dx·dy/dr(dx=dy なら dx/√2)。平行な斜めリンクは t 方向に
+    !   この間隔で (i+j) の偶奇が交互に並ぶ。同じ偶奇のリンクとの距離 2·dx·dy/dr
+    !   を幅にしていた 2026-10-17 までは、偶数・奇数の副格子で逆回転する斜め
+    !   循環に移流項が作用しなかった(§68.36。test/sublattice)
     dr = sqrt(g%dx**2 + g%dy**2)
-    tx_mod%w8lt(1:4) = [ 2 * g%dx * g%dy / dr, g%dx, 2 * g%dx * g%dy / dr, g%dy ]
+    tx_mod%w8lt(1:4) = [ g%dx * g%dy / dr, g%dx, g%dx * g%dy / dr, g%dy ]
     return
   end if
   allocate(tx_mod%taxy(1:2,1:g%nx,dcp%jsh:dcp%jeh), source = 0.0)
@@ -98,7 +101,8 @@ end subroutine
 !   Stelling & Duinmeijer (2003, IJNMF 43:1329) のスタガード格子向け
 !   定式化を ENC の 8 方向エッジに拡張したもの。エッジ e(基準セル c から
 !   k 近傍 n へ、法線流速 u_e)の周りに運動量検査体積(長さ w8dr(k) =
-!   c-n 間距離、横断幅 w8lt(k) = 平行な隣接エッジとの距離)を取り、
+!   c-n 間距離、横断幅 w8lt(k) = 平行な隣接リンクとの距離。斜めエッジでは
+!   反対偶奇のリンクまでの dx·dy/dr。§68.36)を取り、
 !   その面を通る質量流束 Q_f と面での風上化流速 ū_f から
 !     adv_e = -(1/h̄_e) Σ_f Q_f (ū_f - u_e) / A_e
 !   を評価する(流出面では ū_f = u_e で寄与 0、流入面では流入側の流速
@@ -112,7 +116,8 @@ end subroutine
 !     n → n+δ)の実流量 mn の平均(流出が正。§68.21。2026-10-03 までは
 !     面中心のセル流量の t 方向投影を使っていたが、地形で遮られた面でも
 !     非ゼロになり薄いエッジで発散した)。
-!     ū は 1 次風上(u_e か、平行な隣接エッジの流速)。
+!     ū は 1 次風上(u_e か、平行な隣接リンクの流速。斜めエッジでは面の
+!     前後にある反対偶奇の平行リンク 2 本の平均。§68.36)。
 !   - h̄_e = (h_c + h_n)/2(下限 dd/2)。サブグリッド河道(§18・§26)では
 !     水量 h×wfrac(σ 有効時 sect_v(h)×wfrac)を使う(§68.9)。lm は v1 と
 !     同じ流儀で乗じる(輸送項は dtl = dt/lme の減衰を相殺する。§20)。
@@ -130,14 +135,14 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
 
   integer :: i, j, k, in, jn, ie, je
   real :: hc, hn, hb, lme
-  real :: ue, um, umm, up, upp, utp, utm
+  real :: ue, um, umm, up, upp
   real :: qc, qn, qtp, qtm
   real :: ubc, ubn, ubtp, ubtm
   real :: ta
   logical :: donor_rw               ! このエッジの流下方向の供給元を河道セルに限るか(§68.18)
 
   !$omp parallel do schedule(dynamic) &
-  !$omp private(i, j, k, in, jn, ie, je, hc, hn, hb, lme, ue, um, umm, up, upp, utp, utm, &
+  !$omp private(i, j, k, in, jn, ie, je, hc, hn, hb, lme, ue, um, umm, up, upp, &
   !$omp         qc, qn, qtp, qtm, ubc, ubn, ubtp, ubtm, ta, donor_rw)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
@@ -220,8 +225,16 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ta = -(qn * (ubn - ue) - qc * (ubc - ue)) / geo%w8dr(k)
 
         ! 側方面(±t。t = (-n8y, n8x))。流出が正
-        utp = uvk(i + dti(k), j + dtj(k), k)
-        utm = uvk(i - dti(k), j - dtj(k), k)
+        ! 側方面の流入流速 ū_t(流出面では u_e。lateral_u)。
+        ! 法線エッジ: 平行な隣接エッジ(距離 dx = w8lt)の 1 次風上。
+        ! 斜めエッジ: 平行な斜めリンクは t 方向に dx/√2(= w8lt)間隔で偶奇が
+        ! 交互に並ぶ。隣接する反対偶奇のリンク 2 本(面の前後に 1 本ずつ)の
+        ! 平均を 1 次風上の流入値に使う。同じ偶奇のリンク(距離 √2·dx)だけを
+        ! 見ていた 2026-10-17 までは、偶数・奇数の副格子で逆回転する斜め循環
+        ! (発散ゼロで圧力項も効かない)に移流項が一切作用せず、低速の滞留域で
+        ! 市松模様が残った(§68.36)。滑らかな場では (ū_t − u_e)/w8lt の主要項が
+        ! 従来と同一(一様流・段波の整合は不変)で、副格子モードには
+        ! |q_t|·2u_e/w8lt の減衰が働く(test/sublattice)
         ! 側方面(±t)の流束は、面を横切る ENC エッジの実流量(mn。時刻 n、
         ! 流出が正)の c 側・n 側の平均。面中心のセル平均流量 (m, n) の投影で
         ! 与えると、面の向こうのセルが地形で遮られて実際には水が通らない場合
@@ -233,19 +246,13 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! その流速を流入値に使う(壁・乾床側からは ū = u_e)
         if (qtp >= 0) then
           ubtp = ue
-        else if (cell_ok(i + dti(k), j + dtj(k)) .and. &
-                 cell_ok(i + dti(k) + din(k), j + dtj(k) + djn(k))) then
-          ubtp = utp
         else
-          ubtp = ue
+          ubtp = lateral_u(i, j, k, 1, ue)
         end if
         if (qtm >= 0) then
           ubtm = ue
-        else if (cell_ok(i - dti(k), j - dtj(k)) .and. &
-                 cell_ok(i - dti(k) + din(k), j - dtj(k) + djn(k))) then
-          ubtm = utm
         else
-          ubtm = ue
+          ubtm = lateral_u(i, j, k, -1, ue)
         end if
         ta = ta - (qtp * (ubtp - ue) + qtm * (ubtm - ue)) / tx%w8lt(k)
 
@@ -326,6 +333,47 @@ contains
     logical :: ok
     ok = cell_ok(ci, cj)
     if (ok .and. drw) ok = g%rw(ci,cj) > 0
+  end function
+
+  ! 側方面(sgn = ±1 の t 側)の流入流速(1 次風上。供給元が壁・乾床・海なら u_e)。
+  !   法線エッジ: 平行な隣接エッジ(c + sgn·δt から kk 方向)。
+  !   斜めエッジ: 側方面(距離 dx/√2)の上にある最近接の平行リンク 2 本
+  !   (c + sgn·(dti, 0) と c + sgn·(0, dtj) から kk 方向。反対偶奇で、面の前後に
+  !   1 本ずつ)の平均。両端セルが有効なリンクだけを使う(§68.36)
+  pure function lateral_u(ci, cj, kk, sgn, ue0) result(u)
+    integer, intent(in) :: ci, cj, kk, sgn
+    real, intent(in) :: ue0
+    real :: u, usum
+    integer :: n, oi, oj
+    if (kk == 2 .or. kk == 4) then
+      oi = ci + sgn * dti(kk)
+      oj = cj + sgn * dtj(kk)
+      if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
+        u = uvk(oi, oj, kk)
+      else
+        u = ue0
+      end if
+      return
+    end if
+    usum = 0.0
+    n = 0
+    oi = ci + sgn * dti(kk)
+    oj = cj
+    if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
+      usum = usum + uvk(oi, oj, kk)
+      n = n + 1
+    end if
+    oi = ci
+    oj = cj + sgn * dtj(kk)
+    if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
+      usum = usum + uvk(oi, oj, kk)
+      n = n + 1
+    end if
+    if (n > 0) then
+      u = usum / n
+    else
+      u = ue0
+    end if
   end function
 
   ! セル (ci, cj) からその kk 近傍(kk = 1..8)へ向かう ENC エッジの単位幅流量
