@@ -9376,7 +9376,10 @@ Stoker 検定は不変(段波位置 +1.25 %、台地 −1.22 %、L1 h 0.0062 / u
 残留流速 2.32 → 0.019 m/s、ex_flux 8 → 0 — §68.36・§68.37 で 25〜30 % 動いた
 wq.csv の列の感度の正体で、改善)。test/sublattice は PASS(減衰時定数 87 s /
 2246 s)、uniflow は Manning に 0.1 %、sedfeed・bedfines PASS。回帰と reference
-更新は §68.38 の記録と同じ一括(19 ケース更新・再実行 PASS)。
+更新は §68.38 の記録と同じ一括(19 ケース更新・再実行 PASS)。release の MPI
+np=2・4 は dambreak・tide・culvert・gwseep・sublattice・chichibu・uniflow(w5_on)で
+逐次と Log ビット一致、sedfeed(5 構成)・bedfines(6 構成)は save の
+state.dat・geomorph_fines.dat が逐次とビット一致。
 
 ## 69. 非静水圧(1 層 NH)拡張の設計決定(2026-10-05 合意。実装は段階的)
 
