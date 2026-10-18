@@ -9367,6 +9367,10 @@ V_max 6.1 m/s(Courant 0.95)。f_opening_dynamic を 1 にしても出る(2.5 m/s
   (|u1| ≤ |u_e|)は Step 5 を安定にするが壁沿いの行の減衰を半分失う
   (qb が 20 分で 1.49 m/s、台帳 5.994)。上限 2h̄ を加えた両側の深さ条件で
   qb(0.90 m/s、台帳 6.000000000)・池 12 h・Step 5 のすべてが安定。
+  両側条件の木で回帰を再実行: 34 ケース PASS(fixation 含む)、下限だけの版の
+  reference から動いた 7 ケース(dambreak・coastal_drain・chichibu・gwseep・
+  damwq・nhbreak・sewer_wq)を再更新し再実行 PASS(承認済み)。tutorials/
+  chichibu Step 1〜6・wave Step 1〜4 は両側条件で再生成済み。
 
 **検証(2026-10-18)**: sedfeed qb は V_max 0.90 m/s、dzmax クリップなし、台帳
 6.000000000 m³(§68.37 以前と同じ)。秩父 Step 2 の出口湛水 12 h
