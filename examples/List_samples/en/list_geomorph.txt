@@ -91,6 +91,8 @@
   !fix_ctau = 10.0          ! increase ratio c_tau of the critical shear stress (required)
   !fix_dzreset = 0.1        ! cumulative erosion below the fixation surface that resets a (m).
                             !   0 = default 0.1
+  !fix_cn = 2.0             ! roughness increase ratio c_n at full fixation (flow n becomes
+                            !   n (1 + c_n a); the sediment tau* is unchanged. 0 = off = default)
 
   ! ---- Suspended sediment (advection + entrainment and settling) ----
   !f_suspend = 1

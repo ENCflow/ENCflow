@@ -61,9 +61,9 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
   type(t_state), intent(inout) :: s
   real, intent(in) :: dtw       ! 水柱側の実効時間刻み(morfac を含まない)
   integer :: i, j
-  real :: hh, taus, ceq, cc, fx, dzb, cap, fxg
+  real :: hh, taus, ceq, cc, fx, dzb, cap, fxg, afx, tsce
 
-  !$omp parallel do schedule(static) private(i, j, hh, taus, ceq, cc, fx, dzb, cap, fxg)
+  !$omp parallel do schedule(static) private(i, j, hh, taus, ceq, cc, fx, dzb, cap, fxg, afx, tsce)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -83,6 +83,21 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
         else
           ! 板倉・岸(ceq = q_su / wf)
           ceq = ceq_itakura(gm, p%gg, taus)
+        end if
+        ! 定着(§84.8): 浸食項(平衡濃度)だけを定着度 a で減らす。沈降は不変。
+        ! f_esform=1 は限界掃流力を τ*c,s (1 + c_τ a) に上げ、2(τ*c を持たない)は
+        ! ceq に 1/(1 + c_τ a) を乗じる。a = 0 のセルは分岐に入らず厳密に不変
+        if (gm%f_fixation > 0 .and. ceq > 0.0) then
+          afx = s%fx(i,j)
+          if (afx > 0.0) then
+            if (gm%f_esform == 1) then
+              tsce = gm%stausc * (1.0 + gm%fix%ctau * afx)
+              ceq = 0.0
+              if (taus > tsce) ceq = gm%esa * (taus / tsce - 1.0)
+            else
+              ceq = ceq / (1.0 + gm%fix%ctau * afx)
+            end if
+          end if
         end if
         ! 濃度は水の体積あたり = hs / vh(vh = σ の矩形換算水深。swflow の
         ! 移流の供給元濃度・水質の cqc と同じ解釈。σ 非適用セルは vh = h)

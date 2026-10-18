@@ -17,7 +17,10 @@ T_fix = 0.1 h = 360 s、morfac = 1。
 | off | f_fixation = 0 | 基準(砂州は出水で削られる) |
 | on | c_τ = 100、dz_reset = 0.1 m | 定着した砂州は出水でも削られない |
 | weak | c_τ = 0.5、dz_reset = 0.002 m | 削られて定着がリセットされる |
-| rt1 → rt2 | on を 600 s で分割し save_rt から復元 | リスタート往復 |
+| rough | on + c_n = 2 | 定着した砂州の上で粗度が 3 倍になり流速が下がる |
+| susp_off | 浮遊砂 0.2 mm、出水時に濃度 0.002 で給砂、定着なし | 比較の基準 |
+| susp_on / susp_on2 | 浮遊砂 + 定着(f_esform = 1 / 2) | 定着した砂州に細粒分が積もる |
+| rt1 → rt2 | rough を 600 s で分割し save_rt から復元 | リスタート往復(動的粗度の再構築を含む) |
 
 ## 検定項目(Check_fixation.py)
 
@@ -30,9 +33,13 @@ T_fix = 0.1 h = 360 s、morfac = 1。
    zref − z ≤ dz_reset(リセットの不変条件)。
 5. 0 ≤ a ≤ 1。
 6. 無効時の痕跡なし(result_off に Fx 出力がなく、save_off に私有ファイルがない)。
+7. 粗度: 出水時(1800 s)の定着砂州上の流速が rough で on の 0.7 倍未満(実測
+   0.50)、断面流量 Σ V h dy は両構成とも Q_in の ±3 %。
+8. 浮遊砂: 定着ありの砂州は出水で全セル正味堆積(Δz > 0)、平均 Δz が定着なし
+   より 2 cm 以上大きい(f_esform = 1・2 とも。実測 +3.1 / +4.2 cm 対 −1.0 cm)。
 
 Run.sh はさらにリスタート分割継続(rt1 → rt2)の state.dat と
-geomorph_fixation.dat が通し実行(on)とビット一致することを確認する。
+geomorph_fixation.dat が通し実行(rough)とビット一致することを確認する。
 Run_MPI.sh は同じ検定を MPI で行い、save_*_serial とのビット一致を見る
 (厳密フラグ -O2 -ffp-contract=off で逐次・MPI を作って比較する。-Ofast では
 最終桁が揺れる。§28.3)。
@@ -41,6 +48,6 @@ Run_MPI.sh は同じ検定を MPI で行い、save_*_serial とのビット一�
 
 ```
 make
-./Run.sh            # 逐次
+./Run.sh            # 逐次(9 本で約 3 分)
 ./Run_MPI.sh 2      # MPI(2 ランク)
 ```

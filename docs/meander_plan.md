@@ -4,7 +4,8 @@
 test/bankface・bendsed・berode・repose)、段 4 の例題 examples/meander・
 examples/meander_cutoff 作成済み(§84.5)。段 3 は main の移流項修正
 (§68.36。2026-10-17)を受けて §3.4 を改訂し、内岸の定着 f_fixation として
-実装済み(§84.6、test/fixation、examples/meander の param_fix.txt)。
+実装済み(§84.6、test/fixation、examples/meander の param_fix.txt)。段 3b
+(定着の植生効果: 浮遊砂の捕捉と動的粗度 fix_cn)も実装済み(§84.8)。
 段 5 は未着手。** 実装前の議論用資料。
 合意に至った決定は developer.md(新 § を起こす)へ移し、本書は段階ごとに
 消し込む(geomorph_plan.md・nonhydrostatic_plan.md と同じ運用)。
@@ -277,7 +278,7 @@ z_n ≥ e_c(c の水面)なら、そのエッジは河床面ではなく**河岸
   解析解)、効果(低水期に露出 → 出水で浸食が抑制。c_τ 大で浸食ゼロ)、
   リスタート往復ビット一致、np=1,2,4 一致。
 
-### 3.4b 段 3b: 定着の植生効果 — 浮遊砂の捕捉と粗度(2026-10-17 設計案。未合意)
+### 3.4b 段 3b: 定着の植生効果 — 浮遊砂の捕捉と粗度(2026-10-17 合意・実装済み = developer.md §84.8)
 
 **動機**(§84.7 末尾の緩い減水期の試行): 掃流砂の堆積は供給セルの水面で
 頭打ちになるので、砂州の天端は出水ピークの水位で決まり、減水期を長くしても

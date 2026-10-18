@@ -290,6 +290,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_wq_settle | &list_wq | [水質](wq.md) |
 | f_wthr | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_ztype | &list_geoinfo | [地理情報](geoinfo.md) |
+| fix_cn | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fix_ctau | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fix_dzreset | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fix_tfix | &list_geomorph | [土砂・地形変化](geomorph.md) |

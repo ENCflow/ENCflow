@@ -292,6 +292,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | f_wq_settle | &list_wq | [Water quality](wq.md) |
 | f_wthr | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | f_ztype | &list_geoinfo | [Geographic information](geoinfo.md) |
+| fix_cn | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fix_ctau | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fix_dzreset | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fix_tfix | &list_geomorph | [Sediment and landform change](geomorph.md) |

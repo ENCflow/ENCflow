@@ -132,6 +132,7 @@ module m_geomorph
     real :: tfix = 0.0               ! 定着時間 T_fix (s。地形時間)
     real :: ctau = 0.0               ! 定着時の限界掃流力の増分比 c_τ
     real :: dzreset = 0.0            ! 定着面からの累積浸食深のリセット閾値 (m)
+    real :: cn = 0.0                 ! 定着時の粗度の増分比 c_n(0 = 粗度に効かせない。§84.8)
     real, allocatable :: zref(:,:)   ! 定着面の基準高 (m)(帯±ハロ。私有 save の 2 面目)
     integer :: nreset = 0            ! 浸食でリセットしたセル更新数(累計。ランク局所)
     integer :: nfix = 0              ! τ*c,eff で流砂を止めた/減らしたエッジ数(累計)

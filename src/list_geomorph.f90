@@ -67,6 +67,9 @@ module list_geomorph
     real :: fix_ctau = 0.0           ! 定着時の限界掃流力の増分比 c_τ(必須 > 0。既定は置かない)
     real :: fix_dzreset = 0.0        ! 定着面からの累積浸食深がこれを超えると a = 0 (m)。
                                      ! 0 = 既定 0.1(根系層の厚さの目安)
+    real :: fix_cn = 0.0             ! 定着時の粗度(Manning n)の増分比 c_n。流れの摩擦項の n を
+                                     ! n (1 + c_n a) にする(流砂の τ* は変えない。形状抵抗の分離)。
+                                     ! 0 = 粗度に効かせない(既定)。§84.8
 
     integer :: f_suspend = 0         ! 浮遊砂(移流+浸食・沈降)(0:無効, 1:有効)
     integer :: f_esform = 1          ! 平衡濃度式(1:超過掃流力線形(簡易), 2:板倉・岸)
@@ -249,7 +252,7 @@ subroutine list_geomorph_read(p, list)
   integer :: f_berode, f_repose
   real :: berode_kb, berode_tausc, berode_m, repose_phi, repose_relax
   integer :: f_fixation
-  real :: fix_tfix, fix_ctau, fix_dzreset
+  real :: fix_tfix, fix_ctau, fix_dzreset, fix_cn
   integer :: f_suspend
   integer :: f_esform
   real :: susp_d50
@@ -304,7 +307,7 @@ subroutine list_geomorph_read(p, list)
                            f_secflow, sec_nstar, sec_rmax, sec_vmin, &
                            f_berode, berode_kb, berode_tausc, berode_m, &
                            f_repose, repose_phi, repose_relax, &
-                           f_fixation, fix_tfix, fix_ctau, fix_dzreset, &
+                           f_fixation, fix_tfix, fix_ctau, fix_dzreset, fix_cn, &
                            f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_wash, wash_kr, wash_kf, wash_tausc, &
                            f_splash, spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, &
@@ -350,6 +353,7 @@ subroutine list_geomorph_read(p, list)
   fix_tfix = list%fix_tfix
   fix_ctau = list%fix_ctau
   fix_dzreset = list%fix_dzreset
+  fix_cn = list%fix_cn
   f_suspend = list%f_suspend
   f_esform = list%f_esform
   susp_d50 = list%susp_d50
@@ -454,6 +458,7 @@ subroutine list_geomorph_read(p, list)
   list%fix_tfix = fix_tfix
   list%fix_ctau = fix_ctau
   list%fix_dzreset = fix_dzreset
+  list%fix_cn = fix_cn
   list%f_suspend = f_suspend
   list%f_esform = f_esform
   list%susp_d50 = susp_d50

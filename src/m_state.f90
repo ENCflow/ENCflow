@@ -169,6 +169,9 @@ module m_state
                                         ! なら未確保。docs/landslide_tsunami_plan.md)
     real, allocatable :: fx(:,:)        ! 定着度 a ∈ [0,1](f_fixation。geomorph が確保・更新し
                                         !   出力 Fx。私有 save は geomorph_fixation.dat。§84.6)
+    real, allocatable :: rnv(:,:)       ! 動的粗度 n_eff = n (1 + c_n a)(fix_cn > 0 のときだけ geomorph が
+                                        !   確保・更新。流れの摩擦項が allocated なら g%rn の代わりに読む。
+                                        !   a の純関数で save 対象外。§84.8)
     real, allocatable :: vb(:,:)        ! 動く底層の速度 |V| (m/s。診断。tick 末尾の
                                         ! 評価値。save 対象外。f_bedslide 有効時のみ確保)
     real, allocatable :: hl(:,:)        ! 溶岩厚 (m 溶岩柱。幾何面積基底。水柱でない
@@ -846,6 +849,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hl)) deallocate(s%hl)
   if (allocated(s%hb)) deallocate(s%hb)
   if (allocated(s%fx)) deallocate(s%fx)
+  if (allocated(s%rnv)) deallocate(s%rnv)
   if (allocated(s%vb)) deallocate(s%vb)
   if (allocated(s%hd)) deallocate(s%hd)
   if (allocated(s%hbd)) deallocate(s%hbd)

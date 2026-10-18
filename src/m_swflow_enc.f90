@@ -1876,7 +1876,11 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   ! セル境界での物理量を求める
   vve = (s%vv(i,j) + s%vv(in,jn)) / 2       ! 速度の絶対値
   vv0e = vve
-  rne = (g%rn(i,j) + g%rn(in,jn)) / 2       ! 粗度係数
+  if (allocated(s%rnv)) then
+    rne = (s%rnv(i,j) + s%rnv(in,jn)) / 2   ! 動的粗度(定着の植生。§84.8)
+  else
+    rne = (g%rn(i,j) + g%rn(in,jn)) / 2     ! 粗度係数
+  end if
   gve = (s%gv(i,j) + s%gv(in,jn)) / 2       ! 家屋の空隙率
   bbe = (g%bb(i,j) + g%bb(in,jn)) / 2       ! 家屋の平均サイズ
   lme = (s%lm(i,j) + s%lm(in,jn)) / 2       ! 有効慣性係数

@@ -193,8 +193,13 @@ surface (the ground level when the cell was last dry, pushed up by
 deposition) exceeds `fix_dzreset`. Its only effect is to replace
 $`\tau_{*c}`$ by $`\tau_{*c}(1 + c_\tau a)`$ in the threshold and the
 transport formula of the bed load supplied by that cell and in the bank
-erosion of that cell as the bank (elevations and volumes are untouched).
-Verification: [test/fixation](../../../test/fixation/README.md).
+erosion of that cell as the bank, to reduce the entrainment term of the
+suspended sediment by the same ratio ($`\tau_{*c,s}(1 + c_\tau a)`$ for the
+excess-shear form, $`C_{eq}/(1 + c_\tau a)`$ for Itakura-Kishi; settling is
+unchanged), and, with `fix_cn` > 0, to make the Manning n of the flow
+friction $`n(1 + c_n a)`$ (the $`\tau_*`$ of the sediment keeps the original
+n; elevations and volumes are untouched). Verification:
+[test/fixation](../../../test/fixation/README.md).
 
 **Defaults.** `fluv_d50` = 0.01 m lies near the geometric mean of a sand
 bed (0.5 mm) and a mountain gravel bed (5 cm); values for sand and gravel

@@ -15,7 +15,13 @@
 #         (リセットの不変条件)
 #     (5) 0 <= a <= 1(全構成・全出力)
 #     (6) 無効時の痕跡なし: result_off に Fx 出力がない(配列未確保)
-#   リスタート往復と MPI の一致は Run.sh / Run_MPI.sh が cmp で見る
+#     (7) 粗度(rough: c_n = 2): 出水時(1800 s)の定着砂州上の流速が on の
+#         RATIO_V 倍未満、断面流量 Σ V h dy は両構成とも Q_in に ±TOL_QSEC
+#     (8) 浮遊砂(susp_off / susp_on / susp_on2: 出水時に濃度 0.002 で給砂):
+#         定着ありの砂州は出水で全セル正味堆積(Δz > 0)、平均 Δz が定着なしより
+#         DZ_SUSP 以上大きい(f_esform = 1 と 2 の両方)
+#   リスタート往復(rough と同じ設定の rt1 → rt2)と MPI の一致は Run.sh /
+#   Run_MPI.sh が cmp で見る
 import sys, struct, os, math, glob
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_init import NX, NY, J1, J2, JB1, JB2, I_RAMP, I_END
@@ -23,6 +29,7 @@ from make_init import NX, NY, J1, J2, JB1, JB2, I_RAMP, I_END
 T1, TFIX = 600.0, 0.1 * 3600.0
 DZRESET_WEAK = 0.002
 TOL_A, TOL_TXT, DZ_ERO, NMIN = 1.0e-9, 1.0e-4, 0.005, 10
+RATIO_V, TOL_QSEC, DZ_SUSP, Q_IN = 0.7, 0.03, 0.02, 1.7
 
 
 def read_rec(f):
@@ -137,6 +144,32 @@ ok = ok and g5
 g6 = len(glob.glob("result_off/Fx*.txt")) == 0 and not os.path.exists("save_off/geomorph_fixation.dat")
 print("(6) 無効時の痕跡: result_off に Fx 出力なし・save_off に私有ファイルなし : %s" % ("PASS" if g6 else "FAIL"))
 ok = ok and g6
+
+# (7) 粗度: 定着砂州上の流速が下がり、断面流量は保存
+def section_q(tag, k=3):
+    h = load_txt(tag, "H", k); v = load_txt(tag, "V", k)
+    qs = []
+    for i in mid:
+        qs.append(sum(h[j - 1][i - 1] * v[j - 1][i - 1] for j in range(J1, J2 + 1)) * 1.0)
+    return sum(qs) / len(qs)
+v_on = load_txt("on", "V", 3); v_rough = load_txt("rough", "V", 3)
+vb_on = sum(at(v_on, ij) for ij in bar) / len(bar); vb_rough = sum(at(v_rough, ij) for ij in bar) / len(bar)
+q_on, q_rough = section_q("on"), section_q("rough")
+g7 = vb_rough / vb_on < RATIO_V and abs(q_on / Q_IN - 1.0) < TOL_QSEC and abs(q_rough / Q_IN - 1.0) < TOL_QSEC
+print("(7) 粗度: 砂州上の V rough/on = %.3f/%.3f = %.3f (< %.1f), 断面流量 on %.3f, rough %.3f (Q_in %.1f ± %.0f%%) : %s"
+      % (vb_rough, vb_on, vb_rough / vb_on, RATIO_V, q_on, q_rough, Q_IN, 100 * TOL_QSEC, "PASS" if g7 else "FAIL"))
+ok = ok and g7
+
+# (8) 浮遊砂: 定着した砂州は出水で正味堆積
+z1_so, z3_so = load_txt("susp_off", "Z", 1), load_txt("susp_off", "Z", 3)
+dz_off = [at(z3_so, ij) - at(z1_so, ij) for ij in bar]
+for tag in ("susp_on", "susp_on2"):
+    z1s, z3s = load_txt(tag, "Z", 1), load_txt(tag, "Z", 3)
+    dzs = [at(z3s, ij) - at(z1s, ij) for ij in bar]
+    g8 = min(dzs) > 0.0 and sum(dzs) / len(dzs) > sum(dz_off) / len(dz_off) + DZ_SUSP
+    print("(8) 浮遊砂 %-8s: 砂州 Δz min %.4f (> 0), mean %.4f vs 定着なし %.4f (差 > %.2f m) : %s"
+          % (tag, min(dzs), sum(dzs) / len(dzs), sum(dz_off) / len(dz_off), DZ_SUSP, "PASS" if g8 else "FAIL"))
+    ok = ok and g8
 
 print("=== fixation checks %s ===" % ("PASS" if ok else "FAIL"))
 sys.exit(0 if ok else 1)

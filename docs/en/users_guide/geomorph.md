@@ -178,6 +178,7 @@ Riverbed erosion and deposition by a bedload transport formula.
 | fix_tfix | (required) | Fixation time scale T_fix (h, morphological time including morfac). While dry, a → 1 − exp(−t/T_fix) |
 | fix_ctau | (required) | Increase ratio c_τ of the critical shear stress at full fixation |
 | fix_dzreset | 0.1 | Cumulative erosion below the fixation surface that resets a to 0 (m) |
+| fix_cn | 0 | Roughness increase ratio c_n at full fixation: the Manning n of the flow friction becomes n (1 + c_n a) (the τ* of the sediment is unchanged). 0 = no roughness effect |
 
 The minimal input to "just move the bed" is `f_fluvial = 1` plus the
 thickness of the erodible soil `sd0` (&list_geoinfo). The grain size is
@@ -231,14 +232,23 @@ cells exposed at low flow (h ≤ dd) by a fixation degree a ∈ [0, 1] (output
 `Fx0001...`): while dry, a approaches 1 as 1 − exp(−t/T_fix) (`fix_tfix`,
 morphological time including morfac), and the critical shear stress of the
 bed load supplied by that cell and of the bank erosion of that cell rises to
-τ*c (1 + c_τ a) (`fix_ctau`). Deposition onto a fixed surface is not
+τ*c (1 + c_τ a) (`fix_ctau`). With suspended sediment (`f_suspend`) only the
+entrainment term (equilibrium concentration) of a fixed cell is reduced, by the
+same c_τ, while settling is unchanged, so fines supplied during floods settle
+on the fixed bars (the path that raises a bar to floodplain level). With
+`fix_cn` > 0 the flow roughness of fixed cells rises to n (1 + c_n a), the
+flow slows down and more fines are trapped (the form drag of vegetation; the
+τ* of the sediment is not changed. Typical Manning n: grass 0.03 to 0.035,
+floodplains with brush or trees 0.05 to 0.15, i.e. c_n = 1 to 3; the default
+is 0 pending a literature check). Deposition onto a fixed surface is not
 hindered and elevations and volumes are untouched. When a submerged cell is
 eroded by more than `fix_dzreset` (default 0.1 m) below the fixation surface,
 a returns to 0 (nothing becomes permanently unerodible). It does not act on
-the angle-of-repose avalanching or on suspended sediment. Use it with an
-inflow series that alternates floods and low flows
-([examples/meander](../../../examples/meander/), param_fix.txt). Restart in
-`geomorph_fixation.dat`. Verification: [test/fixation](../../../test/fixation/).
+the angle-of-repose avalanching. Use it with an inflow series that alternates
+floods and low flows ([examples/meander](../../../examples/meander/),
+param_fix.txt; with suspended sediment param_fixsusp.txt). Restart in
+`geomorph_fixation.dat` (the dynamic roughness is rebuilt from a and not
+saved). Verification: [test/fixation](../../../test/fixation/).
 
 **Outputs for this section**: bed change in `Z0001...` (`f_out_z=1`; Z − Z0000 is the scour/deposition thickness). How often the cap fluv_dzmax acted is in the end warning "fluvial dzmax clip fired", the number of cells where the soil-depth supply limiter acted in "fluvial supply limiter", and the volume lost at the bedrock floor (normally zero) in "bedrock floor clip" ([Output and monitoring](#output-and-monitoring)).
 

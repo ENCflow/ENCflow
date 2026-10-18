@@ -14,6 +14,9 @@ set -o pipefail
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_off.txt | tee Screen.log || exit 1
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_on.txt | tee -a Screen.log || exit 1
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_weak.txt | tee -a Screen.log || exit 1
+for c in rough susp_off susp_on susp_on2; do
+    mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt | tee -a Screen.log || exit 1
+done
 rm -rf save_rt
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_rt1.txt | tee -a Screen.log || exit 1
 rm -rf save_rt1 && cp -r save_rt save_rt1       # 前半(t = 600 s)の保存値は成長則の検定が読む
@@ -24,14 +27,14 @@ echo ""
 rc=0
 python3 "$sdir/Check_fixation.py" || rc=1
 for f in state.dat geomorph_fixation.dat; do
-    if cmp -s save_rt/$f save_on/$f; then
+    if cmp -s save_rt/$f save_rough/$f; then
         echo "=== restart continuation: $f is bit-identical to the straight run ==="
     else
         echo "FAIL: restart continuation differs from the straight run: $f" >&2
         rc=1
     fi
 done
-for c in off on weak; do
+for c in off on weak rough susp_off susp_on susp_on2; do
     if [ -d save_${c}_serial ]; then
         for f in state.dat geomorph_fixation.dat; do
             [ -e save_$c/$f ] || continue

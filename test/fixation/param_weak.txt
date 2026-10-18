@@ -25,6 +25,7 @@
   f_state_restore = 0
   f_check_cfl = 0
   f_out_z = 1
+  f_out_vv = 1
 /
 
 &list_enc
