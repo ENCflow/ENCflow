@@ -5,7 +5,7 @@
 #   figs/sections.png : 湾曲頂点(x = 350, 450 m)の横断面の時間発展(非粘着性)
 #   figs/metrics.png  : 頂点の河道中心の横移動と河幅の時間発展
 #   figs/fixation.png : 定着構成の定着度 Fx と終了時の河道(result_fix があるとき)
-#   figs/feed.png     : 給砂を入れた流量変動+定着の構成(result_fixfeed / result_fixsuspfeed)
+#   figs/feed.png     : 給砂を入れた流量変動+定着の構成(result_fixfeed / result_fixsuspfeed / result_fixsuspfines)
 # 数表(README 用)を標準出力に書く
 import os, numpy as np, matplotlib
 matplotlib.use("Agg")
@@ -128,7 +128,8 @@ if os.path.isdir("result_fix"):
 
 # --- 5. 給砂を入れた流量変動+定着の構成(result_fixfeed / result_fixsuspfeed) ---
 FEED = [(d, l) for d, l in (("result_fixfeed", "fixation + capacity feed (bed load only)"),
-                           ("result_fixsuspfeed", "fixation + suspended fines at C_eq + roughness + capacity feed"))
+                           ("result_fixsuspfeed", "fixation + suspended fines at C_eq + roughness + capacity feed"),
+                           ("result_fixsuspfines", "same + bed fines ledger (coarse bed, feed at 0.5 C_eq)"))
         if os.path.isdir(d)]
 if FEED:
     fig, axes = plt.subplots(2 * len(FEED), 1, figsize=(14, 3.2 * 2 * len(FEED)), sharex=True)
