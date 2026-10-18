@@ -229,7 +229,8 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 法線エッジ: 平行な隣接エッジ(距離 dx = w8lt)の 1 次風上。
         ! 斜めエッジ: 平行な斜めリンクは t 方向に dx/√2(= w8lt)間隔で偶奇が
         ! 交互に並ぶ。隣接する反対偶奇のリンク 2 本(面の前後に 1 本ずつ)の
-        ! 平均を 1 次風上の流入値に使う(2 本揃わない面は壁面扱い。§68.37)。同じ偶奇のリンク(距離 √2·dx)だけを
+        ! 平均を 1 次風上の流入値に使う(1 本しか無い面はその 1 本が面と同程度に
+        ! 深いときだけ使い、浅い岸のリンクなら壁面扱い。§68.37・§68.39)。同じ偶奇のリンク(距離 √2·dx)だけを
         ! 見ていた 2026-10-17 までは、偶数・奇数の副格子で逆回転する斜め循環
         ! (発散ゼロで圧力項も効かない)に移流項が一切作用せず、低速の滞留域で
         ! 市松模様が残った(§68.36)。滑らかな場では (ū_t − u_e)/w8lt の主要項が
@@ -247,12 +248,12 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         if (qtp >= 0) then
           ubtp = ue
         else
-          ubtp = lateral_u(i, j, k, 1, ue)
+          ubtp = lateral_u(i, j, k, 1, ue, hb)
         end if
         if (qtm >= 0) then
           ubtm = ue
         else
-          ubtm = lateral_u(i, j, k, -1, ue)
+          ubtm = lateral_u(i, j, k, -1, ue, hb)
         end if
         ta = ta - (qtp * (ubtp - ue) + qtm * (ubtm - ue)) / tx%w8lt(k)
 
@@ -340,10 +341,10 @@ contains
   !   斜めエッジ: 側方面(距離 dx/√2)の上にある最近接の平行リンク 2 本
   !   (c + sgn·(dti, 0) と c + sgn·(0, dtj) から kk 方向。反対偶奇で、面の前後に
   !   1 本ずつ)の平均。両端セルが有効なリンクだけを使う(§68.36)
-  pure function lateral_u(ci, cj, kk, sgn, ue0) result(u)
+  pure function lateral_u(ci, cj, kk, sgn, ue0, he) result(u)
     integer, intent(in) :: ci, cj, kk, sgn
-    real, intent(in) :: ue0
-    real :: u, usum
+    real, intent(in) :: ue0, he     ! he: 面(エッジ)の検査体積の水深 h̄
+    real :: u, usum, u1, h1
     integer :: n, oi, oj
     if (kk == 2 .or. kk == 4) then
       oi = ci + sgn * dti(kk)
@@ -357,24 +358,38 @@ contains
     end if
     usum = 0.0
     n = 0
+    u1 = ue0
+    h1 = 0.0
     oi = ci + sgn * dti(kk)
     oj = cj
     if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
-      usum = usum + uvk(oi, oj, kk)
+      u1 = uvk(oi, oj, kk)
+      h1 = 0.5 * (s%h(oi, oj) + s%h(oi + din(kk), oj + djn(kk)))
+      usum = usum + u1
       n = n + 1
     end if
     oi = ci
     oj = cj + sgn * dtj(kk)
     if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
-      usum = usum + uvk(oi, oj, kk)
+      u1 = uvk(oi, oj, kk)
+      h1 = 0.5 * (s%h(oi, oj) + s%h(oi + din(kk), oj + djn(kk)))
+      usum = usum + u1
       n = n + 1
     end if
-    ! 2 本揃うときだけ平均を使う。片側しか無い(池の縁・壁際・マスク端で
-    ! 一方のリンクが無効・乾燥)面は壁面と同じ扱い ū = u_e(流入運動量なし)。
-    ! 1 本だけの値を使うと(2026-10-17 の初版)、深い湛水の不規則な縁で
-    ! 反減衰になり、流速が有限時間で発散した(§68.37。秩父 12 h の出口湛水)
+    ! 2 本揃うときは平均。1 本しか無い面は、その 1 本の水深(両端セルの平均)が
+    ! 面の水深 h̄ の半分以上なら(壁際の行の内側のリンク)その値を使い、浅ければ
+    ! (池の縁の岸のリンク)壁面と同じ扱い ū = u_e(流入運動量なし)。
+    !   - 1 本の値を無条件に使うと(2026-10-17 の初版)、深い湛水の不規則な縁で
+    !     浅い岸のリンクの流速が深い横断流束に乗って注入され、反減衰で有限時間
+    !     発散した(§68.37。秩父 12 h の出口湛水)
+    !   - 1 本しか無い面を無条件に壁面扱いにすると(§68.37 の修正)、壁際の行の
+    !     対角エッジが内側との運動量交換を失い、乾いた河岸に挟まれた水路で
+    !     壁沿いの行が有限時間で加速した(§68.39。test/sedfeed qb: 15 分で
+    !     6 m/s、2 m の河岸に水が登る)。水深で切り分けると両方が安定
     if (n == 2) then
       u = usum / 2
+    else if (n == 1 .and. h1 >= 0.5 * he) then
+      u = u1
     else
       u = ue0
     end if
