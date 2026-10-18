@@ -359,6 +359,78 @@ MPI はハロ交換 1 回の追加。
 
 ### 3.6 段 5: 精度向上(非平衡二次流・有効掃流力・給砂)
 
+段 5 は「5a 給砂」と「5b 非平衡二次流」に分け、5a を先に行う(§84.5〜84.8 の
+例題がすべて無給砂の河床低下に妨げられているため)。有効掃流力 fluv_taufac は
+段 1 で入れた。
+
+#### 3.6a 段 5a: 給砂(2026-10-18 設計案。未合意)
+
+**現状と試行**:
+- 開境界面(自由流出・区間流入面を含む bc_open_face)の掃流砂は、流出が常に
+  容量輸送、流入は `fluv_bcfeed = 1` のとき容量供給(§19.4)。区間流入面も
+  開面なので例題にも効く。浮遊砂は区間流入に濃度 `inflow_cs(t)` または流砂量
+  `inflow_qs(t)`(= Qs/Q の等価濃度。§19.7)を与えられるが、平衡濃度を与える
+  手段はない。掃流砂の流砂量時系列を与える手段はない。
+- examples/meander(一定 Q)を fluv_bcfeed = 1 で再実行すると、上流端の河床
+  低下(x = 50〜150 m で 200 h に −0.85 m)は消えるが、**過給砂**になる
+  (同区間 +0.80 m、河道が氾濫原へ溢れて湿潤セル 8,525 → 17,931)。流入面の
+  容量は流入セル(直線・水深 0.8 m)の水理で決まり、下流の蛇行区間の輸送
+  容量より大きいため。「平衡給砂 = 流入面の容量」は下流区間と釣り合う保証が
+  なく、実務でも給砂量は与件(上流からの供給、ダムの捕捉、置き土)である。
+  したがって**容量給砂に倍率**と、**流砂量の直接指定**の両方が要る。
+
+**設計**(いずれも標高・体積の保存形。台帳で収支を閉じる):
+
+(1) **容量給砂の倍率 `fluv_bcfeed_fac`**(既定 1.0。fluv_bcfeed = 1 のとき
+  有効): 流入面の容量供給 gq(<0)に fac を乗じる。0 = 無給砂、1 = 現行、
+  0.5 = 半給砂(ダム下流の河床低下の再現)、>1 = 過給砂(置き土・土砂還元)。
+  calc_fluvial の開境界ループで 1 行。流出側には掛けない。
+(2) **掃流砂の流砂量時系列 `inflow_qb`**(&list_bound_inflow。(min, m3/s 固体
+  体積)/ fn_inflow_qb。inflow_qs(浮遊砂)と同形): 区間流入の各セルの河床に
+  Δz = Qb·dts·poroi / (A·n_cell)(水の按分と同じ重み。inflow_dist)を加える
+  源泉。流入セルは容量輸送でこれを運ぶ(容量を超えれば盛り上がる = 実河川の
+  置き土と同じ)。fluv_bcfeed = 1 と併用可(容量供給+追加注入)だが、通常は
+  どちらか。geomorph の更新ごとに calc_fluvial の前(供給を可動層に入れてから
+  運ぶ)に適用し、z・sd の共動更新。台帳 vfeed を dispose で報告。
+  区間流入のセル一覧は m_boundary の b%inflow(ifl)%cell から init で帯内の
+  リストに写す(geomorph → m_boundary の読み取り依存を 1 つ追加。逆向きは
+  作らない)。
+(3) **浮遊砂の平衡濃度給砂 `inflow_cs_eq`**(&list_bound_inflow の区間ごとの
+  整数 0/1。既定 0): 1 なら流入濃度 = fac_s × C_eq(流入セルの τ* から
+  f_esform の式で評価)。inflow_cs / inflow_qs と排他。倍率 `susp_bcfeed_fac`
+  (既定 1.0)。C_eq の評価は m_geomorph_suspend の式を pure 関数
+  `suspend_ceq(gm, taus)` に切り出して公開し、m_boundary の makebdc が
+  b%csin を書くときに呼ぶ(m_boundary → m_geomorph の読み取り依存。
+  (2) と逆向きになるので、**(2) の流入セル一覧は m_boundary が公開する
+  読み取り専用の表とし、geomorph は m_boundary を use しない**ことで循環を
+  避ける = 依存は m_boundary → m_geomorph の一方向。要確認: m_boundary の
+  init 順序(geomorph init より前なら C_eq の係数は calc 時にしか要らないので
+  問題ない))。
+(4) **例題**: examples/meander の給砂は、まず (1) の fac を 0.3〜0.7 で振って
+  上流区間の河床が 200 h で ±0.1 m に収まる値を探す(無給砂の試行で x = 150 m
+  の通過流砂量を測って与えてもよい = (2) の使い方)。浮遊砂併用は (3)。
+  実務向けの使い方(ダム捕捉 fac = 0、置き土 inflow_qb の時系列)は
+  users_guide の geomorph 章「給砂」に小節を起こす。
+
+**検証**(test/sedfeed 新設): 直線水路(test/uniflow の地形に土層あり)で
+(a) 無給砂: 上流端から河床低下波、(b) fac = 1: 上流区間の河床が ±1 cm で
+安定、(c) fac = 0.5: 低下量が (a) の約半分、(d) inflow_qb = 一定: 台帳
+Σ(z − z0)(1 − λ)A + 流出量 = ∫Qb dt が機械精度、(e) inflow_cs_eq = 1:
+流入濃度が流入セルの C_eq に一致(出力 Hs/H で確認)。無効時ビット一致、
+np=1,2,4 一致、-fcheck np=2。
+
+**規模**: (1) 数行、(2) 100 行(namelist・読み込み・補間は inflow_qs を複製、
+源泉の適用 1 ループ、台帳)、(3) 80 行(関数の切り出し、makebdc の分岐、
+namelist)。文書: users_guide boundary(区間流入)・geomorph・sediment・
+params_index・List_samples、developer.md §84.9。
+
+**要合意事項**: (i) 容量給砂の倍率は流入側のみ(流出は常に容量)、
+(ii) inflow_qb は河床への源泉(hs への注入ではない)、(iii) 平衡濃度給砂の
+依存方向は m_boundary → m_geomorph、(iv) 例題の給砂は倍率の校正で与える
+(「正しい平衡給砂」は定義できない)。
+
+#### 3.6b 段 5b: 非平衡二次流(未着手。原案のまま)
+
 - **非平衡二次流 `f_secflow=2`**: 強度 I(符号付き。河床近傍の横断流速比
   r と同じ無次元量で定義)の輸送
   ∂(hI)/∂t + ∇·(h u I) = h (I_eq − I)/T_I、I_eq = N* h κ。
@@ -369,11 +441,6 @@ MPI はハロ交換 1 回の追加。
   (sec_lad の既定は文献値【要文献照合】。de Vriend 系の λ_sw ≈ 1.2 h ×
   (1/κ_f 比)等)。save_version 更新。段 1 の rsec 配列を I から埋めるだけで
   掃流砂側は不変。
-- **有効掃流力** fluv_taufac(段 1 で入れていなければここ)。
-- **掃流砂の給砂時系列**: inflow_qs(§19.7)は浮遊砂への注入。掃流砂の
-  開境界は無給砂/平衡給砂(§19.4)。平衡給砂に対する倍率 fluv_bcfeed_fac と、
-  区間流入に対する掃流砂量 Qb(t) の直接注入(風上セルの z・sd を増やす
-  源泉)を追加。
 - 浮遊砂への二次流効果、混合粒径(F4)、運動量フィードバックは本案の外
   (comparison.md の位置づけ上も専用モデル領域)。
 
@@ -413,7 +480,9 @@ m_state / m_restart    段 5(s%si の確保・save)
 | repose_relax | 0.5 | 1 更新の緩和率 | 2 |
 | f_fixation | 0 | 定着 | 3 |
 | fix_tfix / fix_ctau / fix_dzreset | 文献値 | 定着時間・抵抗増・リセット深 | 3 |
-| fluv_bcfeed_fac | 1.0 | 平衡給砂の倍率 | 5 |
+| fluv_bcfeed_fac | 1.0 | 容量給砂の倍率(流入側) | 5a |
+| inflow_qb / fn_inflow_qb | — | 区間流入の掃流砂流砂量時系列(&list_bound_inflow) | 5a |
+| inflow_cs_eq / susp_bcfeed_fac | 0 / 1.0 | 区間流入の浮遊砂を平衡濃度で給砂(&list_bound_inflow) | 5a |
 
 既定値は §62 の gm_param 方式(未指定なら既定を採用し "(default)" 付きで
 表示)。「与件」(fn_berode_kb)には既定を置かない。式固有の係数
