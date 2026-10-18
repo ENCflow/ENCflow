@@ -9321,6 +9321,13 @@ coastal_drain・culvert・chichibu・nhsolitary・sublattice で逐次と Log �
   通水能が Manning に揃う向きの変化。
 - reference の更新は利用者承認(2026-10-18)。tutorials/wave・chichibu の
   数表・図は再生成が要る(handoff)。
+- **回帰(2026-10-18、§68.39 と同じ木で一括)**: reference 25 ケースのうち
+  wave・splash・conduit・frost・pump・salt は不変で PASS、19 ケース(上の 14 +
+  §68.39 で動く kdpart・nhbottom・nhwave・nhwave_nh・gwseep・damwq など)を
+  ./Run.sh -u で更新し、各ケースを ./Run.sh で再実行して PASS を確認した
+  (nhshelf は NH ソルバの OpenMP 非決定 §81 のため単一スレッドで更新・確認)。
+  自己検証の 16 ケースは PASS(fixation は断面流量 Σ V h dy の許容を 3 → 5 %
+  に緩めた: セル中心値の近似で、壁際の行の V が Manning に揃うぶん +3.3 %)。
 
 **変更箇所**: list_enc.f90 の既定値、users_guide swflow / advection(JA・EN)、
 List_samples list_enc(JA・EN)、§68.19 の表の注記。2 を明示している
@@ -9355,8 +9362,21 @@ V_max 6.1 m/s(Courant 0.95)。f_opening_dynamic を 1 にしても出る(2.5 m/s
 **検証(2026-10-18)**: sedfeed qb は V_max 0.90 m/s、dzmax クリップなし、台帳
 6.000000000 m³(§68.37 以前と同じ)。秩父 Step 2 の出口湛水 12 h
 (f_opening_dynamic = 1)は安定で h_max 34.39 m、V_max 2.97 m/s(§68.37 の
-34.206 / 2.957 と同等。V_max は 1 h 16.3 から単調減衰)。reference ケースへの
-影響と回帰は本節末尾に追記。
+34.206 / 2.957 と同等。V_max は 1 h 16.3 から単調減衰)。
+
+**reference ケースへの影響**(f_opening_dynamic = 1 を明示して本改定だけを
+分離。§68.37 の reference と、§68.37 以前(初版)の reference の両方と比較):
+壁の片側リンクが深いケースは初版とビット一致(coastal_drain・dambreak・nhbore・
+nhcurrent・nhsolitary・tide。chichibu 4e-6、sewer_wq 4e-7)= 本改定は初版の
+挙動を壁沿いで復元し、池の縁(浅い岸のリンク)だけ §68.37 を保つ。dambreak の
+Stoker 検定は不変(段波位置 +1.25 %、台地 −1.22 %、L1 h 0.0062 / u 0.0211)で、
+列間ばらつきは 3.68 → 2.36 m(初版の値)に戻る。両方と異なるのは culvert
+(2 分の初期過渡で V_max 0.084 → 0.066、以後は 4 % 以内)、damwq(段波の
+ピーク V_max 1.55 → 1.84)、nhshelf(ピークは 1 % 以内)、gwseep(静止貯水池の
+残留流速 2.32 → 0.019 m/s、ex_flux 8 → 0 — §68.36・§68.37 で 25〜30 % 動いた
+wq.csv の列の感度の正体で、改善)。test/sublattice は PASS(減衰時定数 87 s /
+2246 s)、uniflow は Manning に 0.1 %、sedfeed・bedfines PASS。回帰と reference
+更新は §68.38 の記録と同じ一括(19 ケース更新・再実行 PASS)。
 
 ## 69. 非静水圧(1 層 NH)拡張の設計決定(2026-10-05 合意。実装は段階的)
 
