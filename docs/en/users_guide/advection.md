@@ -452,7 +452,7 @@ fluid force. With the lateral width set to the spacing $`\Delta x/\sqrt2`$ of
 the opposite-parity links and their mean as the upwind value, the mode now
 decays through the flux of the background flow
 ([test/sublattice](../../../test/sublattice/README.md): the e-folding time of a
-sub-lattice mode superposed on a gyre drops from 1094 s to 87 s; the offshore
+sub-lattice mode superposed on a gyre drops from 1094 s to 88 s; the offshore
 checkerboard of tsunami_town from 0.43 to 0.01). The leading terms are
 unchanged for smooth fields, so the bore (Stoker), uniform-flow and bend-loss
 verification values are unchanged.
