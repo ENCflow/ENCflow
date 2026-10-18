@@ -9283,13 +9283,18 @@ mixed = 滑らかな渦(1)+副格子モード(0.5)(背景流下の線形減衰�
 **検証(2026-10-17)**: 池 12 h は安定で、副格子結合前と h_max・V_max が
 0.1 % 以内(34.206 m・2.957 m/s)。Stoker(dambreak)の段波位置・台地水深・
 L1 誤差は不変、列間ばらつきは 2.36 → 3.68 m(壁沿いの行の対角側方面が
-壁面扱いになる分)。test/sublattice は PASS(内部は 2 本揃うので不変)、wave・
-kdpart・nhbottom・chichibu_icmap は reference と identical。壁に接する斜め
-エッジを持つ他のケースは reference が変わる: culvert 1.4 %、coastal_drain
+壁面扱いになる分)。test/sublattice は PASS(壁際の分だけ τ 87 → 88 s、
+alternating 2270 → 2240 s)。自己検証つき 39 ケースは全て PASS、wave・
+kdpart・chichibu_icmap・conduit・frost は reference と identical。壁に接する
+斜めエッジを持つ 14 ケースは reference が変わる: culvert 1.4 %、coastal_drain
 4.7 %(初期過渡の 1 行)、dambreak(Log 8 %。Stoker 検定は不変)、gwseep
 (wq.csv の 1 列 25 %。§68.36 の更新でも大きく動いた感度の高い量)、nhbore
-0.25 %、tide・damwq・sewer_wq・nhbreak・nhcurrent・nhshelf・nhsolitary・
-chichibu は許容差内。利用者承認(2026-10-17)で -u 更新。
+0.25 %、nhbottom 0.08 %、tide・damwq・sewer_wq・nhbreak・nhcurrent・nhshelf・
+nhsolitary・chichibu は許容差内。-fcheck=all の逐次と np=2 が chichibu
+(窓つき)と池 12 h で完走し Log 一致、release の np=2・4 が dambreak・tide・
+coastal_drain・culvert・chichibu・nhsolitary・sublattice で逐次と Log ビット
+一致。tutorials/chichibu の Step 4(200 m 流域)は本改定で不変、Step 5 のピーク
+3,956 → 4,011 m³/s(出口湛水の縁)。reference の更新は利用者承認(2026-10-17)。
 
 ## 69. 非静水圧(1 層 NH)拡張の設計決定(2026-10-05 合意。実装は段階的)
 
