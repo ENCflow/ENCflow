@@ -16,7 +16,8 @@
 #     (5) 0 <= a <= 1(全構成・全出力)
 #     (6) 無効時の痕跡なし: result_off に Fx 出力がない(配列未確保)
 #     (7) 粗度(rough: c_n = 2): 出水時(1800 s)の定着砂州上の流速が on の
-#         RATIO_V 倍未満、断面流量 Σ V h dy は両構成とも Q_in に ±TOL_QSEC
+#         RATIO_V 倍未満、断面流量 Σ V h dy は両構成とも Q_in に ±TOL_QSEC(セル中心の
+#         V・h による近似。壁際の行の通水能補正 f_opening_dynamic = 2 で +3.3 %)
 #     (8) 浮遊砂(susp_off / susp_on / susp_on2: 出水時に濃度 0.002 で給砂):
 #         定着ありの砂州は出水で全セル正味堆積(Δz > 0)、平均 Δz が定着なしより
 #         DZ_SUSP 以上大きい(f_esform = 1 と 2 の両方)
@@ -29,7 +30,7 @@ from make_init import NX, NY, J1, J2, JB1, JB2, I_RAMP, I_END
 T1, TFIX = 600.0, 0.1 * 3600.0
 DZRESET_WEAK = 0.002
 TOL_A, TOL_TXT, DZ_ERO, NMIN = 1.0e-9, 1.0e-4, 0.005, 10
-RATIO_V, TOL_QSEC, DZ_SUSP, Q_IN = 0.7, 0.03, 0.02, 1.7
+RATIO_V, TOL_QSEC, DZ_SUSP, Q_IN = 0.7, 0.05, 0.02, 1.7   # Σ V h dy はセル中心値の近似。f_opening_dynamic = 2(2026-10-18 既定)で壁際の行の V が Manning に揃い +3.3 %
 
 
 def read_rec(f):
