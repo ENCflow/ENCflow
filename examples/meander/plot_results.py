@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# examples/meander の図化(result / result_cohesive / result_varq / result_fix / result_fixsusp を読んで figs/ に保存)
-#   figs/planform.png : 初期と終了時の水深(河道の位置)と河床変化 z−z0(5 構成)
+# examples/meander の図化(result / result_cohesive / result_varq / result_fix / result_fixsusp / result_feed を読んで figs/ に保存)
+#   figs/planform.png : 初期と終了時の水深(河道の位置)と河床変化 z−z0(6 構成)
 #   figs/sections.png : 湾曲頂点(x = 350, 450 m)の横断面の時間発展(非粘着性)
 #   figs/metrics.png  : 頂点の河道中心の横移動と河幅の時間発展
 #   figs/fixation.png : 定着構成の定着度 Fx と終了時の河道(result_fix があるとき)
@@ -17,7 +17,8 @@ CASES = [("result", "non-cohesive banks (f_repose)", "#2a78d6"),
          ("result_cohesive", "cohesive banks (f_berode + f_repose)", "#d6572a"),
          ("result_varq", "non-cohesive, Q 15/1.5 m3/s without fixation", "#8a6fd1"),
          ("result_fix", "non-cohesive + fixation (f_fixation, Q 15/1.5 m3/s)", "#2a9d5a"),
-         ("result_fixsusp", "fixation + suspended fines (0.2 mm, c = 0.004 at floods) + roughness c_n = 2", "#b5641e")]
+         ("result_fixsusp", "fixation + suspended fines (0.2 mm, c = 0.004 at floods) + roughness c_n = 2", "#b5641e"),
+         ("result_feed", "non-cohesive banks, capacity feed (fluv_bcfeed = 1, erodible inlet)", "#6b6b6b")]
 CASES = [c for c in CASES if os.path.isdir(c[0])]
 APEX = [250, 350, 450, 550, 650]                   # 頂点付近の x (m)
 x = (np.arange(NX) + 0.5) * DX

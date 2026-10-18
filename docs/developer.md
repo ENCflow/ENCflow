@@ -11739,4 +11739,9 @@ plan §3.6a(合意 2026-10-18)。§84.5〜84.8 の例題がすべて無給砂の
 - **検証**: 無効時は fluvial・suspend・wash・sedinflow・bankface・bendsed・
   berode・repose・wave・uniflow・fixation が PASS。厳密フラグの逐次と MPI
   np=2, 4 で sedfeed 5 構成の state.dat がビット一致、-fcheck np=2 完走。
+- **例題(examples/meander の param_feed.txt)**: 上流端まで可動にして
+  fluv_bcfeed = 1(倍率 1)。上流区間 x = 50〜150 m の河床変化は 200 h で
+  −0.85 → +0.29 m(給砂 5,400 m³)、河道全体が +0.25〜0.6 m のわずかな堆積傾向で
+  幅 47 m(無給砂 40 m)。機構は同じで上流側の湾曲も動く。流量変動・定着の
+  構成への給砂の組み込み(砂州を出水位より上へ育てる試行)は次の作業。
 

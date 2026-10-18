@@ -8,10 +8,10 @@ SRCDIR	= $(TOPDIR)/src
 
 all: links inputs
 
-inputs: z.txt h.txt sd.txt
+inputs: z.txt h.txt sd.txt sd_feed.txt
 
-z.txt h.txt sd.txt: make_init.py
-	@python3 make_init.py z > z.txt && python3 make_init.py h > h.txt && python3 make_init.py sd > sd.txt
+z.txt h.txt sd.txt sd_feed.txt: make_init.py
+	@python3 make_init.py z > z.txt && python3 make_init.py h > h.txt && python3 make_init.py sd > sd.txt && python3 make_init.py sdfeed > sd_feed.txt
 
 links:
 	@if [ ! -e $(BINDIR)/encflow ] && [ ! -e $(BINDIR)/encflow_mpi ]; then \
@@ -26,6 +26,6 @@ install: all
 
 clean:
 	rm -rf result save
-	rm -f encflow encflow_mpi a.out Screen*.log z.txt h.txt sd.txt
+	rm -f encflow encflow_mpi a.out Screen*.log z.txt h.txt sd.txt sd_feed.txt
 
 .PHONY: all links inputs install clean

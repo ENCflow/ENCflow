@@ -40,6 +40,13 @@ def sd_of(i, j):
         return 0.0
     return SD * min(1.0, max(0.0, (x - XFIX_UP) / LRAMP))
 
+
+def sdfeed_of(i, j):
+    # 給砂構成(param_feed.txt): 上流端まで可動(容量給砂 fluv_bcfeed = 1 が入口の
+    # 河床を固定するので、非侵食帯とランプは要らない)。下流端だけ非侵食
+    x, n = cell(i, j)
+    return 0.0 if x > NX * DX - XFIX_DN else SD
+
 def rows_in(i):
     return [j for j in range(1, NY + 1) if h_of(i, j) > 0]
 
@@ -47,6 +54,6 @@ if __name__ == "__main__":
     kind = sys.argv[1]
     if kind == "rows":
         print(" ".join(str(j) for j in rows_in(1))); sys.exit(0)
-    fn = {"z": z_of, "h": h_of, "sd": sd_of}[kind]
+    fn = {"z": z_of, "h": h_of, "sd": sd_of, "sdfeed": sdfeed_of}[kind]
     for j in range(1, NY + 1):
         print(" ".join("%.4f" % fn(i, j) for i in range(1, NX + 1)))
