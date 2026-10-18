@@ -528,9 +528,15 @@ module subroutine apply_edge_flux(gm, g, s, dts)
   real :: dv8, dz, cap, fx, winv, qk, fd, vout, vcap
   integer :: nlim
   real :: vleak
+  logical :: have_sf
+  real :: ff, tout, vfo, dsf, vfree
 
   nlim = 0
   vleak = 0.0
+  ! 河床の細粒分の帳簿(§84.10)の有無(全ランク同一)。無効時は下の分岐が
+  ! 一切入らず既存の式のまま(ビット一致)
+  have_sf = (gm%f_bedfines > 0)
+  vfree = 0.0
 
   ! --- ループ1.5: 供給量制限(セルの総流出要求 > 可動層 sd なら縮小) ---
   ! エッジ別の可動層クランプは「このエッジ単独」の上限なので、複数エッジが
@@ -541,10 +547,11 @@ module subroutine apply_edge_flux(gm, g, s, dts)
   ! 隣接ランクの帯界面セルの値を受け取り、ループ2の両側が同じ fdon を
   ! 読む = 反対称性(土砂体積保存)は保たれる。制限が発動しないセルは
   ! fdon = 1.0 の乗算で結果は厳密に不変(発動なしの既存ケースはビット一致)
-  !$omp parallel do schedule(static) reduction(+: nlim) private(i, j, k, qk, vout, vcap, winv)
+  !$omp parallel do schedule(static) reduction(+: nlim) private(i, j, k, qk, vout, vcap, winv, ff, tout)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       gm%flv%fdon(i,j) = 1.0
+      if (have_sf) gm%fin%ff(i,j) = 0.0
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       vout = 0.0
@@ -562,11 +569,29 @@ module subroutine apply_edge_flux(gm, g, s, dts)
           gm%flv%fdon(i,j) = vcap / vout         ! sd = 0(岩盤)なら 0
           nlim = nlim + 1
         end if
+        ! 河床の細粒分の帳簿(§84.10): このセルの流出に占める細粒分の割合 ff。
+        ! 交換層の組成 min(1, sf/L_a) から始め、細粒分の流出 <= sf、粗粒分の
+        ! 流出 <= sd − sf を満たす範囲に入れる(流出の総厚 tout <= sd は供給量
+        ! 制限が保証するので両立する区間は空でない)
+        if (have_sf) then
+          ff = 0.0
+          if (s%sf(i,j) > 0.0) then
+            ff = min(1.0, s%sf(i,j) * gm%fin%lainv)
+            tout = vout * gm%flv%fdon(i,j) * dts * gm%wrk%ainv * winv * gm%poroi
+            if (tout > 0.0) then
+              ff = min(ff, s%sf(i,j) / tout)
+              ff = max(ff, 1.0 - max(s%sd(i,j) - s%sf(i,j), 0.0) / tout)
+              ff = min(ff, 1.0)
+            end if
+          end if
+          gm%fin%ff(i,j) = ff
+        end if
       end if
     end do
   end do
   !$omp end parallel do
   call par_halo_cell(gm%flv%fdon)
+  if (have_sf) call par_halo_cell(gm%fin%ff)
 
   ! --- ループ2: 発散 → z と sd の共動更新 + 地下水容量の整合 ---
   !   各エッジ流量に風上セルの fdon を乗じて集計する(風上が域外 = 開境界
@@ -575,13 +600,14 @@ module subroutine apply_edge_flux(gm, g, s, dts)
   !   q*1.0 = q が厳密なので、-Ofast の積和縮約も従来と同じになり
   !   ビット一致が保たれる — 縮小率を加算後に掛ける形に書き換えると
   !   縮約の形が変わり最終桁が動く(実検出))
-  !$omp parallel do schedule(static) reduction(+: vleak) &
-  !$omp   private(i, j, k, in, jn, dv8, dz, cap, fx, winv, qk, fd)
+  !$omp parallel do schedule(static) reduction(+: vleak, vfree) &
+  !$omp   private(i, j, k, in, jn, dv8, dz, cap, fx, winv, qk, fd, vfo, dsf)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       dv8 = 0.0
+      vfo = 0.0
       do k = 1, 8
         qk = gm%wrk%q(ke(k), i+die(k), j+dje(k))
         fd = 1.0
@@ -592,7 +618,23 @@ module subroutine apply_edge_flux(gm, g, s, dts)
           jn = j + djn(k)
           if (g%x(in,jn) > 0) fd = gm%flv%fdon(in,jn)
         end if
-        dv8 = dv8 + sign_e(k) * (qk * fd)
+        if (have_sf) then
+          ! 河床の細粒分の帳簿(§84.10): 流出は全量(細粒分は後で ff_own 倍を
+          ! 懸濁化)、流入は供給側の粗粒分 (1 − ff) だけが河床に届く。域外
+          ! (開境界)からの流入は粗粒
+          if (sign_e(k) * qk > 0.0) then
+            vfo = vfo + sign_e(k) * (qk * fd)
+            dv8 = dv8 + sign_e(k) * (qk * fd)
+          else if (sign_e(k) * qk < 0.0) then
+            if (g%x(in,jn) > 0) then
+              dv8 = dv8 + sign_e(k) * (qk * fd) * (1.0 - gm%fin%ff(in,jn))
+            else
+              dv8 = dv8 + sign_e(k) * (qk * fd)
+            end if
+          end if
+        else
+          dv8 = dv8 + sign_e(k) * (qk * fd)
+        end if
       end do
       ! 河道幅有効時は体積発散を河道底面積 wfrac*dx*dy で厚さに換算
       ! (Δz の河道底集中。無効時は 1.0 の乗算で厳密に不変)
@@ -608,6 +650,19 @@ module subroutine apply_edge_flux(gm, g, s, dts)
       ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
       s%z(i,j) = s%z(i,j) + dz
       s%sd(i,j) = s%sd(i,j) + dz
+      ! 河床の細粒分の帳簿(§84.10): 流出に含まれる細粒分 ff・q をその場で
+      ! 懸濁化する(sf から hs へ。hs は水理時間の柱状量 = Δz/(morfac·poroi))。
+      ! ff の構成で |dsf| <= sf だが、丸めの分はクランプして sf と hs の間で閉じる
+      if (have_sf) then
+        if (vfo > 0.0) then
+          dsf = -vfo * gm%fin%ff(i,j) * dts * gm%wrk%ainv * winv * gm%poroi
+          if (dsf < -s%sf(i,j)) dsf = -s%sf(i,j)
+          s%sf(i,j) = s%sf(i,j) + dsf
+          s%hs(i,j) = s%hs(i,j) - dsf / (gm%morfac * gm%poroi)
+          vfree = vfree - dsf / (gm%poroi * gm%wrk%ainv * winv)
+        end if
+        if (s%sf(i,j) > s%sd(i,j)) s%sf(i,j) = s%sd(i,j)
+      end if
       ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
       ! (飽和表土が削られ、含まれていた水が地表に出る。反対称適用)
       if (s%gw_active) then
@@ -623,6 +678,7 @@ module subroutine apply_edge_flux(gm, g, s, dts)
   !$omp end parallel do
 
   gm%flv%nlim = gm%flv%nlim + nlim
+  if (have_sf) gm%fin%vfree = gm%fin%vfree + vfree
   gm%flv%vleak = gm%flv%vleak + vleak
 
 end subroutine

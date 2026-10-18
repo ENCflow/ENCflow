@@ -168,6 +168,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | f_bdgv | &list_bldgdebris | [Building destruction and debris](bldgdebris.md) |
 | f_bedmotion | &list_bedmotion | [Prescribed bed motion](bedmotion.md) |
 | f_bedslide | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| f_bedfines | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | f_bminterp | &list_bedmotion | [Prescribed bed motion](bedmotion.md) |
 | f_bsplunge | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | f_bsres | &list_geomorph | [Sediment and landform change](geomorph.md) |
@@ -292,6 +293,8 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | f_wq_settle | &list_wq | [Water quality](wq.md) |
 | f_wthr | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | f_ztype | &list_geoinfo | [Geographic information](geoinfo.md) |
+| fines_frac0 | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| fines_la | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fix_cn | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fix_ctau | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fix_dzreset | &list_geomorph | [Sediment and landform change](geomorph.md) |

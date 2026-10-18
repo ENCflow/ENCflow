@@ -167,6 +167,8 @@ module m_state
                                         ! s%sd の内数で常に土層の最上部にある。m_geomorph
                                         ! の f_bedslide が確保・更新・私有保存する。無効
                                         ! なら未確保。docs/landslide_tsunami_plan.md)
+    real, allocatable :: sf(:,:)        ! 河床の細粒分の厚さ (m。0 <= sf <= sd。f_bedfines。geomorph が
+                                        !   確保・更新し出力 Sf。私有 save は geomorph_fines.dat。§84.10)
     real, allocatable :: fx(:,:)        ! 定着度 a ∈ [0,1](f_fixation。geomorph が確保・更新し
                                         !   出力 Fx。私有 save は geomorph_fixation.dat。§84.6)
     real, allocatable :: rnv(:,:)       ! 動的粗度 n_eff = n (1 + c_n a)(fix_cn > 0 のときだけ geomorph が
@@ -849,6 +851,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hl)) deallocate(s%hl)
   if (allocated(s%hb)) deallocate(s%hb)
   if (allocated(s%fx)) deallocate(s%fx)
+  if (allocated(s%sf)) deallocate(s%sf)
   if (allocated(s%rnv)) deallocate(s%rnv)
   if (allocated(s%vb)) deallocate(s%vb)
   if (allocated(s%hd)) deallocate(s%hd)

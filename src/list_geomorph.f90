@@ -82,6 +82,12 @@ module list_geomorph
     real :: susp_esa = 0.0           ! 平衡濃度係数(C_eq = esa・(τ*/τ*c - 1))。
                                      ! f_suspend=1 で必須(体積濃度スケール)
 
+    integer :: f_bedfines = 0        ! 河床の細粒分の帳簿(0:無効, 1:有効。f_suspend が必須。§84.10)
+                                     ! 浮遊砂の浸食を河床に在庫する細粒分 s%sf(出力 Sf)に限り、
+                                     ! 掃流砂の浸食で解放された細粒分はその場で懸濁する
+    real :: fines_la = 0.0           ! 交換層厚 L_a (m)。利用可能率 f = min(1, sf/L_a)。f_bedfines=1 で必須
+    real :: fines_frac0 = 0.0        ! 初期の細粒分割合(sf = fines_frac0 × sd。0 = 粗粒のみ、1 = 細粒のみ)
+
     integer :: f_wash = 0            ! 斜面浸食(雨滴+面状。f_suspend が必須)(0:無効, 1:有効)
     real :: wash_kr = 0.0            ! 雨滴侵食係数(無次元。E_r = kr・降雨強度)
     real :: wash_kf = 0.0            ! 面状侵食係数 (m/s)(E_f = kf・(τ*/τ*c - 1))
@@ -263,6 +269,8 @@ subroutine list_geomorph_read(p, list)
   real :: susp_tausc
   real :: susp_beta
   real :: susp_esa
+  integer :: f_bedfines
+  real :: fines_la, fines_frac0
   integer :: f_wash
   real :: wash_kr
   real :: wash_kf
@@ -312,7 +320,8 @@ subroutine list_geomorph_read(p, list)
                            f_repose, repose_phi, repose_relax, &
                            f_fixation, fix_tfix, fix_ctau, fix_dzreset, fix_cn, &
                            f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
-                           susp_beta, susp_esa, f_wash, wash_kr, wash_kf, wash_tausc, &
+                           susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, &
+                           f_wash, wash_kr, wash_kf, wash_tausc, &
                            f_splash, spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
                            f_dbed, db_d50, db_erest, db_cmin, f_dbwet, db_satbed, &
@@ -365,6 +374,9 @@ subroutine list_geomorph_read(p, list)
   susp_tausc = list%susp_tausc
   susp_beta = list%susp_beta
   susp_esa = list%susp_esa
+  f_bedfines = list%f_bedfines
+  fines_la = list%fines_la
+  fines_frac0 = list%fines_frac0
   f_wash = list%f_wash
   wash_kr = list%wash_kr
   wash_kf = list%wash_kf
@@ -471,6 +483,9 @@ subroutine list_geomorph_read(p, list)
   list%susp_tausc = susp_tausc
   list%susp_beta = susp_beta
   list%susp_esa = susp_esa
+  list%f_bedfines = f_bedfines
+  list%fines_la = fines_la
+  list%fines_frac0 = fines_frac0
   list%f_wash = f_wash
   list%wash_kr = wash_kr
   list%wash_kf = wash_kf

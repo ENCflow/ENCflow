@@ -108,6 +108,9 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
             end if
           end if
         end if
+        ! 河床の細粒分の帳簿(§84.10): 浸食は在庫の利用可能率 f = min(1, sf/L_a)
+        ! で減らす(f = 1 のセルは 1.0 の乗算で厳密に不変)
+        if (gm%f_bedfines > 0) ceq = ceq * min(1.0, s%sf(i,j) * gm%fin%lainv)
         ! 濃度は水の体積あたり = hs / vh(vh = σ の矩形換算水深。swflow の
         ! 移流の供給元濃度・水質の cqc と同じ解釈。σ 非適用セルは vh = h)
         cc = 0.0
@@ -127,6 +130,8 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
         if (fx > 0.0) then
           ! 可動層クランプ(河床側は ×morfac・poroi で減るため換算して制限)
           fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
+          ! 細粒分の在庫を超えない(sf = sd なら同じ値 = 厳密に不変)
+          if (gm%f_bedfines > 0) fx = min(fx, s%sf(i,j) / (gm%morfac * gm%poroi))
         else
           fx = max(fx, -max(s%hs(i,j), 0.0))    ! 沈降は浮遊量まで
         end if
@@ -141,6 +146,9 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
       if (dzb < -s%sd(i,j)) dzb = -s%sd(i,j)
       s%z(i,j) = s%z(i,j) + dzb
       s%sd(i,j) = s%sd(i,j) + dzb
+      ! 細粒分の帳簿: 浸食も沈降も細粒分なので sf を同じ Δz で動かす(sd − sf は
+      ! 不変)。在庫クランプの往復の丸めで僅かに負になれば 0 で止める
+      if (gm%f_bedfines > 0) s%sf(i,j) = max(s%sf(i,j) + dzb, 0.0)
       ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
       ! (calc_fluvial と同じ整合。反対称適用)
       if (s%gw_active) then

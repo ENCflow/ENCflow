@@ -136,6 +136,15 @@ module m_geomorph
     integer :: nfix = 0              ! τ*c,eff で流砂を止めた/減らしたエッジ数(累計)
   end type
 
+  type t_fines
+    ! 河床の細粒分の帳簿(f_bedfines)。§84.10。細粒分の厚さは s%sf(出力 Sf)
+    real :: la = 0.0                 ! 交換層厚 L_a (m)
+    real :: lainv = 0.0              ! 1 / L_a
+    real :: frac0 = 0.0              ! 初期の細粒分割合
+    real, allocatable :: ff(:,:)     ! 流出に占める細粒分の割合(帯±ハロ。apply_edge_flux のループ 1.5 が作る)
+    real :: vfree = 0.0              ! 掃流砂の浸食で懸濁化した細粒分の固体体積 (m3。ランク局所)
+  end type
+
   type t_gmwork
     real :: ainv = 0.0               ! 1 / (dx*dy)
     real, allocatable :: q(:,:,:)    ! エッジ流量4成分 (m3/s)。プロセス間で
@@ -274,6 +283,7 @@ module m_geomorph
     integer :: f_berode = 0          ! 側岸侵食(0:無効, 1:有効。§84.4)
     integer :: f_repose = 0          ! 安息角崩落(0:無効, 1:有効。§84.4)
     integer :: f_fixation = 0        ! 定着(0:無効, 1:有効。§84.6)
+    integer :: f_bedfines = 0        ! 河床の細粒分の帳簿(0:無効, 1:有効。§84.10)
     real :: bs_r = 0.0               ! 浮力比 r = ρw/ρs
     integer :: f_bsres = 1           ! 底層の抵抗則(1:Voellmy, 2:Bingham〔予約〕)
     real :: bs_mu = 0.0              ! Voellmy 摩擦係数 μ
@@ -297,6 +307,7 @@ module m_geomorph
     type(t_bedslide) :: bsl          ! 動く底層(地滑り津波)
     type(t_bank) :: bnk              ! 側岸侵食・安息角崩落
     type(t_fixation) :: fix          ! 定着
+    type(t_fines) :: fin             ! 河床の細粒分の帳簿
     type(t_gmwork) :: wrk            ! 共有スクラッチ(require_work が確保)
   end type
 
@@ -484,6 +495,20 @@ module m_geomorph
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(in) :: s
     end subroutine
+    ! 河床の細粒分の帳簿(m_geomorph_fines。§84.10)
+    module subroutine init_fines(gm, p, g, s, list)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine dispose_fines(gm, p, g, s)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+    end subroutine
   end interface
 
 contains
@@ -609,6 +634,8 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_repose < 0 .or. gm%f_repose > 1) call par_stop("list_geomorph: f_repose must be 0 or 1")
   gm%f_fixation = list%f_fixation
   if (gm%f_fixation < 0 .or. gm%f_fixation > 1) call par_stop("list_geomorph: f_fixation must be 0 or 1")
+  gm%f_bedfines = list%f_bedfines
+  if (gm%f_bedfines < 0 .or. gm%f_bedfines > 1) call par_stop("list_geomorph: f_bedfines must be 0 or 1")
   if (gm%f_fixation > 0 .and. gm%f_fluvial <= 0) then
     call par_stop("list_geomorph: f_fixation requires f_fluvial=1 (fixation acts on the bed-load threshold)")
   end if
@@ -672,6 +699,8 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_berode > 0 .or. gm%f_repose > 0) call init_bank(gm, p, g, list)
   ! 定着(fluvial の後。s%fx の確保・restore まで)
   if (gm%f_fixation > 0) call init_fixation(gm, p, g, s, list)
+  ! 河床の細粒分の帳簿(suspend・setup_sd の後。s%sf の確保・初期値・restore まで)
+  if (gm%f_bedfines > 0) call init_fines(gm, p, g, s, list)
 
   ! 浮遊砂輸送の有効化を通知(swflow_enc がステップ内で s%hs を移流する。
   ! 初期化順序: 本 init は m_swflow_init より前)。土石流(f_debris)も
@@ -992,6 +1021,8 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (gm%f_bedslide > 0) call dispose_bedslide(gm, p, g, s)
   ! 定着度 a・基準高の私有 save と台帳報告(契約5)
   if (gm%f_fixation > 0) call dispose_fixation(gm, p, g, s)
+  ! 河床の細粒分 sf の私有 save と台帳報告(契約5)
+  if (gm%f_bedfines > 0) call dispose_fines(gm, p, g, s)
   if (gm%flv%nclip > 0) then
     call par_warn("geomorph: fluvial dzmax clip fired on " &
                   // itoa(gm%flv%nclip) // " edges" &

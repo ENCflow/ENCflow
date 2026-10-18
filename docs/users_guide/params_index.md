@@ -166,6 +166,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_bdgv | &list_bldgdebris | [家屋破壊・瓦礫](bldgdebris.md) |
 | f_bedmotion | &list_bedmotion | [規定底面運動](bedmotion.md) |
 | f_bedslide | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| f_bedfines | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_bminterp | &list_bedmotion | [規定底面運動](bedmotion.md) |
 | f_bsplunge | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_bsres | &list_geomorph | [土砂・地形変化](geomorph.md) |
@@ -290,6 +291,8 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_wq_settle | &list_wq | [水質](wq.md) |
 | f_wthr | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_ztype | &list_geoinfo | [地理情報](geoinfo.md) |
+| fines_frac0 | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| fines_la | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fix_cn | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fix_ctau | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fix_dzreset | &list_geomorph | [土砂・地形変化](geomorph.md) |

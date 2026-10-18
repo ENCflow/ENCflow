@@ -374,6 +374,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | susp_d50 / susp_wf | 0.2 mm / 0 | grain size / settling velocity | **customary value** fine sand / **derived** 0 uses the Rubey formula[^rubey33] |
 | susp_beta | 1.0 | near-bed concentration factor $`\beta`$ | **method** 1 = vertically uniform approximation |
 | susp_esa | 1e-4 | coefficient of the simple form | **verification case** calibrated in [test/suspend](../../../test/suspend/) (weak basis) |
+| f_bedfines / fines_la / fines_frac0 | 0 / required / 0 | ledger of fines in the bed (§4) | **method** two-component stock. L_a is a numerical mixing thickness (a few cm to 0.1 m); the fraction is a given |
 | wash_kr / wash_kf | 0.01 / 1e-5 m/s | raindrop / sheet erosion coefficients (§5) | **empirical** values of [test/wash](../../../test/wash/); to be calibrated |
 | spl_kr / spl_kt / spl_h | 5e-4 / 0.05 / 1 | dry-erosion coefficients and slope exponent (§6) | **empirical** medians of the tests |
 | spl_ca / spl_cb | 0 / 0 m | concavity amplification lengths | **given** 0 = no amplification; a few to tens of metres to grow valleys |

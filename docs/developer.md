@@ -11765,3 +11765,44 @@ plan §3.6a(合意 2026-10-18)。§84.5〜84.8 の例題がすべて無給砂の
     限界 7)。細粒分の河床への保存(混合層・粒径別の土層)が次の課題で、
     段 5 の残(非平衡二次流)より先に要る可能性がある(handoff)。
 
+### 84.10 段 5c: 河床の細粒分の帳簿 f_bedfines(2026-10-18 実装。機能追加)
+
+設計は meander_plan.md §3.6c(合意済み)。§84.9 末尾の試行で、浮遊砂の浸食が
+土層 s%sd をそのまま細粒分として巻き上げるため掃流砂の河床(1 mm)が細粒分
+(0.2 mm)の速さで削られ、平衡濃度給砂の倍率に極端に敏感になることが分かった。
+一般の混合粒径(交換層 × 粒径階。geomorph_plan.md F4)は §0 に照らして採らず、
+既存の 2 成分(掃流砂 1 粒径・浮遊砂 1 粒径)の区別を河床側にも持たせる最小の
+帳簿にした。
+
+- **状態**: 細粒分の厚さ `s%sf`(m。0 ≤ sf ≤ sd。帯±ハロ。出力 "Sf")。
+  初期値は fines_frac0 × sd(一様割合。分布ファイルは要るときに足す)。私有 save
+  geomorph_fines.dat(契約 5。restart_write_cell 1 面)。更新は自帯のみで近傍の
+  sf は読まない(ハロ交換なし)。無効時は未確保・呼び出しなし。
+- **利用可能率** f = min(1, sf/L_a)(L_a = fines_la。交換層に占める細粒分の割合
+  とみなす数値的な混合厚)。
+- **浮遊砂 E-D**(calc_suspend): 浸食 E = f·w_f·C_eq、浸食量 ≤ sf(sd のクランプと
+  並べて書く。sf = sd なら同じ値 = 厳密に不変)、沈降・乾燥時の全量堆積は sd と
+  sf を同じ Δz で増やす(sd − sf 不変)。
+- **掃流砂・側岸侵食・崩落・容量給砂**(apply_edge_flux。fluvial と bank が共用):
+  ループ 1.5 でセルごとに「流出に占める細粒分の割合」ff を作る: 交換層の組成
+  min(1, sf/L_a) から始め、細粒分の流出 ≤ sf、粗粒分の流出 ≤ sd − sf を満たす
+  範囲に入れる(流出の総厚 ≤ sd は供給量制限が保証するので区間は空でない)。
+  fdon と同様にハロ交換。ループ 2 では流出は全量(z・sd から)、流入は供給側の
+  粗粒分 (1 − ff_nb) だけを河床に加え、流出の細粒分 ff_own·q はその場で懸濁
+  (sf → hs。hs は水理時間の柱状量なので Δz/(morfac·poroi))。域外(開境界・
+  容量給砂)からの流入は粗粒。台帳 vfree(dispose で報告)。無効時は既存の
+  集計式 `dv8 = dv8 + sign_e(k)*(qk*fd)` をそのまま通る(ビット一致。§84.1 の
+  縮約の形を変えない注意と同じ)。
+- **f_wash**: 浸食率に f を乗じ sf から減らす。**f_splash・f_bedslide**: 粗粒
+  扱いで sf ≤ sd のクリップのみ(`allocated(s%sf)` ガード)。f_wthr・inflow_qb は
+  sd だけが増えるので無修正。f_debris は f_suspend と排他。
+- **namelist**(&list_geomorph): `f_bedfines`(f_suspend 必須)、`fines_la`(必須
+  > 0)、`fines_frac0`(0〜1。既定 0)。3 つ。
+- **ファイル**: m_geomorph_fines.f90(新規 submodule: init/dispose/save/restore)、
+  m_geomorph.f90(t_fines、配線)、m_geomorph_suspend/fluvial/wash/splash/bedslide
+  のフック、list_geomorph、m_state(sf)、m_output("Sf")、Makefile。
+- **限界**: 鉛直の層序なし(sf は柱の合計。埋没した細粒分も利用可能)。解放された
+  細粒分の「その場で懸濁」は仮定。L_a に弱く依存。粗粒側は 1 粒径のまま。
+- **検証**(test/bedfines): off / all(細粒 100 %)/ mix(掃流砂+浮遊砂、50 %)/
+  coarse(0 %)/ feed(粗粒水路に細粒分を給砂)/ rt1→rt2。結果は下に追記。
+

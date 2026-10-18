@@ -1,0 +1,59 @@
+!======================================================================
+! bedfines: 河床の細粒分の帳簿(f_bedfines)の検定(developer.md §84.10)
+!   構成 all: 細粒分 100 %(fines_frac0 = 1、浮遊砂のみ)。off と state.dat がビット一致
+!   test/suspend と同じ閉領域ダムブレイク(平坦床 z0 = 0、可動層 sd0 = 10 m、
+!   円形コサイン水塊)。閉じた系なので固体総量と細粒分の総量が機械精度で閉じる。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 8
+  dt_disp = 1
+  dt_file = 8
+  dt_recrd = 8
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_result = 'result_all'
+  dir_save = 'save_all'
+  f_state_save = 1
+  f_state_restore = 0
+  f_check_cfl = 0
+  f_out_z = 1
+/
+&list_enc
+/
+&list_initial
+  f_htype = 0
+  h0 = 0.5
+  f_user_routine = "wave_hump"
+/
+&list_geoinfo
+  lx = 101.0
+  ly = 101.0
+  nx = 101
+  ny = 101
+  f_ztype = 0
+  f_rntype = 0
+  z0 = 0.0
+  rn0 = 0.03
+  sd0 = 10.0
+  sy0 = 0.2
+/
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_suspend = 1
+  f_esform = 1
+  susp_d50 = 0.0002
+  susp_tausc = 0.05
+  susp_esa = 1.0e-4
+  susp_beta = 1.0
+  fluv_porosity = 0.4
+  f_bedfines = 1
+  fines_la = 0.01
+  fines_frac0 = 1.0
+/

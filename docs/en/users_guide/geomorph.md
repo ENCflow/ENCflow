@@ -274,6 +274,32 @@ The minimal input to "just carry some turbidity" is `f_suspend = 1` and
 `sd0` (grain size defaults to fine sand 0.2 mm; the settling velocity is
 derived automatically by the Rubey formula).
 
+### Ledger of fines in the bed (f_bedfines)
+
+By default the entrainment of suspended load treats the whole soil layer
+sd as fines. When bed load (fluv_d50) and suspended load (susp_d50) are
+combined, a coarse bed is then eroded at the rate of the fines. With
+`f_bedfines = 1` the model keeps a ledger of "the thickness of the bed
+that moves as suspended load", sf (output Sf, 0 <= sf <= sd).
+Entrainment is limited to the stock sf (availability min(1, sf/L_a)),
+settling adds to sf, and the fines contained in soil removed by bed
+load, bank erosion or avalanching go into suspension on the spot (only
+the coarse part reaches the neighbouring bed). The number of size
+classes is not increased and there is no hiding/exposure function (a
+two-component ledger).
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| f_bedfines | 0 | 1 enables it (requires f_suspend = 1) |
+| fines_la | (required) | Exchange layer thickness L_a (m). The mixing thickness that sets the availability min(1, sf/L_a); a few cm to 0.1 m |
+| fines_frac0 | 0 | Initial fraction of fines (sf = fines_frac0 x sd). 0 = a purely coarse bed, 1 = the whole layer is fines, as before |
+
+Hillslope erosion f_wash also draws on the stock sf (set fines_frac0 = 1
+when the hillslope soil is fines that can be washed off). Dry hillslope
+erosion, the moving bottom layer, weathering and the bed-load source
+inflow_qb are treated as coarse. There is no vertical stratigraphy, so
+fines buried under a thick coarse deposit remain available.
+
 Sediment inflow from the boundaries (time series of concentration and
 bedload discharge) is given by the segment inflows (inflow_cs /
 inflow_qs) of [Boundary conditions](boundary.md).

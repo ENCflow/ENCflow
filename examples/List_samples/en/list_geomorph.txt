@@ -109,6 +109,13 @@
                             !   (c_b = beta*C)
   !susp_esa = 0.001         ! equilibrium concentration coefficient (f_esform=1.
                             !   0 = default 1e-4. A calibration parameter)
+  !f_bedfines = 1           ! ledger of fines in the bed (requires f_suspend).
+                            !   Entrainment is limited to the stock sf (output Sf);
+                            !   fines released by bed-load erosion go into suspension
+  !fines_la = 0.05          ! exchange layer thickness L_a (m). Availability
+                            !   min(1, sf/L_a) (required)
+  !fines_frac0 = 0.0        ! initial fraction of fines (sf = fraction x sd.
+                            !   0 = coarse only = default, 1 = all fines)
 
   ! ---- Hillslope erosion (rainsplash + sheetwash. Requires f_suspend) ----
   !f_wash = 1
