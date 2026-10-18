@@ -5,6 +5,7 @@
 #   figs/sections.png : 湾曲頂点(x = 350, 450 m)の横断面の時間発展(非粘着性)
 #   figs/metrics.png  : 頂点の河道中心の横移動と河幅の時間発展
 #   figs/fixation.png : 定着構成の定着度 Fx と終了時の河道(result_fix があるとき)
+#   figs/feed.png     : 給砂を入れた流量変動+定着の構成(result_fixfeed / result_fixsuspfeed)
 # 数表(README 用)を標準出力に書く
 import os, numpy as np, matplotlib
 matplotlib.use("Agg")
@@ -124,4 +125,31 @@ if os.path.isdir("result_fix"):
     inside = h0 > 0.05
     print("fixation: cells with a > 0.5 inside the initial channel = %d (%.0f m2), outside = %d" % (
         ((fx > 0.5) & inside).sum(), ((fx > 0.5) & inside).sum() * DX * DX, ((fx > 0.5) & ~inside).sum()))
-print("figures: figs/planform.png figs/sections.png figs/metrics.png" + (" figs/fixation.png" if os.path.isdir("result_fix") else ""))
+
+# --- 5. 給砂を入れた流量変動+定着の構成(result_fixfeed / result_fixsuspfeed) ---
+FEED = [(d, l) for d, l in (("result_fixfeed", "fixation + capacity feed (bed load only)"),
+                           ("result_fixsuspfeed", "fixation + suspended fines at C_eq + roughness + capacity feed"))
+        if os.path.isdir(d)]
+if FEED:
+    fig, axes = plt.subplots(2 * len(FEED), 1, figsize=(14, 3.2 * 2 * len(FEED)), sharex=True)
+    for n, (rdir, label) in enumerate(FEED):
+        tm = times(rdir)
+        for mrow, K in enumerate((min(k for k in tm if tm[k] * MORFAC / 3600 >= 99.0), max(tm))):
+            ax = axes[2 * n + mrow]
+            h = rd(rdir, "H", K); z = rd(rdir, "Z", K); fx = rd(rdir, "Fx", K); dz = z - z0
+            im = ax.imshow(dz, origin="lower", extent=ext, cmap="RdBu_r", vmin=-1.5, vmax=1.5)
+            ax.contour(x, y, h0 > 0.05, levels=[0.5], colors="k", linewidths=0.4)
+            ax.contour(x, y, h > 0.05, levels=[0.5], colors="#2a9d5a", linewidths=0.8)
+            ax.contour(x, y, (fx > 0.5) & (h0 > 0.05), levels=[0.5], colors="#b5641e", linewidths=0.8)
+            ax.set_title("%s: z - z0 after %.0f h (black = initial banks, green = wet, brown = fixed bars inside the initial channel)" % (label, tm[K] * MORFAC / 3600), fontsize=9)
+            plt.colorbar(im, ax=ax, shrink=0.8)
+            ax.set_ylabel("y (m)")
+    axes[-1].set_xlabel("x (m)")
+    plt.tight_layout(); plt.savefig("figs/feed.png", dpi=100); plt.close()
+    for rdir, label in FEED:
+        tm = times(rdir); K = max(tm)
+        z = rd(rdir, "Z", K); fx = rd(rdir, "Fx", K); dz = z - z0; inside = h0 > 0.05
+        fixed = (fx > 0.5) & inside
+        print("%s: fixed cells inside the initial channel %d, of which z - z0 > 1.0 m (floodplain level) %d, max %.2f m; floodplain cells with z - z0 > 0.1 m: %d" % (
+            rdir, fixed.sum(), (fixed & (dz > 1.0)).sum(), dz[fixed].max() if fixed.any() else float("nan"), ((dz > 0.1) & ~inside).sum()))
+print("figures: figs/planform.png figs/sections.png figs/metrics.png" + (" figs/fixation.png" if os.path.isdir("result_fix") else "") + (" figs/feed.png" if FEED else ""))
