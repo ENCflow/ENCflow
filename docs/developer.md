@@ -11818,6 +11818,18 @@ plan §3.6a(合意 2026-10-18)。§84.5〜84.8 の例題がすべて無給砂の
   のフック、list_geomorph、m_state(sf)、m_output("Sf")、Makefile。
 - **限界**: 鉛直の層序なし(sf は柱の合計。埋没した細粒分も利用可能)。掃流砂への
   同伴は等移動度の仮定(粒径選択性なし)。L_a に弱く依存。粗粒側は 1 粒径のまま。
-- **検証**(test/bedfines): off / all(細粒 100 %)/ mix(掃流砂+浮遊砂、50 %)/
-  coarse(0 %)/ feed(粗粒水路に細粒分を給砂)/ rt1→rt2。結果は下に追記。
+- **検証**(test/bedfines、2026-10-18): all(細粒 100 %、浮遊砂のみ)は off と
+  state.dat がビット一致(sf = sd)。mix(掃流砂+浮遊砂、50 %、L_a = 0.05 m)は
+  0 ≤ sf ≤ sd、固体総量 Σhs + (1−λ)Σ(z − z0) = 0、細粒分 Σhs + (1−λ)Σ(sf − sf0)
+  = −2e-13、Σ(sf − sf0) = −1.47 m·cell(浮遊砂に出た分)。coarse(0 %)は hs・sf
+  が厳密に 0 のまま河床が動く(max|Δz| 1.5 mm)。feed(粗粒水路に細粒分を給砂、
+  浮遊砂のみ)は min(z − z0) = 0(河床は削られない)、|sf − (z − z0)| = 3e-13
+  (在庫 = 堆積)。bfeed(細粒 50 %、L_a = 10 m で ff = 0.5、掃流砂のみ動く、
+  容量給砂)は入口列の |Δz|・|Δsf| = 0(給砂が流入セルの組成で入る)、
+  max|Δsf| 3.2 cm。rt1→rt2 は state.dat・geomorph_fines.dat ともビット一致。
+  off に Sf 出力なし。無効時は suspend・wash・fluvial・sedinflow・bankface・
+  bendsed・berode・repose・fixation・sedfeed・uniflow・splash・splashslide・
+  bedslide・avalanche・wave・dambreak が PASS(reference 不変)。厳密フラグの
+  逐次と MPI np=2, 4 で 6 構成の state.dat・geomorph_fines.dat がビット一致、
+  -fcheck=all の np=2 が 6 構成(feed は 300 s)完走。
 
