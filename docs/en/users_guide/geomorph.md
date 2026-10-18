@@ -158,7 +158,8 @@ Riverbed erosion and deposition by a bedload transport formula.
 | fluv_porosity | 0.4 | Riverbed porosity |
 | fluv_sgrav | 1.65 | Submerged specific gravity of sediment grains |
 | fluv_dzmax | 0.05 | Upper limit of bed change per update (m) (stabilization) |
-| fluv_bcfeed | 0 | Sediment feed at open boundaries. 0: no feed at inflow, 1: equilibrium feed (outflow is always at transport capacity) |
+| fluv_bcfeed | 0 | Sediment feed at open boundaries (inflow-segment faces included). 0: no feed at inflow, 1: capacity feed = the supply through the inflow face equals the net outflow of the inflow cell times fluv_bcfeed_fac (factor 1 fixes the bed of the inlet; outflow is always at transport capacity) |
+| fluv_bcfeed_fac | 1.0 | Factor of the capacity feed. 0 = no feed, 1 = fixed inlet. Values between reduce the inlet degradation but not proportionally (give a partial supply with inflow_qb) |
 | fluv_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
 | fluv_taufac | 1.0 | Effective shear-stress ratio f_τ (the τ* passed to the transport formula = f_τ × τ* of the total resistance; a simple separation of form drag by dunes or vegetation. 1 = no separation) |
 | fluv_slope | 0 | Bed-slope correction of the bed-load direction. 1: Hasegawa type (q⃗ = q_b(t̂ − γ∇z), γ = √(τ*c/(μs μk τ*))) |

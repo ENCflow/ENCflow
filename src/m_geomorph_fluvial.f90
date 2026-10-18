@@ -44,6 +44,11 @@ module subroutine init_fluvial(gm, p, g, list)
   gm%tausc = list%fluv_tausc
   gm%dzmax = list%fluv_dzmax
   gm%f_bcfeed = list%fluv_bcfeed
+  if (list%fluv_bcfeed_fac < 0.0) call par_stop("list_geomorph: fluv_bcfeed_fac must be >= 0")
+  gm%flv%bcfac = list%fluv_bcfeed_fac
+  if (gm%f_bcfeed > 0 .and. gm%flv%bcfac /= 1.0) then
+    call par_info("geomorph: capacity feed factor fluv_bcfeed_fac = " // rtoa(gm%flv%bcfac))
+  end if
 
   ! --- 有効掃流力の分離と流砂方向補正(§84.3) ---
   if (list%fluv_taufac <= 0.0 .or. list%fluv_taufac > 1.0) then
@@ -326,9 +331,11 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
       ! スロットの所有者は域外に居ないため、内側セルが代わりに書く。
       ! 単一書き手は保たれる)。水理量は内側セルの一方側値、流向は
       ! セル流速の面法線射影。ue > 0(流出)は常に容量輸送(河床低下波が
-      ! 域外へ抜ける)、ue < 0(流入)は f_bcfeed=1 のとき容量供給
-      ! (平衡給砂。上流端の河床が維持される)。境界面の通過幅補正 frw は
-      ! 未適用(§18 制約(5) の辺開口と同じ扱い)
+      ! 域外へ抜ける)。ue < 0(流入)はここでは 0 を書き、f_bcfeed=1 の
+      ! 供給はループ 1 の後の feed_pass が「流入セルの正味流出 × 倍率」で
+      ! 書く(§84.9。2026-10-18 までの「流入セル自身の τ* による容量供給」は
+      ! 河床上昇 → 流速増 → 供給増の正帰還で発散した実検出)。境界面の
+      ! 通過幅補正 frw は未適用(§18 制約(5) の辺開口と同じ扱い)
       if (bcs%have_open_bc .and. okc) then
         do k = 1, 8
           in = i + din(k)
@@ -341,7 +348,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
           hhe = s%h(i,j)
           if (vve > 0.0 .and. hhe > p%dd) then
             ue = s%u(i,j) * gm%flv%ex(k) + s%v(i,j) * gm%flv%ey(k)   ! 正 = 域外へ
-            if (ue > 0.0 .or. gm%f_bcfeed > 0) then
+            if (ue > 0.0) then
               hhe = max(hhe, p%dv)
               rne = g%rn(i,j)
               taus = gm%flv%taufac * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
@@ -394,6 +401,9 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   end do
   !$omp end parallel do
 
+  ! --- 容量給砂(§84.9): 流入面の供給 = 倍率 × 流入セルの内部エッジへの正味流出 ---
+  if (bcs%have_open_bc .and. gm%f_bcfeed > 0) call feed_pass(gm, p, g, s, dts)
+
   ! --- 側岸侵食(§84.4): 河岸面エッジに河岸→脚部の流砂を加算する ---
   if (gm%f_berode > 0) call bank_edge_pass(gm, p, g, s, dts)
 
@@ -404,6 +414,101 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   gm%flv%nclip = gm%flv%nclip + nclip
   gm%fix%nfix = gm%fix%nfix + nfix
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 容量給砂(f_bcfeed = 1。§84.9): 開いた流入面(面法線流速 < 0)をもつセルに
+! ついて、8 スロット全部(内部エッジと、過渡で流出面になった境界面を含む。
+! 壁の面スロットは書かれず 0)の正味流出 dv(流出が正)を読み、流入面の供給を
+! −bcfac·dv/n_in(面が複数なら等分)として面スロットに書く。bcfac = 1 なら
+! 流入セルの河床は厳密に固定(供給 = 正味流出)、0 は無給砂。0 < bcfac < 1 は
+! 入口の低下を減らすが比例はしない(穴ができると正味流出が減り供給も減る。
+! 部分給砂は inflow_qb で与える)。正味が堆積(dv < 0)なら供給は負 = 流入面から
+! 持ち出す(過渡の横方向輸送で入口の一部の行が受け取る分。bcfac = 1 の河床
+! 固定を厳密にする条件)。
+! ループ 1 の後に自帯のセルで実行する(近傍が書いた k>=5 のエッジも
+! 行 je+1 の冗長計算で揃っている。面スロットの書き手は本セルだけ = 競合なし)。
+! 台帳 vcfeed は自帯の供給の固体体積。
+!----------------------------------------------------------------------
+subroutine feed_pass(gm, p, g, s, dts)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  real, intent(in) :: dts
+  integer :: i, j, k, in, jn, nin, m
+  integer :: kin(1:8)
+  real :: dv, ue, feed, vcfeed
+  vcfeed = 0.0
+  !$omp parallel do schedule(static) reduction(+: vcfeed) &
+  !$omp   private(i, j, k, in, jn, nin, m, kin, dv, ue, feed)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      if (s%h(i,j) <= p%dd) cycle
+      nin = 0
+      dv = 0.0
+      do k = 1, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        dv = dv + sign_e(k) * gm%wrk%q(ke(k), i+die(k), j+dje(k))
+        if (g%x(in,jn) > 0) cycle
+        if (.not. bc_open_face(in, jn)) cycle
+        ue = s%u(i,j) * gm%flv%ex(k) + s%v(i,j) * gm%flv%ey(k)   ! 正 = 域外へ
+        if (ue < 0.0) then
+          nin = nin + 1
+          kin(nin) = k
+        end if
+      end do
+      if (nin == 0) cycle
+      feed = gm%flv%bcfac * dv / nin           ! 符号付き(正味堆積なら負 = 持ち出し)
+      do m = 1, nin
+        k = kin(m)
+        gm%wrk%q(ke(k), i+die(k), j+dje(k)) = sign_e(k) * (-feed)
+      end do
+      vcfeed = vcfeed + feed * nin * dts
+    end do
+  end do
+  !$omp end parallel do
+  gm%flv%vcfeed = gm%flv%vcfeed + vcfeed
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 区間流入の掃流砂源泉 inflow_qb(§84.9): m_boundary が makebdc で書く
+! セル別の固体流砂量表 b%qbin (m3/s) を、流入セルの河床へ Δz = Qb·dts·poroi/A
+! (河道幅有効時は河道底面積あたり)として加え、z・sd を共動更新する。
+! 流入セルは容量輸送でこれを運ぶ(容量を超えれば盛り上がる = 置き土)。
+! 近傍参照の calc_fluvial が続くので z・sd のハロを最新化する
+!----------------------------------------------------------------------
+module subroutine apply_bedfeed(gm, g, s, b, dts)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  type(t_boundary), intent(in) :: b
+  real, intent(in) :: dts
+  integer :: i, j
+  real :: dz, winvd, vfeed
+  vfeed = 0.0
+  !$omp parallel do schedule(static) private(i, j, dz, winvd) reduction(+: vfeed)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (b%qbin(i,j) <= 0.0) cycle
+      winvd = 1.0
+      if (chn%have_width) winvd = 1.0 / chn%wfrac(i,j)
+      dz = b%qbin(i,j) * dts * gm%wrk%ainv * winvd * gm%poroi
+      s%z(i,j) = s%z(i,j) + dz
+      s%sd(i,j) = s%sd(i,j) + dz
+      vfeed = vfeed + b%qbin(i,j) * dts
+    end do
+  end do
+  !$omp end parallel do
+  gm%flv%vfeed = gm%flv%vfeed + vfeed
+  call par_halo_cell(s%z)
+  call par_halo_cell(s%sd)
 end subroutine
 
 

@@ -7,6 +7,7 @@
 submodule(m_geomorph) m_geomorph_suspend
   use m_parallel, only : par_info, par_stop, dcp
   use m_swflow_enc, only : sct, sect_v, sect_sigma   ! σ 断面の濃度解釈(sct%have_sect, sct%sdep。§26)
+  use m_sedform, only : t_ceqpar, sedform_set_ceq, sed_ceq_itakura, sed_rubey_wf   ! 平衡濃度・沈降速度の式(§84.9)
   implicit none
 
 contains
@@ -45,11 +46,19 @@ module subroutine init_suspend(gm, p, list)
   if (list%susp_wf > 0.0) then
     gm%wf = list%susp_wf
   else
-    gm%wf = rubey_wf(gm%sgrav, p%gg, gm%sd50)
+    gm%wf = sed_rubey_wf(gm%sgrav, p%gg, gm%sd50)
     write(msg,'(a,es10.3,a)') "geomorph: suspended sediment settling velocity (Rubey) = ", &
                               gm%wf, " m/s"
     call par_info(trim(msg))
   end if
+  ! 平衡濃度式の係数を葉モジュールに登録する(区間流入の平衡濃度給砂
+  ! inflow_cs_eq が m_boundary から同じ式で評価するため。§84.9)
+  block
+    type(t_ceqpar) :: par
+    par%form = gm%f_esform; par%esa = gm%esa; par%stausc = gm%stausc
+    par%sgrav = gm%sgrav; par%d50 = gm%sd50; par%wf = gm%wf; par%gg = p%gg
+    call sedform_set_ceq(par)
+  end block
 end subroutine
 
 
@@ -82,7 +91,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
           if (taus > gm%stausc) ceq = gm%esa * (taus / gm%stausc - 1.0)
         else
           ! 板倉・岸(ceq = q_su / wf)
-          ceq = ceq_itakura(gm, p%gg, taus)
+          ceq = sed_ceq_itakura(gm%sgrav, p%gg, gm%sd50, gm%wf, taus)
         end if
         ! 定着(§84.8): 浸食項(平衡濃度)だけを定着度 a で減らす。沈降は不変。
         ! f_esform=1 は限界掃流力を τ*c,s (1 + c_τ a) に上げ、2(τ*c を持たない)は
@@ -149,37 +158,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
 end subroutine
 
 
-!----------------------------------------------------------------------
-pure function ceq_itakura(gm, gg, taus) result(ceq)
-  type(t_geomorph), intent(in) :: gm
-  real, intent(in) :: gg      ! 重力加速度
-  real, intent(in) :: taus    ! 無次元掃流力 τ*
-  real :: ceq
-  real :: ap, ratio, omega, ustar, qsu
-  real, parameter :: pi = acos(-1.0)
 
-  ceq = 0.0
-  if (taus <= 0.0) return
-  ap = ik_bstar / taus - 1.0 / ik_eta0
-  if (ap > 20.0) return
-  ratio = exp(-ap**2) / (sqrt(pi) * erfc(ap))
-  omega = taus / ik_bstar * ratio + taus / (ik_bstar * ik_eta0) - 1.0
-  ustar = sqrt(taus * gm%sgrav * gg * gm%sd50)
-  qsu = ik_k * (ik_alpha / (gm%sgrav + 1.0) &
-                * (gm%sgrav * gg * gm%sd50 / ustar) * omega - gm%wf)
-  ceq = max(qsu, 0.0) / gm%wf
-end function
-
-
-!----------------------------------------------------------------------
-pure function rubey_wf(sgrav, gg, d) result(wf)
-  real, intent(in) :: sgrav, gg, d
-  real :: wf
-  real :: bb
-  real, parameter :: nu = 1.0e-6
-  bb = 36.0 * nu**2 / (sgrav * gg * d**3)
-  wf = (sqrt(2.0 / 3.0 + bb) - sqrt(bb)) * sqrt(sgrav * gg * d)
-end function
 
 
 end submodule

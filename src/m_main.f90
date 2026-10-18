@@ -1266,7 +1266,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
 
   ! 地形変化を計算(fn_geomorph 未指定なら no-op。s%z と s%e を更新し、
   ! 末尾で s%z のハロ交換まで済ませる)
-  call m_geomorph_calc(gm, p, g, s, it)
+  call m_geomorph_calc(gm, p, g, s, b, it)
 
   ! 流木過程を適用(fn_driftwood 未指定なら no-op。発生・停止・再流動・
   ! ダム捕捉。geomorph の後 = 同一ステップの z 更新を見た侵食連行。

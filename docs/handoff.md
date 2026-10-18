@@ -846,9 +846,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 ## 中期の道標(着手順は実測次第)
 
 - **蛇行河道の発達と河床変動管理への拡張(設計検討メモ docs/meander_plan.md。
-  2026-10-17 起案・合意。段 0〜段 3 実装済み、段 4 の例題 examples/meander・
-  examples/meander_cutoff 作成済み 2026-10-17 = developer.md §84.1〜§84.6、
-  test/bankface・bendsed・berode・repose・fixation。残: (i) 係数 N*・μs・μk の文献照合(Engelund 1974、
+  2026-10-17 起案・合意。段 0〜段 3b・5a 実装済み、段 4 の例題 examples/meander・
+  examples/meander_cutoff 作成済み = developer.md §84.1〜§84.9、
+  test/bankface・bendsed・berode・repose・fixation・uniflow・sedfeed。残: (i) 係数 N*・μs・μk の文献照合(Engelund 1974、
   長谷川 1981、Nays2DH Solver Manual。本環境から到達不可のため有効時は明示指定
   必須のまま。照合後に §62 方式の既定へ昇格)、(ii) 横断勾配の平衡値 ∂z/∂n ≈ r/γ の
   定量ベンチと格子 45° 回転の比較、(iii) 段 2 の残(K_b の分布ファイル、脚部の被覆効果、repose_phi_wet)、
@@ -856,8 +856,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   main の §68.36 修正後は外岸の後退が出るので §84.5 末尾の候補 (a)(b) は不採用。
   例題は既定のスキーム 3 に戻した)。残: 定着時間・c_τ の文献照合、
   安息角への定着の反映(要るとき。浮遊砂の再浮上抑制と動的粗度 fix_cn は
-  段 3b として実装済み §84.8。例題で砂州を出水位より上へ育てるには河道の
-  平衡給砂が前提 = 段 5 が次)、(v) 河岸脚部の行の通水能不足は
+  段 3b として実装済み §84.8。給砂は段 5a として実装済み §84.9。例題で砂州を
+  出水位より上へ育てる試行(給砂+浮遊砂+定着)は次の作業)、(v) 河岸脚部の
+  行の通水能不足は
   等流計測で正体が確定し(§84.7、test/uniflow)、既存の f_opening_dynamic = 2 で
   Manning に一致する。例題は 2 で再評価済み(§84.7 末尾: 外岸後退が数倍速く、
   側岸侵食則の駆動力の弱さは解消)。河道マスクのない掘り込み河道の利用者向けに

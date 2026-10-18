@@ -1,0 +1,77 @@
+!======================================================================
+! sedfeed: 給砂の検定(developer.md §84.9)
+!   構成 feed1: 容量給砂(倍率 1。上流区間の河床が安定)
+!   幅 5 セルの直線水路(勾配 0.002、全域可動、f_opening_dynamic = 2 で等流は
+!   Manning に一致)。Q = 2.3477 m3/s(等流水深 0.5 m)、d50 = 3 mm、morfac = 10
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 1800
+  dt_disp = 300
+  dt_file = 600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result_feed1'
+  dir_save = 'save_feed1'
+  f_state_save = 1
+  f_check_cfl = 1
+  f_out_z = 1
+  f_out_vv = 1
+/
+
+&list_enc
+  f_opening_dynamic = 2
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'hinit.txt'
+/
+
+&list_geoinfo
+  lx = 300.0
+  ly = 16.0
+  nx = 300
+  ny = 16
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 2.0                 ! 可動層厚(全域可動)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 10.0
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.003
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.005
+  fluv_bcfeed = 1          ! 開境界・区間流入面の容量給砂
+  fluv_bcfeed_fac = 1.0      ! 容量給砂の倍率
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺は自由流出
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 6
+  inflow_cell(1:2,2,1) = 1, 7
+  inflow_cell(1:2,3,1) = 1, 8
+  inflow_cell(1:2,4,1) = 1, 9
+  inflow_cell(1:2,5,1) = 1, 10
+  inflow_val(1:2,1,1) = 0, 2.347724
+  inflow_val(1:2,2,1) = 9999, 2.347724
+  inflow_dist(1) = 0
+/

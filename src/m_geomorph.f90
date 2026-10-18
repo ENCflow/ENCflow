@@ -46,6 +46,7 @@ module m_geomorph
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo, m_geoinfo_require_sd
   use m_state, only : t_state
+  use m_boundary, only : t_boundary        ! 区間流入の掃流砂給砂表 b%qbin(§84.9。読み取り専用)
   use list_geomorph, only : t_list_geomorph, list_geomorph_read
   use m_parallel, only : par_info, par_warn, par_stop, dcp, par_halo_cell, &
                          par_allreduce_max
@@ -73,13 +74,7 @@ module m_geomorph
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
-  ! 板倉・岸の浮上量式の定数(実践河川水理学(iRIC)第4章 式(3)-(5)。
-  ! 原典: 板倉忠興: 河川における乱流拡散現象に関する研究, 土木試験所報告
-  ! 第83号, 1984。定数は原式の値であり namelist にしない)
-  real, parameter :: ik_k = 0.008        ! K
-  real, parameter :: ik_alpha = 0.14     ! α*
-  real, parameter :: ik_bstar = 0.143    ! B*
-  real, parameter :: ik_eta0 = 0.5       ! η0
+  ! (板倉・岸の浮上量式の定数は m_sedform に移した。§84.9)
 
   type t_creep
     real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離)
@@ -107,6 +102,9 @@ module m_geomorph
                                      !   ハロ交換して両側が同じ値を読む = 反対称性を保つ)
     integer :: nclip = 0             ! dzmax クリップの発生エッジ数(累計)
     integer :: nlim = 0              ! 供給量制限の発動セル数(累計)
+    real :: bcfac = 1.0              ! 開境界・区間流入面の容量給砂の倍率(fluv_bcfeed_fac。§84.9)
+    real :: vfeed = 0.0              ! 区間流入の掃流砂源泉 inflow_qb で河床に加えた固体体積 (m3。ランク局所)
+    real :: vcfeed = 0.0             ! 容量給砂(f_bcfeed)で流入面から供給した固体体積 (m3。ランク局所)
     real :: vleak = 0.0              ! 岩盤床クリップで失った土砂体積 (m3)(累計)
   end type
 
@@ -435,6 +433,14 @@ module m_geomorph
       type(t_geomorph), intent(inout) :: gm
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
+    ! 区間流入の掃流砂源泉 inflow_qb(m_geomorph_fluvial。§84.9)
+    module subroutine apply_bedfeed(gm, g, s, b, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      type(t_boundary), intent(in) :: b
       real, intent(in) :: dts
     end subroutine
     ! 側岸侵食・安息角崩落(m_geomorph_bank。§84.4)
@@ -784,11 +790,12 @@ end subroutine
 !   変化を適用する。
 !   注意: 冒頭の return 判定はすべて全ランクで同一(collective 安全)
 !----------------------------------------------------------------------
-subroutine m_geomorph_calc(gm, p, g, s, it)
+subroutine m_geomorph_calc(gm, p, g, s, b, it)
   type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
+  type(t_boundary), intent(in) :: b
   integer, intent(in) :: it
   integer :: i, j
   real :: dts
@@ -821,6 +828,9 @@ subroutine m_geomorph_calc(gm, p, g, s, it)
     call par_halo_cell(s%z)
     if (gm%f_fluvial > 0) call par_halo_cell(s%sd)
   end if
+  ! 区間流入の掃流砂源泉(§84.9): 流入セルの河床に Qb(t) を加えてから運ぶ。
+  ! 判定(表の確保)は全ランク同一 = 中のハロ交換は collective 安全
+  if (gm%f_fluvial > 0 .and. allocated(b%qbin)) call apply_bedfeed(gm, g, s, b, dts)
   if (gm%f_fluvial > 0) call calc_fluvial(gm, p, g, s, dts)
   ! 安息角崩落(§84.4): fluvial(・側岸侵食)が帯内の z を更新した後に、
   ! 更新後の地形で勾配を見る。近傍参照のため z・sd のハロを先に最新化する
@@ -994,6 +1004,14 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   end if
   ! 供給量制限(§84.1)の後に残るのは丸め誤差だけなので、意味のある量
   ! (1e-9 m3 超)のときだけ警告する(".00000 m3" の空警告を出さない)
+  if (gm%flv%vcfeed > 0.0) then
+    call par_warn("geomorph: capacity feed (fluv_bcfeed) supplied " // rtoa(gm%flv%vcfeed) &
+                  // " m3 (solid) through the inflow faces")
+  end if
+  if (gm%flv%vfeed > 0.0) then
+    call par_warn("geomorph: bed-load feed (inflow_qb) added " // rtoa(gm%flv%vfeed) &
+                  // " m3 (solid) to the inflow cells")
+  end if
   if (gm%flv%vleak > 1.0e-9) then
     call par_warn("geomorph: bedrock floor clip caused a sediment budget imbalance of " &
                   // rtoa(gm%flv%vleak) // " m3")

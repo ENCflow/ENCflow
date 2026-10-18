@@ -123,8 +123,12 @@ down by the same factor (supply limiter; the sediment volume stays exactly
 conserved and the number of limited cells is reported at the end),
 (4) whatever still crosses the bedrock surface by round-off is clipped and
 the lost volume is reported (normally none). On open boundaries the
-outflow is always at capacity and the inflow feeds at capacity when
-`fluv_bcfeed = 1`. Bed load rolls on the bed surface: a dry cell never
+outflow is always at capacity and the inflow is fed when `fluv_bcfeed = 1`
+(the supply through the inflow face equals the net outflow of the inflow
+cell times `fluv_bcfeed_fac`; factor 1 fixes the bed of the inlet). Inflow
+segments also take a bed-load discharge series `inflow_qb` (a source to the
+bed) and the equilibrium concentration feed `inflow_cs_eq` of the suspended
+sediment ([boundary conditions](boundary.md)). Bed load rolls on the bed surface: a dry cell never
 supplies it and it is never carried onto ground above the water surface
 of the supplying cell (a bank face; developer.md §84.2).
 
@@ -364,7 +368,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | fluv_tausc / susp_tausc / wash_tausc | 0.05 | critical dimensionless shear stress (§1) | **literature value** representative value of the Shields curve for coarse sand to gravel[^shields36] |
 | fluv_porosity / fluv_sgrav | 0.4 / 1.65 | bed porosity / submerged specific gravity | **customary value** standard values of sand and gravel |
 | fluv_dzmax | 0.05 m | bed change per update (§3) | **numerical** safety valve (Courant condition of bed waves) |
-| fluv_bcfeed | 0 | feeding at open boundaries (§3) | **method** 0: no feeding, 1: capacity feeding |
+| fluv_bcfeed | 0 | feeding at open boundaries (§3) | **method** 0: no feeding, 1: capacity feeding (net outflow of the inflow cell times the factor) |
+| fluv_bcfeed_fac | 1.0 | factor of the capacity feed | 1 = fixed inlet bed, 0 = no feed |
 | f_esform | 1 | equilibrium concentration (§4) | **method** 1: simple (calibration), 2: Itakura–Kishi[^itakura80] (recommended for sand) |
 | susp_d50 / susp_wf | 0.2 mm / 0 | grain size / settling velocity | **customary value** fine sand / **derived** 0 uses the Rubey formula[^rubey33] |
 | susp_beta | 1.0 | near-bed concentration factor $`\beta`$ | **method** 1 = vertically uniform approximation |

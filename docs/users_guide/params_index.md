@@ -295,6 +295,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fix_dzreset | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fix_tfix | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fluv_bcfeed | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| fluv_bcfeed_fac | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fluv_d50 | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fluv_diagratio | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fluv_dzmax | &list_geomorph | [土砂・地形変化](geomorph.md) |
@@ -356,6 +357,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_icsmax | &list_intercept_initloss | [降雨・気象](forcing.md) |
 | fn_inflow_cell | &list_bound_inflow | [境界条件](boundary.md) |
 | fn_inflow_cs | &list_bound_inflow | [境界条件](boundary.md) |
+| fn_inflow_qb | &list_bound_inflow | [境界条件](boundary.md) |
 | fn_inflow_qs | &list_bound_inflow | [境界条件](boundary.md) |
 | fn_inflow_val | &list_bound_inflow | [境界条件](boundary.md) |
 | fn_initial | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
@@ -460,7 +462,10 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | ic_smax_mm | &list_intercept_initloss | [降雨・気象](forcing.md) |
 | inflow_cell | &list_bound_inflow | [境界条件](boundary.md) |
 | inflow_cs | &list_bound_inflow | [境界条件](boundary.md) |
+| inflow_cs_eq | &list_bound_inflow | [境界条件](boundary.md) |
+| inflow_cs_fac | &list_bound_inflow | [境界条件](boundary.md) |
 | inflow_dist | &list_bound_inflow | [境界条件](boundary.md) |
+| inflow_qb | &list_bound_inflow | [境界条件](boundary.md) |
 | inflow_qs | &list_bound_inflow | [境界条件](boundary.md) |
 | inflow_val | &list_bound_inflow | [境界条件](boundary.md) |
 | kk | &list_sysparam | [浅水流計算](swflow.md) |

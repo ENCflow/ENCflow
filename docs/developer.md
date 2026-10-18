@@ -11693,3 +11693,50 @@ plan §7)。実装した段から本節へ移し、plan を消し込む。
   検定済みだが、例題で垂直堆積を見せるには河道の河床が安定していること =
   掃流砂・浮遊砂とも平衡給砂(段 5)が前提。
 
+### 84.9 段 5a: 給砂 — 容量給砂の倍率・掃流砂の流砂量源泉・平衡濃度給砂(2026-10-18 実装)
+
+plan §3.6a(合意 2026-10-18)。§84.5〜84.8 の例題がすべて無給砂の河床低下に
+妨げられていたことへの処方。実務の与件(上流からの供給、ダムの捕捉、置き土)
+を与える手段でもある。
+
+- **容量給砂の再定義(fluv_bcfeed = 1 の挙動変更)**: 2026-10-18 までは流入面の
+  供給を流入セル自身の τ* から容量輸送として評価していた(§19.4)。
+  test/sedfeed の直線水路(morfac 10)でこれは**発散**した: 河床上昇 → 水深減 →
+  流速増 → 供給増の正帰還で、t = 360 s 以降に入口で ±4 m の振動。流入面の
+  供給を**流入セルの 8 スロットの正味流出 dv × fluv_bcfeed_fac**(feed_pass。
+  ループ 1 の後、流入面(面法線流速 < 0 の開面)が複数なら等分。符号付きで、
+  正味堆積なら面から持ち出す)に改めた。倍率 1 で入口の河床が厳密に固定され
+  (test/sedfeed で |Δz| = 0)、構造的に安定。examples/meander を旧定義の
+  fluv_bcfeed = 1 で走らせると過給砂(入口区間 +0.8 m、氾濫原へ溢れる)に
+  なったのも、流入セルの容量が下流区間と釣り合わないため。既存の reference に
+  fluv_bcfeed = 1 のケースはない。
+  - 0 < 倍率 < 1 は入口の低下を減らすが比例しない(入口に穴ができると正味
+    流出が減って供給も減る。test/sedfeed: 倍率 0.5 で −0.45 → −0.40 m)。部分
+    給砂は inflow_qb で与える、と文書化した。
+  - 設計時に見落とした 2 点を実検出で直した: (a) 過渡で流出面になった境界面
+    (斜め)の流出も dv に含める(含めないと入口に残差)、(b) 正味堆積の行で
+    供給を負にする(0 で止めると入口の行間で 2e-6 m の残差)。
+- **掃流砂の流砂量源泉 inflow_qb**(&list_bound_inflow。inflow_qs と同形、
+  fn_inflow_qb も可): m_boundary が makebdc で Qb(t) を補間し、区間のセル数で
+  等分した表 b%qbin(自帯の行)に書く。geomorph は m_geomorph_calc に b を
+  受けて(m_main の呼び出しに引数追加。公開インターフェース変更 → トップ
+  レベル make OK)、calc_fluvial の前に apply_bedfeed で流入セルの z・sd に
+  Δz = Qb·dts·poroi/A(河道幅有効時は河道底面積あたり)を加え、z・sd のハロを
+  交換する。台帳 vfeed(dispose で報告)。plan の「水の按分重み」はセル数の
+  等分に簡略化した(掃流砂がすぐ再配分する)。台帳は test/sedfeed で相対 8e-13。
+- **浮遊砂の平衡濃度給砂 inflow_cs_eq / inflow_cs_fac**(区間ごと): makebdc が
+  流入セルごとに τ*(g%rn, s%vv, s%h。calc_suspend と同じマニング閉じ)から
+  C_eq を評価し b%csin に書く。**式は葉モジュール m_sedform に切り出した**
+  (sed_ceq / sed_ceq_itakura / sed_rubey_wf と係数の組 ceqpar。init_suspend
+  が sedform_set_ceq で登録)。plan の「m_boundary → m_geomorph」の依存は
+  m_geomorph → m_swflow_enc → m_boundary と循環するため不可で、両者が参照する
+  葉モジュールに置く形に変えた(単一インスタンスのモジュール変数)。
+  calc_suspend の式は同じ関数を呼ぶ(suspend・wash・sedinflow の reference は
+  ビット一致)。f_suspend なしで inflow_cs_eq = 1 は最初の makebdc で停止。
+- **test/sedfeed**(2026-10-18 新設): 幅 5 セル・全域可動の直線水路。
+  nofeed(入口 −0.45 m)、feed1(入口 |Δz| = 0、x = 20〜120 m の平均 |Δz| 0.017 m
+  対 0.075)、feed05、qb(台帳 8e-13)、cseq(流入列の hs/h = C_eq、比 0.9996)。
+- **検証**: 無効時は fluvial・suspend・wash・sedinflow・bankface・bendsed・
+  berode・repose・wave・uniflow・fixation が PASS。厳密フラグの逐次と MPI
+  np=2, 4 で sedfeed 5 構成の state.dat がビット一致、-fcheck np=2 完走。
+

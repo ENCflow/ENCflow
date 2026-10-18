@@ -206,8 +206,21 @@
 !   Cell sets and time series can also be given as files (from dir_data):
 !     fn_inflow_cell(n) = "..."  : each line "i j"
 !     fn_inflow_val(n) = "..."   : each line "time(min) total discharge(m3/s)"
+!     inflow_qb(:,k,n) = t, Qb   : bed-load discharge series of the inflow
+!                                  (time (min), m3/s solid volume). Added to
+!                                  the bed of the inflow cells, divided
+!                                  equally, as a source (z and soil thickness
+!                                  rise; the bed load carries it on)
+!     inflow_cs_eq(n) = 0/1      : 1 = the suspended-sediment inflow
+!                                  concentration is the equilibrium
+!                                  concentration of the inflow cells times
+!                                  inflow_cs_fac(n) (exclusive with cs/qs;
+!                                  requires f_suspend=1)
+!     inflow_cs_fac(n) = 1.0     : factor of the equilibrium concentration feed
 !     fn_inflow_cs(n) = "..."    : each line "time(min) volumetric conc.(m3/m3)"
 !     fn_inflow_qs(n) = "..."    : each line "time(min) transport rate(m3/s
+!                                  solid volume)"
+!     fn_inflow_qb(n) = "..."    : each line "time(min) bed-load discharge(m3/s
 !                                  solid volume)"
 !======================================================================
 !&list_bound_inflow

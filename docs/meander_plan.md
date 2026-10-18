@@ -5,8 +5,9 @@ test/bankface・bendsed・berode・repose)、段 4 の例題 examples/meander・
 examples/meander_cutoff 作成済み(§84.5)。段 3 は main の移流項修正
 (§68.36。2026-10-17)を受けて §3.4 を改訂し、内岸の定着 f_fixation として
 実装済み(§84.6、test/fixation、examples/meander の param_fix.txt)。段 3b
-(定着の植生効果: 浮遊砂の捕捉と動的粗度 fix_cn)も実装済み(§84.8)。
-段 5 は未着手。** 実装前の議論用資料。
+(定着の植生効果: 浮遊砂の捕捉と動的粗度 fix_cn)も実装済み(§84.8)。段 5a
+(給砂: fluv_bcfeed_fac・inflow_qb・inflow_cs_eq)も実装済み(§84.9)。段 5b
+(非平衡二次流)は未着手。** 実装前の議論用資料。
 合意に至った決定は developer.md(新 § を起こす)へ移し、本書は段階ごとに
 消し込む(geomorph_plan.md・nonhydrostatic_plan.md と同じ運用)。
 発端は利用者の検討メモ(ChatGPT との問答 2026-10。「ENCflow で蛇行の発達から
@@ -363,7 +364,7 @@ MPI はハロ交換 1 回の追加。
 例題がすべて無給砂の河床低下に妨げられているため)。有効掃流力 fluv_taufac は
 段 1 で入れた。
 
-#### 3.6a 段 5a: 給砂(2026-10-18 設計案。未合意)
+#### 3.6a 段 5a: 給砂(2026-10-18 合意・実装済み = developer.md §84.9。容量給砂の定義は実装時に「流入セルの正味流出 × 倍率」に改めた)
 
 **現状と試行**:
 - 開境界面(自由流出・区間流入面を含む bc_open_face)の掃流砂は、流出が常に

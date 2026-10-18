@@ -297,6 +297,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | fix_dzreset | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fix_tfix | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fluv_bcfeed | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| fluv_bcfeed_fac | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fluv_d50 | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fluv_diagratio | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fluv_dzmax | &list_geomorph | [Sediment and landform change](geomorph.md) |
@@ -357,6 +358,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | fn_icsmax | &list_intercept_initloss | [Rainfall and meteorology](forcing.md) |
 | fn_inflow_cell | &list_bound_inflow | [Boundary conditions](boundary.md) |
 | fn_inflow_cs | &list_bound_inflow | [Boundary conditions](boundary.md) |
+| fn_inflow_qb | &list_bound_inflow | [Boundary conditions](boundary.md) |
 | fn_inflow_qs | &list_bound_inflow | [Boundary conditions](boundary.md) |
 | fn_inflow_val | &list_bound_inflow | [Boundary conditions](boundary.md) |
 | fn_initial | &list_sysparam | [Part I (enabling features)](../users_guide.md) |
@@ -461,7 +463,10 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | ic_smax_mm | &list_intercept_initloss | [Rainfall and meteorology](forcing.md) |
 | inflow_cell | &list_bound_inflow | [Boundary conditions](boundary.md) |
 | inflow_cs | &list_bound_inflow | [Boundary conditions](boundary.md) |
+| inflow_cs_eq | &list_bound_inflow | [Boundary conditions](boundary.md) |
+| inflow_cs_fac | &list_bound_inflow | [Boundary conditions](boundary.md) |
 | inflow_dist | &list_bound_inflow | [Boundary conditions](boundary.md) |
+| inflow_qb | &list_bound_inflow | [Boundary conditions](boundary.md) |
 | inflow_qs | &list_bound_inflow | [Boundary conditions](boundary.md) |
 | inflow_val | &list_bound_inflow | [Boundary conditions](boundary.md) |
 | kk | &list_sysparam | [Shallow water flow computation](swflow.md) |

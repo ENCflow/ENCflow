@@ -30,6 +30,8 @@ module list_geomorph
                                      ! m_swflow_enc の p_diagratio と同値の既定)
     integer :: fluv_bcfeed = 0       ! 開境界の掃流砂給砂(0:流入は無給砂,
                                      ! 1:平衡給砂。流出は常に容量輸送)
+    real :: fluv_bcfeed_fac = 1.0    ! 容量給砂の倍率(fluv_bcfeed = 1 のとき。0 = 無給砂、0.5 = 半給砂、
+                                     ! >1 = 過給砂。流出側には掛けない。§84.9)
     real :: fluv_taufac = 1.0        ! 有効掃流力の比 f_τ(流砂量式に渡す τ* =
                                      ! f_τ × 全抵抗の τ*。砂堆・植生の形状抵抗を
                                      ! 除く簡略分離。1 = 分離なし。§84.3)
@@ -247,6 +249,7 @@ subroutine list_geomorph_read(p, list)
   real :: fluv_dzmax
   real :: fluv_diagratio
   integer :: fluv_bcfeed
+  real :: fluv_bcfeed_fac
   real :: fluv_taufac, fluv_mus, fluv_muk, sec_nstar, sec_rmax, sec_vmin
   integer :: fluv_slope, f_secflow
   integer :: f_berode, f_repose
@@ -303,7 +306,7 @@ subroutine list_geomorph_read(p, list)
   namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
                            fluv_porosity, fluv_sgrav, fluv_dzmax, fluv_diagratio, &
-                           fluv_bcfeed, fluv_taufac, fluv_slope, fluv_mus, fluv_muk, &
+                           fluv_bcfeed, fluv_bcfeed_fac, fluv_taufac, fluv_slope, fluv_mus, fluv_muk, &
                            f_secflow, sec_nstar, sec_rmax, sec_vmin, &
                            f_berode, berode_kb, berode_tausc, berode_m, &
                            f_repose, repose_phi, repose_relax, &
@@ -334,6 +337,7 @@ subroutine list_geomorph_read(p, list)
   fluv_dzmax = list%fluv_dzmax
   fluv_diagratio = list%fluv_diagratio
   fluv_bcfeed = list%fluv_bcfeed
+  fluv_bcfeed_fac = list%fluv_bcfeed_fac
   fluv_taufac = list%fluv_taufac
   fluv_slope = list%fluv_slope
   fluv_mus = list%fluv_mus
@@ -439,6 +443,7 @@ subroutine list_geomorph_read(p, list)
   list%fluv_dzmax = fluv_dzmax
   list%fluv_diagratio = fluv_diagratio
   list%fluv_bcfeed = fluv_bcfeed
+  list%fluv_bcfeed_fac = fluv_bcfeed_fac
   list%fluv_taufac = fluv_taufac
   list%fluv_slope = fluv_slope
   list%fluv_mus = fluv_mus

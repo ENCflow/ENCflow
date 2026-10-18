@@ -50,9 +50,11 @@
   !fluv_sgrav = 1.65        ! submerged specific gravity of sediment grains
   !fluv_dzmax = 0.05        ! bed change limit per edge per update (m)
                             !   (stabilization)
-  !fluv_bcfeed = 0          ! sediment feed at open boundaries (0: inflow feeds
-                            !   nothing, 1: equilibrium feed. Outflow is always
-                            !   at transport capacity)
+  !fluv_bcfeed = 0          ! sediment feed at open boundaries incl. inflow-segment
+                            !   faces (0: inflow feeds nothing, 1: capacity feed =
+                            !   net outflow of the inflow cell times the factor.
+                            !   Outflow is always at transport capacity)
+  !fluv_bcfeed_fac = 1.0    ! factor of the capacity feed (1: fixed inlet bed, 0: none)
   !fluv_diagratio = 0.5857864376  ! diagonal share (normally no need to change)
   !fluv_taufac = 1.0        ! effective shear-stress ratio f_tau (tau* passed to the
                             !   transport formula = f_tau x tau* of the total
