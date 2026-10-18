@@ -873,8 +873,8 @@ tabulated below (in parentheses: change from the next coarser grid).
 |---|---|---|---|
 | 1 (small catchment area) | 1,165 | 1,359 (+17%) | 1,383 (+2%) |
 | 2 | 2,807 | 3,232 (+15%) | 3,333 (+3%) |
-| 3 | 4,010 | 4,357 (+9%) | 5,230 (+20%) |
-| 4 (near the catchment outlet) | 5,342 | 5,646 (+6%) | 6,341 (+12%) |
+| 3 | 4,010 | 4,357 (+9%) | 5,237 (+20%) |
+| 4 (near the catchment outlet) | 5,342 | 5,646 (+6%) | 6,336 (+12%) |
 
 - **Upstream (transects 1 and 2)**: the coarser the grid, the smaller
   the peak. It changes by 15 to 17% from 200 to 100 m but only by 2 to
@@ -891,7 +891,7 @@ tabulated below (in parentheses: change from the next coarser grid).
   12 to 20% from 100 to 50 m. The peak times hardly change across the
   three resolutions (170 to 180 min at transect 4). On a raster the
   channel width equals the cell width, so a finer grid makes the
-  channel narrower and deeper (the maximum depth at probe 4 is 7.3,
+  channel narrower and deeper (the maximum depth at probe 4 is 7.2,
   10.3 and 16.3 m), and we consider the reduced flattening of the
   wave (channel storage) along the long main river to be the main
   cause.
@@ -900,14 +900,14 @@ tabulated below (in parentheses: change from the next coarser grid).
   (`fn_channel`, [the channel chapter of the users
   guide](../../../docs/en/users_guide/channel.md); `./Fig_supp.sh` runs
   these as `result_supp_*_w50`). The peaks at transects 3 and 4 become
-  4,153 / 4,632 at 200 m and 3,614 / 4,641 at 100 m. **At transect 4 near
+  4,153 / 4,634 at 200 m and 3,615 / 4,643 at 100 m. **At transect 4 near
   the catchment outlet the difference between 200 m and 100 m shrinks from
   6% to 0.2%**, which shows that channel-cell storage was the main cause of
   the gap between the two coarse grids. At transect 3, however, the gap does
   not close but reverses (100 m is 13% lower), so a further grid-dependent
   factor remains, such as the conveyance of the narrowed channel. Neither
-  reaches the 50 m grid with its resolved channel (5,230 / 6,341), and the
-  peaks arrive about 30 minutes later.
+  reaches the 50 m grid with its resolved channel (5,237 / 6,336), and the
+  peaks arrive a little over 30 minutes later.
 
   ![Supplement: channel width equalized to 50 m](figs/supp_hydro_w50.png)
 
@@ -916,8 +916,8 @@ tabulated below (in parentheses: change from the next coarser grid).
   (light blue) and even later than the no-width runs (dashed); at the
   upstream transect 1 the width hardly matters. Giving the 50 m grid
   W = 50 m (= the cell width; light-blue dashed line) coincides with the
-  resolved 50 m grid: the peaks differ by less than 0.01% and the discharge
-  by at most 2.3 m³/s (4 × 10⁻⁴). When the width equals the cell width, the
+  resolved 50 m grid: the peaks differ by 0.02% and the discharge
+  by at most 1.9 m³/s (3 × 10⁻⁴). When the width equals the cell width, the
   subgrid channel reduces to the resolved representation as designed (not to
   the last digit; rounding differences such as the treatment of diagonal
   edges remain). A 50 m subgrid channel
@@ -990,7 +990,7 @@ spans 2.5 times the others.** Peak discharge
 | none (diffusion wave) | 9,611 @113 | 15,601 @102 | 17,996 @92 |
 | scheme 1 (old, upwind 0.5 = default) | 5,714 @158 | 6,024 @169 | 6,261 @176 |
 | scheme 1 (upwind 0.1) | 6,856 @135 | 7,884 @136 | diverged (56 min, before the peak) |
-| scheme 3 (default) | 5,342 @174 | 5,646 @178 | 6,341 @173 |
+| scheme 3 (default) | 5,342 @174 | 5,646 @178 | 6,336 @171 |
 
 For reference, the maximum velocity of each computation (V_max in the Log)
 on the 100 m grid was 41 m/s without advection, 25 m/s with scheme 1
@@ -1012,7 +1012,7 @@ and the curves end early in the figure.
 Without the advection term (diffusion wave, local inertia equation), the peak
 at transect 4 goes 9,611 → 15,601 → 17,996 m³/s and 113 → 102 → 92 min from 200 m to 100 m to 50 m: **the finer the grid,
 the larger and earlier the peak**. The resolution dependence is an order of
-magnitude stronger than with the default scheme 3 (5,342 → 5,646 → 6,341,
+magnitude stronger than with the default scheme 3 (5,342 → 5,646 → 6,336,
 with the timing almost unchanged), and the values themselves are 2 to 3
 times larger. Let us follow the reasons step by step.
 
