@@ -80,12 +80,12 @@ main: real precision: 64 bit
 main: number of valid cells: 17885
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000   0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0487  97.7%      0    0.1485    1.0471    3.2547
-  1:00:00.00  16.7%    0.1000  12.3%      0    0.3077    4.6625    6.8358
-  1:30:00.00  25.0%    0.1000   6.0%      0    0.3591    7.7186    6.8663
-  2:00:00.00  33.3%    0.1000   3.2%      0    0.3803    8.1519    7.0867
+  0:30:00.00   8.3%    0.0487  97.7%      0    0.2137    1.4893    4.4243
+  1:00:00.00  16.7%    0.1000   1.1%      0    0.3522    5.2118    8.7554
+  1:30:00.00  25.0%    0.1000   0.5%      0    0.4353    7.8360    9.3230
+  2:00:00.00  33.3%    0.1000   0.2%      0    0.4250    7.7974    9.1465
   ...
-  6:00:00.00 100.0%    0.1000   2.2%     52    0.4848   26.4239    4.2324
+  6:00:00.00 100.0%    0.1000   0.3%     28    0.5145   29.7972    4.1589
 main: program terminated normally
 ```
 
@@ -465,7 +465,7 @@ like this. Before tuning roughness against observed hydrographs, it is
 important to remove them.
 
 The gentle undulation that remains near the peak (150 to 240 min, a
-period of about 5 min and ±25 m³/s, 0.5 %) is not a numerical artifact: it
+period of about 5 min and ±20 m³/s, 0.4 %) is not a numerical artifact: it
 is the seiche of the flat reach in which transect 4 sits (a "pond" of the
 filled DEM, 1.2 to 1.8 km long and 6 m deep, so 2L/√(gh) ≈ 5 to 7 min).
 It is excited on the rising limb and dies out on the recession, the same
@@ -508,11 +508,11 @@ changes from one column to **three columns**.
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000     0.0000     0.0000    0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2647    0.9528    6.7882
-  1:00:00.00  16.7%    0.0751     0.0049     0.0800    9.7%      0    0.4725    5.0105   13.5230
-  1:30:00.00  25.0%    0.0728     0.0072     0.0800    4.9%      0    0.5312    6.6902   13.4817
+  0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2938    1.1180    7.5788
+  1:00:00.00  16.7%    0.0751     0.0049     0.0800    1.1%      0    0.5061    5.8260   13.9790
+  1:30:00.00  25.0%    0.0729     0.0071     0.0800    1.0%      0    0.5441    7.2383   14.1280
   ...
-  6:00:00.00 100.0%    0.0690     0.0110     0.0800    0.1%      0    0.5026   28.4973    5.6453
+  6:00:00.00 100.0%    0.0698     0.0102     0.0800    0.0%      1    0.5215   29.9379    5.4326
 ```
 
 - `S_surf` is surface water, `S_grnd` is subsurface storage, and
@@ -526,8 +526,8 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
 
 ![Step 5: effect of interception and infiltration](figs/step5_hydro.png)
 
-In the hydrograph the peak discharge drops by about a quarter (5,340
-to 4,010 m^3/s). Interception cuts the total by 20%, and infiltration keeps
+In the hydrograph the peak discharge drops by about a quarter (5,510
+to 4,260 m^3/s). Interception cuts the total by 20%, and infiltration keeps
 sucking up the thinly spread hillslope water, so both the rising limb
 and the recession drop.
 
@@ -536,7 +536,7 @@ on the hydrograph. They are explained in the second half of Step 6.
 
 ## Step 6: Boundary condition at the catchment outlet
 
-We now resolve the outlet ponding (h_max of about 28 m) that we have
+We now resolve the outlet ponding (h_max of about 30 m) that we have
 been turning a blind eye to since Step 1. The catchment outlet is not
 on the outer rim (the four edges) of the computational domain but in
 its interior, so instead of an edge boundary condition we use
@@ -570,13 +570,13 @@ immediately). Running it gives:
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   ...
-  3:00:00.00  50.0%    0.0621     0.0095     0.0717    0.6%      4    0.5075    6.4922   13.4140
-  6:00:00.00 100.0%    0.0242     0.0110     0.0352    0.1%      0    0.3207    3.9161    6.9661
+  3:00:00.00  50.0%    0.0605     0.0089     0.0694    0.1%      4    0.5159    7.1280   13.3623
+  6:00:00.00 100.0%    0.0227     0.0102     0.0329    0.0%      0    0.3185    3.7107    6.9177
 ```
 
 - S_total now decreases -- that is the water that left the system
   through the outlet.
-- h_max drops from 28 m to 3.9 m. The disappearance of the ponding can
+- h_max drops from 30 m to 3.7 m. The disappearance of the ponding can
   also be confirmed in the depth distribution.
 
 | Step 5 (no outlet) | Step 6 (perfect drain) |
