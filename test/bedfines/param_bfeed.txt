@@ -1,0 +1,87 @@
+!======================================================================
+! bedfines: 河床の細粒分の帳簿(f_bedfines)の検定(developer.md §84.10)
+!   構成 bfeed: 細粒 50 % の河床(fines_frac0 = 0.5、L_a = 0.05 m)の直線水路で
+!   掃流砂+浮遊砂、上流端まで可動にして容量給砂(fluv_bcfeed = 1)。浮遊砂の給砂は
+!   なし。容量給砂は流入セルと同じ組成で入るので、入口の河床高 z と在庫 sf が
+!   ともに固定される(0 <= sf <= sd も)。
+!   幅 10 セルの直線水路(勾配 0.002)。西端の区間流入 Q = 1.7 m³/s、東辺は
+!   自由流出。下流端は非侵食+ランプ。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.05
+  t0 = 0
+  tt = 600
+  dt_disp = 300
+  dt_file = 600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result_bfeed'
+  dir_save = 'save_bfeed'
+  f_state_save = 1
+  f_state_restore = 0
+  f_check_cfl = 0
+  f_out_z = 1
+/
+&list_enc
+/
+&list_initial
+  f_htype = 1
+  fn_hinit = 'hinit.txt'
+/
+&list_geoinfo
+  lx = 60.0
+  ly = 20.0
+  nx = 60
+  ny = 20
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 1
+  fn_sd = 'sdfeed.txt'
+  sy0 = 0.2
+/
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.002
+  fluv_tausc = 0.05
+  fluv_dzmax = 0.005
+  fluv_bcfeed = 1
+  f_suspend = 1
+  f_esform = 1
+  susp_d50 = 0.0002
+  susp_tausc = 0.05
+  susp_esa = 1.0e-4
+  f_bedfines = 1
+  fines_la = 0.05
+  fines_frac0 = 0.5
+/
+&list_bound_edge
+  f_bc_e = 1
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 6
+  inflow_cell(1:2,2,1) = 1, 7
+  inflow_cell(1:2,3,1) = 1, 8
+  inflow_cell(1:2,4,1) = 1, 9
+  inflow_cell(1:2,5,1) = 1, 10
+  inflow_cell(1:2,6,1) = 1, 11
+  inflow_cell(1:2,7,1) = 1, 12
+  inflow_cell(1:2,8,1) = 1, 13
+  inflow_cell(1:2,9,1) = 1, 14
+  inflow_cell(1:2,10,1) = 1, 15
+  inflow_val(1:2,1,1) = 0, 1.7
+  inflow_val(1:2,2,1) = 9999, 1.7
+  inflow_dist(1) = 0
+/

@@ -5,7 +5,8 @@
 #   hinit.txt: 水路内に等流相当の初期水深 H0。河岸は乾燥
 #   sdinit.txt: 土層厚。流入端の I_FIX 列は 0(非侵食)、I_RAMP 列まで線形に SD0 へ、
 #              I_END 列から I_DOWN 列へ 0 に戻す(自由流出面の洗掘を止める)
-#   python3 make_init.py z > zinit.txt / h > hinit.txt / sd > sdinit.txt
+#   sdfeed.txt: 同上、ただし上流端まで可動(bfeed 構成。容量給砂が入口を固定する)
+#   python3 make_init.py z > zinit.txt / h > hinit.txt / sd > sdinit.txt / sdfeed > sdfeed.txt
 import sys
 
 NX, NY, DX = 60, 20, 1.0
@@ -35,8 +36,15 @@ def sd_of(i, j):
     return SD0 * min(1.0, (i - I_FIX) / float(I_RAMP - I_FIX), (I_DOWN - i) / float(I_DOWN - I_END))
 
 
+def sdfeed_of(i, j):
+    # bfeed 構成: 上流端まで可動(容量給砂が入口の河床を固定する)。下流端のランプは同じ
+    if i >= I_DOWN:
+        return 0.0
+    return SD0 * min(1.0, (I_DOWN - i) / float(I_DOWN - I_END))
+
+
 if __name__ == "__main__":
     kind = sys.argv[1] if len(sys.argv) > 1 else "z"
-    fn = {"z": z_of, "h": h_of, "sd": sd_of}[kind]
+    fn = {"z": z_of, "h": h_of, "sd": sd_of, "sdfeed": sdfeed_of}[kind]
     for j in range(1, NY + 1):
         print(" ".join("%.6f" % fn(i, j) for i in range(1, NX + 1)))

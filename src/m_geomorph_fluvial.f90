@@ -529,7 +529,7 @@ module subroutine apply_edge_flux(gm, g, s, dts)
   integer :: nlim
   real :: vleak
   logical :: have_sf
-  real :: ff, tout, vfo, dsf, vfree
+  real :: ff, tout, vfo, vfi, dsf, vfree
 
   nlim = 0
   vleak = 0.0
@@ -601,13 +601,14 @@ module subroutine apply_edge_flux(gm, g, s, dts)
   !   ビット一致が保たれる — 縮小率を加算後に掛ける形に書き換えると
   !   縮約の形が変わり最終桁が動く(実検出))
   !$omp parallel do schedule(static) reduction(+: vleak, vfree) &
-  !$omp   private(i, j, k, in, jn, dv8, dz, cap, fx, winv, qk, fd, vfo, dsf)
+  !$omp   private(i, j, k, in, jn, dv8, dz, cap, fx, winv, qk, fd, vfo, vfi, dsf)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       dv8 = 0.0
       vfo = 0.0
+      vfi = 0.0
       do k = 1, 8
         qk = gm%wrk%q(ke(k), i+die(k), j+dje(k))
         fd = 1.0
@@ -621,7 +622,10 @@ module subroutine apply_edge_flux(gm, g, s, dts)
         if (have_sf) then
           ! 河床の細粒分の帳簿(§84.10): 流出は全量(細粒分は後で ff_own 倍を
           ! 懸濁化)、流入は供給側の粗粒分 (1 − ff) だけが河床に届く。域外
-          ! (開境界)からの流入は粗粒
+          ! (開境界 = 容量給砂)からの流入は全量が河床に届き、組成は受け手
+          ! (流入セル)自身の ff とする(給砂 = 流入セルが出すものと同じ。
+          ! 粗粒だけ入れると、出て行く細粒分の分だけ粗粒が溜まり、懸濁した
+          ! 細粒分が沈降して戻るたびに入口が盛り上がる正帰還になる。実検出)
           if (sign_e(k) * qk > 0.0) then
             vfo = vfo + sign_e(k) * (qk * fd)
             dv8 = dv8 + sign_e(k) * (qk * fd)
@@ -629,6 +633,7 @@ module subroutine apply_edge_flux(gm, g, s, dts)
             if (g%x(in,jn) > 0) then
               dv8 = dv8 + sign_e(k) * (qk * fd) * (1.0 - gm%fin%ff(in,jn))
             else
+              vfi = vfi - sign_e(k) * (qk * fd)
               dv8 = dv8 + sign_e(k) * (qk * fd)
             end if
           end if
@@ -661,6 +666,8 @@ module subroutine apply_edge_flux(gm, g, s, dts)
           s%hs(i,j) = s%hs(i,j) - dsf / (gm%morfac * gm%poroi)
           vfree = vfree - dsf / (gm%poroi * gm%wrk%ainv * winv)
         end if
+        ! 域外からの流入(容量給砂)の細粒分は受け手の組成 ff で在庫に入る
+        if (vfi > 0.0) s%sf(i,j) = s%sf(i,j) + vfi * gm%fin%ff(i,j) * dts * gm%wrk%ainv * winv * gm%poroi
         if (s%sf(i,j) > s%sd(i,j)) s%sf(i,j) = s%sd(i,j)
       end if
       ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す

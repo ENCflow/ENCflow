@@ -1,5 +1,5 @@
 #!/bin/bash
-# bedfines: 河床の細粒分の帳簿の検定(逐次実行。off / all / mix / coarse / feed
+# bedfines: 河床の細粒分の帳簿の検定(逐次実行。off / all / mix / coarse / feed / bfeed
 #   + リスタート分割 rt1 → rt2(mix と同じ設定))
 #   ./Run.sh
 # 合否は Check_bedfines.py + all と off の state.dat の cmp。save_* は save_*_serial にも複製
@@ -10,6 +10,7 @@ sdir=$(dirname "$(readlink -f "$0")")
 python3 "$sdir/make_init.py" z > zinit.txt
 python3 "$sdir/make_init.py" h > hinit.txt
 python3 "$sdir/make_init.py" sd > sdinit.txt
+python3 "$sdir/make_init.py" sdfeed > sdfeed.txt
 
 set -o pipefail
 ./encflow param_off.txt | tee Screen.log || exit 1
@@ -17,6 +18,7 @@ set -o pipefail
 ./encflow param_mix.txt | tee -a Screen.log || exit 1
 ./encflow param_coarse.txt | tee -a Screen.log || exit 1
 ./encflow param_feed.txt | tee -a Screen.log || exit 1
+./encflow param_bfeed.txt | tee -a Screen.log || exit 1
 rm -rf save_rt
 ./encflow param_rt1.txt | tee -a Screen.log || exit 1
 ./encflow param_rt2.txt | tee -a Screen.log || exit 1
@@ -39,7 +41,7 @@ for f in state.dat geomorph_fines.dat; do
         rc=1
     fi
 done
-for c in off all mix coarse feed; do rm -rf save_${c}_serial && cp -r save_$c save_${c}_serial; done
+for c in off all mix coarse feed bfeed; do rm -rf save_${c}_serial && cp -r save_$c save_${c}_serial; done
 
 if [ $rc -eq 0 ]; then
     echo "=== bedfines verification PASS ==="

@@ -11,14 +11,17 @@
 #     (4) feed(粗粒の水路に細粒分を給砂、浮遊砂のみ): z − z0 >= −TOL_INV(河床は
 #         削られない)、|sf − (z − z0)| < TOL_ID(在庫 = 堆積)、堆積がある(max sf > MIN_DEP)
 #     (5) off に Sf 出力がない(配列未確保)
+#     (6) bfeed(細粒 50 % の河床、掃流砂+浮遊砂、容量給砂、浮遊砂の給砂なし): 入口列
+#         (i = 1、水路の行)の |z − z0| と |sf − sf0| が TOL_FEED 未満(給砂は流入セルと
+#         同じ組成 = 入口の高さと在庫が固定)、0 <= sf <= sd、河床は動いている
 #   リスタート往復(mix と同じ設定の rt1 → rt2)と MPI の一致は Run.sh / Run_MPI.sh が cmp で見る
 import sys, struct, os, glob
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from make_init import NX as CNX, NY as CNY, z_of
+from make_init import NX as CNX, NY as CNY, J1, J2, z_of, sdfeed_of
 
 PORO, SD0_BOX = 0.4, 10.0
 BNX, BNY = 101, 101
-TOL_SUM, TOL_INV, TOL_ID = 1.0e-9, 1.0e-12, 1.0e-9
+TOL_SUM, TOL_INV, TOL_ID, TOL_FEED = 1.0e-9, 1.0e-12, 1.0e-9, 2.0e-3
 MIN_DZ, MIN_REL, MIN_DEP = 1.0e-6, 1.0e-6, 1.0e-6
 
 
@@ -99,6 +102,18 @@ rep("(4a) feed 河床は削られない", min(dz) > -TOL_INV, "min(z-z0) = %.2e"
 rep("(4b) feed 在庫 = 堆積", max(abs(a - b) for a, b in zip(sf, dz)) < TOL_ID,
     "max|sf-(z-z0)| = %.2e" % max(abs(a - b) for a, b in zip(sf, dz)))
 rep("(4c) feed 堆積がある", max(sf) > MIN_DEP, "max(sf) = %.3e m" % max(sf))
+
+# (6) bfeed(channel): 入口の z・sf が固定、不変条件、活性
+z, sd, hs, sf = load("bfeed", CNX, CNY)
+z0 = [z_of(i, j) for j in range(1, CNY + 1) for i in range(1, CNX + 1)]
+sf0 = [0.5 * sdfeed_of(i, j) for j in range(1, CNY + 1) for i in range(1, CNX + 1)]
+dz = [a - b for a, b in zip(z, z0)]; dsf = [a - b for a, b in zip(sf, sf0)]
+inlet = [(j - 1) * CNX + 0 for j in range(J1, J2 + 1)]
+rep("(6a) bfeed 入口の河床高が固定", max(abs(dz[n]) for n in inlet) < TOL_FEED, "max|z-z0| at i=1 = %.2e" % max(abs(dz[n]) for n in inlet))
+rep("(6b) bfeed 入口の在庫が固定", max(abs(dsf[n]) for n in inlet) < TOL_FEED, "max|sf-sf0| at i=1 = %.2e" % max(abs(dsf[n]) for n in inlet))
+inv = min(min(sf), min(b - a for a, b in zip(sf, sd)))
+rep("(6c) bfeed 不変条件 0 <= sf <= sd", inv > -TOL_INV, "min(sf, sd - sf) = %.2e" % inv)
+rep("(6d) bfeed 河床が動いている", max(abs(a) for a in dz) > MIN_DZ and max(hs) > MIN_REL, "max|z-z0| = %.3e, max(hs) = %.3e" % (max(abs(a) for a in dz), max(hs)))
 
 # (5) off に Sf 出力がない
 rep("(5) off に Sf 出力なし", not glob.glob("result_off/Sf*.txt") and bool(glob.glob("result_all/Sf*.txt")),

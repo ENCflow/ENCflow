@@ -295,9 +295,11 @@ two-component ledger).
 | fines_frac0 | 0 | Initial fraction of fines (sf = fines_frac0 x sd). 0 = a purely coarse bed, 1 = the whole layer is fines, as before |
 
 Hillslope erosion f_wash also draws on the stock sf (set fines_frac0 = 1
-when the hillslope soil is fines that can be washed off). Dry hillslope
-erosion, the moving bottom layer, weathering and the bed-load source
-inflow_qb are treated as coarse. There is no vertical stratigraphy, so
+when the hillslope soil is fines that can be washed off). The capacity
+feed at open boundaries (fluv_bcfeed = 1) enters with the composition of
+the inflow cell (both the bed level and the stock at the inlet stay
+fixed). Dry hillslope erosion, the moving bottom layer, weathering and
+the bed-load source inflow_qb are treated as coarse. There is no vertical stratigraphy, so
 fines buried under a thick coarse deposit remain available.
 
 Sediment inflow from the boundaries (time series of concentration and
