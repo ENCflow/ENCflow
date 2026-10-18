@@ -619,26 +619,24 @@ module subroutine apply_edge_flux(gm, g, s, dts)
           jn = j + djn(k)
           if (g%x(in,jn) > 0) fd = gm%flv%fdon(in,jn)
         end if
+        dv8 = dv8 + sign_e(k) * (qk * fd)
         if (have_sf) then
-          ! 河床の細粒分の帳簿(§84.10): 流出は全量(細粒分は後で ff_own 倍を
-          ! 懸濁化)、流入は供給側の粗粒分 (1 − ff) だけが河床に届く。域外
-          ! (開境界 = 容量給砂)からの流入は全量が河床に届き、組成は受け手
-          ! (流入セル)自身の ff とする(給砂 = 流入セルが出すものと同じ。
-          ! 粗粒だけ入れると、出て行く細粒分の分だけ粗粒が溜まり、懸濁した
-          ! 細粒分が沈降して戻るたびに入口が盛り上がる正帰還になる。実検出)
+          ! 河床の細粒分の帳簿(§84.10): 細粒分は掃流砂と一緒に動く(等移動度。
+          ! 流出は供給側の組成 ff_own、流入は供給側の ff_nb の分だけ sf に入る)。
+          ! 域外(開境界 = 容量給砂)からの流入は受け手自身の ff の組成(給砂 =
+          ! 流入セルが出すものと同じ → 入口の z・sf とも固定)。浮遊砂との交換は
+          ! calc_suspend の E-D だけが担う(掃流砂の浸食で解放された細粒分を
+          ! その場で懸濁させると、浮遊の容量 C_eq と無関係に hs が増えて滞水域に
+          ! 積もり、morfac 併用で発散した。実検出)
           if (sign_e(k) * qk > 0.0) then
             vfo = vfo + sign_e(k) * (qk * fd)
-            dv8 = dv8 + sign_e(k) * (qk * fd)
           else if (sign_e(k) * qk < 0.0) then
             if (g%x(in,jn) > 0) then
-              dv8 = dv8 + sign_e(k) * (qk * fd) * (1.0 - gm%fin%ff(in,jn))
+              vfi = vfi - sign_e(k) * (qk * fd) * gm%fin%ff(in,jn)
             else
-              vfi = vfi - sign_e(k) * (qk * fd)
-              dv8 = dv8 + sign_e(k) * (qk * fd)
+              vfi = vfi - sign_e(k) * (qk * fd) * gm%fin%ff(i,j)
             end if
           end if
-        else
-          dv8 = dv8 + sign_e(k) * (qk * fd)
         end if
       end do
       ! 河道幅有効時は体積発散を河道底面積 wfrac*dx*dy で厚さに換算
@@ -655,20 +653,14 @@ module subroutine apply_edge_flux(gm, g, s, dts)
       ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
       s%z(i,j) = s%z(i,j) + dz
       s%sd(i,j) = s%sd(i,j) + dz
-      ! 河床の細粒分の帳簿(§84.10): 流出に含まれる細粒分 ff・q をその場で
-      ! 懸濁化する(sf から hs へ。hs は水理時間の柱状量 = Δz/(morfac·poroi))。
-      ! ff の構成で |dsf| <= sf だが、丸めの分はクランプして sf と hs の間で閉じる
+      ! 河床の細粒分の帳簿(§84.10): 掃流砂に同伴する細粒分の収支で sf を動かす
+      ! (ff の構成で流出 <= sf。丸めの分は 0 <= sf <= sd にクリップ)
       if (have_sf) then
-        if (vfo > 0.0) then
-          dsf = -vfo * gm%fin%ff(i,j) * dts * gm%wrk%ainv * winv * gm%poroi
-          if (dsf < -s%sf(i,j)) dsf = -s%sf(i,j)
-          s%sf(i,j) = s%sf(i,j) + dsf
-          s%hs(i,j) = s%hs(i,j) - dsf / (gm%morfac * gm%poroi)
-          vfree = vfree - dsf / (gm%poroi * gm%wrk%ainv * winv)
-        end if
-        ! 域外からの流入(容量給砂)の細粒分は受け手の組成 ff で在庫に入る
-        if (vfi > 0.0) s%sf(i,j) = s%sf(i,j) + vfi * gm%fin%ff(i,j) * dts * gm%wrk%ainv * winv * gm%poroi
+        dsf = (vfi - vfo * gm%fin%ff(i,j)) * dts * gm%wrk%ainv * winv * gm%poroi
+        if (dsf < -s%sf(i,j)) dsf = -s%sf(i,j)
+        s%sf(i,j) = s%sf(i,j) + dsf
         if (s%sf(i,j) > s%sd(i,j)) s%sf(i,j) = s%sd(i,j)
+        if (vfo > 0.0) vfree = vfree + vfo * gm%fin%ff(i,j) * dts
       end if
       ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
       ! (飽和表土が削られ、含まれていた水が地表に出る。反対称適用)

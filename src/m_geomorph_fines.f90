@@ -11,21 +11,23 @@
 !   細粒分の割合とみなす):
 !     - 浮遊砂 E-D(calc_suspend): 浸食 E = f・w_f・C_eq、浸食量 <= sf。
 !       沈降・乾燥時の全量堆積は sd・sf を同じ Δz で増やす
-!     - 掃流砂・側岸侵食・崩落・容量給砂(apply_edge_flux): 流出 q を供給側の
-!       組成 ff で割る。細粒分 ff・q はその場で懸濁(hs へ)、粗粒分 (1 − ff) q
-!       だけが隣接セルの河床に届く。ff はループ 1.5 で「細粒分の流出 <= sf、
-!       粗粒分の流出 <= sd − sf」を満たす範囲に入れる(0 <= sf <= sd が構造的に
-!       成立)。域外(開境界 = 容量給砂)からの流入は受け手自身の ff の組成で
-!       入る(給砂 = 流入セルが出すものと同じ。粗粒だけ入れると出て行く細粒分の
-!       分だけ粗粒が溜まり入口が盛り上がる正帰還になる。§84.10)
+!     - 掃流砂・側岸侵食・崩落・容量給砂(apply_edge_flux): 細粒分は掃流砂と
+!       一緒に動く(等移動度)。流出 q の ff_own 倍が供給側の sf から出て、受け手の
+!       sf に入る(z・sd は従来どおり q の全量で動く)。ff はループ 1.5 で
+!       「細粒分の流出 <= sf、粗粒分の流出 <= sd − sf」を満たす範囲に入れる
+!       (0 <= sf <= sd が構造的に成立)。域外(開境界 = 容量給砂)からの流入は
+!       受け手自身の ff の組成(給砂 = 流入セルが出すものと同じ → 入口の z・sf
+!       とも固定)。浮遊砂との交換は calc_suspend の E-D だけが担う(解放された
+!       細粒分をその場で懸濁させる案は、浮遊の容量と無関係に hs が増えて
+!       滞水域に積もり発散した。§84.10)
 !     - 斜面浸食 f_wash: 浸食率に f を乗じ sf から減らす
 !     - f_splash・f_bedslide・f_wthr・inflow_qb: 粗粒として扱う(sf <= sd の
 !       クリップのみ)。f_debris は f_suspend と排他
 !   状態: s%sf(帯±ハロ。更新は自帯のみ。近傍は読まない = ハロ交換不要)。
 !     初期値は fines_frac0 × sd(一様割合)。私有 save geomorph_fines.dat
 !     (契約 5。restart_write_cell 1 面。§83)。作業配列 ff(帯±ハロ。
-!     ループ 1.5 で作り fdon と同様にハロ交換)。台帳 vfree(掃流砂の浸食で
-!     懸濁化した細粒分の固体体積。ランク局所)。
+!     ループ 1.5 で作り fdon と同様にハロ交換)。台帳 vfree(掃流砂に同伴して
+!     動いた細粒分の固体体積。ランク局所)。
 !   無効時は配列未確保・呼び出しなし(ゼロコスト。既存 reference 不変)。
 !======================================================================
 submodule(m_geomorph) m_geomorph_fines
@@ -80,8 +82,8 @@ module subroutine dispose_fines(gm, p, g, s)
   type(t_state), intent(in) :: s
   if (p%f_state_save > 0) call save_fines(gm, p, g, s)
   ! ランク局所の台帳
-  call par_warn("geomorph: bed-load erosion released " // rtoa(gm%fin%vfree) &
-                // " m3 (solid) of bed fines into suspension")
+  call par_warn("geomorph: bed load carried " // rtoa(gm%fin%vfree) &
+                // " m3 (solid) of bed fines along with it")
 end subroutine
 
 

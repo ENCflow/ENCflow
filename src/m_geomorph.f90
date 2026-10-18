@@ -142,7 +142,7 @@ module m_geomorph
     real :: lainv = 0.0              ! 1 / L_a
     real :: frac0 = 0.0              ! 初期の細粒分割合
     real, allocatable :: ff(:,:)     ! 流出に占める細粒分の割合(帯±ハロ。apply_edge_flux のループ 1.5 が作る)
-    real :: vfree = 0.0              ! 掃流砂の浸食で懸濁化した細粒分の固体体積 (m3。ランク局所)
+    real :: vfree = 0.0              ! 掃流砂に同伴して動いた細粒分の固体体積 (m3。ランク局所)
   end type
 
   type t_gmwork

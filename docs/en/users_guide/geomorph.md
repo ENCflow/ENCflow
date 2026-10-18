@@ -282,11 +282,11 @@ combined, a coarse bed is then eroded at the rate of the fines. With
 `f_bedfines = 1` the model keeps a ledger of "the thickness of the bed
 that moves as suspended load", sf (output Sf, 0 <= sf <= sd).
 Entrainment is limited to the stock sf (availability min(1, sf/L_a)),
-settling adds to sf, and the fines contained in soil removed by bed
-load, bank erosion or avalanching go into suspension on the spot (only
-the coarse part reaches the neighbouring bed). The number of size
-classes is not increased and there is no hiding/exposure function (a
-two-component ledger).
+settling adds to sf, and soil moved by bed load, bank erosion or
+avalanching carries its fines along with it (equal mobility; the
+exchange with the suspended load is only through entrainment and
+settling). The number of size classes is not increased and there is no
+hiding/exposure function (a two-component ledger).
 
 | Parameter | Default | Meaning |
 |---|---|---|

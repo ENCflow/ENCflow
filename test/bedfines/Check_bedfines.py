@@ -5,8 +5,8 @@
 #         ここでは sf = sd(全層が細粒分)を確認する
 #     (2) mix(掃流砂+浮遊砂、細粒 50 %): 0 <= sf <= sd(TOL_INV)、
 #         固体総量 Σhs + (1−λ)Σ(z − z0) と細粒分 Σhs + (1−λ)Σ(sf − sf0) が
-#         ともに TOL_SUM 未満(閉じた系)、掃流砂の浸食が細粒分を解放している
-#         (Σ(sf − sf0) < 0 で |Σ| > MIN_REL)、河床は動いている(max|z − z0| > MIN_DZ)
+#         ともに TOL_SUM 未満(閉じた系)、細粒分が浮遊砂に出ている(Σ(sf − sf0) < 0 で
+#         |Σ| > MIN_REL、max(hs) > MIN_REL)、河床は動いている(max|z − z0| > MIN_DZ)
 #     (3) coarse(粗粒のみ): hs が厳密に 0、sf が厳密に 0、河床は動いている
 #     (4) feed(粗粒の水路に細粒分を給砂、浮遊砂のみ): z − z0 >= −TOL_INV(河床は
 #         削られない)、|sf − (z − z0)| < TOL_ID(在庫 = 堆積)、堆積がある(max sf > MIN_DEP)
@@ -84,7 +84,7 @@ dsf = sum(a - sf0 for a in sf)
 rep("(2a) mix 不変条件 0 <= sf <= sd", inv > -TOL_INV, "min(sf, sd - sf) = %.2e" % inv)
 rep("(2b) mix 固体総量保存", abs(solids) < TOL_SUM, "sum(hs)+(1-λ)sum(z-z0) = %.2e" % solids)
 rep("(2c) mix 細粒分保存", abs(fines) < TOL_SUM, "sum(hs)+(1-λ)sum(sf-sf0) = %.2e" % fines)
-rep("(2d) mix 掃流砂浸食が細粒分を解放", dsf < -MIN_REL and max(hs) > MIN_REL,
+rep("(2d) mix 細粒分が浮遊砂に出ている", dsf < -MIN_REL and max(hs) > MIN_REL,
     "sum(sf-sf0) = %.3e m*cell, max(hs) = %.3e" % (dsf, max(hs)))
 rep("(2e) mix 河床が動いている", max(abs(a) for a in z) > MIN_DZ, "max|z-z0| = %.3e" % max(abs(a) for a in z))
 
