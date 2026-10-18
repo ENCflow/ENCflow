@@ -464,6 +464,13 @@ grids, **artifacts of the numerical settings** ride on the waveform
 like this. Before tuning roughness against observed hydrographs, it is
 important to remove them.
 
+The gentle undulation that remains near the peak (150 to 240 min, a
+period of about 5 min and ±25 m³/s, 0.5 %) is not a numerical artifact: it
+is the seiche of the flat reach in which transect 4 sits (a "pond" of the
+filled DEM, 1.2 to 1.8 km long and 6 m deep, so 2L/√(gh) ≈ 5 to 7 min).
+It is excited on the rising limb and dies out on the recession, the same
+kind of oscillation as explained in the second half of Step 6.
+
 ## Step 5: Rainfall interception and subsurface infiltration
 
 So far, all the rain that fell has run off. In a real catchment,
