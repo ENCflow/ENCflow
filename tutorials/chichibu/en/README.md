@@ -83,9 +83,9 @@ time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:30:00.00   8.3%    0.0487  97.7%      0    0.1485    1.0471    3.2547
   1:00:00.00  16.7%    0.1000  12.3%      0    0.3077    4.6625    6.8358
   1:30:00.00  25.0%    0.1000   6.0%      0    0.3591    7.7186    6.8663
-  2:00:00.00  33.3%    0.1000   3.2%      0    0.3729    8.1519    6.6155
+  2:00:00.00  33.3%    0.1000   3.2%      0    0.3803    8.1519    7.0867
   ...
-  6:00:00.00 100.0%    0.1000   2.2%     53    0.4840   26.3526    4.2175
+  6:00:00.00 100.0%    0.1000   2.2%     52    0.4848   26.4239    4.2324
 main: program terminated normally
 ```
 
@@ -503,9 +503,9 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
   0:00:00.00   0.0%    0.0000     0.0000     0.0000    0.0%      0    0.0000    0.0000    0.0000
   0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2647    0.9528    6.7882
   1:00:00.00  16.7%    0.0751     0.0049     0.0800    9.7%      0    0.4725    5.0105   13.5230
-  1:30:00.00  25.0%    0.0728     0.0072     0.0800    4.9%      0    0.5312    6.6737   13.4817
+  1:30:00.00  25.0%    0.0728     0.0072     0.0800    4.9%      0    0.5312    6.6902   13.4817
   ...
-  6:00:00.00 100.0%    0.0690     0.0110     0.0800    0.1%      0    0.5028   28.4754    5.6097
+  6:00:00.00 100.0%    0.0690     0.0110     0.0800    0.1%      0    0.5026   28.4973    5.6453
 ```
 
 - `S_surf` is surface water, `S_grnd` is subsurface storage, and
@@ -520,7 +520,7 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
 ![Step 5: effect of interception and infiltration](figs/step5_hydro.png)
 
 In the hydrograph the peak discharge drops by about a quarter (5,340
-to 3,960 m^3/s). Interception cuts the total by 20%, and infiltration keeps
+to 4,010 m^3/s). Interception cuts the total by 20%, and infiltration keeps
 sucking up the thinly spread hillslope water, so both the rising limb
 and the recession drop.
 
@@ -563,8 +563,8 @@ immediately). Running it gives:
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   ...
-  3:00:00.00  50.0%    0.0623     0.0095     0.0718    0.6%      4    0.4983    6.5335   13.5506
-  6:00:00.00 100.0%    0.0243     0.0110     0.0353    0.1%      0    0.3233    3.9612    7.0381
+  3:00:00.00  50.0%    0.0621     0.0095     0.0717    0.6%      4    0.5075    6.4922   13.4140
+  6:00:00.00 100.0%    0.0242     0.0110     0.0352    0.1%      0    0.3207    3.9161    6.9661
 ```
 
 - S_total now decreases -- that is the water that left the system
