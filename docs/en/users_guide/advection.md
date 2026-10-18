@@ -262,7 +262,8 @@ unit width $`q`$ times the length of the face).
   $`Q = q_{t\pm}\,L_k`$. The upwind velocity $`\bar u_{t\pm}`$ of an inflow face
   is the value of the parallel neighbouring edge for axis edges, and for
   diagonal edges the mean of the two parallel links of the opposite parity
-  that lie on either end of the face. Projecting the cell flux at the face centre instead
+  that lie on either end of the face (a face with only one such link is
+  treated like a wall, $`\bar u_t = u_e`$). Projecting the cell flux at the face centre instead
   gave a non-zero flux even on faces blocked by terrain where no water
   actually passes, and the advection term, amplified by $`1/\bar h_e`$ in a
   thin control volume, blew up; hence the actual edge fluxes
@@ -451,7 +452,7 @@ fluid force. With the lateral width set to the spacing $`\Delta x/\sqrt2`$ of
 the opposite-parity links and their mean as the upwind value, the mode now
 decays through the flux of the background flow
 ([test/sublattice](../../../test/sublattice/README.md): the e-folding time of a
-sub-lattice mode superposed on a gyre drops from 1094 s to 87 s; the offshore
+sub-lattice mode superposed on a gyre drops from 1094 s to 88 s; the offshore
 checkerboard of tsunami_town from 0.43 to 0.01). The leading terms are
 unchanged for smooth fields, so the bore (Stoker), uniform-flow and bend-loss
 verification values are unchanged.

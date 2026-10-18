@@ -9258,6 +9258,44 @@ mixed = 滑らかな渦(1)+副格子モード(0.5)(背景流下の線形減衰�
   main への統合時に並行作業で新設されていた chichibu_icmap(Q_max 2.4 %)も
   同じ承認の範囲として更新した。
 
+### 68.37 側方面の片側リンク: 深い湛水の縁で有限時間発散(2026-10-17 発見・修正)
+
+**現象**: tutorials/chichibu の Step 2 設定を 12 時間に延ばした比較計算
+(Fig_chichibu.sh の result_cmp_filled。流域出口に水深 34 m の湛水)が、
+§68.36 の初版では 10.9 時間で Courant 数超過で停止した(副格子結合前は
+12 時間まで安定、V_max 3.4 → 3.0 m/s)。湛水の縁(マスク端と乾燥セルに
+囲まれた不規則な深い池)で流速が 10 時間過ぎから成長し、成長率が振幅とともに
+増える(4 分あたり 1.04 倍 → 3.3 倍)有限時間発散。dt を半分にしても h_max
+83 m まで跳ねる。
+
+**原因**: lateral_u の片側ケース。斜めエッジの側方面で反対偶奇の平行リンクが
+1 本しか有効でない(もう 1 本が乾燥・無効・マスク外)とき、初版はその 1 本の
+値を流入値にしていた。池の縁ではその 1 本が浅い岸のリンクで、深い横断
+リンクの流量 q_t に乗って深いエッジへ運動量を注入し、注入量が流速に比例
+する正帰還になる。流入量を |q_t| ≤ W·h̄/dt にクランプする案(explicit の
+行き過ぎを疑った)は効かず、機構は行き過ぎではない。
+
+**修正**: 2 本揃うときだけ平均を使い、片側しか無い面は壁面と同じ扱い
+ū_t = u_e(流入運動量なし。§68.8 の「壁・乾床は運動量を供給しない」規約に
+揃える)。従来の同偶奇リンクに戻す案も試したが(池 12 h は同様に安定)、
+テストでの差はほぼ無く、規約の一貫性で ū = u_e を採った。
+
+**検証(2026-10-17)**: 池 12 h は安定で、副格子結合前と h_max・V_max が
+0.1 % 以内(34.206 m・2.957 m/s)。Stoker(dambreak)の段波位置・台地水深・
+L1 誤差は不変、列間ばらつきは 2.36 → 3.68 m(壁沿いの行の対角側方面が
+壁面扱いになる分)。test/sublattice は PASS(壁際の分だけ τ 87 → 88 s、
+alternating 2270 → 2240 s)。自己検証つき 39 ケースは全て PASS、wave・
+kdpart・chichibu_icmap・conduit・frost は reference と identical。壁に接する
+斜めエッジを持つ 14 ケースは reference が変わる: culvert 1.4 %、coastal_drain
+4.7 %(初期過渡の 1 行)、dambreak(Log 8 %。Stoker 検定は不変)、gwseep
+(wq.csv の 1 列 25 %。§68.36 の更新でも大きく動いた感度の高い量)、nhbore
+0.25 %、nhbottom 0.08 %、tide・damwq・sewer_wq・nhbreak・nhcurrent・nhshelf・
+nhsolitary・chichibu は許容差内。-fcheck=all の逐次と np=2 が chichibu
+(窓つき)と池 12 h で完走し Log 一致、release の np=2・4 が dambreak・tide・
+coastal_drain・culvert・chichibu・nhsolitary・sublattice で逐次と Log ビット
+一致。tutorials/chichibu の Step 4(200 m 流域)は本改定で不変、Step 5 のピーク
+3,956 → 4,011 m³/s(出口湛水の縁)。reference の更新は利用者承認(2026-10-17)。
+
 ## 69. 非静水圧(1 層 NH)拡張の設計決定(2026-10-05 合意。実装は段階的)
 
 設計の正本は docs/nonhydrostatic_plan.md(本書だけで完結する形)。ここには
