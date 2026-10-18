@@ -95,7 +95,7 @@ COMCOT・TUNAMI-N2・MOST の接続法は docs/nesting_plan.md §2.1(ソース�
 
 | プロセス | ENCflow | 同等以上を持つ代表 | 備考 |
 |---|---|---|---|
-| 2D 浅水(力学波) | ○ 八近傍連結コロケート格子(ENC 格子)・適応 RK | TELEMAC, Delft3D, HEC-RAS, TUFLOW, Iber, BASEMENT | ENC 格子は独自(Tada, 2026, doi:10.3178/hrl.25-00052) |
+| 2D 浅水(力学波) | ○ 八近傍連結コロケート格子(ENC 格子)・適応 RK・運動量保存形の移流(Stelling & Duinmeijer 型を 8 方向に拡張、MUSCL、斜め副格子モードの側方面結合) | TELEMAC, Delft3D, HEC-RAS, TUFLOW, Iber, BASEMENT | ENC 格子は独自(Tada, 2026, doi:10.3178/hrl.25-00052)。ENC 格子上の運動量保存形移流の設計・検証は未公表(docs/advection_design.md。段波 Stoker 解に 1 %、副格子モードの減衰 test/sublattice) |
 | 高潮・津波の遡上(沿岸氾濫) | ○ 海域セル+潮位/水位時系列+乾湿処理 | TELEMAC, Delft3D, ANUGA, GeoClaw | 沖側の発生・伝播は外部から水位で受ける(発生から解くなら断層津波の行)。高潮・河川・豪雨の複合災害を単一モデルで扱える |
 | 地滑り津波(陸上崩壊の水域突入・海底地滑り) | △ 動く底層(慣性なし Voellmy・移動海底方式) | GeoClaw+地滑り源, VolcFlow, NHWAVE, r.avaflow | 発生→流下→造波→伝播→遡上を 1 方程式の底層で単一時間発展に収める。慣性は対象外の概算。近地の分散性は非静水圧補正で |
 | 断層津波の発生(海底変位の時刻歴) | ○ 規定底面運動(変位の時刻歴を増分で z へ。前処理 utils/fault2disp) | GeoClaw, COMCOT, JAGURS, TUNAMI | 時間依存の変形を増分で与えるため、地震誘発の海底地滑りと同一ランに置ける。短い変位の Kajiura 効果は非静水圧補正で |
