@@ -76,10 +76,10 @@
                             !   onto dry ground above the water surface plus
                             !   velocity head (fixes leaks at bore fronts and
                             !   in 1-2 cell wide incised channels)
-  !f_opening_dynamic = 1    ! dynamic reassignment of blocked openings
+  !f_opening_dynamic = 2    ! dynamic reassignment of blocked openings
                             !   (0: off, 1: edges between channel cells only
-                            !   = default (inactive without fn_rw), 2: all
-                            !   edges).
+                            !   (inactive without fn_rw), 2: all edges =
+                            !   default).
                             !   Passage-width shares that cannot be used
                             !   because the diagonal neighbour's ground is
                             !   above the water surface are reassigned to

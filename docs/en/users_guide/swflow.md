@@ -131,13 +131,16 @@ the coefficient follows from the flow and the roughness).
 **Practical points** (details in [§5 of the advection page](advection.md#5-properties-and-choice) and [§6 of the diffusion page](diffusion.md#6-where-to-use-it-and-cautions))
 
 - **Leave the advection term at the defaults** (scheme 3 +
-  `f_opening_dynamic = 1` + `f_dry_head_cap = 1`). Only to reproduce cases
+  `f_opening_dynamic = 2` + `f_dry_head_cap = 1`). Only to reproduce cases
   calibrated with older versions use `f_advection_scheme = 1`,
   `f_opening_dynamic = 0`, `f_dry_head_cap = 0` (the defaults before
-  2026-10-03; moving to scheme 3 needs a roughness recalibration).
+  2026-10-03; moving to scheme 3 needs a roughness recalibration). The
+  default until 2026-10-18, `f_opening_dynamic = 1` (edges of the channel
+  mask only), was inactive in incised channels and along walls without a
+  mask, so 2 (all edges) became the default (a one-cell channel then
+  matches Manning; test/uniflow).
 - **If real-terrain results are later and smaller than observed** (with a
-  channel mask) try `f_advection_donor = 1`. **Inundation, incised terrain
-  and dam breaks without a channel mask**: `f_opening_dynamic = 2`.
+  channel mask) try `f_advection_donor = 1`.
 - **The diffusion term is for** the transverse velocity distribution of
   channels and circulation in bays. With `f_diffusion_term = 2` no
   coefficient is needed; the roughness n sets the size of ν (typically
@@ -161,7 +164,7 @@ the coefficient follows from the flow and the roughness).
 | f_advection_donor | 0 | 1: on edges between channel cells, limit the upwind donor in the flow direction to channel cells (against the artificial loss at bends and confluences; requires the channel mask fn_rw; judge against observations) (§4.4) |
 | f_scalar_scheme | 3 | advection scheme of the scalar transport (suspended sediment, water quality, salt layer, driftwood, debris). 3: link-wise MUSCL (default), 1: first-order upwind (former default; numerical diffusion 3–5 times longitudinally and 14 times laterally; kept for comparison) ([Advection](advection.md) §7) |
 | f_dry_head_cap | 1 | cap the edge depth toward a dry cell by the energy head (water does not climb onto dry ground above the water surface; prevents leaks and blow-ups at bore fronts and in incised channels; inactive at ordinary wet/dry fronts, identical to 0 there) (§5) |
-| f_opening_dynamic | 1 | dynamic reassignment of blocked diagonal openings. 1: edges between channel cells (default; inactive without the channel mask), 2: all edges, 0: off. Corrects the excessive edge velocity of the ENC grid in one-cell channels and along walls (§5) |
+| f_opening_dynamic | 2 | dynamic reassignment of blocked diagonal openings. 2: all edges (default; changed from 1 on 2026-10-18), 1: edges between channel cells only (inactive without the channel mask), 0: off. Corrects the excessive edge velocity of the ENC grid in one-cell channels and along walls (§5) |
 | p_adv_upwind_index | 0.5 | upwinding index of scheme 1 only (0: central difference, 1: first-order upwind) (§3) |
 | f_diffusion_term | 0 | diffusion term. 0: none (default), 2: zero-equation model ν = ν0 + α·u*·h (recommended), 1: constant viscosity ([diffusion](diffusion.md) §2) |
 | p_diffusion_nu | -- | ν0 (m²/s). For model 1 a positive value must be given explicitly (unset is an error stop); for model 2 an optional background viscosity (§2) |
@@ -265,7 +268,7 @@ flat-bed one-layer model).
 | Wide-area / long runs (cost first) | p_adprunge_thresh 2-3, f_friction_fastmath 3-5, f_govequation=1 (diffusive wave) if needed | Cuts the recomputation rate and the friction cost. The diffusive wave ignores inertia, so not for inundation fronts or tsunamis |
 | Accuracy checks, numerical experiments | p_adprunge_thresh 1.1, f_friction_fastmath 0, dt such that Cn_max stays below about 0.5 | High-accuracy side; a few tens of percent more cost. Reducing dt is more reliable than lowering the threshold (the threshold cannot close the gap between dt 0.01 and 0.05; tutorials/wave Step 2) |
 | Bores, hydraulic jumps, tsunami run-up (flows with discontinuities) | default (f_advection_scheme 3) | Momentum-conservative advection: correct bore speed and no oscillations behind the bore. The former default 1 lags the bore and oscillates behind it |
-| Inundation, incised channels, dam breaks without a channel mask | f_opening_dynamic 2 | the default 1 acts only on edges between channel cells; 2 corrects the conveyance along walls and in incised channels on every edge |
+| Reassignment restricted to the channel mask | f_opening_dynamic 1 | the default until 2026-10-18; the default 2 corrects the conveyance along walls and in incised channels on every edge |
 | Reproducing cases calibrated with older versions | f_advection_scheme 1, f_opening_dynamic 0, f_dry_head_cap 0 | the defaults before 2026-10-03. Moving to scheme 3 needs a roughness recalibration (the momentum-conservative form resolves the jump losses and the momentum exchange with the valley floor, so it is slower and lower) |
 
 ## Output and monitoring
