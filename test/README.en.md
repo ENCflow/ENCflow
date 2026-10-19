@@ -78,6 +78,7 @@ analytical-solution or conservation check by Check_*.py.
 | [wash/](wash/) | Hillslope erosion (splash and sheet): smoke test and conservation | Sediment f_wash | conservation (Log) |
 | [splash/](splash/) | Analytical verification of dry hillslope erosion | Sediment f_splash | ref |
 | [splashslide/](splashslide/) | Cemented versus failing scarp (dry erosion combined with slope failure) | f_splash, f_slide | analytic |
+| [splashlc/](splashlc/) | Valley wavelength selection by the curvature correlation length spl_lc (growth of a two-wavelength perturbation) | f_splash (spl_lc, spl_zbase) | analytic |
 | [sedinflow/](sedinflow/) | Ledger check of the sediment-concentration time series of a reach inflow | Boundaries, sediment | analytic |
 | **Debris flow, failure, volcanic flows, avalanches** | | | |
 | [debris/](debris/) | Debris flow (erosion-triggered): smoke test and conservation. Takahashi and Egashira types | Debris flow f_debris | analytic |
