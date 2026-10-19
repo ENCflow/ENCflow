@@ -15,6 +15,7 @@ tada
 test/gtif/test_gtif_reader
 test/gtif/wrk_*.tif
 tutorials/*/wrk_*
+examples/*/wrk_*
 utils/lu2mask/lu2mask
 utils/rmdepress_river/rmdepress_river
 utils/rerecord/rerecord

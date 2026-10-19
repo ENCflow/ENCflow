@@ -1,0 +1,56 @@
+!======================================================================
+! repose: 安息角崩落(f_repose)の検定(developer.md §84.4)
+!   乾いた 45° の砂山(頂上 3 m)を閉領域に置き、水なしで安息角 30° まで
+!   崩す。検定(Check_repose.py): 体積保存、終端の最大勾配(軸・対角)が
+!   tan30° を超えない、頂上が下がる(活性)、共動更新の恒等
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 60
+  dt_disp = 10
+  dt_file = 60
+  dt_recrd = 60
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_result = 'result'
+  dir_save = 'save'
+  f_state_save = 1
+  f_check_cfl = 0
+  f_out_z = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 水なし
+/
+
+&list_geoinfo
+  lx = 41.0
+  ly = 41.0
+  nx = 41
+  ny = 41
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 10.0
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_repose = 1              ! 安息角崩落のみ(掃流砂なし)
+  repose_phi = 30.0         ! 安息角 (deg)
+  repose_relax = 0.5        ! 1 更新の緩和率
+  fluv_porosity = 0.4
+  fluv_dzmax = 0.05         ! 1 エッジ・1 更新の変動上限 (m)
+/

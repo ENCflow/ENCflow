@@ -167,6 +167,8 @@ module subroutine apply_splash(gm, g, s)
       ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 z − sd 不変)
       s%z(i,j) = s%z(i,j) - fx
       s%sd(i,j) = s%sd(i,j) - fx
+      ! 河床の細粒分の帳簿(§84.10)との併用: 粗粒として扱い sf <= sd だけ保つ
+      if (allocated(s%sf)) s%sf(i,j) = min(s%sf(i,j), s%sd(i,j))
       rsum(j) = rsum(j) + fx
       ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
       ! (calc_wash と同じ整合)

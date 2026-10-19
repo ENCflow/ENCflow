@@ -7,6 +7,7 @@
 submodule(m_geomorph) m_geomorph_suspend
   use m_parallel, only : par_info, par_stop, dcp
   use m_swflow_enc, only : sct, sect_v, sect_sigma   ! σ 断面の濃度解釈(sct%have_sect, sct%sdep。§26)
+  use m_sedform, only : t_ceqpar, sedform_set_ceq, sed_ceq_itakura, sed_rubey_wf   ! 平衡濃度・沈降速度の式(§84.9)
   implicit none
 
 contains
@@ -45,11 +46,19 @@ module subroutine init_suspend(gm, p, list)
   if (list%susp_wf > 0.0) then
     gm%wf = list%susp_wf
   else
-    gm%wf = rubey_wf(gm%sgrav, p%gg, gm%sd50)
+    gm%wf = sed_rubey_wf(gm%sgrav, p%gg, gm%sd50)
     write(msg,'(a,es10.3,a)') "geomorph: suspended sediment settling velocity (Rubey) = ", &
                               gm%wf, " m/s"
     call par_info(trim(msg))
   end if
+  ! 平衡濃度式の係数を葉モジュールに登録する(区間流入の平衡濃度給砂
+  ! inflow_cs_eq が m_boundary から同じ式で評価するため。§84.9)
+  block
+    type(t_ceqpar) :: par
+    par%form = gm%f_esform; par%esa = gm%esa; par%stausc = gm%stausc
+    par%sgrav = gm%sgrav; par%d50 = gm%sd50; par%wf = gm%wf; par%gg = p%gg
+    call sedform_set_ceq(par)
+  end block
 end subroutine
 
 
@@ -61,9 +70,9 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
   type(t_state), intent(inout) :: s
   real, intent(in) :: dtw       ! 水柱側の実効時間刻み(morfac を含まない)
   integer :: i, j
-  real :: hh, taus, ceq, cc, fx, dzb, cap, fxg
+  real :: hh, taus, ceq, cc, fx, dzb, cap, fxg, afx, tsce
 
-  !$omp parallel do schedule(static) private(i, j, hh, taus, ceq, cc, fx, dzb, cap, fxg)
+  !$omp parallel do schedule(static) private(i, j, hh, taus, ceq, cc, fx, dzb, cap, fxg, afx, tsce)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -82,8 +91,26 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
           if (taus > gm%stausc) ceq = gm%esa * (taus / gm%stausc - 1.0)
         else
           ! 板倉・岸(ceq = q_su / wf)
-          ceq = ceq_itakura(gm, p%gg, taus)
+          ceq = sed_ceq_itakura(gm%sgrav, p%gg, gm%sd50, gm%wf, taus)
         end if
+        ! 定着(§84.8): 浸食項(平衡濃度)だけを定着度 a で減らす。沈降は不変。
+        ! f_esform=1 は限界掃流力を τ*c,s (1 + c_τ a) に上げ、2(τ*c を持たない)は
+        ! ceq に 1/(1 + c_τ a) を乗じる。a = 0 のセルは分岐に入らず厳密に不変
+        if (gm%f_fixation > 0 .and. ceq > 0.0) then
+          afx = s%fx(i,j)
+          if (afx > 0.0) then
+            if (gm%f_esform == 1) then
+              tsce = gm%stausc * (1.0 + gm%fix%ctau * afx)
+              ceq = 0.0
+              if (taus > tsce) ceq = gm%esa * (taus / tsce - 1.0)
+            else
+              ceq = ceq / (1.0 + gm%fix%ctau * afx)
+            end if
+          end if
+        end if
+        ! 河床の細粒分の帳簿(§84.10): 浸食は在庫の利用可能率 f = min(1, sf/L_a)
+        ! で減らす(f = 1 のセルは 1.0 の乗算で厳密に不変)
+        if (gm%f_bedfines > 0) ceq = ceq * min(1.0, s%sf(i,j) * gm%fin%lainv)
         ! 濃度は水の体積あたり = hs / vh(vh = σ の矩形換算水深。swflow の
         ! 移流の供給元濃度・水質の cqc と同じ解釈。σ 非適用セルは vh = h)
         cc = 0.0
@@ -103,6 +130,8 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
         if (fx > 0.0) then
           ! 可動層クランプ(河床側は ×morfac・poroi で減るため換算して制限)
           fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
+          ! 細粒分の在庫を超えない(sf = sd なら同じ値 = 厳密に不変)
+          if (gm%f_bedfines > 0) fx = min(fx, s%sf(i,j) / (gm%morfac * gm%poroi))
         else
           fx = max(fx, -max(s%hs(i,j), 0.0))    ! 沈降は浮遊量まで
         end if
@@ -111,8 +140,15 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
       s%hs(i,j) = s%hs(i,j) + fx
       ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
       dzb = -fx * gm%morfac * gm%poroi
+      ! 土層を使い切るとき sd を厳密に 0 で止める(上のクランプ fx = sd/(morfac·poroi)
+      ! は往復の丸めで sd を −1e-22 にし得る。負の sd は掃流砂の可動層クランプで
+      ! 流砂の符号を反転させ FPE に至った実バグ。§84.5)
+      if (dzb < -s%sd(i,j)) dzb = -s%sd(i,j)
       s%z(i,j) = s%z(i,j) + dzb
       s%sd(i,j) = s%sd(i,j) + dzb
+      ! 細粒分の帳簿: 浸食も沈降も細粒分なので sf を同じ Δz で動かす(sd − sf は
+      ! 不変)。在庫クランプの往復の丸めで僅かに負になれば 0 で止める
+      if (gm%f_bedfines > 0) s%sf(i,j) = max(s%sf(i,j) + dzb, 0.0)
       ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
       ! (calc_fluvial と同じ整合。反対称適用)
       if (s%gw_active) then
@@ -130,37 +166,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
 end subroutine
 
 
-!----------------------------------------------------------------------
-pure function ceq_itakura(gm, gg, taus) result(ceq)
-  type(t_geomorph), intent(in) :: gm
-  real, intent(in) :: gg      ! 重力加速度
-  real, intent(in) :: taus    ! 無次元掃流力 τ*
-  real :: ceq
-  real :: ap, ratio, omega, ustar, qsu
-  real, parameter :: pi = acos(-1.0)
 
-  ceq = 0.0
-  if (taus <= 0.0) return
-  ap = ik_bstar / taus - 1.0 / ik_eta0
-  if (ap > 20.0) return
-  ratio = exp(-ap**2) / (sqrt(pi) * erfc(ap))
-  omega = taus / ik_bstar * ratio + taus / (ik_bstar * ik_eta0) - 1.0
-  ustar = sqrt(taus * gm%sgrav * gg * gm%sd50)
-  qsu = ik_k * (ik_alpha / (gm%sgrav + 1.0) &
-                * (gm%sgrav * gg * gm%sd50 / ustar) * omega - gm%wf)
-  ceq = max(qsu, 0.0) / gm%wf
-end function
-
-
-!----------------------------------------------------------------------
-pure function rubey_wf(sgrav, gg, d) result(wf)
-  real, intent(in) :: sgrav, gg, d
-  real :: wf
-  real :: bb
-  real, parameter :: nu = 1.0e-6
-  bb = 36.0 * nu**2 / (sgrav * gg * d**3)
-  wf = (sqrt(2.0 / 3.0 + bb) - sqrt(bb)) * sqrt(sgrav * gg * d)
-end function
 
 
 end submodule

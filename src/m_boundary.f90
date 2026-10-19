@@ -36,6 +36,7 @@ module m_boundary
   use m_parallel, only : par_stop, par_warn, is_root, dcp, &
                        par_allreduce_sumr, par_allreduce_maxi
   use m_util, only : itoa
+  use m_sedform, only : ceqpar, have_ceq, sed_ceq   ! 区間流入の平衡濃度給砂(§84.9)
   use list_boundary, only : t_list_boundary, list_boundary_read, &
                             nbsrcmax, nsrccmax, nsrcvmax
   use m_gwflow_conduit, only : t_gwcond      ! 機場の管路取水が参照する管路層の状態(型のみ)
@@ -136,6 +137,11 @@ module m_boundary
                                            !   (注入総量 = Qs・dt が厳密。Q=0 の間は
                                            !   注入されない=水が運ぶ)
     integer :: ncsclip = 0                 ! 等価濃度の上限クリップ発動回数
+    integer :: nqbval = 0                  ! 流入の掃流砂流砂量の時系列データ数(0=指定なし。§84.9)
+    real, allocatable :: qbval(:,:)        ! 掃流砂流砂量時系列 (1:2, 1:nqbval) (s, m3/s 固体体積)
+    real :: qb = 0.0                       ! 現時刻の掃流砂流砂量 (m3/s 固体体積)
+    integer :: cs_eq = 0                   ! 浮遊砂の平衡濃度給砂(1: 流入濃度 = cs_fac × 流入セルの平衡濃度)
+    real :: cs_fac = 1.0                   ! 平衡濃度給砂の倍率
   end type
 
   ! 内部水理構造物族の水理則の共通インターフェース(§22)。
@@ -224,6 +230,8 @@ module m_boundary
     type(t_bound_inflow), allocatable :: inflow(:)  ! 区間流入
     real, allocatable :: cqin(:,:)         ! 境界流入の輸送物質濃度テーブル (g/m3 =
                                            !   mg/L。m_wq が確保・毎ステップ更新。§30)
+    real, allocatable :: qbin(:,:)         ! 区間流入の掃流砂流砂量のセル別テーブル (m3/s 固体体積。
+                                           !   指定区間が 1 つでもあれば確保。geomorph が河床源泉として読む。§84.9)
     real, allocatable :: csin(:,:)         ! 境界流入濃度のセル別テーブル (m3/m3)。
                                            !   濃度指定のある区間が1つでもあれば確保し、
                                            !   makebdc が毎ステップ現時刻値を書く。
@@ -416,6 +424,42 @@ subroutine m_boundary_makebdc(b, p, g, s, gwc)
         end do
       end block
     end if
+    ! 浮遊砂の平衡濃度給砂(§84.9): 流入セルごとに、そのセルの無次元掃流力
+    ! (geomorph の浮遊砂と同じマニング閉じ)から平衡濃度を評価し倍率を乗じる。
+    ! 乾いたセルは 0。係数は geomorph の init_suspend が m_sedform に登録済み
+    if (b%inflow(ifl)%cs_eq > 0) then
+      if (.not. have_ceq) then
+        call par_stop("list_bound_inflow: inflow_cs_eq=1 requires suspended sediment (f_suspend=1)")
+      end if
+      block
+        integer :: m2, i2, j2
+        real :: hh, taus
+        do m2 = 1, b%inflow(ifl)%ncell
+          i2 = b%inflow(ifl)%cell(1,m2)
+          j2 = b%inflow(ifl)%cell(2,m2)
+          if (j2 < dcp%js .or. j2 > dcp%je) cycle
+          b%csin(i2,j2) = 0.0
+          if (s%h(i2,j2) <= p%dd) cycle
+          hh = max(s%h(i2,j2), p%dv)
+          taus = g%rn(i2,j2)**2 * s%vv(i2,j2)**2 / (ceqpar%sgrav * ceqpar%d50 * hh**(1.0/3.0))
+          b%csin(i2,j2) = b%inflow(ifl)%cs_fac * sed_ceq(ceqpar, taus)
+        end do
+      end block
+    end if
+    ! 掃流砂流砂量(§84.9): 区間の Qb(t) をセル数で等分した源泉表(自帯の行のみ)
+    if (b%inflow(ifl)%nqbval > 0) then
+      b%inflow(ifl)%qb = interp_series(b%inflow(ifl)%qbval, b%inflow(ifl)%nqbval, s%t)
+      block
+        integer :: m2, i2, j2
+        do m2 = 1, b%inflow(ifl)%ncell
+          i2 = b%inflow(ifl)%cell(1,m2)
+          j2 = b%inflow(ifl)%cell(2,m2)
+          if (j2 >= dcp%js .and. j2 <= dcp%je) then
+            b%qbin(i2,j2) = b%inflow(ifl)%qb / b%inflow(ifl)%ncell
+          end if
+        end do
+      end block
+    end if
   end do
 
   !--- 各内部水理構造物の現時刻の目標流量を水理則から決める(§22。
@@ -583,6 +627,7 @@ subroutine m_boundary_dispose(b)
     deallocate(b%inflow)
   end if
   if (allocated(b%csin)) deallocate(b%csin)
+  if (allocated(b%qbin)) deallocate(b%qbin)
   if (allocated(b%cqin)) deallocate(b%cqin)
   if (allocated(b%struct)) then
     ! ダム CSV を閉じる(開いているのは rank0 のみ)
@@ -1019,6 +1064,42 @@ subroutine init_inflow(b, p, g, list)
                     //" for segment "//itoa(ifl))
     end if
 
+    !--- 掃流砂流砂量時系列(河床への源泉。§84.9)と浮遊砂の平衡濃度給砂 ---
+    if (len_trim(list%fn_inflow_qb(ifl)) > 0) then
+      call read_val_file2(trim(p%dir_data)//"/"//trim(list%fn_inflow_qb(ifl)), &
+                          b%inflow(ifl)%nqbval, b%inflow(ifl)%qbval)
+    else
+      n = 0
+      do k = 1, ubound(list%inflow_qb, 2)
+        if (list%inflow_qb(1,k,ifl) <= -9999) exit    ! 番兵で終端
+        n = n + 1
+      end do
+      if (n > 0) then
+        allocate(b%inflow(ifl)%qbval(1:2,1:n))
+        b%inflow(ifl)%qbval(1,1:n) = list%inflow_qb(1,1:n,ifl) * 60   ! 分を秒に換算
+        b%inflow(ifl)%qbval(2,1:n) = list%inflow_qb(2,1:n,ifl)
+        b%inflow(ifl)%nqbval = n
+      end if
+    end if
+    do k = 1, b%inflow(ifl)%nqbval
+      if (b%inflow(ifl)%qbval(2,k) < 0.0) then
+        call par_stop("list_bound_inflow: bed-load discharge (inflow_qb) of segment "//itoa(ifl) &
+                      //" must be >= 0")
+      end if
+    end do
+    b%inflow(ifl)%cs_eq = list%inflow_cs_eq(ifl)
+    b%inflow(ifl)%cs_fac = list%inflow_cs_fac(ifl)
+    if (b%inflow(ifl)%cs_eq < 0 .or. b%inflow(ifl)%cs_eq > 1) then
+      call par_stop("list_bound_inflow: inflow_cs_eq must be 0 or 1 (segment "//itoa(ifl)//")")
+    end if
+    if (b%inflow(ifl)%cs_fac < 0.0) then
+      call par_stop("list_bound_inflow: inflow_cs_fac must be >= 0 (segment "//itoa(ifl)//")")
+    end if
+    if (b%inflow(ifl)%cs_eq > 0 .and. (b%inflow(ifl)%nsval > 0 .or. b%inflow(ifl)%nqsval > 0)) then
+      call par_stop("list_bound_inflow: inflow_cs_eq=1 excludes inflow_cs and inflow_qs" &
+                    //" (segment "//itoa(ifl)//")")
+    end if
+
     !--- 検証と (セル, 辺) エントリの構築(角セルは辺ごとに複製) ---
     allocate(b%inflow(ifl)%cell(1:2,1:2*ncell))   ! 複製ぶんの余裕
     allocate(b%inflow(ifl)%side(1:2*ncell))
@@ -1077,8 +1158,15 @@ subroutine init_inflow(b, p, g, list)
   !--- 境界流入濃度のセル別テーブル(濃度指定のある区間が1つでもあれば
   !    確保。値は makebdc が毎ステップ書く。未確保 = 全区間清水) ---
   do ifl = 1, b%ninflow
-    if (b%inflow(ifl)%nsval > 0 .or. b%inflow(ifl)%nqsval > 0) then
+    if (b%inflow(ifl)%nsval > 0 .or. b%inflow(ifl)%nqsval > 0 .or. b%inflow(ifl)%cs_eq > 0) then
       allocate(b%csin(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+      exit
+    end if
+  end do
+  !--- 掃流砂流砂量のセル別テーブル(指定区間が 1 つでもあれば確保。§84.9) ---
+  do ifl = 1, b%ninflow
+    if (b%inflow(ifl)%nqbval > 0) then
+      allocate(b%qbin(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
       exit
     end if
   end do

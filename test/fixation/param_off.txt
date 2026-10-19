@@ -1,0 +1,85 @@
+!======================================================================
+! fixation: 定着(f_fixation)の検定(developer.md §84.6)
+!   構成 off: f_fixation = 0(基準。砂州は出水で削られる)
+!   幅 10 セルの直線水路(勾配 0.002)の南側 3 行が +0.1 m の砂州。西端の
+!   区間流入は 0〜10 分 Q = 0.1 m³/s(低水。砂州は乾く)、11 分から 1.7 m³/s
+!   (出水。砂州が水没して掃流される)。東辺は自由流出。流入端は非侵食+ランプ。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.05
+  t0 = 0
+  tt = 1800
+  dt_disp = 60
+  dt_file = 600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result_off'
+  dir_save = 'save_off'
+  f_state_save = 1
+  f_state_restore = 0
+  f_check_cfl = 0
+  f_out_z = 1
+  f_out_vv = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 1               ! 水深ファイル(砂州を除く水路内のみ。河岸・砂州は乾燥)
+  fn_hinit = 'hinit.txt'
+/
+
+&list_geoinfo
+  lx = 60.0
+  ly = 20.0
+  nx = 60
+  ny = 20
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 1
+  fn_sd = 'sdinit.txt'      ! 土層厚(両端は 0 = 非侵食、ランプを挟んで中央は 10 m)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.002
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.005
+  f_fixation = 0           ! 定着
+  fix_tfix = 0.1            ! 定着時間 T_fix (h) = 360 s
+  fix_ctau = 1.0             ! 定着時の限界掃流力の増分比
+  fix_dzreset = 0.1          ! 定着面からの累積浸食深のリセット閾値 (m)
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺は自由流出
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 6
+  inflow_cell(1:2,2,1) = 1, 7
+  inflow_cell(1:2,3,1) = 1, 8
+  inflow_cell(1:2,4,1) = 1, 9
+  inflow_cell(1:2,5,1) = 1, 10
+  inflow_cell(1:2,6,1) = 1, 11
+  inflow_cell(1:2,7,1) = 1, 12
+  inflow_val(1:2,1,1) = 0, 0.1
+  inflow_val(1:2,2,1) = 10, 0.1
+  inflow_val(1:2,3,1) = 11, 1.7
+  inflow_val(1:2,4,1) = 9999, 1.7
+  inflow_dist(1) = 0
+/

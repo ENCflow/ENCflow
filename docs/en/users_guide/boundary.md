@@ -215,6 +215,19 @@ to reduce concentration of discharge into thin water layers.
   `inflow_cs` or a sediment discharge time series `inflow_qs`
   (mutually exclusive) ([sediment and geomorphic change
   chapter](geomorph.md)). If unspecified, the inflow is clear water.
+  With `inflow_cs_eq(n) = 1` the inflow concentration is instead the
+  equilibrium concentration evaluated from the shear stress of the inflow
+  cells times `inflow_cs_fac(n)` (default 1; equilibrium feed, exclusive
+  with cs / qs, requires f_suspend = 1).
+- Bed load can be fed in two ways. `inflow_qb(:,k,n) = t, Qb` (or
+  `fn_inflow_qb(n)`; time (min), m3/s solid volume) adds Qb(t), divided
+  equally among the inflow cells, as a source to their bed (z and soil
+  thickness rise) and the bed load of the inflow cells carries it on (it
+  piles up when above capacity, like sediment replenishment; use it when
+  the upstream supply is given). The capacity feed is `fluv_bcfeed = 1` on
+  the geomorph side (the supply through the inflow face equals the net
+  outflow of the inflow cell times `fluv_bcfeed_fac`; with factor 1 the bed
+  of the inlet is fixed) and also acts on inflow-segment faces.
 
 **Outputs for this section**: the transect Q just downstream equals the given discharge (a check of the distribution); the inflow peak is in Qmax of `summary.csv` ([Output and monitoring](#output-and-monitoring)).
 

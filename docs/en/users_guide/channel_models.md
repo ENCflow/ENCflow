@@ -92,7 +92,11 @@ move to a resolved channel.
   [ENC grid explained](encgrid.md)). The normalisation of the in-channel
   velocity (conveyance ratio) uses the same blocked fraction every step,
   so a cell adjacent to a dry, high hillslope gets the same velocity as
-  with a wall. Do not combine natural banks with f_opening_dynamic = 0,
+  with a wall. On edges that involve a width cell the reassignment is
+  restricted to channel-to-channel edges even under the default 2 (all
+  edges), because the exchange between a width cell and the hillslope is
+  handled by the width model; a double correction blows up
+  (developer.md §68.38). Do not combine natural banks with f_opening_dynamic = 0,
   which makes the velocity of channels narrower than the cell too small.
   The former automatic zero-height levee was dropped: on natural banks
   whose hillslope is above the crest its weir overflow became a drop flow

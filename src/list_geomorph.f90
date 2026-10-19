@@ -30,6 +30,48 @@ module list_geomorph
                                      ! m_swflow_enc の p_diagratio と同値の既定)
     integer :: fluv_bcfeed = 0       ! 開境界の掃流砂給砂(0:流入は無給砂,
                                      ! 1:平衡給砂。流出は常に容量輸送)
+    real :: fluv_bcfeed_fac = 1.0    ! 容量給砂の倍率(fluv_bcfeed = 1 のとき。0 = 無給砂、0.5 = 半給砂、
+                                     ! >1 = 過給砂。流出側には掛けない。§84.9)
+    real :: fluv_taufac = 1.0        ! 有効掃流力の比 f_τ(流砂量式に渡す τ* =
+                                     ! f_τ × 全抵抗の τ*。砂堆・植生の形状抵抗を
+                                     ! 除く簡略分離。1 = 分離なし。§84.3)
+    integer :: fluv_slope = 0        ! 河床勾配による流砂方向補正(0:なし, 1:長谷川型
+                                     ! q⃗ = q_b(t̂ − γ∇z)、γ = √(τ*c/(μs μk τ*))。§84.3)
+    real :: fluv_mus = 0.0           ! 静止摩擦係数 μs(fluv_slope=1 で必須。文献値の
+                                     ! 既定は置かない = 照合待ち。users_guide/sediment.md)
+    real :: fluv_muk = 0.0           ! 動摩擦係数 μk(同上)
+    integer :: f_secflow = 0         ! 二次流による流砂方向補正(0:なし, 1:平衡型
+                                     ! r = N* h κ、κ は流速場の流線曲率。§84.3)
+    real :: sec_nstar = 0.0          ! N*(Engelund 型の河床近傍横断流速比の係数。
+                                     ! f_secflow=1 で必須。既定は置かない = 照合待ち)
+    real :: sec_rmax = 1.0           ! |r| の上限(急湾曲での h/R 比例則の打ち切り)
+    real :: sec_vmin = 0.01          ! 曲率を評価する最小流速 (m/s)(未満は r = 0)
+
+    integer :: f_berode = 0          ! 側岸侵食(0:無効, 1:有効。f_fluvial=1 が必須)。
+                                     ! 湿潤セルの水面より高い隣接セル(河岸面)を、
+                                     ! 脚部セルの掃流力で後退させ、削った土砂を脚部へ
+                                     ! 保存的に移す(以後の掃流砂が運ぶ)。§84.4
+    real :: berode_kb = 0.0          ! 河岸の侵食速度係数 K_b (m/s)(必須 > 0。
+                                     ! 後退速度 E_b = K_b (τ*/τ*c,b − 1)^m。校正値。
+                                     ! 既定は置かない)
+    real :: berode_tausc = 0.05      ! 河岸の限界無次元掃流力 τ*c,b
+    real :: berode_m = 1.0           ! 超過掃流力のべき指数 m
+    integer :: f_repose = 0          ! 安息角崩落(0:無効, 1:有効)。隣接セル間の勾配が
+                                     ! tanφ_r を超えた分を高い側から低い側へ移す
+                                     ! (保存形。乾湿を問わない。1 更新 1 スイープ)。§84.4
+    real :: repose_phi = 0.0         ! 安息角 φ_r (deg)。0 = 既定 30(§62。slide_phi と同じ)
+    real :: repose_relax = 0.5       ! 1 更新で緩和する超過勾配の割合(0〜1)
+    integer :: f_fixation = 0        ! 定着(0:無効, 1:有効)。乾いたセルの定着度 a が
+                                     ! 1 − exp(−t/T_fix) で育ち、供給側の限界掃流力を
+                                     ! τ*c (1 + c_τ a) に上げる(標高・体積には触れない)。§84.6
+    real :: fix_tfix = 0.0           ! 定着時間 T_fix (h。地形時間 = morfac 込み)(必須 > 0。
+                                     ! 植生定着の時間尺度。文献照合待ちのため既定は置かない)
+    real :: fix_ctau = 0.0           ! 定着時の限界掃流力の増分比 c_τ(必須 > 0。既定は置かない)
+    real :: fix_dzreset = 0.0        ! 定着面からの累積浸食深がこれを超えると a = 0 (m)。
+                                     ! 0 = 既定 0.1(根系層の厚さの目安)
+    real :: fix_cn = 0.0             ! 定着時の粗度(Manning n)の増分比 c_n。流れの摩擦項の n を
+                                     ! n (1 + c_n a) にする(流砂の τ* は変えない。形状抵抗の分離)。
+                                     ! 0 = 粗度に効かせない(既定)。§84.8
 
     integer :: f_suspend = 0         ! 浮遊砂(移流+浸食・沈降)(0:無効, 1:有効)
     integer :: f_esform = 1          ! 平衡濃度式(1:超過掃流力線形(簡易), 2:板倉・岸)
@@ -39,6 +81,12 @@ module list_geomorph
     real :: susp_beta = 1.0          ! 沈降の底面濃度係数(c_b = β・C)
     real :: susp_esa = 0.0           ! 平衡濃度係数(C_eq = esa・(τ*/τ*c - 1))。
                                      ! f_suspend=1 で必須(体積濃度スケール)
+
+    integer :: f_bedfines = 0        ! 河床の細粒分の帳簿(0:無効, 1:有効。f_suspend が必須。§84.10)
+                                     ! 浮遊砂の浸食を河床に在庫する細粒分 s%sf(出力 Sf)に限り、
+                                     ! 掃流砂の浸食で解放された細粒分はその場で懸濁する
+    real :: fines_la = 0.0           ! 交換層厚 L_a (m)。利用可能率 f = min(1, sf/L_a)。f_bedfines=1 で必須
+    real :: fines_frac0 = 0.0        ! 初期の細粒分割合(sf = fines_frac0 × sd。0 = 粗粒のみ、1 = 細粒のみ)
 
     integer :: f_wash = 0            ! 斜面浸食(雨滴+面状。f_suspend が必須)(0:無効, 1:有効)
     real :: wash_kr = 0.0            ! 雨滴侵食係数(無次元。E_r = kr・降雨強度)
@@ -207,6 +255,13 @@ subroutine list_geomorph_read(p, list)
   real :: fluv_dzmax
   real :: fluv_diagratio
   integer :: fluv_bcfeed
+  real :: fluv_bcfeed_fac
+  real :: fluv_taufac, fluv_mus, fluv_muk, sec_nstar, sec_rmax, sec_vmin
+  integer :: fluv_slope, f_secflow
+  integer :: f_berode, f_repose
+  real :: berode_kb, berode_tausc, berode_m, repose_phi, repose_relax
+  integer :: f_fixation
+  real :: fix_tfix, fix_ctau, fix_dzreset, fix_cn
   integer :: f_suspend
   integer :: f_esform
   real :: susp_d50
@@ -214,6 +269,8 @@ subroutine list_geomorph_read(p, list)
   real :: susp_tausc
   real :: susp_beta
   real :: susp_esa
+  integer :: f_bedfines
+  real :: fines_la, fines_frac0
   integer :: f_wash
   real :: wash_kr
   real :: wash_kf
@@ -257,8 +314,14 @@ subroutine list_geomorph_read(p, list)
   namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
                            fluv_porosity, fluv_sgrav, fluv_dzmax, fluv_diagratio, &
-                           fluv_bcfeed, f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
-                           susp_beta, susp_esa, f_wash, wash_kr, wash_kf, wash_tausc, &
+                           fluv_bcfeed, fluv_bcfeed_fac, fluv_taufac, fluv_slope, fluv_mus, fluv_muk, &
+                           f_secflow, sec_nstar, sec_rmax, sec_vmin, &
+                           f_berode, berode_kb, berode_tausc, berode_m, &
+                           f_repose, repose_phi, repose_relax, &
+                           f_fixation, fix_tfix, fix_ctau, fix_dzreset, fix_cn, &
+                           f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
+                           susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, &
+                           f_wash, wash_kr, wash_kf, wash_tausc, &
                            f_splash, spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
                            f_dbed, db_d50, db_erest, db_cmin, f_dbwet, db_satbed, &
@@ -283,6 +346,27 @@ subroutine list_geomorph_read(p, list)
   fluv_dzmax = list%fluv_dzmax
   fluv_diagratio = list%fluv_diagratio
   fluv_bcfeed = list%fluv_bcfeed
+  fluv_bcfeed_fac = list%fluv_bcfeed_fac
+  fluv_taufac = list%fluv_taufac
+  fluv_slope = list%fluv_slope
+  fluv_mus = list%fluv_mus
+  fluv_muk = list%fluv_muk
+  f_secflow = list%f_secflow
+  sec_nstar = list%sec_nstar
+  sec_rmax = list%sec_rmax
+  sec_vmin = list%sec_vmin
+  f_berode = list%f_berode
+  berode_kb = list%berode_kb
+  berode_tausc = list%berode_tausc
+  berode_m = list%berode_m
+  f_repose = list%f_repose
+  repose_phi = list%repose_phi
+  repose_relax = list%repose_relax
+  f_fixation = list%f_fixation
+  fix_tfix = list%fix_tfix
+  fix_ctau = list%fix_ctau
+  fix_dzreset = list%fix_dzreset
+  fix_cn = list%fix_cn
   f_suspend = list%f_suspend
   f_esform = list%f_esform
   susp_d50 = list%susp_d50
@@ -290,6 +374,9 @@ subroutine list_geomorph_read(p, list)
   susp_tausc = list%susp_tausc
   susp_beta = list%susp_beta
   susp_esa = list%susp_esa
+  f_bedfines = list%f_bedfines
+  fines_la = list%fines_la
+  fines_frac0 = list%fines_frac0
   f_wash = list%f_wash
   wash_kr = list%wash_kr
   wash_kf = list%wash_kf
@@ -368,6 +455,27 @@ subroutine list_geomorph_read(p, list)
   list%fluv_dzmax = fluv_dzmax
   list%fluv_diagratio = fluv_diagratio
   list%fluv_bcfeed = fluv_bcfeed
+  list%fluv_bcfeed_fac = fluv_bcfeed_fac
+  list%fluv_taufac = fluv_taufac
+  list%fluv_slope = fluv_slope
+  list%fluv_mus = fluv_mus
+  list%fluv_muk = fluv_muk
+  list%f_secflow = f_secflow
+  list%sec_nstar = sec_nstar
+  list%sec_rmax = sec_rmax
+  list%sec_vmin = sec_vmin
+  list%f_berode = f_berode
+  list%berode_kb = berode_kb
+  list%berode_tausc = berode_tausc
+  list%berode_m = berode_m
+  list%f_repose = f_repose
+  list%repose_phi = repose_phi
+  list%repose_relax = repose_relax
+  list%f_fixation = f_fixation
+  list%fix_tfix = fix_tfix
+  list%fix_ctau = fix_ctau
+  list%fix_dzreset = fix_dzreset
+  list%fix_cn = fix_cn
   list%f_suspend = f_suspend
   list%f_esform = f_esform
   list%susp_d50 = susp_d50
@@ -375,6 +483,9 @@ subroutine list_geomorph_read(p, list)
   list%susp_tausc = susp_tausc
   list%susp_beta = susp_beta
   list%susp_esa = susp_esa
+  list%f_bedfines = f_bedfines
+  list%fines_la = fines_la
+  list%fines_frac0 = fines_frac0
   list%f_wash = f_wash
   list%wash_kr = wash_kr
   list%wash_kf = wash_kf

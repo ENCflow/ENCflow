@@ -158,8 +158,28 @@ Riverbed erosion and deposition by a bedload transport formula.
 | fluv_porosity | 0.4 | Riverbed porosity |
 | fluv_sgrav | 1.65 | Submerged specific gravity of sediment grains |
 | fluv_dzmax | 0.05 | Upper limit of bed change per update (m) (stabilization) |
-| fluv_bcfeed | 0 | Sediment feed at open boundaries. 0: no feed at inflow, 1: equilibrium feed (outflow is always at transport capacity) |
+| fluv_bcfeed | 0 | Sediment feed at open boundaries (inflow-segment faces included). 0: no feed at inflow, 1: capacity feed = the supply through the inflow face equals the net outflow of the inflow cell times fluv_bcfeed_fac (factor 1 fixes the bed of the inlet; outflow is always at transport capacity) |
+| fluv_bcfeed_fac | 1.0 | Factor of the capacity feed. 0 = no feed, 1 = fixed inlet. Values between reduce the inlet degradation but not proportionally (give a partial supply with inflow_qb) |
 | fluv_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
+| fluv_taufac | 1.0 | Effective shear-stress ratio f_τ (the τ* passed to the transport formula = f_τ × τ* of the total resistance; a simple separation of form drag by dunes or vegetation. 1 = no separation) |
+| fluv_slope | 0 | Bed-slope correction of the bed-load direction. 1: Hasegawa type (q⃗ = q_b(t̂ − γ∇z), γ = √(τ*c/(μs μk τ*))) |
+| fluv_mus / fluv_muk | (required) | Static and kinetic friction coefficients μs, μk (must be given explicitly with fluv_slope = 1; see the note below) |
+| f_secflow | 0 | Secondary-flow correction of the bed-load direction. 1: equilibrium type (near-bed transverse velocity ratio r = N* h κ, κ = streamline curvature of the velocity field) |
+| sec_nstar | (required) | N* (must be given explicitly with f_secflow = 1; see the note below) |
+| sec_rmax | 1.0 | Upper bound of |r| (cuts the h/R proportionality in sharp bends; 1 = 45°) |
+| sec_vmin | 0.01 | Minimum velocity (m/s) for evaluating the curvature |
+| f_berode | 0 | Bank erosion. 1: a neighbouring cell whose ground is above the water surface of a wet cell (a bank face) retreats under the shear stress of the toe cell, and the eroded volume is moved to the toe (requires f_fluvial = 1) |
+| berode_kb | (required) | Bank erodibility K_b (m/s). E_b = K_b (τ*/τ*c,b − 1)^m. A calibration value without default |
+| berode_tausc | 0.05 | Critical dimensionless shear stress of the bank τ*c,b |
+| berode_m | 1.0 | Exponent m of the excess shear stress |
+| f_repose | 0 | Angle-of-repose avalanching. 1: the part of the slope between neighbouring cells above tanφ_r is moved from the higher to the lower cell (wet or dry; usable without bed load) |
+| repose_phi | 30 | Angle of repose φ_r (deg) |
+| repose_relax | 0.5 | Fraction of the excess slope relaxed per update (0 to 1) |
+| f_fixation | 0 | Fixation. 1: a fixation degree a grows on dry cells and raises the critical shear stress of the bed load supplied by that cell and of the bank erosion of that cell to τ*c (1 + c_τ a) (requires f_fluvial = 1) |
+| fix_tfix | (required) | Fixation time scale T_fix (h, morphological time including morfac). While dry, a → 1 − exp(−t/T_fix) |
+| fix_ctau | (required) | Increase ratio c_τ of the critical shear stress at full fixation |
+| fix_dzreset | 0.1 | Cumulative erosion below the fixation surface that resets a to 0 (m) |
+| fix_cn | 0 | Roughness increase ratio c_n at full fixation: the Manning n of the flow friction becomes n (1 + c_n a) (the τ* of the sediment is unchanged). 0 = no roughness effect |
 
 The minimal input to "just move the bed" is `f_fluvial = 1` plus the
 thickness of the erodible soil `sd0` (&list_geoinfo). The grain size is
@@ -170,7 +190,68 @@ Combined with the subgrid channel width (fn_width), bedload
 concentrates in the channel width and changes the riverbed there
 ([the channel chapter](channel.md)).
 
-**Outputs for this section**: bed change in `Z0001...` (`f_out_z=1`; Z − Z0000 is the scour/deposition thickness). How often the cap fluv_dzmax acted is in the end warning "fluvial dzmax clip fired", the volume lost at the bedrock floor in "bedrock floor clip" ([Output and monitoring](#output-and-monitoring)).
+**Cross-sectional bed shape in bends (direction correction).** By default
+the bed load follows the depth-averaged flow direction, so bends do not
+scour the outer bank and deposit on the inner bank. With `fluv_slope = 1`
+(bed-slope term: transport down the transverse slope) and `f_secflow = 1`
+(equilibrium secondary-flow term: the near-bed flow points to the inside
+of the bend) a cross section with a deep outer side and a shallow inner
+side forms in bends (use the two together; one alone does not reach an
+equilibrium transverse slope). The equations are in the
+[explanation](sediment.md#3-bed-load-f_fluvial). The coefficients
+`fluv_mus`, `fluv_muk` and `sec_nstar` have **no defaults** (pending a
+check against the literature; developer.md §84.3). The values recalled
+from the literature are μs = 1.0, μk = 0.45 (Hasegawa 1981, Nays2DH) and
+N* = 7 (Engelund type, Nays2DH); [test/bendsed](../../../test/bendsed/)
+verifies with these values. Bed load is never carried onto a neighbouring
+cell whose ground is above the water surface (a bank face), and a dry cell
+never supplies bed load (§84.2).
+
+**Bank retreat and collapse (bank erosion, angle of repose).** A bank face
+(a neighbouring cell above the water surface) retreats with
+`f_berode = 1`: the ground of the bank cell is lowered at the rate
+E_b = K_b (τ*/τ*c,b − 1)^m, proportional to the excess shear stress of the
+toe cell, and the same volume is deposited on the toe cell (the bed load
+carries it on; sediment is conserved). `berode_kb` is a calibration value
+without default (the erodibility of a cohesive bank, i.e. the retreat
+speed for a given flow at the toe). Levee edges (walls at the channel-mask
+boundary) do not erode, so revetted or embanked reaches are expressed by
+the walls of `fn_rw`. `f_repose = 1` is a conservative relaxation that
+collapses slopes steeper than the angle of repose `repose_phi` (default
+30°) from the higher to the lower cell; it handles the collapsed material
+at the toe, excavation faces and the flanks of bars (local non-cohesive
+collapse; it works on dry cells and without bed load). On non-cohesive
+banks toe scour plus collapse already gives the retreat, so do not add the
+same retreat again through `berode_kb`. Verification:
+[test/berode](../../../test/berode/), [test/repose](../../../test/repose/).
+
+**Fixation of inner-bank bars.** Bed load deposits only up to the water
+surface of the supplying cell, so under a constant discharge the inner-bank
+bar stays submerged and the channel only widens instead of migrating.
+`f_fixation = 1` represents the establishment of vegetation and the like on
+cells exposed at low flow (h ≤ dd) by a fixation degree a ∈ [0, 1] (output
+`Fx0001...`): while dry, a approaches 1 as 1 − exp(−t/T_fix) (`fix_tfix`,
+morphological time including morfac), and the critical shear stress of the
+bed load supplied by that cell and of the bank erosion of that cell rises to
+τ*c (1 + c_τ a) (`fix_ctau`). With suspended sediment (`f_suspend`) only the
+entrainment term (equilibrium concentration) of a fixed cell is reduced, by the
+same c_τ, while settling is unchanged, so fines supplied during floods settle
+on the fixed bars (the path that raises a bar to floodplain level). With
+`fix_cn` > 0 the flow roughness of fixed cells rises to n (1 + c_n a), the
+flow slows down and more fines are trapped (the form drag of vegetation; the
+τ* of the sediment is not changed. Typical Manning n: grass 0.03 to 0.035,
+floodplains with brush or trees 0.05 to 0.15, i.e. c_n = 1 to 3; the default
+is 0 pending a literature check). Deposition onto a fixed surface is not
+hindered and elevations and volumes are untouched. When a submerged cell is
+eroded by more than `fix_dzreset` (default 0.1 m) below the fixation surface,
+a returns to 0 (nothing becomes permanently unerodible). It does not act on
+the angle-of-repose avalanching. Use it with an inflow series that alternates
+floods and low flows ([examples/meander](../../../examples/meander/),
+param_fix.txt; with suspended sediment param_fixsusp.txt). Restart in
+`geomorph_fixation.dat` (the dynamic roughness is rebuilt from a and not
+saved). Verification: [test/fixation](../../../test/fixation/).
+
+**Outputs for this section**: bed change in `Z0001...` (`f_out_z=1`; Z − Z0000 is the scour/deposition thickness). How often the cap fluv_dzmax acted is in the end warning "fluvial dzmax clip fired", the number of cells where the soil-depth supply limiter acted in "fluvial supply limiter", and the volume lost at the bedrock floor (normally zero) in "bedrock floor clip" ([Output and monitoring](#output-and-monitoring)).
 
 ## Suspended sediment (f_suspend)
 
@@ -192,6 +273,34 @@ and exchanges with the riverbed through entrainment (E) and settling
 The minimal input to "just carry some turbidity" is `f_suspend = 1` and
 `sd0` (grain size defaults to fine sand 0.2 mm; the settling velocity is
 derived automatically by the Rubey formula).
+
+### Ledger of fines in the bed (f_bedfines)
+
+By default the entrainment of suspended load treats the whole soil layer
+sd as fines. When bed load (fluv_d50) and suspended load (susp_d50) are
+combined, a coarse bed is then eroded at the rate of the fines. With
+`f_bedfines = 1` the model keeps a ledger of "the thickness of the bed
+that moves as suspended load", sf (output Sf, 0 <= sf <= sd).
+Entrainment is limited to the stock sf (availability min(1, sf/L_a)),
+settling adds to sf, and soil moved by bed load, bank erosion or
+avalanching carries its fines along with it (equal mobility; the
+exchange with the suspended load is only through entrainment and
+settling). The number of size classes is not increased and there is no
+hiding/exposure function (a two-component ledger).
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| f_bedfines | 0 | 1 enables it (requires f_suspend = 1) |
+| fines_la | (required) | Exchange layer thickness L_a (m). The mixing thickness that sets the availability min(1, sf/L_a); a few cm to 0.1 m |
+| fines_frac0 | 0 | Initial fraction of fines (sf = fines_frac0 x sd). 0 = a purely coarse bed, 1 = the whole layer is fines, as before |
+
+Hillslope erosion f_wash also draws on the stock sf (set fines_frac0 = 1
+when the hillslope soil is fines that can be washed off). The capacity
+feed at open boundaries (fluv_bcfeed = 1) enters with the composition of
+the inflow cell (both the bed level and the stock at the inlet stay
+fixed). Dry hillslope erosion, the moving bottom layer, weathering and
+the bed-load source inflow_qb are treated as coarse. There is no vertical stratigraphy, so
+fines buried under a thick coarse deposit remain available.
 
 Sediment inflow from the boundaries (time series of concentration and
 bedload discharge) is given by the segment inflows (inflow_cs /
@@ -729,13 +838,17 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 | F9999 | f_out_fmax | maximum fluid force (ρm/ρw)(h + hs)V² (building damage index) |
 | Fs0001... / Fs9999 | f_out_fs = 1 (f_slide = 1 or 2) | slope safety factor and its run minimum (−1 = not evaluated) |
 | Hb0001... / Vb0001... | automatic (f_bedslide) | thickness (m) and speed (m/s, diagnostic) of the moving bed layer |
+| Fx0001... | automatic (f_fixation) | fixation degree a (0 to 1) |
 
 **Ledgers and log** (budget checks)
 
 - The S column of Log.txt is water only; sediment columns are not included.
 - Budget anomalies appear as warnings at the end: "fluvial dzmax clip fired
-  on ..." (how often the bed-change cap acted), "bedrock floor clip caused a
-  sediment budget imbalance of ..." (volume lost at the bedrock floor),
+  on ..." (how often the bed-change cap acted), "fluvial supply limiter
+  (soil depth) fired in ..." (number of cells where the outflow was scaled
+  to the soil depth; conservation holds), "bedrock floor clip caused a
+  sediment budget imbalance of ..." (volume lost at the bedrock floor; only
+  round-off since the supply limiter was introduced),
   "slide min Fs = ..." (run minimum safety factor), "splash exported
   sediment volume = ..." (volume exported by dry erosion), "bedslide plunge
   speeds ... / subcycles total ...".
@@ -796,7 +909,7 @@ Annotated list of all parameters:
 [examples/List_samples/list_geomorph.txt](../../../examples/List_samples/en/list_geomorph.txt).
 Verified test cases exist per process:
 [test/creep](../../../test/creep/) (analytical-solution benchmark),
-[test/fluvial](../../../test/fluvial/), [test/suspend](../../../test/suspend/),
+[test/fluvial](../../../test/fluvial/), [test/bankface](../../../test/bankface/) (bank-face blocking and supply limiter), [test/bendsed](../../../test/bendsed/) (bed-load direction correction in a bend), [test/berode](../../../test/berode/) (bank erosion), [test/repose](../../../test/repose/) (angle-of-repose avalanching), the examples [examples/meander](../../../examples/meander/) and [examples/meander_cutoff](../../../examples/meander_cutoff/) (deformation of a meandering channel and a neck cutoff), [test/suspend](../../../test/suspend/),
 [test/wash](../../../test/wash/), [test/debris](../../../test/debris/),
 [test/slide](../../../test/slide/), [test/avalanche](../../../test/avalanche/),
 [test/sedinflow](../../../test/sedinflow/) (boundary sediment supply),

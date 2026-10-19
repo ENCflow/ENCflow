@@ -410,12 +410,13 @@ Japanese, has the figures, tables and the list of derived cases).
 - Bores, hydraulic jumps, tsunami run-up and other flows with
   discontinuities: the default (3).
 - Rainfall runoff on a real DEM with a channel mask: 3 +
-  `f_opening_dynamic = 1` + `f_dry_head_cap = 1` (the defaults). If the
+  `f_opening_dynamic = 2` + `f_dry_head_cap = 1` (the defaults). If the
   result is later and smaller than observed, try `f_advection_donor = 1`.
   Roughness calibrated with scheme 1 needs recalibration.
-- Inundation, incised terrain and dam breaks without a channel mask: 3 +
-  `f_opening_dynamic = 2`. Use `f_hcap_upwind = 2` only when a sharp bore
-  front on a wet bed is wanted.
+- Inundation, incised terrain and dam breaks without a channel mask: the
+  defaults (3 + `f_opening_dynamic = 2`; until 2026-10-18 the 2 had to be
+  set explicitly). Use `f_hcap_upwind = 2` only when a sharp bore front on
+  a wet bed is wanted.
 - Smooth hillslope flow, kinematic waves, coarse grids (≥ 500 m): 1 and 3
   agree within a few percent. Use 3 for consistency.
 - Reproducing cases calibrated with older versions:

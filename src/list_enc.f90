@@ -35,12 +35,13 @@ module list_enc
                                               !   とき he ≤ max(η + u_n²/2g − z_受け手, 0) とし、
                                               !   水面+速度水頭より高い地盤へは流さない
                                               !   (developer.md §68.16)
-    integer :: f_opening_dynamic = 1          ! 塞がれた開口の動的振り替え (0:なし,
-                                              !   1:河道セル間のエッジのみ(既定。河道マスク
-                                              !   fn_rw がなければ対象エッジがなく無効),
-                                              !   2:全エッジ)。水面より高い隣接地盤で塞がれた
-                                              !   斜め/軸の通過幅シェアを開いたエッジへ毎
-                                              !   ステップ振り替える(developer.md §68.14)
+    integer :: f_opening_dynamic = 2          ! 塞がれた開口の動的振り替え (0:なし,
+                                              !   1:河道セル間のエッジのみ(河道マスク fn_rw が
+                                              !   なければ対象エッジがなく無効。2026-10-18 までの
+                                              !   既定), 2:全エッジ(既定。§68.38))。水面より高い
+                                              !   隣接地盤で塞がれた斜め/軸の通過幅シェアを
+                                              !   開いたエッジへ毎ステップ振り替える
+                                              !   (developer.md §68.14)
     integer :: f_rivermouth_drop = 0          ! 河口から海へ段落ち
     integer :: f_diffusion_term = 0           ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
     real :: p_diagratio = 2 / (2 + sqrt(2.))  ! ratio of diagonal component

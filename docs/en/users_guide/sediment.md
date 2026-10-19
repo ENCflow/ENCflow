@@ -112,15 +112,98 @@ equilibrium concentration of [the debris-flow page](massflow.md) §3.
 \Delta z_{i,j} = -\frac{\Delta t_s}{(1-\lambda)\,\Delta x\,\Delta y}\sum_{k=1}^{8} Q_k
 ```
 
-This is Exner's bed continuity equation[^exner25]. Three clamps prevent
-numerical overshoot: (1) an edge never erodes more than the soil thickness
-$`s_d`$ of its upwind cell, (2) the bed change per update is limited by
-`fluv_dzmax` (default 0.05 m; the analogue of a Courant condition for bed
-waves; the number of events is reported at the end), (3) the bedrock
-surface is never crossed by the simultaneous outflow through several edges
-and the clipped volume is reported. On open boundaries the outflow is
-always at capacity and the inflow feeds at capacity when
-`fluv_bcfeed = 1`.
+This is Exner's bed continuity equation[^exner25]. Numerical overshoot is
+prevented in this order: (1) an edge never erodes more than the soil
+thickness $`s_d`$ of its upwind cell, (2) the bed change per update is
+limited by `fluv_dzmax` (default 0.05 m; the analogue of a Courant
+condition for bed waves; the number of events is reported at the end),
+(3) where the simultaneous outflow through several edges would exceed the
+soil thickness of a cell, every bed-load flux leaving that cell is scaled
+down by the same factor (supply limiter; the sediment volume stays exactly
+conserved and the number of limited cells is reported at the end),
+(4) whatever still crosses the bedrock surface by round-off is clipped and
+the lost volume is reported (normally none). On open boundaries the
+outflow is always at capacity and the inflow is fed when `fluv_bcfeed = 1`
+(the supply through the inflow face equals the net outflow of the inflow
+cell times `fluv_bcfeed_fac`; factor 1 fixes the bed of the inlet). Inflow
+segments also take a bed-load discharge series `inflow_qb` (a source to the
+bed) and the equilibrium concentration feed `inflow_cs_eq` of the suspended
+sediment ([boundary conditions](boundary.md)). Bed load rolls on the bed surface: a dry cell never
+supplies it and it is never carried onto ground above the water surface
+of the supplying cell (a bank face; developer.md §84.2).
+
+**Direction of the bed load (correction in bends).** By default the
+direction is the depth-averaged flow direction $`\hat{\mathbf t}`$. With
+`fluv_slope = 1` and `f_secflow = 1` it becomes
+
+```math
+\mathbf{q}_b = q_b\left(\hat{\mathbf t} + r\,\hat{\mathbf n} - \gamma\nabla z\right),\qquad
+\gamma = \sqrt{\frac{\tau_{*c}}{\mu_s\mu_k\tau_*}},\qquad
+r = N_* h\,\kappa
+```
+
+where $`\hat{\mathbf n}`$ is the left normal of the flow direction and
+$`\kappa`$ the streamline curvature of the depth-averaged velocity field
+(positive for a left turn; $`\kappa\hat{\mathbf n}`$ points to the centre of
+curvature, so $`r\hat{\mathbf n}`$ always points to the inside of the bend).
+$`\gamma\nabla z`$ is the transport down the slope (Hasegawa 1981 type, the
+same form as the bed-slope correction of Nays2DH) and $`r\hat{\mathbf n}`$
+the effect of the near-bed secondary flow pointing to the inside of the
+bend (equilibrium secondary flow of the Engelund type). The secondary flow
+carries sediment to the inner bank and the slope term brings it back down
+the transverse slope that forms; the balance gives a cross section with a
+deep outer and a shallow inner side, $`\partial z/\partial n \approx
+r/\gamma`$. The curvature is evaluated only in cells whose four
+neighbours are all wet ($`r = 0`$ along banks and boundary columns), and
+bank-face steps are excluded from $`\nabla z`$. The coefficients
+$`\mu_s, \mu_k, N_*`$ have no defaults and must be given (pending a check
+against the literature; §84.3). `fluv_taufac` is a simple separation of
+the effective shear stress: a fixed fraction of the total-resistance
+$`\tau_*`$ is passed to the transport formula. Verification:
+[test/bendsed](../../../test/bendsed/README.md).
+
+**Bank retreat and collapse.** A bank face (a neighbouring cell b whose
+ground is at or above the water surface $`z_w + h_w`$ of a wet cell w)
+retreats with `f_berode = 1` at
+
+```math
+E_b = K_b\,\max\!\left(\frac{\tau_{*w}}{\tau_{*c,b}} - 1,\,0\right)^{m},\qquad
+Q_{b\to w} = (1-\lambda)\,E_b\,h_w\,L_k
+```
+
+($`\tau_{*w}`$ is the dimensionless shear stress of the toe cell, $`h_w`$
+the submerged bank height, equal to the toe depth, and $`L_k`$ the passage
+width). The eroded volume is deposited on the toe cell and carried on by
+the bed load (applied as an edge flux through the same conservative path;
+the soil-depth supply limiter also bounds the erodible layer of the bank).
+The angle-of-repose avalanching of `f_repose = 1` moves, per update, a
+height $`\mathrm{relax}\cdot e/16`$ from the higher to the lower cell
+for the part $`e`$ of the height difference between neighbours that exceeds
+$`\tan\phi_r \cdot d_k`$ (a conservative relaxation that does not
+overshoot with eight directions at once; one sweep per update).
+Verification: [test/berode](../../../test/berode/README.md),
+[test/repose](../../../test/repose/README.md).
+
+**Fixation.** The cell fixation degree $`a`$ of `f_fixation = 1` grows while
+the cell is dry (h ≤ dd) as
+
+```math
+a \leftarrow 1 - (1 - a)\,e^{-\Delta t_m / T_\mathrm{fix}}
+```
+
+($`\Delta t_m`$ is the morphological update interval, morfac included) and
+returns to 0 while submerged once the cumulative erosion below the fixation
+surface (the ground level when the cell was last dry, pushed up by
+deposition) exceeds `fix_dzreset`. Its only effect is to replace
+$`\tau_{*c}`$ by $`\tau_{*c}(1 + c_\tau a)`$ in the threshold and the
+transport formula of the bed load supplied by that cell and in the bank
+erosion of that cell as the bank, to reduce the entrainment term of the
+suspended sediment by the same ratio ($`\tau_{*c,s}(1 + c_\tau a)`$ for the
+excess-shear form, $`C_{eq}/(1 + c_\tau a)`$ for Itakura-Kishi; settling is
+unchanged), and, with `fix_cn` > 0, to make the Manning n of the flow
+friction $`n(1 + c_n a)`$ (the $`\tau_*`$ of the sediment keeps the original
+n; elevations and volumes are untouched). Verification:
+[test/fixation](../../../test/fixation/README.md).
 
 **Defaults.** `fluv_d50` = 0.01 m lies near the geometric mean of a sand
 bed (0.5 mm) and a mountain gravel bed (5 cm); values for sand and gravel
@@ -285,11 +368,13 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | fluv_tausc / susp_tausc / wash_tausc | 0.05 | critical dimensionless shear stress (§1) | **literature value** representative value of the Shields curve for coarse sand to gravel[^shields36] |
 | fluv_porosity / fluv_sgrav | 0.4 / 1.65 | bed porosity / submerged specific gravity | **customary value** standard values of sand and gravel |
 | fluv_dzmax | 0.05 m | bed change per update (§3) | **numerical** safety valve (Courant condition of bed waves) |
-| fluv_bcfeed | 0 | feeding at open boundaries (§3) | **method** 0: no feeding, 1: capacity feeding |
+| fluv_bcfeed | 0 | feeding at open boundaries (§3) | **method** 0: no feeding, 1: capacity feeding (net outflow of the inflow cell times the factor) |
+| fluv_bcfeed_fac | 1.0 | factor of the capacity feed | 1 = fixed inlet bed, 0 = no feed |
 | f_esform | 1 | equilibrium concentration (§4) | **method** 1: simple (calibration), 2: Itakura–Kishi[^itakura80] (recommended for sand) |
 | susp_d50 / susp_wf | 0.2 mm / 0 | grain size / settling velocity | **customary value** fine sand / **derived** 0 uses the Rubey formula[^rubey33] |
 | susp_beta | 1.0 | near-bed concentration factor $`\beta`$ | **method** 1 = vertically uniform approximation |
 | susp_esa | 1e-4 | coefficient of the simple form | **verification case** calibrated in [test/suspend](../../../test/suspend/) (weak basis) |
+| f_bedfines / fines_la / fines_frac0 | 0 / required / 0 | ledger of fines in the bed (§4) | **method** two-component stock. L_a is a numerical mixing thickness (a few cm to 0.1 m); the fraction is a given |
 | wash_kr / wash_kf | 0.01 / 1e-5 m/s | raindrop / sheet erosion coefficients (§5) | **empirical** values of [test/wash](../../../test/wash/); to be calibrated |
 | spl_kr / spl_kt / spl_h | 5e-4 / 0.05 / 1 | dry-erosion coefficients and slope exponent (§6) | **empirical** medians of the tests |
 | spl_ca / spl_cb | 0 / 0 m | concavity amplification lengths | **given** 0 = no amplification; a few to tens of metres to grow valleys |

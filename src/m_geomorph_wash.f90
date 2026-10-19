@@ -86,14 +86,18 @@ module subroutine calc_wash(gm, p, g, s, dtw)
         if (taus > gm%wtausc) er = er + gm%wkf * (taus / gm%wtausc - 1.0)
       end if
       if (er <= 0.0) cycle
+      ! 河床の細粒分の帳簿(§84.10): 利用可能率 f = min(1, sf/L_a) を乗じる
+      if (gm%f_bedfines > 0) er = er * min(1.0, s%sf(i,j) * gm%fin%lainv)
       ! 可動層クランプ(河床側は ×morfac・poroi で減るため換算して制限)
       fx = min(er * dtw, s%sd(i,j) / (gm%morfac * gm%poroi))
+      if (gm%f_bedfines > 0) fx = min(fx, s%sf(i,j) / (gm%morfac * gm%poroi))
       if (fx <= 0.0) cycle
       s%hs(i,j) = s%hs(i,j) + fx
       ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
       dzb = -fx * gm%morfac * gm%poroi
       s%z(i,j) = s%z(i,j) + dzb
       s%sd(i,j) = s%sd(i,j) + dzb
+      if (gm%f_bedfines > 0) s%sf(i,j) = max(s%sf(i,j) + dzb, 0.0)
       ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
       ! (calc_suspend と同じ整合。反対称適用)
       if (s%gw_active) then

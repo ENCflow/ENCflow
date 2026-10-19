@@ -31,6 +31,8 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [timberyard/](timberyard/) | 高潮による貯木場からの材木流入(伊勢湾台風型) | 流木 fn_driftwood、潮位 |
 | [sewer_hybrid/](sewer_hybrid/) | 幹線 1 本と枝管網を同じ管路連続体層で表す都市排水の模式実験 | 管路連続体層 f_gwconduit |
 | [qanat/](qanat/) | カナート(横坑集水)の理想化ケース | 管路連続体層、地下水 |
+| [meander/](meander/) | 氾濫原の中の正弦波状の河道が、掃流砂・流砂方向補正・安息角崩落でどう変形するか(外岸の淵・内岸の砂州・河岸の後退)。出水と低水を繰り返す構成では露出した内岸の砂州が定着し、給砂(容量給砂・平衡濃度給砂)を入れると砂州が氾濫原の高さまで育つ。蛇行発達の段 3〜5a の例題 | 掃流砂 f_fluvial、fluv_slope、f_secflow、f_repose、f_berode、f_fixation、fluv_bcfeed、inflow_cs_eq |
+| [meander_cutoff/](meander_cutoff/) | 頸部の狭い蛇行ループが出水で短絡し、旧河道が滞水域になって出入口が埋まり始める | 同上 + 区間流入の時系列 |
 
 ## 複数プロセスの連鎖の例
 

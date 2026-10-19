@@ -477,6 +477,7 @@ module subroutine calc_bedslide(gm, g, s, dtw)
         s%hb(i,j) = s%hb(i,j) + dd
         s%z(i,j) = s%z(i,j) + dd
         s%sd(i,j) = s%sd(i,j) + dd
+        if (allocated(s%sf)) s%sf(i,j) = min(s%sf(i,j), s%sd(i,j))   ! 細粒分の帳簿: 粗粒扱い(§84.10)
       end do
     end do
     !$omp end parallel do
@@ -591,6 +592,7 @@ subroutine plunge_cells(gm, g, s)
       s%hb(i,j) = s%hb(i,j) + dd
       s%z(i,j) = s%z(i,j) + dd
       s%sd(i,j) = s%sd(i,j) + dd
+      if (allocated(s%sf)) s%sf(i,j) = min(s%sf(i,j), s%sd(i,j))   ! 細粒分の帳簿: 粗粒扱い(§84.10)
       if (gm%f_dbwet == 1) then
         dhw = -gm%db_lamsb * dd
         dhw = max(dhw, -max(s%h(i,j), 0.0))

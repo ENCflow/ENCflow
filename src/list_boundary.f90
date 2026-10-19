@@ -60,10 +60,16 @@ module list_boundary
                                                    !   未指定なら清水流入(浮遊砂有効時のみ意味)
     real, allocatable :: inflow_qs(:,:,:)          ! 流入土砂の流砂量時系列 (min, m3/s 固体体積)。
                                                    !   inflow_cs と区間ごとに排他
+    real, allocatable :: inflow_qb(:,:,:)          ! 流入の掃流砂流砂量時系列 (min, m3/s 固体体積)。
+                                                   !   流入セルの河床への源泉(§84.9)
+    integer :: inflow_cs_eq(1:nbsrcmax) = 0        ! 浮遊砂の平衡濃度給砂(0:なし, 1:流入濃度 =
+                                                   !   inflow_cs_fac × 流入セルの平衡濃度。cs/qs と排他)
+    real :: inflow_cs_fac(1:nbsrcmax) = 1.0        ! 平衡濃度給砂の倍率
     character(len=maxpathlen) :: fn_inflow_cell(1:nbsrcmax) = ""  ! セル一覧ファイル名
     character(len=maxpathlen) :: fn_inflow_val(1:nbsrcmax) = ""   ! 時系列ファイル名
     character(len=maxpathlen) :: fn_inflow_cs(1:nbsrcmax) = ""    ! 濃度時系列ファイル名
     character(len=maxpathlen) :: fn_inflow_qs(1:nbsrcmax) = ""    ! 流砂量時系列ファイル名
+    character(len=maxpathlen) :: fn_inflow_qb(1:nbsrcmax) = ""    ! 掃流砂流砂量時系列ファイル名
   end type
 
   ! namelist 読み込み用の静的作業配列(スタックに置かないための措置。
@@ -76,6 +82,9 @@ module list_boundary
   real :: inflow_val(1:2,1:nsrcvmax,1:nbsrcmax)
   real :: inflow_cs(1:2,1:nsrcvmax,1:nbsrcmax)
   real :: inflow_qs(1:2,1:nsrcvmax,1:nbsrcmax)
+  real :: inflow_qb(1:2,1:nsrcvmax,1:nbsrcmax)
+  integer :: inflow_cs_eq(1:nbsrcmax)
+  real :: inflow_cs_fac(1:nbsrcmax)
 
 contains
 
@@ -227,21 +236,27 @@ subroutine read_inflow(un, list)
   character(len=maxpathlen) :: fn_inflow_val(1:nbsrcmax)
   character(len=maxpathlen) :: fn_inflow_cs(1:nbsrcmax)
   character(len=maxpathlen) :: fn_inflow_qs(1:nbsrcmax)
+  character(len=maxpathlen) :: fn_inflow_qb(1:nbsrcmax)
   integer :: ios
   character(len=1024) :: iom
   namelist /list_bound_inflow/ inflow_cell, inflow_val, inflow_dist, &
                                fn_inflow_cell, fn_inflow_val, &
-                               inflow_cs, fn_inflow_cs, inflow_qs, fn_inflow_qs
+                               inflow_cs, fn_inflow_cs, inflow_qs, fn_inflow_qs, &
+                               inflow_qb, fn_inflow_qb, inflow_cs_eq, inflow_cs_fac
 
   inflow_cell = -9999
   inflow_val = -9999
   inflow_cs = -9999
   inflow_qs = -9999
+  inflow_qb = -9999
+  inflow_cs_eq = list%inflow_cs_eq
+  inflow_cs_fac = list%inflow_cs_fac
   inflow_dist = list%inflow_dist
   fn_inflow_cell = list%fn_inflow_cell
   fn_inflow_val = list%fn_inflow_val
   fn_inflow_cs = list%fn_inflow_cs
   fn_inflow_qs = list%fn_inflow_qs
+  fn_inflow_qb = list%fn_inflow_qb
 
   rewind(un)
   read(un, nml=list_bound_inflow, iostat=ios, iomsg=iom)
@@ -253,11 +268,15 @@ subroutine read_inflow(un, list)
   list%inflow_val = inflow_val
   list%inflow_cs = inflow_cs
   list%inflow_qs = inflow_qs
+  list%inflow_qb = inflow_qb
+  list%inflow_cs_eq = inflow_cs_eq
+  list%inflow_cs_fac = inflow_cs_fac
   list%inflow_dist = inflow_dist
   list%fn_inflow_cell = fn_inflow_cell
   list%fn_inflow_val = fn_inflow_val
   list%fn_inflow_cs = fn_inflow_cs
   list%fn_inflow_qs = fn_inflow_qs
+  list%fn_inflow_qb = fn_inflow_qb
 
 end subroutine
 

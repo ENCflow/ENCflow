@@ -50,10 +50,51 @@
   !fluv_sgrav = 1.65        ! submerged specific gravity of sediment grains
   !fluv_dzmax = 0.05        ! bed change limit per edge per update (m)
                             !   (stabilization)
-  !fluv_bcfeed = 0          ! sediment feed at open boundaries (0: inflow feeds
-                            !   nothing, 1: equilibrium feed. Outflow is always
-                            !   at transport capacity)
+  !fluv_bcfeed = 0          ! sediment feed at open boundaries incl. inflow-segment
+                            !   faces (0: inflow feeds nothing, 1: capacity feed =
+                            !   net outflow of the inflow cell times the factor.
+                            !   Outflow is always at transport capacity)
+  !fluv_bcfeed_fac = 1.0    ! factor of the capacity feed (1: fixed inlet bed, 0: none)
   !fluv_diagratio = 0.5857864376  ! diagonal share (normally no need to change)
+  !fluv_taufac = 1.0        ! effective shear-stress ratio f_tau (tau* passed to the
+                            !   transport formula = f_tau x tau* of the total
+                            !   resistance. 1 = no separation)
+  !fluv_slope = 1           ! bed-slope correction of the bed-load direction
+                            !   (1: Hasegawa type gamma*grad z)
+  !fluv_mus = 1.0           ! static friction coefficient mu_s (required with
+                            !   fluv_slope=1; literature value pending verification)
+  !fluv_muk = 0.45          ! kinetic friction coefficient mu_k (same)
+  !f_secflow = 1            ! secondary-flow correction of the bed-load direction
+                            !   (1: equilibrium type r = N* h kappa)
+  !sec_nstar = 7.0          ! N* (required with f_secflow=1; literature value
+                            !   pending verification)
+  !sec_rmax = 1.0           ! upper bound of |r| (1 = 45 deg)
+  !sec_vmin = 0.01          ! minimum velocity for evaluating the curvature (m/s)
+
+  ! ---- Bank erosion and angle-of-repose avalanching (with f_fluvial;
+  !      f_repose also works alone) ----
+  !f_berode = 1             ! bank erosion (a neighbour above the water surface
+                            !   retreats under the toe shear stress. Requires
+                            !   f_fluvial=1)
+  !berode_kb = 1.0e-5       ! bank erodibility K_b (m/s) (required; calibration)
+  !berode_tausc = 0.05      ! critical dimensionless shear stress of the bank
+  !berode_m = 1.0           ! exponent of the excess shear stress
+  !f_repose = 1             ! angle-of-repose avalanching (excess slope moved
+                            !   from the higher to the lower cell, wet or dry)
+  !repose_phi = 30.0        ! angle of repose (deg). 0 = default 30
+  !repose_relax = 0.5       ! fraction of the excess slope relaxed per update
+
+  ! ---- Fixation (with f_fluvial; bars exposed at low flow get fixed and
+  !      resist re-erosion) ----
+  !f_fixation = 1           ! fixation (a fixation degree a grows on dry cells and
+                            !   raises the supplying side's tau*c to tau*c (1 + c_tau a);
+                            !   elevations and volumes are untouched)
+  !fix_tfix = 10.0          ! fixation time scale T_fix (h, morphological time) (required)
+  !fix_ctau = 10.0          ! increase ratio c_tau of the critical shear stress (required)
+  !fix_dzreset = 0.1        ! cumulative erosion below the fixation surface that resets a (m).
+                            !   0 = default 0.1
+  !fix_cn = 2.0             ! roughness increase ratio c_n at full fixation (flow n becomes
+                            !   n (1 + c_n a); the sediment tau* is unchanged. 0 = off = default)
 
   ! ---- Suspended sediment (advection + entrainment and settling) ----
   !f_suspend = 1
@@ -68,6 +109,13 @@
                             !   (c_b = beta*C)
   !susp_esa = 0.001         ! equilibrium concentration coefficient (f_esform=1.
                             !   0 = default 1e-4. A calibration parameter)
+  !f_bedfines = 1           ! ledger of fines in the bed (requires f_suspend).
+                            !   Entrainment is limited to the stock sf (output Sf);
+                            !   fines released by bed-load erosion go into suspension
+  !fines_la = 0.05          ! exchange layer thickness L_a (m). Availability
+                            !   min(1, sf/L_a) (required)
+  !fines_frac0 = 0.0        ! initial fraction of fines (sf = fraction x sd.
+                            !   0 = coarse only = default, 1 = all fines)
 
   ! ---- Hillslope erosion (rainsplash + sheetwash. Requires f_suspend) ----
   !f_wash = 1
