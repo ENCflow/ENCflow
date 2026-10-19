@@ -152,6 +152,9 @@
                             !   about 4.4 l and converges under grid refinement (l/dx >= 2; sec. 48.3)
   !spl_zbase = -9999.0      ! elevation of the erosion base level (m) (<= -9000: none).
                             !   Give the sea level when the cliff foot is the sea
+  !spl_sgrad = 0            ! evaluation of the slope S (0: central difference, 1: steepest
+                            !   descent = maximum downhill gradient to the 8 neighbours;
+                            !   ridge-crest cells then erode with their faces. sec. 48.4)
 
   ! Debris flow / landslide (Takahashi-type equilibrium-concentration E-D)
   ! (0: off, 1: on)

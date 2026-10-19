@@ -561,6 +561,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | spl_h | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | spl_kr | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | spl_lc | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| spl_sgrad | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | spl_zbase | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | spl_kt | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | src_cell | &list_bound_source | [Boundary conditions](boundary.md) |

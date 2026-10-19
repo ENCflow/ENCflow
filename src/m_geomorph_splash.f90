@@ -83,6 +83,8 @@ module subroutine init_splash(gm, g, list)
   if (list%spl_lc < 0.0) call par_stop("list_geomorph: spl_lc must be >= 0")
   gm%slc = list%spl_lc
   gm%szbase = list%spl_zbase
+  if (list%spl_sgrad < 0 .or. list%spl_sgrad > 1) call par_stop("list_geomorph: spl_sgrad must be 0 or 1")
+  gm%ssgrad = list%spl_sgrad
 
   if (.not. allocated(gm%spl%fx)) then
     allocate(gm%spl%fx(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
@@ -169,19 +171,23 @@ module subroutine eval_splash(gm, p, g, s, dts)
   integer :: i, j, nclip
   real :: zc, ze, zw, zn, zs, kap, sx, sy, ss, er, fx
   real :: kc, ke, kw, kn, ks
-  real :: dxi, dyi, dx2i, dy2i
+  real :: dxi, dyi, dx2i, dy2i, ddi
+  real :: zn8(8), dd8(8)
+  integer :: k, in, jn
   logical :: smooth
 
   dxi = 0.5 / g%dx
   dyi = 0.5 / g%dy
   dx2i = 1.0 / (g%dx * g%dx)
   dy2i = 1.0 / (g%dy * g%dy)
+  ddi = 1.0 / sqrt(g%dx * g%dx + g%dy * g%dy)
+  dd8 = [ddi, 1.0 / g%dy, ddi, 1.0 / g%dx, 1.0 / g%dx, ddi, 1.0 / g%dy, ddi]
   nclip = 0
   smooth = (gm%spl%nsm > 0)
   if (smooth) call smooth_z(gm, g, s)
 
   !$omp parallel do schedule(static) reduction(+:nclip) &
-  !$omp   private(i, j, zc, ze, zw, zn, zs, kap, sx, sy, ss, er, fx, kc, ke, kw, kn, ks)
+  !$omp   private(i, j, zc, ze, zw, zn, zs, kap, sx, sy, ss, er, fx, kc, ke, kw, kn, ks, k, in, jn, zn8)
   do j = dcp%js, dcp%je
     gm%spl%fx(:,j) = 0.0
     do i = g%wx(1,j), g%wx(2,j)
@@ -221,9 +227,24 @@ module subroutine eval_splash(gm, p, g, s, dts)
       else
         kap = max((ze + zw - 2.0 * zc) * dx2i + (zn + zs - 2.0 * zc) * dy2i, 0.0)
       end if
-      sx = (ze - zw) * dxi
-      sy = (zn - zs) * dyi
-      ss = sqrt(sx * sx + sy * sy)
+      if (gm%ssgrad == 1) then
+        ! 最急降下: 8 近傍への下り勾配 (zc − zn)/距離 の最大(無効な近傍・上り = 0)。
+        ! 中央差分は稜線の頂で左右が打ち消して S ≈ 0 になり 1 セル幅の尾根が削れない
+        ! (§48.4)。最急降下なら頂のセルも両面の勾配で削れ、市松(高いセルだけ
+        ! S > 0)も減衰する
+        ss = 0.0
+        do k = 1, 8
+          in = i + din(k)
+          jn = j + djn(k)
+          if (in < 1 .or. in > g%nx) cycle
+          if (g%x(in,jn) <= 0) cycle
+          ss = max(ss, (zc - s%z(in,jn)) * dd8(k))
+        end do
+      else
+        sx = (ze - zw) * dxi
+        sy = (zn - zs) * dyi
+        ss = sqrt(sx * sx + sy * sy)
+      end if
       ! 浸食レート(固体体積 m/s)
       er = gm%skr * (1.0 + gm%sca * kap)
       if (gm%skt > 0.0 .and. ss > 0.0) then
