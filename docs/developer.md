@@ -9405,6 +9405,14 @@ wq.csv の列の感度の正体で、改善)。test/sublattice は PASS(減衰�
 np=2・4 は dambreak・tide・culvert・gwseep・sublattice・chichibu・uniflow(w5_on)で
 逐次と Log ビット一致、sedfeed(5 構成)・bedfines(6 構成)は save の
 state.dat・geomorph_fines.dat が逐次とビット一致。
+**MPI の再確認(2026-10-19)**: 上の MPI 確認に使ったビルドスクリプトが 2 回目
+以降は作業ツリー内の古いソースを再利用していた(cp -r のネスト)ことが分かった
+ため、ツリーを消して現行ソース(§68.38 の幅連動の限定を含む)から再ビルドし、
+全ケースをやり直した: dambreak・tide・culvert・gwseep・sublattice・chichibu の
+np=2・4 が逐次と Log ビット一致、uniflow 4 構成・bedfines 8 構成(rt1/rt2 含む)の
+np=2・4 が逐次と Log ビット一致、sedfeed 5 構成は save が逐次とビット一致。
+tutorials/chichibu の補足(w50・s1・s1u・noadv の 3 解像度)と examples/meander は
+この版で再生成した(README の数表・図を更新。meander は §84.11)。
 
 ## 69. 非静水圧(1 層 NH)拡張の設計決定(2026-10-05 合意。実装は段階的)
 
