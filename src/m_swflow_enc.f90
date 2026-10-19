@@ -2757,13 +2757,22 @@ function fwd_cell(g, i, j) result(res)
 end function
 
 
-! エッジ (i1,j1)-(i2,j2) が適用範囲か(f_opening_dynamic=1 は両端が河道セル)
+! エッジ (i1,j1)-(i2,j2) が適用範囲か(f_opening_dynamic=1 は両端が河道セル)。
+! 2(全エッジ)でも、サブグリッド河道幅(fn_width。wfrac < 1)のセルが絡む
+! エッジは 1 と同じ条件に限る: 幅セルと斜面の間の通水は幅モデル(frw と
+! 通水率の正規化。channel_models.md)が担っており、そこに振り替えを重ねると
+! 二重補正で流速が過大になり、tutorials/chichibu の補足(200 m 格子に幅 50 m)が
+! 55 分で発散した(§68.38。2026-10-19 実検出)
 function fwd_pair(g, i1, j1, i2, j2) result(res)
   type(t_geoinfo), intent(in) :: g
   integer, intent(in) :: i1, j1, i2, j2
   logical :: res
   res = .true.
-  if (opt%f_opening_dynamic == 1) res = g%rw(i1,j1) > 0 .and. g%rw(i2,j2) > 0
+  if (opt%f_opening_dynamic == 1) then
+    res = g%rw(i1,j1) > 0 .and. g%rw(i2,j2) > 0
+  else if (chn%have_width) then
+    if (chn%wfrac(i1,j1) < 1.0 .or. chn%wfrac(i2,j2) < 1.0) res = g%rw(i1,j1) > 0 .and. g%rw(i2,j2) > 0
+  end if
 end function
 
 

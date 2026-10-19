@@ -9333,6 +9333,18 @@ coastal_drain・culvert・chichibu・nhsolitary・sublattice で逐次と Log �
 List_samples list_enc(JA・EN)、§68.19 の表の注記。2 を明示している
 test/sedfeed・uniflow・dambreak(dyn)・examples/meander はそのまま(明示は無害)。
 
+**サブグリッド河道幅との相互作用(2026-10-19 実検出・修正)**: tutorials/chichibu
+の補足(200 m 格子の河道セルに幅 50 m = fn_width)が、既定 2 では 55 分で
+発散した(V_max 29 m/s、h_max 15 m。§68.37 の木でも 2 を明示すると同様に
+発散、1 では安定 = 片側面の扱いではなく振り替えの範囲の問題)。幅セルと斜面の
+間の通水は幅モデル(frw・通水率の正規化)が担っており、そこに動的振り替えを
+重ねると二重補正になる。fwd_pair を「2 でも、wfrac < 1 のセルが絡むエッジは
+河道セル同士に限る(= 1 と同じ)」に改めた。fn_width のない計算は不変
+(reference ケースに fn_width はない。test/wave 逐次で識別一致を確認)。
+検証: 同じ w50 200 m 構成が修正後は 6 時間完走(h_max 37.3 m。1 では 37.2 m)、
+test/bendloss(fn_width、1 セル幅水路)は修正前後で出力が同一(振り替えの
+対象に幅セルと斜面のエッジが無い)。
+
 ### 68.39 側方面の片側リンク: 壁沿いの行の有限時間加速と水深による切り分け(2026-10-18 発見・修正)
 
 **現象**: main の §68.37(片側しか無い側方面を壁面扱い)を取り込んだ木で
