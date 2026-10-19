@@ -247,7 +247,7 @@ module m_geomorph
     real :: sdzmax = 0.0             ! 1セル・1更新の侵食上限 (m)(0=無効)
     real :: slc = 0.0                ! κ の相関長 ℓ (m)(0 = 格子ラプラシアン。§48.3)
     real :: szbase = -9999.0         ! 侵食基準面 (m)(-9000 以下 = なし)
-    integer :: ssgrad = 0            ! 勾配の評価(0: 中央差分, 1: 最急降下。§48.4)
+    integer :: ssgrad = 1            ! 勾配の評価(1: 最急降下 = 既定, 0: 中央差分。§48.4)
     integer :: f_debris = 0          ! 土石流 E-D(0:無効, 1:有効。f_suspend と排他)
     real :: db_tanphi = 0.0          ! tan(内部摩擦角)
     real :: db_delte = 0.0           ! 侵食速度係数 δe

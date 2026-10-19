@@ -6,12 +6,12 @@
 #   安定判定 Fs<1 → 流動化 → 埋め戻しでリセットされ、起伏は成長しない
 #   (白ママ型)。
 # 検定:
-#   (1) 固結:   relief(final)/relief(init) >= 1.25(谷の成長)
+#   (1) 固結:   relief(final)/relief(init) >= 1.15(谷の成長。クリープなし・最急降下の
+#               勾配評価(2026-10-19)で ×1.25)
 #   (2) 未固結: relief(final)/relief(init) <= 0.9(谷が維持されない)
 #   (3) 両構成: 台地内部(x <= 6)は無傷(|Δz| < 0.05 m)
-#   (4) 両構成: 侵食の下限が有界(z >= -1.5。sd0=1.3 + creep の岩盤
-#       ドリフト分。creep は sd に触れない仕様のため z−sd は厳密不変で
-#       ない — m_geomorph ヘッダの既知の妥協)
+#   (4) 両構成: 侵食の下限が有界(z >= -1.5。sd0 = 1.3。未固結では崩落土砂の
+#       移動で z − sd が厳密不変でない分の余裕)
 import sys
 import numpy as np
 
@@ -33,7 +33,7 @@ zl0 = np.loadtxt("result_l/Z0000.txt"); zl1 = np.loadtxt("result_l/Z9998.txt")
 
 gc = relief(zc1) / relief(zc0)
 gl = relief(zl1) / relief(zl0)
-check("coherent cliff: relief grows", gc >= 1.25, "x%.2f >= 1.25" % gc)
+check("coherent cliff: relief grows", gc >= 1.15, "x%.2f >= 1.15" % gc)
 check("loose cliff: relief does not grow", gl <= 0.9, "x%.2f <= 0.9" % gl)
 
 dpc = np.abs(zc0[:, :6] - zc1[:, :6]).max()
@@ -41,9 +41,9 @@ dpl = np.abs(zl0[:, :6] - zl1[:, :6]).max()
 check("plateau interior intact (coherent)", dpc < 0.05, "max|dz| = %.4f m" % dpc)
 check("plateau interior intact (loose)", dpl < 0.05, "max|dz| = %.4f m" % dpl)
 
-check("erosion bounded (coherent, incl. creep bedrock drift)", zc1.min() >= -1.5,
+check("erosion bounded (coherent)", zc1.min() >= -1.5,
       "zmin = %.2f" % zc1.min())
-check("erosion bounded (loose, incl. creep bedrock drift)", zl1.min() >= -1.5,
+check("erosion bounded (loose)", zl1.min() >= -1.5,
       "zmin = %.2f" % zl1.min())
 
 sys.exit(rc)

@@ -424,7 +424,7 @@ represent this.
 | spl_dzmax | 0 | Erosion cap per cell per update (m) (0: off); safety valve against runaway feedback |
 | spl_lc | 0 | Correlation length l (m) at which the curvature kappa is evaluated (0: 5-point Laplacian on the grid). If positive, z is smoothed with a Gaussian of standard deviation l before kappa is taken (the collection scale of the sub-grid rills). The valley spacing is then selected at about 4.4 l (linear stage; valleys merge later) and converges under grid refinement (l/dx >= 2); with 0 the spacing sticks to 2-3 grid cells. The growth rate of the deep-valley stage still depends on the grid (examples/badland) |
 | spl_zbase | -9999 | Elevation of the erosion base level (m) (<= -9000: none). Give the sea level when the cliff foot is the sea (z never drops below it; independent of bedrock exposure through sd) |
-| spl_sgrad | 0 | Evaluation of the slope S. 0: central difference, 1: steepest descent (maximum downhill gradient to the 8 neighbours). The central difference cancels at a ridge crest (S ~ 0), so one-cell-wide ridges never erode; with 1 the crest cell erodes with the gradient of its faces and grid-scale checkerboards decay (developer.md sec. 48.4) |
+| spl_sgrad | 1 | Evaluation of the slope S. 1: steepest descent (maximum downhill gradient to the 8 neighbours; default), 0: central difference (behaviour before 2026-10-19). The central difference cancels at a ridge crest (S ~ 0), so one-cell-wide ridges never erode; with steepest descent the crest cell erodes with the gradient of its faces and grid-scale checkerboards decay (developer.md sec. 48.4) |
 
 The minimal input to "just carve valleys into a cliff" is `f_splash = 1`
 + `sd0` + rainfall (fn_precip) (kr and kt at their defaults; if the
