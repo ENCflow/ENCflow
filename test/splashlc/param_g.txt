@@ -1,0 +1,63 @@
+! splashlc 構成 g: 曲率 κ を格子の 5 点ラプラシアンで評価(spl_lc = 0)
+!   2 波長(4 m・20 m)の崖縁擾乱のうち短波長が速く成長する(無限波数問題)。
+!   2Δx 規模の侵食前線が 1 h で台地に達するので、構成 l の半分の 30 分で見る
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 2.0
+  t0 = 0
+  tt = 1800
+  dt_disp = 1800
+  dt_file = 3600
+  dt_recrd = 3600
+  fn_geoinfo = '-'
+  fn_precip = '-'
+  fn_gwflow = '-'
+  fn_geomorph = '-'
+  fn_enc = '-'
+  dir_data = '.'
+  dir_result = 'result_g'
+  dir_save = 'save_g'
+  f_state_save = 1
+  f_out_z = 1
+  f_check_cfl = 0
+/
+&list_enc
+/
+&list_geoinfo
+  lx = 50.0
+  ly = 40.0
+  nx = 50
+  ny = 40
+  f_ztype = 1
+  fn_z = 'z.txt'
+  fn_sw = 'sw.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 30.0
+  sy0 = 0.2
+/
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 10
+  prval(1:2,2) = 9999, 10
+/
+&list_gwflow
+  f_gwvertical = 2
+  f_gwlateral = 0
+/
+&list_gwflow_greenampt
+  gw_ksv_mmh = 36.0
+/
+&list_geomorph
+  dt_geomorph = 10.0
+  morfac = 500.0
+  f_splash = 1
+  spl_kr = 0.0002
+  spl_kt = 0.05
+  spl_cb = 32.0
+  spl_h = 1.5
+  spl_dzmax = 0.2
+  spl_lc = 0.0
+  spl_zbase = 0.0
+/

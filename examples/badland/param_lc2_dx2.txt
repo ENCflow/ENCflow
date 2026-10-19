@@ -1,0 +1,62 @@
+! バッドランド型の谷形成: 格子収束(README「格子収束」)。spl_lc = 2 m、Δx = 2 m
+!   param_lc2.txt と同じ地形・同じ係数を Δx = 2 m で解く(縁の雑音は 1 m の
+!   基準格子上の同じ実現)。間隔・下刻深が Δx によらず収束することを見る
+!   実行: python3 make_terrain.py sweep --dx 2 && ./encflow param_lc2_dx2.txt
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 4.0
+  t0 = 0
+  tt = 10800
+  dt_disp = 3600
+  dt_file = 1800
+  dt_recrd = 10800
+  fn_geoinfo = '-'
+  fn_precip = '-'
+  fn_gwflow = '-'
+  fn_geomorph = '-'
+  fn_enc = '-'
+  dir_data = '.'
+  dir_result = 'result_lc2_dx2'
+  f_out_z = 1
+  f_check_cfl = 0
+/
+&list_enc
+/
+&list_geoinfo
+  lx = 100
+  ly = 240
+  nx = 50
+  ny = 120
+  f_ztype = 1
+  fn_z = 'z_sweep2.txt'
+  fn_sw = 'sw_sweep2.txt'       ! z <= 0 の海(崖は直接海に落ちる)
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 100.0                 ! 崖高より十分厚く(基準面は spl_zbase で与える)
+  sy0 = 0.2
+/
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 10
+  prval(1:2,2) = 9999999, 10
+/
+&list_gwflow
+  f_gwvertical = 2
+  f_gwlateral = 0
+/
+&list_gwflow_greenampt
+  gw_ksv_mmh = 36.0
+/
+&list_geomorph
+  dt_geomorph = 2.0
+  morfac = 500.0
+  f_splash = 1
+  spl_kr = 0.0002
+  spl_kt = 0.05
+  spl_cb = 32.0
+  spl_h = 1.5
+  spl_dzmax = 0.2
+  spl_lc = 2.0
+  spl_zbase = 0.0
+/

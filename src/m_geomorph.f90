@@ -176,6 +176,11 @@ module m_geomorph
                                      !   時刻 n の z(近傍参照)から計算し、
                                      !   apply_splash が局所適用する(debris の
                                      !   fx と同じ理由 = 近傍読みと更新の分離)
+    real, allocatable :: zs(:,:)     ! 相関長 ℓ で平滑化した z(spl_lc > 0 のみ。
+                                     !   (ish:ieh, jsh:jeh)。κ の評価元)
+    real, allocatable :: zt(:,:)     ! 平滑化の作業面(同形)
+    integer :: nsm = 0               ! 平滑化のパス数(= 4(ℓ/Δ)²。0 = 平滑化なし)
+    real :: wsx = 0.0, wsy = 0.0     ! 1 パスの x・y 近傍重み(各方向の分散 2w Δ²)
     integer :: nclip = 0             ! spl_dzmax クリップの発生セル数(累計)
     real :: vout = 0.0               ! 系外排出した固体土砂体積 (m3)(ランク局所累計)
   end type
@@ -240,6 +245,9 @@ module m_geomorph
     real :: scb = 0.0                ! リル項の凹地形増幅長 (m)
     real :: shexp = 1.0              ! リル項の勾配べき指数
     real :: sdzmax = 0.0             ! 1セル・1更新の侵食上限 (m)(0=無効)
+    real :: slc = 0.0                ! κ の相関長 ℓ (m)(0 = 格子ラプラシアン。§48.3)
+    real :: szbase = -9999.0         ! 侵食基準面 (m)(-9000 以下 = なし)
+    integer :: ssgrad = 1            ! 勾配の評価(1: 最急降下 = 既定, 0: 中央差分。§48.4)
     integer :: f_debris = 0          ! 土石流 E-D(0:無効, 1:有効。f_suspend と排他)
     real :: db_tanphi = 0.0          ! tan(内部摩擦角)
     real :: db_delte = 0.0           ! 侵食速度係数 δe
@@ -1091,6 +1099,8 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%dbr%rel)) deallocate(gm%dbr%rel)
   if (allocated(gm%dbr%sld)) deallocate(gm%dbr%sld)
   if (allocated(gm%spl%fx)) deallocate(gm%spl%fx)
+  if (allocated(gm%spl%zs)) deallocate(gm%spl%zs)
+  if (allocated(gm%spl%zt)) deallocate(gm%spl%zt)
   gm%spl%nclip = 0
   gm%spl%vout = 0.0
   gm%dbr%nrelclip = 0

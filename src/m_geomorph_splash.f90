@@ -23,6 +23,17 @@
 !   z と sd は共動更新(帯水層底 z − sd 不変)+ gwflow 容量引き渡しは
 !   wash と同一規約。sd=0 で岩盤露出・停止(風化 f_wthr と収支が閉じる)。
 !
+!   曲率の相関長 ℓ(spl_lc > 0。§48.3): κ を格子の 5 点ラプラシアンで取ると
+!   最短波長(2Δ)が最速成長し(Smith & Bretherton の無限波数問題)、谷間隔と
+!   V 字谷底の κ(∝ 1/Δ)が格子幅に張り付く。ℓ > 0 では z を標準偏差 ℓ の
+!   ガウス核(5 点核 w = 1/8 の反復。各方向の分散 2wΔ² × パス数)で平滑化した zs から
+!   κ を取る: 成長率 σ(k) = Da k² e^{−ℓ²k²/2} が有限波数 k* = √2/ℓ で極大を
+!   持ち、谷間隔 λ* = 2πℓ/√2 ≈ 4.4 ℓ が ℓ で決まる物理量になり、Δ を細かく
+!   しても収束する(拡散項は要らない。クリープは力学的モデルでないため併用しない)。
+!   勾配 S は生の z から取る(位置依存の侵食率そのもの)。
+!   侵食基準面(spl_zbase): 崖下が海なら海面以下は削らない(開いた系の
+!   基準面。sd による岩盤露出と独立に与える)。
+!
 !   2パス構造(MPI 規約): eval_splash が時刻 n の z(近傍参照)から
 !   侵食深 gm%spl%fx を評価し(debris の適用より前に呼ぶ=全プロセスが
 !   時刻 n の z を見る)、apply_splash が局所適用する(debris の後)。
@@ -32,7 +43,7 @@
 !   Phase 3: 容量式の堆積 D = max(0, ΣQs − Qc)/δ²(D8 経路))
 !======================================================================
 submodule(m_geomorph) m_geomorph_splash
-  use m_parallel, only : par_stop, dcp
+  use m_parallel, only : par_info, par_stop, dcp, par_halo_cell
   implicit none
 
 contains
@@ -45,6 +56,8 @@ module subroutine init_splash(gm, g, list)
   type(t_geoinfo), intent(in) :: g
   type(t_list_geomorph), intent(in) :: list
   real :: kr, kt                       ! 既定適用後の有効値(§62)
+  real :: dmin
+  character(len=256) :: msg
 
   ! どちらも未指定なら両方に既定(経験係数。校正前提。§62)。片方だけ指定なら
   ! 他方の 0 は「その項なし」の明示として尊重する
@@ -67,10 +80,78 @@ module subroutine init_splash(gm, g, list)
   gm%scb = list%spl_cb
   gm%shexp = list%spl_h
   gm%sdzmax = list%spl_dzmax
+  if (list%spl_lc < 0.0) call par_stop("list_geomorph: spl_lc must be >= 0")
+  gm%slc = list%spl_lc
+  gm%szbase = list%spl_zbase
+  if (list%spl_sgrad < 0 .or. list%spl_sgrad > 1) call par_stop("list_geomorph: spl_sgrad must be 0 or 1")
+  gm%ssgrad = list%spl_sgrad
 
   if (.not. allocated(gm%spl%fx)) then
     allocate(gm%spl%fx(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
   end if
+  ! 曲率の相関長: パス数 N = 4(ℓ/Δmin)²(5 点核 1 パスの各方向の分散は
+  ! 2wΔ²。w = ℓ²/(2NΔ²) で N パス後の分散が両方向とも ℓ² になる。Δx = Δy
+  ! なら w = 1/8)。核の伝達関数 1 − 2wx(1−cos kxΔx) − 2wy(1−cos kyΔy) が
+  ! 市松モード(格子の角)で非負であるには wx + wy ≤ 1/4 が必要(w = 1/4 の
+  ! 中心重み 0 の核は市松を符号反転で保存し、平滑化が市松を消さない —
+  ! 実検出 2026-10-19)。ℓ < Δ/2 は N = 1・w < 1/8 の弱い平滑化になる
+  if (gm%slc > 0.0) then
+    dmin = min(g%dx, g%dy)
+    gm%spl%nsm = max(1, nint(4.0 * (gm%slc / dmin)**2))
+    gm%spl%wsx = min(0.125, gm%slc**2 / (2.0 * gm%spl%nsm * g%dx**2))
+    gm%spl%wsy = min(0.125, gm%slc**2 / (2.0 * gm%spl%nsm * g%dy**2))
+    write(msg, '(a,es10.3,a,i0,a)') "geomorph: splash curvature length spl_lc = ", gm%slc, &
+                                   " m (", gm%spl%nsm, " smoothing passes)"
+    call par_info(trim(msg))
+    if (.not. allocated(gm%spl%zs)) then
+      allocate(gm%spl%zs(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(gm%spl%zt(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    end if
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! z の平滑化(spl_lc > 0): 5 点核(自セル 1−2wx−2wy、x 近傍 wx、y 近傍 wy)を
+!   nsm 回反復し gm%spl%zs に置く。無効な近傍(範囲外・領域外 x=0)は自セル値
+!   で鏡像(κ の評価と同じ規約)、海セルの z は実地形として読む。
+!   各パスの後に zs のハロを交換する(パス数は namelist 由来の静的量で
+!   全ランク同一 = collective 安全)
+!----------------------------------------------------------------------
+subroutine smooth_z(gm, g, s)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer :: i, j, n
+  real :: zc, ze, zw, zn, zsn, wx, wy, w0
+
+  wx = gm%spl%wsx
+  wy = gm%spl%wsy
+  w0 = 1.0 - 2.0 * (wx + wy)
+  gm%spl%zs(:, dcp%jsh:dcp%jeh) = s%z(:, dcp%jsh:dcp%jeh)
+  do n = 1, gm%spl%nsm
+    !$omp parallel do schedule(static) private(i, j, zc, ze, zw, zn, zsn)
+    do j = dcp%js, dcp%je
+      gm%spl%zt(:, j) = gm%spl%zs(:, j)
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        zc = gm%spl%zs(i,j)
+        ze = zc; zw = zc; zn = zc; zsn = zc
+        if (i < g%nx) then
+          if (g%x(i+1,j) > 0) ze = gm%spl%zs(i+1,j)
+        end if
+        if (i > 1) then
+          if (g%x(i-1,j) > 0) zw = gm%spl%zs(i-1,j)
+        end if
+        if (g%x(i,j+1) > 0) zn = gm%spl%zs(i,j+1)
+        if (g%x(i,j-1) > 0) zsn = gm%spl%zs(i,j-1)
+        gm%spl%zt(i,j) = w0 * zc + wx * (ze + zw) + wy * (zn + zsn)
+      end do
+    end do
+    !$omp end parallel do
+    gm%spl%zs(:, dcp%js:dcp%je) = gm%spl%zt(:, dcp%js:dcp%je)
+    call par_halo_cell(gm%spl%zs)
+  end do
 end subroutine
 
 
@@ -89,16 +170,24 @@ module subroutine eval_splash(gm, p, g, s, dts)
   real, intent(in) :: dts       ! 実効時間刻み(morfac 込み)
   integer :: i, j, nclip
   real :: zc, ze, zw, zn, zs, kap, sx, sy, ss, er, fx
-  real :: dxi, dyi, dx2i, dy2i
+  real :: kc, ke, kw, kn, ks
+  real :: dxi, dyi, dx2i, dy2i, ddi
+  real :: zn8(8), dd8(8)
+  integer :: k, in, jn
+  logical :: smooth
 
   dxi = 0.5 / g%dx
   dyi = 0.5 / g%dy
   dx2i = 1.0 / (g%dx * g%dx)
   dy2i = 1.0 / (g%dy * g%dy)
+  ddi = 1.0 / sqrt(g%dx * g%dx + g%dy * g%dy)
+  dd8 = [ddi, 1.0 / g%dy, ddi, 1.0 / g%dx, 1.0 / g%dx, ddi, 1.0 / g%dy, ddi]
   nclip = 0
+  smooth = (gm%spl%nsm > 0)
+  if (smooth) call smooth_z(gm, g, s)
 
   !$omp parallel do schedule(static) reduction(+:nclip) &
-  !$omp   private(i, j, zc, ze, zw, zn, zs, kap, sx, sy, ss, er, fx)
+  !$omp   private(i, j, zc, ze, zw, zn, zs, kap, sx, sy, ss, er, fx, kc, ke, kw, kn, ks, k, in, jn, zn8)
   do j = dcp%js, dcp%je
     gm%spl%fx(:,j) = 0.0
     do i = g%wx(1,j), g%wx(2,j)
@@ -108,8 +197,11 @@ module subroutine eval_splash(gm, p, g, s, dts)
       if (s%h(i,j) > p%dd) cycle        ! 湿潤セルは f_wash の管轄(相補)
       if (s%pre(i,j) <= 0.0) cycle      ! 侵食は降雨イベント駆動
       if (s%sd(i,j) <= 0.0) cycle       ! 岩盤露出セルは停止
-      ! 近傍 z(範囲外・領域外は鏡像 = 寄与ゼロ)
       zc = s%z(i,j)
+      if (gm%szbase > -9000.0) then
+        if (zc <= gm%szbase) cycle      ! 侵食基準面(海面)以下は削らない
+      end if
+      ! 近傍 z(範囲外・領域外は鏡像 = 寄与ゼロ)
       ze = zc; zw = zc; zn = zc; zs = zc
       if (i < g%nx) then
         if (g%x(i+1,j) > 0) ze = s%z(i+1,j)
@@ -119,11 +211,40 @@ module subroutine eval_splash(gm, p, g, s, dts)
       end if
       if (g%x(i,j+1) > 0) zn = s%z(i,j+1)
       if (g%x(i,j-1) > 0) zs = s%z(i,j-1)
-      ! 曲率(凹で正)と勾配
-      kap = max((ze + zw - 2.0 * zc) * dx2i + (zn + zs - 2.0 * zc) * dy2i, 0.0)
-      sx = (ze - zw) * dxi
-      sy = (zn - zs) * dyi
-      ss = sqrt(sx * sx + sy * sy)
+      ! 曲率(凹で正。spl_lc > 0 なら平滑化した zs から、同じ鏡像規約で)と勾配
+      if (smooth) then
+        kc = gm%spl%zs(i,j)
+        ke = kc; kw = kc; kn = kc; ks = kc
+        if (i < g%nx) then
+          if (g%x(i+1,j) > 0) ke = gm%spl%zs(i+1,j)
+        end if
+        if (i > 1) then
+          if (g%x(i-1,j) > 0) kw = gm%spl%zs(i-1,j)
+        end if
+        if (g%x(i,j+1) > 0) kn = gm%spl%zs(i,j+1)
+        if (g%x(i,j-1) > 0) ks = gm%spl%zs(i,j-1)
+        kap = max((ke + kw - 2.0 * kc) * dx2i + (kn + ks - 2.0 * kc) * dy2i, 0.0)
+      else
+        kap = max((ze + zw - 2.0 * zc) * dx2i + (zn + zs - 2.0 * zc) * dy2i, 0.0)
+      end if
+      if (gm%ssgrad == 1) then
+        ! 最急降下(既定): 8 近傍への下り勾配 (zc − zn)/距離 の最大(無効な近傍・
+        ! 上り = 0)。中央差分(spl_sgrad = 0。旧挙動)は稜線の頂で左右が打ち消して
+        ! S ≈ 0 になり 1 セル幅の尾根が削れない(§48.4)。最急降下なら頂のセルも
+        ! 両面の勾配で削れ、市松(高いセルだけ S > 0)も減衰する
+        ss = 0.0
+        do k = 1, 8
+          in = i + din(k)
+          jn = j + djn(k)
+          if (in < 1 .or. in > g%nx) cycle
+          if (g%x(in,jn) <= 0) cycle
+          ss = max(ss, (zc - s%z(in,jn)) * dd8(k))
+        end do
+      else
+        sx = (ze - zw) * dxi
+        sy = (zn - zs) * dyi
+        ss = sqrt(sx * sx + sy * sy)
+      end if
       ! 浸食レート(固体体積 m/s)
       er = gm%skr * (1.0 + gm%sca * kap)
       if (gm%skt > 0.0 .and. ss > 0.0) then
@@ -138,6 +259,7 @@ module subroutine eval_splash(gm, p, g, s, dts)
         nclip = nclip + 1
       end if
       fx = min(fx, s%sd(i,j))
+      if (gm%szbase > -9000.0) fx = min(fx, zc - gm%szbase)
       gm%spl%fx(i,j) = fx
     end do
   end do

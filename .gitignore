@@ -67,7 +67,13 @@ Thumbs.db
 save/
 save_*/
 test/splashslide/z.txt
+test/splashlc/z.txt
+test/splashlc/sw.txt
 examples/badland/z.txt
+examples/badland/sw.txt
+examples/badland/z_*.txt
+examples/badland/sw_*.txt
+examples/badland/wrk_*
 examples/timberyard/z.txt
 examples/timberyard/z_wall*.txt
 examples/timberyard/sw.txt
