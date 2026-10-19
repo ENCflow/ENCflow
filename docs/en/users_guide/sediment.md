@@ -316,10 +316,29 @@ sediment cannot be carried without flow, so it is **exported out of the
 system** (the total is reported at the end) and $`z`$, $`s_d`$ are reduced
 co-movingly. A concavity feedback without smoothing grows fastest at the
 shortest wavelength (the infinite-wavenumber problem of Smith &
-Bretherton[^smith72]), so selecting a valley spacing needs a weak
-`f_creep`, and the spacing is set by the ratio of the amplification $`c_b`$
-to the diffusion $`D`$ (the same structure as Perron et al.'s
-$`\lambda \propto \sqrt{K_s/K}`$[^perron09]). `spl_dzmax` is a safety valve.
+Bretherton[^smith72]): with the curvature taken on the grid (`spl_lc` = 0)
+the valley spacing sticks to 2-3 grid cells, and a weak `f_creep` only
+decides whether perturbations grow at all (both amplification and diffusion
+scale with $`k^2`$) without selecting a spacing. When the curvature is taken
+from $`z`$ smoothed over a correlation length $`\ell`$ (`spl_lc`, the
+collection scale of the sub-grid rills), the growth rate of a perturbation
+
+```math
+\sigma(k) = k^2\left[D_a\,e^{-\ell^2 k^2/2} - D\right],\qquad
+D_a = P\,k_t\,c_b\,S^{h}
+```
+
+has a maximum at a finite wavenumber, and the valley spacing is
+$`\lambda^* \approx 4.4\ell`$ ($`D_a \gg D`$) to $`6\ell`$
+($`D_a \approx 4D`$), proportional to $`\ell`$ (the same "ratio of
+amplification to diffusion" structure as Perron et al.'s
+$`\lambda \propto \sqrt{K_s/K}`$[^perron09], now with the scale $`\ell`$
+built in). The curvature at a V-shaped valley floor is also bounded by
+$`\sim 2S/\ell`$ (the speed of the deep-valley stage, where the walls
+steepen to one-cell steps, still depends on the grid through $`S`$;
+examples/badland).
+`spl_zbase` is the erosion base level (the sea level when the cliff foot is
+the sea) and `spl_dzmax` a safety valve.
 The defaults $`k_r`$ = 0.0005 and $`k_t`$ = 0.05 are the medians of the tests
 (**empirical**); verification is
 [test/splash](../../../test/splash/README.md) (all digits agree with the
@@ -379,6 +398,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | spl_kr / spl_kt / spl_h | 5e-4 / 0.05 / 1 | dry-erosion coefficients and slope exponent (§6) | **empirical** medians of the tests |
 | spl_ca / spl_cb | 0 / 0 m | concavity amplification lengths | **given** 0 = no amplification; a few to tens of metres to grow valleys |
 | spl_dzmax | 0 | erosion limit per update | **numerical** 0 = off; safety valve against runaway |
+| spl_lc | 0 m | correlation length $`\ell`$ of the curvature | **given** 0 = curvature on the grid (grid-dependent spacing); about one fifth of the valley spacing (examples/badland) |
+| spl_zbase | none | erosion base level | **given** the sea level when the cliff foot is the sea |
 | wthr_p0 / wthr_sdstar | 50 mm/kyr / 0.5 m | soil production rate / decay depth (§7) | **literature value** middle of the published range of the Heimsath function[^heimsath97] |
 | uplift0 | 1 mm/yr | uplift rate | **customary value** lower end of orogenic belts |
 

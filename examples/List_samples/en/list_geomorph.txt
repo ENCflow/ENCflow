@@ -145,6 +145,13 @@
   !spl_h = 1.0              ! slope exponent h of the rill term
   !spl_dzmax = 0.0          ! erosion cap per cell per update (m) (0: off;
                             !   safety valve against runaway feedback)
+  !spl_lc = 0.0             ! correlation length l (m) at which the curvature kappa
+                            !   is evaluated (0: 5-point Laplacian on the grid). If
+                            !   positive, z is smoothed with a Gaussian of std l before
+                            !   kappa is taken; the valley spacing is then selected at
+                            !   about 5-6 l and converges under grid refinement (l/dx >= 2; sec. 48.3)
+  !spl_zbase = -9999.0      ! elevation of the erosion base level (m) (<= -9000: none).
+                            !   Give the sea level when the cliff foot is the sea
 
   ! Debris flow / landslide (Takahashi-type equilibrium-concentration E-D)
   ! (0: off, 1: on)

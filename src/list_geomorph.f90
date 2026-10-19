@@ -106,6 +106,12 @@ module list_geomorph
     real :: spl_h = 1.0              ! リル項の勾配べき指数 h
     real :: spl_dzmax = 0.0          ! 1セル・1更新の侵食上限 (m)(0=無効。
                                      ! 正のフィードバック暴走の安全弁)
+    real :: spl_lc = 0.0             ! 曲率 κ を評価する相関長 ℓ (m)(0 = 格子の 5 点
+                                     ! ラプラシアン)。正なら z を標準偏差 ℓ のガウス核で
+                                     ! 平滑化してから κ を取る(サブグリッドリルの集水
+                                     ! スケール。谷間隔の選択と格子収束を与える。§48.3)
+    real :: spl_zbase = -9999.0      ! 侵食基準面の標高 (m)(-9000 以下 = なし)。
+                                     ! 崖下が海のとき海面を与える(z がこれを下回らない)
 
     integer :: f_debris = 0          ! 土石流 E-D(高橋型平衡濃度)(0:無効, 1:有効)。
                                      ! f_suspend と排他(同一 hs 上の E-D 二重計上防止)。
@@ -276,7 +282,7 @@ subroutine list_geomorph_read(p, list)
   real :: wash_kf
   real :: wash_tausc
   integer :: f_splash
-  real :: spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax
+  real :: spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, spl_lc, spl_zbase
   integer :: f_debris
   real :: db_phi
   real :: db_delte
@@ -323,6 +329,7 @@ subroutine list_geomorph_read(p, list)
                            susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, &
                            f_wash, wash_kr, wash_kf, wash_tausc, &
                            f_splash, spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, &
+                           spl_lc, spl_zbase, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
                            f_dbed, db_d50, db_erest, db_cmin, f_dbwet, db_satbed, &
                            db_mu, db_xi, db_tauy, f_dbcurv, &
@@ -388,6 +395,8 @@ subroutine list_geomorph_read(p, list)
   spl_cb = list%spl_cb
   spl_h = list%spl_h
   spl_dzmax = list%spl_dzmax
+  spl_lc = list%spl_lc
+  spl_zbase = list%spl_zbase
   f_debris = list%f_debris
   db_phi = list%db_phi
   db_delte = list%db_delte
@@ -497,6 +506,8 @@ subroutine list_geomorph_read(p, list)
   list%spl_cb = spl_cb
   list%spl_h = spl_h
   list%spl_dzmax = spl_dzmax
+  list%spl_lc = spl_lc
+  list%spl_zbase = spl_zbase
   list%f_debris = f_debris
   list%db_phi = db_phi
   list%db_delte = db_delte
