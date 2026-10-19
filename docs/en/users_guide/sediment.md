@@ -317,23 +317,23 @@ system** (the total is reported at the end) and $`z`$, $`s_d`$ are reduced
 co-movingly. A concavity feedback without smoothing grows fastest at the
 shortest wavelength (the infinite-wavenumber problem of Smith &
 Bretherton[^smith72]): with the curvature taken on the grid (`spl_lc` = 0)
-the valley spacing sticks to 2-3 grid cells, and a weak `f_creep` only
-decides whether perturbations grow at all (both amplification and diffusion
-scale with $`k^2`$) without selecting a spacing. When the curvature is taken
-from $`z`$ smoothed over a correlation length $`\ell`$ (`spl_lc`, the
-collection scale of the sub-grid rills), the growth rate of a perturbation
+the valley spacing sticks to 2-3 grid cells (adding a diffusion term only
+decides whether perturbations grow at all, since both amplification and
+diffusion scale with $`k^2`$; creep is not a mechanical model and is not
+combined with it). When the curvature is taken from $`z`$ smoothed over a
+correlation length $`\ell`$ (`spl_lc`, the collection scale of the sub-grid
+rills), the growth rate of a perturbation
 
 ```math
-\sigma(k) = k^2\left[D_a\,e^{-\ell^2 k^2/2} - D\right],\qquad
+\sigma(k) = D_a\,k^2\,e^{-\ell^2 k^2/2},\qquad
 D_a = P\,k_t\,c_b\,S^{h}
 ```
 
-has a maximum at a finite wavenumber, and the valley spacing is
-$`\lambda^* \approx 4.4\ell`$ ($`D_a \gg D`$) to $`6\ell`$
-($`D_a \approx 4D`$), proportional to $`\ell`$ (the same "ratio of
-amplification to diffusion" structure as Perron et al.'s
-$`\lambda \propto \sqrt{K_s/K}`$[^perron09], now with the scale $`\ell`$
-built in). The curvature at a V-shaped valley floor is also bounded by
+has a maximum at the finite wavenumber $`k^* = \sqrt{2}/\ell`$, so the
+valley spacing $`\lambda^* = 2\pi\ell/\sqrt{2} \approx 4.4\,\ell`$ is set
+by $`\ell`$ alone (where Perron et al.'s $`\lambda \propto \sqrt{K_s/K}`$
+[^perron09] sets the spacing by the ratio of amplification to diffusion,
+here the smoothing scale itself sets it). The curvature at a V-shaped valley floor is also bounded by
 $`\sim 2S/\ell`$ (the speed of the deep-valley stage, where the walls
 steepen to one-cell steps, still depends on the grid through $`S`$;
 examples/badland).

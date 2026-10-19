@@ -5,10 +5,12 @@
 #   構成 g(spl_lc = 0、格子の κ): 最短波長が最速成長する(無限波数問題)ため
 #     短波長 λ1 の成長比が長波長 λ2 の成長比を上回る。
 #   構成 l(spl_lc = 2 m): 平滑化した κ は λ1 を見ない(ガウス核の伝達
-#     exp(−ℓ²k²/2) = 0.007)ため λ1 は creep で減衰し、λ2(伝達 0.82)が成長する。
+#     exp(−ℓ²k²/2) = 0.007)ため λ1 はほぼ中立にとどまり、λ2(伝達 0.82)だけが
+#     成長する(拡散項は使わないので短波長は減衰せず、成長しないだけ)。
 # 検定:
 #   (1) g: 成長比 λ1 > 成長比 λ2(短波長優勢)
-#   (2) l: 成長比 λ2 >= 1.5(長波長が成長)かつ 成長比 λ1 <= 0.6(短波長が減衰)
+#   (2) l: 成長比 λ2 >= 1.5(長波長が成長)、成長比 λ1 <= 1.5(短波長はほぼ中立)、
+#          かつ λ2 の成長比が λ1 の 3 倍以上(長波長の選択)
 #   (3) 両構成: 台地内部(x <= 12 m)は無傷(|Δz| < 0.05 m)
 #   (4) 両構成: 侵食基準面 spl_zbase = 0 を下回らない(z >= 0)
 import sys
@@ -60,5 +62,6 @@ g1, g2 = res["g"]
 check("grid curvature: short wavelength grows faster", g1 > g2, "x%.2f > x%.2f" % (g1, g2))
 g1, g2 = res["l"]
 check("spl_lc = 2: long wavelength grows", g2 >= 1.5, "x%.2f >= 1.5" % g2)
-check("spl_lc = 2: short wavelength decays", g1 <= 0.6, "x%.2f <= 0.6" % g1)
+check("spl_lc = 2: short wavelength stays near neutral", g1 <= 1.5, "x%.2f <= 1.5" % g1)
+check("spl_lc = 2: long wavelength selected", g2 >= 3.0 * g1, "x%.2f >= 3 * x%.2f" % (g2, g1))
 sys.exit(rc)

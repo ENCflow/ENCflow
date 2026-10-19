@@ -4,7 +4,7 @@
 !   (Green-Ampt 36 mm/h > 10 mm/h)し、地表流はゼロのまま f_splash の
 !   凹地形フィードバック(spl_cb)が谷を刻む。曲率は相関長 spl_lc = 2 m で
 !   評価する(谷間隔 ≈ 5〜7 ℓ に選択。developer.md §48.3)。海面 z = 0 が
-!   侵食基準面(spl_zbase)。弱い creep が最短波長を抑える。
+!   侵食基準面(spl_zbase)。クリープなどの拡散項は使わない(力学的モデルでない)。
 !   実行: python3 make_terrain.py main && ./encflow param.txt(5 時間 =
 !   T_geo 9e6 s の降雨相当。約 1 分)。30 分毎(T_geo 9e5 s)に Z0001.. を出力
 &list_sysparam
@@ -56,8 +56,6 @@
 &list_geomorph
   dt_geomorph = 2.0
   morfac = 500.0
-  f_creep = 1
-  creep_d = 5.0e-7
   f_splash = 1
   spl_kr = 0.0002
   spl_kt = 0.05

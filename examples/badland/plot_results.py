@@ -114,12 +114,16 @@ def spectrum_centroid(z, cols, dx):
 
 
 def metrics(z, z0, dx, hp):
+    """崖面帯(列平均が台地と海面の間)の指標。波長・間隔は地形変化 Δz = z − z0 から
+    取る(拡散項を使わないので初期の白色雑音は減衰せず中立に残り、z そのものの
+    スペクトルを汚すため。Δz は成長した成分だけを含む)"""
     cols = cliff_cols(z, hp)
     if not cols:
         return None
     rel = float(np.mean([z[:, c].std() for c in cols]))
-    sp, sps, nv = valley_spacing(z, cols, dx)
-    lam, _, _ = spectrum_centroid(z, cols, dx)
+    dz = z - z0
+    sp, sps, nv = valley_spacing(dz, cols, dx, pmin=1.0)
+    lam, _, _ = spectrum_centroid(dz, cols, dx)
     stds = z.std(axis=0)
     cr = np.where(stds > 0.2)[0]
     xhead = (cr.min() + 0.5) * dx if len(cr) else np.nan
@@ -214,8 +218,8 @@ if main is not None:
     T = np.array([r["t"] for r in rows])
     fig, ax = plt.subplots(1, 4, figsize=(16, 3.6))
     ax[0].plot(T, [r["relief"] for r in rows], "o-"); ax[0].set_ylabel("崖面帯の y 方向起伏 (m)")
-    ax[1].plot(T, [r["lam"] for r in rows], "o-", label="スペクトル重心の波長"); ax[1].plot(T, [r["spacing"] for r in rows], "s--", label="谷間隔(prominence ≥ 0.5 m)")
-    ax[1].axhline(2 * np.pi * main["lc"] / 1.31, color="k", ls=":", lw=0.8, label="線形理論 λ* = 4.8 ℓ")
+    ax[1].plot(T, [r["lam"] for r in rows], "o-", label="Δz のスペクトル重心の波長"); ax[1].plot(T, [r["spacing"] for r in rows], "s--", label="谷間隔(Δz の prominence ≥ 1 m)")
+    ax[1].axhline(2 * np.pi * main["lc"] / np.sqrt(2.0), color="k", ls=":", lw=0.8, label="線形理論 λ* = 4.4 ℓ")
     ax[1].set_ylabel("(m)"); ax[1].legend(fontsize=7)
     ax[2].plot(T, [r["max_inc"] for r in rows], "o-", label="最大下刻"); ax[2].plot(T, [r["mean_inc"] for r in rows], "s--", label="崖面帯の平均低下")
     ax[2].set_ylabel("(m)"); ax[2].legend(fontsize=7)
@@ -248,15 +252,17 @@ if main is not None:
     ax[3].hist(ridge_k, bins=40, color="C3"); ax[3].set_xlabel("稜線の y 方向曲率 (1/m)"); ax[3].set_title("稜線の鋭さ(崖面帯の列の局所最大)", fontsize=9)
     fig.tight_layout(); fig.savefig("figs/main_features.png", dpi=110); plt.close(fig)
 
-    m0 = metrics(snaps[0][1], z0, dx, hp); mf = rows[-1]
+    m0 = rows[0]; mf = rows[-1]
     vout = re.findall(r"exported sediment volume =\s*([\d.Ee+-]+)", main["log"])
     nclip = re.findall(r"clip fired on\s+(\d+)", main["log"])
     ridge_k = np.array(ridge_k)
     print("## 主ケース(param.txt)")
     print("| 量 | 初期 | 最終(T_geo = %.1e s) |" % mf["t"]); print("|---|---|---|")
     print("| 崖面帯の y 方向起伏 (m) | %.2f | %.2f |" % (m0["relief"], mf["relief"]))
-    print("| 谷間隔 (m)(prominence ≥ 0.5 m) | %s | %s ± %s(%s 本) |" % (fmt(m0["spacing"]), fmt(mf["spacing"]), fmt(mf["spacing_sd"]), fmt(mf["nvalleys"])))
-    print("| スペクトル重心の波長 (m) | %.1f | %.1f |" % (m0["lam"], mf["lam"]))
+    m2 = [r for r in rows if abs(r["t"] - 1.8e6) < 1][0]; m4 = [r for r in rows if abs(r["t"] - 3.6e6) < 1][0]
+    print("| 谷間隔 (m)(Δz の prominence ≥ 1 m) | – | 1.8e6 s: %s ± %s(%s 本)、3.6e6 s: %s ± %s(%s 本)、最終: %s ± %s(%s 本) |" % (
+        fmt(m2["spacing"]), fmt(m2["spacing_sd"]), fmt(m2["nvalleys"]), fmt(m4["spacing"]), fmt(m4["spacing_sd"]), fmt(m4["nvalleys"]), fmt(mf["spacing"]), fmt(mf["spacing_sd"]), fmt(mf["nvalleys"])))
+    print("| Δz のスペクトル重心の波長 (m) | – | 1.8e6 s: %.1f、3.6e6 s: %.1f、最終: %.1f |" % (m2["lam"], m4["lam"], mf["lam"]))
     print("| 最大下刻 / 崖面帯の平均低下 (m) | – | %.1f / %.1f |" % (mf["max_inc"], mf["mean_inc"]))
     print("| 谷頭の位置 x (m)(台地縁 60 m) | %.1f | %.1f |" % (m0["xhead"], mf["xhead"]))
     print("| 稜線の y 方向曲率 (1/m): 中央値 / 最小 | – | %.1f / %.1f |" % (np.median(ridge_k), ridge_k.min()))
@@ -275,16 +281,25 @@ if cases:
     tab = []
     for c in cases:
         z0, dx, hp = c["z0"], c["dx"], c["hp"]
-        early = [s for s in c["snaps"] if s[0] >= 1.8e6 - 1][0] if any(s[0] >= 1.8e6 - 1 for s in c["snaps"]) else c["snaps"][-1]
-        me = metrics(early[1], z0, dx, hp); mf = metrics(c["zf"], z0, dx, hp)
-        tab.append((c, early[0], me, mf))
+        def snap_at(tt):
+            return c["snaps"][int(np.argmin([abs(t - tt) for t, _ in c["snaps"]]))]
+        # 成長段階をそろえる: 崖面帯の起伏が初めて 2 m を超えた出力(ℓ が大きいほど成長が遅い)
+        early = snap_at(1.8e6)
+        grown = None
+        for t, zz in c["snaps"]:
+            mt = metrics(zz, z0, dx, hp)
+            if mt and mt["relief"] >= 2.0:
+                grown = (t, zz); break
+        if grown is None:
+            grown = c["snaps"][-1]
+        me = metrics(early[1], z0, dx, hp); mm = metrics(grown[1], z0, dx, hp); mm["t"] = grown[0]; mf = metrics(c["zf"], z0, dx, hp)
+        tab.append((c, early[0], me, mm, mf))
     print("## 谷間隔の選択則と格子収束")
-    print("| ケース | spl_lc (m) | Δx (m) | 初期の起伏 (m) | T_geo = %.1e s: 重心波長 / 谷間隔 (m) | 最終: 重心波長 / 谷間隔 (m) / 本数 | 最終の起伏 (m) | 最大下刻 / 平均低下 (m) | 谷頭 x (m) |" % tab[0][1])
-    print("|---|---|---|---|---|---|---|---|---|")
-    for c, te, me, mf in tab:
-        m0 = metrics(c["z0"], c["z0"], c["dx"], c["hp"])
-        print("| %s | %g | %g | %.2f | %.1f / %s | %.1f / %s / %s | %.2f | %.1f / %.1f | %.1f |" % (
-            c["name"], c["lc"], c["dx"], m0["relief"], me["lam"], fmt(me["spacing"]), mf["lam"], fmt(mf["spacing"]), fmt(mf["nvalleys"], "%.0f"), mf["relief"], mf["max_inc"], mf["mean_inc"], mf["xhead"]))
+    print("| ケース | spl_lc (m) | Δx (m) | T_geo = 1.8e6 s: Δz の重心波長 / 谷間隔 (m) / 平均低下 (m) | 起伏 2 m 到達時(T_geo): 重心波長 / 谷間隔 (m) / 本数 / 平均低下 (m) | 最終: 起伏 (m) / 最大下刻 / 平均低下 (m) / 谷頭 x (m) |")
+    print("|---|---|---|---|---|---|")
+    for c, te, me, mm, mf in tab:
+        print("| %s | %g | %g | %.1f / %s / %.1f | (%.1e s) %.1f / %s / %s / %.1f | %.2f / %.1f / %.1f / %.1f |" % (
+            c["name"], c["lc"], c["dx"], me["lam"], fmt(me["spacing"]), me["mean_inc"], mm["t"], mm["lam"], fmt(mm["spacing"]), fmt(mm["nvalleys"], "%.0f"), mm["mean_inc"], mf["relief"], mf["max_inc"], mf["mean_inc"], mf["xhead"]))
 
     fig, ax = plt.subplots(2, 4, figsize=(17, 8))
     # 上段: 地図(grid, lc1, lc2, lc4)
@@ -293,28 +308,29 @@ if cases:
         if not cc:
             ax[0, k].axis("off"); continue
         c = cc[0]; ny, nx = c["zf"].shape; ext = [0, nx * c["dx"], 0, ny * c["dx"]]
-        ts, zs = c["snaps"][int(np.argmin([abs(t - 3.6e6) for t, _ in c["snaps"]]))]
+        tg = [mm["t"] for cc2, te, me, mm, mf in tab if cc2["name"] == nm][0]
+        ts, zs = c["snaps"][int(np.argmin([abs(t - tg) for t, _ in c["snaps"]]))]
         im = ax[0, k].imshow(zs, origin="lower", extent=ext, cmap="terrain", vmin=0, vmax=c["hp"])
         ax[0, k].set_xlim(20, 60); ax[0, k].set_ylim(0, 120)
         ax[0, k].set_title(("格子の κ(spl_lc = 0)" if c["lc"] == 0 else "spl_lc = %g m" % c["lc"]) + ", T_geo = %.1e s" % ts, fontsize=9)
     # 下段左: 間隔 vs ℓ
     a = ax[1, 0]
-    lcs = [c["lc"] for c, te, me, mf in tab if c["dx"] == 1.0 and c["lc"] > 0]
-    a.plot(lcs, [me["lam"] for c, te, me, mf in tab if c["dx"] == 1.0 and c["lc"] > 0], "o-", label="T_geo = 1.8e6 s(重心波長)")
-    a.plot(lcs, [mf["lam"] for c, te, me, mf in tab if c["dx"] == 1.0 and c["lc"] > 0], "s--", label="最終(重心波長)")
-    a.plot(lcs, [mf["spacing"] for c, te, me, mf in tab if c["dx"] == 1.0 and c["lc"] > 0], "^:", label="最終(谷間隔)")
+    lcs = [c["lc"] for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0]
+    a.plot(lcs, [me["lam"] for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0], "o-", label="T_geo = 1.8e6 s(Δz の重心波長)")
+    a.plot(lcs, [mm["lam"] for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0], "s--", label="起伏 2 m 到達時(重心波長)")
+    a.plot(lcs, [mm["spacing"] for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0], "^:", label="起伏 2 m 到達時(谷間隔)")
     ll = np.linspace(0.5, 4.5, 20)
-    a.fill_between(ll, 4.4 * ll, 6.0 * ll, color="0.85", label="線形理論 4.4〜6 ℓ")
-    g = [mf for c, te, me, mf in tab if c["lc"] == 0]
+    a.plot(ll, 4.4 * ll, color="0.5", lw=2, label="線形理論 λ* = 4.4 ℓ")
+    g = [mm for c, te, me, mm, mf in tab if c["lc"] == 0]
     if g:
-        a.axhline(g[0]["lam"], color="k", ls=":", lw=0.8, label="格子の κ(最終)")
+        a.axhline(g[0]["lam"], color="k", ls=":", lw=0.8, label="格子の κ(起伏 2 m 到達時)")
     a.set_xlabel("spl_lc ℓ (m)"); a.set_ylabel("波長・間隔 (m)"); a.legend(fontsize=7); a.set_title("谷間隔の選択則", fontsize=9)
     # 下段中: 格子収束
     a = ax[1, 1]
-    dxs = sorted(set(c["dx"] for c, te, me, mf in tab if c["lc"] == 2.0))
-    a.plot(dxs, [[me["lam"] for c, te, me, mf in tab if c["lc"] == 2.0 and c["dx"] == d][0] for d in dxs], "o-", label="重心波長 (m), T_geo = 1.8e6 s")
-    for key, lab, st in [("lam", "重心波長 (m), 最終", "o--"), ("spacing", "谷間隔 (m), 最終", "s--"), ("mean_inc", "崖面帯の平均低下 (m), 最終", "^:"), ("relief", "起伏 (m), 最終", "d-.")]:
-        a.plot(dxs, [[mf[key] for c, te, me, mf in tab if c["lc"] == 2.0 and c["dx"] == d][0] for d in dxs], st, label=lab)
+    dxs = sorted(set(c["dx"] for c, te, me, mm, mf in tab if c["lc"] == 2.0))
+    for key, lab, st, which in [("lam", "重心波長 (m), 1.8e6 s", "o-", 2), ("lam", "重心波長 (m), 起伏 2 m 到達時", "o--", 3), ("spacing", "谷間隔 (m), 起伏 2 m 到達時", "s--", 3),
+                                ("mean_inc", "崖面帯の平均低下 (m), 1.8e6 s", "^:", 2), ("mean_inc", "崖面帯の平均低下 (m), 最終", "^-.", 4)]:
+        a.plot(dxs, [[t[which][key] for t in tab if t[0]["lc"] == 2.0 and t[0]["dx"] == d][0] for d in dxs], st, label=lab)
     a.set_xscale("log"); a.set_xticks(dxs); a.set_xticklabels(["%g" % d for d in dxs]); a.set_xlabel("Δx (m)(spl_lc = 2 m)"); a.legend(fontsize=7); a.set_title("格子収束", fontsize=9)
     # 下段右 2 枚: Δx = 0.5 と 2 の地図
     for k, nm in enumerate(["param_lc2_dx05", "param_lc2_dx2"]):
@@ -325,5 +341,6 @@ if cases:
         ts, zs = c["snaps"][int(np.argmin([abs(t - 3.6e6) for t, _ in c["snaps"]]))]
         ax[1, 2 + k].imshow(zs, origin="lower", extent=ext, cmap="terrain", vmin=0, vmax=c["hp"])
         ax[1, 2 + k].set_xlim(20, 60); ax[1, 2 + k].set_ylim(0, 120); ax[1, 2 + k].set_title("spl_lc = 2 m, Δx = %g m, T_geo = %.1e s" % (c["dx"], ts), fontsize=9)
+    ax[1, 1].set_title("格子収束(spl_lc = 2 m)", fontsize=9)
     fig.tight_layout(); fig.savefig("figs/spacing.png", dpi=110); plt.close(fig)
 print("figs/ written")

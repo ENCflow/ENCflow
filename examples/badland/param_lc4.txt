@@ -1,13 +1,13 @@
 ! バッドランド型の谷形成: 相関長系列(README「谷の間隔」)。spl_lc = 4 m
 !   台地(z = 15 m、幅 40 m)+ 56° の崖が海に落ちる。主ケースと同じ侵食則で
-!   spl_lc だけを変える(谷間隔 ∝ ℓ)。T_geo = 5.4e6 s
+!   spl_lc だけを変える(谷間隔 ∝ ℓ)。ℓ = 4 m は成長が遅い(σ_max ∝ 1/ℓ²)ので 4 倍の T_geo = 2.2e7 s
 !   実行: python3 make_terrain.py sweep && ./encflow param_lc4.txt
 &list_sysparam
   f_gridsystem = 0
   f_govequation = 0
   dt = 2.0
   t0 = 0
-  tt = 10800
+  tt = 43200
   dt_disp = 3600
   dt_file = 1800
   dt_recrd = 10800
@@ -51,8 +51,6 @@
 &list_geomorph
   dt_geomorph = 2.0
   morfac = 500.0
-  f_creep = 1
-  creep_d = 5.0e-7
   f_splash = 1
   spl_kr = 0.0002
   spl_kt = 0.05

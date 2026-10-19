@@ -51,8 +51,6 @@
 &list_geomorph
   dt_geomorph = 10.0
   morfac = 500.0
-  f_creep = 1
-  creep_d = 5.0e-7
   f_splash = 1
   spl_kr = 0.0002
   spl_kt = 0.05
