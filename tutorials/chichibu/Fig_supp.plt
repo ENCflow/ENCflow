@@ -88,7 +88,7 @@ do for [s=1:2] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLB[s], TLB[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]   # 上流は波形が短いので時間軸を縮める
-    set yrange [0:(t == 1 ? 1600 : 6500)]
+    set yrange [0:(s == 1 ? (t == 1 ? 1600 : 8000) : (t == 1 ? 200 : 1000))]   # 4 近傍は ENC の 1/8(本文に注記)
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RES[r], SFX[s], TRN[t]) \
          using 2:3 with lines lw 1.5 title RLB[r]
   }
@@ -98,20 +98,20 @@ unset multiplot
 # ---- 図 2c: 移流項の扱い(なし / スキーム 1 / スキーム 3)× 解像度。測線 1・4 ----
 reset
 set datafile separator comma
-set terminal pngcairo size 1000,1200 font ",11"
+set terminal pngcairo size 1000,1500 font ",11"
 set output "figs/supp_hydro_adv.png"
-set multiplot layout 4,2 title "移流項の扱いと解像度依存: 上から 移流項なし(拡散波)、スキーム 1(旧、風上化 0.5)、スキーム 1(風上化 0.1)、スキーム 3(既定)" noenhanced
+set multiplot layout 5,2 title "移流項の扱いと解像度依存(上から: 移流項なし、スキーム 1 の風上化 0.5 / 0.1 / 1.0、スキーム 3)" noenhanced
 set grid
 set xlabel "時間 (min)"
 set ylabel "流量 (m^3/s)"
 set key top right
 array RESA[3] = [ "200m", "100m", "50m" ]
 array RLBA[3] = [ "200 m", "100 m", "50 m" ]
-array SFXA[4] = [ "_noadv", "_s1", "_s1u", "" ]
-array SLBA[4] = [ "移流項なし", "スキーム 1(風上化 0.5)", "スキーム 1(風上化 0.1)", "スキーム 3(既定)" ]
+array SFXA[5] = [ "_noadv", "_s1", "_s1u", "_s1f", "" ]
+array SLBA[5] = [ "移流項なし", "スキーム 1(風上化 0.5)", "スキーム 1(風上化 0.1)", "スキーム 1(風上化 1.0)", "スキーム 3(既定)" ]
 array TRNA[2] = [ 1, 4 ]
 array TLBA[2] = [ "上流(測線 1)", "下流(測線 4)" ]
-do for [s=1:4] {
+do for [s=1:5] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLBA[s], TLBA[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]
@@ -138,7 +138,7 @@ array TLBW[2] = [ "上流(測線 1)", "下流(測線 4)" ]
 do for [t=1:2] {
   set title TLBW[t] noenhanced
   set xrange [0:(t == 1 ? 150 : 360)]
-  set yrange [0:(t == 1 ? 1600 : 6500)]
+  set yrange [0:(t == 1 ? 1600 : 8000)]
   plot sprintf("result_supp_200m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m 幅なし", \
        sprintf("result_supp_200m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#9467bd' title "200 m W = 50", \
        sprintf("result_supp_100m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m 幅なし", \

@@ -934,7 +934,8 @@ tabulated below (in parentheses: change from the next coarser grid).
 
 ### Result 2: the same computation with 4 neighbors
 
-The bottom row is the 4-neighbor case, with the following peaks.
+The bottom row is the 4-neighbor case (its vertical axes are 1/8 of those
+of the ENC panels above), with the following peaks.
 
 | transect | 200 m | 100 m | 50 m |
 |---|---|---|---|
@@ -972,15 +973,16 @@ scheme (`f_advection_scheme = 3`). We now run the same three resolutions
 with **the advection term dropped (diffusion wave, i.e. the local inertia
 equation, `f_govequation = 1`)** and with **the old advection scheme
 (`f_advection_scheme = 1`, non-conservative with upwind weighting; the upwind
-index `p_adv_upwind_index` is tried at the default 0.5 and at 0.1, the value
-used in test/chichibu)** to see how the treatment of advection changes the
-resolution dependence (`./Fig_supp.sh` runs them as `result_supp_*_noadv` /
-`result_supp_*_s1` / `result_supp_*_s1u`).
+index `p_adv_upwind_index` is tried at the default 0.5, at 0.1, the value
+used in test/chichibu, and at the upper limit 1.0 = full upwind)** to see how
+the treatment of advection changes the resolution dependence (`./Fig_supp.sh`
+runs them as `result_supp_*_noadv` / `result_supp_*_s1` / `result_supp_*_s1u` /
+`result_supp_*_s1f`).
 
 ![Supplement: advection treatment and resolution dependence](figs/supp_hydro_adv.png)
 
 From top: no advection; scheme 1 (upwind index 0.5 = default); scheme 1
-(upwind index 0.1); scheme 3 (default). Left: upstream transect 1; right:
+(upwind index 0.1); scheme 1 (upwind index 1.0); scheme 3 (default). Left: upstream transect 1; right:
 downstream transect 4. **Note that the vertical axis of the top-right panel
 spans 2.5 times the others.** Peak discharge
 (m³/s) and its time (min) at transect 4 (near the basin outlet):
@@ -990,11 +992,12 @@ spans 2.5 times the others.** Peak discharge
 | none (diffusion wave) | 10,208 @109 | 16,147 @99 | 18,707 @89 |
 | scheme 1 (old, upwind 0.5 = default) | 5,914 @154 | 6,082 @167 | 6,329 @180 |
 | scheme 1 (upwind 0.1) | 7,165 @130 | 7,988 @133 | diverged (55 min, before the peak) |
+| scheme 1 (upwind 1.0) | 4,443 @196 | 4,279 @223 | 4,671 @224 |
 | scheme 3 (default) | 5,512 @169 | 5,792 @173 | 6,762 @163 |
 
 For reference, the maximum velocity of each computation (V_max in the Log)
 on the 100 m grid was 42 m/s without advection, 25 m/s with scheme 1
-(upwind 0.5) and 30 m/s with scheme 3. The 50 m case without advection
+(upwind 0.5), 19 m/s with scheme 1 (upwind 1.0) and 30 m/s with scheme 3. The 50 m case without advection
 diverged after 43 minutes at dt = 0.75 s (the velocity reached 60 m/s at bed
 steps and the Courant number exceeded 1), so that one run uses dt = 0.4 s.
 Scheme 1 with upwind 0.1 stops on the 100 m grid during the recession
@@ -1168,6 +1171,14 @@ great deal.
   with the settings of test/chichibu (hillslope roughness 0.15, upwind 0.1):
   "scheme 1 is 41% larger and 1.2 hours earlier than scheme 3 on the 100 m
   grid" (§68.17).
+- **Upwind 1.0 (full upwind)**: 4,443 → 4,279 → 4,671 m³/s, 19%, 26% and 31%
+  smaller than scheme 3 and 27, 50 and 61 minutes later; even the upstream
+  transect 1 is 3 to 7% smaller. On the same grid the two ends of the upwind
+  weight (0.1 and 1.0) give peaks of 7,165 vs 4,443 at 200 m and 7,988 vs
+  4,279 at 100 m, a factor of 1.6 to 1.9. The gap does not close with
+  refinement (100 m is the lowest), because the velocity resolved on the finer
+  grid (V_max 15 → 19 → 26 m/s) offsets the smaller Δx and the numerical
+  viscosity Δx·u does not decrease.
 
 The difference is explained by the amount of numerical viscosity. A larger
 upwind weight means a numerical viscosity proportional to Δx·u that smooths

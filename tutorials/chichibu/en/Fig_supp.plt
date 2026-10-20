@@ -89,7 +89,7 @@ do for [s=1:2] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLB[s], TLB[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]   # 上流は波形が短いので時間軸を縮める
-    set yrange [0:(t == 1 ? 1600 : 6500)]
+    set yrange [0:(s == 1 ? (t == 1 ? 1600 : 8000) : (t == 1 ? 200 : 1000))]   # 4 近傍は ENC の 1/8(本文に注記)
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RES[r], SFX[s], TRN[t]) \
          using 2:3 with lines lw 1.5 title RLB[r]
   }
@@ -99,20 +99,20 @@ unset multiplot
 # ---- 図 2c: 移流項の扱い(なし / スキーム 1 / スキーム 3)× 解像度。測線 1・4 ----
 reset
 set datafile separator comma
-set terminal pngcairo size 1000,1200 font ",11"
+set terminal pngcairo size 1000,1500 font ",11"
 set output "en/figs/supp_hydro_adv.png"
-set multiplot layout 4,2 title "Advection treatment and resolution dependence: from top: no advection (diffusion wave), scheme 1 (old, upwind 0.5), scheme 1 (upwind 0.1), scheme 3 (default)" noenhanced
+set multiplot layout 5,2 title "Advection treatment and resolution dependence (from top: no advection, scheme 1 with upwind 0.5 / 0.1 / 1.0, scheme 3)" noenhanced
 set grid
 set xlabel "time (min)"
 set ylabel "discharge (m^3/s)"
 set key top right
 array RESA[3] = [ "200m", "100m", "50m" ]
 array RLBA[3] = [ "200 m", "100 m", "50 m" ]
-array SFXA[4] = [ "_noadv", "_s1", "_s1u", "" ]
-array SLBA[4] = [ "no advection", "scheme 1 (upwind 0.5)", "scheme 1 (upwind 0.1)", "scheme 3 (default)" ]
+array SFXA[5] = [ "_noadv", "_s1", "_s1u", "_s1f", "" ]
+array SLBA[5] = [ "no advection", "scheme 1 (upwind 0.5)", "scheme 1 (upwind 0.1)", "scheme 1 (upwind 1.0)", "scheme 3 (default)" ]
 array TRNA[2] = [ 1, 4 ]
 array TLBA[2] = [ "upstream (transect 1)", "downstream (transect 4)" ]
-do for [s=1:4] {
+do for [s=1:5] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLBA[s], TLBA[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]
@@ -139,7 +139,7 @@ array TLBW[2] = [ "upstream (transect 1)", "downstream (transect 4)" ]
 do for [t=1:2] {
   set title TLBW[t] noenhanced
   set xrange [0:(t == 1 ? 150 : 360)]
-  set yrange [0:(t == 1 ? 1600 : 6500)]
+  set yrange [0:(t == 1 ? 1600 : 8000)]
   plot sprintf("result_supp_200m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m, no width", \
        sprintf("result_supp_200m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#9467bd' title "200 m W = 50", \
        sprintf("result_supp_100m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m, no width", \

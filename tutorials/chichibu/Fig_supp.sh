@@ -79,6 +79,13 @@ for r in 200m 100m 50m; do
     ./encflow "wrk_supp_param_${r}_s1u.txt" || echo "(s1u $r: 途中停止。ピーク後の減水期)"
     mv result "result_supp_${r}_s1u"
   fi
+  if [ ! -d "result_supp_${r}_s1f" ]; then      # スキーム 1 + 風上化指数 1.0(完全風上。上限値)
+    sed -e '/dir_data/i\  fn_enc     = "-"           ! ENC条件設定ファイル' "param_supp_$r.txt" > "wrk_supp_param_${r}_s1f.txt"
+    printf '\n&list_enc\n  f_advection_scheme = 1   ! 旧移流スキーム\n  p_adv_upwind_index = 1.0 ! 風上化指数(完全風上。既定 0.5 より強い風上化)\n/\n' >> "wrk_supp_param_${r}_s1f.txt"
+    rm -rf result
+    ./encflow "wrk_supp_param_${r}_s1f.txt"
+    mv result "result_supp_${r}_s1f"
+  fi
   if [ ! -d "result_supp_${r}_noadv" ]; then
     sed -e 's/f_govequation = 0/f_govequation = 1/' "param_supp_$r.txt" > "wrk_supp_param_${r}_noadv.txt"
     if [ "$r" = 50m ]; then sed -i 's/^  dt = 0.75 /  dt = 0.4  /' "wrk_supp_param_${r}_noadv.txt"; grep -q 'dt = 0.4' "wrk_supp_param_${r}_noadv.txt"; fi
