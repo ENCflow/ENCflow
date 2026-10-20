@@ -61,7 +61,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Groundwater](users_guide/gwflow.md) (&list_gwflow plus model-specific settings) -- infiltration, lateral flow, weathered bedrock layer, conduit continuum layer (sewer networks, fractured bedrock)
   - [Groundwater models](users_guide/gwflow_models.md) -- bucket, Green-Ampt, Boussinesq lateral flow, weathered bedrock layer, conduit continuum layer, pumping and frozen ground, with equations and the basis of the defaults (supplement)
 - [Fresh and salt water layers](users_guide/salt.md) (&list_salt) -- salt wedges, seawater intrusion, freshwater lenses (sharp-interface approximation)
-- [Sediment and landform change](users_guide/geomorph.md) (&list_geomorph) -- bedload, suspended sediment, hillslope erosion, debris flow, long-term landscape evolution
+- [Sediment and landform change](users_guide/geomorph.md) (&list_geomorph) -- bedload, suspended sediment, hillslope erosion, debris flow, long-term landscape evolution, development of meandering channels (bank erosion, fixation, neck cutoff)
   - [Sediment transport, hillslope and long-term processes](users_guide/sediment.md) -- creep, bedload formulas, Exner, suspended-load exchange, hillslope erosion, dry-slope erosion, weathering/uplift, MORFAC, with equations and the basis of the defaults (supplement)
   - [Debris flow, slope failure and moving bed layer](users_guide/massflow.md) -- single-layer mixture, five resistance laws, erosion/deposition laws, curvature term, safety factor, moving bed layer, with equations and the models referred to (supplement)
 - [Driftwood](users_guide/driftwood.md) (&list_driftwood) -- wood recruitment (hydraulic washout / erosion entrainment), transport and deposition (raster-field estimate)
@@ -267,6 +267,7 @@ settings, including unsupported phenomena), see
 | Urban pluvial flooding (sewer drainage and surcharge) | [Groundwater](users_guide/gwflow.md) (conduit continuum layer) + [Rainfall and weather](users_guide/forcing.md) |
 | Seawater intrusion, salt wedges, freshwater lenses | [Fresh and salt water layers](users_guide/salt.md) + [Tide and sea level](users_guide/tide.md) |
 | Sediment transport / debris flow | [Sediment and landform change](users_guide/geomorph.md) |
+| Development of meandering channels (outer-bank retreat, inner-bank bars turning into land, neck cutoff) | [Sediment and landform change](users_guide/geomorph.md) (bed-load direction correction, bank erosion, angle-of-repose avalanching, fixation; examples/meander and meander_cutoff) |
 | Floods and debris flows with driftwood | [Driftwood](users_guide/driftwood.md) (+ sediment and landform change) |
 | House destruction and debris by tsunami or storm surge | [Building destruction and debris](users_guide/bldgdebris.md) (+ driftwood, tide) |
 | Rainfall-induced slope failure and debris flow | [Sediment and landform change](users_guide/geomorph.md) + [Groundwater](users_guide/gwflow.md) (infiltration -> pore pressure) |

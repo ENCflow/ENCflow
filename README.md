@@ -135,7 +135,11 @@ need to understand all of it. Read only the lines you care about.
 - **Sediment and slope hazards**: riverbed evolution by bedload and
   suspended load, hillslope erosion, slope failure, and debris flow.
   Terrain and soil depth evolve during the computation and feed back
-  into the flow. Driftwood generation, transport and deposition can be
+  into the flow. The development of meandering channels (bed-load
+  direction correction in bends, bank erosion, angle-of-repose
+  avalanching, vegetation fixation of inner-bank bars, neck cutoff, a
+  ledger of fines in the bed) emerges as landform change on the same
+  grid. Driftwood generation, transport and deposition can be
   assessed as maps, and a mixed debris-flow-and-driftwood surge only
   needs both features enabled. Hazard outputs such as safety-factor
   maps, maximum flow depth, fluid force and driftwood arrival, and the
