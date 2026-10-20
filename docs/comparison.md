@@ -17,6 +17,7 @@ buildup-washoff+積雪+長期地形変動+流木+家屋破壊・瓦礫+非静水
 | HEC-RAS 2D | 米陸軍 USACE | 無償 | 非公開 | 実務標準の一つ。流域水文は HEC-HMS が分担 |
 | LISFLOOD-FP 8 | Bristol 大 | 無償 | 公開(GPL) | サブグリッド河道・GPU |
 | CAESAR-Lisflood | 英大学系 | 無償 | 公開(GPL) | LISFLOOD-FP 水理+地形進化(時間〜千年) |
+| SFINCS | Deltares | 無償 | 公開(GPLv3。GitHub Deltares/SFINCS。Fortran) | 複合洪水(高潮・波・降雨・河川)向けの簡約浅水モデル。局所慣性方程式(移流項は任意)+サブグリッド地形+四分木格子、GPU(OpenACC)。HydroMT-SFINCS で入力を自動構築、Delft Dashboard・FloodAdapt と連携。Leijnse ら(2021)、van Ormondt ら(2025) |
 | TELEMAC-2D (+GAIA) | EDF 主導 | 無償 | 公開(GPLv3) | 非構造 FE/FV。土砂は GAIA。流域水文なし |
 | Delft3D FM | Deltares | カーネル無償 | カーネル公開(GPLv3) | GUI は無償配布だがライセンス管理あり。土砂 MOR・水質 WAQ を含む |
 | MIKE 21 / MIKE SHE | DHI | 有償 | 非公開 | 統合水文(SHE)は積雪含め最も網羅的。水質は ECO Lab |
@@ -91,18 +92,23 @@ GeoClaw 以降の行(COMCOT〜PISM)は §2 で言及するモデルを網羅す�
 [ROMS-AGRIF の二方向ネスト(Debreu ら, Ocean Modelling 2012)](https://memsic.ccsd.cnrs.fr/UNIV-GRENOBLE1/hal-00690731)。
 COMCOT・TUNAMI-N2・MOST の接続法は docs/nesting_plan.md §2.1(ソース確認を含む)。
 
+SFINCS の出典: [SFINCS documentation](https://sfincs.readthedocs.io/en/latest/)・
+[GitHub Deltares/SFINCS](https://github.com/Deltares/SFINCS)(2026-10-20 追加。
+作業環境から両サイトに到達できなかったため、内容は Leijnse ら 2021(Coastal
+Engineering)・van Ormondt ら 2025(GMD)の知識によるもの。引用前に要確認)。
+
 ## 2. プロセスカバレッジの比較(ENCflow 現況との対比)
 
 | プロセス | ENCflow | 同等以上を持つ代表 | 備考 |
 |---|---|---|---|
 | 2D 浅水(力学波) | ○ 八近傍連結コロケート格子(ENC 格子)・適応 RK・運動量保存形の移流(Stelling & Duinmeijer 型を 8 方向に拡張、MUSCL、斜め副格子モードの側方面結合) | TELEMAC, Delft3D, HEC-RAS, TUFLOW, Iber, BASEMENT | ENC 格子は独自(Tada, 2026, doi:10.3178/hrl.25-00052)。ENC 格子上の運動量保存形移流の設計・検証は未公表(docs/advection_design.md。段波 Stoker 解に 1 %、副格子モードの減衰 test/sublattice) |
-| 高潮・津波の遡上(沿岸氾濫) | ○ 海域セル+潮位/水位時系列+乾湿処理 | TELEMAC, Delft3D, ANUGA, GeoClaw | 沖側の発生・伝播は外部から水位で受ける(発生から解くなら断層津波の行)。高潮・河川・豪雨の複合災害を単一モデルで扱える |
+| 高潮・津波の遡上(沿岸氾濫) | ○ 海域セル+潮位/水位時系列+乾湿処理 | TELEMAC, Delft3D, ANUGA, GeoClaw, SFINCS(高潮+波+降雨+河川の複合洪水に特化。波は SnapWave の定常波解) | 沖側の発生・伝播は外部から水位で受ける(発生から解くなら断層津波の行)。高潮・河川・豪雨の複合災害を単一モデルで扱える |
 | 地滑り津波(陸上崩壊の水域突入・海底地滑り) | △ 動く底層(慣性なし Voellmy・移動海底方式) | GeoClaw+地滑り源, VolcFlow, NHWAVE, r.avaflow | 発生→流下→造波→伝播→遡上を 1 方程式の底層で単一時間発展に収める。慣性は対象外の概算。近地の分散性は非静水圧補正で |
 | 断層津波の発生(海底変位の時刻歴) | ○ 規定底面運動(変位の時刻歴を増分で z へ。前処理 utils/fault2disp) | GeoClaw, COMCOT, JAGURS, TUNAMI | 時間依存の変形を増分で与えるため、地震誘発の海底地滑りと同一ランに置ける。短い変位の Kajiura 効果は非静水圧補正で |
 | 非静水圧・分散波(ソリトン分裂・undular bore・孤立波) | △ 1 層非静水圧補正(射影法。活性集合・砕波スイッチ) | SWASH, NEOWAVE, FUNWAVE, GeoClaw-Bouss | 専用モデルの精度は競わず、分散性が本質の区間だけ補正する(無効時はゼロ追加)。線形波・孤立波は 1 層理論に 1% 以内 |
-| サブグリッド河道(σ断面・幅) | ○ | LISFLOOD-FP, HEC-RAS(1D-2D) | 1 セル 1 水位+σ(h) は独自色 |
-| 構造物(破堤・ポンプ・カルバート・樋門・分水・ダム操作) | ○ | HEC-RAS, TUFLOW, MIKE, SOBEK | 無償・公開勢では手薄な領域 |
-| 降雨流出・遮断・蒸発散 | ○ 樹冠・Hamon/Thornthwaite・減率 | RRI, GSSHA, MIKE SHE, SHETRAN | 水理特化勢は持たない |
+| サブグリッド河道(σ断面・幅) | ○ | LISFLOOD-FP, HEC-RAS(1D-2D), SFINCS(セル内の地形分布から水深–体積・通水を表にするサブグリッド地形。河道に限らない) | 1 セル 1 水位+σ(h) は独自色 |
+| 構造物(破堤・ポンプ・カルバート・樋門・分水・ダム操作) | ○ | HEC-RAS, TUFLOW, MIKE, SOBEK(SFINCS は薄い壁・堰・排水ポンプ・カルバートまで) | 無償・公開勢では手薄な領域 |
+| 降雨流出・遮断・蒸発散 | ○ 樹冠・Hamon/Thornthwaite・減率 | RRI, GSSHA, MIKE SHE, SHETRAN | 水理特化勢は持たない(SFINCS は rain-on-grid+浸透(定数・CN・Green-Ampt・Horton)まで。遮断・蒸発散・地下水はない) |
 | 地下水 | ○ 2 層(土層+風化基岩層)+井戸揚水シンク | MIKE SHE, SHETRAN, GSSHA, ParFlow | 平面 2 次元で 2 層は少数派。揚水と淡塩 2 層の併用で揚水誘引の海水浸入も扱える |
 | 海水浸入・淡塩2層 | △ 鋭利界面(SWI2 同型)+地表塩水層 | MODFLOW+SWI2/SEAWAT, SUTRA, FEFLOW | 混合・分散まで解く変密度輸送は専用領域。地表氾濫・潮位と単一時間発展で遡上海水の行き先まで追う点が独自 |
 | 都市排水・管路網 | △ 管路連続体層(等価被圧連続体・8 方向通水・サーチャージ) | SWMM+2D 結合(TUFLOW, InfoWorks ICM, xpswmm) | 世界標準は地表 2D と管路 1D 網の結合。網を連続体化する独自路線で、制御構造物・幹線支配系は網モデルに譲る |
@@ -118,7 +124,7 @@ COMCOT・TUNAMI-N2・MOST の接続法は docs/nesting_plan.md §2.1(ソース�
 | 氷河 | ○ 度日質量収支+SIA 流動+滑動+氷河侵食+雪崩再配分 | 汎用洪水モデルには皆無。精緻な氷力学は PISM, Elmer/Ice, OGGM | 洪水水理・流域水文・地形変動と氷河を併走させる構成は他に例がない |
 | 長期地形変動 | ○ 風化・隆起・周期強制 | CAESAR-Lisflood, Landlab, Badlands, FastScape | 実水理駆動では CAESAR-Lisflood と並ぶ。他はプロセス則 LEM で棲み分け |
 | ネスティング(多段格子) | ○ 静的ネスト(任意の深さ・比 r と r_t は任意整数)。帯 Dirichlet / Flather 放射 / スポンジ、置換は面積平均・湿潤判定・保存修正。非静水圧の φ と追加の場(土砂・水質・地下貯留等)も交換 | 津波: COMCOT, TUNAMI, MOST, JAGURS, NEOWAVE, GeoClaw(AMR), FUNWAVE-TVD。構造格子の MIKE 21 Classic, TUFLOW Classic, Delft3D 4。海洋・気象(ROMS-AGRIF, WRF) | 洪水の公開勢は非構造・四分木で局所細密化しネストを持たない。分散波の接続は JAGURS・NEOWAVE・GeoClaw-Bouss・FUNWAVE の少数派(§3) |
-| 並列化 | OpenMP+MPI。ランク数によらずビット再現 | TELEMAC, Delft3D(MPI。ビット再現は保証せず) | 決定的リダクションが差別化点 |
+| 並列化 | OpenMP+MPI。ランク数によらずビット再現 | TELEMAC, Delft3D(MPI。ビット再現は保証せず)、SFINCS(OpenMP+GPU/OpenACC) | 決定的リダクションが差別化点 |
 | リスタート厳密性 | ○ モジュール私有 save 契約 | 商用勢は概ね対応 | 公開勢で徹底例は少ない |
 
 各行の定式・検証値・実装時期の詳細は developer.md の該当 § と
@@ -135,6 +141,20 @@ users_guide の各章にある(本表には書かない)。
   (TELEMAC・Delft3D FM・LISFLOOD-FP)は流域水文・構造物運用が薄い。
   ENCflow は「洪水水理の精度で流域全プロセスを積む」中間帯 = 従来は
   商用の MIKE/TUFLOW が占めてきた領域に、無償・公開で入る位置。
+- **SFINCS との対比(最も近い公開勢)**: Deltares の SFINCS は、無償・コード公開・
+  Fortran・ラスタ格子・入出力が単純、という提供形態が ENCflow に最も近く、
+  同じ時間発展の中で高潮・波・降雨・河川流入・構造物を扱う「複合洪水」志向も
+  共通する。違いは方程式と守備範囲にある。SFINCS は既定で局所慣性方程式
+  (移流項なし)+サブグリッド地形+四分木で**沿岸低平地の高速計算**に特化し
+  (GPU 対応、全球規模の複合洪水評価に実績)、流域水文は rain-on-grid と浸透
+  までで、地下水・土砂・水質・火山系は持たない。ENCflow は力学波(運動量保存形の
+  移流)を既定にして山地流域の急勾配河道まで扱い、流域水文から土砂・地形変動
+  までを同居させる。移流項を省いた局所慣性方程式が急な実地形で解像度依存を
+  強く持つことは tutorials/chichibu の補足(結果 3)に示したとおりで、両者の
+  棲み分けは「沿岸低平地の広域・高速(SFINCS)」と「山地〜沿岸の多プロセス
+  (ENCflow)」になる。SFINCS の四分木・サブグリッド地形・GPU は ENCflow が
+  持たない要素で、ラスタ純化の方針(developer.md §0)の下でどこまで取り込むかは
+  中期の検討対象(ネストは §2 のとおり静的ネストで代替)。
 - **降雨流出と土砂流の同居**: 降灰後の降雨泥流(examples/ashfall_lahar)の
   ように「流出の計算が侵食の駆動になり、侵食が流れの性質(濃度・抵抗)を
   変える」連鎖は、流出モデルと質量流モデルが同じ格子・同じ時間ループに
