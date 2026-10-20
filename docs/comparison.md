@@ -107,6 +107,7 @@ COMCOT・TUNAMI-N2・MOST の接続法は docs/nesting_plan.md §2.1(ソース�
 | 海水浸入・淡塩2層 | △ 鋭利界面(SWI2 同型)+地表塩水層 | MODFLOW+SWI2/SEAWAT, SUTRA, FEFLOW | 混合・分散まで解く変密度輸送は専用領域。地表氾濫・潮位と単一時間発展で遡上海水の行き先まで追う点が独自 |
 | 都市排水・管路網 | △ 管路連続体層(等価被圧連続体・8 方向通水・サーチャージ) | SWMM+2D 結合(TUFLOW, InfoWorks ICM, xpswmm) | 世界標準は地表 2D と管路 1D 網の結合。網を連続体化する独自路線で、制御構造物・幹線支配系は網モデルに譲る |
 | 土砂・地形変化(掃流・浮遊・崩壊・土石流) | ○ MORFAC 付き | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | 土石流を流域水文・洪水と同居させる点が異なる |
+| 蛇行河道の発達(湾曲部の流砂方向補正・側岸侵食・安息角崩落・内岸砂州の植生定着・頸部短絡・河床の細粒分の帳簿) | ○ ラスタ上の地形変化の帰結として(河岸線をベクトルで持たない。平衡二次流。非平衡二次流は計画) | Nays2DH(iRIC)、Delft3D-MOR、BASEMENT、CAESAR-Lisflood、自己発展河岸の研究モデル(Asahi ら 2013) | 専用勢は河岸線を追跡するか曲線座標で解く。ENCflow は河岸面を隣接セル間の段差として扱い、短絡・砂州の氾濫原化は乾湿処理と地形変化の帰結として現れる。流域水文・洪水と同じ時間発展に置ける点が独自(examples/meander・meander_cutoff) |
 | 火山流動・雪崩(岩屑なだれ・火砕流・ラハール・流れ型雪崩) | ○ 等価流体(Voellmy・一定停止応力・曲率項) | Titan2D, VolcFlow, RAMMS, r.avaflow, LAHARZ | 抵抗則は専用勢と同水準。噴火→流下→堆積→天然ダム→決壊洪水→二次泥流の連鎖を単一計算で追える点が独自。希薄系(サージ・噴煙)は対象外 |
 | 降灰後の降雨泥流(降灰 → 降雨 → 灰層の侵食・泥流化 → 堆積) | ○ 降灰厚を土層厚として与えるだけで発生源の指定なし | OpenLISEM(Hazard 版)。FLO-2D, Kanako-2D, Morpho2DH, LaharFlow, RAMMS, r.avaflow, HEC-RAS 6, LAHARZ は連鎖の一部 | 専用勢は降雨流出か土砂流の流下のどちらかで、他方は入力。同じ格子・時間ループに同居するので泥流が自然に立ち上がる。比較研究の相手は OpenLISEM |
 | 溶岩流(湧き出し・停止・固化) | ○ 深さ平均 Bingham(等温)+固化→地形化 | MOLASSES, Q-LavHA(CA・確率論), MAGFLOW, LavaSIM(温度結合), VolcFlow | CA・確率論系と温度結合系の中間の物理水準。固化溶岩が地盤になり、同一ランで降雨・洪水・土砂が新地形上を流れる点が独自 |

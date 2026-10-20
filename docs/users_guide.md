@@ -56,7 +56,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [地下水](users_guide/gwflow.md)(&list_gwflow とモデル固有設定)— 浸透・側方流動・風化基岩層・管路連続体層(下水道網・岩盤亀裂網)
   - [地下水モデルの解説](users_guide/gwflow_models.md) — バケツ・Green-Ampt・Boussinesq 側方流・風化基岩層・管路連続体層・揚水・凍土の式と既定値の根拠(地下水の補足)
 - [淡塩2層](users_guide/salt.md)(&list_salt)— 塩水くさび・海水浸入・淡水レンズ(鋭利界面近似)
-- [土砂・地形変化](users_guide/geomorph.md)(&list_geomorph)— 掃流砂・浮遊砂・斜面浸食・土石流・長期地形発達
+- [土砂・地形変化](users_guide/geomorph.md)(&list_geomorph)— 掃流砂・浮遊砂・斜面浸食・土石流・長期地形発達・蛇行河道の発達(側岸侵食・定着・頸部短絡)
   - [土砂輸送と斜面・長期地形過程の解説](users_guide/sediment.md) — クリープ・流砂量式・Exner・浮遊砂の E-D・斜面浸食・乾式侵食・風化隆起・MORFAC の式と既定値の根拠(土砂・地形変化の補足)
   - [土石流・斜面崩壊・動く底層の解説](users_guide/massflow.md) — 単層混合体・5 つの抵抗則・侵食堆積則・曲率項・安全率・動く底層の式と参考にした他モデル(土砂・地形変化の補足)
 - [流木](users_guide/driftwood.md)(&list_driftwood)— 流木化(水理的流失・侵食連行)・輸送・堆積(ラスタ場の概算)
@@ -251,6 +251,7 @@ ENCflow は地表の水の流れを計算するモデルです。必要に応じ
 | 都市の内水氾濫(下水道の排水・噴出) | [地下水](users_guide/gwflow.md)(管路連続体層)+[降雨・気象](users_guide/forcing.md) |
 | 海水浸入・塩水くさび・淡水レンズ | [淡塩2層](users_guide/salt.md)+[潮位・海面](users_guide/tide.md) |
 | 土砂輸送・土石流 | [土砂・地形変化](users_guide/geomorph.md) |
+| 蛇行河道の発達(外岸の後退・内岸砂州の陸地化・頸部短絡) | [土砂・地形変化](users_guide/geomorph.md)(掃流砂の方向補正・側岸侵食・安息角崩落・定着。例題 examples/meander・meander_cutoff) |
 | 流木を伴う洪水・土石流 | [流木](users_guide/driftwood.md)(+土砂・地形変化) |
 | 津波・高潮による家屋の破壊と瓦礫の流動・堆積 | [家屋破壊・瓦礫](users_guide/bldgdebris.md)(+流木・潮位) |
 | 降雨で誘発される斜面崩壊・土石流 | [土砂・地形変化](users_guide/geomorph.md)+[地下水](users_guide/gwflow.md)(浸透→間隙水圧) |
