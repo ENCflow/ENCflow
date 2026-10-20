@@ -217,8 +217,10 @@ belong to specialized models
   momentum equations keep a constant density. Fresh/salt two-layer
   phenomena are handled with a sharp-interface approximation, but
   mixing and entrainment, internal waves, and reservoir thermal
-  stratification cannot be reproduced; nor can vertical structure such
-  as secondary flow in bends.
+  stratification cannot be reproduced. Vertical structure itself is not
+  resolved either: secondary flow in bends is not carried as a vertical
+  velocity profile, only its effect on the bed-load direction enters,
+  through an equilibrium parameterisation.
 - **Individual sewer pipes and operational control** — tracking
   individual pipes, and network analyses involving control structures
   driven by operating rules, are the realm of dedicated 1-D pipe-network
