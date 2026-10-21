@@ -74,6 +74,9 @@ examples/badland/sw.txt
 examples/badland/z_*.txt
 examples/badland/sw_*.txt
 examples/badland/wrk_*
+examples/badland_storm/z_*.txt
+examples/badland_storm/result_*
+examples/badland_storm/sw_*.txt
 examples/timberyard/z.txt
 examples/timberyard/z_wall*.txt
 examples/timberyard/sw.txt

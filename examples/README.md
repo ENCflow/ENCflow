@@ -21,6 +21,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [List_samples/](List_samples/) | 全 namelist の注釈付き見本(1 ファイル 1 グループ。en/ に英語版) | 全機能 |
 | [benchmark/](benchmark/) | 解析解のある降雨流出ベンチマーク 3 題。平面斜面 h-plane、V 字流域 v-shaped、V 字谷 v-valley | 浅水流・降雨 |
 | [badland/](badland/) | 台地と急崖への降雨で谷が刻まれるバッドランド型の地形発達。白色雑音からの谷の自己形成、谷間隔の選択則(spl_lc)、格子収束、深い谷と鋭い稜線の長期発達 | 乾式斜面侵食 f_splash(spl_lc・spl_zbase) |
+| [badland_storm/](badland_storm/) | 浸透能を下げて豪雨時だけ表面流が現れる崖: 乾式侵食が止まるか、ガリー網に変わるか(badland の対照実験) | f_splash + f_wash・f_suspend、Green-Ampt、降雨時系列 |
 | [ashfall_lahar/](ashfall_lahar/) | 降灰 → 降雨 → 灰層の侵食による泥流(ラハール)の発生と堆積 | 土石流 f_debris、降雨 |
 | [landslide_tsunami/](landslide_tsunami/) | 地滑り・土石流の水域突入と津波。陸上崩壊と海底地滑りの 4 パターンと非静水圧版 | 動く底層 f_bedslide、非静水圧補正 |
 | [tsunami_fault/](tsunami_fault/) | 断層パラメータから津波を発生させる。静水圧・瞬時変位・非静水圧の比較と座標指定の各パターン | 規定底面運動 fn_bedmotion、utils/fault2disp |
@@ -41,7 +42,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 見本です(章を読んだ後の参考に)。
 
 - 津波 → 家屋破壊 → 瓦礫: [tsunami_town/](tsunami_town/)。高潮 → 流木 → 市街地: [timberyard/](timberyard/)。
-- 降灰 → 降雨 → 泥流: [ashfall_lahar/](ashfall_lahar/)。降雨 → 乾式侵食 → 地形発達: [badland/](badland/)。
+- 降灰 → 降雨 → 泥流: [ashfall_lahar/](ashfall_lahar/)。降雨 → 乾式侵食 → 地形発達: [badland/](badland/)。豪雨時だけ表面流が加わる崖: [badland_storm/](badland_storm/)。
 - 断層 → 津波 → 浸水: [tsunami_fault/](tsunami_fault/)、[tsunami_coast/](tsunami_coast/)。斜面崩壊 → 水域突入 → 津波: [landslide_tsunami/](landslide_tsunami/)。
 - 洪水 → 破堤 → 氾濫: [levee_breach/](levee_breach/)。
 - 降雨 → 下水道(管路)→ 噴出・排水: [sewer_hybrid/](sewer_hybrid/)。地下水 → 横坑集水: [qanat/](qanat/)。
