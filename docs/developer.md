@@ -12271,6 +12271,12 @@ test/fluvial・test/suspend・test/wave の検定は変更後も PASS。追加�
   0.000 倍(最初の数ステップ、a が小さい間だけ削られる)。
 - test/fixation の Run.sh / Run_MPI.sh が sdinit.txt を生成していなかった(2026-10-17 の
   新設時からの不備。sdinit.txt は .gitignore 済み)のを直した(別コミット)。
+- MPI(2026-10-21 追記。OpenMPI 4、gfortran、-Ofast -march=native の既定フラグ):
+  test/fixation(decay を含む全構成 16 面)・berode(kb1・kb2・fix0・fix1)・bendsed・
+  repose の Run_MPI.sh が np = 2, 4 とも逐次の save とバイト一致。規律 3 の
+  -fcheck=all ビルド(MPI)でも berode・repose の np = 1, 2 が境界違反なしで走り、
+  np = 1 と 2 がバイト一致(-fcheck ビルドと -Ofast -march=native ビルドの間の
+  最終桁差は §28.3 の再コンパイル差)。
 
 **デルタでの目安**: T_dec は出水 1 回の継続時間の半分〜同程度(delta_fix2 の
 出水 20 分 = 地形 67 h なら 50 h)、c_τ,b = 0.5。
@@ -12298,7 +12304,8 @@ fdon = 0 で同じ流束にしていたので状態はビット一致(等価変�
 
 **検証**: test/repose・berode(kb1・kb2・fix0・fix1)・bendsed・fixation(全構成)の
 save(state.dat・geomorph_fixation.dat の 35 面)が変更前の実行とバイト一致、検定は
-すべて PASS。dx 2.5 のデルタの短縮版(水理 30 分)で state.dat・Z がバイト一致し、
+すべて PASS。MPI は np = 2, 4 が逐次とバイト一致、-fcheck=all の np = 1, 2 も
+境界違反なし(§84.13 の検証と同じ実行)。dx 2.5 のデルタの短縮版(水理 30 分)で state.dat・Z がバイト一致し、
 台帳は「崩落 5.46e5 m³・クリップ 324 回、側岸侵食 3,210 m³」→「崩落 0・クリップ 0、
 側岸侵食 0」(最初の 100 h の分はすべて仮想だった)、供給量制限 1.34e6 → 1.55e4 回。
 
