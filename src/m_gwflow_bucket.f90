@@ -120,6 +120,8 @@ subroutine gwflow_bucket_calc(gwb, p, g, s, it, dts)
       s%hg(i,j) = s%hg(i,j) + fx * (s%af(i,j) / s%gv(i,j))
       ! 浸透フラックスの記録(水質の濃度同伴用。m_wq が読んでゼロ戻し。§30)
       if (allocated(s%fxg)) s%fxg(i,j) = s%fxg(i,j) + fx
+      ! 溶食(geomorph f_dissol)用の涵養量の積算(同じ契約。§86)
+      if (allocated(s%fxd)) s%fxd(i,j) = s%fxd(i,j) + fx
       s%e(i,j) = s%z(i,j) + s%h(i,j)
     end do
   end do

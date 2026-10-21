@@ -1,0 +1,96 @@
+!======================================================================
+! dissol: 構成 B = 集中溶食(吸込穴流入に比例。ドリーネ項)
+!   test/conduit の模式実験 A(一様枡密度の管路層に一様湛水 0.1 m が落ちて
+!   被圧水頭と平衡する。側方流なし・鉛直浸透なし)に、中心 5×5 セルだけ
+!   可溶(data_dissol/sol.txt)の溶食を重ねる。地形更新は dt_geomorph = tt
+!   = 150 s(最終ステップに 1 回)なので、更新までの水理は conduit と同一で、
+!   更新は 150 s までに枡へ流入した全量 F_sink = hgc(150 s) を消費する:
+!     Δz(中心) = −k_d × f_sink × hgc(150) × morfac = −4e-5 × 0.5 × hgc × 1e4
+!              = −0.2 × hgc(150)      (hgc(150) は Hgc0003 の値 = Log の S_grnd)
+!     Δz(外側) = 0
+!   面的項(dissol_src = 1)の記録は鉛直モデルなし(f_gwvertical = 0)で恒久 0。
+!   Check_analytic.py が Z9998 を Hgc0003 から検定する。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! 格子システム(0:ENC)
+  dt = 0.05                 ! 時間刻み (s)
+  t0 = 0                    ! 計算開始時刻 (s)
+  tt = 150                  ! 計算終了時刻 (s)
+  dt_disp = 10              ! 画面表示時間刻み (s)
+  dt_file = 50              ! ファイル出力時間刻み (s)
+  dt_recrd = 10             ! プローブ出力時間刻み (s)
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_gwflow = '-'
+  fn_geomorph = '-'
+  dir_data = 'data_dissol'
+  dir_result = 'result_sink'
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_check_cfl = 0
+  f_out_e = 1
+  f_output_mode = 3         ! text + bil(解析検証は bil の全精度を読む)
+  f_out_z = 1               ! 地盤高の出力
+  f_out_hg = 1              ! Hg / Hgc 場の出力
+/
+
+&list_enc
+  f_adaptive_runge = 1
+/
+
+&list_initial
+  f_htype = 0               ! 初期水深タイプ (0: 固定値)
+  h0 = 0.1                  ! 初期水深固定値 (m)
+/
+
+&list_geoinfo
+  lx = 42.0
+  ly = 42.0
+  nx = 21
+  ny = 21
+  f_ztype = 0     ! 地盤高タイプ (0:固定値)
+  f_rntype = 0    ! 粗度係数タイプ (0:固定値)
+  z0 = 0.0        ! 地盤高固定値 (m)
+  rn0 = 0.05      ! 粗度係数固定値
+/
+
+&list_bound
+/
+
+!======================================================================
+! 地下水設定(管路連続体層のみ。test/conduit/param.txt と同一)
+!======================================================================
+&list_gwflow
+  f_gwvertical = 0          ! 鉛直モデルなし(面的項の記録は 0 のまま)
+  f_gwlateral = 0
+  f_gwlayer2 = 0
+  f_gwconduit = 1           ! 管路連続体層
+  dt_gwflow = 0             ! 毎ステップ更新
+/
+
+&list_gwflow_conduit
+  f_gwc_fluxlaw = 2
+  gwc_cnd_m2s = 0.0         ! 側方通水なし(セル独立の貯留・交換のみ)
+  gwc_cap = 0.05            ! 貯留容量 (m 柱状)
+  gwc_depth = 2.0           ! 埋設深: zbot = z - 2 (m)
+  gwc_sy = 0.05             ! 不圧貯留係数
+  gwc_slot_sy = 0.001       ! 疑似スロット貯留係数(被圧枝)
+  gwc_inlet = 0.01          ! 枡(吸込穴)密度 (個/m2)
+  gwc_cw = 2.66             ! 堰係数
+  gwc_co = 0.15             ! オリフィス係数 Cd·A (m2)
+/
+
+!======================================================================
+! 地形変化設定(集中溶食のみ。可溶率マップで中心 5×5 に限定)
+!======================================================================
+&list_geomorph
+  dt_geomorph = 150.0       ! 更新間隔 (s) = tt(最終ステップに 1 回)
+  morfac = 1.0e4            ! 加速係数
+  f_dissol = 1              ! 石灰岩の溶食
+  dissol_ceq = 100.0        ! 有効溶解能 (mg/L CaCO3)
+  dissol_rho = 2500.0       ! 岩の密度 (kg/m3)
+  dissol_src = 1            ! 面的項 = 浸透量の記録(鉛直モデルなしで 0)
+  dissol_sink = 1           ! 吸込穴流入項
+  dissol_fsink = 0.5        ! 流入水の溶解能の比
+  fn_dissol = 'sol.txt'     ! 可溶率(中心 5×5 = 1)
+/

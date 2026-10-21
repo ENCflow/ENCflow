@@ -65,6 +65,7 @@ analytical-solution or conservation check by Check_*.py.
 | [swi/](swi/) | Analytical reference of the Soil Water Index (JMA three-tank model) | Soil Water Index | analytic |
 | **Sediment and landform change** | | | |
 | [creep/](creep/) | Gaussian-hill benchmark of hillslope creep (linear diffusion) | Sediment f_creep | analytic |
+| [dissol/](dissol/) | Limestone dissolution. The final ground elevation matches the analytic value for the three water sources (infiltration, sink inflow = doline term, rainfall); restart round trip with a save inside an update interval | Landform f_dissol, conduit continuum layer | ref, analytic |
 | [fluvial/](fluvial/) | Bedload Exner equation: smoke test and conservation (closed-domain dam break) | Sediment f_fluvial | analytic |
 | [bankface/](bankface/) | Dam-break flow in a channel with dry banks. Bed-load blocking on bank faces (dry banks stay unchanged) and the supply limiter on a thin soil layer (volume conservation) | bed load | analytic |
 | [bendsed/](bendsed/) | Bed-load direction correction in a 90° bend. Outer-bank scour and inner-bank deposition, left/right mirror symmetry, contrast with no correction | bed load fluv_slope, f_secflow | analytic |

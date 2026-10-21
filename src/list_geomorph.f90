@@ -207,6 +207,21 @@ module list_geomorph
     real :: wthr_sdstar = 0.5        ! 生成の減衰深 sd* (m)
     integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
     real :: uplift0 = -9999.0        ! 隆起速度 (mm/yr)。未指定 = 既定 1.0(§62)
+    integer :: f_dissol = 0          ! 石灰岩の溶食(化学的削剥。0:無効, 1:有効。§86)。
+                                     ! 涵養水量に比例して z を下げる(土砂は出ない)。
+                                     ! 溶ける厚さ = (c_eq/ρ_r) × 水量 × 可溶率
+    real :: dissol_ceq = -9999.0     ! 有効溶解能 (mg/L CaCO3 換算 = 水 1 m3 が溶かす岩の
+                                     ! 質量 g)。未指定 = 既定 100(§62)
+    real :: dissol_rho = 0.0         ! 岩の密度 (kg/m3)。0 = 既定 2500(§62)
+    integer :: dissol_src = 1        ! 面的溶食の水量(1: 地下水の浸透量の記録、
+                                     ! 2: 地上降雨量 s%pre = 浸透の有無によらない最大削剥)
+    integer :: dissol_sink = 0       ! 吸込穴(管路層の枡)流入量も溶食源に加える
+                                     ! (0:加えない, 1:加える。f_gwconduit の枡が前提)
+    real :: dissol_fsink = 1.0       ! 吸込穴流入水の溶解能の比(面的涵養水に対する。校正値)
+    real :: dissol_fres = 0.0        ! 不溶性残渣の体積率 0〜1(溶けた岩の体積 × この率が
+                                     ! 土層 sd に残る。地表は (1−率) 倍だけ下がる。0 = sd 不変)
+    character(len=256) :: fn_dissol = ""  ! 可溶率 0〜1 の分布ファイル(石灰岩の分布。
+                                     ! 未指定 = 全セル 1)
                                      ! (例: 18000〜20000。湿潤・飽和の区別は
                                      ! 一律 γt の近似)
 
@@ -324,6 +339,9 @@ subroutine list_geomorph_read(p, list)
   real :: wthr_p0, wthr_sdstar
   integer :: f_uplift
   real :: uplift0
+  integer :: f_dissol, dissol_src, dissol_sink
+  real :: dissol_ceq, dissol_rho, dissol_fsink, dissol_fres
+  character(len=256) :: fn_dissol
   integer :: f_bedslide, f_bsres, bs_nsubmax, f_bsplunge, f_bsvplunge
   character(len=256) :: fn_bsinit
   real :: bs_reltime, bs_rho, bs_mu, bs_xi, bs_vstop, bs_eps_s, bs_diagratio, bs_cfl
@@ -348,6 +366,8 @@ subroutine list_geomorph_read(p, list)
                            fn_dbinit, db_reltime, db_relsat, &
                            f_slide, slide_c, slide_phi, slide_gamma, &
                            f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0, &
+                           f_dissol, dissol_ceq, dissol_rho, dissol_src, dissol_sink, &
+                           dissol_fsink, dissol_fres, fn_dissol, &
                            f_bedslide, fn_bsinit, bs_reltime, bs_rho, f_bsres, bs_mu, bs_xi, &
                            bs_vstop, bs_eps_s, bs_diagratio, bs_cfl, bs_nsubmax, bs_hplunge, bs_tstop, f_bsplunge, f_bsvplunge
 
@@ -442,6 +462,14 @@ subroutine list_geomorph_read(p, list)
   wthr_sdstar = list%wthr_sdstar
   f_uplift = list%f_uplift
   uplift0 = list%uplift0
+  f_dissol = list%f_dissol
+  dissol_ceq = list%dissol_ceq
+  dissol_rho = list%dissol_rho
+  dissol_src = list%dissol_src
+  dissol_sink = list%dissol_sink
+  dissol_fsink = list%dissol_fsink
+  dissol_fres = list%dissol_fres
+  fn_dissol = list%fn_dissol
   f_bedslide = list%f_bedslide
   fn_bsinit = list%fn_bsinit
   bs_reltime = list%bs_reltime
@@ -553,6 +581,14 @@ subroutine list_geomorph_read(p, list)
   list%wthr_sdstar = wthr_sdstar
   list%f_uplift = f_uplift
   list%uplift0 = uplift0
+  list%f_dissol = f_dissol
+  list%dissol_ceq = dissol_ceq
+  list%dissol_rho = dissol_rho
+  list%dissol_src = dissol_src
+  list%dissol_sink = dissol_sink
+  list%dissol_fsink = dissol_fsink
+  list%dissol_fres = dissol_fres
+  list%fn_dissol = fn_dissol
   list%slide_c = slide_c
   list%slide_phi = slide_phi
   list%slide_gamma = slide_gamma

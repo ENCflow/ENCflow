@@ -224,6 +224,13 @@ module m_state
                                         ! wq_gwc_conc 指定かつ f_wq_gwc_in=1 のみ)。§30)
     real, allocatable :: fxco(:,:)      ! 管路→地表(噴出・陸側吐口)交換量の記録 (m。
                                         ! 同上。確保は m_wq_init(管路連携指定時)。§30)
+    real, allocatable :: fxd(:,:)       ! 溶食(f_dissol)用の涵養量の積算 (m。fxg と同型の
+                                        ! 契約: gwflow の鉛直交換が書き(dissol_src=2 なら
+                                        ! geomorph 自身が降雨を積む)、m_geomorph が地形更新
+                                        ! ごとに読んでゼロ戻し。確保は m_geomorph_init。
+                                        ! 更新間隔の途中の値は geomorph_dissol.dat で save。§86)
+    real, allocatable :: fxdi(:,:)      ! 溶食用の吸込穴(管路層の枡)流入量の積算 (m。
+                                        ! m_gwflow_conduit が書く。同上。dissol_sink=1 のみ確保)
     real, allocatable :: crs(:,:)       ! ため池(rscap)の質量プール (g/m2。幾何面積
                                         ! 基底 = cg と同基底。吸収同伴で蓄積・減衰のみの
                                         ! シンク(あふれ水は吸収されないため放出経路
@@ -868,6 +875,8 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%fxr)) deallocate(s%fxr)
   if (allocated(s%fxci)) deallocate(s%fxci)
   if (allocated(s%fxco)) deallocate(s%fxco)
+  if (allocated(s%fxd)) deallocate(s%fxd)
+  if (allocated(s%fxdi)) deallocate(s%fxdi)
   if (allocated(s%frofac)) deallocate(s%frofac)
   if (allocated(s%tide)) deallocate(s%tide)
   if (allocated(s%hmax)) deallocate(s%hmax)

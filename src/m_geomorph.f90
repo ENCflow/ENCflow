@@ -43,6 +43,7 @@ module m_geomorph
   !   境界では掃流砂を運ばない(掃流砂は河道内に閉じる。越流時の土砂は
   !   浮遊砂が壁込みの実フラックス mn1 で運ぶ)
   ! ==============================================================
+  use, intrinsic :: iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo, m_geoinfo_require_sd
   use m_state, only : t_state
@@ -78,6 +79,19 @@ module m_geomorph
 
   type t_creep
     real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離)
+  end type
+
+  ! 石灰岩の溶食(f_dissol。§86。docs/karst_plan.md)
+  type t_dissol
+    real :: kd = 0.0                 ! 溶解能/岩密度 = 水 1 m あたり溶ける岩の厚さ (m/m)
+    integer :: src = 1               ! 面的溶食の水量(1: 浸透量の記録, 2: 地上降雨量)
+    logical :: sink = .false.        ! 吸込穴(管路層の枡)流入項の有効
+    real :: fsink = 1.0              ! 吸込穴流入水の溶解能の比
+    real :: fres = 0.0               ! 不溶性残渣の体積率(0〜1)
+    logical :: res = .false.         ! fres > 0(sd を共動更新する)
+    logical :: map = .false.         ! 可溶率の分布 fn_dissol の指定あり
+    real, allocatable :: fsol(:,:)   ! 可溶率 0〜1(帯±ハロ。自帯のみ使用)
+    real(real64), allocatable :: vrow(:)  ! 溶けた岩の体積の行部分和 (m3。台帳)
   end type
 
   type t_fluvial
@@ -289,6 +303,7 @@ module m_geomorph
     real :: wsdinv = 0.0             ! 1 / sd*
     integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
     real :: uprate = 0.0             ! 隆起速度 (m/s。mm/yr から換算)
+    integer :: f_dissol = 0          ! 石灰岩の溶食(0:無効, 1:有効。§86)
     integer :: f_bedslide = 0        ! 動く底層(0:無効, 1:有効。landslide_tsunami_plan.md)
     integer :: f_berode = 0          ! 側岸侵食(0:無効, 1:有効。§84.4)
     integer :: f_repose = 0          ! 安息角崩落(0:無効, 1:有効。§84.4)
@@ -318,6 +333,7 @@ module m_geomorph
     type(t_bank) :: bnk              ! 側岸侵食・安息角崩落
     type(t_fixation) :: fix          ! 定着
     type(t_fines) :: fin             ! 河床の細粒分の帳簿
+    type(t_dissol) :: dis            ! 石灰岩の溶食
     type(t_gmwork) :: wrk            ! 共有スクラッチ(require_work が確保)
   end type
 
@@ -513,6 +529,30 @@ module m_geomorph
       type(t_state), intent(inout) :: s
       type(t_list_geomorph), intent(in) :: list
     end subroutine
+    module subroutine init_dissol(gm, p, g, s, list)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine accum_dissol_rain(gm, p, g, s)
+      type(t_geomorph), intent(in) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+    end subroutine
+    module subroutine calc_dissol(gm, g, s)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+    end subroutine
+    module subroutine dispose_dissol(gm, p, g, s)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+    end subroutine
     module subroutine dispose_fines(gm, p, g, s)
       type(t_geomorph), intent(inout) :: gm
       type(t_sysparam), intent(in) :: p
@@ -696,6 +736,19 @@ subroutine m_geomorph_init(gm, p, g, s)
                 * 1.0e-3 / yr_s                     ! mm/yr -> m/s
   end if
 
+  ! --- 石灰岩の溶食(§86。docs/karst_plan.md)---
+  !   残渣率 > 0 のときだけ sd を共動更新する(土層のない構成でも動く)。
+  !   記録場 s%fxd / s%fxdi の確保・分布の読み込み・restore は init_dissol
+  gm%f_dissol = list%f_dissol
+  if (gm%f_dissol > 0) then
+    if (list%dissol_fres > 0.0 .and. .not. (gm%f_fluvial > 0 .or. gm%f_suspend > 0 &
+        .or. gm%f_debris > 0 .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 &
+        .or. gm%f_repose > 0 .or. gm%f_wthr > 0)) then
+      call setup_sd(p, g, s)                        ! 残渣の堆積先として sd を確保・転記
+    end if
+    call init_dissol(gm, p, g, s, list)
+  end if
+
   if (gm%f_fluvial > 0) call init_fluvial(gm, p, g, list)
   if (gm%f_suspend > 0) call init_suspend(gm, p, list)
   if (gm%f_wash > 0) call init_wash(gm, list)
@@ -840,6 +893,8 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   real :: dts
 
   if (.not. gm%enabled) return
+  ! 溶食の降雨源(dissol_src=2)は毎ステップの積算(間欠更新の前。§86)
+  if (gm%f_dissol > 0 .and. gm%dis%src == 2) call accum_dissol_rain(gm, p, g, s)
   if (mod(it, gm%idt_geomorph) /= 0) return
 
   ! 実効時間刻み(間欠実行 × 加速係数)
@@ -884,6 +939,9 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   if (gm%f_creep > 0) call calc_creep(gm, g, s, dts)
   if (gm%f_wthr > 0) call calc_wthr(gm, g, s, dts)
   if (gm%f_uplift > 0) call calc_uplift(gm, g, s, dts)
+  ! 石灰岩の溶食(局所。更新間隔に積算された涵養・吸込穴流入の記録を消費。
+  ! morfac は記録場の水量に掛ける = dts と同じ意味。§86)
+  if (gm%f_dissol > 0) call calc_dissol(gm, g, s)
   ! 動く底層(地滑り土塊。z 更新プロセス群の末尾 = 他プロセスの z 更新を
   ! 見た上で動く。calc_bedslide は冒頭で z・h のハロを最新化し、
   ! サブサイクルごとに hb・z を交換する。発火(release_bedslide)は
@@ -918,7 +976,8 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   ! 近傍参照が、この1回の交換で賄われる(developer.md §11)
   call par_halo_cell(s%z)
   if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 .or. gm%f_wthr > 0 &
-      .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0) then
+      .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0 &
+      .or. (gm%f_dissol > 0 .and. gm%dis%res)) then
     call par_halo_cell(s%sd)
   end if
   ! s%hs のハロは swflow_enc のステップ頭交換が担う(移流の直前に最新化)
@@ -1033,6 +1092,8 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (gm%f_fixation > 0) call dispose_fixation(gm, p, g, s)
   ! 河床の細粒分 sf の私有 save と台帳報告(契約5)
   if (gm%f_bedfines > 0) call dispose_fines(gm, p, g, s)
+  ! 溶食の記録場の私有 save と台帳報告(契約5。§86)
+  if (gm%f_dissol > 0) call dispose_dissol(gm, p, g, s)
   if (gm%flv%nclip > 0) then
     call par_warn("geomorph: fluvial dzmax clip fired on " &
                   // itoa(gm%flv%nclip) // " edges" &
@@ -1103,6 +1164,8 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%spl%fx)) deallocate(gm%spl%fx)
   if (allocated(gm%spl%zs)) deallocate(gm%spl%zs)
   if (allocated(gm%spl%zt)) deallocate(gm%spl%zt)
+  if (allocated(gm%dis%fsol)) deallocate(gm%dis%fsol)
+  if (allocated(gm%dis%vrow)) deallocate(gm%dis%vrow)
   gm%spl%nclip = 0
   gm%spl%vout = 0.0
   gm%dbr%nrelclip = 0
