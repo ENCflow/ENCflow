@@ -156,8 +156,7 @@ deep outer and a shallow inner side, $`\partial z/\partial n \approx
 r/\gamma`$. The curvature is evaluated only in cells whose four
 neighbours are all wet ($`r = 0`$ along banks and boundary columns), and
 bank-face steps are excluded from $`\nabla z`$. The coefficients
-$`\mu_s, \mu_k, N_*`$ have no defaults and must be given (pending a check
-against the literature; §84.3). `fluv_taufac` is a simple separation of
+$`\mu_s = 1.0, \mu_k = 0.45`$ (Asahi et al. 2013 eq. (22), Hasegawa 1984) and $`N_* = 7.0`$ (Engelund 1974) are the defaults (literature check in §84.12). `fluv_taufac` is a simple separation of
 the effective shear stress: a fixed fraction of the total-resistance
 $`\tau_*`$ is passed to the transport formula. Verification:
 [test/bendsed](../../../test/bendsed/README.md).

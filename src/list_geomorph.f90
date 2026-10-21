@@ -37,13 +37,14 @@ module list_geomorph
                                      ! 除く簡略分離。1 = 分離なし。§84.3)
     integer :: fluv_slope = 0        ! 河床勾配による流砂方向補正(0:なし, 1:長谷川型
                                      ! q⃗ = q_b(t̂ − γ∇z)、γ = √(τ*c/(μs μk τ*))。§84.3)
-    real :: fluv_mus = 0.0           ! 静止摩擦係数 μs(fluv_slope=1 で必須。文献値の
-                                     ! 既定は置かない = 照合待ち。users_guide/sediment.md)
-    real :: fluv_muk = 0.0           ! 動摩擦係数 μk(同上)
+    real :: fluv_mus = 1.0           ! 静止摩擦係数 μs(既定 1.0 = Asahi ら 2013 式 (22)、
+                                     ! Hasegawa 1984 に拠る。2026-10-21 照合 §84.12)
+    real :: fluv_muk = 0.45          ! 動摩擦係数 μk(既定 0.45 = 同上。Hasegawa 1989 は
+                                     ! 概算に 0.7 を用いる)
     integer :: f_secflow = 0         ! 二次流による流砂方向補正(0:なし, 1:平衡型
                                      ! r = N* h κ、κ は流速場の流線曲率。§84.3)
-    real :: sec_nstar = 0.0          ! N*(Engelund 型の河床近傍横断流速比の係数。
-                                     ! f_secflow=1 で必須。既定は置かない = 照合待ち)
+    real :: sec_nstar = 7.0          ! N*(Engelund 型の河床近傍横断流速比の係数。既定
+                                     ! 7.0 = Engelund 1974 / Asahi ら 2013 式 (18)。§84.12)
     real :: sec_rmax = 1.0           ! |r| の上限(急湾曲での h/R 比例則の打ち切り)
     real :: sec_vmin = 0.01          ! 曲率を評価する最小流速 (m/s)(未満は r = 0)
 
@@ -65,8 +66,10 @@ module list_geomorph
                                      ! 1 − exp(−t/T_fix) で育ち、供給側の限界掃流力を
                                      ! τ*c (1 + c_τ a) に上げる(標高・体積には触れない)。§84.6
     real :: fix_tfix = 0.0           ! 定着時間 T_fix (h。地形時間 = morfac 込み)(必須 > 0。
-                                     ! 植生定着の時間尺度。文献照合待ちのため既定は置かない)
-    real :: fix_ctau = 0.0           ! 定着時の限界掃流力の増分比 c_τ(必須 > 0。既定は置かない)
+                                     ! 文献に標準値なし: Asahi ら 2013 の T_Land は出水の回帰
+                                     ! 時間との比 0.025〜0.5 で蛇行、1 で発達せず。§84.12)
+    real :: fix_ctau = 0.0           ! 定着時の限界掃流力の増分比 c_τ(必須 > 0。文献に標準値
+                                     ! なし。Asahi ら 2013 は陸地化セルを領域から外す = c_τ → ∞)
     real :: fix_dzreset = 0.0        ! 定着面からの累積浸食深がこれを超えると a = 0 (m)。
                                      ! 0 = 既定 0.1(根系層の厚さの目安)
     real :: fix_cn = 0.0             ! 定着時の粗度(Manning n)の増分比 c_n。流れの摩擦項の n を

@@ -163,9 +163,9 @@ Riverbed erosion and deposition by a bedload transport formula.
 | fluv_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
 | fluv_taufac | 1.0 | Effective shear-stress ratio f_τ (the τ* passed to the transport formula = f_τ × τ* of the total resistance; a simple separation of form drag by dunes or vegetation. 1 = no separation) |
 | fluv_slope | 0 | Bed-slope correction of the bed-load direction. 1: Hasegawa type (q⃗ = q_b(t̂ − γ∇z), γ = √(τ*c/(μs μk τ*))) |
-| fluv_mus / fluv_muk | (required) | Static and kinetic friction coefficients μs, μk (must be given explicitly with fluv_slope = 1; see the note below) |
+| fluv_mus / fluv_muk | 1.0 / 0.45 | Static and kinetic friction coefficients μs, μk. **Literature values** (Asahi et al. 2013 eq. (22), after Hasegawa 1984; Hasegawa 1989 uses μk = 0.7 as an estimate). See the note below |
 | f_secflow | 0 | Secondary-flow correction of the bed-load direction. 1: equilibrium type (near-bed transverse velocity ratio r = N* h κ, κ = streamline curvature of the velocity field) |
-| sec_nstar | (required) | N* (must be given explicitly with f_secflow = 1; see the note below) |
+| sec_nstar | 7.0 | N*. **Literature value** (Engelund 1974; Asahi et al. 2013 eq. (18). The de Vriend coefficient 2/κ²(1 − √g/(κC)) is about 10 for C = 50). See the note below |
 | sec_rmax | 1.0 | Upper bound of |r| (cuts the h/R proportionality in sharp bends; 1 = 45°) |
 | sec_vmin | 0.01 | Minimum velocity (m/s) for evaluating the curvature |
 | f_berode | 0 | Bank erosion. 1: a neighbouring cell whose ground is above the water surface of a wet cell (a bank face) retreats under the shear stress of the toe cell, and the eroded volume is moved to the toe (requires f_fluvial = 1) |
@@ -176,8 +176,8 @@ Riverbed erosion and deposition by a bedload transport formula.
 | repose_phi | 30 | Angle of repose φ_r (deg) |
 | repose_relax | 0.5 | Fraction of the excess slope relaxed per update (0 to 1) |
 | f_fixation | 0 | Fixation. 1: a fixation degree a grows on dry cells and raises the critical shear stress of the bed load supplied by that cell and of the bank erosion of that cell to τ*c (1 + c_τ a) (requires f_fluvial = 1) |
-| fix_tfix | (required) | Fixation time scale T_fix (h, morphological time including morfac). While dry, a → 1 − exp(−t/T_fix) |
-| fix_ctau | (required) | Increase ratio c_τ of the critical shear stress at full fixation |
+| fix_tfix | (required) | Fixation time scale T_fix (h, morphological time including morfac). While dry, a → 1 − exp(−t/T_fix). No standard value in the literature; choose it relative to the return time of floods T_return (Asahi et al. 2013: meandering develops for T_Land/T_return = 0.025 to 0.5 and not for 1) |
+| fix_ctau | (required) | Increase ratio c_τ of the critical shear stress at full fixation. No standard value in the literature (Asahi et al. 2013 remove accreted cells from the domain, i.e. c_τ → ∞; large values approach that) |
 | fix_dzreset | 0.1 | Cumulative erosion below the fixation surface that resets a to 0 (m) |
 | fix_cn | 0 | Roughness increase ratio c_n at full fixation: the Manning n of the flow friction becomes n (1 + c_n a) (the τ* of the sediment is unchanged). 0 = no roughness effect |
 
@@ -199,11 +199,13 @@ of the bend) a cross section with a deep outer side and a shallow inner
 side forms in bends (use the two together; one alone does not reach an
 equilibrium transverse slope). The equations are in the
 [explanation](sediment.md#3-bed-load-f_fluvial). The coefficients
-`fluv_mus`, `fluv_muk` and `sec_nstar` have **no defaults** (pending a
-check against the literature; developer.md §84.3). The values recalled
-from the literature are μs = 1.0, μk = 0.45 (Hasegawa 1981, Nays2DH) and
-N* = 7 (Engelund type, Nays2DH); [test/bendsed](../../../test/bendsed/)
-verifies with these values. Bed load is never carried onto a neighbouring
+`fluv_mus`, `fluv_muk` and `sec_nstar` default to μs = 1.0, μk = 0.45
+(the values Asahi et al. 2013, eq. (22), take from Hasegawa 1984; Hasegawa
+1989 uses μk = 0.7 as an estimate, which makes γ 1.2 times smaller) and
+N* = 7.0 (Engelund 1974; Asahi et al. 2013, eq. (18)); the adopted values
+are printed at start-up (literature check in developer.md §84.12).
+[test/bendsed](../../../test/bendsed/) verifies with these values. Bed load
+is never carried onto a neighbouring
 cell whose ground is above the water surface (a bank face), and a dry cell
 never supplies bed load (§84.2).
 

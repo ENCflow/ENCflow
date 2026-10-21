@@ -67,10 +67,10 @@
   fluv_sgrav = 1.65
   fluv_dzmax = 0.05
   fluv_slope = 1            ! 河床勾配項(長谷川型)
-  fluv_mus = 1.0            ! 文献照合待ちの値(§84.3)
+  fluv_mus = 1.0            ! 文献値(§84.12。既定と同じ)
   fluv_muk = 0.45
   f_secflow = 1             ! 平衡二次流項
-  sec_nstar = 7.0           ! 文献照合待ちの値
+  sec_nstar = 7.0           ! 文献値(§84.12。既定と同じ)
   f_berode = 1              ! 側岸侵食則あり = 粘着性の河岸(脚部の掃流力が
   berode_kb = 3.0e-5        !   τ*c,b を超えた分に比例して後退)
   berode_tausc = 0.5        ! 河岸の限界無次元掃流力(河道平均の τ* ≈ 0.45 より上 =
