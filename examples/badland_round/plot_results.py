@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """examples/badland_round の図化と数表(事前に param_d*.txt を実行しておく)。
 
-  python3 plot_results.py
+  python3 plot_results.py            # クリープ系列(D = 0 / 3e-7 / 1e-6 / 3e-6)
+  python3 plot_results.py strata     # 縞模様(水平層理)の対照: figs/*_strata.png
 
 図(figs/):
   maps.png      4 ケース × 3 時刻の陰影図(等高線付き)+ 初期地形
@@ -15,6 +16,7 @@
 import csv
 import os
 import re
+import sys
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
@@ -24,10 +26,21 @@ matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
 os.makedirs("figs", exist_ok=True)
 
-CASES = [("param_d0.txt", "クリープなし (D = 0)"),
-         ("param_d3e-7.txt", "D = 3e-7 m²/s (L ≈ 2 m)"),
-         ("param_d1e-6.txt", "D = 1e-6 m²/s (L ≈ 8 m)"),
-         ("param_d3e-6.txt", "D = 3e-6 m²/s (L ≈ 24 m)")]
+MODE = sys.argv[1] if len(sys.argv) > 1 else "creep"
+if MODE == "strata":
+    CASES = [("param_d0.txt", "クリープなし・層理なし"),
+             ("param_d0_strata.txt", "クリープなし・硬軟互層 (1.5 m, 倍率 1/0.3)"),
+             ("param_d1e-6.txt", "D = 1e-6 m²/s・層理なし"),
+             ("param_d1e-6_strata.txt", "D = 1e-6 m²/s・硬軟互層 (1.5 m, 倍率 1/0.3)")]
+    SUF = "_strata"
+    HARD = [(1.5 * k, 1.5 * (k + 1)) for k in range(1, 16, 2)]   # 硬層の標高帯(param_*_strata.txt と同じ)
+else:
+    CASES = [("param_d0.txt", "クリープなし (D = 0)"),
+             ("param_d3e-7.txt", "D = 3e-7 m²/s (L ≈ 2 m)"),
+             ("param_d1e-6.txt", "D = 1e-6 m²/s (L ≈ 8 m)"),
+             ("param_d3e-6.txt", "D = 3e-6 m²/s (L ≈ 24 m)")]
+    SUF = ""
+    HARD = []
 HILLS = [(35.0, 24.0), (90.0, 15.0), (128.0, 9.0), (154.0, 5.0)]   # make_terrain.py と同じ
 TANB = 0.8
 YC = 40.0
@@ -227,7 +240,7 @@ for r, c in enumerate(cases, start=1):
         if r == len(cases):
             ax.set_xlabel("x (m)")
 fig.tight_layout()
-fig.savefig("figs/maps.png", dpi=110)
+fig.savefig("figs/maps%s.png" % SUF, dpi=110)
 plt.close(fig)
 
 # ---------------------------------------------------------------- 図 2: 横断
@@ -235,6 +248,9 @@ fig, axes = plt.subplots(len(cases), 1, figsize=(13, 2.8 * len(cases)), sharex=T
 jc = int(YC / dx)
 x = (np.arange(nx) + 0.5) * dx
 for ax, c in zip(np.atleast_1d(axes), cases):
+    if HARD and "strata" in c["name"]:
+        for z1, z2 in HARD:
+            ax.axhspan(z1, z2, color="0.85", lw=0, zorder=0)
     ax.plot(x, c["z0"][jc], "k--", lw=0.8, label="初期")
     n = len(c["snaps"])
     cmap = plt.get_cmap("viridis")
@@ -249,7 +265,7 @@ for ax, c in zip(np.atleast_1d(axes), cases):
     ax.legend(fontsize=8, loc="upper right")
 np.atleast_1d(axes)[-1].set_xlabel("x (m)(y = 40 m、4 つの丘の頂を通る横断)")
 fig.tight_layout()
-fig.savefig("figs/sections.png", dpi=110)
+fig.savefig("figs/sections%s.png" % SUF, dpi=110)
 plt.close(fig)
 
 # ---------------------------------------------------------------- 図 3: 半径方向断面
@@ -257,6 +273,9 @@ fig, axes = plt.subplots(len(cases), len(HILLS), figsize=(3.4 * len(HILLS), 2.6 
 for r, c in enumerate(cases):
     for k, (xc, H) in enumerate(HILLS):
         ax = axes[r, k]
+        if HARD and "strata" in c["name"]:
+            for z1, z2 in HARD:
+                ax.axhspan(z1, z2, color="0.85", lw=0, zorder=0)
         rc0, prof0, _ = radial_profile(c["z0"], xc, YC, H / TANB + 12, dx)
         m = metrics[c["name"]][k]
         ax.plot(rc0, prof0, "k--", lw=0.8, label="初期")
@@ -274,7 +293,7 @@ for r, c in enumerate(cases):
         if r == 0 and k == 0:
             ax.legend(fontsize=7)
 fig.tight_layout()
-fig.savefig("figs/radial.png", dpi=110)
+fig.savefig("figs/radial%s.png" % SUF, dpi=110)
 plt.close(fig)
 
 # ---------------------------------------------------------------- 図 4: 丸さ vs 丘の大きさ、頂の時系列
@@ -311,6 +330,6 @@ axes[2].set_title("頂の低下(線種: 実線 H₀=24, 破線 15, 一点鎖線 
 axes[2].grid(alpha=0.3)
 axes[2].legend(fontsize=8)
 fig.tight_layout()
-fig.savefig("figs/rounding.png", dpi=110)
+fig.savefig("figs/rounding%s.png" % SUF, dpi=110)
 plt.close(fig)
-print("\nfigs/maps.png, sections.png, radial.png, rounding.png written")
+print("\nfigs/maps%s.png, sections%s.png, radial%s.png, rounding%s.png written" % (SUF, SUF, SUF, SUF))
