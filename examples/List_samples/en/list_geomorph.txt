@@ -158,6 +158,13 @@
                             !   downhill gradient to the 8 neighbours = default; ridge-crest
                             !   cells erode with their faces. 0: central difference = the
                             !   behaviour before 2026-10-19. sec. 48.4)
+  !spl_strata(1:2,1) = 0.0, 1.0    ! table of horizontal strata (hard/soft contrast; sec. 48.5).
+  !spl_strata(1:2,2) = 6.0, 0.3    !   Column k = (bottom elevation z_k [m], erodibility factor
+  !spl_strata(1:2,3) = 7.5, 1.0    !   f_k), increasing elevation, up to 64 layers. A cell whose
+                            !   surface elevation lies in z_k <= z < z_{k+1} has E multiplied
+                            !   by f_k (0 = a bed that does not erode = cap rock). Below the
+                            !   lowest layer the factor is 1. Unspecified = no strata. Not
+                            !   applied to creep
 
   ! Debris flow / landslide (Takahashi-type equilibrium-concentration E-D)
   ! (0: off, 1: on)

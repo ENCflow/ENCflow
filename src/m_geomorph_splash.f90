@@ -33,6 +33,11 @@
 !   勾配 S は生の z から取る(位置依存の侵食率そのもの)。
 !   侵食基準面(spl_zbase): 崖下が海なら海面以下は削らない(開いた系の
 !   基準面。sd による岩盤露出と独立に与える)。
+!   水平層理(spl_strata。§48.5): 層の下端標高 z_k と侵食性倍率 f_k の表
+!   (昇順)。セルの地表標高 z が属する層の f_k を E に掛ける(硬軟互層の
+!   縞・段・キャップロック)。最下層より下は 1。層は水平(標高だけの関数)で、
+!   侵食が進んで z が下がると下の層が露出する。クリープには掛けない
+!   (クリープは地形拡散率で材料の性質ではない)。
 !
 !   2パス構造(MPI 規約): eval_splash が時刻 n の z(近傍参照)から
 !   侵食深 gm%spl%fx を評価し(debris の適用より前に呼ぶ=全プロセスが
@@ -57,6 +62,7 @@ module subroutine init_splash(gm, g, list)
   type(t_list_geomorph), intent(in) :: list
   real :: kr, kt                       ! 既定適用後の有効値(§62)
   real :: dmin
+  integer :: k, n
   character(len=256) :: msg
 
   ! どちらも未指定なら両方に既定(経験係数。校正前提。§62)。片方だけ指定なら
@@ -85,6 +91,33 @@ module subroutine init_splash(gm, g, list)
   gm%szbase = list%spl_zbase
   if (list%spl_sgrad < 0 .or. list%spl_sgrad > 1) call par_stop("list_geomorph: spl_sgrad must be 0 or 1")
   gm%ssgrad = list%spl_sgrad
+
+  ! 水平層理の表(spl_strata(1:2,k) = 層の下端標高, 侵食性倍率。先頭から番兵
+  ! (標高 <= -9000)の手前まで)。標高は昇順、倍率は 0 以上。未指定なら
+  ! 何も確保しない(無効時ゼロ追加)
+  n = 0
+  do k = 1, size(list%spl_strata, 2)
+    if (list%spl_strata(1,k) <= -9000.0) exit
+    n = k
+  end do
+  gm%snst = n
+  if (n > 0) then
+    allocate(gm%sstz(n), gm%sstf(n))
+    do k = 1, n
+      gm%sstz(k) = list%spl_strata(1,k)
+      gm%sstf(k) = list%spl_strata(2,k)
+      if (gm%sstf(k) < 0.0) call par_stop("list_geomorph: spl_strata factor must be >= 0 (every layer needs z_bottom, factor)")
+      if (k > 1) then
+        if (gm%sstz(k) <= gm%sstz(k-1)) call par_stop("list_geomorph: spl_strata z_bottom must increase with k")
+      end if
+    end do
+    write(msg, '(a,i0,a)') "geomorph: splash strata: ", n, " layers (z_bottom [m], erodibility factor)"
+    call par_info(trim(msg))
+    do k = 1, n
+      write(msg, '(a,i3,a,f12.3,a,f10.4)') "geomorph:   layer ", k, ": z >= ", gm%sstz(k), "  factor ", gm%sstf(k)
+      call par_info(trim(msg))
+    end do
+  end if
 
   if (.not. allocated(gm%spl%fx)) then
     allocate(gm%spl%fx(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
@@ -169,7 +202,7 @@ module subroutine eval_splash(gm, p, g, s, dts)
   type(t_state), intent(in) :: s
   real, intent(in) :: dts       ! 実効時間刻み(morfac 込み)
   integer :: i, j, nclip
-  real :: zc, ze, zw, zn, zs, kap, sx, sy, ss, er, fx
+  real :: zc, ze, zw, zn, zs, kap, sx, sy, ss, er, fx, fs
   real :: kc, ke, kw, kn, ks
   real :: dxi, dyi, dx2i, dy2i, ddi
   real :: zn8(8), dd8(8)
@@ -187,7 +220,7 @@ module subroutine eval_splash(gm, p, g, s, dts)
   if (smooth) call smooth_z(gm, g, s)
 
   !$omp parallel do schedule(static) reduction(+:nclip) &
-  !$omp   private(i, j, zc, ze, zw, zn, zs, kap, sx, sy, ss, er, fx, kc, ke, kw, kn, ks, k, in, jn, zn8)
+  !$omp   private(i, j, zc, ze, zw, zn, zs, kap, sx, sy, ss, er, fx, fs, kc, ke, kw, kn, ks, k, in, jn, zn8)
   do j = dcp%js, dcp%je
     gm%spl%fx(:,j) = 0.0
     do i = g%wx(1,j), g%wx(2,j)
@@ -249,6 +282,15 @@ module subroutine eval_splash(gm, p, g, s, dts)
       er = gm%skr * (1.0 + gm%sca * kap)
       if (gm%skt > 0.0 .and. ss > 0.0) then
         er = er + gm%skt * (1.0 + gm%scb * kap) * ss**gm%shexp
+      end if
+      ! 水平層理: 地表標高 zc が属する層(z_k <= zc < z_{k+1})の侵食性倍率。
+      ! 最下層より下は 1(§48.5)
+      if (gm%snst > 0) then
+        fs = 1.0
+        do k = 1, gm%snst
+          if (zc >= gm%sstz(k)) fs = gm%sstf(k)
+        end do
+        er = er * fs
       end if
       er = er * s%pre(i,j)
       if (er <= 0.0) cycle

@@ -568,6 +568,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | spl_kr | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | spl_lc | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | spl_sgrad | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| spl_strata | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | spl_zbase | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | spl_kt | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | src_cell | &list_bound_source | [境界条件](boundary.md) |

@@ -250,6 +250,9 @@ module m_geomorph
     real :: slc = 0.0                ! κ の相関長 ℓ (m)(0 = 格子ラプラシアン。§48.3)
     real :: szbase = -9999.0         ! 侵食基準面 (m)(-9000 以下 = なし)
     integer :: ssgrad = 1            ! 勾配の評価(1: 最急降下 = 既定, 0: 中央差分。§48.4)
+    integer :: snst = 0              ! 水平層理の層数(0 = 層理なし。§48.5)
+    real, allocatable :: sstz(:)     ! 層の下端標高 (m)(昇順。snst > 0 のみ確保)
+    real, allocatable :: sstf(:)     ! 層の侵食性倍率(0 = 削れない硬層)
     integer :: f_debris = 0          ! 土石流 E-D(0:無効, 1:有効。f_suspend と排他)
     real :: db_tanphi = 0.0          ! tan(内部摩擦角)
     real :: db_delte = 0.0           ! 侵食速度係数 δe
