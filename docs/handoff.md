@@ -875,14 +875,13 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 - **蛇行河道の発達と河床変動管理への拡張(設計検討メモ docs/meander_plan.md。
   2026-10-17 起案・合意。段 0〜段 3b・5a 実装済み、段 4 の例題 examples/meander・
   examples/meander_cutoff 作成済み = developer.md §84.1〜§84.9、
-  test/bankface・bendsed・berode・repose・fixation・uniflow・sedfeed。残: (i) 係数 N*・μs・μk の文献照合(Engelund 1974、
-  長谷川 1981、Nays2DH Solver Manual。本環境から到達不可のため有効時は明示指定
-  必須のまま。照合後に §62 方式の既定へ昇格)、(ii) 横断勾配の平衡値 ∂z/∂n ≈ r/γ の
+  test/bankface・bendsed・berode・repose・fixation・uniflow・sedfeed。残: (i) 係数 N*・μs・μk は 2026-10-21 に原著で照合し既定へ昇格(§84.12。
+  Hasegawa 1989、Asahi ら 2013、Struiksma ら 1985)、(ii) 横断勾配の平衡値 ∂z/∂n ≈ r/γ の
   定量ベンチと格子 45° 回転の比較、(iii) 段 2 の残(K_b の分布ファイル、脚部の被覆効果、repose_phi_wet)、
   (iv) 段 3 = 内岸砂州の定着 f_fixation 実装済み(§84.6、test/fixation。
   main の §68.36 修正後は外岸の後退が出るので §84.5 末尾の候補 (a)(b) は不採用。
-  例題は既定のスキーム 3 に戻した)。残: 定着時間・c_τ の文献照合、
-  安息角への定着の反映(要るとき。浮遊砂の再浮上抑制と動的粗度 fix_cn は
+  例題は既定のスキーム 3 に戻した)。残: 定着時間・c_τ は文献に標準値なし(Asahi ら 2013 の T_Land は出水回帰
+  時間との比で選ぶ。§84.12)、安息角への定着の反映(要るとき。浮遊砂の再浮上抑制と動的粗度 fix_cn は
   段 3b として実装済み §84.8。給砂は段 5a として実装済み §84.9。例題で砂州を
   出水位より上へ育てる試行(給砂+浮遊砂+定着。param_fixsuspfeed.txt)は
   §84.9 末尾に記録: 砂州は氾濫原の高さまで育つが平衡濃度給砂の倍率 1.0 で

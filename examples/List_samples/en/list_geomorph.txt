@@ -61,13 +61,12 @@
                             !   resistance. 1 = no separation)
   !fluv_slope = 1           ! bed-slope correction of the bed-load direction
                             !   (1: Hasegawa type gamma*grad z)
-  !fluv_mus = 1.0           ! static friction coefficient mu_s (required with
-                            !   fluv_slope=1; literature value pending verification)
-  !fluv_muk = 0.45          ! kinetic friction coefficient mu_k (same)
+  !fluv_mus = 1.0           ! static friction coefficient mu_s (default 1.0;
+                            !   Asahi et al. 2013, Hasegawa 1984)
+  !fluv_muk = 0.45          ! kinetic friction coefficient mu_k (default 0.45; same)
   !f_secflow = 1            ! secondary-flow correction of the bed-load direction
                             !   (1: equilibrium type r = N* h kappa)
-  !sec_nstar = 7.0          ! N* (required with f_secflow=1; literature value
-                            !   pending verification)
+  !sec_nstar = 7.0          ! N* (default 7.0; Engelund 1974)
   !sec_rmax = 1.0           ! upper bound of |r| (1 = 45 deg)
   !sec_vmin = 0.01          ! minimum velocity for evaluating the curvature (m/s)
 
@@ -89,8 +88,11 @@
   !f_fixation = 1           ! fixation (a fixation degree a grows on dry cells and
                             !   raises the supplying side's tau*c to tau*c (1 + c_tau a);
                             !   elevations and volumes are untouched)
-  !fix_tfix = 10.0          ! fixation time scale T_fix (h, morphological time) (required)
-  !fix_ctau = 10.0          ! increase ratio c_tau of the critical shear stress (required)
+  !fix_tfix = 10.0          ! fixation time scale T_fix (h, morphological time) (required;
+                            !   meandering develops for T_fix / flood return time = 0.025 to 0.5,
+                            !   Asahi et al. 2013)
+  !fix_ctau = 10.0          ! increase ratio c_tau of the critical shear stress (required;
+                            !   no standard value in the literature)
   !fix_dzreset = 0.1        ! cumulative erosion below the fixation surface that resets a (m).
                             !   0 = default 0.1
   !fix_cn = 2.0             ! roughness increase ratio c_n at full fixation (flow n becomes
