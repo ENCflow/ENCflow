@@ -52,9 +52,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 00d. **河口デルタ形成の試行(2026-10-20〜21。docs/delta_plan.md)の残り**
    - 3 コミット(§84.13 定着の冠水減衰・河岸係数、§84.14 台帳の等価修正、
-     test/fixation の Run.sh 修正)は逐次のみ検証済み。**Run_MPI.sh の np = 2, 4
-     が未実行**(作業環境に mpif90 なし)。セル局所の変更でハロは既存のままなので
-     一致する見込みだが規律どおり確認する。
+     test/fixation の Run.sh 修正)の MPI 確認は 2026-10-21 に完了: fixation・
+     berode・bendsed・repose の Run_MPI.sh が np = 2, 4 とも逐次とバイト一致、
+     -fcheck=all の MPI ビルドで berode・repose の np = 1, 2 が境界違反なし。
    - 定着の新係数 T_dec(fix_tdec)・c_τ,b(fix_ctau_bank)は文献照合待ち(T_fix・c_τ と
      同様に既定を置かない)。デルタ試行の目安は T_dec = 出水の継続時間程度、c_τ,b = 0.5。
    - 代表ケースは examples/delta(base・sand・mud・varq・fix の 5 構成)として
