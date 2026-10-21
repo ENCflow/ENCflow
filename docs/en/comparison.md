@@ -103,6 +103,7 @@ official site before citing.
 | Seawater intrusion / fresh-salt two-layer | Partial: sharp interface (SWI2-type) + surface salt layer | MODFLOW+SWI2/SEAWAT, SUTRA, FEFLOW | Variable-density transport that resolves mixing and dispersion is a dedicated domain. Following run-up seawater to its destination in a single time evolution with surface inundation and tide is the original point |
 | Urban drainage / conduit networks | Partial: conduit continuum layer (equivalent confined continuum, 8-direction conveyance, surcharge) | SWMM + 2-D couplings (TUFLOW, InfoWorks ICM, xpswmm) | The world standard couples a 2-D surface model with a 1-D pipe network. ENCflow homogenizes the network into a continuum; control structures and trunk-dominated systems are ceded to network models |
 | Sediment and landform change (bedload, suspension, collapse, debris flow) | Yes, with MORFAC | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | Differs in placing debris flows alongside catchment hydrology and floods |
+| Formation of a river-mouth delta (bifurcation at the mouth bar, lobe growth, channel switching; fan versus bird-foot by the sand/mud ratio; stabilisation of distributaries by discharge variation and fixation) | Yes, settings only (sea as ordinary cells + initial water level, capacity feed + suspended mud + bed-fines ledger + slope correction + angle of repose + fixation) | DeltaRCM (reduced complexity, random walks), Delft3D (physics-based 2D/3D; Edmonds & Slingerland), CAESAR-Lisflood (local inertia + lateral erosion) | The effect of the sand/mud ratio (more mud, fewer and longer distributaries) has the same sign as in all three. Symmetry breaking by the instability of the bifurcation rather than by random numbers. Solving backwater and the jet with momentum-conserving flow, coupled on the same grid with discharge variation, tide and catchment hydrology, is the distinctive part. Waves, tidal currents and plume buoyancy are not implemented. docs/delta_plan.md (Japanese) |
 | Development of meandering channels (bed-load direction correction in bends, bank erosion, angle-of-repose avalanching, vegetation fixation of inner-bank bars, neck cutoff, a ledger of fines in the bed) | Yes, as landform change on the raster (no vector bank line; equilibrium secondary flow, non-equilibrium planned) | Nays2DH (iRIC), Delft3D-MOR, BASEMENT, CAESAR-Lisflood, research models with self-evolving banks (Asahi et al. 2013) | Dedicated models track the bank line or solve in curvilinear coordinates. ENCflow treats the bank face as the step between neighbouring cells, so cutoffs and the merging of bars into the floodplain emerge from wetting-drying and landform change; it sits in the same time evolution as catchment hydrology and floods (examples/meander, meander_cutoff) |
 | Volcanic flows and snow avalanches (debris avalanches, pyroclastic flows, lahars, dense-flow avalanches) | Yes: equivalent fluid (Voellmy, constant retarding stress, curvature term) | Titan2D, VolcFlow, RAMMS, r.avaflow, LAHARZ | Resistance laws at the level of dedicated models. Original in following eruption, run-out, deposition, natural damming, dam-break flood and secondary lahar as one chain in a single run. Dilute systems (surges, plumes) are out of scope |
 | Post-ashfall rain-triggered mudflows (ashfall → rainfall → erosion of the ash layer → deposition) | Yes: give the ash thickness as soil depth, no source specification | OpenLISEM (Hazard edition). FLO-2D, Kanako-2D, Morpho2DH, LaharFlow, RAMMS, r.avaflow, HEC-RAS 6 and LAHARZ cover part of the chain | Dedicated models do either the rainfall runoff or the mass-flow run-out, with the other as input. Sharing one grid and time loop lets the mudflow arise by itself. The counterpart for a comparison study is OpenLISEM |
@@ -132,6 +133,21 @@ user's guide chapters, not in this table.
   free and open, the middle band of "stacking all catchment processes
   at flood-hydraulics accuracy" -- territory traditionally occupied
   by the commercial MIKE/TUFLOW.
+- **River-mouth deltas (versus DeltaRCM)**: DeltaRCM is a reduced-complexity
+  model that routes water by random walks and places sand and mud by rules; it
+  suits the exploration of regimes and long-term statistics. ENCflow produces
+  the same regimes (bifurcation at the mouth bar, fan versus bird-foot by the
+  sand/mud ratio, channel switching) from the shallow-water equations and
+  transport formulae (docs/delta_plan.md), with the symmetry breaking carried by
+  the instability of the bifurcation instead of random numbers. The share of
+  mechanistic content is clearly larger for the flow, at the same level as
+  other physics-based 2D models (Delft3D, CAESAR-Lisflood) for the sediment
+  (empirical transport formulae), and phenomenological for the fixation. The
+  advantage lies where the flow dynamics matter (backwater, jets, coupling with
+  discharge variation and other processes) and where coefficients must be
+  transferable; for regime exploration and many-realisation statistics the
+  reduced-complexity model is the better tool. The cost is orders of magnitude
+  higher (dx 2.5 m, 4000 h of morphological time: 7 hours on 4 threads).
 - **Rainfall runoff and mass flows side by side**: a chain such as the
   post-ashfall rain-triggered mudflow (examples/ashfall_lahar), where the
   runoff computation drives the erosion and the erosion changes the nature

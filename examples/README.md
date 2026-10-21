@@ -34,6 +34,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [qanat/](qanat/) | カナート(横坑集水)の理想化ケース | 管路連続体層、地下水 |
 | [meander/](meander/) | 氾濫原の中の正弦波状の河道の蛇行発達。外岸の後退と内岸砂州の成長、出水・低水の繰り返しによる砂州の定着、給砂による砂州の氾濫原化の 9 構成 | 掃流砂の方向補正 fluv_slope・f_secflow、側岸侵食 f_berode、安息角崩落 f_repose、定着 f_fixation、給砂 |
 | [meander_cutoff/](meander_cutoff/) | 頸部の狭い蛇行ループが出水で短絡し、旧河道が滞水域になって出入口が埋まり始める | 同上 + 区間流入の時系列 |
+| [delta/](delta/) | 給砂河川が静水の海盆に突入して作る河口デルタ。河口砂州 → 分岐 → ローブ成長 → 流路の乗り換え。砂泥比による扇状と鳥趾状、流量変動と定着(冠水減衰・河岸係数)による分流路の安定化の 5 構成(docs/delta_plan.md) | 海は通常セル+初期水位、容量給砂 fluv_bcfeed、浮遊泥 inflow_cs + f_bedfines、fluv_slope、f_repose、f_fixation(fix_tdec・fix_ctau_bank)、辺の長波放射 |
 
 ## 複数プロセスの連鎖の例
 
