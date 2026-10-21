@@ -339,4 +339,25 @@
   !uplift0 = 1.0            ! uplift rate (mm/yr). Unspecified = default 1.0
                             !   (negative = subsidence)
 
+  ! ---- limestone dissolution (chemical denudation, karst. developer.md §86) ----
+  !f_dissol = 1             ! limestone dissolution (lowers z in proportion to
+                            !   the recharge; no sediment is produced)
+  !dissol_ceq = 100.0       ! effective dissolution capacity (mg/L as CaCO3 =
+                            !   g of rock dissolved by 1 m3 of water).
+                            !   Unspecified = default 100 (rain on bare rock
+                            !   50-80, under a soil cover 100-300)
+  !dissol_rho = 2500.0      ! rock density (kg/m3). 0 = default 2500
+  !dissol_src = 1           ! water of the diffuse term (1: infiltration of the
+                            !   groundwater module = fn_gwflow required,
+                            !   2: rainfall on the ground = maximum-denudation
+                            !   model without groundwater)
+  !dissol_sink = 1          ! add the inflow into the sinks (inlets of the
+                            !   conduit continuum layer) = dolines (requires
+                            !   f_gwconduit=1 with gwc_inlet / fn_gwc_inlet)
+  !dissol_fsink = 1.0       ! capacity ratio of the sink inflow (calibration)
+  !dissol_fres = 0.0        ! volume fraction of insoluble residue 0-1
+                            !   (dissolved rock x fraction stays in the soil sd)
+  !fn_dissol = "sol.txt"    ! distribution of the soluble fraction 0-1
+                            !   (limestone mask). Unspecified = 1 everywhere
+
 /

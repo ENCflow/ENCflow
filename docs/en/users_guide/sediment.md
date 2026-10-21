@@ -373,6 +373,43 @@ Long-term landscape evolution is meant to be run as "representative
 hydrology repeated × MORFAC × restart chains", the CAESAR-Lisflood style
 [^coulthard13] (developer.md §32).
 
+### Limestone dissolution (f_dissol)
+
+**Chemical denudation.** Limestone dissolving in water is the counterpart
+of weathering (it lowers $`z`$ and keeps $`s_d`$) and is proportional to
+the water entering the rock[^white84][^gabrovsek09]:
+
+```math
+\frac{dz}{dt} = -\,k_d\, f_{\rm sol}\,(q_{\rm r} + f_{\rm sink}\, q_{\rm sink}),
+\qquad k_d = \frac{c_{\rm eq}}{\rho_{\rm r}}
+```
+
+$`q_{\rm r}`$ is the diffuse recharge flux (infiltration, `dissol_src = 1`,
+or rainfall on the ground, `dissol_src = 2`), $`q_{\rm sink}`$ the inflow
+flux into the sinks (inlets) of the conduit continuum layer
+(`dissol_sink = 1`) and $`f_{\rm sol}`$ the soluble fraction of the cell
+(`fn_dissol`). One geomorphic update dissolves
+$`w = k_d f_{\rm sol} F \cdot \texttt{morfac}`$ from the water $`F`$ (m)
+accumulated over the update interval, and leaves the insoluble residue
+fraction $`f_{\rm res}`$ (`dissol_fres`) in the soil:
+$`z \leftarrow z - (1 - f_{\rm res}) w`$,
+$`s_d \leftarrow s_d + f_{\rm res} w`$. Local and linear, hence
+unconditionally stable.
+
+$`c_{\rm eq}`$ (`dissol_ceq`, default 100 mg/L as CaCO₃) is the
+**effective dissolution capacity**: the equilibrium solubility minus the
+concentration already carried by the inflowing water, i.e. the mass of
+rock dissolved by 1 m³ of water. The carbonate equilibrium is not solved;
+soil CO₂ and temperature are folded into this single value (50 to 80 for
+rain on bare rock, 100 to 300 mg/L under a soil cover). With
+$`\rho_{\rm r}`$ (`dissol_rho`, default 2500 kg/m³) this gives
+$`k_d`$ = 4×10⁻⁵ m/m, i.e. 40 mm/kyr for a recharge of 1 m/yr, inside the
+published range of karst denudation rates of 20 to 100 mm/kyr
+[^gabrovsek09]. Water always dissolves its full $`c_{\rm eq}`$
+(undersaturated, constant rate), so the decay of dissolution by
+saturation along the flow path is not represented. Conduit (cave) growth
+is a separate, not yet implemented stage (docs/karst_plan.md §5).
+
 ## 8. Parameters and the basis of their defaults
 
 The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
@@ -401,6 +438,9 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | spl_zbase | none | erosion base level | **given** the sea level when the cliff foot is the sea |
 | wthr_p0 / wthr_sdstar | 50 mm/kyr / 0.5 m | soil production rate / decay depth (§7) | **literature value** middle of the published range of the Heimsath function[^heimsath97] |
 | uplift0 | 1 mm/yr | uplift rate | **customary value** lower end of orogenic belts |
+| dissol_ceq / dissol_rho | 100 mg/L / 2500 kg/m³ | effective dissolution capacity / rock density (§7) | **literature value** representative CaCO₃ concentration of recharge in limestone areas[^white84] and the density of limestone. k_d = 4e-5 m/m, i.e. 40 mm/kyr for a recharge of 1 m/yr (published range 20-100)[^gabrovsek09] |
+| dissol_src / dissol_sink | 1 / 0 | water source / sink term | **method** 1: infiltration, 2: rainfall on the ground. The sink term is the inlet inflow of the conduit continuum layer |
+| dissol_fsink / dissol_fres | 1.0 / 0 | capacity ratio of the sink inflow / residue fraction | **empirical value** to be calibrated / **given** 0 = no residue |
 
 **Where to look when revising the defaults**
 
@@ -448,3 +488,5 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^perron09]: Perron, J. T., Kirchner, J. W. and Dietrich, W. E. (2009): Formation of evenly spaced ridges and valleys. *Nature*, 460, 502–505.
 [^heimsath97]: Heimsath, A. M., Dietrich, W. E., Nishiizumi, K. and Finkel, R. C. (1997): The soil production function and landscape equilibrium. *Nature*, 388, 358–361.
 [^coulthard13]: Coulthard, T. J., Neal, J. C., Bates, P. D., Ramirez, J., de Almeida, G. A. M. and Hancock, G. R. (2013): Integrating the LISFLOOD-FP 2D hydrodynamic model with the CAESAR model: implications for modelling landscape evolution. *Earth Surf. Process. Landforms*, 38, 1897–1906.
+[^white84]: White, W. B. (1984): Rate processes: chemical kinetics and karst landform development. In: La Fleur, R. G. (ed.) *Groundwater as a Geomorphic Agent*, Allen & Unwin, 227–248. (maximum denudation rate D = (P − E) c_eq/ρ)
+[^gabrovsek09]: Gabrovšek, F. (2009): On concepts and methods for the estimation of dissolutional denudation rates in karst areas. *Geomorphology*, 106, 9–14.

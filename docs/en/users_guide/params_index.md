@@ -96,6 +96,12 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | db_vstop | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | db_wstop | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | db_xi | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| dissol_ceq | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| dissol_fres | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| dissol_fsink | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| dissol_rho | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| dissol_sink | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| dissol_src | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | dd | &list_sysparam | [Shallow water flow computation](swflow.md) |
 | depth_rw | &list_geoinfo | [Geographic information](geoinfo.md) |
 | dir_data | &list_sysparam | [Input/output](io.md) |
@@ -183,6 +189,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | f_dbstop | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | f_dbwet | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | f_debris | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| f_dissol | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | f_diffusion_term | &list_enc | [Shallow water flow computation](swflow.md) |
 | f_disp_cn | &list_sysparam | [Input/output](io.md) |
 | f_disp_debug | &list_sysparam | [Input/output](io.md) |
@@ -332,6 +339,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | fn_dam_map | &list_struct_dam | [Structures](structure.md) |
 | fn_dam_out_cell | &list_struct_dam | [Structures](structure.md) |
 | fn_dbinit | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| fn_dissol | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fn_depth_rw | &list_geoinfo | [Geographic information](geoinfo.md) |
 | fn_div_in_cell | &list_struct_diversion | [Structures](structure.md) |
 | fn_div_out_cell | &list_struct_diversion | [Structures](structure.md) |

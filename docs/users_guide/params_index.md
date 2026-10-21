@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 608 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 616 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -94,6 +94,12 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | db_vstop | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_wstop | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_xi | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| dissol_ceq | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| dissol_fres | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| dissol_fsink | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| dissol_rho | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| dissol_sink | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| dissol_src | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | dd | &list_sysparam | [浅水流計算](swflow.md) |
 | depth_rw | &list_geoinfo | [地理情報](geoinfo.md) |
 | dir_data | &list_sysparam | [入出力](io.md) |
@@ -181,6 +187,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_dbstop | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbwet | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_debris | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| f_dissol | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_diffusion_term | &list_enc | [浅水流計算](swflow.md) |
 | f_disp_cn | &list_sysparam | [入出力](io.md) |
 | f_disp_debug | &list_sysparam | [入出力](io.md) |
@@ -330,6 +337,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_dam_map | &list_struct_dam | [構造物](structure.md) |
 | fn_dam_out_cell | &list_struct_dam | [構造物](structure.md) |
 | fn_dbinit | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| fn_dissol | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fn_depth_rw | &list_geoinfo | [地理情報](geoinfo.md) |
 | fn_div_in_cell | &list_struct_diversion | [構造物](structure.md) |
 | fn_div_out_cell | &list_struct_diversion | [構造物](structure.md) |

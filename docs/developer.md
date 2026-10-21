@@ -12325,3 +12325,67 @@ docs/delta_plan.md に記録した(実装済み plan と同じく実績の記録
 台帳が非侵食セルの仮想流束を数えていた不備の等価修正)。設定の手順は
 users_guide/geomorph.md「河口デルタ」、用途の対応は usecases.md、他モデルとの対応は
 comparison.md に反映した。
+
+## 86. 石灰岩の溶食 f_dissol(カルスト地形。2026-10-21 実装)
+
+設計の正本は docs/karst_plan.md(定式化の根拠・限界・第 3 段の検討メモ)。
+ここには決定事項と検証記録を残す。
+
+### 86.1 決定事項
+
+- **位置づけ**: 「カルスト地形を再現できるか」への答えは「概算の加算的
+  プロセスとして、形成傾向の実験まで可」。実在の洞窟系の幾何は方針 2
+  (ラスタ純化)に反するため対象外。カルストの**水文**(乾谷・内陸排水・
+  湧泉)は管路連続体層 §46 の吸込穴と吐口で既に表せる。足りなかったのは
+  「水に溶けて質量が消える = z が下がって土砂が出ない」更新だけ。
+- **m_geomorph の加算的フラグ f_dissol 1 個**に面的溶食と集中溶食を統合
+  (submodule m_geomorph_dissol)。風化 f_wthr(sd を増やし z を保つ)の
+  対として z を下げ sd を保つ。残渣率 dissol_fres > 0 のときだけ sd を
+  共動更新(溶けた岩 × 率が土層に残る)。
+- **定式化**: w = k_d · f_sol · (F_r + f_sink · F_sink) · morfac。
+  k_d = c_eq/ρ_r(水 1 m あたり溶ける岩の厚さ。既定 100 mg/L ÷ 2500 kg/m³
+  = 4e-5 m/m → 涵養 1 m/yr で 40 mm/kyr = 文献域 20〜100 mm/kyr)。
+  F_r は更新間隔に積算された面的涵養水量、F_sink は吸込穴(管路層の枡)
+  流入水量。炭酸平衡は解かず c_eq 1 個に畳む(§0「物理量は直接与える」)。
+  飽和による減衰はなし(未飽和一定率 = White 型の最大削剥速度モデル)。
+- **水量の源は記録場で受ける(fxg と同型の契約。§30)**: s%fxd(涵養。
+  bucket / greenampt の鉛直交換が allocated 判定で書く。dissol_src = 2 では
+  geomorph 自身が毎ステップ s%pre·dt を積む)と s%fxdi(吸込穴流入。
+  conduit の枡流入が書く)。確保は m_geomorph_init、消費とゼロ戻しは
+  calc_dissol。**wq の s%fxg と共用しない**: wq は毎ステップ消費するが
+  geomorph は idt ステップの間欠実行で積算が要り、同じ場を 2 者が消費
+  すると順序依存(wq_calc → geomorph_calc の順で geomorph は常に 0 を見る)。
+- **記録場は私有ファイル geomorph_dissol.dat で save/restore(契約 5)**。
+  更新間隔の途中で save すると積算が失われ、リスタート往復が ULP=0 で
+  閉じなくなるため。面数は fxd 1 面 + sink 有効時 fxdi 1 面。
+- **可溶率の分布 fn_dissol** は rank0 が全域を読んで par_scatter_cell で
+  帯配布(方式 2。conduit の read_map_scatter と同型)。
+- morfac は記録場の水量に掛ける(dts = dt·idt·morfac と同じ意味 = 1 回の
+  更新は同一イベント morfac 回ぶん)。局所・線形のため dzmax 型の安全弁は
+  不要。海セル(侵食基準面)は対象外だが積算水量は消費して捨てる(次の
+  間隔へ持ち越さない)。台帳は行部分和(real64)→ par_sum_rows で決定的。
+- 既定値(§62 の流儀。gm_param で採用値を表示): dissol_ceq 100 mg/L
+  (土壌 CO₂ を経た涵養水の代表。裸岩の雨水 50〜80、土層下 100〜300)、
+  dissol_rho 2500 kg/m³。dissol_fsink(校正値)は 1.0 を既定に置く
+  (0 で項なしの明示になるため番兵は使わない)。
+- dissol_src = 1 で fn_gwflow 未指定は par_stop(記録が恒久 0 = 設定齟齬。
+  降雨源を案内)。dissol_sink = 1 で fn_gwflow 未指定も par_stop。
+  f_gwconduit の有無は geomorph init 時点では分からない(gwflow init が
+  後)ため、枡がなければ項が 0 のまま動く旨を init で表示するに留める。
+- **第 3 段(管路の成長 = 連続体版の洞窟形成)は未実装**。conduit の
+  「cap・cnd・zbot は静的」契約の改定を伴うため、gwflow 側の独立フラグ
+  として別途合意してから着手する(karst_plan.md §5、handoff 1n2)。
+
+### 86.2 検証(2026-10-21。gfortran 13.3 / Open MPI 4、-O2 厳密数学)
+
+- test/dissol(新設): A 面的溶食(バケツ浸透。更新間隔 100 ステップの
+  積算・残渣率 0.25)、B 集中溶食(test/conduit A の解析平衡 + 中心 5×5 の
+  可溶率マップ + 最終ステップ 1 回更新)、C 降雨源(地下水なし)の 3 構成が
+  bil(float32)の全セルで解析値に一致(相対誤差 1e-8 以下 = float32 の丸め)。
+- リスタート往復: A を更新間隔の途中(52 s)で save → 100 s まで継続が
+  通し計算と state.dat・geomorph_dissol.dat・Z9998.bil でバイト一致
+  (私有ファイルがなければ 2 s ぶん = 6e-6 m の差が出る設計 = 検出力あり)。
+- MPI: np = 1, 2, 4 が逐次と Log.txt で ULP = 0、全 bil がバイト一致。
+  -Og -fcheck=all の np = 2(A・B・C)で境界違反なし(規律 3)。
+- 無効時: wave・conduit・chichibu・creep・splash が既存 reference と
+  ビット一致(-Ofast 既定ビルド)。
