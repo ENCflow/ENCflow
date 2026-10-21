@@ -8,6 +8,7 @@ sdir=$(dirname "$(readlink -f "$0")")
 
 python3 "$sdir/make_init.py" z > zinit.txt
 python3 "$sdir/make_init.py" h > hinit.txt
+python3 "$sdir/make_init.py" sd > sdinit.txt
 
 export ENCFLOW_EXPECT_NP="$NP"
 set -o pipefail
