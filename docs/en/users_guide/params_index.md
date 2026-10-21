@@ -297,7 +297,9 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | fines_la | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fix_cn | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fix_ctau | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| fix_ctau_bank | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fix_dzreset | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| fix_tdec | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fix_tfix | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fluv_bcfeed | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | fluv_bcfeed_fac | &list_geomorph | [Sediment and landform change](geomorph.md) |

@@ -180,6 +180,8 @@ Riverbed erosion and deposition by a bedload transport formula.
 | fix_ctau | (required) | Increase ratio c_τ of the critical shear stress at full fixation |
 | fix_dzreset | 0.1 | Cumulative erosion below the fixation surface that resets a to 0 (m) |
 | fix_cn | 0 | Roughness increase ratio c_n at full fixation: the Manning n of the flow friction becomes n (1 + c_n a) (the τ* of the sediment is unchanged). 0 = no roughness effect |
+| fix_tdec | 0 | Decay time T_dec (h, morphological time) of the fixation while submerged: while h > dd, a <- a exp(-t/T_dec). 0 = no decay (an exposed bar loses its fixation only by erosion) |
+| fix_ctau_bank | -1 | Fixation coefficient c_tau,b applied to the bank cell of bank erosion (f_berode). Negative = same as fix_ctau, 0 = banks unaffected |
 
 The minimal input to "just move the bed" is `f_fluvial = 1` plus the
 thickness of the erodible soil `sd0` (&list_geoinfo). The grain size is
@@ -245,7 +247,14 @@ is 0 pending a literature check). Deposition onto a fixed surface is not
 hindered and elevations and volumes are untouched. When a submerged cell is
 eroded by more than `fix_dzreset` (default 0.1 m) below the fixation surface,
 a returns to 0 (nothing becomes permanently unerodible). It does not act on
-the angle-of-repose avalanching. Use it with an inflow series that alternates
+the angle-of-repose avalanching. If a fixed bar stays submerged without being
+eroded (with a strong fixation the erosion never reaches the threshold, and an
+exposed bar becomes permanent in practice), add a decay while submerged with
+`fix_tdec` (while wet, a <- a exp(-t/T_dec): die-back of vegetation, softening
+of the surface layer; a T_dec longer than the duration of a flood keeps the
+fixation through short floods). The effect on bank erosion can be separated
+from the bed with `fix_ctau_bank` (roots stiffen the surface layer but hardly
+the bank toe, so a value below the bed c_tau, e.g. 0.5-1). Use it with an inflow series that alternates
 floods and low flows ([examples/meander](../../../examples/meander/),
 param_fix.txt; with suspended sediment param_fixsusp.txt). Restart in
 `geomorph_fixation.dat` (the dynamic roughness is rebuilt from a and not
@@ -355,6 +364,34 @@ the sea bottom or seaward landform change to be solved (formation of a
 river-mouth terrace, the tsunami deposits above), represent that area
 as ordinary cells + an initial water level, and if you use a sea mask,
 place it offshore of the area of interest.
+
+**River-mouth deltas** - the process in which a river entering still water
+builds a mouth bar, bifurcates, grows lobes and switches channels can be
+computed with settings alone, representing the sea as ordinary cells + an
+initial water level as above and supplying both sand and mud (the record of
+the trials and the expected results are in [docs/delta_plan.md](../../delta_plan.md),
+Japanese). Minimal set-up: a flat basin of ordinary cells 1.5-2 m deep
+(f_htype=2, e0 = sea level), the far edge as a long-wave radiation boundary
+(f_bc=2), a dug channel between dry non-erodible land (sd=0) with a section
+inflow Q and a mud concentration inflow_cs (volume concentration
+0.0002-0.001). Sand: f_fluvial + capacity feed fluv_bcfeed=1 (the upstream
+reach delivers the equilibrium load); mud: f_suspend with an effective settling
+velocity given directly (susp_wf about 1 mm/s, the cohesive-mud reading) +
+f_bedfines=1 (only deposited mud is resuspended). fluv_slope=1 (spreads sand
+over the bar flanks) and f_repose=1 are essential; f_secflow is not used.
+morfac 100-200 for 1000-4000 h of morphological time (a 1000 m wide delta from
+a 30 m wide channel needs about 4000 h and 1e6 m3 of supply; the domain should
+extend 1500 m seaward and +-1300 m sideways). Expected behaviour: the more mud,
+the fewer and longer the distributaries (bird-foot); the less mud, the more
+distributaries in a fan. The shape differs between realisations (the
+instability of the bifurcation amplifies round-off) while the integrated
+quantities do not, so argue with the statistics of several realisations with
+a few cm of noise on the bed. To look at the persistence of distributaries,
+combine alternating floods and low flows with `f_fixation=1`, set `fix_tdec`
+(decay while submerged) to about the duration of a flood and `fix_ctau_bank`
+below the bed c_tau (without the decay an exposed bar becomes permanent and the
+distributaries collapse to grid-width channels). Resolve the distributaries
+with at least width/5 cells.
 
 **Outputs for this section**: sediment in transport in `Hs0001...` (`f_out_hs=1`), volume concentration Hs / (H + Hs), deposition in `Z0001...`. Point time series in the probe column `hs`; maximum flow depth and fluid force in `D9999` and `F9999` ([Output and monitoring](#output-and-monitoring)).
 
@@ -906,6 +943,7 @@ When the type of phenomenon is known, start from the following
 | Lahar (volcanic mudflow) | f_dbed=1 or 2 + f_dbres=4 (fine) / 1; 3+3 when boulder-dominated | 0.05-0.1 | 500-1000 | - | 0.001-0.01 | 30-35 | Initiated by erosion of the ash layer (sd), a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended. The Egashira laminar law is not usable for fine material. See the "Lahars" paragraph above and [examples/ashfall_lahar](../../../examples/ashfall_lahar/) |
 | Simple debris flow (calibration-driven) | f_dbed=1 + f_dbres=1 | - | - | - | - | 30-35 | Calibrate the runout with delta_e and delta_d |
 | Bed change of a sand-bed river | f_fluvial (+ f_suspend) | - | - | - | 0.0003-0.001 | - | Large contribution of suspended load |
+| River-mouth delta | f_fluvial (capacity feed) + f_suspend (inflow concentration) + f_bedfines + fluv_slope + f_repose (+ f_fixation) | - | - | - | sand 0.0005; mud via susp_wf = 1e-3 m/s | 30 | Sea as ordinary cells + initial water level. A mud concentration of 0.0002-0.001 separates fan and bird-foot. morfac 100-200. docs/delta_plan.md |
 | Bed change of a gravel-bed river | f_fluvial | - | - | - | 0.02-0.1 | - | Bedload dominates |
 | Long-term landform evolution | f_creep + f_wthr + f_uplift | - | - | - | - | - | creep_d 0.001-0.05 m²/yr, p0 10-100 mm/kyr, uplift 0.1-5 mm/yr. Together with morfac |
 | Landslide tsunami (bed layer) | f_bedslide | 0.1-0.2 | 300-1000 | - | - | - | mu and xi of the inertia-free bed layer (bs_mu/bs_xi). Calibrated separately from the mixture values |
