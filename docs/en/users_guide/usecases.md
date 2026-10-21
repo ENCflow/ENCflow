@@ -106,6 +106,7 @@ accuracy caveats (blank = nothing special).
 | Phenomenon | Features | Key settings | Notes |
 |---|---|---|---|
 | Landform evolution / erosion rates (hydraulics-driven LEM) | Long-term features of [Sediment and landform change](geomorph.md) | Weathering, uplift + cyclic forcing + morfac | |
+| Karst landforms (doline fields, internal drainage) | Dissolution f_dissol of [Sediment and landform change](geomorph.md) + the conduit continuum layer of [Groundwater](gwflow.md) | Dissolution (proportional to recharge) + sink-inflow term dissol_sink + inlet density + cyclic forcing + morfac. Example: [examples/karst](../../../examples/karst/) | Cave geometry is out of scope. The upper bound of morfac is set by the positive feedback within one storm (see the example) |
 
 ## Not yet supported (planned)
 

@@ -24,6 +24,7 @@ python3 plot_results.py   # plotting (where provided)
 | [badland/](badland/) | Badland-type landscape evolution: rainfall on a plateau and steep scarp carves valleys. Self-organisation of valleys from white noise, the valley-spacing selection rule (spl_lc), grid convergence, long-term growth of deep valleys and sharp ridges | Dry hillslope erosion f_splash (spl_lc, spl_zbase) |
 | [badland_storm/](badland_storm/) | A cliff where surface flow appears only during downpours (lower infiltration capacity): does it stop the dry erosion or turn the cliff into a gully network? (contrast to badland) | f_splash + f_wash, f_suspend, Green-Ampt, rainfall series |
 | [badland_round/](badland_round/) | Rounded-crest badlands (swelling-clay type) where lower hills become domes: the length scale L set by the ratio of advective incision to creep (diffusion) rounds the hills smaller than L first (contrast to the sharp ridges of badland) | f_splash + f_creep, Green-Ampt |
+| [karst/](karst/) | Formation of a doline field on a limestone plateau: under repeated representative storms, infiltrating water dissolves the surface diffusely while the water that collects in depressions and disappears underground through sinks deepens them selectively (self-organization of karst landforms and internal drainage) | limestone dissolution f_dissol, conduit continuum layer (sinks), Green-Ampt, periodic forcing t_cycle_c |
 | [ashfall_lahar/](ashfall_lahar/) | Ashfall → rainfall → erosion of the ash layer → mudflow (lahar) generation and deposition | Debris flow f_debris, rainfall |
 | [landslide_tsunami/](landslide_tsunami/) | Landslides and debris flows plunging into water and the resulting tsunami: four subaerial and submarine patterns plus non-hydrostatic variants | Moving bed layer f_bedslide, non-hydrostatic correction |
 | [tsunami_fault/](tsunami_fault/) | Tsunami generation from fault parameters: hydrostatic, instantaneous and non-hydrostatic runs, and the coordinate patterns of fault2disp | Prescribed bed motion fn_bedmotion, utils/fault2disp |
@@ -44,7 +45,7 @@ Set-ups that show ENCflow's characteristic "several processes chained in
 one run" (for reference after reading the chapters).
 
 - Tsunami → house destruction → debris: [tsunami_town/](tsunami_town/). Storm surge → driftwood → town: [timberyard/](timberyard/).
-- Ashfall → rainfall → lahar: [ashfall_lahar/](ashfall_lahar/). Rainfall → dry-slope erosion → landscape evolution: [badland/](badland/). The same cliff with surface flow during downpours: [badland_storm/](badland_storm/). Hills rounded by creep: [badland_round/](badland_round/).
+- Ashfall → rainfall → lahar: [ashfall_lahar/](ashfall_lahar/). Rainfall → dry-slope erosion → landscape evolution: [badland/](badland/). The same cliff with surface flow during downpours: [badland_storm/](badland_storm/). Hills rounded by creep: [badland_round/](badland_round/). Storm → ponding → sinks → dissolution → dolines: [karst/](karst/).
 - Fault → tsunami → inundation: [tsunami_fault/](tsunami_fault/), [tsunami_coast/](tsunami_coast/). Slope failure → entry into water → tsunami: [landslide_tsunami/](landslide_tsunami/).
 - Flood → levee breach → inundation: [levee_breach/](levee_breach/).
 - Rainfall → sewer (conduits) → surcharge and drainage: [sewer_hybrid/](sewer_hybrid/). Groundwater → qanat collection: [qanat/](qanat/).
