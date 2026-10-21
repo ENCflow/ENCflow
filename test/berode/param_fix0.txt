@@ -1,0 +1,68 @@
+!======================================================================
+! berode: 側岸侵食(f_berode)の検定(developer.md §84.4)
+!   test/bankface と同じ地形(幅 10 セルの直線水路、両岸 +2 m の乾いた河岸、
+!   閉領域のダム破壊流)に側岸侵食を加える。水路に接する河岸セル(2 列 × 60)
+!   だけが削られ、削った土砂は脚部に移る(保存)。K_b を 2 倍にした
+!   param_kb2.txt との損失体積の比が 2 に近いこと(侵食則の線形性)を検定する。
+!   構成 fix0: kb1 + 定着(T_fix = 0.001 h で乾いた河岸は a → 1)。fix_ctau_bank: 河岸には効かせない(c_τ,b = 0)= kb1 と state.dat がバイト一致(§84.12)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.05
+  t0 = 0
+  tt = 60
+  dt_disp = 10
+  dt_file = 60
+  dt_recrd = 60
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_result = 'result_fix0'
+  dir_save = 'save_fix0'
+  f_state_save = 1
+  f_check_cfl = 0
+  f_out_z = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 1               ! 水深ファイル(水路内のみ。河岸は乾燥)
+  fn_hinit = 'hinit.txt'
+/
+
+&list_geoinfo
+  lx = 60.0
+  ly = 20.0
+  nx = 60
+  ny = 20
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 10.0                ! 可動層厚(供給量制限が発動しない厚さ)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.001
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+  f_berode = 1              ! 側岸侵食
+  berode_kb = 1.0e-5         ! 侵食速度係数 K_b (m/s)
+  berode_tausc = 0.05       ! 河岸の限界無次元掃流力
+  berode_m = 1.0            ! べき指数
+  f_fixation = 1            ! 定着(乾いた河岸の a が 3.6 s で育つ。水路は常に湿潤で a = 0)
+  fix_tfix = 0.001
+  fix_ctau = 100.0
+  fix_ctau_bank = 0.0            ! 河岸には効かせない
+/

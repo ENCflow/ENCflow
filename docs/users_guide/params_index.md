@@ -295,7 +295,9 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fines_la | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fix_cn | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fix_ctau | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| fix_ctau_bank | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fix_dzreset | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| fix_tdec | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fix_tfix | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fluv_bcfeed | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fluv_bcfeed_fac | &list_geomorph | [土砂・地形変化](geomorph.md) |

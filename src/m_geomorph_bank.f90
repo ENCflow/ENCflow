@@ -138,11 +138,11 @@ module subroutine bank_edge_pass(gm, p, g, s, dts)
         ! 脚部セルの無次元掃流力(calc_fluvial と同じマニング閉じ・有効掃流力比)
         taus = gm%flv%taufac * g%rn(iw,jw)**2 * s%vv(iw,jw)**2 &
                / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
-        ! 定着(§84.6): 河岸セル b の定着度で限界掃流力を τ*c,b (1 + c_τ a_b) に
-        ! 上げる(a = 0 なら乗算せず厳密に不変)
+        ! 定着(§84.6、§84.12): 河岸セル b の定着度で限界掃流力を τ*c,b (1 + c_τ,b a_b)
+        ! に上げる(a = 0 なら乗算せず厳密に不変。c_τ,b は fix_ctau_bank、既定は c_τ)
         tscb = gm%bnk%tausc
         if (gm%f_fixation > 0) then
-          if (s%fx(ib,jb) > 0.0) tscb = tscb * (1.0 + gm%fix%ctau * s%fx(ib,jb))
+          if (s%fx(ib,jb) > 0.0) tscb = tscb * (1.0 + gm%fix%ctaub * s%fx(ib,jb))
         end if
         if (taus <= tscb) cycle
         eb = gm%bnk%kb * (taus / tscb - 1.0)**gm%bnk%pm   ! 後退速度 (m/s)
