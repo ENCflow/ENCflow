@@ -2,12 +2,14 @@
 
 **状態: 2026-10-20〜21 実施。コード変更は 3 件(developer.md §84.12 定着の冠水減衰と
 河岸専用係数、§84.13 崩落・側岸侵食の台帳の等価修正、test/fixation の Run.sh 修正)。
+代表ケース 5 構成は examples/delta(base・sand・mud・varq・fix)。
 本書は「DeltaRCM のような河口デルタの形成過程を ENCflow で計算できるか」という
 利用者の問いから始めた試行の記録(構成法・結果・機構の議論・残課題)で、
 実装済みの *_plan.md と同じく実績の記録として保持する。** ケースの入力・解析
 スクリプト・図は利用者の作業ディレクトリ work/(git 管理外)にあり、本書は
 それを独立に読めるように書く。設定の手順は users_guide/geomorph.md「河口デルタ」、
-用途の対応は users_guide/usecases.md、他モデルとの対応は comparison.md を参照。
+用途の対応は users_guide/usecases.md、他モデルとの対応は comparison.md、
+実行できる形は examples/delta を参照。
 
 ---
 

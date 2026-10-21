@@ -34,6 +34,7 @@ python3 plot_results.py   # plotting (where provided)
 | [qanat/](qanat/) | An idealised qanat (groundwater-collecting gallery) | Conduit continuum layer, groundwater |
 | [meander/](meander/) | How a sinusoidal channel in a floodplain deforms under bed load, the direction correction and angle-of-repose avalanching (outer-bank pools, inner-bank bars, bank retreat). With alternating floods and low flows the exposed inner-bank bars get fixed, and with sediment feed (capacity feed, equilibrium-concentration feed) the bars grow up to the floodplain level. Stages 3 to 5a of the meander plan | bed load f_fluvial, fluv_slope, f_secflow, f_repose, f_berode, f_fixation, fluv_bcfeed, inflow_cs_eq |
 | [meander_cutoff/](meander_cutoff/) | A meander loop with a narrow neck is cut off by a flood; the old loop becomes slack water and its ends start to fill | same + inflow time series |
+| [delta/](delta/) | A river-mouth delta built by a sediment-laden river entering a still basin: mouth bar, bifurcation, lobe growth and channel switching. Five configurations: fan versus bird-foot by the sand/mud ratio, and the stabilisation of distributaries by discharge variation and fixation (decay while submerged, bank coefficient). Record: docs/delta_plan.md (Japanese) | sea as ordinary cells + initial water level, capacity feed fluv_bcfeed, suspended mud inflow_cs + f_bedfines, fluv_slope, f_repose, f_fixation (fix_tdec, fix_ctau_bank), long-wave radiation edge |
 
 ## Examples of chained processes
 

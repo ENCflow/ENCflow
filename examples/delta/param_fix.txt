@@ -1,0 +1,221 @@
+!======================================================================
+! delta — 流量変動+定着(冠水減衰・河岸係数つき。docs/delta_plan.md §2.6、developer.md §84.12)
+!   param_varq.txt と同じ流量変動に、弱い定着 f_fixation(c_τ = 3、T_fix = 100 h)、冠水時の減衰
+!   fix_tdec = 50 h(出水の継続時間程度)、河岸係数 fix_ctau_bank = 0.5、側岸侵食則(K_b = 3e-5 m/s、
+!   τ*c,b = 0.3)を加える。morfac 200 で地形 4000 h(約 1.5 時間)。
+!   期待: 低水期に露出した砂州が定着して分流路が安定し(幅 20〜30 m の滑らかな水路)、汀線の凹凸は
+!   流量変動の構成で最小。冠水減衰がないと露出した砂州が恒久化して分流路が格子幅の水路に落ちる
+!   (delta_plan.md §2.6 の「強い定着」)。実行: ./encflow param_fix.txt。図化: python3 plot_results.py fix
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.4
+  t0 = 0
+  tt = 72000
+  dt_disp = 1800
+  dt_file = 7200
+  dt_recrd = 7200
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result_fix'
+  f_state_save = 0
+  f_check_cfl = 1
+  f_out_z = 1
+  f_out_vv = 1
+  f_out_hs = 1
+/
+&list_enc
+  f_advection_scheme = 3
+  f_opening_dynamic = 2
+/
+&list_initial
+  f_htype = 2               ! 水位固定で初期化(海面 0 m)
+  e0 = 0.0
+/
+&list_geoinfo
+  lx = 1200
+  ly = 1600
+  nx = 240
+  ny = 320
+  f_ztype = 1
+  fn_z = 'z_fix.txt'
+  f_rntype = 0
+  rn0 = 0.025
+  f_sdtype = 1
+  fn_sd = 'sd_fix.txt'
+  sy0 = 0.2
+/
+&list_geomorph
+  dt_geomorph = 1.0
+  morfac = 200
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.0005
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+  fluv_bcfeed = 1           ! 容量給砂(入口の河床固定)
+  fluv_bcfeed_fac = 1.0
+  fluv_slope = 1
+  fluv_mus = 1.0
+  fluv_muk = 0.45
+  f_secflow = 0
+  f_repose = 1
+  repose_phi = 30.0
+  repose_relax = 0.5
+  f_fixation = 1            ! 定着(露出した砂州が再侵食に抵抗。§84.6)
+  fix_tfix = 100            ! 定着時間 (h。地形時間)
+  fix_ctau = 3
+  fix_dzreset = 0.1
+  fix_cn = 2
+  fix_tdec = 50             ! 冠水時の減衰時間 T_dec (h。§84.12)
+  fix_ctau_bank = 0.5        ! 河岸に効かせる増分比 c_τ,b(§84.12)
+  f_berode = 1              ! 側岸侵食則(水面より高い隣接セルを脚部の掃流力で後退)
+  berode_kb = 3e-05
+  berode_tausc = 0.3
+  berode_m = 1.0
+  f_suspend = 1
+  f_esform = 1
+  susp_d50 = 0.0001
+  susp_wf = 0.001           ! 泥の実効沈降速度 1 mm/s
+  susp_tausc = 0.1
+  susp_esa = 1.0e-4
+  f_bedfines = 1
+  fines_la = 0.05
+  fines_frac0 = 0.0
+/
+&list_bound_edge
+  f_bc_e = 2                ! 東辺: 長波放射(海面固定)
+  f_bc_n = 0
+  f_bc_s = 0
+  f_bc_w = 0
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 158
+  inflow_cell(1:2,2,1) = 1, 159
+  inflow_cell(1:2,3,1) = 1, 160
+  inflow_cell(1:2,4,1) = 1, 161
+  inflow_cell(1:2,5,1) = 1, 162
+  inflow_cell(1:2,6,1) = 1, 163
+  inflow_val(1:2,1,1) = 0, 30
+  inflow_val(1:2,2,1) = 20, 30
+  inflow_val(1:2,3,1) = 22, 6
+  inflow_val(1:2,4,1) = 42, 6
+  inflow_val(1:2,5,1) = 44, 30
+  inflow_val(1:2,6,1) = 64, 30
+  inflow_val(1:2,7,1) = 66, 6
+  inflow_val(1:2,8,1) = 86, 6
+  inflow_val(1:2,9,1) = 88, 30
+  inflow_val(1:2,10,1) = 108, 30
+  inflow_val(1:2,11,1) = 110, 6
+  inflow_val(1:2,12,1) = 130, 6
+  inflow_val(1:2,13,1) = 132, 30
+  inflow_val(1:2,14,1) = 152, 30
+  inflow_val(1:2,15,1) = 154, 6
+  inflow_val(1:2,16,1) = 174, 6
+  inflow_val(1:2,17,1) = 176, 30
+  inflow_val(1:2,18,1) = 196, 30
+  inflow_val(1:2,19,1) = 198, 6
+  inflow_val(1:2,20,1) = 218, 6
+  inflow_val(1:2,21,1) = 220, 30
+  inflow_val(1:2,22,1) = 240, 30
+  inflow_val(1:2,23,1) = 242, 6
+  inflow_val(1:2,24,1) = 262, 6
+  inflow_val(1:2,25,1) = 264, 30
+  inflow_val(1:2,26,1) = 284, 30
+  inflow_val(1:2,27,1) = 286, 6
+  inflow_val(1:2,28,1) = 306, 6
+  inflow_val(1:2,29,1) = 308, 30
+  inflow_val(1:2,30,1) = 328, 30
+  inflow_val(1:2,31,1) = 330, 6
+  inflow_val(1:2,32,1) = 350, 6
+  inflow_val(1:2,33,1) = 352, 30
+  inflow_val(1:2,34,1) = 372, 30
+  inflow_val(1:2,35,1) = 374, 6
+  inflow_val(1:2,36,1) = 394, 6
+  inflow_val(1:2,37,1) = 396, 30
+  inflow_val(1:2,38,1) = 416, 30
+  inflow_val(1:2,39,1) = 418, 6
+  inflow_val(1:2,40,1) = 438, 6
+  inflow_val(1:2,41,1) = 440, 30
+  inflow_val(1:2,42,1) = 460, 30
+  inflow_val(1:2,43,1) = 462, 6
+  inflow_val(1:2,44,1) = 482, 6
+  inflow_val(1:2,45,1) = 484, 30
+  inflow_val(1:2,46,1) = 504, 30
+  inflow_val(1:2,47,1) = 506, 6
+  inflow_val(1:2,48,1) = 526, 6
+  inflow_val(1:2,49,1) = 528, 30
+  inflow_val(1:2,50,1) = 548, 30
+  inflow_val(1:2,51,1) = 550, 6
+  inflow_val(1:2,52,1) = 570, 6
+  inflow_val(1:2,53,1) = 572, 30
+  inflow_val(1:2,54,1) = 592, 30
+  inflow_val(1:2,55,1) = 594, 6
+  inflow_val(1:2,56,1) = 614, 6
+  inflow_val(1:2,57,1) = 616, 30
+  inflow_val(1:2,58,1) = 636, 30
+  inflow_val(1:2,59,1) = 638, 6
+  inflow_val(1:2,60,1) = 658, 6
+  inflow_val(1:2,61,1) = 660, 30
+  inflow_val(1:2,62,1) = 680, 30
+  inflow_val(1:2,63,1) = 682, 6
+  inflow_val(1:2,64,1) = 702, 6
+  inflow_val(1:2,65,1) = 704, 30
+  inflow_val(1:2,66,1) = 724, 30
+  inflow_val(1:2,67,1) = 726, 6
+  inflow_val(1:2,68,1) = 746, 6
+  inflow_val(1:2,69,1) = 748, 30
+  inflow_val(1:2,70,1) = 768, 30
+  inflow_val(1:2,71,1) = 770, 6
+  inflow_val(1:2,72,1) = 790, 6
+  inflow_val(1:2,73,1) = 792, 30
+  inflow_val(1:2,74,1) = 812, 30
+  inflow_val(1:2,75,1) = 814, 6
+  inflow_val(1:2,76,1) = 834, 6
+  inflow_val(1:2,77,1) = 836, 30
+  inflow_val(1:2,78,1) = 856, 30
+  inflow_val(1:2,79,1) = 858, 6
+  inflow_val(1:2,80,1) = 878, 6
+  inflow_val(1:2,81,1) = 880, 30
+  inflow_val(1:2,82,1) = 900, 30
+  inflow_val(1:2,83,1) = 902, 6
+  inflow_val(1:2,84,1) = 922, 6
+  inflow_val(1:2,85,1) = 924, 30
+  inflow_val(1:2,86,1) = 944, 30
+  inflow_val(1:2,87,1) = 946, 6
+  inflow_val(1:2,88,1) = 966, 6
+  inflow_val(1:2,89,1) = 968, 30
+  inflow_val(1:2,90,1) = 988, 30
+  inflow_val(1:2,91,1) = 990, 6
+  inflow_val(1:2,92,1) = 1010, 6
+  inflow_val(1:2,93,1) = 1012, 30
+  inflow_val(1:2,94,1) = 1032, 30
+  inflow_val(1:2,95,1) = 1034, 6
+  inflow_val(1:2,96,1) = 1054, 6
+  inflow_val(1:2,97,1) = 1056, 30
+  inflow_val(1:2,98,1) = 1076, 30
+  inflow_val(1:2,99,1) = 1078, 6
+  inflow_val(1:2,100,1) = 1098, 6
+  inflow_val(1:2,101,1) = 1100, 30
+  inflow_val(1:2,102,1) = 1120, 30
+  inflow_val(1:2,103,1) = 1122, 6
+  inflow_val(1:2,104,1) = 1142, 6
+  inflow_val(1:2,105,1) = 1144, 30
+  inflow_val(1:2,106,1) = 1164, 30
+  inflow_val(1:2,107,1) = 1166, 6
+  inflow_val(1:2,108,1) = 1186, 6
+  inflow_val(1:2,109,1) = 1188, 30
+  inflow_val(1:2,110,1) = 1208, 30
+  inflow_val(1:2,111,1) = 1210, 6
+  inflow_val(1:2,112,1) = 1230, 6
+  inflow_val(1:2,113,1) = 99999, 30
+  inflow_cs(1:2,1,1) = 0, 0.0005          ! 泥の流入体積濃度
+  inflow_cs(1:2,2,1) = 99999, 0.0005
+  inflow_dist(1) = 0
+/
