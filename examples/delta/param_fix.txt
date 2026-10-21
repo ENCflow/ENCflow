@@ -1,5 +1,5 @@
 !======================================================================
-! delta — 流量変動+定着(冠水減衰・河岸係数つき。docs/delta_plan.md §2.6、developer.md §84.12)
+! delta — 流量変動+定着(冠水減衰・河岸係数つき。docs/delta_plan.md §2.6、developer.md §84.13)
 !   param_varq.txt と同じ流量変動に、弱い定着 f_fixation(c_τ = 3、T_fix = 100 h)、冠水時の減衰
 !   fix_tdec = 50 h(出水の継続時間程度)、河岸係数 fix_ctau_bank = 0.5、側岸侵食則(K_b = 3e-5 m/s、
 !   τ*c,b = 0.3)を加える。morfac 200 で地形 4000 h(約 1.5 時間)。
@@ -73,8 +73,8 @@
   fix_ctau = 3
   fix_dzreset = 0.1
   fix_cn = 2
-  fix_tdec = 50             ! 冠水時の減衰時間 T_dec (h。§84.12)
-  fix_ctau_bank = 0.5        ! 河岸に効かせる増分比 c_τ,b(§84.12)
+  fix_tdec = 50             ! 冠水時の減衰時間 T_dec (h。§84.13)
+  fix_ctau_bank = 0.5        ! 河岸に効かせる増分比 c_τ,b(§84.13)
   f_berode = 1              ! 側岸侵食則(水面より高い隣接セルを脚部の掃流力で後退)
   berode_kb = 3e-05
   berode_tausc = 0.3

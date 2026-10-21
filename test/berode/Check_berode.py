@@ -7,7 +7,7 @@
 #     (3) 侵食則の線形性: 河岸の損失体積の比 loss(2K_b)/loss(K_b) が 2 ± TOL_RATIO
 #         (脚部の水深・掃流力が同じ間は後退量 ∝ K_b)
 #     (4) 共動更新恒等: max|(sd − sd0) − (z − z0)| < TOL_SD
-#     (5) 定着の河岸係数(§84.12): fix0(fix_ctau_bank = 0)の z は kb1 と厳密に一致
+#     (5) 定着の河岸係数(§84.13): fix0(fix_ctau_bank = 0)の z は kb1 と厳密に一致
 #         (河岸の a > 0 でも閾値は不変、水路の a = 0)。fix1(既定 = c_τ = 100)の
 #         河岸損失は kb1 の RATIO_FIX 未満(定着した河岸は削られない)
 #   使い方: Check_berode.py(カレントの save_kb1, save_kb2 を読む)

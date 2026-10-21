@@ -135,14 +135,14 @@ module subroutine bank_edge_pass(gm, p, g, s, dts)
         if (s%vv(iw,jw) <= 0.0) cycle
         ! 非侵食の河岸(可動層 sd <= 0 = 岩盤・非侵食の陸地)は後退しない。供給量制限
         ! (apply_edge_flux。fdon = 0)が流束を 0 にするので結果は同じだが、ここで
-        ! 飛ばして台帳(nbank・nbclip・vbank)に「仮想の侵食」を数えない(§84.13)
+        ! 飛ばして台帳(nbank・nbclip・vbank)に「仮想の侵食」を数えない(§84.14)
         if (s%sd(ib,jb) <= 0.0) cycle
         hw = s%h(iw,jw)
         hhe = max(hw, p%dv)
         ! 脚部セルの無次元掃流力(calc_fluvial と同じマニング閉じ・有効掃流力比)
         taus = gm%flv%taufac * g%rn(iw,jw)**2 * s%vv(iw,jw)**2 &
                / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
-        ! 定着(§84.6、§84.12): 河岸セル b の定着度で限界掃流力を τ*c,b (1 + c_τ,b a_b)
+        ! 定着(§84.6、§84.13): 河岸セル b の定着度で限界掃流力を τ*c,b (1 + c_τ,b a_b)
         ! に上げる(a = 0 なら乗算せず厳密に不変。c_τ,b は fix_ctau_bank、既定は c_τ)
         tscb = gm%bnk%tausc
         if (gm%f_fixation > 0) then
@@ -204,7 +204,7 @@ module subroutine calc_repose(gm, g, s, dts)
             dzc = s%z(i,j) - s%z(in,jn)
             lim = gm%bnk%tanphi * gm%bnk%dist(k)
             ! 高い側(供給側)が非侵食(sd <= 0)なら崩落しない。供給量制限が流束を
-            ! 0 にするので結果は同じだが、台帳(nrep・nrclip・vrep)に数えない(§84.13)
+            ! 0 にするので結果は同じだが、台帳(nrep・nrclip・vrep)に数えない(§84.14)
             if (dzc > 0.0) then
               oks = (s%sd(i,j) > 0.0)
             else

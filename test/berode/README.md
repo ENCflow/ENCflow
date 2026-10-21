@@ -13,7 +13,7 @@
 |---|---|
 | 地形・流れ | test/bankface と同一(`make_init.py` を共有) |
 | 側岸侵食 | `f_berode = 1`、τ*c,b = 0.05、m = 1。`param_kb1.txt` K_b = 1e-5 m/s、`param_kb2.txt` K_b = 2e-5 m/s |
-| 定着との結合 | `param_fix0.txt` kb1 + 定着(T_fix = 0.001 h、c_τ = 100)で `fix_ctau_bank = 0`、`param_fix1.txt` 同じ設定で既定(c_τ,b = c_τ)。developer.md §84.12 |
+| 定着との結合 | `param_fix0.txt` kb1 + 定着(T_fix = 0.001 h、c_τ = 100)で `fix_ctau_bank = 0`、`param_fix1.txt` 同じ設定で既定(c_τ,b = c_τ)。developer.md §84.13 |
 | 掃流砂 | 芦田・道上式、d50 = 1 mm、土層 10 m(bankface と同じ) |
 | 時間 | dt = 0.05 s、60 s |
 

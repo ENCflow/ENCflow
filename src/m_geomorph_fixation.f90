@@ -9,7 +9,7 @@
 !   発展(地形時間 dts = dt·idt·morfac で評価。定着は地形変化と同じ時間軸):
 !     乾燥(h <= dd): a ← 1 − (1 − a)·exp(−dts/T_fix)、zref = z
 !     湿潤(h >  dd): a ← a·exp(−dts/T_dec)(fix_tdec > 0 のとき。冠水の継続で
-!                    定着が失われる = 植生の枯死・表層の軟化。§84.12)、
+!                    定着が失われる = 植生の枯死・表層の軟化。§84.13)、
 !                    zref = max(zref, z)(定着面への堆積は表層を更新)、
 !                    zref − z > dz_reset なら a = 0、zref = z(表層が剥がれる)
 !   効果(標高・体積には触れない):
@@ -17,7 +17,7 @@
 !     流砂量式に(calc_fluvial ループ 1)、τ*c,b·(1 + c_τ,b·a_b) を側岸侵食の
 !     河岸セルに(bank_edge_pass)適用する(c_τ,b = fix_ctau_bank。負なら c_τ と
 !     同じ、0 で河岸には効かせない。根系は表層の河床材料を固めるが河岸脚部の
-!     洗掘には効きにくい、という非対称を表す。§84.12)。受け手側の a は見ない(定着面への
+!     洗掘には効きにくい、という非対称を表す。§84.13)。受け手側の a は見ない(定着面への
 !     堆積は妨げない)。浮遊砂 E-D(calc_suspend)では浸食項(平衡濃度)だけを
 !     減らし沈降は変えない(§84.8: f_esform=1 は τ*c,s (1 + c_τ a)、2 は
 !     ceq/(1 + c_τ a))。安息角崩落には効かせない。
@@ -64,7 +64,7 @@ module subroutine init_fixation(gm, p, g, s, list)
   if (gm%fix%dzreset <= 0.0) call par_stop("list_geomorph: fix_dzreset must be > 0")
   if (list%fix_cn < 0.0) call par_stop("list_geomorph: fix_cn must be >= 0")
   gm%fix%cn = list%fix_cn
-  ! 冠水時の減衰(0 = なし = 従来)と河岸専用の増分比(負 = c_τ と同じ = 従来)。§84.12
+  ! 冠水時の減衰(0 = なし = 従来)と河岸専用の増分比(負 = c_τ と同じ = 従来)。§84.13
   if (list%fix_tdec < 0.0) call par_stop("list_geomorph: fix_tdec must be >= 0 (0 = no decay)")
   gm%fix%tdec = list%fix_tdec * hr_s
   if (list%fix_ctau_bank < 0.0) then
