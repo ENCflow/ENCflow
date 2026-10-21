@@ -60,7 +60,7 @@
   fluv_sgrav = 1.65
   fluv_dzmax = 0.05
   fluv_slope = 1            ! 河床勾配項(長谷川型 γ∇z)
-  fluv_mus = 1.0            ! 静止摩擦係数 μs(文献照合待ちの値 — 検定用の明示指定)
+  fluv_mus = 1.0            ! 静止摩擦係数 μs(文献値 §84.12 = 既定。検定用の明示指定)
   fluv_muk = 0.45           ! 動摩擦係数 μk(同上)
   f_secflow = 1             ! 平衡二次流項 r = N* h κ
   sec_nstar = 7.0           ! N*(同上)

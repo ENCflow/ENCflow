@@ -65,16 +65,19 @@ module subroutine init_fluvial(gm, p, g, list)
   gm%flv%f_sec = (list%f_secflow > 0)
   gm%flv%f_dir = (gm%flv%f_slope .or. gm%flv%f_sec)
   if (gm%flv%f_slope) then
-    ! 式固有の係数だが文献照合が済むまで既定は置かない(明示指定を要求。§84.3)
+    ! 既定 μs = 1.0、μk = 0.45(Asahi ら 2013、Hasegawa 1984。§84.12)。採用値は表示する(§62 方式)
     if (list%fluv_mus <= 0.0 .or. list%fluv_muk <= 0.0) then
       call par_stop("list_geomorph: fluv_slope=1 requires fluv_mus > 0 and fluv_muk > 0 " &
                     // "(static/kinetic friction coefficients of the Hasegawa-type slope term)")
     end if
     gm%flv%gcoef = 1.0 / sqrt(list%fluv_mus * list%fluv_muk)
     call par_info("geomorph: bed-slope direction term on (mus = " // rtoa(list%fluv_mus) &
-                  // ", muk = " // rtoa(list%fluv_muk) // ")")
+                  // trim(merge(" (default)", "          ", abs(list%fluv_mus - 1.0) < 1.0e-6)) &
+                  // ", muk = " // rtoa(list%fluv_muk) &
+                  // trim(merge(" (default)", "          ", abs(list%fluv_muk - 0.45) < 1.0e-6)) // ")")
   end if
   if (gm%flv%f_sec) then
+    ! 既定 N* = 7.0(Engelund 1974、Asahi ら 2013。§84.12)。採用値は表示する(§62 方式)
     if (list%sec_nstar <= 0.0) then
       call par_stop("list_geomorph: f_secflow=1 requires sec_nstar > 0 " &
                     // "(coefficient of the near-bed transverse velocity ratio r = N* h kappa)")
@@ -85,7 +88,9 @@ module subroutine init_fluvial(gm, p, g, list)
     gm%flv%rmax = list%sec_rmax
     gm%flv%vmin = list%sec_vmin
     call par_info("geomorph: equilibrium secondary-flow direction term on (N* = " &
-                  // rtoa(list%sec_nstar) // ", rmax = " // rtoa(list%sec_rmax) &
+                  // rtoa(list%sec_nstar) &
+                  // trim(merge(" (default)", "          ", abs(list%sec_nstar - 7.0) < 1.0e-6)) &
+                  // ", rmax = " // rtoa(list%sec_rmax) &
                   // ", vmin = " // rtoa(list%sec_vmin) // " m/s)")
   end if
 
