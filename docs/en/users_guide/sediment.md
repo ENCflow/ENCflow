@@ -396,6 +396,23 @@ $`z \leftarrow z - (1 - f_{\rm res}) w`$,
 $`s_d \leftarrow s_d + f_{\rm res} w`$. Local and linear, hence
 unconditionally stable.
 
+**Lateral dissolution** (`dissol_lat` = $`p`$). Of the capacity $`W_w`$ of
+a ponded cell w, the share $`p`$ goes to the land cells n among its 8
+neighbours whose floor is above the water surface $`e_w`$ (rock walls), in
+proportion to the contact width $`L_k`$ (Δx on the axes, Δx·2/(2+√2) on
+the diagonals), and $`1-p`$ to the floor (a cell without walls gives
+everything to the floor):
+
+```math
+\Delta z_n = -\,f_{{\rm sol},n}\, p\, W_w \frac{L_k}{\sum_{m\in{\rm walls}(w)} L_m},
+\qquad \Delta z_w = -\,f_{{\rm sol},w}(1-p)\,W_w
+```
+
+The total capacity is unchanged (a partition) and wall retreat is
+represented by lowering the wall cell. $`p`$ is the ratio of floor to wall
+dissolution, a calibration value of about 0.2 to 0.5 from the ratio of
+wetted areas.
+
 $`c_{\rm eq}`$ (`dissol_ceq`, default 100 mg/L as CaCO₃) is the
 **effective dissolution capacity**: the equilibrium solubility minus the
 concentration already carried by the inflowing water, i.e. the mass of
@@ -441,6 +458,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | dissol_ceq / dissol_rho | 100 mg/L / 2500 kg/m³ | effective dissolution capacity / rock density (§7) | **literature value** representative CaCO₃ concentration of recharge in limestone areas[^white84] and the density of limestone. k_d = 4e-5 m/m, i.e. 40 mm/kyr for a recharge of 1 m/yr (published range 20-100)[^gabrovsek09] |
 | dissol_src / dissol_sink | 1 / 0 | water source / sink term | **method** 1: infiltration, 2: rainfall on the ground. The sink term is the inlet inflow of the conduit continuum layer |
 | dissol_fsink / dissol_fres | 1.0 / 0 | capacity ratio of the sink inflow / residue fraction | **empirical value** to be calibrated / **given** 0 = no residue |
+| dissol_lat | 0 | share p of lateral dissolution | **empirical value** 0 = floor only. About 0.2 to 0.5 from the ratio of wetted areas; to be calibrated |
 
 **Where to look when revising the defaults**
 
