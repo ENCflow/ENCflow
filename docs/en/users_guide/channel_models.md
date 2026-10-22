@@ -129,7 +129,8 @@ move to a resolved channel.
 - **Advection.** `f_channel_advection = 0` drops the advection term on
   edges involving channel cells (a stabilisation option under strong width
   heterogeneity; default 1). It acts only while a levee (bank0 / fn_bank)
-  is active; in the wall-less width mode the flag has no effect.
+  is active; in the wall-less width mode the flag has no effect (enabling it
+  there diverged in tests, so this is left as is; developer.md §18, Japanese).
 - **Accuracy limits.** The channel is a raster (channel mask + width) and
   channel cells are connected by the implicit rule "adjacent cells are
   connected". Unlike one-dimensional channel-network models, which hold
