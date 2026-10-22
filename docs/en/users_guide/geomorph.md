@@ -776,8 +776,11 @@ is restored automatically from the private file `geomorph_rockfall.dat`. A cliff
 facing sea cells (`fn_sw`) collapses into them and the fallen volume leaves the
 system (the sea cell's z does not change; the limit of a sea cliff whose talus is
 removed by waves; see "rockfall exported to sea cells" at the end of the run). The
-windowed minimum includes the z of sea cells (the sea floor), so put the sea cells
-at sea level if the free face should end at the water surface.
+windowed minimum includes the z of sea cells, but the z of a sea cell cannot be set by
+the user (it is forced to 0 when read and, with `fn_tide`, reset every step to the tide
+level minus `hsea0`; see [tide](tide.md)). Without `fn_tide`, put the elevation datum at
+sea level = 0 if the free face should end at the water surface; with `fn_tide` the bottom
+of the window lies `hsea0` (default 1 m) below the tide level.
 Verification: [test/rockfall](../../../test/rockfall/) (collapse of a vertical
 plateau: conservation, final height differences <= H_c, talus budget). Example:
 [examples/mesa](../../../examples/mesa/) (retreat of cap-rock cliffs with talus).
