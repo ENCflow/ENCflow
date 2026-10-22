@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # examples/delta の入力生成: 河川が静水の海盆に突入してデルタを作る理想化地形
-#   使い方: python3 make_init.py <case> <kind>   (case = base|sand|mud|varq|fix、kind = z|sd|rows)
+#   使い方: python3 make_init.py <case> <kind>   (case = base|sand|mud|varq|fix|wave|baseqb、kind = z|sd|rows)
 #   z:    地盤高 (m。海面 0 m 基準)。西側 LCH m は幅 W の河道(河床 ZCH0 から勾配 S0 で下る)、
 #         両岸は +ZLAND の乾いた非侵食の陸地。河口から LRAMP m の斜面で海盆底 ZSEA へ、残りは平坦な海盆
-#   sd:   土層厚 (m)。河道内 SDCH = 可動、陸地と海盆底は 0 = 非侵食(海盆への堆積は sd を増やす)
+#   sd:   土層厚 (m)。河道内 SDCH = 可動、陸地と海盆底は 0 = 非侵食(海盆への堆積は sd を増やす)。
+#         固定給砂の構成(FIXEDCH)は河道も 0 = 給砂を運ぶ固い水路(河口に出てから動く)
 #   rows: 西端の河道セルの行番号(区間流入の inflow_cell に使う)
 import sys
 import numpy as np
@@ -16,7 +17,9 @@ CASES = {
     "varq": (240, 320, 5.0, 200.0, -1.5),   # 1200 x 1600 m(§2.6 流量変動・定着なし)
     "fix":  (240, 320, 5.0, 200.0, -1.5),   # 1200 x 1600 m(§2.6 流量変動+定着+冠水減衰+河岸係数)
     "wave": (200, 120, 5.0, 150.0, -2.0),   # base + 沖波(docs/wave_plan.md。param_wave.txt)
+    "baseqb": (200, 120, 5.0, 150.0, -2.0), # base の固定給砂版(wave の比較基準。param_baseqb.txt)
 }
+FIXEDCH = {"wave", "baseqb"}               # 固定給砂の構成: 陸地内の河道も非侵食(土層 0。給砂はそのまま通過)
 W, LRAMP, S0, ZCH0, ZLAND, SDCH = 30.0, 50.0, 0.001, -1.0, 1.5, 3.0
 
 def build(case):
@@ -29,7 +32,7 @@ def build(case):
     inch = (X <= LCH) & (np.abs(N) <= W / 2)
     z = np.where(X <= LCH, np.where(inch, ZCH0 - S0 * X, ZLAND),
                  np.where(X <= LCH + LRAMP, zmouth + (ZSEA - zmouth) * (X - LCH) / LRAMP, ZSEA))
-    sd = np.where(inch, SDCH, 0.0)
+    sd = np.where(inch, 0.0 if case in FIXEDCH else SDCH, 0.0)
     rows = [int(j) for j in np.arange(1, NY + 1)[inch[:, 0]]]
     return z, sd, rows
 
