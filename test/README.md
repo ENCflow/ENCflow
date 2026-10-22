@@ -73,6 +73,7 @@ reference の更新(`-u`)は結果の妥当性を人間が確認してから行�
 | [uniflow/](uniflow/) | 乾いた地盤に挟まれた幅 1・5 セルの直線水路の等流。f_opening_dynamic = 2 で Manning に一致、振り替えなしでは河岸行の流量不足(既知の性質を記録) | ENC の通水能、f_opening_dynamic | 解析 |
 | [suspend/](suspend/) | 浮遊砂(移流+浸食・沈降)の疎通・保存則 | 土砂 f_suspend | 解析 |
 | [wash/](wash/) | 斜面浸食(雨滴+面状)の疎通・保存則 | 土砂 f_wash | 保存則(Log) |
+| [wetlw/](wetlw/) | 湿潤侵食の剥離深の横方向拡散 wet_lw: 固体総量の保存、格子規模の凹凸の減少、MPI 一致 | 土砂 wet_lw | 自己検証 |
 | [splash/](splash/) | 乾式斜面侵食の解析検証 | 土砂 f_splash | ref |
 | [splashslide/](splashslide/) | 固結崖と崩壊崖の対照(乾式侵食と斜面崩壊の併用) | f_splash・f_slide | 解析 |
 | [splashlc/](splashlc/) | 曲率の相関長 spl_lc による谷の波長選択(2 波長擾乱の成長比の対照) | f_splash(spl_lc・spl_zbase) | 解析 |
