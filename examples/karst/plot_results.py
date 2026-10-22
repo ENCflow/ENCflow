@@ -84,7 +84,7 @@ d = z0 - zf                                   # 削剥深 (m)
 
 # ---------------------------------------------------------------- 数表
 log = open(SCREEN, errors="ignore").read() if os.path.exists(SCREEN) else ""
-rows = [l.split() for l in log.splitlines() if re.match(r"\s*\d+:\d\d:\d\d", l)]
+rows = [l.split() for l in log.splitlines() if re.match(r"\s*[\d*]+:\d\d:\d\d", l)]
 m = re.search(r"dissolution removed\s*([0-9.Ee+-]+)\s*m3", log)
 vled = float(m.group(1)) if m else np.nan
 vz = d.sum() * dx * dx                        # 地表の体積減少 (m3)
@@ -205,7 +205,8 @@ plt.close()
 
 # ---------------------------------------------------------------- 図: hydrograph
 if rows:
-    th = np.array([sum(float(v) * f for v, f in zip(r[0].split(":"), (1.0, 1 / 60.0, 1 / 3600.0))) for r in rows])
+    # 時刻列は 999 h を超えると "***:00:00" になるため、行番号 × dt_disp(1 h)で時間軸を作る
+    th = np.arange(len(rows), dtype=float)
     ss = np.array([float(r[2]) for r in rows])
     sg = np.array([float(r[3]) for r in rows])
     fig, axes = plt.subplots(1, 2, figsize=(12, 3.8))
