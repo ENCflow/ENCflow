@@ -562,6 +562,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | spl_dzmax | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | spl_h | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | spl_kr | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| spl_ksat | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | spl_lc | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | spl_sgrad | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | spl_strata | &list_geomorph | [Sediment and landform change](geomorph.md) |

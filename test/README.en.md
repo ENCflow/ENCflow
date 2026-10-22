@@ -80,6 +80,7 @@ analytical-solution or conservation check by Check_*.py.
 | [splashslide/](splashslide/) | Cemented versus failing scarp (dry erosion combined with slope failure) | f_splash, f_slide | analytic |
 | [splashlc/](splashlc/) | Valley wavelength selection by the curvature correlation length spl_lc (growth of a two-wavelength perturbation) | f_splash (spl_lc, spl_zbase) | analytic |
 | [splashstrata/](splashstrata/) | Analytic check of the erodibility factors of horizontal strata spl_strata (3 layers: cap rock 0 / 0.5 / 1) | f_splash (spl_strata) | ref + analytic |
+| [splashsat/](splashsat/) | Analytic check of the saturation of the hollow amplification spl_ksat (parabolic trough, constant curvature) | f_splash (spl_ksat) | ref + analytic |
 | [sedinflow/](sedinflow/) | Ledger check of the sediment-concentration time series of a reach inflow | Boundaries, sediment | analytic |
 | **Debris flow, failure, volcanic flows, avalanches** | | | |
 | [debris/](debris/) | Debris flow (erosion-triggered): smoke test and conservation. Takahashi and Egashira types | Debris flow f_debris | analytic |

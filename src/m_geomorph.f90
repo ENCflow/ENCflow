@@ -250,6 +250,7 @@ module m_geomorph
     real :: slc = 0.0                ! κ の相関長 ℓ (m)(0 = 格子ラプラシアン。§48.3)
     real :: szbase = -9999.0         ! 侵食基準面 (m)(-9000 以下 = なし)
     integer :: ssgrad = 1            ! 勾配の評価(1: 最急降下 = 既定, 0: 中央差分。§48.4)
+    real :: sksat = 0.0              ! 凹地形増幅の飽和曲率 κ_s (1/m)(0 = 飽和なし。§48.6)
     integer :: snst = 0              ! 水平層理の層数(0 = 層理なし。§48.5)
     real, allocatable :: sstz(:)     ! 層の下端標高 (m)(昇順。snst > 0 のみ確保)
     real, allocatable :: sstf(:)     ! 層の侵食性倍率(0 = 削れない硬層)
