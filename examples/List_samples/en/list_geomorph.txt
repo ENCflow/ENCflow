@@ -378,5 +378,8 @@
                             !   (recommended). Funnel dolines, basal retreat
   !fn_dissol = "sol.txt"    ! distribution of the soluble fraction 0-1
                             !   (limestone mask). Unspecified = 1 everywhere
+  !dissol_dzmax = 0.05      ! cap on the dissolution per cell and update (m).
+                            !   0 = off. Safety valve against the runaway of
+                            !   the sink feedback (when raising morfac)
 
 /

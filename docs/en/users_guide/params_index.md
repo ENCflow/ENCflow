@@ -97,6 +97,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | db_wstop | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | db_xi | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | dissol_ceq | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| dissol_dzmax | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | dissol_fres | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | dissol_fsink | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | dissol_fsurf | &list_geomorph | [Sediment and landform change](geomorph.md) |

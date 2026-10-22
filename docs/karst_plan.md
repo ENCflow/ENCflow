@@ -94,7 +94,11 @@ z \leftarrow z - (1 - f_{\rm res})\, w,\qquad s_d \leftarrow s_d + f_{\rm res}\,
   岩の体積 w のうち $`f_{\rm res}`$ 倍が土層(テラロッサ)として残り、
   地表は $`(1-f_{\rm res})w`$ 下がる。0(既定)なら sd に触れず、土層の
   ない構成でも動く。> 0 のとき sd を確保する(setup_sd)。
-- 更新は線形・局所(近傍参照なし)で無条件安定。dzmax 型の安全弁は不要。
+- 更新は線形・局所(近傍参照なし)で無条件安定。ただし吸込穴に水が集まる
+  正帰還(窪みが掘れる → 湛水が集中 → 流入 ∝ h^1.5 が増える)は 1 豪雨の中で
+  暴走しうる(examples/karst で morfac 1e4 は発散)ため、1 セル・1 更新の
+  溶食量の上限 `dissol_dzmax`(fluv_dzmax と同型。超過分の溶解能は飽和として
+  捨てる。既定 0 = 無効)を安全弁として置く(2026-10-22 追加)。
 - 海セル(sw > 0)は侵食基準面として対象外。無効セル(x ≤ 0)も対象外。
 - 台帳: 溶けた岩の体積 Σ w·A を行部分和(real64)で積み、dispose で
   par_sum_rows により決定的に総括して報告する。
@@ -260,6 +264,7 @@ frn は geomorph_dissol.dat に 3 面目として save/restore。src = 3 では 
 |---|---|---|
 | A `param.txt` | 平坦・一様湛水 h0 = 0.1 m、バケツ浸透 36 mm/h(容量 0.05 m)、dt_geomorph = 5 s(idt = 100)、morfac = 10⁴、残渣率 0.25、tt = 100 s | 浸透量 I = 1e-5 × 100 = 1e-3 m → w = 4e-5 × 1e-3 × 1e4 = 4e-4 m、Δz = −3e-4 m、Δsd = +1e-4 m |
 | B `param_sink.txt` | test/conduit A の平衡(枡流入の解析平衡 hgc_eq)に、中心 5×5 だけ可溶(fn_dissol)の集中溶食を dt_geomorph = tt(最終ステップで 1 回更新)で重ねる、morfac = 10⁴ | 中心: Δz = −k_d × f_sink × hgc(tt) × morfac(hgc(tt) は Log の S_grnd)、外側: Δz = 0 |
+| G `param_clip.txt` | A と同じ浸透に dissol_dzmax = 1e-5(無制限なら 2e-5 / 更新) | Δz = −20 × 1e-5 = −2e-4 m |
 | D `param_lat.txt` | 中央 3×3 の窪み(z = −1)に水位 −0.5 の湛水、バケツ浸透 36 mm/h、dissol_lat = 0.4、dt_geomorph = 5 s、morfac = 10⁴、tt = 100 s | 窪み 9 セルの溶解能 W = 4e-4 m ずつを、床 (1−p)W と周囲 16 セルの壁 pW·L_k/ΣL に配分(§2.5)。総和 9W |
 | E `param_lata.txt` | D の窪みに微小降雨 0.36 mm/h(降雨源。全セル W = 4e-4 m)、dissol_lat = −1 | 窪みセルごとに p = hΣL/(hΣL + Δx²)。総和 441W(相対 1e-4) |
 | C `param_rain.txt` | 一様降雨 30 mm/h、地下水なし、dissol_src = 2、tt = 3600 s、morfac = 1000 | Δz = −4e-5 × (30/3.6e6 × 3600) × 1000 = −1.2e-3 m |

@@ -1301,9 +1301,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - 蒸発散の控除(dissol_src = 2 で P − E)、吸込穴分布の時間発展
    - 例題 examples/karst(2026-10-21 作成): morfac の上限は「1 回の豪雨の
      中で窪みが掘れて湛水が集中する正帰還」で決まる(1e4 で発散、1e3 で安定。
-     README の注意)。morfac を上げるには、更新あたりの Δz を湛水深で制限する
-     安全弁(dissol_dzmax。fluv_dzmax と同型)か、吸込穴の取水能の上限
-     (オリフィス径)が候補
+     README の注意)。安全弁 dissol_dzmax は 2026-10-22 に実装(§86.5)。
+     吸込穴の取水能の上限(オリフィス径)は候補のまま
    - 側方溶食 dissol_lat(§86.3)と岩盤の崩落 f_rockfall(§87)は 2026-10-22 に
      実装。examples/karst に param_lat.txt(側方溶食)・param_rock.txt
      (+ 崩落)の対照あり。表面流源 dissol_src = 3 は同日実装(§86.4。
