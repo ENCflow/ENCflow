@@ -894,7 +894,11 @@ cross-shore transport (beach face, barriers, dunes), wave set-up and rip
 currents, the cross-shore distribution inside the surf zone and directional
 spectra are not represented. Any water deeper than the surf zone is a wave
 source (a lake gets waves too), so mask water bodies that are not meant to or
-put them in the lee.
+put them in the lee. **River mouths with a mobile bed are not yet supported**:
+once the river's flow depth exceeds h_b the channel itself becomes a wave
+source, longshore transport acts on bars inside the channel and the run
+diverges (examples/delta/README.md, "waves"). A rule that excludes cells
+carrying river flow is being designed (developer.md §84.15, handoff.md).
 
 **Output of this section**: landform change in `Z0001...` (`f_out_z=1`); the
 final warning reports the solid volume carried through edges by longshore

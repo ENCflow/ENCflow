@@ -12421,8 +12421,18 @@ R = Q_r/Q_w)が無かった。設計の比較と不採用案は docs/wave_plan.m
   (44 万 m³ 対 3.9 万 m³)になり、海盆が波の峰に平行な前線で埋まった
   (figs/wave_capfeed_evolution.png)。河川と波の比 R = Q_r/Q_w を制御するには掃流砂を
   固定給砂(inflow_qb。§84.9)で与える。例題は base の容量給砂の実績平均 0.00715 m³/s
-  (固体)を固定給砂にし、同じ給砂の基準 param_baseqb.txt と比べる。
+  (固体)を固定給砂にした(基準は同じ給砂の base)が、下の理由で例題は保留。
+- **河道の深みは波の源**: 河川の流下水深が h_b を超える(例題は 1.2〜2.2 m > 1.07 m)と
+  河道全体が露出度の源(1)になり、河道内の浅い砂州(h ≤ h_b)が砕波帯として沿岸漂砂を
+  受ける。固定給砂で入口の河床が自由だと、河道内の砂州が波で動かされる → 洗掘 →
+  更に源、の正帰還で水理 1.25 h に発散した(河床が 1 セルで 1.5×10⁴ m、CFL 超過で停止)。
+  容量給砂(入口固定)の走りでは河床が滑らかで表面化しなかった。なお固定給砂は波が
+  無くても入口の河道を 1 h で土層 3 m まで洗掘する(流砂能力 > 給砂。これは給砂側の
+  問題で base にも及ぶ)。**河口の規則(河川流のセルを源・砕波帯から外す)が無いと
+  段 1 は可動河床の河口に使えない** — 設計は handoff.md 00e。例題 param_wave・
+  param_baseqb は work/delta_wave_pending に退避し、README には 3 つの挙動
+  (正面入射の遡上・45° の砂嘴・容量給砂の暴走)を図で記録した。
 
 **文書**: users_guide/geomorph.md「波浪による沿岸漂砂」(日英)、users_guide.md の
-fn_* 表、params_index、List_samples/list_wave.txt(日英)、examples/delta/param_wave.txt、
-wave_plan.md の状態。
+fn_* 表、params_index、List_samples/list_wave.txt(日英)、examples/delta/README.md「波浪」
+(保留の経緯と図)、wave_plan.md の状態。
