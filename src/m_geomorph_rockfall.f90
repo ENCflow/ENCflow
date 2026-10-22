@@ -45,10 +45,14 @@
 !   張り出しによる崩落(rf_uc > 0。支え方式が前提): 脚部(上に安息角より急な段がある
 !   陸セル)の岩盤が、前回の埋没(崩落の岩屑の到着)以降に乾式侵食で削られた深さ u を
 !   積み(崖錐の消耗分は数えない。脚部でなくなれば 0)、面の頂の柱は脚部の u >= u_c
-!   でも始まる(H_w > H_c に加えて)。実際のキャップは面の高さではなく下の軟層の
-!   削り込み(張り出し)で落ちるので、H_c を面の高さに合わせる較正が要らなくなり、
-!   後退速度 ≈ 脚部の岩盤の侵食速度 × Δx/u_c が崖錐の除去に律速される。u は更新を
-!   またぐ状態なので私有 save に含める(col の後ろ)。
+!   でも始まる(H_w > H_c に加えて)。ただし脚部が柱より軟らかい(層理 spl_strata の
+!   侵食性倍率が脚部 > 柱)ときだけ: 張り出しは硬いキャップが軟層の上に持ち出される
+!   ことなので、同じ材料の斜面(倍率が等しい)では働かない(働かせると急な斜面の
+!   全段が自分の脚部の侵食で崩れ続け、斜面全体が斜路になる = 試行の記録)。
+!   実際のキャップは面の高さではなく下の軟層の削り込み(張り出し)で落ちるので、
+!   H_c を面の高さに合わせる較正が要らなくなり、後退速度 ≈ 脚部の岩盤の侵食速度 ×
+!   Δx/u_c が崖錐の除去に律速される。u は更新をまたぐ状態なので私有 save に含める
+!   (col の後ろ)。
 !   海セル(sw > 0)への崩落: 供給側が陸、受け手が海セルのエッジも対象にする
 !   (海セルが供給側になることはない)。apply_edge_flux は海セルの z を更新しない
 !   ので、落下分は系外へ出る(海食崖の崩落 = 崖錐が波で除去される極限。乾式侵食の
@@ -125,6 +129,7 @@ module subroutine init_rockfall(gm, p, g, s, list)
   ! 張り出しによる崩落(rf_uc > 0。支え方式が前提)
   if (list%rf_uc > 0.0) then
     if (.not. gm%rf%face) call par_stop("list_geomorph: rf_uc > 0 requires rf_fface >= 0 (supported faces)")
+    if (gm%snst <= 0) call par_stop("list_geomorph: rf_uc > 0 requires spl_strata (the undercut needs a softer foot)")
     gm%rf%uc = list%rf_uc
     allocate(gm%rf%u(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(gm%rf%ftf(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
@@ -246,14 +251,14 @@ subroutine face_start(gm, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   integer :: i, j, k, in, jn, nund
-  real :: dz, lim, umax
+  real :: dz, lim, umax, fc
   logical :: steep, top, foot, und
 
   und = (gm%rf%uc > 0.0)
   if (und) call par_halo_cell(gm%rf%u)        ! apply_splash が帯で更新した u を近傍参照する
   nund = 0
   !$omp parallel do schedule(static) reduction(+: nund) &
-  !$omp   private(i, j, k, in, jn, dz, lim, umax, steep, top, foot)
+  !$omp   private(i, j, k, in, jn, dz, lim, umax, fc, steep, top, foot)
   do j = dcp%js, dcp%je
     gm%rf%colt(:, j) = 0.0
     do i = g%wx(1,j), g%wx(2,j)
@@ -264,6 +269,8 @@ subroutine face_start(gm, g, s)
       top = .true.
       foot = .false.
       umax = 0.0
+      fc = 0.0
+      if (und) fc = strata_factor(gm, s%z(i,j))
       do k = 1, 8
         in = i + din(k)
         jn = j + djn(k)
@@ -275,7 +282,10 @@ subroutine face_start(gm, g, s)
           steep = .true.
           if (gm%rf%col(in,jn) < 0.5) then
             foot = .true.
-            if (und) umax = max(umax, gm%rf%u(in,jn))
+            ! 張り出し: 脚部が柱より軟らかい(倍率が大きい)ときだけ数える
+            if (und) then
+              if (strata_factor(gm, s%z(in,jn)) > fc) umax = max(umax, gm%rf%u(in,jn))
+            end if
           end if
         else if (-dz > gm%rf%hc) then
           top = .false.                           ! H_c より高い段の脚(埋もれた棚)は始めない
@@ -301,6 +311,21 @@ subroutine face_start(gm, g, s)
   gm%rf%col(:, dcp%js:dcp%je) = gm%rf%colt(:, dcp%js:dcp%je)
   call par_halo_cell(gm%rf%col)
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 地表標高 zc が属する層の侵食性倍率(eval_splash と同じ表引き。§48.5)
+!----------------------------------------------------------------------
+pure function strata_factor(gm, zc) result(fs)
+  type(t_geomorph), intent(in) :: gm
+  real, intent(in) :: zc
+  real :: fs
+  integer :: k
+  fs = 1.0
+  do k = 1, gm%snst
+    if (zc >= gm%sstz(k)) fs = gm%sstf(k)
+  end do
+end function
 
 
 !----------------------------------------------------------------------

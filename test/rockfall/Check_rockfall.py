@@ -16,7 +16,7 @@
 #     を加える
 #     uc=<Screen ログ>(face・rc と併用。hc で H_c を与える)は張り出し版(rf_uc): (1) は「Σ(z − z0) =
 #     −乾式侵食の系外排出 × 1/(1 − λ)(台帳)」に、(7) 張り出しで始まった柱の台帳 > 0 かつ
-#     台地面(z >= ZTOP − 1e-3)のセル数が初期より減る、を加える
+#     台地面(z >= ZTOP − 0.5)のセル数が初期より減る(縁の柱が落ちた)、を加える
 import sys, struct, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_init import NX, NY, ZTOP
@@ -135,8 +135,8 @@ if UC:
     txt = open(UC, errors="ignore").read()
     nund = sum(int(v) for v in re.findall(r"columns started by undercut =\s*(\d+)", txt))
     vout = sum(float(v) for v in re.findall(r"splash exported sediment volume =\s*([0-9.Ee+-]+)", txt)) * POROI
-    ncap = sum(1 for r in z for v in r if v >= ZTOP - 1.0e-3)
-    ncap0 = sum(1 for r in z0 for v in r if v >= ZTOP - 1.0e-3)
+    ncap = sum(1 for r in z for v in r if v >= ZTOP - 0.5)     # 雨滴項で頂が一様に下がる分(0.2 m)は数えない
+    ncap0 = sum(1 for r in z0 for v in r if v >= ZTOP - 0.5)
     ok1 = abs(sum_dz + vout) <= 1.0e-4 * max(vout, 1.0)
 ok7 = (nund > 0 and ncap < ncap0) if UC else True
 ok5 = (sea_change == 0.0) if SEA else True

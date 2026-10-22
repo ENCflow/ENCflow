@@ -786,7 +786,9 @@ retreat rate (talus-limited retreat).
    above it) remembers the bedrock depth u removed by dry erosion since it was last
    buried by rockfall debris (talus loss is not counted; u is reset when the cell is no
    longer a foot), and a column at the top of the face also falls when its foot has
-   u >= u_c (in addition to H_w > H_c). While the debris covers the foot the edge is
+   u >= u_c (in addition to H_w > H_c), but only when the foot is weaker than the
+   column (its `spl_strata` erodibility factor is larger); a slope of one material is
+   not affected (`spl_strata` is required). While the debris covers the foot the edge is
    protected; once the talus is removed and the bedrock is cut back by u_c the next
    column falls, so the cycle is talus-limited without tuning H_c to the face height.
    u is also part of the private file.
@@ -800,7 +802,7 @@ retreat rate (talus-limited retreat).
 | rf_hmin | 0.01 | Minimum talus thickness h_min (m) that spreads at the repose angle; thinner talus stays in place (prevents traces of talus from scattering over the slope) |
 | rf_rc | 0 | Radius r_c (m) of the window over which the free-face height is measured. 0 = step between neighbouring cells (depends on dx). Positive: drop to the lowest point within the window (independent of dx; about half to one cliff height) |
 | rf_fface | -1 (off) | Supported-face mode (rule 4). >= 0 enables it (requires rf_rc > 0): dry-erosion factor of a face whose foot is covered by talus (0 = no erosion). The collapse becomes a column collapse |
-| rf_uc | 0 (off) | Critical undercut u_c (m) (rule 5; requires rf_fface >= 0): a column at the top of the face falls once the bedrock of its foot has been cut back by this depth since the last burial. The overhang width a cap can carry (tens of cm to a few m); keep it below dx |
+| rf_uc | 0 (off) | Critical undercut u_c (m) (rule 5; requires rf_fface >= 0 and spl_strata): a column at the top of the face falls once the bedrock of a weaker foot has been cut back by this depth since the last burial. The overhang width a cap can carry (tens of cm to a few m); keep it below dx |
 
 The change per edge and update is capped by `fluv_dzmax` (at the flux stage, so
 conservation holds; give `fluv_dzmax` even without f_fluvial). The talus thickness
