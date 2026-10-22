@@ -38,6 +38,17 @@ elif MODE == "rock":
              ("param_rock3.txt", "同 + 崩落と崖錐(H_c = 4 m、崖錐 0.02 倍、増幅の飽和 κ_s = 0.2)"),
              ("param_rock5.txt", "同 + 崩落と崖錐(H_c = 4 m、崖錐 0.005 倍、増幅の飽和 κ_s = 0.2)")]
     SUF = "_rock"
+elif MODE == "rc":
+    CASES = [("param_bench2.txt", "Δx = 1 m、崩落なし"),
+             ("param_rock2.txt", "Δx = 1 m + 崩落(H_c = 4 m、セル間の段差、崖錐 0.1 倍)"),
+             ("param_rc.txt", "Δx = 1 m + 崩落(H_c = 15 m、窓 r_c = 8 m、崖錐 0.1 倍)"),
+             ("param_rc2.txt", "Δx = 1 m + 崩落(H_c = 15 m、窓 r_c = 8 m、崖錐 0.01 倍、κ_s = 0.2)")]
+    SUF = "_rc"
+elif MODE == "dx4rc":
+    CASES = [("param_dx4.txt", "Δx = 4 m、崩落なし"),
+             ("param_dx4_rc.txt", "Δx = 4 m + 崩落(H_c = 15 m、窓 r_c = 8 m、崖錐 0.1 倍)"),
+             ("param_dx4_rc2.txt", "Δx = 4 m + 崩落(H_c = 15 m、窓 r_c = 8 m、崖錐 0.01 倍、κ_s = 0.2)")]
+    SUF = "_dx4rc"
 elif MODE == "dx4":
     CASES = [("param_dx4.txt", "Δx = 4 m、崩落なし"),
              ("param_dx4_rock.txt", "Δx = 4 m + 崩落と崖錐(H_c = 6 m、崖錐の侵食性 0.1 倍)"),
@@ -55,7 +66,8 @@ else:
 HARD = {"cap": [(17, 20), (8, 10)], "bench": [(17, 20), (6, 10)], "bench2": [(17, 20), (5, 10)], "bench3": [(17, 20), (5, 10)],
         "sat": [(17, 20), (5, 10)], "sat2": [(17, 20), (5, 10)], "rock": [(17, 20), (5, 10)], "rock2": [(17, 20), (5, 10)],
         "rock3": [(17, 20), (5, 10)], "rock4": [(17, 20), (5, 10)], "rock5": [(17, 20), (5, 10)],
-        "dx4": [(17, 20), (5, 10)], "dx4_rock": [(17, 20), (5, 10)], "dx4_rock2": [(17, 20), (5, 10)]}
+        "dx4": [(17, 20), (5, 10)], "dx4_rock": [(17, 20), (5, 10)], "dx4_rock2": [(17, 20), (5, 10)],
+        "rc": [(17, 20), (5, 10)], "rc2": [(17, 20), (5, 10)], "dx4_rc": [(17, 20), (5, 10)], "dx4_rc2": [(17, 20), (5, 10)]}
 PLATEAUS = [(60.0, 50.0, 30.0), (150.0, 50.0, 12.0)]
 ZCAP, YC = 17.0, 50.0
 DX = 1.0                      # 格子幅 (m)。cases の読み込み後に param の lx/nx から置き換える
@@ -127,7 +139,7 @@ for c in cases:
         ls = "-" if k == 0 else "--"
         col = {"cap": "C0", "nocap": "C3", "bench": "C2", "bench2": "C1", "bench3": "C4", "sat": "C5", "sat2": "C6",
                "rock": "C7", "rock2": "C8", "rock3": "C9", "rock4": "C2", "rock5": "C5",
-               "dx4": "C1", "dx4_rock": "C7", "dx4_rock2": "C8"}[c["name"]]
+               "dx4": "C1", "dx4_rock": "C7", "dx4_rock2": "C8", "rc": "C7", "rc2": "C8", "dx4_rc": "C7", "dx4_rc2": "C8"}[c["name"]]
         axes[0].plot(ts, rs, ls, color=col, label="%s, R₀ = %g m" % (c["name"], R))
         axes[1].plot(ts, zs, ls, color=col, label="%s, R₀ = %g m" % (c["name"], R))
         sel = [i for i in range(len(ts)) if rs[i] > 2]
@@ -175,7 +187,7 @@ fig.tight_layout(); fig.savefig("figs/sections%s.png" % SUF, dpi=110); plt.close
 
 # ベンチの指標: 大きい台地の方位平均断面で、z = 10〜17 m の軟層区間と中間硬層の上面(z ≈ 10 m)の
 # 幅 — 硬層上面 ±0.5 m にあるセルの数(台地中心から半径 45 m 以内)を時刻ごとに数える
-if MODE in ("bench", "sat", "rock", "rock4", "dx4"):
+if MODE in ("bench", "sat", "rock", "rock4", "dx4", "rc", "dx4rc"):
     print("\n=== ベンチの指標: 大きい台地(中心 x = 60 m)で中間硬層の上面 ±0.5 m にあるセル数(= 段の面積 m²)===")
     for c in cases:
         ztop = 10.0
@@ -193,7 +205,7 @@ if MODE in ("bench", "sat", "rock", "rock4", "dx4"):
             print("%s T_geo=%.1e: %d / %d / %d / %d / %d | 上の崖の平均勾配 %.1f (角度 %.0f°), 下の崖 %.1f (%.0f°)" % (
                 c["name"], t, w(17, 20.5), w(10.5, 17), w(9.5, 10.5), w(5, 9.5), w(1, 5),
                 6.5 / wu, np.degrees(np.arctan(6.5 / wu)), 8.5 / wl, np.degrees(np.arctan(8.5 / wl))))
-if MODE in ("rock", "rock4", "dx4"):
+if MODE in ("rock", "rock4", "dx4", "rc", "dx4rc"):
     fig, axes = plt.subplots(1, len(cases) - 1, figsize=(5 * (len(cases) - 1), 3.0))
     for ax, c in zip(np.atleast_1d(axes), cases[1:]):
         fn = os.path.join(read_param("param_%s.txt" % c["name"])["dir_result"], "Ht9998.txt")

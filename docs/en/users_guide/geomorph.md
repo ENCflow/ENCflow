@@ -735,7 +735,13 @@ overhang, so three rules approximate the process (developer.md sec. 48.7):
 1. **Collapse**: the part of the height difference between neighbouring cells
    (the free-face height) that exceeds the critical height `rf_hc` is moved from
    the high to the low cell with the same numerical form as the angle-of-repose
-   avalanching (relax x excess / 2 / 8 per update; conservative).
+   avalanching (relax x excess / 2 / 8 per update; conservative). With a window
+   radius `rf_rc` the free-face height is measured as the drop to the lowest point
+   within r_c (a square window of nint(r_c/dx) cells), and the excess over H_c
+   (capped by the excess of that edge over the talus repose angle) is moved on
+   edges steeper than the talus angle. The whole face then takes part even on a
+   fine grid where the cliff spans several cells, and the critical height no
+   longer depends on dx.
 2. **Talus**: the volume arriving at the low cell is booked as talus thickness
    `ht` (output `Ht0001...`). Edges whose donor cell is talus-covered also move the
    excess over the talus repose angle `rf_phi` (only the talus itself).
@@ -755,6 +761,7 @@ retreat rate (talus-limited retreat).
 | rf_relax | 0.5 | Fraction of the excess height relaxed per update (0-1) |
 | rf_ftalus | 0.3 | Dry-erosion factor of talus-covered cells (> 0; the talus removal rate controls the cliff retreat rate. 0 is not allowed: a cell with a trace of talus would never erode again) |
 | rf_hmin | 0.01 | Minimum talus thickness h_min (m) that spreads at the repose angle; thinner talus stays in place (prevents traces of talus from scattering over the slope) |
+| rf_rc | 0 | Radius r_c (m) of the window over which the free-face height is measured. 0 = step between neighbouring cells (depends on dx). Positive: drop to the lowest point within the window (independent of dx; about half to one cliff height) |
 
 The change per edge and update is capped by `fluv_dzmax` (at the flux stage, so
 conservation holds; give `fluv_dzmax` even without f_fluvial). The talus thickness

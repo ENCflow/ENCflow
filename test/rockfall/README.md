@@ -15,14 +15,18 @@
 検定(Check_rockfall.py。save/state.dat の z・sd と result/Ht9998.txt):
 
 1. 土砂体積保存: |Σ(z − z₀)| < 1e-9(結果 1e-13)
-2. 終端の 8 近傍の最大高さ差 ≤ H_c + 1e-3(緩和の幾何収束の残差 1e-4 程度を許す)
+2. 終端の 8 近傍の最大高さ差 ≤ H_c + 1e-3(緩和の幾何収束の残差 1e-4 程度を許す。窓版は 1e-2)
 3. 崖錐の収支: 全セルで ht ≥ (z − z₀)⁺(正味の堆積は崖錐として記録される)、Σht > 0
 4. 共動更新: max|(sd − sd₀) − (z − z₀)| < 1e-10
 
+窓版(param_rc.txt、`rf_rc = 3 m`): 自由面の高さを 3 セルの正方形窓内の最低点との落差で
+測る規則の検定。終端では、崖錐の安息角より急なエッジを持つセルの窓内落差が H_c 以下に
+なります(Check_rockfall.py に `rc=3` を渡す)。Run.sh / Run_MPI.sh は両方を実行します。
+
 ```bash
 make
-./Run.sh            # 逐次 + 検定(save/ を save_serial/ に複製)
-./Run_MPI.sh 2      # MPI + 検定 + save/state.dat の逐次とのビット一致確認
+./Run.sh            # 逐次 + 検定(save/ を save_serial/ に複製。窓版も)
+./Run_MPI.sh 2      # MPI + 検定 + save/state.dat の逐次とのビット一致確認(窓版も)
 ./Run_MPI.sh 4
 ```
 

@@ -94,6 +94,9 @@
                             !   controls the cliff retreat). 0 = default 0.3
   !rf_hmin = 0.01           ! minimum talus thickness that spreads at the repose angle (m)
                             !   (thinner talus stays in place). 0 = default 0.01
+  !rf_rc = 8.0              ! radius (m) of the window for the free-face height. 0 = step between
+                            !   neighbouring cells (dx-dependent) = default. Positive: drop to the
+                            !   lowest point within the window (dx-independent; half to one cliff height)
 
   ! ---- Fixation (with f_fluvial; bars exposed at low flow get fixed and
   !      resist re-erosion) ----

@@ -16,6 +16,11 @@ echo ""
 rc=0
 python3 "$sdir/Check_rockfall.py" save || rc=1
 rm -rf save_serial && cp -r save save_serial
+# 窓版(rf_rc = 3 m)
+./encflow param_rc.txt | tee Screen_rc.log || exit 1
+echo ""
+python3 "$sdir/Check_rockfall.py" save_rc result_rc rc=3 || rc=1
+rm -rf save_rc_serial && cp -r save_rc save_rc_serial
 
 if [ $rc -eq 0 ]; then
     echo "=== rockfall verification PASS ==="

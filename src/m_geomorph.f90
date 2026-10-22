@@ -133,6 +133,9 @@ module m_geomorph
     real :: relax = 0.5              ! 1 更新の緩和率
     real :: ftalus = 0.3             ! 崖錐に覆われたセルの乾式侵食の倍率
     real :: hmin = 0.0               ! 崖錐が安息角で動く最小厚さ (m)
+    integer :: npass = 0             ! 自由面の高さの窓の半径(セル。0 = 隣接セル間の段差)
+    real, allocatable :: zmin(:,:)   ! 窓内の最低標高(帯±ハロ。npass > 0 のみ)
+    real, allocatable :: zt(:,:)     ! 同、作業面(帯)
     real :: dist(1:4) = 0.0          ! k=1..4 の近傍セル中心間距離 (m)
     real :: area = 0.0               ! セル面積 (m2)
     integer :: nrock = 0             ! 崩落したエッジ数(累計。ランク局所)
