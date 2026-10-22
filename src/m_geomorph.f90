@@ -136,6 +136,15 @@ module m_geomorph
     integer :: npass = 0             ! 自由面の高さの窓の半径(セル。0 = 隣接セル間の段差)
     real, allocatable :: zmin(:,:)   ! 窓内の最低標高(帯±ハロ。npass > 0 のみ)
     real, allocatable :: zt(:,:)     ! 同、作業面(帯)
+    logical :: face = .false.        ! 崖錐に支えられた面の方式(rf_fface >= 0)
+    real :: fface = 0.0              ! 支えられた面の乾式侵食の倍率
+    real, allocatable :: col(:,:)    ! 崩落中の柱のフラグ(0/1。帯±ハロ。更新をまたいで持ち越す。face のみ)
+    real, allocatable :: colt(:,:)   ! 同、作業面(帯)
+    real, allocatable :: sup(:,:)    ! 支えられた面のフラグ(0/1。帯±ハロ。前回更新の値を splash が読む)
+    real :: uc = 0.0                 ! 限界張り出し量 u_c (m)。0 = 張り出しによる崩落なし
+    real, allocatable :: u(:,:)      ! 脚部の岩盤が前回の埋没以降に削られた深さ(帯±ハロ。更新をまたぐ。uc > 0 のみ)
+    real, allocatable :: ftf(:,:)    ! 脚部(上に安息角より急な段がある)のフラグ(0/1。帯。前回更新)
+    integer :: nund = 0              ! 張り出しで始まった柱の数(累計。ランク局所)
     real :: dist(1:4) = 0.0          ! k=1..4 の近傍セル中心間距離 (m)
     real :: area = 0.0               ! セル面積 (m2)
     integer :: nrock = 0             ! 崩落したエッジ数(累計。ランク局所)
@@ -1281,6 +1290,13 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%spl%fx)) deallocate(gm%spl%fx)
   if (allocated(gm%spl%zs)) deallocate(gm%spl%zs)
   if (allocated(gm%spl%zt)) deallocate(gm%spl%zt)
+  if (allocated(gm%rf%zmin)) deallocate(gm%rf%zmin)
+  if (allocated(gm%rf%zt)) deallocate(gm%rf%zt)
+  if (allocated(gm%rf%col)) deallocate(gm%rf%col)
+  if (allocated(gm%rf%colt)) deallocate(gm%rf%colt)
+  if (allocated(gm%rf%sup)) deallocate(gm%rf%sup)
+  if (allocated(gm%rf%u)) deallocate(gm%rf%u)
+  if (allocated(gm%rf%ftf)) deallocate(gm%rf%ftf)
   gm%spl%nclip = 0
   gm%spl%vout = 0.0
   gm%dbr%nrelclip = 0

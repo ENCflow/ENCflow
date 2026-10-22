@@ -540,12 +540,14 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | pump_rule | &list_struct_pump | [Structures](structure.md) |
 | repose_phi | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | repose_relax | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| rf_fface | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rf_ftalus | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rf_hc | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rf_hmin | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rf_phi | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rf_rc | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rf_relax | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| rf_uc | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rn0 | &list_geoinfo | [Geographic information](geoinfo.md) |
 | rn0_rw | &list_geoinfo | [Geographic information](geoinfo.md) |
 | runoff_rate | &list_precip | [Rainfall and meteorology](forcing.md) |
