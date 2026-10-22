@@ -187,6 +187,19 @@ module m_geomorph
     real :: vout = 0.0               ! 系外排出した固体土砂体積 (m3)(ランク局所累計)
   end type
 
+  type t_wetlw
+    ! 湿潤侵食の剥離深の横方向拡散(wet_lw > 0 のみ。§84.15)
+    real :: lw = 0.0                 ! 相関長 ℓ_w (m)
+    integer :: nsm = 0               ! 平滑化のパス数(= 4(ℓ_w/Δmin)²。0 = 無効)
+    real :: wsx = 0.0, wsy = 0.0     ! 1 パスの x・y 近傍重み(spl_lc と同じ核)
+    real, allocatable :: e(:,:)      ! 剥離深の集積面 [m](ish:ieh, jsh:jeh。calc_suspend・
+                                     !   calc_wash が帯内に加算し、spread_wet が平滑化して
+                                     !   z・sd から引いた後 0 に戻す)
+    real, allocatable :: et(:,:)     ! 平滑化の作業面(同形)
+    real :: vlost = 0.0              ! 受け側の土層 sd が足りず捨てた固体体積 (m3)
+                                     !   (ランク局所累計。dispose で報告)
+  end type
+
   type t_bedslide
     real :: wl(1:8) = 0.0            ! k軸方向フラックスの通過幅 (m)(bs_diagratio 配分)
     real :: rdr(1:8) = 0.0           ! 1 / 近傍セル中心間距離 (1/m)
@@ -318,6 +331,7 @@ module m_geomorph
     type(t_fluvial) :: flv           ! 掃流砂
     type(t_debris) :: dbr            ! 土石流 E-D
     type(t_splash) :: spl            ! 乾式斜面侵食
+    type(t_wetlw) :: wlw             ! 湿潤侵食の剥離深の横方向拡散(§84.15)
     type(t_bedslide) :: bsl          ! 動く底層(地滑り津波)
     type(t_bank) :: bnk              ! 側岸侵食・安息角崩落
     type(t_fixation) :: fix          ! 定着
@@ -383,6 +397,16 @@ module m_geomorph
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
       real, intent(in) :: dtw
+    end subroutine
+    module subroutine init_wetlw(gm, g, list)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine spread_wet(gm, g, s)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
     end subroutine
     module subroutine init_splash(gm, g, list)
       type(t_geomorph), intent(inout) :: gm
@@ -703,6 +727,7 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_fluvial > 0) call init_fluvial(gm, p, g, list)
   if (gm%f_suspend > 0) call init_suspend(gm, p, list)
   if (gm%f_wash > 0) call init_wash(gm, list)
+  if (list%wet_lw > 0.0) call init_wetlw(gm, g, list)
   if (gm%f_splash > 0) call init_splash(gm, g, list)
   if (gm%f_debris > 0) call init_debris(gm, p, g, list)
   ! 瞬時流動化(f_release)は f_debris の付属機構(fn_dbinit の有無で有効化。
@@ -885,6 +910,10 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   end if
   if (gm%f_suspend > 0) call calc_suspend(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_wash > 0) call calc_wash(gm, p, g, s, p%dt * gm%idt_geomorph)
+  ! 湿潤侵食の剥離深の横方向拡散(wet_lw > 0。§84.15): suspend・wash が集積した
+  ! 剥離深を相関長 ℓ_w で平滑化して z・sd から引く(中でハロ交換。判定は
+  ! namelist 由来で全ランク同一 = collective 安全)
+  if (gm%wlw%nsm > 0) call spread_wet(gm, g, s)
   if (gm%f_creep > 0) call calc_creep(gm, g, s, dts)
   if (gm%f_wthr > 0) call calc_wthr(gm, g, s, dts)
   if (gm%f_uplift > 0) call calc_uplift(gm, g, s, dts)
@@ -1104,6 +1133,15 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%dbr%fx)) deallocate(gm%dbr%fx)
   if (allocated(gm%dbr%rel)) deallocate(gm%dbr%rel)
   if (allocated(gm%dbr%sld)) deallocate(gm%dbr%sld)
+  if (gm%wlw%nsm > 0) then
+    ! ランク局所の診断(受け側の土層不足で捨てた固体体積。0 なら厳密保存)
+    call par_warn("geomorph: wet_lw spreading: solid volume lost to bedrock floor = " &
+                  // rtoa(gm%wlw%vlost) // " m3")
+  end if
+  if (allocated(gm%wlw%e)) deallocate(gm%wlw%e)
+  if (allocated(gm%wlw%et)) deallocate(gm%wlw%et)
+  gm%wlw%nsm = 0
+  gm%wlw%vlost = 0.0
   if (allocated(gm%spl%fx)) deallocate(gm%spl%fx)
   if (allocated(gm%spl%zs)) deallocate(gm%spl%zs)
   if (allocated(gm%spl%zt)) deallocate(gm%spl%zt)

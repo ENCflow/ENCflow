@@ -102,6 +102,11 @@ module list_geomorph
     real :: wash_kr = 0.0            ! 雨滴侵食係数(無次元。E_r = kr・降雨強度)
     real :: wash_kf = 0.0            ! 面状侵食係数 (m/s)(E_f = kf・(τ*/τ*c - 1))
     real :: wash_tausc = 0.05        ! 面状侵食の限界無次元掃流力 τ*c
+    real :: wet_lw = 0.0             ! 湿潤侵食(f_suspend の巻き上げ・f_wash の剥離)の
+                                     ! 剥離深を横方向に広げる相関長 ℓ_w (m)(0 = 無効)。
+                                     ! 流路の流れは幅 ℓ_w の帯(リル幅)から削る =
+                                     ! 1 セル幅の流路への集中に長さスケールを与え、
+                                     ! ガリー間隔の格子収束を得る(§84.15)
 
     integer :: f_splash = 0          ! 乾式斜面侵食(無流水: 雨滴・サブグリッドリル)
                                      ! (0:無効, 1:有効)。乾燥セル(h <= dd)対象で
@@ -303,6 +308,7 @@ subroutine list_geomorph_read(p, list)
   real :: wash_kr
   real :: wash_kf
   real :: wash_tausc
+  real :: wet_lw
   integer :: f_splash
   real :: spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, spl_lc, spl_zbase
   integer :: spl_sgrad
@@ -352,7 +358,7 @@ subroutine list_geomorph_read(p, list)
                            f_fixation, fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank, &
                            f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, &
-                           f_wash, wash_kr, wash_kf, wash_tausc, &
+                           f_wash, wash_kr, wash_kf, wash_tausc, wet_lw, &
                            f_splash, spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, &
                            spl_lc, spl_zbase, spl_sgrad, spl_ksat, spl_strata, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
@@ -415,6 +421,7 @@ subroutine list_geomorph_read(p, list)
   wash_kr = list%wash_kr
   wash_kf = list%wash_kf
   wash_tausc = list%wash_tausc
+  wet_lw = list%wet_lw
   f_splash = list%f_splash
   spl_kr = list%spl_kr
   spl_ca = list%spl_ca
@@ -531,6 +538,7 @@ subroutine list_geomorph_read(p, list)
   list%wash_kr = wash_kr
   list%wash_kf = wash_kf
   list%wash_tausc = wash_tausc
+  list%wet_lw = wet_lw
   list%f_splash = f_splash
   list%spl_kr = spl_kr
   list%spl_ca = spl_ca

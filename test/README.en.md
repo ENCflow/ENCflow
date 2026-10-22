@@ -76,6 +76,7 @@ analytical-solution or conservation check by Check_*.py.
 | [uniflow/](uniflow/) | Uniform flow in straight channels 1 and 5 cells wide between dry ground. Matches Manning with f_opening_dynamic = 2; without the reassignment the bank-adjacent rows carry too little flow (known property recorded) | ENC conveyance, f_opening_dynamic | analytic |
 | [suspend/](suspend/) | Suspended load (advection, erosion, settling): smoke test and conservation | Sediment f_suspend | analytic |
 | [wash/](wash/) | Hillslope erosion (splash and sheet): smoke test and conservation | Sediment f_wash | conservation (Log) |
+| [wetlw/](wetlw/) | Lateral spreading of wet detachment wet_lw: conservation of total solids, reduced grid-scale roughness, MPI identity | Sediment wet_lw | self-check |
 | [splash/](splash/) | Analytical verification of dry hillslope erosion | Sediment f_splash | ref |
 | [splashslide/](splashslide/) | Cemented versus failing scarp (dry erosion combined with slope failure) | f_splash, f_slide | analytic |
 | [splashlc/](splashlc/) | Valley wavelength selection by the curvature correlation length spl_lc (growth of a two-wavelength perturbation) | f_splash (spl_lc, spl_zbase) | analytic |
