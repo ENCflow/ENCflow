@@ -39,7 +39,7 @@ S = lg[:, names.index("S(m)")]
 tide = np.interp(t, [0, 120, 240], [0.0, 2.0, 2.0])      # tival: 0 → 2 m (0〜2 min)、以後 2 m
 
 fig, ax = plt.subplots(figsize=(8, 4))
-ax.plot(t, S, "o-", ms=3, label="平均水深 S(陸+海セル)")
+ax.plot(t, S, "o-", ms=3, label="平均水深 S(陸セル。海セルを除く)")
 ax.set_xlabel("t (s)")
 ax.set_ylabel("S (m)")
 ax.grid(alpha=0.3)

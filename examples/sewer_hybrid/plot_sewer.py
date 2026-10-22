@@ -101,7 +101,8 @@ print("saved sewer_hybrid_result.png")
 fig, axs = plt.subplots(1, 3, figsize=(14, 4.3), facecolor="white")
 for run, c, label in [("D", C_RED, "D: 閉領域(川なし・吐口なし)"), ("E", C_AQUA, "E: 東端に川(受け皿)。吐口なし"), ("F", C_PURPLE, "F: 川 + 幹線末端の開放吐口")]:
     t, ss, sg = read_log(f"result_{run}/Log.txt"); final[run] = (ss[-1] - ss[0], sg[-1])
-    # Log の S_surf は川セルの水柱(固定水位 1.5 m)を含み陸地面積で割った値なので、t = 0 の値を引いて陸地の地表水にする
+    # Log の S_surf は陸地セルだけの平均(2026-10-22 以降。海域マスクの川セルを含まない)。
+    # 以前は川セルの水柱を含んでいたため t = 0 の値を引いていた。現在 ss[0] = 0 で差し引きは恒等
     axs[0].plot(t, sg, color=c, lw=2, label=label)
     axs[1].plot(t, ss - ss[0], color=c, lw=2, label=label)
     for k, ls, tl in [(2, "-", "t = 1 h"), (6, ":", "t = 3 h")]:
