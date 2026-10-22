@@ -38,6 +38,20 @@ if [ -d save_rc_serial ]; then
         rc=1
     fi
 fi
+# 支え方式(rf_fface = 0。柱の崩落)
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_face.txt | tee Screen_face.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_rockfall.py" save_face result_face rc=3 face=1 || rc=1
+if [ -d save_face_serial ]; then
+    if cmp -s save_face/state.dat save_face_serial/state.dat && cmp -s save_face/geomorph_rockfall.dat save_face_serial/geomorph_rockfall.dat; then
+        echo "=== save_face/{state,geomorph_rockfall}.dat are bit-identical to the serial result (save_face_serial) ==="
+    else
+        echo "MISMATCH: save_face/* != save_face_serial/*" >&2
+        rc=1
+    fi
+fi
 # 海セル版
 python3 "$sdir/make_init.py" --sea
 set -o pipefail

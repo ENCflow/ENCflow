@@ -311,7 +311,12 @@ module subroutine eval_splash(gm, p, g, s, dts)
       ! 崖錐の保護(§48.7): 崖錐に覆われたセルは露出材料が崖錐なので、層理の倍率に
       ! 代えて rf_ftalus 倍を(倍率適用前の er0 に)掛ける
       if (gm%f_rockfall > 0) then
-        if (s%ht(i,j) > 0.0) er = er0 * gm%rf%ftalus
+        if (s%ht(i,j) > 0.0) then
+          er = er0 * gm%rf%ftalus
+        else if (gm%rf%face) then
+          ! 崖錐に支えられた面(脚部が崖錐に覆われた急なセル。前回更新のフラグ)
+          if (gm%rf%sup(i,j) > 0.5) er = er0 * gm%rf%fface
+        end if
       end if
       er = er * s%pre(i,j)
       if (er <= 0.0) cycle

@@ -761,6 +761,26 @@ overhang, so three rules approximate the process (developer.md sec. 48.7):
 The removal rate of the talus (`rf_ftalus` x dry erosion) controls the cliff
 retreat rate (talus-limited retreat).
 
+4. **Supported-face mode (`rf_fface` >= 0; requires the window `rf_rc` > 0)**: under
+   rule 1 the whole face only sheds the excess of H_w over H_c and relaxes to the
+   repose angle, so even strong protection turns the plateau into a talus cone and
+   no vertical cliff survives. The supported-face mode changes two things.
+   (a) A cell whose foot (the cell beyond a drop steeper than the talus angle) is
+   covered by talus (ht >= `rf_hmin`, or a collapsing column) is a "talus-supported
+   face": its dry erosion E is multiplied by `rf_fface` (0 = it does not erode; the
+   flag is from the previous update; it replaces the strata factor). (b) The collapse
+   becomes a **column collapse**: a column starts at the top of the face (a cell with
+   no step higher than H_c above it) when H_w > H_c and falls until it is level with
+   its lower neighbours (the full drop; at most tan(phi_t) x dist / 32 per edge and
+   update, the amount the receiving talus can pass on). A column whose foot is a
+   collapsing column waits, so the face retreats one column at a time and stays
+   vertical, and the bedrock of a fallen column is buried as a shelf at the level of
+   the talus top. Collapse stops once the talus is thick enough that H_w <= H_c and
+   resumes when dry erosion (`rf_ftalus`) removes the talus: the talus removal rate
+   controls the retreat rate, and in steady state retreat rate x cliff height ~
+   talus removal rate x talus width. The collapsing-column flags are part of the
+   private file `geomorph_rockfall.dat` (restored automatically).
+
 | Parameter | Default | Meaning |
 |---|---|---|
 | rf_hc | none (required) | Critical free-face height H_c (m); a structural quantity (rock-mass strength) |
@@ -769,6 +789,7 @@ retreat rate (talus-limited retreat).
 | rf_ftalus | 0.3 | Dry-erosion factor of talus-covered cells (> 0; the talus removal rate controls the cliff retreat rate. 0 is not allowed: a cell with a trace of talus would never erode again) |
 | rf_hmin | 0.01 | Minimum talus thickness h_min (m) that spreads at the repose angle; thinner talus stays in place (prevents traces of talus from scattering over the slope) |
 | rf_rc | 0 | Radius r_c (m) of the window over which the free-face height is measured. 0 = step between neighbouring cells (depends on dx). Positive: drop to the lowest point within the window (independent of dx; about half to one cliff height) |
+| rf_fface | -1 (off) | Supported-face mode (rule 4). >= 0 enables it (requires rf_rc > 0): dry-erosion factor of a face whose foot is covered by talus (0 = no erosion). The collapse becomes a column collapse |
 
 The change per edge and update is capped by `fluv_dzmax` (at the flux stage, so
 conservation holds; give `fluv_dzmax` even without f_fluvial). The talus thickness
@@ -779,8 +800,10 @@ removed by waves; see "rockfall exported to sea cells" at the end of the run). T
 windowed minimum includes the z of sea cells (the sea floor), so put the sea cells
 at sea level if the free face should end at the water surface.
 Verification: [test/rockfall](../../../test/rockfall/) (collapse of a vertical
-plateau: conservation, final height differences <= H_c, talus budget). Example:
-[examples/mesa](../../../examples/mesa/) (retreat of cap-rock cliffs with talus).
+plateau: conservation, final height differences <= H_c, talus budget; also the
+windowed, supported-face and sea-cell variants). Example:
+[examples/mesa](../../../examples/mesa/) (retreat of cap-rock cliffs with talus;
+a vertical cliff with talus-limited retreat in the supported-face mode).
 
 **Outputs of this section**: talus thickness `Ht0001...`, terrain `Z0001...`; the
 final "rockfall moved ..." line gives the moved volume and the number of active edges,

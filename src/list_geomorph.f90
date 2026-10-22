@@ -76,6 +76,11 @@ module list_geomorph
                                      ! 崖の後退速度を律する)。0 = 既定 0.3
     real :: rf_hmin = 0.0            ! 崖錐が安息角で動く最小厚さ h_min (m)(薄い崖錐はその場に
                                      ! 留まる = 微量の崖錐が斜面中に散らばる人工物を防ぐ)。0 = 既定 0.01
+    real :: rf_fface = -1.0          ! 崖錐に支えられた面(崖錐律速の後退)の方式(§48.7)。0 以上で有効
+                                     ! (rf_rc > 0 が前提): 安息角より急な落差の先(脚部)が崖錐 ht >= h_min
+                                     ! に覆われたセルの乾式侵食 E を rf_fface 倍にし、崩落を「面の頂の柱が
+                                     ! 脚部まで落ちる」形(柱の崩落)にする = 垂直な面が 1 セルずつ後退し、
+                                     ! 崖錐の除去が後退を律する。負 = 無効(既定。窓版の崩落)
     real :: rf_rc = 0.0              ! 自由面の高さを測る窓の半径 r_c (m)。0 = 隣接セル間の段差
                                      ! (従来。Δx に依存)。正なら nint(r_c/Δx) セルの正方形窓内の最低点
                                      ! との落差 H_w を自由面の高さとし、崖錐の安息角より急なエッジで
@@ -305,7 +310,7 @@ subroutine list_geomorph_read(p, list)
   integer :: f_berode, f_repose
   real :: berode_kb, berode_tausc, berode_m, repose_phi, repose_relax
   integer :: f_rockfall
-  real :: rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc
+  real :: rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc, rf_fface
   integer :: f_fixation
   real :: fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank
   integer :: f_suspend
@@ -367,7 +372,7 @@ subroutine list_geomorph_read(p, list)
                            f_secflow, sec_nstar, sec_rmax, sec_vmin, &
                            f_berode, berode_kb, berode_tausc, berode_m, &
                            f_repose, repose_phi, repose_relax, &
-                           f_rockfall, rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc, &
+                           f_rockfall, rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc, rf_fface, &
                            f_fixation, fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank, &
                            f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, &
@@ -420,6 +425,7 @@ subroutine list_geomorph_read(p, list)
   rf_ftalus = list%rf_ftalus
   rf_hmin = list%rf_hmin
   rf_rc = list%rf_rc
+  rf_fface = list%rf_fface
   f_fixation = list%f_fixation
   fix_tfix = list%fix_tfix
   fix_ctau = list%fix_ctau
@@ -543,6 +549,7 @@ subroutine list_geomorph_read(p, list)
   list%rf_ftalus = rf_ftalus
   list%rf_hmin = rf_hmin
   list%rf_rc = rf_rc
+  list%rf_fface = rf_fface
   list%f_fixation = f_fixation
   list%fix_tfix = fix_tfix
   list%fix_ctau = fix_ctau

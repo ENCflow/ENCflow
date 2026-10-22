@@ -532,6 +532,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | pump_out_cell | &list_struct_pump | [Structures](structure.md) |
 | pump_q0 | &list_struct_pump | [Structures](structure.md) |
 | pump_rule | &list_struct_pump | [Structures](structure.md) |
+| rf_fface | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rf_ftalus | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rf_hc | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rf_hmin | &list_geomorph | [Sediment and landform change](geomorph.md) |
