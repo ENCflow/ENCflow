@@ -33,6 +33,10 @@
 !   勾配 S は生の z から取る(位置依存の侵食率そのもの)。
 !   侵食基準面(spl_zbase): 崖下が海なら海面以下は削らない(開いた系の
 !   基準面。sd による岩盤露出と独立に与える)。
+!   増幅の飽和(spl_ksat。§48.6): 増幅項 1 + c κ の κ を有効曲率
+!   κ̃ = κ / (1 + κ/κ_s) に置き換える(κ ≪ κ_s で従来どおり、κ ≫ κ_s で
+!   1 + c κ_s に飽和)。崖の基部(硬層の上面)のような強い凹部の増幅を有界にして
+!   段(ベンチ)を残し、深い谷頭の暴走も抑える。0 = 飽和なし(既定・旧挙動)。
 !   水平層理(spl_strata。§48.5): 層の下端標高 z_k と侵食性倍率 f_k の表
 !   (昇順)。セルの地表標高 z が属する層の f_k を E に掛ける(硬軟互層の
 !   縞・段・キャップロック)。最下層より下は 1。層は水平(標高だけの関数)で、
@@ -91,6 +95,13 @@ module subroutine init_splash(gm, g, list)
   gm%szbase = list%spl_zbase
   if (list%spl_sgrad < 0 .or. list%spl_sgrad > 1) call par_stop("list_geomorph: spl_sgrad must be 0 or 1")
   gm%ssgrad = list%spl_sgrad
+  if (list%spl_ksat < 0.0) call par_stop("list_geomorph: spl_ksat must be >= 0")
+  gm%sksat = list%spl_ksat
+  if (gm%sksat > 0.0) then
+    write(msg, '(a,es10.3,a,f8.2,a,f8.2)') "geomorph: splash curvature saturation spl_ksat = ", gm%sksat, &
+      " 1/m (max amplification: splash ", 1.0 + gm%sca * gm%sksat, ", rill ", 1.0 + gm%scb * gm%sksat
+    call par_info(trim(msg) // ")")
+  end if
 
   ! 水平層理の表(spl_strata(1:2,k) = 層の下端標高, 侵食性倍率。先頭から番兵
   ! (標高 <= -9000)の手前まで)。標高は昇順、倍率は 0 以上。未指定なら
@@ -260,6 +271,8 @@ module subroutine eval_splash(gm, p, g, s, dts)
       else
         kap = max((ze + zw - 2.0 * zc) * dx2i + (zn + zs - 2.0 * zc) * dy2i, 0.0)
       end if
+      ! 増幅の飽和(§48.6): 有効曲率 κ̃ = κ/(1 + κ/κ_s)
+      if (gm%sksat > 0.0) kap = kap / (1.0 + kap / gm%sksat)
       if (gm%ssgrad == 1) then
         ! 最急降下(既定): 8 近傍への下り勾配 (zc − zn)/距離 の最大(無効な近傍・
         ! 上り = 0)。中央差分(spl_sgrad = 0。旧挙動)は稜線の頂で左右が打ち消して

@@ -125,6 +125,9 @@ module list_geomorph
     integer :: spl_sgrad = 1         ! 勾配 S の評価(1: 最急降下 = 8 近傍への下り勾配の最大
                                      ! = 既定。稜線の頂のセルも両面の勾配で削れる。
                                      ! 0: 中央差分 = 2026-10-19 以前の挙動。§48.4)
+    real :: spl_ksat = 0.0           ! 凹地形増幅の飽和曲率 κ_s (1/m)(§48.6)。正なら有効曲率
+                                     ! κ̃ = κ / (1 + κ/κ_s) を増幅項 1 + c κ̃ に使う(κ ≪ κ_s で
+                                     ! 従来と同じ、κ ≫ κ_s で 1 + c κ_s に飽和)。0 = 飽和なし(既定)
     real :: spl_strata(1:2,1:nspstmax) = -9999.0
                                      ! 水平層理(硬軟差)の表(§48.5)。列 k = (層の下端標高
                                      ! z_k [m], 侵食性倍率 f_k)。z_k は昇順、f_k >= 0
@@ -303,6 +306,7 @@ subroutine list_geomorph_read(p, list)
   integer :: f_splash
   real :: spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, spl_lc, spl_zbase
   integer :: spl_sgrad
+  real :: spl_ksat
   real :: spl_strata(1:2,1:nspstmax)
   integer :: f_debris
   real :: db_phi
@@ -350,7 +354,7 @@ subroutine list_geomorph_read(p, list)
                            susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, &
                            f_wash, wash_kr, wash_kf, wash_tausc, &
                            f_splash, spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, &
-                           spl_lc, spl_zbase, spl_sgrad, spl_strata, &
+                           spl_lc, spl_zbase, spl_sgrad, spl_ksat, spl_strata, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
                            f_dbed, db_d50, db_erest, db_cmin, f_dbwet, db_satbed, &
                            db_mu, db_xi, db_tauy, f_dbcurv, &
@@ -421,6 +425,7 @@ subroutine list_geomorph_read(p, list)
   spl_lc = list%spl_lc
   spl_zbase = list%spl_zbase
   spl_sgrad = list%spl_sgrad
+  spl_ksat = list%spl_ksat
   spl_strata = list%spl_strata
   f_debris = list%f_debris
   db_phi = list%db_phi
@@ -536,6 +541,7 @@ subroutine list_geomorph_read(p, list)
   list%spl_lc = spl_lc
   list%spl_zbase = spl_zbase
   list%spl_sgrad = spl_sgrad
+  list%spl_ksat = spl_ksat
   list%spl_strata = spl_strata
   list%f_debris = f_debris
   list%db_phi = db_phi

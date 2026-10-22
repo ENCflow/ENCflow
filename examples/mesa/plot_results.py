@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """examples/mesa の図化と数表(事前に param_cap.txt / param_nocap.txt を実行しておく)。
   python3 plot_results.py          # キャップあり / 層理なし
-  python3 plot_results.py bench    # 中間硬層の対照(cap / bench / bench2): figs/*_bench.png
+  python3 plot_results.py bench    # 中間硬層の対照(cap / bench / bench2 / bench3): figs/*_bench.png
+  python3 plot_results.py sat      # 増幅の飽和 spl_ksat の対照(bench2 / sat / sat2 / bench3): figs/*_sat.png
   figs/maps.png      ケース × 4 時刻の陰影図
   figs/sections.png  2 つの台地の中心を通る横断(y = 50 m)の時間発展
   figs/series.png    台地面(z >= 17 m)の等価半径 sqrt(A/π) と頂高の時系列(崖の後退速度)
@@ -22,11 +23,18 @@ if MODE == "bench":
              ("param_bench2.txt", "中間硬層 z = 5〜10 m・倍率 0.02"),
              ("param_bench3.txt", "中間硬層 z = 5〜10 m・倍率 0.02、凹地形増幅なし (spl_cb = 0)")]
     SUF = "_bench"
+elif MODE == "sat":
+    CASES = [("param_bench2.txt", "硬層 5〜10 m・倍率 0.02、spl_cb = 32、飽和なし"),
+             ("param_sat.txt", "同、spl_ksat = 0.05(増幅の上限 2.6 倍)"),
+             ("param_sat2.txt", "同、spl_ksat = 0.2(増幅の上限 7.4 倍)"),
+             ("param_bench3.txt", "同、spl_cb = 0(増幅なし)")]
+    SUF = "_sat"
 else:
     CASES = [("param_cap.txt", "キャップロックあり(上 3 m 倍率 0.05、z = 8〜10 m 倍率 0.3)"),
              ("param_nocap.txt", "層理なし(対照)")]
     SUF = ""
-HARD = {"cap": [(17, 20), (8, 10)], "bench": [(17, 20), (6, 10)], "bench2": [(17, 20), (5, 10)], "bench3": [(17, 20), (5, 10)]}
+HARD = {"cap": [(17, 20), (8, 10)], "bench": [(17, 20), (6, 10)], "bench2": [(17, 20), (5, 10)], "bench3": [(17, 20), (5, 10)],
+        "sat": [(17, 20), (5, 10)], "sat2": [(17, 20), (5, 10)]}
 PLATEAUS = [(60.0, 50.0, 30.0), (150.0, 50.0, 12.0)]
 ZCAP, DX, YC = 17.0, 1.0, 50.0
 
@@ -93,7 +101,7 @@ for c in cases:
             r_eq, zmax, A = plateau_stats(z, xc, yc, R)
             ts.append(t); rs.append(r_eq); zs.append(zmax)
         ls = "-" if k == 0 else "--"
-        col = {"cap": "C0", "nocap": "C3", "bench": "C2", "bench2": "C1", "bench3": "C4"}[c["name"]]
+        col = {"cap": "C0", "nocap": "C3", "bench": "C2", "bench2": "C1", "bench3": "C4", "sat": "C5", "sat2": "C6"}[c["name"]]
         axes[0].plot(ts, rs, ls, color=col, label="%s, R₀ = %g m" % (c["name"], R))
         axes[1].plot(ts, zs, ls, color=col, label="%s, R₀ = %g m" % (c["name"], R))
         sel = [i for i in range(len(ts)) if rs[i] > 2]
@@ -141,7 +149,7 @@ fig.tight_layout(); fig.savefig("figs/sections%s.png" % SUF, dpi=110); plt.close
 
 # ベンチの指標: 大きい台地の方位平均断面で、z = 10〜17 m の軟層区間と中間硬層の上面(z ≈ 10 m)の
 # 幅 — 硬層上面 ±0.5 m にあるセルの数(台地中心から半径 45 m 以内)を時刻ごとに数える
-if MODE == "bench":
+if MODE in ("bench", "sat"):
     print("\n=== ベンチの指標: 大きい台地(中心 x = 60 m)で中間硬層の上面 ±0.5 m にあるセル数(= 段の面積 m²)===")
     for c in cases:
         ztop = 10.0
@@ -155,5 +163,8 @@ if MODE == "bench":
             t, z = c["snaps"][i]
             prof = np.array([z[(rr >= a) & (rr < a + 1)].mean() for a in np.arange(0, 46, 1.0)])
             w = lambda z1, z2: int(((prof >= z1) & (prof < z2)).sum())
-            print("%s T_geo=%.1e: %d / %d / %d / %d / %d" % (c["name"], t, w(17, 20.5), w(10.5, 17), w(9.5, 10.5), w(5, 9.5), w(1, 5)))
+            wu = max(w(10.5, 17), 1); wl = max(w(1, 9.5), 1)
+            print("%s T_geo=%.1e: %d / %d / %d / %d / %d | 上の崖の平均勾配 %.1f (角度 %.0f°), 下の崖 %.1f (%.0f°)" % (
+                c["name"], t, w(17, 20.5), w(10.5, 17), w(9.5, 10.5), w(5, 9.5), w(1, 5),
+                6.5 / wu, np.degrees(np.arctan(6.5 / wu)), 8.5 / wl, np.degrees(np.arctan(8.5 / wl))))
 print("\nfigs/maps%s.png, sections%s.png, series%s.png written" % (SUF, SUF, SUF))
