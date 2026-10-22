@@ -1358,6 +1358,13 @@ sat0=0.5、2時間)で層2無効時 np=2 ビット一致、-Og -fcheck=all np=2
 (gwflow_layer2.dat)は連番系列の全出力がビット一致(9998/9999 の
 ラン内最大値統計はラン範囲が異なるため差が出る = 既存のリスタート
 意味論どおり)、全回帰 PASS。
+- **再開時の逆向き検査(2026-10-22)**: 各層の restore_state は「有効なのに自
+  ファイルがない」だけを停止していたため、保存時に有効だった層(layer2・conduit・
+  frost)を再開時に無効にすると貯留が検査なしに失われた。m_gwflow_init の全モデル
+  無効の早期 return より前に stop_if_orphan_state を置き、dir_save に無効モデルの
+  私有ファイルがあれば停止(意図した破棄はファイル削除か別 dir_save)。restore
+  なしのランは inquire も走らない。検証: test/conduit を保存し f_gwconduit = 0 で
+  再開 → 停止、= 1 で再開 → 完走。conduit・frost・gwseep・wave・chichibu PASS。
 
 ### 16.3 井戸揚水シンク m_gwflow_pump(f_gwpump。2026-08-18 実装)
 

@@ -483,9 +483,11 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 - The soil-layer hg is part of the core state save. The bedrock layer,
   the conduit layer and frozen ground use the private files
   `gwflow_layer2.dat`, `gwflow_conduit.dat` and `gwflow_frost.dat`
-  automatically (a model enabled at restart must also have been enabled at
-  save; disabling at restart a model that was enabled at save silently drops
-  that layer's storage).
+  automatically. A model enabled at restart must also have been enabled at
+  save, and disabling at restart a model that was enabled at save (its private
+  file is in dir_save) also stops at initialisation so that its storage is not
+  dropped silently (remove the file or use another dir_save if the drop is
+  intended).
 
 **How to read and check**
 
