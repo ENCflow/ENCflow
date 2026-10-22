@@ -9,6 +9,11 @@
 !         (rf_hc)を超えた分 excess について、1 更新に relax·excess/2/8 の
 !         高さを高い側から低い側へ移す(安息角崩落 calc_repose と同じ数値形。
 !         8 方向同時でも合計は relax·excess_max/2 以下 = 行き過ぎなし)。
+!         窓の半径 r_c(rf_rc)> 0 なら、自由面の高さは「nint(r_c/Δx) セルの
+!         正方形窓内の最低点との落差 H_w」で測り(3×3 の min フィルタをハロ交換
+!         しながら反復 = MPI 安全。Δx に依らない限界高さ)、崖錐の安息角より急な
+!         エッジで H_w > H_c の超過分(そのエッジの安息角超過を上限)を移す。
+!         崖が何セルにもまたがる細かい格子でも、面全体が崩落の対象になる。
 !     (2) 崖錐: 低い側に移った体積は崖錐の厚さ ht(s%ht。出力 Ht)として積む。
 !         崖錐に覆われたセル(ht > 0)が供給側のエッジは安息角 φ_t(rf_phi)
 !         を超えた分も動く(1 エッジの移動高さは ht/8 まで = 崖錐の分だけ)。
@@ -69,6 +74,16 @@ module subroutine init_rockfall(gm, p, g, s, list)
   gm%rf%ftalus = gm_param("rf_ftalus", list%rf_ftalus, 0.3, "")
   ! 崖錐が動く最小厚さの既定 0.01 m(これより薄い崖錐はその場に留まる)
   gm%rf%hmin = gm_param("rf_hmin", list%rf_hmin, 0.01, " m")
+  ! 自由面の高さの窓(0 = 隣接セル間の段差 = 従来)
+  if (list%rf_rc < 0.0) call par_stop("list_geomorph: rf_rc must be >= 0")
+  gm%rf%npass = 0
+  if (list%rf_rc > 0.0) then
+    gm%rf%npass = max(1, nint(list%rf_rc / min(g%dx, g%dy)))
+    allocate(gm%rf%zmin(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(gm%rf%zt(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
+    call par_info("geomorph: rockfall free-face height over a window of " // itoa(gm%rf%npass) &
+                  // " cells (rf_rc = " // rtoa(list%rf_rc) // " m)")
+  end if
   ! fluvial・repose なしでも動けるように dzmax・共有スクラッチ・供給量制限係数を整える
   if (gm%dzmax <= 0.0) then
     if (list%fluv_dzmax <= 0.0) call par_stop("list_geomorph: fluv_dzmax must be > 0")
@@ -93,6 +108,42 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 窓内の最低標高(npass 回の 3×3 min フィルタ。各パスの後にハロ交換 = パス数は
+!   namelist 由来の静的量で全ランク同一 = collective 安全。無効な近傍は飛ばす)
+!----------------------------------------------------------------------
+subroutine window_min(gm, g, s)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer :: i, j, k, in, jn, n
+  real :: zm
+
+  gm%rf%zmin(:, dcp%jsh:dcp%jeh) = s%z(:, dcp%jsh:dcp%jeh)
+  do n = 1, gm%rf%npass
+    !$omp parallel do schedule(static) private(i, j, k, in, jn, zm)
+    do j = dcp%js, dcp%je
+      gm%rf%zt(:, j) = gm%rf%zmin(:, j)
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        zm = gm%rf%zmin(i,j)
+        do k = 1, 8
+          in = i + din(k)
+          jn = j + djn(k)
+          if (in < 1 .or. in > g%nx) cycle
+          if (g%x(in,jn) <= 0) cycle
+          zm = min(zm, gm%rf%zmin(in,jn))
+        end do
+        gm%rf%zt(i,j) = zm
+      end do
+    end do
+    !$omp end parallel do
+    gm%rf%zmin(:, dcp%js:dcp%je) = gm%rf%zt(:, dcp%js:dcp%je)
+    call par_halo_cell(gm%rf%zmin)
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 崩落と崖錐の移動(独立の 2 ループ。z・sd・ht のハロは呼び出し側が最新化済み)
 !----------------------------------------------------------------------
 module subroutine calc_rockfall(gm, g, s, dts)
@@ -101,10 +152,12 @@ module subroutine calc_rockfall(gm, g, s, dts)
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt, id, jd, nrock, ntal, nclip
-  real :: gq, dzc, drop, lim, exc, exct, dzm, vmove, qfac, hfac
+  real :: gq, dzc, drop, lim, exc, exct, dzm, vmove, qfac, hfac, hw
   real :: qk, fd, dvi, dvo, winv
-  logical :: okc
+  logical :: okc, window
 
+  window = (gm%rf%npass > 0)
+  if (window) call window_min(gm, g, s)
   nrock = 0
   ntal = 0
   nclip = 0
@@ -114,7 +167,7 @@ module subroutine calc_rockfall(gm, g, s, dts)
   hfac = gm%rf%relax * 0.5 / 8.0                 ! excess → 1 エッジの移動高さ
   jt = min(dcp%je + 1, dcp%jeh)
   !$omp parallel do schedule(static) reduction(+: nrock, ntal, nclip, vmove) &
-  !$omp   private(i, j, k, in, jn, id, jd, okc, gq, dzc, drop, lim, exc, exct, dzm)
+  !$omp   private(i, j, k, in, jn, id, jd, okc, gq, dzc, drop, lim, exc, exct, dzm, hw)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -135,15 +188,27 @@ module subroutine calc_rockfall(gm, g, s, dts)
             ! 高い側(供給側)が非侵食(sd <= 0)なら動かない(§84.14 と同じ扱い)
             if (drop > 0.0 .and. s%sd(id,jd) > 0.0) then
               exc = 0.0
-              ! (1) 崩落: 自由面の高さが限界 H_c を超えた分
-              if (drop > gm%rf%hc) then
-                exc = drop - gm%rf%hc
-                nrock = nrock + 1
+              lim = gm%rf%tanphi * gm%rf%dist(k)
+              if (window) then
+                ! (1') 崩落(窓): 供給側の窓内最低点との落差 H_w が限界 H_c を超え、かつこの
+                !      エッジが崖錐の安息角より急なら、超過分(安息角超過を上限)
+                if (drop > lim) then
+                  hw = s%z(id,jd) - gm%rf%zmin(id,jd)
+                  if (hw > gm%rf%hc) then
+                    exc = min(hw - gm%rf%hc, drop - lim)
+                    nrock = nrock + 1
+                  end if
+                end if
+              else
+                ! (1) 崩落: 隣接セル間の段差(自由面の高さ)が限界 H_c を超えた分
+                if (drop > gm%rf%hc) then
+                  exc = drop - gm%rf%hc
+                  nrock = nrock + 1
+                end if
               end if
               ! (2) 崖錐の安息角: 供給側に h_min 以上の崖錐があれば tanφ_t·dist を超えた分
               !     (1 エッジの移動高さは崖錐の厚さの 1/8 まで = 崖錐の分だけ動く)
               if (s%ht(id,jd) >= gm%rf%hmin) then
-                lim = gm%rf%tanphi * gm%rf%dist(k)
                 if (drop > lim) then
                   exct = min(drop - lim, s%ht(id,jd) / (8.0 * hfac))
                   if (exct > exc) then

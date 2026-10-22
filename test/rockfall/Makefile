@@ -30,7 +30,7 @@ links:
 install: all
 
 clean:
-	rm -rf result
+	rm -rf result result_rc save save_rc save_serial save_rc_serial
 	rm -f encflow encflow_mpi a.out Screen.log
 
 cleanref:
