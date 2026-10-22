@@ -1,0 +1,75 @@
+! バッドランド型の谷形成 + 海食崖の崩落(主ケース param.txt に f_rockfall を重ねた派生。README 参照)
+!   崖(30 m、56°)の面全体が窓版の限界高さ H_c = 15 m で崩落の対象になり、海セルに面した
+!   縁からは海へ崩落して系外へ出る(崖錐が波で除去される極限)。陸側に落ちた分は崖錐。
+!   台地(z = 30 m、幅 60 m)+ 急崖(tanθ = 1.5 ≈ 56°)が海(z ≤ 0)に落ちる。
+!   崖縁に白色雑音(±0.5 m、シード固定)。一様降雨 10 mm/h は全量浸透
+!   (Green-Ampt 36 mm/h > 10 mm/h)し、地表流はゼロのまま f_splash の
+!   凹地形フィードバック(spl_cb)が谷を刻む。曲率は相関長 spl_lc = 2 m で
+!   評価する(谷間隔 ≈ 5〜7 ℓ に選択。developer.md §48.3)。海面 z = 0 が
+!   侵食基準面(spl_zbase)。クリープなどの拡散項は使わない(力学的モデルでない)。
+!   実行: python3 make_terrain.py main && ./encflow param.txt(5 時間 =
+!   T_geo 9e6 s の降雨相当。約 1 分)。30 分毎(T_geo 9e5 s)に Z0001.. を出力
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 2.0
+  t0 = 0
+  tt = 18000
+  dt_disp = 3600
+  dt_file = 1800
+  dt_recrd = 36000
+  fn_geoinfo = '-'
+  fn_precip = '-'
+  fn_gwflow = '-'
+  fn_geomorph = '-'
+  fn_enc = '-'
+  dir_data = '.'
+  dir_result = 'result_rockfall'
+  f_out_z = 1
+  f_check_cfl = 0
+/
+&list_enc
+/
+&list_geoinfo
+  lx = 120
+  ly = 240
+  nx = 120
+  ny = 240
+  f_ztype = 1
+  fn_z = 'z_main.txt'
+  fn_sw = 'sw_main.txt'       ! z <= 0 の海(崖は直接海に落ちる)
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 100.0                 ! 崖高より十分厚く(基準面は spl_zbase で与える)
+  sy0 = 0.2
+/
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 10
+  prval(1:2,2) = 9999999, 10
+/
+&list_gwflow
+  f_gwvertical = 2
+  f_gwlateral = 0
+/
+&list_gwflow_greenampt
+  gw_ksv_mmh = 36.0
+/
+&list_geomorph
+  dt_geomorph = 2.0
+  morfac = 500.0
+  f_splash = 1
+  spl_kr = 0.0002
+  spl_kt = 0.05
+  spl_cb = 32.0
+  spl_h = 1.5
+  spl_dzmax = 0.2
+  spl_lc = 2.0
+  spl_zbase = 0.0
+  f_rockfall = 1              ! 崩落と崖錐(§48.7)。海セルに面した崖は海へ崩落して系外へ出る
+  rf_hc = 15.0                ! 自由面の限界高さ (m)(窓内の最低点との落差。崖 30 m の面全体が対象)
+  rf_rc = 8.0                 ! 自由面の高さを測る窓の半径 (m)
+  rf_phi = 35.0               ! 崖錐の安息角 (deg)
+  rf_ftalus = 0.1             ! 崖錐に覆われたセルの乾式侵食の倍率
+  fluv_dzmax = 0.5            ! 1 エッジ・1 更新の崩落の変動上限 (m)
+/
