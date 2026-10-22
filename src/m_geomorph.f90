@@ -126,6 +126,21 @@ module m_geomorph
     real :: vrep = 0.0               ! 崩落で移した体積 (m3 かさ。累計)
   end type
 
+  type t_rockfall
+    ! 崩落と崖錐(f_rockfall)。§48.7。崖錐の厚さは s%ht(出力 Ht)
+    real :: hc = 0.0                 ! 自由面(崖)の限界高さ H_c (m)
+    real :: tanphi = 0.0             ! tan(崖錐の安息角)
+    real :: relax = 0.5              ! 1 更新の緩和率
+    real :: ftalus = 0.3             ! 崖錐に覆われたセルの乾式侵食の倍率
+    real :: hmin = 0.0               ! 崖錐が安息角で動く最小厚さ (m)
+    real :: dist(1:4) = 0.0          ! k=1..4 の近傍セル中心間距離 (m)
+    real :: area = 0.0               ! セル面積 (m2)
+    integer :: nrock = 0             ! 崩落したエッジ数(累計。ランク局所)
+    integer :: ntal = 0              ! 崖錐の安息角で動いたエッジ数(累計)
+    integer :: nclip = 0             ! dzmax クリップ数(累計)
+    real :: vmove = 0.0              ! 移した体積 (m3 かさ。累計)
+  end type
+
   type t_fixation
     ! 定着(f_fixation)。§84.6。定着度 a は s%fx(出力 Fx)
     real :: tfix = 0.0               ! 定着時間 T_fix (s。地形時間)
@@ -321,6 +336,7 @@ module m_geomorph
     integer :: f_repose = 0          ! 安息角崩落(0:無効, 1:有効。§84.4)
     integer :: f_fixation = 0        ! 定着(0:無効, 1:有効。§84.6)
     integer :: f_wave_long = 0       ! 波浪による沿岸漂砂(0:無効, 1:有効。fn_wave。§84.15)
+    integer :: f_rockfall = 0        ! 崩落と崖錐(0:無効, 1:有効。§48.7)
     integer :: f_bedfines = 0        ! 河床の細粒分の帳簿(0:無効, 1:有効。§84.10)
     real :: bs_r = 0.0               ! 浮力比 r = ρw/ρs
     integer :: f_bsres = 1           ! 底層の抵抗則(1:Voellmy, 2:Bingham〔予約〕)
@@ -345,6 +361,7 @@ module m_geomorph
     type(t_bedslide) :: bsl          ! 動く底層(地滑り津波)
     type(t_bank) :: bnk              ! 側岸侵食・安息角崩落
     type(t_fixation) :: fix          ! 定着
+    type(t_rockfall) :: rf           ! 崩落と崖錐
     type(t_fines) :: fin             ! 河床の細粒分の帳簿
     type(t_wave) :: wav              ! 波浪による沿岸漂砂
     type(t_gmwork) :: wrk            ! 共有スクラッチ(require_work が確保)
@@ -530,6 +547,26 @@ module m_geomorph
     module subroutine dispose_wave(gm)
       type(t_geomorph), intent(inout) :: gm
     end subroutine
+    ! 崩落と崖錐(m_geomorph_rockfall。§48.7)
+    module subroutine init_rockfall(gm, p, g, s, list)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine calc_rockfall(gm, g, s, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
+    module subroutine dispose_rockfall(gm, p, g, s)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+    end subroutine
     ! 定着(m_geomorph_fixation。§84.6)
     module subroutine init_fixation(gm, p, g, s, list)
       type(t_geomorph), intent(inout) :: gm
@@ -690,6 +727,8 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_repose < 0 .or. gm%f_repose > 1) call par_stop("list_geomorph: f_repose must be 0 or 1")
   gm%f_fixation = list%f_fixation
   if (gm%f_fixation < 0 .or. gm%f_fixation > 1) call par_stop("list_geomorph: f_fixation must be 0 or 1")
+  gm%f_rockfall = list%f_rockfall
+  if (gm%f_rockfall < 0 .or. gm%f_rockfall > 1) call par_stop("list_geomorph: f_rockfall must be 0 or 1")
   gm%f_bedfines = list%f_bedfines
   if (gm%f_bedfines < 0 .or. gm%f_bedfines > 1) call par_stop("list_geomorph: f_bedfines must be 0 or 1")
   if (gm%f_fixation > 0 .and. gm%f_fluvial <= 0) then
@@ -699,7 +738,7 @@ subroutine m_geomorph_init(gm, p, g, s)
     call par_stop("list_geomorph: f_berode requires f_fluvial=1 (bank erosion feeds the bed-load path)")
   end if
   if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 &
-      .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0) then
+      .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0 .or. gm%f_rockfall > 0) then
     ! 河床の物性(共有)
     if (list%fluv_porosity < 0.0 .or. list%fluv_porosity >= 1.0) then
       call par_stop("list_geomorph: fluv_porosity must be in [0,1)")
@@ -729,7 +768,7 @@ subroutine m_geomorph_init(gm, p, g, s)
     gm%wsdstar = list%wthr_sdstar
     gm%wsdinv = 1.0 / list%wthr_sdstar
     if (.not. (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 &
-               .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0)) then
+               .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0 .or. gm%f_rockfall > 0)) then
       call setup_sd(p, g, s)                        ! 風化のみでも sd を確保・転記
     end if
   end if
@@ -755,6 +794,7 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_berode > 0 .or. gm%f_repose > 0) call init_bank(gm, p, g, list)
   ! 定着(fluvial の後。s%fx の確保・restore まで)
   if (gm%f_fixation > 0) call init_fixation(gm, p, g, s, list)
+  if (gm%f_rockfall > 0) call init_rockfall(gm, p, g, s, list)
   ! 河床の細粒分の帳簿(suspend・setup_sd の後。s%sf の確保・初期値・restore まで)
   if (gm%f_bedfines > 0) call init_fines(gm, p, g, s, list)
   ! 波浪による沿岸漂砂(fn_wave の有無で有効化。fluvial の後 = 通過幅・単位ベクトル・
@@ -954,6 +994,14 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
     call par_halo_cell(s%sd)
     call calc_repose(gm, g, s, dts)
   end if
+  ! 崩落と崖錐(§48.7): 崩落と同じ理由で z・sd・崖錐厚 ht のハロを先に最新化する
+  ! (ht は apply_splash が自帯で減らしている)。判定は全ランク同一
+  if (gm%f_rockfall > 0) then
+    call par_halo_cell(s%z)
+    call par_halo_cell(s%sd)
+    call par_halo_cell(s%ht)
+    call calc_rockfall(gm, g, s, dts)
+  end if
   if (gm%f_suspend > 0) call calc_suspend(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_wash > 0) call calc_wash(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_creep > 0) call calc_creep(gm, g, s, dts)
@@ -993,7 +1041,7 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   ! 近傍参照が、この1回の交換で賄われる(developer.md §11)
   call par_halo_cell(s%z)
   if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 .or. gm%f_wthr > 0 &
-      .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0) then
+      .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0 .or. gm%f_rockfall > 0) then
     call par_halo_cell(s%sd)
   end if
   ! s%hs のハロは swflow_enc のステップ頭交換が担う(移流の直前に最新化)
@@ -1106,6 +1154,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (gm%f_bedslide > 0) call dispose_bedslide(gm, p, g, s)
   ! 定着度 a・基準高の私有 save と台帳報告(契約5)
   if (gm%f_fixation > 0) call dispose_fixation(gm, p, g, s)
+  if (gm%f_rockfall > 0) call dispose_rockfall(gm, p, g, s)
   ! 河床の細粒分 sf の私有 save と台帳報告(契約5)
   if (gm%f_bedfines > 0) call dispose_fines(gm, p, g, s)
   if (gm%f_wave_long > 0) call dispose_wave(gm)

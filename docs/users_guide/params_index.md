@@ -150,6 +150,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | evap_monthly | &list_evap | [降雨・気象](forcing.md) |
 | f_adaptive_runge | &list_enc | [浅水流計算](swflow.md) |
 | f_advection_donor | &list_enc | [浅水流計算](swflow.md) |
+| f_rockfall | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_repose | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_scalar_scheme | &list_enc | [浅水流計算](swflow.md) |
 | f_advection_scheme | &list_enc | [浅水流計算](swflow.md) |
@@ -535,6 +536,11 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | pump_out_cell | &list_struct_pump | [構造物](structure.md) |
 | pump_q0 | &list_struct_pump | [構造物](structure.md) |
 | pump_rule | &list_struct_pump | [構造物](structure.md) |
+| rf_ftalus | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| rf_hc | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| rf_hmin | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| rf_phi | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| rf_relax | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | repose_phi | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | repose_relax | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | rn0 | &list_geoinfo | [地理情報](geoinfo.md) |

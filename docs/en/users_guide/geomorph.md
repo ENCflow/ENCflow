@@ -725,6 +725,47 @@ numerical noise.
 
 **Outputs for this section**: the sediment of the mixture in `Hs0001...`, the run maximum of the flow depth h + hs in `D9999`, the fluid force in `F9999`, the safety factor in `Fs0001...` and its run minimum `Fs9999` (`f_out_fs=1`, f_slide=1 or 2). The post-failure landform in `Z0001...`, the run minimum safety factor in the end line "slide min Fs". Build hazard maps with f_slide=2 ([Output and monitoring](#output-and-monitoring)).
 
+## Rockfall and talus (f_rockfall)
+
+The cliffs of cap-rock mesas and buttes retreat with a vertical free face
+because the undercut cap collapses and the fallen debris forms a talus that
+protects the weak layer at the foot. A raster (one z per cell) cannot hold an
+overhang, so three rules approximate the process (developer.md sec. 48.7):
+
+1. **Collapse**: the part of the height difference between neighbouring cells
+   (the free-face height) that exceeds the critical height `rf_hc` is moved from
+   the high to the low cell with the same numerical form as the angle-of-repose
+   avalanching (relax x excess / 2 / 8 per update; conservative).
+2. **Talus**: the volume arriving at the low cell is booked as talus thickness
+   `ht` (output `Ht0001...`). Edges whose donor cell is talus-covered also move the
+   excess over the talus repose angle `rf_phi` (only the talus itself).
+3. **Protection**: the dry-slope erosion `f_splash` of a talus-covered cell
+   (ht > 0) is multiplied by `rf_ftalus` (> 0), and the detached depth is taken from
+   the talus first (the material below is exposed once the talus is gone). Fallen
+   debris is taken to cover the cell it lands on. Talus spreads at its repose angle
+   only where it is at least `rf_hmin` thick.
+
+The removal rate of the talus (`rf_ftalus` x dry erosion) controls the cliff
+retreat rate (talus-limited retreat).
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| rf_hc | none (required) | Critical free-face height H_c (m); a structural quantity (rock-mass strength) |
+| rf_phi | 35 | Repose angle of the talus (deg) (rock-debris talus 30-40 deg) |
+| rf_relax | 0.5 | Fraction of the excess height relaxed per update (0-1) |
+| rf_ftalus | 0.3 | Dry-erosion factor of talus-covered cells (> 0; the talus removal rate controls the cliff retreat rate. 0 is not allowed: a cell with a trace of talus would never erode again) |
+| rf_hmin | 0.01 | Minimum talus thickness h_min (m) that spreads at the repose angle; thinner talus stays in place (prevents traces of talus from scattering over the slope) |
+
+The change per edge and update is capped by `fluv_dzmax` (at the flux stage, so
+conservation holds; give `fluv_dzmax` even without f_fluvial). The talus thickness
+is restored automatically from the private file `geomorph_rockfall.dat`.
+Verification: [test/rockfall](../../../test/rockfall/) (collapse of a vertical
+plateau: conservation, final height differences <= H_c, talus budget). Example:
+[examples/mesa](../../../examples/mesa/) (retreat of cap-rock cliffs with talus).
+
+**Outputs of this section**: talus thickness `Ht0001...`, terrain `Z0001...`; the
+final "rockfall moved ..." line gives the moved volume and the number of active edges.
+
 ## Moving bed layer / landslide tsunami (f_bedslide)
 
 Driving head, buoyancy, Voellmy speed and flux distribution: [supplement](massflow.md#5-moving-bed-layer-f_bedslide).
