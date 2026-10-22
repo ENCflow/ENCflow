@@ -41,6 +41,12 @@
   !wave_gamma = 0.78        ! breaker index gamma = H_b / h_b (surf zone = depth h <= H_b/gamma)
   !wave_smooth = 2          ! smoothing radius of the depth used for the shoreline orientation (cells, 1 or 2)
   !wave_smin = 1.0e-3       ! lower bound of the bed slope that defines a shoreline orientation (flatter = excluded)
+  !wave_lsm = 0.0           ! smoothing length sigma (m) of the depth for the shoreline orientation. > 0 replaces the
+                            !   cell-radius kernel wave_smooth by a multi-pass kernel (normalized over wet cells, N = 4(sigma/dx)^2
+                            !   passes). Use 2 dx or more, up to about a quarter of the surf-zone width: the cut-off wavelength
+                            !   of the high-angle instability then no longer depends on the grid (§84.15 stage 3 (a), test/wave_shore)
+  !wave_bslp = 5.0          ! with wave_lsm > 0: coefficient beta of the local slope term (flux += beta q grad(h - h_s); smooths
+                            !   irregularities shorter than sigma)
   !wave_vmax = -1.0         ! river-mouth rule: cells with |V| above this (m/s) are neither a wave source nor surf zone.
                             !   negative = off (default). Required at river mouths with a mobile bed; put it between
                             !   the river's flow speed and the speed on the shoreline band (e.g. 0.5 for 0.8 vs 0.3 m/s)

@@ -955,7 +955,9 @@ phi0) in `fn_wave` (&list_wave) and every landform update does the following.
 | wave_clock | 1 | clock of the series: 1 = morphological time (hydraulic time x morfac: a wave climate), 0 = hydraulic time (a storm whose duration is hydraulic and acts morfac times longer on the bed) |
 | wave_k2 | 0.34 | coefficient K2 of the deep-water CERC formula (m^{3/5} s^{-6/5}); K = 0.39, gamma = 0.78 |
 | wave_gamma | 0.78 | breaker index gamma |
-| wave_smooth | 2 | smoothing radius of the depth for the shoreline orientation (cells, 1 or 2) |
+| wave_smooth | 2 | smoothing radius of the depth for the shoreline orientation (cells, 1 or 2; when wave_lsm = 0) |
+| wave_lsm | 0 (cell-radius kernel) | smoothing length σ (m) of the depth for the shoreline orientation; > 0 switches to a multi-pass kernel normalized over wet cells. 2Δx or more, up to about a quarter of the surf-zone width. **Recommended** |
+| wave_bslp | 5 | with wave_lsm > 0: coefficient β of the local slope term (smooths irregularities shorter than σ) |
 | wave_smin | 1e-3 | lower bound of the bed slope that defines a shoreline orientation |
 | wave_vmax | −1 (off) | river-mouth rule: cells with \|V\| above this (m/s) are neither a wave source nor surf zone (shadow). Required at river mouths with a mobile bed |
 
@@ -978,6 +980,17 @@ shoreline orientation treats them as land (depth 0). If you use a sea mask,
 place it well offshore of the breaking depth h_b/γ so that its edge does not
 fall inside the smoothing radius wave_smooth of the surf zone (the edge would
 be read as a shoreline).
+**Give the smoothing length `wave_lsm`** (the default 0 keeps the cell-radius-2
+kernel for compatibility). Under high-angle waves (incidence above 45°) the
+shoreline roughness grows, which is physical, but the only length that selects
+the growing wavelength is the smoothing cut-off, so the cell-radius kernel lines
+up bars at the grid spacing. With σ given as a length of 2Δx or more the cut-off
+no longer depends on the grid and the straight-shoreline linear theory is
+reproduced (test/wave_shore: with σ = 2Δx the low-angle decay rate is 1.05 and
+the high-angle growth rate 0.86 of theory, grid-scale power 30 % → 6 %). Use
+2Δx up to about a quarter of the surf-zone width W_b. Irregularities shorter than
+σ are smoothed by the local slope term β (`wave_bslp`, default 5).
+
 **`wave_vmax` is required at river mouths with a mobile bed**: once the
 river's flow depth exceeds h_b the channel itself becomes a wave source,
 longshore transport acts on bars and riffles inside the channel and the run
