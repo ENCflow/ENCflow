@@ -188,9 +188,14 @@ stock `wst` is not written as a field.
   when the area factor is 1 (conversion in [the explanation](driftwood_models.md) §3).
 - In a closed domain without dam capture the sum of the current stores
   `vol_stock + vol_float + vol_deposit` conserves the initial volume (up to
-  numerical error). Account separately for outflow and dam capture.
-  Recruitment, deposition and refloat are internal transfers; adding their
-  cumulative values to the current stores double-counts.
+  numerical error). Driftwood that leaves into the sea cells of the sea
+  mask (fn_sw) or through an edge boundary disappears outside the system
+  and has no column in `driftwood.csv`, so obtain it as the residual
+  initial volume − sum of the current stores − `to_dam_m3` (in the
+  storm-surge timber-yard example the timber carried offshore leaves the
+  system by this route). Recruitment, deposition and refloat are internal
+  transfers; adding their cumulative values to the current stores
+  double-counts.
 
 ## Combinations and restrictions
 

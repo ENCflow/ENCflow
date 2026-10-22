@@ -137,6 +137,10 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 | Swi9999 | automatic | maximum over the computed interval of the SWI after each update (mm) |
 | Swit9999 | automatic | time of that maximum (min) |
 
+No calculation is done on cells of the sea mask (fn_sw); the sea area of
+Swi and Swi9999 is 0 (the same treatment of the sea area as in
+[Input and output formats](io.md)).
+
 **Ledgers and log**
 
 - No SWI-specific ledger or log column (it is a diagnostic and not part

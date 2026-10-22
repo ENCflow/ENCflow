@@ -109,7 +109,7 @@ In practice give the stock map and the thresholds:
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_bd | 1 | 0 disables temporarily while keeping the file |
-| bd_stock0 | (0.3 on building cells) | uniform building stock (m³/m², all cells). Exclusive with fn_bdstock. **If neither is given, 0.3 m³/m² is placed only on cells with buildings (gv < 1)** (the run stops if there are no such cells, e.g. without fn_gv) |
+| bd_stock0 | (0.3 on building cells) | uniform building stock (m³/m², all cells except the sea mask and outside the domain). Exclusive with fn_bdstock. **If neither is given, 0.3 m³/m² is placed only on cells with buildings (gv < 1)** (the run stops if there are no such cells, e.g. without fn_gv) |
 | fn_bdstock | — | building stock (destructible volume) map (m³/m², same matrix format as the terrain). Fold the wooden fraction into it (a cell with 30% wooden houses gets 30% of a fully wooden cell) |
 | fn_bdfrac | — | map of the destructible share fw (0-1) of the building footprint. Default 1. Bounds porosity feedback at gv0 + (1−gv0)·fw; does not directly multiply stock or the destruction rate |
 | bd_dlog | 0.3 | representative debris size (m). The default is the size class of wooden structural members (posts and beams; empirical) |
@@ -207,9 +207,13 @@ separately taken maxima of moving and deposited debris.
   per **effective** area (conversion in [the explanation](bldgdebris_models.md) §3).
 - In a closed domain without dam capture the sum of the current stores
   `vol_stock + vol_float + vol_deposit` conserves the initial volume (up to
-  numerical error). Account separately for outflow and dam capture.
-  Destruction, deposition and refloat are internal transfers; adding their
-  cumulative values to the current stores double-counts.
+  numerical error). Debris that leaves into the sea cells of the sea mask
+  (fn_sw) or through an edge boundary disappears outside the system and
+  has no column in `bldgdebris.csv`, so obtain it as the residual
+  initial volume − sum of the current stores − `to_dam_m3` (in the tsunami
+  example the debris carried offshore by the drawdown leaves the system by
+  this route). Destruction, deposition and refloat are internal transfers;
+  adding their cumulative values to the current stores double-counts.
 - Read the damage-ratio map from `Bs9998` (last frame), the debris reach
   from `Bd9999`, and the damage indices `Fd9999` (with debris) and `F9999`
   (water and sediment only) side by side.

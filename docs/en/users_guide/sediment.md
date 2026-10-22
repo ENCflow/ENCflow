@@ -55,6 +55,15 @@ default 1.65):
 representative value of the Shields curve[^shields36] for coarse sand to
 gravel.
 
+**Boundary with the sea mask.** The terrain is not updated on the sea
+cells of the sea mask (fn_sw), and bedload, creep and the moving bed layer
+do not cross the edges against sea cells (a wall). Suspended sediment and
+the solid fraction of debris flows disappear outside the system once they
+leave into a sea cell (inflow from the sea is clear water). Represent any
+area where the sea bottom must be solved as ordinary cells + an initial
+water level rather than with the sea mask ("The sea mask and the fate of
+sediment" in [Sediment and landform change](geomorph.md)).
+
 ## 2. Hillslope creep (f_creep)
 
 ```math

@@ -38,6 +38,11 @@ grid. Integrated quantities are unaffected. A groundwater mass pool $`c_g`$
 pools and retention-pond pools exchange with the surface water. All
 sources (point g/s, areal and distributed kg/ha/day, rain concentration
 mg/L, boundary inflow concentration) are additive and can be superposed.
+The sea cells of the sea mask (fn_sw) hold no mass (a sea area with the
+initial concentration is zeroed) and the inflow from the sea onto land is
+clean water. Mass that leaves through sea cells or edge boundaries has no
+column in the ledger and is treated as the budget residual (the same
+treatment as suspended sediment; [Sediment and morphology](geomorph.md)).
 
 ## 2. First-order decay
 
@@ -132,8 +137,12 @@ R = 1 + \frac{\rho_b K_d}{\theta}
 The expression of $`R`$ is the standard retardation factor of linear
 equilibrium sorption[^freeze79], estimated in pre-processing from the dry
 bulk density $`\rho_b`$ and the effective porosity $`\theta`$ (10²–10⁴ for
-heavy metals and Cs). Decay also acts on the groundwater pool. Transport
-inside the weathered bedrock layer and the conduit layer is not supported.
+heavy metals and Cs). Decay also acts on the groundwater pool. Only the
+lateral flow and the saturation-excess seepage of layer 1 carry mass;
+percolation into the weathered bedrock layer, pumping and infiltration
+water into the conduit layer move water only and the mass stays in layer 1
+(the layer-1 concentration becomes apparently higher, and the return water
+through layer 2 or the conduits is clean water).
 Verification: [test/gwseep](../../../test/gwseep/README.md) (the cycle
 infiltration → lateral flow → seepage → re-infiltration closes the ledger
 to_gw − seep = mass_gw; $`R`$ = 1e12 immobilises the mass).

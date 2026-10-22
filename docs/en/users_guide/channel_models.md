@@ -16,8 +16,10 @@ is in developer.md §17, §18 and §26 (in Japanese).
 ## 1. Levees (virtual walls)
 
 A virtual wall that does not widen the cells is erected on every edge
-(diagonals included) between channel cells and landside cells. The crest
-is set from the channel-side cell's value with the following datum.
+(diagonals included) between channel cells and landside cells. No wall is
+erected on edges against the sea cells of the sea mask (fn_sw) (the river
+mouth opens automatically; [Channels](channel.md)). The crest is set from
+the channel-side cell's value with the following datum.
 
 | f_bank_datum | crest $`z_c`$ |
 |---|---|
@@ -113,7 +115,12 @@ move to a resolved channel.
   least 2 × the cell size (e.g. 9999). The same holds together with the
   section shape σ (σ acts on the fluxes and the stage through the
   rectangular-equivalent depth, and the width is used only for the
-  plan-area fraction of storage and the conveyance cap; changed
+  plan-area fraction of storage and the conveyance cap. The conveyance
+  cap q = min(W/face length, 1) applies to channel-channel edges, to the
+  faces of open edge boundaries and to the faces against the sea cells of
+  the sea mask (fn_sw) (the river mouth of a width channel = a channel of
+  the same width continuing into the sea), and not to channel-landside
+  edges (developer.md §18); changed
   2026-10-04, before which the effective width was "width × σ(h)" and the
   actual width mattered at low flow).
 - **Advection.** `f_channel_advection = 0` drops the advection term on

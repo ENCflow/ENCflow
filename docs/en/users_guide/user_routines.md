@@ -187,8 +187,10 @@ Make such cells valid in the mask file instead.
   Use `parameter` for true constants and an executable assignment for
   computed values (`pi = acos(-1.0)`).
 - The elevation of sea cells (`g%sw > 0`) is forced to 0 when the file is
-  read. If the hook overwrites z there, the new value is used; leave sea
-  cells alone unless that is intended.
+  read. If the hook overwrites z there, the new value is used only when
+  there is no tide (fn_tide); with fn_tide, the initial application of
+  the tide overwrites it with z = tide − hsea0. Leave sea cells alone
+  unless that is intended.
 - Keep depths non-negative (`max(..., 0.0)`). Decide whether the
   initial-field hook *replaces* or *adds to* the default field
   (`wave_hump` adds: `s%h = max(s%h + η − z, 0)`).

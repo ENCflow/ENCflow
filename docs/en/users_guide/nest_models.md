@@ -193,7 +193,12 @@ blocks beyond both band and sponge contribute to child-to-parent replacement.
   only, and dries the parent cell if the parent's ground is above the mean
   level (for regions straddling the coastline; the water volume is not
   strictly conserved). nest_fb = 1 is a plain average of depth and discharge
-  that conserves volume exactly (for fully wet regions).
+  that conserves volume exactly (for fully wet regions). The coastline
+  here is the wet/dry boundary of a solved sea (ordinary cells with sw=0).
+  Sea-mask (fn_sw) cells are never the target of band writing or
+  replacement, and a configuration that includes them in the band or in
+  the replaced cells is stopped at initialization ("Conditions on a child
+  grid" in [Nesting](nest.md)).
 - Parent cells whose effective area fraction is not 1 (subgrid channel width
   or porosity) receive the child's true water amount converted back to a
   rectangular depth with the parent's area fraction (consistency of channel

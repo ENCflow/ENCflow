@@ -2,8 +2,11 @@
 """メサ・ビュート実験の地形(z.txt): 平地(z = 0 = 基準面)に高さ 20 m の台地を 2 つ置く。
 台地の縁は急崖(tanθ = 2 ≈ 63°)で、縁の位置に白色雑音(±0.5 m、シード固定)を与える。
   大: 半径 30 m(メサ)、小: 半径 12 m(ビュート候補)。領域 200 × 100 m、Δx = 1 m。"""
+import sys
 import numpy as np
 LX, LY, DX, HP, TANB = 200.0, 100.0, 1.0, 20.0, 2.0
+if len(sys.argv) > 2 and sys.argv[1] == "--dx":      # python3 make_terrain.py --dx 4 → z_dx4.txt
+    DX = float(sys.argv[2])
 PLATEAUS = [(60.0, 50.0, 30.0), (150.0, 50.0, 12.0)]   # (xc, yc, 半径)
 rng = np.random.default_rng(20261022)
 nx, ny = int(LX / DX), int(LY / DX)
@@ -18,5 +21,6 @@ for xc, yc, R in PLATEAUS:
     nb = rng.uniform(-0.5, 0.5, 360)
     Re = R + nb[((np.degrees(th) + 360) % 360).astype(int)]
     z = np.maximum(z, np.clip(HP - TANB * (r - Re), 0.0, HP))
-np.savetxt("z.txt", z, fmt="%.6f")
-print("z.txt: %d x %d, plateau cells (z >= 19 m) = %d" % (nx, ny, int((z >= 19).sum())))
+fn = "z.txt" if DX == 1.0 else "z_dx%g.txt" % DX
+np.savetxt(fn, z, fmt="%.6f")
+print("%s: %d x %d (dx = %g m), plateau cells (z >= 19 m) = %d" % (fn, nx, ny, DX, int((z >= 19).sum())))

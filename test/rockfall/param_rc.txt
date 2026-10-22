@@ -1,0 +1,59 @@
+!======================================================================
+! rockfall(窓版): 自由面の高さを窓内の最低点との落差で測る rf_rc = 3 m の検定(developer.md §48.7)
+!   終端では、崖錐の安息角より急なエッジを持つセルの窓内落差が H_c 以下になる。
+!   平地の上の四角い台地(一辺 20 m、高さ 10 m、垂直な自由面)。水なし・降雨なし。
+!   自由面 10 m が限界高さ H_c = 4 m を超えるので崩落し、落下した分が崖錐
+!   (安息角 35°)として裾に広がる。検定(Check_rockfall.py):
+!     (1) 土砂体積保存 Σ(z − z0) = 0、(2) 終端の最大高さ差(8 近傍)<= H_c、
+!     (3) 崖錐の厚さ ht >= 正味の堆積 (z − z0)^+(崖錐の収支)、(4) z と sd の共動更新。
+!   地形更新 0.1 s 毎 × 600 回(緩和率 0.5)。dzmax = 0.5 m。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 60
+  dt_disp = 10
+  dt_file = 60
+  dt_recrd = 60
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_result = 'result_rc'
+  dir_save = 'save_rc'
+  f_state_save = 1
+  f_check_cfl = 0
+  f_out_z = 1
+/
+&list_enc
+/
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 水なし
+/
+&list_geoinfo
+  lx = 41.0
+  ly = 41.0
+  nx = 41
+  ny = 41
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 20.0                ! 台地の高さより厚く(全層が可動)
+  sy0 = 0.2
+/
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_rockfall = 1            ! 崩落と崖錐のみ(掃流砂・乾式侵食なし)
+  rf_hc = 4.0               ! 自由面の限界高さ (m)
+  rf_rc = 3.0               ! 自由面の高さを測る窓の半径 (m)(3 セルの正方形窓。Δx に依らない形)
+  rf_phi = 35.0             ! 崖錐の安息角 (deg)
+  rf_relax = 0.5            ! 1 更新の緩和率
+  rf_ftalus = 0.3           ! 崖錐の侵食性の倍率(本テストでは乾式侵食なしのため不使用)
+  fluv_porosity = 0.4
+  fluv_dzmax = 0.5          ! 1 エッジ・1 更新の変動上限 (m)
+/

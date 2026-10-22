@@ -261,7 +261,7 @@ required.**
 | snow_t_rain | 2.0 | Temperature threshold above which all precipitation is rain (deg C). In between, rain and snow mix linearly |
 | snow_t_melt | 0.0 | Temperature threshold for snowmelt (deg C) |
 | snow_ddf | 4.0 | Degree-day factor (mm/degC/day). When unspecified the default is adopted and printed with "(default)" (basis in [the explanation](forcing_models.md) §4) |
-| snow_swe0 / fn_snow_swe0 | - / "" | Initial snow water equivalent (mm) (uniform value / distribution; mutually exclusive; omit both to start without snow) |
+| snow_swe0 / fn_snow_swe0 | - / "" | Initial snow water equivalent (mm) (uniform value / distribution; mutually exclusive; omit both to start without snow; cells of the sea mask fn_sw are zeroed) |
 
 Post-interception precipitation is partitioned into rain and snow (all
 snow at or below `snow_t_snow`, all rain at or above `snow_t_rain`, a
@@ -333,6 +333,10 @@ Temperature, interception and evapotranspiration are not written as fields.
   In a closed domain it equals the increase of S_total × number of valid
   cells × A plus `ev_total_m3` of evap.csv, apart from the interception
   loss, which is the difference.
+- None of precipitation, interception, evapotranspiration or snow acts on
+  the cells of the sea mask (fn_sw) (Pr is 0 over the sea, SWE stays 0,
+  and no sea-surface evaporation is computed). The number of valid cells
+  in the check above also excludes the sea cells ([Tide](tide.md)).
 - Check the rain/snow split by placing Sw next to Pr (between the
   thresholds snow_t_snow / snow_t_rain the precipitation is split). Read
   snowmelt as the decrease of Sw matched by the increase of S_surf; the

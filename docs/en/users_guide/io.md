@@ -297,6 +297,12 @@ three series, `0000` (start), `0001-` (regular) and `9998` (final state);
 H9999. Automatic and riding fields have no run statistics except where
 stated (Wd9999, Swi9999, ...). If you need the run maximum of such a
 field, refine `dt_file` and compute it in post-processing.
+Cells of the sea mask (fn_sw) are excluded from the period statistics,
+and the sea area of the 9999 series is 0. In the state fields (H, E, Z)
+the sea area holds the boundary representation of the tide (H = hsea0,
+E = tide level, Z = tide level − hsea0), not the sea depth or the seabed
+([Tide](tide.md)). Restrict aggregates such as the inundated area to the
+land, X0000 = 1 (as in the inundated-area row of the quick reference).
 
 ### Quick reference: what you want to see and how to get it
 

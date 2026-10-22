@@ -255,13 +255,13 @@ flat-bed one-layer model).
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| f_rivermouth_drop | 0 | free overfall from the river mouth to the sea (legacy scheme; cannot be combined with the tide feature fn_tide -- using [tide](tide.md) + [boundary conditions](boundary.md) is now recommended) |
+| f_rivermouth_drop | 0 | legacy scheme that forces, on the edges between channel cells (fn_rw) and sea cells (fn_sw), the same critical-flow drop as free outflow (edge boundary type 1). Meant for a sea without fn_tide (z=0, sea surface fixed at its initial-condition value); combined with the tide fn_tide the run is stopped at initialisation with an error (it would ignore the backwater of high tide). Using [tide](tide.md) + [boundary conditions](boundary.md) is now recommended |
 
 ## Recommended values by pattern
 
 | Type | Recommended settings | Why |
 |---|---|---|
-| Tsunami / storm-surge run-up | Defaults (p_adprunge_thresh 1.2-1.5); f_check_cfl=1 to watch Cn | The default stabilization handles both the front over dry ground and the reflected waves |
+| Tsunami / storm-surge run-up | Defaults (p_adprunge_thresh 1.2-1.5); f_check_cfl=1 to watch Cn. How to give the sea: for a tsunami, a solved sea of ordinary cells (sw=0) with a long-wave radiation boundary on the seaward edge ([boundary conditions](boundary.md)); for a storm surge, a sea mask + tide that forces the sea level ([tide](tide.md), [geographic information](geoinfo.md)) | The default stabilization handles both the front over dry ground and the reflected waves |
 | Steep mountain floods, debris flows | f_gravity_correction=1 (default); dt such that Cn_max stays below about 0.5 | Corrects the slope-direction gravity term. Sediment is in [landform change](geomorph.md) |
 | River low flow, velocity distribution of gentle flow | f_diffusion_term=2 (no coefficient needed) | Flow-scaled eddy viscosity smooths the transverse velocity distribution |
 | Urban inundation (building clusters) | Defaults + fn_gv/fn_bb ([geographic information](geoinfo.md)); cm/cd/kk at the defaults | Storage loss and drag are expressed on the geographic side |
@@ -291,7 +291,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   V_max` (with groundwater, snow or glaciers S splits into S_surf / S_grnd
   / S_total; `f_disp_*` selects the displayed columns). S is the
   domain-mean storage depth (m; with the gv conversion and pond/dam
-  storage, sea cells excluded), `Runge` the fraction of edges recomputed
+  storage, sea cells excluded; `h_max` likewise), `Runge` the fraction of edges recomputed
   by the adaptive Runge-Kutta, `ex_flux` the count of suppressed excessive
   outflow fluxes, `Cn_max` the domain maximum Courant number.
 

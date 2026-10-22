@@ -48,8 +48,9 @@ mpirun -np 4 ./encflow_mpi param.txt
 
 **(a) MPI ownership and halos.** The example splits 10 columns × 12 rows across
 three ranks. With the same active-cell count in each row, rank 0 owns rows 1–4,
-rank 1 owns 5–8, and rank 2 owns 9–12. Actual band boundaries use the active-cell
-count per row in the active window as the weight, retaining at least two rows
+rank 1 owns 5–8, and rank 2 owns 9–12. Actual band boundaries use the number of
+cells inside the domain mask per row of the active window (including the sea
+cells of the sea mask) as the weight, retaining at least two rows
 per rank. Child nests align band boundaries with row blocks corresponding to
 parent cells. The row and rank counts in the figure are not recommendations.
 
@@ -111,4 +112,5 @@ mode and precision switches and prevents inconsistencies.
 
 - [test/wave](../../../test/wave/): minimal serial and MPI regression case, with `Run.sh` and `Run_MPI.sh N` examples.
 - [test/chichibu](../../../test/chichibu/): serial and MPI runs using real terrain, a catchment mask and a channel mask.
+- [test/tide](../../../test/tide/): serial and MPI runs with a sea mask and a tide boundary (np = 1, 2, 4 are bit-identical to the serial run; each rank applies the tide to the sea cells of its own band, with no communication).
 - [test/README.en.md](../../../test/README.en.md): common execution and comparison procedures. Consult each case's README and scripts for the quantities compared and tolerances.

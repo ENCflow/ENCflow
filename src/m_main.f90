@@ -293,11 +293,14 @@ subroutine init_instance(fn_param, align)
                                             ! より前、s%dw_active・s%dw_sg を読むため
                                             ! driftwood init より後に。§63)
     call m_gwflow_init(gw, p, g, s)         ! gwflow を初期化(fn_gwflow 指定時のみ有効)
+    call m_tide_init(ti, p, g, s)           ! tide を初期化(state より後・swflow より
+                                            ! 前: 海セルの初期状態(z, h)をセットする。
+                                            ! saltwater init より前: 海セルの hss = h を
+                                            ! 潮位適用後の h = hsea0 で揃えるため。§47.4)
     call m_saltwater_init(sl, p, g, s, gw%lat, gw%lay1)  ! saltwater を初期化(fn_salt 指定時のみ
                                             ! 有効。s%salt_active を立てるため swflow init
-                                            ! より前、層1側方の係数取得のため gwflow より後)
-    call m_tide_init(ti, p, g, s)           ! tide を初期化(state より後・swflow より
-                                            ! 前: 海セルの初期状態(z, h)をセットする)
+                                            ! より前、層1側方の係数取得のため gwflow より後、
+                                            ! 海セルの初期 hss のため tide init より後)
     call m_swflow_init(sw, p, g, b, s)      ! swflow を初期化
     call m_meteo_init(mt, p, g, s)          ! meteo を初期化(fn_meteo 指定時のみ有効。
                                             ! 基準標高の既定に state の z を使うため後に)
@@ -1397,6 +1400,7 @@ subroutine init_resultdir(p)
   call sysdep_copy_to_dir(p%fn_precip, p%dir_result)
   call sysdep_copy_to_dir(p%fn_reservoir, p%dir_result)
   call sysdep_copy_to_dir(p%fn_tide, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_wave, p%dir_result)
   call sysdep_copy_to_dir(p%fn_boundary, p%dir_result)
   call sysdep_copy_to_dir(p%fn_structure, p%dir_result)
   call sysdep_copy_to_dir(p%fn_record, p%dir_result)
