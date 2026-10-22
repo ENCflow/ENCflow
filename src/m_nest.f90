@@ -292,6 +292,20 @@ subroutine nest_setup_child(nt, c, pp, gp, sp, pc, gc, sc, bc)
       call par_stop(trim(tag)//": child t0/tt must match the parent (same t0, nt_child = nt_parent*r_t)")
     end if
     if (pc%f_gridsystem /= 0) call par_stop(trim(tag)//": nesting requires ENC (f_gridsystem=0)")
+    ! 再開は格子ごと(ルートの f_state_restore は子へ伝播しない。§72)。片方だけの
+    ! 再開・再開ステップの不整合・save ディレクトリの共有を停止する(2026-10-22)
+    if ((pp%f_state_restore > 0) .neqv. (pc%f_state_restore > 0)) then
+      call par_stop(trim(tag)//": f_state_restore must be set in every grid's parameter file " // &
+                    "(the root's setting is not propagated to the children)")
+    end if
+    if (pp%f_state_restore == 1 .and. sc%it0 /= sp%it0 * n%rt) then
+      call par_stop(trim(tag)//": restored step mismatch (child it0 = "//itoa(sc%it0)// &
+                    ", parent it0 x r_t = "//itoa(sp%it0 * n%rt)//"): restore every grid from saves of the same time")
+    end if
+    if ((pp%f_state_save > 0 .or. pc%f_state_save > 0 .or. pp%f_state_restore > 0) .and. &
+        trim(pp%dir_save) == trim(pc%dir_save)) then
+      call par_stop(trim(tag)//": dir_save must differ between parent and child ("//trim(pc%dir_save)//")")
+    end if
     ! 寸法と足元
     if (mod(gc%nx, r) /= 0 .or. mod(gc%ny, r) /= 0) then
       call par_stop(trim(tag)//": child nx, ny must be multiples of r")

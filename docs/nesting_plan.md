@@ -414,7 +414,8 @@ advance(g):
   置換した体積の収支)を加える。
 - restart は格子ごとの save ディレクトリに従来の形式で保存し、
   restore も格子ごと(各格子の f_state_restore。**現状注記 2026-10-22**:
-  ルートの指定は子へ伝播しない。test/nest_identity の rsB は両方に指定)。m_nest 自体に私有状態はない
+  ルートの指定は子へ伝播しない。test/nest_identity の rsB は両方に指定。片方
+  だけの再開・it0 の不一致・dir_save の共有は nest_setup_child が停止する)。m_nest 自体に私有状態はない
   (窓の 2 枚は毎ステップ再構築)。save_version の更新は不要。
 
 ## 4. 入力形式

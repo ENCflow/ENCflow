@@ -10797,6 +10797,13 @@ fn_* の本体機能にしたもの。断層津波の発生機構(GeoClaw の dt
   湿潤域全体が ULP 差になる(§79 の検証で観察。nest_twin wave の Log 不一致・
   nest_identity two-way の保存ファイル不一致はこれ)。-O0 で検証するなら
   make.inc の FFLAGS を変えて本体とドライバの両方を組み直す。
+- **再開の格子間整合検査(2026-10-22)**: 再開は格子ごと(各 t_encflow が自分の
+  f_state_restore で restore_state を呼ぶ)で、ルートの指定は子へ伝播しない。
+  nest_setup_child に (1) 親子で f_state_restore の有無が異なる、(2) モード 1 で
+  子の it0 ≠ 親の it0 × r_t、(3) 保存または再開があるのに親子の dir_save が同じ、
+  の 3 つの par_stop を追加(dt・t0 の検査の直後)。検証: rsB の子から
+  f_state_restore を外す → (1) で停止、leg A の子の dir_save を親と同じにする →
+  (3) で停止、nest_identity 全項目 PASS。(2) は両格子の save が同時刻なら成立。
 - **子の初期水深 hinit は同じビルドで切り出すこと**: 別ビルドの `nestcheck cut`
   が書いた hinit(cos の丸めが -Ofast と -O0 で 1 ULP 違う)を流用すると、子の
   初期値が親と 1 ULP ずれ、1 ステップ目から流量が相対 3e-12 違う。Run_nest.sh は

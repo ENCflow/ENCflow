@@ -189,8 +189,10 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 
 - Saving and restarting (f_state_save / f_state_restore) work per grid:
   set f_state_restore and a separate `dir_save` in **every** grid's
-  parameter file (the root's setting is not propagated to the children, and
-  a mismatch is not detected). The nesting end-of-run totals (replacement
+  parameter file (the root's setting is not propagated to the children).
+  Restarting only one grid, a mismatch of the restored step (child it0 ≠
+  parent it0 × r_t) and a `dir_save` shared by parent and child stop at
+  initialisation. The nesting end-of-run totals (replacement
   volumes etc.) are not saved, so after a restart they cover only the
   resumed leg.
 
