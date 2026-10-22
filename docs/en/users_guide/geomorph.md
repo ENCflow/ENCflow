@@ -27,6 +27,7 @@ laws, erosion/deposition laws, triggering, bed layer).
 | Moving bed layer | f_bedslide | Layer hb moves within the terrain and soil, displacing the water surface |
 | Bedrock weathering / uplift | f_wthr / f_uplift | Weathering increases sd; uplift / subsidence shifts z |
 | Limestone dissolution | f_dissol | Lowers z in proportion to the recharge (no sediment is produced); a sink-inflow term for dolines |
+| Rock-wall collapse | f_rockfall | Bedrock faces steeper than the stable rock angle fall as debris (into the receiver's sd). The bedrock version of f_repose |
 
 ![Geomorphic processes, sediment pathways and state updates](../../figs/geomorph_processes_en.png)
 
@@ -940,6 +941,37 @@ dissolution through the inlets and outfalls of the conduit continuum layer.
 
 **Outputs for this section**: ground `Z0001...` (lowered by dissolution; nothing appears in `Hs`) and, with a residue fraction > 0, soil thickness `Sd0001...` (grows). At the end the dissolved rock volume (m³) is printed as "dissolution removed ... m3 of rock". Restart in `geomorph_dissol.dat` (the water accumulated within an update interval) ([Output and monitoring](#output-and-monitoring)).
 
+## Rock-wall collapse (f_rockfall)
+
+Formula: [supplement](sediment.md#rock-wall-collapse-f_rockfall). Design
+record: developer.md §87, docs/karst_plan.md §2.6.
+
+The **bedrock version** of angle-of-repose avalanching `f_repose` (which
+moves the soil sd). A rock wall whose bedrock surface z − sd stands above a
+neighbouring cell's ground by more than the slope of `rockfall_phi` × the
+distance drops `rockfall_relax` of the excess per update as **rock to
+debris**. On the source cell only z is lowered (the bedrock face retreats
+and the soil on top rides down); on the receiver the debris becomes soil sd
+with the bulk ratio `rockfall_bulk`, raising both z and sd. The rock
+volume is conserved and the fallen debris can then be moved by creep, bed
+load or soil avalanching. Walls of depressions deepened by dissolution and
+the undercut feet of towers collapse, giving funnel-shaped dolines,
+debris-covered floors and cliff retreat.
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| rockfall_phi | 60 | Stable angle of the rock (deg). Representative of bare limestone walls: the internal friction angle of rock masses (35 to 45°) plus cohesion, as a first-order estimate |
+| rockfall_relax | 0.5 | Fraction of the excess height relaxed per update (0 to 1) |
+| rockfall_bulk | 1/(1 − fluv_porosity) | Bulk ratio of the debris (deposited volume per unit rock volume). The default is consistent with the bed porosity |
+
+The collapse per cell and update is capped by `fluv_dzmax` (settable
+without bed load; the default 0.05 m is small for rock walls on a 10 m
+grid, raise it to about 1 m for long runs). Collapse is an instantaneous
+relaxation, not a rate law (steep walls fall at every update regardless of
+morfac). Sea cells are neither sources nor receivers.
+
+**Outputs for this section**: ground `Z0001...` (walls lowered, receivers raised) and soil thickness `Sd0001...` (debris). At the end "rockfall moved ... m3 (rock)" is printed ([Output and monitoring](#output-and-monitoring)).
+
 ## Output and monitoring
 
 The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
@@ -1019,7 +1051,7 @@ When the type of phenomenon is known, start from the following
 | River-mouth delta | f_fluvial (capacity feed) + f_suspend (inflow concentration) + f_bedfines + fluv_slope + f_repose (+ f_fixation) | - | - | - | sand 0.0005; mud via susp_wf = 1e-3 m/s | 30 | Sea as ordinary cells + initial water level. A mud concentration of 0.0002-0.001 separates fan and bird-foot. morfac 100-200. docs/delta_plan.md |
 | Bed change of a gravel-bed river | f_fluvial | - | - | - | 0.02-0.1 | - | Bedload dominates |
 | Long-term landform evolution | f_creep + f_wthr + f_uplift | - | - | - | - | - | creep_d 0.001-0.05 m²/yr, p0 10-100 mm/kyr, uplift 0.1-5 mm/yr. Together with morfac |
-| Karst landforms (dissolution, dolines) | f_dissol (+ dissol_sink + the inlets of f_gwconduit) | - | - | - | - | - | c_eq 50-300 mg/L (low for rain on bare rock, high under soil), rho_r 2500-2700. Limit to limestone with fn_dissol. Together with morfac |
+| Karst landforms (dissolution, dolines) | f_dissol (+ dissol_sink + the inlets of f_gwconduit, dissol_lat = −1, f_rockfall) | - | - | - | - | - | c_eq 50-300 mg/L (low for rain on bare rock, high under soil), rho_r 2500-2700. Limit to limestone with fn_dissol. Rock walls phi_rock 50-70°. Together with morfac |
 | Landslide tsunami (bed layer) | f_bedslide | 0.1-0.2 | 300-1000 | - | - | - | mu and xi of the inertia-free bed layer (bs_mu/bs_xi). Calibrated separately from the mixture values |
 
 ## Tests and examples
@@ -1037,4 +1069,6 @@ velocity, grid-dependence detection on a 45-degree slope, plunge into a
 lake and wave generation),
 [test/dissol](../../../test/dissol/) (limestone dissolution: analytic
 solutions for the infiltration, sink and rainfall sources and for the
-lateral-dissolution partition, and a restart round trip).
+lateral-dissolution partition, and a restart round trip),
+[test/rockfall](../../../test/rockfall/) (rock-wall collapse: recursion of
+a rock pillar and rock-volume conservation).

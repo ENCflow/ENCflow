@@ -429,6 +429,32 @@ published range of karst denudation rates of 20 to 100 mm/kyr
 saturation along the flow path is not represented. Conduit (cave) growth
 is a separate, not yet implemented stage (docs/karst_plan.md §5).
 
+### Rock-wall collapse (f_rockfall)
+
+The bedrock version of angle-of-repose avalanching. Where the bedrock
+surface $`z_b = z - s_d`$ stands above the ground $`z_w`$ of a neighbouring
+cell (direction k, distance $`d_k`$) by more than
+$`\tan\phi_{\rm rock}\, d_k`$, part of the excess falls as rock turned into
+debris:
+
+```math
+v_k = \frac{\mathrm{relax}}{(1+b)\,8}\left(z_b - z_w - \tan\phi_{\rm rock}\, d_k\right)_+,
+\qquad
+z_n \mathrel{-}= \sum_k v_k,\quad z_w \mathrel{+}= b\,v_k,\quad s_{d,w} \mathrel{+}= b\,v_k
+```
+
+$`b`$ (`rockfall_bulk`) is the bulk ratio of the debris. Only z is lowered
+on the source (the soil rides on the bedrock surface) and the debris
+becomes soil on the receiver. The factor $`1/((1+b)\,8)`$ is a relaxation
+that accounts for the gap closing from both sides and does not overshoot
+with eight directions at once; one conservative sweep per update (rock
+volume conserved, bulk $`b`$ times larger). The total collapse per cell and
+update is capped by `fluv_dzmax`. $`\phi_{\rm rock}`$ (`rockfall_phi`,
+default 60°) is representative of the stable angle of bare limestone walls,
+a first-order estimate of the internal friction angle of rock masses (35
+to 45°) plus cohesion. Verification:
+[test/rockfall](../../../test/rockfall/README.md).
+
 ## 8. Parameters and the basis of their defaults
 
 The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
@@ -461,6 +487,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | dissol_src / dissol_sink | 1 / 0 | water source / sink term | **method** 1: infiltration, 2: rainfall on the ground. The sink term is the inlet inflow of the conduit continuum layer |
 | dissol_fsink / dissol_fres | 1.0 / 0 | capacity ratio of the sink inflow / residue fraction | **empirical value** to be calibrated / **given** 0 = no residue |
 | dissol_lat | 0 | share p of lateral dissolution | **method** 0 = floor only, −1 = automatic from the wetted-area ratio (recommended). A fixed value follows the ratio of ponding depth to cell size |
+| rockfall_phi / rockfall_relax / rockfall_bulk | 60° / 0.5 / 1/(1−λ) | stable rock angle / relaxation / bulk ratio of the debris (§7) | **customary value** internal friction angle of rock masses 35-45° plus cohesion / **numerical setting** / **method** consistent with the bed porosity |
 
 **Where to look when revising the defaults**
 

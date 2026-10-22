@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 617 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 621 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -158,6 +158,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_adaptive_runge | &list_enc | [浅水流計算](swflow.md) |
 | f_advection_donor | &list_enc | [浅水流計算](swflow.md) |
 | f_repose | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| f_rockfall | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_scalar_scheme | &list_enc | [浅水流計算](swflow.md) |
 | f_advection_scheme | &list_enc | [浅水流計算](swflow.md) |
 | f_bank_aggr | &list_channel | [河道](channel.md) |
@@ -544,6 +545,9 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | pump_rule | &list_struct_pump | [構造物](structure.md) |
 | repose_phi | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | repose_relax | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| rockfall_bulk | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| rockfall_phi | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| rockfall_relax | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | rn0 | &list_geoinfo | [地理情報](geoinfo.md) |
 | rn0_rw | &list_geoinfo | [地理情報](geoinfo.md) |
 | runoff_rate | &list_precip | [降雨・気象](forcing.md) |

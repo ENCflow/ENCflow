@@ -160,6 +160,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | f_adaptive_runge | &list_enc | [Shallow water flow computation](swflow.md) |
 | f_advection_donor | &list_enc | [Shallow water flow computation](swflow.md) |
 | f_repose | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| f_rockfall | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | f_scalar_scheme | &list_enc | [Shallow water flow computation](swflow.md) |
 | f_advection_scheme | &list_enc | [Shallow water flow computation](swflow.md) |
 | f_bank_aggr | &list_channel | [Channels](channel.md) |
@@ -540,6 +541,9 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | pump_rule | &list_struct_pump | [Structures](structure.md) |
 | repose_phi | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | repose_relax | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| rockfall_bulk | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| rockfall_phi | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| rockfall_relax | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rn0 | &list_geoinfo | [Geographic information](geoinfo.md) |
 | rn0_rw | &list_geoinfo | [Geographic information](geoinfo.md) |
 | runoff_rate | &list_precip | [Rainfall and meteorology](forcing.md) |
