@@ -289,6 +289,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_wq_infil | &list_wq | [水質](wq.md) |
 | f_wq_map | &list_wq | [水質](wq.md) |
 | f_wq_settle | &list_wq | [水質](wq.md) |
+| f_wave_longshore | &list_wave | [土砂・地形変化](geomorph.md) |
 | f_wthr | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_ztype | &list_geoinfo | [地理情報](geoinfo.md) |
 | fines_frac0 | &list_geomorph | [土砂・地形変化](geomorph.md) |
@@ -400,6 +401,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_swi | &list_sysparam | [土壌雨量指数](swi.md) |
 | fn_tempmap | &list_meteo | [降雨・気象](forcing.md) |
 | fn_tide | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
+| fn_wave | &list_sysparam | [土砂・地形変化](geomorph.md)(波浪による沿岸漂砂) |
 | fn_timap | &list_tide | [潮位・海面](tide.md) |
 | fn_timaplist | &list_tide | [潮位・海面](tide.md) |
 | fn_width | &list_channel | [河道](channel.md) |
@@ -604,6 +606,15 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | uplift0 | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | v0 | &list_initial | [初期条件](initial.md) |
 | vv | &list_sysparam | [浅水流計算](swflow.md) |
+| wave_clock | &list_wave | [土砂・地形変化](geomorph.md) |
+| wave_dir | &list_wave | [土砂・地形変化](geomorph.md) |
+| wave_gamma | &list_wave | [土砂・地形変化](geomorph.md) |
+| wave_h0 | &list_wave | [土砂・地形変化](geomorph.md) |
+| wave_k2 | &list_wave | [土砂・地形変化](geomorph.md) |
+| wave_smin | &list_wave | [土砂・地形変化](geomorph.md) |
+| wave_smooth | &list_wave | [土砂・地形変化](geomorph.md) |
+| wave_t | &list_wave | [土砂・地形変化](geomorph.md) |
+| wave_val | &list_wave | [土砂・地形変化](geomorph.md) |
 | wash_kf | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | wash_kr | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | wash_tausc | &list_geomorph | [土砂・地形変化](geomorph.md) |

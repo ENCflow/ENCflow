@@ -1,0 +1,52 @@
+! wave_shore 検定 nowave: fn_wave なし(off との比較基準)
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.15
+  t0 = 0
+  tt = 3600
+  dt_disp = 600
+  dt_file = 1800
+  dt_recrd = 1800
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  
+  dir_result = 'result_nowave'
+  dir_save = 'save_nowave'
+  f_state_save = 1
+  f_check_cfl = 1
+  f_out_z = 1
+/
+&list_enc
+/
+&list_initial
+  f_htype = 2               ! 水位 0 で初期化(全域が湿潤。汀線は等深線で測る)
+  e0 = 0.0
+/
+&list_geoinfo
+  lx = 800.0
+  ly = 240.0
+  nx = 320
+  ny = 96
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.025
+  f_sdtype = 1
+  fn_sd = 'sdinit.txt'
+  sy0 = 0.2
+/
+&list_geomorph
+  dt_geomorph = 1.0
+  morfac = 5.0              ! 水理 1 h = 地形 5 h
+  f_fluvial = 1             ! 沿岸漂砂は掃流砂の経路に乗る(静水なので掃流砂自体は動かない)
+  f_qbform = 1
+  fluv_d50 = 0.0005
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+/
+

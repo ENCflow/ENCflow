@@ -1,0 +1,44 @@
+!======================================================================
+!
+! Wave conditions &list_wave (all parameters)
+!
+!   Name this file in &list_sysparam as
+!     fn_wave = "list_wave.txt"
+!   (without fn_wave the wave effects are completely inactive: no memory,
+!   no CPU). Longshore transport rides the bed-load path, so f_fluvial = 1 in
+!   fn_geomorph is required. Design: docs/wave_plan.md, decision: developer.md
+!   §84.15, usage: docs/users_guide/geomorph.md "Wave-driven longshore transport".
+!
+!   Waves are not solved. The offshore wave (significant height, period,
+!   direction of travel) is given; in the surf-zone cells the shoreline
+!   orientation is taken from the depth gradient and the deep-water CERC
+!   formula (Ashton & Murray 2006) gives the longshore transport, applied as
+!   shore-parallel edge fluxes to the bed.
+!
+!======================================================================
+&list_wave
+  f_wave_longshore = 1      ! longshore transport in the surf-zone band (0: off, 1: on)
+
+  ! ---- offshore wave (constants; a wave_val series takes precedence) ----
+  wave_h0 = 1.0             ! significant wave height H0 (m)
+  wave_t = 6.0              ! period T (s)
+  wave_dir = 135.0          ! direction of travel (deg, counter-clockwise from +x (east); north = 90, west = 180)
+                            !   135 = waves travelling north-west (coming from the south-east)
+
+  ! ---- time series (time, H0 (m), T (s), direction (deg); linear interpolation, end values held) ----
+  !   time in minutes; with wave_clock = 1 (default) in morphological time (= hydraulic
+  !   time x morfac: a wave climate), with 0 in hydraulic time (a storm whose duration is
+  !   given in hydraulic time and acts on the bed morfac times longer)
+  !wave_val(1:4,1) = 0,    0.5, 5.0, 90.0
+  !wave_val(1:4,2) = 600,  0.5, 5.0, 90.0
+  !wave_val(1:4,3) = 620,  2.0, 8.0, 120.0    ! storm
+  !wave_val(1:4,4) = 1200, 2.0, 8.0, 120.0
+  !wave_val(1:4,5) = 1220, 0.5, 5.0, 90.0
+  !wave_clock = 1
+
+  ! ---- coefficients (literature defaults) ----
+  !wave_k2 = 0.34           ! coefficient K2 of the deep-water CERC formula (m^{3/5} s^{-6/5}); K = 0.39, gamma = 0.78
+  !wave_gamma = 0.78        ! breaker index gamma = H_b / h_b (surf zone = depth h <= H_b/gamma)
+  !wave_smooth = 2          ! smoothing radius of the depth used for the shoreline orientation (cells, 1 or 2)
+  !wave_smin = 1.0e-3       ! lower bound of the bed slope that defines a shoreline orientation (flatter = excluded)
+/

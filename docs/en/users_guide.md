@@ -122,6 +122,7 @@ The additional features below stay disabled unless you specify their `fn_XXX` en
 | Feature | Configuration-file entry | namelist group |
 |---|---|---|
 | Tide and sea surface | `fn_tide` | &list_tide |
+| Wave-driven longshore transport (arcuate and cuspate deltas, shoreline smoothing) | `fn_wave` | &list_wave | [Sediment and landform change](users_guide/geomorph.md), "Wave-driven longshore transport" (needs f_fluvial=1 in fn_geomorph) |
 | Internal hydraulic structures | `fn_structure` | &list_struct_pump / culvert / diversion / dam |
 | Ponds | `fn_reservoir` | (used together with geographic information) |
 | Channels | `fn_channel` | &list_channel (+ breach) |
