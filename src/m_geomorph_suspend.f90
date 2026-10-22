@@ -140,7 +140,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
         if (fx == 0.0) cycle
       end if
       s%hs(i,j) = s%hs(i,j) + fx
-      ! 剥離深の横方向拡散(wet_lw > 0。§84.15): 巻き上げ分は河床から直接引かず
+      ! 剥離深の横方向拡散(wet_lw > 0。§84.16): 巻き上げ分は河床から直接引かず
       ! 集積面に積み、spread_wet が ℓ_w で平滑化して z・sd から引く。沈降
       ! (fx < 0)と乾燥繰り入れは従来どおり局所適用(堆積は水のある所に起きる)
       if (spread .and. fx > 0.0) then

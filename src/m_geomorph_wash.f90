@@ -95,7 +95,7 @@ module subroutine calc_wash(gm, p, g, s, dtw)
       if (gm%f_bedfines > 0) fx = min(fx, s%sf(i,j) / (gm%morfac * gm%poroi))
       if (fx <= 0.0) cycle
       s%hs(i,j) = s%hs(i,j) + fx
-      ! 剥離深の横方向拡散(wet_lw > 0。§84.15): 集積面に積み spread_wet に委ねる
+      ! 剥離深の横方向拡散(wet_lw > 0。§84.16): 集積面に積み spread_wet に委ねる
       if (spread) then
         gm%wlw%e(i,j) = gm%wlw%e(i,j) + fx * gm%morfac * gm%poroi
         cycle
@@ -123,7 +123,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 剥離深の横方向拡散の初期化(wet_lw > 0。§84.15)
+! 剥離深の横方向拡散の初期化(wet_lw > 0。§84.16)
 !   核は spl_lc(init_splash)と同じ: パス数 N = 4(ℓ_w/Δmin)²、重み
 !   w = ℓ_w²/(2NΔ²) ≤ 1/8(市松モードで伝達関数が非負)。f_suspend が必須
 !   (剥離を集積するのは calc_suspend の巻き上げと calc_wash の剥離)
@@ -154,7 +154,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 剥離深の横方向拡散(wet_lw > 0。§84.15)
+! 剥離深の横方向拡散(wet_lw > 0。§84.16)
 !   calc_suspend(巻き上げ)・calc_wash(剥離)が帯内に集積した剥離深 e [m]
 !   (源セルの可動層クランプ済み。hs は源セルに注入済み)を、5 点ガウス核
 !   (自セル 1−2wx−2wy、x 近傍 wx、y 近傍 wy)で nsm 回平滑化してから

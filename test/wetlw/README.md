@@ -6,7 +6,7 @@
 格子を細かくしても収束しません(examples/badland_storm 結果 4)。
 `wet_lw = ℓ_w` は、各セルで評価した剥離深を標準偏差 ℓ_w のガウス核で
 隣接セルに配ってから `z`・`sd` から引くオプションです(浮遊砂 `hs` は源セルに
-入る。developer.md §84.15)。核は対称で領域外・海セルへの分は自セルに戻すので、
+入る。developer.md §84.16)。核は対称で領域外・海セルへの分は自セルに戻すので、
 固体の総量は保存されます。
 
 このテストは test/wash と同じ構成(平坦床、閉領域ダムブレイク + 一様降雨
@@ -51,4 +51,4 @@ python3 Fig.py    # figs/wetlw.png
 - [test/wash](../wash/)(同じ構成の疎通・保存則)、[test/suspend](../suspend/)
 - [examples/badland_storm](../../examples/badland_storm/) 結果 4・5(ガリー間隔の格子収束)
 - [docs/users_guide/geomorph.md](../../docs/users_guide/geomorph.md) — `wet_lw`
-- developer.md §84.15、docs/splash_plan.md §6.9
+- developer.md §84.16、docs/splash_plan.md §6.9

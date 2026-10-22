@@ -230,7 +230,7 @@ module m_geomorph
   end type
 
   type t_wetlw
-    ! 湿潤侵食の剥離深の横方向拡散(wet_lw > 0 のみ。§84.15)
+    ! 湿潤侵食の剥離深の横方向拡散(wet_lw > 0 のみ。§84.16)
     real :: lw = 0.0                 ! 相関長 ℓ_w (m)
     integer :: nsm = 0               ! 平滑化のパス数(= 4(ℓ_w/Δmin)²。0 = 無効)
     real :: wsx = 0.0, wsy = 0.0     ! 1 パスの x・y 近傍重み(spl_lc と同じ核)
@@ -375,7 +375,7 @@ module m_geomorph
     type(t_fluvial) :: flv           ! 掃流砂
     type(t_debris) :: dbr            ! 土石流 E-D
     type(t_splash) :: spl            ! 乾式斜面侵食
-    type(t_wetlw) :: wlw             ! 湿潤侵食の剥離深の横方向拡散(§84.15)
+    type(t_wetlw) :: wlw             ! 湿潤侵食の剥離深の横方向拡散(§84.16)
     type(t_bedslide) :: bsl          ! 動く底層(地滑り津波)
     type(t_bank) :: bnk              ! 側岸侵食・安息角崩落
     type(t_fixation) :: fix          ! 定着
@@ -1033,7 +1033,7 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   end if
   if (gm%f_suspend > 0) call calc_suspend(gm, p, g, s, p%dt * gm%idt_geomorph)
   if (gm%f_wash > 0) call calc_wash(gm, p, g, s, p%dt * gm%idt_geomorph)
-  ! 湿潤侵食の剥離深の横方向拡散(wet_lw > 0。§84.15): suspend・wash が集積した
+  ! 湿潤侵食の剥離深の横方向拡散(wet_lw > 0。§84.16): suspend・wash が集積した
   ! 剥離深を相関長 ℓ_w で平滑化して z・sd から引く(中でハロ交換。判定は
   ! namelist 由来で全ランク同一 = collective 安全)
   if (gm%wlw%nsm > 0) call spread_wet(gm, g, s)
