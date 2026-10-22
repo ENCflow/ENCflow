@@ -9,6 +9,8 @@ module list_geomorph
   public :: t_list_geomorph
   public :: list_geomorph_read
 
+  integer, parameter :: nspstmax = 64  ! 水平層理の表 spl_strata の最大層数
+
   type t_list_geomorph
     ! --- 実行制御 ---
     real :: dt_geomorph = 0.0        ! 地形変化の更新時間間隔 (s)。0なら毎ステップ
@@ -62,6 +64,32 @@ module list_geomorph
                                      ! (保存形。乾湿を問わない。1 更新 1 スイープ)。§84.4
     real :: repose_phi = 0.0         ! 安息角 φ_r (deg)。0 = 既定 30(§62。slide_phi と同じ)
     real :: repose_relax = 0.5       ! 1 更新で緩和する超過勾配の割合(0〜1)
+    integer :: f_rockfall = 0        ! 崩落と崖錐(0:無効, 1:有効。§48.7)。隣接セル間の高さ差
+                                     ! (自由面)が rf_hc を超えた分を高い側から低い側へ移し
+                                     ! (崩落。保存形)、低い側に崖錐の厚さ ht(出力 Ht)として
+                                     ! 積む。崖錐は安息角 rf_phi で広がり、覆われたセルの乾式
+                                     ! 侵食 f_splash を rf_ftalus 倍に抑える(崖錐の保護)
+    real :: rf_hc = 0.0              ! 自由面(崖)の限界高さ H_c (m)(必須 > 0)
+    real :: rf_phi = 0.0             ! 崖錐の安息角 (deg)。0 = 既定 35
+    real :: rf_relax = 0.5           ! 1 更新で緩和する超過高さの割合(0〜1)
+    real :: rf_ftalus = 0.0          ! 崖錐に覆われたセルの乾式侵食の倍率(> 0。崖錐の除去速度 =
+                                     ! 崖の後退速度を律する)。0 = 既定 0.3
+    real :: rf_hmin = 0.0            ! 崖錐が安息角で動く最小厚さ h_min (m)(薄い崖錐はその場に
+                                     ! 留まる = 微量の崖錐が斜面中に散らばる人工物を防ぐ)。0 = 既定 0.01
+    real :: rf_fface = -1.0          ! 崖錐に支えられた面(崖錐律速の後退)の方式(§48.7)。0 以上で有効
+                                     ! (rf_rc > 0 が前提): 安息角より急な落差の先(脚部)が崖錐 ht >= h_min
+                                     ! に覆われたセルの乾式侵食 E を rf_fface 倍にし、崩落を「面の頂の柱が
+                                     ! 脚部まで落ちる」形(柱の崩落)にする = 垂直な面が 1 セルずつ後退し、
+                                     ! 崖錐の除去が後退を律する。負 = 無効(既定。窓版の崩落)
+    real :: rf_uc = 0.0              ! 限界張り出し量 u_c (m)(§48.7。支え方式と spl_strata が前提)。正なら、
+                                     ! 面の頂の柱は、柱より軟らかい脚部(安息角より急な落差の先。層理の倍率が
+                                     ! 柱より大きい)の岩盤が前回の埋没以降に乾式侵食で u_c 以上削られたときも
+                                     ! 崩れる(H_w > H_c に加えて)= 下の軟層の削り込みでキャップが張り出して
+                                     ! 落ちる形。0 = 無効(既定)
+    real :: rf_rc = 0.0              ! 自由面の高さを測る窓の半径 r_c (m)。0 = 隣接セル間の段差
+                                     ! (従来。Δx に依存)。正なら nint(r_c/Δx) セルの正方形窓内の最低点
+                                     ! との落差 H_w を自由面の高さとし、崖錐の安息角より急なエッジで
+                                     ! H_w > H_c の超過分(そのエッジの安息角超過を上限)を移す
     integer :: f_fixation = 0        ! 定着(0:無効, 1:有効)。乾いたセルの定着度 a が
                                      ! 1 − exp(−t/T_fix) で育ち、供給側の限界掃流力を
                                      ! τ*c (1 + c_τ a) に上げる(標高・体積には触れない)。§84.6
@@ -100,6 +128,11 @@ module list_geomorph
     real :: wash_kr = 0.0            ! 雨滴侵食係数(無次元。E_r = kr・降雨強度)
     real :: wash_kf = 0.0            ! 面状侵食係数 (m/s)(E_f = kf・(τ*/τ*c - 1))
     real :: wash_tausc = 0.05        ! 面状侵食の限界無次元掃流力 τ*c
+    real :: wet_lw = 0.0             ! 湿潤侵食(f_suspend の巻き上げ・f_wash の剥離)の
+                                     ! 剥離深を横方向に広げる相関長 ℓ_w (m)(0 = 無効)。
+                                     ! 流路の流れは幅 ℓ_w の帯(リル幅)から削る =
+                                     ! 1 セル幅の流路への集中に長さスケールを与え、
+                                     ! ガリー間隔の格子収束を得る(§84.16)
 
     integer :: f_splash = 0          ! 乾式斜面侵食(無流水: 雨滴・サブグリッドリル)
                                      ! (0:無効, 1:有効)。乾燥セル(h <= dd)対象で
@@ -123,6 +156,15 @@ module list_geomorph
     integer :: spl_sgrad = 1         ! 勾配 S の評価(1: 最急降下 = 8 近傍への下り勾配の最大
                                      ! = 既定。稜線の頂のセルも両面の勾配で削れる。
                                      ! 0: 中央差分 = 2026-10-19 以前の挙動。§48.4)
+    real :: spl_ksat = 0.0           ! 凹地形増幅の飽和曲率 κ_s (1/m)(§48.6)。正なら有効曲率
+                                     ! κ̃ = κ / (1 + κ/κ_s) を増幅項 1 + c κ̃ に使う(κ ≪ κ_s で
+                                     ! 従来と同じ、κ ≫ κ_s で 1 + c κ_s に飽和)。0 = 飽和なし(既定)
+    real :: spl_strata(1:2,1:nspstmax) = -9999.0
+                                     ! 水平層理(硬軟差)の表(§48.5)。列 k = (層の下端標高
+                                     ! z_k [m], 侵食性倍率 f_k)。z_k は昇順、f_k >= 0
+                                     ! (0 = 削れない硬層)。地表標高 z が z_k <= z < z_{k+1}
+                                     ! の層にあるセルの E を f_k 倍する。最下層より下は 1。
+                                     ! 番兵(z <= -9000)の手前までが有効。未指定 = 層理なし
 
     integer :: f_debris = 0          ! 土石流 E-D(高橋型平衡濃度)(0:無効, 1:有効)。
                                      ! f_suspend と排他(同一 hs 上の E-D 二重計上防止)。
@@ -305,6 +347,8 @@ subroutine list_geomorph_read(p, list)
   integer :: fluv_slope, f_secflow
   integer :: f_berode, f_repose
   real :: berode_kb, berode_tausc, berode_m, repose_phi, repose_relax
+  integer :: f_rockfall
+  real :: rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc, rf_fface, rf_uc
   integer :: f_fixation
   real :: fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank
   integer :: f_suspend
@@ -320,9 +364,12 @@ subroutine list_geomorph_read(p, list)
   real :: wash_kr
   real :: wash_kf
   real :: wash_tausc
+  real :: wet_lw
   integer :: f_splash
   real :: spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, spl_lc, spl_zbase
   integer :: spl_sgrad
+  real :: spl_ksat
+  real :: spl_strata(1:2,1:nspstmax)
   integer :: f_debris
   real :: db_phi
   real :: db_delte
@@ -368,12 +415,13 @@ subroutine list_geomorph_read(p, list)
                            f_secflow, sec_nstar, sec_rmax, sec_vmin, &
                            f_berode, berode_kb, berode_tausc, berode_m, &
                            f_repose, repose_phi, repose_relax, &
+                           f_rockfall, rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc, rf_fface, rf_uc, &
                            f_fixation, fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank, &
                            f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, &
-                           f_wash, wash_kr, wash_kf, wash_tausc, &
+                           f_wash, wash_kr, wash_kf, wash_tausc, wet_lw, &
                            f_splash, spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, &
-                           spl_lc, spl_zbase, spl_sgrad, &
+                           spl_lc, spl_zbase, spl_sgrad, spl_ksat, spl_strata, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
                            f_dbed, db_d50, db_erest, db_cmin, f_dbwet, db_satbed, &
                            db_mu, db_xi, db_tauy, f_dbcurv, &
@@ -416,6 +464,15 @@ subroutine list_geomorph_read(p, list)
   f_repose = list%f_repose
   repose_phi = list%repose_phi
   repose_relax = list%repose_relax
+  f_rockfall = list%f_rockfall
+  rf_hc = list%rf_hc
+  rf_phi = list%rf_phi
+  rf_relax = list%rf_relax
+  rf_ftalus = list%rf_ftalus
+  rf_hmin = list%rf_hmin
+  rf_rc = list%rf_rc
+  rf_fface = list%rf_fface
+  rf_uc = list%rf_uc
   f_fixation = list%f_fixation
   fix_tfix = list%fix_tfix
   fix_ctau = list%fix_ctau
@@ -437,6 +494,7 @@ subroutine list_geomorph_read(p, list)
   wash_kr = list%wash_kr
   wash_kf = list%wash_kf
   wash_tausc = list%wash_tausc
+  wet_lw = list%wet_lw
   f_splash = list%f_splash
   spl_kr = list%spl_kr
   spl_ca = list%spl_ca
@@ -447,6 +505,8 @@ subroutine list_geomorph_read(p, list)
   spl_lc = list%spl_lc
   spl_zbase = list%spl_zbase
   spl_sgrad = list%spl_sgrad
+  spl_ksat = list%spl_ksat
+  spl_strata = list%spl_strata
   f_debris = list%f_debris
   db_phi = list%db_phi
   db_delte = list%db_delte
@@ -542,6 +602,15 @@ subroutine list_geomorph_read(p, list)
   list%f_repose = f_repose
   list%repose_phi = repose_phi
   list%repose_relax = repose_relax
+  list%f_rockfall = f_rockfall
+  list%rf_hc = rf_hc
+  list%rf_phi = rf_phi
+  list%rf_relax = rf_relax
+  list%rf_ftalus = rf_ftalus
+  list%rf_hmin = rf_hmin
+  list%rf_rc = rf_rc
+  list%rf_fface = rf_fface
+  list%rf_uc = rf_uc
   list%f_fixation = f_fixation
   list%fix_tfix = fix_tfix
   list%fix_ctau = fix_ctau
@@ -563,6 +632,7 @@ subroutine list_geomorph_read(p, list)
   list%wash_kr = wash_kr
   list%wash_kf = wash_kf
   list%wash_tausc = wash_tausc
+  list%wet_lw = wet_lw
   list%f_splash = f_splash
   list%spl_kr = spl_kr
   list%spl_ca = spl_ca
@@ -573,6 +643,8 @@ subroutine list_geomorph_read(p, list)
   list%spl_lc = spl_lc
   list%spl_zbase = spl_zbase
   list%spl_sgrad = spl_sgrad
+  list%spl_ksat = spl_ksat
+  list%spl_strata = spl_strata
   list%f_debris = f_debris
   list%db_phi = db_phi
   list%db_delte = db_delte

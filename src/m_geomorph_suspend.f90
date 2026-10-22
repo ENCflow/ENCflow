@@ -71,7 +71,9 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
   real, intent(in) :: dtw       ! 水柱側の実効時間刻み(morfac を含まない)
   integer :: i, j
   real :: hh, taus, ceq, cc, fx, dzb, cap, fxg, afx, tsce
+  logical :: spread
 
+  spread = (gm%wlw%nsm > 0)
   !$omp parallel do schedule(static) private(i, j, hh, taus, ceq, cc, fx, dzb, cap, fxg, afx, tsce)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
@@ -138,6 +140,13 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
         if (fx == 0.0) cycle
       end if
       s%hs(i,j) = s%hs(i,j) + fx
+      ! 剥離深の横方向拡散(wet_lw > 0。§84.16): 巻き上げ分は河床から直接引かず
+      ! 集積面に積み、spread_wet が ℓ_w で平滑化して z・sd から引く。沈降
+      ! (fx < 0)と乾燥繰り入れは従来どおり局所適用(堆積は水のある所に起きる)
+      if (spread .and. fx > 0.0) then
+        gm%wlw%e(i,j) = gm%wlw%e(i,j) + fx * gm%morfac * gm%poroi
+        cycle
+      end if
       ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
       dzb = -fx * gm%morfac * gm%poroi
       ! 土層を使い切るとき sd を厳密に 0 で止める(上のクランプ fx = sd/(morfac·poroi)

@@ -46,6 +46,7 @@
   !fn_enc = ""              ! 浅水流計算(ENC)の調整
   !fn_boundary = ""         ! 境界条件
   !fn_tide = ""             ! 潮位・海面
+  !fn_wave = "list_wave.txt"           ! 波浪条件(沿岸漂砂。fn_geomorph の f_fluvial=1 が必須。docs/users_guide/geomorph.md)
   !fn_structure = ""        ! 内部水理構造物(ポンプ・カルバート等)
   !fn_reservoir = ""        ! ため池
   !fn_channel = ""          ! 河道(堤防・河道幅)

@@ -5,7 +5,7 @@
 TOPDIR	= ../..
 BINDIR	= $(TOPDIR)/bin
 SRCDIR	= $(TOPDIR)/src
-CASES	= base sand mud varq fix
+CASES	= base sand mud varq fix wave baseqb
 
 all: links inputs
 

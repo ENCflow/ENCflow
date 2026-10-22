@@ -87,8 +87,9 @@ examples/tower_karst/sd.txt
 examples/tower_karst/ksv.txt
 examples/tower_karst/Screen*.log
 examples/tower_karst/analysis*.txt
-examples/tower_karst/param_trial.txt
-examples/badland_round/analysis.txt
+examples/badland_round/analysis*.txt
+examples/mesa/z.txt
+examples/mesa/analysis*.txt
 examples/timberyard/z.txt
 examples/timberyard/z_wall*.txt
 examples/timberyard/sw.txt
@@ -149,3 +150,5 @@ examples/levee_breach/rn.txt
 examples/levee_breach/rw.txt
 test/tracer/z_*.txt
 test/tracer/inflow_b.txt
+test/rockfall/zinit_sea.txt
+test/rockfall/sw_sea.txt

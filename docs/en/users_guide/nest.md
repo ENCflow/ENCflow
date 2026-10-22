@@ -20,7 +20,12 @@ of suspended sediment, water quality, driftwood, debris and salt water and
 the groundwater storages (hg, hg2, hgc) are exchanged automatically when the
 process is enabled on both parent and child. On a non-hydrostatic child
 (f_nonhydrostatic = 1) the band cells become known (Dirichlet) cells of the
-parent's non-hydrostatic potential φ (nest_nh, default). The formulation
+parent's non-hydrostatic potential φ (nest_nh, default). Only these
+quantities and φ are exchanged (with nest_bc = 3 the additional fields are
+not). Terrain z (including ground and bed motion), snow, ice, lava and every
+module's internal state are independent per grid, with no mechanism to keep
+parent and child aligned; give forcings such as bed motion to each grid's
+parameter file. The formulation
 of each method, the time interpolation and the basis of the defaults are in
 [Nesting explained](nest_models.md).
 
@@ -136,8 +141,19 @@ the conservation correction, the non-hydrostatic band) are in
   the parent, so no boundary condition is set on the child. **nest_bc = 3 is
   the opposite**: the edges that receive the parent's values are set to
   `f_bc_* = 2` (long-wave radiation; see below).
-- The child is large enough compared with the band (nx, ny > 2·nb + 2).
+- The child is large enough for the band (and sponge):
+  nx, ny > 2·(nb + nest_ns) + 2. With nest_fb > 0 at least one parent cell
+  must lie fully inside the interior beyond band and sponge.
 - The scheme is ENC (f_gridsystem = 0).
+- Sea-mask (fn_sw) cells are not taken into account in the parent–child
+  exchange (writing into the band and the feedback (child to parent) also
+  overwrite h and the velocities of sea cells). **Do not place sea-mask
+  cells in the child's nesting band or in the replaced parent cells
+  corresponding to the child's interior (when nest_fb > 0)**; this is
+  checked at initialization and the run is stopped with an error if any
+  are found. Tsunami runs assume a solved sea (ordinary cells with sw=0);
+  nesting a storm-surge run that uses the tide boundary (fn_tide) is not
+  supported at present.
 
 ## Output and monitoring
 
@@ -156,9 +172,12 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   the children). The S column of each grid's Log.txt is that grid's
   storage; the parent's S includes the values replaced by the child
   (two-way).
-- At the end "nest: summary" prints, per grid, the boundary and feedback
-  methods and the total conservative correction Σ|Δh| × A. For two-way
-  nesting check that this total is negligible against the parent's S × area.
+- At the end "nest: summary" prints, per child, the water volume added by
+  the band replacement, the feedback method and number of replacements, the
+  cumulative change of the parent's volume (sum and |sum|) and, for
+  nest_fb = 3 only, the conservation correction Σ|Δh|·A (the boundary method
+  is printed when the parameters are read). For two-way nesting check that
+  the volume change is negligible against the parent's S × area.
 
 **Measurements** (probe and transect columns)
 
@@ -168,9 +187,14 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 
 **Restart**
 
-- Saving and restarting (f_state_save / f_state_restore) also work per
-  grid; give every grid its own `dir_save`. Restarting the root restarts
-  all grids.
+- Saving and restarting (f_state_save / f_state_restore) work per grid:
+  set f_state_restore and a separate `dir_save` in **every** grid's
+  parameter file (the root's setting is not propagated to the children).
+  Restarting only one grid, a mismatch of the restored step (child it0 ≠
+  parent it0 × r_t) and a `dir_save` shared by parent and child stop at
+  initialisation. The nesting end-of-run totals (replacement
+  volumes etc.) are not saved, so after a restart they cover only the
+  resumed leg.
 
 **How to read and check**
 
@@ -201,6 +225,10 @@ the same conditions. The acceptance test is [test/bmi_nest](../../../test/bmi_ne
   return to the parent. The parent's coarse coastal reflection enters the
   child through the band, and the child's disturbances reflect at the band
   (resolved by two-way mode, or by nest_bc = 3 which radiates them out).
+- The sea mask (fn_sw) and the tide (fn_tide) are independent per grid;
+  there is no mechanism that aligns them between parent and child. A
+  configuration with sea cells in the band or in the replaced cells is
+  stopped at initialization ("Conditions on a child grid" above).
 - Run-up on land near the child's band (about nb × r cells) is coarsely
   approximated; keep it away from the points of interest. Place the landward
   boundary above the maximum run-up so that water never reaches it.

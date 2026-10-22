@@ -19,6 +19,11 @@ piecewise-linear rules are interpolated linearly with end values held
 outside the range. Cell coordinates (i, j) are **1-based** (add +1 when
 picking numbers from the 0-based numbering of GIS such as QGIS;
 [coordinates chapter](coordinates.md)).
+For all four types, none of the cell sets -- intake side or outlet side
+(including delivery cells, release cells and lake-surface cells) -- **can be
+placed on sea-mask (fn_sw) cells** (the run is stopped at initialisation
+with an error). Water discharged to the sea is expressed as drainage
+outside the system with the outlet omitted (removal from the system).
 
 ![The four structure types (pump, culvert, diversion, dam/lake)](../../figs/structure_types_en.png)
 
@@ -62,8 +67,10 @@ omitting the outlet drains out of the domain):
 Forced transfer (mechanical drainage) from an intake cell set to an
 outlet cell set. Intake and outlet need not be adjacent and have no
 distance limit; **omitting the outlet means drainage out of the
-domain** (pumping into sewers or another catchment = removal from the
-system).
+domain** (pumping into sewers, another catchment or the sea = removal
+from the system). An outlet cannot be placed on a sea-mask cell (the run
+is stopped at initialisation with an error), so omit the outlet when
+discharging to the sea.
 
 ```
 &list_struct_pump

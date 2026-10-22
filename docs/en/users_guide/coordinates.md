@@ -41,6 +41,19 @@ governing calculations. The three main roles of georeferencing are:
 You can compute without telling the model any georeferencing (which
 is sufficient for idealized experiments).
 
+**The vertical (elevation) datum is not handled by the model.** Only the
+horizontal coordinates are read from the georeferencing; the vertical
+datum in a GeoTIFF or bil header is neither read nor checked. The ground
+elevation z is the elevation exactly as input, and the tide
+([Tide](tide.md)), the initial water level e0
+([Initial conditions](initial.md)), the reference levels of stage cells and
+radiation boundaries ([Boundary conditions](boundary.md)) and levee crests
+given as absolute elevations ([Channel](channel.md),
+[Geographic information](geoinfo.md)) are all given on the same datum as z.
+Any difference between the datum of the land DEM (e.g. T.P.) and that of
+chart depths (e.g. the lowest water level, D.L.) must be reconciled on the
+terrain data side in preprocessing.
+
 ### Cell numbering convention — 1-based
 
 Cell numbers (i, j) used to specify locations of measurement points,

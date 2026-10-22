@@ -73,6 +73,11 @@ stored in GeoTIFF is adopted or checked against an explicitly supplied `epsg`.
 | mag_z | 1 | multiplier applied to the ground elevation (for sensitivity experiments and unit conversion) |
 | f_user_routine | "" | identifier of a user routine that modifies the topography (for idealized experiments; see [Writing user routines](user_routines.md)) |
 
+The elevation of sea-mask cells (fn_sw) is forced to 0 regardless of the
+value in the topography file (sea cells are boundary cells whose water
+level is expressed through z; the sea-bed bathymetry is not used;
+[tide chapter](tide.md)).
+
 ## Roughness (Manning coefficient)
 
 | Parameter | Default | Meaning |
@@ -131,7 +136,7 @@ area; it does not assign the water-level-boundary role of the sea mask below.
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| fn_sw | "" | sea mask (1: sea). Identifies sea cells treated as a water-level boundary, e.g. prescribed tide ([tide chapter](tide.md)) |
+| fn_sw | "" | sea mask (1: sea). Identifies sea cells treated as a water-level boundary. The water level (tide) is given with fn_tide; without fn_tide the sea cells have z = 0 and the depth from the [initial conditions](initial.md) becomes the fixed sea surface as it is ([tide chapter](tide.md)) |
 | fn_rw | "" | channel mask (1: channel cell) |
 | depth_rw / fn_depth_rw | 0 / "" | incision depth of channel cells (uniform value / distribution; dug down from the topography) |
 | rn0_rw | -1 | fixed roughness of channel cells. A positive value **overrides the roughness of channel cells** regardless of how roughness is given (rn0 / file), independently of whether incision is specified |
@@ -217,7 +222,7 @@ requirements are not identical conditions.
 | fn_seaside | "" | seaside mask (1: treated as the sea side; the sea of fn_sw is always seaside) |
 | fn_seawall / seawall0 | "" / -9999 | crest height distribution (at landside cell positions) / uniform value (mutually exclusive; automatically assigned to adjacent land cells, except channel openings) |
 | f_seawall_datum | 2 | crest height datum (1: height above the cell's own ground, 2: absolute elevation) |
-| f_seawall_mode | 0 | hydraulic mode (0: overtopping only, 1: flap gate (gates), 2: forced drainage) |
+| f_seawall_mode | 0 | hydraulic mode (0: overtopping only, 1: flap gate (gates), 2: forced drainage = an idealization that drains the whole land-side depth regardless of the sea-side level; for compatibility and experiments, real pumping stations use the pumps of the [structures chapter](structure.md)) |
 
 Represents seawalls as line-shaped virtual walls without widening cells
 (the coastal application of the river-levee mechanism, fn_bank). The sea
@@ -247,6 +252,10 @@ Notes when giving the crest with a distribution file `fn_seawall`:
 - Conversely, **giving extra values is harmless**. Crests on land cells
   not adjacent to the seaside become no wall (the number of such cells
   is merely reported at startup and does not affect the computation).
+  However, when the domain contains no seaside cell at all, or when none
+  of the crest cells touches the seaside, the run is stopped at
+  initialisation with an error (the typical case is a tsunami run where
+  fn_seaside was forgotten).
   Painting a **generous buffer along the coast** is therefore the safe
   side, and it automatically prevents the corner-contact leaks above.
 
@@ -260,7 +269,7 @@ can be checked in the following outputs.
 | File | How | Contents |
 |---|---|---|
 | Z0000 | always | the ground elevation as read (after mag_z, the channel excavation depth_rw and user routines) |
-| X0000 | always | domain mask (0: outside, 1: land, 2: sea); the result of fn_mask and fn_sw |
+| X0000 | always | domain mask (0: outside, 1: land, 2: sea); the effective mask built from fn_mask and fn_sw (after the auto-generation of f_masktype=2 and the one-cell extension for sea connectivity), which in general does not coincide with the input fn_mask |
 | Sd0001... | automatic (when a model uses the soil thickness) | soil thickness (m) |
 | Hrs0001... | f_out_hrs = 1 | storage depth of ponds (rscap) (m) |
 | Z0001... | f_out_z = 1 | ground elevation moved by landform change, solidification or bed motion |
@@ -291,7 +300,9 @@ its product with the channel area fraction).
 - Rows run from north to south, columns from west to east. A wrong
   orientation is obvious when Z0000 is overlaid on the source DEM.
 - Check the sea and domain mask boundaries with the value 2 of X0000, and
-  the channel excavation as Z0000 − source DEM.
+  the channel excavation as Z0000 − source DEM (the sea is forced to
+  elevation 0, so a difference from the source DEM always appears over
+  the sea).
 
 ## Parameters and the basis of their defaults
 

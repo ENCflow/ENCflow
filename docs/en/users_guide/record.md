@@ -46,6 +46,10 @@ time (hour/min), ground elevation z, depth h, velocities u, v, |V|,
 sediment hs, and soil depth sd. Water quality adds concentration C (mg/L)
 and surface load cq (g/m²). The cell value q differs from the total discharge
 Q (m³/s) crossing a transect.
+A probe may also be placed on a sea cell of the sea mask (fn_sw), but there
+z is tide − hsea0 (changing with the tide), h is hsea0 (constant) and u, v
+and q are 0; they are not the terrain or the sea depth (z + h is the tide
+level; see [Tide](tide.md)).
 
 ## Flux transects (time series of crossing discharge)
 
@@ -108,7 +112,13 @@ Hmax and Vmax is zero; it is not a direct measurement of channel width.
 Water quality adds load flux L (g/s) and cumulative load Lcum (kg).
 
 Discharge transferred through structures such as culverts does not register
-on transects ([structures](structure.md)). These filenames assume the
+on transects ([structures](structure.md)). For a transect crossing the
+coastline, **place the end points on land cells and do not include sea
+cells of the sea mask (fn_sw)**. Q correctly integrates the edge flows
+between land and sea (inundation and drainage), but if a sea cell enters
+the sampled cells, its hsea0 contaminates Hmax, which drags B and the Hmax
+of summary.csv with it (the velocity of sea cells is 0, so Vmax is not
+affected). These filenames assume the
 default result directory and no filename suffix.
 
 ![Probes, ENC cell-index transects, and real-coordinate transects](../../figs/record_transect_en.png)

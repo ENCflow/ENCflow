@@ -253,7 +253,7 @@ module subroutine nh_init(p, g, b, s)
     allocate(nh_mod%zsrc(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(nh_mod%rhsb(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     do j = dcp%jsh, dcp%jeh
-      nh_mod%zprev(:,j) = s%z(1:g%nx,j)
+      nh_mod%zprev(:,j) = s%z(:,j)       ! 両者とも列窓 ish:ieh で確保(§80)
     end do
     nh_mod%bot_first = .true.
   end if

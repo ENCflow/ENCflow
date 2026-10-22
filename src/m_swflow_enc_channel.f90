@@ -150,15 +150,18 @@ module subroutine build_channel_frw(g)
 
     ! 幅キャップ q を全成分の河道—河道エッジへ重畳する
     ! (q の計算は build_cw と同じ wcap = 決定的に同値)
+    ! 河道—海セル(fn_sw)の面も対象(2026-10-22。§18): 幅河道の河口は
+    ! 「同じ幅の河道が海へ続く」として開いた辺境界の面と同じ幅キャップを
+    ! 与える(自然幅のままだと狭い河道の貯留を速く抜き、流速正規化が薄まる)
     do j = jlo, jhi
       do i = dcp%ish, dcp%ieh - 1
-        if (.not. is_channel(g, i, j) .or. .not. is_channel(g, i+1, j)) cycle
+        if (.not. width_face(g, i, j, i+1, j)) cycle
         chn%frw(4,i,j) = chn%frw(4,i,j) * wcap(g, i, j, i+1, j, g%dy)
       end do
     end do
     do j = jlo, min(dcp%jeh - 1, g%ny - 1)
       do i = dcp%ish, dcp%ieh
-        if (.not. is_channel(g, i, j) .or. .not. is_channel(g, i, j+1)) cycle
+        if (.not. width_face(g, i, j, i, j+1)) cycle
         chn%frw(2,i,j) = chn%frw(2,i,j) * wcap(g, i, j, i, j+1, g%dx)
       end do
     end do
@@ -167,10 +170,10 @@ module subroutine build_channel_frw(g)
     !   幅キャップのみ(開口補正は法線へ振り替える設計のため対象外)
     do j = jlo, min(dcp%jeh - 1, g%ny - 1)
       do i = dcp%ish, dcp%ieh - 1
-        if (is_channel(g, i, j) .and. is_channel(g, i+1, j+1)) then
+        if (width_face(g, i, j, i+1, j+1)) then
           chn%frw(1,i,j) = chn%frw(1,i,j) * wcap(g, i, j, i+1, j+1, capd)
         end if
-        if (is_channel(g, i, j+1) .and. is_channel(g, i+1, j)) then
+        if (width_face(g, i, j+1, i+1, j)) then
           chn%frw(3,i,j) = chn%frw(3,i,j) * wcap(g, i, j+1, i+1, j, capd)
         end if
       end do
@@ -605,7 +608,7 @@ module subroutine breach_init(p, g, s, ch)
     call par_stop("list_channel_breach: br_cell is not specified")
   end if
   if (.not. chn%have_bank) then
-    call par_stop("list_channel_breach: breach requires a levee (fn_bank / bank0 / fn_width)")
+    call par_stop("list_channel_breach: breach requires a levee (fn_bank / bank0)")
   end if
   if (ch%f_br_diag < 0 .or. ch%f_br_diag > 1) then
     call par_stop("list_channel_breach: f_br_diag must be 0 or 1: "//itoa(ch%f_br_diag))
@@ -900,10 +903,10 @@ subroutine build_cw(g, capd)
                 is_wall(g%zbank(ic,jc), g%z(ic,jc), g%z(in,jn))) cycle
           end if
           f0 = chn%frw(ke(k), ic+die(k), jc+dje(k))
-          if (is_channel(g, in, jn)) then
-            q = wcap(g, ic, jc, in, jn, cap8(k))
+          if (is_channel(g, in, jn) .or. g%sw(in,jn) > 0) then
+            q = wcap(g, ic, jc, in, jn, cap8(k))   ! 河道—河道と河道—海(§18。frw と同じ q)
           else
-            q = 1.0                         ! 河道—河道以外はキャップなし
+            q = 1.0                         ! 河道—堤内地はキャップなし
           end if
         end if
         sx_ = geo%l8y(k) / 2
@@ -1068,8 +1071,8 @@ module subroutine cw_cell(g, i, j, sig, cx, cy)
             is_wall(g%zbank(i,j), g%z(i,j), g%z(in,jn))) cycle
       end if
       f0 = sct%frw0(ke(k), i+die(k), j+dje(k))
-      if (is_channel(g, in, jn)) then
-        q = wcap(g, i, j, in, jn, cap8(k))
+      if (is_channel(g, in, jn) .or. g%sw(in,jn) > 0) then
+        q = wcap(g, i, j, in, jn, cap8(k))   ! 河道—河道と河道—海(build_cw と同じ。§18)
       else
         q = 1.0
       end if
@@ -1141,6 +1144,22 @@ function is_channel(g, ic, jc) result(res)
   integer, intent(in) :: ic, jc
   logical :: res
   res = g%x(ic,jc) > 0 .and. g%sw(ic,jc) == 0 .and. g%rw(ic,jc) > 0
+end function
+
+
+!----------------------------------------------------------------------
+! エッジ (i1,j1)-(i2,j2) が幅キャップの対象か: 河道—河道、または
+! 河道—海セル(領域内の sw>0。幅河道の河口 = 同じ幅の河道が海へ続く。§18)
+!----------------------------------------------------------------------
+function width_face(g, i1, j1, i2, j2) result(res)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i1, j1, i2, j2
+  logical :: res, c1, c2, s1, s2
+  c1 = is_channel(g, i1, j1)
+  c2 = is_channel(g, i2, j2)
+  s1 = g%x(i1,j1) > 0 .and. g%sw(i1,j1) > 0
+  s2 = g%x(i2,j2) > 0 .and. g%sw(i2,j2) > 0
+  res = (c1 .and. c2) .or. (c1 .and. s2) .or. (s1 .and. c2)
 end function
 
 

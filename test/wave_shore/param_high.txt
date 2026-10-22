@@ -1,0 +1,61 @@
+! wave_shore 検定 high: 高角の波(α = 60°)。擾乱が成長する(反拡散。符号の検定)
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.15
+  t0 = 0
+  tt = 3600
+  dt_disp = 600
+  dt_file = 1800
+  dt_recrd = 1800
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_wave = '-'
+  dir_result = 'result_high'
+  dir_save = 'save_high'
+  f_state_save = 1
+  f_check_cfl = 1
+  f_out_z = 1
+/
+&list_enc
+/
+&list_initial
+  f_htype = 2               ! 水位 0 で初期化(全域が湿潤。汀線は等深線で測る)
+  e0 = 0.0
+/
+&list_geoinfo
+  lx = 800.0
+  ly = 240.0
+  nx = 320
+  ny = 96
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.025
+  f_sdtype = 1
+  fn_sd = 'sdinit.txt'
+  sy0 = 0.2
+/
+&list_geomorph
+  dt_geomorph = 1.0
+  morfac = 5.0              ! 水理 1 h = 地形 5 h
+  f_fluvial = 1             ! 沿岸漂砂は掃流砂の経路に乗る(静水なので掃流砂自体は動かない)
+  f_qbform = 1
+  fluv_d50 = 0.0005
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+/
+&list_wave
+  f_wave_longshore = 1
+  wave_h0 = 0.5             ! 沖波 0.5 m、周期 5 s → 砕波水深 h_b/γ = 0.86 m(北端から 33 m の帯)
+  wave_t = 5.0
+  wave_dir = 150.0          ! 進行方向 (deg。北 = 90°)。岸向き法線は北なので α = dir − 90
+  wave_clock = 1
+  wave_lsm = 5.0            ! 汀線方位の平滑化長 σ = 2Δx(多パス核。段 3 (a))
+  wave_bslp = 5.0           ! 局所勾配項の係数(既定)
+/
+

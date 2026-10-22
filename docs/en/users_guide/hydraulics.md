@@ -81,7 +81,12 @@ as the reference regardless of inlet submergence, so $`Q_p \to 0`$ right
 after the upstream level passed the crown and the discharge dipped
 temporarily (developer.md §22, Japanese). The gate opening (`culv_gate_rule`) is a linear multiplier of
 the discharge and the flap (`culv_flap`) blocks reverse flow; the order of
-evaluation is three regimes → opening → flap.
+evaluation is three regimes → opening → flap. In addition the transfer per
+step is capped at the volume that fills half of the representative level
+difference, $`|Q| \le 0.5\,A_h\,|\eta_u - \eta_d|/\Delta t`$ ($`A_h`$ is the
+harmonic mean of the effective plan areas Σgv·Δx·Δy of the two cell groups;
+the channel width fn_width is not included). The cap prevents back-and-forth
+oscillation at coarse Δt (developer.md §22, Japanese).
 
 ## 3. Pumps and diversions
 
@@ -93,7 +98,10 @@ the intake side, so nothing is taken that is not there. A diversion is
 passive and stops when the receiving level is at or above the intake
 level (gravity cannot climb). A pump transfers forcibly to outside the
 domain or to outlet cells; with intake from the conduit layer
-(`f_pump_src = 1`) it draws from the storage of the conduit continuum. The
+(`f_pump_src = 1`) it draws from the storage of the conduit continuum. An
+outlet cannot be placed on a sea-mask (fn_sw) cell; discharge into the sea
+is expressed as drainage outside the system with the outlet omitted
+([structures](structure.md)). The
 specific capacity of urban pumping stations, 1–3 m³/s/km², corresponds to
 10–20% of a 50 mm/h rainfall and is a **practical rule of thumb**.
 
@@ -132,6 +140,10 @@ attenuation $`A\,dH/dt = Q_{in} - Q(H)`$, so the pass-through setting
 quality is in [Water-quality models](wq_models.md) §6.
 
 ## 5. Edge boundaries
+
+Edge boundaries act only on edges where valid non-sea cells touch the grid
+frame. They do not act on sea-mask (fn_sw) cells (the sea level is forced
+by the [tide](tide.md)).
 
 **Free outflow (type 1).** Advancing flow passes with the normal component
 of the cell velocity, and standing water drains by a critical-depth drop:
@@ -206,7 +218,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | dam_hq_rule / dam_ori_* / dam_qmax | — | natural-regulation rating / orifice / square-root law | **given** the orifice $`c_e`$ default 0.5 is the culvert value |
 | dam_tadashigaki | min + 0.9(surcharge − min) | start level of the emergency ramp | **customary value** practical placeholder |
 | f_bc_w/e/n/s | 0 | type of the edge boundary (§5) | **method** 0: wall, 1: free outflow (critical drop), 2: radiation |
-| bc_eta_* | derived from the initial state | reference level of the radiation | **derived** zero flux at t = 0 for a uniform initial level |
+| bc_eta_* | derived from the initial state | reference level of the radiation | **derived** explicit value > e0 of f_htype=2 > initial level of each boundary cell; the last gives exactly zero radiation flux at t = 0 cell by cell. On restart it is derived again from the restored state ([Suspend and restart](restart.md)) |
 | inflow_dist | 0 | distribution of the segment inflow (§5) | **method** 2 = Manning conveyance[^chow59]; use 2 for river cross-sections |
 
 **Where to look when revising the defaults**

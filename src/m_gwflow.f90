@@ -219,6 +219,16 @@ subroutine m_gwflow_init(gw, p, g, s)
   end select
 
   ! すべて 0 なら fn を書いたまま一時無効化する経路
+  ! 保存時に有効だった層モデル・凍土を再開時に無効にする設定齟齬を検出する
+  ! (全モデル無効の早期 return より前に置き、層だけを外した設定も捕まえる)。
+  ! 各モデルの restore_state は「有効なのに自ファイルがない」側だけを見るので、
+  ! 逆向き(自ファイルがあるのに無効)は貯留が検査なしに失われていた(§16.2。
+  ! 2026-10-22)。inquire は全ランク同一の判定(collective 安全)
+  if (p%f_state_restore > 0) then
+    call stop_if_orphan_state(p, gw%l2_enabled, 'gwflow_layer2.dat', 'f_gwlayer2')
+    call stop_if_orphan_state(p, gw%c_enabled, 'gwflow_conduit.dat', 'f_gwconduit')
+    call stop_if_orphan_state(p, gw%frost_enabled, 'gwflow_frost.dat', 'f_gwfrost')
+  end if
   if (list%f_gwvertical == 0 .and. .not. gw%lat_enabled .and. .not. gw%l2_enabled &
       .and. .not. gw%c_enabled .and. .not. gw%pump_enabled) return
 
@@ -300,6 +310,25 @@ subroutine m_gwflow_init(gw, p, g, s)
   ! 凍土(s%frofac の確保。気温の存在検査は m_gwflow_check_meteo)
   if (gw%frost_enabled) call gwflow_frost_init(gw%frost, p, g, s)
   gw%initialized = .true.
+end subroutine
+
+!----------------------------------------------------------------------
+! 無効なモデルの私有状態ファイルが dir_save に残っていれば停止する
+!   (保存時には有効だった層の貯留を黙って捨てないための門番。意図して
+!   捨てる場合はファイルを消すか、別の dir_save を使う)
+!----------------------------------------------------------------------
+subroutine stop_if_orphan_state(p, enabled, fname, flag)
+  type(t_sysparam), intent(in) :: p
+  logical, intent(in) :: enabled
+  character(len=*), intent(in) :: fname, flag
+  logical :: found
+  if (enabled) return
+  inquire(file=trim(p%dir_save)//'/'//fname, exist=found)
+  if (found) then
+    call par_stop("gwflow: "//fname//" exists in "//trim(p%dir_save)//" but "//flag// &
+                  " is disabled at restart (its stored state would be dropped); enable "//flag// &
+                  " or remove the file if the drop is intended")
+  end if
 end subroutine
 
 

@@ -55,6 +55,15 @@ default 1.65):
 representative value of the Shields curve[^shields36] for coarse sand to
 gravel.
 
+**Boundary with the sea mask.** The terrain is not updated on the sea
+cells of the sea mask (fn_sw), and bedload, creep and the moving bed layer
+do not cross the edges against sea cells (a wall). Suspended sediment and
+the solid fraction of debris flows disappear outside the system once they
+leave into a sea cell (inflow from the sea is clear water). Represent any
+area where the sea bottom must be solved as ordinary cells + an initial
+water level rather than with the sea mask ("The sea mask and the fate of
+sediment" in [Sediment and landform change](geomorph.md)).
+
 ## 2. Hillslope creep (f_creep)
 
 ```math
@@ -337,7 +346,16 @@ $`\sim 2S/\ell`$ (the speed of the deep-valley stage, where the walls
 steepen to one-cell steps, still depends on the grid through $`S`$;
 examples/badland).
 `spl_zbase` is the erosion base level (the sea level when the cliff foot is
-the sea) and `spl_dzmax` a safety valve.
+the sea) and `spl_dzmax` a safety valve. With `spl_ksat` the $`\kappa`$ in the
+amplification is replaced by the effective curvature
+$`\tilde\kappa = \kappa/(1 + \kappa/\kappa_s)`$, which saturates the amplification
+at strong hollows (the foot of a cliff) at $`1 + c\,\kappa_s`$ (the spacing selection
+of the linear stage is unchanged; verification:
+[test/splashsat](../../../test/splashsat/README.md)). A table of horizontal strata
+`spl_strata` (bottom elevation and erodibility factor per layer) multiplies
+$`E`$ by the factor of the layer in which the cell's surface elevation lies
+(banded hard/soft beds, benches, cap rock; a layer with factor 0 does not
+erode; verification: [test/splashstrata](../../../test/splashstrata/README.md)).
 The defaults $`k_r`$ = 0.0005 and $`k_t`$ = 0.05 are the medians of the tests
 (**empirical**); verification is
 [test/splash](../../../test/splash/README.md) (all digits agree with the
@@ -457,6 +475,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | spl_dzmax | 0 | erosion limit per update | **numerical** 0 = off; safety valve against runaway |
 | spl_lc | 0 m | correlation length $`\ell`$ of the curvature | **given** 0 = curvature on the grid (grid-dependent spacing); about one fifth of the valley spacing (examples/badland) |
 | spl_zbase | none | erosion base level | **given** the sea level when the cliff foot is the sea |
+| spl_ksat | 0 | saturation curvature $`\kappa_s`$ of the amplification | **given** 0 = no saturation; 0.05-0.2 1/m keeps benches at the foot of cliffs (examples/mesa) |
+| spl_strata | none | table of horizontal strata (bottom elevation, erodibility factor) | **given** hard/soft contrast of the stratigraphy; factor 0 = cap rock |
 | wthr_p0 / wthr_sdstar | 50 mm/kyr / 0.5 m | soil production rate / decay depth (§7) | **literature value** middle of the published range of the Heimsath function[^heimsath97] |
 | uplift0 | 1 mm/yr | uplift rate | **customary value** lower end of orogenic belts |
 | dissol_ceq / dissol_rho | 100 mg/L / 2500 kg/m³ | effective dissolution capacity / rock density (§7) | **literature value** representative CaCO₃ concentration of recharge in limestone areas[^white84] and the density of limestone. k_d = 4e-5 m/m, i.e. 40 mm/kyr for a recharge of 1 m/yr (published range 20-100)[^gabrovsek09] |

@@ -362,7 +362,14 @@ as the following boundary for sediment: **suspended sediment leaving
 into a sea cell is treated as lost from the system** (a perfect sink;
 inflow from the sea to the land is always clear water), and **bedload
 does not cross an edge bordering a sea cell** (a wall; sand piles up
-artificially along the seaward front). Wherever you want deposition on
+artificially along the seaward front). The solid fraction (hs) of debris
+flows, driftwood and building debris are carried by the same scalar
+transport as suspended sediment, so they too are treated as outside the
+system once they leave into a sea cell. Where the plunge into the sea and
+the response of the water surface must be solved, represent the sea as
+ordinary cells + an initial water level, as described in the
+[moving bed layer](#moving-bed-layer--landslide-tsunami-f_bedslide)
+section. Wherever you want deposition on
 the sea bottom or seaward landform change to be solved (formation of a
 river-mouth terrace, the tsunami deposits above), represent that area
 as ordinary cells + an initial water level, and if you use a sea mask,
@@ -465,6 +472,8 @@ represent this.
 | spl_lc | 0 | Correlation length l (m) at which the curvature kappa is evaluated (0: 5-point Laplacian on the grid). If positive, z is smoothed with a Gaussian of standard deviation l before kappa is taken (the collection scale of the sub-grid rills). The valley spacing is then selected at about 4.4 l (linear stage; valleys merge later) and converges under grid refinement (l/dx >= 2); with 0 the spacing sticks to 2-3 grid cells. The growth rate of the deep-valley stage still depends on the grid (examples/badland) |
 | spl_zbase | -9999 | Elevation of the erosion base level (m) (<= -9000: none). Give the sea level when the cliff foot is the sea (z never drops below it; independent of bedrock exposure through sd) |
 | spl_sgrad | 1 | Evaluation of the slope S. 1: steepest descent (maximum downhill gradient to the 8 neighbours; default), 0: central difference (behaviour before 2026-10-19). The central difference cancels at a ridge crest (S ~ 0), so one-cell-wide ridges never erode; with steepest descent the crest cell erodes with the gradient of its faces and grid-scale checkerboards decay (developer.md sec. 48.4) |
+| spl_ksat | 0 | Saturation curvature kappa_s (1/m) of the hollow amplification. If positive, the kappa in the amplification 1 + c kappa is replaced by the effective curvature kappa~ = kappa/(1 + kappa/kappa_s) (unchanged for kappa << kappa_s, saturating at 1 + c kappa_s for kappa >> kappa_s). It bounds the amplification at strong hollows such as the foot of a cliff (the top of a hard bed), where it otherwise exceeds 100 and erases benches (examples/mesa). The spacing selection (linear stage, small kappa) is unchanged. 0 = no saturation (behaviour before 2026-10-22) |
+| spl_strata(1:2,k) | none | Table of horizontal strata (hard/soft contrast). Column k gives (bottom elevation z_k [m], erodibility factor f_k) in increasing elevation (up to 64 layers). A cell whose surface elevation z lies in the layer z_k <= z < z_{k+1} has its E multiplied by f_k (0 = a layer that does not erode = cap rock). Below the lowest layer the factor is 1. The layers are horizontal; as erosion lowers z the layer below is exposed. Not applied to creep. Example: [examples/badland_round](../../../examples/badland_round/) (banded alternation of hard and soft beds) |
 
 The minimal input to "just carve valleys into a cliff" is `f_splash = 1`
 + `sd0` + rainfall (fn_precip) (kr and kt at their defaults; if the
@@ -504,6 +513,7 @@ recommend `f_gravity_correction = 1` in &list_enc.
 | f_dbstop / db_vstop / db_wstop | 0 / 0.05 / 0.05 | Stopping condition by low-speed consolidation (stopped sediment is fixed to the bed elevation z; natural dam formation) |
 | db_d50 | 0.05 | Representative grain size (m). Used by f_dbed=3 and f_dbres=2,3. The default is the stony-type d_L (a few cm to dm) |
 | db_erest | 0.85 | Particle restitution coefficient e. Used by f_dbres=2. The customary Egashira value |
+| db_cmin | 0.02 | Lower concentration limit for applying the Egashira laminar law (f_dbres=2); below it the Manning law is used (a numerical switch, since the laminar law diverges as C->0; 0 < db_cmin < C*). The default 2% matches the mud-flow criterion of Takahashi and Nakagawa (1991) |
 | db_mu / db_xi | 0.2 / 1000 | Voellmy mu and xi (m/s²). Used by f_dbres=4. The defaults are mid-range RAMMS values (snow avalanches). Debris avalanches are smaller, mu 0.1 and xi 200-500 (recommendations below) |
 | db_tauy | 10000 | Constant retarding stress tau_y (Pa). Used by f_dbres=5. The lower side of the 5-50 kPa pyroclastic-flow applications |
 | f_dbwet / db_satbed | 0 / 1.0 | Pore-water entrainment (exchange of bed pore water with surface water on erosion/deposition; a first-order bulking effect where erosion dominates. Mutually exclusive with the groundwater computation) |
@@ -724,6 +734,109 @@ numerical noise.
 
 **Outputs for this section**: the sediment of the mixture in `Hs0001...`, the run maximum of the flow depth h + hs in `D9999`, the fluid force in `F9999`, the safety factor in `Fs0001...` and its run minimum `Fs9999` (`f_out_fs=1`, f_slide=1 or 2). The post-failure landform in `Z0001...`, the run minimum safety factor in the end line "slide min Fs". Build hazard maps with f_slide=2 ([Output and monitoring](#output-and-monitoring)).
 
+## Rockfall and talus (f_rockfall)
+
+The cliffs of cap-rock mesas and buttes retreat with a vertical free face
+because the undercut cap collapses and the fallen debris forms a talus that
+protects the weak layer at the foot. A raster (one z per cell) cannot hold an
+overhang, so three rules approximate the process (developer.md sec. 48.7):
+
+1. **Collapse**: the part of the height difference between neighbouring cells
+   (the free-face height) that exceeds the critical height `rf_hc` is moved from
+   the high to the low cell with the same numerical form as the angle-of-repose
+   avalanching (relax x excess / 2 / 8 per update; conservative). With a window
+   radius `rf_rc` the free-face height is measured as the drop to the lowest point
+   within r_c (a square window of nint(r_c/dx) cells), and the excess over H_c
+   (capped by the excess of that edge over the talus repose angle) is moved on
+   edges steeper than the talus angle. The whole face then takes part even on a
+   fine grid where the cliff spans several cells, and the critical height no
+   longer depends on dx.
+2. **Talus**: the volume arriving at the low cell is booked as talus thickness
+   `ht` (output `Ht0001...`). Edges whose donor cell is talus-covered also move the
+   excess over the talus repose angle `rf_phi` (only the talus itself).
+3. **Protection**: the dry-slope erosion `f_splash` of a talus-covered cell
+   (ht > 0) is multiplied by `rf_ftalus` (> 0), and the detached depth is taken from
+   the talus first (the material below is exposed once the talus is gone). Fallen
+   debris is taken to cover the cell it lands on. Talus spreads at its repose angle
+   only where it is at least `rf_hmin` thick.
+
+The removal rate of the talus (`rf_ftalus` x dry erosion) controls the cliff
+retreat rate (talus-limited retreat).
+
+4. **Supported-face mode (`rf_fface` >= 0; requires the window `rf_rc` > 0)**: under
+   rule 1 the whole face only sheds the excess of H_w over H_c and relaxes to the
+   repose angle, so even strong protection turns the plateau into a talus cone and
+   no vertical cliff survives. The supported-face mode changes two things.
+   (a) A cell whose foot (the cell beyond a drop steeper than the talus angle) is
+   covered by talus (ht >= `rf_hmin`, or a collapsing column) is a "talus-supported
+   face": its dry erosion E is multiplied by `rf_fface` (0 = it does not erode; the
+   flag is from the previous update; it replaces the strata factor). (b) The collapse
+   becomes a **column collapse**: a column starts at the top of the face (a cell with
+   no step higher than H_c above it) when H_w > H_c and falls until it is level with
+   its lower neighbours (the full drop; at most tan(phi_t) x dist / 32 per edge and
+   update, the amount the receiving talus can pass on). A column whose foot is a
+   collapsing column waits, so the face retreats one column at a time and stays
+   vertical, and the bedrock of a fallen column is buried as a shelf at the level of
+   the talus top. Collapse stops once the talus is thick enough that H_w <= H_c and
+   resumes when dry erosion (`rf_ftalus`) removes the talus: the talus removal rate
+   controls the retreat rate, and in steady state retreat rate x cliff height ~
+   talus removal rate x talus width. The collapsing-column flags are part of the
+   private file `geomorph_rockfall.dat` (restored automatically).
+5. **Undercut collapse (`rf_uc` > 0; requires the supported-face mode)**: a real cap
+   falls because the weak layer beneath it is cut back (undercut), not because of the
+   face height. A foot cell (a land cell with a step steeper than the talus angle
+   above it) remembers the bedrock depth u removed by dry erosion since it was last
+   buried by rockfall debris (talus loss is not counted; u is reset when the cell is no
+   longer a foot), and a column at the top of the face also falls when its foot has
+   u >= u_c (in addition to H_w > H_c), but only when the foot is weaker than the
+   column (its `spl_strata` erodibility factor is larger); a slope of one material is
+   not affected (`spl_strata` is required). While the debris covers the foot the edge is
+   protected; once the talus is removed and the bedrock is cut back by u_c the next
+   column falls, so the cycle is talus-limited without tuning H_c to the face height.
+   u is also part of the private file.
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| rf_hc | none (required) | Critical free-face height H_c (m); a structural quantity (rock-mass strength) |
+| rf_phi | 35 | Repose angle of the talus (deg) (rock-debris talus 30-40 deg) |
+| rf_relax | 0.5 | Fraction of the excess height relaxed per update (0-1) |
+| rf_ftalus | 0.3 | Dry-erosion factor of talus-covered cells (> 0; the talus removal rate controls the cliff retreat rate. 0 is not allowed: a cell with a trace of talus would never erode again) |
+| rf_hmin | 0.01 | Minimum talus thickness h_min (m) that spreads at the repose angle; thinner talus stays in place (prevents traces of talus from scattering over the slope) |
+| rf_rc | 0 | Radius r_c (m) of the window over which the free-face height is measured. 0 = step between neighbouring cells (depends on dx). Positive: drop to the lowest point within the window (independent of dx; about half to one cliff height) |
+| rf_fface | -1 (off) | Supported-face mode (rule 4). >= 0 enables it (requires rf_rc > 0): dry-erosion factor of a face whose foot is covered by talus (0 = no erosion). The collapse becomes a column collapse |
+| rf_uc | 0 (off) | Critical undercut u_c (m) (rule 5; requires rf_fface >= 0 and spl_strata): a column at the top of the face falls once the bedrock of a weaker foot has been cut back by this depth since the last burial. The overhang width a cap can carry (tens of cm to a few m); keep it below dx |
+
+The change per edge and update is capped by `fluv_dzmax` (at the flux stage, so
+conservation holds; give `fluv_dzmax` even without f_fluvial). The talus thickness
+is restored automatically from the private file `geomorph_rockfall.dat`. A cliff
+facing sea cells (`fn_sw`) collapses into them and the fallen volume leaves the
+system (the sea cell's z does not change; the limit of a sea cliff whose talus is
+removed by waves; see "rockfall exported to sea cells" at the end of the run). The
+windowed minimum includes the z of sea cells, but the z of a sea cell cannot be set by
+the user (it is forced to 0 when read and, with `fn_tide`, reset every step to the tide
+level minus `hsea0`; see [tide](tide.md)). Without `fn_tide`, put the elevation datum at
+sea level = 0 if the free face should end at the water surface; with `fn_tide` the bottom
+of the window lies `hsea0` (default 1 m) below the tide level.
+Verification: [test/rockfall](../../../test/rockfall/) (collapse of a vertical
+plateau: conservation, final height differences <= H_c, talus budget; also the
+windowed, supported-face and sea-cell variants). Example:
+[examples/mesa](../../../examples/mesa/) (retreat of cap-rock cliffs with talus;
+a vertical cliff with talus-limited retreat in the supported-face mode).
+
+**Outputs of this section**: talus thickness `Ht0001...`, terrain `Z0001...`; the
+final "rockfall moved ..." line gives the moved volume and the number of active edges,
+and "rockfall exported to sea cells ..." the volume that fell into the sea.
+
+**Debris flows reaching the sea mask** - the solid fraction hs and the
+water that leave into a sea cell (fn_sw) disappear outside the system
+([the sea mask and the fate of sediment](#suspended-sediment-f_suspend)).
+The bed-slope computation treats the seaward neighbourhood as slope 0, so
+a debris flow does not accelerate by plunging into the sea at the coast.
+To solve the plunge into the sea and the response of the water surface
+(tsunami), represent the sea as ordinary cells + an initial water level
+and hand over to the moving bed layer in the standing water (bs_hplunge;
+next section).
+
 ## Moving bed layer / landslide tsunami (f_bedslide)
 
 Driving head, buoyancy, Voellmy speed and flux distribution: [supplement](massflow.md#5-moving-bed-layer-f_bedslide).
@@ -841,6 +954,97 @@ debris-flow model).
   handover it runs to the flat lake bottom and deposits there.
 
 **Outputs for this section**: the layer thickness `Hb0001...` and speed `Vb0001...` are automatic. At the end "bedslide plunge speeds" (mixture and layer speeds at hand-over) and "subcycles total" are printed. Restart in `geomorph_bedslide.dat` ([Output and monitoring](#output-and-monitoring)).
+
+## Wave-driven longshore transport (fn_wave)
+
+With river sediment alone a delta is either bird-foot (a single realisation)
+or a fan (the ensemble mean). Arcuate and cuspate deltas and the smoothing of
+the shoreline come from the **longshore transport** that waves drive in the
+surf zone (the shape is set by the ratio R = Q_r/Q_w of the river supply to
+the transport the waves can carry; design: [docs/wave_plan.md](../../wave_plan.md),
+Japanese; decision: developer.md §84.15). ENCflow does not solve the waves.
+Give the offshore wave (significant height H0, period T, direction of travel
+phi0) in `fn_wave` (&list_wave) and every landform update does the following.
+
+1. The breaking depth h_b/gamma (H_b = 0.39 g^{1/5} (T H0^2)^{2/5}, gamma = 0.78)
+   defines the surf zone: wet cells with depth h <= h_b/gamma.
+2. The shoreline orientation of each surf-zone cell is the gradient of the
+   smoothed depth (radius `wave_smooth` cells); no shoreline vector is kept.
+   Cells where the waves travel away from the shore, and flat cells with a bed
+   slope below `wave_smin`, are excluded.
+3. Exposure: starting from the wet cells deeper than the surf zone, the
+   exposure propagates one cell per update up-wave (it stops at dry cells), so
+   no waves act in the lee of the delta, in bays or inside channels (no
+   diffraction; after a change of direction the field re-converges within tens
+   to a hundred updates).
+4. The deep-water CERC formula Q_s = K2 H0^{12/5} T^{1/5} cos^{6/5}(alpha)
+   sin(alpha) (alpha = angle between the wave direction and the onshore normal;
+   Ashton & Murray 2006, K2 = 0.34) is divided by the surf-zone width to give a
+   shore-parallel flux, applied to the bed as edge fluxes exactly like bed load
+   (supply limiter, dzmax and conservation are shared; nothing is carried onto
+   dry cells, so the retreat of a dry beach is the task of `f_repose`).
+
+| parameter | default | meaning |
+|---|---|---|
+| f_wave_longshore | 1 | longshore transport in the surf-zone band; 0 = inactive even with fn_wave |
+| wave_h0, wave_t, wave_dir | (required) | offshore significant height (m), period (s), direction of travel (deg counter-clockwise from +x (east), north = 90); a time series takes precedence |
+| wave_val(1:4,k) | - | time series (time (min), H0, T, direction); linear interpolation, end values held; H0 = 0 means calm |
+| wave_clock | 1 | clock of the series: 1 = morphological time (hydraulic time x morfac: a wave climate), 0 = hydraulic time (a storm whose duration is hydraulic and acts morfac times longer on the bed) |
+| wave_k2 | 0.34 | coefficient K2 of the deep-water CERC formula (m^{3/5} s^{-6/5}); K = 0.39, gamma = 0.78 |
+| wave_gamma | 0.78 | breaker index gamma |
+| wave_smooth | 2 | smoothing radius of the depth for the shoreline orientation (cells, 1 or 2; when wave_lsm = 0) |
+| wave_lsm | 0 (cell-radius kernel) | smoothing length σ (m) of the depth for the shoreline orientation; > 0 switches to a multi-pass kernel normalized over wet cells. 2Δx or more, up to about a quarter of the surf-zone width. **Recommended** |
+| wave_bslp | 5 | with wave_lsm > 0: coefficient β of the local slope term (smooths irregularities shorter than σ) |
+| wave_smin | 1e-3 | lower bound of the bed slope that defines a shoreline orientation |
+| wave_vmax | −1 (off) | river-mouth rule: cells with \|V\| above this (m/s) are neither a wave source nor surf zone (shadow). Required at river mouths with a mobile bed |
+
+**Usage**: bed load `f_fluvial = 1` is required (longshore transport rides the
+bed-load path). Represent the sea as ordinary cells + an initial water level
+("River-mouth deltas" above). Low-angle waves (|alpha| < 45 deg) smooth the
+shoreline (diffusion), high-angle waves grow the bulges (spits, asymmetric
+cusps). For a delta the shape follows the ratio of the river supply to Q_s;
+R = Q_r/Q_w < 1 tends to a cuspate delta (Nienhuis et al. 2015). Storms go in
+`wave_val`, a wave climate in the constants.
+
+**Limits**: shadowing is the simple exposure field (no diffraction);
+cross-shore transport (beach face, barriers, dunes), wave set-up and rip
+currents, the cross-shore distribution inside the surf zone and directional
+spectra are not represented. Any water deeper than the surf zone is a wave
+source (a lake gets waves too), so mask water bodies that are not meant to or
+put them in the lee. The cells of the sea mask (fn_sw) are neither a wave
+source nor part of the surf zone, and the depth smoothing that takes the
+shoreline orientation treats them as land (depth 0). If you use a sea mask,
+place it well offshore of the breaking depth h_b/γ so that its edge does not
+fall inside the smoothing radius wave_smooth of the surf zone (the edge would
+be read as a shoreline).
+**Give the smoothing length `wave_lsm`** (the default 0 keeps the cell-radius-2
+kernel for compatibility). Under high-angle waves (incidence above 45°) the
+shoreline roughness grows, which is physical, but the only length that selects
+the growing wavelength is the smoothing cut-off, so the cell-radius kernel lines
+up bars at the grid spacing. With σ given as a length of 2Δx or more the cut-off
+no longer depends on the grid and the straight-shoreline linear theory is
+reproduced (test/wave_shore: with σ = 2Δx the low-angle decay rate is 1.05 and
+the high-angle growth rate 0.86 of theory, grid-scale power 30 % → 6 %). Use
+2Δx up to about a quarter of the surf-zone width W_b. Irregularities shorter than
+σ are smoothed by the local slope term β (`wave_bslp`, default 5).
+
+**`wave_vmax` is required at river mouths with a mobile bed**: once the
+river's flow depth exceeds h_b the channel itself becomes a wave source,
+longshore transport acts on bars and riffles inside the channel and the run
+diverges (examples/delta/README.md, "waves"). With `wave_vmax` set, cells
+whose speed exceeds it are neither a source nor surf zone, so waves do not
+enter the channel. Put the value between the river's flow speed and the speed
+on the shoreline band (check the V output; e.g. 0.5 for 0.8 m/s in the channel
+and 0.3 m/s on the delta front). During a flood the speed rises in front of
+the mouth too, so waves pause there and resume at low flow. Verification:
+[test/wave_river](../../../test/wave_river/).
+
+**Output of this section**: landform change in `Z0001...` (`f_out_z=1`); the
+final warning reports the solid volume carried through edges by longshore
+transport and the number of surf-zone cell-updates. Verification:
+[test/wave_shore](../../../test/wave_shore/) (decay rate of a shoreline
+perturbation matches the linear theory of Ashton & Murray, growth for
+high-angle waves, bit-identical when disabled).
 
 ## Long-term landform evolution (f_wthr / f_uplift)
 
@@ -988,7 +1192,9 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 **Restart**
 
 - z, hs and sd are part of the core state save. The moving bed layer uses
-  the private file `geomorph_bedslide.dat` automatically. The update cycle
+  the private file `geomorph_bedslide.dat` and the bed-fines inventory sf
+  (f_bedfines) `geomorph_fines.dat` automatically (the model must have been
+  enabled at save time). The update cycle
   continues from the saved step number.
 
 **How to read and check**

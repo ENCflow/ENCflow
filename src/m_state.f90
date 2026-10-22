@@ -171,6 +171,8 @@ module m_state
                                         !   確保・更新し出力 Sf。私有 save は geomorph_fines.dat。§84.10)
     real, allocatable :: fx(:,:)        ! 定着度 a ∈ [0,1](f_fixation。geomorph が確保・更新し
                                         !   出力 Fx。私有 save は geomorph_fixation.dat。§84.6)
+    real, allocatable :: ht(:,:)        ! 崖錐の厚さ (m。f_rockfall。geomorph が確保・更新し
+                                        !   出力 Ht。私有 save は geomorph_rockfall.dat。§48.7)
     real, allocatable :: rnv(:,:)       ! 動的粗度 n_eff = n (1 + c_n a)(fix_cn > 0 のときだけ geomorph が
                                         !   確保・更新。流れの摩擦項が allocated なら g%rn の代わりに読む。
                                         !   a の純関数で save 対象外。§84.8)
@@ -565,6 +567,11 @@ subroutine m_state_calcstat(s, p, g)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) == 0) cycle
+      ! 海セル(sw>0)は「解かない・水位を強制する」セル(§23)なので、
+      ! 貯留の総和(S 列)と最大値統計の対象外。分母 n_valcells は元から
+      ! 海セルを除いており、分子だけが海セルの一定の水柱 hsea0(潮位
+      ! 無効時は初期水深)を含んでいた不整合の修正(2026-10-22。§23.1)
+      if (g%sw(i,j) > 0) cycle
       ! ため池・ダムの貯留(hrs)は h と独立に貯水量へ計上する
       ! (h=0 のセルでも貯留は存在する。ゼロ加算はスキップ=従来ケースと
       !  総和のビット一致を保つ)
@@ -858,6 +865,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hl)) deallocate(s%hl)
   if (allocated(s%hb)) deallocate(s%hb)
   if (allocated(s%fx)) deallocate(s%fx)
+  if (allocated(s%ht)) deallocate(s%ht)
   if (allocated(s%sf)) deallocate(s%sf)
   if (allocated(s%rnv)) deallocate(s%rnv)
   if (allocated(s%vb)) deallocate(s%vb)

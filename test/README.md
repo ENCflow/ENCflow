@@ -71,12 +71,18 @@ reference の更新(`-u`)は結果の妥当性を人間が確認してから行�
 | [fixation/](fixation/) | 低水で露出した砂州の定着。成長則の解析解、定着した砂州は出水で削られない、累積浸食によるリセット、粗度増加で砂州上の流速が下がり断面流量は保存、浮遊砂の給砂が定着砂州に積もる、リスタート往復 | 掃流砂・浮遊砂 f_fixation、fix_cn | 解析・自己検証 |
 | [bedfines/](bedfines/) | 河床の細粒分の帳簿。細粒 100 % は無効時とビット一致、掃流砂+浮遊砂で 0 ≤ sf ≤ sd と固体総量・細粒分の保存が機械精度、粗粒だけの河床は浮遊砂を出さない、粗粒の水路に給砂した細粒分の在庫が堆積に厳密に等しい、容量給砂が入口の河床高と在庫を固定、リスタート往復 | 掃流砂・浮遊砂 f_bedfines、fines_la、fines_frac0 | 解析・自己検証 |
 | [sedfeed/](sedfeed/) | 直線水路の区間流入への給砂。無給砂の河床低下波、容量給砂(倍率 1)で入口の河床が厳密に固定、inflow_qb の台帳が機械精度、浮遊砂の平衡濃度給砂が流入セルの C_eq に一致 | 掃流砂 fluv_bcfeed・fluv_bcfeed_fac、inflow_qb、inflow_cs_eq | 解析・自己検証 |
+| [wave_shore/](wave_shore/) | 波浪による沿岸漂砂。直線汀線の正弦波状の擾乱が低角の波で線形理論(Ashton & Murray 2006)の減衰率で消え、高角の波で理論の成長率で育つ(物理長の平滑化 wave_lsm。従来核では格子スケールの砂州が育つことも記録)。保存、無効時ビット一致 | 掃流砂 fn_wave f_wave_longshore wave_lsm | 解析・自己検証 |
+| [wave_river/](wave_river/) | 河口の規則 wave_vmax。河道の淵が波の源になって早瀬に沿岸漂砂が働く問題の再現と、規則による河道の不変(海側では波が働く) | 掃流砂 fn_wave wave_vmax | 自己検証 |
 | [uniflow/](uniflow/) | 乾いた地盤に挟まれた幅 1・5 セルの直線水路の等流。f_opening_dynamic = 2 で Manning に一致、振り替えなしでは河岸行の流量不足(既知の性質を記録) | ENC の通水能、f_opening_dynamic | 解析 |
 | [suspend/](suspend/) | 浮遊砂(移流+浸食・沈降)の疎通・保存則 | 土砂 f_suspend | 解析 |
 | [wash/](wash/) | 斜面浸食(雨滴+面状)の疎通・保存則 | 土砂 f_wash | 保存則(Log) |
+| [wetlw/](wetlw/) | 湿潤侵食の剥離深の横方向拡散 wet_lw: 固体総量の保存、格子規模の凹凸の減少、MPI 一致 | 土砂 wet_lw | 自己検証 |
 | [splash/](splash/) | 乾式斜面侵食の解析検証 | 土砂 f_splash | ref |
 | [splashslide/](splashslide/) | 固結崖と崩壊崖の対照(乾式侵食と斜面崩壊の併用) | f_splash・f_slide | 解析 |
 | [splashlc/](splashlc/) | 曲率の相関長 spl_lc による谷の波長選択(2 波長擾乱の成長比の対照) | f_splash(spl_lc・spl_zbase) | 解析 |
+| [splashstrata/](splashstrata/) | 水平層理の侵食性倍率 spl_strata(3 層: キャップロック 0 / 0.5 / 1)の解析検証 | f_splash(spl_strata) | ref + 解析 |
+| [splashsat/](splashsat/) | 凹地形増幅の飽和 spl_ksat(放物線の谷、κ 一定)の解析検証 | f_splash(spl_ksat) | ref + 解析 |
+| [rockfall/](rockfall/) | 崩落と崖錐(垂直な台地の崩落: 体積保存・終端の高さ差 ≤ H_c・崖錐の収支。窓版・支え方式(柱の崩落)・張り出し版(降雨 + 乾式侵食)・海セル版) | f_rockfall | 解析 |
 | [sedinflow/](sedinflow/) | 区間流入の土砂濃度時系列の台帳検定 | 境界・土砂 | 解析 |
 | **土石流・崩壊・火山流動・雪崩** | | | |
 | [debris/](debris/) | 土石流(侵食起動型)の疎通・保存則。高橋型・江頭型 | 土石流 f_debris | 解析 |

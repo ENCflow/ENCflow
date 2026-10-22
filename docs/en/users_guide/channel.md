@@ -79,6 +79,27 @@ Notes when giving the height with a distribution file `fn_bank`:
   erected), and values on non-channel cells are ignored. Painting a
   **generous buffer along the channel** is therefore the safe side,
   and it automatically prevents the corner-contact leaks above.
+- **The river mouth opens automatically.** No virtual wall is erected on
+  edges between a channel cell and a cell of the sea mask (fn_sw) (the
+  seawall does not put a crest on channel cells either;
+  [geographic information chapter](geoinfo.md)). The flow from the river
+  mouth into the sea is set by the water-surface slope against the level
+  (tide) of the sea cells, so tidal reaches and backwater are represented
+  by giving the sea level with the [tide](tide.md) or with
+  [stage cells](boundary.md). The old method f_rivermouth_drop
+  ([shallow water flow](swflow.md)), which always makes the river mouth a
+  supercritical drop, cannot be combined with the tide. On the river-mouth
+  faces where a subgrid-channel-width cell touches a sea cell, the same
+  width cap as on channel-channel edges applies (treated as a channel of
+  the same width continuing into the sea; [the explanation](channel_models.md) §2).
+- The crest is converted to an absolute elevation at the start of the run
+  and fixed; it does not follow the bed or the landside ground when they
+  move by [geomorphic change](geomorph.md). The test for whether a wall
+  stands and the effective crest are evaluated with the current ground,
+  so an edge whose bed has aggraded up to the crest is no longer a wall
+  (the ground enters the ordinary computation as a step), while the
+  effective crest stays at its fixed value when the landside ground
+  lowers.
 
 ```
 &list_channel
@@ -92,7 +113,7 @@ Notes when giving the height with a distribution file `fn_bank`:
 | fn_bank / bank0 | "" / -- | levee height (distribution / uniform value; one or the other. In the distribution, -900 or below means no levee) |
 | f_bank_datum | 1 | datum of the height. 0: bed (after incision), 1: landside cell elevation (recommended), 2: absolute elevation |
 | f_bank_aggr | 0 | aggregation of the crest for datum=1. 0: mean of the adjacent landside cells (noise suppression), 1: minimum (faithful to overtopping onset), 2: maximum (conservative) |
-| f_bank_mode | 0 | hydraulic mode. 0: overtopping only (impermeable up to the crest in both directions), 1: sluice gate (check valve; passes landside -> channel only), 2: forced drainage (for compatibility and experiments; for real-world pumping stations use the pumps of the [structures chapter](structure.md)) |
+| f_bank_mode | 0 | hydraulic mode. 0: overtopping only (impermeable up to the crest in both directions), 1: sluice gate (check valve; below the crest passes landside -> channel only, and once the channel level exceeds the crest it overtops like mode 0), 2: forced drainage (for compatibility and experiments; for real-world pumping stations use the pumps of the [structures chapter](structure.md)) |
 | f_bank_opening | 1 | opening correction that reallocates the passage width of openings blocked by levee walls to the open channel-channel edges of the same cross-section (corrects the under-conveyance of one-cell channels regardless of orientation; 0 is for comparison with the old behavior; [the explanation](channel_models.md) §1) |
 
 **Outputs for this section**: levee heights are not written. Check overtopping with the landward `H0001...` and the Q of a transect on the landward side ([Output and monitoring](#output-and-monitoring)).
@@ -119,8 +140,10 @@ rationale and accuracy limits in [the explanation](channel_models.md) §2).
 ```
 
 - If no levee is specified, the channel has **no wall (natural banks)**.
-  For embanked rivers specify bank0 / fn_bank explicitly (`bank0 = 0` is
-  the same as no levee).
+  For embanked rivers specify bank0 / fn_bank explicitly. `bank0 = 0`
+  still activates the levee (with the default f_bank_datum = 1 /
+  f_bank_aggr = 0 the crest is the mean of the adjacent landside cells, so
+  edges toward lower landside cells get a wall). Omit bank0 for no levee.
 - Cells whose width is at or above the cell size are automatically
   treated as a resolved channel (incision + wall), and **the width value
   itself does not affect the results**; paint reaches you want treated as

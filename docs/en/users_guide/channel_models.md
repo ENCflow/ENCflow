@@ -16,8 +16,10 @@ is in developer.md §17, §18 and §26 (in Japanese).
 ## 1. Levees (virtual walls)
 
 A virtual wall that does not widen the cells is erected on every edge
-(diagonals included) between channel cells and landside cells. The crest
-is set from the channel-side cell's value with the following datum.
+(diagonals included) between channel cells and landside cells. No wall is
+erected on edges against the sea cells of the sea mask (fn_sw) (the river
+mouth opens automatically; [Channels](channel.md)). The crest is set from
+the channel-side cell's value with the following datum.
 
 | f_bank_datum | crest $`z_c`$ |
 |---|---|
@@ -33,9 +35,11 @@ z_{c}^{\mathrm{eff}} = \max\!\left(z_c,\ z_l,\ z_b\right)
 ```
 
 Where the crest is lower, the ground itself enters the ordinary
-shallow-water computation as a step and no levee acts (`bank0 = 0` is the
-same as no levee; this matters on natural banks in V-shaped valleys and
-when the crest is given as an absolute elevation).
+shallow-water computation as a step and no levee acts (this matters on
+natural banks in V-shaped valleys and when the crest is given as an absolute
+elevation. `bank0 = 0` is not the same as no levee: with the default
+f_bank_datum = 1 / f_bank_aggr = 0 edges toward landside cells lower than
+the mean get a wall. No levee means omitting bank0).
 
 Whatever exceeds the crest spills to the landside as Honma weir
 overtopping ([hydraulic laws](hydraulics.md) §1). When the levee is deeply
@@ -59,7 +63,8 @@ Manning uniform flow in the straight and diagonal channels of
 
 **Hydraulic mode (f_bank_mode).** 0 is overtopping only (impermeable up to
 the crest in both directions), 1 a sluice gate (check valve; a shortcut
-passing landside → channel only) and 2 forced drainage (for compatibility
+passing landside → channel only below the crest, overtopping like mode 0
+once the channel level exceeds the crest) and 2 forced drainage (for compatibility
 and experiments). Real pumping stations and sluices use the pumps and
 culverts of the [structures chapter](structure.md).
 
@@ -113,12 +118,19 @@ move to a resolved channel.
   least 2 × the cell size (e.g. 9999). The same holds together with the
   section shape σ (σ acts on the fluxes and the stage through the
   rectangular-equivalent depth, and the width is used only for the
-  plan-area fraction of storage and the conveyance cap; changed
+  plan-area fraction of storage and the conveyance cap. The conveyance
+  cap q = min(W/face length, 1) applies to channel-channel edges, to the
+  faces of open edge boundaries and to the faces against the sea cells of
+  the sea mask (fn_sw) (the river mouth of a width channel = a channel of
+  the same width continuing into the sea), and not to channel-landside
+  edges (developer.md §18); changed
   2026-10-04, before which the effective width was "width × σ(h)" and the
   actual width mattered at low flow).
 - **Advection.** `f_channel_advection = 0` drops the advection term on
   edges involving channel cells (a stabilisation option under strong width
-  heterogeneity; default 1).
+  heterogeneity; default 1). It acts only while a levee (bank0 / fn_bank)
+  is active; in the wall-less width mode the flag has no effect (enabling it
+  there diverged in tests, so this is left as is; developer.md §18, Japanese).
 - **Accuracy limits.** The channel is a raster (channel mask + width) and
   channel cells are connected by the implicit rule "adjacent cells are
   connected". Unlike one-dimensional channel-network models, which hold
@@ -234,7 +246,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_bank_mode | 0 | hydraulic mode | **method** overtopping only by default; the check valve (1) is a shortcut, real works are [structures](structure.md) |
 | f_bank_opening | 1 | opening correction | **verification case** one-cell straight and diagonal channels follow Manning uniform flow in [test/bendloss](../../../test/bendloss/) (§1) |
 | p_sect_m | 0 | shape exponent of the section | **compatibility** rectangle by default; the recommended 0.3–1 is empirical (table in the chapter) |
-| f_channel_advection | 1 | advection term on edges involving channel cells | **method** normal by default; 0 is for stabilisation under strong width heterogeneity |
+| f_channel_advection | 1 | advection term on edges involving channel cells (acts only with a levee active) | **method** normal by default; 0 is for stabilisation under strong width heterogeneity |
 | rn0_rw | — | channel roughness | **customary value** Manning n (concrete 0.015–0.02, sand bed 0.025–0.035, gravel bed 0.035–0.05, vegetated floodplain 0.05–0.1; Chow's tables[^chow59] and the Japanese river technical standards give similar ranges) |
 
 **Where to look when revising the defaults**

@@ -26,9 +26,11 @@ ANOISE, DNOISE, SEED = 0.5, 1.0, 20260820
 ap = argparse.ArgumentParser()
 ap.add_argument('name', choices=sorted(GEOM))
 ap.add_argument('--dx', type=float, default=1.0)
+ap.add_argument('--ly', type=float, default=0.0, help='y 方向の長さを変える (m。0 = 幾何の既定)')
 ap.add_argument('--tilt', type=float, default=0.0, help='台地の傾き(崖に向かって下がる勾配。0.02 = 2 %)')
 a = ap.parse_args()
-g = GEOM[a.name]
+g = dict(GEOM[a.name])
+if a.ly > 0: g['ly'] = a.ly
 dx = a.dx
 nx, ny = int(round(g['lx'] / dx)), int(round(g['ly'] / dx))
 

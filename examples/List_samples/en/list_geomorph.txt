@@ -83,6 +83,21 @@
   !repose_phi = 30.0        ! angle of repose (deg). 0 = default 30
   !repose_relax = 0.5       ! fraction of the excess slope relaxed per update
 
+  ! ---- Rockfall and talus (cap-rock cliffs; combine with f_splash; sec. 48.7) ----
+  !f_rockfall = 1           ! collapse of free faces higher than rf_hc (conservative) and talus
+                            !   (thickness ht, output Ht). The talus spreads at its repose angle and
+                            !   reduces the dry erosion of covered cells by rf_ftalus
+  !rf_hc = 4.0              ! critical free-face height H_c (m) (required)
+  !rf_phi = 35.0            ! repose angle of the talus (deg). 0 = default 35
+  !rf_relax = 0.5           ! fraction of the excess height relaxed per update (0-1)
+  !rf_ftalus = 0.3          ! dry-erosion factor of talus-covered cells (> 0; the talus removal rate
+                            !   controls the cliff retreat). 0 = default 0.3
+  !rf_hmin = 0.01           ! minimum talus thickness that spreads at the repose angle (m)
+                            !   (thinner talus stays in place). 0 = default 0.01
+  !rf_rc = 8.0              ! radius (m) of the window for the free-face height. 0 = step between
+                            !   neighbouring cells (dx-dependent) = default. Positive: drop to the
+                            !   lowest point within the window (dx-independent; half to one cliff height)
+
   ! ---- Fixation (with f_fluvial; bars exposed at low flow get fixed and
   !      resist re-erosion) ----
   !f_fixation = 1           ! fixation (a fixation degree a grows on dry cells and
@@ -158,6 +173,18 @@
                             !   downhill gradient to the 8 neighbours = default; ridge-crest
                             !   cells erode with their faces. 0: central difference = the
                             !   behaviour before 2026-10-19. sec. 48.4)
+  !spl_ksat = 0.1          ! saturation curvature kappa_s (1/m) of the hollow amplification
+                            !   (sec. 48.6). If positive, kappa in 1 + c kappa is replaced by
+                            !   kappa/(1 + kappa/kappa_s), bounding the amplification at strong
+                            !   hollows (cliff feet) at 1 + c kappa_s so benches survive.
+                            !   0 = no saturation = default
+  !spl_strata(1:2,1) = 0.0, 1.0    ! table of horizontal strata (hard/soft contrast; sec. 48.5).
+  !spl_strata(1:2,2) = 6.0, 0.3    !   Column k = (bottom elevation z_k [m], erodibility factor
+  !spl_strata(1:2,3) = 7.5, 1.0    !   f_k), increasing elevation, up to 64 layers. A cell whose
+                            !   surface elevation lies in z_k <= z < z_{k+1} has E multiplied
+                            !   by f_k (0 = a bed that does not erode = cap rock). Below the
+                            !   lowest layer the factor is 1. Unspecified = no strata. Not
+                            !   applied to creep
 
   ! Debris flow / landslide (Takahashi-type equilibrium-concentration E-D)
   ! (0: off, 1: on)

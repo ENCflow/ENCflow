@@ -176,7 +176,8 @@ cause trouble.
 ![Courant numbers differing from cell to cell, and their maximum](../../figs/courant_max_en.png)
 
 **`Cn_max` in the log is the maximum of the Courant number over the cells,
-further maximized over the display interval.** If the display is every
+further maximized over the display interval** (cells of the sea mask are
+not included, because the flow is not solved there). If the display is every
 60 s, the peak within those 60 s is recorded. It is not the maximum since
 the start of the run (the first line shows the initial state).[^state]
 

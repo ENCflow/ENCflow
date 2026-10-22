@@ -344,6 +344,16 @@ on outflow $`u_e`$ (no contribution).
   instead would mean "still water flows in from the wall side", and in a
   one-cell-wide raster channel every bend would lose about 0.55 m of
   artificial head (developer.md §68.8; the bend cases of [test/bendloss](../../../test/bendloss/README.md)).
+- **Sea cells (tide-prescribed boundary) supply no momentum either.** The
+  cells of the sea mask (fn_sw) are the side whose water level is forced;
+  their apparent water column hsea0 and their zero flux have nothing to do
+  with the real water column and flux. Edges touching a sea cell get no
+  lateral momentum supply, exactly like prescribed boundaries, and a sea
+  cell is never used as a donor nor as the far donor of MUSCL
+  (developer.md §68.35; fix of a real bug in which, with hsea0 very
+  different from the offshore depth, the velocity on the sea-land edges
+  grew to several times the land-side velocity and diverged by positive
+  feedback).
 - **The far donor of MUSCL.** If the cell beyond the $`u_\mathrm{upup}`$ edge
   is outside the domain or invalid, that face degrades to first-order
   upwind (reading 0 would give $`r \gg 1 \to \psi = 2`$, anti-diffusion, and
@@ -468,6 +478,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | p_adv_upwind_index | 0.5 | upwinding index of scheme 1 (0: central, 1: first-order upwind) | **empirical** halfway between central and first-order upwind. The bore lag grows with $`p`$ (§3) |
 | f_advection_donor | 0 | limit the donors of the flow-direction faces to channel cells on edges between channel cells | **method** off by default; it cuts the momentum exchange between the main channel and the flooded valley floor, so judge against observations (§4.4) |
 | limiter $`\psi`$ (fixed) | van Leer | flux limiter of scheme 3 | **literature value** van Leer[^vanleer79]; inside Sweby's TVD region[^sweby84] (§4.3) |
+| f_scalar_scheme | 3 | face value of the scalar transport (suspended sediment, water quality, saline layer, driftwood, building debris) (1: first-order upwind, 3: link-wise MUSCL) | **verification case** measured numerical diffusion in [test/tracer](../../../test/tracer/README.md) (longitudinal D 1/3–1/5, lateral Dy 1/14; §7). First order is not the default because its numerical diffusion is proportional to the grid spacing |
 
 ## 6. Verification cases
 
@@ -543,12 +554,17 @@ The remaining longitudinal diffusion is the limiter degrading to first
 order at the two ends of the front (extrema). No negative concentrations
 or overshoots above 100 % appear (checked in the same case). The kernel
 costs 2–3 times more per scalar, a few percent of the step. The default
-stays at 1 because calibrated values (destruction rates and thresholds of
-driftwood and debris, the concentration-dependent rheology of debris flows)
-fitted with the smeared first-order field would change; 3 is recommended
-where the arrival time or peak of a concentration front, or a load driven
-by a density peak, matters (design and verification in developer.md §78).
-Groundwater transport is not covered (it stays first-order upwind).
+is 3 because the numerical diffusion of first-order upwind is proportional
+to the grid spacing (the lateral part is a product of the diagonal
+distribution), and a default whose answer changes with the grid is no
+basis for calibration. Processes that feed the concentration back into the
+flow (the load criteria of driftwood and building debris, the
+concentration-dependent rheology of debris flows, water-quality peaks)
+shift towards higher peaks, so if existing calibrated values were fitted
+with the smeared first-order concentration field, `f_scalar_scheme = 1`
+restores the former results (for comparison and fallback; design and
+verification in developer.md §78). Groundwater transport is not covered
+(it stays first-order upwind).
 
 ## References
 

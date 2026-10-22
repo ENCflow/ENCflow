@@ -139,6 +139,13 @@ stability condition from the current ice thickness and slope at every
 update and subdivides internally as needed (ice volume is conserved
 exactly).
 
+No ice is placed on the cells of the sea mask (fn_sw): the sea area of the
+initial ice thickness fn_glacier_hi0 is zeroed, and neither the flow nor
+the avalanche redistribution sends ice to sea cells. Tidewater glaciers
+that flow into the sea and calve are out of scope; where a glacier reaches
+the coast, its terminus stops at the shoreline and the ice thickens until
+melt balances the inflow ([Tide](tide.md)).
+
 **Outputs for this section**: the effect of flow is the spreading of `Hi0001...` (extending down the valley). "SIA subcycles total" is printed at the end; an extreme count is a hint to revisit gl_afl and gl_morfac ([Output and monitoring](#output-and-monitoring)).
 
 ## Basal sliding and glacial erosion (f_glslide / f_glero)

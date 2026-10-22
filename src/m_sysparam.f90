@@ -95,6 +95,7 @@ module m_sysparam
     character(:), allocatable :: fn_precip     ! 降水条件設定ファイル
     character(:), allocatable :: fn_reservoir  ! ため池条件設定ファイル
     character(:), allocatable :: fn_tide       ! 潮位条件設定ファイル
+    character(:), allocatable :: fn_wave       ! 波浪条件設定ファイル(沿岸漂砂。§84.15)
     character(:), allocatable :: fn_boundary   ! 境界条件設定ファイル
     character(:), allocatable :: fn_structure  ! 内部水理構造物設定ファイル
     character(:), allocatable :: fn_record     ! 記録設定ファイル
@@ -235,6 +236,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%fn_precip = list%fn_precip                 ! 降水条件設定ファイル
   p%fn_reservoir = list%fn_reservoir           ! ため池条件設定ファイル
   p%fn_tide = list%fn_tide                     ! 潮位条件設定ファイル
+  p%fn_wave = list%fn_wave                     ! 波浪条件設定ファイル
   p%fn_boundary = list%fn_boundary             ! 境界条件設定ファイル
   p%fn_structure = list%fn_structure           ! 内部水理構造物設定ファイル
   p%fn_record = list%fn_record                 ! 記録設定ファイル

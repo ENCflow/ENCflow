@@ -27,7 +27,7 @@
 !
 !**********************************************************************
 module m_nest
-  use m_parallel, only : dcp, nproc, par_info, par_stop, par_allreduce_sumr, par_sum_rows
+  use m_parallel, only : dcp, nproc, par_info, par_stop, par_allreduce_sumr, par_allreduce_sumi, par_sum_rows
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
@@ -272,7 +272,8 @@ subroutine nest_setup_child(nt, c, pp, gp, sp, pc, gc, sc, bc)
   type(t_geoinfo), intent(in) :: gp, gc       ! 親・子の地理情報
   type(t_state), intent(in) :: sp, sc         ! 親・子の状態(場の表の有効判定)
   type(t_boundary), intent(inout) :: bc       ! 子の境界条件(nest_bc = 3 は外部データ付き放射の境界セルを登録する)
-  integer :: r, i, j, nb_req, f, nin
+  integer :: r, i, j, nb_req, f, nin, ip, jp
+  integer :: nsea(2)                           ! 海セル数 [子の帯, 置換対象の親セル](全ランク和)
   logical :: open(1:4)
   character(len=32) :: tag
   character(len=256) :: msg
@@ -291,6 +292,20 @@ subroutine nest_setup_child(nt, c, pp, gp, sp, pc, gc, sc, bc)
       call par_stop(trim(tag)//": child t0/tt must match the parent (same t0, nt_child = nt_parent*r_t)")
     end if
     if (pc%f_gridsystem /= 0) call par_stop(trim(tag)//": nesting requires ENC (f_gridsystem=0)")
+    ! 再開は格子ごと(ルートの f_state_restore は子へ伝播しない。§72)。片方だけの
+    ! 再開・再開ステップの不整合・save ディレクトリの共有を停止する(2026-10-22)
+    if ((pp%f_state_restore > 0) .neqv. (pc%f_state_restore > 0)) then
+      call par_stop(trim(tag)//": f_state_restore must be set in every grid's parameter file " // &
+                    "(the root's setting is not propagated to the children)")
+    end if
+    if (pp%f_state_restore == 1 .and. sc%it0 /= sp%it0 * n%rt) then
+      call par_stop(trim(tag)//": restored step mismatch (child it0 = "//itoa(sc%it0)// &
+                    ", parent it0 x r_t = "//itoa(sp%it0 * n%rt)//"): restore every grid from saves of the same time")
+    end if
+    if ((pp%f_state_save > 0 .or. pc%f_state_save > 0 .or. pp%f_state_restore > 0) .and. &
+        trim(pp%dir_save) == trim(pc%dir_save)) then
+      call par_stop(trim(tag)//": dir_save must differ between parent and child ("//trim(pc%dir_save)//")")
+    end if
     ! 寸法と足元
     if (mod(gc%nx, r) /= 0 .or. mod(gc%ny, r) /= 0) then
       call par_stop(trim(tag)//": child nx, ny must be multiples of r")
@@ -428,6 +443,40 @@ subroutine nest_setup_child(nt, c, pp, gp, sp, pc, gc, sc, bc)
         n%inband(i, j) = (i <= n%nb .or. i > gc%nx - n%nb .or. j <= n%nb .or. j > gc%ny - n%nb)
       end do
     end do
+    ! 海域マスクの排他(§23.1。2026-10-22): 子の帯のセルと、子→親の置換対象の
+    ! 親セルは海セル(sw>0)不可。帯への書き込み(nest_prolong)と置換
+    ! (nest_restrict)は海セルを除外せず、潮位境界の前提(h = hsea0・静止)を
+    ! 黙って壊すため init で止める。マスクは band_shrink 済み(帯+ハロ)なので
+    ! 自ランクの確保範囲だけを数え(親は gp%sw の確保範囲 = lbound/ubound。
+    ! ハロ行の重複計数は > 0 判定に無害)、全ランク和で判定する(par_stop は
+    ! 全ランク同時)
+    nsea(:) = 0
+    do j = n%jlo, n%jhi
+      do i = n%ilo, n%ihi
+        if (.not. n%inband(i, j)) cycle
+        if (gc%x(i, j) <= 0) cycle
+        if (gc%sw(i, j) > 0) nsea(1) = nsea(1) + 1
+      end do
+    end do
+    if (n%nest_fb > 0) then
+      do jp = max(n%jpa, lbound(gp%sw, 2)), min(n%jpb, ubound(gp%sw, 2))
+        do ip = max(n%ipa, lbound(gp%sw, 1)), min(n%ipb, ubound(gp%sw, 1))
+          if (gp%x(ip, jp) <= 0) cycle
+          if (gp%sw(ip, jp) > 0) nsea(2) = nsea(2) + 1
+        end do
+      end do
+    end if
+    call par_allreduce_sumi(nsea)
+    if (nsea(1) > 0) then
+      call par_stop(trim(tag)//": the boundary band of the child contains sea cells (sea mask fn_sw); " &
+                    //"nesting does not exchange sea cells (keep fn_sw cells out of the band; " &
+                    //"solve the sea as ordinary cells, see users_guide/nest.md)")
+    end if
+    if (nsea(2) > 0) then
+      call par_stop(trim(tag)//": the parent cells replaced by the child (nest_fb > 0) contain sea cells " &
+                    //"(sea mask fn_sw); keep fn_sw cells out of the child's interior footprint or use " &
+                    //"nest_fb = 0 (see users_guide/nest.md)")
+    end if
     n%js = dcp%js
     n%je = dcp%je
     n%ready = .true.
