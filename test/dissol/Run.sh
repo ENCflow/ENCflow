@@ -3,7 +3,7 @@
 #   ./Run.sh [-u]
 #
 # 構成 A(param.txt。面的溶食)・B(param_sink.txt。集中溶食)・
-# C(param_rain.txt。降雨源)を Check_analytic.py で解析値と比較し、
+# C(param_rain.txt。降雨源)・D(param_lat.txt。側方溶食)を Check_analytic.py で解析値と比較し、
 # A のリスタート分割 rt1 → rt2 が通し計算と state.dat・Z9998 でバイト
 # 一致することを確かめる。A の Log.txt は reference とも比較する。
 export ULP=${ULP:-1}      # 印字の最終桁を単位とした許容誤差(A の Log.txt)
@@ -20,6 +20,7 @@ set -o pipefail
 ./encflow param.txt | tee Screen.log || exit 1
 ./encflow param_sink.txt | tee -a Screen.log || exit 1
 ./encflow param_rain.txt | tee -a Screen.log || exit 1
+./encflow param_lat.txt | tee -a Screen.log || exit 1
 ./encflow param_rt1.txt | tee -a Screen.log || exit 1
 ./encflow param_rt2.txt | tee -a Screen.log || exit 1
 set +o pipefail
@@ -29,6 +30,7 @@ rc=0
 python3 "$sdir/Check_analytic.py" a result || rc=1
 python3 "$sdir/Check_analytic.py" b result_sink || rc=1
 python3 "$sdir/Check_analytic.py" c result_rain || rc=1
+python3 "$sdir/Check_analytic.py" d result_lat || rc=1
 
 # リスタート往復: 通し(save_all / result)と分割(save_rt / result_rt2)
 for f in state.dat geomorph_dissol.dat; do

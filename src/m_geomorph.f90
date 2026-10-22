@@ -90,7 +90,12 @@ module m_geomorph
     real :: fres = 0.0               ! 不溶性残渣の体積率(0〜1)
     logical :: res = .false.         ! fres > 0(sd を共動更新する)
     logical :: map = .false.         ! 可溶率の分布 fn_dissol の指定あり
-    real, allocatable :: fsol(:,:)   ! 可溶率 0〜1(帯±ハロ。自帯のみ使用)
+    real :: plat = 0.0               ! 側方溶食の配分割合 p(0 = 床のみ。karst_plan §2.5)
+    logical :: lat = .false.         ! plat > 0
+    real, allocatable :: fsol(:,:)   ! 可溶率 0〜1(帯±ハロ。壁セルの参照のためハロも使う)
+    real, allocatable :: qw(:,:)     ! 側方溶食: 湛水セルの壁向け溶解能 (m。帯±ハロ。ハロ交換)
+    real, allocatable :: wfl(:,:)    ! 側方溶食: 床向けの溶解能 (m。自帯)
+    real, allocatable :: dzl(:,:)    ! 側方溶食: 壁セルが集めた溶解能 (m。自帯)
     real(real64), allocatable :: vrow(:)  ! 溶けた岩の体積の行部分和 (m3。台帳)
   end type
 
@@ -542,8 +547,9 @@ module m_geomorph
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
     end subroutine
-    module subroutine calc_dissol(gm, g, s)
+    module subroutine calc_dissol(gm, p, g, s)
       type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
     end subroutine
@@ -941,7 +947,7 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   if (gm%f_uplift > 0) call calc_uplift(gm, g, s, dts)
   ! 石灰岩の溶食(局所。更新間隔に積算された涵養・吸込穴流入の記録を消費。
   ! morfac は記録場の水量に掛ける = dts と同じ意味。§86)
-  if (gm%f_dissol > 0) call calc_dissol(gm, g, s)
+  if (gm%f_dissol > 0) call calc_dissol(gm, p, g, s)
   ! 動く底層(地滑り土塊。z 更新プロセス群の末尾 = 他プロセスの z 更新を
   ! 見た上で動く。calc_bedslide は冒頭で z・h のハロを最新化し、
   ! サブサイクルごとに hb・z を交換する。発火(release_bedslide)は
@@ -1165,6 +1171,9 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%spl%zs)) deallocate(gm%spl%zs)
   if (allocated(gm%spl%zt)) deallocate(gm%spl%zt)
   if (allocated(gm%dis%fsol)) deallocate(gm%dis%fsol)
+  if (allocated(gm%dis%qw)) deallocate(gm%dis%qw)
+  if (allocated(gm%dis%wfl)) deallocate(gm%dis%wfl)
+  if (allocated(gm%dis%dzl)) deallocate(gm%dis%dzl)
   if (allocated(gm%dis%vrow)) deallocate(gm%dis%vrow)
   gm%spl%nclip = 0
   gm%spl%vout = 0.0

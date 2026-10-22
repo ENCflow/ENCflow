@@ -220,6 +220,9 @@ module list_geomorph
     real :: dissol_fsink = 1.0       ! 吸込穴流入水の溶解能の比(面的涵養水に対する。校正値)
     real :: dissol_fres = 0.0        ! 不溶性残渣の体積率 0〜1(溶けた岩の体積 × この率が
                                      ! 土層 sd に残る。地表は (1−率) 倍だけ下がる。0 = sd 不変)
+    real :: dissol_lat = 0.0         ! 側方溶食: 湛水セルの溶解能のうち、水面より高い隣接セル
+                                     ! (岩壁)へ配る割合 0〜1(接触幅比で配分。karst_plan §2.5)。
+                                     ! 0 = 床のみ(既定)。0.2〜0.5 で漏斗形のドリーネ・壁の後退
     character(len=256) :: fn_dissol = ""  ! 可溶率 0〜1 の分布ファイル(石灰岩の分布。
                                      ! 未指定 = 全セル 1)
                                      ! (例: 18000〜20000。湿潤・飽和の区別は
@@ -340,7 +343,7 @@ subroutine list_geomorph_read(p, list)
   integer :: f_uplift
   real :: uplift0
   integer :: f_dissol, dissol_src, dissol_sink
-  real :: dissol_ceq, dissol_rho, dissol_fsink, dissol_fres
+  real :: dissol_ceq, dissol_rho, dissol_fsink, dissol_fres, dissol_lat
   character(len=256) :: fn_dissol
   integer :: f_bedslide, f_bsres, bs_nsubmax, f_bsplunge, f_bsvplunge
   character(len=256) :: fn_bsinit
@@ -367,7 +370,7 @@ subroutine list_geomorph_read(p, list)
                            f_slide, slide_c, slide_phi, slide_gamma, &
                            f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0, &
                            f_dissol, dissol_ceq, dissol_rho, dissol_src, dissol_sink, &
-                           dissol_fsink, dissol_fres, fn_dissol, &
+                           dissol_fsink, dissol_fres, dissol_lat, fn_dissol, &
                            f_bedslide, fn_bsinit, bs_reltime, bs_rho, f_bsres, bs_mu, bs_xi, &
                            bs_vstop, bs_eps_s, bs_diagratio, bs_cfl, bs_nsubmax, bs_hplunge, bs_tstop, f_bsplunge, f_bsvplunge
 
@@ -469,6 +472,7 @@ subroutine list_geomorph_read(p, list)
   dissol_sink = list%dissol_sink
   dissol_fsink = list%dissol_fsink
   dissol_fres = list%dissol_fres
+  dissol_lat = list%dissol_lat
   fn_dissol = list%fn_dissol
   f_bedslide = list%f_bedslide
   fn_bsinit = list%fn_bsinit
@@ -588,6 +592,7 @@ subroutine list_geomorph_read(p, list)
   list%dissol_sink = dissol_sink
   list%dissol_fsink = dissol_fsink
   list%dissol_fres = dissol_fres
+  list%dissol_lat = dissol_lat
   list%fn_dissol = fn_dissol
   list%slide_c = slide_c
   list%slide_phi = slide_phi
