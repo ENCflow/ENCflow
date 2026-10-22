@@ -22,6 +22,11 @@
 !   乾いた浜の後退は安息角崩落が担う)、堤防エッジは遮断、河道幅の係数は水と同じ。
 !   定着の τ*c は効かせない(砕波帯は常時湿潤で a = 0)。
 !
+!   河口の規則(wave_vmax ≥ 0 で有効): 流速 |V| > wave_vmax のセルは波の源にも砕波帯にも
+!   しない(露出度は 0 = 陰)。河川の流下水深が h_b を超える河道が源になって波が河道を
+!   遡り、河道内の砂州に沿岸漂砂が働いて発散するのを防ぐ。しきい値は河川の流下流速と
+!   汀線帯の流速の間(利用者が直接与える。§84.15)。自セルの vv だけ読む = ハロ不要。
+!
 !   時計(wave_clock): 時系列の時刻は 1 = 地形時間(s%t × morfac。波候。既定)、
 !   0 = 水理時間(嵐の継続時間を水理時間で与える)。流束は dts(地形時間)で適用。
 !
@@ -92,6 +97,11 @@ module subroutine init_wave(gm, p, g, list)
   gm%wav%smooth = list%wave_smooth
   if (list%wave_smin <= 0.0) call par_stop("list_wave: wave_smin must be > 0")
   gm%wav%smin = list%wave_smin
+  gm%wav%vmax = list%wave_vmax                            ! 負 = 無効(比較しない)
+  if (gm%wav%vmax >= 0.0) then
+    call par_info("geomorph: wave river-mouth rule on (cells with |V| > " // rtoa(gm%wav%vmax) &
+                  // " m/s are neither a wave source nor surf zone)")
+  end if
 
   ! --- 作業配列(有効時のみ確保 = 無効時ゼロコスト)---
   allocate(gm%wav%hs(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
@@ -151,7 +161,8 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt, a, b, r, ui, uj, nact, im, ip, jm, jp
-  real :: tw, hb, hbd, dx, dy, dxv, dyv, wsum, sig2, w, hh
+  real :: tw, hb, hbd, dx, dy, dxv, dyv, wsum, sig2, w, hh, vmax
+  logical :: usev
   real :: gx, gy, sl, nx, ny, tx, ty, cosa, sina, qs, wb, q
   real :: qe, gq, vlong
   logical :: okc, okbank
@@ -167,6 +178,8 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
   hb = 0.39 * p%gg**0.2 * (gm%wav%tp * gm%wav%h0**2)**0.4
   hbd = hb / gm%wav%gamma
   gm%wav%hbd = hbd
+  vmax = gm%wav%vmax
+  usev = (vmax >= 0.0)                                   ! 河口の規則(wave_vmax。自セルの vv のみ参照)
   ! 進行方向の単位ベクトル(格子の i, j 成分。j は南向き正なので y 成分は −sin)
   dxv = cos(gm%wav%dir * deg)
   dyv = -sin(gm%wav%dir * deg)
@@ -185,6 +198,9 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%h(i,j) <= p%dd) cycle
+      if (usev) then
+        if (s%vv(i,j) > vmax) cycle                ! 河口の規則: 河川流のセルは源にならず陰(0)
+      end if
       if (s%h(i,j) > hbd) then
         gm%wav%ex2(i,j) = 1.0                      ! 砕波帯より深い = 源
       else if (i+ui < 1 .or. i+ui > g%nx .or. j+uj < 1 .or. j+uj > g%ny) then
@@ -248,6 +264,9 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
       if (g%sw(i,j) > 0) cycle
       if (s%h(i,j) <= p%dd .or. s%h(i,j) > hbd) cycle
       if (gm%wav%ex(i,j) < 0.5) cycle                   ! 陰・入り江・河道の内部
+      if (usev) then
+        if (s%vv(i,j) > vmax) cycle                     ! 河口の規則: 河川流のセルは砕波帯にしない
+      end if
       im = max(i - 1, 1); ip = min(i + 1, g%nx)      ! 全域端は片側差分
       jm = max(j - 1, 1); jp = min(j + 1, g%ny)
       gx = (gm%wav%hs(ip,j) - gm%wav%hs(im,j)) / (real(ip - im) * dx)

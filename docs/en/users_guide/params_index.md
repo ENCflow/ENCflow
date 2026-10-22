@@ -629,6 +629,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | wave_smooth | &list_wave | [Sediment and landform change](geomorph.md) |
 | wave_t | &list_wave | [Sediment and landform change](geomorph.md) |
 | wave_val | &list_wave | [Sediment and landform change](geomorph.md) |
+| wave_vmax | &list_wave | [Sediment and landform change](geomorph.md) |
 | wq_ar_cell | &list_wq | [Water quality](wq.md) |
 | wq_ar_load | &list_wq | [Water quality](wq.md) |
 | wq_ar_series | &list_wq | [Water quality](wq.md) |
