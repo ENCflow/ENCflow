@@ -608,7 +608,7 @@ module subroutine breach_init(p, g, s, ch)
     call par_stop("list_channel_breach: br_cell is not specified")
   end if
   if (.not. chn%have_bank) then
-    call par_stop("list_channel_breach: breach requires a levee (fn_bank / bank0 / fn_width)")
+    call par_stop("list_channel_breach: breach requires a levee (fn_bank / bank0)")
   end if
   if (ch%f_br_diag < 0 .or. ch%f_br_diag > 1) then
     call par_stop("list_channel_breach: f_br_diag must be 0 or 1: "//itoa(ch%f_br_diag))
