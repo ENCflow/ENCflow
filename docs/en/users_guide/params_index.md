@@ -287,6 +287,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | f_user_routine | &list_initial | [Initial conditions](initial.md) |
 | f_uvtype | &list_initial | [Initial conditions](initial.md) |
 | f_wash | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| f_wave_shadow | &list_wave | [Sediment and landform change](geomorph.md) |
 | f_wave_longshore | &list_wave | [Sediment and landform change](geomorph.md) |
 | f_wq | &list_wq | [Water quality](wq.md) |
 | f_wq_gwc_in | &list_wq | [Water quality](wq.md) |

@@ -8,12 +8,16 @@ sdir=$(dirname "$(readlink -f "$0")")
 
 python3 "$sdir/make_init.py" z > zinit.txt
 python3 "$sdir/make_init.py" sd > sdinit.txt
+python3 "$sdir/make_init.py" z bar > zinit_bar.txt
+python3 "$sdir/make_init.py" sd bar > sdinit_bar.txt
 
 export ENCFLOW_EXPECT_NP="$NP"
 set -o pipefail
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_low.txt | tee Screen.log || exit 1
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_high.txt | tee -a Screen.log || exit 1
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_high0.txt | tee -a Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_bar.txt | tee -a Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_bar0.txt | tee -a Screen.log || exit 1
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_off.txt | tee -a Screen.log || exit 1
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_nowave.txt | tee -a Screen.log || exit 1
 set +o pipefail
@@ -21,7 +25,7 @@ echo ""
 
 rc=0
 python3 "$sdir/Check_wave_shore.py" || rc=1
-for c in low high high0 off nowave; do
+for c in low high high0 bar bar0 off nowave; do
     if [ -d save_${c}_serial ]; then
         if cmp -s save_$c/state.dat save_${c}_serial/state.dat; then
             echo "=== $c: state.dat is bit-identical to the serial result ==="

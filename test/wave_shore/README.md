@@ -18,6 +18,8 @@ f_fluvial = 1 は経路の前提(静水なので掃流砂自体は動かない)�
 | low | 110°(岸向き法線 = 北から α = 20°) | 低角: 擾乱が拡散で減衰 |
 | high | 150°(α = 60°) | 高角: 反拡散で擾乱が線形理論の成長率で育つ |
 | high0 | 同上、wave_lsm = 0 | 従来のセル半径の核。凹凸が格子スケールで育つことの記録 |
+| bar | 110°、直線汀線+非侵食の水没砂州(x = 350〜450 m、天端 0.2 m)、f_wave_shadow = 1 | 段 3 (b) 部分遮蔽: 砂州の陰にサリエント、風下に侵食 |
+| bar0 | 同上、f_wave_shadow = 0 | 遮蔽なしの対照 |
 | off | fn_wave あり・f_wave_longshore = 0 | 無効時ゼロ追加(nowave と state.dat がバイト一致) |
 | nowave | fn_wave なし | off の比較基準 |
 
@@ -33,11 +35,13 @@ f_fluvial = 1 は経路の前提(静水なので掃流砂自体は動かない)�
    2b. high0(従来のセル半径の核): 同じパワーが 20 % 以上(実測 30 %)。
 3. 体積保存(閉領域。印字精度の丸めを許容)。
 4. off と nowave の state.dat がバイト一致(Run.sh の cmp)。
+5. 水没離岸堤(bar / bar0): 遮蔽ありで陰(汀線から 25 m まで)の堆積が遮蔽なしの 1.5 倍以上
+   (実測 48 対 20 m³ = 2.4 倍)、風下 100 m の侵食が 1.3 倍以上(実測 211 対 115 m³ = 1.8 倍)。
 
 ## 実行
 
 ```bash
 make
-./Run.sh          # 入力生成 → low / high / high0 / off / nowave → Check(5 ラン。15 分程度)
+./Run.sh          # 入力生成 → low / high / high0 / bar / bar0 / off / nowave → Check(7 ラン。20 分程度)
 ./Run_MPI.sh 4    # MPI。state.dat が逐次とバイト一致するのが規律
 ```

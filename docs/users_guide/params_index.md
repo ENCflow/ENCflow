@@ -285,6 +285,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_user_routine | &list_initial | [初期条件](initial.md) |
 | f_uvtype | &list_initial | [初期条件](initial.md) |
 | f_wash | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| f_wave_shadow | &list_wave | [土砂・地形変化](geomorph.md) |
 | f_wave_longshore | &list_wave | [土砂・地形変化](geomorph.md) |
 | f_wq | &list_wq | [水質](wq.md) |
 | f_wq_gwc_in | &list_wq | [水質](wq.md) |
