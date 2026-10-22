@@ -61,7 +61,8 @@ dx = float(p["lx"]) / int(p["nx"])
 morfac = float(p["morfac"])
 kd = float(p["dissol_ceq"]) * 1.0e-3 / float(p["dissol_rho"])
 fres = float(p.get("dissol_fres", 0.0))
-YR = 365.25 * 86400.0
+STORMS_PER_YR = 40.0        # 地形時間の換算: 1 日の周期 = 代表豪雨 1 回、年 40 回とみなす
+YR = 86400.0 * STORMS_PER_YR   # 「年」= 豪雨 40 回ぶんの水理時間
 times = file_times(res)
 snaps = []
 for n in sorted(times):
@@ -98,7 +99,7 @@ print("  地表の体積減少 Σ(z0 − z)Δx² = %.1f m3、÷(1 − f_res = %.
 # 面的削剥(縁から離れた、湛水しなかったセルの代表値 = 中央値)と集中削剥
 dry = inner & (hmax < 0.01)
 dif = np.median(d[dry]) if dry.any() else np.nan
-print("== 面的削剥と集中削剥(地形時間 %.0f 年)" % tend)
+print("== 面的削剥と集中削剥(地形時間 %.0f 年 = 豪雨 %d 回を年 %d 回で換算)" % (tend, round(tend * STORMS_PER_YR), STORMS_PER_YR))
 print("  湛水しなかったセルの削剥深の中央値 = %.4f m(= %.1f mm/kyr。涵養 × k_d の面的溶食)"
       % (dif, dif / tend * 1.0e6))
 print("  最大削剥深 = %.3f m(面的の %.0f 倍)、削剥深 > 1 m のセル数 = %d、> 2 m = %d"
@@ -135,7 +136,7 @@ for thr in (0.5, 1.0, 2.0):
     n, depths, _ = basins(d, thr)
     print("  削剥深 > %.1f m の窪み: %d 個(最大深 %s m)"
           % (thr, n, ", ".join("%.1f" % v for v in sorted(depths, reverse=True)[:8])))
-print("== 削剥深の時系列(地形時間 年: 最大 / 中央値 / 平均 m)")
+print("== 削剥深の時系列(地形時間 年(豪雨 40 回/年換算): 最大 / 中央値 / 平均 m)")
 series = []
 for t, z in snaps:
     dd = z0 - z
@@ -155,9 +156,11 @@ ax.imshow(hillshade(zf, dx), cmap="gray", extent=ext, origin="lower", vmin=0, vm
 ax.contour(x, y, zf, levels=np.arange(290, 306, 1), colors="tab:blue", linewidths=0.4)
 ax.set_title("最終地形(地形時間 %.0f 年)" % tend)
 ax = axes[1, 0]
-im = ax.imshow(d, extent=ext, origin="lower", cmap="magma_r", vmin=0, vmax=max(d.max(), 0.1))
-plt.colorbar(im, ax=ax, label="削剥深 z0 − z (m)")
-ax.set_title("削剥深(面的 %.2f m + ドリーネ)" % dif)
+from matplotlib.colors import LogNorm
+im = ax.imshow(np.maximum(d, 1e-3), extent=ext, origin="lower", cmap="magma_r",
+               norm=LogNorm(vmin=1e-2, vmax=max(d.max(), 0.1)))
+plt.colorbar(im, ax=ax, label="削剥深 z0 − z (m。対数)")
+ax.set_title("削剥深(面的 %.3f m + ドリーネ。縁は不溶)" % dif)
 ax = axes[1, 1]
 im = ax.imshow(hmax, extent=ext, origin="lower", cmap="Blues", vmin=0, vmax=max(hmax.max(), 0.1))
 plt.colorbar(im, ax=ax, label="最大湛水深 (m)")
@@ -237,7 +240,7 @@ ts = np.array(series)
 ax.plot(ts[:, 0], ts[:, 1], "r-o", ms=3, label="最大")
 ax.plot(ts[:, 0], ts[:, 3], "k-o", ms=3, label="平均")
 ax.plot(ts[:, 0], ts[:, 2], "b-o", ms=3, label="中央値(面的)")
-ax.set_xlabel("地形時間 (年)")
+ax.set_xlabel("地形時間 (年。豪雨 40 回/年換算)")
 ax.set_ylabel("削剥深 (m)")
 ax.set_yscale("log")
 ax.legend(fontsize=8)
@@ -245,7 +248,7 @@ ax.grid(alpha=0.3)
 ax.set_title("削剥深の時間発展")
 ax = axes[2]
 ax.plot(ts[:, 0], ts[:, 4], "m-o", ms=3)
-ax.set_xlabel("地形時間 (年)")
+ax.set_xlabel("地形時間 (年。豪雨 40 回/年換算)")
 ax.set_ylabel("削剥深 > 1 m の窪みの数")
 ax.grid(alpha=0.3)
 ax.set_title("ドリーネの数")
