@@ -224,7 +224,7 @@ subroutine load_snapshot(bm, p, g, k, d)
     allocate(wk(1:g%nx, 1:g%ny))
     call fileio_read_matrix(trim(p%dir_data)//"/"//trim(bm%fsnap(k)), g%nx, g%ny, wk, p%f_input_mode)
     do j = dcp%jsh, dcp%jeh
-      d(:,j) = wk(1:g%nx, j)
+      d(:,j) = wk(dcp%ish:dcp%ieh, j)   ! d は列窓 ish:ieh で確保(§80)
     end do
   else
     ! 窓だけのファイル: 外は 0。帯に掛かる行だけ写す
