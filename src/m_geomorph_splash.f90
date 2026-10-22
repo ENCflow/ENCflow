@@ -37,6 +37,8 @@
 !   κ̃ = κ / (1 + κ/κ_s) に置き換える(κ ≪ κ_s で従来どおり、κ ≫ κ_s で
 !   1 + c κ_s に飽和)。崖の基部(硬層の上面)のような強い凹部の増幅を有界にして
 !   段(ベンチ)を残し、深い谷頭の暴走も抑える。0 = 飽和なし(既定・旧挙動)。
+!   崖錐の保護(f_rockfall。§48.7): 崖錐 ht > 0 に覆われたセルは層理の倍率に
+!   代えて rf_ftalus 倍で削れ、剥離分だけ ht を先に減らす(apply_splash)。
 !   水平層理(spl_strata。§48.5): 層の下端標高 z_k と侵食性倍率 f_k の表
 !   (昇順)。セルの地表標高 z が属する層の f_k を E に掛ける(硬軟互層の
 !   縞・段・キャップロック)。最下層より下は 1。層は水平(標高だけの関数)で、
@@ -213,7 +215,7 @@ module subroutine eval_splash(gm, p, g, s, dts)
   type(t_state), intent(in) :: s
   real, intent(in) :: dts       ! 実効時間刻み(morfac 込み)
   integer :: i, j, nclip
-  real :: zc, ze, zw, zn, zs, kap, sx, sy, ss, er, fx, fs
+  real :: zc, ze, zw, zn, zs, kap, sx, sy, ss, er, er0, fx, fs
   real :: kc, ke, kw, kn, ks
   real :: dxi, dyi, dx2i, dy2i, ddi
   real :: zn8(8), dd8(8)
@@ -231,7 +233,7 @@ module subroutine eval_splash(gm, p, g, s, dts)
   if (smooth) call smooth_z(gm, g, s)
 
   !$omp parallel do schedule(static) reduction(+:nclip) &
-  !$omp   private(i, j, zc, ze, zw, zn, zs, kap, sx, sy, ss, er, fx, fs, kc, ke, kw, kn, ks, k, in, jn, zn8)
+  !$omp   private(i, j, zc, ze, zw, zn, zs, kap, sx, sy, ss, er, er0, fx, fs, kc, ke, kw, kn, ks, k, in, jn, zn8)
   do j = dcp%js, dcp%je
     gm%spl%fx(:,j) = 0.0
     do i = g%wx(1,j), g%wx(2,j)
@@ -298,12 +300,18 @@ module subroutine eval_splash(gm, p, g, s, dts)
       end if
       ! 水平層理: 地表標高 zc が属する層(z_k <= zc < z_{k+1})の侵食性倍率。
       ! 最下層より下は 1(§48.5)
+      er0 = er
+      fs = 1.0
       if (gm%snst > 0) then
-        fs = 1.0
         do k = 1, gm%snst
           if (zc >= gm%sstz(k)) fs = gm%sstf(k)
         end do
         er = er * fs
+      end if
+      ! 崖錐の保護(§48.7): 崖錐に覆われたセルは露出材料が崖錐なので、層理の倍率に
+      ! 代えて rf_ftalus 倍を(倍率適用前の er0 に)掛ける
+      if (gm%f_rockfall > 0) then
+        if (s%ht(i,j) > 0.0) er = er0 * gm%rf%ftalus
       end if
       er = er * s%pre(i,j)
       if (er <= 0.0) cycle
@@ -346,6 +354,8 @@ module subroutine apply_splash(gm, g, s)
       s%sd(i,j) = s%sd(i,j) - fx
       ! 河床の細粒分の帳簿(§84.10)との併用: 粗粒として扱い sf <= sd だけ保つ
       if (allocated(s%sf)) s%sf(i,j) = min(s%sf(i,j), s%sd(i,j))
+      ! 崖錐(§48.7)は先に消耗する(露出材料が崖錐 → 下の材料)
+      if (gm%f_rockfall > 0) s%ht(i,j) = max(s%ht(i,j) - fx, 0.0)
       rsum(j) = rsum(j) + fx
       ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
       ! (calc_wash と同じ整合)

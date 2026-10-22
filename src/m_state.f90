@@ -171,6 +171,8 @@ module m_state
                                         !   確保・更新し出力 Sf。私有 save は geomorph_fines.dat。§84.10)
     real, allocatable :: fx(:,:)        ! 定着度 a ∈ [0,1](f_fixation。geomorph が確保・更新し
                                         !   出力 Fx。私有 save は geomorph_fixation.dat。§84.6)
+    real, allocatable :: ht(:,:)        ! 崖錐の厚さ (m。f_rockfall。geomorph が確保・更新し
+                                        !   出力 Ht。私有 save は geomorph_rockfall.dat。§48.7)
     real, allocatable :: rnv(:,:)       ! 動的粗度 n_eff = n (1 + c_n a)(fix_cn > 0 のときだけ geomorph が
                                         !   確保・更新。流れの摩擦項が allocated なら g%rn の代わりに読む。
                                         !   a の純関数で save 対象外。§84.8)
@@ -851,6 +853,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hl)) deallocate(s%hl)
   if (allocated(s%hb)) deallocate(s%hb)
   if (allocated(s%fx)) deallocate(s%fx)
+  if (allocated(s%ht)) deallocate(s%ht)
   if (allocated(s%sf)) deallocate(s%sf)
   if (allocated(s%rnv)) deallocate(s%rnv)
   if (allocated(s%vb)) deallocate(s%vb)

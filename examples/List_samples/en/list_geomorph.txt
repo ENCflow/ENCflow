@@ -83,6 +83,18 @@
   !repose_phi = 30.0        ! angle of repose (deg). 0 = default 30
   !repose_relax = 0.5       ! fraction of the excess slope relaxed per update
 
+  ! ---- Rockfall and talus (cap-rock cliffs; combine with f_splash; sec. 48.7) ----
+  !f_rockfall = 1           ! collapse of free faces higher than rf_hc (conservative) and talus
+                            !   (thickness ht, output Ht). The talus spreads at its repose angle and
+                            !   reduces the dry erosion of covered cells by rf_ftalus
+  !rf_hc = 4.0              ! critical free-face height H_c (m) (required)
+  !rf_phi = 35.0            ! repose angle of the talus (deg). 0 = default 35
+  !rf_relax = 0.5           ! fraction of the excess height relaxed per update (0-1)
+  !rf_ftalus = 0.3          ! dry-erosion factor of talus-covered cells (> 0; the talus removal rate
+                            !   controls the cliff retreat). 0 = default 0.3
+  !rf_hmin = 0.01           ! minimum talus thickness that spreads at the repose angle (m)
+                            !   (thinner talus stays in place). 0 = default 0.01
+
   ! ---- Fixation (with f_fluvial; bars exposed at low flow get fixed and
   !      resist re-erosion) ----
   !f_fixation = 1           ! fixation (a fixation degree a grows on dry cells and

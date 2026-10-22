@@ -152,6 +152,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | evap_monthly | &list_evap | [Rainfall and meteorology](forcing.md) |
 | f_adaptive_runge | &list_enc | [Shallow water flow computation](swflow.md) |
 | f_advection_donor | &list_enc | [Shallow water flow computation](swflow.md) |
+| f_rockfall | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | f_repose | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | f_scalar_scheme | &list_enc | [Shallow water flow computation](swflow.md) |
 | f_advection_scheme | &list_enc | [Shallow water flow computation](swflow.md) |
@@ -529,6 +530,11 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | pump_out_cell | &list_struct_pump | [Structures](structure.md) |
 | pump_q0 | &list_struct_pump | [Structures](structure.md) |
 | pump_rule | &list_struct_pump | [Structures](structure.md) |
+| rf_ftalus | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| rf_hc | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| rf_hmin | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| rf_phi | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| rf_relax | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | repose_phi | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | repose_relax | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rn0 | &list_geoinfo | [Geographic information](geoinfo.md) |
