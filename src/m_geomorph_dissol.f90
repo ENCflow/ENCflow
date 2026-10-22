@@ -15,10 +15,14 @@
 !              greenampt)が allocated 判定で書く。dissol_src=2: 本 submodule
 !              が毎ステップ s%pre·dt を積む(accum_dissol_rain)
 !     s%fxdi — 吸込穴流入量の積算。m_gwflow_conduit の枡流入が書く
-!     どちらも calc_dissol が読んでゼロ戻し。確保は init_dissol(無効時は
+!     gm%dis%frn — 表面流源(dissol_src=3)の地上降雨量の積算(私有)。水量は
+!              浸透量 + fsurf·fb·max(雨 − 浸透, 0)、fb = max(0, 1 − sd/sdsurf)
+!              (裸岩で発生した流出水のうち fsurf がその岩面で溶解能を使う。
+!              通過流は飽和とみなし数えない = 飽和の距離 ≪ Δx。§86.6)
+!     いずれも calc_dissol が読んでゼロ戻し。確保は init_dissol(無効時は
 !     未確保 = 書き手の分岐は allocated 判定のみ = ゼロコスト)
 !   更新間隔の途中で save されると積算が失われるため、モジュール私有
-!   ファイル geomorph_dissol.dat(契約 5。fxd、sink 有効時は fxdi も)で
+!   ファイル geomorph_dissol.dat(契約 5。fxd、sink 有効時は fxdi、表面流源では frn も)で
 !   save/restore する → リスタート往復が ULP=0 で閉じる。
 !
 !   局所更新(近傍参照なし)・線形で無条件安定。海セル(侵食基準面)と無効
@@ -81,8 +85,22 @@ module subroutine init_dissol(gm, p, g, s, list)
       end if
     case (2)
       ! 地上降雨量(遮断後の s%pre)。浸透の有無によらない最大削剥速度モデル
+    case (3)
+      ! 浸透量 + 裸岩で発生する流出水の fsurf 倍(表面流源。§86.6)
+      if (len_trim(p%fn_gwflow) == 0) then
+        call par_stop("list_geomorph: dissol_src=3 (infiltration + surface runoff) requires fn_gwflow; " &
+                      // "use dissol_src=2 (rainfall) without groundwater")
+      end if
+      ! 既定 0.3 = 裸岩の雨水の溶解能(50〜80 mg/L)/ 土層下の涵養水(100〜300)の比。§62
+      gm%dis%fsurf = gm_param("dissol_fsurf", list%dissol_fsurf, 0.3, "")
+      if (gm%dis%fsurf < 0.0) call par_stop("list_geomorph: dissol_fsurf must be >= 0")
+      ! 既定 0.1 m = 土層がこれより薄いセルを裸岩とみなす(線形に漸減)
+      gm%dis%sdsurf = gm_param("dissol_sdsurf", list%dissol_sdsurf, 0.1, " m")
+      if (gm%dis%sdsurf <= 0.0) call par_stop("list_geomorph: dissol_sdsurf must be > 0")
+      gm%dis%sdsinv = 1.0 / gm%dis%sdsurf
+      allocate(gm%dis%frn(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     case default
-      call par_stop("list_geomorph: dissol_src must be 1 (infiltration) or 2 (rainfall)")
+      call par_stop("list_geomorph: dissol_src must be 1 (infiltration), 2 (rainfall) or 3 (infiltration + runoff)")
   end select
 
   select case (list%dissol_sink)
@@ -130,9 +148,13 @@ module subroutine init_dissol(gm, p, g, s, list)
   if (p%f_state_restore > 0) call restore_dissol(gm, p, g, s)
 
   call par_info("geomorph: limestone dissolution on (k_d = " // rtoa(gm%dis%kd) &
-                // " m/m, source = " // trim(merge("infiltration", "rainfall    ", gm%dis%src == 1)) &
+                // " m/m, source = " // trim(srcname(gm%dis%src)) &
                 // ", sink term = " // trim(merge("on ", "off", gm%dis%sink)) &
                 // ", residue = " // rtoa(gm%dis%fres) // ")")
+  if (gm%dis%src == 3) then
+    call par_info("geomorph: surface-runoff dissolution on bare rock (fsurf = " // rtoa(gm%dis%fsurf) &
+                  // ", bare below sd = " // rtoa(gm%dis%sdsurf) // " m)")
+  end if
   if (gm%dis%auto) then
     call par_info("geomorph: lateral dissolution on (wall share = wetted-area ratio h*sum(L)/(h*sum(L)+dx*dy))")
   else if (gm%dis%lat) then
@@ -144,6 +166,18 @@ module subroutine init_dissol(gm, p, g, s, list)
                   // "(zero unless f_gwconduit=1 with inlets)")
   end if
 end subroutine
+
+
+!----------------------------------------------------------------------
+function srcname(src) result(nm)
+  integer, intent(in) :: src
+  character(len=24) :: nm
+  select case (src)
+    case (1); nm = "infiltration"
+    case (2); nm = "rainfall"
+    case default; nm = "infiltration + runoff"
+  end select
+end function
 
 
 !----------------------------------------------------------------------
@@ -181,24 +215,58 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 降雨源(dissol_src=2)の毎ステップ積算: fxd += pre·dt(遮断後の地上降雨)
+! 降雨の毎ステップ積算(遮断後の地上降雨 pre·dt): dissol_src=2 は fxd へ
+! (= 水量そのもの)、dissol_src=3 は私有の frn へ(流出 = 雨 − 浸透 の算出用)
 !----------------------------------------------------------------------
 module subroutine accum_dissol_rain(gm, p, g, s)
-  type(t_geomorph), intent(in) :: gm
+  type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j
-  if (gm%initialized) continue  ! 引数未使用の警告を抑制
-  !$omp parallel do schedule(static) private(i, j)
-  do j = dcp%js, dcp%je
-    do i = g%wx(1,j), g%wx(2,j)
-      if (g%x(i,j) <= 0) cycle
-      s%fxd(i,j) = s%fxd(i,j) + s%pre(i,j) * p%dt
+  if (gm%dis%src == 3) then
+    !$omp parallel do schedule(static) private(i, j)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        gm%dis%frn(i,j) = gm%dis%frn(i,j) + s%pre(i,j) * p%dt
+      end do
     end do
-  end do
-  !$omp end parallel do
+    !$omp end parallel do
+  else
+    !$omp parallel do schedule(static) private(i, j)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        s%fxd(i,j) = s%fxd(i,j) + s%pre(i,j) * p%dt
+      end do
+    end do
+    !$omp end parallel do
+  end if
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 1 セルの水量の消費(記録場を読んでゼロ戻し): 浸透(+ 表面流源)+ 吸込穴
+!----------------------------------------------------------------------
+function take_water(gm, s, i, j) result(fw)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: i, j
+  real :: fw, fb
+  fw = s%fxd(i,j)
+  s%fxd(i,j) = 0.0
+  if (gm%dis%src == 3) then
+    ! 裸岩で発生した流出水(雨 − 浸透)のうち fsurf をその岩面で使う
+    fb = max(0.0, 1.0 - s%sd(i,j) * gm%dis%sdsinv)
+    fw = fw + gm%dis%fsurf * fb * max(gm%dis%frn(i,j) - fw, 0.0)
+    gm%dis%frn(i,j) = 0.0
+  end if
+  if (gm%dis%sink) then
+    fw = fw + gm%dis%fsink * s%fxdi(i,j)
+    s%fxdi(i,j) = 0.0
+  end if
+end function
 
 
 !----------------------------------------------------------------------
@@ -224,12 +292,7 @@ module subroutine calc_dissol(gm, p, g, s)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       ! 積算水量は海セルでも消費して捨てる(次の間隔へ持ち越さない)
-      fw = s%fxd(i,j)
-      s%fxd(i,j) = 0.0
-      if (gm%dis%sink) then
-        fw = fw + gm%dis%fsink * s%fxdi(i,j)
-        s%fxdi(i,j) = 0.0
-      end if
+      fw = take_water(gm, s, i, j)
       if (g%sw(i,j) > 0) cycle
       if (fw <= 0.0) cycle
       w = gm%dis%kd * fw * gm%morfac
@@ -276,12 +339,7 @@ subroutine calc_dissol_lat(gm, p, g, s)
       gm%dis%wfl(i,j) = 0.0
       gm%dis%dzl(i,j) = 0.0
       if (g%x(i,j) <= 0) cycle
-      fw = s%fxd(i,j)
-      s%fxd(i,j) = 0.0
-      if (gm%dis%sink) then
-        fw = fw + gm%dis%fsink * s%fxdi(i,j)
-        s%fxdi(i,j) = 0.0
-      end if
+      fw = take_water(gm, s, i, j)
       if (g%sw(i,j) > 0) cycle
       if (fw <= 0.0) cycle
       wcap = gm%dis%kd * fw * gm%morfac
@@ -406,6 +464,7 @@ subroutine save_dissol(gm, p, g, s)
   end if
   call restart_write_cell(un, s%fxd)
   if (gm%dis%sink) call restart_write_cell(un, s%fxdi)
+  if (gm%dis%src == 3) call restart_write_cell(un, gm%dis%frn)
   if (is_root) close(un)
 end subroutine
 
@@ -429,6 +488,7 @@ subroutine restore_dissol(gm, p, g, s)
   if (is_root) open(newunit=un, file=fname, form='unformatted', status='old')
   call restart_read_cell(un, s%fxd)
   if (gm%dis%sink) call restart_read_cell(un, s%fxdi)
+  if (gm%dis%src == 3) call restart_read_cell(un, gm%dis%frn)
   if (is_root) close(un)
 end subroutine
 

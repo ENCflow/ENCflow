@@ -9,6 +9,8 @@
 #     d: result_lat  中央 3x3 の窪みの溶解能 W = 4e-4 m を、床 (1-p)W と
 #                    周囲 16 セルの壁 pW L_k/ΣL に配分(karst_plan §2.5。p = 0.4)
 #     e: result_lata 同上を降雨源(全セル W)+ 自動配分 p = hΣL/(hΣL + Δx²)で(相対 1e-4)
+#     f: result_surf 表面流源: Δz = -k_d (I + fsurf fb (P - I)) morfac、I = 0.01、P = 0.03、
+#                    fsurf = 0.3、fb = 1 - 0.001/0.1、morfac = 1000(全セル)
 #   終了コード: 0 = PASS、1 = FAIL
 import sys, numpy as np
 
@@ -97,10 +99,14 @@ elif case in ("d", "e"):
     print("%s: total dissolved thickness = %.6e m (sum W = %.6e m, rtol %.0e)  %s"
           % (case.upper(), tot_num, tot_ana, tol_sum, "PASS" if abs(tot_num - tot_ana) <= tol_sum * tot_ana else "FAIL"))
     ok &= abs(tot_num - tot_ana) <= tol_sum * tot_ana
+elif case == "f":
+    I, P, FSURF, FB = 0.01, 0.03, 0.3, 1.0 - 0.001 / 0.1
+    w = KD * (I + FSURF * FB * (P - I)) * 1000.0
+    ok &= check("F: z (z0 - w, bare-rock runoff)", z, np.full_like(z, -w), rtol)
 elif case == "c":
     w = KD * (30.0 / 3.6e6 * 3600.0) * 1000.0
     ok &= check("C: z (z0 - w)", z, np.full_like(z, -w), rtol)
 else:
-    raise SystemExit("usage: Check_analytic.py {a|b|c|d|e} <resultdir> [rtol]")
+    raise SystemExit("usage: Check_analytic.py {a|b|c|d|e|f} <resultdir> [rtol]")
 print("== dissol %s: %s ==" % (case.upper(), "PASS" if ok else "FAIL"))
 sys.exit(0 if ok else 1)

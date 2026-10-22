@@ -3,7 +3,7 @@
 #   ./Run.sh [-u]
 #
 # 構成 A(param.txt。面的溶食)・B(param_sink.txt。集中溶食)・
-# C(param_rain.txt。降雨源)・D(param_lat.txt。側方溶食)・E(param_lata.txt。自動配分)を Check_analytic.py で解析値と比較し、
+# C(param_rain.txt。降雨源)・D(param_lat.txt。側方溶食)・E(param_lata.txt。自動配分)・F(param_surf.txt。表面流源)を Check_analytic.py で解析値と比較し、
 # A のリスタート分割 rt1 → rt2 が通し計算と state.dat・Z9998 でバイト
 # 一致することを確かめる。A の Log.txt は reference とも比較する。
 export ULP=${ULP:-1}      # 印字の最終桁を単位とした許容誤差(A の Log.txt)
@@ -22,6 +22,9 @@ set -o pipefail
 ./encflow param_rain.txt | tee -a Screen.log || exit 1
 ./encflow param_lat.txt | tee -a Screen.log || exit 1
 ./encflow param_lata.txt | tee -a Screen.log || exit 1
+./encflow param_surf.txt | tee -a Screen.log || exit 1
+./encflow param_surf_rt1.txt | tee -a Screen.log || exit 1
+./encflow param_surf_rt2.txt | tee -a Screen.log || exit 1
 ./encflow param_rt1.txt | tee -a Screen.log || exit 1
 ./encflow param_rt2.txt | tee -a Screen.log || exit 1
 set +o pipefail
@@ -33,6 +36,7 @@ python3 "$sdir/Check_analytic.py" b result_sink || rc=1
 python3 "$sdir/Check_analytic.py" c result_rain || rc=1
 python3 "$sdir/Check_analytic.py" d result_lat || rc=1
 python3 "$sdir/Check_analytic.py" e result_lata || rc=1
+python3 "$sdir/Check_analytic.py" f result_surf || rc=1
 
 # リスタート往復: 通し(save_all / result)と分割(save_rt / result_rt2)
 for f in state.dat geomorph_dissol.dat; do
@@ -47,6 +51,12 @@ if cmp -s result/Z9998.bil result_rt2/Z9998.bil; then
     echo "PASS: restart continuation matches the straight run: Z9998.bil"
 else
     echo "FAIL: restart continuation differs from the straight run: Z9998.bil" >&2
+    rc=1
+fi
+if cmp -s result_surf/Z9998.bil result_surf_rt2/Z9998.bil; then
+    echo "PASS: restart continuation matches the straight run (surface source): Z9998.bil"
+else
+    echo "FAIL: restart continuation differs from the straight run (surface source): Z9998.bil" >&2
     rc=1
 fi
 

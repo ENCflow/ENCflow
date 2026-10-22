@@ -84,7 +84,12 @@ module m_geomorph
   ! 石灰岩の溶食(f_dissol。§86。docs/karst_plan.md)
   type t_dissol
     real :: kd = 0.0                 ! 溶解能/岩密度 = 水 1 m あたり溶ける岩の厚さ (m/m)
-    integer :: src = 1               ! 面的溶食の水量(1: 浸透量の記録, 2: 地上降雨量)
+    integer :: src = 1               ! 面的溶食の水量(1: 浸透量の記録, 2: 地上降雨量,
+                                     !   3: 浸透量 + 裸岩の流出水 × fsurf = 表面流源)
+    real :: fsurf = 0.0              ! 表面流源: 流出水の溶解能のうち岩面で使う割合
+    real :: sdsurf = 0.0             ! 表面流源が効く土層厚の上限 (m)
+    real :: sdsinv = 0.0             ! 1 / sdsurf
+    real, allocatable :: frn(:,:)    ! 表面流源: 地上降雨量の積算 (m。帯±ハロ。私有 save)
     logical :: sink = .false.        ! 吸込穴(管路層の枡)流入項の有効
     real :: fsink = 1.0              ! 吸込穴流入水の溶解能の比
     real :: fres = 0.0               ! 不溶性残渣の体積率(0〜1)
@@ -557,7 +562,7 @@ module m_geomorph
       type(t_list_geomorph), intent(in) :: list
     end subroutine
     module subroutine accum_dissol_rain(gm, p, g, s)
-      type(t_geomorph), intent(in) :: gm
+      type(t_geomorph), intent(inout) :: gm
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
@@ -772,10 +777,10 @@ subroutine m_geomorph_init(gm, p, g, s)
   !   記録場 s%fxd / s%fxdi の確保・分布の読み込み・restore は init_dissol
   gm%f_dissol = list%f_dissol
   if (gm%f_dissol > 0) then
-    if (list%dissol_fres > 0.0 .and. .not. (gm%f_fluvial > 0 .or. gm%f_suspend > 0 &
-        .or. gm%f_debris > 0 .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 &
+    if ((list%dissol_fres > 0.0 .or. list%dissol_src == 3) .and. .not. (gm%f_fluvial > 0 &
+        .or. gm%f_suspend > 0 .or. gm%f_debris > 0 .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 &
         .or. gm%f_repose > 0 .or. gm%f_wthr > 0)) then
-      call setup_sd(p, g, s)                        ! 残渣の堆積先として sd を確保・転記
+      call setup_sd(p, g, s)                        ! 残渣の堆積先・裸岩判定として sd を確保・転記
     end if
     call init_dissol(gm, p, g, s, list)
   end if
@@ -938,7 +943,7 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
 
   if (.not. gm%enabled) return
   ! 溶食の降雨源(dissol_src=2)は毎ステップの積算(間欠更新の前。§86)
-  if (gm%f_dissol > 0 .and. gm%dis%src == 2) call accum_dissol_rain(gm, p, g, s)
+  if (gm%f_dissol > 0 .and. gm%dis%src >= 2) call accum_dissol_rain(gm, p, g, s)
   if (mod(it, gm%idt_geomorph) /= 0) return
 
   ! 実効時間刻み(間欠実行 × 加速係数)
@@ -1221,6 +1226,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%spl%zs)) deallocate(gm%spl%zs)
   if (allocated(gm%spl%zt)) deallocate(gm%spl%zt)
   if (allocated(gm%dis%fsol)) deallocate(gm%dis%fsol)
+  if (allocated(gm%dis%frn)) deallocate(gm%dis%frn)
   if (allocated(gm%dis%qw)) deallocate(gm%dis%qw)
   if (allocated(gm%dis%wfl)) deallocate(gm%dis%wfl)
   if (allocated(gm%dis%dzl)) deallocate(gm%dis%dzl)

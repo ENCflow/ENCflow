@@ -214,7 +214,13 @@ module list_geomorph
                                      ! 質量 g)。未指定 = 既定 100(§62)
     real :: dissol_rho = 0.0         ! 岩の密度 (kg/m3)。0 = 既定 2500(§62)
     integer :: dissol_src = 1        ! 面的溶食の水量(1: 地下水の浸透量の記録、
-                                     ! 2: 地上降雨量 s%pre = 浸透の有無によらない最大削剥)
+                                     ! 2: 地上降雨量 s%pre = 浸透の有無によらない最大削剥、
+                                     ! 3: 浸透量 + 裸岩で発生する流出水(雨 − 浸透)の
+                                     !    dissol_fsurf 倍 = 表面流源。§86.6)
+    real :: dissol_fsurf = 0.0       ! 表面流源: 流出水の溶解能のうち、その岩面で使う割合
+                                     ! (裸岩の雨水の溶解能 / 土層下の涵養水の比)。0 = 既定 0.3
+    real :: dissol_sdsurf = 0.0      ! 表面流源が効く土層厚の上限 (m)。土層 sd がこれ未満の
+                                     ! セルを裸岩とみなし (1 − sd/上限) を掛ける。0 = 既定 0.1
     integer :: dissol_sink = 0       ! 吸込穴(管路層の枡)流入量も溶食源に加える
                                      ! (0:加えない, 1:加える。f_gwconduit の枡が前提)
     real :: dissol_fsink = 1.0       ! 吸込穴流入水の溶解能の比(面的涵養水に対する。校正値)
@@ -351,7 +357,7 @@ subroutine list_geomorph_read(p, list)
   integer :: f_uplift
   real :: uplift0
   integer :: f_dissol, dissol_src, dissol_sink
-  real :: dissol_ceq, dissol_rho, dissol_fsink, dissol_fres, dissol_lat
+  real :: dissol_ceq, dissol_rho, dissol_fsink, dissol_fres, dissol_lat, dissol_fsurf, dissol_sdsurf
   character(len=256) :: fn_dissol
   integer :: f_rockfall
   real :: rockfall_phi, rockfall_relax, rockfall_bulk
@@ -380,7 +386,7 @@ subroutine list_geomorph_read(p, list)
                            f_slide, slide_c, slide_phi, slide_gamma, &
                            f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0, &
                            f_dissol, dissol_ceq, dissol_rho, dissol_src, dissol_sink, &
-                           dissol_fsink, dissol_fres, dissol_lat, fn_dissol, &
+                           dissol_fsink, dissol_fres, dissol_lat, dissol_fsurf, dissol_sdsurf, fn_dissol, &
                            f_rockfall, rockfall_phi, rockfall_relax, rockfall_bulk, &
                            f_bedslide, fn_bsinit, bs_reltime, bs_rho, f_bsres, bs_mu, bs_xi, &
                            bs_vstop, bs_eps_s, bs_diagratio, bs_cfl, bs_nsubmax, bs_hplunge, bs_tstop, f_bsplunge, f_bsvplunge
@@ -484,6 +490,8 @@ subroutine list_geomorph_read(p, list)
   dissol_fsink = list%dissol_fsink
   dissol_fres = list%dissol_fres
   dissol_lat = list%dissol_lat
+  dissol_fsurf = list%dissol_fsurf
+  dissol_sdsurf = list%dissol_sdsurf
   fn_dissol = list%fn_dissol
   f_rockfall = list%f_rockfall
   rockfall_phi = list%rockfall_phi
@@ -608,6 +616,8 @@ subroutine list_geomorph_read(p, list)
   list%dissol_fsink = dissol_fsink
   list%dissol_fres = dissol_fres
   list%dissol_lat = dissol_lat
+  list%dissol_fsurf = dissol_fsurf
+  list%dissol_sdsurf = dissol_sdsurf
   list%fn_dissol = fn_dissol
   list%f_rockfall = f_rockfall
   list%rockfall_phi = rockfall_phi
