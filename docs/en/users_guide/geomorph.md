@@ -361,7 +361,14 @@ as the following boundary for sediment: **suspended sediment leaving
 into a sea cell is treated as lost from the system** (a perfect sink;
 inflow from the sea to the land is always clear water), and **bedload
 does not cross an edge bordering a sea cell** (a wall; sand piles up
-artificially along the seaward front). Wherever you want deposition on
+artificially along the seaward front). The solid fraction (hs) of debris
+flows, driftwood and building debris are carried by the same scalar
+transport as suspended sediment, so they too are treated as outside the
+system once they leave into a sea cell. Where the plunge into the sea and
+the response of the water surface must be solved, represent the sea as
+ordinary cells + an initial water level, as described in the
+[moving bed layer](#moving-bed-layer--landslide-tsunami-f_bedslide)
+section. Wherever you want deposition on
 the sea bottom or seaward landform change to be solved (formation of a
 river-mouth terrace, the tsunami deposits above), represent that area
 as ordinary cells + an initial water level, and if you use a sea mask,
@@ -773,6 +780,16 @@ plateau: conservation, final height differences <= H_c, talus budget). Example:
 **Outputs of this section**: talus thickness `Ht0001...`, terrain `Z0001...`; the
 final "rockfall moved ..." line gives the moved volume and the number of active edges.
 
+**Debris flows reaching the sea mask** - the solid fraction hs and the
+water that leave into a sea cell (fn_sw) disappear outside the system
+([the sea mask and the fate of sediment](#suspended-sediment-f_suspend)).
+The bed-slope computation treats the seaward neighbourhood as slope 0, so
+a debris flow does not accelerate by plunging into the sea at the coast.
+To solve the plunge into the sea and the response of the water surface
+(tsunami), represent the sea as ordinary cells + an initial water level
+and hand over to the moving bed layer in the standing water (bs_hplunge;
+next section).
+
 ## Moving bed layer / landslide tsunami (f_bedslide)
 
 Driving head, buoyancy, Voellmy speed and flux distribution: [supplement](massflow.md#5-moving-bed-layer-f_bedslide).
@@ -944,7 +961,12 @@ cross-shore transport (beach face, barriers, dunes), wave set-up and rip
 currents, the cross-shore distribution inside the surf zone and directional
 spectra are not represented. Any water deeper than the surf zone is a wave
 source (a lake gets waves too), so mask water bodies that are not meant to or
-put them in the lee.
+put them in the lee. The cells of the sea mask (fn_sw) are neither a wave
+source nor part of the surf zone, and the depth smoothing that takes the
+shoreline orientation treats them as land (depth 0). If you use a sea mask,
+place it well offshore of the breaking depth h_b/γ so that its edge does not
+fall inside the smoothing radius wave_smooth of the surf zone (the edge would
+be read as a shoreline).
 
 **Output of this section**: landform change in `Z0001...` (`f_out_z=1`); the
 final warning reports the solid volume carried through edges by longshore

@@ -74,7 +74,7 @@ Equations of decay, settling and partitioning and the sources of the representat
 | wq_kd | - | Equilibrium partition coefficient (L/kg). Two-phase dissolved/particulate partitioning (below; requires f_suspend) |
 | f_wq_settle | 0 | Destination of settling. 0: lost to the riverbed, 1: to the surface buildup pool (resuspension cycle) |
 | f_wq_infil | 1 | Behavior at infiltration. 0: remains on the surface (for particulate substances), 1: entrained at the current concentration into the subsurface pool (for dissolved substances) |
-| wq_rg | 1 | Retardation factor R (>= 1) for subsurface transport. Reduces the effective concentration of groundwater advection and seepage return to 1/R (see "Transport through groundwater" below) |
+| wq_rg | 1 | Retardation factor R (>= 1) for subsurface transport. Reduces the effective concentration of groundwater advection and seepage return to 1/R (see "Transport through groundwater" below). Specifying it explicitly requires f_wq_infil=1 (combining it with 0 is stopped at initialisation with an error) |
 
 **Representative values by substance (a starting point)** - because
 water-quality properties differ by orders of magnitude between
@@ -178,8 +178,8 @@ dimensionless; convert the L/kg input before using it in this expression.
 Cells without suspended sediment have fd=1 (entirely dissolved).
 
 - **infiltration**, with `f_wq_infil=1`, entrains only the dissolved fraction fd into the
-  ground (the particulate fraction is filtered out and remains on the
-  surface),
+  ground (the particulate fraction does not enter the soil; it is
+  filtered out at the surface and remains there),
 - **settling** removes the particulate fraction (1 − fd) at the
   **same settling velocity as the suspended sediment** (`wq_vs` is no
   longer needed; specifying both is an error). The destination is
@@ -237,8 +237,18 @@ that judgement through R.
   no subsurface decay and no other groundwater mass exchange. Otherwise,
   include those terms. `decay_g` combines losses from all stores; it does
   not provide the groundwater component separately.
-- Transport inside the weathered-bedrock layer (f_gwlayer2) is not
-  supported yet.
+- Only the lateral flow and the saturation-excess seepage of layer 1
+  (the soil layer) carry mass. The other pathways by which water leaves
+  layer 1 move water only, and the mass stays in layer 1: percolation into
+  the weathered-bedrock layer (f_gwlayer2), pumping (f_gwpump) and
+  infiltration water into the conduit layer (gwc_leak_layer=1).
+  Evapotranspiration also removes pure water only (which is the physically
+  correct behavior). Two consequences follow: (a) the layer-1 concentration
+  Cg/Hg is pushed apparently higher, and (b) water that returns to the
+  surface through layer 2 or the conduits is clean water, so a configuration
+  that reproduces baseflow with f_gwlayer2 can underestimate the load
+  carried through groundwater. The ledger closure (the relation above) is
+  not broken by any of these pathways.
 
 Worked example: [test/gwseep](../../../test/gwseep/) (a closed sloping
 domain cycling infiltration → lateral groundwater flow → seepage →
@@ -421,15 +431,25 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 |---|---|---|
 | C0001... | automatic | volume-averaged concentration (mg/L = g/m³); meaningful in wet cells only, 0 in dry cells |
 | B0001... | automatic (with the buildup pool) | surface buildup pool (kg/ha; geometric area basis) |
-| Cg0001... | rides on f_out_hg (with infiltration entrainment f_wq_infil=1) | subsurface mass pool (g/m²; geometric area basis = mass in the cell is Cg × A); groundwater concentration = Cg / (Hg × θ) |
+| Cg0001... | rides on f_out_hg (with infiltration entrainment f_wq_infil=1) | subsurface mass pool (g/m²; geometric area basis = mass in the cell is Cg × A); groundwater concentration = Cg / Hg (mg/L; Hg is a column-equivalent water depth, so do not divide by θ; in cells with building porosity gv < 1 an approximation of order gv applies) |
 
 **Ledgers and log** (budget checks)
 
 - `result/wq.csv`: time `time_s` [s] and the mass columns [g] below.
   `mass_*_g` are current stores at the record time; the others are
   cumulative (every `dt_recrd`).
-- The screen and Log.txt have no water-quality column (the S water-budget
-  columns are unchanged).
+- The screen and Log.txt have no water-quality column (the storage column S
+  of the water budget is unchanged).
+- There is no column for the mass that leaves the system through the sea
+  cells of the sea mask (fn_sw) or through the edge boundaries. The outflow
+  to outside the system is obtained as the residual: cumulative inputs −
+  internal transfers − current mass.
+- Sea cells hold no mass (a sea area with the initial concentration wq_c0
+  is zeroed; sea cells are excluded from decay and from the ledger). Water
+  that flows from the sea onto land is clean water (concentration 0). To
+  give the seawater a concentration, express it as the boundary inflow
+  concentration of a point source or an inflow segment on the land cells
+  adjacent to the sea.
 
 | Columns | Meaning |
 |---|---|

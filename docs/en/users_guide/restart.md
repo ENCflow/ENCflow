@@ -66,6 +66,11 @@ additional duration.
   contains the state at the saved time.
 - With `f_state_save = 1` in the restarted run, finalization saves again to
   the same `dir_save`. Advance `tt` for each save–restart–save cycle.
+- The sea cells of the sea mask ([tide](tide.md)) restore `z` and `h` from
+  `state.dat`, and the initial application of the tide is skipped (the
+  saved state is authoritative). The tide update phase is based on the
+  absolute step number, so after restart the tide is updated at the same
+  steps as in an uninterrupted run and the round trip is bitwise identical.
 
 ### Agreement with an uninterrupted run
 
@@ -83,6 +88,15 @@ claim about statistics, entire logs, or every combination of features.
   save its finite-difference history. The first projection after restart
   uses zero bottom acceleration, so exact agreement with an uninterrupted
   run is not guaranteed when the bed moves.
+- In a configuration where the reference level of the long-wave radiation
+  boundary (type 2) is derived automatically from the initial level
+  (`bc_eta_*` unspecified and f_htype 0, 1 or 3), the restarted run derives
+  the reference again from the restored state (the level of the boundary
+  cells at the saved time). If a wave was crossing the boundary at the
+  saved time, the reference shifts and the radiation after restart does
+  not agree with an uninterrupted run. When agreement is required, give
+  `bc_eta_*` explicitly or use f_htype=2 (e0 as the reference)
+  ([boundary conditions](boundary.md)).
 
 The basis is [developer.md](../../developer.md) §7 and §69.10, together with
 `m_state.f90`, `m_swflow_enc.f90`, and `m_swflow_enc_nh.f90`.
@@ -100,7 +114,11 @@ axis. A typical use is branching after spin-up:
 
 Time-series forcing, such as tide, boundary inflow, and rain, is **read again
 using the new time axis**. Align the forcing at scenario start with the
-restored state; large discrepancies can cause initial disturbances. Mode 2
+restored state; large discrepancies can cause initial disturbances. The
+sea cells of the sea mask are restored with `z` and `h` of the saved time
+and are replaced when the tide is applied at the first step of the new
+time axis (the sea in the starting-state outputs `H0000` and `E0000`
+still carries the tide of the saved time). Mode 2
 provides initial conditions and does not promise exact agreement with an
 uninterrupted run.
 

@@ -51,6 +51,13 @@ For a long-wave radiation edge boundary (type 2), if the reference level
 is not explicitly set, `f_htype=2` uses `e0` as that reference
 ([boundary conditions](boundary.md)).
 
+The initial depth or level is also assigned to sea-mask (fn_sw) cells.
+When the tide (fn_tide) is active, its initial application overwrites
+that value; without fn_tide the sea cells stay fixed at the initial
+condition (they are never updated afterwards, and since their elevation
+is forced to 0, the sea surface is h0 for `f_htype=0` and e0 for
+`f_htype=2`; [tide chapter](tide.md)).
+
 ## Depression filling and initial channel depth
 
 `f_fill_depres` fills hollows that retain water below the surrounding
@@ -130,8 +137,9 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 **Ledgers and log**
 
 - The S of the first line (time 0) of Log.txt is the initial water
-  (domain-mean storage depth in m); with an initial level e0, S × number
-  of valid cells × cell area is the stored volume.
+  (domain-mean storage depth in m, excluding sea cells); with an initial
+  level e0, S × number of valid cells × cell area is the stored volume on
+  the land side.
 
 **Measurements** (probe and transect columns)
 

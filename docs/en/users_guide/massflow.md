@@ -241,7 +241,12 @@ The failed mass is represented as a bed layer $`h_b`$ moving **within** the
 topography $`z`$ and the soil $`s_d`$, running from land into water as an
 inertialess Voellmy flow. When the layer moves, $`z`$ rises or falls while
 the depth $`h`$ is kept, so the water surface $`z + h`$ is displaced (the
-**moving-seabed** tsunami source[^tinti06][^harbitz06]).
+**moving-seabed** tsunami source[^tinti06][^harbitz06]). The water body is
+a "solved sea" that does not use the sea mask (fn_sw): ordinary cells + an
+initial water level (f_htype=2), with long-wave radiation boundaries
+(type 2) on the edges. The
+bed layer never enters the sea cells of the sea mask and does not cross the
+edges against them.
 
 ```math
 \Phi = z + r\,h,\quad r = \frac{\rho_w}{\rho_s},

@@ -112,7 +112,11 @@ not the lateral flow, so it is added to the head only in saturated cells.
 The passage widths $`L_k`$ and distances $`\Delta s_k`$ are the same
 eight-direction shares as the ENC core ([ENC grid](encgrid.md) §2;
 `gw_diagratio`), which lets converging flow along diagonal valleys be
-represented.
+represented. There is no exchange with the sea cells of the sea mask
+(fn_sw): sea cells are a no-flux boundary of the lateral flow. The
+exchange driven by the head difference between the aquifer and the sea is
+the job of f_salt_gw=1 of the [sharp-interface two-layer salt model](salt.md);
+lateral flow alone produces no groundwater discharge to the sea.
 
 **Stability.** Being explicit, the structural bound $`h_{gw} \le s_d`$ gives
 
@@ -214,8 +218,13 @@ $`c_w`$ (`gwc_cw`, default 2.66 m^{1/2}/s) corresponds to a rectangular-weir
 coefficient ≈ 1.7 times an inlet perimeter ≈ 1.5 m and $`c_o`$ (`gwc_co`,
 default 0.15 m²) to a discharge coefficient 0.6 times an opening of
 0.25 m²; both are **empirical**. Outfalls (`fn_gwc_outfall`) are open pipe
-ends with the orifice formula and a flap against backflow. The exchange
-with another layer goes from the higher to the lower head with the
+ends with the orifice formula and a flap against backflow. An outfall
+placed on a sea cell has the tide level (the water level of the sea cell)
+as its receiving head and its discharge is removed to outside the system;
+one placed on land has the surface water level as its receiving head and
+discharges onto the surface. In both cases the discharge is capped at the
+equalising amount, the storage that brings the conduit head down to the
+receiving head. The exchange with another layer goes from the higher to the lower head with the
 constant capacity `gwc_leak_mmh`; its default 10 mm/h is the vertical
 conductivity of the soil around the pipe (= the Green-Ampt default).
 

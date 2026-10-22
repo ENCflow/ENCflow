@@ -79,6 +79,27 @@ Notes when giving the height with a distribution file `fn_bank`:
   erected), and values on non-channel cells are ignored. Painting a
   **generous buffer along the channel** is therefore the safe side,
   and it automatically prevents the corner-contact leaks above.
+- **The river mouth opens automatically.** No virtual wall is erected on
+  edges between a channel cell and a cell of the sea mask (fn_sw) (the
+  seawall does not put a crest on channel cells either;
+  [geographic information chapter](geoinfo.md)). The flow from the river
+  mouth into the sea is set by the water-surface slope against the level
+  (tide) of the sea cells, so tidal reaches and backwater are represented
+  by giving the sea level with the [tide](tide.md) or with
+  [stage cells](boundary.md). The old method f_rivermouth_drop
+  ([shallow water flow](swflow.md)), which always makes the river mouth a
+  supercritical drop, cannot be combined with the tide. On the river-mouth
+  faces where a subgrid-channel-width cell touches a sea cell, the same
+  width cap as on channel-channel edges applies (treated as a channel of
+  the same width continuing into the sea; [the explanation](channel_models.md) §2).
+- The crest is converted to an absolute elevation at the start of the run
+  and fixed; it does not follow the bed or the landside ground when they
+  move by [geomorphic change](geomorph.md). The test for whether a wall
+  stands and the effective crest are evaluated with the current ground,
+  so an edge whose bed has aggraded up to the crest is no longer a wall
+  (the ground enters the ordinary computation as a step), while the
+  effective crest stays at its fixed value when the landside ground
+  lowers.
 
 ```
 &list_channel

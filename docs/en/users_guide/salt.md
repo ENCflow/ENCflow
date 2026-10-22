@@ -49,6 +49,12 @@ How to read the results (fields, ledgers, measurement columns, restart) is summa
 - **Storm-surge / tsunami run-up and where the seawater goes**: the
   run-up seawater flows over land as salt water (riding on the
   shallow-water advection).
+- **Pumping-induced seawater intrusion**: well pumping (f_gwpump in
+  [Groundwater](gwflow.md)) takes fresh water first and draws whatever
+  the fresh thickness cannot supply from the saltwater zone (salt
+  contamination of the well). The rise of the salt-water surface caused
+  by pumping (an approximation of upconing) emerges automatically from
+  the lateral flow and the dynamics of the saltwater zone.
 - Mixing and entrainment (brackish water generation), the inertia of
   internal waves, and continuous concentration fields are **not
   handled** (the interface stays sharp).
@@ -95,7 +101,7 @@ quantities).
 | Coastal aquifer salt wedge (Ghyben-Herzberg) | 0 / 1 | 1025 | fn_salt_hgs0 with the existing salt-water surface along the coast, or start fresh and wait for intrusion | f_gwlateral=1, K_sh 3600-36000 mm/h (sandy aquifer 1e-3 to 1e-2 m/s), sy0 0.2-0.3, sd0 = aquifer thickness 5-20 m | With recharge (rainfall + Green-Ampt) a freshwater lens appears |
 | Estuary / tidal-river salt wedge | 1 / 0 | 1025 (brackish inner bay 1005-1015) | 0 | fn_tide + segment inflow (river discharge) | Calibrate the wedge position with salt_ni 0.02-0.03 and salt_alpha 0.5-1 |
 | Where storm-surge / tsunami seawater goes | 1 / 0 | 1025 | 0 | Tide (surge) or boundary incidence (tsunami) + seawalls | Mixing is not solved = extent of the salt-water run-up and where it drains |
-| Salinization of reclaimed lowland (intrusion and drainage) | 1 / 1 | 1025 | fn_salt_hgs0 with the existing salt-water surface | Drainage pumps ([structures](structure.md)) | Fresh/salt split of infiltration is not implemented (see constraints) |
+| Salinization of reclaimed lowland (intrusion and drainage) | 1 / 1 | 1025 | fn_salt_hgs0 with the existing salt-water surface | Drainage pumps ([structures](structure.md)) | At present the surface and subsurface salt water are not connected (both infiltration and seepage are treated as fresh; see constraints). Usable as far as tracking the run-up salt water on the surface and the existing subsurface salt-water surface separately |
 | Stratified brackish lake / reservoir (halocline position) | 1 / 0 | 1010-1020 | salt_hss0 = lower-layer thickness | - | Sharp interface: no mixed layer or entrainment |
 
 ## Connection to the sea
@@ -109,7 +115,9 @@ become an "all salt, water level = tide level" boundary:
   Tidal variations are reflected directly in the boundary head.
 - **Surface**: seawater that runs up over land at high tide or in a
   storm surge is tracked as salt water (and salt water that returns to
-  the sea disappears).
+  the sea disappears). The salt layer of the sea cells is aligned from the
+  initial state with the water column hsea0 after the tide is applied, and
+  is always entirely salt water.
 
 ## Output and monitoring
 
@@ -152,10 +160,16 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 - f_salt_gw=1 requires the lateral flow of the soil layer
   (f_gwlateral=1 in [Groundwater](gwflow.md)); K_sh and the specific
   yield are shared.
-- The fresh/salt partitioning of evapotranspiration and infiltration is
-  not yet implemented (implicitly treated as fresh; the "salt damage"
-  path where infiltrating seawater contaminates the aquifer is a future
-  extension).
+- The saltwater zone follows only the lateral flow of layer 1, the
+  sea-side boundary and pumping. Evapotranspiration, infiltration,
+  percolation into layer 2 (f_gwlayer2), infiltration water into the
+  conduit layer (gwc_leak_layer=1) and saturation-excess seepage are
+  implicitly treated as fresh, and the subsurface salt water does not reach
+  the surface through seepage (the "salt damage" path where infiltrating
+  seawater contaminates the aquifer is a future extension). When the fresh
+  water is exhausted and Hg < Hgs, the consistency clamp (Hgs ≤ Hg)
+  reduces the salt water, so the salt-water volume is not a conserved
+  quantity.
 - At rapidly advancing intrusion fronts, a small partition error
   between the total and the salt (proportional to dt) can arise from
   time splitting; reducing dt reduces it (see developer.md sec. 47.2).

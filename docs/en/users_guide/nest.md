@@ -138,6 +138,15 @@ the conservation correction, the non-hydrostatic band) are in
   `f_bc_* = 2` (long-wave radiation; see below).
 - The child is large enough compared with the band (nx, ny > 2·nb + 2).
 - The scheme is ENC (f_gridsystem = 0).
+- Sea-mask (fn_sw) cells are not taken into account in the parent–child
+  exchange (writing into the band and the feedback (child to parent) also
+  overwrite h and the velocities of sea cells). **Do not place sea-mask
+  cells in the child's nesting band or in the replaced parent cells
+  corresponding to the child's interior (when nest_fb > 0)**; this is
+  checked at initialization and the run is stopped with an error if any
+  are found. Tsunami runs assume a solved sea (ordinary cells with sw=0);
+  nesting a storm-surge run that uses the tide boundary (fn_tide) is not
+  supported at present.
 
 ## Output and monitoring
 
@@ -201,6 +210,10 @@ the same conditions. The acceptance test is [test/bmi_nest](../../../test/bmi_ne
   return to the parent. The parent's coarse coastal reflection enters the
   child through the band, and the child's disturbances reflect at the band
   (resolved by two-way mode, or by nest_bc = 3 which radiates them out).
+- The sea mask (fn_sw) and the tide (fn_tide) are independent per grid;
+  there is no mechanism that aligns them between parent and child. A
+  configuration with sea cells in the band or in the replaced cells is
+  stopped at initialization ("Conditions on a child grid" above).
 - Run-up on land near the child's band (about nb × r cells) is coarsely
   approximated; keep it away from the points of interest. Place the landward
   boundary above the maximum run-up so that water never reaches it.

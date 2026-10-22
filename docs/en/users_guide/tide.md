@@ -95,6 +95,14 @@ sea as a "drain at level 0"; see [Parameters and the basis of their defaults](#p
 /
 ```
 
+A sea mask (fn_sw) without fn_tide is also valid. Sea cells then have
+z = 0 (their elevation is forced to 0 regardless of the terrain file) and
+h stays fixed at the value given by the [initial conditions](initial.md),
+because sea cells are never updated. With f_htype=0 the sea surface is h0,
+with f_htype=2 it is e0, and that surface acts as the prescribed level.
+The difference from an empty &list_tide is that the latter explicitly
+gives a tide of 0 m and the water column hsea0.
+
 ## Usage patterns
 
 - **Flooding by storm surge / rising tide**: raise the tide level with
@@ -110,9 +118,11 @@ sea as a "drain at level 0"; see [Parameters and the basis of their defaults](#p
 - **Tsunami (incidence from the boundary)**: not the tide feature -
   the basic setup is the long-wave radiation edge boundary (type 2)
   combined with water-level-prescribed cells and an initial water
-  level ([the boundary conditions chapter](boundary.md)). When the
-  domain contains a sea area, use fn_sw and fn_seaside for the sea
-  surface initialization and the seaside test of breakwaters.
+  level ([the boundary conditions chapter](boundary.md)). A "solved
+  sea" that propagates waves inside the domain does not use the sea
+  mask fn_sw; give ordinary cells (sw = 0) the bathymetry and an
+  initial water level. Use fn_seaside for the seaside test of seawalls
+  ([the geographic information chapter](geoinfo.md)).
 
 ## Recommended values by pattern
 
@@ -137,19 +147,23 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 | File | How | Contents |
 |---|---|---|
 | H0001... / E0001... | f_out_h (default on) / f_out_e | on sea cells the depth H = hsea0 and the level E = the given tide; read inundation and drainage on land from these |
+| H9999 and the other 9999 series | each statistics flag | period maxima exclude sea cells; the sea area is 0 ([Input and output formats](io.md)) |
 | X0000 | always | domain mask (2 = sea); check that the sea mask is as intended |
 
 **Ledgers and log**
 
-- The S column of Log.txt excludes sea cells. Water entering the land from
-  the sea appears as an increase of S, water drained to the sea as a
-  decrease.
+- The storage column S and the h_max column of Log.txt exclude sea cells
+  (before 2026-10-22, S included the constant water column of the sea
+  cells). Water entering the land from the sea appears as an increase of
+  S, water drained to the sea as a decrease.
 
 **Measurements** (probe and transect columns)
 
 - A [transect](record.md) across the coastline gives the inundation and
-  drainage discharge Q (m³/s; sign by the transect direction). Probe
-  columns `h` and `z + h` on land show how the water follows the tide.
+  drainage discharge Q (m³/s; sign by the transect direction). Place
+  both end points on land cells and do not include sea cells; otherwise
+  hsea0 contaminates Hmax and B. Probe columns `h` and `z + h` on land
+  show how the water follows the tide.
 
 **Restart**
 
@@ -174,10 +188,32 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   sand, represent the water body as ordinary cells + an initial water
   level (see the suspended-sediment section of
   [Sediment and landform change](geomorph.md)).
-- The tide update phase is based on the absolute step number, so after
-  a [restart](restart.md) updates occur at the same timing as an
-  uninterrupted run (a restart round trip with tide enabled is also
-  bit-identical).
+- Likewise, sea cells take part in none of the rainfall,
+  evapotranspiration, infiltration, groundwater (lateral flow does not
+  exchange with sea cells), snow, water-quality, driftwood or
+  building-debris calculations. The sea is a reservoir of infinite
+  capacity: water and matter leaving to the sea disappear outside the
+  system, and water entering from the sea does not reduce the volume of
+  the sea cells (which is why the storage column S and the maximum
+  statistics of the log exclude sea cells). The exceptions are the
+  [sharp-interface two-layer salt model](salt.md) (sea cells supply the
+  prescribed saltwater head) and the sea outfalls of the
+  [conduit layer](gwflow.md) (discharge outside the system).
+- It cannot be combined with the forced drop at the river mouth
+  f_rivermouth_drop ([Shallow-water flow](swflow.md)); permanently
+  supercritical flow that ignores backwater at high tide contradicts
+  the prescribed level, so the run is stopped with an error. The run is
+  also stopped with an error when the domain contains no sea cell at all
+  (inside the domain mask and sw > 0).
+- Sea cells cannot hold the cells of [boundary conditions](boundary.md)
+  (stage cells, internal sources, inflow segments), the cells of
+  [structures](structure.md) (intakes, outfalls, transfer destinations,
+  releases, lake surfaces), or the nesting band of a child and the
+  parent cells replaced by feedback in [nesting](nest.md); each of these
+  is stopped at initialisation with an error.
+- For restart, see "Restart" under [Output and monitoring](#output-and-monitoring)
+  and [Suspend and Restart](restart.md).
+
 ## Parameters and the basis of their defaults
 
 The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).

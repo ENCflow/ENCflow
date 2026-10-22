@@ -179,11 +179,16 @@ The stability condition of the explicit scheme is checked at
 initialization; if dt exceeds the limit, the limit value is printed
 and the run stops (lower dt or thin the updates with dt_gwflow).
 
-When [water quality](wq.md) (fn_wq) is enabled, dissolved substances
-in the groundwater move with the lateral flow and return to the
-surface water at their groundwater concentration where seepage
-occurs (sorption retardation is given by wq_rg on the water-quality
-side).
+When [water quality](wq.md) (fn_wq; f_wq_infil=1 is the default) is
+enabled, dissolved substances in the groundwater move with the lateral
+flow and return to the surface water where seepage occurs, at the
+effective concentration set by wq_rg (at the groundwater concentration
+when R=1; the retardation factor R of sorption is given on the
+water-quality side). Only the lateral flow and the saturation-excess
+seepage of layer 1 carry mass; water that leaves layer 1 by the other
+pathways (percolation into layer 2, pumping, infiltration water into the
+conduits) carries no mass (see the sections below and "Transport through
+groundwater" in [Water quality](wq.md)).
 
 **Outputs for this section**: the shape of the water table from the gradient of `Hg0001...`; seepage (return flow) from wet cells of `H0001...` during rainless periods. There is no seepage column; read it as the decrease of `S_grnd` matched by the increase of `S_surf` ([Output and monitoring](#output-and-monitoring)).
 
@@ -210,6 +215,11 @@ exfiltrates to the surface.
   recommend **spin-up -> save -> reuse as the initial condition**
   (f_state_restore=2 in [Suspend and restart](restart.md)).
 - Evapotranspiration does not touch layer 2.
+- The subsurface mass of [water quality](wq.md) stays in layer 1. It is
+  not carried by the percolation from layer 1 to 2 or by the lateral flow
+  inside layer 2, and the water that returns from layer 2 to layer 1 is
+  clean water (the layer-1 concentration Cg/Hg is pushed apparently
+  higher).
 
 **Outputs for this section**: the layer-2 storage in `Hg2` (rides on `f_out_hg`), restart in `gwflow_layer2.dat`. `S_grnd` is the sum of layers 1 and 2 ([Output and monitoring](#output-and-monitoring)).
 
@@ -293,6 +303,17 @@ Applications are expressed by parameter combinations:
     touch the conduit layer, and in-conduit solute transport is not resolved.
     There is no exchange with sea cells except discharge through
     outfalls (fn_gwc_outfall).
+  - [Water quality](wq.md) (wq_gwc_conc) can be coupled in the form of
+    "a fixed concentration carried by the surcharge water and the water of
+    land-side outfalls" (sanitary-risk assessment of sewer surcharge; a
+    supply-side fixed-concentration approximation that does not solve the
+    mass budget or advection inside the pipes; sea-side outfalls are
+    removal to outside the system and are not covered). Inlet capture
+    removes the load of the flood water to the conduit side at the same
+    rate with f_wq_gwc_in=1 (the default; `to_gwc_g` in wq.csv; 0 leaves
+    it on the surface). Infiltration water (gwc_leak_layer=1) moves only
+    the water of layer 1 into the conduits; the subsurface mass of water
+    quality is not carried with it.
 
 **Outputs for this section**: the conduit storage in `Hgc` (rides on `f_out_hg`) and the total outfall discharge printed at the end ("outfall discharge total"). Surcharge appears in the surface `H0001...`, discharge from sea outfalls as a decrease of `S_total`. Restart in `gwflow_conduit.dat` ([Output and monitoring](#output-and-monitoring)).
 
@@ -332,6 +353,10 @@ consecutively from 1.
   [Boundary conditions](boundary.md)).
 - A well is a cell-scale sink (borehole-scale hydraulics - well
   radius, skin, partial penetration - are not represented).
+- The subsurface mass of [water quality](wq.md) is not carried by the
+  abstraction (only water leaves to outside the system and the mass stays
+  in layer 1, so the layer-1 concentration Cg/Hg is pushed apparently
+  higher).
 
 **Outputs for this section**: the drawdown of `Hg0001...` around the well cells (cone of influence) and, at the end, the per-well "demand / pumped / %" line for the achieved abstraction ([Output and monitoring](#output-and-monitoring)).
 

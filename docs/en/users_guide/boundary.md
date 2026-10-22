@@ -63,7 +63,7 @@ are added)
 | Catchment rainfall runoff | 0 (default) | rainfall | stage_eta = -999 at the outlet cell (complete drain) | Edge boundaries do not act on catchment terrain surrounded by nodata |
 | River flood inundation | 0 (the downstream edge may be 1) | segment inflow Q(t), inflow_dist=2 | prescribed level (time series) or free outflow at the downstream end | Specific discharge guide: annual maximum 1-5, design flood 5-20 m³/s/km² (catchments of 10-100 km²) |
 | Tsunami | 2 (long-wave radiation) on the seaward edges | initial level e0 + prescribed level stage_val on the seaward edge (incident waveform) | 2 | Inland edges 0 or 1 |
-| Storm surge | - | the sea is fn_tide ([tide](tide.md)) | same | No edge boundary is needed inside the sea mask |
+| Storm surge | - | the sea is fn_tide ([tide](tide.md)) | same | Edge boundaries do not act on sea-mask cells (nothing happens even when a sea cell touches the grid frame; the sea level is forced by the tide) |
 | Pluvial (urban) flooding | 0 | rainfall | drainage pumps ([structures](structure.md)); sewers via the [conduit layer](gwflow.md) | Omitting the outlet drains out of the domain |
 | Dam break, bore | 0 | initial level (fn_hinit) | downstream edge 1 | Check the initial Cn_max |
 
@@ -90,10 +90,13 @@ to south).
 | 1 | free outflow. Advancing flow passes through as is, and standing water drains by free overfall along the flow direction (outward normal for still water), with total flux based on the natural width. At a subgrid channel outlet, upstream channel velocity and channel direction set the exit flux. No inflow | outflow of flood flows advancing over dry ground |
 | 2 | long-wave radiation, projected along the outward normal with a natural-width total. No outflow at the reference still-water level; only the water level deviation of waves reaching the boundary is transmitted (inflow of receding waves is also allowed) | propagation of tsunamis, storm surges, and waves |
 
-- The reference water level of type 2 is derived automatically from the
-  initial condition if unspecified (with a constant initial water
-  level, the radiation flux at t=0 is exactly zero). To fix it, give a
-  uniform value in `bc_eta_w/e/n/s` (same elevation datum as z).
+- The reference water level of type 2 is determined in the following
+  order of precedence. (1) An explicit `bc_eta_w/e/n/s` (uniform value;
+  same elevation datum as z). (2) If the initial condition is a fixed
+  water level (f_htype=2), the uniform e0 (dry boundary cells also drain
+  relative to this level). (3) Otherwise the initial water level of each
+  boundary cell (even with a non-uniform initial level, the radiation
+  flux at t=0 is exactly zero in every boundary cell).
 - Ordinary type 2 sets zero flux where `h < dd`; radiation alone does
   not rewet a dry boundary cell.
 - For a nested child with `nest_bc = 3`, type 2 uses the parent level
@@ -159,6 +162,11 @@ inflow volume is not preserved in that cell's budget.
   permanently empty perfect drains.
 - For **tidal reaches and backwater**, use a water level time series
   `stage_val(:,k,n) = t, eta`.
+- **Stage cells cannot be placed on sea-mask (fn_sw) cells** (the same
+  holds for internal sources and inflow segments; the run is stopped at
+  initialisation with an error). The level of a sea cell is forced by the
+  tide ([tide](tide.md)), so place stage cells on the "solved" cells on
+  the land side.
 - A large level difference between prescribed cells and their
   surroundings produces a local dam-break flow. If the initial Cn_max
   is large, review dt.
