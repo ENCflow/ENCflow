@@ -359,7 +359,12 @@
   !dissol_src = 1           ! water of the diffuse term (1: infiltration of the
                             !   groundwater module = fn_gwflow required,
                             !   2: rainfall on the ground = maximum-denudation
-                            !   model without groundwater)
+                            !   model without groundwater, 3: infiltration +
+                            !   runoff generated on bare rock x dissol_fsurf)
+  !dissol_fsurf = 0.3       ! surface source: share of the runoff's capacity
+                            !   spent on its own rock face. 0 = default 0.3
+  !dissol_sdsurf = 0.1      ! soil thickness below which the surface source
+                            !   applies (m). 0 = default 0.1
   !dissol_sink = 1          ! add the inflow into the sinks (inlets of the
                             !   conduit continuum layer) = dolines (requires
                             !   f_gwconduit=1 with gwc_inlet / fn_gwc_inlet)

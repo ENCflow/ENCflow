@@ -323,8 +323,10 @@ $`s_d`$ を保つ)として、岩に入る水の量に比例させます[^white8
 \qquad k_d = \frac{c_{\rm eq}}{\rho_{\rm r}}
 ```
 
-$`q_{\rm r}`$ は面的な涵養フラックス(浸透量 `dissol_src = 1`、または
-地上降雨量 `dissol_src = 2`)、$`q_{\rm sink}`$ は管路連続体層の吸込穴への
+$`q_{\rm r}`$ は面的な涵養フラックス(浸透量 `dissol_src = 1`、地上降雨量
+`dissol_src = 2`、または浸透量に裸岩で発生する流出水 $`f_{\rm surf}\,
+f_b\,(P - I)`$ を加えたもの `dissol_src = 3`。$`f_b = \max(0, 1 - s_d/s_{\rm surf})`$
+は裸岩の割合)、$`q_{\rm sink}`$ は管路連続体層の吸込穴への
 流入フラックス(`dissol_sink = 1`)、$`f_{\rm sol}`$ はセル別の可溶率
 (`fn_dissol`)です。1 回の地形更新では、更新間隔に積算された水量
 $`F`$ (m) に morfac を掛けて $`w = k_d f_{\rm sol} F \cdot \texttt{morfac}`$
@@ -408,7 +410,8 @@ $`\phi_{\rm rock}`$(`rockfall_phi`、既定 60°)は裸の石灰岩壁の安定�
 | wthr_p0 / wthr_sdstar | 50 mm/kyr / 0.5 m | 土層生成速度 / 減衰深(§7) | **文献値** Heimsath 型の文献域の中央[^heimsath97] |
 | uplift0 | 1 mm/yr | 隆起速度 | **慣用値** 造山帯の代表値の下限 |
 | dissol_ceq / dissol_rho | 100 mg/L / 2500 kg/m³ | 有効溶解能 / 岩の密度(§7) | **文献値** 石灰岩地域の涵養水の CaCO₃ 濃度の代表[^white84]と石灰岩の密度。k_d = 4e-5 m/m → 涵養 1 m/yr で 40 mm/kyr(文献域 20〜100)[^gabrovsek09] |
-| dissol_src / dissol_sink | 1 / 0 | 水量の源 / 吸込穴項 | **方式** 1: 浸透量、2: 地上降雨量。吸込穴項は管路連続体層の枡流入 |
+| dissol_src / dissol_sink | 1 / 0 | 水量の源 / 吸込穴項 | **方式** 1: 浸透量、2: 地上降雨量、3: 浸透量 + 裸岩の流出水。吸込穴項は管路連続体層の枡流入 |
+| dissol_fsurf / dissol_sdsurf | 0.3 / 0.1 m | 表面流源の流出水の溶解能の比 / 裸岩とみなす土層厚 | **文献値** 裸岩の雨水 50〜80 mg/L と土層下の涵養水 100〜300 の比 / **数値設定** |
 | dissol_fsink / dissol_fres | 1.0 / 0 | 吸込穴流入水の溶解能の比 / 残渣率 | **経験値** 校正前提 / **与件** 0 = 残渣なし |
 | dissol_lat | 0 | 側方溶食の配分割合 p | **方式** 0 = 床のみ、−1 = 濡れ面の面積比で自動(推奨)。固定値は湛水深/格子幅の比から |
 | rockfall_phi / rockfall_relax / rockfall_bulk | 60° / 0.5 / 1/(1−λ) | 岩盤の安定勾配角 / 緩和率 / 岩屑のかさ比(§7) | **慣用値** 岩盤の内部摩擦角 35〜45° に粘着を加味 / **数値設定** / **方式** 河床の空隙率と整合 |

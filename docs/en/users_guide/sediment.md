@@ -385,7 +385,9 @@ the water entering the rock[^white84][^gabrovsek09]:
 ```
 
 $`q_{\rm r}`$ is the diffuse recharge flux (infiltration, `dissol_src = 1`,
-or rainfall on the ground, `dissol_src = 2`), $`q_{\rm sink}`$ the inflow
+rainfall on the ground, `dissol_src = 2`, or infiltration plus the runoff
+generated on bare rock $`f_{\rm surf}\, f_b\,(P - I)`$, `dissol_src = 3`,
+with $`f_b = \max(0, 1 - s_d/s_{\rm surf})`$ the bare-rock factor), $`q_{\rm sink}`$ the inflow
 flux into the sinks (inlets) of the conduit continuum layer
 (`dissol_sink = 1`) and $`f_{\rm sol}`$ the soluble fraction of the cell
 (`fn_dissol`). One geomorphic update dissolves
@@ -484,7 +486,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | wthr_p0 / wthr_sdstar | 50 mm/kyr / 0.5 m | soil production rate / decay depth (§7) | **literature value** middle of the published range of the Heimsath function[^heimsath97] |
 | uplift0 | 1 mm/yr | uplift rate | **customary value** lower end of orogenic belts |
 | dissol_ceq / dissol_rho | 100 mg/L / 2500 kg/m³ | effective dissolution capacity / rock density (§7) | **literature value** representative CaCO₃ concentration of recharge in limestone areas[^white84] and the density of limestone. k_d = 4e-5 m/m, i.e. 40 mm/kyr for a recharge of 1 m/yr (published range 20-100)[^gabrovsek09] |
-| dissol_src / dissol_sink | 1 / 0 | water source / sink term | **method** 1: infiltration, 2: rainfall on the ground. The sink term is the inlet inflow of the conduit continuum layer |
+| dissol_src / dissol_sink | 1 / 0 | water source / sink term | **method** 1: infiltration, 2: rainfall on the ground, 3: infiltration + runoff on bare rock. The sink term is the inlet inflow of the conduit continuum layer |
+| dissol_fsurf / dissol_sdsurf | 0.3 / 0.1 m | capacity ratio of the runoff in the surface source / soil thickness counted as bare rock | **literature value** ratio of rain on bare rock (50-80 mg/L) to recharge under soil (100-300) / **numerical setting** |
 | dissol_fsink / dissol_fres | 1.0 / 0 | capacity ratio of the sink inflow / residue fraction | **empirical value** to be calibrated / **given** 0 = no residue |
 | dissol_lat | 0 | share p of lateral dissolution | **method** 0 = floor only, −1 = automatic from the wetted-area ratio (recommended). A fixed value follows the ratio of ponding depth to cell size |
 | rockfall_phi / rockfall_relax / rockfall_bulk | 60° / 0.5 / 1/(1−λ) | stable rock angle / relaxation / bulk ratio of the debris (§7) | **customary value** internal friction angle of rock masses 35-45° plus cohesion / **numerical setting** / **method** consistent with the bed porosity |

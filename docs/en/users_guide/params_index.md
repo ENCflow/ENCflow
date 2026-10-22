@@ -99,8 +99,10 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | dissol_ceq | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | dissol_fres | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | dissol_fsink | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| dissol_fsurf | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | dissol_lat | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | dissol_rho | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| dissol_sdsurf | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | dissol_sink | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | dissol_src | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | dd | &list_sysparam | [Shallow water flow computation](swflow.md) |
