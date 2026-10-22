@@ -101,7 +101,8 @@ approach (sources in developer.md §66).
 
 The input paths are **superposed**, not mutually exclusive (they can
 be combined, e.g. background load + specific sources). The cell set of
-each group can also be given by file (`fn_*_cell`), and cell
+each group can also be given by file (`fn_wq_pt_cell`, `fn_wq_ar_cell`;
+one cell per line as "i j"; exclusive with inline entry), and cell
 coordinates (i, j) are **1-based** (beware of 0-based GIS numbering;
 see [the coordinate systems chapter](coordinates.md)). Times in the
 load and concentration time series are **elapsed days** from t=0.
@@ -121,6 +122,7 @@ the group)
 ```
   wq_ar_cell(:,1,1) = ...
   wq_ar_load(1) = 0.5                 ! constant unit load (kg/ha/day)
+  !wq_ar_series(:,1,1) = 0.0, 0.5     ! or a time series (elapsed days, kg/ha/day)
 ```
 
 **Distributed diffuse source (unit loads by land use)** - a cell-wise

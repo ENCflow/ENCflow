@@ -22,7 +22,11 @@ separate `fn_structure` file ([structures](structure.md)).
 
 Cell sets and time series for B, C and D can be written directly in the
 namelist or supplied via `fn_*` files (paths relative to `dir_data`).
-Files take precedence over the corresponding inline values. Input times
+Files take precedence over the corresponding inline values. A cell list
+(`fn_src_cell`, `fn_stage_cell`, `fn_inflow_cell`) holds one cell per line
+as "i j"; a series (`fn_src_val`, `fn_stage_val`, `fn_inflow_val`,
+`fn_inflow_cs`, `fn_inflow_qs`, `fn_inflow_qb`) holds one point per line as
+"time value"; each is one file per group (third subscript). Input times
 are in minutes, discharge in m³/s, and water levels in m with the same
 elevation datum as `z`. Series are linearly interpolated, holding the end
 values outside their range. Family A uses `f_bc_*` and, if needed, `bc_eta_*`.
