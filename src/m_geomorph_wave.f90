@@ -106,6 +106,8 @@ module subroutine init_wave(gm, p, g, list)
     call par_info("geomorph: wave shoreline smoothing length wave_lsm = " // rtoa(gm%wav%lsm) &
                   // " m (" // itoa(gm%wav%nsm) // " smoothing passes)")
   end if
+  if (list%wave_bslp < 0.0) call par_stop("list_wave: wave_bslp must be >= 0")
+  gm%wav%bslp = list%wave_bslp
   gm%wav%vmax = list%wave_vmax                            ! 負 = 無効(比較しない)
   if (gm%wav%vmax >= 0.0) then
     call par_info("geomorph: wave river-mouth rule on (cells with |V| > " // rtoa(gm%wav%vmax) &
@@ -118,7 +120,11 @@ module subroutine init_wave(gm, p, g, list)
   allocate(gm%wav%qy(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(gm%wav%ex(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(gm%wav%ex2(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
-  if (gm%wav%nsm > 0) allocate(gm%wav%hs2(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
+  if (gm%wav%nsm > 0) then
+    allocate(gm%wav%hs2(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
+    allocate(gm%wav%hm(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(gm%wav%hm2(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
+  end if
 
   if (allocated(gm%wav%val)) then
     call par_info("geomorph: wave-driven longshore transport on (K2 = " // rtoa(gm%wav%k2) &
@@ -172,7 +178,8 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt, a, b, r, ui, uj, nact, im, ip, jm, jp, n
   real :: tw, hb, hbd, dx, dy, dxv, dyv, wsum, sig2, w, hh, vmax
-  real :: wsx, wsy, w0, hc, he, hw, hn, hsv
+  real :: wsx, wsy, w0, hc, he, hw, hn, hsv, bslp, ax, ay
+  logical :: useb
   logical :: usev
   real :: gx, gy, sl, nx, ny, tx, ty, cosa, sina, qs, wb, q
   real :: qe, gq, vlong
@@ -191,6 +198,8 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
   gm%wav%hbd = hbd
   vmax = gm%wav%vmax
   usev = (vmax >= 0.0)                                   ! 河口の規則(wave_vmax。自セルの vv のみ参照)
+  bslp = gm%wav%bslp
+  useb = (gm%wav%nsm > 0 .and. bslp > 0.0)               ! 局所勾配項(多パス核のときのみ)
   ! 進行方向の単位ベクトル(格子の i, j 成分。j は南向き正なので y 成分は −sin)
   dxv = cos(gm%wav%dir * deg)
   dyv = -sin(gm%wav%dir * deg)
@@ -233,21 +242,27 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
 
   ! --- 平滑化した水深(乾いたセル・域外・海域マスクは深さ 0 = 陸)---
   if (gm%wav%nsm > 0) then
-    ! 多パスの 5 点核(§84.16 wet_lw と同じ。σ = wave_lsm)。場は帯で作り、各パスの後に
-    ! ハロ交換(パス数は namelist 由来で全ランク同一 = collective 安全)。全域の端は
-    ! 自セル値で鏡像(領域の縁は陸ではない)。x ≤ 0・海域・乾いたセルは 0 のまま
+    ! 多パスの 5 点核(§84.16 wet_lw と同じ。σ = wave_lsm)を正規化畳み込みで掛ける:
+    ! 湿潤セルの水深 h·m とマスク m(湿潤 1、乾燥・域外・海域 0)を同じ核で平滑化し、
+    ! h_s = Σ(h m)/Σm とする。乾いた浜を「水深 0 の陸」として混ぜない = 汀線近くでも
+    ! 勾配の大きさが海浜勾配のままで、向きは湿潤側の等深線に従う(§84.15 段 3 (a))。
+    ! 場は帯で作り各パスの後にハロ交換(パス数は namelist 由来で全ランク同一 =
+    ! collective 安全)。全域の端は自セル値で鏡像
     !$omp parallel do schedule(static) private(i, j)
     do j = dcp%js, dcp%je
       gm%wav%hs(:, j) = 0.0
+      gm%wav%hm(:, j) = 0.0
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
         if (g%sw(i,j) > 0) cycle
         if (s%h(i,j) <= p%dd) cycle
         gm%wav%hs(i,j) = s%h(i,j)
+        gm%wav%hm(i,j) = 1.0
       end do
     end do
     !$omp end parallel do
     call par_halo_cell(gm%wav%hs)
+    call par_halo_cell(gm%wav%hm)
     wsx = gm%wav%wsx
     wsy = gm%wav%wsy
     w0 = 1.0 - 2.0 * (wsx + wsy)
@@ -255,6 +270,7 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
       !$omp parallel do schedule(static) private(i, j, hc, he, hw, hn, hsv)
       do j = dcp%js, dcp%je
         gm%wav%hs2(:, j) = gm%wav%hs(:, j)
+        gm%wav%hm2(:, j) = gm%wav%hm(:, j)
         do i = g%wx(1,j), g%wx(2,j)
           if (g%x(i,j) <= 0) cycle
           hc = gm%wav%hs(i,j)
@@ -264,12 +280,34 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
           if (j < g%ny) hn = gm%wav%hs(i,j+1)
           if (j > 1) hsv = gm%wav%hs(i,j-1)
           gm%wav%hs2(i,j) = w0 * hc + wsx * (he + hw) + wsy * (hn + hsv)
+          hc = gm%wav%hm(i,j)
+          he = hc; hw = hc; hn = hc; hsv = hc
+          if (i < g%nx) he = gm%wav%hm(i+1,j)
+          if (i > 1) hw = gm%wav%hm(i-1,j)
+          if (j < g%ny) hn = gm%wav%hm(i,j+1)
+          if (j > 1) hsv = gm%wav%hm(i,j-1)
+          gm%wav%hm2(i,j) = w0 * hc + wsx * (he + hw) + wsy * (hn + hsv)
         end do
       end do
       !$omp end parallel do
       gm%wav%hs(:, dcp%js:dcp%je) = gm%wav%hs2(:, dcp%js:dcp%je)
+      gm%wav%hm(:, dcp%js:dcp%je) = gm%wav%hm2(:, dcp%js:dcp%je)
       call par_halo_cell(gm%wav%hs)
+      call par_halo_cell(gm%wav%hm)
     end do
+    ! 正規化(マスクの平滑化値が小さい孤立した水たまりは 0 = 平坦扱いで対象外)。
+    ! 勾配は隣接セルを読むのでハロ行まで含めて割る
+    !$omp parallel do schedule(static) private(i, j)
+    do j = dcp%jsh, dcp%jeh
+      do i = dcp%ish, dcp%ieh
+        if (gm%wav%hm(i,j) > 1.0e-3) then
+          gm%wav%hs(i,j) = gm%wav%hs(i,j) / gm%wav%hm(i,j)
+        else
+          gm%wav%hs(i,j) = 0.0
+        end if
+      end do
+    end do
+    !$omp end parallel do
   else
   r = gm%wav%smooth
   sig2 = 0.5 * r
@@ -306,7 +344,7 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
   ! --- 砕波帯セルの流束ベクトル ---
   nact = 0
   !$omp parallel do schedule(static) reduction(+: nact) &
-  !$omp   private(i, j, im, ip, jm, jp, gx, gy, sl, nx, ny, tx, ty, cosa, sina, qs, wb, q)
+  !$omp   private(i, j, im, ip, jm, jp, gx, gy, sl, nx, ny, tx, ty, cosa, sina, qs, wb, q, ax, ay)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       gm%wav%qx(i,j) = 0.0
@@ -334,8 +372,14 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
       qs = gm%wav%k2 * gm%wav%h0**2.4 * gm%wav%tp**0.2 * cosa**1.2 * sina   ! m3/s かさ
       wb = max(hbd / sl, dx)                             ! 砕波帯の幅
       q = qs / wb / gm%poroi                             ! 単位岸沖幅の固体流束 (m2/s)
-      gm%wav%qx(i,j) = q * tx
-      gm%wav%qy(i,j) = q * ty
+      ax = 0.0
+      ay = 0.0
+      if (useb) then                                     ! 局所勾配項: 平滑化からの偏差 a = h − h_s の勾配
+        ax = ((s%h(ip,j) - gm%wav%hs(ip,j)) - (s%h(im,j) - gm%wav%hs(im,j))) / (real(ip - im) * dx)
+        ay = ((s%h(i,jp) - gm%wav%hs(i,jp)) - (s%h(i,jm) - gm%wav%hs(i,jm))) / (real(jp - jm) * dy)
+      end if
+      gm%wav%qx(i,j) = q * (tx + bslp * ax)
+      gm%wav%qy(i,j) = q * (ty + bslp * ay)
       nact = nact + 1
     end do
   end do

@@ -18,7 +18,7 @@
 import sys, os, math
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from make_init import NX, NY, DX, Z0, S, A, L
+from make_init import NX, NY, DX, YL, S, A, L
 
 H0, T, K2, GAMMA, G = 0.5, 5.0, 0.34, 0.78, 9.8
 MORFAC, DT_FILE = 5.0, 1800.0

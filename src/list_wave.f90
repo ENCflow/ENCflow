@@ -33,6 +33,9 @@ module list_wave
     real :: wave_lsm = 0.0             ! 汀線方位を取る水深の平滑化長 σ (m)。> 0 なら wave_smooth(セル)の代わりに
                                        !   多パスの 5 点核(§84.16 と同じ。N = 4(σ/Δmin)² パス)で平滑化する。
                                        !   砕波帯の幅 W_b 程度にすると不安定の打ち切り波長が格子に依らない(§84.15 段 3 (a))
+    real :: wave_bslp = 2.0            ! 多パス核(wave_lsm > 0)のときの局所勾配項の係数 β: 流束に
+                                       !   β q ∇(h − h_s)(平滑化からの水深の偏差の勾配 = 局所の穴へ砂を
+                                       !   押す)を加える。σ より小さい凹凸を均す(0 で無効)
     real :: wave_vmax = -1.0           ! 河口の規則: 流速 |V| がこれを超えるセルは波の源にも砕波帯にも
                                        !   しない (m/s)。負 = 無効(既定)。河川の流下流速と汀線帯の流速の
                                        !   間に置く(可動河床の河口で必須。§84.15)
@@ -45,12 +48,12 @@ subroutine list_wave_read(p, list)
   type(t_sysparam), intent(in) :: p
   type(t_list_wave), intent(inout) :: list
   integer :: f_wave_longshore, wave_clock, wave_smooth
-  real :: wave_h0, wave_t, wave_dir, wave_k2, wave_gamma, wave_smin, wave_vmax, wave_lsm
+  real :: wave_h0, wave_t, wave_dir, wave_k2, wave_gamma, wave_smin, wave_vmax, wave_lsm, wave_bslp
   real :: wave_val(1:4,1:nwvmax)
   integer :: un, ios
   character(len=1024) :: iom
   namelist /list_wave/ f_wave_longshore, wave_h0, wave_t, wave_dir, wave_val, wave_clock, &
-                       wave_k2, wave_gamma, wave_smooth, wave_smin, wave_vmax, wave_lsm
+                       wave_k2, wave_gamma, wave_smooth, wave_smin, wave_vmax, wave_lsm, wave_bslp
 
   f_wave_longshore = list%f_wave_longshore
   wave_h0 = list%wave_h0
@@ -64,6 +67,7 @@ subroutine list_wave_read(p, list)
   wave_smin = list%wave_smin
   wave_vmax = list%wave_vmax
   wave_lsm = list%wave_lsm
+  wave_bslp = list%wave_bslp
 
   call par_info("reading list_wave in "//trim(p%fn_wave))
   open(newunit=un, file=trim(p%fn_wave), status='old', iostat=ios, iomsg=iom)
@@ -84,6 +88,7 @@ subroutine list_wave_read(p, list)
   list%wave_smin = wave_smin
   list%wave_vmax = wave_vmax
   list%wave_lsm = wave_lsm
+  list%wave_bslp = wave_bslp
 end subroutine
 
 end module
