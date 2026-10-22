@@ -843,6 +843,68 @@ debris-flow model).
 
 **Outputs for this section**: the layer thickness `Hb0001...` and speed `Vb0001...` are automatic. At the end "bedslide plunge speeds" (mixture and layer speeds at hand-over) and "subcycles total" are printed. Restart in `geomorph_bedslide.dat` ([Output and monitoring](#output-and-monitoring)).
 
+## Wave-driven longshore transport (fn_wave)
+
+With river sediment alone a delta is either bird-foot (a single realisation)
+or a fan (the ensemble mean). Arcuate and cuspate deltas and the smoothing of
+the shoreline come from the **longshore transport** that waves drive in the
+surf zone (the shape is set by the ratio R = Q_r/Q_w of the river supply to
+the transport the waves can carry; design: [docs/wave_plan.md](../../wave_plan.md),
+Japanese; decision: developer.md §84.15). ENCflow does not solve the waves.
+Give the offshore wave (significant height H0, period T, direction of travel
+phi0) in `fn_wave` (&list_wave) and every landform update does the following.
+
+1. The breaking depth h_b/gamma (H_b = 0.39 g^{1/5} (T H0^2)^{2/5}, gamma = 0.78)
+   defines the surf zone: wet cells with depth h <= h_b/gamma.
+2. The shoreline orientation of each surf-zone cell is the gradient of the
+   smoothed depth (radius `wave_smooth` cells); no shoreline vector is kept.
+   Cells where the waves travel away from the shore, and flat cells with a bed
+   slope below `wave_smin`, are excluded.
+3. Exposure: starting from the wet cells deeper than the surf zone, the
+   exposure propagates one cell per update up-wave (it stops at dry cells), so
+   no waves act in the lee of the delta, in bays or inside channels (no
+   diffraction; after a change of direction the field re-converges within tens
+   to a hundred updates).
+4. The deep-water CERC formula Q_s = K2 H0^{12/5} T^{1/5} cos^{6/5}(alpha)
+   sin(alpha) (alpha = angle between the wave direction and the onshore normal;
+   Ashton & Murray 2006, K2 = 0.34) is divided by the surf-zone width to give a
+   shore-parallel flux, applied to the bed as edge fluxes exactly like bed load
+   (supply limiter, dzmax and conservation are shared; nothing is carried onto
+   dry cells, so the retreat of a dry beach is the task of `f_repose`).
+
+| parameter | default | meaning |
+|---|---|---|
+| f_wave_longshore | 1 | longshore transport in the surf-zone band; 0 = inactive even with fn_wave |
+| wave_h0, wave_t, wave_dir | (required) | offshore significant height (m), period (s), direction of travel (deg counter-clockwise from +x (east), north = 90); a time series takes precedence |
+| wave_val(1:4,k) | - | time series (time (min), H0, T, direction); linear interpolation, end values held; H0 = 0 means calm |
+| wave_clock | 1 | clock of the series: 1 = morphological time (hydraulic time x morfac: a wave climate), 0 = hydraulic time (a storm whose duration is hydraulic and acts morfac times longer on the bed) |
+| wave_k2 | 0.34 | coefficient K2 of the deep-water CERC formula (m^{3/5} s^{-6/5}); K = 0.39, gamma = 0.78 |
+| wave_gamma | 0.78 | breaker index gamma |
+| wave_smooth | 2 | smoothing radius of the depth for the shoreline orientation (cells, 1 or 2) |
+| wave_smin | 1e-3 | lower bound of the bed slope that defines a shoreline orientation |
+
+**Usage**: bed load `f_fluvial = 1` is required (longshore transport rides the
+bed-load path). Represent the sea as ordinary cells + an initial water level
+("River-mouth deltas" above). Low-angle waves (|alpha| < 45 deg) smooth the
+shoreline (diffusion), high-angle waves grow the bulges (spits, asymmetric
+cusps). For a delta the shape follows the ratio of the river supply to Q_s;
+R = Q_r/Q_w < 1 tends to a cuspate delta (Nienhuis et al. 2015). Storms go in
+`wave_val`, a wave climate in the constants.
+
+**Limits**: shadowing is the simple exposure field (no diffraction);
+cross-shore transport (beach face, barriers, dunes), wave set-up and rip
+currents, the cross-shore distribution inside the surf zone and directional
+spectra are not represented. Any water deeper than the surf zone is a wave
+source (a lake gets waves too), so mask water bodies that are not meant to or
+put them in the lee.
+
+**Output of this section**: landform change in `Z0001...` (`f_out_z=1`); the
+final warning reports the solid volume carried through edges by longshore
+transport and the number of surf-zone cell-updates. Verification:
+[test/wave_shore](../../../test/wave_shore/) (decay rate of a shoreline
+perturbation matches the linear theory of Ashton & Murray, growth for
+high-angle waves, bit-identical when disabled).
+
 ## Long-term landform evolution (f_wthr / f_uplift)
 
 Soil production function and uplift: [supplement](sediment.md#7-bedrock-weathering-and-uplift-f_wthr--f_uplift).

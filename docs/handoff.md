@@ -62,6 +62,20 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - 残課題の詳細は delta_plan.md §5(乗り換え周期の定量、小スケールの肌理の
      解像度依存、プルーム浮力・波浪・潮汐流・圧密、実デルタ指標との照合)。
 
+00e. **波浪による沿岸漂砂 fn_wave(2026-10-22。docs/wave_plan.md、§84.15)の残り**
+   - 段 1(案 A: 沖波の CERC 式で砕波帯の沿岸漂砂)は実装・検定済み
+     (test/wave_shore: 低角の線形理論 0.93 倍、高角の凹凸成長、保存、無効時
+     ビット一致、np = 2, 4 バイト一致、-fcheck=all np = 2 範囲外なし)。
+   - 段 2(案 B: 波による攪拌 = 掃流砂の有効せん断力に波の寄与を加える
+     f_wave_stir)と段 3(遮蔽の精緻化。露出度は現状 8 方向の Jacobi 伝播で
+     回折なし)は未着手。高角の不安定が格子スケールで育つ(格子幅の砂州)のは
+     段 3 の課題。
+   - examples/delta/param_wave.txt(base + H₀ 0.6 m・T 6 s・東から)の結果と図は
+     README 未記載(1 ラン約 50 分)。
+   - ビルドの注意: `make MODE=mpi install` の後に src だけで `make` すると
+     libencflow.a に逐次と MPI の .o が混在してトップレベルの make(utils の
+     リンク)が失敗する。モードを切り替えるときは `make clean` を挟むこと。
+
 000. **章ページから詳説ページへの内容移行(2026-10-12 完了)**:
    forcing・nest・bedmotion・channel・driftwood・bldgdebris の 6 章に詳説
    ページ(`*_models.md`。日英)を新設し、式・根拠・詳細設定を移した。

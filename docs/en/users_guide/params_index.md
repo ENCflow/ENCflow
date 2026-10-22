@@ -291,6 +291,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | f_wq_infil | &list_wq | [Water quality](wq.md) |
 | f_wq_map | &list_wq | [Water quality](wq.md) |
 | f_wq_settle | &list_wq | [Water quality](wq.md) |
+| f_wave_longshore | &list_wave | [Sediment and landform change](geomorph.md) |
 | f_wthr | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | f_ztype | &list_geoinfo | [Geographic information](geoinfo.md) |
 | fines_frac0 | &list_geomorph | [Sediment and landform change](geomorph.md) |
@@ -401,6 +402,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | fn_swi | &list_sysparam | [Soil Water Index](swi.md) |
 | fn_tempmap | &list_meteo | [Rainfall and meteorology](forcing.md) |
 | fn_tide | &list_sysparam | [Part I (enabling features)](../users_guide.md) |
+| fn_wave | &list_sysparam | [Sediment and landform change](geomorph.md) (wave-driven longshore transport) |
 | fn_timap | &list_tide | [Tide level and sea surface](tide.md) |
 | fn_timaplist | &list_tide | [Tide level and sea surface](tide.md) |
 | fn_width | &list_channel | [Channels](channel.md) |
@@ -602,6 +604,15 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | uplift0 | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | v0 | &list_initial | [Initial conditions](initial.md) |
 | vv | &list_sysparam | [Shallow water flow computation](swflow.md) |
+| wave_clock | &list_wave | [Sediment and landform change](geomorph.md) |
+| wave_dir | &list_wave | [Sediment and landform change](geomorph.md) |
+| wave_gamma | &list_wave | [Sediment and landform change](geomorph.md) |
+| wave_h0 | &list_wave | [Sediment and landform change](geomorph.md) |
+| wave_k2 | &list_wave | [Sediment and landform change](geomorph.md) |
+| wave_smin | &list_wave | [Sediment and landform change](geomorph.md) |
+| wave_smooth | &list_wave | [Sediment and landform change](geomorph.md) |
+| wave_t | &list_wave | [Sediment and landform change](geomorph.md) |
+| wave_val | &list_wave | [Sediment and landform change](geomorph.md) |
 | wash_kf | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | wash_kr | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | wash_tausc | &list_geomorph | [Sediment and landform change](geomorph.md) |

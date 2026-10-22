@@ -110,6 +110,7 @@ module list_sysparam
     character(len=maxpathlen) :: fn_structure = ""       ! 内部水理構造物設定ファイル
     character(len=maxpathlen) :: fn_record = ""          ! 記録設定ファイル
     character(len=maxpathlen) :: fn_geomorph = ""        ! 地形変化条件設定ファイル
+    character(len=maxpathlen) :: fn_wave = ""            ! 波浪条件設定ファイル(沿岸漂砂。§84.15)
     character(len=maxpathlen) :: fn_gwflow = ""          ! 地下水条件設定ファイル
     character(len=maxpathlen) :: fn_intercept = ""       ! 降雨遮断条件設定ファイル
     character(len=maxpathlen) :: fn_evap = ""            ! 蒸発散条件設定ファイル
@@ -226,6 +227,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: fn_structure  ! 内部水理構造物設定ファイル
   character(:), allocatable :: fn_record     ! 記録設定ファイル
   character(:), allocatable :: fn_geomorph   ! 地形変化条件設定ファイル
+  character(:), allocatable :: fn_wave       ! 波浪条件設定ファイル
   character(:), allocatable :: fn_gwflow     ! 地下水条件設定ファイル
   character(:), allocatable :: fn_intercept  ! 降雨遮断条件設定ファイル
   character(:), allocatable :: fn_evap       ! 蒸発散条件設定ファイル
@@ -267,7 +269,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_ddd, f_out_dda, f_out_pre, f_out_hrs, f_out_fr, f_out_cn, f_out_hg, &
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
                         fn_structure, &
-                        fn_record, fn_geomorph, fn_gwflow, fn_intercept, fn_evap, fn_meteo, fn_wq, fn_snow, fn_glacier, fn_lavaflow, fn_bedmotion, fn_salt, fn_swi, fn_driftwood, fn_bldgdebris, fn_channel, fn_enc, fn_nest, &
+                        fn_record, fn_geomorph, fn_wave, fn_gwflow, fn_intercept, fn_evap, fn_meteo, fn_wq, fn_snow, fn_glacier, fn_lavaflow, fn_bedmotion, fn_salt, fn_swi, fn_driftwood, fn_bldgdebris, fn_channel, fn_enc, fn_nest, &
                         fn_log, dir_data, dir_result, dir_save, outfn_suffix, out_fill
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
@@ -357,6 +359,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   fn_structure = list%fn_structure
   fn_record = list%fn_record
   fn_geomorph = list%fn_geomorph
+  fn_wave = list%fn_wave
   fn_gwflow = list%fn_gwflow
   fn_intercept = list%fn_intercept
   fn_evap = list%fn_evap
@@ -471,6 +474,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%fn_structure = fn_structure
   list%fn_record = fn_record
   list%fn_geomorph = fn_geomorph
+  list%fn_wave = fn_wave
   list%fn_gwflow = fn_gwflow
   list%fn_intercept = fn_intercept
   list%fn_evap = fn_evap
@@ -503,6 +507,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   if (trim(list%fn_structure) == "-") list%fn_structure = trim(fn_sysparam)
   if (trim(list%fn_record) == "-") list%fn_record = trim(fn_sysparam)
   if (trim(list%fn_geomorph) == "-") list%fn_geomorph = trim(fn_sysparam)
+  if (trim(list%fn_wave) == "-") list%fn_wave = trim(fn_sysparam)
   if (trim(list%fn_gwflow) == "-") list%fn_gwflow = trim(fn_sysparam)
   if (trim(list%fn_intercept) == "-") list%fn_intercept = trim(fn_sysparam)
   if (trim(list%fn_evap) == "-") list%fn_evap = trim(fn_sysparam)
