@@ -12707,7 +12707,11 @@ fn_* 表、params_index、List_samples/list_wave.txt(日英)、examples/delta/RE
 42 m³ 動かす。均一に深い河道(砕波帯のセルがない)に正面の波では問題が出ないことも
 確認した = 発散には「深い河道の中の浅い砂州」と斜め入射が要る。
 (iv) MPI: test/wave_river の Run_MPI.sh np = 2, 4 で nowave・novmax・vmax の state.dat が
-逐次とバイト一致、-fcheck=all の np = 2 で範囲外なし。
+逐次とバイト一致、-fcheck=all の np = 2 で範囲外なし。(v) examples/delta の波浪ケース
+(合意した案 C: 固定給砂 inflow_qb 0.00715 m³/s + 陸地内の河道を非侵食 + wave_vmax 0.5):
+同じ給砂の波なし(baseqb)と比べ、陸化 16 → 38 ×10³ m²、分流路(0.8 R)9 → 1 本、
+風下(北)へ砂嘴、南北非対称 0.55 → 0.93。堆積量は同じ(保存)。堆積体の中の波の峰に
+平行な格子幅の指状砂州は高角不安定の格子スケール成長で、段 3 の課題(README「波浪」)。
 
 ### 84.16 湿潤侵食の剥離深の横方向拡散 wet_lw(2026-10-22 実装。機能追加)
 
