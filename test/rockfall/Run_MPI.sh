@@ -24,6 +24,21 @@ if [ -d save_serial ]; then
         rc=1
     fi
 fi
+# 基岩版(rf_bedrock = 1)
+python3 "$sdir/make_init.py" --sdzero
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_bed.txt | tee Screen_bed.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_rockfall.py" save_bed result_bed bed=save || rc=1
+if [ -d save_bed_serial ]; then
+    if cmp -s save_bed/state.dat save_bed_serial/state.dat; then
+        echo "=== save_bed/state.dat is bit-identical to the serial result (save_bed_serial) ==="
+    else
+        echo "MISMATCH: save_bed/state.dat != save_bed_serial/state.dat" >&2
+        rc=1
+    fi
+fi
 # 窓版(rf_rc = 3 m)
 set -o pipefail
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_rc.txt | tee Screen_rc.log || exit 1

@@ -6,7 +6,10 @@
 #     (3) 崖錐の収支: 全セルで ht >= (z − z0)^+ − TOL_HT(正味の堆積は崖錐)、Σht > 0
 #     (4) 共動更新恒等: max|(sd − sd0) − (z − z0)| < TOL_SD
 #   使い方: Check_rockfall.py <savedir> [<resdir>] [rc=<窓の半径 m>] [sea=<Screen ログ>] [face=1]
-#                             [uc=<Screen ログ>] [hc=<H_c m>]
+#                             [uc=<Screen ログ>] [hc=<H_c m>] [bed=<基準の savedir>]
+#     bed=<savedir>(基岩版 rf_bedrock = 1。sd0 = 0)は (4) を (4') max|sd − ht| < TOL_HT(落下物
+#     だけが sd = 崖錐)に置き換え、(8) z が基準(sd0 = 20 m の param.txt の save)と一致(厳密数学
+#     -O2 では 0、-Ofast では式形の違いによる縮約で最終桁 2e-15 が出るので TOL_Z = 1e-12 を許す)、を加える
 #     sea を与えると海セル版: (1) は「陸の体積減少 = 台帳 vsea(海へ排出)」、
 #     (5) 海セルの z は不変、を検定する(zinit_sea.txt / sw_sea.txt を使う)
 #     rc を与えると (2) は「安息角より急なエッジを持つセルの、窓(nint(rc) セルの正方形)内の
@@ -56,6 +59,7 @@ RC = 0
 SEA = ""
 FACE = False
 UC = ""
+BED = ""
 for a in sys.argv[2:]:
     if a.startswith("rc="):
         RC = int(round(float(a[3:])))
@@ -67,6 +71,8 @@ for a in sys.argv[2:]:
         UC = a[3:]
     elif a.startswith("hc="):
         HC = float(a[3:])
+    elif a.startswith("bed="):
+        BED = a[4:]
     else:
         RES = a
 import math
@@ -158,6 +164,17 @@ if FACE:
 ok6 = (smax > TANPHI) if FACE else True
 ok3 = htdef >= -TOL_HT and sum_ht > 0.0
 ok4 = ident < TOL_SD
+ok8 = True
+if BED:
+    # (4') 基岩版: 初期の土層 0 なので sd は落下物だけ = 崖錐 ht(印字桁 1e-4 m を許す)
+    sdht = max(abs(sd[(j) * NX + i] - ht[j][i]) for j in range(NY) for i in range(NX))
+    ok4 = sdht < TOL_HT
+    # (8) z は供給量制限が発動しない基準(sd0 = 20 m)とビット一致
+    with open(BED + "/state.dat", "rb") as f:
+        read_rle_array(f, ntot)
+        zref = read_rle_array(f, ntot)
+    zdiff = max(abs(zf[n] - zref[n]) for n in range(ntot))
+    ok8 = (zdiff <= 1.0e-12)
 if UC:
     print("(1) 体積収支   : sum(z - z0) = %.5f = -乾式侵食の排出(台帳 × 1/(1-λ)) %.5f m*cell : %s" % (sum_dz, -vout, "PASS" if ok1 else "FAIL"))
 elif SEA:
@@ -168,11 +185,15 @@ else:
 print("(2) 最大高さ差%s: %.6f <= H_c + %.0e = %g m : %s  (頂 %.2f -> %.3f m)" % (("(窓 %d セル、急なエッジを持つ%sセル)" % (RC, "頂の " if FACE else "")) if RC else "", hmax, TOL_H2, HC, "PASS" if ok2 else "FAIL", ZTOP, zmax))
 print("(3) 崖錐の収支 : min(ht - (z-z0)^+) = %.2e m, Σht = %.2f, Σ(z-z0)^+ = %.2f m*cell : %s"
       % (htdef, sum_ht, sum_dep, "PASS" if ok3 else "FAIL"))
-print("(4) 共動更新   : max|(sd-sd0)-(z-z0)| = %.3e m : %s" % (ident, "PASS" if ok4 else "FAIL"))
+if BED:
+    print("(4') 基岩版 sd : max|sd - ht| = %.3e m (tol %.0e) : %s" % (sdht, TOL_HT, "PASS" if ok4 else "FAIL"))
+    print("(8) 基準と一致 : max|z - z(%s)| = %.3e m (tol 1e-12。厳密数学では 0) : %s" % (BED, zdiff, "PASS" if ok8 else "FAIL"))
+else:
+    print("(4) 共動更新   : max|(sd-sd0)-(z-z0)| = %.3e m : %s" % (ident, "PASS" if ok4 else "FAIL"))
 if FACE:
     print("(6) 岩盤の面   : 崖錐のないセルの最大勾配 %.3f > tan(35 deg) = %.3f : %s" % (smax, TANPHI, "PASS" if ok6 else "FAIL"))
 if UC:
     print("(7) 張り出し   : 張り出しで始まった柱 %d > 0、台地面のセル数 %d -> %d(縮む): %s" % (nund, ncap0, ncap, "PASS" if ok7 else "FAIL"))
-ok = ok1 and ok2 and ok3 and ok4 and ok5 and ok6 and ok7
+ok = ok1 and ok2 and ok3 and ok4 and ok5 and ok6 and ok7 and ok8
 print("== rockfall 検定: %s ==" % ("PASS" if ok else "FAIL"))
 sys.exit(0 if ok else 1)

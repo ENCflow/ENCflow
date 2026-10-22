@@ -152,3 +152,4 @@ test/tracer/z_*.txt
 test/tracer/inflow_b.txt
 test/rockfall/zinit_sea.txt
 test/rockfall/sw_sea.txt
+test/rockfall/sd_zero.txt

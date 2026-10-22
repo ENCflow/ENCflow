@@ -179,6 +179,7 @@ module m_geomorph
     integer :: nclip = 0             ! dzmax クリップ数(累計)
     real :: vmove = 0.0              ! 移した体積 (m3 かさ。累計)
     real :: vsea = 0.0               ! 海セルへ崩落して系外へ出た体積 (m3 かさ。累計。ランク局所)
+    logical :: bedrock = .false.     ! 基岩の崩落(rf_bedrock = 1): 供給側に sd <= 0 を許し専用の適用で移す
   end type
 
   type t_fixation
