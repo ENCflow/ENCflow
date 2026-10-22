@@ -73,12 +73,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - 河口の規則 wave_vmax(流速規則 = 候補 A)は 2026-10-22 に実装・検定済み
      (§84.15、test/wave_river。無効時ビット一致、MPI np = 2, 4 バイト一致)。
      しきい値は利用者が流速の分布出力を見て与える(既定なし = 無効)。
-   - **河口の例題(examples/delta の波浪ケース)の再開には給砂の与え方の決定が要る**:
-     容量給砂 fluv_bcfeed = 1 は波が河口砂州を均し続けて入口の流砂が base の 11 倍に
-     暴走、固定給砂 inflow_qb は波と無関係に入口を土層 3 m まで洗掘する(流砂能力 >
-     給砂。base にも及ぶ)。固定給砂+入口の河床固定の組み合わせ(fluv_bcfeed の河床
-     固定だけを使う選択肢)を検討してから、規則つきで再実行する。param_wave・
-     param_baseqb は work/delta_wave_pending に退避中。README に 4 ランの挙動と図 3 枚。
+   - 河口の例題は案 C(固定給砂 inflow_qb + 陸地内の河道を非侵食 + wave_vmax 0.5)で
+     2026-10-22 に完了(examples/delta の baseqb・wave。README「波浪」)。波ありで
+     陸化 2.4 倍・分流路 1 本・風下へ偏る砂嘴。残る課題: 堆積体の中に波の峰に平行な
+     指状の砂州が格子幅で並ぶ(高角不安定の格子スケール成長 = 段 3 の遮蔽の精緻化)。
+     R を振る感度(inflow_qb と H₀)は未実施。
    - ビルドの注意: `make MODE=mpi install` の後に src だけで `make` すると
      libencflow.a に逐次と MPI の .o が混在してトップレベルの make(utils の
      リンク)が失敗する。モードを切り替えるときは `make clean` を挟むこと。
