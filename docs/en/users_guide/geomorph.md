@@ -180,6 +180,8 @@ Riverbed erosion and deposition by a bedload transport formula.
 | fix_ctau | (required) | Increase ratio c_τ of the critical shear stress at full fixation. No standard value in the literature (Asahi et al. 2013 remove accreted cells from the domain, i.e. c_τ → ∞; large values approach that) |
 | fix_dzreset | 0.1 | Cumulative erosion below the fixation surface that resets a to 0 (m) |
 | fix_cn | 0 | Roughness increase ratio c_n at full fixation: the Manning n of the flow friction becomes n (1 + c_n a) (the τ* of the sediment is unchanged). 0 = no roughness effect |
+| fix_tdec | 0 | Decay time T_dec (h, morphological time) of the fixation while submerged: while h > dd, a <- a exp(-t/T_dec). 0 = no decay (an exposed bar loses its fixation only by erosion) |
+| fix_ctau_bank | -1 | Fixation coefficient c_tau,b applied to the bank cell of bank erosion (f_berode). Negative = same as fix_ctau, 0 = banks unaffected |
 
 The minimal input to "just move the bed" is `f_fluvial = 1` plus the
 thickness of the erodible soil `sd0` (&list_geoinfo). The grain size is
@@ -247,7 +249,14 @@ is 0 pending a literature check). Deposition onto a fixed surface is not
 hindered and elevations and volumes are untouched. When a submerged cell is
 eroded by more than `fix_dzreset` (default 0.1 m) below the fixation surface,
 a returns to 0 (nothing becomes permanently unerodible). It does not act on
-the angle-of-repose avalanching. Use it with an inflow series that alternates
+the angle-of-repose avalanching. If a fixed bar stays submerged without being
+eroded (with a strong fixation the erosion never reaches the threshold, and an
+exposed bar becomes permanent in practice), add a decay while submerged with
+`fix_tdec` (while wet, a <- a exp(-t/T_dec): die-back of vegetation, softening
+of the surface layer; a T_dec longer than the duration of a flood keeps the
+fixation through short floods). The effect on bank erosion can be separated
+from the bed with `fix_ctau_bank` (roots stiffen the surface layer but hardly
+the bank toe, so a value below the bed c_tau, e.g. 0.5-1). Use it with an inflow series that alternates
 floods and low flows ([examples/meander](../../../examples/meander/),
 param_fix.txt; with suspended sediment param_fixsusp.txt). Restart in
 `geomorph_fixation.dat` (the dynamic roughness is rebuilt from a and not
@@ -358,6 +367,34 @@ river-mouth terrace, the tsunami deposits above), represent that area
 as ordinary cells + an initial water level, and if you use a sea mask,
 place it offshore of the area of interest.
 
+**River-mouth deltas** - the process in which a river entering still water
+builds a mouth bar, bifurcates, grows lobes and switches channels can be
+computed with settings alone, representing the sea as ordinary cells + an
+initial water level as above and supplying both sand and mud (the record of
+the trials and the expected results are in [docs/delta_plan.md](../../delta_plan.md),
+Japanese). Minimal set-up: a flat basin of ordinary cells 1.5-2 m deep
+(f_htype=2, e0 = sea level), the far edge as a long-wave radiation boundary
+(f_bc=2), a dug channel between dry non-erodible land (sd=0) with a section
+inflow Q and a mud concentration inflow_cs (volume concentration
+0.0002-0.001). Sand: f_fluvial + capacity feed fluv_bcfeed=1 (the upstream
+reach delivers the equilibrium load); mud: f_suspend with an effective settling
+velocity given directly (susp_wf about 1 mm/s, the cohesive-mud reading) +
+f_bedfines=1 (only deposited mud is resuspended). fluv_slope=1 (spreads sand
+over the bar flanks) and f_repose=1 are essential; f_secflow is not used.
+morfac 100-200 for 1000-4000 h of morphological time (a 1000 m wide delta from
+a 30 m wide channel needs about 4000 h and 1e6 m3 of supply; the domain should
+extend 1500 m seaward and +-1300 m sideways). Expected behaviour: the more mud,
+the fewer and longer the distributaries (bird-foot); the less mud, the more
+distributaries in a fan. The shape differs between realisations (the
+instability of the bifurcation amplifies round-off) while the integrated
+quantities do not, so argue with the statistics of several realisations with
+a few cm of noise on the bed. To look at the persistence of distributaries,
+combine alternating floods and low flows with `f_fixation=1`, set `fix_tdec`
+(decay while submerged) to about the duration of a flood and `fix_ctau_bank`
+below the bed c_tau (without the decay an exposed bar becomes permanent and the
+distributaries collapse to grid-width channels). Resolve the distributaries
+with at least width/5 cells.
+
 **Outputs for this section**: sediment in transport in `Hs0001...` (`f_out_hs=1`), volume concentration Hs / (H + Hs), deposition in `Z0001...`. Point time series in the probe column `hs`; maximum flow depth and fluid force in `D9999` and `F9999` ([Output and monitoring](#output-and-monitoring)).
 
 ## Hillslope erosion (f_wash)
@@ -427,6 +464,8 @@ represent this.
 | spl_lc | 0 | Correlation length l (m) at which the curvature kappa is evaluated (0: 5-point Laplacian on the grid). If positive, z is smoothed with a Gaussian of standard deviation l before kappa is taken (the collection scale of the sub-grid rills). The valley spacing is then selected at about 4.4 l (linear stage; valleys merge later) and converges under grid refinement (l/dx >= 2); with 0 the spacing sticks to 2-3 grid cells. The growth rate of the deep-valley stage still depends on the grid (examples/badland) |
 | spl_zbase | -9999 | Elevation of the erosion base level (m) (<= -9000: none). Give the sea level when the cliff foot is the sea (z never drops below it; independent of bedrock exposure through sd) |
 | spl_sgrad | 1 | Evaluation of the slope S. 1: steepest descent (maximum downhill gradient to the 8 neighbours; default), 0: central difference (behaviour before 2026-10-19). The central difference cancels at a ridge crest (S ~ 0), so one-cell-wide ridges never erode; with steepest descent the crest cell erodes with the gradient of its faces and grid-scale checkerboards decay (developer.md sec. 48.4) |
+| spl_ksat | 0 | Saturation curvature kappa_s (1/m) of the hollow amplification. If positive, the kappa in the amplification 1 + c kappa is replaced by the effective curvature kappa~ = kappa/(1 + kappa/kappa_s) (unchanged for kappa << kappa_s, saturating at 1 + c kappa_s for kappa >> kappa_s). It bounds the amplification at strong hollows such as the foot of a cliff (the top of a hard bed), where it otherwise exceeds 100 and erases benches (examples/mesa). The spacing selection (linear stage, small kappa) is unchanged. 0 = no saturation (behaviour before 2026-10-22) |
+| spl_strata(1:2,k) | none | Table of horizontal strata (hard/soft contrast). Column k gives (bottom elevation z_k [m], erodibility factor f_k) in increasing elevation (up to 64 layers). A cell whose surface elevation z lies in the layer z_k <= z < z_{k+1} has its E multiplied by f_k (0 = a layer that does not erode = cap rock). Below the lowest layer the factor is 1. The layers are horizontal; as erosion lowers z the layer below is exposed. Not applied to creep. Example: [examples/badland_round](../../../examples/badland_round/) (banded alternation of hard and soft beds) |
 
 The minimal input to "just carve valleys into a cliff" is `f_splash = 1`
 + `sd0` + rainfall (fn_precip) (kr and kt at their defaults; if the
@@ -908,6 +947,7 @@ When the type of phenomenon is known, start from the following
 | Lahar (volcanic mudflow) | f_dbed=1 or 2 + f_dbres=4 (fine) / 1; 3+3 when boulder-dominated | 0.05-0.1 | 500-1000 | - | 0.001-0.01 | 30-35 | Initiated by erosion of the ash layer (sd), a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended. The Egashira laminar law is not usable for fine material. See the "Lahars" paragraph above and [examples/ashfall_lahar](../../../examples/ashfall_lahar/) |
 | Simple debris flow (calibration-driven) | f_dbed=1 + f_dbres=1 | - | - | - | - | 30-35 | Calibrate the runout with delta_e and delta_d |
 | Bed change of a sand-bed river | f_fluvial (+ f_suspend) | - | - | - | 0.0003-0.001 | - | Large contribution of suspended load |
+| River-mouth delta | f_fluvial (capacity feed) + f_suspend (inflow concentration) + f_bedfines + fluv_slope + f_repose (+ f_fixation) | - | - | - | sand 0.0005; mud via susp_wf = 1e-3 m/s | 30 | Sea as ordinary cells + initial water level. A mud concentration of 0.0002-0.001 separates fan and bird-foot. morfac 100-200. docs/delta_plan.md |
 | Bed change of a gravel-bed river | f_fluvial | - | - | - | 0.02-0.1 | - | Bedload dominates |
 | Long-term landform evolution | f_creep + f_wthr + f_uplift | - | - | - | - | - | creep_d 0.001-0.05 m²/yr, p0 10-100 mm/kyr, uplift 0.1-5 mm/yr. Together with morfac |
 | Landslide tsunami (bed layer) | f_bedslide | 0.1-0.2 | 300-1000 | - | - | - | mu and xi of the inertia-free bed layer (bs_mu/bs_xi). Calibrated separately from the mixture values |

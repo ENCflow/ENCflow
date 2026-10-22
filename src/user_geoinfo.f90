@@ -37,7 +37,7 @@ submodule(m_geoinfo) user_geoinfo
 
   ! 識別名簿(エラー表示用の一覧)。名簿と resolve の分岐は同時に
   ! 更新すること(乖離は defined/run が「未定義名」として検出する)
-  character(len=*), parameter :: routine_names(1:9) = [ character(len=32) :: &
+  character(len=*), parameter :: routine_names(1:10) = [ character(len=32) :: &
       "wave_solid_wall",  &   ! 波例題: 斜めの不透過壁(2セル厚)
       "wave_leaky_wall",  &   ! 波例題: 斜めの半透過壁(1セル厚)
       "tohoku_flood",     &   ! 東北大氾濫計算(スタブ)
@@ -46,6 +46,7 @@ submodule(m_geoinfo) user_geoinfo
       "beach_slope",      &   ! 孤立波遡上例題: 平坦部 + 1:19.85 の海浜斜面(test/nhbreak)
       "shelf_slope",      &   ! ソリトン分裂例題: 平坦部 → 1:20 の斜面 → 半分の水深の棚(test/nhshelf)
       "channel_slope",    &   ! 一様流例題: 勾配 S = 2.25e-4 の直線水路(西が高い。test/nhcurrent)
+      "parabolic_trough", &   ! 乾式侵食例題: x 方向に一様な放物線の谷(κ 一定。test/splashsat)
       "template"          ]   ! 新規ルーチンの雛形(空)
 
 contains
@@ -120,6 +121,8 @@ function resolve(name) result(fp)
       fp => geoinfo_shelf_slope
     case ("channel_slope")
       fp => geoinfo_channel_slope
+    case ("parabolic_trough")
+      fp => geoinfo_parabolic_trough
     case ("template")
       fp => geoinfo_template
     case default
@@ -303,6 +306,28 @@ end subroutine
 !----------------------------------------------------------------------
 ! 新規ルーチンの雛形(空。複製して使う)
 !----------------------------------------------------------------------
+!----------------------------------------------------------------------
+! 乾式侵食例題: x 方向に一様な放物線の谷 z = a (y − ly/2)²(a = 0.05)。
+!   曲率 ∇²z = 2a = 0.1 1/m が全セルで一定(2 次式の 5 点差分は厳密)なので、
+!   凹地形増幅の飽和(spl_ksat)の解析検証に使う。test/splashsat の param.txt と
+!   Check_analytic.py の a・κ と対で保守すること
+!----------------------------------------------------------------------
+subroutine geoinfo_parabolic_trough(p, g)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(inout) :: g
+  integer :: i, j
+  real :: yc
+  real, parameter :: a = 0.05      ! 放物線の係数 (1/m)。κ = 2a
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  do j = lbound(g%z, 2), ubound(g%z, 2)
+    yc = (j - 0.5) * g%dy - 0.5 * g%ly
+    do i = lbound(g%z, 1), ubound(g%z, 1)
+      g%z(i,j) = a * yc * yc
+    end do
+  end do
+end subroutine
+
+
 subroutine geoinfo_template(p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g

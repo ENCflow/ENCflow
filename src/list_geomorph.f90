@@ -9,6 +9,8 @@ module list_geomorph
   public :: t_list_geomorph
   public :: list_geomorph_read
 
+  integer, parameter :: nspstmax = 64  ! 水平層理の表 spl_strata の最大層数
+
   type t_list_geomorph
     ! --- 実行制御 ---
     real :: dt_geomorph = 0.0        ! 地形変化の更新時間間隔 (s)。0なら毎ステップ
@@ -75,6 +77,11 @@ module list_geomorph
     real :: fix_cn = 0.0             ! 定着時の粗度(Manning n)の増分比 c_n。流れの摩擦項の n を
                                      ! n (1 + c_n a) にする(流砂の τ* は変えない。形状抵抗の分離)。
                                      ! 0 = 粗度に効かせない(既定)。§84.8
+    real :: fix_tdec = 0.0           ! 冠水時の定着の減衰時間 T_dec (h。地形時間)。湿潤(h > dd)の間
+                                     ! a ← a exp(−t/T_dec)(植生の枯死・表層の軟化)。0 = 減衰なし
+                                     ! (既定 = 露出した砂州は浸食でしか定着を失わない)。§84.13
+    real :: fix_ctau_bank = -1.0     ! 河岸侵食(f_berode)の河岸セルに効かせる定着の増分比 c_τ,b。
+                                     ! 負 = fix_ctau と同じ(既定)、0 = 河岸には効かせない。§84.13
 
     integer :: f_suspend = 0         ! 浮遊砂(移流+浸食・沈降)(0:無効, 1:有効)
     integer :: f_esform = 1          ! 平衡濃度式(1:超過掃流力線形(簡易), 2:板倉・岸)
@@ -118,6 +125,15 @@ module list_geomorph
     integer :: spl_sgrad = 1         ! 勾配 S の評価(1: 最急降下 = 8 近傍への下り勾配の最大
                                      ! = 既定。稜線の頂のセルも両面の勾配で削れる。
                                      ! 0: 中央差分 = 2026-10-19 以前の挙動。§48.4)
+    real :: spl_ksat = 0.0           ! 凹地形増幅の飽和曲率 κ_s (1/m)(§48.6)。正なら有効曲率
+                                     ! κ̃ = κ / (1 + κ/κ_s) を増幅項 1 + c κ̃ に使う(κ ≪ κ_s で
+                                     ! 従来と同じ、κ ≫ κ_s で 1 + c κ_s に飽和)。0 = 飽和なし(既定)
+    real :: spl_strata(1:2,1:nspstmax) = -9999.0
+                                     ! 水平層理(硬軟差)の表(§48.5)。列 k = (層の下端標高
+                                     ! z_k [m], 侵食性倍率 f_k)。z_k は昇順、f_k >= 0
+                                     ! (0 = 削れない硬層)。地表標高 z が z_k <= z < z_{k+1}
+                                     ! の層にあるセルの E を f_k 倍する。最下層より下は 1。
+                                     ! 番兵(z <= -9000)の手前までが有効。未指定 = 層理なし
 
     integer :: f_debris = 0          ! 土石流 E-D(高橋型平衡濃度)(0:無効, 1:有効)。
                                      ! f_suspend と排他(同一 hs 上の E-D 二重計上防止)。
@@ -273,7 +289,7 @@ subroutine list_geomorph_read(p, list)
   integer :: f_berode, f_repose
   real :: berode_kb, berode_tausc, berode_m, repose_phi, repose_relax
   integer :: f_fixation
-  real :: fix_tfix, fix_ctau, fix_dzreset, fix_cn
+  real :: fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank
   integer :: f_suspend
   integer :: f_esform
   real :: susp_d50
@@ -290,6 +306,8 @@ subroutine list_geomorph_read(p, list)
   integer :: f_splash
   real :: spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, spl_lc, spl_zbase
   integer :: spl_sgrad
+  real :: spl_ksat
+  real :: spl_strata(1:2,1:nspstmax)
   integer :: f_debris
   real :: db_phi
   real :: db_delte
@@ -331,12 +349,12 @@ subroutine list_geomorph_read(p, list)
                            f_secflow, sec_nstar, sec_rmax, sec_vmin, &
                            f_berode, berode_kb, berode_tausc, berode_m, &
                            f_repose, repose_phi, repose_relax, &
-                           f_fixation, fix_tfix, fix_ctau, fix_dzreset, fix_cn, &
+                           f_fixation, fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank, &
                            f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, &
                            f_wash, wash_kr, wash_kf, wash_tausc, &
                            f_splash, spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, &
-                           spl_lc, spl_zbase, spl_sgrad, &
+                           spl_lc, spl_zbase, spl_sgrad, spl_ksat, spl_strata, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
                            f_dbed, db_d50, db_erest, db_cmin, f_dbwet, db_satbed, &
                            db_mu, db_xi, db_tauy, f_dbcurv, &
@@ -381,6 +399,8 @@ subroutine list_geomorph_read(p, list)
   fix_ctau = list%fix_ctau
   fix_dzreset = list%fix_dzreset
   fix_cn = list%fix_cn
+  fix_tdec = list%fix_tdec
+  fix_ctau_bank = list%fix_ctau_bank
   f_suspend = list%f_suspend
   f_esform = list%f_esform
   susp_d50 = list%susp_d50
@@ -405,6 +425,8 @@ subroutine list_geomorph_read(p, list)
   spl_lc = list%spl_lc
   spl_zbase = list%spl_zbase
   spl_sgrad = list%spl_sgrad
+  spl_ksat = list%spl_ksat
+  spl_strata = list%spl_strata
   f_debris = list%f_debris
   db_phi = list%db_phi
   db_delte = list%db_delte
@@ -493,6 +515,8 @@ subroutine list_geomorph_read(p, list)
   list%fix_ctau = fix_ctau
   list%fix_dzreset = fix_dzreset
   list%fix_cn = fix_cn
+  list%fix_tdec = fix_tdec
+  list%fix_ctau_bank = fix_ctau_bank
   list%f_suspend = f_suspend
   list%f_esform = f_esform
   list%susp_d50 = susp_d50
@@ -517,6 +541,8 @@ subroutine list_geomorph_read(p, list)
   list%spl_lc = spl_lc
   list%spl_zbase = spl_zbase
   list%spl_sgrad = spl_sgrad
+  list%spl_ksat = spl_ksat
+  list%spl_strata = spl_strata
   list%f_debris = f_debris
   list%db_phi = db_phi
   list%db_delte = db_delte

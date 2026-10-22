@@ -21,6 +21,11 @@
 #     (8) 浮遊砂(susp_off / susp_on / susp_on2: 出水時に濃度 0.002 で給砂):
 #         定着ありの砂州は出水で全セル正味堆積(Δz > 0)、平均 Δz が定着なしより
 #         DZ_SUSP 以上大きい(f_esform = 1 と 2 の両方)
+#     (9) 冠水減衰(decay: on + T_dec = 0.1 h = 360 s。§84.13): 出水で水没した砂州の
+#         a(1800) = a_on·exp(−(1800 − t_w)/T_dec)。a_on は on の保存値(水没時刻 t_w で
+#         凍結した値)で t_w = −T_fix ln(1 − a_on)。保存値どうしで相対 1e-3(乾湿の
+#         切り替わりの数ステップ分を許す)。乾いたままの河岸の a は on と同一
+#         (減衰は湿潤セルだけ)、河道セルの a は厳密に 0
 #   リスタート往復(rough と同じ設定の rt1 → rt2)と MPI の一致は Run.sh /
 #   Run_MPI.sh が cmp で見る
 import sys, struct, os, math, glob
@@ -171,6 +176,23 @@ for tag in ("susp_on", "susp_on2"):
     print("(8) 浮遊砂 %-8s: 砂州 Δz min %.4f (> 0), mean %.4f vs 定着なし %.4f (差 > %.2f m) : %s"
           % (tag, min(dzs), sum(dzs) / len(dzs), sum(dz_off) / len(dz_off), DZ_SUSP, "PASS" if g8 else "FAIL"))
     ok = ok and g8
+
+# (9) 冠水減衰(decay): 水没した砂州の a は水没時刻から exp(−t/T_dec) で落ち、乾いた河岸は on と同じ
+TDEC = 0.1 * 3600.0
+a_on, _ = load_fix("on")
+a_dc, _ = load_fix("decay")
+dev = 0.0
+for ij in bar:
+    ao = at(a_on, ij)
+    tw = -TFIX * math.log(1.0 - ao)                     # on は水没時刻で a が凍結する
+    pred = ao * math.exp(-(1800.0 - tw) / TDEC)
+    dev = max(dev, abs(at(a_dc, ij) / pred - 1.0))
+bank_d = max(abs(at(a_dc, ij) - at(a_on, ij)) for ij in bank)
+chan_d = max(abs(at(a_dc, ij)) for ij in chan)
+g9 = dev < 1.0e-3 and bank_d == 0.0 and chan_d == 0.0
+print("(9) 冠水減衰: 砂州 a(1800) の a_on·exp(−(1800 − t_w)/360) からの相対ずれ %.2e (< 1e-3), 河岸の a は on と差 %.1e (= 0), 河道 %.1e (= 0) : %s"
+      % (dev, bank_d, chan_d, "PASS" if g9 else "FAIL"))
+ok = ok and g9
 
 print("=== fixation checks %s ===" % ("PASS" if ok else "FAIL"))
 sys.exit(0 if ok else 1)

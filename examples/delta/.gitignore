@@ -1,0 +1,5 @@
+z_*.txt
+sd_*.txt
+result_*/
+save_*/
+timeseries_*.csv

@@ -765,6 +765,12 @@ subroutine init_source(b, p, g, list)
         call par_stop("list_bound_source: source "//itoa(isrc)//" cell (" &
                       //itoa(i)//","//itoa(j)//") is outside the domain mask (x=0)")
       end if
+      if (g%sw(i,j) /= 0) then
+        ! 海セルは continuous が更新しない境界セル(水位は m_tide が強制)。
+        ! 湧き出し・吸い込みを置いても boundary_h が読み飛ばすため無効(§23)
+        call par_stop("list_bound_source: source "//itoa(isrc)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is a sea cell (sea mask fn_sw)")
+      end if
     end do
 
   end do
@@ -861,6 +867,14 @@ subroutine init_stage(b, p, g, list)
       if (g%x(i,j) <= 0) then
         call par_stop("list_bound_stage: group "//itoa(istage)//" cell (" &
                       //itoa(i)//","//itoa(j)//") is outside the domain mask (x=0)")
+      end if
+      if (g%sw(i,j) /= 0) then
+        ! 海セルの水位は m_tide が z で表す(h = hsea0 一定)。水位規定を
+        ! 置くと boundary_h の最終クランプが海セルの h を上書きし、潮位
+        ! 境界の前提が壊れる(§23)
+        call par_stop("list_bound_stage: group "//itoa(istage)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is a sea cell (sea mask fn_sw; " &
+                      //"the sea level is prescribed by the tide module fn_tide)")
       end if
     end do
 
@@ -1114,6 +1128,12 @@ subroutine init_inflow(b, p, g, list)
       if (g%x(i,j) <= 0) then
         call par_stop("list_bound_inflow: segment "//itoa(ifl)//" cell (" &
                       //itoa(i)//","//itoa(j)//") is outside the domain mask (x=0)")
+      end if
+      if (g%sw(i,j) /= 0) then
+        ! 海セルの外縁面は put_bc_faces が読み飛ばすため、流入区間に含めても
+        ! その面の流量は黙って失われる(§23)
+        call par_stop("list_bound_inflow: segment "//itoa(ifl)//" cell (" &
+                      //itoa(i)//","//itoa(j)//") is a sea cell (sea mask fn_sw)")
       end if
       nsides = 0
       if (i == 1)    then; nsides = nsides + 1; sides(nsides) = e_side_w; end if

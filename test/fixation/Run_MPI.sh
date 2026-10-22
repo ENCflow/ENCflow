@@ -8,12 +8,14 @@ sdir=$(dirname "$(readlink -f "$0")")
 
 python3 "$sdir/make_init.py" z > zinit.txt
 python3 "$sdir/make_init.py" h > hinit.txt
+python3 "$sdir/make_init.py" sd > sdinit.txt
 
 export ENCFLOW_EXPECT_NP="$NP"
 set -o pipefail
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_off.txt | tee Screen.log || exit 1
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_on.txt | tee -a Screen.log || exit 1
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_weak.txt | tee -a Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_decay.txt | tee -a Screen.log || exit 1
 for c in rough susp_off susp_on susp_on2; do
     mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt | tee -a Screen.log || exit 1
 done
@@ -34,7 +36,7 @@ for f in state.dat geomorph_fixation.dat; do
         rc=1
     fi
 done
-for c in off on weak rough susp_off susp_on susp_on2; do
+for c in off on weak decay rough susp_off susp_on susp_on2; do
     if [ -d save_${c}_serial ]; then
         for f in state.dat geomorph_fixation.dat; do
             [ -e save_$c/$f ] || continue

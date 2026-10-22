@@ -76,6 +76,8 @@ reference の更新(`-u`)は結果の妥当性を人間が確認してから行�
 | [splash/](splash/) | 乾式斜面侵食の解析検証 | 土砂 f_splash | ref |
 | [splashslide/](splashslide/) | 固結崖と崩壊崖の対照(乾式侵食と斜面崩壊の併用) | f_splash・f_slide | 解析 |
 | [splashlc/](splashlc/) | 曲率の相関長 spl_lc による谷の波長選択(2 波長擾乱の成長比の対照) | f_splash(spl_lc・spl_zbase) | 解析 |
+| [splashstrata/](splashstrata/) | 水平層理の侵食性倍率 spl_strata(3 層: キャップロック 0 / 0.5 / 1)の解析検証 | f_splash(spl_strata) | ref + 解析 |
+| [splashsat/](splashsat/) | 凹地形増幅の飽和 spl_ksat(放物線の谷、κ 一定)の解析検証 | f_splash(spl_ksat) | ref + 解析 |
 | [sedinflow/](sedinflow/) | 区間流入の土砂濃度時系列の台帳検定 | 境界・土砂 | 解析 |
 | **土石流・崩壊・火山流動・雪崩** | | | |
 | [debris/](debris/) | 土石流(侵食起動型)の疎通・保存則。高橋型・江頭型 | 土石流 f_debris | 解析 |

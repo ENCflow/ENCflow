@@ -13,12 +13,14 @@ export ENCFLOW_EXPECT_NP="$NP"
 set -o pipefail
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_kb1.txt | tee Screen.log || exit 1
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_kb2.txt | tee -a Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_fix0.txt | tee -a Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_fix1.txt | tee -a Screen.log || exit 1
 set +o pipefail
 echo ""
 
 rc=0
 python3 "$sdir/Check_berode.py" || rc=1
-for c in kb1 kb2; do
+for c in kb1 kb2 fix0 fix1; do
     if [ -d save_${c}_serial ]; then
         if cmp -s save_$c/state.dat save_${c}_serial/state.dat; then
             echo "=== $c: state.dat is bit-identical to the serial result ==="

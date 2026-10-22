@@ -23,6 +23,8 @@ python3 plot_results.py   # plotting (where provided)
 | [benchmark/](benchmark/) | Three rainfall-runoff benchmarks with analytical solutions: a plane slope (h-plane), a V-shaped catchment (v-shaped) and a V-shaped valley (v-valley) | Shallow water, rainfall |
 | [badland/](badland/) | Badland-type landscape evolution: rainfall on a plateau and steep scarp carves valleys. Self-organisation of valleys from white noise, the valley-spacing selection rule (spl_lc), grid convergence, long-term growth of deep valleys and sharp ridges | Dry hillslope erosion f_splash (spl_lc, spl_zbase) |
 | [badland_storm/](badland_storm/) | A cliff where surface flow appears only during downpours (lower infiltration capacity): does it stop the dry erosion or turn the cliff into a gully network? (contrast to badland) | f_splash + f_wash, f_suspend, Green-Ampt, rainfall series |
+| [badland_round/](badland_round/) | Rounded-crest badlands (swelling-clay type) where lower hills become domes: the length scale L set by the ratio of advective incision to creep (diffusion) rounds the hills smaller than L first (contrast to the sharp ridges of badland); also a contrast with banded hard/soft strata (spl_strata) | f_splash + f_creep (+ spl_strata), Green-Ampt |
+| [mesa/](mesa/) | Mesa and butte formation: a cap rock (spl_strata) keeps a flat top and parallel retreat of vertical cliffs; the plateau shrinks to an isolated butte and a pinnacle. Contrast without strata | f_splash (spl_strata) + f_creep, Green-Ampt |
 | [ashfall_lahar/](ashfall_lahar/) | Ashfall → rainfall → erosion of the ash layer → mudflow (lahar) generation and deposition | Debris flow f_debris, rainfall |
 | [landslide_tsunami/](landslide_tsunami/) | Landslides and debris flows plunging into water and the resulting tsunami: four subaerial and submarine patterns plus non-hydrostatic variants | Moving bed layer f_bedslide, non-hydrostatic correction |
 | [tsunami_fault/](tsunami_fault/) | Tsunami generation from fault parameters: hydrostatic, instantaneous and non-hydrostatic runs, and the coordinate patterns of fault2disp | Prescribed bed motion fn_bedmotion, utils/fault2disp |
@@ -35,6 +37,7 @@ python3 plot_results.py   # plotting (where provided)
 | [qanat/](qanat/) | An idealised qanat (groundwater-collecting gallery) | Conduit continuum layer, groundwater |
 | [meander/](meander/) | How a sinusoidal channel in a floodplain deforms under bed load, the direction correction and angle-of-repose avalanching (outer-bank pools, inner-bank bars, bank retreat). With alternating floods and low flows the exposed inner-bank bars get fixed, and with sediment feed (capacity feed, equilibrium-concentration feed) the bars grow up to the floodplain level. Stages 3 to 5a of the meander plan | bed load f_fluvial, fluv_slope, f_secflow, f_repose, f_berode, f_fixation, fluv_bcfeed, inflow_cs_eq |
 | [meander_cutoff/](meander_cutoff/) | A meander loop with a narrow neck is cut off by a flood; the old loop becomes slack water and its ends start to fill | same + inflow time series |
+| [delta/](delta/) | A river-mouth delta built by a sediment-laden river entering a still basin: mouth bar, bifurcation, lobe growth and channel switching. Five configurations: fan versus bird-foot by the sand/mud ratio, and the stabilisation of distributaries by discharge variation and fixation (decay while submerged, bank coefficient). Record: docs/delta_plan.md (Japanese) | sea as ordinary cells + initial water level, capacity feed fluv_bcfeed, suspended mud inflow_cs + f_bedfines, fluv_slope, f_repose, f_fixation (fix_tdec, fix_ctau_bank), long-wave radiation edge |
 
 ## Examples of chained processes
 
@@ -42,7 +45,7 @@ Set-ups that show ENCflow's characteristic "several processes chained in
 one run" (for reference after reading the chapters).
 
 - Tsunami → house destruction → debris: [tsunami_town/](tsunami_town/). Storm surge → driftwood → town: [timberyard/](timberyard/).
-- Ashfall → rainfall → lahar: [ashfall_lahar/](ashfall_lahar/). Rainfall → dry-slope erosion → landscape evolution: [badland/](badland/). The same cliff with surface flow during downpours: [badland_storm/](badland_storm/).
+- Ashfall → rainfall → lahar: [ashfall_lahar/](ashfall_lahar/). Rainfall → dry-slope erosion → landscape evolution: [badland/](badland/). The same cliff with surface flow during downpours: [badland_storm/](badland_storm/). Hills rounded by creep: [badland_round/](badland_round/). Cap-rock mesa to butte: [mesa/](mesa/).
 - Fault → tsunami → inundation: [tsunami_fault/](tsunami_fault/), [tsunami_coast/](tsunami_coast/). Slope failure → entry into water → tsunami: [landslide_tsunami/](landslide_tsunami/).
 - Flood → levee breach → inundation: [levee_breach/](levee_breach/).
 - Rainfall → sewer (conduits) → surcharge and drainage: [sewer_hybrid/](sewer_hybrid/). Groundwater → qanat collection: [qanat/](qanat/).

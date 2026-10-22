@@ -295,7 +295,9 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fines_la | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fix_cn | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fix_ctau | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| fix_ctau_bank | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fix_dzreset | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| fix_tdec | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fix_tfix | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fluv_bcfeed | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fluv_bcfeed_fac | &list_geomorph | [土砂・地形変化](geomorph.md) |
@@ -564,8 +566,10 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | spl_dzmax | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | spl_h | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | spl_kr | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| spl_ksat | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | spl_lc | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | spl_sgrad | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| spl_strata | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | spl_zbase | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | spl_kt | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | src_cell | &list_bound_source | [境界条件](boundary.md) |

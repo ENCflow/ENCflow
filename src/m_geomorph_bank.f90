@@ -133,16 +133,20 @@ module subroutine bank_edge_pass(gm, p, g, s, dts)
           cycle
         end if
         if (s%vv(iw,jw) <= 0.0) cycle
+        ! 非侵食の河岸(可動層 sd <= 0 = 岩盤・非侵食の陸地)は後退しない。供給量制限
+        ! (apply_edge_flux。fdon = 0)が流束を 0 にするので結果は同じだが、ここで
+        ! 飛ばして台帳(nbank・nbclip・vbank)に「仮想の侵食」を数えない(§84.14)
+        if (s%sd(ib,jb) <= 0.0) cycle
         hw = s%h(iw,jw)
         hhe = max(hw, p%dv)
         ! 脚部セルの無次元掃流力(calc_fluvial と同じマニング閉じ・有効掃流力比)
         taus = gm%flv%taufac * g%rn(iw,jw)**2 * s%vv(iw,jw)**2 &
                / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
-        ! 定着(§84.6): 河岸セル b の定着度で限界掃流力を τ*c,b (1 + c_τ a_b) に
-        ! 上げる(a = 0 なら乗算せず厳密に不変)
+        ! 定着(§84.6、§84.13): 河岸セル b の定着度で限界掃流力を τ*c,b (1 + c_τ,b a_b)
+        ! に上げる(a = 0 なら乗算せず厳密に不変。c_τ,b は fix_ctau_bank、既定は c_τ)
         tscb = gm%bnk%tausc
         if (gm%f_fixation > 0) then
-          if (s%fx(ib,jb) > 0.0) tscb = tscb * (1.0 + gm%fix%ctau * s%fx(ib,jb))
+          if (s%fx(ib,jb) > 0.0) tscb = tscb * (1.0 + gm%fix%ctaub * s%fx(ib,jb))
         end if
         if (taus <= tscb) cycle
         eb = gm%bnk%kb * (taus / tscb - 1.0)**gm%bnk%pm   ! 後退速度 (m/s)
@@ -177,7 +181,7 @@ module subroutine calc_repose(gm, g, s, dts)
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt, nrep, nrclip
   real :: gq, dzc, lim, excess, dzm, vrep, qfac
-  logical :: okc
+  logical :: okc, oks
 
   nrep = 0
   nrclip = 0
@@ -186,7 +190,7 @@ module subroutine calc_repose(gm, g, s, dts)
   qfac = gm%bnk%relax * 0.5 / 8.0 * gm%bnk%area / (dts * gm%poroi)
   jt = min(dcp%je + 1, dcp%jeh)
   !$omp parallel do schedule(static) reduction(+: nrep, nrclip, vrep) &
-  !$omp   private(i, j, k, in, jn, okc, gq, dzc, lim, excess, dzm)
+  !$omp   private(i, j, k, in, jn, okc, oks, gq, dzc, lim, excess, dzm)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -199,7 +203,14 @@ module subroutine calc_repose(gm, g, s, dts)
           if (g%sw(in,jn) <= 0) then
             dzc = s%z(i,j) - s%z(in,jn)
             lim = gm%bnk%tanphi * gm%bnk%dist(k)
-            if (abs(dzc) > lim) then
+            ! 高い側(供給側)が非侵食(sd <= 0)なら崩落しない。供給量制限が流束を
+            ! 0 にするので結果は同じだが、台帳(nrep・nrclip・vrep)に数えない(§84.14)
+            if (dzc > 0.0) then
+              oks = (s%sd(i,j) > 0.0)
+            else
+              oks = (s%sd(in,jn) > 0.0)
+            end if
+            if (abs(dzc) > lim .and. oks) then
               excess = abs(dzc) - lim
               gq = sign(qfac * excess, dzc)        ! 高い側 → 低い側(c→n 正)
               dzm = qfac * excess * dts * gm%wrk%ainv * gm%poroi

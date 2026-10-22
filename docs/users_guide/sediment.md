@@ -283,7 +283,13 @@ $`\lambda^* = 2\pi\ell/\sqrt{2} \approx 4.4\,\ell`$ と $`\ell`$ だけで決ま
 V 字谷底の κ も $`\sim 2S/\ell`$ に有界になります(ただし谷壁が垂直化する
 深い段階の速さは勾配 $`S`$ が格子で決まるため格子依存が残ります。
 examples/badland)。`spl_zbase` は侵食基準面(崖下が海なら海面)、
-`spl_dzmax` は暴走の安全弁です。既定 $`k_r`$ = 0.0005、$`k_t`$ = 0.05 は
+`spl_dzmax` は暴走の安全弁です。`spl_ksat` を与えると増幅項の $`\kappa`$ を
+有効曲率 $`\tilde\kappa = \kappa/(1 + \kappa/\kappa_s)`$ に置き換え、強い凹部
+(崖の基部)での増幅を $`1 + c\,\kappa_s`$ で飽和させます(線形段階の間隔選択は
+不変。検証は [test/splashsat](../../test/splashsat/README.md))。水平層理 `spl_strata`(層の下端標高と
+侵食性倍率の表)を与えると、セルの地表標高が属する層の倍率を $`E`$ に掛けます
+(硬軟互層の縞・段・キャップロック。倍率 0 の層は削れません。検証は
+[test/splashstrata](../../test/splashstrata/README.md))。既定 $`k_r`$ = 0.0005、$`k_t`$ = 0.05 は
 テストの中央値(**経験値**)で、検証は
 [test/splash](../../test/splash/README.md)(増幅なしの解析形
 $`\Delta z = P(k_r + k_t S)T`$ に全桁一致、排出台帳が解析和に一致)と
@@ -339,6 +345,8 @@ $`U`$(`uplift0`、既定 1 mm/yr)は造山帯の代表値の下限で、負値�
 | spl_dzmax | 0 | 1 更新の侵食上限 | **数値設定** 0 = 無効。暴走の安全弁 |
 | spl_lc | 0 m | 曲率の相関長 $`\ell`$ | **与件** 0 = 格子の κ(間隔が格子依存)。谷間隔のおよそ 1/5(examples/badland) |
 | spl_zbase | なし | 侵食基準面 | **与件** 崖下が海なら海面 |
+| spl_ksat | 0 | 増幅の飽和曲率 $`\kappa_s`$ | **与件** 0 = 飽和なし。崖の基部の段を残すには 0.05〜0.2 1/m(examples/mesa) |
+| spl_strata | なし | 水平層理の(下端標高, 侵食性倍率)表 | **与件** 層序の硬軟差。倍率 0 = キャップロック |
 | wthr_p0 / wthr_sdstar | 50 mm/kyr / 0.5 m | 土層生成速度 / 減衰深(§7) | **文献値** Heimsath 型の文献域の中央[^heimsath97] |
 | uplift0 | 1 mm/yr | 隆起速度 | **慣用値** 造山帯の代表値の下限 |
 

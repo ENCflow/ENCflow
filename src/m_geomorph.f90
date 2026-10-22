@@ -131,6 +131,8 @@ module m_geomorph
     real :: ctau = 0.0               ! 定着時の限界掃流力の増分比 c_τ
     real :: dzreset = 0.0            ! 定着面からの累積浸食深のリセット閾値 (m)
     real :: cn = 0.0                 ! 定着時の粗度の増分比 c_n(0 = 粗度に効かせない。§84.8)
+    real :: tdec = 0.0               ! 冠水時の減衰時間 T_dec (s。地形時間。0 = 減衰なし。§84.13)
+    real :: ctaub = 0.0              ! 河岸侵食の河岸セルに効かせる増分比 c_τ,b(§84.13)
     real, allocatable :: zref(:,:)   ! 定着面の基準高 (m)(帯±ハロ。私有 save の 2 面目)
     integer :: nreset = 0            ! 浸食でリセットしたセル更新数(累計。ランク局所)
     integer :: nfix = 0              ! τ*c,eff で流砂を止めた/減らしたエッジ数(累計)
@@ -248,6 +250,10 @@ module m_geomorph
     real :: slc = 0.0                ! κ の相関長 ℓ (m)(0 = 格子ラプラシアン。§48.3)
     real :: szbase = -9999.0         ! 侵食基準面 (m)(-9000 以下 = なし)
     integer :: ssgrad = 1            ! 勾配の評価(1: 最急降下 = 既定, 0: 中央差分。§48.4)
+    real :: sksat = 0.0              ! 凹地形増幅の飽和曲率 κ_s (1/m)(0 = 飽和なし。§48.6)
+    integer :: snst = 0              ! 水平層理の層数(0 = 層理なし。§48.5)
+    real, allocatable :: sstz(:)     ! 層の下端標高 (m)(昇順。snst > 0 のみ確保)
+    real, allocatable :: sstf(:)     ! 層の侵食性倍率(0 = 削れない硬層)
     integer :: f_debris = 0          ! 土石流 E-D(0:無効, 1:有効。f_suspend と排他)
     real :: db_tanphi = 0.0          ! tan(内部摩擦角)
     real :: db_delte = 0.0           ! 侵食速度係数 δe
