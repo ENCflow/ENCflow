@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """examples/mesa の図化と数表(事前に param_cap.txt / param_nocap.txt を実行しておく)。
-  figs/maps.png      2 ケース × 4 時刻の陰影図
+  python3 plot_results.py          # キャップあり / 層理なし
+  python3 plot_results.py bench    # 中間硬層の対照(cap / bench / bench2): figs/*_bench.png
+  figs/maps.png      ケース × 4 時刻の陰影図
   figs/sections.png  2 つの台地の中心を通る横断(y = 50 m)の時間発展
   figs/series.png    台地面(z >= 17 m)の等価半径 sqrt(A/π) と頂高の時系列(崖の後退速度)
 """
-import csv, os, re
+import csv, os, re, sys
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
@@ -13,8 +15,18 @@ from matplotlib.colors import LightSource
 matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
 os.makedirs("figs", exist_ok=True)
-CASES = [("param_cap.txt", "キャップロックあり(上 3 m 倍率 0.05、z = 8〜10 m 倍率 0.3)"),
-         ("param_nocap.txt", "層理なし(対照)")]
+MODE = sys.argv[1] if len(sys.argv) > 1 else "cap"
+if MODE == "bench":
+    CASES = [("param_cap.txt", "中間硬層 z = 8〜10 m・倍率 0.3(param_cap)"),
+             ("param_bench.txt", "中間硬層 z = 6〜10 m・倍率 0.05"),
+             ("param_bench2.txt", "中間硬層 z = 5〜10 m・倍率 0.02"),
+             ("param_bench3.txt", "中間硬層 z = 5〜10 m・倍率 0.02、凹地形増幅なし (spl_cb = 0)")]
+    SUF = "_bench"
+else:
+    CASES = [("param_cap.txt", "キャップロックあり(上 3 m 倍率 0.05、z = 8〜10 m 倍率 0.3)"),
+             ("param_nocap.txt", "層理なし(対照)")]
+    SUF = ""
+HARD = {"cap": [(17, 20), (8, 10)], "bench": [(17, 20), (6, 10)], "bench2": [(17, 20), (5, 10)], "bench3": [(17, 20), (5, 10)]}
 PLATEAUS = [(60.0, 50.0, 30.0), (150.0, 50.0, 12.0)]
 ZCAP, DX, YC = 17.0, 1.0, 50.0
 
@@ -81,7 +93,7 @@ for c in cases:
             r_eq, zmax, A = plateau_stats(z, xc, yc, R)
             ts.append(t); rs.append(r_eq); zs.append(zmax)
         ls = "-" if k == 0 else "--"
-        col = "C0" if c["name"] == "cap" else "C3"
+        col = {"cap": "C0", "nocap": "C3", "bench": "C2", "bench2": "C1", "bench3": "C4"}[c["name"]]
         axes[0].plot(ts, rs, ls, color=col, label="%s, R₀ = %g m" % (c["name"], R))
         axes[1].plot(ts, zs, ls, color=col, label="%s, R₀ = %g m" % (c["name"], R))
         sel = [i for i in range(len(ts)) if rs[i] > 2]
@@ -94,7 +106,7 @@ axes[0].set_xlabel("地形時間 T_geo (s)"); axes[0].set_ylabel("台地面(z �
 axes[0].set_title("キャップの縁の後退(直線 = 平行後退)"); axes[0].grid(alpha=0.3); axes[0].legend(fontsize=8)
 axes[1].set_xlabel("地形時間 T_geo (s)"); axes[1].set_ylabel("頂高 (m)")
 axes[1].set_title("頂の高さ"); axes[1].grid(alpha=0.3); axes[1].legend(fontsize=8)
-fig.tight_layout(); fig.savefig("figs/series.png", dpi=110); plt.close(fig)
+fig.tight_layout(); fig.savefig("figs/series%s.png" % SUF, dpi=110); plt.close(fig)
 
 # --- 地図
 isel = [0, 1, 2, 3]
@@ -109,14 +121,14 @@ for r, c in enumerate(cases):
         ax.contour(x, y, z, levels=[ZCAP], colors="red", linewidths=0.8)
         ax.set_title("%s  T_geo = %.1e s" % (c["name"], t), fontsize=9)
 fig.suptitle("赤線 = キャップ上面(z = 17 m)の輪郭", fontsize=10)
-fig.tight_layout(); fig.savefig("figs/maps.png", dpi=110); plt.close(fig)
+fig.tight_layout(); fig.savefig("figs/maps%s.png" % SUF, dpi=110); plt.close(fig)
 
 # --- 横断
 fig, axes = plt.subplots(len(cases), 1, figsize=(13, 3 * len(cases)), sharex=True)
 jc = int(YC / DX)
 for ax, c in zip(axes, cases):
-    if c["name"] == "cap":
-        ax.axhspan(17, 20, color="0.8", lw=0, zorder=0); ax.axhspan(8, 10, color="0.9", lw=0, zorder=0)
+    for z1, z2 in HARD.get(c["name"], []):
+        ax.axhspan(z1, z2, color="0.85", lw=0, zorder=0)
     ax.plot(x, c["snaps"][0][1][jc], "k--", lw=0.8, label="初期")
     n = len(c["snaps"]); cmap = plt.get_cmap("viridis")
     for i in range(1, n):
@@ -125,5 +137,23 @@ for ax, c in zip(axes, cases):
     ax.set_ylabel("z (m)"); ax.set_ylim(-0.5, 22); ax.grid(alpha=0.3); ax.legend(fontsize=8, loc="upper right")
     ax.set_title(labels[c["name"]], fontsize=10, loc="left")
 axes[-1].set_xlabel("x (m)(y = 50 m。灰色 = キャップ(上)と中間硬層(下))")
-fig.tight_layout(); fig.savefig("figs/sections.png", dpi=110); plt.close(fig)
-print("\nfigs/maps.png, sections.png, series.png written")
+fig.tight_layout(); fig.savefig("figs/sections%s.png" % SUF, dpi=110); plt.close(fig)
+
+# ベンチの指標: 大きい台地の方位平均断面で、z = 10〜17 m の軟層区間と中間硬層の上面(z ≈ 10 m)の
+# 幅 — 硬層上面 ±0.5 m にあるセルの数(台地中心から半径 45 m 以内)を時刻ごとに数える
+if MODE == "bench":
+    print("\n=== ベンチの指標: 大きい台地(中心 x = 60 m)で中間硬層の上面 ±0.5 m にあるセル数(= 段の面積 m²)===")
+    for c in cases:
+        ztop = 10.0
+        win = np.hypot(X - 60.0, Y - 50.0) <= 45.0
+        ns = [int((win & (np.abs(z - ztop) <= 0.5)).sum()) for t, z in c["snaps"]]
+        print("%s: %s" % (c["name"], " ".join(str(n) for n in ns)))
+    print("\n=== 方位平均断面(大きい台地)で各標高帯が占める半径方向の幅 (m): 17-20 / 10.5-17 / 9.5-10.5(段) / 5-9.5 / 1-5 ===")
+    rr = np.hypot(X - 60.0, Y - 50.0)
+    for c in cases:
+        for i in (2, 6, 9):
+            t, z = c["snaps"][i]
+            prof = np.array([z[(rr >= a) & (rr < a + 1)].mean() for a in np.arange(0, 46, 1.0)])
+            w = lambda z1, z2: int(((prof >= z1) & (prof < z2)).sum())
+            print("%s T_geo=%.1e: %d / %d / %d / %d / %d" % (c["name"], t, w(17, 20.5), w(10.5, 17), w(9.5, 10.5), w(5, 9.5), w(1, 5)))
+print("\nfigs/maps%s.png, sections%s.png, series%s.png written" % (SUF, SUF, SUF))

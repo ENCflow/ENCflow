@@ -80,7 +80,7 @@ examples/badland_storm/sw_*.txt
 examples/badland_round/z.txt
 examples/badland_round/analysis*.txt
 examples/mesa/z.txt
-examples/mesa/analysis.txt
+examples/mesa/analysis*.txt
 examples/timberyard/z.txt
 examples/timberyard/z_wall*.txt
 examples/timberyard/sw.txt
