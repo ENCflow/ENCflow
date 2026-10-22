@@ -932,11 +932,14 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   if (gm%f_fluvial > 0 .and. allocated(b%qbin)) call apply_bedfeed(gm, g, s, b, dts)
   if (gm%f_fluvial > 0) call calc_fluvial(gm, p, g, s, dts)
   ! 波浪による沿岸漂砂(§84.15): fluvial が帯内の z を更新した後に、更新後の地形で
-  ! 砕波帯と汀線方位を見る(近傍参照のため z・sd のハロを先に最新化。判定は
-  ! 全ランク同一 = collective 安全)
+  ! 砕波帯と汀線方位を見る(近傍参照のため z・sd のハロを先に最新化。平滑化は
+  ! h を ±wave_smooth(≤ 2)行読むので h のハロも最新化する — 時間ループ中の h の
+  ! ハロは ±1 行しか現ステップの値でないため、これを欠くと帯境界で逐次と食い違い
+  ! 得る(bedslide のプランジと同じ扱い)。判定は全ランク同一 = collective 安全)
   if (gm%f_wave_long > 0) then
     call par_halo_cell(s%z)
     call par_halo_cell(s%sd)
+    call par_halo_cell(s%h)
     call calc_wave_longshore(gm, p, g, s, dts)
   end if
   ! 安息角崩落(§84.4): fluvial(・側岸侵食)が帯内の z を更新した後に、

@@ -144,7 +144,7 @@ Q_s は地形時間の量(波は水理の時間刻みと無関係)。geomorph �
   補間 → H_b・h_b)、calc_wave_longshore(§3.3〜3.5。calc_fluvial と bank の後、
   repose の前に `gm%wrk%q` へ加算)、stir_factor(§4。calc_fluvial/calc_suspend が
   τ* に掛ける係数を返す)、dispose(台帳: 沿岸漂砂の総量・侵食/堆積の体積)。
-- MPI: 平滑化は自帯+ハロ交換、流束は既存の 2 ループ構造。collective なし。
+- MPI: 平滑化は自帯+ハロ交換(h・z・sd のハロを呼び出し前に最新化)、流束は既存の 2 ループ構造。collective なし。np = 2, 4 で逐次とバイト一致(§84.15。初回の不一致は全域端の範囲外読みが原因)。
 - save/restore: 状態なし(与件と地形から毎回作る)。
 - 計算順(architecture.md §2.2): geomorph_calc の内部で fluvial → bank → **wave** →
   repose → suspend の順(wave の流束は fluvial と同じ apply_edge_flux に乗せるので

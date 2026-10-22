@@ -28,6 +28,11 @@
 !   MPI: 平滑化・流束ベクトル・露出度は自帯 js..je で計算してハロ交換(3+1 回)、
 !   エッジ流束は calc_repose と同じ 2 ループ(書き手一意、je+1 行の冗長計算)。
 !   collective なし。状態なし(与件と地形から毎回作る = save/restore 不要)。
+!   近傍参照の範囲: 平滑化は h を ±wave_smooth(≤ ハロ幅 2)読むので呼び出し側が
+!   h のハロを最新化する(ステップ頭の交換は ±1 行しか現ステップの値でない)。
+!   全域の端は別問題: g%x の余白は 1 行、sw・h は余白なし(jsh = max(1, ·))なので、
+!   核・風上参照・中央差分の 3 箇所は 1..nx, 1..ny を明示的に判定する(§84.15。
+!   範囲外読みは未定義値 = 逐次と MPI で不一致になった実バグ)。
 !   無効時は配列未確保・呼び出しなし(ゼロコスト)。
 !======================================================================
 submodule(m_geomorph) m_geomorph_wave
@@ -136,8 +141,8 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 沿岸漂砂のエッジ流束(calc_fluvial の後、calc_repose の前。z・sd のハロは
-! 呼び出し側が最新化済み。h・u・v のハロはステップ頭の交換で最新)
+! 沿岸漂砂のエッジ流束(calc_fluvial の後、calc_repose の前。z・sd・h のハロは
+! 呼び出し側が最新化済み)
 !----------------------------------------------------------------------
 module subroutine calc_wave_longshore(gm, p, g, s, dts)
   type(t_geomorph), intent(inout) :: gm
@@ -145,7 +150,7 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
-  integer :: i, j, k, in, jn, jt, a, b, r, ui, uj, nact
+  integer :: i, j, k, in, jn, jt, a, b, r, ui, uj, nact, im, ip, jm, jp
   real :: tw, hb, hbd, dx, dy, dxv, dyv, wsum, sig2, w, hh
   real :: gx, gy, sl, nx, ny, tx, ty, cosa, sina, qs, wb, q
   real :: qe, gq, vlong
@@ -182,8 +187,10 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
       if (s%h(i,j) <= p%dd) cycle
       if (s%h(i,j) > hbd) then
         gm%wav%ex2(i,j) = 1.0                      ! 砕波帯より深い = 源
+      else if (i+ui < 1 .or. i+ui > g%nx .or. j+uj < 1 .or. j+uj > g%ny) then
+        gm%wav%ex2(i,j) = 1.0                      ! 風上が全域の外 = 開境界の沖(露出)
       else
-        gm%wav%ex2(i,j) = gm%wav%ex(i+ui, j+uj)    ! 風上の前回値(ハロ込み)
+        gm%wav%ex2(i,j) = gm%wav%ex(i+ui, j+uj)    ! 風上の前回値(ハロ込み。域外 x<=0 は 0 = 陰)
       end if
     end do
   end do
@@ -213,11 +220,14 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
       if (g%x(i,j) <= 0) cycle
       hh = 0.0
       do b = -r, r
+        if (j+b < 1 .or. j+b > g%ny) cycle          ! 全域の外(x の余白は 1 行、sw・h は余白なし)
         do a = -r, r
-          if (g%x(i+a, j+b) > 0 .and. g%sw(i+a, j+b) <= 0 .and. s%h(i+a, j+b) > p%dd) then
-            w = exp(-(a * a + b * b) / (2.0 * sig2))
-            hh = hh + w * s%h(i+a, j+b)
-          end if
+          if (i+a < 1 .or. i+a > g%nx) cycle
+          if (g%x(i+a, j+b) <= 0) cycle
+          if (g%sw(i+a, j+b) > 0) cycle
+          if (s%h(i+a, j+b) <= p%dd) cycle
+          w = exp(-(a * a + b * b) / (2.0 * sig2))
+          hh = hh + w * s%h(i+a, j+b)
         end do
       end do
       gm%wav%hs(i,j) = hh / wsum
@@ -229,7 +239,7 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
   ! --- 砕波帯セルの流束ベクトル ---
   nact = 0
   !$omp parallel do schedule(static) reduction(+: nact) &
-  !$omp   private(i, j, gx, gy, sl, nx, ny, tx, ty, cosa, sina, qs, wb, q)
+  !$omp   private(i, j, im, ip, jm, jp, gx, gy, sl, nx, ny, tx, ty, cosa, sina, qs, wb, q)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       gm%wav%qx(i,j) = 0.0
@@ -238,8 +248,10 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
       if (g%sw(i,j) > 0) cycle
       if (s%h(i,j) <= p%dd .or. s%h(i,j) > hbd) cycle
       if (gm%wav%ex(i,j) < 0.5) cycle                   ! 陰・入り江・河道の内部
-      gx = (gm%wav%hs(i+1,j) - gm%wav%hs(i-1,j)) / (2.0 * dx)
-      gy = (gm%wav%hs(i,j+1) - gm%wav%hs(i,j-1)) / (2.0 * dy)
+      im = max(i - 1, 1); ip = min(i + 1, g%nx)      ! 全域端は片側差分
+      jm = max(j - 1, 1); jp = min(j + 1, g%ny)
+      gx = (gm%wav%hs(ip,j) - gm%wav%hs(im,j)) / (real(ip - im) * dx)
+      gy = (gm%wav%hs(i,jp) - gm%wav%hs(i,jm)) / (real(jp - jm) * dy)
       sl = sqrt(gx * gx + gy * gy)
       if (sl < gm%wav%smin) cycle                       ! 平坦 = 汀線方位が定義できない
       nx = gx / sl                                       ! 岸沖法線(沖向き = 深くなる向き)
