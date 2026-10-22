@@ -2,6 +2,7 @@
 """examples/karst の図化と数表(事前に param.txt を実行しておく)。
 
   python3 plot_results.py | tee analysis.txt
+  python3 plot_results.py param_lat.txt | tee analysis_lat.txt   # 側方溶食あり(figs/*_lat.png)
 
 図(figs/):
   maps.png        初期地形・最終地形の陰影図、削剥深 z0 − z、最大湛水深 H9999
@@ -26,8 +27,10 @@ matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
 os.makedirs("figs", exist_ok=True)
 
-PARAM = "param.txt"
-SCREEN = "Screen.log"
+import sys
+PARAM = sys.argv[1] if len(sys.argv) > 1 else "param.txt"      # param_lat.txt で側方溶食ありの結果を図化
+SUFFIX = "" if PARAM == "param.txt" else "_" + PARAM[6:-4]      # 図の接尾辞(param_lat.txt → _lat)
+SCREEN = "Screen%s.log" % SUFFIX
 RIM = 3                     # make_terrain.py の不溶の縁(セル)
 
 
@@ -169,7 +172,7 @@ for ax in axes.flat:
     ax.set_xlabel("x (m)")
     ax.set_ylabel("y (m)")
 plt.tight_layout()
-plt.savefig("figs/maps.png", dpi=130)
+plt.savefig("figs/maps%s.png" % SUFFIX, dpi=130)
 plt.close()
 
 # ---------------------------------------------------------------- 図: evolution
@@ -187,7 +190,7 @@ for ax, k in zip(axes[0], idx):
     ax.set_xlabel("x (m)")
 axes[0, 0].set_ylabel("y (m)")
 plt.tight_layout()
-plt.savefig("figs/evolution.png", dpi=130)
+plt.savefig("figs/evolution%s.png" % SUFFIX, dpi=130)
 plt.close()
 
 # ---------------------------------------------------------------- 図: sections
@@ -203,7 +206,7 @@ for ax, (lab, getter, coord) in zip(axes, [("x 断面 (y = %.0f m)" % y[jm], lam
     ax.grid(alpha=0.3)
 axes[0].legend(fontsize=7, ncol=2)
 plt.tight_layout()
-plt.savefig("figs/sections.png", dpi=130)
+plt.savefig("figs/sections%s.png" % SUFFIX, dpi=130)
 plt.close()
 
 # ---------------------------------------------------------------- 図: hydrograph
@@ -224,7 +227,7 @@ if rows:
         ax.set_title(lab + ": 豪雨 40 mm × 1 h の後、湛水が吸込穴と土層へ消える")
         ax.grid(alpha=0.3)
     plt.tight_layout()
-    plt.savefig("figs/hydrograph.png", dpi=130)
+    plt.savefig("figs/hydrograph%s.png" % SUFFIX, dpi=130)
     plt.close()
 
 # ---------------------------------------------------------------- 図: stats
@@ -253,6 +256,6 @@ ax.set_ylabel("削剥深 > 1 m の窪みの数")
 ax.grid(alpha=0.3)
 ax.set_title("ドリーネの数")
 plt.tight_layout()
-plt.savefig("figs/stats.png", dpi=130)
+plt.savefig("figs/stats%s.png" % SUFFIX, dpi=130)
 plt.close()
-print("figs/maps.png, evolution.png, sections.png, hydrograph.png, stats.png written")
+print("figs/maps%s.png, evolution, sections, hydrograph, stats written" % SUFFIX)
