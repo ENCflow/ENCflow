@@ -48,11 +48,11 @@
 !======================================================================
 submodule(m_geomorph) m_geomorph_dissol
   use, intrinsic :: iso_fortran_env, only : real64
-  use m_parallel, only : par_info, par_stop, dcp, is_root, par_scatter_cell, par_sum_rows
+  use m_parallel, only : par_info, par_warn, par_stop, dcp, is_root, par_scatter_cell, par_sum_rows
   use m_fileio, only : fileio_read_matrix
   use m_restart, only : restart_write_cell, restart_read_cell
   use m_sysdep_util, only : sysdep_mkdir
-  use m_util, only : rtoa
+  use m_util, only : rtoa, itoa
   implicit none
 
 contains
@@ -122,6 +122,8 @@ module subroutine init_dissol(gm, p, g, s, list)
   end if
   gm%dis%fres = list%dissol_fres
   gm%dis%res = (gm%dis%fres > 0.0)
+  if (list%dissol_dzmax < 0.0) call par_stop("list_geomorph: dissol_dzmax must be >= 0 (0 = no cap)")
+  gm%dis%dzmax = list%dissol_dzmax
   if (list%dissol_lat > 1.0) then
     call par_stop("list_geomorph: dissol_lat must be in [0, 1] or -1 (automatic, wetted-area ratio)")
   end if
@@ -154,6 +156,10 @@ module subroutine init_dissol(gm, p, g, s, list)
   if (gm%dis%src == 3) then
     call par_info("geomorph: surface-runoff dissolution on bare rock (fsurf = " // rtoa(gm%dis%fsurf) &
                   // ", bare below sd = " // rtoa(gm%dis%sdsurf) // " m)")
+  end if
+  if (gm%dis%dzmax > 0.0) then
+    call par_info("geomorph: dissolution per cell and update capped at dissol_dzmax = " &
+                  // rtoa(gm%dis%dzmax) // " m (excess capacity discarded)")
   end if
   if (gm%dis%auto) then
     call par_info("geomorph: lateral dissolution on (wall share = wetted-area ratio h*sum(L)/(h*sum(L)+dx*dy))")
@@ -277,7 +283,7 @@ module subroutine calc_dissol(gm, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  integer :: i, j
+  integer :: i, j, nclip
   real :: fw, w
   real(real64) :: rsum
 
@@ -286,7 +292,8 @@ module subroutine calc_dissol(gm, p, g, s)
     return
   end if
 
-  !$omp parallel do schedule(static) private(i, j, fw, w, rsum)
+  nclip = 0
+  !$omp parallel do schedule(static) reduction(+: nclip) private(i, j, fw, w, rsum)
   do j = dcp%js, dcp%je
     rsum = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
@@ -298,6 +305,10 @@ module subroutine calc_dissol(gm, p, g, s)
       w = gm%dis%kd * fw * gm%morfac
       if (gm%dis%map) w = w * gm%dis%fsol(i,j)
       if (w <= 0.0) cycle
+      if (gm%dis%dzmax > 0.0 .and. w > gm%dis%dzmax) then
+        w = gm%dis%dzmax                                 ! 超過分の溶解能は捨てる(飽和)
+        nclip = nclip + 1
+      end if
       if (gm%dis%res) then
         s%z(i,j) = s%z(i,j) - (1.0 - gm%dis%fres) * w
         s%sd(i,j) = s%sd(i,j) + gm%dis%fres * w
@@ -309,6 +320,7 @@ module subroutine calc_dissol(gm, p, g, s)
     gm%dis%vrow(j) = gm%dis%vrow(j) + rsum * g%dx * g%dy
   end do
   !$omp end parallel do
+  gm%dis%nclip = gm%dis%nclip + nclip
 end subroutine
 
 
@@ -322,7 +334,7 @@ subroutine calc_dissol_lat(gm, p, g, s)
   type(t_state), intent(inout) :: s
   real, parameter :: wdiag = 2.0 / (2.0 + sqrt(2.0))   ! 斜め接触幅の比(p_diagratio の既定と同値)
   real, parameter :: lk(1:8) = [wdiag, 1.0, wdiag, 1.0, 1.0, wdiag, 1.0, wdiag]
-  integer :: i, j, k, in, jn, m, im, jm
+  integer :: i, j, k, in, jn, m, im, jm, nclip
   real :: fw, wcap, ew, sumw, fs, pw
   logical :: wall
   real(real64) :: rsum
@@ -407,7 +419,8 @@ subroutine calc_dissol_lat(gm, p, g, s)
   !$omp end parallel do
 
   ! (3) 床と壁の量をまとめて適用し、台帳に積む
-  !$omp parallel do schedule(static) private(i, j, fs, rsum)
+  nclip = 0
+  !$omp parallel do schedule(static) reduction(+: nclip) private(i, j, fs, rsum)
   do j = dcp%js, dcp%je
     rsum = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
@@ -417,6 +430,10 @@ subroutine calc_dissol_lat(gm, p, g, s)
       if (fs <= 0.0) cycle
       if (gm%dis%map) fs = fs * gm%dis%fsol(i,j)
       if (fs <= 0.0) cycle
+      if (gm%dis%dzmax > 0.0 .and. fs > gm%dis%dzmax) then
+        fs = gm%dis%dzmax                                ! 床+壁の合計を頭打ち(超過は飽和として捨てる)
+        nclip = nclip + 1
+      end if
       if (gm%dis%res) then
         s%z(i,j) = s%z(i,j) - (1.0 - gm%dis%fres) * fs
         s%sd(i,j) = s%sd(i,j) + gm%dis%fres * fs
@@ -428,6 +445,7 @@ subroutine calc_dissol_lat(gm, p, g, s)
     gm%dis%vrow(j) = gm%dis%vrow(j) + rsum * g%dx * g%dy
   end do
   !$omp end parallel do
+  gm%dis%nclip = gm%dis%nclip + nclip
 end subroutine
 
 
@@ -442,6 +460,11 @@ module subroutine dispose_dissol(gm, p, g, s)
   ! 溶けた岩の体積の総括(par_sum_rows = 決定的。collective は全ランクが呼ぶ)
   call par_sum_rows(gm%dis%vrow, vtot)
   call par_info("geomorph: dissolution removed " // rtoa(real(vtot)) // " m3 of rock")
+  if (gm%dis%nclip > 0) then
+    ! ランク局所の診断(発動は正常動作。多ければ dt_geomorph/morfac/dissol_dzmax の見直し)
+    call par_warn("geomorph: dissolution dzmax clip fired in " // itoa(gm%dis%nclip) &
+                  // " cell-updates (review dt_geomorph/morfac/dissol_dzmax)")
+  end if
 end subroutine
 
 

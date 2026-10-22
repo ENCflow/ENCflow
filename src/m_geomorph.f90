@@ -90,6 +90,8 @@ module m_geomorph
     real :: sdsurf = 0.0             ! 表面流源が効く土層厚の上限 (m)
     real :: sdsinv = 0.0             ! 1 / sdsurf
     real, allocatable :: frn(:,:)    ! 表面流源: 地上降雨量の積算 (m。帯±ハロ。私有 save)
+    real :: dzmax = 0.0              ! 1 セル・1 更新の溶食量の上限 (m。0 = 無効)
+    integer :: nclip = 0             ! dzmax クリップの回数(累計。ランク局所)
     logical :: sink = .false.        ! 吸込穴(管路層の枡)流入項の有効
     real :: fsink = 1.0              ! 吸込穴流入水の溶解能の比
     real :: fres = 0.0               ! 不溶性残渣の体積率(0〜1)
@@ -1227,6 +1229,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%spl%zt)) deallocate(gm%spl%zt)
   if (allocated(gm%dis%fsol)) deallocate(gm%dis%fsol)
   if (allocated(gm%dis%frn)) deallocate(gm%dis%frn)
+  gm%dis%nclip = 0
   if (allocated(gm%dis%qw)) deallocate(gm%dis%qw)
   if (allocated(gm%dis%wfl)) deallocate(gm%dis%wfl)
   if (allocated(gm%dis%dzl)) deallocate(gm%dis%dzl)
