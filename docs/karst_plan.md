@@ -131,7 +131,10 @@ $`W_w = k_d F_w \cdot \texttt{morfac}`$(§2.2 の w を可溶率を掛ける前�
 吸込穴の流入量(= 窪みの集水)が壁の後退も駆動し、集水の大きい窪みほど
 広く深くなる、というドリーネの成長則がそのまま出る。$`p`$ は「床と壁の
 溶ける比」で、接触面積比の概算(壁の濡れ面 h·L と床面 Δx² の比)から
-0.2〜0.5 程度。校正値。
+0.2〜0.5 程度、深い湛水(h ≈ Δx)なら 0.8 程度。`dissol_lat = −1` では
+この面積比 $`p_w = h_w \sum L/(h_w \sum L + \Delta x \Delta y)`$ をセルごとに
+計算する(推奨。examples/karst の p = 0.3 固定では壁の分け前が小さく、
+穴の幅がほとんど変わらなかった = 2026-10-22 の試行)。
 
 **離散化(3 パス。MPI は owner-compute)**:
 1. 湛水セルごとに $`W_w`$ を記録場から作り(§2.2 と同じ消費・ゼロ戻し)、
@@ -188,6 +191,7 @@ Z9998 を配分式の解析値(Check_analytic.py が独立に実装)と比較し
 | A `param.txt` | 平坦・一様湛水 h0 = 0.1 m、バケツ浸透 36 mm/h(容量 0.05 m)、dt_geomorph = 5 s(idt = 100)、morfac = 10⁴、残渣率 0.25、tt = 100 s | 浸透量 I = 1e-5 × 100 = 1e-3 m → w = 4e-5 × 1e-3 × 1e4 = 4e-4 m、Δz = −3e-4 m、Δsd = +1e-4 m |
 | B `param_sink.txt` | test/conduit A の平衡(枡流入の解析平衡 hgc_eq)に、中心 5×5 だけ可溶(fn_dissol)の集中溶食を dt_geomorph = tt(最終ステップで 1 回更新)で重ねる、morfac = 10⁴ | 中心: Δz = −k_d × f_sink × hgc(tt) × morfac(hgc(tt) は Log の S_grnd)、外側: Δz = 0 |
 | D `param_lat.txt` | 中央 3×3 の窪み(z = −1)に水位 −0.5 の湛水、バケツ浸透 36 mm/h、dissol_lat = 0.4、dt_geomorph = 5 s、morfac = 10⁴、tt = 100 s | 窪み 9 セルの溶解能 W = 4e-4 m ずつを、床 (1−p)W と周囲 16 セルの壁 pW·L_k/ΣL に配分(§2.5)。総和 9W |
+| E `param_lata.txt` | D の窪みに微小降雨 0.36 mm/h(降雨源。全セル W = 4e-4 m)、dissol_lat = −1 | 窪みセルごとに p = hΣL/(hΣL + Δx²)。総和 441W(相対 1e-4) |
 | C `param_rain.txt` | 一様降雨 30 mm/h、地下水なし、dissol_src = 2、tt = 3600 s、morfac = 1000 | Δz = −4e-5 × (30/3.6e6 × 3600) × 1000 = −1.2e-3 m |
 
 - 合否: Check_analytic.py が Z9998(・Sd9998)の内部セルを解析値と比較

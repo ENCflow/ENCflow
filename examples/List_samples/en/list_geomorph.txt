@@ -357,10 +357,11 @@
   !dissol_fsink = 1.0       ! capacity ratio of the sink inflow (calibration)
   !dissol_fres = 0.0        ! volume fraction of insoluble residue 0-1
                             !   (dissolved rock x fraction stays in the soil sd)
-  !dissol_lat = 0.3         ! lateral dissolution: share 0-1 of a ponded cell's
+  !dissol_lat = -1.0        ! lateral dissolution: share 0-1 of a ponded cell's
                             !   capacity given to the neighbouring cells above
-                            !   its water surface (rock walls). 0 = floor only.
-                            !   Funnel dolines, basal retreat of towers
+                            !   its water surface (rock walls). 0 = floor only,
+                            !   -1 = automatic from the wetted-area ratio
+                            !   (recommended). Funnel dolines, basal retreat
   !fn_dissol = "sol.txt"    ! distribution of the soluble fraction 0-1
                             !   (limestone mask). Unspecified = 1 everywhere
 

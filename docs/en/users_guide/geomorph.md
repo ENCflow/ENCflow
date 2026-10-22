@@ -908,12 +908,14 @@ form anywhere".
 | dissol_sink | 0 | Sink-inflow term (1 = on; requires the inlets of f_gwconduit) |
 | dissol_fsink | 1.0 | Ratio of the dissolution capacity of the sink inflow (calibration value; surface runoff that bypasses the soil is below 1) |
 | dissol_fres | 0 | Volume fraction of insoluble residue, 0 to 1. Dissolved rock × fraction stays in the soil sd (terra rossa). 0 leaves sd untouched |
-| dissol_lat | 0 | Lateral dissolution: the share (0 to 1) of a ponded cell's dissolution capacity given to the neighbouring cells whose floor is above its water surface (rock walls), in proportion to the contact width; the rest goes to the floor. 0 = floor only. 0.2 to 0.5 widens depressions into funnels and produces basal notches and wall retreat of towers |
+| dissol_lat | 0 | Lateral dissolution: the share (0 to 1) of a ponded cell's dissolution capacity given to the neighbouring cells whose floor is above its water surface (rock walls), in proportion to the contact width; the rest goes to the floor. 0 = floor only. **−1 = automatic per cell from the wetted-area ratio hΣL/(hΣL + Δx²) (recommended)**. A fixed value should follow the ratio of ponding depth to cell size (about 0.8 for h = 5 m, Δx = 10 m) |
 | fn_dissol | "" | Distribution of the soluble fraction 0 to 1 (limestone mask). Unspecified = 1 in every cell |
 
-**Lateral dissolution** (`dissol_lat` = p > 0) spends part of the ponded
-water's capacity on the rock walls of the neighbouring cells that stand
-above its water surface. Wall retreat is represented by lowering the wall
+**Lateral dissolution** (`dissol_lat` = p > 0, or −1 for automatic) spends
+part of the ponded water's capacity on the rock walls of the neighbouring
+cells that stand above its water surface. The automatic mode splits by the
+wetted-area ratio (walls h·ΣL against the floor Δx²), so deeper ponding
+gives the walls a larger share. Wall retreat is represented by lowering the wall
 cell (the raster convention of bank erosion `f_berode`). With p = 0 a cell
 with a sink becomes a one-cell-wide deep hole (examples/karst); with p > 0
 the depressions with the largest catchments grow both wider and deeper,

@@ -410,8 +410,10 @@ everything to the floor):
 
 The total capacity is unchanged (a partition) and wall retreat is
 represented by lowering the wall cell. $`p`$ is the ratio of floor to wall
-dissolution, a calibration value of about 0.2 to 0.5 from the ratio of
-wetted areas.
+dissolution; with `dissol_lat = −1` it is set per cell from the wetted-area
+ratio $`p_w = h_w \sum L / (h_w \sum L + \Delta x \Delta y)`$ (recommended:
+deeper ponding gives the walls a larger share). A fixed value should follow
+the ratio of ponding depth to cell size (about 0.8 for h = 5 m, Δx = 10 m).
 
 $`c_{\rm eq}`$ (`dissol_ceq`, default 100 mg/L as CaCO₃) is the
 **effective dissolution capacity**: the equilibrium solubility minus the
@@ -458,7 +460,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | dissol_ceq / dissol_rho | 100 mg/L / 2500 kg/m³ | effective dissolution capacity / rock density (§7) | **literature value** representative CaCO₃ concentration of recharge in limestone areas[^white84] and the density of limestone. k_d = 4e-5 m/m, i.e. 40 mm/kyr for a recharge of 1 m/yr (published range 20-100)[^gabrovsek09] |
 | dissol_src / dissol_sink | 1 / 0 | water source / sink term | **method** 1: infiltration, 2: rainfall on the ground. The sink term is the inlet inflow of the conduit continuum layer |
 | dissol_fsink / dissol_fres | 1.0 / 0 | capacity ratio of the sink inflow / residue fraction | **empirical value** to be calibrated / **given** 0 = no residue |
-| dissol_lat | 0 | share p of lateral dissolution | **empirical value** 0 = floor only. About 0.2 to 0.5 from the ratio of wetted areas; to be calibrated |
+| dissol_lat | 0 | share p of lateral dissolution | **method** 0 = floor only, −1 = automatic from the wetted-area ratio (recommended). A fixed value follows the ratio of ponding depth to cell size |
 
 **Where to look when revising the defaults**
 
