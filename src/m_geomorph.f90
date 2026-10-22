@@ -178,7 +178,14 @@ module m_geomorph
     real :: gamma = 0.78             ! 砕波指標 γ
     real :: smin = 1.0e-3            ! 汀線方位を定義する海底勾配の下限
     real :: vmax = -1.0              ! 河口の規則の流速しきい値 (m/s)。負 = 無効
-    integer :: smooth = 2            ! 平滑化半径(セル)
+    integer :: smooth = 2            ! 平滑化半径(セル。lsm = 0 のとき)
+    real :: lsm = 0.0                ! 平滑化長 σ (m)。> 0 で多パス核(nsm パス)
+    integer :: nsm = 0               ! 多パス核のパス数(= 4(σ/Δmin)²。0 = セル半径の核)
+    real :: bslp = 0.0               ! 局所勾配項の係数 β(多パス核のときのみ)
+    real :: wsx = 0.0, wsy = 0.0     ! 1 パスの x・y 近傍重み(§84.16 と同じ)
+    real, allocatable :: hs2(:,:)    ! 多パス核の作業領域(帯)
+    real, allocatable :: hm(:,:)     ! 多パス核の正規化用マスク(湿潤 = 1。帯±ハロ)
+    real, allocatable :: hm2(:,:)    ! 同作業領域(帯)
     real :: hbd = 0.0                ! 砕波水深 h_b = H_b/γ (m)(現在値)
     real, allocatable :: val(:,:)    ! 時系列 (1:4, n)(時刻 s, H0, T, 方向)
     real, allocatable :: hs(:,:)     ! 平滑化した水深(帯±ハロ)
@@ -1254,6 +1261,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   end if
   if (allocated(gm%wrk%q)) deallocate(gm%wrk%q)
   if (allocated(gm%wav%hs)) deallocate(gm%wav%hs, gm%wav%qx, gm%wav%qy, gm%wav%ex, gm%wav%ex2)
+  if (allocated(gm%wav%hs2)) deallocate(gm%wav%hs2, gm%wav%hm, gm%wav%hm2)
   if (allocated(gm%wav%val)) deallocate(gm%wav%val)
   if (allocated(gm%flv%fdon)) deallocate(gm%flv%fdon)
   if (allocated(gm%flv%rsec)) deallocate(gm%flv%rsec)

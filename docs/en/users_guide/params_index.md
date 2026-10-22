@@ -624,7 +624,9 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | wave_dir | &list_wave | [Sediment and landform change](geomorph.md) |
 | wave_gamma | &list_wave | [Sediment and landform change](geomorph.md) |
 | wave_h0 | &list_wave | [Sediment and landform change](geomorph.md) |
+| wave_bslp | &list_wave | [Sediment and landform change](geomorph.md) |
 | wave_k2 | &list_wave | [Sediment and landform change](geomorph.md) |
+| wave_lsm | &list_wave | [Sediment and landform change](geomorph.md) |
 | wave_smin | &list_wave | [Sediment and landform change](geomorph.md) |
 | wave_smooth | &list_wave | [Sediment and landform change](geomorph.md) |
 | wave_t | &list_wave | [Sediment and landform change](geomorph.md) |
