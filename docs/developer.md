@@ -5331,6 +5331,22 @@ dt 上界を支配する(エッジ 24 m³/s・dx=10 m で dt ≤ 0.061 s。幹�
 - test/salt の reference(模式実験 A)は暫定コミット(解析終状態が根拠。
   規律1の趣旨により人間の目視確認をもって確定。2026-08-24 目視承認済み)。
 
+### 47.4 初期化順の修正(2026-10-22): tide init を saltwater init より前に
+
+- **症状**: m_saltwater_init(海セルの hss = h)が m_tide_init(海セルの
+  h = hsea0)より前に走っていたため、海セルの初期 hss が初期条件の h
+  (h0・e0 − 0)になり、潮位の初期適用後は hss ≠ h。ステップ末の維持
+  (5)が走るまでの**最初の 1 ステップ**だけ、海セルの供給濃度 hss/h が
+  h_init/hsea0 になっていた(海の初期水深 0 なら最初のステップの流入が
+  淡水)。1 ステップ限りで実害はほぼないが「海は常に全塩水」の設計と不一致。
+- **修正**: m_main の初期化順を tide init → saltwater init に入れ替えた
+  (tide init は state より後・swflow より前であればよく、saltwater init は
+  gwflow init より後であればよい。両制約を満たす)。
+- **検証**(gfortran 13.3 / serial): test/salt 模式実験 A は identical、
+  海水浸入ケース(f_salt_surf=0)と test/tide も不変。test/tide に fn_salt
+  (f_salt_surf=1)を加えた構成で、開始状態の海セルの Hss0000 が 1.0 = hsea0
+  (修正前は h0 = 0.5)になることを確認。
+
 ## 48. 乾式斜面侵食 m_geomorph_splash(f_splash。2026-08-20 実装)
 
 表面流のない高透水斜面(バッドランド・火砕丘の海食崖)の谷形成を扱う
