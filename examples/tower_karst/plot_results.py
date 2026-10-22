@@ -8,7 +8,7 @@
   sections.png    塔 1(左下)の中心を通る x 断面と y 断面の時間発展
   towers.png      各丘の頂高・平野からの比高・裾の半径(z > 平野 + 5 m の等価半径)の時間発展
   hydrograph.png  Log の S_surf・S_grnd(最初の 3 日と最後の 3 日)
-数表(標準出力): 水収支、溶けた岩の体積の検算、平野・裾・塔の削剥、崩落の台帳
+数表(標準出力): 水収支、溶けた岩の体積の検算、平野・裾・塔の削剥、崩落の台帳と崖錐(Ht)
 
 依存: numpy, matplotlib
 """
@@ -92,22 +92,22 @@ log = open(SCREEN, errors="ignore").read() if os.path.exists(SCREEN) else ""
 rows = [l.split() for l in log.splitlines() if re.match(r"\s*[\d*]+:\d\d:\d\d", l)]
 m = re.search(r"dissolution removed\s*([0-9.Ee+-]+)\s*m3", log)
 vled = float(m.group(1)) if m else np.nan
-m = re.search(r"rockfall moved\s*([0-9.Ee+-]+)\s*m3", log)
-vrock = float(m.group(1)) if m else np.nan
-bulk = float(p.get("rockfall_bulk", 1.5))
+vrock = sum(float(v) for v in re.findall(r"rockfall moved\s*([0-9.Ee+-]+)\s*m3", log)) if log else np.nan
+htf = np.loadtxt(os.path.join(res, "Ht9998.txt")) if os.path.exists(os.path.join(res, "Ht9998.txt")) else np.zeros_like(zf)
 print("== 水収支: 最終 S_total = %s m(降雨累計 40 mm × %d 日 = %.3f m)"
       % (rows[-1][4] if rows else "?", int(round(times[9998] / 86400)), 0.04 * times[9998] / 86400))
-vz = -(zf - z0).sum() * dx * dx                  # 地表の体積減少(崩落は (bulk−1)×岩 だけ増やす)
+vz = -(zf - z0).sum() * dx * dx                  # 地表の体積減少(崩落は z を保存するので寄与しない)
 print("== 体積の検算(地形時間 %.0f 年 = 豪雨 %d 回を年 %d 回で換算)" % (tend, round(tend * STORMS_PER_YR), STORMS_PER_YR))
-print("  溶けた岩(台帳)= %.0f m3、崩落した岩(台帳)= %.0f m3(岩屑 %.0f m3)" % (vled, vrock, vrock * bulk))
-print("  地表の体積減少 Σ(z0 − z)Δx² = %.0f m3 ≈ 溶食 × (1 − f_res) − 崩落 × (bulk − 1) = %.0f m3"
-      % (vz, vled * (1.0 - fres) - vrock * (bulk - 1.0)))
+print("  溶けた岩(台帳)= %.0f m3、崩落で移した岩(台帳。かさ)= %.0f m3、最終の崖錐 Σht Δx² = %.0f m3(最大 %.2f m)"
+      % (vled, vrock, htf.sum() * dx * dx, htf.max()))
+print("  地表の体積減少 Σ(z0 − z)Δx² = %.0f m3 ≈ 溶食 × (1 − f_res) = %.0f m3(崩落は保存形で寄与しない)"
+      % (vz, vled * (1.0 - fres)))
 dp = np.median(d[plain0 & (hmax < 0.05)])
 print("== 平野・裾・塔")
 print("  平野(初期 z < 5 m、湛水なし)の削剥深の中央値 = %.2f m(= %.0f mm/kyr)" % (dp, dp / tend * 1.0e6))
 foot = plain0 & (hmax >= 0.05)
 print("  裾(湛水した平野セル %d 個)の削剥深の中央値 = %.2f m、最大 = %.2f m" % (int(foot.sum()), np.median(d[foot]) if foot.any() else np.nan, d[foot].max() if foot.any() else np.nan))
-print("  岩屑・残渣の土層: 平野の中央値 %.2f m(初期 1 m)、裸岩域の中央値 %.3f m(初期 0.001 m)、最大 %.2f m"
+print("  岩屑・残渣の土層 sd: 平野の中央値 %.2f m(初期 1 m)、裸岩域の中央値 %.3f m(初期 0.001 m)、最大 %.2f m(崖錐 ht は sd に含まれる)"
       % (np.median(sdf[plain0]), np.median(sdf[rock0]), sdf.max()))
 
 

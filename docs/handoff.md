@@ -1361,8 +1361,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      README の注意)。安全弁 dissol_dzmax は 2026-10-22 に実装(§86.5)。
      吸込穴の取水能の上限(オリフィス径)は候補のまま
    - 側方溶食 dissol_lat(§86.3)は 2026-10-22 に実装。岩壁の崩落は main の
-     崩落と崖錐 f_rockfall(§48.7)を使う(独自の岩盤版は同日に取り下げ。
-     karst_plan §2.6)。examples/karst に param_lat.txt(側方溶食)・
+     崩落と崖錐 f_rockfall を基岩モード rf_bedrock = 1 で使う(§48.7 末尾。
+     独自の岩盤版は同日に取り下げ。karst_plan §2.6)。
+   - 中期: mesa を基岩の規約(sd = 0 の基岩 + f_wthr の地層依存の生成 + splash +
+     rf_bedrock)で作り直す案。f_wthr に spl_strata 型の倍率(または地図)を足す
+     のが先。mesa の全構成の再調整が要るので、mesa の作業が落ち着いてから
+     別ブランチで(2026-10-22 の議論。§48.7 末尾)examples/karst に param_lat.txt(側方溶食)・
      param_rock.txt(+ 崩落)の対照あり。表面流源 dissol_src = 3 は同日実装(§86.4。
      examples/tower_karst が使う)。残: 流路集中の溶食(リンネンカッレン。
      格子以下)、凍結破砕・生物風化・クラック沿いの加速(気温依存の裸岩

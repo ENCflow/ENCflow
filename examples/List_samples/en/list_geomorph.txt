@@ -97,6 +97,9 @@
   !rf_rc = 8.0              ! radius (m) of the window for the free-face height. 0 = step between
                             !   neighbouring cells (dx-dependent) = default. Positive: drop to the
                             !   lowest point within the window (dx-independent; half to one cliff height)
+  !rf_bedrock = 1           ! bedrock collapse: cells with soil sd <= 0 fall too (no supply limit;
+                            !   the fallen rock goes to the receiver's sd and talus ht), e.g. limestone
+                            !   walls undercut by dissolution. 0 = default
 
   ! ---- Fixation (with f_fluvial; bars exposed at low flow get fixed and
   !      resist re-erosion) ----

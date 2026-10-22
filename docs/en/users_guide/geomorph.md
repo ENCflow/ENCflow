@@ -805,6 +805,17 @@ retreat rate (talus-limited retreat).
 | rf_rc | 0 | Radius r_c (m) of the window over which the free-face height is measured. 0 = step between neighbouring cells (depends on dx). Positive: drop to the lowest point within the window (independent of dx; about half to one cliff height) |
 | rf_fface | -1 (off) | Supported-face mode (rule 4). >= 0 enables it (requires rf_rc > 0): dry-erosion factor of a face whose foot is covered by talus (0 = no erosion). The collapse becomes a column collapse |
 | rf_uc | 0 (off) | Critical undercut u_c (m) (rule 5; requires rf_fface >= 0 and spl_strata): a column at the top of the face falls once the bedrock of a weaker foot has been cut back by this depth since the last burial. The overhang width a cap can carry (tens of cm to a few m); keep it below dx |
+| rf_bedrock | 0 | Bedrock collapse. With 1, cells whose soil sd <= 0 (bedrock) can be sources too, and the supply limit (cap by sd) is not applied: the source loses z (soil and talus go first), the receiver gains the same amount in z, sd and talus ht. For bedrock below the soil that fails, such as limestone walls undercut by dissolution (examples/tower_karst) |
+
+**Bedrock and soil convention.** By default (rf_bedrock = 0) a cell with sd <= 0 is
+non-erodible bedrock, as for dry erosion, bed load and angle-of-repose avalanching,
+and the rock that may fall is given as a column of soil sd (examples/mesa gives the
+whole plateau sd = 100 m and sets the hardness with spl_strata). Where the bedrock
+z - sd itself changes, as with limestone dissolution `f_dissol`, set `rf_bedrock = 1`
+so that bedrock collapses too. The fallen material is added to both the receiver's sd
+and its talus ht, and can then move by the talus repose angle, dry erosion or bed
+load. Verification: the bedrock configuration of test/rockfall (param_bed.txt: a
+plateau without soil collapses to the same z as the plateau with sd = 20 m).
 
 The change per edge and update is capped by `fluv_dzmax` (at the flux stage, so
 conservation holds; give `fluv_dzmax` even without f_fluvial). The talus thickness
