@@ -765,13 +765,19 @@ retreat rate (talus-limited retreat).
 
 The change per edge and update is capped by `fluv_dzmax` (at the flux stage, so
 conservation holds; give `fluv_dzmax` even without f_fluvial). The talus thickness
-is restored automatically from the private file `geomorph_rockfall.dat`.
+is restored automatically from the private file `geomorph_rockfall.dat`. A cliff
+facing sea cells (`fn_sw`) collapses into them and the fallen volume leaves the
+system (the sea cell's z does not change; the limit of a sea cliff whose talus is
+removed by waves; see "rockfall exported to sea cells" at the end of the run). The
+windowed minimum includes the z of sea cells (the sea floor), so put the sea cells
+at sea level if the free face should end at the water surface.
 Verification: [test/rockfall](../../../test/rockfall/) (collapse of a vertical
 plateau: conservation, final height differences <= H_c, talus budget). Example:
 [examples/mesa](../../../examples/mesa/) (retreat of cap-rock cliffs with talus).
 
 **Outputs of this section**: talus thickness `Ht0001...`, terrain `Z0001...`; the
-final "rockfall moved ..." line gives the moved volume and the number of active edges.
+final "rockfall moved ..." line gives the moved volume and the number of active edges,
+and "rockfall exported to sea cells ..." the volume that fell into the sea.
 
 ## Moving bed layer / landslide tsunami (f_bedslide)
 

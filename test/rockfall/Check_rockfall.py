@@ -5,7 +5,9 @@
 #     (2) 終端の最大高さ差(軸 4 方向・対角 4 方向)<= H_c + TOL_H(崩落で自由面が限界以下)
 #     (3) 崖錐の収支: 全セルで ht >= (z − z0)^+ − TOL_HT(正味の堆積は崖錐)、Σht > 0
 #     (4) 共動更新恒等: max|(sd − sd0) − (z − z0)| < TOL_SD
-#   使い方: Check_rockfall.py <savedir> [<resdir>] [rc=<窓の半径 m>]
+#   使い方: Check_rockfall.py <savedir> [<resdir>] [rc=<窓の半径 m>] [sea=<Screen ログ>]
+#     sea を与えると海セル版: (1) は「陸の体積減少 = 台帳 vsea(海へ排出)」、
+#     (5) 海セルの z は不変、を検定する(zinit_sea.txt / sw_sea.txt を使う)
 #     rc を与えると (2) は「安息角より急なエッジを持つセルの、窓(nint(rc) セルの正方形)内の
 #     最低点との落差 <= H_c + TOL_H」(窓版 rf_rc の規則)に置き換える
 import sys, struct, os
@@ -43,14 +45,18 @@ def read_rle_array(f, ntot):
 
 RES = "result"
 RC = 0
+SEA = ""
 for a in sys.argv[2:]:
     if a.startswith("rc="):
         RC = int(round(float(a[3:])))
+    elif a.startswith("sea="):
+        SEA = a[4:]
     else:
         RES = a
 import math
 TANPHI = math.tan(math.radians(35.0))
-z0 = [[float(v) for v in line.split()] for line in open("zinit.txt")]
+z0 = [[float(v) for v in line.split()] for line in open("zinit_sea.txt" if SEA else "zinit.txt")]
+sw = [[int(v) for v in line.split()] for line in open("sw_sea.txt")] if SEA else [[0] * NX for _ in range(NY)]
 with open(sys.argv[1] + "/state.dat", "rb") as f:
     ntot = NX * NY
     read_rle_array(f, ntot)
@@ -62,6 +68,13 @@ z = [[zf[(j - 1) * NX + (i - 1)] for i in range(1, NX + 1)] for j in range(1, NY
 ht = [[float(v) for v in line.split()] for line in open(RES + "/Ht9998.txt")]
 dz = [[z[j][i] - z0[j][i] for i in range(NX)] for j in range(NY)]
 sum_dz = sum(sum(r) for r in dz)
+import re
+vsea = 0.0
+if SEA:
+    # 台帳はランク局所(MPI では各ランクが 1 行ずつ出す)ので、全行の和を取る
+    vsea = sum(float(v) for v in re.findall(r"exported to sea cells =\s*([0-9.Ee+-]+)", open(SEA, errors="ignore").read()))
+    land_loss = -sum(dz[j][i] for j in range(NY) for i in range(NX) if sw[j][i] == 0)
+    sea_change = max(abs(dz[j][i]) for j in range(NY) for i in range(NX) if sw[j][i] == 1)
 hmax = 0.0
 if RC == 0:
     for j in range(NY):
@@ -90,16 +103,23 @@ ident = max(abs((sd[j * NX + i] - SD0) - dz[j][i]) for j in range(NY) for i in r
 htdef = min(ht[j][i] - max(dz[j][i], 0.0) for j in range(NY) for i in range(NX))
 sum_ht = sum(sum(r) for r in ht)
 sum_dep = sum(max(v, 0.0) for r in dz for v in r)
-ok1 = abs(sum_dz) < TOL_SUM
+ok1 = abs(sum_dz) < TOL_SUM if not SEA else abs(land_loss - vsea) <= 1.0e-4 * max(vsea, 1.0)
+ok5 = (sea_change == 0.0) if SEA else True
 TOL_H2 = TOL_H if RC == 0 else 1.0e-2   # 窓版は安息角超過を上限にした緩和で収束が遅く、残差 5e-3 程度を許す
+if SEA:
+    TOL_H2 = 5.0e-2                      # 海セル版は海が吸い込み続けて静止しない(準定常)ので 0.05 m を許す
 ok2 = hmax <= HC + TOL_H2
 ok3 = htdef >= -TOL_HT and sum_ht > 0.0
 ok4 = ident < TOL_SD
-print("(1) 体積保存   : sum(z - z0) = %.3e m*cell (tol %.0e) : %s" % (sum_dz, TOL_SUM, "PASS" if ok1 else "FAIL"))
+if SEA:
+    print("(1) 体積収支   : 陸の減少 %.5f = 海への排出(台帳) %.5f m*cell : %s" % (land_loss, vsea, "PASS" if ok1 else "FAIL"))
+    print("(5) 海セル不変 : max|z - z0| (sea) = %.3e m : %s" % (sea_change, "PASS" if ok5 else "FAIL"))
+else:
+    print("(1) 体積保存   : sum(z - z0) = %.3e m*cell (tol %.0e) : %s" % (sum_dz, TOL_SUM, "PASS" if ok1 else "FAIL"))
 print("(2) 最大高さ差%s: %.6f <= H_c + %.0e = %g m : %s  (頂 %.2f -> %.3f m)" % ("(窓 %d セル、急なエッジを持つセル)" % RC if RC else "", hmax, TOL_H2, HC, "PASS" if ok2 else "FAIL", ZTOP, zmax))
 print("(3) 崖錐の収支 : min(ht - (z-z0)^+) = %.2e m, Σht = %.2f, Σ(z-z0)^+ = %.2f m*cell : %s"
       % (htdef, sum_ht, sum_dep, "PASS" if ok3 else "FAIL"))
 print("(4) 共動更新   : max|(sd-sd0)-(z-z0)| = %.3e m : %s" % (ident, "PASS" if ok4 else "FAIL"))
-ok = ok1 and ok2 and ok3 and ok4
+ok = ok1 and ok2 and ok3 and ok4 and ok5
 print("== rockfall 検定: %s ==" % ("PASS" if ok else "FAIL"))
 sys.exit(0 if ok else 1)

@@ -38,4 +38,19 @@ if [ -d save_rc_serial ]; then
         rc=1
     fi
 fi
+# 海セル版
+python3 "$sdir/make_init.py" --sea
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_sea.txt 2>&1 | tee Screen_sea.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_rockfall.py" save_sea result_sea sea=Screen_sea.log || rc=1
+if [ -d save_sea_serial ]; then
+    if cmp -s save_sea/state.dat save_sea_serial/state.dat; then
+        echo "=== save_sea/state.dat is bit-identical to the serial result (save_sea_serial) ==="
+    else
+        echo "MISMATCH: save_sea/state.dat != save_sea_serial/state.dat" >&2
+        rc=1
+    fi
+fi
 exit $rc
