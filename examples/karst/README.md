@@ -38,6 +38,8 @@ python3 make_terrain.py                    # z.txt, sol.txt
 python3 plot_results.py | tee analysis.txt # figs/*.png + 数表
 ./encflow param_lat.txt > Screen_lat.log   # 側方溶食あり(約 1 時間)
 python3 plot_results.py param_lat.txt | tee analysis_lat.txt   # figs/*_lat.png
+./encflow param_rock.txt > Screen_rock.log # + 岩盤の崩落(約 1 時間)
+python3 plot_results.py param_rock.txt | tee analysis_rock.txt # figs/*_rock.png
 ```
 
 ## 検算
@@ -109,8 +111,33 @@ developer.md §86.3)。`python3 plot_results.py param_lat.txt` で figs/*_lat.pn
   集水で決まり、側方溶食はその形を変える)。
 - それでも穴の形は残る。壁セルは溶けても湛水の水面(穴の底から数 m)より
   高いままなので水が広がらず、壁 8 セルで分け合う配分は床 1 セルに集中する
-  分より小さい。漏斗形(斜面後退)には、壁セルが水面下に入って湛水が広がる
-  まで壁を下げる過程、すなわち岩壁の崩落(岩 → 岩屑)が要る。
+  分より小さい。
+
+### 側方溶食+岩盤の崩落(param_rock.txt。f_rockfall、φ_rock = 35°)
+
+param_lat.txt に岩盤の崩落 `f_rockfall`([岩盤の崩落](../../docs/users_guide/geomorph.md#岩盤の崩落f_rockfall)、
+developer.md §87)を加える。隣接セル間の段差が tanφ × Δx = 7 m を超えた分の
+半分を 1 更新ごとに岩屑として穴へ落とす(かさ比 1.5)。
+`python3 plot_results.py param_rock.txt` で figs/*_rock.png。
+
+| 項目 | 側方溶食あり | + 崩落(35°) |
+|---|---|---|
+| 崩落した岩(台帳) | — | 310 m³(9700 セル更新) |
+| 最深ドリーネ(地表) | 10.7 m | 10.2 m |
+| 最深ドリーネの岩屑(土層)厚 | 1.7 m(残渣) | 4.2 m(残渣+岩屑) |
+| 隣接 8 セルの平均削剥 | 2.03 m | 2.07 m |
+| 削剥深 > 1 m / > 2 m のセル数 | 163 / 68 | 164 / 68 |
+
+![sections_rock](figs/sections_rock.png)
+
+- 崩落は壁と底の段差を tanφ × Δx(7 m)付近に保つだけで、地表の形は
+  ほとんど変わらない。溶食は岩屑の下でも続くので(床の溶食は z を下げ sd を
+  保つ)、穴の底は岩屑 4 m に覆われたまま下がり、壁は段差が閾値を超えた分
+  だけ崩れて追随する。
+- **格子幅に対する実効角**。Δx = 10 m では 60° は段差 17 m(発火せず)、
+  35° で 7 m に相当する。深さ 10 m 級のドリーネを漏斗形にするには φ を
+  25° 以下(段差 5 m 以下)にするか、格子を細かくする必要がある。
+  φ = 30° で塔の裾が崩れる例は [examples/tower_karst](../tower_karst/)。
 
 ## 読み方の注意
 
