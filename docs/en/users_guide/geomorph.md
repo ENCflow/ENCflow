@@ -966,7 +966,13 @@ debris-covered floors and cliff retreat.
 
 The collapse per cell and update is capped by `fluv_dzmax` (settable
 without bed load; the default 0.05 m is small for rock walls on a 10 m
-grid, raise it to about 1 m for long runs). Collapse is an instantaneous
+grid, raise it to about 1 m for long runs). **The angle is an effective
+value for the grid spacing**: a wall only collapses once the step between
+neighbouring cells exceeds tanφ × Δx, i.e. 17 m for φ = 60°, 10 m for 45°
+and 7 m for 35° at Δx = 10 m. Walls of dolines about 10 m deep
+(examples/karst) need about 35°, the undercut towers of
+examples/tower_karst about 45°, representing the mean slope of a
+debris-mantled wall below the grid scale. Collapse is an instantaneous
 relaxation, not a rate law (steep walls fall at every update regardless of
 morfac). Sea cells are neither sources nor receivers.
 
