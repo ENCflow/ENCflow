@@ -97,6 +97,15 @@ module subroutine init_wave(gm, p, g, list)
   gm%wav%smooth = list%wave_smooth
   if (list%wave_smin <= 0.0) call par_stop("list_wave: wave_smin must be > 0")
   gm%wav%smin = list%wave_smin
+  if (list%wave_lsm < 0.0) call par_stop("list_wave: wave_lsm must be >= 0 (0 = cell-radius kernel wave_smooth)")
+  gm%wav%lsm = list%wave_lsm
+  if (gm%wav%lsm > 0.0) then                              ! 多パス核(§84.16 wet_lw と同じ導出)
+    gm%wav%nsm = max(1, nint(4.0 * (gm%wav%lsm / min(g%dx, g%dy))**2))
+    gm%wav%wsx = min(0.125, gm%wav%lsm**2 / (2.0 * gm%wav%nsm * g%dx**2))
+    gm%wav%wsy = min(0.125, gm%wav%lsm**2 / (2.0 * gm%wav%nsm * g%dy**2))
+    call par_info("geomorph: wave shoreline smoothing length wave_lsm = " // rtoa(gm%wav%lsm) &
+                  // " m (" // itoa(gm%wav%nsm) // " smoothing passes)")
+  end if
   gm%wav%vmax = list%wave_vmax                            ! 負 = 無効(比較しない)
   if (gm%wav%vmax >= 0.0) then
     call par_info("geomorph: wave river-mouth rule on (cells with |V| > " // rtoa(gm%wav%vmax) &
@@ -109,6 +118,7 @@ module subroutine init_wave(gm, p, g, list)
   allocate(gm%wav%qy(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(gm%wav%ex(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(gm%wav%ex2(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
+  if (gm%wav%nsm > 0) allocate(gm%wav%hs2(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
 
   if (allocated(gm%wav%val)) then
     call par_info("geomorph: wave-driven longshore transport on (K2 = " // rtoa(gm%wav%k2) &
@@ -160,8 +170,9 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
-  integer :: i, j, k, in, jn, jt, a, b, r, ui, uj, nact, im, ip, jm, jp
+  integer :: i, j, k, in, jn, jt, a, b, r, ui, uj, nact, im, ip, jm, jp, n
   real :: tw, hb, hbd, dx, dy, dxv, dyv, wsum, sig2, w, hh, vmax
+  real :: wsx, wsy, w0, hc, he, hw, hn, hsv
   logical :: usev
   real :: gx, gy, sl, nx, ny, tx, ty, cosa, sina, qs, wb, q
   real :: qe, gq, vlong
@@ -220,7 +231,46 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
   !$omp end parallel do
   call par_halo_cell(gm%wav%ex)
 
-  ! --- 平滑化した水深(ガウス核。乾いたセル・域外は深さ 0 = 陸)---
+  ! --- 平滑化した水深(乾いたセル・域外・海域マスクは深さ 0 = 陸)---
+  if (gm%wav%nsm > 0) then
+    ! 多パスの 5 点核(§84.16 wet_lw と同じ。σ = wave_lsm)。場は帯で作り、各パスの後に
+    ! ハロ交換(パス数は namelist 由来で全ランク同一 = collective 安全)。全域の端は
+    ! 自セル値で鏡像(領域の縁は陸ではない)。x ≤ 0・海域・乾いたセルは 0 のまま
+    !$omp parallel do schedule(static) private(i, j)
+    do j = dcp%js, dcp%je
+      gm%wav%hs(:, j) = 0.0
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        if (g%sw(i,j) > 0) cycle
+        if (s%h(i,j) <= p%dd) cycle
+        gm%wav%hs(i,j) = s%h(i,j)
+      end do
+    end do
+    !$omp end parallel do
+    call par_halo_cell(gm%wav%hs)
+    wsx = gm%wav%wsx
+    wsy = gm%wav%wsy
+    w0 = 1.0 - 2.0 * (wsx + wsy)
+    do n = 1, gm%wav%nsm
+      !$omp parallel do schedule(static) private(i, j, hc, he, hw, hn, hsv)
+      do j = dcp%js, dcp%je
+        gm%wav%hs2(:, j) = gm%wav%hs(:, j)
+        do i = g%wx(1,j), g%wx(2,j)
+          if (g%x(i,j) <= 0) cycle
+          hc = gm%wav%hs(i,j)
+          he = hc; hw = hc; hn = hc; hsv = hc
+          if (i < g%nx) he = gm%wav%hs(i+1,j)
+          if (i > 1) hw = gm%wav%hs(i-1,j)
+          if (j < g%ny) hn = gm%wav%hs(i,j+1)
+          if (j > 1) hsv = gm%wav%hs(i,j-1)
+          gm%wav%hs2(i,j) = w0 * hc + wsx * (he + hw) + wsy * (hn + hsv)
+        end do
+      end do
+      !$omp end parallel do
+      gm%wav%hs(:, dcp%js:dcp%je) = gm%wav%hs2(:, dcp%js:dcp%je)
+      call par_halo_cell(gm%wav%hs)
+    end do
+  else
   r = gm%wav%smooth
   sig2 = 0.5 * r
   wsum = 0.0
@@ -251,6 +301,7 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
   end do
   !$omp end parallel do
   call par_halo_cell(gm%wav%hs)
+  end if
 
   ! --- 砕波帯セルの流束ベクトル ---
   nact = 0
