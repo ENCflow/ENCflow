@@ -312,6 +312,19 @@ subroutine m_wq_init(wq, p, g, b, s)
     do k = dcp%jsh, dcp%jeh
       s%cq(:,k) = list%wq_c0 * max(s%h(:,k), 0.0)
     end do
+    ! 海セル(sw>0)には質量を置かない(2026-10-22。§30.8): 海セルは水位を
+    ! 強制する境界で、advect_scalar の受け手から外れるため cq が輸送で
+    ! 減らず、風上の供給元としては読まれて海から陸への流入が c0×h_init/hsea0
+    ! の濃度を持ち続ける(無限供給)実バグの修正。表面蓄積プール・積雪・
+    ! 氷河と同じ「海セルには置かない」原則(ゾーン2 = sw は帯行で使える)
+    block
+      integer :: i2, j2
+      do j2 = max(dcp%jsh, 1), min(dcp%jeh, g%ny)
+        do i2 = max(dcp%ish, 1), min(dcp%ieh, g%nx)
+          if (g%sw(i2,j2) > 0) s%cq(i2,j2) = 0.0
+        end do
+      end do
+    end block
   end if
 
   ! --- リスタート ---
@@ -1192,6 +1205,7 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
+        if (g%sw(i,j) > 0) cycle          ! 海セルは質量を持たない(§30.8)
         if (wq%fdec < 1.0) then
           if (s%cq(i,j) > 0.0) then
             w = s%cq(i,j) * (1.0 - wq%fdec)
@@ -1392,6 +1406,7 @@ subroutine m_wq_record(wq, p, g, s)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle          ! 海セルは質量を持たない(§30.8)
       rows(j) = rows(j) + mass_of(g, s, i, j, s%cq(i,j))
       ! cg は幾何面積基底(質量 = cg×A。W3)
       if (allocated(s%cg)) rows2(j) = rows2(j) + real(s%cg(i,j), real64) * acell
