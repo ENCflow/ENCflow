@@ -36,6 +36,8 @@ make                                       # ../../bin/encflow へのリンク
 python3 make_terrain.py                    # z.txt, sol.txt
 ./encflow param.txt > Screen.log           # 約 1 時間
 python3 plot_results.py | tee analysis.txt # figs/*.png + 数表
+./encflow param_lat.txt > Screen_lat.log   # 側方溶食あり(約 1 時間)
+python3 plot_results.py param_lat.txt | tee analysis_lat.txt   # figs/*_lat.png
 ```
 
 ## 検算
@@ -79,10 +81,36 @@ python3 plot_results.py | tee analysis.txt # figs/*.png + 数表
   階段状に増え、地表に水は残らない。最後の 3 日は最初の 3 日より湛水の
   ピークが小さい(窪みが深まり、流入が速くなった)。
 - **形の限界**。ドリーネは横幅 1〜2 セル(10〜20 m)の深い穴で、実際の漏斗形
-  (斜面の後退)にはならない。吸込穴が「セルの点」で、岩盤斜面の崩落・
-  後退の過程(岩盤には f_repose が効かない)を持たないため。幅を持った
-  ドリーネには吸込穴の密度を広げる(fn_gwc_inlet)か、斜面後退の過程を
-  足す必要がある(docs/karst_plan.md §5 の積み残し)。
+  (斜面の後退)にはならない。吸込穴が「セルの点」で、水が最深セルに集まる
+  ため。下の側方溶食を加えると深さが半分になり幅が倍になるが、穴の形は
+  残る(岩壁の崩落・後退の過程がないため。docs/karst_plan.md §5 の積み残し)。
+
+### 側方溶食あり(param_lat.txt。dissol_lat = −1)
+
+同じ設定で、湛水の溶解能を濡れ面の面積比 hΣL/(hΣL + Δx²) で「水面より
+床が高い隣接セル(岩壁)」にも配る([側方溶食](../../docs/users_guide/geomorph.md#石灰岩の溶食f_dissol)、
+developer.md §86.3)。`python3 plot_results.py param_lat.txt` で figs/*_lat.png。
+
+| 項目 | 床のみ(param.txt) | 側方溶食あり(param_lat.txt) |
+|---|---|---|
+| 溶けた岩の体積(台帳 = 地表の体積差 ÷ 0.9) | 90817 m³ | 89510 m³(配分なので総量は同じ。差は湛水の経路の違い) |
+| 面的削剥(湛水しなかったセルの中央値) | 0.025 m | 0.025 m |
+| 最深ドリーネ | 22.6 m | 10.7 m |
+| 最深ドリーネの隣接 8 セルの平均削剥 | 0.56 m | 2.03 m |
+| 削剥深 > 1 m / > 2 m / > 5 m のセル数 | 77 / 53 / 38 | 163 / 68 / 22 |
+| 削剥深 > 2 m の窪みの数 | 52 | 49 |
+
+![maps_lat](figs/maps_lat.png)
+
+![sections_lat](figs/sections_lat.png)
+
+- 壁への配分で最深部の掘削が半分になり、隣接セルが 4 倍下がって、
+  深さ > 1 m の面積が 2 倍になる。窪みの数は変わらない(どこが深まるかは
+  集水で決まり、側方溶食はその形を変える)。
+- それでも穴の形は残る。壁セルは溶けても湛水の水面(穴の底から数 m)より
+  高いままなので水が広がらず、壁 8 セルで分け合う配分は床 1 セルに集中する
+  分より小さい。漏斗形(斜面後退)には、壁セルが水面下に入って湛水が広がる
+  まで壁を下げる過程、すなわち岩壁の崩落(岩 → 岩屑)が要る。
 
 ## 読み方の注意
 
