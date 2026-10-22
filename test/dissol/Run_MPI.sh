@@ -21,6 +21,7 @@ mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param.txt | tee Screen.log || exit 1
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_sink.txt | tee -a Screen.log || exit 1
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_rain.txt | tee -a Screen.log || exit 1
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_lat.txt | tee -a Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_lata.txt | tee -a Screen.log || exit 1
 set +o pipefail
 echo ""
 
@@ -29,8 +30,9 @@ python3 "$sdir/Check_analytic.py" a result || rc=1
 python3 "$sdir/Check_analytic.py" b result_sink || rc=1
 python3 "$sdir/Check_analytic.py" c result_rain || rc=1
 python3 "$sdir/Check_analytic.py" d result_lat || rc=1
+python3 "$sdir/Check_analytic.py" e result_lata || rc=1
 
-for d in result result_sink result_rain result_lat; do
+for d in result result_sink result_rain result_lat result_lata; do
     if [ -d ${d}_serial ]; then
         ok=1
         for f in ${d}_serial/*.bil; do

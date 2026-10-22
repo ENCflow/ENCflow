@@ -91,7 +91,8 @@ module m_geomorph
     logical :: res = .false.         ! fres > 0(sd を共動更新する)
     logical :: map = .false.         ! 可溶率の分布 fn_dissol の指定あり
     real :: plat = 0.0               ! 側方溶食の配分割合 p(0 = 床のみ。karst_plan §2.5)
-    logical :: lat = .false.         ! plat > 0
+    logical :: lat = .false.         ! 側方溶食の有効(plat > 0 または auto)
+    logical :: auto = .false.        ! p を濡れ面の面積比 hΣL/(hΣL + ΔxΔy) でセルごとに決める
     real, allocatable :: fsol(:,:)   ! 可溶率 0〜1(帯±ハロ。壁セルの参照のためハロも使う)
     real, allocatable :: qw(:,:)     ! 側方溶食: 湛水セルの壁向け溶解能 (m。帯±ハロ。ハロ交換)
     real, allocatable :: wfl(:,:)    ! 側方溶食: 床向けの溶解能 (m。自帯)

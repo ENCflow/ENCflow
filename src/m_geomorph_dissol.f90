@@ -30,7 +30,10 @@
 !   溶解能 W_w = k_d·F_w·morfac のうち p を、w の水面 e_w より床が高い 8 近傍の
 !   陸セル(岩壁)へ接触幅 L_k(軸 Δx、斜め Δx·2/(2+√2))比で配り、残り 1−p を
 !   床へ。壁のない湛水セル・乾いたセルは床に全量。壁の後退は壁セルの z の
-!   低下で表す(berode と同じ慣習)。3 パス(owner-compute):
+!   低下で表す(berode と同じ慣習)。dissol_lat = −1 では p をセルごとに
+!   濡れ面の面積比 p_w = h_w ΣL / (h_w ΣL + ΔxΔy)(ΣL = 壁の接触幅の和、
+!   L = L_k·Δx)で決める(深い湛水ほど壁の分け前が増える。Δx = Δy を想定)。
+!   3 パス(owner-compute):
 !     (1) 自帯の各セルで W を作り、壁の有無で qw(壁向け)/ wfl(床向け)へ
 !         (先頭で z・h のハロを交換し、時刻 n の z・h で判定)
 !     (2) qw のハロを交換し、各セル n が 8 近傍 w の qw から分け前を dzl(n) に
@@ -101,11 +104,12 @@ module subroutine init_dissol(gm, p, g, s, list)
   end if
   gm%dis%fres = list%dissol_fres
   gm%dis%res = (gm%dis%fres > 0.0)
-  if (list%dissol_lat < 0.0 .or. list%dissol_lat > 1.0) then
-    call par_stop("list_geomorph: dissol_lat must be in [0, 1]")
+  if (list%dissol_lat > 1.0) then
+    call par_stop("list_geomorph: dissol_lat must be in [0, 1] or -1 (automatic, wetted-area ratio)")
   end if
-  gm%dis%plat = list%dissol_lat
-  gm%dis%lat = (gm%dis%plat > 0.0)
+  gm%dis%auto = (list%dissol_lat < 0.0)
+  gm%dis%plat = max(list%dissol_lat, 0.0)
+  gm%dis%lat = (gm%dis%plat > 0.0 .or. gm%dis%auto)
   if (gm%dis%lat) then
     allocate(gm%dis%qw(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(gm%dis%wfl(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
@@ -129,7 +133,9 @@ module subroutine init_dissol(gm, p, g, s, list)
                 // " m/m, source = " // trim(merge("infiltration", "rainfall    ", gm%dis%src == 1)) &
                 // ", sink term = " // trim(merge("on ", "off", gm%dis%sink)) &
                 // ", residue = " // rtoa(gm%dis%fres) // ")")
-  if (gm%dis%lat) then
+  if (gm%dis%auto) then
+    call par_info("geomorph: lateral dissolution on (wall share = wetted-area ratio h*sum(L)/(h*sum(L)+dx*dy))")
+  else if (gm%dis%lat) then
     call par_info("geomorph: lateral dissolution on (wall share dissol_lat = " &
                   // rtoa(gm%dis%plat) // ")")
   end if
@@ -254,7 +260,7 @@ subroutine calc_dissol_lat(gm, p, g, s)
   real, parameter :: wdiag = 2.0 / (2.0 + sqrt(2.0))   ! 斜め接触幅の比(p_diagratio の既定と同値)
   real, parameter :: lk(1:8) = [wdiag, 1.0, wdiag, 1.0, 1.0, wdiag, 1.0, wdiag]
   integer :: i, j, k, in, jn, m, im, jm
-  real :: fw, wcap, ew, sumw, fs
+  real :: fw, wcap, ew, sumw, fs, pw
   logical :: wall
   real(real64) :: rsum
 
@@ -264,7 +270,7 @@ subroutine calc_dissol_lat(gm, p, g, s)
   gm%dis%qw(:,:) = 0.0
 
   ! (1) 湛水セルの溶解能を壁向け / 床向けに分ける(自帯のみ書く)
-  !$omp parallel do schedule(static) private(i, j, k, in, jn, fw, wcap, ew, wall)
+  !$omp parallel do schedule(static) private(i, j, k, in, jn, fw, wcap, ew, wall, sumw, pw)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       gm%dis%wfl(i,j) = 0.0
@@ -280,6 +286,7 @@ subroutine calc_dissol_lat(gm, p, g, s)
       if (fw <= 0.0) cycle
       wcap = gm%dis%kd * fw * gm%morfac
       wall = .false.
+      sumw = 0.0
       if (s%h(i,j) > p%dd) then
         ew = s%z(i,j) + s%h(i,j)
         do k = 1, 8
@@ -290,13 +297,19 @@ subroutine calc_dissol_lat(gm, p, g, s)
           if (g%sw(in,jn) > 0) cycle
           if (s%z(in,jn) > ew) then
             wall = .true.
-            exit
+            sumw = sumw + lk(k)
           end if
         end do
       end if
       if (wall) then
-        gm%dis%qw(i,j) = gm%dis%plat * wcap
-        gm%dis%wfl(i,j) = (1.0 - gm%dis%plat) * wcap
+        if (gm%dis%auto) then
+          ! 濡れ面の面積比: 壁 h·ΣL(L = lk·Δx)対 床 Δx·Δy
+          pw = s%h(i,j) * sumw * g%dx / (s%h(i,j) * sumw * g%dx + g%dx * g%dy)
+        else
+          pw = gm%dis%plat
+        end if
+        gm%dis%qw(i,j) = pw * wcap
+        gm%dis%wfl(i,j) = (1.0 - pw) * wcap
       else
         gm%dis%wfl(i,j) = wcap
       end if
