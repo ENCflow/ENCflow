@@ -512,6 +512,7 @@ recommend `f_gravity_correction = 1` in &list_enc.
 | f_dbstop / db_vstop / db_wstop | 0 / 0.05 / 0.05 | Stopping condition by low-speed consolidation (stopped sediment is fixed to the bed elevation z; natural dam formation) |
 | db_d50 | 0.05 | Representative grain size (m). Used by f_dbed=3 and f_dbres=2,3. The default is the stony-type d_L (a few cm to dm) |
 | db_erest | 0.85 | Particle restitution coefficient e. Used by f_dbres=2. The customary Egashira value |
+| db_cmin | 0.02 | Lower concentration limit for applying the Egashira laminar law (f_dbres=2); below it the Manning law is used (a numerical switch, since the laminar law diverges as C->0; 0 < db_cmin < C*). The default 2% matches the mud-flow criterion of Takahashi and Nakagawa (1991) |
 | db_mu / db_xi | 0.2 / 1000 | Voellmy mu and xi (m/s²). Used by f_dbres=4. The defaults are mid-range RAMMS values (snow avalanches). Debris avalanches are smaller, mu 0.1 and xi 200-500 (recommendations below) |
 | db_tauy | 10000 | Constant retarding stress tau_y (Pa). Used by f_dbres=5. The lower side of the 5-50 kPa pyroclastic-flow applications |
 | f_dbwet / db_satbed | 0 / 1.0 | Pore-water entrainment (exchange of bed pore water with surface water on erosion/deposition; a first-order bulking effect where erosion dominates. Mutually exclusive with the groundwater computation) |
@@ -776,8 +777,11 @@ is restored automatically from the private file `geomorph_rockfall.dat`. A cliff
 facing sea cells (`fn_sw`) collapses into them and the fallen volume leaves the
 system (the sea cell's z does not change; the limit of a sea cliff whose talus is
 removed by waves; see "rockfall exported to sea cells" at the end of the run). The
-windowed minimum includes the z of sea cells (the sea floor), so put the sea cells
-at sea level if the free face should end at the water surface.
+windowed minimum includes the z of sea cells, but the z of a sea cell cannot be set by
+the user (it is forced to 0 when read and, with `fn_tide`, reset every step to the tide
+level minus `hsea0`; see [tide](tide.md)). Without `fn_tide`, put the elevation datum at
+sea level = 0 if the free face should end at the water surface; with `fn_tide` the bottom
+of the window lies `hsea0` (default 1 m) below the tide level.
 Verification: [test/rockfall](../../../test/rockfall/) (collapse of a vertical
 plateau: conservation, final height differences <= H_c, talus budget). Example:
 [examples/mesa](../../../examples/mesa/) (retreat of cap-rock cliffs with talus).
