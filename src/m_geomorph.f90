@@ -177,6 +177,7 @@ module m_geomorph
     real :: k2 = 0.34                ! 沖波 CERC 式の係数 K2 (m^{3/5} s^{-6/5})
     real :: gamma = 0.78             ! 砕波指標 γ
     real :: smin = 1.0e-3            ! 汀線方位を定義する海底勾配の下限
+    real :: vmax = -1.0              ! 河口の規則の流速しきい値 (m/s)。負 = 無効
     integer :: smooth = 2            ! 平滑化半径(セル)
     real :: hbd = 0.0                ! 砕波水深 h_b = H_b/γ (m)(現在値)
     real, allocatable :: val(:,:)    ! 時系列 (1:4, n)(時刻 s, H0, T, 方向)

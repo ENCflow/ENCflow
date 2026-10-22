@@ -1,0 +1,78 @@
+! wave_river 検定 vmax: 河口の規則あり(wave_vmax = 0.5 m/s)。河道(流速 ≈ 0.8 m/s)は波の源にも砕波帯にもならない
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.15
+  t0 = 0
+  tt = 1800
+  dt_disp = 600
+  dt_file = 900
+  dt_recrd = 900
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_geomorph = '-'
+  fn_wave = '-'
+  dir_result = 'result_vmax'
+  dir_save = 'save_vmax'
+  f_state_save = 1
+  f_check_cfl = 1
+  f_out_z = 1
+  f_out_vv = 1
+/
+&list_enc
+  f_opening_dynamic = 2     ! 河道マスクのない掘り込み河道で壁際の通水能を確保
+/
+&list_initial
+  f_htype = 2               ! 水位 0: 河道 1.2 m、海は水深どおり、陸地は乾燥
+  e0 = 0.0
+/
+&list_geoinfo
+  lx = 300.0
+  ly = 200.0
+  nx = 120
+  ny = 80
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.025
+  f_sdtype = 1
+  fn_sd = 'sdinit.txt'
+  sy0 = 0.2
+/
+&list_bound_edge
+  f_bc_e = 2                ! 東辺: 長波放射(海面固定)
+  f_bc_n = 0
+  f_bc_s = 0
+  f_bc_w = 0
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 39
+  inflow_cell(1:2,2,1) = 1, 40
+  inflow_cell(1:2,3,1) = 1, 41
+  inflow_cell(1:2,4,1) = 1, 42
+  inflow_val(1:2,1,1) = 0, 10.0        ! 10 m3/s: 幅 10 m × 水深 1.2 m で流速 ≈ 0.8 m/s
+  inflow_val(1:2,2,1) = 9999, 10.0
+/
+&list_geomorph
+  dt_geomorph = 1.0
+  morfac = 10.0             ! 水理 30 分 = 地形 5 h
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.0005
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+  fluv_bcfeed = 1           ! 容量給砂(入口の河床固定)
+  fluv_slope = 1
+/
+&list_wave
+  f_wave_longshore = 1
+  wave_h0 = 0.5             ! 沖波 0.5 m、周期 5 s → 砕波水深 h_b/γ = 0.86 m < 河道の水深 1.2 m
+  wave_t = 5.0
+  wave_dir = 150.0          ! 東南東から斜めに来る波(examples/delta と同じ。風上 = 南東)
+  wave_clock = 1
+  wave_vmax = 0.5           ! 河口の規則: 河川の流下流速(≈ 0.8)と汀線帯の流速の間
+/

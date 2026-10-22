@@ -620,6 +620,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | wave_smooth | &list_wave | [Sediment and landform change](geomorph.md) |
 | wave_t | &list_wave | [Sediment and landform change](geomorph.md) |
 | wave_val | &list_wave | [Sediment and landform change](geomorph.md) |
+| wave_vmax | &list_wave | [Sediment and landform change](geomorph.md) |
 | wash_kf | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | wash_kr | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | wash_tausc | &list_geomorph | [Sediment and landform change](geomorph.md) |

@@ -953,6 +953,7 @@ phi0) in `fn_wave` (&list_wave) and every landform update does the following.
 | wave_gamma | 0.78 | breaker index gamma |
 | wave_smooth | 2 | smoothing radius of the depth for the shoreline orientation (cells, 1 or 2) |
 | wave_smin | 1e-3 | lower bound of the bed slope that defines a shoreline orientation |
+| wave_vmax | −1 (off) | river-mouth rule: cells with \|V\| above this (m/s) are neither a wave source nor surf zone (shadow). Required at river mouths with a mobile bed |
 
 **Usage**: bed load `f_fluvial = 1` is required (longshore transport rides the
 bed-load path). Represent the sea as ordinary cells + an initial water level
@@ -973,11 +974,16 @@ shoreline orientation treats them as land (depth 0). If you use a sea mask,
 place it well offshore of the breaking depth h_b/γ so that its edge does not
 fall inside the smoothing radius wave_smooth of the surf zone (the edge would
 be read as a shoreline).
-**River mouths with a mobile bed are not yet supported**:
-once the river's flow depth exceeds h_b the channel itself becomes a wave
-source, longshore transport acts on bars inside the channel and the run
-diverges (examples/delta/README.md, "waves"). A rule that excludes cells
-carrying river flow is being designed (developer.md §84.15, handoff.md).
+**`wave_vmax` is required at river mouths with a mobile bed**: once the
+river's flow depth exceeds h_b the channel itself becomes a wave source,
+longshore transport acts on bars and riffles inside the channel and the run
+diverges (examples/delta/README.md, "waves"). With `wave_vmax` set, cells
+whose speed exceeds it are neither a source nor surf zone, so waves do not
+enter the channel. Put the value between the river's flow speed and the speed
+on the shoreline band (check the V output; e.g. 0.5 for 0.8 m/s in the channel
+and 0.3 m/s on the delta front). During a flood the speed rises in front of
+the mouth too, so waves pause there and resume at low flow. Verification:
+[test/wave_river](../../../test/wave_river/).
 
 **Output of this section**: landform change in `Z0001...` (`f_out_z=1`); the
 final warning reports the solid volume carried through edges by longshore
