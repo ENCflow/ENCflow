@@ -107,18 +107,6 @@ module m_geomorph
     real(real64), allocatable :: vrow(:)  ! 溶けた岩の体積の行部分和 (m3。台帳)
   end type
 
-  ! 岩盤の崩落(f_rockfall。§87。f_repose の岩盤版: 岩 → 岩屑)
-  type t_rockfall
-    real :: tanphi = 0.0             ! tan(岩盤の安定勾配角)
-    real :: relax = 0.5              ! 超過高さの緩和率(1 更新あたり)
-    real :: bulk = 0.0               ! 岩屑のかさ比(岩 1 → 堆積 bulk)
-    real :: dist(1:8) = 0.0          ! 8 近傍のセル中心間距離 (m)
-    real, allocatable :: qr(:,:,:)   ! 方向別の崩落量 (m。帯±ハロ × 8。ハロ交換)
-    integer :: nfall = 0             ! 崩落したセル更新数(累計。ランク局所)
-    integer :: nclip = 0             ! dzmax クリップ数(累計)
-    real :: vrock = 0.0              ! 崩落した岩の体積 (m3。累計。ランク局所)
-  end type
-
   type t_fluvial
     real :: wl(1:8) = 0.0            ! k軸方向フラックスの通過幅 (m)
     real :: ex(1:8) = 0.0            ! k軸方向の単位ベクトル x 成分
@@ -329,7 +317,6 @@ module m_geomorph
     integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
     real :: uprate = 0.0             ! 隆起速度 (m/s。mm/yr から換算)
     integer :: f_dissol = 0          ! 石灰岩の溶食(0:無効, 1:有効。§86)
-    integer :: f_rockfall = 0        ! 岩盤の崩落(0:無効, 1:有効。§87)
     integer :: f_bedslide = 0        ! 動く底層(0:無効, 1:有効。landslide_tsunami_plan.md)
     integer :: f_berode = 0          ! 側岸侵食(0:無効, 1:有効。§84.4)
     integer :: f_repose = 0          ! 安息角崩落(0:無効, 1:有効。§84.4)
@@ -360,7 +347,6 @@ module m_geomorph
     type(t_fixation) :: fix          ! 定着
     type(t_fines) :: fin             ! 河床の細粒分の帳簿
     type(t_dissol) :: dis            ! 石灰岩の溶食
-    type(t_rockfall) :: rck          ! 岩盤の崩落
     type(t_gmwork) :: wrk            ! 共有スクラッチ(require_work が確保)
   end type
 
@@ -575,16 +561,6 @@ module m_geomorph
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
     end subroutine
-    module subroutine init_rockfall(gm, g, list)
-      type(t_geomorph), intent(inout) :: gm
-      type(t_geoinfo), intent(in) :: g
-      type(t_list_geomorph), intent(in) :: list
-    end subroutine
-    module subroutine calc_rockfall(gm, g, s)
-      type(t_geomorph), intent(inout) :: gm
-      type(t_geoinfo), intent(in) :: g
-      type(t_state), intent(inout) :: s
-    end subroutine
     module subroutine dispose_dissol(gm, p, g, s)
       type(t_geomorph), intent(inout) :: gm
       type(t_sysparam), intent(in) :: p
@@ -787,19 +763,6 @@ subroutine m_geomorph_init(gm, p, g, s)
     call init_dissol(gm, p, g, s, list)
   end if
 
-  ! --- 岩盤の崩落(§87)---
-  !   岩 → 岩屑(受け手の sd)のため sd を要する(未確保なら確保・転記)
-  gm%f_rockfall = list%f_rockfall
-  if (gm%f_rockfall < 0 .or. gm%f_rockfall > 1) call par_stop("list_geomorph: f_rockfall must be 0 or 1")
-  if (gm%f_rockfall > 0) then
-    if (.not. (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 .or. gm%f_splash > 0 &
-               .or. gm%f_bedslide > 0 .or. gm%f_repose > 0 .or. gm%f_wthr > 0 &
-               .or. (gm%f_dissol > 0 .and. list%dissol_fres > 0.0))) then
-      call setup_sd(p, g, s)
-    end if
-    call init_rockfall(gm, g, list)
-  end if
-
   if (gm%f_fluvial > 0) call init_fluvial(gm, p, g, list)
   if (gm%f_suspend > 0) call init_suspend(gm, p, list)
   if (gm%f_wash > 0) call init_wash(gm, list)
@@ -993,9 +956,6 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   ! 石灰岩の溶食(局所。更新間隔に積算された涵養・吸込穴流入の記録を消費。
   ! morfac は記録場の水量に掛ける = dts と同じ意味。§86)
   if (gm%f_dissol > 0) call calc_dissol(gm, p, g, s)
-  ! 岩盤の崩落(§87): 溶食で急になった岩壁を岩屑として崩す(z・sd の近傍参照。
-  ! 冒頭で z・sd のハロを交換する。判定は全ランク同一 = collective 安全)
-  if (gm%f_rockfall > 0) call calc_rockfall(gm, g, s)
   ! 動く底層(地滑り土塊。z 更新プロセス群の末尾 = 他プロセスの z 更新を
   ! 見た上で動く。calc_bedslide は冒頭で z・h のハロを最新化し、
   ! サブサイクルごとに hb・z を交換する。発火(release_bedslide)は
@@ -1031,7 +991,7 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   call par_halo_cell(s%z)
   if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 .or. gm%f_wthr > 0 &
       .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0 &
-      .or. (gm%f_dissol > 0 .and. gm%dis%res) .or. gm%f_rockfall > 0) then
+      .or. (gm%f_dissol > 0 .and. gm%dis%res)) then
     call par_halo_cell(s%sd)
   end if
   ! s%hs のハロは swflow_enc のステップ頭交換が担う(移流の直前に最新化)
@@ -1148,15 +1108,6 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (gm%f_bedfines > 0) call dispose_fines(gm, p, g, s)
   ! 溶食の記録場の私有 save と台帳報告(契約5。§86)
   if (gm%f_dissol > 0) call dispose_dissol(gm, p, g, s)
-  if (gm%f_rockfall > 0) then
-    ! ランク局所の台帳(岩の体積。岩屑のかさは × bulk)
-    call par_warn("geomorph: rockfall moved " // rtoa(gm%rck%vrock) &
-                  // " m3 (rock) over " // itoa(gm%rck%nfall) // " cell-updates")
-    if (gm%rck%nclip > 0) then
-      call par_warn("geomorph: rockfall dzmax clip fired in " // itoa(gm%rck%nclip) &
-                    // " cell-updates (review dt_geomorph/morfac/fluv_dzmax)")
-    end if
-  end if
   if (gm%flv%nclip > 0) then
     call par_warn("geomorph: fluvial dzmax clip fired on " &
                   // itoa(gm%flv%nclip) // " edges" &
@@ -1234,8 +1185,6 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%dis%wfl)) deallocate(gm%dis%wfl)
   if (allocated(gm%dis%dzl)) deallocate(gm%dis%dzl)
   if (allocated(gm%dis%vrow)) deallocate(gm%dis%vrow)
-  if (allocated(gm%rck%qr)) deallocate(gm%rck%qr)
-  gm%rck%nfall = 0; gm%rck%nclip = 0; gm%rck%vrock = 0.0
   gm%spl%nclip = 0
   gm%spl%vout = 0.0
   gm%dbr%nrelclip = 0

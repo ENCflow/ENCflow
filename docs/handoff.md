@@ -1303,9 +1303,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      中で窪みが掘れて湛水が集中する正帰還」で決まる(1e4 で発散、1e3 で安定。
      README の注意)。安全弁 dissol_dzmax は 2026-10-22 に実装(§86.5)。
      吸込穴の取水能の上限(オリフィス径)は候補のまま
-   - 側方溶食 dissol_lat(§86.3)と岩盤の崩落 f_rockfall(§87)は 2026-10-22 に
-     実装。examples/karst に param_lat.txt(側方溶食)・param_rock.txt
-     (+ 崩落)の対照あり。表面流源 dissol_src = 3 は同日実装(§86.4。
+   - 側方溶食 dissol_lat(§86.3)は 2026-10-22 に実装。岩壁の崩落は main の
+     崩落と崖錐 f_rockfall(§48.7)を使う(独自の岩盤版は同日に取り下げ。
+     karst_plan §2.6)。examples/karst に param_lat.txt(側方溶食)・
+     param_rock.txt(+ 崩落)の対照あり。表面流源 dissol_src = 3 は同日実装(§86.4。
      examples/tower_karst が使う)。残: 流路集中の溶食(リンネンカッレン。
      格子以下)、凍結破砕・生物風化・クラック沿いの加速(気温依存の裸岩
      風化則)、岩屑の転動距離。タワーカルストの例題は

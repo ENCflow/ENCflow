@@ -82,15 +82,6 @@
                             !   from the higher to the lower cell, wet or dry)
   !repose_phi = 30.0        ! angle of repose (deg). 0 = default 30
   !repose_relax = 0.5       ! fraction of the excess slope relaxed per update
-  !f_rockfall = 1           ! rock-wall collapse (bedrock version of f_repose):
-                            !   bedrock z - sd steeper than the stable angle
-                            !   falls as debris (receiver's sd). Walls of
-                            !   dissolution hollows, cliff retreat
-  !rockfall_phi = 60.0      ! stable rock angle (deg). 0 = default 60
-  !rockfall_relax = 0.5     ! fraction of the excess height relaxed per update
-  !rockfall_bulk = 1.5      ! bulk ratio of the debris. 0 = default
-                            !   1/(1 - fluv_porosity) (the cap per cell and
-                            !   update is fluv_dzmax; about 1 m for rock walls)
 
   ! ---- Fixation (with f_fluvial; bars exposed at low flow get fixed and
   !      resist re-erosion) ----

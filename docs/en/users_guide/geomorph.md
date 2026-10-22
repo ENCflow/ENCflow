@@ -27,7 +27,6 @@ laws, erosion/deposition laws, triggering, bed layer).
 | Moving bed layer | f_bedslide | Layer hb moves within the terrain and soil, displacing the water surface |
 | Bedrock weathering / uplift | f_wthr / f_uplift | Weathering increases sd; uplift / subsidence shifts z |
 | Limestone dissolution | f_dissol | Lowers z in proportion to the recharge (no sediment is produced); a sink-inflow term for dolines |
-| Rock-wall collapse | f_rockfall | Bedrock faces steeper than the stable rock angle fall as debris (into the receiver's sd). The bedrock version of f_repose |
 
 ![Geomorphic processes, sediment pathways and state updates](../../figs/geomorph_processes_en.png)
 
@@ -930,7 +929,7 @@ with a sink becomes a one-cell-wide deep hole (examples/karst); with p > 0
 the depressions with the largest catchments grow both wider and deeper,
 giving the first-order forms of funnel-shaped dolines, merging depressions
 (cockpits) and the basal retreat of towers facing a plain (tower karst).
-Rock-wall collapse (rock to debris) is not represented.
+Rock-wall collapse (rock to debris) is added with rockfall and talus `f_rockfall` (examples/tower_karst).
 
 The chemistry (carbonate equilibrium, CO₂ partial pressure, temperature)
 is not solved; its result is given as `dissol_ceq`. Saturation along the
@@ -948,43 +947,6 @@ itself (dry valleys, internal drainage, springs) is available without
 dissolution through the inlets and outfalls of the conduit continuum layer.
 
 **Outputs for this section**: ground `Z0001...` (lowered by dissolution; nothing appears in `Hs`) and, with a residue fraction > 0, soil thickness `Sd0001...` (grows). At the end the dissolved rock volume (m³) is printed as "dissolution removed ... m3 of rock". Restart in `geomorph_dissol.dat` (the water accumulated within an update interval) ([Output and monitoring](#output-and-monitoring)).
-
-## Rock-wall collapse (f_rockfall)
-
-Formula: [supplement](sediment.md#rock-wall-collapse-f_rockfall). Design
-record: developer.md §87, docs/karst_plan.md §2.6.
-
-The **bedrock version** of angle-of-repose avalanching `f_repose` (which
-moves the soil sd). A rock wall whose bedrock surface z − sd stands above a
-neighbouring cell's ground by more than the slope of `rockfall_phi` × the
-distance drops `rockfall_relax` of the excess per update as **rock to
-debris**. On the source cell only z is lowered (the bedrock face retreats
-and the soil on top rides down); on the receiver the debris becomes soil sd
-with the bulk ratio `rockfall_bulk`, raising both z and sd. The rock
-volume is conserved and the fallen debris can then be moved by creep, bed
-load or soil avalanching. Walls of depressions deepened by dissolution and
-the undercut feet of towers collapse, giving funnel-shaped dolines,
-debris-covered floors and cliff retreat.
-
-| Parameter | Default | Meaning |
-|---|---|---|
-| rockfall_phi | 60 | Stable angle of the rock (deg). Representative of bare limestone walls: the internal friction angle of rock masses (35 to 45°) plus cohesion, as a first-order estimate |
-| rockfall_relax | 0.5 | Fraction of the excess height relaxed per update (0 to 1) |
-| rockfall_bulk | 1/(1 − fluv_porosity) | Bulk ratio of the debris (deposited volume per unit rock volume). The default is consistent with the bed porosity |
-
-The collapse per cell and update is capped by `fluv_dzmax` (settable
-without bed load; the default 0.05 m is small for rock walls on a 10 m
-grid, raise it to about 1 m for long runs). **The angle is an effective
-value for the grid spacing**: a wall only collapses once the step between
-neighbouring cells exceeds tanφ × Δx, i.e. 17 m for φ = 60°, 10 m for 45°
-and 7 m for 35° at Δx = 10 m. Walls of dolines about 10 m deep
-(examples/karst) need about 35°, the undercut towers of
-examples/tower_karst about 45°, representing the mean slope of a
-debris-mantled wall below the grid scale. Collapse is an instantaneous
-relaxation, not a rate law (steep walls fall at every update regardless of
-morfac). Sea cells are neither sources nor receivers.
-
-**Outputs for this section**: ground `Z0001...` (walls lowered, receivers raised) and soil thickness `Sd0001...` (debris). At the end "rockfall moved ... m3 (rock)" is printed ([Output and monitoring](#output-and-monitoring)).
 
 ## Output and monitoring
 
@@ -1083,6 +1045,4 @@ velocity, grid-dependence detection on a 45-degree slope, plunge into a
 lake and wave generation),
 [test/dissol](../../../test/dissol/) (limestone dissolution: analytic
 solutions for the infiltration, sink and rainfall sources and for the
-lateral-dissolution partition, and a restart round trip),
-[test/rockfall](../../../test/rockfall/) (rock-wall collapse: recursion of
-a rock pillar and rock-volume conservation).
+lateral-dissolution partition, and a restart round trip).
