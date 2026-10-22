@@ -98,7 +98,7 @@ ratio_h = rate_h / rate_h_th
 ps_h, sd_h = small_power(np.loadtxt("result_high/Z0002.txt"))
 g2 = RATIO_LO < ratio_h < RATIO_HI and all(np.diff(ah) > 0) and ps_h < PSMALL_MAX
 print("(2) high α=60°: 振幅 a(t) = %s m, 成長率 %.3e /s, 理論 |D| k² = %.3e /s, 比 %.2f (%.1f〜%.1f); 凹凸(等深線 %.1f m)の波長 10 m 未満のパワー %.0f%% (< %.0f%%) : %s"
-      % (np.round(ah, 2), rate_h, -rate_h_th, ratio_h, RATIO_LO, RATIO_HI, HC2, ps_h, PSMALL_MAX, "PASS" if g2 else "FAIL"))
+      % (np.round(ah, 2), -rate_h, -rate_h_th, ratio_h, RATIO_LO, RATIO_HI, HC2, ps_h, PSMALL_MAX, "PASS" if g2 else "FAIL"))
 ok = ok and g2
 ps_h0, sd_h0 = small_power(np.loadtxt("result_high0/Z0002.txt"))
 g2b = ps_h0 >= PSMALL_MIN
