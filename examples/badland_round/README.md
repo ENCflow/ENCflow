@@ -30,7 +30,7 @@
 | 降雨・浸透 | 一様 10 mm/h を継続、Green-Ampt 36 mm/h → 全量浸透(表面流ゼロ) |
 | 乾式斜面侵食 | f_splash: spl_kr = 2e-4, spl_kt = 0.05, spl_h = 1.5, spl_cb = 32 m, spl_lc = 2 m, spl_dzmax = 0.2, spl_zbase = 0(examples/badland と同じ) |
 | クリープ | f_creep: D = 0 / 3e-7 / 1e-6 / 3e-6 m²/s(L ≈ 0 / 2.4 / 8 / 24 m) |
-| 水平層理(縞の対照) | param_d0_strata / param_d1e-6_strata.txt: `spl_strata` で厚さ 1.5 m の硬軟互層(倍率 1 / 0.3、16 層) |
+| 水平層理(縞の対照) | param_d0_strata / param_d1e-6_strata.txt: `spl_strata` で厚さ 1.5 m の硬軟互層(倍率 1 / 0.3、16 層)。param_d0_strata3 / d3e-7_strata3 / d1e-6_strata3.txt: 厚さ 3 m(8 層) |
 | 時間 | dt = 2 s、地形更新 2 s 毎 × morfac 500。24 h = T_geo 4.3e7 s(10 mm/h の雨 430 m 分)。2 h 毎に Z を出力 |
 
 ```
@@ -40,6 +40,8 @@ for d in d0 d3e-7 d1e-6 d3e-6; do ./encflow param_$d.txt > Screen_$d.log; done  
 python3 plot_results.py | tee analysis.txt # figs/*.png + 数表(検算・丘ごとの指標)
 for d in d0_strata d1e-6_strata; do ./encflow param_$d.txt > Screen_$d.log; done  # 縞の対照
 python3 plot_results.py strata | tee analysis_strata.txt   # figs/*_strata.png
+for d in d0_strata3 d3e-7_strata3 d1e-6_strata3; do ./encflow param_$d.txt > Screen_$d.log; done  # 層厚 3 m
+python3 plot_results.py strata3 | tee analysis_strata3.txt # figs/*_strata3.png
 ```
 
 ## 検算
@@ -124,7 +126,38 @@ T_geo = 1.44e7 s(8 h)の丘ごとの指標(方位平均した半径方向断面�
   過程が段を消す。
 - 硬軟差が段として見えるかどうかは、段の高さ(層厚)とクリープの長さ尺度 L の
   比で決まります(L ≫ 層厚なら段は消える)。層厚を厚く、または D を小さくすれば
-  段が現れます。
+  段が現れます(次の節で確認)。
+
+### 層厚 3 m にすると段は出るか
+
+層厚を 3 m(8 層)に倍にして、クリープなし・D = 3e-7(L ≈ 2.4 m < 層厚)・
+D = 1e-6(L ≈ 8 m > 層厚)で比べました(`python3 plot_results.py strata3`)。
+
+![sections_strata3](figs/sections_strata3.png)
+
+![radial_strata3](figs/radial_strata3.png)
+
+段の指標: 24 m・15 m の丘の方位平均断面で、裾からの高さが頂の 15〜85 % の側面区間の
+局所勾配の最大/最小比と相対変動(段があれば大きい。T_geo = 1.44e7 s):
+
+| ケース | 層厚 (m) | L (m) | S 最大/最小(24 m の丘) | 相対変動(24 m / 15 m) |
+|---|---|---|---|---|
+| クリープなし・互層 | 3 | 0 | 4.6 | 0.42 / 0.39 |
+| D = 3e-7・互層 | 3 | 2.4 | 2.5 | 0.28 / 0.22 |
+| D = 1e-6・層理なし | – | 8 | 1.6 | 0.14 / 0.15 |
+| D = 1e-6・互層 | 1.5 | 8 | 1.5 | 0.09 / 0.09 |
+| D = 1e-6・互層 | 3 | 8 | 1.4 | 0.11 / 0.14 |
+
+- **D = 1e-6(L ≈ 8 m)では層厚を 3 m にしても段は出ません**。側面の勾配変動は
+  層理なしと同じ(相対変動 0.11〜0.14)で、断面は滑らかな凸形のままです。硬層の
+  効果は侵食総量(層理なしの 8 割)と丘の残り方にだけ現れます。
+- **D = 3e-7(L ≈ 2.4 m < 層厚 3 m)では段が出ます**。硬層の上面(z = 6・12・18 m)に
+  緩い段(勾配の変曲)が並び、相対変動 0.28 はクリープなし(0.42)と層理なし
+  (0.14)の中間です。クリープなしの 3 m の段(軟層が硬層上面まで削れた平らな
+  ベンチと急なライザー)が、クリープで丸められた形です。
+- つまり「段が見えるか」は層厚と L の比で決まり(層厚 ≳ L で段、層厚 ≪ L で縞だけ)、
+  写真のように縞があって段がない丘は、層厚がクリープの長さ尺度より薄い
+  (または硬軟差が小さい)ことを示します。
 
 ## 読み方の注意
 

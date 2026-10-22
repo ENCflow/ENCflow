@@ -2,7 +2,8 @@
 """examples/badland_round の図化と数表(事前に param_d*.txt を実行しておく)。
 
   python3 plot_results.py            # クリープ系列(D = 0 / 3e-7 / 1e-6 / 3e-6)
-  python3 plot_results.py strata     # 縞模様(水平層理)の対照: figs/*_strata.png
+  python3 plot_results.py strata     # 縞模様(水平層理 1.5 m)の対照: figs/*_strata.png
+  python3 plot_results.py strata3    # 層厚 3 m と 1.5 m の対照: figs/*_strata3.png
 
 図(figs/):
   maps.png      4 ケース × 3 時刻の陰影図(等高線付き)+ 初期地形
@@ -27,20 +28,30 @@ matplotlib.rcParams["axes.unicode_minus"] = False
 os.makedirs("figs", exist_ok=True)
 
 MODE = sys.argv[1] if len(sys.argv) > 1 else "creep"
+HARD15 = [(1.5 * k, 1.5 * (k + 1)) for k in range(1, 16, 2)]   # 硬層の標高帯(param_*_strata.txt と同じ)
+HARD3 = [(3.0 * k, 3.0 * (k + 1)) for k in range(1, 8, 2)]      # 同(param_*_strata3.txt、層厚 3 m)
 if MODE == "strata":
     CASES = [("param_d0.txt", "クリープなし・層理なし"),
              ("param_d0_strata.txt", "クリープなし・硬軟互層 (1.5 m, 倍率 1/0.3)"),
              ("param_d1e-6.txt", "D = 1e-6 m²/s・層理なし"),
              ("param_d1e-6_strata.txt", "D = 1e-6 m²/s・硬軟互層 (1.5 m, 倍率 1/0.3)")]
     SUF = "_strata"
-    HARD = [(1.5 * k, 1.5 * (k + 1)) for k in range(1, 16, 2)]   # 硬層の標高帯(param_*_strata.txt と同じ)
+    HARD = {"d0_strata": HARD15, "d1e-6_strata": HARD15}
+elif MODE == "strata3":
+    CASES = [("param_d0_strata3.txt", "クリープなし・硬軟互層 (3 m, 倍率 1/0.3)"),
+             ("param_d3e-7_strata3.txt", "D = 3e-7 m²/s (L ≈ 2 m)・硬軟互層 (3 m)"),
+             ("param_d1e-6.txt", "D = 1e-6 m²/s (L ≈ 8 m)・層理なし"),
+             ("param_d1e-6_strata.txt", "D = 1e-6 m²/s (L ≈ 8 m)・硬軟互層 (1.5 m)"),
+             ("param_d1e-6_strata3.txt", "D = 1e-6 m²/s (L ≈ 8 m)・硬軟互層 (3 m)")]
+    SUF = "_strata3"
+    HARD = {"d0_strata3": HARD3, "d3e-7_strata3": HARD3, "d1e-6_strata": HARD15, "d1e-6_strata3": HARD3}
 else:
     CASES = [("param_d0.txt", "クリープなし (D = 0)"),
              ("param_d3e-7.txt", "D = 3e-7 m²/s (L ≈ 2 m)"),
              ("param_d1e-6.txt", "D = 1e-6 m²/s (L ≈ 8 m)"),
              ("param_d3e-6.txt", "D = 3e-6 m²/s (L ≈ 24 m)")]
     SUF = ""
-    HARD = []
+    HARD = {}
 HILLS = [(35.0, 24.0), (90.0, 15.0), (128.0, 9.0), (154.0, 5.0)]   # make_terrain.py と同じ
 TANB = 0.8
 YC = 40.0
@@ -212,6 +223,23 @@ for isnap, store, tag in ((ISEL, metrics, "評価時刻"), (len(cases[0]["snaps"
                                                                  m["cidx"], m["curv"], m["wcap"]))
 TSEL = cases[0]["snaps"][ISEL][0]
 
+# 段(ベンチ)の指標: 24 m・15 m の丘の方位平均断面で、裾からの高さが頂の 15〜85 % の
+# 側面区間の局所勾配 S(r) の最大/最小比と相対変動(標準偏差/平均)。段があれば大きい
+if HARD:
+    print("\n=== 側面の段の指標(T_geo = %.2e s)===" % TSEL)
+    print("ケース | 丘 H0 (m) | 側面区間 r (m) | S 最大/最小 | 比 | S の相対変動")
+    for c in cases:
+        for xc, H in HILLS[:2]:
+            rc, prof, _ = radial_profile(c["snaps"][ISEL][1], xc, YC, H / TANB + 12, dx)
+            ok = np.isfinite(prof)
+            r, p = rc[ok], prof[ok] - prof[ok].min()
+            S = -np.gradient(p, r)
+            sel = (p > 0.15 * p[0]) & (p < 0.85 * p[0]) & (S > 0)
+            if sel.sum() < 3:
+                continue
+            print("%s | %g | %.0f-%.0f | %.2f/%.2f | %.1f | %.2f" % (c["name"], H, r[sel].min(), r[sel].max(),
+                  S[sel].max(), S[sel].min(), S[sel].max() / S[sel].min(), S[sel].std() / S[sel].mean()))
+
 # 理論の長さ尺度 L = D / (P kt S^(h-1))
 print("\n長さ尺度 L = D/(P kt S_f^(h−1)) (m), S_f = %.1f:" % TANB,
       ", ".join("%s: %.1f" % (c["name"], c["D"] / (P * KT * TANB ** (HEXP - 1))) for c in cases))
@@ -248,9 +276,8 @@ fig, axes = plt.subplots(len(cases), 1, figsize=(13, 2.8 * len(cases)), sharex=T
 jc = int(YC / dx)
 x = (np.arange(nx) + 0.5) * dx
 for ax, c in zip(np.atleast_1d(axes), cases):
-    if HARD and "strata" in c["name"]:
-        for z1, z2 in HARD:
-            ax.axhspan(z1, z2, color="0.85", lw=0, zorder=0)
+    for z1, z2 in HARD.get(c["name"], []):
+        ax.axhspan(z1, z2, color="0.85", lw=0, zorder=0)
     ax.plot(x, c["z0"][jc], "k--", lw=0.8, label="初期")
     n = len(c["snaps"])
     cmap = plt.get_cmap("viridis")
@@ -273,9 +300,8 @@ fig, axes = plt.subplots(len(cases), len(HILLS), figsize=(3.4 * len(HILLS), 2.6 
 for r, c in enumerate(cases):
     for k, (xc, H) in enumerate(HILLS):
         ax = axes[r, k]
-        if HARD and "strata" in c["name"]:
-            for z1, z2 in HARD:
-                ax.axhspan(z1, z2, color="0.85", lw=0, zorder=0)
+        for z1, z2 in HARD.get(c["name"], []):
+            ax.axhspan(z1, z2, color="0.85", lw=0, zorder=0)
         rc0, prof0, _ = radial_profile(c["z0"], xc, YC, H / TANB + 12, dx)
         m = metrics[c["name"]][k]
         ax.plot(rc0, prof0, "k--", lw=0.8, label="初期")
