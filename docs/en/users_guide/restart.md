@@ -88,6 +88,10 @@ claim about statistics, entire logs, or every combination of features.
   save its finite-difference history. The first projection after restart
   uses zero bottom acceleration, so exact agreement with an uninterrupted
   run is not guaranteed when the bed moves.
+- The nonhydrostatic breaking criterion `f_nh_breaking = 1` (type 1) does not
+  save its breaking-flag history. The first restored step is judged without
+  history, so the run does not agree with an uninterrupted run if any cell was
+  breaking at the saved time ([nonhydrostatic](nonhydrostatic.md)).
 - In a configuration where the reference level of the long-wave radiation
   boundary (type 2) is derived automatically from the initial level
   (`bc_eta_*` unspecified and f_htype 0, 1 or 3), the restarted run derives
@@ -116,8 +120,9 @@ Time-series forcing, such as tide, boundary inflow, and rain, is **read again
 using the new time axis**. Align the forcing at scenario start with the
 restored state; large discrepancies can cause initial disturbances. The
 sea cells of the sea mask are restored with `z` and `h` of the saved time
-and are replaced when the tide is applied at the first step of the new
-time axis (the sea in the starting-state outputs `H0000` and `E0000`
+and are replaced at the first tide-update step of the new time axis (the
+first step whose number is a multiple of dt_tiupdate/dt; the first step itself
+only if dt_tiupdate ≤ dt) (the sea in the starting-state outputs `H0000` and `E0000`
 still carries the tide of the saved time). Mode 2
 provides initial conditions and does not promise exact agreement with an
 uninterrupted run.
@@ -145,7 +150,10 @@ Restore checks the format version, grid counts, real precision, and field
 count, and checks for the required private files. **These checks do not detect
 every different case with the same grid counts, or establish that grid
 locations and inputs match.** The user must keep the case and settings
-consistent.
+consistent. The soil depth sd is taken from the saved state; changing the
+geoinfo sd at restart has no effect. Restoring a save that has no soil layer
+(made with groundwater disabled) into a run with groundwater or landform
+change enabled stops.
 
 State restore supports ENC. The legacy STG scheme stops when
 `f_state_restore > 0`. Thread and MPI rank counts may change under the

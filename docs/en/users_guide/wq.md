@@ -474,9 +474,10 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 
 **Restart**
 
-- The surface, subsurface and pool masses are saved in the private file
-  `wq.dat`; save/restore is automatic (fn_wq must have been enabled at
-  save time).
+- The surface cq, subsurface cg, surface-pool bp and pond-pool crs masses
+  and the dam/lake pool masses are saved in the private file `wq.dat`;
+  save/restore is automatic (fn_wq must have been enabled at save time; the
+  run stops if the number of dams differs from the saved one).
 
 **How to read and check**
 

@@ -1064,7 +1064,9 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 **Restart**
 
 - z, hs and sd are part of the core state save. The moving bed layer uses
-  the private file `geomorph_bedslide.dat` automatically. The update cycle
+  the private file `geomorph_bedslide.dat` and the bed-fines inventory sf
+  (f_bedfines) `geomorph_fines.dat` automatically (the model must have been
+  enabled at save time). The update cycle
   continues from the saved step number.
 
 **How to read and check**

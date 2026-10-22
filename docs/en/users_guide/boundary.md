@@ -274,8 +274,9 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 **Restart**
 
 - Boundary time series are re-read from the restart time; there is no
-  saved state. The reference level of the radiation boundary is derived
-  again from the initial condition.
+  saved state. The reference level of the radiation boundary (when
+  `bc_eta_*` is not given) is derived again from the restored state (the
+  boundary-cell levels at the saved time; see [restart](restart.md)).
 
 **How to read and check**
 

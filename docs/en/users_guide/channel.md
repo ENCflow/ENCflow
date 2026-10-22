@@ -113,7 +113,7 @@ Notes when giving the height with a distribution file `fn_bank`:
 | fn_bank / bank0 | "" / -- | levee height (distribution / uniform value; one or the other. In the distribution, -900 or below means no levee) |
 | f_bank_datum | 1 | datum of the height. 0: bed (after incision), 1: landside cell elevation (recommended), 2: absolute elevation |
 | f_bank_aggr | 0 | aggregation of the crest for datum=1. 0: mean of the adjacent landside cells (noise suppression), 1: minimum (faithful to overtopping onset), 2: maximum (conservative) |
-| f_bank_mode | 0 | hydraulic mode. 0: overtopping only (impermeable up to the crest in both directions), 1: sluice gate (check valve; passes landside -> channel only), 2: forced drainage (for compatibility and experiments; for real-world pumping stations use the pumps of the [structures chapter](structure.md)) |
+| f_bank_mode | 0 | hydraulic mode. 0: overtopping only (impermeable up to the crest in both directions), 1: sluice gate (check valve; below the crest passes landside -> channel only, and once the channel level exceeds the crest it overtops like mode 0), 2: forced drainage (for compatibility and experiments; for real-world pumping stations use the pumps of the [structures chapter](structure.md)) |
 | f_bank_opening | 1 | opening correction that reallocates the passage width of openings blocked by levee walls to the open channel-channel edges of the same cross-section (corrects the under-conveyance of one-cell channels regardless of orientation; 0 is for comparison with the old behavior; [the explanation](channel_models.md) §1) |
 
 **Outputs for this section**: levee heights are not written. Check overtopping with the landward `H0001...` and the Q of a transect on the landward side ([Output and monitoring](#output-and-monitoring)).
@@ -140,8 +140,10 @@ rationale and accuracy limits in [the explanation](channel_models.md) §2).
 ```
 
 - If no levee is specified, the channel has **no wall (natural banks)**.
-  For embanked rivers specify bank0 / fn_bank explicitly (`bank0 = 0` is
-  the same as no levee).
+  For embanked rivers specify bank0 / fn_bank explicitly. `bank0 = 0`
+  still activates the levee (with the default f_bank_datum = 1 /
+  f_bank_aggr = 0 the crest is the mean of the adjacent landside cells, so
+  edges toward lower landside cells get a wall). Omit bank0 for no levee.
 - Cells whose width is at or above the cell size are automatically
   treated as a resolved channel (incision + wall), and **the width value
   itself does not affect the results**; paint reaches you want treated as

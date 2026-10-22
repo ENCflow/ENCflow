@@ -81,7 +81,12 @@ as the reference regardless of inlet submergence, so $`Q_p \to 0`$ right
 after the upstream level passed the crown and the discharge dipped
 temporarily (developer.md §22, Japanese). The gate opening (`culv_gate_rule`) is a linear multiplier of
 the discharge and the flap (`culv_flap`) blocks reverse flow; the order of
-evaluation is three regimes → opening → flap.
+evaluation is three regimes → opening → flap. In addition the transfer per
+step is capped at the volume that fills half of the representative level
+difference, $`|Q| \le 0.5\,A_h\,|\eta_u - \eta_d|/\Delta t`$ ($`A_h`$ is the
+harmonic mean of the effective plan areas Σgv·Δx·Δy of the two cell groups;
+the channel width fn_width is not included). The cap prevents back-and-forth
+oscillation at coarse Δt (developer.md §22, Japanese).
 
 ## 3. Pumps and diversions
 
