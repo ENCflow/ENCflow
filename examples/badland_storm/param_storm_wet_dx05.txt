@@ -12,7 +12,7 @@
 &list_sysparam
   f_gridsystem = 0
   f_govequation = 0
-  dt = 0.25
+  dt = 0.125                 ! Δx = 0.5 m では 0.25 だと初回豪雨で発散(崖脚の 1 セル幅の溝で Cn > 1)
   t0 = 0
   tt = 36000
   dt_file = 3600
