@@ -12425,8 +12425,8 @@ comparison.md に反映した。
   take_water に集約(床のみ・側方溶食の両経路で共用)。frn は
   geomorph_dissol.dat の 3 面目(sink の後)。
 - 検証: test/dissol 構成 F が解析値に全桁一致、更新間隔の途中の save →
-  継続がバイト一致、np = 2 が逐次と bil バイト一致・Log 同一(np = 4 は
-  実行中。結果は次の追記)。A〜E・reference 不変。
+  継続がバイト一致、np = 2, 4 が逐次と bil バイト一致・Log 同一。
+  A〜E・reference 不変。
   -Og -fcheck=all の np = 2, 4 クリーン(窪みが帯をまたぐ)、-O2 の
   np = 1, 2, 4 が逐次と bil バイト一致・Log ULP = 0。A〜C・リスタート往復・
   無効時の reference は不変。
