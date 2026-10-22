@@ -627,11 +627,14 @@ f_out_fs = 1** の組を推奨します — f_slide = 1 では崩壊が地形・
 
 1 エッジ・1 更新の変動は `fluv_dzmax` で頭打ちです(流量段階 = 保存則を保つ。
 f_fluvial なしでも `fluv_dzmax` を与えてください)。崖錐の厚さは再開時に私有ファイル
-`geomorph_rockfall.dat` で自動的に扱われます。検証: [test/rockfall](../../test/rockfall/)
+`geomorph_rockfall.dat` で自動的に扱われます。海セル(`fn_sw`)に面した崖は海セルへ
+崩落でき、落ちた分は系外へ出ます(海セルの z は変わらない。崖錐が波で除去される
+海食崖の極限。終了時の「rockfall exported to sea cells」で量を確認)。窓版の最低点には
+海セルの z(海底)も入るので、海面を自由面の下端にしたいときは海セルの z を海面に置きます。検証: [test/rockfall](../../test/rockfall/)
 (垂直な台地の崩落: 体積保存・終端の高さ差 ≤ H_c・崖錐の収支)。動く実例:
 [examples/mesa](../../examples/mesa/)(キャップロックの崖の後退と崖錐)。
 
-**この節に関係する出力**: 崖錐の厚さ `Ht0001…`、地形 `Z0001…`。終了時の「rockfall moved …」で移した体積と発動エッジ数を確認します。
+**この節に関係する出力**: 崖錐の厚さ `Ht0001…`、地形 `Z0001…`。終了時の「rockfall moved …」で移した体積と発動エッジ数、「rockfall exported to sea cells …」で海へ出た体積を確認します。
 
 **海域マスクに達した土石流** — 海セル(fn_sw)へ流出した固体分 hs と水は
 系外へ消えます([海域マスクと土砂の行き先](#浮遊砂f_suspend))。河床勾配の

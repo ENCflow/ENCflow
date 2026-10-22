@@ -142,6 +142,7 @@ module m_geomorph
     integer :: ntal = 0              ! 崖錐の安息角で動いたエッジ数(累計)
     integer :: nclip = 0             ! dzmax クリップ数(累計)
     real :: vmove = 0.0              ! 移した体積 (m3 かさ。累計)
+    real :: vsea = 0.0               ! 海セルへ崩落して系外へ出た体積 (m3 かさ。累計。ランク局所)
   end type
 
   type t_fixation

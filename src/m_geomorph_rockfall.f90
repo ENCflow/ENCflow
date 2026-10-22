@@ -28,6 +28,12 @@
 !   律速される後退 = 実際のメサの崖)。崩落の規模は H_c で、崖錐の勾配は
 !   φ_t で与える。
 !
+!   海セル(sw > 0)への崩落: 供給側が陸、受け手が海セルのエッジも対象にする
+!   (海セルが供給側になることはない)。apply_edge_flux は海セルの z を更新しない
+!   ので、落下分は系外へ出る(海食崖の崩落 = 崖錐が波で除去される極限。乾式侵食の
+!   「splash exported」と同型)。排出量は台帳 vsea に積んで dispose で報告する。
+!   窓版の最低点には海セルの z(海底)も入る(海底が深いと自由面の高さに水面下の
+!   分が加わる。海面を自由面の下端にしたいなら海セルの z を海面に置く)。
 !   流量は calc_repose と同じく独自の 2 ループで wrk%q に書き(全成分上書き、
 !   x<=0 の近傍へ向く面スロットも 0)、apply_edge_flux(供給量制限 → 発散 →
 !   z・sd の共動更新)で適用する。ht の収支は apply の発散と同じ式(風上の
@@ -152,9 +158,9 @@ module subroutine calc_rockfall(gm, g, s, dts)
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt, id, jd, nrock, ntal, nclip
-  real :: gq, dzc, drop, lim, exc, exct, dzm, vmove, qfac, hfac, hw
+  real :: gq, dzc, drop, lim, exc, exct, dzm, vmove, vsea, qfac, hfac, hw
   real :: qk, fd, dvi, dvo, winv
-  logical :: okc, window
+  logical :: okc, window, okn, tosea, ok
 
   window = (gm%rf%npass > 0)
   if (window) call window_min(gm, g, s)
@@ -162,12 +168,13 @@ module subroutine calc_rockfall(gm, g, s, dts)
   ntal = 0
   nclip = 0
   vmove = 0.0
+  vsea = 0.0
   ! 高さ差 → 固体流量の換算: 1 更新・1 エッジで relax·excess/2/8 の高さ
   qfac = gm%rf%relax * 0.5 / 8.0 * gm%rf%area / (dts * gm%poroi)
   hfac = gm%rf%relax * 0.5 / 8.0                 ! excess → 1 エッジの移動高さ
   jt = min(dcp%je + 1, dcp%jeh)
-  !$omp parallel do schedule(static) reduction(+: nrock, ntal, nclip, vmove) &
-  !$omp   private(i, j, k, in, jn, id, jd, okc, gq, dzc, drop, lim, exc, exct, dzm, hw)
+  !$omp parallel do schedule(static) reduction(+: nrock, ntal, nclip, vmove, vsea) &
+  !$omp   private(i, j, k, in, jn, id, jd, okc, okn, tosea, ok, gq, dzc, drop, lim, exc, exct, dzm, hw)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -176,15 +183,21 @@ module subroutine calc_rockfall(gm, g, s, dts)
         in = i + din(k)
         jn = j + djn(k)
         gq = 0.0                                   ! 必ず上書き(書き手の契約)
-        if (okc .and. g%x(in,jn) > 0) then
-          if (g%sw(in,jn) <= 0) then
-            dzc = s%z(i,j) - s%z(in,jn)
+        if (g%x(in,jn) > 0) then
+          okn = (g%sw(in,jn) <= 0)
+          ! 陸どうし、または供給側(高い側)が陸で受け手が海セル(海セルが供給側に
+          ! なることはない)
+          dzc = s%z(i,j) - s%z(in,jn)
+          if (dzc > 0.0) then
+            id = i; jd = j
+            ok = okc
+          else
+            id = in; jd = jn
+            ok = okn
+          end if
+          tosea = ok .and. .not. (okc .and. okn)
+          if (ok) then
             drop = abs(dzc)
-            if (dzc > 0.0) then
-              id = i; jd = j
-            else
-              id = in; jd = jn
-            end if
             ! 高い側(供給側)が非侵食(sd <= 0)なら動かない(§84.14 と同じ扱い)
             if (drop > 0.0 .and. s%sd(id,jd) > 0.0) then
               exc = 0.0
@@ -225,7 +238,10 @@ module subroutine calc_rockfall(gm, g, s, dts)
                   dzm = gm%dzmax
                   nclip = nclip + 1
                 end if
-                if (j <= dcp%je) vmove = vmove + dzm * gm%rf%area
+                if (j <= dcp%je) then
+                  vmove = vmove + dzm * gm%rf%area
+                  if (tosea) vsea = vsea + dzm * gm%rf%area
+                end if
               end if
             end if
           end if
@@ -245,6 +261,7 @@ module subroutine calc_rockfall(gm, g, s, dts)
   gm%rf%ntal = gm%rf%ntal + ntal
   gm%rf%nclip = gm%rf%nclip + nclip
   gm%rf%vmove = gm%rf%vmove + vmove
+  gm%rf%vsea = gm%rf%vsea + vsea
 
   call apply_edge_flux(gm, g, s, dts)
 
@@ -294,6 +311,9 @@ module subroutine dispose_rockfall(gm, p, g, s)
   call par_warn("geomorph: rockfall moved " // rtoa(gm%rf%vmove) // " m3 (bulk) over " &
                 // itoa(gm%rf%nrock) // " free-face edge-updates and " // itoa(gm%rf%ntal) &
                 // " talus edge-updates (dzmax clip " // itoa(gm%rf%nclip) // ")")
+  if (gm%rf%vsea > 0.0) then
+    call par_warn("geomorph: rockfall exported to sea cells = " // rtoa(gm%rf%vsea) // " m3 (bulk)")
+  end if
 end subroutine
 
 

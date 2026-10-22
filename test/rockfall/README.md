@@ -23,9 +23,13 @@
 測る規則の検定。終端では、崖錐の安息角より急なエッジを持つセルの窓内落差が H_c 以下に
 なります(Check_rockfall.py に `rc=3` を渡す)。Run.sh / Run_MPI.sh は両方を実行します。
 
+海セル版(param_sea.txt、`make_init.py --sea`): 西側 x < 10 m を海セル(sw = 1、z = 0)にし、
+台地の西壁が海に面する構成。海へ落ちた分は系外へ出るので、検定は (1) 陸の体積減少 =
+台帳「rockfall exported to sea cells」、(5) 海セルの z 不変、に置き換わります。
+
 ```bash
 make
-./Run.sh            # 逐次 + 検定(save/ を save_serial/ に複製。窓版も)
+./Run.sh            # 逐次 + 検定(save/ を save_serial/ に複製。窓版・海セル版も)
 ./Run_MPI.sh 2      # MPI + 検定 + save/state.dat の逐次とのビット一致確認(窓版も)
 ./Run_MPI.sh 4
 ```
