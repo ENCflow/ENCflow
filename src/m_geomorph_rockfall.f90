@@ -42,6 +42,13 @@
 !         私有 save に含める(ht の後ろ。face のみ)。
 !     脚部の崖錐が厚くなると H_w <= H_c で崩落が止まり、崖錐が乾式侵食(rf_ftalus)で
 !     除かれて H_w が戻ると再開する(定常では 後退速度 × 崖高 ≈ 崖錐の除去率 × 崖錐幅)。
+!   張り出しによる崩落(rf_uc > 0。支え方式が前提): 脚部(上に安息角より急な段がある
+!   陸セル)の岩盤が、前回の埋没(崩落の岩屑の到着)以降に乾式侵食で削られた深さ u を
+!   積み(崖錐の消耗分は数えない。脚部でなくなれば 0)、面の頂の柱は脚部の u >= u_c
+!   でも始まる(H_w > H_c に加えて)。実際のキャップは面の高さではなく下の軟層の
+!   削り込み(張り出し)で落ちるので、H_c を面の高さに合わせる較正が要らなくなり、
+!   後退速度 ≈ 脚部の岩盤の侵食速度 × Δx/u_c が崖錐の除去に律速される。u は更新を
+!   またぐ状態なので私有 save に含める(col の後ろ)。
 !   海セル(sw > 0)への崩落: 供給側が陸、受け手が海セルのエッジも対象にする
 !   (海セルが供給側になることはない)。apply_edge_flux は海セルの z を更新しない
 !   ので、落下分は系外へ出る(海食崖の崩落 = 崖錐が波で除去される極限。乾式侵食の
@@ -115,6 +122,14 @@ module subroutine init_rockfall(gm, p, g, s, list)
     call par_info("geomorph: rockfall talus-supported faces on (face erodibility x" // rtoa(gm%rf%fface) &
                   // "; column collapse at the top of the face)")
   end if
+  ! 張り出しによる崩落(rf_uc > 0。支え方式が前提)
+  if (list%rf_uc > 0.0) then
+    if (.not. gm%rf%face) call par_stop("list_geomorph: rf_uc > 0 requires rf_fface >= 0 (supported faces)")
+    gm%rf%uc = list%rf_uc
+    allocate(gm%rf%u(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(gm%rf%ftf(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
+    call par_info("geomorph: rockfall undercut collapse on (critical undercut u_c = " // rtoa(gm%rf%uc) // " m)")
+  end if
   ! fluvial・repose なしでも動けるように dzmax・共有スクラッチ・供給量制限係数を整える
   if (gm%dzmax <= 0.0) then
     if (list%fluv_dzmax <= 0.0) call par_stop("list_geomorph: fluv_dzmax must be > 0")
@@ -184,10 +199,14 @@ subroutine face_support(gm, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   integer :: i, j, k, in, jn
+  real :: dz, lim
+  logical :: und
 
-  !$omp parallel do schedule(static) private(i, j, k, in, jn)
+  und = (gm%rf%uc > 0.0)
+  !$omp parallel do schedule(static) private(i, j, k, in, jn, dz, lim)
   do j = dcp%js, dcp%je
     gm%rf%sup(:, j) = 0.0
+    if (und) gm%rf%ftf(:, j) = 0.0
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
@@ -196,11 +215,14 @@ subroutine face_support(gm, g, s)
         jn = j + djn(k)
         if (in < 1 .or. in > g%nx) cycle
         if (g%x(in,jn) <= 0) cycle
-        ! 脚部 = 崖錐に覆われたセル、または崩落中の柱(通過中の岩屑)
-        if (s%ht(in,jn) < gm%rf%hmin .and. gm%rf%col(in,jn) < 0.5) cycle
-        if (s%z(i,j) - s%z(in,jn) > gm%rf%tanphi * gm%rf%dist(ke(k))) then
-          gm%rf%sup(i,j) = 1.0
-          exit
+        dz = s%z(i,j) - s%z(in,jn)
+        lim = gm%rf%tanphi * gm%rf%dist(ke(k))
+        if (dz > lim) then
+          ! 脚部 = 崖錐に覆われたセル、または崩落中の柱(通過中の岩屑)
+          if (s%ht(in,jn) >= gm%rf%hmin .or. gm%rf%col(in,jn) > 0.5) gm%rf%sup(i,j) = 1.0
+        else if (-dz > lim) then
+          ! 自身が脚部(上に安息角より急な段がある)= 張り出し量 u を積む対象
+          if (und) gm%rf%ftf(i,j) = 1.0
         end if
       end do
     end do
@@ -223,11 +245,15 @@ subroutine face_start(gm, g, s)
   type(t_geomorph), intent(inout) :: gm
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  integer :: i, j, k, in, jn
-  real :: dz, lim
-  logical :: steep, top, foot
+  integer :: i, j, k, in, jn, nund
+  real :: dz, lim, umax
+  logical :: steep, top, foot, und
 
-  !$omp parallel do schedule(static) private(i, j, k, in, jn, dz, lim, steep, top, foot)
+  und = (gm%rf%uc > 0.0)
+  if (und) call par_halo_cell(gm%rf%u)        ! apply_splash が帯で更新した u を近傍参照する
+  nund = 0
+  !$omp parallel do schedule(static) reduction(+: nund) &
+  !$omp   private(i, j, k, in, jn, dz, lim, umax, steep, top, foot)
   do j = dcp%js, dcp%je
     gm%rf%colt(:, j) = 0.0
     do i = g%wx(1,j), g%wx(2,j)
@@ -237,6 +263,7 @@ subroutine face_start(gm, g, s)
       steep = .false.
       top = .true.
       foot = .false.
+      umax = 0.0
       do k = 1, 8
         in = i + din(k)
         jn = j + djn(k)
@@ -246,7 +273,10 @@ subroutine face_start(gm, g, s)
         lim = gm%rf%tanphi * gm%rf%dist(ke(k))
         if (dz > lim) then
           steep = .true.
-          if (gm%rf%col(in,jn) < 0.5) foot = .true.
+          if (gm%rf%col(in,jn) < 0.5) then
+            foot = .true.
+            if (und) umax = max(umax, gm%rf%u(in,jn))
+          end if
         else if (-dz > gm%rf%hc) then
           top = .false.                           ! H_c より高い段の脚(埋もれた棚)は始めない
         end if
@@ -254,11 +284,20 @@ subroutine face_start(gm, g, s)
       if (gm%rf%col(i,j) > 0.5) then
         if (steep) gm%rf%colt(i,j) = 1.0      ! 安息角以内に収まったら終わる
       else if (top .and. foot) then
-        if (s%z(i,j) - gm%rf%zmin(i,j) > gm%rf%hc) gm%rf%colt(i,j) = 1.0
+        if (s%z(i,j) - gm%rf%zmin(i,j) > gm%rf%hc) then
+          gm%rf%colt(i,j) = 1.0
+        else if (und) then
+          ! 張り出し: 脚部(崩落中でない)の岩盤が u_c 以上削られていれば落ちる
+          if (umax >= gm%rf%uc) then
+            gm%rf%colt(i,j) = 1.0
+            nund = nund + 1
+          end if
+        end if
       end if
     end do
   end do
   !$omp end parallel do
+  gm%rf%nund = gm%rf%nund + nund
   gm%rf%col(:, dcp%js:dcp%je) = gm%rf%colt(:, dcp%js:dcp%je)
   call par_halo_cell(gm%rf%col)
 end subroutine
@@ -419,11 +458,20 @@ module subroutine calc_rockfall(gm, g, s, dts)
         s%ht(i,j) = max(s%ht(i,j) - dvo * dts * gm%wrk%ainv * winv * gm%poroi, 0.0) &
                     + dvi * dts * gm%wrk%ainv * winv * gm%poroi
       end if
+      ! 張り出し量 u は、岩屑が到着した(埋没)か、自身が崩落中の柱なら 0 に戻す
+      if (gm%rf%uc > 0.0) then
+        if (dvi > 0.0 .or. gm%rf%col(i,j) > 0.5) gm%rf%u(i,j) = 0.0
+      end if
     end do
   end do
   !$omp end parallel do
   call par_halo_cell(s%ht)
-  if (gm%rf%face) call face_support(gm, g, s)
+  if (gm%rf%face) then
+    ! 支え・脚部のフラグは近傍の z を読む: apply_edge_flux が自帯で更新した z のハロを
+    ! 先に最新化する(怠ると帯界面のフラグがランク数に依存する。張り出し版 np = 4 の実バグ)
+    call par_halo_cell(s%z)
+    call face_support(gm, g, s)
+  end if
 end subroutine
 
 
@@ -440,6 +488,9 @@ module subroutine dispose_rockfall(gm, p, g, s)
                 // " talus edge-updates (dzmax clip " // itoa(gm%rf%nclip) // ")")
   if (gm%rf%vsea > 0.0) then
     call par_warn("geomorph: rockfall exported to sea cells = " // rtoa(gm%rf%vsea) // " m3 (bulk)")
+  end if
+  if (gm%rf%uc > 0.0) then
+    call par_warn("geomorph: rockfall columns started by undercut = " // itoa(gm%rf%nund))
   end if
 end subroutine
 
@@ -462,6 +513,7 @@ subroutine save_rockfall(gm, p, g, s)
   end if
   call restart_write_cell(un, s%ht)
   if (gm%rf%face) call restart_write_cell(un, gm%rf%col)   ! 崩落中の柱(支え方式のみ)
+  if (gm%rf%uc > 0.0) call restart_write_cell(un, gm%rf%u)  ! 張り出し量(rf_uc > 0 のみ)
   if (is_root) close(un)
 end subroutine
 
@@ -486,12 +538,14 @@ subroutine restore_rockfall(gm, p, g, s)
   if (is_root) open(newunit=un, file=fname, form='unformatted', status='old')
   call restart_read_cell(un, s%ht)
   if (gm%rf%face) call restart_read_cell(un, gm%rf%col)
+  if (gm%rf%uc > 0.0) call restart_read_cell(un, gm%rf%u)
   if (is_root) close(un)
   call par_halo_cell(s%ht)
-  ! 支え方式: 崩落中の柱は save から、支えられた面のフラグは状態(z, ht)から再構成する
-  ! (連続計算と同じ 1 更新遅れの値)
+  ! 支え方式: 崩落中の柱と張り出し量は save から、支えられた面・脚部のフラグは
+  ! 状態(z, ht)から再構成する(連続計算と同じ 1 更新遅れの値)
   if (gm%rf%face) then
     call par_halo_cell(gm%rf%col)
+    if (gm%rf%uc > 0.0) call par_halo_cell(gm%rf%u)
     call face_support(gm, g, s)
   end if
 end subroutine

@@ -81,6 +81,10 @@ module list_geomorph
                                      ! に覆われたセルの乾式侵食 E を rf_fface 倍にし、崩落を「面の頂の柱が
                                      ! 脚部まで落ちる」形(柱の崩落)にする = 垂直な面が 1 セルずつ後退し、
                                      ! 崖錐の除去が後退を律する。負 = 無効(既定。窓版の崩落)
+    real :: rf_uc = 0.0              ! 限界張り出し量 u_c (m)(§48.7。支え方式が前提)。正なら、面の頂の柱は
+                                     ! 脚部(安息角より急な落差の先)の岩盤が前回の埋没以降に乾式侵食で u_c
+                                     ! 以上削られたときも崩れる(H_w > H_c に加えて)= 下の軟層の削り込みで
+                                     ! キャップが張り出して落ちる形。0 = 無効(既定)
     real :: rf_rc = 0.0              ! 自由面の高さを測る窓の半径 r_c (m)。0 = 隣接セル間の段差
                                      ! (従来。Δx に依存)。正なら nint(r_c/Δx) セルの正方形窓内の最低点
                                      ! との落差 H_w を自由面の高さとし、崖錐の安息角より急なエッジで
@@ -310,7 +314,7 @@ subroutine list_geomorph_read(p, list)
   integer :: f_berode, f_repose
   real :: berode_kb, berode_tausc, berode_m, repose_phi, repose_relax
   integer :: f_rockfall
-  real :: rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc, rf_fface
+  real :: rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc, rf_fface, rf_uc
   integer :: f_fixation
   real :: fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank
   integer :: f_suspend
@@ -372,7 +376,7 @@ subroutine list_geomorph_read(p, list)
                            f_secflow, sec_nstar, sec_rmax, sec_vmin, &
                            f_berode, berode_kb, berode_tausc, berode_m, &
                            f_repose, repose_phi, repose_relax, &
-                           f_rockfall, rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc, rf_fface, &
+                           f_rockfall, rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc, rf_fface, rf_uc, &
                            f_fixation, fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank, &
                            f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, &
@@ -426,6 +430,7 @@ subroutine list_geomorph_read(p, list)
   rf_hmin = list%rf_hmin
   rf_rc = list%rf_rc
   rf_fface = list%rf_fface
+  rf_uc = list%rf_uc
   f_fixation = list%f_fixation
   fix_tfix = list%fix_tfix
   fix_ctau = list%fix_ctau
@@ -550,6 +555,7 @@ subroutine list_geomorph_read(p, list)
   list%rf_hmin = rf_hmin
   list%rf_rc = rf_rc
   list%rf_fface = rf_fface
+  list%rf_uc = rf_uc
   list%f_fixation = f_fixation
   list%fix_tfix = fix_tfix
   list%fix_ctau = fix_ctau

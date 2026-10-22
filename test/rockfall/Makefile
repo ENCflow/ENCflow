@@ -30,7 +30,7 @@ links:
 install: all
 
 clean:
-	rm -rf result result_rc result_face result_sea save save_rc save_face save_sea save_serial save_rc_serial save_face_serial save_sea_serial
+	rm -rf result result_rc result_face result_uc result_sea save save_rc save_face save_uc save_sea save_serial save_rc_serial save_face_serial save_uc_serial save_sea_serial
 	rm -f encflow encflow_mpi a.out Screen.log Screen_*.log zinit.txt zinit_sea.txt sw_sea.txt
 
 cleanref:

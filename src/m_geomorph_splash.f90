@@ -345,14 +345,18 @@ module subroutine apply_splash(gm, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j
-  real :: fx, cap, fxg
+  real :: fx, cap, fxg, fht
   real :: rsum(dcp%js:dcp%je)
 
-  !$omp parallel do schedule(static) private(i, j, fx, cap, fxg)
+  !$omp parallel do schedule(static) private(i, j, fx, cap, fxg, fht)
   do j = dcp%js, dcp%je
     rsum(j) = 0.0
     do i = g%wx(1,j), g%wx(2,j)
       fx = gm%spl%fx(i,j)
+      ! 張り出し量(rf_uc): 脚部(前回更新のフラグ)でなければ 0 に戻す(侵食の有無によらず)
+      if (gm%rf%uc > 0.0) then
+        if (gm%rf%ftf(i,j) <= 0.5) gm%rf%u(i,j) = 0.0
+      end if
       if (fx <= 0.0) cycle
       ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 z − sd 不変)
       s%z(i,j) = s%z(i,j) - fx
@@ -360,7 +364,14 @@ module subroutine apply_splash(gm, g, s)
       ! 河床の細粒分の帳簿(§84.10)との併用: 粗粒として扱い sf <= sd だけ保つ
       if (allocated(s%sf)) s%sf(i,j) = min(s%sf(i,j), s%sd(i,j))
       ! 崖錐(§48.7)は先に消耗する(露出材料が崖錐 → 下の材料)
-      if (gm%f_rockfall > 0) s%ht(i,j) = max(s%ht(i,j) - fx, 0.0)
+      if (gm%f_rockfall > 0) then
+        fht = min(s%ht(i,j), fx)
+        s%ht(i,j) = s%ht(i,j) - fht
+        ! 張り出し量(rf_uc): 脚部の岩盤の剥離分(崖錐の消耗分を除く)を積む
+        if (gm%rf%uc > 0.0) then
+          if (gm%rf%ftf(i,j) > 0.5) gm%rf%u(i,j) = gm%rf%u(i,j) + (fx - fht)
+        end if
+      end if
       rsum(j) = rsum(j) + fx
       ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
       ! (calc_wash と同じ整合)

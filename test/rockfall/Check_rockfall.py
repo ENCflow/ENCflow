@@ -6,6 +6,7 @@
 #     (3) 崖錐の収支: 全セルで ht >= (z − z0)^+ − TOL_HT(正味の堆積は崖錐)、Σht > 0
 #     (4) 共動更新恒等: max|(sd − sd0) − (z − z0)| < TOL_SD
 #   使い方: Check_rockfall.py <savedir> [<resdir>] [rc=<窓の半径 m>] [sea=<Screen ログ>] [face=1]
+#                             [uc=<Screen ログ>] [hc=<H_c m>]
 #     sea を与えると海セル版: (1) は「陸の体積減少 = 台帳 vsea(海へ排出)」、
 #     (5) 海セルの z は不変、を検定する(zinit_sea.txt / sw_sea.txt を使う)
 #     rc を与えると (2) は「安息角より急なエッジを持つセルの、窓(nint(rc) セルの正方形)内の
@@ -13,11 +14,15 @@
 #     face=1(rc と併用)は支え方式(rf_fface): (2) の対象を「上に H_c より高い段がないセル」
 #     (始まりうる柱)に限り、(6) 岩盤の面が残る(ht = 0 の供給側で安息角より急な段差がある)
 #     を加える
+#     uc=<Screen ログ>(face・rc と併用。hc で H_c を与える)は張り出し版(rf_uc): (1) は「Σ(z − z0) =
+#     −乾式侵食の系外排出 × 1/(1 − λ)(台帳)」に、(7) 張り出しで始まった柱の台帳 > 0 かつ
+#     台地面(z >= ZTOP − 1e-3)のセル数が初期より減る、を加える
 import sys, struct, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_init import NX, NY, ZTOP
 
 HC, SD0 = 4.0, 20.0
+POROI = 1.0 / (1.0 - 0.4)      # 1/(1 − λ)(fluv_porosity = 0.4)
 TOL_SUM, TOL_H, TOL_HT, TOL_SD = 1.0e-9, 1.0e-3, 2.0e-4, 1.0e-10   # 高さ差は relax の幾何収束の残差(1e-4 程度)を許す。ht は印字桁 1e-4 m の出力から
 
 
@@ -50,6 +55,7 @@ RES = "result"
 RC = 0
 SEA = ""
 FACE = False
+UC = ""
 for a in sys.argv[2:]:
     if a.startswith("rc="):
         RC = int(round(float(a[3:])))
@@ -57,6 +63,10 @@ for a in sys.argv[2:]:
         SEA = a[4:]
     elif a == "face=1":
         FACE = True
+    elif a.startswith("uc="):
+        UC = a[3:]
+    elif a.startswith("hc="):
+        HC = float(a[3:])
     else:
         RES = a
 import math
@@ -120,6 +130,15 @@ htdef = min(ht[j][i] - max(dz[j][i], 0.0) for j in range(NY) for i in range(NX))
 sum_ht = sum(sum(r) for r in ht)
 sum_dep = sum(max(v, 0.0) for r in dz for v in r)
 ok1 = abs(sum_dz) < TOL_SUM if not SEA else abs(land_loss - vsea) <= 1.0e-4 * max(vsea, 1.0)
+nund, vout, ncap, ncap0 = 0, 0.0, 0, 0
+if UC:
+    txt = open(UC, errors="ignore").read()
+    nund = sum(int(v) for v in re.findall(r"columns started by undercut =\s*(\d+)", txt))
+    vout = sum(float(v) for v in re.findall(r"splash exported sediment volume =\s*([0-9.Ee+-]+)", txt)) * POROI
+    ncap = sum(1 for r in z for v in r if v >= ZTOP - 1.0e-3)
+    ncap0 = sum(1 for r in z0 for v in r if v >= ZTOP - 1.0e-3)
+    ok1 = abs(sum_dz + vout) <= 1.0e-4 * max(vout, 1.0)
+ok7 = (nund > 0 and ncap < ncap0) if UC else True
 ok5 = (sea_change == 0.0) if SEA else True
 TOL_H2 = TOL_H if RC == 0 else 1.0e-2   # 窓版は安息角超過を上限にした緩和で収束が遅く、残差 5e-3 程度を許す
 if SEA:
@@ -139,7 +158,9 @@ if FACE:
 ok6 = (smax > TANPHI) if FACE else True
 ok3 = htdef >= -TOL_HT and sum_ht > 0.0
 ok4 = ident < TOL_SD
-if SEA:
+if UC:
+    print("(1) 体積収支   : sum(z - z0) = %.5f = -乾式侵食の排出(台帳 × 1/(1-λ)) %.5f m*cell : %s" % (sum_dz, -vout, "PASS" if ok1 else "FAIL"))
+elif SEA:
     print("(1) 体積収支   : 陸の減少 %.5f = 海への排出(台帳) %.5f m*cell : %s" % (land_loss, vsea, "PASS" if ok1 else "FAIL"))
     print("(5) 海セル不変 : max|z - z0| (sea) = %.3e m : %s" % (sea_change, "PASS" if ok5 else "FAIL"))
 else:
@@ -150,6 +171,8 @@ print("(3) 崖錐の収支 : min(ht - (z-z0)^+) = %.2e m, Σht = %.2f, Σ(z-z0)^
 print("(4) 共動更新   : max|(sd-sd0)-(z-z0)| = %.3e m : %s" % (ident, "PASS" if ok4 else "FAIL"))
 if FACE:
     print("(6) 岩盤の面   : 崖錐のないセルの最大勾配 %.3f > tan(35 deg) = %.3f : %s" % (smax, TANPHI, "PASS" if ok6 else "FAIL"))
-ok = ok1 and ok2 and ok3 and ok4 and ok5 and ok6
+if UC:
+    print("(7) 張り出し   : 張り出しで始まった柱 %d > 0、台地面のセル数 %d -> %d(縮む): %s" % (nund, ncap0, ncap, "PASS" if ok7 else "FAIL"))
+ok = ok1 and ok2 and ok3 and ok4 and ok5 and ok6 and ok7
 print("== rockfall 検定: %s ==" % ("PASS" if ok else "FAIL"))
 sys.exit(0 if ok else 1)

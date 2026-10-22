@@ -537,6 +537,7 @@ the namelist declarations in list_*.f90 (developer.md Sec. 35.1).
 | rf_hc | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rf_hmin | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rf_rc | &list_geomorph | [Sediment and landform change](geomorph.md) |
+| rf_uc | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rf_phi | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | rf_relax | &list_geomorph | [Sediment and landform change](geomorph.md) |
 | repose_phi | &list_geomorph | [Sediment and landform change](geomorph.md) |
