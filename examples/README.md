@@ -23,7 +23,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [badland/](badland/) | 台地と急崖への降雨で谷が刻まれるバッドランド型の地形発達。白色雑音からの谷の自己形成、谷間隔の選択則(spl_lc)、格子収束、深い谷と鋭い稜線の長期発達 | 乾式斜面侵食 f_splash(spl_lc・spl_zbase) |
 | [badland_storm/](badland_storm/) | 浸透能を下げて豪雨時だけ表面流が現れる崖: 乾式侵食が止まるか、ガリー網に変わるか(badland の対照実験) | f_splash + f_wash・f_suspend、Green-Ampt、降雨時系列 |
 | [badland_round/](badland_round/) | 稜線が丸く、低い丘ほどドーム状になるバッドランド(膨潤粘土型): 移流型の下刻とクリープ(拡散)の比が決める長さ尺度 L で、L より小さい丘から丸くなる(badland の「鋭い稜線」の対照)。水平層理の硬軟互層(spl_strata)で縞と段が出る対照も | f_splash + f_creep(+ spl_strata)、Green-Ampt |
-| [mesa/](mesa/) | メサ・ビュートの形成: キャップロック(spl_strata)で平らな頂と垂直な崖の平行後退、台地の縮小 → 孤立丘 → 尖塔。層理なし・中間硬層・増幅の飽和・崩落と崖錐の対照 | f_splash(spl_strata・spl_ksat)+ f_creep + f_rockfall、Green-Ampt |
+| [mesa/](mesa/) | メサ・ビュートの形成: キャップロック(spl_strata)で平らな頂と垂直な崖の平行後退、台地の縮小 → 孤立丘 → 尖塔。層理なし・中間硬層・増幅の飽和・崩落と崖錐(窓版・支え方式 = 垂直な崖 + 段)の対照 | f_splash(spl_strata・spl_ksat)+ f_creep + f_rockfall(rf_rc・rf_fface)、Green-Ampt |
 | [ashfall_lahar/](ashfall_lahar/) | 降灰 → 降雨 → 灰層の侵食による泥流(ラハール)の発生と堆積 | 土石流 f_debris、降雨 |
 | [landslide_tsunami/](landslide_tsunami/) | 地滑り・土石流の水域突入と津波。陸上崩壊と海底地滑りの 4 パターンと非静水圧版 | 動く底層 f_bedslide、非静水圧補正 |
 | [tsunami_fault/](tsunami_fault/) | 断層パラメータから津波を発生させる。静水圧・瞬時変位・非静水圧の比較と座標指定の各パターン | 規定底面運動 fn_bedmotion、utils/fault2disp |
