@@ -85,6 +85,9 @@ module subroutine init_wave(gm, p, g, list)
     gm%wav%tp = list%wave_t
     gm%wav%dir = list%wave_dir
   end if
+  if (list%f_wave_shadow < 0 .or. list%f_wave_shadow > 1) call par_stop("list_wave: f_wave_shadow must be 0 or 1")
+  gm%wav%shadow = list%f_wave_shadow
+  if (gm%wav%shadow > 0) call par_info("geomorph: wave partial shadowing by submerged bars on (exposure = transmitted height ratio)")
   if (list%wave_clock < 0 .or. list%wave_clock > 1) call par_stop("list_wave: wave_clock must be 0 or 1")
   gm%wav%clock = list%wave_clock
   if (list%wave_k2 <= 0.0) call par_stop("list_wave: wave_k2 must be > 0")
@@ -178,8 +181,8 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt, a, b, r, ui, uj, nact, im, ip, jm, jp, n
   real :: tw, hb, hbd, dx, dy, dxv, dyv, wsum, sig2, w, hh, vmax
-  real :: wsx, wsy, w0, hc, he, hw, hn, hsv, bslp, ax, ay
-  logical :: useb
+  real :: wsx, wsy, w0, hc, he, hw, hn, hsv, bslp, ax, ay, rsh
+  logical :: useb, useshd
   logical :: usev
   real :: gx, gy, sl, nx, ny, tx, ty, cosa, sina, qs, wb, q
   real :: qe, gq, vlong
@@ -199,6 +202,7 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
   vmax = gm%wav%vmax
   usev = (vmax >= 0.0)                                   ! 河口の規則(wave_vmax。自セルの vv のみ参照)
   bslp = gm%wav%bslp
+  useshd = (gm%wav%shadow > 0)                           ! 水没砂州の部分遮蔽(段 3 (b))
   useb = (gm%wav%nsm > 0 .and. bslp > 0.0)               ! 局所勾配項(多パス核のときのみ)
   ! 進行方向の単位ベクトル(格子の i, j 成分。j は南向き正なので y 成分は −sin)
   dxv = cos(gm%wav%dir * deg)
@@ -225,6 +229,9 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
         gm%wav%ex2(i,j) = 1.0                      ! 砕波帯より深い = 源
       else if (i+ui < 1 .or. i+ui > g%nx .or. j+uj < 1 .or. j+uj > g%ny) then
         gm%wav%ex2(i,j) = 1.0                      ! 風上が全域の外 = 開境界の沖(露出)
+      else if (useshd) then
+        ! 部分遮蔽: 到達波高の比 f = min(風上の f, h/h_b)(このセルを通る波は γh まで)
+        gm%wav%ex2(i,j) = min(gm%wav%ex(i+ui, j+uj), s%h(i,j) / hbd)
       else
         gm%wav%ex2(i,j) = gm%wav%ex(i+ui, j+uj)    ! 風上の前回値(ハロ込み。域外 x<=0 は 0 = 陰)
       end if
@@ -344,7 +351,7 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
   ! --- 砕波帯セルの流束ベクトル ---
   nact = 0
   !$omp parallel do schedule(static) reduction(+: nact) &
-  !$omp   private(i, j, im, ip, jm, jp, gx, gy, sl, nx, ny, tx, ty, cosa, sina, qs, wb, q, ax, ay)
+  !$omp   private(i, j, im, ip, jm, jp, gx, gy, sl, nx, ny, tx, ty, cosa, sina, qs, wb, q, ax, ay, rsh)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       gm%wav%qx(i,j) = 0.0
@@ -352,7 +359,11 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%h(i,j) <= p%dd .or. s%h(i,j) > hbd) cycle
-      if (gm%wav%ex(i,j) < 0.5) cycle                   ! 陰・入り江・河道の内部
+      if (useshd) then
+        if (gm%wav%ex(i,j) <= 0.0) cycle                ! 陰(到達波高 0)
+      else
+        if (gm%wav%ex(i,j) < 0.5) cycle                 ! 陰・入り江・河道の内部
+      end if
       if (usev) then
         if (s%vv(i,j) > vmax) cycle                     ! 河口の規則: 河川流のセルは砕波帯にしない
       end if
@@ -372,6 +383,10 @@ module subroutine calc_wave_longshore(gm, p, g, s, dts)
       qs = gm%wav%k2 * gm%wav%h0**2.4 * gm%wav%tp**0.2 * cosa**1.2 * sina   ! m3/s かさ
       wb = max(hbd / sl, dx)                             ! 砕波帯の幅
       q = qs / wb / gm%poroi                             ! 単位岸沖幅の固体流束 (m2/s)
+      if (useshd) then                                   ! 到達波高が局所の砕波限界 γh を下回る分だけ減らす
+        rsh = min(1.0, gm%wav%ex(i,j) * hbd / s%h(i,j))  ! (= 1 なら砕波帯の飽和状態 = 従来どおり)
+        if (rsh < 1.0) q = q * rsh**2.5                  ! 浅水のエネルギー流束 ∝ H^{5/2}
+      end if
       ax = 0.0
       ay = 0.0
       if (useb) then                                     ! 局所勾配項: 平滑化からの偏差 a = h − h_s の勾配

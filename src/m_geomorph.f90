@@ -174,6 +174,7 @@ module m_geomorph
     real :: dir = 0.0                ! 進行方向 (deg。x 軸から反時計回り。北 = 90°)
     real :: dvec(1:2) = 0.0          ! 進行方向の単位ベクトル(格子の i, j 成分)
     integer :: clock = 1             ! 時系列の時計(1: 地形時間, 0: 水理時間)
+    integer :: shadow = 0            ! 水没砂州の部分遮蔽(0/1。§84.15 段 3 (b))
     real :: k2 = 0.34                ! 沖波 CERC 式の係数 K2 (m^{3/5} s^{-6/5})
     real :: gamma = 0.78             ! 砕波指標 γ
     real :: smin = 1.0e-3            ! 汀線方位を定義する海底勾配の下限
