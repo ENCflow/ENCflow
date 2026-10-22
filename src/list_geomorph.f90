@@ -226,6 +226,13 @@ module list_geomorph
                                      ! セルごとに自動(推奨。湛水が深いほど壁の分け前が増える)
     character(len=256) :: fn_dissol = ""  ! 可溶率 0〜1 の分布ファイル(石灰岩の分布。
                                      ! 未指定 = 全セル 1)
+    integer :: f_rockfall = 0        ! 岩盤の崩落(0:無効, 1:有効。§87)。基岩面 z − sd が隣接
+                                     ! セルの地表より tanφ_rock × 距離を超えて高い分を、
+                                     ! 岩 → 岩屑(受け手の sd)として移す(f_repose の岩盤版)
+    real :: rockfall_phi = 0.0       ! 岩盤の安定勾配角 φ_rock (deg)。0 = 既定 60(§62)
+    real :: rockfall_relax = 0.5     ! 1 更新で緩和する超過高さの割合(0〜1)
+    real :: rockfall_bulk = 0.0      ! 岩屑のかさ比(岩 1 に対する堆積体積)。0 = 既定
+                                     ! 1/(1 − fluv_porosity)
                                      ! (例: 18000〜20000。湿潤・飽和の区別は
                                      ! 一律 γt の近似)
 
@@ -346,6 +353,8 @@ subroutine list_geomorph_read(p, list)
   integer :: f_dissol, dissol_src, dissol_sink
   real :: dissol_ceq, dissol_rho, dissol_fsink, dissol_fres, dissol_lat
   character(len=256) :: fn_dissol
+  integer :: f_rockfall
+  real :: rockfall_phi, rockfall_relax, rockfall_bulk
   integer :: f_bedslide, f_bsres, bs_nsubmax, f_bsplunge, f_bsvplunge
   character(len=256) :: fn_bsinit
   real :: bs_reltime, bs_rho, bs_mu, bs_xi, bs_vstop, bs_eps_s, bs_diagratio, bs_cfl
@@ -372,6 +381,7 @@ subroutine list_geomorph_read(p, list)
                            f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0, &
                            f_dissol, dissol_ceq, dissol_rho, dissol_src, dissol_sink, &
                            dissol_fsink, dissol_fres, dissol_lat, fn_dissol, &
+                           f_rockfall, rockfall_phi, rockfall_relax, rockfall_bulk, &
                            f_bedslide, fn_bsinit, bs_reltime, bs_rho, f_bsres, bs_mu, bs_xi, &
                            bs_vstop, bs_eps_s, bs_diagratio, bs_cfl, bs_nsubmax, bs_hplunge, bs_tstop, f_bsplunge, f_bsvplunge
 
@@ -475,6 +485,10 @@ subroutine list_geomorph_read(p, list)
   dissol_fres = list%dissol_fres
   dissol_lat = list%dissol_lat
   fn_dissol = list%fn_dissol
+  f_rockfall = list%f_rockfall
+  rockfall_phi = list%rockfall_phi
+  rockfall_relax = list%rockfall_relax
+  rockfall_bulk = list%rockfall_bulk
   f_bedslide = list%f_bedslide
   fn_bsinit = list%fn_bsinit
   bs_reltime = list%bs_reltime
@@ -595,6 +609,10 @@ subroutine list_geomorph_read(p, list)
   list%dissol_fres = dissol_fres
   list%dissol_lat = dissol_lat
   list%fn_dissol = fn_dissol
+  list%f_rockfall = f_rockfall
+  list%rockfall_phi = rockfall_phi
+  list%rockfall_relax = rockfall_relax
+  list%rockfall_bulk = rockfall_bulk
   list%slide_c = slide_c
   list%slide_phi = slide_phi
   list%slide_gamma = slide_gamma

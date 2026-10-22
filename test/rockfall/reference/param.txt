@@ -1,0 +1,65 @@
+!======================================================================
+! rockfall: 岩盤の崩落(f_rockfall)の検定(developer.md §87、karst_plan.md §2.6)
+!   平坦 0 m の中央 1 セルだけ 10 m の岩柱(data_rockfall/zpillar.txt)を
+!   水なしで置き、安定勾配角 45° まで崩す。土層は裸岩を表す微小値 sd0 =
+!   1e-3 m。毎ステップ(dt_geomorph = 0)の更新を 10 回:
+!     v_k = relax (zb − z_w − tanφ dist_k)/(1 + bulk)/8、zb = z − sd
+!     供給側: z −= Σv_k、受け手: z += bulk v、sd += bulk v
+!   relax = 1、bulk = 1.5、dzmax = 100(クリップなし)。
+!   Check_rockfall.py が同じ漸化式を独立に実装して Z9998・Sd9998 と比較し、
+!   岩の体積の保存(Σ sd = bulk × 岩の体積、Σ Δz = (bulk − 1) × 岩の体積)を
+!   見る。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 1.0
+  dt_disp = 0.5
+  dt_file = 1.0
+  dt_recrd = 1.0
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_data = 'data_rockfall'
+  dir_result = 'result'
+  f_disp_debug = 1
+  f_output_mode = 3         ! text + bil(検定は bil の全精度を読む)
+  f_check_cfl = 0
+  f_out_z = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 水なし
+/
+
+&list_geoinfo
+  lx = 42.0
+  ly = 42.0
+  nx = 21
+  ny = 21
+  f_ztype = 1
+  fn_z = 'zpillar.txt'      ! 中央 1 セルだけ 10 m
+  f_rntype = 0
+  rn0 = 0.05
+  sd0 = 0.001               ! 裸岩(基岩面 = z − 0.001)
+/
+
+&list_bound
+/
+
+&list_geomorph
+  dt_geomorph = 0.0         ! 毎ステップ更新(10 回)
+  morfac = 1.0
+  f_rockfall = 1            ! 岩盤の崩落
+  rockfall_phi = 45.0       ! 安定勾配角 (deg)
+  rockfall_relax = 1.0      ! 超過高さの緩和率
+  rockfall_bulk = 1.5       ! 岩屑のかさ比
+  fluv_dzmax = 100.0        ! クリップなし
+/
