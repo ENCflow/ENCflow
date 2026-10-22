@@ -973,6 +973,11 @@ shoreline orientation treats them as land (depth 0). If you use a sea mask,
 place it well offshore of the breaking depth h_b/γ so that its edge does not
 fall inside the smoothing radius wave_smooth of the surf zone (the edge would
 be read as a shoreline).
+**River mouths with a mobile bed are not yet supported**:
+once the river's flow depth exceeds h_b the channel itself becomes a wave
+source, longshore transport acts on bars inside the channel and the run
+diverges (examples/delta/README.md, "waves"). A rule that excludes cells
+carrying river flow is being designed (developer.md §84.15, handoff.md).
 
 **Output of this section**: landform change in `Z0001...` (`f_out_z=1`); the
 final warning reports the solid volume carried through edges by longshore

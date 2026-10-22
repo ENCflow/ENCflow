@@ -27,8 +27,8 @@ def pget(key, default):
 DX = pget("lx", 1000.0) / pget("nx", 200.0)
 MORFAC = pget("morfac", 100.0)
 DT_FILE = pget("dt_file", 3600.0)
-LCH = {"base": 150.0, "wave": 150.0}.get(case, 200.0)
-ZSEA = {"base": -2.0, "wave": -2.0}.get(case, -1.5)
+LCH = {"base": 150.0}.get(case, 200.0)
+ZSEA = {"base": -2.0}.get(case, -1.5)
 
 frames = []
 fn = os.path.join(d, "FILENUMBER.csv")
