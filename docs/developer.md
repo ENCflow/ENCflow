@@ -4249,8 +4249,11 @@ Cn_max)→ 場の最大値**。
   保ち、「コメント除去後の一致」を生成時に機械検査する(将来の日英
   CI でも同じ検査を流用する)。tutorials の en/ 版はケースディレクトリ
   から `./encflow en/param_stepN.txt` で実行できる(相対パスは CWD
-  基準のため値の書き換えが不要)。**List_samples 以外の examples は
-  日本語のみ**(解説の役割は users_guide・tutorials が担う。§35)。
+  基準のため値の書き換えが不要)。List_samples 以外の examples は当初
+  日本語のみとしていた(解説の役割は users_guide・tutorials が担う。§35)が、
+  **2026-10-23 改定: examples/<case>/README.md も英訳対象に広げる**
+  (examples/<case>/en/README.md。現象別例題は海外読者の入口になるため)。
+  param・図化スクリプト・図は従来どおり共有(図は日本語ラベルのまま)。
 - **利用者向け文書の式・引用・根拠の書き方(2026-10-12 決定。見本は
   users_guide/encgrid.md・advection.md・nonhydrostatic.md)**:
   (1) パラメータの意味は可能な限り式で示す(ブロックは ```math、
@@ -4391,13 +4394,13 @@ Cn_max)→ 場の最大値**。
   (3) 設定例の「コメント以外の完全一致」(有効入力+1 行完結のコメントアウト例)、
   (4) Notebook のコード一致(コメント・表示文字列を除く)、(5) 見出し構成・表の
   行数・刻印・ローカルリンクの検査、(6) 翻訳を要求しない正本の範囲
-  tools/i18n/scope.json(内部開発文書、List_samples 以外の examples、test の
-  param)を提供する。CI(.github/workflows/i18n.yml)は単体テストと「記録済みの組の
+  tools/i18n/scope.json(内部開発文書、examples・test の param、benchmark の
+  list)を提供する。CI(.github/workflows/i18n.yml)は単体テストと「記録済みの組の
   更新漏れ・リンク切れ」だけを合格条件にする(初回全件監査: unreviewed 124、
   missing 80、既存英訳の更新漏れは handoff に列挙)。決定: 既存ミラーは一括で
   reviewed にしない(存在だけでは最新と断定できない)。接尾辞方式の README.en.md
-  は有効のまま維持し、新規は en/ 方式に統一する(移行は任意)。List_samples 以外の
-  examples 日本語のみ・開発者文書対象外の決定は変更しない。Notebook は 2026-08 の
+  は有効のまま維持し、新規は en/ 方式に統一する(移行は任意)。開発者文書対象外の
+  決定は変更しない。examples の README は同日に対象へ広げた(上の改定)。Notebook は 2026-08 の
   既存英語版(コードコメント・print 文言を英訳)に合わせ「コメントと表示文字列以外
   は同一」を規律とする。落とし穴: 字句比較は説明文「! dt = 0.05 を使う」を代入例と
   誤認しやすいので、右辺が値だけの行に限定している(散文は比較しない)。

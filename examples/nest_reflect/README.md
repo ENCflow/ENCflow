@@ -1,5 +1,7 @@
 # nest_reflect — 比 3・5 の双方向ネストで界面を横切る波(一様細格子との比較)
 
+[English](en/README.md)
+
 多段ネスティング(docs/users_guide/nest.md、docs/nesting_plan.md)の空間比 r > 1
 の検証例。一様水深 1 m の 100 m 四方の水域で、中央のガウス型初期水位
 (a = 0.2 m、σ = 5 m)が広がり、親格子の中央に置いた子格子(親セル 67 個分)の

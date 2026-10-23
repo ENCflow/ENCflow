@@ -13,8 +13,8 @@
     {
       "source": "docs/multilingual.md",
       "target": "docs/en/multilingual.md",
-      "source_sha256": "db6ef00cb0a65423fd7c9a6053be46143ff609bfd6fc8da29d8df3bebc2370d9",
-      "target_sha256": "a292ebbd1af88784710d6d5676254c998483097a2c3d2ed0de3e2be70d93999c",
+      "source_sha256": "622fe44505d9cca7eda80f7e7f498b5c1d58bf08c420870c948b4081100438a3",
+      "target_sha256": "466217e829cbdb50d77f89c608fea914fdee1d9cf6408df6ff4add8d42bf58fe",
       "reviewer": "Claude (Claude Code session; content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"
@@ -69,6 +69,177 @@
       "target": "examples/List_samples/en/list_wq.txt",
       "source_sha256": "462e707f6e8144be78cbf4e816894ba6a3cf1b4e267d980f57bfe182ed04c714",
       "target_sha256": "3ea5398bbe1c04695b61d34e61cebe8fb0ffaefedd4a2e24ccf3d053f4c2f07c",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/ashfall_lahar/README.md",
+      "target": "examples/ashfall_lahar/en/README.md",
+      "source_sha256": "588409af69433498e280dc2240a13c0f33c6cfd36ff372a01666556978641b33",
+      "target_sha256": "52d8e57a606172f3867ece9593abd6caec88251cda75f5f71043b06bb92b8d8d",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/badland/README.md",
+      "target": "examples/badland/en/README.md",
+      "source_sha256": "c4f0efff4a32e2651fd6e7b6a3d11e3d851571dc4f8f490a9a82c007e11ab5b3",
+      "target_sha256": "b1016ff311d085054dd2e62961b1df16be50528418361cb2d8e45cc5c390d730",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/badland_round/README.md",
+      "target": "examples/badland_round/en/README.md",
+      "source_sha256": "5388cc4dc748488c9c69d364e18050d0ec7f6f84c84d6cca634c14eeaf28648a",
+      "target_sha256": "b59f9e221fdb0da0bcaaa1b5b3ab8922caab04fe41f9f4a211908c307eee3eca",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/badland_storm/README.md",
+      "target": "examples/badland_storm/en/README.md",
+      "source_sha256": "21f7286ac2ab7559f875acc3544cb8df59f9b7f695c738bc68a36865e7f6fb9f",
+      "target_sha256": "c970e498afcb9fb8d213afbf7b14c4d985f36b17bd95df251516de7ac6ba6f99",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/delta/README.md",
+      "target": "examples/delta/en/README.md",
+      "source_sha256": "7606d3be97c776a57084fe5be7516f1e29efb9e5eaefc06c70814e37d4cc6b42",
+      "target_sha256": "281cf8b71f1b5a0ec66330a68a6d8d90be048a4a8e890a8fa0c128d8abcb7e77",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/karst/README.md",
+      "target": "examples/karst/en/README.md",
+      "source_sha256": "aee269b0064f0899debd5a77b60ef1f21a9405c3493c45589fc7422df3ec9e50",
+      "target_sha256": "8dd8dc785a595206abecdf93514a1f3d4b20ac166a34c977e82b6438f0c62d25",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/landslide_tsunami/README.md",
+      "target": "examples/landslide_tsunami/en/README.md",
+      "source_sha256": "7b4c75c9285657bdf60d294cc3bfbeba5194e342e12e92b6c89b4a361b052fbf",
+      "target_sha256": "fa6ef254c09deb56802024d1077fec9ad15f1c9aa566dd2acc8b908c52f72b68",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/levee_breach/README.md",
+      "target": "examples/levee_breach/en/README.md",
+      "source_sha256": "a61af7802a951dbc5a6f709508e0180911a77da4aac621bedfb247ba5b2dc36c",
+      "target_sha256": "123cab6dc5cf4306138dc675a94c37920a370286e03cfd56fcd2395971b97c77",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/meander/README.md",
+      "target": "examples/meander/en/README.md",
+      "source_sha256": "78f007d3d12bb8ecf5cb10cdbf8c2418da2abd69fc976e09db0a6cdc304a4600",
+      "target_sha256": "77997fddef091cd1cd5aaf41ce7cb339b61d18ca6ba1af19e90e8ba28059e70b",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/meander_cutoff/README.md",
+      "target": "examples/meander_cutoff/en/README.md",
+      "source_sha256": "38bf4ec38d164e72dfa7877e27886247f9c5d9439a758d411298f2d44da7bf8e",
+      "target_sha256": "0a5e39de449ea15d92a9b301d187168f2aa7b826987ffdd093bd5e4af7b3d533",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/mesa/README.md",
+      "target": "examples/mesa/en/README.md",
+      "source_sha256": "e92c8348bd374df3d2472c661b2e54fbf58c72f9a44c47770646165cd8a27b55",
+      "target_sha256": "a72cc49f3329edea448ecee17f93927e1aa249c2194a3f4193a64a3aaeb9227a",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/nest_reflect/README.md",
+      "target": "examples/nest_reflect/en/README.md",
+      "source_sha256": "022f90f6f700ccae749f5ab1a379fb954c416fa56b317070b8ae462a82aac597",
+      "target_sha256": "4ca4f528ebdae0be0c15948269ec49610b320343b50d052091d3bd731d06c272",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/qanat/README.md",
+      "target": "examples/qanat/en/README.md",
+      "source_sha256": "bafc7cd7f8751c7f08b5d6c63319c5d6ba1fc03eb15f177fddc705c9ea30c3fe",
+      "target_sha256": "8e6ffab090c21687ad90a75c65b91b9db9af225e9fe810033a26986b4e178314",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/sewer_hybrid/README.md",
+      "target": "examples/sewer_hybrid/en/README.md",
+      "source_sha256": "81bbe2c30f6cc75bb8150f58728b107db3510e07402f3df43e2ee9feadef979a",
+      "target_sha256": "acca6044c4bccf2d70b9b8fb8907f69dd636a2909e7051200d2adad980155dd1",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/timberyard/README.md",
+      "target": "examples/timberyard/en/README.md",
+      "source_sha256": "a38313d0a5c62f0718229c6f31623d83fc80d7016f2e216393df57126726bdca",
+      "target_sha256": "b7677004714c3d60cf17e62dbff29eb8d4280e3cdca1d3c1ff17bcdaa0e942fa",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/tower_karst/README.md",
+      "target": "examples/tower_karst/en/README.md",
+      "source_sha256": "07a07584f63abcf9bd3e5b6d67908a6ea47e5aceeb881050f2fadb0ae725851b",
+      "target_sha256": "0d42e3c64a56375f05a73bd91312e07e7f7ef3ba6c18bb39d426b180802f5dc2",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/tsunami_coast/README.md",
+      "target": "examples/tsunami_coast/en/README.md",
+      "source_sha256": "72df1ef10f2d66844f9bf05e366a534bfe0487e9112b94975781bb5b9e72511f",
+      "target_sha256": "40cc26197bcb50825ec2d7c0410c402addab5dc34ee5a6cdb6cfe024ad0d8697",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/tsunami_fault/README.md",
+      "target": "examples/tsunami_fault/en/README.md",
+      "source_sha256": "fc4ede329b445e469b158e255704872531bc6ffcbad7d908061455ccee6f214b",
+      "target_sha256": "4a7178a2ddfec3ed66d30ca49ab19bb3450424274d53ecea6f81b1a141d86d0b",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/tsunami_town/README.md",
+      "target": "examples/tsunami_town/en/README.md",
+      "source_sha256": "51308d83db689b7b6ca7de1ad208d6e8ce48c1552ad7c8665d875eb7bef6c71d",
+      "target_sha256": "4102809d78bf4130d33328db5580273c3d0564dacd86d978d210ef633f3f3d86",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"

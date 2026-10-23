@@ -209,7 +209,7 @@ tsunami run are shown)
 
 **(3) Run** as usual, `./encflow param.txt` (the MPI build likewise).
 The complete example is
-[examples/tsunami_fault](../../../examples/tsunami_fault/README.md)
+[examples/tsunami_fault](../../../examples/tsunami_fault/en/README.md)
 (this setup itself). The water body and boundaries are discussed in §6.
 
 Coordinates can be given in three ways, all absorbed on the fault2disp
@@ -227,7 +227,7 @@ Land cells move with the same displacement field, so when the fault
 deformation reaches the coast and the land (flooding of subsided lowland,
 waves spreading from uplifted areas, their superposition in bays) it is
 part of the same run with the settings of §3 unchanged. The example is
-[examples/tsunami_coast](../../../examples/tsunami_coast/README.md) (a deep
+[examples/tsunami_coast](../../../examples/tsunami_coast/en/README.md) (a deep
 fault under the coast subsides the shore by 0.6 m, and the disturbance
 reaches the coast 10 minutes before the offshore fault's tsunami).
 
@@ -324,7 +324,7 @@ not needed.
    shows the discharge dropping.
 
 The complete example is
-[examples/levee_breach](../../../examples/levee_breach/README.md) (a
+[examples/levee_breach](../../../examples/levee_breach/en/README.md) (a
 straight channel with a 20 m wide, 3 m high resolved levee, with a
 comparison case giving the same schedule to a virtual wall through
 `&list_channel_breach`).
@@ -459,19 +459,19 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   motion through the library API, against a restart and together with a
   submarine slide (details in [the explanation](bedmotion_models.md) §6).
 
-- [examples/tsunami_fault](../../../examples/tsunami_fault/README.md): an
+- [examples/tsunami_fault](../../../examples/tsunami_fault/en/README.md): an
   idealised reverse fault (strike N-S, dip 15°, 60 km × 30 km, slip 5 m,
   30 s rise). Comparison of hydrostatic / instantaneous / non-hydrostatic
   + acceleration term, and setup examples of the fault2disp coordinate
   patterns (bil and GeoTIFF georeference, plane rectangular system,
   longitude/latitude).
-- [examples/tsunami_coast](../../../examples/tsunami_coast/README.md):
+- [examples/tsunami_coast](../../../examples/tsunami_coast/en/README.md):
   three segments, a deep fault under the coast (0.6 m coastal subsidence),
   a shallow offshore fault (the main tsunami, 30 s later) and a splay
   fault at the bay mouth (0.8 m uplift of the cape). The disturbance from
   the coastal deformation reaches the shore 10 minutes before the offshore
   tsunami, and the subsided plain at the bay head floods earlier.
-- [examples/levee_breach](../../../examples/levee_breach/README.md): a
+- [examples/levee_breach](../../../examples/levee_breach/en/README.md): a
   straight channel with a 20 m wide, 3 m high resolved levee. At the flood
   peak, 5 rows × 2 columns of levee cells are lowered to the floodplain
   ground over 20 minutes (the centre deepens first, then widens). With a

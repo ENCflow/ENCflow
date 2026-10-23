@@ -99,7 +99,7 @@ ENC 配置格子(独自スキーム)が主実装、STG は旧互換の比較用�
 
 - 正本は日本語(例外: LICENSE と TRADEMARKS.md は英語正本。ルート README.md は
   英語ミラーで README.ja.md が正本)。英語版は `en/` ミラー(docs/en/、
-  tutorials/<case>/en/、test/<case>/en/、examples/List_samples/en/)で、冒頭に
+  tutorials/<case>/en/、test/<case>/en/、examples/<case>/en/、List_samples/en/)で、冒頭に
   「English mirror of <正本パス>」を刻印する。既存の README.en.md は有効。
 - 翻訳のために計算本体・データ・Run.sh・reference を複製・変更しない。設定例は
   コメントだけを翻訳し、値・識別子・ファイル参照・有効状態(コメントアウト例を

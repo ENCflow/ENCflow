@@ -222,12 +222,12 @@ a failure (levees must be enabled).
   diagonal edges touching the sites open as well, and a breach 2–3 cells
   wide gives nearly the same discharge as the resolved levee (1.5 times
   for one cell, 0.85 for five; measured with 10 m cells and 1.7–1.9 m of
-  head in [examples/levee_breach](../../../examples/levee_breach/README.md)).
+  head in [examples/levee_breach](../../../examples/levee_breach/en/README.md)).
 - **When the levee is present as elevation in the DEM (a resolved levee)**
   there is no virtual wall and this breach cannot be used. Use the
   procedure of [prescribed bed motion](bedmotion.md) §5, which lowers the
   bed of the breach cells along a time history (both methods are compared
-  in [examples/levee_breach](../../../examples/levee_breach/README.md)).
+  in [examples/levee_breach](../../../examples/levee_breach/en/README.md)).
 
 **Outputs for this section**: the breach width and depth are not written. Check with the landward transect Q, the spread of `H0001...` behind the levee and the drop of transect Q downstream in the channel ([Output and monitoring](#output-and-monitoring)).
 

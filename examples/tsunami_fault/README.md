@@ -1,5 +1,7 @@
 # tsunami_fault — 断層パラメータから津波を発生させる(fn_bedmotion + utils/fault2disp)
 
+[English](en/README.md)
+
 理想化した逆断層の地盤変位を [utils/fault2disp](../../utils/fault2disp/README.md)
 (Okada 1985)で求め、[規定底面運動 fn_bedmotion](../../docs/users_guide/bedmotion.md)
 で地盤高 z を時刻歴で動かして津波を発生・伝播・遡上させる例。コード変更なし

@@ -2,16 +2,45 @@
   "version": 1,
   "_comment": "翻訳を要求しない正本のパターン(fnmatch。'*' は '/' にも一致)。訳が無くても not-required として扱い、--strict でも不合格にしない。訳が存在する組には影響しない(通常どおり照合する)。根拠は docs/multilingual.md §3 と developer.md §34.2。",
   "not_required": [
-    {"pattern": "docs/developer.md", "reason": "内部開発文書(developer.md §34.2)"},
-    {"pattern": "docs/handoff*.md", "reason": "内部開発文書(developer.md §34.2)"},
-    {"pattern": "docs/*_plan.md", "reason": "内部開発文書(developer.md §34.2)"},
-    {"pattern": "docs/*_design.md", "reason": "内部開発文書(developer.md §34.2)"},
-    {"pattern": "docs/channel_model.md", "reason": "内部開発文書(developer.md §34.2)"},
-    {"pattern": "docs/architecture.md", "reason": "開発者向け案内図。英訳は任意"},
-    {"pattern": "docs/icon/*", "reason": "アイコン制作メモ(開発者向け)"},
-    {"pattern": "examples/*/README.md", "reason": "List_samples 以外の examples は日本語のみ(developer.md §34.2)"},
-    {"pattern": "examples/*/param*.txt", "reason": "List_samples 以外の examples は日本語のみ(developer.md §34.2)"},
-    {"pattern": "examples/benchmark/*", "reason": "List_samples 以外の examples は日本語のみ(developer.md §34.2)"},
-    {"pattern": "test/*/param*.txt", "reason": "検証ケースの入力のコメント英訳は任意(multilingual.md §3)"}
+    {
+      "pattern": "docs/developer.md",
+      "reason": "内部開発文書(developer.md §34.2)"
+    },
+    {
+      "pattern": "docs/handoff*.md",
+      "reason": "内部開発文書(developer.md §34.2)"
+    },
+    {
+      "pattern": "docs/*_plan.md",
+      "reason": "内部開発文書(developer.md §34.2)"
+    },
+    {
+      "pattern": "docs/*_design.md",
+      "reason": "内部開発文書(developer.md §34.2)"
+    },
+    {
+      "pattern": "docs/channel_model.md",
+      "reason": "内部開発文書(developer.md §34.2)"
+    },
+    {
+      "pattern": "docs/architecture.md",
+      "reason": "開発者向け案内図。英訳は任意"
+    },
+    {
+      "pattern": "docs/icon/*",
+      "reason": "アイコン制作メモ(開発者向け)"
+    },
+    {
+      "pattern": "examples/*/param*.txt",
+      "reason": "例題の入力のコメント英訳は任意(multilingual.md §3)"
+    },
+    {
+      "pattern": "examples/benchmark/*/list_*.txt",
+      "reason": "ベンチマークの設定ファイルは対象外(multilingual.md §3)"
+    },
+    {
+      "pattern": "test/*/param*.txt",
+      "reason": "検証ケースの入力のコメント英訳は任意(multilingual.md §3)"
+    }
   ]
 }

@@ -1,5 +1,7 @@
 # landslide_tsunami — 地滑り・土石流の水域突入と津波(理想化ケース集)
 
+[English](en/README.md)
+
 崩壊土塊が湖(貯水池・湾)に突入して水面波を発生させる現象を、
 **動く底層 f_bedslide**(developer.md §61、docs/landslide_tsunami_plan.md)と
 土石流モデル(f_debris)の組み合わせで概算する 4 つのパターンと、そのうち

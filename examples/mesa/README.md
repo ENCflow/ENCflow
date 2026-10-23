@@ -1,5 +1,7 @@
 # examples/mesa — メサ・ビュートの形成実験(キャップロック = spl_strata)
 
+[English](en/README.md)
+
 平地(z = 0 = 侵食基準面)に高さ 20 m の台地 2 つ(半径 30 m / 12 m、縁 63°)を置き、
 上 3 m をキャップロック(倍率 0.05)、z = 8〜10 m を中間硬層(倍率 0.3)とした
 ケース(param_cap.txt)と、層理なしの対照(param_nocap.txt)。降雨 10 mm/h 全量浸透、
