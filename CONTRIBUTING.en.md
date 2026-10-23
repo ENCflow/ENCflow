@@ -1,5 +1,7 @@
 # Contributing to ENCflow
 
+[日本語版](CONTRIBUTING.md)
+
 > English mirror of CONTRIBUTING.md. The Japanese file is the master copy.
 
 Thank you for your interest in ENCflow. The current ways to help are
@@ -55,3 +57,13 @@ conventions. The verification discipline for changes (regression
 baselines, bit reproducibility) is summarized in
 [CLAUDE.md](CLAUDE.md). Local verification runs through each
 `test/<case>/Run.sh` (automatic comparison against the baselines).
+
+## Documentation and translations
+
+See the [multilingual documentation policy](docs/en/multilingual.md) for the
+layout, authoritative sources, updates and review of documents, tutorials and
+sample settings. The English LICENSE and TRADEMARKS.md are authoritative;
+Japanese is authoritative for all other documents, tutorials and sample
+settings. Translations preserve the source content without changing settings
+or verification baselines. As noted above, please report translation and
+documentation errors through Issues.

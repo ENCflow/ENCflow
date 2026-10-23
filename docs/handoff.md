@@ -449,7 +449,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      英語ミラーの未反映(geomorph の §62 既定値・bedslide・推奨値、wq の
      下水噴出節、gwflow の管路 4 行、list_geomorph.txt の土石流・bedslide、
      list_swi.txt の不在)を発見して修正した。**モジュールを足したら同じ
-     3 つの機械比較を回す**こと(下記「国際化の節目」の CI 候補)
+     3 つの機械比較を回す**こと。このうち「日英の見出し数・表の行数」と
+     「List_samples 日英のパラメータ集合」は 2026-10-23 に tools/i18n/check.py
+     (構成の WARN、コメント除去後の完全一致の ERROR)として常設した。namelist と
+     索引の突合は未スクリプト化(下記「国際化」)
 
 1. **gwflow 導入コミットの検証(直近の宿題)**
    - fn_gwflow 未指定で全ケース既存 reference とビット一致(逐次・np=1,2,4)
@@ -869,10 +872,24 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   公開後に一時ブランチを削除した。結果としてタグは軽量(v1.5.0 までと同じ)。
   §34.4 の「注釈付き」は、ローカルからタグを push できる資格情報を整えた
   上で次回から適用する。
-- 国際化の節目: docs/en/ ミラー+日英同期の CI チェック導入。チェックの
-  中身は 2026-10-01 の監査で手動実施した 3 つの機械比較(namelist と索引の
-  突合 / 日英の見出し数・表の行数 / List_samples 日英のパラメータ集合)を
-  スクリプト化すれば足りる(手順は 0b)。
+- 国際化(2026-10-23 に規約・検査・CI を設置。developer.md §34.2、docs/multilingual.md):
+  tools/i18n/check.py が日英対応の発見・確認記録(reviews.json)・設定例の一致・
+  見出し構成・刻印・リンクを検査し、CI(i18n.yml)は「記録済みの組の更新漏れ・
+  リンク切れ」だけを合格条件にする。記録済みは 9 組(規約、CONTRIBUTING、
+  tutorials 入口、test/wave・wave_river の README と入力)。**残作業**:
+  (a) 初回監査で判明した既存英訳の更新漏れ(`audit` が ERROR を出す):
+  examples/List_samples/en/ の list_enc.txt(非静水圧 &list_enc の例 22 行が未反映)、
+  list_sysparam.txt(fn_bedmotion・fn_swi・f_out_hs/fs/dmax/dmaxt/fmax の例)、
+  list_gwflow.txt(fn_gwc_sy/slot_sy/leak/outfall・gwc_nsubmax。英語側にだけ
+  gwc_leak_layer がある)、list_wq.txt(wq_rg・wq_gwc_conc・f_wq_gwc_in・wq_kd・
+  wq_in_conc・wq_in_series)、list_geomorph.txt(fix_tdec・fix_ctau_bank・wet_lw)。
+  list_bedmotion.txt は英語版が未作成。
+  (b) 表の行数が日英で違う未確認ミラー(内容の追随漏れの疑い。`audit` の WARN):
+  comparison.md、users_guide の geomorph・params_index・structure・usecases。`--git-dates` で正本の方が新しい組も同様に順次確認する。
+  (c) 既存の unreviewed 124 組は、内容を確認したものから `record` する
+  (一括登録はしない)。test/ の README 70 件は未翻訳(missing)で、順次。
+  (d) namelist と params_index(日英)の突合は未スクリプト化(2026-10-01 は手動)。
+  (e) 接尾辞方式(test/README.en.md 等 5 件)の en/ への移行は任意(規約 §2・§5)。
   コード内コメントの言語方針は海外コア開発者が現実になった時点で
   §34.2 を改定して決定(それまで日本語のまま)。
 - 残ドキュメント: install.md は 2026-08-13、tutorial.md(目次)と
