@@ -1,5 +1,7 @@
 # test/nhwave — 閉じた正方水槽の定在波(分散関係の計測)
 
+[English](en/README.md)
+
 docs/nonhydrostatic_plan.md §11 Phase 1(静水圧 ENC の数値分散の計測)と、
 Phase 4 以降(1 層 NH の分散関係の検証)の共用ケース。
 

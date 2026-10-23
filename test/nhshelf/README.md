@@ -1,5 +1,7 @@
 # test/nhshelf — 棚に乗り上げる孤立波のソリトン分裂(底面勾配項の検証)
 
+[English](en/README.md)
+
 docs/nonhydrostatic_plan.md §11 Phase 5(ソリトン分裂)・Phase 7(底面勾配項)、
 developer.md §69.5。水深 1 m の平坦部 → 1:20 の斜面(x 120〜130 m)→
 水深 0.5 m の棚(user_geoinfo `shelf_slope`)に、a/H = 0.1 の孤立波

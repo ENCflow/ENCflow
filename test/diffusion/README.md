@@ -1,5 +1,7 @@
 # test/diffusion — 運動方程式の拡散項のガウス形ジェット・ベンチマーク(解析解)
 
+[English](en/README.md)
+
 浅水流計算の拡散項(`&list_enc` の `f_diffusion_term`、
 [ユーザーガイドの拡散項の解説](../../docs/users_guide/diffusion.md))を、
 定数渦動粘性 ν の拡散方程式 ∂u/∂t = ν ∂²u/∂y² の解析解で検定します。

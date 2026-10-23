@@ -1,5 +1,7 @@
 # test/dambreak — 湿潤床のダム破壊(Stoker 解析解による移流スキームの検証)
 
+[English](en/README.md)
+
 段波(不連続)の速度と背後の状態が解析的に分かる、Stoker (1957) の湿潤床
 ダム破壊問題です。移流項の離散化の良否がそのまま段波の位置と波形に
 現れるため、ENCflow の移流スキーム(`f_advection_scheme`)の判定基準

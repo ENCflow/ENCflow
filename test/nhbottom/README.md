@@ -1,5 +1,7 @@
 # test/nhbottom — 動く底面の加速度項(f_nh_bottom。Phase 8)
 
+[English](en/README.md)
+
 1 層非静水圧(NH)補正に、動く底面の鉛直加速度 z̈_b を源項として加える
 研究オプション f_nh_bottom の検証(docs/nonhydrostatic_plan.md §16、
 developer.md §69.10)。底面の運動学条件 w_b = ∂z_b/∂t + u·∇z_b を

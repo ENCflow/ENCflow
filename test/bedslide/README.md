@@ -1,5 +1,7 @@
 # test/bedslide — 動く底層(f_bedslide): Voellmy 速度の解析値、斜面 → 湖の突入、混合体からの引き渡し
 
+[English](en/README.md)
+
 地滑り津波のための**動く底層**モジュール(`&list_geomorph` の
 `f_bedslide = 1`。水の下を走る土塊を、水面を持ち上げる慣性なしの底層
 hb として解く。docs/landslide_tsunami_plan.md、developer.md §61)の

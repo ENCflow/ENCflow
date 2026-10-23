@@ -1,5 +1,7 @@
 # test/nhwave_nh — 閉じた正方水槽の定在波(非静水圧 1 層補正の回帰テスト)
 
+[English](en/README.md)
+
 test/nhwave と同じ水槽(L = 100 m、Δx = 1 m、h0 = 8 m、x モード (4, 0)、
 kH = 1.0)に 1 層非静水圧補正(f_nonhydrostatic=1、CG)を掛ける。
 docs/nonhydrostatic_plan.md §11 Phase 4。目標周期は ω² = gHΛ/(1 + (H²/4)Λ)

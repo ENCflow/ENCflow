@@ -1,5 +1,7 @@
 # test/conduit — 管路連続体層(f_gwconduit)の解析平衡と全結合の対称性
 
+[English](en/README.md)
+
 下水道網・岩盤亀裂網・農地暗渠などのサブグリッド管路網を等価な連続体
 として表す**管路連続体層**(`&list_gwflow` の `f_gwconduit = 1`、
 [ユーザーガイドの地下水の章](../../docs/users_guide/gwflow.md#管路連続体層f_gwconduit1list_gwflow_conduit))
