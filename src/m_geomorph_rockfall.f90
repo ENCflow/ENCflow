@@ -135,6 +135,13 @@ module subroutine init_rockfall(gm, p, g, s, list)
     allocate(gm%rf%ftf(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
     call par_info("geomorph: rockfall undercut collapse on (critical undercut u_c = " // rtoa(gm%rf%uc) // " m)")
   end if
+  ! 基岩の崩落(rf_bedrock = 1): 供給側に sd <= 0 の基岩も許し、供給量制限を使わない専用の
+  ! 適用(apply_bedrock)で移す。0 = 従来(sd > 0 のセルだけが崩れる。§84.14 の規約)
+  if (list%rf_bedrock < 0 .or. list%rf_bedrock > 1) call par_stop("list_geomorph: rf_bedrock must be 0 or 1")
+  gm%rf%bedrock = (list%rf_bedrock > 0)
+  if (gm%rf%bedrock) then
+    call par_info("geomorph: rockfall of bedrock on (cells with sd <= 0 collapse too; no supply limit)")
+  end if
   ! fluvial・repose なしでも動けるように dzmax・共有スクラッチ・供給量制限係数を整える
   if (gm%dzmax <= 0.0) then
     if (list%fluv_dzmax <= 0.0) call par_stop("list_geomorph: fluv_dzmax must be > 0")
@@ -264,7 +271,7 @@ subroutine face_start(gm, g, s)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
-      if (s%sd(i,j) <= 0.0) cycle
+      if (.not. gm%rf%bedrock .and. s%sd(i,j) <= 0.0) cycle
       steep = .false.
       top = .true.
       foot = .false.
@@ -378,8 +385,9 @@ module subroutine calc_rockfall(gm, g, s, dts)
           tosea = ok .and. .not. (okc .and. okn)
           if (ok) then
             drop = abs(dzc)
-            ! 高い側(供給側)が非侵食(sd <= 0)なら動かない(§84.14 と同じ扱い)
-            if (drop > 0.0 .and. s%sd(id,jd) > 0.0) then
+            ! 高い側(供給側)が非侵食(sd <= 0)なら動かない(§84.14 と同じ扱い)。
+            ! 基岩の崩落(rf_bedrock)では基岩も供給側になる
+            if (drop > 0.0 .and. (gm%rf%bedrock .or. s%sd(id,jd) > 0.0)) then
               exc = 0.0
               lim = gm%rf%tanphi * gm%rf%dist(k)
               if (gm%rf%face) then
@@ -453,10 +461,17 @@ module subroutine calc_rockfall(gm, g, s, dts)
   gm%rf%vmove = gm%rf%vmove + vmove
   gm%rf%vsea = gm%rf%vsea + vsea
 
-  call apply_edge_flux(gm, g, s, dts)
+  if (gm%rf%bedrock) then
+    ! 基岩の崩落: 供給量制限・岩盤床クリップのない専用の適用(z・sd・ht をまとめて更新)
+    call apply_bedrock(gm, g, s, dts)
+  else
+    call apply_edge_flux(gm, g, s, dts)
+  end if
 
   ! --- 崖錐の収支: 発散と同じ式(風上の fdon を乗じたエッジ流量)で流出・流入を
-  !     分けて集計し、流出は ht から(0 でクランプ)、流入は ht へ積む ---
+  !     分けて集計し、流出は ht から(0 でクランプ)、流入は ht へ積む
+  !     (基岩の崩落では apply_bedrock が済ませている)---
+  if (.not. gm%rf%bedrock) then
   !$omp parallel do schedule(static) private(i, j, k, in, jn, qk, fd, dvi, dvo, winv)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
@@ -490,6 +505,7 @@ module subroutine calc_rockfall(gm, g, s, dts)
     end do
   end do
   !$omp end parallel do
+  end if
   call par_halo_cell(s%ht)
   if (gm%rf%face) then
     ! 支え・脚部のフラグは近傍の z を読む: apply_edge_flux が自帯で更新した z のハロを
@@ -497,6 +513,70 @@ module subroutine calc_rockfall(gm, g, s, dts)
     call par_halo_cell(s%z)
     call face_support(gm, g, s)
   end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 基岩の崩落の適用(rf_bedrock = 1。apply_edge_flux の代わり):
+!   発散 dv8 は apply_edge_flux のループ 2 と同じ式(fdon = 1 なので q*1.0 = q。
+!   供給量制限が発動しない構成では z がビット一致する = test/rockfall 基岩版の検定)。
+!   供給側は z を下げ、土層 sd と崖錐 ht は上から先に減る(0 でクランプ = 残りは基岩
+!   z − sd から出る)。受け手は z・sd・ht を同じ量だけ積む(落下物は可動 = 以後は
+!   崖錐の安息角・乾式侵食・掃流で動ける)。岩の体積は保存(かさは poroi 倍で、
+!   apply_edge_flux と同じ換算)。海セルは受け手として更新しない(系外 = vsea)。
+!   浸食で地下水容量が貯留を下回ったら超過分を地表水へ(apply_edge_flux と同じ)。
+!----------------------------------------------------------------------
+subroutine apply_bedrock(gm, g, s, dts)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: dts
+  integer :: i, j, k
+  real :: qk, dv8, dvi, dvo, winv, dz, hout, hin, cap, fx
+
+  !$omp parallel do schedule(static) private(i, j, k, qk, dv8, dvi, dvo, winv, dz, hout, hin, cap, fx)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      dv8 = 0.0
+      dvi = 0.0
+      dvo = 0.0
+      do k = 1, 8
+        qk = gm%wrk%q(ke(k), i+die(k), j+dje(k))
+        dv8 = dv8 + sign_e(k) * qk
+        if (sign_e(k) * qk > 0.0) then
+          dvo = dvo + sign_e(k) * qk
+        else if (sign_e(k) * qk < 0.0) then
+          dvi = dvi - sign_e(k) * qk
+        end if
+      end do
+      if (dvi > 0.0 .or. dvo > 0.0) then
+        winv = 1.0
+        if (chn%have_width) winv = 1.0 / chn%wfrac(i,j)
+        dz = -dv8 * dts * gm%wrk%ainv * winv * gm%poroi
+        hout = dvo * dts * gm%wrk%ainv * winv * gm%poroi
+        hin = dvi * dts * gm%wrk%ainv * winv * gm%poroi
+        s%z(i,j) = s%z(i,j) + dz
+        s%sd(i,j) = max(s%sd(i,j) - hout, 0.0) + hin
+        s%ht(i,j) = max(s%ht(i,j) - hout, 0.0) + hin
+        if (allocated(s%sf)) s%sf(i,j) = min(s%sf(i,j), s%sd(i,j))
+        if (s%gw_active) then
+          cap = s%sd(i,j) * g%sy0
+          if (s%hg(i,j) > cap) then
+            fx = s%hg(i,j) - cap
+            s%hg(i,j) = cap
+            s%h(i,j) = s%h(i,j) + fx
+          end if
+        end if
+      end if
+      ! 張り出し量 u は、岩屑が到着した(埋没)か、自身が崩落中の柱なら 0 に戻す
+      if (gm%rf%uc > 0.0) then
+        if (dvi > 0.0 .or. gm%rf%col(i,j) > 0.5) gm%rf%u(i,j) = 0.0
+      end if
+    end do
+  end do
+  !$omp end parallel do
 end subroutine
 
 

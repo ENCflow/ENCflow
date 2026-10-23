@@ -90,6 +90,11 @@ module list_geomorph
                                      ! (従来。Δx に依存)。正なら nint(r_c/Δx) セルの正方形窓内の最低点
                                      ! との落差 H_w を自由面の高さとし、崖錐の安息角より急なエッジで
                                      ! H_w > H_c の超過分(そのエッジの安息角超過を上限)を移す
+    integer :: rf_bedrock = 0        ! 基岩の崩落(0:無効, 1:有効。§48.7)。1 なら供給側(高い側)に
+                                     ! sd <= 0 の基岩も許し、共有の供給量制限(sd による頭打ち)を
+                                     ! 使わずに移す: 供給側は z を下げ(sd・崖錐は上から先に減る)、
+                                     ! 受け手は z・sd・崖錐 ht を同じ量だけ積む。溶食で裾を切られた
+                                     ! 石灰岩の壁など、土層 sd の下の基岩 z − sd が崩れる場合に使う
     integer :: f_fixation = 0        ! 定着(0:無効, 1:有効)。乾いたセルの定着度 a が
                                      ! 1 − exp(−t/T_fix) で育ち、供給側の限界掃流力を
                                      ! τ*c (1 + c_τ a) に上げる(標高・体積には触れない)。§84.6
@@ -249,6 +254,34 @@ module list_geomorph
     real :: wthr_sdstar = 0.5        ! 生成の減衰深 sd* (m)
     integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
     real :: uplift0 = -9999.0        ! 隆起速度 (mm/yr)。未指定 = 既定 1.0(§62)
+    integer :: f_dissol = 0          ! 石灰岩の溶食(化学的削剥。0:無効, 1:有効。§86)。
+                                     ! 涵養水量に比例して z を下げる(土砂は出ない)。
+                                     ! 溶ける厚さ = (c_eq/ρ_r) × 水量 × 可溶率
+    real :: dissol_ceq = -9999.0     ! 有効溶解能 (mg/L CaCO3 換算 = 水 1 m3 が溶かす岩の
+                                     ! 質量 g)。未指定 = 既定 100(§62)
+    real :: dissol_rho = 0.0         ! 岩の密度 (kg/m3)。0 = 既定 2500(§62)
+    integer :: dissol_src = 1        ! 面的溶食の水量(1: 地下水の浸透量の記録、
+                                     ! 2: 地上降雨量 s%pre = 浸透の有無によらない最大削剥、
+                                     ! 3: 浸透量 + 裸岩で発生する流出水(雨 − 浸透)の
+                                     !    dissol_fsurf 倍 = 表面流源。§86.6)
+    real :: dissol_fsurf = 0.0       ! 表面流源: 流出水の溶解能のうち、その岩面で使う割合
+                                     ! (裸岩の雨水の溶解能 / 土層下の涵養水の比)。0 = 既定 0.3
+    real :: dissol_sdsurf = 0.0      ! 表面流源が効く土層厚の上限 (m)。土層 sd がこれ未満の
+                                     ! セルを裸岩とみなし (1 − sd/上限) を掛ける。0 = 既定 0.1
+    integer :: dissol_sink = 0       ! 吸込穴(管路層の枡)流入量も溶食源に加える
+                                     ! (0:加えない, 1:加える。f_gwconduit の枡が前提)
+    real :: dissol_fsink = 1.0       ! 吸込穴流入水の溶解能の比(面的涵養水に対する。校正値)
+    real :: dissol_fres = 0.0        ! 不溶性残渣の体積率 0〜1(溶けた岩の体積 × この率が
+                                     ! 土層 sd に残る。地表は (1−率) 倍だけ下がる。0 = sd 不変)
+    real :: dissol_lat = 0.0         ! 側方溶食: 湛水セルの溶解能のうち、水面より高い隣接セル
+                                     ! (岩壁)へ配る割合 0〜1(接触幅比で配分。karst_plan §2.5)。
+                                     ! 0 = 床のみ(既定)。−1 = 濡れ面の面積比 hΣL/(hΣL + ΔxΔy) で
+                                     ! セルごとに自動(推奨。湛水が深いほど壁の分け前が増える)
+    character(len=256) :: fn_dissol = ""  ! 可溶率 0〜1 の分布ファイル(石灰岩の分布。
+                                     ! 未指定 = 全セル 1)
+    real :: dissol_dzmax = 0.0       ! 1 セル・1 更新の溶食量の上限 (m)。0 = 無効(既定)。
+                                     ! 超過分の溶解能は捨てる(飽和とみなす)。吸込穴に水が
+                                     ! 集中する正帰還が 1 豪雨の中で暴走するのを抑える安全弁
                                      ! (例: 18000〜20000。湿潤・飽和の区別は
                                      ! 一律 γt の近似)
 
@@ -321,6 +354,7 @@ subroutine list_geomorph_read(p, list)
   real :: berode_kb, berode_tausc, berode_m, repose_phi, repose_relax
   integer :: f_rockfall
   real :: rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc, rf_fface, rf_uc
+  integer :: rf_bedrock
   integer :: f_fixation
   real :: fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank
   integer :: f_suspend
@@ -371,6 +405,10 @@ subroutine list_geomorph_read(p, list)
   real :: wthr_p0, wthr_sdstar
   integer :: f_uplift
   real :: uplift0
+  integer :: f_dissol, dissol_src, dissol_sink
+  real :: dissol_ceq, dissol_rho, dissol_fsink, dissol_fres, dissol_lat, dissol_fsurf, dissol_sdsurf
+  real :: dissol_dzmax
+  character(len=256) :: fn_dissol
   integer :: f_bedslide, f_bsres, bs_nsubmax, f_bsplunge, f_bsvplunge
   character(len=256) :: fn_bsinit
   real :: bs_reltime, bs_rho, bs_mu, bs_xi, bs_vstop, bs_eps_s, bs_diagratio, bs_cfl
@@ -384,6 +422,7 @@ subroutine list_geomorph_read(p, list)
                            f_berode, berode_kb, berode_tausc, berode_m, &
                            f_repose, repose_phi, repose_relax, &
                            f_rockfall, rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc, rf_fface, rf_uc, &
+                           rf_bedrock, &
                            f_fixation, fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank, &
                            f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, &
@@ -396,6 +435,9 @@ subroutine list_geomorph_read(p, list)
                            fn_dbinit, db_reltime, db_relsat, &
                            f_slide, slide_c, slide_phi, slide_gamma, &
                            f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0, &
+                           f_dissol, dissol_ceq, dissol_rho, dissol_src, dissol_sink, &
+                           dissol_fsink, dissol_fres, dissol_lat, dissol_fsurf, dissol_sdsurf, fn_dissol, &
+                           dissol_dzmax, &
                            f_bedslide, fn_bsinit, bs_reltime, bs_rho, f_bsres, bs_mu, bs_xi, &
                            bs_vstop, bs_eps_s, bs_diagratio, bs_cfl, bs_nsubmax, bs_hplunge, bs_tstop, f_bsplunge, f_bsvplunge
 
@@ -438,6 +480,7 @@ subroutine list_geomorph_read(p, list)
   rf_rc = list%rf_rc
   rf_fface = list%rf_fface
   rf_uc = list%rf_uc
+  rf_bedrock = list%rf_bedrock
   f_fixation = list%f_fixation
   fix_tfix = list%fix_tfix
   fix_ctau = list%fix_ctau
@@ -502,6 +545,18 @@ subroutine list_geomorph_read(p, list)
   wthr_sdstar = list%wthr_sdstar
   f_uplift = list%f_uplift
   uplift0 = list%uplift0
+  f_dissol = list%f_dissol
+  dissol_ceq = list%dissol_ceq
+  dissol_rho = list%dissol_rho
+  dissol_src = list%dissol_src
+  dissol_sink = list%dissol_sink
+  dissol_fsink = list%dissol_fsink
+  dissol_fres = list%dissol_fres
+  dissol_lat = list%dissol_lat
+  dissol_fsurf = list%dissol_fsurf
+  dissol_sdsurf = list%dissol_sdsurf
+  dissol_dzmax = list%dissol_dzmax
+  fn_dissol = list%fn_dissol
   f_bedslide = list%f_bedslide
   fn_bsinit = list%fn_bsinit
   bs_reltime = list%bs_reltime
@@ -564,6 +619,7 @@ subroutine list_geomorph_read(p, list)
   list%rf_rc = rf_rc
   list%rf_fface = rf_fface
   list%rf_uc = rf_uc
+  list%rf_bedrock = rf_bedrock
   list%f_fixation = f_fixation
   list%fix_tfix = fix_tfix
   list%fix_ctau = fix_ctau
@@ -625,6 +681,18 @@ subroutine list_geomorph_read(p, list)
   list%wthr_sdstar = wthr_sdstar
   list%f_uplift = f_uplift
   list%uplift0 = uplift0
+  list%f_dissol = f_dissol
+  list%dissol_ceq = dissol_ceq
+  list%dissol_rho = dissol_rho
+  list%dissol_src = dissol_src
+  list%dissol_sink = dissol_sink
+  list%dissol_fsink = dissol_fsink
+  list%dissol_fres = dissol_fres
+  list%dissol_lat = dissol_lat
+  list%dissol_fsurf = dissol_fsurf
+  list%dissol_sdsurf = dissol_sdsurf
+  list%dissol_dzmax = dissol_dzmax
+  list%fn_dissol = fn_dissol
   list%slide_c = slide_c
   list%slide_phi = slide_phi
   list%slide_gamma = slide_gamma

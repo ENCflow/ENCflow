@@ -62,6 +62,7 @@ reference の更新(`-u`)は結果の妥当性を人間が確認してから行�
 | [swi/](swi/) | 土壌雨量指数(気象庁 3 段タンク)の解析参照解 | 土壌雨量指数 | 解析 |
 | **土砂・地形変化** | | | |
 | [creep/](creep/) | 斜面クリープ(線形拡散)のガウス丘ベンチマーク | 土砂 f_creep | 解析 |
+| [dissol/](dissol/) | 石灰岩の溶食。浸透・吸込穴(ドリーネ項)・降雨の 3 源で終了時の地盤高が解析値に一致、更新間隔の途中で save するリスタート往復 | 地形 f_dissol、管路連続体層 | ref・解析 |
 | [fluvial/](fluvial/) | 掃流砂 Exner の疎通・保存則(閉領域ダムブレイク型) | 土砂 f_fluvial | 解析 |
 | [bankface/](bankface/) | 乾いた河岸をもつ水路のダム破壊流。河岸面の掃流遮断(乾いた河岸は不変)と薄い土層での供給量制限(体積保存) | 掃流砂 | 解析 |
 | [bendsed/](bendsed/) | 90° 湾曲水路の流砂方向補正。外岸洗掘・内岸堆積の向き、left/right の鏡像対称、補正なしとの対照 | 掃流砂 fluv_slope・f_secflow | 解析 |
@@ -81,7 +82,7 @@ reference の更新(`-u`)は結果の妥当性を人間が確認してから行�
 | [splashlc/](splashlc/) | 曲率の相関長 spl_lc による谷の波長選択(2 波長擾乱の成長比の対照) | f_splash(spl_lc・spl_zbase) | 解析 |
 | [splashstrata/](splashstrata/) | 水平層理の侵食性倍率 spl_strata(3 層: キャップロック 0 / 0.5 / 1)の解析検証 | f_splash(spl_strata) | ref + 解析 |
 | [splashsat/](splashsat/) | 凹地形増幅の飽和 spl_ksat(放物線の谷、κ 一定)の解析検証 | f_splash(spl_ksat) | ref + 解析 |
-| [rockfall/](rockfall/) | 崩落と崖錐(垂直な台地の崩落: 体積保存・終端の高さ差 ≤ H_c・崖錐の収支。窓版・支え方式(柱の崩落)・張り出し版(降雨 + 乾式侵食)・海セル版) | f_rockfall | 解析 |
+| [rockfall/](rockfall/) | 崩落と崖錐(垂直な台地の崩落: 体積保存・終端の高さ差 ≤ H_c・崖錐の収支。窓版・支え方式(柱の崩落)・張り出し版(降雨 + 乾式侵食)・海セル版・基岩版 rf_bedrock) | f_rockfall | 解析 |
 | [sedinflow/](sedinflow/) | 区間流入の土砂濃度時系列の台帳検定 | 境界・土砂 | 解析 |
 | **土石流・崩壊・火山流動・雪崩** | | | |
 | [debris/](debris/) | 土石流(侵食起動型)の疎通・保存則。高橋型・江頭型 | 土石流 f_debris | 解析 |

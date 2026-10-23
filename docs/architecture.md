@@ -24,8 +24,9 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理。複数�
   │                  加算: lateral / layer2 / conduit(管路連続体層)/
   │                  pump(井戸揚水シンク)/ frost(凍土の浸透抑制))
   │    m_geomorph    土砂・地形変化(加算: creep / fluvial / suspend / wash / splash / debris /
-  │                  bedslide。debris は土石流・地滑り・火山流動の抵抗則/E-D 切替を含む。
-  │                  bedslide は z・sd の内数として動く底層 hb = 地滑り津波の移動海底源)
+  │                  bedslide / wthr・uplift / dissol。debris は土石流・地滑り・火山流動の
+  │                  抵抗則/E-D 切替を含む。bedslide は z・sd の内数として動く底層 hb =
+  │                  地滑り津波の移動海底源。dissol は石灰岩の溶食 = 土砂を出さない z 低下)
   │    m_driftwood   流木(材積のラスタ場3台帳: 立木 wst → 流動 s%hd → 堆積 s%wd。
   │                  発生・停止・再流動を担う。移流は swflow_enc の advect_scalar)
   │    m_bldgdebris  家屋破壊・瓦礫(家屋ストック wbs → 流動 s%hbd → 堆積 s%wbd。

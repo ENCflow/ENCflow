@@ -45,10 +45,15 @@
 台地の西壁が海に面する構成。海へ落ちた分は系外へ出るので、検定は (1) 陸の体積減少 =
 台帳「rockfall exported to sea cells」、(5) 海セルの z 不変、に置き換わります。
 
+基岩版(param_bed.txt、`rf_bedrock = 1`): 同じ台地を土層なし(`fn_sd` の 0 地図。
+make_init.py --sdzero)で与え、基岩の崩落で崩します。供給量制限が発動しない param.txt
+(sd0 = 20 m)と同じ z に崩れること((8) 厳密数学で 0、-Ofast では最終桁 2e-15)、
+落下物だけが sd になる(sd = 崖錐 ht。(4'))ことを検定します(`bed=save`)。
+
 ```bash
 make
-./Run.sh            # 逐次 + 検定(save/ を save_serial/ に複製。窓版・支え方式・張り出し版・海セル版も)
-./Run_MPI.sh 2      # MPI + 検定 + save/state.dat の逐次とのビット一致確認(窓版・支え方式・張り出し版・海セル版も)
+./Run.sh            # 逐次 + 検定(save/ を save_serial/ に複製。基岩版・窓版・支え方式・張り出し版・海セル版も)
+./Run_MPI.sh 2      # MPI + 検定 + save/state.dat の逐次とのビット一致確認(基岩版・窓版・支え方式・張り出し版・海セル版も)
 ./Run_MPI.sh 4
 ```
 

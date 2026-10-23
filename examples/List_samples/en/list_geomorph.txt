@@ -97,6 +97,9 @@
   !rf_rc = 8.0              ! radius (m) of the window for the free-face height. 0 = step between
                             !   neighbouring cells (dx-dependent) = default. Positive: drop to the
                             !   lowest point within the window (dx-independent; half to one cliff height)
+  !rf_bedrock = 1           ! bedrock collapse: cells with soil sd <= 0 fall too (no supply limit;
+                            !   the fallen rock goes to the receiver's sd and talus ht), e.g. limestone
+                            !   walls undercut by dissolution. 0 = default
 
   ! ---- Fixation (with f_fluvial; bars exposed at low flow get fixed and
   !      resist re-erosion) ----
@@ -365,5 +368,39 @@
   !f_uplift = 1             ! uplift
   !uplift0 = 1.0            ! uplift rate (mm/yr). Unspecified = default 1.0
                             !   (negative = subsidence)
+
+  ! ---- limestone dissolution (chemical denudation, karst. developer.md §86) ----
+  !f_dissol = 1             ! limestone dissolution (lowers z in proportion to
+                            !   the recharge; no sediment is produced)
+  !dissol_ceq = 100.0       ! effective dissolution capacity (mg/L as CaCO3 =
+                            !   g of rock dissolved by 1 m3 of water).
+                            !   Unspecified = default 100 (rain on bare rock
+                            !   50-80, under a soil cover 100-300)
+  !dissol_rho = 2500.0      ! rock density (kg/m3). 0 = default 2500
+  !dissol_src = 1           ! water of the diffuse term (1: infiltration of the
+                            !   groundwater module = fn_gwflow required,
+                            !   2: rainfall on the ground = maximum-denudation
+                            !   model without groundwater, 3: infiltration +
+                            !   runoff generated on bare rock x dissol_fsurf)
+  !dissol_fsurf = 0.3       ! surface source: share of the runoff's capacity
+                            !   spent on its own rock face. 0 = default 0.3
+  !dissol_sdsurf = 0.1      ! soil thickness below which the surface source
+                            !   applies (m). 0 = default 0.1
+  !dissol_sink = 1          ! add the inflow into the sinks (inlets of the
+                            !   conduit continuum layer) = dolines (requires
+                            !   f_gwconduit=1 with gwc_inlet / fn_gwc_inlet)
+  !dissol_fsink = 1.0       ! capacity ratio of the sink inflow (calibration)
+  !dissol_fres = 0.0        ! volume fraction of insoluble residue 0-1
+                            !   (dissolved rock x fraction stays in the soil sd)
+  !dissol_lat = -1.0        ! lateral dissolution: share 0-1 of a ponded cell's
+                            !   capacity given to the neighbouring cells above
+                            !   its water surface (rock walls). 0 = floor only,
+                            !   -1 = automatic from the wetted-area ratio
+                            !   (recommended). Funnel dolines, basal retreat
+  !fn_dissol = "sol.txt"    ! distribution of the soluble fraction 0-1
+                            !   (limestone mask). Unspecified = 1 everywhere
+  !dissol_dzmax = 0.05      ! cap on the dissolution per cell and update (m).
+                            !   0 = off. Safety valve against the runaway of
+                            !   the sink feedback (when raising morfac)
 
 /

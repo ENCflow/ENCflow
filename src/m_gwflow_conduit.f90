@@ -583,6 +583,8 @@ subroutine gwflow_conduit_calc(gwc, lat, p, g, s, it, dts)
             s%e(i,j) = s%z(i,j) + s%h(i,j)
             ! 水質連携: 流入量を記録(fxg と同じ契約。wq が消費・ゼロ戻し)
             if (allocated(s%fxci)) s%fxci(i,j) = s%fxci(i,j) + fx
+            ! 溶食(geomorph f_dissol の吸込穴項)用の流入量の積算(同じ契約。§86)
+            if (allocated(s%fxdi)) s%fxdi(i,j) = s%fxdi(i,j) + fx
           end if
         else if (hcnd > hs .and. s%hgc(i,j) > capc) then
           ! 噴出(被圧時のみ。オリフィス式。被圧分と等化量で制限)

@@ -26,6 +26,7 @@ laws, erosion/deposition laws, triggering, bed layer).
 | Debris flow / landslide | f_debris / f_slide | Water-sediment mixture; selectable exchange and resistance laws, slope stability test |
 | Moving bed layer | f_bedslide | Layer hb moves within the terrain and soil, displacing the water surface |
 | Bedrock weathering / uplift | f_wthr / f_uplift | Weathering increases sd; uplift / subsidence shifts z |
+| Limestone dissolution | f_dissol | Lowers z in proportion to the recharge (no sediment is produced); a sink-inflow term for dolines |
 
 ![Geomorphic processes, sediment pathways and state updates](../../figs/geomorph_processes_en.png)
 
@@ -804,6 +805,17 @@ retreat rate (talus-limited retreat).
 | rf_rc | 0 | Radius r_c (m) of the window over which the free-face height is measured. 0 = step between neighbouring cells (depends on dx). Positive: drop to the lowest point within the window (independent of dx; about half to one cliff height) |
 | rf_fface | -1 (off) | Supported-face mode (rule 4). >= 0 enables it (requires rf_rc > 0): dry-erosion factor of a face whose foot is covered by talus (0 = no erosion). The collapse becomes a column collapse |
 | rf_uc | 0 (off) | Critical undercut u_c (m) (rule 5; requires rf_fface >= 0 and spl_strata): a column at the top of the face falls once the bedrock of a weaker foot has been cut back by this depth since the last burial. The overhang width a cap can carry (tens of cm to a few m); keep it below dx |
+| rf_bedrock | 0 | Bedrock collapse. With 1, cells whose soil sd <= 0 (bedrock) can be sources too, and the supply limit (cap by sd) is not applied: the source loses z (soil and talus go first), the receiver gains the same amount in z, sd and talus ht. For bedrock below the soil that fails, such as limestone walls undercut by dissolution (examples/tower_karst) |
+
+**Bedrock and soil convention.** By default (rf_bedrock = 0) a cell with sd <= 0 is
+non-erodible bedrock, as for dry erosion, bed load and angle-of-repose avalanching,
+and the rock that may fall is given as a column of soil sd (examples/mesa gives the
+whole plateau sd = 100 m and sets the hardness with spl_strata). Where the bedrock
+z - sd itself changes, as with limestone dissolution `f_dissol`, set `rf_bedrock = 1`
+so that bedrock collapses too. The fallen material is added to both the receiver's sd
+and its talus ht, and can then move by the talus repose angle, dry erosion or bed
+load. Verification: the bedrock configuration of test/rockfall (param_bed.txt: a
+plateau without soil collapses to the same z as the plateau with sd = 20 m).
 
 The change per edge and update is capped by `fluv_dzmax` (at the flux stage, so
 conservation holds; give `fluv_dzmax` even without f_fluvial). The talus thickness
@@ -1073,6 +1085,84 @@ intervals, it is `(tt − t0) × morfac / (365.25 × 86400)` years. See
 
 **Outputs for this section**: soil thickness `Sd0001...` (grows by weathering) and ground `Z0001...` (rises by uplift). Read them in morphological time: time of FILENUMBER.csv × morfac is the elapsed years ([Output and monitoring](#output-and-monitoring)).
 
+## Limestone dissolution (f_dissol)
+
+Formula and typical rates: [supplement](sediment.md#limestone-dissolution-f_dissol).
+The design record is docs/karst_plan.md (developer.md §86).
+
+**Chemical denudation**: limestone dissolves in water and disappears. Unlike
+the other geomorphic processes it produces no sediment: `z` is lowered and
+`sd` is kept (the counterpart of weathering `f_wthr`). The dissolved
+thickness is proportional to the amount of water entering the rock: per
+metre of water the ground is lowered by `dissol_ceq / dissol_rho` (default
+100 mg/L ÷ 2500 kg/m³ = 4×10⁻⁵ m). With a recharge of 1 m/yr this is
+40 mm/kyr, inside the published range of karst denudation rates
+(20 to 100 mm/kyr).
+
+The water amount is one of three sources. `dissol_src = 1` (default) is the
+**infiltration** of the groundwater module (vertical exchange of the bucket
+or Green-Ampt model) and needs `fn_gwflow`. `dissol_src = 2` is the
+**rainfall on the ground** (after interception), a maximum-denudation model
+that works without groundwater (evapotranspiration is not subtracted).
+`dissol_src = 3` is **infiltration plus the runoff generated on bare rock**:
+in cells whose soil is thinner than `dissol_sdsurf`, the runoff (rain minus
+infiltration) also spends `dissol_fsurf` of its capacity on that rock face
+(dissolution of bare slopes and tower faces; water arriving from upstream
+is taken as saturated and not counted).
+
+Dolines (sinkhole depressions) are represented with `dissol_sink = 1`: the
+water that enters the inlets (sinks) of the
+[conduit continuum layer](gwflow.md#conduit-continuum-layer-f_gwconduit1-list_gwflow_conduit)
+multiplied by `dissol_fsink` is added to the dissolution of that cell. As
+the depression deepens, the ponding grows, the weir-type inflow grows and
+dissolution accelerates: the positive feedback closes with the existing
+exchange law alone. The sink distribution is given by `fn_gwc_inlet`; a
+small uniform density over the whole limestone area means "a doline may
+form anywhere".
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| dissol_ceq | 100 | Effective dissolution capacity (mg/L as CaCO3): the mass of rock (g) dissolved by 1 m³ of water. Decide it in preprocessing as the equilibrium solubility minus the concentration of the inflowing water |
+| dissol_rho | 2500 | Rock density (kg/m³) |
+| dissol_src | 1 | Water amount of the diffuse term (1: infiltration, 2: rainfall on the ground, 3: infiltration + runoff generated on bare rock × dissol_fsurf) |
+| dissol_fsurf | 0.3 | Surface source (dissol_src = 3): share of the runoff's capacity spent on its own rock face. Ratio of the capacity of rain on bare rock (50 to 80 mg/L) to that of recharge under soil (100 to 300) |
+| dissol_sdsurf | 0.1 | Soil thickness (m) below which the surface source applies; cells thinner than this count as bare rock with the factor (1 − sd/limit) |
+| dissol_sink | 0 | Sink-inflow term (1 = on; requires the inlets of f_gwconduit) |
+| dissol_fsink | 1.0 | Ratio of the dissolution capacity of the sink inflow (calibration value; surface runoff that bypasses the soil is below 1) |
+| dissol_fres | 0 | Volume fraction of insoluble residue, 0 to 1. Dissolved rock × fraction stays in the soil sd (terra rossa). 0 leaves sd untouched |
+| dissol_lat | 0 | Lateral dissolution: the share (0 to 1) of a ponded cell's dissolution capacity given to the neighbouring cells whose floor is above its water surface (rock walls), in proportion to the contact width; the rest goes to the floor. 0 = floor only. **−1 = automatic per cell from the wetted-area ratio hΣL/(hΣL + Δx²) (recommended)**. A fixed value should follow the ratio of ponding depth to cell size (about 0.8 for h = 5 m, Δx = 10 m) |
+| fn_dissol | "" | Distribution of the soluble fraction 0 to 1 (limestone mask). Unspecified = 1 in every cell |
+| dissol_dzmax | 0 | Cap on the dissolution per cell and update (m). 0 = off. The excess capacity is discarded (saturation). A safety valve against the runaway of the positive feedback at sinks within one storm, used to raise morfac (examples/karst). The number of clips is printed at the end |
+
+**Lateral dissolution** (`dissol_lat` = p > 0, or −1 for automatic) spends
+part of the ponded water's capacity on the rock walls of the neighbouring
+cells that stand above its water surface. The automatic mode splits by the
+wetted-area ratio (walls h·ΣL against the floor Δx²), so deeper ponding
+gives the walls a larger share. Wall retreat is represented by lowering the wall
+cell (the raster convention of bank erosion `f_berode`). With p = 0 a cell
+with a sink becomes a one-cell-wide deep hole (examples/karst); with p > 0
+the depressions with the largest catchments grow both wider and deeper,
+giving the first-order forms of funnel-shaped dolines, merging depressions
+(cockpits) and the basal retreat of towers facing a plain (tower karst).
+Rock-wall collapse (rock to debris) is added with rockfall and talus `f_rockfall` (examples/tower_karst).
+
+The chemistry (carbonate equilibrium, CO₂ partial pressure, temperature)
+is not solved; its result is given as `dissol_ceq`. Saturation along the
+flow path (strong at valley heads, weak downstream) is not represented
+either (a candidate for a later coupling with the dissolved species of the
+water-quality module in the form c_eq − c). Collapse dolines and cave
+geometry are out of scope. Morphological time is gained as in
+[long-term landform evolution](#long-term-landform-evolution-f_wthr--f_uplift)
+(morfac × restart chains); a doline 10 m deep needs morphological time of
+the order of 100 kyr.
+
+The minimal input is `f_dissol = 1` with `fn_gwflow` (infiltration), or
+`f_dissol = 1` with `dissol_src = 2` (rainfall). The hydrology of karst
+itself (dry valleys, internal drainage, springs) is available without
+dissolution through the inlets and outfalls of the conduit continuum layer.
+
+**Outputs for this section**: ground `Z0001...` (lowered by dissolution; nothing appears in `Hs`) and, with a residue fraction > 0, soil thickness `Sd0001...` (grows). At the end the dissolved rock volume (m³) is printed as "dissolution removed ... m3 of rock". Restart in `geomorph_dissol.dat` (the water accumulated within an update interval) ([Output and monitoring](#output-and-monitoring)).
+
 ## Output and monitoring
 
 The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
@@ -1154,6 +1244,7 @@ When the type of phenomenon is known, start from the following
 | River-mouth delta | f_fluvial (capacity feed) + f_suspend (inflow concentration) + f_bedfines + fluv_slope + f_repose (+ f_fixation) | - | - | - | sand 0.0005; mud via susp_wf = 1e-3 m/s | 30 | Sea as ordinary cells + initial water level. A mud concentration of 0.0002-0.001 separates fan and bird-foot. morfac 100-200. docs/delta_plan.md |
 | Bed change of a gravel-bed river | f_fluvial | - | - | - | 0.02-0.1 | - | Bedload dominates |
 | Long-term landform evolution | f_creep + f_wthr + f_uplift | - | - | - | - | - | creep_d 0.001-0.05 m²/yr, p0 10-100 mm/kyr, uplift 0.1-5 mm/yr. Together with morfac |
+| Karst landforms (dissolution, dolines) | f_dissol (+ dissol_sink + the inlets of f_gwconduit, dissol_lat = −1, f_rockfall) | - | - | - | - | - | c_eq 50-300 mg/L (low for rain on bare rock, high under soil), rho_r 2500-2700. Limit to limestone with fn_dissol. Rock walls phi_rock 50-70°. Together with morfac |
 | Landslide tsunami (bed layer) | f_bedslide | 0.1-0.2 | 300-1000 | - | - | - | mu and xi of the inertia-free bed layer (bs_mu/bs_xi). Calibrated separately from the mixture values |
 
 ## Tests and examples
@@ -1168,4 +1259,7 @@ Verified test cases exist per process:
 [test/sedinflow](../../../test/sedinflow/) (boundary sediment supply),
 [test/bedslide](../../../test/bedslide/) (moving bed layer: analytic
 velocity, grid-dependence detection on a 45-degree slope, plunge into a
-lake and wave generation).
+lake and wave generation),
+[test/dissol](../../../test/dissol/) (limestone dissolution: analytic
+solutions for the infiltration, sink and rainfall sources and for the
+lateral-dissolution partition, and a restart round trip).

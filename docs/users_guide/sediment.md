@@ -334,6 +334,53 @@ $`U`$(`uplift0`、既定 1 mm/yr)は造山帯の代表値の下限で、負値�
 地形時間を稼ぐ CAESAR-Lisflood 型[^coulthard13]の実行様式を想定して
 います(developer.md §32)。
 
+### 石灰岩の溶食(f_dissol)
+
+**化学的削剥。** 石灰岩が水に溶けて消える過程は、風化の対(z を下げ
+$`s_d`$ を保つ)として、岩に入る水の量に比例させます[^white84][^gabrovsek09]:
+
+```math
+\frac{dz}{dt} = -\,k_d\, f_{\rm sol}\,(q_{\rm r} + f_{\rm sink}\, q_{\rm sink}),
+\qquad k_d = \frac{c_{\rm eq}}{\rho_{\rm r}}
+```
+
+$`q_{\rm r}`$ は面的な涵養フラックス(浸透量 `dissol_src = 1`、地上降雨量
+`dissol_src = 2`、または浸透量に裸岩で発生する流出水 $`f_{\rm surf}\,
+f_b\,(P - I)`$ を加えたもの `dissol_src = 3`。$`f_b = \max(0, 1 - s_d/s_{\rm surf})`$
+は裸岩の割合)、$`q_{\rm sink}`$ は管路連続体層の吸込穴への
+流入フラックス(`dissol_sink = 1`)、$`f_{\rm sol}`$ はセル別の可溶率
+(`fn_dissol`)です。1 回の地形更新では、更新間隔に積算された水量
+$`F`$ (m) に morfac を掛けて $`w = k_d f_{\rm sol} F \cdot \texttt{morfac}`$
+を溶かし、不溶性残渣の体積率 $`f_{\rm res}`$(`dissol_fres`)だけ土層に
+残します: $`z \leftarrow z - (1 - f_{\rm res}) w`$、
+$`s_d \leftarrow s_d + f_{\rm res} w`$。局所・線形で無条件に安定です。
+
+**側方溶食**(`dissol_lat` = $`p`$)。湛水セル w の溶解能 $`W_w`$ のうち
+$`p`$ を、w の水面 $`e_w`$ より床が高い 8 近傍の陸セル n(岩壁)へ接触幅
+$`L_k`$(軸 Δx、斜め Δx·2/(2+√2))に比例して配り、残り $`1-p`$ を床へ
+配ります(壁のないセルは床に全量):
+
+```math
+\Delta z_n = -\,f_{{\rm sol},n}\, p\, W_w \frac{L_k}{\sum_{m\in{\rm walls}(w)} L_m},
+\qquad \Delta z_w = -\,f_{{\rm sol},w}(1-p)\,W_w
+```
+
+総溶解能は不変(配分)で、壁の後退は壁セルの z の低下で表します。
+$`p`$ は床と壁の溶ける比で、`dissol_lat = −1` なら濡れ面の面積比
+$`p_w = h_w \sum L / (h_w \sum L + \Delta x \Delta y)`$ でセルごとに決めます
+(推奨。深い湛水ほど壁の分け前が増える)。固定値を与えるなら湛水深と
+格子幅の比から(h = 5 m・Δx = 10 m で約 0.8)。
+
+$`c_{\rm eq}`$(`dissol_ceq`、既定 100 mg/L CaCO₃ 換算)は**有効溶解能**
+で、平衡溶解度から流入水の既存濃度を引いた「1 m³ の水が溶かす岩の質量」
+です。炭酸平衡は解かず、土壌 CO₂・温度の効果はこの 1 個に畳みます
+(裸岩の雨水 50〜80、土層下 100〜300 mg/L)。$`\rho_{\rm r}`$(`dissol_rho`、
+既定 2500 kg/m³)と合わせて $`k_d`$ = 4×10⁻⁵ m/m、涵養 1 m/yr で
+40 mm/kyr となり、カルストの化学的削剥速度の文献域 20〜100 mm/kyr
+[^gabrovsek09]に入ります。水は常に $`c_{\rm eq}`$ ぶん溶かす(未飽和
+一定率)ので、流下に伴う飽和の減衰は表しません。洞窟(管路)の成長は
+別の段階として未実装です(docs/karst_plan.md §5)。
+
 ## 8. パラメータと既定値の根拠
 
 根拠欄の分類語の意味は[既定値の根拠の読み方](../users_guide.md#既定値の根拠の読み方)を参照してください。
@@ -364,6 +411,12 @@ $`U`$(`uplift0`、既定 1 mm/yr)は造山帯の代表値の下限で、負値�
 | spl_strata | なし | 水平層理の(下端標高, 侵食性倍率)表 | **与件** 層序の硬軟差。倍率 0 = キャップロック |
 | wthr_p0 / wthr_sdstar | 50 mm/kyr / 0.5 m | 土層生成速度 / 減衰深(§7) | **文献値** Heimsath 型の文献域の中央[^heimsath97] |
 | uplift0 | 1 mm/yr | 隆起速度 | **慣用値** 造山帯の代表値の下限 |
+| dissol_ceq / dissol_rho | 100 mg/L / 2500 kg/m³ | 有効溶解能 / 岩の密度(§7) | **文献値** 石灰岩地域の涵養水の CaCO₃ 濃度の代表[^white84]と石灰岩の密度。k_d = 4e-5 m/m → 涵養 1 m/yr で 40 mm/kyr(文献域 20〜100)[^gabrovsek09] |
+| dissol_src / dissol_sink | 1 / 0 | 水量の源 / 吸込穴項 | **方式** 1: 浸透量、2: 地上降雨量、3: 浸透量 + 裸岩の流出水。吸込穴項は管路連続体層の枡流入 |
+| dissol_fsurf / dissol_sdsurf | 0.3 / 0.1 m | 表面流源の流出水の溶解能の比 / 裸岩とみなす土層厚 | **文献値** 裸岩の雨水 50〜80 mg/L と土層下の涵養水 100〜300 の比 / **数値設定** |
+| dissol_dzmax | 0 | 1 セル・1 更新の溶食量の上限 | **数値設定** 0 = 無効。fluv_dzmax と同型の安全弁(超過は飽和として捨てる) |
+| dissol_fsink / dissol_fres | 1.0 / 0 | 吸込穴流入水の溶解能の比 / 残渣率 | **経験値** 校正前提 / **与件** 0 = 残渣なし |
+| dissol_lat | 0 | 側方溶食の配分割合 p | **方式** 0 = 床のみ、−1 = 濡れ面の面積比で自動(推奨)。固定値は湛水深/格子幅の比から |
 
 **既定値を見直すときの手がかり**
 
@@ -409,3 +462,5 @@ $`U`$(`uplift0`、既定 1 mm/yr)は造山帯の代表値の下限で、負値�
 [^perron09]: Perron, J. T., Kirchner, J. W. and Dietrich, W. E. (2009): Formation of evenly spaced ridges and valleys. *Nature*, 460, 502–505.
 [^heimsath97]: Heimsath, A. M., Dietrich, W. E., Nishiizumi, K. and Finkel, R. C. (1997): The soil production function and landscape equilibrium. *Nature*, 388, 358–361.
 [^coulthard13]: Coulthard, T. J., Neal, J. C., Bates, P. D., Ramirez, J., de Almeida, G. A. M. and Hancock, G. R. (2013): Integrating the LISFLOOD-FP 2D hydrodynamic model with the CAESAR model: implications for modelling landscape evolution. *Earth Surf. Process. Landforms*, 38, 1897–1906.
+[^white84]: White, W. B. (1984): Rate processes: chemical kinetics and karst landform development. In: La Fleur, R. G. (ed.) *Groundwater as a Geomorphic Agent*, Allen & Unwin, 227–248.(最大削剥速度 D = (P − E) c_eq/ρ)
+[^gabrovsek09]: Gabrovšek, F. (2009): On concepts and methods for the estimation of dissolutional denudation rates in karst areas. *Geomorphology*, 106, 9–14.

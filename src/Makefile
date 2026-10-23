@@ -22,6 +22,7 @@ LIBOBJS	= m_main.o m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o \
 	  m_geomorph_fixation.o \
 	  m_geomorph_rockfall.o \
 	  m_geomorph_fines.o \
+	  m_geomorph_dissol.o \
 	  m_geomorph_wave.o \
 	  m_sedform.o \
 	  m_gwflow.o m_gwflow_bucket.o m_gwflow_greenampt.o \
@@ -114,6 +115,7 @@ m_geomorph_bank.o: m_geomorph.o m_swflow_enc.o m_util.o $(PAR_OBJ)
 m_geomorph_fixation.o: m_geomorph.o m_sysdep_util.o m_util.o $(PAR_OBJ) m_restart.o
 m_geomorph_rockfall.o: m_geomorph.o m_swflow_enc.o m_sysdep_util.o m_util.o $(PAR_OBJ) m_restart.o
 m_geomorph_fines.o: m_geomorph.o m_sysdep_util.o m_util.o $(PAR_OBJ) m_restart.o
+m_geomorph_dissol.o: m_geomorph.o m_sysdep_util.o m_util.o m_fileio.o $(PAR_OBJ) m_restart.o
 m_geomorph_wave.o: m_geomorph.o m_swflow_enc.o m_util.o $(PAR_OBJ)
 list_geomorph.o: m_sysparam.o $(PAR_OBJ)
 m_gwflow.o: m_sysparam.o list_gwflow.o m_state.o m_geoinfo.o m_gwflow_bucket.o \

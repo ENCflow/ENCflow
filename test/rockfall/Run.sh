@@ -16,6 +16,12 @@ echo ""
 rc=0
 python3 "$sdir/Check_rockfall.py" save || rc=1
 rm -rf save_serial && cp -r save save_serial
+# 基岩版(rf_bedrock = 1。土層 0。z は param.txt とビット一致)
+python3 "$sdir/make_init.py" --sdzero
+./encflow param_bed.txt | tee Screen_bed.log || exit 1
+echo ""
+python3 "$sdir/Check_rockfall.py" save_bed result_bed bed=save || rc=1
+rm -rf save_bed_serial && cp -r save_bed save_bed_serial
 # 窓版(rf_rc = 3 m)
 ./encflow param_rc.txt | tee Screen_rc.log || exit 1
 echo ""

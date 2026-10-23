@@ -65,6 +65,7 @@ analytical-solution or conservation check by Check_*.py.
 | [swi/](swi/) | Analytical reference of the Soil Water Index (JMA three-tank model) | Soil Water Index | analytic |
 | **Sediment and landform change** | | | |
 | [creep/](creep/) | Gaussian-hill benchmark of hillslope creep (linear diffusion) | Sediment f_creep | analytic |
+| [dissol/](dissol/) | Limestone dissolution. The final ground elevation matches the analytic value for the three water sources (infiltration, sink inflow = doline term, rainfall); restart round trip with a save inside an update interval | Landform f_dissol, conduit continuum layer | ref, analytic |
 | [fluvial/](fluvial/) | Bedload Exner equation: smoke test and conservation (closed-domain dam break) | Sediment f_fluvial | analytic |
 | [bankface/](bankface/) | Dam-break flow in a channel with dry banks. Bed-load blocking on bank faces (dry banks stay unchanged) and the supply limiter on a thin soil layer (volume conservation) | bed load | analytic |
 | [bendsed/](bendsed/) | Bed-load direction correction in a 90° bend. Outer-bank scour and inner-bank deposition, left/right mirror symmetry, contrast with no correction | bed load fluv_slope, f_secflow | analytic |
@@ -84,7 +85,7 @@ analytical-solution or conservation check by Check_*.py.
 | [splashlc/](splashlc/) | Valley wavelength selection by the curvature correlation length spl_lc (growth of a two-wavelength perturbation) | f_splash (spl_lc, spl_zbase) | analytic |
 | [splashstrata/](splashstrata/) | Analytic check of the erodibility factors of horizontal strata spl_strata (3 layers: cap rock 0 / 0.5 / 1) | f_splash (spl_strata) | ref + analytic |
 | [splashsat/](splashsat/) | Analytic check of the saturation of the hollow amplification spl_ksat (parabolic trough, constant curvature) | f_splash (spl_ksat) | ref + analytic |
-| [rockfall/](rockfall/) | Rockfall and talus (collapse of a vertical plateau: conservation, final height differences <= H_c, talus budget) | f_rockfall | analytic |
+| [rockfall/](rockfall/) | Rockfall and talus (collapse of a vertical plateau: conservation, final height differences <= H_c, talus budget; windowed, supported-face, undercut, sea-cell and bedrock rf_bedrock configurations) | f_rockfall | analytic |
 | [sedinflow/](sedinflow/) | Ledger check of the sediment-concentration time series of a reach inflow | Boundaries, sediment | analytic |
 | **Debris flow, failure, volcanic flows, avalanches** | | | |
 | [debris/](debris/) | Debris flow (erosion-triggered): smoke test and conservation. Takahashi and Egashira types | Debris flow f_debris | analytic |

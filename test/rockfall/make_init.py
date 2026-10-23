@@ -5,6 +5,8 @@
 #              落下分が崖錐(安息角 PHI)として裾に広がる
 #   --sea: 西側(x < XSEA)を海セル(sw = 1、z = 0)にし、台地の西壁が海に面する構成
 #          (zinit_sea.txt / sw_sea.txt)。海へ落ちた分は系外へ出る(台帳 vsea)
+#   --sdzero: 土層厚 0 の地図 sd_zero.txt(基岩版 rf_bedrock = 1。一様値 sd0 = 0 は
+#          list_geoinfo が受け付けないのでファイルで与える)
 import sys
 
 NX, NY, DX = 41, 41, 1.0
@@ -23,7 +25,11 @@ def sea_of(i, j):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "--sea":
+    if len(sys.argv) > 1 and sys.argv[1] == "--sdzero":
+        with open("sd_zero.txt", "w") as f:
+            for j in range(1, NY + 1):
+                f.write(" ".join("0.0" for i in range(1, NX + 1)) + "\n")
+    elif len(sys.argv) > 1 and sys.argv[1] == "--sea":
         with open("zinit_sea.txt", "w") as f:
             for j in range(1, NY + 1):
                 f.write(" ".join("%.6f" % (0.0 if sea_of(i, j) else z_of(i, j)) for i in range(1, NX + 1)) + "\n")

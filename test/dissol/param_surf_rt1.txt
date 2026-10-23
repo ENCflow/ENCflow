@@ -1,0 +1,86 @@
+!======================================================================
+! dissol: 構成 F のリスタート分割の前半(0 → 1830 s。更新間隔 60 s の途中で保存。
+!   表面流源の降雨積算 frn が geomorph_dissol.dat で保存・復元されることの検定)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! 格子システム(0:ENC)
+  dt = 1.0                  ! 時間刻み (s)
+  t0 = 0                    ! 計算開始時刻 (s)
+  tt = 1830                 ! 計算終了時刻 (s)。更新間隔の途中で保存
+  dt_disp = 600             ! 画面表示時間刻み (s)
+  dt_file = 3600            ! ファイル出力時間刻み (s)
+  dt_recrd = 3600           ! プローブ出力時間刻み (s)
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_gwflow = '-'
+  fn_precip = '-'
+  fn_geomorph = '-'
+  dir_data = 'data_dissol'
+  dir_result = 'result_surf_rt1'
+  dir_save = 'save_surf_rt'
+  f_state_save = 1
+  f_state_restore = 0
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_check_cfl = 0
+  f_output_mode = 3         ! text + bil(解析検証は bil の全精度を読む)
+  f_out_z = 1               ! 地盤高の出力(解析検証は Z9998 / Sd9998 を読む)
+  f_out_hg = 1
+/
+
+&list_enc
+  f_adaptive_runge = 1
+/
+
+&list_initial
+  f_htype = 0               ! 初期水深タイプ (0: 固定値)
+  h0 = 0.0                  ! 水なし(雨で湛水する)
+/
+
+&list_geoinfo
+  lx = 42.0
+  ly = 42.0
+  nx = 21
+  ny = 21
+  f_ztype = 0     ! 地盤高タイプ (0:固定値)
+  f_rntype = 0    ! 粗度係数タイプ (0:固定値)
+  z0 = 0.0        ! 地盤高固定値 (m)
+  rn0 = 0.05      ! 粗度係数固定値
+  sd0 = 0.001     ! 土層厚 (m)。裸岩(< dissol_sdsurf = 0.1 → fb = 0.99)
+/
+
+&list_bound
+/
+
+!======================================================================
+! 地下水設定(バケツ: 一定浸透能 36 mm/h = 1e-5 m/s、容量 0.05 m)
+!======================================================================
+&list_gwflow
+  f_gwvertical = 1          ! バケツ
+  f_gwlateral = 0
+  dt_gwflow = 0             ! 毎ステップ更新
+/
+&list_gwflow_bucket
+  gw_infil_mmh = 10.0       ! 浸透 10 mm/h(雨 30 mm/h の 1/3)
+  gw_capacity = 10.0
+/
+
+!======================================================================
+! 地形変化設定(溶食のみ)
+!======================================================================
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 30      ! 一様降雨 30 mm/h を 1 時間
+  prval(1:2,2) = 9999, 30
+/
+
+&list_geomorph
+  dt_geomorph = 60.0        ! 更新間隔 (s) = 60 ステップ(積算の検証)
+  morfac = 1000.0           ! 加速係数
+  f_dissol = 1              ! 石灰岩の溶食
+  dissol_ceq = 100.0        ! 有効溶解能 (mg/L CaCO3)
+  dissol_rho = 2500.0       ! 岩の密度 (kg/m3)
+  dissol_src = 3            ! 浸透量 + 裸岩の流出水 × fsurf(表面流源)
+  dissol_fsurf = 0.3        ! 流出水の溶解能のうち岩面で使う割合
+  dissol_sdsurf = 0.1       ! 裸岩とみなす土層厚の上限 (m)
+/

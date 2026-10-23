@@ -78,6 +78,15 @@ examples/badland_storm/z_*.txt
 examples/badland_storm/result_*
 examples/badland_storm/sw_*.txt
 examples/badland_round/z.txt
+examples/karst/z.txt
+examples/karst/sol.txt
+examples/karst/Screen*.log
+examples/karst/analysis*.txt
+examples/tower_karst/z.txt
+examples/tower_karst/sd.txt
+examples/tower_karst/ksv.txt
+examples/tower_karst/Screen*.log
+examples/tower_karst/analysis*.txt
 examples/badland_round/analysis*.txt
 examples/mesa/z.txt
 examples/mesa/analysis*.txt
@@ -143,3 +152,4 @@ test/tracer/z_*.txt
 test/tracer/inflow_b.txt
 test/rockfall/zinit_sea.txt
 test/rockfall/sw_sea.txt
+test/rockfall/sd_zero.txt
