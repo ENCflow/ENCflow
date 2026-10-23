@@ -40,8 +40,8 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "2b2582a4d10a55ec2731c778df76cb615cdb096bde97a915b3ca1c9d0e6af2b4",
-      "target_sha256": "b6f1aefe324e6b5d40e2b2d52baa7745704ce1b6463fd9d424665e825326bda0",
+      "source_sha256": "f39068f530eceb3d3c394719a2a698b61b0bc0d7eff1e1e187b8be6ca53105d9",
+      "target_sha256": "01e9e481ad2ec5ea3dbe041ada49239570a73dc8b14e399c31b1e8e6af622789",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"
