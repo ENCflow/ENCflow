@@ -879,12 +879,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   tutorials 入口、test/wave・wave_river の README と入力)。**残作業**:
   (a) 初回監査で判明した既存英訳 List_samples の更新漏れ(list_enc の非静水圧 22 行、
   list_sysparam・list_gwflow・list_wq・list_geomorph の例、list_bedmotion の英語版
-  未作成)は同日に解消した(`audit` の ERROR なし)。ただし 6 件とも英語版全文の
-  内容確認は未実施で unreviewed のまま(差分の追記のみ確認)。
+  未作成)は同日に解消し、6 件とも英語版全文を正本と突き合わせて record 済み
+  (method=assistant。人間の確認ではない)。
   (b) 表の行数が日英で違う未確認ミラー(内容の追随漏れの疑い。`audit` の WARN):
   comparison.md、users_guide の geomorph・params_index・structure・usecases。
   `--git-dates` で正本の方が新しい組も同様に順次確認する。
-  (c) 既存の unreviewed 125 組は、内容を確認したものから `record` する
+  (c) 既存の unreviewed 119 組は、内容を確認したものから `record` する
   (一括登録はしない)。test/ の README 70 件は未翻訳(missing)で、順次。
   (d) namelist と params_index(日英)の突合は未スクリプト化(2026-10-01 は手動)。
   (e) 接尾辞方式(test/README.en.md 等 5 件)の en/ への移行は任意(規約 §2・§5)。
