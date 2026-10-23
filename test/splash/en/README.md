@@ -90,4 +90,4 @@ the transverse direction (row-to-row deviation 0.0).
 
 - [docs/users_guide/geomorph.md](../../../docs/en/users_guide/geomorph.md) — `f_splash`, `spl_*`
 - [docs/splash_plan.md](../../../docs/splash_plan.md) (in Japanese) — design and the issues of Phase 2 onward
-- developer.md §48 (implementation, verification, Shiramama contrast) (in Japanese)
+- developer.md §48 (implementation, verification, Shiromama contrast) (in Japanese)

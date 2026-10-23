@@ -885,9 +885,18 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   comparison.md、users_guide の geomorph・params_index・structure・usecases。
   `--git-dates` で正本の方が新しい組も同様に順次確認する。
   (c) examples の README 19 件は 2026-10-23 に §34.2 を改定して対象化し、英訳・全文の
-  内容確認・record 済み(method=assistant)。残る unreviewed 119 組は、内容を確認した
-  ものから `record` する(一括登録はしない)。test/ の README 67 件は未翻訳(missing)で、
-  順次。
+  内容確認・record 済み(method=assistant)。test/ の README 71 件(wave・wave_river を
+  除く全ケース + chichibu の data_chichibu*/README 3 件 + nhwave/Dispersion_result.md)も
+  同日に英訳し、全文を正本と突き合わせて record 済み(method=assistant)。残る
+  unreviewed 119 組(docs/en ほか)は、内容を確認したものから `record` する(一括登録は
+  しない)。英訳中に見つかった**正本側の疑義**(未修正。人間の判断待ち): 既定値の記述が
+  古い(test/chichibu と test/bendloss の「f_opening_dynamic = 1 既定」。2026-10-18 に
+  2 が既定)、表セル内の未エスケープ `|`(kdpart・lava・slide・volcano・debris・bedslide・
+  berode・bankface・wash・rockfall 等の `a|b` 表記と max|...| 式。GitHub 表示で列が
+  ずれる)、bendloss の σ 表の後に孤立した表 2 行、berode の kb1 河岸損失(所見 0.206 m·cell
+  と崩落節の 0.367 m³·cell)、nhbottom の素朴形 +3.5 % と実装 +3.9 % の読み分け、
+  avalanche の成長 2.78 倍と本文 3.8 倍、dissol 冒頭の「3 構成」(現在 A〜G + 往復)。
+  英語版は正本に従って訳してある(訳側で修正しない)。
   (d) namelist と params_index(日英)の突合は未スクリプト化(2026-10-01 は手動)。
   (e) 接尾辞方式(test/README.en.md 等 5 件)の en/ への移行は任意(規約 §2・§5)。
   コード内コメントの言語方針は海外コア開発者が現実になった時点で
