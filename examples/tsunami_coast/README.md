@@ -1,5 +1,7 @@
 # tsunami_coast — 沿岸の沈降・隆起と沖の断層津波の時間差(fn_bedmotion)
 
+[English](en/README.md)
+
 断層による地盤変動は沖の海底だけでなく海岸と陸にも及ぶ。東北地方太平洋沖地震
 では沿岸が 0.5〜1 m 沈降し、関東地震では相模湾沿岸が 1〜2 m 隆起した。
 [fn_bedmotion](../../docs/users_guide/bedmotion.md) は陸・海を区別せずに
