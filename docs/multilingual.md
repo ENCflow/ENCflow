@@ -87,8 +87,9 @@ utils/<tool>/README.md                → utils/<tool>/en/README.md
 - `test/` のケース説明(README)は順次すべてを対象とする。パラメータのコメント
   英訳は、理解に役立つものから任意で整備する。
 - `examples/List_samples/` は注釈自体がリファレンスなので全件を対象にする。
-  **List_samples 以外の examples(現象別例題・benchmark)は日本語のみ**(§34.2。
-  解説の役割は users_guide・tutorials が担う)。
+- `examples/<case>/` の README(現象別例題)も全件を対象にする(2026-10-23 に
+  §34.2 を改定)。param・図化スクリプト・図は共有し、コメント英訳は任意。
+  benchmark の list_*.txt は対象外。
 
 ### 表示用資産
 

@@ -103,9 +103,11 @@ exists).
   them. English comments for their parameter files are optional, starting
   with those that aid understanding.
 - All of `examples/List_samples/` is in scope, because the comments
-  themselves are the reference. **Examples other than List_samples
-  (phenomenon-specific examples and benchmark) are Japanese only** (§34.2;
-  the users_guide and tutorials carry the explanatory role).
+  themselves are the reference.
+- The README of every `examples/<case>/` (phenomenon-specific example) is in
+  scope as well (§34.2 amended on 2026-10-23). Parameter files, plotting
+  scripts and figures are shared; English comments are optional. The
+  `list_*.txt` files of benchmark are out of scope.
 
 ### Presentation assets
 

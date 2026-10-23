@@ -13,8 +13,8 @@
     {
       "source": "docs/multilingual.md",
       "target": "docs/en/multilingual.md",
-      "source_sha256": "db6ef00cb0a65423fd7c9a6053be46143ff609bfd6fc8da29d8df3bebc2370d9",
-      "target_sha256": "a292ebbd1af88784710d6d5676254c998483097a2c3d2ed0de3e2be70d93999c",
+      "source_sha256": "622fe44505d9cca7eda80f7e7f498b5c1d58bf08c420870c948b4081100438a3",
+      "target_sha256": "466217e829cbdb50d77f89c608fea914fdee1d9cf6408df6ff4add8d42bf58fe",
       "reviewer": "Claude (Claude Code session; content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"
