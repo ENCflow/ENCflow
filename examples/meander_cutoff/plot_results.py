@@ -25,6 +25,9 @@ def rd(name, k):
 tm = {int(l.split(",")[0]): float(l.split(",")[2])
       for l in open(R + "/FILENUMBER.csv") if not l.startswith("#") and int(l.split(",")[0]) < 9000}
 ks = sorted(tm)
+# 経過図のパネル数(第 2 引数。省略時は全出力。長時間の計算では 6 程度に間引く)
+NSEQ = int(sys.argv[2]) if len(sys.argv) > 2 else len(ks)
+kseq = [ks[int(round(i * (len(ks) - 1) / max(NSEQ - 1, 1)))] for i in range(min(NSEQ, len(ks)))] if NSEQ < len(ks) else ks
 # 初期の河道のうち「ループ」(y > 70 m の部分)と、頸部ゾーン(初期に乾いていて
 # 低い河岸 = z − 近傍河床の最大 < 1.2 m)を領域として定義する
 loop = (h0 > 0) & (y[:, None] > 70.0)
@@ -59,8 +62,8 @@ def Q(t):
 print("| t (min) | 地形時間 (h) | Q (m³/s) | ループで流れているセル(\\|V\\| > 0.3 m/s) | 頸部ゾーンで流れているセル | 初期河道の外で湿潤 | 最深の洗掘 (m) |")
 print("|---|---|---|---|---|---|---|")
 ext = [0, NX * DX, 0, NY * DX]
-fig, axes = plt.subplots(len(ks), 2, figsize=(14, 2.6 * len(ks)))
-for n, k in enumerate(ks):
+fig, axes = plt.subplots(len(kseq), 2, figsize=(14, 2.6 * len(kseq)))
+for n, k in enumerate(kseq):
     h = rd("H", k); vv = rd("V", k); z = rd("Z", k); dz = z - z0
     flowing = (h > 0.05) & (vv > 0.3)
     print("| %.0f | %.0f | %.0f | %d | %d | %d | %.2f |" % (tm[k] / 60, tm[k] * MORFAC / 3600, Q(tm[k]), (flowing & loop).sum(), (flowing & neck).sum(), ((h > 0.05) & (h0 == 0)).sum(), dz.min()))

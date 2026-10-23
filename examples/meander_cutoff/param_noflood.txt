@@ -14,7 +14,7 @@
   f_govequation = 0
   dt = 0.1
   t0 = 0
-  tt = 10800
+  tt = 64800
   dt_disp = 600
   dt_file = 1800
   dt_recrd = 1800
