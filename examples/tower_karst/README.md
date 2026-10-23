@@ -1,5 +1,7 @@
 # examples/tower_karst — 平野に残る裸岩の塔(タワーカルスト)の形成実験
 
+[English](en/README.md)
+
 湿潤熱帯のカルストで、石灰岩の塔(fenglin)が平野の上に残る過程を、
 **溶食 f_dissol**(浸透量に比例する面的溶食+湛水に接する岩壁の側方溶食)
 と**崩落と崖錐 f_rockfall**(基岩モード `rf_bedrock = 1`)の重ね合わせで見る

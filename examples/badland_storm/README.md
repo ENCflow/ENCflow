@@ -1,5 +1,7 @@
 # examples/badland_storm — 豪雨時だけ飽和して表面流が現れる崖の地形発達
 
+[English](en/README.md)
+
 examples/badland の主ケース(台地 30 m・幅 60 m、56° の崖が海(z ≤ 0)に落ちる。
 乾式斜面侵食 f_splash、相関長 spl_lc = 2 m、侵食基準面 = 海面、クリープなし)
 を基に、**浸透能を下げて豪雨時だけ表面流が現れる**降雨を与え、湿潤時の侵食
