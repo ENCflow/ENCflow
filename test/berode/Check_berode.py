@@ -103,16 +103,20 @@ ok = ok and g5
 
 # (6)〜(8) 崩落土塊(f_rockfall の河岸モード)
 import re
-# 台帳は Screen.log の各実行(「reading list_sysparam in param_<tag>.txt」で区切る)の
-# 最初の行から取る(MPI ではランクごとに同じ全域値を印字するので重複を 1 つにする)
-vbank, vrock, cur = {}, {}, None
+# 台帳は Screen.log の各実行(「reading list_sysparam in param_<tag>.txt」で区切る)から
+# 取る。MPI ではランク局所の値をランクごとに印字するので、同じ実行の行を合算する
+# (全ランクが同じ値なら 1 つ = 全域値か単一ランク)
+lb, lr, cur = {}, {}, None
 for line in open("Screen.log", encoding="utf-8", errors="replace"):
     m = re.search(r"reading list_sysparam in param_(\w+)\.txt", line)
     if m: cur = m.group(1); continue
     m = re.search(r"bank erosion moved\s+([0-9.Ee+-]+)\s*m3", line)
-    if m and cur and cur not in vbank: vbank[cur] = float(m.group(1))
+    if m and cur: lb.setdefault(cur, []).append(float(m.group(1)))
     m = re.search(r"rockfall moved\s+([0-9.Ee+-]+)\s*m3", line)
-    if m and cur and cur not in vrock: vrock[cur] = float(m.group(1))
+    if m and cur: lr.setdefault(cur, []).append(float(m.group(1)))
+def total(v): return v[0] if len(set(v)) == 1 else sum(v)
+vbank = {k: total(v) for k, v in lb.items()}
+vrock = {k: total(v) for k, v in lr.items()}
 for tag in ("slump", "slump0"):
     dz, ident = load(tag)
     sum_dz = sum(sum(r) for r in dz)

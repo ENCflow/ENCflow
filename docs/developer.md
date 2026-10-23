@@ -13137,9 +13137,11 @@ rf_bedrock = 1 で重ねる(§48.7 末尾。独自の岩盤版は 2026-10-22 に
   崖錐 ht ≥ 0 で脚部(水路の行)にだけ積もる、遮蔽ありの側岸侵食の台帳 0.002 m³ =
   遮蔽なし 0.299 m³ の 0.007 倍、終端の崖錐 18.8 m³ < 崩落の台帳 30.6 m³(掃流砂が
   12 m³ 運び去った)。
-- MPI: test/berode の 6 構成(slump・slump0 を含む)は np = 2 で state.dat と
-  geomorph_rockfall.dat が逐次とバイト一致(np = 4 と test/rockfall np = 2 は実行中。
-  結果は次のコミットで追記)。
+- MPI(現行ソースから再ビルドした MPI 版): test/berode の 6 構成(slump・slump0 を
+  含む)は np = 2, 4 で state.dat と geomorph_rockfall.dat が逐次とバイト一致、
+  test/rockfall の 6 構成は np = 2 で逐次と一致(無効時の不変)。検定 (7)(8) の
+  台帳(bank erosion moved / rockfall moved)はランク局所の値がランクごとに印字
+  されるので、Check_berode.py は同じ実行の行を合算して読む。
 
 **例題**(examples/meander param_cohesive_slump.txt = 粘着性 + rf_bank、H_c = 1.5 m、
 h_cover = 0.2 m): 淵の洗掘で河岸面が H_c を超えると崩れ(崩落 1,450 m³)、土塊の
