@@ -915,6 +915,12 @@ subroutine m_swflow_enc_init(p, g, b, s)
     call par_info("swflow: dynamic opening reassignment enabled (f_opening_dynamic=" &
                   //itoa(opt%f_opening_dynamic)//")")
   end if
+  ! f_channel_advection = 0 は堤防有効時のみ対応。壁なし幅モードで働かせると
+  ! 発散する(§18。2026-10-22 試験)ので、黙って無視せず初期化で停止する
+  if (opt%f_channel_advection == 0 .and. .not. chn%have_bank) then
+    call par_stop("list_channel: f_channel_advection=0 requires a levee (fn_bank / bank0); " // &
+                  "it is not supported in the wall-less width mode (diverges) - remove it or set 1")
+  end if
   chn%adv_drop_rw = chn%have_bank .and. opt%f_channel_advection == 0
 
   ! システムパラメータから継承するENCパラメータをセットする
