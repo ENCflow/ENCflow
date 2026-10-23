@@ -38,9 +38,22 @@ for dj in range(-r, r + 1):
 neck = (h0 == 0) & (mx > -1e8) & (z0 - mx < 1.2)
 
 
+# 流入ハイドログラフは結果ディレクトリに対応する設定ファイル(result → param.txt、
+# result_<名> → param_<名>.txt。無ければ param.txt)の inflow_val から読む(区分一定)
+import re
+_pf = "param%s.txt" % SFX
+if not os.path.exists(_pf):
+    _pf = "wrk_param%s.txt" % SFX if os.path.exists("wrk_param%s.txt" % SFX) else "param.txt"
+_hyd = sorted((float(m.group(1)), float(m.group(2))) for m in
+              (re.match(r"\s*inflow_val\(1:2,\d+,1\)\s*=\s*([0-9.]+),\s*([0-9.]+)", l) for l in open(_pf)) if m)
+
+
 def Q(t):
     tmin = t / 60.0
-    return 40.0 if 40.0 <= tmin <= 100.0 else 15.0
+    q = _hyd[0][1]
+    for t0, q0 in _hyd:
+        if tmin >= t0: q = q0
+    return q
 
 
 print("| t (min) | 地形時間 (h) | Q (m³/s) | ループで流れているセル(\\|V\\| > 0.3 m/s) | 頸部ゾーンで流れているセル | 初期河道の外で湿潤 | 最深の洗掘 (m) |")
