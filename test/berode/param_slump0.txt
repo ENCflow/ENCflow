@@ -1,0 +1,70 @@
+!======================================================================
+! berode: 側岸侵食 + 崩落土塊(f_rockfall の河岸モード rf_bank)の検定(developer.md §84.17)
+!   kb1 と同じ流れ・河岸で、河岸面(2 m)が限界高さ H_c = 1.5 m を超えて崩落し、崖錐が脚部を覆う。
+!   berode_hcover = 0.0(遮蔽なし)
+!   test/bankface と同じ地形(幅 10 セルの直線水路、両岸 +2 m の乾いた河岸、
+!   閉領域のダム破壊流)に側岸侵食を加える。水路に接する河岸セル(2 列 × 60)
+!   だけが削られ、削った土砂は脚部に移る(保存)。K_b を 2 倍にした
+!   param_kb2.txt との損失体積の比が 2 に近いこと(侵食則の線形性)を検定する。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.05
+  t0 = 0
+  tt = 60
+  dt_disp = 10
+  dt_file = 60
+  dt_recrd = 60
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_result = 'result_slump0'
+  dir_save = 'save_slump0'
+  f_state_save = 1
+  f_check_cfl = 0
+  f_out_z = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 1               ! 水深ファイル(水路内のみ。河岸は乾燥)
+  fn_hinit = 'hinit.txt'
+/
+
+&list_geoinfo
+  lx = 60.0
+  ly = 20.0
+  nx = 60
+  ny = 20
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 10.0                ! 可動層厚(供給量制限が発動しない厚さ)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.001
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+  f_berode = 1              ! 側岸侵食
+  berode_kb = 1.0e-5         ! 侵食速度係数 K_b (m/s)
+  berode_tausc = 0.05       ! 河岸の限界無次元掃流力
+  berode_m = 1.0            ! べき指数
+  berode_hcover = 0.0      ! 崖錐がこの厚さで河岸面を完全遮蔽 (m)。0 = 遮蔽なし
+  f_rockfall = 1            ! 崩落と崖錐
+  rf_bank = 1               ! 河岸モード(水面下の段は除外、崖錐は掃流で減る)
+  rf_hc = 1.5               ! 河岸面の限界高さ H_c (m)(河岸 2 m > H_c)
+  rf_phi = 35.0             ! 崖錐の安息角
+/

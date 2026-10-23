@@ -55,6 +55,16 @@ module subroutine init_bank(gm, p, g, list)
     call par_info("geomorph: bank erosion on (K_b = " // rtoa(list%berode_kb) &
                   // " m/s, tausc_b = " // rtoa(list%berode_tausc) &
                   // ", m = " // rtoa(list%berode_m) // ")")
+    ! 崩落土塊による遮蔽(§84.17): 脚部の崖錐 ht が h_cover で河岸面を完全に遮蔽する
+    if (list%berode_hcover < 0.0) call par_stop("list_geomorph: berode_hcover must be >= 0")
+    if (list%berode_hcover > 0.0) then
+      if (gm%f_rockfall <= 0 .or. list%rf_bank <= 0) then
+        call par_stop("list_geomorph: berode_hcover > 0 requires f_rockfall=1 with rf_bank=1 (slump-block talus)")
+      end if
+      gm%bnk%hcover = list%berode_hcover
+      call par_info("geomorph: bank erosion shielded by slump-block talus (h_cover = " &
+                    // rtoa(list%berode_hcover) // " m)")
+    end if
   end if
 
   if (gm%f_repose > 0) then
@@ -142,6 +152,11 @@ module subroutine bank_edge_pass(gm, p, g, s, dts)
         ! 脚部セルの無次元掃流力(calc_fluvial と同じマニング閉じ・有効掃流力比)
         taus = gm%flv%taufac * g%rn(iw,jw)**2 * s%vv(iw,jw)**2 &
                / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+        ! 崩落土塊による遮蔽(§84.17): 脚部の崖錐 ht の分だけ河岸面に届く掃流力を減らす
+        ! (Asahi ら 2013 式 (27)〜(28) の K = 1 − A_chunk/(D_chunk B) の格子版)
+        if (gm%bnk%hcover > 0.0) then
+          taus = taus * max(1.0 - s%ht(iw,jw) / gm%bnk%hcover, 0.0)
+        end if
         ! 定着(§84.6、§84.13): 河岸セル b の定着度で限界掃流力を τ*c,b (1 + c_τ,b a_b)
         ! に上げる(a = 0 なら乗算せず厳密に不変。c_τ,b は fix_ctau_bank、既定は c_τ)
         tscb = gm%bnk%tausc

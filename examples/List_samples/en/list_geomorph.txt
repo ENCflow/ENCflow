@@ -78,6 +78,9 @@
   !berode_kb = 1.0e-5       ! bank erodibility K_b (m/s) (required; calibration)
   !berode_tausc = 0.05      ! critical dimensionless shear stress of the bank
   !berode_m = 1.0           ! exponent of the excess shear stress
+  !berode_hcover = 0.2      ! talus (slump blocks) thickness ht that shields the bank face completely (m):
+                            !   the toe tau* is multiplied by (1 - ht/h_cover)+. 0 = no shielding (default);
+                            !   requires rf_bank = 1
   !f_repose = 1             ! angle-of-repose avalanching (excess slope moved
                             !   from the higher to the lower cell, wet or dry)
   !repose_phi = 30.0        ! angle of repose (deg). 0 = default 30
@@ -100,6 +103,9 @@
   !rf_bedrock = 1           ! bedrock collapse: cells with soil sd <= 0 fall too (no supply limit;
                             !   the fallen rock goes to the receiver's sd and talus ht), e.g. limestone
                             !   walls undercut by dissolution. 0 = default
+  !rf_bank = 1              ! bank mode (slump blocks of meandering channels, section 84.17): submerged
+                            !   steps do not collapse, talus is also removed by bed load, fixation raises
+                            !   H_c. Pair with berode_hcover for the shielding
 
   ! ---- Fixation (with f_fluvial; bars exposed at low flow get fixed and
   !      resist re-erosion) ----

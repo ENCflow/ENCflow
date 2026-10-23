@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# examples/meander の図化(result / result_cohesive / result_varq / result_fix / result_fixsusp / result_feed を読んで figs/ に保存)
+# examples/meander の図化(result / result_cohesive / result_cohesive_slump / result_varq / result_fix / result_fixsusp / result_feed を読んで figs/ に保存)
 #   figs/planform.png : 初期と終了時の水深(河道の位置)と河床変化 z−z0(6 構成)
 #   figs/sections.png : 湾曲頂点(x = 350, 450 m)の横断面の時間発展(非粘着性)
 #   figs/metrics.png  : 頂点の河道中心の横移動と河幅の時間発展
@@ -16,6 +16,7 @@ DX, NX, NY = mi.DX, mi.NX, mi.NY
 MORFAC = 50.0
 CASES = [("result", "non-cohesive banks (f_repose)", "#2a78d6"),
          ("result_cohesive", "cohesive banks (f_berode + f_repose)", "#d6572a"),
+         ("result_cohesive_slump", "cohesive banks + slump blocks (f_rockfall rf_bank, berode_hcover)", "#e0a020"),
          ("result_varq", "non-cohesive, Q 15/1.5 m3/s without fixation", "#8a6fd1"),
          ("result_fix", "non-cohesive + fixation (f_fixation, Q 15/1.5 m3/s)", "#2a9d5a"),
          ("result_fixsusp", "fixation + suspended fines (0.2 mm, c = 0.004 at floods) + roughness c_n = 2", "#b5641e"),
