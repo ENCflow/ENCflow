@@ -929,7 +929,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   examples/meander_cutoff 作成済み = developer.md §84.1〜§84.9、
   test/bankface・bendsed・berode・repose・fixation・uniflow・sedfeed。残: (i) 係数 N*・μs・μk は 2026-10-21 に原著で照合し既定へ昇格(§84.12。
   Hasegawa 1989、Asahi ら 2013、Struiksma ら 1985)、(ii) 横断勾配の平衡値 ∂z/∂n ≈ r/γ の
-  定量ベンチと格子 45° 回転の比較、(iii) 段 2 の残(K_b の分布ファイル、脚部の被覆効果、repose_phi_wet)、
+  定量ベンチと格子 45° 回転の比較、(iii) 段 2 の残(K_b の分布ファイル、repose_phi_wet。脚部の被覆効果は 2026-10-23 に f_rockfall の河岸モードで実装 §84.17)、
   (iv) 段 3 = 内岸砂州の定着 f_fixation 実装済み(§84.6、test/fixation。
   main の §68.36 修正後は外岸の後退が出るので §84.5 末尾の候補 (a)(b) は不採用。
   例題は既定のスキーム 3 に戻した)。残: 定着時間・c_τ は文献に標準値なし(Asahi ら 2013 の T_Land は出水回帰

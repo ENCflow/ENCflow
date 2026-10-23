@@ -141,6 +141,7 @@ module m_geomorph
     real :: kb = 0.0                 ! 河岸の侵食速度係数 K_b (m/s)
     real :: tausc = 0.05             ! 河岸の限界無次元掃流力
     real :: pm = 1.0                 ! べき指数 m
+    real :: hcover = 0.0             ! 脚部の崖錐がこの厚さで河岸面を完全遮蔽 (m)。0 = なし(§84.17)
     real :: tanphi = 0.0             ! tan(安息角)
     real :: relax = 0.5              ! 崩落の緩和率
     real :: dist(1:4) = 0.0          ! k=1..4 の近傍セル中心間距離 (m)
@@ -180,6 +181,8 @@ module m_geomorph
     real :: vmove = 0.0              ! 移した体積 (m3 かさ。累計)
     real :: vsea = 0.0               ! 海セルへ崩落して系外へ出た体積 (m3 かさ。累計。ランク局所)
     logical :: bedrock = .false.     ! 基岩の崩落(rf_bedrock = 1): 供給側に sd <= 0 を許し専用の適用で移す
+    logical :: bank = .false.        ! 河岸モード(rf_bank = 1。§84.17): 水面下の段を除外、崖錐は掃流で減る
+    logical :: own = .false.         ! calc_rockfall 自身の適用中(apply_edge_flux が崖錐を減らさない)
   end type
 
   type t_fixation

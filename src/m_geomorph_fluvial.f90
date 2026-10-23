@@ -533,8 +533,8 @@ module subroutine apply_edge_flux(gm, g, s, dts)
   real :: dv8, dz, cap, fx, winv, qk, fd, vout, vcap
   integer :: nlim
   real :: vleak
-  logical :: have_sf
-  real :: ff, tout, vfo, vfi, dsf, vfree
+  logical :: have_sf, have_ht
+  real :: ff, tout, vfo, vfi, dsf, vfree, vo8
 
   nlim = 0
   vleak = 0.0
@@ -542,6 +542,11 @@ module subroutine apply_edge_flux(gm, g, s, dts)
   ! 一切入らず既存の式のまま(ビット一致)
   have_sf = (gm%f_bedfines > 0)
   vfree = 0.0
+  ! 崩落土塊の搬出(§84.17。rf_bank = 1): calc_rockfall 自身の適用以外(掃流砂・
+  ! 側岸侵食・安息角崩落)では、セルの総流出の厚さ分だけ崖錐 ht を先に減らす
+  ! (流入は崖錐にしない)。無効時は分岐に入らず既存の式のまま(ビット一致)
+  have_ht = .false.
+  if (gm%f_rockfall > 0) have_ht = (gm%rf%bank .and. .not. gm%rf%own)
 
   ! --- ループ1.5: 供給量制限(セルの総流出要求 > 可動層 sd なら縮小) ---
   ! エッジ別の可動層クランプは「このエッジ単独」の上限なので、複数エッジが
@@ -606,7 +611,7 @@ module subroutine apply_edge_flux(gm, g, s, dts)
   !   ビット一致が保たれる — 縮小率を加算後に掛ける形に書き換えると
   !   縮約の形が変わり最終桁が動く(実検出))
   !$omp parallel do schedule(static) reduction(+: vleak, vfree) &
-  !$omp   private(i, j, k, in, jn, dv8, dz, cap, fx, winv, qk, fd, vfo, vfi, dsf)
+  !$omp   private(i, j, k, in, jn, dv8, dz, cap, fx, winv, qk, fd, vfo, vfi, dsf, vo8)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -614,6 +619,7 @@ module subroutine apply_edge_flux(gm, g, s, dts)
       dv8 = 0.0
       vfo = 0.0
       vfi = 0.0
+      vo8 = 0.0
       do k = 1, 8
         qk = gm%wrk%q(ke(k), i+die(k), j+dje(k))
         fd = 1.0
@@ -625,6 +631,9 @@ module subroutine apply_edge_flux(gm, g, s, dts)
           if (g%x(in,jn) > 0) fd = gm%flv%fdon(in,jn)
         end if
         dv8 = dv8 + sign_e(k) * (qk * fd)
+        if (have_ht) then
+          if (sign_e(k) * qk > 0.0) vo8 = vo8 + sign_e(k) * (qk * fd)
+        end if
         if (have_sf) then
           ! 河床の細粒分の帳簿(§84.10): 細粒分は掃流砂と一緒に動く(等移動度。
           ! 流出は供給側の組成 ff_own、流入は供給側の ff_nb の分だけ sf に入る)。
@@ -658,6 +667,10 @@ module subroutine apply_edge_flux(gm, g, s, dts)
       ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
       s%z(i,j) = s%z(i,j) + dz
       s%sd(i,j) = s%sd(i,j) + dz
+      ! 崩落土塊の搬出(§84.17): 総流出の厚さ分だけ崖錐を先に減らす(0 でクランプ)
+      if (have_ht) then
+        if (vo8 > 0.0) s%ht(i,j) = max(s%ht(i,j) - vo8 * dts * gm%wrk%ainv * winv * gm%poroi, 0.0)
+      end if
       ! 河床の細粒分の帳簿(§84.10): 掃流砂に同伴する細粒分の収支で sf を動かす
       ! (ff の構成で流出 <= sf。丸めの分は 0 <= sf <= sd にクリップ)
       if (have_sf) then

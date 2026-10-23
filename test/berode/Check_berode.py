@@ -10,13 +10,21 @@
 #     (5) 定着の河岸係数(§84.13): fix0(fix_ctau_bank = 0)の z は kb1 と厳密に一致
 #         (河岸の a > 0 でも閾値は不変、水路の a = 0)。fix1(既定 = c_τ = 100)の
 #         河岸損失は kb1 の RATIO_FIX 未満(定着した河岸は削られない)
-#   使い方: Check_berode.py(カレントの save_kb1, save_kb2 を読む)
+#     (6) 崩落土塊(§84.17。slump = kb1 + f_rockfall の河岸モード rf_bank、H_c = 1.5 m、
+#         berode_hcover = 0.1 m / slump0 = 遮蔽なし): 体積保存・共動更新は (1)(4) と同じ、
+#         崖錐 ht(result_*/Ht9998.txt)は >= 0 で水路の行(脚部)にだけ積もる
+#     (7) 遮蔽: slump の側岸侵食の台帳(Screen.log「bank erosion moved」)が slump0 の
+#         RATIO_COVER 未満(崖錐 ht >= h_cover の脚部では河岸面に掃流力が届かない)
+#     (8) 搬出: 終端の崖錐の総量 Σht·ΔxΔy が崩落の台帳「rockfall moved」(かさ)より小さい
+#         (掃流砂が崖錐を運び去った分)かつ > 0
+#   使い方: Check_berode.py(カレントの save_kb1, save_kb2, …, result_slump*, Screen.log を読む)
 import sys, struct, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_init import NX, NY, J1, J2, h_of
 
 SD0 = 10.0
-TOL_SUM, TOL_SD, TOL_RATIO, RATIO_FIX = 1.0e-9, 1.0e-10, 0.02, 0.05
+TOL_SUM, TOL_SD, TOL_RATIO, RATIO_FIX, RATIO_COVER = 1.0e-9, 1.0e-10, 0.02, 0.05, 0.1
+DX = 1.0
 
 
 def read_rec(f):
@@ -92,5 +100,36 @@ g5 = diff0 == 0.0 and loss_f1 < RATIO_FIX * loss["kb1"]
 print("(5) 定着の河岸係数: fix0 (c_tau_bank = 0) の z は kb1 と max|Δ| = %.1e (= 0), fix1 (既定 = c_tau) の河岸損失 %.5f = kb1 の %.3f 倍 (< %.2f) : %s"
       % (diff0, loss_f1, loss_f1 / loss["kb1"], RATIO_FIX, "PASS" if g5 else "FAIL"))
 ok = ok and g5
+
+# (6)〜(8) 崩落土塊(f_rockfall の河岸モード)
+import re
+# 台帳は Screen.log の各実行(「reading list_sysparam in param_<tag>.txt」で区切る)の
+# 最初の行から取る(MPI ではランクごとに同じ全域値を印字するので重複を 1 つにする)
+vbank, vrock, cur = {}, {}, None
+for line in open("Screen.log", encoding="utf-8", errors="replace"):
+    m = re.search(r"reading list_sysparam in param_(\w+)\.txt", line)
+    if m: cur = m.group(1); continue
+    m = re.search(r"bank erosion moved\s+([0-9.Ee+-]+)\s*m3", line)
+    if m and cur and cur not in vbank: vbank[cur] = float(m.group(1))
+    m = re.search(r"rockfall moved\s+([0-9.Ee+-]+)\s*m3", line)
+    if m and cur and cur not in vrock: vrock[cur] = float(m.group(1))
+for tag in ("slump", "slump0"):
+    dz, ident = load(tag)
+    sum_dz = sum(sum(r) for r in dz)
+    ht = [[float(v) for v in line.split()] for line in open("result_%s/Ht9998.txt" % tag)]
+    htmin = min(min(r) for r in ht)
+    out_rows = max(max(ht[j - 1]) for j in range(1, NY + 1) if not (J1 <= j <= J2))
+    g6 = abs(sum_dz) < TOL_SUM and ident < TOL_SD and htmin >= 0.0 and out_rows == 0.0
+    print("(6) %s 崩落土塊: sum(z - z0) = %.2e, 共動 %.1e, min ht = %.1e, 水路外の max ht = %.1e : %s"
+          % (tag, sum_dz, ident, htmin, out_rows, "PASS" if g6 else "FAIL"))
+    ok = ok and g6
+    if tag == "slump":
+        httot = sum(sum(r) for r in ht) * DX * DX
+g7 = vbank["slump"] < RATIO_COVER * vbank["slump0"]
+print("(7) 遮蔽: 側岸侵食 slump %.5f m3 = slump0 %.5f m3 の %.3f 倍 (< %.1f) : %s"
+      % (vbank["slump"], vbank["slump0"], vbank["slump"] / vbank["slump0"], RATIO_COVER, "PASS" if g7 else "FAIL"))
+g8 = 0.0 < httot < vrock["slump"]
+print("(8) 搬出: 終端の崖錐 %.3f m3 < 崩落の台帳 %.3f m3 (bulk) : %s" % (httot, vrock["slump"], "PASS" if g8 else "FAIL"))
+ok = ok and g7 and g8
 print("== berode 検定: %s ==" % ("PASS" if ok else "FAIL"))
 sys.exit(0 if ok else 1)
