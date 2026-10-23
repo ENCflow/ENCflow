@@ -20,7 +20,7 @@ computation with real terrain data, in the following order.
   discharge oscillations caused by real terrain data
 - **Step 7**: 3D visualization (animation) with ParaView
 
-We assume you have completed the [wave tutorial](../../wave/README.md)
+We assume you have completed the [wave tutorial](../../wave/en/README.md)
 first (it explains how to run the model, the meaning of each screen
 column, and the structure of parameter files). All work below is done
 in the case directory (`tutorials/chichibu`); run the English parameter
@@ -28,7 +28,7 @@ files from there as `./encflow en/param_step1.txt` etc.
 
 ## A look at the data
 
-`../data_chichibu/` contains the following raster data.
+`data_chichibu/` (relative to the case directory `tutorials/chichibu`) contains the following raster data.
 
 | Data | Contents |
 |---|---|
@@ -774,8 +774,7 @@ Independent refinements you can add to the minimal procedure.
 of the same extent exported from QGIS can be draped on the terrain.
 For that procedure and for settings such as the water-film threshold
 `hmin`, variable selection and the handling of sea areas, see
-[utils/out2vtk/README.md](../../../utils/out2vtk/README.md)
-(in Japanese).
+[utils/out2vtk/README.en.md](../../../utils/out2vtk/README.en.md).
 
 ## Closing remarks
 

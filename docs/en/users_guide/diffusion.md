@@ -270,7 +270,7 @@ Even with `f_diffusion_term = 0` the diffusion term is computed when
 - The verification record of the implementation (developer.md §20):
   bitwise identity with every reference when off; bitwise identity across
   rank and thread counts for model 1 ($`\nu_0`$ = 0.1 m²/s) and model 2
-  ($`n`$ = 0.02, default $`\alpha`$) in [test/wave](../../../test/wave/README.md)
+  ($`n`$ = 0.02, default $`\alpha`$) in [test/wave](../../../test/wave/en/README.md)
   and for model 2 in [test/chichibu](../../../test/chichibu/README.md);
   exact mass conservation; preservation of the four-fold symmetry of the
   circular initial surface; smoothing of the velocity and depth peaks.
@@ -291,7 +291,7 @@ Even with `f_diffusion_term = 0` the diffusion term is computed when
 - [examples/List_samples/list_enc.txt](../../../examples/List_samples/en/list_enc.txt) --
   annotated list of every `&list_enc` parameter with its default.
 
-The READMEs of the test cases are in Japanese.
+The README of test/wave is available in English; the other test-case READMEs are in Japanese.
 
 ## References
 

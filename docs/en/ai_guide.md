@@ -53,7 +53,7 @@ You do not need to figure out the feature combination yourself — ask
 in the words of the phenomenon. The agent looks the phenomenon up in
 the [use-case gallery](users_guide/usecases.md), checks the parameters
 in the [User's Guide](users_guide.md) chapters and
-[List_samples](../examples/List_samples/), and assembles the case
+[List_samples](../../examples/List_samples/en/), and assembles the case
 (parameter file plus terrain or other data as needed).
 
 Three tips for writing instructions:
@@ -162,7 +162,7 @@ as long as your own cases are backed up, nothing is lost.
 - Parameter meanings are in the
   [full parameter index](users_guide/params_index.md) and the chapters;
   annotated examples are in
-  [examples/List_samples](../examples/List_samples/) — a single "refer
+  [examples/List_samples](../../examples/List_samples/en/) — a single "refer
   to ..." raises the accuracy noticeably.
 - You can also delegate environment setup itself: "run make install in
   src and confirm that Run.sh in test/wave reaches PASS".

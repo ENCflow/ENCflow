@@ -340,7 +340,7 @@ non-hydrostatic correction are in the tables of their own pages.
 | Case | Content | Point |
 |---|---|---|
 | [tutorials/wave](../../../tutorials/wave/en/README.md) | waves in a tank (Steps 1-2) | effect of dt and of the threshold $`\theta`$; reading the Runge and Cn columns |
-| [test/wave](../../../test/wave/README.md) | basic regression case | bit reproduction of the default settings (np = 1, 2, 4) |
+| [test/wave](../../../test/wave/en/README.md) | basic regression case | bit reproduction of the default settings (np = 1, 2, 4) |
 | [test/dambreak](../../../test/dambreak/README.md) | Stoker's dam-break solution | bore speed and intermediate depth correct independently of dt |
 | [test/chichibu](../../../test/chichibu/README.md) | flood on real terrain | grid convergence and MPI agreement of the default settings |
 | [test/diffusion](../../../test/diffusion/README.md) | Gaussian jet | size of the smoothing $`(p_d/4)\Delta^2 u''`$ of the velocity reconstruction (§4) and the consistency of the initial flux (§6) |
