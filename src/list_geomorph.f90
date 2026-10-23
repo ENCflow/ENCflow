@@ -59,6 +59,9 @@ module list_geomorph
                                      ! 既定は置かない)
     real :: berode_tausc = 0.05      ! 河岸の限界無次元掃流力 τ*c,b
     real :: berode_m = 1.0           ! 超過掃流力のべき指数 m
+    real :: berode_hcover = 0.0      ! 脚部の崖錐(崩落土塊 ht)がこの厚さで河岸面を完全に遮蔽する (m)。
+                                     ! 脚部の τ* に (1 − ht/h_cover)⁺ を乗じる。0 = 遮蔽なし(既定)。
+                                     ! f_rockfall(rf_bank=1)が前提。§84.17
     integer :: f_repose = 0          ! 安息角崩落(0:無効, 1:有効)。隣接セル間の勾配が
                                      ! tanφ_r を超えた分を高い側から低い側へ移す
                                      ! (保存形。乾湿を問わない。1 更新 1 スイープ)。§84.4
@@ -95,6 +98,10 @@ module list_geomorph
                                      ! 使わずに移す: 供給側は z を下げ(sd・崖錐は上から先に減る)、
                                      ! 受け手は z・sd・崖錐 ht を同じ量だけ積む。溶食で裾を切られた
                                      ! 石灰岩の壁など、土層 sd の下の基岩 z − sd が崩れる場合に使う
+    integer :: rf_bank = 0           ! 河岸モード(0:無効, 1:有効。§84.17)。1 なら (a) 水面下の段
+                                     ! (供給側の地盤が受け手の水面より低い)は崩落の対象外、(b) 崖錐 ht
+                                     ! は掃流砂・側岸侵食・安息角崩落の流出でも減る(崩落土塊の搬出)、
+                                     ! (c) 定着(f_fixation)で H_c を H_c (1 + c_τ,b a) に上げる
     integer :: f_fixation = 0        ! 定着(0:無効, 1:有効)。乾いたセルの定着度 a が
                                      ! 1 − exp(−t/T_fix) で育ち、供給側の限界掃流力を
                                      ! τ*c (1 + c_τ a) に上げる(標高・体積には触れない)。§84.6
@@ -351,10 +358,10 @@ subroutine list_geomorph_read(p, list)
   real :: fluv_taufac, fluv_mus, fluv_muk, sec_nstar, sec_rmax, sec_vmin
   integer :: fluv_slope, f_secflow
   integer :: f_berode, f_repose
-  real :: berode_kb, berode_tausc, berode_m, repose_phi, repose_relax
+  real :: berode_kb, berode_tausc, berode_m, berode_hcover, repose_phi, repose_relax
   integer :: f_rockfall
   real :: rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc, rf_fface, rf_uc
-  integer :: rf_bedrock
+  integer :: rf_bedrock, rf_bank
   integer :: f_fixation
   real :: fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank
   integer :: f_suspend
@@ -419,10 +426,10 @@ subroutine list_geomorph_read(p, list)
                            fluv_porosity, fluv_sgrav, fluv_dzmax, fluv_diagratio, &
                            fluv_bcfeed, fluv_bcfeed_fac, fluv_taufac, fluv_slope, fluv_mus, fluv_muk, &
                            f_secflow, sec_nstar, sec_rmax, sec_vmin, &
-                           f_berode, berode_kb, berode_tausc, berode_m, &
+                           f_berode, berode_kb, berode_tausc, berode_m, berode_hcover, &
                            f_repose, repose_phi, repose_relax, &
                            f_rockfall, rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc, rf_fface, rf_uc, &
-                           rf_bedrock, &
+                           rf_bedrock, rf_bank, &
                            f_fixation, fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank, &
                            f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, &
@@ -468,6 +475,7 @@ subroutine list_geomorph_read(p, list)
   berode_kb = list%berode_kb
   berode_tausc = list%berode_tausc
   berode_m = list%berode_m
+  berode_hcover = list%berode_hcover
   f_repose = list%f_repose
   repose_phi = list%repose_phi
   repose_relax = list%repose_relax
@@ -481,6 +489,7 @@ subroutine list_geomorph_read(p, list)
   rf_fface = list%rf_fface
   rf_uc = list%rf_uc
   rf_bedrock = list%rf_bedrock
+  rf_bank = list%rf_bank
   f_fixation = list%f_fixation
   fix_tfix = list%fix_tfix
   fix_ctau = list%fix_ctau
@@ -607,6 +616,7 @@ subroutine list_geomorph_read(p, list)
   list%berode_kb = berode_kb
   list%berode_tausc = berode_tausc
   list%berode_m = berode_m
+  list%berode_hcover = berode_hcover
   list%f_repose = f_repose
   list%repose_phi = repose_phi
   list%repose_relax = repose_relax
@@ -620,6 +630,7 @@ subroutine list_geomorph_read(p, list)
   list%rf_fface = rf_fface
   list%rf_uc = rf_uc
   list%rf_bedrock = rf_bedrock
+  list%rf_bank = rf_bank
   list%f_fixation = f_fixation
   list%fix_tfix = fix_tfix
   list%fix_ctau = fix_ctau

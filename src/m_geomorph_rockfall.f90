@@ -142,6 +142,14 @@ module subroutine init_rockfall(gm, p, g, s, list)
   if (gm%rf%bedrock) then
     call par_info("geomorph: rockfall of bedrock on (cells with sd <= 0 collapse too; no supply limit)")
   end if
+  ! 河岸モード(rf_bank = 1。§84.17): 水面下の段は崩落の対象外、崖錐は掃流砂・側岸侵食・
+  ! 安息角崩落の流出でも減る(崩落土塊の搬出)、定着で H_c を上げる
+  if (list%rf_bank < 0 .or. list%rf_bank > 1) call par_stop("list_geomorph: rf_bank must be 0 or 1")
+  gm%rf%bank = (list%rf_bank > 0)
+  if (gm%rf%bank) then
+    call par_info("geomorph: rockfall bank mode on (subaerial faces only; talus removed by bed load" &
+                  // trim(merge("; H_c raised by fixation)", ")                        ", gm%f_fixation > 0)))
+  end if
   ! fluvial・repose なしでも動けるように dzmax・共有スクラッチ・供給量制限係数を整える
   if (gm%dzmax <= 0.0) then
     if (list%fluv_dzmax <= 0.0) call par_stop("list_geomorph: fluv_dzmax must be > 0")
@@ -343,8 +351,8 @@ module subroutine calc_rockfall(gm, g, s, dts)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
-  integer :: i, j, k, in, jn, jt, id, jd, nrock, ntal, nclip
-  real :: gq, dzc, drop, lim, exc, exct, dzm, vmove, vsea, qfac, hfac, hw
+  integer :: i, j, k, in, jn, jt, id, jd, ir, jr, nrock, ntal, nclip
+  real :: gq, dzc, drop, lim, exc, exct, dzm, vmove, vsea, qfac, hfac, hw, hc
   real :: qk, fd, dvi, dvo, winv
   logical :: okc, window, okn, tosea, ok
 
@@ -361,7 +369,7 @@ module subroutine calc_rockfall(gm, g, s, dts)
   hfac = gm%rf%relax * 0.5 / 8.0                 ! excess → 1 エッジの移動高さ
   jt = min(dcp%je + 1, dcp%jeh)
   !$omp parallel do schedule(static) reduction(+: nrock, ntal, nclip, vmove, vsea) &
-  !$omp   private(i, j, k, in, jn, id, jd, okc, okn, tosea, ok, gq, dzc, drop, lim, exc, exct, dzm, hw)
+  !$omp   private(i, j, k, in, jn, id, jd, ir, jr, okc, okn, tosea, ok, gq, dzc, drop, lim, exc, exct, dzm, hw, hc)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -376,13 +384,23 @@ module subroutine calc_rockfall(gm, g, s, dts)
           ! なることはない)
           dzc = s%z(i,j) - s%z(in,jn)
           if (dzc > 0.0) then
-            id = i; jd = j
+            id = i; jd = j; ir = in; jr = jn
             ok = okc
           else
-            id = in; jd = jn
+            id = in; jd = jn; ir = i; jr = j
             ok = okn
           end if
           tosea = ok .and. .not. (okc .and. okn)
+          hc = gm%rf%hc
+          if (ok .and. gm%rf%bank) then
+            ! 河岸モード (a): 供給側の地盤が受け手の水面より低い(水面下の段 = 淵の壁)は
+            ! 対象外。河岸面(受け手の水面より高い段)と乾いた段だけが崩れる
+            if (s%z(id,jd) < s%z(ir,jr) + s%h(ir,jr)) ok = .false.
+            ! (c) 定着(§84.6、§84.13): 供給側の定着度で限界高さを H_c (1 + c_τ,b a) に上げる
+            if (gm%f_fixation > 0) then
+              if (s%fx(id,jd) > 0.0) hc = hc * (1.0 + gm%fix%ctaub * s%fx(id,jd))
+            end if
+          end if
           if (ok) then
             drop = abs(dzc)
             ! 高い側(供給側)が非侵食(sd <= 0)なら動かない(§84.14 と同じ扱い)。
@@ -405,15 +423,15 @@ module subroutine calc_rockfall(gm, g, s, dts)
                 !      エッジが崖錐の安息角より急なら、超過分(安息角超過を上限)
                 if (drop > lim) then
                   hw = s%z(id,jd) - gm%rf%zmin(id,jd)
-                  if (hw > gm%rf%hc) then
-                    exc = min(hw - gm%rf%hc, drop - lim)
+                  if (hw > hc) then
+                    exc = min(hw - hc, drop - lim)
                     nrock = nrock + 1
                   end if
                 end if
               else
                 ! (1) 崩落: 隣接セル間の段差(自由面の高さ)が限界 H_c を超えた分
-                if (drop > gm%rf%hc) then
-                  exc = drop - gm%rf%hc
+                if (drop > hc) then
+                  exc = drop - hc
                   nrock = nrock + 1
                 end if
               end if
@@ -461,12 +479,14 @@ module subroutine calc_rockfall(gm, g, s, dts)
   gm%rf%vmove = gm%rf%vmove + vmove
   gm%rf%vsea = gm%rf%vsea + vsea
 
+  gm%rf%own = .true.                                   ! 自身の適用: 崖錐の収支は下で行う
   if (gm%rf%bedrock) then
     ! 基岩の崩落: 供給量制限・岩盤床クリップのない専用の適用(z・sd・ht をまとめて更新)
     call apply_bedrock(gm, g, s, dts)
   else
     call apply_edge_flux(gm, g, s, dts)
   end if
+  gm%rf%own = .false.
 
   ! --- 崖錐の収支: 発散と同じ式(風上の fdon を乗じたエッジ流量)で流出・流入を
   !     分けて集計し、流出は ht から(0 でクランプ)、流入は ht へ積む

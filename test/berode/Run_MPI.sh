@@ -11,23 +11,28 @@ python3 "$sdir/make_init.py" h > hinit.txt
 
 export ENCFLOW_EXPECT_NP="$NP"
 set -o pipefail
-mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_kb1.txt | tee Screen.log || exit 1
-mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_kb2.txt | tee -a Screen.log || exit 1
-mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_fix0.txt | tee -a Screen.log || exit 1
-mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_fix1.txt | tee -a Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_kb1.txt 2>&1 | tee Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_kb2.txt 2>&1 | tee -a Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_fix0.txt 2>&1 | tee -a Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_fix1.txt 2>&1 | tee -a Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_slump.txt 2>&1 | tee -a Screen.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_slump0.txt 2>&1 | tee -a Screen.log || exit 1
 set +o pipefail
 echo ""
 
 rc=0
 python3 "$sdir/Check_berode.py" || rc=1
-for c in kb1 kb2 fix0 fix1; do
+for c in kb1 kb2 fix0 fix1 slump slump0; do
     if [ -d save_${c}_serial ]; then
-        if cmp -s save_$c/state.dat save_${c}_serial/state.dat; then
-            echo "=== $c: state.dat is bit-identical to the serial result ==="
-        else
-            echo "MISMATCH: save_$c/state.dat != save_${c}_serial/state.dat" >&2
-            rc=1
-        fi
+        for f in state.dat geomorph_rockfall.dat; do
+            [ -f save_${c}_serial/$f ] || continue
+            if cmp -s save_$c/$f save_${c}_serial/$f; then
+                echo "=== $c: $f is bit-identical to the serial result ==="
+            else
+                echo "MISMATCH: save_$c/$f != save_${c}_serial/$f" >&2
+                rc=1
+            fi
+        done
     fi
 done
 exit $rc

@@ -173,6 +173,7 @@ Riverbed erosion and deposition by a bedload transport formula.
 | berode_kb | (required) | Bank erodibility K_b (m/s). E_b = K_b (τ*/τ*c,b − 1)^m. A calibration value without default |
 | berode_tausc | 0.05 | Critical dimensionless shear stress of the bank τ*c,b |
 | berode_m | 1.0 | Exponent m of the excess shear stress |
+| berode_hcover | 0 (none) | Shielding by slump blocks (§84.17): the talus ht at the toe (bank mode of f_rockfall) that shields the bank face completely (m); the toe τ* is multiplied by (1 − ht/h_cover)⁺ (the K of the slump blocks in Asahi et al. 2013). Requires rf_bank = 1 |
 | f_repose | 0 | Angle-of-repose avalanching. 1: the part of the slope between neighbouring cells above tanφ_r is moved from the higher to the lower cell (wet or dry; usable without bed load) |
 | repose_phi | 30 | Angle of repose φ_r (deg) |
 | repose_relax | 0.5 | Fraction of the excess slope relaxed per update (0 to 1) |
@@ -229,6 +230,24 @@ collapse; it works on dry cells and without bed load). On non-cohesive
 banks toe scour plus collapse already gives the retreat, so do not add the
 same retreat again through `berode_kb`. Verification:
 [test/berode](../../../test/berode/), [test/repose](../../../test/repose/).
+
+**Self-protection of the bank by slump blocks.** A cohesive bank fails in
+blocks once pool scour makes the bank face higher than a critical height, and
+the fallen blocks cover the toe and stop bank erosion until the flow has
+carried them away (Asahi et al. 2013; Parker et al. 2011). This is represented
+by the **bank mode** `rf_bank = 1` of [cliff collapse and talus](#cliff-collapse-and-talus-f_rockfall)
+`f_rockfall` together with `berode_hcover` (developer.md §84.17): the part of a
+bank face (a step above the water surface of the receiving cell; submerged steps,
+i.e. pool walls, are excluded) that exceeds the critical height `rf_hc` collapses
+into talus ht at the toe, the talus is removed by the outflow of bed load, bank
+erosion and avalanching, and at a toe with talus ht the shear stress reaching the
+bank face is reduced by (1 − ht/h_cover)⁺. With fixation (`f_fixation`) the
+critical height rises to H_c (1 + c_τ,b a) with the fixation degree of the source
+cell. H_c is a structural quantity for the bank material (a guide: the initial bank
+height plus the pool scour at which failure should start), h_cover the block size
+(tens of centimetres to a metre). Verification: slump / slump0 in
+[test/berode](../../../test/berode/); example: param_cohesive_slump.txt in
+[examples/meander](../../../examples/meander/).
 
 **Fixation of inner-bank bars.** Bed load deposits only up to the water
 surface of the supplying cell, so under a constant discharge the inner-bank
@@ -806,6 +825,7 @@ retreat rate (talus-limited retreat).
 | rf_fface | -1 (off) | Supported-face mode (rule 4). >= 0 enables it (requires rf_rc > 0): dry-erosion factor of a face whose foot is covered by talus (0 = no erosion). The collapse becomes a column collapse |
 | rf_uc | 0 (off) | Critical undercut u_c (m) (rule 5; requires rf_fface >= 0 and spl_strata): a column at the top of the face falls once the bedrock of a weaker foot has been cut back by this depth since the last burial. The overhang width a cap can carry (tens of cm to a few m); keep it below dx |
 | rf_bedrock | 0 | Bedrock collapse. With 1, cells whose soil sd <= 0 (bedrock) can be sources too, and the supply limit (cap by sd) is not applied: the source loses z (soil and talus go first), the receiver gains the same amount in z, sd and talus ht. For bedrock below the soil that fails, such as limestone walls undercut by dissolution (examples/tower_karst) |
+| rf_bank | 0 | Bank mode (§84.17; slump blocks of meandering channels): with 1, (a) submerged steps (source ground below the receiver's water surface = pool walls) do not collapse, (b) the talus ht is also reduced by the outflow of bed load, bank erosion and avalanching (removal of the blocks; inflow does not become talus), (c) fixation f_fixation raises the critical height to H_c (1 + c_τ,b a). Shielding of bank erosion is berode_hcover |
 
 **Bedrock and soil convention.** By default (rf_bedrock = 0) a cell with sd <= 0 is
 non-erodible bedrock, as for dry erosion, bed load and angle-of-repose avalanching,
