@@ -1,0 +1,24 @@
+!======================================================================
+! English mirror of examples/List_samples/list_bedmotion.txt.
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+! Prescribed bed motion settings sample (&list_bedmotion; developer.md
+!   Sec. 70, docs/bedmotion_plan.md)
+!   Enabled by fn_bedmotion = "this file" or "-" in the main parameters.
+!   Forces z by a time history of ground displacement (snapshot table +
+!   cumulative displacement rasters). h is unchanged, so the water surface
+!   e = z + h is lifted (the generation mechanism of fault tsunamis).
+!   Applied incrementally, so it coexists with geomorph and lavaflow.
+!   Cells of the sea mask do not move (compute tsunamis with the "solved
+!   sea", f_htype=2). No private state in restarts.
+!======================================================================
+&list_bedmotion
+  f_bedmotion = 1           ! 0 temporarily disables while keeping the file
+  fn_bmlist = 'bmlist.txt'  ! snapshot table: one line "time filename" (relative to
+                            !   dir_data. Times are relative to t0, ascending. Each file
+                            !   is the cumulative displacement d (m) over the whole
+                            !   domain, in the same format as z. Before the table the
+                            !   first value is held, after it the last)
+  !f_bminterp = 1           ! time interpolation (1: linear, 0: step)
+  !bm_tscale = 1.0          ! unit of the table times (s. 60 for minutes)
+/

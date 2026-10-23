@@ -1,5 +1,7 @@
 # Boundary conditions (&list_bound_edge / source / stage / inflow)
 
+> English mirror of docs/users_guide/boundary.md. The Japanese file is the master copy.
+
 [Back to the user's guide index](../users_guide.md)
 
 Defines the exchange of water between the computational domain and the

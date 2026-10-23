@@ -391,7 +391,7 @@ on outflow $`u_e`$ (no contribution).
 - The cost relative to scheme 1 is +12–20% for scheme 2 and +19–27% for
   scheme 3 (five edges on the line plus two lateral edges read per edge, and
   the exchange at the start of the step; wall-clock of [test/dambreak](../../../test/dambreak/README.md),
-  [test/wave](../../../test/wave/README.md) and [test/chichibu](../../../test/chichibu/README.md)). Memory is about the same.
+  [test/wave](../../../test/wave/en/README.md) and [test/chichibu](../../../test/chichibu/README.md)). Memory is about the same.
 
 ## 5. Properties and choice
 
@@ -493,12 +493,12 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   that schemes 1 and 3 agree.
 - **[test/chichibu](../../../test/chichibu/README.md)** -- real terrain (100 m). The place for grid convergence
   and comparison with observations.
-- **[test/wave](../../../test/wave/README.md)** -- spreading of a hump of water at rest (frictionless
+- **[test/wave](../../../test/wave/en/README.md)** -- spreading of a hump of water at rest (frictionless
   closed basin). The reference case of the regression tests; shows the
   sensitivity of the maximum depth and velocity to the scheme (0.1–0.5%) and
   the preservation of the four-fold symmetry.
 
-The READMEs of the test cases are in Japanese.
+The README of test/wave is available in English; the other test-case READMEs are in Japanese.
 
 **Related examples and tutorials**
 

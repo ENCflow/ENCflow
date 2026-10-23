@@ -1,0 +1,104 @@
+! English mirror of test/wave/param.txt; the Japanese file is authoritative.
+! Translate comments only. Run from test/wave, not from en/.
+! Official regression scripts continue to use param.txt in the case root.
+
+!======================================================================
+!
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! grid system (0: ENC, 1: STG)
+  f_govequation = 0         ! governing equations (0: DynWE, 1: DifWE, 2: KinWE)
+  !dt = 0.01                 ! time step (s)
+  dt = 0.05                 ! time step (s)
+  !dt = 0.1                  ! time step (s)
+  t0 = 0                    ! start time (s)
+  tt = 8                    ! end time (s)
+  dt_disp = 0.5             ! screen display interval (s)
+  dt_file = 1               ! file output interval (s)
+  dt_recrd = 0.1            ! probe output interval (s)
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  !fn_boundary = '-'
+  dir_result = 'result'
+  f_disp_debug = 1          ! regression test: print all significant digits of S
+  f_disp_qq = 1             ! regression test: also display Q_max
+  f_check_cfl = 0
+  f_out_e = 1
+/
+
+!======================================================================
+! ENC numerical settings
+!======================================================================
+&list_enc
+  f_gravity_correction = 0         ! gravity correction (0: disabled, 1: enabled)
+  f_exflux_reduction = 0           ! excess-outflow reduction (0: disabled, 1: enabled)
+  f_hcap_upwind = 0                ! limit edge depth by upwind depth (0: disabled, 1: enabled)
+  f_friction_fastmath = 0          ! fast friction calculation (0: disabled, 1-5: acceleration level)
+  p_adv_upwind_index = 1.0         ! upwind fraction (0.0 ~ 1.0)
+  p_diagratio = 0.578              ! diagonal-component fraction (0.0 ~ 1.0)
+  f_adaptive_runge = 1             ! adaptive Runge-Kutta (0: disabled, 1: enabled)
+  p_adprunge_thresh = 1.2          ! adaptive Runge-Kutta threshold (1.1 ~)
+/
+
+!======================================================================
+! Initial conditions
+!======================================================================
+&list_initial
+    f_htype = 0             ! initial depth type (0: constant)
+    f_uvtype = 0            ! initial velocity type (0: constant)
+    h0 = 1.0                ! constant initial depth (m)
+    u0 = 0                  ! initial x velocity (m/s)
+    v0 = 0                  ! initial y velocity (m/s)
+
+    f_user_routine = "wave_hump"   ! user routine identifier (circular cosine-shaped initial water level)
+/
+
+!======================================================================
+! Geographic settings
+!======================================================================
+&list_geoinfo
+  lx = 100.0
+  ly = 100.0
+
+  !nx = 51
+  !ny = 51
+
+  !nx = 101
+  !ny = 101
+
+  !nx = 143
+  !ny = 143
+
+  !nx = 151
+  !ny = 151
+
+  !nx = 200
+  !ny = 200
+
+  !nx = 285
+  !ny = 285
+
+  nx = 385
+  ny = 385
+
+  !nx = 505
+  !ny = 505
+
+  f_ztype = 0     ! bed elevation type (0: constant, 1: text file)
+  f_rntype = 0    ! roughness type (0: constant, 1: text file)
+  z0 = 0.0        ! constant bed elevation (m)
+  rn0 = 0.0       ! constant roughness coefficient
+
+  ! user routine identifier (no obstacle if unspecified)
+  !f_user_routine = "wave_solid_wall"   ! diagonal impermeable wall (2 cells thick)
+  !f_user_routine = "wave_leaky_wall"   ! diagonal partially permeable wall (1 cell thick)
+/
+
+
+!======================================================================
+! Boundary conditions
+!======================================================================
+&list_bound
+
+/

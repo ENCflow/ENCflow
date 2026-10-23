@@ -23,6 +23,8 @@ ENC 配置格子(独自スキーム)が主実装、STG は旧互換の比較用�
 - **docs/developer.md** — 設計・規約・実バグ記録の正本(§0〜§30)。
   変更が既存の規約に触れるときは該当 § を読み、規約を変える場合は
   文書の更新までを同じ作業に含めること。
+- **docs/multilingual.md** — 文書・教材・設定例の多言語化規約(正本・配置・
+  更新と確認記録・検査)。翻訳、文書の移動、注釈付き入力の変更の前に参照する。
 - **docs/handoff.md** — 未完了作業と中期の道標。作業完了時に消し込む。
 - **docs/comparison.md** — 他モデルとの比較(提供形態・プロセス
   カバレッジ・ポジショニング)。機能追加の節目で更新する。
@@ -92,3 +94,18 @@ ENC 配置格子(独自スキーム)が主実装、STG は旧互換の比較用�
   geomorph/gwflow と同じ)。排他切替のモデル群は t_swflow 型の手続き
   ポインタ成分方式、加算的なプロセス群は独立フラグの重ね合わせ方式。
   実装契約の見本は m_gwflow_bucket のヘッダ。
+
+## 文書・設定例の多言語化(詳細は docs/multilingual.md)
+
+- 正本は日本語(例外: LICENSE と TRADEMARKS.md は英語正本。ルート README.md は
+  英語ミラーで README.ja.md が正本)。英語版は `en/` ミラー(docs/en/、
+  tutorials/<case>/en/、test/<case>/en/、examples/List_samples/en/)で、冒頭に
+  「English mirror of <正本パス>」を刻印する。既存の README.en.md は有効。
+- 翻訳のために計算本体・データ・Run.sh・reference を複製・変更しない。設定例は
+  コメントだけを翻訳し、値・識別子・ファイル参照・有効状態(コメントアウト例を
+  含む)を保つ。実行場所は言語によらずケース直下(`./encflow en/param.txt`)。
+- 利用者向け文書・教材・List_samples の正本を変えたら、同じ作業で英語版も更新する。
+  更新後に `python3 tools/i18n/check.py audit --recorded-only --strict-recorded --links`
+  (CI と同じ条件)を通し、原文と訳文を確認した組だけを `check.py record` で記録する
+  (AI による確認は `--method assistant`。人間の確認と偽らない)。更新できない訳は
+  `stale` のまま残し handoff.md に書く。既存の未確認ミラーを一括で記録しない。

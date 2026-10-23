@@ -1,5 +1,7 @@
 # Measurement (&list_record)
 
+> English mirror of docs/users_guide/record.md. The Japanese file is the master copy.
+
 [Back to the User's Guide index](../users_guide.md)
 
 Sets up **probes** (point time series) and **flux transects** (time

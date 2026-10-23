@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "reviews": [
+    {
+      "source": "CONTRIBUTING.md",
+      "target": "CONTRIBUTING.en.md",
+      "source_sha256": "a7b44704c1412f994827578d18e1c3114cc2bd7023bb704f2d8a77b7861ffce1",
+      "target_sha256": "f3fa7eee76fa563503be39c9a0f19e1efb79d882ebaf6313d22d04573c12f44d",
+      "reviewer": "Claude (Claude Code session; content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "docs/multilingual.md",
+      "target": "docs/en/multilingual.md",
+      "source_sha256": "db6ef00cb0a65423fd7c9a6053be46143ff609bfd6fc8da29d8df3bebc2370d9",
+      "target_sha256": "a292ebbd1af88784710d6d5676254c998483097a2c3d2ed0de3e2be70d93999c",
+      "reviewer": "Claude (Claude Code session; content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/List_samples/list_bedmotion.txt",
+      "target": "examples/List_samples/en/list_bedmotion.txt",
+      "source_sha256": "b1911c25b489839057019085a05e91ff710f7e1b173cd31aa588f071499ad714",
+      "target_sha256": "ae9b9c8e00320e8c40934c71129cfc4519a5899197454ece429964ef3265d668",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/List_samples/list_enc.txt",
+      "target": "examples/List_samples/en/list_enc.txt",
+      "source_sha256": "4e964af72b48a0c894136d91a9df7a401e5ccd42785532ccb91d17a714de5fe2",
+      "target_sha256": "bce74a0546b38d19a330e2f1ebcc752f8adc7a5716e2e4394ed4448f30d4463f",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/List_samples/list_geomorph.txt",
+      "target": "examples/List_samples/en/list_geomorph.txt",
+      "source_sha256": "f39068f530eceb3d3c394719a2a698b61b0bc0d7eff1e1e187b8be6ca53105d9",
+      "target_sha256": "01e9e481ad2ec5ea3dbe041ada49239570a73dc8b14e399c31b1e8e6af622789",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/List_samples/list_gwflow.txt",
+      "target": "examples/List_samples/en/list_gwflow.txt",
+      "source_sha256": "96b7ce19ace7c0327c58d497cdb1d88faee29109da269c93fb9255b18a11337a",
+      "target_sha256": "e092ec6fd409a0cf251aed4b93b89bea157d796f47bf7a1611785ec9e12ffe2c",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/List_samples/list_sysparam.txt",
+      "target": "examples/List_samples/en/list_sysparam.txt",
+      "source_sha256": "c12114fc31b292b479039045c74b94cb504e5e9c488f7ad689215f87e97688e1",
+      "target_sha256": "19f9a36de0c0312f807e08252c3971bd4b9c478ac58fcb87383f623012d214d5",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/List_samples/list_wq.txt",
+      "target": "examples/List_samples/en/list_wq.txt",
+      "source_sha256": "462e707f6e8144be78cbf4e816894ba6a3cf1b4e267d980f57bfe182ed04c714",
+      "target_sha256": "3ea5398bbe1c04695b61d34e61cebe8fb0ffaefedd4a2e24ccf3d053f4c2f07c",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "test/wave/README.md",
+      "target": "test/wave/en/README.md",
+      "source_sha256": "97ce0c3c334d9f8207514eff7d1099d7e193b15850cb333af67590baf942a200",
+      "target_sha256": "5addda831d5f0bc8c01af51614b97a93ccead02430f741d9b4aa8e337920da55",
+      "reviewer": "Claude (Claude Code session; content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "test/wave/param.txt",
+      "target": "test/wave/en/param.txt",
+      "source_sha256": "e402f1b36b4a6a949ad3ffaca5b510abfb906272f44f9cfda812102bc1b8133f",
+      "target_sha256": "68f66aaf26aa1bce26e123c27948462376d49878b7e43f125f674b1ff86a946c",
+      "reviewer": "ChatGPT (content/lexical review; not a model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "test/wave_river/README.md",
+      "target": "test/wave_river/en/README.md",
+      "source_sha256": "15959d7d1e7f4c1d413f8fe1c455e1f3d61a8c22e0cb9d5f56c95005fabf53c7",
+      "target_sha256": "7c1389abc3c0cc9771022f14376a500645dd64391a325e51c0f5985786cff99a",
+      "reviewer": "Claude (Claude Code session; content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "test/wave_river/param_novmax.txt",
+      "target": "test/wave_river/en/param_novmax.txt",
+      "source_sha256": "268da9172e9ff12ec274fcdd6b1cf187901515b5055f2d2e60e927b6d430fc66",
+      "target_sha256": "c1f9f59c74c51314898f3f0807e4d5afaddcf0846f9e5fabbb97237b765b7bed",
+      "reviewer": "ChatGPT (content/lexical review; not a model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "test/wave_river/param_nowave.txt",
+      "target": "test/wave_river/en/param_nowave.txt",
+      "source_sha256": "6b770cc8632f0e31ebd1b43e3bbf6285bfebfd32bb9e3b7439db19a0df1618f9",
+      "target_sha256": "ac74e1da0fcef76f85235779c2839ff30c7e2b0bfc7187a0c29289ef9f52c3b4",
+      "reviewer": "ChatGPT (content/lexical review; not a model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "test/wave_river/param_vmax.txt",
+      "target": "test/wave_river/en/param_vmax.txt",
+      "source_sha256": "5c290d6b91f38f1e865159de650b86ce3ec5b092eca8ef458854b1c43a5a4838",
+      "target_sha256": "39e766913bee9ebd43a7d81d0dda335d82a4869d76e69fab8ecacb545b72b87c",
+      "reviewer": "ChatGPT (content/lexical review; not a model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "tutorials/README.md",
+      "target": "tutorials/en/README.md",
+      "source_sha256": "a32d83a66ca2a42ca0ae090ec783cac6396a045486880e18b88d0831be6a8899",
+      "target_sha256": "7c37c5059e8000225f7451dc294e8e323d6fd6c33d47f57fc5645b05076875b0",
+      "reviewer": "ChatGPT (content/lexical review; not a model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-23"
+    }
+  ]
+}

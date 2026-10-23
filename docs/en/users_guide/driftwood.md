@@ -1,5 +1,7 @@
 # Driftwood (fn_driftwood)
 
+> English mirror of docs/users_guide/driftwood.md. The Japanese file is the master copy.
+
 [Back to the user's guide index](../users_guide.md)
 
 Estimates the generation, transport and deposition of **driftwood**

@@ -1,0 +1,80 @@
+! English mirror of test/wave_river/param_novmax.txt.
+! The Japanese file is authoritative; edit it first.
+
+! wave_river test novmax: no river-mouth rule. The channel becomes a wave source; waves extend upstream and change its bed (reproducing the problem)
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.15
+  t0 = 0
+  tt = 1800
+  dt_disp = 600
+  dt_file = 900
+  dt_recrd = 900
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_geomorph = '-'
+  fn_wave = '-'
+  dir_result = 'result_novmax'
+  dir_save = 'save_novmax'
+  f_state_save = 1
+  f_check_cfl = 1
+  f_out_z = 1
+  f_out_vv = 1
+/
+&list_enc
+  f_opening_dynamic = 2     ! Maintain conveyance near the walls of an incised channel without a channel mask
+/
+&list_initial
+  f_htype = 2               ! Water level 0: channel depth 1.2 m, sea depth from topography, land dry
+  e0 = 0.0
+/
+&list_geoinfo
+  lx = 300.0
+  ly = 200.0
+  nx = 120
+  ny = 80
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.025
+  f_sdtype = 1
+  fn_sd = 'sdinit.txt'
+  sy0 = 0.2
+/
+&list_bound_edge
+  f_bc_e = 2                ! East boundary: long-wave radiation (fixed sea level)
+  f_bc_n = 0
+  f_bc_s = 0
+  f_bc_w = 0
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 39
+  inflow_cell(1:2,2,1) = 1, 40
+  inflow_cell(1:2,3,1) = 1, 41
+  inflow_cell(1:2,4,1) = 1, 42
+  inflow_val(1:2,1,1) = 0, 10.0        ! 10 m3/s: width 10 m x depth 1.2 m gives speed approx. 0.8 m/s
+  inflow_val(1:2,2,1) = 9999, 10.0
+/
+&list_geomorph
+  dt_geomorph = 1.0
+  morfac = 10.0             ! 30 minutes hydrodynamic time = 5 h morphological time
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.0005
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+  fluv_bcfeed = 1           ! Supply at transport capacity (fixed inlet bed elevation)
+  fluv_slope = 1
+/
+&list_wave
+  f_wave_longshore = 1
+  wave_h0 = 0.5             ! Offshore wave height 0.5 m, period 5 s -> breaking depth h_b/gamma = 0.86 m < channel depth 1.2 m
+  wave_t = 5.0
+  wave_dir = 150.0          ! Oblique waves from the east-southeast (as in examples/delta; upwind = southeast)
+  wave_clock = 1
+/

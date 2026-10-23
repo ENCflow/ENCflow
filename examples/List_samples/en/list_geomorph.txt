@@ -121,6 +121,13 @@
                             !   0 = default 0.1
   !fix_cn = 2.0             ! roughness increase ratio c_n at full fixation (flow n becomes
                             !   n (1 + c_n a); the sediment tau* is unchanged. 0 = off = default)
+  !fix_tdec = 50.0          ! decay time T_dec of the fixation while inundated (h; morphological
+                            !   time). While wet, a <- a exp(-t/T_dec). 0 = no decay = default
+                            !   (an exposed bar loses its fixation only by erosion)
+  !fix_ctau_bank = 0.5      ! increase ratio c_tau,b applied to the bank cells of bank erosion.
+                            !   Negative = same as fix_ctau = default, 0 = not applied to the
+                            !   banks (roots bind the surface layer but hardly resist the
+                            !   scour at the bank toe)
 
   ! ---- Suspended sediment (advection + entrainment and settling) ----
   !f_suspend = 1
@@ -151,6 +158,9 @@
                             !   only one is given the other stays 0)
   !wash_kf = 1.0e-6         ! sheetwash erosion coefficient (m/s)
   !wash_tausc = 0.05        ! critical dimensionless shear stress of sheetwash
+  !wet_lw = 0.0             ! correlation length l_w (m) that spreads the detachment depth
+                            ! laterally (0 = off. Rill width. Shared by the detachment of
+                            ! f_wash and the entrainment of f_suspend. developer.md Sec. 84.16)
 
   ! ---- dry-slope erosion (no overland flow: rainsplash + subgrid rills;
   !      dry cells only) ----
@@ -181,7 +191,7 @@
   !spl_sgrad = 1            ! evaluation of the slope S (1: steepest descent = maximum
                             !   downhill gradient to the 8 neighbours = default; ridge-crest
                             !   cells erode with their faces. 0: central difference = the
-                            !   behaviour before 2026-10-19. sec. 48.4)
+                            !   old behaviour. sec. 48.4)
   !spl_ksat = 0.1          ! saturation curvature kappa_s (1/m) of the hollow amplification
                             !   (sec. 48.6). If positive, kappa in 1 + c kappa is replaced by
                             !   kappa/(1 + kappa/kappa_s), bounding the amplification at strong

@@ -99,6 +99,66 @@
   !p_diffusion_alpha = 0.0683333  ! coefficient alpha of the zero-equation model
                             !   (default 0.41/6 = Elder type)
 
+  ! ---- Non-hydrostatic correction (research use; docs/nonhydrostatic_plan.md) ----
+  !f_nonhydrostatic = 0     ! 0: hydrostatic (default), 1: one-layer non-hydrostatic
+                            !   correction (beta = h^2/4. For river run-up of tsunamis
+                            !   whose soliton fission is essentially dispersive, and
+                            !   for near-field generation of landslide tsunamis.
+                            !   Grid guideline dx <~ H/2)
+  !nh_hmin = 0.1            ! cells shallower than this stay hydrostatic (m)
+  !nh_solver = 2            ! iterative solver (1: Jacobi, 2: CG (default). Jacobi
+                            !   converges slowly for dx << H; kept for comparison)
+  !nh_itmax = 500           ! upper limit of the number of iterations
+  !nh_tol = 1.0e-6          ! relative convergence criterion
+  !f_nh_adaptive = 0        ! active set (0: solve everywhere inside the NH mask
+                            !   (default), 1: solve only on the cells where the
+                            !   detector exceeds its threshold plus a margin of
+                            !   nh_margin cells around them. Long-wave and steady-
+                            !   flow regions then add no cost)
+  !nh_detector = 1          ! detector (1: dispersive type chi = |beta D a*|/(|a*|+|beta D a*|)
+                            !   ~ (kH)^2/4, independent of the amplitude (default),
+                            !   2: absolute type |beta D a*|/g)
+  !nh_chi_on = 0.06         ! detection threshold (cells with chi > nh_chi_on are
+                            !   seeds. 0.06 is the level of a 3% phase-speed
+                            !   difference from the hydrostatic solution)
+  !nh_margin = 0            ! margin width (cells. 0: automatic from 2H/dx =
+                            !   4 times the decay distance H/2)
+  !nh_amin = 1.0e-5         ! lower limit of detection |beta D a*| (m/s2). Cells whose
+                            !   correction is below this are not seeds (removes the
+                            !   precursor noise of the explicit scheme)
+  !nh_arel = 1.0e-3         ! relative lower limit of detection. Cells below this
+                            !   ratio of the domain maximum |beta D a*| of the step
+                            !   are not seeds
+  !f_nh_breaking = 0        ! breaking switch (0: none, 1: cells judged to be breaking
+                            !   and nh_break_margin cells around them are made
+                            !   hydrostatic and treated as bores. Essential for
+                            !   breaking waves running up a slope. Use together
+                            !   with f_hcap_upwind = 2)
+  !nh_break_type = 3        ! criterion (1: surface rise rate d(eta)/dt > alpha sqrt(gh)
+                            !   (SWASH type. Adjacent cells use beta. Carries a
+                            !   state that is kept until the crest has passed),
+                            !   2: Froude number |V|/sqrt(gh) > nh_break_fr,
+                            !   3: surface slope |grad eta| > nh_break_slope (default))
+  !nh_break_alpha = 0.6     ! onset threshold alpha of criterion 1
+  !nh_break_beta = 0.3      ! threshold beta of criterion 1 for cells adjacent to a breaking cell
+  !nh_break_fr = 0.6        ! Froude-number threshold of criterion 2
+  !nh_break_slope = 0.3     ! surface-slope threshold of criterion 3
+  !nh_break_margin = 0      ! margin made hydrostatic around breaking cells (cells. 0: 2H/dx)
+  !nh_break_visc = 0.0      ! eddy-viscosity coefficient delta_b^2 of the breaking zone (0: none.
+                            !   1.44 = equivalent to Kennedy et al. 2000. Adds
+                            !   nu_b = nh_break_visc*B*h*sqrt(gh)*|grad eta| to the momentum diffusion term)
+  !nh_bc_margin = 0         ! margin kept hydrostatic next to forcing boundaries (stage,
+                            !   section inflow, outflow, radiation) (cells. 0: 2H/dx)
+  !f_nh_slope = 0           ! bottom-slope terms (0: linear NH on a flat bed (Version 1),
+                            !   1: Version 2, including the kinematic bottom condition
+                            !   w_b = u.grad z_b and the pressure term (phi/h) grad(h+2z_b).
+                            !   Use for waves over slopes and shelves)
+  !f_nh_bottom = 0          ! acceleration term of a moving bottom (0: none, 1: adds the
+                            !   vertical bottom acceleration z_b'' to the NH source term.
+                            !   Acts on landslide tsunamis (f_bedslide), landform
+                            !   evolution, lava flows and z updates through the API.
+                            !   Near-field waveforms of short landslides b/H <~ 2)
+
   ! ---- Miscellaneous ----
   !f_rivermouth_drop = 0    ! overfall from the river mouth to the sea (old
                             !   method; cannot be combined with fn_tide. Using

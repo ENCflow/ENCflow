@@ -1,5 +1,7 @@
 # Writing user routines
 
+> English mirror of docs/users_guide/user_routines.md. The Japanese file is the master copy.
+
 User routines are the mechanism for giving the topography or the
 initial condition **by formulas or code** instead of files (idealized
 experiments, comparison with analytical solutions, benchmarks). You add a

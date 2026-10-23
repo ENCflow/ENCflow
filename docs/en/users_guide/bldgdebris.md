@@ -1,5 +1,7 @@
 # Building destruction and debris (fn_bldgdebris)
 
+> English mirror of docs/users_guide/bldgdebris.md. The Japanese file is the master copy.
+
 [Back to the user's guide index](../users_guide.md)
 
 Estimates the **destruction of wooden houses** by tsunami, storm-surge
