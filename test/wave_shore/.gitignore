@@ -2,3 +2,7 @@ zinit.txt
 sdinit.txt
 zinit_bar.txt
 sdinit_bar.txt
+rd_*/
+sd_*/
+p_*.txt
+r_*.log

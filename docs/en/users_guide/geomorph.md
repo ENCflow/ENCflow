@@ -950,7 +950,7 @@ phi0) in `fn_wave` (&list_wave) and every landform update does the following.
 | parameter | default | meaning |
 |---|---|---|
 | f_wave_longshore | 1 | longshore transport in the surf-zone band; 0 = inactive even with fn_wave |
-| f_wave_shadow | 0 | partial shadowing by submerged bars: the exposure becomes the transmitted-height ratio and the flux in the lee of a bar is reduced (salient and downdrift erosion behind a breakwater). Identical to off on an undisturbed beach |
+| f_wave_shadow | 0 | partial shadowing by submerged bars: the exposure becomes a transmission factor and the flux in the lee of a bar is reduced by (h_crest/h_trough)^{5/2} (the lee rests, sand piles at its updrift edge, erosion downdrift). Identical to off on a monotonically shoaling beach |
 | wave_h0, wave_t, wave_dir | (required) | offshore significant height (m), period (s), direction of travel (deg counter-clockwise from +x (east), north = 90); a time series takes precedence |
 | wave_val(1:4,k) | - | time series (time (min), H0, T, direction); linear interpolation, end values held; H0 = 0 means calm |
 | wave_clock | 1 | clock of the series: 1 = morphological time (hydraulic time x morfac: a wave climate), 0 = hydraulic time (a storm whose duration is hydraulic and acts morfac times longer on the bed) |
@@ -994,11 +994,15 @@ the high-angle growth rate 0.86 of theory, grid-scale power 30 % → 6 %). Use
 
 **Shadowing by submerged bars (`f_wave_shadow`)** reduces longshore transport
 on the beach in the lee of a bar (mouth bar, lobe, breakwater). A wave that has
-crossed a bar with crest depth h_c keeps at most γh_c, so the flux of lee cells
-deeper than h_c is reduced by (h_c/h)^{5/2} (shallow-water energy flux ∝ H^{5/2}).
-In the submerged breakwater case of test/wave_shore the lee deposition rises
-2.4× and the downdrift erosion 1.8×. The inner beach shallower than h_c stays a
-saturated surf zone, so the effect is limited (developer.md §84.15).
+crossed a bar with crest depth h_c keeps at most γh_c, so the flux of the whole
+lee column (inner beach included) is reduced by (h_c/h_trough)^{5/2}
+(shallow-water energy flux ∝ H^{5/2}; the transmission treatment of a
+breakwater in one-line models). Diffraction is not represented, so sand piles at
+the updrift edge of the lee rather than at its centre, and the downdrift side
+erodes. In the submerged breakwater case of test/wave_shore the bed change at
+the lee centre drops to 1/5, the deposition at the updrift edge rises 4× and the
+downdrift erosion 2.6×. The test uses the depth steps of the grid, so bars and
+holes shorter than σ also shadow weakly (developer.md §84.15).
 
 **`wave_vmax` is required at river mouths with a mobile bed**: once the
 river's flow depth exceeds h_b the channel itself becomes a wave source,

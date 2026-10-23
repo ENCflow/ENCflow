@@ -41,8 +41,9 @@
   !wave_gamma = 0.78        ! breaker index gamma = H_b / h_b (surf zone = depth h <= H_b/gamma)
   !wave_smooth = 2          ! smoothing radius of the depth used for the shoreline orientation (cells, 1 or 2)
   !wave_smin = 1.0e-3       ! lower bound of the bed slope that defines a shoreline orientation (flatter = excluded)
-  !f_wave_shadow = 0        ! partial shadowing by submerged bars (0: off, 1: on): the exposure becomes the transmitted-height
-                            !   ratio and the flux in the lee of a bar is reduced (salient behind a breakwater; §84.15 stage 3 (b))
+  !f_wave_shadow = 0        ! partial shadowing by submerged bars (0: off, 1: on): the exposure becomes a transmission factor and
+                            !   the flux in the lee of a bar (mouth bar, lobe, breakwater) is reduced by (h_crest/h_trough)^{5/2}
+                            !   (the lee rests, sand piles at its updrift edge, erosion downdrift; no diffraction; §84.15 stage 3 (b))
   !wave_lsm = 0.0           ! smoothing length sigma (m) of the depth for the shoreline orientation. > 0 replaces the
                             !   cell-radius kernel wave_smooth by a multi-pass kernel (normalized over wet cells, N = 4(sigma/dx)^2
                             !   passes). Use 2 dx or more, up to about a quarter of the surf-zone width: the cut-off wavelength
