@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# examples/meander_cutoff の図化(result を読んで figs/ に保存)
+# examples/meander_cutoff の図化(result(引数で result_* も可)を読んで figs/ に保存)
 #   figs/sequence.png : 出水の前・中・後の流速分布と河床変化(短絡の経過)
 #   figs/final.png    : 終了時の水深・流速・河床変化と、初期河道(黒線)・新流路
 # 数表(README 用): 旧河道(ループ)と新流路(頸部)の流れているセル数の推移
-import os, numpy as np, matplotlib
+import os, sys, numpy as np, matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import make_init as mi
@@ -14,7 +14,8 @@ x = (np.arange(NX) + 0.5) * DX
 y = (np.arange(NY) + 0.5) * DX
 os.makedirs("figs", exist_ok=True)
 z0 = np.loadtxt("z.txt"); h0 = np.loadtxt("h.txt")
-R = "result"
+R = sys.argv[1] if len(sys.argv) > 1 else "result"        # 結果ディレクトリ(省略時 result)
+SFX = ("_" + R[len("result_"):]) if R.startswith("result_") else ""   # 図のファイル名の接尾辞
 
 
 def rd(name, k):
@@ -58,7 +59,7 @@ for n, k in enumerate(ks):
     im = ax.imshow(dz, origin="lower", extent=ext, cmap="RdBu_r", vmin=-2, vmax=2)
     ax.contour(x, y, h0 > 0, levels=[0.5], colors="k", linewidths=0.3)
     ax.set_title("bed change z - z0 (m)")
-plt.tight_layout(); plt.savefig("figs/sequence.png", dpi=80); plt.close()
+plt.tight_layout(); plt.savefig("figs/sequence%s.png" % SFX, dpi=80); plt.close()
 
 k = ks[-1]
 h = rd("H", k); vv = rd("V", k); z = rd("Z", k); dz = z - z0
@@ -70,5 +71,5 @@ for ax in axes:
     ax.contour(x, y, h0 > 0, levels=[0.5], colors="k", linewidths=0.4)
     ax.contour(x, y, neck, levels=[0.5], colors="orange", linewidths=0.6)
     ax.set_xlabel("x (m)"); ax.set_ylabel("y (m)")
-plt.tight_layout(); plt.savefig("figs/final.png", dpi=100); plt.close()
-print("figures: figs/sequence.png figs/final.png")
+plt.tight_layout(); plt.savefig("figs/final%s.png" % SFX, dpi=100); plt.close()
+print("figures: figs/sequence%s.png figs/final%s.png" % (SFX, SFX))

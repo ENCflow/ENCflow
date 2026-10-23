@@ -1,0 +1,99 @@
+!======================================================================
+! meander_cutoff: 出水による短絡 + 崩落土塊(f_rockfall の河岸モード。§84.17)
+!   (docs/meander_plan.md 段 4、developer.md §84.5)。入力は make_init.py
+!   (make が生成): 正弦波生成曲線(最大方向角 105°)の 2 波長、幅 20 m、
+!   氾濫原は近傍の河床 +1.6 m、2 つの河道区間に近い陸(頸部)だけ +0.95 m。
+!   土層厚は両端 30 m が 0、上流端から 150 m はランプ。流入は西端の河道
+!   10 セル: Q = 15 m³/s(30 分)→ 40 m³/s(40〜100 分の出水)→ 15 m³/s。
+!   東辺は自由流出。地形時間は morfac = 10(水理 3 h = 地形 30 h)。
+!   二次流の偏角上限 sec_rmax = 0.3、安息角 40°(河岸 1.6 m / 2 m = 38.7° が
+!   安定)、dt = 0.1 s(淵の深い流れの CFL)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 10800
+  dt_disp = 600
+  dt_file = 1800
+  dt_recrd = 1800
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result_slump'
+  f_state_save = 0
+  f_check_cfl = 1
+  f_out_z = 1
+  f_out_vv = 1
+/
+&list_enc
+  f_advection_scheme = 3    ! 既定の運動量保存形(examples/meander と同じ。§84.6)
+  f_opening_dynamic = 2     ! 塞がれた開口の動的振り替えを全エッジに(河道マスクがない
+                            !   掘り込み河道では既定の 1 は無効。壁際の行の通水能不足を
+                            !   解消する。§84.7、test/uniflow)
+/
+&list_initial
+  f_htype = 1
+  fn_hinit = 'h.txt'
+/
+&list_geoinfo
+  lx = 346.0
+  ly = 206.0
+  nx = 173
+  ny = 103
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 1
+  fn_sd = 'sd.txt'
+  sy0 = 0.2
+/
+&list_geomorph
+  dt_geomorph = 1.0
+  morfac = 10.0
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.001
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+  fluv_slope = 1
+  fluv_mus = 1.0
+  fluv_muk = 0.45
+  f_secflow = 1
+  sec_nstar = 7.0
+  sec_rmax = 0.3
+  f_repose = 1
+  repose_phi = 40.0
+  f_rockfall = 1            ! 崩落土塊(§84.17): 河岸面が限界高さを超えると塊で崩れ、崖錐が脚部を覆う
+  rf_bank = 1               ! 河岸モード(水面下の段は除外、崖錐は掃流砂で搬出)
+  rf_hc = 1.8               ! 限界高さ (m)。氾濫原 1.6 m は淵の洗掘 0.2 m で、頸部 0.95 m は 0.85 m で崩れる
+  rf_phi = 35.0             ! 崖錐の安息角 (deg)
+/
+&list_bound_edge
+  f_bc_e = 1
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 16
+  inflow_cell(1:2,2,1) = 1, 17
+  inflow_cell(1:2,3,1) = 1, 18
+  inflow_cell(1:2,4,1) = 1, 19
+  inflow_cell(1:2,5,1) = 1, 20
+  inflow_cell(1:2,6,1) = 1, 21
+  inflow_cell(1:2,7,1) = 1, 22
+  inflow_cell(1:2,8,1) = 1, 23
+  inflow_cell(1:2,9,1) = 1, 24
+  inflow_cell(1:2,10,1) = 1, 25
+  inflow_val(1:2,1,1) = 0, 15.0
+  inflow_val(1:2,2,1) = 30, 15.0
+  inflow_val(1:2,3,1) = 40, 40.0
+  inflow_val(1:2,4,1) = 100, 40.0
+  inflow_val(1:2,5,1) = 110, 15.0
+  inflow_val(1:2,6,1) = 9999, 15.0
+  inflow_dist(1) = 0
+/
