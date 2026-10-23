@@ -77,8 +77,13 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      2026-10-22 に完了(examples/delta の baseqb・wave。README「波浪」)。波ありで
      陸化 2.4 倍・分流路 1 本・風下へ偏る砂嘴。格子幅の指状砂州は段 3 (a)(wave_lsm の
      物理長の平滑化+wave_bslp。2026-10-22 追加、test/wave_shore で線形理論と Δx 細分化を
-     確認)で対処し、例題を σ = 10 m で再実行(README「波浪」)。残り: 段 3 (b) 水没砂州の
-     部分遮蔽(有限振幅での砂嘴の間隔の選択)、段 2 の攪拌、R を振る感度(inflow_qb と H₀)。
+     確認)で対処し、例題を σ = 10 m で再実行(README「波浪」)。段 3 (b) 水没砂州の
+     部分遮蔽 f_wave_shadow も追加(案 C: 一線式の透過率を陰の列全体に。test/wave_shore
+     bar/bar0 で離岸堤の型 = 陰が休み、風上側の縁に堆積、風下に侵食)。
+   - 残り: 段 2 の攪拌(案 B)、R を振る感度(inflow_qb と H₀)、examples/delta の波浪ケースを
+     f_wave_shadow = 1 で走らせて河口砂州・ローブの陰の効果を見る(未実施)、回折と風上の
+     8 方向量子化の精緻化(必要になったとき)。散逸に比例する岸沖配分(案 B)は断面維持の
+     岸沖輸送が要るため段 2 以降の課題。
    - ビルドの注意: `make MODE=mpi install` の後に src だけで `make` すると
      libencflow.a に逐次と MPI の .o が混在してトップレベルの make(utils の
      リンク)が失敗する。モードを切り替えるときは `make clean` を挟むこと。

@@ -16,6 +16,11 @@
 #         (格子スケールの砂州が育つ = 物理長の平滑化が要ることの記録)
 #     (3) 保存: Σ(z − z0) が 0(閉領域。印字精度 1e-4 × セル数の丸めを許容)
 #     (4) 無効時のビット一致は Run.sh が cmp で見る(off と nowave)
+#     (5) bar / bar0(直線汀線の沖の非侵食の水没砂州 = 離岸堤。段 3 (b) の部分遮蔽 f_wave_shadow):
+#         遮蔽ありで陰の中央(x = 360〜440 m、汀線から 25 m)の地形変化(Σ|Δz|)が遮蔽なしの
+#         LEE_QUIET 倍以下(陰が休む)、陰の風上側の縁(x = 440〜500 m)の堆積が UP_RATIO 倍以上、
+#         風下側(x = 250〜350 m)の侵食が DOWN_RATIO 倍以上(回折が無いので砂は陰の中央でなく
+#         風上側の縁に溜まる。一線モデルの離岸堤と同じ型)
 import sys, os, math
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -27,6 +32,7 @@ TOL_D = 0.35
 RATIO_LO, RATIO_HI = 0.5, 1.5   # (2) 高角の成長率の理論比の範囲(実測 0.86)
 PSMALL_MAX, PSMALL_MIN = 15.0, 20.0   # (2) 波長 10 m 未満のパワー (%)。実測: 物理長 6 %、従来核 30 %
 HC2 = 0.8                    # 凹凸を測る等深線(砕波帯の沖側)
+LEE_QUIET, UP_RATIO, DOWN_RATIO = 0.5, 1.5, 1.5   # (5) 実測: 陰の中央 0.21、風上の縁 4.3、風下 2.6
 HC = 0.5                     # 測る等深線の水深 (m)
 X1, X2 = 200.0, 600.0        # 測定区間(中央 2 波長。両端 1 波長は壁と遮蔽の影響域)
 
@@ -114,6 +120,22 @@ for tag in ("low", "high"):
     g3 = abs(dz) < tol
     print("(3) %s 体積保存: Σ(z − z0) dA = %.2f m³ (印字精度の許容 %.1f m³) : %s" % (tag, dz, tol, "PASS" if g3 else "FAIL"))
     ok = ok and g3
+
+# (5) 水没離岸堤: 遮蔽ありで陰の中央が休み、風上側の縁に堆積、風下に侵食
+from make_init import XB1, XB2, YL
+X = np.broadcast_to(x[None, :], (NY, NX)); Y = np.broadcast_to(y[:, None], (NY, NX))
+core = (X >= XB1 + 10.0) & (X < XB2 - 10.0) & (Y >= YL) & (Y < 45.0)
+upedge = (X >= XB2 - 10.0) & (X < XB2 + 50.0) & (Y >= YL) & (Y < 55.0)
+down = (X >= XB1 - 100.0) & (X < XB1) & (Y >= YL) & (Y < 55.0)
+v = {}
+for tag in ("bar", "bar0"):
+    dz = np.loadtxt("result_%s/Z0002.txt" % tag) - np.loadtxt("result_%s/Z0000.txt" % tag)
+    v[tag] = (np.abs(dz[core]).sum() * DX * DX, dz[upedge].sum() * DX * DX, dz[down].sum() * DX * DX)
+r_core = v["bar"][0] / max(v["bar0"][0], 1e-6); r_up = v["bar"][1] / max(v["bar0"][1], 1e-6); r_down = v["bar"][2] / min(v["bar0"][2], -1e-6)
+g5 = r_core < LEE_QUIET and v["bar"][1] > 0 and r_up > UP_RATIO and v["bar"][2] < 0 and r_down > DOWN_RATIO
+print("(5) 水没離岸堤: 陰の中央 Σ|Δz| %.0f m³ (遮蔽なし %.0f、比 %.2f < %.1f)、風上側の縁の堆積 %.0f m³ (%.0f、比 %.1f > %.1f)、風下の侵食 %.0f m³ (%.0f、比 %.1f > %.1f) : %s"
+      % (v["bar"][0], v["bar0"][0], r_core, LEE_QUIET, v["bar"][1], v["bar0"][1], r_up, UP_RATIO, v["bar"][2], v["bar0"][2], r_down, DOWN_RATIO, "PASS" if g5 else "FAIL"))
+ok = ok and g5
 
 print("== wave_shore 検定: %s ==" % ("PASS" if ok else "FAIL"))
 sys.exit(0 if ok else 1)

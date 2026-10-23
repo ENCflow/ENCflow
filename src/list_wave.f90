@@ -18,6 +18,11 @@ module list_wave
 
   type t_list_wave
     integer :: f_wave_longshore = 1    ! 汀線帯の沿岸漂砂(0:無効, 1:有効)。wave_plan.md 案 A
+    integer :: f_wave_shadow = 0       ! 水没砂州の部分遮蔽(0:無効, 1:有効)。露出度を「透過率 f」にし、
+                                       !   岸側の隣が自セルより深いセルで f に (h/h_岸側)^{5/2} を掛けて伝える
+                                       !   (砂州を越えた波は天端で砕けて γh まで。積が (h_天端/h_トラフ)^{5/2} に
+                                       !   縮約し岸側の列全体に効く = 一線モデルの離岸堤の扱い。単調に浅くなる
+                                       !   浜では 1 = 従来)(§84.15 段 3 (b))
     real :: wave_h0 = 0.0              ! 沖の有義波高 H0 (m)(固定値。時系列があればそちらが優先)
     real :: wave_t = 0.0               ! 周期 T (s)(固定値)
     real :: wave_dir = 0.0             ! 波の進行方向 (deg。x 軸(東)から反時計回り。北 = 90°)
@@ -47,15 +52,16 @@ contains
 subroutine list_wave_read(p, list)
   type(t_sysparam), intent(in) :: p
   type(t_list_wave), intent(inout) :: list
-  integer :: f_wave_longshore, wave_clock, wave_smooth
+  integer :: f_wave_longshore, wave_clock, wave_smooth, f_wave_shadow
   real :: wave_h0, wave_t, wave_dir, wave_k2, wave_gamma, wave_smin, wave_vmax, wave_lsm, wave_bslp
   real :: wave_val(1:4,1:nwvmax)
   integer :: un, ios
   character(len=1024) :: iom
-  namelist /list_wave/ f_wave_longshore, wave_h0, wave_t, wave_dir, wave_val, wave_clock, &
+  namelist /list_wave/ f_wave_longshore, f_wave_shadow, wave_h0, wave_t, wave_dir, wave_val, wave_clock, &
                        wave_k2, wave_gamma, wave_smooth, wave_smin, wave_vmax, wave_lsm, wave_bslp
 
   f_wave_longshore = list%f_wave_longshore
+  f_wave_shadow = list%f_wave_shadow
   wave_h0 = list%wave_h0
   wave_t = list%wave_t
   wave_dir = list%wave_dir
@@ -77,6 +83,7 @@ subroutine list_wave_read(p, list)
   close(un)
 
   list%f_wave_longshore = f_wave_longshore
+  list%f_wave_shadow = f_wave_shadow
   list%wave_h0 = wave_h0
   list%wave_t = wave_t
   list%wave_dir = wave_dir
