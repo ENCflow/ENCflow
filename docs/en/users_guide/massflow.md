@@ -111,7 +111,7 @@ surface speed. Concave terrain decelerates, convex terrain reduces the
 friction, and a flow that would lift off gets zero friction. It is the
 curvature term that Fischer et al. put into RAMMS[^fischer12]; turn it on
 when comparing with μ–ξ values calibrated in RAMMS. Verification:
-[test/curvature](../../../test/curvature/README.md) (comparison with the
+[test/curvature](../../../test/curvature/en/README.md) (comparison with the
 steady one-dimensional ODE; the thickening on the arc, on minus off, is
 1.03 times the ODE value).
 
@@ -291,7 +291,7 @@ still-water depth for the test.
 debris; $`r = 0.5`$), μ = 0.15, ξ = 500 m/s² (calibration values of the
 inertialess layer used by every configuration of
 [examples/landslide_tsunami](../../../examples/landslide_tsunami/) and
-[test/bedslide](../../../test/bedslide/README.md)), $`v_{stop}`$ = 0.05 m/s.
+[test/bedslide](../../../test/bedslide/en/README.md)), $`v_{stop}`$ = 0.05 m/s.
 They are named separately from the μ, ξ of the mixture because the
 calibration differs with and without inertia. Without inertia the layer
 moves at its terminal speed from the start, so the near-field wave is
@@ -319,7 +319,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | db_reltime / db_relsat | 0 / 1.0 | release time / saturation of the failed mass (§4) | **given** |
 | slide_c / slide_phi / slide_gamma | 0 / 30° / 18 kN/m³ | strength constants of the stability test (§4) | **customary value** shallow-landslide values; c' = 0 is on the safe side |
 | bs_rho | 2000 kg/m³ | bulk density of the mass (§5) | **customary value** representative of saturated soil and rock debris |
-| bs_mu / bs_xi | 0.15 / 500 m/s² | Voellmy μ, ξ of the layer | **verification case** calibration of the inertialess layer ([test/bedslide](../../../test/bedslide/)) |
+| bs_mu / bs_xi | 0.15 / 500 m/s² | Voellmy μ, ξ of the layer | **verification case** calibration of the inertialess layer ([test/bedslide](../../../test/bedslide/en/README.md)) |
 | bs_vstop / bs_tstop | 0.05 m/s / 0 s | stopping speed and its duration | **numerical** 10–15 s when entering water (longer than the temporary drawdown) |
 | bs_eps_s / bs_cfl / bs_nsubmax | 0.02 / 0.4 / 10000 | linearisation width / sub-cycle safety factor and limit | **numerical** raise eps_s when sub-cycles are excessive |
 | bs_hplunge / f_bsvplunge / f_bsplunge | 0 / 0 / 0 | hand-over depth and conditions | **method** vplunge = 1 for fast entries from land |
@@ -341,12 +341,12 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Case | Content | Point |
 |---|---|---|
-| [test/debris](../../../test/debris/README.md) | four constitutive configurations (simple, Egashira, Takahashi–Nakagawa, pore water) | total solid 1e-13, np = 1, 2, 4 agree |
-| [test/slide](../../../test/slide/README.md) | fluidisation and stability test | self-checks of conservation and water budget |
-| [test/volcano](../../../test/volcano/README.md) | Voellmy uniform flow and τ_y run-out | uniform depth within 0.04% of the analytical solution (four neighbours) |
-| [test/curvature](../../../test/curvature/README.md) | steady one-dimensional test of the curvature term | thickening on the arc 1.03 times the ODE |
-| [test/avalanche](../../../test/avalanche/README.md) | avalanche (Voellmy + velocity-proportional entrainment) | grows 1.5 times by entrainment and stops; ledger to machine precision |
-| [test/bedslide](../../../test/bedslide/README.md) | analytical speed of the layer, 45° slope, entry into a lake | $`V`$ of interior cells within 0.5% of the analytical value |
+| [test/debris](../../../test/debris/en/README.md) | four constitutive configurations (simple, Egashira, Takahashi–Nakagawa, pore water) | total solid 1e-13, np = 1, 2, 4 agree |
+| [test/slide](../../../test/slide/en/README.md) | fluidisation and stability test | self-checks of conservation and water budget |
+| [test/volcano](../../../test/volcano/en/README.md) | Voellmy uniform flow and τ_y run-out | uniform depth within 0.04% of the analytical solution (four neighbours) |
+| [test/curvature](../../../test/curvature/en/README.md) | steady one-dimensional test of the curvature term | thickening on the arc 1.03 times the ODE |
+| [test/avalanche](../../../test/avalanche/en/README.md) | avalanche (Voellmy + velocity-proportional entrainment) | grows 1.5 times by entrainment and stops; ledger to machine precision |
+| [test/bedslide](../../../test/bedslide/en/README.md) | analytical speed of the layer, 45° slope, entry into a lake | $`V`$ of interior cells within 0.5% of the analytical value |
 | [examples/landslide_tsunami](../../../examples/landslide_tsunami/) | rock avalanche, hand-over, submarine landslide | four patterns compared |
 | [examples/ashfall_lahar](../../../examples/ashfall_lahar/) | ash fall → rain → lahar | the lahar setting pattern |
 

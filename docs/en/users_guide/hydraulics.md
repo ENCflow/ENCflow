@@ -75,7 +75,7 @@ $`d_c = \min\!\left(D, (Q_w^2/gB^2)^{1/3}\right)`$, obtained explicitly
 without iteration. As the barrel approaches capacity $`d_c \to D`$ and the
 reference returns to the crown, and right after the inlet submerges
 (h₁ = D) $`Q_p \approx Q_w`$, so the three regimes join smoothly through
-$`\min`$ (panel (b); [test/culvert](../../../test/culvert/) checks that the
+$`\min`$ (panel (b); [test/culvert](../../../test/culvert/en/README.md) checks that the
 recovered discharge is monotonic). Before 2026-10-12 the crown was used
 as the reference regardless of inlet submergence, so $`Q_p \to 0`$ right
 after the upstream level passed the crown and the discharge dipped
@@ -239,11 +239,11 @@ are the Honma values of §1 and are not user parameters.
 
 | Case | Content | Point |
 |---|---|---|
-| [test/damwq](../../../test/damwq/README.md) | constant release of a dam and a pond | storage and release ledger agree with the analytical solution |
-| [test/coastal_drain](../../../test/coastal_drain/README.md) | pumping station from the conduit layer with a sea outfall | transfer of the pumping station |
-| [test/nhcurrent](../../../test/nhcurrent/README.md) | uniform flow and sine wave from prescribed levels | use of prescribed-level boundaries |
-| [test/sedinflow](../../../test/sedinflow/README.md) | total segment inflow with sediment | ledger closure of the inflow |
-| [test/nest_identity](../../../test/nest_identity/README.md) | Flather versus radiation boundary | both agree for a still parent grid |
+| [test/damwq](../../../test/damwq/en/README.md) | constant release of a dam and a pond | storage and release ledger agree with the analytical solution |
+| [test/coastal_drain](../../../test/coastal_drain/en/README.md) | pumping station from the conduit layer with a sea outfall | transfer of the pumping station |
+| [test/nhcurrent](../../../test/nhcurrent/en/README.md) | uniform flow and sine wave from prescribed levels | use of prescribed-level boundaries |
+| [test/sedinflow](../../../test/sedinflow/en/README.md) | total segment inflow with sediment | ledger closure of the inflow |
+| [test/nest_identity](../../../test/nest_identity/en/README.md) | Flather versus radiation boundary | both agree for a still parent grid |
 | [tutorials/wave](../../../tutorials/wave/en/README.md) Step 3 | radiation boundary | transmission and reflection of waves |
 
 ## References

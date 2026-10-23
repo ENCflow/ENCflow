@@ -1,5 +1,7 @@
 # test/nest_identity — 比 1:1 の自己ネストの恒等テスト
 
+[English](en/README.md)
+
 ネスティング(docs/users_guide/nest.md、docs/nesting_plan.md)の検証の要。
 子を親の部分領域と同じ格子(比 1:1、dt 同一)にすると、帯の補間は恒等写像
 (親の値をそのまま置く)になり、**子の内部(帯を除く)は親の同じセルと

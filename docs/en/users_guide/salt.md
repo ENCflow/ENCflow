@@ -151,7 +151,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   subsurface interface elevation is ground − soil thickness + Hgs / sy0.
 - Check the quasi-steady intrusion against the Ghyben–Herzberg relation
   $`z_s = h_f/\varepsilon`$ (about 40 times the fresh head) as a function of
-  distance from the coast (procedure of [test/salt](../../../test/salt/)).
+  distance from the coast (procedure of [test/salt](../../../test/salt/en/README.md)).
 - Where the run-up sea water ended up is read from the last frame of
   `Hss0001...` (salt water left after drainage).
 
@@ -203,7 +203,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 ## Tests and examples
 
-- [test/salt](../../../test/salt/): the pool-partition experiment (approach to a stable stratification) and seawater intrusion with analytic checks.
+- [test/salt](../../../test/salt/en/README.md): the pool-partition experiment (approach to a stable stratification) and seawater intrusion with analytic checks.
 - Worked example of the format: [examples/List_samples/en/list_salt.txt](../../../examples/List_samples/en/list_salt.txt).
 
 ## References

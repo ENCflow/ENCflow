@@ -219,11 +219,11 @@ consistent with the estimate pipe-full capacity 1.70 m³/s ≳ runoff
   stiffer slot_sy or a finer grid the subcycling subdivides the step
   automatically ("subcycles = N" on screen).
 - The same configuration turned into a short 30-minute regression test is
-  [test/sewer_wq](../../../test/sewer_wq/) (in Japanese), which adds the
+  [test/sewer_wq](../../../test/sewer_wq/en/README.md), which adds the
   water-quality module and follows the spread of coliform bacteria in the
   erupted water as sewage. Drainage of a system below sea level (negative
   inverts, sea outfalls, pumping stations) is in
-  [test/coastal_drain](../../../test/coastal_drain/) (in Japanese), and
+  [test/coastal_drain](../../../test/coastal_drain/en/README.md), and
   groundwater collection by a gallery in
   [examples/qanat](../../qanat/en/README.md).
 

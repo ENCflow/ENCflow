@@ -1,5 +1,7 @@
 # test/bendsed — 90° 湾曲水路の流砂方向補正(河床勾配項+平衡二次流項)
 
+[English](en/README.md)
+
 掃流砂 Exner(`f_fluvial`)に 2026-10-17 に加えた流砂方向補正
 (developer.md §84.3。蛇行発達への拡張 docs/meander_plan.md の段 1)の検定です。
 流砂ベクトルを q⃗_b = q_b (t̂ + r n̂ − γ∇z) とし、`fluv_slope = 1` で河床

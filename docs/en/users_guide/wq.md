@@ -199,7 +199,7 @@ roughly Pb: 10⁴–10⁶, Cu/Zn/Cd: 10³–10⁵, As: 10¹–10³ L/kg, but
 target basin is more reliable**. Sorption retardation in groundwater
 is given separately by `wq_rg` (below).
 
-Worked example: [test/kdpart](../../../test/kdpart/) (a suspended-
+Worked example: [test/kdpart](../../../test/kdpart/en/README.md) (a suspended-
 sediment dam break plus a point source, with built-in checks of the
 ledger closure and the monotonic response to increasing Kd).
 
@@ -252,7 +252,7 @@ that judgement through R.
   carried through groundwater. The ledger closure (the relation above) is
   not broken by any of these pathways.
 
-Worked example: [test/gwseep](../../../test/gwseep/) (a closed sloping
+Worked example: [test/gwseep](../../../test/gwseep/en/README.md) (a closed sloping
 domain cycling infiltration → lateral groundwater flow → seepage →
 re-infiltration, with built-in checks of the ledger closure and the
 immobilization at wq_rg=1e12).
@@ -283,7 +283,7 @@ dams/lakes ([structures](structure.md)) or retention ponds (rscap;
   decay also acts in this pool. Evaporation removes pure water, leaving
   mass behind and increasing concentration.
 
-Worked example: [test/damwq](../../../test/damwq/) (a slope with a
+Worked example: [test/damwq](../../../test/damwq/en/README.md) (a slope with a
 retention-pond patch and a constant-release dam, with built-in checks
 of the ledger closure and the end-to-end preservation of a uniform
 concentration).
@@ -418,7 +418,7 @@ concentration).
 - The concentration is fully mixed (no vertical profile) and a single
   substance (to include viruses etc., run each substance separately).
 
-Example: [test/sewer_wq](../../../test/sewer_wq/) (a town with trunk and
+Example: [test/sewer_wq](../../../test/sewer_wq/en/README.md) (a town with trunk and
 branch sewers under 100 mm/h x 30 min of rain - the chain of surcharge →
 flooding → spreading → decay, and the budget check of wq.csv. How the
 network was built: [examples/sewer_hybrid](../../../examples/sewer_hybrid/)).
@@ -498,10 +498,10 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 
 ## Tests and examples
 
-- [test/kdpart](../../../test/kdpart/): Kd two-phase partitioning in a suspended-sediment dam break with a point source.
-- [test/gwseep](../../../test/gwseep/): budget check of transport through infiltration and lateral groundwater flow.
-- [test/damwq](../../../test/damwq/): steady-state check of completely mixed dam release and pond entrainment.
-- [test/sewer_wq](../../../test/sewer_wq/): budget check of sewer surcharge in a town with a conduit network (how the network was built: [examples/sewer_hybrid](../../../examples/sewer_hybrid/)).
+- [test/kdpart](../../../test/kdpart/en/README.md): Kd two-phase partitioning in a suspended-sediment dam break with a point source.
+- [test/gwseep](../../../test/gwseep/en/README.md): budget check of transport through infiltration and lateral groundwater flow.
+- [test/damwq](../../../test/damwq/en/README.md): steady-state check of completely mixed dam release and pond entrainment.
+- [test/sewer_wq](../../../test/sewer_wq/en/README.md): budget check of sewer surcharge in a town with a conduit network (how the network was built: [examples/sewer_hybrid](../../../examples/sewer_hybrid/)).
 - Worked example of the format: [examples/List_samples/en/list_wq.txt](../../../examples/List_samples/en/list_wq.txt)
 - Combined with groundwater, infiltration entrainment and the
   subsurface pool can be tracked

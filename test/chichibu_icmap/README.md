@@ -1,5 +1,7 @@
 # test/chichibu_icmap — 窓つき領域マスク+分布ファイルの回帰ケース
 
+[English](en/README.md)
+
 [test/chichibu](../chichibu/) と同じ秩父流域 100 m 格子(560 × 300、流域マスクの
 窓は列 76..501・行の一部)に、**固定遮断率モデルの遮断率分布**
 `Chichibu_100m_icalpha.txt`(x 方向の勾配 α(i) = 0.8 (i−1)/(nx−1))を与え、

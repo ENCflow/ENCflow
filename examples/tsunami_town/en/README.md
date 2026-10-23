@@ -283,5 +283,5 @@ the 60,000 m³ of timber in the driftwood case, 35,795 m³ was washed out,
 - Description of the feature and parameter table: [docs/users_guide/bldgdebris.md](../../../docs/en/users_guide/bldgdebris.md); driftwood: [users_guide/driftwood.md](../../../docs/en/users_guide/driftwood.md); tide: [users_guide/tide.md](../../../docs/en/users_guide/tide.md)
 - List of applications: [docs/users_guide/usecases.md](../../../docs/en/users_guide/usecases.md)
 - Design, verification and literature cross-check: docs/developer.md §63 (the building destruction and debris module and the void ratio as a state variable; in Japanese)
-- Self-verification tests: [test/bldgdebris](../../../test/bldgdebris/) (conservation laws, one-way coupling, volume conservation under feedback, restart) and [test/gvchange](../../../test/gvchange/) (unit check of void-ratio changes) (in Japanese)
+- Self-verification tests: [test/bldgdebris](../../../test/bldgdebris/en/README.md) (conservation laws, one-way coupling, volume conservation under feedback, restart) and [test/gvchange](../../../test/gvchange/en/README.md) (unit check of void-ratio changes) (in Japanese)
 - Example of the same type: [examples/timberyard](../../timberyard/en/README.md) (timber influx from a log yard by a storm surge)

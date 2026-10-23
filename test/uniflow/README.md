@@ -1,5 +1,7 @@
 # test/uniflow — 乾いた地盤に挟まれた直線水路の等流
 
+[English](en/README.md)
+
 河道マスク(fn_rw)も河道幅モードも使わない「ラスタの掘り込み水路」で、
 壁際の行の通水能を Manning の等流と比べる(developer.md §84.7)。
 

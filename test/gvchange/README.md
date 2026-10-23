@@ -1,5 +1,7 @@
 # test/gvchange — 空隙率変更手続き m_state_set_gv の単体検定
 
+[English](en/README.md)
+
 セル空隙率 gv(瓦礫・建物などが水柱を占めることで減る「水の入れる割合」。
 developer.md §63.1 の A1・A2)を変更する手続き `m_state_set_gv` の単体
 検定です。計算本体(時間ループ)は回さず、`libencflow.a` の手続きを

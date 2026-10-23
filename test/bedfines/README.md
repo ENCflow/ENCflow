@@ -1,5 +1,7 @@
 # bedfines — 河床の細粒分の帳簿(f_bedfines)の検定
 
+[English](en/README.md)
+
 developer.md §84.10、docs/meander_plan.md §3.6c。掃流砂(fluv_d50)と浮遊砂
 (susp_d50)を重ねる計算で、浮遊砂の巻き上げを河床に在庫する細粒分 sf
 (0 ≤ sf ≤ sd。出力 Sf)に限り、細粒分は掃流砂・側岸侵食・崩落と一緒に動く

@@ -29,7 +29,7 @@ numerical diffusion: longitudinally $`D \approx u\,\Delta x\,(1 - Cr)/2`$
 $`u\Delta x/2`$: 4 m²/s for u = 1 m/s and Δx = 10 m), and laterally, even
 without any lateral flow, $`D_y \approx 0.29\,u\,\Delta y`$ from the diagonal
 shares of the eight-direction links (measured in
-[test/tracer](../../../test/tracer/README.md), within 5 % of the theory).
+[test/tracer](../../../test/tracer/en/README.md), within 5 % of the theory).
 The default `f_scalar_scheme = 3` (link-wise MUSCL; [Advection](advection.md)
 §7) reduces this to 1/3–1/5 longitudinally and 1/14 laterally; where the
 arrival time or the peak of a concentration front still matters, refine the
@@ -143,7 +143,7 @@ percolation into the weathered bedrock layer, pumping and infiltration
 water into the conduit layer move water only and the mass stays in layer 1
 (the layer-1 concentration becomes apparently higher, and the return water
 through layer 2 or the conduits is clean water).
-Verification: [test/gwseep](../../../test/gwseep/README.md) (the cycle
+Verification: [test/gwseep](../../../test/gwseep/en/README.md) (the cycle
 infiltration → lateral flow → seepage → re-infiltration closes the ledger
 to_gw − seep = mass_gw; $`R`$ = 1e12 immobilises the mass).
 
@@ -182,7 +182,7 @@ $`M/V`$. Settling inside the pool is not implemented. Mass entering a
 fixed-level lake leaves the system like the water (ledger `to_dam_g`).
 Mass absorbed by a retention pond (`rscap`) accumulates in a cell-wise pool
 with no return path (evaporation removes only water, concentrating the
-pool). Verification: [test/damwq](../../../test/damwq/README.md) (all
+pool). Verification: [test/damwq](../../../test/damwq/en/README.md) (all
 digits of the analytical solution).
 
 **Sewer surcharge (wq_gwc_conc).** The surcharge and land-side outfall
@@ -199,7 +199,7 @@ $`T_{90}`$ of hours to days are in the
 [representative table of the chapter](wq.md#representative-values-a-starting-point);
 the die-off rates of faecal indicators are within the range of standard
 water-quality textbooks[^chapra97]. Verification:
-[test/sewer_wq](../../../test/sewer_wq/README.md).
+[test/sewer_wq](../../../test/sewer_wq/en/README.md).
 
 ## 7. Parameters and the basis of their defaults
 
@@ -243,11 +243,11 @@ representative values.
 
 | Case | Content | Point |
 |---|---|---|
-| [test/damwq](../../../test/damwq/README.md) | reservoir (completely mixed) and pond | ledger agrees with the analytical solution to all digits |
-| [test/kdpart](../../../test/kdpart/README.md) | Kd partitioning and particulate settling | ledger closure and monotonicity with increasing Kd |
-| [test/gwseep](../../../test/gwseep/README.md) | infiltration → lateral flow → seepage | to_gw − seep = mass_gw; immobile at $`R`$ = 1e12 |
-| [test/sewer_wq](../../../test/sewer_wq/README.md) | sanitary risk of sewer surcharge | ledger check of surcharge → inundation → spreading → decay |
-| [test/tracer](../../../test/tracer/README.md) | Numerical diffusion of the first-order upwind transport | Spreading of a clean-water front D = u·Δx·(1−Cr)/2 and lateral variance of a steady plume Dy = 0.29·u·Δy, both within 5 % of the theory |
+| [test/damwq](../../../test/damwq/en/README.md) | reservoir (completely mixed) and pond | ledger agrees with the analytical solution to all digits |
+| [test/kdpart](../../../test/kdpart/en/README.md) | Kd partitioning and particulate settling | ledger closure and monotonicity with increasing Kd |
+| [test/gwseep](../../../test/gwseep/en/README.md) | infiltration → lateral flow → seepage | to_gw − seep = mass_gw; immobile at $`R`$ = 1e12 |
+| [test/sewer_wq](../../../test/sewer_wq/en/README.md) | sanitary risk of sewer surcharge | ledger check of surcharge → inundation → spreading → decay |
+| [test/tracer](../../../test/tracer/en/README.md) | Numerical diffusion of the first-order upwind transport | Spreading of a clean-water front D = u·Δx·(1−Cr)/2 and lateral variance of a steady plume Dy = 0.29·u·Δy, both within 5 % of the theory |
 
 ## References
 

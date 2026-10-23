@@ -24,7 +24,7 @@ Outputs are `dir_out/disp_NNNN.txt` (cumulative displacement at each time, in
 the same text-matrix format as ENCflow's z, with rows from north to south) and
 `dir_out/bmlist.txt` (a table of time and filename). On the ENCflow side, set
 `fn_bmlist = 'bm/bmlist.txt'` in `&list_bedmotion`. A complete example is in
-[examples/tsunami_fault](../../examples/tsunami_fault/README.md).
+[examples/tsunami_fault](../../examples/tsunami_fault/en/README.md).
 
 ## 1. Minimal setup
 
@@ -89,7 +89,7 @@ centre, at depth `d_top + fwidth × sin(dip)`. `d_top` is used directly: the
 terrain elevation in `fn_z` is not subtracted to adjust its depth automatically.
 Lengths, widths and positions are in metres; angles are in degrees. Fault length
 and width are not multiplied by a projection scale factor. See
-[examples/tsunami_fault](../../examples/tsunami_fault/) for a computed displacement field.
+[examples/tsunami_fault](../../examples/tsunami_fault/en/README.md) for a computed displacement field.
 
 ## 3. Three ways to specify coordinates
 
@@ -225,7 +225,7 @@ L=3, W=2) to four digits. It compares transverse Mercator coordinates against
 the Snyder (1987) series within 1 mm at points in UTM zone 54 and Japan's
 plane rectangular system IX.
 
-[examples/tsunami_fault](../../examples/tsunami_fault/) provides
+[examples/tsunami_fault](../../examples/tsunami_fault/en/README.md) provides
 [fault2disp.txt](../../examples/tsunami_fault/fault2disp.txt) (Pattern A),
 [fault2disp_bil.txt](../../examples/tsunami_fault/fault2disp_bil.txt) /
 [fault2disp_gtif.txt](../../examples/tsunami_fault/fault2disp_gtif.txt) (Pattern B),

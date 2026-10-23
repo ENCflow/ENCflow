@@ -83,7 +83,7 @@ reload result files. Regular file output continues during model steps
 under its normal settings. The display interval can match `dt_file`,
 but plotting itself is independent of the file-output time window and
 file numbering. Inputs for the sample commands above are in
-[test/chichibu](../test/chichibu/).
+[test/chichibu](../test/chichibu/en/README.md).
 
 ### Combining BMI with parameter-file access
 
@@ -115,7 +115,7 @@ the desired items in a template containing a complete existing case,
 and write a separate parameter file before initialization. For example,
 filling in `dt` and `tt` allows repeated runs with different conditions.
 An implemented example is [`make_param` in test_set_value.py](python/test_set_value.py).
-It reads `param.txt` from [test/wave](../test/wave/), changes `dir_result`
+It reads `param.txt` from [test/wave](../test/wave/en/README.md), changes `dir_result`
 for each run and, where needed, adds `fn_precip` and a rainfall namelist.
 It then passes the generated file to `ENCflow(...)`.
 
@@ -190,9 +190,9 @@ next step.
 See the [Python wrapper](python/encflow.py), [BMI adapter](bmi_encflow.f90)
 and [acceptance/application logic in m_main](../src/m_main.f90).
 Verification examples include [test_set_value.py](python/test_set_value.py)
-using [test/wave](../test/wave/) for precipitation equivalence and
-state/roughness settings, [test/bmi_vars](../test/bmi_vars/) for
-feature-dependent variables, and [test/bmi_nest](../test/bmi_nest/)
+using [test/wave](../test/wave/en/README.md) for precipitation equivalence and
+state/roughness settings, [test/bmi_vars](../test/bmi_vars/en/README.md) for
+feature-dependent variables, and [test/bmi_nest](../test/bmi_nest/en/README.md)
 for multiple grids.
 
 ### Overriding roughness (calibration, time-varying roughness)
@@ -242,7 +242,7 @@ Setting the subsurface storage or the snow water equivalent has the same
 update; negative values are an error). Being listed as an input (=
 existing) and being accepted by set (= the conditions above) are
 separate: a rejected set returns an error. The acceptance test is
-[test/bmi_vars](../test/bmi_vars/).
+[test/bmi_vars](../test/bmi_vars/en/README.md).
 
 **Choosing the exchange interval**: get/set copy whole fields, so
 exchange at the **time scale of the quantity being exchanged** (minutes
@@ -332,9 +332,9 @@ mpirun -np 4 ./test_encflow_bmi_mpi param.txt
 | Tool | Purpose |
 | --- | --- |
 | `test_encflow_bmi [param] [set]` | Test driver that runs a case to completion through BMI (results match a standalone run; with `set`, also checks that a same-value set is harmless) |
-| [python/test_set_value.py](python/test_set_value.py) | Equivalence tests for set_value (file forcing versus external supply; unchanged results for same-value h, z and rn; effect of a changed rn; run in [test/wave](../test/wave/)) |
-| [python/test_vars.py](python/test_vars.py) | Acceptance test of feature-dependent variables (variable lists, values, re-initialize, same-value set of hg / swe and its acceptance rules; run in [test/bmi_vars](../test/bmi_vars/). `Run.sh` also runs the static driver and bmi-tester) |
-| [python/test_nest.py](python/test_nest.py) | Acceptance test of multi-grid exposure (grid information, variable lists, 1:1 self-nesting identity, re-initialize, same-value set; run in [test/bmi_nest](../test/bmi_nest/). `Run.sh` also runs the static driver and bmi-tester) |
+| [python/test_set_value.py](python/test_set_value.py) | Equivalence tests for set_value (file forcing versus external supply; unchanged results for same-value h, z and rn; effect of a changed rn; run in [test/wave](../test/wave/en/README.md)) |
+| [python/test_vars.py](python/test_vars.py) | Acceptance test of feature-dependent variables (variable lists, values, re-initialize, same-value set of hg / swe and its acceptance rules; run in [test/bmi_vars](../test/bmi_vars/en/README.md). `Run.sh` also runs the static driver and bmi-tester) |
+| [python/test_nest.py](python/test_nest.py) | Acceptance test of multi-grid exposure (grid information, variable lists, 1:1 self-nesting identity, re-initialize, same-value set; run in [test/bmi_nest](../test/bmi_nest/en/README.md). `Run.sh` also runs the static driver and bmi-tester) |
 | `python/check_bmi.sh` | Runs the official CSDMS conformance test, bmi-tester (list the input files the parameter file refers to after it) |
 
 To reproduce the conformance check:

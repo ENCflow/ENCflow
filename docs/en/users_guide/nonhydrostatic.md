@@ -61,7 +61,7 @@ On a grid with $`\Delta x > 1.7H`$ the correction is buried in numerical
 dispersion and meaningless; **practical use assumes $`\Delta x \lesssim H/2`$**
 (for a tsunami running up a 10 m deep river, $`\Delta x \approx`$ 2.5–5 m).
 The cost is set by this resolution requirement rather than by the solver.
-The measured numerical dispersion of the ENC grid ([test/nhwave](../../../test/nhwave/README.md)) is 0.3–0.8%
+The measured numerical dispersion of the ENC grid ([test/nhwave](../../../test/nhwave/en/README.md)) is 0.3–0.8%
 ($`k\Delta x`$ = 0.13–0.18), clearly distinguishable from the target of the
 one-layer model (12% at $`kH = 1`$).
 
@@ -164,7 +164,7 @@ profile is not worse, and it needs only one scalar, so **the linear profile
 $`\beta = h^2/4`$ is used**. On a uniform current $`U_0`$ the relation becomes
 $`(\omega - U_0 k)^2 = gHk^2/(1 + (kH)^2/4)`$, consistent with applying the
 filter to the total acceleration including advection (confirmed numerically
-in [test/nhcurrent](../../../test/nhcurrent/README.md)).
+in [test/nhcurrent](../../../test/nhcurrent/en/README.md)).
 
 ## 3. Algorithm: projection at the end of the step (fractional step)
 
@@ -219,7 +219,7 @@ where $`h_e`$ is exactly the edge depth the momentum equation used for its
 face flux. In the one-dimensional flat-bed linear analysis the semi-discrete
 dispersion relation is **exactly**
 $`\omega^2 = gH\Lambda/(1 + \beta\Lambda)`$ ($`\Lambda`$: eigenvalue of the
-discrete Laplacian); in [test/nhwave_nh](../../../test/nhwave_nh/README.md) the periods for $`kH`$ = 0.25–2 match
+discrete Laplacian); in [test/nhwave_nh](../../../test/nhwave_nh/en/README.md) the periods for $`kH`$ = 0.25–2 match
 the theory within ±0.2%.
 
 **Solver.** `nh_solver = 2` (CG, default) or 1 (Jacobi). Because of the
@@ -244,7 +244,7 @@ delivers only 1/3–1/9 of the target correction (linear analysis;
 developer.md §69, plan §4). An elliptic correction acts on the neighbourhood
 simultaneously, so it has to be iterated.
 
-**Cost.** Solved on the whole domain, the standing-wave test ([test/nhwave_nh](../../../test/nhwave_nh/README.md);$`10^4`$ cells,
+**Cost.** Solved on the whole domain, the standing-wave test ([test/nhwave_nh](../../../test/nhwave_nh/en/README.md);$`10^4`$ cells,
 45 CG iterations per step) takes about three times the wall-clock time of
 the hydrostatic run. With the active set (§5) the regions of long waves,
 steady flow and inundation carry no cost.
@@ -310,7 +310,7 @@ margin: in a hump-wave test (developer.md §69.2) it was 9.4e-4 / 4.0e-4 / 1.0e-
 ## 6. Wave breaking (`f_nh_breaking`, `nh_break_visc`)
 
 The one-layer model does not break waves. Run without a switch, a breaking
-solitary wave on a beach (the experiment of Synolakis[^synolakis87], $`a/H = 0.28`$, [test/nhbreak](../../../test/nhbreak/README.md)) keeps
+solitary wave on a beach (the experiment of Synolakis[^synolakis87], $`a/H = 0.28`$, [test/nhbreak](../../../test/nhbreak/en/README.md)) keeps
 its shape to the shoreline, then runs up as a thin tongue, and the run-up
 $`R/H`$ becomes 1.64 (close to the non-breaking run-up law; the experimental
 law gives 0.42). As in hybrid Boussinesq models[^tonelli09][^tissier12] and SWASH[^smit13], **cells detected
@@ -354,7 +354,7 @@ progressive wave, $`\partial\eta/\partial t \approx c\,|\partial\eta/\partial x|
 1.44, corresponding to the literature constant $`\delta_b = 1.2`$, is the
 reference value (default 0 = off).
 
-**Run-up heights reached** ([test/nhbreak](../../../test/nhbreak/README.md), $`R/H`$; experimental law 0.42):
+**Run-up heights reached** ([test/nhbreak](../../../test/nhbreak/en/README.md), $`R/H`$; experimental law 0.42):
 
 | Configuration | $`\Delta x = H/4`$, dt 0.02 | $`\Delta x = H/8`$, Cr 0.07, $`n`$ = 0.01 |
 |---|---:|---:|
@@ -389,7 +389,7 @@ a_e = a^{*}_e + \frac{\phi_n - \phi_c}{L_k} + (\phi_c + \phi_n)\,\sigma_e,
 (which reduces to $`\beta D a`$ on a flat bed). The operator becomes
 non-symmetric, so CG solves the flat part and iterates the slope terms by
 Picard, about doubling the iteration count. On a 1:20 slope and shelf
-([test/nhshelf](../../../test/nhshelf/README.md)) the difference from Version 1 is a few percent (2% on the
+([test/nhshelf](../../../test/nhshelf/en/README.md)) the difference from Version 1 is a few percent (2% on the
 leading soliton), so the default is 0; it is a research option for abrupt
 bathymetry (shelf edges, submarine landslides).
 
@@ -426,7 +426,7 @@ non-negative at all wavenumbers and vanishes at the grid scale. $`\ddot z_b`$
 is a second difference against the previous step's $`z`$ kept privately by the
 module (one-step lag; it responds to every process that moves $`z`$), and one
 extra solve is done only in steps in which the bottom moved. For a
-Hammack-type[^hammack73] prescribed uplift ([test/nhbottom](../../../test/nhbottom/README.md), configuration 1)
+Hammack-type[^hammack73] prescribed uplift ([test/nhbottom](../../../test/nhbottom/en/README.md), configuration 1)
 the leading wave height is
 within +3.9% of the exact (potential-flow) solution (hydrostatic +40%,
 without the acceleration term +16%). Coupled with an inertialess bed layer
@@ -449,7 +449,7 @@ water level directly above the deposit.
   1 has no history for one step after restoring).
 - **Nesting**: the band of a child grid receives the parent's $`\phi`$ as
   Dirichlet values ([Nesting](nest.md); the parent–child identity test is the
-  nh configuration of [test/nest_identity](../../../test/nest_identity/README.md), and [examples/nest_reflect](../../../examples/nest_reflect/en/README.md)
+  nh configuration of [test/nest_identity](../../../test/nest_identity/en/README.md), and [examples/nest_reflect](../../../examples/nest_reflect/en/README.md)
   compares the treatments of the band).
 
 ### Parameters and the basis of their defaults
@@ -461,31 +461,31 @@ defaults is given here.
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
 | nh_hmin | 0.1 m | cells shallower than this stay hydrostatic | **empirical** wet/dry fronts, very shallow water and bores after breaking are left to the momentum-conservative advection as bores (§4). Must exceed dd |
-| nh_solver | 2 (CG) | iterative solver | **verification case** in [test/nhwave_nh](../../../test/nhwave_nh/README.md) CG converges in 10–80 iterations while Jacobi has not converged after 500 sweeps at $`\Delta x = H/8`$ (§3) |
+| nh_solver | 2 (CG) | iterative solver | **verification case** in [test/nhwave_nh](../../../test/nhwave_nh/en/README.md) CG converges in 10–80 iterations while Jacobi has not converged after 500 sweeps at $`\Delta x = H/8`$ (§3) |
 | nh_tol / nh_itmax | 1e-6 / 500 | convergence criterion and iteration cap | **numerical** the condition number does not depend on the number of cells ($`\kappa \approx 1 + 2\varepsilon`$), so the cap is generous (§3) |
 | nh_bc_margin / nh_margin / nh_break_margin | 0 (automatic $`\lceil 2H/\Delta x\rceil`$) | margin around forced boundaries, seeds and breaking cells | **derived** four times the e-folding distance $`H/2`$ of the Green function (§5); in the hump-wave test the margins 4 / 8 / 16 cells differ by 9.4e-4 / 4.0e-4 / 1.0e-4 m |
 | nh_chi_on | 0.06 | detection threshold of the active set (dispersion ratio $`\chi`$) | **derived** from the dispersion relation of §2: the value of $`(kH)^2/4 / (1 + (kH)^2/4)`$ at a 3% phase-speed difference from hydrostatic |
 | nh_amin / nh_arel | 1e-5 m/s² / 1e-3 | absolute and relative floors of the detector | **numerical** keeps the ratio detector from picking up round-off-level short waves (§5) |
-| nh_break_type / nh_break_slope | 3 / 0.3 | breaking detector (surface slope) | **verification case** a local, Galilean-invariant, stateless detector; the run-up in [test/nhbreak](../../../test/nhbreak/README.md) converges to the experimental law (§6) |
+| nh_break_type / nh_break_slope | 3 / 0.3 | breaking detector (surface slope) | **verification case** a local, Galilean-invariant, stateless detector; the run-up in [test/nhbreak](../../../test/nhbreak/en/README.md) converges to the experimental law (§6) |
 | nh_break_alpha / nh_break_beta | 0.6 / 0.3 | thresholds of detector 1 (surface rise rate) | **literature value** SWASH defaults[^smit13] |
 | nh_break_fr | 0.6 | threshold of detector 2 (Froude number) | **empirical** |
-| nh_break_visc | 0 (reference 1.44) | breaking eddy-viscosity coefficient $`\delta_b^2`$ | **literature value** $`\delta_b = 1.2`$ → 1.44[^kennedy00]; $`R/H`$ = 0.45 in [test/nhbreak](../../../test/nhbreak/README.md) (experimental law 0.42; §6) |
-| f_nh_slope | 0 | bottom-slope terms (Version 2) | **verification case** a few percent difference from Version 1 in [test/nhshelf](../../../test/nhshelf/README.md); off by default because the iterations double (§7) |
-| f_nh_bottom | 0 | moving-bottom acceleration term | **verification case** leading wave height within +3.9% of the exact solution in [test/nhbottom](../../../test/nhbottom/README.md) (+16% without); off by default since it acts only when the bottom moves (§7) |
+| nh_break_visc | 0 (reference 1.44) | breaking eddy-viscosity coefficient $`\delta_b^2`$ | **literature value** $`\delta_b = 1.2`$ → 1.44[^kennedy00]; $`R/H`$ = 0.45 in [test/nhbreak](../../../test/nhbreak/en/README.md) (experimental law 0.42; §6) |
+| f_nh_slope | 0 | bottom-slope terms (Version 2) | **verification case** a few percent difference from Version 1 in [test/nhshelf](../../../test/nhshelf/en/README.md); off by default because the iterations double (§7) |
+| f_nh_bottom | 0 | moving-bottom acceleration term | **verification case** leading wave height within +3.9% of the exact solution in [test/nhbottom](../../../test/nhbottom/en/README.md) (+16% without); off by default since it acts only when the bottom moves (§7) |
 
 **Verification cases** (figures, tables and the derived cases are in the
 READMEs, which are in Japanese):
 
 | Case | Content | Key result |
 |---|---|---|
-| [nhwave](../../../test/nhwave/README.md) / [nhwave_nh](../../../test/nhwave_nh/README.md) | standing waves in a closed basin | hydrostatic numerical dispersion < 1%; non-hydrostatic periods within ±0.2% of theory ($`kH`$ = 0.25–2) |
-| [nhsolitary](../../../test/nhsolitary/README.md) | propagation of a solitary wave | after 60 s the shape RMS is 2.9%, speed −0.8%; hydrostatic turns into a bore |
-| [nhbore](../../../test/nhbore/README.md) | undular bore splitting from a step | the leading wave approaches the KdV asymptote $`2a`$ monotonically[^gurevich74]; exceeds 2 for $`a/H = 0.2`$ (consistent with the fully nonlinear theory[^el06]) |
-| [nhshelf](../../../test/nhshelf/README.md) | solitary wave climbing onto a shelf | fission into a leading soliton plus a train of 6; hydrostatic gives a bore with 1 crest |
-| [nhcurrent](../../../test/nhcurrent/README.md) | linear waves on a uniform current | dispersion relation of the form $`(\omega - U_0k)^2`$ confirmed with and against the current (+1.4–2.5%) |
-| [nhbreak](../../../test/nhbreak/README.md) | run-up of a breaking solitary wave | table in §6 |
-| [nhbottom](../../../test/nhbottom/README.md) | prescribed uplift and submarine landslide | leading wave height within +3.9% of the exact solution; the acceleration term matters in the near field of the landslide |
-| [nest_identity](../../../test/nest_identity/README.md) | parent–child identity of nested grids | the interior of a non-hydrostatic child (band = parent's $`\phi`$ as known cells) matches the parent within 1e-10 |
+| [nhwave](../../../test/nhwave/en/README.md) / [nhwave_nh](../../../test/nhwave_nh/en/README.md) | standing waves in a closed basin | hydrostatic numerical dispersion < 1%; non-hydrostatic periods within ±0.2% of theory ($`kH`$ = 0.25–2) |
+| [nhsolitary](../../../test/nhsolitary/en/README.md) | propagation of a solitary wave | after 60 s the shape RMS is 2.9%, speed −0.8%; hydrostatic turns into a bore |
+| [nhbore](../../../test/nhbore/en/README.md) | undular bore splitting from a step | the leading wave approaches the KdV asymptote $`2a`$ monotonically[^gurevich74]; exceeds 2 for $`a/H = 0.2`$ (consistent with the fully nonlinear theory[^el06]) |
+| [nhshelf](../../../test/nhshelf/en/README.md) | solitary wave climbing onto a shelf | fission into a leading soliton plus a train of 6; hydrostatic gives a bore with 1 crest |
+| [nhcurrent](../../../test/nhcurrent/en/README.md) | linear waves on a uniform current | dispersion relation of the form $`(\omega - U_0k)^2`$ confirmed with and against the current (+1.4–2.5%) |
+| [nhbreak](../../../test/nhbreak/en/README.md) | run-up of a breaking solitary wave | table in §6 |
+| [nhbottom](../../../test/nhbottom/en/README.md) | prescribed uplift and submarine landslide | leading wave height within +3.9% of the exact solution; the acceleration term matters in the near field of the landslide |
+| [nest_identity](../../../test/nest_identity/en/README.md) | parent–child identity of nested grids | the interior of a non-hydrostatic child (band = parent's $`\phi`$ as known cells) matches the parent within 1e-10 |
 
 **Related examples** (settings that use the correction on real and idealised terrain):
 

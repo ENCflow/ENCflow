@@ -193,9 +193,9 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 ## 6. Verification cases
 
-- [test/icevap](../../../test/icevap/): equivalence of minimal input and explicitly specified defaults for fixed-rate interception, initial loss and constant evapotranspiration.
-- [test/frost](../../../test/frost/): comparison with analytical values for the freezing index and infiltration suppression under constant air temperature.
-- [test/chichibu](../../../test/chichibu/): regression case of uniform rainfall on a real-terrain catchment.
+- [test/icevap](../../../test/icevap/en/README.md): equivalence of minimal input and explicitly specified defaults for fixed-rate interception, initial loss and constant evapotranspiration.
+- [test/frost](../../../test/frost/en/README.md): comparison with analytical values for the freezing index and infiltration suppression under constant air temperature.
+- [test/chichibu](../../../test/chichibu/en/README.md): regression case of uniform rainfall on a real-terrain catchment.
 
 ## References
 

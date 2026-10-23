@@ -1,5 +1,7 @@
 # test/icevap — 降雨遮断・蒸発散の既定値の同値検定
 
+[English](en/README.md)
+
 降雨遮断(`fn_intercept`)と蒸発散(`fn_evap`)の物性値に既定を与えた
 方針(developer.md §66)の検定です。3 つの構成で、最小入力(既定値を
 省略)と既定値を明示した入力の save と Log.txt がバイト一致し、画面に

@@ -220,7 +220,7 @@ stock `wst` is not written as a field.
 
 ## Verification cases
 
-[test/driftwood](../../../test/driftwood/) checks volume conservation, transport and
+[test/driftwood](../../../test/driftwood/en/README.md) checks volume conservation, transport and
 deposition for both erosion entrainment and hydraulic recruitment, and compares
 saved states from split and uninterrupted runs.
 

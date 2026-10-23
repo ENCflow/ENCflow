@@ -1,5 +1,7 @@
 # test/sedfeed — 区間流入への給砂
 
+[English](en/README.md)
+
 掃流砂・浮遊砂の給砂 3 方式(developer.md §84.9、docs/meander_plan.md §3.6a)の検定。
 
 ## 設定

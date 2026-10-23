@@ -81,7 +81,7 @@ acts even where $`s_d = 0`$ and moves the soil base too. The default
 $`D`$ = 0.005 m²/yr is the middle of the published range of hillslope
 diffusivities, 0.001 to 0.05 m²/yr[^fernandes97]. It is a quantity of
 morphological time, to be read together with `morfac`. Verification:
-[test/creep](../../../test/creep/README.md) (Gaussian hill, maximum error
+[test/creep](../../../test/creep/en/README.md) (Gaussian hill, maximum error
 7.8e-5 m against the analytical solution, `morfac` = 2 equivalence 2.3e-4 m).
 
 ## 3. Bedload (f_fluvial)
@@ -168,7 +168,7 @@ bank-face steps are excluded from $`\nabla z`$. The coefficients
 $`\mu_s = 1.0, \mu_k = 0.45`$ (Asahi et al. 2013 eq. (22), Hasegawa 1984) and $`N_* = 7.0`$ (Engelund 1974) are the defaults (literature check in §84.12). `fluv_taufac` is a simple separation of
 the effective shear stress: a fixed fraction of the total-resistance
 $`\tau_*`$ is passed to the transport formula. Verification:
-[test/bendsed](../../../test/bendsed/README.md).
+[test/bendsed](../../../test/bendsed/en/README.md).
 
 **Bank retreat and collapse.** A bank face (a neighbouring cell b whose
 ground is at or above the water surface $`z_w + h_w`$ of a wet cell w)
@@ -189,8 +189,8 @@ height $`\mathrm{relax}\cdot e/16`$ from the higher to the lower cell
 for the part $`e`$ of the height difference between neighbours that exceeds
 $`\tan\phi_r \cdot d_k`$ (a conservative relaxation that does not
 overshoot with eight directions at once; one sweep per update).
-Verification: [test/berode](../../../test/berode/README.md),
-[test/repose](../../../test/repose/README.md).
+Verification: [test/berode](../../../test/berode/en/README.md),
+[test/repose](../../../test/repose/en/README.md).
 
 **Fixation.** The cell fixation degree $`a`$ of `f_fixation = 1` grows while
 the cell is dry (h ≤ dd) as
@@ -211,15 +211,15 @@ excess-shear form, $`C_{eq}/(1 + c_\tau a)`$ for Itakura-Kishi; settling is
 unchanged), and, with `fix_cn` > 0, to make the Manning n of the flow
 friction $`n(1 + c_n a)`$ (the $`\tau_*`$ of the sediment keeps the original
 n; elevations and volumes are untouched). Verification:
-[test/fixation](../../../test/fixation/README.md).
+[test/fixation](../../../test/fixation/en/README.md).
 
 **Defaults.** `fluv_d50` = 0.01 m lies near the geometric mean of a sand
 bed (0.5 mm) and a mountain gravel bed (5 cm); values for sand and gravel
 beds are in the recommended values at the end of the chapter.
 `fluv_porosity` = 0.4 and `fluv_sgrav` = 1.65 are the standard values of
-sand and gravel. Verification: [test/fluvial](../../../test/fluvial/README.md)
+sand and gravel. Verification: [test/fluvial](../../../test/fluvial/en/README.md)
 (total solid 4.6e-16, co-moving update 1.2e-14),
-[test/sedinflow](../../../test/sedinflow/README.md) (closure of the
+[test/sedinflow](../../../test/sedinflow/en/README.md) (closure of the
 sediment supplied through the boundary).
 
 ## 4. Suspended sediment (f_suspend)
@@ -277,7 +277,7 @@ and `susp_tausc`.
 **Defaults.** `susp_d50` = 0.2 mm is fine sand, the representative grain
 size of suspended load; `susp_esa` = 1e-4 is the coefficient of the simple
 form, which has no published value, calibrated in
-[test/suspend](../../../test/suspend/README.md) (**empirical**).
+[test/suspend](../../../test/suspend/en/README.md) (**empirical**).
 Verification: the same test, total solid conserved to 2.2e-15 with both
 equilibrium formulas.
 
@@ -297,7 +297,7 @@ dimensionless) the detached volume per rainfall and $`k_f`$ (`wash_kf`, m/s)
 the coefficient of sheet erosion linear in the excess shear, with
 $`\tau_*`$ evaluated with the suspended grain size. It is a USLE-type
 empirical law written with the grid variables; the defaults 0.01 and
-1e-5 m/s are the values of [test/wash](../../../test/wash/README.md)
+1e-5 m/s are the values of [test/wash](../../../test/wash/en/README.md)
 (**empirical, to be calibrated**). The detached volume is subtracted from
 $`z`$ and $`s_d`$ co-movingly and erosion stops at $`s_d = 0`$ (exposed
 bedrock). Outside channels the entrainment $`E`$ of the suspended load and
@@ -351,17 +351,17 @@ amplification is replaced by the effective curvature
 $`\tilde\kappa = \kappa/(1 + \kappa/\kappa_s)`$, which saturates the amplification
 at strong hollows (the foot of a cliff) at $`1 + c\,\kappa_s`$ (the spacing selection
 of the linear stage is unchanged; verification:
-[test/splashsat](../../../test/splashsat/README.md)). A table of horizontal strata
+[test/splashsat](../../../test/splashsat/en/README.md)). A table of horizontal strata
 `spl_strata` (bottom elevation and erodibility factor per layer) multiplies
 $`E`$ by the factor of the layer in which the cell's surface elevation lies
 (banded hard/soft beds, benches, cap rock; a layer with factor 0 does not
-erode; verification: [test/splashstrata](../../../test/splashstrata/README.md)).
+erode; verification: [test/splashstrata](../../../test/splashstrata/en/README.md)).
 The defaults $`k_r`$ = 0.0005 and $`k_t`$ = 0.05 are the medians of the tests
 (**empirical**); verification is
-[test/splash](../../../test/splash/README.md) (all digits agree with the
+[test/splash](../../../test/splash/en/README.md) (all digits agree with the
 analytical form $`\Delta z = P(k_r + k_t S)T`$ without amplification; the
 export ledger equals the analytical sum) and
-[test/splashslide](../../../test/splashslide/README.md) (contrast of a
+[test/splashslide](../../../test/splashslide/en/README.md) (contrast of a
 cohesive and a loose cliff). The full reasoning and trials are in
 docs/splash_plan.md.
 
@@ -467,9 +467,9 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_esform | 1 | equilibrium concentration (§4) | **method** 1: simple (calibration), 2: Itakura–Kishi[^itakura80] (recommended for sand) |
 | susp_d50 / susp_wf | 0.2 mm / 0 | grain size / settling velocity | **customary value** fine sand / **derived** 0 uses the Rubey formula[^rubey33] |
 | susp_beta | 1.0 | near-bed concentration factor $`\beta`$ | **method** 1 = vertically uniform approximation |
-| susp_esa | 1e-4 | coefficient of the simple form | **verification case** calibrated in [test/suspend](../../../test/suspend/) (weak basis) |
+| susp_esa | 1e-4 | coefficient of the simple form | **verification case** calibrated in [test/suspend](../../../test/suspend/en/README.md) (weak basis) |
 | f_bedfines / fines_la / fines_frac0 | 0 / required / 0 | ledger of fines in the bed (§4) | **method** two-component stock. L_a is a numerical mixing thickness (a few cm to 0.1 m); the fraction is a given |
-| wash_kr / wash_kf | 0.01 / 1e-5 m/s | raindrop / sheet erosion coefficients (§5) | **empirical** values of [test/wash](../../../test/wash/); to be calibrated |
+| wash_kr / wash_kf | 0.01 / 1e-5 m/s | raindrop / sheet erosion coefficients (§5) | **empirical** values of [test/wash](../../../test/wash/en/README.md); to be calibrated |
 | spl_kr / spl_kt / spl_h | 5e-4 / 0.05 / 1 | dry-erosion coefficients and slope exponent (§6) | **empirical** medians of the tests |
 | spl_ca / spl_cb | 0 / 0 m | concavity amplification lengths | **given** 0 = no amplification; a few to tens of metres to grow valleys |
 | spl_dzmax | 0 | erosion limit per update | **numerical** 0 = off; safety valve against runaway |
@@ -506,13 +506,13 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Case | Content | Point |
 |---|---|---|
-| [test/creep](../../../test/creep/README.md) | diffusion of a Gaussian hill | maximum error 7.8e-5 m, morfac equivalence |
-| [test/fluvial](../../../test/fluvial/README.md) | dam break and bed change in a closed domain | total solid and co-moving update to machine precision |
-| [test/suspend](../../../test/suspend/README.md) | two equilibrium formulas | total solid 2.2e-15 |
-| [test/sedinflow](../../../test/sedinflow/README.md) | sediment supplied through the boundary | ledger closure ~1e-16 |
-| [test/wash](../../../test/wash/README.md) | rain + dam break hillslope erosion | total solid 1.7e-13 |
-| [test/splash](../../../test/splash/README.md) | dry erosion on a slope with a break | all digits agree with the analytical form, export ledger agrees |
-| [test/splashslide](../../../test/splashslide/README.md) | cohesive / loose cliff | relief growth ×1.34 / ×0.77 |
+| [test/creep](../../../test/creep/en/README.md) | diffusion of a Gaussian hill | maximum error 7.8e-5 m, morfac equivalence |
+| [test/fluvial](../../../test/fluvial/en/README.md) | dam break and bed change in a closed domain | total solid and co-moving update to machine precision |
+| [test/suspend](../../../test/suspend/en/README.md) | two equilibrium formulas | total solid 2.2e-15 |
+| [test/sedinflow](../../../test/sedinflow/en/README.md) | sediment supplied through the boundary | ledger closure ~1e-16 |
+| [test/wash](../../../test/wash/en/README.md) | rain + dam break hillslope erosion | total solid 1.7e-13 |
+| [test/splash](../../../test/splash/en/README.md) | dry erosion on a slope with a break | all digits agree with the analytical form, export ledger agrees |
+| [test/splashslide](../../../test/splashslide/en/README.md) | cohesive / loose cliff | relief growth ×1.34 / ×0.77 |
 | [examples/badland](../../../examples/badland/) | valley formation on a plateau edge | valleys grow from the cliff edge with zero surface flow |
 
 ## References

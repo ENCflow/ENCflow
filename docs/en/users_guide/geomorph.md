@@ -208,7 +208,7 @@ equilibrium transverse slope). The equations are in the
 1989 uses μk = 0.7 as an estimate, which makes γ 1.2 times smaller) and
 N* = 7.0 (Engelund 1974; Asahi et al. 2013, eq. (18)); the adopted values
 are printed at start-up (literature check in developer.md §84.12).
-[test/bendsed](../../../test/bendsed/) verifies with these values. Bed load
+[test/bendsed](../../../test/bendsed/en/README.md) verifies with these values. Bed load
 is never carried onto a neighbouring
 cell whose ground is above the water surface (a bank face), and a dry cell
 never supplies bed load (§84.2).
@@ -229,7 +229,7 @@ at the toe, excavation faces and the flanks of bars (local non-cohesive
 collapse; it works on dry cells and without bed load). On non-cohesive
 banks toe scour plus collapse already gives the retreat, so do not add the
 same retreat again through `berode_kb`. Verification:
-[test/berode](../../../test/berode/), [test/repose](../../../test/repose/).
+[test/berode](../../../test/berode/en/README.md), [test/repose](../../../test/repose/en/README.md).
 
 **Self-protection of the bank by slump blocks.** A cohesive bank fails in
 blocks once pool scour makes the bank face higher than a critical height, and
@@ -246,7 +246,7 @@ critical height rises to H_c (1 + c_τ,b a) with the fixation degree of the sour
 cell. H_c is a structural quantity for the bank material (a guide: the initial bank
 height plus the pool scour at which failure should start), h_cover the block size
 (tens of centimetres to a metre). Verification: slump / slump0 in
-[test/berode](../../../test/berode/); example: param_cohesive_slump.txt in
+[test/berode](../../../test/berode/en/README.md); example: param_cohesive_slump.txt in
 [examples/meander](../../../examples/meander/).
 
 **Fixation of inner-bank bars.** Bed load deposits only up to the water
@@ -280,7 +280,7 @@ the bank toe, so a value below the bed c_tau, e.g. 0.5-1). Use it with an inflow
 floods and low flows ([examples/meander](../../../examples/meander/),
 param_fix.txt; with suspended sediment param_fixsusp.txt). Restart in
 `geomorph_fixation.dat` (the dynamic roughness is rebuilt from a and not
-saved). Verification: [test/fixation](../../../test/fixation/).
+saved). Verification: [test/fixation](../../../test/fixation/en/README.md).
 
 **Outputs for this section**: bed change in `Z0001...` (`f_out_z=1`; Z − Z0000 is the scour/deposition thickness). How often the cap fluv_dzmax acted is in the end warning "fluvial dzmax clip fired", the number of cells where the soil-depth supply limiter acted in "fluvial supply limiter", and the volume lost at the bedrock floor (normally zero) in "bedrock floor clip" ([Output and monitoring](#output-and-monitoring)).
 
@@ -507,7 +507,7 @@ Working example: [examples/badland](../../../examples/badland/) (in
 Japanese; long-duration rain on a plateau-and-cliff terrain grows
 valleys from the cliff margin with zero surface runoff). The
 cohesion contrast (whether valleys form at all) is in
-[test/splashslide](../../../test/splashslide/).
+[test/splashslide](../../../test/splashslide/en/README.md).
 
 **Outputs for this section**: landform in `Z0001...` and `Sd0001...`; the volume exported from the domain is printed at the end as "splash exported sediment volume" ([Output and monitoring](#output-and-monitoring)).
 
@@ -610,7 +610,7 @@ friction on convexities; friction is cut to zero where the flow would
 leave the ground). RAMMS calibrates mu and xi with this term included,
 so set it to 1 in comparison runs that use those values. Curvature picks
 up fine DEM roughness, so match the grid resolution to the model you
-compare with. There is no effect on straight slopes ([test/curvature](../../../test/curvature/)).
+compare with. There is no effect on straight slopes ([test/curvature](../../../test/curvature/en/README.md)).
 
 **Snow avalanches (dense flow)** - the same equivalent-fluid setup is
 also the standard formulation for dense-flow snow avalanches. The
@@ -666,11 +666,11 @@ formulation, not on appearances.
   impact pressures), (4) no automatic coupling with the snow (SWE)
   module (to chain from a winter snowpack run, convert SWE to sd in
   preprocessing).
-- A verified example is [test/avalanche](../../../test/avalanche/)
+- A verified example is [test/avalanche](../../../test/avalanche/en/README.md)
   (release → growth to 1.5x by entrainment → stopping on the flat;
   solid ledger at machine precision). The Voellmy steady uniform-flow
   analytic benchmark (0.04% agreement) is continuously tested in
-  [test/volcano](../../../test/volcano/) configuration 1 (the same
+  [test/volcano](../../../test/volcano/en/README.md) configuration 1 (the same
   resistance law). Comparison with observed avalanche runouts has not
   been done. The "avalanche redistribution" in the glacier module is a
   slow slope redistribution of snow for accumulation - a different
@@ -848,7 +848,7 @@ the user (it is forced to 0 when read and, with `fn_tide`, reset every step to t
 level minus `hsea0`; see [tide](tide.md)). Without `fn_tide`, put the elevation datum at
 sea level = 0 if the free face should end at the water surface; with `fn_tide` the bottom
 of the window lies `hsea0` (default 1 m) below the tide level.
-Verification: [test/rockfall](../../../test/rockfall/) (collapse of a vertical
+Verification: [test/rockfall](../../../test/rockfall/en/README.md) (collapse of a vertical
 plateau: conservation, final height differences <= H_c, talus budget; also the
 windowed, supported-face and sea-cell variants). Example:
 [examples/mesa](../../../examples/mesa/) (retreat of cap-rock cliffs with talus;
@@ -979,7 +979,7 @@ debris-flow model).
   mixture arriving during dewatering that is left behind because it is
   below bs_hplunge can be reduced with f_bsplunge=1 (test with the
   still-water depth). A dry large-scale collapse is more naturally given
-  as a bed layer from the start with fn_bsinit. In [test/bedslide](../../../test/bedslide/)
+  as a bed layer from the start with fn_bsinit. In [test/bedslide](../../../test/bedslide/en/README.md)
   configuration 4, without handover (mixture only) the material piles up
   near the shoreline and never reaches the lake bottom, whereas with
   handover it runs to the flat lake bottom and deposits there.
@@ -1081,12 +1081,12 @@ enter the channel. Put the value between the river's flow speed and the speed
 on the shoreline band (check the V output; e.g. 0.5 for 0.8 m/s in the channel
 and 0.3 m/s on the delta front). During a flood the speed rises in front of
 the mouth too, so waves pause there and resume at low flow. Verification:
-[test/wave_river](../../../test/wave_river/).
+[test/wave_river](../../../test/wave_river/en/README.md).
 
 **Output of this section**: landform change in `Z0001...` (`f_out_z=1`); the
 final warning reports the solid volume carried through edges by longshore
 transport and the number of surf-zone cell-updates. Verification:
-[test/wave_shore](../../../test/wave_shore/) (decay rate of a shoreline
+[test/wave_shore](../../../test/wave_shore/en/README.md) (decay rate of a shoreline
 perturbation matches the linear theory of Ashton & Murray, growth for
 high-angle waves, bit-identical when disabled).
 
@@ -1285,14 +1285,14 @@ When the type of phenomenon is known, start from the following
 Annotated list of all parameters:
 [examples/List_samples/list_geomorph.txt](../../../examples/List_samples/en/list_geomorph.txt).
 Verified test cases exist per process:
-[test/creep](../../../test/creep/) (analytical-solution benchmark),
-[test/fluvial](../../../test/fluvial/), [test/bankface](../../../test/bankface/) (bank-face blocking and supply limiter), [test/bendsed](../../../test/bendsed/) (bed-load direction correction in a bend), [test/berode](../../../test/berode/) (bank erosion), [test/repose](../../../test/repose/) (angle-of-repose avalanching), the examples [examples/meander](../../../examples/meander/) and [examples/meander_cutoff](../../../examples/meander_cutoff/) (deformation of a meandering channel and a neck cutoff), [test/suspend](../../../test/suspend/),
-[test/wash](../../../test/wash/), [test/debris](../../../test/debris/),
-[test/slide](../../../test/slide/), [test/avalanche](../../../test/avalanche/),
-[test/sedinflow](../../../test/sedinflow/) (boundary sediment supply),
-[test/bedslide](../../../test/bedslide/) (moving bed layer: analytic
+[test/creep](../../../test/creep/en/README.md) (analytical-solution benchmark),
+[test/fluvial](../../../test/fluvial/en/README.md), [test/bankface](../../../test/bankface/en/README.md) (bank-face blocking and supply limiter), [test/bendsed](../../../test/bendsed/en/README.md) (bed-load direction correction in a bend), [test/berode](../../../test/berode/en/README.md) (bank erosion), [test/repose](../../../test/repose/en/README.md) (angle-of-repose avalanching), the examples [examples/meander](../../../examples/meander/) and [examples/meander_cutoff](../../../examples/meander_cutoff/) (deformation of a meandering channel and a neck cutoff), [test/suspend](../../../test/suspend/en/README.md),
+[test/wash](../../../test/wash/en/README.md), [test/debris](../../../test/debris/en/README.md),
+[test/slide](../../../test/slide/en/README.md), [test/avalanche](../../../test/avalanche/en/README.md),
+[test/sedinflow](../../../test/sedinflow/en/README.md) (boundary sediment supply),
+[test/bedslide](../../../test/bedslide/en/README.md) (moving bed layer: analytic
 velocity, grid-dependence detection on a 45-degree slope, plunge into a
 lake and wave generation),
-[test/dissol](../../../test/dissol/) (limestone dissolution: analytic
+[test/dissol](../../../test/dissol/en/README.md) (limestone dissolution: analytic
 solutions for the infiltration, sink and rainfall sources and for the
 lateral-dissolution partition, and a restart round trip).

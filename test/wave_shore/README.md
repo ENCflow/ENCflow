@@ -1,5 +1,7 @@
 # test/wave_shore — 波浪による沿岸漂砂(fn_wave)の検定
 
+[English](en/README.md)
+
 沖波を与件に砕波帯の汀線方位から沿岸漂砂を起こす機構(developer.md §84.15、
 docs/wave_plan.md 案 A)を、直線汀線の線形理論(Ashton & Murray 2006)で検定します。
 

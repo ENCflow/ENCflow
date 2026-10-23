@@ -59,7 +59,7 @@ cell width; diagonal: cell area / diagonal path length = 0.707 cell width),
 correcting the under-conveyance of one-cell channels regardless of
 orientation; 0 is for comparison with the old behaviour (checked against
 Manning uniform flow in the straight and diagonal channels of
-[test/bendloss](../../../test/bendloss/)).
+[test/bendloss](../../../test/bendloss/en/README.md)).
 
 **Hydraulic mode (f_bank_mode).** 0 is overtopping only (impermeable up to
 the crest in both directions), 1 a sluice gate (check valve; a shortcut
@@ -244,7 +244,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_bank_datum | 1 | datum of the levee height | **method** the landside-elevation datum is natural when building a levee-height map in GIS and rarely produces crests below the ground |
 | f_bank_aggr | 0 | aggregation of the crest for datum = 1 | **method** the mean of the adjacent landside cells suppresses DEM noise. 1 is faithful to the onset of overtopping, 2 conservative |
 | f_bank_mode | 0 | hydraulic mode | **method** overtopping only by default; the check valve (1) is a shortcut, real works are [structures](structure.md) |
-| f_bank_opening | 1 | opening correction | **verification case** one-cell straight and diagonal channels follow Manning uniform flow in [test/bendloss](../../../test/bendloss/) (§1) |
+| f_bank_opening | 1 | opening correction | **verification case** one-cell straight and diagonal channels follow Manning uniform flow in [test/bendloss](../../../test/bendloss/en/README.md) (§1) |
 | p_sect_m | 0 | shape exponent of the section | **compatibility** rectangle by default; the recommended 0.3–1 is empirical (table in the chapter) |
 | f_channel_advection | 1 | advection term on edges involving channel cells (levee required; 0 in the wall-less width mode stops) | **method** normal by default; 0 is for stabilisation under strong width heterogeneity |
 | rn0_rw | — | channel roughness | **customary value** Manning n (concrete 0.015–0.02, sand bed 0.025–0.035, gravel bed 0.035–0.05, vegetated floodplain 0.05–0.1; Chow's tables[^chow59] and the Japanese river technical standards give similar ranges) |
@@ -261,8 +261,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 ## 6. Verification cases
 
-- [test/bendloss](../../../test/bendloss/): straight, bent and diagonal channels, subgrid width and opening correction, assessed against Manning uniform flow or a straight-channel comparison.
-- [test/chichibu](../../../test/chichibu/): real-terrain examples comparing channel masks, roughness, width and levee settings through flood-wave behaviour.
+- [test/bendloss](../../../test/bendloss/en/README.md): straight, bent and diagonal channels, subgrid width and opening correction, assessed against Manning uniform flow or a straight-channel comparison.
+- [test/chichibu](../../../test/chichibu/en/README.md): real-terrain examples comparing channel masks, roughness, width and levee settings through flood-wave behaviour.
 
 ## References
 

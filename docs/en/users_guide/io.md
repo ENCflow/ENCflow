@@ -95,7 +95,7 @@ and embeds location and the configured CRS information. Text contains no georefe
 > compressed GeoTIFFs open in GIS as usual, and are **also directly
 > usable as ENCflow input (f_input_mode=4) and by utils/out2vtk**
 > (reading Deflate with predictor 3 is supported, and agreement with
-> real GDAL outputs is checked in the regression tests — [test/gtif](../../../test/gtif/)).
+> real GDAL outputs is checked in the regression tests — [test/gtif](../../../test/gtif/en/README.md)).
 > Running out2vtk right after the compression is fine (it assembles
 > exact file names, so the `_c` files are ignored and the originals
 > are used). If you delete the originals to save space and keep only

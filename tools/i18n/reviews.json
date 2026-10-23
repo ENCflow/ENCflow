@@ -86,7 +86,7 @@
       "source": "examples/badland/README.md",
       "target": "examples/badland/en/README.md",
       "source_sha256": "c4f0efff4a32e2651fd6e7b6a3d11e3d851571dc4f8f490a9a82c007e11ab5b3",
-      "target_sha256": "b1016ff311d085054dd2e62961b1df16be50528418361cb2d8e45cc5c390d730",
+      "target_sha256": "48ac486371cb467933f9bde402fa788952e9384cbf9797834611dfbd7f69eea8",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"
@@ -122,7 +122,7 @@
       "source": "examples/karst/README.md",
       "target": "examples/karst/en/README.md",
       "source_sha256": "ec85c81b8cc7878cbe4f83b3a9fa1cd3cf31202df045e3977ac76dfd9890c157",
-      "target_sha256": "3a5f4f03a5b10d0732bb1166d0c7962cf71354424a3cc1b28add53c5b143c63a",
+      "target_sha256": "61679d6736fb5a8422a5395063e142060815fc135683a8275cac205ddfaa6c96",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"
@@ -149,7 +149,7 @@
       "source": "examples/meander/README.md",
       "target": "examples/meander/en/README.md",
       "source_sha256": "e231c4fa10117012385a173f76e4f361f4c5829467f41237ed01bbf3401db36d",
-      "target_sha256": "a3e53f73d3b9ec158f2c86facad25bb651dcd8db930157a3c4754cf8652a3dda",
+      "target_sha256": "04dda6c372d02d5d6cf1d175481440832289fd46b9c8263d99c467fc9d22736f",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"
@@ -194,7 +194,7 @@
       "source": "examples/sewer_hybrid/README.md",
       "target": "examples/sewer_hybrid/en/README.md",
       "source_sha256": "81bbe2c30f6cc75bb8150f58728b107db3510e07402f3df43e2ee9feadef979a",
-      "target_sha256": "acca6044c4bccf2d70b9b8fb8907f69dd636a2909e7051200d2adad980155dd1",
+      "target_sha256": "5195d0a64868ae797876db1f7cca7efe557d7697857cc73d12f2da641808530e",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"
@@ -212,7 +212,7 @@
       "source": "examples/tower_karst/README.md",
       "target": "examples/tower_karst/en/README.md",
       "source_sha256": "07a07584f63abcf9bd3e5b6d67908a6ea47e5aceeb881050f2fadb0ae725851b",
-      "target_sha256": "0d42e3c64a56375f05a73bd91312e07e7f7ef3ba6c18bb39d426b180802f5dc2",
+      "target_sha256": "d95b10dcbdf7436ccf2029e1b02155c8630adc399ccaf2aef8419c469631fafb",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"
@@ -239,7 +239,7 @@
       "source": "examples/tsunami_town/README.md",
       "target": "examples/tsunami_town/en/README.md",
       "source_sha256": "51308d83db689b7b6ca7de1ad208d6e8ce48c1552ad7c8665d875eb7bef6c71d",
-      "target_sha256": "4102809d78bf4130d33328db5580273c3d0564dacd86d978d210ef633f3f3d86",
+      "target_sha256": "37ec63d1cf841f5ee24f13a6b13338c326db28670bce6f03ad9a07ddb0dbd7dc",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"

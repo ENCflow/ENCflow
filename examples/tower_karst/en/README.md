@@ -157,7 +157,7 @@ converted at 50 per year):
   "Limestone dissolution" and "Rockfall and talus",
   [sediment.md](../../../docs/en/users_guide/sediment.md) — equations and the
   basis of the defaults
-- [test/dissol](../../../test/dissol/) (in Japanese),
-  [test/rockfall](../../../test/rockfall/) (in Japanese) — analytical
+- [test/dissol](../../../test/dissol/en/README.md),
+  [test/rockfall](../../../test/rockfall/en/README.md) — analytical
   verification; [docs/karst_plan.md](../../../docs/karst_plan.md) (in
   Japanese) — design and limitations

@@ -258,7 +258,7 @@ The defaults $`c`$ = 0.01 m, $`z_b = z - 3`$ m, $`s_y`$ = 0.05 and
 $`s_{slot} = s_y/50`$ are those of an urban branch network (D = 0.4 m, cover
 2–2.5 m), from the conversion script of
 [examples/sewer_hybrid](../../../examples/sewer_hybrid/) and
-[test/conduit](../../../test/conduit/README.md) (analytical equilibrium
+[test/conduit](../../../test/conduit/en/README.md) (analytical equilibrium
 reproduced to all printed digits).
 
 ## 7. Well pumping (f_gwpump = 1)
@@ -273,7 +273,7 @@ supply-limited).
 
 With the [fresh/salt two-layer model](salt.md) fresh water is pumped first
 (shallow-screen approximation) and the shortfall comes from the salt
-layer. Verification: [test/pump](../../../test/pump/README.md) (total
+layer. Verification: [test/pump](../../../test/pump/en/README.md) (total
 storage within 13 digits of the analytical value, demand = abstraction).
 
 ## 8. Infiltration suppression by frozen ground (f_gwfrost = 1)
@@ -297,7 +297,7 @@ model: ground temperature, frost depth and unfrozen water are not solved.
 equation[^andersland04] gives a frost depth ≈ $`0.06\sqrt{FI}`$ m for a soil
 with a water content of about 0.3, i.e. 0.25 m at $`FI`$ = 20, and
 infiltration nearly stops in a wet soil whose top 20–30 cm are
-frozen[^zhao99]. Verification: [test/frost](../../../test/frost/README.md)
+frozen[^zhao99]. Verification: [test/frost](../../../test/frost/en/README.md)
 (all 14 digits of the analytical value of the linear reduction).
 
 ## 9. Parameters and the basis of their defaults
@@ -316,7 +316,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | gw2_depth / gw2_sy / gw2_infil_mmh | 3 m / 0.05 / 1 mm/h | thickness, specific yield and infiltration capacity of the bedrock layer (§5) | **literature value** upper end of the granitic weathered-zone observations[^kosugi06][^katsura08] |
 | gw2_ksh_mmh / gw2_sat0 | 0 / 0 | lateral $`K`$ / initial saturation of layer 2 | **given** 0 = capacity only / **calibration** spin-up for long runs |
 | f_gwc_fluxlaw | 2 | flux law of the conduit layer (§6) | **method** 2: square-root law of turbulent pipe flow (continuum of CFP Mode 2[^shoemaker08]) |
-| gwc_cap / gwc_depth / gwc_sy / gwc_slot_sy | 0.01 m / 3 m / 0.05 / sy/50 | capacity, invert depth, storage coefficient, pseudo-slot | **empirical** dimensions of an urban branch network (examples/sewer_hybrid, [test/conduit](../../../test/conduit/)) |
+| gwc_cap / gwc_depth / gwc_sy / gwc_slot_sy | 0.01 m / 3 m / 0.05 / sy/50 | capacity, invert depth, storage coefficient, pseudo-slot | **empirical** dimensions of an urban branch network (examples/sewer_hybrid, [test/conduit](../../../test/conduit/en/README.md)) |
 | gwc_cnd_m2s | 0 | conductance density | **given** converted from pipe data; 0 = no lateral flow |
 | gwc_inlet / gwc_cw / gwc_co | 0 / 2.66 / 0.15 | inlet density, weir and orifice coefficients | **given** / **derived** weir 1.7 × perimeter 1.5 m / $`C_d`$ 0.6 × 0.25 m² |
 | gwc_leak_layer / gwc_leak_mmh | 0 / 10 mm/h | partner layer and capacity of the leakage | **derived** same as the $`K_{sv}`$ of the surrounding soil |
@@ -345,11 +345,11 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Case | Content | Point |
 |---|---|---|
-| [test/gwdefault](../../../test/gwdefault/README.md) | equivalence of the defaults | minimal and explicit inputs give byte-identical logs and private files |
-| [test/conduit](../../../test/conduit/README.md) | analytical equilibrium and full coupling of the conduit layer | equilibrium level and storage to all printed digits; eight-direction symmetry |
-| [test/gwseep](../../../test/gwseep/README.md) | water-quality ledger of infiltration → lateral flow → exfiltration | to_gw − seep = mass_gw closes |
-| [test/pump](../../../test/pump/README.md) | mass balance of pumping | 13 digits of the analytical value |
-| [test/frost](../../../test/frost/README.md) | infiltration suppression by frost | all 14 digits of the analytical value |
+| [test/gwdefault](../../../test/gwdefault/en/README.md) | equivalence of the defaults | minimal and explicit inputs give byte-identical logs and private files |
+| [test/conduit](../../../test/conduit/en/README.md) | analytical equilibrium and full coupling of the conduit layer | equilibrium level and storage to all printed digits; eight-direction symmetry |
+| [test/gwseep](../../../test/gwseep/en/README.md) | water-quality ledger of infiltration → lateral flow → exfiltration | to_gw − seep = mass_gw closes |
+| [test/pump](../../../test/pump/en/README.md) | mass balance of pumping | 13 digits of the analytical value |
+| [test/frost](../../../test/frost/en/README.md) | infiltration suppression by frost | all 14 digits of the analytical value |
 | [examples/sewer_hybrid](../../../examples/sewer_hybrid/) | trunk + branch network conversion | cell-wise sy map |
 | [examples/qanat](../../../examples/qanat/) | conduit layer + layer 2 | collection, conveyance and outlet of a gallery |
 

@@ -245,9 +245,9 @@ separately taken maxima of moving and deposited debris.
 
 ## Verification cases
 
-[test/bldgdebris](../../../test/bldgdebris/) checks debris-volume conservation,
+[test/bldgdebris](../../../test/bldgdebris/en/README.md) checks debris-volume conservation,
 one-way coupling with driftwood, water-volume conservation under void-ratio
-feedback, and split-run continuation. [test/gvchange](../../../test/gvchange/)
+feedback, and split-run continuation. [test/gvchange](../../../test/gvchange/en/README.md)
 provides unit checks of the void-ratio update procedure.
 
 ## Worked example: tsunami run-up into a town with house destruction and debris

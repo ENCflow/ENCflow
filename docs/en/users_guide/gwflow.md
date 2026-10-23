@@ -273,7 +273,7 @@ Applications are expressed by parameter combinations:
   slot_sy / gwc_eps_h.
 - gwc_leak_layer=1 requires the soil-layer system (Green-Ampt or
   lateral) to be enabled; =2 requires f_gwlayer2=1.
-- See [test/conduit](../../../test/conduit/) for schematic experiments (with an analytic
+- See [test/conduit](../../../test/conduit/en/README.md) for schematic experiments (with an analytic
   equilibrium check).
 
 **What it can and cannot do (range of the continuum approximation)**
@@ -513,8 +513,8 @@ see [the rainfall and meteorology chapter](forcing.md).
 
 ## Tests and examples
 
-- [test/gwdefault](../../../test/gwdefault/): equivalence of minimal and explicit-default inputs for the bucket, Green-Ampt/layer 2, frost and conduit configurations.
-- [test/pump](../../../test/pump/) and [test/frost](../../../test/frost/): analytical checks of storage loss by well pumping and infiltration suppression by the freezing index.
-- [test/gwseep](../../../test/gwseep/): infiltration, lateral groundwater transport and exfiltration, checked together with water-quality mass balances.
+- [test/gwdefault](../../../test/gwdefault/en/README.md): equivalence of minimal and explicit-default inputs for the bucket, Green-Ampt/layer 2, frost and conduit configurations.
+- [test/pump](../../../test/pump/en/README.md) and [test/frost](../../../test/frost/en/README.md): analytical checks of storage loss by well pumping and infiltration suppression by the freezing index.
+- [test/gwseep](../../../test/gwseep/en/README.md): infiltration, lateral groundwater transport and exfiltration, checked together with water-quality mass balances.
 - [examples/sewer_hybrid](../../../examples/sewer_hybrid/): configuration and input generation for a trunk and branch network in one conduit layer. The conversion from pipe specifications to cell parameters is demonstrated in [gen_data.py](../../../examples/sewer_hybrid/gen_data.py).
 - [examples/qanat](../../../examples/qanat/): a conduit/layer-2 example of groundwater collection, conveyance and outlet discharge through an underground gallery.

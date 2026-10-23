@@ -75,7 +75,7 @@ $`1/\cosh kH`$[^kajiura63]). The [non-hydrostatic correction](nonhydrostatic.md)
 §7 with f_nonhydrostatic=1 and f_nh_bottom=1 provides it in the one-layer
 approximation $`1/(1 + \beta k^2)^2`$ (developer.md §69.10). The velocity
 jumps then enter as acceleration pulses, so write the snapshots densely
-(increase nout of fault2disp; [test/nhbottom](../../../test/nhbottom/) writes
+(increase nout of fault2disp; [test/nhbottom](../../../test/nhbottom/en/README.md) writes
 one per step). In [examples/tsunami_fault](../../../examples/tsunami_fault/)
 the non-hydrostatic run lowers the coastal maximum level by 24 %
 (dispersion), and the acceleration term contributes a further −2 %.
@@ -126,7 +126,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 ## 6. Verification cases
 
-- [test/nhbottom](../../../test/nhbottom/) configuration 3: a Hammack-type uplift of 0.2 m in 1 s over
+- [test/nhbottom](../../../test/nhbottom/en/README.md) configuration 3: a Hammack-type uplift of 0.2 m in 1 s over
 |x − x_c| < 20 m in a 10 m deep channel, given as a snapshot table with
 one entry per step, matches the driver that applies the same motion
 through the library API (identical except the last digit of the

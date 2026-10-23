@@ -252,7 +252,7 @@ type.
 
 ## Related
 
-- [test/splash](../../../test/splash/) (analytical verification; in Japanese), [test/splashslide](../../../test/splashslide/) (cohesion contrast; in Japanese),
-  [test/splashlc](../../../test/splashlc/) (test of the wavelength selection; in Japanese)
+- [test/splash](../../../test/splash/en/README.md) (analytical verification; in Japanese), [test/splashslide](../../../test/splashslide/en/README.md) (cohesion contrast; in Japanese),
+  [test/splashlc](../../../test/splashlc/en/README.md) (test of the wavelength selection; in Japanese)
 - docs/splash_plan.md (formulation and record of trials; in Japanese), developer.md §48, §48.3 (in Japanese)
 - [docs/users_guide/geomorph.md](../../../docs/en/users_guide/geomorph.md) — `f_splash`, `spl_*`

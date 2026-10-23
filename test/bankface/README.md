@@ -1,5 +1,7 @@
 # test/bankface — 河岸面の掃流遮断と供給量制限(掃流砂 Exner の保存則)
 
+[English](en/README.md)
+
 掃流砂 Exner(`f_fluvial`)に 2026-10-17 に入れた 2 つの挙動変更
 (developer.md §84.1・§84.2。蛇行発達への拡張 docs/meander_plan.md の段 0)の
 検定です。

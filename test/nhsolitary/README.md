@@ -1,5 +1,7 @@
 # test/nhsolitary — 孤立波の伝播(非静水圧補正の非線形検証)
 
+[English](en/README.md)
+
 docs/nonhydrostatic_plan.md §11 Phase 5 Test 3。平坦床・無摩擦・壁境界の
 水路(300 m × 8 m、Δx = Δy = 0.25 m = H/4、32 行)に、H = 1 m、a/H = 0.1 の
 Boussinesq 型孤立波(η = a sech²(k_s(x − x0))、u = cη/(H+η)、

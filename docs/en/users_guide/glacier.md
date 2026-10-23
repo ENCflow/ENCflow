@@ -351,7 +351,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 ## Tests and examples
 
-- [test/glacier/](../../../test/glacier/): benchmark against the SIA analytical solution and the cirque-formation test (idealised verification experiments).
+- [test/glacier/](../../../test/glacier/en/README.md): benchmark against the SIA analytical solution and the cirque-formation test (idealised verification experiments).
 - Worked example of the format: [examples/List_samples/en/list_glacier.txt](../../../examples/List_samples/en/list_glacier.txt).
 
 ## References

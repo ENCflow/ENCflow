@@ -211,7 +211,7 @@ user, but they are listed here to show where the values come from.
 
 ## Tests and examples
 
-- [test/swi](../../../test/swi/): comparison with a fine-step RK4 reference solution of the three tanks, checking the final value, period maximum, its time and spatial uniformity. The case also shows the short ramp in the rainfall table and the checks in `Check_swi.py`.
+- [test/swi](../../../test/swi/en/README.md): comparison with a fine-step RK4 reference solution of the three tanks, checking the final value, period maximum, its time and spatial uniformity. The case also shows the short ramp in the rainfall table and the checks in `Check_swi.py`.
 
 ## References
 

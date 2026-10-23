@@ -1,5 +1,7 @@
 # test/nhbore — 長波の段差から分裂する undular bore(非静水圧補正のソリトン分裂)
 
+[English](en/README.md)
+
 docs/nonhydrostatic_plan.md §11 Phase 5、§1 の「河川遡上津波のソリトン分裂・
 undular bore」の素過程。平坦床・無摩擦・壁境界の水路(450 m × 8 m、
 Δx = Δy = 0.25 m = H/4、32 行)で、H = 1 m、x < 100 m を a/H = 0.1 だけ高く

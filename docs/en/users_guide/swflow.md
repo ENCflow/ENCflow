@@ -150,12 +150,12 @@ the coefficient follows from the flow and the roughness).
 - **Mass** is conserved exactly whatever the advection and diffusion
   settings. Schemes 2 and 3 cost +12–27% over scheme 1; the diffusion term
   costs nothing when off.
-- **Verification cases**: bores [test/dambreak](../../../test/dambreak/README.md),
-  bends, steps and lateral inflow [test/bendloss](../../../test/bendloss/README.md),
-  hillslope flow [test/hillslope](../../../test/hillslope/README.md), real
-  terrain [test/chichibu](../../../test/chichibu/README.md) (READMEs in
+- **Verification cases**: bores [test/dambreak](../../../test/dambreak/en/README.md),
+  bends, steps and lateral inflow [test/bendloss](../../../test/bendloss/en/README.md),
+  hillslope flow [test/hillslope](../../../test/hillslope/en/README.md), real
+  terrain [test/chichibu](../../../test/chichibu/en/README.md) (READMEs in
   Japanese); analytical benchmark of the diffusion term
-  [test/diffusion](../../../test/diffusion/README.md) (diffusion of a Gaussian
+  [test/diffusion](../../../test/diffusion/en/README.md) (diffusion of a Gaussian
   jet, error below 0.14%).
 
 | Parameter | Default | Meaning (details in the § of the explanation pages) |
@@ -218,12 +218,12 @@ flat-bed one-layer model).
   (10–90 CG iterations per step). With the active set the regions of long
   waves, steady flow and inundation carry no cost.
 - **Verification cases**: dispersion relation of standing waves
-  [test/nhwave_nh](../../../test/nhwave_nh/README.md), solitary wave
-  [test/nhsolitary](../../../test/nhsolitary/README.md), undular bore
-  [test/nhbore](../../../test/nhbore/README.md), soliton fission on a shelf
-  [test/nhshelf](../../../test/nhshelf/README.md), breaking run-up
-  [test/nhbreak](../../../test/nhbreak/README.md), moving bottom
-  [test/nhbottom](../../../test/nhbottom/README.md) (READMEs in Japanese; the
+  [test/nhwave_nh](../../../test/nhwave_nh/en/README.md), solitary wave
+  [test/nhsolitary](../../../test/nhsolitary/en/README.md), undular bore
+  [test/nhbore](../../../test/nhbore/en/README.md), soliton fission on a shelf
+  [test/nhshelf](../../../test/nhshelf/en/README.md), breaking run-up
+  [test/nhbreak](../../../test/nhbreak/en/README.md), moving bottom
+  [test/nhbottom](../../../test/nhbottom/en/README.md) (READMEs in Japanese; the
   results are summarised in §8 of the explanation).
 
 | Parameter | Default | Meaning (details in the § of the [explanation](nonhydrostatic.md)) |
