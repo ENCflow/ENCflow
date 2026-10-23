@@ -38,7 +38,7 @@ python3 make_terrain.py                    # z.txt, sol.txt
 python3 plot_results.py | tee analysis.txt # figs/*.png + 数表
 ./encflow param_lat.txt > Screen_lat.log   # 側方溶食あり(約 1 時間)
 python3 plot_results.py param_lat.txt | tee analysis_lat.txt   # figs/*_lat.png
-./encflow param_rock.txt > Screen_rock.log # + 岩盤の崩落(約 1 時間)
+./encflow param_rock.txt > Screen_rock.log # + 崩落と崖錐(約 1 時間)
 python3 plot_results.py param_rock.txt | tee analysis_rock.txt # figs/*_rock.png
 ```
 
@@ -113,31 +113,33 @@ developer.md §86.3)。`python3 plot_results.py param_lat.txt` で figs/*_lat.pn
   高いままなので水が広がらず、壁 8 セルで分け合う配分は床 1 セルに集中する
   分より小さい。
 
-### 側方溶食+岩盤の崩落(param_rock.txt。f_rockfall、φ_rock = 35°)
+### 側方溶食+崩落と崖錐(param_rock.txt。f_rockfall、rf_hc = 5 m、rf_bedrock = 1)
 
-param_lat.txt に岩盤の崩落 `f_rockfall`([岩盤の崩落](../../docs/users_guide/geomorph.md#岩盤の崩落f_rockfall)、
-developer.md §87)を加える。隣接セル間の段差が tanφ × Δx = 7 m を超えた分の
-半分を 1 更新ごとに岩屑として穴へ落とす(かさ比 1.5)。
-`python3 plot_results.py param_rock.txt` で figs/*_rock.png。
+param_lat.txt に崩落と崖錐 `f_rockfall`([崩落と崖錐](../../docs/users_guide/geomorph.md#崩落と崖錐f_rockfall)、
+developer.md §48.7)を加える。窪みの壁は土層のない基岩なので基岩モード
+`rf_bedrock = 1` で崩し、窓 1 セル(rf_rc = 10 m)内の最低点との落差が限界高さ
+H_c = 5 m を超えた分の半分を 1 更新ごとに崖錐(ht。土層 sd にも入る)として
+穴へ落とす(崖錐の安息角 35°)。`python3 plot_results.py param_rock.txt` で
+figs/*_rock.png。
 
-| 項目 | 側方溶食あり | + 崩落(35°) |
+| 項目 | 側方溶食あり | + 崩落(H_c = 5 m) |
 |---|---|---|
-| 崩落した岩(台帳) | — | 310 m³(9700 セル更新) |
-| 最深ドリーネ(地表) | 10.7 m | 10.2 m |
-| 最深ドリーネの岩屑(土層)厚 | 1.7 m(残渣) | 4.2 m(残渣+岩屑) |
-| 隣接 8 セルの平均削剥 | 2.03 m | 2.07 m |
-| 削剥深 > 1 m / > 2 m のセル数 | 163 / 68 | 164 / 68 |
+| 崩落で移した岩(台帳) | — | 663 m³(2.0 万エッジ更新。崖錐 最大 2.5 m) |
+| 最深ドリーネ(地表) | 10.7 m | 9.7 m |
+| 最深ドリーネの土層厚 | 1.7 m(残渣) | 2.8 m(残渣+崖錐 1.1 m) |
+| 隣接 8 セルの平均削剥 | 2.03 m | 2.16 m |
+| 削剥深 > 1 m / > 2 m のセル数 | 163 / 68 | 165 / 70 |
 
 ![sections_rock](figs/sections_rock.png)
 
-- 崩落は壁と底の段差を tanφ × Δx(7 m)付近に保つだけで、地表の形は
-  ほとんど変わらない。溶食は岩屑の下でも続くので(床の溶食は z を下げ sd を
-  保つ)、穴の底は岩屑 4 m に覆われたまま下がり、壁は段差が閾値を超えた分
-  だけ崩れて追随する。
-- **格子幅に対する実効角**。Δx = 10 m では 60° は段差 17 m(発火せず)、
-  35° で 7 m に相当する。深さ 10 m 級のドリーネを漏斗形にするには φ を
-  25° 以下(段差 5 m 以下)にするか、格子を細かくする必要がある。
-  φ = 30° で塔の裾が崩れる例は [examples/tower_karst](../tower_karst/)。
+- 崩落は壁の露出面を H_c = 5 m 付近に保つだけで、地表の形はほとんど
+  変わらない(隣接セルの削剥が 0.1 m 増え、最深部が 1 m 浅くなる)。溶食は
+  崖錐の下でも続くので(床の溶食は z を下げ sd を保つ)、穴の底は崖錐に
+  覆われたまま下がり、壁は落差が H_c を超えた分だけ崩れて追随する。
+- 深さ 10 m 級の穴を漏斗形に広げるには、H_c をもっと小さくする(穴の深さ
+  の 1/3 以下)か、窓 rf_rc を広げて壁の面全体を対象にするか、格子を細かく
+  する必要がある(Δx = 10 m では穴が 1 セル幅のため、崩れるのは隣接 8 セルの
+  縁だけ)。塔の裾が崩れる例は [examples/tower_karst](../tower_karst/)。
 
 ## 読み方の注意
 
