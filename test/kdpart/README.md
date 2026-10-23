@@ -1,5 +1,7 @@
 # test/kdpart — 水質の平衡分配(Kd)と粒子態沈降の台帳閉合・単調性
 
+[English](en/README.md)
+
 溶存態と粒子態(浮遊砂に付着)への**平衡分配**(`wq_kd`)と、粒子態の
 沈降を表面蓄積プールへ送る `f_wq_settle = 1`(developer.md §30.6 の K1)の
 検定です。[test/suspend](../suspend/) と同じ閉領域ダムブレイクに、中央セルの

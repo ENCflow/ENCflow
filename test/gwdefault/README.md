@@ -1,5 +1,7 @@
 # test/gwdefault — 地下水モジュールの既定値の同値検定
 
+[English](en/README.md)
+
 地下水モジュール(`&list_gwflow` 系)の物性・校正値に既定値を与えた
 方針(developer.md §64)の検定です。4 つの構成それぞれについて、
 **最小入力**(既定値を省略した `param_<tag>.txt`)と**既定値をすべて明示**

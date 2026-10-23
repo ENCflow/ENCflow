@@ -1,5 +1,7 @@
 # test/wash — 斜面侵食(f_wash: 雨滴 + 面状侵食)の疎通と保存則
 
+[English](en/README.md)
+
 降雨による斜面侵食モジュール(`f_wash = 1`。雨滴侵食 `wash_kr` と
 面状侵食 `wash_kf` で河床を削り、浮遊砂 `f_suspend` が輸送を担う。
 developer.md §19)の疎通・保存則の検定です。一様降雨 50 mm/h と閉領域

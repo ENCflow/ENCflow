@@ -1,5 +1,7 @@
 # test/fixation — 定着(f_fixation)の検定
 
+[English](en/README.md)
+
 低水で露出した砂州に定着が進み、出水時の再侵食に抵抗する過程
 (developer.md §84.6、docs/meander_plan.md §3.4)の検定。
 

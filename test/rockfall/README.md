@@ -1,5 +1,7 @@
 # test/rockfall — 崩落と崖錐(f_rockfall)の検定
 
+[English](en/README.md)
+
 平地の上の四角い台地(一辺 20 m、高さ 10 m、垂直な自由面)に、水も降雨もなく
 **崩落と崖錐** `f_rockfall`(developer.md §48.7)だけを働かせます。自由面 10 m が
 限界高さ H_c = 4 m を超えるので縁が崩落し、落下した分が崖錐(安息角 35°)として

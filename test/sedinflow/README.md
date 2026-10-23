@@ -1,5 +1,7 @@
 # test/sedinflow — 土砂流入境界(inflow_cs / inflow_qs)の台帳閉合
 
+[English](en/README.md)
+
 流入境界(`&list_bound_inflow`)に土砂濃度 `inflow_cs` または流砂量
 `inflow_qs` の時系列を付け、水と一緒に土砂を注入する機能
 (developer.md §19 の土砂流入)の検定です。乾いた閉領域の西辺 4 セルに

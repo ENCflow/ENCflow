@@ -1,5 +1,7 @@
 # test/berode — 側岸侵食(f_berode)
 
+[English](en/README.md)
+
 水面より高い隣接セル(河岸面)を脚部セルの掃流力で後退させる側岸侵食
 (developer.md §84.4。蛇行発達への拡張 docs/meander_plan.md の段 2)の検定です。
 後退速度は超過掃流力型 E_b = K_b (τ*/τ*c,b − 1)^m、水没河岸高 h_w(脚部の

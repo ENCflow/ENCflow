@@ -1,5 +1,7 @@
 # test/dissol — 石灰岩の溶食(f_dissol)の解析検証とリスタート往復
 
+[English](en/README.md)
+
 地形変化モジュールの石灰岩の溶食(`&list_geomorph` の `f_dissol = 1`、
 [ユーザーガイドの地形変化の章](../../docs/users_guide/geomorph.md#石灰岩の溶食f_dissol))
 の検証ケースです(developer.md §86、docs/karst_plan.md §3)。溶食は
