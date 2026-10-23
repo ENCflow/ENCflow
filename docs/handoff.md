@@ -887,8 +887,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   (c) examples の README 19 件は 2026-10-23 に §34.2 を改定して対象化し、英訳・全文の
   内容確認・record 済み(method=assistant)。残る unreviewed 119 組は、内容を確認した
   ものから `record` する(一括登録はしない)。test/ の README 67 件は未翻訳(missing)で、
-  順次。正本側の疑問点: mesa の段丘の表見出し「24 m の台地」(本文は 20 m)、meander の
-  見出し「9 つの構成」(表は 10 行)、karst の設定表「f_sink = 1」(パラメータ名は dissol_sink)。
+  順次。
   (d) namelist と params_index(日英)の突合は未スクリプト化(2026-10-01 は手動)。
   (e) 接尾辞方式(test/README.en.md 等 5 件)の en/ への移行は任意(規約 §2・§5)。
   コード内コメントの言語方針は海外コア開発者が現実になった時点で

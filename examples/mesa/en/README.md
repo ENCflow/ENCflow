@@ -268,7 +268,7 @@ the retreat rate is limited by talus removal.
 
 ## Does a thicker, harder intermediate layer produce a bench?
 
-| Case | Intermediate hard layer | spl_cb | Retreat rate of the 24 m plateau (R₀ = 30 m) (m/s) | Final top height of the large plateau (m) |
+| Case | Intermediate hard layer | spl_cb | Retreat rate of the 20 m plateau (R₀ = 30 m) (m/s) | Final top height of the large plateau (m) |
 |---|---|---|---|---|
 | param_cap | z = 8–10 m, factor 0.3 | 32 | 1.2e-6 (accelerating; disintegrates at 2.2e7 s) | 2.5 |
 | param_bench | z = 6–10 m, factor 0.05 | 32 | 5.3e-7 (linear) | 20 (still present at 8.6e7 s) |
