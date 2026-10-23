@@ -884,8 +884,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   (b) 表の行数が日英で違う未確認ミラー(内容の追随漏れの疑い。`audit` の WARN):
   comparison.md、users_guide の geomorph・params_index・structure・usecases。
   `--git-dates` で正本の方が新しい組も同様に順次確認する。
-  (c) 既存の unreviewed 119 組は、内容を確認したものから `record` する
-  (一括登録はしない)。test/ の README 70 件は未翻訳(missing)で、順次。
+  (c) 既存の unreviewed 138 組(examples の README 19 件の英訳 = 2026-10-23 に §34.2 を
+  改定して対象化し、作業エージェントが翻訳・構成とリンクを機械検査済み。全文の内容
+  確認と record は未実施 — を含む)は、内容を確認したものから `record` する(一括登録は
+  しない)。test/ の README 67 件は未翻訳(missing)で、順次。正本側の疑問点: mesa の
+  段丘の表見出し「24 m の台地」(本文は 20 m)、meander の見出し「9 つの構成」(表は 10 行)。
   (d) namelist と params_index(日英)の突合は未スクリプト化(2026-10-01 は手動)。
   (e) 接尾辞方式(test/README.en.md 等 5 件)の en/ への移行は任意(規約 §2・§5)。
   コード内コメントの言語方針は海外コア開発者が現実になった時点で

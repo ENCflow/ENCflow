@@ -1,5 +1,7 @@
 # tsunami_town — 津波の市街地遡上による家屋破壊・瓦礫の流動・堆積(理想化ケース)
 
+[English](en/README.md)
+
 海岸の低平な市街地に津波が遡上し、木造家屋を破壊して瓦礫を内陸へ運び、
 堆積させる現象を、**家屋破壊・瓦礫モジュール fn_bldgdebris**
 (docs/users_guide/bldgdebris.md、developer.md §63)と**潮位強制 fn_tide**
