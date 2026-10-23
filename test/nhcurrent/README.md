@@ -1,5 +1,7 @@
 # test/nhcurrent — 一様流上の線形波の分散関係(非静水圧補正の Phase 5 Test 2)
 
+[English](en/README.md)
+
 一様流 U₀ の上を進む微小振幅波の分散関係が、1 層非静水圧補正
 (`f_nonhydrostatic = 1`、docs/nonhydrostatic_plan.md §11 Phase 5 Test 2、
 developer.md §69.8)でも

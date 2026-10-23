@@ -1,5 +1,7 @@
 # bmi_vars — 機能依存の BMI 変数と hg・swe の set の受け入れ試験
 
+[English](en/README.md)
+
 BMI の変数表は「その量を生産する機能が有効な格子にだけ載る」動的な表です
 (developer.md §76、bmi/README.md「公開変数」)。本ケースはそれを 3 つの
 構成で検査します。地形は平坦(z=0)・閉領域・一様降雨 36 mm/h・初期水深 5 cm。

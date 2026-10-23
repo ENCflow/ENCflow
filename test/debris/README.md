@@ -1,5 +1,7 @@
 # test/debris — 土石流(侵食・堆積 E-D)の疎通と保存則: 4 つの構成則
 
+[English](en/README.md)
+
 単層混合体方式の土石流モデル(`f_debris = 1`。地表水 h と土砂柱状量 hs の
 単層で表し、河床との侵食・堆積 E-D と抵抗則を切り替える。
 docs/debris_plan.md、developer.md §28)の疎通・保存則の検定です。

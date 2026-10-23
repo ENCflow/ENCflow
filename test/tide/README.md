@@ -1,5 +1,7 @@
 # test/tide — 潮位境界(m_tide)の疎通と既定値の同値検定
 
+[English](en/README.md)
+
 海域セルに潮位の時系列を与える潮位境界(`fn_tide`、
 [ユーザーガイドの潮位の章](../../docs/users_guide/tide.md))の最小ケース
 です。平坦な陸(z = 1 m、初期水深 0.5 m)の西縁 1 列を海域マスク

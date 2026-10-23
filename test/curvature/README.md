@@ -1,5 +1,7 @@
 # test/curvature — 土石流・雪崩の曲率項(f_dbcurv)の定常 1 次元検定
 
+[English](en/README.md)
+
 斜面の凹円弧で遠心加速度が降伏摩擦を増やす**曲率項**(`&list_geomorph`
 の `f_dbcurv = 1`。土石流・雪崩・火砕流などの混合体流動 f_debris 系で
 使う)の検証ケースです(developer.md §28.10)。直線斜面 A → 凹円弧 →
