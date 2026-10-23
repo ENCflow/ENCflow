@@ -16,6 +16,11 @@
                                     !   the subsurface pool = for dissolved
                                     !   forms (default), 0: remains on the
                                     !   surface = for particulate forms)
+  !wq_rg = 1.0                      ! retardation factor R of subsurface transport (>=1.
+                                    !   Delay by equilibrium sorption = the effective
+                                    !   concentration of advection and seepage in the
+                                    !   groundwater becomes 1/R. R = 1 + rho_b*Kd/theta.
+                                    !   Omitted = 1 (no retardation))
 
   ! ---- Point sources (cell set + load g/s. The group total is divided
   !      equally among the cells) ----
@@ -76,6 +81,22 @@
                                     !   bed (default), 1: to the accumulation
                                     !   pool = a resuspension cycle)
 
+  ! ---- Coupling with the conduit continuum layer (sanitary risk
+  !      assessment of sewer eruption) ----
+  !   Used together with f_gwconduit=1 (&list_gwflow_conduit). The water
+  !   erupting from inlets and discharged at land-side outfalls carries a
+  !   fixed concentration (fixed supply-side concentration approximation =
+  !   the mass balance inside the pipes is not solved). For reading the
+  !   units (e.g. read g as 1e6 CFU for E. coli), representative values
+  !   and the outputs, see "Sanitary risk assessment of sewer eruption"
+  !   in users_guide/wq.md
+  !wq_gwc_conc = 1.0e4              ! fixed concentration of the eruption/outfall
+                                    !   water (nominal mg/L. Example of reading
+                                    !   sewage as 1e6 CFU/100mL)
+  !f_wq_gwc_in = 1                  ! on inflow into inlets (0: remains on the
+                                    !   surface, 1: removed to the conduit ledger
+                                    !   with its concentration (default))
+
   ! ---- Rainfall concentration (wet deposition. Input over the whole
   !      domain as ground-reaching rainfall x concentration) ----
   !   Constant (wq_rain_conc) or a time series (wq_rain_series),
@@ -90,5 +111,21 @@
                                    !   11000 day)
   !wq_k20 = 0.1                    ! first-order decay coefficient (1/day;
                                    !   exclusive with wq_thalf)
-  !wq_vs = 0.5                     ! settling velocity (m/day. Loss to the bed)
+  !wq_vs = 0.5                     ! settling velocity (m/day. Loss to the bed;
+                                   !   exclusive with wq_kd)
+
+  ! ---- Kd equilibrium two-phase partitioning (K1. Sorptive substances
+  !      such as heavy metals; requires f_suspend) ----
+  !   Dissolved fraction fd = 1/(1+Kd*Css). Only the fd part infiltrates;
+  !   the particulate part 1-fd settles at the settling velocity of the
+  !   suspended sediment (the destination follows f_wq_settle; =1, the
+  !   pool, is recommended = closes the resuspension cycle together with
+  !   the shear washoff)
+  !wq_kd = 1.0e4                   ! equilibrium partition coefficient (L/kg.
+                                   !   E.g. Pb is 1e4 to 1e6)
+
+  ! ---- Boundary inflow concentrations (per inflow-section number of
+  !      &list_bound_inflow; mg/L) ----
+  !wq_in_conc(1) = 5.0              ! constant concentration
+  !wq_in_series(:,1,2) = 0.0, 10.0  ! time series (days elapsed, mg/L)
 /

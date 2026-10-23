@@ -229,7 +229,7 @@
 !     urban sewers   = inlet density given, no interlayer exchange
 !                      (use gwc_leak_layer=1 for infiltration/inflow)
 !     bedrock/karst  = no inlet density (specify it for sinkholes),
-!                      gwc_leak_layer=2
+!                      with gwc_leak_layer=2
 !   The stability condition of the explicit scheme is checked at
 !   initialization (the limit is governed by gwc_slot_sy; if exceeded,
 !   lower dt_gwflow or relax slot_sy / eps_h).
@@ -265,6 +265,11 @@
   ! but a stricter dt limit, which subcycling absorbs automatically)
   gwc_sy = 0.05
   gwc_slot_sy = 0.001
+  ! Per-cell maps of the storage coefficients (take precedence over the
+  ! scalars when given. For trunk and branch pipes of different section
+  ! heights in one run. sy = cap/pipe height; slot <= sy of each cell)
+  !fn_gwc_sy = "gwc_sy.txt"
+  !fn_gwc_slot_sy = "gwc_slot_sy.txt"
 
   ! Initial filling ratio [0,1] (default 0 = empty)
   gwc_sat0 = 0.0
@@ -289,11 +294,35 @@
   ! (or a map; default 10 = about the vertical conductivity of the
   ! soil around the pipes)
   !gwc_leak_mmh = 10.0
+  ! Map of the interlayer exchange capacity (mm/h). Takes precedence over
+  ! the scalar when given. Cells with 0 have no exchange (lined reaches of
+  ! qanats and culverts, sound sewer pipes)
+  !fn_gwc_leak = "gwc_leak.txt"
+
+  ! Map of the outfall orifice coefficient Cd*A (m2). Cells with a value
+  ! are outfalls (a conduit, cap>0, is required). Open pipe ends with a
+  ! built-in flap (no backflow), unconfined or confined alike. The
+  ! receiver is decided by the cell's neighbourhood:
+  !  - adjacent to a sea cell: receiving head = lowest water level (tide)
+  !    of the adjacent sea cells. The discharge leaves the system (the
+  !    cumulative amount is printed at the end). Drainage below sea level
+  !    is combined with the conduit intake of &list_struct_pump (f_pump_src=1)
+  !  - not adjacent to the sea: open land-side outfall (adit mouth,
+  !    daylighting culvert outlet). Receiving head = surface water level
+  !    of the cell itself. The discharge goes to surface flow (stays in
+  !    the domain = conserved)
+  !fn_gwc_outfall = "outfall.txt"
 
   ! Numerical parameters (normally no need to change)
   gwc_eps = 1.0e-3          ! regularization amount for the dry test (m)
   gwc_eps_h = 1.0e-2        ! linearization width of the sqrt law (m)
-  !gwc_diagratio = 0.5857864 ! diagonal partitioning of the flux width
+  !gwc_diagratio = 0.5857864 ! diagonal partitioning of the flux width [0,1]
+  ! Upper limit of the number of subcycles of the lateral conveyance. A dt
+  ! above the stability limit of the explicit scheme is automatically
+  ! split into N = ceiling(dt/limit) substeps (N is printed at
+  ! initialization). The run stops when N exceeds this limit (relax
+  ! slot_sy/eps_h or raise the limit)
+  !gwc_nsubmax = 100
 
 /
 

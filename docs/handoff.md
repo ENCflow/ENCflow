@@ -877,16 +877,14 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   見出し構成・刻印・リンクを検査し、CI(i18n.yml)は「記録済みの組の更新漏れ・
   リンク切れ」だけを合格条件にする。記録済みは 9 組(規約、CONTRIBUTING、
   tutorials 入口、test/wave・wave_river の README と入力)。**残作業**:
-  (a) 初回監査で判明した既存英訳の更新漏れ(`audit` が ERROR を出す):
-  examples/List_samples/en/ の list_enc.txt(非静水圧 &list_enc の例 22 行が未反映)、
-  list_sysparam.txt(fn_bedmotion・fn_swi・f_out_hs/fs/dmax/dmaxt/fmax の例)、
-  list_gwflow.txt(fn_gwc_sy/slot_sy/leak/outfall・gwc_nsubmax。英語側にだけ
-  gwc_leak_layer がある)、list_wq.txt(wq_rg・wq_gwc_conc・f_wq_gwc_in・wq_kd・
-  wq_in_conc・wq_in_series)、list_geomorph.txt(fix_tdec・fix_ctau_bank・wet_lw)。
-  list_bedmotion.txt は英語版が未作成。
+  (a) 初回監査で判明した既存英訳 List_samples の更新漏れ(list_enc の非静水圧 22 行、
+  list_sysparam・list_gwflow・list_wq・list_geomorph の例、list_bedmotion の英語版
+  未作成)は同日に解消した(`audit` の ERROR なし)。ただし 6 件とも英語版全文の
+  内容確認は未実施で unreviewed のまま(差分の追記のみ確認)。
   (b) 表の行数が日英で違う未確認ミラー(内容の追随漏れの疑い。`audit` の WARN):
-  comparison.md、users_guide の geomorph・params_index・structure・usecases。`--git-dates` で正本の方が新しい組も同様に順次確認する。
-  (c) 既存の unreviewed 124 組は、内容を確認したものから `record` する
+  comparison.md、users_guide の geomorph・params_index・structure・usecases。
+  `--git-dates` で正本の方が新しい組も同様に順次確認する。
+  (c) 既存の unreviewed 125 組は、内容を確認したものから `record` する
   (一括登録はしない)。test/ の README 70 件は未翻訳(missing)で、順次。
   (d) namelist と params_index(日英)の突合は未スクリプト化(2026-10-01 は手動)。
   (e) 接尾辞方式(test/README.en.md 等 5 件)の en/ への移行は任意(規約 §2・§5)。
