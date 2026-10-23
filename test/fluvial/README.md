@@ -1,5 +1,7 @@
 # test/fluvial — 掃流砂 Exner(f_fluvial)の疎通と保存則
 
+[English](en/README.md)
+
 河床変動の基本モジュール、掃流砂輸送 + Exner 方程式(`&list_geomorph` の
 `f_fluvial = 1`、流砂量式は芦田・道上)の疎通・保存則の検定です
 (developer.md §19、§20)。閉領域の静水の上に水の山(wave_hump、+1 m)を

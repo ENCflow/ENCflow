@@ -1,5 +1,7 @@
 # test/suspend — 浮遊砂(f_suspend)の疎通と保存則: 2 つの平衡濃度式
 
+[English](en/README.md)
+
 浮遊砂モジュール(`&list_geomorph` の `f_suspend = 1`。河床との巻き上げ・
 沈降 E-D と水柱内の移流。developer.md §19)の疎通・保存則の検定です。
 閉領域の静水の上に水の山(wave_hump、+1 m)を置いて崩し、環状波の下で

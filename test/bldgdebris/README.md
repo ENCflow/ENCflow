@@ -1,5 +1,7 @@
 # test/bldgdebris — 家屋破壊・瓦礫ラスタ場(fn_bldgdebris)の疎通・保存則・片方向結合
 
+[English](en/README.md)
+
 家屋ストックが浸水深または流体力で破壊されて瓦礫になり、流木と同じ
 ラスタ場(流動中 hbd、堆積 wbd)として運ばれる**家屋破壊・瓦礫モジュール**
 (`fn_bldgdebris`、[ユーザーガイドの家屋瓦礫の章](../../docs/users_guide/bldgdebris.md)、

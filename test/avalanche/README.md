@@ -1,5 +1,7 @@
 # test/avalanche — 流れ型雪崩(等価流体 Voellmy + 速度比例連行)の疎通と保存則
 
+[English](en/README.md)
+
 土砂流動モデルを援用した**流れ型雪崩**の構成(developer.md §28.8 の
 「雪崩への適用」、users_guide/geomorph.md の雪崩の項)の検定です。
 Voellmy 抵抗則の等価流体(`f_dbres = 4`)に、走路の雪を削り込む
