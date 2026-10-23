@@ -129,8 +129,8 @@ move to a resolved channel.
 - **Advection.** `f_channel_advection = 0` drops the advection term on
   edges involving channel cells (a stabilisation option under strong width
   heterogeneity; default 1). It acts only while a levee (bank0 / fn_bank)
-  is active; in the wall-less width mode the flag has no effect (enabling it
-  there diverged in tests, so this is left as is; developer.md §18, Japanese).
+  is active; giving 0 in the wall-less width mode stops at initialisation
+  (enabling it there diverged in tests; developer.md §18, Japanese).
 - **Accuracy limits.** The channel is a raster (channel mask + width) and
   channel cells are connected by the implicit rule "adjacent cells are
   connected". Unlike one-dimensional channel-network models, which hold
@@ -246,7 +246,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_bank_mode | 0 | hydraulic mode | **method** overtopping only by default; the check valve (1) is a shortcut, real works are [structures](structure.md) |
 | f_bank_opening | 1 | opening correction | **verification case** one-cell straight and diagonal channels follow Manning uniform flow in [test/bendloss](../../../test/bendloss/) (§1) |
 | p_sect_m | 0 | shape exponent of the section | **compatibility** rectangle by default; the recommended 0.3–1 is empirical (table in the chapter) |
-| f_channel_advection | 1 | advection term on edges involving channel cells (acts only with a levee active) | **method** normal by default; 0 is for stabilisation under strong width heterogeneity |
+| f_channel_advection | 1 | advection term on edges involving channel cells (levee required; 0 in the wall-less width mode stops) | **method** normal by default; 0 is for stabilisation under strong width heterogeneity |
 | rn0_rw | — | channel roughness | **customary value** Manning n (concrete 0.015–0.02, sand bed 0.025–0.035, gravel bed 0.035–0.05, vegetated floodplain 0.05–0.1; Chow's tables[^chow59] and the Japanese river technical standards give similar ranges) |
 
 **Where to look when revising the defaults**
