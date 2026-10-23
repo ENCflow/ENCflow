@@ -430,7 +430,7 @@ Hammack-type[^hammack73] prescribed uplift ([test/nhbottom](../../../test/nhbott
 the leading wave height is
 within +3.9% of the exact (potential-flow) solution (hydrostatic +40%,
 without the acceleration term +16%). Coupled with an inertialess bed layer
-(configuration 2 of the same case; case C of [examples/landslide_tsunami](../../../examples/landslide_tsunami/README.md)) a
+(configuration 2 of the same case; case C of [examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md)) a
 self-excited oscillation trapped at the cut-off frequency $`\sqrt{4g/H}`$ of
 the one-layer model remains at the foot of the slope, so do not use the
 water level directly above the deposit.
@@ -449,7 +449,7 @@ water level directly above the deposit.
   1 has no history for one step after restoring).
 - **Nesting**: the band of a child grid receives the parent's $`\phi`$ as
   Dirichlet values ([Nesting](nest.md); the parent–child identity test is the
-  nh configuration of [test/nest_identity](../../../test/nest_identity/README.md), and [examples/nest_reflect](../../../examples/nest_reflect/README.md)
+  nh configuration of [test/nest_identity](../../../test/nest_identity/README.md), and [examples/nest_reflect](../../../examples/nest_reflect/en/README.md)
   compares the treatments of the band).
 
 ### Parameters and the basis of their defaults
@@ -489,16 +489,16 @@ READMEs, which are in Japanese):
 
 **Related examples** (settings that use the correction on real and idealised terrain):
 
-- [examples/landslide_tsunami](../../../examples/landslide_tsunami/README.md) -- slope failure (A) and submarine
+- [examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md) -- slope failure (A) and submarine
   landslide (C) with `f_nh_slope = 1` and, in addition, `f_nh_bottom = 1`
   (param_*_nh0 / param_*_nh); near-field comparison with hydrostatic and
   indicative run times.
-- [examples/tsunami_fault](../../../examples/tsunami_fault/README.md) -- fault tsunami (prescribed bed motion) with
+- [examples/tsunami_fault](../../../examples/tsunami_fault/en/README.md) -- fault tsunami (prescribed bed motion) with
   the correction and the acceleration term (param_nh.txt). Even for a 30 km
   wide uplift in 2000 m of water ($`kH`$ ≈ 0.4–0.8) dispersion during
   propagation lowers the leading wave by 13–24%, while the acceleration term
   contributes only −2% above the source.
-- [examples/nest_reflect](../../../examples/nest_reflect/README.md) -- non-hydrostatic parent and child grids;
+- [examples/nest_reflect](../../../examples/nest_reflect/en/README.md) -- non-hydrostatic parent and child grids;
   the default of holding the parent's $`\phi`$ in the band (`nest_nh = 1`)
   against making the band hydrostatic.
 

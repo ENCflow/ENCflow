@@ -135,9 +135,9 @@ full-precision volume column of the Log). Restart (save → restore at
 f_nh_bottom it differs by one step of the acceleration term), and coexisting
 with a submarine slide (f_bedslide) Σ(z − z0) = Σ d holds within output
 precision (the internal transfer of the bed layer sums to zero).
-- [examples/tsunami_fault](../../../examples/tsunami_fault/README.md): comparison of hydrostatic / instantaneous / non-hydrostatic + acceleration term.
-- [examples/tsunami_coast](../../../examples/tsunami_coast/README.md): the time lag between coastal subsidence/uplift and the offshore tsunami.
-- [examples/levee_breach](../../../examples/levee_breach/README.md): breach of a resolved levee (compared with &list_channel_breach on a virtual wall).
+- [examples/tsunami_fault](../../../examples/tsunami_fault/en/README.md): comparison of hydrostatic / instantaneous / non-hydrostatic + acceleration term.
+- [examples/tsunami_coast](../../../examples/tsunami_coast/en/README.md): the time lag between coastal subsidence/uplift and the offshore tsunami.
+- [examples/levee_breach](../../../examples/levee_breach/en/README.md): breach of a resolved levee (compared with &list_channel_breach on a virtual wall).
 
 ## References
 

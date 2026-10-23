@@ -231,7 +231,7 @@ a coastal log storage yard is released by the storm-surge water-level
 rise and carried into an urban area by the overtopping flow — is
 included in [examples/timberyard](../../../examples/timberyard/)
 (`python3 make_terrain.py && ./encflow param.txt`; about one minute).
-Its [README](../../../examples/timberyard/README.md) (Japanese) explains
+Its [README](../../../examples/timberyard/en/README.md) explains
 the key points of the setup (no sea mask for the log yard and harbor,
 timber stock only in the yard cells via `fn_dwstock`, hydraulic
 recruitment used as "mooring loss by the surge" with `dw_hrec` above
