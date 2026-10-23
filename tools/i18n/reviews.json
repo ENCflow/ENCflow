@@ -121,8 +121,8 @@
     {
       "source": "examples/karst/README.md",
       "target": "examples/karst/en/README.md",
-      "source_sha256": "aee269b0064f0899debd5a77b60ef1f21a9405c3493c45589fc7422df3ec9e50",
-      "target_sha256": "8dd8dc785a595206abecdf93514a1f3d4b20ac166a34c977e82b6438f0c62d25",
+      "source_sha256": "ec85c81b8cc7878cbe4f83b3a9fa1cd3cf31202df045e3977ac76dfd9890c157",
+      "target_sha256": "3a5f4f03a5b10d0732bb1166d0c7962cf71354424a3cc1b28add53c5b143c63a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"
@@ -148,8 +148,8 @@
     {
       "source": "examples/meander/README.md",
       "target": "examples/meander/en/README.md",
-      "source_sha256": "78f007d3d12bb8ecf5cb10cdbf8c2418da2abd69fc976e09db0a6cdc304a4600",
-      "target_sha256": "77997fddef091cd1cd5aaf41ce7cb339b61d18ca6ba1af19e90e8ba28059e70b",
+      "source_sha256": "e231c4fa10117012385a173f76e4f361f4c5829467f41237ed01bbf3401db36d",
+      "target_sha256": "a3e53f73d3b9ec158f2c86facad25bb651dcd8db930157a3c4754cf8652a3dda",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"
@@ -166,8 +166,8 @@
     {
       "source": "examples/mesa/README.md",
       "target": "examples/mesa/en/README.md",
-      "source_sha256": "e92c8348bd374df3d2472c661b2e54fbf58c72f9a44c47770646165cd8a27b55",
-      "target_sha256": "a72cc49f3329edea448ecee17f93927e1aa249c2194a3f4193a64a3aaeb9227a",
+      "source_sha256": "a74d9f0a5a704dc2a9008df6a2a07f474679a24e20792252a2219d936b974435",
+      "target_sha256": "611f3ba658984f4c97136d0c29991479ad7cf110d8a1334394834de2fc774ea2",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"

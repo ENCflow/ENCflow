@@ -40,7 +40,7 @@ generated terrain `z.txt` and soluble-fraction map `sol.txt`
 | Rainfall | Representative storm 40 mm/h × 1 h, repeated with a 1-day period (`t_cycle_c = "1d"`) |
 | Soil and infiltration | Soil 0.5 m (sy 0.2), Green-Ampt 10 mm/h → 1/4 of the storm infiltrates (the water amount of diffuse dissolution), 3/4 becomes surface flow |
 | Sinks | Inlets of the conduit continuum layer at 1×10⁻⁴ /m² (one per ha), weir coefficient 2.66. The conduit layer has no lateral flow and a capacity of 2000 m (receptacle). The soil water drains into the conduit layer with an exchange capacity of 10 mm/h |
-| Dissolution | c_eq = 100 mg/L, ρ_r = 2500 kg/m³, infiltration source + sink term (f_sink = 1), residue fraction 0.1, soluble-fraction map `sol.txt` |
+| Dissolution | c_eq = 100 mg/L, ρ_r = 2500 kg/m³, infiltration source + sink term (dissol_sink = 1), residue fraction 0.1, soluble-fraction map `sol.txt` |
 | Time | dt = 2 s, terrain update every 10 min × morfac 1000 (1 day = 1000 storms = 25 years at 40 per year). 60 days = 1.5 kyr of morphological time. Z, H, Hg and Hgc output every 10 days. About 1 hour (4 threads) |
 
 ```
