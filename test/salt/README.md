@@ -1,5 +1,7 @@
 # test/salt — 地表塩水層(f_salt_surf)と海水浸入の平衡
 
+[English](en/README.md)
+
 淡水・塩水を密度の違う 2 つの層として扱う塩水モジュール(`fn_salt`、
 [ユーザーガイドの塩水の章](../../docs/users_guide/salt.md)、developer.md §47)の
 検定です。2 つの模式実験からなります。

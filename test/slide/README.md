@@ -1,5 +1,7 @@
 # test/slide — 瞬時流動化(f_release)と斜面安定判定(f_slide)の疎通と保存則
 
+[English](en/README.md)
+
 地滑り型の土砂流動の 2 つの発生機構の検定です(developer.md §28.1、§28.9)。
 
 1. **瞬時流動化 f_release**(`param.txt`): 崩壊深分布 `fn_dbinit` を与え、

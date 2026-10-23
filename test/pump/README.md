@@ -1,5 +1,7 @@
 # test/pump — 井戸揚水シンク(f_gwpump)の質量収支
 
+[English](en/README.md)
+
 地下水から一定流量を汲み上げる**井戸揚水**(`&list_gwflow` の
 `f_gwpump = 1`、`&list_gwflow_pump`。
 [ユーザーガイドの地下水の章](../../docs/users_guide/gwflow.md))の

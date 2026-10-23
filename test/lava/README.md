@@ -1,5 +1,7 @@
 # test/lava — 溶岩流(fn_lavaflow): Huppert 相似解と Bingham 停止厚
 
+[English](en/README.md)
+
 溶岩流モジュール(`fn_lavaflow`。Bingham 粘性重力流 + 固化。
 [ユーザーガイドの溶岩流の章](../../docs/users_guide/lavaflow.md)、developer.md §51)の
 検定です。reference 比較なしの解析解検定で閉じます([test/volcano](../volcano/)

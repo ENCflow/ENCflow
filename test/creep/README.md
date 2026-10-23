@@ -1,5 +1,7 @@
 # test/creep — 斜面クリープ(線形拡散)のガウス丘ベンチマーク
 
+[English](en/README.md)
+
 地形変化モジュールの斜面クリープ(`&list_geomorph` の `f_creep = 1`、
 [ユーザーガイドの地形変化の章](../../docs/users_guide/geomorph.md))を、
 等方線形拡散 ∂z/∂t = D∇²z の解析解で検定します。水は置かず(h₀ = 0、
