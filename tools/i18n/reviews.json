@@ -841,7 +841,7 @@
     {
       "source": "examples/meander_cutoff/README.md",
       "target": "examples/meander_cutoff/en/README.md",
-      "source_sha256": "38bf4ec38d164e72dfa7877e27886247f9c5d9439a758d411298f2d44da7bf8e",
+      "source_sha256": "432bd82497ee92b026894327bf128aa5f2010fe560abe0c00cf51823bda1641b",
       "target_sha256": "bc27f3bead93c028b55064ff65b971b186f0b2f92223938fc6ba423b15214018",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
