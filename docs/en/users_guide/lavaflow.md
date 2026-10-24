@@ -12,7 +12,7 @@ current (lubrication approximation); the viscosity η and yield stress
 elevation z at a fixed rate (solidification), and **rainfall, flooding,
 and sediment transport over the new topography continue in the same
 run** (eruption → lava field → secondary hydrologic response as one
-chain). The full design is in [docs/lava_plan.md](../../lava_plan.md);
+chain). The full design is in [docs/lava_plan.md](../../lava_plan.md) (in Japanese);
 the implementation record is developer.md Sec. 51.
 
 How to read the results (fields, ledgers, measurement columns, restart) is summarized in [Output and monitoring](#output-and-monitoring) on this page.

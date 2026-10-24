@@ -1,4 +1,8 @@
 !======================================================================
+! English mirror of examples/List_samples/list_bldgdebris.txt.
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!======================================================================
 ! Building destruction and debris sample (&list_bldgdebris. developer.md §63)
 !   Enable with fn_bldgdebris = "this file" or "-" in the main parameter file.
 !   Treats wooden houses as a "destructible stock" raster field and
@@ -60,7 +64,8 @@
 
   ! ---- stopping and deposition (defaults 0.01 / 0.05) ----
   bd_wstop = 0.01                   ! grounding deposition rate (m/s)
-  bd_vstop = 0.05                   ! velocity threshold of slow-flow deposition (m/s; 0 = depth only)
+  bd_vstop = 0.05                   ! velocity threshold of slow-flow deposition (m/s; 0 = depth
+                                    !   (draft) criterion only)
 
   ! ---- refloat (default bd_wfloat=0 = deposited debris never moves) ----
   bd_wfloat = 0.0                   ! refloat rate (m/s; 0 = none)
@@ -70,6 +75,8 @@
 
   ! ---- feedback to the void ratio ----
   f_bdgv = 1                        ! 1: gv = gv0 + (1-gv0)*fw*d with the destroyed fraction d
-                                    !    (the same water spreads over a larger area = feedback)
-                                    ! 0: one-way coupling (damage and debris maps only)
+                                    !    (the same water spreads over a larger area = destruction
+                                    !    feeds back to the flow)
+                                    ! 0: one-way coupling (destroyed fraction and debris maps only;
+                                    !    the flow is unchanged)
 /

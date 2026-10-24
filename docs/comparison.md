@@ -84,7 +84,7 @@ GeoClaw 以降の行(COMCOT〜PISM)は §2 で言及するモデルを網羅す�
 
 ネスティングの出典(2026-10-10 確認):
 [JAGURS の分散・ネスト並列化(PAGEOPH 2015)](https://link.springer.com/doi/10.1007/s00024-015-1049-2) /
-[NEOWAVE の非静水圧ネスト(IJNMF)](https://uaf.edu/cfos/files/publications/kowalik/Yamazaki_et_al_2010-IJNMF-1.pdf) /
+[NEOWAVE の非静水圧ネスト(Yamazaki ら、IJNMF 2011。ファイル名は 2010)](https://uaf.edu/cfos/files/publications/kowalik/Yamazaki_et_al_2010-IJNMF-1.pdf) /
 [GeoClaw-Bouss の陰的 AMR(Berger & LeVeque, SISC 2024)](https://faculty.washington.edu/rjl/pubs/mjb-rjl-implicit-2023/index.html) /
 [FUNWAVE-TVD の多格子ネスト(GMD 2022)](https://gmd.copernicus.org/articles/15/5441/2022/) /
 [ネスト Boussinesq(Zhou ら, NHESS 2011)](https://nhess.copernicus.org/articles/11/2677/2011/) /

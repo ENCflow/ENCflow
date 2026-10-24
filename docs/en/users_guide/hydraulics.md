@@ -177,7 +177,7 @@ Flather condition[^flather76] with external level and velocity, used by
 `nest_bc = 3` of [nesting](nest.md). Still water gives zero flux and the
 inflow of a drawdown is allowed.
 
-**Segment inflow (family D).** The total discharge $`Q`$ of the segment is
+**Segment inflow (type D).** The total discharge $`Q`$ of the segment is
 distributed over the open faces:
 
 ```math

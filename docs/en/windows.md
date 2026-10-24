@@ -138,6 +138,12 @@ two ways to get there:
   whole Linux system; your own files are likewise under
   `Ubuntu` → `home` → `your user name`.
 
+> **`\` may appear as `¥`**: on Japanese keyboards and Japanese-language
+> Windows, the backslash `\` is displayed and typed as the yen sign `¥`
+> (the same character, only drawn differently). If `\\wsl$` in this
+> guide looks like `¥¥wsl$` on your screen, it is the same thing, and
+> typing it with the `¥` key is fine.
+
 If you followed the steps above, ENCflow is at
 `\\wsl$\Ubuntu\home\username\ENCflow`. You will visit this place
 often, so right-click the folder and **pin it to Quick access**.

@@ -1,5 +1,7 @@
 > English mirror of tutorials/chichibu/README.md. The Japanese file is the master copy.
 
+[日本語](../README.md)
+
 # Tutorial 2: chichibu -- rain on a real-terrain catchment
 
 We cover the Chichibu catchment in the upper Arakawa River basin
@@ -161,7 +163,7 @@ The screen output tells us the following.
   afterwards. By default the outer rim of the computational domain is
   an impermeable wall, so this catchment is a **closed vessel with no
   water outlet**; the constant S column confirms mass conservation.
-- Meanwhile the h_max column keeps growing from 8 m to 26 m: the water
+- Meanwhile the h_max column keeps growing from 8 m to nearly 30 m: the water
   that cannot get out keeps accumulating somewhere.
 
 The depth distribution at the final time (`result/H9998.txt`) shows
@@ -392,8 +394,8 @@ gnuplot -p -c Plot_flux.plt result
 ```
 
 displays the hydrographs of the four transects in turn (the bundled
-`../Plot_flux.plt` / `../Plot_map.plt` are scripts for visual
-inspection of results; run them from the case directory).
+`Plot_flux.plt` / `Plot_map.plt` in the case directory are scripts for
+visual inspection of results; run them from there).
 
 ![Step 3: hydrographs at each transect](figs/step3_transects.png)
 
@@ -401,9 +403,8 @@ We obtained catchment-scale flood routing at 1-minute resolution, with
 the flood wave growing and lagging from upstream transect 1 to
 downstream transect 4.
 
-The distributed outputs can be surveyed with `../Plot_step3.plt`,
-which arranges six maps of the final-time and maximum fields on one
-screen:
+The distributed outputs can be surveyed with `Plot_step3.plt`, which
+arranges six maps of the final-time and maximum fields on one screen:
 
 ```bash
 gnuplot Plot_step3.plt
@@ -788,7 +789,7 @@ conditions -> 3D visualization. From here:
   distributed roughness, subgrid channels, and more --
   [users guide](../../../docs/en/users_guide.md)
 - How to write the namelists of each feature --
-  [examples/List_samples/](../../../examples/List_samples/)
+  [examples/List_samples/en/](../../../examples/List_samples/en/)
 - To run a large computation in parallel with MPI:
   `mpirun -np 4 ./encflow_mpi en/param_step6.txt` (the results match
   the serial run bit for bit)
@@ -808,7 +809,7 @@ regenerated separately with `./Fig_supp.sh`.
 complete at this point; the following is for readers who are curious about
 how the results change with a finer grid, what the 8-direction exchange of
 the ENC grid buys, and what the advection term does. Reproducing the
-computations takes one to two hours because they include 50 m grid cases.
+computations takes a few hours because they include 50 m grid cases (see below).
 If you only want the conclusions, read the bold sentences at the end of each
 subsection and "What to take away about the ENC grid".
 
@@ -822,10 +823,10 @@ the Step 4 configuration with text input only). We also run the
 **4-neighbor** computation mentioned at the end of Step 1
 (`p_diagratio = 0.0`, diagonal exchange closed) at the same three
 resolutions, to see what the 8-direction exchange of the ENC grid
-brings. These six runs (plus the three width-equalized runs and the six
+brings. These six runs (plus the three width-equalized runs and the twelve
 runs with a different treatment of advection described below) and the
 figures are reproduced in one go with `./Fig_supp.sh` from the case
-directory (it includes five 50 m grid runs, so it takes about three hours
+directory (it includes seven 50 m grid runs, so it takes about three hours
 on a 4-core laptop).
 
 ### Mapping the transects

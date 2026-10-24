@@ -1,4 +1,8 @@
 !======================================================================
+! English mirror of examples/List_samples/list_wave.txt.
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!======================================================================
 !
 ! Wave conditions &list_wave (all parameters)
 !
@@ -37,7 +41,7 @@
   !wave_clock = 1
 
   ! ---- coefficients (literature defaults) ----
-  !wave_k2 = 0.34           ! coefficient K2 of the deep-water CERC formula (m^{3/5} s^{-6/5}); K = 0.39, gamma = 0.78
+  !wave_k2 = 0.34           ! coefficient K2 of the deep-water CERC formula (m^{3/5} s^{-6/5}); converted from K = 0.39, gamma = 0.78
   !wave_gamma = 0.78        ! breaker index gamma = H_b / h_b (surf zone = depth h <= H_b/gamma)
   !wave_smooth = 2          ! smoothing radius of the depth used for the shoreline orientation (cells, 1 or 2)
   !wave_smin = 1.0e-3       ! lower bound of the bed slope that defines a shoreline orientation (flatter = excluded)

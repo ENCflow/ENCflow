@@ -7,7 +7,8 @@
 Handles drainage pumps, culverts (sluice pipes and sluice gates),
 diversions, and dams/lakes. Enabled via `fn_structure`, with one
 namelist group per type (absence of a group = no structures of that
-type).
+type). The discharge formulas and the basis of the coefficients are in
+[the hydraulics of structures and boundaries](hydraulics.md).
 
 The four types share a common skeleton: **two cell sets (intake side ->
 outlet side or out of the domain) + a hydraulic rule Q (a function of a
@@ -47,7 +48,7 @@ omitting the outlet drains out of the domain):
 
 ```
 &list_struct_pump
-  pump_cell(:,1,1) = 120, 45     ! intake cell (i, j)
+  pump_in_cell(:,1,1) = 120, 45  ! intake cell (i, j)
   pump_q0(1) = 5.0               ! pumping rate (m3/s)
 /
 ```
@@ -99,6 +100,17 @@ discharging to the sea.
   water is drawn from the pond storage instead of the surface water
   (forebay drainage). In this case only the depth (= pond depth) can be
   used as the reference.
+- **Conduit intake (pumping station)**: with `f_pump_src(n) = 1` the pump
+  draws directly from the storage hgc of the conduit continuum layer
+  (f_gwconduit of [groundwater](gwflow.md)) instead of the surface water
+  (drainage pumping stations of sewers and trunk mains; requires
+  f_gwconduit=1, and the intake cells must have conduits, cap > 0). The
+  meaning of the reference changes: `f_pump_ref` = 0: the **conduit head**
+  of the representative intake cell, 1: the **storage hgc** (m of water
+  column). Discharge to outlet cells (return inside the domain) and
+  drainage out of the domain work as usual. Drainage from a head below the
+  tide level cannot be discharged by a gravity outfall (fn_gwc_outfall in
+  gwflow.md), so combine it with this feature.
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -106,7 +118,8 @@ discharging to the sea.
 | pump_out_cell(:,k,n) | none | Set of outlet cells (i, j). Omitted = drainage out of the domain (removal from the system) |
 | pump_q0(n) | -- | Constant discharge at all times (m3/s). Exactly one of this or pump_rule is mandatory |
 | pump_rule(:,k,n) | -- | Operating-rule polyline (reference value m, discharge m3/s). Exactly one of this or pump_q0 is mandatory |
-| f_pump_ref(n) | 0 | Reference of the operating rule. 0: water level eta of the representative (first) intake cell, 1: depth h of the same cell (only 1 is allowed for pond intake) |
+| f_pump_ref(n) | 0 | Reference of the operating rule. 0: water level eta of the representative (first) intake cell, 1: depth h of the same cell (only 1 is allowed for pond intake; for conduit intake 0: conduit head, 1: storage hgc) |
+| f_pump_src(n) | 0 | Intake source. 0: surface water (pond cells automatically use the pond storage), 1: the conduit continuum layer hgc (pumping station; requires f_gwconduit=1) |
 | fn_pump_in_cell(n) / fn_pump_out_cell(n) | "" | File specification of the cell sets (from dir_data; each line "i j") |
 
 **Outputs for this section**: no pump ledger, and the transfer does not cross a transect. Check the effect as the drop of `H0001...` upstream and, when draining out of the domain, the decrease of S in the log ([Output and monitoring](#output-and-monitoring)).
@@ -213,14 +226,13 @@ Operation rules (constant, rate cut, rating, orifice, square-root law, emergency
 A bucket model in which the cells of the **water surface (capture
 set)** absorb all arriving water every step into storage, and release
 it to the outlet cells according to an operation rule (the flow and
-backwater on the impounded surface are not solved). When
-[water quality](wq.md) is enabled, storage lakes act as completely
-mixed reservoirs and the released water carries the storage
-concentration M/V (see "Reservoirs and retention ponds" in the wq
-chapter). Not only dam
+backwater on the impounded surface are not solved). Not only dam
 reservoirs but **general lakes** (natural lakes, lagoons, regulating
 ponds, and lake groups sharing one water level) are handled by the
-same mechanism.
+same mechanism. When [water quality](wq.md) is enabled, storage lakes
+act as completely mixed reservoirs and the released water carries the
+storage concentration M/V (see "Reservoirs and retention ponds" in the
+wq chapter).
 
 **The water surface is specified in one of three ways** (per number n):
 

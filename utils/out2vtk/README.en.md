@@ -1,6 +1,6 @@
-> English mirror of utils/out2vtk/README.md. The Japanese file is the master copy.
-
 # out2vtk — View simulation results in 3D with ParaView
+
+> English mirror of utils/out2vtk/README.md. The Japanese file is the master copy.
 
 [日本語](README.md)
 
@@ -27,7 +27,7 @@ the default output directory and no filename suffix.*
 [SVG](../../docs/figs/visualization_workflow_en.svg) · [Generator](../../docs/figs/guide/fig_visualization.py)
 
 For hiding dry areas and adjusting colors, see the [ParaView quick start](#paraview-quick-start)
-below. Results from [test/wave](../../test/wave/) make a useful practice case.
+below. Results from [test/wave](../../test/wave/en/README.md) make a useful practice case.
 For depth or discharge line plots, use the CSV files in `probes/` and `fluxes/`
 from [measurement output](../../docs/en/users_guide/record.md) in Python or a spreadsheet.
 
@@ -97,18 +97,28 @@ below is optional:
 - **Variables `vars`**: all detected output variables are included by default.
   To reduce file size, select their output prefixes, such as H, E, u, v, V, Q,
   Pr, Hg or Sw.
-- **Domain mask `f_mask`**: when `X0000` exists, the default (`1`) shows land
-  only. `2` includes sea cells; `0` disables masking. Mask values are also
-  included as point data named `mask`, for use with Threshold. If `X0000`
-  is absent, or every cell is active land, output is unmasked. VTK blanking
-  (`vtkGhostType`) hides a surface cell only when all four corners are masked;
-  the visible surface can therefore extend half a grid cell past a boundary.
+- **Domain mask `f_mask`**: when the results include `X0000` (the domain
+  mask: 0 = outside the domain, 1 = land, 2 = sea; always written by encflow),
+  the default (`f_mask = 1`) generates vtk files for **land only**. Cells
+  outside the domain and sea cells are hidden by VTK blanking
+  (`vtkGhostType`), so no action is needed in ParaView. `f_mask = 2` includes
+  the sea (when you also want the sea-side water surface, as for storm surge
+  or tsunami); `f_mask = 0` disables masking (whole domain). In every case the
+  mask values are also included as point data named `mask`, so you can switch
+  with a Threshold filter as well. Results without `X0000` (output of older
+  versions) and cases where the whole domain is computed give the same output
+  as before. The unit of hiding is a surface cell (the quadrilateral joining
+  grid-cell centres), and only cells whose four corners are all in the hidden
+  region are hidden, so the visible surface extends half a grid cell beyond
+  the boundary.
 - **Grid information**: grid dimensions and coordinates are taken from the
   Z0000 hdr or GeoTIFF. For txt, dimensions are counted from the file. Without
   georeferencing, coordinates are local metres from the southwest corner.
-  Cell size comes from the parameter file or `csx`, `csy`; it defaults to 1 m
-  if neither is supplied, so pass the parameter file for txt output. For bil
-  without an hdr, specify `nx` and `ny` as well.
+  Cell size comes from the parameter file (`fn_param` or the argument) or
+  `csx`, `csy`; it defaults to 1 m if neither is supplied, so pass the
+  parameter file for txt output. Only for bil output without an hdr (a case
+  without georeferencing and `f_output_mode = 2`) must `nx` and `ny` be
+  specified.
 
 ### Included point data
 
@@ -142,9 +152,11 @@ and [colors and NaN display](https://docs.paraview.org/en/latest/ReferenceManual
 
 ## Draping maps or satellite images (with QGIS)
 
-Export an image of the model extent from QGIS and apply it as a texture to
-the terrain. `terrain.vts` includes texture coordinates normalized to 0–1
-across the grid extent.
+ParaView cannot read web maps directly, but by **exporting an image of the
+same extent as the model domain from QGIS and draping it over the terrain**
+you can make 3D animations of water flowing over satellite imagery or maps.
+`terrain.vts` includes texture coordinates normalized to 0–1 across the grid
+extent, so applying the image is just a matter of selecting it.
 
 ### Export a background image from QGIS
 
@@ -174,9 +186,10 @@ Texture coordinates remain normalized to the grid extent, so draping still works
   use local metre coordinates from the southwest corner.
 - Only numbers listed in `FILENUMBER.csv` are converted. Results from an
   interrupted run can also be used.
-- If Z exists at a particular output time, the water surface uses that terrain;
-  otherwise it uses Z0000. `terrain.vts` always uses Z0000. Terrain animation
-  is not yet implemented.
-- VTK output assumes little-endian hardware, as does bil output.
+- When a landform-change (geomorph) run writes Z at each output time, the
+  water-surface height is computed on the terrain of that time. `terrain.vts`,
+  however, is fixed to Z0000 (animating the terrain itself is future work).
+- VTK files assume little-endian byte order (as does the existing bil output;
+  all supported platforms, x86 / arm / NEC VE, qualify).
 - Size is roughly `(32 + 4 × number of variables)` bytes per grid cell per
   time step. Use `vars` to reduce it.

@@ -11,16 +11,6 @@ and snow accumulation/snowmelt (fn_snow) are required** (snowfall is
 the accumulation source). Like landform change, the processes are
 **stackable**: enable only what you need.
 
-The minimal input to "just try it" is **an empty &list_glacier in
-fn_glacier** (plus fn_meteo and fn_snow, both of which may be empty
-groups). The degree-day, sliding and erosion coefficients have
-defaults (the "Default" column; basis in [Parameters and the basis of their defaults](#parameters-and-the-basis-of-their-defaults) below); when
-unspecified the default is adopted and printed with "(default)". The
-default configuration is "grow from no ice by snowfall, SIA flow on,
-no sliding or erosion". Set gl_morfac and t_cycle, which buy
-geomorphic time, to suit the problem (see the
-[configuration example](#configuration-example) below).
-
 | Process | Flag | Description |
 |---|---|---|
 | Mass balance | (always on) | Firnification of perennial snow (accumulation) and degree-day melt of the ice surface (ablation) |
@@ -50,6 +40,16 @@ when saving).
 The design background (the SIA formulation, the time-acceleration
 concept, and the documented simplifications) is in the developer
 document [docs/glacier_plan.md](../../glacier_plan.md) (Japanese).
+
+The minimal input to "just try it" is **an empty &list_glacier in
+fn_glacier** (plus fn_meteo and fn_snow, both of which may be empty
+groups). The degree-day, sliding and erosion coefficients have
+defaults (the "Default" column; basis in [Parameters and the basis of their defaults](#parameters-and-the-basis-of-their-defaults) below); when
+unspecified the default is adopted and printed with "(default)". The
+default configuration is "grow from no ice by snowfall, SIA flow on,
+no sliding or erosion". Set gl_morfac and t_cycle, which buy
+geomorphic time, to suit the problem (see the
+[configuration example](#configuration-example) below).
 
 How to read the results (fields, ledgers, measurement columns, restart) is summarized in [Output and monitoring](#output-and-monitoring) on this page. Each feature section also ends with a short note on just the outputs that concern it.
 
@@ -251,7 +251,7 @@ experiments.
 | Temperate glacier (Alps; perennial snow patches to small glaciers in Japan) | 6-10 | 1e-16 | 1e-13 to 1e-12 | 1e-4 | Bed at the melting point, fast sliding. Erosion experiments: f_glslide + f_glero |
 | Cold / polar type (high latitude or altitude) | 4-7 | 1e-17 to 1e-16 | 0 (no sliding = f_glslide=0) | - | Frozen bed; deformation flow only |
 | Glacier hydrology (meltwater runoff) only | 6-10 | - | - | - | f_glflow=0 (a glacier that does not flow) + ice thickness from fn_glacier_hi0 |
-| Cirque / U-shaped valley formation experiments | 8 | 1e-16 | 1e-13 | 1e-4 (l=1) / 1e-7 to 1e-6 (l=2) | Millennia via gl_morfac x t_cycle. f_glava=1 |
+| Cirque / U-shaped valley formation experiments | 8 | 1e-16 | 1e-13 | 1e-4 (l=1) / 1e-7 to 1e-6 (l=2) | Millennia to tens of millennia via gl_morfac × t_cycle. f_glava=1 |
 
 Long-period climate change (glacial cycles, warming trends) can be
 superimposed on the representative year with `tempofs` (an air

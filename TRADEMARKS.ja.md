@@ -23,7 +23,7 @@ ENCflow との関係を事実に即して説明するために ENCflow の名称
 - ソフトウェア、データ、ワークフロー、サービス等について、ENCflow 対応、ENCflow と連携可能、ENCflow を基にしている等と事実に即して説明すること
 - ENCflow のチュートリアル、講習資料、教材、例題、ユーティリティ、前処理・後処理ツール等を作成・公開すること
 - ENCflow を利用した有償または無償のコンサルティング、解析、教育、技術支援等を提供すること
-- ENCflow を研究、業務、製品、サービス等の内部で改変して利用すること
+- 研究、運用、商用その他の内部目的で ENCflow を改変すること
 - Apache License 2.0 の条件に従って ENCflow またはその改変版を再配布すること
 - 派生ソフトウェアについて「based on ENCflow」「ENCflow を基に開発」「ENCflow 用拡張」などと、その関係を正確に表示すること
 
@@ -60,7 +60,7 @@ Apache License 2.0 の条件に従う限り、ENCflow の改変・再配布は�
 - `ENCflow Enterprise`
 - `ENCflow Official Plus`
 
-改変版の名称や目立つブランド表示に ENCflow の名称を含める場合には、README 等の目立つ場所に、例えば次のような表示を行うことを推奨します。
+改変版の名称や目立つブランド表示に ENCflow の名称を含める場合には、例えば次のような明確な表示を行うことを推奨します。
 
 > This is a modified version of ENCflow and is not an official release of the ENCflow project.
 
@@ -143,4 +143,4 @@ Apache License 2.0 は、ENCflow ソースコードの著作権上の利用許�
 
 予定している名称・表示が公式 ENCflow プロジェクトとの関係を誤認させる可能性があるか判断に迷う場合には、公式 GitHub Discussions その他の公式連絡手段からお問い合わせください。
 
-ENCflow プロジェクトは、公式プロジェクトの識別を明確に保ちながら、ENCflow ができるだけ多くの研究者、技術者、学生、企業、行政機関その他の利用者に自由に利用されることを目指します。
+私たちの目標は、公式プロジェクトの識別を明確に保ちながら、ENCflow をできるだけ広く利用できるようにすることです。

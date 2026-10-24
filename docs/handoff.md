@@ -887,9 +887,17 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   (c) examples の README 19 件は 2026-10-23 に §34.2 を改定して対象化し、英訳・全文の
   内容確認・record 済み(method=assistant)。test/ の README 71 件(wave・wave_river を
   除く全ケース + chichibu の data_chichibu*/README 3 件 + nhwave/Dispersion_result.md)も
-  同日に英訳し、全文を正本と突き合わせて record 済み(method=assistant)。残る
-  unreviewed 119 組(docs/en ほか)は、内容を確認したものから `record` する(一括登録は
-  しない)。英訳中に見つかった正本側の疑義は 2026-10-24 に正本・英語版を同時に修正(chichibu・
+  同日に英訳し、全文を正本と突き合わせて record 済み(method=assistant)。残っていた
+  unreviewed 119 組(docs/en の users_guide 全章・README・比較・install・windows・ai_guide・
+  tutorial・colab、tutorials の README・param・図、List_samples 20 件、bmi・utils・test・examples
+  の README、TRADEMARKS.ja)も 2026-10-24 に全文を突き合わせ、訳側の遅れ(欠落した表行・段落・
+  リンク先の英語版化・古い注記)を直して record 済み。**unreviewed は 0**。以後は正本を変えたら
+  同じ作業で訳を更新し、CI(stale 検出)に従う。  119 組の読み合わせで見つかった正本側の疑義は 2026-10-24 に正本・英語版を同時に修正(users_guide.md の
+  fn_wave 行、params_index の項目数 668 と berode_hcover・rf_bank の追加、geomorph のラハール侵食起動、
+  sediment の輸送スキームの記述と wet_lw 行、comparison の NEOWAVE の年、structure の pump_in_cell、
+  list_channel のコメント位置、tutorials/chichibu の h_max・所要時間・ケース数)。examples/README の
+  benchmark 行はディレクトリへのリンクのまま(README が無い。GitHub では一覧表示されるので可)。
+  英訳中に見つかった正本側の疑義は 2026-10-24 に正本・英語版を同時に修正(chichibu・
   bendloss の「f_opening_dynamic = 1 既定」→ 2(§68.38)、表セル内の `|` を `\|` にエスケープ
   (test 配下 44 ファイル)、bendloss の孤立した表 2 行を元の表へ、dissol「3 構成」→ A〜G、
   tide の比較先 result_min/result_minx、hillslope の粗度の注記、bedfines の題名、nhbottom の

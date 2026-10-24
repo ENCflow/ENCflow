@@ -412,8 +412,8 @@ The essentials of the numerical experiments of developer.md §68 (2026-10).
 Sources of the numbers: the bore from [test/dambreak](../../../test/dambreak/en/README.md), the smooth flood
 wave, lateral inflow and stepped bed from [test/bendloss](../../../test/bendloss/en/README.md), grid
 convergence, stability and cost on real terrain from [test/chichibu](../../../test/chichibu/en/README.md),
-the agreement on hillslopes from [test/hillslope](../../../test/hillslope/en/README.md) (each README, in
-Japanese, has the figures, tables and the list of derived cases).
+the agreement on hillslopes from [test/hillslope](../../../test/hillslope/en/README.md) (each README
+has the figures, tables and the list of derived cases).
 
 **Guidance.**
 
@@ -497,8 +497,6 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   closed basin). The reference case of the regression tests; shows the
   sensitivity of the maximum depth and velocity to the scheme (0.1–0.5%) and
   the preservation of the four-fold symmetry.
-
-The README of test/wave is available in English; the other test-case READMEs are in Japanese.
 
 **Related examples and tutorials**
 

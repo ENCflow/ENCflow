@@ -240,10 +240,10 @@ the same conditions. The acceptance test is [test/bmi_nest](../../../test/bmi_ne
 - Verification of waves crossing the interface of two-way nests at ratios 3
   and 5 (comparison with a uniform fine grid; figures of the levels, errors,
   one-way band vs Flather and the non-hydrostatic band) is in
-  [examples/nest_reflect](../../../examples/nest_reflect/).
+  [examples/nest_reflect](../../../examples/nest_reflect/en/README.md).
 
 ## Tests and examples
 
 - [test/nest_identity](../../../test/nest_identity/en/README.md): identity tests of 1:1 self-nesting (band replacement, two-way, Flather and non-hydrostatic configurations).
 - [test/bmi_nest](../../../test/bmi_nest/en/README.md): acceptance test of a nested system driven through BMI.
-- [examples/nest_reflect](../../../examples/nest_reflect/): waves crossing the interface of two-way nests with ratios 3 and 5, compared with a uniform fine grid (figures in the README).
+- [examples/nest_reflect](../../../examples/nest_reflect/en/README.md): waves crossing the interface of two-way nests with ratios 3 and 5, compared with a uniform fine grid (figures in the README).

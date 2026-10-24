@@ -93,19 +93,22 @@
   !   explicitly for embanked rivers. Cells whose width is at least the
   !   cell size are automatically treated the same as a resolved channel
   !fn_width = "channel_width.txt"  ! channel width distribution (m; effective on
-                                   !   channel cells only. Values at or above
-                                   !   the cell size all give the identical
-                                   !   resolved-channel result, so they need
-                                   !   not be the real width (to saturate even
-                                   !   channel-end cells use 2x the cell size
-                                   !   or more, e.g. 9999). But with the
-                                   !   cross-section sigma (p_sect_m>0) the same
-                                   !   holds (sigma acts on the area-based
-                                   !   flux; the width only sets the plan-area
-                                   !   fraction and the conveyance cap).
-                                   !   0 or below = no
-                                   !   width information = resolved)
+                                   !   channel cells only. 0 or below = no width
+                                   !   information = treated as resolved. Values
+                                   !   at or above the cell size all give the
+                                   !   identical result = resolved treatment, so
+                                   !   they need not be the real width (to
+                                   !   saturate even channel-end cells reliably
+                                   !   use 2x the cell size or more, e.g. 9999).
+                                   !   The same holds when combined with the
+                                   !   cross-section shape sigma (p_sect_m>0)
+                                   !   (sigma acts on the area-based flux; the
+                                   !   width only sets the plan-area fraction
+                                   !   and the conveyance cap. Sec. 68.28))
   f_channel_advection = 1       ! advection term on edges involving channel cells
+                                !   (1: normal (default), 0: drop it = a
+                                !    stabilization option under strong width
+                                !    heterogeneity)
 !  p_sect_m = 0.5                ! shape exponent m of the channel section
                                  !   (sigma(h)=(h/D)^m; Sec. 26). 0=rectangular
                                  !   =conventional (default), 0.5=parabola-like,
@@ -119,9 +122,6 @@
                                  !   the reproduction of level and recession at
                                  !   low to medium flows; for h>=D it reduces to
                                  !   the conventional rectangular dynamics
-                                !   (1: normal (default), 0: drop it = a
-                                !    stabilization option under strong width
-                                !    heterogeneity)
 /
 
 !----------------------------------------------------------------------

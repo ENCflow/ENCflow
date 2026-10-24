@@ -20,7 +20,9 @@ Omitting source, stage or inflow adds no such condition. Omitting edge
 settings **keeps the default walls**. Segment inflow overrides the
 specified outer normal faces, so part of the west edge can admit flow even
 with `f_bc_w = 0`. Internal works such as pumps and culverts belong to the
-separate `fn_structure` file ([structures](structure.md)).
+separate `fn_structure` file ([structures](structure.md)). The equations
+of free outflow, long-wave radiation and the segment-inflow distribution
+are in [Hydraulics of structures and boundaries](hydraulics.md) §5.
 
 Cell sets and time series for B, C and D can be written directly in the
 namelist or supplied via `fn_*` files (paths relative to `dir_data`).
@@ -216,12 +218,14 @@ the uniform contribution. These modes therefore do not always exclude the
 dry floodplain. Dry or shallow sections move toward uniform distribution
 to reduce concentration of discharge into thin water layers.
 
-- Where wall corners or nodata reduce an inflow cell's ability to pass
-  water inward relative to the best-connected cells of that segment, its
-  inflow face is assigned zero flow. Total Q is distributed over the
-  remaining faces. If all cells have equal connectivity, none is excluded.
-  This avoids concentrating discharge at restricted segment ends
-  (developer.md §69.9, Japanese).
+- Where a cell at the end of the segment touches a wall corner or nodata
+  and lacks the interior edge that would pass water on in the inflow
+  direction, its inflow face is closed automatically and the total inflow
+  is distributed over the remaining cells (the interior of a straight
+  segment behaves as before). Forcing the same unit-width discharge into a
+  corner cell as into the straight part cannot be passed on, and a
+  store-and-release oscillation grows (developer.md §69.9, in Japanese).
+  If every cell of the segment is in the same condition, nothing is closed.
 - Discharges are non-negative only (for outflow use prescribed water
   level or extraction).
 - When combined with sediment computation (suspended sediment), the

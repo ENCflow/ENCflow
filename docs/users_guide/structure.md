@@ -39,7 +39,7 @@
 
 ```
 &list_struct_pump
-  pump_cell(:,1,1) = 120, 45     ! 取水セル (i, j)
+  pump_in_cell(:,1,1) = 120, 45  ! 取水セル (i, j)
   pump_q0(1) = 5.0               ! 排水量 (m3/s)
 /
 ```

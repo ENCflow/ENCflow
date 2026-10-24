@@ -18,7 +18,7 @@ This page walks through adding one routine of your own and running it.
 | Hook | File | What it modifies | When it runs | Namelist |
 |---|---|---|---|---|
 | Topography | `src/user_geoinfo.f90` | elevation `g%z`, domain mask `g%x`, sea mask `g%sw`, channel mask `g%rw` (and, if needed, coefficients such as `g%rn`) | right after all topography, mask and coefficient files have been read and the channel has been excavated; before levee and seawall crests are built | `f_user_routine` in `&list_geoinfo` |
-| Initial field | `src/user_initial.f90` | depth `s%h`, velocity `s%u`, `s%v`, and if needed `s%z`, `s%hrs`, `s%hg`, `s%hs` | right after the default initial field (`f_htype` etc., including depression filling and channel depth) has been built; before the band is cut out | `f_user_routine` in `&list_initial` |
+| Initial field | `src/user_initial.f90` | depth `s%h`, velocity `s%u`, `s%v` and, if needed, the computational elevation `s%z`, reservoir depth `s%hrs`, groundwater storage `s%hg`, suspended sediment `s%hs` | right after the default initial field (`f_htype` etc., including depression filling and channel depth) has been built; before the band is cut out | `f_user_routine` in `&list_initial` |
 
 Both can be used together (for example a slope from the topography hook
 and a solitary wave from the initial-field hook, as in `test/nhshelf`).
@@ -225,7 +225,7 @@ Make such cells valid in the mask file instead.
   each file.
 - [Geographic information](geoinfo.md) (`&list_geoinfo`),
   [Initial conditions](initial.md) (`&list_initial`),
-  [the wave tutorial](../../../tutorials/wave/) (minimal setup using
+  [the wave tutorial](../../../tutorials/wave/en/README.md) (minimal setup using
   `wave_hump` and `wave_solid_wall`).
 - The developer-side contract (window-shaped arrays, zone lifecycle) is in
   developer.md §11 and §82.

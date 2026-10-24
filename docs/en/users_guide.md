@@ -122,7 +122,7 @@ The additional features below stay disabled unless you specify their `fn_XXX` en
 | Feature | Configuration-file entry | namelist group |
 |---|---|---|
 | Tide and sea surface | `fn_tide` | &list_tide |
-| Wave-driven longshore transport (arcuate and cuspate deltas, shoreline smoothing) | `fn_wave` | &list_wave | [Sediment and landform change](users_guide/geomorph.md), "Wave-driven longshore transport" (needs f_fluvial=1 in fn_geomorph) |
+| Wave-driven longshore transport (arcuate and cuspate deltas, shoreline smoothing) | `fn_wave` | &list_wave ([Sediment and landform change](users_guide/geomorph.md), "Wave-driven longshore transport"; needs f_fluvial=1 in fn_geomorph) |
 | Internal hydraulic structures | `fn_structure` | &list_struct_pump / culvert / diversion / dam |
 | Ponds | `fn_reservoir` | (used together with geographic information) |
 | Channels | `fn_channel` | &list_channel (+ breach) |
@@ -266,7 +266,7 @@ settings, including unsupported phenomena), see
 | Dispersive tsunamis and waves (soliton fission of river-intruding tsunamis, undular bores, solitary waves) | [Shallow water flow](users_guide/swflow.md) (non-hydrostatic correction f_nonhydrostatic) |
 | Rainfall runoff (catchment hydrology) | [Rainfall and weather](users_guide/forcing.md) (+ groundwater) |
 | Urban pluvial flooding (sewer drainage and surcharge) | [Groundwater](users_guide/gwflow.md) (conduit continuum layer) + [Rainfall and weather](users_guide/forcing.md) |
-| Seawater intrusion, salt wedges, freshwater lenses | [Fresh and salt water layers](users_guide/salt.md) + [Tide and sea level](users_guide/tide.md) |
+| Seawater intrusion, salt wedges, freshwater lenses | [Fresh and salt water layers](users_guide/salt.md) + [Tide and sea surface](users_guide/tide.md) |
 | Sediment transport / debris flow | [Sediment and landform change](users_guide/geomorph.md) |
 | Development of meandering channels (outer-bank retreat, inner-bank bars turning into land, neck cutoff) | [Sediment and landform change](users_guide/geomorph.md) (bed-load direction correction, bank erosion, angle-of-repose avalanching, fixation; examples/meander and meander_cutoff) |
 | Floods and debris flows with driftwood | [Driftwood](users_guide/driftwood.md) (+ sediment and landform change) |

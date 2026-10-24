@@ -215,8 +215,9 @@ stock `wst` is not written as a field.
   manner as [representing sabo facilities](geomorph.md)).
 - Save/restore preserves `hd`, `wd`, `wst` and `zref` in
   `driftwood.dat`. **The `Wd9999` maximum and cumulative process volumes
-  in the CSV are not restored**. Combine the separate run segments when
-  evaluating statistics and budgets over the complete period.
+  in the CSV are not restored**. Do not read whole-period statistics or
+  budgets from the post-restart output alone; keep the results before and
+  after the split apart and aggregate them yourself.
 
 ## Verification cases
 

@@ -257,7 +257,7 @@ s_y = \frac{c}{D}
 The defaults $`c`$ = 0.01 m, $`z_b = z - 3`$ m, $`s_y`$ = 0.05 and
 $`s_{slot} = s_y/50`$ are those of an urban branch network (D = 0.4 m, cover
 2–2.5 m), from the conversion script of
-[examples/sewer_hybrid](../../../examples/sewer_hybrid/) and
+[examples/sewer_hybrid](../../../examples/sewer_hybrid/en/README.md) and
 [test/conduit](../../../test/conduit/en/README.md) (analytical equilibrium
 reproduced to all printed digits).
 
@@ -350,8 +350,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/gwseep](../../../test/gwseep/en/README.md) | water-quality ledger of infiltration → lateral flow → exfiltration | to_gw − seep = mass_gw closes |
 | [test/pump](../../../test/pump/en/README.md) | mass balance of pumping | 13 digits of the analytical value |
 | [test/frost](../../../test/frost/en/README.md) | infiltration suppression by frost | all 14 digits of the analytical value |
-| [examples/sewer_hybrid](../../../examples/sewer_hybrid/) | trunk + branch network conversion | cell-wise sy map |
-| [examples/qanat](../../../examples/qanat/) | conduit layer + layer 2 | collection, conveyance and outlet of a gallery |
+| [examples/sewer_hybrid](../../../examples/sewer_hybrid/en/README.md) | trunk + branch network conversion | cell-wise sy map |
+| [examples/qanat](../../../examples/qanat/en/README.md) | conduit layer + layer 2 | collection, conveyance and outlet of a gallery |
 
 ## References
 

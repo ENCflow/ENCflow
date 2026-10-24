@@ -69,7 +69,7 @@ one-layer model (12% at $`kH = 1`$).
 
 ![Vertical structure, time step and mask of the one-layer model](../../figs/nonhydro_scheme_en.png)
 
-**Figure: vertical structure, time step and active set of the one-layer model.** (a) Vertical-velocity arrows start at the water surface and bed. The triangle on a separate axis shows the non-hydrostatic component q at the dashed vertical section: linear from zero at the surface to q_b at the bed. (b) The flat-bed baseline proceeds from the hydrostatic predictor through projection to continuity. See §7 for extensions with bed slope and bed acceleration. (c) A single-grid example: select seeds among candidate cells, then expand the margin within those candidates. On a nested child boundary strip, φ supplied by the parent is treated as known.
+**Figure: vertical structure, time step and active set of the one-layer model.** (a) Vertical-velocity arrows start at the water surface and bed. The triangle on a separate axis shows the non-hydrostatic component q at the dashed vertical section: linear from zero at the surface to q_b at the bed. (b) The flat-bed baseline proceeds from the hydrostatic predictor through projection to continuity. See §7 for extensions with bed slope and bed acceleration. (c) A single-grid example: select seeds among the candidate cells, then expand the margin around them. On a nested child boundary strip, φ supplied by the parent is treated as known.
 
 The variables are those of figure (a): $`h`$ depth, $`z_b`$ bottom,
 $`\eta = z_b + h`$ surface, $`\mathbf{u}`$ depth-averaged horizontal velocity,
@@ -473,8 +473,8 @@ defaults is given here.
 | f_nh_slope | 0 | bottom-slope terms (Version 2) | **verification case** a few percent difference from Version 1 in [test/nhshelf](../../../test/nhshelf/en/README.md); off by default because the iterations double (§7) |
 | f_nh_bottom | 0 | moving-bottom acceleration term | **verification case** leading wave height within +3.9% of the exact solution in [test/nhbottom](../../../test/nhbottom/en/README.md) (+16% without); off by default since it acts only when the bottom moves (§7) |
 
-**Verification cases** (figures, tables and the derived cases are in the
-READMEs, which are in Japanese):
+**Verification cases** (figures, tables and the list of derived cases are
+in the READMEs):
 
 | Case | Content | Key result |
 |---|---|---|

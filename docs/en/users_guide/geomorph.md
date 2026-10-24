@@ -27,6 +27,7 @@ laws, erosion/deposition laws, triggering, bed layer).
 | Moving bed layer | f_bedslide | Layer hb moves within the terrain and soil, displacing the water surface |
 | Bedrock weathering / uplift | f_wthr / f_uplift | Weathering increases sd; uplift / subsidence shifts z |
 | Limestone dissolution | f_dissol | Lowers z in proportion to the recharge (no sediment is produced); a sink-inflow term for dolines |
+| Rockfall and talus | f_rockfall | Collapse of free faces (cliffs) that exceed a critical height, and the talus (thickness ht) of the fallen debris. The talus spreads at its repose angle and suppresses dry-slope erosion |
 
 ![Geomorphic processes, sediment pathways and state updates](../../figs/geomorph_processes_en.png)
 
@@ -202,7 +203,7 @@ scour the outer bank and deposit on the inner bank. With `fluv_slope = 1`
 of the bend) a cross section with a deep outer side and a shallow inner
 side forms in bends (use the two together; one alone does not reach an
 equilibrium transverse slope). The equations are in the
-[explanation](sediment.md#3-bed-load-f_fluvial). The coefficients
+[explanation](sediment.md#3-bedload-f_fluvial). The coefficients
 `fluv_mus`, `fluv_muk` and `sec_nstar` default to μs = 1.0, μk = 0.45
 (the values Asahi et al. 2013, eq. (22), take from Hasegawa 1984; Hasegawa
 1989 uses μk = 0.7 as an estimate, which makes γ 1.2 times smaller) and
@@ -247,7 +248,7 @@ cell. H_c is a structural quantity for the bank material (a guide: the initial b
 height plus the pool scour at which failure should start), h_cover the block size
 (tens of centimetres to a metre). Verification: slump / slump0 in
 [test/berode](../../../test/berode/en/README.md); example: param_cohesive_slump.txt in
-[examples/meander](../../../examples/meander/).
+[examples/meander](../../../examples/meander/en/README.md).
 
 **Fixation of inner-bank bars.** Bed load deposits only up to the water
 surface of the supplying cell, so under a constant discharge the inner-bank
@@ -277,7 +278,7 @@ of the surface layer; a T_dec longer than the duration of a flood keeps the
 fixation through short floods). The effect on bank erosion can be separated
 from the bed with `fix_ctau_bank` (roots stiffen the surface layer but hardly
 the bank toe, so a value below the bed c_tau, e.g. 0.5-1). Use it with an inflow series that alternates
-floods and low flows ([examples/meander](../../../examples/meander/),
+floods and low flows ([examples/meander](../../../examples/meander/en/README.md),
 param_fix.txt; with suspended sediment param_fixsusp.txt). Restart in
 `geomorph_fixation.dat` (the dynamic roughness is rebuilt from a and not
 saved). Verification: [test/fixation](../../../test/fixation/en/README.md).
@@ -290,7 +291,12 @@ Entrainment, settling, equilibrium formulas and Rubey's formula: [supplement](se
 
 Advects the concentration field (columnar equivalent hs) with the flow
 and exchanges with the riverbed through entrainment (E) and settling
-(D).
+(D). The concentration is per volume of water (hs divided by the
+rectangular-equivalent depth), and in cells that use the cross-section
+shape σ of [channels](channel.md) the sediment is carried at the same
+velocity as the water. In σ cells the exchange E, D is multiplied by the
+wetted-width ratio σ(h), so in a narrow low-water channel at low flow the
+exchange with the bed is reduced in proportion to the width.
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -438,6 +444,7 @@ Detachment supplies `hs` and lowers `z` and `sd` by the same amount.
 | wash_kr | 0.01 | Raindrop erosion coefficient (dimensionless; E = kr x rainfall intensity) |
 | wash_kf | 1e-5 | Sheet erosion coefficient (m/s) |
 | wash_tausc | 0.05 | Critical dimensionless shear stress for sheet erosion |
+| wet_lw | 0 | Correlation length ℓ_w (m) that spreads the detachment depth laterally (0 = off). Acts on both the detachment of f_wash and the entrainment of f_suspend (works with f_suspend alone too) |
 
 kr and kf are empirical coefficients (calibration assumed). When both
 are unspecified both get their defaults; when only one is given, the 0
@@ -448,6 +455,25 @@ The minimal input to "just erode the slopes" is `f_wash = 1` +
 sufficient to meet the wet-cell condition. The raindrop term needs rainfall
 reaching the ground; the sheet-erosion term can act without rain if flow-induced
 shear exceeds its threshold.
+
+**Lateral spreading of the detachment, `wet_lw`.** When the flow gathers
+into a one-cell-wide channel, the positive feedback in which only that
+cell erodes and collects still more water has no length scale, so the
+width and spacing of gullies are set by the grid spacing (refining the
+grid makes the valleys denser; there is no convergence). With
+`wet_lw = ℓ_w` the detachment depth evaluated in each cell (the detachment
+of f_wash and the entrainment of f_suspend; settling is excluded) is
+distributed to the neighbouring cells with a Gaussian kernel of standard
+deviation ℓ_w before it is subtracted from `z` and `sd` (the suspended
+sediment `hs` enters the source cell). This expresses "the flow in the
+channel erodes a band of width ℓ_w (the rill width) and the banks slump
+into the channel", and the total solid volume is conserved. Where the
+receiving soil `sd` is insufficient, the shortfall is discarded as bedrock
+exposure and reported at the end as "wet_lw spreading: solid volume lost
+to bedrock floor" (0 means strict conservation). On grids with
+Δx ≤ ℓ_w/2 the valley spacing no longer depends on the grid
+(developer.md §84.16, result 5 of
+[examples/badland_storm](../../../examples/badland_storm/en/README.md)).
 
 **Outputs for this section**: detached sediment rides in the surface `Hs0001...`; the loss of soil appears in `Sd0001...` and `Z0001...` ([Output and monitoring](#output-and-monitoring)).
 
@@ -492,7 +518,7 @@ represent this.
 | spl_zbase | -9999 | Elevation of the erosion base level (m) (<= -9000: none). Give the sea level when the cliff foot is the sea (z never drops below it; independent of bedrock exposure through sd) |
 | spl_sgrad | 1 | Evaluation of the slope S. 1: steepest descent (maximum downhill gradient to the 8 neighbours; default), 0: central difference (behaviour before 2026-10-19). The central difference cancels at a ridge crest (S ~ 0), so one-cell-wide ridges never erode; with steepest descent the crest cell erodes with the gradient of its faces and grid-scale checkerboards decay (developer.md sec. 48.4) |
 | spl_ksat | 0 | Saturation curvature kappa_s (1/m) of the hollow amplification. If positive, the kappa in the amplification 1 + c kappa is replaced by the effective curvature kappa~ = kappa/(1 + kappa/kappa_s) (unchanged for kappa << kappa_s, saturating at 1 + c kappa_s for kappa >> kappa_s). It bounds the amplification at strong hollows such as the foot of a cliff (the top of a hard bed), where it otherwise exceeds 100 and erases benches (examples/mesa). The spacing selection (linear stage, small kappa) is unchanged. 0 = no saturation (behaviour before 2026-10-22) |
-| spl_strata(1:2,k) | none | Table of horizontal strata (hard/soft contrast). Column k gives (bottom elevation z_k [m], erodibility factor f_k) in increasing elevation (up to 64 layers). A cell whose surface elevation z lies in the layer z_k <= z < z_{k+1} has its E multiplied by f_k (0 = a layer that does not erode = cap rock). Below the lowest layer the factor is 1. The layers are horizontal; as erosion lowers z the layer below is exposed. Not applied to creep. Example: [examples/badland_round](../../../examples/badland_round/) (banded alternation of hard and soft beds) |
+| spl_strata(1:2,k) | none | Table of horizontal strata (hard/soft contrast). Column k gives (bottom elevation z_k [m], erodibility factor f_k) in increasing elevation (up to 64 layers). A cell whose surface elevation z lies in the layer z_k <= z < z_{k+1} has its E multiplied by f_k (0 = a layer that does not erode = cap rock). Below the lowest layer the factor is 1. The layers are horizontal; as erosion lowers z the layer below is exposed. Not applied to creep. Example: [examples/badland_round](../../../examples/badland_round/en/README.md) (banded alternation of hard and soft beds) |
 
 The minimal input to "just carve valleys into a cliff" is `f_splash = 1`
 + `sd0` + rainfall (fn_precip) (kr and kt at their defaults; if the
@@ -503,10 +529,12 @@ the spacing is set by the grid and refining the grid adds valleys. Creep or
 other diffusion terms are not mechanical models and are not combined with it
 (they are not needed to select the spacing).
 
-Working example: [examples/badland](../../../examples/badland/) (in
-Japanese; long-duration rain on a plateau-and-cliff terrain grows
-valleys from the cliff margin with zero surface runoff). The
-cohesion contrast (whether valleys form at all) is in
+Working example: [examples/badland](../../../examples/badland/en/README.md)
+(long-duration rain on a plateau-and-cliff terrain grows valleys from the
+cliff margin with zero surface runoff: self-formation of valleys from
+white noise, the valley-spacing selection rule, grid convergence, and the
+long-term development of deep valleys and sharp ridges). The cohesion
+contrast (whether valleys form at all) is in
 [test/splashslide](../../../test/splashslide/en/README.md).
 
 **Outputs for this section**: landform in `Z0001...` and `Sd0001...`; the volume exported from the domain is printed at the end as "splash exported sediment volume" ([Output and monitoring](#output-and-monitoring)).
@@ -585,12 +613,12 @@ pays off).
   descending a torrent) use `f_dbed = 3` + `f_dbres = 3`
   (Takahashi-Nakagawa). `f_dbwet = 1` (uptake of path pore water) is
   recommended as the first-order bulking effect. Working example:
-  [examples/ashfall_lahar](../../../examples/ashfall_lahar/) (ash-thickness
+  [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) (ash-thickness
   distribution → rainfall → mudflow → fan deposition).
-- **How to initiate**: **erosion of an ash layer given as soil depth sd**
-  (rain runoff on a steep slope picks up the ash to the equilibrium
-  concentration — no source needs to be specified; [examples/ashfall_lahar](../../../examples/ashfall_lahar/)),
-  a **sediment-laden segment inflow** at the
+- **How to initiate**: an **erosion-triggered** start, in which the ash
+  layer is given as an erodible soil layer sd and the rain runoff raises the
+  concentration by erosion (no source needs to be specified;
+  examples/ashfall_lahar), a **sediment-laden segment inflow** at the
   upstream end (the supply hydrograph; inflow_cs of
   [Boundary conditions](boundary.md)), or a **chain** in which deposits
   from an earlier stage form a natural dam and breach (deposits fixed by
@@ -851,8 +879,9 @@ of the window lies `hsea0` (default 1 m) below the tide level.
 Verification: [test/rockfall](../../../test/rockfall/en/README.md) (collapse of a vertical
 plateau: conservation, final height differences <= H_c, talus budget; also the
 windowed, supported-face and sea-cell variants). Example:
-[examples/mesa](../../../examples/mesa/) (retreat of cap-rock cliffs with talus;
-a vertical cliff with talus-limited retreat in the supported-face mode).
+[examples/mesa](../../../examples/mesa/en/README.md) (retreat of cap-rock cliffs with talus;
+a vertical cliff plus benches in the supported-face mode, talus-limited
+retreat with the undercut collapse).
 
 **Outputs of this section**: talus thickness `Ht0001...`, terrain `Z0001...`; the
 final "rockfall moved ..." line gives the moved volume and the number of active edges,
@@ -897,7 +926,7 @@ the edges).
 | bs_reltime | 0 | Release time (s) |
 | bs_rho | 2000 | Bulk density of the mass (kg/m³, pores included; buoyancy ratio r = 1000/rho_s). The default is representative of saturated soil and rock debris (r = 0.5). 0 uses the default and init prints the adopted value with "(default)" |
 | f_bsres | 1 | Resistance law. 1: Voellmy (inertia-free; V = sqrt(xi hb (S - mu b))). 2 (Bingham) is reserved |
-| bs_mu / bs_xi | 0.15 / 500 | Voellmy mu and xi (m/s²). The defaults are the calibrated values of the inertia-free bed layer (as in [examples/landslide_tsunami](../../../examples/landslide_tsunami/)). Named separately from the mixture's db_mu/db_xi (calibration differs with and without inertia) |
+| bs_mu / bs_xi | 0.15 / 500 | Voellmy mu and xi (m/s²). The defaults are the calibrated values of the inertia-free bed layer (as in [examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md)). Named separately from the mixture's db_mu/db_xi (calibration differs with and without inertia) |
 | bs_vstop | 0.05 | Velocity threshold for stopping (m/s; hb of cells below it is fixed to the terrain; irreversible) |
 | bs_tstop | 0 | Duration of slow motion required before fixing (s). 0 = immediate. To avoid false fixing during the ten-odd seconds in which the shoreline zone dewaters and the layer stalls on plunging, 10-15 s (longer than the dewatering) is recommended for plunging cases |
 | bs_eps_s | 0.02 | Linearization width near yield (dimensionless slope; smaller means more subcycles) |
@@ -913,7 +942,7 @@ the defaults above; the adopted values are printed at run time, so
 always review them against your case. Make the soil depth sd0 at least
 the collapse depth).
 
-Working example: [examples/landslide_tsunami](../../../examples/landslide_tsunami/)
+Working example: [examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md)
 (a debris avalanche, debris flow → handover, mixture only, and a
 submarine landslide on the same terrain, with figures and the reasons
 for the settings).
@@ -932,7 +961,7 @@ added automatically. Restart uses the private file
 water time step to satisfy its stability conditions (advection and a
 diffusion-type condition near yield), so while the mass is moving the
 **total run time is about 1.5-2.5 times** (2.7 s → 4-6 s in
-[examples/landslide_tsunami](../../../examples/landslide_tsunami/)). This is not an anomaly. At the end,
+[examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md)). This is not an anomaly. At the end,
 "bedslide subcycles total = ... (max ... per update)" reports the count.
 If the count is extreme or the run stops on exceeding bs_nsubmax, the
 first remedy is a larger bs_eps_s (0.02 → 0.05) (mechanism and order of
@@ -1271,7 +1300,7 @@ When the type of phenomenon is known, start from the following
 | Dense pyroclastic flow | f_dbed=0 + f_dbres=5 | - | - | 5-50 | - | - | VolcFlow-type applications |
 | Stony debris flow (Japanese type) | f_dbed=3 + f_dbres=3 | - | - | - | 0.05-0.3 | 35 | Takahashi-Nakagawa 1991. Grain size = representative boulders of the front |
 | Mudflow, fine sediment flow | f_dbed=2 + f_dbres=2 | - | - | - | 0.001-0.01 | 30-35 | Egashira constitutive law. e ≈ 0.85 |
-| Lahar (volcanic mudflow) | f_dbed=1 or 2 + f_dbres=4 (fine) / 1; 3+3 when boulder-dominated | 0.05-0.1 | 500-1000 | - | 0.001-0.01 | 30-35 | Initiated by erosion of the ash layer (sd), a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended. The Egashira laminar law is not usable for fine material. See the "Lahars" paragraph above and [examples/ashfall_lahar](../../../examples/ashfall_lahar/) |
+| Lahar (volcanic mudflow) | f_dbed=1 or 2 + f_dbres=4 (fine) / 1; 3+3 when boulder-dominated | 0.05-0.1 | 500-1000 | - | 0.001-0.01 | 30-35 | Initiated by erosion of the ash layer (sd), a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended. The Egashira laminar law is not usable for fine material. See the "Lahars" paragraph above and [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) |
 | Simple debris flow (calibration-driven) | f_dbed=1 + f_dbres=1 | - | - | - | - | 30-35 | Calibrate the runout with delta_e and delta_d |
 | Bed change of a sand-bed river | f_fluvial (+ f_suspend) | - | - | - | 0.0003-0.001 | - | Large contribution of suspended load |
 | River-mouth delta | f_fluvial (capacity feed) + f_suspend (inflow concentration) + f_bedfines + fluv_slope + f_repose (+ f_fixation) | - | - | - | sand 0.0005; mud via susp_wf = 1e-3 m/s | 30 | Sea as ordinary cells + initial water level. A mud concentration of 0.0002-0.001 separates fan and bird-foot. morfac 100-200. docs/delta_plan.md |
@@ -1286,7 +1315,7 @@ Annotated list of all parameters:
 [examples/List_samples/list_geomorph.txt](../../../examples/List_samples/en/list_geomorph.txt).
 Verified test cases exist per process:
 [test/creep](../../../test/creep/en/README.md) (analytical-solution benchmark),
-[test/fluvial](../../../test/fluvial/en/README.md), [test/bankface](../../../test/bankface/en/README.md) (bank-face blocking and supply limiter), [test/bendsed](../../../test/bendsed/en/README.md) (bed-load direction correction in a bend), [test/berode](../../../test/berode/en/README.md) (bank erosion), [test/repose](../../../test/repose/en/README.md) (angle-of-repose avalanching), the examples [examples/meander](../../../examples/meander/) and [examples/meander_cutoff](../../../examples/meander_cutoff/) (deformation of a meandering channel and a neck cutoff), [test/suspend](../../../test/suspend/en/README.md),
+[test/fluvial](../../../test/fluvial/en/README.md), [test/bankface](../../../test/bankface/en/README.md) (bank-face blocking and supply limiter), [test/bendsed](../../../test/bendsed/en/README.md) (bed-load direction correction in a bend), [test/berode](../../../test/berode/en/README.md) (bank erosion), [test/repose](../../../test/repose/en/README.md) (angle-of-repose avalanching), the examples [examples/meander](../../../examples/meander/en/README.md) and [examples/meander_cutoff](../../../examples/meander_cutoff/en/README.md) (deformation of a meandering channel and a neck cutoff), [test/suspend](../../../test/suspend/en/README.md),
 [test/wash](../../../test/wash/en/README.md), [test/debris](../../../test/debris/en/README.md),
 [test/slide](../../../test/slide/en/README.md), [test/avalanche](../../../test/avalanche/en/README.md),
 [test/sedinflow](../../../test/sedinflow/en/README.md) (boundary sediment supply),

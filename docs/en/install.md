@@ -124,6 +124,9 @@ If you prefer, you can instead install the binaries from the
 Linux). When you compute inside WSL, installing ParaView **on the
 Windows side** is convenient: you can open the result files through
 the Explorer path `\\wsl$\...` (or place results under `/mnt/c/...`).
+On Japanese-language Windows the backslash `\` is displayed and typed
+as the yen sign `¥` (it is the same character;
+[Using ENCflow on Windows](windows.md)).
 
 **Once you have made it this far, you are all set — head to the
 [tutorial](../../tutorials/wave/en/README.md).** The sections from

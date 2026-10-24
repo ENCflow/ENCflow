@@ -28,6 +28,7 @@ site before citing.
 | HEC-RAS 2D | USACE (US Army) | Free | Closed | One of the de facto standards in practice. Catchment hydrology is delegated to HEC-HMS |
 | LISFLOOD-FP 8 | University of Bristol | Free | Open (GPL) | Subgrid channels, GPU |
 | CAESAR-Lisflood | UK universities | Free | Open (GPL) | LISFLOOD-FP hydraulics + landscape evolution (hours to millennia) |
+| SFINCS | Deltares | Free | Open (GPLv3; GitHub Deltares/SFINCS; Fortran) | Reduced-complexity shallow-water model for compound flooding (storm surge, waves, rainfall, rivers). Local inertia equations (advection term optional) + subgrid topography + quadtree grid, GPU (OpenACC). HydroMT-SFINCS builds the inputs automatically; links with Delft Dashboard and FloodAdapt. Leijnse et al. (2021), van Ormondt et al. (2025) |
 | TELEMAC-2D (+GAIA) | EDF-led | Free | Open (GPLv3) | Unstructured FE/FV. Sediment via GAIA. No catchment hydrology |
 | Delft3D FM | Deltares | Kernel free | Kernel open (GPLv3) | GUI distributed free but under license management. Includes sediment (MOR) and water quality (WAQ) |
 | MIKE 21 / MIKE SHE | DHI | Commercial | Closed | Integrated hydrology (SHE) is the most comprehensive, snow included. Water quality is ECO Lab |
@@ -91,18 +92,38 @@ that every model named in Sec. 2 appears here; their distribution
 forms are from general knowledge and should be confirmed on each
 official site before citing.
 
+Nesting sources (confirmed 2026-10-10):
+[Dispersive, nested and parallel JAGURS (PAGEOPH 2015)](https://link.springer.com/doi/10.1007/s00024-015-1049-2) /
+[Non-hydrostatic nesting in NEOWAVE (Yamazaki et al., IJNMF 2011; the file name says 2010)](https://uaf.edu/cfos/files/publications/kowalik/Yamazaki_et_al_2010-IJNMF-1.pdf) /
+[Implicit AMR of GeoClaw-Bouss (Berger & LeVeque, SISC 2024)](https://faculty.washington.edu/rjl/pubs/mjb-rjl-implicit-2023/index.html) /
+[Multi-grid nesting of FUNWAVE-TVD (GMD 2022)](https://gmd.copernicus.org/articles/15/5441/2022/) /
+[Nested Boussinesq (Zhou et al., NHESS 2011)](https://nhess.copernicus.org/articles/11/2677/2011/) /
+[TUFLOW Multiple 2D Domains (Classic M2D and HPC Quadtree)](https://docs.tuflow.com/classic-hpc/manual/2026.0/TwoD2DLinking-2.html) /
+[HEC-RAS 2D (no nesting; refinement regions)](https://therassolution.kleinschmidtgroup.com/the-ras-solution-forum/topic/reduce-grid-size-at-area-of-interest) /
+[Refinement by domain decomposition in Delft3D 4 (DDM29)](https://www.ddm.org/DD29/proceedings/ID104_pages.pdf) /
+[Multiple Grids of MIKE 21 Classic](https://en.wikipedia.org/wiki/MIKE_21) /
+[Two-way nesting of ROMS-AGRIF (Debreu et al., Ocean Modelling 2012)](https://memsic.ccsd.cnrs.fr/UNIV-GRENOBLE1/hal-00690731).
+The coupling methods of COMCOT, TUNAMI-N2 and MOST are in docs/nesting_plan.md
+§2.1 (in Japanese; includes the source checks).
+
+SFINCS sources: [SFINCS documentation](https://sfincs.readthedocs.io/en/latest/) and
+[GitHub Deltares/SFINCS](https://github.com/Deltares/SFINCS) (added 2026-10-20.
+Neither site could be reached from the working environment, so the content is
+from knowledge of Leijnse et al. 2021 (Coastal Engineering) and van Ormondt et
+al. 2025 (GMD); confirm before citing).
+
 ## 2. Comparison of process coverage (against ENCflow's current state)
 
 | Process | ENCflow | Representatives with equal or better coverage | Notes |
 |---|---|---|---|
-| 2D shallow water (dynamic wave) | Yes: eight-neighbor connected collocated grid (ENC grid), adaptive RK | TELEMAC, Delft3D, HEC-RAS, TUFLOW, Iber, BASEMENT | The ENC grid is original (Tada, 2026, doi:10.3178/hrl.25-00052) |
-| Storm surge / tsunami run-up (coastal inundation) | Yes: sea cells (not solved, level prescribed; cannot hold boundaries, structures or nest bands, excluded from statistics) + tide/water-level time series + wetting-drying. To solve the offshore side, use bathymetry + f_htype=2 ("solved sea") | TELEMAC, Delft3D, ANUGA, GeoClaw | Offshore generation and propagation are received as water levels from outside (to solve the generation, see the fault tsunami row). Compound storm surge, river and rainfall flooding in a single model |
+| 2D shallow water (dynamic wave) | Yes: eight-neighbor connected collocated grid (ENC grid), adaptive RK, momentum-conservative advection (Stelling & Duinmeijer type extended to eight directions, MUSCL, lateral-face coupling of the diagonal sub-lattice mode) | TELEMAC, Delft3D, HEC-RAS, TUFLOW, Iber, BASEMENT | The ENC grid is original (Tada, 2026, doi:10.3178/hrl.25-00052). The design and verification of the momentum-conservative advection on the ENC grid are unpublished (docs/advection_design.md, in Japanese; within 1 % of Stoker's bore solution, decay of the sub-lattice mode in test/sublattice) |
+| Storm surge / tsunami run-up (coastal inundation) | Yes: sea cells (not solved, level prescribed; cannot hold boundaries, structures or nest bands, excluded from statistics) + tide/water-level time series + wetting-drying. To solve the offshore side, use bathymetry + f_htype=2 ("solved sea") | TELEMAC, Delft3D, ANUGA, GeoClaw, SFINCS (specialised in compound flooding of storm surge + waves + rainfall + rivers; waves as the stationary wave solution of SnapWave) | Offshore generation and propagation are received as water levels from outside (to solve the generation, see the fault tsunami row). Compound storm surge, river and rainfall flooding in a single model |
 | Landslide tsunamis (subaerial collapse plunging into water, submarine slides) | Partial: moving bed layer (inertialess Voellmy, moving-bottom approach) | GeoClaw + landslide source, VolcFlow, NHWAVE, r.avaflow | Release, run-out, wave generation, propagation and run-up in a single time evolution with a one-equation bed layer. Inertia is out of scope (an estimate). Near-field dispersion via the non-hydrostatic correction |
 | Fault tsunami generation (time history of seabed displacement) | Yes: prescribed bed motion (displacement history applied incrementally to z; preprocessing utils/fault2disp) | GeoClaw, COMCOT, JAGURS, TUNAMI | Because the time-dependent deformation is applied incrementally, earthquake-triggered submarine slides can share the run. The Kajiura effect of short deformation via the non-hydrostatic correction |
 | Non-hydrostatic, dispersive waves (soliton fission, undular bores, solitary waves) | Partial: one-layer non-hydrostatic correction (projection; active set, breaking switch) | SWASH, NEOWAVE, FUNWAVE, GeoClaw-Bouss | Does not compete with dedicated models on accuracy; corrects only the reaches where dispersion is essential (zero cost when disabled). Linear and solitary waves within 1% of one-layer theory |
-| Subgrid channels (sigma cross-section, width) | Yes | LISFLOOD-FP, HEC-RAS (1D-2D) | One water level per cell + sigma(h) is a distinctive approach |
-| Structures (breach, pumps, culverts, sluice gates, diversions, dam operation) | Yes | HEC-RAS, TUFLOW, MIKE, SOBEK | An area where the free/open camp is thin |
-| Rainfall runoff, interception, evapotranspiration | Yes: canopy, Hamon/Thornthwaite, lapse rate | RRI, GSSHA, MIKE SHE, SHETRAN | The hydraulics-specialized camp does not have these |
+| Subgrid channels (sigma cross-section, width) | Yes | LISFLOOD-FP, HEC-RAS (1D-2D), SFINCS (subgrid topography that tabulates depth–volume and conveyance from the elevation distribution within a cell; not limited to channels) | One water level per cell + sigma(h) is a distinctive approach |
+| Structures (breach, pumps, culverts, sluice gates, diversions, dam operation) | Yes | HEC-RAS, TUFLOW, MIKE, SOBEK (SFINCS goes as far as thin walls, weirs, drainage pumps and culverts) | An area where the free/open camp is thin |
+| Rainfall runoff, interception, evapotranspiration | Yes: canopy, Hamon/Thornthwaite, lapse rate | RRI, GSSHA, MIKE SHE, SHETRAN | The hydraulics-specialized camp does not have these (SFINCS goes as far as rain-on-grid + infiltration (constant, CN, Green-Ampt, Horton); no interception, evapotranspiration or groundwater) |
 | Groundwater | Yes: two layers (soil + weathered bedrock) + well pumping sinks | MIKE SHE, SHETRAN, GSSHA, ParFlow | Two layers in a plan-view 2-D model is a minority position. Pumping combined with the fresh/salt layers also covers pumping-induced seawater intrusion |
 | Seawater intrusion / fresh-salt two-layer | Partial: sharp interface (SWI2-type) + surface salt layer | MODFLOW+SWI2/SEAWAT, SUTRA, FEFLOW | Variable-density transport that resolves mixing and dispersion is a dedicated domain. Following run-up seawater to its destination in a single time evolution with surface inundation and tide is the original point |
 | Urban drainage / conduit networks | Partial: conduit continuum layer (equivalent confined continuum, 8-direction conveyance, surcharge) | SWMM + 2-D couplings (TUFLOW, InfoWorks ICM, xpswmm) | The world standard couples a 2-D surface model with a 1-D pipe network. ENCflow homogenizes the network into a continuum; control structures and trunk-dominated systems are ceded to network models |
@@ -119,7 +140,8 @@ official site before citing.
 | Glaciers | Yes: degree-day mass balance + SIA flow + sliding + glacial erosion + avalanche redistribution | None among general flood models. Detailed ice dynamics: PISM, Elmer/Ice, OGGM | No other model runs glaciers side by side with flood hydraulics, catchment hydrology and landform change |
 | Wave-driven longshore transport (shoreline smoothing, spits, arcuate deltas) | Partial: no wave propagation, a CERC-type estimate in the shoreline band (f_wave_longshore; offshore H0, T and direction as inputs, smoothed shoreline orientation, local-slope term, river-mouth velocity rule; stirring and sheltering refinements are planned) | Delft3D-MOR+WAVE (SWAN), XBeach, CEM (the one-line coastline model of Ashton & Murray) | Models that propagate waves are a domain of their own. Running the CERC rule of one-line models on top of 2-D landform change is the distinctive point (the wave case of examples/delta; developer.md §84.15, Japanese) |
 | Long-term landform evolution | Yes: weathering, uplift, periodic forcing, limestone dissolution (recharge-proportional chemical denudation plus a sink-inflow term for dolines) | CAESAR-Lisflood, Landlab, Badlands, FastScape | On a par with CAESAR-Lisflood among hydraulics-driven models; the others are process-law LEMs. Dissolution runs in the same run as the conduit continuum layer (karst hydrology) as a first-order estimate; cave-network geometry (speleogenesis models) is out of scope |
-| Parallelization | OpenMP + MPI. Bit-reproducible regardless of rank count | TELEMAC, Delft3D (MPI; bit reproducibility not guaranteed) | Deterministic reductions are the differentiator |
+| Nesting (multi-level grids) | Yes: static nesting (any depth; the ratios r and r_t are arbitrary integers). Band Dirichlet / Flather radiation / sponge; replacement by area averaging, wet test and conservation correction. The non-hydrostatic φ and additional fields (sediment, water quality, subsurface storage, etc.) are exchanged too | Tsunami: COMCOT, TUNAMI, MOST, JAGURS, NEOWAVE, GeoClaw (AMR), FUNWAVE-TVD. Structured-grid MIKE 21 Classic, TUFLOW Classic, Delft3D 4. Ocean and atmosphere (ROMS-AGRIF, WRF) | The open flood codes refine locally with unstructured or quadtree grids and have no nesting. Coupling dispersive waves across the interface is the minority of JAGURS, NEOWAVE, GeoClaw-Bouss and FUNWAVE (Sec. 3) |
+| Parallelization | OpenMP + MPI. Bit-reproducible regardless of rank count | TELEMAC, Delft3D (MPI; bit reproducibility not guaranteed), SFINCS (OpenMP + GPU/OpenACC) | Deterministic reductions are the differentiator |
 | Restart exactness | Yes: module-private save contract | Commercial codes generally support it | Few open codes enforce it thoroughly |
 
 The formulations, verification figures and implementation dates behind
@@ -131,13 +153,40 @@ user's guide chapters, not in this table.
 - In the free, open-code class, the only ones that carry "dynamic-wave
   2D hydraulics + catchment hydrology + structures + sediment + water
   quality + multi-layer groundwater" in a single code are effectively
-  GSSHA and SHETRAN, and both lean toward hydrology (their hydraulics
-  are diffusive-wave with simplified channels). Conversely, the open
+  GSSHA and SHETRAN, and no example, open or commercial, adds driftwood
+  and building destruction and debris (fragility-type destruction
+  criterion + raster transport of debris + void-ratio feedback; Sec. 2)
+  to that in the same time evolution (damage assessment by
+  depth-to-damage-ratio post-processing is the practical standard). Both
+  lean toward hydrology (their hydraulics are diffusive-wave with
+  simplified channels). Conversely, the open
   players strong in hydraulics (TELEMAC, Delft3D FM, LISFLOOD-FP) are
   thin on catchment hydrology and structure operation. ENCflow enters,
   free and open, the middle band of "stacking all catchment processes
   at flood-hydraulics accuracy" -- territory traditionally occupied
   by the commercial MIKE/TUFLOW.
+- **Contrast with SFINCS (the closest open player)**: Deltares' SFINCS is
+  the closest to ENCflow in distribution form -- free, open code, Fortran,
+  raster grid, simple input and output -- and shares the "compound
+  flooding" orientation of handling storm surge, waves, rainfall, river
+  inflow and structures within the same time evolution. The differences
+  lie in the equations and in the scope. SFINCS specialises by default in
+  **fast computation of coastal lowlands** with the local inertia equations
+  (no advection term) + subgrid topography + quadtree (GPU-capable; track
+  record in global-scale compound-flood assessment); its catchment
+  hydrology stops at rain-on-grid and infiltration, and it has no
+  groundwater, sediment, water quality or volcanic family. ENCflow takes
+  the dynamic wave (momentum-conservative advection) as its default,
+  reaches the steep channels of mountain catchments, and puts everything
+  from catchment hydrology to sediment and landform change in one run.
+  That the local inertia equations without the advection term depend
+  strongly on resolution on steep real terrain is shown in the supplement
+  to tutorials/chichibu (result 3), so the two divide into "wide-area,
+  fast, coastal lowlands (SFINCS)" and "multi-process from mountains to
+  coast (ENCflow)". The quadtree, subgrid topography and GPU of SFINCS are
+  elements ENCflow does not have; how far to adopt them under the
+  raster-purity policy (developer.md Sec. 0) is a medium-term question
+  (nesting is substituted by static nesting, as in Sec. 2).
 - **River-mouth deltas (versus DeltaRCM)**: DeltaRCM is a reduced-complexity
   model that routes water by random walks and places sand and mud by rules; it
   suits the exploration of regimes and long-term statistics. ENCflow produces
@@ -161,6 +210,32 @@ user's guide chapters, not in this table.
   one time loop. Across open and commercial codes, OpenLISEM (Hazard
   edition) is practically the only other one solving it in one run; the
   rest take one side as input (the lahar row of §2).
+- **Position of nesting (multi-level grids)**: nested grids are standard
+  equipment in tsunami models (COMCOT, TUNAMI, MOST, JAGURS, NEOWAVE, the
+  AMR of GeoClaw), but coupling dispersive waves (non-hydrostatic,
+  Boussinesq) across the interface is limited to JAGURS (Baba et al.
+  2015), NEOWAVE (Yamazaki et al. 2011; Dirichlet on the non-hydrostatic
+  pressure), GeoClaw-Bouss (Berger & LeVeque 2024; SGN under AMR, the
+  elliptic equation solved implicitly level by level) and FUNWAVE-TVD
+  (Choi et al. 2022; two-way). The band φ of ENCflow (NEOWAVE type) belongs
+  to this minority and has a verification in which a 1:1 self-nest
+  reproduces the parent in the child's interior to 2e-13 m
+  (test/nest_identity). Outside tsunamis, the open flood and river codes
+  refine locally with unstructured, quadtree or non-uniform grids (TELEMAC,
+  Delft3D FM, HEC-RAS, TUFLOW HPC Quadtree, LISFLOOD-FP 8.1) and therefore
+  have no nesting, while the structured-grid generation -- MIKE 21 Classic
+  (Multiple Grids), TUFLOW Classic (M2D), Delft3D 4 (domain
+  decomposition) -- supported nested and multi-domain grids (all their
+  successors moved to unstructured grids). In ocean and atmospheric models
+  (ROMS-AGRIF/CROCO, WRF) nesting is standard, and ENCflow's Flather
+  radiation and reflux are of that lineage. What is original in ENCflow is
+  that **it refines locally with static nesting while keeping raster
+  purity, and exchanges not only the shallow-water h and u but also
+  suspended sediment, water quality, driftwood, debris, salt water and
+  subsurface storage through the same bands and replacement**; no example,
+  open or commercial, nests catchment hydrology and groundwater (the
+  integrated hydrology models MIKE SHE, GSSHA and ParFlow are
+  single-grid).
 - **Bit reproducibility for any rank count, restart exactness, and the
   ULP=0 verification discipline** are explicitly guaranteed by almost
   no product, commercial ones included, and make a strong research
@@ -189,7 +264,6 @@ user's guide chapters, not in this table.
   (docs/en/ and the tutorials' en/); the remaining English gap is
   only in the developer documentation (developer.md etc. are
   Japanese-only).
-
 - **AI-agent orientation**: on top of the fully
   text-based input and output (no GUI dependency), ENCflow ships a
   documentation system that lets "phenomenon -> features -> parameters"
@@ -205,7 +279,6 @@ user's guide chapters, not in this table.
   hard for agents to operate, and among the open players no example of
   repository-level agent groundwork is found at this time (a gap that
   may narrow as other models catch up).
-
 - **A third positioning axis — a gateway across
   disciplines (screening)**: the value of ENCflow cannot be measured
   only on the axis "is it more precise than each field's specialist
@@ -214,8 +287,9 @@ user's guide chapters, not in this table.
   same way of running, the barrier to running a *first* computation
   outside one's own field is one step lower than with the conventional
   practice of combining separate software systems (e.g. a river
-  researcher can try groundwater, and a flood researcher can try
-  sediment, snowmelt, or water quality, starting from one added
+  researcher can try groundwater, a flood researcher can try sediment,
+  snowmelt, or water quality, and a tsunami researcher can try driftwood
+  or building destruction and debris, starting from one added
   configuration file). The value is as a screening tool — estimate
   with a simple model whether a process matters, and move to a
   specialist model once you know it does — so the positioning is **a
@@ -228,7 +302,6 @@ user's guide chapters, not in this table.
   developer.md Sec. 0. Note this does not mean "correct results
   without expertise" — what is lowered is the barrier to trying, not
   the expertise barrier, and user-facing wording keeps to this line.
-
 - **Contrast with two other routes to
   integration**: (a) **physics-first integrated hydrology (ParFlow)**
   — the representative open model that tightly couples 3D variably

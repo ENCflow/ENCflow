@@ -2,7 +2,7 @@
 
 > English mirror of docs/users_guide/salt.md. The Japanese file is the master copy.
 
-[Back to the User's Guide index](../users_guide.md)
+[Back to the user's guide index](../users_guide.md)
 
 Introduces a **salt-water layer** into the surface water and the shallow
 groundwater (soil layer), approximately handling fresh/salt interactions
@@ -25,7 +25,7 @@ interface elevation).
 \qquad
 \Phi_s = \eta + \varepsilon\,\zeta
 ```
- Even with a horizontal water
+Even with a horizontal water
 surface, a tilted interface produces a hydrostatic pressure difference
 at depth that moves the salt water (removing a partition in a pool ends
 with a stably stratified state, which the model reproduces).
@@ -106,7 +106,7 @@ quantities).
 
 ## Connection to the sea
 
-Sea cells (the sea mask of [Tide and sea level](tide.md)) automatically
+Sea cells (the sea mask of [Tide and sea surface](tide.md)) automatically
 become an "all salt, water level = tide level" boundary:
 
 - **Subsurface**: salt water is exchanged in both directions between

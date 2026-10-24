@@ -44,7 +44,7 @@ analytical-solution or conservation check by Check_*.py.
 | [nhwave/](nhwave/en/README.md) | Standing waves in a closed tank: measuring the numerical dispersion of the hydrostatic ENC scheme | Shallow water | ref |
 | [nhwave_nh/](nhwave_nh/en/README.md) | The same tank with the one-layer non-hydrostatic correction | Non-hydrostatic | ref |
 | [nhsolitary/](nhsolitary/en/README.md) | Propagation of a solitary wave (nonlinear verification) | Non-hydrostatic | ref |
-| [nhcurrent/](nhcurrent/en/README.md) | Dispersion relation of linear waves on a uniform current | Non-hydrostatic, reach inflow, radiation boundary | ref |
+| [nhcurrent/](nhcurrent/en/README.md) | Dispersion relation of linear waves on a uniform current | Non-hydrostatic, segment inflow, radiation boundary | ref |
 | [nhshelf/](nhshelf/en/README.md) | Soliton fission of a solitary wave climbing a shelf; verification of the bottom-slope terms | Non-hydrostatic f_nh_slope | ref |
 | [nhbore/](nhbore/en/README.md) | Undular bore splitting from a long-wave step | Non-hydrostatic | ref |
 | [nhbreak/](nhbreak/en/README.md) | Run-up of a breaking solitary wave on a beach: breaking switch, eddy viscosity, wet-dry degeneration | Non-hydrostatic f_nh_breaking | ref |
@@ -86,7 +86,7 @@ analytical-solution or conservation check by Check_*.py.
 | [splashstrata/](splashstrata/en/README.md) | Analytic check of the erodibility factors of horizontal strata spl_strata (3 layers: cap rock 0 / 0.5 / 1) | f_splash (spl_strata) | ref + analytic |
 | [splashsat/](splashsat/en/README.md) | Analytic check of the saturation of the hollow amplification spl_ksat (parabolic trough, constant curvature) | f_splash (spl_ksat) | ref + analytic |
 | [rockfall/](rockfall/en/README.md) | Rockfall and talus (collapse of a vertical plateau: conservation, final height differences <= H_c, talus budget; windowed, supported-face, undercut, sea-cell and bedrock rf_bedrock configurations) | f_rockfall | analytic |
-| [sedinflow/](sedinflow/en/README.md) | Ledger check of the sediment-concentration time series of a reach inflow | Boundaries, sediment | analytic |
+| [sedinflow/](sedinflow/en/README.md) | Ledger check of the sediment-concentration time series of a segment inflow | Boundaries, sediment | analytic |
 | **Debris flow, failure, volcanic flows, avalanches** | | | |
 | [debris/](debris/en/README.md) | Debris flow (erosion-triggered): smoke test and conservation. Takahashi and Egashira types | Debris flow f_debris | analytic |
 | [slide/](slide/en/README.md) | Instantaneous fluidisation (landslide type): smoke test, conservation, stability analysis | Slope failure f_release, f_slide | analytic |

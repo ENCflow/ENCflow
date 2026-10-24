@@ -127,7 +127,7 @@ set output "en/figs/step1_hend.png"
 set title "Step 1: depth after 6 hours (ponding at the outlet)"
 plot 'result_step1/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
-# ---- Step 1: 窪地除去の有無(最終時刻の水深の比較) ----
+# ---- Step 1: 窪地除去の有無(12 時間後の水深の比較。計算時間を延長した比較計算) ----
 set output "en/figs/step1_hend_filled.png"
 set title "Depth after 12 hours: depression-filled DEM (filled)"
 plot 'result_cmp_filled/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle

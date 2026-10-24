@@ -4,7 +4,7 @@
 
 This is a guide for learning how to use ENCflow step by step, with
 runnable examples. Each tutorial is self-contained in a directory
-under [tutorials/](../../tutorials/), and you work through it by
+under [tutorials/](../../tutorials/en/README.md), and you work through it by
 typing the commands yourself while reading the README inside. For
 prerequisites, see the [installation guide](install.md) (all the
 computation needs is a single Fortran compiler; visualization of the
@@ -20,8 +20,8 @@ ParaView -- see section 2 of the same guide for installing them).
 
 Further tutorials (channel refinement, long runs and restart, etc.)
 will be added over time. Beyond these, the configuration sample
-collection in [examples/](../../examples/) and the verified examples
-in [test/](../../test/) are useful references.
+collection in [examples/](../../examples/README.en.md) and the verified examples
+in [test/](../../test/README.en.md) are useful references.
 
 ## Learning path
 
@@ -73,7 +73,7 @@ feature combination for a phenomenon and combine the relevant chapters.
 Specialised features such as nesting and the non-hydrostatic correction
 can wait until you need them.
 
-[test/](../../test/) and [examples/](../../examples/) are not teaching
+[test/](../../test/README.en.md) and [examples/](../../examples/README.en.md) are not teaching
 material for beginners, so look at them after the chapters, as needed. The
 tests show how each feature is verified (against analytical solutions
 and conservation laws); the examples show namelist samples and set-ups

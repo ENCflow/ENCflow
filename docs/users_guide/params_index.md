@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 664 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 668 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -27,6 +27,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | bd_wdes | &list_bldgdebris | [家屋破壊・瓦礫](bldgdebris.md) |
 | bd_wfloat | &list_bldgdebris | [家屋破壊・瓦礫](bldgdebris.md) |
 | bd_wstop | &list_bldgdebris | [家屋破壊・瓦礫](bldgdebris.md) |
+| berode_hcover | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | berode_kb | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | berode_m | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | berode_tausc | &list_geomorph | [土砂・地形変化](geomorph.md) |
@@ -551,6 +552,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | pump_rule | &list_struct_pump | [構造物](structure.md) |
 | repose_phi | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | repose_relax | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| rf_bank | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | rf_bedrock | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | rf_fface | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | rf_ftalus | &list_geomorph | [土砂・地形変化](geomorph.md) |
