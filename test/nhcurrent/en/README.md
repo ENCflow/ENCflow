@@ -42,7 +42,7 @@ reference.
 |---|---|
 | `Run.sh` / `Run_MPI.sh N` | Run the following-current NH case and compare Log.txt with the reference (ULP = 1, Runge column excluded) |
 | `Current.py [result_dir ...]` | Obtain k and the amplitude decay from the complex amplitude A(x) in the window (following current 45–95 s, opposing current and still water 65–100 s) and list them beside the k of the NH, hydrostatic and continuous theories |
-| `Fig.py` | The figure `figs/nhcurrent.png` below |
+| `Fig.py` | The figure `en/figs/nhcurrent.png` below (`python3 Fig.py en`; `figs/nhcurrent.png` is the Japanese version) |
 
 ## Running
 
@@ -51,20 +51,20 @@ make
 ./Run.sh                                   # following-current NH (5500 steps, CG 26 iterations on average; a few minutes or more)
 for p in param_0 param_c param_h param_hc; do ./encflow $p.txt; done
 python3 Current.py                         # table of the 5 cases
-python3 Fig.py                             # figs/nhcurrent.png
+python3 Fig.py en                          # en/figs/nhcurrent.png
 ```
 
 ## Figures
 
-![Linear waves on a uniform current](../figs/nhcurrent.png)
+![Linear waves on a uniform current](figs/nhcurrent.png)
 
 Left: the water-level deviation η(x) of the following-current NH case at
 t = 70 s (41 probes) and a sine wave of the theoretical wavenumber k_NH drawn
-with the measured amplitude. A wave train of wavelength 7.3 m rides on the
+with the measured amplitude. A wave train of wavelength 7.5 m rides on the
 current with aligned phases. Right: the measured k (black line) of the 5 cases
 and the theoretical values. The still-water and following-current NH
 computations lie on the one-layer NH theory (red) and depart from the
-hydrostatic theory (blue) by more than 10%. The hydrostatic computations lie
+hydrostatic theory (blue) by 8–12%. The hydrostatic computations lie
 on the hydrostatic theory. In the opposing-current case (kH ≈ 1.3) the waves
 travel against the current, and since the group velocity c_g − U₀ is small,
 the amplitude decays to 0.02 cm at x = 60 m and the phase accuracy drops.
@@ -73,19 +73,19 @@ the amplitude decays to 0.02 cm at x = 60 m and the phase accuracy drops.
 
 | Case | U₀ | Propagation | k measured | k NH theory | k hydrostatic theory | k/k_NH | k/k_hyd | Amplitude (60 m) |
 |---|---:|:-:|---:|---:|---:|---:|---:|---:|
-| Still water NH (param_0) | 0 | −x | 1.019 | 1.005 | 0.898 | 1.014 | 1.135 | 0.91 cm |
-| Following current NH (param) | 0.5 | +x | 0.848 | 0.828 | 0.774 | 1.025 | 1.097 | 0.98 cm |
-| Following current, hydrostatic (param_h) | 0.5 | +x | 0.781 | 0.828 | 0.774 | 0.943 | 1.010 | 0.89 cm |
-| Opposing current NH (param_c) | 0.5 | −x | 1.266 | 1.341 | 1.070 | 0.944 | 1.183 | 0.02 cm |
-| Opposing current, hydrostatic (param_hc) | 0.5 | −x | 1.077 | 1.341 | 1.070 | 0.803 | 1.006 | 0.17 cm |
+| Still water NH (param_0) | 0 | −x | 1.006 | 1.005 | 0.898 | 1.001 | 1.120 | 1.00 cm |
+| Following current NH (param) | 0.5 | +x | 0.838 | 0.828 | 0.774 | 1.012 | 1.083 | 1.13 cm |
+| Following current, hydrostatic (param_h) | 0.5 | +x | 0.773 | 0.828 | 0.774 | 0.934 | 0.999 | 0.96 cm |
+| Opposing current NH (param_c) | 0.5 | −x | 1.254 | 1.341 | 1.070 | 0.935 | 1.172 | 0.02 cm |
+| Opposing current, hydrostatic (param_hc) | 0.5 | −x | 1.068 | 1.341 | 1.070 | 0.796 | 0.998 | 0.18 cm |
 
 (Windows: following current 45–95 s, opposing current and still water
 65–100 s. Output of `python3 Current.py`. The reference comparison of the
 following-current NH case is PASS.)
 
-- In still water k is +1.4% from the one-layer NH theory, and +2.5% in the
-  following current (10–13% away from the hydrostatic theory). The hydrostatic
-  computations are +1.0% (following current) and +0.6% (opposing current) from
+- In still water k is +0.1% from the one-layer NH theory, and +1.2% in the
+  following current (8–12% away from the hydrostatic theory). The hydrostatic
+  computations are −0.1% (following current) and −0.2% (opposing current) from
   the hydrostatic theory. This is a numerical confirmation that the dispersion
   relation holds in the form (ω − U₀k)² on a uniform current as well.
 - In the opposing-current NH case (kH ≈ 1.3) the group velocity c_g − U₀ is

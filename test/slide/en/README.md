@@ -39,7 +39,7 @@ low-speed consolidation.
 | File | Contents |
 |---|---|
 | `Check_slide.py <save> release\|fslide\|fsdiag [result]` | release: (1) total solid, (2) co-moving update, (3) water budget Σh = λ relsat ΣD, (4) activity. fslide: (1)(2), (4) cells with sd = 0 on the slope, (5) hazard outputs min Fs9999 < 1 and D9999 ≥ H9999. fsdiag: (1) no mobilization (z, sd, hs unchanged), (2) detection of the hazardous range of Fs |
-| `Fig.py` | The figures `figs/*.png` below |
+| `Fig.py` | The figures `en/figs/*.png` below (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
 ## Running
 
@@ -47,29 +47,29 @@ low-speed consolidation.
 make
 ./Run.sh          # generate dbinit → run the 3 configurations and Check. PASS when all PASS (a few seconds)
 ./Run_MPI.sh 4    # MPI. state.dat and the output files (Fs9999 etc.) are byte-identical to the serial run
-python3 Fig.py    # figs/release.png, figs/fslide.png
+python3 Fig.py en # en/figs/release.png, en/figs/fslide.png
 ```
 
 ## Figures
 
-![Instantaneous mobilization](../figs/release.png)
+![Instantaneous mobilization](figs/release.png)
 
 Configuration 1. Left: the collapse area with collapse depth D = 1 m.
 Center: the terrain change after 10 s. The collapse area is lowered by
-about 0.9 m (part of the released 1 m is redeposited immediately), and
-deposition of up to 0.22 m has begun downstream of the slope break.
+about 0.96 m (part of the released 1 m is redeposited immediately), and
+deposition of up to 0.61 m has begun downstream of the slope break.
 Right: the flow depth h + hs. The released mass spreads from the collapse
 area over the slope break onto the flat part as a fan.
 
-![Slope stability test](../figs/fslide.png)
+![Slope stability test](figs/fslide.png)
 
 Configuration 2 (left three panels) and 3 (right). Left: the run minimum
 safety factor Fs9999. Fs < 1 over the whole slope (minimum 0.455), and
 only the gentle part near the slope break has Fs > 1. Center left: the
 final soil thickness sd. Many cells on the slope reach sd = 0 (failed and
-bedrock exposed; 240 cells), and stripes of failed sediment that flowed
+bedrock exposed; 260 cells), and stripes of failed sediment that flowed
 down and redeposited are also visible. Center right: the maximum flow
-depth D9999 (maximum 0.36 m). Right: Fs9999 of configuration 3. Since
+depth D9999 (maximum 0.37 m). Right: Fs9999 of configuration 3. Since
 nothing is mobilized, the minimum of Fs stays at 0.943, and only the
 detection of the hazardous range (< 1) takes place (the hazard map of the
 judge-only mode).
@@ -78,8 +78,8 @@ judge-only mode).
 
 | Configuration | Total solid | Co-moving update | Water budget / activity | Result |
 |---|---|---|---|---|
-| 1 release | 1e-13 | 9e-14 | Σh = 52.8000 (expected λ relsat ΣD = 52.8000) / collapse area min dz −0.90 m, deposition outside the area +0.22 m | PASS |
-| 2 fslide | 8e-12 (tolerance 1e-8: rounding accumulated over about 20 000 cell conversions) | 9e-14 | slope min sd = 0 (240 cells failed) / min Fs9999 0.455, D9999 ≥ H9999 | PASS |
+| 1 release | 1e-13 | 3e-14 | Σh = 52.8000 (expected λ relsat ΣD = 52.8000) / collapse area min dz −0.96 m, deposition outside the area +0.61 m | PASS |
+| 2 fslide | 8e-12 (tolerance 1e-8: rounding accumulated over about 20 000 cell conversions) | 9e-14 | slope min sd = 0 (260 cells failed) / min Fs9999 0.455, D9999 ≥ H9999 | PASS |
 | 3 fsdiag | — | — | z, sd and hs unchanged; min Fs 0.943 < 1 detected (600 cells evaluated) | PASS |
 
 - The mobilization fires only once, by a time-crossing test, and does not

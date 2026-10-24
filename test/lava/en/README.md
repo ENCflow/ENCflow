@@ -37,7 +37,7 @@ same practice as [test/volcano](../../volcano/en/README.md)).
 |---|---|
 | `make_init.py` | `zinit.txt` (uniform slope) |
 | `Check_lava.py <save> huppert\|bingham` | Configuration 1: (1) ledger Σhl·A = V_in, (2) area-equivalent radius within 10% of r_N, (3) r(tt)/r(tt/2) within 5% of √2. Configuration 2: (1) ledger Σhl + Σdz = V_in (solidification is an internal transfer to z), (2) hl + dz in the check window (i = 15–35) within 20% of h∞ and CV < threshold, (3) solidified fraction > 0.7 |
-| `Fig.py` | The figure `figs/lava.png` below |
+| `Fig.py` | The figure `en/figs/lava.png` below (`python3 Fig.py en`; `figs/lava.png` is the Japanese version) |
 
 ## Running
 
@@ -45,12 +45,12 @@ same practice as [test/volcano](../../volcano/en/README.md)).
 make
 ./Run.sh          # configuration 1 → Check → configuration 2 → Check → equivalence check of configuration 3 (about 30 seconds)
 ./Run_MPI.sh 4    # MPI. state.dat and lavaflow.dat are byte-identical to the serial run (-O2 strict math)
-python3 Fig.py    # figs/lava.png
+python3 Fig.py en # en/figs/lava.png
 ```
 
 ## Figures
 
-![Lava flow](../figs/lava.png)
+![Lava flow](figs/lava.png)
 
 Left: the lava thickness of configuration 1 after 600 s. It spreads
 axisymmetrically from the center. Center: the growth of the area-equivalent

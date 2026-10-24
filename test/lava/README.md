@@ -37,7 +37,7 @@
 make
 ./Run.sh          # 構成 1 → Check → 構成 2 → Check → 構成 3 の同値検定(約 30 秒)
 ./Run_MPI.sh 4    # MPI。state.dat・lavaflow.dat が逐次とバイト一致(-O2 厳密数学)
-python3 Fig.py    # figs/lava.png
+python3 Fig.py    # figs/lava.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

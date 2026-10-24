@@ -1039,20 +1039,29 @@
     {
       "source": "test/bldgdebris/README.md",
       "target": "test/bldgdebris/en/README.md",
-      "source_sha256": "13bb197e36783351871639566fca753cd7638fba0a3cd4ebb1e0c5e71fcc330d",
-      "target_sha256": "9b66a7dc2df1acab612bde00bbf23133d37f453b88624cb2302773615d6b08ea",
+      "source_sha256": "3fc4114e1e5af5317c98c4e9729c557d1ea1b6529ce8cc08ebe3f465b123426e",
+      "target_sha256": "f4998834f448d9755c7aceeb5dd77839b261ef8f154e3e3c2725e951f29fccc9",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/bldgdebris/figs/bldgdebris.png",
+      "target": "test/bldgdebris/en/figs/bldgdebris.png",
+      "source_sha256": "21e13a9c3112d88a707ac2863cce7b0ceb818e87dbddab32ab528b89a9898590",
+      "target_sha256": "6e2c08f396569e01b8d4e5cf2b4e75149a6ba5889095c17dac3473956aaa8eb1",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/bmi_nest/README.md",
       "target": "test/bmi_nest/en/README.md",
-      "source_sha256": "7cab1cca4fbd73b23aa256a6a03c2598c5dd13d499610ffb6c8cd69af225c7e9",
-      "target_sha256": "ab761a4c1521b79db41add07ef6a926d55299d7de0ce613e1ce8354897e328fa",
+      "source_sha256": "979b03644eed14fe3f001037a6f38792af9461e100a4518feddbb4fc04e54150",
+      "target_sha256": "b449aa2c90cf790d7cd1314f3ac8126b606477bb82bb07a4b34e3476d776df06",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/bmi_vars/README.md",
@@ -1264,8 +1273,8 @@
     {
       "source": "test/dissol/README.md",
       "target": "test/dissol/en/README.md",
-      "source_sha256": "0c0d2e25b4678d2aa6b82cbed519a861f1fc6712c6c964f673c0f6321624136b",
-      "target_sha256": "9afa763dc1c48b2e9e2fac342a3bc8095beb494f2a78c179394cd2250c396fff",
+      "source_sha256": "74b5ee460b9f8614070a15b761eac9d736722c163bda1a93a813e12996ecfa50",
+      "target_sha256": "818976a8629c42c559053831858fc7cd1ecd9386069b9778141cadbeceef77a4",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
@@ -1426,9 +1435,18 @@
     {
       "source": "test/lava/README.md",
       "target": "test/lava/en/README.md",
-      "source_sha256": "affeb31a7c3dc01b4acddabb49ddbfa8c5260812799e82bd649e62a7bee8e720",
-      "target_sha256": "a5040e92204fa12ef590c6ecf40fa9ca4e4840c5f5df58cab48936b5aaecddab",
+      "source_sha256": "014813a7ef409a5523cc27b69bc8ad869ec42e83ba9ba70f0b2878b3a122a79e",
+      "target_sha256": "18d861d13e4fa729a95d94f03b54ac7cfafcf9250cad6b7d5ab443e43ebfc68b",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/lava/figs/lava.png",
+      "target": "test/lava/en/figs/lava.png",
+      "source_sha256": "c1ebf6bed63cf3c06a3a01a9d1e81b2f41c032ecc4753b77195319e3f14eb01c",
+      "target_sha256": "828ef381cecffd759a673f3cbb49d3e78d79eec742777b7321a8cd9351c51a68",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
     },
@@ -1498,11 +1516,20 @@
     {
       "source": "test/nhcurrent/README.md",
       "target": "test/nhcurrent/en/README.md",
-      "source_sha256": "727d4be28019d3c2885cbf84c15ef2d69f178d06829d38810d4e45014089f86b",
-      "target_sha256": "4363003ce33c320a3efebebadc9d9300fd3ce3d20a6bbf59651e3d02e8969946",
+      "source_sha256": "383b5979081f78a42963bb1572d5a69bd39b066172766e6e740735aea6cfa079",
+      "target_sha256": "4ba7f6d2b879ed2ed7123dfd5e8f3c33c4aec27c68f4f37caf96396f8a72a452",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/nhcurrent/figs/nhcurrent.png",
+      "target": "test/nhcurrent/en/figs/nhcurrent.png",
+      "source_sha256": "e7090740657baced242f29b856f55ceb8315c0721d2956556559741f19f737da",
+      "target_sha256": "80c8c3bdc963da2a06d6737039b5442a48cb78ebc19cdc1a61f10bf7ed0bfa71",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/nhshelf/README.md",
@@ -1633,9 +1660,27 @@
     {
       "source": "test/slide/README.md",
       "target": "test/slide/en/README.md",
-      "source_sha256": "aa535c2fd0a6c3bc535386b77912d3d232d9bdbca959305b6ffb3d9904853250",
-      "target_sha256": "344778168894eaabbfe14df439c0f2e6b79aab26906544a6feb10c13eff59ada",
+      "source_sha256": "40c753ee278a6412ceb2b65d275107976f733ef3575dcb89baa5db8d12d3fe9c",
+      "target_sha256": "c7c7e19b4017f49c19113116523f8d22aa1b87b865cbb3cb27ad4cf4725d5fcb",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/slide/figs/fslide.png",
+      "target": "test/slide/en/figs/fslide.png",
+      "source_sha256": "d657f576eaeaf6be434196969830f15eaff798f27748dfa069bd42e696d9768d",
+      "target_sha256": "dad956815157f0388a2e5de070ac78b47cec43d9596a208804d260e5f3ab5cf8",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/slide/figs/release.png",
+      "target": "test/slide/en/figs/release.png",
+      "source_sha256": "b04f89b9289c80b4e50625704aa0aa89cb39af5aad9f855350096a59266f6bfb",
+      "target_sha256": "d4480ec7accb6770963a4b13461c62d20bf394d7d099195fe8824ba222529599",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
     },
