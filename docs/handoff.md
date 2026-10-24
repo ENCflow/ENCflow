@@ -892,7 +892,24 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   tutorial・colab、tutorials の README・param・図、List_samples 20 件、bmi・utils・test・examples
   の README、TRADEMARKS.ja)も 2026-10-24 に全文を突き合わせ、訳側の遅れ(欠落した表行・段落・
   リンク先の英語版化・古い注記)を直して record 済み。**unreviewed は 0**。以後は正本を変えたら
-  同じ作業で訳を更新し、CI(stale 検出)に従う。  119 組の読み合わせで見つかった正本側の疑義は 2026-10-24 に正本・英語版を同時に修正(users_guide.md の
+  同じ作業で訳を更新し、CI(stale 検出)に従う。  **test の README の図と数値(2026-10-24)**: 46 本の Fig.py(と Diag/Landslide/Theory/Solitary 等)に
+  `en` 引数を追加し、英語ラベル版 62 枚を test/<case>/en/figs/ に生成して英語 README から参照
+  (.gitignore に `!test/*/en/figs/*.png`)。未対応: nhbreak の切り分け節の図 2 枚(runup_diag・
+  runup_visc。Diag.py の派生ケース約 40 本が必要)は英語 README も日本語図を参照。
+  同日に gfortran 13.3 の release ビルドで全 67 ケースの Run.sh を実行し、README の数値を照合した。
+  回帰は nhshelf のみ FAIL(ULP=1 で Q_max 列 2 箇所が 2 量子差。reference は未更新・要判断)、
+  他は PASS。2026-10-18 の reference 更新(5aa1e71: 移流の片側リンク修正と f_opening_dynamic = 2
+  既定化)に README が追随していなかったケースが多数あり、現行値に更新した(kdpart・nhbottom・
+  nhcurrent・nhsolitary・nhbore・nhbreak・nhwave・tracer・sewer_wq・gwseep・damwq・hillslope・
+  dambreak・bedslide・debris・bldgdebris・slide・avalanche・volcano・bendsed・bendloss・fixation・
+  suspend・wash・sedinflow・driftwood・bankface・gwdefault・sublattice・wave_shore・chichibu_icmap・
+  dissol・bmi_nest ほか)。**挙動変化として人間の確認が要るもの**(自己検定は PASS のまま):
+  bendsed の外岸−内岸 Δz −0.224 → −0.075 m、slide の域外堆積 +0.22 → +0.61 m、bldgdebris 構成 2 の
+  破壊 +50 %・堆積 2 倍、volcano の τ_y ランアウトが遷緩点を越える(README・§28.8 の「斜面上で
+  止まる」は成立しない)、nhsolitary・nhbore の静水圧段波のスパイク(1.5 → 2.6 a0、〜3a)、
+  nhshelf の分裂波 6 → 3、avalanche の成長 3.8 → 3.5 倍、hillslope の平面斜面が運動学的波と
+  一致(以前は遅れ)。いずれも 10-18 の既定変更の影響と推定(因果は未検証)。
+  119 組の読み合わせで見つかった正本側の疑義は 2026-10-24 に正本・英語版を同時に修正(users_guide.md の
   fn_wave 行、params_index の項目数 668 と berode_hcover・rf_bank の追加、geomorph のラハール侵食起動、
   sediment の輸送スキームの記述と wet_lw 行、comparison の NEOWAVE の年、structure の pump_in_cell、
   list_channel のコメント位置、tutorials/chichibu の h_max・所要時間・ケース数)。examples/README の
