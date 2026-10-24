@@ -15,6 +15,6 @@ target period is ω² = gHΛ/(1 + (H²/4)Λ) → 6.34 s (hydrostatic 5.67 s).
   collected in the README of test/nhwave and its `Fig.py` (which draws the
   results of this case over the hydrostatic ones).
 
-![Water level of the standing wave (hydrostatic vs non-hydrostatic)](../../nhwave/figs/standing_wave.png)
+![Water level of the standing wave (hydrostatic vs non-hydrostatic)](../../nhwave/en/figs/standing_wave.png)
 
-![Dispersion relation: phase-speed ratio c/√(gH) against kH](../../nhwave/figs/dispersion.png)
+![Dispersion relation: phase-speed ratio c/√(gH) against kH](../../nhwave/en/figs/dispersion.png)

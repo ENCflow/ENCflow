@@ -29,4 +29,4 @@ make
 
 reference は人間が結果を確認してから `./Run.sh -u` で作成・更新します
 (CLAUDE.md の絶対規律 1)。期待する挙動の目安: 1 時間時点の S ≈ 0.0568 m、
-h_max ≈ 7.3 m、Q_max ≈ 28 m²/s(遮断なしの chichibu より小さい)。
+h_max ≈ 7.7 m、Q_max ≈ 30 m²/s(遮断なしの chichibu より小さい)。

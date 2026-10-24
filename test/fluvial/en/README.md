@@ -26,7 +26,7 @@ equilibrium) is recorded as remaining work (§19).
 | File | Contents |
 |---|---|
 | `Check_fluvial.py <save>` | (1) sediment volume conservation \|Σ(z − z₀)\| < 1e-9 (a consequence of the antisymmetric fluxes), (2) co-update max\|(sd − sd₀) − (z − z₀)\| < 1e-10, (3) activity max\|z − z₀\| > 1e-4 m |
-| `Fig.py` | The figure `figs/fluvial.png` below |
+| `Fig.py` | The figure `en/figs/fluvial.png` below (`python3 Fig.py en`; `figs/fluvial.png` is the Japanese version) |
 
 ## Running
 
@@ -34,12 +34,12 @@ equilibrium) is recorded as remaining work (§19).
 make
 ./Run.sh          # run → Check (1 s)
 ./Run_MPI.sh 4    # MPI; the discipline is that state.dat is byte-identical to the serial run
-python3 Fig.py    # figs/fluvial.png
+python3 Fig.py en # en/figs/fluvial.png
 ```
 
 ## Figure
 
-![Bedload Exner](../figs/fluvial.png)
+![Bedload Exner](figs/fluvial.png)
 
 Left: bed change after 8 s. Scour of up to 1.9 mm occurs in the ring of
 radius 5–10 m where the velocity is highest as the mound collapses, with
@@ -54,8 +54,8 @@ soil depth changes by exactly the amount the bed moves).
 
 | Check | Computed | Result |
 |---|---|---|
-| (1) Σ(z − z₀) | −4.6e-17 m·cell | PASS (machine precision) |
-| (2) max\|(sd − sd₀) − (z − z₀)\| | 1.1e-14 m | PASS |
+| (1) Σ(z − z₀) | 4.2e-17 m·cell | PASS (machine precision) |
+| (2) max\|(sd − sd₀) − (z − z₀)\| | 1.3e-14 m | PASS |
 | (3) max\|z − z₀\| | 1.86 mm | PASS (> 0.1 mm) |
 
 - Because the Exner update sums the antisymmetric fluxes edge by edge, the

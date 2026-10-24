@@ -38,7 +38,7 @@ addition to the regression comparison.
 | `Run.sh` / `Run_MPI.sh N` | Compare Log.txt with the reference (ULP = 0, excluding the Runge column) |
 | `Run_stiff.sh` | Stiff variant `param_stiff.txt` (slot_sy = 0.002 → subcycling N = 2). No reference. Checked against the analytical equilibrium hgc = 0.1 + 1.3 × 0.002 = 0.1026 |
 | `gen_data.py` | Record of the generation of `data_cd/` (the data are committed) |
-| `Fig.py` | The figure `figs/coastal_drain.png` below |
+| `Fig.py` | The figure `en/figs/coastal_drain.png` below (`python3 Fig.py en`; `figs/coastal_drain.png` is the Japanese version) |
 
 ## Running
 
@@ -47,12 +47,12 @@ make
 ./Run.sh          # 2 h computation (tens of seconds) + reference comparison
 ./Run_MPI.sh 2
 ./Run_stiff.sh
-python3 Fig.py    # figs/coastal_drain.png
+python3 Fig.py en # en/figs/coastal_drain.png
 ```
 
 ## Figures
 
-![Drainage of a below-sea-level polder](../figs/coastal_drain.png)
+![Drainage of a below-sea-level polder](figs/coastal_drain.png)
 
 Left: time series of the water level. The cell near the outfall reaches the
 tide level within 1 minute by the intrusion of the sea, and the western

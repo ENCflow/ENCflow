@@ -38,7 +38,7 @@ make
 ./Run.sh          # 2 h の計算(数十秒)+ reference 比較
 ./Run_MPI.sh 2
 ./Run_stiff.sh
-python3 Fig.py    # figs/coastal_drain.png
+python3 Fig.py    # figs/coastal_drain.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

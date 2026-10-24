@@ -37,5 +37,5 @@ make
 
 The reference is created and updated with `./Run.sh -u` after a person has
 confirmed the results (absolute rule 1 of CLAUDE.md). Expected behaviour as a
-guide: at 1 hour, S ≈ 0.0568 m, h_max ≈ 7.3 m, Q_max ≈ 28 m²/s (smaller than
+guide: at 1 hour, S ≈ 0.0568 m, h_max ≈ 7.7 m, Q_max ≈ 30 m²/s (smaller than
 chichibu without interception).

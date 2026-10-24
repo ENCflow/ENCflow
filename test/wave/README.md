@@ -48,7 +48,7 @@ make                      # bin/ の実行ファイルへのリンク
 ./Run.sh                  # 逐次。Log.txt を reference と比較(ULP = 1、Runge 列は除外)
 ./Run_MPI.sh 4            # MPI 4 ランク。逐次と同じ Log になるのが規律
 ./encflow param_cap.txt   # f_dry_head_cap = 1(result_cap/)。Log は reference に一致
-python3 Fig.py            # figs/profile.png, map.png, log.png
+python3 Fig.py            # figs/profile.png, map.png, log.png(引数 en で英語版を en/figs/ に)
 ```
 
 Run.sh は共通エンジン [../Scripts/Run_case.sh](../Scripts/Run_case.sh) を
@@ -81,7 +81,7 @@ t = 8 s には半径 39 m の環として外へ広がります。中央は t = 4
 3.19 m/s で、静水深の長波速度 √(g h₀) = 3.13 m/s に一致します(+2% は
 前面が盛り上がった水面の上を進む分)。中: h_max は 2.0 → 1.20 m に
 下がって環の高さに落ち着き、V_max は t = 2 s の 1.08 m/s を頂点に減衰、
-Cn_max は 0.85〜0.89 で安定条件内です。右: 適応的ルンゲ・クッタの
+Cn_max は 0.78〜0.89 で安定条件内です。右: 適応的ルンゲ・クッタの
 適用率は、波の前面が広がるにつれ 0 → 35% へ増えます。
 
 ## 所見

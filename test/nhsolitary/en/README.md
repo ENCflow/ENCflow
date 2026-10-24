@@ -22,28 +22,28 @@ frictionless, wall-bounded channel (300 m × 8 m, Δx = Δy = 0.25 m = H/4,
 
 ## Figures
 
-![Propagation of the solitary wave: evolution of the water surface and crest height](../figs/profiles.png)
+![Propagation of the solitary wave: evolution of the water surface and crest height](figs/profiles.png)
 
 The water surface η/a0 along the central row overlaid every 20 s (top:
 non-hydrostatic, middle: hydrostatic) and the crest height a(t)/a0 (bottom).
 The non-hydrostatic wave keeps its shape as it travels; the hydrostatic one
-steepens at its front into a bore. `./Fig.py` generates `figs/profiles.png`.
+steepens at its front into a bore. `./Fig.py en` generates `en/figs/profiles.png` (`figs/profiles.png` is the Japanese version).
 
 ## Findings (2026-10-12)
 
 | Case | c_fit (m/s) | c_fit / √(g(H+a)) | a(60 s)/a0 | Waveform RMS/a | Trailing wave/a |
 |---|---:|---:|---:|---:|---:|
-| Non-hydrostatic (whole domain) | 3.256 | 0.992 | 1.049 | 0.029 | 0.043 |
-| Non-hydrostatic (active set, margin 8) | 3.256 | 0.992 | 1.049 | 0.029 | 0.043 |
-| Hydrostatic | 3.334 | 1.015 | 1.48 | 0.30 | 0.29 |
+| Non-hydrostatic (whole domain) | 3.288 | 1.001 | 1.076 | 0.033 | 0.036 |
+| Non-hydrostatic (active set, margin 8) | 3.288 | 1.001 | 1.076 | 0.033 | 0.036 |
+| Hydrostatic | 3.541 | 1.079 | 2.60 | 0.44 | 0.57 |
 
 - In the one-layer NH model the solitary wave propagates keeping its shape
-  (RMS 2.9%). The KdV-type initial waveform is not an exact solution of the
+  (RMS 3.3%). The KdV-type initial waveform is not an exact solution of the
   one-layer model (dispersion coefficient 1/8; KdV has 1/6), so the width
-  adjusts slightly, leaving 4% trailing waves, and the amplitude is +4.9%.
-  The speed is −0.8% relative to √(g(H+a)).
+  adjusts slightly, leaving 3.6% trailing waves, and the amplitude is +7.6%.
+  The speed is +0.1% relative to √(g(H+a)).
 - The hydrostatic run has no dispersion, so the front steepens into a bore
-  (amplitude 1.5 times, waveform RMS 30%).
+  (amplitude 2.6 times, waveform RMS 44%).
 - With dt halved (0.01 s) and without adaptive RK the speed is the same
   (−0.02%; the amplitude is +3.1%).
 - **Effect of the channel width**: with 8 rows (width 2 m) the speed is
@@ -52,7 +52,7 @@ steepens at its front into a bore. `./Fig.py` generates `figs/profiles.png`.
   Λ_wall/Λ_plane in the standing-wave test), and it is proportional to the
   fraction of rows adjacent to a wall. Take a sufficient width when
   discussing solitary-wave speed in a narrow channel (this case uses 32 rows,
-  giving 0.8%).
+  giving 0.1%).
 - The active set is identical to the whole-domain solution in both the
   probes and the crest positions (to the printed digits). Active cells
   average 53%.
@@ -61,7 +61,7 @@ steepens at its front into a bore. `./Fig.py` generates `figs/profiles.png`.
 
 | Case | c_fit / √(g(H+a)) | a(60 s)/a0 | Waveform RMS/a |
 |---|---:|---:|---:|
-| V1 (param.txt) | 0.9918 | 1.049 | 0.029 |
+| V1 (param.txt) | 1.0014 | 1.076 | 0.033 |
 | V2, CG + Picard | 0.9920 | 1.045 | 0.028 |
 | V2, Jacobi | 0.9920 | 1.045 | 0.028 |
 

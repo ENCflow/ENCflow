@@ -12,16 +12,24 @@ RESDIR=<dir> PARAM=<param> python3 Check_stoker.py が書く)。
 - figs/incised.png : 1 セル幅・2 セル幅水路(マスク壁・掘込地形)の段波位置誤差と
                      段波背後の越え高さ(result_{m1,m2,ch1,ch2,...}_s{1,3}_d{0,2}[_c1])
 """
-import csv, glob, os, re
+import csv, glob, os, re, sys
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
+EN = "en" in sys.argv[1:]
+
+
+def T(ja, en):
+    return en if EN else ja
+
+
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
 
 HL, HR = 10.0, 1.0
-os.makedirs("figs", exist_ok=True)
+os.makedirs(FIGDIR, exist_ok=True)
 
 
 def load(d):
@@ -51,18 +59,18 @@ def plateau(h_ana):
 
 
 # ---- 図 1: 広い水路の断面 ----
-cases = [("result_scheme1", "スキーム 1(旧既定: セル中心勾配、非保存形)", "C0", "-"),
-         ("result_dyn_s1", "スキーム 1 + 動的振り替え(全エッジ)", "C0", "--"),
-         ("result", "スキーム 3(既定: 運動量保存形 + MUSCL)= param.txt", "C3", "-"),
-         ("result_dyn_s3", "スキーム 3 + 動的振り替え(全エッジ)", "C3", "--")]
+cases = [("result_scheme1", T("スキーム 1(旧既定: セル中心勾配、非保存形)", "Scheme 1 (former default: cell-centre gradient, non-conservative)"), "C0", "-"),
+         ("result_dyn_s1", T("スキーム 1 + 動的振り替え(全エッジ)", "Scheme 1 + dynamic reassignment (all edges)"), "C0", "--"),
+         ("result", T("スキーム 3(既定: 運動量保存形 + MUSCL)= param.txt", "Scheme 3 (default: momentum-conservative + MUSCL) = param.txt"), "C3", "-"),
+         ("result_dyn_s3", T("スキーム 3 + 動的振り替え(全エッジ)", "Scheme 3 + dynamic reassignment (all edges)"), "C3", "--")]
 data = [(load(d), lab, c, ls) for d, lab, c, ls in cases]
 ref = next(dd for dd, *_ in data if dd is not None)
 fig, axes = plt.subplots(3, 1, figsize=(9, 10))
 for ax, key, akey, ylab, xr, yr in [
-        (axes[0], "h_num", "h_ana", "水深 h (m)", (150, 850), None),
-        (axes[1], "u_num", "u_ana", "流速 u (m/s)", (150, 850), None),
-        (axes[2], "h_num", "h_ana", "水深 h (m)、段波付近の拡大", (640, 840), (0.5, 7.5))]:
-    ax.plot(ref["x"], ref[akey], "k", lw=2.2, label="Stoker 解析解", zorder=5)
+        (axes[0], "h_num", "h_ana", T("水深 h (m)", "Depth h (m)"), (150, 850), None),
+        (axes[1], "u_num", "u_ana", T("流速 u (m/s)", "Velocity u (m/s)"), (150, 850), None),
+        (axes[2], "h_num", "h_ana", T("水深 h (m)、段波付近の拡大", "Depth h (m), enlargement around the bore"), (640, 840), (0.5, 7.5))]:
+    ax.plot(ref["x"], ref[akey], "k", lw=2.2, label=T("Stoker 解析解", "Stoker analytical solution"), zorder=5)
     for dd, lab, c, ls in data:
         if dd is not None:
             ax.plot(dd["x"], dd[key], color=c, ls=ls, lw=1.4, label=lab)
@@ -71,11 +79,11 @@ for ax, key, akey, ylab, xr, yr in [
         ax.set_ylim(*yr)
     ax.set_ylabel(ylab)
     ax.grid(alpha=0.3)
-axes[0].set_title("湿潤床ダム破壊(hl = 10 m、hr = 1 m、Δx = 2 m)の t = 30 s の中央行", fontsize=11)
+axes[0].set_title(T("湿潤床ダム破壊(hl = 10 m、hr = 1 m、Δx = 2 m)の t = 30 s の中央行", "Wet-bed dam break (hl = 10 m, hr = 1 m, Δx = 2 m): central row at t = 30 s"), fontsize=11)
 axes[0].legend(fontsize=8, loc="upper right")
 axes[2].set_xlabel("x (m)")
 fig.tight_layout()
-fig.savefig("figs/profile.png", dpi=110)
+fig.savefig(f"{FIGDIR}/profile.png", dpi=110)
 plt.close(fig)
 
 # ---- 図 2: 1 セル・2 セル水路 ----
@@ -97,10 +105,10 @@ for d in sorted(glob.glob("result_m[12]_s[13]_d[02]*") + glob.glob("result_ch[12
 if rows:
     fig, axes = plt.subplots(1, 2, figsize=(11, 4))
     geoms = [g for g in ["m1", "m2", "ch1", "ch2", "ch1z12", "ch2z12"] if any(r[0] == g for r in rows)]
-    labels = {"m1": "1 セル\nマスク壁", "m2": "2 セル\nマスク壁", "ch1": "1 セル\n掘込 z=20",
-              "ch2": "2 セル\n掘込 z=20", "ch1z12": "1 セル\n掘込 z=12", "ch2z12": "2 セル\n掘込 z=12"}
-    combos = [(1, 0, False, "スキーム 1", "C0", 0.6), (1, 2, False, "1 + 振り替え", "C0", 1.0),
-              (3, 0, False, "スキーム 3", "C3", 0.6), (3, 2, False, "3 + 振り替え", "C3", 1.0)]
+    labels = {"m1": T("1 セル\nマスク壁", "1 cell\nmask wall"), "m2": T("2 セル\nマスク壁", "2 cells\nmask wall"), "ch1": T("1 セル\n掘込 z=20", "1 cell\nincised z=20"),
+              "ch2": T("2 セル\n掘込 z=20", "2 cells\nincised z=20"), "ch1z12": T("1 セル\n掘込 z=12", "1 cell\nincised z=12"), "ch2z12": T("2 セル\n掘込 z=12", "2 cells\nincised z=12")}
+    combos = [(1, 0, False, T("スキーム 1", "Scheme 1"), "C0", 0.6), (1, 2, False, T("1 + 振り替え", "1 + reassignment"), "C0", 1.0),
+              (3, 0, False, T("スキーム 3", "Scheme 3"), "C3", 0.6), (3, 2, False, T("3 + 振り替え", "3 + reassignment"), "C3", 1.0)]
     w = 0.2
     for k, (s, dyn, cap, lab, c, al) in enumerate(combos):
         for ax, col in zip(axes, [4, 5]):
@@ -112,16 +120,17 @@ if rows:
                 vals.append(r[0][col] if r else np.nan)
             ax.bar(np.arange(len(geoms)) + (k - 1.5) * w, vals, w, color=c, alpha=al, label=lab)
     axes[0].axhline(0, color="k", lw=0.8)
-    axes[0].set_ylabel("段波位置の誤差 (%、進行距離に対して)")
-    axes[1].set_ylabel("段波背後の越え高さ h_max − hm (m)")
+    axes[0].set_ylabel(T("段波位置の誤差 (%、進行距離に対して)", "Bore position error (%, of distance travelled)"))
+    axes[1].set_ylabel(T("段波背後の越え高さ h_max − hm (m)", "Overshoot behind the bore h_max − hm (m)"))
     for ax in axes:
         ax.set_xticks(np.arange(len(geoms)))
         ax.set_xticklabels([labels[g] for g in geoms], fontsize=9)
         ax.grid(alpha=0.3, axis="y")
     axes[0].legend(fontsize=8)
-    fig.suptitle("1 セル幅・2 セル幅水路でのダム破壊(§68.15。広い水路: スキーム 1 −15.5% / 3.2 m、スキーム 3 +1.1% / 0.04 m)", fontsize=10)
+    fig.suptitle(T("1 セル幅・2 セル幅水路でのダム破壊(§68.15。広い水路: スキーム 1 −15.5% / 3.2 m、スキーム 3 +1.3% / 0.00 m)",
+                   "Dam break in one-cell-wide and two-cell-wide channels (§68.15; wide channel: scheme 1 −15.5% / 3.2 m, scheme 3 +1.3% / 0.00 m)"), fontsize=10)
     fig.tight_layout()
-    fig.savefig("figs/incised.png", dpi=110)
+    fig.savefig(f"{FIGDIR}/incised.png", dpi=110)
     plt.close(fig)
     print("geom  scheme dyn cap  bore_err%  overshoot_m")
     for r in rows:

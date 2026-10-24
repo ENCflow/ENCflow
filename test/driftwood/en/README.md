@@ -30,7 +30,7 @@ volume ledger closes), standing stock 0.01 m³/m², representative diameter
 | File | Contents |
 |---|---|
 | `Check_driftwood.py <save> [stock0]` | (1) volume conservation \|Σhd + Σwd + Σwst − stock₀ nx ny\| < 1e-9, (2) activity: recruitment > 1e-3 and deposition > 1e-3 m·cell, (3) arrival: max(hd + wd) > 0 on the flat part (i ≥ 30) |
-| `Fig.py` | The figure `figs/driftwood.png` below |
+| `Fig.py` | The figure `en/figs/driftwood.png` below (`python3 Fig.py en`; `figs/driftwood.png` is the Japanese version) |
 
 ## Running
 
@@ -38,19 +38,19 @@ volume ledger closes), standing stock 0.01 m³/m², representative diameter
 make
 ./Run.sh          # configuration 1 → 2 → split restart → equivalence of defaults; PASS if all pass (a few seconds)
 ./Run_MPI.sh 4    # MPI; state.dat and driftwood.dat are byte-identical to the serial run (with the -O2 strict-math build)
-python3 Fig.py    # figs/driftwood.png
+python3 Fig.py en # en/figs/driftwood.png
 ```
 
 ## Figure
 
-![Distribution of driftwood](../figs/driftwood.png)
+![Distribution of driftwood](figs/driftwood.png)
 
 Top row (configuration 1): the erosion by the debris flow (about 3 mm)
 exceeds the rooting depth of 2 mm, and the standing trees over the whole
-slope become driftwood (right). At 30 s there is no moving driftwood (left);
+slope become driftwood (right). At 30 s there is almost no moving driftwood (left);
 all of it has deposited on the slope and just upstream of the slope break
 (center; grounded in the low-speed consolidation zone of the mixture). Only a
-little (1.9 mm) reaches the flat part.
+little (3.0 mm) reaches the flat part.
 Bottom row (configuration 2): hydraulic recruitment. The standing trees on
 the lower half of the slope are washed out (right), moving driftwood gathers
 at the edge of the ponding just above the slope break (left), and it
@@ -61,8 +61,8 @@ of the flat part (center).
 
 | Configuration | Volume conservation | Recruitment / deposition (m·cell) | Arrival on the flat part max(hd + wd) | Result |
 |---|---|---|---|---|
-| 1 debris flow + erosion entrainment | 0.0 | 5.60 / 5.60 (all deposited) | 1.9 mm | PASS |
-| 2 hydraulic recruitment by flood | 3.0e-13 | 0.188 / 0.101 | 0.88 mm | PASS |
+| 1 debris flow + erosion entrainment | 0.0 | 5.42 / 5.41 (almost all deposited) | 3.0 mm | PASS |
+| 2 hydraulic recruitment by flood | 2.8e-13 | 0.170 / 0.099 | 1.08 mm | PASS |
 | 3 split continuation by restart | driftwood.dat and state.dat byte-identical to the continuous run | | | PASS |
 | 4 equivalence of defaults | save_min and save_minx byte-identical ((1)–(3) also PASS with stock₀ = 0.001) | | | PASS |
 

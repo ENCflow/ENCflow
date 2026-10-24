@@ -36,11 +36,11 @@ band for MPI np = 4.
 | `param.txt` | Baseline case (with reference). `&list_enc` states explicitly gravity correction, excess-outflow reduction and hcap = 1, upwind coefficient 0.5, adaptive RK threshold 1.5. The advection scheme is not written, so it is **the current default (3: momentum-conservative + MUSCL)** |
 | `param_scheme1.txt` | `f_advection_scheme = 1` (the former default cell-centre gradient scheme; non-conservative). For comparison |
 | `param_scheme3.txt` | `f_advection_scheme = 3` stated explicitly. Since the default became 3, the same result as `param.txt` |
-| `param_dyn_s1.txt` / `param_dyn_s3.txt` | Scheme 1 / 3 with `f_opening_dynamic = 2` (dynamic reassignment of blocked openings on all edges) added. In a wide channel there is no effect except along the walls |
+| `param_dyn_s1.txt` / `param_dyn_s3.txt` | Scheme 1 / 3 with `f_opening_dynamic = 2` (dynamic reassignment of blocked openings on all edges) added (since 2 became the default on 2026-10-18 these now give the same results as the unsuffixed files; write `f_opening_dynamic = 0` explicitly for the comparison). In a wide channel there is no effect except along the walls |
 | `Check_stoker.py` | Compares the central row as a one-dimensional profile with the analytical solution and prints the errors of the bore position, hm and um, the overshoot behind the bore, the L1 errors and the deviation between rows. Writes `stoker.csv` (no pass/fail judgement; the regression is Log.txt) |
 | `Make_incised.py` | Generates the terrain, mask and parameters of the dam break in one-cell-wide and two-cell-wide channels (§68.15) |
 | `Plot_dambreak.plt` / `Plot_dambreak.py` | Interactive display and simple plotting (older scripts) |
-| `Fig.py` | Draws the figures below, `figs/*.png` |
+| `Fig.py` | Draws the figures below, `en/figs/*.png` (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
 ## Running
 
@@ -62,7 +62,7 @@ for p in param_m[12]_*.txt param_ch[12]_*.txt; do
   RESDIR=$(grep dir_result $p | sed "s/.*'\(.*\)'.*/\1/") PARAM=$p python3 Check_stoker.py
 done
 
-python3 Fig.py             # figs/profile.png, figs/incised.png
+python3 Fig.py en          # en/figs/profile.png, en/figs/incised.png
 ```
 
 In Check_stoker.py the bore position is "the position where h crosses
@@ -73,7 +73,7 @@ hl, hr and the step position are synchronized with `dambreak_step` in
 
 ## Figures
 
-![Depth and velocity on the central row at t = 30 s](../figs/profile.png)
+![Depth and velocity on the central row at t = 30 s](figs/profile.png)
 
 Top and middle: depth h and velocity u on the central row at t = 30 s.
 Black is the Stoker analytical solution. The default scheme 3 (red)
@@ -92,7 +92,7 @@ property of the spatial discretization independent of the time step or the
 protection mechanisms; §68.6). The dynamic reassignment (dashed) overlaps
 the solid lines in a wide channel.
 
-![Dam break in one-cell-wide and two-cell-wide channels](../figs/incised.png)
+![Dam break in one-cell-wide and two-cell-wide channels](figs/incised.png)
 
 The same problem confined to a channel one cell wide (row 3 of ny = 5) or
 two cells wide. The landside is either invalid cells (mask wall) or dry
@@ -104,7 +104,7 @@ ENC cannot be used, and without reassignment the bore lags greatly: −50%
 with scheme 1 and −36% with scheme 3. When the dynamic reassignment
 (`f_opening_dynamic = 2`) moves the blocked passage widths to the axis
 edges, the values of the one-cell channel return to those of the wide
-channel (−16% / +1.1%). In the two-cell channel −6% remains even with
+channel (−16% / +1.1%). In the two-cell channel −4% remains even with
 scheme 3 + reassignment (because each cell touches a wall on one side only,
 so the transverse momentum exchange is asymmetric; not analysed, handoff).
 The mask wall and the incised terrain give the same values to all digits in
@@ -116,7 +116,7 @@ Wide channel (the grid of `param.txt`), t = 30 s, central row:
 
 | Setting | Bore position | hm | um | Overshoot behind the bore | L1(h) | L1(u) |
 |---|---:|---:|---:|---:|---:|---:|
-| Scheme 3 (default, `param.txt`) | +1.25% | −1.2% | +1.2% | 0.01 m | 0.006 | 0.021 |
+| Scheme 3 (default, `param.txt`) | +1.25% | −1.5% | +1.2% | 0.00 m | 0.006 | 0.021 |
 | Scheme 3 + reassignment 2 | +1.25% | −1.5% | +1.2% | 0.00 m | 0.006 | 0.021 |
 | Scheme 1 (former default) | −15.45% | +14.3% | −11.4% | 3.21 m | 0.051 | 0.171 |
 | Scheme 1 + reassignment 2 | −15.45% | +13.8% | −11.5% | 3.21 m | 0.050 | 0.171 |
@@ -127,7 +127,7 @@ the mask wall and the incised terrain give the same values):
 | Channel | Scheme 1 | 1 + reassignment | Scheme 3 | 3 + reassignment |
 |---|---|---|---|---|
 | 1 cell | −49.7% / 4.12 m | −16.4% / 3.16 m | −35.6% / 0.81 m | **+1.1% / 0.05 m** |
-| 2 cells | −30.9% / 3.74 m | −15.0% / 3.15 m | −24.2% / 1.38 m | −6.3% / 1.28 m |
+| 2 cells | −30.9% / 3.74 m | −15.0% / 3.15 m | −18.6% / 1.18 m | −4.1% / 0.87 m |
 
 - **That the bore speed comes out correctly** is the basis for making the
   momentum-conservative schemes (2 and 3) the default. With scheme 1 the
