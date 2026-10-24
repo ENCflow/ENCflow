@@ -1030,8 +1030,8 @@
     {
       "source": "test/chichibu/README.md",
       "target": "test/chichibu/en/README.md",
-      "source_sha256": "757f4a873eae503c3b05f3297d7df475996de4e6c21d9145891911bc0600f964",
-      "target_sha256": "452bededbeb368d8e7eba67ce44bc798756fc7c72541246140e818a1240877cf",
+      "source_sha256": "23732acf280e0d3ec270cacd560b88f215cde2d0e232bf01c7625f4bc525fc11",
+      "target_sha256": "c6d3c1e7ee39cc5a39a33f3454a79e3b6304a33e9f6bd435c999f201f3cf3233",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
