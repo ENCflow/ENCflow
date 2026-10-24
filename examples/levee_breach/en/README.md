@@ -116,8 +116,8 @@ The band marks the progress of the breach (70–90 min).
 
 | Case | Peak discharge through the opening (m³/s) / time (min) | Flood volume (10⁴ m³) | Inundated area (ha; h > 0.01 m) | Maximum inundation depth (m) | Start of inundation at the toe (min) |
 |---|---:|---:|---:|---:|---:|
-| Resolved levee + prescribed bed motion | 154 / 96 | 41.3 | 71.6 | 1.15 | 76 |
-| Virtual wall + &list_channel_breach (f_br_diag = 1) | 131 / 112 | 36.5 | 67.7 | 0.91 | 76 |
+| Resolved levee + prescribed bed motion | 152 / 120 | 40.2 | 71.8 | 1.10 | 76 |
+| Virtual wall + &list_channel_breach (f_br_diag = 1) | 150 / 120 | 41.4 | 71.0 | 0.98 | 76 |
 
 - With the resolved levee, once the levee cells have been lowered to the
   floor the opening consists of ordinary cells and the shallow-water
@@ -130,7 +130,7 @@ The band marks the progress of the breach (70–90 min).
   formula. With `f_br_diag = 1` the diagonal edges touching a site are
   lowered to the same crest, so the passing width per breached cell
   becomes one cell width (normal 0.414 + diagonal 2 × 0.293), and at 5
-  cells of width the discharge is 0.85 times that of the resolved levee.
+  cells of width the discharge is 0.98 times that of the resolved levee.
   With `f_br_diag = 0`, which lowers only the normal edges of the sites as
   before, the diagonal links between adjacent sites remain walls, so the
   discharge stays at 0.44 times (measurements below). The division of
@@ -144,23 +144,29 @@ discharge at 100 min compared):
 
 | Width (cells / sites) | Resolved levee Q (m³/s) | Broad-crested weir 1.7·B·H^1.5 (m³/s) | Virtual wall f_br_diag = 0 Q / ratio to resolved | f_br_diag = 1 Q / ratio to resolved |
 |---:|---:|---:|---:|---:|
-| 1 | 40 | 39 | 15.4 / 0.39 | 60.0 / 1.51 |
-| 2 | 74 | 77 | 29.4 / 0.40 | 81.2 / 1.10 |
-| 3 | 104 | 113 | 42.8 / 0.41 | 99.7 / 0.95 |
-| 5 | 154 | 169 | 67.7 / 0.44 | 130.8 / 0.85 |
+| 1 | 36.5 | 37 | 15.1 / 0.41 | 60.8 / 1.66 |
+| 2 | 73.7 | 70 | 29.5 / 0.40 | 86.1 / 1.17 |
+| 3 | 105.1 | 102 | 43.1 / 0.41 | 108.5 / 1.03 |
+| 5 | 152.3 | 162 | 67.5 / 0.44 | 149.2 / 0.98 |
 
 The resolved levee matches the broad-crested weir estimate (B = number of
-cells × dx, H = river level − floor ≈ 1.6–1.7 m). The virtual wall with
+cells × dx, H = river level − floor ≈ 1.5–1.7 m), and for wider openings
+it falls below the weir formula as the water level rises on the
+floodplain side (152 vs 162 at 5 cells). The virtual wall with
 f_br_diag = 0 has an effective width of 0.38 dx per site (the
 passing-width share 0.414 of a normal edge), proportional to the number
-of sites; f_br_diag = 1 is closest to the resolved levee at 2–3 cells of
-width, overestimates at 1 cell by the two end diagonals (0.59 cell
-widths), and for wider openings the weir formula falls below as the water
-level rises on the floodplain side. The f_br_diag = 1 result agrees with
-a run in which the diagonal pairs are added explicitly as sites (maximum
-difference 0.35 m³/s, because the reference ground elevation of the
-diagonal sites themselves differs by 1 cm). The options considered and
-rejected are in
+of sites; f_br_diag = 1 is nearly equal to the resolved levee at 3–5
+cells of width (1.03 and 0.98 times) and overestimates at 1 cell by the
+two end diagonals (0.59 cell widths; 1.66 times). The f_br_diag = 1
+result agrees with a run in which the diagonal pairs are added explicitly
+as sites (maximum difference 0.35 m³/s, because the reference ground
+elevation of the diagonal sites themselves differs by 1 cm; measured with
+f_advection_scheme = 1). The table uses the default advection scheme 3;
+with scheme 1 (the setting of this example until 2026-10-23) the virtual
+wall with f_br_diag = 1 was closest to the resolved levee at 2–3 cells and
+0.85 times at 5 cells (in the virtual-wall channel the river level in
+front of the opening moves by about 0.1 m with the scheme). The options
+considered and rejected are in
 [Channels explained](../../../docs/en/users_guide/channel_models.md) §4.
 
 ## Notes
@@ -174,13 +180,15 @@ rejected are in
   outlet (backwater length ≈ h/S = 4.7 km), the river level at the
   opening is 2 m away from the crest and the overflow is weak. A short
   idealized channel needs a prescribed water level at the downstream end.
-- The default advection scheme 3 (momentum-conserving form) self-excites
-  a discharge oscillation of 5-minute period and ±6 % in this deep
-  straight channel (independent of dt, the inflow distribution and the
-  treatment of the downstream end; the same with scheme 2; it disappears
-  when the segment inflow is replaced by an internal source. The
-  investigation of the cause is docs/handoff.md 00a), so both cases use
-  `f_advection_scheme = 1`.
+- Advection is the default (`f_advection_scheme = 3`, momentum-conserving
+  form + MUSCL). The code before 2026-10-18 self-excited a discharge
+  oscillation of 5-minute period and ±6 % in this deep straight channel
+  (insufficient damping of the diagonal sublattice mode;
+  docs/developer.md §68.36–68.39, docs/handoff.md 00a), so both cases of
+  this example used `f_advection_scheme = 1` at that time. With the
+  current code the standard deviation of the channel discharge after the
+  breach is complete (92–120 min) is 0.6 m³/s (0.9 with scheme 1), and the
+  transverse distribution in the channel is uniform over the 5 columns.
 - The datum of the virtual-wall crest is stated explicitly as
   `f_bank_datum = 1` (floodplain cell elevation). The default of the code
   before 2026-10-13 was 0 (bed datum); if omitted, the crest in this

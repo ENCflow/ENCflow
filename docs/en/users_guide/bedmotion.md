@@ -342,8 +342,8 @@ Notes:
 - The effective width of a resolved-levee breach is close to the number
   of cells × dx and matches the broad-crested weir estimate 1.7·B·H^1.5.
   A virtual-wall breach with f_br_diag = 1 (diagonal edges lowered too)
-  gives nearly the same discharge at 2–3 cells of width (1.5 times for one
-  cell, 0.85 for five; measured in examples/levee_breach).
+  gives nearly the same discharge at 3–5 cells of width (1.7 times for one
+  cell, 1.2 for two; measured in examples/levee_breach).
 - An opening narrower than a cell cannot be represented (the resolution
   of a resolved levee is the cell). On a coarse grid use the breach of the
   virtual (subgrid) wall.
