@@ -1615,8 +1615,8 @@
     {
       "source": "test/nhbreak/README.md",
       "target": "test/nhbreak/en/README.md",
-      "source_sha256": "fb72e6fd410363053befab74f04719b403ff66763ed0ad2df0d09bfcb0f3cb52",
-      "target_sha256": "86f2ceafe128d13e1d0fe2ed1e74e59e269ef219dc553cdff2937b56c066e977",
+      "source_sha256": "e115dad9f10a0bb75e213575c947988959450e080f9fd818235f793dcc855b87",
+      "target_sha256": "941ec04f9c884a8adc38d6866d0d3db53631bcf6f4d665d20a5facdce718e129",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
@@ -1626,6 +1626,24 @@
       "target": "test/nhbreak/en/figs/runup.png",
       "source_sha256": "183bee84d5ad897a86d90f98387faac90affb7af073c9db620e560ce59bce71c",
       "target_sha256": "e0caf983582c25f82a43e22786163a195d5f4c2749771829630f1dc9840c446c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/nhbreak/figs/runup_diag.png",
+      "target": "test/nhbreak/en/figs/runup_diag.png",
+      "source_sha256": "10671cd9d0231cb7e7734178c9d29457583b632ba15136a15aac30960efe71dc",
+      "target_sha256": "3443fa7f1121d274d54ce79c51765b728a40df9c1a8b38b124a03e8ca4aa4761",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/nhbreak/figs/runup_visc.png",
+      "target": "test/nhbreak/en/figs/runup_visc.png",
+      "source_sha256": "6bc25aaa3b7fef4189644b2d61712ad01a1e08dcedffa0ee7826b2adb8fa3c7a",
+      "target_sha256": "306b5a77ed6e1faa1740563a439e18b561b3bcf236624025281f07d60e63b9e1",
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"

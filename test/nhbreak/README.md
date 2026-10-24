@@ -58,7 +58,7 @@ param.txt の f_nh_breaking=0、dir_result='result_ns' の結果があれば描�
 result_x_*/ に走らせ(u, v も出力)、`./Diag.py` で最大遡上高と水面上の
 全エネルギー E = Σ[½g((z+h−H)² − max(z−H,0)²) + ½h|u|²] の履歴
 (E0 = 2.29 J/m、単位幅、ρ = 1)を表にし、`./Diag.py --fig` で
-`figs/runup_diag.png` を描く。波を脚の 30 m 手前に置くケースは
+`figs/runup_diag.png` を描く(引数 en で英語版を en/figs/ に)。波を脚の 30 m 手前に置くケースは
 user_initial `wave_solitary28_toe`(x0 = 120 m)。
 
 ![最大遡上高の dt 収束とエネルギー履歴](figs/runup_diag.png)
@@ -106,7 +106,7 @@ user_initial `wave_solitary28_toe`(x0 = 120 m)。
 砕波と判定したセルに ν_b = nh_break_visc·B·h·√(gh)·|∇η| を与え、運動量の
 拡散項で散逸させる(Kennedy et al. 2000 相当の 1.44 を使用)。
 `./Diag.py --run visc005_nh viscf005_nh viscfine_nh finef0025_nh amp10_v ...`
-で走らせ、`./Diag.py --figvisc` で `figs/runup_visc.png` を描く。
+で走らせ、`./Diag.py --figvisc` で `figs/runup_visc.png` を描く(引数 en で英語版を en/figs/ に)。
 
 ![渦粘性の効果と振幅系列](figs/runup_visc.png)
 

@@ -159,8 +159,8 @@ def fig():
     ax1.axhline(0.918 * 0.28 ** 0.606, color="#6b6a66", ls=":", lw=1.0, label=T("実験則 0.42", "Experimental law 0.42"))
     ax1.set_xscale("log"); ax1.set_xticks(dts + [0.0025]); ax1.set_xticklabels(["0.02", "0.01", "0.005", "0.0025"]); ax1.minorticks_off()
     ax1.set_xlim(0.025, 0.002); ax1.set_ylim(0.0, 0.9)
-    ax1.set_xlabel(T("dt (s)  (実線: Δx = 0.25 m、白抜き: Δx = 0.125 m)", "dt (s)  (solid: Δx = 0.25 m, open: Δx = 0.125 m)")); ax1.set_ylabel("R_max / H")
-    ax1.set_title(T("最大遡上高の dt 収束", "dt convergence of the maximum run-up height"), fontsize=10, loc="left")
+    ax1.set_xlabel(T("dt (s)  (実線: Δx = 0.25 m、白抜き: Δx = 0.125 m)", "dt (s)  (solid: Δx = 0.25 m, open: 0.125 m)")); ax1.set_ylabel("R_max / H")
+    ax1.set_title(T("最大遡上高の dt 収束", "dt convergence of R_max"), fontsize=10, loc="left")
     ax1.legend(loc="lower center", frameon=False, fontsize=6.5, ncol=2)
     for lab, n, col, ls in [(T("NH + スイッチ dt 0.02", "NH + switch dt 0.02"), "base_nh", C_NH, "-"), (T("同 dt 0.005", "same, dt 0.005"), "dt005_nh", C_NH, "--"),
                             (T("静水圧 dt 0.02", "Hydrostatic dt 0.02"), "base_h", C_HY, "-"), (T("同 dt 0.005", "same, dt 0.005"), "dt005_h", C_HY, "--")]:
@@ -169,7 +169,7 @@ def fig():
     ax2.axvspan(28.5, 36, color="#9c9a94", alpha=0.15, lw=0)
     ax2.text(32.2, 0.98, T("斜面上", "on the slope"), ha="center", fontsize=8, color="#52514e")
     ax2.set_xlim(0, 50); ax2.set_ylim(0.3, 1.02)
-    ax2.set_xlabel("t (s)"); ax2.set_ylabel(T("E / E₀(水面上の全エネルギー)", "E / E₀ (total energy above the still surface)"))
+    ax2.set_xlabel("t (s)"); ax2.set_ylabel(T("E / E₀(水面上の全エネルギー)", "E / E₀ (energy above still surface)"))
     ax2.set_title(T("エネルギー履歴", "Energy history"), fontsize=10, loc="left")
     ax2.legend(loc="lower left", frameon=False, fontsize=7)
     fig.tight_layout(); fig.savefig(f"{FIGDIR}/runup_diag.png", dpi=150)
@@ -210,7 +210,7 @@ def fig_visc():
     aa = np.linspace(0.05, 0.45, 50)
     ax3.plot(aa, 0.918 * aa ** 0.606, color=C_TH, ls=":", lw=1.2, label=T("実験則 0.918 (a/H)^0.606", "Experimental law 0.918 (a/H)^0.606"))
     ax3.set_xlim(0.05, 0.45); ax3.set_ylim(0.1, 0.8); ax3.set_xlabel("a / H"); ax3.set_ylabel("R_max / H")
-    ax3.set_title(T("振幅系列(Δx = H/4、dt 0.005、n = 0.01)", "Amplitude series (Δx = H/4, dt 0.005, n = 0.01)"), fontsize=10, loc="left")
+    ax3.set_title(T("振幅系列(Δx = H/4、dt 0.005、n = 0.01)", "Amplitude series (H/4, dt 0.005, n 0.01)"), fontsize=10, loc="left")
     ax3.legend(loc="upper left", frameon=False, fontsize=7)
     fig.tight_layout(); fig.savefig(f"{FIGDIR}/runup_visc.png", dpi=150)
     print(f"written: {FIGDIR}/runup_visc.png")

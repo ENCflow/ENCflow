@@ -73,11 +73,11 @@ result of param.txt with f_nh_breaking=0, dir_result='result_ns' exists).
 friction, grid) in result_x_*/ (u and v are also output), `./Diag.py`
 tabulates the maximum run-up height and the history of the total energy
 above the still surface E = Σ[½g((z+h−H)² − max(z−H,0)²) + ½h|u|²]
-(E0 = 2.29 J/m, per unit width, ρ = 1), and `./Diag.py --fig` draws
-`figs/runup_diag.png`. The cases that place the wave 30 m before the toe
+(E0 = 2.29 J/m, per unit width, ρ = 1), and `./Diag.py --fig en` draws
+`en/figs/runup_diag.png` (`figs/runup_diag.png` is the Japanese version). The cases that place the wave 30 m before the toe
 use user_initial `wave_solitary28_toe` (x0 = 120 m).
 
-![dt convergence of the maximum run-up height and energy history](../figs/runup_diag.png)
+![dt convergence of the maximum run-up height and energy history](figs/runup_diag.png)
 
 | Configuration | dt 0.02 | dt 0.01 | dt 0.005 | E/E0 at shoreline arrival (dt 0.005) |
 |---|---:|---:|---:|---:|
@@ -133,9 +133,9 @@ Cells judged as breaking are given ν_b = nh_break_visc·B·h·√(gh)·|∇η| 
 dissipate through the diffusion term of the momentum equation (1.44,
 corresponding to Kennedy et al. 2000, is used). Run with
 `./Diag.py --run visc005_nh viscf005_nh viscfine_nh finef0025_nh amp10_v ...`
-and draw `figs/runup_visc.png` with `./Diag.py --figvisc`.
+and draw `en/figs/runup_visc.png` with `./Diag.py --figvisc en` (`figs/runup_visc.png` is the Japanese version).
 
-![Effect of the eddy viscosity and amplitude series](../figs/runup_visc.png)
+![Effect of the eddy viscosity and amplitude series](figs/runup_visc.png)
 
 | Configuration | R/H | E/E0 at shoreline arrival |
 |---|---:|---:|
