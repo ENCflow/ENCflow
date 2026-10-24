@@ -43,7 +43,8 @@ ENCflow の変更は、回帰基準とのビット一致検証を一つずつ通
 
 コードの構造は [docs/architecture.md](docs/architecture.md)(最初に
 読む1枚)から、設計判断の経緯と規約は
-[docs/developer.md](docs/developer.md) を参照してください。
+[docs/developer.md](docs/developer.md) を参照してください(基本方針 §0 の
+英訳は [docs/en/developer.md](docs/en/developer.md))。
 変更時の検証規律(回帰基準・ビット再現)は [CLAUDE.md](CLAUDE.md) に
 まとまっています。ローカルでの検証は各 `test/<ケース>/Run.sh`
 (基準との自動照合)で行えます。

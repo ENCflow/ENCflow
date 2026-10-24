@@ -82,7 +82,9 @@ utils/<tool>/README.md                → utils/<tool>/en/README.md
 - `docs/` の利用者向け文書(users_guide、install、tutorial、comparison、ai_guide、
   windows、本書)は全件を対象にする。開発者向け文書(developer.md、handoff、
   `*_plan.md`、`*_design.md`、channel_model.md、architecture.md、icon/)は対象外
-  (§34.2。国際化の実態を見て再判断)。
+  (§34.2。国際化の実態を見て再判断)。例外として developer.md の §0(基本方針)
+  だけは `docs/en/developer.md` に部分ミラーを置く(2026-10-24。冒頭に範囲を明示し、
+  記録は `--section '## 0.'` で節単位にする。§6)。
 - `tutorials/` は説明と注釈付き入力をセットで扱い、全件を対象にする。
 - `test/` のケース説明(README)は順次すべてを対象とする。パラメータのコメント
   英訳は、理解に役立つものから任意で整備する。README に埋め込む図は、図化
@@ -164,7 +166,9 @@ namelist 名、変数名、数値、文字列値、論理値、パス、代入�
 更新できない翻訳は未確認・未更新のまま明示する。ハッシュだけを更新して完了扱いにしない。
 
 `tools/i18n/reviews.json` に原文・訳文の SHA-256、確認者、確認方法(`human` /
-`assistant`)、日付を記録する。テキストは UTF-8、改行 CRLF を LF に正規化して
+`assistant`)、日付を記録する。正本の一節だけを訳した**部分ミラー**(§3 の developer.md
+§0 が唯一の例)は `record --section '<見出しの先頭>'` で記録し、原文側のハッシュと
+構成の照合はその節(同じか上位の見出しの直前まで)に限る。訳文の冒頭に範囲を明示する。テキストは UTF-8、改行 CRLF を LF に正規化して
 ハッシュ化し、画像等のバイナリはバイト列をハッシュ化する。AI の確認を人間の確認と
 して記録しない。
 
@@ -204,6 +208,10 @@ python3 tools/i18n/check.py audit --json > /tmp/encflow-i18n-status.json
 # 内容確認後、1組ずつ記録する。AI による確認なら --method assistant
 python3 tools/i18n/check.py record docs/install.md docs/en/install.md \
   --reviewer '確認者名' --method human
+
+# 部分ミラー(正本の一節だけの訳)は節を指定して記録する
+python3 tools/i18n/check.py record docs/developer.md docs/en/developer.md \
+  --section '## 0.' --reviewer '確認者名' --method human
 ```
 
 自動発見は `docs/`、`tutorials/`、`test/`、`examples/`、`bmi/`、`utils/` の Markdown、

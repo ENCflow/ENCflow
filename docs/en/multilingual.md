@@ -238,6 +238,10 @@ python3 tools/i18n/check.py audit --json > /tmp/encflow-i18n-status.json
 # After reviewing content, record one pair. For AI review use --method assistant.
 python3 tools/i18n/check.py record docs/install.md docs/en/install.md \
   --reviewer 'Reviewer name' --method human
+
+# A partial mirror (translation of one section of the source) is recorded with its section
+python3 tools/i18n/check.py record docs/developer.md docs/en/developer.md \
+  --section '## 0.' --reviewer 'Reviewer name' --method human
 ```
 
 Discovery covers Markdown, notebooks and `param*.txt` / `list_*.txt` under

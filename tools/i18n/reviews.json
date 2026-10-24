@@ -4,17 +4,17 @@
     {
       "source": "CONTRIBUTING.md",
       "target": "CONTRIBUTING.en.md",
-      "source_sha256": "a7b44704c1412f994827578d18e1c3114cc2bd7023bb704f2d8a77b7861ffce1",
-      "target_sha256": "f3fa7eee76fa563503be39c9a0f19e1efb79d882ebaf6313d22d04573c12f44d",
-      "reviewer": "Claude (Claude Code session; content and lexical review, no model execution)",
+      "source_sha256": "83f58bbca3217008a0932ddb76ee0ba973738d0b5d20c82f7dddc411d7e5b503",
+      "target_sha256": "99d34b4c6f90d1b19a5eeaac141f53a1c7727836678e8343b00ce8e424b89b24",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "319bc6cea675dbf4e02991e8e2f5fd7d4be0586b51b5da10b44a5625d0795e34",
-      "target_sha256": "32f804ffb28871b3f448c349cdce9db4d73f244f72af5381753eda44f806e99b",
+      "source_sha256": "ecf1c5d1932632fbb41090a85020a574efb9cdcb81dc9a970e78bafcd6d746f4",
+      "target_sha256": "7df5bec722c91f5fc0002dffaf3a68bc1ff91ed9f1e818fa3ac949596b7b17dc",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
@@ -65,6 +65,16 @@
       "reviewed_on": "2026-10-24"
     },
     {
+      "source": "docs/developer.md",
+      "target": "docs/en/developer.md",
+      "source_sha256": "c00a74f8cbf60c6cda92b3d56458c031b44c90026ff89bb03c7c08aa7ed5d9ea",
+      "target_sha256": "61b4e4212bc9079374148ed65fcf3dca9fa2ec13eaff23aafd097e2d941c7d6d",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24",
+      "source_section": "## 0."
+    },
+    {
       "source": "docs/install.md",
       "target": "docs/en/install.md",
       "source_sha256": "d59e0930d09850a60684a9fa20c1260da32c81ccc55d2e24a572fa9a2f1a6cdd",
@@ -76,8 +86,8 @@
     {
       "source": "docs/multilingual.md",
       "target": "docs/en/multilingual.md",
-      "source_sha256": "0f684e2cbf5366f323df756b683e732035718751e17a9ef1454218c79b8eb9e4",
-      "target_sha256": "bd1e0c65a32c59781bb8bfcf60a0c0cf936180bacc415b095a9c1a1888987a3d",
+      "source_sha256": "b8dd6dc075cbe5a30316bca63f3ab1648cf4b41209662ed261ac738c629dc856",
+      "target_sha256": "5ee4980c677d8db426b7e87d4edeffa7bacc57e24aedbcfdfc4d63bdf1e55375",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
