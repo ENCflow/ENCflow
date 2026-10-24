@@ -909,8 +909,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   リンク先の英語版化・古い注記)を直して record 済み。**unreviewed は 0**。以後は正本を変えたら
   同じ作業で訳を更新し、CI(stale 検出)に従う。  **test の README の図と数値(2026-10-24)**: 46 本の Fig.py(と Diag/Landslide/Theory/Solitary 等)に
   `en` 引数を追加し、英語ラベル版 62 枚を test/<case>/en/figs/ に生成して英語 README から参照
-  (.gitignore に `!test/*/en/figs/*.png`)。未対応: nhbreak の切り分け節の図 2 枚(runup_diag・
-  runup_visc。Diag.py の派生ケース約 40 本が必要)は英語 README も日本語図を参照。
+  (.gitignore に `!test/*/en/figs/*.png`)。nhbreak の切り分け節の図 2 枚(runup_diag・runup_visc)は
+  同日に Diag.py の派生ケース 41 本を現行コードで再計算して日英とも再生成し、README(日英)の
+  表の数値も現行値に更新した(§69.6 の表は 10-12 の値のまま。README 参照の注記を追加)。
   同日に gfortran 13.3 の release ビルドで全 67 ケースの Run.sh を実行し、README の数値を照合した。
   回帰は nhshelf のみ FAIL(ULP=1 で Q_max 列 2 箇所が 2 量子差)で、利用者の許可を得て同日に
   reference を更新(他の列は ULP 内)。他は PASS。2026-10-18 の reference 更新(5aa1e71: 移流の片側リンク修正と f_opening_dynamic = 2
@@ -1081,7 +1082,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   Δx = H/4 の平坦部の数値散逸(−18%)が打ち消した値で、Δx/2・Cr 0.07 の
   収束値は NH + スイッチ 0.63(+50%。砕波崩壊の散逸不足。摩擦 n = 0.01
   で +10〜20% の見込み)、静水圧 0.34(−20%。平坦部 100 m の早期段波化。
-  波を脚の手前に置くと 0.42 で偶然一致)。
+  波を脚の手前に置くと 0.42 で偶然一致)(2026-10-24 の再計算では 0.61 /
+  0.33 / 0.40、摩擦 + 渦粘性で 0.46 = +9%。test/nhbreak/README.md)。
   init の界面エッジ行の補完漏れ(実バグ)を修正。**残**:
   (b) Phase 4c 通信回避(plan §7。計測後)、(c) Phase 5 の残り(一様流上の
   波 = 区間流入+放射境界の構成)、(d) 砕波域の渦粘性 nh_break_visc は
