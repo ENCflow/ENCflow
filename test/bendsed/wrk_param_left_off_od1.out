@@ -1,0 +1,23 @@
+reading list_sysparam in wrk_param_left_off_od1.txt
+reading list_geoinfo in wrk_param_left_off_od1.txt
+ reading ./zinit_left.txt
+reading boundary lists in wrk_param_left_off_od1.txt
+reading list_initial in wrk_param_left_off_od1.txt
+reading list_geomorph in wrk_param_left_off_od1.txt
+geomorph: fluv_d50 = 0.0010 m
+reading list_enc in wrk_param_left_off_od1.txt
+swflow_enc: f_advection_scheme = 3 (momentum-conservative, MUSCL van Leer)
+swflow: f_opening_dynamic=1 has no channel mask (fn_rw); dynamic opening disabled
+main: number of processes: 1
+main: number of threads: 4
+main: real precision: 64 bit
+main: number of valid cells: 4641
+time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
+  0:00:00.00   0.0%    0.1540   0.0%      0    0.1212    0.6000    0.0000
+  0:01:40.00  16.7%    0.1466  19.9%      0    0.2265    0.9728    2.1484
+  0:03:20.00  33.3%    0.1349   0.1%      0    0.2866    0.7586    3.7004
+  0:05:00.00  50.0%    0.1280   0.0%      0    0.2988    0.8269    3.9603
+  0:06:40.00  66.7%    0.1263   0.1%      0    0.2775    0.8784    3.3361
+  0:08:20.00  83.3%    0.1259   0.0%      0    0.2666    0.9202    2.8140
+  0:10:00.00 100.0%    0.1228   0.0%      0    0.3073    0.9560    4.2457
+main: program terminated normally

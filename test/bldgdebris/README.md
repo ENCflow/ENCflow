@@ -69,6 +69,10 @@ python3 Fig.py    # figs/bldgdebris.png(引数 en で英語版を en/figs/ に)
 - 実地への展開例は examples/tsunami_town(流木なし / あり、判定 1 / 2、
   帰還 0 / 1 の比較)です。
 
+- 構成 2 の破壊 / 堆積(0.125 / 0.078)が以前の記録(0.083 / 0.039)より大きいのは
+  2026-10-18 の既定変更(f_opening_dynamic = 2。developer.md §68.38)による。旧既定 1 を
+  明示すると以前の値が再現する(2026-10-24 確認)。
+
 ## 関連文書
 
 - [docs/users_guide/bldgdebris.md](../../docs/users_guide/bldgdebris.md) — 破壊判定(`f_bdcrit`)、沈下率、空隙率帰還、パターン別の推奨値

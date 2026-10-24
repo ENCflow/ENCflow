@@ -903,12 +903,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   nhcurrent・nhsolitary・nhbore・nhbreak・nhwave・tracer・sewer_wq・gwseep・damwq・hillslope・
   dambreak・bedslide・debris・bldgdebris・slide・avalanche・volcano・bendsed・bendloss・fixation・
   suspend・wash・sedinflow・driftwood・bankface・gwdefault・sublattice・wave_shore・chichibu_icmap・
-  dissol・bmi_nest ほか)。**挙動変化として人間の確認が要るもの**(自己検定は PASS のまま):
-  bendsed の外岸−内岸 Δz −0.224 → −0.075 m、slide の域外堆積 +0.22 → +0.61 m、bldgdebris 構成 2 の
-  破壊 +50 %・堆積 2 倍、volcano の τ_y ランアウトが遷緩点を越える(README・§28.8 の「斜面上で
-  止まる」は成立しない)、nhsolitary・nhbore の静水圧段波のスパイク(1.5 → 2.6 a0、〜3a)、
-  nhshelf の分裂波 6 → 3、avalanche の成長 3.8 → 3.5 倍、hillslope の平面斜面が運動学的波と
-  一致(以前は遅れ)。いずれも 10-18 の既定変更の影響と推定(因果は未検証)。
+  dissol・bmi_nest ほか)。挙動変化の切り分け(同日。§68.38 末尾): 旧既定 f_opening_dynamic = 1 の明示で
+  slide・volcano・bldgdebris・hillslope・nhsolitary・nhbore は旧値が再現(= 既定 2 の効果で、
+  物理的には壁沿いの行の通水能が揃った帰結)、bendsed・avalanche は部分再現(残りは §68.37〜39)。
+  **残課題**: bendsed の外岸−内岸差が 1/3 に縮んだ機構(移流修正の寄与)の解明と、静水圧
+  計算の段波背後のスパイク(nhsolitary 2.6 a0、nhbore 3a。砕波モデルなしの数値振動)の扱い。
   119 組の読み合わせで見つかった正本側の疑義は 2026-10-24 に正本・英語版を同時に修正(users_guide.md の
   fn_wave 行、params_index の項目数 668 と berode_hcover・rf_bank の追加、geomorph のラハール侵食起動、
   sediment の輸送スキームの記述と wet_lw 行、comparison の NEOWAVE の年、structure の pump_in_cell、

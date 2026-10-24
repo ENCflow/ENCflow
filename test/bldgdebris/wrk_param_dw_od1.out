@@ -1,0 +1,35 @@
+reading list_sysparam in wrk_param_dw_od1.txt
+reading list_geoinfo in wrk_param_dw_od1.txt
+reading list_initial in wrk_param_dw_od1.txt
+reading list_precip in wrk_param_dw_od1.txt
+reading list_driftwood in wrk_param_dw_od1.txt
+driftwood: dw_dlog = 0.0050 m
+driftwood: dw_sglog = 0.5000
+driftwood: dw_hrec = 0.0020 m
+driftwood: dw_vrec = 0.2000 m/s
+driftwood: dw_wstop = 0.0050 m/s
+driftwood module enabled
+reading list_bldgdebris in wrk_param_dw_od1.txt
+bldgdebris: bd_dlog = 0.0050 m
+bldgdebris: bd_sg = 0.5000
+bldgdebris: bd_fcrit = 2.0000E-04 m3/s2
+bldgdebris: bd_wdes = 2.0000E-05 m/s
+bldgdebris: bd_wstop = 0.0050 m/s
+bldgdebris: bd_vstop = 0.0100 m/s
+building-debris module enabled
+reading list_enc in wrk_param_dw_od1.txt
+swflow_enc: f_advection_scheme = 3 (momentum-conservative, MUSCL van Leer)
+swflow: f_opening_dynamic=1 has no channel mask (fn_rw); dynamic opening disabled
+main: number of processes: 1
+main: number of threads: 4
+main: real precision: 64 bit
+main: number of valid cells: 1200
+time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
+  0:00:00.00   0.0%    0.0000   0.0%      0    0.0000    0.0000    0.0000
+  0:00:10.00  16.7%    0.0006   0.0%      0    0.0015    0.0006    0.0000
+  0:00:20.00  33.3%    0.0011  37.6%      0    0.0068    0.0015    0.2354
+  0:00:30.00  50.0%    0.0017   5.9%      0    0.0086    0.0051    0.3026
+  0:00:40.00  66.7%    0.0022   6.8%      0    0.0103    0.0091    0.3669
+  0:00:50.00  83.3%    0.0028   5.0%      0    0.0118    0.0121    0.4258
+  0:01:00.00 100.0%    0.0033   5.7%      0    0.0130    0.0147    0.4736
+main: program terminated normally

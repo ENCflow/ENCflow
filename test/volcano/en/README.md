@@ -103,6 +103,12 @@ released amount (99.9% has been fixed to the bed).
   [test/curvature](../../curvature/en/README.md) is a check that adds the
   curvature term to the same uniform flow.
 
+- The deposit crossing the slope break in configuration 2 is due to the change
+  of the default on 2026-10-18 (f_opening_dynamic = 2; developer.md §68.38).
+  With the former default 1 written explicitly, the values of 10-12 (release
+  area −1.56 m, flat part 0.06 m, remaining 0.005 = stops on the slope) are
+  reproduced (confirmed 2026-10-24).
+
 ## Related documents
 
 - [docs/users_guide/geomorph.md](../../../docs/en/users_guide/geomorph.md) — resistance laws of mixture flow (`f_dbres` 1–5), equivalent-fluid mode, application to avalanches

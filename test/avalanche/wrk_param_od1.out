@@ -1,0 +1,23 @@
+reading list_sysparam in wrk_param_od1.txt
+reading list_geoinfo in wrk_param_od1.txt
+reading list_initial in wrk_param_od1.txt
+reading list_geomorph in wrk_param_od1.txt
+geomorph: db_wstop = 0.1000 m/s
+geomorph: db_mu = 0.2000
+geomorph: db_xi = 1500.0000 m/s2
+reading list_enc in wrk_param_od1.txt
+swflow_enc: f_advection_scheme = 3 (momentum-conservative, MUSCL van Leer)
+swflow: f_opening_dynamic=1 has no channel mask (fn_rw); dynamic opening disabled
+main: number of processes: 1
+main: number of threads: 4
+main: real precision: 64 bit
+main: number of valid cells: 1200
+time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
+  0:00:00.00   0.0%    0.0000   0.0%      0    0.0000    0.0000    0.0000
+  0:00:10.00  16.7%    0.0003   2.3%      0    0.1426    0.0245    6.9466
+  0:00:20.00  33.3%    0.0003   1.4%      0    0.1439    0.0057    7.0113
+  0:00:30.00  50.0%    0.0003   0.9%      4    0.0080    0.0061    0.2062
+  0:00:40.00  66.7%    0.0003   1.0%      6    0.0920    0.0102    4.2891
+  0:00:50.00  83.3%    0.0003   0.4%      2    0.1122    0.0103    5.2997
+  0:01:00.00 100.0%    0.0003   0.3%      2    0.1144    0.0131    5.4174
+main: program terminated normally

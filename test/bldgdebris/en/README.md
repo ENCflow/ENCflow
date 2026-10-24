@@ -83,6 +83,12 @@ without feedback.
   (comparisons of without / with driftwood, criterion 1 / 2, feedback
   0 / 1).
 
+- The destruction / deposition of configuration 2 (0.125 / 0.078) being larger
+  than the earlier record (0.083 / 0.039) is due to the change of the default on
+  2026-10-18 (f_opening_dynamic = 2; developer.md §68.38); with the former
+  default 1 written explicitly the earlier values are reproduced (confirmed
+  2026-10-24).
+
 ## Related documents
 
 - [docs/users_guide/bldgdebris.md](../../../docs/en/users_guide/bldgdebris.md) — destruction criterion (`f_bdcrit`), sinking share, void-ratio feedback, recommended values by pattern
