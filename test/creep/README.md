@@ -44,7 +44,7 @@ A・σ・D・中心セルは `param.txt`、`src/user_geoinfo.f90` の
 make
 ./Run.sh          # 2 ケースを実行し、Check_analytic.py で解析解と比較(両方 PASS で PASS)
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/profile.png
+python3 Fig.py    # figs/profile.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

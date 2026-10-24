@@ -1093,11 +1093,20 @@
     {
       "source": "test/creep/README.md",
       "target": "test/creep/en/README.md",
-      "source_sha256": "b39b62162655fbeaebbfe71b7a8c7a42a8a10a29d7d9718e9ffbfcd97db86de0",
-      "target_sha256": "eb42d5ff3f7c72946fce5abcf729dceb03c1df6b240462732ae4f69a517e995a",
+      "source_sha256": "9547f04fcdbe38b8aa9e6a111f921506b5a39e652e7d9fec2ceb0076d82a77ee",
+      "target_sha256": "e955a671e699cc4e15d23c85cea93f66d27e2d21d21466032bbdff4a9420d0e8",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/creep/figs/profile.png",
+      "target": "test/creep/en/figs/profile.png",
+      "source_sha256": "b78df3f73500274930b0916a23edc9e3d7027a0a9fc743eba0145f5330090e85",
+      "target_sha256": "eaed5f73097c9faa9486c50a4f9361643b529e9d7c1f5c4eb55068b68dc7a453",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/culvert/README.md",
@@ -1201,11 +1210,29 @@
     {
       "source": "test/glacier/README.md",
       "target": "test/glacier/en/README.md",
-      "source_sha256": "85cbee7034fe5e1998ba24787cf065e369f139c55238758ec04561d23371d2d3",
-      "target_sha256": "95cefafe865e90051ba069260216266cf440e5d766aa9f5fefc75d199e092777",
+      "source_sha256": "2dd2ad62195b25f42cba7a932dab72607f2da0d309d6ce4ac757c8ab22212bf2",
+      "target_sha256": "40822758bdc573e15eabb716bfe6ca860e897bfe6658c1f00d57d952f9c41dc8",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/glacier/figs/cirque.png",
+      "target": "test/glacier/en/figs/cirque.png",
+      "source_sha256": "6c17230c00be23bf35a72ecbd72741b34c6c8e27228bcdb72ec61a65363c47e7",
+      "target_sha256": "f385239737f156df817c8c823f965122bc8c675c77e1bc80109a605edc43a6fd",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/glacier/figs/halfar.png",
+      "target": "test/glacier/en/figs/halfar.png",
+      "source_sha256": "f9923071a32b31f1efd782eb1c3696fb99fa5d1e576cdd7bef0bb224845c7716",
+      "target_sha256": "541056f7fb148ec602d872e9d6aeaa24912bcd1a44ef09efb3b7621b3c91ab60",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/gtif/README.md",

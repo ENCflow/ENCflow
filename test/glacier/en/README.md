@@ -42,7 +42,7 @@ thickness goes from 200 to 177 m and the radius spreads from 600 to 640 m.
 | `Make_input.py` | Generates `data/hi0.txt` (Halfar initial ice thickness) and `data/zcone.txt` (conical mountain) |
 | `Check_halfar.py` | Judges the mean, maximum and central errors of the final ice thickness Hi9998 against the similarity solution, and the conservation of S_total (water equivalent of the ice) |
 | `Check_cirque.py` | Judges glacier formation (max Hi > 1 m), subglacial erosion (dz < −0.01 m), no uplift, and no NaN |
-| `Fig.py` | Draws the figures `figs/*.png` below |
+| `Fig.py` | Draws the figures `en/figs/*.png` below (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
 ## Running
 
@@ -50,12 +50,12 @@ thickness goes from 200 to 177 m and the radius spreads from 600 to 640 m.
 make
 ./Run.sh          # generate inputs → Halfar → cirque → the 2 Checks → equivalence check of the defaults. PASS when all pass
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/halfar.png, figs/cirque.png
+python3 Fig.py en # en/figs/halfar.png, en/figs/cirque.png
 ```
 
 ## Figures
 
-![Halfar dome](../figs/halfar.png)
+![Halfar dome](figs/halfar.png)
 
 Left: the ice thickness along the central row. The computation after 80 days of
 flow (blue dots) from the initial state (grey) lies over the similarity
@@ -67,7 +67,7 @@ of tens of metres). The interior is within ±5 m, and a weak pattern with
 opposite signs in the axial and diagonal directions (a trace of the
 8-direction discretization) is visible.
 
-![Cirque-formation smoke test](../figs/cirque.png)
+![Cirque-formation smoke test](figs/cirque.png)
 
 Left: the initial conical mountain. Centre: the ice thickness after 1 day
 (1.4 years of landform time). The whole mountain is covered with ice (maximum

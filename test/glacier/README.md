@@ -43,7 +43,7 @@ t₀ = (1/(18Γ)) (7/4)³ R₀⁴/H₀⁷、Γ = 2A(ρ_i g)³/(n + 2)。初期(t
 make
 ./Run.sh          # 入力生成 → Halfar → カール → 2 つの Check → 既定値の同値検定。すべて通れば PASS
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/halfar.png, figs/cirque.png
+python3 Fig.py    # figs/halfar.png, figs/cirque.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図
