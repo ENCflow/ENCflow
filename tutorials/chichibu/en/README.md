@@ -1,5 +1,7 @@
 > English mirror of tutorials/chichibu/README.md. The Japanese file is the master copy.
 
+[日本語](../README.md)
+
 # Tutorial 2: chichibu -- rain on a real-terrain catchment
 
 We cover the Chichibu catchment in the upper Arakawa River basin
@@ -392,8 +394,8 @@ gnuplot -p -c Plot_flux.plt result
 ```
 
 displays the hydrographs of the four transects in turn (the bundled
-`../Plot_flux.plt` / `../Plot_map.plt` are scripts for visual
-inspection of results; run them from the case directory).
+`Plot_flux.plt` / `Plot_map.plt` in the case directory are scripts for
+visual inspection of results; run them from there).
 
 ![Step 3: hydrographs at each transect](figs/step3_transects.png)
 
@@ -401,9 +403,8 @@ We obtained catchment-scale flood routing at 1-minute resolution, with
 the flood wave growing and lagging from upstream transect 1 to
 downstream transect 4.
 
-The distributed outputs can be surveyed with `../Plot_step3.plt`,
-which arranges six maps of the final-time and maximum fields on one
-screen:
+The distributed outputs can be surveyed with `Plot_step3.plt`, which
+arranges six maps of the final-time and maximum fields on one screen:
 
 ```bash
 gnuplot Plot_step3.plt
@@ -788,7 +789,7 @@ conditions -> 3D visualization. From here:
   distributed roughness, subgrid channels, and more --
   [users guide](../../../docs/en/users_guide.md)
 - How to write the namelists of each feature --
-  [examples/List_samples/](../../../examples/List_samples/)
+  [examples/List_samples/en/](../../../examples/List_samples/en/)
 - To run a large computation in parallel with MPI:
   `mpirun -np 4 ./encflow_mpi en/param_step6.txt` (the results match
   the serial run bit for bit)

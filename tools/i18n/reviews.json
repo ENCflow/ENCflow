@@ -1001,6 +1001,33 @@
       "reviewed_on": "2026-10-23"
     },
     {
+      "source": "tutorials/chichibu/Fig_chichibu.plt",
+      "target": "tutorials/chichibu/en/Fig_chichibu.plt",
+      "source_sha256": "939b94ea07dcd64562cf8b7e3faf6501f7549e341c15c4aaa692b2ed4677ac07",
+      "target_sha256": "0352a45593cd0783d91e82a2b6a88c7a67fe70506fdc37cd2fca7227d23f11b0",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/chichibu/Fig_supp.plt",
+      "target": "tutorials/chichibu/en/Fig_supp.plt",
+      "source_sha256": "5c7a347adebd49286d3d63a231c7586427af089b91644cd29d31597c51d48638",
+      "target_sha256": "bbf3f2e42f6f09594553b3600f00e7e452d611ea6e374502dc6b896397e25953",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/chichibu/README.md",
+      "target": "tutorials/chichibu/en/README.md",
+      "source_sha256": "16a2942340dd9ec6425379b6e156f80e2bb2c821239de766eba409fc085b4c8c",
+      "target_sha256": "02392e329ee8e733d3a223cbb4a155ca74642b9c53a2c48987ab682b3ee1a1f9",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
       "source": "tutorials/chichibu/figs/step1_hend.png",
       "target": "tutorials/chichibu/en/figs/step1_hend.png",
       "source_sha256": "895a5cd05f4731fd261fc1281a39ed46f405603e1eee28ee10d0cc6e40bb51c5",
@@ -1195,6 +1222,96 @@
       "source_sha256": "6f8524a4ba9891235258f2c1ce0618082167fa7b8412f8b63604f83af625ceb9",
       "target_sha256": "2213d05b117a79a4f8dfdc162aae77b277f6975dba411bf70bbd8dfa50514d19",
       "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/chichibu/param_step1.txt",
+      "target": "tutorials/chichibu/en/param_step1.txt",
+      "source_sha256": "63a400d12631cd241375daa1575f7117c8705c5adca47a38ca8d1efd38f46101",
+      "target_sha256": "f7b682588b8cad2dc2a83d698175c41a8932081bbe6418929f6b0c9e3fced6c3",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/chichibu/param_step2.txt",
+      "target": "tutorials/chichibu/en/param_step2.txt",
+      "source_sha256": "3c25e5841ec863425d33e3a8814583f29c9a8ad7682b976836223a3bf7cb963c",
+      "target_sha256": "581b7877e828251b6a2ef411f23dde3667d0b083178b96a283de2ee0700d30a1",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/chichibu/param_step3.txt",
+      "target": "tutorials/chichibu/en/param_step3.txt",
+      "source_sha256": "1939e0a1112e0efaf0200e7ab69e5ac50d49bea96cb930fe8d2e13b72bf2e91f",
+      "target_sha256": "87ddb5f23d9e9e4bbd1028efebe51877a09da74882cee25132093f303a1f91ff",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/chichibu/param_step4.txt",
+      "target": "tutorials/chichibu/en/param_step4.txt",
+      "source_sha256": "e85d6143a65cb86414dafbaad2f9ff1c2cc9e0048614eaaa1be5298a7d40c1e4",
+      "target_sha256": "cabb9ae705b9ff2ab65c49b2ce32ca01e88d828635a34458498d6abacf531a3e",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/chichibu/param_step5.txt",
+      "target": "tutorials/chichibu/en/param_step5.txt",
+      "source_sha256": "6f2c6ba88310f4cb926aceb3f5a3747659a8f8e8862abf2304ed1070f65c9a69",
+      "target_sha256": "888c50fcd32667d99902d9dce175e629ad776e835e1bd3f47f875fe92f8e08d5",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/chichibu/param_step6.txt",
+      "target": "tutorials/chichibu/en/param_step6.txt",
+      "source_sha256": "903ac083183cdcc99043a2373b04058d1f80faaa1272345ffb39ac7ebd24da0a",
+      "target_sha256": "467735f2964693287e3e92d8c38fe68830e0fa25919aea43730bbb98ea3315f9",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/chichibu/param_step7.txt",
+      "target": "tutorials/chichibu/en/param_step7.txt",
+      "source_sha256": "8a36d375aabc5e4361042d0e61a8de68e0bf3451eb1e624e2097d897fa197a21",
+      "target_sha256": "686f3143617fb52efad5d1b36275a1602acbd72774037368bd62c9309abfc179",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/chichibu/param_supp_100m.txt",
+      "target": "tutorials/chichibu/en/param_supp_100m.txt",
+      "source_sha256": "cc6558e6a09d7cef1172eaef97e5fb0a6b783f008646fea6b562bc57a8dc6518",
+      "target_sha256": "46123f760b0365b189d4c13eaf5c064e38da11a3d2c875ed973cd5befd9de705",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/chichibu/param_supp_200m.txt",
+      "target": "tutorials/chichibu/en/param_supp_200m.txt",
+      "source_sha256": "31cb4d116bf4bb413757dddff6dad936116a8f78e364c5e55e96629784060a14",
+      "target_sha256": "bc3ec4c5b7d95b10542f25c847b7ce6c4cbede71b1a66b010e2086f91841e30f",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/chichibu/param_supp_50m.txt",
+      "target": "tutorials/chichibu/en/param_supp_50m.txt",
+      "source_sha256": "d17d9721e2acd8bacc03574e903693b9943aa01dcce621e64f197d3697699ba4",
+      "target_sha256": "5cab1ff51f4b345461b5b6e93c3bdea1948223422acb3681f8944ed68a88c74e",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
     },
