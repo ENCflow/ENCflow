@@ -52,6 +52,36 @@ def digest(path: Path) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def digest_text(value: str) -> str:
+    return hashlib.sha256(value.replace("\r\n", "\n").encode("utf-8")).hexdigest()
+
+
+def section_text(value: str, heading: str) -> str:
+    """見出し `heading`(先頭一致。例 "## 0.")で始まる節の本文(同じか上位の見出しの
+    直前まで)。部分ミラー(正本の一節だけの翻訳。§6)の照合単位。見つからなければ空。"""
+    lines = value.replace("\r\n", "\n").split("\n")
+    level = len(HEADING.match(heading + " ")[1]) if HEADING.match(heading + " ") else 0
+    start = next((i for i, l in enumerate(lines) if l.startswith(heading)), None)
+    if start is None or not level:
+        return ""
+    end = len(lines)
+    for i in range(start + 1, len(lines)):
+        m = HEADING.match(lines[i])
+        if m and len(m[1]) <= level:
+            end = i
+            break
+    return "\n".join(lines[start:end]) + "\n"
+
+
+def source_view(src: Path, entry: dict | None) -> tuple[str, str]:
+    """照合に使う正本のテキストとそのハッシュ(部分ミラーは記録した節だけ)"""
+    section = entry.get("source_section") if entry else None
+    if section and src.suffix == ".md":
+        value = section_text(text(src), section)
+        return value, digest_text(value)
+    return (text(src) if src.suffix == ".md" else ""), digest(src)
+
+
 def inside(root: Path, name: str) -> Path:
     path = (root / name).resolve()
     if Path(name).is_absolute() or ".." in Path(name).parts:
@@ -521,8 +551,9 @@ def audit(root: Path, language: str = "en", links: bool = False,
     # 明示登録で自動発見の対象外(任意名の設定ファイル等)も扱える。
     for key in reviews:
         pairs.setdefault(key, False)
+    # 部分ミラー(節だけの訳)は、正本の他の節へのリンクの代替にならないので除く
     mirrors = {s: t for s, t in discovered.keys() | reviews.keys()
-               if (root / t).is_file()}
+               if (root / t).is_file() and not reviews.get((s, t), {}).get("source_section")}
     rows, dates = [], {}
     for (source, target), legacy in sorted(pairs.items()):
         src, dst = inside(root, source), inside(root, target)
@@ -534,8 +565,9 @@ def audit(root: Path, language: str = "en", links: bool = False,
         elif not dst.is_file():
             status = "not-required" if not_required(scope, source) else "missing"
         else:
+            source_text, source_hash = source_view(src, entry)
             if entry:
-                if digest(src) != entry["source_sha256"]:
+                if source_hash != entry["source_sha256"]:
                     status = "stale"
                 elif digest(dst) != entry["target_sha256"]:
                     status = "translation-changed"
@@ -549,7 +581,7 @@ def audit(root: Path, language: str = "en", links: bool = False,
             if src.suffix == ".ipynb":
                 issues.extend(notebook_issues(text(src), text(dst)))
             if src.suffix == ".md" and dst.suffix == ".md":
-                issues.extend(structure_issues(text(src), text(dst)))
+                issues.extend(structure_issues(source_text, text(dst)))
                 issues.extend(stamp_issues(root, target, source))
             if kind(src) == "presentation" and src.suffix != ".txt" and status != "reviewed":
                 issues.append("WARN: presentation asset; data and rendering logic require manual review")
@@ -580,7 +612,7 @@ def audit(root: Path, language: str = "en", links: bool = False,
 
 
 def record(root: Path, source: str, target: str, reviewer: str, method: str,
-           reviewed_on: str) -> None:
+           reviewed_on: str, section: str | None = None) -> None:
     if source == target or not reviewer.strip() or method not in ("human", "assistant"):
         raise ValueError("distinct paths, a reviewer and a valid method are required")
     date.fromisoformat(reviewed_on)
@@ -596,12 +628,18 @@ def record(root: Path, source: str, target: str, reviewer: str, method: str,
         problems = notebook_issues(text(src), text(dst))
         if any(i.startswith("ERROR:") for i in problems):
             raise ValueError("; ".join(problems))
+    entry = {"source": source, "target": target,
+             "source_sha256": digest(src), "target_sha256": digest(dst),
+             "reviewer": reviewer, "method": method, "reviewed_on": reviewed_on}
+    if section:
+        if src.suffix != ".md" or not section_text(text(src), section):
+            raise ValueError(f"section heading not found in the Markdown source: {section}")
+        entry["source_section"] = section
+        entry["source_sha256"] = digest_text(section_text(text(src), section))
     data = load_registry(root)
     data["reviews"] = [e for e in data["reviews"]
                        if (e["source"], e["target"]) != (source, target)]
-    data["reviews"].append({"source": source, "target": target,
-                            "source_sha256": digest(src), "target_sha256": digest(dst),
-                            "reviewer": reviewer, "method": method, "reviewed_on": reviewed_on})
+    data["reviews"].append(entry)
     data["reviews"].sort(key=lambda e: (e["source"], e["target"]))
     path = root / REGISTRY
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -630,13 +668,14 @@ def main(argv=None) -> int:
     review.add_argument("--reviewer", required=True)
     review.add_argument("--method", choices=("human", "assistant"), required=True)
     review.add_argument("--date", default=date.today().isoformat())
+    review.add_argument("--section", help="部分ミラー: 正本のこの見出し(先頭一致。例 '## 0.')の節だけを照合する")
     args = parser.parse_args(argv)
     root = args.root.resolve()
     try:
         if not root.is_dir():
             raise ValueError(f"repository directory does not exist: {root}")
         if args.command == "record":
-            record(root, args.source, args.target, args.reviewer, args.method, args.date)
+            record(root, args.source, args.target, args.reviewer, args.method, args.date, args.section)
             print(f"Recorded: {args.source} -> {args.target}")
             return 0
         if not re.fullmatch(r"[a-z]{2}(?:-[A-Za-z0-9]+)?", args.language) or args.language == "ja":

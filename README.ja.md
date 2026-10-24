@@ -215,7 +215,8 @@ ENCflow は、深さ平均・密度一定の平面2次元の世界に意図的�
   判定する検定スクリプトで確かめます。コードと文書、正本と翻訳、
   テストと基準の一致は CI が機械的に検査します。「なぜこの結果になる
   のか」を第三者が遡れる状態を保つことを、全ソース公開と並ぶ基本方針に
-  しています([docs/developer.md](docs/developer.md) §0)。
+  しています([docs/developer.md](docs/developer.md) §0。英訳は
+  [docs/en/developer.md](docs/en/developer.md))。
 - **プロジェクトとしての持続性** — 設計判断の理由と経緯
   ([docs/developer.md](docs/developer.md))から全体像
   ([docs/architecture.md](docs/architecture.md))までが文書化され、

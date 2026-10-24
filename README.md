@@ -286,8 +286,8 @@ belong to specialized models
   originals and translations, and between tests and their references
   is checked mechanically by CI. Keeping the state in which a third
   party can trace "why this result" is a basic policy alongside full
-  source disclosure ([docs/developer.md](docs/developer.md) §0, in
-  Japanese).
+  source disclosure ([docs/developer.md](docs/developer.md) §0; English
+  translation of §0 in [docs/en/developer.md](docs/en/developer.md)).
 - **Sustainability as a project** — everything from the reasoning
   behind each design decision ([docs/developer.md](docs/developer.md),
   in Japanese) to the overall map
@@ -335,7 +335,8 @@ code as evidence.
 Developers and the curious should head to
 [docs/architecture.md](docs/architecture.md) for the one-page map of
 the architecture, [docs/developer.md](docs/developer.md) for the
-authoritative source on design philosophy and conventions (both in
+authoritative source on design philosophy and conventions (the project
+policy §0 is in English in [docs/en/developer.md](docs/en/developer.md); both in
 Japanese), and [docs/en/comparison.md](docs/en/comparison.md) for the
 comparison with other models.
 
