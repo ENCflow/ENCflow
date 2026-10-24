@@ -1471,11 +1471,20 @@
     {
       "source": "test/nhbreak/README.md",
       "target": "test/nhbreak/en/README.md",
-      "source_sha256": "e0475b02d8d0135e576d27721c78623f3f8abb9a6919f8efd31d0320444398a3",
-      "target_sha256": "7334ff82de14f7172b44a287751cef65414e3d3f3b166462c0bed910ccfa5893",
+      "source_sha256": "fb72e6fd410363053befab74f04719b403ff66763ed0ad2df0d09bfcb0f3cb52",
+      "target_sha256": "86f2ceafe128d13e1d0fe2ed1e74e59e269ef219dc553cdff2937b56c066e977",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/nhbreak/figs/runup.png",
+      "target": "test/nhbreak/en/figs/runup.png",
+      "source_sha256": "183bee84d5ad897a86d90f98387faac90affb7af073c9db620e560ce59bce71c",
+      "target_sha256": "e0caf983582c25f82a43e22786163a195d5f4c2749771829630f1dc9840c446c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/nhcurrent/README.md",

@@ -21,23 +21,24 @@ configuration of Synolakis (1987): depth H = 1 m, a/H = 0.28, slope 1:19.85
 
 ## Figures
 
-![Evolution of the run-up height and the surface near the slope](../figs/runup.png)
+![Evolution of the run-up height and the surface near the slope](figs/runup.png)
 
 Top: run-up height R(t)/H (ground elevation of the wet front − H).
-Hydrostatic 0.39, NH + breaking switch 0.63, NH without switch 0.82
+Hydrostatic 0.40, NH + breaking switch 0.57, NH without switch 0.74
 (experimental law 0.42). Bottom: surface and ground near the slope
 (t = 28, 36, 42 s). The hydrostatic wave turns into a bore before the
-slope, while NH climbs onto the slope without breaking. `./Fig.py`
-generates `figs/runup.png` (the curve without the switch is drawn if the
+slope, while NH climbs onto the slope without breaking. `./Fig.py en`
+generates `en/figs/runup.png` (`figs/runup.png` is the Japanese version;
+the curve without the switch is drawn if the
 result of param.txt with f_nh_breaking=0, dir_result='result_ns' exists).
 
-## Findings (2026-10-12)
+## Findings (2026-10-12; the hydrostatic, param.txt and no-switch hcap-2 values were recomputed on 2026-10-24; the 0.63 etc. in the diagnosis sections below are the values of 10-12)
 
 | Configuration | R_max/H | Remarks |
 |---|---:|---|
-| Hydrostatic (hcap 1 / 2) | 0.455 / 0.392 | Early bore formation and dissipation on the flat part. Close to the experimental law 0.42 |
-| NH, no switch (hcap 1 / 2) | 1.64 / 0.82 | Runs up as a thin tongue without breaking. The 1.64 of hcap 1 is closer to the non-breaking run-up law 2.57 |
-| NH + slope criterion 0.2, margin 8 (hcap 2) = param.txt | 0.63 | Insensitive to the settings (slope 0.15 / 0.3, margin 16, Froude 0.5: 0.62 / 0.64 / 0.63 / 0.64) |
+| Hydrostatic (hcap 1 / 2) | 0.455 / 0.404 | Early bore formation and dissipation on the flat part. Close to the experimental law 0.42 |
+| NH, no switch (hcap 1 / 2) | 1.64 / 0.74 | Runs up as a thin tongue without breaking. The 1.64 of hcap 1 is closer to the non-breaking run-up law 2.57 |
+| NH + slope criterion 0.2, margin 8 (hcap 2) = param.txt | 0.57 | Insensitive to the settings (slope 0.15 / 0.3, margin 16, Froude 0.5: 0.62 / 0.64 / 0.63 / 0.64) |
 | NH + SWASH-type ∂η/∂t criterion (α 0.6 / 0.15 / 0.1, β = α/2, margin 8) | 0.66 / 0.61 / 0.39 | Fires in the current code (breaking cells 52 / 4500 on average). With α 0.1 the whole front becomes hydrostatic and matches hydrostatic. The record of 2026-10-05 (2.2–2.7; α 0.1 diverged) is not reproduced (note below) |
 | NH, depth threshold nh_hmin = 0.5 m (hcap 1 / 2) | 0.74 / 0.62 | On 2026-10-05 a spike of h = 1.5 m (two-sided mean edge depth at the bore front; §68.7) rose at the shoreline and the run diverged, but the current code does not diverge (h_max 1.29 m; note below) |
 
