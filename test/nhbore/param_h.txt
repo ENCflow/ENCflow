@@ -32,7 +32,7 @@
 &list_enc
   f_gravity_correction = 0
   f_exflux_reduction = 0
-  f_hcap_upwind = 0
+  f_hcap_upwind = 2                ! 上流側水深(段波背後の数値振動の防止。§68.7。NH の param.txt は 0)
   f_friction_fastmath = 0
   f_adaptive_runge = 1
   p_adprunge_thresh = 1.2

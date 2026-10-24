@@ -67,7 +67,27 @@ make
   −0.075 m: with the former default f_opening_dynamic = 1 written explicitly it
   is −0.120 m (control +0.027 m), and the rest comes from the fix of the
   one-sided links of advection on 2026-10-18 (§68.37, §68.39) (confirmed
-  2026-10-24; the mechanism has not been analysed).
+  2026-10-24).
+- Mechanism of the reduction (2026-10-24; confirmed by rerunning left_on with
+  u, v, V output every 100 s): the former default 1 is inactive in this case,
+  which has no river mask, so the cells adjacent to the stair-stepped banks of
+  the raster arc keep their blocked diagonal openings unreallocated and lose
+  conveyance (even in the straight reach, V in the two columns next to the
+  banks is 0.93 times that of the inner columns). The arc then acts as a
+  conveyance contraction relative to the straight reach (mean V 1.14 vs
+  1.02 m/s at 100 s), transports more than the supply from upstream, and the
+  whole arc degrades, running away by positive feedback (mean Δz of the arc
+  −0.30 m at 600 s, maximum V 4.1 m/s, minimum h 0.02 m; the inner side also
+  erodes by −0.15 m and nothing deposits). The −0.120 m is a difference
+  superimposed on this overall degradation. With the default 2 the conveyance
+  of the arc matches the straight reach (mean V 1.12 vs 1.06 m/s), the bed is
+  nearly stationary (mean Δz of the arc −0.016 m), and the −0.075 m is the
+  transverse redistribution itself (outer −0.08 m, inner +0.10 m: outer-bank
+  scour and inner-bank deposition). The reduction is therefore not a weakening
+  of the correction but the disappearance of a numerical overall degradation.
+  The contribution of the advection fix (−0.224 → −0.120 m) cannot be
+  reproduced because the old code is not in the history; it is presumed to be
+  of the same kind (treatment of the one-sided links at stair-stepped banks).
 
 ## Related documents
 

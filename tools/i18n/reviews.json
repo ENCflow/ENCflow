@@ -1030,8 +1030,8 @@
     {
       "source": "test/bendsed/README.md",
       "target": "test/bendsed/en/README.md",
-      "source_sha256": "a0bf6bfee4f1243615a7c51e57512cdacb450a087654d9e9031717afe81c83e9",
-      "target_sha256": "e07cedc62d23e4169a1305f344ed3d72fdf3f265f8ffd20fcc31b7bd69f132d5",
+      "source_sha256": "c2ce6d75d479094cd99e7f4f39b794f70ec31b42ac883762f4600b34306e538e",
+      "target_sha256": "98af10a4f693dd4abb4704ab5643077981a8b0f4ff05dbdcc56cfd8f2c1a7f91",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
@@ -1570,8 +1570,8 @@
     {
       "source": "test/nhbore/README.md",
       "target": "test/nhbore/en/README.md",
-      "source_sha256": "e1c71d25baf4bdcc90ca70adc79036389dc89fb1fe881e9fcc5e0fbd1f13dc6e",
-      "target_sha256": "f454a7bb6b58b8ecfc40d2ddd7b264c4a0eecffc8cfdf68fc2f6e86da2406a41",
+      "source_sha256": "7b6fc3a401dbbb75aa89aa75c3d31086e67569fca90c6fdbc2e874bd6f55482c",
+      "target_sha256": "8164872da4884fe6ecf146a2fd0a0cdbd1d0b342821053fe5563c428742e4898",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
@@ -1579,8 +1579,8 @@
     {
       "source": "test/nhbore/figs/bore.png",
       "target": "test/nhbore/en/figs/bore.png",
-      "source_sha256": "52a86dd935e00caec36570c91400a8baa06bedeb5ed3293f751461fd3361d64f",
-      "target_sha256": "19ebf976e1163dc77da81e02f7b3359d393db335257b45c6b76df848d4b9cc85",
+      "source_sha256": "d053cdf7e4f4158f296e1c5b2d2665f7d8aaf6f49532e59fbadc672afcab1a80",
+      "target_sha256": "7c72aa6ad00f432fe80064007647cb04e3a84797de5ed8037cbd8e56068a86f6",
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
@@ -1669,8 +1669,8 @@
     {
       "source": "test/nhsolitary/README.md",
       "target": "test/nhsolitary/en/README.md",
-      "source_sha256": "1bb2fd152ec0408b406adaec7c1875a5bb240802dfd6c1178b77e002a18e0b5c",
-      "target_sha256": "d1d9e0f55125bf10a40cf7ecf1c4aef0011974785b2903a09948188037772a96",
+      "source_sha256": "bfc6b27eb1195ad5be7b31e691990c128611e387d4142782ac5be2cb55f04e6f",
+      "target_sha256": "1b12c81ebcca81210d270ff73c04895da671b9eef55752b00aec0a6d5144221c",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
@@ -1678,8 +1678,8 @@
     {
       "source": "test/nhsolitary/figs/profiles.png",
       "target": "test/nhsolitary/en/figs/profiles.png",
-      "source_sha256": "5cbf47803717e95d24f2ed679392a475e25296e36af221b2fe8e4d46190b50d7",
-      "target_sha256": "f89f4ea4a2476f64bda52aa078b708738e6a40c1a599b9231d2e9a184565cfb0",
+      "source_sha256": "88312a63602ccfcfdc225658263e6e798ca882a0c6e38487d6672459033db542",
+      "target_sha256": "93b3528befa19d01d9fcd04b38ade7ca848672af49dde884b04acf1a7d1e4bfe",
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"

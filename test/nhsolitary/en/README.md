@@ -27,23 +27,30 @@ frictionless, wall-bounded channel (300 m × 8 m, Δx = Δy = 0.25 m = H/4,
 The water surface η/a0 along the central row overlaid every 20 s (top:
 non-hydrostatic, middle: hydrostatic) and the crest height a(t)/a0 (bottom).
 The non-hydrostatic wave keeps its shape as it travels; the hydrostatic one
-steepens at its front into a bore. `./Fig.py en` generates `en/figs/profiles.png` (`figs/profiles.png` is the Japanese version).
+steepens at its front into a bore and decays. `./Fig.py en` generates `en/figs/profiles.png` (`figs/profiles.png` is the Japanese version).
 
-## Findings (2026-10-12)
+## Findings (2026-10-12; the hydrostatic row is the value of 2026-10-24 with f_hcap_upwind = 2)
 
 | Case | c_fit (m/s) | c_fit / √(g(H+a)) | a(60 s)/a0 | Waveform RMS/a | Trailing wave/a |
 |---|---:|---:|---:|---:|---:|
 | Non-hydrostatic (whole domain) | 3.288 | 1.001 | 1.076 | 0.033 | 0.036 |
 | Non-hydrostatic (active set, margin 8) | 3.288 | 1.001 | 1.076 | 0.033 | 0.036 |
-| Hydrostatic | 3.541 | 1.079 | 2.60 | 0.44 | 0.57 |
+| Hydrostatic (f_hcap_upwind = 2) | 3.375 | 1.028 | 0.864 | 0.32 | 0.23 |
 
 - In the one-layer NH model the solitary wave propagates keeping its shape
   (RMS 3.3%). The KdV-type initial waveform is not an exact solution of the
   one-layer model (dispersion coefficient 1/8; KdV has 1/6), so the width
   adjusts slightly, leaving 3.6% trailing waves, and the amplitude is +7.6%.
   The speed is +0.1% relative to √(g(H+a)).
-- The hydrostatic run has no dispersion, so the front steepens into a bore
-  (amplitude 2.6 times, waveform RMS 44%).
+- The hydrostatic run has no dispersion, so the front steepens into a bore,
+  which dissipates and decays (amplitude 0.86 at 60 s, waveform RMS 32%).
+  param_h.txt specifies f_hcap_upwind = 2 (upstream depth), as nhbreak does,
+  to avoid the one-cell-wide spike at the bore front (§68.6, §68.7)
+  (2026-10-24). With the default 0 (two-sided average) a spike rises at the
+  front (amplitude 2.60 a0 at 60 s, RMS 0.44, trailing wave 0.57, c_fit
+  3.541 m/s), and the table up to 2026-10-24 carried those values. The NH run
+  (param.txt) stays at 0, since dispersion keeps the front from steepening
+  and no spike appears.
 - With dt halved (0.01 s) and without adaptive RK the speed is the same
   (−0.02%; the amplitude is +3.1%).
 - **Effect of the channel width**: with 8 rows (width 2 m) the speed is
@@ -57,12 +64,13 @@ steepens at its front into a bore. `./Fig.py en` generates `en/figs/profiles.png
   probes and the crest positions (to the printed digits). Active cells
   average 53%.
 
-- The spike at the hydrostatic bore front (amplitude 2.6 times) and the change
-  of the NH speed (3.256 → 3.288 m/s) are due to the change of the default on
-  2026-10-18 (f_opening_dynamic = 2; developer.md §68.38). With the former
-  default 1 written explicitly, both the NH and the hydrostatic rows of the
-  table of 10-12 (3.256 / 0.992 / 1.049 / 0.029 / 0.043 and 3.334 / 1.015 /
-  1.48 / 0.30 / 0.29) are reproduced (confirmed 2026-10-24).
+- The change of the NH speed (3.256 → 3.288 m/s) and the growth of the spike
+  of the hydrostatic run with f_hcap_upwind = 0 (1.48 → 2.60 a0) are due to the
+  change of the default on 2026-10-18 (f_opening_dynamic = 2; developer.md
+  §68.38). With the former default 1 written explicitly (and hcap 0 for the
+  hydrostatic run), both the NH and the hydrostatic rows of the table of 10-12
+  (3.256 / 0.992 / 1.049 / 0.029 / 0.043 and 3.334 / 1.015 / 1.48 / 0.30 /
+  0.29) are reproduced (confirmed 2026-10-24).
 
 ## Effect of the bottom-slope terms (f_nh_slope=1, Version 2) on a flat bed (2026-10-12)
 
