@@ -31,9 +31,9 @@
     {
       "source": "bmi/README.md",
       "target": "bmi/README.en.md",
-      "source_sha256": "2b6d85dec56df36450b5e3cf9ad2954ce2a9e971315ec33f06b3a22b51ba1e3d",
-      "target_sha256": "282e590eacb56bd8d758fcb775042ace084ffbfed745be04c0786806b7a65be7",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "f3ed072cdfc2a49e1ce2d6c7263076fd1bd433eaa423e646e468a1ef190a4e09",
+      "target_sha256": "d78147ef1ace9cbcc5d516488e010a0dc8e00b6094fa2c38ce0dfe85a8f39bbf",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
     },
@@ -85,9 +85,9 @@
     {
       "source": "docs/tutorial.md",
       "target": "docs/en/tutorial.md",
-      "source_sha256": "23a9f7e439f45c0e36fc020e417c6fe24c8400fb873c185221f145dfc0d903bd",
-      "target_sha256": "ddeaab105e5b725bc02708ecfbf2b7bf4f4d99bf20b54ec8fe270fcab09d0210",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "b6e92b2da6007ef928f7874bf6d42021fd227051e5adcc42f14debe81ecc33e6",
+      "target_sha256": "cfffab3392014110abf0b325d28f113df633c233fcb2c34ac8dbdc8e99ffdf79",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
     },
@@ -850,11 +850,11 @@
     {
       "source": "examples/mesa/README.md",
       "target": "examples/mesa/en/README.md",
-      "source_sha256": "a74d9f0a5a704dc2a9008df6a2a07f474679a24e20792252a2219d936b974435",
-      "target_sha256": "611f3ba658984f4c97136d0c29991479ad7cf110d8a1334394834de2fc774ea2",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "ad7f16eb0ead8f8096d1db073573d3b3ae1702648a670bc997ff2afa50ce658c",
+      "target_sha256": "206e45a7db6b60fe01b09fd753a62b4a698ca9e0a2f25fb4ad2d2b9b95f8cfda",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "examples/nest_reflect/README.md",
@@ -2209,11 +2209,38 @@
     {
       "source": "tutorials/README.md",
       "target": "tutorials/en/README.md",
-      "source_sha256": "a32d83a66ca2a42ca0ae090ec783cac6396a045486880e18b88d0831be6a8899",
-      "target_sha256": "7c37c5059e8000225f7451dc294e8e323d6fd6c33d47f57fc5645b05076875b0",
-      "reviewer": "ChatGPT (content/lexical review; not a model execution)",
+      "source_sha256": "65364afca3b154010a08879a2cc8a87e94c42a41d971fa12f247aab0a908c2cf",
+      "target_sha256": "1b55623100598757dccda528e0e8d3c7552f58a68627bc3c966825e573d93e6f",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/bmi/README.md",
+      "target": "tutorials/bmi/en/README.md",
+      "source_sha256": "5c93d3d35b0fc3f970e009e4c8043db323f4f2cca4085730d12d4e46c068a5e6",
+      "target_sha256": "49fe08cc78f9a007adc136ccfd00462afcd0389029a5217d844898289b83bf82",
+      "reviewer": "Claude (assistant)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/bmi/param.txt",
+      "target": "tutorials/bmi/en/param.txt",
+      "source_sha256": "15aeae53f925f92dfd2e228d034aedf2a80eb571b981a8f738451fcd0ea42521",
+      "target_sha256": "f3a4fb96dca99484d29de25327cd573177a23d67b5a37dfab7b0efad28e2a07d",
+      "reviewer": "Claude (assistant)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/bmi/param_norain.txt",
+      "target": "tutorials/bmi/en/param_norain.txt",
+      "source_sha256": "8ed3d61ba6f6c9b06aa50f3e1b2a256f1c76992e85604696be5399dbc65f027f",
+      "target_sha256": "86a9b38afcf97fc0dc423d570bd4d13c51ca1b060f9da42aa2f4c7b50727605a",
+      "reviewer": "Claude (assistant)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "tutorials/chichibu/Fig_chichibu.plt",

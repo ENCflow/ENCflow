@@ -50,6 +50,23 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 未完了・検証待ち
 
+00f. **BMI チュートリアル tutorials/bmi(2026-10-24 新設)の残り**
+   - 新設: 初学者向けの 7 段(起動と終了 → update → get → 描画 → リアルタイム
+     表示 → set(雨)→ set(粗度))。Python 環境は uv を既定(PEP 723 の
+     inline 依存宣言で `uv run step*.py` だけで動く)とし、venv+pip・conda・OS
+     パッケージの代替手順も併記。題材は chichibu Step 2 + Step 6 の出口排水口
+     (param.txt。データは ../chichibu/data_chichibu を共有)。日英 README と
+     param の en/ ミラーを同時整備し record 済み(assistant)。
+   - 作成時に検出した実バグ(GeoTIFF の読み取りユニット未クローズ。共有
+     ライブラリ経由の initialize が停止)は developer.md §55.2 で修正済み。
+   - 未決: (i) チュートリアルの step*.py は「スクリプトは言語別に複製しない」
+     (multilingual.md §3)に従い日本語コメントのまま共有している。英語読者向けに
+     en/ 版スクリプト(コメントのみ英訳)を許すかは規約の判断待ち(README 側は
+     日英ともコード抜粋に各言語のコメントを付けている)。(ii) 図は英語ラベルで
+     日英共有。(iii) Step 5 のリアルタイム表示は画面のある環境でのみ目視確認が
+     必要(作業環境はヘッドレスのため `--save` 経路で確認)。(iv) 粗度 0.5 倍は
+     dt = 6 s でクーラン条件を破るため Step 7 は 1・1.5・2 倍とした(README に注記)。
+
 00c. **方針 13(説明責任。developer.md §0。2026-10-24 制定)の既存部分への遡及**
    - 出典の棚卸し: users guide 第III部のうち「参考文献」節のない章
      (bedmotion・bldgdebris・driftwood・forcing・nonhydrostatic・wq・
