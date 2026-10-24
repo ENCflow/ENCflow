@@ -289,6 +289,11 @@ What is checked, and the limits:
   inspecting the initial full-repository audit of 2026-10-23). Existing
   untranslated or unreviewed documents are not failure conditions. Moving to
   `--strict` is decided once the unreviewed pairs have been worked through.
+  The same CI runs `tools/params_index/check.py`, which checks the full
+  parameter index (ja/en) against the namelist declarations in `src/*.f90`
+  (missing or extra rows, ordering, ja/en correspondence, the stated entry
+  count, and the mention of each name in its chapter page; developer.md
+  §35.1; introduced 2026-10-24).
 - Do not move or delete existing Japanese sources. Keep rendering
   refactoring and execution-mechanism changes separate from translations.
   Translation work must not change numerical code, authoritative numerical
