@@ -38,7 +38,7 @@ Log の貯留 S から復元した Q(h₁) を流量則と直接比べられま�
 make
 ./Run.sh          # Log.txt を reference と比較(ULP = 0、Runge 列を除く)
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/law.png
+python3 Fig.py    # figs/law.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

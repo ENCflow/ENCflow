@@ -56,7 +56,7 @@ morphology.
    Σ|Δz| at the centre of the lee (x = 360–440 m, 25 m from the shoreline) is
    at most 0.5 times that without shadowing (measured 16 versus 78 m³ = 0.21),
    the deposition at the updrift edge of the lee (x = 440–500 m) is at least
-   1.5 times (measured 160 versus 37 m³), and the erosion over 100 m downdrift
+   1.5 times (measured 238 versus 100 m³), and the erosion over 100 m downdrift
    is at least 1.5 times (measured 294 versus 115 m³). Since there is no
    diffraction, the sand accumulates not at the centre of the lee but at its
    updrift edge (the same pattern as a detached breakwater in a one-line

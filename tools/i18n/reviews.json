@@ -940,9 +940,18 @@
     {
       "source": "test/avalanche/README.md",
       "target": "test/avalanche/en/README.md",
-      "source_sha256": "d1e0c4dc1208ca847621f31233138cfadb5cba8811af685439871121adbf4979",
-      "target_sha256": "1006735cd9f251abf3341b7ecae5a5d7fe8a4ecae4f3ceb79c24c534cc363341",
+      "source_sha256": "a0cfc68f9645a6f5159e278325241e0b590204c7c257de750e4574ed5b9922f1",
+      "target_sha256": "0600f60d52c2008f56a0eb1778d00e3e8b25a0b259433feb2810e222afedd98f",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/avalanche/figs/avalanche.png",
+      "target": "test/avalanche/en/figs/avalanche.png",
+      "source_sha256": "7186014b24cc9ecd36029a02d5b21e7da0b150a73ca875add0a15cca4ecfa858",
+      "target_sha256": "9fde425424d746af26427a14666823da920b5e212984c6276f3d2395a46ea0da",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
     },
@@ -1192,11 +1201,20 @@
     {
       "source": "test/culvert/README.md",
       "target": "test/culvert/en/README.md",
-      "source_sha256": "1034651b3402ea8ba8e95dea24f36b1b633ab8c98808801a0751b34684b91ef2",
-      "target_sha256": "e4947182f32aff09ea951ad48a9fdab1b5c3839e5ccd2497219d21413cb8ed98",
+      "source_sha256": "828c8bbaafc080d70fdecf064c6196794e41ae50c97e3a6bbf3ffb368a04697a",
+      "target_sha256": "2dbde67bd2591e117ccbd1da6de740c0b677dd57a63073e905438babd6289d4c",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/culvert/figs/law.png",
+      "target": "test/culvert/en/figs/law.png",
+      "source_sha256": "ecba36f968edc8c0840e14c9ebad5cec6ace0f8464813b476d1d473045d2771e",
+      "target_sha256": "25d148cb06315c16e707a020cd89bef2050e14196e3c927b225f4cf65584bfab",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/curvature/README.md",
@@ -1412,7 +1430,7 @@
       "target_sha256": "37215120b93569ac20390f477c46bd734ea723f0379f51a693e289d154552175",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/gwdefault/README.md",
@@ -1444,9 +1462,36 @@
     {
       "source": "test/hillslope/README.md",
       "target": "test/hillslope/en/README.md",
-      "source_sha256": "66ab33cc90d7aaf27ee1df33634279771bf6eacaeca9be23dc6876ff559444f2",
-      "target_sha256": "2d8e62f97cacb5be8aa56105776b5635b2a96f834c848e6d603b625034220a56",
+      "source_sha256": "97c0d4eea2da928244c6d05d61e176f277aed4570f2ca484293435c72471870e",
+      "target_sha256": "da214e7b8176cca4ca534434aac9a91da5c6740ce577b615ab5d641f006ca84b",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/hillslope/figs/plane.png",
+      "target": "test/hillslope/en/figs/plane.png",
+      "source_sha256": "e25ca25d6dfa2134033e59d1e6910a163a6aa8ec5ce65996a13a10c386fc0641",
+      "target_sha256": "6cd48d764e6cccaaefa023d6c3054e2385b687e1fe05644eca43dabc04f4e25f",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/hillslope/figs/stair.png",
+      "target": "test/hillslope/en/figs/stair.png",
+      "source_sha256": "6fff83645af9306f59a7b0c9c5a7ed4296403eadab040cff9cf4fd09c6b4861b",
+      "target_sha256": "188befe16e4c733cb0f6184d752470ae626d3f1e52c4a3616ee5d7638271c17b",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/hillslope/figs/vcat.png",
+      "target": "test/hillslope/en/figs/vcat.png",
+      "source_sha256": "e3cd8a60f8010a073f8d5cb5f8a3bc091fd8308e3e4faa835ad9e5e96efbb0da",
+      "target_sha256": "ba244fe391e73558e966c621cd968449350580ba5a260b90c74b2942abfa1e64",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
     },
@@ -1871,7 +1916,7 @@
       "target_sha256": "9bc00c8e4906cf3f96ba744c262dd8b930c58f32b480d48701959b78758ba98f",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/sublattice/README.md",
@@ -2101,11 +2146,11 @@
     {
       "source": "test/wave_shore/README.md",
       "target": "test/wave_shore/en/README.md",
-      "source_sha256": "b9eee79d26dbe4e43d7bc3f250a8edd03952f3b76f009af9c8b1ac15c601a3f7",
-      "target_sha256": "8d111c88c8f950c140986154e334ecea7f703fbb7d8dc8509970c1dcc1c7a31f",
+      "source_sha256": "4d1a91e148676462a5aa3079bcfa13362fd092ec1e37da83d81cee110a9fe6ac",
+      "target_sha256": "dac63b2a3208fb32f154d713e4029d67d8e480b0299680ff5f0f3b881e9236eb",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/wetlw/README.md",

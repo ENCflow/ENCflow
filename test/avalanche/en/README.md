@@ -32,7 +32,7 @@ of the snow.
 | File | Contents |
 |---|---|
 | `Check_avalanche.py <save>` | (1) solid ledger \|Σhs + (1 − λ)Σ(z − z₀)\| < 1e-9, (2) co-update max\|(sd − sd₀) − (z − z₀)\| < 1e-10, (3) entrainment activity: min(sd − sd₀) < −0.05 m on the path (outside the release area), (4) growth: entrained solid / released solid > 0.2, (5) stopping: remaining Σhs / (released + entrained) < 0.3 |
-| `Fig.py` | The figure `figs/avalanche.png` below |
+| `Fig.py` | The figure `en/figs/avalanche.png` below (`python3 Fig.py en`; `figs/avalanche.png` is the Japanese version) |
 
 ## Running
 
@@ -40,19 +40,19 @@ of the snow.
 make
 ./Run.sh          # generate dbinit → run → Check (1 s)
 ./Run_MPI.sh 4    # MPI; state.dat is byte-identical to the serial run
-python3 Fig.py    # figs/avalanche.png
+python3 Fig.py en # en/figs/avalanche.png
 ```
 
 ## Figure
 
-![Dense-flow snow avalanche](../figs/avalanche.png)
+![Dense-flow snow avalanche](figs/avalanche.png)
 
 Top left: fracture depth D = 0.5 m of the release area. Top right: thickness
 of the entrained snow sd₀ − sd. Along the path from the release area to the
 slope break the snow is scoured through its full depth (0.5 m). Bottom left:
 change of the snow surface z − z₀. The path is negative from scouring, and
-stopped debris deposits up to 0.67 m downstream of the slope break at
-x = 30–42 m. Bottom right: longitudinal profile (average over all rows).
+stopped debris deposits up to 0.61 m downstream of the slope break at
+x = 30–45 m. Bottom right: longitudinal profile (average over all rows).
 That the two curves z − z₀ and −(sd₀ − sd) coincide is the co-update
 identity itself (z and sd move by the same amount), and the remaining hs is
 nearly zero.
@@ -61,14 +61,14 @@ nearly zero.
 
 | Check | Computed | Result |
 |---|---|---|
-| (1) Solid ledger | −1.2e-13 m·cell | PASS |
-| (2) Co-update | 1.1e-14 m | PASS |
+| (1) Solid ledger | −2.5e-14 m·cell | PASS |
+| (2) Co-update | 1.0e-14 m | PASS |
 | (3) Entrainment activity | path min(sd − sd₀) = −0.500 m (full depth) | PASS |
-| (4) Growth | entrained solid 60.1 / released solid 21.6 = 2.78 times | PASS |
-| (5) Stopping | remaining Σhs / (released + entrained) = 0.035 | PASS |
+| (4) Growth | entrained solid 54.3 / released solid 21.6 = 2.51 times | PASS |
+| (5) Stopping | remaining Σhs / (released + entrained) = 0.017 | PASS |
 
-- By entrainment the avalanche grows to about 3.8 times the released amount,
-  and 96.5% stops and deposits below the slope break. The ledger and the
+- By entrainment the avalanche grows to about 3.5 times the released amount,
+  and 98.3% stops and deposits below the slope break. The ledger and the
   co-update are at machine precision.
 - The entrainable layer is given by reinterpreting the existing soil depth
   sd, and the co-update, ledger, clamp and two-pass MPI structure are all

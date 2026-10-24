@@ -1,19 +1,29 @@
 #!/usr/bin/env python3
 """test/culvert の図を figs/*.png に描く(事前に ./Run.sh を実行しておく)。
 
-  python3 Fig.py
+  python3 Fig.py        # 日本語版 → figs/
+  python3 Fig.py en     # 英語版   → en/figs/
 
 - figs/law.png : Log の S(m) から復元した流量 Q = -A_total dS/dt を上流水深
                  h1 = S A_total / A_up に対して描き、流量則(堰・管路・min)と重ねる
 """
-import os
+import sys, os
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
+
+EN = "en" in sys.argv[1:]
+
+
+def T(ja, en):
+    return en if EN else ja
+
+
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
-os.makedirs("figs", exist_ok=True)
+os.makedirs(FIGDIR, exist_ok=True)
 
 G = 9.8; B = D = 1.0; CE = 0.5
 A_TOT = 132 * 100.0; A_UP = 110 * 100.0
@@ -45,15 +55,15 @@ h1_mid = 0.5 * (s[1:] + s[:-1]) * A_TOT / A_UP
 h = np.linspace(0.05, 3.0, 600); qw, qp, q = law(h)
 
 fig, ax = plt.subplots(figsize=(7, 4.5))
-ax.plot(h, qw, "--", color="tab:blue", lw=1.2, label="堰 Q_w = 0.35 B h₁√(2g h₁)")
-ax.plot(h, qp, "--", color="tab:orange", lw=1.2, label="管路 Q_p = C_p√(η_u − (z_out + (d_c+D)/2))")
-ax.plot(h, q, "-", color="k", lw=1.8, label="流量則 Q = min(Q_w, Q_p)(h₁ ≥ D)")
-ax.plot(h1_mid, q_num, "o", color="tab:red", ms=3.5, label="計算(S の差分から復元)")
+ax.plot(h, qw, "--", color="tab:blue", lw=1.2, label=T("堰 Q_w = 0.35 B h₁√(2g h₁)", "Weir Q_w = 0.35 B h₁√(2g h₁)"))
+ax.plot(h, qp, "--", color="tab:orange", lw=1.2, label=T("管路 Q_p = C_p√(η_u − (z_out + (d_c+D)/2))", "Pipe Q_p = C_p√(η_u − (z_out + (d_c+D)/2))"))
+ax.plot(h, q, "-", color="k", lw=1.8, label=T("流量則 Q = min(Q_w, Q_p)(h₁ ≥ D)", "Discharge law Q = min(Q_w, Q_p) (h₁ ≥ D)"))
+ax.plot(h1_mid, q_num, "o", color="tab:red", ms=3.5, label=T("計算(S の差分から復元)", "Computed (recovered from differences of S)"))
 ax.axvline(D, color="gray", lw=0.8, ls=":")
-ax.set(xlim=(0, 3.05), ylim=(0, 6), xlabel="上流水深 h₁ = η_u − z_in (m)", ylabel="Q (m³/s)",
-       title="カルバート 1×1 m の排水試験: 復元流量と流量則")
+ax.set(xlim=(0, 3.05), ylim=(0, 6), xlabel=T("上流水深 h₁ = η_u − z_in (m)", "Upstream depth h₁ = η_u − z_in (m)"), ylabel="Q (m³/s)",
+       title=T("カルバート 1×1 m の排水試験: 復元流量と流量則", "Drainage test of a 1×1 m culvert: recovered discharge and the discharge law"))
 ax.legend(fontsize=8, loc="upper left"); ax.grid(alpha=0.3)
-fig.tight_layout(); fig.savefig("figs/law.png", dpi=120)
+fig.tight_layout(); fig.savefig(f"{FIGDIR}/law.png", dpi=120)
 
 # 所見用の数値
 mono = np.all(np.diff(q_num) <= 1e-9) and np.all(np.diff(h1_mid) < 0)
