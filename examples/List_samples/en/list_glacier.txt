@@ -39,7 +39,8 @@
   gl_tmelt = 0.0            ! temperature threshold of ice melt (degC)
 
   ! ---- SIA ice flow (G2) ----
-  f_glflow = 1              ! 0: no flow (the simplest hydrological glacier)
+  f_glflow = 1              ! 0: no flow (a "non-flowing glacier" = the simplest
+                            !   form for hydrological use)
   gl_afl = 1.0e-16          ! Glen flow-law coefficient A (Pa^-3 yr^-1;
                             !   ~1e-16 for temperate ice; n=3 fixed; the
                             !   explicit substep is chosen automatically
@@ -53,11 +54,10 @@
                             !   default 1e-13 = 100 m/yr at tau_b 100 kPa)
 
   ! ---- Glacial erosion (G3; requires f_glslide) ----
-  !   edot = Kg * us^l (us measured in m/yr) lowers s%z. s%sd is reduced
-  !   in step (the bedrock is fixed until sd=0, then bedrock erodes =
-  !   the same structure as the fluvial z/sd co-update). Eroded debris is
-  !   treated as exported from the system (the ledger is reported at
-  !   dispose; a documented simplification, glacier_plan.md Sec. 6)
+  !   edot = Kg * us^l (us evaluated in m/yr) lowers s%z. s%sd is reduced
+  !   in step (the bedrock is fixed until sd=0, then the bedrock erodes).
+  !   Eroded material is treated as exported from the system (the ledger
+  !   is reported at dispose; a known compromise, glacier_plan.md Sec. 6)
   f_glero = 0               ! 1 to enable
   !gl_kg = 1.0e-4           ! erosion coefficient Kg (dimensionless for l=1;
                             !   default 1e-4 = measured by Humphrey & Raymond 1994)
@@ -71,8 +71,8 @@
   !gl_ava_tanc = 0.6        ! critical slope tan(theta_c) (0.6 = ~31 deg)
 
   ! ---- Initial ice thickness (if omitted: 0 = start from no ice) ----
-  !fn_glacier_hi0 = "hi0.txt"  ! distributed initial ice thickness (m of
-                            !   ice; e.g. a clip of the Farinotti et al.
-                            !   global consensus estimate; the restored
-                            !   state wins on restart)
+  !fn_glacier_hi0 = "hi0.txt"  ! initial ice thickness distribution (m of
+                            !   ice; e.g. a clip of a global ice-thickness
+                            !   estimate product such as Farinotti et al.;
+                            !   on restore the restored value wins)
 /

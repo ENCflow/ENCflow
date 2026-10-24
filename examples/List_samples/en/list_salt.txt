@@ -1,4 +1,8 @@
 !======================================================================
+! English mirror of examples/List_samples/list_salt.txt.
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!======================================================================
 !
 ! Example of the fresh/salt two-layer settings &list_salt
 !
@@ -11,9 +15,8 @@
 !   Introduces a "salt layer" (always the lowest part of the column;
 !   sharp interface) into the surface water and the shallow groundwater
 !   (soil layer), handling salt wedges, seawater intrusion, and
-!   freshwater lenses with a quasi-static approximation of the same
-!   type as established sharp-interface (two-zone) methods. The depth h
-!   and subsurface storage
+!   freshwater lenses with the quasi-static approximation of the
+!   sharp-interface two-zone method. The depth h and subsurface storage
 !   Hg remain the fresh+salt totals; the salt-layer thicknesses
 !   (Hss / Hgs) are part of them. The density difference appears only
 !   in the driving head of the salt layer,
@@ -57,8 +60,10 @@
 
   ! Numerical parameters (normally no need to change)
   salt_eps = 1.0e-3         ! regularization amount for the dry test (m)
-  salt_eps_h = 1.0e-2       ! linearization width of the sqrt law (m)
-  !salt_diagratio = 0.5857864 ! diagonal partitioning of the flux width
-  salt_nsubmax = 200        ! upper bound of adaptive subcycling
+  salt_eps_h = 1.0e-2       ! linearization width of the gravity-current sqrt
+                            !   law (head difference, m)
+  !salt_diagratio = 0.5857864 ! diagonal share of the passage width [0,1]
+  salt_nsubmax = 200        ! upper bound of adaptive subcycles of the surface
+                            !   gravity current
 
 /

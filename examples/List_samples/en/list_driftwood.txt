@@ -1,5 +1,9 @@
 !======================================================================
-! Driftwood sample (&list_driftwood; developer.md §50, Japanese)
+! English mirror of examples/List_samples/list_driftwood.txt.
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!======================================================================
+! Driftwood sample (&list_driftwood; developer.md §50)
 !   Enable with fn_driftwood = "this file" or "-" in the main parameter
 !   file. Estimates driftwood as a raster field of wood volume per cell
 !   (m3/m2); individual-log tracking and geometric jamming at bridges
@@ -15,12 +19,13 @@
 !   Properties, thresholds and rates have defaults: an empty
 !   &list_driftwood runs (stock 0.001 m3/m2 uniformly on land cells;
 !   adopted defaults are printed with a "(default)" mark at start-up;
-!   rationale in developer.md §50.6, Japanese).
+!   rationale in developer.md §50.6).
 !======================================================================
 &list_driftwood
   f_dw = 1                          ! 0 disables temporarily, keeping the file
 
-  ! ---- standing stock (uniform or map; with neither given, 0.001 on land) ----
+  ! ---- standing stock (uniform or map, exclusive; with neither given,
+  !      0.001 uniformly on land cells) ----
   dw_stock0 = 0.01                  ! uniform standing stock (m3/m2)
   !fn_dwstock = "stock.txt"         ! stock map (m3/m2, same matrix format as
                                     !   the terrain; convert forest inventory
@@ -34,9 +39,10 @@
                                     !   (Braudrick & Grant 2000; half submerged at 0.5)
 
   ! ---- recruitment; both default when neither is given, one given disables the other ----
-  dw_wrec = 1.0e-5                  ! hydraulic washout rate (m/s = m3/m2/s; enables it)
-  dw_hrec = 0.5                     ! depth threshold (m; mixed flow depth with debris flow)
-  dw_vrec = 1.0                     ! velocity threshold (m/s)
+  dw_wrec = 1.0e-5                  ! hydraulic washout rate (m/s = m3/m2/s; specifying it enables)
+  dw_hrec = 0.5                     ! washout depth threshold (m; under debris flow judged by
+                                    !   the mixture flow depth)
+  dw_vrec = 1.0                     ! washout velocity threshold (m/s)
   dw_droot = 0.5                    ! rooting depth (m; enables erosion entrainment --
                                     !   full washout when the cumulative erosion depth
                                     !   exceeds it; couples automatically to bedload,

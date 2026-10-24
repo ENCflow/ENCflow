@@ -26,8 +26,9 @@
                             !   aa lava; basaltic 1e2-1e4, andesitic and up
                             !   >= 1e5. Smaller eta means more explicit
                             !   subcycles - plan Sec. 6)
-  lv_tauy = 2000.0          ! yield stress tau_y (Pa; 0 = Newtonian.
-                            !   stopping thickness on slope = tau_y/(rho g tan))
+  lv_tauy = 2000.0          ! yield stress tau_y (Pa; 0 = Newtonian fluid.
+                            !   stopping thickness on a slope tan(theta)
+                            !   = tau_y/(rho g tan(theta)))
 
   ! ---- solidification (stopped cells: hl -> z; 0 = none) ----
   lv_wsol = 0.005           ! solidification rate (m/s)
@@ -49,6 +50,6 @@
   lv_val(1:2,2,1) = 60, 5.0 !   linear interpolation; duplicate a time
   lv_val(1:2,3,1) = 120, 0.0 !  for a step change)
   !lv_q0(1) = 10.0          ! constant effusion rate (m3/s; instead of lv_val)
-  !fn_lv_cell(1) = "vent1_cells.txt"  ! cell-set file (rows of "i j"; overrides)
-  !fn_lv_val(1) = "vent1_q.txt"       ! time-series file (min, m3/s; highest)
+  !fn_lv_cell(1) = "vent1_cells.txt"  ! cell-set file (rows of "i j"; takes precedence)
+  !fn_lv_val(1) = "vent1_q.txt"       ! time-series file (min, m3/s; highest precedence)
 /

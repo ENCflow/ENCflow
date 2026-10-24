@@ -226,4 +226,4 @@ the interior of a cell.
 ## Tests and examples
 
 - [test/gtif](../../../test/gtif/en/README.md): GeoTIFF input and georeferencing test assets for projected and geographic coordinates.
-- [examples/tsunami_fault](../../../examples/tsunami_fault/): fault locations specified in longitude/latitude or projected coordinates, with bil/GeoTIFF georeferencing examples.
+- [examples/tsunami_fault](../../../examples/tsunami_fault/en/README.md): fault locations specified in longitude/latitude or projected coordinates, with bil/GeoTIFF georeferencing examples.

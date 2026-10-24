@@ -154,7 +154,7 @@ default written explicitly give byte-identical saved states.
 
 - [test/bldgdebris](../../../test/bldgdebris/en/README.md): debris-volume conservation, one-way coupling with driftwood, water-volume conservation under void-ratio feedback, split-run continuation.
 - [test/gvchange](../../../test/gvchange/en/README.md): unit checks of the void-ratio update procedure.
-- [examples/tsunami_town](../../../examples/tsunami_town/): tsunami run-up into a town (without/with driftwood, depth/load criterion, feedback on/off).
+- [examples/tsunami_town](../../../examples/tsunami_town/en/README.md): tsunami run-up into a town (without/with driftwood, depth/load criterion, feedback on/off).
 
 ## References
 

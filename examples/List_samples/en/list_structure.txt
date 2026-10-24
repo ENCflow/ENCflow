@@ -67,6 +67,11 @@
 !   (forebay drainage). In that case the depth reference (f_pump_ref=1)
 !   refers to the pond depth hrs. The water-level reference (=0) cannot
 !   be used at a pond representative cell (stops with an error)
+!   Pipe intake (pumping station): f_pump_src(n) = 1 draws directly from
+!   the storage hgc of the pipe continuum layer (f_gwconduit) (drainage
+!   stations of sewers and trunk pipes. The intake cells must have a pipe,
+!   cap > 0). The reference is reinterpreted as f_pump_ref = 0: pipe head,
+!   1: storage hgc (m of column)
 !   Note: f_bank_mode=2 (forced drainage) of the levee model (fn_channel)
 !   is for compatibility with past runs and extreme-scenario experiments;
 !   for real pumping stations use this family
