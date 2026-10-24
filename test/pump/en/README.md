@@ -35,7 +35,7 @@ analytical value.
 |---|---|
 | `param.txt` | As above (with a reference) |
 | `data_pump/wells.txt` | Cell list of well 1 (all cells) |
-| `Fig.py` | Draws the figures `figs/*.png` below |
+| `Fig.py` | Draws the figures `en/figs/*.png` below (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
 ## Running
 
@@ -43,12 +43,12 @@ analytical value.
 make
 ./Run.sh          # compare Log.txt with the reference (ULP = 1, excluding the Runge column)
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/storage.png, figs/map.png
+python3 Fig.py en # en/figs/storage.png, en/figs/map.png
 ```
 
 ## Figures
 
-![Time series of storage](../figs/storage.png)
+![Time series of storage](figs/storage.png)
 
 The initial surface water of 0.05 m infiltrates completely underground in
 about 500 s (infiltration capacity 1e-4 m/s × 500 s = 0.05 m), and the
@@ -57,7 +57,7 @@ the start with the constant slope −Q/A and coincides with the analytical
 value (dashed line). The pumping draws from the groundwater from the start
 regardless of whether surface water is present.
 
-![Groundwater level at the final time](../figs/map.png)
+![Groundwater level at the final time](figs/map.png)
 
 The subsurface storage Hg (column-equivalent water depth) at the final time
 (3600 s). Well 1 is distributed equally over all cells, so the level drops

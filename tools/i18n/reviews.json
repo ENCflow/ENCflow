@@ -1669,11 +1669,29 @@
     {
       "source": "test/pump/README.md",
       "target": "test/pump/en/README.md",
-      "source_sha256": "c2096923c40c1f09f62dd47f8d70f05670d1449f8142f3424d8eaec53c8f407c",
-      "target_sha256": "5639d0041b6c279e911f412dd738b93c43fbb723f8263303141171d01dee1632",
+      "source_sha256": "f708d5c6f9c6e98056de0cb839005bbc5a52341e6c49c193f3d86669b0c345eb",
+      "target_sha256": "c6edd1943d2a64c586ee57b507dcad354bfc70b9c49e0272bc5211faba1e86dc",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/pump/figs/map.png",
+      "target": "test/pump/en/figs/map.png",
+      "source_sha256": "fa9505873f1c48d23d3e27b6501d7be8be8e925ac83a7fd2ca6d004f8116662a",
+      "target_sha256": "42cd3eb9152667239f72b9efb3b9339a1b1c6930c651939f1a6fd9c82e860d79",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/pump/figs/storage.png",
+      "target": "test/pump/en/figs/storage.png",
+      "source_sha256": "f1c310e470d9e29f057543bd3007e7acde767f507272739a9644e348c219d730",
+      "target_sha256": "4c9b90f3156bc820b93f79d3cd5d7293929066a0a6953b9476e79e34f5e6df75",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/repose/README.md",
@@ -1831,9 +1849,18 @@
     {
       "source": "test/splashslide/README.md",
       "target": "test/splashslide/en/README.md",
-      "source_sha256": "3bb426d8408abfbcc3c7640e57da945e750014b4bc0f03084bd015862bd67b86",
-      "target_sha256": "f27cce2b05ba880e25c543494ab10cf6ba6d5c30a7171c39c18c2a31376381db",
+      "source_sha256": "d16cd1874407f724f9755a1e79d31f20ea7bd7e55e8f66266ab2226cf976723c",
+      "target_sha256": "ffedb5659556b2e76324f74b5379640127c5c39b38f275bc85a5dd812fdc9b54",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/splashslide/figs/splashslide.png",
+      "target": "test/splashslide/en/figs/splashslide.png",
+      "source_sha256": "d907696ad5e7b20a97d80f17762866449f012858fd384c21c44068330452ec83",
+      "target_sha256": "eb0fc4f2efdd8f7c444ad32e6da9e957afacb8c13f1de6da0ca028e0f4a76ea0",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
     },
@@ -1921,11 +1948,20 @@
     {
       "source": "test/tracer/README.md",
       "target": "test/tracer/en/README.md",
-      "source_sha256": "1e89ca306c7b903bb6912b70f63e1dc43dbe28cdd1f90e94d2d158ae28d9b752",
-      "target_sha256": "a3bf85efff12aa860a351b9b126cbf8c5b06e0c1565509b3893449a1c2dc26ca",
+      "source_sha256": "3e84d0316aa44c5be7a3e13916c007eed6a2d3582aa2bcf65cf141f1310d9101",
+      "target_sha256": "d2e5ab25ca78ee101ff25bec0455e8f78e7e1559ffb67c0b1ba00df48fd45e21",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/tracer/figs/tracer.png",
+      "target": "test/tracer/en/figs/tracer.png",
+      "source_sha256": "77a8e51efd914fc669a39032e7e163cf8c97b9625f838195b0e7154540c63405",
+      "target_sha256": "03f996b392aa0fe9b3ef79ba730c82765a6b153d284b89f05883a75b481ed719",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/uniflow/README.md",
@@ -2031,9 +2067,9 @@
       "target": "test/wave_river/en/README.md",
       "source_sha256": "15959d7d1e7f4c1d413f8fe1c455e1f3d61a8c22e0cb9d5f56c95005fabf53c7",
       "target_sha256": "7c1389abc3c0cc9771022f14376a500645dd64391a325e51c0f5985786cff99a",
-      "reviewer": "Claude (Claude Code session; content and lexical review, no model execution)",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/wave_river/param_novmax.txt",
