@@ -30,7 +30,7 @@
 make
 ./Run.sh          # 構成 1 → Check → 構成 2 → Check
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/sedinflow.png
+python3 Fig.py    # figs/sedinflow.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図
@@ -39,7 +39,7 @@ python3 Fig.py    # figs/sedinflow.png
 
 上段が濃度指定、下段が流砂量指定。左: 8 s 後の水深。西辺から入った水が
 扇状に広がります。中: 浮遊砂 hs。注入された土砂が流れとともに運ばれ、
-右: 流入セルの直前で E-D により河床が 14 mm 洗掘されています(流入
+右: 流入セルの直前で E-D により河床が 12.5 mm 洗掘されています(流入
 直後の高速部)。Qs = 0.005 m³/s は cs = Qs/Q = 0.001 の等価濃度に
 還元されるので、2 つの構成は同じ結果になります。
 

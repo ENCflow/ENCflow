@@ -38,7 +38,7 @@ the ordinary shallow-water computation.
 | `param_min.txt` | Configuration 2: `&list_tide` left empty (defaults = uniform fixed tide level 0 m, hsea0 = 1 m) |
 | `param_minx.txt` | Configuration 2': the defaults written explicitly (`titype = 1`, `ti0 = 0`, `hsea0 = 1`) |
 | `sw.txt` | Sea mask (the westernmost column is 1) |
-| `Fig.py` | Draws the figures `figs/*.png` below |
+| `Fig.py` | Draws the figures `en/figs/*.png` below (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
 ## Running
 
@@ -47,12 +47,12 @@ make
 ./Run.sh          # compare configuration 1 with the reference → run configurations 2 and 2' and check that result_min and result_minx
                   # are byte-identical (diff -r) and that "(default)" is printed. PASS when both pass
 ./Run_MPI.sh 4    # MPI with 4 ranks (configuration 1)
-python3 Fig.py    # figs/storage.png, figs/map.png
+python3 Fig.py en # en/figs/storage.png, en/figs/map.png
 ```
 
 ## Figures
 
-![Time series of the mean depth and the tide level](../figs/storage.png)
+![Time series of the mean depth and the tide level](figs/storage.png)
 
 The mean depth S of the screen output (the average over land cells excluding
 sea cells; until 2026-10-22 it included the constant water column hsea0 of the
@@ -64,7 +64,7 @@ keeps increasing.
 Even after the tide level levels off at 2 m (t > 120 s), inundation proceeds
 at a constant rate until the land water surface catches up with 2 m.
 
-![Water-level distribution](../figs/map.png)
+![Water-level distribution](figs/map.png)
 
 The distribution of the water level e = z + h. At t = 60 s drainage is in
 progress and the water surface is lower toward the west edge (sea side); at

@@ -47,7 +47,7 @@ U0・σ・ν・yc は `param*.txt`、`src/user_initial.f90` の `jet_gaussian`�
 make
 ./Run.sh          # 2 解像度を実行し、Check_analytic.py で解析解と比較(両方 PASS で PASS)
 ./Run_MPI.sh 4    # MPI 4 ランク。解析解比較に加え、逐次結果(result_serial)とプローブ CSV のバイト比較
-python3 Fig.py    # figs/profile.png
+python3 Fig.py    # figs/profile.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

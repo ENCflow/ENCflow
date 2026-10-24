@@ -2,19 +2,23 @@
 """test/tide の図を figs/*.png に描く(事前に ./Run.sh を実行しておく)。
 
   python3 Fig.py
+  python3 Fig.py en   (英語ラベル。en/figs/ に書く)
 
 - figs/storage.png : 画面出力(Log.txt)の平均水深 S(t) と潮位の時系列。
                      陸水の海への排水(S 減少)→ 潮位が陸の水面を超えた後の浸水(S 増加)
 - figs/map.png     : 水位 e の分布(t = 60, 120, 180, 240 s)
 """
-import os
+import os, sys
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
+EN = "en" in sys.argv[1:]
+def T(ja, en): return en if EN else ja
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
-os.makedirs("figs", exist_ok=True)
+os.makedirs(FIGDIR, exist_ok=True)
 
 
 def read_log(path):
@@ -39,20 +43,20 @@ S = lg[:, names.index("S(m)")]
 tide = np.interp(t, [0, 120, 240], [0.0, 2.0, 2.0])      # tival: 0 → 2 m (0〜2 min)、以後 2 m
 
 fig, ax = plt.subplots(figsize=(8, 4))
-ax.plot(t, S, "o-", ms=3, label="平均水深 S(陸セル。海セルを除く)")
+ax.plot(t, S, "o-", ms=3, label=T("平均水深 S(陸セル。海セルを除く)", "Mean depth S (land cells; sea cells excluded)"))
 ax.set_xlabel("t (s)")
 ax.set_ylabel("S (m)")
 ax.grid(alpha=0.3)
 ax2 = ax.twinx()
-ax2.plot(t, tide, "C3--", label="潮位(m, T.P.)")
+ax2.plot(t, tide, "C3--", label=T("潮位(m, T.P.)", "Tide level (m, T.P.)"))
 ax2.axhline(1.5, color="0.6", lw=0.8)
-ax2.text(2, 1.52, "陸の初期水面 z + h0 = 1.5 m", fontsize=8, color="0.4")
-ax2.set_ylabel("潮位 (m)")
+ax2.text(2, 1.52, T("陸の初期水面 z + h0 = 1.5 m", "Initial land water surface z + h0 = 1.5 m"), fontsize=8, color="0.4")
+ax2.set_ylabel(T("潮位 (m)", "Tide level (m)"))
 h1, l1 = ax.get_legend_handles_labels(); h2, l2 = ax2.get_legend_handles_labels()
 ax.legend(h1 + h2, l1 + l2, loc="lower right", fontsize=9)
-ax.set_title("潮位境界: 陸水の排水(S 減少)→ 潮位が陸の水面を超えて浸水(S 増加)", fontsize=10)
+ax.set_title(T("潮位境界: 陸水の排水(S 減少)→ 潮位が陸の水面を超えて浸水(S 増加)", "Tide boundary: drainage of land water (S decreases) → inundation (S increases)"), fontsize=10)
 fig.tight_layout()
-fig.savefig("figs/storage.png", dpi=110)
+fig.savefig(f"{FIGDIR}/storage.png", dpi=110)
 plt.close(fig)
 
 fig, axes = plt.subplots(1, 4, figsize=(14, 3.8))
@@ -61,10 +65,10 @@ for ax, n in zip(axes, [1, 2, 3, 4]):
     h = np.loadtxt(f"result/H{n:04d}.txt") if os.path.isfile(f"result/H{n:04d}.txt") else None
     e = np.where(h <= 1e-6, np.nan, e) if h is not None else e
     im = ax.imshow(e, origin="lower", extent=[0, 210, 0, 210], vmin=0.5, vmax=2.0, cmap="viridis")
-    ax.set_title(f"水位 e (m), t = {60*n} s(潮位 {np.interp(60*n,[0,120,240],[0,2,2]):.1f} m)", fontsize=9)
+    ax.set_title(T(f"水位 e (m), t = {60*n} s(潮位 {np.interp(60*n,[0,120,240],[0,2,2]):.1f} m)", f"e (m), t = {60*n} s (tide {np.interp(60*n,[0,120,240],[0,2,2]):.1f} m)"), fontsize=9)
     ax.set_xlabel("x (m)")
 axes[0].set_ylabel("y (m)")
 fig.colorbar(im, ax=axes, shrink=0.8, label="e (m)")
-fig.savefig("figs/map.png", dpi=110, bbox_inches="tight")
+fig.savefig(f"{FIGDIR}/map.png", dpi=110, bbox_inches="tight")
 plt.close(fig)
 print("S: t=0 %.4f, min %.4f at %.0f s, end %.4f" % (S[0], S.min(), t[S.argmin()], S[-1]))
