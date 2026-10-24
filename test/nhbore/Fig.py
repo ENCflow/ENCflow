@@ -44,7 +44,7 @@ if __name__ == "__main__":
         ok = np.isfinite(r[:, 3]) & (r[:, 1] < 440)
         ax2.plot(r[ok, 0], r[ok, 3], "o-", ms=4, color=col, mec="white", mew=0.8, label=lab)
     ax2.axhline(2.0, color=C_TH, ls=":", lw=1.0, label=T("KdV の漸近値 2a", "KdV asymptote 2a"))
-    ax2.set_xlim(0, 100); ax2.set_ylim(1.0, 2.6)
+    ax2.set_xlim(0, 100); ax2.set_ylim(0.6, 2.6)
     ax2.set_xlabel("t (s)"); ax2.set_ylabel(T("先頭波の高さ η₁ / a", "Leading-wave height η₁ / a"))
     ax2.set_title(T("先頭波の成長", "Growth of the leading wave"), fontsize=10, loc="left")
     ax2.legend(loc="lower right", frameon=False, fontsize=8)

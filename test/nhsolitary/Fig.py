@@ -38,7 +38,7 @@ if __name__ == "__main__":
             ic = int(np.argmax(h))
             ax.annotate(f"{t:.0f} s", (x[ic], (h[ic] - H) / 0.1), xytext=(0, 4),
                         textcoords="offset points", ha="center", fontsize=8, color="#52514e")
-        ax.set_xlim(0, 300); ax.set_ylim(-0.3, 1.7)
+        ax.set_xlim(0, 300); ax.set_ylim(-0.3, 1.5)
         ax.set_ylabel("η / a₀")
         ax.set_title(lab, fontsize=10, loc="left")
     axes[-2].set_xlabel("x (m)")
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         r = analyze(d, dx, H)
         ax.plot(r["rows"][:, 0], r["rows"][:, 2] / r["a0"], "o-", ms=4, color=col, mec="white", mew=0.8,
                 label=f"{lab}{T('(', ' (')}c/√(g(H+a)) = {r['c_fit']/r['c_th']:.3f})")
-    ax.set_xlim(0, 60); ax.set_ylim(0.9, 1.6)
+    ax.set_xlim(0, 60); ax.set_ylim(0.8, 1.4)
     ax.set_xlabel("t (s)"); ax.set_ylabel("a(t) / a₀")
     ax.set_title(T("波頂高さの推移", "Evolution of the crest height"), fontsize=10, loc="left")
     ax.legend(loc="upper left", frameon=False, fontsize=9)
