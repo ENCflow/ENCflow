@@ -615,7 +615,10 @@ pays off).
   recommended as the first-order bulking effect. Working example:
   [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) (ash-thickness
   distribution → rainfall → mudflow → fan deposition).
-- **How to initiate**: a **sediment-laden segment inflow** at the
+- **How to initiate**: an **erosion-triggered** start, in which the ash
+  layer is given as an erodible soil layer sd and the rain runoff raises the
+  concentration by erosion (no source needs to be specified;
+  examples/ashfall_lahar), a **sediment-laden segment inflow** at the
   upstream end (the supply hydrograph; inflow_cs of
   [Boundary conditions](boundary.md)), or a **chain** in which deposits
   from an earlier stage form a natural dam and breach (deposits fixed by

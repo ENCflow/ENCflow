@@ -94,7 +94,7 @@ official site before citing.
 
 Nesting sources (confirmed 2026-10-10):
 [Dispersive, nested and parallel JAGURS (PAGEOPH 2015)](https://link.springer.com/doi/10.1007/s00024-015-1049-2) /
-[Non-hydrostatic nesting in NEOWAVE (IJNMF)](https://uaf.edu/cfos/files/publications/kowalik/Yamazaki_et_al_2010-IJNMF-1.pdf) /
+[Non-hydrostatic nesting in NEOWAVE (Yamazaki et al., IJNMF 2011; the file name says 2010)](https://uaf.edu/cfos/files/publications/kowalik/Yamazaki_et_al_2010-IJNMF-1.pdf) /
 [Implicit AMR of GeoClaw-Bouss (Berger & LeVeque, SISC 2024)](https://faculty.washington.edu/rjl/pubs/mjb-rjl-implicit-2023/index.html) /
 [Multi-grid nesting of FUNWAVE-TVD (GMD 2022)](https://gmd.copernicus.org/articles/15/5441/2022/) /
 [Nested Boussinesq (Zhou et al., NHESS 2011)](https://nhess.copernicus.org/articles/11/2677/2011/) /

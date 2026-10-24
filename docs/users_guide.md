@@ -117,7 +117,7 @@ ENCflow は地表の水の流れを計算するモデルです。必要に応じ
 | 機能 | 設定ファイルの指定 | namelist グループ |
 |---|---|---|
 | 潮位・海面 | `fn_tide` | &list_tide |
-| 波浪による沿岸漂砂(弧状・カスプ状デルタ、汀線の均し) | `fn_wave` | &list_wave | [土砂・地形変化](users_guide/geomorph.md)の「波浪による沿岸漂砂」(fn_geomorph の f_fluvial=1 が必須) |
+| 波浪による沿岸漂砂(弧状・カスプ状デルタ、汀線の均し) | `fn_wave` | &list_wave([土砂・地形変化](users_guide/geomorph.md)の「波浪による沿岸漂砂」。fn_geomorph の f_fluvial=1 が必須) |
 | 内部水理構造物 | `fn_structure` | &list_struct_pump / culvert / diversion / dam |
 | ため池 | `fn_reservoir` | (地理情報と併用) |
 | 河道 | `fn_channel` | &list_channel(+ breach) |

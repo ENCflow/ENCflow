@@ -163,7 +163,7 @@ The screen output tells us the following.
   afterwards. By default the outer rim of the computational domain is
   an impermeable wall, so this catchment is a **closed vessel with no
   water outlet**; the constant S column confirms mass conservation.
-- Meanwhile the h_max column keeps growing from 8 m to 26 m: the water
+- Meanwhile the h_max column keeps growing from 8 m to nearly 30 m: the water
   that cannot get out keeps accumulating somewhere.
 
 The depth distribution at the final time (`result/H9998.txt`) shows
@@ -809,7 +809,7 @@ regenerated separately with `./Fig_supp.sh`.
 complete at this point; the following is for readers who are curious about
 how the results change with a finer grid, what the 8-direction exchange of
 the ENC grid buys, and what the advection term does. Reproducing the
-computations takes one to two hours because they include 50 m grid cases.
+computations takes a few hours because they include 50 m grid cases (see below).
 If you only want the conclusions, read the bold sentences at the end of each
 subsection and "What to take away about the ENC grid".
 
@@ -823,10 +823,10 @@ the Step 4 configuration with text input only). We also run the
 **4-neighbor** computation mentioned at the end of Step 1
 (`p_diagratio = 0.0`, diagonal exchange closed) at the same three
 resolutions, to see what the 8-direction exchange of the ENC grid
-brings. These six runs (plus the three width-equalized runs and the six
+brings. These six runs (plus the three width-equalized runs and the twelve
 runs with a different treatment of advection described below) and the
 figures are reproduced in one go with `./Fig_supp.sh` from the case
-directory (it includes five 50 m grid runs, so it takes about three hours
+directory (it includes seven 50 m grid runs, so it takes about three hours
 on a 4-core laptop).
 
 ### Mapping the transects

@@ -48,7 +48,7 @@ omitting the outlet drains out of the domain):
 
 ```
 &list_struct_pump
-  pump_cell(:,1,1) = 120, 45     ! intake cell (i, j)
+  pump_in_cell(:,1,1) = 120, 45  ! intake cell (i, j)
   pump_q0(1) = 5.0               ! pumping rate (m3/s)
 /
 ```

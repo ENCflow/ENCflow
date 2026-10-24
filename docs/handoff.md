@@ -892,15 +892,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   tutorial・colab、tutorials の README・param・図、List_samples 20 件、bmi・utils・test・examples
   の README、TRADEMARKS.ja)も 2026-10-24 に全文を突き合わせ、訳側の遅れ(欠落した表行・段落・
   リンク先の英語版化・古い注記)を直して record 済み。**unreviewed は 0**。以後は正本を変えたら
-  同じ作業で訳を更新し、CI(stale 検出)に従う。  119 組の読み合わせで見つかった**正本側の疑義**(未修正。人間の判断待ち): docs/users_guide.md の
-  fn_wave 行が 3 列の表で 4 セル / params_index.md 冒頭「全 664 項目」に対し表は 666 行、また
-  &list_geomorph の berode_hcover・rf_bank が索引に無い / geomorph.md 推奨値表のラハール行
-  「降灰層の侵食」が「発生の与え方」に無い / sediment.md §4「風上輸送」(§7 で MUSCL が既定)と
-  §8 表に wet_lw 行なし / comparison.md の NEOWAVE(Yamazaki ら 2011)と出典ファイル名 2010 /
-  structure.md「とりあえず」例の pump_cell と表の pump_in_cell / list_channel.txt 88-89 行の
-  続きコメントの位置 / tutorials/chichibu README の所要時間(1〜2 時間と 3 時間前後)・「移流 6
-  ケース」(実際 12)・h_max 26 m と出力 29.8 m / examples/README の benchmark 行は README の
-  ない directory へのリンク。
+  同じ作業で訳を更新し、CI(stale 検出)に従う。  119 組の読み合わせで見つかった正本側の疑義は 2026-10-24 に正本・英語版を同時に修正(users_guide.md の
+  fn_wave 行、params_index の項目数 668 と berode_hcover・rf_bank の追加、geomorph のラハール侵食起動、
+  sediment の輸送スキームの記述と wet_lw 行、comparison の NEOWAVE の年、structure の pump_in_cell、
+  list_channel のコメント位置、tutorials/chichibu の h_max・所要時間・ケース数)。examples/README の
+  benchmark 行はディレクトリへのリンクのまま(README が無い。GitHub では一覧表示されるので可)。
   英訳中に見つかった正本側の疑義は 2026-10-24 に正本・英語版を同時に修正(chichibu・
   bendloss の「f_opening_dynamic = 1 既定」→ 2(§68.38)、表セル内の `|` を `\|` にエスケープ
   (test 配下 44 ファイル)、bendloss の孤立した表 2 行を元の表へ、dissol「3 構成」→ A〜G、

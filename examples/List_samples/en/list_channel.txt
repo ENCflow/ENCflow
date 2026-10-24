@@ -106,6 +106,9 @@
                                    !   width only sets the plan-area fraction
                                    !   and the conveyance cap. Sec. 68.28))
   f_channel_advection = 1       ! advection term on edges involving channel cells
+                                !   (1: normal (default), 0: drop it = a
+                                !    stabilization option under strong width
+                                !    heterogeneity)
 !  p_sect_m = 0.5                ! shape exponent m of the channel section
                                  !   (sigma(h)=(h/D)^m; Sec. 26). 0=rectangular
                                  !   =conventional (default), 0.5=parabola-like,
@@ -119,9 +122,6 @@
                                  !   the reproduction of level and recession at
                                  !   low to medium flows; for h>=D it reduces to
                                  !   the conventional rectangular dynamics
-                                !   (1: normal (default), 0: drop it = a
-                                !    stabilization option under strong width
-                                !    heterogeneity)
 /
 
 !----------------------------------------------------------------------
