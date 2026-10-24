@@ -1,5 +1,7 @@
 # ENCflow
 
+> English mirror of README.ja.md. The Japanese file is the master copy.
+
 [![CI](https://github.com/ENCflow/ENCflow/actions/workflows/ci.yml/badge.svg)](https://github.com/ENCflow/ENCflow/actions/workflows/ci.yml)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.22042847-blue)](https://doi.org/10.5281/zenodo.22042847)
 
@@ -24,12 +26,6 @@ Replacing each field's specialist models is not the goal.
 [Tutorial](docs/en/tutorial.md) /
 [User's Guide](docs/en/users_guide.md) /
 [Comparison with other models](docs/en/comparison.md)
-
-*The Japanese documentation is the authoritative version; the English
-pages are derived mirrors. The user-facing documentation — README,
-installation, tutorials, user's guide, use-case gallery, comparison,
-and the AI guide — is fully mirrored in English under docs/en/.
-Developer documentation such as developer.md is currently Japanese only.*
 
 ---
 
@@ -101,9 +97,10 @@ need to understand all of it. Read only the lines you care about.
   wetting-and-drying tracks the run-up front. Storm surge, river flood
   and heavy rainfall form a compound flood in a single model. Timber
   influx from coastal log yards into urban areas is handled with the
-  driftwood feature, and the destruction of wooden houses with the
-  resulting debris is estimated by the building-damage feature in the
-  same time evolution as the run-up, giving damage-ratio maps and
+  driftwood feature, and the destruction of wooden houses and the
+  generation, flow and deposition of the resulting debris by the
+  building-damage feature, both estimated in the same time evolution as
+  the run-up, giving damage-ratio maps and
   debris arrival and deposit maps.
 - **Tsunami generation from an earthquake, and dispersive waves**: the
   fault displacement is given as a time history of the ground, and the
@@ -227,8 +224,8 @@ belong to specialized models
   models. Standalone structures are covered by the internal hydraulic
   structures, and the areal drainage capacity, pressurized flow, and
   eruption of dense street-level networks by the conduit continuum
-  layer; being a continuum approximation, it reproduces the spatial
-  pattern of surcharge but cannot identify which manhole erupts.
+  layer; being a continuum approximation, it cannot identify which
+  manhole erupts.
   Systems dominated by a single trunk main also belong to network
   models.
 - **Deep groundwater** — ENCflow's groundwater is a shallow two-layer
@@ -282,7 +279,8 @@ belong to specialized models
 - **Sustainability as a project** — everything from the reasoning
   behind each design decision ([docs/developer.md](docs/developer.md),
   in Japanese) to the overall map
-  ([docs/architecture.md](docs/architecture.md)) is documented, and
+  ([docs/architecture.md](docs/architecture.md), in Japanese) is
+  documented, and
   the correctness of changes is verified mechanically by the
   regression tests and CI. Because the development knowledge lives in
   the repository itself, combined with the fully open source code,
@@ -307,8 +305,8 @@ notebook that runs in the browser alone is also available.
 1. [Installation](docs/en/install.md) — a single `make install`
 2. [Tutorial](docs/en/tutorial.md) — from the minimal example to real-terrain catchments
 3. [User's Guide](docs/en/users_guide.md) — reference for every setting
-4. [examples/](examples/) — sample configuration files
-5. [test/](test/) — verified examples, doubling as regression tests
+4. [examples/](examples/README.en.md) — sample configuration files
+5. [test/](test/README.en.md) — verified examples, doubling as regression tests
 6. [Using ENCflow with AI agents](docs/en/ai_guide.md) — delegating
    case building, execution, and analysis to an AI in the words of the
    phenomenon
@@ -318,16 +316,16 @@ documentation does not cover, the quickest route is to have an AI
 agent examine the source code for you. The entire computation lives
 in the Fortran under `src/`, and the reasons behind every design
 decision are documented in
-[docs/developer.md](docs/developer.md), so a question like "which
+[docs/developer.md](docs/developer.md) (in Japanese), so a question like "which
 equation computes X, and where?" can be answered with the actual
 code as evidence.
 
 Developers and the curious should head to
 [docs/architecture.md](docs/architecture.md) for the one-page map of
 the architecture, [docs/developer.md](docs/developer.md) for the
-authoritative source on design philosophy and conventions, and
-[docs/comparison.md](docs/en/comparison.md) for the comparison with
-other models. Developer documentation is currently in Japanese.
+authoritative source on design philosophy and conventions (both in
+Japanese), and [docs/en/comparison.md](docs/en/comparison.md) for the
+comparison with other models.
 
 ## Interoperability (BMI)
 

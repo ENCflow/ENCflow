@@ -16,7 +16,7 @@ chosen time, width and depth to represent a **breach**. During the local
 displacement update, h is kept and z is moved, so e = z + h moves by the
 same amount. The subsequent flow calculation changes depth and velocity
 (the same contract as the morphological modules). The design is in
-[docs/bedmotion_plan.md](../../bedmotion_plan.md), the implementation
+[docs/bedmotion_plan.md](../../bedmotion_plan.md) (in Japanese), the implementation
 record in developer.md §70, and the preprocessing from fault parameters in
 the [fault2disp geometry diagram and setup guide](../../../utils/fault2disp/README.en.md#2-fault-parameter-conventions).
 The time interpolation of the displacement, the fault displacement field,
@@ -353,7 +353,7 @@ Notes:
 - A tsunami run does **not** use the sea mask: the water body is given
   by the fixed initial level f_htype=2 (still water e0; cells with
   z < e0 are sea), the "solved sea" configuration (the same as
-  [examples/landslide_tsunami](../../../examples/landslide_tsunami/)). Cells in the sea mask (sw > 0) have their
+  [examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md)). Cells in the sea mask (sw > 0) have their
   level prescribed and therefore do not move when a displacement is given.
 - Open-ocean edges use long-wave radiation (f_bc_* = 2) to reduce reflection;
   it does not guarantee zero reflection for every wave. Landward edges use

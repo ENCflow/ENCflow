@@ -86,8 +86,8 @@ with a band. The illustrated widths are nb=3 and nest_ns=4 child cells.
   interpolated to the sub-step **start**, while φ uses the sub-step **end**.
   `nest_nh` is separate from `nest_bc` and does not apply to band-free method 3.
 
-For comparisons against a uniform
-fine grid, see the illustrated README in [examples/nest_reflect](../../../examples/nest_reflect/).
+For an example comparing the error of each method against a uniform
+fine grid, see the illustrated README in [examples/nest_reflect](../../../examples/nest_reflect/en/README.md).
 
 ## 3. Non-hydrostatic child grids (nest_nh)
 
@@ -156,7 +156,7 @@ velocity onto the individual ENC boundary faces to compute discharge.
 - If the parent is at rest (constant η, u = 0) the result is bit-identical
   to the existing radiation boundary (the flather case of
   [test/nest_identity](../../../test/nest_identity/en/README.md)). The comparison with a band on a one-way r3t3 interface
-  crossing is in [examples/nest_reflect](../../../examples/nest_reflect/) (README).
+  crossing is in [examples/nest_reflect](../../../examples/nest_reflect/en/README.md) (README).
 
 ## 5. Sponge (nest_bc = 4)
 
@@ -220,7 +220,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| nest_bc | 2 | parent → child boundary method | **verification case** passing level, velocity and edge discharge (2) gives the most consistent interface ([examples/nest_reflect](../../../examples/nest_reflect/); 1 is the TUNAMI-type level-only band) |
+| nest_bc | 2 | parent → child boundary method | **verification case** passing level, velocity and edge discharge (2) gives the most consistent interface ([examples/nest_reflect](../../../examples/nest_reflect/en/README.md); 1 is the TUNAMI-type level-only band) |
 | nest_fb | 2 | child → parent replacement | **verification case** the wet-cell average keeps the parent's wet/dry state across a coastline (1:1 self-nesting is bit-identical in [test/nest_identity](../../../test/nest_identity/en/README.md)) |
 | nest_nb | 0 (automatic) | width of the boundary band | **derived** from the stencil of the advection term: 2 for scheme 1, 3 for schemes 2 and 3 (the band covers ±2 edges along the line; [Advection](advection.md) §4.5) |
 | nest_ns | 4 | width of the sponge | **empirical** a fraction of the child's wavelength (§5) |
@@ -232,13 +232,13 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   want resolved on the child (8–10 cells) and increase it until the
   reflection at the interface disappears; the reflection can be
   quantified with the procedure of
-  [examples/nest_reflect](../../../examples/nest_reflect/).
+  [examples/nest_reflect](../../../examples/nest_reflect/en/README.md).
 
 ## 8. Verification cases
 
 - [test/nest_identity](../../../test/nest_identity/en/README.md): identity tests of 1:1 self-nesting (band replacement, two-way, Flather and non-hydrostatic configurations).
 - [test/bmi_nest](../../../test/bmi_nest/en/README.md): acceptance test of a nested system driven through BMI.
-- [examples/nest_reflect](../../../examples/nest_reflect/): waves crossing the interface of two-way nests with ratios 3 and 5, compared with a uniform fine grid (figures in the README).
+- [examples/nest_reflect](../../../examples/nest_reflect/en/README.md): waves crossing the interface of two-way nests with ratios 3 and 5, compared with a uniform fine grid (figures in the README).
 
 ## References
 

@@ -291,8 +291,6 @@ Even with `f_diffusion_term = 0` the diffusion term is computed when
 - [examples/List_samples/list_enc.txt](../../../examples/List_samples/en/list_enc.txt) --
   annotated list of every `&list_enc` parameter with its default.
 
-The README of test/wave is available in English; the other test-case READMEs are in Japanese.
-
 ## References
 
 [^elder59]: Elder, J. W. (1959): The dispersion of marked fluid in turbulent shear flow. *J. Fluid Mech.*, 5, 544–560. (depth-averaged eddy viscosity $`\kappa u_* h/6`$)

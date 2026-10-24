@@ -153,8 +153,7 @@ the coefficient follows from the flow and the roughness).
 - **Verification cases**: bores [test/dambreak](../../../test/dambreak/en/README.md),
   bends, steps and lateral inflow [test/bendloss](../../../test/bendloss/en/README.md),
   hillslope flow [test/hillslope](../../../test/hillslope/en/README.md), real
-  terrain [test/chichibu](../../../test/chichibu/en/README.md) (READMEs in
-  Japanese); analytical benchmark of the diffusion term
+  terrain [test/chichibu](../../../test/chichibu/en/README.md); analytical benchmark of the diffusion term
   [test/diffusion](../../../test/diffusion/en/README.md) (diffusion of a Gaussian
   jet, error below 0.14%).
 
@@ -169,6 +168,12 @@ the coefficient follows from the flow and the roughness).
 | f_diffusion_term | 0 | diffusion term. 0: none (default), 2: zero-equation model ν = ν0 + α·u*·h (recommended), 1: constant viscosity ([diffusion](diffusion.md) §2) |
 | p_diffusion_nu | -- | ν0 (m²/s). For model 1 a positive value must be given explicitly (unset is an error stop); for model 2 an optional background viscosity (§2) |
 | p_diffusion_alpha | 0.41/6 | coefficient α of the zero-equation model (default is the Elder type; calibrate within 0.15–0.6 for stronger transverse mixing) (§2) |
+
+**Others**
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| f_rivermouth_drop | 0 | legacy scheme that forces, on the edges between channel cells (fn_rw) and sea cells (fn_sw), the same critical-flow drop as free outflow (edge boundary type 1). Meant for a sea without fn_tide (z=0, sea surface fixed at its initial-condition value); combined with the tide fn_tide the run is stopped at initialisation with an error (it would ignore the backwater of high tide). Using [tide](tide.md) + [boundary conditions](boundary.md) is now recommended |
 
 **Non-hydrostatic correction (research option)**
 
@@ -223,8 +228,8 @@ flat-bed one-layer model).
   [test/nhbore](../../../test/nhbore/en/README.md), soliton fission on a shelf
   [test/nhshelf](../../../test/nhshelf/en/README.md), breaking run-up
   [test/nhbreak](../../../test/nhbreak/en/README.md), moving bottom
-  [test/nhbottom](../../../test/nhbottom/en/README.md) (READMEs in Japanese; the
-  results are summarised in §8 of the explanation).
+  [test/nhbottom](../../../test/nhbottom/en/README.md) (the results are
+  summarised in §8 of the explanation).
 
 | Parameter | Default | Meaning (details in the § of the [explanation](nonhydrostatic.md)) |
 |---|---|---|
@@ -250,12 +255,6 @@ flat-bed one-layer model).
 | nh_break_visc | 0 | breaking eddy-viscosity coefficient δ_b² (0: off; 1.44 corresponds to the literature value). Dissipates through the [diffusion term](diffusion.md) (§6) |
 | f_nh_slope | 0 | bottom-slope terms (Version 2). 1: for waves over slopes, shelves and abrupt bathymetry; about twice the iterations (§7) |
 | f_nh_bottom | 0 | moving-bottom acceleration term. 1: for the near field of landslide tsunamis (one-layer approximation of the Kajiura filter); acts on f_bedslide, fn_bedmotion, morphological change and API updates of z (§7) |
-
-**Others**
-
-| Parameter | Default | Meaning |
-|---|---|---|
-| f_rivermouth_drop | 0 | legacy scheme that forces, on the edges between channel cells (fn_rw) and sea cells (fn_sw), the same critical-flow drop as free outflow (edge boundary type 1). Meant for a sea without fn_tide (z=0, sea surface fixed at its initial-condition value); combined with the tide fn_tide the run is stopped at initialisation with an error (it would ignore the backwater of high tide). Using [tide](tide.md) + [boundary conditions](boundary.md) is now recommended |
 
 ## Recommended values by pattern
 
@@ -330,7 +329,7 @@ Annotated list of all parameters (with the defaults spelled out):
 ## Relation to verification
 
 Many of these switches change the computed results. The regression
-tests (reference in [test/](../../../test/)) were created with the defaults, so compare
+tests (reference in [test/](../../../test/README.en.md)) were created with the defaults, so compare
 results obtained with modified settings against your own baseline.
 
 ## References
