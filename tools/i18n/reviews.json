@@ -1453,9 +1453,18 @@
     {
       "source": "test/nhbottom/README.md",
       "target": "test/nhbottom/en/README.md",
-      "source_sha256": "fa5ec59c1835242c2724efd8b18f90e3e3cac2776ef84978782afa84bd51fbc7",
-      "target_sha256": "4c29f55273fc42b67252227b90a4e1f47220114e8ef876b883b8a7329aac00ca",
+      "source_sha256": "7b8c2a275dc4bf5e0885a488dcc9982e8147f7cfe5348997daf4a3c56e8b6212",
+      "target_sha256": "fe58310b092a4cb6fe816d4879041e202237d44f1e5101226e251d827679b3eb",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/nhbottom/figs/landslide.png",
+      "target": "test/nhbottom/en/figs/landslide.png",
+      "source_sha256": "4bc6cfeaa50147c13a51afe00cc178e5de0b90921e32fb77fbbc4eacc860b1ec",
+      "target_sha256": "e8106a950704e78fd95d132653138a186888fc6bcaa4f60b0645d09928c5aaad",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
     },

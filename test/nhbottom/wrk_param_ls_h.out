@@ -1,0 +1,48 @@
+reading list_sysparam in param_ls_h.txt
+reading list_geoinfo in param_ls_h.txt
+ reading ./z.txt
+reading boundary lists in param_ls_h.txt
+reading list_initial in param_ls_h.txt
+reading list_record in param_ls_h.txt
+reading list_geomorph in param_ls_h.txt
+geomorph: bs_rho = 2000.0000 kg/m3
+geomorph: bs_mu = 0.1500
+geomorph: bs_xi = 500.0000 m/s2
+geomorph: bs_vstop = 0.0500 m/s
+geomorph: bedslide enabled (Voellmy mu=.15000, xi=500.00000, r=rho_w/rho_s=.50000)
+reading list_enc in param_ls_h.txt
+swflow_enc: f_advection_scheme = 3 (momentum-conservative, MUSCL van Leer)
+swflow: dynamic opening reassignment enabled (f_opening_dynamic=2)
+main: number of processes: 1
+main: number of threads: 2
+main: real precision: 64 bit
+main: number of valid cells: 4800
+time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
+  0:00:00.00   0.0%   23.3333   0.0%      0    0.1980   40.0000    0.0000
+  0:00:05.00   4.2%   23.3325  17.5%      0    0.2115   41.8024    4.8602
+  0:00:10.00   8.3%   23.2963   6.6%      2    0.2089   41.4843    5.9976
+  0:00:15.00  12.5%   23.3413   5.8%      4    0.2054   41.0051    2.1131
+  0:00:20.00  16.7%   23.3467   5.1%      6    0.2038   40.7847    2.5886
+  0:00:25.00  20.8%   23.3526   4.3%      6    0.2008   40.4554    2.1280
+  0:00:30.00  25.0%   23.3257   4.1%      6    0.2006   40.3484    0.8722
+  0:00:35.00  29.2%   23.3287   3.8%      6    0.1988   40.1398    0.8568
+  0:00:40.00  33.3%   23.3334   4.4%      6    0.1985   40.0619    0.6773
+  0:00:45.00  37.5%   23.3357   4.1%      6    0.1985   40.0532    0.4792
+  0:00:50.00  41.7%   23.3342   3.7%      6    0.1983   40.0389    0.3987
+  0:00:55.00  45.8%   23.3320   4.6%      6    0.1982   40.0297    0.3776
+  0:01:00.00  50.0%   23.3327   4.5%      6    0.1982   40.0208    0.3417
+  0:01:05.00  54.2%   23.3340   4.3%      6    0.1983   40.0130    0.3234
+  0:01:10.00  58.3%   23.3334   3.7%      6    0.1983   40.0132    0.2938
+  0:01:15.00  62.5%   23.3332   3.2%      6    0.1982   40.0119    0.2757
+  0:01:20.00  66.7%   23.3334   2.8%      6    0.1982   40.0095    0.2712
+  0:01:25.00  70.8%   23.3333   2.3%      6    0.1982   40.0078    0.2472
+  0:01:30.00  75.0%   23.3334   1.6%      6    0.1982   40.0028    0.2444
+  0:01:35.00  79.2%   23.3334   1.0%      6    0.1982   40.0035    0.2372
+  0:01:40.00  83.3%   23.3333   0.9%      6    0.1982   40.0023    0.2300
+  0:01:45.00  87.5%   23.3333   0.8%      6    0.1982   40.0017    0.2252
+  0:01:50.00  91.7%   23.3334   0.6%      6    0.1982   40.0014    0.2219
+  0:01:55.00  95.8%   23.3334   0.4%      6    0.1982   40.0013    0.2143
+  0:02:00.00 100.0%   23.3333   0.3%      6    0.1982   40.0015    0.2088
+ geomorph: bedslide released   1.9110E+04 m3, plunged   0.0000E+00 m3, stopped   1.9099E+04 m3, still moving   1.1038E+01 m3
+ geomorph: bedslide subcycles total = 34169 over 2381 active updates (max 83 per update; see developer.md sec.61.10)
+main: program terminated normally
