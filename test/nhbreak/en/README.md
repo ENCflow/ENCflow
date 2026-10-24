@@ -32,7 +32,7 @@ generates `en/figs/runup.png` (`figs/runup.png` is the Japanese version;
 the curve without the switch is drawn if the
 result of param.txt with f_nh_breaking=0, dir_result='result_ns' exists).
 
-## Findings (2026-10-12; the hydrostatic, param.txt and no-switch hcap-2 values were recomputed on 2026-10-24; the 0.63 etc. in the diagnosis sections below are the values of 10-12)
+## Findings (2026-10-12; the hydrostatic, param.txt and no-switch hcap-2 values and the numbers of the diagnosis and eddy-viscosity sections below were recomputed on 2026-10-24)
 
 | Configuration | R_max/H | Remarks |
 |---|---:|---|
@@ -67,7 +67,7 @@ result of param.txt with f_nh_breaking=0, dir_result='result_ns' exists).
   (experiment ≈ 0.09). NH contributes nothing; it is a problem of
   representing the wet/dry front (a tongue a few mm thick) at Δx = H/4.
 
-## Isolating the cause of the overestimate (0.63 against 0.42) (rerun 2026-10-12; developer.md §69.6)
+## Isolating the cause of the overestimate (0.57 against 0.42) (2026-10-12; the numbers are recomputed on 2026-10-24; developer.md §69.6 keeps the values of 10-12)
 
 `./Diag.py --run` runs derived cases (dt, initial position, extent of NH,
 friction, grid) in result_x_*/ (u and v are also output), `./Diag.py`
@@ -81,45 +81,46 @@ use user_initial `wave_solitary28_toe` (x0 = 120 m).
 
 | Configuration | dt 0.02 | dt 0.01 | dt 0.005 | E/E0 at shoreline arrival (dt 0.005) |
 |---|---:|---:|---:|---:|
-| NH + breaking switch (param.txt) | 0.631 | 0.530 | 0.505 | 0.62 |
-| NH, no switch | 0.820 | 0.681 | 0.581 | 0.72 |
-| NH on the flat part only (nh_hmin 0.98; the slope is hydrostatic) | 0.618 | 0.518 | — | — |
-| Hydrostatic (param_h.txt; wave 100 m before the toe) | 0.392 | 0.316 | 0.316 | 0.36 |
-| Hydrostatic, wave placed 30 m before the toe | 0.505 | — | **0.417** | 0.50 |
-| NH + switch, Manning n = 0.01 | 0.492 | — | 0.455 | 0.60 |
+| NH + breaking switch (param.txt) | 0.568 | 0.530 | 0.518 | 0.64 |
+| NH, no switch | 0.744 | 0.631 | 0.581 | 0.75 |
+| NH on the flat part only (nh_hmin 0.98; the slope is hydrostatic) | 0.555 | 0.518 | — | — |
+| Hydrostatic (param_h.txt; wave 100 m before the toe) | 0.404 | 0.329 | 0.304 | 0.37 |
+| Hydrostatic, wave placed 30 m before the toe | 0.467 | — | **0.404** | 0.51 |
+| NH + switch, Manning n = 0.01 | 0.467 | — | 0.442 | 0.61 |
 | NH + switch, n = 0.02 / NH no switch, n = 0.01 | 0.379 / 0.568 | — | — | — |
-| Hydrostatic, n = 0.01 / before the toe + n = 0.01 | 0.354 / 0.417 | — | — | — |
-| Δx/2: hydrostatic (dt 0.01 / 0.0025) | 0.470 | | **0.338** (dt 0.0025) | 0.37 |
-| Δx/2: NH + switch (dt 0.01 / 0.0025) | 0.760 | | **0.628** (dt 0.0025) | 0.71 |
-| Δx/2: NH + switch, n = 0.01 (dt 0.01) | 0.527 | | | |
-| Hydrostatic, wave placed 5 m before the toe (`wave_solitary28_x145`) | 0.581 | — | 0.480 | 0.62 |
-| NH + switch, same | — | — | 0.543 | 0.71 |
+| Hydrostatic, n = 0.01 / before the toe + n = 0.01 | 0.366 / 0.417 | — | — | — |
+| Δx/2: hydrostatic (dt 0.01 / 0.0025) | 0.433 | | **0.332** (dt 0.0025) | 0.37 |
+| Δx/2: NH + switch (dt 0.01 / 0.0025) | 0.691 | | **0.609** (dt 0.0025) | 0.72 |
+| Δx/2: NH + switch, n = 0.01 (dt 0.01) | 0.514 | | | |
+| Hydrostatic, wave placed 5 m before the toe (`wave_solitary28_x145`) | 0.530 | — | 0.492 | 0.65 |
+| NH + switch, same | — | — | 0.543 | 0.74 |
 
 - **dt = 0.02 (Courant ≈ 0.28) is not converged**: as dt → 0, NH + switch
-  0.63 → 0.50, hydrostatic 0.39 → 0.32. The dt dependence lies in the stage
+  0.57 → 0.52, hydrostatic 0.40 → 0.30. The dt dependence lies in the stage
   of hydrostatic bore formation and the wet/dry front (restricting NH to the
   flat part lowers R by the same amount; the bore jump condition is correct
   independently of dt in the Stoker solution of test/dambreak). Refinement
   at a fixed Courant number raises R instead (an error proportional to Cr).
 - **Δx = H/4 is also coarse for NH**: with Δx/2 and Cr 0.07, hydrostatic
-  gives 0.34 (within 7% of the coarse-grid converged value 0.32), NH +
-  switch 0.63 (coarse grid 0.50). The difference is the numerical
+  gives 0.33 (within 10% of the coarse-grid converged value 0.30), NH +
+  switch 0.61 (coarse grid 0.52). The difference is the numerical
   dissipation of the solitary wave on the flat part (E/E0 at toe arrival
-  0.82 → 0.91). On the coarse grid the dt error (+25%) and the numerical
-  dissipation (−20%) cancelled to give 0.63 ≈ 0.63.
-- **The hydrostatic 0.39 is a coincidence**: it is the result of early bore
-  formation over the 100 m of flat part, which loses 40% of E. Placing the
-  wave 30 m before the toe gives 0.417 (also the result of bore formation
-  over 30 m), and 5 m before the toe (the arrangement of Titov & Synolakis
-  1995; an intact wave reaches the toe) gives hydrostatic 0.48 and NH +
-  switch 0.54 (dt 0.005). When an intact wave becomes a hydrostatic bore on
+  0.84 → 0.91). On the coarse grid the dt error (+10%) and the numerical
+  dissipation (−15%) cancelled to give 0.57 (with the values of 10-12,
+  +25% and −20% cancelled to give 0.63 ≈ 0.63).
+- **The hydrostatic 0.40 is a coincidence**: it is the result of early bore
+  formation over the 100 m of flat part, which loses 30–50% of E (dt 0.02 /
+  0.005) before the toe. Placing the wave 30 m before the toe gives 0.404
+  (also the result of bore formation over 30 m), and 5 m before the toe (the
+  arrangement of Titov & Synolakis 1995; an intact wave reaches the toe)
+  gives hydrostatic 0.49 and NH + switch 0.54 (dt 0.005). When an intact wave becomes a hydrostatic bore on
   the slope and runs up, the result is 0.5–0.6, so additional breaking
   dissipation is needed even for hydrostatic.
-- **The +50% overestimate of NH + switch at the converged value (0.63) is
+- **The +45% overestimate of NH + switch at the converged value (0.61) is
   insufficient dissipation of the breaking collapse** (remaining E at
-  maximum run-up 0.71 E0 against 0.49 E0 for hydrostatic (before the toe)).
-  With friction n = 0.01, NH drops by 20–30% (hydrostatic by 10%), and
-  +10–20% is expected to remain at the converged value.
+  maximum run-up 0.69 E0 against 0.50 E0 for hydrostatic (before the toe)).
+  With friction n = 0.01, NH drops by 15–25% (hydrostatic by 10%), and
+  +10–20% remains at the converged value (0.50 with Δx/2 and dt/8).
 - **For a quantitative evaluation, confirm convergence at Courant ≲ 0.1 and
   Δx ≲ H/8, and apply friction (n ≈ 0.01).** The remaining overestimate is
   the issue of explicit dissipation in the breaking zone (eddy viscosity,
@@ -127,7 +128,7 @@ use user_initial `wave_solitary28_toe` (x0 = 120 m).
   the length of the flat part. param.txt keeps dt 0.02 and Δx = H/4 for the
   regression test.
 
-## Eddy viscosity in the breaking zone nh_break_visc (rerun 2026-10-12; developer.md §69.7, plan §15)
+## Eddy viscosity in the breaking zone nh_break_visc (2026-10-12; the numbers are recomputed on 2026-10-24; developer.md §69.7, plan §15)
 
 Cells judged as breaking are given ν_b = nh_break_visc·B·h·√(gh)·|∇η| and
 dissipate through the diffusion term of the momentum equation (1.44,
@@ -139,30 +140,30 @@ and draw `en/figs/runup_visc.png` with `./Diag.py --figvisc en` (`figs/runup_vis
 
 | Configuration | R/H | E/E0 at shoreline arrival |
 |---|---:|---:|
-| NH + switch, Δx = H/4, dt 0.005 | 0.505 | 0.62 |
-| Same + eddy viscosity 1.44 | 0.480 | 0.58 |
-| Same + friction n = 0.01 | 0.455 | 0.60 |
-| Same + friction + eddy viscosity | 0.429 | 0.56 |
-| NH + switch, Δx = H/8, Cr 0.07, frictionless | 0.628 | 0.71 |
-| Same + friction n = 0.01 | 0.508 | 0.67 |
-| Same + friction + eddy viscosity 1.44 | **0.445** | 0.56 |
+| NH + switch, Δx = H/4, dt 0.005 | 0.518 | 0.64 |
+| Same + eddy viscosity 1.44 | 0.492 | 0.60 |
+| Same + friction n = 0.01 | 0.442 | 0.61 |
+| Same + friction + eddy viscosity | 0.429 | 0.58 |
+| NH + switch, Δx = H/8, Cr 0.07, frictionless | 0.609 | 0.72 |
+| Same + friction n = 0.01 | 0.496 | 0.67 |
+| Same + friction + eddy viscosity 1.44 | **0.464** | 0.59 |
 
 Amplitude series (Δx = H/4, dt 0.005, n = 0.01, wave at x0 = 120 m;
 experimental law R/H = 0.918 (a/H)^0.606):
 
 | a/H | Experimental law | No eddy viscosity | Eddy viscosity 1.44 |
 |---:|---:|---:|---:|
-| 0.10 | 0.227 | 0.253 (+11%) | 0.253 (+11%) |
+| 0.10 | 0.227 | 0.241 (+6%) | 0.241 (+6%) |
 | 0.20 | 0.346 | 0.392 (+13%) | 0.379 (+10%) |
-| 0.28 | 0.424 | 0.480 (+13%) | 0.455 (+7%) |
-| 0.40 | 0.527 | 0.581 (+10%) | 0.530 (+1%) |
+| 0.28 | 0.424 | 0.467 (+10%) | 0.455 (+7%) |
+| 0.40 | 0.527 | 0.555 (+5%) | 0.530 (+1%) |
 
 - Under the converged conditions (Δx = H/8, Cr 0.07) + friction + eddy
-  viscosity the result is +5% above the experimental law (target ±10%).
-  Breakdown: friction n = 0.01 takes 0.628 → 0.508 (−19%), the eddy
-  viscosity 0.508 → 0.445 (−12%). The finer the grid, the steeper |∇η| at
-  the front, so the dissipation of the eddy viscosity is more effective
-  (−5% on the coarse grid).
+  viscosity the result is +9% above the experimental law (within the target
+  ±10%; +5% with the values of 10-12). Breakdown: friction n = 0.01 takes
+  0.609 → 0.496 (−19%), the eddy viscosity 0.496 → 0.464 (−6%). The finer
+  the grid, the steeper |∇η| at the front, so the dissipation of the eddy
+  viscosity is more effective (−3% on the coarse grid).
 - The amplitude series is consistent with the exponent of the experimental
   law, and the effect of the eddy viscosity grows with the amplitude (at
   a/H = 0.10 the breaking criterion does not fire and the value is

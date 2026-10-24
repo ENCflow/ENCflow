@@ -1615,8 +1615,8 @@
     {
       "source": "test/nhbreak/README.md",
       "target": "test/nhbreak/en/README.md",
-      "source_sha256": "e115dad9f10a0bb75e213575c947988959450e080f9fd818235f793dcc855b87",
-      "target_sha256": "941ec04f9c884a8adc38d6866d0d3db53631bcf6f4d665d20a5facdce718e129",
+      "source_sha256": "8cbff6b3813efb05dbe06d3b956aeece3d418c2fe8b0bbd7607c1a5e4c063741",
+      "target_sha256": "15244a35af6ec7d92a38299e1b5b5b332644546b7eb4e36f14c1333802a4f86a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
