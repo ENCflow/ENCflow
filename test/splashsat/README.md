@@ -1,5 +1,7 @@
 # test/splashsat — 凹地形増幅の飽和(spl_ksat)の解析検証
 
+[English](en/README.md)
+
 乾式斜面侵食 `f_splash` の凹地形増幅 1 + c κ の κ を有効曲率
 κ̃ = κ / (1 + κ/κ_s) に置き換える **飽和形** `spl_ksat`(developer.md §48.6)の
 解析検証です。x 方向に一様な放物線の谷 z = 0.05 (y − ly/2)²(ユーザールーチン

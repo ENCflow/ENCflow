@@ -1,5 +1,7 @@
 # test/bmi_nest — BMI の多格子公開(ネスト系 = 1 component)の受け入れ試験
 
+[English](en/README.md)
+
 ネスト系をそのまま BMI の 1 つのモデルとして扱えること(bmi/README.md、
 docs/users_guide/nest.md §BMI)を、test/nest_identity と同じ比 1:1 の自己ネスト
 (wave 385²、子 121²、親セル 133..253、双方向 nest_fb = 2)で検査する。

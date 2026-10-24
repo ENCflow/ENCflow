@@ -1,5 +1,7 @@
 # test/damwq — ダム(完全混合)とため池の水質台帳: 解析解との全桁一致
 
+[English](en/README.md)
+
 構造物モジュールのダム(捕捉列から取水し一定量を放流)とため池パッチ
 (容量に達するまで吸収)に、水質の**完全混合プール**と**ため池同伴**を
 結合した経路(developer.md §30.7)の検定です。閉領域斜面に初期濃度
@@ -24,7 +26,7 @@
 | ファイル | 内容 |
 |---|---|
 | `Run.sh` | Log.txt・wq.csv を reference と比較(ULP = 0)→ `Check_damwq.py closure` → `uniform` |
-| `Check_damwq.py closure|uniform` | 台帳の閉合(相対 1e-6)と各経路の活性 / 最終 C 場の湿潤セルが 100 ± 0.1 |
+| `Check_damwq.py closure\|uniform` | 台帳の閉合(相対 1e-6)と各経路の活性 / 最終 C 場の湿潤セルが 100 ± 0.1 |
 | `Fig.py` | 下の図 `figs/damwq.png` |
 
 ## 実行

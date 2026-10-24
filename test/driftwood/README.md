@@ -1,5 +1,7 @@
 # test/driftwood — 流木ラスタ場(fn_driftwood)の疎通・保存則・リスタート
 
+[English](en/README.md)
+
 流木を「立木ストック wst → 流動中 hd → 堆積 wd」の 3 つのラスタ場で表す
 流木モジュール(`fn_driftwood`、[ユーザーガイドの流木の章](../../docs/users_guide/driftwood.md)、
 developer.md §50)の検定です。発生の 2 経路(土石流の侵食連行、洪水の
@@ -22,7 +24,7 @@ developer.md §50)の検定です。発生の 2 経路(土石流の侵食連行�
 
 | ファイル | 内容 |
 |---|---|
-| `Check_driftwood.py <save> [stock0]` | (1) 材積保存 |Σhd + Σwd + Σwst − stock₀ nx ny| < 1e-9、(2) 活性: 流木化 > 1e-3 かつ堆積 > 1e-3 m·cell、(3) 到達: 平坦部(i ≥ 30)の max(hd + wd) > 0 |
+| `Check_driftwood.py <save> [stock0]` | (1) 材積保存 \|Σhd + Σwd + Σwst − stock₀ nx ny\| < 1e-9、(2) 活性: 流木化 > 1e-3 かつ堆積 > 1e-3 m·cell、(3) 到達: 平坦部(i ≥ 30)の max(hd + wd) > 0 |
 | `Fig.py` | 下の図 `figs/driftwood.png` |
 
 ## 実行

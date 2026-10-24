@@ -257,7 +257,7 @@ Even with `f_diffusion_term = 0` the diffusion term is computed when
 
 ## 7. Verification cases
 
-- [test/diffusion](../../../test/diffusion/README.md) -- **the analytical
+- [test/diffusion](../../../test/diffusion/en/README.md) -- **the analytical
   benchmark of the diffusion term**. A Gaussian jet uniform in $`x`$,
   $`u(y) = U_0\exp(-(y - y_c)^2/2\sigma^2)`$, in a flat frictionless channel
   diffuses for 12.5 s with constant $`\nu`$ = 4 m²/s and is compared with
@@ -271,20 +271,20 @@ Even with `f_diffusion_term = 0` the diffusion term is computed when
   bitwise identity with every reference when off; bitwise identity across
   rank and thread counts for model 1 ($`\nu_0`$ = 0.1 m²/s) and model 2
   ($`n`$ = 0.02, default $`\alpha`$) in [test/wave](../../../test/wave/en/README.md)
-  and for model 2 in [test/chichibu](../../../test/chichibu/README.md);
+  and for model 2 in [test/chichibu](../../../test/chichibu/en/README.md);
   exact mass conservation; preservation of the four-fold symmetry of the
   circular initial surface; smoothing of the velocity and depth peaks.
-- [test/creep](../../../test/creep/README.md) -- the hillslope creep of the
+- [test/creep](../../../test/creep/en/README.md) -- the hillslope creep of the
   morphological module (isotropic linear diffusion
   $`\partial z/\partial t = D\nabla^2 z`$) checked against the analytical
   solution of a Gaussian hill. An example of the explicit time-step
   condition of a diffusion equation and of diffusion creating no extremum
   (five-point Laplacian; the nine-point weights of this page with the
   diagonal shares set to 0).
-- [test/nhbreak](../../../test/nhbreak/README.md) -- shows the breaking eddy
+- [test/nhbreak](../../../test/nhbreak/en/README.md) -- shows the breaking eddy
   viscosity `nh_break_visc` lowering the run-up through this diffusion term
   (§5).
-- `param_ls_bd.txt` of [test/nhbottom](../../../test/nhbottom/README.md) --
+- `param_ls_bd.txt` of [test/nhbottom](../../../test/nhbottom/en/README.md) --
   a trial adding a constant viscosity $`\nu`$ = 0.3 m²/s to a submarine
   landslide tsunami (confirms that the self-excited oscillation at the foot
   of the slope is not damped by momentum diffusion).

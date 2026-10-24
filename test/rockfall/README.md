@@ -1,5 +1,7 @@
 # test/rockfall — 崩落と崖錐(f_rockfall)の検定
 
+[English](en/README.md)
+
 平地の上の四角い台地(一辺 20 m、高さ 10 m、垂直な自由面)に、水も降雨もなく
 **崩落と崖錐** `f_rockfall`(developer.md §48.7)だけを働かせます。自由面 10 m が
 限界高さ H_c = 4 m を超えるので縁が崩落し、落下した分が崖錐(安息角 35°)として
@@ -8,7 +10,7 @@
 | 項目 | 値 |
 |---|---|
 | 領域・格子 | 41 × 41 m、Δx = 1 m(四周壁の閉領域) |
-| 地形 | make_init.py: 台地 z = 10 m(|x|, |y| ≤ 10 m)、周囲 z = 0 |
+| 地形 | make_init.py: 台地 z = 10 m(\|x\|, \|y\| ≤ 10 m)、周囲 z = 0 |
 | 崩落 | rf_hc = 4 m、rf_phi = 35°、rf_relax = 0.5、fluv_dzmax = 0.5 m |
 | 時間 | dt = 0.1 s、60 s(地形更新 600 回、morfac = 1) |
 

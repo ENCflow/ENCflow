@@ -132,13 +132,13 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   (conifer / broadleaf) and stand age; the same guideline tabulates them in
   its estimation method.
 
-Verification (developer.md §50.6): in [test/driftwood](../../../test/driftwood/)
+Verification (developer.md §50.6): in [test/driftwood](../../../test/driftwood/en/README.md)
 an empty &list_driftwood and a configuration with every default written
 explicitly give byte-identical saved states.
 
 ## 6. Verification cases
 
-- [test/driftwood](../../../test/driftwood/): volume conservation, transport and deposition for both erosion entrainment and hydraulic recruitment, and comparison of saved states from split and uninterrupted runs.
+- [test/driftwood](../../../test/driftwood/en/README.md): volume conservation, transport and deposition for both erosion entrainment and hydraulic recruitment, and comparison of saved states from split and uninterrupted runs.
 - [examples/timberyard](../../../examples/timberyard/): timber influx from a log yard by storm surge (sensitivity of the deposition parameters and the impact-force postprocessing).
 - [examples/tsunami_town](../../../examples/tsunami_town/): coastal forest and log yard in a tsunami, chained with house destruction.
 

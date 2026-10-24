@@ -1,5 +1,7 @@
 # test/splashstrata — 乾式斜面侵食の水平層理(spl_strata)の解析検証
 
+[English](en/README.md)
+
 乾式斜面侵食 `f_splash` に**水平層理の侵食性倍率** `spl_strata`(層の下端標高と
 倍率の表。developer.md §48.5)を与えたときの解析検証です。
 [test/splash](../splash/) と同じ遷緩点付き斜面(slope_break: z = 0.4(30 − x)、

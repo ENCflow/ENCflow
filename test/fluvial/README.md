@@ -1,5 +1,7 @@
 # test/fluvial — 掃流砂 Exner(f_fluvial)の疎通と保存則
 
+[English](en/README.md)
+
 河床変動の基本モジュール、掃流砂輸送 + Exner 方程式(`&list_geomorph` の
 `f_fluvial = 1`、流砂量式は芦田・道上)の疎通・保存則の検定です
 (developer.md §19、§20)。閉領域の静水の上に水の山(wave_hump、+1 m)を
@@ -19,7 +21,7 @@
 
 | ファイル | 内容 |
 |---|---|
-| `Check_fluvial.py <save>` | (1) 土砂体積保存 |Σ(z − z₀)| < 1e-9(反対称フラックスの帰結)、(2) 共動更新 max|(sd − sd₀) − (z − z₀)| < 1e-10、(3) 活性 max|z − z₀| > 1e-4 m |
+| `Check_fluvial.py <save>` | (1) 土砂体積保存 \|Σ(z − z₀)\| < 1e-9(反対称フラックスの帰結)、(2) 共動更新 max\|(sd − sd₀) − (z − z₀)\| < 1e-10、(3) 活性 max\|z − z₀\| > 1e-4 m |
 | `Fig.py` | 下の図 `figs/fluvial.png` |
 
 ## 実行
@@ -47,8 +49,8 @@ python3 Fig.py    # figs/fluvial.png
 | 検定 | 計算値 | 判定 |
 |---|---|---|
 | (1) Σ(z − z₀) | −4.6e-17 m·cell | PASS(機械精度) |
-| (2) max|(sd − sd₀) − (z − z₀)| | 1.1e-14 m | PASS |
-| (3) max|z − z₀| | 1.86 mm | PASS(> 0.1 mm) |
+| (2) max\|(sd − sd₀) − (z − z₀)\| | 1.1e-14 m | PASS |
+| (3) max\|z − z₀\| | 1.86 mm | PASS(> 0.1 mm) |
 
 - エッジごとの反対称フラックスを集計する Exner 更新なので、土砂体積は
   機械精度で保存されます。

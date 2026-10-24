@@ -160,6 +160,6 @@ used in ordinary computations.
 
 ## Tests and examples
 
-- [test/wave](../../../test/wave/): a minimal setup specifying the time step, end time and spatial-output interval.
-- [test/nest_identity](../../../test/nest_identity/): the `restart` configuration compares save/resume on the same time axis with an uninterrupted run.
+- [test/wave](../../../test/wave/en/README.md): a minimal setup specifying the time step, end time and spatial-output interval.
+- [test/nest_identity](../../../test/nest_identity/en/README.md): the `restart` configuration compares save/resume on the same time axis with an uninterrupted run.
 - [examples/List_samples/en/list_sysparam.txt](../../../examples/List_samples/en/list_sysparam.txt): annotated settings for time, output intervals, calendar and periodic forcing.

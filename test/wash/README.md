@@ -1,5 +1,7 @@
 # test/wash — 斜面侵食(f_wash: 雨滴 + 面状侵食)の疎通と保存則
 
+[English](en/README.md)
+
 降雨による斜面侵食モジュール(`f_wash = 1`。雨滴侵食 `wash_kr` と
 面状侵食 `wash_kf` で河床を削り、浮遊砂 `f_suspend` が輸送を担う。
 developer.md §19)の疎通・保存則の検定です。一様降雨 50 mm/h と閉領域
@@ -44,8 +46,8 @@ python3 Fig.py    # figs/wash.png
 | 検定 | 計算値 | 判定 |
 |---|---|---|
 | 固体総量 Σhs + (1 − λ)Σ(z − z₀) | 0.0(機械精度) | PASS |
-| 共動更新 max|(sd − sd₀) − (z − z₀)| | 1.9e-14 m | PASS |
-| 活性 max hs / max|z − z₀| | 2.24 mm / 5.58 mm | PASS |
+| 共動更新 max\|(sd − sd₀) − (z − z₀)\| | 1.9e-14 m | PASS |
+| 活性 max hs / max\|z − z₀\| | 2.24 mm / 5.58 mm | PASS |
 
 - wash は近傍を読まない 1 パスの地形プロセスなので OpenMP でも安全で、
   np = 1, 2, 4 の state.dat は逐次とバイト一致します(§19)。

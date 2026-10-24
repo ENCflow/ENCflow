@@ -200,7 +200,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 
 - Check parent–child consistency by overlaying H and E of parent and
   child across the boundary band at the same time (a 1:1 self-nest is
-  bit-identical, [test/nest_identity](../../../test/nest_identity/)).
+  bit-identical, [test/nest_identity](../../../test/nest_identity/en/README.md)).
   Look for interface reflections with a probe near the child boundary
   ([explanation](nest_models.md) §5).
 
@@ -217,7 +217,7 @@ non-root grids carry `~grid<k>` in the object part of the name
 there is no georeferencing, a child's origin is derived from the parent's
 origin and the alignment position, so all grids are expressed in the root's
 coordinate system. set (depth, terrain, precipitation) works per grid under
-the same conditions. The acceptance test is [test/bmi_nest](../../../test/bmi_nest/).
+the same conditions. The acceptance test is [test/bmi_nest](../../../test/bmi_nest/en/README.md).
 
 ## Notes
 
@@ -234,7 +234,7 @@ the same conditions. The acceptance test is [test/bmi_nest](../../../test/bmi_ne
   boundary above the maximum run-up so that water never reaches it.
 - In a 1:1 self-nest (child = a subregion of the parent) the child's interior
   is bit-identical to the same region of the parent, and in two-way mode the
-  whole root is bit-identical to a stand-alone run ([test/nest_identity](../../../test/nest_identity/); its
+  whole root is bit-identical to a stand-alone run ([test/nest_identity](../../../test/nest_identity/en/README.md); its
   README lists the identity cases; useful for verifying the band and
   replacement design).
 - Verification of waves crossing the interface of two-way nests at ratios 3
@@ -244,6 +244,6 @@ the same conditions. The acceptance test is [test/bmi_nest](../../../test/bmi_ne
 
 ## Tests and examples
 
-- [test/nest_identity](../../../test/nest_identity/): identity tests of 1:1 self-nesting (band replacement, two-way, Flather and non-hydrostatic configurations).
-- [test/bmi_nest](../../../test/bmi_nest/): acceptance test of a nested system driven through BMI.
+- [test/nest_identity](../../../test/nest_identity/en/README.md): identity tests of 1:1 self-nesting (band replacement, two-way, Flather and non-hydrostatic configurations).
+- [test/bmi_nest](../../../test/bmi_nest/en/README.md): acceptance test of a nested system driven through BMI.
 - [examples/nest_reflect](../../../examples/nest_reflect/): waves crossing the interface of two-way nests with ratios 3 and 5, compared with a uniform fine grid (figures in the README).

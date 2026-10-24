@@ -1,5 +1,7 @@
 # test/suspend — 浮遊砂(f_suspend)の疎通と保存則: 2 つの平衡濃度式
 
+[English](en/README.md)
+
 浮遊砂モジュール(`&list_geomorph` の `f_suspend = 1`。河床との巻き上げ・
 沈降 E-D と水柱内の移流。developer.md §19)の疎通・保存則の検定です。
 閉領域の静水の上に水の山(wave_hump、+1 m)を置いて崩し、環状波の下で
@@ -23,7 +25,7 @@
 
 | ファイル | 内容 |
 |---|---|
-| `Check_suspend.py <save>` | (1) 固体総量 |Σhs + (1 − λ)Σ(z − z₀)| < 1e-9、(2) 共動更新 max|(sd − sd₀) − (z − z₀)| < 1e-10、(3) 活性 max hs > 閾値かつ max|z − z₀| > 閾値 |
+| `Check_suspend.py <save>` | (1) 固体総量 \|Σhs + (1 − λ)Σ(z − z₀)\| < 1e-9、(2) 共動更新 max\|(sd − sd₀) − (z − z₀)\| < 1e-10、(3) 活性 max hs > 閾値かつ max\|z − z₀\| > 閾値 |
 | `Fig.py` | 下の図 `figs/suspend.png`(Run.sh は構成 1 を `save_serial/`、構成 2 を `save/` に残す) |
 
 ## 実行
@@ -48,7 +50,7 @@ python3 Fig.py    # figs/suspend.png
 
 ## 所見
 
-| 構成 | 固体総量 | 共動更新 | max hs / max|dz| | 判定 |
+| 構成 | 固体総量 | 共動更新 | max hs / max\|dz\| | 判定 |
 |---|---|---|---|---|
 | 1 線形式 | 0.0 | 1.2e-14 | 0.45 mm / 1.13 mm | PASS |
 | 2 板倉・岸 | 0.0 | 1.3e-14 | 1.04 mm / 2.53 mm | PASS |

@@ -1,5 +1,7 @@
 # test/gwseep — 水質の地下経路(浸透 → 側方流動 → 湧出)の台帳閉合
 
+[English](en/README.md)
+
 水質モジュール(`fn_wq`、[ユーザーガイドの水質の章](../../docs/users_guide/wq.md))の
 うち、溶存物質が地表水から地下水へ浸透し、側方流動で運ばれ、下流端で
 湧出して再び地表へ戻る**地下経路**(developer.md §30.5)の検定です。
@@ -21,7 +23,7 @@
 | ファイル | 内容 |
 |---|---|
 | `Run.sh` | Log.txt と wq.csv を reference と比較(ULP = 0)→ `Check_gwseep.py closure` → 構成 2 → `Check_gwseep.py immobile` |
-| `Check_gwseep.py closure|immobile <wq.csv>` | 台帳 to_gw − seep = mass_gw と総質量 4000 g(相対 1e-6)、輸送の活性 / 完全不動化(seep ≈ 0、mass_gw = to_gw) |
+| `Check_gwseep.py closure\|immobile <wq.csv>` | 台帳 to_gw − seep = mass_gw と総質量 4000 g(相対 1e-6)、輸送の活性 / 完全不動化(seep ≈ 0、mass_gw = to_gw) |
 | `Fig.py` | 下の図 `figs/gwseep.png` |
 
 ## 実行

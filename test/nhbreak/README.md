@@ -1,5 +1,7 @@
 # test/nhbreak — 砕波性孤立波の海浜遡上(非静水圧補正の砕波スイッチと乾湿退化)
 
+[English](en/README.md)
+
 docs/nonhydrostatic_plan.md §11 Phase 6、developer.md §69.4。Synolakis (1987) の
 構成: 水深 H = 1 m、a/H = 0.28、斜面 1:19.85(脚 x = 150 m。user_geoinfo
 `beach_slope`)、孤立波 x0 = 50 m(user_initial `wave_solitary28`)、

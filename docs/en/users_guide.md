@@ -145,7 +145,7 @@ The additional features below stay disabled unless you specify their `fn_XXX` en
 
 </details>
 
-For examples to build on, see the [working setup in test/wave](../../test/wave/)
+For examples to build on, see the [working setup in test/wave](../../test/wave/en/README.md)
 or the [annotated parameter list](../../examples/List_samples/en/list_sysparam.txt).
 
 ## How to read a parameter file

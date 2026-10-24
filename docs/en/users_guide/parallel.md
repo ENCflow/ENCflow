@@ -110,7 +110,7 @@ mode and precision switches and prevents inconsistencies.
 
 ## Tests and examples
 
-- [test/wave](../../../test/wave/): minimal serial and MPI regression case, with `Run.sh` and `Run_MPI.sh N` examples.
-- [test/chichibu](../../../test/chichibu/): serial and MPI runs using real terrain, a catchment mask and a channel mask.
-- [test/tide](../../../test/tide/): serial and MPI runs with a sea mask and a tide boundary (np = 1, 2, 4 are bit-identical to the serial run; each rank applies the tide to the sea cells of its own band, with no communication).
+- [test/wave](../../../test/wave/en/README.md): minimal serial and MPI regression case, with `Run.sh` and `Run_MPI.sh N` examples.
+- [test/chichibu](../../../test/chichibu/en/README.md): serial and MPI runs using real terrain, a catchment mask and a channel mask.
+- [test/tide](../../../test/tide/en/README.md): serial and MPI runs with a sea mask and a tide boundary (np = 1, 2, 4 are bit-identical to the serial run; each rank applies the tide to the sea cells of its own band, with no communication).
 - [test/README.en.md](../../../test/README.en.md): common execution and comparison procedures. Consult each case's README and scripts for the quantities compared and tolerances.

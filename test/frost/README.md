@@ -1,5 +1,7 @@
 # test/frost — 凍土による浸透抑制(f_gwfrost)の解析検証
 
+[English](en/README.md)
+
 融雪期の出水(凍った地面の上を流れる融雪水)のための、気温連動の
 浸透能低減モジュール(`&list_gwflow` の `f_gwfrost = 1`、developer.md §16.4)の
 検定です。度日ベースの凍結指数 FI(℃·day)を積算し、低減係数

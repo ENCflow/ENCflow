@@ -885,9 +885,18 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   comparison.md、users_guide の geomorph・params_index・structure・usecases。
   `--git-dates` で正本の方が新しい組も同様に順次確認する。
   (c) examples の README 19 件は 2026-10-23 に §34.2 を改定して対象化し、英訳・全文の
-  内容確認・record 済み(method=assistant)。残る unreviewed 119 組は、内容を確認した
-  ものから `record` する(一括登録はしない)。test/ の README 67 件は未翻訳(missing)で、
-  順次。
+  内容確認・record 済み(method=assistant)。test/ の README 71 件(wave・wave_river を
+  除く全ケース + chichibu の data_chichibu*/README 3 件 + nhwave/Dispersion_result.md)も
+  同日に英訳し、全文を正本と突き合わせて record 済み(method=assistant)。残る
+  unreviewed 119 組(docs/en ほか)は、内容を確認したものから `record` する(一括登録は
+  しない)。英訳中に見つかった正本側の疑義は 2026-10-24 に正本・英語版を同時に修正(chichibu・
+  bendloss の「f_opening_dynamic = 1 既定」→ 2(§68.38)、表セル内の `|` を `\|` にエスケープ
+  (test 配下 44 ファイル)、bendloss の孤立した表 2 行を元の表へ、dissol「3 構成」→ A〜G、
+  tide の比較先 result_min/result_minx、hillslope の粗度の注記、bedfines の題名、nhbottom の
+  理論値を Theory.py の実装フィルタの値(0.0853、+3.9 %)に)。**未解決**: berode の kb1 河岸
+  損失(所見 0.206 m·cell と崩落節 0.367 m³·cell。コンパイラのない環境では再計算できず)、
+  chichibu の図表の数値は f_opening_dynamic = 1 当時のまま(注記で明示)、developer.md の
+  §68 内 2 箇所(「既定 1」「f_opening_dynamic = 1 が既定で」)の古い記述。
   (d) namelist と params_index(日英)の突合は未スクリプト化(2026-10-01 は手動)。
   (e) 接尾辞方式(test/README.en.md 等 5 件)の en/ への移行は任意(規約 §2・§5)。
   コード内コメントの言語方針は海外コア開発者が現実になった時点で

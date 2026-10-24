@@ -1,5 +1,7 @@
 # test/glacier — 氷河モジュール: Halfar ドームの相似解とカール形成スモークテスト
 
+[English](en/README.md)
+
 氷河モジュール(`fn_glacier`、[ユーザーガイドの氷河の章](../../docs/users_guide/glacier.md))
 の検証ケースです。3 つの構成からなります(docs/glacier_plan.md §7、
 developer.md §45)。

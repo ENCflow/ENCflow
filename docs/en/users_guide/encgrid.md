@@ -126,7 +126,7 @@ edges sample the neighbouring rows and the reconstruction contains a
 second-order smoothing
 $`u_c = u + (p_d/4)\Delta^2\,\partial^2 u/\partial y^2 + \cdots`$. This
 quantity appears in the output and the probes; in the Gaussian jet of
-[test/diffusion](../../../test/diffusion/README.md) the centre velocity
+[test/diffusion](../../../test/diffusion/en/README.md) the centre velocity
 reads 0.14% low at $`\Delta x = 1`$ m (this is not an error of the
 diffusion term). The speed $`|\mathbf{V}| = \sqrt{u^2 + v^2}`$ is used by
 the friction and drag terms and by the upwind decisions of the advection.
@@ -294,7 +294,7 @@ diffusion, non-hydrostatic) is on the pages [Advection](advection.md),
   the problem. For thin hillslope sheet flow (millimetres) keep dd at
   1 mm; for coastal inundation of metres, raising it to a few mm–1 cm
   changes little and makes the run cheaper. After a change, check the
-  sensitivity on a simple case such as [test/wave](../../../test/wave/).
+  sensitivity on a simple case such as [test/wave](../../../test/wave/en/README.md).
 - For the building coefficients cm, cd and kk, experimental and numerical
   studies of building-cluster resistance report added mass 1–2 and drag
   1–2. Move them together with the roughness while comparing with
@@ -341,10 +341,10 @@ non-hydrostatic correction are in the tables of their own pages.
 |---|---|---|
 | [tutorials/wave](../../../tutorials/wave/en/README.md) | waves in a tank (Steps 1-2) | effect of dt and of the threshold $`\theta`$; reading the Runge and Cn columns |
 | [test/wave](../../../test/wave/en/README.md) | basic regression case | bit reproduction of the default settings (np = 1, 2, 4) |
-| [test/dambreak](../../../test/dambreak/README.md) | Stoker's dam-break solution | bore speed and intermediate depth correct independently of dt |
-| [test/chichibu](../../../test/chichibu/README.md) | flood on real terrain | grid convergence and MPI agreement of the default settings |
-| [test/diffusion](../../../test/diffusion/README.md) | Gaussian jet | size of the smoothing $`(p_d/4)\Delta^2 u''`$ of the velocity reconstruction (§4) and the consistency of the initial flux (§6) |
-| [test/nhwave](../../../test/nhwave/README.md) | standing waves in a closed tank | numerical dispersion of the hydrostatic ENC below 1% |
+| [test/dambreak](../../../test/dambreak/en/README.md) | Stoker's dam-break solution | bore speed and intermediate depth correct independently of dt |
+| [test/chichibu](../../../test/chichibu/en/README.md) | flood on real terrain | grid convergence and MPI agreement of the default settings |
+| [test/diffusion](../../../test/diffusion/en/README.md) | Gaussian jet | size of the smoothing $`(p_d/4)\Delta^2 u''`$ of the velocity reconstruction (§4) and the consistency of the initial flux (§6) |
+| [test/nhwave](../../../test/nhwave/en/README.md) | standing waves in a closed tank | numerical dispersion of the hydrostatic ENC below 1% |
 
 ## References
 

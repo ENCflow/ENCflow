@@ -1,5 +1,7 @@
 # test/sewer_wq — 下水噴出の衛生リスク(水質 × 管路連続体層)
 
+[English](en/README.md)
+
 [examples/sewer_hybrid](../../examples/sewer_hybrid/) のラン D(幹線 1 本 +
 枝管網、セル別 sy / slot_sy)を短縮・自己完結化した回帰テストです。
 降雨 100 mm/h × 30 min(計 51.7 mm)が管内貯留(約 16 mm)を超えて

@@ -472,5 +472,5 @@ For levee overtopping and breach and channel conveyance, see the
 
 ## Tests and examples
 
-- [test/coastal_drain](../../../test/coastal_drain/): drainage with a pumping station drawing directly from the conduit layer (`f_pump_src=1`) and an outfall into sea cells.
-- [test/damwq](../../../test/damwq/): dam capture, constant release and reservoir storage coupled with water quality, checked against mass balances and analytical complete-mixing values.
+- [test/coastal_drain](../../../test/coastal_drain/en/README.md): drainage with a pumping station drawing directly from the conduit layer (`f_pump_src=1`) and an outfall into sea cells.
+- [test/damwq](../../../test/damwq/en/README.md): dam capture, constant release and reservoir storage coupled with water quality, checked against mass balances and analytical complete-mixing values.

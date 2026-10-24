@@ -164,7 +164,7 @@ A_e = \tfrac{1}{2}\left(\mathbf{T}_c + \mathbf{T}_n\right)\cdot\mathbf{n}_k
 
 - **Non-conservative.** Because it is not written as a momentum flux, it
   loses momentum at discontinuities. In the wet-bed dam break (Stoker's
-  analytical solution[^stoker57], [test/dambreak](../../../test/dambreak/README.md)) the bore position lags by 15%, an
+  analytical solution[^stoker57], [test/dambreak](../../../test/dambreak/en/README.md)) the bore position lags by 15%, an
   overshoot of 3 m (a 2Δx oscillation) appears behind the bore, and a
   standing hump remains at the dam site. Stronger upwinding ($`p \to 1`$)
   increases the lag.
@@ -343,7 +343,7 @@ on outflow $`u_e`$ (no contribution).
   takes $`\bar u = u_e`$ and contributes nothing. Reading the stored value 0
   instead would mean "still water flows in from the wall side", and in a
   one-cell-wide raster channel every bend would lose about 0.55 m of
-  artificial head (developer.md §68.8; the bend cases of [test/bendloss](../../../test/bendloss/README.md)).
+  artificial head (developer.md §68.8; the bend cases of [test/bendloss](../../../test/bendloss/en/README.md)).
 - **Sea cells (tide-prescribed boundary) supply no momentum either.** The
   cells of the sea mask (fn_sw) are the side whose water level is forced;
   their apparent water column hsea0 and their zero flux have nothing to do
@@ -390,8 +390,8 @@ on outflow $`u_e`$ (no contribution).
   projection of the axis velocity.
 - The cost relative to scheme 1 is +12–20% for scheme 2 and +19–27% for
   scheme 3 (five edges on the line plus two lateral edges read per edge, and
-  the exchange at the start of the step; wall-clock of [test/dambreak](../../../test/dambreak/README.md),
-  [test/wave](../../../test/wave/en/README.md) and [test/chichibu](../../../test/chichibu/README.md)). Memory is about the same.
+  the exchange at the start of the step; wall-clock of [test/dambreak](../../../test/dambreak/en/README.md),
+  [test/wave](../../../test/wave/en/README.md) and [test/chichibu](../../../test/chichibu/en/README.md)). Memory is about the same.
 
 ## 5. Properties and choice
 
@@ -409,10 +409,10 @@ The essentials of the numerical experiments of developer.md §68 (2026-10).
 | Cost | 1.00 | 1.19 | 1.27 |
 | Role | legacy; reproducing existing calibrations | fallback for 3 (coarse problems that tolerate the overshoot at the bore front) | **default**; best for bores, jumps, lateral inflow, convergence and stability |
 
-Sources of the numbers: the bore from [test/dambreak](../../../test/dambreak/README.md), the smooth flood
-wave, lateral inflow and stepped bed from [test/bendloss](../../../test/bendloss/README.md), grid
-convergence, stability and cost on real terrain from [test/chichibu](../../../test/chichibu/README.md),
-the agreement on hillslopes from [test/hillslope](../../../test/hillslope/README.md) (each README, in
+Sources of the numbers: the bore from [test/dambreak](../../../test/dambreak/en/README.md), the smooth flood
+wave, lateral inflow and stepped bed from [test/bendloss](../../../test/bendloss/en/README.md), grid
+convergence, stability and cost on real terrain from [test/chichibu](../../../test/chichibu/en/README.md),
+the agreement on hillslopes from [test/hillslope](../../../test/hillslope/en/README.md) (each README, in
 Japanese, has the figures, tables and the list of derived cases).
 
 **Guidance.**
@@ -462,7 +462,7 @@ threshold-type deposition (`vstop` of debris and driftwood) and on the maximum
 fluid force. With the lateral width set to the spacing $`\Delta x/\sqrt2`$ of
 the opposite-parity links and their mean as the upwind value, the mode now
 decays through the flux of the background flow
-([test/sublattice](../../../test/sublattice/README.md): the e-folding time of a
+([test/sublattice](../../../test/sublattice/en/README.md): the e-folding time of a
 sub-lattice mode superposed on a gyre drops from 1094 s to 88 s; the offshore
 checkerboard of tsunami_town from 0.43 to 0.01). The leading terms are
 unchanged for smooth fields, so the bore (Stoker), uniform-flow and bend-loss
@@ -474,24 +474,24 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| f_advection_scheme | 3 | scheme of the advection term (1: cell-centre gradient, 2: conservative + first-order upwind, 3: conservative + MUSCL) | **verification case** bore position error +1.1% in [test/dambreak](../../../test/dambreak/README.md), depth ratio 0.992 with lateral inflow in [test/bendloss](../../../test/bendloss/README.md), grid convergence in [test/chichibu](../../../test/chichibu/README.md) (table above) |
+| f_advection_scheme | 3 | scheme of the advection term (1: cell-centre gradient, 2: conservative + first-order upwind, 3: conservative + MUSCL) | **verification case** bore position error +1.1% in [test/dambreak](../../../test/dambreak/en/README.md), depth ratio 0.992 with lateral inflow in [test/bendloss](../../../test/bendloss/en/README.md), grid convergence in [test/chichibu](../../../test/chichibu/en/README.md) (table above) |
 | p_adv_upwind_index | 0.5 | upwinding index of scheme 1 (0: central, 1: first-order upwind) | **empirical** halfway between central and first-order upwind. The bore lag grows with $`p`$ (§3) |
 | f_advection_donor | 0 | limit the donors of the flow-direction faces to channel cells on edges between channel cells | **method** off by default; it cuts the momentum exchange between the main channel and the flooded valley floor, so judge against observations (§4.4) |
 | limiter $`\psi`$ (fixed) | van Leer | flux limiter of scheme 3 | **literature value** van Leer[^vanleer79]; inside Sweby's TVD region[^sweby84] (§4.3) |
-| f_scalar_scheme | 3 | face value of the scalar transport (suspended sediment, water quality, saline layer, driftwood, building debris) (1: first-order upwind, 3: link-wise MUSCL) | **verification case** measured numerical diffusion in [test/tracer](../../../test/tracer/README.md) (longitudinal D 1/3–1/5, lateral Dy 1/14; §7). First order is not the default because its numerical diffusion is proportional to the grid spacing |
+| f_scalar_scheme | 3 | face value of the scalar transport (suspended sediment, water quality, saline layer, driftwood, building debris) (1: first-order upwind, 3: link-wise MUSCL) | **verification case** measured numerical diffusion in [test/tracer](../../../test/tracer/en/README.md) (longitudinal D 1/3–1/5, lateral Dy 1/14; §7). First order is not the default because its numerical diffusion is proportional to the grid spacing |
 
 ## 6. Verification cases
 
-- **[test/dambreak](../../../test/dambreak/README.md)** -- Stoker's wet-bed dam break (flat, frictionless;
+- **[test/dambreak](../../../test/dambreak/en/README.md)** -- Stoker's wet-bed dam break (flat, frictionless;
   $`h_l = 10`$ m, $`h_r = 1`$ m). Bore position, the depth and velocity of the
   intermediate state and the L1 error are compared with the analytical
   solution (`Check_stoker.py`). Source of the bore row in §5.
-- **[test/bendloss](../../../test/bendloss/README.md)** -- one-cell-wide channels: straight vs. bent (bend
+- **[test/bendloss](../../../test/bendloss/en/README.md)** -- one-cell-wide channels: straight vs. bent (bend
   loss), stepped beds (dissipation at steps), lateral inflow (physical
   solution of spatially varied flow). The README lists the cases.
-- **[test/hillslope](../../../test/hillslope/README.md)** -- smooth hillslope and V-shaped catchment. Confirms
+- **[test/hillslope](../../../test/hillslope/en/README.md)** -- smooth hillslope and V-shaped catchment. Confirms
   that schemes 1 and 3 agree.
-- **[test/chichibu](../../../test/chichibu/README.md)** -- real terrain (100 m). The place for grid convergence
+- **[test/chichibu](../../../test/chichibu/en/README.md)** -- real terrain (100 m). The place for grid convergence
   and comparison with observations.
 - **[test/wave](../../../test/wave/en/README.md)** -- spreading of a hump of water at rest (frictionless
   closed basin). The reference case of the regression tests; shows the
@@ -540,7 +540,7 @@ The scheme is how the face value is taken.
   from a boundary face (concentration table): walls, dry beds and
   prescribed boundaries supply no gradient (the reasoning of §4.4).
 
-Measured in [test/tracer](../../../test/tracer/README.md) (u ≈ 0.9 m/s):
+Measured in [test/tracer](../../../test/tracer/en/README.md) (u ≈ 0.9 m/s):
 
 | Quantity | First-order upwind | MUSCL | Ratio |
 |---|---:|---:|---:|

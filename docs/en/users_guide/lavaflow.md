@@ -49,7 +49,7 @@ h_0 = \frac{\tau_y}{\rho g S}
 Edges with $`h_e \le h_0`$ do not flow. For $`\tau_y = 0`$ it reduces to
 the Newtonian $`q = \rho g S h_e^3 / 3\eta`$, and a constant supply on a
 flat bed follows the similarity solution of viscous gravity
-currents[^huppert82] (checked in [test/lava](../../../test/lava/)). For
+currents[^huppert82] (checked in [test/lava](../../../test/lava/en/README.md)). For
 $`\tau_y > 0`$ with a lava surface parallel to a uniform slope of
 gradient $`\tan\theta`$, the stopping thickness is
 $`h_\infty = \tau_y/(\rho g \tan\theta)`$.
@@ -188,7 +188,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 ## Tests and examples
 
-- Verification case: [test/lava](../../../test/lava/) — the Huppert
+- Verification case: [test/lava](../../../test/lava/en/README.md) — the Huppert
   similarity solution (axisymmetric spreading in the Newtonian limit)
   and the Bingham stopping thickness h∞ against analytic solutions.
 

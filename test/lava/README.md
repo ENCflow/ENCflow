@@ -1,5 +1,7 @@
 # test/lava — 溶岩流(fn_lavaflow): Huppert 相似解と Bingham 停止厚
 
+[English](en/README.md)
+
 溶岩流モジュール(`fn_lavaflow`。Bingham 粘性重力流 + 固化。
 [ユーザーガイドの溶岩流の章](../../docs/users_guide/lavaflow.md)、developer.md §51)の
 検定です。reference 比較なしの解析解検定で閉じます([test/volcano](../volcano/)
@@ -26,7 +28,7 @@
 | ファイル | 内容 |
 |---|---|
 | `make_init.py` | `zinit.txt`(等勾配斜面) |
-| `Check_lava.py <save> huppert|bingham` | 構成 1: (1) 台帳 Σhl·A = V_in、(2) 面積等価半径が r_N に 10% 以内、(3) r(tt)/r(tt/2) が √2 に 5% 以内。構成 2: (1) 台帳 Σhl + Σdz = V_in(固化は z への内部移転)、(2) 検定窓(i = 15〜35)の hl + dz が h∞ に 20% 以内・CV < 閾値、(3) 固化率 > 0.7 |
+| `Check_lava.py <save> huppert\|bingham` | 構成 1: (1) 台帳 Σhl·A = V_in、(2) 面積等価半径が r_N に 10% 以内、(3) r(tt)/r(tt/2) が √2 に 5% 以内。構成 2: (1) 台帳 Σhl + Σdz = V_in(固化は z への内部移転)、(2) 検定窓(i = 15〜35)の hl + dz が h∞ に 20% 以内・CV < 閾値、(3) 固化率 > 0.7 |
 | `Fig.py` | 下の図 `figs/lava.png` |
 
 ## 実行

@@ -236,7 +236,7 @@ the numbers are recorded.)
   the bars above the flood level requires a stable channel bed = equilibrium
   feed of both bedload and suspended sediment (stage 5). The vegetation effect
   of fixation itself is verified in the susp and rough configurations of
-  [test/fixation](../../../test/fixation/) (in Japanese).
+  [test/fixation](../../../test/fixation/en/README.md).
 - **Capacity feed removes the degradation wave of the unfed bed**
   (param_feed.txt): with a mobile bed up to the upstream end and
   `fluv_bcfeed = 1` (supply = net outflow of the inflow cell), the bed at the
@@ -379,8 +379,8 @@ the numbers are recorded.)
 - [docs/users_guide/geomorph.md](../../../docs/en/users_guide/geomorph.md) —
   settings for the bedload-direction corrections, bank erosion,
   angle-of-repose avalanching and fixation
-- [test/bendsed](../../../test/bendsed/) (in Japanese),
-  [test/berode](../../../test/berode/) (in Japanese),
-  [test/repose](../../../test/repose/) (in Japanese),
-  [test/fixation](../../../test/fixation/) (in Japanese) — verification of
+- [test/bendsed](../../../test/bendsed/en/README.md),
+  [test/berode](../../../test/berode/en/README.md),
+  [test/repose](../../../test/repose/en/README.md),
+  [test/fixation](../../../test/fixation/en/README.md) — verification of
   each mechanism

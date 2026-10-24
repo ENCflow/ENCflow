@@ -1,5 +1,7 @@
 # test/splash — 乾式斜面侵食(f_splash)の解析検証
 
+[English](en/README.md)
+
 無流水の斜面で働く**乾式斜面侵食**(`f_splash = 1`: 雨滴侵食 +
 サブグリッドリル侵食、凹地形増幅つき。developer.md §48、docs/splash_plan.md)の
 解析検証です。遷緩点付き斜面(slope_break)に一様降雨 30 mm/h を与え、

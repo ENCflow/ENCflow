@@ -360,6 +360,6 @@ list_meteo / list_evap / list_snow in
 
 ## Tests and examples
 
-- [test/chichibu](../../../test/chichibu/): uniform rainfall on a real-terrain catchment, with regression checks for runoff collection and flood-wave propagation.
-- [test/icevap](../../../test/icevap/): equivalence of minimal input and explicitly specified defaults for fixed-rate interception, initial loss and constant evapotranspiration.
-- [test/frost](../../../test/frost/): comparison with analytical values for the freezing index and infiltration suppression under constant air temperature.
+- [test/chichibu](../../../test/chichibu/en/README.md): uniform rainfall on a real-terrain catchment, with regression checks for runoff collection and flood-wave propagation.
+- [test/icevap](../../../test/icevap/en/README.md): equivalence of minimal input and explicitly specified defaults for fixed-rate interception, initial loss and constant evapotranspiration.
+- [test/frost](../../../test/frost/en/README.md): comparison with analytical values for the freezing index and infiltration suppression under constant air temperature.

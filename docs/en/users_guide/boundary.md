@@ -292,9 +292,9 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 
 ## Tests and examples
 
-- [test/sedinflow](../../../test/sedinflow/): sediment concentration/flux specifications for segment inflow, with a ledger check against the injected total.
-- [test/nhcurrent](../../../test/nhcurrent/): prescribed-stage settings that maintain a uniform current and generate a sinusoidal wave.
-- [test/nest_identity](../../../test/nest_identity/): the `flather` configuration compares a nested boundary driven by a still-water parent with a stand-alone radiation boundary.
+- [test/sedinflow](../../../test/sedinflow/en/README.md): sediment concentration/flux specifications for segment inflow, with a ledger check against the injected total.
+- [test/nhcurrent](../../../test/nhcurrent/en/README.md): prescribed-stage settings that maintain a uniform current and generate a sinusoidal wave.
+- [test/nest_identity](../../../test/nest_identity/en/README.md): the `flather` configuration compares a nested boundary driven by a still-water parent with a stand-alone radiation boundary.
 - Annotated example of all parameters: [examples/List_samples/list_boundary.txt](../../../examples/List_samples/en/list_boundary.txt)
 - Edge boundary (radiation): [tutorials/wave](../../../tutorials/wave/en/README.md) Step 3
 - Structures such as drainage pumps and sluice gates are on the fn_structure side ([structures chapter](structure.md)).

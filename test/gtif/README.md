@@ -1,5 +1,7 @@
 # GeoTIFF リーダー用テスト資産(Phase 0)
 
+[English](en/README.md)
+
 docs/geotiff_plan.md の Phase 0 で整備した読みテスト用の GeoTIFF 一式。
 Phase 1 で追加するリーダーの回帰テストが、ここの `data_gtif/*.tif` を読んで
 `expected/*.txt` と比較する。

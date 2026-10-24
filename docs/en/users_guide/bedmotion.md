@@ -454,7 +454,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 
 ## 11. Tests and examples
 
-- [test/nhbottom](../../../test/nhbottom/) configuration 3: a Hammack-type
+- [test/nhbottom](../../../test/nhbottom/en/README.md) configuration 3: a Hammack-type
   uplift given as a per-step snapshot table, checked against the same
   motion through the library API, against a restart and together with a
   submarine slide (details in [the explanation](bedmotion_models.md) §6).

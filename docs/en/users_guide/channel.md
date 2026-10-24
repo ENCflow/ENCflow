@@ -326,8 +326,8 @@ written as fields.
 
 ## Tests and examples
 
-- [test/bendloss](../../../test/bendloss/): straight, bent and diagonal channels, subgrid width and opening correction, assessed against Manning uniform flow or a straight-channel comparison.
-- [test/chichibu](../../../test/chichibu/): real-terrain examples comparing channel masks, roughness, width and levee settings through flood-wave behaviour.
+- [test/bendloss](../../../test/bendloss/en/README.md): straight, bent and diagonal channels, subgrid width and opening correction, assessed against Manning uniform flow or a straight-channel comparison.
+- [test/chichibu](../../../test/chichibu/en/README.md): real-terrain examples comparing channel masks, roughness, width and levee settings through flood-wave behaviour.
 - Format samples: [examples/List_samples/list_channel.txt](../../../examples/List_samples/en/list_channel.txt)
 - Seawalls (fn_seawall) are the coastal application of the same
   virtual-wall mechanism, configured in the [geographic information

@@ -1,5 +1,7 @@
 # test/splashlc — 曲率の相関長 spl_lc による谷の波長選択
 
+[English](en/README.md)
+
 乾式斜面侵食 f_splash の凹地形フィードバックは、曲率 κ を格子の 5 点
 ラプラシアンで評価すると最短波長(2Δx)が最速で成長し(Smith & Bretherton
 の無限波数問題)、谷の間隔が格子幅に張り付きます。`spl_lc` は κ を

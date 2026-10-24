@@ -221,5 +221,5 @@ param_rock.txt` draws figs/*_rock.png.
 - [docs/users_guide/geomorph.md](../../../docs/en/users_guide/geomorph.md) "Limestone dissolution",
   [sediment.md](../../../docs/en/users_guide/sediment.md) — formulas and the basis of the defaults
 - [docs/users_guide/gwflow.md](../../../docs/en/users_guide/gwflow.md) "Conduit continuum layer" — sinks and springs
-- [test/dissol](../../../test/dissol/) (in Japanese) — analytical verification; [docs/karst_plan.md](../../../docs/karst_plan.md) (in Japanese) — design and limits
+- [test/dissol](../../../test/dissol/en/README.md) — analytical verification; [docs/karst_plan.md](../../../docs/karst_plan.md) (in Japanese) — design and limits
 - Applications: [docs/users_guide/usecases.md](../../../docs/en/users_guide/usecases.md) "Karst landforms"

@@ -146,14 +146,14 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   way is to run water only once and place "the value where collapse
   starts" on the F9999 map.
 
-Verification (developer.md §63.9): in [test/bldgdebris](../../../test/bldgdebris/)
+Verification (developer.md §63.9): in [test/bldgdebris](../../../test/bldgdebris/en/README.md)
 an empty &list_bldgdebris with gv.txt and a configuration with every
 default written explicitly give byte-identical saved states.
 
 ## 6. Verification cases
 
-- [test/bldgdebris](../../../test/bldgdebris/): debris-volume conservation, one-way coupling with driftwood, water-volume conservation under void-ratio feedback, split-run continuation.
-- [test/gvchange](../../../test/gvchange/): unit checks of the void-ratio update procedure.
+- [test/bldgdebris](../../../test/bldgdebris/en/README.md): debris-volume conservation, one-way coupling with driftwood, water-volume conservation under void-ratio feedback, split-run continuation.
+- [test/gvchange](../../../test/gvchange/en/README.md): unit checks of the void-ratio update procedure.
 - [examples/tsunami_town](../../../examples/tsunami_town/): tsunami run-up into a town (without/with driftwood, depth/load criterion, feedback on/off).
 
 ## References

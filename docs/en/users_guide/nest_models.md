@@ -98,7 +98,7 @@ parent's φ (interpolated to the end of the sub-step) is placed there, so the
 non-hydrostatic pressure of a dispersive wave coming from the parent is
 continuous at the interface, and in a 1:1 self-nest the child's interior
 matches the parent (to the CG tolerance; maximum difference 2e-13 m in the
-nh case of [test/nest_identity](../../../test/nest_identity/)). nest_nh = 0 makes the band and the
+nh case of [test/nest_identity](../../../test/nest_identity/en/README.md)). nest_nh = 0 makes the band and the
 nh_bc_margin cells inside it hydrostatic (the same margin as the other forced
 boundaries), which shifts the phase of dispersive waves at the interface
 (maximum difference 1.4e-2 m in the same case). If the parent is not
@@ -155,7 +155,7 @@ velocity onto the individual ENC boundary faces to compute discharge.
   boundary).
 - If the parent is at rest (constant η, u = 0) the result is bit-identical
   to the existing radiation boundary (the flather case of
-  [test/nest_identity](../../../test/nest_identity/)). The comparison with a band on a one-way r3t3 interface
+  [test/nest_identity](../../../test/nest_identity/en/README.md)). The comparison with a band on a one-way r3t3 interface
   crossing is in [examples/nest_reflect](../../../examples/nest_reflect/) (README).
 
 ## 5. Sponge (nest_bc = 4)
@@ -221,10 +221,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
 | nest_bc | 2 | parent → child boundary method | **verification case** passing level, velocity and edge discharge (2) gives the most consistent interface ([examples/nest_reflect](../../../examples/nest_reflect/); 1 is the TUNAMI-type level-only band) |
-| nest_fb | 2 | child → parent replacement | **verification case** the wet-cell average keeps the parent's wet/dry state across a coastline (1:1 self-nesting is bit-identical in [test/nest_identity](../../../test/nest_identity/)) |
+| nest_fb | 2 | child → parent replacement | **verification case** the wet-cell average keeps the parent's wet/dry state across a coastline (1:1 self-nesting is bit-identical in [test/nest_identity](../../../test/nest_identity/en/README.md)) |
 | nest_nb | 0 (automatic) | width of the boundary band | **derived** from the stencil of the advection term: 2 for scheme 1, 3 for schemes 2 and 3 (the band covers ±2 edges along the line; [Advection](advection.md) §4.5) |
 | nest_ns | 4 | width of the sponge | **empirical** a fraction of the child's wavelength (§5) |
-| nest_nh | 1 | treatment of the non-hydrostatic band | **verification case** with the parent's φ as known values the interior of the 1:1 self-nest of [test/nest_identity](../../../test/nest_identity/) matches within 2e-13 m, against 1.4e-2 m when hydrostatic (§3) |
+| nest_nh | 1 | treatment of the non-hydrostatic band | **verification case** with the parent's φ as known values the interior of the 1:1 self-nest of [test/nest_identity](../../../test/nest_identity/en/README.md) matches within 2e-13 m, against 1.4e-2 m when hydrostatic (§3) |
 
 **Where to look when revising the defaults**
 
@@ -236,8 +236,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 ## 8. Verification cases
 
-- [test/nest_identity](../../../test/nest_identity/): identity tests of 1:1 self-nesting (band replacement, two-way, Flather and non-hydrostatic configurations).
-- [test/bmi_nest](../../../test/bmi_nest/): acceptance test of a nested system driven through BMI.
+- [test/nest_identity](../../../test/nest_identity/en/README.md): identity tests of 1:1 self-nesting (band replacement, two-way, Flather and non-hydrostatic configurations).
+- [test/bmi_nest](../../../test/bmi_nest/en/README.md): acceptance test of a nested system driven through BMI.
 - [examples/nest_reflect](../../../examples/nest_reflect/): waves crossing the interface of two-way nests with ratios 3 and 5, compared with a uniform fine grid (figures in the README).
 
 ## References

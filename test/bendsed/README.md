@@ -1,5 +1,7 @@
 # test/bendsed — 90° 湾曲水路の流砂方向補正(河床勾配項+平衡二次流項)
 
+[English](en/README.md)
+
 掃流砂 Exner(`f_fluvial`)に 2026-10-17 に加えた流砂方向補正
 (developer.md §84.3。蛇行発達への拡張 docs/meander_plan.md の段 1)の検定です。
 流砂ベクトルを q⃗_b = q_b (t̂ + r n̂ − γ∇z) とし、`fluv_slope = 1` で河床
@@ -36,8 +38,8 @@ make
 | 検定 | on | off(対照) |
 |---|---|---|
 | 外岸 − 内岸の平均 Δz(left = right) | −0.224 m | +0.030 m |
-| 鏡像差 max|Δz_left − flipud(Δz_right)| | 2.2e-5 m | 2.3e-11 m |
-| 乾いた河岸の max|Δz| | 0 | 0 |
+| 鏡像差 max\|Δz_left − flipud(Δz_right)\| | 2.2e-5 m | 2.3e-11 m |
+| 乾いた河岸の max\|Δz\| | 0 | 0 |
 
 - 補正なしでは水深平均流が内岸側で加速するため内岸側が多く削れ、補正ありで
   符号が反転して外岸側が深くなる(河床勾配項をエッジの直接差分で評価する

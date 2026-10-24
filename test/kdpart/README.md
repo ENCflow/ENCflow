@@ -1,5 +1,7 @@
 # test/kdpart — 水質の平衡分配(Kd)と粒子態沈降の台帳閉合・単調性
 
+[English](en/README.md)
+
 溶存態と粒子態(浮遊砂に付着)への**平衡分配**(`wq_kd`)と、粒子態の
 沈降を表面蓄積プールへ送る `f_wq_settle = 1`(developer.md §30.6 の K1)の
 検定です。[test/suspend](../suspend/) と同じ閉領域ダムブレイクに、中央セルの
@@ -20,7 +22,7 @@ Kd を 1000 倍にすると沈降が増え浸透が減ること(単調性)を re
 | ファイル | 内容 |
 |---|---|
 | `Run.sh` | Log.txt・wq.csv を reference と比較 → `Check_kdpart.py closure`(両構成)→ `monotonic` |
-| `Check_kdpart.py closure|monotonic` | in_point = mass_surface + mass_gw + mass_pool(相対 1e-6)、settle・to_gw・mass_pool の活性 / Kd 増で settle 増・to_gw 減 |
+| `Check_kdpart.py closure\|monotonic` | in_point = mass_surface + mass_gw + mass_pool(相対 1e-6)、settle・to_gw・mass_pool の活性 / Kd 増で settle 増・to_gw 減 |
 | `Fig.py` | 下の図 `figs/kdpart.png` |
 
 ## 実行
