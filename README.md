@@ -276,6 +276,18 @@ belong to specialized models
   third-party code; zero dependencies also means a clean, unambiguous
   copyright provenance. Licensed under Apache-2.0, commercial use
   included.
+- **Accountable through sources, verification, and consistency** —
+  the sources of each model, governing equation, and parameter are
+  cited wherever possible, and simplifications of our own that rest on
+  no literature are labelled as such. Behaviour with an analytical
+  solution or a conservation law is checked by self-judging
+  verification scripts, separately from the regression against
+  reference results. Agreement between code and documentation, between
+  originals and translations, and between tests and their references
+  is checked mechanically by CI. Keeping the state in which a third
+  party can trace "why this result" is a basic policy alongside full
+  source disclosure ([docs/developer.md](docs/developer.md) §0, in
+  Japanese).
 - **Sustainability as a project** — everything from the reasoning
   behind each design decision ([docs/developer.md](docs/developer.md),
   in Japanese) to the overall map

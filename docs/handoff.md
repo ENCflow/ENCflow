@@ -50,6 +50,21 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 未完了・検証待ち
 
+00c. **方針 13(説明責任。developer.md §0。2026-10-24 制定)の既存部分への遡及**
+   - 出典の棚卸し: users guide 第III部のうち「参考文献」節のない章
+     (bedmotion・bldgdebris・driftwood・forcing・nonhydrostatic・wq・
+     structure・channel・tide・boundary など)で、モデル・式・既定値の出典を
+     plan 文書・developer.md から引き写すか、独自定式ならその旨を明記する
+     (日英。list_*.f90 の既定値コメントとも整合させる)。
+   - 検定スクリプトの整備: 解析解があるのに reference 比較だけのケース
+     (pump・frost の線形解、conduit の解析平衡、nhbottom の規定隆起厳密解
+     など)に Check_*.py を足し、test/README.md の「検証」列を更新する。
+     benchmark 系(examples/benchmark の h-plane・v-shaped・v-valley)の
+     環境非依存テストへの昇格(§10)もここに含める。
+   - 一貫性検査の追加候補: List_samples ↔ namelist 宣言の突合せ(params_index
+     と同型)、test/README.md のケース一覧 ↔ test/ ディレクトリの突合せ。
+     どれも i18n.yml の枠(Python 標準ライブラリ・生成なし)で足す。
+
 00d. **河口デルタ形成の試行(2026-10-20〜21。docs/delta_plan.md)の残り**
    - 3 コミット(§84.13 定着の冠水減衰・河岸係数、§84.14 台帳の等価修正、
      test/fixation の Run.sh 修正)の MPI 確認は 2026-10-21 に完了: fixation・
