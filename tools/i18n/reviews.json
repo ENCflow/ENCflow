@@ -2218,7 +2218,7 @@
     {
       "source": "tutorials/bmi/README.md",
       "target": "tutorials/bmi/en/README.md",
-      "source_sha256": "9c68c56a588447a43f2523b6f20ed5ad9bd01b2e1bf51cb11d9f6ec4cd34f14d",
+      "source_sha256": "5c93d3d35b0fc3f970e009e4c8043db323f4f2cca4085730d12d4e46c068a5e6",
       "target_sha256": "49fe08cc78f9a007adc136ccfd00462afcd0389029a5217d844898289b83bf82",
       "reviewer": "Claude (assistant)",
       "method": "assistant",

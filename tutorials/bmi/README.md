@@ -160,9 +160,9 @@ print("finished without advancing time")
 ```
 
 ```bash
-uv run step1_hello.py          # A(uv)の場合
+uv run step1_hello.py               # A(uv)の場合
 # または
-python3 step1_hello.py         # B〜D(venv / conda / OS パッケージ)の場合
+python3 step1_hello.py              # B〜D(venv / conda / OS パッケージ)の場合
 ```
 
 ```
@@ -224,9 +224,9 @@ print("finished")
 ```
 
 ```bash
-uv run step2_time.py          # A(uv)の場合
+uv run step2_time.py                # A(uv)の場合
 # または
-python3 step2_time.py         # B〜D(venv / conda / OS パッケージ)の場合
+python3 step2_time.py               # B〜D(venv / conda / OS パッケージ)の場合
 ```
 
 ```
@@ -293,9 +293,9 @@ with ENCflow("param.txt") as model:
 ```
 
 ```bash
-uv run step3_state.py          # A(uv)の場合
+uv run step3_state.py               # A(uv)の場合
 # または
-python3 step3_state.py         # B〜D(venv / conda / OS パッケージ)の場合
+python3 step3_state.py              # B〜D(venv / conda / OS パッケージ)の場合
 ```
 
 ```
@@ -381,9 +381,9 @@ plt.show()                                   # 画面がない環境では何も
 ```
 
 ```bash
-uv run step4_plot.py          # A(uv)の場合
+uv run step4_plot.py                # A(uv)の場合
 # または
-python3 step4_plot.py         # B〜D(venv / conda / OS パッケージ)の場合
+python3 step4_plot.py               # B〜D(venv / conda / OS パッケージ)の場合
 ```
 
 ![Step 4: t = 2 h の水深分布](figs/step4_depth.png)
@@ -513,9 +513,9 @@ print(f"   max h: A = {h_a.max():.2f} m,  C = {h_c.max():.2f} m")
 ```
 
 ```bash
-uv run step6_rain.py          # A(uv)の場合
+uv run step6_rain.py                # A(uv)の場合
 # または
-python3 step6_rain.py         # B〜D(venv / conda / OS パッケージ)の場合
+python3 step6_rain.py               # B〜D(venv / conda / OS パッケージ)の場合
 ```
 
 ```
@@ -584,9 +584,9 @@ def run(factor):
 ```
 
 ```bash
-uv run step7_roughness.py          # A(uv)の場合
+uv run step7_roughness.py           # A(uv)の場合
 # または
-python3 step7_roughness.py         # B〜D(venv / conda / OS パッケージ)の場合
+python3 step7_roughness.py          # B〜D(venv / conda / OS パッケージ)の場合
 ```
 
 ```
