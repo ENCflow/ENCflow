@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# examples/meander_cutoff の図化(result を読んで figs/ に保存)
+# examples/meander_cutoff の図化(result(引数で result_* も可)を読んで figs/ に保存)
 #   figs/sequence.png : 出水の前・中・後の流速分布と河床変化(短絡の経過)
 #   figs/final.png    : 終了時の水深・流速・河床変化と、初期河道(黒線)・新流路
 # 数表(README 用): 旧河道(ループ)と新流路(頸部)の流れているセル数の推移
-import os, numpy as np, matplotlib
+import os, sys, numpy as np, matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import make_init as mi
@@ -14,7 +14,8 @@ x = (np.arange(NX) + 0.5) * DX
 y = (np.arange(NY) + 0.5) * DX
 os.makedirs("figs", exist_ok=True)
 z0 = np.loadtxt("z.txt"); h0 = np.loadtxt("h.txt")
-R = "result"
+R = sys.argv[1] if len(sys.argv) > 1 else "result"        # 結果ディレクトリ(省略時 result)
+SFX = ("_" + R[len("result_"):]) if R.startswith("result_") else ""   # 図のファイル名の接尾辞
 
 
 def rd(name, k):
@@ -24,6 +25,9 @@ def rd(name, k):
 tm = {int(l.split(",")[0]): float(l.split(",")[2])
       for l in open(R + "/FILENUMBER.csv") if not l.startswith("#") and int(l.split(",")[0]) < 9000}
 ks = sorted(tm)
+# 経過図のパネル数(第 2 引数。省略時は全出力。長時間の計算では 6 程度に間引く)
+NSEQ = int(sys.argv[2]) if len(sys.argv) > 2 else len(ks)
+kseq = [ks[int(round(i * (len(ks) - 1) / max(NSEQ - 1, 1)))] for i in range(min(NSEQ, len(ks)))] if NSEQ < len(ks) else ks
 # 初期の河道のうち「ループ」(y > 70 m の部分)と、頸部ゾーン(初期に乾いていて
 # 低い河岸 = z − 近傍河床の最大 < 1.2 m)を領域として定義する
 loop = (h0 > 0) & (y[:, None] > 70.0)
@@ -37,16 +41,29 @@ for dj in range(-r, r + 1):
 neck = (h0 == 0) & (mx > -1e8) & (z0 - mx < 1.2)
 
 
+# 流入ハイドログラフは結果ディレクトリに対応する設定ファイル(result → param.txt、
+# result_<名> → param_<名>.txt。無ければ param.txt)の inflow_val から読む(区分一定)
+import re
+_pf = "param%s.txt" % SFX
+if not os.path.exists(_pf):
+    _pf = "wrk_param%s.txt" % SFX if os.path.exists("wrk_param%s.txt" % SFX) else "param.txt"
+_hyd = sorted((float(m.group(1)), float(m.group(2))) for m in
+              (re.match(r"\s*inflow_val\(1:2,\d+,1\)\s*=\s*([0-9.]+),\s*([0-9.]+)", l) for l in open(_pf)) if m)
+
+
 def Q(t):
     tmin = t / 60.0
-    return 40.0 if 40.0 <= tmin <= 100.0 else 15.0
+    q = _hyd[0][1]
+    for t0, q0 in _hyd:
+        if tmin >= t0: q = q0
+    return q
 
 
 print("| t (min) | 地形時間 (h) | Q (m³/s) | ループで流れているセル(\\|V\\| > 0.3 m/s) | 頸部ゾーンで流れているセル | 初期河道の外で湿潤 | 最深の洗掘 (m) |")
 print("|---|---|---|---|---|---|---|")
 ext = [0, NX * DX, 0, NY * DX]
-fig, axes = plt.subplots(len(ks), 2, figsize=(14, 2.6 * len(ks)))
-for n, k in enumerate(ks):
+fig, axes = plt.subplots(len(kseq), 2, figsize=(14, 2.6 * len(kseq)))
+for n, k in enumerate(kseq):
     h = rd("H", k); vv = rd("V", k); z = rd("Z", k); dz = z - z0
     flowing = (h > 0.05) & (vv > 0.3)
     print("| %.0f | %.0f | %.0f | %d | %d | %d | %.2f |" % (tm[k] / 60, tm[k] * MORFAC / 3600, Q(tm[k]), (flowing & loop).sum(), (flowing & neck).sum(), ((h > 0.05) & (h0 == 0)).sum(), dz.min()))
@@ -58,7 +75,7 @@ for n, k in enumerate(ks):
     im = ax.imshow(dz, origin="lower", extent=ext, cmap="RdBu_r", vmin=-2, vmax=2)
     ax.contour(x, y, h0 > 0, levels=[0.5], colors="k", linewidths=0.3)
     ax.set_title("bed change z - z0 (m)")
-plt.tight_layout(); plt.savefig("figs/sequence.png", dpi=80); plt.close()
+plt.tight_layout(); plt.savefig("figs/sequence%s.png" % SFX, dpi=80); plt.close()
 
 k = ks[-1]
 h = rd("H", k); vv = rd("V", k); z = rd("Z", k); dz = z - z0
@@ -70,5 +87,5 @@ for ax in axes:
     ax.contour(x, y, h0 > 0, levels=[0.5], colors="k", linewidths=0.4)
     ax.contour(x, y, neck, levels=[0.5], colors="orange", linewidths=0.6)
     ax.set_xlabel("x (m)"); ax.set_ylabel("y (m)")
-plt.tight_layout(); plt.savefig("figs/final.png", dpi=100); plt.close()
-print("figures: figs/sequence.png figs/final.png")
+plt.tight_layout(); plt.savefig("figs/final%s.png" % SFX, dpi=100); plt.close()
+print("figures: figs/sequence%s.png figs/final%s.png" % (SFX, SFX))
