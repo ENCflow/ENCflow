@@ -156,6 +156,37 @@ neck zone evolved as follows (every 20 h of morphological time).
   cutoff depends strongly on the strength settings of the bank material
   (φ_r, H_c).
 
+### Plugging of the old channel and fines (param_slump_fines.txt; 2026-10-24)
+
+To the cohesive + slump-block configuration we added suspended fines (0.2 mm,
+fed at 0.5 times the equilibrium concentration of the inflow cells,
+`inflow_cs_eq = 1`) and the ledger of fines in the bed `f_bedfines = 1` (the
+initial bed is coarse only), to see whether the ends of the old channel, slack
+water after the cutoff, are plugged by settling fines.
+
+| Morphological time (h) | 20 | 40 | 60 | 80 | 100 | 120 | 140 | 160 | 180 |
+|---|---|---|---|---|---|---|---|---|---|
+| cohesive + slump blocks + fines: loop / neck | 2213 / 265 | 2100 / 266 | 1988 / 272 | 1846 / 266 | 1708 / 254 | 1592 / 229 | **767** / 179 | 739 / 181 | 748 / 199 |
+
+![Final state without a flood, cohesive banks with slump blocks and fines](../figs/final_slump_fines.png)
+
+- The cutoff comes at 120 to 140 h, 20 h later than without fines (100 to
+  120 h): the fines settle in the pools at the neck, reduce the scour, and the
+  bank face reaches H_c later.
+- After the cutoff **the abandonment of the old channel persists**: at 180 h the
+  flowing cells in the loop are 748 (without fines the widened new channel
+  reconnects with the loop and they return to 1,095) and the wet cells 1,278
+  (1,409). Of the 482 cells of the entrance zone, 315 are dry (270), the bed
+  change at the entrances averages +0.66 m (+0.45 m), and the fines ledger Sf
+  averages 0.06 m at the entrances and 0.10 m over the loop (maximum 1.3 m).
+  The fines accumulate in the old channel and advance the plugging of its ends,
+  but an oxbow lake (complete separation) is not reached within 180 h.
+- The fines carried along with the bed load by the ledger total 1.0 × 10⁶ m³,
+  a large amount: inside the channel the fines keep moving with the bed load,
+  and only what enters slack water remains. The next trial to speed up the
+  plugging is to combine alternating floods and low flows (fines enter the old
+  channel during floods and settle at low flow) with fixation (§84.6).
+
 ## Related documents
 
 - docs/meander_plan.md §3.5, developer.md §84.5, §84.17 (in Japanese)
