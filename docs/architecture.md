@@ -253,7 +253,7 @@ z は読み込みで 0 に強制され、fn_tide があれば m_tide が毎更�
 
 | 知りたいこと | 見る場所 |
 |---|---|
-| 設計判断の理由・経緯・実バグ | docs/developer.md(§0 方針 12 箇条から) |
+| 設計判断の理由・経緯・実バグ | docs/developer.md(§0 方針 13 箇条から) |
 | 変更時の検証手順・禁止事項 | CLAUDE.md |
 | 未完了の作業・中期の道標 | docs/handoff.md |
 | パラメータの意味(646 項目) | docs/users_guide/params_index.md と各章 |
