@@ -897,8 +897,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   (.gitignore に `!test/*/en/figs/*.png`)。未対応: nhbreak の切り分け節の図 2 枚(runup_diag・
   runup_visc。Diag.py の派生ケース約 40 本が必要)は英語 README も日本語図を参照。
   同日に gfortran 13.3 の release ビルドで全 67 ケースの Run.sh を実行し、README の数値を照合した。
-  回帰は nhshelf のみ FAIL(ULP=1 で Q_max 列 2 箇所が 2 量子差。reference は未更新・要判断)、
-  他は PASS。2026-10-18 の reference 更新(5aa1e71: 移流の片側リンク修正と f_opening_dynamic = 2
+  回帰は nhshelf のみ FAIL(ULP=1 で Q_max 列 2 箇所が 2 量子差)で、利用者の許可を得て同日に
+  reference を更新(他の列は ULP 内)。他は PASS。2026-10-18 の reference 更新(5aa1e71: 移流の片側リンク修正と f_opening_dynamic = 2
   既定化)に README が追随していなかったケースが多数あり、現行値に更新した(kdpart・nhbottom・
   nhcurrent・nhsolitary・nhbore・nhbreak・nhwave・tracer・sewer_wq・gwseep・damwq・hillslope・
   dambreak・bedslide・debris・bldgdebris・slide・avalanche・volcano・bendsed・bendloss・fixation・
