@@ -20,6 +20,60 @@
       "reviewed_on": "2026-10-23"
     },
     {
+      "source": "docs/users_guide.md",
+      "target": "docs/en/users_guide.md",
+      "source_sha256": "b96fe20682cf5b7e512b46d358851e8240b606ba346acc4e7ad80361e6e5ac40",
+      "target_sha256": "494cffce7a99d1c05251286541a20f77828a1bb82f9cf9096c91758ced93b953",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "docs/users_guide/channel.md",
+      "target": "docs/en/users_guide/channel.md",
+      "source_sha256": "76e4c64e18824faa69ad8d2603088281627e12cda29d6e0a37a11d3f03c20865",
+      "target_sha256": "5f4fa3393908416747b085ac69e2253e2dbdfebb42e39c15ae13ca3bb9a2c1d1",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "docs/users_guide/encgrid.md",
+      "target": "docs/en/users_guide/encgrid.md",
+      "source_sha256": "6e711bb9cc60faab837b4fbabc90fee332bc879363219c4e8a22001cf19f125f",
+      "target_sha256": "a36cbcdfc4af43a46a22eff6e05ac7c118da29fa0068e70e1d36f73af66e9675",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "docs/users_guide/geoinfo.md",
+      "target": "docs/en/users_guide/geoinfo.md",
+      "source_sha256": "5861062308c72756210aca912a570da864a06e4ee9a4633a9ad374487689271e",
+      "target_sha256": "27dba2a556cadc9811db7d273550b61963f9d63bd33778916a8ad994145918af",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "docs/users_guide/gwflow_models.md",
+      "target": "docs/en/users_guide/gwflow_models.md",
+      "source_sha256": "1486306cf0fd8a6ca9fb641f0af5a2ddb9961413124c827b66085bb0bb702db3",
+      "target_sha256": "8a33d2940ec2d02d233a73bc545f2d43780574a952d56496ba2d72021d63f921",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "docs/users_guide/salt.md",
+      "target": "docs/en/users_guide/salt.md",
+      "source_sha256": "328e380ef3aaafe5d5facfda273d7189ccb22df615f1b48c498ef89e3dd22d9a",
+      "target_sha256": "e692b287a9d0bca09cbeaaf65efe905f76643d0da20373de727731abc555bd1c",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
       "source": "examples/List_samples/list_bedmotion.txt",
       "target": "examples/List_samples/en/list_bedmotion.txt",
       "source_sha256": "b1911c25b489839057019085a05e91ff710f7e1b173cd31aa588f071499ad714",

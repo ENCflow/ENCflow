@@ -220,9 +220,9 @@ requirements are not identical conditions.
 | Parameter | Default | Meaning |
 |---|---|---|
 | fn_seaside | "" | seaside mask (1: treated as the sea side; the sea of fn_sw is always seaside) |
-| fn_seawall / seawall0 | "" / -9999 | crest height distribution (at landside cell positions) / uniform value (mutually exclusive; automatically assigned to adjacent land cells, except channel openings) |
+| fn_seawall / seawall0 | "" / -9999 | crest height distribution (at landside cell positions) / uniform value (mutually exclusive; the uniform value is assigned automatically to land cells adjacent to the sea side, while channel cells remain openings) |
 | f_seawall_datum | 2 | crest height datum (1: height above the cell's own ground, 2: absolute elevation) |
-| f_seawall_mode | 0 | hydraulic mode (0: overtopping only, 1: flap gate (gates), 2: forced drainage = an idealization that drains the whole land-side depth regardless of the sea-side level; for compatibility and experiments, real pumping stations use the pumps of the [structures chapter](structure.md)) |
+| f_seawall_mode | 0 | hydraulic mode (0: overtopping only, 1: flap (land locks and sluice gates), 2: forced drainage = an idealization that drains the whole land-side depth regardless of the sea-side level; for compatibility and experiments, real pumping stations use the pumps of the [structures chapter](structure.md)) |
 
 Represents seawalls as line-shaped virtual walls without widening cells
 (the coastal application of the river-levee mechanism, fn_bank). The sea
