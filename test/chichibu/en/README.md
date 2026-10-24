@@ -23,7 +23,7 @@ experiments of §68. The tutorial on the same catchment at 200 m grid is
 | Domain and grid | 56 km × 30 km, 560 × 300 cells (Δx = 100 m). `data_chichibu/` (elevation `Chichibu_100m_filled2.txt` (depression-filled), catchment mask, channel mask) |
 | Roughness | Slopes n = 0.15, channel cells (fn_rw) n = 0.02 |
 | Rainfall | 200 mm/h from 0 to 30 min, 0 thereafter (surface flow is the only process; no infiltration or interception) |
-| Computation | Dynamic wave (f_govequation = 0), the default ENC settings (f_advection_scheme = 3, f_opening_dynamic = 1, f_dry_head_cap = 1). `p_adv_upwind_index = 0.1`, dt = 2.5 s, 6 h |
+| Computation | Dynamic wave (f_govequation = 0), the default ENC settings (f_advection_scheme = 3, f_opening_dynamic = 2 (changed from 1 on 2026-10-18; §68.38), f_dry_head_cap = 1). `p_adv_upwind_index = 0.1`, dt = 2.5 s, 6 h |
 | Records | Discharge at transects 1–4 (the main stem from upstream to downstream; x = 16.5 / 21.5 / 29.6 / 43.3 km), depth at 2 probes (channel cells on transects 1 and 2) |
 
 | File | Contents |
@@ -66,7 +66,10 @@ hour, showing the delay of the collection from the hillslopes.
 
 - The reference is the Log of the default settings (scheme 3, dynamic
   opening correction). The verdict of `Run.sh` is PASS (at the time of
-  writing; within the ULP = 1 tolerance).
+  writing; within the ULP = 1 tolerance). The numbers in the table and the
+  figure above are from the computation when f_opening_dynamic = 1; since 2
+  became the default on 2026-10-18, Q_max changes by about +6 % (§68.38; the
+  table and figure have not been updated).
 - **The domain is closed** (outside the catchment mask is wall; the S column
   of the Log is constant at the total rainfall of 100 mm). Water accumulates
   in the channel cell (479, 35) at the outlet, reaching a depth of 33 m at

@@ -32,7 +32,7 @@ slope_break 地形(tanθ = 0.4 の斜面 → x = 30 m の遷緩点 → 平坦)�
 
 | ファイル | 内容 |
 |---|---|
-| `Check_debris.py <save> [eg|wet]` | 上記の検定(`save*/state.dat` を読む) |
+| `Check_debris.py <save> [eg\|wet]` | 上記の検定(`save*/state.dat` を読む) |
 | `Fig.py` | 下の図 `figs/*.png` |
 
 ## 実行

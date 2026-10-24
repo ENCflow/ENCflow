@@ -36,7 +36,7 @@ same practice as [test/volcano](../../volcano/en/README.md)).
 | File | Contents |
 |---|---|
 | `make_init.py` | `zinit.txt` (uniform slope) |
-| `Check_lava.py <save> huppert|bingham` | Configuration 1: (1) ledger Σhl·A = V_in, (2) area-equivalent radius within 10% of r_N, (3) r(tt)/r(tt/2) within 5% of √2. Configuration 2: (1) ledger Σhl + Σdz = V_in (solidification is an internal transfer to z), (2) hl + dz in the check window (i = 15–35) within 20% of h∞ and CV < threshold, (3) solidified fraction > 0.7 |
+| `Check_lava.py <save> huppert\|bingham` | Configuration 1: (1) ledger Σhl·A = V_in, (2) area-equivalent radius within 10% of r_N, (3) r(tt)/r(tt/2) within 5% of √2. Configuration 2: (1) ledger Σhl + Σdz = V_in (solidification is an internal transfer to z), (2) hl + dz in the check window (i = 15–35) within 20% of h∞ and CV < threshold, (3) solidified fraction > 0.7 |
 | `Fig.py` | The figure `figs/lava.png` below |
 
 ## Running

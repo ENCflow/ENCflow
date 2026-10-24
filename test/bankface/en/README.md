@@ -34,7 +34,7 @@ of the meander-development extension docs/meander_plan.md; both in Japanese).
 
 | File | Contents |
 |---|---|
-| `Check_bankface.py <save> <sd0>` | (1) volume conservation |Σ(z − z₀)| < 1e-9, (2) max|z − z₀| of the dry bank cells is exactly 0, (3) co-moving update max|(sd − sd₀) − (z − z₀)| < 1e-10, (4) activity in the channel > 1e-4 m, (5) min sd ≥ 0 |
+| `Check_bankface.py <save> <sd0>` | (1) volume conservation \|Σ(z − z₀)\| < 1e-9, (2) max\|z − z₀\| of the dry bank cells is exactly 0, (3) co-moving update max\|(sd − sd₀) − (z − z₀)\| < 1e-10, (4) activity in the channel > 1e-4 m, (5) min sd ≥ 0 |
 
 ## Running
 
@@ -49,9 +49,9 @@ make
 | Check | sd₀ = 10 m | sd₀ = 0.5 mm |
 |---|---|---|
 | (1) Σ(z − z₀) | −2.5e-14 | 5.4e-13 (the supply limiter acted in 352,127 cell updates) |
-| (2) max|z − z₀| of the dry banks | 0 | 0 |
+| (2) max\|z − z₀\| of the dry banks | 0 | 0 |
 | (3) co-moving update | 1.8e-15 | 5.7e-14 |
-| (4) max|z − z₀| in the channel | 11.9 mm | 6.7 mm |
+| (4) max\|z − z₀\| in the channel | 11.9 mm | 6.7 mm |
 | (5) min sd | 9.99 m | 0 (bedrock exposed; the floor is not broken through) |
 
 With the code before the change, (2) is 0.39 mm / 0.50 mm and (1) for the

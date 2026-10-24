@@ -25,7 +25,7 @@
 
 | ファイル | 内容 |
 |---|---|
-| `Check_suspend.py <save>` | (1) 固体総量 |Σhs + (1 − λ)Σ(z − z₀)| < 1e-9、(2) 共動更新 max|(sd − sd₀) − (z − z₀)| < 1e-10、(3) 活性 max hs > 閾値かつ max|z − z₀| > 閾値 |
+| `Check_suspend.py <save>` | (1) 固体総量 \|Σhs + (1 − λ)Σ(z − z₀)\| < 1e-9、(2) 共動更新 max\|(sd − sd₀) − (z − z₀)\| < 1e-10、(3) 活性 max hs > 閾値かつ max\|z − z₀\| > 閾値 |
 | `Fig.py` | 下の図 `figs/suspend.png`(Run.sh は構成 1 を `save_serial/`、構成 2 を `save/` に残す) |
 
 ## 実行
@@ -50,7 +50,7 @@ python3 Fig.py    # figs/suspend.png
 
 ## 所見
 
-| 構成 | 固体総量 | 共動更新 | max hs / max|dz| | 判定 |
+| 構成 | 固体総量 | 共動更新 | max hs / max\|dz\| | 判定 |
 |---|---|---|---|---|
 | 1 線形式 | 0.0 | 1.2e-14 | 0.45 mm / 1.13 mm | PASS |
 | 2 板倉・岸 | 0.0 | 1.3e-14 | 1.04 mm / 2.53 mm | PASS |

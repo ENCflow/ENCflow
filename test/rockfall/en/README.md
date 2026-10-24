@@ -12,7 +12,7 @@ collapses and the fallen material spreads at the foot as talus (repose angle 35�
 | Item | Value |
 |---|---|
 | Domain and grid | 41 × 41 m, Δx = 1 m (closed domain with walls on all four sides) |
-| Terrain | make_init.py: plateau z = 10 m (|x|, |y| ≤ 10 m), z = 0 around it |
+| Terrain | make_init.py: plateau z = 10 m (\|x\|, \|y\| ≤ 10 m), z = 0 around it |
 | Rockfall | rf_hc = 4 m, rf_phi = 35°, rf_relax = 0.5, fluv_dzmax = 0.5 m |
 | Time | dt = 0.1 s, 60 s (600 terrain updates, morfac = 1) |
 

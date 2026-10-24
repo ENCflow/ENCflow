@@ -38,7 +38,7 @@ reference 比較ではなく `Check_volcano.py` の自己検定で合否を決�
 |---|---|
 | `param.txt` / `param_ty.txt` | 構成 1 / 2 |
 | `make_init.py z` / `db` | `zinit.txt`(等勾配斜面)/ `dbinit.txt`(崩壊深分布) |
-| `Check_volcano.py <save> voellmy|tauy` | 構成 1: (1) 水台帳、(2) 固体台帳、(3) 検定窓 x ∈ [60, 100] の <h_t> と解析解・等流性・濃度。構成 2: (1) 固体台帳、(2) 活性(放出域の低下と平坦部の堆積)、(3) 停止(残存 hs の割合) |
+| `Check_volcano.py <save> voellmy\|tauy` | 構成 1: (1) 水台帳、(2) 固体台帳、(3) 検定窓 x ∈ [60, 100] の <h_t> と解析解・等流性・濃度。構成 2: (1) 固体台帳、(2) 活性(放出域の低下と平坦部の堆積)、(3) 停止(残存 hs の割合) |
 | `Fig.py` | 下の図 `figs/*.png` |
 
 ## 実行

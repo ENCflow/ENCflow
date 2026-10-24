@@ -29,7 +29,7 @@ factor `wq_rg = 1e12` (complete immobilization) is also checked.
 | File | Contents |
 |---|---|
 | `Run.sh` | Compare Log.txt and wq.csv with the reference (ULP = 0) → `Check_gwseep.py closure` → configuration 2 → `Check_gwseep.py immobile` |
-| `Check_gwseep.py closure|immobile <wq.csv>` | Ledger to_gw − seep = mass_gw and total mass 4000 g (relative 1e-6), activity of the transport / complete immobilization (seep ≈ 0, mass_gw = to_gw) |
+| `Check_gwseep.py closure\|immobile <wq.csv>` | Ledger to_gw − seep = mass_gw and total mass 4000 g (relative 1e-6), activity of the transport / complete immobilization (seep ≈ 0, mass_gw = to_gw) |
 | `Fig.py` | The figure `figs/gwseep.png` below |
 
 ## Running

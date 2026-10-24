@@ -50,8 +50,8 @@ climb the step and jams (see the note in `make_init.py`).
 
 | File | Contents |
 |---|---|
-| `make_init.py zbench|dbbench|zrot|dbrot|z|db` | Generation of the terrain and the bed-layer thickness (the constants are paired with the Check) |
-| `Check_bedslide.py bench|tsunami|plunge` | Configurations 1 and 2: (1) ledger Σdz = Σdsd = 0 and bedrock surface unchanged, (2) Vb of the interior cells within 0.5% of V, (3) cross-section passage speed within 10% of V. Configuration 3: ledger, Σh unchanged, deposition on the lake bed, wave generation, release ledger. Configuration 4: solid and water ledgers, handover volume, arrival at the lake bed, and the control does not arrive |
+| `make_init.py zbench\|dbbench\|zrot\|dbrot\|z\|db` | Generation of the terrain and the bed-layer thickness (the constants are paired with the Check) |
+| `Check_bedslide.py bench\|tsunami\|plunge` | Configurations 1 and 2: (1) ledger Σdz = Σdsd = 0 and bedrock surface unchanged, (2) Vb of the interior cells within 0.5% of V, (3) cross-section passage speed within 10% of V. Configuration 3: ledger, Σh unchanged, deposition on the lake bed, wave generation, release ledger. Configuration 4: solid and water ledgers, handover volume, arrival at the lake bed, and the control does not arrive |
 | `Fig.py` | The figures below, `figs/*.png` |
 
 ## Running
@@ -102,7 +102,7 @@ handover it stops near the shoreline and does not reach the lake bed
 | Configuration 1: cross-section passage speed | 7.519 m/s (−2.9% = agrees with the boundary layer 2·ld/ny of the 2 wall rows) | PASS |
 | Configuration 2: interior Vb | 7.736–7.746 m/s (0.14%) | PASS |
 | Configuration 2: cross-section passage speed | 7.175 m/s (−7.4%; wall ends + staircase cross-section) | PASS |
-| Configuration 3: ledger / Σh | Σdz −1.6e-12, max|Δ(z − sd)| 3e-13 / Σh unchanged (−6e-4 m·cell) | PASS |
+| Configuration 3: ledger / Σh | Σdz −1.6e-12, max\|Δ(z − sd)\| 3e-13 / Σh unchanged (−6e-4 m·cell) | PASS |
 | Configuration 3: lake-bed deposition / wave generation | flat lake bed max dz 5.18 m / water-surface maximum 0.47 m (flat part of the lake bed) | PASS |
 | Configuration 3: release ledger | released 19,110 = stopped 16,660 + moving 2,450 m³ | PASS |
 | Configuration 4: handover | 17,658 m³, lake-bed max dz 5.17 m; control 0.00 m | PASS |

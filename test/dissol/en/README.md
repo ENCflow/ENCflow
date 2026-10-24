@@ -9,8 +9,8 @@ The verification case for limestone dissolution in the landform-change module
 [the landform-change chapter of the user's guide](../../../docs/en/users_guide/geomorph.md#limestone-dissolution-f_dissol))
 (developer.md §86, docs/karst_plan.md §3). Dissolution is a local, linear
 update that lowers z by exactly "the amount of water entering the rock × k_d
-(= c_eq/ρ_r) × morfac", so the ground elevation at the end is checked in 3
-configurations in which the water amount is determined analytically.
+(= c_eq/ρ_r) × morfac", so the ground elevation at the end is checked in
+configurations A–G in which the water amount is determined analytically.
 
 | Configuration | File | Source of the water | Analytical value |
 |---|---|---|---|

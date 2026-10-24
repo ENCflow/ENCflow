@@ -40,8 +40,8 @@ hb として解く。docs/landslide_tsunami_plan.md、developer.md §61)の
 
 | ファイル | 内容 |
 |---|---|
-| `make_init.py zbench|dbbench|zrot|dbrot|z|db` | 地形・底層厚の生成(定数は Check と対) |
-| `Check_bedslide.py bench|tsunami|plunge` | 構成 1・2: (1) 台帳 Σdz = Σdsd = 0・岩盤面不変、(2) 内部セルの Vb が V に 0.5% 以内、(3) 断面通過速度が V に 10% 以内。構成 3: 台帳、Σh 不変、湖底堆積、造波、発火台帳。構成 4: 固体・水の台帳、引き渡し体積、湖底到達、対照は到達しない |
+| `make_init.py zbench\|dbbench\|zrot\|dbrot\|z\|db` | 地形・底層厚の生成(定数は Check と対) |
+| `Check_bedslide.py bench\|tsunami\|plunge` | 構成 1・2: (1) 台帳 Σdz = Σdsd = 0・岩盤面不変、(2) 内部セルの Vb が V に 0.5% 以内、(3) 断面通過速度が V に 10% 以内。構成 3: 台帳、Σh 不変、湖底堆積、造波、発火台帳。構成 4: 固体・水の台帳、引き渡し体積、湖底到達、対照は到達しない |
 | `Fig.py` | 下の図 `figs/*.png` |
 
 ## 実行
@@ -85,7 +85,7 @@ python3 Fig.py    # figs/bench.png, tsunami.png, plunge.png
 | 構成 1: 断面通過速度 | 7.519 m/s(−2.9% = 壁 2 行の境界層 2·ld/ny と一致) | PASS |
 | 構成 2: 内部 Vb | 7.736〜7.746 m/s(0.14%) | PASS |
 | 構成 2: 断面通過速度 | 7.175 m/s(−7.4%。壁端 + 階段断面) | PASS |
-| 構成 3: 台帳 / Σh | Σdz −1.6e-12、max|Δ(z − sd)| 3e-13 / Σh 不変(−6e-4 m·cell) | PASS |
+| 構成 3: 台帳 / Σh | Σdz −1.6e-12、max\|Δ(z − sd)\| 3e-13 / Σh 不変(−6e-4 m·cell) | PASS |
 | 構成 3: 湖底堆積 / 造波 | 平坦湖底 max dz 5.18 m / 水面最大 0.47 m(湖底平坦部) | PASS |
 | 構成 3: 発火台帳 | 放出 19,110 = 停止 16,660 + 移動中 2,450 m³ | PASS |
 | 構成 4: 引き渡し | 17,658 m³、湖底 max dz 5.17 m。対照 0.00 m | PASS |

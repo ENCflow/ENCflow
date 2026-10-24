@@ -24,7 +24,7 @@ per update).
 
 | File | Contents |
 |---|---|
-| `Check_repose.py <save>` | (1) volume conservation |Σ(z − z₀)| < 1e-9, (2) final maximum slope (axial and diagonal) ≤ tan30° + 1e-4, (3) the summit drops by at least 0.5 m, (4) identity of the co-moving update |
+| `Check_repose.py <save>` | (1) volume conservation \|Σ(z − z₀)\| < 1e-9, (2) final maximum slope (axial and diagonal) ≤ tan30° + 1e-4, (3) the summit drops by at least 0.5 m, (4) identity of the co-moving update |
 
 ## Running
 

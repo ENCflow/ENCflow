@@ -22,7 +22,7 @@ agreement between schemes are examined.
 
 `Make_hillslope.py` generates the terrain and the parameter files (the
 constants are collected in this script). Common to all cases: Manning
-roughness n = 0.15 on the slope, free outflow on the east side, and one flux
+roughness n = 0.15 on the slope (the V-shaped catchment as in the table), free outflow on the east side, and one flux
 transect (spanning all rows) just before the outlet records the discharge
 every minute.
 

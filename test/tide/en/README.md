@@ -79,7 +79,7 @@ domain is level with the tide level of 2 m.
 | S(t = 0) | 0.5000 m (initial depth 0.5 m over the 20 land columns. Sea cells are not included in S) |
 | Minimum of S | 0.3762 m (t = 90 s; the time when the tide level = the land water surface 1.5 m) |
 | S(t = 240 s) | 1.4209 m (the whole domain approaches the water surface of 2 m) |
-| Configurations 2 and 2' | result/ byte-identical; `titype = 1 (default)` printed on the screen |
+| Configurations 2 and 2' | result_min and result_minx byte-identical; `titype = 1 (default)` printed on the screen |
 
 - It is confirmed that the switch from drainage to inundation occurs at the
   time dictated by the relation between the tide level and the land water

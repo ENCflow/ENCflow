@@ -67,7 +67,7 @@ with the sea it is 0.5000–0.5002 m, agreeing with the analytical value
 | Check | Computed | Result |
 |---|---|---|
 | A: final Hss | 0.4762 m uniform (analytical 10/21 = 0.47619…), scatter 1.7e-16 | reference PASS |
-| A: surface water depth H | Exactly unchanged at all times and in all cells (max|ΔH| = 0.0) | — |
+| A: surface water depth H | Exactly unchanged at all times and in all cells (max\|ΔH\| = 0.0) | — |
 | A: salt-water volume | Relative 2e-5 (within the rounding of the float32 output) | — |
 | B: groundwater level Hg | 0.5000–0.5002 m (analytical 0.5) | — |
 

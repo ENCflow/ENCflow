@@ -42,8 +42,8 @@ make
 | Check | on | off (control) |
 |---|---|---|
 | Mean Δz, outer bank − inner bank (left = right) | −0.224 m | +0.030 m |
-| Mirror difference max|Δz_left − flipud(Δz_right)| | 2.2e-5 m | 2.3e-11 m |
-| max|Δz| of the dry banks | 0 | 0 |
+| Mirror difference max\|Δz_left − flipud(Δz_right)\| | 2.2e-5 m | 2.3e-11 m |
+| max\|Δz\| of the dry banks | 0 | 0 |
 
 - Without correction the depth-averaged flow accelerates on the inner-bank
   side, so the inner-bank side erodes more; with correction the sign reverses

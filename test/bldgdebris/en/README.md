@@ -31,7 +31,7 @@ size 5 mm, apparent specific gravity 0.5.
 
 | File | Contents |
 |---|---|
-| `Check_bldgdebris.py <save>` | (1) volume conservation |Σ(hbd + wbd) gv + Σwbs − Σwbs₀| < 1e-9, (2) activity: destruction > 1e-3 and deposition > 1e-3 m·cell, (3) arrival: max(hbd + wbd) > 0 on the flat part |
+| `Check_bldgdebris.py <save>` | (1) volume conservation \|Σ(hbd + wbd) gv + Σwbs − Σwbs₀\| < 1e-9, (2) activity: destruction > 1e-3 and deposition > 1e-3 m·cell, (3) arrival: max(hbd + wbd) > 0 on the flat part |
 | `gv.txt` / `bdstock_min.txt` | Void-ratio distribution of configuration 4 / stock of configuration 5′ |
 | `Fig.py` | The figure `figs/bldgdebris.png` below |
 

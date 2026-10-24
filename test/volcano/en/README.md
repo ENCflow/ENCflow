@@ -46,7 +46,7 @@ Also, ny = 8 because the band decomposition needs at least 2 rows per rank.
 |---|---|
 | `param.txt` / `param_ty.txt` | Configurations 1 / 2 |
 | `make_init.py z` / `db` | `zinit.txt` (slope of uniform gradient) / `dbinit.txt` (collapse-depth distribution) |
-| `Check_volcano.py <save> voellmy|tauy` | Configuration 1: (1) water ledger, (2) solid ledger, (3) <h_t> in the check window x ∈ [60, 100] versus the analytical solution, uniformity and concentration. Configuration 2: (1) solid ledger, (2) activity (lowering of the release area and deposition on the flat), (3) stopping (fraction of remaining hs) |
+| `Check_volcano.py <save> voellmy\|tauy` | Configuration 1: (1) water ledger, (2) solid ledger, (3) <h_t> in the check window x ∈ [60, 100] versus the analytical solution, uniformity and concentration. Configuration 2: (1) solid ledger, (2) activity (lowering of the release area and deposition on the flat), (3) stopping (fraction of remaining hs) |
 | `Fig.py` | The figures `figs/*.png` below |
 
 ## Running

@@ -28,7 +28,7 @@ that increasing Kd 1000-fold increases settling and decreases infiltration
 | File | Contents |
 |---|---|
 | `Run.sh` | Compares Log.txt and wq.csv with the reference → `Check_kdpart.py closure` (both configurations) → `monotonic` |
-| `Check_kdpart.py closure|monotonic` | in_point = mass_surface + mass_gw + mass_pool (relative 1e-6), activity of settle, to_gw and mass_pool / settle increases and to_gw decreases with larger Kd |
+| `Check_kdpart.py closure\|monotonic` | in_point = mass_surface + mass_gw + mass_pool (relative 1e-6), activity of settle, to_gw and mass_pool / settle increases and to_gw decreases with larger Kd |
 | `Fig.py` | The figure `figs/kdpart.png` below |
 
 ## Running

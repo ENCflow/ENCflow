@@ -25,7 +25,7 @@ developer.md §63)の検定です。瓦礫の柱状量は空隙面積基底な�
 
 | ファイル | 内容 |
 |---|---|
-| `Check_bldgdebris.py <save>` | (1) 材積保存 |Σ(hbd + wbd) gv + Σwbs − Σwbs₀| < 1e-9、(2) 活性: 破壊 > 1e-3 かつ堆積 > 1e-3 m·cell、(3) 到達: 平坦部の max(hbd + wbd) > 0 |
+| `Check_bldgdebris.py <save>` | (1) 材積保存 \|Σ(hbd + wbd) gv + Σwbs − Σwbs₀\| < 1e-9、(2) 活性: 破壊 > 1e-3 かつ堆積 > 1e-3 m·cell、(3) 到達: 平坦部の max(hbd + wbd) > 0 |
 | `gv.txt` / `bdstock_min.txt` | 構成 4 の空隙率分布 / 構成 5′ のストック |
 | `Fig.py` | 下の図 `figs/bldgdebris.png` |
 

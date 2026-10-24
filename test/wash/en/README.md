@@ -52,8 +52,8 @@ with sheet erosion in the fast-flowing ring dominant.
 | Check | Computed | Result |
 |---|---|---|
 | Total solid Σhs + (1 − λ)Σ(z − z₀) | 0.0 (machine precision) | PASS |
-| Co-moving update max|(sd − sd₀) − (z − z₀)| | 1.9e-14 m | PASS |
-| Activity max hs / max|z − z₀| | 2.24 mm / 5.58 mm | PASS |
+| Co-moving update max\|(sd − sd₀) − (z − z₀)\| | 1.9e-14 m | PASS |
+| Activity max hs / max\|z − z₀\| | 2.24 mm / 5.58 mm | PASS |
 
 - wash is a one-pass landform process that does not read its neighbours, so
   it is safe under OpenMP as well, and the state.dat of np = 1, 2, 4 is

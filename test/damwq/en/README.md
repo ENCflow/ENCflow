@@ -33,7 +33,7 @@ are confirmed by comparison with the reference and by `Check_damwq.py`.
 | File | Contents |
 |---|---|
 | `Run.sh` | Compare Log.txt and wq.csv with the reference (ULP = 0) → `Check_damwq.py closure` → `uniform` |
-| `Check_damwq.py closure|uniform` | Closure of the ledger (relative 1e-6) and activity of each pathway / wet cells of the final C field at 100 ± 0.1 |
+| `Check_damwq.py closure\|uniform` | Closure of the ledger (relative 1e-6) and activity of each pathway / wet cells of the final C field at 100 ± 0.1 |
 | `Fig.py` | The figure `figs/damwq.png` below |
 
 ## Running

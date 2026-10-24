@@ -28,7 +28,7 @@ flow in a closed domain).
 
 | File | Contents |
 |---|---|
-| `Check_berode.py` | (1) volume conservation |Σ(z − z₀)| < 1e-9; (2) all of the 2 bank rows adjacent to the channel (120 cells) have Δz < 0, and the non-adjacent banks are exactly 0; (3) the ratio of the bank loss volumes loss(2K_b)/loss(K_b) = 2 ± 2% (linearity of the erosion law); (4) the identity of the co-moving update; (5) the bank coefficient of fixation: z of fix0 agrees exactly with kb1, and the bank loss of fix1 is less than 5 % of kb1; (6) slump blocks: volume conservation and co-moving update of slump / slump0, talus ht ≥ 0 accumulating only in the channel rows (the toe); (7) shielding: the bank-erosion ledger of slump is less than 0.1 times that of slump0; (8) removal: the final total talus is smaller than the rockfall ledger (the part carried away by the bedload)|
+| `Check_berode.py` | (1) volume conservation \|Σ(z − z₀)\| < 1e-9; (2) all of the 2 bank rows adjacent to the channel (120 cells) have Δz < 0, and the non-adjacent banks are exactly 0; (3) the ratio of the bank loss volumes loss(2K_b)/loss(K_b) = 2 ± 2% (linearity of the erosion law); (4) the identity of the co-moving update; (5) the bank coefficient of fixation: z of fix0 agrees exactly with kb1, and the bank loss of fix1 is less than 5 % of kb1; (6) slump blocks: volume conservation and co-moving update of slump / slump0, talus ht ≥ 0 accumulating only in the channel rows (the toe); (7) shielding: the bank-erosion ledger of slump is less than 0.1 times that of slump0; (8) removal: the final total talus is smaller than the rockfall ledger (the part carried away by the bedload)|
 
 ## Running
 

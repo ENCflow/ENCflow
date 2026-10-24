@@ -1,4 +1,4 @@
-# bedfines — Verification of the ledger of fines in the bed (f_bedfines)
+# test/bedfines — Verification of the ledger of fines in the bed (f_bedfines)
 
 > English mirror of test/bedfines/README.md. The Japanese file is the master copy.
 

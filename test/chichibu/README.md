@@ -17,7 +17,7 @@ reference を持つ回帰ケース、ほかの `param*.txt` は §68 の実験�
 | 領域・格子 | 56 km × 30 km、560 × 300 セル(Δx = 100 m)。`data_chichibu/`(標高 `Chichibu_100m_filled2.txt`(窪地処理済み)、流域マスク、河道マスク) |
 | 粗度 | 斜面 n = 0.15、河道セル(fn_rw)n = 0.02 |
 | 降雨 | 0〜30 min に 200 mm/h、以後 0(プロセスは地表流のみ。浸透・遮断なし) |
-| 計算 | 動的波(f_govequation = 0)、既定の ENC 設定(f_advection_scheme = 3、f_opening_dynamic = 1、f_dry_head_cap = 1)。`p_adv_upwind_index = 0.1`、dt = 2.5 s、6 h |
+| 計算 | 動的波(f_govequation = 0)、既定の ENC 設定(f_advection_scheme = 3、f_opening_dynamic = 2(2026-10-18 に 1 から変更。§68.38)、f_dry_head_cap = 1)。`p_adv_upwind_index = 0.1`、dt = 2.5 s、6 h |
 | 記録 | 測線 1〜4(本流の上流から下流。x = 16.5 / 21.5 / 29.6 / 43.3 km)の流量、プローブ 2 点(測線 1・2 上の河道セル)の水深 |
 
 | ファイル | 内容 |
@@ -56,7 +56,9 @@ python3 Fig.py    # figs/chichibu.png
 | 4 | 流域出口の上流 4.6 km(x = 43.3 km) | 4926 | 3.48 |
 
 - reference は既定設定(スキーム 3・動的開口補正)の Log です。
-  `Run.sh` の判定は PASS(本書作成時。ULP = 1 の許容内)。
+  `Run.sh` の判定は PASS(本書作成時。ULP = 1 の許容内)。上の表と図の数値は
+  f_opening_dynamic = 1 当時の計算で、2 を既定にした 2026-10-18 以降は Q_max が
+  +6 % 程度変わります(§68.38。図表は未更新)。
 - **領域は閉じています**(流域マスク外は壁。Log の S 列は総雨量 100 mm で
   一定)。流出口の河道セル (479, 35) に水が溜まり、6 h で水深 33 m、
   背水は本流を x = 41.7 km まで遡って測線 4 を含みます(測線 4 の

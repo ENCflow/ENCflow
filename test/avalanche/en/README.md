@@ -31,7 +31,7 @@ of the snow.
 
 | File | Contents |
 |---|---|
-| `Check_avalanche.py <save>` | (1) solid ledger |Σhs + (1 − λ)Σ(z − z₀)| < 1e-9, (2) co-update max|(sd − sd₀) − (z − z₀)| < 1e-10, (3) entrainment activity: min(sd − sd₀) < −0.05 m on the path (outside the release area), (4) growth: entrained solid / released solid > 0.2, (5) stopping: remaining Σhs / (released + entrained) < 0.3 |
+| `Check_avalanche.py <save>` | (1) solid ledger \|Σhs + (1 − λ)Σ(z − z₀)\| < 1e-9, (2) co-update max\|(sd − sd₀) − (z − z₀)\| < 1e-10, (3) entrainment activity: min(sd − sd₀) < −0.05 m on the path (outside the release area), (4) growth: entrained solid / released solid > 0.2, (5) stopping: remaining Σhs / (released + entrained) < 0.3 |
 | `Fig.py` | The figure `figs/avalanche.png` below |
 
 ## Running

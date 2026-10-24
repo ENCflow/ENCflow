@@ -1,4 +1,4 @@
-# bedfines — 河床の細粒分の帳簿(f_bedfines)の検定
+# test/bedfines — 河床の細粒分の帳簿(f_bedfines)の検定
 
 [English](en/README.md)
 

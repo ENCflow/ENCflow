@@ -29,7 +29,7 @@ volume ledger closes), standing stock 0.01 m³/m², representative diameter
 
 | File | Contents |
 |---|---|
-| `Check_driftwood.py <save> [stock0]` | (1) volume conservation |Σhd + Σwd + Σwst − stock₀ nx ny| < 1e-9, (2) activity: recruitment > 1e-3 and deposition > 1e-3 m·cell, (3) arrival: max(hd + wd) > 0 on the flat part (i ≥ 30) |
+| `Check_driftwood.py <save> [stock0]` | (1) volume conservation \|Σhd + Σwd + Σwst − stock₀ nx ny\| < 1e-9, (2) activity: recruitment > 1e-3 and deposition > 1e-3 m·cell, (3) arrival: max(hd + wd) > 0 on the flat part (i ≥ 30) |
 | `Fig.py` | The figure `figs/driftwood.png` below |
 
 ## Running

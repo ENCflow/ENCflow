@@ -30,7 +30,7 @@ reference 比較ではなく `Check_slide.py` の自己検定(保存則・水収
 
 | ファイル | 内容 |
 |---|---|
-| `Check_slide.py <save> release|fslide|fsdiag [result]` | release: (1) 固体総量、(2) 共動更新、(3) 水収支 Σh = λ relsat ΣD、(4) 活性。fslide: (1)(2)、(4) 斜面に sd = 0 のセル、(5) 危険度出力 min Fs9999 < 1・D9999 ≥ H9999。fsdiag: (1) 無流動化(z・sd・hs 不変)、(2) Fs の危険域検出 |
+| `Check_slide.py <save> release\|fslide\|fsdiag [result]` | release: (1) 固体総量、(2) 共動更新、(3) 水収支 Σh = λ relsat ΣD、(4) 活性。fslide: (1)(2)、(4) 斜面に sd = 0 のセル、(5) 危険度出力 min Fs9999 < 1・D9999 ≥ H9999。fsdiag: (1) 無流動化(z・sd・hs 不変)、(2) Fs の危険域検出 |
 | `Fig.py` | 下の図 `figs/*.png` |
 
 ## 実行

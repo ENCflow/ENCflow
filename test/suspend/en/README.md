@@ -30,7 +30,7 @@ checked with `Check_suspend.py` (the counterpart of the bedload version in
 
 | File | Contents |
 |---|---|
-| `Check_suspend.py <save>` | (1) total solid |Σhs + (1 − λ)Σ(z − z₀)| < 1e-9, (2) co-update max|(sd − sd₀) − (z − z₀)| < 1e-10, (3) activity max hs > threshold and max|z − z₀| > threshold |
+| `Check_suspend.py <save>` | (1) total solid \|Σhs + (1 − λ)Σ(z − z₀)\| < 1e-9, (2) co-update max\|(sd − sd₀) − (z − z₀)\| < 1e-10, (3) activity max hs > threshold and max\|z − z₀\| > threshold |
 | `Fig.py` | The figure `figs/suspend.png` below (Run.sh leaves configuration 1 in `save_serial/` and configuration 2 in `save/`) |
 
 ## Running
@@ -58,7 +58,7 @@ empirical formulas that presuppose calibration).
 
 ## Findings
 
-| Configuration | Total solid | Co-update | max hs / max|dz| | Result |
+| Configuration | Total solid | Co-update | max hs / max\|dz\| | Result |
 |---|---|---|---|---|
 | 1 linear formula | 0.0 | 1.2e-14 | 0.45 mm / 1.13 mm | PASS |
 | 2 Itakura-Kishi | 0.0 | 1.3e-14 | 1.04 mm / 2.53 mm | PASS |

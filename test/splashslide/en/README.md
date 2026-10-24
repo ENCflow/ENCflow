@@ -34,7 +34,7 @@ and checks the growth rate of the relief with `Check_contrast.py`.
 
 | File | Contents |
 |---|---|
-| `Check_contrast.py` | (1) consolidated: relief(final)/relief(init) ≥ 1.15, (2) unconsolidated: ≤ 0.9, (3) the plateau interior (x ≤ 6 m) is intact (|Δz| < 0.05 m), (4) the lower bound of erosion is bounded (z ≥ −1.5 m) |
+| `Check_contrast.py` | (1) consolidated: relief(final)/relief(init) ≥ 1.15, (2) unconsolidated: ≤ 0.9, (3) the plateau interior (x ≤ 6 m) is intact (\|Δz\| < 0.05 m), (4) the lower bound of erosion is bounded (z ≥ −1.5 m) |
 | `Fig.py` | The figure `figs/splashslide.png` below |
 
 ## Running
@@ -64,7 +64,7 @@ for the unconsolidated cliff it decays × 0.78.
 | Check | Consolidated cliff | Unconsolidated cliff | Result |
 |---|---|---|---|
 | Growth rate of the relief | × 1.25 (≥ 1.15) | × 0.78 (≤ 0.9) | PASS |
-| Plateau interior |Δz| | 0.0 | 0.0 | PASS |
+| Plateau interior \|Δz\| | 0.0 | 0.0 | PASS |
 | Minimum elevation z | 0.00 m | −1.30 m (≥ −1.5) | PASS |
 
 - The hypothesis "the critical condition for valley formation is the degree

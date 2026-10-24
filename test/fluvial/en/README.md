@@ -25,7 +25,7 @@ equilibrium) is recorded as remaining work (§19).
 
 | File | Contents |
 |---|---|
-| `Check_fluvial.py <save>` | (1) sediment volume conservation |Σ(z − z₀)| < 1e-9 (a consequence of the antisymmetric fluxes), (2) co-update max|(sd − sd₀) − (z − z₀)| < 1e-10, (3) activity max|z − z₀| > 1e-4 m |
+| `Check_fluvial.py <save>` | (1) sediment volume conservation \|Σ(z − z₀)\| < 1e-9 (a consequence of the antisymmetric fluxes), (2) co-update max\|(sd − sd₀) − (z − z₀)\| < 1e-10, (3) activity max\|z − z₀\| > 1e-4 m |
 | `Fig.py` | The figure `figs/fluvial.png` below |
 
 ## Running
@@ -55,8 +55,8 @@ soil depth changes by exactly the amount the bed moves).
 | Check | Computed | Result |
 |---|---|---|
 | (1) Σ(z − z₀) | −4.6e-17 m·cell | PASS (machine precision) |
-| (2) max|(sd − sd₀) − (z − z₀)| | 1.1e-14 m | PASS |
-| (3) max|z − z₀| | 1.86 mm | PASS (> 0.1 mm) |
+| (2) max\|(sd − sd₀) − (z − z₀)\| | 1.1e-14 m | PASS |
+| (3) max\|z − z₀\| | 1.86 mm | PASS (> 0.1 mm) |
 
 - Because the Exner update sums the antisymmetric fluxes edge by edge, the
   sediment volume is conserved to machine precision.

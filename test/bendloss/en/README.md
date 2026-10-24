@@ -13,7 +13,7 @@ a straight channel (developer.md §68.8–68.32). There is no regression
 comparison with a reference; each experiment is judged by its check
 script (`Check_bendloss.py`, `Check_lateral.py`) and analytical values. It
 is also the record of the experiments that gave the basis for adopting the
-default scheme (f_advection_scheme = 3, f_opening_dynamic = 1) (the table
+default scheme (f_advection_scheme = 3, f_opening_dynamic = 1; the latter was changed to 2 on 2026-10-18, §68.38) (the table
 of §68.19).
 
 ## Configuration (base case)
@@ -169,6 +169,8 @@ the correction).
 | Diagonal diagw4 | 4 m | 1.933 | 1.933 |
 | Diagonal diagw10 | 10 m | 1.373 (capped at the natural width) | 1.115 |
 | Diagonal end diagwe4 (end on the east edge, kept diagonal; §68.26, §68.30) | 4 m | 1.933 (1.934–1.936 up to the end) | 1.933 |
+| Zigzag + levee zigzagw | 10 m | reach average 1.373 | 1.373 |
+| Zigzag W=4 (width_zigzagw4.txt = width_zigzagw with 10 → 4; §68.32) | 4 m | straight 2.380 (with walls) / 1.970 (without walls = inconsistency of the velocity normalization) | 2.380 |
 
 Uniform flow with σ (section shape, §26; the face flux is area-based u·vh,
 §68.28). The expected value is the numerical solution of
@@ -188,8 +190,6 @@ placed below the crest of D = 3 (bed +3) (width_sect uses bank0 = 0.1 with
 the landside datum, so the crest = bed +3). Before 2026-10-04 the terrain
 had landside = crest (bed +3), and ground at the same height as the crest
 was treated as a wall (the 2.95–3.07 of width_sect is that value).
-| Zigzag + levee zigzagw | 10 m | reach average 1.373 | 1.373 |
-| Zigzag W=4 (width_zigzagw4.txt = width_zigzagw with 10 → 4; §68.32) | 4 m | straight 2.380 (with walls) / 1.970 (without walls = inconsistency of the velocity normalization) | 2.380 |
 
 ## 2×2 of scheme × opening correction (no width) (param_{wave,zz}_{nolev,o0,o1}_s*.txt)
 

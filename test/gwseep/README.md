@@ -23,7 +23,7 @@
 | ファイル | 内容 |
 |---|---|
 | `Run.sh` | Log.txt と wq.csv を reference と比較(ULP = 0)→ `Check_gwseep.py closure` → 構成 2 → `Check_gwseep.py immobile` |
-| `Check_gwseep.py closure|immobile <wq.csv>` | 台帳 to_gw − seep = mass_gw と総質量 4000 g(相対 1e-6)、輸送の活性 / 完全不動化(seep ≈ 0、mass_gw = to_gw) |
+| `Check_gwseep.py closure\|immobile <wq.csv>` | 台帳 to_gw − seep = mass_gw と総質量 4000 g(相対 1e-6)、輸送の活性 / 完全不動化(seep ≈ 0、mass_gw = to_gw) |
 | `Fig.py` | 下の図 `figs/gwseep.png` |
 
 ## 実行

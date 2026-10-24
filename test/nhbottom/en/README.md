@@ -24,7 +24,7 @@ symbol of the ENC):
 |---|---|---|
 | Hydrostatic | gHΛ | 1 |
 | NH, no acceleration term | gHΛ/(1 + βΛ) | 1 |
-| NH, with acceleration term | gHΛ/(1 + βΛ) | (1 − βΛ)/(1 + βΛ) |
+| NH, with acceleration term (the naive source term of the derivation; the implementation uses 1/(1 + βΛ)², see below) | gHΛ/(1 + βΛ) | (1 − βΛ)/(1 + βΛ) |
 | Exact (potential flow) | gk tanh kH | 1/cosh kH |
 
 The filter of the one-layer NH matches the exact solution up to O(k²H²)
@@ -62,7 +62,7 @@ Bottom right: surface time series at x = x_c + 200 m.
 |---|---:|---:|---:|---:|---:|---:|
 | Hydrostatic | 0.1124 | 20.92 | 0.1153 | 19.55 | 0.975 | 1.404 |
 | NH (no acceleration term) | 0.0955 | 22.36 | 0.0950 | 22.45 | 1.005 | 1.156 |
-| NH (with acceleration term, f_nh_bottom=1) | 0.0856 | 22.14 | 0.0850 | 22.25 | 1.007 | 1.035 |
+| NH (with acceleration term, f_nh_bottom=1) | 0.0856 | 22.14 | 0.0853 | 22.25 | 1.004 | 1.039 |
 | Exact (linear potential flow) | — | — | 0.0821 | 22.45 | — | 1 |
 
 - ENCflow agrees with its own linear theory for all three models (NH within
@@ -70,7 +70,7 @@ Bottom right: surface time series at x = x_c + 200 m.
   suffers numerical dissipation). This confirms that the acceleration term
   is implemented as formulated.
 - With the acceleration term the difference of the leading wave height from
-  the exact solution shrinks from +16% to +3.5% (hydrostatic +40%). In the
+  the exact solution shrinks from +16% to +3.9% (hydrostatic +40%). In the
   profile at t = 1 s, the surface directly above the uplift changes from
   box-shaped (hydrostatic) to a rounded form (NH + acceleration term;
   overlapping the exact solution); this is the effect of the filter.

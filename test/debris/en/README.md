@@ -40,7 +40,7 @@ entrained pore water).
 
 | File | Contents |
 |---|---|
-| `Check_debris.py <save> [eg|wet]` | The checks above (reads `save*/state.dat`) |
+| `Check_debris.py <save> [eg\|wet]` | The checks above (reads `save*/state.dat`) |
 | `Fig.py` | The figures `figs/*.png` below |
 
 ## Running
