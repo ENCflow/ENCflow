@@ -19,9 +19,12 @@ ParaView -- see section 2 of the same guide for installing them).
 | 2 | [chichibu -- rain falling on a real-terrain catchment](../../tutorials/chichibu/en/README.md) | Real terrain data (DEM, masks) and depression removal / GeoTIFF input and output / channel mask and roughness / recording (probes, transects) / tuning numerical settings / rainfall interception, subsurface infiltration and the water balance / boundary conditions at the catchment outlet / understanding discharge oscillations originating in real terrain data / 3D visualization (animation) with ParaView |
 | 3 | [bmi -- driving ENCflow from Python](../../tutorials/bmi/en/README.md) | Introduction to BMI (CSDMS Basic Model Interface). Setting up Python (uv and others) / start and finish / advancing time / reading the state and array orientation / plotting with Matplotlib and live display / supplying rain from outside (set) / overriding the roughness coefficient |
 
-Tutorial 3 uses Python, but it starts from setting up the environment so
-that you can try it without being a Python user (the computation itself is
-the same Fortran ENCflow as in 1 and 2). Further tutorials (channel
+**We ask everyone to try 1 and 2.** **3 (bmi) is unnecessary for most
+people**: read it only if you want to couple ENCflow with other models or
+programs, or to read and write state variables and parameters from outside
+while the computation is running (it uses Python, but it starts from setting
+up the environment so that you can try it without being a Python user; the
+computation itself is the same Fortran ENCflow as in 1 and 2). Further tutorials (channel
 refinement, long runs and restart, etc.) will be added over time. Beyond these, the configuration sample
 collection in [examples/](../../examples/README.en.md) and the verified examples
 in [test/](../../test/README.en.md) are useful references.

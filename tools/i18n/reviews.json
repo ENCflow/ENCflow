@@ -85,8 +85,8 @@
     {
       "source": "docs/tutorial.md",
       "target": "docs/en/tutorial.md",
-      "source_sha256": "58f9f505eaf773a5f8dbf51fa9b1237e48aaf2627a1e3186294bbb5085b0c8e0",
-      "target_sha256": "8a2dfd6dfa9727b676baf7ce064a8a28597b560c78e0c55a5442f3b053ef0fc2",
+      "source_sha256": "b6e92b2da6007ef928f7874bf6d42021fd227051e5adcc42f14debe81ecc33e6",
+      "target_sha256": "cfffab3392014110abf0b325d28f113df633c233fcb2c34ac8dbdc8e99ffdf79",
       "reviewer": "Claude (assistant)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
@@ -2209,8 +2209,8 @@
     {
       "source": "tutorials/README.md",
       "target": "tutorials/en/README.md",
-      "source_sha256": "282b9c7dcb0bbefdf8738d75fe5906ad05296894bafab9fc53fbb2f67a129b1f",
-      "target_sha256": "5bcdc37807f3a7a1550c6c10c348b3436ff193626549d799d095cf31212d9d41",
+      "source_sha256": "65364afca3b154010a08879a2cc8a87e94c42a41d971fa12f247aab0a908c2cf",
+      "target_sha256": "1b55623100598757dccda528e0e8d3c7552f58a68627bc3c966825e573d93e6f",
       "reviewer": "Claude (assistant)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"

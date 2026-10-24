@@ -15,6 +15,17 @@ for prerequisites.
 | 2 | [chichibu](../chichibu/en/README.md) | Real terrain data, rainfall runoff, recording, water balance and visualization |
 | 3 | [bmi](../bmi/en/README.md) | Driving ENCflow from Python (BMI): start, advance time, read the state, live plotting, supplying rain and roughness from outside |
 
+**We ask everyone to try 1 (wave) and 2 (chichibu).** These two cover
+how ENCflow is used from end to end: preparing the input, running, and
+reading the results.
+
+**3 (bmi) is unnecessary for most people.** Ordinary use (write a parameter
+file, run, read the result files) does not involve the BMI. Read it only if
+you want to couple ENCflow with other models or programs, or to read and
+write state variables and parameters from outside while the computation is
+running (for example, supplying rain from Python, or repeating runs while
+changing the roughness).
+
 Work in `tutorials/wave`, `tutorials/chichibu` or `tutorials/bmi`. Even when reading English,
 run commands from the case root, not from `en/`. Do not confuse the location
 used to resolve documentation links with the working directory for execution.
