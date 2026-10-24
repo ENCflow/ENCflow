@@ -49,7 +49,7 @@ make
 ./Run_MPI.sh 4
 ./Run_lat.sh        # B: result_lat/ に出力(約 2.5 分)
 ./Run_lat_MPI.sh 4  # B の MPI。逐次とビット一致するのが規律
-python3 Fig.py      # figs/equilibrium.png, figs/lateral.png(数表も表示)
+python3 Fig.py      # figs/equilibrium.png, figs/lateral.png(数表も表示。引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

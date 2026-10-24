@@ -1084,11 +1084,29 @@
     {
       "source": "test/conduit/README.md",
       "target": "test/conduit/en/README.md",
-      "source_sha256": "21bb85ce12f0920fa45887b900768aabfd4f253055bfcdb7ba93dc0fedde7343",
-      "target_sha256": "c27059820bc2d71b928d389a9253301322b297fe5dccc3726cb8a20bc023ffb1",
+      "source_sha256": "ce3e16573429250d119c0b7101a8af0c8e6ef9978966dfd1cc884619f7e74bc5",
+      "target_sha256": "37c52b7d0301da221ae4029435cb397f254787ad5abf87ed41d33e464a845bcd",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/conduit/figs/equilibrium.png",
+      "target": "test/conduit/en/figs/equilibrium.png",
+      "source_sha256": "17eb04fb68c611c64f2b98cf32aff698afd8dde7c82125335d6df00e4d14e57c",
+      "target_sha256": "2800bd8506d81efdbd5d05068947495a29459f0e6c18647f2a5329143a180032",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/conduit/figs/lateral.png",
+      "target": "test/conduit/en/figs/lateral.png",
+      "source_sha256": "285170d44625df446e0faeb965f5df67ae4ecb9877806e5d4ed75c7e0ea61260",
+      "target_sha256": "408109940124ffcf77e72e8000c0f2f5280766581d9117353233f7c94c0871d2",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/creep/README.md",
@@ -1183,11 +1201,11 @@
     {
       "source": "test/fixation/README.md",
       "target": "test/fixation/en/README.md",
-      "source_sha256": "39eb18a919308b46316f7e2b86a3313996053a3dc8fd55452dc2be93c34b2c5f",
-      "target_sha256": "f64ec05128dd4cf69d194d7ec221f40cd5ea4f764511a6aa4e9975ee195413b2",
+      "source_sha256": "41da07813655928a2dc587240418281e44f81d9a0546648024374616700ea106",
+      "target_sha256": "d9e969da992d79ace96c39e09775b43351419c7ababb7600a1caa2291b6fd079",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/fluvial/README.md",
@@ -1201,11 +1219,20 @@
     {
       "source": "test/frost/README.md",
       "target": "test/frost/en/README.md",
-      "source_sha256": "76f4c153908ba0e2a963faca33f7cf9c6ee87772ea2e8361632762f8a0c40698",
-      "target_sha256": "94eb46e9b7dab966efd5dd00d268cb060c5c0c0469ab8c65c3fa793518e13330",
+      "source_sha256": "df4d3379d1701a0a9d6ca608716bb16b5f564a271916813b2f3958a98f0b859e",
+      "target_sha256": "fd53717c8ad4f87fde77738bae47404732424afe81fd35c6ca5f9bbdbd5f3322",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/frost/figs/frost.png",
+      "target": "test/frost/en/figs/frost.png",
+      "source_sha256": "416cc7125f0b2ca034963bad2c6ce5f91beb96bdb20ba73175675fda62dfba89",
+      "target_sha256": "0ccdf15d54a344d04caa8309ba391d9eaaa1087d9fb4b1335204184847b84252",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "test/glacier/README.md",
