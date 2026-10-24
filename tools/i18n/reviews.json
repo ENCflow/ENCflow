@@ -994,8 +994,8 @@
     {
       "source": "test/berode/README.md",
       "target": "test/berode/en/README.md",
-      "source_sha256": "6664a2fdcde885336fd5b9f14303d0071c5753781db400d0a6e65f1520976945",
-      "target_sha256": "cb987643de1564f18523beb6b29707e2791e005d62a55fbf7f1e795f0fb7896e",
+      "source_sha256": "871bc2a3418ca7687f7d77d7084ced9652b7ad55b4700c09022b55958bee77eb",
+      "target_sha256": "ff90b5ebc3b1c4d33c6e7b121463806f03441ccf17c850777b084898efb376a9",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
