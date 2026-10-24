@@ -51,7 +51,7 @@ deep form in the channel cells (black dots) of the main stem and the
 tributaries. Inundation (around 1 m) also spreads over the lowlands of the
 valley floor. Middle: discharge at transects 1–4. The peak becomes larger
 and later from upstream to downstream, and at the most downstream transect
-4 it is 4926 m³/s @ 3.48 h. Right: depth at the probes. Even after the
+4 it is 5035 m³/s @ 3.37 h. Right: depth at the probes. Even after the
 rainfall ends (0.5 h) the channel depth keeps increasing for more than an
 hour, showing the delay of the collection from the hillslopes.
 
@@ -59,23 +59,23 @@ hour, showing the delay of the collection from the hillslopes.
 
 | Transect | Position | Peak discharge (m³/s) | Peak time (h) |
 |---|---|---|---|
-| 1 | Uppermost main stem (x = 16.5 km) | 1144 | 0.83 |
-| 2 | x = 21.5 km | 2788 | 1.00 |
-| 3 | x = 29.6 km | 3982 | 1.75 |
-| 4 | 4.6 km upstream of the catchment outlet (x = 43.3 km) | 4926 | 3.48 |
+| 1 | Uppermost main stem (x = 16.5 km) | 1221 | 0.80 |
+| 2 | x = 21.5 km | 2928 | 0.97 |
+| 3 | x = 29.6 km | 4053 | 1.72 |
+| 4 | 4.6 km upstream of the catchment outlet (x = 43.3 km) | 5035 | 3.37 |
 
 - The reference is the Log of the default settings (scheme 3, dynamic
-  opening correction). The verdict of `Run.sh` is PASS (at the time of
-  writing; within the ULP = 1 tolerance). The numbers in the table and the
-  figure above are from the computation when f_opening_dynamic = 1; since 2
-  became the default on 2026-10-18, Q_max changes by about +6 % (§68.38; the
-  table and figure have not been updated).
+  opening correction). The verdict of `Run.sh` is PASS (rerun on 2026-10-24;
+  Log.txt identical to the reference). The table and figure above were
+  recomputed the same day with the default (f_opening_dynamic = 2; §68.38) and
+  are 2–7 % larger than the values with the former default 1 (4926 m³/s @
+  3.48 h at transect 4).
 - **The domain is closed** (outside the catchment mask is wall; the S column
   of the Log is constant at the total rainfall of 100 mm). Water accumulates
   in the channel cell (479, 35) at the outlet, reaching a depth of 33 m at
   6 h, and the backwater runs up the main stem to x = 41.7 km, including
   transect 4 (the 6 h depth of 1.07 m at transect 4 is a value in the
-  backwater zone). The peak (3.48 h) is before this influence. In practical
+  backwater zone). The peak (3.37 h) is before this influence. In practical
   computations place a free-outflow boundary (`&list_bound`) at the outlet.
 - This case is also a guide to convergence: on the 50 / 100 / 200 m grids of
   the same catchment the most downstream peak changes with resolution

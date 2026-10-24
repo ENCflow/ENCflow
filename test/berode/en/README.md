@@ -38,16 +38,16 @@ make
 ./Run_MPI.sh 4    # MPI; the rule is that state.dat is byte-identical to the serial run
 ```
 
-## Findings (2026-10-17)
+## Findings (2026-10-17; the numbers were recomputed on 2026-10-24 and differ from the 10-17 values because of changes such as the promotion of f_opening_dynamic = 2 to the default, §68.38)
 
 | Check | K_b = 1e-5 | K_b = 2e-5 |
 |---|---|---|
-| Σ(z − z₀) | 4.6e-13 | −6.4e-13 |
-| Bank loss volume | 0.206 m·cell | 0.412 m·cell (ratio 1.998) |
-| Minimum Δz of the adjacent banks | −3.4 mm | −6.9 mm |
+| Σ(z − z₀) | −6.0e-13 | 1.3e-13 |
+| Bank loss volume | 0.367 m·cell | 0.733 m·cell (ratio 1.997) |
+| Minimum Δz of the adjacent banks | −6.0 mm | −12.0 mm |
 
 - While the toe shear stress is the same, the retreat is proportional to K_b
-  (ratio 1.998; at twice K_b more sediment deposits at the toe, giving a slight
+  (ratio 1.997; at twice K_b more sediment deposits at the toe, giving a slight
   nonlinearity).
 - K_b has no default (a calibration value; no literature standard is set) and
   must be specified explicitly.
@@ -59,7 +59,7 @@ make
 | Check | slump (h_cover = 0.1 m) | slump0 (no shielding) |
 |---|---|---|
 | Rockfall ledger (bulk) | 30.6 m³ | 30.4 m³ |
-| Bank-erosion ledger | 0.002 m³ | 0.299 m³ (kb1 alone gives a bank loss of 0.367 m³·cell) |
+| Bank-erosion ledger | 0.002 m³ | 0.299 m³ (kb1 alone gives a bank loss of 0.367 m·cell) |
 | Final talus Σht | 18.8 m³ | — |
 
 - Since the 2 m bank exceeds H_c = 1.5 m it collapses immediately, and talus of 0.25 m
