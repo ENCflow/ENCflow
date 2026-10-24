@@ -74,7 +74,10 @@ inside the loop.
 ## Findings
 
 - **The cutoff emerges as a consequence of the wet/dry treatment and landform
-  evolution** (the policy of plan §3.5). Before the flood almost no flow crosses
+  evolution** (the policy of plan §3.5). Even without the overflow of a flood,
+  bank retreat alone (angle-of-repose avalanching, or slump blocks of cohesive
+  banks) cuts the neck at 100 to 120 h (see "Slump blocks and a cutoff without
+  a flood" below). Before the flood almost no flow crosses
   the neck (76 flowing cells in the neck zone); the flow overtopping it during
   the flood (323 cells) carves a channel through the neck, and the new channel
   remains after the flood (153 cells). The flowing cells in the loop decrease
@@ -95,8 +98,62 @@ inside the loop.
   incision of the new channel during the flood). Lowering morfac reduces the
   triggering, but the storyline of the results is the same.
 
+## Slump blocks and a cutoff without a flood (2026-10-23)
+
+With the bank mode of cliff collapse and talus `f_rockfall` from main
+(`rf_bank = 1`; developer.md §84.17), four configurations with and without the
+flood were compared (`./encflow param_<name>.txt`; figures with
+`python3 plot_results.py result_<name> 7`).
+
+| Parameter file | Inflow | Banks | Morphological time |
+|---|---|---|---|
+| param_slump.txt | with the flood (as above) | angle of repose 40° + slump blocks (H_c = 1.8 m, talus 35°) | 30 h |
+| param_noflood.txt | Q = 15 m³/s constant (the neck is not overtopped) | angle of repose 40° (control) | 180 h |
+| param_slump_noflood.txt | same | angle of repose 40° + slump blocks | 180 h |
+| param_slump_cohesive.txt | same | **cohesive**: angle of repose 60° (banks at 1.6 m / 2 m = 38.7° do not fail) + retreat by slump blocks only | 180 h |
+
+With the flood, the cutoff is hardly changed by the slump blocks (after 30 h,
+846 flowing cells in the loop against 774, 139 in the new channel against 153;
+collapse 490 m³): slump blocks take no part in a cutoff carved by overflow. In
+the three runs without a flood, the flowing cells in the loop and in the neck
+zone evolved as follows (every 20 h of morphological time).
+
+| Morphological time (h) | 20 | 40 | 60 | 80 | 100 | 120 | 140 | 160 | 180 |
+|---|---|---|---|---|---|---|---|---|---|
+| control (repose 40°) loop / neck | 2220 / 231 | 2151 / 237 | 2068 / 235 | 1940 / 230 | **833** / 154 | 811 / 171 | 793 / 163 | 1208 / 140 | 1124 / 161 |
+| repose 40° + slump blocks | 2232 / 240 | 2133 / 250 | 2092 / 228 | 1914 / 243 | **821** / 154 | 794 / 196 | 777 / 204 | 1090 / 159 | 1005 / 154 |
+| cohesive + slump blocks | 2231 / 229 | 2140 / 238 | 2079 / 251 | 1889 / 241 | 1817 / 249 | **787** / 172 | 795 / 177 | 784 / 175 | 1095 / 147 |
+
+![Sequence without a flood, cohesive banks with slump blocks](../figs/sequence_slump_cohesive.png)
+
+![Final state without a flood, cohesive banks with slump blocks](../figs/final_slump_cohesive.png)
+
+- **Even without overflow, bank retreat alone cuts the neck** (the proper form
+  of a neck cutoff). In the control (non-cohesive = avalanching) and with slump
+  blocks added, the flowing cells in the loop drop from 1,900 to 800 between 80
+  and 100 h; with cohesive banks (slump blocks only) between 100 and 120 h, and
+  the flow moves into the new channel through the neck. Of the 409 cells of the
+  neck zone, about 230 are lowered by more than 0.2 m at 60 h (in all three
+  runs) and about 220 stay wet after the cutoff.
+- **On cohesive banks the slump blocks are the only path of retreat**
+  (avalanching 0 m³, collapse 11,300 m³). The cutoff comes 20 h later than on
+  non-cohesive banks, and its timing is set by the critical height H_c (= the
+  pool scour at which failure starts). In the non-cohesive control, avalanching
+  (11,600 m³) plays the same role, and adding slump blocks does not change the
+  timing (only the split, 6,900 m³ of collapse + 4,900 m³ of avalanching).
+- The downstream (second) loop is the one cut; the upstream loop remains at
+  180 h (figure, 120 to 150 h: the right loop is slack water = black). The
+  flowing cells in the loop return to about 1,100 after 160 h because the
+  widened new channel reconnects with the ends of the loop and part of the flow
+  re-enters it (180 h). As with the flood, the plugging of the old channel
+  (deposition at its ends) only begins.
+- The wet cells outside the initial channel grow to about 3,400 at 180 h. Banks
+  with a repose angle of 40° or a critical height of 1.8 m retreat widely under
+  180 h of constant discharge (widening), so the timing of the neck cutoff
+  depends strongly on the bank strength (φ_r, H_c).
+
 ## Related documents
 
-- docs/meander_plan.md §3.5, developer.md §84.5 (in Japanese)
+- docs/meander_plan.md §3.5, developer.md §84.5 and §84.17 (in Japanese)
 - [examples/meander](../../meander/en/README.md) — deformation of a meandering channel by the same mechanism (widening and cross-section shape)
 - [docs/users_guide/geomorph.md](../../../docs/en/users_guide/geomorph.md)
