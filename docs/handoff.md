@@ -920,7 +920,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   tide の比較先 result_min/result_minx、hillslope の粗度の注記、bedfines の題名、nhbottom の
   理論値を Theory.py の実装フィルタの値(0.0853、+3.9 %)に)。berode の所見表と chichibu の図表の数値は 2026-10-24 に
   gfortran 13.3 の release ビルドで再計算して更新(berode 検定 PASS、chichibu は reference と同一)。developer.md §68 の「既定 1」の古い記述 3 箇所は 2026-10-24 に修正済み。
-  (d) namelist と params_index(日英)の突合は未スクリプト化(2026-10-01 は手動)。
+  (d) namelist と params_index(日英)の突合は 2026-10-24 に `tools/params_index/check.py`
+  として常設し i18n の CI に組み込んだ(§35.1。導入時に並び 5 行と users_guide.md の項目数を修正)。
   (e) 接尾辞方式(test/README.en.md 等 5 件)の en/ への移行は任意(規約 §2・§5)。
   コード内コメントの言語方針は海外コア開発者が現実になった時点で
   §34.2 を改定して決定(それまで日本語のまま)。

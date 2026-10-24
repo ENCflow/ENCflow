@@ -21,6 +21,8 @@ on:
       - 'TRADEMARKS*.md'
       - 'LICENSE'
       - 'tools/i18n/**'
+      - 'tools/params_index/**'
+      - 'src/*.f90'
       - '.github/workflows/i18n.yml'
   pull_request:
     paths:
@@ -37,6 +39,8 @@ on:
       - 'TRADEMARKS*.md'
       - 'LICENSE'
       - 'tools/i18n/**'
+      - 'tools/params_index/**'
+      - 'src/*.f90'
       - '.github/workflows/i18n.yml'
   workflow_dispatch:
 
@@ -47,8 +51,12 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Unit tests of the checker
-        run: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/i18n -p 'test_*.py'
+      - name: Unit tests of the checkers
+        run: |
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/i18n -p 'test_*.py'
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/params_index -p 'test_*.py'
+      - name: Parameter index (ja/en) must match the namelist declarations
+        run: python3 tools/params_index/check.py
       - name: Recorded pairs must be current and their links valid
         run: python3 tools/i18n/check.py audit --recorded-only --strict-recorded --links
       - name: Inventory (informational; does not fail the job)
