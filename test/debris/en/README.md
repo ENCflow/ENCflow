@@ -41,7 +41,7 @@ entrained pore water).
 | File | Contents |
 |---|---|
 | `Check_debris.py <save> [eg\|wet]` | The checks above (reads `save*/state.dat`) |
-| `Fig.py` | The figures `figs/*.png` below |
+| `Fig.py` | The figures `en/figs/*.png` below (`python3 Fig.py en`; `figs/*.png` is the Japanese version) |
 
 ## Running
 
@@ -49,27 +49,27 @@ entrained pore water).
 make
 ./Run.sh          # run the 4 configurations in turn, each followed by Check. PASS when all pass (a few seconds)
 ./Run_MPI.sh 4    # MPI. state.dat is byte-identical to the serial run (with the -O2 strict-math build)
-python3 Fig.py    # figs/profile.png, figs/map.png
+python3 Fig.py en # en/figs/profile.png, en/figs/map.png
 ```
 
 ## Figures
 
-![Longitudinal profiles of the 4 configurations](../figs/profile.png)
+![Longitudinal profiles of the 4 configurations](figs/profile.png)
 
 Top: terrain. Middle: terrain change dz (average over all rows, cm). In every
-configuration the whole slope is thinly eroded (0.2–0.4 cm in configurations
-1–3, 1.6 cm in configuration 4), erosion intensifies just before the slope
-break, and in configuration 1 deposition (+0.2 cm) appears directly below the
+configuration the whole slope is thinly eroded (0.3–0.5 cm in configurations
+1–3, 2.5 cm in configuration 4), erosion intensifies just before the slope
+break, and in configuration 1 deposition (+0.5 cm) appears directly below the
 slope break. Bottom: sediment in motion hs (cm). It is carried at a constant
 concentration on the slope and drops sharply on the flat beyond the slope break
 (in a dilute sheet flow θ_e ≈ 0, so deposition on the flat is slow, and in a
 short check the arrival of hs is taken as the evidence of activity). The
 pore-water entrainment of configuration 4 adds the pore water of the eroded bed
-to the flow, so the surface water increases (Σh 4.0 → 7.5 m·cell), and a
+to the flow, so the surface water increases (Σh 4.0 → 9.2 m·cell), and a
 positive feedback in which the velocity and erosion increase further is seen
-(erosion −0.44 → −2.2 cm).
+(erosion −0.50 → −3.0 cm).
 
-![Distributions of configuration 1](../figs/map.png)
+![Distributions of configuration 1](figs/map.png)
 
 The terrain change (left) and the flow depth (right) of configuration 1.
 Transversely uniform erosion, a deposition zone of 1–2 cells directly below the
@@ -79,10 +79,10 @@ slope break, and a thin water film on the flat are seen.
 
 | Configuration | Total solids Σhs + (1 − λ)Σdz | Co-moving update | Activity (min dz / arrival) | Water ledger |
 |---|---|---|---|---|
-| 1 | −1.8e-13 | 7e-14 | −0.32 cm / deposition below the slope break +0.18 cm | — |
-| 2 Egashira | 7e-13 | 9e-14 | −0.25 cm / max hs 0.15 cm | — |
-| 3 Takahashi–Nakagawa | 2.2e-13 | 7e-14 | −0.44 cm / max hs 0.09 cm | — |
-| 4 + pore-water entrainment | 2.2e-13 | 9e-14 | −2.2 cm / max hs 1.1 cm | 1.1e-13 |
+| 1 | −4.3e-14 | 4e-14 | −0.33 cm / deposition below the slope break +0.55 cm | — |
+| 2 Egashira | −4.6e-13 | 4e-14 | −0.33 cm / max hs 0.09 cm | — |
+| 3 Takahashi–Nakagawa | 3.0e-13 | 1.9e-13 | −0.50 cm / max hs 0.15 cm | — |
+| 4 + pore-water entrainment | 2.5e-13 | 7e-14 | −3.0 cm / max hs 2.6 cm | 1.5e-13 |
 
 - The total solids and the co-moving update hold at machine precision in all
   4 configurations. The E-D exchange amounts are obtained from the field at

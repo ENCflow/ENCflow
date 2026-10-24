@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
-"""test/swi の図を figs/swi.png に描く(事前に ./Run.sh を実行しておく)。
+"""test/swi の図を figs/swi.png に描く(事前に ./Run.sh を実行しておく)。引数 en: 英語表記で en/figs/ に出力。
 気象庁 3 段直列タンクの参照解(RK4、dt = 0.5 s)の SWI(t) と、ENCflow の最終値 Swi9998・期間最大 Swi9999・
 発生時刻 Swit9999(全セル同値)。参照解の計算は Check_swi.py の定数・関数と同じ。
 """
-import glob, os, struct
+import glob, os, struct, sys
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
+EN = "en" in sys.argv[1:]          # 引数 en: 英語表記で en/figs/ に出力
+def T(ja, en): return en if EN else ja
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
-os.makedirs("figs", exist_ok=True)
+os.makedirs(FIGDIR, exist_ok=True)
 
 
 def read_rec(f):
@@ -66,14 +69,14 @@ for i in range(int(TT / dt)):
 ts = np.array(ts) / 60; swi = np.array(swi); tanks = np.array(tanks)
 fin = np.loadtxt("result/Swi9998.txt"); mx = np.loadtxt("result/Swi9999.txt"); tmx = np.loadtxt("result/Swit9999.txt")
 fig, ax = plt.subplots(figsize=(9, 4.2))
-ax.plot(ts, swi, "k", lw=1.6, label="参照解 SWI(t)(RK4、dt = 0.5 s)")
-for k, lab in enumerate(["第 1 タンク", "第 2 タンク", "第 3 タンク"]):
+ax.plot(ts, swi, "k", lw=1.6, label=T("参照解 SWI(t)(RK4、dt = 0.5 s)", "reference SWI(t) (RK4, dt = 0.5 s)"))
+for k, lab in enumerate([T("第 1 タンク", "tank 1"), T("第 2 タンク", "tank 2"), T("第 3 タンク", "tank 3")]):
     ax.plot(ts, tanks[:, k], lw=0.9, ls="--", label=lab)
-ax.plot([tmx.mean()], [mx.mean()], "C3o", ms=8, label=f"ENCflow 期間最大 Swi9999 = {mx.mean():.2f} mm @ {tmx.mean():.0f} min")
-ax.plot([TT / 60], [fin.mean()], "C3s", ms=8, label=f"ENCflow 最終値 Swi9998 = {fin.mean():.2f} mm")
-ax.axvspan(0, TRAIN / 60, color="0.92", label="降雨 30 mm/h")
-ax.set_xlabel("t (min)"); ax.set_ylabel("貯留 (mm)"); ax.grid(alpha=0.3); ax.legend(fontsize=8)
-ax.set_title("土壌雨量指数(気象庁 3 段タンク、全国一律定数): 30 mm/h × 3 h → 休止 3 h", fontsize=10)
-fig.tight_layout(); fig.savefig("figs/swi.png", dpi=110); plt.close(fig)
+ax.plot([tmx.mean()], [mx.mean()], "C3o", ms=8, label=T("ENCflow 期間最大 Swi9999", "ENCflow period maximum Swi9999") + f" = {mx.mean():.2f} mm @ {tmx.mean():.0f} min")
+ax.plot([TT / 60], [fin.mean()], "C3s", ms=8, label=T("ENCflow 最終値 Swi9998", "ENCflow final value Swi9998") + f" = {fin.mean():.2f} mm")
+ax.axvspan(0, TRAIN / 60, color="0.92", label=T("降雨 30 mm/h", "rainfall 30 mm/h"))
+ax.set_xlabel("t (min)"); ax.set_ylabel(T("貯留 (mm)", "Storage (mm)")); ax.grid(alpha=0.3); ax.legend(fontsize=8)
+ax.set_title(T("土壌雨量指数(気象庁 3 段タンク、全国一律定数): 30 mm/h × 3 h → 休止 3 h", "Soil Water Index (JMA three-tank model, nationally uniform constants): 30 mm/h × 3 h → 3 h pause"), fontsize=10)
+fig.tight_layout(); fig.savefig(f"{FIGDIR}/swi.png", dpi=110); plt.close(fig)
 ipk = swi.argmax()
 print("ref final %.3f peak %.3f @ %.1f min; ENC final %.3f (min %.3f max %.3f) peak %.3f @ %.1f min" % (swi[-1], swi[ipk], ts[ipk], fin.mean(), fin.min(), fin.max(), mx.mean(), tmx.mean()))

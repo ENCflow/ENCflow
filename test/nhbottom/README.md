@@ -40,7 +40,7 @@ make                                  # uplift のビルド(src の libencflow.a
 ./uplift param_h.txt uplift.txt       # 静水圧
 ./uplift param_n.txt uplift.txt       # NH、加速度項なし
 python3 Theory.py                     # 線形理論の数表
-python3 Fig.py                        # figs/uplift.png と数表
+python3 Fig.py                        # figs/uplift.png と数表(引数 en で英語版を en/figs/ に)
 ```
 
 ![区間隆起](figs/uplift.png)
@@ -50,13 +50,13 @@ python3 Fig.py                        # figs/uplift.png と数表
 
 | ケース | η_max ENCflow (m) | t (s) | η_max 理論 (m) | t (s) | ENC/理論 | 理論/厳密 |
 |---|---:|---:|---:|---:|---:|---:|
-| 静水圧 | 0.1124 | 20.92 | 0.1153 | 19.55 | 0.975 | 1.404 |
-| NH(加速度項なし) | 0.0955 | 22.36 | 0.0950 | 22.45 | 1.005 | 1.156 |
-| NH(加速度項あり f_nh_bottom=1) | 0.0856 | 22.14 | 0.0853 | 22.25 | 1.004 | 1.039 |
+| 静水圧 | 0.1197 | 19.15 | 0.1153 | 19.55 | 1.038 | 1.404 |
+| NH(加速度項なし) | 0.0959 | 22.14 | 0.0950 | 22.45 | 1.010 | 1.156 |
+| NH(加速度項あり f_nh_bottom=1) | 0.0861 | 21.96 | 0.0853 | 22.25 | 1.009 | 1.039 |
 | 厳密(線形ポテンシャル流) | — | — | 0.0821 | 22.45 | — | 1 |
 
-- ENCflow は 3 モデルとも自分の線形理論に一致する(NH は ±0.7%、静水圧は
-  箱型のパルスが数値散逸で −2.5%・遅れ 1.4 s)。加速度項の実装が定式
+- ENCflow は 3 モデルとも自分の線形理論に一致する(NH は ±1.0%、静水圧は
+  箱型のパルスで +3.8%・0.4 s 早い)。加速度項の実装が定式
   どおりであることの確認。
 - 加速度項によって、先頭波高の厳密解との差が +16% → +3.9% に縮まる
   (静水圧 +40%)。t = 1 s の断面で、隆起直上の水面が箱型(静水圧)から
@@ -87,7 +87,7 @@ NH(f_nh_slope=1。加速度項なし)/ NH + 加速度項で比較する。入力
 ./encflow param_ls_b025.txt   # 同、dt = 0.025 s(一段遅れの影響)
 ./encflow param_ls_n025.txt   # 加速度項なし、dt = 0.025 s(対照)
 ./encflow param_ls_bd.txt     # NH + 加速度項 + 運動量拡散 ν = 0.3 m²/s
-python3 Landslide.py          # figs/landslide.png と数表
+python3 Landslide.py          # figs/landslide.png と数表(引数 en で英語版を en/figs/ に)
 ```
 
 ![海底地滑り](figs/landslide.png)

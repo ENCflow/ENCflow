@@ -49,10 +49,10 @@ make                                  # build uplift (from libencflow.a in src)
 ./uplift param_h.txt uplift.txt       # hydrostatic
 ./uplift param_n.txt uplift.txt       # NH, no acceleration term
 python3 Theory.py                     # tables of the linear theory
-python3 Fig.py                        # figs/uplift.png and tables
+python3 Fig.py en                     # en/figs/uplift.png and tables (figs/uplift.png without en: Japanese version)
 ```
 
-![Uplift of a section](../figs/uplift.png)
+![Uplift of a section](figs/uplift.png)
 
 Top: profiles at t = 1 s (end of the uplift), 5 s and 20 s. Solid =
 ENCflow, dashed = linear theory of each model, dotted = exact solution.
@@ -60,14 +60,13 @@ Bottom right: surface time series at x = x_c + 200 m.
 
 | Case | η_max ENCflow (m) | t (s) | η_max theory (m) | t (s) | ENC/theory | theory/exact |
 |---|---:|---:|---:|---:|---:|---:|
-| Hydrostatic | 0.1124 | 20.92 | 0.1153 | 19.55 | 0.975 | 1.404 |
-| NH (no acceleration term) | 0.0955 | 22.36 | 0.0950 | 22.45 | 1.005 | 1.156 |
-| NH (with acceleration term, f_nh_bottom=1) | 0.0856 | 22.14 | 0.0853 | 22.25 | 1.004 | 1.039 |
+| Hydrostatic | 0.1197 | 19.15 | 0.1153 | 19.55 | 1.038 | 1.404 |
+| NH (no acceleration term) | 0.0959 | 22.14 | 0.0950 | 22.45 | 1.010 | 1.156 |
+| NH (with acceleration term, f_nh_bottom=1) | 0.0861 | 21.96 | 0.0853 | 22.25 | 1.009 | 1.039 |
 | Exact (linear potential flow) | — | — | 0.0821 | 22.45 | — | 1 |
 
 - ENCflow agrees with its own linear theory for all three models (NH within
-  ±0.7%; hydrostatic −2.5% with a lag of 1.4 s because the box-shaped pulse
-  suffers numerical dissipation). This confirms that the acceleration term
+  ±1.0%; hydrostatic +3.8% and 0.4 s early for the box-shaped pulse). This confirms that the acceleration term
   is implemented as formulated.
 - With the acceleration term the difference of the leading wave height from
   the exact solution shrinks from +16% to +3.9% (hydrostatic +40%). In the
@@ -106,7 +105,7 @@ acceleration term) / NH + acceleration term. The inputs come from
 ./encflow param_ls_b025.txt   # same, dt = 0.025 s (effect of the one-step lag)
 ./encflow param_ls_n025.txt   # no acceleration term, dt = 0.025 s (control)
 ./encflow param_ls_bd.txt     # NH + acceleration term + momentum diffusion ν = 0.3 m²/s
-python3 Landslide.py          # figs/landslide.png and tables
+python3 Landslide.py en       # en/figs/landslide.png and tables (figs/landslide.png without en: Japanese version)
 ```
 
 ![Submarine landslide](../figs/landslide.png)

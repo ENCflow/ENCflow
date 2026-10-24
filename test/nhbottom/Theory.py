@@ -17,6 +17,8 @@ import math, sys
 import numpy as np
 if not hasattr(np, "trapezoid"):
     np.trapezoid = np.trapz
+EN = "en" in sys.argv[1:]          # 引数 en で英語表記(Fig.py / Landslide.py と共通)
+def T(ja, en): return en if EN else ja
 
 G = 9.80665
 H = 10.0
@@ -25,8 +27,10 @@ LX = 1000.0
 DX_ENC = 1.25            # ENC の Δx(Λ のシンボル用)
 N = 8192                 # 理論の周期格子(Δx = 0.122 m)
 MODELS = ("hydro", "nh0", "nh1raw", "nh1", "exact")
-LABEL = {"hydro": "静水圧", "nh0": "NH(加速度項なし)", "nh1raw": "NH(素朴な源項 −(h/2)z̈)",
-         "nh1": "NH(加速度項あり)", "exact": "厳密(線形ポテンシャル流)"}
+LABEL = {"hydro": T("静水圧", "hydrostatic"), "nh0": T("NH(加速度項なし)", "NH (no acceleration term)"),
+         "nh1raw": T("NH(素朴な源項 −(h/2)z̈)", "NH (naive source term −(h/2)z̈)"),
+         "nh1": T("NH(加速度項あり)", "NH (with acceleration term)"),
+         "exact": T("厳密(線形ポテンシャル流)", "exact (linear potential flow)")}
 
 def _ramp_dd(tau):
     return 0.5 * (math.pi / TC) ** 2 * np.cos(math.pi * tau / TC)
