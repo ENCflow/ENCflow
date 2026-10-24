@@ -666,6 +666,10 @@ module m_swflow_enc
       integer, intent(in) :: in, jn
       logical :: r
     end function
+    module function bc_inflow_cell(i, j) result(r)
+      integer, intent(in) :: i, j
+      logical :: r
+    end function
     module subroutine bc_dispose()
     end subroutine
   end interface
