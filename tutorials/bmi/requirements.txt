@@ -1,0 +1,4 @@
+# BMI チュートリアルの Python スクリプトが使うパッケージ(uv を使わない人向け)
+#   python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+numpy
+matplotlib

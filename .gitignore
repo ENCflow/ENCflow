@@ -155,3 +155,9 @@ test/tracer/inflow_b.txt
 test/rockfall/zinit_sea.txt
 test/rockfall/sw_sea.txt
 test/rockfall/sd_zero.txt
+
+# --- tutorials/bmi(BMI チュートリアル。Python 環境と実行生成物)---
+tutorials/bmi/result_norain/
+tutorials/bmi/frames/
+.venv/
+uv.lock

@@ -19,6 +19,10 @@ is needed).
 
 ## Quick start (from Python)
 
+If you are new to this, start with the
+[BMI tutorial](../tutorials/bmi/en/README.md) (tutorials/bmi), which goes in
+seven steps from setting up Python to set_value. This page is its reference.
+
 ```sh
 cd bmi && make        # builds libencflow_bmi.so (and ../src on first run)
 ```

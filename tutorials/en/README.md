@@ -13,8 +13,9 @@ for prerequisites.
 |---|---|---|
 | 1 | [wave](../wave/en/README.md) | First run, parameter files, time step and boundary conditions |
 | 2 | [chichibu](../chichibu/en/README.md) | Real terrain data, rainfall runoff, recording, water balance and visualization |
+| 3 | [bmi](../bmi/en/README.md) | Driving ENCflow from Python (BMI): start, advance time, read the state, live plotting, supplying rain and roughness from outside |
 
-Work in `tutorials/wave` or `tutorials/chichibu`. Even when reading English,
+Work in `tutorials/wave`, `tutorials/chichibu` or `tutorials/bmi`. Even when reading English,
 run commands from the case root, not from `en/`. Do not confuse the location
 used to resolve documentation links with the working directory for execution.
 

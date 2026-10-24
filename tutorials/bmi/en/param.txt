@@ -1,0 +1,74 @@
+! English mirror of tutorials/bmi/param.txt.
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! BMI tutorial: 200 mm/h x 30 min of rain on the Chichibu catchment (200 m grid)
+!
+!   Step 2 of tutorials/chichibu (GeoTIFF input, channel mask and
+!   roughness) plus only the catchment-outlet drain of Step 6. The input
+!   data are shared with tutorials/chichibu/data_chichibu (not copied).
+!   The answer is the same through BMI and in a normal run (./encflow param.txt).
+!
+!======================================================================
+! System parameter settings
+!======================================================================
+&list_sysparam
+  dt = 6.0                   ! time step (s)
+  tt_c = "6 hour"            ! end time of the computation
+  dt_disp_c = "30 min"       ! screen display interval
+  dt_file_c = "30 min"       ! file output interval
+
+  fn_geoinfo = "-"           ! geographic information settings file ("-" = in this file)
+  fn_precip  = "-"           ! precipitation settings file
+  fn_boundary = "-"          ! boundary condition settings file
+
+  dir_data = "../chichibu/data_chichibu"  ! input data directory (shared with chichibu)
+  dir_result = "result"      ! result output directory
+
+  f_input_mode = 4           ! matrix input format (1: text, 2: bil, 4: geotiff)
+  f_output_mode = 5          ! matrix output format (1: text, 2: bil, 4: geotiff)
+/
+
+!======================================================================
+! Geographic information settings
+!======================================================================
+&list_geoinfo
+  dx = 200.0
+  dy = 200.0
+
+  f_ztype = 1          ! ground elevation type (0: default constant, 1: file)
+  f_masktype = 1       ! domain mask (0: none, 1: catchment mask)
+
+  f_rntype = 0         ! roughness coefficient type (0: default constant, 1: file)
+  rn0 = 0.05           ! constant roughness coefficient (mountain slopes)
+  rn0_rw = 0.02        ! constant roughness coefficient on channel-mask cells
+
+  fn_z = "Chichibu_200m_filled.tif"        ! ground elevation file
+  fn_mask = "Chichibu_200m_basin.tif"      ! domain mask file
+  fn_rw = "Chichibu_200m_river.tif"        ! channel mask file
+/
+
+!======================================================================
+! Precipitation settings (Step 6 uses param_norain.txt, which has no
+! such group, and supplies the same rain from Python with set)
+!======================================================================
+&list_precip
+  ! type of precipitation data (0: none, 1: uniform time series)
+  prtype = 1
+  ! precipitation time series (time (min), intensity (mm/h))
+  prval(:,1) =   0,   0
+  prval(:,2) =  30, 200
+  prval(:,3) =  60,   0
+/
+
+!======================================================================
+! Stage-prescribed cell group: make the catchment outlet a perfect drain
+! by prescribing a stage below the river bed (same as tutorials/chichibu
+! Step 6; without it water keeps piling up at the outlet)
+!======================================================================
+&list_bound_stage
+  ! group 1: catchment outlet (stage below the bed = perfect drain)
+  stage_cell(:,1,1) = 239, 19
+  stage_cell(:,2,1) = 240, 19
+  stage_eta(1) = 111.0
+/

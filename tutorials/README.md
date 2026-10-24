@@ -10,8 +10,9 @@
 |---|---|---|
 | 1 | [wave](wave/README.md) | 最初の実行、パラメータファイル、時間刻み、境界条件 |
 | 2 | [chichibu](chichibu/README.md) | 実地形データ、降雨流出、計測、水収支、可視化 |
+| 3 | [bmi](bmi/README.md) | Python から ENCflow を操る(BMI): 起動・時間を進める・状態の取り出し・リアルタイム描画・雨や粗度の外部供給 |
 
-作業場所は `tutorials/wave` または `tutorials/chichibu` です。
+作業場所は `tutorials/wave`・`tutorials/chichibu`・`tutorials/bmi` です。
 英語版を読む場合も `en/` へ移動せず、各ケース直下で実行します。
 README内のリンクと、実行時の作業ディレクトリを混同しないでください。
 

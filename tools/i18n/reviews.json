@@ -31,9 +31,9 @@
     {
       "source": "bmi/README.md",
       "target": "bmi/README.en.md",
-      "source_sha256": "2b6d85dec56df36450b5e3cf9ad2954ce2a9e971315ec33f06b3a22b51ba1e3d",
-      "target_sha256": "282e590eacb56bd8d758fcb775042ace084ffbfed745be04c0786806b7a65be7",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "f3ed072cdfc2a49e1ce2d6c7263076fd1bd433eaa423e646e468a1ef190a4e09",
+      "target_sha256": "d78147ef1ace9cbcc5d516488e010a0dc8e00b6094fa2c38ce0dfe85a8f39bbf",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
     },
@@ -85,9 +85,9 @@
     {
       "source": "docs/tutorial.md",
       "target": "docs/en/tutorial.md",
-      "source_sha256": "23a9f7e439f45c0e36fc020e417c6fe24c8400fb873c185221f145dfc0d903bd",
-      "target_sha256": "ddeaab105e5b725bc02708ecfbf2b7bf4f4d99bf20b54ec8fe270fcab09d0210",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "58f9f505eaf773a5f8dbf51fa9b1237e48aaf2627a1e3186294bbb5085b0c8e0",
+      "target_sha256": "8a2dfd6dfa9727b676baf7ce064a8a28597b560c78e0c55a5442f3b053ef0fc2",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
     },
@@ -2209,11 +2209,38 @@
     {
       "source": "tutorials/README.md",
       "target": "tutorials/en/README.md",
-      "source_sha256": "a32d83a66ca2a42ca0ae090ec783cac6396a045486880e18b88d0831be6a8899",
-      "target_sha256": "7c37c5059e8000225f7451dc294e8e323d6fd6c33d47f57fc5645b05076875b0",
-      "reviewer": "ChatGPT (content/lexical review; not a model execution)",
+      "source_sha256": "282b9c7dcb0bbefdf8738d75fe5906ad05296894bafab9fc53fbb2f67a129b1f",
+      "target_sha256": "5bcdc37807f3a7a1550c6c10c348b3436ff193626549d799d095cf31212d9d41",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/bmi/README.md",
+      "target": "tutorials/bmi/en/README.md",
+      "source_sha256": "a8cec2011f81af5a73a3cf48ac943982a298c2d98e07b59b1981f66911def5fe",
+      "target_sha256": "6a32f7ba1e759039f3c39d57938c793e0664cd49e457f4fb324efcddd55e5bae",
+      "reviewer": "Claude (assistant)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/bmi/param.txt",
+      "target": "tutorials/bmi/en/param.txt",
+      "source_sha256": "15aeae53f925f92dfd2e228d034aedf2a80eb571b981a8f738451fcd0ea42521",
+      "target_sha256": "f3a4fb96dca99484d29de25327cd573177a23d67b5a37dfab7b0efad28e2a07d",
+      "reviewer": "Claude (assistant)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "tutorials/bmi/param_norain.txt",
+      "target": "tutorials/bmi/en/param_norain.txt",
+      "source_sha256": "8ed3d61ba6f6c9b06aa50f3e1b2a256f1c76992e85604696be5399dbc65f027f",
+      "target_sha256": "86a9b38afcf97fc0dc423d570bd4d13c51ca1b060f9da42aa2f4c7b50727605a",
+      "reviewer": "Claude (assistant)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "tutorials/chichibu/Fig_chichibu.plt",
