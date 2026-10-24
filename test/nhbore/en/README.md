@@ -55,3 +55,8 @@ splits into a wave train from its head.
   does not reach the asymptotic value even in the 450 m channel. For a
   quantitative comparison, use the time evolution of the leading-wave height
   itself (figure, right).
+- The growth of the oscillation behind the hydrostatic bore from the record of
+  10-12 (1.4–1.6a) to 2–3a is due to the change of the default on 2026-10-18
+  (f_opening_dynamic = 2; developer.md §68.38). With the former default 1
+  written explicitly it returns to the values of 10-12 (1.57a at 90 s, leading
+  wave speed ratio 1.108) (confirmed 2026-10-24).

@@ -78,6 +78,9 @@ Fs < 1(最小 0.455)になり、遷緩点付近の緩い部分だけ Fs > 1 で�
 - 流体力 F9999 = (h + hs)V² は混合体密度込みで、τ_y ケースで ρm/ρw ≈ 2 倍に
   なることを確認しています(§28.9)。
 
+- 域外堆積が +0.22 → +0.61 m に増えたのは 2026-10-18 の既定変更(f_opening_dynamic = 2。
+  developer.md §68.38)による。旧既定 1 を明示すると −0.90 / +0.22 m が再現する(2026-10-24 確認)。
+
 ## 関連文書
 
 - [docs/users_guide/geomorph.md](../../docs/users_guide/geomorph.md) — `fn_dbinit`・`db_reltime`・`db_relsat`、`f_slide`、危険度出力 `f_out_fs` 等

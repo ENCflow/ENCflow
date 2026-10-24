@@ -79,6 +79,11 @@ nearly zero.
   scenario (prescribed fracture depth), and impact pressures are converted
   with the snow density — are stated explicitly in the user's guide.
 
+- The growth ratio (entrained / released) 2.51 reflects the changes of
+  2026-10-18: with the former default f_opening_dynamic = 1 written explicitly
+  it is 2.96 (2.78 when recorded; the remaining difference comes from the
+  advection fixes of §68.37 and §68.39) (confirmed 2026-10-24).
+
 ## Related documents
 
 - [docs/users_guide/geomorph.md](../../../docs/en/users_guide/geomorph.md) — setup pattern for (dense-flow) avalanches, customary ranges of μ/ξ, table of reinterpretations

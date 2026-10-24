@@ -1,0 +1,24 @@
+reading list_sysparam in wrk_param_p05_s1_od1.txt
+reading list_geoinfo in wrk_param_p05_s1_od1.txt
+ reading ./z_p05.txt
+reading boundary lists in wrk_param_p05_s1_od1.txt
+reading list_initial in wrk_param_p05_s1_od1.txt
+reading list_record in wrk_param_p05_s1_od1.txt
+reading list_precip in wrk_param_p05_s1_od1.txt
+reading list_enc in wrk_param_p05_s1_od1.txt
+swflow: f_opening_dynamic=1 has no channel mask (fn_rw); dynamic opening disabled
+main: number of processes: 1
+main: number of threads: 4
+main: real precision: 64 bit
+main: number of valid cells: 400
+time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s), Q_max(m2/s)
+  0:00:00.00   0.0%    0.00000000000000   0.0%      0    0.0000    0.0000    0.0000    0.0000
+  0:30:00.00  12.5%    0.08938187615440  69.1%      0    0.0721    0.1301    0.3751    0.0325
+  1:00:00.00  25.0%    0.13355577666346   1.4%      0    0.1009    0.2403    0.5667    0.0942
+  1:30:00.00  37.5%    0.13799980419924   1.2%      0    0.1051    0.2583    0.5999    0.1101
+  2:00:00.00  50.0%    0.13808540820776   1.2%      0    0.1052    0.2587    0.6007    0.1105
+  2:30:00.00  62.5%    0.13808658012242   1.2%      0    0.1052    0.2587    0.6007    0.1105
+  3:00:00.00  75.0%    0.13808659519812   1.1%      0    0.1052    0.2587    0.6007    0.1105
+  3:30:00.00  87.5%    0.13808659539203   1.2%      0    0.1052    0.2587    0.6007    0.1105
+  4:00:00.00 100.0%    0.13808659539459   1.2%      0    0.1052    0.2587    0.6007    0.1105
+main: program terminated normally

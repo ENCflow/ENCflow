@@ -63,6 +63,12 @@ make
   ∂z/∂n ≈ r/γ has not been done; it needs a long run with fixed banks
   (remaining item of §84.3).
 
+- Two factors reduced the outer − inner difference from −0.224 m (10-17) to
+  −0.075 m: with the former default f_opening_dynamic = 1 written explicitly it
+  is −0.120 m (control +0.027 m), and the rest comes from the fix of the
+  one-sided links of advection on 2026-10-18 (§68.37, §68.39) (confirmed
+  2026-10-24; the mechanism has not been analysed).
+
 ## Related documents
 
 - developer.md §84.3, docs/meander_plan.md §3.2 (in Japanese)

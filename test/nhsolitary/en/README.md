@@ -57,6 +57,13 @@ steepens at its front into a bore. `./Fig.py en` generates `en/figs/profiles.png
   probes and the crest positions (to the printed digits). Active cells
   average 53%.
 
+- The spike at the hydrostatic bore front (amplitude 2.6 times) and the change
+  of the NH speed (3.256 → 3.288 m/s) are due to the change of the default on
+  2026-10-18 (f_opening_dynamic = 2; developer.md §68.38). With the former
+  default 1 written explicitly, both the NH and the hydrostatic rows of the
+  table of 10-12 (3.256 / 0.992 / 1.049 / 0.029 / 0.043 and 3.334 / 1.015 /
+  1.48 / 0.30 / 0.29) are reproduced (confirmed 2026-10-24).
+
 ## Effect of the bottom-slope terms (f_nh_slope=1, Version 2) on a flat bed (2026-10-12)
 
 | Case | c_fit / √(g(H+a)) | a(60 s)/a0 | Waveform RMS/a |

@@ -96,6 +96,11 @@ judge-only mode).
   has been confirmed to become ρm/ρw ≈ 2 times larger in the τ_y case
   (§28.9).
 
+- The increase of the deposition outside the area from +0.22 to +0.61 m is due to
+  the change of the default on 2026-10-18 (f_opening_dynamic = 2; developer.md
+  §68.38); with the former default 1 written explicitly, −0.90 / +0.22 m are
+  reproduced (confirmed 2026-10-24).
+
 ## Related documents
 
 - [docs/users_guide/geomorph.md](../../../docs/en/users_guide/geomorph.md) — `fn_dbinit`, `db_reltime`, `db_relsat`, `f_slide`, hazard outputs `f_out_fs` etc.
