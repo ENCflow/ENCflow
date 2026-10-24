@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """test/chichibu の回帰ケース(param.txt。100 m 格子、6 h)の結果を図にする。
 
-  python3 Fig.py [result_dir]      既定 result → figs/chichibu.png
+  python3 Fig.py [result_dir] [en] 既定 result → figs/chichibu.png(en で英語版を en/figs/chichibu.png に)
 
 左: 6 時間の最大水深(10 分ごとの出力 H*.txt の最大。流域マスク外は灰色)。
     河道マスクを細線で重ね、測線 1〜4 とプローブを描く。
@@ -14,11 +14,15 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
-plt.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
+EN = "en" in sys.argv[1:]
+def T(ja, en): return en if EN else ja
+FIGDIR = "en/figs" if EN else "figs"
+args = [a for a in sys.argv[1:] if a != "en"]
+plt.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
 
 here = os.path.dirname(os.path.abspath(__file__))
-res = sys.argv[1] if len(sys.argv) > 1 else os.path.join(here, "result")
+res = args[0] if args else os.path.join(here, "result")
 data = os.path.join(here, "data_chichibu")
 DX = 100.0
 
@@ -52,40 +56,40 @@ yy, xx = np.nonzero(rw & mask)
 ax.plot((xx + 0.5) * DX / 1000, (yy + 0.5) * DX / 1000, ",", color="k", alpha=0.35)
 for n, (xr, yr, xl, yl) in enumerate(flx, 1):
     ax.plot([(xr - 0.5) * DX / 1000, (xl - 0.5) * DX / 1000], [(yr - 0.5) * DX / 1000, (yl - 0.5) * DX / 1000], "r-", lw=2)
-    ax.text((xr + 3) * DX / 1000, (yr + (2 if n != 1 else -8)) * DX / 1000, f"測線{n}", color="r", fontsize=10, fontweight="bold")
+    ax.text((xr + 3) * DX / 1000, (yr + (2 if n != 1 else -8)) * DX / 1000, T(f"測線{n}", f"T{n}"), color="r", fontsize=10, fontweight="bold")
 for n, (xp, yp) in enumerate(pbs, 1):
     ax.plot((xp - 0.5) * DX / 1000, (yp - 0.5) * DX / 1000, "o", mfc="none", mec="darkorange", mew=2, ms=8)
-fig.colorbar(im, ax=ax, shrink=0.8, pad=0.02, label="6 時間の最大水深 (m)")
+fig.colorbar(im, ax=ax, shrink=0.8, pad=0.02, label=T("6 時間の最大水深 (m)", "maximum depth over 6 h (m)"))
 ax.set_xlabel("x (km)"); ax.set_ylabel("y (km)")
-ax.set_title("最大水深と河道マスク(灰 = 流域外)")
+ax.set_title(T("最大水深と河道マスク(灰 = 流域外)", "Maximum depth and channel mask\n(grey: outside the catchment; T1–T4: transects)"))
 
 ax = fig.add_subplot(gs[1])
 peaks = []
 for n in range(1, 5):
     d = np.loadtxt(os.path.join(res, "fluxes", f"flux{n:04d}.csv"), delimiter=",", comments="#")
     t, q = d[:, 0], d[:, 2]
-    ax.plot(t, q, lw=1.6, label=f"測線{n}")
+    ax.plot(t, q, lw=1.6, label=T(f"測線{n}", f"transect {n}"))
     k = np.argmax(q); peaks.append((n, q[k], t[k]))
-ax.set_xlabel("時間 (h)"); ax.set_ylabel("流量 Q (m³/s)")
-ax.set_xlim(0, 6); ax.grid(alpha=0.4); ax.legend(loc="upper left")
+ax.set_xlabel(T("時間 (h)", "time (h)")); ax.set_ylabel(T("流量 Q (m³/s)", "discharge Q (m³/s)"))
+ax.set_xlim(0, 6); ax.grid(alpha=0.4); ax.legend(loc=T("upper left", "upper right"))  # 英語版は凡例が長く降雨の注記と重なるため右上
 ax2 = ax.twinx()
 ax2.bar([0.25], [200], width=0.5, color="steelblue", alpha=0.25, align="center")
 ax2.set_ylim(800, 0); ax2.set_yticks([0, 200]); ax2.tick_params(axis="y", colors="steelblue", labelsize=8)
-ax2.text(0.55, 100, "降雨 200 mm/h", color="steelblue", fontsize=9, va="center")
-ax.set_title("測線の流量(0.5 h × 200 mm/h)")
+ax2.text(0.55, 100, T("降雨 200 mm/h", "rainfall 200 mm/h"), color="steelblue", fontsize=9, va="center")
+ax.set_title(T("測線の流量(0.5 h × 200 mm/h)", "Discharge at the transects (0.5 h × 200 mm/h)"))
 
 ax = fig.add_subplot(gs[2])
 for n in range(1, 3):
     d = np.loadtxt(os.path.join(res, "probes", f"probe{n:04d}.csv"), delimiter=",", comments="#")
-    ax.plot(d[:, 0], d[:, 3], lw=1.6, label=f"プローブ{n}")
-ax.set_xlabel("時間 (h)"); ax.set_ylabel("水深 h (m)")
+    ax.plot(d[:, 0], d[:, 3], lw=1.6, label=T(f"プローブ{n}", f"probe {n}"))
+ax.set_xlabel(T("時間 (h)", "time (h)")); ax.set_ylabel(T("水深 h (m)", "depth h (m)"))
 ax.set_xlim(0, 6); ax.grid(alpha=0.4); ax.legend()
-ax.set_title("河道セルの水深")
+ax.set_title(T("河道セルの水深", "Depth at the channel cells"))
 
-fig.suptitle("test/chichibu — 秩父流域 100 m 格子の回帰ケース(6 h)", fontsize=13)
-os.makedirs(os.path.join(here, "figs"), exist_ok=True)
-fig.savefig(os.path.join(here, "figs", "chichibu.png"), dpi=110, bbox_inches="tight")
-print("figs/chichibu.png")
+fig.suptitle(T("test/chichibu — 秩父流域 100 m 格子の回帰ケース(6 h)", "test/chichibu — regression case of the Chichibu catchment at 100 m grid (6 h)"), fontsize=13)
+os.makedirs(os.path.join(here, FIGDIR), exist_ok=True)
+fig.savefig(os.path.join(here, FIGDIR, "chichibu.png"), dpi=110, bbox_inches="tight")
+print(f"{FIGDIR}/chichibu.png")
 for n, q, t in peaks:
     print(f"flux{n}: peak {q:.1f} m3/s at {t:.2f} h")
 print("max depth in basin: %.2f m, max channel depth: %.2f m" % (np.nanmax(hmax), np.nanmax(np.where(rw, hmax, np.nan))))

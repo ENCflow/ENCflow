@@ -31,7 +31,7 @@ checked with `Check_suspend.py` (the counterpart of the bedload version in
 | File | Contents |
 |---|---|
 | `Check_suspend.py <save>` | (1) total solid \|Σhs + (1 − λ)Σ(z − z₀)\| < 1e-9, (2) co-update max\|(sd − sd₀) − (z − z₀)\| < 1e-10, (3) activity max hs > threshold and max\|z − z₀\| > threshold |
-| `Fig.py` | The figure `figs/suspend.png` below (Run.sh leaves configuration 1 in `save_serial/` and configuration 2 in `save/`) |
+| `Fig.py` | The figure `en/figs/suspend.png` below (`python3 Fig.py en`; `figs/suspend.png` is the Japanese version. Run.sh leaves configuration 1 in `save_serial/` and configuration 2 in `save/`) |
 
 ## Running
 
@@ -39,12 +39,12 @@ checked with `Check_suspend.py` (the counterpart of the bedload version in
 make
 ./Run.sh          # configuration 1 → Check → configuration 2 → Check (a few seconds)
 ./Run_MPI.sh 4    # MPI; state.dat is byte-identical to the serial run
-python3 Fig.py    # figs/suspend.png
+python3 Fig.py en # en/figs/suspend.png
 ```
 
 ## Figure
 
-![Bed change and suspended sediment of the suspended-sediment case](../figs/suspend.png)
+![Bed change and suspended sediment of the suspended-sediment case](figs/suspend.png)
 
 Top row: configuration 1; bottom row: configuration 2. Left: bed change.
 Scour occurs in the ring of radius 5–10 m where the velocity is highest as
@@ -60,8 +60,8 @@ empirical formulas that presuppose calibration).
 
 | Configuration | Total solid | Co-update | max hs / max\|dz\| | Result |
 |---|---|---|---|---|
-| 1 linear formula | 0.0 | 1.2e-14 | 0.45 mm / 1.13 mm | PASS |
-| 2 Itakura-Kishi | 0.0 | 1.3e-14 | 1.04 mm / 2.53 mm | PASS |
+| 1 linear formula | 0.0 | 1.3e-14 | 0.49 mm / 1.13 mm | PASS |
+| 2 Itakura-Kishi | 0.0 | 1.2e-14 | 1.12 mm / 2.52 mm | PASS |
 
 - At morfac = 1 the E-D exchange is exactly antisymmetric, and the total
   solid is conserved to machine precision (ledger separation of MORFAC: the
