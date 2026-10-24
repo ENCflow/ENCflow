@@ -895,8 +895,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   tide の比較先 result_min/result_minx、hillslope の粗度の注記、bedfines の題名、nhbottom の
   理論値を Theory.py の実装フィルタの値(0.0853、+3.9 %)に)。**未解決**: berode の kb1 河岸
   損失(所見 0.206 m·cell と崩落節 0.367 m³·cell。コンパイラのない環境では再計算できず)、
-  chichibu の図表の数値は f_opening_dynamic = 1 当時のまま(注記で明示)、developer.md の
-  §68 内 2 箇所(「既定 1」「f_opening_dynamic = 1 が既定で」)の古い記述。
+  chichibu の図表の数値は f_opening_dynamic = 1 当時のまま(注記で明示)。developer.md §68 の「既定 1」の古い記述 3 箇所は 2026-10-24 に修正済み。
   (d) namelist と params_index(日英)の突合は未スクリプト化(2026-10-01 は手動)。
   (e) 接尾辞方式(test/README.en.md 等 5 件)の en/ への移行は任意(規約 §2・§5)。
   コード内コメントの言語方針は海外コア開発者が現実になった時点で
