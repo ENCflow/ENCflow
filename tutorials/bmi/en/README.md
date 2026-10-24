@@ -120,9 +120,12 @@ sudo apt install -y python3-numpy python3-matplotlib
 python3 step1_hello.py
 ```
 
-The explanations below are written in the form of A,
-`uv run step1_hello.py`. Readers using B--D replace `uv run` with
-`python3` (the scripts are the same).
+In every step below, the command to run is shown both ways: the A (uv)
+form `uv run step1_hello.py`, "or" the B--D form `python3 step1_hello.py`.
+Run only the one line that matches your environment. The difference is
+just how Python is started; the script and its results are the same (for
+B, run it in a terminal where `source .venv/bin/activate` has been done,
+for C after `conda activate encflow`).
 
 > **Windows users**: as with ENCflow itself, we assume you work inside WSL
 > (Ubuntu) ([Using ENCflow on Windows](../../../docs/en/windows.md)). In WSL
@@ -163,7 +166,9 @@ print("finished without advancing time")
 ```
 
 ```bash
-uv run step1_hello.py
+uv run step1_hello.py               # with A (uv)
+# or
+python3 step1_hello.py              # with B--D (venv / conda / OS packages)
 ```
 
 ```
@@ -224,7 +229,9 @@ print("finished")
 ```
 
 ```bash
-uv run step2_time.py
+uv run step2_time.py                # with A (uv)
+# or
+python3 step2_time.py               # with B--D (venv / conda / OS packages)
 ```
 
 ```
@@ -292,7 +299,9 @@ with ENCflow("param.txt") as model:
 ```
 
 ```bash
-uv run step3_state.py
+uv run step3_state.py               # with A (uv)
+# or
+python3 step3_state.py              # with B--D (venv / conda / OS packages)
 ```
 
 ```
@@ -381,7 +390,9 @@ plt.show()                                   # does nothing and returns where th
 ```
 
 ```bash
-uv run step4_plot.py
+uv run step4_plot.py                # with A (uv)
+# or
+python3 step4_plot.py               # with B--D (venv / conda / OS packages)
 ```
 
 ![Step 4: depth distribution at t = 2 h](../figs/step4_depth.png)
@@ -430,6 +441,9 @@ model.finalize()
 ```bash
 uv run step5_live.py                 # display on screen (close the window at the end to exit)
 uv run step5_live.py --save frames   # no display: save a PNG sequence in frames/
+# or (with B--D)
+python3 step5_live.py
+python3 step5_live.py --save frames
 ```
 
 ![Step 5: one frame of the live display (t = 1.67 h)](../figs/step5_frame.png)
@@ -454,7 +468,8 @@ and the time series passes its peak (about 1.5 h) and recedes.
   interval, color scale, any cell), is
   [bmi/python/live_view.py](../../../bmi/python/live_view.py). It can be used
   on the case in this directory as is, e.g.
-  `uv run --with numpy,matplotlib ../../bmi/python/live_view.py param.txt --probe 147 104`.
+  `uv run --with numpy,matplotlib ../../bmi/python/live_view.py param.txt --probe 147 104`
+  (with B--D: `python3 ../../bmi/python/live_view.py param.txt --probe 147 104`).
 
 ## Step 6: Supply from outside (rain)
 
@@ -514,7 +529,9 @@ print(f"   max h: A = {h_a.max():.2f} m,  C = {h_c.max():.2f} m")
 ```
 
 ```bash
-uv run step6_rain.py
+uv run step6_rain.py                # with A (uv)
+# or
+python3 step6_rain.py               # with B--D (venv / conda / OS packages)
 ```
 
 ```
@@ -587,7 +604,9 @@ def run(factor):
 ```
 
 ```bash
-uv run step7_roughness.py
+uv run step7_roughness.py           # with A (uv)
+# or
+python3 step7_roughness.py          # with B--D (venv / conda / OS packages)
 ```
 
 ```

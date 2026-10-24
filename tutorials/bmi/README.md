@@ -115,9 +115,12 @@ sudo apt install -y python3-numpy python3-matplotlib
 python3 step1_hello.py
 ```
 
-以下の説明では A の `uv run step1_hello.py` の形で書きます。
-B〜D の人は `uv run` を `python3` に読み替えてください
-(スクリプトの中身は同じです)。
+以下の各ステップの実行例は、A(uv)の `uv run step1_hello.py` と、
+B〜D の `python3 step1_hello.py` を「または」で毎回併記します。
+自分の環境に合う方の 1 行だけを実行してください。違いは起動の
+しかただけで、スクリプトの中身と結果は同じです(B の venv は
+`source .venv/bin/activate`、C の conda は `conda activate encflow` を
+済ませたターミナルで実行します)。
 
 > **Windows の方へ**: ENCflow 本体と同様、WSL(Ubuntu)の中で作業する
 > 前提です([Windows での使い方](../../docs/windows.md))。WSL では
@@ -157,7 +160,9 @@ print("finished without advancing time")
 ```
 
 ```bash
-uv run step1_hello.py
+uv run step1_hello.py          # A(uv)の場合
+# または
+python3 step1_hello.py         # B〜D(venv / conda / OS パッケージ)の場合
 ```
 
 ```
@@ -219,7 +224,9 @@ print("finished")
 ```
 
 ```bash
-uv run step2_time.py
+uv run step2_time.py          # A(uv)の場合
+# または
+python3 step2_time.py         # B〜D(venv / conda / OS パッケージ)の場合
 ```
 
 ```
@@ -286,7 +293,9 @@ with ENCflow("param.txt") as model:
 ```
 
 ```bash
-uv run step3_state.py
+uv run step3_state.py          # A(uv)の場合
+# または
+python3 step3_state.py         # B〜D(venv / conda / OS パッケージ)の場合
 ```
 
 ```
@@ -372,7 +381,9 @@ plt.show()                                   # 画面がない環境では何も
 ```
 
 ```bash
-uv run step4_plot.py
+uv run step4_plot.py          # A(uv)の場合
+# または
+python3 step4_plot.py         # B〜D(venv / conda / OS パッケージ)の場合
 ```
 
 ![Step 4: t = 2 h の水深分布](figs/step4_depth.png)
@@ -418,6 +429,9 @@ model.finalize()
 ```bash
 uv run step5_live.py                 # 画面に順次表示(終了後、ウィンドウを閉じると終わる)
 uv run step5_live.py --save frames   # 画面がない環境: PNG 連番を frames/ に保存
+# または(B〜D の場合)
+python3 step5_live.py
+python3 step5_live.py --save frames
 ```
 
 ![Step 5: リアルタイム表示の 1 コマ(t = 1.67 h)](figs/step5_frame.png)
@@ -438,6 +452,7 @@ uv run step5_live.py --save frames   # 画面がない環境: PNG 連番を fram
   スケール、任意のセル)つきで実装したのが
   [bmi/python/live_view.py](../../bmi/python/live_view.py) です。
   `uv run --with numpy,matplotlib ../../bmi/python/live_view.py param.txt --probe 147 104`
+  (B〜D では `python3 ../../bmi/python/live_view.py param.txt --probe 147 104`)
   のように、このディレクトリのケースにそのまま使えます。
 
 ## Step 6: 外から与える(雨)
@@ -498,7 +513,9 @@ print(f"   max h: A = {h_a.max():.2f} m,  C = {h_c.max():.2f} m")
 ```
 
 ```bash
-uv run step6_rain.py
+uv run step6_rain.py          # A(uv)の場合
+# または
+python3 step6_rain.py         # B〜D(venv / conda / OS パッケージ)の場合
 ```
 
 ```
@@ -567,7 +584,9 @@ def run(factor):
 ```
 
 ```bash
-uv run step7_roughness.py
+uv run step7_roughness.py          # A(uv)の場合
+# または
+python3 step7_roughness.py         # B〜D(venv / conda / OS パッケージ)の場合
 ```
 
 ```

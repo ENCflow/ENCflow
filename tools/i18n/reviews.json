@@ -2218,8 +2218,8 @@
     {
       "source": "tutorials/bmi/README.md",
       "target": "tutorials/bmi/en/README.md",
-      "source_sha256": "a8cec2011f81af5a73a3cf48ac943982a298c2d98e07b59b1981f66911def5fe",
-      "target_sha256": "6a32f7ba1e759039f3c39d57938c793e0664cd49e457f4fb324efcddd55e5bae",
+      "source_sha256": "9c68c56a588447a43f2523b6f20ed5ad9bd01b2e1bf51cb11d9f6ec4cd34f14d",
+      "target_sha256": "49fe08cc78f9a007adc136ccfd00462afcd0389029a5217d844898289b83bf82",
       "reviewer": "Claude (assistant)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
