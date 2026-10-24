@@ -157,8 +157,8 @@
     {
       "source": "examples/meander_cutoff/README.md",
       "target": "examples/meander_cutoff/en/README.md",
-      "source_sha256": "432bd82497ee92b026894327bf128aa5f2010fe560abe0c00cf51823bda1641b",
-      "target_sha256": "231c7e65d742a45107529a1303a7377d99208becda8b0399fe76fe81fc1caa0d",
+      "source_sha256": "c690bced6dbd276a0127f241607ca3d4afb750ceb23231a99d54cd5c92c8dec0",
+      "target_sha256": "96d519f078c706723474c4aae9abcedc6b8f16acc8d2d43d2697f0dc3f40847f",
       "reviewer": "Claude (Claude Code session; content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
