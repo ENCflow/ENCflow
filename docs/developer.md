@@ -6473,6 +6473,36 @@ RasterModelGrid ノード配列とは無変換で 1:1 対応する。
 影響しない)。live_view.py は origin='lower' 表示に更新し、--probe の
 内部セル番地 (i, j) は arr[ny-j, i-1] へ変換する。
 
+### 55.2 【実バグ】GeoTIFF 読み取りユニットの未クローズ(共有ライブラリで露見。2026-10-24 修正)
+
+- **現象**: Python から `libencflow_bmi.so` 経由で GeoTIFF 入力のケース
+  (tutorials/chichibu Step 2 以降、tutorials/bmi)を initialize すると、
+  2 番目に開く GeoTIFF(fn_z。先に georef 推定のため gtif_inquire で
+  一度開いている)で「cannot open GeoTIFF」と停止する。同じ param を
+  実行形式(encflow・静的な test_encflow_bmi)で動かすと問題なく読める。
+- **原因**: m_geotiff の 5 本の公開手続きが、読み終えたユニットを
+  `if (t%un >= 0) close(t%un)` で閉じていた。`open(newunit=)` が返す
+  ユニット番号は**負**(gfortran は −10 以下)なので、この条件は決して
+  成立せず、読んだ GeoTIFF はすべて開いたまま残っていた(ユニット・
+  ファイル記述子の漏れ)。実行形式では gfortran ランタイムが同じファイルの
+  二重 open を許す経路に入るため無害だったが、dlopen で読み込まれた
+  共有ライブラリ(Python の ctypes や C の dlopen)では規格どおり
+  「File already opened in another unit」(iostat 5004)となり露見した
+  (ランタイムの初期化の違いによるもので、ENCflow 側の正しい振る舞いは
+  「読み終えたら閉じる」の一つ)。
+- **修正**: 条件を `t%un /= -1` に変更(−1 は open 失敗・未開放の印として
+  open_parse が代入する値。t_tif の既定値も −1)。5 箇所とも同じ。
+- **検証**: 等価リファクタとして、修正前後の実行形式で tutorials/bmi の
+  param.txt(GeoTIFF 入力)を完走させ Log.txt・H0012.txt・H0012.tif が
+  バイト一致。test/gtif(49 項目)PASS、test/wave・test/chichibu の Run.sh
+  PASS。共有ライブラリ経由の GeoTIFF ケースが initialize できることを
+  tutorials/bmi の全ステップで確認。
+- **教訓**: 「開いているか」を番号の符号で判定しない。newunit の番号は
+  負であり、未開放の印には明示的な番兵値(ここでは −1)か logical を使う。
+  実行形式で通る I/O の瑕疵は共有ライブラリで初めて現れることがあるので、
+  BMI の .so 経由の完走も GeoTIFF 入力ケースで一度は通す(tutorials/bmi
+  がその役を兼ねる)。
+
 ## 56. BMI set_value による外部降水供給(逐次。2026-08-28 実装)
 
 bmi_plan.md §4.2 の合意案(ステージング+update 冒頭適用・生産者は
