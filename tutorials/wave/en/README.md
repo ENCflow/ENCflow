@@ -1,5 +1,7 @@
 > English mirror of tutorials/wave/README.md. The Japanese file is the master copy.
 
+[日本語](../README.md)
+
 # Tutorial 1: wave -- waves spreading over still water
 
 A "mound of water" placed on a still water surface collapses and spreads
@@ -660,7 +662,7 @@ bore. Step by step:
 5. To use it, add one line to `&list_enc`.
 
 ```
-  fn_enc = "-"              ! ENC parameter file
+  fn_enc = "-"              ! ENC parameter settings file
   ...
 &list_enc
   f_nonhydrostatic = 1           ! one-layer non-hydrostatic correction
