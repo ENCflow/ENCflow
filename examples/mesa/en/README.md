@@ -35,6 +35,8 @@ for c in face4 face5; do ./encflow param_$c.txt > Screen_$c.log; done           
 python3 plot_results.py face8 | tee analysis_face8.txt   # figs/*_face8.png
 for c in uc uc2 uc3; do ./encflow param_$c.txt > Screen_$c.log; done               # undercut collapse (rf_uc)
 python3 plot_results.py uc | tee analysis_uc.txt         # figs/*_uc.png, talus_uc.png
+./encflow param_uc_cap.txt > Screen_uc_cap.log; ./encflow param_uc_slow.txt > Screen_uc_slow.log   # options 1 and 2 for achieving both (8 min + 16 min)
+python3 plot_results.py ucx | tee analysis_ucx.txt       # figs/*_ucx.png
 ```
 
 ## Results (analysis.txt, figs/)
@@ -252,6 +254,41 @@ the retreat rate is limited by talus removal.
   the same time. Achieving both requires a mechanism that keeps the debris on the soft-layer
   face (adhesion of talus along the face), or a rule that books the undercut over several
   cells and drops a face height of debris at once.
+
+### Options 1 and 2 for achieving both (settings only): thick cap, slow talus removal
+
+We tried two options that need no code change. Option 1 (uc_cap) changes the strata of uc2
+(talus 0.3×) to a 7 m cap (z ≥ 13, factor 0.05) + 3 m soft layer, aiming at the shape of a
+real mesa: "the vertical part is the cap cliff, and the soft layer below it is a debris
+slope". Option 2 (uc_slow) lowers the talus erodibility of uc (0.1×) to 0.03× and doubles the
+run (T_geo 1.7e8 s), to see whether a region appears where the debris accumulates at the foot
+and supports the soft-layer face.
+
+![sections_ucx](../figs/sections_ucx.png)
+
+| Case | Cap thickness | Talus erodibility | Columns dropped by undercut | Total talus (m³, final) | Bench area (m², final) | Rim retreat rate (m/s, R₀ = 30 m) |
+|---|---|---|---|---|---|---|
+| uc2 | 3 m | 0.3 | 14222 | 110 | 307 | 1.8e-7 |
+| uc_cap (option 1) | 7 m | 0.3 | 15340 | 153 | 220 | 1.3e-7 |
+| uc | 3 m | 0.1 | 8038 | 846 | 628 | 1.6e-7 |
+| uc_slow (option 2) | 3 m | 0.03 (run 2×) | 8034 | 2035 | 899 | 1.3e-7 |
+
+- **Neither makes the cliff vertical.** In option 1 the cap cliff (13 → 20 m) is also a slope
+  of about 45° spread over 6–7 m horizontally: the remains of the columns dropped by undercut
+  (they fall only to the height of the lower neighbour) form a stepped ramp, which the dry
+  erosion of the cap (factor 0.05) then rounds. The rim retreat is slow at 1.3e-7 m/s (the
+  retreat stays talus-limited), and the bench shrinks to 220 m².
+- In option 2, 2000 m³ of talus remain, but they only accumulate in a ring on the plain around
+  the plateau and do not stay on the soft-layer slope just below the cap (45°, steeper than the
+  repose angle). The soft-layer face is not supported, and the cross-section is the same
+  35–45° slope as uc. The bench area widens to 900 m², as wide as face (with the slower talus
+  removal, the debris on top of the hard layer remains).
+- The cause comes down to two points of the rules. (i) A column collapses "down to the height
+  of the lower neighbour", so when the foot is partway down a slope the remaining bedrock
+  becomes one step of the ramp. (ii) Debris cannot stay on a face steeper than the repose
+  angle, so the debris of one column cannot cover the face and flows down to the foot. This
+  cannot be solved by settings; a rule that leaves a thin talus on the face (option 3:
+  adhesion of talus) is the next candidate.
 
 ## Limitations
 

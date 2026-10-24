@@ -850,11 +850,11 @@
     {
       "source": "examples/mesa/README.md",
       "target": "examples/mesa/en/README.md",
-      "source_sha256": "a74d9f0a5a704dc2a9008df6a2a07f474679a24e20792252a2219d936b974435",
-      "target_sha256": "611f3ba658984f4c97136d0c29991479ad7cf110d8a1334394834de2fc774ea2",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "ad7f16eb0ead8f8096d1db073573d3b3ae1702648a670bc997ff2afa50ce658c",
+      "target_sha256": "206e45a7db6b60fe01b09fd753a62b4a698ca9e0a2f25fb4ad2d2b9b95f8cfda",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "examples/nest_reflect/README.md",
