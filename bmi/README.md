@@ -17,6 +17,10 @@ BMI を使う場合も、必要な追加ソフトは Python 側の numpy だけ�
 
 ## クイックスタート(Python から使う)
 
+初めての方は、Python 環境の準備から set までを 7 段で進める
+[BMI チュートリアル](../tutorials/bmi/README.md)(tutorials/bmi)から
+始めてください。本ページはそのリファレンスです。
+
 ```sh
 cd bmi && make        # libencflow_bmi.so を生成(初回は ../src もビルド)
 ```

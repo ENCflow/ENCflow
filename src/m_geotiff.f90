@@ -112,7 +112,7 @@ subroutine gtif_inquire(fname, info, stat, msg)
 
   call open_parse(fname, t, stat, msg)
   info = t%info
-  if (t%un >= 0) close(t%un)
+  if (t%un /= -1) close(t%un)   ! newunit は負の番号(-1 は未開放の印)
 end subroutine
 
 
@@ -134,7 +134,7 @@ subroutine gtif_read_real(fname, nx, ny, a, stat, msg, info)
   if (stat == 0) call check_dims(t, nx, ny, fname, stat, msg)
   if (stat == 0) call decode_blocks(t, .true., [1, nx, 1, ny], a, idum, fname, stat, msg)
   if (present(info)) info = t%info
-  if (t%un >= 0) close(t%un)
+  if (t%un /= -1) close(t%un)   ! newunit は負の番号(-1 は未開放の印)
 end subroutine
 
 
@@ -158,7 +158,7 @@ subroutine gtif_read_window_real(fname, nx, ny, i1, i2, j1, j2, a, stat, msg, in
   if (stat == 0) call check_dims(t, nx, ny, fname, stat, msg)
   if (stat == 0) call decode_blocks(t, .true., [i1, i2, j1, j2], a, idum, fname, stat, msg)
   if (present(info)) info = t%info
-  if (t%un >= 0) close(t%un)
+  if (t%un /= -1) close(t%un)   ! newunit は負の番号(-1 は未開放の印)
 end subroutine
 
 
@@ -182,7 +182,7 @@ subroutine gtif_read_window_int(fname, nx, ny, i1, i2, j1, j2, a, stat, msg, inf
   end if
   if (stat == 0) call decode_blocks(t, .false., [i1, i2, j1, j2], rdum, a, fname, stat, msg)
   if (present(info)) info = t%info
-  if (t%un >= 0) close(t%un)
+  if (t%un /= -1) close(t%un)   ! newunit は負の番号(-1 は未開放の印)
 end subroutine
 
 
@@ -209,7 +209,7 @@ subroutine gtif_read_int(fname, nx, ny, a, stat, msg, info)
   end if
   if (stat == 0) call decode_blocks(t, .false., [1, nx, 1, ny], rdum, a, fname, stat, msg)
   if (present(info)) info = t%info
-  if (t%un >= 0) close(t%un)
+  if (t%un /= -1) close(t%un)   ! newunit は負の番号(-1 は未開放の印)
 end subroutine
 
 

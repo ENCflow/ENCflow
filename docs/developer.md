@@ -5906,6 +5906,12 @@ h_min(rf_hmin。既定 0.01 m)以上の厚さだけ。崖錐の除去速度が�
   流れ下るので軟層の面は支えられず、崖は垂直にならない(段の面積は face の 1/3)。
   「垂直な崖 + 段」(支え方式)と「崖錐律速」(張り出し)は別々に得られ、両立は未達:
   面に沿った崖錐の付着か、面の高さ分の岩屑を一度に落とす複数セルの張り出し帳簿が要る。
+  設定だけの両立案(uc_cap: キャップ 7 m + 軟層 3 m、崖錐 0.3 倍 / uc_slow: 崖錐 0.03 倍、
+  run 2 倍)はどちらも崖が垂直にならない(キャップの崖も 45° 前後の段々の斜路。
+  崖錐 2000 m³ は外周のリングに溜まり、45° の軟層斜面には留まらない)。原因は
+  (i) 柱の崩落が低い隣接の高さまでしか落ちず、脚部が斜面の途中なら残りが斜路の一段に
+  なること、(ii) 岩屑が安息角より急な面に留まれず 1 柱分では面を覆えないこと。
+  次の候補は面に薄い崖錐を残す規則(崖錐の付着 rf_hveneer。1 パラメータ)。
   実バグ(np = 4 で帯界面の 6 行が 6e-5 m ずれた): face_support は近傍の z を読むが、
   直前の apply_edge_flux は z を自帯でしか更新しない(ハロは呼び出し側が次の手続きの前に
   交換する規約)ので、帯界面の脚部フラグ ftf がランク数に依存した。face_support の前に
@@ -6471,6 +6477,36 @@ RasterModelGrid ノード配列とは無変換で 1:1 対応する。
 完走 Log は reference と identical のまま(get 経路の変更は Log に
 影響しない)。live_view.py は origin='lower' 表示に更新し、--probe の
 内部セル番地 (i, j) は arr[ny-j, i-1] へ変換する。
+
+### 55.2 【実バグ】GeoTIFF 読み取りユニットの未クローズ(共有ライブラリで露見。2026-10-24 修正)
+
+- **現象**: Python から `libencflow_bmi.so` 経由で GeoTIFF 入力のケース
+  (tutorials/chichibu Step 2 以降、tutorials/bmi)を initialize すると、
+  2 番目に開く GeoTIFF(fn_z。先に georef 推定のため gtif_inquire で
+  一度開いている)で「cannot open GeoTIFF」と停止する。同じ param を
+  実行形式(encflow・静的な test_encflow_bmi)で動かすと問題なく読める。
+- **原因**: m_geotiff の 5 本の公開手続きが、読み終えたユニットを
+  `if (t%un >= 0) close(t%un)` で閉じていた。`open(newunit=)` が返す
+  ユニット番号は**負**(gfortran は −10 以下)なので、この条件は決して
+  成立せず、読んだ GeoTIFF はすべて開いたまま残っていた(ユニット・
+  ファイル記述子の漏れ)。実行形式では gfortran ランタイムが同じファイルの
+  二重 open を許す経路に入るため無害だったが、dlopen で読み込まれた
+  共有ライブラリ(Python の ctypes や C の dlopen)では規格どおり
+  「File already opened in another unit」(iostat 5004)となり露見した
+  (ランタイムの初期化の違いによるもので、ENCflow 側の正しい振る舞いは
+  「読み終えたら閉じる」の一つ)。
+- **修正**: 条件を `t%un /= -1` に変更(−1 は open 失敗・未開放の印として
+  open_parse が代入する値。t_tif の既定値も −1)。5 箇所とも同じ。
+- **検証**: 等価リファクタとして、修正前後の実行形式で tutorials/bmi の
+  param.txt(GeoTIFF 入力)を完走させ Log.txt・H0012.txt・H0012.tif が
+  バイト一致。test/gtif(49 項目)PASS、test/wave・test/chichibu の Run.sh
+  PASS。共有ライブラリ経由の GeoTIFF ケースが initialize できることを
+  tutorials/bmi の全ステップで確認。
+- **教訓**: 「開いているか」を番号の符号で判定しない。newunit の番号は
+  負であり、未開放の印には明示的な番兵値(ここでは −1)か logical を使う。
+  実行形式で通る I/O の瑕疵は共有ライブラリで初めて現れることがあるので、
+  BMI の .so 経由の完走も GeoTIFF 入力ケースで一度は通す(tutorials/bmi
+  がその役を兼ねる)。
 
 ## 56. BMI set_value による外部降水供給(逐次。2026-08-28 実装)
 
