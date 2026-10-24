@@ -86,6 +86,25 @@ class RepositoryTests(unittest.TestCase):
         self.put('docs/page.md', '更新した原文')
         self.assertEqual(check.audit(self.root)[0]['status'], 'stale')
 
+    def test_section_record_tracks_only_that_section(self):
+        self.put('docs/page.md', '# 題\n\n## 0. 方針\n\n本文\n\n### 0.1 細目\n\n細目\n\n## 1. 他\n\n他\n')
+        self.put('docs/en/page.md', '> English mirror of docs/page.md (§0 only)\n\n## 0. Policy\n\nBody\n\n### 0.1 Detail\n\nDetail\n')
+        with self.assertRaises(ValueError):
+            check.record(self.root, 'docs/page.md', 'docs/en/page.md', 'r', 'assistant', '2026-10-24', '## 9.')
+        check.record(self.root, 'docs/page.md', 'docs/en/page.md', 'r', 'assistant', '2026-10-24', '## 0.')
+        row = check.audit(self.root)[0]
+        self.assertEqual(row['status'], 'reviewed')
+        self.assertFalse(any('heading structure' in i for i in row['issues']))
+        self.put('docs/page.md', '# 題\n\n## 0. 方針\n\n本文\n\n### 0.1 細目\n\n細目\n\n## 1. 他\n\n変更\n')
+        self.assertEqual(check.audit(self.root)[0]['status'], 'reviewed')
+        self.put('docs/page.md', '# 題\n\n## 0. 方針\n\n変更\n\n### 0.1 細目\n\n細目\n\n## 1. 他\n\n変更\n')
+        self.assertEqual(check.audit(self.root)[0]['status'], 'stale')
+        # 部分ミラーがあっても、他の英訳から正本へのリンクは「ミラーへ向けよ」と警告しない
+        self.put('docs/other.md', '[dev](page.md)')
+        self.put('docs/en/other.md', '> English mirror of docs/other.md\n\n[dev](../page.md)')
+        rows = {r['target']: r for r in check.audit(self.root, links=True)}
+        self.assertFalse(any('link to source' in i for i in rows['docs/en/other.md']['issues']))
+
     def test_translation_edit_requires_review(self):
         self.put('docs/page.md', '原文')
         self.put('docs/en/page.md', 'Translation')
