@@ -887,9 +887,21 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   (c) examples の README 19 件は 2026-10-23 に §34.2 を改定して対象化し、英訳・全文の
   内容確認・record 済み(method=assistant)。test/ の README 71 件(wave・wave_river を
   除く全ケース + chichibu の data_chichibu*/README 3 件 + nhwave/Dispersion_result.md)も
-  同日に英訳し、全文を正本と突き合わせて record 済み(method=assistant)。残る
-  unreviewed 119 組(docs/en ほか)は、内容を確認したものから `record` する(一括登録は
-  しない)。英訳中に見つかった正本側の疑義は 2026-10-24 に正本・英語版を同時に修正(chichibu・
+  同日に英訳し、全文を正本と突き合わせて record 済み(method=assistant)。残っていた
+  unreviewed 119 組(docs/en の users_guide 全章・README・比較・install・windows・ai_guide・
+  tutorial・colab、tutorials の README・param・図、List_samples 20 件、bmi・utils・test・examples
+  の README、TRADEMARKS.ja)も 2026-10-24 に全文を突き合わせ、訳側の遅れ(欠落した表行・段落・
+  リンク先の英語版化・古い注記)を直して record 済み。**unreviewed は 0**。以後は正本を変えたら
+  同じ作業で訳を更新し、CI(stale 検出)に従う。  119 組の読み合わせで見つかった**正本側の疑義**(未修正。人間の判断待ち): docs/users_guide.md の
+  fn_wave 行が 3 列の表で 4 セル / params_index.md 冒頭「全 664 項目」に対し表は 666 行、また
+  &list_geomorph の berode_hcover・rf_bank が索引に無い / geomorph.md 推奨値表のラハール行
+  「降灰層の侵食」が「発生の与え方」に無い / sediment.md §4「風上輸送」(§7 で MUSCL が既定)と
+  §8 表に wet_lw 行なし / comparison.md の NEOWAVE(Yamazaki ら 2011)と出典ファイル名 2010 /
+  structure.md「とりあえず」例の pump_cell と表の pump_in_cell / list_channel.txt 88-89 行の
+  続きコメントの位置 / tutorials/chichibu README の所要時間(1〜2 時間と 3 時間前後)・「移流 6
+  ケース」(実際 12)・h_max 26 m と出力 29.8 m / examples/README の benchmark 行は README の
+  ない directory へのリンク。
+  英訳中に見つかった正本側の疑義は 2026-10-24 に正本・英語版を同時に修正(chichibu・
   bendloss の「f_opening_dynamic = 1 既定」→ 2(§68.38)、表セル内の `|` を `\|` にエスケープ
   (test 配下 44 ファイル)、bendloss の孤立した表 2 行を元の表へ、dissol「3 構成」→ A〜G、
   tide の比較先 result_min/result_minx、hillslope の粗度の注記、bedfines の題名、nhbottom の

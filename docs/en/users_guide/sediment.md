@@ -304,6 +304,19 @@ bedrock). Outside channels the entrainment $`E`$ of the suspended load and
 the $`k_f`$ term overlap conceptually; when both are used, manage the
 overlap through the calibration.
 
+**Width scale (`wet_lw`).** Sheet erosion and entrainment are both
+proportional to $`\tau_*`$, and the positive feedback that erodes only the
+one cell where the flow has gathered has no length scale, so the width and
+spacing of gullies are set by the grid spacing. When `wet_lw` $`= \ell_w`$
+is given, the detachment depth $`e_j`$ evaluated per cell is spread with a
+Gaussian kernel $`K`$ of standard deviation $`\ell_w`$ before it is applied
+to the bed ($`\Delta z_i = -\sum_j K_{ij}\,e_j`$; the kernel is symmetric and
+the shares that would fall outside the domain or on sea cells are returned
+to the source cell, so $`\sum_i \Delta z_i = -\sum_j e_j`$: the total solid is
+conserved). The suspended sediment $`h_s`$ enters the source cell $`j`$.
+$`\ell_w`$ is the width of the rills (flow paths), approximated as a fixed
+value independent of discharge.
+
 ## 6. Dry-slope erosion (f_splash)
 
 Valley formation on highly permeable slopes without surface flow

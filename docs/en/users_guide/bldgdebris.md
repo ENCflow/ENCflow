@@ -254,9 +254,9 @@ provides unit checks of the void-ratio update procedure.
 
 An idealized experiment of a tsunami running up into a coastal town,
 destroying wooden houses and carrying debris inland, is included in
-[examples/tsunami_town](../../../examples/tsunami_town/) (comparisons
+[examples/tsunami_town](../../../examples/tsunami_town/en/README.md) (comparisons
 without/with driftwood, depth/load criterion, and feedback on/off;
-explained in its README, in Japanese).
+explained in its README).
 
 ## What is not modeled
 

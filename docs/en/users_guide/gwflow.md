@@ -245,7 +245,7 @@ Applications are expressed by parameter combinations:
 | f_gwc_fluxlaw | 2 | Lateral flux law. 1: linear, 2: sqrt (turbulent conduit flow, q proportional to the square root of the gradient) |
 | gwc_cnd_m2s / fn_gwc_cnd | 0 / - | Conveyance density (m2/s; pipe-full discharge per unit width at unit hydraulic gradient). Uniform value or a map. 0 disables lateral flow |
 | gwc_cap / fn_gwc_cap | 0.01 / - | Storage capacity (columnar m; total pipe volume / cell area). Cells with 0 have no conduits. The default is about an urban branch-sewer network |
-| gwc_depth / fn_gwc_bot | 3 / - | Head datum (invert) elevation. Uniform burial depth (z - gwc_depth) or an elevation map |
+| gwc_depth / fn_gwc_bot | 3 / - | Head datum (invert) elevation. Uniform burial depth (z - gwc_depth) or an elevation map (negative values allowed = invert below sea level) |
 | gwc_sy | 0.05 | Storage coefficient while unconfined (in-pipe filling; (0,1]). cap / pipe height |
 | gwc_slot_sy | gwc_sy/50 | Pseudo-slot storage coefficient while confined (<= gwc_sy; smaller = stiffer pressure response). Also 1/50 per cell for a mapped sy |
 | fn_gwc_sy / fn_gwc_slot_sy | "" | Maps of the storage coefficients (take precedence over the scalars). Give them per cell when trunk and branch pipes of different section height coexist (sy = cap / pipe height) |
@@ -268,13 +268,43 @@ Applications are expressed by parameter combinations:
   the surface level while pressurized, water **erupts** (manhole
   surcharge to the surface).
 - The stability condition of the explicit scheme is checked at
-  initialization. The limit is governed by the pseudo slot gwc_slot_sy,
-  so with fine grids and a small slot_sy, reduce dt_gwflow or relax
-  slot_sy / gwc_eps_h.
+  initialization; when dt (dt_gwflow) exceeds the limit, the lateral
+  conveyance is **automatically subcycled** (N = ceiling(dt/limit);
+  "subcycles = N" is printed at initialization; a setting that exceeds
+  the cap gwc_nsubmax stops the run). The stability limit is governed by
+  the pseudo slot gwc_slot_sy, so when N is too large and the run is
+  slow, relax slot_sy / gwc_eps_h or revisit the conveyance (paying the
+  N-fold cost lets you keep a small slot_sy as it is).
 - gwc_leak_layer=1 requires the soil-layer system (Green-Ampt or
   lateral) to be enabled; =2 requires f_gwlayer2=1.
+- **Outfalls** (fn_gwc_outfall): orifice-type open pipe ends. They have a
+  built-in backflow flap (discharge only while conduit head > receiving
+  head) and work whether unconfined or pressurized. The receiving side is
+  decided by the cell's neighbourhood:
+  - **Adjacent to a sea cell**: receiving head = the lowest water level
+    (tide) of the adjacent sea cells. The discharged water is removed from
+    the system (the sea is a fixed-level receiver) and S_total decreases
+    by the discharged amount (the cumulative discharged volume is printed
+    at the end). Water whose head is below the tide level cannot drain by
+    gravity, so draining a system below sea level is combined with the
+    conduit intake of a drainage pump (f_pump_src=1 in
+    [Structures](structure.md)).
+  - **No sea neighbour (land-side open outfall)**: receiving head = the
+    surface water level of the cell itself. This is the daylight of an
+    adit or culvert outlet: it discharges freely without waiting for
+    pipe-full, and the discharged water is treated as surface flow
+    (inside the domain = mass conserving). Use it for qanat outlets and
+    tile-drain outfalls (note the difference from surcharge through the
+    inlet density, which occurs only while pressurized).
 - See [test/conduit](../../../test/conduit/en/README.md) for schematic experiments (with an analytic
   equilibrium check).
+
+**Converting pipe data to parameters (preprocessing).** cap, cnd and sy
+are converted in preprocessing from the specifications of the pipe
+network (diameter, roughness, layout density). The conversion formulas
+and the caveats when trunk and branch pipes coexist are in the
+[supplement](gwflow_models.md) sec. 6; a worked script is
+[examples/sewer_hybrid/gen_data.py](../../../examples/sewer_hybrid/gen_data.py).
 
 **What it can and cannot do (range of the continuum approximation)**
 
@@ -300,9 +330,8 @@ Applications are expressed by parameter combinations:
     sewers plus bedrock; single instance).
   - The invert elevation is fixed at the start of the run and does not
     follow terrain evolution (fn_geomorph). Evapotranspiration does not
-    touch the conduit layer, and in-conduit solute transport is not resolved.
-    There is no exchange with sea cells except discharge through
-    outfalls (fn_gwc_outfall).
+    touch the conduit layer. There is no exchange with sea cells except
+    discharge through outfalls (fn_gwc_outfall).
   - [Water quality](wq.md) (wq_gwc_conc) can be coupled in the form of
     "a fixed concentration carried by the surcharge water and the water of
     land-side outfalls" (sanitary-risk assessment of sewer surcharge; a
@@ -469,7 +498,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   leaves the system = S_total decreases).
 - Well pumping prints per well at the end "demand ... m3, pumped ... m3
   (... %)" (requested, actually pumped, achievement).
-- With evapotranspiration ([Rainfall and weather](forcing.md)) the column
+- With evapotranspiration ([Rainfall and meteorology](forcing.md)) the column
   `ev_gw_m3` of `evap.csv` is the cumulative evaporation from the subsurface.
 
 **Measurements** (probe and transect columns)
@@ -516,5 +545,5 @@ see [the rainfall and meteorology chapter](forcing.md).
 - [test/gwdefault](../../../test/gwdefault/en/README.md): equivalence of minimal and explicit-default inputs for the bucket, Green-Ampt/layer 2, frost and conduit configurations.
 - [test/pump](../../../test/pump/en/README.md) and [test/frost](../../../test/frost/en/README.md): analytical checks of storage loss by well pumping and infiltration suppression by the freezing index.
 - [test/gwseep](../../../test/gwseep/en/README.md): infiltration, lateral groundwater transport and exfiltration, checked together with water-quality mass balances.
-- [examples/sewer_hybrid](../../../examples/sewer_hybrid/): configuration and input generation for a trunk and branch network in one conduit layer. The conversion from pipe specifications to cell parameters is demonstrated in [gen_data.py](../../../examples/sewer_hybrid/gen_data.py).
-- [examples/qanat](../../../examples/qanat/): a conduit/layer-2 example of groundwater collection, conveyance and outlet discharge through an underground gallery.
+- [examples/sewer_hybrid](../../../examples/sewer_hybrid/en/README.md): example settings and input generation that represent a trunk and a branch network in the same conduit layer.
+- [examples/qanat](../../../examples/qanat/en/README.md): an example combining the conduit layer with layer 2 to represent collection, conveyance and outlet seepage of an underground gallery.

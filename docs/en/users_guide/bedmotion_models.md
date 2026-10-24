@@ -60,9 +60,9 @@ is given.
 The difference from the instantaneous input that omits the rupture process
 (pattern C of the chapter) appears in the near-field arrival time and wave
 height: 2–3 % in the maximum level of
-[examples/tsunami_fault](../../../examples/tsunami_fault/) and +24 to 40 % at
+[examples/tsunami_fault](../../../examples/tsunami_fault/en/README.md) and +24 to 40 % at
 the bay mouth and shelf of
-[examples/tsunami_coast](../../../examples/tsunami_coast/) (see the READMEs).
+[examples/tsunami_coast](../../../examples/tsunami_coast/en/README.md) (see the READMEs).
 
 ## 3. Hydrostatic and non-hydrostatic
 
@@ -76,7 +76,7 @@ $`1/\cosh kH`$[^kajiura63]). The [non-hydrostatic correction](nonhydrostatic.md)
 approximation $`1/(1 + \beta k^2)^2`$ (developer.md §69.10). The velocity
 jumps then enter as acceleration pulses, so write the snapshots densely
 (increase nout of fault2disp; [test/nhbottom](../../../test/nhbottom/en/README.md) writes
-one per step). In [examples/tsunami_fault](../../../examples/tsunami_fault/)
+one per step). In [examples/tsunami_fault](../../../examples/tsunami_fault/en/README.md)
 the non-hydrostatic run lowers the coastal maximum level by 24 %
 (dispersion), and the acceleration term contributes a further −2 %.
 
@@ -116,10 +116,11 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 **Where to look when revising the defaults**
 
-- Take the fault parameters from published finite-fault source models
-  (national seismological agencies, USGS). Use the rupture duration as a
-  guide for the rise time (tens of seconds to over a hundred seconds for
-  M8-class events).
+- Take the fault parameters from the published finite-fault source models
+  of the Japan Meteorological Agency, the Headquarters for Earthquake
+  Research Promotion or the USGS. Use the rupture duration as a guide for
+  the rise time (tens of seconds to over a hundred seconds for M8-class
+  events).
 - For short-wavelength displacements (width comparable to the depth),
   enable f_nh_bottom of the [non-hydrostatic correction](nonhydrostatic.md) §7
   and write the snapshots finely (§3).

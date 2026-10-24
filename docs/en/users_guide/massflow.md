@@ -123,6 +123,12 @@ co-movingly. It is clamped by the erodible layer (erosion $`\le s_d`$) and
 by the suspended amount (deposition $`\le h_s`$); dry cells return
 everything to the bed.
 
+![Equilibrium concentration and bedload formulas](../../figs/sediment_laws_en.png)
+
+Panel (b) is the equilibrium concentration $`C_\infty(\tan\theta)`$ of this
+section (φ = 35°, s = 1.65, C* = 0.6); panel (a) belongs to
+[the sediment-transport page](sediment.md) §3.
+
 **f_dbed = 1: relaxation to the equilibrium concentration (Takahashi
 type).** Erosion and deposition proceed at a rate proportional to the
 speed towards the equilibrium concentration of the slope $`\theta`$
@@ -144,12 +150,6 @@ i = \delta_e\,\frac{C_\infty - C}{C_* - C_\infty}\,|\mathbf{V}|\ (C < C_\infty),
 \qquad
 i = \delta_d\,\frac{C_\infty - C}{C_*}\,|\mathbf{V}|\ (C > C_\infty)
 ```
-
-![Equilibrium concentration and bedload formulas](../../figs/sediment_laws_en.png)
-
-Panel (b) is the equilibrium concentration $`C_\infty(\tan\theta)`$ of this
-section (φ = 35°, s = 1.65, C* = 0.6); panel (a) belongs to
-[the sediment-transport page](sediment.md) §3.
 
 The stony-type $`C_\infty`$ is derived from a force balance; the immature
 coefficient 6.7, the slope thresholds 0.138 and 0.03 and the cap
@@ -290,7 +290,7 @@ still-water depth for the test.
 **Defaults.** $`\rho_s`$ = 2000 kg/m³ (saturated soil mass and rock
 debris; $`r = 0.5`$), μ = 0.15, ξ = 500 m/s² (calibration values of the
 inertialess layer used by every configuration of
-[examples/landslide_tsunami](../../../examples/landslide_tsunami/) and
+[examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md) and
 [test/bedslide](../../../test/bedslide/en/README.md)), $`v_{stop}`$ = 0.05 m/s.
 They are named separately from the μ, ξ of the mixture because the
 calibration differs with and without inertia. Without inertia the layer
@@ -347,8 +347,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/curvature](../../../test/curvature/en/README.md) | steady one-dimensional test of the curvature term | thickening on the arc 1.03 times the ODE |
 | [test/avalanche](../../../test/avalanche/en/README.md) | avalanche (Voellmy + velocity-proportional entrainment) | grows 1.5 times by entrainment and stops; ledger to machine precision |
 | [test/bedslide](../../../test/bedslide/en/README.md) | analytical speed of the layer, 45° slope, entry into a lake | $`V`$ of interior cells within 0.5% of the analytical value |
-| [examples/landslide_tsunami](../../../examples/landslide_tsunami/) | rock avalanche, hand-over, submarine landslide | four patterns compared |
-| [examples/ashfall_lahar](../../../examples/ashfall_lahar/) | ash fall → rain → lahar | the lahar setting pattern |
+| [examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md) | rock avalanche, hand-over, submarine landslide | four patterns compared |
+| [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) | ash fall → rain → lahar | the lahar setting pattern |
 
 ## References
 

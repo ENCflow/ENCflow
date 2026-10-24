@@ -139,8 +139,8 @@ explicitly give byte-identical saved states.
 ## 6. Verification cases
 
 - [test/driftwood](../../../test/driftwood/en/README.md): volume conservation, transport and deposition for both erosion entrainment and hydraulic recruitment, and comparison of saved states from split and uninterrupted runs.
-- [examples/timberyard](../../../examples/timberyard/): timber influx from a log yard by storm surge (sensitivity of the deposition parameters and the impact-force postprocessing).
-- [examples/tsunami_town](../../../examples/tsunami_town/): coastal forest and log yard in a tsunami, chained with house destruction.
+- [examples/timberyard](../../../examples/timberyard/en/README.md): timber influx from a log yard by storm surge (sensitivity of the deposition parameters and the impact-force postprocessing).
+- [examples/tsunami_town](../../../examples/tsunami_town/en/README.md): coastal forest and log yard in a tsunami, chained with house destruction.
 
 ## References
 

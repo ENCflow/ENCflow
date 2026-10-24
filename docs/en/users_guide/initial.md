@@ -162,4 +162,4 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 - Still water + a water-level mound from a user routine: [tutorials/wave](../../../tutorials/wave/en/README.md)
 - Regression case with an initial water hump over still water: [test/wave](../../../test/wave/en/README.md)
 - Real-terrain case starting from dry ground with rainfall: [test/chichibu](../../../test/chichibu/en/README.md)
-- Example treating the sea as normal cells with an initial water level specified by `f_htype=2`: [examples/tsunami_fault](../../../examples/tsunami_fault/)
+- Example treating the sea as normal cells with an initial water level specified by `f_htype=2`: [examples/tsunami_fault](../../../examples/tsunami_fault/en/README.md)
