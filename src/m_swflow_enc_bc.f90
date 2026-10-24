@@ -899,6 +899,25 @@ end function
 
 
 !----------------------------------------------------------------------
+! 枠内セル (i, j) が区間流入の法線面を持つ外縁セルか(外縁の行・列にあり、
+! その辺のセル別面型が e_bc_inflow。角セルは両辺を見る)。
+! 運動量保存形移流(adv_prepare_mc)がこのセルに接するエッジを移流の対象から
+! 外すために使う(§68.40)。bt_cell は全ランクが同じ list から構築するので
+! 判定は全ランク同値(ハロ行のセルも含む)。
+! 閉じた流入面(受け口係数 0 の角セル)も面型は e_bc_inflow のまま=真
+!----------------------------------------------------------------------
+module function bc_inflow_cell(i, j) result(r)
+  integer, intent(in) :: i, j
+  logical :: r
+  r = .false.
+  if (i == 1        .and. bc_face_type(e_side_w, j) == e_bc_inflow) r = .true.
+  if (i == dcp%nx_g .and. bc_face_type(e_side_e, j) == e_bc_inflow) r = .true.
+  if (j == 1        .and. bc_face_type(e_side_n, i) == e_bc_inflow) r = .true.
+  if (j == dcp%ny_g .and. bc_face_type(e_side_s, i) == e_bc_inflow) r = .true.
+end function
+
+
+!----------------------------------------------------------------------
 ! 辺 sd の添字 idx における外縁面の型を返す
 ! (idx が範囲外=角のゴーストは辺の型に落とす)
 !----------------------------------------------------------------------

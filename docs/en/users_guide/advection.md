@@ -354,6 +354,20 @@ on outflow $`u_e`$ (no contribution).
   different from the offshore depth, the velocity on the sea-land edges
   grew to several times the land-side velocity and diverged by positive
   feedback).
+- **Edges touching an outer cell with a segment-inflow face get no
+  advection term either.** A cell with a normal face of
+  [segment inflow](boundary.md#segment-inflow-list_bound_inflow) (closed
+  corner cells included) passes the whole segment discharge through a
+  normal face of passing width 0.414 dx (the unit-width discharge is 2.4
+  times the cell mean) and lacks the diagonal links outside the frame, so
+  its cell-mean discharge is not consistent as the face flux of a control
+  volume. As for sea cells, the edges touching such a cell get a zero
+  advection term (developer.md §68.40; fix of a real behaviour in which,
+  in a straight channel of odd width between walls, the inflow
+  concentrated at the centre by the closure of the corner cells coupled
+  with the advection terms of the boundary row and self-excited a
+  discharge oscillation of 5-minute period. Only the inflow row is
+  affected, so uniform-flow and flood-wave results hardly change).
 - **The far donor of MUSCL.** If the cell beyond the $`u_\mathrm{upup}`$ edge
   is outside the domain or invalid, that face degrades to first-order
   upwind (reading 0 would give $`r \gg 1 \to \psi = 2`$, anti-diffusion, and

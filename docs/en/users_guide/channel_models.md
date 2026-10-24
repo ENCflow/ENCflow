@@ -213,21 +213,24 @@ l, or whose landside cell is l and whose channel cell is a 4-neighbour of
 c (the diagonals on both sides of a normal site, including those leading
 outward at the two ends of the opening). The passing width per breached
 cell then becomes 0.414 (normal) + 2 × 0.293 (diagonals) = one cell width.
-Measured in examples/levee_breach (10 m cells, 1.7–1.9 m of head):
+Measured in examples/levee_breach (10 m cells, 1.5–1.7 m of head, the
+default advection scheme 3):
 
 | Breach width (cells) | Resolved levee Q (m³/s) | f_br_diag = 0 Q / ratio | f_br_diag = 1 Q / ratio |
 |---:|---:|---:|---:|
-| 1 | 40 | 15 / 0.39 | 60 / 1.51 |
-| 2 | 74 | 29 / 0.40 | 81 / 1.10 |
-| 3 | 104 | 43 / 0.41 | 100 / 0.95 |
-| 5 | 154 | 68 / 0.44 | 131 / 0.85 |
+| 1 | 37 | 15 / 0.41 | 61 / 1.66 |
+| 2 | 74 | 30 / 0.40 | 86 / 1.17 |
+| 3 | 105 | 43 / 0.41 | 109 / 1.03 |
+| 5 | 152 | 68 / 0.44 | 149 / 0.98 |
 
 The broad-crested weir estimate $`Q = 1.7\,B\,H^{3/2}`$ (B = cells × dx,
-H = river level − floor) matches the resolved levee (39 vs 40 for one
-cell, 169 vs 154 for five), and f_br_diag = 1 comes closest to it at
-2–3 cells. The factor 1.5 at one cell comes from the two end diagonals
-(0.59 cell widths) added to it; for wider openings the weir formula falls
-below as the landside level rises. Switching the wall off once the
+H = river level − floor) matches the resolved levee (37 vs 37 for one
+cell, 162 vs 152 for five; for wider openings the weir formula falls
+below as the landside level rises), and f_br_diag = 1 is nearly equal to
+the resolved levee at 3–5 cells. The factor 1.7 at one cell comes from
+the two end diagonals (0.59 cell widths) added to it (with advection
+scheme 1 it was closest at 2–3 cells and 0.85 times at 5 cells).
+Switching the wall off once the
 effective crest reaches the ground on both sides was rejected: solving a
 3 m step with a single shallow-water edge has no critical-flow control
 and produces a jet, 1.3–3 times the resolved discharge. The breach of a resolved
