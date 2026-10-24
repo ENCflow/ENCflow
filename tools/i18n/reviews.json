@@ -76,11 +76,11 @@
     {
       "source": "docs/multilingual.md",
       "target": "docs/en/multilingual.md",
-      "source_sha256": "622fe44505d9cca7eda80f7e7f498b5c1d58bf08c420870c948b4081100438a3",
-      "target_sha256": "466217e829cbdb50d77f89c608fea914fdee1d9cf6408df6ff4add8d42bf58fe",
-      "reviewer": "Claude (Claude Code session; content and lexical review, no model execution)",
+      "source_sha256": "93ace15d0b8438176f98bc08d51880f18f8b6ffd549a7a6fa77fbb93b03f6a8f",
+      "target_sha256": "dca4e810e20801424c392ac122c543e6623c534575951383f55226aa25db629e",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-24"
     },
     {
       "source": "docs/tutorial.md",

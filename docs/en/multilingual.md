@@ -104,6 +104,11 @@ exists).
   with those that aid understanding.
 - All of `examples/List_samples/` is in scope, because the comments
   themselves are the reference.
+- The figures embedded in a `test/` README are drawn in an English-labelled
+  version into `en/figs/` by the `en` argument of the plotting script (Fig.py
+  etc.), and the English README refers to them (2026-10-24; the drawing code
+  and the data are shared, only the labels and the output directory switch;
+  without the argument the script behaves as before).
 - The README of every `examples/<case>/` (phenomenon-specific example) is in
   scope as well (§34.2 amended on 2026-10-23). Parameter files, plotting
   scripts and figures are shared; English comments are optional. The

@@ -4385,6 +4385,11 @@ Cn_max)→ 場の最大値**。
   英語版** — 対外的な名称使用の判断基準となる文書のため、ドキュメント
   一般の「日本語が正本」の例外)と TRADEMARKS.ja.md(日本語訳)を
   リポジトリ直下に設置し、両 README のライセンス節からリンクした。
+- **2026-10-24 改定: test の図は英語ラベル版を別に描く**。test/<case>/en/README.md が
+  日本語ラベルの共有図を参照していた問題への対応。各 Fig.py(および README の図を描く
+  他のスクリプト)に `en` 引数を追加し、ラベルと出力先(`en/figs/`)だけを切り替える
+  (`T(ja, en)` 関数と `FIGDIR` の定型。描画処理・データは共通、引数なしは従来どおり)。
+  英語図の対は check.py が「presentation asset」として検出し、目視確認して record する。
 - **多言語化の運用規約と検査ツール(2026-10-23 設置)**: 本節の決定を運用規約
   docs/multilingual.md(英語ミラー docs/en/multilingual.md)にまとめ、CLAUDE.md・
   CONTRIBUTING から参照した。検査は tools/i18n/check.py(標準ライブラリのみ)で、
