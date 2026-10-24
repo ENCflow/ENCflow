@@ -34,7 +34,7 @@ basin 11000 m² as A_up, Q = −A_total dS/dt and h₁ ≈ S A_total / A_up.
 |---|---|
 | `param.txt` | The case above (with a reference) |
 | `make_init.py` | Regenerates the 3 files in `data_culvert/` |
-| `Fig.py` | The figure `figs/law.png` below and the numbers in the findings |
+| `Fig.py` | The figure `en/figs/law.png` below (`python3 Fig.py en`; `figs/law.png` is the Japanese version) and the numbers in the findings |
 
 ## Running
 
@@ -42,12 +42,12 @@ basin 11000 m² as A_up, Q = −A_total dS/dt and h₁ ≈ S A_total / A_up.
 make
 ./Run.sh          # compare Log.txt with the reference (ULP = 0, excluding the Runge column)
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/law.png
+python3 Fig.py en # en/figs/law.png
 ```
 
 ## Figures
 
-![Recovered discharge and the discharge law](../figs/law.png)
+![Recovered discharge and the discharge law](figs/law.png)
 
 The red dots are the computed discharge recovered from differences of S, and
 the black line is the discharge law $`Q = \min(Q_w, Q_p)`$ (h₁ ≥ D). Because

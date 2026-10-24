@@ -35,7 +35,7 @@ make
 ./Run.sh "" _s3                # 直線・折れ線 × スキーム 1 / 3(各 2 h、数十秒)
 python3 Make_channel.py wave10 # 洪水波の直線 rw 河道
 for p in param_wave_nolev_s1 param_wave_nolev_s3 param_wave_dyn_s1 param_wave_dyn_s3; do ./encflow $p.txt; done
-python3 Fig.py                 # figs/bendloss.png
+python3 Fig.py                 # figs/bendloss.png(引数 en で英語版を en/figs/ に)
 ```
 
 `param_wave_nolev_s3.txt` / `param_wave_dyn_s3.txt` は `_s1` から
@@ -49,11 +49,12 @@ python3 Fig.py                 # figs/bendloss.png
 左: 直線(実線)と折れ線(破線)の定常水深の路長分布。スキーム 1・3 とも
 直線と折れ線が重なり、**屈曲 1 回あたりの損失水頭は 0.000 m(K = 0.00)**
 です(§68.8 の修正後の性質)。屈曲セルそのものには局所的な水深の
-立ち上がり(スキーム 1 で 2.15 m、3 で 1.87 m)がありますが、区間平均には
-現れません。水深が Manning の 1.373 m ではなく 1.789 m
-(+30%)なのは、1 セル幅水路が対角エッジを欠くため既定の p_diagratio では
-軸エッジの通水幅(lpy = 0.42)でしか流れないためで(p_diagratio = 0 で
-一致)、直線と折れ線の差だけを見る実験です。
+立ち上がり(スキーム 1 で 1.95 m、3 で 1.44 m)がありますが、区間平均には
+現れません。水深が Manning の 1.373 m に一致するのは既定の動的開口補正
+(f_opening_dynamic = 2。§68.38)によるもので、2026-10-18 以前の既定
+(開口補正なし)では 1.789 m(+30%)でした(1 セル幅水路が対角エッジを
+欠くため、開口補正なしでは軸エッジの通水幅(lpy = 0.42)でしか流れない。
+p_diagratio = 0 で一致)。直線と折れ線の差だけを見る実験です。
 右: 直線 rw 河道(堤内地 = 河床 + 10 m)の洪水波の x = 3.8 km での
 ハイドログラフ。開口補正なし(破線)ではスキーム 3 のピークがスキーム 1 より
 大きく減衰します(ピーク 182.1 / 166.1 m³/s)が、動的開口補正(実線)でエッジ流速 = セル流速に

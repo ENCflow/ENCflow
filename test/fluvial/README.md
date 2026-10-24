@@ -30,7 +30,7 @@
 make
 ./Run.sh          # 実行 → Check(1 秒)
 ./Run_MPI.sh 4    # MPI。state.dat が逐次とバイト一致するのが規律
-python3 Fig.py    # figs/fluvial.png
+python3 Fig.py    # figs/fluvial.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図
@@ -48,8 +48,8 @@ python3 Fig.py    # figs/fluvial.png
 
 | 検定 | 計算値 | 判定 |
 |---|---|---|
-| (1) Σ(z − z₀) | −4.6e-17 m·cell | PASS(機械精度) |
-| (2) max\|(sd − sd₀) − (z − z₀)\| | 1.1e-14 m | PASS |
+| (1) Σ(z − z₀) | 4.2e-17 m·cell | PASS(機械精度) |
+| (2) max\|(sd − sd₀) − (z − z₀)\| | 1.3e-14 m | PASS |
 | (3) max\|z − z₀\| | 1.86 mm | PASS(> 0.1 mm) |
 
 - エッジごとの反対称フラックスを集計する Exner 更新なので、土砂体積は

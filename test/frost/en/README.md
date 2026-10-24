@@ -30,7 +30,7 @@ S_grnd(3600) = K·dt·(7200 − 7201/2) = 0.0179975 m.
 | File | Contents |
 |---|---|
 | `Run.sh` / `Run_MPI.sh N` | Compare Log.txt with the reference (ULP = 0) |
-| `Fig.py` | The figure `figs/frost.png` below |
+| `Fig.py` | The figure `en/figs/frost.png` below (`python3 Fig.py en`; `figs/frost.png` is the Japanese version) |
 
 ## Running
 
@@ -38,12 +38,12 @@ S_grnd(3600) = K·dt·(7200 − 7201/2) = 0.0179975 m.
 make
 ./Run.sh
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/frost.png
+python3 Fig.py en # en/figs/frost.png
 ```
 
 ## Figures
 
-![Infiltration suppression by frozen ground](../figs/frost.png)
+![Infiltration suppression by frozen ground](figs/frost.png)
 
 Left: the subsurface storage S_grnd (●) lies on the analytical solution
 K t (1 − t/2T) (black), and infiltration stops as the reduction factor Ff

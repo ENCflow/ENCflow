@@ -31,7 +31,7 @@ comparison with a stored reference).
 | File | Contents |
 |---|---|
 | `Check_swi.py <result>` | (1) final value Swi9998 within a relative 1% of the reference solution, (2) period maximum Swi9999, (3) time of occurrence Swit9999 within ±2 min, (4) all cells equal |
-| `Fig.py` | The figure `figs/swi.png` below (the reference solution is computed as in Check) |
+| `Fig.py` | The figure `en/figs/swi.png` below (`python3 Fig.py en`; `figs/swi.png` is the Japanese version; the reference solution is computed as in Check) |
 
 ## Running
 
@@ -39,12 +39,12 @@ comparison with a stored reference).
 make
 ./Run.sh          # run → Check (1 s)
 ./Run_MPI.sh 4    # MPI; state.dat, swi.dat and the Swi output are bit-identical to the serial run
-python3 Fig.py    # figs/swi.png
+python3 Fig.py en # en/figs/swi.png
 ```
 
 ## Figure
 
-![Soil Water Index](../figs/swi.png)
+![Soil Water Index](figs/swi.png)
 
 SWI(t) of the reference solution (black) and the storages of the three tanks
 (dashed). During the rain the first tank rises across its two outlets (15 mm,

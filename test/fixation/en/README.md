@@ -41,11 +41,11 @@ segment (columns 26–49). d50 = 2 mm, T_fix = 0.1 h = 360 s, morfac = 1.
 5. 0 ≤ a ≤ 1.
 6. No trace when disabled (no Fx output in result_off, no private file in save_off).
 7. Roughness: during the flood (1800 s) the velocity on the fixed bar in rough is
-   less than 0.7 times that of on (measured 0.50), and the cross-sectional discharge
-   Σ V h dy is within ±3 % of Q_in in both configurations.
+   less than 0.7 times that of on (measured 0.52), and the cross-sectional discharge
+   Σ V h dy is within ±5 % of Q_in in both configurations.
 8. Suspended sediment: with fixation the bar shows net deposition in every cell
    during the flood (Δz > 0), and the mean Δz is at least 2 cm larger than without
-   fixation (for both f_esform = 1 and 2; measured +3.1 / +4.2 cm versus −1.0 cm).
+   fixation (for both f_esform = 1 and 2; measured +4.5 / +6.2 cm versus −0.5 cm).
 9. Submergence decay: in the bar of decay, a(1800) = a_on·exp(−(1800 − t_w)/360)
    (a_on is the saved value of on = the value frozen at the submergence time t_w;
    relative 1e-3 between saved values), a of the banks that stay dry is identical

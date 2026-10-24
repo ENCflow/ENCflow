@@ -6,9 +6,10 @@
   中: 解析解の断面 u(y)(t = 0, 25, 50 s)と、粗格子の u00NN.txt の中央列(○)。
   右: 計算 − 解析解の推移(プローブごと。両格子)。
   使い方: ./Run.sh のあとで python3 Fig.py(result/ と result_fine/ を読む)。
+          python3 Fig.py en で英語ラベルの図を en/figs/profile.png に書く。
   計算本体の外(方針 10)。matplotlib・numpy のみ。
 """
-import glob, math, os
+import glob, math, os, sys
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
@@ -55,7 +56,10 @@ def fields(resdir):
     return out
 
 
-plt.rcParams.update({"font.family": ["IPAGothic", "DejaVu Sans"], "font.size": 9})
+EN = "en" in sys.argv[1:]
+def T(ja, en): return en if EN else ja
+FIGDIR = "en/figs" if EN else "figs"
+plt.rcParams.update({"font.family": ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"], "font.size": 9})
 fig, axs = plt.subplots(1, 3, figsize=(13, 4.2))
 cols = ["#2a78d6", "#eb6834", "#8fbf6a", "#6b6a66"]
 
@@ -69,7 +73,7 @@ if os.path.isdir("result_fine"):
     for k, (r, t, u) in enumerate(probes("result_fine", 0.5)):
         ax.plot(t[2::4], u[2::4], "x", color=cols[k], ms=4)
 ax.set_xlabel("t (s)"); ax.set_ylabel("u (m/s)")
-ax.set_title("プローブ u(t): 線 = 解析解、○ Δx = 1 m、× Δx = 0.5 m", loc="left", fontsize=9)
+ax.set_title(T("プローブ u(t): 線 = 解析解、○ Δx = 1 m、× Δx = 0.5 m", "Probe u(t): line = analytical, ○ Δx = 1 m, × Δx = 0.5 m"), loc="left", fontsize=9)
 ax.legend(fontsize=8, frameon=False)
 
 # 中: 断面 u(y)
@@ -82,7 +86,7 @@ for k, (t, u) in enumerate(fl[:3]):
     ax.plot(y[::4] - YC, u[::4], "o", color=cols[k], ms=3.5, mfc="none")
 ax.set_xlim(-40, 40)
 ax.set_xlabel("y − yc (m)"); ax.set_ylabel("u (m/s)")
-ax.set_title("中央列の断面: 線 = 解析解、○ 計算(Δx = 1 m)", loc="left", fontsize=9)
+ax.set_title(T("中央列の断面: 線 = 解析解、○ 計算(Δx = 1 m)", "Central column: line = analytical, ○ computed (Δx = 1 m)"), loc="left", fontsize=9)
 ax.legend(fontsize=8, frameon=False)
 
 # 右: 誤差
@@ -95,10 +99,10 @@ for lab, resdir, dy, ls in (("Δx = 1 m", "result", 1.0, "-"), ("Δx = 0.5 m", "
         ax.plot(t, err * 1e3, ls, color=cols[k], lw=1.1, label="%s, r = %.0f m" % (lab, round(r)))
 ax.axhline(0, color="#d8d6d1", lw=0.8)
 ax.set_xlabel("t (s)"); ax.set_ylabel("u_num − u_ana (10⁻³ m/s)")
-ax.set_title("誤差の推移(許容 ±0.5 = U0 の 1%)", loc="left", fontsize=9)
+ax.set_title(T("誤差の推移(許容 ±0.5 = U0 の 1%)", "Error (tolerance ±0.5 = 1% of U0)"), loc="left", fontsize=9)
 ax.legend(fontsize=7, frameon=False, ncol=2)
 
 fig.tight_layout()
-os.makedirs("figs", exist_ok=True)
-fig.savefig("figs/profile.png", dpi=130)
-print("wrote figs/profile.png")
+os.makedirs(FIGDIR, exist_ok=True)
+fig.savefig(f"{FIGDIR}/profile.png", dpi=130)
+print(f"wrote {FIGDIR}/profile.png")

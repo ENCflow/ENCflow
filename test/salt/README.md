@@ -37,7 +37,7 @@ make
 ./Run.sh          # A: reference と比較
 ./Run_MPI.sh 4
 ./Run_sea.sh      # B(数秒)
-python3 Fig.py    # figs/salt.png
+python3 Fig.py    # figs/salt.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

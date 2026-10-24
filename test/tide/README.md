@@ -41,7 +41,7 @@ make
 ./Run.sh          # 構成 1 を reference と比較 → 構成 2 と 2' を実行し result_min と result_minx の
                   # バイト一致(diff -r)と "(default)" 表示を検定。両方通れば PASS
 ./Run_MPI.sh 4    # MPI 4 ランク(構成 1)
-python3 Fig.py    # figs/storage.png, figs/map.png
+python3 Fig.py    # figs/storage.png, figs/map.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

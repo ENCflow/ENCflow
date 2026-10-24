@@ -18,22 +18,22 @@ docs/nonhydrostatic_plan.md §11 Phase 5 (soliton fission) and Phase 7
 
 ## Figure
 
-![Soliton fission on the shelf: final water surface and time evolution](../figs/fission.png)
+![Soliton fission on the shelf: final water surface and time evolution](figs/fission.png)
 
 Top: water surface η/a0 of the centre row at t = 120 s (NH V2, V1 and
 hydrostatic; the terrain is schematic). Bottom: the NH (V2) water surface
 every 20 s. After crossing the slope (grey band) it splits into a leading
-soliton and a trailing train. Generated in `figs/fission.png` by `./Fig.py`.
+soliton and a trailing train. Generated in `en/figs/fission.png` by `./Fig.py en` (`figs/fission.png` is the Japanese version, `./Fig.py`).
 
 ## Findings (2026-10-12)
 
 | Configuration | Number of crests on the shelf | Leading η/H₂ | Second η/H₂ |
 |---|---:|---:|---:|
-| NH, with bottom-slope terms (param.txt) | 6 | 0.163 | 0.091 |
-| NH, without slope terms (V1) | 6 | 0.166 | 0.091 |
-| Hydrostatic | 1 (bore) | 0.102 | — |
+| NH, with bottom-slope terms (param.txt) | 3 | 0.172 | 0.089 |
+| NH, without slope terms (V1) | 3 | 0.176 | 0.089 |
+| Hydrostatic | 1 (bore) | 0.114 | — |
 
 NH reproduces the fission into a leading soliton and a trailing train; the
 hydrostatic run becomes a bore. The effect of the bottom-slope terms is 2%
-at the leading crest. The reflection in front of the shelf is 0.002 m in
+at the leading crest. The reflection in front of the shelf is 0.001 m in
 both (0.001 m for the hydrostatic run).

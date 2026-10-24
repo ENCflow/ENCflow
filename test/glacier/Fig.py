@@ -1,20 +1,28 @@
 #!/usr/bin/env python3
 """test/glacier の図を figs/*.png に描く(事前に ./Run.sh を実行しておく)。
 
-  python3 Fig.py
+  python3 Fig.py        # 引数 en で英語版を en/figs/ に
 
 - figs/halfar.png : Halfar ドーム。初期(t = t0)と最終(地形時間 t0 + 80 日 ≈ 2 t0)の
                     中央行の氷厚と相似解、および氷厚分布の計算 − 解析解
 - figs/cirque.png : カール形成スモークテスト。初期地形(円錐)、最終氷厚 Hi、地形変化 Z9998 − Z0000
 """
-import glob, os
+import glob, os, sys
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
+EN = "en" in sys.argv[1:]
+
+
+def T(ja, en):
+    return en if EN else ja
+
+
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
-os.makedirs("figs", exist_ok=True)
+os.makedirs(FIGDIR, exist_ok=True)
 
 # Check_halfar.py / Make_input.py と対で保守する定数
 NX = NY = 61; DX = 25.0; IC = JC = 31
@@ -42,19 +50,21 @@ ana1 = halfar(R, t1)
 
 fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), gridspec_kw={"width_ratios": [1.4, 1]})
 ax = axes[0]
-ax.plot(x, hi0[JC - 1], "0.5", lw=1.2, label="初期 t = t0(相似解を与える)")
-ax.plot(x, hi1[JC - 1], "C0o", ms=3, label=f"ENCflow t = t0 + {TT*MORFAC/86400:.0f} 日")
-ax.plot(x, ana1[JC - 1], "k-", lw=1.2, label="相似解(Halfar 1983)")
-ax.set_xlabel("x − x_c (m)"); ax.set_ylabel("氷厚 H (m)")
-ax.set_title(f"中央行の氷厚(t0 = {T0/86400:.1f} 日、地形時間 ≈ {t1/T0:.2f} t0)", fontsize=10)
+ax.plot(x, hi0[JC - 1], "0.5", lw=1.2, label=T("初期 t = t0(相似解を与える)", "initial t = t0 (similarity solution given)"))
+ax.plot(x, hi1[JC - 1], "C0o", ms=3, label=f"ENCflow t = t0 + {TT*MORFAC/86400:.0f} " + T("日", "days"))
+ax.plot(x, ana1[JC - 1], "k-", lw=1.2, label=T("相似解(Halfar 1983)", "similarity solution (Halfar 1983)"))
+ax.set_xlabel("x − x_c (m)"); ax.set_ylabel(T("氷厚 H (m)", "ice thickness H (m)"))
+ax.set_title(T(f"中央行の氷厚(t0 = {T0/86400:.1f} 日、地形時間 ≈ {t1/T0:.2f} t0)",
+                f"Ice thickness along the central row (t0 = {T0/86400:.1f} days, landform time ≈ {t1/T0:.2f} t0)"), fontsize=10)
 ax.legend(fontsize=8); ax.grid(alpha=0.3)
 ax = axes[1]
 im = ax.imshow(hi1 - ana1, origin="lower", extent=[x[0], x[-1], x[0], x[-1]], cmap="RdBu_r", vmin=-40, vmax=40)
-ax.set_title("氷厚の計算 − 相似解 (m)", fontsize=10); ax.set_xlabel("x − x_c (m)"); ax.set_ylabel("y − y_c (m)")
+ax.set_title(T("氷厚の計算 − 相似解 (m)", "computed − similarity solution, ice thickness (m)"), fontsize=10); ax.set_xlabel("x − x_c (m)"); ax.set_ylabel("y − y_c (m)")
 fig.colorbar(im, ax=ax, shrink=0.85)
-fig.suptitle("Halfar ドーム(平坦床・質量収支ゼロの SIA 流動、Δx = 25 m、Glen A = 1e-16 Pa⁻³ yr⁻¹)", fontsize=10)
+fig.suptitle(T("Halfar ドーム(平坦床・質量収支ゼロの SIA 流動、Δx = 25 m、Glen A = 1e-16 Pa⁻³ yr⁻¹)",
+                "Halfar dome (SIA flow on a flat bed with zero mass balance, Δx = 25 m, Glen A = 1e-16 Pa⁻³ yr⁻¹)"), fontsize=10)
 fig.tight_layout()
-fig.savefig("figs/halfar.png", dpi=110)
+fig.savefig(f"{FIGDIR}/halfar.png", dpi=110)
 plt.close(fig)
 err = hi1 - ana1
 print("Halfar: mean|err| %.2f m, max|err| %.1f m, center err %.1f m, volume ratio %.6f" % (np.abs(err).mean(), np.abs(err).max(), err[JC - 1, IC - 1], hi1.sum() / hi0.sum()))
@@ -63,14 +73,15 @@ if os.path.isdir("result_cirque"):
     z0 = np.loadtxt("result_cirque/Z0000.txt"); z1 = np.loadtxt("result_cirque/Z9998.txt"); hi = np.loadtxt("result_cirque/Hi9998.txt")
     nx = z0.shape[1]
     fig, axes = plt.subplots(1, 3, figsize=(14, 4))
-    for ax, a, title, cmap, kw in [(axes[0], z0, "初期地形 z (m)(円錐山体)", "terrain", {}),
-                                   (axes[1], np.where(hi > 0.01, hi, np.nan), "最終氷厚 Hi (m)", "Blues", {}),
-                                   (axes[2], z1 - z0, "地形変化 Z9998 − Z0000 (m)", "Reds_r", {"vmax": 0})]:
+    for ax, a, title, cmap, kw in [(axes[0], z0, T("初期地形 z (m)(円錐山体)", "initial terrain z (m) (conical mountain)"), "terrain", {}),
+                                   (axes[1], np.where(hi > 0.01, hi, np.nan), T("最終氷厚 Hi (m)", "final ice thickness Hi (m)"), "Blues", {}),
+                                   (axes[2], z1 - z0, T("地形変化 Z9998 − Z0000 (m)", "terrain change Z9998 − Z0000 (m)"), "Reds_r", {"vmax": 0})]:
         im = ax.imshow(a, origin="lower", cmap=cmap, **kw)
         ax.set_title(title, fontsize=10); ax.set_xlabel("ix"); ax.set_ylabel("iy")
         fig.colorbar(im, ax=ax, shrink=0.8)
-    fig.suptitle("カール形成スモークテスト(雪 → 雪崩再配分 → 氷化 → SIA 流動 + 滑動 → 氷河侵食。1 日 × 地形時間 500 倍)", fontsize=10)
+    fig.suptitle(T("カール形成スモークテスト(雪 → 雪崩再配分 → 氷化 → SIA 流動 + 滑動 → 氷河侵食。1 日 × 地形時間 500 倍)",
+                    "Cirque-formation smoke test (snow → avalanche redistribution → firnification → SIA flow + sliding → glacial erosion; 1 day × landform time 500)"), fontsize=10)
     fig.tight_layout()
-    fig.savefig("figs/cirque.png", dpi=110)
+    fig.savefig(f"{FIGDIR}/cirque.png", dpi=110)
     plt.close(fig)
     print("cirque: max Hi %.1f m, min dz %.3f m, max dz %.3f m, eroded cells %d" % (hi.max(), (z1 - z0).min(), (z1 - z0).max(), ((z1 - z0) < -0.01).sum()))

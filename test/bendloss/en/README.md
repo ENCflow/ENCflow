@@ -32,7 +32,7 @@ of §68.19).
 | `Make_channel.py <kind>` | straight / zigzag / wave10 / width / diag / diagw[W] / zigzagw / stair / stair3 / steep / sbreak / lower (terrain generation; see the header) |
 | `Make_lateral.py` / `Check_lateral.py` | Generation of channels with lateral inflow and comparison with the analytical solution of spatially varied flow |
 | `param_*.txt` | The experiments below (name suffixes `_s1` / `_s3` = scheme, `_noadv` = no advection term, `dyn` = dynamic opening correction, `nolev` = no levee, `o0` / `o1` = wall + opening correction off / on) |
-| `Fig.py` | The figure below, `figs/bendloss.png` |
+| `Fig.py` | The figure `en/figs/bendloss.png` below (`python3 Fig.py en`; `figs/bendloss.png` is the Japanese version) |
 
 ## Running
 
@@ -41,7 +41,7 @@ make
 ./Run.sh "" _s3                # straight and zigzag × scheme 1 / 3 (2 h each; tens of seconds)
 python3 Make_channel.py wave10 # straight rw channel for the flood wave
 for p in param_wave_nolev_s1 param_wave_nolev_s3 param_wave_dyn_s1 param_wave_dyn_s3; do ./encflow $p.txt; done
-python3 Fig.py                 # figs/bendloss.png
+python3 Fig.py en              # en/figs/bendloss.png
 ```
 
 `param_wave_nolev_s3.txt` / `param_wave_dyn_s3.txt` are copies of the `_s1`
@@ -51,19 +51,21 @@ files made with
 
 ## Figures
 
-![Bend loss and flood wave](../figs/bendloss.png)
+![Bend loss and flood wave](figs/bendloss.png)
 
 Left: distribution along the channel of the steady depth for the straight
 (solid) and zigzag (dashed) channels. For both schemes 1 and 3 the straight
 and zigzag channels coincide, and **the head loss per bend is 0.000 m
 (K = 0.00)** (the property after the fix of §68.8). The bend cells
-themselves show a local rise of the depth (2.15 m with scheme 1, 1.87 m
-with scheme 3), but it does not appear in the reach average. The depth is
-1.789 m (+30%) rather than Manning's 1.373 m because a one-cell-wide
-channel lacks the diagonal edges, so with the default p_diagratio the flow
-passes only through the passage width of the axis edges (lpy = 0.42) (it
-agrees with p_diagratio = 0); the experiment looks only at the difference
-between straight and zigzag.
+themselves show a local rise of the depth (1.95 m with scheme 1, 1.44 m
+with scheme 3), but it does not appear in the reach average. The depth
+agrees with Manning's 1.373 m because of the default dynamic opening
+correction (f_opening_dynamic = 2; §68.38); with the default before
+2026-10-18 (no opening correction) it was 1.789 m (+30%), because a
+one-cell-wide channel lacks the diagonal edges, so without the opening
+correction the flow passes only through the passage width of the axis
+edges (lpy = 0.42) (it agrees with p_diagratio = 0). The experiment looks
+only at the difference between straight and zigzag.
 Right: hydrograph at x = 3.8 km of the flood wave in the straight rw channel
 (landside = bed + 10 m). Without the opening correction (dashed) the peak
 of scheme 3 attenuates more than that of scheme 1 (peaks 182.1 /

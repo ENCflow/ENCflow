@@ -33,7 +33,7 @@ size 5 mm, apparent specific gravity 0.5.
 |---|---|
 | `Check_bldgdebris.py <save>` | (1) volume conservation \|Σ(hbd + wbd) gv + Σwbs − Σwbs₀\| < 1e-9, (2) activity: destruction > 1e-3 and deposition > 1e-3 m·cell, (3) arrival: max(hbd + wbd) > 0 on the flat part |
 | `gv.txt` / `bdstock_min.txt` | Void-ratio distribution of configuration 4 / stock of configuration 5′ |
-| `Fig.py` | The figure `figs/bldgdebris.png` below |
+| `Fig.py` | The figure `en/figs/bldgdebris.png` below (`python3 Fig.py en`; `figs/bldgdebris.png` is the Japanese version) |
 
 ## Running
 
@@ -41,12 +41,12 @@ size 5 mm, apparent specific gravity 0.5.
 make
 ./Run.sh          # configuration 1 → 2, 2′ → restart → 4, 4′ → 5, 5′; PASS if all pass (about 8 s)
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/bldgdebris.png
+python3 Fig.py en # en/figs/bldgdebris.png
 ```
 
 ## Figure
 
-![Distribution of building debris](../figs/bldgdebris.png)
+![Distribution of building debris](figs/bldgdebris.png)
 
 Top row (configuration 1): depth criterion. Houses are destroyed in the 1–3
 cells just below the slope break where the ponding on the flat part exceeds
@@ -67,11 +67,11 @@ without feedback.
 
 | Configuration | Volume conservation | Destruction / deposition (m·cell) | Arrival on the flat part | Result |
 |---|---|---|---|---|
-| 1 depth criterion | 2.7e-14 | 0.023 / 0.0069 | 0.38 mm | PASS |
-| 2 driftwood + debris (load criterion) | 2.7e-14 | 0.083 / 0.039 | 0.57 mm | PASS. state.dat and driftwood.dat byte-identical to 2′ |
+| 1 depth criterion | 3.2e-14 | 0.026 / 0.0077 | 0.42 mm | PASS |
+| 2 driftwood + debris (load criterion) | 6.9e-14 | 0.125 / 0.078 | 0.87 mm | PASS. state.dat and driftwood.dat byte-identical to 2′ |
 | 3 restart | bldgdebris.dat and state.dat byte-identical to the continuous run | | | PASS |
-| 4 void-ratio feedback | 6.6e-14 | 0.084 / 0.076 | 0.81 mm | PASS. S(t) agrees with 4′ |
-| 5 defaults | −9.9e-12 | 15.2 / 6.8 | 0.11 m | PASS. Byte-identical to 5′ |
+| 4 void-ratio feedback | 7.1e-14 | 0.087 / 0.077 | 0.93 mm | PASS. S(t) agrees with 4′ |
+| 5 defaults | −1.0e-11 | 15.3 / 8.8 | 0.11 m | PASS. Byte-identical to 5′ |
 
 - The volume, weighted by gv, is conserved to machine precision, and it is
   also confirmed that the change of the void ratio conserves water volume

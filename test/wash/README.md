@@ -29,7 +29,7 @@ developer.md §19)の疎通・保存則の検定です。一様降雨 50 mm/h �
 make
 ./Run.sh          # 実行 → 固体総量・共動更新・活性の検定(1 秒)
 ./Run_MPI.sh 4    # MPI。state.dat が逐次とバイト一致
-python3 Fig.py    # figs/wash.png
+python3 Fig.py    # figs/wash.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図
@@ -38,7 +38,7 @@ python3 Fig.py    # figs/wash.png
 
 左: 河床変動。山の崩れた環で面状侵食が集中し(最大 5.6 mm)、雨滴
 侵食は全域に薄く乗ります。中: 浮遊砂 hs。削られた土砂が水柱内に
-運ばれています(最大 2.2 mm)。右: 中央行の断面。[test/suspend](../suspend/)
+運ばれています(最大 2.4 mm)。右: 中央行の断面。[test/suspend](../suspend/)
 より 1 桁大きい変動で、流れが速い環での面状侵食が支配的です。
 
 ## 所見
@@ -46,8 +46,8 @@ python3 Fig.py    # figs/wash.png
 | 検定 | 計算値 | 判定 |
 |---|---|---|
 | 固体総量 Σhs + (1 − λ)Σ(z − z₀) | 0.0(機械精度) | PASS |
-| 共動更新 max\|(sd − sd₀) − (z − z₀)\| | 1.9e-14 m | PASS |
-| 活性 max hs / max\|z − z₀\| | 2.24 mm / 5.58 mm | PASS |
+| 共動更新 max\|(sd − sd₀) − (z − z₀)\| | 2.1e-14 m | PASS |
+| 活性 max hs / max\|z − z₀\| | 2.42 mm / 5.58 mm | PASS |
 
 - wash は近傍を読まない 1 パスの地形プロセスなので OpenMP でも安全で、
   np = 1, 2, 4 の state.dat は逐次とバイト一致します(§19)。

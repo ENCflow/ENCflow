@@ -47,7 +47,7 @@ Also, ny = 8 because the band decomposition needs at least 2 rows per rank.
 | `param.txt` / `param_ty.txt` | Configurations 1 / 2 |
 | `make_init.py z` / `db` | `zinit.txt` (slope of uniform gradient) / `dbinit.txt` (collapse-depth distribution) |
 | `Check_volcano.py <save> voellmy\|tauy` | Configuration 1: (1) water ledger, (2) solid ledger, (3) <h_t> in the check window x ∈ [60, 100] versus the analytical solution, uniformity and concentration. Configuration 2: (1) solid ledger, (2) activity (lowering of the release area and deposition on the flat), (3) stopping (fraction of remaining hs) |
-| `Fig.py` | The figures `figs/*.png` below |
+| `Fig.py` | The figures `en/figs/*.png` below (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
 ## Running
 
@@ -55,12 +55,12 @@ Also, ny = 8 because the band decomposition needs at least 2 rows per rank.
 make
 ./Run.sh          # generate inputs → configuration 1 → Check → configuration 2 → Check. PASS when all pass
 ./Run_MPI.sh 4    # MPI. The rule is that save/state.dat is byte-identical to the serial run
-python3 Fig.py    # figs/voellmy.png, figs/tauy.png
+python3 Fig.py en # en/figs/voellmy.png, en/figs/tauy.png
 ```
 
 ## Figures
 
-![Voellmy steady uniform flow](../figs/voellmy.png)
+![Voellmy steady uniform flow](figs/voellmy.png)
 
 Top: the flow depth h_t = h + hs in the steady state (average over all rows).
 The uniform-flow depth is reached within a few metres of the inflow, and in the
@@ -72,25 +72,25 @@ Bottom: the volumetric concentration of the mixture C = hs/(h + hs) keeps
 cs/(1 + cs) = 0.444, determined by the inflow concentration, over the whole
 domain (without exchange the concentration is a conserved quantity).
 
-![τ_y runout](../figs/tauy.png)
+![τ_y runout](figs/tauy.png)
 
 Left: the release area with collapse depth D = 2 m. Centre: the terrain change
-after 90 s. The release area is lowered by 1.5–2 m, and a fan-shaped deposit
-lies from directly below it to just before the slope break (with a retarding
-stress of 4000 Pa the flow stops on the slope). Right: the remaining sediment
-in motion hs is only a thin fringe of less than a mm on the flat, 0.6% of the
-released amount (99.4% has been fixed to the bed).
+after 90 s. The release area is lowered by up to 1.7 m, and a fan-shaped deposit
+lies from directly below it to just beyond the slope break (with a retarding
+stress of 4000 Pa the flow stops near the slope break). Right: the remaining sediment
+in motion hs is only a thin fringe of about a mm near the slope break, 0.1% of the
+released amount (99.9% has been fixed to the bed).
 
 ## Findings
 
 | Check | Computed value | Verdict |
 |---|---|---|
-| Configuration 1 (1) water ledger Σh − Q tt | −6.0e-12 m·cell | PASS (machine precision) |
-| Configuration 1 (2) solid ledger Σhs + (1 − λ)Σdz − cs Q tt | −5.1e-12 m·cell | PASS |
+| Configuration 1 (1) water ledger Σh − Q tt | −6.4e-12 m·cell | PASS (machine precision) |
+| Configuration 1 (2) solid ledger Σhs + (1 − λ)Σdz − cs Q tt | −4.5e-12 m·cell | PASS |
 | Configuration 1 (3) <h_t> versus the analytical solution | 0.3434 / 0.3434 m (0.0%), CV 0.000, C 0.444 (theory 0.444) | PASS |
-| Configuration 2 (1) solid ledger | 1.6e-11 m·cell | PASS |
-| Configuration 2 (2) activity | release area min dz = −1.56 m, flat max dz = 0.050 m | PASS |
-| Configuration 2 (3) stopping | remaining Σhs / released solids = 0.006 (< 0.3) | PASS |
+| Configuration 2 (1) solid ledger | 1.2e-11 m·cell | PASS |
+| Configuration 2 (2) activity | release area min dz = −1.71 m, flat max dz = 0.646 m | PASS |
+| Configuration 2 (3) stopping | remaining Σhs / released solids = 0.001 (< 0.3) | PASS |
 
 - The Voellmy uniform flow agrees with the analytical solution to 4 digits, and
   the water and solid ledgers close at machine precision. These are the

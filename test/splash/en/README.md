@@ -32,7 +32,7 @@ the reference was fixed on the basis of the analytical agreement (§48).
 | File | Contents |
 |---|---|
 | `Run.sh` / `Run_MPI.sh N` | Compare Log.txt with the reference (ULP = 0) |
-| `Fig.py` | The figure `figs/splash.png` below (uses Sd9998 − Sd0000 = Δz) |
+| `Fig.py` | The figure `en/figs/splash.png` below (`python3 Fig.py en`; `figs/splash.png` is the Japanese version; uses Sd9998 − Sd0000 = Δz) |
 
 ## Running
 
@@ -40,12 +40,12 @@ the reference was fixed on the basis of the analytical agreement (§48).
 make
 ./Run.sh
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/splash.png
+python3 Fig.py en # en/figs/splash.png
 ```
 
 ## Figures
 
-![Erosion depth of dry-slope erosion](../figs/splash.png)
+![Erosion depth of dry-slope erosion](figs/splash.png)
 
 Left: the longitudinal profile of the row-averaged erosion depth Δz. The
 slope interior agrees with the theoretical value 1.5 mm **to all digits**,

@@ -33,7 +33,7 @@ Ff(t) = 1 − t/T(T = 3600 s)なので、地下貯留は S_grnd(t) = K t (1 − 
 make
 ./Run.sh
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/frost.png
+python3 Fig.py    # figs/frost.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

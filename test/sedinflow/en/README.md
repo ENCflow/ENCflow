@@ -27,7 +27,7 @@ concentration").
 | File | Contents |
 |---|---|
 | `Check_sedinflow.py <save>` | Σhs + (1 − λ)Σ(z − z₀) = C·Q·tt = 0.04 m·cell (machine precision), Σh = Q·tt = 40 m³ |
-| `Fig.py` | The figure `figs/sedinflow.png` below (Run.sh leaves configuration 1 in `save_serial/` and configuration 2 in `save/`) |
+| `Fig.py` | The figure `en/figs/sedinflow.png` below (`python3 Fig.py en`; `figs/sedinflow.png` is the Japanese version. Run.sh leaves configuration 1 in `save_serial/` and configuration 2 in `save/`) |
 
 ## Running
 
@@ -35,18 +35,18 @@ concentration").
 make
 ./Run.sh          # configuration 1 → Check → configuration 2 → Check
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/sedinflow.png
+python3 Fig.py en # en/figs/sedinflow.png
 ```
 
 ## Figures
 
-![Distributions of the sediment inflow](../figs/sedinflow.png)
+![Distributions of the sediment inflow](figs/sedinflow.png)
 
 Top row: prescribed concentration; bottom row: prescribed sediment discharge.
 Left: the depth after 8 s. The water entering from the west side spreads as a
 fan. Center: suspended sediment hs. The injected sediment is carried along
 with the flow. Right: just in front of the inflow cells the bed is scoured by
-14 mm through E-D (the high-velocity part immediately after the inflow).
+12.5 mm through E-D (the high-velocity part immediately after the inflow).
 Qs = 0.005 m³/s is reduced to the equivalent concentration
 cs = Qs/Q = 0.001, so the two configurations give the same result.
 

@@ -36,7 +36,7 @@
 make
 ./Run.sh          # 地形生成 → 構成 1 → 2 → Check(数十秒)
 ./Run_MPI.sh 4    # MPI。state.dat が逐次とバイト一致
-python3 Fig.py    # figs/splashslide.png
+python3 Fig.py    # figs/splashslide.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

@@ -37,7 +37,7 @@ and the width spreads by a factor of √2.
 |---|---|
 | `param.txt` / `param_morfac2.txt` | morfac = 1 (50 s) / morfac = 2 (25 s) |
 | `Check_analytic.py` | Compares z(t) of the probe CSV with the analytical solution; PASS when the maximum absolute error < 5e-3 m |
-| `Fig.py` | Draws the figure `figs/profile.png` below |
+| `Fig.py` | Draws the figure `en/figs/profile.png` below (`python3 Fig.py en`; `figs/profile.png` is the Japanese version) |
 
 A, σ, D and the center cell are paired in three places: `param.txt`,
 `gaussian_hill` in `src/user_geoinfo.f90`, and `Check_analytic.py`.
@@ -49,12 +49,12 @@ Change them together when changing them.
 make
 ./Run.sh          # run the 2 cases and compare with the analytical solution by Check_analytic.py (PASS when both PASS)
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/profile.png
+python3 Fig.py en # en/figs/profile.png
 ```
 
 ## Figures
 
-![Creep of the Gaussian hill](../figs/profile.png)
+![Creep of the Gaussian hill](figs/profile.png)
 
 Left: the ground elevation z(t) at the probes (points) and the analytical
 solution (lines). All 4 points lie on the lines, and the morfac = 2 result

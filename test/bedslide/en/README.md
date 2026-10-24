@@ -52,7 +52,7 @@ climb the step and jams (see the note in `make_init.py`).
 |---|---|
 | `make_init.py zbench\|dbbench\|zrot\|dbrot\|z\|db` | Generation of the terrain and the bed-layer thickness (the constants are paired with the Check) |
 | `Check_bedslide.py bench\|tsunami\|plunge` | Configurations 1 and 2: (1) ledger Σdz = Σdsd = 0 and bedrock surface unchanged, (2) Vb of the interior cells within 0.5% of V, (3) cross-section passage speed within 10% of V. Configuration 3: ledger, Σh unchanged, deposition on the lake bed, wave generation, release ledger. Configuration 4: solid and water ledgers, handover volume, arrival at the lake bed, and the control does not arrive |
-| `Fig.py` | The figures below, `figs/*.png` |
+| `Fig.py` | The figures below, `en/figs/*.png` (`python3 Fig.py en`; `figs/*.png` is the Japanese version) |
 
 ## Running
 
@@ -60,12 +60,12 @@ climb the step and jams (see the note in `make_init.py`).
 make
 ./Run.sh          # input generation → configurations 1 and 2 → Check bench → configuration 3 → Check tsunami → configuration 4 and control → Check plunge (about 7 s)
 ./Run_MPI.sh 4    # MPI. state.dat and geomorph_bedslide.dat are byte-identical with the serial run (-O2 strict math)
-python3 Fig.py    # figs/bench.png, tsunami.png, plunge.png
+python3 Fig.py en # en/figs/bench.png, tsunami.png, plunge.png
 ```
 
 ## Figures
 
-![Speed of the Voellmy bed layer](../figs/bench.png)
+![Speed of the Voellmy bed layer](figs/bench.png)
 
 Left: bed-layer speed Vb of configuration 1 (t = 1 s). The 100 interior
 cells agree with the analytical value 7.7460 m/s to **0.00%**; only the
@@ -74,23 +74,23 @@ deviate. Right: configuration 2 (rotated 45°). Vb of the 79 interior cells
 agrees with the analytical value to 0.14%, showing that the layer moves
 isotropically even on a grid oblique to the slope.
 
-![Slope → lake](../figs/tsunami.png)
+![Slope → lake](figs/tsunami.png)
 
 Configuration 3. Top left: longitudinal profile of the centre row. The soil
 mass above the slip surface (dashed) plunges into the lake within 60 s, runs
-to the flat part of the lake bed (−40 m) at x ≥ 300 m and deposits 5.2 m
+to the flat part of the lake bed (−40 m) at x ≥ 300 m and deposits 5.3 m
 (grey is bedrock + bed layer, red is the final terrain). Top right:
 distribution of the terrain change; lowering of the source area (blue) and
 deposition on the lake bed (red). Bottom left and right: water-surface
 displacement. The drawdown behind the plunge point and the leading wave
-spreading across the lake (maximum 0.73 m) are visible.
+spreading across the lake (maximum 1.0 m) are visible.
 
-![Handover from the mixture](../figs/plunge.png)
+![Handover from the mixture](figs/plunge.png)
 
 Configuration 4 (left) and the control (right). The mass that flowed over
 land as a debris flow (mixture) becomes, with the handover, a bed layer in
 the cells with a ponded depth of 2 m or more and runs along the lake bed
-(deposit 5.2 m, handover 17,658 m³ = 92% of the release); without the
+(deposit 5.2 m, handover 18,319 m³ = 96% of the release); without the
 handover it stops near the shoreline and does not reach the lake bed
 (deposit on the flat part 0 m).
 
@@ -102,10 +102,10 @@ handover it stops near the shoreline and does not reach the lake bed
 | Configuration 1: cross-section passage speed | 7.519 m/s (−2.9% = agrees with the boundary layer 2·ld/ny of the 2 wall rows) | PASS |
 | Configuration 2: interior Vb | 7.736–7.746 m/s (0.14%) | PASS |
 | Configuration 2: cross-section passage speed | 7.175 m/s (−7.4%; wall ends + staircase cross-section) | PASS |
-| Configuration 3: ledger / Σh | Σdz −1.6e-12, max\|Δ(z − sd)\| 3e-13 / Σh unchanged (−6e-4 m·cell) | PASS |
-| Configuration 3: lake-bed deposition / wave generation | flat lake bed max dz 5.18 m / water-surface maximum 0.47 m (flat part of the lake bed) | PASS |
-| Configuration 3: release ledger | released 19,110 = stopped 16,660 + moving 2,450 m³ | PASS |
-| Configuration 4: handover | 17,658 m³, lake-bed max dz 5.17 m; control 0.00 m | PASS |
+| Configuration 3: ledger / Σh | Σdz −8.6e-13, max\|Δ(z − sd)\| 8e-13 / Σh unchanged (−2.2e-3 m·cell) | PASS |
+| Configuration 3: lake-bed deposition / wave generation | flat lake bed max dz 5.27 m / water-surface maximum 0.59 m (flat part of the lake bed) | PASS |
+| Configuration 3: release ledger | released 19,110 = stopped 16,636 + moving 2,474 m³ | PASS |
+| Configuration 4: handover | 18,319 m³, lake-bed max dz 5.17 m; control 0.00 m | PASS |
 
 - The 45°-rotated benchmark is a detector for a wrong normalization of the
   8-direction distribution, which makes the passage speed come out √2 times

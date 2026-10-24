@@ -34,7 +34,7 @@
 make
 ./Run.sh          # 構成 1 → Check → 構成 2 → Check(数秒)
 ./Run_MPI.sh 4    # MPI。state.dat が逐次とバイト一致
-python3 Fig.py    # figs/suspend.png
+python3 Fig.py    # figs/suspend.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図
@@ -52,8 +52,8 @@ python3 Fig.py    # figs/suspend.png
 
 | 構成 | 固体総量 | 共動更新 | max hs / max\|dz\| | 判定 |
 |---|---|---|---|---|
-| 1 線形式 | 0.0 | 1.2e-14 | 0.45 mm / 1.13 mm | PASS |
-| 2 板倉・岸 | 0.0 | 1.3e-14 | 1.04 mm / 2.53 mm | PASS |
+| 1 線形式 | 0.0 | 1.3e-14 | 0.49 mm / 1.13 mm | PASS |
+| 2 板倉・岸 | 0.0 | 1.2e-14 | 1.12 mm / 2.52 mm | PASS |
 
 - morfac = 1 では E-D の交換が厳密に反対称で、固体総量は機械精度で保存
   されます(MORFAC の台帳分離: 水柱側は水理時間、河床側は × morfac。§19)。

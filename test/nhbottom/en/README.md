@@ -49,10 +49,10 @@ make                                  # build uplift (from libencflow.a in src)
 ./uplift param_h.txt uplift.txt       # hydrostatic
 ./uplift param_n.txt uplift.txt       # NH, no acceleration term
 python3 Theory.py                     # tables of the linear theory
-python3 Fig.py                        # figs/uplift.png and tables
+python3 Fig.py en                     # en/figs/uplift.png and tables (figs/uplift.png without en: Japanese version)
 ```
 
-![Uplift of a section](../figs/uplift.png)
+![Uplift of a section](figs/uplift.png)
 
 Top: profiles at t = 1 s (end of the uplift), 5 s and 20 s. Solid =
 ENCflow, dashed = linear theory of each model, dotted = exact solution.
@@ -60,14 +60,13 @@ Bottom right: surface time series at x = x_c + 200 m.
 
 | Case | η_max ENCflow (m) | t (s) | η_max theory (m) | t (s) | ENC/theory | theory/exact |
 |---|---:|---:|---:|---:|---:|---:|
-| Hydrostatic | 0.1124 | 20.92 | 0.1153 | 19.55 | 0.975 | 1.404 |
-| NH (no acceleration term) | 0.0955 | 22.36 | 0.0950 | 22.45 | 1.005 | 1.156 |
-| NH (with acceleration term, f_nh_bottom=1) | 0.0856 | 22.14 | 0.0853 | 22.25 | 1.004 | 1.039 |
+| Hydrostatic | 0.1197 | 19.15 | 0.1153 | 19.55 | 1.038 | 1.404 |
+| NH (no acceleration term) | 0.0959 | 22.14 | 0.0950 | 22.45 | 1.010 | 1.156 |
+| NH (with acceleration term, f_nh_bottom=1) | 0.0861 | 21.96 | 0.0853 | 22.25 | 1.009 | 1.039 |
 | Exact (linear potential flow) | — | — | 0.0821 | 22.45 | — | 1 |
 
 - ENCflow agrees with its own linear theory for all three models (NH within
-  ±0.7%; hydrostatic −2.5% with a lag of 1.4 s because the box-shaped pulse
-  suffers numerical dissipation). This confirms that the acceleration term
+  ±1.0%; hydrostatic +3.8% and 0.4 s early for the box-shaped pulse). This confirms that the acceleration term
   is implemented as formulated.
 - With the acceleration term the difference of the leading wave height from
   the exact solution shrinks from +16% to +3.9% (hydrostatic +40%). In the
@@ -106,31 +105,31 @@ acceleration term) / NH + acceleration term. The inputs come from
 ./encflow param_ls_b025.txt   # same, dt = 0.025 s (effect of the one-step lag)
 ./encflow param_ls_n025.txt   # no acceleration term, dt = 0.025 s (control)
 ./encflow param_ls_bd.txt     # NH + acceleration term + momentum diffusion ν = 0.3 m²/s
-python3 Landslide.py          # figs/landslide.png and tables
+python3 Landslide.py en       # en/figs/landslide.png and tables (figs/landslide.png without en: Japanese version)
 ```
 
-![Submarine landslide](../figs/landslide.png)
+![Submarine landslide](figs/landslide.png)
 
 | Probe | Quantity | Hydrostatic | NH (f_nh_slope=1, no acceleration term) | NH + acceleration term (f_nh_bottom=1) |
 |---|---|---:|---:|---:|
-| x = 212 m (just off the shoreline, depth 5 m) | Minimum (m) | -2.744 | -3.008 | -2.325 |
-| x = 212 m (just off the shoreline, depth 5 m) | Maximum (m) | 1.880 | 2.178 | 1.845 |
-| x = 298 m (foot of the slope, depth 39 m) | Minimum (m) | -1.201 | -2.097 | -1.291 |
-| x = 298 m (foot of the slope, depth 39 m) | Maximum (m) | 1.644 | 1.975 | 1.045 |
-| x = 398 m (lake centre) | Minimum (m) | -0.645 | -0.913 | -0.777 |
-| x = 398 m (lake centre) | Maximum (m) | 1.203 | 0.658 | 0.557 |
-| x = 548 m (far-shore side) | Minimum (m) | -0.543 | -0.487 | -0.431 |
-| x = 548 m (far-shore side) | Maximum (m) | 0.792 | 0.429 | 0.366 |
+| x = 212 m (just off the shoreline, depth 5 m) | Minimum (m) | -2.727 | -3.102 | -2.345 |
+| x = 212 m (just off the shoreline, depth 5 m) | Maximum (m) | 1.916 | 2.064 | 1.845 |
+| x = 298 m (foot of the slope, depth 39 m) | Minimum (m) | -1.200 | -2.097 | -1.236 |
+| x = 298 m (foot of the slope, depth 39 m) | Maximum (m) | 1.637 | 1.968 | 0.998 |
+| x = 398 m (lake centre) | Minimum (m) | -0.643 | -0.917 | -0.784 |
+| x = 398 m (lake centre) | Maximum (m) | 1.207 | 0.650 | 0.577 |
+| x = 548 m (far-shore side) | Minimum (m) | -0.550 | -0.499 | -0.439 |
+| x = 548 m (far-shore side) | Maximum (m) | 0.796 | 0.436 | 0.368 |
 
 | Probe | max\|Δη\| with acceleration term, dt 0.05 vs 0.025 (m) | Same, without acceleration term (m) | Effect of the acceleration term max\|η_b − η_n\| (m) |
 |---|---:|---:|---:|
-| x = 212 m (just off the shoreline, depth 5 m) | 0.1172 | 0.0765 | 1.9515 |
-| x = 298 m (foot of the slope, depth 39 m) | 0.2582 | 0.0662 | 1.0287 |
-| x = 398 m (lake centre) | 0.0273 | 0.0301 | 0.2033 |
-| x = 548 m (far-shore side) | 0.0108 | 0.0096 | 0.1382 |
+| x = 212 m (just off the shoreline, depth 5 m) | 0.1259 | 0.0785 | 1.8888 |
+| x = 298 m (foot of the slope, depth 39 m) | 0.5716 | 0.0748 | 1.0412 |
+| x = 398 m (lake centre) | 0.0823 | 0.0457 | 0.2110 |
+| x = 548 m (far-shore side) | 0.0238 | 0.0090 | 0.1318 |
 
 - **The effect of the acceleration term is large in the near field**: just
-  off the shoreline (x = 212) the leading trough goes from −3.0 to −2.3 m,
+  off the shoreline (x = 212) the leading trough goes from −3.1 to −2.3 m,
   and at the foot of the slope (x = 298; directly above the deposition zone
   of the mass) the crest from 2.0 to 1.0 m. The front of the mass is 1–2
   cells (kH ≫ 2), so NH without the acceleration term (and hydrostatic) map
@@ -140,7 +139,7 @@ python3 Landslide.py          # figs/landslide.png and tables
 - **The effect of the one-step lag Δt**, seen as the difference from
   halving dt, is similar in the far field with and without the acceleration
   term (0.01–0.03 m = the sensitivity to dt itself), and larger with the
-  acceleration term in the near field (x = 298) (0.26 m against 0.07 m; 1/4
+  acceleration term in the near field (x = 298) (0.57 m against 0.07 m; 1/2
   of the 1.0 m effect). Most of the near-field difference is the phase
   difference of the trapped mode described below.
 - **A mode trapped at the cut-off frequency of the one-layer NH**: at the
@@ -153,8 +152,8 @@ python3 Landslide.py          # figs/landslide.png and tables
   front of the mass (grid scale) excites this; it does not exist in
   hydrostatic (grid-scale waves escape at √(gH)). Because this oscillation
   shakes the driving head Φ = z + r·h of the bed layer, part of the bed
-  layer (3,000 m³) cannot stay below bs_vstop for 15 s and is still
-  "moving" at 120 s (49 m³ without the acceleration term). The momentum
+  layer (4,000 m³) cannot stay below bs_vstop for 15 s and is still
+  "moving" at 120 s (53 m³ without the acceleration term). The momentum
   diffusion term (param_ls_bd.txt; ν = 0.3 m²/s: e-folding 8 s at the grid
   scale, 13% in 120 s for a 100 m wavelength) does not damp it (±0.67 m) =
   it is not a free grid mode but a self-excited oscillation of the coupling

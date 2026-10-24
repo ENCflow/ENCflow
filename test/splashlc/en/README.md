@@ -45,7 +45,7 @@ grow).
 | File | Contents |
 |---|---|
 | `Check_select.py` | (1) g: growth ratio of λ₁ > growth ratio of λ₂, (2) l: λ₂ ≥ ×1.5, λ₁ ≤ ×1.5, growth ratio λ₂/λ₁ ≥ 3, (3) the plateau interior (x ≤ 12 m) is intact, (4) z ≥ spl_zbase |
-| `Fig.py` | The figure `figs/splashlc.png` below |
+| `Fig.py` | The figure `en/figs/splashlc.png` below (`python3 Fig.py en`; `figs/splashlc.png` is the Japanese version) |
 
 ## Running
 
@@ -53,12 +53,12 @@ grow).
 make
 ./Run.sh          # generate terrain → configuration g → l → Check (a few seconds)
 ./Run_MPI.sh 4    # MPI. state.dat is byte-identical to the serial run
-python3 Fig.py    # figs/splashlc.png
+python3 Fig.py en # en/figs/splashlc.png
 ```
 
 ## Figures
 
-![Wavelength selection](../figs/splashlc.png)
+![Wavelength selection](figs/splashlc.png)
 
 Top row: κ on the grid; bottom row: correlation length ℓ = 2 m. Left: the
 final terrain. Center: the y-direction relief of the columns in the

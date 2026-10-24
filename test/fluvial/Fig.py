@@ -6,14 +6,22 @@
 - figs/fluvial.png : 閉領域ダムブレイク型(wave_hump の水の山が崩れる)で掃流砂 Exner が
                      動かした河床変動 z − z₀ の分布と中央行の断面、最終水位
 """
-import os, struct
+import os, struct, sys
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
+EN = "en" in sys.argv[1:]
+
+
+def T(ja, en):
+    return en if EN else ja
+
+
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
-os.makedirs("figs", exist_ok=True)
+os.makedirs(FIGDIR, exist_ok=True)
 
 
 def read_rec(f):
@@ -42,16 +50,17 @@ dz = st["z"]            # z0 = 0
 x = (np.arange(NX) + 0.5) * DX
 fig, axes = plt.subplots(1, 3, figsize=(15, 4.2))
 im = axes[0].imshow(dz * 1000, origin="lower", extent=[0, 101, 0, 101], cmap="RdBu_r", vmin=-2, vmax=2)
-axes[0].set_title("河床変動 z − z₀ (mm)、t = 8 s", fontsize=10); fig.colorbar(im, ax=axes[0], shrink=0.8)
+axes[0].set_title(T("河床変動 z − z₀ (mm)、t = 8 s", "Bed change z − z₀ (mm), t = 8 s"), fontsize=10); fig.colorbar(im, ax=axes[0], shrink=0.8)
 im = axes[1].imshow(st["z"] + st["h"], origin="lower", extent=[0, 101, 0, 101], cmap="viridis")
-axes[1].set_title("水位 z + h (m)、t = 8 s", fontsize=10); fig.colorbar(im, ax=axes[1], shrink=0.8)
+axes[1].set_title(T("水位 z + h (m)、t = 8 s", "Water level z + h (m), t = 8 s"), fontsize=10); fig.colorbar(im, ax=axes[1], shrink=0.8)
 for ax in axes[:2]:
     ax.set_xlabel("x (m)"); ax.set_ylabel("y (m)")
 jc = NY // 2
 axes[2].plot(x, dz[jc] * 1000, "C3", lw=1.5, label="z − z₀ (mm)")
-axes[2].plot(x, (st["sd"][jc] - SD0) * 1000, "C0--", lw=1, label="sd − sd₀ (mm)(共動更新 = 同じ曲線)")
-axes[2].set_xlabel("x (m)"); axes[2].set_ylabel("(mm)"); axes[2].set_title("中央行の断面", fontsize=10)
+axes[2].plot(x, (st["sd"][jc] - SD0) * 1000, "C0--", lw=1, label=T("sd − sd₀ (mm)(共動更新 = 同じ曲線)", "sd − sd₀ (mm) (co-update = same curve)"))
+axes[2].set_xlabel("x (m)"); axes[2].set_ylabel("(mm)"); axes[2].set_title(T("中央行の断面", "Profile along the central row"), fontsize=10)
 axes[2].grid(alpha=0.3); axes[2].legend(fontsize=8)
-fig.suptitle("掃流砂 Exner(芦田・道上、d50 = 1 mm): 静水 0.5 m 上の水の山(+1 m)が崩れて河床を動かす閉領域", fontsize=10)
-fig.tight_layout(); fig.savefig("figs/fluvial.png", dpi=110); plt.close(fig)
+fig.suptitle(T("掃流砂 Exner(芦田・道上、d50 = 1 mm): 静水 0.5 m 上の水の山(+1 m)が崩れて河床を動かす閉領域",
+               "Bedload Exner (Ashida–Michiue, d50 = 1 mm): closed domain where a water mound (+1 m) on still water 0.5 m collapses and moves the bed"), fontsize=10)
+fig.tight_layout(); fig.savefig(f"{FIGDIR}/fluvial.png", dpi=110); plt.close(fig)
 print("sum dz = %.2e, max|dz| = %.2e m, max|(sd-sd0)-dz| = %.2e, sum h = %.4f" % (dz.sum(), np.abs(dz).max(), np.abs((st["sd"] - SD0) - dz).max(), st["h"].sum()))

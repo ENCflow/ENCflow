@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""test/wetlw の図を figs/wetlw.png に描く(事前に ./Run.sh を実行しておく)。
+"""test/wetlw の図を figs/wetlw.png に描く(事前に ./Run.sh を実行しておく。引数 en で英語版を en/figs/ に)。
 構成 0(wet_lw なし)と構成 l(wet_lw = 3 m)の侵食深 Δz = z0 − z の分布と中央行の断面。
 """
-import os, struct
+import sys, os, struct
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
+EN = "en" in sys.argv[1:]
+def T(ja, en): return en if EN else ja
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
-os.makedirs("figs", exist_ok=True)
+os.makedirs(FIGDIR, exist_ok=True)
 
 
 def read_rec(f):
@@ -37,13 +40,13 @@ dz0 = -load_z("save_0", NX, NY)
 dzl = -load_z("save_l", NX, NY)
 vmax = max(dz0.max(), dzl.max())
 fig, ax = plt.subplots(1, 3, figsize=(14, 4.2))
-for a, d, t in ((ax[0], dz0, "wet_lw なし"), (ax[1], dzl, "wet_lw = 3 m")):
+for a, d, t in ((ax[0], dz0, T("wet_lw なし", "no wet_lw")), (ax[1], dzl, "wet_lw = 3 m")):
     im = a.imshow(d * 1e3, origin="lower", extent=[0, NX, 0, NY], cmap="YlOrBr", vmin=0, vmax=vmax * 1e3)
-    a.set_title("侵食深 Δz (mm): " + t, fontsize=10); a.set_xlabel("x (m)"); a.set_ylabel("y (m)")
+    a.set_title(T("侵食深 Δz (mm): ", "erosion depth Δz (mm): ") + t, fontsize=10); a.set_xlabel("x (m)"); a.set_ylabel("y (m)")
     fig.colorbar(im, ax=a, shrink=0.8)
 j = NY // 2
-ax[2].plot(np.arange(NX) + 0.5, dz0[j] * 1e3, "-", lw=1, label="wet_lw なし")
+ax[2].plot(np.arange(NX) + 0.5, dz0[j] * 1e3, "-", lw=1, label=T("wet_lw なし", "no wet_lw"))
 ax[2].plot(np.arange(NX) + 0.5, dzl[j] * 1e3, "-", lw=1.5, label="wet_lw = 3 m")
-ax[2].set_xlabel("x (m)"); ax[2].set_ylabel("Δz (mm)"); ax[2].set_title("中央行 (y = %d m) の断面" % j, fontsize=10); ax[2].legend(fontsize=8)
-fig.tight_layout(); fig.savefig("figs/wetlw.png", dpi=110)
-print("figs/wetlw.png written")
+ax[2].set_xlabel("x (m)"); ax[2].set_ylabel("Δz (mm)"); ax[2].set_title(T("中央行 (y = %d m) の断面", "profile along the central row (y = %d m)") % j, fontsize=10); ax[2].legend(fontsize=8)
+fig.tight_layout(); fig.savefig(f"{FIGDIR}/wetlw.png", dpi=110)
+print(f"{FIGDIR}/wetlw.png written")

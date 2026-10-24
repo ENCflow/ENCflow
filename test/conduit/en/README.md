@@ -49,7 +49,7 @@ hcrown + (hgc − cap)/slot_sy, and h + hgc = 0.1 m, so
 | `data_conduit/inlet.txt` | Inlet density distribution of B (non-zero only in the central 3×3) |
 | `Run.sh` / `Run_MPI.sh N` | Regression test of A (serial / MPI) |
 | `Run_lat.sh` / `Run_lat_MPI.sh N` | Run of B (result_lat/) |
-| `Fig.py` | Draws the figures below, `figs/*.png` |
+| `Fig.py` | Draws the figures below, `en/figs/*.png` (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
 ## Running
 
@@ -59,12 +59,12 @@ make
 ./Run_MPI.sh 4
 ./Run_lat.sh        # B: output to result_lat/ (about 2.5 min)
 ./Run_lat_MPI.sh 4  # MPI of B. The rule is bit-identity with the serial run
-python3 Fig.py      # figs/equilibrium.png, figs/lateral.png (also prints the tables)
+python3 Fig.py en   # en/figs/equilibrium.png, en/figs/lateral.png (also prints the tables)
 ```
 
 ## Figures
 
-![Schematic experiment A: convergence to the analytical equilibrium](../figs/equilibrium.png)
+![Schematic experiment A: convergence to the analytical equilibrium](figs/equilibrium.png)
 
 The surface S_surf decreases through the weir-type → orifice-type inflow at
 the inlets, the conduit layer S_grnd increases, and both reach the
@@ -74,7 +74,7 @@ digits. The absence of oscillation after reaching equilibrium is the work of
 eq_inflow, which limits the inflow when the conduits are full by the
 equilibrium condition (§46.4).
 
-![Schematic experiment B: distribution of the conduit-layer head and the surface water depth](../figs/lateral.png)
+![Schematic experiment B: distribution of the conduit-layer head and the surface water depth](figs/lateral.png)
 
 Left: conduit-layer head Hgc at the final time (120 s). The water that
 entered through the inlets of the central 3×3 spreads radially through the

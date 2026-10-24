@@ -30,7 +30,7 @@ factor `wq_rg = 1e12` (complete immobilization) is also checked.
 |---|---|
 | `Run.sh` | Compare Log.txt and wq.csv with the reference (ULP = 0) → `Check_gwseep.py closure` → configuration 2 → `Check_gwseep.py immobile` |
 | `Check_gwseep.py closure\|immobile <wq.csv>` | Ledger to_gw − seep = mass_gw and total mass 4000 g (relative 1e-6), activity of the transport / complete immobilization (seep ≈ 0, mass_gw = to_gw) |
-| `Fig.py` | The figure `figs/gwseep.png` below |
+| `Fig.py` | The figure `en/figs/gwseep.png` below (`python3 Fig.py en`; `figs/gwseep.png` is the Japanese version) |
 
 ## Running
 
@@ -38,23 +38,23 @@ factor `wq_rg = 1e12` (complete immobilization) is also checked.
 make
 ./Run.sh
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/gwseep.png
+python3 Fig.py en # en/figs/gwseep.png
 ```
 
 ## Figure
 
-![Groundwater pathway of water quality](../figs/gwseep.png)
+![Groundwater pathway of water quality](figs/gwseep.png)
 
-Left: time series of the ledger. The surface mass decreases to 3160 g by
+Left: time series of the ledger. The surface mass decreases to 3190 g by
 infiltration in the first 10 minutes, then increases as seepage returns it
-to the surface, and the subsurface mass decreases from 840 g. The cumulative
+to the surface, and the subsurface mass decreases from 805 g. The cumulative
 infiltration to_gw and seepage seep both keep increasing beyond the initial
 mass (1.3 times the initial mass passes through the ground by circulation),
-and their difference, 597.60 g, agrees to all output digits with the
-subsurface mass 597.60 g. The total remains 4000.0000 g. With
+and their difference, 590.63 g, agrees to all output digits with the
+subsurface mass 590.63 g. The total remains 4000.0000 g. With
 immobilization (dash-dotted line) the subsurface mass keeps increasing,
 equal to to_gw. Center: final concentration. The wet cells at the downstream
-end, where seepage and ponding occur, are at 99.997–99.998 mg/L; the
+end, where seepage and ponding occur, are at 99.9970–99.9973 mg/L; the
 concentration is preserved along the whole pathway infiltration → seepage.
 Right: final depth (ponding at the downstream end).
 
@@ -62,9 +62,9 @@ Right: final depth (ponding at the downstream end).
 
 | Check | Computed | Result |
 |---|---|---|
-| to_gw − seep = mass_gw | 5143.075 − 4545.473 = 597.602 g (mass_gw 597.602) | PASS |
+| to_gw − seep = mass_gw | 5116.210 − 4525.575 = 590.634 g (mass_gw 590.634) | PASS |
 | Total mass mass_surface + mass_gw | 4000.0000 g | PASS |
-| Continuity of concentration | wet cells 99.9968–99.9975 mg/L (initial 100) | — |
+| Continuity of concentration | wet cells 99.9970–99.9973 mg/L (initial 100) | — |
 | Immobilization (wq_rg = 1e12) | seep ≈ 0, mass_gw = to_gw agree to all digits | PASS |
 | Regression | Log.txt and wq.csv at ULP = 0 to the reference | PASS |
 

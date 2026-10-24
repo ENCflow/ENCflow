@@ -49,7 +49,7 @@ make
 ## Verification record (2026-10-21; gfortran 13.3 / Open MPI, -O2)
 
 - Analytical checks: in A, B and C every cell of the bil agrees with the
-  analytical value (maximum relative error 1e-8 or less = float32 rounding).
+  analytical value (maximum relative error 6e-8 or less = float32 rounding).
   In D (2026-10-22) every floor and wall cell agrees with the distribution
   formula, and the total dissolution capacity 9W is conserved (within float32
   rounding); at np = 4 the pit straddles bands. E (automatic distribution)

@@ -42,7 +42,7 @@ they do not dry.
 | `param.txt` | Δx = 1 m, dt = 0.05 s |
 | `param_fine.txt` | Δx = 0.5 m, dt = 0.02 s (grid-convergence check. ν_max = 4.4 m²/s) |
 | `Check_analytic.py` | Compares u(t) of the probe CSV with the analytical solution; PASS when the maximum absolute error is < 5e-4 m/s (1% of U0) |
-| `Fig.py` | Draws the figure below, `figs/profile.png` |
+| `Fig.py` | Draws the figure `en/figs/profile.png` below (`python3 Fig.py en`; `figs/profile.png` is the Japanese version) |
 
 U0, σ, ν and yc are paired across `param*.txt`, `jet_gaussian` in
 `src/user_initial.f90`, `Check_analytic.py` and `Fig.py`. When changing
@@ -54,12 +54,12 @@ them, change them together.
 make
 ./Run.sh          # runs the 2 resolutions and compares with the analytical solution by Check_analytic.py (PASS when both PASS)
 ./Run_MPI.sh 4    # MPI, 4 ranks. In addition to the analytical comparison, byte comparison of the probe CSV with the serial result (result_serial)
-python3 Fig.py    # figs/profile.png
+python3 Fig.py en # en/figs/profile.png
 ```
 
 ## Figure
 
-![Diffusion of the Gaussian jet](../figs/profile.png)
+![Diffusion of the Gaussian jet](figs/profile.png)
 
 Left: probe velocities u(t) (○ Δx = 1 m, × Δx = 0.5 m) and the analytical
 solution (lines). Middle: profiles of the analytical solution (t = 0, 6.25,

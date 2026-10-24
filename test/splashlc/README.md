@@ -45,7 +45,7 @@ docs/splash_plan.md §6.6)。このテストは崖縁に **2 波長の正弦擾�
 make
 ./Run.sh          # 地形生成 → 構成 g → l → Check(数秒)
 ./Run_MPI.sh 4    # MPI。state.dat が逐次とバイト一致
-python3 Fig.py    # figs/splashlc.png
+python3 Fig.py    # figs/splashlc.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

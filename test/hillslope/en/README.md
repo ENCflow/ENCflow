@@ -43,7 +43,7 @@ W = 2 km, Q_e = P L W = 211.1 m³/s.
 |---|---|
 | `Make_hillslope.py plane` / `stairplane` / `vcat` | Generation of the terrain `z_*.txt`, the roughness `rn_*.txt` and `param_*.txt` (stairplane after plane) |
 | `param_*_s1.txt` (in the repository) / `param_*_s3.txt` (generated; .gitignore) | Scheme 1 / 3 |
-| `Fig.py` | The figures below, `figs/*.png`, and the tables |
+| `Fig.py` | The figures below, `en/figs/*.png` (`python3 Fig.py en`; `figs/*.png` are the Japanese versions), and the tables |
 
 ## Running
 
@@ -51,26 +51,30 @@ W = 2 km, Q_e = P L W = 211.1 m³/s.
 make
 python3 Make_hillslope.py plane && python3 Make_hillslope.py stairplane && python3 Make_hillslope.py vcat
 for p in param_*.txt; do ./encflow $p; done     # 11 cases. The two f10 runs take 1.5–15 min each, the others 1–3 min
-python3 Fig.py                                   # figs/plane.png, stair.png, vcat.png and the tables
+python3 Fig.py en                                # en/figs/plane.png, stair.png, vcat.png and the tables
 ```
 
 ## Figures
 
-![Uniform plane slope](../figs/plane.png)
+![Uniform plane slope](figs/plane.png)
 
 Outlet discharge of the uniform plane slope. Scheme 1 (blue) and scheme 3
 (red dashed) overlap completely, and the equilibrium discharge agrees with
-the analytical P L W = 211.1 m³/s to 4 digits. The rise is gentler than the
-kinematic wave (black): 90% is reached at 63 min for gradient 0.05
-(analytical 57 min) and at 42 min for 0.20 (38 min). The kinematic wave
-neglects the diffusion of the depth and therefore has a sharp front; that
-the shallow-water solution is more blunted than it is correct behaviour.
+the analytical P L W = 211.1 m³/s to 4 digits. The rise almost coincides with the
+kinematic wave (black; slightly ahead in the middle), and only the corner at
+equilibrium is rounded: 90% is reached at 57 min for gradient 0.05
+(analytical 57 min) and at 38 min for 0.20 (38 min). The kinematic wave
+neglects the diffusion of the depth and therefore has a sharp corner at
+equilibrium; that the shallow-water solution is blunted there is correct
+behaviour (with the default before 2026-10-18, f_opening_dynamic = 1, the
+conveyance of the wall-adjacent rows was smaller and the rise lagged by a few
+minutes).
 
-![Stepped slope](../figs/stair.png)
+![Stepped slope](figs/stair.png)
 
 Outlet discharge (left) of the stepped slope with a 10 m step every 2 cells
 (right). The three curves — no advection term, scheme 1 and scheme 3 —
-overlap (peaks 210.70 / 210.70 / 210.72 m³/s; 50% reached at 105 min,
+overlap (peaks 210.68 / 210.68 / 210.69 m³/s; 50% reached at 106 min,
 identical). The kinetic energy lost at a step is the velocity head
 u²/2g ≈ 0.01 m (velocity 0.5 m/s), negligible compared with the 10 m step,
 so the result does not change even if the dissipation at the steps is
@@ -78,10 +82,10 @@ treated differently. The arrival is more than 40 min later than on the
 smooth slope drawn for reference (grey) because water pools on the landing
 of each step before dropping to the next.
 
-![V-shaped catchment](../figs/vcat.png)
+![V-shaped catchment](figs/vcat.png)
 
 Outlet discharge of the V-shaped catchment. The hydrograph changes between
-Δx = 100 m and 10 m (peak 3.83 → 5.02 m³/s), but at each grid schemes 1 and
+Δx = 100 m and 10 m (peak 4.28 → 5.03 m³/s), but at each grid schemes 1 and
 3 overlap. The difference between grids comes from the resolution of the
 slopes and the channel band (at 100 m the channel band is 1 cell wide and
 the slopes 8 cells) and from the position of the transect (the catchment
@@ -92,11 +96,11 @@ the outlet), not from the schemes.
 
 | Case | Scheme 1 | Scheme 3 | Remarks |
 |---|---|---|---|
-| Plane 0.05 | 211.11 m³/s (equilibrium) | 211.11 | Analytical P L W = 211.1. 90% reached at 63 min (kinematic wave 57 min) |
-| Plane 0.20 | 211.11 | 211.11 | 90% reached at 42 min (38 min) |
-| Stepped slope 0.05 | 210.70 | 210.72 | No advection term 210.70. All three reach 50% at 105 min |
-| V-shaped 100 m | 3.828 @ 91 min | 3.828 | 3 h runoff volume 21,148 m³ |
-| V-shaped 10 m | 5.015 @ 91 min | 5.015 | 25,041 m³ (total rainfall 27,540 m³) |
+| Plane 0.05 | 211.11 m³/s (equilibrium) | 211.11 | Analytical P L W = 211.1. 90% reached at 57 min (kinematic wave 57 min) |
+| Plane 0.20 | 211.11 | 211.11 | 90% reached at 38 min (38 min) |
+| Stepped slope 0.05 | 210.68 | 210.69 | No advection term 210.68. All three reach 50% at 106 min |
+| V-shaped 100 m | 4.282 @ 91 min | 4.282 | 3 h runoff volume 22,546 m³ |
+| V-shaped 10 m | 5.032 @ 91 min | 5.033 | 25,484 m³ (total rainfall 27,540 m³) |
 
 - **On the smooth slope, the stepped slope and the V-shaped catchment alike,
   schemes 1 and 3 agree to 3–4 digits.** The scheme difference seen in

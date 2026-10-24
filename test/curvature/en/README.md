@@ -42,7 +42,7 @@ uniform-flow depth h_n = (q_m²/(ξ (tanθ − μ)))^{1/3} (A: 0.319 m, B: 0.638
 | `param_on.txt` / `param_off.txt` | With / without the curvature term (identical except for `f_dbcurv`) |
 | `make_init.py` | Generates the terrain `zinit.txt` (the constants are paired with those of Check) |
 | `Check_curvature.py` | Reads the flow depth h_t(x) averaged over all rows from `state.dat` and judges (1) uniform flow A, (2) uniform flow B and the on/off difference, (3) agreement with the ODE on the arc, (4) the ratio of the thickening on − off to the ODE |
-| `Fig.py` | Draws the figure `figs/profile.png` below (it borrows the functions of Check, so the check output is also displayed) |
+| `Fig.py` | Draws the figure `en/figs/profile.png` below (`python3 Fig.py en`; `figs/profile.png` is the Japanese version; it borrows the functions of Check, so the check output is also displayed) |
 
 ## Running
 
@@ -50,12 +50,12 @@ uniform-flow depth h_n = (q_m²/(ξ (tanθ − μ)))^{1/3} (A: 0.319 m, B: 0.638
 make
 ./Run.sh          # generate zinit.txt → run off → on → Check_curvature.py (PASS/FAIL)
 ./Run_MPI.sh 4    # MPI. The rule is that save_*/state.dat is byte-identical to the serial run
-python3 Fig.py    # figs/profile.png
+python3 Fig.py en # en/figs/profile.png
 ```
 
 ## Figures
 
-![Longitudinal profiles of the terrain and the steady flow depth](../figs/profile.png)
+![Longitudinal profiles of the terrain and the steady flow depth](figs/profile.png)
 
 Top: terrain. The grey band is the section of the concave arc (x = 60–94 m).
 Middle: the steady mixture flow depth h_t (average over all rows). The dots are

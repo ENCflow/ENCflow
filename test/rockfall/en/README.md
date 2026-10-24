@@ -18,7 +18,7 @@ collapses and the fallen material spreads at the foot as talus (repose angle 35�
 
 Checks (Check_rockfall.py; z and sd of save/state.dat and result/Ht9998.txt):
 
-1. Sediment volume conservation: |Σ(z − z₀)| < 1e-9 (result 1e-13)
+1. Sediment volume conservation: |Σ(z − z₀)| < 1e-9 (result 8e-13)
 2. Final maximum height difference among the 8 neighbours ≤ H_c + 1e-3 (allows a residual of about 1e-4 from the geometric convergence of the relaxation; 1e-2 for the windowed variant)
 3. Talus budget: ht ≥ (z − z₀)⁺ in every cell (net deposition is booked as talus), Σht > 0
 4. Co-moving update: max|(sd − sd₀) − (z − z₀)| < 1e-10

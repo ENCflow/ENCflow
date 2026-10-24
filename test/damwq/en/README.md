@@ -34,7 +34,7 @@ are confirmed by comparison with the reference and by `Check_damwq.py`.
 |---|---|
 | `Run.sh` | Compare Log.txt and wq.csv with the reference (ULP = 0) → `Check_damwq.py closure` → `uniform` |
 | `Check_damwq.py closure\|uniform` | Closure of the ledger (relative 1e-6) and activity of each pathway / wet cells of the final C field at 100 ± 0.1 |
-| `Fig.py` | The figure `figs/damwq.png` below |
+| `Fig.py` | The figure `en/figs/damwq.png` below (`python3 Fig.py en`; `figs/damwq.png` is the Japanese version) |
 
 ## Running
 
@@ -42,12 +42,12 @@ are confirmed by comparison with the reference and by `Check_damwq.py`.
 make
 ./Run.sh
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/damwq.png
+python3 Fig.py en # en/figs/damwq.png
 ```
 
 ## Figure
 
-![Water-quality ledger of the dam and retention pond](../figs/damwq.png)
+![Water-quality ledger of the dam and retention pond](figs/damwq.png)
 
 Left: time series of the ledger. In the first 10 minutes the water on the
 slope collects in the capture row of the dam (to_dam rises sharply to
@@ -68,7 +68,7 @@ is preserved along the whole pathway.
 |---|---|---|---|
 | Released mass rel_dam (5400 s) | 2700.0000 g | 2700 g | All digits agree |
 | Retention pond to_rs = mass_rs | 120.00000 g | 120 g | All digits agree |
-| to_dam − rel_dam = mass_dam | 4539.4250 − 2700.0000 = 1839.4250 g | mass_dam 1839.4250 | Agree |
+| to_dam − rel_dam = mass_dam | 4539.2078 − 2700.0000 = 1839.2078 g | mass_dam 1839.2078 | Agree |
 | Total mass | 4000.0000 g | 4000 g | PASS |
 | Final concentration (wet cells) | 100.0000 mg/L | 100 | PASS |
 

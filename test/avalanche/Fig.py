@@ -1,19 +1,29 @@
 #!/usr/bin/env python3
 """test/avalanche の図を figs/*.png に描く(事前に ./Run.sh を実行しておく)。
 
-  python3 Fig.py
+  python3 Fig.py        # 日本語版 → figs/
+  python3 Fig.py en     # 英語版   → en/figs/
 
 - figs/avalanche.png : 発生区の破断深 D、連行された雪の厚さ −(sd − sd₀)、停止後の雪面変化 z − z₀、
                        全行平均の縦断(連行・堆積の収支)
 """
-import os, struct
+import sys, os, struct
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
+
+EN = "en" in sys.argv[1:]
+
+
+def T(ja, en):
+    return en if EN else ja
+
+
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
-os.makedirs("figs", exist_ok=True)
+os.makedirs(FIGDIR, exist_ok=True)
 
 
 def read_rec(f):
@@ -47,24 +57,27 @@ ent = -(st["sd"] - SD0)
 fig, axes = plt.subplots(2, 2, figsize=(12, 7))
 ax = axes[0, 0]
 im = ax.imshow(np.where(db > 0, db, np.nan), origin="lower", extent=EXT, cmap="Oranges")
-ax.set_title("発生区の破断深 D (m)(t = 1 s に流動化。走路の雪 sd₀ = 0.5 m)", fontsize=9); fig.colorbar(im, ax=ax, shrink=0.8)
+ax.set_title(T("発生区の破断深 D (m)(t = 1 s に流動化。走路の雪 sd₀ = 0.5 m)",
+               "Fracture depth D (m) of the release area (fluidized at t = 1 s; sd₀ = 0.5 m)"), fontsize=9); fig.colorbar(im, ax=ax, shrink=0.8)
 ax = axes[0, 1]
 im = ax.imshow(np.where(ent > 1e-4, ent, np.nan), origin="lower", extent=EXT, cmap="Blues", vmin=0, vmax=SD0)
-ax.set_title("連行された雪の厚さ sd₀ − sd (m)(走路)", fontsize=9); fig.colorbar(im, ax=ax, shrink=0.8)
+ax.set_title(T("連行された雪の厚さ sd₀ − sd (m)(走路)", "Thickness of the entrained snow sd₀ − sd (m) (path)"), fontsize=9); fig.colorbar(im, ax=ax, shrink=0.8)
 ax = axes[1, 0]
 im = ax.imshow(dz, origin="lower", extent=EXT, cmap="RdBu_r", vmin=-1, vmax=1)
-ax.set_title("雪面の変化 z − z₀ (m)(負: 削剥、正: 停止デブリの堆積)、t = 60 s", fontsize=9); fig.colorbar(im, ax=ax, shrink=0.8)
+ax.set_title(T("雪面の変化 z − z₀ (m)(負: 削剥、正: 停止デブリの堆積)、t = 60 s",
+               "Snow-surface change z − z₀ (m) (−: scouring, +: stopped debris), t = 60 s"), fontsize=9); fig.colorbar(im, ax=ax, shrink=0.8)
 for ax in axes.flat[:3]:
     ax.axvline(XB, color="k", lw=0.6, ls=":"); ax.set_xlabel("x (m)"); ax.set_ylabel("y (m)")
 ax = axes[1, 1]
-ax.plot(x, dz.mean(axis=0), "C3", lw=1.5, label="z − z₀(全行平均)")
-ax.plot(x, -ent.mean(axis=0), "C0--", lw=1.2, label="−(sd₀ − sd)(連行分)")
-ax.plot(x, st["hs"].mean(axis=0), "C2:", lw=1.2, label="残存 hs")
+ax.plot(x, dz.mean(axis=0), "C3", lw=1.5, label=T("z − z₀(全行平均)", "z − z₀ (average over all rows)"))
+ax.plot(x, -ent.mean(axis=0), "C0--", lw=1.2, label=T("−(sd₀ − sd)(連行分)", "−(sd₀ − sd) (entrained)"))
+ax.plot(x, st["hs"].mean(axis=0), "C2:", lw=1.2, label=T("残存 hs", "remaining hs"))
 ax.axvline(XB, color="0.5", ls=":")
 ax.set_xlabel("x (m)"); ax.set_ylabel("(m)")
-ax.set_title("縦断(全行平均)", fontsize=9); ax.grid(alpha=0.3); ax.legend(fontsize=8)
-fig.suptitle("流れ型雪崩(等価流体 Voellmy μ = 0.2・ξ = 1500 + 速度比例連行 E = δe|V|、δe = 0.05)", fontsize=10)
-fig.tight_layout(); fig.savefig("figs/avalanche.png", dpi=110); plt.close(fig)
+ax.set_title(T("縦断(全行平均)", "Longitudinal profile (average over all rows)"), fontsize=9); ax.grid(alpha=0.3); ax.legend(fontsize=8)
+fig.suptitle(T("流れ型雪崩(等価流体 Voellmy μ = 0.2・ξ = 1500 + 速度比例連行 E = δe|V|、δe = 0.05)",
+               "Dense-flow snow avalanche (equivalent fluid Voellmy μ = 0.2, ξ = 1500 + velocity-proportional entrainment E = δe|V|, δe = 0.05)"), fontsize=10)
+fig.tight_layout(); fig.savefig(f"{FIGDIR}/avalanche.png", dpi=110); plt.close(fig)
 rel = (db > 0)
 released = (1 - PORO) * db.sum()
 entrained = (1 - PORO) * ent[~rel].clip(0).sum()

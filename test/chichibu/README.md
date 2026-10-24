@@ -32,7 +32,7 @@ reference を持つ回帰ケース、ほかの `param*.txt` は §68 の実験�
 make
 ./Run.sh          # 6 h の計算(4 コアで数分)+ reference 比較
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/chichibu.png
+python3 Fig.py    # figs/chichibu.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

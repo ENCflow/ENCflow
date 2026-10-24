@@ -29,7 +29,7 @@ that increasing Kd 1000-fold increases settling and decreases infiltration
 |---|---|
 | `Run.sh` | Compares Log.txt and wq.csv with the reference → `Check_kdpart.py closure` (both configurations) → `monotonic` |
 | `Check_kdpart.py closure\|monotonic` | in_point = mass_surface + mass_gw + mass_pool (relative 1e-6), activity of settle, to_gw and mass_pool / settle increases and to_gw decreases with larger Kd |
-| `Fig.py` | The figure `figs/kdpart.png` below |
+| `Fig.py` | The figure `en/figs/kdpart.png` below (`python3 Fig.py en`; `figs/kdpart.png` is the Japanese version) |
 
 ## Running
 
@@ -37,18 +37,18 @@ that increasing Kd 1000-fold increases settling and decreases infiltration
 make
 ./Run.sh
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/kdpart.png
+python3 Fig.py en # en/figs/kdpart.png
 ```
 
 ## Figures
 
-![Kd partitioning](../figs/kdpart.png)
+![Kd partitioning](figs/kdpart.png)
 
 Left: the destinations of the injected 400 g after 8 s (logarithmic axis).
 At Kd = 200 most of it remains in the surface water; the infiltrated
-dissolved phase is 0.044 g and the settled particulate phase 1.47 g. At
-Kd = 2e5 the particulate phase dominates: settling increases to 37.5 g and
-infiltration decreases to 0.027 g. In both cases the sum of the three equals
+dissolved phase is 0.045 g and the settled particulate phase 0.66 g. At
+Kd = 2e5 the particulate phase dominates: settling increases to 35.9 g and
+infiltration decreases to 0.028 g. In both cases the sum of the three equals
 400.0000 g. Center: the final concentration at Kd = 200, spreading from the
 point source on the ring wave. Right: the particulate phase (the part
 attached to suspended sediment).
@@ -57,10 +57,10 @@ attached to suspended sediment).
 
 | Quantity | Kd = 200 | Kd = 2e5 | Result |
 |---|---|---|---|
-| mass_surface / mass_gw / mass_pool (g) | 398.49 / 0.0441 / 1.470 | 362.44 / 0.0275 / 37.53 | — |
+| mass_surface / mass_gw / mass_pool (g) | 399.29 / 0.0445 / 0.664 | 364.07 / 0.0282 / 35.90 | — |
 | Closure: sum − injected 400 g | 0.000000 | 0.000000 | PASS |
-| Monotonicity settle_g | 1.47 → 37.5 (increase) | | PASS |
-| Monotonicity to_gw_g | 4.41e-2 → 2.75e-2 (decrease) | | PASS |
+| Monotonicity settle_g | 0.664 → 35.9 (increase) | | PASS |
+| Monotonicity to_gw_g | 4.45e-2 → 2.82e-2 (decrease) | | PASS |
 
 - The dissolved fraction is fd = 1/(1 + Kd·Css); only the dissolved phase
   infiltrates and only the particulate phase settles. Cells without suspended

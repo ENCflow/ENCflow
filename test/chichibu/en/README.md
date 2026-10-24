@@ -29,7 +29,7 @@ experiments of §68. The tutorial on the same catchment at 200 m grid is
 | File | Contents |
 |---|---|
 | `Run.sh` / `Run_MPI.sh N` | Compares Log.txt with the reference (ULP = 1) |
-| `Fig.py` | The figure below, `figs/chichibu.png` |
+| `Fig.py` | The figure below, `en/figs/chichibu.png` (`python3 Fig.py en`; `figs/chichibu.png` is the Japanese version) |
 | `Plot_chichibu_flux.plt` / `Plot_chichibu_map.plt` / `Plot_flux.plt` | Display of the discharge and the distributions with gnuplot |
 
 ## Running
@@ -38,12 +38,12 @@ experiments of §68. The tutorial on the same catchment at 200 m grid is
 make
 ./Run.sh          # 6 h computation (a few minutes on 4 cores) + reference comparison
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/chichibu.png
+python3 Fig.py en # en/figs/chichibu.png
 ```
 
 ## Figure
 
-![Regression case of the Chichibu catchment](../figs/chichibu.png)
+![Regression case of the Chichibu catchment](figs/chichibu.png)
 
 Left: maximum depth over the 6 hours (logarithmic colour). The rainfall
 collects from the hillslopes into the channels, and flows several metres

@@ -38,7 +38,7 @@ MUSCL advection scheme 3 and hcap = 1.
 | `en/param.txt` | English comments for `param.txt`; regression scripts still use the authoritative `param.txt` |
 | `param_cap.txt` | Same settings with `f_dry_head_cap = 1` (energy-head cap on edge depth toward dry cells; developer.md §68.16). The domain is entirely wet, so the cap never acts; this checks bit identity with the reference |
 | `Plot_wave.plt` | Interactive gnuplot display of water level, maximum depth and velocity distributions |
-| `Fig.py` | Produces the `figs/*.png` figures below |
+| `Fig.py` | Produces the `en/figs/*.png` figures below (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
 ## Execution
 
@@ -53,7 +53,7 @@ make                      # Link the executables from bin/
 ./Run.sh                  # Serial; compare Log.txt with the reference (ULP = 1; exclude Runge)
 ./Run_MPI.sh 4            # MPI with 4 ranks; the Log must match the serial run
 ./encflow param_cap.txt   # f_dry_head_cap = 1 (result_cap/); the Log matches the reference
-python3 Fig.py            # figs/profile.png, map.png, log.png
+python3 Fig.py en         # en/figs/profile.png, map.png, log.png
 ```
 
 Run.sh calls the shared engine [Run_case.sh](../../Scripts/Run_case.sh) and compares
@@ -63,7 +63,7 @@ excluded because it may depend on the thread count (`SKIPCOLS=4`).
 
 ## Figures
 
-![Water-level profiles along the central row](../figs/profile.png)
+![Water-level profiles along the central row](figs/profile.png)
 
 These profiles show water level e = z + h along the central row (y = 50 m).
 The mound collapses into an outward-moving ring: the top flattens at t = 2 s,
@@ -74,7 +74,7 @@ dispersion; they shrink with grid refinement (see the supplementary discussion
 in tutorials/wave). The dotted t = 8 s line for `param_cap.txt`
 (f_dry_head_cap = 1) lies exactly over the solid line.
 
-![Water-level distributions and maximum depth](../figs/map.png)
+![Water-level distributions and maximum depth](figs/map.png)
 
 Left and center: water-level distributions at t = 2 and 8 s. The ring remains
 circular independently of the grid orientation, reflecting the isotropy of the
@@ -82,14 +82,14 @@ ENC grid's eight-direction exchanges. Right: maximum depth during the run, H9999
 Outside the initial 2 m mound, values are around 1.2 m where the ring passed;
 the corners not reached by the wave remain at 1 m.
 
-![Wave-front position and output-log time series](../figs/log.png)
+![Wave-front position and output-log time series](figs/log.png)
 
 Left: the outermost radius r_f(t) where the water level exceeds still water by
 1 cm. The mean propagation speed is 3.19 m/s, consistent with the long-wave
 speed at the still-water depth, √(g h₀) = 3.13 m/s; the +2% reflects propagation
 over the raised surface at the front. Center: h_max decreases from 2.0 to
 1.20 m and settles at the ring height; V_max peaks at 1.08 m/s at t = 2 s and
-then decreases. Cn_max remains within the stability condition at 0.85–0.89.
+then decreases. Cn_max remains within the stability condition at 0.78–0.89.
 Right: the adaptive Runge–Kutta application percentage increases from 0 to 35%
 as the front spreads.
 

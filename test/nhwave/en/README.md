@@ -20,13 +20,13 @@ the numerical dispersion of the hydrostatic ENC) and Phase 4 onward
 
 ## Figures
 
-![Water level of the standing wave (hydrostatic vs non-hydrostatic, h0 = 8 m)](../figs/standing_wave.png)
+![Water level of the standing wave (hydrostatic vs non-hydrostatic, h0 = 8 m)](figs/standing_wave.png)
 
 Water level at probe 1 for h0 = 8 m (kH = 1.0). Compared with the
-hydrostatic run (period 5.66 s), the one-layer non-hydrostatic run
+hydrostatic run (period 5.65 s), the one-layer non-hydrostatic run
 (test/nhwave_nh, period 6.33 s) is 12% longer by dispersion.
 
-![Dispersion relation: phase-speed ratio c/√(gH) versus kH](../figs/dispersion.png)
+![Dispersion relation: phase-speed ratio c/√(gH) versus kH](figs/dispersion.png)
 
 Phase-speed ratio obtained from the periods measured in the scan
 (h0 = 1–16 m, x mode and diagonal mode). The hydrostatic ENC is 1
@@ -34,7 +34,7 @@ regardless of kH (numerical dispersion < 1%); the non-hydrostatic ENC lies
 on the target curve of the one-layer NH, 1/√(1 + k²H²/4), and is close to
 the exact solution √(tanh kH / kH) for kH ≲ 2.
 
-The figures are generated in `figs/` by `./Fig.py` after `./Dispersion.py`
+The figures are generated in `en/figs/` by `./Fig.py en` (`figs/` holds the Japanese versions, `./Fig.py`) after `./Dispersion.py`
 (the scan) and `../nhwave_nh/Run.sh` (matplotlib).
 
 ## Regression test
@@ -58,21 +58,22 @@ writes a table to Dispersion_result.md. The references for comparison are
 ## Findings (2026-10-05; hydrostatic, before the NH implementation)
 
 - The measured periods agree with the semi-discrete ENC prediction T_ENC
-  within 0.1% for the x mode and 0.02% for the diagonal mode
+  within 0.3% for the x mode and 0.6% for the diagonal mode
   (kΔx = 0.13–0.18). The numerical dispersion (T_ENC − T_cont) is 0.3–0.8%,
   an order of magnitude different from the target of the one-layer NH
   (+12% at kH = 1, +42% at kH = 2), so this case can clearly distinguish
   the presence or absence of NH.
 - The difference with and without the adaptive RK (rk1 / rk0) is 0.05% or
   less. At dt = 0.05 (Courant 0.44) the period lengthens by +0.6%, and at
-  dt = 0.005 it is within 0.2% of T_ENC.
+  dt = 0.005 it is within 0.3% of T_ENC.
 - f_hcap_upwind = 1 has no effect at small amplitude (the same period as
   rk1 for x_h8).
-- Over 8 periods the amplitude changes by +1–2% for the x mode and −5–6% for
-  the diagonal mode. This appears to be because the shift of the
-  eigenfunction caused by the missing diagonal edges at the walls
-  (Λ_wall/Λ_plane = 0.994–0.997) leaks into other modes. The NH
-  verification compares under the same conditions.
+- Over 8 periods the amplitude changes by 0 to −0.5% for the x mode and −1 to +0.4% for
+  the diagonal mode (recomputed on 2026-10-24; before the revision of
+  2026-10-18 (§68.37–38) it was +1 to 2% for x and −5 to 6% for the diagonal
+  mode, which was attributed to the shift of the eigenfunction caused by the
+  missing diagonal edges at the walls (Λ_wall/Λ_plane = 0.994–0.997) leaking
+  into other modes). The NH verification compares under the same conditions.
 
 ## Verification of the non-hydrostatic correction (2026-10-05; test/nhwave_nh and the scan)
 
@@ -82,13 +83,13 @@ modes and compared with T_NH = 2π/√(gHΛ/(1+(H²/4)Λ))):
 
 | Case | kH | T_meas | T_NH | Difference | Hydrostatic T | CG iterations/step |
 |---|---:|---:|---:|---:|---:|---:|
-| x, h0=2 | 0.25 | 11.403 | 11.423 | −0.18% | 11.335 | 12–15 |
-| x, h0=8 | 1.01 | 6.332 | 6.338 | −0.10% | 5.667 | 45–52 |
-| x, h0=16 | 2.01 | 5.682 | 5.672 | +0.18% | 4.007 | 72–85 |
-| xy, h0=8 | 1.42 | 4.924 | 4.924 | −0.01% | 4.024 | 44–52 |
+| x, h0=2 | 0.25 | 11.392 | 11.423 | −0.27% | 11.302 | 12–15 |
+| x, h0=8 | 1.01 | 6.330 | 6.338 | −0.14% | 5.654 | 45–52 |
+| x, h0=16 | 2.01 | 5.678 | 5.672 | +0.10% | 4.001 | 72–85 |
+| xy, h0=8 | 1.42 | 4.904 | 4.924 | −0.41% | 4.003 | 44–52 |
 
 - The period is the same without the adaptive RK (rk0) and at dt = 0.005
-  (−0.15 / −0.17%). The change of amplitude (+6.7% over 8 periods, +4.2%
+  (−0.15 / −0.17%). The change of amplitude (−0.9% over 8 periods, +4.2%
   over 35 periods) is the same as in the long hydrostatic run (+4.2%): a
   transfer between modes caused by the shift of the eigenfunction at the
   walls, not an instability of the time integration.

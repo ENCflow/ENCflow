@@ -25,7 +25,7 @@ the co-moving update and the activity are checked with `Check_suspend.py`
 | File | Contents |
 |---|---|
 | `Run.sh` | Runs and checks with `../suspend/Check_suspend.py save` |
-| `Fig.py` | The figure `figs/wash.png` below |
+| `Fig.py` | The figure `en/figs/wash.png` below (`python3 Fig.py en`; `figs/wash.png` is the Japanese version) |
 
 ## Running
 
@@ -33,17 +33,17 @@ the co-moving update and the activity are checked with `Check_suspend.py`
 make
 ./Run.sh          # run → checks of total solid, co-moving update and activity (1 s)
 ./Run_MPI.sh 4    # MPI; state.dat byte-identical to the serial run
-python3 Fig.py    # figs/wash.png
+python3 Fig.py en # en/figs/wash.png
 ```
 
 ## Figures
 
-![Hillslope erosion](../figs/wash.png)
+![Hillslope erosion](figs/wash.png)
 
 Left: bed change. Sheet erosion concentrates in the ring of the collapsed
 mound (maximum 5.6 mm), and raindrop erosion lies thinly over the whole
 domain. Center: suspended sediment hs. The eroded sediment is carried in the
-water column (maximum 2.2 mm). Right: the section along the central row. The
+water column (maximum 2.4 mm). Right: the section along the central row. The
 change is an order of magnitude larger than in [test/suspend](../../suspend/en/README.md),
 with sheet erosion in the fast-flowing ring dominant.
 
@@ -52,8 +52,8 @@ with sheet erosion in the fast-flowing ring dominant.
 | Check | Computed | Result |
 |---|---|---|
 | Total solid Σhs + (1 − λ)Σ(z − z₀) | 0.0 (machine precision) | PASS |
-| Co-moving update max\|(sd − sd₀) − (z − z₀)\| | 1.9e-14 m | PASS |
-| Activity max hs / max\|z − z₀\| | 2.24 mm / 5.58 mm | PASS |
+| Co-moving update max\|(sd − sd₀) − (z − z₀)\| | 2.1e-14 m | PASS |
+| Activity max hs / max\|z − z₀\| | 2.42 mm / 5.58 mm | PASS |
 
 - wash is a one-pass landform process that does not read its neighbours, so
   it is safe under OpenMP as well, and the state.dat of np = 1, 2, 4 is

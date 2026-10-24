@@ -14,7 +14,7 @@ theoretical value from the modified equation. There is no physical dispersion,
 decay or settling (the defaults of the water-quality module).
 
 - **Configuration A (longitudinal)**: a north–south channel 3 cells wide
-  (slope 9e-4, n = 0.03, depth 1 m, u ≈ 0.91 m/s; the orientation in which
+  (slope 9e-4, n = 0.03, depth 1 m, u ≈ 1.0 m/s; the orientation in which
   band decomposition allows MPI verification) is filled with water of initial
   concentration 100 mg/L, and clean water flows in from the north side. From
   the width σ (standard deviation of −dC/dx) over which the clean-water front
@@ -45,18 +45,18 @@ the scalar scheme.
 make              # links, z_*.txt and inflow_b.txt
 ./Run.sh          # regression of param.txt (Log.txt + wq.csv) + runs of the other 3 cases + Check_tracer.py
 ./Run_MPI.sh 4    # MPI with 4 ranks (ULP=0 to the reference)
-python3 Fig.py    # figs/tracer.png
+python3 Fig.py en # en/figs/tracer.png
 ```
 
 ## Results (gfortran -Ofast)
 
-![Front and plume](../figs/tracer.png)
+![Front and plume](figs/tracer.png)
 
 | Case | dx (m) | dt (s) | u (m/s) | Cr | Measured D (m²/s) | Theoretical D u·dx·(1−Cr)/2 | Ratio | MUSCL D (m²/s) | MUSCL / first-order |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| param.txt | 10 | 1 | 0.91 | 0.09 | 4.3 | 4.1 | 1.04 | 1.2 | 0.28 |
-| param_a10dt2.txt | 10 | 2 | 0.91 | 0.18 | 3.9 | 3.7 | 1.04 | 0.8 | 0.20 |
-| param_a20.txt | 20 | 2 | 0.92 | 0.09 | 8.7 | 8.4 | 1.05 | 2.6 | 0.30 |
+| param.txt | 10 | 1 | 1.00 | 0.10 | 4.7 | 4.5 | 1.04 | 0.8 | 0.16 |
+| param_a10dt2.txt | 10 | 2 | 1.00 | 0.20 | 4.2 | 4.0 | 1.05 | 0.3 | 0.07 |
+| param_a20.txt | 20 | 2 | 1.00 | 0.10 | 9.4 | 9.0 | 1.05 | 1.7 | 0.18 |
 | param_b.txt (lateral) | 10 | 1 | 1.00 | — | 2.7 | 2.9 (0.293·u·dy) | 0.94 | 0.19 | 0.07 |
 
 (Values for t = 30–90 min. Check_tracer.py verifies that first-order upwind
@@ -72,8 +72,8 @@ How to read this:
   **D ≈ u·dx/2** (Cr is small, so the (1 − Cr) correction is 10–20 %).
   Because the shallow-water dt is set by the gravity-wave CFL condition, the
   scalar Cr is always around 0.1–0.2; D hardly changes with dt and is
-  **proportional to the grid spacing** (4 m²/s at dx 10 m, 9 m²/s at 20 m).
-  The width of the front (2σ) reaches 350 m (35 cells) in one hour.
+  **proportional to the grid spacing** (5 m²/s at dx 10 m, 9 m²/s at 20 m).
+  The width of the front (2σ) reaches 370 m (37 cells) in one hour.
 - Laterally there is numerical diffusion **Dy ≈ 0.29·u·dy** even without any
   lateral flow (0.65 times the longitudinal value). In the eight-direction
   links of the ENC grid, even for a uniform flow in the x direction, 0.293 of
@@ -89,7 +89,7 @@ How to read this:
   reconstructed along the diagonal, so for a concentration field that is
   linear in the lateral direction the average of the two diagonal donors
   coincides with the central value and the leading term of the lateral
-  numerical diffusion also vanishes. The longitudinal D becomes 1/3–1/5 and
+  numerical diffusion also vanishes. The longitudinal D becomes 1/5–1/14 and
   the lateral Dy 1/14 (σy 3 km downstream: 129 → 38 m); what remains is the
   limiter degrading to first order at the two ends of the front (extrema).
   Use it when looking at the arrival time of a concentration front, peak

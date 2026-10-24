@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
-"""test/frost の図を figs/frost.png に描く(事前に ./Run.sh を実行しておく)。
+"""test/frost の図を figs/frost.png に描く(事前に ./Run.sh を実行しておく。引数 en で英語版を en/figs/ に)。
 凍土による浸透抑制: 一定気温 −8.64 ℃で凍結指数 FI が線形に増え、低減係数 Ff = 1 − FI/fifull が 1 → 0 に
 落ちる。地下貯留 S_grnd(t) と解析解 K t (1 − t/2T)、Ff の分布(t = 1800, 3600 s)。
 """
-import glob, os, struct
+import glob, os, struct, sys
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
+EN = "en" in sys.argv[1:]
+def T(ja, en): return en if EN else ja
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
-os.makedirs("figs", exist_ok=True)
+os.makedirs(FIGDIR, exist_ok=True)
 
 
 def read_rec(f):
@@ -52,23 +55,24 @@ def read_log(path):
 
 
 names, lg = read_log("result/Log.txt")
-t = lg[:, 0]; K = 1e-5; T = 3600.0
+t = lg[:, 0]; K = 1e-5; T_ = 3600.0
 fig, axes = plt.subplots(1, 3, figsize=(15, 4), gridspec_kw={"width_ratios": [1.6, 1, 1]})
 ax = axes[0]
-ax.plot(t, lg[:, names.index("S_grnd(m)")], "C1o", ms=4, label="計算 S_grnd")
-tt = np.linspace(0, T, 200)
-ax.plot(tt, K * tt * (1 - tt / (2 * T)), "k-", lw=1, label="解析 K t (1 − t/2T)、K = 1e-5 m/s、T = 3600 s")
-ax.plot(t, lg[:, names.index("S_surf(m)")], "C0s", ms=3, label="計算 S_surf")
-ax2 = ax.twinx(); ax2.plot(tt, 1 - tt / T, "C3--", lw=1, label="低減係数 Ff = 1 − t/T"); ax2.set_ylabel("Ff", color="C3")
-ax.set_xlabel("t (s)"); ax.set_ylabel("柱状換算水深 (m)"); ax.grid(alpha=0.3)
+ax.plot(t, lg[:, names.index("S_grnd(m)")], "C1o", ms=4, label=T("計算 S_grnd", "Computed S_grnd"))
+tt = np.linspace(0, T_, 200)
+ax.plot(tt, K * tt * (1 - tt / (2 * T_)), "k-", lw=1, label=T("解析 K t (1 − t/2T)、K = 1e-5 m/s、T = 3600 s", "Analytical K t (1 − t/2T), K = 1e-5 m/s, T = 3600 s"))
+ax.plot(t, lg[:, names.index("S_surf(m)")], "C0s", ms=3, label=T("計算 S_surf", "Computed S_surf"))
+ax2 = ax.twinx(); ax2.plot(tt, 1 - tt / T_, "C3--", lw=1, label=T("低減係数 Ff = 1 − t/T", "Reduction factor Ff = 1 − t/T")); ax2.set_ylabel("Ff", color="C3")
+ax.set_xlabel("t (s)"); ax.set_ylabel(T("柱状換算水深 (m)", "Column-equivalent depth (m)")); ax.grid(alpha=0.3)
 h1, l1 = ax.get_legend_handles_labels(); h2, l2 = ax2.get_legend_handles_labels(); ax.legend(h1 + h2, l1 + l2, fontsize=8, loc="center left")
-ax.set_title("浸透が凍結とともに止まる(S_grnd(3600) = K T/2 = 0.018 m)", fontsize=9)
+ax.set_title(T("浸透が凍結とともに止まる(S_grnd(3600) = K T/2 = 0.018 m)", "Infiltration stops as the ground freezes (S_grnd(3600) = K T/2 = 0.018 m)"), fontsize=9)
 for ax, n, tlab in [(axes[1], "Ff0001.txt", "1800 s"), (axes[2], "Ff0002.txt", "3600 s")]:
     a = np.loadtxt("result/" + n)
     im = ax.imshow(a, origin="lower", extent=[0, 42, 0, 42], cmap="Blues_r", vmin=0, vmax=1)
-    ax.set_title(f"Ff の分布 t = {tlab}(一様 {a.mean():.3f})", fontsize=9); ax.set_xlabel("x (m)"); ax.set_ylabel("y (m)")
+    ax.set_title(T(f"Ff の分布 t = {tlab}(一様 {a.mean():.3f})", f"Distribution of Ff at t = {tlab} (uniform {a.mean():.3f})"), fontsize=9); ax.set_xlabel("x (m)"); ax.set_ylabel("y (m)")
     fig.colorbar(im, ax=ax, shrink=0.8)
-fig.suptitle("凍土による浸透抑制(f_gwfrost): 平坦閉領域 21 × 21、初期水 0.05 m、気温 −8.64 ℃、fro_fifull = 0.36 ℃·day", fontsize=10)
-fig.tight_layout(); fig.savefig("figs/frost.png", dpi=110); plt.close(fig)
+fig.suptitle(T("凍土による浸透抑制(f_gwfrost): 平坦閉領域 21 × 21、初期水 0.05 m、気温 −8.64 ℃、fro_fifull = 0.36 ℃·day",
+               "Infiltration suppression by frozen ground (f_gwfrost): flat closed domain 21 × 21, initial water 0.05 m, air temperature −8.64 ℃, fro_fifull = 0.36 ℃·day"), fontsize=10)
+fig.tight_layout(); fig.savefig(f"{FIGDIR}/frost.png", dpi=110); plt.close(fig)
 k = names.index("S_grnd(m)")
 print("S_grnd(3600) = %.14f (analytic discrete 0.0179975), Ff(1800) = %.4f, Ff(3600) = %.4f" % (lg[-1, k], np.loadtxt("result/Ff0001.txt").mean(), np.loadtxt("result/Ff0002.txt").mean()))

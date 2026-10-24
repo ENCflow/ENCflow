@@ -33,7 +33,7 @@
 make
 ./Run.sh          # 実行 → Check(1 秒)
 ./Run_MPI.sh 4    # MPI。state.dat・swi.dat・Swi 出力が逐次とビット一致
-python3 Fig.py    # figs/swi.png
+python3 Fig.py    # figs/swi.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

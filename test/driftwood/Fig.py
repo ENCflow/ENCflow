@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 """test/driftwood の図を figs/*.png に描く(事前に ./Run.sh を実行しておく)。
 
-  python3 Fig.py
+  python3 Fig.py        # 引数 en で英語版を en/figs/ に
 
 - figs/driftwood.png : 構成 1(土石流 + 侵食連行)と構成 2(洪水の水理的流失)の
                        流木の分布: 流動中 hd、堆積 wd、流木化したストック stock₀ − wst(save*/driftwood.dat)
 """
-import os, struct
+import sys, os, struct
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
+EN = "en" in sys.argv[1:]
+def T(ja, en): return en if EN else ja
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
-os.makedirs("figs", exist_ok=True)
+os.makedirs(FIGDIR, exist_ok=True)
 
 
 def read_rec(f):
@@ -40,15 +43,15 @@ def load_dw(savedir):
         return {k: read_rle(f, NX * NY).reshape(NY, NX) for k in ["hd", "wd", "wst"]}
 
 
-cases = [("save", "構成 1: 土石流 + 侵食連行(降雨 200 mm/h、30 s)"),
-         ("save_flood", "構成 2: 洪水の水理的流失(地形変化なし、60 s)")]
+cases = [("save", T("構成 1: 土石流 + 侵食連行(降雨 200 mm/h、30 s)", "Config. 1: debris flow + erosion entrainment (rainfall 200 mm/h, 30 s)")),
+         ("save_flood", T("構成 2: 洪水の水理的流失(地形変化なし、60 s)", "Config. 2: hydraulic recruitment by flood (no landform change, 60 s)"))]
 fig, axes = plt.subplots(2, 3, figsize=(15, 6.2))
 for row, (d, lab) in enumerate(cases):
     dw = load_dw(d)
     stock0 = 0.01
-    for ax, a, title, cmap in [(axes[row, 0], dw["hd"] * 1e3, "流動中の流木 hd (mm)", "Blues"),
-                               (axes[row, 1], dw["wd"] * 1e3, "堆積した流木 wd (mm)", "Oranges"),
-                               (axes[row, 2], (stock0 - dw["wst"]) * 1e3, "流木化したストック stock₀ − wst (mm)", "Greens")]:
+    for ax, a, title, cmap in [(axes[row, 0], dw["hd"] * 1e3, T("流動中の流木 hd (mm)", "moving driftwood hd (mm)"), "Blues"),
+                               (axes[row, 1], dw["wd"] * 1e3, T("堆積した流木 wd (mm)", "deposited driftwood wd (mm)"), "Oranges"),
+                               (axes[row, 2], (stock0 - dw["wst"]) * 1e3, T("流木化したストック stock₀ − wst (mm)", "recruited stock stock₀ − wst (mm)"), "Greens")]:
         im = ax.imshow(np.where(a > 1e-6, a, np.nan), origin="lower", extent=EXT, cmap=cmap)
         ax.axvline(XB, color="k", lw=0.6, ls=":")
         ax.set_title(f"{lab.split(':')[0]}: {title}", fontsize=9); ax.set_xlabel("x (m)"); ax.set_ylabel("y (m)")
@@ -56,5 +59,6 @@ for row, (d, lab) in enumerate(cases):
     print("%-11s rec %.4e  hd %.4e  wd %.4e  total-stock0 %.2e  reach max(hd+wd) x>=30: %.2e" % (
         d, (stock0 - dw["wst"]).sum(), dw["hd"].sum(), dw["wd"].sum(),
         dw["hd"].sum() + dw["wd"].sum() + dw["wst"].sum() - stock0 * NX * NY, (dw["hd"] + dw["wd"])[:, 29:].max()))
-fig.suptitle("流木ラスタ場(slope_break 地形。上: 構成 1 土石流 + 侵食連行、下: 構成 2 洪水の水理的流失。立木ストック 0.01 m³/m²)", fontsize=10)
-fig.tight_layout(); fig.savefig("figs/driftwood.png", dpi=110); plt.close(fig)
+fig.suptitle(T("流木ラスタ場(slope_break 地形。上: 構成 1 土石流 + 侵食連行、下: 構成 2 洪水の水理的流失。立木ストック 0.01 m³/m²)",
+               "Driftwood raster fields (slope_break terrain. Top: config. 1 debris flow + erosion entrainment; bottom: config. 2 hydraulic recruitment by flood. Standing stock 0.01 m³/m²)"), fontsize=10)
+fig.tight_layout(); fig.savefig(f"{FIGDIR}/driftwood.png", dpi=110); plt.close(fig)

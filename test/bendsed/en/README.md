@@ -37,22 +37,24 @@ make
 ./Run_MPI.sh 4    # MPI. The rule is that state.dat is byte-identical to the serial run
 ```
 
-## Findings (2026-10-17; gfortran 13.3, -O2 strict math)
+## Findings (2026-10-24; gfortran 13.3, -Ofast)
 
 | Check | on | off (control) |
 |---|---|---|
-| Mean Δz, outer bank − inner bank (left = right) | −0.224 m | +0.030 m |
-| Mirror difference max\|Δz_left − flipud(Δz_right)\| | 2.2e-5 m | 2.3e-11 m |
+| Mean Δz, outer bank − inner bank (left = right) | −0.075 m | +0.004 m |
+| Mirror difference max\|Δz_left − flipud(Δz_right)\| | 5.3e-15 m | 7.1e-15 m |
 | max\|Δz\| of the dry banks | 0 | 0 |
 
 - Without correction the depth-averaged flow accelerates on the inner-bank
   side, so the inner-bank side erodes more; with correction the sign reverses
   and the outer-bank side deepens (with the revision of §84.3 that evaluates
   the bed-slope term by direct differences on the edges, this became clear at
-  −0.224 m, from −0.098 m with the first version using central differences).
-- The mirror difference is larger with correction (2.2e-5), because the
-  positive feedback of morphological change amplifies round-off differences;
-  it is within the tolerance 1e-4.
+  −0.224 m, from −0.098 m with the first version using central differences;
+  with the current code (2026-10-24) it is −0.075 m).
+- The mirror difference is at round-off level both with and without
+  correction (5.3e-15 / 7.1e-15), within the tolerance 1e-4 (with the -O2
+  strict-math build of 2026-10-17 it was 2.2e-5 with correction, because the
+  positive feedback of morphological change amplifies round-off differences).
 - The segment-inflow cells (west end) receive no sediment feed and scour down
   through the 10 m soil layer (local scour at a point source; excluded from
   the statistics). The free-outflow face at the outlet transports at

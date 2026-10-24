@@ -35,7 +35,7 @@ and checks the growth rate of the relief with `Check_contrast.py`.
 | File | Contents |
 |---|---|
 | `Check_contrast.py` | (1) consolidated: relief(final)/relief(init) ≥ 1.15, (2) unconsolidated: ≤ 0.9, (3) the plateau interior (x ≤ 6 m) is intact (\|Δz\| < 0.05 m), (4) the lower bound of erosion is bounded (z ≥ −1.5 m) |
-| `Fig.py` | The figure `figs/splashslide.png` below |
+| `Fig.py` | The figure `en/figs/splashslide.png` below (`python3 Fig.py en`; `figs/splashslide.png` is the Japanese version) |
 
 ## Running
 
@@ -43,12 +43,12 @@ and checks the growth rate of the relief with `Check_contrast.py`.
 make
 ./Run.sh          # terrain generation → configuration 1 → 2 → Check (tens of seconds)
 ./Run_MPI.sh 4    # MPI; state.dat is byte-identical to the serial run
-python3 Fig.py    # figs/splashslide.png
+python3 Fig.py en # en/figs/splashslide.png
 ```
 
 ## Figure
 
-![Shiromama contrast](../figs/splashslide.png)
+![Shiromama contrast](figs/splashslide.png)
 
 Top row: consolidated cliff; bottom row: unconsolidated cliff. Left: initial
 terrain (the perturbation of the cliff edge is the same for both). Center:

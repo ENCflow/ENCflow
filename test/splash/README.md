@@ -35,7 +35,7 @@ f_splash だけが担います。凹地形増幅を切る(`spl_ca = spl_cb = 0`)
 make
 ./Run.sh
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/splash.png
+python3 Fig.py    # figs/splash.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

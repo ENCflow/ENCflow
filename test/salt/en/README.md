@@ -35,7 +35,7 @@ consists of two schematic experiments.
 |---|---|
 | `Run.sh` / `Run_MPI.sh N` | Regression test of A (Log.txt, ULP = 0) |
 | `Run_sea.sh` | Run of B (result_sea/) |
-| `Fig.py` | The figure `figs/salt.png` below |
+| `Fig.py` | The figure `en/figs/salt.png` below (`python3 Fig.py en`; `figs/salt.png` is the Japanese version) |
 
 ## Running
 
@@ -44,12 +44,12 @@ make
 ./Run.sh          # A: compare with the reference
 ./Run_MPI.sh 4
 ./Run_sea.sh      # B (a few seconds)
-python3 Fig.py    # figs/salt.png
+python3 Fig.py en # en/figs/salt.png
 ```
 
 ## Figures
 
-![Exchange flow of the salt layer and seawater intrusion](../figs/salt.png)
+![Exchange flow of the salt layer and seawater intrusion](figs/salt.png)
 
 Left and center: the salt-layer thickness Hss of schematic experiment A.
 The 1 m of salt water placed in the 10 leftmost columns spreads uniformly

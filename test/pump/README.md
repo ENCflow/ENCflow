@@ -38,7 +38,7 @@ S_total(3600 s) = 0.029551020408163 m が解析値です。
 make
 ./Run.sh          # Log.txt を reference と比較(ULP = 1、Runge 列を除く)
 ./Run_MPI.sh 4
-python3 Fig.py    # figs/storage.png, figs/map.png
+python3 Fig.py    # figs/storage.png, figs/map.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

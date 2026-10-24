@@ -55,6 +55,7 @@ Screen_*.log
 !examples/sewer_hybrid/sewer_hybrid_result.png
 !examples/*/figs/*.png
 !test/*/figs/*.png
+!test/*/en/figs/*.png
 
 # --- OS / editor ---
 .DS_Store

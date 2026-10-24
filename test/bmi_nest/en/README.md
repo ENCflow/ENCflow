@@ -20,7 +20,7 @@ self-nesting as test/nest_identity (wave 385², child 121², parent cells
      hinit_child.txt. Save the final depth hA and the Log.
    - B: nest (param_root.txt). Check the grid information (`grids = [0, 1]`,
      shape, spacing and origin; the origin of the child is the origin of the
-     parent + the alignment position), the variable list (16 outputs, 6 inputs,
+     parent + the alignment position), the variable list (24 outputs, 8 inputs,
      qualified names with `~grid1`), and var_grid. At every step the depth and
      speed in the interior of the child (outside the boundary strip) must be
      bit-identical to the footprint on the root, the final root depth must
