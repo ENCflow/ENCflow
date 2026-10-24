@@ -20,9 +20,9 @@ Common: a closed-domain slope of 40 × 20 cells (`z.txt`), initial water 0.05 m,
 | Configuration | Enabled | Omitted → values shown as defaults |
 |---|---|---|
 | a | Bucket (`f_gwvertical = 1`) | gw_infil_mmh = 10 mm/h, gw_capacity = 0.2 m |
-| b | Green-Ampt + lateral flow + weathered bedrock layer (`f_gwlayer2 = 1`) | sd0 = 1 m, gw_ksv_mmh = 10, gw_psif = 0, gw_ksh_mmh = 360, gw2_depth = 3 m, gw2_sy = 0.05, gw2_infil_mmh = 1 |
-| c | Green-Ampt + frozen ground (`f_gwfrost = 1`, `fn_meteo`) | sd0, gw_ksv_mmh, gw_psif, fro_fifull = 20 ℃·day |
-| d | Green-Ampt + conduit continuum layer (`f_gwconduit = 1`, infiltration water `gwc_leak_layer = 1`) | sd0, gw_ksv_mmh, gw_psif, gwc_cap = 0.01 m, gwc_depth = 3 m, gwc_sy = 0.05, gwc_slot_sy = 1e-3, gwc_leak_mmh = 10 |
+| b | Green-Ampt + lateral flow + weathered bedrock layer (`f_gwlayer2 = 1`) | sd0 = 1 m, gw_ksv_mmh = 10, gw_ksh_mmh = 360, gw2_depth = 3 m, gw2_sy = 0.05, gw2_infil_mmh = 1 |
+| c | Green-Ampt + frozen ground (`f_gwfrost = 1`, `fn_meteo`) | sd0, gw_ksv_mmh, fro_fifull = 20 ℃·day |
+| d | Green-Ampt + conduit continuum layer (`f_gwconduit = 1`, infiltration water `gwc_leak_layer = 1`) | sd0, gw_ksv_mmh, gwc_cap = 0.01 m, gwc_depth = 3 m, gwc_sy = 0.05, gwc_slot_sy = 1e-3, gwc_leak_mmh = 10 |
 
 In configuration d, `gwc_inlet` (inlet density) and `gwc_cnd_m2s` (conveyance
 density) are given values (no default is set, because 0 is the explicit
@@ -46,9 +46,9 @@ make
 | Configuration | Byte identity of save / Log | "(default)" lines |
 |---|---|---|
 | a bucket | identical | 2 |
-| b Green-Ampt + lateral + layer 2 | identical | 7 |
-| c Green-Ampt + frozen ground | identical | 4 |
-| d Green-Ampt + conduit layer | identical | 5 |
+| b Green-Ampt + lateral + layer 2 | identical | 6 |
+| c Green-Ampt + frozen ground | identical | 3 |
+| d Green-Ampt + conduit layer | identical | 7 |
 | Total | PASS | 18 (expected 18) |
 
 - The basis of the defaults (Green-Ampt parameters by soil texture, soil

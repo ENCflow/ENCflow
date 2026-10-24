@@ -44,7 +44,7 @@ F が曲率項で、off では F = 1 です。直線部では z″ = 0 なので
 make
 ./Run.sh          # zinit.txt 生成 → off → on を実行 → Check_curvature.py(PASS/FAIL)
 ./Run_MPI.sh 4    # MPI。save_*/state.dat が逐次とバイト一致するのが規律
-python3 Fig.py    # figs/profile.png
+python3 Fig.py    # figs/profile.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図

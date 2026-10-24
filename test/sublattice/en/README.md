@@ -53,8 +53,8 @@ e-folding time τ.
 |---|---|---|---|---|
 | alternating: after 5 min / 60 min | 0.57 / 0.33 (τ 4570 s) | 0.18 / 0.07 (τ 2240 s) | 0.18 / 0.07 (τ 2200 s) | 0.40 / 0.10 (τ 1940 s) |
 | mixed: τ of the sub-lattice mode | 1094 s (still present after 60 min, changing sign) | **88 s** (0.03 at 5 min) | 87 s | 364 s |
-| mixed: remaining background gyre (60 min) | 0.72 | 0.90 | 0.89 | 0.88 |
-| smooth: remaining gyre (60 min) | 0.96 | 0.97 | 0.97 | 0.94 |
+| mixed: remaining background gyre (60 min) | 0.72 | 0.90 | 0.89 | 0.92 |
+| smooth: remaining gyre (60 min) | 0.96 | 0.97 | 0.97 | 0.99 |
 
 - In the configuration with the sub-lattice mode alone (alternating), the
   damping by the advection term is proportional to the flux |q_t|, and since

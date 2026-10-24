@@ -17,7 +17,7 @@ state.dat / swflow_enc.dat in save). Bugs in grid confusion, row order,
 halos, time interpolation and replacement appear here mechanically as
 ULP 0 mismatches.
 
-![Configuration of the identity cases](../figs/identity.png)
+![Configuration of the identity cases](figs/identity.png)
 
 ## Running
 
@@ -52,5 +52,5 @@ in make.inc (developer.md §72).
 | nha (display only) | Active set in the child only (f_nh_adaptive = 1), whole-domain solution in the parent | Truncation error of the active set (cells adjacent to the band join the seeds with the parent's φ) | Measured max\|dh\| 3.0e-4 m |
 
 - Arguments of nestcheck: `run <root param> <i0> <j0> <nb> [tol]`. `cut <single param> <i0> <j0> <nxc> <nyc> <out>` cuts the child's initial-depth file out of the initial depth of the stand-alone grid. The chichibu terrain files are cut out by cut_chichibu.py (data_chichibu_child/).
-- The figure is generated as figs/identity.png by `./Fig.py` (a schematic; no data needed).
+- The figure is generated as en/figs/identity.png by `./Fig.py en` (a schematic; no data needed; figs/identity.png is the Japanese version, from `./Fig.py`).
 - The same identity through BMI (grid distinction, replacement, re-initialize) is test/bmi_nest.

@@ -44,5 +44,5 @@ FTZ/DAZ(非正規化数のゼロ化)の有無が本体と食い違って一致�
 | nha(表示のみ) | 子だけ活性集合(f_nh_adaptive = 1)、親は全域解 | 活性集合の切り捨て誤差(帯に接するセルは親の φ で種に加わる) | 実測 max\|dh\| 3.0e-4 m |
 
 - nestcheck の引数: `run <root param> <i0> <j0> <nb> [tol]`。`cut <single param> <i0> <j0> <nxc> <nyc> <out>` は単独格子の初期水深から子の初期水深ファイルを切り出す。chichibu の地形類は cut_chichibu.py で切り出す(data_chichibu_child/)。
-- 図は `./Fig.py` で figs/identity.png に生成する(模式図。データ不要)。
+- 図は `./Fig.py` で figs/identity.png に生成する(模式図。データ不要。引数 en で英語版を en/figs/ に)。
 - BMI 越しの同じ恒等(格子の区別・置換・再 initialize)は test/bmi_nest。

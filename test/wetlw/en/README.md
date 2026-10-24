@@ -33,12 +33,12 @@ and with `wet_lw = 3 m` (configuration l), and checks the following.
 make
 ./Run.sh          # configuration 0 → l → checks (a few seconds)
 ./Run_MPI.sh 4    # MPI. state.dat is byte-identical to the serial run
-python3 Fig.py    # figs/wetlw.png
+python3 Fig.py en # en/figs/wetlw.png
 ```
 
 ## Figure
 
-![wetlw](../figs/wetlw.png)
+![wetlw](figs/wetlw.png)
 
 Left: erosion depth Δz = z0 − z of configuration 0; centre: configuration l;
 right: profile along the central row. The ring-shaped erosion carved by the
@@ -50,7 +50,7 @@ filled in (the total is the same).
 
 | Quantity | Configuration 0 (no wet_lw) | Configuration l (ℓ_w = 3 m) |
 |---|---|---|
-| Total solids Σhs + (1−λ)Σ(z−z0) | 0.000e+00 | 0.000e+00 |
+| Total solids Σhs + (1−λ)Σ(z−z0) | −8.882e−16 | 0.000e+00 |
 | Grid-scale roughness of the erosion depth (sum of squares of the Laplacian, m²) | 4.19e−05 | 7.47e−06 (0.18 times) |
 | Maximum erosion depth (m) | 5.58e−03 | 4.61e−03 |
 | Ratio of the total erosion | 1 | 1.002 |

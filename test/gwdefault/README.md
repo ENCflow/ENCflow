@@ -17,9 +17,9 @@
 | 構成 | 有効化 | 省略 → 既定が表示される値 |
 |---|---|---|
 | a | バケツ(`f_gwvertical = 1`) | gw_infil_mmh = 10 mm/h、gw_capacity = 0.2 m |
-| b | Green-Ampt + 側方流動 + 風化基岩層(`f_gwlayer2 = 1`) | sd0 = 1 m、gw_ksv_mmh = 10、gw_psif = 0、gw_ksh_mmh = 360、gw2_depth = 3 m、gw2_sy = 0.05、gw2_infil_mmh = 1 |
-| c | Green-Ampt + 凍土(`f_gwfrost = 1`、`fn_meteo`) | sd0、gw_ksv_mmh、gw_psif、fro_fifull = 20 ℃·day |
-| d | Green-Ampt + 管路連続体層(`f_gwconduit = 1`、浸入水 `gwc_leak_layer = 1`) | sd0、gw_ksv_mmh、gw_psif、gwc_cap = 0.01 m、gwc_depth = 3 m、gwc_sy = 0.05、gwc_slot_sy = 1e-3、gwc_leak_mmh = 10 |
+| b | Green-Ampt + 側方流動 + 風化基岩層(`f_gwlayer2 = 1`) | sd0 = 1 m、gw_ksv_mmh = 10、gw_ksh_mmh = 360、gw2_depth = 3 m、gw2_sy = 0.05、gw2_infil_mmh = 1 |
+| c | Green-Ampt + 凍土(`f_gwfrost = 1`、`fn_meteo`) | sd0、gw_ksv_mmh、fro_fifull = 20 ℃·day |
+| d | Green-Ampt + 管路連続体層(`f_gwconduit = 1`、浸入水 `gwc_leak_layer = 1`) | sd0、gw_ksv_mmh、gwc_cap = 0.01 m、gwc_depth = 3 m、gwc_sy = 0.05、gwc_slot_sy = 1e-3、gwc_leak_mmh = 10 |
 
 構成 d では `gwc_inlet`(枡密度)と `gwc_cnd_m2s`(通水能密度)は与件です
 (0 が「側方なし」「交換なし」の明示になるため既定を置かない)。
@@ -42,9 +42,9 @@ make
 | 構成 | save / Log のバイト一致 | "(default)" 行 |
 |---|---|---|
 | a バケツ | 一致 | 2 |
-| b Green-Ampt + 側方 + 層 2 | 一致 | 7 |
-| c Green-Ampt + 凍土 | 一致 | 4 |
-| d Green-Ampt + 管路層 | 一致 | 5 |
+| b Green-Ampt + 側方 + 層 2 | 一致 | 6 |
+| c Green-Ampt + 凍土 | 一致 | 3 |
+| d Green-Ampt + 管路層 | 一致 | 7 |
 | 合計 | PASS | 18(期待 18) |
 
 - 既定値の根拠(土性別の Green-Ampt パラメータ、森林土壌の土層厚、

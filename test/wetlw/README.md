@@ -28,7 +28,7 @@
 make
 ./Run.sh          # 構成 0 → l → 検定(数秒)
 ./Run_MPI.sh 4    # MPI。state.dat が逐次とバイト一致
-python3 Fig.py    # figs/wetlw.png
+python3 Fig.py    # figs/wetlw.png(引数 en で英語版を en/figs/ に)
 ```
 
 ## 図
@@ -43,7 +43,7 @@ python3 Fig.py    # figs/wetlw.png
 
 | 量 | 構成 0(wet_lw なし) | 構成 l(ℓ_w = 3 m) |
 |---|---|---|
-| 固体総量 Σhs + (1−λ)Σ(z−z0) | 0.000e+00 | 0.000e+00 |
+| 固体総量 Σhs + (1−λ)Σ(z−z0) | −8.882e−16 | 0.000e+00 |
 | 侵食深の格子規模の凹凸(ラプラシアンの 2 乗和, m²) | 4.19e−05 | 7.47e−06(0.18 倍) |
 | 最大侵食深 (m) | 5.58e−03 | 4.61e−03 |
 | 総侵食量の比 | 1 | 1.002 |
