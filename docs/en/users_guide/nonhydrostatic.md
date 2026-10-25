@@ -228,9 +228,13 @@ identity term the condition number $`\kappa \approx 1 + 2\varepsilon`$
 not depend on the number of cells, and CG converges in 10–80 iterations.
 Jacobi converges slowly for $`\Delta x \ll H`$ (not converged after 500 sweeps
 at $`\Delta x = H/8`$) and is kept for comparison. Inner products are
-deterministic sums of row partial sums in a fixed order and the convergence
-test uses order-independent maxima, so **the results are bitwise identical
-for any number of threads or MPI ranks** ([Parallel execution](parallel.md)).
+deterministic sums of row partial sums in a fixed order, so **with a single
+thread (`OMP_NUM_THREADS=1`) the results are bitwise identical for any
+number of MPI ranks**. With **several OpenMP threads, however, the order of
+the reductions inside the solver varies between runs and the results have
+been observed to differ in the last digits** (test/nhshelf; a known issue,
+`developer.md` §71). Do bitwise comparisons of non-hydrostatic runs with a
+single thread ([Parallel execution](parallel.md)).
 Communication inside the iteration is one halo exchange per matrix-vector
 product plus the reduction of the inner products.
 
@@ -509,8 +513,9 @@ practical line of existing one-layer non-hydrostatic models and of the prior
 work on local adaptivity. What is specific to ENCflow is the combination
 with the 8-direction ENC grid, the momentum-conservative advection[^sd03] and the
 adaptive Runge–Kutta, the dispersion-based detector $`\chi`$ with a margin set
-from the decay distance, the deterministic bitwise-reproducible solver, and
-the zero-overhead integration when the option is off.
+from the decay distance, the solver built on deterministic sums (bitwise
+reproducible across rank counts with a single thread), and the zero-overhead
+integration when the option is off.
 
 | Model / study | What this implementation took from it | Differences |
 |---|---|---|

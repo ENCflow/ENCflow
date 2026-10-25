@@ -85,7 +85,12 @@ thread / MPI rank counts change, with the same executable, real precision,
 input and computing environment**. Comparing one rank with multiple ranks of
 the same `encflow_mpi` is an example. This does not mean that entire screen
 logs are identical: execution information such as rank and thread counts
-changes.
+changes. **Known exception**: the solver of the
+[non-hydrostatic correction](nonhydrostatic.md) runs its reductions in an
+order that varies between runs with several OpenMP threads, so the last
+digits can differ (`developer.md` §71). Do bitwise comparisons of
+non-hydrostatic runs with `OMP_NUM_THREADS=1` (with a single thread the
+results agree for any rank count).
 
 `encflow` and `encflow_mpi` are separate builds. Fast-math optimization under
 `-Ofast` can cause last-bit (ULP-level) differences between them. For strict

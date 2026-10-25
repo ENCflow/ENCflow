@@ -365,20 +365,20 @@
     {
       "source": "docs/users_guide/nonhydrostatic.md",
       "target": "docs/en/users_guide/nonhydrostatic.md",
-      "source_sha256": "e7454c3f67cab92976c0c3a3743b37b8269ebc458d4661f3371b357005de29a1",
-      "target_sha256": "e3c5957a8cb5c1730ea3bdd92ca5917a3b274ea610bdb9d15d27bac4299e949b",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "897f43a0e8be6cc0ea1db1e938e0330f97350ee8b389c325125796a59fbde38a",
+      "target_sha256": "82bcf0e8be6c5e78001a2921eaf71f25645202865e93bb18db8d24503b606eb2",
+      "reviewer": "Claude (Claude Code session; diff-level content review of the 2026-10-25 reproducibility edits against the Japanese master)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-25"
     },
     {
       "source": "docs/users_guide/parallel.md",
       "target": "docs/en/users_guide/parallel.md",
-      "source_sha256": "2d850614c42876195079b81153c3fefe67c9743e3ce779122b656ed1ca935f0f",
-      "target_sha256": "ad00def9217c449c678d66d63e1477fc8b55c95be0decce1d72205f934d1755e",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "315897952d16c2084d237fd36cdc02a3b327aba9449f0252ddb88e5be6753686",
+      "target_sha256": "f60e0d8bdb07689410b43713a9d9ea2e4cc82b61be0340eb79f4a65d60673c61",
+      "reviewer": "Claude (Claude Code session; diff-level content review of the 2026-10-25 reproducibility edits against the Japanese master)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-25"
     },
     {
       "source": "docs/users_guide/params_index.md",
