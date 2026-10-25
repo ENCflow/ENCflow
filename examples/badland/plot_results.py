@@ -234,7 +234,7 @@ if main is not None:
     ax[2].plot(TS, [r["max_inc"] for r in rows], "o-", label=T("最大下刻", "maximum incision")); ax[2].plot(TS, [r["mean_inc"] for r in rows], "s--", label=T("崖面帯の平均低下", "mean lowering of the cliff-face zone"))
     ax[2].set_ylabel("(m)"); ax[2].legend(fontsize=7)
     ax[3].plot(TS, [r["xhead"] for r in rows], "o-")
-    ax[3].set_ylabel(T("谷頭の位置 x (m)(台地縁 60 m)", "valley-head position x (m) (plateau margin at 60 m)"))
+    ax[3].set_ylabel(T("谷頭の位置 x (m)(台地縁 60 m)", "valley head x (m) (plateau edge 60 m)"))
     for a in ax:
         a.set_xlabel("T_geo (s)")
     fig.tight_layout(); fig.savefig(f"{FIGDIR}/main_series.png", dpi=110); plt.close(fig)
