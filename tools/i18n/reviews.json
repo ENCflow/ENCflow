@@ -834,10 +834,10 @@
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
       "source_sha256": "751931d2370db5fe64eab161e789f8e7c1a329fa70f63bd68b6e0aa659ba2deb",
-      "target_sha256": "032fe7e1213bdee5940f1566982d8ca156b66d46d94089bb009e9086c27646cd",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "target_sha256": "44ac02ef6eadf7d07a3ffade0a7274a81d2f3d3f4a88e4c2b3b89a0d0a1c4aa1",
+      "reviewer": "Claude (Claude Code session; English README figure links switched to en/figs, English-label figures generated from regenerated results and compared with the committed Japanese figures)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-25"
     },
     {
       "source": "examples/meander/README.md",
@@ -915,19 +915,19 @@
       "source": "examples/tsunami_coast/README.md",
       "target": "examples/tsunami_coast/en/README.md",
       "source_sha256": "72df1ef10f2d66844f9bf05e366a534bfe0487e9112b94975781bb5b9e72511f",
-      "target_sha256": "40cc26197bcb50825ec2d7c0410c402addab5dc34ee5a6cdb6cfe024ad0d8697",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "target_sha256": "8a48a916b48ca9e6fd333860bf3fd002c56ab81eb11a32c6d253f9b503d61eff",
+      "reviewer": "Claude (Claude Code session; English README figure links switched to en/figs, English-label figures generated from regenerated results and compared with the committed Japanese figures)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-25"
     },
     {
       "source": "examples/tsunami_fault/README.md",
       "target": "examples/tsunami_fault/en/README.md",
       "source_sha256": "fc4ede329b445e469b158e255704872531bc6ffcbad7d908061455ccee6f214b",
-      "target_sha256": "4a7178a2ddfec3ed66d30ca49ab19bb3450424274d53ecea6f81b1a141d86d0b",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "target_sha256": "e3e3b9d56ecf10459dd6b091678defa4e654afe634abbb241f101a9f45f0ebb0",
+      "reviewer": "Claude (Claude Code session; English README figure links switched to en/figs, English-label figures generated from regenerated results and compared with the committed Japanese figures)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-25"
     },
     {
       "source": "examples/tsunami_town/README.md",

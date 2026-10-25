@@ -48,11 +48,11 @@ python3 plot_results.py     # figs/*.png and tables
 
 ## Results
 
-![Ground displacement](../figs/deformation.png)
+![Ground displacement](figs/deformation.png)
 
-![Probes](../figs/probes.png)
+![Probes](figs/probes.png)
 
-![Water-level distributions and flooding](../figs/snapshots.png)
+![Water-level distributions and flooding](figs/snapshots.png)
 
 | Probe | With time history: arrival (min) / max / min (m) | Instantaneous displacement: arrival / max / min | Offshore fault only: arrival / max / min |
 |---|---:|---:|---:|

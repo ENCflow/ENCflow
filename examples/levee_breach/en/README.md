@@ -23,7 +23,7 @@ wall through `&list_channel_breach`. No code change (settings only).
 
 ## Geometry and setup
 
-![Setup](../figs/setup.png)
+![Setup](figs/setup.png)
 
 Left: terrain and the breach opening. Right: east–west profile along the
 central row of the opening (j = 50) at the start of the run and after the
@@ -103,7 +103,7 @@ python3 plot_results.py                # figs/*.png and tables
 
 ## Results
 
-![Time series](../figs/timeseries.png)
+![Time series](figs/timeseries.png)
 
 Left: inflow hydrograph, discharge through the breach opening (transect at
 column 23), and channel discharge downstream (j = 70). Center: river level
@@ -112,7 +112,7 @@ resolved levee the z column of probe 3 shows the lowering of the levee
 directly). Right: inundation depth on the floodplain (toe, middle, far).
 The band marks the progress of the breach (70–90 min).
 
-![Inundation](../figs/inundation.png)
+![Inundation](figs/inundation.png)
 
 | Case | Peak discharge through the opening (m³/s) / time (min) | Flood volume (10⁴ m³) | Inundated area (ha; h > 0.01 m) | Maximum inundation depth (m) | Start of inundation at the toe (min) |
 |---|---:|---:|---:|---:|---:|
