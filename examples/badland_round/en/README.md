@@ -72,13 +72,13 @@ change the volume).
 
 ## Results
 
-![maps](../figs/maps.png)
+![maps](figs/maps.png)
 
-![sections](../figs/sections.png)
+![sections](figs/sections.png)
 
-![radial](../figs/radial.png)
+![radial](figs/radial.png)
 
-![rounding](../figs/rounding.png)
+![rounding](figs/rounding.png)
 
 Per-hill indices at T_geo = 1.44e7 s (8 h) (from the azimuthally averaged
 radial profiles):
@@ -121,11 +121,11 @@ z = 0 to 24 m) and compared with and without strata for no creep (D = 0) and
 for D = 1e-6 m²/s. The factor multiplies only the dry erosion E and not the
 creep.
 
-![maps_strata](../figs/maps_strata.png)
+![maps_strata](figs/maps_strata.png)
 
-![sections_strata](../figs/sections_strata.png)
+![sections_strata](figs/sections_strata.png)
 
-![radial_strata](../figs/radial_strata.png)
+![radial_strata](figs/radial_strata.png)
 
 (The grey bands in the section plots are the hard layers. Drawn with
 `python3 plot_results.py strata`.)
@@ -164,9 +164,9 @@ Doubling the layer thickness to 3 m (8 layers), we compared no creep,
 D = 3e-7 (L ≈ 2.4 m < layer thickness) and D = 1e-6 (L ≈ 8 m > layer
 thickness) (`python3 plot_results.py strata3`).
 
-![sections_strata3](../figs/sections_strata3.png)
+![sections_strata3](figs/sections_strata3.png)
 
-![radial_strata3](../figs/radial_strata3.png)
+![radial_strata3](figs/radial_strata3.png)
 
 Step indices: on the azimuthally averaged profiles of the 24 m and 15 m hills,
 the maximum/minimum ratio and the relative variation of the local slope over
