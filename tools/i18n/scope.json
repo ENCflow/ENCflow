@@ -19,6 +19,10 @@
       "reason": "内部開発文書(developer.md §34.2)"
     },
     {
+      "pattern": "docs/csdms_registration.md",
+      "reason": "内部開発文書(CSDMS 登録準備の作業メモ。developer.md §34.2)"
+    },
+    {
       "pattern": "docs/channel_model.md",
       "reason": "内部開発文書(developer.md §34.2)"
     },

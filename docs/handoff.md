@@ -866,6 +866,17 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 公開準備(方針の正本は developer.md §34)
 
+- **CSDMS モデルリポジトリ登録(準備 2026-10-25。控えは docs/csdms_registration.md)**:
+  申請対象は v3.0.0(1aaf175)。済: README(日英)のビット一致の断定を成立条件付きに
+  改め引用の節に HRL 論文の範囲を補足、CITATION.cff の message を「版+論文」に、
+  v3.0.0 での BMI 試験(wave 等価性・bmi-tester・bmi_nest・bmi_vars)の実行記録、
+  Nightly の bmi ジョブに test/bmi_vars を追加。残(人間): Zenodo の v3.0.0 版 DOI の
+  確認(作業環境から zenodo.org に到達できず未確認)、CITATION.cff の
+  preferred-citation を残すか references に移すかの判断、質問票の連絡先、
+  users_guide/nonhydrostatic.md の「スレッド数によらずビット同一」と Release ノート
+  「NH の OpenMP reduction は非決定」の矛盾の解消、次回 Nightly(bmi_vars 追加後)の
+  緑の確認、CSDMS への提出そのもの。
+
 - **リリース v3.0.0(2026-10-25 公開済み)**: Release「ENCflow v3.0.0」(タグ
   v3.0.0 = 1aaf1752 = CITATION 3.0.0 / 2026-10-25。Release UI で Target=main
   のタグ作成、軽量)。Nightly #43(9d677abb)全ジョブ緑を確認後に公開。
