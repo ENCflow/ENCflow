@@ -1557,8 +1557,8 @@ salt・gwseep・gwdefault・chichibu の逐次回帰 PASS。
 MPI: gfortran -Og -fcheck=all(OMP 1 スレッド)で gwbed np=2・np=4 が
 クリーン(np=4 の Log は逐次 release reference とビット一致)。release で
 gwbed np=1,2,4 が逐次 reference に ULP=0(Runge 列除外)かつ解析検定 PASS。
-機能無効時の MPI 回帰(wave・dambreak・frost・pump・conduit・salt・gwseep の
-np=2)は別途記録(下記)。
+機能無効時の MPI 回帰: wave・dambreak・frost・pump・conduit・salt・gwseep の
+np=2 が逐次 reference に ULP=0(全 PASS。CI と同じ対象)。
 reference は解析解一致を根拠に暫定コミット(目視承認待ち。handoff.md)。
 
 ## 17. 堤防(仮想壁面)モデルの設計(2026-08-06 決定)
