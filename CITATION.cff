@@ -2,9 +2,13 @@
 # GitHub はこのファイルを認識し、リポジトリに「Cite this repository」を表示します。
 cff-version: 1.2.0
 message: >-
-  ENCflow を研究に使用した場合は、以下の論文(preferred-citation)を
-  引用してください。 / If you use ENCflow in your research, please cite
-  the article below.
+  ENCflow を研究に使用した場合は、使用したソフトウェアの版(本ファイルの
+  version と doi。Zenodo に版ごとのアーカイブがあります)と、基礎となる
+  ENC 格子・数値スキームの論文(preferred-citation)の両方を引用して
+  ください。 / If you use ENCflow in your research, please cite both the
+  software version you used (version and doi of this file; each release
+  is archived on Zenodo) and the article on the underlying ENC grid and
+  numerical scheme (preferred-citation below).
 title: "ENCflow"
 type: software
 version: "3.0.0"

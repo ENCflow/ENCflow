@@ -246,10 +246,17 @@ belong to specialized models
   workstations and supercomputers, one line in the make configuration
   switches to hybrid OpenMP×MPI, threads within a node and MPI across
   nodes, scaling to large runs with the same input files.
-- **Reproducible results** — bit-identical answers regardless of the
-  number of threads or MPI ranks. Restarts match uninterrupted runs
+- **Reproducible results** — with the same executable, input, and
+  computing environment, bit-identical answers regardless of the number
+  of threads or MPI ranks is the rule of ENCflow's parallelization,
+  checked by the regression tests. Restarts match uninterrupted runs
   exactly. This directly serves research reproducibility and
-  professional accountability.
+  professional accountability. Bitwise agreement holds under
+  conditions: build settings (optimization flags, real precision) and
+  the enabled features impose limits (e.g. multi-threaded OpenMP runs
+  of the non-hydrostatic solver, or BMI runs through the shared
+  library). See [Parallel execution](docs/en/users_guide/parallel.md)
+  and the known issues in each release note.
 - **Progressive refinement by design** — start from minimal "it just
   runs" parameters and refine step by step as data becomes available.
   Every feature is built with this philosophy.
@@ -378,8 +385,9 @@ history and roadmap.
   immediately. Suited to hydraulics and hydrology coursework.
 - **Researchers** — process interactions such as slope failure leading
   to debris flow, channel blockage and inundation, or weathering
-  leading to soil and erosion, in a single model. Bit reproducibility
-  makes numerical experiments strictly comparable.
+  leading to soil and erosion, in a single model. Bit reproducibility of
+  runs under matched conditions makes numerical experiments strictly
+  comparable.
 - **Practitioners** — inundation analysis, structure operation,
   sediment hazards, and water quality in one input system, with no
   tool-switching between projects, and a direct path to large runs on
@@ -390,10 +398,18 @@ history and roadmap.
 [Apache License 2.0](LICENSE). Commercial use, modification, and
 redistribution are permitted, retaining the copyright notice and
 [NOTICE](NOTICE); see LICENSE for details.
-For citation in research, see [CITATION.cff](CITATION.cff).
-Every release is archived on
+In research, please cite both **the ENCflow software version you
+used** (every release is archived on
 [Zenodo](https://doi.org/10.5281/zenodo.22042847) with a DOI, so you
-can cite the exact version you used.
+can cite the exact version) and **the article on the underlying ENC
+grid and numerical scheme** ([Tada, 2026](https://doi.org/10.3178/hrl.25-00052),
+Hydrological Research Letters). See [CITATION.cff](CITATION.cff) for
+the formats. That article covers the base scheme; a model description
+paper of ENCflow as a whole (the individual process models and their
+coupling) has not been published yet. For what each feature has been
+verified against and the limits of its applicability, see the
+[list of verification cases](test/README.en.md) and the
+[users guide](docs/en/users_guide.md).
 For the use of the ENCflow name and official logos, see the
 [ENCflow Name and Trademark Policy](TRADEMARKS.md).
 
