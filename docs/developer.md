@@ -4570,8 +4570,8 @@ Cn_max)→ 場の最大値**。
 - SemVer(vMAJOR.MINOR.PATCH)の **git 注釈付きタグ**で打つ。初版は
   v0.9.0(公開整備が一巡した時点。CI・CONTRIBUTING・Discussions・
   実地形データの出典整備まで完了)。
-  (実態の注記 2026-10-03: v0.9.0〜v1.6.0 は GitHub Release UI で作成した
-  軽量タグ。Claude Code の cloud 環境からは refs/tags の push が 403 で
+  (実態の注記 2026-10-03、2026-10-25 更新: v0.9.0〜v3.0.0 は GitHub Release UI
+  で作成した軽量タグ。Claude Code の cloud 環境からは refs/tags の push が 403 で
   通らないため、タグは Release UI か利用者ローカルから打つ。対象コミットを
   main 先頭以外にしたいときは、そのコミットを指す一時ブランチを Target に
   指定する。handoff の v1.6.0 の項に手順。)
