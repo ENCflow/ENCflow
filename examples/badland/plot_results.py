@@ -249,9 +249,9 @@ if main is not None:
     ax[0].hist(Sf[land], bins=bins, histtype="step", color="C3", label=T("最終", "final"), density=True)
     ax[0].set_xlabel(T("勾配 |∇z|", "slope |∇z|")); ax[0].set_ylabel(T("頻度密度", "probability density")); ax[0].legend(fontsize=8); ax[0].set_title(T("勾配の分布(陸)", "Slope distribution (land)"), fontsize=9)
     im = ax[1].imshow(np.clip(Kf, -3, 3), origin="lower", extent=ext, cmap="RdBu", vmin=-3, vmax=3)
-    ax[1].set_xlim(30, 100); ax[1].set_title(T("最終の曲率 ∇²z (1/m)(青: 稜線 = 凸、赤: 谷 = 凹)", "Final curvature ∇²z (1/m) (blue: ridge = convex, red: valley = concave)"), fontsize=9); fig.colorbar(im, ax=ax[1], shrink=0.8)
+    ax[1].set_xlim(30, 100); ax[1].set_title(T("最終の曲率 ∇²z (1/m)(青: 稜線 = 凸、赤: 谷 = 凹)", "Final curvature ∇²z (1/m) (blue: ridge, red: valley)"), fontsize=9); fig.colorbar(im, ax=ax[1], shrink=0.8)
     im = ax[2].imshow(np.log10(np.maximum(acc, 1)), origin="lower", extent=ext, cmap="Blues")
-    ax[2].set_xlim(30, 100); ax[2].set_title(T("最終地形の D8 集水面積 log10(セル数)", "D8 drainage area of the final terrain, log10 (cells)"), fontsize=9); fig.colorbar(im, ax=ax[2], shrink=0.8)
+    ax[2].set_xlim(30, 100); ax[2].set_title(T("最終地形の D8 集水面積 log10(セル数)", "D8 drainage area (final), log10 cells"), fontsize=9); fig.colorbar(im, ax=ax[2], shrink=0.8)
     # 稜線の鋭さ: 崖面帯の列ごとの稜線(局所最大)の曲率
     ridge_k = []
     for cc in cols:
@@ -259,7 +259,7 @@ if main is not None:
         for j in range(1, ny - 1):
             if col[j] > col[j - 1] and col[j] >= col[j + 1]:
                 ridge_k.append((col[j - 1] + col[j + 1] - 2 * col[j]) / dx ** 2)
-    ax[3].hist(ridge_k, bins=40, color="C3"); ax[3].set_xlabel(T("稜線の y 方向曲率 (1/m)", "y-direction curvature of the ridges (1/m)")); ax[3].set_title(T("稜線の鋭さ(崖面帯の列の局所最大)", "Ridge sharpness (local maxima of the columns in the cliff-face zone)"), fontsize=9)
+    ax[3].hist(ridge_k, bins=40, color="C3"); ax[3].set_xlabel(T("稜線の y 方向曲率 (1/m)", "y-direction curvature of the ridges (1/m)")); ax[3].set_title(T("稜線の鋭さ(崖面帯の列の局所最大)", "Ridge sharpness (column maxima in the cliff-face zone)"), fontsize=9)
     fig.tight_layout(); fig.savefig(f"{FIGDIR}/main_features.png", dpi=110); plt.close(fig)
 
     m0 = rows[0]; mf = rows[-1]

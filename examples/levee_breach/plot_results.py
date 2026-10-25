@@ -44,7 +44,7 @@ fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(12, 4.2), gridspec_kw={"width_rati
 im = ax0.imshow(z0, extent=[0, NX * DX, 0, NY * DX], origin="upper", cmap="terrain", vmin=-4, vmax=4)
 ax0.add_patch(plt.Rectangle((200, (NY - 52) * DX), 20, 50, fill=False, ec="#eb6834", lw=2))
 ax0.annotate(T("破堤口 (列 21〜22, 行 48〜52)", "Breach opening (columns 21–22, rows 48–52)"), (225, (NY - 50) * DX), color="#eb6834", fontsize=9, va="center")
-ax0.text(80, 400, T("山付き", "Hill-bounded"), ha="center"); ax0.text(180, 400, T("河道", "Channel"), ha="center", rotation=90)
+ax0.text(80, 400, T("山付き", "Hills"), ha="center"); ax0.text(180, 400, T("河道", "Channel"), ha="center", rotation=90)
 ax0.text(600, 400, T("堤内地(氾濫原)", "Floodplain (landside)"), ha="center")
 ax0.set_xlabel("x (m)"); ax0.set_ylabel("y (m)"); ax0.set_title(T("地形 z(堤防は標高そのもの = 解像堤防)", "Terrain z (the levee is elevation itself = resolved levee)"))
 plt.colorbar(im, ax=ax0, label="z (m)", shrink=0.85)
@@ -54,7 +54,7 @@ if cases:
         zz = field(rdir, "Z", k)[JB - 1, :]
         ax1.plot(x, zz, color=c, lw=2, label=T("z  t = %d 分", "z  t = %d min") % round(tk[k] / 60))
     ax1.set_xlim(100, 400); ax1.set_ylim(-4.5, 3.5)
-    ax1.set_xlabel("x (m)"); ax1.set_ylabel("z (m)"); ax1.set_title(T("破堤口の中心行(j = %d)の東西断面", "East–west profile along the central row of the opening (j = %d)") % JB)
+    ax1.set_xlabel("x (m)"); ax1.set_ylabel("z (m)"); ax1.set_title(T("破堤口の中心行(j = %d)の東西断面", "E–W profile along the central row of the opening (j = %d)") % JB)
     ax1.legend(frameon=False)
 fig.tight_layout(); fig.savefig(os.path.join(FIGDIR, "setup.png"), dpi=120); plt.close(fig)
 
