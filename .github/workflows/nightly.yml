@@ -9,6 +9,7 @@
 #                   debug 逐次 reference と MPI np=2 のビット一致を検査
 #                   (確保範囲・FPE の実行時検査。developer.md §10)
 #     bmi         : CSDMS bmi-tester 適合性+BMI 経由実行の逐次 reference 一致
+#                   +多格子(bmi_nest)・機能依存変数(bmi_vars)の受け入れ試験
 #   手動実行は workflow_dispatch から。
 name: Nightly
 
@@ -173,4 +174,12 @@ jobs:
           set -e
           . "$HOME/bmi-venv/bin/activate"
           cd test/bmi_nest
+          ./Run.sh
+      # 機能依存の公開変数(動的変数表)と hg・swe の set(developer.md §76):
+      # Python 受け入れ試験(none/full/ga)+ 静的ドライバ + bmi-tester(2026-10-25 追加)
+      - name: BMI feature-dependent variables acceptance + bmi-tester (bmi_vars)
+        run: |
+          set -e
+          . "$HOME/bmi-venv/bin/activate"
+          cd test/bmi_vars
           ./Run.sh
