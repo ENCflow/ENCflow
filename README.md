@@ -370,6 +370,13 @@ through the standard initialize / update / get_value / set_value calls.
   high-resolution inundation just in the basins at risk, or a
   forecasting system that assimilates observations while it runs can
   use ENCflow as its flood component.
+- **A whole model, or a small part** — ENCflow is a self-contained model
+  with many processes, yet a feature that is not enabled costs no memory
+  and no CPU, and needs no parameter file of its own. Minimal
+  configurations such as shallow water only, or groundwater only, run
+  light, so ENCflow also serves as a small component that another model
+  calls to supply a process it lacks. This is in the spirit of what CSDMS
+  pursues with BMI: composing models from interchangeable parts.
 - **The core is untouched** — BMI lives in the optional `bmi/` adapter;
   the regular builds remain dependency-free as before.
 

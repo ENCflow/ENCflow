@@ -13,9 +13,9 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "2c7c4aa3e22fb2e09841a18aa978e51d00c983903d83a9959ed3271c338f0367",
-      "target_sha256": "daf13b137df515de0442bb21de91c34755757c3837d4b3ec3e468fbfd8b09de1",
-      "reviewer": "Claude (Claude Code session; diff-level content review of the 2026-10-25 reproducibility/citation edits against the Japanese master)",
+      "source_sha256": "1bc21b2a4a6006ebf1d3995a4db536db4d0721badab3b2bc9f47218367feb6cd",
+      "target_sha256": "4a6937e03446c405604ed2dc495ec66dae93524daa8d0f3b30f23afee615973b",
+      "reviewer": "Claude (Claude Code session; added the BMI \"whole model or small part\" bullet to the Japanese master and the English mirror together)",
       "method": "assistant",
       "reviewed_on": "2026-10-25"
     },
