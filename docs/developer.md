@@ -1559,7 +1559,7 @@ MPI: gfortran -Og -fcheck=all(OMP 1 スレッド)で gwbed np=2・np=4 が
 gwbed np=1,2,4 が逐次 reference に ULP=0(Runge 列除外)かつ解析検定 PASS。
 機能無効時の MPI 回帰: wave・dambreak・frost・pump・conduit・salt・gwseep の
 np=2 が逐次 reference に ULP=0(全 PASS。CI と同じ対象)。
-reference は解析解一致を根拠に暫定コミット(目視承認待ち。handoff.md)。
+reference は解析解一致を根拠に暫定コミット(2026-10-25 目視承認済み = 確定)。
 
 ## 17. 堤防(仮想壁面)モデルの設計(2026-08-06 決定)
 
