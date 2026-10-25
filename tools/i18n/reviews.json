@@ -870,10 +870,10 @@
       "source": "examples/nest_reflect/README.md",
       "target": "examples/nest_reflect/en/README.md",
       "source_sha256": "022f90f6f700ccae749f5ab1a379fb954c416fa56b317070b8ae462a82aac597",
-      "target_sha256": "4ca4f528ebdae0be0c15948269ec49610b320343b50d052091d3bd731d06c272",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "target_sha256": "87b3f410763b4391f4865f13730f7486bc7e6ad2b92249d941af2161e3970a10",
+      "reviewer": "Claude (Claude Code session; snapshots/error_time links switched to en/figs; oneway_edge/nh_profile kept on the shared Japanese figures because regenerated results differ numerically from the committed figures)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-25"
     },
     {
       "source": "examples/qanat/README.md",

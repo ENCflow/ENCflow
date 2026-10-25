@@ -73,8 +73,13 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      sewer_hybrid・delta)。既定(引数なし)の出力は不変(結果のある 7 件でバイト一致を確認)。
    - 英語図を en/figs に生成し英語 README から参照済み: tsunami_fault・tsunami_coast・
      levee_breach・sewer_hybrid・badland・badland_round(README の手順で結果を再生成。
-     同じ結果から描いた日本語版はコミット済みの figs/ と一致)。nest_reflect は同じ手順で
-     作業中(2026-10-25 時点。結果の再計算中)。
+     同じ結果から描いた日本語版はコミット済みの figs/ と一致)。nest_reflect は snapshots・
+     error_time の 2 枚のみ英語化。**oneway_edge と nh_profile は現行 main で再計算すると
+     数値が変わる**(Flather 一方向の max |Δη| 4.0e-4 → 6.2e-4 m、NH 子の max 4.8e-3 →
+     5.3e-3 m / 5.7e-3 → 6.2e-3 m。図は 2026-10-22 生成、以後の src 変更は bf03768b の
+     区間流入面の移流など)ため、英語図を作らず日本語図の共有のまま。README の表の数値も
+     同じ古い結果に基づく。原因の切り分け(どのコミットで変わったか)と、日本語図・表を
+     現行で再生成するかの判断待ち。
    - **残(利用者の保存済み結果が要る。再計算は数時間〜十数時間)**: badland_storm・mesa・
      karst・tower_karst。各ケース直下で日本語版と同じ引数に `en` を足して実行し、
      英語 README の図リンクを `../figs/` → `figs/` に切替えて record する。

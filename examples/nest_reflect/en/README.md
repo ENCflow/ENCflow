@@ -31,7 +31,7 @@ python3 analyze.py
 Generated in `figs/` with `./Fig.py` after each run (matplotlib; runs that do
 not exist are skipped).
 
-![Water level and error at t = 4 s](../figs/snapshots.png)
+![Water level and error at t = 4 s](figs/snapshots.png)
 
 Water level at t = 4 s (the time at which the wave is crossing the child's
 interface). Top row: fine grid (reference), stand-alone coarse grid, and the
@@ -41,7 +41,7 @@ centre and right are the errors from the fine grid. Inside the child's footprint
 so its error is smaller than that of the stand-alone coarse grid and no pattern
 attributable to the interface is visible.
 
-![Time evolution of the error](../figs/error_time.png)
+![Time evolution of the error](figs/error_time.png)
 
 Time evolution of the RMS error inside and outside the child's footprint. Solid
 lines are r_t = 1 (parent dt = 1/60 s), dashed lines r_t = r (parent dt = 0.05 s,
