@@ -4593,6 +4593,14 @@ Cn_max)→ 場の最大値**。
   リリース=DOI 付与なので、版指定引用が必要になる前に打つ)。
   初適用: 流木モジュール(§50)は v1.1.0 の対象とし、タグは文献照合の
   消化とまとめて打つ(handoff 1k)。
+- **CITATION.cff の引用対象(2026-10-25 決定)**: 引用してもらう第一の対象は
+  ソフトウェアの版。HRL 論文(基礎スキーム)は `preferred-citation` ではなく
+  `references` に置く(preferred-citation があると GitHub の「Cite this
+  repository」が論文だけを表示するため)。`doi` は Concept DOI
+  (10.5281/zenodo.22042847)で固定し、`identifiers` に Concept DOI と当該版の
+  版 DOI を列挙する。版 DOI はタグ後に Zenodo が付与するため、タグを打つ
+  コミットには入れられない。リリース後に identifiers の版 DOI を更新する
+  文書コミットを 1 つ積む(次のタグまでに。v3.0.0 = 10.5281/zenodo.23635011)。
 - プログラム本体にバージョン定数は埋め込まない(正本は git タグ。
   §0 の簡潔性のためで、出力が変わらないので回帰基準にも触れない)。
   save_version(§7)はリスタート形式の互換性判定用の日付であり、

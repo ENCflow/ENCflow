@@ -12,7 +12,7 @@ plan 文書と同じ扱い)。登録が済んだら、申請内容の控えだ�
 | 版 | ENCflow v3.0.0(タグ `v3.0.0` = コミット `1aaf175`、2026-10-25 公開) |
 | Release | https://github.com/ENCflow/ENCflow/releases/tag/v3.0.0(変更点・非互換変更・既知の問題を日英で記載) |
 | 引用情報 | CITATION.cff(version 3.0.0 / date-released 2026-10-25) |
-| DOI | 10.5281/zenodo.22042847 は **Concept DOI**(全版を代表。handoff.md「公開準備」参照)。v3.0.0 固有の版 DOI は Zenodo 側で確認する(§5) |
+| DOI | Concept DOI(全版を代表): 10.5281/zenodo.22042847(README バッジ・CITATION.cff の doi)。**v3.0.0 の版 DOI: 10.5281/zenodo.23635011**(利用者確認 2026-10-25。CITATION.cff の identifiers に記載)。申請の Code DOI には版 DOI を書く |
 
 v3.0.0 と main の先頭(`ef219ce`)の差は handoff/developer.md の文書更新のみで、
 計算コードは同じ。申請では v3.0.0 を指定し、main の後続変更は含めない。
@@ -30,7 +30,7 @@ CSDMS の提出手順は「ライセンスの選択 → モデル情報(質問�
 | Model name | ENCflow |
 | Extended name | Eight-Neighborhood Connected collocated-grid flow model (shallow-water-based multi-process surface model) |
 | Developers | Tsuyoshi Tada (National Defense Academy, Japan); So Kazama (Tohoku University, Japan) |
-| Contact | GitHub Discussions https://github.com/ENCflow/ENCflow/discussions(個人メールを書くかは利用者判断) |
+| Contact | Tsuyoshi Tada — tada@nda.ac.jp, tadadaze@gmail.com(利用者決定 2026-10-25)。質問の窓口として GitHub Discussions https://github.com/ENCflow/ENCflow/discussions も併記 |
 | One-line description | A single-source Fortran program that solves overland water flow with the 2-D shallow water equations on an original eight-neighborhood connected collocated raster grid, and couples optional processes (channels and structures, rainfall–runoff, groundwater, fresh/salt two-layer flow, water quality, snow and glaciers, sediment transport and landscape evolution, lava, driftwood and debris) on the same grid. |
 | Keywords | shallow water equations; flood inundation; overland flow; rainfall-runoff; groundwater; sediment transport; landscape evolution; tsunami; storm surge; non-hydrostatic; nesting; OpenMP; MPI; BMI |
 | Model type | Single model (one BMI component; nested grids are exposed through grid ids) |
@@ -41,7 +41,7 @@ CSDMS の提出手順は「ライセンスの選択 → モデル情報(質問�
 | Platforms | Linux, macOS, Windows (gfortran, Intel ifx, NVIDIA nvfortran; OpenMP; MPI optional). No external libraries |
 | Code license | Apache-2.0 |
 | Source code | https://github.com/ENCflow/ENCflow (tag v3.0.0) |
-| Code DOI | 10.5281/zenodo.22042847 (concept DOI; version DOI of v3.0.0 — §5 で確認後に記入) |
+| Code DOI | 10.5281/zenodo.23635011 (version DOI of v3.0.0). Concept DOI for all versions: 10.5281/zenodo.22042847 |
 | Development status | Active |
 | BMI | Yes — BMI 2.0 (Fortran adapter in `bmi/`; passes the CSDMS bmi-tester for a single grid and for a nested system) |
 | Documentation | Install: docs/en/install.md. Tutorials: docs/en/tutorial.md, tutorials/bmi/en/README.md (BMI from Python). Users guide: docs/en/users_guide.md. BMI specification and limits: bmi/README.en.md |
@@ -93,30 +93,33 @@ MPI 経路は bmi/README の手順で別途確認する(登録の前提にはし
   リリースノートの既知の問題)の形に改めた。引用の節に「ソフトウェア版と
   HRL 論文の両方」「HRL 論文は基礎スキーム、全体のモデル論文は未刊行」
   「検証内容は test/README とユーザーガイド」を追記。
-- CITATION.cff: `message` を「使用した版(version/doi)と preferred-citation の
-  論文の両方」に改めた。`preferred-citation` は残している。
-  **判断待ち(§5)**: GitHub の「Cite this repository」は preferred-citation が
-  あるとその論文だけを表示する。ソフトウェア版の引用を前面に出すなら、
-  preferred-citation を外して HRL 論文を `references:` に移す選択肢がある
-  (CFF 1.2.0 の references は関連文献の列挙に使える)。どちらも規格上は正しい。
+- CITATION.cff(利用者決定 2026-10-25): `preferred-citation` を外し、HRL 論文を
+  `references:` に移した。これで GitHub の「Cite this repository」はソフトウェア
+  (ENCflow、版・著者・DOI)を表示する。`doi` は Concept DOI のまま、`identifiers`
+  に Concept DOI と v3.0.0 の版 DOI を列挙。`message` は「使用した版を引用し、
+  references の論文も併せて引用」に改めた。リリース時の更新手順は developer.md
+  §34.4(version / date-released に加え、版 DOI が付与されたら identifiers を
+  更新する)。
+- docs/users_guide/nonhydrostatic.md・parallel.md(日英): 「スレッド数によらず
+  ビット同一」を、リリースノートと developer.md §71 に合わせて「単一スレッドなら
+  ランク数によらず同一。複数スレッドでは reduction の順序が実行間で変わり最終桁が
+  揺れる(既知の問題)」に改めた(利用者決定 2026-10-25)。
 
-## 5. 残項目(人間の確認・判断が要るもの)
+## 5. 残項目と確定事項
 
-1. **Zenodo の v3.0.0 レコード確認**: Release 連携で版 DOI が付与されたか、
-   ファイル・版番号・公開日・著者が v3.0.0 と対応しているか。版 DOI が
-   分かれば申請の Code DOI に記入する(CITATION.cff の doi は Concept DOI
-   のままでよい)。本メモ作成環境からは zenodo.org / doi.org に到達できず
-   未確認。
-2. **CITATION.cff の preferred-citation の扱い**(§4)。
-3. **連絡先**: 質問票の連絡先に Discussions を書くか、個人メールを書くか。
-4. **ユーザーガイドの非静水圧の章との整合**: docs/users_guide/nonhydrostatic.md
-   (と en ミラー)は「スレッド数・MPI ランク数によらずビット単位で同一」と
-   書いているが、v3.0.0 Release ノートと developer.md §71 の検証メモは
-   「NH ソルバの OpenMP reduction は実行間で非決定(nhshelf で確認。
-   単一スレッドならビット一致)」としている。どちらが現状か(reduction の
-   実装を確認するか、再現して原因を特定するか)を決めて、文書を片方に揃える。
-   登録を止める項目ではないが、紹介文の「制約」の根拠になるので早めに。
-5. **Nightly への test/bmi_vars 追加**: 本作業で bmi ジョブに追加した
-   (§3 のローカル確認を根拠)。次回の Nightly が緑であることを確認する。
-6. 所属機関の公開承認・同梱データの再配布条件は本メモの対象外(整理済み
-   であれば作業不要)。
+確定(2026-10-25、利用者): v3.0.0 の版 DOI = 10.5281/zenodo.23635011、HRL 論文は
+CITATION.cff の references へ、非静水圧の再現性記述はリリースノート・developer.md
+側に統一、連絡先は tada@nda.ac.jp と tadadaze@gmail.com、**所属機関の公開承認は
+取得済み**。
+
+残り:
+
+1. **Nightly の緑の確認**: bmi ジョブに test/bmi_vars を追加した(§3 のローカル
+   確認を根拠)。次回の Nightly が緑であることを確認する。
+2. **GitHub の「Cite this repository」表示の確認**: preferred-citation を外した後、
+   リポジトリページの表示がソフトウェア引用(ENCflow 3.0.0、両著者、DOI)に
+   なっていること。
+3. **Release v3.0.0 の「検証」節への転記**(任意): §3 の表(人間の操作)。
+4. **CSDMS への提出**: アカウント作成、質問票への §2 の記入、ソース公開先
+   (GitHub URL・版 DOI)の連絡。
+5. 同梱データの再配布条件は本メモの対象外(整理済みであれば作業不要)。

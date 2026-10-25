@@ -3,12 +3,13 @@
 cff-version: 1.2.0
 message: >-
   ENCflow を研究に使用した場合は、使用したソフトウェアの版(本ファイルの
-  version と doi。Zenodo に版ごとのアーカイブがあります)と、基礎となる
-  ENC 格子・数値スキームの論文(preferred-citation)の両方を引用して
-  ください。 / If you use ENCflow in your research, please cite both the
-  software version you used (version and doi of this file; each release
-  is archived on Zenodo) and the article on the underlying ENC grid and
-  numerical scheme (preferred-citation below).
+  version。版ごとの DOI は Zenodo にあり、identifiers に当該版の DOI を
+  記載しています)を引用してください。基礎となる ENC 格子・数値スキームの
+  論文(references)も併せて引用してください。 / If you use ENCflow in
+  your research, please cite the software version you used (the version
+  of this file; each release has its own DOI on Zenodo, and identifiers
+  lists the DOI of this version), together with the article on the
+  underlying ENC grid and numerical scheme (references).
 title: "ENCflow"
 type: software
 version: "3.0.0"
@@ -22,19 +23,27 @@ authors:
     given-names: "So"
     affiliation: "Department of Civil Engineering, Tohoku University, Japan"
 doi: "10.5281/zenodo.22042847"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.22042847"
+    description: "Concept DOI (resolves to the latest release; covers all versions)"
+  - type: doi
+    value: "10.5281/zenodo.23635011"
+    description: "Version DOI of v3.0.0 (Zenodo archive of this release)"
 repository-code: "https://github.com/ENCflow/ENCflow"
-preferred-citation:
-  type: article
-  title: "An eight-neighborhood connected collocated grid scheme for overland flow simulation"
-  authors:
-    - family-names: "Tada"
-      given-names: "Tsuyoshi"
-      affiliation: "Department of Civil and Environmental Engineering, National Defense Academy, Japan"
-  journal: "Hydrological Research Letters"
-  volume: 20
-  issue: 2
-  start: 113
-  end: 118
-  year: 2026
-  doi: "10.3178/hrl.25-00052"
-  url: "https://www.jstage.jst.go.jp/article/hrl/20/2/20_113/_article"
+# 基礎スキームの文献(ENCflow 全体のモデル記述論文は未刊行)
+references:
+  - type: article
+    title: "An eight-neighborhood connected collocated grid scheme for overland flow simulation"
+    authors:
+      - family-names: "Tada"
+        given-names: "Tsuyoshi"
+        affiliation: "Department of Civil and Environmental Engineering, National Defense Academy, Japan"
+    journal: "Hydrological Research Letters"
+    volume: 20
+    issue: 2
+    start: 113
+    end: 118
+    year: 2026
+    doi: "10.3178/hrl.25-00052"
+    url: "https://www.jstage.jst.go.jp/article/hrl/20/2/20_113/_article"

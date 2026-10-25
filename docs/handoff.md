@@ -870,12 +870,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   申請対象は v3.0.0(1aaf175)。済: README(日英)のビット一致の断定を成立条件付きに
   改め引用の節に HRL 論文の範囲を補足、CITATION.cff の message を「版+論文」に、
   v3.0.0 での BMI 試験(wave 等価性・bmi-tester・bmi_nest・bmi_vars)の実行記録、
-  Nightly の bmi ジョブに test/bmi_vars を追加。残(人間): Zenodo の v3.0.0 版 DOI の
-  確認(作業環境から zenodo.org に到達できず未確認)、CITATION.cff の
-  preferred-citation を残すか references に移すかの判断、質問票の連絡先、
-  users_guide/nonhydrostatic.md の「スレッド数によらずビット同一」と Release ノート
-  「NH の OpenMP reduction は非決定」の矛盾の解消、次回 Nightly(bmi_vars 追加後)の
-  緑の確認、CSDMS への提出そのもの。
+  Nightly の bmi ジョブに test/bmi_vars を追加。同日の利用者決定で、v3.0.0 の版 DOI
+  (10.5281/zenodo.23635011)を CITATION.cff の identifiers に記載、HRL 論文を
+  preferred-citation から references へ移動、users_guide/nonhydrostatic.md・parallel.md
+  (日英)の再現性記述を Release ノート・§71 側(複数スレッドで非決定)に統一、
+  連絡先と所属機関の公開承認済みを確認。残(人間): 次回 Nightly(bmi_vars 追加後)の
+  緑の確認、GitHub の「Cite this repository」表示の確認、CSDMS への提出そのもの。
 
 - **リリース v3.0.0(2026-10-25 公開済み)**: Release「ENCflow v3.0.0」(タグ
   v3.0.0 = 1aaf1752 = CITATION 3.0.0 / 2026-10-25。Release UI で Target=main
