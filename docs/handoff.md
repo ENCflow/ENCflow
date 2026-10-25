@@ -67,6 +67,29 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      必要(作業環境はヘッドレスのため `--save` 経路で確認)。(iv) 粗度 0.5 倍は
      dt = 6 s でクーラン条件を破るため Step 7 は 1・1.5・2 倍とした(README に注記)。
 
+00g. **examples の英語ラベル図(2026-10-25。tutorials/test と同じ方式)**
+   - 図化スクリプト 12 本に `en` 引数を追加済み(badland・badland_storm・badland_round・
+     mesa・karst・tower_karst・tsunami_fault・tsunami_coast・levee_breach・nest_reflect・
+     sewer_hybrid・delta)。既定(引数なし)の出力は不変(結果のある 7 件でバイト一致を確認)。
+   - 英語図を en/figs に生成し英語 README から参照済み: tsunami_fault・tsunami_coast・
+     levee_breach・sewer_hybrid・badland・badland_round(README の手順で結果を再生成。
+     同じ結果から描いた日本語版はコミット済みの figs/ と一致)。nest_reflect は同じ手順で
+     作業中(2026-10-25 時点。結果の再計算中)。
+   - **残(利用者の保存済み結果が要る。再計算は数時間〜十数時間)**: badland_storm・mesa・
+     karst・tower_karst。各ケース直下で日本語版と同じ引数に `en` を足して実行し、
+     英語 README の図リンクを `../figs/` → `figs/` に切替えて record する。
+     例: `python3 plot_storm.py en`(badland_storm。conv_dx.py は図に日本語がないので対象外)、
+     `python3 plot_results.py en` と `plot_results.py bench en` … (mesa の各 tag)、
+     `python3 plot_results.py en` / `param_lat.txt en` / `param_rock.txt en`(karst)、
+     `python3 plot_results.py en`(tower_karst)。
+   - **delta は本方式では作れない**: README が参照する figs/(base_evolution・sandmud・
+     fixation・wave_cmp など 14 枚)を生成するスクリプトがリポジトリにない
+     (plot_results.py は fig_<case>_*.png を描く別物)。生成元を特定するか、
+     英語図は保留のまま日本語図を共有し続けるかの判断待ち。
+   - **要確認(記述の不一致)**: badland_storm の差分地図の題はスクリプトでは
+     「青: 表面流で余計に削れた」、README(日英)の説明文は「青 = 対照の方が深く削れた」。
+     どちらが正しいかを結果で確かめて片方を直す(翻訳作業では触っていない)。
+
 00c. **方針 13(説明責任。developer.md §0。2026-10-24 制定)の既存部分への遡及**
    - 出典の棚卸し: users guide 第III部のうち「参考文献」節のない章
      (bedmotion・bldgdebris・driftwood・forcing・nonhydrostatic・wq・
