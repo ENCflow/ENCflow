@@ -597,7 +597,9 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
   逐次/np=2)+夜間の nightly.yml(reference 全14ケース(dambreak 追加後)の逐次と
   MPI np=1,2,4、トップレベル make による utils 追随漏れ検出、
   -Og -fcheck=all ビルドの逐次=np2 一致検査、BMI 適合性 bmi-tester
-  92項目+BMI 経由実行の CLI ビット一致)。debug 層は release(-Ofast/
+  +BMI 経由実行の CLI ビット一致。bmi ジョブは wave の bmi-tester と
+  等価性に加え、test/bmi_nest(2026-10-10 追加)と test/bmi_vars
+  (2026-10-25 追加)の受け入れ試験を回す)。debug 層は release(-Ofast/
   -flto)製のコミット済み reference と比較できないため、ランナー内で
   debug 逐次の reference を作り直して MPI 結果と照合する(リポジトリの
   reference は不変 — 消去・再生成はランナーの使い捨て作業領域のみ)。
@@ -6439,6 +6441,8 @@ finalize に分離した。**計算物理コードには一切触れていない
 BMI アダプタ(bmi/)、変数アクセサ、MPI 所有権ガード(owns_mpi)は
 段2〜4 で。m_main の公開 API はその際 get_time / get_value 系の
 アクセサを追加していく。
+→ **済**(2026-08-28〜): アダプタ §54、アクセサは §54・§60・§76 で
+順次追加、owns_mpi ガード §58。
 
 ## 54. BMI アダプタ bmi/(BMI 対応 段2。2026-08-28 実装)
 
@@ -6503,6 +6507,9 @@ CSDMS BMI 2.0 の逐次アダプタ。全体計画は docs/bmi_plan.md §6、
 MPI BMI(z の gather、rank0 有効の規約化、owns_mpi ガード)、
 set_value(強制場の所有権設計 = bmi_plan.md §4.2)、bind(c) 層+
 ctypes サンプル(bmi_plan.md §4.3-4.4)、Standard Names の拡充。
+→ **済**: MPI BMI §58、set_value §56(降水)・§57(z・h)・§76(hg・swe)・
+§77(rn)、bind(c) 層+ctypes §55、Standard Names の拡充 §60・§73・§76。
+現状の総括は bmi_plan.md §12。
 
 ## 55. BMI の C 相互運用層と Python サンプル(BMI 対応 段2.5。2026-08-28 実装)
 
@@ -6552,7 +6559,7 @@ bmi/ に bind(c) 層と ctypes ラッパーを追加し、逐次 ENCflow を Pyt
 要否が連結相手の規約次第になるのは生配列の直接受け渡しの場合であり、
 BMI では格子が origin/spacing/shape で自己記述されるため、配列並びを
 メタデータと整合させれば相手は規約を推測しなくてよい。そこで
-**BMI 層(bmi_encflow.f90 の get 経路。将来は set も)で行反転し、
+**BMI 層(bmi_encflow.f90 の get 経路。set も同日 §56 以降で同じ逆写像)で行反転し、
 「要素0 = 南西隅・行は南→北・origin = 左下・spacing 正」の標準形に
 正規化**した。内部(j=1 = 北)と m_main アクセサは不変で、変換は
 翻訳層のコピー時のみ(追加コスト実質ゼロ)。Landlab の
@@ -6639,7 +6646,8 @@ bmi_plan.md §4.2 の合意案(ステージング+update 冒頭適用・生産�
 ### 残作業
 
 MPI 対応(scatter 経路)、h・z の set(整合処理 = e 回復が必要。
-§7 論点9)。時変強制の高頻度 set の性能は、コード対処でなく
+§7 論点9)。→ **済**: scatter 経路 §58、h・z の set §57。
+時変強制の高頻度 set の性能は、コード対処でなく
 **交換間隔の指針として文書化で解決**とした(bmi_plan.md §8.0:
 結合間隔は強制の時間スケールで選ぶ。dt_prupdate 等の内部
 「プロセス更新間隔」と同じ設計判断の外部版であり、BMI 型連携一般に
@@ -6691,6 +6699,7 @@ MPI 対応(scatter 経路)、h・z の set(整合処理 = e 回復が必要。
   水深ガードが次ステップで処理する(geomorph の侵食と同じ扱い)。
 - MPI は staging の scatter が未実装(§56 と同じく段3)。ハロ交換は
   適用側に既に入っているため、scatter 経路の追加のみで動く見込み。
+  → **済**(§58。同日)。
 
 ## 58. BMI の MPI 対応(段3。2026-08-28 実装)
 
@@ -6746,7 +6755,9 @@ bmi_plan.md §6 段3。BMI のライフサイクル・get/set を MPI で成立�
 MPI_COMM_WORLD → par_comm 抽象化(サブコミュニケータ結合)、
 par_stop の return code 化(library モード)、MPI 版 .so + mpiexec
 python の検証、複数インスタンス(handle 方式)。いずれも需要が
-具体化してから。
+具体化してから。(2026-10-25 時点でも需要待ちのまま。ネスト系の複数格子は
+§73 で 1 component として解決し、独立した複数モデルだけが残る。
+bmi_plan.md §12.2)
 
 ## 59. bmi-tester 適合性確認と再 initialize 対応(2026-08-28 実施)
 
@@ -11264,7 +11275,8 @@ docs/nesting_plan.md §3.9、本節は決定事項と規約。bmi/ の既存規�
   (bmif の names はポインタで返す仕様)。§60 で保留した「機能有効時のみ
   確保される変数」はこの表の拡張点: base_* に名前を足し var_internal に
   内部名を加える。有効判定が要るなら m_main に問い合わせ口を加えて
-  ensure_items で除く(未実装。需要待ち)。
+  ensure_items で除く(未実装。需要待ち)。→ **§76 で実装**(動的変数表。
+  名前表の一元化と m_main_has_value、initialize ごとの表再生成)。
 - **get/set は変数の格子を select して m_main のアクセサを呼び、ルートに
   戻す**(enter_grid/leave_grid。grid 0 では select を呼ばない = ネストなしの
   経路は従来と同一命令列)。受理条件・意味論(§56・§57)は格子によらず同じ
