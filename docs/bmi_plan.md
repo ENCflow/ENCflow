@@ -5,8 +5,14 @@
 経緯: 2026-08-28 の検討として起草。同日中に段1(ライフサイクル化 =
 developer.md §53)・段2(bmi/ アダプタ = §54)・bind(c)+Python
 (§55)・set_value(§56 降水・§57 z/h)・段3(MPI 対応 = §58)まで
-実装済み。実装済み事項の正本は developer.md の各 § で、本書は検討の
-経緯と全体計画の記録。残る将来枠は段4のみ(§6)。
+実装済み。その後、再 initialize と bmi-tester 合格(§59)、公開変数の
+第2弾(§60)、ネスト系の多格子公開(§73)、動的変数表と機能依存変数の
+get/set(第3弾。§76。設計は本書 §11)、粗度 rn の set(§77)、
+Nightly CI の BMI ジョブ(§10)、初学者向け tutorials/bmi(2026-10-24)と
+続き、2026-10-25 に CSDMS モデルリポジトリ登録の準備(docs/
+csdms_registration.md)に至った。実装済み事項の正本は developer.md の
+各 § で、本書は検討の経緯と全体計画の記録。**現状の総括と残る将来枠は
+§12**(段4と第3弾の需要待ち項目)。
 
 参考: BMI 2.0 仕様 <https://bmi.csdms.io/>、Fortran binding
 <https://github.com/csdms/bmi-fortran>(MIT)。
@@ -39,7 +45,7 @@ BMI 化してもモデル本体は BMI に依存しない(standalone 実行は�
 | MPI 版 update | 相性良好 | 1ステップ内で halo・allreduce が完結し「全ランクが同一判定」規約が既にある(§5) |
 | MPI 版 get_value_ptr | 非対応とする | 全域配列は単一メモリとして存在しない → BMI_FAILURE(仕様上許容) |
 | 外部 coupler との MPI 共存 | 小改修 | par_init/par_finalize の所有権ガード(MPI_Initialized)を足す |
-| 方針 §0 との整合 | 要・方針追記 | 方針10(外部ライブラリ不使用)との関係を先に整理する(§4) |
+| 方針 §0 との整合 | 要・方針追記 → 合意済み(2026-08-28) | 方針10(外部ライブラリ不使用)との関係を先に整理する(§4。案Bで合意し方針10 に注記) |
 
 ## 3. 現行構造の適合性(コード実査)
 
@@ -245,6 +251,11 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
   **論理全域格子**(nx×ny)。帯分割・ハロはランク内部の実装詳細。
 - 同一プロセス内の複数インスタンスは当面非対応(必要になったら
   型を公開せず handle 方式に拡張できる)。
+  → **その後(2026-10)**: ネスト系(fn_nest)は 1 プロセス内に複数の
+  `t_encflow` を持つが、BMI からは**ネスト系全体が 1 component**で、
+  格子は grid id で区別する(§73)。独立した複数モデル(handle 方式)は
+  引き続き非対応(bmi/README「制約」。§71 Phase 0 で私有状態の所有の
+  明示までは済んでいる)。
 
 ## 6. 段階的な工事計画と検証
 
@@ -270,13 +281,23 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
 > 全域保持は g%z)— 規律3 の -fcheck=all np=2 が検証で実効。
 > 残る将来枠は段4(par_comm 抽象化・par_stop の return code 化・
 > MPI 版 .so、複数インスタンス)のみ。
+>
+> **その後の実装記録(2026-08-29〜2026-10-25)**: §59 = finalize 後の
+> 再 initialize(残留リセット)と bmi-tester 合格(当時 47 passed)。
+> §60 = 公開変数の第2弾(e・vv・qq・ux/uy。流向は成分に合成)。
+> §73 = ネスト系の多格子公開(grid id、`~grid<k>` 修飾名、C API の格子
+> 関数に grid 引数を追加 = v3.0.0 の非互換変更)。§76 = 動的変数表と
+> 機能依存変数の get/set(本書 §11)。§77 = 粗度 rn の set(P 区分)。
+> 受け入れ試験は test/bmi_nest・test/bmi_vars、CI は nightly.yml の bmi
+> ジョブ(bmi-tester + CLI との等価性 + bmi_nest + bmi_vars)。利用者向け
+> 入口は tutorials/bmi(7 段。uv で `uv run step*.py`)。
 
 | 段 | 内容 | 規模感 | 検証 |
 | --- | --- | --- | --- |
 | 1 | m_main のライフサイクル化(t_encflow 導入、run_main のループ1回分を update に抽出、ループ前後の初期出力・最終出力を initialize 末尾 / finalize 先頭へ移設) | 中。m_main.f90 中心の等価リファクタ | **絶対規律2がそのまま使える**: 逐次ビット一致 + MPI np=1,2,4 ULP=0。既存 reference 不変 |
 | 2 | serial BMI アダプタ(bmi/bmi_encflow.f90 + Makefile)。initialize/update/update_until/finalize/time/grid/get_value 中心 | 中。定型コードが大半(BMI は約40関数だが多くは数行。非対応は BMI_FAILURE 可) | 本体無変更 → 既存回帰は自明に不変。BMI 側は CSDMS bmi-tester。非正方形格子(nx≠ny)で flatten 順序を確認 |
 | 3 | MPI BMI(get_value=par_gather_to、set_value=par_scatter_cell、get_value_ptr=BMI_FAILURE)+ par_init/par_finalize の MPI_Initialized / owns_mpi ガード | 小 | 同上 + mpi4py 共存の煙試験 |
-| 4 | (将来枠)MPI_COMM_WORLD → par_comm 抽象化、par_stop のエラー伝播化(library モード)、set_value による強制供給、複数インスタンス | 未定 | 必要になってから設計 |
+| 4 | (将来枠)MPI_COMM_WORLD → par_comm 抽象化、par_stop のエラー伝播化(library モード)、MPI 版 .so、独立複数インスタンス(handle 方式) | 未定 | 必要になってから設計。set_value による強制供給は §56 で実装済み(段4から除外)。ネスト系の複数格子は §73 で 1 component として解決 |
 
 段1は BMI を使わなくても価値がある(Python 制御・単体試験・
 アンサンブル・データ同化がやりやすくなる)。段2以降は本体に触れない。
@@ -287,6 +308,8 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
    (makepre・初期出力・番号0スロット)とループ後ブロック
    (output_state 9998 / output_summary 9999 / record_summary)の
    置き場所。standalone 実行のビット一致を保つ移設位置の確定。
+   → **解決(2026-08-28・§53)**: initialize 末尾 / finalize 先頭へ移設し
+   逐次・MPI ともビット一致。
 2. **エラー経路**: ierror は既に run_main → m_main_all へ return-code
    的に伝わるため update の BMI_FAILURE 化と相性が良い。一方
    par_stop は MPI_Finalize + stop 1 で**ホストプロセスごと落とす**。
@@ -294,6 +317,8 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
    モード化は段4へ。
 3. **update_until の時刻端数**: ENCflow は固定 dt。dt の整数倍のみ
    受け付ける(端数は BMI_FAILURE か直近ステップへの切り下げ)。
+   → **決定・実装済み**: 現在以降・終了時刻以内・dt の整数倍のみ受理し、
+   それ以外は BMI_FAILURE(bmi/bmi_encflow.f90 の update_until)。
 4. **ENC 配置(staggered)量の公開**: セル中心量(h,e,z,pre,hg,…)を
    grid 0 で公開。エッジ配置の u,v,m,n は当面非公開とするか、別
    grid id とするかを決める(第1段はセル量のみで十分)。
@@ -329,10 +354,17 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
    仕様のままでよいか(BMI の initialize(config) に自然に載る見込み)。
 7. **再 initialize**: finalize 後の再 initialize(同一プロセス内)を
    許すなら、t_encflow 成分のデフォルト初期化(§13)への依存を確認。
+   → **解決(2026-08-28・§59)**: 逐次で可(残留状態のリセットを
+   init_instance に集約)。bmi_nest・bmi_vars の受け入れ試験が再 initialize
+   を毎回検査する。
 8. **MPI 時の get_value の返り値の意味論**: 全域配列は rank0 のみ
    有効とするか(gather 先が rank0 のため自然)、全ランクへ bcast
    するか。呼び出しは全ランク collective とし、有効値の所在だけを
    規約化する(§8 の利用イメージ参照)。
+   → **決定(2026-08-28・§58)**: 全ランク collective で呼び、get の全域
+   配列と set の src は rank0 のみ有効。値検査は allreduce で全ランク同一
+   判定。共有ライブラリ(Python 用)は逐次のみで、MPI は静的ドライバ
+   test_encflow_bmi_mpi で使う。
 9. **set_value 後の整合処理**: 変数によっては配列コピーで済まない
    (例: z の更新は e 回復・ハロ交換を伴う。m_geomorph が z 更新後に
    済ませている契約と同じ処理を set_value 側も負う)。変数ごとに
@@ -346,10 +378,15 @@ main.f90 ── encflow / encflow_mpi     bmi/bmi_encflow.f90 ── libencflow_
 
 ## 8. 利用イメージ(Python サンプル。設計スケッチ)
 
-BMI 化後に利用者側がどう書けるかのイメージ(**未実装につきこのままでは
-動かない**。`ENCflow` クラスは bmi/python/encflow.py に置く予定の
-ctypes 最小ラッパー、変数名は仮)。実験条件(tt, dt)を Python 側で
-定義し、水深分布とハイドログラフを matplotlib で描く例:
+BMI 化後に利用者側がどう書けるかのイメージとして 2026-08-28 に書いた
+設計スケッチ(当時は未実装)。**現在は bmi/python/encflow.py の ctypes
+ラッパー `ENCflow` で実際にこの形で動く**(メソッド名は実装で一部変更:
+`grid_shape()` / `grid_spacing()` は引数なしでルート格子を返し、格子を
+指定するときは `shape_of(grid)` 等。公開変数名は bmi/README.md の表が
+正)。動く最小例と段階的な説明は **tutorials/bmi**(Step 1〜7)にあり、
+利用者はそちらを入口にする。以下は当時のスケッチを設計意図の記録として
+残す。実験条件(tt, dt)を Python 側で定義し、水深分布とハイドログラフを
+matplotlib で描く例:
 
 ```python
 import numpy as np
@@ -409,10 +446,9 @@ fig.savefig("result.png", dpi=150)
 - **ハイドログラフを流量にする場合**は qq(線流量)等を同様に取得
   (変数名マッピングは §7-5)。既存の m_record プローブ CSV を使う
   選択肢も残る。
-- **MPI 版で同じスクリプトを使う場合**は `mpiexec -n N python …` と
-  なり、get_value の全域配列は rank0 のみ有効という規約になる見込み
-  (描画・保存は rank0 で行う)。非 rank0 での get_value の返り値の
-  意味論は §7 の設計論点に追加する。
+- **MPI 版**: get_value の全域配列は rank0 のみ有効という規約で決定
+  (§58。§7 論点8)。ただし Python 用の共有ライブラリは逐次のみで、MPI は
+  Fortran の静的ドライバ test_encflow_bmi_mpi から使う(bmi/README)。
 
 ### 8.0 交換間隔の指針(時間分割誤差と性能。2026-08-28 追記)
 
@@ -498,6 +534,10 @@ while enc.time() < tt:
 - **一方向(get のみ)なら第2段の範囲で可能**。双方向(z を戻す等)は
   set_value が必要で、§4.2 で後続段に回した課題そのもの。Landlab 連携は
   set_value を実装する具体的動機になる。
+  → z の set は §57 で実装済み(geomorph 等の z 更新プロセスが無効の
+  ケースのみ受理 = 下の「所有権」の分担そのもの)。上のスケッチは現行の
+  ラッパーで動く形になっているが、**Landlab との結合実例(notebook)は
+  未作成**(§10.1 項目 4)。
 - **set_value は配列コピーでは済まない場合がある**: z の更新は e 回復・
   ハロ交換等の整合処理を伴う(m_geomorph が z 更新後に済ませている
   契約と同じ)。§7 に論点として追加(論点9)。
@@ -555,6 +595,10 @@ BMI 対応モデルのカタログは CSDMS model repository・pymt components�
 
 対応した場合、docs/comparison.md の「提供形態」に BMI(PyMT /
 NextGen 系エコシステムとの相互運用)を追記する節目になる。
+→ 追記済み(2026-08-29。comparison.md の ENCflow 行と「結合枠組み」の節)。
+README(日英)にも「外部連携(BMI)」の節があり、2026-10-25 に「単体でも、
+部品としても」(無効化した機能は資源もパラメータも要らず、他モデルの
+不足プロセスを補う小部品として呼べる = CSDMS の趣旨との整合)を追加した。
 「専門の隣の現象をまず試す」(§0 目的3)導線として、Python から
 `initialize → update → get_value` で回せることは導入障壁の低減にも
 合致する。
@@ -568,20 +612,33 @@ NextGen 系エコシステムとの相互運用)を追記する節目になる�
    証明であり、以降のすべての経路の前提になる。
    → **達成(2026-08-28)**: 47 passed / 0 failed(developer.md §59。
    再現は bmi/python/check_bmi.sh)。bmi/README.md に記載済み。
+   公開変数の増加に伴い検査数も増え、v3.0.0(2026-10-25)では wave
+   128 passed / 11 skipped、bmi_nest 242 passed / 20 skipped、bmi_vars
+   146 passed / 11 skipped(skip は矩形格子に無い face/edge 系と
+   bmi-tester が実行しない set 試験)。Nightly の bmi ジョブが毎晩検査する。
 2. **CSDMS Model Repository への登録**: CSDMS のモデル台帳
    (csdms.colorado.edu。数百モデル規模)にフォームで登録すると、
    メタデータ付きのモデルページができ DOI も付与される。エコシステム
    全体からの発見可能性はまずここで決まる。無料。既存の CITATION.cff・
    LICENSE がそのまま登録要件に使える。
+   → **準備済み(2026-10-25)**: 申請対象を v3.0.0 とし、README の再現性の
+   表現と引用案内(ソフトウェア版 + HRL 論文)の整合、CITATION.cff の
+   引用対象をソフトウェアに(HRL 論文は references、v3.0.0 の版 DOI を
+   identifiers に)、v3.0.0 での BMI 試験記録、質問票の記入案を
+   docs/csdms_registration.md にまとめた。提出そのものは人間の作業。
 3. **README/リポジトリ側の表示**: BMI 対応の節を README に設け、
    GitHub topics(basic-model-interface, csdms 等)を付ける。
    CSDMS の help-desk(GitHub)で対応を知らせるのも一手。
+   → README の節は日英とも整備済み(§10)。topics と help-desk は未着手。
 4. **連携実例の notebook を作って個別コミュニティへ**: 認知は登録より
    実例が効く。§8.1 の Landlab 連携 notebook を tutorials/ に置き
    Landlab コミュニティ(GitHub Discussions)へ、GLOFRIM には
    「ENCflow を局所氾濫エンジンとして追加できる」ことを issue で提案、
    eWaterCycle にはコンテナ+grpc4bmi のプラグイン追加を打診(§4.4
    形態3)。
+   → 入口として tutorials/bmi(2026-10-24。起動と終了 → update → get →
+   描画 → リアルタイム表示 → set(雨)→ set(粗度)の 7 段、日英)を
+   整備。Landlab 結合の notebook と各コミュニティへの打診は未着手。
 5. **pymt 公式 component 化**: babelize して conda-forge に
    pymt_encflow を置くと、pymt のモデル一覧に載り「インストールして
    すぐ使える形」で露出する(§4.3 のとおり重いので、需要を見てから)。
@@ -614,7 +671,9 @@ NextGen 系エコシステムとの相互運用)を追記する節目になる�
 t_state の成分(m_state.f90)と m_output の出力条件から。「存在」は
 §11.3 の判定基準(= その量を生産するプロセスが有効)。Standard Name は
 CSDMS の既存名を優先し、無いものは文法(object~adjective__quantity)内で
-造語する(bmi-tester の名前検査は文法のみ。§73)。**名前は全て案**。
+造語する(bmi-tester の名前検査は文法のみ。§73)。**名前は全て案**
+(採用した名前・存在条件・set 可否の正本は bmi/README.md「機能依存の
+変数」の表。第1弾は全項実装済み、第2弾以降は需要待ち)。
 
 | 内部名 | 内容 | 単位 | 確保 | 存在判定 | get | set 区分(§11.5) | Standard Name(案) |
 |---|---|---|---|---|---|---|---|
@@ -765,3 +824,30 @@ S 区分の適用、§3 の set_value の列挙)、handoff.md の保留項目の
 5. ステージングの汎用化は見送り(変数ごとの現行様式)でよいか。
 6. Standard Name の候補(CSDMS 既存名優先・文法内造語を許容)。
 7. 段 0 の等価リファクタ(名前表の一元化)を先行コミットとして行うか。
+
+## 12. 現状の総括と残る将来枠(2026-10-25)
+
+### 12.1 できていること(正本は developer.md の各 §と bmi/README.md)
+
+| 項目 | 内容 |
+|---|---|
+| 構成 | bmi/(vendor/bmi.f90 同梱、bmi_encflow.f90、bind(c) 層 bmi_encflow_c.f90、静的ドライバ test_bmi.f90、Python ラッパー python/encflow.py・encflow_bmi.py)。本体 src/ は BMI を知らない(§53 の公開ライフサイクル API 経由) |
+| 公開変数 | どのケースにも存在する 12(h・z・pre・e・vv・qq・ux・uy・期間最大 3・rn)+ 機能依存 7(hg・swe・sd・hs・cqc・hi・hl。動的変数表 §76)。set は h(S)・z(Q)・pre(F)・rn(P)・hg・swe(S)の 6。ネスト系は `~grid<k>` 修飾名で格子ごと(§73) |
+| 非対応(方針) | get_value_ptr(参照渡し)、エッジ配置量 u/v/m/n の公開、独立した複数モデル(1 プロセス 1 モデル。ネスト系は 1 component)、MPI 版の共有ライブラリ |
+| 検証 | CLI との等価性(BMI 経由の完走が Log で ULP=0)、CSDMS bmi-tester(単一格子・ネスト系・機能依存変数)、set の等価性と同値 set の不変性(test_set_value.py・bmi_vars)、MPI np=1,2,4 の静的ドライバ一致。Nightly の bmi ジョブで毎晩 |
+| 文書・教材 | bmi/README.md(日英)、tutorials/bmi(7 段、日英)、README の「外部連携(BMI)」節、ユーザーガイド、docs/csdms_registration.md |
+| 既知の制約 | 共有ライブラリ経由はコンパイル条件の差で CLI とビットまでは一致しないことがある(表示桁では一致。厳密比較は静的ドライバ)。非静水圧の OpenMP 複数スレッドは実行間非決定(§71 の検証メモ)。C API の格子関数は 2026-10-10 に grid 引数が加わった(Python ラッパー経由なら無関係) |
+
+### 12.2 残る将来枠(すべて需要待ち)
+
+- 段4(§6): MPI_COMM_WORLD → par_comm 抽象化、par_stop のエラー伝播化
+  (library モード。現状は入力不正で stop)、MPI 版 .so、独立複数インスタンス
+  (handle 方式)。
+- 公開変数の第2弾以降(§11.2): hg2・hgc・塩水層・swi・流木/瓦礫の get、
+  hs・cq の set(S)、気温の外部供給(F。tsrc=外部の新設)、ネスト境界の
+  η_e・u_e(F。nesting_plan.md §15.6)。
+- 認知経路(§10.1): CSDMS への提出、GitHub topics、Landlab 結合の notebook、
+  GLOFRIM / eWaterCycle への打診、pymt component 化(babelizer。重いので
+  需要を見てから)、学術経路(全体のモデル記述論文は未刊行)。
+- 教材の仕上げ(handoff 00f): tutorials/bmi の Step 5(リアルタイム表示)の
+  画面付き環境での目視確認、step*.py の英語コメント版の扱い。
