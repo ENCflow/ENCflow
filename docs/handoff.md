@@ -866,17 +866,27 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 公開準備(方針の正本は developer.md §34)
 
-- **リリース v2.1.0(2026-10-06 準備)**: v2.0.0 以降の 67 コミット。MINOR の
-  根拠(§34.4): 加算的な新機能 = 1 層非静水圧補正 f_nonhydrostatic(§69。
-  活性集合・砕波スイッチ・渦粘性・底面勾配項・動く底面の加速度項)、規定
-  底面運動 fn_bedmotion(§70)と前処理 utils/fault2disp、例題 tsunami_fault・
-  tsunami_coast・landslide_tsunami 非静水圧版、検証ケース nh* 8 件。namelist は
-  追加のみ、save_version 不変。**数値結果に影響する修正**: MUSCL の upup が
-  領域外の 0 を読む反拡散(§69.9。7d5448d・6b77443・0e0688d。既定スキームで
-  規定境界・壁・乾湿前縁の面値が変わる。reference 11 ケース更新 32c0d9b、
-  利用者承認)。CI 6 ケース PASS(main 40f7813)。**残**: Nightly の緑を確認、
-  タグ v2.1.0(cloud 環境からは push 不可 → 一時ブランチ release/v2.1.0 を
-  Release UI の Target に)、Zenodo DOI の付与確認。
+- **リリース v3.0.0(2026-10-25 準備)**: v2.1.0(1a846e0)以降 722 コミット
+  (マージ以外 600)。**MAJOR の根拠(§34.4、v2.0.0 の前例と同じ「既定の昇格
+  による既存入力の結果変化」)**: f_opening_dynamic 1→2(§68.38。reference
+  25 中 14 が変化)、f_scalar_scheme の新設と既定 3(§78)、spl_sgrad 既定 1
+  (§48.4)、f_bank_datum 既定 0→1(§17)、fluv_bcfeed=1 の再定義(§84.9)、
+  BMI C API の grid 引数追加(§73)。既定スキームの修正(§68.35〜§68.40、
+  mn 初期化 §7、海セルの Log 統計 f151cc04)で v2.1.0 時点の reference 22 件
+  中 17 件が更新済み(いずれも利用者承認)。namelist は追加 86・削除 0、
+  save_version は 2026-10-04b のまま。加算的な新機能: 多段ネスティング
+  (§72〜§75)、BMI 第 3 弾(§76・§77)、蛇行・河岸侵食・定着・給砂(§84)、
+  波浪の沿岸漂砂(§84.15)、乾式斜面侵食の拡張と崩落・崖錐(§48)、石灰岩の
+  溶食(§86)、河床交換能 f_gwbed(§16.5)、マスク窓化(§79〜§83)。
+  版番号 v3.0.0 は利用者決定(2026-10-25)。手順: Nightly #43(main 9d677abb、
+  workflow_dispatch)の緑を確認 → CITATION 3.0.0 / 2026-10-25 のコミットへ
+  main を fast-forward → Release「ENCflow v3.0.0」(タグはローカルから
+  `git tag -a` で push。cloud からは不可。資格情報が直っていなければ Release
+  UI で Target=main)→ Zenodo DOI の確認。
+- **リリース v2.1.0(2026-10-06 公開済み)**: Release「ENCflow v2.1.0」(タグ
+  v2.1.0 = 1a846e0)。MINOR の根拠は 1 層非静水圧補正 f_nonhydrostatic(§69)
+  と規定底面運動 fn_bedmotion(§70)ほか。数値結果に影響する修正は MUSCL の
+  upup の領域外読み(§69.9。reference 11 ケース更新 32c0d9b)。
 - **リリース v2.0.0(2026-10-05 公開済み)**: main を
   claude/epic-hawking-kfj04n の先頭(CITATION 2.0.0 / 2026-10-04)に
   fast-forward。MAJOR の根拠(§34.4): f_advection_tvd / f_advection_runge の
