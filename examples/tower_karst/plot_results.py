@@ -2,6 +2,7 @@
 """examples/tower_karst の図化と数表(事前に param.txt を実行しておく)。
 
   python3 plot_results.py | tee analysis.txt
+  python3 plot_results.py en                 # 英語ラベル版を en/figs/ に描く
 
 図(figs/):
   maps.png        初期・最終地形の陰影図、削剥深(対数)、最終の土層厚(岩屑・残渣)
@@ -21,11 +22,20 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import LightSource, LogNorm
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
-matplotlib.rcParams["axes.unicode_minus"] = False
-os.makedirs("figs", exist_ok=True)
+EN = "en" in sys.argv[1:]
+ARGS = [a for a in sys.argv[1:] if a != "en"]
 
-PARAM = sys.argv[1] if len(sys.argv) > 1 else "param.txt"
+
+def T(ja, en):
+    return en if EN else ja
+
+
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
+matplotlib.rcParams["axes.unicode_minus"] = False
+os.makedirs(FIGDIR, exist_ok=True)
+
+PARAM = ARGS[0] if ARGS else "param.txt"
 SUFFIX = "" if PARAM == "param.txt" else "_" + PARAM[6:-4]
 SCREEN = "Screen%s.log" % SUFFIX
 HILLS = [(300.0, 300.0, 40.0, 90.0), (700.0, 320.0, 40.0, 90.0),
@@ -139,44 +149,44 @@ fig, axes = plt.subplots(2, 2, figsize=(11, 10))
 ax = axes[0, 0]
 ax.imshow(hillshade(z0, dx), cmap="gray", extent=ext, origin="lower", vmin=0, vmax=1)
 ax.contour(x, y, z0, levels=np.arange(5, 45, 5), colors="tab:blue", linewidths=0.5)
-ax.set_title("初期地形(等高線 5 m)")
+ax.set_title(T("初期地形(等高線 5 m)", "Initial terrain (contours 5 m)"))
 ax = axes[0, 1]
 ax.imshow(hillshade(zf, dx), cmap="gray", extent=ext, origin="lower", vmin=0, vmax=1)
 ax.contour(x, y, zf, levels=np.arange(-10, 45, 5), colors="tab:blue", linewidths=0.5)
-ax.set_title("最終地形(地形時間 %.0f 年)" % tend)
+ax.set_title(T("最終地形(地形時間 %.0f 年)", "Final terrain (morphological time %.0f yr)") % tend)
 ax = axes[1, 0]
 im = ax.imshow(np.maximum(d, 1e-3), extent=ext, origin="lower", cmap="magma_r",
                norm=LogNorm(vmin=0.1, vmax=max(d.max(), 1.0)))
-plt.colorbar(im, ax=ax, label="削剥深 z0 − z (m。対数。負 = 岩屑の堆積は 0 で表示)")
-ax.set_title("削剥深(平野 %.1f m、裾はより深い)" % dp)
+plt.colorbar(im, ax=ax, label=T("削剥深 z0 − z (m。対数。負 = 岩屑の堆積は 0 で表示)", "Denudation depth z0 − z (m, log; negative = debris deposition shown as 0)"))
+ax.set_title(T("削剥深(平野 %.1f m、裾はより深い)", "Denudation depth (plain %.1f m, deeper at the foot)") % dp)
 ax = axes[1, 1]
 im = ax.imshow(sdf, extent=ext, origin="lower", cmap="YlOrBr", vmin=0, vmax=max(sdf.max(), 1.0))
-plt.colorbar(im, ax=ax, label="土層厚 sd (m)")
-ax.set_title("最終の土層厚(岩屑の裾野 + 残渣)")
+plt.colorbar(im, ax=ax, label=T("土層厚 sd (m)", "Soil thickness sd (m)"))
+ax.set_title(T("最終の土層厚(岩屑の裾野 + 残渣)", "Final soil thickness (debris apron + residue)"))
 for ax in axes.flat:
     ax.set_xlabel("x (m)")
     ax.set_ylabel("y (m)")
 plt.tight_layout()
-plt.savefig("figs/maps%s.png" % SUFFIX, dpi=130)
+plt.savefig("%s/maps%s.png" % (FIGDIR, SUFFIX), dpi=130)
 plt.close()
 
 # ---------------------------------------------------------------- 図: sections(塔 1)
 xc, yc = HILLS[0][0], HILLS[0][1]
 ic, jc = int(xc / dx), int(yc / dx)
 fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-for ax, (lab, getz, getb, coord) in zip(axes, [("x 断面 (y = %.0f m)" % y[jc], lambda z: z[jc, :], lambda z, sd: (z - sd)[jc, :], x),
-                                               ("y 断面 (x = %.0f m)" % x[ic], lambda z: z[:, ic], lambda z, sd: (z - sd)[:, ic], y)]):
+for ax, (lab, getz, getb, coord) in zip(axes, [(T("x 断面 (y = %.0f m)", "x section (y = %.0f m)") % y[jc], lambda z: z[jc, :], lambda z, sd: (z - sd)[jc, :], x),
+                                               (T("y 断面 (x = %.0f m)", "y section (x = %.0f m)") % x[ic], lambda z: z[:, ic], lambda z, sd: (z - sd)[:, ic], y)]):
     for k, (t, z, sd) in enumerate(snaps):
-        ax.plot(coord, getz(z), lw=0.9, label="%.0f 年" % t)
-    ax.plot(coord, getb(zf, sdf), "k--", lw=0.8, label="最終の基岩面 z − sd")
-    ax.set_title(lab + " — 塔 1 の中心を通る")
-    ax.set_xlabel("距離 (m)")
+        ax.plot(coord, getz(z), lw=0.9, label=T("%.0f 年", "%.0f yr") % t)
+    ax.plot(coord, getb(zf, sdf), "k--", lw=0.8, label=T("最終の基岩面 z − sd", "final bedrock surface z − sd"))
+    ax.set_title(lab + T(" — 塔 1 の中心を通る", " — through the centre of tower 1"))
+    ax.set_xlabel(T("距離 (m)", "Distance (m)"))
     ax.set_ylabel("z (m)")
     ax.set_xlim(xc - 200 if lab.startswith("x") else yc - 200, (xc if lab.startswith("x") else yc) + 200)
     ax.grid(alpha=0.3)
 axes[0].legend(fontsize=7, ncol=2)
 plt.tight_layout()
-plt.savefig("figs/sections%s.png" % SUFFIX, dpi=130)
+plt.savefig("%s/sections%s.png" % (FIGDIR, SUFFIX), dpi=130)
 plt.close()
 
 # ---------------------------------------------------------------- 図: towers
@@ -186,19 +196,19 @@ for k, (xc, yc, H, R) in enumerate(HILLS):
     rel = np.array([s[2][k][1] for s in series])
     req = np.array([s[2][k][2] for s in series])
     ang = np.array([s[2][k][3] for s in series])
-    lab = "丘 %d (H0 = %.0f m)" % (k + 1, H)
+    lab = T("丘 %d (H0 = %.0f m)", "Hill %d (H0 = %.0f m)") % (k + 1, H)
     axes[0].plot(ts, rel, "-o", ms=3, label=lab)
     axes[1].plot(ts, req, "-o", ms=3, label=lab)
     axes[2].plot(ts, ang, "-o", ms=3, label=lab)
-axes[0].set_ylabel("平野からの比高 (m)")
-axes[1].set_ylabel("平野 + 5 m より高い部分の等価半径 (m)")
-axes[2].set_ylabel("基岩面の最大勾配角 (°)")
+axes[0].set_ylabel(T("平野からの比高 (m)", "Relative height above plain (m)"))
+axes[1].set_ylabel(T("平野 + 5 m より高い部分の等価半径 (m)", "Equivalent radius above plain + 5 m (m)"))
+axes[2].set_ylabel(T("基岩面の最大勾配角 (°)", "Max. slope angle of bedrock surface (°)"))
 for ax in axes:
-    ax.set_xlabel("地形時間 (年。豪雨 %d 回/年換算)" % STORMS_PER_YR)
+    ax.set_xlabel(T("地形時間 (年。豪雨 %d 回/年換算)", "Morphological time (yr; %d storms/yr)") % STORMS_PER_YR)
     ax.grid(alpha=0.3)
 axes[0].legend(fontsize=7)
 plt.tight_layout()
-plt.savefig("figs/towers%s.png" % SUFFIX, dpi=130)
+plt.savefig("%s/towers%s.png" % (FIGDIR, SUFFIX), dpi=130)
 plt.close()
 
 # ---------------------------------------------------------------- 図: hydrograph
@@ -207,17 +217,17 @@ if rows:
     ss = np.array([float(r[2]) for r in rows])
     sg = np.array([float(r[3]) for r in rows])
     fig, axes = plt.subplots(1, 2, figsize=(12, 3.8))
-    for ax, (t1, t2, lab) in zip(axes, [(0, 72, "最初の 3 日"), (th[-1] - 72, th[-1], "最後の 3 日")]):
+    for ax, (t1, t2, lab) in zip(axes, [(0, 72, T("最初の 3 日", "First 3 days")), (th[-1] - 72, th[-1], T("最後の 3 日", "Last 3 days"))]):
         mm = (th >= t1) & (th <= t2)
-        ax.plot(th[mm] / 24, ss[mm] * 1000, "b-", label="S_surf(湛水)")
+        ax.plot(th[mm] / 24, ss[mm] * 1000, "b-", label=T("S_surf(湛水)", "S_surf (ponding)"))
         ax2 = ax.twinx()
         ax2.plot(th[mm] / 24, sg[mm] * 1000, "g-")
-        ax.set_xlabel("水理時間 (日)")
-        ax.set_ylabel("湛水 (mm、領域平均)", color="b")
-        ax2.set_ylabel("地下貯留 (mm、領域平均)", color="g")
+        ax.set_xlabel(T("水理時間 (日)", "Hydraulic time (days)"))
+        ax.set_ylabel(T("湛水 (mm、領域平均)", "Ponding (mm, domain mean)"), color="b")
+        ax2.set_ylabel(T("地下貯留 (mm、領域平均)", "Subsurface storage (mm, domain mean)"), color="g")
         ax.set_title(lab)
         ax.grid(alpha=0.3)
     plt.tight_layout()
-    plt.savefig("figs/hydrograph%s.png" % SUFFIX, dpi=130)
+    plt.savefig("%s/hydrograph%s.png" % (FIGDIR, SUFFIX), dpi=130)
     plt.close()
-print("figs/maps%s.png, sections, towers, hydrograph written" % SUFFIX)
+print("%s/maps%s.png, sections, towers, hydrograph written" % (FIGDIR, SUFFIX))

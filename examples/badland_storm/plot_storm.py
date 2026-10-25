@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """examples/badland_storm の図化と数表(param_storm.txt・param_dry.txt を実行後)。
   python3 plot_storm.py
+  python3 plot_storm.py en     # 英語ラベル版を en/figs/ に描く
 図(figs/): maps.png(両ケースの地形の時間発展と差)、series.png(時系列)、
           flow.png(豪雨時の最大水深 Hmax と最終地形の D8 網)
 依存: numpy, matplotlib。解析関数は examples/badland/plot_results.py を流用する。
@@ -10,14 +11,22 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
+EN = "en" in sys.argv[1:]
+
+
+def T(ja, en):
+    return en if EN else ja
+
+
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
-sys.argv = ["x"]
+sys.argv = ["x"] + (["en"] if EN else [])   # 流用元(badland/plot_results.py)の EN 判定にも渡す
 HERE = os.path.dirname(os.path.abspath(__file__))
 src = open(os.path.join(HERE, "..", "badland", "plot_results.py"), encoding="utf-8").read()
 exec(src.split("# ---------------------------------------------------------------- 主ケース")[0])
 os.chdir(HERE)
-os.makedirs("figs", exist_ok=True)
+os.makedirs(FIGDIR, exist_ok=True)
 
 MORFAC = 50.0
 HP = 30.0
@@ -57,17 +66,17 @@ for name, c in cases.items():
     rows[name] = rr
 fig, ax = plt.subplots(1, 4, figsize=(16, 3.6))
 for name, rr in rows.items():
-    T = [r["t"] for r in rr]
-    ax[0].plot(T, [r["relief"] for r in rr], "o-", ms=3, label=name)
-    ax[1].plot(T, [r["spacing"] for r in rr], "o-", ms=3, label=name + " 谷間隔")
-    ax[1].plot(T, [r["lam"] for r in rr], "s--", ms=3, label=name + " Δz 重心波長")
-    ax[2].plot(T, [r["mean_inc"] for r in rr], "o-", ms=3, label=name + " 崖面帯の平均低下")
-    ax[2].plot(T, [r["max_inc"] for r in rr], "s--", ms=3, label=name + " 最大下刻")
-    ax[3].plot(T, [r["xhead"] for r in rr], "o-", ms=3, label=name)
-ax[0].set_ylabel("崖面帯の y 方向起伏 (m)"); ax[1].set_ylabel("(m)"); ax[2].set_ylabel("(m)"); ax[3].set_ylabel("谷頭の位置 x (m)(台地縁 60 m)")
+    TS = [r["t"] for r in rr]
+    ax[0].plot(TS, [r["relief"] for r in rr], "o-", ms=3, label=name)
+    ax[1].plot(TS, [r["spacing"] for r in rr], "o-", ms=3, label=name + T(" 谷間隔", " valley spacing"))
+    ax[1].plot(TS, [r["lam"] for r in rr], "s--", ms=3, label=name + T(" Δz 重心波長", " centroid wavelength of Δz"))
+    ax[2].plot(TS, [r["mean_inc"] for r in rr], "o-", ms=3, label=name + T(" 崖面帯の平均低下", " mean lowering of the cliff-face belt"))
+    ax[2].plot(TS, [r["max_inc"] for r in rr], "s--", ms=3, label=name + T(" 最大下刻", " maximum incision"))
+    ax[3].plot(TS, [r["xhead"] for r in rr], "o-", ms=3, label=name)
+ax[0].set_ylabel(T("崖面帯の y 方向起伏 (m)", "y-direction relief of the cliff-face belt (m)")); ax[1].set_ylabel("(m)"); ax[2].set_ylabel("(m)"); ax[3].set_ylabel(T("谷頭の位置 x (m)(台地縁 60 m)", "valley-head position x (m) (plateau edge at 60 m)"))
 for a in ax:
     a.set_xlabel("T_geo (s)"); a.legend(fontsize=7)
-fig.tight_layout(); fig.savefig("figs/series%s.png" % SUF, dpi=110); plt.close(fig)
+fig.tight_layout(); fig.savefig(f"{FIGDIR}/series%s.png" % SUF, dpi=110); plt.close(fig)
 
 # ---- 地図 ----
 names = [n for n in ("dry", "storm") if n in cases]
@@ -79,16 +88,16 @@ for r, name in enumerate(names):
     for k, tt in enumerate(picks_t):
         tg, n, z = c["snaps"][int(np.argmin([abs(t - tt) for t, _, _ in c["snaps"]]))]
         im = axes[r, k].imshow(z, origin="lower", extent=ext, cmap="terrain", vmin=0, vmax=HP)
-        axes[r, k].set_xlim(20, 100); axes[r, k].set_title("%s: T_geo = %.1e s(%d 周期)" % ("全量浸透(対照)" if name == "dry" else "豪雨時に表面流", tg, n), fontsize=9)
+        axes[r, k].set_xlim(20, 100); axes[r, k].set_title(T("%s: T_geo = %.1e s(%d 周期)", "%s: T_geo = %.1e s (%d cycles)") % (T("全量浸透(対照)", "complete infiltration (control)") if name == "dry" else T("豪雨時に表面流", "surface flow during storms"), tg, n), fontsize=9)
     fig.colorbar(im, ax=axes[r, :].tolist(), shrink=0.7, label="z (m)")
 if len(names) == 2:
     for k, tt in enumerate(picks_t):
         zs = cases["storm"]["snaps"][int(np.argmin([abs(t - tt) for t, _, _ in cases["storm"]["snaps"]]))][2]
         zd = cases["dry"]["snaps"][int(np.argmin([abs(t - tt) for t, _, _ in cases["dry"]["snaps"]]))][2]
         im = axes[2, k].imshow(zs - zd, origin="lower", extent=ext, cmap="RdBu", vmin=-15, vmax=15)
-        axes[2, k].set_xlim(20, 100); axes[2, k].set_title("差 z(表面流) − z(対照)(青: 表面流で余計に削れた)", fontsize=9)
+        axes[2, k].set_xlim(20, 100); axes[2, k].set_title(T("差 z(表面流) − z(対照)(青: 表面流で余計に削れた)", "Difference z(surface flow) − z(control) (blue: eroded deeper with surface flow)"), fontsize=9)
     fig.colorbar(im, ax=axes[2, :].tolist(), shrink=0.7, label="Δz (m)")
-fig.savefig("figs/maps%s.png" % SUF, dpi=110, bbox_inches="tight"); plt.close(fig)
+fig.savefig(f"{FIGDIR}/maps%s.png" % SUF, dpi=110, bbox_inches="tight"); plt.close(fig)
 
 # ---- 流れ ----
 if "storm" in cases:
@@ -98,16 +107,16 @@ if "storm" in cases:
     fig, ax = plt.subplots(1, 3, figsize=(14, 4.6))
     if c["hmax"] is not None:
         im = ax[0].imshow(np.log10(np.maximum(c["hmax"], 1e-4)), origin="lower", extent=ext, cmap="Blues", vmin=-3, vmax=0)
-        ax[0].set_xlim(20, 100); ax[0].set_title("豪雨終了時(最終)の水深 log10 h (m)", fontsize=9); fig.colorbar(im, ax=ax[0], shrink=0.8)
+        ax[0].set_xlim(20, 100); ax[0].set_title(T("豪雨終了時(最終)の水深 log10 h (m)", "Water depth at the end of the storm (final), log10 h (m)"), fontsize=9); fig.colorbar(im, ax=ax[0], shrink=0.8)
     im = ax[1].imshow(np.log10(np.maximum(acc, 1)), origin="lower", extent=ext, cmap="Blues")
-    ax[1].set_xlim(20, 100); ax[1].set_title("最終地形の D8 集水面積 log10(セル数)", fontsize=9); fig.colorbar(im, ax=ax[1], shrink=0.8)
+    ax[1].set_xlim(20, 100); ax[1].set_title(T("最終地形の D8 集水面積 log10(セル数)", "D8 drainage area of the final terrain, log10 (cells)"), fontsize=9); fig.colorbar(im, ax=ax[1], shrink=0.8)
     if "dry" in cases:
         accd = d8_accumulation(cases["dry"]["snaps"][-1][2], sw)
         bins = np.logspace(0, 4, 30)
-        ax[2].hist(acc[(sw == 0) & (zf > 0)], bins=bins, histtype="step", label="表面流あり")
-        ax[2].hist(accd[(sw == 0) & (cases["dry"]["snaps"][-1][2] > 0)], bins=bins, histtype="step", label="対照")
-        ax[2].set_xscale("log"); ax[2].set_yscale("log"); ax[2].set_xlabel("D8 集水面積(セル数)"); ax[2].legend(fontsize=8); ax[2].set_title("集水面積の分布(最終)", fontsize=9)
-    fig.tight_layout(); fig.savefig("figs/flow%s.png" % SUF, dpi=110); plt.close(fig)
+        ax[2].hist(acc[(sw == 0) & (zf > 0)], bins=bins, histtype="step", label=T("表面流あり", "with surface flow"))
+        ax[2].hist(accd[(sw == 0) & (cases["dry"]["snaps"][-1][2] > 0)], bins=bins, histtype="step", label=T("対照", "control"))
+        ax[2].set_xscale("log"); ax[2].set_yscale("log"); ax[2].set_xlabel(T("D8 集水面積(セル数)", "D8 drainage area (cells)")); ax[2].legend(fontsize=8); ax[2].set_title(T("集水面積の分布(最終)", "Distribution of drainage area (final)"), fontsize=9)
+    fig.tight_layout(); fig.savefig(f"{FIGDIR}/flow%s.png" % SUF, dpi=110); plt.close(fig)
 
 # ---- 数表 ----
 print("| 量 | " + " | ".join(("対照(全量浸透)" if n == "dry" else "豪雨時に表面流") for n in names) + " |")
@@ -133,4 +142,4 @@ for n in names:
 if "storm" in cases and cases["storm"]["hmax"] is not None:
     hm = cases["storm"]["hmax"]; land = (sw == 0) & (cases["storm"]["z0"] > 0)
     print("| 豪雨終了時の水深 h (m): 中央値 / 99 %% 点 / 最大(陸) | %.3f / %.3f / %.3f |" % (np.median(hm[land]), np.percentile(hm[land], 99), hm[land].max()))
-print("figs/ written")
+print(f"{FIGDIR}/ written")

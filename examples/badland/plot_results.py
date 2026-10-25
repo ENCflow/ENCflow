@@ -2,6 +2,7 @@
 """examples/badland の図化と数表(事前に param*.txt を実行しておく)。
 
   python3 plot_results.py            # 存在する result* をすべて図化し、数表を表示する
+  python3 plot_results.py en         # 英語ラベル版を en/figs/ に描く
 
 図(figs/):
   main_maps.png     主ケースの地形の時間発展(地図・崖面帯の横断・谷と稜線の縦断)
@@ -15,13 +16,22 @@ import csv
 import glob
 import os
 import re
+import sys
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
+EN = "en" in sys.argv[1:]
+
+
+def T(ja, en):
+    return en if EN else ja
+
+
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
-os.makedirs("figs", exist_ok=True)
+os.makedirs(FIGDIR, exist_ok=True)
 
 
 # ---------------------------------------------------------------- 読み込み
@@ -184,7 +194,7 @@ if main is not None:
         t, z = snaps[ip]
         ax = fig.add_subplot(gs[0, k])
         im = ax.imshow(z, origin="lower", extent=ext, cmap="terrain", vmin=0, vmax=hp)
-        ax.set_xlim(30, 100); ax.set_title("T_geo = %.1e s\n(10 mm/h の降雨 %.0f 日分)" % (t, t / 86400.0), fontsize=9)
+        ax.set_xlim(30, 100); ax.set_title(T("T_geo = %.1e s\n(10 mm/h の降雨 %.0f 日分)", "T_geo = %.1e s\n(%.0f days of 10 mm/h rain)") % (t, t / 86400.0), fontsize=9)
         ax.set_xlabel("x (m)")
         if k == 0:
             ax.set_ylabel("y (m)")
@@ -196,18 +206,18 @@ if main is not None:
     for ip in picks:
         t, z = snaps[ip]
         ax.plot(y, z[:, c], label="T_geo = %.1e s" % t, lw=1)
-    ax.set_xlabel("y (m)"); ax.set_ylabel("z (m)"); ax.set_title("初期の崖面の中央の列(x = %.1f m)の横断" % ((c + 0.5) * dx), fontsize=9)
+    ax.set_xlabel("y (m)"); ax.set_ylabel("z (m)"); ax.set_title(T("初期の崖面の中央の列(x = %.1f m)の横断", "Cross-section at the central column of the initial cliff face (x = %.1f m)") % ((c + 0.5) * dx), fontsize=9)
     ax.legend(fontsize=7)
     # 谷と稜線の縦断(最終)
     ax = fig.add_subplot(gs[1, 2:4])
     x = (np.arange(nx) + 0.5) * dx
     cols = cliff_cols(zf, hp); cf = cols[len(cols) // 2]
     jv = int(np.argmin(zf[:, cf])); jr = int(np.argmax(zf[:, cf]))
-    ax.plot(x, z0[jv, :], "0.6", label="初期")
-    ax.plot(x, zf[jv, :], "C0", label="最終: 谷底(y = %.1f m)" % ((jv + 0.5) * dx))
-    ax.plot(x, zf[jr, :], "C3", label="最終: 稜線(y = %.1f m)" % ((jr + 0.5) * dx))
-    ax.set_xlabel("x (m)"); ax.set_ylabel("z (m)"); ax.legend(fontsize=7); ax.set_title("縦断(x 方向)", fontsize=9)
-    fig.savefig("figs/main_maps.png", dpi=110, bbox_inches="tight"); plt.close(fig)
+    ax.plot(x, z0[jv, :], "0.6", label=T("初期", "initial"))
+    ax.plot(x, zf[jv, :], "C0", label=T("最終: 谷底(y = %.1f m)", "final: valley floor (y = %.1f m)") % ((jv + 0.5) * dx))
+    ax.plot(x, zf[jr, :], "C3", label=T("最終: 稜線(y = %.1f m)", "final: ridge crest (y = %.1f m)") % ((jr + 0.5) * dx))
+    ax.set_xlabel("x (m)"); ax.set_ylabel("z (m)"); ax.legend(fontsize=7); ax.set_title(T("縦断(x 方向)", "Longitudinal profiles (x direction)"), fontsize=9)
+    fig.savefig(f"{FIGDIR}/main_maps.png", dpi=110, bbox_inches="tight"); plt.close(fig)
 
     # --- 時系列 ---
     rows = []
@@ -215,19 +225,19 @@ if main is not None:
         m = metrics(z, z0, dx, hp)
         if m:
             m["t"] = t; rows.append(m)
-    T = np.array([r["t"] for r in rows])
+    TS = np.array([r["t"] for r in rows])
     fig, ax = plt.subplots(1, 4, figsize=(16, 3.6))
-    ax[0].plot(T, [r["relief"] for r in rows], "o-"); ax[0].set_ylabel("崖面帯の y 方向起伏 (m)")
-    ax[1].plot(T, [r["lam"] for r in rows], "o-", label="Δz のスペクトル重心の波長"); ax[1].plot(T, [r["spacing"] for r in rows], "s--", label="谷間隔(Δz の prominence ≥ 1 m)")
-    ax[1].axhline(2 * np.pi * main["lc"] / np.sqrt(2.0), color="k", ls=":", lw=0.8, label="線形理論 λ* = 4.4 ℓ")
+    ax[0].plot(TS, [r["relief"] for r in rows], "o-"); ax[0].set_ylabel(T("崖面帯の y 方向起伏 (m)", "y-direction relief of the cliff-face zone (m)"))
+    ax[1].plot(TS, [r["lam"] for r in rows], "o-", label=T("Δz のスペクトル重心の波長", "wavelength of the spectral centroid of Δz")); ax[1].plot(TS, [r["spacing"] for r in rows], "s--", label=T("谷間隔(Δz の prominence ≥ 1 m)", "valley spacing (prominence of Δz ≥ 1 m)"))
+    ax[1].axhline(2 * np.pi * main["lc"] / np.sqrt(2.0), color="k", ls=":", lw=0.8, label=T("線形理論 λ* = 4.4 ℓ", "linear theory λ* = 4.4 ℓ"))
     ax[1].set_ylabel("(m)"); ax[1].legend(fontsize=7)
-    ax[2].plot(T, [r["max_inc"] for r in rows], "o-", label="最大下刻"); ax[2].plot(T, [r["mean_inc"] for r in rows], "s--", label="崖面帯の平均低下")
+    ax[2].plot(TS, [r["max_inc"] for r in rows], "o-", label=T("最大下刻", "maximum incision")); ax[2].plot(TS, [r["mean_inc"] for r in rows], "s--", label=T("崖面帯の平均低下", "mean lowering of the cliff-face zone"))
     ax[2].set_ylabel("(m)"); ax[2].legend(fontsize=7)
-    ax[3].plot(T, [r["xhead"] for r in rows], "o-")
-    ax[3].set_ylabel("谷頭の位置 x (m)(台地縁 60 m)")
+    ax[3].plot(TS, [r["xhead"] for r in rows], "o-")
+    ax[3].set_ylabel(T("谷頭の位置 x (m)(台地縁 60 m)", "valley-head position x (m) (plateau margin at 60 m)"))
     for a in ax:
         a.set_xlabel("T_geo (s)")
-    fig.tight_layout(); fig.savefig("figs/main_series.png", dpi=110); plt.close(fig)
+    fig.tight_layout(); fig.savefig(f"{FIGDIR}/main_series.png", dpi=110); plt.close(fig)
 
     # --- バッドランド的特徴 ---
     S0, K0 = slope_curv(z0, dx); Sf, Kf = slope_curv(zf, dx)
@@ -235,13 +245,13 @@ if main is not None:
     acc = d8_accumulation(zf, sw)
     fig, ax = plt.subplots(1, 4, figsize=(17, 4.2))
     bins = np.linspace(0, 3, 61)
-    ax[0].hist(S0[land], bins=bins, histtype="step", color="0.5", label="初期", density=True)
-    ax[0].hist(Sf[land], bins=bins, histtype="step", color="C3", label="最終", density=True)
-    ax[0].set_xlabel("勾配 |∇z|"); ax[0].set_ylabel("頻度密度"); ax[0].legend(fontsize=8); ax[0].set_title("勾配の分布(陸)", fontsize=9)
+    ax[0].hist(S0[land], bins=bins, histtype="step", color="0.5", label=T("初期", "initial"), density=True)
+    ax[0].hist(Sf[land], bins=bins, histtype="step", color="C3", label=T("最終", "final"), density=True)
+    ax[0].set_xlabel(T("勾配 |∇z|", "slope |∇z|")); ax[0].set_ylabel(T("頻度密度", "probability density")); ax[0].legend(fontsize=8); ax[0].set_title(T("勾配の分布(陸)", "Slope distribution (land)"), fontsize=9)
     im = ax[1].imshow(np.clip(Kf, -3, 3), origin="lower", extent=ext, cmap="RdBu", vmin=-3, vmax=3)
-    ax[1].set_xlim(30, 100); ax[1].set_title("最終の曲率 ∇²z (1/m)(青: 稜線 = 凸、赤: 谷 = 凹)", fontsize=9); fig.colorbar(im, ax=ax[1], shrink=0.8)
+    ax[1].set_xlim(30, 100); ax[1].set_title(T("最終の曲率 ∇²z (1/m)(青: 稜線 = 凸、赤: 谷 = 凹)", "Final curvature ∇²z (1/m) (blue: ridge = convex, red: valley = concave)"), fontsize=9); fig.colorbar(im, ax=ax[1], shrink=0.8)
     im = ax[2].imshow(np.log10(np.maximum(acc, 1)), origin="lower", extent=ext, cmap="Blues")
-    ax[2].set_xlim(30, 100); ax[2].set_title("最終地形の D8 集水面積 log10(セル数)", fontsize=9); fig.colorbar(im, ax=ax[2], shrink=0.8)
+    ax[2].set_xlim(30, 100); ax[2].set_title(T("最終地形の D8 集水面積 log10(セル数)", "D8 drainage area of the final terrain, log10 (cells)"), fontsize=9); fig.colorbar(im, ax=ax[2], shrink=0.8)
     # 稜線の鋭さ: 崖面帯の列ごとの稜線(局所最大)の曲率
     ridge_k = []
     for cc in cols:
@@ -249,8 +259,8 @@ if main is not None:
         for j in range(1, ny - 1):
             if col[j] > col[j - 1] and col[j] >= col[j + 1]:
                 ridge_k.append((col[j - 1] + col[j + 1] - 2 * col[j]) / dx ** 2)
-    ax[3].hist(ridge_k, bins=40, color="C3"); ax[3].set_xlabel("稜線の y 方向曲率 (1/m)"); ax[3].set_title("稜線の鋭さ(崖面帯の列の局所最大)", fontsize=9)
-    fig.tight_layout(); fig.savefig("figs/main_features.png", dpi=110); plt.close(fig)
+    ax[3].hist(ridge_k, bins=40, color="C3"); ax[3].set_xlabel(T("稜線の y 方向曲率 (1/m)", "y-direction curvature of the ridges (1/m)")); ax[3].set_title(T("稜線の鋭さ(崖面帯の列の局所最大)", "Ridge sharpness (local maxima of the columns in the cliff-face zone)"), fontsize=9)
+    fig.tight_layout(); fig.savefig(f"{FIGDIR}/main_features.png", dpi=110); plt.close(fig)
 
     m0 = rows[0]; mf = rows[-1]
     vout = re.findall(r"exported sediment volume =\s*([\d.Ee+-]+)", main["log"])
@@ -312,26 +322,26 @@ if cases:
         ts, zs = c["snaps"][int(np.argmin([abs(t - tg) for t, _ in c["snaps"]]))]
         im = ax[0, k].imshow(zs, origin="lower", extent=ext, cmap="terrain", vmin=0, vmax=c["hp"])
         ax[0, k].set_xlim(20, 60); ax[0, k].set_ylim(0, 120)
-        ax[0, k].set_title(("格子の κ(spl_lc = 0)" if c["lc"] == 0 else "spl_lc = %g m" % c["lc"]) + ", T_geo = %.1e s" % ts, fontsize=9)
+        ax[0, k].set_title((T("格子の κ(spl_lc = 0)", "grid κ (spl_lc = 0)") if c["lc"] == 0 else "spl_lc = %g m" % c["lc"]) + ", T_geo = %.1e s" % ts, fontsize=9)
     # 下段左: 間隔 vs ℓ
     a = ax[1, 0]
     lcs = [c["lc"] for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0]
-    a.plot(lcs, [me["lam"] for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0], "o-", label="T_geo = 1.8e6 s(Δz の重心波長)")
-    a.plot(lcs, [mm["lam"] for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0], "s--", label="起伏 2 m 到達時(重心波長)")
-    a.plot(lcs, [mm["spacing"] for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0], "^:", label="起伏 2 m 到達時(谷間隔)")
+    a.plot(lcs, [me["lam"] for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0], "o-", label=T("T_geo = 1.8e6 s(Δz の重心波長)", "T_geo = 1.8e6 s (centroid wavelength of Δz)"))
+    a.plot(lcs, [mm["lam"] for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0], "s--", label=T("起伏 2 m 到達時(重心波長)", "at relief 2 m (centroid wavelength)"))
+    a.plot(lcs, [mm["spacing"] for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0], "^:", label=T("起伏 2 m 到達時(谷間隔)", "at relief 2 m (valley spacing)"))
     ll = np.linspace(0.5, 4.5, 20)
-    a.plot(ll, 4.4 * ll, color="0.5", lw=2, label="線形理論 λ* = 4.4 ℓ")
+    a.plot(ll, 4.4 * ll, color="0.5", lw=2, label=T("線形理論 λ* = 4.4 ℓ", "linear theory λ* = 4.4 ℓ"))
     g = [mm for c, te, me, mm, mf in tab if c["lc"] == 0]
     if g:
-        a.axhline(g[0]["lam"], color="k", ls=":", lw=0.8, label="格子の κ(起伏 2 m 到達時)")
-    a.set_xlabel("spl_lc ℓ (m)"); a.set_ylabel("波長・間隔 (m)"); a.legend(fontsize=7); a.set_title("谷間隔の選択則", fontsize=9)
+        a.axhline(g[0]["lam"], color="k", ls=":", lw=0.8, label=T("格子の κ(起伏 2 m 到達時)", "grid κ (at relief 2 m)"))
+    a.set_xlabel("spl_lc ℓ (m)"); a.set_ylabel(T("波長・間隔 (m)", "wavelength / spacing (m)")); a.legend(fontsize=7); a.set_title(T("谷間隔の選択則", "Valley-spacing selection"), fontsize=9)
     # 下段中: 格子収束
     a = ax[1, 1]
     dxs = sorted(set(c["dx"] for c, te, me, mm, mf in tab if c["lc"] == 2.0))
-    for key, lab, st, which in [("lam", "重心波長 (m), 1.8e6 s", "o-", 2), ("lam", "重心波長 (m), 起伏 2 m 到達時", "o--", 3), ("spacing", "谷間隔 (m), 起伏 2 m 到達時", "s--", 3),
-                                ("mean_inc", "崖面帯の平均低下 (m), 1.8e6 s", "^:", 2), ("mean_inc", "崖面帯の平均低下 (m), 最終", "^-.", 4)]:
+    for key, lab, st, which in [("lam", T("重心波長 (m), 1.8e6 s", "centroid wavelength (m), 1.8e6 s"), "o-", 2), ("lam", T("重心波長 (m), 起伏 2 m 到達時", "centroid wavelength (m), at relief 2 m"), "o--", 3), ("spacing", T("谷間隔 (m), 起伏 2 m 到達時", "valley spacing (m), at relief 2 m"), "s--", 3),
+                                ("mean_inc", T("崖面帯の平均低下 (m), 1.8e6 s", "mean lowering of the cliff-face zone (m), 1.8e6 s"), "^:", 2), ("mean_inc", T("崖面帯の平均低下 (m), 最終", "mean lowering of the cliff-face zone (m), final"), "^-.", 4)]:
         a.plot(dxs, [[t[which][key] for t in tab if t[0]["lc"] == 2.0 and t[0]["dx"] == d][0] for d in dxs], st, label=lab)
-    a.set_xscale("log"); a.set_xticks(dxs); a.set_xticklabels(["%g" % d for d in dxs]); a.set_xlabel("Δx (m)(spl_lc = 2 m)"); a.legend(fontsize=7); a.set_title("格子収束", fontsize=9)
+    a.set_xscale("log"); a.set_xticks(dxs); a.set_xticklabels(["%g" % d for d in dxs]); a.set_xlabel(T("Δx (m)(spl_lc = 2 m)", "Δx (m) (spl_lc = 2 m)")); a.legend(fontsize=7); a.set_title(T("格子収束", "Grid convergence"), fontsize=9)
     # 下段右 2 枚: Δx = 0.5 と 2 の地図
     for k, nm in enumerate(["param_lc2_dx05", "param_lc2_dx2"]):
         cc = [c for c in cases if c["name"] == nm]
@@ -341,6 +351,6 @@ if cases:
         ts, zs = c["snaps"][int(np.argmin([abs(t - 3.6e6) for t, _ in c["snaps"]]))]
         ax[1, 2 + k].imshow(zs, origin="lower", extent=ext, cmap="terrain", vmin=0, vmax=c["hp"])
         ax[1, 2 + k].set_xlim(20, 60); ax[1, 2 + k].set_ylim(0, 120); ax[1, 2 + k].set_title("spl_lc = 2 m, Δx = %g m, T_geo = %.1e s" % (c["dx"], ts), fontsize=9)
-    ax[1, 1].set_title("格子収束(spl_lc = 2 m)", fontsize=9)
-    fig.tight_layout(); fig.savefig("figs/spacing.png", dpi=110); plt.close(fig)
-print("figs/ written")
+    ax[1, 1].set_title(T("格子収束(spl_lc = 2 m)", "Grid convergence (spl_lc = 2 m)"), fontsize=9)
+    fig.tight_layout(); fig.savefig(f"{FIGDIR}/spacing.png", dpi=110); plt.close(fig)
+print(f"{FIGDIR}/ written")

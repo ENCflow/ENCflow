@@ -3,6 +3,7 @@
 
   python3 plot_results.py | tee analysis.txt
   python3 plot_results.py param_lat.txt | tee analysis_lat.txt   # 側方溶食あり(figs/*_lat.png)
+  python3 plot_results.py [param] en                             # 英語ラベル版を en/figs/ に描く
 
 図(figs/):
   maps.png        初期地形・最終地形の陰影図、削剥深 z0 − z、最大湛水深 H9999
@@ -18,17 +19,26 @@
 import csv
 import os
 import re
+import sys
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import LightSource
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
-matplotlib.rcParams["axes.unicode_minus"] = False
-os.makedirs("figs", exist_ok=True)
+EN = "en" in sys.argv[1:]
+ARGS = [a for a in sys.argv[1:] if a != "en"]
 
-import sys
-PARAM = sys.argv[1] if len(sys.argv) > 1 else "param.txt"      # param_lat.txt で側方溶食ありの結果を図化
+
+def T(ja, en):
+    return en if EN else ja
+
+
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
+matplotlib.rcParams["axes.unicode_minus"] = False
+os.makedirs(FIGDIR, exist_ok=True)
+
+PARAM = ARGS[0] if ARGS else "param.txt"      # param_lat.txt で側方溶食ありの結果を図化
 SUFFIX = "" if PARAM == "param.txt" else "_" + PARAM[6:-4]      # 図の接尾辞(param_lat.txt → _lat)
 SCREEN = "Screen%s.log" % SUFFIX
 RIM = 3                     # make_terrain.py の不溶の縁(セル)
@@ -153,26 +163,26 @@ y = (np.arange(ny) + 0.5) * dx
 ax = axes[0, 0]
 ax.imshow(hillshade(z0, dx), cmap="gray", extent=ext, origin="lower", vmin=0, vmax=1)
 cs = ax.contour(x, y, z0, levels=np.arange(296, 306, 1), colors="tab:blue", linewidths=0.4)
-ax.set_title("初期地形(等高線 1 m)")
+ax.set_title(T("初期地形(等高線 1 m)", "Initial terrain (contours 1 m)"))
 ax = axes[0, 1]
 ax.imshow(hillshade(zf, dx), cmap="gray", extent=ext, origin="lower", vmin=0, vmax=1)
 ax.contour(x, y, zf, levels=np.arange(290, 306, 1), colors="tab:blue", linewidths=0.4)
-ax.set_title("最終地形(地形時間 %.0f 年)" % tend)
+ax.set_title(T("最終地形(地形時間 %.0f 年)", "Final terrain (morphological time %.0f yr)") % tend)
 ax = axes[1, 0]
 from matplotlib.colors import LogNorm
 im = ax.imshow(np.maximum(d, 1e-3), extent=ext, origin="lower", cmap="magma_r",
                norm=LogNorm(vmin=1e-2, vmax=max(d.max(), 0.1)))
-plt.colorbar(im, ax=ax, label="削剥深 z0 − z (m。対数)")
-ax.set_title("削剥深(面的 %.3f m + ドリーネ。縁は不溶)" % dif)
+plt.colorbar(im, ax=ax, label=T("削剥深 z0 − z (m。対数)", "Denudation depth z0 − z (m, log)"))
+ax.set_title(T("削剥深(面的 %.3f m + ドリーネ。縁は不溶)", "Denudation depth (diffuse %.3f m + dolines; rim insoluble)") % dif)
 ax = axes[1, 1]
 im = ax.imshow(hmax, extent=ext, origin="lower", cmap="Blues", vmin=0, vmax=max(hmax.max(), 0.1))
-plt.colorbar(im, ax=ax, label="最大湛水深 (m)")
-ax.set_title("期間最大の湛水深(H9999)")
+plt.colorbar(im, ax=ax, label=T("最大湛水深 (m)", "Maximum ponding depth (m)"))
+ax.set_title(T("期間最大の湛水深(H9999)", "Maximum ponding depth over the run (H9999)"))
 for ax in axes.flat:
     ax.set_xlabel("x (m)")
     ax.set_ylabel("y (m)")
 plt.tight_layout()
-plt.savefig("figs/maps%s.png" % SUFFIX, dpi=130)
+plt.savefig("%s/maps%s.png" % (FIGDIR, SUFFIX), dpi=130)
 plt.close()
 
 # ---------------------------------------------------------------- 図: evolution
@@ -186,27 +196,27 @@ for ax, k in zip(axes[0], idx):
     ax.imshow(hillshade(z, dx), cmap="gray", extent=ext, origin="lower", vmin=0, vmax=1)
     cs = ax.contour(x, y, dd, levels=[0.5, 1, 2, 4, 8], colors=["gold", "orange", "red", "purple", "black"], linewidths=0.8)
     ax.clabel(cs, fmt="%g m", fontsize=7)
-    ax.set_title("%.0f 年(最大削剥 %.1f m)" % (t, dd.max()))
+    ax.set_title(T("%.0f 年(最大削剥 %.1f m)", "%.0f yr (max denudation %.1f m)") % (t, dd.max()))
     ax.set_xlabel("x (m)")
 axes[0, 0].set_ylabel("y (m)")
 plt.tight_layout()
-plt.savefig("figs/evolution%s.png" % SUFFIX, dpi=130)
+plt.savefig("%s/evolution%s.png" % (FIGDIR, SUFFIX), dpi=130)
 plt.close()
 
 # ---------------------------------------------------------------- 図: sections
 jm, im_ = np.unravel_index(np.argmax(d), d.shape)
 fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-for ax, (lab, getter, coord) in zip(axes, [("x 断面 (y = %.0f m)" % y[jm], lambda z: z[jm, :], x),
-                                           ("y 断面 (x = %.0f m)" % x[im_], lambda z: z[:, im_], y)]):
+for ax, (lab, getter, coord) in zip(axes, [(T("x 断面 (y = %.0f m)", "x section (y = %.0f m)") % y[jm], lambda z: z[jm, :], x),
+                                           (T("y 断面 (x = %.0f m)", "y section (x = %.0f m)") % x[im_], lambda z: z[:, im_], y)]):
     for t, z in snaps:
-        ax.plot(coord, getter(z), lw=0.9, label="%.0f 年" % t)
-    ax.set_title(lab + " — 最も深いドリーネを通る")
-    ax.set_xlabel("距離 (m)")
+        ax.plot(coord, getter(z), lw=0.9, label=T("%.0f 年", "%.0f yr") % t)
+    ax.set_title(lab + T(" — 最も深いドリーネを通る", " — through the deepest doline"))
+    ax.set_xlabel(T("距離 (m)", "Distance (m)"))
     ax.set_ylabel("z (m)")
     ax.grid(alpha=0.3)
 axes[0].legend(fontsize=7, ncol=2)
 plt.tight_layout()
-plt.savefig("figs/sections%s.png" % SUFFIX, dpi=130)
+plt.savefig("%s/sections%s.png" % (FIGDIR, SUFFIX), dpi=130)
 plt.close()
 
 # ---------------------------------------------------------------- 図: hydrograph
@@ -216,18 +226,18 @@ if rows:
     ss = np.array([float(r[2]) for r in rows])
     sg = np.array([float(r[3]) for r in rows])
     fig, axes = plt.subplots(1, 2, figsize=(12, 3.8))
-    for ax, (t1, t2, lab) in zip(axes, [(0, 72, "最初の 3 日"), (th[-1] - 72, th[-1], "最後の 3 日")]):
+    for ax, (t1, t2, lab) in zip(axes, [(0, 72, T("最初の 3 日", "First 3 days")), (th[-1] - 72, th[-1], T("最後の 3 日", "Last 3 days"))]):
         m = (th >= t1) & (th <= t2)
-        ax.plot(th[m] / 24, ss[m] * 1000, "b-", label="S_surf(湛水)")
+        ax.plot(th[m] / 24, ss[m] * 1000, "b-", label=T("S_surf(湛水)", "S_surf (ponding)"))
         ax2 = ax.twinx()
-        ax2.plot(th[m] / 24, sg[m] * 1000, "g-", label="S_grnd(土層+管路層)")
-        ax.set_xlabel("水理時間 (日)")
-        ax.set_ylabel("湛水 (mm、領域平均)", color="b")
-        ax2.set_ylabel("地下貯留 (mm、領域平均)", color="g")
-        ax.set_title(lab + ": 豪雨 40 mm × 1 h の後、湛水が吸込穴と土層へ消える")
+        ax2.plot(th[m] / 24, sg[m] * 1000, "g-", label=T("S_grnd(土層+管路層)", "S_grnd (soil + conduit layer)"))
+        ax.set_xlabel(T("水理時間 (日)", "Hydraulic time (days)"))
+        ax.set_ylabel(T("湛水 (mm、領域平均)", "Ponding (mm, domain mean)"), color="b")
+        ax2.set_ylabel(T("地下貯留 (mm、領域平均)", "Subsurface storage (mm, domain mean)"), color="g")
+        ax.set_title(lab + T(": 豪雨 40 mm × 1 h の後、湛水が吸込穴と土層へ消える", ": after the 40 mm × 1 h storm, ponding vanishes into sinks and soil"))
         ax.grid(alpha=0.3)
     plt.tight_layout()
-    plt.savefig("figs/hydrograph%s.png" % SUFFIX, dpi=130)
+    plt.savefig("%s/hydrograph%s.png" % (FIGDIR, SUFFIX), dpi=130)
     plt.close()
 
 # ---------------------------------------------------------------- 図: stats
@@ -235,27 +245,27 @@ fig, axes = plt.subplots(1, 3, figsize=(14, 3.8))
 ax = axes[0]
 ax.hist(d[inner].ravel(), bins=60, color="tab:brown")
 ax.set_yscale("log")
-ax.set_xlabel("削剥深 (m)")
-ax.set_ylabel("セル数")
-ax.set_title("削剥深の分布(内部セル)")
+ax.set_xlabel(T("削剥深 (m)", "Denudation depth (m)"))
+ax.set_ylabel(T("セル数", "Number of cells"))
+ax.set_title(T("削剥深の分布(内部セル)", "Distribution of denudation depth (interior cells)"))
 ax = axes[1]
 ts = np.array(series)
-ax.plot(ts[:, 0], ts[:, 1], "r-o", ms=3, label="最大")
-ax.plot(ts[:, 0], ts[:, 3], "k-o", ms=3, label="平均")
-ax.plot(ts[:, 0], ts[:, 2], "b-o", ms=3, label="中央値(面的)")
-ax.set_xlabel("地形時間 (年。豪雨 40 回/年換算)")
-ax.set_ylabel("削剥深 (m)")
+ax.plot(ts[:, 0], ts[:, 1], "r-o", ms=3, label=T("最大", "maximum"))
+ax.plot(ts[:, 0], ts[:, 3], "k-o", ms=3, label=T("平均", "mean"))
+ax.plot(ts[:, 0], ts[:, 2], "b-o", ms=3, label=T("中央値(面的)", "median (diffuse)"))
+ax.set_xlabel(T("地形時間 (年。豪雨 40 回/年換算)", "Morphological time (yr; 40 storms/yr)"))
+ax.set_ylabel(T("削剥深 (m)", "Denudation depth (m)"))
 ax.set_yscale("log")
 ax.legend(fontsize=8)
 ax.grid(alpha=0.3)
-ax.set_title("削剥深の時間発展")
+ax.set_title(T("削剥深の時間発展", "Evolution of denudation depth"))
 ax = axes[2]
 ax.plot(ts[:, 0], ts[:, 4], "m-o", ms=3)
-ax.set_xlabel("地形時間 (年。豪雨 40 回/年換算)")
-ax.set_ylabel("削剥深 > 1 m の窪みの数")
+ax.set_xlabel(T("地形時間 (年。豪雨 40 回/年換算)", "Morphological time (yr; 40 storms/yr)"))
+ax.set_ylabel(T("削剥深 > 1 m の窪みの数", "Number of depressions with denudation depth > 1 m"))
 ax.grid(alpha=0.3)
-ax.set_title("ドリーネの数")
+ax.set_title(T("ドリーネの数", "Number of dolines"))
 plt.tight_layout()
-plt.savefig("figs/stats%s.png" % SUFFIX, dpi=130)
+plt.savefig("%s/stats%s.png" % (FIGDIR, SUFFIX), dpi=130)
 plt.close()
-print("figs/maps%s.png, evolution, sections, hydrograph, stats written" % SUFFIX)
+print("%s/maps%s.png, evolution, sections, hydrograph, stats written" % (FIGDIR, SUFFIX))

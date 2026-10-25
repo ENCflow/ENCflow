@@ -9,6 +9,7 @@
   python3 plot_results.py face8    # 同、H_c = 8 m(上の崖も柱の崩落の対象: bench2 / face / face4 / face5): figs/*_face8.png
   python3 plot_results.py uc       # 張り出しによる崩落 rf_uc(崖錐律速: bench2 / face / uc / uc2 / uc3): figs/*_uc.png
   python3 plot_results.py ucx      # 両立の案 1・2(厚いキャップ uc_cap、遅い崖錐 uc_slow: uc2 / uc_cap / uc / uc_slow): figs/*_ucx.png
+  python3 plot_results.py [tag] en # 英語ラベル版を en/figs/ に描く(tag は上と同じ)
   figs/maps.png      ケース × 4 時刻の陰影図
   figs/sections.png  2 つの台地の中心を通る横断(y = 50 m)の時間発展
   figs/series.png    台地面(z >= 17 m)の等価半径 sqrt(A/π) と頂高の時系列(崖の後退速度)
@@ -19,79 +20,88 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import LightSource
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
+EN = "en" in sys.argv[1:]
+ARGS = [a for a in sys.argv[1:] if a != "en"]
+
+
+def T(ja, en):
+    return en if EN else ja
+
+
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
-os.makedirs("figs", exist_ok=True)
-MODE = sys.argv[1] if len(sys.argv) > 1 else "cap"
+os.makedirs(FIGDIR, exist_ok=True)
+MODE = ARGS[0] if ARGS else "cap"
 if MODE == "bench":
-    CASES = [("param_cap.txt", "中間硬層 z = 8〜10 m・倍率 0.3(param_cap)"),
-             ("param_bench.txt", "中間硬層 z = 6〜10 m・倍率 0.05"),
-             ("param_bench2.txt", "中間硬層 z = 5〜10 m・倍率 0.02"),
-             ("param_bench3.txt", "中間硬層 z = 5〜10 m・倍率 0.02、凹地形増幅なし (spl_cb = 0)")]
+    CASES = [("param_cap.txt", T("中間硬層 z = 8〜10 m・倍率 0.3(param_cap)", "hard intermediate layer z = 8–10 m, factor 0.3 (param_cap)")),
+             ("param_bench.txt", T("中間硬層 z = 6〜10 m・倍率 0.05", "hard intermediate layer z = 6–10 m, factor 0.05")),
+             ("param_bench2.txt", T("中間硬層 z = 5〜10 m・倍率 0.02", "hard intermediate layer z = 5–10 m, factor 0.02")),
+             ("param_bench3.txt", T("中間硬層 z = 5〜10 m・倍率 0.02、凹地形増幅なし (spl_cb = 0)", "hard intermediate layer z = 5–10 m, factor 0.02, no hollow amplification (spl_cb = 0)"))]
     SUF = "_bench"
 elif MODE == "sat":
-    CASES = [("param_bench2.txt", "硬層 5〜10 m・倍率 0.02、spl_cb = 32、飽和なし"),
-             ("param_sat.txt", "同、spl_ksat = 0.05(増幅の上限 2.6 倍)"),
-             ("param_sat2.txt", "同、spl_ksat = 0.2(増幅の上限 7.4 倍)"),
-             ("param_bench3.txt", "同、spl_cb = 0(増幅なし)")]
+    CASES = [("param_bench2.txt", T("硬層 5〜10 m・倍率 0.02、spl_cb = 32、飽和なし", "hard layer 5–10 m, factor 0.02, spl_cb = 32, no saturation")),
+             ("param_sat.txt", T("同、spl_ksat = 0.05(増幅の上限 2.6 倍)", "same, spl_ksat = 0.05 (amplification cap 2.6×)")),
+             ("param_sat2.txt", T("同、spl_ksat = 0.2(増幅の上限 7.4 倍)", "same, spl_ksat = 0.2 (amplification cap 7.4×)")),
+             ("param_bench3.txt", T("同、spl_cb = 0(増幅なし)", "same, spl_cb = 0 (no amplification)"))]
     SUF = "_sat"
 elif MODE == "rock":
-    CASES = [("param_bench2.txt", "硬層 5〜10 m・倍率 0.02、崩落なし"),
-             ("param_rock2.txt", "同 + 崩落と崖錐(H_c = 4 m、崖錐の侵食性 0.1 倍)"),
-             ("param_rock4.txt", "同 + 崩落と崖錐(H_c = 4 m、崖錐 0.02 倍)"),
-             ("param_rock3.txt", "同 + 崩落と崖錐(H_c = 4 m、崖錐 0.02 倍、増幅の飽和 κ_s = 0.2)"),
-             ("param_rock5.txt", "同 + 崩落と崖錐(H_c = 4 m、崖錐 0.005 倍、増幅の飽和 κ_s = 0.2)")]
+    CASES = [("param_bench2.txt", T("硬層 5〜10 m・倍率 0.02、崩落なし", "hard layer 5–10 m, factor 0.02, no rockfall")),
+             ("param_rock2.txt", T("同 + 崩落と崖錐(H_c = 4 m、崖錐の侵食性 0.1 倍)", "same + rockfall and talus (H_c = 4 m, talus erodibility 0.1×)")),
+             ("param_rock4.txt", T("同 + 崩落と崖錐(H_c = 4 m、崖錐 0.02 倍)", "same + rockfall and talus (H_c = 4 m, talus 0.02×)")),
+             ("param_rock3.txt", T("同 + 崩落と崖錐(H_c = 4 m、崖錐 0.02 倍、増幅の飽和 κ_s = 0.2)", "same + rockfall and talus (H_c = 4 m, talus 0.02×, amplification saturation κ_s = 0.2)")),
+             ("param_rock5.txt", T("同 + 崩落と崖錐(H_c = 4 m、崖錐 0.005 倍、増幅の飽和 κ_s = 0.2)", "same + rockfall and talus (H_c = 4 m, talus 0.005×, amplification saturation κ_s = 0.2)"))]
     SUF = "_rock"
 elif MODE == "rc":
-    CASES = [("param_bench2.txt", "Δx = 1 m、崩落なし"),
-             ("param_rock2.txt", "Δx = 1 m + 崩落(H_c = 4 m、セル間の段差、崖錐 0.1 倍)"),
-             ("param_rc.txt", "Δx = 1 m + 崩落(H_c = 15 m、窓 r_c = 8 m、崖錐 0.1 倍)"),
-             ("param_rc2.txt", "Δx = 1 m + 崩落(H_c = 15 m、窓 r_c = 8 m、崖錐 0.01 倍、κ_s = 0.2)")]
+    CASES = [("param_bench2.txt", T("Δx = 1 m、崩落なし", "Δx = 1 m, no rockfall")),
+             ("param_rock2.txt", T("Δx = 1 m + 崩落(H_c = 4 m、セル間の段差、崖錐 0.1 倍)", "Δx = 1 m + rockfall (H_c = 4 m, step between cells, talus 0.1×)")),
+             ("param_rc.txt", T("Δx = 1 m + 崩落(H_c = 15 m、窓 r_c = 8 m、崖錐 0.1 倍)", "Δx = 1 m + rockfall (H_c = 15 m, window r_c = 8 m, talus 0.1×)")),
+             ("param_rc2.txt", T("Δx = 1 m + 崩落(H_c = 15 m、窓 r_c = 8 m、崖錐 0.01 倍、κ_s = 0.2)", "Δx = 1 m + rockfall (H_c = 15 m, window r_c = 8 m, talus 0.01×, κ_s = 0.2)"))]
     SUF = "_rc"
 elif MODE == "face":
-    CASES = [("param_bench2.txt", "Δx = 1 m、崩落なし"),
-             ("param_rc2.txt", "窓版崩落(H_c = 15 m、r_c = 8 m、崖錐 0.01 倍、κ_s = 0.2)"),
-             ("param_face.txt", "支え方式(rf_fface = 0、崖錐 0.01 倍)"),
-             ("param_face2.txt", "支え方式(rf_fface = 0、崖錐 0.1 倍)"),
-             ("param_face3.txt", "支え方式(rf_fface = 0、崖錐 0.3 倍)")]
+    CASES = [("param_bench2.txt", T("Δx = 1 m、崩落なし", "Δx = 1 m, no rockfall")),
+             ("param_rc2.txt", T("窓版崩落(H_c = 15 m、r_c = 8 m、崖錐 0.01 倍、κ_s = 0.2)", "windowed rockfall (H_c = 15 m, r_c = 8 m, talus 0.01×, κ_s = 0.2)")),
+             ("param_face.txt", T("支え方式(rf_fface = 0、崖錐 0.01 倍)", "supported-face mode (rf_fface = 0, talus 0.01×)")),
+             ("param_face2.txt", T("支え方式(rf_fface = 0、崖錐 0.1 倍)", "supported-face mode (rf_fface = 0, talus 0.1×)")),
+             ("param_face3.txt", T("支え方式(rf_fface = 0、崖錐 0.3 倍)", "supported-face mode (rf_fface = 0, talus 0.3×)"))]
     SUF = "_face"
 elif MODE == "face8":
-    CASES = [("param_bench2.txt", "Δx = 1 m、崩落なし"),
-             ("param_face.txt", "支え方式(H_c = 15 m、崖錐 0.01 倍)"),
-             ("param_face4.txt", "支え方式(H_c = 8 m、崖錐 0.01 倍)"),
-             ("param_face5.txt", "支え方式(H_c = 8 m、崖錐 0.1 倍)")]
+    CASES = [("param_bench2.txt", T("Δx = 1 m、崩落なし", "Δx = 1 m, no rockfall")),
+             ("param_face.txt", T("支え方式(H_c = 15 m、崖錐 0.01 倍)", "supported-face mode (H_c = 15 m, talus 0.01×)")),
+             ("param_face4.txt", T("支え方式(H_c = 8 m、崖錐 0.01 倍)", "supported-face mode (H_c = 8 m, talus 0.01×)")),
+             ("param_face5.txt", T("支え方式(H_c = 8 m、崖錐 0.1 倍)", "supported-face mode (H_c = 8 m, talus 0.1×)"))]
     SUF = "_face8"
 elif MODE == "uc":
-    CASES = [("param_bench2.txt", "Δx = 1 m、崩落なし"),
-             ("param_face.txt", "支え方式(H_c = 15 m、崖錐 0.01 倍、張り出しなし)"),
-             ("param_uc.txt", "支え方式 + 張り出し u_c = 0.5 m(崖錐 0.1 倍)"),
-             ("param_uc2.txt", "支え方式 + 張り出し u_c = 0.5 m(崖錐 0.3 倍)"),
-             ("param_uc3.txt", "支え方式 + 張り出し u_c = 0.5 m(崖錐 1 倍)")]
+    CASES = [("param_bench2.txt", T("Δx = 1 m、崩落なし", "Δx = 1 m, no rockfall")),
+             ("param_face.txt", T("支え方式(H_c = 15 m、崖錐 0.01 倍、張り出しなし)", "supported-face mode (H_c = 15 m, talus 0.01×, no undercut)")),
+             ("param_uc.txt", T("支え方式 + 張り出し u_c = 0.5 m(崖錐 0.1 倍)", "supported-face mode + undercut u_c = 0.5 m (talus 0.1×)")),
+             ("param_uc2.txt", T("支え方式 + 張り出し u_c = 0.5 m(崖錐 0.3 倍)", "supported-face mode + undercut u_c = 0.5 m (talus 0.3×)")),
+             ("param_uc3.txt", T("支え方式 + 張り出し u_c = 0.5 m(崖錐 1 倍)", "supported-face mode + undercut u_c = 0.5 m (talus 1×)"))]
     SUF = "_uc"
 elif MODE == "ucx":
-    CASES = [("param_uc2.txt", "張り出し u_c = 0.5 m、キャップ 3 m、崖錐 0.3 倍"),
-             ("param_uc_cap.txt", "同、キャップ 7 m(z >= 13)+ 軟層 3 m、崖錐 0.3 倍(案 1)"),
-             ("param_uc.txt", "張り出し u_c = 0.5 m、キャップ 3 m、崖錐 0.1 倍"),
-             ("param_uc_slow.txt", "同、崖錐 0.03 倍、run 2 倍(案 2)")]
+    CASES = [("param_uc2.txt", T("張り出し u_c = 0.5 m、キャップ 3 m、崖錐 0.3 倍", "undercut u_c = 0.5 m, cap 3 m, talus 0.3×")),
+             ("param_uc_cap.txt", T("同、キャップ 7 m(z >= 13)+ 軟層 3 m、崖錐 0.3 倍(案 1)", "same, cap 7 m (z >= 13) + soft layer 3 m, talus 0.3× (option 1)")),
+             ("param_uc.txt", T("張り出し u_c = 0.5 m、キャップ 3 m、崖錐 0.1 倍", "undercut u_c = 0.5 m, cap 3 m, talus 0.1×")),
+             ("param_uc_slow.txt", T("同、崖錐 0.03 倍、run 2 倍(案 2)", "same, talus 0.03×, run 2× (option 2)"))]
     SUF = "_ucx"
 elif MODE == "dx4rc":
-    CASES = [("param_dx4.txt", "Δx = 4 m、崩落なし"),
-             ("param_dx4_rc.txt", "Δx = 4 m + 崩落(H_c = 15 m、窓 r_c = 8 m、崖錐 0.1 倍)"),
-             ("param_dx4_rc2.txt", "Δx = 4 m + 崩落(H_c = 15 m、窓 r_c = 8 m、崖錐 0.01 倍、κ_s = 0.2)")]
+    CASES = [("param_dx4.txt", T("Δx = 4 m、崩落なし", "Δx = 4 m, no rockfall")),
+             ("param_dx4_rc.txt", T("Δx = 4 m + 崩落(H_c = 15 m、窓 r_c = 8 m、崖錐 0.1 倍)", "Δx = 4 m + rockfall (H_c = 15 m, window r_c = 8 m, talus 0.1×)")),
+             ("param_dx4_rc2.txt", T("Δx = 4 m + 崩落(H_c = 15 m、窓 r_c = 8 m、崖錐 0.01 倍、κ_s = 0.2)", "Δx = 4 m + rockfall (H_c = 15 m, window r_c = 8 m, talus 0.01×, κ_s = 0.2)"))]
     SUF = "_dx4rc"
 elif MODE == "dx4":
-    CASES = [("param_dx4.txt", "Δx = 4 m、崩落なし"),
-             ("param_dx4_rock.txt", "Δx = 4 m + 崩落と崖錐(H_c = 6 m、崖錐の侵食性 0.1 倍)"),
-             ("param_dx4_rock2.txt", "Δx = 4 m + 崩落と崖錐(H_c = 6 m、崖錐の侵食性 0.01 倍)")]
+    CASES = [("param_dx4.txt", T("Δx = 4 m、崩落なし", "Δx = 4 m, no rockfall")),
+             ("param_dx4_rock.txt", T("Δx = 4 m + 崩落と崖錐(H_c = 6 m、崖錐の侵食性 0.1 倍)", "Δx = 4 m + rockfall and talus (H_c = 6 m, talus erodibility 0.1×)")),
+             ("param_dx4_rock2.txt", T("Δx = 4 m + 崩落と崖錐(H_c = 6 m、崖錐の侵食性 0.01 倍)", "Δx = 4 m + rockfall and talus (H_c = 6 m, talus erodibility 0.01×)"))]
     SUF = "_dx4"
 elif MODE == "rock4":
-    CASES = [("param_bench2.txt", "硬層 5〜10 m・倍率 0.02、崩落なし"),
-             ("param_rock.txt", "同 + 崩落と崖錐(H_c = 4 m、崖錐の侵食性 0.3 倍)"),
-             ("param_rock2.txt", "同 + 崩落と崖錐(H_c = 4 m、崖錐の侵食性 0.1 倍)")]
+    CASES = [("param_bench2.txt", T("硬層 5〜10 m・倍率 0.02、崩落なし", "hard layer 5–10 m, factor 0.02, no rockfall")),
+             ("param_rock.txt", T("同 + 崩落と崖錐(H_c = 4 m、崖錐の侵食性 0.3 倍)", "same + rockfall and talus (H_c = 4 m, talus erodibility 0.3×)")),
+             ("param_rock2.txt", T("同 + 崩落と崖錐(H_c = 4 m、崖錐の侵食性 0.1 倍)", "same + rockfall and talus (H_c = 4 m, talus erodibility 0.1×)"))]
     SUF = "_rock4"
 else:
-    CASES = [("param_cap.txt", "キャップロックあり(上 3 m 倍率 0.05、z = 8〜10 m 倍率 0.3)"),
-             ("param_nocap.txt", "層理なし(対照)")]
+    CASES = [("param_cap.txt", T("キャップロックあり(上 3 m 倍率 0.05、z = 8〜10 m 倍率 0.3)", "with cap rock (top 3 m factor 0.05, z = 8–10 m factor 0.3)")),
+             ("param_nocap.txt", T("層理なし(対照)", "no strata (control)"))]
     SUF = ""
 HARD = {"cap": [(17, 20), (8, 10)], "bench": [(17, 20), (6, 10)], "bench2": [(17, 20), (5, 10)], "bench3": [(17, 20), (5, 10)],
         "sat": [(17, 20), (5, 10)], "sat2": [(17, 20), (5, 10)], "rock": [(17, 20), (5, 10)], "rock2": [(17, 20), (5, 10)],
@@ -184,11 +194,11 @@ for c in cases:
             rate = -np.polyfit(np.array(ts)[sel], np.array(rs)[sel], 1)[0]
         print("%s R0=%g: r_eq %s / zmax %s / 後退速度 %.2e m/s(地形時間)" % (
             c["name"], R, " ".join("%.1f" % v for v in rs[:7]), " ".join("%.1f" % v for v in zs[:7]), rate))
-axes[0].set_xlabel("地形時間 T_geo (s)"); axes[0].set_ylabel("台地面(z ≥ 17 m)の等価半径 (m)")
-axes[0].set_title("キャップの縁の後退(直線 = 平行後退)"); axes[0].grid(alpha=0.3); axes[0].legend(fontsize=8)
-axes[1].set_xlabel("地形時間 T_geo (s)"); axes[1].set_ylabel("頂高 (m)")
-axes[1].set_title("頂の高さ"); axes[1].grid(alpha=0.3); axes[1].legend(fontsize=8)
-fig.tight_layout(); fig.savefig("figs/series%s.png" % SUF, dpi=110); plt.close(fig)
+axes[0].set_xlabel(T("地形時間 T_geo (s)", "Morphological time T_geo (s)")); axes[0].set_ylabel(T("台地面(z ≥ 17 m)の等価半径 (m)", "Equivalent radius of plateau surface (z ≥ 17 m) (m)"))
+axes[0].set_title(T("キャップの縁の後退(直線 = 平行後退)", "Retreat of the cap rim (straight line = parallel retreat)")); axes[0].grid(alpha=0.3); axes[0].legend(fontsize=8)
+axes[1].set_xlabel(T("地形時間 T_geo (s)", "Morphological time T_geo (s)")); axes[1].set_ylabel(T("頂高 (m)", "Top height (m)"))
+axes[1].set_title(T("頂の高さ", "Top height")); axes[1].grid(alpha=0.3); axes[1].legend(fontsize=8)
+fig.tight_layout(); fig.savefig("%s/series%s.png" % (FIGDIR, SUF), dpi=110); plt.close(fig)
 
 # --- 地図
 isel = [0, 1, 2, 3]
@@ -202,8 +212,8 @@ for r, c in enumerate(cases):
         ax.contour(x, y, z, levels=np.arange(2, 21, 2), colors="orange", linewidths=0.4)
         ax.contour(x, y, z, levels=[ZCAP], colors="red", linewidths=0.8)
         ax.set_title("%s  T_geo = %.1e s" % (c["name"], t), fontsize=9)
-fig.suptitle("赤線 = キャップ上面(z = 17 m)の輪郭", fontsize=10)
-fig.tight_layout(); fig.savefig("figs/maps%s.png" % SUF, dpi=110); plt.close(fig)
+fig.suptitle(T("赤線 = キャップ上面(z = 17 m)の輪郭", "Red line = outline of the cap top (z = 17 m)"), fontsize=10)
+fig.tight_layout(); fig.savefig("%s/maps%s.png" % (FIGDIR, SUF), dpi=110); plt.close(fig)
 
 # --- 横断
 fig, axes = plt.subplots(len(cases), 1, figsize=(13, 3 * len(cases)), sharex=True)
@@ -211,15 +221,15 @@ jc = int(YC / DX)
 for ax, c in zip(axes, cases):
     for z1, z2 in HARD.get(c["name"], []):
         ax.axhspan(z1, z2, color="0.85", lw=0, zorder=0)
-    ax.plot(x, c["snaps"][0][1][jc], "k--", lw=0.8, label="初期")
+    ax.plot(x, c["snaps"][0][1][jc], "k--", lw=0.8, label=T("初期", "initial"))
     n = len(c["snaps"]); cmap = plt.get_cmap("viridis")
     for i in range(1, n):
         t, z = c["snaps"][i]
         ax.plot(x, z[jc], color=cmap(i / (n - 1)), lw=0.9, label=("T_geo = %.1e s" % t) if i in (1, n // 2, n - 1) else None)
     ax.set_ylabel("z (m)"); ax.set_ylim(-0.5, 22); ax.grid(alpha=0.3); ax.legend(fontsize=8, loc="upper right")
     ax.set_title(labels[c["name"]], fontsize=10, loc="left")
-axes[-1].set_xlabel("x (m)(y = 50 m。灰色 = キャップ(上)と中間硬層(下))")
-fig.tight_layout(); fig.savefig("figs/sections%s.png" % SUF, dpi=110); plt.close(fig)
+axes[-1].set_xlabel(T("x (m)(y = 50 m。灰色 = キャップ(上)と中間硬層(下))", "x (m) (y = 50 m; grey = cap (upper) and hard intermediate layer (lower))"))
+fig.tight_layout(); fig.savefig("%s/sections%s.png" % (FIGDIR, SUF), dpi=110); plt.close(fig)
 
 # ベンチの指標: 大きい台地の方位平均断面で、z = 10〜17 m の軟層区間と中間硬層の上面(z ≈ 10 m)の
 # 幅 — 硬層上面 ±0.5 m にあるセルの数(台地中心から半径 45 m 以内)を時刻ごとに数える
@@ -250,10 +260,10 @@ if MODE in ("rock", "rock4", "dx4", "rc", "dx4rc", "face", "face8", "uc", "ucx")
         htf = np.loadtxt(fn)
         im = ax.imshow(htf, extent=ext, origin="lower", cmap="YlOrBr", vmin=0, vmax=max(htf.max(), 0.1))
         ax.contour(x, y, c["snaps"][-1][1], levels=[ZCAP], colors="red", linewidths=0.8)
-        ax.set_title("%s: 崖錐の厚さ Ht (m) 最終" % c["name"], fontsize=9)
+        ax.set_title(T("%s: 崖錐の厚さ Ht (m) 最終", "%s: final talus thickness Ht (m)") % c["name"], fontsize=9)
         plt.colorbar(im, ax=ax, shrink=0.8)
-    fig.tight_layout(); fig.savefig("figs/talus%s.png" % SUF, dpi=110); plt.close(fig)
-    print("figs/talus%s.png written" % SUF)
+    fig.tight_layout(); fig.savefig("%s/talus%s.png" % (FIGDIR, SUF), dpi=110); plt.close(fig)
+    print("%s/talus%s.png written" % (FIGDIR, SUF))
     # 崖錐の総量と崩落の台帳の時系列
     print("\n=== 崖錐の総量 Σht (m³) の時系列(2 スナップ毎)===")
     for c in cases[1:]:
@@ -264,4 +274,4 @@ if MODE in ("rock", "rock4", "dx4", "rc", "dx4rc", "face", "face8", "uc", "ucx")
             if os.path.exists(fn):
                 vals.append("%.0f" % np.loadtxt(fn).sum())
         print("%s: %s" % (c["name"], " ".join(vals)))
-print("\nfigs/maps%s.png, sections%s.png, series%s.png written" % (SUF, SUF, SUF))
+print("\n%s/maps%s.png, sections%s.png, series%s.png written" % (FIGDIR, SUF, SUF, SUF))

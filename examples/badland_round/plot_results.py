@@ -4,6 +4,7 @@
   python3 plot_results.py            # クリープ系列(D = 0 / 3e-7 / 1e-6 / 3e-6)
   python3 plot_results.py strata     # 縞模様(水平層理 1.5 m)の対照: figs/*_strata.png
   python3 plot_results.py strata3    # 層厚 3 m と 1.5 m の対照: figs/*_strata3.png
+  python3 plot_results.py en         # 英語ラベル版を en/figs/ に描く(strata / strata3 と併用可)
 
 図(figs/):
   maps.png      4 ケース × 3 時刻の陰影図(等高線付き)+ 初期地形
@@ -23,30 +24,39 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import LightSource
-matplotlib.rcParams["font.family"] = ["IPAGothic", "DejaVu Sans"]
-matplotlib.rcParams["axes.unicode_minus"] = False
-os.makedirs("figs", exist_ok=True)
+ARGS = [a for a in sys.argv[1:] if a != "en"]   # "en" は英語ラベル指定。残りが従来の位置引数
+EN = "en" in sys.argv[1:]
 
-MODE = sys.argv[1] if len(sys.argv) > 1 else "creep"
+
+def T(ja, en):
+    return en if EN else ja
+
+
+FIGDIR = "en/figs" if EN else "figs"
+matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
+matplotlib.rcParams["axes.unicode_minus"] = False
+os.makedirs(FIGDIR, exist_ok=True)
+
+MODE = ARGS[0] if ARGS else "creep"
 HARD15 = [(1.5 * k, 1.5 * (k + 1)) for k in range(1, 16, 2)]   # 硬層の標高帯(param_*_strata.txt と同じ)
 HARD3 = [(3.0 * k, 3.0 * (k + 1)) for k in range(1, 8, 2)]      # 同(param_*_strata3.txt、層厚 3 m)
 if MODE == "strata":
-    CASES = [("param_d0.txt", "クリープなし・層理なし"),
-             ("param_d0_strata.txt", "クリープなし・硬軟互層 (1.5 m, 倍率 1/0.3)"),
-             ("param_d1e-6.txt", "D = 1e-6 m²/s・層理なし"),
-             ("param_d1e-6_strata.txt", "D = 1e-6 m²/s・硬軟互層 (1.5 m, 倍率 1/0.3)")]
+    CASES = [("param_d0.txt", T("クリープなし・層理なし", "no creep, no strata")),
+             ("param_d0_strata.txt", T("クリープなし・硬軟互層 (1.5 m, 倍率 1/0.3)", "no creep, alternating beds (1.5 m, factors 1/0.3)")),
+             ("param_d1e-6.txt", T("D = 1e-6 m²/s・層理なし", "D = 1e-6 m²/s, no strata")),
+             ("param_d1e-6_strata.txt", T("D = 1e-6 m²/s・硬軟互層 (1.5 m, 倍率 1/0.3)", "D = 1e-6 m²/s, alternating beds (1.5 m, factors 1/0.3)"))]
     SUF = "_strata"
     HARD = {"d0_strata": HARD15, "d1e-6_strata": HARD15}
 elif MODE == "strata3":
-    CASES = [("param_d0_strata3.txt", "クリープなし・硬軟互層 (3 m, 倍率 1/0.3)"),
-             ("param_d3e-7_strata3.txt", "D = 3e-7 m²/s (L ≈ 2 m)・硬軟互層 (3 m)"),
-             ("param_d1e-6.txt", "D = 1e-6 m²/s (L ≈ 8 m)・層理なし"),
-             ("param_d1e-6_strata.txt", "D = 1e-6 m²/s (L ≈ 8 m)・硬軟互層 (1.5 m)"),
-             ("param_d1e-6_strata3.txt", "D = 1e-6 m²/s (L ≈ 8 m)・硬軟互層 (3 m)")]
+    CASES = [("param_d0_strata3.txt", T("クリープなし・硬軟互層 (3 m, 倍率 1/0.3)", "no creep, alternating beds (3 m, factors 1/0.3)")),
+             ("param_d3e-7_strata3.txt", T("D = 3e-7 m²/s (L ≈ 2 m)・硬軟互層 (3 m)", "D = 3e-7 m²/s (L ≈ 2 m), alternating beds (3 m)")),
+             ("param_d1e-6.txt", T("D = 1e-6 m²/s (L ≈ 8 m)・層理なし", "D = 1e-6 m²/s (L ≈ 8 m), no strata")),
+             ("param_d1e-6_strata.txt", T("D = 1e-6 m²/s (L ≈ 8 m)・硬軟互層 (1.5 m)", "D = 1e-6 m²/s (L ≈ 8 m), alternating beds (1.5 m)")),
+             ("param_d1e-6_strata3.txt", T("D = 1e-6 m²/s (L ≈ 8 m)・硬軟互層 (3 m)", "D = 1e-6 m²/s (L ≈ 8 m), alternating beds (3 m)"))]
     SUF = "_strata3"
     HARD = {"d0_strata3": HARD3, "d3e-7_strata3": HARD3, "d1e-6_strata": HARD15, "d1e-6_strata3": HARD3}
 else:
-    CASES = [("param_d0.txt", "クリープなし (D = 0)"),
+    CASES = [("param_d0.txt", T("クリープなし (D = 0)", "no creep (D = 0)")),
              ("param_d3e-7.txt", "D = 3e-7 m²/s (L ≈ 2 m)"),
              ("param_d1e-6.txt", "D = 1e-6 m²/s (L ≈ 8 m)"),
              ("param_d3e-6.txt", "D = 3e-6 m²/s (L ≈ 24 m)")]
@@ -254,7 +264,7 @@ ax.axis("on")
 ax.imshow(hillshade(z0, dx), cmap="gray", extent=ext, origin="lower", vmin=0, vmax=1)
 ax.contour(np.arange(nx) * dx + 0.5 * dx, np.arange(ny) * dx + 0.5 * dx, z0, levels=np.arange(2, 26, 2),
            colors="orange", linewidths=0.4)
-ax.set_title("初期地形(円錐丘 H = 24 / 15 / 9 / 5 m, tanθ = 0.8)")
+ax.set_title(T("初期地形(円錐丘 H = 24 / 15 / 9 / 5 m, tanθ = 0.8)", "Initial terrain (conical hills H = 24 / 15 / 9 / 5 m, tanθ = 0.8)"))
 for r, c in enumerate(cases, start=1):
     for k, i in enumerate(isel):
         t, z = c["snaps"][i]
@@ -268,7 +278,7 @@ for r, c in enumerate(cases, start=1):
         if r == len(cases):
             ax.set_xlabel("x (m)")
 fig.tight_layout()
-fig.savefig("figs/maps%s.png" % SUF, dpi=110)
+fig.savefig(f"{FIGDIR}/maps%s.png" % SUF, dpi=110)
 plt.close(fig)
 
 # ---------------------------------------------------------------- 図 2: 横断
@@ -278,7 +288,7 @@ x = (np.arange(nx) + 0.5) * dx
 for ax, c in zip(np.atleast_1d(axes), cases):
     for z1, z2 in HARD.get(c["name"], []):
         ax.axhspan(z1, z2, color="0.85", lw=0, zorder=0)
-    ax.plot(x, c["z0"][jc], "k--", lw=0.8, label="初期")
+    ax.plot(x, c["z0"][jc], "k--", lw=0.8, label=T("初期", "initial"))
     n = len(c["snaps"])
     cmap = plt.get_cmap("viridis")
     for i in range(1, n):
@@ -290,9 +300,9 @@ for ax, c in zip(np.atleast_1d(axes), cases):
     ax.set_ylim(-0.5, 26)
     ax.grid(alpha=0.3)
     ax.legend(fontsize=8, loc="upper right")
-np.atleast_1d(axes)[-1].set_xlabel("x (m)(y = 40 m、4 つの丘の頂を通る横断)")
+np.atleast_1d(axes)[-1].set_xlabel(T("x (m)(y = 40 m、4 つの丘の頂を通る横断)", "x (m) (y = 40 m, cross-section through the crests of the four hills)"))
 fig.tight_layout()
-fig.savefig("figs/sections%s.png" % SUF, dpi=110)
+fig.savefig(f"{FIGDIR}/sections%s.png" % SUF, dpi=110)
 plt.close(fig)
 
 # ---------------------------------------------------------------- 図 3: 半径方向断面
@@ -304,22 +314,22 @@ for r, c in enumerate(cases):
             ax.axhspan(z1, z2, color="0.85", lw=0, zorder=0)
         rc0, prof0, _ = radial_profile(c["z0"], xc, YC, H / TANB + 12, dx)
         m = metrics[c["name"]][k]
-        ax.plot(rc0, prof0, "k--", lw=0.8, label="初期")
+        ax.plot(rc0, prof0, "k--", lw=0.8, label=T("初期", "initial"))
         ax.plot(m["rc"], m["prof"], "r-", lw=1.4, label="T_geo = %.1e s" % TSEL)
         if np.isfinite(m["wcap"]):
-            ax.axvline(m["wcap"], color="b", lw=0.6, ls=":", label="キャップ半幅")
+            ax.axvline(m["wcap"], color="b", lw=0.6, ls=":", label=T("キャップ半幅", "cap half-width"))
         ax.set_ylim(-0.5, H + 1)
         ax.grid(alpha=0.3)
         if r == 0:
-            ax.set_title("丘 H₀ = %g m" % H)
+            ax.set_title(T("丘 H₀ = %g m", "hill H₀ = %g m") % H)
         if k == 0:
             ax.set_ylabel("%s\nz (m)" % labels[c["name"]], fontsize=8)
         if r == len(cases) - 1:
-            ax.set_xlabel("頂からの距離 r (m)")
+            ax.set_xlabel(T("頂からの距離 r (m)", "distance from the crest r (m)"))
         if r == 0 and k == 0:
             ax.legend(fontsize=7)
 fig.tight_layout()
-fig.savefig("figs/radial%s.png" % SUF, dpi=110)
+fig.savefig(f"{FIGDIR}/radial%s.png" % SUF, dpi=110)
 plt.close(fig)
 
 # ---------------------------------------------------------------- 図 4: 丸さ vs 丘の大きさ、頂の時系列
@@ -330,16 +340,16 @@ for c in cases:
     axes[0].plot(Hs, [m["smax"] for m in mm], "o-", label=labels[c["name"]])
     axes[1].plot(Hs, [max(-m["curv"], 1e-3) for m in mm], "o-", label=labels[c["name"]])
 axes[0].axhline(TANB, color="k", lw=0.5, ls="--")
-axes[0].text(5, TANB + 0.05, "初期の側面勾配 0.8", fontsize=8)
-axes[0].set_xlabel("丘の初期高さ H₀ (m)")
-axes[0].set_ylabel("側面の最大勾配(方位平均断面)")
-axes[0].set_title("側面の急峻化(尖る型)/ 緩傾斜化(丸い型)(T_geo = %.1e s)" % TSEL)
+axes[0].text(5, TANB + 0.05, T("初期の側面勾配 0.8", "initial flank slope 0.8"), fontsize=8)
+axes[0].set_xlabel(T("丘の初期高さ H₀ (m)", "initial hill height H₀ (m)"))
+axes[0].set_ylabel(T("側面の最大勾配(方位平均断面)", "maximum flank slope (azimuthally averaged profile)"))
+axes[0].set_title(T("側面の急峻化(尖る型)/ 緩傾斜化(丸い型)(T_geo = %.1e s)", "Flank steepening (sharp type) / gentling (rounded type) (T_geo = %.1e s)") % TSEL)
 axes[0].grid(alpha=0.3)
 axes[0].legend(fontsize=8)
-axes[1].set_xlabel("丘の初期高さ H₀ (m)")
-axes[1].set_ylabel("頂の曲率 −∂²z/∂r² (1/m)(大 = 尖る)")
+axes[1].set_xlabel(T("丘の初期高さ H₀ (m)", "initial hill height H₀ (m)"))
+axes[1].set_ylabel(T("頂の曲率 −∂²z/∂r² (1/m)(大 = 尖る)", "crest curvature −∂²z/∂r² (1/m) (large = sharp)"))
 axes[1].set_yscale("log")
-axes[1].set_title("頂の鋭さ(T_geo = %.1e s)" % TSEL)
+axes[1].set_title(T("頂の鋭さ(T_geo = %.1e s)", "Crest sharpness (T_geo = %.1e s)") % TSEL)
 axes[1].grid(alpha=0.3, which="both")
 for c in cases:
     for k, (xc, H) in enumerate(HILLS):
@@ -350,12 +360,12 @@ for c in cases:
             zs.append(zsum)
         axes[2].plot(ts, zs, color=plt.get_cmap("tab10")(cases.index(c)), lw=1.0,
                      ls=["-", "--", "-.", ":"][k], label=(labels[c["name"]] if k == 0 else None))
-axes[2].set_xlabel("地形時間 T_geo (s)")
-axes[2].set_ylabel("頂の高さ (m)")
-axes[2].set_title("頂の低下(線種: 実線 H₀=24, 破線 15, 一点鎖線 9, 点線 5 m)")
+axes[2].set_xlabel(T("地形時間 T_geo (s)", "landform time T_geo (s)"))
+axes[2].set_ylabel(T("頂の高さ (m)", "crest height (m)"))
+axes[2].set_title(T("頂の低下(線種: 実線 H₀=24, 破線 15, 一点鎖線 9, 点線 5 m)", "Crest lowering (line style: solid H₀=24, dashed 15, dash-dot 9, dotted 5 m)"))
 axes[2].grid(alpha=0.3)
 axes[2].legend(fontsize=8)
 fig.tight_layout()
-fig.savefig("figs/rounding%s.png" % SUF, dpi=110)
+fig.savefig(f"{FIGDIR}/rounding%s.png" % SUF, dpi=110)
 plt.close(fig)
-print("\nfigs/maps%s.png, sections%s.png, radial%s.png, rounding%s.png written" % (SUF, SUF, SUF, SUF))
+print("\n%s/maps%s.png, sections%s.png, radial%s.png, rounding%s.png written" % (FIGDIR, SUF, SUF, SUF, SUF))
