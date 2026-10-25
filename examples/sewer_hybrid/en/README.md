@@ -22,7 +22,7 @@ needed; everything is assembled from input files alone. The following
 explains, in order, the meaning of the parameters, the configuration of
 each run, and how to read the results.
 
-![Comparison of runs A–D](../sewer_hybrid_result.png)
+![Comparison of runs A–D](figs/sewer_hybrid_result.png)
 
 ## 1. The five parameters of the conduit continuum layer
 
@@ -141,7 +141,7 @@ is because sy/5 is still soft; in practice sy/50 is the default. §64).
 
 ## 5. Effect of the river and the outfall (runs E, F)
 
-![Comparison of runs D, E and F](../sewer_hybrid_outfall.png)
+![Comparison of runs D, E and F](figs/sewer_hybrid_outfall.png)
 
 A–D are closed boxes with walls on all four sides and no outlet for the
 pipes. In a real sewer system the end of the trunk opens into a river or

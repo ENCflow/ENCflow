@@ -888,10 +888,10 @@
       "source": "examples/sewer_hybrid/README.md",
       "target": "examples/sewer_hybrid/en/README.md",
       "source_sha256": "81bbe2c30f6cc75bb8150f58728b107db3510e07402f3df43e2ee9feadef979a",
-      "target_sha256": "5195d0a64868ae797876db1f7cca7efe557d7697857cc73d12f2da641808530e",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "target_sha256": "bf1557eae5c8ffb872414b66cb793d1f8ca26098349e81cefbde43ce7ff8df53",
+      "reviewer": "Claude (Claude Code session; English README figure links switched to en/figs; regenerated Japanese figures are byte-identical to the committed ones)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-25"
     },
     {
       "source": "examples/timberyard/README.md",
