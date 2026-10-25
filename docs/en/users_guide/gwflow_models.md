@@ -300,7 +300,54 @@ infiltration nearly stops in a wet soil whose top 20–30 cm are
 frozen[^zhao99]. Verification: [test/frost](../../../test/frost/en/README.md)
 (all 14 digits of the analytical value of the linear reduction).
 
-## 9. Parameters and the basis of their defaults
+## 9. Streambed exchange limit (f_gwbed = 1)
+
+The standard representation of river-aquifer exchange is Darcy flow through
+a streambed conductance set by the conductivity $`K_b`$ and thickness $`M`$
+of the bed layer. The RIV package of MODFLOW[^harbaugh05] uses
+$`Q = C\,(h_{riv} - h_{aq})`$ with $`C = K_b W L / M`$, and caps it at
+$`Q = C\,(h_{riv} - z_{bot})`$ once the aquifer head drops below the bed
+bottom. Since every quantity in ENCflow is a column quantity, an exchange
+limit per unit area $`k_{bed}`$ (m/s) is given on the channel-mask cells in
+place of $`C`$, in the same form as the interlayer exchange of the conduit
+layer (§6): the direction follows the head difference and the discharge is
+capped (**an original simplification**: a Darcy form proportional to
+$`\Delta h / M`$ is not adopted, because it needs the extra input $`M`$ and
+a guard against $`M \to 0`$; multiplying $`k_{bed}`$ by $`\Delta h / M`$
+would migrate to it later).
+
+```math
+\text{vertical (channel cells)}:\quad f_v = \min\!\left(k_{bed}\,\Delta t_s,\ h,\ c - h_g\right),
+\qquad
+\text{lateral (channel / non-channel edges)}:\quad |q_k| \le k_{bed}\, L_k\, h_e
+```
+
+The vertical part replaces the infiltration capacity $`K`$ / $`K_{sv}`$ of
+§2 and §3 by $`k_{bed}`$ on channel cells; the lateral part limits the edge
+discharge $`q_k`$ of §4 in both directions by the product of the
+channel-side $`k_{bed}`$ and the interface area (passage width $`L_k`$ x
+interface saturated thickness $`h_e`$). While the groundwater head is below
+the capacity the exchange is one-way vertical infiltration (the RIV cap, a
+river perched above the aquifer); when the surrounding groundwater is high,
+lateral inflow saturates the channel cell and exfiltrates to the surface
+(gaining river) at a rate throttled by $`k_{bed}`$. Edges between channel
+cells are aquifer continuity and are not capped. Only fluxes are reduced,
+so the stability condition of §4 is unchanged.
+
+**Typical values.** Pooled riverbed permeabilities[^calver01] scatter over
+1e-7 to 1e-3 m/s (0.36 to 3600 mm/h) and are often one to three orders of
+magnitude below the surrounding aquifer because of fine-sediment clogging
+(colmation)[^brunke99], recovering after scouring floods. Gravel beds of
+alluvial-fan rivers exceed the soil; concrete channels are 0. $`k_{bed}`$
+has no default (0 means impervious; given). A variable $`k_{bed}`$ coupled
+with the fines ledger (f_bedfines in [Sediment and morphology](geomorph.md))
+is a future extension. Verification:
+[test/gwbed](../../../test/gwbed/en/README.md) (linear growth of the
+throttled gaining flow, the $`k_{bed} = 0`$ cut-off and the replacement of
+the vertical infiltration capacity, compared with analytical values).
+
+
+## 10. Parameters and the basis of their defaults
 
 The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
 
@@ -323,6 +370,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | gwc_eps_h / gwc_nsubmax | 1e-2 m / 100 | linearisation width of the square-root law / sub-cycle limit | **numerical** |
 | fro_fifull / fro_fmin / fro_tf / fro_ct | 20 °C·day / 0 / 0 °C / 1 | reduction factor of frozen ground (§8) | **literature value** corresponds to a Stefan frost depth of 0.25 m[^andersland04][^zhao99] |
 | fro_swe0 / fro_fimax / fro_fi0 | 0 / 0 / 0 | snow insulation, cap, initial value | **given** 0 = none; calibration entry for snowmelt events |
+| gwbed_k_mmh / fn_gwbed_k | - | streambed exchange limit $`k_{bed}`$ (§9) | **given** 0 = impervious. Pooled riverbed K[^calver01] spans 0.36-3600 mm/h. No default |
 
 **Where to look when revising the defaults**
 
@@ -341,7 +389,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   infiltration rate from the annual baseflow (precipitation − direct
   runoff − evapotranspiration).
 
-## 10. Verification cases
+## 11. Verification cases
 
 | Case | Content | Point |
 |---|---|---|
@@ -350,6 +398,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/gwseep](../../../test/gwseep/en/README.md) | water-quality ledger of infiltration → lateral flow → exfiltration | to_gw − seep = mass_gw closes |
 | [test/pump](../../../test/pump/en/README.md) | mass balance of pumping | 13 digits of the analytical value |
 | [test/frost](../../../test/frost/en/README.md) | infiltration suppression by frost | all 14 digits of the analytical value |
+| [test/gwbed](../../../test/gwbed/en/README.md) | throttling, cut-off and replacement by the streambed exchange limit | the per-step loss of the floodplain cells matches S_grnd to all 14 digits; gaining increments match the analytical rate |
 | [examples/sewer_hybrid](../../../examples/sewer_hybrid/en/README.md) | trunk + branch network conversion | cell-wise sy map |
 | [examples/qanat](../../../examples/qanat/en/README.md) | conduit layer + layer 2 | collection, conveyance and outlet of a gallery |
 
@@ -369,3 +418,6 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^cunge64]: Cunge, J. A. and Wegner, M. (1964): Intégration numérique des équations d'écoulement de Barré de Saint-Venant par un schéma implicite de différences finies. *La Houille Blanche*, 1, 33–39. (Preissmann slot)
 [^andersland04]: Andersland, O. B. and Ladanyi, B. (2004): *Frozen Ground Engineering*, 2nd ed. Wiley. (Stefan equation)
 [^zhao99]: Zhao, L. and Gray, D. M. (1999): Estimating snowmelt infiltration into frozen soils. *Hydrol. Process.*, 13, 1827–1842.
+[^harbaugh05]: Harbaugh, A. W. (2005): MODFLOW-2005, the U.S. Geological Survey modular ground-water model — the Ground-Water Flow Process. *USGS Techniques and Methods*, 6-A16. (RIV package)
+[^calver01]: Calver, A. (2001): Riverbed permeabilities: information from pooled data. *Ground Water*, 39, 546–553.
+[^brunke99]: Brunke, M. (1999): Colmation and depth filtration within streambeds: retention of particles in hyporheic interstices. *Int. Rev. Hydrobiol.*, 84, 99–117.

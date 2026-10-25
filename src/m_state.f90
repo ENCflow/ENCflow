@@ -249,6 +249,11 @@ module m_state
     real, allocatable :: frofac(:,:)    ! 凍土の浸透低減係数 [fro_fmin,1](m_gwflow_frost
                                         ! が書き、鉛直浸透モデルが浸透能に乗じる。
                                         ! 確保は gwflow_frost_init(f_gwfrost=1 のみ)。§16.4)
+    real, allocatable :: kbed(:,:)      ! 河床交換能 (m/s。河道セルのみ >= 0、非河道セルは
+                                        ! 負の番兵)。m_gwflow_bed が init で構築する静的係数。
+                                        ! 鉛直浸透モデルが河道セルの浸透能を置き換え、層1の
+                                        ! 側方流が河道・非河道間エッジの流量上限に使う。
+                                        ! 確保は gwflow_bed_init(f_gwbed=1 のみ)。§16.5)
     logical :: wq_active = .false.  ! 水質輸送の有効化(m_wq_init が設定。
                                     ! swflow_enc がステップ内で s%cq を移流する)
     real :: cg_rginv = 1.0          ! 地下輸送の移流分担率 1/R(遅延化係数 wq_rg の
@@ -886,6 +891,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%fxd)) deallocate(s%fxd)
   if (allocated(s%fxdi)) deallocate(s%fxdi)
   if (allocated(s%frofac)) deallocate(s%frofac)
+  if (allocated(s%kbed)) deallocate(s%kbed)
   if (allocated(s%tide)) deallocate(s%tide)
   if (allocated(s%hmax)) deallocate(s%hmax)
   if (allocated(s%hmaxt)) deallocate(s%hmaxt)

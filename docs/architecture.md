@@ -22,7 +22,8 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理。複数�
   │                         f_nh_bottom を含む。状態・ソルバ・診断は submodule 私有。§69)
   │    m_gwflow      地下水の切替器(鉛直は排他: bucket / greenampt。
   │                  加算: lateral / layer2 / conduit(管路連続体層)/
-  │                  pump(井戸揚水シンク)/ frost(凍土の浸透抑制))
+  │                  pump(井戸揚水シンク)/ frost(凍土の浸透抑制)/
+  │                  bed(河床交換能 = 河道セルと地下水の交換の上限。§16.5))
   │    m_geomorph    土砂・地形変化(加算: creep / fluvial / suspend / wash / splash / debris /
   │                  bedslide / bank(側岸侵食) / fines(河床細粒分の帳簿) / fixation(植生定着)/
   │                  rockfall(崩落と崖錐)/ wave(波浪による沿岸漂砂。fn_wave)/ wthr・uplift /

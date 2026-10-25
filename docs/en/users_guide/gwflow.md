@@ -62,6 +62,7 @@ a second layer, a conduit continuum layer, and pumping sinks if needed.
 | f_gwconduit | 0 | 1: enable the conduit continuum layer (sewer networks, fractured bedrock, etc.) |
 | f_gwpump | 0 | 1: enable well pumping / groundwater abstraction (sink) |
 | f_gwfrost | 0 | 1: enable infiltration suppression by frozen ground (requires air temperature, fn_meteo) |
+| f_gwbed | 0 | 1: enable the streambed exchange limit (cap on the exchange between channel cells and groundwater; requires the channel mask fn_rw) |
 | dt_gwflow | 0 | Update interval of the groundwater computation (s). 0: every step. If specified, must be at least dt (consistency is maintained through the effective time step) |
 
 **Soil depth sd and specific yield sy0 belong to the geographic
@@ -78,6 +79,7 @@ when a model that needs soil depth (Green-Ampt or lateral) is selected.
 | Down to baseflow / low-flow recession | The above + f_gwlayer2=1 |
 | Urban pluvial flooding (sewer drainage and surcharge) | f_gwconduit=1 (alone where imperviousness dominates; add f_gwvertical=2 to include infiltration) |
 | Simplest loss model | f_gwvertical=1 (bucket) |
+| River-aquifer exchange (return of floodplain ponding to the channel, lined channels) | Any of the above + f_gwbed=1 (fn_rw) |
 
 ## Just try it (minimal input)
 
@@ -434,6 +436,56 @@ reduction factor is applied to the vertical infiltration capacity
 
 **Outputs for this section**: the freezing index is not written as a raster (its state is saved in `gwflow_frost.dat`). Check the effect as `Hg0001...` ceasing to grow and `H0001...` responding more strongly to the same rain or snowmelt ([Output and monitoring](#output-and-monitoring)).
 
+## Streambed exchange limit (f_gwbed=1, &list_gwflow_bed)
+
+Equations, correspondence to MODFLOW RIV and typical values: [supplement](gwflow_models.md#9-streambed-exchange-limit-f_gwbed--1).
+
+On the cells of the channel mask (`fn_rw`; [Geographic information](geoinfo.md))
+the exchange between surface water and soil-layer groundwater through the
+bed and banks is given a **limit per unit area k_bed** (mm/h). In reality
+the exchange between a river and its aquifer is often governed by a
+clogged streambed layer (colmation) or by a lining, whose permeability
+differs from that of the surrounding soil. Without it (f_gwbed=0) channel
+cells connect to groundwater with the same infiltration capacity and
+lateral conductivity as every other cell.
+
+It acts in two places.
+
+- **Vertical (losing side)**: the vertical infiltration capacity of channel
+  cells (gw_infil_mmh of the bucket, K_sv of Green-Ampt) is replaced by
+  k_bed. This is one-way infiltration until the groundwater head reaches
+  the capacity, i.e. a river perched above the aquifer. k_bed = 0 makes the
+  bed impervious (concrete channel). The frozen-ground factor multiplies
+  the replaced value.
+- **Lateral (gaining and losing sides)**: in the lateral flow model
+  (f_gwlateral=1) the edge discharge between a channel cell and a
+  non-channel cell is capped at |q| <= k_bed x passage width x interface
+  saturated thickness. The cap is the same in both directions, so a
+  gaining river, where surrounding groundwater enters the channel and
+  exfiltrates, is also throttled by k_bed. Edges between two channel cells
+  are treated as aquifer continuity and are not capped; layer 2, the
+  conduit layer and the fresh/salt layers are not affected.
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| gwbed_k_mmh | - | Uniform exchange limit of the channel cells (mm/h). 0 is allowed (= impervious). Required unless fn_gwbed_k is given |
+| fn_gwbed_k | "" | Map of the exchange limit (mm/h). Takes precedence over the uniform value. Only the values on channel cells are used; cells with 0 do not exchange (lined reaches) |
+
+- Either the vertical or the lateral model must be enabled, and the channel
+  mask fn_rw must exist (otherwise initialization stops).
+- It only reduces fluxes, so the stability condition of the lateral flow is
+  unchanged.
+- Guide: measured riverbed permeabilities scatter over 1e-7 to 1e-3 m/s
+  (0.36 to 3600 mm/h) and are often one to three orders of magnitude below
+  the surrounding soil because of fine-sediment clogging. Gravel beds of
+  alluvial-fan rivers exceed the soil; concrete channels are 0 (table of
+  recommended values below).
+- There is no coupling with bed evolution (no variable k_bed driven by the
+  fines fraction).
+
+**Outputs for this section**: no raster output. Check the effect on `Hg0001...` of the channel cells (it stays 0 when k_bed = 0) and on the rise of the channel `H0001...` without rain (gaining river) ([Output and monitoring](#output-and-monitoring)).
+
+
 ## Recommended values by pattern
 
 The defaults are middle-of-the-road values that make the model run.
@@ -469,6 +521,7 @@ it is smaller than the table, about 0.1-0.2)
 | Sewer infiltration / inflow | Conduit layer + Green-Ampt + gwc_leak_layer=1 | as above | as above | - | - | leak 1-10 mm/h (larger for aged pipes) |
 | Bedrock / karst | Conduit layer + layer 2 + gwc_leak_layer=2 | 0.5-1 | 10-50 | - | thickness 10-50 m, sy 0.01-0.05 | gwc_inlet only at sinkholes; cnd is the conveyance of the fracture network |
 | Snowmelt runoff over frozen ground | Green-Ampt + frost + fn_snow | 0.5-1 | 10-50 | - | - | fifull 10-40 degC.day (smaller for moist soils), fro_swe0 0.05-0.2 m |
+| River-aquifer exchange (return of floodplain ponding, losing reaches, lined channels) | lateral + streambed exchange limit (+ Green-Ampt) | 1-5 | 10-50 | 360-36000 | - | k_bed: clogged sand bed 1-100 mm/h, gravel bed 100-3600 mm/h, concrete channel 0. No default (required) |
 | Coastal aquifer saltwater wedge | Lateral + [fresh/salt two-layer](salt.md) | 5-20 | - | 3600-36000 | - | Sandy aquifer K 1e-3-1e-2 m/s, sy0 0.2-0.3 |
 | Simplest loss (calibration-driven) | Bucket | - | 5-50 (infil) | - | - | capacity 0.05-0.3 m. The SCS S (0.06-0.17 m for CN 60-80) is a guide |
 
@@ -545,5 +598,6 @@ see [the rainfall and meteorology chapter](forcing.md).
 - [test/gwdefault](../../../test/gwdefault/en/README.md): equivalence of minimal and explicit-default inputs for the bucket, Green-Ampt/layer 2, frost and conduit configurations.
 - [test/pump](../../../test/pump/en/README.md) and [test/frost](../../../test/frost/en/README.md): analytical checks of storage loss by well pumping and infiltration suppression by the freezing index.
 - [test/gwseep](../../../test/gwseep/en/README.md): infiltration, lateral groundwater transport and exfiltration, checked together with water-quality mass balances.
+- [test/gwbed](../../../test/gwbed/en/README.md): throttled gaining flow, the k_bed = 0 cut-off and the replacement of the vertical infiltration capacity by the streambed exchange limit, compared with analytical values.
 - [examples/sewer_hybrid](../../../examples/sewer_hybrid/en/README.md): example settings and input generation that represent a trunk and a branch network in the same conduit layer.
 - [examples/qanat](../../../examples/qanat/en/README.md): an example combining the conduit layer with layer 2 to represent collection, conveyance and outlet seepage of an underground gallery.

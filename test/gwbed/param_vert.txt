@@ -1,0 +1,77 @@
+!======================================================================
+! gwbed: 河床交換能(f_gwbed)の解析検証 — 構成 3「鉛直浸透能の置き換え
+!        (失水)」
+!
+!   param.txt と同じ 2 × 11 のマスク・河道配置だが地形は平坦(z = 0)、
+!   堤防なし、側方流動なし。初期水深 0.1 m 一様で地表の流れは起きない。
+!   Green-Ampt(psif=0 = 一定浸透能)K_sv = 36 mm/h = 1e-5 m/s を非河道
+!   セル(12)に、河道セル(6)では k_bed = 3.6 mm/h = 1e-6 m/s が K_sv を
+!   置き換える。表面水は全時間で残り(1e-5 × 3600 = 0.036 < 0.1)容量
+!   (0.2 m)にも達しないので、領域平均の地下貯留は厳密に
+!     S_grnd(t) = (12 × 1e-5 + 6 × 1e-6) t / 18 = 7e-6 t   (m)
+!     S_grnd(3600) = 0.0252 m、S_total = 0.1 不変
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 3600
+  dt_disp = 300
+  dt_file = 1800
+  dt_recrd = 300
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_gwflow = '-'
+  fn_record = '-'
+  dir_data = 'data_gwbed'
+  dir_result = 'result_vert'
+  f_disp_debug = 1
+  f_check_cfl = 0
+  f_out_hg = 1
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.1
+/
+
+&list_geoinfo
+  nx = 2
+  ny = 11
+  dx = 2.0
+  dy = 2.0
+  f_ztype = 0
+  z0 = 0.0                  ! 平坦
+  f_masktype = 1
+  fn_mask = 'mask.txt'
+  fn_rw = 'rw.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 0
+  sd0 = 1.0
+  sy0 = 0.2
+/
+
+&list_bound
+/
+
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 1, 2
+  pbxy(:,2) = 1, 1
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt
+  f_gwlateral = 0           ! 側方なし
+  f_gwbed = 1               ! 河床交換能(鉛直の置き換えのみ作用)
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 36.0         ! 1e-5 m/s(非河道セル)
+  gw_psif = 0.0
+/
+
+&list_gwflow_bed
+  gwbed_k_mmh = 3.6         ! 1e-6 m/s(河道セルの浸透能)
+/

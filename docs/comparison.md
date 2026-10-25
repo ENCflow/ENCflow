@@ -112,7 +112,7 @@ Engineering)・van Ormondt ら 2025(GMD)の知識によるもの。引用前に�
 | サブグリッド河道(σ断面・幅) | ○ | LISFLOOD-FP, HEC-RAS(1D-2D), SFINCS(セル内の地形分布から水深–体積・通水を表にするサブグリッド地形。河道に限らない) | 1 セル 1 水位+σ(h) は独自色 |
 | 構造物(破堤・ポンプ・カルバート・樋門・分水・ダム操作) | ○ | HEC-RAS, TUFLOW, MIKE, SOBEK(SFINCS は薄い壁・堰・排水ポンプ・カルバートまで) | 無償・公開勢では手薄な領域 |
 | 降雨流出・遮断・蒸発散 | ○ 樹冠・Hamon/Thornthwaite・減率 | RRI, GSSHA, MIKE SHE, SHETRAN | 水理特化勢は持たない(SFINCS は rain-on-grid+浸透(定数・CN・Green-Ampt・Horton)まで。遮断・蒸発散・地下水はない) |
-| 地下水 | ○ 2 層(土層+風化基岩層)+井戸揚水シンク | MIKE SHE, SHETRAN, GSSHA, ParFlow | 平面 2 次元で 2 層は少数派。揚水と淡塩 2 層の併用で揚水誘引の海水浸入も扱える |
+| 地下水 | ○ 2 層(土層+風化基岩層)+井戸揚水シンク+河床交換能(MODFLOW RIV 相当の上限形) | MIKE SHE, SHETRAN, GSSHA, ParFlow | 平面 2 次元で 2 層は少数派。揚水と淡塩 2 層の併用で揚水誘引の海水浸入も扱える。河川と帯水層の交換は河道マスクのセル列で表し、別の河川パッケージを持たない |
 | 海水浸入・淡塩2層 | △ 鋭利界面(SWI2 同型)+地表塩水層 | MODFLOW+SWI2/SEAWAT, SUTRA, FEFLOW | 混合・分散まで解く変密度輸送は専用領域。地表氾濫・潮位と単一時間発展で遡上海水の行き先まで追う点が独自 |
 | 都市排水・管路網 | △ 管路連続体層(等価被圧連続体・8 方向通水・サーチャージ) | SWMM+2D 結合(TUFLOW, InfoWorks ICM, xpswmm) | 世界標準は地表 2D と管路 1D 網の結合。網を連続体化する独自路線で、制御構造物・幹線支配系は網モデルに譲る |
 | 土砂・地形変化(掃流・浮遊・崩壊・土石流) | ○ MORFAC 付き。崖の崩落と崖錐(f_rockfall。窓版の自由面高さ・海食崖の海への排出)も | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | 土石流を流域水文・洪水と同居させる点が異なる |
