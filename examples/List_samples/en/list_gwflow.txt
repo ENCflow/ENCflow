@@ -75,6 +75,11 @@
   !  1: enabled (uses &list_gwflow_frost. Requires air temperature, fn_meteo)
   !f_gwfrost = 1
 
+  ! Enable the streambed exchange limit
+  !  0: none (no resources are allocated)
+  !  1: enabled (uses &list_gwflow_bed. Requires the channel mask fn_rw)
+  !f_gwbed = 1
+
   ! Update time interval of the groundwater computation (s)
   !  0 updates every step
   !  A nonzero value must be at least the time step dt
@@ -402,5 +407,34 @@
   ! Initial freezing index (degC.day) (default 0. Set it to start an
   ! event run of the melt season "already frozen")
   !fro_fi0 = 20.0
+
+/
+
+
+!======================================================================
+! Streambed exchange limit specific settings (f_gwbed = 1)
+!======================================================================
+!   On the cells of the channel mask (fn_rw), gives the exchange between
+!   surface water and soil-layer groundwater through the bed and banks a
+!   limit per unit area k_bed (mm/h) (the counterpart of the streambed
+!   conductance of MODFLOW RIV). It replaces the vertical infiltration
+!   capacity of channel cells (gw_infil_mmh / gw_ksv_mmh) by k_bed and, in
+!   the lateral flow model, caps the edge discharge between channel and
+!   non-channel cells at k_bed x interface area in both directions (the
+!   exfiltration of a gaining river is throttled too).
+!   0 = impervious (concrete channel). Because 0 is meaningful there is no
+!   default: either gwbed_k_mmh or fn_gwbed_k is required. Either the
+!   vertical or the lateral model must be enabled.
+!======================================================================
+&list_gwflow_bed
+  ! Uniform exchange limit of the channel cells (mm/h). >= 0 (0 =
+  ! impervious). Guide: clogged sand bed 1-100, gravel bed 100-3600,
+  ! concrete channel 0
+  gwbed_k_mmh = 36.0
+
+  ! Map of the exchange limit (mm/h). Takes precedence over the uniform
+  ! value. Only the values on channel cells are used; cells with 0 do not
+  ! exchange (lined reaches)
+  !fn_gwbed_k = "gwbed_k.txt"
 
 /

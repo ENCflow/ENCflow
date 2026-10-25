@@ -99,6 +99,16 @@ module m_gwflow_lateral
   !   厳密に同じ値を得る。swflow の par_edge_merge に相当する通信は不要。
   !   §11「冗長計算=配布機構」)
   !
+  ! 【河床交換能(§16.5。2026-10-25)】
+  !   f_gwbed=1 のとき(s%kbed が確保済み)、層1(to_surface)のループ1で
+  !   河道セル(g%rw>0)と非河道セルの間のエッジ流量を
+  !     |q_k| <= k_bed(河道側セル) · l_k · h_e
+  !   に抑える(両向き同じ上限。河床・河岸の界面を通る流量の上限 =
+  !   MODFLOW RIV の頭打ちの柱状量版)。Darcy 項の計算後・過大流出抑制の
+  !   前に適用し、水質の同伴フラックス qm は抑えた後の q を使う。
+  !   河道同士のエッジ・層2・管路層は対象外。無効時は分岐に入らない
+  !   (do_bed = .false.)= 従来とビット一致
+  !
   ! 【地表流との結合】
   !   側方流入で飽和容量を超えたセルは、超過分を上位(層1は s%h、層2は
   !   s%hg)へ渡す(反対称適用。m_gwflow_bucket 契約(1)(2)と同型。
@@ -415,19 +425,22 @@ subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
   real, intent(in), optional :: rginv                ! 移流分担率 1/R(省略時 1.0)
   integer :: i, j, k, in, jn, jt
   real :: hgwc, hgwn, hc0, hn0, hgw_up, hgw_e, gq, dh_up, dhg, capc, capn, fx
-  real :: qmv, dcm, wm, rgi
-  logical :: do_cg
+  real :: qmv, dcm, wm, rgi, qcap
+  logical :: do_cg, do_bed
 
   do_cg = present(cg)
   rgi = 1.0
   if (present(rginv)) rgi = rginv
+  ! 河床交換能(§16.5): 層1のみ。河道セルと非河道セルの間のエッジ流量を
+  ! |q| <= k_bed·l_k·h_e に抑える(両向き同じ上限)。無効時は分岐に入らない
+  do_bed = lay%to_surface .and. allocated(s%kbed)
 
   ! --- ループ1: エッジ流量(各成分の書き手は一意なので競合しない) ---
   !   帯界面のエッジ成分 k=1..3(行 je)はハロ行 je+1 の書き手が担う
   !   (冗長計算。全域端では行が存在せず対象外)
   jt = min(dcp%je + 1, dcp%jeh)
   !$omp parallel do schedule(static) &
-  !$omp   private(i, j, k, in, jn, hgwc, hgwn, hc0, hn0, hgw_up, hgw_e, gq, dh_up, capc, capn, qmv)
+  !$omp   private(i, j, k, in, jn, hgwc, hgwn, hc0, hn0, hgw_up, hgw_e, gq, dh_up, capc, capn, qmv, qcap)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -464,6 +477,20 @@ subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
                   hgw_e = min(0.5 * (hgwc + hgwn), hgw_up)
                   ! エッジ流量(書き手 c から k 近傍 n に向かい正)
                   gq = lay%ksh * hgw_e * (hc0 - hn0) * glt%rdr(k) * glt%wl(k)
+                  ! 河床交換能による上限(§16.5): 河道・非河道間のエッジだけ。
+                  ! 上限は河道側セルの k_bed × 界面面積(通過幅 × 界面飽和帯厚)
+                  if (do_bed) then
+                    if ((g%rw(i,j) > 0) .neqv. (g%rw(in,jn) > 0)) then
+                      if (g%rw(i,j) > 0) then
+                        qcap = s%kbed(i,j) * glt%wl(k) * hgw_e
+                      else
+                        qcap = s%kbed(in,jn) * glt%wl(k) * hgw_e
+                      end if
+                      ! (番兵の負値は「上限なし」。マップ構築が河道セルを >= 0 に
+                      !  保つため通常は到達しない)
+                      if (qcap >= 0.0 .and. abs(gq) > qcap) gq = sign(qcap, gq)
+                    end if
+                  end if
                   ! 過大流出の抑制: このエッジの流出で上流側が eps を
                   ! 割るなら縮小(exflux_reduction 相当。§5.1)
                   dh_up = abs(gq) * dts * glt%ainv * lay%syinv

@@ -189,6 +189,11 @@ subroutine gwflow_greenampt_calc(ga, p, g, s, it, dts)
       ! 実効透水係数: 凍土有効時は低減係数を乗じる(§16.4。
       ! 無効時は kv = ksv でスカラー時代とビット一致)
       kv = ga%ksv(i,j)
+      ! 河床交換能(§16.5): 河道セルは K_sv を k_bed で置き換える
+      ! (非河道セルは負の番兵 = 置き換えなし。無効時は配列未確保でビット一致)
+      if (allocated(s%kbed)) then
+        if (s%kbed(i,j) >= 0.0) kv = s%kbed(i,j)
+      end if
       if (allocated(s%frofac)) kv = kv * s%frofac(i,j)
       ! kv = 0(マップ指定の不浸透セル・完全凍結)は浸透なし
       ! (正則化 F_eff の除算保護を兼ねる)

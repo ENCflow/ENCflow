@@ -109,6 +109,11 @@ subroutine gwflow_bucket_calc(gwb, p, g, s, it, dts)
       ! 実効浸透能: 凍土有効時は低減係数を乗じる(§16.4。無効時は
       ! rt = rate で従来とビット一致)
       rt = gwb%rate
+      ! 河床交換能(§16.5): 河道セルは浸透能を k_bed で置き換える
+      ! (非河道セルは負の番兵 = 置き換えなし。無効時は配列未確保でビット一致)
+      if (allocated(s%kbed)) then
+        if (s%kbed(i,j) >= 0.0) rt = s%kbed(i,j)
+      end if
       if (allocated(s%frofac)) rt = rt * s%frofac(i,j)
       ! 浸透フラックス: 浸透能・表面水量・残容量の最小
       fx = min(rt * dts, s%h(i,j), gwb%cap - s%hg(i,j))

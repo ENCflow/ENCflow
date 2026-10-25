@@ -252,7 +252,46 @@ $`w_0`$ = `fro_swe0` が積雪断熱の e-folding(0 で断熱なし)、
 [^zhao99]ことに対応します。検証: [test/frost](../../test/frost/README.md)
 (線形低減の解析値に全 14 桁一致)。
 
-## 9. パラメータと既定値の根拠
+## 9. 河床交換能(f_gwbed = 1)
+
+河川と帯水層の交換は、河床層の透水係数 $`K_b`$ と厚さ $`M`$ で決まる河床
+コンダクタンスを通る Darcy 流として表すのが標準です。MODFLOW の RIV
+パッケージ[^harbaugh05]は $`Q = C\,(h_{riv} - h_{aq})`$、$`C = K_b W L / M`$
+とし、帯水層水頭が河床底より下がれば $`Q = C\,(h_{riv} - z_{bot})`$ で
+頭打ちにします。ENCflow は全量が柱状量なので、$`C`$ の代わりに単位面積
+あたりの交換能 $`k_{bed}`$ (m/s) を河道マスクのセルに与え、管路層の層間
+交換(§6)と同じ「向きは水頭差、流量は上限で頭打ち」の形で表します
+(**独自の簡略化**: $`\Delta h / M`$ に比例する Darcy 形は、河床層厚
+$`M`$ の追加入力と $`M \to 0`$ の発散回避が要るため採りません。
+$`k_{bed}`$ に $`\Delta h / M`$ を掛ければ後から移行できます)。
+
+```math
+\text{鉛直(河道セル)}:\quad f_v = \min\!\left(k_{bed}\,\Delta t_s,\ h,\ c - h_g\right),
+\qquad
+\text{側方(河道・非河道間のエッジ)}:\quad |q_k| \le k_{bed}\, L_k\, h_e
+```
+
+鉛直は §2・§3 の浸透能 $`K`$・$`K_{sv}`$ を河道セルで $`k_{bed}`$ に置き
+換えたもの、側方は §4 のエッジ流量 $`q_k`$ を、河道側セルの $`k_{bed}`$ と
+界面面積(通過幅 $`L_k`$ × 界面飽和帯厚 $`h_e`$)の積で両向きに制限した
+ものです。地下水頭が容量に達していない間は鉛直の片方向浸透(RIV の
+頭打ち = 河床から切り離された河川)、周囲の地下水が高いときは側方流入が
+河道セルを飽和させて地表へ湧出し(得水)、その速度を $`k_{bed}`$ が
+律速します。河道同士のエッジは帯水層の連続として制限しません。減らす側
+の作用だけなので §4 の安定条件は変わりません。
+
+**値の目安。** 河床の透水係数の集計[^calver01]では 1e-7〜1e-3 m/s
+(0.36〜3600 mm/h)に散らばり、細粒の目詰まり(コルマチオン)[^brunke99]で
+周囲の帯水層より 1〜3 桁小さいことが多く、洪水の洗掘で回復します。礫床の
+扇状地河川は土より大きく、コンクリート水路は 0 です。$`k_{bed}`$ には既定
+を置きません(0 に「不透」の意味があるため。与件)。細粒分の帳簿
+([土砂・地形変化](geomorph.md)の f_bedfines)と連動した可変 $`k_{bed}`$
+は将来の拡張です。検証: [test/gwbed](../../test/gwbed/README.md)
+(上限で律速された得水の線形増加・$`k_{bed} = 0`$ の遮断・鉛直浸透能の
+置き換えを解析値と比較)。
+
+
+## 10. パラメータと既定値の根拠
 
 根拠欄の分類語の意味は[既定値の根拠の読み方](../users_guide.md#既定値の根拠の読み方)を参照してください。
 
@@ -275,6 +314,7 @@ $`w_0`$ = `fro_swe0` が積雪断熱の e-folding(0 で断熱なし)、
 | gwc_eps_h / gwc_nsubmax | 1e-2 m / 100 | $`\sqrt{}`$ 則の線形化幅 / サブサイクル上限 | **数値設定** |
 | fro_fifull / fro_fmin / fro_tf / fro_ct | 20 °C·day / 0 / 0 °C / 1 | 凍土の低減係数(§8) | **文献値** Stefan 式の凍結深 0.25 m に相当[^andersland04][^zhao99] |
 | fro_swe0 / fro_fimax / fro_fi0 | 0 / 0 / 0 | 積雪断熱・上限・初期値 | **与件** 0 = なし。融雪期の校正入口 |
+| gwbed_k_mmh / fn_gwbed_k | — | 河床交換能 $`k_{bed}`$(§9) | **与件** 0 = 不透。河床 K の集計[^calver01]は 0.36〜3600 mm/h。既定なし |
 
 **既定値を見直すときの手がかり**
 
@@ -290,7 +330,7 @@ $`w_0`$ = `fro_swe0` が積雪断熱の e-folding(0 で断熱なし)、
   地質により大きく異なります。基底流出の年間量(降水 − 直接流出 −
   蒸発散)から容量と浸透能を逆算してください。
 
-## 10. 検証ケース
+## 11. 検証ケース
 
 | ケース | 内容 | 要点 |
 |---|---|---|
@@ -299,6 +339,7 @@ $`w_0`$ = `fro_swe0` が積雪断熱の e-folding(0 で断熱なし)、
 | [test/gwseep](../../test/gwseep/README.md) | 浸透 → 側方 → 湧出の水質台帳 | to_gw − seep = mass_gw で閉合 |
 | [test/pump](../../test/pump/README.md) | 井戸揚水の質量収支 | 解析値に 13 桁一致 |
 | [test/frost](../../test/frost/README.md) | 凍土の浸透抑制 | 解析値に全 14 桁一致 |
+| [test/gwbed](../../test/gwbed/README.md) | 河床交換能の律速・遮断・置き換え | 堤内地の 1 ステップ損失が S_grnd に全 14 桁一致、得水の増分が解析値 |
 | [examples/sewer_hybrid](../../examples/sewer_hybrid/) | 幹線 + 枝管網の換算 | セル別 sy マップの実演 |
 | [examples/qanat](../../examples/qanat/) | 管路層 + 層 2 | 横坑の集水・導水・出口湧出 |
 
@@ -318,3 +359,6 @@ $`w_0`$ = `fro_swe0` が積雪断熱の e-folding(0 で断熱なし)、
 [^cunge64]: Cunge, J. A. and Wegner, M. (1964): Intégration numérique des équations d'écoulement de Barré de Saint-Venant par un schéma implicite de différences finies. *La Houille Blanche*, 1, 33–39.(Preissmann スロット)
 [^andersland04]: Andersland, O. B. and Ladanyi, B. (2004): *Frozen Ground Engineering*, 2nd ed. Wiley.(Stefan 式)
 [^zhao99]: Zhao, L. and Gray, D. M. (1999): Estimating snowmelt infiltration into frozen soils. *Hydrol. Process.*, 13, 1827–1842.
+[^harbaugh05]: Harbaugh, A. W. (2005): MODFLOW-2005, the U.S. Geological Survey modular ground-water model — the Ground-Water Flow Process. *USGS Techniques and Methods*, 6-A16.(RIV パッケージ)
+[^calver01]: Calver, A. (2001): Riverbed permeabilities: information from pooled data. *Ground Water*, 39, 546–553.
+[^brunke99]: Brunke, M. (1999): Colmation and depth filtration within streambeds: retention of particles in hyporheic interstices. *Int. Rev. Hydrobiol.*, 84, 99–117.

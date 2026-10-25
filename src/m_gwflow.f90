@@ -16,6 +16,9 @@ module m_gwflow
   !   - 加算的な修飾: f_gwfrost(凍土による浸透抑制。m_gwflow_frost。
   !     気温(fn_meteo)必須 — 初期化順序の制約により存在検査は m_main が
   !     meteo init 後に m_gwflow_check_meteo で行う。無効時は資源ゼロ)
+  !   - 加算的な修飾: f_gwbed(河床交換能。m_gwflow_bed。河道セルの鉛直
+  !     浸透能の置き換えと層1側方の河道・非河道間エッジ流量の上限。
+  !     河道マスク fn_rw 必須。静的係数 s%kbed のみで無効時は資源ゼロ。§16.5)
   !   - 鉛直の束縛は t_gwflow の手続きポインタ成分(abstract interface +
   !     nopass)。側方は当面単一モデルのため直接呼び出し(第2の側方
   !     モデルが実在した時点でポインタ束へ昇格する。等価リファクタとして
@@ -41,6 +44,7 @@ module m_gwflow
                                gwflow_conduit_dispose
   use m_gwflow_pump, only : t_gwpump, gwflow_pump_init, gwflow_pump_calc, gwflow_pump_dispose
   use m_gwflow_frost, only : t_frost, gwflow_frost_init, gwflow_frost_calc, gwflow_frost_dispose
+  use m_gwflow_bed, only : t_gwbed, gwflow_bed_init, gwflow_bed_dispose
   use m_meteo, only : t_meteo
   use m_parallel, only : par_stop, par_allreduce_max, dcp
   use m_util, only : itoa
@@ -112,12 +116,14 @@ module m_gwflow
     type(t_gwcond) :: cond           ! 管路連続体層(機場・水質が参照する)
     type(t_gwpump) :: pump           ! 井戸揚水
     type(t_frost) :: frost           ! 凍土
+    type(t_gwbed) :: bed             ! 河床交換能(静的係数 s%kbed の構築のみ)
     logical :: enabled = .false.     ! モジュール有効(鉛直・側方・層2・管路層のいずれか)
     logical :: lat_enabled = .false. ! 側方流動の有効化(f_gwlateral=1)
     logical :: l2_enabled = .false.  ! 風化基岩層の有効化(f_gwlayer2=1)
     logical :: c_enabled = .false.   ! 管路連続体層の有効化(f_gwconduit=1)
     logical :: pump_enabled = .false. ! 井戸揚水の有効化(f_gwpump=1)
     logical :: frost_enabled = .false. ! 凍土による浸透抑制の有効化(f_gwfrost=1)
+    logical :: bed_enabled = .false. ! 河床交換能の有効化(f_gwbed=1)
     integer :: idt_gwflow = 1        ! 更新間隔(ステップ数)
     real :: dts = 0.0                ! 実効時間刻み(p%dt * idt_gwflow)(s)
     logical :: initialized = .false.
@@ -218,6 +224,21 @@ subroutine m_gwflow_init(gw, p, g, s)
                     // itoa(list%f_gwfrost))
   end select
 
+  ! --- 河床交換能(鉛直浸透能の置き換え+層1側方エッジの上限。無効時は資源ゼロ) ---
+  select case (list%f_gwbed)
+    case (0)
+      gw%bed_enabled = .false.
+    case (1)
+      if (list%f_gwvertical == 0 .and. .not. gw%lat_enabled) then
+        call par_stop("list_gwflow: f_gwbed=1 requires a vertical model " &
+                      // "(f_gwvertical=1 or 2) or the lateral model (f_gwlateral=1)")
+      end if
+      gw%bed_enabled = .true.
+    case default
+      call par_stop("list_gwflow: f_gwbed must be 0(none) or 1(bed exchange limit): " &
+                    // itoa(list%f_gwbed))
+  end select
+
   ! すべて 0 なら fn を書いたまま一時無効化する経路
   ! 保存時に有効だった層モデル・凍土を再開時に無効にする設定齟齬を検出する
   ! (全モデル無効の早期 return より前に置き、層だけを外した設定も捕まえる)。
@@ -300,6 +321,9 @@ subroutine m_gwflow_init(gw, p, g, s)
 
   gw%enabled = .true.
   s%gw_active = .true.               ! 質量台帳(S_grnd/S_total)と Log 列の拡張を有効化
+  ! 河床交換能(s%kbed の構築。g%rw が全域形であるこの時点で行う。鉛直・側方の
+  ! 各モデルは init で kbed を読まないため、順序は calc より前であればよい)
+  if (gw%bed_enabled) call gwflow_bed_init(gw%bed, p, g, s)
   if (associated(gw%init)) call gw%init(gw%vert, p, g, s)
   if (gw%lat_enabled) call gwflow_lateral_init(gw%lat, gw%lay1, p, g, s, gw%dts)
   if (gw%l2_enabled) call gwflow_layer2_init(gw%l2, gw%lat, p, g, s, gw%dts)
@@ -391,6 +415,7 @@ subroutine m_gwflow_dispose(gw, p, g, s)
   if (gw%c_enabled) call gwflow_conduit_dispose(gw%cond, p, g, s)    ! save は dispose で(契約5)
   if (gw%pump_enabled) call gwflow_pump_dispose(gw%pump, p, g)       ! 取水総括の表示(内部状態なし)
   if (gw%frost_enabled) call gwflow_frost_dispose(gw%frost, p, g)    ! save は dispose で(契約5)
+  if (gw%bed_enabled) call gwflow_bed_dispose(gw%bed)                ! 私有状態なし(s%kbed は m_state が解放)
   ! 幾何・エッジ作業領域は層間共有のため、どれかが使っていれば破棄する
   if (gw%lat_enabled .or. gw%l2_enabled .or. gw%c_enabled) call gwflow_lateral_dispose(gw%lat, gw%lay1, p)
   gw%init    => null()
@@ -402,6 +427,7 @@ subroutine m_gwflow_dispose(gw, p, g, s)
   gw%c_enabled = .false.
   gw%pump_enabled = .false.
   gw%frost_enabled = .false.
+  gw%bed_enabled = .false.
   gw%initialized = .false.
 end subroutine
 
