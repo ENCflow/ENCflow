@@ -71,7 +71,7 @@ python3 plot_results.py                # 4 figures in figs/ + tables
 
 ## Result 1: main case (from white noise to deep valleys and sharp ridges)
 
-![maps](../figs/main_maps.png)
+![maps](figs/main_maps.png)
 
 Top: evolution of the terrain (T_geo = 0, 1.8×10⁶, 3.6×10⁶, 9×10⁶ s). From a
 cliff margin holding nothing but white noise, valleys spaced a little over
@@ -83,7 +83,7 @@ evolution of a cross-section through the cliff-face zone (the valley floors
 reach the base level and the ridges remain thin and high). Bottom right:
 longitudinal profiles through a valley floor and a ridge crest.
 
-![series](../figs/main_series.png)
+![series](figs/main_series.png)
 
 Time series. The relief (the standard deviation in the y direction in the
 cliff-face zone) increases as the valleys deepen and decreases as the plateau
@@ -93,7 +93,7 @@ is dismembered. The wavelength of the spectral centroid of the landform change
 maximum incision reaches the base level (30 m), and the valley heads retreat
 from the plateau margin at a constant speed.
 
-![features](../figs/main_features.png)
+![features](figs/main_features.png)
 
 Badland-like features. Left: the slope distribution changes from the initial
 two values (plateau 0, cliff 1.5) to a continuous distribution of sharp
@@ -126,7 +126,7 @@ spl_dzmax = 0.2).
 
 ## Result 2: what sets the valley spacing
 
-![spacing](../figs/spacing.png)
+![spacing](figs/spacing.png)
 
 Top: terrain with the grid κ (spl_lc = 0) and with spl_lc = 1 / 2 / 4 m (at
 the time the relief of the cliff-face zone first exceeds 2 m. The larger ℓ,

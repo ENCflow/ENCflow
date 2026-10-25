@@ -780,10 +780,10 @@
       "source": "examples/badland/README.md",
       "target": "examples/badland/en/README.md",
       "source_sha256": "c4f0efff4a32e2651fd6e7b6a3d11e3d851571dc4f8f490a9a82c007e11ab5b3",
-      "target_sha256": "48ac486371cb467933f9bde402fa788952e9384cbf9797834611dfbd7f69eea8",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "target_sha256": "0569e0792197de584844871c47b82889e05706e19e9c0cd6206f26fa25401f05",
+      "reviewer": "Claude (Claude Code session; English README figure links switched to en/figs; regenerated Japanese figures are byte-identical to the committed ones)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-25"
     },
     {
       "source": "examples/badland_round/README.md",
