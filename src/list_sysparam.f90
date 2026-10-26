@@ -124,6 +124,7 @@ module list_sysparam
     character(len=maxpathlen) :: fn_swi = ""             ! 土壌雨量指数設定ファイル(§49)
     character(len=maxpathlen) :: fn_driftwood = ""       ! 流木設定ファイル(§50)
     character(len=maxpathlen) :: fn_bldgdebris = ""      ! 家屋破壊・瓦礫設定ファイル(§63)
+    character(len=maxpathlen) :: fn_vz = ""              ! 鉛直不飽和浸透(VZ)流出設定ファイル(§87)
     character(len=maxpathlen) :: fn_channel = ""         ! 河道条件設定ファイル
     character(len=maxpathlen) :: fn_enc = ""             ! ENC設定ファイル
     character(len=maxpathlen) :: fn_nest = ""            ! ネスト格子一覧(ルートのみ。空=ネストなし。docs/nesting_plan.md)
@@ -241,6 +242,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: fn_swi        ! 土壌雨量指数設定ファイル
   character(:), allocatable :: fn_driftwood  ! 流木設定ファイル
   character(:), allocatable :: fn_bldgdebris ! 家屋破壊・瓦礫設定ファイル
+  character(:), allocatable :: fn_vz         ! 鉛直不飽和浸透(VZ)流出設定ファイル
   character(:), allocatable :: fn_channel    ! 河道条件設定ファイル
   character(:), allocatable :: fn_enc        ! ENC設定ファイル
   character(:), allocatable :: fn_nest       ! ネスト格子一覧
@@ -269,7 +271,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_ddd, f_out_dda, f_out_pre, f_out_hrs, f_out_fr, f_out_cn, f_out_hg, &
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
                         fn_structure, &
-                        fn_record, fn_geomorph, fn_wave, fn_gwflow, fn_intercept, fn_evap, fn_meteo, fn_wq, fn_snow, fn_glacier, fn_lavaflow, fn_bedmotion, fn_salt, fn_swi, fn_driftwood, fn_bldgdebris, fn_channel, fn_enc, fn_nest, &
+                        fn_record, fn_geomorph, fn_wave, fn_gwflow, fn_intercept, fn_evap, fn_meteo, fn_wq, fn_snow, fn_glacier, fn_lavaflow, fn_bedmotion, fn_salt, fn_swi, fn_driftwood, fn_bldgdebris, fn_vz, fn_channel, fn_enc, fn_nest, &
                         fn_log, dir_data, dir_result, dir_save, outfn_suffix, out_fill
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
@@ -373,6 +375,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   fn_swi = list%fn_swi
   fn_driftwood = list%fn_driftwood
   fn_bldgdebris = list%fn_bldgdebris
+  fn_vz = list%fn_vz
   fn_channel = list%fn_channel
   fn_enc = list%fn_enc
   fn_nest = list%fn_nest
@@ -488,6 +491,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%fn_swi = fn_swi
   list%fn_driftwood = fn_driftwood
   list%fn_bldgdebris = fn_bldgdebris
+  list%fn_vz = fn_vz
   list%fn_channel = fn_channel
   list%fn_enc = fn_enc
   list%fn_nest = fn_nest
@@ -521,6 +525,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   if (trim(list%fn_swi) == "-") list%fn_swi = trim(fn_sysparam)
   if (trim(list%fn_driftwood) == "-") list%fn_driftwood = trim(fn_sysparam)
   if (trim(list%fn_bldgdebris) == "-") list%fn_bldgdebris = trim(fn_sysparam)
+  if (trim(list%fn_vz) == "-") list%fn_vz = trim(fn_sysparam)
   if (trim(list%fn_channel) == "-") list%fn_channel = trim(fn_sysparam)
   if (trim(list%fn_enc) == "-") list%fn_enc = trim(fn_sysparam)
 

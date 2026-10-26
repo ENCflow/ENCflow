@@ -22,6 +22,8 @@ module m_main
                            m_bldgdebris_record, m_bldgdebris_dispose
   use m_snow, only : t_snow, m_snow_init, m_snow_calc, m_snow_dispose
   use m_swi, only : t_swi, m_swi_init, m_swi_calc, m_swi_dispose
+  use m_vzflow, only : t_vzflow, m_vzflow_init, m_vzflow_calc, m_vzflow_record, m_vzflow_outprof, &
+                      m_vzflow_dispose
   use m_glacier, only : t_glacier, m_glacier_init, m_glacier_calc, m_glacier_dispose
   use m_lavaflow, only : t_lavaflow, m_lavaflow_init, m_lavaflow_calc, m_lavaflow_dispose
   use m_bedmotion, only : t_bedmotion, m_bedmotion_init, m_bedmotion_calc, m_bedmotion_dispose
@@ -82,6 +84,7 @@ module m_main
     type(t_bldgdebris) :: bd
     type(t_snow) :: sn
     type(t_swi) :: si
+    type(t_vzflow) :: vz             ! 鉛直不飽和浸透(VZ)流出(fn_vz。§87)
     type(t_glacier) :: gl
     type(t_lavaflow) :: lv
     type(t_bedmotion) :: bm
@@ -243,7 +246,7 @@ subroutine init_instance(fn_param, align)
              gm => enc%gm, gw => enc%gw, ev => enc%ev, mt => enc%mt, &
              wq => enc%wq, dw => enc%dw, bd => enc%bd, sn => enc%sn, si => enc%si, &
              gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw, &
-             ou => enc%ou)
+             ou => enc%ou, vz => enc%vz)
 
     ! システムを初期化
     call m_sysparam_init(p, fn_param)       ! sysparam を初期化
@@ -326,6 +329,9 @@ subroutine init_instance(fn_param, align)
                                             ! state init より後に。bedmotion_plan.md)
     call m_swi_init(si, p, g, s)            ! swi を初期化(fn_swi 指定時のみ有効。
                                             ! 排他検査に他モジュールの fn_* を使う。§49)
+    call m_vzflow_init(vz, p, g, b, s, ninst > 1)  ! VZ 流出を初期化(fn_vz 指定時のみ有効。
+                                            ! 併用検査に他モジュールの fn_*、セル検査に
+                                            ! ゾーン2の全域マスクと境界の一覧を使う。§87)
     call output_init(ou, p, g)              ! ファイル出力の準備(geoinfoより後に)
 
     ! 地理情報を各ランクに合わせて縮小
@@ -399,10 +405,10 @@ subroutine step_instance()
              gm => enc%gm, gw => enc%gw, ev => enc%ev, mt => enc%mt, &
              wq => enc%wq, dw => enc%dw, bd => enc%bd, sn => enc%sn, si => enc%si, &
              gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw, &
-             ou => enc%ou)
+             ou => enc%ou, vz => enc%vz)
 
     call run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, &
-                  wq, dw, bd, sn, gl, lv, bm, si, ou, &
+                  wq, dw, bd, sn, gl, lv, bm, si, vz, ou, &
                   enc%extpre_active, enc%extpre_fresh, enc%extpre, &
                   enc%extz_fresh, enc%extz, enc%exth_fresh, enc%exth, &
                   enc%exthg_fresh, enc%exthg, enc%extswe_fresh, enc%extswe, &
@@ -542,7 +548,7 @@ subroutine finalize_instance()
              gm => enc%gm, gw => enc%gw, ev => enc%ev, mt => enc%mt, &
              wq => enc%wq, dw => enc%dw, bd => enc%bd, sn => enc%sn, si => enc%si, &
              gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw, &
-             ou => enc%ou)
+             ou => enc%ou, vz => enc%vz)
 
     ! 最終出力(従来 run_main の末尾)
     call run_close(p, g, s, r, ou)
@@ -566,6 +572,8 @@ subroutine finalize_instance()
     call m_lavaflow_dispose(lv, p, g, s)    ! save は dispose で(契約5)
     call m_bedmotion_dispose(bm, g)
     call m_swi_dispose(si, p, g)            ! save は dispose で(契約5。§49)
+    call m_vzflow_dispose(vz, p, s)         ! save は dispose で(契約5。区間の途中なら残りを
+                                            ! 同期して s%h へ移してから。m_state の save より先。§87)
     call m_record_dispose(r)
     call m_state_dispose(s, p)
     call m_boundary_dispose(b)
@@ -1016,7 +1024,7 @@ end subroutine
 !   進行位置は s%it が正本(m_state_updatetime が更新)。エラーは
 !   ierror に累積し、継続判定は呼び出し側(m_main_finished)が行う
 !----------------------------------------------------------------------
-subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, bd, sn, gl, lv, bm, si, ou, &
+subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, bd, sn, gl, lv, bm, si, vz, ou, &
                     extpre_active, extpre_fresh, extpre, &
                     extz_fresh, extz, exth_fresh, exth, &
                     exthg_fresh, exthg, extswe_fresh, extswe, &
@@ -1043,6 +1051,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   type(t_lavaflow), intent(inout) :: lv   ! 溶岩流(溶岩厚 s%hl と作業台帳を保持)
   type(t_bedmotion), intent(inout) :: bm  ! 規定底面運動(スナップショットの読み進みを保持)
   type(t_swi), intent(inout) :: si     ! 土壌雨量指数(タンク貯留を保持。§49)
+  type(t_vzflow), intent(inout) :: vz  ! VZ 流出(共有参照柱・区画・出口。§87)
   type(t_output), intent(inout) :: ou  ! 分布出力(集約バッファ・装置番号)
   logical, intent(in) :: extpre_active    ! BMI 外部降水供給モードか
   logical, intent(inout) :: extpre_fresh  ! 未適用の新しい場があるか(適用で消す)
@@ -1234,6 +1243,11 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   ! 発散検出はランク局所のため、判定に先立ち全ランク最大へ集約する
   call par_allreduce_maxi(ierror)
 
+  ! 鉛直不飽和浸透(VZ)流出(fn_vz 未指定なら no-op。swflow が VZ セルに入れた
+  ! 雨を s%h から回収し、同期時刻なら共有参照柱を進めて区画の排水を出口セルの
+  ! s%h へ移す(e 回復まで)。地下水と同じ「swflow の後に s%h から取る」結合。§87)
+  call m_vzflow_calc(vz, p, g, s, it)
+
   ! 湖水位の地下水頭強制(dam_gw 指定の湖沼のみ。gwflow と同周期で
   ! m_gwflow_calc の直前に湖面セルの hg を規定し、交換量を湖の貯留と
   ! やり取りする。未指定なら実質 no-op。§22 第3弾)
@@ -1313,6 +1327,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   if (do_file) then
     s%ifn = s%ifn + 1
     call output_state(ou, p, g, s, s%ifn)
+    call m_vzflow_outprof(vz, p, s%ifn)   ! 柱の鉛直分布(f_vz_outprof=1 のときのみ。§87)
   end if
 
   ! dt_record 間隔でプローブとフラックスの値を出力
@@ -1324,6 +1339,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
    call m_wq_record(wq, p, g, s)
    call m_driftwood_record(dw, p, g, s)
    call m_bldgdebris_record(bd, p, g, s)
+   call m_vzflow_record(vz, s)
   end if
 
 
@@ -1412,6 +1428,7 @@ subroutine init_resultdir(p)
   call sysdep_copy_to_dir(p%fn_wq, p%dir_result)
   call sysdep_copy_to_dir(p%fn_driftwood, p%dir_result)
   call sysdep_copy_to_dir(p%fn_bldgdebris, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_vz, p%dir_result)
   call sysdep_copy_to_dir(p%fn_snow, p%dir_result)
   call sysdep_copy_to_dir(p%fn_glacier, p%dir_result)
   call sysdep_copy_to_dir(p%fn_lavaflow, p%dir_result)

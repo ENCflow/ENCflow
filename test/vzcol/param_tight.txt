@@ -1,0 +1,89 @@
+!======================================================================
+! vzcol: VZ(鉛直不飽和浸透)流出の共有参照柱 1 本の検定(developer.md §87)
+!
+!   3 × 8 セル(Δx = Δy = 10 m)の全セルを区画 1 とし、柱 1 本(L = 3 m、
+!   Δζ = 2.5 cm、120 層)を参照させて系外へ排水する(vz_out_kind = 2。
+!   地表流は生じない)。土層厚は 0.3〜2.9 m の分布で、界面上の値
+!   (0.5、1.0 等)と界面の途中の値(0.7375、1.2340 等)を混ぜる。
+!   小杉パラメータは検定用の例示値(Ks = 100 mm/h、θs = 0.5、θr = 0.1、
+!   ψm = −0.5 m、σ = 1.5)で、特定の土壌の推奨値ではない。
+!   初期条件は定常重力排水 q0 = 1 mm/h(一様 ψ0)。降雨は 0〜60 分が
+!   1 mm/h(= q0。定常の検定)、61〜180 分が 50 mm/h、以後 0。
+!   確認事項(Check_vzcol.py): 定常期の F = q0·t、各深さの保存則
+!   ΔS = F0 − D、小杉式の値、区画の収支残差、Log の S_total の収支。
+!
+!   param_tight.txt: 時間誤差の許容を 1/4 にした再計算(時間収束の検定)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! 格子システム(0:ENC)
+  dt = 5.0                  ! 時間刻み (s)
+  t0 = 0
+  tt = 43200                ! 12 h
+  dt_disp = 1800
+  dt_file = 21600           ! 柱の鉛直分布を 6 h・12 h に出力
+  dt_recrd = 600            ! VZ の CSV を 10 分ごとに出力
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_precip = '-'
+  fn_vz = '-'
+  dir_data = 'data_vzcol'
+  dir_result = 'result_tight'
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 3
+  ny = 8                    ! np = 4 でもランクあたり 2 行
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_rntype = 0
+  rn0 = 0.05
+  f_sdtype = 1
+  fn_sd = 'sd.txt'          ! 土層厚 (m)
+/
+
+&list_bound
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 1       ! (min, mm/h)。表は線形補間、更新は 1 分ごと
+  prval(1:2,2) = 60, 1
+  prval(1:2,3) = 61, 50
+  prval(1:2,4) = 180, 50
+  prval(1:2,5) = 181, 0
+  prval(1:2,6) = 9999, 0
+/
+
+&list_vz
+  fn_vz_zone = 'zone.txt'   ! 区画番号ラスタ(全セル 1)
+  dt_vz = 60.0              ! 同期間隔 (s)
+  vz_out_depth = 0.5, 0.7375, 1.0, 1.234, 2.0, 2.9
+  f_vz_outprof = 1          ! 柱の鉛直分布を出力時刻に CSV で出す
+  vz_tol_theta = 2.5e-4     ! 既定の 1/4
+  vz_tol_psi = 2.5e-4       ! 既定の 1/4
+  vz_tol_q = 2.5e-3         ! 既定の 1/4
+/
+
+&list_vz_column
+  vz_ks_mmh(1) = 100.0      ! 飽和透水係数 (mm/h)
+  vz_thetas(1) = 0.5
+  vz_thetar(1) = 0.1
+  vz_psim(1) = -0.5         ! (m)
+  vz_sigma(1) = 1.5
+  vz_depth(1) = 3.0         ! 計算柱の深さ (m)
+  vz_dz(1) = 0.025          ! 層厚 (m)
+  vz_q0_mmh(1) = 1.0        ! 初期: 定常重力排水 1 mm/h
+/
+
+&list_vz_zone
+  vz_out_kind(1) = 2        ! 系外流出
+/

@@ -1,0 +1,38 @@
+#!/bin/bash
+# vzzone: 逐次実行 + 回帰テスト + 解析検定(VZ 区画・共有柱・出口。developer.md §87)
+#   ./Run.sh [-u]
+# param.txt は reference 比較(Log.txt・vz_zone.csv・vz_column.csv、ULP=0)と
+# Check_vzzone.py base。ほかは Check_vzzone.py の検定のみ(reference 非依存):
+#   param_dup.txt         柱を共有 vs 複製(区画の応答がビット一致)
+#   param_avg.txt         雨の分布 + 柱内面積平均(入力 = 面積 × 柱内平均雨量、収支)
+#   param_strictfail.txt  同じ雨で厳密モード → 柱内の雨量の不一致で停止すること
+#   param_save.txt / param_restart.txt  6 h で保存 → 再開(連続計算とビット一致)
+sdir=$(dirname "$(readlink -f "$0")")
+export ULP=0
+export SKIPCOLS=6      # 検査対象外とする列番号(Log の Runge 列)
+export FILES="Log.txt vz_zone.csv vz_column.csv"
+"$sdir/../Scripts/Run_case.sh" serial "$@" || exit 1
+
+python3 Check_vzzone.py base result || exit 1
+
+for tag in dup avg; do
+    rm -rf result_$tag
+    ./encflow param_$tag.txt > Screen_$tag.log 2>&1 || { echo "ERROR: param_$tag run failed" >&2; exit 1; }
+done
+python3 Check_vzzone.py dup result result_dup || exit 1
+python3 Check_vzzone.py avg result_avg || exit 1
+
+rm -rf result_strictfail
+if ./encflow param_strictfail.txt > Screen_strictfail.log 2>&1; then
+    echo "ERROR: param_strictfail should stop (rainfall differs within a column)" >&2; exit 1
+fi
+grep -q "rainfall differs within column" Screen_strictfail.log \
+    || { echo "ERROR: param_strictfail stopped for another reason" >&2; exit 1; }
+echo "  ok   strict mode stops when rainfall differs within a column"
+
+rm -rf result_save result_restart save
+./encflow param_save.txt > Screen_save.log 2>&1 || { echo "ERROR: param_save run failed" >&2; exit 1; }
+./encflow param_restart.txt > Screen_restart.log 2>&1 || { echo "ERROR: param_restart run failed" >&2; exit 1; }
+python3 Check_vzzone.py restart result result_restart || exit 1
+
+echo "=== vzzone verification PASS ==="

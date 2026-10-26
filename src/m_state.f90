@@ -122,6 +122,14 @@ module m_state
     real :: swemean = 0.0    ! 領域平均の積雪水量(m)。fn_snow 有効時のみ更新
     real :: himean = 0.0     ! 領域平均の氷河貯留(m 水当量)。fn_glacier 有効時のみ更新
     logical :: gw_active = .false.  ! 地下水モデルの有効化(m_gwflow_init が設定)
+    ! 鉛直不飽和浸透(VZ。§87)の台帳。vz_active は m_vzflow_init が立てる。
+    ! VZ 貯留は共有柱の解を区画の土層厚で読んだ値で、セル配列を持たない
+    ! (vzstore は全ランク同値のスカラー)。vzp は同期前の回収済み雨量
+    real(real64) :: vzstore = 0.0_real64  ! VZ 貯留の総和 Σ V_VZ,g/(dx·dy) (m。同期時に更新)
+    real :: vzmean = 0.0     ! 領域平均の VZ 貯留(m。回収済み未同期の雨を含む)。vz_active 時のみ更新
+    logical :: vz_active = .false.  ! VZ の有効化(m_vzflow_init が設定)
+    real, allocatable :: vzp(:,:)   ! 回収済み・未同期の雨 (m。セル面積基底 pre·dt の積算。
+                                    ! 確保は m_vzflow_init(有効時のみ)、同期でゼロ戻し)
     real, allocatable :: cq(:,:)        ! 輸送物質柱状量 (g/m2。§30。濃度 = cq/vh は
                                         ! 導出量 cqc。移流は swflow_enc がステップ内で
                                         ! 行い(wq_active)、発生源・浸透同伴・減衰は
@@ -546,6 +554,7 @@ subroutine m_state_calcstat(s, p, g)
   real(real64) :: hgsum_j(dcp%js:dcp%je)
   real(real64) :: swesum_j(dcp%js:dcp%je), swesum
   real(real64) :: hisum_j(dcp%js:dcp%je), hisum
+  real(real64) :: vzsum_j(dcp%js:dcp%je), vzsum
   real :: qcumf
   real :: dtpdx     ! dt / min(dx, dy)
   real :: cosdir
@@ -675,6 +684,19 @@ subroutine m_state_calcstat(s, p, g)
     call par_sum_rows(hisum_j, hisum)
     s%himean = hisum / s%n_valcells * s%gl_ir
   end if
+  ! VZ 貯留(§87)。既存の走査ループに手を入れず別ループで数える(無効時は
+  ! 何もしない = 既存の総和の演算順は不変)。判定 vz_active は全ランク同一
+  if (s%vz_active) then
+    vzsum_j(:) = 0.0
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) == 0 .or. g%sw(i,j) > 0) cycle
+        if (s%vzp(i,j) > 0.0) vzsum_j(j) = vzsum_j(j) + s%vzp(i,j)
+      end do
+    end do
+    call par_sum_rows(vzsum_j, vzsum)
+    s%vzmean = (vzsum + s%vzstore) / s%n_valcells
+  end if
   rmax = [hmax, vvmax, qqmax, cnmax]
   call par_allreduce_max(rmax)
   hmax  = rmax(1)
@@ -743,6 +765,16 @@ subroutine m_state_printstate(p, s)
     sblk(2) = s%hgmean
     sblk(3) = hmean + s%hgmean + s%swemean + s%himean
     ns = 3
+  end if
+  ! VZ 貯留は S_grnd に算入(§87。無効時は既存の式に触れない別枝)
+  if (s%vz_active) then
+    if (ns == 1) then
+      sblk(2) = 0.0
+      sblk(3) = hmean
+      ns = 3
+    end if
+    sblk(2) = sblk(2) + s%vzmean
+    sblk(3) = sblk(3) + s%vzmean
   end if
 
   ! --- 保存量列の書式 ---
@@ -859,6 +891,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%cg)) deallocate(s%cg)
   if (allocated(s%bp)) deallocate(s%bp)
   if (allocated(s%hg2)) deallocate(s%hg2)
+  if (allocated(s%vzp)) deallocate(s%vzp)
   if (allocated(s%hgc)) deallocate(s%hgc)
   if (allocated(s%hss)) deallocate(s%hss)
   if (allocated(s%hgs)) deallocate(s%hgs)

@@ -318,7 +318,7 @@ subroutine m_geoinfo_require_sd(g, sd_default)
     g%sd0 = param_default("geoinfo", "sd0", g%sd0, sd_default, " m")
   end if
   if (g%sd0 <= 0.0) then
-    call par_stop("list_geoinfo: soil depth is required by gwflow/geomorph " // &
+    call par_stop("list_geoinfo: soil depth is required by gwflow/geomorph/vz " // &
                   "(set sd0 > 0 or f_sdtype=1/fn_sd)")
   end if
   allocate(g%sd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = g%sd0)
@@ -455,12 +455,14 @@ subroutine set_params(p, g, list)
   if (g%sd_dist .and. len_trim(list%fn_sd) == 0) then
     call par_stop('list_geoinfo: f_sdtype=1 but fn_sd=""')
   end if
-  if (g%sd_dist .and. len_trim(p%fn_gwflow) == 0 .and. len_trim(p%fn_geomorph) == 0) then
-    ! gwflow も geomorph も無効なら土層厚は読み込みも確保もしない(メモリを
+  if (g%sd_dist .and. len_trim(p%fn_gwflow) == 0 .and. len_trim(p%fn_geomorph) == 0 &
+      .and. len_trim(p%fn_vz) == 0) then
+    ! gwflow も geomorph も VZ も無効なら土層厚は読み込みも確保もしない(メモリを
     ! 使わない)。geomorph は土砂プロセスの可動層として sd の分布を使う
     ! (以前は gwflow だけで判定しており、geomorph 単独 + fn_sd が黙って
-    ! 読み飛ばされ require_sd で停止する実バグ。§28.12)
-    call par_info("list_geoinfo: f_sdtype=1 but neither fn_gwflow nor fn_geomorph is set;" &
+    ! 読み飛ばされ require_sd で停止する実バグ。§28.12)。VZ は区画の
+    ! 読み出し深さとして使う(§87)
+    call par_info("list_geoinfo: f_sdtype=1 but none of fn_gwflow, fn_geomorph, fn_vz is set;" &
                   // " skipping soil depth")
     g%sd_dist = .false.
   end if

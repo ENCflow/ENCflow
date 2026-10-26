@@ -1,0 +1,107 @@
+!======================================================================
+! vzzone: VZ 区画・共有柱・出口の検定(developer.md §87)
+!
+!   7 × 8 セル(Δx = Δy = 10 m)。列 1〜5 が VZ セル(行 1〜3 = 区画 1、
+!   行 4〜5 = 区画 2、行 6〜8 = 区画 3)、列 6 は領域外、列 7 は行 1・3・5 だけが
+!   領域内の孤立した受水セル O_a・O_b・O_c(周囲を領域外で囲み、地表水が
+!   動かない)。
+!   柱 1(Ks = 100 mm/h、σ = 1.5)を区画 1 と 3 が共有、柱 2(Ks = 50 mm/h、
+!   σ = 1.0)を区画 2 が参照する。出口: 区画 1 は O_a へ 0.6・O_b へ 0.4、
+!   区画 2 は O_a へ 1.0(区画 1 と同じ受水セル)、区画 3 は系外流出。O_c は
+!   雨だけを受ける対照。小杉パラメータは検定用の例示値。
+!   降雨は vzcol と同じ(0〜60 分 1 mm/h、61〜180 分 50 mm/h、以後 0)を
+!   全セル一様に与える。
+!   確認事項(Check_vzzone.py): 受水セルの水深 = 配分どおりの移送量 + 雨、
+!   地表水の総量 = 受水セルへの移送の総和 + 雨(一度だけの加算)、区画の
+!   収支、Log の S_total の収支、柱を複製した構成(param_dup.txt)との一致。
+!
+!   param_avg.txt: 雨の分布(prmap.txt [mm/day] × 時系列倍率)を与え、
+!   柱の入力を柱内の面積平均にする(f_vz_rain = 1)。区画の入力 = 面積 × 柱内平均雨量、
+!   全体の収支を確かめる。param_strictfail.txt は同じ雨で厳密モード(f_vz_rain = 0)に
+!   したもので、柱内の雨量の不一致で停止することを確かめる
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 5.0
+  t0 = 0
+  tt = 43200                ! 12 h
+  dt_disp = 1800
+  dt_file = 43200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_precip = '-'
+  fn_vz = '-'
+  fn_record = '-'
+  dir_data = 'data_vzzone'
+  dir_result = 'result_strictfail'
+  f_disp_debug = 1
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 7
+  ny = 8                    ! np = 4 でもランクあたり 2 行
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 1
+  fn_mask = 'mask.txt'      ! 列 6 と列 7 の偶数行・行 7〜8 は領域外
+  f_rntype = 0
+  rn0 = 0.05
+  f_sdtype = 1
+  fn_sd = 'sd.txt'          ! 土層厚 (m)。VZ セル以外の値は使わない
+/
+
+&list_bound
+/
+
+&list_record
+  pbxytype = 0              ! プローブ = セル番号 (i, j)
+  pbxy(:,1) = 7, 1          ! O_a
+  pbxy(:,2) = 7, 3          ! O_b
+  pbxy(:,3) = 7, 5          ! O_c
+/
+
+&list_precip
+  prtype = 2
+  fn_prmap = 'prmap.txt'    ! 降雨分布 (mm/day = prtype 2 の既定の単位)。列 7 の受水セルは 24(= 1 mm/h)
+  prval(1:2,1) = 0, 1       ! (min, 倍率)
+  prval(1:2,2) = 60, 1
+  prval(1:2,3) = 61, 50
+  prval(1:2,4) = 180, 50
+  prval(1:2,5) = 181, 0
+  prval(1:2,6) = 9999, 0
+/
+
+&list_vz
+  fn_vz_zone = 'zone.txt'
+  dt_vz = 60.0
+  vz_out_depth = 0.5, 1.0
+  f_vz_rain = 0             ! 厳密モード(柱内の雨量の不一致で停止するはず)
+/
+
+&list_vz_column
+  vz_ks_mmh(1) = 100.0, vz_thetas(1) = 0.5, vz_thetar(1) = 0.1
+  vz_psim(1) = -0.5, vz_sigma(1) = 1.5
+  vz_depth(1) = 3.0, vz_dz(1) = 0.025, vz_q0_mmh(1) = 1.0
+  vz_ks_mmh(2) = 50.0, vz_thetas(2) = 0.45, vz_thetar(2) = 0.05
+  vz_psim(2) = -0.3, vz_sigma(2) = 1.0
+  vz_depth(2) = 3.0, vz_dz(2) = 0.025, vz_q0_mmh(2) = 0.5
+/
+
+&list_vz_zone
+  vz_zone_col(1) = 1, vz_out_kind(1) = 1
+  vz_out_cell(:,1,1) = 7, 1                 ! O_a
+  vz_out_cell(:,2,1) = 7, 3                 ! O_b
+  vz_out_w(1:2,1) = 0.6, 0.4
+  vz_zone_col(2) = 2, vz_out_kind(2) = 1
+  vz_out_cell(:,1,2) = 7, 1                 ! O_a(区画 1 と同じ受水セル)
+  vz_zone_col(3) = 1, vz_out_kind(3) = 2    ! 柱 1 を区画 1 と共有、系外流出
+/

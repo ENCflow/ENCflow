@@ -1,0 +1,78 @@
+!======================================================================
+! vzcol(param_fixed.txt): 固定圧下端の定常解の検定(developer.md §87)
+!
+!   下端 ζ = L = 1 m に固定圧 ψ = 0(地下水面)を置き(f_vz_bottom = 2。
+!   検証用の境界)、上端に一定流束 q = 10 mm/h を 10 日間与える。定常解は
+!     dψ/dζ = 1 − q/K(ψ)、ψ(L) = 0
+!   を満たすので、Check_vzcol.py が求積(RK4)した分布と比べる。
+!   Δζ = 1 cm(100 層)、界面透水係数は算術平均(既定)。初期は一様 ψ = −0.5 m
+!   (下端と不連続な厳しい始まり方で、刻みの制御の頑健性も兼ねる)。
+!   小杉パラメータは param.txt と同じ検定用の例示値。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 60.0                 ! 地表流は生じない(全セル VZ・系外流出)
+  t0 = 0
+  tt = 864000               ! 10 日
+  dt_disp = 86400
+  dt_file = 864000
+  dt_recrd = 3600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_precip = '-'
+  fn_vz = '-'
+  dir_data = 'data_vzcol'
+  dir_result = 'result_fixed'
+  f_disp_debug = 1
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 3
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_rntype = 0
+  rn0 = 0.05
+  f_sdtype = 0
+  sd0 = 0.5                 ! 土層厚 (m)。読み出し深さ(定常なので任意)
+/
+
+&list_bound
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 10      ! 10 mm/h 一定
+  prval(1:2,2) = 99999, 10
+/
+
+&list_vz
+  fn_vz_zone = 'zone.txt'
+  dt_vz = 3600.0
+  f_vz_outprof = 1
+/
+
+&list_vz_column
+  vz_ks_mmh(1) = 100.0
+  vz_thetas(1) = 0.5
+  vz_thetar(1) = 0.1
+  vz_psim(1) = -0.5
+  vz_sigma(1) = 1.5
+  vz_depth(1) = 1.0
+  vz_dz(1) = 0.01
+  vz_psi0(1) = -0.5         ! 初期: 一様 ψ = −0.5 m
+  f_vz_bottom(1) = 2        ! 固定圧(検証用)
+  vz_psibot(1) = 0.0        ! 地下水面
+/
+
+&list_vz_zone
+  vz_out_kind(1) = 2
+/
