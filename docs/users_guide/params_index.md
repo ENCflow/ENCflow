@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 702 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 703 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -666,6 +666,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | vz_tol_psi | &list_vz | [鉛直不飽和浸透(VZ)流出](vz.md) |
 | vz_tol_q | &list_vz | [鉛直不飽和浸透(VZ)流出](vz.md) |
 | vz_tol_theta | &list_vz | [鉛直不飽和浸透(VZ)流出](vz.md) |
+| vz_wt0 | &list_vz_column | [鉛直不飽和浸透(VZ)流出](vz.md) |
 | vz_zone_col | &list_vz_zone | [鉛直不飽和浸透(VZ)流出](vz.md) |
 | wash_kf | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | wash_kr | &list_geomorph | [土砂・地形変化](geomorph.md) |

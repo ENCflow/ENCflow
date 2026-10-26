@@ -33,6 +33,7 @@ not recommended values for a particular soil.
 | time convergence | `param_tight.txt` | the time error tolerances of the base (vz_tol_theta, vz_tol_psi, vz_tol_q) divided by 4 |
 | area average | `param_avg.txt` | the base with f_vz_rain = 1 (area average within a column). The rain is uniform |
 | zero soil depth | `param_sd0.txt` | the soil depth of the base replaced by `sd_zero.txt` (3 cells are 0 m) |
+| hydrostatic initial condition | `param_hydro.txt` | 0.5 m deep with 2.5 cm layers, bottom ψ = 0 (f_vz_bottom = 2), initially hydrostatic with the water table at the bottom (vz_wt0 = 0.5 m), no rain for 1 day |
 
 ## Checks (Check_vzcol.py)
 
@@ -62,6 +63,10 @@ not recommended values for a particular soil.
 - **Zero soil depth**: cells with soil depth 0 are read at the surface (drainage
   = rain, storage = 0), so the aggregation of the zone agrees with the sum of the
   cell-by-cell read-outs and the balance residual is within the budget.
+- **Hydrostatic initial condition**: in a column with a fixed bottom pressure
+  ψ = 0, the hydrostatic state with the water table at the bottom is a solution at
+  rest with zero flux, so without rain ψ(ζ) = ζ − 0.5 m is kept and the cumulative
+  fluxes at all faces stay 0.
 
 ## Running
 

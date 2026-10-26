@@ -90,12 +90,15 @@
   !vz_depth(1) = 10.0
   !vz_dz(1) = 0.025
 
-  ! initial condition (one of the two):
+  ! initial condition (one of the three):
   !   vz_q0_mmh: flux of steady gravity drainage (mm/h). Uniform psi0 with
   !              K(psi0) = q0 (runoff rate before the rain)
   !   vz_psi0  : uniform pressure head (m. Negative)
+  !   vz_wt0   : depth of a hydrostatic water table (m. 0 or more).
+  !              psi(zeta) = zeta - vz_wt0
   vz_q0_mmh(1) = 1.0
   !vz_psi0(1) = -1.0
+  !vz_wt0(1) = 0.5
 
   ! bottom 1: free drainage (default) / 2: fixed pressure (for verification;
   ! give psi by vz_psibot)

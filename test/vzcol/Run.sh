@@ -4,7 +4,7 @@
 # param.txt は reference 比較(Log.txt、ULP=0)と
 # Check_vzcol.py base。param_fixed.txt(固定圧下端の定常解)・
 # param_tight.txt(時間収束)・param_avg.txt(面積平均モード)・
-# param_sd0.txt(土層厚 0 のセルを含む区画)は
+# param_sd0.txt(土層厚 0 のセルを含む区画)・param_hydro.txt(静水圧の初期条件)は
 # Check_vzcol.py の検定のみ(reference 非依存)
 # reference 比較は Log.txt(ULP=0)。vz_zone.csv・vz_column.csv は 16 桁で書くため
 # CPU(-march=native のベクトル化)が違うと最終桁が変わり(Zen3 向けビルドで確認)、
@@ -19,7 +19,7 @@ export FILES=${FILES:-Log.txt}
 
 python3 Check_vzcol.py base result || exit 1
 
-for tag in fixed tight avg sd0; do
+for tag in fixed tight avg sd0 hydro; do
     rm -rf result_$tag
     ./encflow param_$tag.txt > Screen_$tag.log 2>&1 || { echo "ERROR: param_$tag run failed" >&2; exit 1; }
 done
@@ -27,5 +27,6 @@ python3 Check_vzcol.py fixed result_fixed || exit 1
 python3 Check_vzcol.py tight result result_tight || exit 1
 python3 Check_vzcol.py avg result result_avg || exit 1
 python3 Check_vzcol.py sd0 result_sd0 || exit 1
+python3 Check_vzcol.py hydro result_hydro || exit 1
 
 echo "=== vzcol verification PASS ==="

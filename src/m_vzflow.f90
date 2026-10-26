@@ -474,7 +474,7 @@ end subroutine
 subroutine setup_columns(vz, list)
   type(t_vzflow), intent(inout) :: vz
   type(t_list_vz), intent(in) :: list
-  integer :: c, nc, nz
+  integer :: c, nc, nz, ninit
   real :: depth, dz
   real(real64) :: ks, psi0, psibot
   logical :: ok
@@ -535,9 +535,16 @@ subroutine setup_columns(vz, list)
                     real(list%vz_sigma(c), real64), real(depth, real64), &
                     real(depth, real64) / real(nz, real64), list%f_vz_bottom(c), psibot, -1.0_real64, ok)
     if (.not. ok) call par_stop("list_vz_column: invalid column geometry"//trim(tag))
-    ! 初期条件: 定常重力排水の流束 q0 か一様な ψ0 のどちらか一方
-    if (list%vz_q0_mmh(c) > -9998.0 .and. list%vz_psi0(c) > -9998.0) then
-      call par_stop("list_vz_column: give only one of vz_q0_mmh"//trim(tag)//" and vz_psi0"//trim(tag))
+    ! 初期条件: 定常重力排水の流束 q0、一様な ψ0、静水圧の地下水面の深さ d_wt の
+    ! いずれか 1 つ
+    ninit = count([list%vz_q0_mmh(c) > -9998.0, list%vz_psi0(c) > -9998.0, list%vz_wt0(c) > -9998.0])
+    if (ninit > 1) then
+      call par_stop("list_vz_column: give only one of vz_q0_mmh"//trim(tag)//", vz_psi0"//trim(tag) &
+                    //" and vz_wt0"//trim(tag))
+    else if (list%vz_wt0(c) > -9998.0) then
+      if (.not. (list%vz_wt0(c) >= 0.0)) call par_stop("list_vz_column: vz_wt0"//trim(tag)//" must be >= 0 (m)")
+      call set_hydrostatic_psi(vz%cols(c), real(list%vz_wt0(c), real64))
+      cycle
     else if (list%vz_q0_mmh(c) > -9998.0) then
       call vzcol_steady_psi(vz%cols(c)%geo, real(list%vz_q0_mmh(c), real64) / 3.6e6_real64, psi0, ok)
       if (.not. ok) then
@@ -548,7 +555,8 @@ subroutine setup_columns(vz, list)
       psi0 = real(list%vz_psi0(c), real64)
     else
       call par_stop("list_vz_column: give the initial condition vz_q0_mmh"//trim(tag)//" (steady drainage" &
-                    //" flux) or vz_psi0"//trim(tag)//" (uniform pressure head)")
+                    //" flux), vz_psi0"//trim(tag)//" (uniform pressure head) or vz_wt0"//trim(tag) &
+                    //" (depth of a hydrostatic water table)")
     end if
     call set_uniform_psi(vz%cols(c), psi0)
   end do
@@ -565,6 +573,25 @@ subroutine set_uniform_psi(col, psi0)
   real(real64) :: cap, kk
   do k = 1, col%geo%nz
     col%psi(k) = psi0
+    call vzcol_props(col%geo, col%psi(k), col%th(k), cap, kk)
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 柱の状態を静水圧にする: 深さ d_wt の地下水面(ψ = 0)から ψ(ζ) = ζ − d_wt
+! (層中心の深さ ζ_k で評価。地下水面より下は正 = 飽和。柱の下端より深い
+! 地下水面なら全層が負)。下端を固定圧 ψ_b にした柱で d_wt = L − ψ_b とすれば
+! 流束 0 の静止解(谷 2023 の小斜面の人工降雨実験 KIEX の初期条件:
+! 下端 ψ = 0、地表 ψ = −L の線形分布)
+!----------------------------------------------------------------------
+subroutine set_hydrostatic_psi(col, dwt)
+  type(t_vzcol), intent(inout) :: col
+  real(real64), intent(in) :: dwt
+  integer :: k
+  real(real64) :: cap, kk
+  do k = 1, col%geo%nz
+    col%psi(k) = col%geo%zc(k) - dwt
     call vzcol_props(col%geo, col%psi(k), col%th(k), cap, kk)
   end do
 end subroutine

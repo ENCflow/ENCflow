@@ -79,7 +79,8 @@ Four things are needed.
    default** (it is site data). Convert a soil depth measured normal to the slope
    into a vertical depth in preprocessing.
 3. **Kosugi parameters of the column** `vz_ks_mmh`, `vz_thetas`, `vz_thetar`,
-   `vz_psim`, `vz_sigma` and the initial condition (`vz_q0_mmh` or `vz_psi0`).
+   `vz_psim`, `vz_sigma` and the initial condition (one of `vz_q0_mmh`, `vz_psi0`
+   and `vz_wt0`).
    **There are no defaults** (see [Parameters and the basis of their
    defaults](#parameters-and-the-basis-of-their-defaults) below).
 4. **Outlet** `vz_out_kind` (and `vz_out_cell`).
@@ -309,8 +310,9 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | vz_sigma(c) | none | Kosugi log standard deviation σ | **given** required |
 | vz_depth(c) | 10 m | depth L of the computational column | **literature value** standard reference column of the original paper[^tani2023]. Take it deeper than the largest soil depth read out |
 | vz_dz(c) | 0.025 m | layer thickness (an integer fraction of vz_depth) | **literature value** same[^tani2023] |
-| vz_q0_mmh(c) | none | initial condition: flux of steady gravity drainage (mm/h). Uniform ψ0 with K(ψ0) = q0 | **given** one of this and vz_psi0 is required |
+| vz_q0_mmh(c) | none | initial condition: flux of steady gravity drainage (mm/h). Uniform ψ0 with K(ψ0) = q0 | **given** one of this, vz_psi0 and vz_wt0 is required |
 | vz_psi0(c) | none | initial condition: uniform pressure head (m. Negative) | **given** |
+| vz_wt0(c) | none | initial condition: depth of a hydrostatic water table (m. 0 or more). ψ(ζ) = ζ − vz_wt0 (saturated below the water table) | **given** in a column whose bottom has a fixed pressure ψ_b, vz_wt0 = vz_depth − ψ_b gives a state at rest with zero flux |
 | f_vz_bottom(c) | 1 | bottom 1: free drainage / 2: fixed pressure (for verification) | **method** |
 | vz_psibot(c) | none | ψ at a fixed-pressure bottom (m. f_vz_bottom = 2) | **given** |
 

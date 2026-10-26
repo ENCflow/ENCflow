@@ -48,6 +48,7 @@ module list_vz
     real :: vz_dz(1:vz_ncolmax) = -9999.0         ! 層厚 (m)
     real :: vz_q0_mmh(1:vz_ncolmax) = -9999.0     ! 初期条件: 定常重力排水の流束 (mm/h)
     real :: vz_psi0(1:vz_ncolmax) = -9999.0       ! 初期条件: 一様な圧力水頭 (m。負)
+    real :: vz_wt0(1:vz_ncolmax) = -9999.0        ! 初期条件: 静水圧の地下水面の深さ (m。0 以上)
     integer :: f_vz_bottom(1:vz_ncolmax) = 1      ! 下端 1: 自由排水 / 2: 固定圧(検証用)
     real :: vz_psibot(1:vz_ncolmax) = -9999.0     ! 固定圧の ψ_b (m。f_vz_bottom = 2)
     ! ---- &list_vz_zone(区画番号 z で添字) ----
@@ -80,7 +81,7 @@ subroutine list_vz_read(p, list)
   real :: vz_ks_mmh(1:vz_ncolmax), vz_thetas(1:vz_ncolmax), vz_thetar(1:vz_ncolmax)
   real :: vz_psim(1:vz_ncolmax), vz_sigma(1:vz_ncolmax)
   real :: vz_depth(1:vz_ncolmax), vz_dz(1:vz_ncolmax)
-  real :: vz_q0_mmh(1:vz_ncolmax), vz_psi0(1:vz_ncolmax)
+  real :: vz_q0_mmh(1:vz_ncolmax), vz_psi0(1:vz_ncolmax), vz_wt0(1:vz_ncolmax)
   integer :: f_vz_bottom(1:vz_ncolmax)
   real :: vz_psibot(1:vz_ncolmax)
   integer :: vz_zone_col(1:vz_nzonemax), vz_out_kind(1:vz_nzonemax)
@@ -91,7 +92,7 @@ subroutine list_vz_read(p, list)
                      vz_dt_init, vz_dt_min, vz_dt_max, vz_tol_theta, vz_tol_psi, vz_tol_q, &
                      vz_mb_rate, vz_maxit, vz_out_depth, f_vz_outprof
   namelist /list_vz_column/ vz_ks_mmh, vz_thetas, vz_thetar, vz_psim, vz_sigma, &
-                            vz_depth, vz_dz, vz_q0_mmh, vz_psi0, f_vz_bottom, vz_psibot
+                            vz_depth, vz_dz, vz_q0_mmh, vz_psi0, vz_wt0, f_vz_bottom, vz_psibot
   namelist /list_vz_zone/ vz_zone_col, vz_out_kind, vz_out_cell, vz_out_w
 
   f_vz = list%f_vz
@@ -118,6 +119,7 @@ subroutine list_vz_read(p, list)
   vz_dz = list%vz_dz
   vz_q0_mmh = list%vz_q0_mmh
   vz_psi0 = list%vz_psi0
+  vz_wt0 = list%vz_wt0
   f_vz_bottom = list%f_vz_bottom
   vz_psibot = list%vz_psibot
   vz_zone_col = list%vz_zone_col
@@ -162,6 +164,7 @@ subroutine list_vz_read(p, list)
   list%vz_dz = vz_dz
   list%vz_q0_mmh = vz_q0_mmh
   list%vz_psi0 = vz_psi0
+  list%vz_wt0 = vz_wt0
   list%f_vz_bottom = f_vz_bottom
   list%vz_psibot = vz_psibot
   list%vz_zone_col = vz_zone_col

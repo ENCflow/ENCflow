@@ -1,0 +1,77 @@
+!======================================================================
+! vzcol(param_hydro.txt): 静水圧の初期条件 vz_wt0 の検定(developer.md §87)
+!
+!   深さ 0.5 m・層厚 2.5 cm(20 層)の柱の下端に固定圧 ψ = 0 を置き
+!   (f_vz_bottom = 2)、初期地下水面を下端(vz_wt0 = 0.5 m)とする静水圧
+!   ψ(ζ) = ζ − 0.5(地表で −0.5 m。谷 2023 の小斜面の人工降雨実験 KIEX の
+!   初期条件の形)を与え、雨なしで 1 日進める。静水圧は流束 0 の厳密な静止解
+!   なので、ψ は初期値のまま、下端流束は 0 のまま(Check_vzcol.py hydro)。
+!   小杉パラメータは param.txt と同じ検定用の例示値。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 60.0                 ! 地表流は生じない(全セル VZ・系外流出)
+  t0 = 0
+  tt = 86400                ! 1 日
+  dt_disp = 21600
+  dt_file = 86400
+  dt_recrd = 3600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_precip = '-'
+  fn_vz = '-'
+  dir_data = 'data_vzcol'
+  dir_result = 'result_hydro'
+  f_disp_debug = 1
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 3
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_rntype = 0
+  rn0 = 0.05
+  f_sdtype = 0
+  sd0 = 0.5                 ! 土層厚 (m) = 柱の深さ(下端の流束を読む)
+/
+
+&list_bound
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 0       ! 雨なし
+  prval(1:2,2) = 99999, 0
+/
+
+&list_vz
+  fn_vz_zone = 'zone.txt'
+  dt_vz = 3600.0
+  f_vz_outprof = 1
+/
+
+&list_vz_column
+  vz_ks_mmh(1) = 100.0
+  vz_thetas(1) = 0.5
+  vz_thetar(1) = 0.1
+  vz_psim(1) = -0.5
+  vz_sigma(1) = 1.5
+  vz_depth(1) = 0.5
+  vz_dz(1) = 0.025
+  vz_wt0(1) = 0.5           ! 初期: 下端を地下水面とする静水圧
+  f_vz_bottom(1) = 2        ! 固定圧(検証用)
+  vz_psibot(1) = 0.0        ! 地下水面
+/
+
+&list_vz_zone
+  vz_out_kind(1) = 2
+/

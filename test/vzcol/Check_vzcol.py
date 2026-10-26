@@ -7,6 +7,7 @@ Python 標準ライブラリのみ。使い方:
   python3 Check_vzcol.py tight  result result_tight     # 時間許容を 1/4 にした再計算との差
   python3 Check_vzcol.py avg    result result_avg       # 面積平均モード(一様雨)と厳密モードの一致
   python3 Check_vzcol.py sd0    result_sd0              # 土層厚 0 のセルを含む区画の集約
+  python3 Check_vzcol.py hydro  result_hydro            # 静水圧の初期条件(vz_wt0)が静止解のまま
 
 base の検定項目:
   (a) 定常期(雨 = q0 = 1 mm/h、t <= 3600 s): 全深さの累積流束 = q0·t、貯留不変
@@ -179,6 +180,25 @@ def check_sd0(res):
     check(worst <= 1.0, "(sd0) zone water balance residual within the budget (worst ratio %.2e)" % worst)
 
 
+def check_hydro(res, dwt=0.5):
+    """静水圧の初期条件 vz_wt0: 下端固定圧 ψ = 0 の柱で地下水面を下端に置くと
+    流束 0 の静止解なので、雨なしで進めても ψ(ζ) = ζ − d_wt のまま、流束は 0"""
+    print("== vzcol hydrostatic initial condition: " + res)
+    profs = sorted(f for f in os.listdir(res) if f.startswith("vzprof_1_"))
+    check(len(profs) >= 1, "profile files written (%d)" % len(profs))
+    worst_psi, worst_f = 0.0, 0.0
+    for f in profs:
+        for z, psi, th, kk, zb, fb in read_prof(os.path.join(res, f)):
+            worst_psi = max(worst_psi, abs(psi - (z - dwt)))
+            worst_f = max(worst_f, abs(fb))
+    check(worst_psi < 1e-12, "psi stays hydrostatic psi = z - d_wt (max abs dev %.2e m)" % worst_psi)
+    check(worst_f < 1e-12, "cumulative fluxes stay 0 at all faces (max abs %.2e m)" % worst_f)
+    hc, col = read_csv(os.path.join(res, "vz_column.csv"))
+    iF0, iFb = hc.index("F0(m)"), hc.index("Fbottom(m)")
+    check(all(abs(r[iF0]) == 0.0 and abs(r[iFb]) < 1e-12 for r in col),
+          "no top input and no bottom outflow in vz_column.csv")
+
+
 def check_base(res):
     print("== vzcol base: " + res)
     hc, col = read_csv(os.path.join(res, "vz_column.csv"))
@@ -315,6 +335,8 @@ def main():
         check_pair(sys.argv[2], sys.argv[3], 1e-12, "area-average mode")
     elif mode == "sd0":
         check_sd0(sys.argv[2])
+    elif mode == "hydro":
+        check_hydro(sys.argv[2])
     else:
         sys.exit("unknown mode " + mode)
     if failed:
