@@ -64,6 +64,17 @@ follows from all three of these purposes.
    memory, CPU and communication when not enabled, and bit-identical results with
    the existing references when disabled. The authoritative design is
    docs/nonhydrostatic_plan.md and the record of the decision is §69.)
+   (Exception agreed 2026-10-26: only for uses in which the response of vertical
+   unsaturated infiltration itself is the object of study (the VZ runoff model of
+   Tani (2023)), the one-dimensional Richards equation may be solved on a small
+   number of **shared reference columns**. Conditions: (1) no vertical grid is held
+   per cell (the vertical state is number of columns × number of layers; the cell
+   side holds only the zone number and the read-out weights of the soil depth),
+   (2) lateral subsurface flow is not solved, and the drainage of a zone is moved to
+   explicitly specified outlets (the horizontal upper limit is unchanged), (3) zero
+   additional memory, CPU and communication when fn_vz is not specified, and
+   bit-identical results with the existing references when disabled. The
+   authoritative design is docs/vz_plan.md and the record of the decision is §87.)
 6. **Do not over-complicate the model; refine it gradually to match the information
    available.** It must run, for a start, with a simple specification of parameters.
 7. **Unneeded processes are "not enabled" by not creating or specifying their

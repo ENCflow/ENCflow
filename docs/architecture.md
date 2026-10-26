@@ -262,7 +262,7 @@ z は読み込みで 0 に強制され、fn_tide があれば m_tide が毎更�
 | 使い方(利用者視点) | docs/users_guide.md・tutorials/・users_guide/usecases.md(現象→機能) |
 | 前処理・後処理の道具 | utils/*/README.md(fault2disp・out2vtk 等) |
 | 他モデルとの立ち位置 | docs/comparison.md |
-| 個別機能の設計文書 | docs/*_plan.md(geomorph・debris・splash・glacier・boundary・geotiff・gwconduit・swi・driftwood・lava・landslide_tsunami・nonhydrostatic・bedmotion・bmi〔実装済み。設計解説と実績の記録として保持〕、delta〔河口デルタ形成の試行の記録。構成法・結果・機構の議論・他モデルとの対応〕、lake・wq_metal・xwindow・meander・wave・vz〔検討メモ。meander = 蛇行発達・側岸侵食・流砂方向補正の段階計画、wave = 波浪による沿岸漂砂と攪拌(弧状・カスプ状デルタ)、vz = 谷(2023)の鉛直不飽和浸透(VZ)流出モデル = 共有参照柱の 1 次元 Richards。方針 5 の例外の合意待ち〕)・channel_model.md。家屋破壊・瓦礫は plan を消し込み済みで developer.md §63 が正本。非静水圧は developer.md §69、規定底面運動は §70 が規約の正本 |
+| 個別機能の設計文書 | docs/*_plan.md(geomorph・debris・splash・glacier・boundary・geotiff・gwconduit・swi・driftwood・lava・landslide_tsunami・nonhydrostatic・bedmotion・bmi〔実装済み。設計解説と実績の記録として保持〕、delta〔河口デルタ形成の試行の記録。構成法・結果・機構の議論・他モデルとの対応〕、lake・wq_metal・xwindow・meander・wave・vz〔検討メモ。meander = 蛇行発達・側岸侵食・流砂方向補正の段階計画、wave = 波浪による沿岸漂砂と攪拌(弧状・カスプ状デルタ)、vz = 谷(2023)の鉛直不飽和浸透(VZ)流出モデル = 共有参照柱の 1 次元 Richards。2026-10-26 合意・段階実装中〕)・channel_model.md。家屋破壊・瓦礫は plan を消し込み済みで developer.md §63 が正本。非静水圧は developer.md §69、規定底面運動は §70 が規約の正本 |
 | 「まず動かしてみる」最小入力と型別の推奨値 | users_guide/geomorph.md・driftwood.md・bldgdebris.md・gwflow.md・forcing.md(遮断・蒸発散・積雪)・glacier.md・lavaflow.md の各「パターン別の推奨値」、wq.md「物質別の代表値」(根拠は developer.md §62・§50.6・§63.9・§64〜§67。共通ヘルパは m_util の param_default)。既定値を置かない章(浅水流・河道・境界・潮位・初期条件・地理情報の粗度・淡塩・SWI・構造物・計測・降雨)にも「とりあえず動かしてみる」最小入力と型別の目安表がある |
 | モジュール実装の作法 | src/m_gwflow_bucket.f90 のヘッダ |
 | ビルドの仕組み | make.inc・docs/install.md・§1/§3 |

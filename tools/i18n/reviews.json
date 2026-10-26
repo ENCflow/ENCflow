@@ -67,11 +67,11 @@
     {
       "source": "docs/developer.md",
       "target": "docs/en/developer.md",
-      "source_sha256": "c00a74f8cbf60c6cda92b3d56458c031b44c90026ff89bb03c7c08aa7ed5d9ea",
-      "target_sha256": "61b4e4212bc9079374148ed65fcf3dca9fa2ec13eaff23aafd097e2d941c7d6d",
+      "source_sha256": "6ebcaa57746325932fa93f7884131e8cf782f1b3278885d5ffd114992613952c",
+      "target_sha256": "9d1f68d9a62ad10e0d37aa20c2777747d722a67bc6f065f2178c6b998e11b50d",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24",
+      "reviewed_on": "2026-10-26",
       "source_section": "## 0."
     },
     {
