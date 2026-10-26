@@ -51,7 +51,7 @@ CSDMS の提出手順は「ライセンスの選択 → モデル情報(質問�
 
 紹介文に書く「検証の範囲」は、次の区別を保つ(相談で指摘された点):
 
-- Nightly は `REF_CASES` の 14 ケース(逐次・MPI np=1,2,4・-fcheck=all)と BMI
+- Nightly は `REF_CASES` の 16 ケース(逐次・MPI np=1,2,4・-fcheck=all)と BMI
   ジョブであり、「リポジトリ内の全検証例を毎晩回している」のではない。
 - 回帰比較(reference との一致)と、理論解・保存則の確認(Check_*.py)は別物
   (test/README.en.md の Check 列)。
