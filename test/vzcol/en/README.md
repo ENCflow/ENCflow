@@ -32,6 +32,7 @@ not recommended values for a particular soil.
 | fixed-pressure bottom | `param_fixed.txt` | 1 m deep with 1 cm layers, bottom ψ = 0 (f_vz_bottom = 2), 10 mm/h at the top for 10 days. Initially uniform ψ = −0.5 m |
 | time convergence | `param_tight.txt` | the time error tolerances of the base (vz_tol_theta, vz_tol_psi, vz_tol_q) divided by 4 |
 | area average | `param_avg.txt` | the base with f_vz_rain = 1 (area average within a column). The rain is uniform |
+| zero soil depth | `param_sd0.txt` | the soil depth of the base replaced by `sd_zero.txt` (3 cells are 0 m) |
 
 ## Checks (Check_vzcol.py)
 
@@ -58,6 +59,9 @@ not recommended values for a particular soil.
 - **Time convergence**: the cumulative fluxes differ from the rerun with
   tolerances divided by 4 by at most 0.2%.
 - **Area-average mode**: agrees with the strict mode when the rain is uniform.
+- **Zero soil depth**: cells with soil depth 0 are read at the surface (drainage
+  = rain, storage = 0), so the aggregation of the zone agrees with the sum of the
+  cell-by-cell read-outs and the balance residual is within the budget.
 
 ## Running
 

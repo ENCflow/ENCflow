@@ -253,8 +253,11 @@ the STG grid. Coexistence of VZ and groundwater (splitting ownership by zone) is
 future extension.
 
 **What cannot be on VZ cells**: channel (fn_rw), sea (fn_sw), boundary condition,
-injection and structure cells. The soil depth must be greater than 0 and not
-greater than the column depth `vz_depth`.
+injection and structure cells. The soil depth must be 0 or more and not greater
+than the column depth `vz_depth`. A cell with soil depth 0 is treated as a class
+whose rain drains as it is (it is read at the surface, so drainage = rain and
+storage = 0; places with exposed bedrock, or the 0 cm class of the linear
+distribution of soil depth in Tani (2023)).
 
 **States that stop the computation** (shown with the reason as out of scope)
 

@@ -667,7 +667,10 @@ subroutine setup_zones(vz, p, g, b, list)
       if (z == 0) cycle
       associate (zz => vz%zones(z), geo => vz%cols(vz%zones(z)%col)%geo)
         d = real(sdf(i,j), real64)
-        if (.not. (d > 0.0_real64)) call stop_at("vz: soil depth must be > 0 on VZ cells", i, j)
+        ! 土層厚 0 は「雨がそのまま排水される区分」: 界面 0 で読み出すので
+        ! D = F_0、S = 0(W(0) に入り、層重み M には入らない。谷 2023 の線形分布の
+        ! 0 cm 区分)。負と非数は停止
+        if (.not. (d >= 0.0_real64)) call stop_at("vz: soil depth must be >= 0 on VZ cells", i, j)
         if (d > geo%depth) then
           call stop_at("vz: soil depth exceeds the column depth vz_depth (deepen the column)", i, j)
         end if

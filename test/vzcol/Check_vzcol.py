@@ -6,6 +6,7 @@ Python 標準ライブラリのみ。使い方:
   python3 Check_vzcol.py fixed  result_fixed            # 固定圧下端の定常解
   python3 Check_vzcol.py tight  result result_tight     # 時間許容を 1/4 にした再計算との差
   python3 Check_vzcol.py avg    result result_avg       # 面積平均モード(一様雨)と厳密モードの一致
+  python3 Check_vzcol.py sd0    result_sd0              # 土層厚 0 のセルを含む区画の集約
 
 base の検定項目:
   (a) 定常期(雨 = q0 = 1 mm/h、t <= 3600 s): 全深さの累積流束 = q0·t、貯留不変
@@ -114,6 +115,70 @@ def depth_cols(head):
     return deps
 
 
+def check_zone_sum(res, sd, tag):
+    """区画の貯留・排水(面積重み W・M による集約)が、鉛直分布の出力から
+    セルごとに土層厚の深さで読み出した値の和と一致する(土層厚 0 のセルは
+    界面 0 で読む = 排水は上端入力 F0、貯留は 0)"""
+    hc, col = read_csv(os.path.join(res, "vz_column.csv"))
+    hz, zone = read_csv(os.path.join(res, "vz_zone.csv"))
+    it, iF0 = hc.index("time(s)"), hc.index("F0(m)")
+    izt = hz.index("time(s)")
+    ivs, ivd = hz.index("vstore(m3)"), hz.index("vdrain(m3)")
+    zrow = {round(r[izt]): r for r in zone}
+    crow = {round(r[it]): r for r in col}
+    profs = sorted(f for f in os.listdir(res) if f.startswith("vzprof_1_"))
+    for f, t in zip(profs, [21600, 43200]):
+        prof = read_prof(os.path.join(res, f))
+        dz = prof[0][4]
+        faces = [0.0] + [p[4] for p in prof]
+        fcum = [crow[t][iF0]] + [p[5] for p in prof]
+        bsum = [0.0]
+        for p in prof:
+            bsum.append(bsum[-1] + p[2] * dz)
+        vs, vd = 0.0, 0.0
+        for row in sd:
+            for d in row:
+                j = min(int(d / dz), len(prof))
+                while j < len(prof) and faces[j + 1] <= d:
+                    j += 1
+                while j > 0 and faces[j] > d:
+                    j -= 1
+                if j >= len(prof):
+                    a, j = 0.0, len(prof)
+                    vs += DX * DY * bsum[j]
+                    vd += DX * DY * fcum[j]
+                    continue
+                a = (d - faces[j]) / (faces[j + 1] - faces[j])
+                vs += DX * DY * ((1 - a) * bsum[j] + a * bsum[j + 1])
+                vd += DX * DY * ((1 - a) * fcum[j] + a * fcum[j + 1])
+        zr = zrow[t]
+        # vzprof は 16 桁で書かれるため、この比較は表示桁の範囲で一致すればよい
+        check(abs(vs - zr[ivs]) / zr[ivs] < 1e-12,
+              "%s t=%d: zone storage = sum of cell storages (rel %.2e)" % (tag, t, abs(vs - zr[ivs]) / zr[ivs]))
+        check(abs(vd - zr[ivd]) / zr[ivd] < 1e-11,
+              "%s t=%d: zone drainage = sum of cell drainages (rel %.2e)" % (tag, t, abs(vd - zr[ivd]) / zr[ivd]))
+
+
+def check_sd0(res):
+    """土層厚 0 のセル(雨がそのまま排水される区分)を含む区画の集約と収支"""
+    print("== vzcol zero soil depth: " + res)
+    sd = []
+    with open(os.path.join("data_vzcol", "sd_zero.txt")) as f:
+        for line in f:
+            if line.split():
+                sd.append([float(x) for x in line.split()])
+    nzero = sum(1 for row in sd for d in row if d == 0.0)
+    check(nzero > 0, "zero soil depth cells present (%d)" % nzero)
+    check_zone_sum(res, sd, "(sd0)")
+    hz, zone = read_csv(os.path.join(res, "vz_zone.csv"))
+    izt, ivin, ires, iarea = (hz.index("time(s)"), hz.index("vin(m3)"), hz.index("residual(m3)"),
+                              hz.index("area(m2)"))
+    worst = 0.0
+    for r in zone:
+        worst = max(worst, abs(r[ires]) / (MB_RATE * r[izt] * r[iarea] + 1e-9 * r[ivin]))
+    check(worst <= 1.0, "(sd0) zone water balance residual within the budget (worst ratio %.2e)" % worst)
+
+
 def check_base(res):
     print("== vzcol base: " + res)
     hc, col = read_csv(os.path.join(res, "vz_column.csv"))
@@ -160,41 +225,12 @@ def check_base(res):
           "(c) Kosugi theta(psi), K(psi) match (max rel err %.2e, %.2e)" % (worst_th, worst_k))
 
     # (d) 区画の集約 = セル別の読み出しの総和(出力時刻 6 h・12 h)
+    check_zone_sum(res, SD, "(d)")
     izt = hz.index("time(s)")
-    ivs, ivd, ivin, ires = hz.index("vstore(m3)"), hz.index("vdrain(m3)"), hz.index("vin(m3)"), hz.index("residual(m3)")
+    ivin, ires = hz.index("vin(m3)"), hz.index("residual(m3)")
     iarea = hz.index("area(m2)")
     zrow = {round(r[izt]): r for r in zone}
     crow = {round(r[it]): r for r in col}
-    for f, t in zip(profs, [21600, 43200]):
-        prof = read_prof(os.path.join(res, f))
-        dz = prof[0][4]
-        faces = [0.0] + [p[4] for p in prof]
-        fcum = [crow[t][iF0]] + [p[5] for p in prof]
-        bsum = [0.0]
-        for p in prof:
-            bsum.append(bsum[-1] + p[2] * dz)
-        vs, vd = 0.0, 0.0
-        for row in SD:
-            for d in row:
-                j = min(int(d / dz), len(prof))
-                while j < len(prof) and faces[j + 1] <= d:
-                    j += 1
-                while j > 0 and faces[j] > d:
-                    j -= 1
-                if j >= len(prof):
-                    a, j = 0.0, len(prof)
-                    vs += DX * DY * bsum[j]
-                    vd += DX * DY * fcum[j]
-                    continue
-                a = (d - faces[j]) / (faces[j + 1] - faces[j])
-                vs += DX * DY * ((1 - a) * bsum[j] + a * bsum[j + 1])
-                vd += DX * DY * ((1 - a) * fcum[j] + a * fcum[j + 1])
-        zr = zrow[t]
-        # vzprof は 16 桁で書かれるため、この比較は表示桁の範囲で一致すればよい
-        check(abs(vs - zr[ivs]) / zr[ivs] < 1e-12,
-              "(d) t=%d: zone storage = sum of cell storages (rel %.2e)" % (t, abs(vs - zr[ivs]) / zr[ivs]))
-        check(abs(vd - zr[ivd]) / zr[ivd] < 1e-11,
-              "(d) t=%d: zone drainage = sum of cell drainages (rel %.2e)" % (t, abs(vd - zr[ivd]) / zr[ivd]))
     worst = 0.0
     for r in zone:
         worst = max(worst, abs(r[ires]) / (MB_RATE * r[izt] * r[iarea] + 1e-9 * r[ivin]))
@@ -277,6 +313,8 @@ def main():
         check_pair(sys.argv[2], sys.argv[3], 2e-3, "time convergence")
     elif mode == "avg":
         check_pair(sys.argv[2], sys.argv[3], 1e-12, "area-average mode")
+    elif mode == "sd0":
+        check_sd0(sys.argv[2])
     else:
         sys.exit("unknown mode " + mode)
     if failed:
