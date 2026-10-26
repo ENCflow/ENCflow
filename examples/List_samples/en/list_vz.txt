@@ -1,0 +1,123 @@
+!======================================================================
+! English mirror of examples/List_samples/list_vz.txt.
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of vertical unsaturated flow (VZ) runoff settings
+! &list_vz / &list_vz_column / &list_vz_zone
+!
+!   Use this file by specifying, in the system parameters &list_sysparam,
+!     fn_vz = "list_vz.txt"
+!   (if fn_vz is not specified, the feature is completely inactive).
+!
+!   The VZ runoff model of Tani (2023): solves the one-dimensional Richards
+!   equation (Kosugi model) on a sufficiently deep shared reference column,
+!   reads the downward flux at the soil depth of each cell of a VZ zone,
+!   integrates it over the area, and moves the drainage of the zone
+!   instantaneously to outlet cells (or out of the system)
+!   (users_guide/vz.md, developer.md §87).
+!
+!   Required inputs:
+!     - zone number raster fn_vz_zone (under dir_data; 0 = not applied)
+!     - soil depth (f_sdtype / sd0 / fn_sd in &list_geoinfo; no default)
+!     - Kosugi parameters and initial condition of the columns (no defaults)
+!     - outlet vz_out_kind of each zone (required)
+!
+!   Features that cannot be combined in the first version (the run stops):
+!   fn_gwflow, fn_snow, fn_glacier, fn_geomorph, fn_wq, fn_salt, nesting,
+!   STG grid
+!
+!   Output: vz_zone.csv (cumulative water volumes and balance residual of
+!   the zones) and vz_column.csv (cumulative fluxes of the columns and the
+!   drainage and storage at given depths). The VZ storage is counted in
+!   S_grnd of the Log
+!
+!======================================================================
+&list_vz
+  ! temporary deactivation (setting 0 while fn_vz stays written makes it fully inactive)
+  f_vz = 1
+
+  ! zone number raster (integer. 0 = not applied, 1, 2, ... = consecutive zone numbers)
+  fn_vz_zone = "vz_zone.asc"
+
+  ! synchronisation interval for advancing the columns (s). 0 = every step (costly). Default 60
+  !dt_vz = 60.0
+
+  ! handling of the top flux (rain) of a column
+  !   0: require identical ground rainfall over the cells referring to the
+  !      column (stops otherwise. Default)
+  !   1: area average over all cells referring to the column (when the rain
+  !      has a spatial distribution)
+  !f_vz_rain = 0
+
+  ! interface hydraulic conductivity 1: arithmetic mean (default) / 2: harmonic mean
+  !f_vz_kface = 1
+
+  ! numerical control (normally keep the defaults. To check the results, compare
+  ! with a rerun whose tolerances are divided by 4)
+  !vz_dt_init = 1.0         ! initial internal time step (s)
+  !vz_dt_min = 0.001        ! lower limit of the internal time step (s. Stops below it)
+  !vz_dt_max = 3600.0       ! upper limit of the internal time step (s)
+  !vz_tol_theta = 1.0e-3    ! theta scale of the time error (ratio to thetas - thetar)
+  !vz_tol_psi = 1.0e-3      ! psi scale of the time error (common value for absolute m and relative)
+  !vz_tol_q = 1.0e-2        ! relative scale of the time error of the cumulative interface fluxes
+  !vz_mb_rate = 1.0e-11     ! budget of the nonlinear water balance error of a column (m/s)
+  !vz_maxit = 25            ! upper limit of the Picard iterations
+
+  ! depths written to the column diagnostics (vz_column.csv) (m. Up to 20)
+  !vz_out_depth = 0.5, 1.0, 2.0
+
+  ! 1: write the vertical profile of the columns vzprof_<column>_<number>.csv
+  !    at the distribution output times (dt_file)
+  !f_vz_outprof = 0
+/
+
+&list_vz_column
+  ! shared reference columns (indexed by the column number c. Consecutive
+  ! 1, 2, ... Up to 50)
+  ! The Kosugi parameters have no defaults (give them from water retention and
+  ! conductivity tests of the soil). The values below are a format example, not
+  ! recommended values for a particular soil
+  vz_ks_mmh(1) = 100.0      ! saturated hydraulic conductivity (mm/h)
+  vz_thetas(1) = 0.5        ! saturated water content
+  vz_thetar(1) = 0.1        ! residual water content
+  vz_psim(1) = -0.5         ! median pressure head psi_m (m. Negative)
+  vz_sigma(1) = 1.5         ! log standard deviation sigma
+
+  ! depth (m) and layer thickness (m) of the computational column (the depth is
+  ! an integer multiple of the layer thickness. Defaults 10 m and 2.5 cm).
+  ! Take it sufficiently deeper than the largest soil depth read out
+  !vz_depth(1) = 10.0
+  !vz_dz(1) = 0.025
+
+  ! initial condition (one of the two):
+  !   vz_q0_mmh: flux of steady gravity drainage (mm/h). Uniform psi0 with
+  !              K(psi0) = q0 (runoff rate before the rain)
+  !   vz_psi0  : uniform pressure head (m. Negative)
+  vz_q0_mmh(1) = 1.0
+  !vz_psi0(1) = -1.0
+
+  ! bottom 1: free drainage (default) / 2: fixed pressure (for verification;
+  ! give psi by vz_psibot)
+  !f_vz_bottom(1) = 1
+  !vz_psibot(1) = 0.0
+/
+
+&list_vz_zone
+  ! VZ zones (indexed by the zone number z, the number in the zone number raster)
+  ! column referred to (default: same as the zone number. Several zones may
+  ! share the same column)
+  vz_zone_col(1) = 1
+
+  ! outlet (required) 1: move to surface cells / 2: out of the system
+  vz_out_kind(1) = 1
+
+  ! outlet cells (i, j) (vz_out_kind = 1. Up to 99. VZ cells, sea cells and
+  ! water level boundary cells are not allowed)
+  vz_out_cell(:,1,1) = 120, 80
+  !vz_out_cell(:,2,1) = 121, 80
+
+  ! distribution ratios of the outlets (sum 1. May be omitted for one cell.
+  ! All required for several cells)
+  !vz_out_w(1:2,1) = 0.6, 0.4
+/

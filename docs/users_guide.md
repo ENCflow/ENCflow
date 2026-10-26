@@ -70,11 +70,12 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [水質](users_guide/wq.md)(&list_wq)— 負荷投入・輸送・減衰・洗い出し・Kd 二相分配・地下水経由・貯水池
   - [水質モデルの解説](users_guide/wq_models.md) — 減衰・沈降・Kd 分配・浸透同伴と地下輸送・蓄積洗い出し・貯水池・下水噴出の式と代表値の出典(水質の補足)
 - [土壌雨量指数](users_guide/swi.md)(&list_swi)— 土砂災害警戒の実務指標(気象庁3段タンク。専用ラン)
+- [鉛直不飽和浸透(VZ)流出](users_guide/vz.md)(&list_vz / &list_vz_column / &list_vz_zone)— 山地斜面の降雨流出応答を共有参照柱の 1 次元 Richards 式から求める(谷 2023 の VZ モデル。区画の直接排水を出口セルへ)
 - [計測](users_guide/record.md)(&list_record)— プローブ・フラックス測線
 - [用途集](users_guide/usecases.md)— 現象名から機能の組み合わせを引く(未対応の現象も明示)
 
 **付録**
-- [全パラメータ索引](users_guide/params_index.md) — 全 671 パラメータの名前→章の逆引き
+- [全パラメータ索引](users_guide/params_index.md) — 全 702 パラメータの名前→章の逆引き
 
 ---
 
@@ -249,6 +250,7 @@ ENCflow は地表の水の流れを計算するモデルです。必要に応じ
 | 地滑り・山体崩壊・海底地滑りによる津波 | [土砂・地形変化](users_guide/geomorph.md)(動く底層)(+[浅水流計算](users_guide/swflow.md)の非静水圧補正) |
 | 分散性のある津波・波(河川遡上津波のソリトン分裂・undular bore・孤立波) | [浅水流計算](users_guide/swflow.md)(非静水圧補正 f_nonhydrostatic) |
 | 降雨流出(流域水文) | [降雨・気象](users_guide/forcing.md)(+地下水) |
+| 山地斜面の降雨流出を鉛直不飽和浸透から求める(谷の VZ モデル) | [鉛直不飽和浸透(VZ)流出](users_guide/vz.md)+[降雨・気象](users_guide/forcing.md) |
 | 都市の内水氾濫(下水道の排水・噴出) | [地下水](users_guide/gwflow.md)(管路連続体層)+[降雨・気象](users_guide/forcing.md) |
 | 海水浸入・塩水くさび・淡水レンズ | [淡塩2層](users_guide/salt.md)+[潮位・海面](users_guide/tide.md) |
 | 土砂輸送・土石流 | [土砂・地形変化](users_guide/geomorph.md) |

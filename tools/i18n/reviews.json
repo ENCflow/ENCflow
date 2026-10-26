@@ -13,11 +13,11 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "1bc21b2a4a6006ebf1d3995a4db536db4d0721badab3b2bc9f47218367feb6cd",
-      "target_sha256": "4a6937e03446c405604ed2dc495ec66dae93524daa8d0f3b30f23afee615973b",
-      "reviewer": "Claude (Claude Code session; added the BMI \"whole model or small part\" bullet to the Japanese master and the English mirror together)",
+      "source_sha256": "2b0e45c0f7929d20a1f89707a61af546f77e2c00e69a6f9c71c7e92ba7dde99b",
+      "target_sha256": "ba0b68ad41cd6f897e6e1b8dcdaa83ad3e4414102a25c5032632c7e20899552e",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-25"
+      "reviewed_on": "2026-10-26"
     },
     {
       "source": "TRADEMARKS.md",
@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "2d3457bd08582ac28c6009270ba71150ffbec553518b73781a6734093803e6ab",
-      "target_sha256": "167f727ae8be37f3f92df184cb6bc9be87bccbfadd9940a82efd1f9d374e4d9c",
-      "reviewer": "Claude",
+      "source_sha256": "afcada1b4051ef782e1675538210cdf0850087a0c289e8379af786d29a6cd403",
+      "target_sha256": "84ba8ace581abd152507328245e5178cabc121827758dffeed396cfbe76fccfe",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-25"
+      "reviewed_on": "2026-10-26"
     },
     {
       "source": "docs/developer.md",
@@ -104,11 +104,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "fd33773b4d557e4396725ab4d581bab8c6bfce651e9a6d1719c4a4a563d0056f",
-      "target_sha256": "b1c0a0ec94f1f69b876e0a49a05602cb579a049265ef94ab24834613d39683d1",
-      "reviewer": "Claude",
+      "source_sha256": "e9372cf29f82ad8dfd18b5f73afeb78b34b9c3b7b774e6b36a00edb3e46b42bd",
+      "target_sha256": "5f6a017002b210c84a8ab617cc2f68519641505f258cc52831e05eb43460d8a5",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-25"
+      "reviewed_on": "2026-10-26"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -383,11 +383,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "3be1a041c88b8d6cf93689fdbebab2219cd2910d5ffe9c057368f59399299234",
-      "target_sha256": "6878e13d9678e923993630bb6b9b8467318c5c8654a8e5087210f0050824bb1c",
-      "reviewer": "Claude",
+      "source_sha256": "4a8daeeb795e9b6f24d42a7c94392e004b4e29d352829351fce66fe08e55f862",
+      "target_sha256": "c8f47238ac8e3d1288eaf740176d8e04168ea0cea26e3816e09ae0e0268b2be9",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-25"
+      "reviewed_on": "2026-10-26"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -482,11 +482,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "ec42c39daeb2bb28c94e35fb00dfe67fcfaa29a59914c4ea9d9ff6f00fdfa78b",
-      "target_sha256": "659502cb0096f9a9feb1f496acbc35d08e8999ce339520ba42ac324177abb227",
+      "source_sha256": "ba5d3d7aa091faf373c7be77784472c8e4795226a62d5caf3808d02ca97aaf67",
+      "target_sha256": "1fdab3b05091566132785536469cd7437e1d8b4d18d34f507186f9f8ab058fd1",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-26"
     },
     {
       "source": "docs/users_guide/user_routines.md",
@@ -496,6 +496,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "docs/users_guide/vz.md",
+      "target": "docs/en/users_guide/vz.md",
+      "source_sha256": "d0daf7e5de360d895ad1acb0865e389195569ba77350e87cd731c3302d1846e1",
+      "target_sha256": "3b46836ea37e733986e37b1f114ba2d4366c3a36c92790b70e9d15c93f122bc6",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-26"
     },
     {
       "source": "docs/users_guide/wq.md",
@@ -725,11 +734,11 @@
     {
       "source": "examples/List_samples/list_sysparam.txt",
       "target": "examples/List_samples/en/list_sysparam.txt",
-      "source_sha256": "c12114fc31b292b479039045c74b94cb504e5e9c488f7ad689215f87e97688e1",
-      "target_sha256": "19f9a36de0c0312f807e08252c3971bd4b9c478ac58fcb87383f623012d214d5",
+      "source_sha256": "d5e8d46d9998ebbd0b8708429c51afb835430b12deb92e3d4cf2ad9f3a83c284",
+      "target_sha256": "b863e836394b08e88bf3f6e0f98bd9a766d95f139b641eca5a31c56d3c9b45a2",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-26"
     },
     {
       "source": "examples/List_samples/list_tide.txt",
@@ -739,6 +748,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "examples/List_samples/list_vz.txt",
+      "target": "examples/List_samples/en/list_vz.txt",
+      "source_sha256": "fb9c2256fbe61010d7c708cac84741fe6d65f67b6ec3fb7f19c40718a3c0842f",
+      "target_sha256": "a071307ea16b88a799bae38e15cca75cbe97c991bc083822f3ee62deb1b04aa9",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-26"
     },
     {
       "source": "examples/List_samples/list_wave.txt",
@@ -941,11 +959,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "cec78419204cab3b04af63b0533a5e73f0142cd3923bb6fcd6a6bef04a476394",
-      "target_sha256": "5811c8784aa111c8b453a06e22927bfcf27b7f00e20fa1ca5d346666652104e6",
+      "source_sha256": "bb8035288f5381260cda08418afafa8744b0e4125f72bf192d7ec091aa01c8a8",
+      "target_sha256": "aa3d099d59cf94e496c0b423de93fdfb9b6c453f9af6b221ada01e46d4bfea29",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-26"
     },
     {
       "source": "test/avalanche/README.md",
@@ -2098,6 +2116,24 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/vzcol/README.md",
+      "target": "test/vzcol/en/README.md",
+      "source_sha256": "b18d0c24892008789def4cc5579fe727b19a39ffbb2e13b511c7e14e9083cf05",
+      "target_sha256": "30a0503538b830bd3b6081e63ee6f78c5118a3989e500c63bf1c94002551a86e",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-26"
+    },
+    {
+      "source": "test/vzzone/README.md",
+      "target": "test/vzzone/en/README.md",
+      "source_sha256": "63128df481f95e326abfe77a4f5d3da1156d20929fc68d9a21cfba3d71e60f25",
+      "target_sha256": "a8fac7afe96c5c50b44b986f5c92e018b5b4fceb1d13602ac3f5da81fb0ea490",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-26"
     },
     {
       "source": "test/wash/README.md",

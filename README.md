@@ -117,6 +117,10 @@ need to understand all of it. Read only the lines you care about.
   infiltration, and two-layer groundwater in a soil layer and a
   weathered-bedrock layer providing baseflow and recession. Well
   pumping and groundwater abstraction sinks for drawdown analysis.
+  Also Tani's VZ model, which derives the runoff response of mountain
+  hillslopes from vertical unsaturated infiltration (the one-dimensional
+  Richards equation on shared reference columns, read out at the soil
+  depth of the zones and drained directly to outlets).
 - **Seawater intrusion and salt wedges**: with a fresh/salt two-layer
   sharp-interface approximation, seawater intrusion into and retreat
   from aquifers, freshwater lenses, pumping-induced intrusion and well

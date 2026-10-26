@@ -61,6 +61,7 @@ accuracy caveats (blank = nothing special).
 | Phenomenon | Features | Key settings | Notes |
 |---|---|---|---|
 | Rainfall runoff (flood runoff analysis) | [Rainfall and weather](forcing.md) + [Groundwater](gwflow.md) | Green-Ampt + lateral flow (f_gwlateral=1) | |
+| Rainfall runoff of mountain hillslopes (response governed by vertical unsaturated infiltration; the VZ model of Tani 2023) | [Vertical unsaturated flow (VZ) runoff](vz.md) + [Rainfall and weather](forcing.md) | Zone number raster + soil depth + Kosugi parameters of the shared reference columns + outlets (fn_vz) | Direct drainage without lateral delay. Cannot be combined with groundwater (fn_gwflow) in the first version |
 | Baseflow / low-flow recession | Weathered bedrock layer in [Groundwater](gwflow.md) | f_gwlayer2=1 + spin-up via [Suspend and restart](restart.md) | In event runs the initial saturation gw2_sat0 is the practical calibration point |
 | Catchment water balance / recharge estimates | [Rainfall and weather](forcing.md) (evapotranspiration) + [Groundwater](gwflow.md) | Track S_surf/S_grnd/S_total over a long run | The S columns are domain-mean storage depths (m); their differences give the net balance |
 | Farmland tile drainage | Conduit continuum layer | The tile-drain preset with gwc_leak_layer=1 (exchange with the soil layer) | |

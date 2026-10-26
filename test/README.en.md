@@ -63,6 +63,8 @@ analytical-solution or conservation check by Check_*.py.
 | **Rainfall, interception, Soil Water Index** | | | |
 | [icevap/](icevap/en/README.md) | Minimal input of each interception and evapotranspiration model and the display of defaults | Interception, evapotranspiration | screen output |
 | [swi/](swi/en/README.md) | Analytical reference of the Soil Water Index (JMA three-tank model) | Soil Water Index | analytic |
+| [vzcol/](vzcol/en/README.md) | One VZ shared reference column: steady gravity drainage, depth-wise conservation, Kosugi model, agreement of zone weights with the cell-by-cell read-out, steady solution with a fixed-pressure bottom versus quadrature, time convergence, area-average mode | VZ runoff fn_vz | ref, analytic |
+| [vzzone/](vzzone/en/README.md) | VZ zones, shared columns and outlets: receiving by the distribution ratios, a single addition to a shared receiving cell, S_total balance, bit-identical results for shared and duplicated columns, rain distribution with area averaging, stop of the strict mode, save → restart agreement | VZ runoff fn_vz | ref, analytic |
 | **Sediment and landform change** | | | |
 | [creep/](creep/en/README.md) | Gaussian-hill benchmark of hillslope creep (linear diffusion) | Sediment f_creep | analytic |
 | [dissol/](dissol/en/README.md) | Limestone dissolution. The final ground elevation matches the analytic value for the three water sources (infiltration, sink inflow = doline term, rainfall); restart round trip with a save inside an update interval | Landform f_dissol, conduit continuum layer | ref, analytic |

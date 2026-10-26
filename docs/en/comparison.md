@@ -125,6 +125,7 @@ al. 2025 (GMD); confirm before citing).
 | Structures (breach, pumps, culverts, sluice gates, diversions, dam operation) | Yes | HEC-RAS, TUFLOW, MIKE, SOBEK (SFINCS goes as far as thin walls, weirs, drainage pumps and culverts) | An area where the free/open camp is thin |
 | Rainfall runoff, interception, evapotranspiration | Yes: canopy, Hamon/Thornthwaite, lapse rate | RRI, GSSHA, MIKE SHE, SHETRAN | The hydraulics-specialized camp does not have these (SFINCS goes as far as rain-on-grid + infiltration (constant, CN, Green-Ampt, Horton); no interception, evapotranspiration or groundwater) |
 | Groundwater | Yes: two layers (soil + weathered bedrock) + well pumping sinks + streambed exchange limit (the capped form of MODFLOW RIV) | MIKE SHE, SHETRAN, GSSHA, ParFlow | Two layers in a plan-view 2-D model is a minority position. Pumping combined with the fresh/salt layers also covers pumping-induced seawater intrusion. River-aquifer exchange is represented on the channel-mask cells themselves, without a separate river package |
+| Vertical unsaturated flow (Richards) | Partial: one-dimensional Richards (Kosugi model) on shared reference columns, read out at the soil depth of the zones and drained directly to outlets (the VZ runoff model of Tani 2023) | HYDRUS-1D (dedicated vertical 1-D), MIKE SHE, SHETRAN, ParFlow | No vertical grid per cell; a few reference columns represent the zones (state = columns × layers). A rough estimate that does not solve the lateral delay. In the first version it cannot be combined with the groundwater (two layers) at the same place |
 | Seawater intrusion / fresh-salt two-layer | Partial: sharp interface (SWI2-type) + surface salt layer | MODFLOW+SWI2/SEAWAT, SUTRA, FEFLOW | Variable-density transport that resolves mixing and dispersion is a dedicated domain. Following run-up seawater to its destination in a single time evolution with surface inundation and tide is the original point |
 | Urban drainage / conduit networks | Partial: conduit continuum layer (equivalent confined continuum, 8-direction conveyance, surcharge) | SWMM + 2-D couplings (TUFLOW, InfoWorks ICM, xpswmm) | The world standard couples a 2-D surface model with a 1-D pipe network. ENCflow homogenizes the network into a continuum; control structures and trunk-dominated systems are ceded to network models |
 | Sediment and landform change (bedload, suspension, collapse, debris flow) | Yes, with MORFAC. Also cliff rockfall and talus (f_rockfall; windowed free-face height, export into the sea for sea cliffs) | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | Differs in placing debris flows alongside catchment hydrology and floods |
@@ -310,7 +311,11 @@ user's guide chapters, not in this table.
   (Hypre, HDF5, ...), and without structures, sediment, water
   quality, or the volcanic family. ENCflow's approximate route with
   an abstracted vertical (developer.md Sec. 0, policy 5) coexists by
-  its laptop-first accessibility and its breadth of processes.
+  its laptop-first accessibility and its breadth of processes (as an
+  exception, only for Tani's VZ runoff model, which deals with the
+  response of vertical unsaturated infiltration itself, the Richards
+  equation is solved on a few shared reference columns, with no
+  vertical grid per cell; developer.md Sec. 87).
   (b) **coupling frameworks (CSDMS: BMI, pymt, Landlab)** — the
   community route of connecting existing specialist models through a
   standard interface. Its strength is using each field's specialist

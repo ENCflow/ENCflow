@@ -73,6 +73,7 @@
   !fn_geomorph = ""         ! sediment and landform evolution
   !fn_wq = ""               ! water quality (load runoff)
   !fn_swi = ""              ! soil water index (dedicated run; users_guide/swi.md)
+  !fn_vz = ""               ! vertical unsaturated flow (VZ) runoff (users_guide/vz.md)
   !fn_record = ""           ! measurement (probes and transects)
 
   ! ---- Distribution file formats (users_guide/io.md) ----

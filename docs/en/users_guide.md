@@ -75,11 +75,12 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Water quality](users_guide/wq.md) (&list_wq) -- load input, transport, decay, washoff, Kd two-phase partitioning, groundwater pathway, reservoirs
   - [Water-quality models](users_guide/wq_models.md) -- decay, settling, Kd partitioning, infiltration and groundwater transport, buildup/washoff, reservoirs and sewer surcharge, with equations and the sources of the representative values (supplement)
 - [Soil Water Index](users_guide/swi.md) (&list_swi) - the operational sediment-disaster warning index (JMA 3-tank model; dedicated runs)
+- [Vertical unsaturated flow (VZ) runoff](users_guide/vz.md) (&list_vz / &list_vz_column / &list_vz_zone) - the rainfall-runoff response of mountain hillslopes from the one-dimensional Richards equation on shared reference columns (the VZ model of Tani 2023; direct drainage of zones to outlet cells)
 - [Measurement](users_guide/record.md) (&list_record) -- probes, flux transects
 - [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 671 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 702 parameter names to their chapters
 
 ---
 
@@ -265,6 +266,7 @@ settings, including unsupported phenomena), see
 | Tsunamis from landslides, sector collapses, submarine slides | [Sediment and landform change](users_guide/geomorph.md) (moving bed layer) (+ the non-hydrostatic correction in [Shallow water flow](users_guide/swflow.md)) |
 | Dispersive tsunamis and waves (soliton fission of river-intruding tsunamis, undular bores, solitary waves) | [Shallow water flow](users_guide/swflow.md) (non-hydrostatic correction f_nonhydrostatic) |
 | Rainfall runoff (catchment hydrology) | [Rainfall and weather](users_guide/forcing.md) (+ groundwater) |
+| Rainfall runoff of mountain hillslopes from vertical unsaturated infiltration (Tani's VZ model) | [Vertical unsaturated flow (VZ) runoff](users_guide/vz.md) + [Rainfall and weather](users_guide/forcing.md) |
 | Urban pluvial flooding (sewer drainage and surcharge) | [Groundwater](users_guide/gwflow.md) (conduit continuum layer) + [Rainfall and weather](users_guide/forcing.md) |
 | Seawater intrusion, salt wedges, freshwater lenses | [Fresh and salt water layers](users_guide/salt.md) + [Tide and sea surface](users_guide/tide.md) |
 | Sediment transport / debris flow | [Sediment and landform change](users_guide/geomorph.md) |
