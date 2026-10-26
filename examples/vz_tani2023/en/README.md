@@ -5,8 +5,8 @@
 This example recomputes, with the vertical unsaturated flow (VZ) runoff of ENCflow
 ([fn_vz](../../../docs/en/users_guide/vz.md)) and the same settings, the
 computations of the VZ runoff model that Tani (2023)[^tani2023] carried out with
-HYDRUS-1D, and compares them with the calculated runoff rates of the paper. All
-seven events of the paper are covered.
+HYDRUS-1D, and compares them with the calculated runoff rates and pressure heads of
+the paper. All seven events of the paper are covered.
 
 | Event | Target | Figure |
 |---|---|---|
@@ -17,8 +17,9 @@ seven events of the paper are covered.
 | KI1, KI2 | Kiryu Experimental Watershed (Shiga; weathered granite, 5.99 ha) (August 1982, July 2006) | Fig. 16, Fig. 17 |
 
 Comparing with the values calculated in the paper checks the 1D Richards kernel of
-ENCflow and the read-out of the zones (integrating over the catchment the drainage
-at the depth of the soil) against the results of an independent implementation.
+ENCflow (the change of pressure head inside the column) and the read-out of the
+zones (integrating over the catchment the drainage at the depth of the soil) against
+the results of an independent implementation.
 
 ## Handling of the numbers of the paper (no data are shipped)
 
@@ -26,7 +27,8 @@ The rainfall, the observed runoff rates and the calculated runoff rates of the p
 exist only in figures. This example keeps no numbers in the repository: the user
 obtains the PDF of the paper from J-STAGE, and `extract_tani2023.py` extracts them
 into `data/` from the coordinates of the vector drawing of the figures (rain bars,
-observed markers or curves, and the curves of the calculated values).
+observed markers or curves, the curves of the calculated values, and the curves of
+the pressure heads and hydraulic heads).
 
 - Target PDF: <https://www.jstage.jst.go.jp/article/jjshwr/36/1/36_36.1741/_pdf/-char/ja>
   (the SHA-256 of the version obtained on 2026-10-26 is recorded in the script; a
@@ -99,8 +101,11 @@ make                          # link to the executables in bin/ and the grid inp
 
 The extraction needs the Python package pdfminer.six (`pip install pdfminer.six`).
 If matplotlib is available, `result_<event>/fig_<event>.png` shows the rainfall and
-the runoff rates calculated in the paper, by ENCflow and observed. They contain
-numbers of the paper, so the figures are not kept in the repository either.
+the runoff rates calculated in the paper, by ENCflow and observed, and
+`fig_<event>_psi.png` shows the pressure heads (hydraulic heads). They contain
+numbers of the paper, so the figures are not kept in the repository either. The
+vertical profiles of the column are written every 30 minutes (every 10 minutes for
+KIEX), so the results of the 7 events take about 110 MB.
 
 ## Results (2026-10-26; gfortran 13.3, default numerical settings)
 
@@ -161,7 +166,105 @@ calculated with the linear distribution (QcC for MREX, MR1 and KI).
   diurnal maxima driven by the 12-hour averaged rainfall).
 - The comparison with observations (discussion in Sections IV and V of the paper)
   can be checked in the figures. As in the paper, this example makes no adjustment to
-  fit the observations.
+  fit the observations. Pressure heads are compared in the next section.
+
+## Comparison of pressure heads (hydraulic heads)
+
+`extract_tani2023.py` also extracts the figures of pressure heads and hydraulic heads
+of the paper, as curves per depth, into `data/psi_<event>.csv`. The line style of each
+depth (solid, dashed, dotted, dash-dot, dash-dot-dot) is identified from the line
+width, the drawing order in the PDF (the order of depth) and the ratio of the numbers
+of dots and dashes, and is checked against the specification. On the ENCflow side,
+ψ at the layer centres from the output of the vertical profiles of the column
+(`f_vz_outprof = 1`) is interpolated linearly in depth, and the hydraulic head is
+ψ − depth with the ground surface as datum.
+
+| Figure | Quantity | Depths |
+|---|---|---|
+| Fig. 12 (b) | calculated pressure heads of KIEX (those of Ohta et al. 1983; see below) | 10, 30 cm |
+| Fig. 11 (d) | calculated hydraulic heads of MREX | 0.225, 0.475, 0.75, 1.025 m |
+| Fig. 11 (c) | observed hydraulic heads at nest 5-4 of MREX (elevation) | 0.22, 0.48, 0.74, 1.02 m |
+| Fig. 13 (c) | calculated hydraulic heads of MR1 | 0.225, 0.475, 0.75, 1.025 m |
+| Fig. 14 (i) | calculated pressure heads of TY1 | 10, 30, 50, 100, 150, 200 cm |
+| Fig. 14 (d) to (g) | observed tensiometer values on SL of TY1 (T1, T1.5, T3, T4) | 10 to 50 cm |
+| Fig. 15 (d) | calculated pressure heads of TY2 | 10, 30, 50, 100, 150, 200, 250 cm |
+| Fig. 16 (c), Fig. 17 (c) | calculated pressure heads of KI1 and KI2 | 10, 30, 65, 130, 200, 300 cm |
+
+The arrival time, taken as the arrival of the wetting front, is the first time the
+value crosses a level from below (ψ = −50 cm for TY and KI, −60 cm for MR1, −15 cm
+for KIEX; for MREX, whose observations are elevations with an unknown datum, "half-way
+between the first value and the maximum", also for the calculated values). The
+difference is ENCflow − paper (cm), compared at each output time of ENCflow over the
+parts where the curve of the paper is inside the frame of the figure.
+
+| Event | Depths | Arrival time difference ENCflow − paper (h) | Median of difference (cm) | 90 % value of difference (cm) |
+|---|---|---|---|---|
+| TY2 | 10, 30, 50, 100, 150, 200, 250 cm | −0.10, +0.14, +0.21, +0.04, −0.08, +0.04, −0.76 | +0.1 (all depths) | 0.4 to 1.3 |
+| KI1 | 10, 30, 65, 130, 200, 300 cm | −0.17, +0.17, +0.17, +0.48, +0.08, −0.20 | 0.0 to +0.5 | 0.5 to 2.0 |
+| KI2 | 10, 30, 65, 130, 200, 300 cm | −0.20, +0.17, +0.25, +0.64, +1.49, +1.50 | 0.0 to +0.4 | 0.7 to 1.1 |
+| MREX | 0.225, 0.475, 0.75, 1.025 m | +0.42, +1.11, +1.74, +2.33 | +1.6 to +1.7 | 2.2 to 2.3 |
+| MR1 | 0.225, 0.475, 0.75, 1.025 m | — (above the level from the start of the figure), +8.2, +7.6, +9.9 | +0.6 to +0.9 | 4.2 to 33.7 |
+| TY1 | 10, 30, 50, 100, 150, 200 cm | +1.09, +2.27, +15.7, +4.20, +2.04, — (ENCflow does not reach it within the period) | −0.2 to 0.0 (except 200 cm) | 2.0 to 102 |
+| KIEX | 10, 30 cm (against the values calculated by Ohta et al. 1983) | 0.00, +0.07 | 0.0, +1.0 | 0.3, 4.9 |
+
+- In **TY2, KI1 and KI2** the arrival times of the front agree within ±0.8 h at all
+  depths from 0.1 to 3 m (+1.5 h at 2 and 3 m of KI2, arriving 75 to 105 h after the
+  start), and the medians of the differences are within 0.5 cm. Not only the runoff
+  rates but also the water movement inside the column reproduce the computation of
+  the paper (HYDRUS-1D).
+- In **MREX** the arrival is somewhat later (+0.4 to +2.3 h, larger at depth), and
+  the quasi-steady values are 1.6 cm higher. The curves calculated in the paper are
+  drawn from 10.1 h, while the rain bars of the figure (averages over about 12
+  hours) start at 11.6 h, so a difference in how the rainfall is given is
+  conceivable (not confirmed).
+- **MR1** starts at the left end of the figure with ψ = −100 cm (section on runoff
+  rates), so the arrival of the front is 8 to 10 h late, but after the arrival the
+  curves overlap and the medians of the differences are within 1 cm.
+- In **TY1**, after the first rain (14 July; 20.4 mm in the bars of the figure) the
+  soil of ENCflow is drier than in the paper: the arrival at 50 cm is 15.7 h late and
+  200 cm is not reached within the period. From the second rain (16 July) on, the
+  curves overlap. TY2, with the same soil and initial condition (text of the paper),
+  agrees at all depths, so a difference in the input of the first rain, rather than
+  in the kernel or the settings, is conceivable. As a check, multiplying only the
+  first rain by 1.3 brings the arrival time differences at 30 to 200 cm to −1.4 to
+  −0.3 h (−11.7 h at 50 cm, where the curve of the paper rises slowly around −50 cm,
+  so the arrival time is sensitive to its definition), and the p90 of the runoff rate
+  (limit 2) becomes KT 0.065 → 0.031 (MN 0.097 → 0.106, SL 0.060 → 0.057). The total
+  of the bars of the figure agrees with the total rainfall in Table 1 (+0.6 %), and
+  whether the rainfall used in the computation of the paper differs from the bars of
+  the figure is unknown. The example keeps the bars of the figure.
+- Fig. 12 (b) of **KIEX** is, according to the note of the paper (English: "Panel b
+  shows a scan of Figure 7 presented by Ohta et al. (1983)"), read from the figure of
+  Ohta et al. (1983) and is not a value calculated with the VZ model of the paper.
+  That the value at 30 cm falls below its initial value (−20 cm) in the recession
+  also does not fit the settings of the paper (in a 50 cm column with bottom ψ = 0,
+  the soil does not become drier than the hydrostatic profile with the water table at
+  the bottom, which is the initial condition, even after the rain stops), so it is
+  considered a computation with another model. 10 cm overlaps well, and at 30 cm
+  ENCflow is higher in the recession (−18.7 cm against −24.7 cm at 7 h; ENCflow
+  approaches the hydrostatic −20 cm).
+
+Comparison with observations (discussed qualitatively in the paper; this example
+makes no adjustment to fit the observations):
+
+| Observation | Depths | Arrival time observed / ENCflow / calculated in the paper (h) | Median of difference ENCflow − observed (cm) |
+|---|---|---|---|
+| TY1 T1 | 10, 46 cm | 8.2 / 8.1 / 7.0; 16.8 / 60.5 / — | −3.7; −23.2 |
+| TY1 T1.5 | 10, 30, 50 cm | 6.9 / 8.1 / 7.0; 7.0 / 19.5 / 17.2; 7.0 / 65.2 / 49.5 | −3.5; −10.5; −4.5 |
+| TY1 T3 | 10, 40 cm | 9.3 / 8.1 / 7.0; 16.6 / 38.5 / — | −7.6; −14.9 |
+| TY1 T4 | 10, 30, 50 cm | 6.9 / 8.1 / 7.0; 80.8 / 19.5 / 17.2; 88.6 / 65.2 / 49.5 | −6.0; −0.7; +0.4 |
+| MREX nest 5-4 | 0.22, 0.48, 0.74, 1.02 m | 14.6 / 18.1 / 17.9; 23.1 / 27.1 / 25.8; 35.0 / 36.2 / 34.8; 47.8 / 46.2 / 44.1 | size of the rise: observed 0.80, 0.84, 0.68, 0.47 m; ENCflow 0.52 m |
+
+- At 10 cm in **TY1**, the arrival times of the observations at four sites, ENCflow
+  and the computation of the paper fall within 6.9 to 9.3 h. At 30 to 50 cm of T1,
+  T1.5 and T3 the observations are much earlier (7 to 17 h, during the first rain):
+  the deep part becomes wet more quickly than in the vertical 1D computations (both
+  the paper and ENCflow). T4, conversely, is later. The medians of the differences
+  are over the times when the observation is inside the frame of the figure.
+- The rise times of **MREX** are within ±4 h of the observations for both ENCflow and
+  the computation of the paper (at the shallow 0.22 and 0.48 m the observations are
+  3.5 to 4 h earlier). The observations are elevations, so the values themselves are
+  not compared, and the figure overlays the changes from the first value.
 
 ## Assignment of the rainfall in time (estimated)
 
@@ -195,9 +298,11 @@ was made is suspected, but not confirmed). KIEX (bars from the start of the rain
   distribution) is not compared.
 - The baseflow added to the values calculated in the paper itself (the separation
   line cannot be recovered from the paper).
-- Comparison with the observed and calculated pressure heads (hydraulic heads)
-  (Fig. 11 (c)(d), Fig. 12 (b), Fig. 13 (c), Fig. 14 (d) to (i), Fig. 16 (c),
-  Fig. 17 (c)).
+- Fig. 14 (h) (pressure heads near the bottom of the soil layer at each site of
+  TY1). The depths are not in the figure, so it is not compared.
+- The cause of the difference in pressure head after the first rain of TY1 (section
+  on pressure heads; the rainfall used in the computation of the paper cannot be
+  checked).
 
 ## References
 

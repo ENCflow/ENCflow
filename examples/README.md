@@ -20,7 +20,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 |---|---|---|
 | [List_samples/](List_samples/) | 全 namelist の注釈付き見本(1 ファイル 1 グループ。en/ に英語版) | 全機能 |
 | [benchmark/](benchmark/) | 解析解のある降雨流出ベンチマーク 3 題。平面斜面 h-plane、V 字流域 v-shaped、V 字谷 v-valley | 浅水流・降雨 |
-| [vz_tani2023/](vz_tani2023/) | 谷(2023)の VZ 流出モデルの再現: 論文の全 7 事例(小斜面の人工降雨 KIEX、ゼロ次谷 MREX・MR1、竜ノ口山 TY1・TY2、桐生 KI1・KI2)を同じ設定で再計算し、論文の計算流出強度(HYDRUS-1D)と比べる。論文の数値は利用者が入手した PDF の図から取り出す(同梱しない) | 鉛直不飽和浸透(VZ)流出 fn_vz(柱の共有・土層厚の線形分布) |
+| [vz_tani2023/](vz_tani2023/) | 谷(2023)の VZ 流出モデルの再現: 論文の全 7 事例(小斜面の人工降雨 KIEX、ゼロ次谷 MREX・MR1、竜ノ口山 TY1・TY2、桐生 KI1・KI2)を同じ設定で再計算し、論文の計算流出強度・圧力水頭(HYDRUS-1D)と比べる。論文の数値は利用者が入手した PDF の図から取り出す(同梱しない) | 鉛直不飽和浸透(VZ)流出 fn_vz(柱の共有・土層厚の線形分布) |
 | [badland/](badland/) | 台地と急崖への降雨で谷が刻まれるバッドランド型の地形発達。白色雑音からの谷の自己形成、谷間隔の選択則(spl_lc)、格子収束、深い谷と鋭い稜線の長期発達 | 乾式斜面侵食 f_splash(spl_lc・spl_zbase) |
 | [badland_storm/](badland_storm/) | 浸透能を下げて豪雨時だけ表面流が現れる崖: 乾式侵食が止まるか、ガリー網に変わるか(badland の対照実験) | f_splash + f_wash・f_suspend、Green-Ampt、降雨時系列 |
 | [badland_round/](badland_round/) | 稜線が丸く、低い丘ほどドーム状になるバッドランド(膨潤粘土型): 移流型の下刻とクリープ(拡散)の比が決める長さ尺度 L で、L より小さい丘から丸くなる(badland の「鋭い稜線」の対照)。水平層理の硬軟互層(spl_strata)で縞と段が出る対照も | f_splash + f_creep(+ spl_strata)、Green-Ampt |

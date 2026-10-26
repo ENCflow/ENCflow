@@ -10,7 +10,7 @@
   t0 = 0                    ! 時刻 0 = 2006-07-14 10:00(図−17 の時間軸の左端を 1 時間単位に丸めた時刻)
   tt = 741600
   dt_disp = 3600
-  dt_file = 741600
+  dt_file = 1800            ! 柱の鉛直分布を 30 分ごとに(図−17(c) の圧力水頭と比べる)
   dt_recrd = 600            ! vz_zone.csv・vz_column.csv の記録間隔 (s)
   fn_geoinfo = '-'
   fn_initial = '-'
@@ -47,6 +47,7 @@
 &list_vz
   fn_vz_zone = 'zone.txt'   ! 区画 1 = KI
   dt_vz = 60.0
+  f_vz_outprof = 1          ! 柱の鉛直分布(ψ)を dt_file ごとに
   vz_out_depth = 0.65, 1.3
 /
 

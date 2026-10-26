@@ -368,8 +368,11 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   Kiryu; including the linear distribution of soil depth, a shared column and the
   post-processing of the paper such as deep percolation). For KIEX, MREX, MR1 and TY2,
   90 % of the points in the range of large runoff are within 5 to 22 % of the values
-  calculated in the paper, and the peaks differ by at most 2.3 %. The numbers of the
-  paper are extracted from the figures of the PDF obtained by the user (not shipped).
+  calculated in the paper, and the peaks differ by at most 2.3 %. Pressure heads are
+  also compared: for TY2, KI1 and KI2 the arrival times of the wetting front agree
+  within ±0.8 h at all depths from 0.1 to 3 m (+1.5 h at 2 and 3 m of KI2). The
+  numbers of the paper are extracted from the figures of the PDF obtained by the user
+  (not shipped).
 - The results are bit-identical regardless of the number of MPI processes (every
   rank computes the columns identically, and only the owning rank adds to an
   outlet).

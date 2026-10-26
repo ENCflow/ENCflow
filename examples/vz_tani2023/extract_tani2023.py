@@ -21,6 +21,8 @@ KI1 = 図−16、KI2 = 図−17。事例ごとに次を書き出す:
                   clipped = 1。単位は図の縦軸のまま(MR1 は L/s、ほかは mm/h)
   precip_<EV>.txt ENCflow の &list_precip(降雨の棒を段階関数で与える。RAIN_SHIFT_H の
                   ずらしと、MREX の蒸発散の差し引き(RAIN_FACTOR)を適用)
+  psi_<EV>.csv    圧力水頭・水理水頭の曲線(論文の計算値と、TY1・MREX は観測値)。
+                  深さごとの (時刻, 値)。図の枠の上下端で切られた点は clipped = 1
   meta_<EV>.json  時刻の基準と表−1 との照合結果
 
 時刻は図の時間軸の左端からの時間 (h)。日付の軸は日界の目盛り(0 時)から較正し、
@@ -57,6 +59,7 @@ PDF_SHA256 = "f914ff0c61793b64560365d7d8f60c1540105adf1459d62f1b110ab2d358675b"
 #   obs_curve: 観測が曲線で描かれている場合(KIEX)
 #   exclude: 凡例の記号・線の見本の範囲 (x0, y0, x1, y1)
 #   checks : 表−1 との照合(max = 最大時間雨量、total = 棒の合計。tol は許容)
+# 圧力水頭・水理水頭の図は PSI_PANELS
 FIGS = {
     "KIEX": dict(
         page=15, figure="図−12", axis_x=121.491, x_end=210.231,
@@ -176,6 +179,76 @@ RAIN_SHIFT_H = {"KIEX": 0.0, "MREX": 0.0, "MR1": -0.5, "TY1": +0.5, "TY2": -0.5,
 # 地表面の境界条件とした)
 RAIN_FACTOR = {"MREX": 0.8}
 
+# 圧力水頭・水理水頭の図の読み取り仕様。曲線は深さごとに線種(実線・破線・点線・
+# 一点鎖線・二点鎖線)で描き分けられ、同じ線幅の曲線どうしも PDF の描画順(深さの
+# 順)に並ぶ。同じ線幅・濃さの描画を順に集め、時間が左へ戻る所で次の曲線に切り替えて
+# curves の順に割り当て、線種(点と線分の数の比)を照合する。時間軸は同じ図の流出強度
+# の図と共通(FIGS の time)
+#   panel    : 図の記号。source = calc(計算値)/ obs(観測値)。site = 観測点(計算値は空。
+#              論文以外の計算値は出典)
+#   quantity : psi = 圧力水頭 (cm)、head = 地表面を基準とする水理水頭 (m)、
+#              elev = 標高で表した水理水頭 (m。MREX の観測)
+#   frame    : 図の枠の下端・上端の y(ここに張り付いた点は枠で切られた点)
+#   ticks    : 縦軸の主目盛りを探す y の範囲と値。tick_lw は枠・目盛りの線幅
+#   curves   : (深さ (m), 線幅, 濃さ, 線種) を描画順に
+#   exclude  : 引き出し線(線幅, x0, y0, x1, y1。この範囲に収まる描画を除く)
+PSI_PANELS = {
+    # KIEX の (b) は論文の注記(英文: "Panel b shows a scan of Figure 7 presented by Ohta et al.
+    # (1983)")により太田ら(1983)の計算値。論文の VZ モデルの計算値ではないので site で区別する
+    "KIEX": [dict(panel="(b)", source="calc", site="Ohta1983", quantity="psi", frame=(505.0, 581.238),
+                  ticks=dict(ylim=(515.0, 585.0), values=[-40, -20, 0]), tick_lw=0.715,
+                  curves=[(0.10, 0.537, 1.0, "solid"), (0.30, 0.715, 1.0, "dash")], exclude=[])],
+    "MREX": [dict(panel="(d)", source="calc", site="", quantity="head", frame=(391.1, 452.3),
+                  ticks=dict(ylim=(392.0, 440.0), values=[-2.0, -1.5, -1.0]), tick_lw=0.688,
+                  curves=[(0.225, 0.344, 1.0, "solid"), (0.475, 0.516, 1.0, "dash"),
+                          (0.75, 0.688, 1.0, "dot"), (1.025, 0.688, 1.0, "dashdot")], exclude=[]),
+             # 観測(nest 5-4。Ebel et al. 2007 の図−18 を論文が読み取ったもの)
+             dict(panel="(c)", source="obs", site="nest5-4", quantity="elev", frame=(454.7, 515.9),
+                  ticks=dict(ylim=(456.0, 500.0), values=[268.5, 269.0, 269.5]), tick_lw=0.688,
+                  curves=[(0.22, 0.344, 1.0, "solid"), (0.48, 0.516, 1.0, "dash"),
+                          (0.74, 0.688, 1.0, "dot"), (1.02, 0.516, 1.0, "dashdot")], exclude=[])],
+    "MR1": [dict(panel="(c)", source="calc", site="", quantity="head", frame=(379.6, 471.2),
+                 ticks=dict(ylim=(385.0, 465.0), values=[-1.5, -1.0, -0.5]), tick_lw=0.859,
+                 curves=[(0.225, 0.43, 1.0, "solid"), (0.475, 0.644, 1.0, "dash"),
+                         (0.75, 0.859, 1.0, "dot"), (1.025, 0.859, 1.0, "dashdot")], exclude=[])],
+    "TY1": [dict(panel="(i)", source="calc", site="", quantity="psi", frame=(211.57, 252.99),
+                 ticks=dict(ylim=(215.0, 250.0), values=[-50, 0]), tick_lw=0.932,
+                 curves=[(0.10, 0.699, 1.0, "dash"), (0.30, 0.932, 1.0, "dot"), (0.50, 0.699, 1.0, "solid"),
+                         (1.00, 0.699, 1.0, "dashdot"), (1.50, 0.699, 1.0, "dashdotdot"),
+                         (2.00, 0.699, 1.0, "dash")], exclude=[]),
+            # 観測(SL の斜面のテンシオメータ。(h) の土壌層の底面付近の値は深さが図にないので扱わない)
+            dict(panel="(d)", source="obs", site="T1", quantity="psi", frame=(435.23, 476.61),
+                 ticks=dict(ylim=(440.0, 470.0), values=[-50, 0]), tick_lw=0.932,
+                 curves=[(0.10, 0.699, 1.0, "dash"), (0.46, 0.466, 1.0, "solid")], exclude=[]),
+            dict(panel="(e)", source="obs", site="T1.5", quantity="psi", frame=(390.48, 431.9),
+                 ticks=dict(ylim=(395.0, 425.0), values=[-50, 0]), tick_lw=0.932,
+                 curves=[(0.10, 0.699, 1.0, "dash"), (0.30, 1.166, 1.0, "dot"), (0.50, 0.466, 1.0, "solid")],
+                 exclude=[(0.466, 214.0, 400.0, 292.0, 424.0)]),
+            dict(panel="(f)", source="obs", site="T3", quantity="psi", frame=(345.73, 387.2),
+                 ticks=dict(ylim=(350.0, 380.0), values=[-50, 0]), tick_lw=0.932,
+                 curves=[(0.10, 0.699, 1.0, "dash"), (0.40, 0.466, 1.0, "solid")],
+                 exclude=[(0.466, 201.0, 355.0, 220.0, 365.0)]),
+            dict(panel="(g)", source="obs", site="T4", quantity="psi", frame=(301.02, 342.45),
+                 ticks=dict(ylim=(300.0, 337.0), values=[-100, -50, 0]), tick_lw=0.932,
+                 curves=[(0.10, 0.699, 1.0, "dash"), (0.30, 1.166, 1.0, "dot"), (0.50, 0.466, 1.0, "solid")],
+                 exclude=[])],
+    "TY2": [dict(panel="(d)", source="calc", site="", quantity="psi", frame=(397.66, 440.21),
+                 ticks=dict(ylim=(400.0, 435.0), values=[-50, 0]), tick_lw=0.796,
+                 curves=[(0.10, 0.597, 1.0, "dash"), (0.30, 0.796, 1.0, "dot"), (0.50, 0.597, 1.0, "solid"),
+                         (1.00, 0.597, 1.0, "dashdot"), (1.50, 0.597, 1.0, "dashdotdot"),
+                         (2.00, 0.597, 1.0, "dash"), (2.50, 1.593, 0.5, "solid")], exclude=[])],
+    "KI1": [dict(panel="(c)", source="calc", site="", quantity="psi", frame=(392.2, 475.3),
+                 ticks=dict(ylim=(395.0, 472.0), values=[-100, -50, 0]), tick_lw=0.849,
+                 curves=[(0.10, 0.637, 1.0, "dash"), (0.30, 1.062, 1.0, "dot"), (0.65, 0.425, 1.0, "solid"),
+                         (1.30, 0.637, 1.0, "dashdot"), (2.00, 0.637, 1.0, "dash"),
+                         (3.00, 1.274, 0.5, "solid")], exclude=[])],
+    "KI2": [dict(panel="(c)", source="calc", site="", quantity="psi", frame=(400.6, 475.9),
+                 ticks=dict(ylim=(402.0, 472.0), values=[-100, -50, 0]), tick_lw=0.848,
+                 curves=[(0.10, 0.636, 1.0, "dash"), (0.30, 1.061, 1.0, "dot"), (0.65, 0.424, 1.0, "solid"),
+                         (1.30, 0.636, 1.0, "dashdot"), (2.00, 0.636, 1.0, "dash"),
+                         (3.00, 1.273, 0.5, "solid")], exclude=[])],
+}
+
 failed = []
 
 
@@ -243,6 +316,89 @@ def vticks(items, base, length):
         if not out or x - out[-1] > 0.05:
             out.append(x)
     return out
+
+
+def path_length(pts):
+    return sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(pts[:-1], pts[1:]))
+
+
+def line_style(stroke):
+    """曲線の描画(線分の並び)の線種: 20 pt を超える線があれば実線、ほかは点(1.3 pt 未満)と
+    線分の数の比"""
+    lens = [path_length(it["pts"]) for it in stroke]
+    if any(L > 20.0 for L in lens):
+        return "solid"
+    dots = sum(1 for L in lens if L < 1.3)
+    dashes = len(lens) - dots
+    if dashes == 0:
+        return "dot"
+    r = dots / dashes
+    return "dash" if r < 0.3 else ("dashdot" if r < 1.4 else "dashdotdot")
+
+
+def psi_panel(items, spec, pan, hours):
+    """圧力水頭・水理水頭の図の曲線を深さごとに取り出す → [(深さ, [(t, 値, clipped)])]"""
+    ybot, ytop = pan["frame"]
+    xl, xr = spec["axis_x"], spec["x_end"]
+    ty = hticks(items, xl, pan["ticks"]["ylim"])
+    vals = pan["ticks"]["values"]
+    note(len(ty) == len(vals), "%s %s axis ticks %s" % (pan["panel"], pan["quantity"], ty))
+    ppu = (ty[-1] - ty[0]) / (vals[-1] - vals[0])
+
+    def key_of(it):
+        for (_, lw, gray, _) in pan["curves"]:
+            if abs(it["lw"] - lw) < 0.002 and abs(gray_of(it["scol"]) - gray) < 0.01:
+                return (lw, gray)
+        return None
+
+    def tick_like(it):
+        """枠・目盛り(枠に接する水平・鉛直の 2 点の線)と、枠の上端・下端の線上だけの描画"""
+        ys = [y for (_, y) in it["pts"]]
+        if all(abs(y - ybot) < 0.05 for y in ys) or all(abs(y - ytop) < 0.05 for y in ys):
+            return True
+        if it["npts"] != 2 or abs(it["lw"] - pan["tick_lw"]) > 0.002:
+            return False
+        (x0, y0), (x1, y1) = it["pts"]
+        if abs(x1 - x0) > 0.01 and abs(y1 - y0) > 0.01:
+            return False
+        return any(min(abs(v - e) for v in (a, b)) < 0.3
+                   for (a, b, e) in ((x0, x1, xl), (x0, x1, xr), (y0, y1, ybot), (y0, y1, ytop)))
+
+    strokes = {}
+    for it in items:
+        if it["k"] not in ("curve", "line"):
+            continue
+        x0, y0, x1, y1 = it["bbox"]
+        if not (xl - 0.5 <= x0 and x1 <= xr + 0.5 and ybot - 0.5 <= y0 and y1 <= ytop + 0.5):
+            continue
+        k = key_of(it)
+        if k is None or tick_like(it):
+            continue
+        if any(abs(it["lw"] - lw) < 0.002 and a <= x0 and x1 <= c and b <= y0 and y1 <= d
+               for (lw, a, b, c, d) in pan["exclude"]):
+            continue
+        lst = strokes.setdefault(k, [])
+        if lst and it["pts"][0][0] >= lst[-1][-1]["pts"][-1][0] - 1.0:
+            lst[-1].append(it)              # 同じ曲線の続き
+        else:
+            lst.append([it])                # 時間が左へ戻った: 次の曲線
+    out = []
+    for k, lst in strokes.items():
+        depths = [(d, st) for (d, lw, gray, st) in pan["curves"] if (lw, gray) == k]
+        note(len(lst) == len(depths), "%s lw %.3f: %d curves (expected %d)"
+             % (pan["panel"], k[0], len(lst), len(depths)))
+        for (d, st), stroke in zip(depths, lst):
+            got = line_style(stroke)
+            pts = []
+            for it in stroke:
+                for (x, y) in it["pts"]:
+                    p = (hours(x), vals[0] + (y - ty[0]) / ppu, 1 if y <= ybot + 0.05 or y >= ytop - 0.05 else 0)
+                    if not pts or abs(p[0] - pts[-1][0]) > 1e-6 or abs(p[1] - pts[-1][1]) > 1e-6:
+                        pts.append(p)
+            note(got == st and len(pts) > 3, "%s %s %.3f m: %s, %d points, %.1f-%.1f h"
+                 % (pan["panel"], pan["site"] or pan["source"], d, got, len(pts), pts[0][0], pts[-1][0]))
+            out.append((d, pts))
+    return sorted(out)
 
 
 def extract(pdf, ev, spec, outdir):
@@ -376,6 +532,12 @@ def extract(pdf, ev, spec, outdir):
             obs.append((name, hours(cx), qval(cy), 1 if qs["scale"] == "log" and abs(cy - yfloor) < 0.3 else 0))
         note(len(cen) > 10, "observed %s: %d markers" % (name, len(cen)))
 
+    # --- 圧力水頭・水理水頭 ---
+    psi = []
+    for pan in PSI_PANELS.get(ev, []):
+        for d, pts in psi_panel(items, spec, pan, hours):
+            psi.append((pan, d, pts))
+
     # --- 書き出し ---
     os.makedirs(outdir, exist_ok=True)
 
@@ -397,6 +559,14 @@ def extract(pdf, ev, spec, outdir):
         w.writerow(["catchment", "t(h)", "runoff(%s)" % qs["unit"], "censored"])
         for row in obs:
             w.writerow([row[0], "%.4f" % row[1], "%.6g" % row[2], row[3]])
+
+    unit = dict(psi="psi(cm)", head="head(m)", elev="elev(m)")
+    with open(os.path.join(outdir, "psi_%s.csv" % ev), "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["source", "site", "depth(m)", "quantity", "t(h)", "value", "clipped"])
+        for pan, d, pts in psi:
+            for t, v, c in pts:
+                w.writerow([pan["source"], pan["site"], "%.3f" % d, unit[pan["quantity"]], "%.4f" % t, "%.5g" % v, c])
 
     # 降雨の段階関数(時間は分。棒のない時間は 0)。&list_precip の prval は線形補間
     # なので、各区間の終わりの直前(0.01 分前)にも同じ値の点を置く
@@ -427,7 +597,8 @@ def extract(pdf, ev, spec, outdir):
         f.write("/\n")
     meta = dict(event=ev, figure=spec["figure"], pdf_page=spec["page"], t0=t0_label, t_end_h=t_end,
                 rain_total_mm=total, rain_max_mmh=rmax, checks=spec["checks"], n_rain_bars=len(rain),
-                n_prval=k, rain_shift_h=shift, rain_factor=factor, runoff_unit=qs["unit"])
+                n_prval=k, rain_shift_h=shift, rain_factor=factor, runoff_unit=qs["unit"],
+                psi_curves=["%s %s %s %.3f m" % (pan["panel"], pan["source"], pan["site"], d) for pan, d, _ in psi])
     with open(os.path.join(outdir, "meta_%s.json" % ev), "w") as f:
         json.dump(meta, f, indent=1, ensure_ascii=False)
     print("  time 0 = %s, end = %.1f h, prval points = %d (max 999)" % (t0_label, t_end, k))

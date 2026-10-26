@@ -21,7 +21,7 @@
   t0 = 0                    ! 時刻 0 = 1976-09-08 12:00(図−15 の時間軸の左端)
   tt = 475200               ! 5.5 日(1976-09-14 00:00 まで)
   dt_disp = 86400
-  dt_file = 475200
+  dt_file = 1800            ! 柱の鉛直分布を 30 分ごとに(図−15(d) の圧力水頭と比べる)
   dt_recrd = 600            ! vz_zone.csv・vz_column.csv を 10 分ごとに
   fn_geoinfo = '-'
   fn_initial = '-'
@@ -58,6 +58,7 @@
 &list_vz
   fn_vz_zone = 'zone.txt'   ! 1 = KT、2 = MN、3 = SL(make_case.py)
   dt_vz = 60.0
+  f_vz_outprof = 1          ! 柱の鉛直分布(ψ)を dt_file ごとに
   vz_out_depth = 0.5, 1.0, 1.75, 2.5
 /
 
