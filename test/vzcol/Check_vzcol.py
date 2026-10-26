@@ -13,7 +13,9 @@ base の検定項目:
   (a) 定常期(雨 = q0 = 1 mm/h、t <= 3600 s): 全深さの累積流束 = q0·t、貯留不変
   (b) 各出力深さの保存則 S(t) − S(t1) = [F0(t) − F0(t1)] − [D(t) − D(t1)]
       (非線形残差の予算 vz_mb_rate·t の範囲)
-  (c) 鉛直分布の θ(ψ)・K(ψ) が小杉式(Kosugi 1996)の値と一致
+  (c) 鉛直分布の θ(ψ)・K(ψ) が小杉式(Kosugi 1996 の式 (7)(14)(20))の値と一致。
+      加えて θ と K の組が別の表し方 K_r(S_e) = S_e^{1/2} {Q[Q^{-1}(S_e) + σ]}²
+      (同 式 (21)。Q^{-1} は statistics.NormalDist の逆関数)を満たす
   (d) 区画の貯留・排水をセル別の読み出し(土層厚の補間)で積み上げた値と、
       面積重み W・M による集約値が一致。区画の収支残差が予算内
   (e) 柱の上端入力 F0 が降雨表(1 分更新・線形補間)から独立に組み立てた雨量と
@@ -22,6 +24,7 @@ base の検定項目:
 import csv
 import math
 import os
+import statistics
 import sys
 
 # param.txt と同じ値(検定用の例示値)
@@ -59,13 +62,25 @@ def read_csv(path):
     return head, data
 
 
+def qfun(x):
+    """標準正規分布の上側確率 Q(x)(Kosugi 1996 の式 (8))"""
+    return 0.5 * math.erfc(x / math.sqrt(2.0))
+
+
 def kosugi(psi):
+    """小杉式: S_e = Q[ln(ψ/ψm)/σ](式 (14))、θ = θr + (θs − θr) S_e(式 (7))、
+    K = Ks S_e^{1/2} {Q[ln(ψ/ψm)/σ + σ]}²(式 (20))。ψ ≥ 0 は飽和(ψc = 0 の 2 パラメータ形)"""
     if psi >= 0.0:
         return THS, KS
     x = (math.log(-psi) - math.log(-PSIM)) / SIGMA
-    se = 0.5 * math.erfc(x / math.sqrt(2.0))
-    q2 = 0.5 * math.erfc((x + SIGMA) / math.sqrt(2.0))
+    se = qfun(x)
+    q2 = qfun(x + SIGMA)
     return THR + (THS - THR) * se, KS * math.sqrt(se) * q2 * q2
+
+
+def kosugi_kr_of_se(se):
+    """K_r(S_e) = S_e^{1/2} {Q[Q^{-1}(S_e) + σ]}²(式 (21))。Q^{-1}(p) = −Φ^{-1}(p)"""
+    return math.sqrt(se) * qfun(-statistics.NormalDist().inv_cdf(se) + SIGMA) ** 2
 
 
 def read_prof(path):
@@ -235,14 +250,19 @@ def check_base(res):
     # (c) 小杉式
     profs = sorted(f for f in os.listdir(res) if f.startswith("vzprof_1_"))
     check(len(profs) >= 2, "(c) profile files written (%d)" % len(profs))
-    worst_th, worst_k = 0.0, 0.0
+    worst_th, worst_k, worst_21 = 0.0, 0.0, 0.0
     for f in profs:
         for z, psi, th, kk, zb, fb in read_prof(os.path.join(res, f)):
             th_ref, k_ref = kosugi(psi)
             worst_th = max(worst_th, abs(th - th_ref) / th_ref)
             worst_k = max(worst_k, abs(kk - k_ref) / k_ref)
+            se = (th - THR) / (THS - THR)              # 出力の θ から(ψ を使わない別の経路)
+            if 1e-6 < se < 1.0 - 1e-6:
+                worst_21 = max(worst_21, abs(kk / KS - kosugi_kr_of_se(se)) / (kk / KS))
     check(worst_th < 1e-12 and worst_k < 1e-10,
           "(c) Kosugi theta(psi), K(psi) match (max rel err %.2e, %.2e)" % (worst_th, worst_k))
+    check(worst_21 < 1e-8,
+          "(c) Kosugi (1996) eq. (21) K_r(S_e) holds for the output pairs (max rel err %.2e)" % worst_21)
 
     # (d) 区画の集約 = セル別の読み出しの総和(出力時刻 6 h・12 h)
     check_zone_sum(res, SD, "(d)")

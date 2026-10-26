@@ -122,7 +122,12 @@ Q(x) = \tfrac12\operatorname{erfc}\!\left(\frac{x}{\sqrt2}\right),\quad
 K = K_s\,Q(x)^{1/2}\,Q(x+\sigma)^2
 ```
 
-(θ = θs and K = Ks for ψ ≥ 0). At the top **the ground rainfall is given as the
+(θ = θs and K = Ks for ψ ≥ 0). These are equations (14) and (20) of Kosugi (1996)
+(the two-parameter form saturated at ψ = 0; the conductivity follows Mualem's model
+in the S_e^{1/2} form). ψm is the pressure head at which the effective saturation
+S_e = (θ − θr)/(θs − θr) is 0.5 (corresponding to the median of the pore radius
+distribution), and σ is the standard deviation of the distribution of ln|ψ|. At the
+top **the ground rainfall is given as the
 flux**, and the bottom is **free drainage** (unit hydraulic gradient f = K(ψ)).
 
 The discretisation is finite volume (layer-mean water content and interface
@@ -331,7 +336,11 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   paper[^tani2023] are values of the field soils of each study site (Table 2; they
   differ greatly between Tatsunokuchi-yama, Kiryu and Mettman Ridge) and do not make
   general defaults. Give values obtained by fitting the Kosugi model to water
-  retention and conductivity tests of the soil (Kosugi 1996[^kosugi1996]). The values
+  retention and conductivity tests of the soil (Kosugi 1996[^kosugi1996]). Some
+  fitted values in the literature give the pressure head at the inflection point of
+  the retention curve (ψ₀ in the notation of Kosugi 1996; not the initial ψ0 used
+  here), as in Table 1 of that paper; then convert with vz_psim = ψ₀ exp(σ²)
+  (equation (12) of that paper) and give it in m. The values
   and settings of the original paper for Tatsunokuchi-yama are in
   [examples/vz_tani2023](../../../examples/vz_tani2023/en/README.md). Forest soils often have a large Ks at the
   surface, well above the rainfall intensity, while σ and ψm strongly affect the
@@ -380,5 +389,5 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 ## References
 
 [^tani2023]: Tani, M. (2023): Reevaluating the runoff mechanisms of small mountainous catchments by applying a new storm-runoff model based on the vertical unsaturated flow (in Japanese with English abstract). *Journal of Japan Society of Hydrology and Water Resources*, 36(1), 20–51. doi:10.3178/jjshwr.36.1741 (the VZ runoff model; the standard reference column is 10 m deep with 2.5 cm layers and free drainage at the bottom (II.2), and the Kosugi values are per study site (Table 2). Checked against the original paper on 2026-10-26)
-[^kosugi1996]: Kosugi, K. (1996): Lognormal distribution model for unsaturated soil hydraulic properties. *Water Resources Research*, 32(9), 2697–2703. doi:10.1029/96WR01776
+[^kosugi1996]: Kosugi, K. (1996): Lognormal distribution model for unsaturated soil hydraulic properties. *Water Resources Research*, 32(9), 2697–2703. doi:10.1029/96WR01776 (equations (7), (8), (13), (14) and (20); checked against the original paper on 2026-10-26)
 [^celia1990]: Celia, M. A., Bouloutas, E. T. and Zarba, R. L. (1990): A general mass-conservative numerical solution for the unsaturated flow equation. *Water Resources Research*, 26(7), 1483–1496. doi:10.1029/WR026i007p01483

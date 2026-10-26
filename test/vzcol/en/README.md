@@ -45,7 +45,10 @@ not recommended values for a particular soil.
   residual vz_mb_rate·t (holds structurally because drainage and storage are read
   with the same interpolation coefficients).
 - **Kosugi model**: θ(ψ) and K(ψ) of the vertical profiles (vzprof) agree with the
-  Kosugi model computed with Python's math.erfc.
+  Kosugi model computed with Python's math.erfc (equations (7), (14) and (20) of
+  Kosugi 1996). In addition, the output pairs of θ and K satisfy another expression
+  that does not use ψ, K_r(S_e) = S_e^{1/2} {Q[Q^{-1}(S_e) + σ]}² (equation (21) of
+  the same paper).
 - **Aggregation of the zone**: the storage and drainage of the zone (aggregation
   by the weights W and M) agree with the values summed cell by cell by
   interpolating at the distributed soil depths. The balance residual of the zone
@@ -80,7 +83,8 @@ make
 
 Steady phase: relative error of the cumulative fluxes 1e-15, storage change 0;
 depth-wise conservation at 2.4e-4 of the budget; Kosugi model 4e-16 (θ) and
-2e-15 (K); the zone aggregation agrees with the cell-by-cell sums to 1e-16; the
+2e-15 (K), and 3e-15 against equation (21); the zone aggregation agrees with the
+cell-by-cell sums to 1e-16; the
 S_total balance of the Log 9e-12 m. The steady solution with a fixed-pressure
 bottom differs from quadrature by 1.1e-4 m (arithmetic mean; 1.7e-5 m with the
 harmonic mean), bottom flux = top flux to 2e-14. The difference from tolerances

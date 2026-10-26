@@ -106,7 +106,10 @@ Q(x) = \tfrac12\operatorname{erfc}\!\left(\frac{x}{\sqrt2}\right),\quad
 K = K_s\,Q(x)^{1/2}\,Q(x+\sigma)^2
 ```
 
-(ψ ≥ 0 では θ = θs、K = Ks)。上端は**地上雨量を流束として与え**、下端は
+(ψ ≥ 0 では θ = θs、K = Ks)。Kosugi (1996) の式 (14)・(20)(ψ = 0 で飽和する
+2 パラメータ形。透水係数は Mualem の式で S_e^{1/2} の形)で、ψm は有効飽和度
+S_e = (θ − θr)/(θs − θr) が 0.5 になる圧力水頭(間隙径分布の中央値に対応)、
+σ は ln|ψ| の分布の標準偏差です。上端は**地上雨量を流束として与え**、下端は
 **自由排水**(単位動水勾配 f = K(ψ))です。
 
 離散化は有限体積(層の平均含水率と界面の流束)と後退 Euler で、含水率の差で
@@ -288,7 +291,10 @@ VZ と地下水の同居(区画ごとの所有の切り分け)は今後の拡張
 - **小杉パラメータに既定値はありません**。原論文[^tani2023]の値は試験地ごとの
   現場の土壌の値(表−2。竜ノ口山・桐生・Mettman Ridge で大きく異なる)で、
   一般の既定値にはならないためです。土壌の保水・透水試験から小杉式を当てはめた
-  値を与えてください(Kosugi 1996[^kosugi1996])。原論文の竜ノ口山の値と設定は
+  値を与えてください(Kosugi 1996[^kosugi1996])。文献の当てはめ値には保水曲線の
+  変曲点の圧力水頭(Kosugi 1996 の記号で ψ₀。初期条件の ψ0 とは別)を示すものが
+  あり(同論文の表 1 など)、その場合は vz_psim = ψ₀ exp(σ²)(同 式 (12))に換算し、
+  m 単位で与えます。原論文の竜ノ口山の値と設定は
   [examples/vz_tani2023](../../examples/vz_tani2023/) にあります。森林土壌は表層の Ks が大きく、降雨強度より
   十分大きいことが多い一方、σ と ψm は応答の速さ・逓減の形に強く効きます。
 - 初期条件 `vz_q0_mmh` は「降雨前の流出率」に相当します(自由排水の下端では
@@ -322,5 +328,5 @@ VZ と地下水の同居(区画ごとの所有の切り分け)は今後の拡張
 ## 参考文献
 
 [^tani2023]: 谷 誠 (2023): 鉛直不飽和浸透に基づく新しい洪水流出モデルの適用による山地小流域の流出機構の再検討. 水文・水資源学会誌, 36(1), 20–51. doi:10.3178/jjshwr.36.1741(VZ 流出モデル。標準の参照柱は深さ 10 m・層厚 2.5 cm・下端は自由排水(Ⅱ.2)、小杉式の値は試験地ごと(表−2)。2026-10-26 に原論文で照合)
-[^kosugi1996]: Kosugi, K. (1996): Lognormal distribution model for unsaturated soil hydraulic properties. *Water Resources Research*, 32(9), 2697–2703. doi:10.1029/96WR01776
+[^kosugi1996]: Kosugi, K. (1996): Lognormal distribution model for unsaturated soil hydraulic properties. *Water Resources Research*, 32(9), 2697–2703. doi:10.1029/96WR01776(式 (7)・(8)・(13)・(14)・(20)。2026-10-26 に原論文で照合)
 [^celia1990]: Celia, M. A., Bouloutas, E. T. and Zarba, R. L. (1990): A general mass-conservative numerical solution for the unsaturated flow equation. *Water Resources Research*, 26(7), 1483–1496. doi:10.1029/WR026i007p01483
