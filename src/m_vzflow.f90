@@ -66,8 +66,7 @@ module m_vzflow
   use m_sysdep_util, only : sysdep_mkdir
   use m_util, only : param_default, itoa
   use m_parallel, only : par_info, par_stop, dcp, is_root, par_gather_to, par_bcast_cell, &
-                         par_bcast_cell_i, par_allreduce_max, par_allreduce_sumi, par_sum_rows, &
-                         par_allreduce_sumr
+                         par_bcast_cell_i, par_allreduce_max, par_allreduce_sumi, par_sum_rows
   implicit none
   private
   public :: t_vzflow
@@ -473,7 +472,7 @@ end subroutine
 subroutine setup_columns(vz, list)
   type(t_vzflow), intent(inout) :: vz
   type(t_list_vz), intent(in) :: list
-  integer :: c, nc
+  integer :: c, nc, nz
   real :: depth, dz
   real(real64) :: ks, psi0, psibot
   logical :: ok
@@ -508,6 +507,14 @@ subroutine setup_columns(vz, list)
     depth = param_default("vz", "vz_depth"//trim(tag), list%vz_depth(c), 10.0, " m", unset = -9999.0)
     dz = param_default("vz", "vz_dz"//trim(tag), list%vz_dz(c), 0.025, " m", unset = -9999.0)
     if (.not. (depth > 0.0 .and. dz > 0.0)) call par_stop("list_vz_column: vz_depth and vz_dz must be > 0")
+    ! 層数は入力の精度(既定 real)で判定し、層厚は depth/nz を real64 で作る
+    ! (単精度ビルドでは 0.025 等が real64 に広げると端数を持ち、整数倍の
+    ! 判定と層の積み上げが入力の丸めに左右されるため)
+    nz = nint(depth / dz)
+    if (nz < 2 .or. abs(real(nz) * dz - depth) > 8.0 * epsilon(depth) * depth) then
+      call par_stop("list_vz_column: vz_depth"//trim(tag)//" must be an integer multiple (>= 2) of vz_dz" &
+                    //trim(tag))
+    end if
     select case (list%f_vz_bottom(c))
       case (1)
         psibot = 0.0_real64
@@ -523,12 +530,9 @@ subroutine setup_columns(vz, list)
     ! 格子と物性を先に設定(初期 ψ は仮。定常流束指定ならこのあと解く)
     call vzcol_init(vz%cols(c), vz%ctl, ks, real(list%vz_thetas(c), real64), &
                     real(list%vz_thetar(c), real64), real(list%vz_psim(c), real64), &
-                    real(list%vz_sigma(c), real64), real(depth, real64), real(dz, real64), &
-                    list%f_vz_bottom(c), psibot, -1.0_real64, ok)
-    if (.not. ok) then
-      call par_stop("list_vz_column: vz_depth"//trim(tag)//" must be an integer multiple (>= 2) of vz_dz" &
-                    //trim(tag))
-    end if
+                    real(list%vz_sigma(c), real64), real(depth, real64), &
+                    real(depth, real64) / real(nz, real64), list%f_vz_bottom(c), psibot, -1.0_real64, ok)
+    if (.not. ok) call par_stop("list_vz_column: invalid column geometry"//trim(tag))
     ! 初期条件: 定常重力排水の流束 q0 か一様な ψ0 のどちらか一方
     if (list%vz_q0_mmh(c) > -9998.0 .and. list%vz_psi0(c) > -9998.0) then
       call par_stop("list_vz_column: give only one of vz_q0_mmh"//trim(tag)//" and vz_psi0"//trim(tag))
@@ -1227,19 +1231,23 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 保存(私有ファイル vzflow.dat。rank0 が書く。読み並びは restore_state と対)
-!   出口の繰越は所有ランクだけが持つので、寄与ランクが 1 つの総和で集める
+!   出口の繰越は所有ランクだけが持つので、その行だけが非 0 の行部分和を
+!   par_sum_rows で集める(寄与が 1 つなので総和は厳密。real64 のまま
+!   集めるので単精度ビルドでも繰越が丸められない)
 !----------------------------------------------------------------------
 subroutine save_state(vz, p)
   type(t_vzflow), intent(in) :: vz
   type(t_sysparam), intent(in) :: p
   integer :: un, c, z, q, j
-  real, allocatable :: carry(:)
-  allocate(carry(1:max(vz%nocell,1)), source = 0.0)
+  real(real64), allocatable :: carry(:), rowv(:)
+  allocate(carry(1:max(vz%nocell,1)), source = 0.0_real64)
+  allocate(rowv(dcp%js:dcp%je))
   do q = 1, vz%nocell
+    rowv(:) = 0.0_real64
     j = vz%ocell(2,q)
-    if (j >= dcp%js .and. j <= dcp%je) carry(q) = real(vz%ocarry(q))
+    if (j >= dcp%js .and. j <= dcp%je) rowv(j) = vz%ocarry(q)
+    call par_sum_rows(rowv, carry(q))
   end do
-  call par_allreduce_sumr(carry)
   if (.not. is_root) return
   call sysdep_mkdir(p%dir_save)
   open(newunit=un, file=trim(p%dir_save)//'/vzflow.dat', form='unformatted', status='replace')
@@ -1261,7 +1269,7 @@ subroutine save_state(vz, p)
   end do
   if (vz%nocell > 0) then
     write(un) vz%ocell(:, 1:vz%nocell)
-    write(un) real(carry(1:vz%nocell), real64), vz%ovcum(1:vz%nocell)
+    write(un) carry(1:vz%nocell), vz%ovcum(1:vz%nocell)
   end if
   close(un)
 end subroutine
