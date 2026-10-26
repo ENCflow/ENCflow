@@ -5,7 +5,7 @@
 !   山地小流域の流出機構の再検討. 水文・水資源学会誌 36(1), 20–51.
 !   設定は論文の本文と表−2 による(README の対応表)。降雨は論文の図−14 から
 !   extract_tani2023.py が data/precip_TY1.txt に生成する(リポジトリには
-!   置かない)。格子入力は make_case.py が data/ に生成する。
+!   置かない)。格子入力は make_case.py が data/grid_ty/ に生成する。
 !
 !   3 区画(KT・MN・SL)が 1 本の柱(TY の土壌)を共有し、土層厚は線形分布
 !   (0 cm から最大値まで 2.5 cm 刻みの区分が同じ面積。最大 KT 175・MN 250・
@@ -25,7 +25,7 @@
   fn_initial = '-'
   fn_precip = 'data/precip_TY1.txt'   ! extract_tani2023.py が生成
   fn_vz = '-'
-  dir_data = 'data'
+  dir_data = 'data/grid_ty'
   dir_result = 'result_ty1'
   f_check_cfl = 0
 /

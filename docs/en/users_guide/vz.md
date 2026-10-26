@@ -362,13 +362,14 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   responses whether a column is shared or duplicated, a rain distribution with
   area averaging, the stop of the strict mode, and agreement of save → restart.
 - [examples/vz_tani2023](../../../examples/vz_tani2023/en/README.md): an example
-  that recomputes with the same settings the computation of Tani (2023) for
-  Tatsunokuchi-yama (TY1 and TY2; HYDRUS-1D) and compares it with the calculated
-  runoff rates of the paper (three catchments share one column; linear distribution
-  of soil depth). For TY2, 90 % of the points of 0.5 mm/h or more are within 7 % of
-  the values calculated in the paper, and the peaks differ by at most 2.3 %. The
-  numbers of the paper are extracted from the figures of the PDF obtained by the user
-  (not shipped).
+  that recomputes with the same settings all seven computations of Tani (2023)
+  (HYDRUS-1D) and compares them with the calculated runoff rates of the paper
+  (sprinkling on a small hillslope, a zero-order catchment, Tatsunokuchi-yama and
+  Kiryu; including the linear distribution of soil depth, a shared column and the
+  post-processing of the paper such as deep percolation). For KIEX, MREX, MR1 and TY2,
+  90 % of the points in the range of large runoff are within 5 to 22 % of the values
+  calculated in the paper, and the peaks differ by at most 2.3 %. The numbers of the
+  paper are extracted from the figures of the PDF obtained by the user (not shipped).
 - The results are bit-identical regardless of the number of MPI processes (every
   rank computes the columns identically, and only the owning rank adds to an
   outlet).

@@ -6,7 +6,7 @@ TOPDIR	= ../..
 BINDIR	= $(TOPDIR)/bin
 SRCDIR	= $(TOPDIR)/src
 
-all: links data/zone.txt
+all: links data/grid_ty/zone.txt
 
 links:
 	@if [ ! -e $(BINDIR)/encflow ] && [ ! -e $(BINDIR)/encflow_mpi ]; then \
@@ -17,7 +17,7 @@ links:
 	    else rm -f $$b; fi; \
 	done
 
-data/zone.txt: make_case.py
+data/grid_ty/zone.txt: make_case.py
 	python3 make_case.py data
 
 install: all

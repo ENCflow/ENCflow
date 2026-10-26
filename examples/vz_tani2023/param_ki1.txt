@@ -1,0 +1,71 @@
+!======================================================================
+! examples/vz_tani2023: 谷(2023)の桐生(KI)の VZ 計算の再現(KI1、1982 年 8 月)
+!
+!   流域 5.99 ha の風化花崗岩の流域。設定は論文 Ⅳ.3 と表−2(README の対応表)。
+!   土層厚は線形分布 0〜130 cm(53 区分。平均 65 cm が中央値)。初期条件は
+!   ψ = −100 cm(KI2 の観測による値を KI1 にも適用)。論文は土壌層底面からの排水の
+!   1/2 を深部浸透とし、残りを流出とした。この後処理は compare_tani2023.py が行う
+!   (ENCflow は排水を系外へ出すだけ)。降雨は図−16 から extract_tani2023.py が生成。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! 格子システム(0:ENC)
+  dt = 60.0                 ! 時間刻み (s)。全セルが VZ で地表流はない
+  t0 = 0                    ! 時刻 0 = 1982-08-01 00:00(図−16 の時間軸の左端)
+  tt = 129600
+  dt_disp = 3600
+  dt_file = 129600
+  dt_recrd = 600            ! vz_zone.csv・vz_column.csv の記録間隔 (s)
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_precip = 'data/precip_KI1.txt'   ! extract_tani2023.py が生成
+  fn_vz = '-'
+  dir_data = 'data/grid_ki'  ! make_case.py が生成
+  dir_result = 'result_ki1'
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 53
+  ny = 1
+  dx = 1.0                  ! 1 区分 = 1 m2(流出強度は面積に依らない)
+  dy = 1.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 1
+  fn_mask = 'mask.txt'
+  f_rntype = 0
+  rn0 = 0.05
+  f_sdtype = 1
+  fn_sd = 'sd.txt'          ! 土層厚 (m)。0, 0.025, ..., 1.30
+/
+
+&list_bound
+/
+
+&list_vz
+  fn_vz_zone = 'zone.txt'   ! 区画 1 = KI
+  dt_vz = 60.0
+  vz_out_depth = 0.65, 1.3
+/
+
+&list_vz_column
+  ! KI の土壌の小杉パラメータ(表−2。WS の土壌調査、Katsura et al. 2014)。
+  ! Ks = 1.9e-1 cm/s = 6840 mm/h
+  vz_ks_mmh(1) = 6840.0
+  vz_thetas(1) = 0.507
+  vz_thetar(1) = 0.212
+  vz_psim(1) = -0.094       ! ψm = −9.4 cm
+  vz_sigma(1) = 1.34
+  vz_depth(1) = 10.0        ! 長さ 10 m の土壌柱、刻み 2.5 cm、下端は自由排水(Ⅱ.2)
+  vz_dz(1) = 0.025
+  vz_psi0(1) = -1.0         ! 初期条件: すべての深さで ψ = −100 cm
+/
+
+&list_vz_zone
+  vz_zone_col(1) = 1, vz_out_kind(1) = 2    ! 排水は系外へ(流出への配分 1/2 は比較時)
+/

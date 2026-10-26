@@ -1,0 +1,74 @@
+!======================================================================
+! examples/vz_tani2023: 谷(2023)の桐生の小斜面 Plot 2 の人工降雨実験(KIEX、1981 年。太田ら 1983)の再現
+!
+!   不透水の基岩上に厚さ 50 cm の土壌層がある小斜面(9 m2)。論文 Ⅳ.1: 半無限長の柱の
+!   代わりに 50 cm の土壌柱の底面の圧力水頭を ψ = 0 に固定して浸出させ、その排水強度を
+!   流出強度とした。初期条件は底面 ψ = 0、地表面 ψ = −50 cm の線形分布(= 底面を
+!   地下水面とする静水圧。vz_wt0 = 0.5 m)。土壌は KI(表−2)。降雨は図−12 から
+!   extract_tani2023.py が生成(3 段の人工降雨。時刻 0 = 降雨の開始)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! 格子システム(0:ENC)
+  dt = 10.0                 ! 時間刻み (s)。全セルが VZ で地表流はない
+  t0 = 0                    ! 時刻 0 = 人工降雨の開始(図−12 の 0 h)
+  tt = 25200
+  dt_disp = 3600
+  dt_file = 600             ! 鉛直分布を 10 分ごとに(図−12(b) の圧力水頭と比べる)
+  dt_recrd = 60            ! vz_zone.csv・vz_column.csv の記録間隔 (s)
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_precip = 'data/precip_KIEX.txt'   ! extract_tani2023.py が生成
+  fn_vz = '-'
+  dir_data = 'data/grid_kiex'  ! make_case.py が生成
+  dir_result = 'result_kiex'
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 3
+  ny = 1
+  dx = 1.0                  ! 1 区分 = 1 m2(流出強度は面積に依らない)
+  dy = 1.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 1
+  fn_mask = 'mask.txt'
+  f_rntype = 0
+  rn0 = 0.05
+  f_sdtype = 1
+  fn_sd = 'sd.txt'          ! 土層厚 0.5 m(柱の下端の排水を読む)
+/
+
+&list_bound
+/
+
+&list_vz
+  fn_vz_zone = 'zone.txt'   ! 区画 1 = Plot 2
+  dt_vz = 60.0
+  f_vz_outprof = 1          ! 柱の鉛直分布(ψ)を dt_file ごとに
+  vz_out_depth = 0.1, 0.3, 0.5
+/
+
+&list_vz_column
+  ! KI の土壌の小杉パラメータ(表−2。WS の土壌調査、Katsura et al. 2014)。
+  ! Ks = 1.9e-1 cm/s = 6840 mm/h
+  vz_ks_mmh(1) = 6840.0
+  vz_thetas(1) = 0.507
+  vz_thetar(1) = 0.212
+  vz_psim(1) = -0.094       ! ψm = −9.4 cm
+  vz_sigma(1) = 1.34
+  vz_depth(1) = 0.5         ! 50 cm の土壌柱(刻み 2.5 cm)
+  vz_dz(1) = 0.025
+  f_vz_bottom(1) = 2        ! 底面の圧力水頭を固定
+  vz_psibot(1) = 0.0        ! ψ = 0(浸出)
+  vz_wt0(1) = 0.5           ! 初期条件: 底面を地下水面とする静水圧(地表で ψ = −50 cm)
+/
+
+&list_vz_zone
+  vz_zone_col(1) = 1, vz_out_kind(1) = 2    ! 排水(= 流出強度)は系外へ
+/

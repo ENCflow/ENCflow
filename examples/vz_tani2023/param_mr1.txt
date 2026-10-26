@@ -1,0 +1,70 @@
+!======================================================================
+! examples/vz_tani2023: 谷(2023)の Mettman Ridge CB1 の崩壊発生イベント(MR1、1996 年 11 月)の再現
+!
+!   設定は MREX と同じ(論文 Ⅳ.1)。ただし蒸発散の差し引きはせず、排水から深部浸透
+!   0.3 mm/h だけを引く。上流堰の計算流出強度 = 1/2 ×(排水 − 0.3 mm/h)× 860 m2
+!   (L/s。compare_tani2023.py)。図−13 は 11/16 からで、論文がいつから計算したかは
+!   書かれていないので、図の左端から初期条件 ψ = −100 cm で始める(README)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! 格子システム(0:ENC)
+  dt = 60.0                 ! 時間刻み (s)。全セルが VZ で地表流はない
+  t0 = 0                    ! 時刻 0 = 1996-11-16 00:00(図−13 の時間軸の左端)
+  tt = 345600
+  dt_disp = 3600
+  dt_file = 345600
+  dt_recrd = 600            ! vz_zone.csv・vz_column.csv の記録間隔 (s)
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_precip = 'data/precip_MR1.txt'   ! extract_tani2023.py が生成
+  fn_vz = '-'
+  dir_data = 'data/grid_mr'  ! make_case.py が生成
+  dir_result = 'result_mr1'
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 81
+  ny = 1
+  dx = 1.0                  ! 1 区分 = 1 m2(流出強度は面積に依らない)
+  dy = 1.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 1
+  fn_mask = 'mask.txt'
+  f_rntype = 0
+  rn0 = 0.05
+  f_sdtype = 1
+  fn_sd = 'sd.txt'          ! 土層厚 (m)。0, 0.025, ..., 2.00
+/
+
+&list_bound
+/
+
+&list_vz
+  fn_vz_zone = 'zone.txt'   ! 区画 1 = CB1
+  dt_vz = 60.0
+  vz_out_depth = 0.225, 0.475, 0.75, 1.025, 2.0
+/
+
+&list_vz_column
+  ! MR の土壌の小杉パラメータ(表−2。Ebel et al. 2007 の関数関係に小杉式を当てはめた値)。
+  ! Ks = 3.4e-2 cm/s = 1224 mm/h
+  vz_ks_mmh(1) = 1224.0
+  vz_thetas(1) = 0.500
+  vz_thetar(1) = 0.180
+  vz_psim(1) = -0.250       ! ψm = −25.0 cm
+  vz_sigma(1) = 0.80
+  vz_depth(1) = 10.0        ! 長さ 10 m の土壌柱、刻み 2.5 cm、下端は自由排水(Ⅱ.2)
+  vz_dz(1) = 0.025
+  vz_psi0(1) = -1.0         ! 初期条件: すべての深さで ψ = −100 cm
+/
+
+&list_vz_zone
+  vz_zone_col(1) = 1, vz_out_kind(1) = 2    ! 排水は系外へ(深部浸透と堰への配分は比較時)
+/

@@ -500,8 +500,8 @@
     {
       "source": "docs/users_guide/vz.md",
       "target": "docs/en/users_guide/vz.md",
-      "source_sha256": "ff927e26b0d054d8ac818cef381f63a1df9bc1f6a620a93828f486381a89d62c",
-      "target_sha256": "0c05ac0f4b9c076cf9f3dfbfcb84f500706b6e389349db866ae132909ca302ca",
+      "source_sha256": "9b295ff830ce72c7d1204f686c80840e988991c74f214ea3a4d64b75419c9744",
+      "target_sha256": "687344e3f58f09b6a91796624394be9c3a79fa77abb033ba49b7149f965ed239",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-26"
@@ -779,8 +779,8 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "12e09ae7d8fcd26bc1845dd98901236d52361a7da2066aae00588081013db937",
-      "target_sha256": "44817633a50a8b5531cb120b03f62c7cb82cb7d09c3d3b2534e557cd904f93cc",
+      "source_sha256": "d7ffb871ec078876d0079effd0b6c98bf249996d0ea75ecec7afbc707a6e7b8b",
+      "target_sha256": "c66b6d0a457cb980c4234a460f6368ed47ce0cd8acf51fea02298807a653d5a4",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-26"
@@ -959,8 +959,8 @@
     {
       "source": "examples/vz_tani2023/README.md",
       "target": "examples/vz_tani2023/en/README.md",
-      "source_sha256": "d0ace5150366b2829d777e12ecb7eb00e0010b6ee14e8ad1428a9f2f1c349726",
-      "target_sha256": "c5c94e59d34c1698c75ab238b95bf970e7335ad0cec2ebce5601c1869d896387",
+      "source_sha256": "7b3b43626193220d85afffa65ae05f3e3b90e1fd44389066d9e45e98f64f69d7",
+      "target_sha256": "93739a3457bab0e45f218e85ac4a454424d125ae081a0e7e29ae8e9267400241",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-26"
