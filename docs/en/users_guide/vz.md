@@ -327,11 +327,13 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 **Hints for revisiting the defaults**
 
-- **The Kosugi parameters have no defaults.** The values used in the original
-  paper have not yet been checked, so values whose basis cannot be shown are not
-  set (making them defaults will be considered once they are checked). Give values
-  obtained by fitting the Kosugi model to water retention and conductivity tests
-  of the soil (Kosugi 1996[^kosugi1996]). Forest soils often have a large Ks at the
+- **The Kosugi parameters have no defaults.** The values of the original
+  paper[^tani2023] are values of the field soils of each study site (Table 2; they
+  differ greatly between Tatsunokuchi-yama, Kiryu and Mettman Ridge) and do not make
+  general defaults. Give values obtained by fitting the Kosugi model to water
+  retention and conductivity tests of the soil (Kosugi 1996[^kosugi1996]). The values
+  and settings of the original paper for Tatsunokuchi-yama are in
+  [examples/vz_tani2023](../../../examples/vz_tani2023/en/README.md). Forest soils often have a large Ks at the
   surface, well above the rainfall intensity, while σ and ψm strongly affect the
   speed of the response and the shape of the recession.
 - The initial condition `vz_q0_mmh` corresponds to "the runoff rate before the
@@ -359,12 +361,20 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   rain, the total amount of surface water, the S_total balance, bit-identical
   responses whether a column is shared or duplicated, a rain distribution with
   area averaging, the stop of the strict mode, and agreement of save → restart.
+- [examples/vz_tani2023](../../../examples/vz_tani2023/en/README.md): an example
+  that recomputes with the same settings the computation of Tani (2023) for
+  Tatsunokuchi-yama (TY1 and TY2; HYDRUS-1D) and compares it with the calculated
+  runoff rates of the paper (three catchments share one column; linear distribution
+  of soil depth). For TY2, 90 % of the points of 0.5 mm/h or more are within 7 % of
+  the values calculated in the paper, and the peaks differ by at most 2.3 %. The
+  numbers of the paper are extracted from the figures of the PDF obtained by the user
+  (not shipped).
 - The results are bit-identical regardless of the number of MPI processes (every
   rank computes the columns identically, and only the owning rank adds to an
   outlet).
 
 ## References
 
-[^tani2023]: Tani, M. (2023): Re-examination of runoff mechanisms in small mountain catchments by applying a new flood runoff model based on vertical unsaturated infiltration (title translated; in Japanese). *Journal of Japan Society of Hydrology and Water Resources*, 36(1), 20–51. doi:10.3178/jjshwr.36.1741 (the VZ runoff model; the standard reference column is 10 m deep with 2.5 cm layers and free drainage. The values in this chapter come from design material prepared by the user during ENCflow development; they have not yet been checked against the original paper)
+[^tani2023]: Tani, M. (2023): Reevaluating the runoff mechanisms of small mountainous catchments by applying a new storm-runoff model based on the vertical unsaturated flow (in Japanese with English abstract). *Journal of Japan Society of Hydrology and Water Resources*, 36(1), 20–51. doi:10.3178/jjshwr.36.1741 (the VZ runoff model; the standard reference column is 10 m deep with 2.5 cm layers and free drainage at the bottom (II.2), and the Kosugi values are per study site (Table 2). Checked against the original paper on 2026-10-26)
 [^kosugi1996]: Kosugi, K. (1996): Lognormal distribution model for unsaturated soil hydraulic properties. *Water Resources Research*, 32(9), 2697–2703. doi:10.1029/96WR01776
 [^celia1990]: Celia, M. A., Bouloutas, E. T. and Zarba, R. L. (1990): A general mass-conservative numerical solution for the unsaturated flow equation. *Water Resources Research*, 26(7), 1483–1496. doi:10.1029/WR026i007p01483

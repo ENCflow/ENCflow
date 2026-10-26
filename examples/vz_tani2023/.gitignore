@@ -1,0 +1,6 @@
+# 論文の図から取り出した数値と格子入力(extract_tani2023.py・make_case.py が生成。
+# データの再配布をしないため置かない)
+data/
+result_*/
+encflow
+encflow_mpi

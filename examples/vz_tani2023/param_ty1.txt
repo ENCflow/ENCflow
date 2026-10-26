@@ -1,0 +1,78 @@
+!======================================================================
+! examples/vz_tani2023: 谷(2023)の竜ノ口山(TY)の VZ 計算の再現(TY1、1987 年 7 月)
+!
+!   谷 誠 (2023): 鉛直不飽和浸透に基づく新しい洪水流出モデルの適用による
+!   山地小流域の流出機構の再検討. 水文・水資源学会誌 36(1), 20–51.
+!   設定は論文の本文と表−2 による(README の対応表)。降雨は論文の図−14 から
+!   extract_tani2023.py が data/precip_TY1.txt に生成する(リポジトリには
+!   置かない)。格子入力は make_case.py が data/ に生成する。
+!
+!   3 区画(KT・MN・SL)が 1 本の柱(TY の土壌)を共有し、土層厚は線形分布
+!   (0 cm から最大値まで 2.5 cm 刻みの区分が同じ面積。最大 KT 175・MN 250・
+!   SL 100 cm)。排水はすべて系外へ(vz_out_kind = 2)。流出強度は
+!   vz_zone.csv の vdrain の時間差分を区画面積で割って求める
+!   (compare_tani2023.py)。全セルが VZ なので地表流は生じない。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! 格子システム(0:ENC)
+  dt = 60.0                 ! 時間刻み (s)。地表流がないので柱の同期間隔と同じにする
+  t0 = 0                    ! 時刻 0 = 1987-07-14 06:00(図−14 の時間軸の左端)
+  tt = 604800               ! 7 日(1987-07-21 06:00 まで)
+  dt_disp = 86400
+  dt_file = 604800
+  dt_recrd = 600            ! vz_zone.csv・vz_column.csv を 10 分ごとに
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_precip = 'data/precip_TY1.txt'   ! extract_tani2023.py が生成
+  fn_vz = '-'
+  dir_data = 'data'
+  dir_result = 'result_ty1'
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 101                  ! 区分の数の最大(MN の 101)
+  ny = 3                    ! 1 行 = 1 流域(KT・MN・SL)
+  dx = 1.0                  ! 1 区分 = 1 m2(流出強度は面積に依らない)
+  dy = 1.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 1
+  fn_mask = 'mask.txt'      ! make_case.py が生成(区分の数だけ 1)
+  f_rntype = 0
+  rn0 = 0.05
+  f_sdtype = 1
+  fn_sd = 'sd.txt'          ! 土層厚 (m)。0, 0.025, ..., 最大値(make_case.py)
+/
+
+&list_bound
+/
+
+&list_vz
+  fn_vz_zone = 'zone.txt'   ! 1 = KT、2 = MN、3 = SL(make_case.py)
+  dt_vz = 60.0
+  vz_out_depth = 0.5, 1.0, 1.75, 2.5
+/
+
+&list_vz_column
+  ! TY の土壌の小杉パラメータ(表−2)。Ks = 5.0e-3 cm/s = 180 mm/h
+  vz_ks_mmh(1) = 180.0
+  vz_thetas(1) = 0.370
+  vz_thetar(1) = 0.230
+  vz_psim(1) = -0.200       ! ψm = −20.0 cm
+  vz_sigma(1) = 1.60
+  vz_depth(1) = 10.0        ! 長さ 10 m の土壌柱、深さ方向の刻み 2.5 cm、下端は自由排水
+  vz_dz(1) = 0.025
+  vz_psi0(1) = -4.0         ! 初期条件: すべての深さで ψ = −400 cm(SL の観測値による)
+/
+
+&list_vz_zone
+  vz_zone_col(1) = 1, vz_out_kind(1) = 2    ! KT
+  vz_zone_col(2) = 1, vz_out_kind(2) = 2    ! MN
+  vz_zone_col(3) = 1, vz_out_kind(3) = 2    ! SL
+/
