@@ -73,6 +73,15 @@ module subroutine calc_creep(gm, g, s, dts)
         end if
         gm%wrk%q(k, i+die(k), j+dje(k)) = gq
       end do
+      ! 域外(x <= 0)の近傍に向く面スロット(k >= 5 は域外セルの所有成分)を 0 で上書きする
+      ! (クリープは領域の外へ運ばない = 四周は壁)。共有スクラッチには先行の掃流砂が開境界の
+      ! 流出を書いており、上書きしないとループ 2 がそれを再び集計して境界セルを掘り下げて
+      ! いた(2026-10-27 実検出。§19.10。apply_edge_flux の書き手の契約と同じ)
+      do k = 5, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        if (g%x(in,jn) <= 0) gm%wrk%q(ke(k), i+die(k), j+dje(k)) = 0.0
+      end do
     end do
   end do
   !$omp end parallel do

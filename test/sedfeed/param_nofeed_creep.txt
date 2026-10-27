@@ -1,0 +1,82 @@
+!======================================================================
+! sedfeed: 構成 nofeed にごく小さい斜面クリープ(creep_d = 1e-30 m2/s)を重ねた対照
+!   (developer.md §19.10)。1 回の更新のクリープの変化が z の ULP より小さいので、河床は
+!   nofeed とビット一致するはず。共有のエッジ流量スクラッチに残った掃流砂の開境界の流出
+!   (東辺)をクリープが再び集計すると、東端のセルが掘り下がる(2026-10-27 までの実バグ)。
+!   creep_d = 1e-12 程度ではクリープ自身の寄与(1e-7 m 程度)が河床低下の非線形な発達で
+!   0.16 m まで拡大するので、対照には ULP 未満の値を使う。
+!   Check_sedfeed.py の (6) が nofeed との差を検定する。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 1800
+  dt_disp = 300
+  dt_file = 600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result_nofeed_creep'
+  dir_save = 'save_nofeed_creep'
+  f_state_save = 1
+  f_check_cfl = 1
+  f_out_z = 1
+  f_out_vv = 1
+/
+
+&list_enc
+  f_opening_dynamic = 2
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'hinit.txt'
+/
+
+&list_geoinfo
+  lx = 300.0
+  ly = 16.0
+  nx = 300
+  ny = 16
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 2.0                 ! 可動層厚(全域可動)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 10.0
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.003
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.005
+  f_creep = 1               ! 斜面クリープ(対照のため z を変えない拡散係数)
+  creep_d = 1.0e-30         ! (m2/s)
+  fluv_bcfeed = 0          ! 開境界・区間流入面の容量給砂
+  fluv_bcfeed_fac = 1.0      ! 容量給砂の倍率
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺は自由流出
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 6
+  inflow_cell(1:2,2,1) = 1, 7
+  inflow_cell(1:2,3,1) = 1, 8
+  inflow_cell(1:2,4,1) = 1, 9
+  inflow_cell(1:2,5,1) = 1, 10
+  inflow_val(1:2,1,1) = 0, 2.347724
+  inflow_val(1:2,2,1) = 9999, 2.347724
+  inflow_dist(1) = 0
+/

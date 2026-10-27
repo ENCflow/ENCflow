@@ -10,6 +10,9 @@
 #         ∫Qb dt × morfac が TOL_LEDGER(save_qb/state.dat の z を読む)
 #     (5) 浮遊砂の平衡濃度給砂 inflow_cs_eq(cseq): 流入列の濃度 hs/h が流入セルの
 #         τ* から評価した C_eq に ±TOL_CEQ で一致
+#     (6) クリープとの併用(nofeed_creep。creep_d = 1e-30 で 1 回の更新の変化は z の ULP 未満):
+#         河床が nofeed とビット一致
+#         (クリープが開境界の掃流砂の流出を再集計しないこと。developer.md §19.10)
 import sys, os, struct
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_init import NX, NY, DX, J1, J2, X1, X2, S, N
@@ -105,6 +108,14 @@ g5 = abs(ratio - 1.0) < TOL_CEQ
 print("(5) inflow_cs_eq: 流入列の hs/h = %.5f, C_eq(流入セルの τ*) = %.5f, 比 %.4f (1 ± %.2f) : %s"
       % (sum(cc) / len(cc), sum(ce) / len(ce), ratio, TOL_CEQ, "PASS" if g5 else "FAIL"))
 ok = ok and g5
+
+zc = load_state_z("nofeed_creep")
+zn = load_state_z("nofeed")
+dzc = max(abs(zc[j][i] - zn[j][i]) for j in range(NY) for i in range(NX))
+g6 = dzc == 0.0
+print("(6) クリープ併用(creep_d = 1e-30): nofeed との max|Δz| = %.2e m (ビット一致) : %s"
+      % (dzc, "PASS" if g6 else "FAIL"))
+ok = ok and g6
 
 print("=== sedfeed checks %s ===" % ("PASS" if ok else "FAIL"))
 sys.exit(0 if ok else 1)

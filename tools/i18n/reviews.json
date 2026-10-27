@@ -1877,11 +1877,11 @@
     {
       "source": "test/sedfeed/README.md",
       "target": "test/sedfeed/en/README.md",
-      "source_sha256": "fdc5452361fd93e19a11b1518a6d6e6e28b12c183b1f71d86a55ddbe39df6bba",
-      "target_sha256": "bcbe673b15d4d012a873215eeb4c9846c864dc4694f72b8027af102e07ff7c6e",
+      "source_sha256": "1a4d2b364df8b691f81b5a614b3666cdc9df92b21085bf08e1f6ed3cb21efd50",
+      "target_sha256": "98b35b889573b4b2b97c18168dceef06773bb4cfe72fecb81f749ca1679a19e7",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "test/sedinflow/README.md",
