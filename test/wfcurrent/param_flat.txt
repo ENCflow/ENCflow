@@ -1,0 +1,71 @@
+!======================================================================
+! wfcurrent: 一様水深 5 m の沿岸流と岸沖の釣り合い(屈折なし。実装の厳密な検査)
+!   不規則波 H_m0 = 1.5 m、T = 8 s、進行方向 30°、方向分散 20° を西から入れ、底面摩擦
+!   (f_w = 0.05)の散逸だけで沿岸方向の外力 F_y をつくる(砕波はほぼ 0)。一様水深なので
+!   屈折がなく、岸沿いに一様。wf_flow = 2(外力 + GLM の Stokes 輸送 + 波・流れの摩擦)。
+!   東は壁(岸沖の正味の流量 0 = Lagrangian 流速 u^L ≈ 0)。確認事項(Check_wfcurrent.py flat)
+!     - 沿岸方向: セルごとに F_y/(ρh) = g n² |V_E| v_E / h^{4/3} を v_E について解いた
+!       v = v_S + v_E と一致(|V_E| = √(u_E² + v_E² + (1.16 u_rms)²)、u_E = u − u_S)
+!     - 岸沖方向: 面ごとに g_e Δη/Δx = F_x/(ρh) + g n² |V_E| u_S / h^{4/3}(戻り流れの摩擦)
+!     - u^L ≈ 0、岸沿いに一様
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 3600
+  dt_disp = 600
+  dt_file = 3600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_wavefield = '-'
+  dir_result = 'result_flat'
+  f_check_cfl = 1
+  f_output_mode = 3
+  f_out_e = 1
+  f_out_u = 1
+  f_out_v = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 2
+  e0 = 0.0
+/
+
+&list_geoinfo
+  nx = 120
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = -5.0
+  f_rntype = 0
+  rn0 = 0.05                ! 立ち上がりの時定数を約 10 分にする(定常の釣り合いは粗度に依らず検定できる)
+/
+
+&list_bound_edge
+  f_bc_w = 2                ! 西は長波放射(基準水位 0)
+  f_bc_e = 0                ! 東は壁
+  f_bc_n = 3                ! 南北は側方 Neumann
+  f_bc_s = 3
+/
+
+&list_wavefield
+  wf_bc_side = 1, 0, 2, 2   ! 西が入射、東は吸収(波は抜ける)、南北は側方 Neumann
+  wf_hm0 = 1.5
+  wf_trep = 8.0
+  wf_dir = 30.0
+  wf_spread = 20.0
+  wf_fw = 0.05
+  dt_wave = 60
+  wf_tol = 1.0e-7
+  wf_flow = 2
+  f_wf_roller = 0
+  f_wf_outdiag = 1
+/

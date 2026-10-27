@@ -177,6 +177,20 @@ Flather condition[^flather76] with external level and velocity, used by
 `nest_bc = 3` of [nesting](nest.md). Still water gives zero flux and the
 inflow of a drawdown is allowed.
 
+**Lateral Neumann (type 3).** The partner cell $`(i_n, j_n)`$ outside the grid is
+taken as the mirror cell $`(\mathrm{clamp}(i_n), \mathrm{clamp}(j_n))`$ moved into the
+grid along the normal of the edge, and the momentum equation of the boundary face is
+solved with the same formula as an interior face (the normal gradients of water level
+and ground are zero; the gradient along the boundary remains). The advection term uses
+the value of the interior face obtained by moving the boundary face one cell inward,
+and positions where the advection stencils of interior faces leave the grid read the
+mirror. These are the conditions under which the boundary rows have the same solution
+as the interior rows in a flow that is uniform alongshore; the type was added for
+wave-driven longshore currents ([coastal wave field](wavefield.md); developer.md §88).
+Copying the velocity and flux of a boundary face directly from the face one cell inside
+is not used, because it diverges through a positive feedback between the water level of
+the boundary row and the boundary flux.
+
 **Segment inflow (type D).** The total discharge $`Q`$ of the segment is
 distributed over the open faces:
 
@@ -217,7 +231,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_dam_mode / dam_q0 / dam_rate | — | operation mode and values | **given** |
 | dam_hq_rule / dam_ori_* / dam_qmax | — | natural-regulation rating / orifice / square-root law | **given** the orifice $`c_e`$ default 0.5 is the culvert value |
 | dam_tadashigaki | min + 0.9(surcharge − min) | start level of the emergency ramp | **customary value** practical placeholder |
-| f_bc_w/e/n/s | 0 | type of the edge boundary (§5) | **method** 0: wall, 1: free outflow (critical drop), 2: radiation |
+| f_bc_w/e/n/s | 0 | type of the edge boundary (§5) | **method** 0: wall, 1: free outflow (critical drop), 2: radiation, 3: lateral Neumann |
 | bc_eta_* | derived from the initial state | reference level of the radiation | **derived** explicit value > e0 of f_htype=2 > initial level of each boundary cell; the last gives exactly zero radiation flux at t = 0 cell by cell. On restart it is derived again from the restored state ([Suspend and restart](restart.md)) |
 | inflow_dist | 0 | distribution of the segment inflow (§5) | **method** 2 = Manning conveyance[^chow59]; use 2 for river cross-sections |
 

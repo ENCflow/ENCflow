@@ -1,0 +1,64 @@
+!======================================================================
+! wfcurrent: 基本の構成を時計回りに 90° 回した格子(8 列 × 120 行。北が沖、南が陸)
+!   W・E が側方 Neumann(移流項の写しにランク界面の行の補完を使う経路)、沿岸流は東向き
+!   (u > 0)、岸沖の外力・Stokes 輸送は y 成分(行の増える向き = 南が正)。進行方向は
+!   20° − 90° = 290°。基本(param.txt)の結果をセル (i, j) → (9 − j, i) へ写し、
+!   u_rot = −v、v_rot = u、η が一致すること(Check_wfcurrent.py rot)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 3600
+  dt_disp = 600
+  dt_file = 3600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_wavefield = '-'
+  dir_result = 'result_rot'
+  f_check_cfl = 1
+  f_output_mode = 3
+  f_out_e = 1
+  f_out_u = 1
+  f_out_v = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 2
+  e0 = 0.0
+/
+
+&list_geoinfo
+  nx = 8
+  ny = 120
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1
+  fn_z = 'z_rot.txt'
+  f_rntype = 0
+  rn0 = 0.025
+/
+
+&list_bound_edge
+  f_bc_n = 2                ! 沖は長波放射(基準水位 0)
+  f_bc_w = 3                ! 岸に交わる東西の辺は側方 Neumann(沿岸流が通り抜ける)
+  f_bc_e = 3
+/
+
+&list_wavefield
+  wf_bc_side = 2, 2, 1, 0   ! 北が入射、南(陸)は吸収、東西は側方 Neumann
+  wf_hm0 = 1.0
+  wf_trep = 8.0
+  wf_dir = 290.0            ! 南へ進む向きから 20° 東へ傾く(東向きの沿岸流)
+  dt_wave = 60
+  wf_tol = 1.0e-7
+  wf_flow = 2
+  f_wf_roller = 1
+  f_wf_outdiag = 1
+/

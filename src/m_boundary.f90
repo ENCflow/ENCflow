@@ -54,7 +54,7 @@ module m_boundary
   public :: m_boundary_dam_gwcheck
   public :: m_boundary_dam_gwforce
   public :: dam_operate, dam_sink, dam_draw, e_struct_dam
-  public :: e_bc_wall, e_bc_outflow, e_bc_radiation, e_bc_inflow
+  public :: e_bc_wall, e_bc_outflow, e_bc_radiation, e_bc_neumann, e_bc_inflow
   public :: e_ext_none, e_ext_nest
   public :: e_side_w, e_side_e, e_side_n, e_side_s
   ! 共有補助手続き(submodule m_boundary_structure も使う)。private のままだと
@@ -67,6 +67,8 @@ module m_boundary
   integer, parameter :: e_bc_wall = 0      ! 不透過(既定)
   integer, parameter :: e_bc_outflow = 1   ! 自由流出(洪水向け: 通過流+段落ち)
   integer, parameter :: e_bc_radiation = 2 ! 長波放射(津波向け: 水位偏差を透過)
+  integer, parameter :: e_bc_neumann = 3   ! 側方 Neumann(沿岸流向け: 境界の法線方向の水位・
+                                           !   地盤の勾配 0 で境界面の運動方程式を解く。§88)
   integer, parameter :: e_bc_inflow = 9    ! 流量規定面(区間流入。面単位の内部型。
                                            !   f_bc_* の値としては指定不可。利用者向けの
                                            !   型番号と衝突しない値に置く)
@@ -673,9 +675,9 @@ subroutine init_edge(b, list)
   bt(e_side_n) = list%f_bc_n
   bt(e_side_s) = list%f_bc_s
   do sd = 1, 4
-    if (bt(sd) < e_bc_wall .or. bt(sd) > e_bc_radiation) then
+    if (bt(sd) < e_bc_wall .or. bt(sd) > e_bc_neumann) then
       call par_stop("list_bound_edge: f_bc_"//side_name(sd) &
-                    //" must be 0(wall), 1(free outflow) or 2(radiation): "//itoa(bt(sd)))
+                    //" must be 0(wall), 1(free outflow), 2(radiation) or 3(lateral Neumann): "//itoa(bt(sd)))
     end if
   end do
   b%edge%btype = bt

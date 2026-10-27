@@ -12,10 +12,11 @@
 解きます。HISWA[^hiswa]・XBeach の定常モード[^xbeach]・SnapWave[^snapwave] と同じ
 階層の概算で、周波数の広がり・風による発達・波どうしの非線形相互作用は扱いません。
 
-**段階的に実装中です。** 現在(段 W1)は**固定床・流れの影響なしの波浪場**で、
-波高などを計算して出力するだけです。**流れと地形には作用しません**
-(`fn_wavefield` を書いても書かなくても浅水流の結果は同じです)。波による沿岸流・
-セットアップ(段 W2)、流れによる波の変化(段 W3)、沿岸漂砂・岸沖の侵食と堆積
+**段階的に実装中です。** 現在は段 W2 までで、**固定床の波浪場**(段 W1)と、
+**波による流れ(セットアップ・沿岸流。段 W2)**を計算します。流れへの作用は
+`wf_flow` で有効にします(既定 0 = 作用なし。このときは `fn_wavefield` を書いても
+書かなくても浅水流の結果は同じです。[流れへの作用](#流れへの作用wf_flow段-w2))。
+**地形には作用しません。** 流れによる波の変化(段 W3)、沿岸漂砂・岸沖の侵食と堆積
 (段 W4・W5)は以降の段で追加します(docs/wavefield_plan.md §9)。
 
 [土砂・地形変化の章](geomorph.md)の「波浪による沿岸漂砂」(`fn_wave`。沖波を与件に
@@ -71,7 +72,11 @@
 | `wf_gammax` | 0.6 | 水深による上限 H_rms ≤ γmax h(不規則波) |
 | `wf_fw` | 0 | 底面摩擦係数 f_w(0 = 摩擦なし) |
 | `wf_hmin` | 0.1 m | 波浪セルの最小水深 |
-| `f_wf_outdiag` | 0 | 1: 底面軌道流速 Wu・砕波散逸 Wb も分布出力 |
+| `f_wf_outdiag` | 0 | 1: 底面軌道流速 Wu・砕波散逸 Wb も分布出力(`wf_flow` ≥ 1 なら外力 Wfx・Wfy、Stokes 輸送 Wsx・Wsy、ローラー Wr も) |
+| `wf_flow` | 0 | 流れへの作用。0: なし / 1: 波の外力だけ / 2: 外力 + GLM の Stokes 輸送 + 波・流れの底面摩擦(推奨)。[流れへの作用](#流れへの作用wf_flow段-w2) |
+| `f_wf_roller` | 1 | 1: ローラーのエネルギー平衡を解く(`wf_flow` ≥ 1) |
+| `wf_beta` | 0.1 | ローラーの散逸係数 β |
+| `wf_tramp` | 100 s | 外力の立ち上げ時間(時間軸の起点から 0 → 1 倍へ線形)。0 で立ち上げなし |
 
 採用した既定値は画面に `(default)` を付けて表示します。
 
@@ -99,6 +104,7 @@
 | 防波堤・島の背後の陰 | 同上。方向分散は既定 20° | Wh・Wa(平均波向) |
 | 波候の時間変化(地形変化と組む準備) | `wf_val` の時系列、`dt_wave` で更新間隔、`wf_clock = 1` で地形時間 | `wavefield.csv`(更新ごとの台帳) |
 | 波の前線の到達(津波・洪水と同時に進める) | `wf_mode = 1`(非定常)、`f_wf_init = 0` | Wh の時間変化 |
+| 波によるセットアップ・沿岸流 | `wf_flow = 2`、海岸に交わる左右の辺を波・流れとも側方 Neumann(`wf_bc_side` = 2、`f_bc_*` = 3) | E(水位)・u・v(流速)・Wfx・Wfy(外力) |
 
 ## 計算のしくみ
 
@@ -238,6 +244,104 @@ c = 0.28(不規則波)・0.21(規則波)です(Guza & Thornton 1985[^gt85] の�
 どちらもセルの更新順に依らない形なので、MPI の分割数・スレッド数によらず結果は
 ビット単位で一致します。
 
+## 流れへの作用(wf_flow。段 W2)
+
+`wf_flow` を 1 か 2 にすると、波浪場が浅水流に作用し、**波によるセットアップ
+(汀線付近の平均水位の上昇)・沖のセットダウン・沿岸流**が生じます。既定の 0 では
+段 W1 と同じく流れに作用しません(`fn_wavefield` を書いても浅水流の結果は同じ)。
+
+```
+&list_wavefield
+  ...
+  wf_flow = 2              ! 0 作用なし(既定)/ 1 外力 / 2 外力 + GLM + 波・流れの摩擦
+/
+&list_bound_edge
+  f_bc_n = 3               ! 海岸に交わる左右の辺は側方 Neumann(沿岸流が通り抜ける)
+  f_bc_s = 3
+/
+```
+
+**どれを使うか。** 沿岸流・離岸流・河口の流れとの相互作用を見るなら **2** を
+使ってください。2 は、波が運ぶ質量(Stokes 輸送)とその戻り流れ(底層の離岸方向の
+流れ)、波の軌道流速で強まる底面摩擦を含みます。1 は放射応力の勾配だけを外力として
+加える簡略形(セットアップの古典理論と同じ扱い)で、摩擦は流れの流速だけで決まります。
+1 では静止に近い流れの摩擦が弱く、始動時の振動が長く残ります(下の「始動」)。
+
+### 外力(放射応力の勾配)
+
+方向ビンのエネルギーから放射応力(Longuet-Higgins & Stewart 1964[^lhs64])を
+
+```math
+S_{xx} = n\sum_m E_m\cos^2\theta_m\,\Delta\theta + \left(n - \tfrac12\right)E + E_r\cos^2\bar\theta,\qquad
+S_{xy} = n\sum_m E_m\cos\theta_m\sin\theta_m\,\Delta\theta + E_r\cos\bar\theta\sin\bar\theta
+```
+
+(S_yy も同様。n = c_g/c、θ̄ は平均波向)で求め、波の外力
+$`F_i = -\partial S_{ij}/\partial x_j`$ をセル中心で差分(両隣が波浪セルなら中央差分)
+します。直角に入る波では、砕波帯より沖で平均水位が下がり(set-down)、砕波帯で
+上がります(set-up。Longuet-Higgins & Stewart 1962[^lhs64]、Bowen ら 1968[^bowen68])。
+斜めに入る波では、砕波で S_xy が減る分が沿岸方向の外力になり、沿岸流を駆動します。
+
+浅水流の各辺には、両セルの外力の平均を辺の向きへ射影して $`F_k/(\rho h)`$ を
+加速度として足します(h は両セルの平均水深)。
+
+### ローラー
+
+砕けた波のエネルギーは、いったん波頭の表面の渦(ローラー)に移ってから散逸します。
+ローラーのエネルギー E_r(J/m²)は波の平均波向・位相速度 c で運ばれ、
+
+```math
+\frac{\partial E_r}{\partial t} + \nabla\cdot\left(c\,\hat{\mathbf e}_{\bar\theta}E_r\right) = D_b - D_r,\qquad
+D_r = \frac{2\beta g E_r}{c}
+```
+
+を解きます(Svendsen 1984[^svendsen84]、Reniers & Battjes 1997[^rb97]。D_b は砕波の散逸と
+上限で除いた分)。ローラーの放射応力 E_r cos²θ̄ 等は Nairn ら(1990)[^nairn90] の近似で、
+XBeach と同じ形です。ローラーは砕波の運動量をいったん蓄えて岸側で放すので、
+**外力・セットアップ・沿岸流の最大が岸側へずれます**(砕波点の直後で流れが立ち上がる
+遅れ)。空間の輸送は波と同じ 2 リンク分解の風上法で、準定常では定常解、非定常では
+同じ時間刻みで進めます。
+
+### GLM と波・流れの底面摩擦(wf_flow = 2)
+
+浅水流の流速を **Lagrangian 平均流速 u^L**(水の粒子が 1 周期に進む距離の平均。
+質量の輸送を表す)と読み、底面摩擦は**オイラー流速** u^E = u^L − u^S に作用させます
+(深さ平均の GLM。Andrews & McIntyre 1978[^am78]、Walstra ら 2000[^walstra00]。XBeach と
+同じ)。Stokes 輸送の速さは
+
+```math
+\mathbf u^S = \frac{\sum_m E_m\hat{\mathbf e}_m\,\Delta\theta + 2E_r\,\hat{\mathbf e}_{\bar\theta}}{\rho h c}
+```
+
+(右辺第 2 項はローラーの質量輸送 2E_r/c。Svendsen 1984)です。閉じた海浜では正味の
+岸沖の流量が 0(u^L ≈ 0)になり、オイラー流速 u^E = −u^S が**戻り流れ**(底層の
+離岸方向の流れ)を表します。摩擦の速さは波の軌道流速を含め
+
+```math
+\tau_b = \rho\,\frac{g n_m^2}{h^{1/3}}\,\sqrt{|\mathbf u^E|^2 + (1.16\,u_{rms})^2}\;\mathbf u^E
+```
+
+(Ruessink ら 2001[^ruessink01]。n_m はマニングの粗度)で、砕波帯では軌道流速が摩擦を
+大きく強めます。
+
+### 始動(外力の立ち上げ)
+
+準定常の波浪場は開始時に全域で満値になるので、急に加わる外力が汀線付近の振動
+(副振動)を起こします。`wf_tramp`(既定 100 s。XBeach の taper の既定)の間、外力と
+Stokes 輸送を 0 から線形に増やします。立ち上げは時間軸の起点 t0 から数えるので、
+再開(`f_state_restore = 1`)では続きの値になります。保存した状態を初期条件として
+使う(`f_state_restore = 2`)ときは新しい時間軸で立ち上げ直すので、すでに釣り合った
+状態から続けるなら `wf_tramp = 0` にしてください。
+
+### 側方の境界(f_bc = 3)
+
+海岸に交わる左右の辺は、**波を側方 Neumann(`wf_bc_side` = 2)、流れを側方 Neumann
+(`f_bc_*` = 3。[境界条件](boundary.md))**にします。流れの側方 Neumann は「境界の外にも
+同じ海岸が続く」扱いで、沿岸流が辺を通り抜けます(壁にすると沿岸流がせき止められて
+辺に偽の循環ができます)。岸沿いに一様な海岸では、境界の行も内部の行と同じ解になります
+(test/wfcurrent で全行の差が流速の最大の約 0.03%)。地形が辺の近くで岸沿いに変わる
+場合は、辺の外もその地形が続く扱いになるので、見たい区域を辺から離してください。
+
 ## 出力・確認
 
 **分布**(出力時刻ごと。[入出力の形式](io.md))
@@ -248,6 +352,13 @@ c = 0.28(不規則波)・0.21(規則波)です(Guza & Thornton 1985[^gt85] の�
 | Wa | 平均波向(進む向き。x 軸から反時計回り。無波セルは −9999) | deg |
 | Wu | 底面軌道流速 u_rms = H_rms σ/(2√2 sinh kh)(XBeach の定義)。`f_wf_outdiag = 1` | m/s |
 | Wb | 砕波散逸 D_w(不規則波)。`f_wf_outdiag = 1` | W/m² |
+| Wfx・Wfy | 波の外力 F = −∇·S(セル中心。ローラーを含む)。`wf_flow` ≥ 1 かつ `f_wf_outdiag = 1` | N/m² |
+| Wsx・Wsy | Stokes 輸送の速さ u^S。`wf_flow = 2` かつ `f_wf_outdiag = 1` | m/s |
+| Wr | ローラーのエネルギー E_r。`f_wf_roller = 1` かつ `f_wf_outdiag = 1` | J/m² |
+
+**y の成分(Wfy・Wsy)は流速 v と同じ向き(行の増える向き = 南が正)です。** 波向の
+規約(北が正)とは逆なので注意してください。`wf_flow = 2` の流速 u・v は Lagrangian
+平均流速 u^L で、底面の流れ(オイラー流速)は u − Wsx、v − Wsy です。
 
 **台帳** `result/wavefield.csv`。準定常は更新ごとに収束時の率(W)を、非定常は
 計測間隔(`dt_recrd`)ごとに累積量(J)を書きます。
@@ -272,8 +383,19 @@ c = 0.28(不規則波)・0.21(規則波)です(Guza & Thornton 1985[^gt85] の�
 
 - **位相平均・代表周期 1 個**です。回折・反射・周波数の広がり・風による発達・非線形の
   波の相互作用は扱いません。陰の縁のぼけは数値拡散で、回折ではありません。
-- **段 W1 は流れ・地形に作用しません。** 波による沿岸流・セットアップ・漂砂は後の段です。
-  流れ(河川流・潮流・津波)による波の変化(ドップラー効果・阻止)もまだ入りません。
+- **地形には作用しません**(漂砂は後の段)。流れ(河川流・潮流・津波)による波の変化
+  (ドップラー効果・阻止)もまだ入りません(段 W3)。
+- **砕波による横方向の混合(渦粘性)は入りません。** 沿岸流の分布は、ENC の斜めの面の
+  移流による数値的な横混合でならされます(砕波の始まりの外縁に最大の数 % の流れが出ます)。
+  浅水流の水平拡散([拡散項](diffusion.md) の `f_diffusion_term`)を併用することは
+  できますが、波による混合の定式(Battjes 1975 型)ではありません。
+- **方向分散 0 の単一方向の波(規則波を含む)は、屈折が Snell の法則より遅れます**
+  (N_θ = 40、入射 20° で砕波点の向きが約 1.5° 大きい)。沿岸方向の放射応力 S_xy は
+  向きに敏感なので、砕波帯より沖に偽の沿岸方向の外力が出ます(砕波帯の外力の約 5%。
+  方向分散 20° では約 1%)。沿岸流を見るときは方向分散を与えるか、ビン数を増やして
+  ください。
+- **側方 Neumann の辺**は「外にも同じ海岸が続く」扱いです。地形が辺の近くで岸沿いに
+  変わる場合や、構造物が辺に接する場合は、見たい区域を辺から十分離してください。
 - **海域マスクの海セル(sw)は波浪の計算域外**です。沖は海底地形を持つ通常のセルで表し、
   入射の境界は外縁の辺に置きます。
 - **STG 格子・ネストとは併用できません**(開始時に停止します)。
@@ -300,6 +422,11 @@ c = 0.28(不規則波)・0.21(規則波)です(Guza & Thornton 1985[^gt85] の�
 | `wf_tol` | 1e-4 | **数値設定**: 独自(波高の相対変化。検定では 1e-6〜1e-8 で解の差を確かめた) |
 | `wf_spread` | 20° | **経験値**: 本プロジェクトの目安(独自)。風波〜うねりの代表的な広がりの中間として置いた値で、地点の波浪観測があればその方向分散を与える |
 | ρ | 1025 kg/m³ | **慣用値**: 海水の密度(XBeach の既定)。設定項目ではない |
+| `wf_flow` | 0 | **方式**: 既定は流れに作用しない(段 W1 と同じ結果)。使うときは 2 を推奨(XBeach と同じ GLM と波・流れの摩擦) |
+| `f_wf_roller` | 1 | **方式**: XBeach の既定[^xbeach](roller = 1)。外力の最大を岸側へずらす効果は観測と合う(Reniers & Battjes 1997[^rb97]) |
+| `wf_beta` | 0.1 | **文献値**: XBeach の既定[^xbeach](範囲 0.05〜0.3)。Reniers & Battjes(1997)[^rb97] の 0.1 |
+| `wf_tramp` | 100 s | **数値設定**: XBeach の taper の既定[^xbeach](定常の波浪場を全域で一度に与える同じ状況の始動) |
+| 摩擦の速さの係数 | 1.16 | **文献値**: Ruessink ら(2001)[^ruessink01] の波・流れの摩擦(XBeach の定式)。設定項目ではない |
 
 分散関係は Fenton & McKee(1990)[^fm90] の陽な近似を初期値に Newton 法 3 回で解きます。
 
@@ -312,20 +439,33 @@ c = 0.28(不規則波)・0.21(規則波)です(Guza & Thornton 1985[^gt85] の�
   波浪場の有無で流れが同じこと、沖の波の時系列の補間。
 - [test/wfshadow](../../test/wfshadow/README.md): 防波堤と斜めの壁の囲い。独立に実装した
   掃引解との一致、斜めの壁の遮断、格子方向に揃った波の陰が厳密に鋭いこと。
-- どちらも MPI の np = 1・2・4 で逐次とビット一致します。
+- [test/wfcurrent](../../test/wfcurrent/README.md): 流れへの作用(段 W2)。セットアップの
+  面ごとの離散の釣り合い・沖の set-down(Longuet-Higgins & Stewart)・砕波帯の勾配
+  (Bowen ら)、一様水深の沿岸流と戻り流れの摩擦の閉じた形との一致、海浜の沿岸流の
+  運動量の積分の釣り合い・ローラーの収支と岸側へのずれ、側方 Neumann の辺の岸沿いの
+  一様性、90° 回した格子との一致、再開の継続のバイト一致。
+- いずれも MPI の np = 1・2・4 で逐次とビット一致します。
 
 ## 参考文献
 
+[^am78]: Andrews, D. G. & McIntyre, M. E. (1978) An exact theory of nonlinear waves on a Lagrangian-mean flow. J. Fluid Mech. 89, 609–646.
 [^baldock98]: Baldock, T. E., Holmes, P., Bunker, S. & Van Weert, P. (1998) Cross-shore hydrodynamics within an unsaturated surf zone. Coastal Engineering 34, 173–196.
 [^bg68]: Bretherton, F. P. & Garrett, C. J. R. (1968) Wavetrains in inhomogeneous moving media. Proc. R. Soc. Lond. A 302, 529–554.
+[^bowen68]: Bowen, A. J., Inman, D. L. & Simmons, V. P. (1968) Wave 'set-down' and set-up. J. Geophys. Res. 73(8), 2569–2577.
 [^eurotop]: EurOtop (2018) Manual on wave overtopping of sea defences and related structures, 2nd ed. Van der Meer, J. W., Allsop, N. W. H., Bruce, T., De Rouck, J., Kortenhaus, A., Pullen, T., Schüttrumpf, H., Troch, P. & Zanuttigh, B. www.overtopping-manual.com
 [^fm90]: Fenton, J. D. & McKee, W. D. (1990) On calculating the lengths of water waves. Coastal Engineering 14, 499–513.
 [^gt85]: Guza, R. T. & Thornton, E. B. (1985) Velocity moments in nearshore. J. Waterway, Port, Coastal, Ocean Eng. 111(2), 235–256.
 [^hiswa]: Holthuijsen, L. H., Booij, N. & Herbers, T. H. C. (1989) A prediction model for stationary, short-crested waves in shallow water with ambient currents. Coastal Engineering 13, 23–54.
 [^jb07]: Janssen, T. T. & Battjes, J. A. (2007) A note on wave energy dissipation over steep beaches. Coastal Engineering 54, 711–716. 砕波波高 H_b の形は Battjes, J. A. & Janssen, J. P. F. M. (1978) Energy loss and set-up due to breaking of random waves. Proc. 16th ICCE, 569–587 の Miche 型(XBeach の定式と同じ)。
 [^kuik88]: Kuik, A. J., van Vledder, G. Ph. & Holthuijsen, L. H. (1988) A method for the routine analysis of pitch-and-roll buoy wave data. J. Phys. Oceanogr. 18, 1020–1034.
+[^lhs64]: Longuet-Higgins, M. S. & Stewart, R. W. (1964) Radiation stresses in water waves; a physical discussion, with applications. Deep-Sea Research 11, 529–562. 沖の set-down は Longuet-Higgins, M. S. & Stewart, R. W. (1962) Radiation stress and mass transport in gravity waves, with application to 'surf beats'. J. Fluid Mech. 13, 481–504。
+[^nairn90]: Nairn, R. B., Roelvink, J. A. & Southgate, H. N. (1990) Transition zone width and implications for modelling surfzone hydrodynamics. Proc. 22nd ICCE, 68–81.
+[^rb97]: Reniers, A. J. H. M. & Battjes, J. A. (1997) A laboratory study of longshore currents over barred and non-barred beaches. Coastal Engineering 30, 1–22.
+[^ruessink01]: Ruessink, B. G., Miles, J. R., Feddersen, F., Guza, R. T. & Elgar, S. (2001) Modeling the alongshore current on barred beaches. J. Geophys. Res. 106(C10), 22451–22463.
 [^snapwave]: Roelvink, D., van Ormondt, M., Reyns, J. & van der Lugt, M. (2025) SnapWave: fast, implicit wave transformation from offshore to nearshore. Geosci. Model Dev. 18, 9469–9495. doi:10.5194/gmd-18-9469-2025(既定値は公開ソースによる)
+[^svendsen84]: Svendsen, I. A. (1984) Wave heights and set-up in a surf zone. Coastal Engineering 8, 303–329.
 [^swan]: Booij, N., Ris, R. C. & Holthuijsen, L. H. (1999) A third-generation wave model for coastal regions: 1. Model description and validation. J. Geophys. Res. 104(C4), 7649–7666.
 [^tarboton97]: Tarboton, D. G. (1997) A new method for the determination of flow directions and upslope areas in grid digital elevation models. Water Resour. Res. 33(2), 309–319.
 [^vanleer74]: van Leer, B. (1974) Towards the ultimate conservative difference scheme. II. Monotonicity and conservation combined in a second-order scheme. J. Comput. Phys. 14, 361–370.
+[^walstra00]: Walstra, D. J. R., Roelvink, J. A. & Groeneweg, J. (2000) Calculation of wave-driven currents in a 3D mean flow model. Proc. 27th ICCE, 1050–1063.
 [^xbeach]: Roelvink, D., Reniers, A., van Dongeren, A., van Thiel de Vries, J., McCall, R. & Lescinski, J. (2009) Modelling storm impacts on beaches, dunes and barrier islands. Coastal Engineering 56, 1133–1152. 定式と既定値は XBeach マニュアル(xbeach.readthedocs.io)と公開ソース(params.F90)による。

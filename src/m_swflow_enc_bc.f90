@@ -12,7 +12,7 @@ submodule(m_swflow_enc) m_swflow_enc_bc
   ! ため submodule 側で直接 use する(§13)
   use, intrinsic :: iso_fortran_env, only : r64 => real64
   use m_boundary, only : t_boundary, e_bc_wall, e_bc_outflow, e_bc_radiation, &
-                         e_bc_inflow, e_side_w, e_side_e, e_side_n, e_side_s, &
+                         e_bc_neumann, e_bc_inflow, e_side_w, e_side_e, e_side_n, e_side_s, &
                          dam_operate, dam_sink, dam_draw, e_struct_dam
   use m_parallel, only : dcp, par_stop, par_allreduce_sumr
   implicit none
@@ -42,6 +42,9 @@ module subroutine bc_init(p, g, b)
   ! 辺境界条件を写す(ホットループでの間接参照回避)
   bcs%f_bc_side = b%edge%btype
   bcs%have_open_bc = any(bcs%f_bc_side /= e_bc_wall) .or. (b%ninflow > 0)
+  bcs%have_neumann = any(bcs%f_bc_side == e_bc_neumann)
+  bcs%adv_neumann_we = (bcs%f_bc_side(e_side_w) == e_bc_neumann .or. bcs%f_bc_side(e_side_e) == e_bc_neumann) &
+                       .and. opt%f_advection_term > 0 .and. opt%f_advection_scheme >= 2
   if (any(bcs%f_bc_side == e_bc_radiation)) then
     ! 基準水位は m_boundary_set_etaref(m_state_init 直後)が確定済み
     if (.not. allocated(b%edge%eta_cell)) then
@@ -512,12 +515,22 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
     ! 西辺・東辺(全ランクが自帯+共有行のセル js-1..je+1 を走査。
     ! ハロ行のセルは共有行スロットの冗長計算のため。put 側のスロット行
     ! フィルタが書き込み範囲を js-1..je に制限する)
-    if (bcs%f_bc_side(e_side_w) /= e_bc_wall) then
+    ! 側方 Neumann(型 3)の辺は put_neumann_faces が書く。従来の型の put_bc_faces の
+    ! 命令列を変えないよう、振り分けは辺ごとにここで行う(§88)
+    if (bcs%f_bc_side(e_side_w) == e_bc_neumann) then
+      do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
+        call put_neumann_faces(p, g, s, sx, 1, j, kfw)
+      end do
+    else if (bcs%f_bc_side(e_side_w) /= e_bc_wall) then
       do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
         call put_bc_faces(p, g, s, sx, 1, j, kfw, e_side_w)
       end do
     end if
-    if (bcs%f_bc_side(e_side_e) /= e_bc_wall) then
+    if (bcs%f_bc_side(e_side_e) == e_bc_neumann) then
+      do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
+        call put_neumann_faces(p, g, s, sx, dcp%nx_g, j, kfe)
+      end do
+    else if (bcs%f_bc_side(e_side_e) /= e_bc_wall) then
       do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
         call put_bc_faces(p, g, s, sx, dcp%nx_g, j, kfe, e_side_e)
       end do
@@ -526,12 +539,20 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
     ! 北辺・南辺(行の所有ランクのみ。判定は全ランクが同一コードで実行)
     ! 角の斜め面は複数辺のループが書く(idempotent: 辺の条件が同型なら
     ! 同値。異なる場合は後に処理される N/S 辺の式が有効になる)
-    if (bcs%f_bc_side(e_side_n) /= e_bc_wall .and. dcp%js <= 1 .and. 1 <= dcp%je) then
+    if (bcs%f_bc_side(e_side_n) == e_bc_neumann .and. dcp%js <= 1 .and. 1 <= dcp%je) then
+      do i = g%wx(1,1), g%wx(2,1)
+        call put_neumann_faces(p, g, s, sx, i, 1, kfn)
+      end do
+    else if (bcs%f_bc_side(e_side_n) /= e_bc_wall .and. dcp%js <= 1 .and. 1 <= dcp%je) then
       do i = g%wx(1,1), g%wx(2,1)
         call put_bc_faces(p, g, s, sx, i, 1, kfn, e_side_n)
       end do
     end if
-    if (bcs%f_bc_side(e_side_s) /= e_bc_wall .and. dcp%js <= dcp%ny_g .and. dcp%ny_g <= dcp%je) then
+    if (bcs%f_bc_side(e_side_s) == e_bc_neumann .and. dcp%js <= dcp%ny_g .and. dcp%ny_g <= dcp%je) then
+      do i = g%wx(1,dcp%ny_g), g%wx(2,dcp%ny_g)
+        call put_neumann_faces(p, g, s, sx, i, dcp%ny_g, kfs)
+      end do
+    else if (bcs%f_bc_side(e_side_s) /= e_bc_wall .and. dcp%js <= dcp%ny_g .and. dcp%ny_g <= dcp%je) then
       do i = g%wx(1,dcp%ny_g), g%wx(2,dcp%ny_g)
         call put_bc_faces(p, g, s, sx, i, dcp%ny_g, kfs, e_side_s)
       end do
@@ -850,6 +871,130 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 側方 Neumann の辺のセル (i,j) の境界面(kf の 3 面)を put_neumann_face で書く。
+! 面の選別は put_bc_faces と同じ(無効・海セル、角の斜め面の両辺 open、スロット行の
+! 書き込み範囲)。従来の型の put_bc_faces とは呼び出し元(boundary_uvmn)で分ける(§88)
+!----------------------------------------------------------------------
+subroutine put_neumann_faces(p, g, s, sx, i, j, kf)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(inout) :: sx
+  integer, intent(in) :: i, j
+  integer, intent(in) :: kf(1:3)
+  integer :: m, k, in, jn, ie, je
+
+  if (g%x(i,j) <= 0) return
+  if (g%sw(i,j) > 0) return
+  do m = 1, 3
+    k = kf(m)
+    in = i + din(k)
+    jn = j + djn(k)
+    if (.not. bc_open_face(in, jn)) cycle
+    ie = i + die(k)
+    je = j + dje(k)
+    if (je < dcp%js - 1 .or. je > dcp%je) cycle
+    call put_neumann_face(p, g, s, sx, i, j, k, kf, in, jn, ie, je)
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 側方 Neumann の境界面(型 3。put_neumann_faces から面ごとに呼ぶ。§88)
+!   枠外の相手セルを、辺の法線方向に枠内へ寄せたセル(鏡像。角の外は両方向に寄せる)と
+!   みなし、境界面の運動方程式を内部の面と同じ calc_kth_flux で解く。法線方向の水位・
+!   地盤の勾配が 0 になり、圧力勾配は鏡像セルとの差 = 境界に沿う成分だけが残る。岸沿いに
+!   一様な流れでは内部の面と同じ式になり、流入(負の流速)も許す。鏡像セルが無効・海
+!   セルなら自セル(全方向の勾配 0)。内部の面(calc_kth_momentum)に合わせる規則:
+!   両側が乾いたときだけ閉じる、適応的ルンゲクッタの判定、過大な流出の抑制(流出は
+!   自セル、流入は鏡像セルが送り手。通過幅係数と動的振り替えの係数 = bc_neumann_fwd を
+!   掛ける)。移流の項は、運動量保存形(f_advection_scheme = 2, 3)なら辺の法線方向に
+!   一つ内側へ平行移動した内部の面の値を使う(境界面の検査体積は枠外にはみ出すため。
+!   内部の面のステンシルの枠外は移流の側が鏡像を読む = m_swflow_enc_adv の mirror_cell)。
+!   旧スキーム 1 と拡散項は、枠の端のセルで 0 になる既存の規約のまま持たない。
+!   従来の型(put_bc_faces)とは別の手続きにして、振り分けも put_bc_faces の外
+!   (boundary_uvmn)で行い、従来の経路の命令列を変えない(put_bc_faces の面の
+!   ループの中で振り分けると、-Ofast で波を使わない既存の reference が最終桁で
+!   ずれた。§88)。
+!   境界面の流速・流量そのものを一つ内側の面から写す方式は、境界の行の水位と境界の
+!   流量の正帰還で発散した(W2 の検証。§88)
+!----------------------------------------------------------------------
+subroutine put_neumann_face(p, g, s, sx, i, j, k, kf, in, jn, ie, je)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(inout) :: sx
+  integer, intent(in) :: i, j, k, in, jn, ie, je
+  integer, intent(in) :: kf(1:3)
+  integer :: im, jm                ! 鏡像セル
+  integer :: ii, jj                ! 移流項の写し元(辺の法線方向に一つ内側のセル)
+  real :: h, hv, dh, cor, uve0, mne0, uve1, mne1, hee, maglim, tae0
+
+  h = s%h(i,j)
+  im = min(max(in, 1), dcp%nx_g)
+  jm = min(max(jn, 1), dcp%ny_g)
+  if (g%x(im,jm) <= 0 .or. g%sw(im,jm) > 0) then
+    im = i
+    jm = j
+  end if
+  if (h < p%dd .and. s%h(im,jm) < p%dd) then
+    uve1 = 0
+    mne1 = 0
+  else
+    tae0 = 0.0
+    if (opt%f_advection_term > 0 .and. opt%f_advection_scheme >= 2) then
+      ii = i - din(kf(1))
+      jj = j - djn(kf(1))
+      if (ii >= 1 .and. ii <= dcp%nx_g .and. jj >= 1 .and. jj <= dcp%ny_g) then
+        tae0 = sign_e(k) * tx_mod%tae(ke(k), ii + die(k), jj + dje(k))
+      end if
+      if (chn%adv_drop_rw) then
+        if (g%rw(i,j) > 0 .or. g%rw(im,jm) > 0) tae0 = 0.0
+      end if
+    end if
+    uve0 = sign_e(k) * sx%uv(ke(k), ie, je)
+    mne0 = sign_e(k) * sx%mn(ke(k), ie, je)
+    call calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, im, jm, 0, uve1, mne1, hee)
+    if (opt%f_adaptive_runge > 0) then
+      maglim = opt%p_adprunge_thresh
+      if ((mne0 >= 0 .and. (mne1 > mne0 * maglim .or. mne1 < mne0 / maglim)) .or. &
+          (mne0 < 0  .and. (mne1 < mne0 * maglim .or. mne1 > mne0 / maglim))) then
+        call calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, im, jm, 1, uve1, mne1, hee)
+      end if
+    end if
+    if (opt%f_exflux_reduction > 0 .and. mne1 < 0.0) then
+      dh = -mne1 * geo%mn2dh(k) / s%gv(im,jm)
+      if (chn%have_frw) dh = dh * chn%frw(ke(k), ie, je)
+      if (chn%have_fwd) dh = dh * chn%fwd(ke(k), ie, je)
+      if (chn%have_width) dh = dh / chn%wfrac(im,jm)
+      hv = s%h(im,jm)
+      if (sct%have_sect) hv = sect_v(hv, sct%sdep(im,jm))
+      if (hv - dh <= 0) then
+        cor = max(hv - p%dd, 0.0) / dh
+        uve1 = uve1 * cor
+        mne1 = mne1 * cor
+      end if
+    end if
+  end if
+  ! 過大な流出の抑制(流出方向。送り手は自セル。put_bc_faces の共通の抑制と同じ形に
+  ! 動的振り替えの係数を加える)
+  dh = mne1 * geo%mn2dh(k) / s%gv(i,j)
+  if (chn%have_frw) dh = dh * chn%frw(ke(k), ie, je)
+  if (chn%have_fwd) dh = dh * chn%fwd(ke(k), ie, je)
+  if (chn%have_width) dh = dh / chn%wfrac(i,j)
+  hv = h
+  if (sct%have_sect) hv = sect_v(h, sct%sdep(i,j))
+  if (dh > 0 .and. hv - dh <= 0) then
+    cor = max(hv - p%dd, 0.0) / dh
+    uve1 = uve1 * cor
+    mne1 = mne1 * cor
+  end if
+  sx%uv(ke(k), ie, je) = sign_e(k) * uve1
+  sx%mn1(ke(k), ie, je) = sign_e(k) * mne1
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 近傍 (in,jn) が格子枠外で、その面が横切る辺が全て開いているか。
 ! 型はセル別(bt_cell)で引く: 法線面のゴースト(枠外座標が1軸のみ)は
 ! 対応するセルの面型を参照し、流入区間の上書き(e_bc_inflow)が効く。
@@ -867,6 +1012,79 @@ module function bc_open_face(in, jn) result(op)
   if (jn < 1        .and. bc_face_type(e_side_n, in) == e_bc_wall) op = .false.
   if (jn > dcp%ny_g .and. bc_face_type(e_side_s, in) == e_bc_wall) op = .false.
 end function
+
+
+!----------------------------------------------------------------------
+! 枠外の位置 (id,jd) が側方 Neumann の辺だけの外か(ok)。真なら (im,jm) に鏡像セル
+! (辺の法線方向に枠内へ寄せたセル。角の外は両方向に寄せる)を返す。法線面の外は
+! セル別の面型、角の外は両辺の型で引く(bc_open_face と同じ)。境界面の運動方程式
+! (put_neumann_face)と開口の動的振り替え(sblk)が同じ鏡像を使う(§88)
+!----------------------------------------------------------------------
+pure module subroutine bc_neumann_cell(id, jd, ok, im, jm)
+  integer, intent(in) :: id, jd
+  logical, intent(out) :: ok
+  integer, intent(out) :: im, jm
+  ok = .true.
+  if (id < 1)        ok = ok .and. bc_face_type(e_side_w, jd) == e_bc_neumann
+  if (id > dcp%nx_g) ok = ok .and. bc_face_type(e_side_e, jd) == e_bc_neumann
+  if (jd < 1)        ok = ok .and. bc_face_type(e_side_n, id) == e_bc_neumann
+  if (jd > dcp%ny_g) ok = ok .and. bc_face_type(e_side_s, id) == e_bc_neumann
+  im = min(max(id, 1), dcp%nx_g)
+  jm = min(max(jd, 1), dcp%ny_g)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 側方 Neumann の辺の境界面の動的振り替え係数 fwd(build_fwd の後に呼ぶ。§88)
+!   境界面(枠外へ出る面)の係数に、辺の法線方向に一つ内側へ平行移動した内部の面の
+!   係数を写す(岸沿いに一様な流れで境界の行の通過幅が内部の行と一致する)。
+!   エッジの格納(build_fwd と同じ): 成分4 (a,b)-(a+1,b)、成分2 (a,b)-(a,b+1)、
+!   成分1 (a,b)-(a+1,b+1)、成分3 (a,b+1)-(a+1,b)。
+!     N 辺: 格納行 0 の成分 1〜3 ← 行 1     S 辺: 格納行 ny の成分 1〜3 ← 行 ny−1
+!     W 辺: 格納列 0 の成分 1・3・4 ← 列 1  E 辺: 格納列 nx の成分 1・3・4 ← 列 nx−1
+!   写すのは build_fwd がこのステップに構築した行 jlo..jhi(全ランクが同じ入力から
+!   冗長に構築するので決定的)。W・E を先に、N・S を後に写す(角の斜め面は N・S の
+!   写しが有効。境界面の流速の処理順と同じ)。区間流入のセルの面は写さない。
+!   格納の列 0・nx が確保範囲(列窓 ± ハロ)の外なら、その辺に接する有効セルが
+!   ないので何もしない
+!----------------------------------------------------------------------
+module subroutine bc_neumann_fwd(jlo, jhi)
+  integer, intent(in) :: jlo, jhi
+  integer :: i, j, i1, i2
+  integer :: nx, ny
+  nx = dcp%nx_g
+  ny = dcp%ny_g
+  i1 = max(0, lbound(chn%fwd, 2))
+  i2 = min(nx, ubound(chn%fwd, 2))
+  if (bcs%f_bc_side(e_side_w) == e_bc_neumann .and. nx >= 2 .and. i1 == 0) then
+    do j = jlo, jhi
+      if (bc_face_type(e_side_w, j) /= e_bc_neumann) cycle
+      chn%fwd(4, 0, j) = chn%fwd(4, 1, j)
+      if (j < ny) chn%fwd(1, 0, j) = chn%fwd(1, 1, j)
+      if (j < ny) chn%fwd(3, 0, j) = chn%fwd(3, 1, j)
+    end do
+  end if
+  if (bcs%f_bc_side(e_side_e) == e_bc_neumann .and. nx >= 2 .and. i2 == nx) then
+    do j = jlo, jhi
+      if (bc_face_type(e_side_e, j) /= e_bc_neumann) cycle
+      chn%fwd(4, nx, j) = chn%fwd(4, nx - 1, j)
+      if (j < ny) chn%fwd(1, nx, j) = chn%fwd(1, nx - 1, j)
+      if (j < ny) chn%fwd(3, nx, j) = chn%fwd(3, nx - 1, j)
+    end do
+  end if
+  if (bcs%f_bc_side(e_side_n) == e_bc_neumann .and. ny >= 2 .and. jlo <= 1) then
+    do i = i1, i2
+      if (i >= 1 .and. bc_face_type(e_side_n, i) /= e_bc_neumann) cycle
+      chn%fwd(1:3, i, 0) = chn%fwd(1:3, i, 1)
+    end do
+  end if
+  if (bcs%f_bc_side(e_side_s) == e_bc_neumann .and. ny >= 2 .and. jhi >= ny) then
+    do i = i1, i2
+      if (i >= 1 .and. bc_face_type(e_side_s, i) /= e_bc_neumann) cycle
+      chn%fwd(1:3, i, ny) = chn%fwd(1:3, i, ny - 1)
+    end do
+  end if
+end subroutine
 
 
 !----------------------------------------------------------------------
@@ -921,7 +1139,7 @@ end function
 ! 辺 sd の添字 idx における外縁面の型を返す
 ! (idx が範囲外=角のゴーストは辺の型に落とす)
 !----------------------------------------------------------------------
-function bc_face_type(sd, idx) result(t)
+pure function bc_face_type(sd, idx) result(t)
   integer, intent(in) :: sd, idx
   integer :: t
   if (allocated(bcs%bt_cell) .and. idx >= 1 .and. idx <= size(bcs%bt_cell, 1)) then

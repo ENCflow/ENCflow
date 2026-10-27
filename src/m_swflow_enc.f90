@@ -51,6 +51,10 @@ module m_swflow_enc
   public :: m_swflow_enc_nh_export, m_swflow_enc_nh_import, m_swflow_enc_nh_active   ! ネスティングの帯の φ(§16)
   public :: bcs, bc_open_face                  ! 開境界の面判定(m_geomorph の
                                                ! 開境界土砂フラックスが読む。読み取り専用)
+  ! submodule(m_swflow_enc_bc の側方 Neumann の境界面。§88)からのホスト結合参照のため
+  ! 公開する。private のままだと gfortran が全呼び出しをインライン化してシンボルを
+  ! 消し、submodule からリンクできない(m_boundary の interp_series と同じ事情)
+  public :: calc_kth_flux
 
   !--------------------------------------------------------------------
   ! モジュール内で共有される構造体と変数の宣言
@@ -151,6 +155,9 @@ module m_swflow_enc
                                             !   nvfortran は submodule のホスト結合を
                                             !   use 結合扱いし書き込みを拒否する。§13)
     integer :: f_bc_side(1:4) = e_bc_wall     ! 外縁4辺の境界条件型(W,E,N,S)
+    logical :: have_neumann = .false.         ! 側方 Neumann の辺があるか(bc_init が設定。§88)
+    logical :: adv_neumann_we = .false.       ! W・E の側方 Neumann の面が一つ内側の面の移流項を
+                                            !   写すか(ランク界面の行の移流項の補完が要る。bc_init)
     integer, allocatable :: bt_cell(:,:)      ! 外縁面の型(セル別。(j,W/E)・(i,N/S)。
                                             !   辺の型を初期値とし流入区間が上書き)
     real, allocatable :: bc_eta_cell(:,:)     ! 放射境界の基準水位(セル別)
@@ -658,6 +665,14 @@ module m_swflow_enc
       integer, intent(in) :: in, jn
       logical :: op
     end function
+    pure module subroutine bc_neumann_cell(id, jd, ok, im, jm)
+      integer, intent(in) :: id, jd
+      logical, intent(out) :: ok
+      integer, intent(out) :: im, jm
+    end subroutine
+    module subroutine bc_neumann_fwd(jlo, jhi)
+      integer, intent(in) :: jlo, jhi
+    end subroutine
     module subroutine bc_ext_init(g, b)
       type(t_geoinfo), intent(in) :: g
       type(t_boundary), intent(in) :: b
@@ -1088,6 +1103,9 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
 
   ! 移流項を計算する
   call adv_prepare(p, g, s, sx_mod)
+  ! W・E の側方 Neumann の境界面は一つ内側の面の移流項を写す(put_neumann_face)。界面行の
+  ! 他ランク所有の面の値を補完しておく(N・S の写し元は自帯の中。§88)
+  if (bcs%adv_neumann_we) call par_edge_merge(tx_mod%tae, esync_s, esync_n)
 
   ! 拡散項を計算する
   call diff_prepare(p, g, s)
@@ -1882,6 +1900,11 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   real :: hte                     ! エッジの混合流動深(時刻 n。層流則用)
   real :: rme                     ! 1 + s・C(混合密度比 ρm/ρ)
   real :: vv0e                    ! 辺の速さ |V|(下限 p%vv 適用前。降伏停止判定用。§28.11)
+  ! 波→流れ(段 W2。s%wv_flow > 0 のときだけ使う。§88)
+  real :: wfe                     ! 辺の外力の成分 F_k/ρ (m2/s2。中心から近傍が正)
+  real :: use_                    ! 辺の Stokes 輸送の成分 u^S_k (m/s。wv_flow = 2)
+  real :: vvw, vue2w              ! 辺の波・流れの摩擦の速さ (m/s。wv_flow = 2。下限 p%vv)と、
+                                  ! そのうち辺に直交する成分の二乗(ルンゲクッタの更新用)
 
   ! セル境界での物理量を求める
   vve = (s%vv(i,j) + s%vv(in,jn)) / 2       ! 速度の絶対値
@@ -1911,6 +1934,29 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   ! セル境界でのuveと直交する流速成分の二乗を計算
   !   ルンゲクッタで流速の絶対値を更新する際に使用する
   vue2 = max(vve**2 - uve0**2, 0.0)
+
+  ! 波→流れ(段 W2。§88): 外力 F = −∇·S(セル中心)の両セル平均を辺の向きへ射影した
+  ! F_k/ρ と、GLM の Stokes 輸送の辺の成分 u^S_k(どちらも立ち上げの係数 wv_ramp を
+  ! 掛ける)。浅水流の流速は Lagrangian 平均 u^L と読み、摩擦はオイラー流速
+  ! u^E = u^L − u^S に作用させる。摩擦の速さは √(|u^E|² + (1.16 u_rms)²)(Ruessink ら
+  ! 2001 の波・流れの摩擦。XBeach と同じ)のセル値 s%wvsp(m_wavefield が毎ステップ
+  ! 計算)の両セル平均。wv_flow = 0 では従来の文の並びを変えない(従来の文はそのまま
+  ! 残し、有効時だけ上書き・補正する。分岐の中でも量の多い計算を置くと -Ofast の
+  ! 最終桁が既存の reference とずれた。§88)
+  wfe = 0.0
+  use_ = 0.0
+  vvw = 0.0
+  vue2w = 0.0
+  if (s%wv_flow > 0) then
+    wfe = s%wv_ramp * 0.5 * ((s%wvfx(i,j) + s%wvfx(in,jn)) * geo%n8x(k) &
+                             + (s%wvfy(i,j) + s%wvfy(in,jn)) * geo%n8y(k)) / s%wv_rho
+    if (s%wv_flow >= 2) then
+      use_ = s%wv_ramp * 0.5 * ((s%wvus(i,j) + s%wvus(in,jn)) * geo%n8x(k) &
+                                + (s%wvvs(i,j) + s%wvvs(in,jn)) * geo%n8y(k))
+      vvw = max(0.5 * (s%wvsp(i,j) + s%wvsp(in,jn)), p%vv)
+      vue2w = max(vvw**2 - (uve0 - use_)**2, 0.0)
+    end if
+  end if
 
   ! 中心セルと近傍セルの水深をセット
   hc0 = s%h(i,j)
@@ -2061,6 +2107,10 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     !   速度非依存の降伏減速度 a_y を半陰解法に合成(÷|V| で次元を合わせる)
     if (aye > 0.0) tfe = tfe - aye / max(vve, p%vv)
 
+    ! 波・流れの摩擦(wv_flow = 2): マニング則の摩擦の速さを vve から vvw へ差し替える
+    ! (家屋の抗力・降伏の項は流れの速さ vve のまま)
+    if (s%wv_flow >= 2 .and. fbe <= 0.0) tfe = tfe - ge * rne**2 * (vvw - vve) * m_ffactor_calc(hhe) * gve
+
     ! l段目の時間刻み
     dtl = p%dt / a(l) / lme
 
@@ -2068,6 +2118,16 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     !   摩擦項を半陰解法で計算する
     !   どちらも中心セルから近傍セルに向かい正
     uve1 = (uve0 + (tae + tge) * dtl) / (1 - tfe * dtl)
+    ! 波の外力 F_k/(ρ h) を加速度に加え、摩擦は u^E = uve1 − u^S_k に作用させる
+    ! (半陰解法: uve1 − uve0 = dtl·(tae + tge + F_k/(ρh) + tfe·(uve1 − u^S_k)))。
+    ! F_k/(ρh) の h は両セルの平均水深(流速の符号に依らない)。風上の上限
+    ! (cap_he_upwind)を掛けた he を使うと、静止に近い釣り合い(セットアップ)で
+    ! 流速の符号の揺らぎごとに外力が切り替わり、行ごとに違う平均の駆動が残って
+    ! 循環がゆっくり育つ(§88。W2 の検証で確認)
+    if (s%wv_flow > 0) then
+      uve1 = (uve0 + (tae + tge + wfe / max((hc + hn) / 2, p%dv)) * dtl - tfe * use_ * dtl) &
+             / (1 - tfe * dtl)
+    end if
 
     ! 乾燥セルへ向かうエッジ水深のエネルギー頭による頭打ち(§68.16)
     !   受け手(流向の下流側)が乾燥(h < dd)のとき、運べる水深は送り手の
@@ -2133,8 +2193,9 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
       real :: winvc, winvn
       integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
       real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
-      ! セル境界での流速の絶対値を更新
+      ! セル境界での流速の絶対値を更新(波・流れの摩擦の速さはオイラー流速の成分で)
       vve = sqrt(uve1**2 + vue2)
+      if (s%wv_flow >= 2) vvw = sqrt((uve1 - use_)**2 + vue2w)
 
       ! 河道幅有効時のセル平面積率の逆数(無効時は 1.0 の乗算で厳密に不変)
       winvc = 1.0
@@ -2755,6 +2816,10 @@ subroutine build_fwd(p, g, s)
     end do
   end do
   !$omp end parallel do
+
+  ! 側方 Neumann の辺の境界面(枠外へ出る面)は上の走査が書かない(1.0 のまま)。辺の
+  ! 法線方向に一つ内側の(平行移動した)内部の面の係数を写す(§88)
+  if (bcs%have_neumann) call bc_neumann_fwd(jlo, jhi)
 end subroutine
 
 
@@ -2799,15 +2864,26 @@ function sblk(g, s, ic, jc, id, jd) result(res)
   integer, intent(in) :: ic, jc, id, jd
   real :: res
   real :: dz, hc
+  integer :: ii, jj
+  logical :: ok
   res = 1.0
-  if (id < 1 .or. id > g%nx .or. jd < 1 .or. jd > g%ny) return
-  if (g%x(id,jd) <= 0) return
-  res = 0.0
-  if (g%sw(id,jd) > 0) return
-  if (chn%have_bopen) then
-    if (g%rw(id,jd) <= 0 .and. is_wall(g%zbank(ic,jc), s%z(ic,jc), s%z(id,jd))) return
+  ii = id
+  jj = jd
+  ! 枠外の側方セルは塞がり 1(壁)。側方 Neumann の辺の外は、境界面と同じく辺の法線方向に
+  ! 枠内へ寄せた鏡像セルで判定する(壁とみなすと境界の行の軸の面だけに斜めの分の
+  ! 通過幅が上乗せされ、開いた斜めの境界面と二重になる。§88)
+  if (id < 1 .or. id > g%nx .or. jd < 1 .or. jd > g%ny) then
+    if (.not. bcs%have_neumann) return
+    call bc_neumann_cell(id, jd, ok, ii, jj)
+    if (.not. ok) return
   end if
-  dz = s%z(id,jd) - s%z(ic,jc)
+  if (g%x(ii,jj) <= 0) return
+  res = 0.0
+  if (g%sw(ii,jj) > 0) return
+  if (chn%have_bopen) then
+    if (g%rw(ii,jj) <= 0 .and. is_wall(g%zbank(ic,jc), s%z(ic,jc), s%z(ii,jj))) return
+  end if
+  dz = s%z(ii,jj) - s%z(ic,jc)
   if (dz <= 0.0) return
   hc = s%h(ic,jc)
   if (hc <= dz) then

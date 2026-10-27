@@ -105,8 +105,10 @@ need to understand all of it. Read only the lines you care about.
 - **Coastal waves**: shoaling, refraction, breaking and the shadows of
   breakwaters and islands are computed for offshore waves on the same
   grid by a phase-averaged energy balance over directional bins, giving
-  maps of wave height and direction (the coupling with wave-driven
-  currents, sediment transport and beach change is being added in stages).
+  maps of wave height and direction. Wave setup and longshore currents
+  (radiation stress, roller and GLM Stokes drift) can also be added to
+  the shallow-water flow (the coupling with sediment transport and beach
+  change is being added in stages).
 - **Tsunami generation from an earthquake, and dispersive waves**: the
   fault displacement is given as a time history of the ground, and the
   tsunami is followed from generation through propagation to run-up in

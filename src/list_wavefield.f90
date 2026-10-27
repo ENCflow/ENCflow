@@ -3,7 +3,8 @@ module list_wavefield
   ! (層契約 §12)。生の値を t_list_wavefield に運ぶだけで、解釈・検証・既定値の
   ! 適用・導出は m_wavefield の init が行う(developer.md §88、docs/wavefield_plan.md)。
   !   &list_wavefield : 有効化・方向ビン・解法(非定常/準定常)・境界の型・沖の波
-  !                     (固定値または時系列)・砕波と摩擦の係数・出力
+  !                     (固定値または時系列)・砕波と摩擦の係数・出力・流れへの作用
+  !                     (段 W2: 外力・GLM・波・流れの摩擦・ローラー)
   ! 未指定の番兵は実数 −9999、整数 −9999。グループ不在は全番兵のまま(init が判定)。
   use m_sysparam, only : t_sysparam
   use m_parallel, only : par_info, par_stop
@@ -38,6 +39,10 @@ module list_wavefield
     real :: wf_fw = -9999.0                      ! 底面摩擦係数 f_w
     real :: wf_hmin = -9999.0                    ! 波浪セルの最小水深 (m)
     integer :: f_wf_outdiag = -9999              ! 1: 診断量(砕波散逸・軌道流速)も分布出力
+    integer :: wf_flow = -9999                   ! 流れへの作用 0: なし / 1: 外力 / 2: 外力+GLM+摩擦
+    integer :: f_wf_roller = -9999               ! 1: ローラーのエネルギー平衡(wf_flow >= 1)
+    real :: wf_beta = -9999.0                    ! ローラーの散逸係数 β
+    real :: wf_tramp = -9999.0                   ! 外力の立ち上げ時間 (s)
   end type
 
 contains
@@ -53,16 +58,16 @@ subroutine list_wavefield_read(p, list)
   character(len=256) :: msg
 
   integer :: f_wavefield, wf_ntheta, wf_mode, wf_itmax, f_wf_init, wf_wavetype, wf_clock, wf_break
-  integer :: f_wf_outdiag
+  integer :: f_wf_outdiag, wf_flow, f_wf_roller
   integer :: wf_bc_side(1:4)
   real :: dt_wave, wf_tol, wf_hm0, wf_trep, wf_dir, wf_spread
-  real :: wf_gamma, wf_alpha, wf_gammax, wf_fw, wf_hmin
+  real :: wf_gamma, wf_alpha, wf_gammax, wf_fw, wf_hmin, wf_beta, wf_tramp
   real :: wf_val(1:5, 1:wf_nvalmax)
 
   namelist /list_wavefield/ f_wavefield, wf_ntheta, wf_mode, dt_wave, wf_itmax, wf_tol, f_wf_init, &
                             wf_bc_side, wf_wavetype, wf_hm0, wf_trep, wf_dir, wf_spread, wf_val, &
                             wf_clock, wf_break, wf_gamma, wf_alpha, wf_gammax, wf_fw, wf_hmin, &
-                            f_wf_outdiag
+                            f_wf_outdiag, wf_flow, f_wf_roller, wf_beta, wf_tramp
 
   f_wavefield = list%f_wavefield
   wf_ntheta = list%wf_ntheta
@@ -86,6 +91,10 @@ subroutine list_wavefield_read(p, list)
   wf_fw = list%wf_fw
   wf_hmin = list%wf_hmin
   f_wf_outdiag = list%f_wf_outdiag
+  wf_flow = list%wf_flow
+  f_wf_roller = list%f_wf_roller
+  wf_beta = list%wf_beta
+  wf_tramp = list%wf_tramp
 
   call par_info("reading list_wavefield in " // trim(p%fn_wavefield))
   open(newunit=un, file=trim(p%fn_wavefield), status='old', action='read', iostat=ios)
@@ -116,6 +125,10 @@ subroutine list_wavefield_read(p, list)
   list%wf_fw = wf_fw
   list%wf_hmin = wf_hmin
   list%f_wf_outdiag = f_wf_outdiag
+  list%wf_flow = wf_flow
+  list%f_wf_roller = f_wf_roller
+  list%wf_beta = wf_beta
+  list%wf_tramp = wf_tramp
 end subroutine
 
 end module

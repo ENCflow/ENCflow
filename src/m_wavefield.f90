@@ -149,6 +149,19 @@ module m_wavefield
     real :: res = 0.0                           ! 直近の残差
     integer :: nsub = 1                         ! 直近の非定常のサブステップ数
     integer :: un = 0                           ! 台帳 CSV の装置番号(rank0)
+    ! 波→流れ(段 W2。§88)
+    integer :: flow = 0                         ! 0 作用なし / 1 外力 / 2 外力+GLM+波・流れの摩擦
+    logical :: roller = .false.                 ! ローラーのエネルギー平衡
+    real :: beta = 0.1                          ! ローラーの散逸係数 β
+    real :: tramp = 0.0                         ! 外力の立ち上げ時間 (s。0 なら立ち上げなし)
+    real, allocatable :: er(:,:)                ! ローラーのエネルギー E_r (ish:ieh, jsh:jeh。J/m2)
+    real, allocatable :: er1(:,:)               ! 更新後の値 (ish:ieh, js:je)
+    real, allocatable :: dbrk(:,:)              ! 砕波の散逸(上限の除去を含む。ish:ieh, js:je。W/m2)
+    real, allocatable :: thm(:,:)               ! 平均波向 (rad。ish:ieh, jsh:jeh)
+    real, allocatable :: cph(:,:)               ! 位相速度 c = σ/k (ish:ieh, jsh:jeh)
+    integer, allocatable :: lar(:,:), lbr(:,:)  ! ローラーの 2 リンク分解の格子方向 (ish:ieh, jsh:jeh)
+    real, allocatable :: qar(:,:), qbr(:,:)     ! 位相速度あたりの流出率 (1/m)
+    integer :: nrit = 0                         ! 直近のローラーの反復回数
   end type
 
 contains
@@ -167,6 +180,7 @@ subroutine m_wavefield_init(wf, p, g, s, multi)
   type(t_state), intent(inout) :: s
   logical, intent(in) :: multi
   type(t_list_wavefield) :: list
+  logical :: have_diag, have_force
 
   if (len_trim(p%fn_wavefield) == 0) then
     if (p%f_state_restore > 0) call stop_if_orphan(p)
@@ -210,16 +224,47 @@ subroutine m_wavefield_init(wf, p, g, s, multi)
   s%wv_active = .true.
   s%wv_outdiag = wf%outdiag
 
+  ! 波→流れ(段 W2): 外力・Stokes 輸送(共有状態)とローラー・砕波の散逸(私有)
+  if (wf%flow >= 1) then
+    allocate(s%wvfx(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%wvfy(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    if (wf%flow >= 2) then
+      allocate(s%wvus(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(s%wvvs(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(s%wvsp(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    end if
+    s%wv_rho = rho
+    allocate(wf%dbrk(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
+    allocate(wf%thm(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(wf%cph(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    if (wf%roller) then
+      allocate(wf%er(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(wf%er1(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
+      allocate(wf%lar(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0)
+      allocate(wf%lbr(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0)
+      allocate(wf%qar(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(wf%qbr(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(s%wver(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    end if
+  end if
+
   ! 開始時の波浪場: 復元、準定常解、または静穏
   call boundary_now(wf, p, s)
   call update_props(wf, p, g, s)
   call check_incident_cells(wf, g)
+  have_diag = .false.
+  have_force = .false.
   if (p%f_state_restore > 0) then
-    call restore_state(wf, p)
+    call restore_state(wf, p, s, have_diag, have_force)
   else if (wf%finit == 1) then
     call solve_steady(wf, p, g, s)
+    if (wf%roller) call roller_steady(wf, p, g, s)
   end if
-  call diagnose(wf, p, g, s)
+  ! 復元した診断量・外力があればそのまま使う(準定常の再開をビット一致にする。§88)
+  if (.not. have_diag) call diagnose(wf, p, g, s)
+  if (wf%flow >= 1 .and. .not. have_force) call flow_coupling(wf, p, g, s)
+  s%wv_flow = wf%flow
+  if (wf%flow >= 1) s%wv_ramp = ramp_factor(wf, p, s%it0)
   ! 非定常の台帳の起点: 再開(f_state_restore = 1)は保存時の起点と累積を引き継ぐ
   ! (restore_state が設定)。それ以外は現在の貯留から数え始める
   if (p%f_state_restore /= 1) wf%store0 = storage(wf, g)
@@ -243,19 +288,29 @@ subroutine m_wavefield_calc(wf, p, g, s, it)
   integer, intent(in) :: it
 
   if (.not. wf%enabled) return
+  ! 外力の立ち上げの係数(このステップの浅水流が使う。時間軸の it から決まるので
+  ! 再開(f_state_restore = 1)でも続きの値になり、保存は要らない)
+  if (wf%flow >= 1) s%wv_ramp = ramp_factor(wf, p, it)
   if (wf%mode == 2) then
-    if (mod(it, wf%idt) /= 0) return
+    if (mod(it, wf%idt) /= 0) then
+      if (wf%flow >= 2) call friction_speed(g, s)
+      return
+    end if
     call boundary_now(wf, p, s)
     call update_props(wf, p, g, s)
     call solve_steady(wf, p, g, s)
+    if (wf%roller) call roller_steady(wf, p, g, s)
     call diagnose(wf, p, g, s)
+    if (wf%flow >= 1) call flow_coupling(wf, p, g, s)
     call write_steady(wf, g, s)
   else
     call boundary_now(wf, p, s)
     call update_props(wf, p, g, s)
     call step_unsteady(wf, p, g, s)
     call diagnose(wf, p, g, s)
+    if (wf%flow >= 1) call flow_coupling(wf, p, g, s)
   end if
+  if (wf%flow >= 2) call friction_speed(g, s)
 end subroutine
 
 
@@ -276,12 +331,13 @@ end subroutine
 !----------------------------------------------------------------------
 ! 破棄(save は dispose で。契約5。m_state の save より先に走る)
 !----------------------------------------------------------------------
-subroutine m_wavefield_dispose(wf, p, g)
+subroutine m_wavefield_dispose(wf, p, g, s)
   type(t_wavefield), intent(inout) :: wf
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
   if (.not. wf%enabled) return
-  if (p%f_state_save > 0) call save_state(wf, p, g)
+  if (p%f_state_save > 0) call save_state(wf, p, g, s)
   if (is_root .and. wf%un /= 0) close(wf%un)
   wf%un = 0
   if (allocated(wf%cth)) deallocate(wf%cth)
@@ -301,6 +357,15 @@ subroutine m_wavefield_dispose(wf, p, g)
   if (allocated(wf%dtl)) deallocate(wf%dtl)
   if (allocated(wf%rrate)) deallocate(wf%rrate)
   if (allocated(wf%rcum)) deallocate(wf%rcum)
+  if (allocated(wf%er)) deallocate(wf%er)
+  if (allocated(wf%er1)) deallocate(wf%er1)
+  if (allocated(wf%dbrk)) deallocate(wf%dbrk)
+  if (allocated(wf%thm)) deallocate(wf%thm)
+  if (allocated(wf%cph)) deallocate(wf%cph)
+  if (allocated(wf%lar)) deallocate(wf%lar)
+  if (allocated(wf%lbr)) deallocate(wf%lbr)
+  if (allocated(wf%qar)) deallocate(wf%qar)
+  if (allocated(wf%qbr)) deallocate(wf%qbr)
   wf%enabled = .false.
   wf%initialized = .false.
 end subroutine
@@ -309,6 +374,46 @@ end subroutine
 !======================================================================
 !========================== PRIVATE ROUTINES ==========================
 !======================================================================
+
+!----------------------------------------------------------------------
+! 波・流れの底面摩擦の速さ √(|u − u^S|² + (1.16 u_rms)²)(セル。Ruessink ら 2001。§88)
+!   浅水流の辺は両セルの平均を摩擦の速さに使う。u・v は前ステップ確定の流速
+!   (Lagrangian 平均)、u^S には立ち上げの係数を掛ける。担当帯で計算してハロを
+!   交換する(この時点の s%u・s%v のハロ行は 1 ステップ前の値: 浅水流のステップ頭の
+!   交換は wavefield_calc より後。ハロ行まで計算すると帯の境目の辺の摩擦が分割数で
+!   変わった = W2 の MPI 検証で判明)
+!----------------------------------------------------------------------
+subroutine friction_speed(g, s)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  !$omp parallel do schedule(dynamic) private(i, j)
+  do j = dcp%js, dcp%je
+    do i = max(dcp%ish, 1), min(dcp%ieh, g%nx)
+      s%wvsp(i,j) = sqrt((s%u(i,j) - s%wv_ramp * s%wvus(i,j))**2 + (s%v(i,j) - s%wv_ramp * s%wvvs(i,j))**2 &
+                         + (1.16 * s%wvub(i,j))**2)
+    end do
+  end do
+  !$omp end parallel do
+  call par_halo_cell(s%wvsp)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 外力の立ち上げの係数: ステップ it(t0 + it·dt → t0 + (it+1)·dt)の終わりの時刻で
+! min(1, 経過時間 / wf_tramp)。wf_tramp = 0 なら常に 1
+!----------------------------------------------------------------------
+pure function ramp_factor(wf, p, it) result(r)
+  type(t_wavefield), intent(in) :: wf
+  type(t_sysparam), intent(in) :: p
+  integer, intent(in) :: it
+  real :: r
+  if (wf%tramp > 0.0) then
+    r = min(1.0, real(it + 1) * p%dt / wf%tramp)
+  else
+    r = 1.0
+  end if
+end function
 
 !----------------------------------------------------------------------
 ! パラメータの検証と既定値(採用値は "(default)" 付きで表示。§62 方式)
@@ -414,6 +519,47 @@ subroutine setup_params(wf, p, g, list)
   wf%outdiag = (list%f_wf_outdiag == 1)
   if (list%f_wf_outdiag /= -9999 .and. list%f_wf_outdiag /= 0 .and. list%f_wf_outdiag /= 1) then
     call par_stop("list_wavefield: f_wf_outdiag must be 0 or 1")
+  end if
+
+  ! --- 流れへの作用(段 W2)---
+  !   既定 0 = 段 W1 と同じ(波浪場は流れに作用しない)。ローラーの既定 1 と β = 0.1 は
+  !   XBeach の既定(params.F90)
+  wf%flow = list%wf_flow
+  if (wf%flow == -9999) then
+    wf%flow = 0
+    call par_info("wavefield: wf_flow = 0 (default; the wave field does not act on the flow)")
+  end if
+  if (wf%flow < 0 .or. wf%flow > 2) then
+    call par_stop("list_wavefield: wf_flow must be 0 (none), 1 (wave force) or 2 (wave force + GLM" &
+                  // " Stokes drift + wave-current bed friction): " // itoa(wf%flow))
+  end if
+  if (wf%flow >= 1) then
+    select case (list%f_wf_roller)
+      case (-9999)
+        wf%roller = .true.
+        call par_info("wavefield: f_wf_roller = 1 (roller energy balance) (default)")
+      case (0)
+        wf%roller = .false.
+      case (1)
+        wf%roller = .true.
+      case default
+        call par_stop("list_wavefield: f_wf_roller must be 0 or 1")
+    end select
+    if (wf%roller) then
+      wf%beta = param_default("wavefield", "wf_beta", list%wf_beta, 0.1, "", unset = -9999.0)
+      if (wf%beta <= 0.0) call par_stop("list_wavefield: wf_beta must be > 0")
+    end if
+    ! 外力の立ち上げ(数値上の始動処理): 時間軸の起点 t0 から wf_tramp の間、外力と
+    ! Stokes 輸送を 0 から 1 倍へ線形に増やす。準定常の波浪場は開始時に全域で満値に
+    ! なるため、急な外力が浅水流の過渡(岸の副振動)を起こす。既定 100 s は XBeach の
+    ! taper の既定(params.F90。定常の波浪場を全域で一度に与える同じ状況)
+    wf%tramp = param_default("wavefield", "wf_tramp", list%wf_tramp, 100.0, "s", unset = -9999.0)
+    if (wf%tramp < 0.0) call par_stop("list_wavefield: wf_tramp must be >= 0")
+    if (wf%flow == 1) call par_info("wavefield: the wave force acts on the flow (wf_flow = 1)")
+    if (wf%flow == 2) call par_info("wavefield: the wave force, the GLM Stokes drift and the wave-current" &
+                                    // " bed friction act on the flow (wf_flow = 2)")
+  else if (list%f_wf_roller /= -9999 .or. list%wf_beta > -9998.0 .or. list%wf_tramp > -9998.0) then
+    call par_info("wavefield: f_wf_roller, wf_beta and wf_tramp are not used with wf_flow = 0")
   end if
 
   ! --- 沖の波(固定値または時系列)---
@@ -839,6 +985,8 @@ subroutine step_unsteady(wf, p, g, s)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (wf%wcell(i,j) == 1) cmax(1) = max(cmax(1), wf%cg(i,j))
+      ! ローラーは位相速度 c = σ/k(> c_g)で運ぶ
+      if (wf%roller .and. wf%wcell(i,j) == 1 .and. wf%kw(i,j) > 0.0) cmax(1) = max(cmax(1), wf%om / wf%kw(i,j))
     end do
   end do
   call par_allreduce_max(cmax)
@@ -847,6 +995,7 @@ subroutine step_unsteady(wf, p, g, s)
   href = max(wf%hbc, 1.0e-6)
   do k = 1, wf%nsub
     call iterate(wf, p, g, s, dts, href, res)
+    if (wf%roller) call roller_update(wf, p, g, dts)
     ! 累積(量 = 率 × Δt。乾燥化による除去は量そのもの)
     wf%rcum(:, 1:6) = wf%rcum(:, 1:6) + wf%rrate(:, 1:6) * real(dts, real64)
     wf%rcum(:, l_dry) = wf%rcum(:, l_dry) + wf%rrate(:, l_dry)
@@ -983,8 +1132,8 @@ contains
       ! 仮想の送り手(格子の外)。群速度・値は境界の内側のセル(座標を格子に寄せる)
       ic = min(max(id, 1), g%nx)
       jc = min(max(jd, 1), g%ny)
-      if (wcell_at(ic, jc) == 0) return
-      select case (virtual_type(id, jd))
+      if (wcell_in(wf, g, ic, jc) == 0) return
+      select case (vside_type(wf, g, id, jd))
         case (1)
           fbc = fbc + wf%cg(ic,jc) * q * wf%ebc(m)
         case (2)
@@ -994,38 +1143,12 @@ contains
       end select
       return
     end if
-    if (wcell_at(id, jd) == 0) return
+    if (wcell_in(wf, g, id, jd) == 0) return
     if (mod(l, 2) == 1) then
-      if (blocked(id, jd, i, j)) return
+      if (diag_closed(wf, g, id, jd, i, j)) return
     end if
     fin = fin + wf%cg(id,jd) * q * wf%ae(id,jd,m)
   end subroutine
-
-  ! 仮想の送り手(格子の外)の辺の型。角(x・y とも外)は 入射 > 側方 Neumann > 吸収 の
-  ! 優先で決める(入射辺の角の外は沖の波の領域とみなす = 直線海岸で岸沿いに一様な
-  ! 解を崩さない)
-  pure function virtual_type(id, jd) result(t)
-    integer, intent(in) :: id, jd
-    integer :: t
-    integer :: tx, ty
-    tx = -1
-    ty = -1
-    if (id < 1) tx = wf%bcside(1)
-    if (id > g%nx) tx = wf%bcside(2)
-    if (jd < 1) ty = wf%bcside(3)
-    if (jd > g%ny) ty = wf%bcside(4)
-    if (tx < 0) then
-      t = ty
-    else if (ty < 0) then
-      t = tx
-    else if (tx == 1 .or. ty == 1) then
-      t = 1
-    else if (tx == 2 .or. ty == 2) then
-      t = 2
-    else
-      t = 0
-    end if
-  end function
 
   ! 送り手 (i, j) から格子方向 l への流出 f(率)の行き先を台帳に分類する
   subroutine classify(i, j, l, f, rbc, rabs)
@@ -1037,38 +1160,72 @@ contains
     jt = j + ldj(l)
     if (it < 1 .or. it > g%nx .or. jt < 1 .or. jt > g%ny) then
       rbc = rbc + real(f, real64)
-    else if (wcell_at(it, jt) == 0) then
+    else if (wcell_in(wf, g, it, jt) == 0) then
       rabs = rabs + real(f, real64)
     else if (mod(l, 2) == 1) then
-      if (blocked(i, j, it, jt)) rabs = rabs + real(f, real64)
+      if (diag_closed(wf, g, i, j, it, jt)) rabs = rabs + real(f, real64)
     end if
   end subroutine
 
-  ! 確保範囲・格子の外を 0 として波浪セルかを返す
-  pure function wcell_at(ii, jj) result(w)
-    integer, intent(in) :: ii, jj
-    integer :: w
-    w = 0
-    if (ii < max(1, dcp%ish) .or. ii > min(g%nx, dcp%ieh)) return
-    if (jj < max(1, dcp%js - 1) .or. jj > min(g%ny, dcp%je + 1)) return
-    w = wf%wcell(ii, jj)
-  end function
-
-  ! 対角リンク (id, jd) → (ir, jr) が閉じているか: 角を共有する 2 セル (ir, jd)・(id, jr)
-  ! がともに格子内の非波浪セルなら閉じる(格子の外は開いた海とみなす)
-  pure function blocked(id, jd, ir, jr) result(b)
-    integer, intent(in) :: id, jd, ir, jr
-    logical :: b
-    logical :: c1, c2
-    b = .false.
-    if (ir < 1 .or. ir > g%nx .or. jd < 1 .or. jd > g%ny) return
-    if (id < 1 .or. id > g%nx .or. jr < 1 .or. jr > g%ny) return
-    c1 = (wcell_at(ir, jd) == 0)
-    c2 = (wcell_at(id, jr) == 0)
-    b = c1 .and. c2
-  end function
-
 end subroutine
+
+!----------------------------------------------------------------------
+! 格子の外の仮想の送り手の辺の型(波とローラーの輸送が共有)。角(x・y とも外)は
+! 入射 > 側方 Neumann > 吸収 の優先で決める(入射辺の角の外は沖の波の領域とみなす =
+! 直線海岸で岸沿いに一様な解を崩さない。§88.2)
+!----------------------------------------------------------------------
+pure function vside_type(wf, g, id, jd) result(t)
+  type(t_wavefield), intent(in) :: wf
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: id, jd
+  integer :: t
+  integer :: tx, ty
+  tx = -1
+  ty = -1
+  if (id < 1) tx = wf%bcside(1)
+  if (id > g%nx) tx = wf%bcside(2)
+  if (jd < 1) ty = wf%bcside(3)
+  if (jd > g%ny) ty = wf%bcside(4)
+  if (tx < 0) then
+    t = ty
+  else if (ty < 0) then
+    t = tx
+  else if (tx == 1 .or. ty == 1) then
+    t = 1
+  else if (tx == 2 .or. ty == 2) then
+    t = 2
+  else
+    t = 0
+  end if
+end function
+
+
+! 確保範囲・格子の外を 0 として波浪セルかを返す(帯±1 行)
+pure function wcell_in(wf, g, ii, jj) result(w)
+  type(t_wavefield), intent(in) :: wf
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: ii, jj
+  integer :: w
+  w = 0
+  if (ii < max(1, dcp%ish) .or. ii > min(g%nx, dcp%ieh)) return
+  if (jj < max(1, dcp%js - 1) .or. jj > min(g%ny, dcp%je + 1)) return
+  w = wf%wcell(ii, jj)
+end function
+
+
+! 対角リンク (id, jd) → (ir, jr) が閉じているか: 角を共有する 2 セル (ir, jd)・(id, jr)
+! がともに格子内の非波浪セルなら閉じる(格子の外は開いた海とみなす)
+pure function diag_closed(wf, g, id, jd, ir, jr) result(b)
+  type(t_wavefield), intent(in) :: wf
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: id, jd, ir, jr
+  logical :: b
+  b = .false.
+  if (ir < 1 .or. ir > g%nx .or. jd < 1 .or. jd > g%ny) return
+  if (id < 1 .or. id > g%nx .or. jr < 1 .or. jr > g%ny) return
+  b = (wcell_in(wf, g, ir, jd) == 0) .and. (wcell_in(wf, g, id, jr) == 0)
+end function
+
 
 
 !----------------------------------------------------------------------
@@ -1102,6 +1259,7 @@ subroutine cell_row(wf, p, g, s, j, href, resj)
       eold = sum(wf%ae(i,j,:)) * wf%dth
       if (eold > 0.0) rdry = rdry + real(eold, real64)
       wf%ae1(i,j,:) = 0.0
+      if (allocated(wf%dbrk)) wf%dbrk(i,j) = 0.0
       cycle
     end if
     dt = wf%dtl(i,j)
@@ -1166,6 +1324,8 @@ subroutine cell_row(wf, p, g, s, j, href, resj)
     end do
     enew = sum(x) * wf%dth
     rbrk = rbrk + real(sb * enew, real64)
+    ! ローラーの源(段 W2): 砕波の散逸と上限で除いた分(収束時は定常の率)
+    if (allocated(wf%dbrk)) wf%dbrk(i,j) = sb * enew
     rfric = rfric + real(sf * enew, real64)
     ! 上限(不規則波: H_rms <= γmax h、規則波: 飽和砕波 H <= γ h)
     if (wf%wtype == 1) then
@@ -1177,6 +1337,7 @@ subroutine cell_row(wf, p, g, s, j, href, resj)
       fac = emax / enew
       x(:) = x(:) * fac
       if (dt > 0.0) rlim = rlim + real((enew - emax) / dt, real64)
+      if (allocated(wf%dbrk) .and. dt > 0.0) wf%dbrk(i,j) = wf%dbrk(i,j) + (enew - emax) / dt
       enew = emax
     end if
     wf%ae1(i,j,:) = x(:)
@@ -1351,6 +1512,8 @@ subroutine drop_all(wf, g)
   do m = 1, wf%nth
     wf%ae(:,:,m) = 0.0
   end do
+  if (allocated(wf%er)) wf%er(:,:) = 0.0
+  if (allocated(wf%dbrk)) wf%dbrk(:,:) = 0.0
 end subroutine
 
 
@@ -1375,7 +1538,9 @@ subroutine diagnose(wf, p, g, s)
       s%wvdir(i,j) = dir_missing
       s%wvub(i,j) = 0.0
       s%wvdw(i,j) = 0.0
+      if (allocated(s%wver)) s%wver(i,j) = 0.0
       if (wf%wcell(i,j) == 0) cycle
+      if (allocated(s%wver)) s%wver(i,j) = wf%er(i,j)
       e = 0.0
       ex = 0.0
       ey = 0.0
@@ -1433,6 +1598,348 @@ function storage(wf, g) result(st)
   call par_sum_rows(rows, st)
 end function
 
+
+
+!----------------------------------------------------------------------
+! 平均波向 θ_m と位相速度 c = σ/k(帯±1 行。波浪セル以外は 0)。ローラーの輸送と
+! 放射応力・Stokes 輸送が使う(段 W2)
+!----------------------------------------------------------------------
+subroutine mean_dir_speed(wf, g)
+  type(t_wavefield), intent(inout) :: wf
+  type(t_geoinfo), intent(in) :: g
+  integer :: i, j, m
+  real :: ex, ey
+
+  !$omp parallel do schedule(dynamic) private(i, j, m, ex, ey)
+  do j = max(1, dcp%js - 1), min(g%ny, dcp%je + 1)
+    do i = max(1, dcp%ish), min(g%nx, dcp%ieh)
+      wf%thm(i,j) = 0.0
+      wf%cph(i,j) = 0.0
+      if (wf%wcell(i,j) == 0 .or. wf%kw(i,j) <= 0.0) cycle
+      ex = 0.0
+      ey = 0.0
+      do m = 1, wf%nth
+        ex = ex + wf%ae(i,j,m) * wf%cth(m)
+        ey = ey + wf%ae(i,j,m) * wf%sth(m)
+      end do
+      if (ex /= 0.0 .or. ey /= 0.0) wf%thm(i,j) = atan2(ey, ex)
+      wf%cph(i,j) = wf%om / wf%kw(i,j)
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! ローラーの輸送の準備: 平均波向とセルごとの 2 リンク分解(帯±1 行。波と同じ規則で、
+! 向きがセルごとに違う)
+!----------------------------------------------------------------------
+subroutine roller_prepare(wf, g)
+  type(t_wavefield), intent(inout) :: wf
+  type(t_geoinfo), intent(in) :: g
+  integer :: i, j
+  real :: c, sn, qx, qy, ax, ay
+
+  call mean_dir_speed(wf, g)
+  !$omp parallel do schedule(dynamic) private(i, j, c, sn, qx, qy, ax, ay)
+  do j = max(1, dcp%js - 1), min(g%ny, dcp%je + 1)
+    do i = max(1, dcp%ish), min(g%nx, dcp%ieh)
+      wf%lar(i,j) = 0
+      wf%lbr(i,j) = 0
+      wf%qar(i,j) = 0.0
+      wf%qbr(i,j) = 0.0
+      if (wf%cph(i,j) <= 0.0) cycle
+      c = cos(wf%thm(i,j))
+      sn = sin(wf%thm(i,j))
+      if (abs(c) < 1.0e-6) c = 0.0
+      if (abs(sn) < 1.0e-6) sn = 0.0
+      qx = c / g%dx
+      qy = sn / g%dy
+      ax = abs(qx)
+      ay = abs(qy)
+      if (abs(ax - ay) <= 1.0e-6 * max(ax, ay)) ay = ax
+      if (ax >= ay) then
+        wf%lar(i,j) = merge(0, 4, qx >= 0.0)
+        wf%qar(i,j) = ax - ay
+        wf%qbr(i,j) = ay
+      else
+        wf%lar(i,j) = merge(2, 6, qy >= 0.0)
+        wf%qar(i,j) = ay - ax
+        wf%qbr(i,j) = ax
+      end if
+      wf%lbr(i,j) = diag_code(qx, qy)
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! ローラーのエネルギー平衡の 1 回の更新(段 W2。Svendsen 1984・Nairn ら 1990・Reniers ら
+! 2004、XBeach と同型):
+!   ∂E_r/∂t + ∇·(c ê_r E_r) = D_b − D_r、D_r = 2βg E_r/c
+!   (D_b = 砕波の散逸 + 上限で除いた分。ê_r は平均波向)。輸送は波と同じ 2 リンク分解の
+!   風上(受け手で集める)、散逸は半陰的。dtg > 0 なら全セル同じ Δt、そうでなければ
+!   局所の Δτ = 1/(c(q_a + q_b))。仮想の送り手は側方 Neumann なら内側のセルの値、
+!   入射・吸収の辺からは入らない。res は帯の最大の変化 / eref
+!----------------------------------------------------------------------
+subroutine roller_iterate(wf, p, g, dtg, eref, res)
+  type(t_wavefield), intent(inout) :: wf
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  real, intent(in) :: dtg, eref
+  real, intent(out) :: res
+  integer :: i, j, l, id, jd, ic, jc
+  real :: fin, rout, dt, eo, en
+
+  res = 0.0
+  !$omp parallel do schedule(dynamic) private(i, j, l, id, jd, ic, jc, fin, rout, dt, eo, en) reduction(max:res)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      wf%er1(i,j) = 0.0
+      if (wf%wcell(i,j) == 0 .or. wf%cph(i,j) <= 0.0) cycle
+      fin = 0.0
+      do l = 0, 7
+        id = i - ldi(l)
+        jd = j - ldj(l)
+        if (id < 1 .or. id > g%nx .or. jd < 1 .or. jd > g%ny) then
+          ic = min(max(id, 1), g%nx)
+          jc = min(max(jd, 1), g%ny)
+          if (wcell_in(wf, g, ic, jc) == 0) cycle
+          if (vside_type(wf, g, id, jd) /= 2) cycle
+          if (wf%lar(ic,jc) == l) fin = fin + wf%cph(ic,jc) * wf%qar(ic,jc) * wf%er(ic,jc)
+          if (wf%lbr(ic,jc) == l) fin = fin + wf%cph(ic,jc) * wf%qbr(ic,jc) * wf%er(ic,jc)
+          cycle
+        end if
+        if (wcell_in(wf, g, id, jd) == 0) cycle
+        if (mod(l, 2) == 1) then
+          if (diag_closed(wf, g, id, jd, i, j)) cycle
+        end if
+        if (wf%lar(id,jd) == l) fin = fin + wf%cph(id,jd) * wf%qar(id,jd) * wf%er(id,jd)
+        if (wf%lbr(id,jd) == l) fin = fin + wf%cph(id,jd) * wf%qbr(id,jd) * wf%er(id,jd)
+      end do
+      rout = wf%cph(i,j) * (wf%qar(i,j) + wf%qbr(i,j))
+      if (dtg > 0.0) then
+        dt = dtg
+      else
+        dt = 1.0 / rout
+      end if
+      eo = wf%er(i,j)
+      en = (eo + dt * (fin - rout * eo + wf%dbrk(i,j))) / (1.0 + dt * 2.0 * wf%beta * p%gg / wf%cph(i,j))
+      en = max(en, 0.0)
+      wf%er1(i,j) = en
+      res = max(res, abs(en - eo) / eref)
+    end do
+  end do
+  !$omp end parallel do
+  !$omp parallel do schedule(dynamic) private(i, j)
+  do j = dcp%js, dcp%je
+    do i = dcp%ish, dcp%ieh
+      wf%er(i,j) = wf%er1(i,j)
+    end do
+  end do
+  !$omp end parallel do
+  call par_halo_cell(wf%er)
+end subroutine
+
+
+! 非定常のサブステップごとのローラーの更新(向きは現在の波浪場から)
+subroutine roller_update(wf, p, g, dtg)
+  type(t_wavefield), intent(inout) :: wf
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  real, intent(in) :: dtg
+  real :: res
+  call roller_prepare(wf, g)
+  call roller_iterate(wf, p, g, dtg, 1.0, res)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 準定常: 収束した波浪場の砕波の散逸を源に、ローラーを局所の擬似時間刻みで定常まで
+! 反復する(前回の解から。判定は沖の波のエネルギーに対する変化で wf_tol)
+!----------------------------------------------------------------------
+subroutine roller_steady(wf, p, g, s)
+  type(t_wavefield), intent(inout) :: wf
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  real :: eref, res(1)
+  integer :: it
+
+  if (s%initialized) continue  ! 引数未使用の警告を抑制
+  wf%nrit = 0
+  if (wf%hbc <= 0.0 .or. wf%om <= 0.0) then
+    wf%er(:,:) = 0.0
+    return
+  end if
+  if (wf%wtype == 2) then
+    eref = rho * p%gg * wf%hbc**2 / 8.0
+  else
+    eref = rho * p%gg * wf%hbc**2 / 16.0
+  end if
+  call roller_prepare(wf, g)
+  do it = 1, wf%itmax
+    call roller_iterate(wf, p, g, -1.0, eref, res(1))
+    call par_allreduce_max(res)
+    wf%nrit = it
+    if (res(1) < wf%tol) exit
+  end do
+  if (res(1) >= wf%tol) then
+    call par_info("wavefield: the roller did not converge in " // itoa(wf%itmax) // " iterations (residual " &
+                  // rtoa(res(1)) // ")")
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 波→流れの受け渡し(段 W2。§88): 放射応力(波+ローラー)の発散から外力 F = −∇·S、
+! Stokes 輸送 u^S(wf_flow = 2)を帯で求め、共有状態に流速と同じ向き(y = ラスタの行
+! = 南)で書いてハロまで交換する(collective)。
+!   S_xx = Σ E_m Δθ [n cos²θ_m + (n − 1/2)] + E_r cos²θ_r
+!   S_xy = Σ E_m Δθ n cos θ_m sin θ_m + E_r cos θ_r sin θ_r
+!   S_yy = Σ E_m Δθ [n sin²θ_m + (n − 1/2)] + E_r sin²θ_r、n = c_g/c
+!   (Longuet-Higgins & Stewart 1964 を方向ビンで積分。ローラーは Nairn ら 1990 の近似 =
+!   XBeach マニュアル)。発散は軸方向の中央差分(非波浪の近傍は片側差分)。
+!   u^S = (Σ E_m Δθ ê_m + 2 E_r ê_r)/(ρ h c)(XBeach マニュアルの E ê/(ρhc) に、ローラーの
+!   質量輸送 2E_r/(ρc)(Svendsen 1984)を加える)。u_rms(s%wvub)のハロも交換する
+!----------------------------------------------------------------------
+subroutine flow_coupling(wf, p, g, s)
+  type(t_wavefield), intent(inout) :: wf
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, allocatable :: sxx(:,:), sxy(:,:), syy(:,:)
+  integer :: i, j, m, j1, j2
+  real :: n, e, exx, exy, eyy, mx, my, ct, st, er_, fyn, h
+
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  call mean_dir_speed(wf, g)
+  j1 = max(1, dcp%js - 1)
+  j2 = min(g%ny, dcp%je + 1)
+  allocate(sxx(dcp%ish:dcp%ieh, j1:j2), sxy(dcp%ish:dcp%ieh, j1:j2), syy(dcp%ish:dcp%ieh, j1:j2))
+  !$omp parallel do schedule(dynamic) private(i, j, m, n, e, exx, exy, eyy, ct, st, er_)
+  do j = j1, j2
+    do i = dcp%ish, dcp%ieh
+      sxx(i,j) = 0.0
+      sxy(i,j) = 0.0
+      syy(i,j) = 0.0
+      if (i < 1 .or. i > g%nx) cycle
+      if (wf%cph(i,j) <= 0.0) cycle
+      n = wf%cg(i,j) / wf%cph(i,j)
+      e = 0.0
+      exx = 0.0
+      exy = 0.0
+      eyy = 0.0
+      do m = 1, wf%nth
+        e = e + wf%ae(i,j,m)
+        exx = exx + wf%ae(i,j,m) * wf%cth(m)**2
+        exy = exy + wf%ae(i,j,m) * wf%cth(m) * wf%sth(m)
+        eyy = eyy + wf%ae(i,j,m) * wf%sth(m)**2
+      end do
+      e = e * wf%dth
+      exx = exx * wf%dth
+      exy = exy * wf%dth
+      eyy = eyy * wf%dth
+      sxx(i,j) = n * exx + (n - 0.5) * e
+      sxy(i,j) = n * exy
+      syy(i,j) = n * eyy + (n - 0.5) * e
+      if (wf%roller) then
+        er_ = wf%er(i,j)
+        ct = cos(wf%thm(i,j))
+        st = sin(wf%thm(i,j))
+        sxx(i,j) = sxx(i,j) + er_ * ct * ct
+        sxy(i,j) = sxy(i,j) + er_ * ct * st
+        syy(i,j) = syy(i,j) + er_ * st * st
+      end if
+    end do
+  end do
+  !$omp end parallel do
+
+  !$omp parallel do schedule(dynamic) private(i, j, m, fyn, mx, my, er_, h)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      s%wvfx(i,j) = 0.0
+      s%wvfy(i,j) = 0.0
+      if (wf%flow >= 2) then
+        s%wvus(i,j) = 0.0
+        s%wvvs(i,j) = 0.0
+      end if
+      if (wf%cph(i,j) <= 0.0) cycle
+      ! F_x = −(∂S_xx/∂x + ∂S_xy/∂y)、F_y = −(∂S_xy/∂x + ∂S_yy/∂y)(y 北)
+      s%wvfx(i,j) = -(ddx(sxx, i, j) + ddy(sxy, i, j))
+      fyn = -(ddx(sxy, i, j) + ddy(syy, i, j))
+      s%wvfy(i,j) = -fyn                           ! 流速と同じ向き(y = 南)へ
+      if (wf%flow >= 2) then
+        mx = 0.0
+        my = 0.0
+        do m = 1, wf%nth
+          mx = mx + wf%ae(i,j,m) * wf%cth(m)
+          my = my + wf%ae(i,j,m) * wf%sth(m)
+        end do
+        mx = mx * wf%dth
+        my = my * wf%dth
+        if (wf%roller) then
+          er_ = wf%er(i,j)
+          mx = mx + 2.0 * er_ * cos(wf%thm(i,j))
+          my = my + 2.0 * er_ * sin(wf%thm(i,j))
+        end if
+        h = s%h(i,j)
+        s%wvus(i,j) = mx / (rho * h * wf%cph(i,j))
+        s%wvvs(i,j) = -my / (rho * h * wf%cph(i,j))  ! y = 南
+      end if
+    end do
+  end do
+  !$omp end parallel do
+  deallocate(sxx, sxy, syy)
+
+  call par_halo_cell(s%wvfx)
+  call par_halo_cell(s%wvfy)
+  if (wf%flow >= 2) then
+    call par_halo_cell(s%wvus)
+    call par_halo_cell(s%wvvs)
+    call par_halo_cell(s%wvub)
+  end if
+
+contains
+
+  ! ∂a/∂x(x 東)。両隣が波浪セルなら中央差分、片方なら片側差分、なければ 0
+  function ddx(a, ii, jj) result(d)
+    real, intent(in) :: a(dcp%ish:, j1:)
+    integer, intent(in) :: ii, jj
+    real :: d
+    logical :: e_, w_
+    e_ = wcell_in(wf, g, ii + 1, jj) == 1 .and. wf%cph(min(ii + 1, dcp%ieh), jj) > 0.0
+    w_ = wcell_in(wf, g, ii - 1, jj) == 1 .and. wf%cph(max(ii - 1, dcp%ish), jj) > 0.0
+    d = 0.0
+    if (e_ .and. w_) then
+      d = (a(ii+1,jj) - a(ii-1,jj)) / (2.0 * g%dx)
+    else if (e_) then
+      d = (a(ii+1,jj) - a(ii,jj)) / g%dx
+    else if (w_) then
+      d = (a(ii,jj) - a(ii-1,jj)) / g%dx
+    end if
+  end function
+
+  ! ∂a/∂y(y 北 = j の負の向き)
+  function ddy(a, ii, jj) result(d)
+    real, intent(in) :: a(dcp%ish:, j1:)
+    integer, intent(in) :: ii, jj
+    real :: d
+    logical :: n_, s_
+    n_ = wcell_in(wf, g, ii, jj - 1) == 1 .and. wf%cph(ii, max(jj - 1, j1)) > 0.0
+    s_ = wcell_in(wf, g, ii, jj + 1) == 1 .and. wf%cph(ii, min(jj + 1, j2)) > 0.0
+    d = 0.0
+    if (n_ .and. s_) then
+      d = (a(ii,jj-1) - a(ii,jj+1)) / (2.0 * g%dy)
+    else if (n_) then
+      d = (a(ii,jj-1) - a(ii,jj)) / g%dy
+    else if (s_) then
+      d = (a(ii,jj) - a(ii,jj+1)) / g%dy
+    end if
+  end function
+
+end subroutine
 
 !----------------------------------------------------------------------
 ! 台帳の CSV(rank0)
@@ -1506,16 +2013,22 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 保存・復元(私有ファイル。契約5)
-!   wavefield_info.txt: 形式の版・ビン数・モード・非定常の累積台帳(全ランクが読む)
-!   wavefield.dat: ビンごとの E_m(m_restart の RLE。collective)
+!   wavefield_info.txt: 形式の版・ビン数・モード・非定常の累積台帳と起点の貯留、
+!     段 W2 の拡張の有無(flow・roller・ndiag。旧ファイルは無く、既定 0 で読む)
+!     (全ランクが読む)
+!   wavefield.dat: ビンごとの E_m(m_restart の RLE。collective)、続けて
+!     ローラー E_r(roller = 1)、診断量 4 面(ndiag = 1: 波高・平均波向・u_rms・砕波散逸)、
+!     外力 2 面(flow >= 1)、Stokes 輸送 2 面(flow = 2)。準定常は更新の間これらを
+!     保持するので、復元して使うと再開がビット一致する(§88)
 !----------------------------------------------------------------------
-subroutine save_state(wf, p, g)
+subroutine save_state(wf, p, g, s)
   type(t_wavefield), intent(in) :: wf
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
-  integer :: un, m, version, nth, mode
+  type(t_state), intent(in) :: s
+  integer :: un, m, version, nth, mode, flow, roller, ndiag
   real(real64) :: cum(nl), store0
-  namelist /wavefield_info/ version, nth, mode, cum, store0
+  namelist /wavefield_info/ version, nth, mode, cum, store0, flow, roller, ndiag
 
   do m = 1, nl
     call par_sum_rows(wf%rcum(:, m), cum(m))
@@ -1526,6 +2039,9 @@ subroutine save_state(wf, p, g)
   nth = wf%nth
   mode = wf%mode
   store0 = wf%store0
+  flow = wf%flow
+  roller = merge(1, 0, wf%roller)
+  ndiag = 1
   if (is_root) then
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/wavefield_info.txt', status='replace')
@@ -1536,18 +2052,34 @@ subroutine save_state(wf, p, g)
   do m = 1, wf%nth
     call restart_write_cell(un, wf%ae(:,:,m))
   end do
+  if (wf%roller) call restart_write_cell(un, wf%er)
+  call restart_write_cell(un, s%wvh)
+  call restart_write_cell(un, s%wvdir)
+  call restart_write_cell(un, s%wvub)
+  call restart_write_cell(un, s%wvdw)
+  if (wf%flow >= 1) then
+    call restart_write_cell(un, s%wvfx)
+    call restart_write_cell(un, s%wvfy)
+  end if
+  if (wf%flow >= 2) then
+    call restart_write_cell(un, s%wvus)
+    call restart_write_cell(un, s%wvvs)
+  end if
   if (is_root) close(un)
 end subroutine
 
 
-subroutine restore_state(wf, p)
+subroutine restore_state(wf, p, s, have_diag, have_force)
   type(t_wavefield), intent(inout) :: wf
   type(t_sysparam), intent(in) :: p
+  type(t_state), intent(inout) :: s
+  logical, intent(out) :: have_diag, have_force
   character(:), allocatable :: fname
   logical :: found
-  integer :: un, ios, m, version, nth, mode
+  integer :: un, ios, m, version, nth, mode, flow, roller, ndiag
   real(real64) :: cum(nl), store0
-  namelist /wavefield_info/ version, nth, mode, cum, store0
+  real, allocatable :: tmp(:,:)
+  namelist /wavefield_info/ version, nth, mode, cum, store0, flow, roller, ndiag
 
   fname = trim(p%dir_save)//'/wavefield_info.txt'
   inquire(file=fname, exist=found)
@@ -1559,6 +2091,9 @@ subroutine restore_state(wf, p)
   mode = -1
   cum(:) = 0.0_real64
   store0 = 0.0_real64
+  flow = 0
+  roller = 0
+  ndiag = 0
   open(newunit=un, file=fname, status='old', action='read', iostat=ios)
   if (ios /= 0) call par_stop("wavefield: cannot open "//fname)
   read(un, nml=wavefield_info, iostat=ios)
@@ -1580,11 +2115,63 @@ subroutine restore_state(wf, p)
   fname = trim(p%dir_save)//'/wavefield.dat'
   inquire(file=fname, exist=found)                ! 全ランクが同じ判定をする(collective 安全)
   if (.not. found) call par_stop("wavefield: state file not found: "//fname)
+  allocate(tmp(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (is_root) open(newunit=un, file=fname, form='unformatted', status='old', action='read')
   do m = 1, wf%nth
     call restart_read_cell(un, wf%ae(:,:,m))
   end do
+  ! 段 W2 の拡張(保存時に無かったものは既定: ローラー 0、診断量・外力は init が求め直す)
+  if (roller == 1) then
+    if (wf%roller) then
+      call restart_read_cell(un, wf%er)
+    else
+      call restart_read_cell(un, tmp)
+    end if
+  end if
+  if (wf%roller .and. roller /= 1) call par_info("wavefield: the saved state has no roller energy; it starts from 0")
+  have_diag = (ndiag == 1)
+  if (have_diag) then
+    call restart_read_cell(un, s%wvh)
+    call restart_read_cell(un, s%wvdir)
+    call restart_read_cell(un, s%wvub)
+    call restart_read_cell(un, s%wvdw)
+  end if
+  if (flow >= 1) then
+    if (wf%flow >= 1) then
+      call restart_read_cell(un, s%wvfx)
+      call restart_read_cell(un, s%wvfy)
+    else
+      call restart_read_cell(un, tmp)
+      call restart_read_cell(un, tmp)
+    end if
+  end if
+  if (flow >= 2) then
+    if (wf%flow >= 2) then
+      call restart_read_cell(un, s%wvus)
+      call restart_read_cell(un, s%wvvs)
+    else
+      call restart_read_cell(un, tmp)
+      call restart_read_cell(un, tmp)
+    end if
+  end if
   if (is_root) close(un)
+  deallocate(tmp)
+  have_force = (wf%flow >= 1 .and. flow >= wf%flow)
+  if (wf%flow >= 1 .and. .not. have_force) then
+    call par_info("wavefield: the saved state has no wave force for wf_flow = "//itoa(wf%flow) &
+                  //"; it is recomputed from the restored wave field")
+  end if
+  ! 流れが読む量はハロまで(帯は復元済み)
+  if (wf%roller) call par_halo_cell(wf%er)
+  if (have_force) then
+    call par_halo_cell(s%wvfx)
+    call par_halo_cell(s%wvfy)
+    if (wf%flow >= 2) then
+      call par_halo_cell(s%wvus)
+      call par_halo_cell(s%wvvs)
+      call par_halo_cell(s%wvub)
+    end if
+  end if
 end subroutine
 
 

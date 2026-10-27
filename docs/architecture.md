@@ -49,8 +49,10 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理。複数�
   │    m_tide        潮位(海域マスクの海セルに z = η − hsea0・h = hsea0 を強制。§47)
   │    m_wavefield   沿岸の波浪場(代表周波数・方向ビンの位相平均エネルギー平衡。空間は 2 リンク
   │                  分解の風上法、方向空間は陰的な屈折。非定常/準定常の 2 モードを 1 つの Jacobi
-  │                  型の核で。状態 E_m は私有、共有状態へは診断量だけ。段 W1 は流れ・地形に
-  │                  作用しない。fn_wavefield。§88)
+  │                  型の核で。状態 E_m は私有、共有状態へは診断量と、wf_flow >= 1 なら流れへの
+  │                  作用(外力・Stokes 輸送・波・流れの摩擦の速さ。ローラーのエネルギー平衡を
+  │                  含む)を書く。浅水流は calc_kth_flux でそれを読む(段 W2)。地形には作用
+  │                  しない。fn_wavefield。§88)
   │    m_wq          水質    m_meteo 気象強制場・暦
   │    m_saltwater   淡塩2層(鋭利界面。地表塩水層+地下塩水 zone+海側境界)
   │    m_swi         土壌雨量指数(地上雨量を読むだけの純診断。物理場に書かない)
@@ -142,8 +144,11 @@ glacier_calc                  氷河(毎ステップ: 氷面融解 hi → h。dt
 boundary_makebdc              境界条件値の準備
 tide_calc                     潮位(海域セルの水位強制)
 wavefield_calc                沿岸の波浪場(非定常は毎ステップ、準定常は dt_wave ごと。前ステップ
-                                確定の s%h をハロ交換して読み、共有状態へは診断量 s%wvh・wvdir・
-                                wvub・wvdw だけを書く。段 W1 は流れに作用しない。無効なら no-op。§88)
+                                確定の s%h をハロ交換して読み、共有状態へ診断量 s%wvh・wvdir・
+                                wvub・wvdw を書く。wf_flow >= 1 なら外力 s%wvfx・wvfy、Stokes 輸送
+                                wvus・wvvs、ローラー wver と、毎ステップ摩擦の速さ wvsp(前ステップ
+                                確定の u・v から)・立ち上げの係数 wv_ramp も。swflow_calc より前。
+                                無効なら no-op。§88)
 swflow_calc                   ★浅水流本体(移流・拡散 → 運動方程式 → 境界強制 →
                                 [nh_project: 1 層 NH 射影で全加速度を補正。NH ON のみ] →
                                 連続式 → h,e,u,v,m,n 確定。§69)
@@ -183,7 +188,7 @@ calcstat                      統計(S 台帳・max 類。決定的総和)
 |---|---|---|---|
 | p | t_sysparam | m_sysparam | 実行制御。init 後は全モジュール読み取り専用 |
 | g | t_geoinfo | m_geoinfo | 地形 z(入力)・粗度 rn・家屋 gv/bb/lm(入力)・マスク x/sw/rw・格子。原則不変(動的な標高は s%z、動的な空隙率は s%gv/s%lm。g%gv/g%lm の帯は band_shrink で解放)。例外は BMI の P 区分: set_value('rn') が g%rn の帯を上書きする(§77) |
-| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), hb(動く底層。z・sd の内数), sf(河床の細粒分の厚さ), fx(植生定着度), ht(崖錐の厚さ), cq/cg/crs(輸送物質の地表・地下・ため池プール), hd/wd(流動・堆積流木), hbd/wbd(流動・堆積瓦礫), gv/lm(空隙率と有効慣性係数。§63), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池), vzp/vzstore(VZ の台帳 = 回収済み未同期の雨と区画の VZ 貯留の総和。柱の状態 ψ は t_vzflow 私有。§87)、wvh/wvdir/wvub/wvdw(沿岸の波浪場の診断量 = 波高・平均波向・軌道流速・砕波散逸。方向ビンの状態 E_m は t_wavefield 私有。§88)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi・hb・VZ の柱等のモジュール私有 save は各 dispose。契約5) |
+| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), hb(動く底層。z・sd の内数), sf(河床の細粒分の厚さ), fx(植生定着度), ht(崖錐の厚さ), cq/cg/crs(輸送物質の地表・地下・ため池プール), hd/wd(流動・堆積流木), hbd/wbd(流動・堆積瓦礫), gv/lm(空隙率と有効慣性係数。§63), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池), vzp/vzstore(VZ の台帳 = 回収済み未同期の雨と区画の VZ 貯留の総和。柱の状態 ψ は t_vzflow 私有。§87)、wvh/wvdir/wvub/wvdw(沿岸の波浪場の診断量 = 波高・平均波向・軌道流速・砕波散逸。方向ビンの状態 E_m は t_wavefield 私有。§88)、wvfx/wvfy・wvus/wvvs・wvsp・wver(波→流れ = 外力・Stokes 輸送・波・流れの摩擦の速さ・ローラーのエネルギー。y 成分は流れと同じく南が正。wf_flow >= 1 のときだけ確保。§88)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi・hb・VZ の柱等のモジュール私有 save は各 dispose。契約5) |
 | sx | t_enc_status | m_swflow_enc 私有 | エッジ流速 uv・流量 mn(前ステップ確定)・mn1(更新中)。他モジュールから不可視。NH の状態(圧力 φ・活性集合・砕波状態・zprev 等)も submodule 私有で、リスタート保存なし(φ は現在状態から再構築。f_nh_bottom の z̈ だけ再開直後の 1 ステップが異なる。§69) |
 | r, b, … | 各 t_* | 各モジュール | モジュール私有。各過程の作業台帳・サブモデルの状態も `t_*` の成分として持つ(モジュール変数に状態を置くのは m_swflow_enc 系(7 つの変数群 opt/nhp/bcs/dbr/chn/sct/geo と submodule の私有状態)・m_ffactor・dcp だけで、これらは複数インスタンス時に `*_ctx_swap` で枠へ退避・復帰する。§71)。リスタートは各自の save ファイル(契約5)。例外: m_bedmotion は私有 save を持たず、再開時刻の変位を表から求めて「適用済み」とする(§70) |
 

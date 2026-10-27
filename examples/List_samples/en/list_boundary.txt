@@ -44,6 +44,12 @@
 !      exactly zero. Specifying bc_eta_* explicitly makes that uniform
 !      value take precedence (same datum as z; e.g. when you want to fix
 !      the datum in restored runs).
+!   3: lateral Neumann (for wave-driven longshore currents)
+!      The same topography and flow are treated as continuing beyond the
+!      boundary (zero normal gradient). Both inflow and outflow are
+!      allowed. Use it for the left and right sides that cross a coast;
+!      the longshore current passes through the side
+!      (users_guide/wavefield.md, boundary.md).
 !
 !   Correspondence between directions and grid indices (raster row order
 !   = north to south):

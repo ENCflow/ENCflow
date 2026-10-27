@@ -14,8 +14,9 @@
 !   breaking, bottom friction and the shadows behind breakwaters and islands
 !   are computed by a phase-averaged energy balance with one representative
 !   period and directional bins (users_guide/wavefield.md, developer.md §88).
-!   Stage W1 does not act on the flow or the bed (it only writes the wave
-!   height and related quantities).
+!   With wf_flow = 1 or 2 it acts on the flow and produces setup and
+!   longshore currents (stage W2; the default 0 means no action). It does
+!   not act on the bed.
 !
 !   Required input:
 !     - incident sides (at least one 1 in wf_bc_side)
@@ -32,7 +33,9 @@
 !
 !   Output: Wh (wave height; H_m0 for random waves), Wa (mean direction).
 !   With f_wf_outdiag = 1 also Wu (bottom orbital velocity u_rms) and Wb
-!   (breaking dissipation). Ledger result/wavefield.csv
+!   (breaking dissipation), and with wf_flow >= 1 also the force Wfx, Wfy,
+!   the Stokes transport Wsx, Wsy and the roller Wr (y components are
+!   positive to the south, like the velocity v). Ledger result/wavefield.csv
 !
 !======================================================================
 &list_wavefield
@@ -73,6 +76,13 @@
   !wf_fw = 0.0              ! bottom friction factor f_w (0 = no friction)
   !wf_hmin = 0.1            ! minimum depth of a wave cell (m)
 
+  ! action on the flow (stage W2). When used, make the left and right sides
+  ! that cross the coast f_bc_* = 3 (lateral Neumann) in &list_bound_edge
+  !wf_flow = 0              ! 0: no action (default) / 1: wave force only / 2: wave force + GLM Stokes transport + wave-current friction (recommended)
+  !f_wf_roller = 1          ! 1: roller energy balance (with wf_flow >= 1; default 1)
+  !wf_beta = 0.1            ! dissipation coefficient beta of the roller
+  !wf_tramp = 100.0         ! ramp-up time of the force (s; 0 for no ramp)
+
   ! output
-  !f_wf_outdiag = 0         ! 1: also write the distributions of the bottom orbital velocity Wu and the breaking dissipation Wb
+  !f_wf_outdiag = 0         ! 1: also write the distributions of the bottom orbital velocity Wu and the breaking dissipation Wb (with wf_flow >= 1 also the force, the Stokes transport and the roller)
 /

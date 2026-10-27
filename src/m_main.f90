@@ -581,7 +581,7 @@ subroutine finalize_instance()
     call m_swi_dispose(si, p, g)            ! save は dispose で(契約5。§49)
     call m_vzflow_dispose(vz, p, s)         ! save は dispose で(契約5。区間の途中なら残りを
                                             ! 同期して s%h へ移してから。m_state の save より先。§87)
-    call m_wavefield_dispose(wf, p, g)      ! save は dispose で(契約5。§88)
+    call m_wavefield_dispose(wf, p, g, s)   ! save は dispose で(契約5。§88)
     call m_record_dispose(r)
     call m_state_dispose(s, p)
     call m_boundary_dispose(b)

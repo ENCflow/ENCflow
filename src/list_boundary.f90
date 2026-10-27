@@ -30,7 +30,7 @@ module list_boundary
   type t_list_boundary
     ! ---- &list_bound_edge ----
     logical :: present_edge = .false.              ! グループが存在したか
-    integer :: f_bc_w = 0                          ! 西辺 (i=1)  0:不透過 1:自由流出 2:放射
+    integer :: f_bc_w = 0                          ! 西辺 (i=1)  0:不透過 1:自由流出 2:放射 3:側方 Neumann
     integer :: f_bc_e = 0                          ! 東辺 (i=nx)
     integer :: f_bc_n = 0                          ! 北辺 (j=1: ラスタ上端)
     integer :: f_bc_s = 0                          ! 南辺 (j=ny)

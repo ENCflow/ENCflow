@@ -1,0 +1,71 @@
+!======================================================================
+! wfcurrent: 基本 = 海浜の沿岸流(不規則波・斜め入射 20°。wf_flow = 2、ローラーあり = 既定)
+!   不規則波 H_m0 = 1 m、T = 8 s、進行方向 20°、方向分散 20°(既定)を勾配 1/80 の海浜に
+!   入れる。外力 + ローラー + GLM の Stokes 輸送 + 波・流れの底面摩擦。ローラー(Svendsen
+!   1984、β = 0.1)は砕波の散逸をいったん蓄えて岸側で放すので、外力と沿岸流の最大が岸側へ
+!   ずれる(Reniers & Battjes 1997)。reference 比較(Log.txt・wavefield.csv・E9998.txt・
+!   v9998.txt)と再開の往復の通し計算(save_all へ保存)を兼ねる。
+!   確認事項(Check_wfcurrent.py roller): param_long と同じ釣り合い、外力と流れの最大が
+!   param_long より岸側、ローラーのエネルギーの収支(砕波 + 上限の除去 = ローラーの散逸 +
+!   汀線への流出)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 3600
+  dt_disp = 600
+  dt_file = 3600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_wavefield = '-'
+  dir_result = 'result'
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_check_cfl = 1
+  f_output_mode = 3
+  f_out_e = 1
+  f_out_u = 1
+  f_out_v = 1
+  f_state_save = 1
+  dir_save = 'save_all'
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 2
+  e0 = 0.0
+/
+
+&list_geoinfo
+  nx = 120
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.025
+/
+
+&list_bound_edge
+  f_bc_w = 2                ! 沖は長波放射(基準水位 0)
+  f_bc_n = 3                ! 岸に交わる南北の辺は側方 Neumann(沿岸流が通り抜ける)
+  f_bc_s = 3
+/
+
+&list_wavefield
+  wf_bc_side = 1, 0, 2, 2   ! 西が入射、東(陸)は吸収、南北は側方 Neumann
+  wf_hm0 = 1.0
+  wf_trep = 8.0
+  wf_dir = 20.0             ! 東から 20° 北へ進む(北向きの沿岸流)
+  dt_wave = 60
+  wf_tol = 1.0e-7
+  wf_flow = 2
+  f_wf_roller = 1
+  f_wf_outdiag = 1
+/

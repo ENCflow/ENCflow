@@ -288,13 +288,40 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
 
 contains
 
-  ! セル (ci, cj) を基準セルとする k 方向エッジの法線流速(確保範囲外は 0)
+  ! 枠外の位置 (ci, cj) が側方 Neumann の辺だけの外なら、辺の法線方向に枠内へ寄せた
+  ! 鏡像セル(境界面の運動方程式と同じ。§88)の添字を返す。それ以外はそのまま
+  ! (Neumann の辺がなければ常にそのまま = 従来の経路)
+  pure subroutine mirror_cell(ci, cj, mi, mj)
+    integer, intent(in) :: ci, cj
+    integer, intent(out) :: mi, mj
+    logical :: ok
+    mi = ci
+    mj = cj
+    if (.not. bcs%have_neumann) return
+    if (ci >= 1 .and. ci <= g%nx .and. cj >= 1 .and. cj <= dcp%ny_g) return
+    call bc_neumann_cell(ci, cj, ok, mi, mj)
+    if (.not. ok) then
+      mi = ci
+      mj = cj
+    end if
+  end subroutine
+
+  ! セル (ci, cj) を基準セルとする k 方向エッジの法線流速(確保範囲外は 0)。
+  ! 両端のセルがともに側方 Neumann の辺の外のエッジは、基準セルを鏡像へ平行移動した
+  ! エッジ(枠内か境界面)を読む(枠外と枠内を結ぶエッジは境界面そのもの。§88)
   pure function uvk(ci, cj, kk) result(u)
     integer, intent(in) :: ci, cj, kk
     real :: u
-    integer :: ei, ej
-    ei = ci + die(kk)
-    ej = cj + dje(kk)
+    integer :: ei, ej, mi, mj
+    mi = ci
+    mj = cj
+    if (bcs%have_neumann) then
+      ei = ci + din(kk)
+      ej = cj + djn(kk)
+      if (ei < 1 .or. ei > g%nx .or. ej < 1 .or. ej > dcp%ny_g) call mirror_cell(ci, cj, mi, mj)
+    end if
+    ei = mi + die(kk)
+    ej = mj + dje(kk)
     if (ei < 0 .or. ei > ubound(sx%uv, 2) .or. ej < dcp%jsh - 1 .or. ej > dcp%jeh) then
       u = 0.0
     else
@@ -324,20 +351,33 @@ contains
   pure function far_ok(ci, cj) result(ok)
     integer, intent(in) :: ci, cj
     logical :: ok
+    integer :: mi, mj
+    call mirror_cell(ci, cj, mi, mj)      ! 側方 Neumann の辺の外は鏡像(§88)
     ok = .false.
-    if (ci < 1 .or. ci > g%nx .or. cj < 1 .or. cj > dcp%ny_g) return
-    ok = g%x(ci,cj) > 0 .and. g%sw(ci,cj) == 0
+    if (mi < 1 .or. mi > g%nx .or. mj < 1 .or. mj > dcp%ny_g) return
+    ok = g%x(mi,mj) > 0 .and. g%sw(mi,mj) == 0
   end function
 
   ! セルが運動量の供給元になれるか(確保範囲内・有効・海セルでない・移動限界以上の水深)
   pure function cell_ok(ci, cj) result(ok)
     integer, intent(in) :: ci, cj
     logical :: ok
+    integer :: mi, mj
+    call mirror_cell(ci, cj, mi, mj)      ! 側方 Neumann の辺の外は鏡像(§88)
     ok = .false.
-    if (ci < 1 .or. ci > ubound(s%h, 1) .or. cj < dcp%jsh .or. cj > dcp%jeh) return
-    if (g%x(ci,cj) <= 0) return
-    if (g%sw(ci,cj) > 0) return      ! 海セルは運動量を供給しない(規定境界。§68.35)
-    ok = s%h(ci,cj) >= p%dd
+    if (mi < 1 .or. mi > ubound(s%h, 1) .or. mj < dcp%jsh .or. mj > dcp%jeh) return
+    if (g%x(mi,mj) <= 0) return
+    if (g%sw(mi,mj) > 0) return      ! 海セルは運動量を供給しない(規定境界。§68.35)
+    ok = s%h(mi,mj) >= p%dd
+  end function
+
+  ! セルの水深(側方 Neumann の辺の外は鏡像。cell_ok が真のセルにだけ使う)
+  pure function hcell(ci, cj) result(h)
+    integer, intent(in) :: ci, cj
+    real :: h
+    integer :: mi, mj
+    call mirror_cell(ci, cj, mi, mj)
+    h = s%h(mi,mj)
   end function
 
   ! 流下方向の風上供給元になれるか: cell_ok に加え、河道セル間のエッジでは
@@ -350,8 +390,12 @@ contains
     integer, intent(in) :: ci, cj
     logical, intent(in) :: drw
     logical :: ok
+    integer :: mi, mj
     ok = cell_ok(ci, cj)
-    if (ok .and. drw) ok = g%rw(ci,cj) > 0
+    if (ok .and. drw) then
+      call mirror_cell(ci, cj, mi, mj)
+      ok = g%rw(mi,mj) > 0
+    end if
   end function
 
   ! 側方面(sgn = ±1 の t 側)の流入流速(1 次風上。供給元が壁・乾床・海なら u_e)。
@@ -382,7 +426,7 @@ contains
     oj = cj
     if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
       u1 = uvk(oi, oj, kk)
-      h1 = 0.5 * (s%h(oi, oj) + s%h(oi + din(kk), oj + djn(kk)))
+      h1 = 0.5 * (hcell(oi, oj) + hcell(oi + din(kk), oj + djn(kk)))
       usum = usum + u1
       n = n + 1
     end if
@@ -390,7 +434,7 @@ contains
     oj = cj + sgn * dtj(kk)
     if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
       u1 = uvk(oi, oj, kk)
-      h1 = 0.5 * (s%h(oi, oj) + s%h(oi + din(kk), oj + djn(kk)))
+      h1 = 0.5 * (hcell(oi, oj) + hcell(oi + din(kk), oj + djn(kk)))
       usum = usum + u1
       n = n + 1
     end if

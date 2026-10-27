@@ -139,6 +139,17 @@ module m_state
     real, allocatable :: wvdir(:,:)     ! 平均波向 (deg。進む向き、x 軸から反時計回り。無波 −9999)
     real, allocatable :: wvub(:,:)      ! 底面軌道流速 u_rms (m/s)
     real, allocatable :: wvdw(:,:)      ! 砕波の散逸 (W/m2。不規則波)
+    ! 波→流れ(段 W2。wf_flow >= 1 のときだけ確保。向きは流速 u・v と同じ = x 東・
+    ! y はラスタの行の向き(南)。帯±ハロで、m_wavefield が更新ごとにハロまで埋める)
+    integer :: wv_flow = 0              ! 0: 作用なし / 1: 外力 / 2: 外力+GLM(Stokes)+波・流れの摩擦
+    real :: wv_rho = 1025.0             ! 外力の換算に使う密度 (kg/m3。m_wavefield が設定)
+    real :: wv_ramp = 1.0               ! 外力・Stokes 輸送の立ち上げの係数 0..1(wf_tramp。毎ステップ)
+    real, allocatable :: wvsp(:,:)      ! 波・流れの摩擦の速さ √(|u − u^S|² + (1.16 u_rms)²) (m/s。wf_flow = 2。毎ステップ)
+    real, allocatable :: wvfx(:,:)      ! 波の外力 F = −∇·S の x 成分 (N/m2)
+    real, allocatable :: wvfy(:,:)      ! 同 y 成分 (N/m2)
+    real, allocatable :: wvus(:,:)      ! Stokes 輸送の流速 u^S (m/s。wf_flow = 2)
+    real, allocatable :: wvvs(:,:)      ! 同 v^S (m/s)
+    real, allocatable :: wver(:,:)      ! ローラーのエネルギー E_r (J/m2。f_wf_roller = 1。診断・出力用)
     real, allocatable :: cq(:,:)        ! 輸送物質柱状量 (g/m2。§30。濃度 = cq/vh は
                                         ! 導出量 cqc。移流は swflow_enc がステップ内で
                                         ! 行い(wq_active)、発生源・浸透同伴・減衰は
@@ -905,6 +916,12 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%wvdir)) deallocate(s%wvdir)
   if (allocated(s%wvub)) deallocate(s%wvub)
   if (allocated(s%wvdw)) deallocate(s%wvdw)
+  if (allocated(s%wvfx)) deallocate(s%wvfx)
+  if (allocated(s%wvsp)) deallocate(s%wvsp)
+  if (allocated(s%wvfy)) deallocate(s%wvfy)
+  if (allocated(s%wvus)) deallocate(s%wvus)
+  if (allocated(s%wvvs)) deallocate(s%wvvs)
+  if (allocated(s%wver)) deallocate(s%wver)
   if (allocated(s%hgc)) deallocate(s%hgc)
   if (allocated(s%hss)) deallocate(s%hss)
   if (allocated(s%hgs)) deallocate(s%hgs)

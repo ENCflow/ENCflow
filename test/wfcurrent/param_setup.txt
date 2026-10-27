@@ -1,0 +1,71 @@
+!======================================================================
+! wfcurrent: 波によるセットアップ(規則波・直角入射。外力だけ = wf_flow = 1)
+!   規則波 H = 1 m、T = 8 s を勾配 1/80 の海浜に直角に入れる。静止(u = 0)の定常では、
+!   面ごとに水位の勾配が外力と釣り合う。確認事項(Check_wfcurrent.py setup)
+!     - 面ごとの離散の釣り合い g_e Δη/Δx = (F_i + F_{i+1})/(2ρ h_f)
+!     - 砕波帯より沖の set-down η = −H²k/(8 sinh 2kh)(Longuet-Higgins & Stewart 1962)
+!     - 砕波帯の勾配 dη/dx = −K dz/dx、K = 1/(1 + 8/(3γ²))(Bowen ら 1968)
+!     - 岸沿いに一様
+!   定常は摩擦に依らないので、摩擦の流速の下限 vv を 0.2 m/s に上げて始動時の副振動を
+!   1 時間で減衰させる(既定 0.01 m/s では外力だけの静止に近い流れの摩擦が弱く、
+!   副振動と境界の行の循環が何時間も残る)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  vv = 0.2                  ! 摩擦の流速の下限(上の注)
+  t0 = 0
+  tt = 3600
+  dt_disp = 600
+  dt_file = 3600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_wavefield = '-'
+  dir_result = 'result_setup'
+  f_check_cfl = 1
+  f_output_mode = 3
+  f_out_e = 1
+  f_out_u = 1
+  f_out_v = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 2
+  e0 = 0.0
+/
+
+&list_geoinfo
+  nx = 120
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.025
+/
+
+&list_bound_edge
+  f_bc_w = 2                ! 沖は長波放射(基準水位 0)
+  f_bc_n = 3                ! 岸に交わる南北の辺は側方 Neumann
+  f_bc_s = 3
+/
+
+&list_wavefield
+  wf_bc_side = 1, 0, 2, 2   ! 西が入射、東(陸)は吸収、南北は側方 Neumann
+  wf_wavetype = 2           ! 規則波(H <= γh の飽和砕波)
+  wf_hm0 = 1.0
+  wf_trep = 8.0
+  wf_dir = 0.0
+  dt_wave = 60
+  wf_tol = 1.0e-7
+  wf_flow = 1               ! 外力だけ(GLM・波・流れの摩擦なし)
+  f_wf_roller = 0
+  f_wf_outdiag = 1
+/

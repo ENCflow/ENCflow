@@ -11,7 +11,7 @@ Combine the following **four groups** as needed in the file specified by
 
 | Family | Group | Where it acts and what it prescribes |
 |---|---|---|
-| A Edge boundaries | &list_bound_edge | Base type for each outer grid edge (0 wall / 1 free outflow / 2 long-wave radiation) |
+| A Edge boundaries | &list_bound_edge | Base type for each outer grid edge (0 wall / 1 free outflow / 2 long-wave radiation / 3 lateral Neumann) |
 | B Internal sources | &list_bound_source | Total Q(t) for a valid cell set; positive for injection, negative for extraction |
 | C Prescribed water level | &list_bound_stage | Set depths in a valid cell set from the prescribed level η |
 | D Segment inflow | &list_bound_inflow | Non-negative total Q(t) through the outer normal faces of edge cells |
@@ -97,6 +97,7 @@ to south).
 | 0 (default) | impermeable (wall) | tanks, closed catchments |
 | 1 | free outflow. Advancing flow passes through as is, and standing water drains by free overfall along the flow direction (outward normal for still water), with total flux based on the natural width. At a subgrid channel outlet, upstream channel velocity and channel direction set the exit flux. No inflow | outflow of flood flows advancing over dry ground |
 | 2 | long-wave radiation, projected along the outward normal with a natural-width total. No outflow at the reference still-water level; only the water level deviation of waves reaching the boundary is transmitted (inflow of receding waves is also allowed) | propagation of tsunamis, storm surges, and waves |
+| 3 | lateral Neumann. The same topography and flow are treated as continuing beyond the boundary (zero normal gradient). The momentum equation of a boundary face is solved with the same formula as an interior face, taking the partner outside as the cell moved into the grid along the normal of the edge (a mirror). Both inflow and outflow are allowed | the left and right sides that cross a coast (wave-driven longshore currents pass through; [coastal wave field](wavefield.md)) |
 
 - The reference water level of type 2 is determined in the following
   order of precedence. (1) An explicit `bc_eta_w/e/n/s` (uniform value;
@@ -111,6 +112,13 @@ to south).
   and outward normal velocity in a Flather condition:
   `u_n = u_n,e + sqrt(g/h) (η − η_e)`. Configure this in the child's
   `&list_nest` ([nesting](nest.md)).
+- So that the boundary rows have the same solution as the interior rows on a coast
+  that is uniform alongshore, type 3 matches the interior faces in the wet/dry rule,
+  the adaptive Runge–Kutta, the suppression of excessive outflow, the reassignment of
+  blocked openings and the advection term (which reads the mirror outside the grid)
+  (developer.md §88). If the topography changes alongshore near a side, the outside is
+  treated as continuing that topography, so keep the area of interest away from the
+  side.
 - Edge boundaries take effect only on **edges where valid non-sea cells touch
   the grid frame**. They have no effect on catchment terrain surrounded
   by a rim of nodata (outside the mask) -- use prescribed water level
