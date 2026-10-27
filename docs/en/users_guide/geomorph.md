@@ -1325,7 +1325,13 @@ flood runs (`morfac > 1` or the intermittency conversion) with
 `f_state_restore = 2` (a new time axis; dt may change). With `f_rockinc = 1` in
 both, the cumulative incision `Ri` continues. Disable uplift, weathering and creep
 in the event runs (the calendar is counted by the time of the flood runs; this is
-not enforced).
+not enforced). When a save with h_s > 0 is restored into a configuration without a
+process that carries the solids of the flow h_s (`f_suspend`, `f_debris`), the
+initialization deposits them on the bed in place (z and sd rise by h_s/(1 − λ),
+h_s = 0; the solid ledger is unchanged; there are no fines, so they count as
+coarse). The deposited solid volume is printed as "the restored flow carried solids
+(hs) ... deposited ... m3 (solid)". Configurations without landform change (no
+`fn_geomorph`) behave as before, and h_s stays in the flow.
 
 **Outputs for this section**: the debris-flow part is added to the cumulative
 incision `Ri0001...`. At the end "rock erosion by debris flows: eroded ... m3

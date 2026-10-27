@@ -1045,6 +1045,11 @@ docs/mountain_stream_plan.md §12(developer.md §88.18)。
 間欠係数の換算)は、`f_state_restore = 2`(新しい時間軸。dt を変えられる)でつなぎます。
 両方で `f_rockinc = 1` にすると、累積下刻 `Ri` が続きます。イベント計算では隆起・風化・
 クリープを無効にしてください(暦は出水の計算の時間で数えるため。強制はしません)。
+流れの土砂 h_s を運ぶ過程(`f_suspend`・`f_debris`)のない構成に、h_s > 0 の save を復元すると、
+初期化でその場の河床に堆積させます(z・sd を h_s/(1 − λ) 上げ、h_s = 0。固体の台帳は変わらない。
+細粒分は持たないので粗粒として扱う)。堆積させた固体の体積は「the restored flow carried solids
+(hs) … deposited … m3 (solid)」と表示されます。地形変化を使わない構成(`fn_geomorph` なし)では
+従来どおりで、h_s は流れに残ります。
 
 **この節に関係する出力**: 累積下刻 `Ri0001…` に土石流の分も加わります。終了時に
 「rock erosion by debris flows: eroded … m3 (bulk, into the mobile layer sd)」(削った岩盤の

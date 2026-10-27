@@ -131,6 +131,12 @@ When using `bedmotion`, mode 2 also starts its applied-displacement history
 from zero. Set the reference for the new displacement series so that it does
 not reapply displacement already present in the saved terrain.
 
+When a state saved with a process that carries the solids of the flow h_s
+(`f_suspend`, `f_debris`) is read by a landform-change configuration without such
+a process, the restored h_s is deposited on the bed in place (both modes; for
+alternating debris-flow event runs and long-term flood runs;
+[landform change chapter](geomorph.md#rock-erosion-by-debris-flows-rock_kdb)).
+
 Use a separate `dir_result` for each scenario. If saving again, also give each
 scenario its own copy of `dir_save`. The save destination is the load source,
 so a new save must not overwrite the original branching state needed by the

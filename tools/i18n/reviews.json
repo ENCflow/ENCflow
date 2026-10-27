@@ -266,8 +266,8 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "554bca18de257565a8a118f636275fe9f9f41ef727a3da16449bac56702bf10d",
-      "target_sha256": "b27848734af3d96e2811047ff710796d09314b1d1719b37a992922249ce5f7dd",
+      "source_sha256": "319f629ce184298c5db4f4ef9d64b74aaaab56f06d2b13e7fa1c22f8b313abbe",
+      "target_sha256": "5f660d0cb076728876be8a8109aec8529a92ee988be7a85eb91c37e60fc6a272",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -401,11 +401,11 @@
     {
       "source": "docs/users_guide/restart.md",
       "target": "docs/en/users_guide/restart.md",
-      "source_sha256": "0d0f584b95f9315ff64ed086c3150d0a57f4443906c022fe6e86be4acf12a8e9",
-      "target_sha256": "27bc7a68cacb03207e761735bbc575786416b76441748acf0b36b92a1574da46",
+      "source_sha256": "a3f8a45d3e3cb382c6e84fe8efa1c800ff8c99f7ce9eed4cf33f64eea4424293",
+      "target_sha256": "a6e218fe92436adcd9f2c85e3221745a8f2b008b25e8e6d3fad9cf5fdbb8f3d8",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "docs/users_guide/salt.md",
@@ -995,8 +995,8 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "2872547ea2b905dd0d8cdbf9f10c17a66f2df3e1ce069b01bb4d942ea10e7408",
-      "target_sha256": "03b39fb792bbe4173773c5767b4850e581c9126e2fa41837bb31f4ffc45db1e1",
+      "source_sha256": "5b36164df5a6c469a6b7fc788ef6c70d3a4425349391c89f446d3876521ce285",
+      "target_sha256": "5d385e15540142e871cca1d233995601ba623fe69ce739482176334e7d76075e",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -1346,8 +1346,8 @@
     {
       "source": "test/dbrock/README.md",
       "target": "test/dbrock/en/README.md",
-      "source_sha256": "faea0fbd4b1edc814d6794199cbfa4da31bb31e854ec6cec2e545b8dc620b3a1",
-      "target_sha256": "f0694abf73e76f16e588321d4b3f0cd33d3dd471016034d858c8158135f5ab1c",
+      "source_sha256": "6f803061c23edf84e226be8da2bdc6f1cef13ccfd963d5c25223901b774fcbde",
+      "target_sha256": "12c9c5b89652be2da71ce28e91b03e153eefbb5bef1d75b35e7b8d5717c8f304",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"

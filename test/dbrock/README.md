@@ -32,13 +32,15 @@ reference は持たず、解析解・保存則・バイト一致・停止の表�
 | DB3 濃度の門 | `param_db3_cmin.txt` | db_cmin = 0.5 > C | どのセルも Ri = 0、sd 不変 |
 | DB3 速度の門 | `param_db3_vstop.txt` | db_vstop = 10 m/s > \|V\| | どのセルも Ri = 0、sd 不変 |
 | DB2 保存 | `param_db2.txt` | 四周壁の 10 × 40 セル。勾配 0.4 の斜面(y < 25 m)と平坦部。北の帯の土層 0.5 m を t = 1 s に流動化し、厚さ 2 cm の被覆の上を流下させる(E-D は高橋型、クーロン + Manning、φ = 30°、低速凝集)。20 s | 全固体 Σh_s A + (1 − λ)Σ(z − z0)A が 1e-10 m³ 以内で 0。可動層の固体 Σh_s A + (1 − λ)Σ(sd − sd0)A が (1 − λ) × 台帳(土石流が削った岩盤のかさ体積)と相対 1e-7。(sd − sd0) − (z − z0) = Ri が 1e-12 m 以内。台帳 > 1e-3 m³ |
+| DB5 継続 | `param_db5_rt1.txt`・`param_db5_rt2.txt` | db2 を t = 10 s で保存し(rt1)、再開(`f_state_restore = 1`)して 20 s まで進める(rt2) | save_db5_rt の state.dat・geomorph_rockinc.dat が通し計算 save_db2 とバイト一致 |
+| DB5 交互計算 | `param_db5_f1.txt`・`param_db5_d.txt`・`param_db5_f2.txt` | db1 の水路で、清水の出水(`f_fluvial` + 流水の剥離)100 s → 土石流(交換なし・土石流の項)100 s → 出水 50 s を `f_state_restore = 2` でつなぐ。土石流の後の save は流れに h_s を持つ | 段ごとの Σ ΔRi A が各段の台帳と相対 1e-7、Ri は減らない。3 段目の初期化の表示(堆積させた固体)が復元した Σh_s A と相対 1e-7。3 段目の終了時に h_s = 0。岩盤面 R = z − sd は段ごとに ΔR + ΔRi = 0(1e-12 m 以内。堆積は z と sd の両方に入る) |
 | DB7 入力の誤り | `param_db7_kp.txt` ほか 4 つ | 土石流の構成に流水の剥離 / 閾値なし / db_cmin = 0 / f_debris なしで rock_kdb / 岩盤を削る過程なし | 初期化でそれぞれの表示で停止 |
 
 | ファイル | 内容 |
 |---|---|
 | `make_init.py` | db1・db3 の水路の地形・初期の被覆・侵食性倍率と、db2 の箱の地形・土層厚・崩壊深の生成(定数は `param*.txt`・`Check_dbrock.py` と対で保守) |
-| `Check_dbrock.py db1 / db3 / db2 LOG` | 上の判定(h・h_s・z・sd は save の state.dat、Ri は geomorph_rockinc.dat から倍精度で読む。DB2 の台帳は Screen ログの終了時の表示) |
-| `Run.sh` / `Run_MPI.sh N` | 全構成の実行と検定。MPI は逐次の save(`save_*_serial`)と state.dat・geomorph_rockinc.dat をバイト比較する |
+| `Check_dbrock.py db1 / db3 / db2 LOG / db5` | 上の判定(h・h_s・z・sd は save の state.dat、Ri は geomorph_rockinc.dat から倍精度で読む。DB2・DB5 の台帳は Screen ログの表示) |
+| `Run.sh` / `Run_MPI.sh N` | 全構成の実行と検定。交互計算の各段の後の save は `save_db5_<段>` に写す。MPI は逐次の save(`save_*_serial`)と state.dat・geomorph_rockinc.dat をバイト比較する |
 
 ## 実行
 
@@ -56,7 +58,11 @@ python3 make_init.py   # 入力の再生成(同梱。変更したときだけ)
 - DB3: 濃度・速度の門の外では Ri と sd の変化がともに 0。
 - DB2: 全固体 5.1e-14 m³。可動層の固体と (1 − λ) × 台帳の相対差 4.9e-10(台帳の表示は 9 桁)。
   (sd − sd0) − (z − z0) − Ri の最大 1.9e-14 m。土石流が削った岩盤 0.74 m³(最大 Ri 6.0 mm)。
+- DB5: 10 s の save からの継続は、通し計算と state.dat・geomorph_rockinc.dat がバイト一致。
+  交互計算は、段ごとの Σ ΔRi A と台帳の相対差の最大 2.2e-9(台帳 出水 1.21・土石流 3.21・出水 0.378 m³)。
+  3 段目の初期化で 4.55 m³ の固体を堆積させ、復元した Σh_s A との相対差 4.4e-10。終了時の h_s は 0。
+  段ごとの max|ΔR + ΔRi| は 8.9e-14 m。
 - DB7: 5 構成とも初期化で停止。
 - MPI(DB4): -fcheck=all の np = 2 で実行時エラーなし。-O2 のビルドで逐次と np = 1, 2, 4 の
-  state.dat・geomorph_rockinc.dat がバイト一致。既定の -Ofast でも Run_MPI.sh 2・4 が全構成で
-  逐次とバイト一致。
+  state.dat・geomorph_rockinc.dat がバイト一致。既定の -Ofast でも Run_MPI.sh 2・4 が全構成
+  (DB5 の連鎖を含む)で逐次とバイト一致。

@@ -39,13 +39,15 @@ erodibility multiplier (0 to 2, shifting with a period of 9 rows) vary by row.
 | DB3 concentration gate | `param_db3_cmin.txt` | db_cmin = 0.5 > C | Ri = 0 and sd unchanged in every cell |
 | DB3 velocity gate | `param_db3_vstop.txt` | db_vstop = 10 m/s > \|V\| | Ri = 0 and sd unchanged in every cell |
 | DB2 conservation | `param_db2.txt` | A 10 × 40 box with walls on all sides: a slope of 0.4 (y < 25 m) and a flat. 0.5 m of the soil in the northern band is mobilized at t = 1 s and runs down over a 2 cm cover (Takahashi-type E-D, Coulomb + Manning, φ = 30°, low-velocity settling). 20 s | Total solids Σh_s A + (1 − λ)Σ(z − z0)A zero within 1e-10 m³. Mobile-layer solids Σh_s A + (1 − λ)Σ(sd − sd0)A within relative 1e-7 of (1 − λ) × the ledger (bulk volume of rock eroded by debris flows). (sd − sd0) − (z − z0) = Ri within 1e-12 m. Ledger > 1e-3 m³ |
+| DB5 continuation | `param_db5_rt1.txt`, `param_db5_rt2.txt` | db2 saved at t = 10 s (rt1) and restarted (`f_state_restore = 1`) to 20 s (rt2) | state.dat and geomorph_rockinc.dat of save_db5_rt byte-identical to the straight run save_db2 |
+| DB5 alternating runs | `param_db5_f1.txt`, `param_db5_d.txt`, `param_db5_f2.txt` | In the channel of db1, a clear-water flood (`f_fluvial` + fluvial plucking) for 100 s → a debris flow (no exchange, debris-flow term) for 100 s → a flood for 50 s, chained with `f_state_restore = 2`. The save after the debris flow carries h_s in the flow | Σ ΔRi A of each stage within relative 1e-7 of the ledger of that stage, Ri never decreases. The message at the initialization of the third stage (deposited solids) within relative 1e-7 of the restored Σh_s A. h_s = 0 at the end of the third stage. The rock surface R = z − sd satisfies ΔR + ΔRi = 0 in each stage (within 1e-12 m; the deposit enters both z and sd) |
 | DB7 input errors | `param_db7_kp.txt` and 4 others | Fluvial plucking in a debris-flow run / no threshold / db_cmin = 0 / rock_kdb without f_debris / no process that erodes the rock | Each stops at the initialization with its message |
 
 | File | Contents |
 |---|---|
 | `make_init.py` | Generates the terrain, initial cover and erodibility multiplier of the channel of db1 and db3, and the terrain, soil depth and release depth of the box of db2 (constants kept in pairs with `param*.txt` and `Check_dbrock.py`) |
-| `Check_dbrock.py db1 / db3 / db2 LOG` | The judgements above (h, h_s, z and sd are read in double precision from state.dat of the saves and Ri from geomorph_rockinc.dat; the ledger of DB2 from the end-of-run line in the Screen log) |
-| `Run.sh` / `Run_MPI.sh N` | Runs and checks all configurations. MPI compares state.dat and geomorph_rockinc.dat byte by byte with the serial saves (`save_*_serial`) |
+| `Check_dbrock.py db1 / db3 / db2 LOG / db5` | The judgements above (h, h_s, z and sd are read in double precision from state.dat of the saves and Ri from geomorph_rockinc.dat; the ledgers of DB2 and DB5 from the lines in the Screen logs) |
+| `Run.sh` / `Run_MPI.sh N` | Runs and checks all configurations. The save after each stage of the alternating runs is copied to `save_db5_<stage>`. MPI compares state.dat and geomorph_rockinc.dat byte by byte with the serial saves (`save_*_serial`) |
 
 ## Running
 
@@ -69,8 +71,15 @@ python3 make_init.py   # regenerate the inputs (bundled; only when changed)
   solids and (1 − λ) × the ledger is 4.9e-10 (the ledger is printed with 9
   digits). The largest (sd − sd0) − (z − z0) − Ri is 1.9e-14 m. Rock eroded by
   debris flows: 0.74 m³ (largest Ri 6.0 mm).
+- DB5: the continuation from the save at 10 s is byte-identical to the straight run in
+  state.dat and geomorph_rockinc.dat. In the alternating runs, the largest relative
+  difference between Σ ΔRi A of a stage and its ledger is 2.2e-9 (ledgers: flood 1.21, debris
+  flow 3.21, flood 0.378 m³). The initialization of the third stage deposited 4.55 m³ of solids,
+  within 4.4e-10 (relative) of the restored Σh_s A. h_s is 0 at the end. The largest
+  |ΔR + ΔRi| of a stage is 8.9e-14 m.
 - DB7: all 5 configurations stop at the initialization.
 - MPI (DB4): no run-time errors with -fcheck=all at np = 2. With the -O2 build,
   the state.dat and geomorph_rockinc.dat of np = 1, 2 and 4 are byte-identical to
   the serial run. With the default -Ofast, Run_MPI.sh 2 and 4 are also
-  byte-identical to the serial run for all configurations.
+  byte-identical to the serial run for all configurations (including the chain
+  of DB5).

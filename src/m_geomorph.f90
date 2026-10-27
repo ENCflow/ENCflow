@@ -1089,6 +1089,12 @@ subroutine m_geomorph_init(gm, p, g, s)
   ! 同じ advect_scalar による hs 輸送を使う
   s%sed_active = (gm%f_suspend > 0 .or. gm%f_debris > 0)
   if (s%sed_active) s%sed_sgrav = gm%sgrav   ! fmax の混合密度係数用(§28.9)
+  ! 交互計算(出水 ⇄ 土石流。§88.20): h_s を運ぶ過程のない構成に h_s > 0 の save を復元したら、
+  ! その場の河床に堆積させる。そのままでは h_s が流れに凍って残る。判定は namelist 由来で
+  ! 全ランク同一(collective 安全)
+  if (p%f_state_restore > 0 .and. .not. s%sed_active) then
+    call deposit_restored_hs(g, s, list%fluv_porosity)
+  end if
   ! 浮遊砂の沈降速度(f_suspend のみ。m_wq の Kd 分配が粒子態の沈降に
   ! 読む — debris の hs は流動体の固相で対象外。§30.6)
   if (gm%f_suspend > 0) s%sed_wf = gm%wf
@@ -1144,6 +1150,48 @@ subroutine setup_sd(p, g, s, allow_bare)
     end if
   else
     s%sd(:,:) = g%sd(:,:)
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 復元した流れの土砂 h_s の堆積(§88.20。h_s を運ぶ過程 f_suspend・f_debris のない構成で
+! restore したときだけ呼ばれる)。h_s > 0 のセルで z・sd += h_s/(1 − λ)、h_s = 0 にする
+! (固体の台帳 Σh_s + (1 − λ)Σz は不変。細粒分 sf は持たないので粗粒として扱う)。
+! 堆積した固体の体積は行部分和(real64 → par_sum_rows = 決定的)で表示する
+!----------------------------------------------------------------------
+subroutine deposit_restored_hs(g, s, lam)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: lam          ! 河床の空隙率 λ(fluv_porosity)
+  integer :: i, j
+  real :: dz
+  real(real64) :: vtot
+  real(real64), allocatable :: vrow(:)
+  character(len=32) :: buf
+
+  allocate(vrow(dcp%js:dcp%je), source = 0.0_real64)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (s%hs(i,j) <= 0.0) cycle
+      dz = s%hs(i,j) / (1.0 - lam)
+      s%z(i,j) = s%z(i,j) + dz
+      s%e(i,j) = s%z(i,j) + s%h(i,j)
+      s%sd(i,j) = s%sd(i,j) + dz
+      vrow(j) = vrow(j) + real(s%hs(i,j), real64) * real(g%dx * g%dy, real64)
+      s%hs(i,j) = 0.0
+    end do
+  end do
+  call par_sum_rows(vrow, vtot)
+  call par_halo_cell(s%z)
+  call par_halo_cell(s%e)
+  call par_halo_cell(s%sd)
+  call par_halo_cell(s%hs)
+  if (vtot > 0.0_real64) then
+    write(buf, '(es16.8)') vtot
+    call par_info("geomorph: the restored flow carried solids (hs) but no process carries them in " &
+                  // "this run; deposited " // trim(adjustl(buf)) // " m3 (solid) on the bed in place")
   end if
 end subroutine
 

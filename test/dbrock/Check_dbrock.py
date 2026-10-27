@@ -6,6 +6,10 @@
 #   Check_dbrock.py db3        DB3: 濃度の門(db3_cmin)・速度の門(db3_vstop)の外で岩盤が削れない
 #   Check_dbrock.py db2 LOG    DB2: 閉じた箱の保存(全固体は不変、可動層の固体は岩盤起源の分だけ
 #                                   増える、(sd − sd0) − (z − z0) = Ri。台帳と比べる)
+#   Check_dbrock.py db5        DB5: 出水 → 土石流 → 出水の連鎖(db5_f1・db5_d・db5_f2)で、累積下刻の
+#                                   増分が各段の台帳に一致し、3 段目の初期化で流れに残った h_s が
+#                                   堆積する(表示と復元した Σh_s A の一致、終了時の h_s = 0。§88.20)。
+#                                   岩盤面 z − sd は岩盤侵食の分だけ下がる(ΔR + ΔRi = 0)
 # 水深・土砂柱状量・z・sd は save の state.dat(倍精度)、Ri は geomorph_rockinc.dat から読む。
 # 定数は param*.txt・make_init.py と対で保守する。
 import sys, os, math, struct, re
@@ -19,6 +23,10 @@ KD, TAUCD, MD, HS, T1 = 1.0e-3, 300.0, 1.5, 0.05, 600.0
 TOL_DB1, TOL_SAME = 1.0e-9, 1.0e-12
 # 構成 db2(DB2)
 TOL_SUM, TOL_RI, TOL_LEDGER, MIN_V = 1.0e-10, 1.0e-12, 1.0e-7, 1.0e-3
+# 構成 db5(DB5)の終了時・初期化の表示
+PLUCK = r"rock incision: plucked\s+(\S+) m3"
+ERODE = r"rock erosion by debris flows: eroded\s+(\S+) m3"
+DEPOSIT = r"deposited\s+(\S+) m3 \(solid\)"
 
 
 def read_rec(f):
@@ -173,6 +181,58 @@ def check_db2(logfile):
     return ok
 
 
+def ledger_line(logfile, pat, what):
+    """終了時の表示から体積を読む(ファイル中の最後の該当行)"""
+    v = None
+    for line in open(logfile, encoding="utf-8", errors="replace"):
+        m = re.search(pat, line)
+        if m:
+            v = float(m.group(1))
+    if v is None:
+        sys.exit("FAIL: %s line not found in %s" % (what, logfile))
+    return v
+
+
+def check_db5():
+    """DB5: 出水 → 土石流 → 出水の連鎖(f_state_restore = 2)で累積下刻 Ri が続き、
+    3 段目の初期化で流れに残った固体 h_s がその場の河床に堆積して h_s = 0 になる"""
+    area = DX * DX
+    r1 = load_ri("save_db5_f1", NX, NY)
+    r2 = load_ri("save_db5_d", NX, NY)
+    r3 = load_ri("save_db5_f2", NX, NY)
+    _, zf1, sdf1, _ = load_state("save_db5_f1", NX, NY)
+    _, zd, sdd, hsd = load_state("save_db5_d", NX, NY)
+    _, zf2, sdf2, hsf2 = load_state("save_db5_f2", NX, NY)
+    v1 = ledger_line("Screen_db5_f1.log", PLUCK, "plucked")
+    v2 = ledger_line("Screen_db5_d.log", ERODE, "eroded")
+    v3 = ledger_line("Screen_db5_f2.log", PLUCK, "plucked")
+    dep = ledger_line("Screen_db5_f2.log", DEPOSIT, "deposited")
+    cells = [(j, i) for j in range(NY) for i in range(NX)]
+    s1 = sum(r1[j][i] for j, i in cells) * area
+    s2 = sum(r2[j][i] - r1[j][i] for j, i in cells) * area
+    s3 = sum(r3[j][i] - r2[j][i] for j, i in cells) * area
+    dmin = min(min(r2[j][i] - r1[j][i], r3[j][i] - r2[j][i]) for j, i in cells)
+    e = max(abs(s1 / v1 - 1.0), abs(s2 / v2 - 1.0), abs(s3 / v3 - 1.0))
+    ok = report("(DB5-1) 累積下刻の継続", e < TOL_LEDGER and dmin >= 0.0 and min(v1, v2, v3) > MIN_V,
+                "段ごとの Σ ΔRi A / 台帳 − 1 の max = %.2e (相対 tol %.0e)。台帳 出水 %.4e・土石流 %.4e・"
+                "出水 %.4e m3、Ri の段ごとの増分の最小 %.2e m"
+                % (e, TOL_LEDGER, v1, v2, v3, dmin))
+    shs = sum(max(hsd[j][i], 0.0) for j, i in cells) * area
+    ok = report("(DB5-2) 残留土砂の堆積", shs > MIN_V and abs(dep / shs - 1.0) < TOL_LEDGER,
+                "表示 %.9e m3、復元した Σh_s A %.9e m3 (相対 tol %.0e)" % (dep, shs, TOL_LEDGER)) and ok
+    hmax = max(abs(hsf2[j][i]) for j, i in cells)
+    ok = report("(DB5-3) h_s = 0", hmax == 0.0,
+                "3 段目の終了時の max|h_s| = %.2e m(h_s を運ぶ過程がない)" % hmax) and ok
+    # 岩盤面 R = z − sd は、交換・掃流砂・残留土砂の堆積(z と sd が同じだけ動く)では動かず、
+    # 岩盤侵食の分だけ下がる: ΔR + ΔRi = 0(堆積を z と sd の両方に入れたことの確認を含む)
+    rmax = max(max(abs((zd[j][i] - sdd[j][i]) - (zf1[j][i] - sdf1[j][i]) + (r2[j][i] - r1[j][i])),
+                   abs((zf2[j][i] - sdf2[j][i]) - (zd[j][i] - sdd[j][i]) + (r3[j][i] - r2[j][i])))
+               for j, i in cells)
+    ok = report("(DB5-4) 岩盤面", rmax < TOL_RI,
+                "段ごとの max|ΔR + ΔRi| = %.2e m (tol %.0e。R = z − sd)" % (rmax, TOL_RI)) and ok
+    return ok
+
+
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else ""
     if mode == "db1":
@@ -181,7 +241,9 @@ if __name__ == "__main__":
         ok = check_db3()
     elif mode == "db2":
         ok = check_db2(sys.argv[2])
+    elif mode == "db5":
+        ok = check_db5()
     else:
-        sys.exit("usage: Check_dbrock.py db1 | db3 | db2 LOG")
+        sys.exit("usage: Check_dbrock.py db1 | db3 | db2 LOG | db5")
     print("== dbrock %s: %s ==" % (mode, "PASS" if ok else "FAIL"))
     sys.exit(0 if ok else 1)

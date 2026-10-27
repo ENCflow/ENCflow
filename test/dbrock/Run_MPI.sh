@@ -11,9 +11,14 @@ sdir=$(dirname "$(readlink -f "$0")")
 export ENCFLOW_EXPECT_NP="$NP"
 
 cfgs="db1 db1_dtg db3_cmin db3_vstop db2"
+saves="$cfgs db5_rt db5_f1 db5_d db5_f2"
 set -o pipefail
-for c in $cfgs; do
+for c in $cfgs db5_rt1 db5_rt2; do
     mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt | tee Screen_$c.log || exit 1
+done
+for s in f1 d f2; do
+    mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_db5_$s.txt | tee Screen_db5_$s.log || exit 1
+    rm -rf save_db5_$s && cp -r save_db5 save_db5_$s
 done
 set +o pipefail
 echo ""
@@ -22,6 +27,15 @@ rc=0
 python3 "$sdir/Check_dbrock.py" db1 || rc=1
 python3 "$sdir/Check_dbrock.py" db3 || rc=1
 python3 "$sdir/Check_dbrock.py" db2 Screen_db2.log || rc=1
+python3 "$sdir/Check_dbrock.py" db5 || rc=1
+for f in state.dat geomorph_rockinc.dat; do
+    if cmp -s save_db5_rt/$f save_db2/$f; then
+        echo "=== save_db5_rt/$f (restart) is bit-identical to save_db2/$f ==="
+    else
+        echo "MISMATCH: save_db5_rt/$f != save_db2/$f" >&2
+        rc=1
+    fi
+done
 
 # DB7: 入力の誤りは全ランクが初期化で停止する
 for c in db7_kp db7_tauc db7_cmin db7_nodb db7_none; do
@@ -33,7 +47,7 @@ for c in db7_kp db7_tauc db7_cmin db7_nodb db7_none; do
     fi
 done
 
-for c in $cfgs; do
+for c in $saves; do
     if [ -d save_${c}_serial ]; then
         for f in state.dat geomorph_rockinc.dat; do
             if cmp -s save_$c/$f save_${c}_serial/$f; then

@@ -14511,3 +14511,29 @@ test/rockinc(reference は持たない。解析解・保存則・バイト一致
     含む)。地形変化を使うほかの検定も、比較を終えた 9 検定(bankface・bedfines・berode・creep・
     dissol・fluvial・kdpart・repose・rockfall)の 968 ファイルが一致した。CI の回帰ケース(wave・
     dambreak・frost・pump・conduit・salt・vzcol・vzzone)も PASS。
+
+### 88.20 交互計算の残留土砂の規約(P2。§88.18 の 8)
+
+- **規約**: 流れの土砂 h_s を運ぶ過程(f_suspend・f_debris。sed_active)のない構成に、h_s > 0 の
+  save を復元(f_state_restore = 1・2)したら、m_geomorph_init で h_s > 0 のセルの h_s を
+  その場の河床に堆積させる(z・sd += h_s/(1 − λ)、h_s = 0、e = z + h)。
+  - λ は fluv_porosity(地形変化の構成なら常に読める)。
+  - 固体の台帳 Σh_s + (1 − λ)Σ(z − z0) は変えない。細粒分 sf は持たないので粗粒として扱う。
+  - 堆積した固体の体積は、行部分和(real64 → par_sum_rows)で表示する。
+  - z・e・sd・h_s のハロを交換する。判定(f_state_restore > 0 かつ sed_active でない)は
+    namelist 由来で全ランク同一。
+- **以前の挙動**: h_s は運ばれも交換もされずに流れに凍り、台帳にだけ残っていた。
+- **地形変化を使わない構成**(fn_geomorph なし): m_geomorph_init は早期 return するので、
+  従来どおり h_s は残る(利用者ガイドに明記)。
+- **検定 test/dbrock の DB5**:
+  - 土石流の途中(10 s)の save からの継続が、通し計算と state.dat・geomorph_rockinc.dat で
+    バイト一致した(§28.4 の「土石流の継続等価は ULP まで」は、この構成では差なし)。
+  - 出水(f_fluvial + 流水の剥離 100 s)→ 土石流(土石流の項 100 s)→ 出水(50 s)を
+    f_state_restore = 2 でつないだ。累積下刻 Ri の増分が各段の台帳と一致し、3 段目の初期化で
+    流れに残った固体が堆積し(表示と復元した Σh_s A が一致)、h_s = 0 になった。
+    岩盤面 R = z − sd は段ごとに ΔR + ΔRi = 0(8.9e-14 m。堆積が z と sd の両方に入ったことの確認)。
+- **MPI**: -fcheck=all の np = 2 を先に回し(実行時エラーなし)、-O2 で逐次 = np 1・2・4 が
+  dbrock の全 save(DB5 の連鎖を含む)でバイト一致した。
+- **A/B**(-O2): 復元を使う既存の構成のうち地形変化のある 9 組(bedfines・dissol 2・driftwood・
+  fixation・hillsoil 2・rockinc 2 の rt1 → rt2)は、P1 の実行ファイルと result・save の 364 ファイルが
+  バイト一致した(h_s > 0 を sed なしで復元する経路は既存の検定になく、堆積の表示も出ない)。
