@@ -39,6 +39,10 @@
   f_creep = 1
   creep_d = 1.0e-6          ! creep diffusion coefficient (m2/s). 0 = default
                             !   1.6e-10 (0.005 m2/yr)
+  !creep_hstar = 0.1        ! soil decay depth H_c of depth-dependent creep (m). 0 = the
+                            !   conventional linear diffusion of z (default). > 0 multiplies the
+                            !   flux by 1 − exp(−sd/H_c) of the supplying cell and moves only the
+                            !   soil layer (z and sd updated together; needs soil depth sd0/fn_sd)
 
   ! ---- Bedload (Exner. Bed erosion and deposition) ----
   !f_fluvial = 1

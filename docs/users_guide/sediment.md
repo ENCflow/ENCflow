@@ -67,6 +67,28 @@ $`z`$ だけを更新し $`s_d`$ は変えない(有限厚の土層を運ぶモ�
 検証: [test/creep](../../test/creep/README.md)(ガウス丘の解析解に
 最大誤差 7.8e-5 m、`morfac` = 2 の等価性 2.3e-4 m)。
 
+**深さ依存クリープ(`creep_hstar` > 0)**:
+
+```math
+\mathbf{q} = -D\left(1 - e^{-H/H_c}\right)\nabla z,
+\qquad
+\frac{\partial z}{\partial t} = \frac{\partial s_d}{\partial t} = -\nabla\cdot\mathbf{q}
+```
+
+土層だけが動く形で、$`H`$ は各エッジの供給側(高い側)のセルの土層厚 $`s_d`$、
+$`H_c`$ は輸送の減衰厚(`creep_hstar`)です。土層厚と勾配の両方に比例する輸送
+[^johnstone15]を、Landlab の DepthDependentDiffuser と同じ $`K H_* (1 - e^{-H/H_*})`$ の
+形で表したもので、$`D = K H_*`$ と読めば厚い土層の極限($`H \gg H_c`$)で上の線形拡散に
+一致します($`D`$ = `creep_d` の意味は変えない)。$`z`$ と $`s_d`$ を同じ量だけ動かすので
+岩盤面 $`z - s_d`$ は変わらず、裸岩($`s_d = 0`$)からは運びません。$`H`$ を供給側の
+セルで評価すること、流量を固体体積に換算して掃流砂と共有の供給量制限(1 回の更新で
+セルの土層厚を超えて出さない)に通すことは、本モデルの離散化の選択です。実効の
+拡散係数は $`D`$ 以下なので、安定条件は上と同じです。
+検証: [test/creep](../../test/creep/README.md) の深さ依存クリープの 4 構成(厚い土層で
+従来の線形拡散と 1.8e-15 m で一致、岩盤面 $`z - s_d`$ の不変 4e-14 m、土層の総量の
+保存、$`s_d \ge 0`$、裸岩で不変)。土層生成(§7)と組んだ定常斜面は、斜面の脚部に
+渓流を置く連成の実験で確かめる予定です(docs/mountain_stream_plan.md §5)。
+
 ## 3. 掃流砂(f_fluvial)
 
 **流砂量式。** エッジごとに両セル平均の $`\tau_*`$ から無次元流砂量
@@ -446,6 +468,7 @@ $`H_*(1-\lambda)\Delta x / q_c`$ です。
 |---|---:|---|---|
 | dt_geomorph / morfac | 0 / 1 | 地形更新間隔 (s) / 地形時間の加速(§1) | **方式** MORFAC 法[^roelvink06]。イベント計算は 1 |
 | creep_d | 0.005 m²/yr | クリープ拡散係数 $`D`$(§2) | **文献値** 文献域 0.001〜0.05 m²/yr の中央[^fernandes97] |
+| creep_hstar | 0(従来の線形拡散) | 深さ依存クリープの減衰厚 $`H_c`$ (m)(§2) | **校正値** 標準値がない。厚い土層では結果によらない |
 | f_qbform | 1 | 流砂量式(§3) | **方式** 1: 芦田・道上[^ashida72]、2: MPM[^mpm48] |
 | fluv_d50 | 0.01 m | 掃流砂の代表粒径 | **経験値** 砂床〜礫床の幾何平均付近 |
 | fluv_tausc / susp_tausc / wash_tausc | 0.05 | 限界無次元掃流力(§1) | **文献値** Shields 曲線の粗砂〜礫の代表値[^shields36] |
@@ -500,7 +523,7 @@ $`H_*(1-\lambda)\Delta x / q_c`$ です。
 
 | ケース | 内容 | 要点 |
 |---|---|---|
-| [test/creep](../../test/creep/README.md) | ガウス丘の拡散 | 解析解に最大誤差 7.8e-5 m、morfac 等価性 |
+| [test/creep](../../test/creep/README.md) | ガウス丘の拡散 | 解析解に最大誤差 7.8e-5 m、morfac 等価性。深さ依存クリープの岩盤面の不変・土層の保存・裸岩で不変 |
 | [test/fluvial](../../test/fluvial/README.md) | 閉領域の段波と河床変動 | 固体総量・共動更新が機械精度 |
 | [test/suspend](../../test/suspend/README.md) | 2 つの平衡濃度式 | 固体総量 2.2e-15 |
 | [test/sedinflow](../../test/sedinflow/README.md) | 境界からの土砂供給 | 流入総量の台帳閉合 ~1e-16 |
@@ -516,6 +539,7 @@ $`H_*(1-\lambda)\Delta x / q_c`$ です。
 [^shields36]: Shields, A. (1936): Anwendung der Ähnlichkeitsmechanik und der Turbulenzforschung auf die Geschiebebewegung. Mitt. Preuss. Versuchsanst. Wasserbau Schiffbau, 26, Berlin.
 [^culling60]: Culling, W. E. H. (1960): Analytical theory of erosion. *J. Geol.*, 68, 336–344.(斜面の線形拡散モデル)
 [^fernandes97]: Fernandes, N. F. and Dietrich, W. E. (1997): Hillslope evolution by diffusive processes: The timescale for equilibrium adjustments. *Water Resour. Res.*, 33, 1307–1318.(拡散係数の文献域)
+[^johnstone15]: Johnstone, S. A. and Hilley, G. E. (2015): Lithologic control on the form of soil-mantled hillslopes. *Geology*, 43(1), 83–86. doi:10.1130/G36052.1(要旨で確認: 輸送が勾配と土層厚の両方に比例すると、岩質が土層に覆われた斜面の形に現れる。式の形と doi は Landlab の DepthDependentDiffuser の説明による)
 [^ashida72]: 芦田和男・道上正規 (1972): 移動床流れの抵抗と掃流砂量に関する基礎的研究. 土木学会論文報告集, 206, 59–69.
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.
 [^exner25]: Exner, F. M. (1925): Über die Wechselwirkung zwischen Wasser und Geschiebe in Flüssen. *Sitzungsber. Akad. Wiss. Wien, Math.-Naturwiss. Kl.*, 134, 165–204.

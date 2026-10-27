@@ -1106,9 +1106,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 - **山地渓流の地形発達(岩盤下刻・被覆・斜面供給)**(docs/mountain_stream_plan.md。
   2026-10-27 合意。developer.md §88): 第 1 段の (1) 剥離・被覆・薄層の利用可能率・台帳
   (f_rockinc。test/rockinc の T2〜T7・T9)、(2) 研磨(tools)項・T3 の山形、(3) 分布隆起
-  fn_uplift と T8、(4) 全域で土層 0 の save の復元の許容を実装。残り: (5) 例題
-  examples/bedrock_cover と文書の仕上げ(comparison.md を含む)、T10(格子の向き・解像度の
-  記録。格子幅を変えた T8 の比較を含む)。第 2 段 = 深さ依存クリープ(creep_hstar)。
+  fn_uplift と T8、(4) 全域で土層 0 の save の復元の許容を実装。第 2 段の深さ依存クリープ
+  (creep_hstar。§88.8)も実装。残り: (5) 例題 examples/bedrock_cover と文書の仕上げ
+  (comparison.md を含む)、T10(格子の向き・解像度の記録。格子幅を変えた T8 の比較を含む)、
+  第 2 段の連成実験(plan §5.3。f_wthr と組んだ定常斜面の確認を含む)。
   - **T9 の発見(水理。要議論)**: 急勾配の等流で、既定の動的振り替え f_opening_dynamic = 2
     (§68.14)の塞がり率 s = clamp((z_n − z_c)/h_c) が一様斜面の上流側の地盤を部分的な壁と
     数え、流速が Manning より速くなる(幅 5 セル・Δx = 1 m・水深 0.3 m の中央列で τ_b 比

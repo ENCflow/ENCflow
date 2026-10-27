@@ -23,6 +23,7 @@
 |---|---|
 | `Check_fluvial.py <save> [nosd]` | (1) 土砂体積保存 \|Σ(z − z₀)\| < 1e-9(反対称フラックスの帰結)、(2) 共動更新 max\|(sd − sd₀) − (z − z₀)\| < 1e-10、(3) 活性 max\|z − z₀\| > 1e-4 m。`nosd` は (2) を省く |
 | `param_creep.txt` | 同じ箱に斜面クリープ(`f_creep = 1`、D = 0.01 m²/s)を重ねた構成(`save_creep/`)。帯界面のハロの検定用(下の所見) |
+| `param_creep_hs.txt` | `param_creep.txt` のクリープを深さ依存(`creep_hstar = 20 m`。土層厚 10 m で利用可能率 0.39 から)にした構成(`save_creep_hs/`)。sd のハロの検定用(下の所見) |
 | `Fig.py` | 下の図 `figs/fluvial.png` |
 
 ## 実行
@@ -65,6 +66,12 @@ python3 Fig.py    # figs/fluvial.png(引数 en で英語版を en/figs/ に)
   2026-10-27 に np = 2 で Σ(z − z₀) = 2.5e-5 m·cell と逐次との不一致を検出し、
   クリープの前の z のハロ交換で修正しました(developer.md §19.9)。修正後は
   Σ(z − z₀) = −6.2e-18 で、np = 2, 4 が逐次とバイト一致します。
+- `param_creep_hs.txt`(掃流砂 + 深さ依存クリープ)は (1)〜(3) をすべて見ます(深さ依存
+  クリープも z と sd を共動更新する。developer.md §88.8)。深さ依存クリープは供給側の
+  近傍の sd も読むので、掃流砂のあとに z と並べて sd のハロも交換します。この交換を外した
+  ビルドでは np = 2 が逐次と一致しないことを確かめてあります(2026-10-27)。
+  H_c = 20 m は、利用可能率 1 − e^{−sd/H_c} が sd の変化に敏感になるように選んだ検定用の値です。
+  結果は Σ(z − z₀) = 3.5e-17 m·cell、共動更新 1.4e-14 m で、np = 2, 4 が逐次とバイト一致します。
 - 河道マスク(rw)付きの通水断面の扱いは [tutorials/chichibu](../../tutorials/chichibu/)
   のサブグリッド河道、浮遊砂・ウォッシュロードは [test/suspend](../suspend/)、
   [test/wash](../wash/) を参照してください。

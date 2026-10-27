@@ -104,8 +104,8 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "a8f78d47756d93f785860091b2e939f3d30cac37a8054cace130436b9024acde",
-      "target_sha256": "5b72312149a04e25598cd4da72f07b804d3d826de9ebc589a3c2e43df2675048",
+      "source_sha256": "aefc5dfe8e12d53c2a6d1c8dc2cac519c4c2abad957e8f657dffbcab49ad5a24",
+      "target_sha256": "c2d3e3042bb5ddbf26bef64555fe65dc65410c70bf224445a700d59ec076aaf3",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -266,8 +266,8 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "cf9128ab0ce474c756bb8da12744fd7851343f85208365c4a8d308c5b238012c",
-      "target_sha256": "d17d68430607518a3b2b63dfaf74174e12665021aef99815234964c4fb0389d8",
+      "source_sha256": "a2ee6d964146b0e540c2dc0450286131eccc03e227a0f840b2f9669b7787d0ba",
+      "target_sha256": "1a4a41241a3363be86f2ca368ad205a76420e65d778db8dfc03107d86e83c109",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -383,8 +383,8 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "cb49d4efeb99e27029d8039603d9dc4d80fa0818c2951dc8c5c81f3aca84f05e",
-      "target_sha256": "4b728aa23e0f97dc018dbd66353cefea9a2e098953b1675e0b4f312610e8d852",
+      "source_sha256": "8ec370dafe99bcbe8934a53479a3a7617610cd58863a9944a6c1af618bc9fa71",
+      "target_sha256": "f30a7a78dbce95a64d7a10ba3869e105454a9fea480e6af28c6513a468dd1c05",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -419,8 +419,8 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "7bfa0b58500b7d7103c461bd9cd4764c0b9c77cc4abf762f4779ded976a25aa1",
-      "target_sha256": "0740da6191c98936e2da310da97e5bbb0f262fec93ab637ff6069fbeb5a99a92",
+      "source_sha256": "e39aaa698d24d74e315a74e730ad6672778becebc5dd602cf7d4f662dea59311",
+      "target_sha256": "5e8b2f8b1adcef2ddac17b9d3bf8406938e0f5def491614efb5554c60d111f27",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -608,8 +608,8 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "1fdfeca804fb2b7b9aea898e608a3790d7cf7950706707327385aa36f0b515ec",
-      "target_sha256": "6ad65f2be68b657c448da2c35c1775054d78ec365187dc56e8a801a4f103cd40",
+      "source_sha256": "ef47a523a18abf2d307df8799df3f28dde4b8bb320b3880e4a651fd90ebc6e2e",
+      "target_sha256": "672e520cab42e9b35e1340e57ed5a716afddc8e77230c5f0a01f2fef47364598",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -1229,11 +1229,11 @@
     {
       "source": "test/creep/README.md",
       "target": "test/creep/en/README.md",
-      "source_sha256": "9547f04fcdbe38b8aa9e6a111f921506b5a39e652e7d9fec2ceb0076d82a77ee",
-      "target_sha256": "e955a671e699cc4e15d23c85cea93f66d27e2d21d21466032bbdff4a9420d0e8",
+      "source_sha256": "b5ecb8346202890896696d4dd30b4b826e27873ed88175fd0e880b5ba354fd60",
+      "target_sha256": "0890ba12598fb7b0e04e14d9be87abb2dd85612c975275041d167ba56575037e",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "test/creep/figs/profile.png",
@@ -1409,8 +1409,8 @@
     {
       "source": "test/fluvial/README.md",
       "target": "test/fluvial/en/README.md",
-      "source_sha256": "ed7626fafc459e6c05465959a854fe337dc189111d9d2263db8ddb512b6f28be",
-      "target_sha256": "a0351d7235cdd72015bf7e03a5685d21e2c15216bc3d506603485ca85bdd11a4",
+      "source_sha256": "3ccf93eae8c0b3efbdad460abf536a0358a0004341dcb8e63439c5a7d8574ef5",
+      "target_sha256": "c44e6bb8faf51418db44d880bff8d0d5779414a1a924f24cdc9c61db001f3073",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"

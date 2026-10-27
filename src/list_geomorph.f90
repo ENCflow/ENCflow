@@ -20,6 +20,9 @@ module list_geomorph
     ! 各プロセスは独立に有効化でき、calc は有効なものを順に適用する
     integer :: f_creep = 0           ! 斜面クリープ(線形拡散)(0:無効, 1:有効)
     real :: creep_d = 0.0            ! クリープ拡散係数 (m2/s)。0 = 既定 0.005 m2/yr(§62)
+    real :: creep_hstar = 0.0        ! 深さ依存クリープの土層の減衰厚 H_c (m。§88.8)。0 = 従来の z の
+                                     ! 線形拡散(sd は不変・裸岩も拡散)。> 0: 流量に供給側(高い側)
+                                     ! セルの 1 − exp(−sd/H_c) を掛け、z と sd を共動更新(土層だけが動く)
 
     integer :: f_fluvial = 0         ! 掃流砂 Exner(河床の浸食・堆積)(0:無効, 1:有効)
     integer :: f_qbform = 1          ! 流砂量式(1:芦田・道上, 2:MPM)
@@ -363,7 +366,7 @@ subroutine list_geomorph_read(p, list)
   real :: dt_geomorph
   real :: morfac
   integer :: f_creep
-  real :: creep_d
+  real :: creep_d, creep_hstar
   integer :: f_fluvial
   integer :: f_qbform
   real :: fluv_d50
@@ -444,7 +447,7 @@ subroutine list_geomorph_read(p, list)
   real :: bs_reltime, bs_rho, bs_mu, bs_xi, bs_vstop, bs_eps_s, bs_diagratio, bs_cfl
   real :: bs_hplunge, bs_tstop
 
-  namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, &
+  namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, creep_hstar, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
                            fluv_porosity, fluv_sgrav, fluv_dzmax, fluv_diagratio, &
                            fluv_bcfeed, fluv_bcfeed_fac, fluv_taufac, fluv_slope, fluv_mus, fluv_muk, &
@@ -477,6 +480,7 @@ subroutine list_geomorph_read(p, list)
   morfac = list%morfac
   f_creep = list%f_creep
   creep_d = list%creep_d
+  creep_hstar = list%creep_hstar
   f_fluvial = list%f_fluvial
   f_qbform = list%f_qbform
   fluv_d50 = list%fluv_d50
@@ -626,6 +630,7 @@ subroutine list_geomorph_read(p, list)
   list%morfac = morfac
   list%f_creep = f_creep
   list%creep_d = creep_d
+  list%creep_hstar = creep_hstar
   list%f_fluvial = f_fluvial
   list%f_qbform = f_qbform
   list%fluv_d50 = fluv_d50

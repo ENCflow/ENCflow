@@ -18,7 +18,7 @@ laws, erosion/deposition laws, triggering, bed layer).
 
 | Process | Flag | Content |
 |---|---|---|
-| Hillslope creep | f_creep | Linear diffusion of elevation z; soil depth sd is not updated |
+| Hillslope creep | f_creep | Linear diffusion of elevation z; by default soil depth sd is not updated (creep_hstar > 0 gives depth-dependent creep that moves only the soil layer) |
 | Bedload | f_fluvial | Erosion and deposition from sediment-flux balance (Exner equation) |
 | Suspended sediment | f_suspend | Advection of sediment column hs and bed exchange (entrainment / settling) |
 | Hillslope erosion | f_wash | Rain / sheet erosion in wet, non-channel cells (requires f_suspend) |
@@ -55,7 +55,9 @@ channel cells.
 `fn_dbinit`, require `f_debris`. Judge-only mode does not automatically disable
 other debris-flow processes. Debris flow and the moving bed layer require
 `morfac = 1`. `sd = 0` limits soil erosion / mobilization; it does not freeze
-`z` against creep or uplift, and weathering can continue to produce soil.
+`z` against the default creep or uplift (depth-dependent creep `creep_hstar > 0`
+carries nothing out of cells with `sd = 0`), and weathering can continue to
+produce soil.
 Sea-mask cells (`sw > 0`) receive no landform updates.
 
 How to read the results (fields, ledgers, measurement columns, restart) is summarized in [Output and monitoring](#output-and-monitoring) on this page. Each feature section also ends with a short note on just the outputs that concern it.
@@ -137,13 +139,30 @@ Equations and basis of the defaults: [supplement](sediment.md#2-hillslope-creep-
 | Parameter | Default | Meaning |
 |---|---|---|
 | creep_d | 1.6e-10 (= 0.005 m²/yr) | Creep diffusion coefficient (m²/s). Literature range 0.001-0.05 m²/yr. A geomorphic-time quantity, so interpret it together with morfac |
+| creep_hstar | 0 | Soil decay depth H_c of depth-dependent creep (m). 0 = the conventional linear diffusion of z. > 0 multiplies the flux by 1 − exp(−sd/H_c) of the supplying (higher) cell and moves only the soil layer (z and sd updated together) |
 
 The minimal input to "just smooth the slopes" is `f_creep = 1` alone (no
 soil depth needed; add morfac to see changes over years to millennia).
 
-The implementation updates only `z`, leaving `sd` unchanged. Creep therefore
-acts even at `sd = 0` and shifts the soil base `z − sd`. This is a terrain
-diffusion approximation, not transport of a finite soil layer.
+By default (`creep_hstar = 0`) the implementation updates only `z`, leaving
+`sd` unchanged. Creep therefore acts even at `sd = 0` and shifts the soil base
+`z − sd`. This is a terrain diffusion approximation, not transport of a finite
+soil layer.
+
+With `creep_hstar = H_c > 0` it becomes depth-dependent creep and only the soil
+layer moves. The flux is q = −D (1 − e^{−H/H_c}) ∇z (H is the soil depth sd of
+the supplying, i.e. higher, cell): the same linear diffusion as before under a
+thick soil (sd ≫ H_c), slower under a thin soil, and nothing is carried out of
+bare rock (sd = 0). z and sd move by the same amount, so the bedrock surface
+`z − sd` does not change. The same supply limiter as for bedload applies (a
+cell never gives more than its soil depth in one update); the number of times
+it fires is counted, together with that of bedload, in the warning "fluvial
+supply limiter" at the end of the run. Soil depth (`sd0` or `fn_sd`) is
+required; give bare rock as a zero soil-depth file. The stability condition is
+the same as before (the effective diffusion coefficient does not exceed
+`creep_d`). Combined with soil production `f_wthr`, the soil made by weathering
+is carried down the slopes into the valleys (hillslope supply to mountain
+streams; docs/mountain_stream_plan.md §5, in Japanese).
 
 **Outputs for this section**: landform change in `Z0001...` (`f_out_z=1`) and `Sd0001...`. The process is slow, so match the morphological acceleration morfac with `dt_file` ([Output and monitoring](#output-and-monitoring)).
 
@@ -1403,7 +1422,7 @@ When the type of phenomenon is known, start from the following
 | River-mouth delta | f_fluvial (capacity feed) + f_suspend (inflow concentration) + f_bedfines + fluv_slope + f_repose (+ f_fixation) | - | - | - | sand 0.0005; mud via susp_wf = 1e-3 m/s | 30 | Sea as ordinary cells + initial water level. A mud concentration of 0.0002-0.001 separates fan and bird-foot. morfac 100-200. docs/delta_plan.md |
 | Bed change of a gravel-bed river | f_fluvial | - | - | - | 0.02-0.1 | - | Bedload dominates |
 | Long-term landform evolution | f_creep + f_wthr + f_uplift | - | - | - | - | - | creep_d 0.001-0.05 m²/yr, p0 10-100 mm/kyr, uplift 0.1-5 mm/yr. Together with morfac |
-| Bedrock incision in mountain streams | f_fluvial + f_rockinc (+ f_wthr + f_uplift + f_creep) | - | - | - | 0.01-0.1 | - | H* from the grain size to the bed relief (a few cm to tens of cm). Calibrate k_p and τ_c (mind the bias of τ_b on steep slopes). Bare rock via a zero soil-thickness file. docs/mountain_stream_plan.md |
+| Bedrock incision in mountain streams | f_fluvial + f_rockinc (+ f_wthr + f_uplift + f_creep) | - | - | - | 0.01-0.1 | - | H* from the grain size to the bed relief (a few cm to tens of cm). Calibrate k_p and τ_c (mind the bias of τ_b on steep slopes). Bare rock via a zero soil-thickness file. Soil supply from the slopes by creep with creep_hstar > 0 (calibrate H_c). docs/mountain_stream_plan.md |
 | Karst landforms (dissolution, dolines) | f_dissol (+ dissol_sink + the inlets of f_gwconduit, dissol_lat = −1, f_rockfall) | - | - | - | - | - | c_eq 50-300 mg/L (low for rain on bare rock, high under soil), rho_r 2500-2700. Limit to limestone with fn_dissol. Rock walls phi_rock 50-70°. Together with morfac |
 | Landslide tsunami (bed layer) | f_bedslide | 0.1-0.2 | 300-1000 | - | - | - | mu and xi of the inertia-free bed layer (bs_mu/bs_xi). Calibrated separately from the mixture values |
 

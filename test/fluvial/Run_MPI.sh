@@ -39,4 +39,19 @@ if [ -d save_creep_serial ]; then
         rc=1
     fi
 fi
+
+# 深さ依存クリープ併用(供給側の近傍の sd も読む。developer.md §88.8)
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_creep_hs.txt | tee Screen_creep_hs.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_fluvial.py" save_creep_hs || rc=1
+if [ -d save_creep_hs_serial ]; then
+    if cmp -s save_creep_hs/state.dat save_creep_hs_serial/state.dat; then
+        echo "=== creep_hs: state.dat is bit-identical to the serial result (save_creep_hs_serial) ==="
+    else
+        echo "MISMATCH: save_creep_hs/state.dat != save_creep_hs_serial/state.dat" >&2
+        rc=1
+    fi
+fi
 exit $rc

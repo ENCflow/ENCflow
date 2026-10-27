@@ -19,9 +19,9 @@ module m_geomorph
   !     Δz を s%sd に共動適用する(浸食で土層が薄くなり、gwflow の容量
   !     sd*sy0 が縮む=飽和・流出の早期化。z と sd が同じ Δz で動くため
   !     帯水層底 (z - sd) は不変=岩盤固定が構造的に成立)。浸食は
-  !     sd >= 0 の範囲(sd=0 は岩盤露出)。クリープは当面 sd に触れない
-  !     (土層のない理想地形のベンチマーク用途を保つ。TODO: 実地形で
-  !     クリープを使う段になったら sd 共動と可動層クランプを追加する)
+  !     sd >= 0 の範囲(sd=0 は岩盤露出)。クリープは既定では sd に触れない
+  !     (土層のない理想地形のベンチマーク用途を保つ)。creep_hstar > 0 では
+  !     土層だけが動く深さ依存クリープとして sd と共動し、供給量制限を共有する(§88.8)
   !
   ! MPI 規約(developer.md §11):
   !   - s%z / s%sd の更新は自帯 js..je のみ(owner-compute)
@@ -80,6 +80,7 @@ module m_geomorph
 
   type t_creep
     real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離)
+    real :: hcinv = 0.0              ! 1 / H_c(深さ依存クリープ。0 = 従来の線形拡散。§88.8)
   end type
 
   ! 石灰岩の溶食(f_dissol。§86。docs/karst_plan.md)
@@ -845,7 +846,15 @@ subroutine m_geomorph_init(gm, p, g, s)
     if (gm%creep_d <= 0.0) then
       call par_stop("list_geomorph: f_creep requires creep_d > 0")
     end if
+    ! 深さ依存クリープ(§88.8。docs/mountain_stream_plan.md §5.1): 土層 sd だけが動く
+    if (list%creep_hstar < 0.0) call par_stop("list_geomorph: creep_hstar must be >= 0")
+    if (list%creep_hstar > 0.0) then
+      gm%crp%hcinv = 1.0 / gm_param("creep_hstar", list%creep_hstar, 0.0, " m")
+      call par_info("geomorph: depth-dependent creep on (the soil layer sd moves with z)")
+    end if
     call init_creep(gm, p, g)
+  else if (list%creep_hstar > 0.0) then
+    call par_stop("list_geomorph: creep_hstar requires f_creep=1")
   end if
 
   gm%f_fluvial = list%f_fluvial
@@ -916,7 +925,8 @@ subroutine m_geomorph_init(gm, p, g, s)
     end if
   end if
   if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 &
-      .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0 .or. gm%f_rockfall > 0) then
+      .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0 .or. gm%f_rockfall > 0 &
+      .or. gm%crp%hcinv > 0.0) then
     ! 河床の物性(共有)
     if (list%fluv_porosity < 0.0 .or. list%fluv_porosity >= 1.0) then
       call par_stop("list_geomorph: fluv_porosity must be in [0,1)")
@@ -946,7 +956,8 @@ subroutine m_geomorph_init(gm, p, g, s)
     gm%wsdstar = list%wthr_sdstar
     gm%wsdinv = 1.0 / list%wthr_sdstar
     if (.not. (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 &
-               .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0 .or. gm%f_rockfall > 0)) then
+               .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0 .or. gm%f_rockfall > 0 &
+               .or. gm%crp%hcinv > 0.0)) then
       call setup_sd(p, g, s)                        ! 風化のみでも sd を確保・転記
     end if
   end if
@@ -976,13 +987,18 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_dissol > 0) then
     if ((list%dissol_fres > 0.0 .or. list%dissol_src == 3) .and. .not. (gm%f_fluvial > 0 &
         .or. gm%f_suspend > 0 .or. gm%f_debris > 0 .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 &
-        .or. gm%f_repose > 0 .or. gm%f_wthr > 0)) then
+        .or. gm%f_repose > 0 .or. gm%f_wthr > 0 .or. gm%crp%hcinv > 0.0)) then
       call setup_sd(p, g, s)                        ! 残渣の堆積先・裸岩判定として sd を確保・転記
     end if
     call init_dissol(gm, p, g, s, list)
   end if
 
   if (gm%f_fluvial > 0) call init_fluvial(gm, p, g, list)
+  ! 深さ依存クリープ(§88.8)は共有の apply_edge_flux(供給量制限)で z・sd を動かす。
+  ! 掃流砂が無効なら供給量制限の係数の配列だけここで確保する(init_fluvial と同形)
+  if (gm%crp%hcinv > 0.0 .and. .not. allocated(gm%flv%fdon)) then
+    allocate(gm%flv%fdon(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 1.0)
+  end if
   ! 流水による岩盤下刻(fluvial の後 = 流砂量の次元化係数・通過幅を共有する。§88)
   if (gm%f_rockinc > 0) call init_rockinc(gm, p, g, s, list)
   if (gm%f_suspend > 0) call init_suspend(gm, p, list)
@@ -1252,6 +1268,8 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   if (gm%f_creep > 0 .and. (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_wash > 0 &
       .or. gm%f_debris > 0 .or. gm%f_splash > 0 .or. gm%f_repose > 0 .or. gm%f_rockfall > 0)) then
     call par_halo_cell(s%z)
+    ! 深さ依存クリープ(§88.8)は供給側の近傍の sd も読む
+    if (gm%crp%hcinv > 0.0) call par_halo_cell(s%sd)
   end if
   if (gm%f_creep > 0) call calc_creep(gm, g, s, dts)
   if (gm%f_wthr > 0) call calc_wthr(gm, g, s, dts)
@@ -1294,7 +1312,7 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   call par_halo_cell(s%z)
   if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 .or. gm%f_wthr > 0 &
       .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0 .or. gm%f_rockfall > 0 &
-      .or. (gm%f_dissol > 0 .and. gm%dis%res)) then
+      .or. (gm%f_dissol > 0 .and. gm%dis%res) .or. gm%crp%hcinv > 0.0) then
     call par_halo_cell(s%sd)
   end if
   ! s%hs のハロは swflow_enc のステップ頭交換が担う(移流の直前に最新化)
@@ -1381,6 +1399,9 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 斜面クリープ(線形拡散 dz/dt = D * div(grad z))
+!   creep_hstar > 0 は土層だけが動く深さ依存クリープ(calc_creep_soil が流量を書き、
+!   共有の apply_edge_flux が z・sd を共動更新する。近傍の sd も読む。§88.8)。
+!   以下は既定(線形拡散)の経路:
 !   保存形の2ループ構造(m_gwflow_lateral と同型):
 !     ループ1: エッジ流量(時刻 n の z から。書き手はハロ行 je+1 まで)
 !     ループ2: 発散を取り z を更新(自帯 js..je のみ)

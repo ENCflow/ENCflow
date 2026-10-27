@@ -84,6 +84,35 @@ morphological time, to be read together with `morfac`. Verification:
 [test/creep](../../../test/creep/en/README.md) (Gaussian hill, maximum error
 7.8e-5 m against the analytical solution, `morfac` = 2 equivalence 2.3e-4 m).
 
+**Depth-dependent creep (`creep_hstar` > 0)**:
+
+```math
+\mathbf{q} = -D\left(1 - e^{-H/H_c}\right)\nabla z,
+\qquad
+\frac{\partial z}{\partial t} = \frac{\partial s_d}{\partial t} = -\nabla\cdot\mathbf{q}
+```
+
+Only the soil layer moves. $`H`$ is the soil depth $`s_d`$ of the supplying
+(higher) cell of each edge and $`H_c`$ is the transport decay depth
+(`creep_hstar`). It expresses transport proportional to both slope and soil
+depth[^johnstone15] in the same form $`K H_* (1 - e^{-H/H_*})`$ as Landlab's
+DepthDependentDiffuser; reading $`D = K H_*`$, it reduces to the linear
+diffusion above in the limit of a thick soil ($`H \gg H_c`$) (the meaning of
+$`D`$ = `creep_d` is unchanged). Because $`z`$ and $`s_d`$ move by the same
+amount, the bedrock surface $`z - s_d`$ does not change, and nothing is
+carried out of bare rock ($`s_d = 0`$). Evaluating $`H`$ in the supplying cell
+and passing the flux, converted to solid volume, through the supply limiter
+shared with bedload (a cell never gives more than its soil depth in one
+update) are discretisation choices of this model. The effective diffusivity
+does not exceed $`D`$, so the stability condition is the same as above.
+Verification: the four depth-dependent creep configurations of
+[test/creep](../../../test/creep/en/README.md) (agreement with the
+conventional linear diffusion to 1.8e-15 m under a thick soil, the bedrock
+surface $`z - s_d`$ unchanged to 4e-14 m, conservation of the total soil,
+$`s_d \ge 0`$, no change on bare rock). The steady hillslope combined with
+soil production (§7) is to be checked in a coupled experiment with a stream at
+the foot of the slope (docs/mountain_stream_plan.md §5, in Japanese).
+
 ## 3. Bedload (f_fluvial)
 
 **Transport formula.** On each edge the dimensionless transport rate
@@ -542,6 +571,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 |---|---:|---|---|
 | dt_geomorph / morfac | 0 / 1 | update interval (s) / acceleration of morphological time (§1) | **method** MORFAC method[^roelvink06]; 1 for event runs |
 | creep_d | 0.005 m²/yr | creep diffusivity $`D`$ (§2) | **literature value** middle of the published range 0.001–0.05 m²/yr[^fernandes97] |
+| creep_hstar | 0 (conventional linear diffusion) | decay depth $`H_c`$ of depth-dependent creep (m) (§2) | **calibration value** no standard value. Does not affect the result under a thick soil |
 | f_qbform | 1 | bedload formula (§3) | **method** 1: Ashida–Michiue[^ashida72], 2: MPM[^mpm48] |
 | fluv_d50 | 0.01 m | representative grain size of bedload | **empirical** near the geometric mean of sand and gravel beds |
 | fluv_tausc / susp_tausc / wash_tausc | 0.05 | critical dimensionless shear stress (§1) | **literature value** representative value of the Shields curve for coarse sand to gravel[^shields36] |
@@ -598,7 +628,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Case | Content | Point |
 |---|---|---|
-| [test/creep](../../../test/creep/en/README.md) | diffusion of a Gaussian hill | maximum error 7.8e-5 m, morfac equivalence |
+| [test/creep](../../../test/creep/en/README.md) | diffusion of a Gaussian hill | maximum error 7.8e-5 m, morfac equivalence. Depth-dependent creep: bedrock surface unchanged, soil conserved, no change on bare rock |
 | [test/fluvial](../../../test/fluvial/en/README.md) | dam break and bed change in a closed domain | total solid and co-moving update to machine precision |
 | [test/suspend](../../../test/suspend/en/README.md) | two equilibrium formulas | total solid 2.2e-15 |
 | [test/sedinflow](../../../test/sedinflow/en/README.md) | sediment supplied through the boundary | ledger closure ~1e-16 |
@@ -614,6 +644,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^shields36]: Shields, A. (1936): Anwendung der Ähnlichkeitsmechanik und der Turbulenzforschung auf die Geschiebebewegung. Mitt. Preuss. Versuchsanst. Wasserbau Schiffbau, 26, Berlin.
 [^culling60]: Culling, W. E. H. (1960): Analytical theory of erosion. *J. Geol.*, 68, 336–344. (linear diffusion of hillslopes)
 [^fernandes97]: Fernandes, N. F. and Dietrich, W. E. (1997): Hillslope evolution by diffusive processes: The timescale for equilibrium adjustments. *Water Resour. Res.*, 33, 1307–1318. (range of diffusivities)
+[^johnstone15]: Johnstone, S. A. and Hilley, G. E. (2015): Lithologic control on the form of soil-mantled hillslopes. *Geology*, 43(1), 83–86. doi:10.1130/G36052.1 (checked against the abstract: when transport scales with both slope and soil depth, rock type shows up in the form of soil-mantled hillslopes. The form of the equation and the doi follow the description of Landlab's DepthDependentDiffuser)
 [^ashida72]: Ashida, K. and Michiue, M. (1972): Study on hydraulic resistance and bed-load transport rate in alluvial streams. *Proc. JSCE*, 206, 59–69 (in Japanese).
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.
 [^exner25]: Exner, F. M. (1925): Über die Wechselwirkung zwischen Wasser und Geschiebe in Flüssen. *Sitzungsber. Akad. Wiss. Wien, Math.-Naturwiss. Kl.*, 134, 165–204.
