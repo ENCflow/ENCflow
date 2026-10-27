@@ -286,6 +286,16 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                       nfix = nfix + 1
                     end if
                   end if
+                  ! 岩盤下刻(§88)の薄層の利用可能率: 供給(風上)側セルの可動層 sd から
+                  ! 1 − exp(−sd/H*) を掛ける(露出率と同じ H*。厚い沖積層では 1 に近づく)。
+                  ! 無効時は分岐に入らず演算は不変
+                  if (gm%f_rockinc > 0 .and. gq /= 0.0) then
+                    if (gq > 0.0) then
+                      gq = gq * rock_avail(s%sd(i,j), gm%rk%hsinv)
+                    else
+                      gq = gq * rock_avail(s%sd(in,jn), gm%rk%hsinv)
+                    end if
+                  end if
                   ! 通過幅係数(水と同じ開口・幅キャップ。無効時は乗算なし)。
                   ! 動的振り替えの表 fwd(§68.14)も水と同じく乗じる: geomorph は
                   ! swflow の後に走り、fwd はこのステップの頭で作られて連続式が
@@ -379,6 +389,8 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                     nfix = nfix + 1
                   end if
                 end if
+                ! 岩盤下刻(§88)の利用可能率: 域外への流出は自セルが供給側
+                if (gm%f_rockinc > 0 .and. gq > 0.0) gq = gq * rock_avail(s%sd(i,j), gm%rk%hsinv)
                 winvd = 1.0
                 if (chn%have_width) winvd = 1.0 / chn%wfrac(i,j)
                 dze = abs(gq) * dts * gm%wrk%ainv * winvd * gm%poroi

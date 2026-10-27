@@ -382,6 +382,47 @@ $`c_{\rm eq}`$(`dissol_ceq`、既定 100 mg/L CaCO₃ 換算)は**有効溶解�
 一定率)ので、流下に伴う飽和の減衰は表しません。洞窟(管路)の成長は
 別の段階として未実装です(docs/karst_plan.md §5)。
 
+### 流水による岩盤下刻(f_rockinc)
+
+**剥離と被覆。** 岩盤面 $`R = z - s_d`$ を流水の剥離で下げ、可動層
+$`H = s_d`$ が露出率 $`e^{-H/H_*}`$ で下刻を抑えます:
+
+```math
+\tau_b = \frac{\rho_w g n^2 |V|^2}{h_e^{1/3}},\qquad
+E_{p0} = f_r\,k_p \max\!\left(\frac{\tau_b}{\tau_c} - 1,\ 0\right)^{m},\qquad
+\frac{dR}{dt} = -E_{p0}\,e^{-H/H_*},\qquad \frac{dH}{dt} = E_{p0}\,e^{-H/H_*}
+```
+
+$`\tau_b`$ は掃流砂と同じ Manning 閉じ($`h_e = \max(h, d_v)`$)、$`f_r`$ は
+侵食性倍率(`fn_rock`)です。剥離項は、岩盤河道の侵食速度を底面せん断応力で
+表す型[^howard83]の超過せん断応力形 $`E = k_e(\tau_b - \tau_c)^m`$ を
+$`k_p = k_e \tau_c^m`$ と置いた比形で、$`k_p`$ は「$`\tau_b = 2\tau_c`$ での
+裸岩の下刻速度」(m/s)になります(閾値つきの形の典拠は照合中)。被覆を層厚の
+指数関数で表す形は SPACE[^shobe17] と Landlab の GravelBedrockEroder と同じです。
+剥離した岩の厚さは同じ厚さの可動層になり($`z`$ は不変)、膨張は $`k_p`$ に
+吸収します(風化と同じ 1:1 の換算。**独自の簡略化**)。
+
+**薄層の輸送。** 掃流砂のエッジ流量に、供給側セルの利用可能率
+$`F_s = 1 - e^{-H/H_*}`$ を掛けます。一様な容量 $`q_c`$ と一定の流砂量 $`q_s`$
+の定常では $`F_s = q_s/q_c`$ となり、露出率は $`1 - q_s/q_c`$、つまり供給比で
+書いた被覆[^sklar04][^turowski07]に一致します。被覆を沖積層の厚さと河床の
+起伏の比で決める考え方[^zhang15]を、露出率と利用可能率に同じ $`H_*`$ を使う
+閉包で書いたもので、この組合せと有次元化は**独自**です
+(docs/mountain_stream_plan.md §4.3)。剥離物が下流で流砂に加わる定常は、
+セルごとに $`q_i = q_{i-1} + (1-\lambda)\Delta x\,E_{p0}(1 - q_i/q_c)`$ を
+解けば得られます(test/rockinc の T3)。
+
+**時間積分。** 水理を更新の頭で固定し、露出率を厳密に積分します:
+
+```math
+H^{n+1} = H^n + B_p,\qquad
+B_p = H_*\ln\!\left(1 + \frac{E_{p0}\,\Delta t_s}{H_*}\,e^{-H^n/H_*}\right)
+```
+
+(風化の伝播子と同じ形)。更新間隔・`morfac` を変えても同じ結果になり、
+無条件に安定です。薄い層の排出は陽的で、時間尺度は
+$`H_*(1-\lambda)\Delta x / q_c`$ です。
+
 ## 8. パラメータと既定値の根拠
 
 根拠欄の分類語の意味は[既定値の根拠の読み方](../users_guide.md#既定値の根拠の読み方)を参照してください。
@@ -419,6 +460,10 @@ $`c_{\rm eq}`$(`dissol_ceq`、既定 100 mg/L CaCO₃ 換算)は**有効溶解�
 | dissol_dzmax | 0 | 1 セル・1 更新の溶食量の上限 | **数値設定** 0 = 無効。fluv_dzmax と同型の安全弁(超過は飽和として捨てる) |
 | dissol_fsink / dissol_fres | 1.0 / 0 | 吸込穴流入水の溶解能の比 / 残渣率 | **経験値** 校正前提 / **与件** 0 = 残渣なし |
 | dissol_lat | 0 | 側方溶食の配分割合 p | **方式** 0 = 床のみ、−1 = 濡れ面の面積比で自動(推奨)。固定値は湛水深/格子幅の比から |
+| rock_kp / rock_tauc | なし / なし | 剥離の速度係数 (m/s) / 閾値 (Pa)(§7 の岩盤下刻) | **校正値** 標準値がない。k_p は τ_b = 2τ_c での裸岩の下刻速度 |
+| rock_m | 1 | 剥離のべき指数 | **慣用値** 線形(側岸侵食の berode_m と同じ) |
+| rock_hstar | なし | 被覆の長さ H* | **与件** 岩盤面の起伏・礫径の目安(数 cm〜数十 cm)。露出率と利用可能率に共用 |
+| fn_rock | なし(全域 1) | 岩盤の侵食性倍率 | **与件** 岩質の差。0 = 侵食しない |
 
 **既定値を見直すときの手がかり**
 
@@ -446,6 +491,7 @@ $`c_{\rm eq}`$(`dissol_ceq`、既定 100 mg/L CaCO₃ 換算)は**有効溶解�
 | [test/splash](../../test/splash/README.md) | 遷緩点斜面の乾式侵食 | 解析形に全桁一致、排出台帳一致 |
 | [test/splashslide](../../test/splashslide/README.md) | 固結 / 未固結の崖 | 起伏の成長率 ×1.34 / ×0.77 |
 | [examples/badland](../../examples/badland/) | 台地と崖の谷形成 | 表面流ゼロのまま崖縁から谷が成長 |
+| [test/rockinc](../../test/rockinc/README.md) | 流水による岩盤下刻 | 自己被覆の解析解 9e-8、被覆の準定常 4e-4、閉じた箱の保存 6e-18 |
 
 ## 参考文献
 
@@ -466,3 +512,8 @@ $`c_{\rm eq}`$(`dissol_ceq`、既定 100 mg/L CaCO₃ 換算)は**有効溶解�
 [^coulthard13]: Coulthard, T. J., Neal, J. C., Bates, P. D., Ramirez, J., de Almeida, G. A. M. and Hancock, G. R. (2013): Integrating the LISFLOOD-FP 2D hydrodynamic model with the CAESAR model: implications for modelling landscape evolution. *Earth Surf. Process. Landforms*, 38, 1897–1906.
 [^white84]: White, W. B. (1984): Rate processes: chemical kinetics and karst landform development. In: La Fleur, R. G. (ed.) *Groundwater as a Geomorphic Agent*, Allen & Unwin, 227–248.(最大削剥速度 D = (P − E) c_eq/ρ)
 [^gabrovsek09]: Gabrovšek, F. (2009): On concepts and methods for the estimation of dissolutional denudation rates in karst areas. *Geomorphology*, 106, 9–14.
+[^howard83]: Howard, A. D. and Kerby, G. (1983): Channel changes in badlands. *Geol. Soc. Am. Bull.*, 94, 739–752.(岩盤河道の侵食速度を出水時の底面せん断で表す。要旨で確認)
+[^shobe17]: Shobe, C. M., Tucker, G. E. and Barnhart, K. R. (2017): The SPACE 1.0 model. *Geosci. Model Dev.*, 10, 4577–4604. doi:10.5194/gmd-10-4577-2017(被覆の指数形は Landlab のソースで確認)
+[^sklar04]: Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
+[^turowski07]: Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion. *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697
+[^zhang15]: Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N. (2015): Macro-roughness model of bedrock–alluvial river morphodynamics. *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015(要旨で確認)

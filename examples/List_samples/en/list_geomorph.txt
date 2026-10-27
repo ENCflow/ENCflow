@@ -386,6 +386,25 @@
   !uplift0 = 1.0            ! uplift rate (mm/yr). Unspecified = default 1.0
                             !   (negative = subsidence)
 
+  ! ---- bedrock incision by flowing water (mountain streams. Requires
+  !      f_fluvial=1. developer.md §88) ----
+  !f_rockinc = 1            ! lowers the bedrock surface z − sd by plucking and
+                            !   adds the plucked rock to the mobile layer sd
+                            !   (z unchanged). The mobile layer suppresses the
+                            !   incision by the exposure exp(−sd/H*), and the
+                            !   bedload outflow is multiplied by the availability
+                            !   1 − exp(−sd/H*) (also where the rock is not eroded)
+  !rock_kp = 1.0e-6         ! plucking rate coefficient (m/s; required; incision
+                            !   rate of bare rock at τ_b = 2τ_c; calibration value)
+  !rock_tauc = 10.0         ! plucking threshold τ_c (Pa; required; calibration value)
+  !rock_m = 1.0             ! plucking exponent (default 1)
+  !rock_hstar = 0.05        ! cover length H* (m; required; a measure of the
+                            !   relief of the bedrock surface and the grain size)
+  !fn_rock = 'rock.txt'     ! distribution of the erodibility multiplier of the
+                            !   bedrock (>= 0; 0 = not eroded). Unset = 1 everywhere.
+                            !   To start from bare rock, give a soil-thickness file
+                            !   of zeros (f_sdtype=1, fn_sd)
+
   ! ---- limestone dissolution (chemical denudation, karst. developer.md §86) ----
   !f_dissol = 1             ! limestone dissolution (lowers z in proportion to
                             !   the recharge; no sediment is produced)

@@ -463,6 +463,57 @@ published range of karst denudation rates of 20 to 100 mm/kyr
 saturation along the flow path is not represented. Conduit (cave) growth
 is a separate, not yet implemented stage (docs/karst_plan.md §5).
 
+### Bedrock incision by flowing water (f_rockinc)
+
+**Plucking and cover.** The bedrock surface $`R = z - s_d`$ is lowered by
+plucking by the flow, and the mobile layer $`H = s_d`$ suppresses the
+incision through the exposure $`e^{-H/H_*}`$:
+
+```math
+\tau_b = \frac{\rho_w g n^2 |V|^2}{h_e^{1/3}},\qquad
+E_{p0} = f_r\,k_p \max\!\left(\frac{\tau_b}{\tau_c} - 1,\ 0\right)^{m},\qquad
+\frac{dR}{dt} = -E_{p0}\,e^{-H/H_*},\qquad \frac{dH}{dt} = E_{p0}\,e^{-H/H_*}
+```
+
+$`\tau_b`$ uses the same Manning closure as bedload
+($`h_e = \max(h, d_v)`$), and $`f_r`$ is the erodibility multiplier
+(`fn_rock`). The plucking term writes the excess-shear-stress form
+$`E = k_e(\tau_b - \tau_c)^m`$ of the type that expresses the erosion rate of
+bedrock channels by the bed shear stress[^howard83] in ratio form with
+$`k_p = k_e \tau_c^m`$, so $`k_p`$ is "the incision rate of bare rock at
+$`\tau_b = 2\tau_c`$" (m/s) (the source of the thresholded form is still
+being checked). Expressing the cover as an exponential of the layer
+thickness is the same as in SPACE[^shobe17] and Landlab's
+GravelBedrockEroder. The plucked rock becomes a mobile layer of the same
+thickness ($`z`$ is unchanged), and bulking is absorbed into $`k_p`$ (the
+same 1:1 conversion as weathering; **our own simplification**).
+
+**Thin-layer transport.** The edge flux of bedload is multiplied by the
+availability $`F_s = 1 - e^{-H/H_*}`$ of the supplying cell. In a steady
+state with a uniform capacity $`q_c`$ and a constant transport rate
+$`q_s`$, $`F_s = q_s/q_c`$, and the exposure is $`1 - q_s/q_c`$, i.e. it
+agrees with the cover written as a supply ratio[^sklar04][^turowski07]. The
+idea of setting the cover by the ratio of the alluvial thickness to the bed
+relief[^zhang15] is written as a closure that uses the same $`H_*`$ for the
+exposure and the availability; this combination and the dimensional form are
+**our own** (docs/mountain_stream_plan.md §4.3). The steady state in which
+the plucked rock joins the transport downstream follows from solving
+$`q_i = q_{i-1} + (1-\lambda)\Delta x\,E_{p0}(1 - q_i/q_c)`$ cell by cell
+(T3 of test/rockinc).
+
+**Time integration.** The hydraulics are frozen at the start of an update
+and the exposure is integrated exactly:
+
+```math
+H^{n+1} = H^n + B_p,\qquad
+B_p = H_*\ln\!\left(1 + \frac{E_{p0}\,\Delta t_s}{H_*}\,e^{-H^n/H_*}\right)
+```
+
+(the same form as the weathering propagator). Changing the update interval
+or `morfac` gives the same result, and it is unconditionally stable. The
+outflow from a thin layer is explicit, with the time scale
+$`H_*(1-\lambda)\Delta x / q_c`$.
+
 ## 8. Parameters and the basis of their defaults
 
 The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
@@ -500,6 +551,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | dissol_dzmax | 0 | cap on the dissolution per cell and update | **numerical setting** 0 = off. A safety valve of the fluv_dzmax type (the excess is discarded as saturation) |
 | dissol_fsink / dissol_fres | 1.0 / 0 | capacity ratio of the sink inflow / residue fraction | **empirical value** to be calibrated / **given** 0 = no residue |
 | dissol_lat | 0 | share p of lateral dissolution | **method** 0 = floor only, −1 = automatic from the wetted-area ratio (recommended). A fixed value follows the ratio of ponding depth to cell size |
+| rock_kp / rock_tauc | none / none | plucking rate coefficient (m/s) / threshold (Pa) (bedrock incision of §7) | **calibration value** no standard value. k_p is the incision rate of bare rock at τ_b = 2τ_c |
+| rock_m | 1 | plucking exponent | **conventional value** linear (same as berode_m of bank erosion) |
+| rock_hstar | none | cover length H* | **given** a measure of the relief of the bedrock surface and the grain size (a few cm to tens of cm). Shared by the exposure and the availability |
+| fn_rock | none (1 everywhere) | erodibility multiplier of the bedrock | **given** lithological contrast. 0 = not eroded |
 
 **Where to look when revising the defaults**
 
@@ -529,6 +584,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/splash](../../../test/splash/en/README.md) | dry erosion on a slope with a break | all digits agree with the analytical form, export ledger agrees |
 | [test/splashslide](../../../test/splashslide/en/README.md) | cohesive / loose cliff | relief growth ×1.34 / ×0.77 |
 | [examples/badland](../../../examples/badland/) | valley formation on a plateau edge | valleys grow from the cliff edge with zero surface flow |
+| [test/rockinc](../../../test/rockinc/en/README.md) | bedrock incision by flowing water | analytic self-cover solution 9e-8, quasi-steady cover 4e-4, conservation in a closed box 6e-18 |
 
 ## References
 
@@ -549,3 +605,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^coulthard13]: Coulthard, T. J., Neal, J. C., Bates, P. D., Ramirez, J., de Almeida, G. A. M. and Hancock, G. R. (2013): Integrating the LISFLOOD-FP 2D hydrodynamic model with the CAESAR model: implications for modelling landscape evolution. *Earth Surf. Process. Landforms*, 38, 1897–1906.
 [^white84]: White, W. B. (1984): Rate processes: chemical kinetics and karst landform development. In: La Fleur, R. G. (ed.) *Groundwater as a Geomorphic Agent*, Allen & Unwin, 227–248. (maximum denudation rate D = (P − E) c_eq/ρ)
 [^gabrovsek09]: Gabrovšek, F. (2009): On concepts and methods for the estimation of dissolutional denudation rates in karst areas. *Geomorphology*, 106, 9–14.
+[^howard83]: Howard, A. D. and Kerby, G. (1983): Channel changes in badlands. *Geol. Soc. Am. Bull.*, 94, 739–752. (Erosion rate of bedrock channels expressed by the bed shear stress during floods; checked against the abstract)
+[^shobe17]: Shobe, C. M., Tucker, G. E. and Barnhart, K. R. (2017): The SPACE 1.0 model. *Geosci. Model Dev.*, 10, 4577–4604. doi:10.5194/gmd-10-4577-2017 (the exponential cover form checked in the Landlab source)
+[^sklar04]: Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
+[^turowski07]: Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion. *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697
+[^zhang15]: Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N. (2015): Macro-roughness model of bedrock–alluvial river morphodynamics. *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015 (checked against the abstract)

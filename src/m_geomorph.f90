@@ -108,6 +108,20 @@ module m_geomorph
     real(real64), allocatable :: vrow(:)  ! 溶けた岩の体積の行部分和 (m3。台帳)
   end type
 
+  ! 流水による岩盤下刻(f_rockinc。§88。docs/mountain_stream_plan.md 第 1 段)
+  type t_rockinc
+    real :: kp = 0.0                 ! 剥離の速度係数 k_p (m/s)
+    real :: tauc = 0.0               ! 剥離の閾値 τ_c (Pa)
+    real :: pm = 1.0                 ! 剥離のべき指数 m
+    real :: hstar = 0.0              ! 被覆の長さ H* (m)
+    real :: hsinv = 0.0              ! 1 / H*(掃流砂の利用可能率 1 − exp(−sd/H*) でも使う)
+    logical :: map = .false.         ! 侵食性倍率の分布 fn_rock の指定あり
+    real, allocatable :: fr(:,:)     ! 侵食性倍率(>= 0。帯±ハロ。fn_rock 指定時のみ確保)
+    real(real64), allocatable :: vprow(:)  ! 剥離した岩盤のかさ体積の行部分和 (m3。台帳)
+    real :: bmax = 0.0               ! 1 セル・1 更新の剥離厚 / H* の最大(診断。ランク局所)
+    real :: lmax = 0.0               ! 薄層の排出率 × dts の最大(診断。ランク局所。目安 <= 0.5)
+  end type
+
   type t_fluvial
     real :: wl(1:8) = 0.0            ! k軸方向フラックスの通過幅 (m)
     real :: ex(1:8) = 0.0            ! k軸方向の単位ベクトル x 成分
@@ -397,6 +411,7 @@ module m_geomorph
     real :: wsdinv = 0.0             ! 1 / sd*
     integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
     real :: uprate = 0.0             ! 隆起速度 (m/s。mm/yr から換算)
+    integer :: f_rockinc = 0         ! 流水による岩盤下刻(0:無効, 1:有効。§88)
     integer :: f_dissol = 0          ! 石灰岩の溶食(0:無効, 1:有効。§86)
     integer :: f_bedslide = 0        ! 動く底層(0:無効, 1:有効。landslide_tsunami_plan.md)
     integer :: f_berode = 0          ! 側岸侵食(0:無効, 1:有効。§84.4)
@@ -432,6 +447,7 @@ module m_geomorph
     type(t_rockfall) :: rf           ! 崩落と崖錐
     type(t_fines) :: fin             ! 河床の細粒分の帳簿
     type(t_dissol) :: dis            ! 石灰岩の溶食
+    type(t_rockinc) :: rk            ! 流水による岩盤下刻
     type(t_wave) :: wav              ! 波浪による沿岸漂砂
     type(t_gmwork) :: wrk            ! 共有スクラッチ(require_work が確保)
   end type
@@ -706,6 +722,41 @@ module m_geomorph
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(in) :: s
     end subroutine
+    ! 流水による岩盤下刻(m_geomorph_rockinc。§88)
+    module subroutine init_rockinc(gm, p, g, s, list)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine calc_rockinc(gm, p, g, s, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
+    module subroutine dispose_rockinc(gm, p, g, s)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+    end subroutine
+    ! 被覆の利用可能率 1 − exp(−h·hsinv)(小さい引数で桁落ちしない形。掃流砂の
+    ! 供給側にも掛けるので fluvial からも呼ぶ。実装は m_geomorph_rockinc)
+    module pure function rock_avail(h, hsinv) result(f)
+      real, intent(in) :: h, hsinv
+      real :: f
+    end function
+    ! 分布ファイル(全域の行列)を rank0 が読み帯±ハロへ配る(方式 2。値の検査は
+    ! 呼び出し側。実装は m_geomorph_rockinc。fn_rock が使う)
+    module subroutine read_cellmap(p, g, fn, a)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      character(len=*), intent(in) :: fn
+      real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
+    end subroutine
   end interface
 
 contains
@@ -841,6 +892,26 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_berode > 0 .and. gm%f_fluvial <= 0) then
     call par_stop("list_geomorph: f_berode requires f_fluvial=1 (bank erosion feeds the bed-load path)")
   end if
+  ! 流水による岩盤下刻(§88)の組合せの検査(初期版の範囲。値の検査は init_rockinc)。
+  ! 判定はすべて namelist 由来で全ランク同一(collective 安全)
+  gm%f_rockinc = list%f_rockinc
+  if (gm%f_rockinc < 0 .or. gm%f_rockinc > 1) call par_stop("list_geomorph: f_rockinc must be 0 or 1")
+  if (gm%f_rockinc > 0) then
+    if (gm%f_fluvial <= 0) then
+      call par_stop("list_geomorph: f_rockinc requires f_fluvial=1 (the plucked rock is carried as bed load)")
+    end if
+    if (gm%f_debris > 0 .or. gm%f_bedslide > 0) then
+      call par_stop("list_geomorph: f_rockinc cannot be combined with f_debris/f_bedslide yet " &
+                    // "(mixture hs and morfac=1 events; docs/mountain_stream_plan.md §6.1)")
+    end if
+    if (g%width_active) then
+      call par_stop("list_geomorph: f_rockinc does not support the subgrid channel width (fn_width) yet " &
+                    // "(the bed area basis of the rock source is the full cell)")
+    end if
+    if (len_trim(p%fn_nest) > 0) then
+      call par_stop("list_geomorph: f_rockinc is not supported with nesting (fn_nest) yet")
+    end if
+  end if
   if (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_debris > 0 &
       .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 .or. gm%f_repose > 0 .or. gm%f_rockfall > 0) then
     ! 河床の物性(共有)
@@ -899,6 +970,8 @@ subroutine m_geomorph_init(gm, p, g, s)
   end if
 
   if (gm%f_fluvial > 0) call init_fluvial(gm, p, g, list)
+  ! 流水による岩盤下刻(fluvial の後 = 流砂量の次元化係数・通過幅を共有する。§88)
+  if (gm%f_rockinc > 0) call init_rockinc(gm, p, g, s, list)
   if (gm%f_suspend > 0) call init_suspend(gm, p, list)
   if (gm%f_wash > 0) call init_wash(gm, list)
   if (list%wet_lw > 0.0) call init_wetlw(gm, g, list)
@@ -928,6 +1001,10 @@ subroutine m_geomorph_init(gm, p, g, s)
       if (gm%f_wave_long > 0) then
         if (gm%f_fluvial <= 0) then
           call par_stop("list_wave: f_wave_longshore requires f_fluvial=1 (longshore transport rides the bed-load path)")
+        end if
+        ! 岩盤下刻(§88)の利用可能率を沿岸漂砂に掛けるかの規約が未定のため、初期版は併用しない
+        if (gm%f_rockinc > 0) then
+          call par_stop("list_wave: f_wave_longshore cannot be combined with f_rockinc yet")
         end if
         call init_wave(gm, p, g, wlist)
       end if
@@ -1094,6 +1171,10 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   ! 区間流入の掃流砂源泉(§84.9): 流入セルの河床に Qb(t) を加えてから運ぶ。
   ! 判定(表の確保)は全ランク同一 = 中のハロ交換は collective 安全
   if (gm%f_fluvial > 0 .and. allocated(b%qbin)) call apply_bedfeed(gm, g, s, b, dts)
+  ! 流水による岩盤下刻(§88): 区間流入の給砂の後・掃流砂の前(上流から入った土砂の
+  ! 被覆を先に見て、生成物を同じ更新の掃流砂で運ぶ)。セル局所で sd を書き、近傍を
+  ! 読む calc_fluvial のために末尾で sd のハロを交換する(判定は全ランク同一)
+  if (gm%f_rockinc > 0) call calc_rockinc(gm, p, g, s, dts)
   if (gm%f_fluvial > 0) call calc_fluvial(gm, p, g, s, dts)
   ! 波浪による沿岸漂砂(§84.15): fluvial が帯内の z を更新した後に、更新後の地形で
   ! 砕波帯と汀線方位を見る(近傍参照のため z・sd のハロを先に最新化。平滑化は
@@ -1296,6 +1377,8 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (gm%f_bedfines > 0) call dispose_fines(gm, p, g, s)
   ! 溶食の記録場の私有 save と台帳報告(契約5。§86)
   if (gm%f_dissol > 0) call dispose_dissol(gm, p, g, s)
+  ! 岩盤下刻の累積下刻の私有 save と台帳報告(契約5。§88)
+  if (gm%f_rockinc > 0) call dispose_rockinc(gm, p, g, s)
   if (gm%f_wave_long > 0) call dispose_wave(gm)
   if (gm%flv%nclip > 0) then
     call par_warn("geomorph: fluvial dzmax clip fired on " &

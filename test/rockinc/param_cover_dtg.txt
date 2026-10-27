@@ -1,0 +1,77 @@
+!======================================================================
+! rockinc: 自己被覆の解析解・更新間隔の違い(構成 cover_dtg。param_cover.txt と同じ系)
+!   dt_geomorph を 300 → 600 s(更新 3 回)にする。剥離は露出率を厳密に積分する
+!   伝播子なので、e^{H/H*} = 1 + E_p0 t / H* は更新間隔によらず、最終の H は
+!   cover と丸め誤差の範囲で一致する(Check_rockinc.py cover が比較する)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 1800
+  dt_disp = 600
+  dt_file = 1800
+  dt_recrd = 1800
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result_cover_dtg'
+  dir_save = 'save_cover_dtg'
+  f_state_save = 1
+  f_check_cfl = 1
+  f_output_mode = 2         ! bil(単精度。検定は h・V を読む)
+  f_out_vv = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'hinit.txt'
+  v0 = 1.120351             ! 等流流速(make_init.py の V0。南向き = j の増える向き)
+/
+
+&list_geoinfo
+  lx = 3.0
+  ly = 60.0
+  nx = 3
+  ny = 60
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.04
+  f_sdtype = 1
+  fn_sd = 'sdzero.txt'      ! 裸岩(土層厚 0)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 600.0       ! 更新 3 回(cover の倍の間隔)
+  morfac = 1.0
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.05           ! τ* = 0.036 < τ*c(礫は動かない)
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+  f_rockinc = 1
+  rock_kp = 6.0e-5          ! 剥離の速度係数 (m/s。τ_b = 2τ_c での裸岩の下刻速度)
+  rock_tauc = 10.0          ! 剥離の閾値 (Pa)。等流の τ_b ≈ 29.4 Pa
+  rock_m = 1.5
+  rock_hstar = 0.05         ! 被覆の長さ H* (m)
+/
+
+&list_bound_edge
+  f_bc_s = 1                ! 南辺は自由流出
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 2, 1
+  inflow_val(1:2,1,1) = 0, 0.336105
+  inflow_val(1:2,2,1) = 9999, 0.336105
+  inflow_dist(1) = 0
+/

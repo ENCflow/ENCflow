@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 703 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 709 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -279,6 +279,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_rivermouth_drop | &list_enc | [浅水流計算](swflow.md) |
 | f_rntype | &list_geoinfo | [地理情報](geoinfo.md) |
 | f_rockfall | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| f_rockinc | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_salt_gw | &list_salt | [淡塩2層](salt.md) |
 | f_salt_surf | &list_salt | [淡塩2層](salt.md) |
 | f_scalar_scheme | &list_enc | [浅水流計算](swflow.md) |
@@ -405,6 +406,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_record | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
 | fn_reservoir | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
 | fn_rn | &list_geoinfo | [地理情報](geoinfo.md) |
+| fn_rock | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fn_rscap | &list_geoinfo | [地理情報](geoinfo.md) |
 | fn_rw | &list_geoinfo | [地理情報](geoinfo.md) |
 | fn_salt | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
@@ -575,6 +577,10 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | rf_uc | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | rn0 | &list_geoinfo | [地理情報](geoinfo.md) |
 | rn0_rw | &list_geoinfo | [地理情報](geoinfo.md) |
+| rock_hstar | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| rock_kp | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| rock_m | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| rock_tauc | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | runoff_rate | &list_precip | [降雨・気象](forcing.md) |
 | salt_alpha | &list_salt | [淡塩2層](salt.md) |
 | salt_diagratio | &list_salt | [淡塩2層](salt.md) |

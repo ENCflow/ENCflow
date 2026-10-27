@@ -104,11 +104,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "b7f8a69040342fd79e422bfaa8b02f5458b7d537b6034ef10465fc8fe02b8bf4",
-      "target_sha256": "040429576ab10b1dbaac222df17ed138d6015b91367cfc38fd4bf138349e26bc",
+      "source_sha256": "c59f3efd6f605451f514913d4c2a2255c77f6c64d9f96caa7fa79dd04f381f00",
+      "target_sha256": "a6e23550ca4f4d3af8823c554679f61c76b5c520a6ce3530fbf0d785464624fc",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-26"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -266,11 +266,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "de322617d51c14c721f1dbfc9b42a577c328cc7c2dc01ea9a89754a3b080ceeb",
-      "target_sha256": "2a082c4a8d13b5a11ee7ebef812befb6365d5ac7004df7eb716877a64b533050",
+      "source_sha256": "806ad033f9238c97833ab353463d128eaa3e2c94634b652e8ed0aea11c4a6c30",
+      "target_sha256": "120fc0c49daf06e4f1b5adf4472cc28ce1fdbd7ce839d0930ea32737e1b2bed5",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -320,11 +320,11 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "e98fd76dc0edeb883d82e8fd1d03a7673c7ad9bfd2ded7e1630f5f54d4797eab",
-      "target_sha256": "3ac97f772b40182aa974580cf718c40b95bd217d176643cba5916362b76068cd",
+      "source_sha256": "eaa27826160491352b17332b8104058180cd8eaf6320abbedd697cdd9fed388f",
+      "target_sha256": "6d988c25bceecd6fddf886de0dbf3dac6918c12c502a8c1400a97f2d86f071aa",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "docs/users_guide/lavaflow.md",
@@ -383,11 +383,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "4d4e3bb370c53083f0df5d8b556729f8273d1c847beca9f3c155a7a5b4742fa5",
-      "target_sha256": "a3efddcd2f82a315064c0b564745d6a3713fa7e673ce8ff269bdde22c9fb02f3",
+      "source_sha256": "693bb69519e13c7bd5392cd167a9020f4a7c9523391a253b13e81c24a29a6fb8",
+      "target_sha256": "3713b88afeaf1a02886ebe7a9ba29bceb81cd45b7361cb39694903f759255066",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-26"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -419,11 +419,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "687f491378720d0885a694f1eec4ef770bc8c6906ef6fd4bf397dea9bbdcd4ea",
-      "target_sha256": "53177b68be3e34e567c43f05f9bfb48af283b3a59a9ee142bab71d4ce7ca6f2c",
+      "source_sha256": "40105807424b69b8b7be938a7f42951aa5179eea2c4c3d31ee85e379b5c62a81",
+      "target_sha256": "702fa6ceb43079423cc9cf495893bcf13a069bdbb5c63d89444fe75104c37385",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "docs/users_guide/structure.md",
@@ -608,8 +608,8 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "ad72f751380b250afbd222b468d756f95ca57e8ad6c01089ecdf0b8450628313",
-      "target_sha256": "c22d3b057e593f74c4ab047bd37d21f201f6cc621c0f84c09b031fb4db1ed77d",
+      "source_sha256": "f26f77db11bdee26de17d1583e82dfa6cac2ab70f73a109303229385c46c1ae7",
+      "target_sha256": "a200a1374532b69b681e9b8bcb0df59c04a6084c22b36ccf9038cdf792169da0",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -1846,6 +1846,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/rockinc/README.md",
+      "target": "test/rockinc/en/README.md",
+      "source_sha256": "93cfee14d1ec5241be4d7ea35a3fb0f573d485c9dd65e8b6ddb2d8d2bd2cfbaa",
+      "target_sha256": "e2a6790162cd32056d62ec21a6d7bead78ee434771b1a60e4578a13d0ad7a3f9",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "test/salt/README.md",

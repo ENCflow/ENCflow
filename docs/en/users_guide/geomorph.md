@@ -12,7 +12,7 @@ processes change different state variables.
 The equations, the basis of the defaults and the references are in two
 supplements: [Sediment transport, hillslope and long-term processes](sediment.md)
 (creep, bedload, suspended load, hillslope erosion, dry-slope erosion,
-weathering/uplift, MORFAC) and
+weathering/uplift, bedrock incision, MORFAC) and
 [Debris flow, slope failure and moving bed layer](massflow.md) (resistance
 laws, erosion/deposition laws, triggering, bed layer).
 
@@ -26,6 +26,7 @@ laws, erosion/deposition laws, triggering, bed layer).
 | Debris flow / landslide | f_debris / f_slide | Water-sediment mixture; selectable exchange and resistance laws, slope stability test |
 | Moving bed layer | f_bedslide | Layer hb moves within the terrain and soil, displacing the water surface |
 | Bedrock weathering / uplift | f_wthr / f_uplift | Weathering increases sd; uplift / subsidence shifts z |
+| Bedrock incision by flowing water | f_rockinc | Plucking by the flow lowers the bedrock surface z − sd and adds the plucked rock to the mobile layer sd (z unchanged). The mobile layer shields the bed (cover), and the outflow of bedload is multiplied by an availability factor (requires f_fluvial) |
 | Limestone dissolution | f_dissol | Lowers z in proportion to the recharge (no sediment is produced); a sink-inflow term for dolines |
 | Rockfall and talus | f_rockfall | Collapse of free faces (cliffs) that exceed a critical height, and the talus (thickness ht) of the fallen debris. The talus spreads at its repose angle and suppresses dry-slope erosion |
 
@@ -1147,6 +1148,79 @@ intervals, it is `(tt − t0) × morfac / (365.25 × 86400)` years. See
 
 **Outputs for this section**: soil thickness `Sd0001...` (grows by weathering) and ground `Z0001...` (rises by uplift). Read them in morphological time: time of FILENUMBER.csv × morfac is the elapsed years ([Output and monitoring](#output-and-monitoring)).
 
+## Bedrock incision by flowing water (f_rockinc)
+
+Formulas and sources: [supplement](sediment.md#bedrock-incision-by-flowing-water-f_rockinc).
+The master design record is docs/mountain_stream_plan.md (developer.md §88).
+
+This is the process by which the flow cuts the bedrock beneath a thin
+alluvial layer (the mobile layer `sd`), as in the bedrock channels of
+mountain streams. The bedrock surface is represented by `z − sd`; no new
+state variable is introduced.
+
+- **Plucking**: when the bed shear stress τ_b exceeds the threshold τ_c,
+  bare rock is eroded at the rate k_p (τ_b/τ_c − 1)^m. The plucked rock
+  becomes a mobile layer of the same thickness (`sd` increases and `z` does
+  not change; the same 1:1 conversion as weathering).
+- **Cover**: the thicker the mobile layer, the less the bedrock is eroded
+  (exposure exp(−sd/H*), where H* is `rock_hstar`).
+- **Thin-layer transport**: the outflow of bedload is multiplied by the
+  availability 1 − exp(−sd/H*). A thin gravel layer is not carried at the
+  full capacity, and in a steady state the cover fraction equals
+  "transport rate / capacity"
+  ([supplement](sediment.md#bedrock-incision-by-flowing-water-f_rockinc)).
+  With `f_rockinc = 1` the bedload transport of a thin alluvial layer changes
+  by this factor even in cells where the bedrock is not eroded
+  (τ_b ≤ τ_c, or `fn_rock` is 0).
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| f_rockinc | 0 | 1 enables it (`f_fluvial = 1` is required) |
+| rock_kp | none (required, > 0) | Plucking rate coefficient (m/s): the incision rate of bare rock at τ_b = 2τ_c |
+| rock_tauc | none (required, > 0) | Plucking threshold τ_c (Pa) |
+| rock_m | 1.0 | Plucking exponent m |
+| rock_hstar | none (required, > 0) | Cover length H* (m): a measure of the relief of the bedrock surface. Shared by the exposure and the availability |
+| fn_rock | "" | Distribution of the erodibility multiplier of the bedrock (≥ 0; 0 = not eroded = fixed bed, structures). Unset = 1 everywhere |
+
+`rock_kp` and `rock_tauc` are calibration values without a standard value
+in the literature, so they have no defaults. τ_b is obtained from the same
+Manning closure as bedload (the depth and velocity of the cell).
+
+To start from bare rock, give a soil-thickness file of zeros
+(`f_sdtype = 1`, `fn_sd`); a uniform value `sd0 = 0` cannot be used.
+
+**Time step**: plucking integrates the exposure exactly, so it is stable
+regardless of `dt_geomorph` and `morfac` (self-cover limits the thickness
+added in one update). The outflow of bedload from a thin layer advances
+explicitly, so if "max thin-layer drainage rate x dts" printed at the end
+exceeds 0.5, lower `dt_geomorph` or `morfac` (a guideline for the cover
+dynamics not to depend on the update interval).
+
+**Combinations (initial version)**: it cannot be combined with `f_debris`,
+`f_bedslide`, the subgrid channel width `fn_width`, nesting, or wave-driven
+longshore transport (the run stops). When combined with `f_suspend`,
+`f_bedfines = 1` is recommended (it prevents the plucked coarse material
+from being entrained as suspended load). Small long-term increments are
+involved, so a double-precision build is recommended.
+
+**Caution on steep slopes**: in the uniform-flow test (T9 of
+[test/rockinc](../../../test/rockinc/en/README.md)), τ_b computed from the
+cell velocity exceeded the uniform-flow balance ρ g h tanθ by 1 % at slope
+0.01, 14 % at 0.1 and 29 % at 0.2 (5 cells wide, Δx = 1 m, depth 0.3 m).
+The dynamic reassignment of blocked openings (`f_opening_dynamic = 2`, the
+default) counts the upslope ground of a uniform slope as a partial wall and
+speeds up the flow; the effect grows with grid spacing × slope relative to
+the depth. For steep mountain streams, calibrate `rock_kp` and `rock_tauc`
+(and the transport rate) including this bias.
+
+**Outputs for this section**: cumulative incision `Ri0001...` (total plucked
+thickness, m; uplift and weathering are not included). The bedrock surface
+is Z − Sd. At the end, the volume of plucked bedrock (bulk) "rock incision:
+plucked ... m3" is printed, together with the maximum increment per update /
+H* and the maximum thin-layer drainage rate × dts. Restart uses
+`geomorph_rockinc.dat` (cumulative incision)
+([Output and monitoring](#output-and-monitoring)).
+
 ## Limestone dissolution (f_dissol)
 
 Formula and typical rates: [supplement](sediment.md#limestone-dissolution-f_dissol).
@@ -1241,6 +1315,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 | Fs0001... / Fs9999 | f_out_fs = 1 (f_slide = 1 or 2) | slope safety factor and its run minimum (−1 = not evaluated) |
 | Hb0001... / Vb0001... | automatic (f_bedslide) | thickness (m) and speed (m/s, diagnostic) of the moving bed layer |
 | Fx0001... | automatic (f_fixation) | fixation degree a (0 to 1) |
+| Ri0001... | automatic (f_rockinc) | cumulative bedrock incision by flowing water (m; total plucked thickness). The bedrock surface is Z − Sd |
 
 **Ledgers and log** (budget checks)
 
@@ -1265,8 +1340,9 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 **Restart**
 
 - z, hs and sd are part of the core state save. The moving bed layer uses
-  the private file `geomorph_bedslide.dat` and the bed-fines inventory sf
-  (f_bedfines) `geomorph_fines.dat` automatically (the model must have been
+  the private file `geomorph_bedslide.dat`, the bed-fines inventory sf
+  (f_bedfines) `geomorph_fines.dat` and the cumulative bedrock incision Ri
+  (f_rockinc) `geomorph_rockinc.dat` automatically (the model must have been
   enabled at save time). The update cycle
   continues from the saved step number.
 
@@ -1306,6 +1382,7 @@ When the type of phenomenon is known, start from the following
 | River-mouth delta | f_fluvial (capacity feed) + f_suspend (inflow concentration) + f_bedfines + fluv_slope + f_repose (+ f_fixation) | - | - | - | sand 0.0005; mud via susp_wf = 1e-3 m/s | 30 | Sea as ordinary cells + initial water level. A mud concentration of 0.0002-0.001 separates fan and bird-foot. morfac 100-200. docs/delta_plan.md |
 | Bed change of a gravel-bed river | f_fluvial | - | - | - | 0.02-0.1 | - | Bedload dominates |
 | Long-term landform evolution | f_creep + f_wthr + f_uplift | - | - | - | - | - | creep_d 0.001-0.05 m²/yr, p0 10-100 mm/kyr, uplift 0.1-5 mm/yr. Together with morfac |
+| Bedrock incision in mountain streams | f_fluvial + f_rockinc (+ f_wthr + f_uplift + f_creep) | - | - | - | 0.01-0.1 | - | H* from the grain size to the bed relief (a few cm to tens of cm). Calibrate k_p and τ_c (mind the bias of τ_b on steep slopes). Bare rock via a zero soil-thickness file. docs/mountain_stream_plan.md |
 | Karst landforms (dissolution, dolines) | f_dissol (+ dissol_sink + the inlets of f_gwconduit, dissol_lat = −1, f_rockfall) | - | - | - | - | - | c_eq 50-300 mg/L (low for rain on bare rock, high under soil), rho_r 2500-2700. Limit to limestone with fn_dissol. Rock walls phi_rock 50-70°. Together with morfac |
 | Landslide tsunami (bed layer) | f_bedslide | 0.1-0.2 | 300-1000 | - | - | - | mu and xi of the inertia-free bed layer (bs_mu/bs_xi). Calibrated separately from the mixture values |
 
@@ -1324,4 +1401,8 @@ velocity, grid-dependence detection on a 45-degree slope, plunge into a
 lake and wave generation),
 [test/dissol](../../../test/dissol/en/README.md) (limestone dissolution: analytic
 solutions for the infiltration, sink and rainfall sources and for the
-lateral-dissolution partition, and a restart round trip).
+lateral-dissolution partition, and a restart round trip),
+[test/rockinc](../../../test/rockinc/en/README.md) (bedrock incision by flowing
+water: analytic self-cover solution, quasi-steady cover, conservation in a
+closed box, restart round trip from bare rock, and a record of τ_b in steep
+uniform flow).

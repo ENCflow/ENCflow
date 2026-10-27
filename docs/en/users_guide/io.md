@@ -330,6 +330,7 @@ come from `FILENUMBER.csv`.
 | Subsurface storage / water table | flag | Hg (f_out_hg; also Hg2 / Hgc / Hgs / Cg) | Hg is a column-equivalent depth (m). Saturated thickness = Hg / sy0; water table ≈ ground − soil thickness + Hg / sy0 (lateral / Green-Ampt configurations; see the figure in [Groundwater](gwflow.md)) |
 | Soil thickness | automatic | Sd | only when a model that uses sd is enabled |
 | Fixation degree | automatic | Fx | 0 to 1; only with f_fixation ([Sediment and landform change](geomorph.md)) |
+| Cumulative bedrock incision | automatic | Ri | total plucked thickness by flowing water (m); only with f_rockinc. The bedrock surface is Z − Sd ([Sediment and landform change](geomorph.md)) |
 | Snow water equivalent | automatic | Sw | mm of water ([Snow](forcing.md)) |
 | Soil Water Index | automatic | Swi / Swi9999 / Swit9999 | mm ([Soil Water Index](swi.md)) |
 | Sediment column / concentration / flow depth | flag or computed | Hs (f_out_hs), D9999 / Dt9999 (f_out_dmax family) | volume concentration = Hs / (H + Hs); instantaneous flow depth = H + Hs, run maximum D9999 |
