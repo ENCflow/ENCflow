@@ -12,6 +12,11 @@
 #   Check_rockinc.py uplift   T8: 隆起(出口固定)の下で定常になった縦断の勾配が、各セルで
 #                                 E_p0(S) (1 − q_j/q_c(S)) = U(q_j = (1 − λ) U Δy j。等流の水理)を
 #                                 解いた準解析解に近い。定常性と、局所の釣り合い B_p/dts = U も見る
+#   Check_rockinc.py t11      T11(C1): 谷頭の給砂 q_in の下の定常縦断形。各セルで
+#                                 (E_p0(S) + β q_j)(1 − q_j/q_c(S)) = U、
+#                                 q_j = q_{j−1} + (1 − λ) Δy E_p0(S)(1 − q_j/q_c(S))(q_0 = q_in)を
+#                                 等流の水理で解いた準解析解と勾配を比べ、隆起・研磨・給砂・開境界の
+#                                 流出の台帳で土砂収支を閉じる
 #   Check_rockinc.py steep    T9: 急勾配の等流で、セル値の Manning 閉じの τ_b と等流の釣り合いの比を
 #                                 記録する(合否なし。動的振り替えの影響の記録。README の所見)
 # 水理(h、|V|、v)は最終時刻の分布出力(bil = 単精度)、H = sd・z・Ri は save(倍精度)から読む。
@@ -41,6 +46,11 @@ TOL_HUMP, MAX_FULL = 5.0e-3, 0.05    # r < 1 の相対差 / r >= 1 の下刻速�
 UP_KP, UP_TAUC, UP_M, UP_HS, UP_D50, UP_U, UP_MORF = 6.0e-6, 10.0, 1.5, 0.05, 0.01, 1.0e-5, 50.0
 UP_J1, UP_J2 = 15, 58                # 検定するセル(流入セル直下の減衰する段差を避ける)
 TOL_UP_STEADY, TOL_UP_BAL, TOL_UP_SLOPE, TOL_UP_TREND = 0.02, 0.02, 0.05, 0.02
+# 構成 t11_*(T11 = C1。T8 と同じ水路・隆起・剥離に谷頭の給砂 q_in = r T11_QC0。地形の時間 1.5e5 s、
+# 出力は 600 s(地形の時間 3e4 s)ごと)
+T11_CFGS = (("t11_r02", 0.2, 0.0), ("t11_r05", 0.5, 0.0), ("t11_r08", 0.8, 0.0), ("t11_r05a", 0.5, 0.005))
+T11_QC0, T11_TT, T11_DTF = 1.81e-3, 3000.0, 600.0
+TOL_T11_STEADY, TOL_T11_SLOPE, TOL_T11_BUDGET = 0.02, 0.05, 1.0e-8
 # 構成 box(T4)
 BX_SD0, BX_Z0 = 0.005, 0.0
 TOL_LEDGER, MIN_VP, MIN_DZ = 1.0e-7, 1.0e-3, 1.0e-4
@@ -277,6 +287,93 @@ def check_uplift():
     return ok
 
 
+def uniform_flow(slope):
+    """幅一様の等流(Manning)の水深と流速(水路の単位幅流量 Q_UNIT)"""
+    h = (Q_UNIT * N / math.sqrt(slope)) ** 0.6
+    return h, Q_UNIT / h
+
+
+def t11_profile(qin, beta):
+    """T11 の準解析解: 北端から各セルの勾配 S_j と流出 q_j を解く。q_j は剥離の釣り合い
+    q_j = (q_{j−1} + a)/(1 + a/q_c)(a = (1 − λ) Δy E_p0(S))で S_j から決まり、S_j は
+    (E_p0(S) + β q_j)(1 − q_j/q_c(S)) = U の根(S について単調。二分法)"""
+    def resid(s, qprev):
+        h, v = uniform_flow(s)
+        e = ep0(v, h, UP_KP, UP_TAUC, UP_M)
+        qc = qcap(v, h, UP_D50)
+        a = (1.0 - LAM) * DX * e
+        q = (qprev + a) / (1.0 + a / qc)
+        return (e + beta * q) * (1.0 - q / qc) - UP_U, q
+    sa, q = [], qin
+    for _ in range(NY):
+        lo, hi = 1.0e-4, 0.2
+        for _ in range(200):
+            mid = math.sqrt(lo * hi)
+            if resid(mid, q)[0] > 0.0:
+                hi = mid
+            else:
+                lo = mid
+        s = math.sqrt(lo * hi)
+        q = resid(s, q)[1]
+        sa.append(s)
+    return sa
+
+
+def net_out(logfile):
+    """開境界を通った掃流砂の正味の固体体積(dispose の台帳。developer.md §88.12)"""
+    v = None
+    pat = re.compile(r"open boundaries \(out - in\)\s+(\S+) m3")
+    for line in open(logfile, encoding="utf-8", errors="replace"):
+        m = pat.search(line)
+        if m:
+            v = float(m.group(1))
+    if v is None:
+        sys.exit("FAIL: open-boundary ledger line not found in %s" % logfile)
+    return v
+
+
+def check_t11():
+    """T11(C1): 谷頭の給砂の下の定常縦断形。最後の 2 回の出力(地形の時間 3e4 s 間隔)で定常性、
+    j = UP_J1〜UP_J2 の勾配を準解析解(t11_profile)と比べる。土砂収支は
+    Σ(z − z0) A = U T N_up A − 研磨量 + (給砂 − 開境界の正味の流出)/(1 − λ)
+    (剥離は z を動かさず可動層へ。N_up は隆起するセルの数 = 出口のセル以外)"""
+    i = I1 - 1
+    tg = T11_TT * UP_MORF
+    ok = True
+    smid = {}
+    for c, r, beta in T11_CFGS:
+        z4 = load_bil("result_" + c, "Z", 4, NX, NY)
+        z5 = load_bil("result_" + c, "Z", 5, NX, NY)
+        _, z, _ = load_state("save_" + c, NX, NY)
+        qin = r * T11_QC0
+        sa = t11_profile(qin, beta)
+        steady = sl = 0.0
+        sm = {}
+        for j in range(UP_J1 - 1, UP_J2):
+            steady = max(steady, abs((z5[j][i] - z4[j][i]) / (T11_DTF * UP_MORF)) / UP_U)
+            sm[j] = (z5[j - 1][i] - z5[j + 1][i]) / (2.0 * DX)
+            sl = max(sl, abs(sm[j] / sa[j] - 1.0))
+        log = "Screen_%s.log" % c
+        _, va = ledger(log)
+        vout = net_out(log)
+        vfeed = qin * tg                            # inflow_qb の固体体積(給砂は全時間一定)
+        nup = NX * NY - 1
+        sum_dz = sum(z[j][ii] - z_of(ii + 1, j + 1) for j in range(NY) for ii in range(NX)) * DX * DX
+        pred = UP_U * tg * nup * DX * DX - va + (vfeed - vout) / (1.0 - LAM)
+        bud = abs(sum_dz - pred) / abs(pred)
+        j1, j2 = UP_J1 - 1, UP_J2 - 1
+        smid[c] = (sm[j1], sm[j2], sa[j1], sa[j2])
+        ok = report("(T11) %s 定常性" % c, steady < TOL_T11_STEADY,
+                    "max|dz/dt| / U = %.2e (tol %.0e)" % (steady, TOL_T11_STEADY)) and ok
+        ok = report("(T11) %s 勾配と準解析解" % c, sl < TOL_T11_SLOPE,
+                    "r = %.1f、β = %g: j = %d〜%d で S = %.5f〜%.5f(準解析解 %.5f〜%.5f)、max|S/S_a − 1| = %.2e (tol %.0e)"
+                    % (r, beta, UP_J1, UP_J2, sm[j1], sm[j2], sa[j1], sa[j2], sl, TOL_T11_SLOPE)) and ok
+        ok = report("(T11) %s 土砂収支" % c, bud < TOL_T11_BUDGET,
+                    "Σ(z − z0)A = %.4f m3、隆起 − 研磨 %.4f + (給砂 %.4f − 流出 %.4f)/(1 − λ) = %.4f、相対差 %.1e (tol %.0e)"
+                    % (sum_dz, UP_U * tg * nup - va, vfeed, vout, pred, bud, TOL_T11_BUDGET)) and ok
+    return ok
+
+
 def ledger(logfile):
     """dispose の台帳行(剥離・研磨のかさ体積)を読む(ファイル中の最後の行)"""
     vp = va = None
@@ -362,8 +459,10 @@ if __name__ == "__main__":
         ok = check_uplift()
     elif what == "box":
         ok = check_box(sys.argv[2])
+    elif what == "t11":
+        ok = check_t11()
     elif what == "steep":
         ok = check_steep()
     else:
-        sys.exit("usage: Check_rockinc.py cover|pluck|hump|uplift|box LOG|steep")
+        sys.exit("usage: Check_rockinc.py cover|pluck|hump|uplift|box LOG|t11|steep")
     sys.exit(0 if ok else 1)

@@ -11,6 +11,7 @@ sdir=$(dirname "$(readlink -f "$0")")
 
 cfgs1="cover cover_dtg cover_mf cover_rt1"
 cfgs2="cover_rt2 pluck pluck_mf5 pluck_mf20 pluck_rt1 pluck_rt2 hump_r02 hump_r05 hump_r08 hump_r12 uplift box"
+cfgs3="t11_r02 t11_r05 t11_r08 t11_r05a"
 set -o pipefail
 for c in $cfgs1; do
     mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt | tee Screen_$c.log || exit 1
@@ -27,7 +28,7 @@ else
     rc=1
 fi
 set -o pipefail
-for c in $cfgs2; do
+for c in $cfgs2 $cfgs3; do
     mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt | tee Screen_$c.log || exit 1
 done
 set +o pipefail
@@ -37,6 +38,7 @@ python3 "$sdir/Check_rockinc.py" cover || rc=1
 python3 "$sdir/Check_rockinc.py" pluck || rc=1
 python3 "$sdir/Check_rockinc.py" hump || rc=1
 python3 "$sdir/Check_rockinc.py" uplift || rc=1
+python3 "$sdir/Check_rockinc.py" t11 || rc=1
 python3 "$sdir/Check_rockinc.py" box Screen_box.log || rc=1
 for d in pluck cover; do
     for f in state.dat geomorph_rockinc.dat; do
@@ -56,7 +58,8 @@ else
 fi
 
 for d in save_cover save_cover_dtg save_cover_mf save_pluck save_pluck_mf5 save_pluck_mf20 \
-         save_hump_r02 save_hump_r05 save_hump_r08 save_hump_r12 save_uplift save_box; do
+         save_hump_r02 save_hump_r05 save_hump_r08 save_hump_r12 save_uplift save_box \
+         save_t11_r02 save_t11_r05 save_t11_r08 save_t11_r05a; do
     if [ -d ${d}_serial ]; then
         for f in state.dat geomorph_rockinc.dat; do
             if cmp -s $d/$f ${d}_serial/$f; then

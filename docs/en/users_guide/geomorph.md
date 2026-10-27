@@ -1227,7 +1227,9 @@ incision experiment needs relative uplift, so combine uplift `f_uplift = 1`
 with the distribution `fn_uplift` (0 at the outlet cells = fixed base level),
 and set the outlet row to 0 (not eroded) with `fn_rock` (T8 of
 [test/rockinc](../../../test/rockinc/en/README.md) checks the steady
-longitudinal profile in which uplift and incision balance in this way).
+longitudinal profile in which uplift and incision balance in this way, and T11
+the steady slope with a supply at the head added: more supply steepens it
+through the cover).
 
 **Time step**: plucking integrates the exposure exactly, so it is stable
 regardless of `dt_geomorph` and `morfac` (self-cover limits the thickness
@@ -1456,8 +1458,9 @@ solutions for the infiltration, sink and rainfall sources and for the
 lateral-dissolution partition, and a restart round trip),
 [test/rockinc](../../../test/rockinc/en/README.md) (bedrock incision by flowing
 water: analytic self-cover solution, quasi-steady cover, the hump of abrasion,
-conservation in a closed box, restart round trip from bare rock, and a record
-of τ_b in steep uniform flow) and the example
+conservation in a closed box, restart round trip from bare rock, the steady
+longitudinal profile under uplift with and without a supply at the head, and a
+record of τ_b in steep uniform flow) and the example
 [examples/bedrock_cover](../../../examples/bedrock_cover/en/README.md) (the
 amount and timing of supply, the initial cover and the retreat of a step), and
 [test/hillsoil](../../../test/hillsoil/en/README.md) (soil production by

@@ -266,8 +266,8 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "e2c05425581f012a92def0ea57316b4e74a2e36643e35488117ee38acfe0cf27",
-      "target_sha256": "2a5df6edd1091a130a2869c49b9c6a7155867082e94a63c4ee657dc78f85efa6",
+      "source_sha256": "ec48fbc34b76f1d55ecc5d6d5062f5f5e0946496fcd4c63a75e48352309767cc",
+      "target_sha256": "d2e541b511b6e165d61f7d047837c18be8791a3bb1ebd9ac3f25dd30a30ca818",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -419,8 +419,8 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "90df4ff5d17edc760055a7c3c8b902e5a9cf44babd9f6abe714f5477ed7a69b1",
-      "target_sha256": "6798a8b2a87dbb8985a67a6303e52350cf4f1c1722199cb8d195e67f501c3d8b",
+      "source_sha256": "d8272229324648cf88a46829fb26b9c06cb06323a33a0414abdef3fd6f390562",
+      "target_sha256": "5f8198018e32ec8d73141cb43b43ef810db1518a1df08161e1028360a1b4f5c2",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -986,8 +986,8 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "8107b304e4657a5e872da82041f1b2dbc2f4b572d51197c3ae489d9e7009924d",
-      "target_sha256": "b0e3e72ed26eeb512b64795932236d863fd43508ea698db55acdbd4bcda9390c",
+      "source_sha256": "9c528dfbcc1ac15b4d9c37f999076b7d0c8d904679673011cbf80e2b38081bb2",
+      "target_sha256": "6bd1617e57383e78449d24ff352606f72b105c695328ea3a46a5992b4a0d8b9b",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -1868,8 +1868,8 @@
     {
       "source": "test/rockinc/README.md",
       "target": "test/rockinc/en/README.md",
-      "source_sha256": "e0a06380b31df69740e87cfae8d139243478c737cb8242d405df397be90b311d",
-      "target_sha256": "8957e5adf94fbd7463c6299e255ca2378edc8ad9247e0c5d0711763aeaa9937a",
+      "source_sha256": "1546bf152d0c285f9b01c870c1838d9ca5f9a92a6eb3979663af3a0d85d59f10",
+      "target_sha256": "75ddf00a27f19229f29d2c0d201db1fbd71f5dba5f0dca15d8e22180951bf88a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"

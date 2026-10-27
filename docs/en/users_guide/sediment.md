@@ -642,7 +642,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/splash](../../../test/splash/en/README.md) | dry erosion on a slope with a break | all digits agree with the analytical form, export ledger agrees |
 | [test/splashslide](../../../test/splashslide/en/README.md) | cohesive / loose cliff | relief growth ×1.34 / ×0.77 |
 | [examples/badland](../../../examples/badland/) | valley formation on a plateau edge | valleys grow from the cliff edge with zero surface flow |
-| [test/rockinc](../../../test/rockinc/en/README.md) | bedrock incision by flowing water | analytic self-cover solution 9e-8, quasi-steady cover 4e-4, hump of abrasion 7e-4, conservation in a closed box (9 digits with the ledger) |
+| [test/rockinc](../../../test/rockinc/en/README.md) | bedrock incision by flowing water | analytic self-cover solution 9e-8, quasi-steady cover 4e-4, hump of abrasion 7e-4, conservation in a closed box (9 digits with the ledger), the steady slope under a supply at the head within 1.5 % of the quasi-analytic solution with the sediment budget to 4e-10 |
 | [examples/bedrock_cover](../../../examples/bedrock_cover/en/README.md) | cover effect in bedrock channels | steady incision rates of the 3 models within 2.3 % of the theory, constant versus pulsed supply with the same total, initial cover, retreat of a step |
 | [test/hillsoil](../../../test/hillsoil/en/README.md) | soil production by weathering | 1.6e-15 to the analytical solutions with a uniform and a distributed (fn_wthr) rate, cells with multiplier 0 unchanged |
 

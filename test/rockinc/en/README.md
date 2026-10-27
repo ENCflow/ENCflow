@@ -7,7 +7,7 @@
 The verification case for bedrock incision by flowing water in the
 landform-change module (`f_rockinc = 1` in `&list_geomorph`;
 [the landform-change chapter of the user's guide](../../../docs/en/users_guide/geomorph.md#bedrock-incision-by-flowing-water-f_rockinc))
-(developer.md §88, T2 to T7 and T9 of docs/mountain_stream_plan.md §4.9).
+(developer.md §88, T2 to T7 and T9 of docs/mountain_stream_plan.md §4.9, and C1 = T11 of §11.3).
 Plucking by the flow and abrasion by the transported gravel lower the bedrock
 surface z − sd; the plucked rock is added 1:1 to the mobile layer sd, and the
 abraded fines leave the system. The mobile layer suppresses the incision
@@ -33,13 +33,14 @@ default) both water and bedload flow along the axis with the full width.
 | T7 acceleration (with bedload) | `param_pluck_mf5.txt` / `param_pluck_mf20.txt` | pluck with morfac = 5 (flow time 600 s) / 20 (150 s); the same geomorphic time 3000 s | The cumulative incision z − z0 agrees with pluck to relative 2e-3 / 4e-3 (O(dts)) |
 | Restore of a bare-rock save | `param_cover_rt1.txt` → `param_cover_rt2.txt` (control `param_cover_rt2_off.txt`) | cover saved before the first geomorphic update (t = 200 s; the soil thickness is zero everywhere) and continued to 1800 s. The control restores the same save without f_rockinc | The save with zero soil thickness everywhere is accepted (the message is checked), and state.dat and geomorph_rockinc.dat are byte-identical to the straight run. The control stops as before |
 | T8 steady longitudinal profile under uplift | `param_uplift.txt` | Uniform uplift U = 1e-5 m/s; only the outlet cell is neither uplifted nor eroded (`upmap.txt`, `rockmap_up.txt` = 0 = fixed base level). Plucking only from bare rock (k_p = 6e-6 m/s, H* = 5 cm), morfac = 50 (geomorphic time 7.5e4 s) | For j = 15 to 58: steadiness max\|dz/dt\| < 0.02 U, local balance B_p/(U dts) = 1 ± 0.02, the slope within 5 % of the quasi-analytic solution with uniform-flow hydraulics (E_p0(S)(1 − q_j/q_c(S)) = U, q_j = (1 − λ) U Δy j), and its downstream steepening within 2 % |
+| T11 steady longitudinal profile under head supply (C1) | `param_t11_r02.txt`, `r05`, `r08`, `r05a` | T8 plus a constant supply q_in = r q_c0 at the inflow cell in the north (`inflow_qb`; r = 0.2, 0.5, 0.8; q_c0 = 1.81e-3 m²/s is an estimate of the uniform-flow capacity at slope 0.01). r05a also has abrasion (β = 0.005 1/m). Geomorphic time 1.5e5 s | For j = 15 to 58: steadiness max\|dz/dt\| < 0.02 U, the slope within 5 % of the quasi-analytic solution with uniform-flow hydraulics ((E_p0(S) + β q_j)(1 − q_j/q_c(S)) = U, q_j = q_{j−1} + (1 − λ)Δy E_p0(S)(1 − q_j/q_c(S)), q_0 = q_in), and the sediment budget Σ(z − z0)A = uplift − abrasion + (supply − open-boundary outflow)/(1 − λ) to relative 1e-8 (the outflow is the ledger of developer.md §88.12) |
 | T5 restart round trip | `param_pluck_rt1.txt` → `param_pluck_rt2.txt` | pluck saved at 150 s from bare rock and continued to 300 s | state.dat and geomorph_rockinc.dat are byte-identical to the straight run |
 | T9 steep uniform flow (record) | `param_steep_s001.txt` … `param_steep_s020.txt`, `param_steep_s020_od0.txt` | Uniform flow at slopes 0.01 to 0.2 in a 5-cell channel (no landform change). od0 is without the dynamic reassignment | Tabulates the ratio of the cell τ_b = ρ g n² V²/h^{1/3} to the uniform-flow balance (no pass/fail) |
 
 | File | Content |
 |---|---|
 | `make_init.py` | Generates the terrain, initial depth, bare-rock file, steep channels and erodibility multiplier (constants are kept in step with `param*.txt` and `Check_rockinc.py`) |
-| `Check_rockinc.py cover / pluck / box LOG / steep` | The criteria above. The hydraulics are read from bil (single precision), H = sd, z and Ri from the saves (double precision) |
+| `Check_rockinc.py cover / pluck / hump / uplift / box LOG / t11 / steep` | The criteria above. The hydraulics are read from bil (single precision), H = sd, z and Ri from the saves (double precision) |
 | `Run.sh` / `Run_MPI.sh N` | Runs and checks all configurations. MPI compares bytes with the serial saves (`save_*_serial`) |
 
 ## Running
@@ -47,7 +48,7 @@ default) both water and bedload flow along the axis with the full width.
 ```bash
 make
 python3 make_init.py z > zinit.txt   # regenerate the inputs (bundled; only when changed)
-./Run.sh            # serial (about 30 s)
+./Run.sh            # serial (about 50 s)
 ./Run_MPI.sh 4      # MPI (after Run.sh; byte comparison with save_*_serial)
 ```
 
@@ -78,6 +79,15 @@ python3 make_init.py z > zinit.txt   # regenerate the inputs (bundled; only when
   profile by uniform flow), difference of the steepening 0.16 %, steadiness
   4.6e-3 U, local balance 2.6e-3. Just below the inflow cell a 2-cell step pattern
   forms that decays by about −0.7 per cell (the check uses j ≥ 15).
+- T11: the slope (j = 15 to 58) is 0.00902 to 0.00990 for r = 0.2 (quasi-analytic
+  0.00915 to 0.01003), 0.01088 to 0.01169 for r = 0.5 (0.01097 to 0.01179),
+  0.01260 to 0.01338 for r = 0.8 (0.01267 to 0.01345) and 0.00997 to 0.01055 for
+  r = 0.5 with abrasion (0.01005 to 0.01063). The maximum relative differences
+  are 1.5 %, 0.84 %, 0.56 % and 0.81 %. More supply steepens the slope through
+  the cover (T8 with r = 0 has 0.00768 to 0.00861), and adding abrasion makes the
+  supply act as tools, so the slope is gentler for the same supply. Steadiness
+  6e-5 U or less; the sediment budget closes within relative 4e-10 (the digits
+  printed in the ledgers).
 - T4: Σ(z − z0) A = −0.236164 m³ (abraded volume), Σ(sd − sd0) A = 0.693794 m³
   (plucked volume) and Σ Ri A = their sum agree with the ledger within 2e-9;
   Ri = 0 in the rows with multiplier 0.
