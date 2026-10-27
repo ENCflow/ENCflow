@@ -1267,9 +1267,14 @@ H* and the maximum thin-layer drainage rate × dts. Restart uses
 `geomorph_rockinc.dat` (cumulative incision)
 ([Output and monitoring](#output-and-monitoring)).
 
-Example: [examples/bedrock_cover](../../../examples/bedrock_cover/en/README.md)
+Examples: [examples/bedrock_cover](../../../examples/bedrock_cover/en/README.md)
 (the amount and timing of supply, the initial cover and the retreat of a step,
-compared in incised channels one cell wide placed side by side).
+compared in incised channels one cell wide placed side by side) and
+[examples/mountain_valley](../../../examples/mountain_valley/en/README.md)
+(weathering and creep on the hillslopes coupled with bedrock incision in the
+stream of a rising V-shaped valley: the steady valley and the response to a
+base-level fall; a model for converting time by giving the coefficients of the
+continuous processes multiplied by the inverse of the intermittency factor).
 
 ## Limestone dissolution (f_dissol)
 
