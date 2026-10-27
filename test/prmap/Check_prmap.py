@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # prmap(降雨分布 prtype = 2・3 の時間の単位)の検定(developer.md §88)
-#   使い方: Check_prmap.py [tag ...]   (省略時は全構成)
+#   使い方: Check_prmap.py [tag ...]   (省略時は全構成と restart)
 #   読むもの: result_<tag>/Log.txt と Screen_<tag>.log(Run.sh・Run_MPI.sh が作る)
 #
 #   4 × 8 セルの平坦な閉領域に一様な雨を与えるので、Log の S(領域平均の水深)は
@@ -12,8 +12,10 @@
 #   で、これを積算した S と Log の S を比べる(相対 1e-9。Log の表示 14 桁の丸めは
 #   最小の S でも 3e-11、単位の取り違えは 24 倍・60 倍の差になる)。同じ指定の
 #   別表現(数値の分・単位付きの文字列・単位を省いた文字列・*_c の優先)の Log が
-#   ビット一致すること、画面に採用値が表示されることも確かめる。構成は
-#   param_*.txt と対で保守する。
+#   ビット一致すること、prtype = 3 では dt_prupdate が効かないこと、画面に採用値が
+#   表示されることも確かめる。restart は、prtype = 3 をフレームの途中で保存して
+#   再開した結果(p3_restart)の再開後の Log が連続計算(p3_prupdate)とビット一致する
+#   こと。構成は param_*.txt と対で保守する。
 import os
 import sys
 
@@ -21,6 +23,7 @@ DT, TT = 10.0, 5400.0
 MAP2 = 24.0                     # prmap.txt の値 (mm)
 FRAMES = [6.0, 12.0, 0.0]       # f1〜f3.txt の値 (mm)
 RTOL = 1e-9
+T_SAVE = 2700.0                 # param_p3_save.txt の tt (s)
 
 # tag: (prtype, dt_mapunit (min), dt_maplist (min), 画面の採用値, ビット一致すべき構成)
 CASES = {
@@ -35,6 +38,8 @@ CASES = {
                                "precip: dt_mapunit = 30.00000 min (default)"], "p3_def"),
     "p3_unit": (3, 60.0, 30.0, ["precip: dt_maplist = 30.00000 min (180 steps)",
                                 "precip: dt_mapunit = 60.00000 min"], None),
+    "p3_prupdate": (3, 30.0, 30.0, ["precip: dt_maplist = 30.00000 min (180 steps)",
+                                    "precip: dt_mapunit = 30.00000 min (default)"], "p3_def"),
 }
 
 
@@ -52,6 +57,12 @@ def read_log(path):
             c = line.split()
             rows.append((hms(c[0]), float(c[2])))
     return rows
+
+
+def log_lines(path):
+    # 時刻 (s) → Log の行
+    with open(path) as f:
+        return {hms(line.split()[0]): line for line in f if not line.startswith("time")}
 
 
 def rate(case, it):
@@ -79,6 +90,18 @@ def main(tags):
             nfail += 1
 
     for tag in tags:
+        if tag == "restart":
+            print("== prmap restart: result_p3_restart vs result_p3_prupdate")
+            if not all(os.path.exists(f"result_{t}/Log.txt") for t in ("p3_restart", "p3_prupdate")):
+                check(False, "result_p3_restart/Log.txt or result_p3_prupdate/Log.txt not found")
+                continue
+            a = log_lines("result_p3_restart/Log.txt")
+            b = log_lines("result_p3_prupdate/Log.txt")
+            rows = [t for t in sorted(a) if t > T_SAVE]
+            check(len(rows) >= 5 and all(t in b and a[t] == b[t] for t in rows),
+                  f"Log.txt rows after the restart at {T_SAVE:g} s identical to the "
+                  f"continuous run ({len(rows)} rows)")
+            continue
         case = CASES[tag]
         print(f"== prmap {tag}")
         log = f"result_{tag}/Log.txt"
@@ -107,8 +130,9 @@ def main(tags):
 
 
 if __name__ == "__main__":
-    args = sys.argv[1:] or list(CASES)
-    bad = [a for a in args if a not in CASES]
+    known = list(CASES) + ["restart"]
+    args = sys.argv[1:] or known
+    bad = [a for a in args if a not in known]
     if bad:
-        sys.exit(f"usage: Check_prmap.py [tag ...]  (unknown: {' '.join(bad)}; known: {' '.join(CASES)})")
+        sys.exit(f"usage: Check_prmap.py [tag ...]  (unknown: {' '.join(bad)}; known: {' '.join(known)})")
     sys.exit(main(args))

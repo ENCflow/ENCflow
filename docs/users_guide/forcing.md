@@ -72,7 +72,7 @@
 | パラメータ | 既定値 | 意味 |
 |---|---|---|
 | prval | — | 時系列 `(時刻(min), 値)` の組。値は prtype=1 で雨量強度 (mm/h)、prtype=2 で倍率。最後の時刻以降は最後の値で継続 |
-| dt_prupdate | 1 | 降雨の更新間隔 (min)(prtype=1, 2) |
+| dt_prupdate | 1 | 降雨の更新間隔 (min)(prtype=1, 2。prtype=3 では使わない) |
 | fn_prmap | "" | 降水分布ファイル(prtype=2) |
 | fn_maplist | "" | 分布ファイル名のリスト(1行1ファイル。prtype=3)。**リスト中のパスも dir_data 起点**(リストファイルからの相対ではない) |
 | dt_maplist(_c) | 60 | 分布ファイルの時間間隔 (min)(prtype=3)。`_c` は単位付きの文字列(下記) |

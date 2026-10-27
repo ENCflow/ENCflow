@@ -11,7 +11,9 @@ developer.md §88). `Check_prmap.py` confirms the specification: numbers are in
 minutes, strings `_c` with a unit are read in that unit (a number without a unit
 is in minutes), `_c` takes precedence when both are given, and without either,
 prtype = 2 assumes accumulation over 24 hours (mm/day) and prtype = 3 the file
-interval (no reference comparison).
+interval. It also confirms that dt_prupdate has no effect with prtype = 3, and
+that saving in the middle of a frame and restarting agrees with the continuous
+run (no reference comparison).
 
 ## Set-up
 
@@ -32,6 +34,8 @@ prtype = 3 list is `f1.txt`–`f3.txt` (6, 12 and 0 mm in all cells).
 | `param_p3_def.txt` | prtype = 3, `dt_maplist = 30` | switched every 30 minutes, values accumulated over 30 minutes | 17.97 mm |
 | `param_p3_c30.txt` | `dt_maplist_c = "30"` | a number without a unit is in minutes; same as p3_def | 17.97 mm |
 | `param_p3_unit.txt` | `dt_maplist_c = "0.5h"`, `dt_mapunit = 60` | switched every 30 minutes, values accumulated over 60 minutes (mm/h) | 8.98 mm |
+| `param_p3_prupdate.txt` | p3_def with `dt_prupdate = 7` | not used with prtype = 3; same as p3_def | 17.97 mm |
+| `param_p3_save.txt` / `param_p3_restart.txt` | p3_prupdate saved at 45 minutes and restarted | the Log after the restart is the same as p3_prupdate | 17.97 mm |
 
 The prtype = 3 frames are switched by the time at the end of a step (step it uses
 the frame that contains the time it·dt). The first frame is therefore one step
@@ -45,8 +49,13 @@ shorter (1790 s), and the rain of p3_def falls slightly short of 6 + 12 = 18 mm.
   units gives a factor of 24 or 60).
 - **Agreement of other forms**: the Log.txt of the configurations that give the
   same time as a number in minutes, as a string with a unit or as a string
-  without a unit, and of the configuration where `_c` takes precedence, is
-  bit-identical to that of the corresponding configuration.
+  without a unit, of the configuration where `_c` takes precedence, and of the
+  prtype = 3 configuration with dt_prupdate written, is bit-identical to that of
+  the corresponding configuration.
+- **Restart**: after saving in the middle of the second frame (45 minutes) and
+  restarting, the rows of the Log after the restart are bit-identical to the
+  continuous run (the current frame is read again right after the restart;
+  developer.md §7).
 - **Display of the adopted value**: the screen shows the adopted value, such as
   `precip: dt_mapunit = 1440.00000 min (default)`.
 
@@ -54,18 +63,26 @@ shorter (1790 s), and the rain of p3_def falls slightly short of 6 + 12 = 18 mm.
 
 ```bash
 make
-./Run.sh          # 8 serial configurations + checks (a few seconds)
+./Run.sh          # 9 serial configurations and save/restart + checks (a few seconds)
 ./Run_MPI.sh 4    # MPI (np ≤ 4); besides the checks, the Log.txt of all configurations is byte-identical to the serial run
 ```
 
 ## Verification record (2026-10-27; gfortran 13.3 / Open MPI 4.1, Ubuntu 24.04)
 
-With the code before the fix (dt_mapunit used as seconds, dt_mapunit_c
-overwritten by the default, dt_maplist_c without effect on the frame interval),
-p2_min gave 2160 mm (60 times), p2_c1h and p2_c60 1.5 mm, p2_prio 2160 mm,
-p3_c30 24.03 mm and p3_unit 721 mm, and 21 items including the display failed.
-After the fix all items pass, and the largest relative difference of S is 2e-11
-(rounding of the digits shown). The Log of the configurations without a
-specification (p2_def, p3_def) is bit-identical to that before the fix. With MPI
-np = 1, 2 and 4, the Log.txt of all configurations is byte-identical to the serial
-run.
+With the code before the fix of the time units (developer.md §88.2; dt_mapunit
+used as seconds, dt_mapunit_c overwritten by the default, dt_maplist_c without
+effect on the frame interval), p2_min gave 2160 mm (60 times), p2_c1h and p2_c60
+1.5 mm, p2_prio 2160 mm, p3_c30 24.03 mm and p3_unit 721 mm, and 26 items failed,
+including the display of the adopted values and the items below. With the code
+where only the units were fixed, the defect where dt_prupdate thins out the frame
+switching (developer.md §88.4) left the second and later frames of p3_prupdate
+unread (S at 1:00 was 12.0 mm instead of 17.97 mm), and 3 items failed: S and the
+agreement of the Log of p3_prupdate, and the restart.
+
+After both fixes all items pass, and the largest relative difference of S is
+2e-11 (rounding of the digits shown). The Log of the configurations without a
+specification (p2_def, p3_def) is bit-identical to that before the fixes, and the
+Log of p3_def, p3_c30 and p3_unit is bit-identical before and after the fix of
+§88.4. With MPI np = 1, 2 and 4, the Log.txt of all configurations is
+byte-identical to the serial run (also with an -Og -fcheck=all build, the serial
+run and np = 2 agree without out-of-bounds accesses).

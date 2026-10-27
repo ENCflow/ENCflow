@@ -81,7 +81,7 @@ Select how rainfall is given with `prtype`.
 | Parameter | Default | Meaning |
 |---|---|---|
 | prval | - | Time-series pairs `(time (min), value)`. The value is rainfall intensity (mm/h) for prtype=1 and a multiplier for prtype=2. After the last time, the last value persists |
-| dt_prupdate | 1 | Rainfall update interval (min) (prtype=1, 2) |
+| dt_prupdate | 1 | Rainfall update interval (min) (prtype=1, 2; not used with prtype=3) |
 | fn_prmap | "" | Precipitation distribution file (prtype=2) |
 | fn_maplist | "" | List of distribution file names (one file per line; prtype=3). **Paths inside the list are also relative to dir_data** (not relative to the list file) |
 | dt_maplist(_c) | 60 | Time interval of the distribution files (min) (prtype=3). `_c` takes a string with a unit (below) |

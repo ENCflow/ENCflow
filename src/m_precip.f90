@@ -20,7 +20,7 @@ module m_precip
     ! 降雨タイプ(0:降雨なし, 1:一様時系列, 2:分布×割合時系列, 3:分布時系列ファイル)
     integer :: prtype = 0
     real :: dt_prupdate = 0.0           ! 降雨分布更新時間間隔 (min)
-    integer :: idt_prupdate = 0         ! 降雨分布更新時間ステップ数
+    integer :: idt_prupdate = 0         ! 降雨分布更新時間ステップ数(prtype=3 は 1)
     integer :: npr = 0                  ! 時系列データの個数
     real, allocatable :: prval(:,:)     ! 降雨時系列 (時刻(s), 降水強度(mm/h)または倍率)
     real, allocatable :: prmap(:,:)     ! 降雨分布 (mm/dt_mapunit。既定は mm/day)
@@ -87,6 +87,10 @@ subroutine m_precip_init(pr, p, g)
     pr%idt_maplist = max(nint(pr%dt_maplist / p%dt), 1)
     call par_info("precip: dt_maplist = "//rtoa(pr%dt_maplist / 60)//" min ("// &
                   itoa(pr%idt_maplist)//" steps)")
+    ! dt_prupdate は使わない(文書どおり)。makepre を毎ステップ呼び、フレームの
+    ! 切替は idt_maplist の境界で判定する(idt_prupdate ごとに呼ぶと、両者の
+    ! 公倍数のステップでしか切り替わらない。developer.md §88.4)
+    pr%idt_prupdate = 1
   end if
   if (prtype == 2 .or. prtype == 3) call set_mapunit
 

@@ -13908,3 +13908,30 @@ handoff 00i(2026-10-26 発見)の修正。利用者の決定(2026-10-27): 降雨
 - 修正後: 逐次の CI 8 ケースと chichibu が reference と一致、MPI np = 2 の CI 8 ケースが
   逐次 reference と一致、test/prmap は np = 1・2・4 の Log が逐次とバイト一致。
   トップレベルの make(utils のリンク)が通る(str2sec の引数の追加。§10)。
+
+### 88.4 prtype = 3 のフレームの切替が dt_prupdate で間引かれる不具合(2026-10-27 発見・修正)
+
+- m_main は makepre を `mod(it, idt_prupdate) == 0` のステップでしか呼ばないが、
+  prtype = 3 のフレームの切替は makepre の中で `mod(it, idt_maplist) == 0` を見る。
+  idt_maplist が idt_prupdate の倍数でないと、両者の公倍数のステップでしか切り替わら
+  なかった(文書は「prtype = 3 では dt_prupdate は指定しても無効」)。dt_prupdate を
+  書かなくても既定の 1 分と dt の組で起きる: dt = 7 s で idt_prupdate = 9、
+  dt_maplist = 60 分で idt_maplist = 514 となり、毎時のはずの切替が約 9 時間ごとに
+  なる(dt = 8・9 s、0.7・0.9 s なども同様。0.5・1・2・5・10 s 等の割り切れる dt では
+  起きない)。修正前の確認: dt = 10 s・dt_maplist = 30 分・dt_prupdate = 7 分で
+  1.5 h の間、dt = 7 s・既定の dt_prupdate・dt_maplist = 60 分で 3 h の間、2 枚目
+  以降のフレームが読まれなかった(修正後はどちらも境界のステップで切り替わる)。
+- 修正: prtype = 3 では idt_prupdate = 1(makepre を毎ステップ呼び、切替は
+  idt_maplist の境界だけで判定)。境界以外のステップの makepre は判定だけで戻り、
+  updated = .false. なので遮断・標高補正の再適用はない。idt_prupdate が idt_maplist を
+  割り切っていた構成は従来とビット一致する(切替と更新のステップが同じ。test/prmap の
+  p3_def・p3_c30・p3_unit で修正の前後の Log が一致)。
+- 検定: test/prmap に p3_prupdate(dt_prupdate = 7 分。p3_def と Log がビット一致)と、
+  フレームの途中(45 分)で保存 → 再開する p3_save・p3_restart(再開後の Log が連続計算と
+  ビット一致。restore 直後の初回 makepre が現在のフレームを読み直す §7 の経路で、
+  prtype = 3 の再開はこれまでテストがなかった)を追加。修正前のコードでは p3_prupdate の
+  S(1:00 で 12.0 mm、正しくは 17.97 mm)と Log の一致、再開の 3 項目が不合格。
+  修正後は逐次・MPI np = 1・2・4 とも全項目が合格し、Log は逐次とバイト一致
+  (-Og -fcheck=all の逐次と np = 2 も範囲外アクセスなしで一致)。CI の 8 ケースは
+  逐次・np = 2 とも reference と一致(prtype = 3 の分岐の中だけの変更)。prtype = 3 を
+  使う既存のテスト・例題はない。
