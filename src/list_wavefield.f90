@@ -43,6 +43,7 @@ module list_wavefield
     integer :: f_wf_roller = -9999               ! 1: ローラーのエネルギー平衡(wf_flow >= 1)
     real :: wf_beta = -9999.0                    ! ローラーの散逸係数 β
     real :: wf_tramp = -9999.0                   ! 外力の立ち上げ時間 (s)
+    integer :: f_wf_current = -9999              ! 1: 流れの波への作用(ドップラー・屈折・輸送・阻止。段 W3)
   end type
 
 contains
@@ -58,7 +59,7 @@ subroutine list_wavefield_read(p, list)
   character(len=256) :: msg
 
   integer :: f_wavefield, wf_ntheta, wf_mode, wf_itmax, f_wf_init, wf_wavetype, wf_clock, wf_break
-  integer :: f_wf_outdiag, wf_flow, f_wf_roller
+  integer :: f_wf_outdiag, wf_flow, f_wf_roller, f_wf_current
   integer :: wf_bc_side(1:4)
   real :: dt_wave, wf_tol, wf_hm0, wf_trep, wf_dir, wf_spread
   real :: wf_gamma, wf_alpha, wf_gammax, wf_fw, wf_hmin, wf_beta, wf_tramp
@@ -67,7 +68,7 @@ subroutine list_wavefield_read(p, list)
   namelist /list_wavefield/ f_wavefield, wf_ntheta, wf_mode, dt_wave, wf_itmax, wf_tol, f_wf_init, &
                             wf_bc_side, wf_wavetype, wf_hm0, wf_trep, wf_dir, wf_spread, wf_val, &
                             wf_clock, wf_break, wf_gamma, wf_alpha, wf_gammax, wf_fw, wf_hmin, &
-                            f_wf_outdiag, wf_flow, f_wf_roller, wf_beta, wf_tramp
+                            f_wf_outdiag, wf_flow, f_wf_roller, wf_beta, wf_tramp, f_wf_current
 
   f_wavefield = list%f_wavefield
   wf_ntheta = list%wf_ntheta
@@ -95,6 +96,7 @@ subroutine list_wavefield_read(p, list)
   f_wf_roller = list%f_wf_roller
   wf_beta = list%wf_beta
   wf_tramp = list%wf_tramp
+  f_wf_current = list%f_wf_current
 
   call par_info("reading list_wavefield in " // trim(p%fn_wavefield))
   open(newunit=un, file=trim(p%fn_wavefield), status='old', action='read', iostat=ios)
@@ -129,6 +131,7 @@ subroutine list_wavefield_read(p, list)
   list%f_wf_roller = f_wf_roller
   list%wf_beta = wf_beta
   list%wf_tramp = wf_tramp
+  list%f_wf_current = f_wf_current
 end subroutine
 
 end module

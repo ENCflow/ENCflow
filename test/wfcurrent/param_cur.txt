@@ -1,0 +1,67 @@
+!======================================================================
+! wfcurrent: 基本に流れの波への作用を加えた双方向の連成(f_wf_current = 1。段 W3)
+!   波が沿岸流を起こし(段 W2)、その沿岸流が波を変える(ドップラー・流れによる屈折と
+!   輸送。段 W3)。沿岸流は波の沿岸方向の成分と同じ向き(順流)。確認事項
+!   (Check_wfcurrent.py cur。基本と比べる): 波の外力と底面摩擦の運動量の積分の釣り合い・
+!   セルごとの閉じた形・岸沿いの一様性・ローラーのエネルギーの収支(流れで運ばれ、
+!   位相速度は固有の σ̄/k̄)が段 W2 と同じ許容で成り立ち、流れの作用で波高・沿岸流が
+!   変わる(作用が効いている)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 3600
+  dt_disp = 600
+  dt_file = 3600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_wavefield = '-'
+  dir_result = 'result_cur'
+  f_check_cfl = 1
+  f_output_mode = 3
+  f_out_e = 1
+  f_out_u = 1
+  f_out_v = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 2
+  e0 = 0.0
+/
+
+&list_geoinfo
+  nx = 120
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.025
+/
+
+&list_bound_edge
+  f_bc_w = 2                ! 沖は長波放射(基準水位 0)
+  f_bc_n = 3                ! 岸に交わる南北の辺は側方 Neumann(沿岸流が通り抜ける)
+  f_bc_s = 3
+/
+
+&list_wavefield
+  wf_bc_side = 1, 0, 2, 2   ! 西が入射、東(陸)は吸収、南北は側方 Neumann
+  wf_hm0 = 1.0
+  wf_trep = 8.0
+  wf_dir = 20.0             ! 東から 20° 北へ進む(北向きの沿岸流)
+  dt_wave = 60
+  wf_tol = 1.0e-7
+  wf_flow = 2
+  f_wf_roller = 1
+  f_wf_outdiag = 1
+  f_wf_current = 1          ! 流れの波への作用(段 W3)
+/

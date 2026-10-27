@@ -4,17 +4,17 @@
 # param.txt(海浜の沿岸流。不規則波・斜め入射・ローラーあり)は reference 比較(Log.txt・
 # wavefield.csv・E9998.txt・v9998.txt、ULP=0)と Check_wfcurrent.py roller。
 # param_setup(セットアップ)・param_flat(一様水深の沿岸流と岸沖の釣り合い)・param_long
-# (ローラーなし)・param_rot(90° 回した格子)は Check_wfcurrent.py の検定のみ
-# (reference 非依存)。param_rt1 → param_rt2 の再開の継続が通し計算(param.txt)と
-# state.dat・swflow_enc.dat・wavefield.dat・最終分布でバイト一致すること、param_bad
-# (wf_flow = 3)が停止することを確かめる
+# (ローラーなし)・param_rot(90° 回した格子)・param_cur(流れの波への作用 = 段 W3 を加えた
+# 双方向の連成)は Check_wfcurrent.py の検定のみ(reference 非依存)。param_rt1 → param_rt2
+# の再開の継続が通し計算(param.txt)と state.dat・swflow_enc.dat・wavefield.dat・最終分布で
+# バイト一致すること、param_bad(wf_flow = 3)が停止することを確かめる
 sdir=$(dirname "$(readlink -f "$0")")
 export ULP=0
 export SKIPCOLS=4      # 検査対象外とする列番号(Log の Runge 列)
 export FILES=${FILES:-"Log.txt wavefield.csv E9998.txt v9998.txt"}
 "$sdir/../Scripts/Run_case.sh" serial "$@" || exit 1
 
-for tag in setup flat long rot; do
+for tag in setup flat long rot cur; do
     rm -rf result_$tag
     ./encflow param_$tag.txt > Screen_$tag.log 2>&1 || { echo "ERROR: param_$tag run failed" >&2; exit 1; }
 done
@@ -27,6 +27,7 @@ python3 Check_wfcurrent.py flat result_flat || exit 1
 python3 Check_wfcurrent.py long result_long || exit 1
 python3 Check_wfcurrent.py roller result result_long || exit 1
 python3 Check_wfcurrent.py rot result result_rot || exit 1
+python3 Check_wfcurrent.py cur result_cur result || exit 1
 
 # 再開の継続: 通し計算(save_all / result)と分割(save_rt / result_rt2)
 for f in save_all/state.dat:save_rt/state.dat save_all/swflow_enc.dat:save_rt/swflow_enc.dat \

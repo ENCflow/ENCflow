@@ -1,0 +1,82 @@
+!======================================================================
+! wfdoppler: 基本 = 逆流で阻止される不規則波(f_wf_current = 1。段 W3 の V9)
+!   長さ 600 m の水路(幅 40 m、河床 −3 m → −1.5 m、120 × 8 セル)を、東端の列の湧き出し
+!   (q = 1.2 m²/s)から西へ流れる逆流に、西の辺から不規則波 H_m0 = 0.05 m・T = 1.5 s
+!   (単一方向)を入れる。流れは東へ速くなり(0.38 → 0.69 m/s)、x ≈ 470 m で分散関係の
+!   根がなくなる(c_g + U ≤ 0 = 阻止)。手前では急峻さによる砕波(Baldock ら 1998)が
+!   大半を除き、阻止の点に届いた作用量は台帳の「阻止」(blocked_W)へ。reference 比較
+!   (Log.txt・wavefield.csv・Wh9998.txt・u9998.txt)と再開の通し計算(save_all)を兼ねる。
+!   確認事項(Check_wfdoppler.py blk): 阻止の点の位置、その先の波高 ≤ 6%、砕波の手前の
+!   作用量の流束の保存、台帳の閉合
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 3600
+  dt_disp = 600
+  dt_file = 1200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_wavefield = '-'
+  dir_result = 'result'
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_state_save = 1
+  dir_save = 'save_all'
+  f_check_cfl = 1
+  f_output_mode = 3
+  f_out_e = 1
+  f_out_u = 1
+  f_out_v = 1
+/
+&list_enc
+/
+&list_initial
+  f_htype = 2
+  e0 = 0.0
+/
+&list_geoinfo
+  nx = 120
+  ny = 8
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.02
+/
+&list_bound_edge
+  f_bc_w = 2                ! 西は長波放射(流出。基準水位 0)
+  f_bc_e = 0                ! 東は壁(流れは東端の列の湧き出しから西へ)
+  f_bc_n = 3                ! 南北は側方 Neumann(岸沿いに一様)
+  f_bc_s = 3
+/
+&list_bound_source
+  src_cell(:,1,1) = 120, 1  ! 東端の列に q = 1.2 m2/s(幅 40 m で 48 m3/s。10 分で立ち上げ)
+  src_cell(:,2,1) = 120, 2
+  src_cell(:,3,1) = 120, 3
+  src_cell(:,4,1) = 120, 4
+  src_cell(:,5,1) = 120, 5
+  src_cell(:,6,1) = 120, 6
+  src_cell(:,7,1) = 120, 7
+  src_cell(:,8,1) = 120, 8
+  src_val(:,1,1) = 0, 0.0
+  src_val(:,2,1) = 10, 48.0
+  src_val(:,3,1) = 9999, 48.0
+/
+&list_wavefield
+  wf_bc_side = 1, 0, 2, 2   ! 西が入射、東は吸収、南北は側方 Neumann
+  wf_wavetype = 1           ! 不規則波(急峻さによる砕波あり。Baldock ら 1998)
+  wf_hm0 = 0.05
+  wf_spread = 0.0           ! 単一方向(1 次元の検定)
+  wf_trep = 1.5             ! 逆流で x ≈ 470 m(流速 0.59 m/s)で阻止される周期
+  wf_dir = 0.0              ! 東へ
+  dt_wave = 600
+  wf_tol = 1.0e-9
+  wf_itmax = 10000          ! 阻止の近くの遅いビンで収束が遅い(流れの発達中の更新で約 7000 回。§88)
+  f_wf_current = 1
+  f_wf_outdiag = 1
+/

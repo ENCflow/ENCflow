@@ -1,0 +1,74 @@
+!======================================================================
+! wfdoppler: 逆流の上の規則波(阻止されない周期。V9)
+!   基本と同じ逆流(0.38 → 0.67 m/s)に規則波 H = 0.05 m・T = 4 s を入れる(砕けない)。
+!   波数は流れのない値より大きく(固有角周波数 σ が ω より大きい)、エネルギーは浅水変形
+!   だけの値の 1.35 倍まで大きくなる。確認事項(Check_wfdoppler.py opp): 作用量の流束
+!   (c_g + U)E/σ がセル 1〜115 で一定(湧き出しの列の近くは除く)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 3600
+  dt_disp = 600
+  dt_file = 1200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_wavefield = '-'
+  dir_result = 'result_opp'
+  f_check_cfl = 1
+  f_output_mode = 3
+  f_out_e = 1
+  f_out_u = 1
+  f_out_v = 1
+/
+&list_enc
+/
+&list_initial
+  f_htype = 2
+  e0 = 0.0
+/
+&list_geoinfo
+  nx = 120
+  ny = 8
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.02
+/
+&list_bound_edge
+  f_bc_w = 2                ! 西は長波放射(流出。基準水位 0)
+  f_bc_e = 0                ! 東は壁(流れは東端の列の湧き出しから西へ)
+  f_bc_n = 3                ! 南北は側方 Neumann(岸沿いに一様)
+  f_bc_s = 3
+/
+&list_bound_source
+  src_cell(:,1,1) = 120, 1  ! 東端の列に q = 1.2 m2/s(幅 40 m で 48 m3/s。10 分で立ち上げ)
+  src_cell(:,2,1) = 120, 2
+  src_cell(:,3,1) = 120, 3
+  src_cell(:,4,1) = 120, 4
+  src_cell(:,5,1) = 120, 5
+  src_cell(:,6,1) = 120, 6
+  src_cell(:,7,1) = 120, 7
+  src_cell(:,8,1) = 120, 8
+  src_val(:,1,1) = 0, 0.0
+  src_val(:,2,1) = 10, 48.0
+  src_val(:,3,1) = 9999, 48.0
+/
+&list_wavefield
+  wf_bc_side = 1, 0, 2, 2   ! 西が入射、東は吸収、南北は側方 Neumann
+  wf_wavetype = 2           ! 規則波(H <= γh の飽和砕波だけ。H が小さいので砕けない)
+  wf_hm0 = 0.05
+  wf_trep = 4.0             ! 逆流でも阻止されない周期
+  wf_dir = 0.0              ! 東へ
+  dt_wave = 600
+  wf_tol = 1.0e-9
+  wf_itmax = 4000
+  f_wf_current = 1
+  f_wf_outdiag = 1
+/

@@ -18,14 +18,16 @@ split into **N_θ directional bins**. It is a rough estimate of the same level a
 the stationary mode of XBeach[^xbeach] and SnapWave[^snapwave]; frequency spreading,
 wind growth and nonlinear wave–wave interactions are not treated.
 
-**The feature is being implemented in stages.** It currently reaches stage W2: the
-**wave field on a fixed bed** (stage W1) and the **wave-driven flow (setup and longshore
-currents; stage W2)**. The action on the flow is enabled with `wf_flow` (default 0 = no
-action; then the shallow water results are the same whether or not `fn_wavefield` is
-written; [action on the flow](#action-on-the-flow-wf_flow-stage-w2)). **It does not act
-on the bed.** The change of waves by currents (stage W3), and longshore transport and
-cross-shore erosion and accretion (stages W4 and W5) will be added in later stages
-(docs/wavefield_plan.md §9).
+**The feature is being implemented in stages.** It currently reaches stage W3: the
+**wave field on a fixed bed** (stage W1), the **wave-driven flow (setup and longshore
+currents; stage W2)** and the **change of waves by currents (Doppler shift, refraction by
+currents and blocking; stage W3)**. The action on the flow is enabled with `wf_flow`, and the
+action of the current on the waves with `f_wf_current` (both default 0 = no action; with
+`wf_flow = 0` the shallow water results are the same whether or not `fn_wavefield` is
+written; [action on the flow](#action-on-the-flow-wf_flow-stage-w2),
+[change of waves by currents](#change-of-waves-by-currents-f_wf_current-stage-w3)). **It does
+not act on the bed.** Longshore transport and cross-shore erosion and accretion (stages W4
+and W5) will be added in later stages (docs/wavefield_plan.md §9).
 
 It is a different feature from "longshore transport by waves" in the
 [sediment and morphology chapter](geomorph.md) (`fn_wave`, a simplified mode that
@@ -91,6 +93,7 @@ spectrum (EurOtop 2018[^eurotop]).
 | `f_wf_roller` | 1 | 1: solve the energy balance of the roller (with `wf_flow` ≥ 1) |
 | `wf_beta` | 0.1 | Dissipation coefficient β of the roller |
 | `wf_tramp` | 100 s | Ramp-up time of the force (linear from 0 to 1 times from the origin of the time axis). 0 for no ramp |
+| `f_wf_current` | 0 | 1: action of the current on the waves (Doppler shift, refraction and transport by the current, blocking). [Change of waves by currents](#change-of-waves-by-currents-f_wf_current-stage-w3) |
 
 Defaults that are adopted are printed on screen with `(default)`.
 
@@ -124,6 +127,7 @@ All that is needed is **an incident side** and **the offshore waves** (`wf_hm0`,
 | Time-varying wave climate (preparing for morphology) | Series in `wf_val`, update interval `dt_wave`, `wf_clock = 1` for morphological time | `wavefield.csv` (ledger per update) |
 | Arrival of a wave front (advanced together with a tsunami or flood) | `wf_mode = 1` (unsteady), `f_wf_init = 0` | Time change of Wh |
 | Wave setup and longshore currents | `wf_flow = 2`; the left and right sides that cross the coast lateral Neumann for both waves and flow (`wf_bc_side` = 2, `f_bc_*` = 3) | E (water level), u, v (velocity), Wfx, Wfy (force) |
+| Waves on river mouths, tidal currents and rip currents (blocking, steepening) | `f_wf_current = 1` (also `wf_flow = 2` for two-way coupling of waves and flow) | Wh, Wa, blocked in the ledger |
 
 ## How it is computed
 
@@ -402,6 +406,88 @@ interior rows (in test/wfcurrent all rows agree to about 0.03% of the maximum ve
 the topography changes alongshore near a side, the outside is treated as continuing that
 topography, so keep the area of interest away from the sides.
 
+## Change of waves by currents (f_wf_current, stage W3)
+
+With `f_wf_current = 1`, the shallow water flow (river flow, tidal currents, rip currents,
+longshore currents, tsunami currents) changes the waves. On an opposing current (one that
+faces the waves) the wavelength shortens and the wave height grows, and on a strong opposing
+current the waves can no longer advance against the flow (**blocking**). On a following current
+the wavelength lengthens and the wave height decreases. Where the current speed varies in space
+the wave direction also turns (refraction by currents). This represents a river-mouth jet that
+stops offshore waves from propagating up the river, and the steepening of waves on rip and tidal
+currents.
+
+```
+&list_wavefield
+  ...
+  f_wf_current = 1         ! 0 none (default) / 1 action of the current on the waves
+/
+```
+
+Combined with the wave-driven flow (`wf_flow`), waves and flow are coupled both ways (the
+longshore current changes the waves, and those waves drive the longshore current).
+
+### Doppler shift and blocking
+
+The dispersion relation of waves on a current $`\mathbf U`$ is, with the current component
+$`U_m = \mathbf U\cdot\hat{\mathbf e}_m`$ along the direction $`\hat{\mathbf e}_m`$ of
+directional bin m,
+
+```math
+(\omega - k U_m)^2 = g k \tanh kh
+```
+
+(Bretherton & Garrett 1968[^bg68]). ω is the angular frequency of the offshore waves; on a
+steady current it does not change, by the conservation of wave crests. For each cell and bin
+this relation is solved on the branch that is continuous as U_m → 0 (Newton's method), giving
+the intrinsic angular frequency $`\sigma_m = \omega - k_m U_m`$ and the intrinsic group
+velocity c_g,m. On an opposing current (U_m < 0) k_m is larger and σ_m > ω; on a following
+current the reverse. When the opposing current is so strong that the group velocity and the
+current cancel (c_g,m + U_m ≤ 0) or the root disappears, the waves of that bin are **blocked**:
+the wave action that arrives there is recorded as blocked in the ledger and removed.
+
+### Wave action balance
+
+On a current the wave energy is not conserved, but the **wave action N = E/σ** is (Bretherton &
+Garrett 1968).
+
+```math
+\frac{\partial N_m}{\partial t} + \nabla\cdot\left[(c_{g,m}\hat{\mathbf e}_m + \mathbf U)N_m\right]
++ \frac{\partial (c_\theta N_m)}{\partial\theta} = -\frac{D_m}{\sigma_m}
+```
+
+The spatial transport carries the velocity $`c_{g,m}\hat{\mathbf e}_m + \mathbf U`$, decomposed
+for each cell and bin, with the same two-link upwind scheme as W1. A term due to the gradient of
+the current speed is added to the refraction speed in direction space (x east, y north; the same
+form as SWAN[^swan] and XBeach[^xbeach]).
+
+```math
+c_\theta = \frac{\sigma}{\sinh 2kh}\left(\frac{\partial h}{\partial x}\sin\theta - \frac{\partial h}{\partial y}\cos\theta\right)
++ \cos\theta\left(\sin\theta\frac{\partial u}{\partial x} - \cos\theta\frac{\partial u}{\partial y}\right)
++ \sin\theta\left(\sin\theta\frac{\partial v}{\partial x} - \cos\theta\frac{\partial v}{\partial y}\right)
+```
+
+Breaking, bottom friction and the limit are evaluated with the same formulas as W1, using the
+energy $`E_m = \sigma_m N_m`$ and the energy-weighted mean wavenumber and intrinsic angular
+frequency. Wave action is conserved even in a current that changes in time (an adiabatic
+invariant), so the state of the computation is held as wave action and carried over unchanged
+when the current changes (the unsteady ledger also closes while the current changes in time).
+
+The velocity used is the velocity of the shallow water flow itself (with `wf_flow = 2` the
+Lagrangian mean velocity u^L; the same as wci of XBeach[^xbeach]). The roller (`wf_flow` ≥ 1) is
+also carried by the current (velocity c ê + U, c = σ̄/k̄).
+
+### Cost and convergence
+
+With a current, the dispersion relation and the decomposition of the transport are recomputed
+for each cell and bin at every update, and quantities per bin (wavenumber, intrinsic angular
+frequency, outflow rates, refraction speed) are held. The memory of the wave field becomes about
+three times as large (about 2.4 kB per cell with N_θ = 40). In the unsteady mode (`wf_mode = 1`)
+they are recomputed at every step, which is expensive. Near blocking, wave action moves slowly in
+the bins where the group velocity and the current cancel, and the quasi-steady iteration
+converges slowly (about 2000 iterations for the river-mouth jet of test/wfdoppler and about 7000
+for its blocked channel). If a message says that it did not converge, raise `wf_itmax`.
+
 ## Output and checks
 
 **Distributions** (at each output time; [input/output formats](io.md))
@@ -437,8 +523,10 @@ interval (`dt_recrd`).
 | dry | Energy removed from cells whose depth fell to `wf_hmin` or less (amount, J) |
 | trunc | Numerical truncation (the amount added by setting negative values to 0; normally 0 or of round-off size) |
 | imbalance, storage | Residual of the budget, storage of the wave field (Σ E A) |
+| blocked (`f_wf_current = 1`) | The part removed by blocking |
 
-The quasi-steady imbalance is the rate of change of storage in the last iteration and
+With `f_wf_current = 1` the ledger amounts are wave action × ω (the same as energy without a
+current). The quasi-steady imbalance is the rate of change of storage in the last iteration and
 approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storage) −
 (net input) and is of round-off size. A large value indicates a defect; please report it.
 
@@ -447,9 +535,17 @@ approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storag
 - **Phase-averaged with one representative period.** Diffraction, reflection,
   frequency spreading, wind growth and nonlinear wave–wave interactions are not treated.
   The smearing of shadow edges is numerical diffusion, not diffraction.
-- **It does not act on the bed** (sediment transport comes in later stages). The change
-  of waves by currents (river flow, tidal currents, tsunamis), such as the Doppler shift
-  and blocking, is not yet included either (stage W3).
+- **It does not act on the bed** (sediment transport comes in later stages).
+- **Blocked waves are only removed as wave action**; reflection at the blocking point
+  (conversion to short waves) is not represented. With one representative period, blocking
+  happens to all the energy at once (real waves are blocked from the short components of the
+  spectrum). Breaking by the steepening before the blocking point is represented.
+- Even when the current changes in time, the angular frequency ω of the offshore waves is kept
+  constant (the change of ω by the time variation of the current is not included).
+- **At abrupt changes of the current** (near sources, at the edges of jets), unidirectional
+  waves spread by a few % into the neighbouring bins through refraction by the current
+  (numerical diffusion of the first-order upwind scheme in direction space; it decreases with
+  the square of the bin width).
 - **Lateral mixing by breaking waves (eddy viscosity) is not included.** The distribution
   of the longshore current is smoothed by the numerical lateral mixing of the advection
   through the ENC diagonal faces (a current of a few % of the maximum appears at the outer
@@ -496,6 +592,7 @@ approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storag
 | `f_wf_roller` | 1 | **Method**: the XBeach default[^xbeach] (roller = 1). Its effect of moving the maximum of the force shoreward agrees with observations (Reniers & Battjes 1997[^rb97]) |
 | `wf_beta` | 0.1 | **Literature value**: the XBeach default[^xbeach] (range 0.05–0.3); the 0.1 of Reniers & Battjes (1997)[^rb97] |
 | `wf_tramp` | 100 s | **Numerical**: the default of XBeach's taper[^xbeach] (the start-up in the same situation, where a steady wave field is applied to the whole domain at once) |
+| `f_wf_current` | 0 | **Method**: by default the current does not act (the same results as up to stage W2). The formulation is the wave action balance of Bretherton & Garrett (1968)[^bg68]; the refraction by currents and the velocity used (Lagrangian mean) are the same as wci of XBeach[^xbeach]. Solving the dispersion relation directly for each directional bin is original (XBeach advances the wavenumber in time with the eikonal equations) |
 | Coefficient of the friction speed | 1.16 | **Literature value**: the wave–current friction of Ruessink et al. (2001)[^ruessink01] (the XBeach formulation). Not a setting |
 
 The dispersion relation is solved by three Newton iterations starting from the explicit
@@ -521,7 +618,15 @@ approximation of Fenton & McKee (1990)[^fm90].
   and the friction of the return flow on a uniform depth with the closed form, the
   integral momentum balance of the longshore current on a beach, the budget of the roller
   and its shoreward shift, alongshore uniformity at lateral Neumann sides, agreement with
-  a grid rotated by 90°, and byte-identical continuation after a restart.
+  a grid rotated by 90°, and byte-identical continuation after a restart. The balances and
+  budgets of the two-way coupling with the action of the current on the waves (stage W3) are
+  checked too.
+- [test/wfdoppler](../../../test/wfdoppler/en/README.md): the change of waves by currents (stage
+  W3). Conservation of the wave action flux on opposing and following currents (with an
+  independently solved dispersion relation), the position of blocking by an opposing current
+  and the ledger, with and without the current effect, the unsteady mode (the wave action ledger
+  closes while the current spins up), a river-mouth jet that stops the waves from propagating up
+  the river, and byte-identical continuation after a restart.
 - All are bit-identical to the serial run with MPI np = 1, 2 and 4.
 
 ## References

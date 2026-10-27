@@ -7,6 +7,7 @@ Python 標準ライブラリのみ。使い方:
   python3 Check_wfcurrent.py long   result_long           # 海浜の沿岸流(不規則波、ローラーなし)
   python3 Check_wfcurrent.py roller result result_long    # 同じ構成でローラーあり(基本 param.txt)
   python3 Check_wfcurrent.py rot    result result_rot     # 基本を 90° 回した格子(W・E が側方 Neumann)
+  python3 Check_wfcurrent.py cur    result_cur result     # 基本に流れの波への作用(段 W3)を加えた双方向の連成
 
 格子は 120 × 8 セル(Δx = Δy = 10 m)。西(i = 1)が沖で入射、南北は側方 Neumann(波・流れとも)。
 分布は bil(単精度)の最終出力(9998)で読む。y の成分(v・Wfy・Wsy)は流れの出力と同じ
@@ -29,7 +30,9 @@ Python 標準ライブラリのみ。使い方:
   - 岸沖の面の釣り合い(GLM): g_e Δη/Δx = F_x/(ρh_f) − g n² |V_E| (u − u_S)/h_f^{4/3}
     (u^L ≈ 0 のとき戻り流れ u^E = −u^S の摩擦がセットアップを押し上げる)
   - ローラーのエネルギー(定常): Σ(D_b + 上限の除去) = Σ D_r + 汀線への流出、
-    D_r = 2 β g E_r / c(Reniers & Battjes 1997。β = 0.1 は XBeach の既定)
+    D_r = 2 β g E_r / c(Reniers & Battjes 1997。β = 0.1 は XBeach の既定)。流れの波への
+    作用(cur)では c は平均波向の向きの流速成分 U_θ でのドップラーの分散関係
+    (ω − k U_θ)² = g k tanh(kh) の固有の位相速度 σ/k(モデルはビンのエネルギー重みの平均)
 """
 import csv
 import math
@@ -296,30 +299,83 @@ def check_roller(d, dlong):
     check(fr > fl and (cr - cl) * DX >= 3.0,
           "roller: the force peak and the current move shoreward (force +%d cells, centroid +%.1f m >= 3 m)"
           % (fr - fl, (cr - cl) * DX))
-    # ローラーのエネルギーの収支(台帳の砕波 + 上限の除去 = Σ D_r + 汀線への流出)
+    roller_budget(d, a, "roller", False)
+
+
+def doppler_c(sig, h, um):
+    """(ω − k U)² = g k tanh(kh) の U → 0 で連続な枝の固有の位相速度 σ/k と固有角周波数 σ
+    (順流・弱い逆流)"""
+    k = wavenumber(sig, h)
+    for _ in range(100):
+        kh = k * h
+        s0 = math.sqrt(G * k * math.tanh(kh))
+        dk = (s0 + k * um - sig) / (0.5 * s0 / k * (1.0 + 2.0 * kh / math.sinh(2.0 * kh)) + um)
+        k -= dk
+        if abs(dk) <= 1e-14 * k:
+            break
+    return (sig - k * um) / k, sig - k * um
+
+
+def roller_budget(d, a, label, cur):
+    """ローラーのエネルギーの収支(台帳の砕波 + 上限の除去 = Σ D_r + 汀線への流出)と分布。
+    流れの波への作用(cur)では台帳が作用量 × ω なので、砕波の分布で重みを付けた σ/ω を
+    掛けてエネルギーにする"""
+    j = JC
     a2 = read_fields(d, ["Wr", "Wa"])
     sig = 2.0 * math.pi / 8.0
     sdr = 0.0
+    wsum = wsr = 0.0
     last = None
     for i in range(NX):
         h = depth(a, j, i)
         if a["Wh"][j][i] <= 0.0 or h < HMIN:
             continue
-        c = sig / wavenumber(sig, h)
+        if cur:
+            th = math.radians(a2["Wa"][j][i])
+            um = a["u"][j][i] * math.cos(th) - a["v"][j][i] * math.sin(th)    # v は南が正
+            c, sg = doppler_c(sig, h, um)
+            wsum += a["Wb"][j][i]
+            wsr += a["Wb"][j][i] * sg / sig
+        else:
+            c = sig / wavenumber(sig, h)
         sdr += 2.0 * BETA * G * a2["Wr"][j][i] / c * DX
         last = (c, a2["Wr"][j][i], a2["Wa"][j][i])
     c, er, th = last
     flux = c * er * math.cos(math.radians(th))
     row = read_csv("%s/wavefield.csv" % d)[-1]
     src = (float(row["breaking_W"]) + float(row["limit_W"])) / (NY * DY)
+    if cur:
+        src *= wsr / wsum
     print("  roller source (breaking + limit, ledger) %.1f W/m = dissipation %.1f + flux to the shoreline %.1f W/m"
           % (src, sdr, flux))
     check(abs(sdr + flux - src) <= 0.01 * src,
-          "roller: steady roller energy budget closes within 1%% (%.2f%%)" % (100.0 * (sdr + flux - src) / src))
+          "%s: steady roller energy budget closes within 1%% (%.2f%%)" % (label, 100.0 * (sdr + flux - src) / src))
     i0 = next(i for i in range(NX) if a["Wb"][j][i] > 0.001 * max(a["Wb"][j]))
     ermax = max(a2["Wr"][j])
     eroff = max(a2["Wr"][j][i] for i in range(i0))
-    check(eroff <= 0.01 * ermax, "roller: the roller energy is confined to the surf zone (offshore max %.2e J/m2)" % eroff)
+    check(eroff <= 0.01 * ermax, "%s: the roller energy is confined to the surf zone (offshore max %.2e J/m2)"
+          % (label, eroff))
+
+
+def check_cur(d, dbase):
+    """基本に流れの波への作用(段 W3)を加えた双方向の連成: 段 W2 と同じ釣り合いと収支が成り立ち、
+    流れの作用が波と沿岸流を変える"""
+    print("== cur (%s vs %s): the base case with the current acting on the waves (f_wf_current = 1)" % (d, dbase))
+    a = beach_current(d, "cur")
+    roller_budget(d, a, "cur", True)
+    b = read_fields(dbase, ["E", "v", "Wh", "Wa"])
+    j = JC
+    cells = [i for i in range(NX) if a["Wh"][j][i] > 0.0 and depth(a, j, i) >= HMIN]
+    dh = max(abs(a["Wh"][j][i] - b["Wh"][j][i]) / b["Wh"][j][i] for i in cells)
+    dvmax = max(abs(x) for x in a["v"][j]) / max(abs(x) for x in b["v"][j]) - 1.0
+    print("  cur: max relative change of the wave height %.2e, of the peak longshore current %+.2e" % (dh, dvmax))
+    check(1e-4 <= dh <= 0.05, "cur: the current changes the waves (max relative change of the wave height %.1e, "
+          "between 1e-4 and 5%%)" % dh)
+    row = read_csv("%s/wavefield.csv" % d)[-1]
+    vin = float(row["in_W"])
+    imb = float(row["imbalance_W"])
+    check(abs(imb) <= 1e-6 * vin, "cur: the wave ledger (action x omega) closes (imbalance %.1e of the inflow)"
+          % (abs(imb) / vin))
 
 
 def check_rot(d, drot):
@@ -366,6 +422,8 @@ def main():
         check_roller(sys.argv[2], sys.argv[3])
     elif mode == "rot":
         check_rot(sys.argv[2], sys.argv[3])
+    elif mode == "cur":
+        check_cur(sys.argv[2], sys.argv[3])
     else:
         raise SystemExit("unknown mode: " + mode)
     if failed:

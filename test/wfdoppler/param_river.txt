@@ -1,0 +1,72 @@
+!======================================================================
+! wfdoppler: 河口の噴流が波の遡上を止める(V10)
+!   西の陸地を幅 10 m・河床 −1.2 m の河道が貫き、東の海(海浜勾配 0.02)へ 1 m/s の流れが
+!   出る(test/wave_river と同型)。東(沖)から不規則波 H_m0 = 0.2 m・T = 2.5 s・方向分散
+!   20° を入れる。確認事項(Check_wfdoppler.py river、param_river_nocur と比べる): 流れの
+!   作用ありでは波が河道を遡らない(fn_wave の wave_vmax のような打ち切りなしで、分散関係
+!   の阻止として)、噴流の上で波が急峻になり集まる、台帳に阻止が記録される
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.25
+  t0 = 0
+  tt = 1200
+  dt_disp = 600
+  dt_file = 1800
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_wavefield = '-'
+  dir_result = 'result_river'
+  f_check_cfl = 1
+  f_output_mode = 3
+  f_out_e = 1
+  f_out_u = 1
+  f_out_v = 1
+/
+&list_enc
+/
+&list_initial
+  f_htype = 2
+  e0 = 0.0
+/
+&list_geoinfo
+  nx = 120
+  ny = 80
+  dx = 2.5
+  dy = 2.5
+  f_ztype = 1
+  fn_z = 'z_river.txt'
+  f_rntype = 0
+  rn0 = 0.025
+/
+&list_bound_edge
+  f_bc_e = 2                ! 東(沖)は長波放射
+  f_bc_n = 3                ! 南北は側方 Neumann
+  f_bc_s = 3
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 39   ! 河道(幅 10 m、水深 1.2 m)に 12 m3/s(流速 1 m/s。10 分で立ち上げ)
+  inflow_cell(1:2,2,1) = 1, 40
+  inflow_cell(1:2,3,1) = 1, 41
+  inflow_cell(1:2,4,1) = 1, 42
+  inflow_val(1:2,1,1) = 0, 0.0
+  inflow_val(1:2,2,1) = 10, 12.0
+  inflow_val(1:2,3,1) = 9999, 12.0
+  inflow_dist(1) = 0
+/
+&list_wavefield
+  wf_bc_side = 0, 1, 2, 2   ! 東(沖)が入射、西は吸収、南北は側方 Neumann
+  wf_wavetype = 1
+  wf_hm0 = 0.2
+  wf_trep = 2.5             ! 河道の流れ(1 m/s、水深 1.2 m)で阻止される周期
+  wf_dir = 180.0            ! 西へ(河口へ向かう)
+  wf_spread = 20.0
+  dt_wave = 600
+  wf_tol = 1.0e-6
+  wf_itmax = 3000           ! 阻止の近くの遅いビンで収束が遅い(噴流の発達中の t = 600 s の更新で約 2000 回)
+  f_wf_current = 1
+  f_wf_outdiag = 1
+/

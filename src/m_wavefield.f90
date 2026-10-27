@@ -63,7 +63,7 @@ module m_wavefield
   !
   ! 【初版の併用制限】STG・ネストは init で停止(§88.1 D11)。
   ! ==================================================================================
-  use, intrinsic :: iso_fortran_env, only : real64
+  use, intrinsic :: iso_fortran_env, only : real64, int8
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
@@ -162,6 +162,18 @@ module m_wavefield
     integer, allocatable :: lar(:,:), lbr(:,:)  ! ローラーの 2 リンク分解の格子方向 (ish:ieh, jsh:jeh)
     real, allocatable :: qar(:,:), qbr(:,:)     ! 位相速度あたりの流出率 (1/m)
     integer :: nrit = 0                         ! 直近のローラーの反復回数
+    ! 流れの波への作用(段 W3。f_wf_current = 1。§88)。ビンごとの量は有効時のみ確保
+    logical :: current = .false.
+    real, allocatable :: ux(:,:), uy(:,:)       ! 流れの流速 (m/s。x 東・y 北。ish:ieh, jsh:jeh)
+    real, allocatable :: kb(:,:,:)              ! ビンごとの波数 k_m (ish:ieh, jsh:jeh, 1:nth)
+    real, allocatable :: sgb(:,:,:)             ! ビンごとの固有角周波数 σ_m(0 = 阻止)
+    real, allocatable :: qab(:,:,:), qbb(:,:,:) ! ビンごとの流出率 (1/s。軸 lab・対角 lbb へ)
+    integer(int8), allocatable :: lab(:,:,:), lbb(:,:,:)   ! ビンごとの流出先の格子方向
+    real, allocatable :: cthb(:,:,:)            ! ビンごとの屈折速度 c_θ (rad/s。ish:ieh, js:je, 1:nth)
+    real, allocatable :: rmax(:,:)              ! セルの最大流出率 max_m (qab + qbb) (1/s)
+    real(real64), allocatable :: rblk(:)        ! 阻止の率(行部分和。作用量 × ω。js:je)
+    real(real64), allocatable :: rcblk(:)       ! 阻止の累積量(非定常。js:je)
+    real(real64) :: cumblk0 = 0.0_real64        ! 再開前までの阻止の累積
   end type
 
 contains
@@ -248,9 +260,26 @@ subroutine m_wavefield_init(wf, p, g, s, multi)
     end if
   end if
 
+  ! 流れの波への作用(段 W3): ビンごとの分散関係・輸送の分解・屈折速度(有効時のみ確保)
+  if (wf%current) then
+    allocate(wf%ux(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(wf%uy(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(wf%kb(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:wf%nth), source = 0.0)
+    allocate(wf%sgb(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:wf%nth), source = 0.0)
+    allocate(wf%qab(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:wf%nth), source = 0.0)
+    allocate(wf%qbb(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:wf%nth), source = 0.0)
+    allocate(wf%lab(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:wf%nth), source = 0_int8)
+    allocate(wf%lbb(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:wf%nth), source = 0_int8)
+    allocate(wf%cthb(dcp%ish:dcp%ieh, dcp%js:dcp%je, 1:wf%nth), source = 0.0)
+    allocate(wf%rmax(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(wf%rblk(dcp%js:dcp%je), source = 0.0_real64)
+    allocate(wf%rcblk(dcp%js:dcp%je), source = 0.0_real64)
+  end if
+
   ! 開始時の波浪場: 復元、準定常解、または静穏
   call boundary_now(wf, p, s)
   call update_props(wf, p, g, s)
+  if (wf%current) call update_current(wf, p, g, s)
   call check_incident_cells(wf, g)
   have_diag = .false.
   have_force = .false.
@@ -261,13 +290,31 @@ subroutine m_wavefield_init(wf, p, g, s, multi)
     if (wf%roller) call roller_steady(wf, p, g, s)
   end if
   ! 復元した診断量・外力があればそのまま使う(準定常の再開をビット一致にする。§88)
-  if (.not. have_diag) call diagnose(wf, p, g, s)
-  if (wf%flow >= 1 .and. .not. have_force) call flow_coupling(wf, p, g, s)
+  if (.not. have_diag) then
+    if (wf%current) then
+      call diagnose_cur(wf, p, g, s)
+    else
+      call diagnose(wf, p, g, s)
+    end if
+  end if
+  if (wf%flow >= 1 .and. .not. have_force) then
+    if (wf%current) then
+      call flow_coupling_cur(wf, p, g, s)
+    else
+      call flow_coupling(wf, p, g, s)
+    end if
+  end if
   s%wv_flow = wf%flow
   if (wf%flow >= 1) s%wv_ramp = ramp_factor(wf, p, s%it0)
   ! 非定常の台帳の起点: 再開(f_state_restore = 1)は保存時の起点と累積を引き継ぐ
   ! (restore_state が設定)。それ以外は現在の貯留から数え始める
-  if (p%f_state_restore /= 1) wf%store0 = storage(wf, g)
+  if (p%f_state_restore /= 1) then
+    if (wf%current) then
+      wf%store0 = storage_cur(wf, g)
+    else
+      wf%store0 = storage(wf, g)
+    end if
+  end if
 
   call open_csv(wf, p)
   if (wf%mode == 2 .and. p%f_state_restore /= 1) call write_steady(wf, g, s)
@@ -298,17 +345,32 @@ subroutine m_wavefield_calc(wf, p, g, s, it)
     end if
     call boundary_now(wf, p, s)
     call update_props(wf, p, g, s)
-    call solve_steady(wf, p, g, s)
-    if (wf%roller) call roller_steady(wf, p, g, s)
-    call diagnose(wf, p, g, s)
-    if (wf%flow >= 1) call flow_coupling(wf, p, g, s)
+    if (wf%current) then
+      call update_current(wf, p, g, s)
+      call solve_steady(wf, p, g, s)
+      if (wf%roller) call roller_steady(wf, p, g, s)
+      call diagnose_cur(wf, p, g, s)
+      if (wf%flow >= 1) call flow_coupling_cur(wf, p, g, s)
+    else
+      call solve_steady(wf, p, g, s)
+      if (wf%roller) call roller_steady(wf, p, g, s)
+      call diagnose(wf, p, g, s)
+      if (wf%flow >= 1) call flow_coupling(wf, p, g, s)
+    end if
     call write_steady(wf, g, s)
   else
     call boundary_now(wf, p, s)
     call update_props(wf, p, g, s)
-    call step_unsteady(wf, p, g, s)
-    call diagnose(wf, p, g, s)
-    if (wf%flow >= 1) call flow_coupling(wf, p, g, s)
+    if (wf%current) then
+      call update_current(wf, p, g, s)
+      call step_unsteady_cur(wf, p, g, s)
+      call diagnose_cur(wf, p, g, s)
+      if (wf%flow >= 1) call flow_coupling_cur(wf, p, g, s)
+    else
+      call step_unsteady(wf, p, g, s)
+      call diagnose(wf, p, g, s)
+      if (wf%flow >= 1) call flow_coupling(wf, p, g, s)
+    end if
   end if
   if (wf%flow >= 2) call friction_speed(g, s)
 end subroutine
@@ -561,6 +623,21 @@ subroutine setup_params(wf, p, g, list)
   else if (list%f_wf_roller /= -9999 .or. list%wf_beta > -9998.0 .or. list%wf_tramp > -9998.0) then
     call par_info("wavefield: f_wf_roller, wf_beta and wf_tramp are not used with wf_flow = 0")
   end if
+
+  ! --- 流れの波への作用(段 W3)---
+  select case (list%f_wf_current)
+    case (-9999)
+      wf%current = .false.
+      call par_info("wavefield: f_wf_current = 0 (default; the current does not act on the waves)")
+    case (0)
+      wf%current = .false.
+    case (1)
+      wf%current = .true.
+      call par_info("wavefield: the current acts on the waves (Doppler shift, refraction and transport" &
+                    // " by the current, blocking; f_wf_current = 1)")
+    case default
+      call par_stop("list_wavefield: f_wf_current must be 0 or 1: " // itoa(list%f_wf_current))
+  end select
 
   ! --- 沖の波(固定値または時系列)---
   wf%clock = list%wf_clock
@@ -957,7 +1034,11 @@ subroutine solve_steady(wf, p, g, s)
   if (wf%wtype == 1) href = wf%hbc / sqrt(2.0)     ! 比較は H_rms で
   wf%niter = 0
   do it = 1, wf%itmax
-    call iterate(wf, p, g, s, -1.0, href, res(1))
+    if (wf%current) then
+      call iterate_cur(wf, p, g, s, -1.0, href, res(1))
+    else
+      call iterate(wf, p, g, s, -1.0, href, res(1))
+    end if
     call par_allreduce_max(res)
     wf%niter = it
     wf%res = res(1)
@@ -1756,7 +1837,11 @@ subroutine roller_update(wf, p, g, dtg)
   type(t_geoinfo), intent(in) :: g
   real, intent(in) :: dtg
   real :: res
-  call roller_prepare(wf, g)
+  if (wf%current) then
+    call roller_prepare_cur(wf, g)
+  else
+    call roller_prepare(wf, g)
+  end if
   call roller_iterate(wf, p, g, dtg, 1.0, res)
 end subroutine
 
@@ -1784,7 +1869,11 @@ subroutine roller_steady(wf, p, g, s)
   else
     eref = rho * p%gg * wf%hbc**2 / 16.0
   end if
-  call roller_prepare(wf, g)
+  if (wf%current) then
+    call roller_prepare_cur(wf, g)
+  else
+    call roller_prepare(wf, g)
+  end if
   do it = 1, wf%itmax
     call roller_iterate(wf, p, g, -1.0, eref, res(1))
     call par_allreduce_max(res)
@@ -1947,6 +2036,982 @@ contains
 
 end subroutine
 
+!======================================================================
+! 流れの波への作用(段 W3。f_wf_current = 1。§88)
+!   作用量の平衡 ∂N_m/∂t + ∇·[(c_g,m ê_m + U) N_m] + ∂(c_θ N_m)/∂θ = −D_m/σ_m
+!   (Bretherton & Garrett 1968、SWAN = Booij ら 1999 の形を周波数 1 個に縮約。§5.2)を解く。
+!   状態 ae はこの経路では作用量 N_m = E_m/σ_m(σ_m はセル・ビンごとの固有角周波数。
+!   流れがなければ σ_m = ω で W1 のエネルギー平衡と同じ解)。作用量は時間変化する流れの
+!   中の断熱不変量なので、流れが変わっても状態はそのまま(エネルギー E_m = σ_m N_m が
+!   変わる)で、非定常の台帳(作用量 × ω)も閉じる。エネルギーが要る量(砕波・摩擦・上限・
+!   診断量・放射応力)は σ_m N_m から求める。流れなしの経路の命令列を変えないよう、流れ
+!   ありの手続きは別に置き、呼び出し元で振り分ける(段 W2 の -Ofast の教訓。§88.4)
+!======================================================================
+
+!----------------------------------------------------------------------
+! 流れの場と、ビンごとの分散関係・輸送の分解・屈折速度(更新ごと。collective)
+!   U は浅水流の流速(wf_flow = 2 では Lagrangian 平均 u^L。XBeach の wci と同じ)。
+!   ビン m ごとに (ω − k U_m)² = g k tanh(kh)(U_m = ê_m·U)を U_m → 0 で連続な枝で
+!   解き(doppler_k)、σ_m = ω − k U_m、固有の群速度 c_g,m = n σ_m/k を求め、伝播速度
+!   v_m = c_g,m ê_m + U を W1 と同じ規則で 2 リンク分解する。根がない、または
+!   c_g,m + U_m <= 0 のビンは阻止(sgb = 0。そこへ届く作用量は台帳「阻止」へ)。
+!   屈折速度(x 東・y 北。SWAN・XBeach の形):
+!     c_θ = σ/sinh 2kh (h_x sin θ − h_y cos θ) + cos θ (sin θ u_x − cos θ u_y)
+!           + sin θ (sin θ v_x − cos θ v_y)、|c_θ| <= σ_m/4(W1 と同じ制限)
+!   帯±1 行で求める(送り手はハロ行にもいる)。屈折速度は帯だけ
+!----------------------------------------------------------------------
+subroutine update_current(wf, p, g, s)
+  type(t_wavefield), intent(inout) :: wf
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j, m
+  real :: h, um, k, sig, kh, n, cgm, px, py, ax, ay, rsum
+  real :: hx, hy, uxx, uxy, uyx, uyy, cfac, cl
+  logical :: ok
+
+  ! 浅水流の流速のハロ(この時点のハロ行は 1 ステップ前の値。§88.4 の摩擦の速さの教訓)
+  call par_halo_cell(s%u)
+  call par_halo_cell(s%v)
+  !$omp parallel do schedule(dynamic) private(i, j)
+  do j = dcp%jsh, dcp%jeh
+    do i = max(dcp%ish, 1), min(dcp%ieh, g%nx)
+      wf%ux(i,j) = s%u(i,j)
+      wf%uy(i,j) = -s%v(i,j)             ! y 北(浅水流の v は行の増える向き = 南が正)
+    end do
+  end do
+  !$omp end parallel do
+
+  !$omp parallel do schedule(dynamic) private(i, j, m, h, um, k, sig, kh, n, cgm, px, py, ax, ay, rsum, ok)
+  do j = max(1, dcp%js - 1), min(g%ny, dcp%je + 1)
+    do i = max(1, dcp%ish), min(g%nx, dcp%ieh)
+      wf%rmax(i,j) = 0.0
+      do m = 1, wf%nth
+        wf%kb(i,j,m) = 0.0
+        wf%sgb(i,j,m) = 0.0
+        wf%qab(i,j,m) = 0.0
+        wf%qbb(i,j,m) = 0.0
+        wf%lab(i,j,m) = 0_int8
+        wf%lbb(i,j,m) = 0_int8
+      end do
+      if (wf%wcell(i,j) == 0 .or. wf%kw(i,j) <= 0.0) cycle
+      h = s%h(i,j)
+      rsum = 0.0
+      do m = 1, wf%nth
+        um = wf%ux(i,j) * wf%cth(m) + wf%uy(i,j) * wf%sth(m)
+        call doppler_k(wf%om, h, um, p%gg, wf%kw(i,j), k, sig, ok)
+        if (.not. ok) cycle
+        kh = k * h
+        if (kh > 20.0) then
+          n = 0.5
+        else
+          n = 0.5 * (1.0 + 2.0 * kh / sinh(2.0 * kh))
+        end if
+        cgm = n * sig / k
+        if (cgm + um <= 0.0) cycle
+        wf%kb(i,j,m) = k
+        wf%sgb(i,j,m) = sig
+        px = (cgm * wf%cth(m) + wf%ux(i,j)) / g%dx
+        py = (cgm * wf%sth(m) + wf%uy(i,j)) / g%dy
+        ax = abs(px)
+        ay = abs(py)
+        if (abs(ax - ay) <= 1.0e-6 * max(ax, ay)) ay = ax
+        if (ax >= ay) then
+          wf%lab(i,j,m) = int(merge(0, 4, px >= 0.0), int8)
+          wf%qab(i,j,m) = ax - ay
+          wf%qbb(i,j,m) = ay
+        else
+          wf%lab(i,j,m) = int(merge(2, 6, py >= 0.0), int8)
+          wf%qab(i,j,m) = ay - ax
+          wf%qbb(i,j,m) = ax
+        end if
+        wf%lbb(i,j,m) = int(diag_code(px, py), int8)
+        rsum = max(rsum, wf%qab(i,j,m) + wf%qbb(i,j,m))
+      end do
+      wf%rmax(i,j) = rsum
+    end do
+  end do
+  !$omp end parallel do
+
+  !$omp parallel do schedule(dynamic) private(i, j, m, h, kh, hx, hy, uxx, uxy, uyx, uyy, cfac, cl)
+  do j = dcp%js, dcp%je
+    do i = max(1, dcp%ish), min(g%nx, dcp%ieh)
+      do m = 1, wf%nth
+        wf%cthb(i,j,m) = 0.0
+      end do
+      if (wf%wcell(i,j) == 0) cycle
+      h = s%h(i,j)
+      call grad_cell(wf, g, s%h, i, j, hx, hy)
+      call grad_cell(wf, g, wf%ux, i, j, uxx, uxy)
+      call grad_cell(wf, g, wf%uy, i, j, uyx, uyy)
+      do m = 1, wf%nth
+        if (wf%sgb(i,j,m) <= 0.0) cycle
+        kh = wf%kb(i,j,m) * h
+        cfac = 0.0
+        if (kh <= 20.0) cfac = wf%sgb(i,j,m) / sinh(2.0 * kh)
+        wf%cthb(i,j,m) = cfac * (wf%sth(m) * hx - wf%cth(m) * hy) &
+                         + wf%cth(m) * (wf%sth(m) * uxx - wf%cth(m) * uxy) &
+                         + wf%sth(m) * (wf%sth(m) * uyx - wf%cth(m) * uyy)
+        cl = 0.25 * wf%sgb(i,j,m)
+        wf%cthb(i,j,m) = max(-cl, min(cl, wf%cthb(i,j,m)))
+      end do
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 流れのある分散関係(段 W3): f(k) = σ_0(k) + k U_m − ω = 0、σ_0 = √(g k tanh kh) を、
+! U_m → 0 で連続な枝(σ = ω − k U_m > 0)で解く。σ_0 は k に単調増加で上に凸
+! (c_g = dσ_0/dk は k とともに減る)ので f も上に凸: f < 0 の側からの Newton 法は根を
+! 越えずに単調に近づく。順流(U_m > 0)は f(k_0) > 0(k_0 は流れなしの根)なので 1 回目で
+! 根の手前(f < 0 の側。正の k)へ移り、以後単調。逆流(U_m < 0)は f(k_0) < 0 から単調に
+! 増え、f の最大(c_g + U_m = 0)に達する前に根がなければ解なし = 阻止(ok = .false.)
+!----------------------------------------------------------------------
+pure subroutine doppler_k(om, h, um, gg, k0, k, sig, ok)
+  real, intent(in) :: om, h, um, gg, k0
+  real, intent(out) :: k, sig
+  logical, intent(out) :: ok
+  real :: f, df, kh, s0, dk
+  integer :: it
+
+  ok = .true.
+  k = k0
+  sig = om
+  if (um == 0.0) return
+  do it = 1, 60
+    kh = k * h
+    if (kh > 20.0) then
+      s0 = sqrt(gg * k)
+      df = 0.5 * s0 / k + um
+    else
+      s0 = sqrt(gg * k * tanh(kh))
+      df = 0.5 * s0 / k * (1.0 + 2.0 * kh / sinh(2.0 * kh)) + um
+    end if
+    f = s0 + k * um - om
+    if (df <= 0.0) then
+      ok = .false.                       ! f の最大を越えた: 逆流で根がない
+      return
+    end if
+    dk = f / df
+    k = k - dk
+    if (abs(dk) <= 1.0e-10 * k) exit
+  end do
+  if (it > 60 .or. k <= 0.0) then
+    ok = .false.                         ! 収束しない(阻止の点の重根の近く)
+    return
+  end if
+  sig = om - k * um
+  if (sig <= 0.0) ok = .false.
+end subroutine
+
+
+!----------------------------------------------------------------------
+! セル (i, j) の勾配(x 東・y 北)。両隣が波浪セルなら中央差分、片方なら片側差分、
+! なければ 0(cell_row の depth_grad と同じ規則。帯±1 行の範囲の波浪セルだけ読む)
+!----------------------------------------------------------------------
+pure subroutine grad_cell(wf, g, a, i, j, gx, gy)
+  type(t_wavefield), intent(in) :: wf
+  type(t_geoinfo), intent(in) :: g
+  real, intent(in) :: a(dcp%ish:, dcp%jsh:)
+  integer, intent(in) :: i, j
+  real, intent(out) :: gx, gy
+  logical :: e_, w_, n_, s_
+  e_ = wcl(i + 1, j)
+  w_ = wcl(i - 1, j)
+  n_ = wcl(i, j - 1)
+  s_ = wcl(i, j + 1)
+  gx = 0.0
+  gy = 0.0
+  if (e_ .and. w_) then
+    gx = (a(i+1,j) - a(i-1,j)) / (2.0 * g%dx)
+  else if (e_) then
+    gx = (a(i+1,j) - a(i,j)) / g%dx
+  else if (w_) then
+    gx = (a(i,j) - a(i-1,j)) / g%dx
+  end if
+  if (n_ .and. s_) then
+    gy = (a(i,j-1) - a(i,j+1)) / (2.0 * g%dy)
+  else if (n_) then
+    gy = (a(i,j-1) - a(i,j)) / g%dy
+  else if (s_) then
+    gy = (a(i,j) - a(i,j+1)) / g%dy
+  end if
+
+contains
+
+  pure function wcl(ii, jj) result(w)
+    integer, intent(in) :: ii, jj
+    logical :: w
+    w = .false.
+    if (ii < max(1, dcp%ish) .or. ii > min(g%nx, dcp%ieh)) return
+    if (jj < max(1, dcp%js - 1) .or. jj > min(g%ny, dcp%je + 1)) return
+    w = (wf%wcell(ii, jj) == 1)
+  end function
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 1 回の更新(核。流れあり)。iterate と同じ手順で、局所の擬似時間刻みは
+! Δτ = 1/(セルの最大流出率 rmax)、輸送と屈折は作用量で行う
+!----------------------------------------------------------------------
+subroutine iterate_cur(wf, p, g, s, dtg, href, res)
+  type(t_wavefield), intent(inout) :: wf
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  real, intent(in) :: dtg, href
+  real, intent(out) :: res
+  integer :: i, j, m
+  real :: resj
+
+  !$omp parallel do schedule(dynamic) private(i, j)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      wf%dtl(i,j) = 0.0
+      if (wf%wcell(i,j) == 0) cycle
+      if (dtg > 0.0) then
+        wf%dtl(i,j) = dtg
+      else if (wf%rmax(i,j) > 0.0) then
+        wf%dtl(i,j) = 1.0 / wf%rmax(i,j)
+      end if
+    end do
+  end do
+  !$omp end parallel do
+
+  wf%rrate(:,:) = 0.0_real64
+  wf%rblk(:) = 0.0_real64
+
+  do m = 1, wf%nth
+    call transport_bin_cur(wf, g, m)
+  end do
+
+  res = 0.0
+  !$omp parallel do schedule(dynamic) private(j, resj) reduction(max:res)
+  do j = dcp%js, dcp%je
+    call cell_row_cur(wf, p, g, s, j, href, resj)
+    res = max(res, resj)
+  end do
+  !$omp end parallel do
+
+  !$omp parallel do schedule(dynamic) private(i, j, m)
+  do j = dcp%js, dcp%je
+    do m = 1, wf%nth
+      do i = dcp%ish, dcp%ieh
+        wf%ae(i,j,m) = wf%ae1(i,j,m)
+      end do
+    end do
+  end do
+  !$omp end parallel do
+  do m = 1, wf%nth
+    call par_halo_cell(wf%ae(:,:,m))
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! ビン m の空間の流入出(流れあり。受け手で集める = 書き手一意。決定的)
+!   送り手の分解はセルごとに違うので、受け手は 8 近傍すべてを調べ、送り手のビン m の
+!   流出先がこの受け手なら率 × N_d を集める。N_i ← N_i + Δτ (Σ流入 − 流出率 × N_i)。
+!   仮想の送り手(格子の外)は W1 と同じく境界の内側のセルの分解を使い、入射の辺は
+!   沖のエネルギーを境界の内側のセルの σ で作用量にする。
+!   阻止のビン(σ_i = 0)へ届く作用量は台帳「阻止」へ。台帳は作用量 × ω(率)
+!----------------------------------------------------------------------
+subroutine transport_bin_cur(wf, g, m)
+  type(t_wavefield), intent(inout) :: wf
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: m
+  integer :: i, j, l
+  real :: fin, fbc, rout, na, sg, fac
+  real(real64) :: rin_bc, rout_bc, rout_abs, rb
+
+  fac = g%dx * g%dy * wf%dth * wf%om
+  !$omp parallel do schedule(dynamic) private(i, j, l, fin, fbc, rout, na, sg, rin_bc, rout_bc, rout_abs, rb)
+  do j = dcp%js, dcp%je
+    rin_bc = 0.0_real64
+    rout_bc = 0.0_real64
+    rout_abs = 0.0_real64
+    rb = 0.0_real64
+    do i = g%wx(1,j), g%wx(2,j)
+      if (wf%wcell(i,j) == 0) then
+        wf%ae1(i,j,m) = 0.0
+        cycle
+      end if
+      fin = 0.0
+      fbc = 0.0
+      do l = 0, 7
+        call gather_cur(i, j, l, fin, fbc)
+      end do
+      rin_bc = rin_bc + real(fbc, real64)
+      sg = wf%sgb(i,j,m)
+      if (sg <= 0.0) then
+        ! 阻止のビン: 届いた作用量と残っていた分(流れが変わって阻止になった)を除く
+        rb = rb + real(fin + fbc, real64)
+        if (wf%dtl(i,j) > 0.0) rb = rb + real(wf%ae(i,j,m) / wf%dtl(i,j), real64)
+        wf%ae1(i,j,m) = 0.0
+        cycle
+      end if
+      na = wf%ae(i,j,m)
+      rout = wf%qab(i,j,m) + wf%qbb(i,j,m)
+      wf%ae1(i,j,m) = na + wf%dtl(i,j) * (fin + fbc - rout * na)
+      if (na > 0.0) then
+        if (wf%qab(i,j,m) > 0.0) call classify(i, j, int(wf%lab(i,j,m)), wf%qab(i,j,m) * na, rout_bc, rout_abs)
+        if (wf%qbb(i,j,m) > 0.0) call classify(i, j, int(wf%lbb(i,j,m)), wf%qbb(i,j,m) * na, rout_bc, rout_abs)
+      end if
+    end do
+    wf%rrate(j, l_in) = wf%rrate(j, l_in) + rin_bc * fac
+    wf%rrate(j, l_out) = wf%rrate(j, l_out) + rout_bc * fac
+    wf%rrate(j, l_abs) = wf%rrate(j, l_abs) + rout_abs * fac
+    wf%rblk(j) = wf%rblk(j) + rb * fac
+  end do
+  !$omp end parallel do
+
+contains
+
+  ! 受け手 (i, j) へ格子方向 l で届く作用量の流入(送り手 = (i, j) − 方向 l)
+  subroutine gather_cur(i, j, l, fin, fbc)
+    integer, intent(in) :: i, j, l
+    real, intent(inout) :: fin, fbc
+    integer :: id, jd, ic, jc
+    real :: q
+    id = i - ldi(l)
+    jd = j - ldj(l)
+    if (id < 1 .or. id > g%nx .or. jd < 1 .or. jd > g%ny) then
+      ic = min(max(id, 1), g%nx)
+      jc = min(max(jd, 1), g%ny)
+      if (wcell_in(wf, g, ic, jc) == 0) return
+      if (wf%sgb(ic,jc,m) <= 0.0) return
+      q = rate_to(ic, jc, l)
+      if (q <= 0.0) return
+      select case (vside_type(wf, g, id, jd))
+        case (1)
+          fbc = fbc + q * wf%ebc(m) / wf%sgb(ic,jc,m)
+        case (2)
+          fbc = fbc + q * wf%ae(ic,jc,m)
+        case default
+          continue
+      end select
+      return
+    end if
+    if (wcell_in(wf, g, id, jd) == 0) return
+    if (wf%sgb(id,jd,m) <= 0.0) return
+    q = rate_to(id, jd, l)
+    if (q <= 0.0) return
+    if (mod(l, 2) == 1) then
+      if (diag_closed(wf, g, id, jd, i, j)) return
+    end if
+    fin = fin + q * wf%ae(id,jd,m)
+  end subroutine
+
+  ! 送り手 (ii, jj) からビン m で格子方向 l へ流れ出る率
+  pure function rate_to(ii, jj, l) result(q)
+    integer, intent(in) :: ii, jj, l
+    real :: q
+    q = 0.0
+    if (int(wf%lab(ii,jj,m)) == l) q = q + wf%qab(ii,jj,m)
+    if (int(wf%lbb(ii,jj,m)) == l) q = q + wf%qbb(ii,jj,m)
+  end function
+
+  ! 送り手 (i, j) から格子方向 l への流出 f(率)の行き先を台帳に分類する(transport_bin と同じ)
+  subroutine classify(i, j, l, f, rbc, rabs)
+    integer, intent(in) :: i, j, l
+    real, intent(in) :: f
+    real(real64), intent(inout) :: rbc, rabs
+    integer :: it, jt
+    it = i + ldi(l)
+    jt = j + ldj(l)
+    if (it < 1 .or. it > g%nx .or. jt < 1 .or. jt > g%ny) then
+      rbc = rbc + real(f, real64)
+    else if (wcell_in(wf, g, it, jt) == 0) then
+      rabs = rabs + real(f, real64)
+    else if (mod(l, 2) == 1) then
+      if (diag_closed(wf, g, i, j, it, jt)) rabs = rabs + real(f, real64)
+    end if
+  end subroutine
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! セル内の方向空間の屈折・源項・上限(流れあり。cell_row と同じ手順を作用量で)
+!   源項の砕波・摩擦はエネルギー重みの平均の k̄・σ̄(代表周波数 σ̄/2π)で評価し、
+!   率 D/E を作用量に掛ける(エネルギーは E = Σ σ_m N_m Δθ)。阻止のビンは 0(屈折で
+!   流れ込んだ分は台帳「阻止」へ)。台帳は作用量 × ω(乾燥化による除去も)。ローラーへ
+!   渡す砕波の散逸 dbrk と上限はエネルギーで
+!----------------------------------------------------------------------
+subroutine cell_row_cur(wf, p, g, s, j, href, resj)
+  type(t_wavefield), intent(inout) :: wf
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: j
+  real, intent(in) :: href
+  real, intent(out) :: resj
+  integer :: i, m, mp, mm
+  real :: x(wf%nth), r(wf%nth), a(wf%nth), b(wf%nth), c(wf%nth), fc(wf%nth), sg(wf%nth), an(wf%nth)
+  real :: eold, enew, nnew, hold, hnew, sb, sf, dt, h, fac, cf_, cl, q, emax, rhog, kbar, sbar, ew, em
+  real(real64) :: rbrk, rfric, rlim, rdry, rneg, rb
+  logical :: refr
+
+  resj = 0.0
+  rbrk = 0.0_real64
+  rfric = 0.0_real64
+  rlim = 0.0_real64
+  rdry = 0.0_real64
+  rneg = 0.0_real64
+  rb = 0.0_real64
+  rhog = rho * p%gg
+  do i = g%wx(1,j), g%wx(2,j)
+    if (wf%wcell(i,j) == 0) then
+      eold = sum(wf%ae(i,j,:)) * wf%dth * wf%om       ! 残っていた作用量 × ω
+      if (eold > 0.0) rdry = rdry + real(eold, real64)
+      wf%ae1(i,j,:) = 0.0
+      if (allocated(wf%dbrk)) wf%dbrk(i,j) = 0.0
+      cycle
+    end if
+    dt = wf%dtl(i,j)
+    h = s%h(i,j)
+    ! 前の値のエネルギー E = Σ σ_m N_m Δθ と、エネルギー重みの平均の波数・固有角周波数
+    ! (エネルギーがなければ流れなしの値)
+    kbar = 0.0
+    sbar = 0.0
+    ew = 0.0
+    do m = 1, wf%nth
+      sg(m) = wf%sgb(i,j,m)
+      if (sg(m) > 0.0) then
+        em = sg(m) * wf%ae(i,j,m)
+        kbar = kbar + em * wf%kb(i,j,m)
+        sbar = sbar + em * sg(m)
+        ew = ew + em
+        an(m) = wf%ae(i,j,m)
+        r(m) = wf%ae1(i,j,m)
+      else
+        an(m) = 0.0
+        r(m) = 0.0
+      end if
+    end do
+    eold = ew * wf%dth
+    if (ew > 0.0) then
+      kbar = kbar / ew
+      sbar = sbar / ew
+    else
+      kbar = wf%kw(i,j)
+      sbar = wf%om
+    end if
+    sb = 0.0
+    sf = 0.0
+    if (eold > 0.0 .and. kbar > 0.0) then
+      if (wf%wtype == 1) sb = breaking_c(eold, kbar, h, sbar) / eold
+      if (wf%fw > 0.0) sf = friction_c(eold, kbar, h, sbar) / eold
+    end if
+    refr = any(wf%cthb(i,j,:) /= 0.0)
+    if (refr) then
+      q = dt / wf%dth
+      do m = 1, wf%nth
+        mp = modulo(m, wf%nth) + 1
+        fc(m) = corr_flux_n(m, mp, 0.5 * (wf%cthb(i,j,m) + wf%cthb(i,j,mp)))
+      end do
+      do m = 1, wf%nth
+        mm = modulo(m - 2, wf%nth) + 1
+        r(m) = r(m) - q * (fc(m) - fc(mm))
+      end do
+      do m = 1, wf%nth
+        mp = modulo(m, wf%nth) + 1
+        mm = modulo(m - 2, wf%nth) + 1
+        cf_ = 0.5 * (wf%cthb(i,j,m) + wf%cthb(i,j,mp))
+        cl = 0.5 * (wf%cthb(i,j,mm) + wf%cthb(i,j,m))
+        b(m) = 1.0 + dt * (sb + sf) + q * (max(cf_, 0.0) - min(cl, 0.0))
+        c(m) = q * min(cf_, 0.0)
+        a(m) = -q * max(cl, 0.0)
+      end do
+      call cyclic_tridiag(wf%nth, a, b, c, r, x)
+    else
+      fac = 1.0 / (1.0 + dt * (sb + sf))
+      x(:) = r(:) * fac
+    end if
+    ! 阻止のビン(屈折で流れ込んだ分を含む)と負値(丸め規模)の切り捨て
+    do m = 1, wf%nth
+      if (sg(m) <= 0.0) then
+        if (x(m) > 0.0 .and. dt > 0.0) rb = rb + real(x(m) * wf%dth / dt, real64)
+        x(m) = 0.0
+      else if (x(m) < 0.0) then
+        if (dt > 0.0) rneg = rneg + real(-x(m) * wf%dth * wf%om / dt, real64)
+        x(m) = 0.0
+      end if
+    end do
+    nnew = sum(x) * wf%dth
+    rbrk = rbrk + real(sb * nnew * wf%om, real64)
+    rfric = rfric + real(sf * nnew * wf%om, real64)
+    enew = 0.0                           ! エネルギー(ローラーの源・上限・残差)
+    do m = 1, wf%nth
+      enew = enew + x(m) * sg(m)
+    end do
+    enew = enew * wf%dth
+    if (allocated(wf%dbrk)) wf%dbrk(i,j) = sb * enew
+    ! 上限(不規則波: H_rms <= γmax h、規則波: 飽和砕波 H <= γ h)
+    if (wf%wtype == 1) then
+      emax = rhog * (wf%gamx * h)**2 / 8.0
+    else
+      emax = rhog * (wf%gam * h)**2 / 8.0
+    end if
+    if (enew > emax) then
+      fac = emax / enew
+      x(:) = x(:) * fac
+      if (dt > 0.0) rlim = rlim + real(nnew * (1.0 - fac) * wf%om / dt, real64)
+      if (allocated(wf%dbrk) .and. dt > 0.0) wf%dbrk(i,j) = wf%dbrk(i,j) + (enew - emax) / dt
+      enew = emax
+    end if
+    wf%ae1(i,j,:) = x(:)
+    hold = sqrt(8.0 * eold / rhog)
+    hnew = sqrt(8.0 * enew / rhog)
+    resj = max(resj, abs(hnew - hold) / href)
+  end do
+  wf%rrate(j, l_brk) = rbrk * g%dx * g%dy
+  wf%rrate(j, l_fric) = rfric * g%dx * g%dy
+  wf%rrate(j, l_lim) = rlim * g%dx * g%dy
+  wf%rrate(j, l_dry) = rdry * g%dx * g%dy
+  wf%rrate(j, l_neg) = rneg * g%dx * g%dy
+  wf%rblk(j) = wf%rblk(j) + rb * wf%om * g%dx * g%dy
+
+contains
+
+  ! 面 m+1/2 の制限つき反拡散流束(前の値の作用量 an から。cell_row の corr_flux と同じ形)
+  function corr_flux_n(m, mp, cf) result(f)
+    integer, intent(in) :: m, mp
+    real, intent(in) :: cf
+    real :: f
+    real :: eu, ed, euu, du, dn
+    integer :: mu
+    if (cf >= 0.0) then
+      mu = modulo(m - 2, wf%nth) + 1
+      eu = an(m)
+      ed = an(mp)
+      euu = an(mu)
+    else
+      mu = modulo(mp, wf%nth) + 1
+      eu = an(mp)
+      ed = an(m)
+      euu = an(mu)
+    end if
+    du = eu - euu
+    dn = ed - eu
+    if (du * dn > 0.0) then
+      f = cf * du * dn / (du + dn)
+    else
+      f = 0.0
+    end if
+  end function
+
+  ! 砕波の散逸 D_w (W/m2)。代表周波数は固有の σ̄/2π
+  pure function breaking_c(e, k, hh, sig) result(dw)
+    real, intent(in) :: e, k, hh, sig
+    real :: dw
+    real :: hrms, hb, qb, rr, fr
+    hrms = sqrt(8.0 * e / rhog)
+    hb = 0.88 / k * tanh(wf%gam * k * hh / 0.88)
+    fr = sig / (2.0 * pi)
+    if (hb >= 30.0 * hrms) then
+      dw = 0.0                           ! breaking と同じ(極小のエネルギーの overflow を避ける)
+    else if (wf%brk == 2) then
+      rr = hb / hrms
+      qb = 1.0 + 4.0 / (3.0 * sqrt(pi)) * (rr**3 + 1.5 * rr) * exp(-rr * rr) - erf(rr)
+      qb = max(qb, 0.0)
+      dw = 3.0 * sqrt(pi) / 16.0 * wf%alp * rhog * fr * hrms**3 / hh * qb
+    else
+      qb = exp(-(hb / hrms)**2)
+      dw = 0.25 * wf%alp * rhog * fr * qb * (hb**2 + hrms**2)
+    end if
+  end function
+
+  ! 底面摩擦の散逸 D_f = c ρ f_w u_orb³ (W/m2)。u_orb = H σ̄/(2 sinh k̄h)
+  pure function friction_c(e, k, hh, sig) result(df)
+    real, intent(in) :: e, k, hh, sig
+    real :: df
+    real :: hrms, khh, uorb
+    hrms = sqrt(8.0 * e / rhog)
+    khh = k * hh
+    if (khh > 20.0) then
+      df = 0.0
+      return
+    end if
+    uorb = hrms * sig / (2.0 * sinh(khh))
+    df = wf%cfric * rho * wf%fw * uorb**3
+  end function
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 非定常(流れあり): 流出率 × Δt <= 1 になるサブステップで進める。率はセルの最大流出率
+! rmax(流れを含む)、ローラーは (c + |U|)/min(Δx, Δy) で抑える
+!----------------------------------------------------------------------
+subroutine step_unsteady_cur(wf, p, g, s)
+  type(t_wavefield), intent(inout) :: wf
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real :: cmax(1), dts, res, href, cr
+  integer :: i, j, k, m
+
+  cmax(1) = 0.0
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (wf%wcell(i,j) == 0) cycle
+      cmax(1) = max(cmax(1), wf%rmax(i,j))
+      if (wf%roller) then
+        cr = 0.0
+        do m = 1, wf%nth
+          if (wf%sgb(i,j,m) > 0.0) cr = max(cr, wf%sgb(i,j,m) / wf%kb(i,j,m))
+        end do
+        cmax(1) = max(cmax(1), (cr + sqrt(wf%ux(i,j)**2 + wf%uy(i,j)**2)) / min(g%dx, g%dy))
+      end if
+    end do
+  end do
+  call par_allreduce_max(cmax)
+  wf%nsub = max(1, ceiling(p%dt * cmax(1) - 1.0e-6))
+  dts = p%dt / real(wf%nsub)
+  href = max(wf%hbc, 1.0e-6)
+  do k = 1, wf%nsub
+    call iterate_cur(wf, p, g, s, dts, href, res)
+    if (wf%roller) call roller_update(wf, p, g, dts)
+    wf%rcum(:, 1:6) = wf%rcum(:, 1:6) + wf%rrate(:, 1:6) * real(dts, real64)
+    wf%rcum(:, l_dry) = wf%rcum(:, l_dry) + wf%rrate(:, l_dry)
+    wf%rcum(:, l_neg) = wf%rcum(:, l_neg) + wf%rrate(:, l_neg) * real(dts, real64)
+    wf%rcblk(:) = wf%rcblk(:) + wf%rblk(:) * real(dts, real64)
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 共有状態の診断量(流れあり。diagnose と同じ量)。エネルギーは E_m = σ_m N_m、u_rms・
+! 砕波散逸の k・σ はエネルギー重みの平均の k̄・σ̄(固有)
+!----------------------------------------------------------------------
+subroutine diagnose_cur(wf, p, g, s)
+  type(t_wavefield), intent(in) :: wf
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j, m
+  real :: e, ex, ey, hrms, kh, rhog, hb, qb, fr, rr, kbar, sbar, em
+
+  rhog = rho * p%gg
+  !$omp parallel do schedule(dynamic) private(i, j, m, e, ex, ey, hrms, kh, hb, qb, fr, rr, kbar, sbar, em)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      s%wvh(i,j) = 0.0
+      s%wvdir(i,j) = dir_missing
+      s%wvub(i,j) = 0.0
+      s%wvdw(i,j) = 0.0
+      if (allocated(s%wver)) s%wver(i,j) = 0.0
+      if (wf%wcell(i,j) == 0) cycle
+      if (allocated(s%wver)) s%wver(i,j) = wf%er(i,j)
+      e = 0.0
+      ex = 0.0
+      ey = 0.0
+      kbar = 0.0
+      sbar = 0.0
+      do m = 1, wf%nth
+        if (wf%sgb(i,j,m) <= 0.0) cycle
+        em = wf%sgb(i,j,m) * wf%ae(i,j,m)
+        e = e + em
+        ex = ex + em * wf%cth(m)
+        ey = ey + em * wf%sth(m)
+        kbar = kbar + em * wf%kb(i,j,m)
+        sbar = sbar + em * wf%sgb(i,j,m)
+      end do
+      if (e <= 0.0) cycle
+      kbar = kbar / e
+      sbar = sbar / e
+      e = e * wf%dth
+      hrms = sqrt(8.0 * e / rhog)
+      if (wf%wtype == 1) then
+        s%wvh(i,j) = sqrt(2.0) * hrms
+      else
+        s%wvh(i,j) = hrms
+      end if
+      s%wvdir(i,j) = modulo(atan2(ey, ex) * 180.0 / pi, 360.0)
+      kh = kbar * s%h(i,j)
+      if (kh > 0.0 .and. kh <= 20.0) s%wvub(i,j) = hrms * sbar / (2.0 * sqrt(2.0) * sinh(kh))
+      if (wf%wtype == 1 .and. kbar > 0.0) then
+        hb = 0.88 / kbar * tanh(wf%gam * kh / 0.88)
+        fr = sbar / (2.0 * pi)
+        if (hb >= 30.0 * hrms) then
+          continue                       ! 散逸は 0 のまま(breaking の注)
+        else if (wf%brk == 2) then
+          rr = hb / hrms
+          qb = max(1.0 + 4.0 / (3.0 * sqrt(pi)) * (rr**3 + 1.5 * rr) * exp(-rr * rr) - erf(rr), 0.0)
+          s%wvdw(i,j) = 3.0 * sqrt(pi) / 16.0 * wf%alp * rhog * fr * hrms**3 / s%h(i,j) * qb
+        else
+          qb = exp(-(hb / hrms)**2)
+          s%wvdw(i,j) = 0.25 * wf%alp * rhog * fr * qb * (hb**2 + hrms**2)
+        end if
+      end if
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 平均波向 θ_m と位相速度 c = σ̄/k̄(流れあり。帯±1 行。σ̄・k̄ はエネルギー重みの平均、
+! エネルギーがなければ流れなしの ω/k)
+!----------------------------------------------------------------------
+subroutine mean_dir_speed_cur(wf, g)
+  type(t_wavefield), intent(inout) :: wf
+  type(t_geoinfo), intent(in) :: g
+  integer :: i, j, m
+  real :: ex, ey, kbar, sbar, ew, em
+
+  !$omp parallel do schedule(dynamic) private(i, j, m, ex, ey, kbar, sbar, ew, em)
+  do j = max(1, dcp%js - 1), min(g%ny, dcp%je + 1)
+    do i = max(1, dcp%ish), min(g%nx, dcp%ieh)
+      wf%thm(i,j) = 0.0
+      wf%cph(i,j) = 0.0
+      if (wf%wcell(i,j) == 0 .or. wf%kw(i,j) <= 0.0) cycle
+      ex = 0.0
+      ey = 0.0
+      kbar = 0.0
+      sbar = 0.0
+      ew = 0.0
+      do m = 1, wf%nth
+        if (wf%sgb(i,j,m) <= 0.0) cycle
+        em = wf%sgb(i,j,m) * wf%ae(i,j,m)        ! E_m = σ_m N_m
+        ex = ex + em * wf%cth(m)
+        ey = ey + em * wf%sth(m)
+        kbar = kbar + em * wf%kb(i,j,m)
+        sbar = sbar + em * wf%sgb(i,j,m)
+        ew = ew + em
+      end do
+      if (ex /= 0.0 .or. ey /= 0.0) wf%thm(i,j) = atan2(ey, ex)
+      if (ew > 0.0) then
+        wf%cph(i,j) = sbar / kbar
+      else
+        wf%cph(i,j) = wf%om / wf%kw(i,j)
+      end if
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! ローラーの輸送の準備(流れあり): 伝播速度 c ê_θ̄ + U をセルごとに 2 リンク分解する。
+! roller_iterate は率を c × q で使うので、q には率/c を入れる
+!----------------------------------------------------------------------
+subroutine roller_prepare_cur(wf, g)
+  type(t_wavefield), intent(inout) :: wf
+  type(t_geoinfo), intent(in) :: g
+  integer :: i, j
+  real :: c, qx, qy, ax, ay
+
+  call mean_dir_speed_cur(wf, g)
+  !$omp parallel do schedule(dynamic) private(i, j, c, qx, qy, ax, ay)
+  do j = max(1, dcp%js - 1), min(g%ny, dcp%je + 1)
+    do i = max(1, dcp%ish), min(g%nx, dcp%ieh)
+      wf%lar(i,j) = 0
+      wf%lbr(i,j) = 0
+      wf%qar(i,j) = 0.0
+      wf%qbr(i,j) = 0.0
+      c = wf%cph(i,j)
+      if (c <= 0.0) cycle
+      qx = (c * cos(wf%thm(i,j)) + wf%ux(i,j)) / g%dx
+      qy = (c * sin(wf%thm(i,j)) + wf%uy(i,j)) / g%dy
+      ax = abs(qx)
+      ay = abs(qy)
+      if (abs(ax - ay) <= 1.0e-6 * max(ax, ay)) ay = ax
+      if (ax >= ay) then
+        wf%lar(i,j) = merge(0, 4, qx >= 0.0)
+        wf%qar(i,j) = (ax - ay) / c
+        wf%qbr(i,j) = ay / c
+      else
+        wf%lar(i,j) = merge(2, 6, qy >= 0.0)
+        wf%qar(i,j) = (ay - ax) / c
+        wf%qbr(i,j) = ax / c
+      end if
+      wf%lbr(i,j) = diag_code(qx, qy)
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 波→流れの受け渡し(流れあり。flow_coupling と同じ量)。E_m = σ_m N_m、放射応力の n と
+! Stokes 輸送の位相速度をビンごとの固有の値 n_m = c_g,m k_m/σ_m、c_m = σ_m/k_m にする
+!   S_xx = Σ E_m Δθ [n_m cos²θ_m + (n_m − 1/2)] + E_r cos²θ_r 等、
+!   u^S = Σ E_m Δθ ê_m/(ρ h c_m) + 2 E_r ê_r/(ρ h c̄)(E_m/c_m = k_m N_m = 波の運動量)
+!----------------------------------------------------------------------
+subroutine flow_coupling_cur(wf, p, g, s)
+  type(t_wavefield), intent(inout) :: wf
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, allocatable :: sxx(:,:), sxy(:,:), syy(:,:)
+  integer :: i, j, m, j1, j2
+  real :: n, e, exx, exy, eyy, eh, mx, my, ct, st, er_, fyn, h, kh, em
+
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  call mean_dir_speed_cur(wf, g)
+  j1 = max(1, dcp%js - 1)
+  j2 = min(g%ny, dcp%je + 1)
+  allocate(sxx(dcp%ish:dcp%ieh, j1:j2), sxy(dcp%ish:dcp%ieh, j1:j2), syy(dcp%ish:dcp%ieh, j1:j2))
+  !$omp parallel do schedule(dynamic) private(i, j, m, n, e, exx, exy, eyy, eh, ct, st, er_, kh, em)
+  do j = j1, j2
+    do i = dcp%ish, dcp%ieh
+      sxx(i,j) = 0.0
+      sxy(i,j) = 0.0
+      syy(i,j) = 0.0
+      if (i < 1 .or. i > g%nx) cycle
+      if (wf%cph(i,j) <= 0.0) cycle
+      e = 0.0
+      exx = 0.0
+      exy = 0.0
+      eyy = 0.0
+      eh = 0.0
+      do m = 1, wf%nth
+        if (wf%sgb(i,j,m) <= 0.0) cycle
+        kh = wf%kb(i,j,m) * s%h(i,j)
+        if (kh > 20.0) then
+          n = 0.5
+        else
+          n = 0.5 * (1.0 + 2.0 * kh / sinh(2.0 * kh))
+        end if
+        em = wf%sgb(i,j,m) * wf%ae(i,j,m)
+        e = e + em
+        exx = exx + em * n * wf%cth(m)**2
+        exy = exy + em * n * wf%cth(m) * wf%sth(m)
+        eyy = eyy + em * n * wf%sth(m)**2
+        eh = eh + em * (n - 0.5)
+      end do
+      sxx(i,j) = (exx + eh) * wf%dth
+      sxy(i,j) = exy * wf%dth
+      syy(i,j) = (eyy + eh) * wf%dth
+      if (wf%roller) then
+        er_ = wf%er(i,j)
+        ct = cos(wf%thm(i,j))
+        st = sin(wf%thm(i,j))
+        sxx(i,j) = sxx(i,j) + er_ * ct * ct
+        sxy(i,j) = sxy(i,j) + er_ * ct * st
+        syy(i,j) = syy(i,j) + er_ * st * st
+      end if
+    end do
+  end do
+  !$omp end parallel do
+
+  !$omp parallel do schedule(dynamic) private(i, j, m, fyn, mx, my, er_, h)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      s%wvfx(i,j) = 0.0
+      s%wvfy(i,j) = 0.0
+      if (wf%flow >= 2) then
+        s%wvus(i,j) = 0.0
+        s%wvvs(i,j) = 0.0
+      end if
+      if (wf%cph(i,j) <= 0.0) cycle
+      s%wvfx(i,j) = -(ddx(sxx, i, j) + ddy(sxy, i, j))
+      fyn = -(ddx(sxy, i, j) + ddy(syy, i, j))
+      s%wvfy(i,j) = -fyn                           ! 流速と同じ向き(y = 南)へ
+      if (wf%flow >= 2) then
+        mx = 0.0
+        my = 0.0
+        do m = 1, wf%nth
+          if (wf%sgb(i,j,m) <= 0.0) cycle
+          mx = mx + wf%ae(i,j,m) * wf%cth(m) * wf%kb(i,j,m)
+          my = my + wf%ae(i,j,m) * wf%sth(m) * wf%kb(i,j,m)
+        end do
+        mx = mx * wf%dth
+        my = my * wf%dth
+        if (wf%roller) then
+          er_ = wf%er(i,j)
+          mx = mx + 2.0 * er_ * cos(wf%thm(i,j)) / wf%cph(i,j)
+          my = my + 2.0 * er_ * sin(wf%thm(i,j)) / wf%cph(i,j)
+        end if
+        h = s%h(i,j)
+        s%wvus(i,j) = mx / (rho * h)
+        s%wvvs(i,j) = -my / (rho * h)              ! y = 南
+      end if
+    end do
+  end do
+  !$omp end parallel do
+  deallocate(sxx, sxy, syy)
+
+  call par_halo_cell(s%wvfx)
+  call par_halo_cell(s%wvfy)
+  if (wf%flow >= 2) then
+    call par_halo_cell(s%wvus)
+    call par_halo_cell(s%wvvs)
+    call par_halo_cell(s%wvub)
+  end if
+
+contains
+
+  ! ∂a/∂x(x 東。flow_coupling の ddx と同じ)
+  function ddx(a, ii, jj) result(d)
+    real, intent(in) :: a(dcp%ish:, j1:)
+    integer, intent(in) :: ii, jj
+    real :: d
+    logical :: e_, w_
+    e_ = wcell_in(wf, g, ii + 1, jj) == 1 .and. wf%cph(min(ii + 1, dcp%ieh), jj) > 0.0
+    w_ = wcell_in(wf, g, ii - 1, jj) == 1 .and. wf%cph(max(ii - 1, dcp%ish), jj) > 0.0
+    d = 0.0
+    if (e_ .and. w_) then
+      d = (a(ii+1,jj) - a(ii-1,jj)) / (2.0 * g%dx)
+    else if (e_) then
+      d = (a(ii+1,jj) - a(ii,jj)) / g%dx
+    else if (w_) then
+      d = (a(ii,jj) - a(ii-1,jj)) / g%dx
+    end if
+  end function
+
+  ! ∂a/∂y(y 北 = j の負の向き。flow_coupling の ddy と同じ)
+  function ddy(a, ii, jj) result(d)
+    real, intent(in) :: a(dcp%ish:, j1:)
+    integer, intent(in) :: ii, jj
+    real :: d
+    logical :: n_, s_
+    n_ = wcell_in(wf, g, ii, jj - 1) == 1 .and. wf%cph(ii, max(jj - 1, j1)) > 0.0
+    s_ = wcell_in(wf, g, ii, jj + 1) == 1 .and. wf%cph(ii, min(jj + 1, j2)) > 0.0
+    d = 0.0
+    if (n_ .and. s_) then
+      d = (a(ii,jj-1) - a(ii,jj+1)) / (2.0 * g%dy)
+    else if (n_) then
+      d = (a(ii,jj-1) - a(ii,jj)) / g%dy
+    else if (s_) then
+      d = (a(ii,jj) - a(ii,jj+1)) / g%dy
+    end if
+  end function
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 貯留(流れあり): Σ N_m ω Δθ A(作用量 × ω。台帳と同じ単位。collective)
+!----------------------------------------------------------------------
+function storage_cur(wf, g) result(st)
+  type(t_wavefield), intent(in) :: wf
+  type(t_geoinfo), intent(in) :: g
+  real(real64) :: st
+  real(real64) :: rows(dcp%js:dcp%je)
+  integer :: i, j, m
+  real :: sn
+  do j = dcp%js, dcp%je
+    rows(j) = 0.0_real64
+    do i = g%wx(1,j), g%wx(2,j)
+      if (wf%wcell(i,j) == 0) cycle
+      sn = 0.0
+      do m = 1, wf%nth
+        sn = sn + wf%ae(i,j,m)
+      end do
+      rows(j) = rows(j) + real(sn * wf%dth * wf%om, real64)
+    end do
+    rows(j) = rows(j) * g%dx * g%dy
+  end do
+  call par_sum_rows(rows, st)
+end function
+
+
 !----------------------------------------------------------------------
 ! 台帳の CSV(rank0)
 !----------------------------------------------------------------------
@@ -1966,11 +3031,21 @@ subroutine open_csv(wf, p)
   end if
   open(newunit=wf%un, file=trim(p%dir_result)//'/wavefield.csv', status='replace')
   if (wf%mode == 2) then
-    write(wf%un, '(a)') "t_s,it,iter,residual,H_bc,T_bc,dir_bc,in_W,out_W,absorbed_W,breaking_W," // &
-                        "friction_W,limit_W,dry_J,trunc_W,imbalance_W,storage_J"
+    if (wf%current) then
+      write(wf%un, '(a)') "t_s,it,iter,residual,H_bc,T_bc,dir_bc,in_W,out_W,absorbed_W,breaking_W," // &
+                          "friction_W,limit_W,dry_J,trunc_W,imbalance_W,storage_J,blocked_W"
+    else
+      write(wf%un, '(a)') "t_s,it,iter,residual,H_bc,T_bc,dir_bc,in_W,out_W,absorbed_W,breaking_W," // &
+                          "friction_W,limit_W,dry_J,trunc_W,imbalance_W,storage_J"
+    end if
   else
-    write(wf%un, '(a)') "t_s,it,nsub,H_bc,T_bc,dir_bc,in_J,out_J,absorbed_J,breaking_J,friction_J," // &
-                        "limit_J,dry_J,trunc_J,storage_J,storage0_J,imbalance_J"
+    if (wf%current) then
+      write(wf%un, '(a)') "t_s,it,nsub,H_bc,T_bc,dir_bc,in_J,out_J,absorbed_J,breaking_J,friction_J," // &
+                          "limit_J,dry_J,trunc_J,storage_J,storage0_J,imbalance_J,blocked_J"
+    else
+      write(wf%un, '(a)') "t_s,it,nsub,H_bc,T_bc,dir_bc,in_J,out_J,absorbed_J,breaking_J,friction_J," // &
+                          "limit_J,dry_J,trunc_J,storage_J,storage0_J,imbalance_J"
+    end if
   end if
 end subroutine
 
@@ -1979,17 +3054,31 @@ subroutine write_steady(wf, g, s)
   type(t_wavefield), intent(inout) :: wf
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: v(nl), st, imb
+  real(real64) :: v(nl), st, imb, vb
   integer :: k
   do k = 1, nl
     call par_sum_rows(wf%rrate(:, k), v(k))
   end do
-  st = storage(wf, g)
+  vb = 0.0_real64
+  if (wf%current) then
+    ! 流れがあるときの台帳は作用量 × ω(作用量の保存で閉じる。§88)
+    call par_sum_rows(wf%rblk, vb)
+    st = storage_cur(wf, g)
+  else
+    st = storage(wf, g)
+  end if
   imb = v(l_in) - v(l_out) - v(l_abs) - v(l_brk) - v(l_fric) - v(l_lim) + v(l_neg)
+  if (wf%current) imb = imb - vb
   if (is_root .and. wf%un /= 0) then
-    write(wf%un, '(f0.2,",",i0,",",i0,",",es12.5,3(",",f0.4),10(",",es15.7))') s%t, s%it, wf%niter, &
-      wf%res, wf%hbc, wf%tbc, wf%dbc, v(l_in), v(l_out), v(l_abs), v(l_brk), v(l_fric), v(l_lim), &
-      v(l_dry), v(l_neg), imb, st
+    if (wf%current) then
+      write(wf%un, '(f0.2,",",i0,",",i0,",",es12.5,3(",",f0.4),11(",",es15.7))') s%t, s%it, wf%niter, &
+        wf%res, wf%hbc, wf%tbc, wf%dbc, v(l_in), v(l_out), v(l_abs), v(l_brk), v(l_fric), v(l_lim), &
+        v(l_dry), v(l_neg), imb, st, vb
+    else
+      write(wf%un, '(f0.2,",",i0,",",i0,",",es12.5,3(",",f0.4),10(",",es15.7))') s%t, s%it, wf%niter, &
+        wf%res, wf%hbc, wf%tbc, wf%dbc, v(l_in), v(l_out), v(l_abs), v(l_brk), v(l_fric), v(l_lim), &
+        v(l_dry), v(l_neg), imb, st
+    end if
     flush(wf%un)
   end if
 end subroutine
@@ -1999,19 +3088,33 @@ subroutine write_unsteady(wf, g, s)
   type(t_wavefield), intent(inout) :: wf
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: v(nl), st, imb
+  real(real64) :: v(nl), st, imb, vb
   integer :: k
   do k = 1, nl
     call par_sum_rows(wf%rcum(:, k), v(k))
     v(k) = v(k) + wf%cum0(k)
   end do
-  st = storage(wf, g)
+  vb = 0.0_real64
+  if (wf%current) then
+    call par_sum_rows(wf%rcblk, vb)
+    vb = vb + wf%cumblk0
+    st = storage_cur(wf, g)
+  else
+    st = storage(wf, g)
+  end if
   imb = (st - wf%store0) - (v(l_in) - v(l_out) - v(l_abs) - v(l_brk) - v(l_fric) - v(l_lim) &
         - v(l_dry) + v(l_neg))
+  if (wf%current) imb = imb + vb
   if (is_root .and. wf%un /= 0) then
-    write(wf%un, '(f0.2,",",i0,",",i0,3(",",f0.4),11(",",es15.7))') s%t, s%it, wf%nsub, wf%hbc, &
-      wf%tbc, wf%dbc, v(l_in), v(l_out), v(l_abs), v(l_brk), v(l_fric), v(l_lim), v(l_dry), v(l_neg), &
-      st, wf%store0, imb
+    if (wf%current) then
+      write(wf%un, '(f0.2,",",i0,",",i0,3(",",f0.4),12(",",es15.7))') s%t, s%it, wf%nsub, wf%hbc, &
+        wf%tbc, wf%dbc, v(l_in), v(l_out), v(l_abs), v(l_brk), v(l_fric), v(l_lim), v(l_dry), v(l_neg), &
+        st, wf%store0, imb, vb
+    else
+      write(wf%un, '(f0.2,",",i0,",",i0,3(",",f0.4),11(",",es15.7))') s%t, s%it, wf%nsub, wf%hbc, &
+        wf%tbc, wf%dbc, v(l_in), v(l_out), v(l_abs), v(l_brk), v(l_fric), v(l_lim), v(l_dry), v(l_neg), &
+        st, wf%store0, imb
+    end if
     flush(wf%un)
   end if
 end subroutine
@@ -2020,9 +3123,10 @@ end subroutine
 !----------------------------------------------------------------------
 ! 保存・復元(私有ファイル。契約5)
 !   wavefield_info.txt: 形式の版・ビン数・モード・非定常の累積台帳と起点の貯留、
-!     段 W2 の拡張の有無(flow・roller・ndiag。旧ファイルは無く、既定 0 で読む)
-!     (全ランクが読む)
-!   wavefield.dat: ビンごとの E_m(m_restart の RLE。collective)、続けて
+!     段 W2 の拡張の有無(flow・roller・ndiag。旧ファイルは無く、既定 0 で読む)、
+!     段 W3 の阻止の累積 cumblk と状態の量 state(0: エネルギー E_m、1: 流れありの作用量
+!     N_m。同じく後方互換の拡張)(全ランクが読む)
+!   wavefield.dat: ビンごとの状態(state。m_restart の RLE。collective)、続けて
 !     ローラー E_r(roller = 1)、診断量 4 面(ndiag = 1: 波高・平均波向・u_rms・砕波散逸)、
 !     外力 2 面(flow >= 1)、Stokes 輸送 2 面(flow = 2)。準定常は更新の間これらを
 !     保持するので、復元して使うと再開がビット一致する(§88)
@@ -2032,14 +3136,19 @@ subroutine save_state(wf, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  integer :: un, m, version, nth, mode, flow, roller, ndiag
-  real(real64) :: cum(nl), store0
-  namelist /wavefield_info/ version, nth, mode, cum, store0, flow, roller, ndiag
+  integer :: un, m, version, nth, mode, flow, roller, ndiag, state
+  real(real64) :: cum(nl), store0, cumblk
+  namelist /wavefield_info/ version, nth, mode, cum, store0, flow, roller, ndiag, cumblk, state
 
   do m = 1, nl
     call par_sum_rows(wf%rcum(:, m), cum(m))
     cum(m) = cum(m) + wf%cum0(m)
   end do
+  cumblk = 0.0_real64
+  if (wf%current) then
+    call par_sum_rows(wf%rcblk, cumblk)
+    cumblk = cumblk + wf%cumblk0
+  end if
   if (g%initialized) continue  ! 引数未使用の警告を抑制
   version = save_version
   nth = wf%nth
@@ -2048,6 +3157,7 @@ subroutine save_state(wf, p, g, s)
   flow = wf%flow
   roller = merge(1, 0, wf%roller)
   ndiag = 1
+  state = merge(1, 0, wf%current)
   if (is_root) then
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/wavefield_info.txt', status='replace')
@@ -2082,10 +3192,10 @@ subroutine restore_state(wf, p, s, have_diag, have_force)
   logical, intent(out) :: have_diag, have_force
   character(:), allocatable :: fname
   logical :: found
-  integer :: un, ios, m, version, nth, mode, flow, roller, ndiag
-  real(real64) :: cum(nl), store0
+  integer :: un, ios, m, version, nth, mode, flow, roller, ndiag, state, i, j
+  real(real64) :: cum(nl), store0, cumblk
   real, allocatable :: tmp(:,:)
-  namelist /wavefield_info/ version, nth, mode, cum, store0, flow, roller, ndiag
+  namelist /wavefield_info/ version, nth, mode, cum, store0, flow, roller, ndiag, cumblk, state
 
   fname = trim(p%dir_save)//'/wavefield_info.txt'
   inquire(file=fname, exist=found)
@@ -2100,6 +3210,8 @@ subroutine restore_state(wf, p, s, have_diag, have_force)
   flow = 0
   roller = 0
   ndiag = 0
+  cumblk = 0.0_real64
+  state = 0
   open(newunit=un, file=fname, status='old', action='read', iostat=ios)
   if (ios /= 0) call par_stop("wavefield: cannot open "//fname)
   read(un, nml=wavefield_info, iostat=ios)
@@ -2114,9 +3226,14 @@ subroutine restore_state(wf, p, s, have_diag, have_force)
   if (mode /= wf%mode) then
     call par_stop("wavefield: wf_mode ("//itoa(wf%mode)//") differs from the saved state ("//itoa(mode)//")")
   end if
+  if (state == 1 .and. .not. wf%current) then
+    call par_stop("wavefield: the saved wave field holds wave action (saved with f_wf_current = 1);" &
+                  //" restore it with f_wf_current = 1")
+  end if
   if (p%f_state_restore == 1) then
     wf%cum0(:) = cum(:)
     wf%store0 = store0
+    wf%cumblk0 = cumblk
   end if
   fname = trim(p%dir_save)//'/wavefield.dat'
   inquire(file=fname, exist=found)                ! 全ランクが同じ判定をする(collective 安全)
@@ -2126,6 +3243,22 @@ subroutine restore_state(wf, p, s, have_diag, have_force)
   do m = 1, wf%nth
     call restart_read_cell(un, wf%ae(:,:,m))
   end do
+  if (state == 0 .and. wf%current) then
+    ! 流れなしで保存したエネルギーを作用量へ(init が求めた σ_m で。阻止のビンは 0)
+    call par_info("wavefield: the saved wave energy is converted to wave action with the current at restart")
+    do m = 1, wf%nth
+      do j = dcp%js, dcp%je
+        do i = max(1, dcp%ish), min(dcp%nx_g, dcp%ieh)
+          if (wf%sgb(i,j,m) > 0.0) then
+            wf%ae(i,j,m) = wf%ae(i,j,m) / wf%sgb(i,j,m)
+          else
+            wf%ae(i,j,m) = 0.0
+          end if
+        end do
+      end do
+      call par_halo_cell(wf%ae(:,:,m))
+    end do
+  end if
   ! 段 W2 の拡張(保存時に無かったものは既定: ローラー 0、診断量・外力は init が求め直す)
   if (roller == 1) then
     if (wf%roller) then

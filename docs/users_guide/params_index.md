@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 730 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 731 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -308,6 +308,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_wave_longshore | &list_wave | [土砂・地形変化](geomorph.md) |
 | f_wave_shadow | &list_wave | [土砂・地形変化](geomorph.md) |
 | f_wavefield | &list_wavefield | [沿岸の波浪場](wavefield.md) |
+| f_wf_current | &list_wavefield | [沿岸の波浪場](wavefield.md) |
 | f_wf_init | &list_wavefield | [沿岸の波浪場](wavefield.md) |
 | f_wf_outdiag | &list_wavefield | [沿岸の波浪場](wavefield.md) |
 | f_wf_roller | &list_wavefield | [沿岸の波浪場](wavefield.md) |

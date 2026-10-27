@@ -107,8 +107,10 @@ need to understand all of it. Read only the lines you care about.
   grid by a phase-averaged energy balance over directional bins, giving
   maps of wave height and direction. Wave setup and longshore currents
   (radiation stress, roller and GLM Stokes drift) can also be added to
-  the shallow-water flow (the coupling with sediment transport and beach
-  change is being added in stages).
+  the shallow-water flow, and conversely river-mouth jets, tidal and
+  longshore currents can change the waves (Doppler shift, refraction by
+  currents and blocking) in a two-way coupling (the coupling with
+  sediment transport and beach change is being added in stages).
 - **Tsunami generation from an earthquake, and dispersive waves**: the
   fault displacement is given as a time history of the ground, and the
   tsunami is followed from generation through propagation to run-up in
