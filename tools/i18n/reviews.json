@@ -266,8 +266,8 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "df1c190212860d123bef77f5b1c09bd3c4e3b347a27e9fdd69aae18740b8a950",
-      "target_sha256": "5c27ac41a8ac0997ff758b4d3064a83b1a5886a9830c217bc44d5ba7471a1773",
+      "source_sha256": "1bf3f7ac9d6787505e5253d9acbeafc63982933705e216ac427fbcecfd31c805",
+      "target_sha256": "150562c48656384725665a70845c9f798188c10f2e817b8ce22d7628aaa51642",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -419,8 +419,8 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "5f86c963b42b29aeaa280502b9ab41bd26fa1d66a8d5adb78590b48e79e0a9ab",
-      "target_sha256": "cf694686ffa4163e547f6ba0f12d75bf83278504a40492042dfca7c278b9435c",
+      "source_sha256": "a90a3da4aacc9b1963ff0349e64c786c13a038e55432a1128f9a0c2727bf4ce0",
+      "target_sha256": "a6a8eacec48bb7081eeda5de72c5f7d61c690643709f62e1f05c51dbd6f08110",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -779,8 +779,8 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "d5da8ef5de682d30cbc420067c2dc07ab967ad6c44df3bbf403ce0dc240375a9",
-      "target_sha256": "07fe9a1dce253699d45ccbe88d6e78bba2c16ad6772933da5a45f898f478c003",
+      "source_sha256": "74dc5abd016cc322f1c2033c6d74902f7a8f3405bf8206fe16ba092c4579b28b",
+      "target_sha256": "c2a16b253fa6a740331b171af80dcdde5c3ed06929a053502b206c7940fde0f9",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -896,8 +896,8 @@
     {
       "source": "examples/mountain_valley/README.md",
       "target": "examples/mountain_valley/en/README.md",
-      "source_sha256": "33c3ba11d5375c7a3f62c592f84851c24e2c96db33c9a6959fc1603714b75613",
-      "target_sha256": "12f937eddd1b9812fa8a2b08621681ef273178b7730489cf1f385e94d0926974",
+      "source_sha256": "41e37901b896e7112b960ee940f272a778f1975efc5c3852c0ebaeb0b38c5e4b",
+      "target_sha256": "ce9feb67785b8f2bcdc2a580db3a5f88cfb2ca8e279b5e71dd8ed60d07086e1a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"

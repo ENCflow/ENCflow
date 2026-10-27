@@ -22,6 +22,6 @@ install: all
 clean:
 	rm -rf result result_* save save_*
 	rm -f encflow encflow_mpi a.out Screen.log Screen_*.log analysis*.txt
-	rm -f z_init*.txt h_init*.txt sd_zero*.txt up_base*.txt up_drop*.txt wthr_hill*.txt rock_base*.txt
+	rm -f z_init*.txt h_init*.txt sd_zero*.txt up_base*.txt up_drop*.txt wthr_hill*.txt rock_base*.txt p_*.txt
 
 .PHONY: all links install clean

@@ -8,10 +8,13 @@
 #            渓流から k セル目の高さ (U/D_eff) Δx² (k L − k(k−1)/2)(L = 斜面のセル数。分水界の流束 0)
 #   C1 渓流: 各セルで (E_p0(S) + β q)(1 − q/q_c(S)) = U、q Δx = q_上流 Δx + (1 − λ)(E_p Δx Δy + Q_lat Δy)
 #            (E_p = E_p0 (1 − q/q_c)。Q_lat は斜面から届く土層 = 定常で 2 U L_斜面。等流の水理で谷頭から解く)
+#   C4: 研磨だけの定常は β q (1 − q/q_c(S)) = U(準定常のパルスは給砂中の半分の時間だけ)
 import sys, os, math, struct, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_init import (Grid, CASES, T_RUN, T_OUT, T_DROP, F_FLOOD, YR, S0, QF, N, D50, LAM, HSTAR, KP, TAUC,
-                       PM, BETA, UPLIFT0, WTHR_P0, CREEP_D, SDSTAR, HC, HILL_L)
+                       PM, BETA, UPLIFT0, WTHR_P0, CREEP_D, SDSTAR, HC, HILL_L,
+                       P_CASES, P_NX, P_NY, P_DX, P_N, P_D50, P_HSTAR, P_U, P_KP, P_TAUC, P_PM, P_BETA,
+                       P_QC0, P_RM, P_SHORT, P_LONG, P_TGEO, P_DTG, P_Q)
 import matplotlib
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
@@ -259,6 +262,121 @@ def fig_drop():
     return hss2, pred2[-1]
 
 
+# ---------------------------------------------------------------- C4 パルス給砂
+P_J1, P_J2 = 15, 58
+P_LAB = (T("一定", "constant"), T("パルス 周期 %g s" % P_SHORT, "pulses, period %g s" % P_SHORT),
+         T("パルス 周期 %g s" % P_LONG, "pulses, period %g s" % P_LONG))
+P_COL = (C1, C2C, C3C)
+
+
+def pbil(case, name, k):
+    return bil(case, name, k, P_NX, P_NY)
+
+
+def p_nout():
+    return int(round(P_TGEO / P_DTG))
+
+
+def p_series(case, ch):
+    i = 2 * ch + 1
+    ts, ss = [], []
+    for k in range(1, p_nout() + 1):
+        z = pbil(case, "Z", k)
+        ts.append(k * P_DTG)
+        ss.append((z[P_J1 - 1][i] - z[P_J2 - 1][i]) / ((P_J2 - P_J1) * P_DX))
+    return ts, ss
+
+
+def p_qs_slope(model, duty):
+    """予測の区間 j = P_J1〜P_J2 の平均の勾配。研磨だけ: 給砂を duty の割合の時間だけ q_m/duty で
+    与えた準定常 duty β q_on (1 − q_on/q_c(S)) = U(一様な勾配)。剥離だけ: 一定給砂の各セルで
+    E_p0(S)(1 − q_j/q_c(S)) = U、q_j = q_m + (1 − λ) U Δy j(T11 の式。露出率は q に線形なので、
+    準定常のパルスも同じ平均になる)"""
+    qw = P_Q / P_DX
+
+    def solve(f):
+        lo, hi = 1.0e-4, 0.1
+        for _ in range(200):
+            mid = math.sqrt(lo * hi)
+            if f(mid) > P_U:
+                hi = mid
+            else:
+                lo = mid
+        return math.sqrt(lo * hi)
+
+    def capacity(s):
+        return qcap(qw, s, P_D50, P_N)
+
+    if model == "a":
+        qon = P_RM * P_QC0 / duty
+        return solve(lambda s: duty * P_BETA * qon * max(0.0, 1.0 - qon / capacity(s)) if capacity(s) > 0.0 else 0.0)
+    ss = []
+    for j in range(P_J1, P_J2 + 1):
+        qj = P_RM * P_QC0 + (1.0 - LAM) * P_U * P_DX * j
+        ss.append(solve(lambda s, qj=qj: ep0(qw, s, P_KP, P_TAUC, P_PM, P_N) * max(0.0, 1.0 - qj / capacity(s))
+                        if capacity(s) > 0.0 else 0.0))
+    return sum(ss) / len(ss)
+
+
+def p_supply(ch, k):
+    """水路 ch に出力の区間 k − 1 → k(地形の時間)で与えた給砂の固体体積"""
+    if ch == 0:
+        return P_RM * P_QC0 * P_DX * P_DTG
+    per = P_SHORT if ch == 1 else P_LONG
+    n, tot, t0 = 3000, 0.0, (k - 1) * P_DTG
+    for m in range(n):
+        t = t0 + (m + 0.5) * P_DTG / n
+        tot += (2.0 * P_RM * P_QC0 * P_DX if (t % per) < 0.5 * per else 0.0) * P_DTG / n
+    return tot
+
+
+def p_outflow(case, ch, k0):
+    """出口の掃流砂の流出(出力の区間ごとの平均 m3/s)を水路の土砂収支から求める。剥離だけ:
+    (1 − λ) ΔΣz = (1 − λ) U Δt N_up + 給砂 − 流出(剥離は z を動かさない)。研磨だけ:
+    (1 − λ) ΔΣsd = 給砂 − 流出(研磨は sd を動かさない)"""
+    i = 2 * ch + 1
+    zp, sp = pbil(case, "Z", k0 - 1), pbil(case, "Sd", k0 - 1)
+    outs = []
+    for k in range(k0, p_nout() + 1):
+        z, sd = pbil(case, "Z", k), pbil(case, "Sd", k)
+        if P_CASES[case] == "p":
+            store = sum(z[j][i] - zp[j][i] for j in range(P_NY)) - P_U * P_DTG * (P_NY - 1)
+        else:
+            store = sum(sd[j][i] - sp[j][i] for j in range(P_NY))
+        outs.append((p_supply(ch, k) - (1.0 - LAM) * store * P_DX * P_DX) / P_DTG)
+        zp, sp = z, sd
+    return outs
+
+
+def fig_pulse():
+    fig, ax = plt.subplots(1, 2, figsize=(10, 4))
+    for a, case, ttl in ((ax[0], "P_p", T("剥離だけ(P_p)", "plucking only (P_p)")),
+                         (ax[1], "P_a", T("研磨だけ(P_a)", "abrasion only (P_a)"))):
+        for ch in range(3):
+            ts, ss = p_series(case, ch)
+            a.plot([t / 1000.0 for t in ts], ss, color=P_COL[ch], lw=1.8, label=P_LAB[ch])
+        model = P_CASES[case]
+        a.axhline(p_qs_slope(model, 1.0), color=GRAY, lw=1.2, ls="--",
+                  label=T("一定給砂の予測", "prediction, constant supply") if model == "a" else
+                  T("一定給砂・準定常のパルスの予測", "prediction, constant and quasi-steady pulses"))
+        if model == "a":
+            a.axhline(p_qs_slope(model, 0.5), color=GRAY, lw=1.2, ls=":",
+                      label=T("準定常のパルスの予測", "prediction, quasi-steady pulses"))
+        a.set_title(ttl)
+        a.set_xlabel(T("地形の時間 (千秒)", "morphological time (ks)"))
+        a.set_ylabel(T("区間の平均の勾配(j = %d〜%d)" % (P_J1, P_J2), "mean slope over j = %d-%d" % (P_J1, P_J2)))
+        a.grid(alpha=0.3)
+        if model == "p":                               # 振れる系列の上に凡例の余白を空ける
+            lo, hi = a.get_ylim()
+            a.set_ylim(lo, hi + 0.45 * (hi - lo))
+            a.legend(fontsize=8, loc="upper center", ncol=2)
+        else:
+            a.legend(fontsize=8, loc="center right")
+    fig.tight_layout()
+    fig.savefig(os.path.join(FIGDIR, "pulse.png"), dpi=110)
+    plt.close(fig)
+
+
 # ---------------------------------------------------------------- 数表
 def tables():
     print("=== C3 斜面(V_b、暦の %g 年。中央の半分の行の平均)===" % T_RUN)
@@ -306,6 +424,31 @@ def tables():
                   "  ".join("%7.2f" % (z[r][g.ic - 1] - z0[r][g.ic - 1]) for r in rows) + "  " +
                   "  ".join("%8.2f" % (0.5 * (z[r][0] + z[r][g.nx - 1]) - z[r][g.ic - 1]) for r in rows) +
                   "  %.3f" % hm)
+    n = p_nout()
+    per = int(round(P_LONG / P_DTG))                # 長周期のパルスの 1 周期の出力の数
+    nwin = (n // 3) // per * per                    # 最後のおよそ 1/3 を長周期の整数倍にそろえた窓
+    k0 = n - nwin + 1
+    print("=== C4 同じ平均の給砂(給砂比 %g)の一定とパルス(最後の %d 区間 = 長周期 %d 周期)==="
+          % (P_RM, nwin, nwin // per))
+    for case in ("P_p", "P_a"):
+        if not have(case):
+            continue
+        model = P_CASES[case]
+        print("  %s: 予測 一定 %.5f%s" % (case, p_qs_slope(model, 1.0),
+              ("、準定常のパルス %.5f" % p_qs_slope(model, 0.5)) if model == "a" else ""))
+        for ch in range(3):
+            ts, ss = p_series(case, ch)
+            last = ss[k0 - 1:]
+            sds = [pbil(case, "Sd", k)[(P_J1 + P_J2) // 2][2 * ch + 1] for k in range(k0, n + 1)]
+            cov = "%.2f" % (sum(1 for v in sds if v > P_HSTAR) / len(sds))
+            if ch == 1:
+                cov = "—(出力の間隔が周期の倍数で位相がそろうため測れない)"
+            outs = p_outflow(case, ch, k0)
+            mo = sum(outs) / len(outs)
+            cv = math.sqrt(sum((o - mo) ** 2 for o in outs) / len(outs)) / mo
+            print("    %-18s 勾配 %.5f(%.5f〜%.5f)、区間の中央の被覆 > H* の時間の割合 %s、"
+                  "出口の流出 %.3e m3/s(変動係数 %.2f)" % (P_LAB[ch], sum(last) / len(last), min(last), max(last),
+                                                       cov, mo, cv))
 
 
 if __name__ == "__main__":
@@ -313,4 +456,6 @@ if __name__ == "__main__":
     fig_channel()
     if have("V_c"):
         fig_drop()
+    if have("P_p") and have("P_a"):
+        fig_pulse()
     tables()

@@ -1274,7 +1274,8 @@ compared in incised channels one cell wide placed side by side) and
 (weathering and creep on the hillslopes coupled with bedrock incision in the
 stream of a rising V-shaped valley: the steady valley and the response to a
 base-level fall; a model for converting time by giving the coefficients of the
-continuous processes multiplied by the inverse of the intermittency factor).
+continuous processes multiplied by the inverse of the intermittency factor; the
+second part compares constant supply and pulses with the same mean).
 
 ## Limestone dissolution (f_dissol)
 

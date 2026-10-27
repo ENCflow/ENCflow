@@ -16,8 +16,10 @@ coupling) of docs/mountain_stream_plan.md §11 (in Japanese). The check of the
 hillslopes alone is C2 of [test/hillsoil](../../../test/hillsoil/en/README.md)
 and the check of the stream alone is T11 (C1) of
 [test/rockinc](../../../test/rockinc/en/README.md); this example is compared
-with the two predictions combined. The values are illustrative, not
-calibrated for a particular catchment.
+with the two predictions combined. In the second part, C4, the steady slope of
+a stream is compared under the same mean supply given constantly and in
+pulses. The values are illustrative, not calibrated for a particular
+catchment.
 
 ## Time (conversion by the intermittency factor)
 
@@ -56,7 +58,7 @@ simultaneous progress.
 
 | File | Contents |
 |---|---|
-| `make_init.py` | Writes the terrain, initial depth, soil depth, multiplier distributions and `param_*.txt` (constants kept in pairs with `plot_results.py`) |
+| `make_init.py` | Writes the terrain, initial depth, soil depth, multiplier distributions, supply time series and `param_*.txt` (constants kept in pairs with `plot_results.py`) |
 | `plot_results.py` | Figures `figs/*.png` (`en/figs/` with `en`) and tables (standard output; comparison with the predictions and the ledgers) |
 
 ## Running
@@ -181,6 +183,63 @@ grain sizes of the plucked gravel and of the soil (including a bulking factor)
 would directly affect the cover of the stream (docs/mountain_stream_plan.md
 §4.1; not included at this stage).
 
+## Timing of supply: constant supply versus pulses with the same mean (C4)
+
+Supply from the hillslopes to the stream can be intermittent, as with
+landslides. Whether the steady slope of the stream changes when the same mean
+supply comes all at once or little by little is compared in channels one cell
+wide like T11 (C1) of test/rockinc (C4 of docs/mountain_stream_plan.md §11.3,
+in Japanese; no hillslopes, replaced by a supply at the head).
+
+| Item | Value |
+|---|---|
+| Channels | One cell wide (Δx = 1 m), 60 m long, slope 0.01 at the start, n = 0.04, Q = 0.336 m³/s (uniform-flow depth 0.3 m). Dry ground at +2 m on both banks; 3 channels side by side from west to east (they do not affect each other) |
+| Uplift and base level | Uniform uplift U = 1e-5 m/s (value during floods); the outlet row is neither uplifted nor eroded |
+| Gravel and cover | d50 = 1 cm, porosity 0.4, H* = 5 cm. From bare rock |
+| Incision | `P_p` plucking only (k_p = 6e-6 m/s, τ_c = 10 Pa, m = 1.5); `P_a` abrasion only (β = 0.05 1/m) |
+| Supply | Mean supply ratio 0.4 (q_m = 0.4 × 1.81e-3 m²/s). Per channel: constant, and pulses supplying 0.8 half of the time (periods 600 s and 12000 s; morphological time). The pulses are the time-series files `p_qb_short.txt` and `p_qb_long.txt` (`fn_inflow_qb`). The total over the same time is the same |
+| Time | dt = 0.1 s, morfac 10 (dts = 1 s). Morphological time 3e5 s, output every 3000 s. Statistics over the last 32 intervals (8 periods of the long pulses) |
+
+```bash
+./encflow param_P_p.txt > Screen_P_p.log   # about 2 minutes
+./encflow param_P_a.txt > Screen_P_a.log   # about 2 minutes
+```
+
+![Slope under constant and pulsed supply](figs/pulse.png)
+
+| Model | Constant | Pulses, period 600 s | Pulses, period 12000 s (range) | Prediction |
+|---|---|---|---|---|
+| Plucking only | 0.01071 | 0.01065 | 0.01076 (0.01015 to 0.01136) | 0.01080 (constant and quasi-steady pulses alike) |
+| Abrasion only | 0.00716 | 0.00745 | 0.01000 (0.00945 to 0.01028) | constant 0.00716, quasi-steady pulses 0.01055 |
+
+- **Plucking only**: the timing of supply hardly changes the mean slope
+  (within 1 %). The exposed fraction 1 − q/q_c is linear in the transport rate
+  q, so in the quasi-steady limit the time-mean incision rate depends only on
+  the mean supply. With the long pulses the slope swings by ±6 % with the
+  supply.
+- **Abrasion only**: with the long pulses the mean slope becomes 1.40 times as
+  steep. Without supply there are no tools and nothing is worn, and during
+  supply the cover is thick and little rock is exposed, so the same mean supply
+  wears less efficiently and the incision that balances uplift needs a steeper
+  slope (somewhat gentler than the quasi-steady prediction of 0.01055 because
+  the cover thickness lags behind the switching of the supply). The short
+  pulses are smoothed while travelling down the channel and approach the
+  constant supply (4 % steeper).
+- **Duration of cover and outflow at the outlet**: with the long pulses, the
+  cover in the middle of the reach exceeds H* half of the time (never with
+  plucking only and always with abrasion only under constant supply). The
+  outflow at the outlet varies with a coefficient of variation of 0.39
+  (plucking only) and 0.63 (abrasion only) at 3000 s intervals, while the short
+  pulses are smoothed at that interval (coefficient of variation 0).
+- The answer of B of examples/bedrock_cover (without uplift), that the effect
+  of the timing of supply is larger where abrasion (tools) matters and appears
+  when the pulse period is longer than the response time of the cover, also
+  holds for the steady slope under uplift.
+- **Update interval**: with dts = 5 s (morfac 50), "thin-layer drainage rate x
+  dts" reached 1.8 in the abrasion-only channels and the slope under the short
+  pulses came out gentler than under constant supply (0.00689). The slopes for
+  dts = 1 s and 0.5 s differ by 0.7 % or less.
+
 ## Caveats (scope of this example)
 
 - The stream is a channel one cell wide; the width of the valley floor
@@ -210,4 +269,4 @@ would directly affect the cover of the stream (docs/mountain_stream_plan.md
   [examples/bedrock_cover](../../bedrock_cover/en/README.md) (cover effect in
   bedrock channels)
 - docs/mountain_stream_plan.md §11 (plan of the coupled experiments) and
-  developer.md §88.11 to §88.16 (in Japanese)
+  developer.md §88.11 to §88.17 (in Japanese)
