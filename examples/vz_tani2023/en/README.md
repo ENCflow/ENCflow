@@ -67,6 +67,15 @@ cumulative drainage vdrain of a zone divided by its area, and the post-processin
 that the paper did outside the model is applied in the same way
 (`compare_tani2023.py`).
 
+The figure below summarises this configuration (it contains no numbers of the
+paper). (a) is the processing flow, (b) shows the rows of cells of each grid, where
+the position from the left is the soil depth of the cell, (c) shows the shared
+reference column of each soil and the range of depths at which the cells of each
+zone read the column (orange bars), and (d) is the post-processing to the compared
+quantity.
+
+![Configuration of the computations of examples/vz_tani2023](figs/setup.png)
+
 | Event | Soil | Soil depth | Initial condition | Post-processing of the paper (applied when comparing) | Time 0 and period |
 |---|---|---|---|---|---|
 | KIEX | KI | a 50 cm column, seepage with ψ fixed to 0 at the bottom (`f_vz_bottom = 2`) | hydrostatic: ψ = 0 at the bottom, ψ = −50 cm at the surface (`vz_wt0 = 0.5`) | none (drainage at the bottom = runoff rate) | start of the rain, 7 h |
@@ -97,6 +106,7 @@ cd examples/vz_tani2023
 make                          # link to the executables in bin/ and the grid input data/grid_*/
 ./Run.sh <PDF of the paper>   # extraction → computation of the 7 events → comparison (0 to 40 s per event)
 ./Run.sh                      # only computation and comparison once extracted
+python3 plot_setup.py         # configuration figure figs/setup.png (uses no numbers of the paper, so no PDF needed; en for English labels)
 ```
 
 The extraction needs the Python package pdfminer.six (`pip install pdfminer.six`).

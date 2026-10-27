@@ -959,11 +959,20 @@
     {
       "source": "examples/vz_tani2023/README.md",
       "target": "examples/vz_tani2023/en/README.md",
-      "source_sha256": "e016fa25064e4f0a1ea29545bf5e5f3f887a45ab7976e709ebe9e0e577f3a7cb",
-      "target_sha256": "6fc13de2094bd5414a1a5621de616cbde1fd2737a116f13b59d7036470ffed43",
+      "source_sha256": "0911c3295b939600d43ab5416d63d52201e56ca4f393d6238a9b0a3bf546ad23",
+      "target_sha256": "a7929eb3b9bb61e47f3eb27aa93bbbbc4913734a78397cd6b3c2a09cd3984425",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-26"
+      "reviewed_on": "2026-10-27"
+    },
+    {
+      "source": "examples/vz_tani2023/figs/setup.png",
+      "target": "examples/vz_tani2023/en/figs/setup.png",
+      "source_sha256": "cee39d1d78c19b8ff707e0f6fecd60c9c45151efb2bfb3bd418006d76680451b",
+      "target_sha256": "d67fdd9429a0eaadd0192c343754ae5701bd7e2fb210269b9eb3e10fcf309139",
+      "reviewer": "Claude (Claude Code session; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "test/README.md",
