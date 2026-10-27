@@ -13903,7 +13903,7 @@ users_guide/geomorph.md「流水による岩盤下刻」、式と出典は users
 
 実装はコミットを分ける(plan §8 の段取り): (1) 剥離・利用可能率・台帳と T1〜T7・T9
 (本節 88.2〜88.4)、(2) 研磨と T3 の山形(88.5)、(3) fn_uplift と T8(88.6)、(4) restore の
-ガードの緩和、(5) 例題・文書の仕上げ。
+ガードの緩和(88.7)、(5) 例題・文書の仕上げ。
 
 ### 88.2 実装(第 1 コミット: 剥離・被覆・利用可能率)
 
@@ -14079,4 +14079,18 @@ test/rockinc(reference は持たない。解析解・保存則・バイト一致
   もので、内部の不安定ではない。実地形への適用では、流入境界の数セルの扱い(侵食性倍率
   0・隆起 0 で固定する等)に注意する(handoff)。
 - 検証: -fcheck=all の逐次と np = 2、-Ofast の np = 1, 2, 4 が全 12 構成でバイト一致。
+
+### 88.7 全域で土層 0 の save の復元(第 4 コミット)
+
+- setup_sd の「restore 時に全域で sd ≤ 0 なら停止」(§19.1。gwflow 無効時に作った土層
+  ゼロの save を sd 必須のモデルに使う設定齟齬の検出)を、f_rockinc の有効時だけ情報表示に
+  緩めた(optional 引数 allow_bare。岩盤下刻の構成では裸岩の全域が正当な状態になりうる。
+  plan §8 の判断 8)。判定は namelist 由来と allreduce の最大値で全ランク同一(collective 安全)。
+  ほかの 2 か所の setup_sd(風化のみ・溶食の残渣)は掃流砂が無効のときだけ呼ばれるので、
+  f_rockinc(f_fluvial 必須)と重ならない。
+- 検証(test/rockinc の cover_rt1 → rt2): 最初の地形更新(t = 300 s)の前の t = 200 s で
+  保存した裸岩の save を復元して 1800 s まで継続し、通し計算(cover)と state.dat・
+  geomorph_rockinc.dat がバイト一致、情報表示を確認。f_rockinc だけを外した cover_rt2_off は
+  従来どおり停止(表示「has no soil depth」を確認)。-fcheck=all の np = 2、-Ofast の
+  np = 1, 2, 4 でも同じ(MPI の停止は mpirun の非ゼロ終了)。
 

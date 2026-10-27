@@ -24,6 +24,7 @@ j 方向の帯界面を横切る)、勾配 0.01、n = 0.04、等流水深 0.3 m(
 | T4 閉じた箱の保存 | `param_box.txt` | test/fluvial と同じ箱(101 × 101、wave_hump の放射状の流れ)に sd0 = 5 mm、剥離と研磨(β = 0.05 1/m)、侵食性倍率 `rockmap_box.txt`(帯界面 j = 51 を含む行 45〜55 を 0、西半分を 0.5) | Σ(z − z0) A = −研磨量、Σ(sd − sd0) A = 剥離量、Σ Ri A = 剥離量 + 研磨量(台帳と相対 1e-7)、倍率 0 の行は Ri = 0 |
 | T3 研磨の山形 | `param_hump_r02.txt` … `param_hump_r12.txt` | 剥離なし・研磨だけ(β = 0.005 1/m、H* = 1 cm)。北端の流入セルに一定の給砂 q_in = r q_c(r = 0.2・0.5・0.8・1.2) | 内部のセル(j = 21〜50)で、最後の 1000 s(地形の時間)の Ri の増分による下刻速度が β q_in (1 − q_in/q_c)、被覆率が q_in/q_c(相対 5e-3)。r = 1.2 は全被覆で下刻速度が山の頂点の 0.05 倍未満 |
 | T7 加速係数(掃流砂あり) | `param_pluck_mf5.txt` / `param_pluck_mf20.txt` | pluck を morfac = 5(流れの時間 600 s)/ 20(150 s)に。地形の時間は同じ 3000 s | 累積の下刻量 z − z0 が pluck と相対 2e-3 / 4e-3 で一致(O(dts)) |
+| 裸岩の save の復元 | `param_cover_rt1.txt` → `param_cover_rt2.txt`(対照 `param_cover_rt2_off.txt`) | cover を最初の地形更新の前(t = 200 s。土層は全域 0)で保存し 1800 s まで継続。対照は f_rockinc なしで同じ save を復元 | 全域で土層 0 の save を受け入れ(表示を確認)、通し計算と state.dat・geomorph_rockinc.dat がバイト一致。対照は従来どおり停止 |
 | T8 隆起下の定常縦断形 | `param_uplift.txt` | U = 1e-5 m/s の一様隆起、出口のセルだけ隆起も侵食もしない(`upmap.txt`・`rockmap_up.txt` = 0 = 基準面の固定)。裸岩から剥離だけ(k_p = 6e-6 m/s、H* = 5 cm)、morfac = 50(地形の時間 7.5e4 s) | j = 15〜58 で、定常性 max\|dz/dt\| < 0.02 U、局所の釣り合い B_p/(U dts) = 1 ± 0.02、勾配が等流の準解析解(E_p0(S)(1 − q_j/q_c(S)) = U、q_j = (1 − λ) U Δy j)と 5 % 以内、下流ほど急になる傾きが 2 % 以内 |
 | T5 リスタート往復 | `param_pluck_rt1.txt` → `param_pluck_rt2.txt` | pluck を裸岩から 150 s で保存し 300 s まで継続 | 通し計算と state.dat・geomorph_rockinc.dat がバイト一致 |
 | T9 急勾配の等流(記録) | `param_steep_s001.txt` … `param_steep_s020.txt`、`param_steep_s020_od0.txt` | 幅 5 セルの水路で勾配 0.01〜0.2 の等流(地形変化なし)。od0 は動的振り替えなし | セル値の τ_b = ρ g n² V²/h^{1/3} と等流の釣り合いの比を表にする(合否なし) |
@@ -61,7 +62,8 @@ python3 make_init.py z > zinit.txt   # 入力の再生成(同梱。変更した�
   1 セルごとに約 −0.7 倍で減衰する 2 セル周期の段差ができる(検定は j ≥ 15)。
 - T4: Σ(z − z0) A = −0.236164 m³(研磨量)、Σ(sd − sd0) A = 0.693794 m³(剥離量)、
   Σ Ri A = その和が台帳と 2e-9 以内で一致、倍率 0 の行は Ri = 0。
-- T5: 裸岩から 150 s で保存・継続した結果が通し計算とバイト一致。
+- T5: 裸岩から 150 s で保存・継続した結果が通し計算とバイト一致。全域で土層 0 の save
+  (cover_rt1)からの継続も通し計算とバイト一致し、f_rockinc なしの対照は停止する。
 - MPI: -fcheck=all(nightly と同じ debug フラグ)の np = 2 を先に実行し、境界違反なし・
   全構成が debug の逐次とバイト一致。-Ofast の np = 1, 2, 4 も逐次とバイト一致。
 - T9(記録): 水路中央の τ_b / ρ g h tanθ は勾配 0.01・0.05・0.1・0.2 で

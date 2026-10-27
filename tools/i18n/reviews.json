@@ -266,8 +266,8 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "64718ea497acaffa09f320692967c113e622fecf0578dd2f4fba65c9aed09295",
-      "target_sha256": "399dd1c0a3943acb9a408d35327d0ec1abf16032f4a52aedfa711c7382779a50",
+      "source_sha256": "cf9128ab0ce474c756bb8da12744fd7851343f85208365c4a8d308c5b238012c",
+      "target_sha256": "d17d68430607518a3b2b63dfaf74174e12665021aef99815234964c4fb0389d8",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -1850,8 +1850,8 @@
     {
       "source": "test/rockinc/README.md",
       "target": "test/rockinc/en/README.md",
-      "source_sha256": "1fa5227311d0607554c0c9c1425253bf532028466283084e9ff315d135557438",
-      "target_sha256": "004776bf2be667bc0cbb338d3b112cbcea59b83c08b0ab5c2ae17ba6df45ff24",
+      "source_sha256": "e0a06380b31df69740e87cfae8d139243478c737cb8242d405df397be90b311d",
+      "target_sha256": "8957e5adf94fbd7463c6299e255ca2378edc8ad9247e0c5d0711763aeaa9937a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"

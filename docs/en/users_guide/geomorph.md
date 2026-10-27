@@ -1198,7 +1198,11 @@ without a standard value in the literature, so they have no defaults. τ_b is ob
 Manning closure as bedload (the depth and velocity of the cell).
 
 To start from bare rock, give a soil-thickness file of zeros
-(`f_sdtype = 1`, `fn_sd`); a uniform value `sd0 = 0` cannot be used. An
+(`f_sdtype = 1`, `fn_sd`); a uniform value `sd0 = 0` cannot be used. A restart
+from a save whose soil thickness is zero everywhere stops in the other
+landform-change configurations as a configuration mistake, but with
+`f_rockinc = 1` it is accepted as a legitimate bare-rock state (an information
+message only). An
 incision experiment needs relative uplift, so combine uplift `f_uplift = 1`
 with the distribution `fn_uplift` (0 at the outlet cells = fixed base level),
 and set the outlet row to 0 (not eroded) with `fn_rock` (T8 of

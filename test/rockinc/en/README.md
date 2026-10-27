@@ -31,6 +31,7 @@ default) both water and bedload flow along the axis with the full width.
 | T4 conservation in a closed box | `param_box.txt` | The box of test/fluvial (101 × 101, radial flow from wave_hump) with sd0 = 5 mm, plucking and abrasion (β = 0.05 1/m), and the erodibility multiplier `rockmap_box.txt` (0 in rows 45 to 55, which contain the band interface j = 51; 0.5 in the western half) | Σ(z − z0) A = −abraded volume, Σ(sd − sd0) A = plucked volume, Σ Ri A = plucked + abraded volume (relative 1e-7 against the ledger), Ri = 0 in the rows with multiplier 0 |
 | T3 hump of abrasion | `param_hump_r02.txt` … `param_hump_r12.txt` | Abrasion only without plucking (β = 0.005 1/m, H* = 1 cm). A constant sediment feed q_in = r q_c at the inflow cell at the north end (r = 0.2, 0.5, 0.8, 1.2) | In the interior cells (j = 21 to 50), the incision rate from the increment of Ri over the last 1000 s (geomorphic time) is β q_in (1 − q_in/q_c) and the cover fraction is q_in/q_c (relative 5e-3). For r = 1.2 the bed is fully covered and the incision rate is below 0.05 of the top of the hump |
 | T7 acceleration (with bedload) | `param_pluck_mf5.txt` / `param_pluck_mf20.txt` | pluck with morfac = 5 (flow time 600 s) / 20 (150 s); the same geomorphic time 3000 s | The cumulative incision z − z0 agrees with pluck to relative 2e-3 / 4e-3 (O(dts)) |
+| Restore of a bare-rock save | `param_cover_rt1.txt` → `param_cover_rt2.txt` (control `param_cover_rt2_off.txt`) | cover saved before the first geomorphic update (t = 200 s; the soil thickness is zero everywhere) and continued to 1800 s. The control restores the same save without f_rockinc | The save with zero soil thickness everywhere is accepted (the message is checked), and state.dat and geomorph_rockinc.dat are byte-identical to the straight run. The control stops as before |
 | T8 steady longitudinal profile under uplift | `param_uplift.txt` | Uniform uplift U = 1e-5 m/s; only the outlet cell is neither uplifted nor eroded (`upmap.txt`, `rockmap_up.txt` = 0 = fixed base level). Plucking only from bare rock (k_p = 6e-6 m/s, H* = 5 cm), morfac = 50 (geomorphic time 7.5e4 s) | For j = 15 to 58: steadiness max\|dz/dt\| < 0.02 U, local balance B_p/(U dts) = 1 ± 0.02, the slope within 5 % of the quasi-analytic solution with uniform-flow hydraulics (E_p0(S)(1 − q_j/q_c(S)) = U, q_j = (1 − λ) U Δy j), and its downstream steepening within 2 % |
 | T5 restart round trip | `param_pluck_rt1.txt` → `param_pluck_rt2.txt` | pluck saved at 150 s from bare rock and continued to 300 s | state.dat and geomorph_rockinc.dat are byte-identical to the straight run |
 | T9 steep uniform flow (record) | `param_steep_s001.txt` … `param_steep_s020.txt`, `param_steep_s020_od0.txt` | Uniform flow at slopes 0.01 to 0.2 in a 5-cell channel (no landform change). od0 is without the dynamic reassignment | Tabulates the ratio of the cell τ_b = ρ g n² V²/h^{1/3} to the uniform-flow balance (no pass/fail) |
@@ -81,7 +82,9 @@ python3 make_init.py z > zinit.txt   # regenerate the inputs (bundled; only when
   (plucked volume) and Σ Ri A = their sum agree with the ledger within 2e-9;
   Ri = 0 in the rows with multiplier 0.
 - T5: the run saved at 150 s from bare rock and continued is byte-identical to
-  the straight run.
+  the straight run. The continuation from the save with zero soil thickness
+  everywhere (cover_rt1) is also byte-identical to the straight run, and the
+  control without f_rockinc stops.
 - MPI: np = 2 with -fcheck=all (the same debug flags as nightly) was run first:
   no bounds violation, and all configurations are byte-identical to the debug
   serial run. np = 1, 2, 4 with -Ofast are also byte-identical to serial.

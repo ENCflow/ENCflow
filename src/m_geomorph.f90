@@ -931,7 +931,7 @@ subroutine m_geomorph_init(gm, p, g, s)
     !   注意: gwflow 併用時の容量 sd*sy0 はセル全面の土層解釈のままで、
     !   幅セルの sd(河道底の土層)とは近似的な整合(既知の妥協)
     ! 土層厚(=可動層厚)の確保と s%sd への転記
-    call setup_sd(p, g, s)
+    call setup_sd(p, g, s, allow_bare = (gm%f_rockinc > 0))
   end if
 
   ! --- 基岩風化(土層生成関数。§32)---
@@ -1057,19 +1057,28 @@ end subroutine
 ! 第2の利用者。geomorph init が先に走るため、gwflow 併用時はこちらの
 ! 転記が先に行われる — 値は同じ g%sd 由来で同一)
 !----------------------------------------------------------------------
-subroutine setup_sd(p, g, s)
+subroutine setup_sd(p, g, s, allow_bare)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   type(t_state), intent(inout) :: s
+  logical, intent(in), optional :: allow_bare  ! 全域で土層ゼロの restore を受け入れる(岩盤下刻。§88)
   real :: sdmax(1)
 
   call m_geoinfo_require_sd(g)
   if (p%f_state_restore > 0) then
     ! restore 時は転記しない(復元値が勝つ)。土層ゼロの save を
-    ! 浸食計算に使う設定齟齬は停止(判定は全ランク同一 = collective 安全)
+    ! 浸食計算に使う設定齟齬は停止(判定は全ランク同一 = collective 安全)。
+    ! 岩盤下刻(f_rockinc)の構成では裸岩の全域が正当な状態なので情報表示に留める
     sdmax(1) = maxval(s%sd(:, dcp%js:dcp%je))
     call par_allreduce_max(sdmax)
     if (sdmax(1) <= 0.0) then
+      if (present(allow_bare)) then
+        if (allow_bare) then
+          call par_info("geomorph: restored soil depth is zero everywhere (bare rock; accepted " &
+                        // "because f_rockinc is on)")
+          return
+        end if
+      end if
       call par_stop("geomorph: restored state file has no soil depth (saved by an old " &
                     // "configuration), disable restore or recreate the state file")
     end if
