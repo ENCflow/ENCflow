@@ -23,6 +23,16 @@ is handled on the ENCflow grid as the following three parts.
   the transfer from a zone to its outlet is not solved (**instantaneous direct
   drainage**).
 
+The figure below shows how these relate to the soil depth. Each cell of the zone
+number raster (a) reads a shared reference column (b) at the depth of its own soil
+depth, and the drainage collected per zone is sent to an outlet. Zones 1 and 2 have
+the same soil, so they share column 1 (`vz_zone_col`) and differ only in the outlet
+(zone 1 to an outlet cell, zone 2 out of the system). Cells A, B and C of zone 1
+read the same column 1 at their soil depths of 0.3, 0.8 and 1.5 m, so the
+differences in soil depth become differences in response.
+
+![Relation of the zone number raster, shared reference columns, soil depth and outlets in VZ](../../figs/vz_layout_en.png)
+
 This direct drainage is an approximation that **omits** the delay and the change
 of waveform by lateral subsurface flow. It does not mean that rainwater particles
 reach the outlet at once (a fast response of the runoff rate and a fast movement
