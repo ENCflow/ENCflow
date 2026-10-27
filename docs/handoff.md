@@ -123,16 +123,14 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - 単精度ビルドの Check_*.py は許容が倍精度前提で不合格になる(入力の丸め
      規模。§87.3)。単精度用の許容を設けるかは必要になってから。
 
-00i. **m_precip の時間単位の既存不具合(2026-10-26 発見。未修正)**
-   - dt_mapunit_c を与えても、続く `if (list%dt_mapunit > 0.0) ... else` の
-     既定分岐で上書きされて効かない。
-   - dt_mapunit は文書(users_guide/forcing.md・list_precip の注釈)では分だが、
-     `pr%dt_mapunit = list%dt_mapunit` と秒のまま使っている。
-   - dt_maplist_c は idt_maplist の計算より後に適用され、さらに str2sec の秒が
-     分として `* 60` される経路がある(prtype = 3 の既定 dt_mapunit)。
-   - 挙動変更になるので VZ の作業では直していない(test/vzzone は prtype = 2 の
-     既定 mm/day だけを使う)。修正時は降雨分布ファイルを使う既存ケースの
-     reference への影響を確認し、等価でない修正として単独のコミットにする。
+00i. **m_precip の時間単位(2026-10-27 修正。developer.md §88、test/prmap)の残り**
+   - list_tide の dt_timaplist_c は単位を省いた数値が秒のまま(数値の dt_timaplist は
+     分)。list_precip の `_c`(単位なし = 分 = 数値と同じ単位)と揃えるかは未判断
+     (str2sec の default_unit = 60 を渡すだけで揃う。挙動変更)。
+   - prtype = 3 の出力 Pr(s%prh)はファイルの値そのまま(mm/dt_mapunit)で、
+     dt_mapunit が 1 時間でないと mm/h にならない(prtype = 1・2 は mm/h)。
+     runoff_rate の適用先の違い(forcing.md に「現行実装」として記載)と合わせて
+     整理する候補(出力だけの差で、水収支には影響しない)。
 
 00c. **方針 13(説明責任。developer.md §0。2026-10-24 制定)の既存部分への遡及**
    - 出典の棚卸し: users guide 第III部のうち「参考文献」節のない章

@@ -84,9 +84,29 @@ Select how rainfall is given with `prtype`.
 | dt_prupdate | 1 | Rainfall update interval (min) (prtype=1, 2) |
 | fn_prmap | "" | Precipitation distribution file (prtype=2) |
 | fn_maplist | "" | List of distribution file names (one file per line; prtype=3). **Paths inside the list are also relative to dir_data** (not relative to the list file) |
-| dt_maplist(_c) | 60 | Time interval of the distribution files (min) (prtype=3) |
-| dt_mapunit(_c) | 0 | Specifies over how many minutes the values in the distribution files are accumulated rainfall (mm). With 0 (default), prtype=2 assumes one day (= mm/day) and prtype=3 assumes the file interval (accumulated mm between dt_maplist frames; with a 1-hour interval this equals mm/h) |
+| dt_maplist(_c) | 60 | Time interval of the distribution files (min) (prtype=3). `_c` takes a string with a unit (below) |
+| dt_mapunit(_c) | 0 | Specifies over how many minutes the values in the distribution files are accumulated rainfall (mm) (prtype=2, 3). With 0 (default), prtype=2 assumes one day (= mm/day) and prtype=3 assumes the file interval (accumulated mm between dt_maplist frames; with a 1-hour interval this equals mm/h). `_c` takes a string with a unit (below) |
 | runoff_rate | 1.0 | Runoff coefficient. Its target differs between prtype modes in the current implementation; see below. Use 1.0 with groundwater computation |
+
+**Time units**: the numbers `dt_prupdate`, `dt_maplist` and `dt_mapunit`
+are in minutes. `dt_maplist_c` and `dt_mapunit_c` take strings with a unit
+such as `"1d"`, `"24h"`, `"30m"` or `"600s"` (the same format as "Specifying
+times as strings" in [Time Management](time.md)). **A number written without a
+unit is taken as minutes** (not seconds, as it is for the `_c` parameters of
+`&list_sysparam`). If both are written, `_c` takes precedence. The adopted
+value is shown on the screen, for example
+`precip: dt_mapunit = 1440.00000 min (default)`, so a mix-up of units can be
+checked there.
+
+```
+&list_precip                ! example: map of 1-hour rainfall (mm) x multiplier
+  prtype = 2
+  fn_prmap = "rain_1h.txt"
+  dt_mapunit = 60           ! values are rainfall accumulated over 60 minutes (= mm/h); same as dt_mapunit_c = "1h"
+  prval(:,1) =    0, 1
+  prval(:,2) = 1440, 1
+/
+```
 
 **Current `runoff_rate` behaviour**: with `prtype=1,2`, it scales the
 output rainfall field `prh`, but not the precipitation intensity `pre`

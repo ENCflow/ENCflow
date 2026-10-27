@@ -75,9 +75,27 @@
 | dt_prupdate | 1 | 降雨の更新間隔 (min)(prtype=1, 2) |
 | fn_prmap | "" | 降水分布ファイル(prtype=2) |
 | fn_maplist | "" | 分布ファイル名のリスト(1行1ファイル。prtype=3)。**リスト中のパスも dir_data 起点**(リストファイルからの相対ではない) |
-| dt_maplist(_c) | 60 | 分布ファイルの時間間隔 (min)(prtype=3) |
-| dt_mapunit(_c) | 0 | 分布ファイルの値が「何分間の積算雨量 (mm)」かの指定。0(既定)なら prtype=2 は1日(= mm/day)、prtype=3 はファイル間隔(dt_maplist 間の積算 mm。間隔1時間なら mm/h と同値) |
+| dt_maplist(_c) | 60 | 分布ファイルの時間間隔 (min)(prtype=3)。`_c` は単位付きの文字列(下記) |
+| dt_mapunit(_c) | 0 | 分布ファイルの値が「何分間の積算雨量 (mm)」かの指定(prtype=2, 3)。0(既定)なら prtype=2 は1日(= mm/day)、prtype=3 はファイル間隔(dt_maplist 間の積算 mm。間隔1時間なら mm/h と同値)。`_c` は単位付きの文字列(下記) |
 | runoff_rate | 1.0 | 流出率。現行実装では prtype によって適用先が異なるため、下記参照。地下水計算との併用では 1.0 を使う |
+
+**時間の単位**: `dt_prupdate`・`dt_maplist`・`dt_mapunit` の数値は分です。
+`dt_maplist_c`・`dt_mapunit_c` には `"1d"`・`"24h"`・`"30m"`・`"600s"` のような
+単位付きの文字列を書けます(書式は[時刻の管理](time.md)の「文字列での時間指定」と
+同じ)。**単位を省いた数値は分**とみなします(`&list_sysparam` の `_c` のように秒では
+ありません)。両方を書くと `_c` が優先します。採用した値は画面に
+`precip: dt_mapunit = 1440.00000 min (default)` のように表示されるので、単位の
+取り違えはここで確かめられます。
+
+```
+&list_precip                ! 例: 1時間雨量 (mm) の分布 × 倍率
+  prtype = 2
+  fn_prmap = "rain_1h.txt"
+  dt_mapunit = 60           ! 値は60分間の積算雨量 (= mm/h)。dt_mapunit_c = "1h" と同じ
+  prval(:,1) =    0, 1
+  prval(:,2) = 1440, 1
+/
+```
 
 **`runoff_rate` の現行実装**: `prtype=1,2` では出力用雨量 `prh` に掛かり、
 水収支へ渡す降水強度 `pre` には掛かりません。`prtype=3` では分布値を
