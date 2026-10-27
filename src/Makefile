@@ -73,7 +73,9 @@ $(LIB): $(LIBOBJS)
 #   前回ビルドと MODE・MPI 実装(module 環境)・PREC のいずれかが
 #   変わっていたら全オブジェクトを作り直す。
 #   (serial/mpi の .o、m_parallel.mod、異なる MPI の mpi.mod、
-#    異なる実数サイズの .o/.mod の混在リンクを防ぐ)
+#    異なる実数サイズの .o/.mod の混在リンクを防ぐ。libencflow.a も消す:
+#    ar rcs は既存のメンバーを残すので、前のモードの m_parallel_mpi.o 等が
+#    書庫に残り utils のリンクが壊れる。developer.md §3)
 #   MPIID: MPI ラッパーの -show 出力(実装ごとに異なる)のハッシュ。
 #          MPI モードでのみ計算する。serial ではスタンプにハッシュを
 #          付けない — 非ラッパーの -show は「失敗して空」とは限らず、
@@ -91,7 +93,7 @@ MODESTAMP	= .mode_$(MODE)_$(MPIID)_$(PREC)
 $(OBJS): $(MODESTAMP) ../make.inc
 
 $(MODESTAMP):
-	@rm -f *.o *.mod *.smod .mode_*
+	@rm -f *.o *.mod *.smod .mode_* $(LIB)
 	@touch $@
 
 # ---------------------------------------------------------------
