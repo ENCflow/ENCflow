@@ -1,0 +1,67 @@
+!======================================================================
+! vzcol: 小杉パラメータの一部だけを指定すると停止すること(developer.md §87.7。
+!   別の土壌の値が試算用の組と混ざるのを防ぐ。Run.sh が停止とその理由を確かめる)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! 格子システム(0:ENC)
+  dt = 5.0                  ! 時間刻み (s)
+  t0 = 0
+  tt = 43200                ! 12 h
+  dt_disp = 1800
+  dt_file = 21600           ! 柱の鉛直分布を 6 h・12 h に出力
+  dt_recrd = 600            ! VZ の CSV を 10 分ごとに出力
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_precip = '-'
+  fn_vz = '-'
+  dir_data = 'data_vzcol'
+  dir_result = 'result_partial'
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 3
+  ny = 8                    ! np = 4 でもランクあたり 2 行
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_rntype = 0
+  rn0 = 0.05
+  f_sdtype = 1
+  fn_sd = 'sd.txt'          ! 土層厚 (m)
+/
+
+&list_bound
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 1       ! (min, mm/h)。表は線形補間、更新は 1 分ごと
+  prval(1:2,2) = 60, 1
+  prval(1:2,3) = 61, 50
+  prval(1:2,4) = 180, 50
+  prval(1:2,5) = 181, 0
+  prval(1:2,6) = 9999, 0
+/
+
+&list_vz
+  fn_vz_zone = 'zone.txt'   ! 区画番号ラスタ(全セル 1)
+  dt_vz = 60.0              ! 同期間隔 (s)
+  vz_out_depth = 0.5, 0.7375, 1.0, 1.234, 2.0, 2.9
+  f_vz_outprof = 1          ! 柱の鉛直分布を出力時刻に CSV で出す
+/
+
+&list_vz_column
+  vz_ks_mmh(1) = 100.0      ! これだけを指定(θs・θr・ψm・σ がない)
+/
+
+&list_vz_zone
+  vz_out_kind(1) = 2        ! 系外流出
+/

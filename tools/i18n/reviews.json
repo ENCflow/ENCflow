@@ -500,11 +500,11 @@
     {
       "source": "docs/users_guide/vz.md",
       "target": "docs/en/users_guide/vz.md",
-      "source_sha256": "78d58bb0d5801366a3ba039b0f2d43b04517c819f1b440949c11ec4cb551677d",
-      "target_sha256": "24741ef91dd99e52fb7873c332486084663d5f742734e56f7caece58e5538b0a",
+      "source_sha256": "09ec33fc7e0b0f862941c141275ee3cafe46ec66c66164bed6ce162434a0c1d6",
+      "target_sha256": "288b4cd72846315ec2b0366e8598f332e933d68d5ef5468fbc45d881b6d2ce64",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-26"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "docs/users_guide/wq.md",
@@ -752,11 +752,11 @@
     {
       "source": "examples/List_samples/list_vz.txt",
       "target": "examples/List_samples/en/list_vz.txt",
-      "source_sha256": "53565839ee0a846594bae399c36d9ecd1f2ac1b0eefe6254f656e22606208128",
-      "target_sha256": "b30d408e3b004fd232d1b4e0025956b4853d046f1aacc8b597c00117eac4c36b",
+      "source_sha256": "6545997e2b8c2f5362b1078be1bdf652a7dc8a0be72646bfabfec4b2996d2cf6",
+      "target_sha256": "e61800e1c0f9c5628809055adaf7fb3bd6155551708a0cd352a952f28c35510e",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-26"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "examples/List_samples/list_wave.txt",
@@ -2129,11 +2129,11 @@
     {
       "source": "test/vzcol/README.md",
       "target": "test/vzcol/en/README.md",
-      "source_sha256": "3d975398f9ba4a3eebf560ffb4ace8ee488d96304984332c2543d360d7b2aa62",
-      "target_sha256": "163453296243d29121cb4b348091e02cdc8effefe21bb83b162802ce7ac29549",
+      "source_sha256": "8dc31ae783f50a051b76c6ebe4b5e2be3d2aba6d703a4c2cd27f33dfbf138ec9",
+      "target_sha256": "89a5d3a5590e0500ed372b1a326ba36d71edd3ecb04a937dd1ec62fa7adf1492",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-26"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "test/vzzone/README.md",

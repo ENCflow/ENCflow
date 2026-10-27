@@ -47,13 +47,13 @@ settings consist of three groups.
   fn_vz_zone = 'zone.asc'   ! zone number raster (integer. 0 = not applied)
   dt_vz = 60.0              ! synchronisation interval for advancing the columns (s. 0 = every step)
 /
-&list_vz_column             ! shared reference columns (indexed by column number)
-  vz_ks_mmh(1) = 100.0      ! saturated hydraulic conductivity (mm/h)
-  vz_thetas(1) = 0.5        ! saturated water content
-  vz_thetar(1) = 0.1        ! residual water content
-  vz_psim(1) = -0.5         ! Kosugi psi_m (m. Negative)
-  vz_sigma(1) = 1.5         ! Kosugi sigma
-  vz_q0_mmh(1) = 1.0        ! initial condition: flux of steady gravity drainage (mm/h)
+&list_vz_column             ! shared reference columns (indexed by column number. If omitted, trial defaults)
+  vz_ks_mmh(1) = 180.0      ! saturated hydraulic conductivity (mm/h)
+  vz_thetas(1) = 0.370      ! saturated water content
+  vz_thetar(1) = 0.230      ! residual water content
+  vz_psim(1) = -0.200       ! Kosugi psi_m (m. Negative)
+  vz_sigma(1) = 1.60        ! Kosugi sigma
+  vz_q0_mmh(1) = 0.1        ! initial condition: flux of steady gravity drainage (mm/h)
 /
 &list_vz_zone               ! zones (indexed by zone number)
   vz_zone_col(1) = 1        ! column referred to (default: same as the zone number)
@@ -62,14 +62,18 @@ settings consist of three groups.
 /
 ```
 
-`f_vz = 0` deactivates the feature temporarily while it stays written. The zone
+The column values of the example are the same as the trial defaults (the soil of
+Tatsunokuchi-yama in Tani (2023); see [Parameters and the basis of their
+defaults](#parameters-and-the-basis-of-their-defaults) below). Replace them with the
+values of the site for real studies. `f_vz = 0` deactivates the feature
+temporarily while it stays written. The zone
 numbers are consecutive 1, 2, …; even without per-zone settings, `vz_zone_col`
 is the column with the same number as the zone. `vz_out_kind` must be given for
 every zone.
 
 ## Getting started (minimum input)
 
-Four things are needed.
+Three things are needed.
 
 1. **Zone number raster** `fn_vz_zone` (under `dir_data`, on the same grid as the
    topography). A number of 1 or more for VZ cells and 0 elsewhere.
@@ -78,12 +82,19 @@ Four things are needed.
    depth at which the flux of the reference column is read. **There is no
    default** (it is site data). Convert a soil depth measured normal to the slope
    into a vertical depth in preprocessing.
-3. **Kosugi parameters of the column** `vz_ks_mmh`, `vz_thetas`, `vz_thetar`,
-   `vz_psim`, `vz_sigma` and the initial condition (one of `vz_q0_mmh`, `vz_psi0`
-   and `vz_wt0`).
-   **There are no defaults** (see [Parameters and the basis of their
-   defaults](#parameters-and-the-basis-of-their-defaults) below).
-4. **Outlet** `vz_out_kind` (and `vz_out_cell`).
+3. **Outlet** `vz_out_kind` (and `vz_out_cell`).
+
+**The column settings (`&list_vz_column`) can be omitted.** If they are omitted,
+trial defaults are used and the adopted values are displayed on the screen with
+`(default)`. The Kosugi parameters (`vz_ks_mmh`, `vz_thetas`, `vz_thetar`,
+`vz_psim`, `vz_sigma`) are the set of the soil of Tatsunokuchi-yama in Tani (2023),
+and the initial condition is steady gravity drainage at a pre-rain runoff rate of
+0.1 mm/h (`vz_q0_mmh`). The trial values do not represent the soil of your site, so
+give the values of the site for real studies (see [Parameters and the basis of
+their defaults](#parameters-and-the-basis-of-their-defaults) below). Give all five
+Kosugi parameters or omit all of them (giving only some of them stops the run, to
+prevent mixing values of different soils). A column referred to by a zone whose
+settings are omitted also gets the trial defaults.
 
 Give the rainfall as in [rainfall and weather](forcing.md). To see only the
 runoff of a small catchment, make all cells of the catchment one zone with
@@ -308,14 +319,14 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| vz_ks_mmh(c) | none | saturated hydraulic conductivity (mm/h) | **given** required (see the hints below) |
-| vz_thetas(c) | none | saturated water content | **given** required |
-| vz_thetar(c) | none | residual water content | **given** required |
-| vz_psim(c) | none | Kosugi median pressure head ψm (m. Negative) | **given** required |
-| vz_sigma(c) | none | Kosugi log standard deviation σ | **given** required |
+| vz_ks_mmh(c) | 180 mm/h | saturated hydraulic conductivity (mm/h) | **literature value** for trials. Soil of Tatsunokuchi-yama in Table 2 of Tani (2023)[^tani2023] (5.0×10⁻³ cm/s). Used when all five are omitted (see the hints below) |
+| vz_thetas(c) | 0.370 | saturated water content | **literature value** same[^tani2023] |
+| vz_thetar(c) | 0.230 | residual water content | **literature value** same[^tani2023] |
+| vz_psim(c) | −0.200 m | Kosugi median pressure head ψm (m. Negative) | **literature value** same[^tani2023] |
+| vz_sigma(c) | 1.60 | Kosugi log standard deviation σ | **literature value** same[^tani2023] |
 | vz_depth(c) | 10 m | depth L of the computational column | **literature value** standard reference column of the original paper[^tani2023]. Take it deeper than the largest soil depth read out |
 | vz_dz(c) | 0.025 m | layer thickness (an integer fraction of vz_depth) | **literature value** same[^tani2023] |
-| vz_q0_mmh(c) | none | initial condition: flux of steady gravity drainage (mm/h). Uniform ψ0 with K(ψ0) = q0 | **given** one of this, vz_psi0 and vz_wt0 is required |
+| vz_q0_mmh(c) | 0.1 mm/h | initial condition: flux of steady gravity drainage (mm/h). Uniform ψ0 with K(ψ0) = q0 | **empirical** for trials. A guide to the pre-rain runoff rate (e.g., the observed runoff before the rain of KI2 at Kiryu in Tani (2023) is about 0.1 mm/h[^tani2023]). Used when vz_psi0 and vz_wt0 are not given either. Give only one of the three |
 | vz_psi0(c) | none | initial condition: uniform pressure head (m. Negative) | **given** |
 | vz_wt0(c) | none | initial condition: depth of a hydrostatic water table (m. 0 or more). ψ(ζ) = ζ − vz_wt0 (saturated below the water table) | **given** in a column whose bottom has a fixed pressure ψ_b, vz_wt0 = vz_depth − ψ_b gives a state at rest with zero flux |
 | f_vz_bottom(c) | 1 | bottom 1: free drainage / 2: fixed pressure (for verification) | **method** |
@@ -332,11 +343,15 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 **Hints for revisiting the defaults**
 
-- **The Kosugi parameters have no defaults.** The values of the original
-  paper[^tani2023] are values of the field soils of each study site (Table 2; they
-  differ greatly between Tatsunokuchi-yama, Kiryu and Mettman Ridge) and do not make
-  general defaults. Give values obtained by fitting the Kosugi model to water
-  retention and conductivity tests of the soil (Kosugi 1996[^kosugi1996]). Some
+- **The defaults of the Kosugi parameters are for trials.** The values of the
+  original paper[^tani2023] are values of the field soils of each study site
+  (Table 2; they differ greatly between Tatsunokuchi-yama, Kiryu and Mettman Ridge)
+  and are not universal. As the default we chose the set of Tatsunokuchi-yama (TY),
+  the soil of the main events of the paper (TY1, TY2) and the most moderate of the
+  three in permeability (table below). These are values for running the model first
+  and seeing its behaviour. For real studies, give values obtained by fitting the
+  Kosugi model to water retention and conductivity tests of the soil (Kosugi
+  1996[^kosugi1996]). Some
   fitted values in the literature give the pressure head at the inflection point of
   the retention curve (ψ₀ in the notation of Kosugi 1996; not the initial ψ0 used
   here), as in Table 1 of that paper; then convert with vz_psim = ψ₀ exp(σ²)
@@ -347,6 +362,11 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   speed of the response and the shape of the recession.
 - The initial condition `vz_q0_mmh` corresponds to "the runoff rate before the
   rain" (with a free-drainage bottom, a uniform ψ0 is an exact steady solution).
+  The default of 0.1 mm/h is a guide for trials. The initial condition strongly
+  affects the response to the first rain. For the TY set, q0 = 0.1 mm/h corresponds
+  to a uniform ψ ≈ −0.31 m and 0.01 mm/h to ψ ≈ −0.62 m; ψ = −1 m corresponds to
+  q0 ≈ 0.0015 mm/h and the initial value ψ = −4 m of the original paper for
+  Tatsunokuchi-yama to q0 ≈ 2×10⁻⁶ mm/h (the adopted ψ is displayed on the screen).
   Another way is a long spin-up that is saved and restarted as the initial state
   ([interruption and restart](restart.md)).
 - Take `vz_depth` sufficiently deeper than the largest soil depth read out. It is
@@ -355,6 +375,33 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 - Checking that the results do not change when the time error tolerances
   (`vz_tol_*`) are divided by 4 is a simple check of the numerical accuracy.
 
+**Sets of Kosugi parameters for trials** (Table 2 of Tani (2023)[^tani2023]. To try
+a soil with other properties, give all five)
+
+| Set | vz_ks_mmh | vz_thetas | vz_thetar | vz_psim (m) | vz_sigma | Features |
+|---|---:|---:|---:|---:|---:|---|
+| TY (Tatsunokuchi-yama; default) | 180 | 0.370 | 0.230 | −0.200 | 1.60 | the smallest Ks of the three, and a small θs − θr (range that can be stored) |
+| KI (Kiryu) | 6840 | 0.507 | 0.212 | −0.094 | 1.34 | catchment on weathered granite; extremely large Ks |
+| MR (Mettman Ridge) | 1224 | 0.500 | 0.180 | −0.250 | 0.80 | zero-order catchment in Oregon, USA; small σ (steep retention curve) |
+
+The settings of the paper and the results of the reproduction for each are in
+[examples/vz_tani2023](../../../examples/vz_tani2023/en/README.md).
+
+**Conversion from van Genuchten parameters**: when only α and n of the van
+Genuchten model are at hand, σ and ψm of the Kosugi model can be obtained by the
+correspondence that makes the medians of the two models (ψ at S_e = 0.5) equal
+(equations (25) and (26) of Kosugi 1996[^kosugi1996]; fits to 50 soils showed that
+the inflection points also nearly agree). θs, θr and Ks are used as they are.
+
+```math
+m = 1 - \frac{1}{n},\quad
+\sigma^2 = (1 - m)\,\ln\frac{2^{1/m} - 1}{m},\quad
+\psi_m = -\frac{(2^{1/m} - 1)^{1-m}}{\alpha}
+```
+
+The unit of ψm is that of 1/α (cm if α is in 1/cm, so convert it to m). The curves
+of the two models are similar but not the same (Figures 3 to 8 of that paper).
+
 ## Verification and examples
 
 - [test/vzcol](../../../test/vzcol/): one column and one zone. `Check_vzcol.py`
@@ -362,8 +409,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   ΔS = F0 − D, the values of the Kosugi model, agreement of the aggregation by
   zone weights with the cell-by-cell read-out, the balance of rainfall and
   S_total, agreement of the steady solution with a fixed-pressure bottom with
-  quadrature, the difference from tolerances divided by 4, and agreement of the
-  area-average mode.
+  quadrature, the difference from tolerances divided by 4, agreement of the
+  area-average mode, and the trial defaults (a run with the column settings omitted
+  agrees bit for bit with the same values given explicitly and displays the adopted
+  values; a partial set stops).
 - [test/vzzone](../../../test/vzzone/): two columns, three zones (a shared
   column), several outlets with a shared receiving cell and outflow from the
   system. `Check_vzzone.py` tests receiving-cell depth = transfer by the ratios +

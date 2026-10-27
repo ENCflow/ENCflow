@@ -34,6 +34,9 @@ not recommended values for a particular soil.
 | area average | `param_avg.txt` | the base with f_vz_rain = 1 (area average within a column). The rain is uniform |
 | zero soil depth | `param_sd0.txt` | the soil depth of the base replaced by `sd_zero.txt` (3 cells are 0 m) |
 | hydrostatic initial condition | `param_hydro.txt` | 0.5 m deep with 2.5 cm layers, bottom ψ = 0 (f_vz_bottom = 2), initially hydrostatic with the water table at the bottom (vz_wt0 = 0.5 m), no rain for 1 day |
+| trial defaults | `param_dflt.txt` | the base without `&list_vz_column` (defaults: the Kosugi set of Tatsunokuchi-yama TY, initially q0 = 0.1 mm/h, 10 m deep with 2.5 cm layers) |
+| explicit defaults | `param_tyx.txt` | control with the same values as the trial defaults given explicitly |
+| partial set | `param_partial.txt` | only Ks of the Kosugi parameters is given (must stop) |
 
 ## Checks (Check_vzcol.py)
 
@@ -70,6 +73,11 @@ not recommended values for a particular soil.
   ψ = 0, the hydrostatic state with the water table at the bottom is a solution at
   rest with zero flux, so without rain ψ(ζ) = ζ − 0.5 m is kept and the cumulative
   fluxes at all faces stay 0.
+- **Trial defaults**: the run with the column settings omitted agrees byte by byte
+  in all outputs (Log.txt, CSV, vertical profiles) with the run giving the same
+  values explicitly, and the six adopted items (five Kosugi parameters and q0) are
+  displayed with `(default)`. Giving only some of the Kosugi parameters stops with
+  the reason (checked by Run.sh).
 
 ## Running
 

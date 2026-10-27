@@ -468,44 +468,71 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 共有参照柱(物性・格子・初期条件・下端)。小杉パラメータには既定を置かない
-! (原論文の使用値と照合できるまで必須入力。vz_plan.md §8 の 7)
+! 共有参照柱(物性・格子・初期条件・下端)
+!   柱の数 = 設定のある最大の柱番号と、区画の設定が参照する最大の柱番号
+!   (vz_zone_col。未指定なら区画番号)の大きい方(1 以上)。設定のない柱も
+!   区画が参照していれば既定の柱になる(参照されない柱は setup_zones で停止)。
+!   試算用の既定(developer.md §87.7。§62 と同じく採用値を必ず表示する):
+!   小杉パラメータは 5 つとも未指定なら谷(2023)表−2 の竜ノ口山(TY)の組、
+!   一部だけの指定は停止(別の土壌の値の混在を防ぐ)。初期条件が未指定なら
+!   定常重力排水 q0 = 0.1 mm/h
 !----------------------------------------------------------------------
 subroutine setup_columns(vz, list)
   type(t_vzflow), intent(inout) :: vz
   type(t_list_vz), intent(in) :: list
-  integer :: c, nc, nz, ninit
-  real :: depth, dz
+  ! 試算用の小杉パラメータ(谷 2023 表−2 の竜ノ口山 TY: Ks = 5.0e-3 cm/s = 180 mm/h)と
+  ! 初期条件の既定(降雨前の流出率の目安。経験値)
+  real, parameter :: ty_ks_mmh = 180.0, ty_thetas = 0.370, ty_thetar = 0.230
+  real, parameter :: ty_psim = -0.200, ty_sigma = 1.60
+  real, parameter :: q0_default_mmh = 0.1
+  integer :: c, nc, nz, ninit, nset, z
+  real :: depth, dz, ksmmh, ths, thr, psim, sigma, q0mmh
   real(real64) :: ks, psi0, psibot
   logical :: ok
   character(len=8) :: tag
+  character(len=32) :: buf
 
   nc = 0
   do c = 1, vz_ncolmax
-    if (list%vz_ks_mmh(c) <= -9998.0) exit
-    nc = c
+    if (any([list%vz_ks_mmh(c), list%vz_thetas(c), list%vz_thetar(c), list%vz_psim(c), &
+             list%vz_sigma(c), list%vz_depth(c), list%vz_dz(c), list%vz_q0_mmh(c), &
+             list%vz_psi0(c), list%vz_wt0(c), list%vz_psibot(c)] > -9998.0) &
+        .or. list%f_vz_bottom(c) /= 1) nc = c
   end do
-  do c = nc + 1, vz_ncolmax
-    if (list%vz_ks_mmh(c) > -9998.0) then
-      call par_stop("list_vz_column: columns must be numbered 1, 2, ... without gaps (vz_ks_mmh(" &
-                    // itoa(c) // ") is set after a gap)")
+  do z = 1, vz_nzonemax
+    c = list%vz_zone_col(z)
+    if (c <= -9998 .and. list%vz_out_kind(z) > -9998) c = z
+    if (c > vz_ncolmax) then
+      call par_stop("list_vz_zone: vz_zone_col("//itoa(z)//") must be <= "//itoa(vz_ncolmax))
     end if
+    nc = max(nc, c)                   ! 不正な番号(0 以下)は setup_zones が停止
   end do
-  if (nc == 0) call par_stop("list_vz_column: no column is defined (set vz_ks_mmh(1) etc.)")
+  nc = max(nc, 1)
   vz%ncol = nc
   allocate(vz%cols(1:nc))
 
   do c = 1, nc
     write(tag, '("(",i0,")")') c
-    if (list%vz_ks_mmh(c) <= 0.0) call par_stop("list_vz_column: vz_ks_mmh"//trim(tag)//" must be > 0")
-    if (.not. (list%vz_thetar(c) >= 0.0 .and. list%vz_thetar(c) < list%vz_thetas(c) &
-               .and. list%vz_thetas(c) <= 1.0)) then
+    nset = count([list%vz_ks_mmh(c), list%vz_thetas(c), list%vz_thetar(c), list%vz_psim(c), &
+                  list%vz_sigma(c)] > -9998.0)
+    if (nset /= 0 .and. nset /= 5) then
+      call par_stop("list_vz_column: give all five Kosugi parameters of column "//itoa(c) &
+                    //" (vz_ks_mmh, vz_thetas, vz_thetar, vz_psim, vz_sigma) or none of them" &
+                    //" (none = the trial set of Tani 2023, Tatsunokuchi-yama)")
+    end if
+    if (nset == 0) call par_info("vz: column "//itoa(c)//" uses the trial Kosugi set (Tani 2023 Table 2," &
+                                 //" Tatsunokuchi-yama TY); give the values of the site for real use")
+    ksmmh = param_default("vz", "vz_ks_mmh"//trim(tag), list%vz_ks_mmh(c), ty_ks_mmh, " mm/h", unset = -9999.0)
+    ths = param_default("vz", "vz_thetas"//trim(tag), list%vz_thetas(c), ty_thetas, "", unset = -9999.0)
+    thr = param_default("vz", "vz_thetar"//trim(tag), list%vz_thetar(c), ty_thetar, "", unset = -9999.0)
+    psim = param_default("vz", "vz_psim"//trim(tag), list%vz_psim(c), ty_psim, " m", unset = -9999.0)
+    sigma = param_default("vz", "vz_sigma"//trim(tag), list%vz_sigma(c), ty_sigma, "", unset = -9999.0)
+    if (ksmmh <= 0.0) call par_stop("list_vz_column: vz_ks_mmh"//trim(tag)//" must be > 0")
+    if (.not. (thr >= 0.0 .and. thr < ths .and. ths <= 1.0)) then
       call par_stop("list_vz_column: require 0 <= vz_thetar"//trim(tag)//" < vz_thetas"//trim(tag)//" <= 1")
     end if
-    if (.not. (list%vz_psim(c) < 0.0 .and. list%vz_psim(c) > -9998.0)) then
-      call par_stop("list_vz_column: vz_psim"//trim(tag)//" must be given and < 0 (m)")
-    end if
-    if (.not. (list%vz_sigma(c) > 0.0)) call par_stop("list_vz_column: vz_sigma"//trim(tag)//" must be > 0")
+    if (.not. (psim < 0.0)) call par_stop("list_vz_column: vz_psim"//trim(tag)//" must be < 0 (m)")
+    if (.not. (sigma > 0.0)) call par_stop("list_vz_column: vz_sigma"//trim(tag)//" must be > 0")
     depth = param_default("vz", "vz_depth"//trim(tag), list%vz_depth(c), 10.0, " m", unset = -9999.0)
     dz = param_default("vz", "vz_dz"//trim(tag), list%vz_dz(c), 0.025, " m", unset = -9999.0)
     if (.not. (depth > 0.0 .and. dz > 0.0)) call par_stop("list_vz_column: vz_depth and vz_dz must be > 0")
@@ -528,15 +555,15 @@ subroutine setup_columns(vz, list)
       case default
         call par_stop("list_vz_column: f_vz_bottom"//trim(tag)//" must be 1(free drainage) or 2(fixed pressure)")
     end select
-    ks = real(list%vz_ks_mmh(c), real64) / 3.6e6_real64
+    ks = real(ksmmh, real64) / 3.6e6_real64
     ! 格子と物性を先に設定(初期 ψ は仮。定常流束指定ならこのあと解く)
-    call vzcol_init(vz%cols(c), vz%ctl, ks, real(list%vz_thetas(c), real64), &
-                    real(list%vz_thetar(c), real64), real(list%vz_psim(c), real64), &
-                    real(list%vz_sigma(c), real64), real(depth, real64), &
+    call vzcol_init(vz%cols(c), vz%ctl, ks, real(ths, real64), &
+                    real(thr, real64), real(psim, real64), &
+                    real(sigma, real64), real(depth, real64), &
                     real(depth, real64) / real(nz, real64), list%f_vz_bottom(c), psibot, -1.0_real64, ok)
     if (.not. ok) call par_stop("list_vz_column: invalid column geometry"//trim(tag))
     ! 初期条件: 定常重力排水の流束 q0、一様な ψ0、静水圧の地下水面の深さ d_wt の
-    ! いずれか 1 つ
+    ! いずれか 1 つ。どれもなければ q0 の既定
     ninit = count([list%vz_q0_mmh(c) > -9998.0, list%vz_psi0(c) > -9998.0, list%vz_wt0(c) > -9998.0])
     if (ninit > 1) then
       call par_stop("list_vz_column: give only one of vz_q0_mmh"//trim(tag)//", vz_psi0"//trim(tag) &
@@ -545,18 +572,19 @@ subroutine setup_columns(vz, list)
       if (.not. (list%vz_wt0(c) >= 0.0)) call par_stop("list_vz_column: vz_wt0"//trim(tag)//" must be >= 0 (m)")
       call set_hydrostatic_psi(vz%cols(c), real(list%vz_wt0(c), real64))
       cycle
-    else if (list%vz_q0_mmh(c) > -9998.0) then
-      call vzcol_steady_psi(vz%cols(c)%geo, real(list%vz_q0_mmh(c), real64) / 3.6e6_real64, psi0, ok)
-      if (.not. ok) then
-        call par_stop("list_vz_column: vz_q0_mmh"//trim(tag)//" must satisfy 0 < q0 < Ks (and be resolvable)")
-      end if
     else if (list%vz_psi0(c) > -9998.0) then
       if (.not. (list%vz_psi0(c) < 0.0)) call par_stop("list_vz_column: vz_psi0"//trim(tag)//" must be < 0 (m)")
       psi0 = real(list%vz_psi0(c), real64)
     else
-      call par_stop("list_vz_column: give the initial condition vz_q0_mmh"//trim(tag)//" (steady drainage" &
-                    //" flux), vz_psi0"//trim(tag)//" (uniform pressure head) or vz_wt0"//trim(tag) &
-                    //" (depth of a hydrostatic water table)")
+      q0mmh = param_default("vz", "vz_q0_mmh"//trim(tag), list%vz_q0_mmh(c), q0_default_mmh, " mm/h", &
+                            unset = -9999.0)
+      call vzcol_steady_psi(vz%cols(c)%geo, real(q0mmh, real64) / 3.6e6_real64, psi0, ok)
+      if (.not. ok) then
+        call par_stop("list_vz_column: vz_q0_mmh"//trim(tag)//" must satisfy 0 < q0 < Ks (and be resolvable)")
+      end if
+      write(buf, '(es12.4)') psi0
+      call par_info("vz: column "//itoa(c)//" initial psi = "//trim(adjustl(buf))//" m (uniform; steady" &
+                    //" drainage at vz_q0_mmh)")
     end if
     call set_uniform_psi(vz%cols(c), psi0)
   end do
@@ -655,6 +683,11 @@ subroutine setup_zones(vz, p, g, b, list)
   do z = 1, nzn
     c = list%vz_zone_col(z)
     if (c <= -9998) c = z            ! 未指定 = 区画番号と同じ柱
+    if (c > vz%ncol .and. list%vz_out_kind(z) <= -9998 .and. list%vz_zone_col(z) <= -9998) then
+      ! 設定のない区画(柱の数は区画の設定から決めるため、ここで先に止める)
+      call par_stop("list_vz_zone: zone "//itoa(z)//" of fn_vz_zone has no settings (give vz_out_kind(" &
+                    //itoa(z)//"))")
+    end if
     if (c < 1 .or. c > vz%ncol) then
       call par_stop("list_vz_zone: vz_zone_col("//itoa(z)//") refers to an undefined column "//itoa(c))
     end if

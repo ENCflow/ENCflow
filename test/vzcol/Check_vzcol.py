@@ -8,6 +8,8 @@ Python 標準ライブラリのみ。使い方:
   python3 Check_vzcol.py avg    result result_avg       # 面積平均モード(一様雨)と厳密モードの一致
   python3 Check_vzcol.py sd0    result_sd0              # 土層厚 0 のセルを含む区画の集約
   python3 Check_vzcol.py hydro  result_hydro            # 静水圧の初期条件(vz_wt0)が静止解のまま
+  python3 Check_vzcol.py dflt   result_dflt result_tyx Screen_dflt.log
+                                                        # 試算用の既定(小杉パラメータ・初期条件)
 
 base の検定項目:
   (a) 定常期(雨 = q0 = 1 mm/h、t <= 3600 s): 全深さの累積流束 = q0·t、貯留不変
@@ -343,6 +345,36 @@ def check_pair(res1, res2, tol, label):
     check(worst <= tol, "cumulative fluxes agree (max rel diff %.2e <= %.0e)" % (worst, tol))
 
 
+# 試算用の既定(developer.md §87.7)の表示。谷(2023)表−2 の竜ノ口山(TY)の組と q0
+DEFAULT_LINES = ["vz: vz_ks_mmh(1) = 180.0000 mm/h (default)",
+                 "vz: vz_thetas(1) = 0.3700 (default)",
+                 "vz: vz_thetar(1) = 0.2300 (default)",
+                 "vz: vz_psim(1) = -0.2000 m (default)",
+                 "vz: vz_sigma(1) = 1.6000 (default)",
+                 "vz: vz_q0_mmh(1) = 0.1000 mm/h (default)"]
+
+
+def check_dflt(res_d, res_x, screen):
+    """柱の設定なし(param_dflt.txt)が、既定と同じ値を明示した対照(param_tyx.txt)と
+    ビット一致し、採用値を "(default)" 付きで表示すること"""
+    print("== vzcol trial defaults: %s vs %s" % (res_d, res_x))
+    with open(screen) as f:
+        lines = [l.rstrip("\n") for l in f]
+    missing = [l for l in DEFAULT_LINES if l not in lines]
+    check(not missing, "adopted defaults are displayed with (default) (%d lines%s)"
+          % (len(DEFAULT_LINES), "" if not missing else "; missing: " + "; ".join(missing)))
+    check(any("uses the trial Kosugi set" in l for l in lines), "the use of the trial Kosugi set is announced")
+    files = ["Log.txt", "vz_zone.csv", "vz_column.csv"] + \
+        sorted(f for f in os.listdir(res_x) if f.startswith("vzprof_"))
+    differ = []
+    for f in files:
+        with open(os.path.join(res_d, f), "rb") as a, open(os.path.join(res_x, f), "rb") as b:
+            if a.read() != b.read():
+                differ.append(f)
+    check(not differ, "results identical to the explicit values (%d files%s)"
+          % (len(files), "" if not differ else "; differ: " + ", ".join(differ)))
+
+
 def main():
     mode = sys.argv[1]
     if mode == "base":
@@ -357,6 +389,8 @@ def main():
         check_sd0(sys.argv[2])
     elif mode == "hydro":
         check_hydro(sys.argv[2])
+    elif mode == "dflt":
+        check_dflt(sys.argv[2], sys.argv[3], sys.argv[4])
     else:
         sys.exit("unknown mode " + mode)
     if failed:

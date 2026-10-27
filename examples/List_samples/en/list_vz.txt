@@ -20,8 +20,10 @@
 !   Required inputs:
 !     - zone number raster fn_vz_zone (under dir_data; 0 = not applied)
 !     - soil depth (f_sdtype / sd0 / fn_sd in &list_geoinfo; no default)
-!     - Kosugi parameters and initial condition of the columns (no defaults)
 !     - outlet vz_out_kind of each zone (required)
+!   The Kosugi parameters and initial condition of the columns can be omitted;
+!   then trial defaults (the soil of Tatsunokuchi-yama in Tani 2023, steady
+!   gravity drainage at a pre-rain runoff rate of 0.1 mm/h) are displayed and used
 !
 !   Features that cannot be combined in the first version (the run stops):
 !   fn_gwflow, fn_snow, fn_glacier, fn_geomorph, fn_wq, fn_salt, nesting,
@@ -73,16 +75,19 @@
 /
 
 &list_vz_column
-  ! shared reference columns (indexed by the column number c. Consecutive
-  ! 1, 2, ... Up to 50)
-  ! The Kosugi parameters have no defaults (give them from water retention and
-  ! conductivity tests of the soil). The values below are a format example, not
-  ! recommended values for a particular soil
-  vz_ks_mmh(1) = 100.0      ! saturated hydraulic conductivity (mm/h)
-  vz_thetas(1) = 0.5        ! saturated water content
-  vz_thetar(1) = 0.1        ! residual water content
-  vz_psim(1) = -0.5         ! median pressure head psi_m (m. Negative)
-  vz_sigma(1) = 1.5         ! log standard deviation sigma
+  ! shared reference columns (indexed by the column number c. Up to 50. A column
+  ! referred to by a zone whose settings are omitted gets the trial defaults)
+  ! Give all five Kosugi parameters or omit all of them (giving only some stops).
+  ! The defaults are for trials: the set of the soil of Tatsunokuchi-yama (TY) in
+  ! Table 2 of Tani (2023) (values below). For real studies, give them from water
+  ! retention and conductivity tests of the soil. Other trial sets (same table):
+  !   Kiryu KI: 6840.0, 0.507, 0.212, -0.094, 1.34
+  !   Mettman Ridge MR: 1224.0, 0.500, 0.180, -0.250, 0.80
+  !vz_ks_mmh(1) = 180.0     ! saturated hydraulic conductivity (mm/h)
+  !vz_thetas(1) = 0.370     ! saturated water content
+  !vz_thetar(1) = 0.230     ! residual water content
+  !vz_psim(1) = -0.200      ! median pressure head psi_m (m. Negative)
+  !vz_sigma(1) = 1.60       ! log standard deviation sigma
 
   ! depth (m) and layer thickness (m) of the computational column (the depth is
   ! an integer multiple of the layer thickness. Defaults 10 m and 2.5 cm).
@@ -90,13 +95,13 @@
   !vz_depth(1) = 10.0
   !vz_dz(1) = 0.025
 
-  ! initial condition (one of the three):
+  ! initial condition (one of the three. If none, the default vz_q0_mmh = 0.1):
   !   vz_q0_mmh: flux of steady gravity drainage (mm/h). Uniform psi0 with
   !              K(psi0) = q0 (runoff rate before the rain)
   !   vz_psi0  : uniform pressure head (m. Negative)
   !   vz_wt0   : depth of a hydrostatic water table (m. 0 or more).
   !              psi(zeta) = zeta - vz_wt0
-  vz_q0_mmh(1) = 1.0
+  !vz_q0_mmh(1) = 0.1
   !vz_psi0(1) = -1.0
   !vz_wt0(1) = 0.5
 
