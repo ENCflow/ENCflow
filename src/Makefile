@@ -91,7 +91,7 @@ MODESTAMP	= .mode_$(MODE)_$(MPIID)_$(PREC)
 $(OBJS): $(MODESTAMP) ../make.inc
 
 $(MODESTAMP):
-	@rm -f *.o *.mod *.smod .mode_*
+	@rm -f *.o *.mod *.smod .mode_* $(LIB)
 	@touch $@
 
 # ---------------------------------------------------------------

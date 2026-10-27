@@ -219,7 +219,14 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
   Check_mode.sh も実行ファイルがなければ bin/ から自動でリンクを張る。
 - `.mode_$(MODE)_$(MPIID)_$(PREC)` スタンプ: MODE 切替・MPI 実装切替
   (ラッパーの -show 出力のハッシュ)・実数精度(PREC)切替を検出し、
-  混成オブジェクトを防ぐため全再ビルドする。
+  混成オブジェクトを防ぐため全再ビルドする。libencflow.a も消す。
+  - **【実バグ】モード切替後の libencflow.a の混成(2026-10-27 修正)**: スタンプの規則は
+    *.o・*.mod・*.smod を消すが、書庫 libencflow.a を消していなかった。ar rcs は同名の部品を
+    置き換えるだけなので、MPI → serial と切り替えると m_parallel_mpi.o が書庫に残る。
+    libencflow.a をリンクする utils(fault2disp など)が MPI の記号(mpi_barrier_f08_ など)で
+    リンクに失敗した。encflow 本体はオブジェクトを直接リンクするので影響はなかった。規則で
+    $(LIB) も消すようにした。mpi → serial の切替の後に書庫の m_parallel が serial 版だけになり、
+    トップレベルの make(§10 の追随検査)が通ることを確かめた。
 - `$(OBJS): ../make.inc` の依存により、**make.inc の編集は自動で全再ビルド**
   される(-flto の付け外し等も手動 clean 不要)。
 - **残る手動 clean は「serial モードでのコンパイラ本体切替(ifx⇄gfortran 等)」
