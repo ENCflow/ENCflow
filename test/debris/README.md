@@ -7,13 +7,13 @@
 docs/debris_plan.md、developer.md §28)の疎通・保存則の検定です。
 slope_break 地形(tanθ = 0.4 の斜面 → x = 30 m の遷緩点 → 平坦)に
 200 mm/h の降雨を与え、斜面で侵食した土砂が遷緩点下へ運ばれる過程を
-4 つの構成則の組合せで走らせます。定量ベンチマークではなく、
+4 つの構成則の組合せで走らせます(構成 5 は掃流砂との併用)。定量ベンチマークではなく、
 **固体総量の保存・共動更新の恒等・活性(侵食が起き土砂が到達する)**を
 `Check_debris.py` で検定します(§28.3、§28.5〜7)。
 
 ## 構成
 
-共通: 60 m × 20 m(Δx = 1 m)、可動層 sd₀ = 5 m、空隙率 λ = 0.4(C* = 0.6)、
+共通(構成 5 の地形と可動層は下記): 60 m × 20 m(Δx = 1 m)、可動層 sd₀ = 5 m、空隙率 λ = 0.4(C* = 0.6)、
 降雨 200 mm/h、dt = 0.02 s、四周壁(閉領域 = 台帳が閉じる)。
 
 | 構成 | ファイル | E-D 式 `f_dbed` | 抵抗則 `f_dbres` | 時間 | 検定モード |
@@ -22,25 +22,35 @@ slope_break 地形(tanθ = 0.4 の斜面 → x = 30 m の遷緩点 → 平坦)�
 | 2 | `param_eg.txt` | 2: 江頭・芦田 (1992) | 2: 江頭構成則(d50 = 0.05 m、反発係数 0.85) | 30 s | eg |
 | 3 | `param_tk.txt` | 3: 高橋・中川 (1991) 式 (12)(27) | 3: 石礫型 式 (22)〜(25) | 60 s | eg |
 | 4 | `param_tkwet.txt` | 3 + 間隙水連行 `f_dbwet = 1`(渓床飽和 s_b) | 3 | 60 s | wet |
+| 5 | `param_fluv.txt` | 1 + 掃流砂 `f_fluvial = 1`(芦田・道上、d50 = 2 mm) | 1 | 30 s | fluv |
+
+構成 5 は、土石流 E-D と掃流砂の併用の検定です。地形は slope_break を転置した
+20 × 60 セルの斜面(`z_fluv.txt`。`make_fluv.py` が生成。y < 40 m で tanθ = 0.4、
+下流は平坦)で、流れが j 方向の帯の界面を横切ります。可動層は 2 mm と薄く、
+掃流砂の供給量制限が帯の界面で効きます。土石流 E-D が帯内の z・sd を動かした後、
+掃流砂の前にハロを交換すること(developer.md §28.13 の実バグの回帰検定)を、
+`Run_MPI.sh` が np = N と np = 1 の state.dat のバイト一致で確かめます(合否。逐次
+ビルドとの比較は他の構成と同じく警告)。
 
 検定項目: (1) 固体総量保存 |Σhs + (1 − λ)Σ(z − z₀)| < 1e-9(E-D の反対称
 交換の帰結)、(2) 共動更新の恒等 max|(sd − sd₀) − (z − z₀)| < 1e-10(z と
 土層厚 sd が同じ量だけ動く)、(3) 活性: 斜面侵食 min dz < −1e-3 m かつ
-平坦部への土砂到達(構成 1 は遷緩点下の堆積 max dz、eg モードは max hs)、
+平坦部への土砂到達(構成 1・5 は遷緩点下の堆積 max dz、eg モードは max hs)、
 (4) wet モードのみ水台帳 |Σh − 降雨総量 + λ s_b Σdz| < 1e-9(連行した
 間隙水の分だけ地表水が増える)。
 
 | ファイル | 内容 |
 |---|---|
-| `Check_debris.py <save> [eg\|wet]` | 上記の検定(`save*/state.dat` を読む) |
+| `Check_debris.py <save> [eg\|wet\|fluv]` | 上記の検定(`save*/state.dat` を読む。fluv は構成 5 の地形と sd₀ = 2 mm で (1)〜(3)) |
+| `make_fluv.py` | 構成 5 の地形 `z_fluv.txt` の生成(同梱。定数は `Check_debris.py` の fluv モードと対で保守) |
 | `Fig.py` | 下の図 `figs/*.png` |
 
 ## 実行
 
 ```bash
 make
-./Run.sh          # 4 構成を順に実行し、それぞれ Check。すべて PASS で PASS(数秒)
-./Run_MPI.sh 4    # MPI。state.dat が逐次とバイト一致(-O2 厳密数学ビルドで)
+./Run.sh          # 5 構成を順に実行し、それぞれ Check。すべて PASS で PASS(数秒)
+./Run_MPI.sh 4    # MPI。state.dat が逐次とバイト一致(-O2 厳密数学ビルドで)。構成 5 は np = 1 とも比較
 python3 Fig.py    # figs/profile.png, figs/map.png(引数 en で英語版を en/figs/ に)
 ```
 
@@ -71,11 +81,15 @@ python3 Fig.py    # figs/profile.png, figs/map.png(引数 en で英語版を en/
 | 2 江頭 | −4.6e-13 | 4e-14 | −0.33 cm / max hs 0.09 cm | — |
 | 3 高橋・中川 | 3.0e-13 | 1.9e-13 | −0.50 cm / max hs 0.15 cm | — |
 | 4 + 間隙水連行 | 2.5e-13 | 7e-14 | −3.0 cm / max hs 2.6 cm | 1.5e-13 |
+| 5 + 掃流砂 | −4.4e-13 | 4e-14 | −0.20 cm / 遷緩点下堆積 +0.15 cm | — |
 
-- 固体総量と共動更新は 4 構成とも機械精度で成り立ちます。E-D の
+- 固体総量と共動更新は 5 構成とも機械精度で成り立ちます。E-D の
   交換量は時刻 n の場から 2 パスで求めて適用する構造(§28.2 の OpenMP
   競合の実バグの教訓)で、np = 1, 2, 4 の state.dat は逐次とバイト一致
   します(-O2 厳密数学ビルド。-Ofast ではビルド間に ULP 差。§28.5)。
+- 構成 5 は 2026-10-27 に追加しました。修正前の実行ファイルでは、np = 2・3・4 の
+  state.dat が np = 1 と食い違いました(developer.md §28.13)。修正後は、-O2 と既定の
+  -Ofast のビルドで np = 1, 2, 4 が逐次とバイト一致し、-fcheck=all の np = 2 も PASS します。
 - このケースは**疎通と保存則**の検定です。構成則の定量的な妥当性は
   文献照合の残作業として debris_plan.md に記録されています(未成熟
   土石流域の係数、掃流状域の堆積式など)。
@@ -86,4 +100,5 @@ python3 Fig.py    # figs/profile.png, figs/map.png(引数 en で英語版を en/
 
 - [docs/users_guide/geomorph.md](../../docs/users_guide/geomorph.md) — 土石流の設定(`f_dbed`、`f_dbres`、`f_dbwet`、停止 `f_dbstop`)
 - [docs/debris_plan.md](../../docs/debris_plan.md) — 設計全文と文献照合の残作業
-- developer.md §28.1〜28.7(構成、実バグ、検証記録、江頭・高橋中川則、間隙水連行)
+- developer.md §28.1〜28.7(構成、実バグ、検証記録、江頭・高橋中川則、間隙水連行)、
+  §28.13(掃流砂との併用のハロの実バグ)

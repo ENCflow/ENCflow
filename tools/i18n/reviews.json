@@ -995,8 +995,8 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "8ec2c18d9e7514f0b5d02f550cc97ac92f5296f6ba4caf040a20e41b1f8b862c",
-      "target_sha256": "efd2c4d958b12496cac30d0a2d99f437d172e24f778b65d0c512ba7d1cdd06ff",
+      "source_sha256": "14b8b259b2abf19bf4290309796cbf31460c5d5e67690fc5ce7a6f71a58c59a4",
+      "target_sha256": "208eec27c7c6317fb1084b53e03cf0d048e947b66a0eb51aa5c4ed54e838db0b",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -1346,11 +1346,11 @@
     {
       "source": "test/debris/README.md",
       "target": "test/debris/en/README.md",
-      "source_sha256": "9d05652424c9ec9aae45ab377104464310bafaa648ca5a11dec2c8d4ea3a5cd5",
-      "target_sha256": "60ae05a5df954cdb6c7646e1517bd4d28b2f773869fbf5d0a003fe9e35e69956",
+      "source_sha256": "6c6c30cfbea684a149d92111753c35ff2fd1c7e2f749656308e74bec4a49c111",
+      "target_sha256": "87c5fcd29be312e2bbc6978bcac325fe8a68d0fa191b00be6d69236af14f5306",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "test/debris/figs/map.png",
