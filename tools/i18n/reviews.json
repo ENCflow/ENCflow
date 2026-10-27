@@ -266,8 +266,8 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "ec48fbc34b76f1d55ecc5d6d5062f5f5e0946496fcd4c63a75e48352309767cc",
-      "target_sha256": "d2e541b511b6e165d61f7d047837c18be8791a3bb1ebd9ac3f25dd30a30ca818",
+      "source_sha256": "179a900abf279b550335f166af890891c71ed7e94f9d2638a590b1e3aea82429",
+      "target_sha256": "f3b28aea728187da1a1404098c496031fbbe219499be2e184aabf46fc7b0476b",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -419,8 +419,8 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "d8272229324648cf88a46829fb26b9c06cb06323a33a0414abdef3fd6f390562",
-      "target_sha256": "5f8198018e32ec8d73141cb43b43ef810db1518a1df08161e1028360a1b4f5c2",
+      "source_sha256": "6ab32c9a173a8fe524ca3962701ffecc5f50c415af19766183fb073946d4a847",
+      "target_sha256": "d67bf87f78f9dd3613f3befc933b74ae43eb1755d9264ea053cd60c8ceec3af4",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -986,8 +986,8 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "9c528dfbcc1ac15b4d9c37f999076b7d0c8d904679673011cbf80e2b38081bb2",
-      "target_sha256": "6bd1617e57383e78449d24ff352606f72b105c695328ea3a46a5992b4a0d8b9b",
+      "source_sha256": "8ec2c18d9e7514f0b5d02f550cc97ac92f5296f6ba4caf040a20e41b1f8b862c",
+      "target_sha256": "efd2c4d958b12496cac30d0a2d99f437d172e24f778b65d0c512ba7d1cdd06ff",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -1571,8 +1571,8 @@
     {
       "source": "test/hillsoil/README.md",
       "target": "test/hillsoil/en/README.md",
-      "source_sha256": "03ed387f62dcd26270247dc6498e9597ed186579dd50760bc20945b781f3e324",
-      "target_sha256": "371300c5d7e9b2b57e0a2ce1484fbfe3ce42ba34b71fa5e65bcbca485d75d1ea",
+      "source_sha256": "ee786958ed69f5feb83bcee0ea051869993fc497ab7d021ea515774bc78fa5a0",
+      "target_sha256": "2184c6ce568e2b1d1d173e20b974ceb5bd1629e2d643f7c72027f281df9325ed",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"

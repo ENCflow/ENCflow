@@ -162,7 +162,10 @@ required; give bare rock as a zero soil-depth file. The stability condition is
 the same as before (the effective diffusion coefficient does not exceed
 `creep_d`). Combined with soil production `f_wthr`, the soil made by weathering
 is carried down the slopes into the valleys (hillslope supply to mountain
-streams; docs/mountain_stream_plan.md §5, in Japanese).
+streams; docs/mountain_stream_plan.md §5, in Japanese). In the steady state
+under uplift U, the soil depth is H_ss = sd* ln(W0/U) and the cross-slope
+curvature of the hillslope is −U/D_eff (D_eff = D (1 − e^{−H_ss/H_c})); C2 of
+[test/hillsoil](../../../test/hillsoil/en/README.md) checks this.
 
 **Outputs for this section**: landform change in `Z0001...` (`f_out_z=1`) and `Sd0001...`. The process is slow, so match the morphological acceleration morfac with `dt_file` ([Output and monitoring](#output-and-monitoring)).
 
@@ -1465,4 +1468,5 @@ record of τ_b in steep uniform flow) and the example
 amount and timing of supply, the initial cover and the retreat of a step), and
 [test/hillsoil](../../../test/hillsoil/en/README.md) (soil production by
 weathering: analytical solutions with a uniform and a distributed (`fn_wthr`)
-rate, cells with multiplier 0 unchanged).
+rate, cells with multiplier 0 unchanged, and the steady hillslope of uplift,
+weathering and depth-dependent creep).

@@ -142,7 +142,9 @@ developer.md §62。
 数えられます。土層厚(`sd0` または `fn_sd`)が必要で、裸岩は土層厚 0 の分布で
 与えます。安定条件は従来と同じです(実効の拡散係数は `creep_d` 以下)。土層生成
 `f_wthr` と組むと、風化でできた土層が斜面を下って谷へ運ばれます(山地渓流の斜面
-供給。docs/mountain_stream_plan.md §5)。
+供給。docs/mountain_stream_plan.md §5)。隆起 U の下の定常では、土層厚が
+H_ss = sd* ln(W0/U)、斜面の横断の曲率が −U/D_eff(D_eff = D (1 − e^{−H_ss/H_c}))に
+なります([test/hillsoil](../../test/hillsoil/) の C2 が検定しています)。
 
 **この節に関係する出力**: 地形の変化は `Z0001…`(`f_out_z=1`)と `Sd0001…`。ゆっくりした過程なので、地形時間の加速 morfac と `dt_file` を合わせて出します([出力・確認](#出力確認))。
 
@@ -1169,4 +1171,5 @@ docs/karst_plan.md(developer.md §86)。
 被覆の準定常、研磨の山形、閉じた箱の保存、裸岩からのリスタート往復、隆起の下の
 定常縦断形(谷頭の給砂あり・なし)、急勾配の等流の τ_b の記録)と例題 [examples/bedrock_cover](../../examples/bedrock_cover/)
 (給砂の量と時期・初期の被覆・段差の後退)、[test/hillsoil](../../test/hillsoil/)
-(風化による土層生成: 一様・分布 `fn_wthr` の解析解、倍率 0 のセルの不変)。
+(風化による土層生成: 一様・分布 `fn_wthr` の解析解、倍率 0 のセルの不変、隆起・風化・
+深さ依存クリープの定常斜面)。

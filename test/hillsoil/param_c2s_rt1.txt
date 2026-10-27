@@ -1,0 +1,79 @@
+!======================================================================
+! hillsoil: 構成 c2s のリスタート分割の前半(0 → 500 s。save_c2s_rt へ保存)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 500
+  dt_disp = 500
+  dt_file = 500
+  dt_recrd = 500
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result_c2s_rt1'
+  dir_save = 'save_c2s_rt'
+  f_state_save = 1          ! 終了時の状態を保存(Check_hillsoil.py が z・sd を読む)
+  f_check_cfl = 1
+  f_output_mode = 2         ! bil(単精度。検定は最後の 2 回の Z で定常性を見る)
+  f_out_z = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'c2_h.txt'     ! 渓流は等流水深 0.3 m(make_init.py c2h)
+  v0 = 1.120351             ! 等流流速(make_init.py c2q。南向き)
+/
+
+&list_geoinfo
+  lx = 11.0
+  ly = 24.0
+  nx = 11
+  ny = 24
+  f_ztype = 1
+  fn_z = 'c2_z.txt'         ! 渓流の底と平らな台地(make_init.py c2z)
+  f_rntype = 0
+  rn0 = 0.04
+  f_sdtype = 1
+  fn_sd = 'c2_sd.txt'       ! 渓流 0、斜面 0.3 m(make_init.py c2sd)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0         ! 毎ステップ更新
+  morfac = 400.0            ! dts = 40 s(1000 にすると渓流の掃流砂の dzmax の制限が働き崩れる)
+  f_fluvial = 1             ! 渓流の掃流砂(斜面は乾いたまま)
+  f_qbform = 1
+  fluv_d50 = 0.01
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+  f_creep = 1
+  creep_d = 2.3817e-5       ! クリープ拡散係数 D (m2/s)
+  creep_hstar = 0.3         ! 深さ依存クリープの減衰厚 H_c (m)
+  f_wthr = 1
+  wthr_p0 = 1.893456e8      ! W0 = 6e-6 m/s = 3U (mm/kyr)
+  wthr_sdstar = 0.5
+  fn_wthr = 'c2_hill.txt'   ! 渓流のセルは風化しない(倍率 0)
+  f_uplift = 1
+  uplift0 = 63115.2         ! U = 2e-6 m/s (mm/yr)
+  fn_uplift = 'c2_hill.txt' ! 渓流のセルは隆起しない(倍率 0 = 斜面の基準面)
+/
+
+&list_bound_edge
+  f_bc_s = 1                ! 南辺は自由流出(渓流の出口)
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 6, 1
+  inflow_val(1:2,1,1) = 0, 0.336105
+  inflow_val(1:2,2,1) = 9999, 0.336105
+  inflow_dist(1) = 0
+/
