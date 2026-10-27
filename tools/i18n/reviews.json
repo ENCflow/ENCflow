@@ -266,8 +266,8 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "1546d38a841a477bb7564efe0aeabbc1f35f3bf36c98f046fa5cf7b300f93c39",
-      "target_sha256": "200fb30b745ee2396f8f8ac336ac095628c5d66464d02e8a94cce938438868c8",
+      "source_sha256": "78f321795b41699230acfc3f3e070b4c3f860871d7a3758587b90142a11ee313",
+      "target_sha256": "b6c22fba49021c9374f333844eb26f4abe1bdbe1aaf7f744e0f947c8d9fc3e21",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -986,11 +986,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "a52066d9503384b4cfc33b2ccdd92ced5fe12a94e8718502594e5a4d5d7e039a",
-      "target_sha256": "e604dd07ac6918a88a028f5228835b3dc4fd0cdad0aa94c99374affdfc64f3da",
+      "source_sha256": "cdcd08a3be677d3cc5fe52a61c7e0fe155322054a365b71b5fdc1941e5fc9371",
+      "target_sha256": "c6df2031b14dda10ea5bedb3ffacebd838d345cf38b93d64442c87b1ea027ef7",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-26"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "test/avalanche/README.md",
@@ -1886,8 +1886,8 @@
     {
       "source": "test/sedfeed/README.md",
       "target": "test/sedfeed/en/README.md",
-      "source_sha256": "1a4d2b364df8b691f81b5a614b3666cdc9df92b21085bf08e1f6ed3cb21efd50",
-      "target_sha256": "98b35b889573b4b2b97c18168dceef06773bb4cfe72fecb81f749ca1679a19e7",
+      "source_sha256": "9d2763644064f878eaa4309eedaaa679d64a5fe0e5ca431d5704cf5a03b0102c",
+      "target_sha256": "b10cd8e4aa194cd5bc19fa87501039877b5c58848985a3d6bb1c040da907e73a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"

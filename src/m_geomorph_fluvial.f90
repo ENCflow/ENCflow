@@ -137,6 +137,8 @@ module subroutine init_fluvial(gm, p, g, list)
   call require_work(gm, g)
   ! 供給量制限係数(帯±ハロ。1 = 制限なし。自帯以外は交換で埋まる)
   allocate(gm%flv%fdon(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 1.0)
+  ! 開境界から出た掃流砂の台帳の行部分和(§88.12。集計は開いた面があるときだけ)
+  allocate(gm%flv%voutrow(dcp%js:dcp%je), source = 0.0_real64)
   ! 二次流の横断流速比(帯±ハロ。有効時のみ)
   if (gm%flv%f_sec) allocate(gm%flv%rsec(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
 end subroutine
@@ -541,7 +543,7 @@ module subroutine apply_edge_flux(gm, g, s, dts)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
-  integer :: i, j, k, in, jn
+  integer :: i, j, k, in, jn, istep
   real :: dv8, dz, cap, fx, winv, qk, fd, vout, vcap
   integer :: nlim
   real :: vleak
@@ -709,6 +711,39 @@ module subroutine apply_edge_flux(gm, g, s, dts)
   gm%flv%nlim = gm%flv%nlim + nlim
   if (have_sf) gm%fin%vfree = gm%fin%vfree + vfree
   gm%flv%vleak = gm%flv%vleak + vleak
+
+  ! --- 台帳: 開境界を通った掃流砂の正味の固体体積(流出 − 流入。§88.12。結果は変えない) ---
+  !   開いた面は領域の枠(bc_open_face)にしかないので、枠に接するセルだけを見る(枠の行は
+  !   全列、ほかの行は i = 1 と nx_g)。ループ 2 と同じく、流出は供給量制限の後の q × fdon、
+  !   流入(容量給砂。入口の持ち出しは負の給砂 = 流出)は q のまま。壁の面のスロットは書き手が
+  !   0 にしている(§19.10)ので、枠外に向く面の和が開境界の正味の出入りになる。行ごとの
+  !   部分和(par_sum_rows で決定的に集計)。掃流砂が無効なら確保されない
+  if (bcs%have_open_bc .and. allocated(gm%flv%voutrow)) then
+    !$omp parallel do schedule(static) private(i, j, k, in, jn, istep, qk, vout)
+    do j = dcp%js, dcp%je
+      istep = 1
+      if (j /= 1 .and. j /= dcp%ny_g) istep = max(1, dcp%nx_g - 1)
+      do i = 1, dcp%nx_g, istep
+        if (i < g%wx(1,j) .or. i > g%wx(2,j)) cycle
+        if (g%x(i,j) <= 0) cycle
+        if (g%sw(i,j) > 0) cycle
+        vout = 0.0
+        do k = 1, 8
+          in = i + din(k)
+          jn = j + djn(k)
+          if (in >= 1 .and. in <= dcp%nx_g .and. jn >= 1 .and. jn <= dcp%ny_g) cycle
+          qk = sign_e(k) * gm%wrk%q(ke(k), i+die(k), j+dje(k))
+          if (qk > 0.0) then
+            vout = vout + qk * gm%flv%fdon(i,j)
+          else
+            vout = vout + qk
+          end if
+        end do
+        if (vout /= 0.0) gm%flv%voutrow(j) = gm%flv%voutrow(j) + real(vout * dts, real64)
+      end do
+    end do
+    !$omp end parallel do
+  end if
 
 end subroutine
 

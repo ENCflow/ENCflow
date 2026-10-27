@@ -13,11 +13,14 @@
 #     (6) クリープとの併用(nofeed_creep。creep_d = 1e-30 で 1 回の更新の変化は z の ULP 未満):
 #         河床が nofeed とビット一致
 #         (クリープが開境界の掃流砂の流出を再集計しないこと。developer.md §19.10)
-import sys, os, struct
+#     (7) 開境界の掃流砂の台帳(developer.md §88.12): 給砂なし・容量給砂の構成(nofeed・feed1・
+#         feed05)で (1 − λ) Σ(z − z0) A + 正味の流出(Screen_<構成>.log の
+#         「net bed load out through open boundaries」)= 0 が相対 TOL_NET
+import sys, os, struct, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_init import NX, NY, DX, J1, J2, X1, X2, S, N
 
-DZ_NOFEED, DZ_FEED1, TOL_LEDGER, TOL_CEQ = 0.2, 0.03, 1.0e-9, 0.01
+DZ_NOFEED, DZ_FEED1, TOL_LEDGER, TOL_CEQ, TOL_NET = 0.2, 0.03, 1.0e-9, 0.01, 1.0e-8
 LAMBDA, MORFAC_QB, QB, TT_QB = 0.4, 10.0, 0.0005, 1200.0
 ESA, STAUSC, SGRAV, DSUSP = 1.0e-4, 0.05, 1.65, 0.0002
 
@@ -116,6 +119,19 @@ g6 = dzc == 0.0
 print("(6) クリープ併用(creep_d = 1e-30): nofeed との max|Δz| = %.2e m (ビット一致) : %s"
       % (dzc, "PASS" if g6 else "FAIL"))
 ok = ok and g6
+
+worst, nets = 0.0, []
+for tag in ("nofeed", "feed1", "feed05"):
+    zt = load_state_z(tag)
+    vol = sum((zt[j - 1][i] - z0[j - 1][i]) for j in range(1, NY + 1) for i in range(NX)) * DX * DX * (1.0 - LAMBDA)
+    log = open("Screen_%s.log" % tag, encoding="utf-8", errors="replace").read()
+    net = sum(float(v) for v in re.findall(r"open boundaries \(out - in\)\s+(\S+) m3", log))
+    nets.append(net)
+    worst = max(worst, abs(vol + net) / max(abs(net), 1.0e-30))
+g7 = worst < TOL_NET and min(nets) > 0.0
+print("(7) 開境界の掃流砂の台帳: 正味の流出 %s m3、(1−λ)Σ(z−z0)A + 流出 の相対差 max %.1e (< %.0e) : %s"
+      % ("・".join("%.4f" % v for v in nets), worst, TOL_NET, "PASS" if g7 else "FAIL"))
+ok = ok and g7
 
 print("=== sedfeed checks %s ===" % ("PASS" if ok else "FAIL"))
 sys.exit(0 if ok else 1)

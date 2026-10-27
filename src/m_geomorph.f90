@@ -51,7 +51,7 @@ module m_geomorph
   use list_geomorph, only : t_list_geomorph, list_geomorph_read
   use list_wave, only : t_list_wave, list_wave_read   ! 波浪条件(沿岸漂砂。§84.15)
   use m_parallel, only : par_info, par_warn, par_stop, dcp, par_halo_cell, &
-                         par_allreduce_max
+                         par_allreduce_max, par_sum_rows
   use m_util, only : itoa, rtoa, param_default
   implicit none
   private
@@ -151,6 +151,8 @@ module m_geomorph
     real :: vfeed = 0.0              ! 区間流入の掃流砂源泉 inflow_qb で河床に加えた固体体積 (m3。ランク局所)
     real :: vcfeed = 0.0             ! 容量給砂(f_bcfeed)で流入面から供給した固体体積 (m3。ランク局所)
     real :: vleak = 0.0              ! 岩盤床クリップで失った土砂体積 (m3)(累計)
+    real(real64), allocatable :: voutrow(:)  ! 開境界を通った掃流砂の正味の固体体積(流出 − 流入)
+                                     !   の行部分和 (m3。台帳。js..je。par_sum_rows で決定的に集計。§88.12)
   end type
 
   type t_bank
@@ -1424,6 +1426,8 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
+  real(real64) :: vbout
+  character(len=160) :: msg
   ! 底層 hb の私有 save と台帳報告(契約5。無効時は何もしない)
   if (gm%f_bedslide > 0) call dispose_bedslide(gm, p, g, s)
   ! 定着度 a・基準高の私有 save と台帳報告(契約5)
@@ -1455,6 +1459,16 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (gm%flv%vfeed > 0.0) then
     call par_warn("geomorph: bed-load feed (inflow_qb) added " // rtoa(gm%flv%vfeed) &
                   // " m3 (solid) to the inflow cells")
+  end if
+  ! 開境界を通った掃流砂の正味の台帳(流出 − 流入。§88.12。全域の決定的な総和。確保は
+  ! 掃流砂の有効時 = 全ランク同一なので par_sum_rows の collective 条件を満たす)
+  if (allocated(gm%flv%voutrow)) then
+    call par_sum_rows(gm%flv%voutrow, vbout)
+    if (vbout /= 0.0_real64) then
+      write(msg, '(a,es16.9,a)') "geomorph: net bed load out through open boundaries (out - in) ", &
+                                 vbout, " m3 (solid)"
+      call par_info(trim(msg))
+    end if
   end if
   if (gm%flv%vleak > 1.0e-9) then
     call par_warn("geomorph: bedrock floor clip caused a sediment budget imbalance of " &
@@ -1501,6 +1515,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%wav%hs2)) deallocate(gm%wav%hs2, gm%wav%hm, gm%wav%hm2)
   if (allocated(gm%wav%val)) deallocate(gm%wav%val)
   if (allocated(gm%flv%fdon)) deallocate(gm%flv%fdon)
+  if (allocated(gm%flv%voutrow)) deallocate(gm%flv%voutrow)
   if (allocated(gm%flv%rsec)) deallocate(gm%flv%rsec)
   if (allocated(gm%fix%zref)) deallocate(gm%fix%zref)
   if (allocated(gm%dbr%fx)) deallocate(gm%dbr%fx)

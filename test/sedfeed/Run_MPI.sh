@@ -12,7 +12,7 @@ python3 "$sdir/make_init.py" h > hinit.txt
 export ENCFLOW_EXPECT_NP="$NP"
 set -o pipefail
 for c in nofeed feed1 feed05 qb cseq nofeed_creep; do
-    mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt | tee -a Screen.log || exit 1
+    mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt 2>&1 | tee Screen_$c.log | tee -a Screen.log || exit 1
 done
 set +o pipefail
 echo ""

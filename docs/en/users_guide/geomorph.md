@@ -1373,6 +1373,13 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   "slide min Fs = ..." (run minimum safety factor), "splash exported
   sediment volume = ..." (volume exported by dry erosion), "bedslide plunge
   speeds ... / subcycles total ...".
+- The net solid volume of bed load through the open boundaries (out − in;
+  the inflow of the capacity feed is subtracted) is printed at the end as the
+  information "net bed load out through open boundaries (out - in) ..." (the
+  total over all ranks; shown when the amount through the open edges is not
+  0). In configurations where only bedload changes the bed, (1 − λ) Σ(z − z0)
+  A = feed by inflow_qb − this value closes
+  ([test/sedfeed](../../../test/sedfeed/en/README.md), check 7).
 - There is no cumulative sediment CSV; derive the budget from the fields
   as below.
 

@@ -1091,6 +1091,11 @@ docs/karst_plan.md(developer.md §86)。
   失われた体積。供給量制限の導入後は丸め誤差分しか出ない)、「slide min Fs = …」(期間
   最小の安全率)、「splash exported sediment volume = …」(乾式侵食で
   系外へ出た体積)、「bedslide plunge speeds … / subcycles total …」。
+- 開境界を通った掃流砂の正味の固体体積(流出 − 流入。容量給砂の流入を差し引く)は、終了時の
+  情報「net bed load out through open boundaries (out - in) …」に出ます(全ランクの合計。
+  開いた辺を出入りした量が 0 でなければ表示)。掃流砂だけが河床を動かす構成では、
+  (1 − λ) Σ(z − z0) A = inflow_qb の給砂 − この値 で閉じます
+  ([test/sedfeed](../../test/sedfeed/) の検定 7)。
 - 土砂の累積収支 CSV はありません。収支は下の「読み方」の式で
   分布から求めます。
 
