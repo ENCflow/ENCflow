@@ -400,7 +400,10 @@ production rates 0.01 to 0.1 mm/yr and $`s_*`$ (`wthr_sdstar`, default
 **Uplift.** $`z \mathrel{+}= U\,\Delta t_s`$ ($`s_d`$ unchanged: the bedrock
 rises as a rigid body). $`U`$ (`uplift0`, default 1 mm/yr) is the lower end
 of the representative values of orogenic belts; negative values are
-subsidence. Sea-mask cells are the base level and are excluded.
+subsidence. Sea-mask cells are the base level and are excluded. With
+`fn_uplift`, the rate becomes $`U f_u`$ with a cell-wise multiplier
+distribution (0 at the outlet cells fixes the base level, negative values
+lower it; differential uplift of fault blocks can also be given).
 Long-term landscape evolution is meant to be run as "representative
 hydrology repeated × MORFAC × restart chains", the CAESAR-Lisflood style
 [^coulthard13] (developer.md §32).
@@ -562,6 +565,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | spl_strata | none | table of horizontal strata (bottom elevation, erodibility factor) | **given** hard/soft contrast of the stratigraphy; factor 0 = cap rock |
 | wthr_p0 / wthr_sdstar | 50 mm/kyr / 0.5 m | soil production rate / decay depth (§7) | **literature value** middle of the published range of the Heimsath function[^heimsath97] |
 | uplift0 | 1 mm/yr | uplift rate | **customary value** lower end of orogenic belts |
+| fn_uplift | none (1 everywhere) | distribution of the uplift multiplier | **given** fixed (0) or falling (negative) base level, fault blocks |
 | dissol_ceq / dissol_rho | 100 mg/L / 2500 kg/m³ | effective dissolution capacity / rock density (§7) | **literature value** representative CaCO₃ concentration of recharge in limestone areas[^white84] and the density of limestone. k_d = 4e-5 m/m, i.e. 40 mm/kyr for a recharge of 1 m/yr (published range 20-100)[^gabrovsek09] |
 | dissol_src / dissol_sink | 1 / 0 | water source / sink term | **method** 1: infiltration, 2: rainfall on the ground, 3: infiltration + runoff on bare rock. The sink term is the inlet inflow of the conduit continuum layer |
 | dissol_fsurf / dissol_sdsurf | 0.3 / 0.1 m | capacity ratio of the runoff in the surface source / soil thickness counted as bare rock | **literature value** ratio of rain on bare rock (50-80 mg/L) to recharge under soil (100-300) / **numerical setting** |

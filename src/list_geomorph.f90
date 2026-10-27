@@ -262,6 +262,9 @@ module list_geomorph
     real :: wthr_sdstar = 0.5        ! 生成の減衰深 sd* (m)
     integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
     real :: uplift0 = -9999.0        ! 隆起速度 (mm/yr)。未指定 = 既定 1.0(§62)
+    character(len=256) :: fn_uplift = ""  ! 隆起速度の倍率の分布ファイル(§88。未指定 = 全セル 1)。
+                                     ! 隆起速度 = uplift0 × 倍率。出口のセルを 0 にすれば基準面が
+                                     ! 固定され、負にすれば基準面の低下を与えられる
     integer :: f_rockinc = 0         ! 流水による岩盤下刻(0:無効, 1:有効。§88。f_fluvial=1 が必須)。
                                      ! 岩盤面 R = z − sd を剥離・研磨で下げる。被覆(可動層 sd)が
                                      ! 露出率 exp(−sd/H*) で下刻を抑え、掃流砂の流出に利用可能率
@@ -428,6 +431,7 @@ subroutine list_geomorph_read(p, list)
   real :: wthr_p0, wthr_sdstar
   integer :: f_uplift
   real :: uplift0
+  character(len=256) :: fn_uplift
   integer :: f_rockinc
   real :: rock_kp, rock_tauc, rock_m, rock_beta, rock_hstar
   character(len=256) :: fn_rock
@@ -460,7 +464,7 @@ subroutine list_geomorph_read(p, list)
                            db_mu, db_xi, db_tauy, f_dbcurv, &
                            fn_dbinit, db_reltime, db_relsat, &
                            f_slide, slide_c, slide_phi, slide_gamma, &
-                           f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0, &
+                           f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0, fn_uplift, &
                            f_rockinc, rock_kp, rock_tauc, rock_m, rock_beta, rock_hstar, fn_rock, &
                            f_dissol, dissol_ceq, dissol_rho, dissol_src, dissol_sink, &
                            dissol_fsink, dissol_fres, dissol_lat, dissol_fsurf, dissol_sdsurf, fn_dissol, &
@@ -574,6 +578,7 @@ subroutine list_geomorph_read(p, list)
   wthr_sdstar = list%wthr_sdstar
   f_uplift = list%f_uplift
   uplift0 = list%uplift0
+  fn_uplift = list%fn_uplift
   f_rockinc = list%f_rockinc
   rock_kp = list%rock_kp
   rock_tauc = list%rock_tauc
@@ -719,6 +724,7 @@ subroutine list_geomorph_read(p, list)
   list%wthr_sdstar = wthr_sdstar
   list%f_uplift = f_uplift
   list%uplift0 = uplift0
+  list%fn_uplift = fn_uplift
   list%f_rockinc = f_rockinc
   list%rock_kp = rock_kp
   list%rock_tauc = rock_tauc

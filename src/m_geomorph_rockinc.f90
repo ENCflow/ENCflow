@@ -250,7 +250,7 @@ end function
 
 !----------------------------------------------------------------------
 ! 分布ファイル(全域の行列)を rank0 が読み、帯±ハロへ配る(方式 2。値の検査は
-! 呼び出し側。fn_rock)。f_dissol の read_solmap と同じ経路
+! 呼び出し側。fn_rock・fn_uplift)。f_dissol の read_solmap と同じ経路
 !----------------------------------------------------------------------
 module subroutine read_cellmap(p, g, fn, a)
   type(t_sysparam), intent(in) :: p

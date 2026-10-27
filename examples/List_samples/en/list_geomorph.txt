@@ -385,6 +385,10 @@
   !f_uplift = 1             ! uplift
   !uplift0 = 1.0            ! uplift rate (mm/yr). Unspecified = default 1.0
                             !   (negative = subsidence)
+  !fn_uplift = 'uplift.txt' ! distribution of the uplift multiplier (uplift rate =
+                            !   uplift0 × multiplier. Unset = 1 everywhere).
+                            !   0 at the outlet cells = fixed base level,
+                            !   negative = falling base level
 
   ! ---- bedrock incision by flowing water (mountain streams. Requires
   !      f_fluvial=1. developer.md §88) ----

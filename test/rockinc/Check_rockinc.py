@@ -9,13 +9,16 @@
 #                                 β q_in (1 − q_in/q_c)(山形)、被覆率が q_in/q_c に一致。r >= 1 は全被覆
 #   Check_rockinc.py box LOG  T4: 閉じた箱の保存(Σ(z − z0) A = −研磨量、Σ(sd − sd0) A = 剥離量、
 #                                 Σ Ri A = 剥離量 + 研磨量。台帳と比べる)
+#   Check_rockinc.py uplift   T8: 隆起(出口固定)の下で定常になった縦断の勾配が、各セルで
+#                                 E_p0(S) (1 − q_j/q_c(S)) = U(q_j = (1 − λ) U Δy j。等流の水理)を
+#                                 解いた準解析解に近い。定常性と、局所の釣り合い B_p/dts = U も見る
 #   Check_rockinc.py steep    T9: 急勾配の等流で、セル値の Manning 閉じの τ_b と等流の釣り合いの比を
 #                                 記録する(合否なし。動的振り替えの影響の記録。README の所見)
 # 水理(h、|V|、v)は最終時刻の分布出力(bil = 単精度)、H = sd・z・Ri は save(倍精度)から読む。
 # 定数は param*.txt・make_init.py と対で保守する。
 import sys, os, math, struct, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from make_init import NX, NY, DX, I1, I2, S, N, NX_ST, I1_ST, I2_ST, SLOPES_ST, BX_NX, BX_NY, fr_box, z_of
+from make_init import NX, NY, DX, I1, I2, S, N, Q_UNIT, NX_ST, I1_ST, I2_ST, SLOPES_ST, BX_NX, BX_NY, fr_box, z_of
 
 RHO, G = 1000.0, 9.8                 # m_geomorph_rockinc の rhow、既定の重力加速度
 DD, DVIRT = 0.001, 0.001             # list_sysparam の dd・dv(既定)
@@ -34,6 +37,10 @@ HU_BETA, HU_HS, HU_D50, HU_MORF, HU_QC = 0.005, 0.01, 0.01, 10.0, 1.810e-3
 HU_R = (0.2, 0.5, 0.8, 1.2)          # 給砂比(inflow_qb = r HU_QC。HU_QC は等流の容量の概算)
 HU_J1, HU_J2 = 21, 50                # 検定する内部のセル(入口の盛り上がり・出口の影響を避ける)
 TOL_HUMP, MAX_FULL = 5.0e-3, 0.05    # r < 1 の相対差 / r >= 1 の下刻速度の上限(山の頂点に対する比)
+# 構成 uplift(T8)
+UP_KP, UP_TAUC, UP_M, UP_HS, UP_D50, UP_U, UP_MORF = 6.0e-6, 10.0, 1.5, 0.05, 0.01, 1.0e-5, 50.0
+UP_J1, UP_J2 = 15, 58                # 検定するセル(流入セル直下の減衰する段差を避ける)
+TOL_UP_STEADY, TOL_UP_BAL, TOL_UP_SLOPE, TOL_UP_TREND = 0.02, 0.02, 0.05, 0.02
 # 構成 box(T4)
 BX_SD0, BX_Z0 = 0.005, 0.0
 TOL_LEDGER, MIN_VP, MIN_DZ = 1.0e-7, 1.0e-3, 1.0e-4
@@ -221,6 +228,55 @@ def check_hump():
     return ok
 
 
+def check_uplift():
+    """T8: 隆起下の定常縦断形。最後の 2 回の出力(地形の時間 1.5e4 s 間隔)で定常性を見て、
+    勾配を等流の準解析解 E_p0(S) (1 − q_j/q_c(S)) = U と比べる(勾配が下流ほど急になる傾きも)。
+    局所の釣り合いは 1 回の更新の剥離 B_p(H)= U dts(剥離だけの定常)"""
+    z4 = load_bil("result_uplift", "Z", 4, NX, NY)
+    z5 = load_bil("result_uplift", "Z", 5, NX, NY)
+    hh = load_bil("result_uplift", "H", 5, NX, NY)
+    vv = load_bil("result_uplift", "V", 5, NX, NY)
+    _, _, sd = load_state("save_uplift", NX, NY)
+    i, dts = I1 - 1, 0.1 * UP_MORF
+
+    def uniform(slope):
+        h = (Q_UNIT * N / math.sqrt(slope)) ** 0.6
+        return h, Q_UNIT / h
+
+    def slope_analytic(q):
+        lo, hi = 1.0e-4, 0.05
+        for _ in range(100):
+            mid = math.sqrt(lo * hi)
+            h, v = uniform(mid)
+            if ep0(v, h, UP_KP, UP_TAUC, UP_M) * (1.0 - q / qcap(v, h, UP_D50)) > UP_U:
+                hi = mid
+            else:
+                lo = mid
+        return math.sqrt(lo * hi)
+
+    steady = bal = sl = 0.0
+    sm, sa = {}, {}
+    for j in range(UP_J1 - 1, UP_J2):
+        steady = max(steady, abs((z5[j][i] - z4[j][i]) / (300.0 * UP_MORF)) / UP_U)
+        e = ep0(vv[j][i], hh[j][i], UP_KP, UP_TAUC, UP_M)
+        bp = UP_HS * math.log1p(e * dts / UP_HS * math.exp(-sd[j][i] / UP_HS))
+        bal = max(bal, abs(bp / (UP_U * dts) - 1.0))
+        sm[j] = (z5[j - 1][i] - z5[j + 1][i]) / (2.0 * DX)
+        sa[j] = slope_analytic((1.0 - LAM) * UP_U * DX * (j + 1))
+        sl = max(sl, abs(sm[j] / sa[j] - 1.0))
+    j1, j2 = UP_J1 - 1, UP_J2 - 1
+    trend = (sm[j2] / sm[j1]) / (sa[j2] / sa[j1]) - 1.0
+    ok = report("(T8) 定常性", steady < TOL_UP_STEADY, "max|dz/dt| / U = %.2e (tol %.0e)" % (steady, TOL_UP_STEADY))
+    ok = report("(T8) 局所の釣り合い", bal < TOL_UP_BAL,
+                "max|B_p/(U dts) − 1| = %.2e (tol %.0e)" % (bal, TOL_UP_BAL)) and ok
+    ok = report("(T8) 勾配と準解析解", sl < TOL_UP_SLOPE,
+                "j = %d〜%d で S = %.5f〜%.5f(準解析解 %.5f〜%.5f)、max|S/S_a − 1| = %.2e (tol %.0e)"
+                % (UP_J1, UP_J2, sm[j1], sm[j2], sa[j1], sa[j2], sl, TOL_UP_SLOPE)) and ok
+    ok = report("(T8) 下流ほど急になる傾き", abs(trend) < TOL_UP_TREND,
+                "S(%d)/S(%d) の準解析解との比 − 1 = %.2e (tol %.0e)" % (UP_J2, UP_J1, trend, TOL_UP_TREND)) and ok
+    return ok
+
+
 def ledger(logfile):
     """dispose の台帳行(剥離・研磨のかさ体積)を読む(ファイル中の最後の行)"""
     vp = va = None
@@ -302,10 +358,12 @@ if __name__ == "__main__":
         ok = check_pluck()
     elif what == "hump":
         ok = check_hump()
+    elif what == "uplift":
+        ok = check_uplift()
     elif what == "box":
         ok = check_box(sys.argv[2])
     elif what == "steep":
         ok = check_steep()
     else:
-        sys.exit("usage: Check_rockinc.py cover|pluck|hump|box LOG|steep")
+        sys.exit("usage: Check_rockinc.py cover|pluck|hump|uplift|box LOG|steep")
     sys.exit(0 if ok else 1)

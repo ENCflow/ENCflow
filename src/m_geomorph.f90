@@ -413,6 +413,7 @@ module m_geomorph
     real :: wsdinv = 0.0             ! 1 / sd*
     integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
     real :: uprate = 0.0             ! 隆起速度 (m/s。mm/yr から換算)
+    real, allocatable :: upmap(:,:)  ! 隆起速度の倍率(fn_uplift。帯±ハロ。指定時のみ確保。§88)
     integer :: f_rockinc = 0         ! 流水による岩盤下刻(0:無効, 1:有効。§88)
     integer :: f_dissol = 0          ! 石灰岩の溶食(0:無効, 1:有効。§86)
     integer :: f_bedslide = 0        ! 動く底層(0:無効, 1:有効。landslide_tsunami_plan.md)
@@ -752,7 +753,7 @@ module m_geomorph
       real :: f
     end function
     ! 分布ファイル(全域の行列)を rank0 が読み帯±ハロへ配る(方式 2。値の検査は
-    ! 呼び出し側。実装は m_geomorph_rockinc。fn_rock が使う)
+    ! 呼び出し側。実装は m_geomorph_rockinc。fn_rock・fn_uplift が使う)
     module subroutine read_cellmap(p, g, fn, a)
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
@@ -956,6 +957,16 @@ subroutine m_geomorph_init(gm, p, g, s)
     ! 既定 1 mm/yr(造山帯の代表値の下限。負 = 沈降も可。§62)
     gm%uprate = gm_param("uplift0", list%uplift0, 1.0, " mm/yr", unset=-9999.0) &
                 * 1.0e-3 / yr_s                     ! mm/yr -> m/s
+    ! 分布隆起(§88): 隆起速度 = uplift0 × 倍率の分布(出口を 0 = 基準面の固定、
+    ! 負 = 基準面の低下)。rank0 が全域を読み帯±ハロへ配る(方式 2)
+    if (len_trim(list%fn_uplift) > 0) then
+      allocate(gm%upmap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+      call read_cellmap(p, g, list%fn_uplift, gm%upmap)
+      call par_info("geomorph: distributed uplift on (rate = uplift0 x map from " &
+                    // trim(list%fn_uplift) // ")")
+    end if
+  else if (len_trim(list%fn_uplift) > 0) then
+    call par_stop("list_geomorph: fn_uplift requires f_uplift=1")
   end if
 
   ! --- 石灰岩の溶食(§86。docs/karst_plan.md)---
@@ -1111,6 +1122,19 @@ subroutine calc_uplift(gm, g, s, dts)
   real, intent(in) :: dts
   integer :: i, j
 
+  if (allocated(gm%upmap)) then
+    ! 分布隆起(fn_uplift。§88): 速度 = uplift0 × 倍率
+    !$omp parallel do schedule(static) private(i, j)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        if (g%sw(i,j) > 0) cycle
+        s%z(i,j) = s%z(i,j) + gm%uprate * gm%upmap(i,j) * dts
+      end do
+    end do
+    !$omp end parallel do
+    return
+  end if
   !$omp parallel do schedule(static) private(i, j)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)

@@ -31,6 +31,7 @@ default) both water and bedload flow along the axis with the full width.
 | T4 conservation in a closed box | `param_box.txt` | The box of test/fluvial (101 × 101, radial flow from wave_hump) with sd0 = 5 mm, plucking and abrasion (β = 0.05 1/m), and the erodibility multiplier `rockmap_box.txt` (0 in rows 45 to 55, which contain the band interface j = 51; 0.5 in the western half) | Σ(z − z0) A = −abraded volume, Σ(sd − sd0) A = plucked volume, Σ Ri A = plucked + abraded volume (relative 1e-7 against the ledger), Ri = 0 in the rows with multiplier 0 |
 | T3 hump of abrasion | `param_hump_r02.txt` … `param_hump_r12.txt` | Abrasion only without plucking (β = 0.005 1/m, H* = 1 cm). A constant sediment feed q_in = r q_c at the inflow cell at the north end (r = 0.2, 0.5, 0.8, 1.2) | In the interior cells (j = 21 to 50), the incision rate from the increment of Ri over the last 1000 s (geomorphic time) is β q_in (1 − q_in/q_c) and the cover fraction is q_in/q_c (relative 5e-3). For r = 1.2 the bed is fully covered and the incision rate is below 0.05 of the top of the hump |
 | T7 acceleration (with bedload) | `param_pluck_mf5.txt` / `param_pluck_mf20.txt` | pluck with morfac = 5 (flow time 600 s) / 20 (150 s); the same geomorphic time 3000 s | The cumulative incision z − z0 agrees with pluck to relative 2e-3 / 4e-3 (O(dts)) |
+| T8 steady longitudinal profile under uplift | `param_uplift.txt` | Uniform uplift U = 1e-5 m/s; only the outlet cell is neither uplifted nor eroded (`upmap.txt`, `rockmap_up.txt` = 0 = fixed base level). Plucking only from bare rock (k_p = 6e-6 m/s, H* = 5 cm), morfac = 50 (geomorphic time 7.5e4 s) | For j = 15 to 58: steadiness max\|dz/dt\| < 0.02 U, local balance B_p/(U dts) = 1 ± 0.02, the slope within 5 % of the quasi-analytic solution with uniform-flow hydraulics (E_p0(S)(1 − q_j/q_c(S)) = U, q_j = (1 − λ) U Δy j), and its downstream steepening within 2 % |
 | T5 restart round trip | `param_pluck_rt1.txt` → `param_pluck_rt2.txt` | pluck saved at 150 s from bare rock and continued to 300 s | state.dat and geomorph_rockinc.dat are byte-identical to the straight run |
 | T9 steep uniform flow (record) | `param_steep_s001.txt` … `param_steep_s020.txt`, `param_steep_s020_od0.txt` | Uniform flow at slopes 0.01 to 0.2 in a 5-cell channel (no landform change). od0 is without the dynamic reassignment | Tabulates the ratio of the cell τ_b = ρ g n² V²/h^{1/3} to the uniform-flow balance (no pass/fail) |
 
@@ -70,6 +71,12 @@ python3 make_init.py z > zinit.txt   # regenerate the inputs (bundled; only when
   cell (low velocity) is 0.72 of the interior on the uniform slope, so for
   r > 0.7 a mound forms at the inlet and grows until the capacity rises (0.88
   of the interior at r = 0.8).
+- T8: slope 0.00768 to 0.00861 (quasi-analytic 0.00785 to 0.00879), maximum
+  relative difference 2.1 % (halving the time step changes the slope by only
+  1e-4; it appears to be the approximation of the gradually varied flow of the
+  profile by uniform flow), difference of the steepening 0.16 %, steadiness
+  4.6e-3 U, local balance 2.6e-3. Just below the inflow cell a 2-cell step pattern
+  forms that decays by about −0.7 per cell (the check uses j ≥ 15).
 - T4: Σ(z − z0) A = −0.236164 m³ (abraded volume), Σ(sd − sd0) A = 0.693794 m³
   (plucked volume) and Σ Ri A = their sum agree with the ledger within 2e-9;
   Ri = 0 in the rows with multiplier 0.

@@ -15,6 +15,9 @@
 # 構成 box(T4)の侵食性倍率 fn_rock: 101 × 101 の箱で、行 BX_J1〜BX_J2(np = 2 の帯界面
 # j = 51 を含む)を 0(侵食しない)、西半分の列 i <= BX_I を 0.5、ほかを 1 にする:
 #   python3 make_init.py rockbox > rockmap_box.txt
+# 構成 uplift(T8)の隆起速度の倍率 fn_uplift と侵食性倍率 fn_rock: 出口のセル(水路の j = NY)
+# だけ 0(隆起せず削れない = 基準面の固定)、ほかは 1:
+#   python3 make_init.py upmap > upmap.txt、 python3 make_init.py rockup > rockmap_up.txt
 import sys, math
 
 NX, NY, DX = 3, 60, 1.0
@@ -68,6 +71,10 @@ if __name__ == "__main__":
         dump(NX_ST, lambda i, j: z_of(i, j, s, I1_ST, I2_ST))
     elif kind == "hsteep":
         dump(NX_ST, lambda i, j: h_of(i, j, I1_ST, I2_ST))
+    elif kind == "upmap":
+        dump(NX, lambda i, j: 0.0 if (j == NY and I1 <= i <= I2) else 1.0)
+    elif kind == "rockup":
+        dump(NX, lambda i, j: 0.0 if j == NY else 1.0)
     elif kind == "rockbox":
         for j in range(1, BX_NY + 1):
             print(" ".join("%.1f" % fr_box(i, j) for i in range(1, BX_NX + 1)))

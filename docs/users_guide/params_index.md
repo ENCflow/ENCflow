@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 710 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 711 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -428,6 +428,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_tide | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
 | fn_timap | &list_tide | [潮位・海面](tide.md) |
 | fn_timaplist | &list_tide | [潮位・海面](tide.md) |
+| fn_uplift | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fn_vz | &list_sysparam | [鉛直不飽和浸透(VZ)流出](vz.md) |
 | fn_vz_zone | &list_vz | [鉛直不飽和浸透(VZ)流出](vz.md) |
 | fn_wave | &list_sysparam | [土砂・地形変化](geomorph.md)(波浪による沿岸漂砂) |

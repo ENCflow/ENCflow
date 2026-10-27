@@ -1137,6 +1137,7 @@ so the soil base shifts by the same amount.
 | wthr_p0 | 50 | Soil production rate on bare bedrock (mm/kyr). The middle of the literature range 0.01-0.1 mm/yr |
 | wthr_sdstar | 0.5 | Decay depth of production (m) (an exponential law: the thicker the soil, the slower the weathering) |
 | uplift0 | 1.0 | Uplift rate (mm/yr). Negative for subsidence. The lower end of representative orogenic values |
+| fn_uplift | "" | Distribution of the uplift multiplier (uplift rate = uplift0 × multiplier). 0 at the outlet cells fixes the base level, negative values lower it. Unset = 1 everywhere. Requires `f_uplift = 1` |
 
 The minimal input to "just let the landscape evolve" is `f_wthr = 1`
 (+ `sd0`) and `f_uplift = 1`, with `f_creep = 1` for the slopes,
@@ -1197,7 +1198,12 @@ without a standard value in the literature, so they have no defaults. τ_b is ob
 Manning closure as bedload (the depth and velocity of the cell).
 
 To start from bare rock, give a soil-thickness file of zeros
-(`f_sdtype = 1`, `fn_sd`); a uniform value `sd0 = 0` cannot be used.
+(`f_sdtype = 1`, `fn_sd`); a uniform value `sd0 = 0` cannot be used. An
+incision experiment needs relative uplift, so combine uplift `f_uplift = 1`
+with the distribution `fn_uplift` (0 at the outlet cells = fixed base level),
+and set the outlet row to 0 (not eroded) with `fn_rock` (T8 of
+[test/rockinc](../../../test/rockinc/en/README.md) checks the steady
+longitudinal profile in which uplift and incision balance in this way).
 
 **Time step**: plucking integrates the exposure exactly, so it is stable
 regardless of `dt_geomorph` and `morfac` (self-cover limits the thickness
