@@ -75,6 +75,22 @@ follows from all three of these purposes.
    additional memory, CPU and communication when fn_vz is not specified, and
    bit-identical results with the existing references when disabled. The
    authoritative design is docs/vz_plan.md and the record of the decision is §87.)
+   (Exception agreed 2026-10-27: only for uses in which coastal morphological change
+   driven by waves and the interaction between waves and currents are the object of
+   study, short-period waves may be solved on the same grid as the SWE as a
+   phase-averaged **action balance with one representative frequency and
+   directional bins**. Conditions: (1) the phase is not resolved (phase-resolving
+   short waves are out of scope; the dispersion of long waves is the task of the
+   non-hydrostatic correction), (2) there is no frequency dimension (one
+   representative frequency; the state per cell is at most N_θ directional values
+   plus one roller energy), (3) no wind growth and no nonlinear wave–wave
+   interactions (offshore waves are given at the boundary), (4) the effects on the
+   flow are limited to three paths — a body force (radiation stress), mass transport
+   (Stokes) and bottom friction — and the effects on sediment to two paths, stirring
+   and the transport velocity, (5) zero additional memory, CPU and communication when
+   fn_wavefield is not specified, and bit-identical results with the existing
+   references when disabled. The authoritative design is docs/wavefield_plan.md and
+   the record of the decision is §88.)
 6. **Do not over-complicate the model; refine it gradually to match the information
    available.** It must run, for a start, with a simple specification of parameters.
 7. **Unneeded processes are "not enabled" by not creating or specifying their
