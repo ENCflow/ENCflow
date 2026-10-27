@@ -1339,7 +1339,11 @@ incision `Ri0001...`. At the end "rock erosion by debris flows: eroded ... m3
 increment per update / H* are printed. Checked in
 [test/dbrock](../../../test/dbrock/en/README.md) (analytical self-cover solution,
 invariance to the update interval, the concentration and velocity gates,
-conservation in a closed box, input errors).
+conservation in a closed box, input errors). Example:
+[examples/debris_bedrock](../../../examples/debris_bedrock/en/README.md) (the
+erosion by one debris flow in a stream whose slope eases in steps; the effects of
+the resistance law, the cover and the threshold, and a comparison with a
+clear-water flood with the same discharge).
 
 ## Limestone dissolution (f_dissol)
 
@@ -1543,4 +1547,7 @@ rate, cells with multiplier 0 unchanged, and the steady hillslope of uplift,
 weathering and depth-dependent creep), and
 [test/dbrock](../../../test/dbrock/en/README.md) (rock erosion by debris flows:
 analytical self-cover solution, invariance to the update interval, the
-concentration and velocity gates, conservation in a closed box, input errors).
+concentration and velocity gates, conservation in a closed box, input errors) and
+the example [examples/debris_bedrock](../../../examples/debris_bedrock/en/README.md)
+(the longitudinal distribution of the erosion by one debris flow, the effects of
+the cover and the threshold, and a comparison with a clear-water flood).

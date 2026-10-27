@@ -42,6 +42,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [delta/](delta/) | 給砂河川が静水の海盆に突入して作る河口デルタ。河口砂州 → 分岐 → ローブ成長 → 流路の乗り換え。砂泥比による扇状と鳥趾状、流量変動と定着(冠水減衰・河岸係数)による分流路の安定化の 5 構成(docs/delta_plan.md) | 海は通常セル+初期水位、容量給砂 fluv_bcfeed、浮遊泥 inflow_cs + f_bedfines、fluv_slope、f_repose、f_fixation(fix_tdec・fix_ctau_bank)、辺の長波放射 |
 | [bedrock_cover/](bedrock_cover/) | 山地渓流の岩盤河道の被覆効果(道具と被覆): 給砂の量(定常の下刻速度の山形)、給砂の時期(同じ総量の一定給砂とパルス)、初期の被覆、段差(遷急点)の後退を、幅 1 セルの掘り込み水路を並べて比べる | 流水による岩盤下刻 f_rockinc(剥離・被覆・研磨)、掃流砂 f_fluvial、区間流入の給砂 inflow_qb |
 | [mountain_valley/](mountain_valley/) | 隆起する山地の V 字谷で、斜面(風化による土層の生成・深さ依存クリープ)と渓流(岩盤下刻・被覆)を同時に動かす。定常の斜面と渓流の勾配を斜面だけ・渓流だけの予測と比べ、斜面の供給が渓流を急にし研磨を増やすこと、基準面の低下への渓流と斜面の応答の遅れを見る。後半は同じ平均の給砂を一定とパルスで与えた渓流の定常勾配(研磨が効くとパルスで急になる) | 風化 f_wthr(fn_wthr)、深さ依存クリープ creep_hstar、流水による岩盤下刻 f_rockinc、掃流砂 f_fluvial、分布隆起 fn_uplift |
+| [debris_bedrock/](debris_bedrock/) | 勾配が段々に緩くなる渓流に 1 回の土石流を流し、岩盤がどこでどれだけ削れるかを見る。侵食は急な区間に集まり、堆積層があると剥がれるまで削れない。抵抗則・閾値の効きと、同じ流量の清水の出水との比較 | 土石流 f_debris(高橋・中川、クーロン + Manning)、土石流による岩盤侵食 f_rockinc の rock_kdb |
 
 ## 複数プロセスの連鎖の例
 
@@ -49,7 +50,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 見本です(章を読んだ後の参考に)。
 
 - 津波 → 家屋破壊 → 瓦礫: [tsunami_town/](tsunami_town/)。高潮 → 流木 → 市街地: [timberyard/](timberyard/)。
-- 降灰 → 降雨 → 泥流: [ashfall_lahar/](ashfall_lahar/)。降雨 → 乾式侵食 → 地形発達: [badland/](badland/)。豪雨時だけ表面流が加わる崖: [badland_storm/](badland_storm/)。クリープで丸くなる丘: [badland_round/](badland_round/)。キャップロックのメサ → ビュート: [mesa/](mesa/)。豪雨 → 湛水 → 吸込穴 → 溶食 → ドリーネ: [karst/](karst/)。裸岩の塔 → 裾の溶食 → 崩落 → 塔の後退: [tower_karst/](tower_karst/)。給砂 → 被覆と道具 → 岩盤の下刻: [bedrock_cover/](bedrock_cover/)。隆起 → 風化 → クリープ → 渓流の被覆と下刻 → 定常の谷: [mountain_valley/](mountain_valley/)。
+- 降灰 → 降雨 → 泥流: [ashfall_lahar/](ashfall_lahar/)。降雨 → 乾式侵食 → 地形発達: [badland/](badland/)。豪雨時だけ表面流が加わる崖: [badland_storm/](badland_storm/)。クリープで丸くなる丘: [badland_round/](badland_round/)。キャップロックのメサ → ビュート: [mesa/](mesa/)。豪雨 → 湛水 → 吸込穴 → 溶食 → ドリーネ: [karst/](karst/)。裸岩の塔 → 裾の溶食 → 崩落 → 塔の後退: [tower_karst/](tower_karst/)。給砂 → 被覆と道具 → 岩盤の下刻: [bedrock_cover/](bedrock_cover/)。隆起 → 風化 → クリープ → 渓流の被覆と下刻 → 定常の谷: [mountain_valley/](mountain_valley/)。土石流 → 堆積層の剥離 → 岩盤の侵食: [debris_bedrock/](debris_bedrock/)。
 - 断層 → 津波 → 浸水: [tsunami_fault/](tsunami_fault/)、[tsunami_coast/](tsunami_coast/)。斜面崩壊 → 水域突入 → 津波: [landslide_tsunami/](landslide_tsunami/)。
 - 洪水 → 破堤 → 氾濫: [levee_breach/](levee_breach/)。
 - 降雨 → 下水道(管路)→ 噴出・排水: [sewer_hybrid/](sewer_hybrid/)。地下水 → 横坑集水: [qanat/](qanat/)。

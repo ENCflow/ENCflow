@@ -1055,7 +1055,9 @@ docs/mountain_stream_plan.md §12(developer.md §88.18)。
 「rock erosion by debris flows: eroded … m3 (bulk, into the mobile layer sd)」(削った岩盤の
 かさ体積)と、1 回の更新の最大増分 / H* が表示されます。検定は
 [test/dbrock](../../test/dbrock/)(自己被覆の解析解、更新間隔の不変、濃度・速度の門、
-閉じた箱の保存、入力の誤り)。
+閉じた箱の保存、入力の誤り)。例題は [examples/debris_bedrock](../../examples/debris_bedrock/)
+(勾配が段々に緩くなる渓流での 1 回の土石流の侵食。抵抗則・被覆・閾値の効きと、同じ流量の
+清水の出水との比較)。
 
 ## 石灰岩の溶食(f_dissol)
 
@@ -1227,4 +1229,6 @@ docs/karst_plan.md(developer.md §86)。
 (給砂の量と時期・初期の被覆・段差の後退)、[test/hillsoil](../../test/hillsoil/)
 (風化による土層生成: 一様・分布 `fn_wthr` の解析解、倍率 0 のセルの不変、隆起・風化・
 深さ依存クリープの定常斜面)、[test/dbrock](../../test/dbrock/)(土石流による岩盤侵食:
-自己被覆の解析解、更新間隔の不変、濃度・速度の門、閉じた箱の保存、入力の誤り)。
+自己被覆の解析解、更新間隔の不変、濃度・速度の門、閉じた箱の保存、入力の誤り)と例題
+[examples/debris_bedrock](../../examples/debris_bedrock/)(1 回の土石流の侵食の縦断分布、
+被覆・閾値の効き、清水の出水との比較)。
