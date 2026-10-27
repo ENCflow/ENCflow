@@ -428,6 +428,18 @@ subroutine m_wavefield_dispose(wf, p, g, s)
   if (allocated(wf%lbr)) deallocate(wf%lbr)
   if (allocated(wf%qar)) deallocate(wf%qar)
   if (allocated(wf%qbr)) deallocate(wf%qbr)
+  if (allocated(wf%ux)) deallocate(wf%ux)
+  if (allocated(wf%uy)) deallocate(wf%uy)
+  if (allocated(wf%kb)) deallocate(wf%kb)
+  if (allocated(wf%sgb)) deallocate(wf%sgb)
+  if (allocated(wf%qab)) deallocate(wf%qab)
+  if (allocated(wf%qbb)) deallocate(wf%qbb)
+  if (allocated(wf%lab)) deallocate(wf%lab)
+  if (allocated(wf%lbb)) deallocate(wf%lbb)
+  if (allocated(wf%cthb)) deallocate(wf%cthb)
+  if (allocated(wf%rmax)) deallocate(wf%rmax)
+  if (allocated(wf%rblk)) deallocate(wf%rblk)
+  if (allocated(wf%rcblk)) deallocate(wf%rcblk)
   wf%enabled = .false.
   wf%initialized = .false.
 end subroutine
