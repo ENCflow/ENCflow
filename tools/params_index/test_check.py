@@ -14,6 +14,7 @@ module list_a
   namelist /list_a/ aa, &   ! コメント
                     ab, ac
   namelist /save_info/ save_version, nx
+  namelist /wavefield_info/ version, nth
 end module
 """
 SRC_B = """\

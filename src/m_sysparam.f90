@@ -114,6 +114,7 @@ module m_sysparam
     character(:), allocatable :: fn_driftwood  ! 流木設定ファイル(§50)
     character(:), allocatable :: fn_bldgdebris ! 家屋破壊・瓦礫設定ファイル(§63)
     character(:), allocatable :: fn_vz         ! 鉛直不飽和浸透(VZ)流出設定ファイル(§87)
+    character(:), allocatable :: fn_wavefield  ! 沿岸の波浪場設定ファイル(§88)
     real :: t_cycle = 0.0                      ! 強制の反復周期 (s。0=なし。§32.4)
     character(:), allocatable :: fn_channel    ! 河道条件設定ファイル
     character(:), allocatable :: fn_enc        ! ENC設定ファイル
@@ -256,6 +257,7 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%fn_driftwood = list%fn_driftwood           ! 流木設定ファイル
   p%fn_bldgdebris = list%fn_bldgdebris         ! 家屋破壊・瓦礫設定ファイル
   p%fn_vz = list%fn_vz                         ! 鉛直不飽和浸透(VZ)流出設定ファイル
+  p%fn_wavefield = list%fn_wavefield           ! 沿岸の波浪場設定ファイル
   p%fn_channel = list%fn_channel               ! 河道条件設定ファイル
   p%fn_enc = list%fn_enc                       ! ENC設定ファイル
   p%fn_nest = list%fn_nest                     ! ネスト格子一覧

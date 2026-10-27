@@ -54,6 +54,8 @@ analytical-solution or conservation check by Check_*.py.
 | [coastal_drain/](coastal_drain/en/README.md) | Drainage of a polder below sea level (outfalls and pump stations) | Conduit continuum layer, tide | ref |
 | [culvert/](culvert/en/README.md) | Passage through the three culvert regimes (drainage test; monotonic recovered discharge) | Structures | ref, analytic |
 | [salt/](salt/en/README.md) | Fresh/salt two-layer experiments (final state of a lock exchange, sea boundary) | Fresh/salt two-layer | ref |
+| [wfshoal/](wfshoal/en/README.md) | Beach profile of the coastal wave field. Shoaling and saturated breaking of regular waves (linear theory), refraction (Snell's law and first-order convergence in the directional bins), breaking of random waves (Baldock, Janssen & Battjes; discrete solution with independently written dissipation formulas), unsteady front and steady state, ledger closure, restart continuation, identical flow with and without the wave field, offshore wave series | Coastal wave field fn_wavefield | ref, analytic |
+| [wfshadow/](wfshadow/en/README.md) | Two-dimensional coastal wave field: the shadow of a breakwater and an enclosure of diagonal walls. Agreement with an independently implemented sweep solution, blocking by diagonal walls, exactly sharp shadows for waves aligned with a lattice direction | Coastal wave field fn_wavefield | ref, analytic |
 | **Groundwater and urban drainage** | | | |
 | [gwdefault/](gwdefault/en/README.md) | Minimal input of each groundwater model and the display of defaults | Groundwater | screen output |
 | [pump/](pump/en/README.md) | Linear drawdown by a well pumping sink (analytical check) | Groundwater | ref |

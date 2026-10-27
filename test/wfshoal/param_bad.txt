@@ -1,0 +1,52 @@
+!======================================================================
+! wfshoal: 方向ビン数が 8 の倍数でない設定(停止すること)
+!   軸と対角の向きがビンの中心に乗るよう wf_ntheta は 8 の倍数に限る(Run.sh が停止と理由を確かめる)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! 格子システム(0:ENC)
+  dt = 0.5                  ! 時間刻み (s)
+  t0 = 0
+  tt = 1800
+  dt_disp = 600
+  dt_file = 1800            ! 波高・波向の分布を 0 s と 1800 s に出力
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_wavefield = '-'
+  dir_result = 'result_bad'
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_check_cfl = 1
+  f_output_mode = 3         ! テキスト(検定・比較)+ bil(単精度。検定)
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 2               ! 水位 0 で初期化(東の陸は乾燥)
+  e0 = 0.0
+/
+
+&list_geoinfo
+  nx = 120
+  ny = 8                    ! np = 4 でもランクあたり 2 行
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1
+  fn_z = 'z.txt'            ! make_z.py が書く
+  f_rntype = 0
+  rn0 = 0.025
+/
+
+&list_wavefield
+  wf_bc_side = 1, 0, 2, 2   ! 辺 W, E, N, S(西が入射、東は陸側の吸収、南北は側方 Neumann)
+  wf_ntheta = 30            ! 8 の倍数でない(停止すること)
+  ! 沖の波の時系列: 時刻 (min)・H_m0 (m)・周期 (s)・進行方向 (deg)・方向分散 (deg)
+  wf_val(1:5,1) = 0,  1.0, 8.0, 340.0, 20.0
+  wf_val(1:5,2) = 20, 1.5, 9.0,  20.0, 15.0
+  wf_val(1:5,3) = 40, 1.5, 9.0,  20.0, 15.0
+  dt_wave = 600             ! 準定常の更新間隔 (s)
+  wf_fw = 0.02              ! 底面摩擦係数(検定用の例示値)
+  f_wf_outdiag = 1          ! 底面軌道流速 Wu・砕波散逸 Wb も出力
+/

@@ -1,0 +1,78 @@
+!======================================================================
+! English mirror of examples/List_samples/list_wavefield.txt.
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of coastal wave field settings &list_wavefield
+!
+!   Use this file by specifying, in the system parameters &list_sysparam,
+!     fn_wavefield = "list_wavefield.txt"
+!   (if fn_wavefield is not specified, the feature is completely inactive).
+!
+!   Offshore waves (height, period, direction of travel, directional
+!   spreading) enter from the outer sides, and shoaling, refraction,
+!   breaking, bottom friction and the shadows behind breakwaters and islands
+!   are computed by a phase-averaged energy balance with one representative
+!   period and directional bins (users_guide/wavefield.md, developer.md §88).
+!   Stage W1 does not act on the flow or the bed (it only writes the wave
+!   height and related quantities).
+!
+!   Required input:
+!     - incident sides (at least one 1 in wf_bc_side)
+!     - offshore waves wf_hm0, wf_trep, wf_dir (or the time series wf_val)
+!   Represent the offshore by ordinary cells with sea-bed topography (filled
+!   with water by f_htype = 2 or similar). Waves do not pass through
+!   sea-mask cells (sw)
+!
+!   The direction is the direction of travel (counterclockwise from the
+!   x axis = east, north = 90°). It differs by 180° from the "coming from"
+!   convention of SWAN and XBeach
+!
+!   Features that cannot be combined (the run stops): the STG grid, nesting
+!
+!   Output: Wh (wave height; H_m0 for random waves), Wa (mean direction).
+!   With f_wf_outdiag = 1 also Wu (bottom orbital velocity u_rms) and Wb
+!   (breaking dissipation). Ledger result/wavefield.csv
+!
+!======================================================================
+&list_wavefield
+  ! temporary deactivation (0 with fn_wavefield still written = completely inactive)
+  f_wavefield = 1
+
+  ! type of the outer sides W, E, N, S (0: absorbing / 1: incident / 2: lateral Neumann). Default all 0.
+  ! For a straight coast, set the offshore side to 1 and the left and right sides crossing the coast to 2
+  ! (the same sea continues outside)
+  wf_bc_side = 1, 0, 2, 2
+
+  ! offshore waves (fixed values)
+  wf_hm0 = 1.5              ! wave height (m; significant wave height H_m0 for random waves, H for regular waves)
+  wf_trep = 8.0             ! representative period (s; the energy period T_m-1,0 for random waves; T_p/1.1 as a guide if only T_p is known)
+  wf_dir = 0.0              ! direction of travel (deg; east = 0, north = 90)
+  !wf_spread = 20.0         ! directional spreading sigma_theta (deg; 0 = unidirectional, upper limit 48.8; default 20, 0 for regular waves)
+
+  ! time series of offshore waves (instead of fixed values): time (min), height, period, direction, spreading.
+  ! Linear interpolation between rows (the direction the short way). Rows that omit the spreading use the default
+  !wf_val(1:5,1) = 0,   1.0, 8.0, 350.0, 20.0
+  !wf_val(1:5,2) = 360, 2.0, 10.0, 10.0, 15.0
+  !wf_clock = 0             ! clock of the series 0: hydraulic time / 1: morphological time (MORFAC times)
+
+  ! solution method
+  !wf_mode = 2              ! 1: unsteady (every step in physical time) / 2: quasi-steady (every dt_wave; default)
+  !dt_wave = 3600.0         ! update interval of the quasi-steady mode (s)
+  !wf_tol = 1.0e-4          ! quasi-steady convergence criterion (relative change of wave height in one iteration)
+  !wf_itmax = 1000          ! maximum number of quasi-steady iterations (default 4 max(nx, ny))
+  !f_wf_init = 1            ! 1: quasi-steady solution at the start / 0: start from calm (to watch a front in the unsteady mode)
+  !wf_ntheta = 40           ! number of directional bins (a multiple of 8, 8-360; default 40 = 9°)
+
+  ! wave type, breaking, friction (defaults are the values of the XBeach stationary mode and SnapWave)
+  !wf_wavetype = 1          ! 1: random waves / 2: regular waves (saturated breaking H <= gamma h; for verification)
+  !wf_break = 1             ! 1: Baldock et al. (1998) / 2: Janssen & Battjes (2007)
+  !wf_gamma = 0.78          ! breaker index gamma
+  !wf_alpha = 1.0           ! dissipation coefficient alpha of breaking
+  !wf_gammax = 0.6          ! depth limit H_rms <= gammax h (random waves)
+  !wf_fw = 0.0              ! bottom friction factor f_w (0 = no friction)
+  !wf_hmin = 0.1            ! minimum depth of a wave cell (m)
+
+  ! output
+  !f_wf_outdiag = 0         ! 1: also write the distributions of the bottom orbital velocity Wu and the breaking dissipation Wb
+/

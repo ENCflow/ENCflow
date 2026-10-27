@@ -47,6 +47,7 @@
   !fn_boundary = ""         ! 境界条件
   !fn_tide = ""             ! 潮位・海面
   !fn_wave = "list_wave.txt"           ! 波浪条件(沿岸漂砂。fn_geomorph の f_fluvial=1 が必須。docs/users_guide/geomorph.md)
+  !fn_wavefield = "list_wavefield.txt" ! 沿岸の波浪場(浅水変形・屈折・砕波・陰。users_guide/wavefield.md)
   !fn_structure = ""        ! 内部水理構造物(ポンプ・カルバート等)
   !fn_reservoir = ""        ! ため池
   !fn_channel = ""          ! 河道(堤防・河道幅)

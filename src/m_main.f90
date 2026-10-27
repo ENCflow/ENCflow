@@ -24,6 +24,8 @@ module m_main
   use m_swi, only : t_swi, m_swi_init, m_swi_calc, m_swi_dispose
   use m_vzflow, only : t_vzflow, m_vzflow_init, m_vzflow_calc, m_vzflow_record, m_vzflow_outprof, &
                       m_vzflow_dispose
+  use m_wavefield, only : t_wavefield, m_wavefield_init, m_wavefield_calc, m_wavefield_record, &
+                          m_wavefield_dispose
   use m_glacier, only : t_glacier, m_glacier_init, m_glacier_calc, m_glacier_dispose
   use m_lavaflow, only : t_lavaflow, m_lavaflow_init, m_lavaflow_calc, m_lavaflow_dispose
   use m_bedmotion, only : t_bedmotion, m_bedmotion_init, m_bedmotion_calc, m_bedmotion_dispose
@@ -85,6 +87,7 @@ module m_main
     type(t_snow) :: sn
     type(t_swi) :: si
     type(t_vzflow) :: vz             ! 鉛直不飽和浸透(VZ)流出(fn_vz。§87)
+    type(t_wavefield) :: wf          ! 沿岸の波浪場(fn_wavefield。§88)
     type(t_glacier) :: gl
     type(t_lavaflow) :: lv
     type(t_bedmotion) :: bm
@@ -246,7 +249,7 @@ subroutine init_instance(fn_param, align)
              gm => enc%gm, gw => enc%gw, ev => enc%ev, mt => enc%mt, &
              wq => enc%wq, dw => enc%dw, bd => enc%bd, sn => enc%sn, si => enc%si, &
              gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw, &
-             ou => enc%ou, vz => enc%vz)
+             ou => enc%ou, vz => enc%vz, wf => enc%wf)
 
     ! システムを初期化
     call m_sysparam_init(p, fn_param)       ! sysparam を初期化
@@ -332,6 +335,10 @@ subroutine init_instance(fn_param, align)
     call m_vzflow_init(vz, p, g, b, s, ninst > 1)  ! VZ 流出を初期化(fn_vz 指定時のみ有効。
                                             ! 併用検査に他モジュールの fn_*、セル検査に
                                             ! ゾーン2の全域マスクと境界の一覧を使う。§87)
+    call m_wavefield_init(wf, p, g, s, ninst > 1)  ! 沿岸の波浪場を初期化(fn_wavefield 指定時のみ
+                                            ! 有効。swflow init より後 = 河道の幅・断面形の
+                                            ! 有無が確定、静的な波浪セルの判定にゾーン2の
+                                            ! 全域マスク、地形時計に s%geo_morfac を使う。§88)
     call output_init(ou, p, g)              ! ファイル出力の準備(geoinfoより後に)
 
     ! 地理情報を各ランクに合わせて縮小
@@ -405,10 +412,10 @@ subroutine step_instance()
              gm => enc%gm, gw => enc%gw, ev => enc%ev, mt => enc%mt, &
              wq => enc%wq, dw => enc%dw, bd => enc%bd, sn => enc%sn, si => enc%si, &
              gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw, &
-             ou => enc%ou, vz => enc%vz)
+             ou => enc%ou, vz => enc%vz, wf => enc%wf)
 
     call run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, &
-                  wq, dw, bd, sn, gl, lv, bm, si, vz, ou, &
+                  wq, dw, bd, sn, gl, lv, bm, si, vz, wf, ou, &
                   enc%extpre_active, enc%extpre_fresh, enc%extpre, &
                   enc%extz_fresh, enc%extz, enc%exth_fresh, enc%exth, &
                   enc%exthg_fresh, enc%exthg, enc%extswe_fresh, enc%extswe, &
@@ -548,7 +555,7 @@ subroutine finalize_instance()
              gm => enc%gm, gw => enc%gw, ev => enc%ev, mt => enc%mt, &
              wq => enc%wq, dw => enc%dw, bd => enc%bd, sn => enc%sn, si => enc%si, &
              gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw, &
-             ou => enc%ou, vz => enc%vz)
+             ou => enc%ou, vz => enc%vz, wf => enc%wf)
 
     ! 最終出力(従来 run_main の末尾)
     call run_close(p, g, s, r, ou)
@@ -574,6 +581,7 @@ subroutine finalize_instance()
     call m_swi_dispose(si, p, g)            ! save は dispose で(契約5。§49)
     call m_vzflow_dispose(vz, p, s)         ! save は dispose で(契約5。区間の途中なら残りを
                                             ! 同期して s%h へ移してから。m_state の save より先。§87)
+    call m_wavefield_dispose(wf, p, g)      ! save は dispose で(契約5。§88)
     call m_record_dispose(r)
     call m_state_dispose(s, p)
     call m_boundary_dispose(b)
@@ -1024,7 +1032,7 @@ end subroutine
 !   進行位置は s%it が正本(m_state_updatetime が更新)。エラーは
 !   ierror に累積し、継続判定は呼び出し側(m_main_finished)が行う
 !----------------------------------------------------------------------
-subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, bd, sn, gl, lv, bm, si, vz, ou, &
+subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, bd, sn, gl, lv, bm, si, vz, wf, ou, &
                     extpre_active, extpre_fresh, extpre, &
                     extz_fresh, extz, exth_fresh, exth, &
                     exthg_fresh, exthg, extswe_fresh, extswe, &
@@ -1052,6 +1060,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   type(t_bedmotion), intent(inout) :: bm  ! 規定底面運動(スナップショットの読み進みを保持)
   type(t_swi), intent(inout) :: si     ! 土壌雨量指数(タンク貯留を保持。§49)
   type(t_vzflow), intent(inout) :: vz  ! VZ 流出(共有参照柱・区画・出口。§87)
+  type(t_wavefield), intent(inout) :: wf  ! 沿岸の波浪場(ビン別エネルギー・台帳。§88)
   type(t_output), intent(inout) :: ou  ! 分布出力(集約バッファ・装置番号)
   logical, intent(in) :: extpre_active    ! BMI 外部降水供給モードか
   logical, intent(inout) :: extpre_fresh  ! 未適用の新しい場があるか(適用で消す)
@@ -1237,6 +1246,12 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   ! dt_tiupdate。s%z の変更はステップ頭のハロ交換が運ぶので swflow より前に)
   call m_tide_calc(ti, p, g, s)
 
+  ! 沿岸の波浪場(fn_wavefield 未指定なら no-op。非定常は毎ステップ、準定常は
+  ! dt_wave ごとに、前ステップ確定の水深を背景に更新する。tide の後 = 潮位を
+  ! 反映した水深、swflow の前 = 段 W2 以降の外力・摩擦が同じステップの波浪場を
+  ! 使う位置。W1 は流れ・地形に作用しない。§88)
+  call m_wavefield_calc(wf, p, g, s, it)
+
   ! 地表水を計算
   call m_swflow_calc(sw, p, g, b, s, ierror)
 
@@ -1340,6 +1355,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
    call m_driftwood_record(dw, p, g, s)
    call m_bldgdebris_record(bd, p, g, s)
    call m_vzflow_record(vz, s)
+   call m_wavefield_record(wf, p, g, s)
   end if
 
 

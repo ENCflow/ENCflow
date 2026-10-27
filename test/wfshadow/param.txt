@@ -1,0 +1,58 @@
+!======================================================================
+! wfshadow: 沿岸の波浪場(fn_wavefield。developer.md §88)の 2 次元の検定。基本の構成
+!
+!   100 × 100 セル(Δx = Δy = 10 m)、水深 10 m で一様。西の辺から延びる 1 セル厚の
+!   防波堤(行 60、列 1..50)と、角だけで接する斜めの壁で囲んだ菱形の水域
+!   (|i − 75| + |j − 30| = 8 が陸)を置く。南の辺から北向き(90°)の不規則波
+!   (H_m0 = 1 m、T = 8 s、方向分散 20°)を入れる。東西の辺は側方 Neumann、北は吸収。
+!   一様水深なので屈折はなく、砕波・摩擦も効かない(H_rms/h = 0.07)。
+!   確認事項(Check_wfshadow.py base): 同じ離散方程式を伝播順の掃引で直接解いた解
+!   (反復なし。Python で独立に実装)との一致、菱形の内側が厳密に 0(斜めの壁を
+!   すり抜けない)、幾何光学解(ビンごとに直進)との差の大きさ(数値拡散の目安。表示のみ)。
+!   reference とは Log.txt・wavefield.csv・Wh0001.txt を比較
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! 格子システム(0:ENC)
+  dt = 0.5                  ! 時間刻み (s)
+  t0 = 0
+  tt = 1
+  dt_disp = 1
+  dt_file = 1
+  dt_recrd = 1
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_wavefield = '-'
+  dir_result = 'result'
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_check_cfl = 1
+  f_output_mode = 3         ! テキスト(比較)+ bil(単精度。検定)
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 2               ! 水位 0 で初期化(陸は乾燥)
+  e0 = 0.0
+/
+
+&list_geoinfo
+  nx = 100
+  ny = 100
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1
+  fn_z = 'z.txt'            ! make_z.py が書く
+  f_rntype = 0
+  rn0 = 0.025
+/
+
+&list_wavefield
+  wf_bc_side = 2, 2, 0, 1   ! 辺 W, E, N, S(東西は側方 Neumann、北は吸収、南が入射)
+  wf_hm0 = 1.0
+  wf_trep = 8.0
+  wf_dir = 90.0             ! 北向き
+  wf_spread = 20.0          ! 方向分散 (deg)
+  wf_tol = 1.0e-6
+/

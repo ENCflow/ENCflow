@@ -52,6 +52,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Initial conditions](users_guide/initial.md) (&list_initial) -- depth, water level, depression filling
 - [Boundary conditions](users_guide/boundary.md) (&list_bound_edge/source/stage/inflow) -- edge boundaries, sources, prescribed stages, reach inflow
 - [Tide and sea surface](users_guide/tide.md) (&list_tide) -- storm surge, rising-tide inundation, drainage
+- [Coastal wave field](users_guide/wavefield.md) (&list_wavefield) -- shoaling, refraction, breaking and breakwater shadows of offshore waves (phase-averaged, one representative period, directional bins; stage W1 does not act on the flow or the bed)
 - [Internal hydraulic structures](users_guide/structure.md) (&list_struct_pump/culvert/diversion/dam) -- pumps, culverts, diversions, dams and lakes
   - [Hydraulics of structures and boundaries](users_guide/hydraulics.md) -- Honma weir formula, the three culvert regimes, dam operation rules, free-outflow and radiation boundaries, inflow distribution, with equations and the basis of the coefficients (supplement)
 - [Channels](users_guide/channel.md) (&list_channel) -- levees, channel width, cross-section shape, breach
@@ -80,7 +81,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 703 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 726 parameter names to their chapters
 
 ---
 
@@ -123,6 +124,7 @@ The additional features below stay disabled unless you specify their `fn_XXX` en
 | Feature | Configuration-file entry | namelist group |
 |---|---|---|
 | Tide and sea surface | `fn_tide` | &list_tide |
+| Coastal wave field (distribution of wave height and direction) | `fn_wavefield` | &list_wavefield |
 | Wave-driven longshore transport (arcuate and cuspate deltas, shoreline smoothing) | `fn_wave` | &list_wave ([Sediment and landform change](users_guide/geomorph.md), "Wave-driven longshore transport"; needs f_fluvial=1 in fn_geomorph) |
 | Internal hydraulic structures | `fn_structure` | &list_struct_pump / culvert / diversion / dam |
 | Ponds | `fn_reservoir` | (used together with geographic information) |
@@ -262,6 +264,7 @@ settings, including unsupported phenomena), see
 | Open levees, detention basins, secondary levees | [Channels](users_guide/channel.md) (levees, openings) + [Structures](users_guide/structure.md) |
 | Polder / lowland drainage by pumping | [Structures](users_guide/structure.md) (pumps) + [Tide and sea surface](users_guide/tide.md) |
 | Storm surge / tsunami run-up | [Tide and sea surface](users_guide/tide.md) + [boundary conditions](users_guide/boundary.md) |
+| Distribution of coastal wave height and direction (shoaling, refraction, breaking, breakwater shadows) | [Coastal wave field](users_guide/wavefield.md) |
 | Tsunami generation by an earthquake (fault): generation, propagation, run-up, coastal uplift/subsidence | [Prescribed bed motion](users_guide/bedmotion.md) (+ utils/fault2disp) + [boundary conditions](users_guide/boundary.md) (radiation) |
 | Tsunamis from landslides, sector collapses, submarine slides | [Sediment and landform change](users_guide/geomorph.md) (moving bed layer) (+ the non-hydrostatic correction in [Shallow water flow](users_guide/swflow.md)) |
 | Dispersive tsunamis and waves (soliton fission of river-intruding tsunamis, undular bores, solitary waves) | [Shallow water flow](users_guide/swflow.md) (non-hydrostatic correction f_nonhydrostatic) |

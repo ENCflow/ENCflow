@@ -130,6 +130,15 @@ module m_state
     logical :: vz_active = .false.  ! VZ の有効化(m_vzflow_init が設定)
     real, allocatable :: vzp(:,:)   ! 回収済み・未同期の雨 (m。セル面積基底 pre·dt の積算。
                                     ! 確保は m_vzflow_init(有効時のみ)、同期でゼロ戻し)
+    ! 沿岸の波浪場(fn_wavefield。§88)の診断量。確保と wv_active の設定は m_wavefield_init
+    ! (有効時のみ)。状態(ビン別のエネルギー)は t_wavefield の私有で、ここは書き出しと
+    ! 他プロセスへの受け渡し用の導出量(帯 js..je を更新ごとに上書き)
+    logical :: wv_active = .false.      ! 波浪場の有効化
+    logical :: wv_outdiag = .false.     ! 砕波散逸・軌道流速も分布出力するか(f_wf_outdiag)
+    real, allocatable :: wvh(:,:)       ! 波高 (m。不規則波は H_m0、規則波は H)
+    real, allocatable :: wvdir(:,:)     ! 平均波向 (deg。進む向き、x 軸から反時計回り。無波 −9999)
+    real, allocatable :: wvub(:,:)      ! 底面軌道流速 u_rms (m/s)
+    real, allocatable :: wvdw(:,:)      ! 砕波の散逸 (W/m2。不規則波)
     real, allocatable :: cq(:,:)        ! 輸送物質柱状量 (g/m2。§30。濃度 = cq/vh は
                                         ! 導出量 cqc。移流は swflow_enc がステップ内で
                                         ! 行い(wq_active)、発生源・浸透同伴・減衰は
@@ -892,6 +901,10 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%bp)) deallocate(s%bp)
   if (allocated(s%hg2)) deallocate(s%hg2)
   if (allocated(s%vzp)) deallocate(s%vzp)
+  if (allocated(s%wvh)) deallocate(s%wvh)
+  if (allocated(s%wvdir)) deallocate(s%wvdir)
+  if (allocated(s%wvub)) deallocate(s%wvub)
+  if (allocated(s%wvdw)) deallocate(s%wvdw)
   if (allocated(s%hgc)) deallocate(s%hgc)
   if (allocated(s%hss)) deallocate(s%hss)
   if (allocated(s%hgs)) deallocate(s%hgs)

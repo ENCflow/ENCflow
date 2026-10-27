@@ -188,6 +188,17 @@ subroutine output_state(o, p, g, s, k)
   if (allocated(g%sd) .and. allocated(s%sd)) call output_matrix(o, p, g, "Sd", s%sd, k)
   ! 表面蓄積プール (kg/ha = g/m2 × 10。プール有効時のみ。§30)
   if (s%wq_active .and. allocated(s%bp)) call output_matrix(o, p, g, "B", 10.0*s%bp, k)
+  ! 沿岸の波浪場(fn_wavefield 有効時のみ。§88): 波高 Wh(不規則波は H_m0、規則波は H)・
+  ! 平均波向 Wa(deg。進む向き、x 軸から反時計回り。無波セルは −9999)。f_wf_outdiag = 1
+  ! のとき底面軌道流速 Wu(u_rms。m/s)・砕波散逸 Wb(W/m2)も
+  if (s%wv_active) then
+    call output_matrix(o, p, g, "Wh", s%wvh, k)
+    call output_matrix(o, p, g, "Wa", s%wvdir, k)
+    if (s%wv_outdiag) then
+      call output_matrix(o, p, g, "Wu", s%wvub, k)
+      call output_matrix(o, p, g, "Wb", s%wvdw, k)
+    end if
+  end if
   if (is_root) write(o%un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it
 end subroutine
 

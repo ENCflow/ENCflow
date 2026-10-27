@@ -102,6 +102,11 @@ need to understand all of it. Read only the lines you care about.
   building-damage feature, both estimated in the same time evolution as
   the run-up, giving damage-ratio maps and
   debris arrival and deposit maps.
+- **Coastal waves**: shoaling, refraction, breaking and the shadows of
+  breakwaters and islands are computed for offshore waves on the same
+  grid by a phase-averaged energy balance over directional bins, giving
+  maps of wave height and direction (the coupling with wave-driven
+  currents, sediment transport and beach change is being added in stages).
 - **Tsunami generation from an earthquake, and dispersive waves**: the
   fault displacement is given as a time history of the ground, and the
   tsunami is followed from generation through propagation to run-up in

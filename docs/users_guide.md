@@ -47,6 +47,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [初期条件](users_guide/initial.md)(&list_initial)— 水深・水位・窪地充填
 - [境界条件](users_guide/boundary.md)(&list_bound_edge/source/stage/inflow)— 辺境界・ソース・水位規定・区間流入
 - [潮位・海面](users_guide/tide.md)(&list_tide)— 高潮・上げ潮浸水・排水
+- [沿岸の波浪場](users_guide/wavefield.md)(&list_wavefield)— 沖の波の浅水変形・屈折・砕波・防波堤の陰(位相平均・代表周期・方向ビン。段 W1 は流れ・地形に作用しない)
 - [内部水理構造物](users_guide/structure.md)(&list_struct_pump/culvert/diversion/dam)— ポンプ・カルバート・分水・ダム・湖沼
   - [構造物と境界の水理則の解説](users_guide/hydraulics.md) — 本間公式・カルバートの 3 レジーム・ダム運転則・自由流出と放射境界・区間流入の配分の式と係数の根拠(構造物・境界条件・河道の補足)
 - [河道](users_guide/channel.md)(&list_channel)— 堤防・河道幅・断面形・破堤
@@ -75,7 +76,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [用途集](users_guide/usecases.md)— 現象名から機能の組み合わせを引く(未対応の現象も明示)
 
 **付録**
-- [全パラメータ索引](users_guide/params_index.md) — 全 703 パラメータの名前→章の逆引き
+- [全パラメータ索引](users_guide/params_index.md) — 全 726 パラメータの名前→章の逆引き
 
 ---
 
@@ -118,6 +119,7 @@ ENCflow は地表の水の流れを計算するモデルです。必要に応じ
 | 機能 | 設定ファイルの指定 | namelist グループ |
 |---|---|---|
 | 潮位・海面 | `fn_tide` | &list_tide |
+| 沿岸の波浪場(波高・波向の分布) | `fn_wavefield` | &list_wavefield |
 | 波浪による沿岸漂砂(弧状・カスプ状デルタ、汀線の均し) | `fn_wave` | &list_wave([土砂・地形変化](users_guide/geomorph.md)の「波浪による沿岸漂砂」。fn_geomorph の f_fluvial=1 が必須) |
 | 内部水理構造物 | `fn_structure` | &list_struct_pump / culvert / diversion / dam |
 | ため池 | `fn_reservoir` | (地理情報と併用) |
@@ -246,6 +248,7 @@ ENCflow は地表の水の流れを計算するモデルです。必要に応じ
 | 霞堤・遊水地・二線堤の治水効果 | [河道](users_guide/channel.md)(堤防・開口)+[構造物](users_guide/structure.md) |
 | 干拓地・低平地の機場排水 | [構造物](users_guide/structure.md)(ポンプ)+[潮位・海面](users_guide/tide.md) |
 | 高潮・津波の遡上 | [潮位・海面](users_guide/tide.md)+[境界条件](users_guide/boundary.md) |
+| 海岸の波高・波向の分布(浅水変形・屈折・砕波・防波堤の陰) | [沿岸の波浪場](users_guide/wavefield.md) |
 | 地震(断層)による津波の発生〜伝播〜遡上、沿岸の隆起・沈降 | [規定底面運動](users_guide/bedmotion.md)(+utils/fault2disp)+[境界条件](users_guide/boundary.md)(放射) |
 | 地滑り・山体崩壊・海底地滑りによる津波 | [土砂・地形変化](users_guide/geomorph.md)(動く底層)(+[浅水流計算](users_guide/swflow.md)の非静水圧補正) |
 | 分散性のある津波・波(河川遡上津波のソリトン分裂・undular bore・孤立波) | [浅水流計算](users_guide/swflow.md)(非静水圧補正 f_nonhydrostatic) |

@@ -4,7 +4,7 @@
   python3 tools/params_index/check.py [--root DIR]
 
 src/*.f90 の `namelist /group/ a, b, &` 宣言(継続行を連結、! 以降のコメントを除く。
-再開ヘッダ &save_info は利用者パラメータでないため対象外)から (名前, グループ) を
+再開ヘッダ &save_info・&wavefield_info は利用者パラメータでないため対象外)から (名前, グループ) を
 抽出し、docs/users_guide/params_index.md とその英語ミラーの表、章ページ、索引の
 項目数の記述と照合する(developer.md §35.1)。索引を生成・変更はしない。
 
@@ -29,7 +29,7 @@ INDEX_JA = "docs/users_guide/params_index.md"
 INDEX_EN = "docs/en/users_guide/params_index.md"
 GUIDE_JA = "docs/users_guide.md"
 GUIDE_EN = "docs/en/users_guide.md"
-EXCLUDE_GROUPS = {"save_info"}
+EXCLUDE_GROUPS = {"save_info", "wavefield_info"}
 
 NAMELIST = re.compile(r"^\s*namelist\s*/\s*(\w+)\s*/\s*(.*)$", re.I)
 ROW = re.compile(r"^\|\s*(\S+)\s*\|\s*&(\w+)\s*\|\s*\[([^\]]*)\]\(([^)\s]+)\)[^|]*\|\s*$")

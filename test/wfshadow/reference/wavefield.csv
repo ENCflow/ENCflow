@@ -1,0 +1,2 @@
+t_s,it,iter,residual,H_bc,T_bc,dir_bc,in_W,out_W,absorbed_W,breaking_W,friction_W,limit_W,dry_J,trunc_W,imbalance_W,storage_J
+.00,0,367, 9.91448E-07,1.0000,8.0000,90.0000,  5.0683365E+06,  2.2595193E+06,  2.8088133E+06,  1.0259383E-27,  0.0000000E+00,  0.0000000E+00,  0.0000000E+00,  0.0000000E+00,  3.9317302E+00,  4.0462458E+08
