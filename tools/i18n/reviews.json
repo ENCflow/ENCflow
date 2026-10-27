@@ -608,11 +608,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "f39068f530eceb3d3c394719a2a698b61b0bc0d7eff1e1e187b8be6ca53105d9",
-      "target_sha256": "01e9e481ad2ec5ea3dbe041ada49239570a73dc8b14e399c31b1e8e6af622789",
+      "source_sha256": "ad72f751380b250afbd222b468d756f95ca57e8ad6c01089ecdf0b8450628313",
+      "target_sha256": "c22d3b057e593f74c4ab047bd37d21f201f6cc621c0f84c09b031fb4db1ed77d",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",

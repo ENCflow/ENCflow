@@ -144,7 +144,8 @@
                             !   0 = default 1e-4. A calibration parameter)
   !f_bedfines = 1           ! ledger of fines in the bed (requires f_suspend).
                             !   Entrainment is limited to the stock sf (output Sf);
-                            !   fines released by bed-load erosion go into suspension
+                            !   bed fines moved by bed load travel with it (equal
+                            !   mobility)
   !fines_la = 0.05          ! exchange layer thickness L_a (m). Availability
                             !   min(1, sf/L_a) (required)
   !fines_frac0 = 0.0        ! initial fraction of fines (sf = fraction x sd.
