@@ -14171,3 +14171,19 @@ save_version 20261027 は据え置き = 後方互換の拡張)、wavefield.dat �
   ENC の斜めの面の移流の数値的な横混合でならされる。
   (3) 側方 Neumann は外に同じ海岸が続く扱いなので、辺の近くで岸沿いに地形が変わる
   場合は見たい区域を辺から離す(ユーザーガイドに明記)。
+
+### 88.6 実バグ: 極小のエネルギーでの砕波の散逸の overflow(2026-10-27。段 W3 の検証で発見)
+
+- **症状**: 段 W3 の開発中、河口の噴流のケースで砕波の散逸(breaking の
+  `qb = exp(−(hb/hrms)²)`)が SIGFPE で停止した(release の既定 `-ffpe-trap=zero,overflow`)。
+  阻止された河道の中などでエネルギーが極小(E ≲ 1e-300 J/m²)になると H_rms が 1e-150 m を
+  下回り、比 H_b/H_rms の 2 乗(Janssen & Battjes 型は 3 乗)が倍精度の範囲を超える。
+  E が非正規化数まで小さいと H_rms = 0 で 0 除算にもなる。W1 の経路(breaking と diagnose)にも
+  同じ式があり、潜在していた(既存の検定では起きていなかった)。
+- **修正**: `hb >= 30 hrms` なら比を作らずに散逸 0 とする(breaking・diagnose)。比が 30 以上
+  では Baldock 型の Q_b = exp(−900) も Janssen & Battjes 型の
+  1 + c(r³ + 1.5r)exp(−r²) − erf(r)(erf(30) = 1)も倍精度で厳密に 0 なので、**値は変わらない**
+  (H_b = H_rms = 0 の 0/0 だけが、NaN でなく 0 になる)。
+- **確認**: release の逐次で wfshoal・wfshadow・wfcurrent が reference とビット一致・検定も通る、
+  既存の 10 ケース(wave・dambreak・frost・pump・conduit・salt・tracer・culvert・coastal_drain・
+  sewer_wq。-Ofast の命令列の変化に敏感だったケースを含む)も reference とビット一致。

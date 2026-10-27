@@ -1389,7 +1389,11 @@ contains
     hrms = sqrt(8.0 * e / rhog)
     hb = 0.88 / k * tanh(wf%gam * k * hh / 0.88)
     fr = wf%om / (2.0 * pi)
-    if (wf%brk == 2) then
+    if (hb >= 30.0 * hrms) then
+      ! 砕波の割合は倍精度で 0(exp(−900)。JB 型も 1 − erf(30) = 0)。比を作る前に判定して、
+      ! 極小のエネルギーで (H_b/H_rms)² が overflow しないようにする
+      dw = 0.0
+    else if (wf%brk == 2) then
       ! Janssen & Battjes (2007)
       rr = hb / hrms
       qb = 1.0 + 4.0 / (3.0 * sqrt(pi)) * (rr**3 + 1.5 * rr) * exp(-rr * rr) - erf(rr)
@@ -1563,7 +1567,9 @@ subroutine diagnose(wf, p, g, s)
       if (wf%wtype == 1 .and. wf%kw(i,j) > 0.0) then
         hb = 0.88 / wf%kw(i,j) * tanh(wf%gam * kh / 0.88)
         fr = wf%om / (2.0 * pi)
-        if (wf%brk == 2) then
+        if (hb >= 30.0 * hrms) then
+          continue                       ! 散逸は 0 のまま(breaking の注)
+        else if (wf%brk == 2) then
           rr = hb / hrms
           qb = max(1.0 + 4.0 / (3.0 * sqrt(pi)) * (rr**3 + 1.5 * rr) * exp(-rr * rr) - erf(rr), 0.0)
           s%wvdw(i,j) = 3.0 * sqrt(pi) / 16.0 * wf%alp * rhog * fr * hrms**3 / s%h(i,j) * qb
