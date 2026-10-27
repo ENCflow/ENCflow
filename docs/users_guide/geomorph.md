@@ -997,6 +997,9 @@ docs/mountain_stream_plan.md(developer.md §88)。
 dts の最大が表示されます。リスタートは `geomorph_rockinc.dat`(累積下刻)
 ([出力・確認](#出力確認))。
 
+例題 [examples/bedrock_cover](../../examples/bedrock_cover/)(給砂の量と時期、初期の
+被覆、段差の後退を、幅 1 セルの掘り込み水路を並べて比べる)。
+
 ## 石灰岩の溶食(f_dissol)
 
 式と速度の目安: [解説](sediment.md#石灰岩の溶食f_dissol)。設計の正本は
@@ -1157,4 +1160,5 @@ docs/karst_plan.md(developer.md §86)。
 3 源と側方溶食の配分の解析解、リスタート往復)、
 [test/rockinc](../../test/rockinc/)(流水による岩盤下刻: 自己被覆の解析解、
 被覆の準定常、研磨の山形、閉じた箱の保存、裸岩からのリスタート往復、急勾配の
-等流の τ_b の記録)。
+等流の τ_b の記録)と例題 [examples/bedrock_cover](../../examples/bedrock_cover/)
+(給砂の量と時期・初期の被覆・段差の後退)。

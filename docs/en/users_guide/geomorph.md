@@ -1261,6 +1261,10 @@ H* and the maximum thin-layer drainage rate × dts. Restart uses
 `geomorph_rockinc.dat` (cumulative incision)
 ([Output and monitoring](#output-and-monitoring)).
 
+Example: [examples/bedrock_cover](../../../examples/bedrock_cover/en/README.md)
+(the amount and timing of supply, the initial cover and the retreat of a step,
+compared in incised channels one cell wide placed side by side).
+
 ## Limestone dissolution (f_dissol)
 
 Formula and typical rates: [supplement](sediment.md#limestone-dissolution-f_dissol).
@@ -1445,4 +1449,6 @@ lateral-dissolution partition, and a restart round trip),
 [test/rockinc](../../../test/rockinc/en/README.md) (bedrock incision by flowing
 water: analytic self-cover solution, quasi-steady cover, the hump of abrasion,
 conservation in a closed box, restart round trip from bare rock, and a record
-of τ_b in steep uniform flow).
+of τ_b in steep uniform flow) and the example
+[examples/bedrock_cover](../../../examples/bedrock_cover/en/README.md) (the
+amount and timing of supply, the initial cover and the retreat of a step).

@@ -10,10 +10,11 @@ water quality + buildup-washoff + snow + long-term landscape
 evolution + driftwood + building destruction and debris + the
 non-hydrostatic correction + prescribed bed motion for fault tsunamis +
 multi-level nesting + meandering-channel development + rockfall and talus +
-wave-driven longshore transport (stage 1) + limestone dissolution (karst);
-including the 2026-10-22
-alignment of the sea-mask semantics (not solved, level prescribed, outflow
-to the sea leaves the ledgers) across all modules; updated 2026-10-23).
+wave-driven longshore transport (stage 1) + limestone dissolution (karst) +
+bedrock incision in mountain streams and depth-dependent creep; including the
+2026-10-22 alignment of the sea-mask semantics (not solved, level prescribed,
+outflow to the sea leaves the ledgers) across all modules; updated
+2026-10-27).
 Licenses and distribution forms can change, so re-check each official
 site before citing.
 
@@ -141,6 +142,7 @@ al. 2025 (GMD); confirm before citing).
 | Glaciers | Yes: degree-day mass balance + SIA flow + sliding + glacial erosion + avalanche redistribution | None among general flood models. Detailed ice dynamics: PISM, Elmer/Ice, OGGM | No other model runs glaciers side by side with flood hydraulics, catchment hydrology and landform change |
 | Wave-driven longshore transport (shoreline smoothing, spits, arcuate deltas) | Partial: no wave propagation, a CERC-type estimate in the shoreline band (f_wave_longshore; offshore H0, T and direction as inputs, smoothed shoreline orientation, local-slope term, river-mouth velocity rule; stirring and sheltering refinements are planned) | Delft3D-MOR+WAVE (SWAN), XBeach, CEM (the one-line coastline model of Ashton & Murray) | Models that propagate waves are a domain of their own. Running the CERC rule of one-line models on top of 2-D landform change is the distinctive point (the wave case of examples/delta; developer.md §84.15, Japanese) |
 | Long-term landform evolution | Yes: weathering, uplift, periodic forcing, limestone dissolution (recharge-proportional chemical denudation plus a sink-inflow term for dolines) | CAESAR-Lisflood, Landlab, Badlands, FastScape | On a par with CAESAR-Lisflood among hydraulics-driven models; the others are process-law LEMs. Dissolution runs in the same run as the conduit continuum layer (karst hydrology) as a first-order estimate; cave-network geometry (speleogenesis models) is out of scope |
+| Bedrock incision in mountain streams (plucking, abrasion, cover by the mobile layer, base level) and soil supply from the slopes | Yes: excess-shear plucking + abrasion by the transported gravel; cover as the exposed fraction for the mobile-layer thickness and as the availability of bedload; distributed uplift. Depth-dependent creep that moves only the soil layer (creep_hstar). Mixed grain sizes are not adopted (decision of developer.md §84.10); bedrock erosion by debris flows is a later stage | Landlab (SPACE = stream power + cover, DepthDependentDiffuser), research models (the saltation–abrasion model of Sklar & Dietrich 2004, the macro-roughness model of Zhang et al. 2015, the two-dimensional bedrock–alluvial channels of Inoue et al. 2016) | Most LEMs use stream power and do not solve the flow. Coupling tools and cover in two dimensions through the shallow-water bed shear stress and the bedload capacity, in the same time evolution as floods and catchment hydrology, is distinctive. The grid dependence of τ_b on steep slopes (developer.md §88.4) is an open issue (examples/bedrock_cover, docs/mountain_stream_plan.md) |
 | Nesting (multi-level grids) | Yes: static nesting (any depth; the ratios r and r_t are arbitrary integers). Band Dirichlet / Flather radiation / sponge; replacement by area averaging, wet test and conservation correction. The non-hydrostatic φ and additional fields (sediment, water quality, subsurface storage, etc.) are exchanged too | Tsunami: COMCOT, TUNAMI, MOST, JAGURS, NEOWAVE, GeoClaw (AMR), FUNWAVE-TVD. Structured-grid MIKE 21 Classic, TUFLOW Classic, Delft3D 4. Ocean and atmosphere (ROMS-AGRIF, WRF) | The open flood codes refine locally with unstructured or quadtree grids and have no nesting. Coupling dispersive waves across the interface is the minority of JAGURS, NEOWAVE, GeoClaw-Bouss and FUNWAVE (Sec. 3) |
 | Parallelization | OpenMP + MPI. Bit-reproducible regardless of rank count | TELEMAC, Delft3D (MPI; bit reproducibility not guaranteed), SFINCS (OpenMP + GPU/OpenACC) | Deterministic reductions are the differentiator |
 | Restart exactness | Yes: module-private save contract | Commercial codes generally support it | Few open codes enforce it thoroughly |

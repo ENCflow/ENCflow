@@ -532,6 +532,7 @@ $`H_*(1-\lambda)\Delta x / q_c`$ です。
 | [test/splashslide](../../test/splashslide/README.md) | 固結 / 未固結の崖 | 起伏の成長率 ×1.34 / ×0.77 |
 | [examples/badland](../../examples/badland/) | 台地と崖の谷形成 | 表面流ゼロのまま崖縁から谷が成長 |
 | [test/rockinc](../../test/rockinc/README.md) | 流水による岩盤下刻 | 自己被覆の解析解 9e-8、被覆の準定常 4e-4、研磨の山形 7e-4、閉じた箱の保存(台帳と 9 桁) |
+| [examples/bedrock_cover](../../examples/bedrock_cover/README.md) | 岩盤河道の被覆効果 | 3 モデルの定常の下刻速度が理論と 2.3 % 以内、同じ総量の一定給砂とパルス給砂、初期の被覆、段差の後退 |
 
 ## 参考文献
 
