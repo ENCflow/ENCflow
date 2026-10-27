@@ -14457,3 +14457,50 @@ test/rockinc(reference は持たない。解析解・保存則・バイト一致
 合意時の訂正: plan §12.7 の DB2 の式。剥離は z を変えないので、全固体
 Σh_s + (1 − λ)Σ(z − z0) は 0 のまま。岩盤起源のかさ体積の (1 − λ) 倍だけ増えるのは、可動層の固体
 Σh_s + (1 − λ)Σ(sd − sd0) である(§4.1 の 2 つの不変量と同じ)。
+
+### 88.19 土石流による岩盤侵食の実装(P1。§88.18 の 1〜7・10)
+
+- **入力**: list_geomorph に rock_kdb(k_d、m/s。既定 0 = 項なし)・rock_taucdb(τ_cd、Pa。
+  rock_kdb > 0 で必須)・rock_mdb(m_d。既定 1)。H* と fn_rock は流水と共有する。
+- **組合せと検査**(判定はすべて namelist 由来で全ランク同一):
+  - m_geomorph_init: f_rockinc の要件を「f_fluvial か f_debris」に緩め、f_debris との併用の
+    停止を外した(f_bedslide は残す)。
+  - init_rockinc の f_debris の構成では、次を要求する: rock_kp = rock_beta = 0、rock_kdb > 0、
+    rock_taucdb > 0、rock_mdb > 0、db_cmin ∈ (0, C*)(0 なら清水も土石流の係数で削るため)。
+  - init_rockinc の f_fluvial の構成では、rock_kdb > 0 を停止にする。流水の項
+    (rock_kp か rock_beta)は従来どおり 1 つ以上を要求する。
+- **計算**(calc_debris の 2 パス。§28.2 の構造をそのまま使う):
+  - パス 1: 時刻 n の場から E_d0 を作業配列 gm%rk%edb(ish:ieh, js:je)に書く。勾配は
+    f_dbed = 2 と同じ slope_flow(近傍の z。ハロはステップ頭で最新)、g_e は m_swflow_enc の
+    opt%f_gravity_correction に合わせて g/(1 + tan²θ) か g、門は C ≥ db_cmin・|V| > 0・
+    |V| ≥ db_vstop・f_r > 0・tanθ > 0。
+  - パス 2: E-D を適用した後の自セルの sd で、被覆を伝播子 rock_cover_inc
+    (H* ln(1 + (E dts/H*) e^{−sd/H*}))で積分し、sd・s%ri に足す(z は不変)。
+  - 堆積層を剥がした同じ更新で岩盤が削られる順になる。z を書かないので z のハロ交換は
+    増えない。sd のハロは、§28.13 の交換と geomorph の末尾の交換が担う。
+  - パス 2 の `if (fx == 0.0) cycle` は、岩盤侵食を E-D のないセルでも適用するため
+    `if (fx /= 0.0) then … end if` に変えた。演算は変わらない。
+- **流水の項の呼び出し**: calc_rockinc は流水の項がある構成(rk%fl)だけで呼ぶ。土石流の
+  構成では呼ばない(§88.18 の 6)。dispose の流水の台帳行も rk%fl のときだけ出し、土石流の項は
+  「rock erosion by debris flows: eroded … m3」と最大増分 / H* を出す。
+- **落とし穴**: 共有スクラッチのセル面積の逆数 gm%wrk%ainv は require_work(掃流砂・クリープの
+  初期化)でしか設定されない。土石流だけの構成では 0 のままなので、土石流の項の台帳は
+  Δx·Δy から直接求める(流水の項の calc_rockinc は f_fluvial が前提なので従来どおり)。
+- **比較の計算との照合**: plan §12.4 の渓流(高橋・中川・裸岩)に、同じ係数(k_d = 1.807e-4 m/s、
+  τ_cd = 1 kPa、m_d = 1)で土石流の項を入れた。区間の侵食は 1.95・0.90・0.01・0・0 cm で、
+  後処理の L2c(2.15・1.01・0.01・0・0)の 0.90 倍になった。駆動応力に運動方程式の cos²θ を
+  掛けた分(後処理は sinθ だけ)と、毎ステップの積分・門の違いによる。台帳 32.49 m³ は ΣRi·A と一致。
+- **検定 test/dbrock**:
+  - DB1: 自己被覆の解析解と相対 1.4e-15、更新間隔 2 倍と 2.3e-16。倍率 0 の行は不変、z は不変。
+  - DB3: 濃度・速度の門の外では Ri = 0。
+  - DB2: 閉じた箱で全固体 5.1e-14 m³。可動層の固体と (1 − λ) × 台帳の相対差 4.9e-10、
+    (sd − sd0) − (z − z0) = Ri が 1.9e-14 m。
+  - DB7: 入力の誤り 5 構成が初期化で停止。
+  - DB4: -fcheck=all の np = 2 を先に回した。-O2 で逐次 = np 1・2・4(state.dat・
+    geomorph_rockinc.dat)、-Ofast でも Run_MPI.sh 2・4 が逐次とバイト一致。
+  - DB6(-O2 の A/B。変更前の HEAD と result・save をバイト比較): f_debris・f_rockinc を使う既存の
+    9 検定(avalanche・bedslide・curvature・debris・driftwood・rockinc・slide・splashslide・volcano)の
+    1247 ファイルがすべて一致した(rk%fl で囲った calc_rockinc の呼び出しと、パス 2 の if ブロック化を
+    含む)。地形変化を使うほかの検定も、比較を終えた 9 検定(bankface・bedfines・berode・creep・
+    dissol・fluvial・kdpart・repose・rockfall)の 968 ファイルが一致した。CI の回帰ケース(wave・
+    dambreak・frost・pump・conduit・salt・vzcol・vzzone)も PASS。

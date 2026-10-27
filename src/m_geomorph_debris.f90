@@ -32,10 +32,17 @@
 !   定義される)。時刻 n の s%z(自セル+近傍。ハロはステップ頭交換で
 !   最新)を読むため、本プロセスは m_geomorph_calc の先頭で適用される。
 !   morfac は 1 に限定(init で検証。イベント計算)。
+!
+!   土石流による岩盤侵食(f_rockinc の rock_kdb > 0。§88.18、plan §12): パス 1 で、濃い混合体
+!   (C >= db_cmin)が流れている(|V| >= db_vstop)湿潤セルの裸岩の低下速度
+!     E_d0 = f_r k_d max(τ_d/τ_cd − 1, 0)^{m_d}、τ_d = ρ_w (1 + sC) g_e h_t tanθ_f
+!   を gm%rk%edb に書く(θ_f は slope_flow の流向の河床勾配で下りのみ、g_e は運動方程式と同じ
+!   有効重力 g cos²θ_f(f_gravity_correction = 1)か g)。パス 2 は E-D を適用した後の自セルの
+!   sd で被覆を厳密に積分し(rock_cover_inc)、生成物を 1:1 で sd に足す(z は不変)。
 !======================================================================
 submodule(m_geomorph) m_geomorph_debris
   use m_parallel, only : par_stop, dcp, par_halo_cell
-  use m_swflow_enc, only : m_swflow_enc_set_debris
+  use m_swflow_enc, only : m_swflow_enc_set_debris, opt
   use m_fileio, only : fileio_read_matrix
   implicit none
 
@@ -49,6 +56,8 @@ submodule(m_geomorph) m_geomorph_debris
   ! 高橋・中川(1991)新砂防 44(3) の定数(原式固定。f_dbed=3)
   real, parameter :: tk_ab = 0.02        ! a_i・sinα_i(式(2)(15)の 0.02)
   real, parameter :: tk_p = 1.0 / 3.0    ! 堆積の慣性係数の定数 p(式(27)。採用値)
+
+  real, parameter :: rk_rhow = 1000.0    ! 水の密度 (kg/m3。岩盤侵食の駆動応力。rockinc と同じ)
 
 contains
 
@@ -352,6 +361,9 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   integer :: i, j
   real :: tanth, cinf, cc, hm, fx, dzb, cap, fxg, hseq, dhw
   real :: tanthc, sinthc, vcr, fac
+  real :: tanf, ge, taud, fr, bd, bdm, area   ! 土石流による岩盤侵食(§88.18)
+  real(real64) :: vd
+  logical :: rkd, gcorr
 
   ! --- f_dbed=3 の流動面勾配は近傍の h・hs を読む。両者のハロは
   !     ステップ頭交換のままで、swflow が帯内を更新済み = 帯界面で
@@ -367,12 +379,18 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   !     ことで、勾配読みが帯内更新とハロの不整合を起こさない) ---
   if (gm%f_slide > 0) call slide_pass1(gm, p, g, s)
 
+  ! --- 土石流による岩盤侵食(§88.18)の有無と、駆動応力の有効重力(運動方程式と同じ) ---
+  rkd = gm%rk%db
+  gcorr = .false.
+  if (rkd .and. allocated(opt)) gcorr = (opt%f_gravity_correction > 0)
+
   ! --- パス1: 交換量の計算(時刻 n の状態のみを読む) ---
   !$omp parallel do schedule(static) private(i, j, tanth, cinf, cc, hm, fx, hseq, &
-  !$omp                                      tanthc, sinthc, vcr, fac)
+  !$omp                                      tanthc, sinthc, vcr, fac, tanf, ge, taud, fr)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       gm%dbr%fx(i,j) = 0.0
+      if (rkd) gm%rk%edb(i,j) = 0.0
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%h(i,j) <= p%dd) then
@@ -488,6 +506,25 @@ module subroutine calc_debris(gm, p, g, s, dtw)
           end if
         end if
         if (fx < 0.0) fx = max(fx, -max(s%hs(i,j), 0.0))    ! 堆積は浮遊量まで
+        ! 土石流による岩盤侵食の裸岩の低下速度(§88.18): 濃い混合体が流れているセルだけ。
+        ! 時刻 n の近傍の z から流向の河床勾配を求める(f_dbed = 2 と同じ slope_flow)
+        if (rkd) then
+          if (cc >= gm%db_cmin .and. s%vv(i,j) > 0.0 .and. s%vv(i,j) >= gm%db_vstop) then
+            fr = 1.0
+            if (gm%rk%map) fr = gm%rk%fr(i,j)
+            if (fr > 0.0) then
+              tanf = slope_flow(g, s, i, j)
+              if (tanf > 0.0) then
+                ge = p%gg
+                if (gcorr) ge = p%gg / (1.0 + tanf**2)
+                taud = rk_rhow * (1.0 + gm%sgrav * cc) * ge * hm * tanf
+                if (taud > gm%rk%taucdb) then
+                  gm%rk%edb(i,j) = fr * gm%rk%kdb * (taud / gm%rk%taucdb - 1.0)**gm%rk%mdb
+                end if
+              end if
+            end if
+          end if
+        end if
       end if
       gm%dbr%fx(i,j) = fx
     end do
@@ -495,39 +532,57 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   !$omp end parallel do
 
   ! --- パス2: 適用(書き込みは自セルに閉じる) ---
-  !$omp parallel do schedule(static) private(i, j, fx, dzb, cap, fxg, dhw)
+  area = g%dx * g%dy
+  bdm = 0.0
+  !$omp parallel do schedule(static) private(i, j, fx, dzb, cap, fxg, dhw, bd, vd) &
+  !$omp   reduction(max: bdm)
   do j = dcp%js, dcp%je
+    vd = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
       fx = gm%dbr%fx(i,j)
-      if (fx == 0.0) cycle
-      s%hs(i,j) = s%hs(i,j) + fx
-      ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
-      dzb = -fx * gm%morfac * gm%poroi
-      s%z(i,j) = s%z(i,j) + dzb
-      s%sd(i,j) = s%sd(i,j) + dzb
-      ! 間隙水の連行(f_dbwet=1。高橋・中川1991 式(5)の源泉
-      ! i{c*+(1−c*)s_b} の水側。
-      ! gwflow 併用は init で排除済み):
-      !   侵食(Δz<0): λ・s_b・|Δz| の間隙水を地表水 h へ放出(飽和床)
-      !   堆積(Δz>0): 同量を埋没(地表水の範囲で。不足分は不飽和堆積)
-      if (gm%f_dbwet == 1) then
-        dhw = -gm%db_lamsb * dzb
-        if (dhw < 0.0) dhw = max(dhw, -max(s%h(i,j), 0.0))
-        s%h(i,j) = s%h(i,j) + dhw
+      if (fx /= 0.0) then
+        s%hs(i,j) = s%hs(i,j) + fx
+        ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
+        dzb = -fx * gm%morfac * gm%poroi
+        s%z(i,j) = s%z(i,j) + dzb
+        s%sd(i,j) = s%sd(i,j) + dzb
+        ! 間隙水の連行(f_dbwet=1。高橋・中川1991 式(5)の源泉
+        ! i{c*+(1−c*)s_b} の水側。
+        ! gwflow 併用は init で排除済み):
+        !   侵食(Δz<0): λ・s_b・|Δz| の間隙水を地表水 h へ放出(飽和床)
+        !   堆積(Δz>0): 同量を埋没(地表水の範囲で。不足分は不飽和堆積)
+        if (gm%f_dbwet == 1) then
+          dhw = -gm%db_lamsb * dzb
+          if (dhw < 0.0) dhw = max(dhw, -max(s%h(i,j), 0.0))
+          s%h(i,j) = s%h(i,j) + dhw
+        end if
+        ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
+        ! (calc_suspend と同じ整合。反対称適用)
+        if (s%gw_active) then
+          cap = s%sd(i,j) * g%sy0
+          if (s%hg(i,j) > cap) then
+            fxg = s%hg(i,j) - cap
+            s%hg(i,j) = cap
+            s%h(i,j) = s%h(i,j) + fxg
+          end if
+        end if
       end if
-      ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
-      ! (calc_suspend と同じ整合。反対称適用)
-      if (s%gw_active) then
-        cap = s%sd(i,j) * g%sy0
-        if (s%hg(i,j) > cap) then
-          fxg = s%hg(i,j) - cap
-          s%hg(i,j) = cap
-          s%h(i,j) = s%h(i,j) + fxg
+      ! 土石流による岩盤侵食(§88.18): E-D の適用後の自セルの sd で被覆を厳密に積分し、
+      ! 生成物を 1:1 で可動層へ(z は不変。地下水の容量は増えるだけ)
+      if (rkd) then
+        if (gm%rk%edb(i,j) > 0.0) then
+          bd = rock_cover_inc(gm%rk%edb(i,j) * dtw, s%sd(i,j), gm%rk%hstar, gm%rk%hsinv)
+          s%sd(i,j) = s%sd(i,j) + bd
+          s%ri(i,j) = s%ri(i,j) + bd
+          vd = vd + real(bd, real64)
+          bdm = max(bdm, bd * gm%rk%hsinv)
         end if
       end if
     end do
+    if (rkd) gm%rk%vdrow(j) = gm%rk%vdrow(j) + vd * real(area, real64)
   end do
   !$omp end parallel do
+  if (rkd) gm%rk%bdmax = max(gm%rk%bdmax, bdm)
 
   ! --- 斜面安定のパス2: Fs < 1 のセルの土層を全層流動化 ---
   if (gm%f_slide == 1) call slide_pass2(gm, g, s)   ! 2(判定のみ)は流動化しない

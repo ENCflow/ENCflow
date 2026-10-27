@@ -26,7 +26,7 @@ laws, erosion/deposition laws, triggering, bed layer).
 | Debris flow / landslide | f_debris / f_slide | Water-sediment mixture; selectable exchange and resistance laws, slope stability test |
 | Moving bed layer | f_bedslide | Layer hb moves within the terrain and soil, displacing the water surface |
 | Bedrock weathering / uplift | f_wthr / f_uplift | Weathering increases sd; uplift / subsidence shifts z |
-| Bedrock incision by flowing water | f_rockinc | Plucking by the flow and abrasion by the transported gravel lower the bedrock surface z − sd. The plucked rock is added to the mobile layer sd (z unchanged) and the abraded fines leave the system. The mobile layer shields the bed (cover), and the outflow of bedload is multiplied by an availability factor (requires f_fluvial) |
+| Bedrock incision by flowing water | f_rockinc | Plucking by the flow and abrasion by the transported gravel lower the bedrock surface z − sd. The plucked rock is added to the mobile layer sd (z unchanged) and the abraded fines leave the system. The mobile layer shields the bed (cover), and the outflow of bedload is multiplied by an availability factor (requires f_fluvial). In debris-flow runs (f_debris) it becomes rock erosion by debris flows (rock_kdb) |
 | Limestone dissolution | f_dissol | Lowers z in proportion to the recharge (no sediment is produced); a sink-inflow term for dolines |
 | Rockfall and talus | f_rockfall | Collapse of free faces (cliffs) that exceed a critical height, and the talus (thickness ht) of the fallen debris. The talus spreads at its repose angle and suppresses dry-slope erosion |
 
@@ -1207,7 +1207,7 @@ state variable is introduced.
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| f_rockinc | 0 | 1 enables it (`f_fluvial = 1` is required) |
+| f_rockinc | 0 | 1 enables it (`f_fluvial = 1` is required, or `f_debris = 1` for the debris-flow term) |
 | rock_kp | 0 (= no plucking) | Plucking rate coefficient (m/s): the incision rate of bare rock at τ_b = 2τ_c |
 | rock_tauc | none (required when rock_kp > 0) | Plucking threshold τ_c (Pa) |
 | rock_m | 1.0 | Plucking exponent m |
@@ -1241,9 +1241,9 @@ explicitly, so if "max thin-layer drainage rate x dts" printed at the end
 exceeds 0.5, lower `dt_geomorph` or `morfac` (a guideline for the cover
 dynamics not to depend on the update interval).
 
-**Combinations (initial version)**: it cannot be combined with `f_debris`,
-`f_bedslide`, the subgrid channel width `fn_width`, nesting, or wave-driven
-longshore transport (the run stops). When combined with `f_suspend`,
+**Combinations (initial version)**: it cannot be combined with `f_bedslide`,
+the subgrid channel width `fn_width`, nesting, or wave-driven longshore transport
+(the run stops). In `f_debris` runs only the debris-flow term below is used. When combined with `f_suspend`,
 `f_bedfines = 1` is recommended (it prevents the plucked coarse material
 from being entrained as suspended load). Small long-term increments are
 involved, so a double-precision build is recommended.
@@ -1276,6 +1276,64 @@ stream of a rising V-shaped valley: the steady valley and the response to a
 base-level fall; a model for converting time by giving the coefficients of the
 continuous processes multiplied by the inverse of the intermittency factor; the
 second part compares constant supply and pulses with the same mean).
+
+### Rock erosion by debris flows (rock_kdb)
+
+Equations and sources: [supplement](sediment.md#bedrock-incision-by-flowing-water-f_rockinc).
+The design master is docs/mountain_stream_plan.md §12 (developer.md §88.18,
+in Japanese).
+
+In debris-flow event runs (`f_debris = 1`, `morfac = 1`), the flowing mixture
+erodes the rock. It is an optional term of `f_rockinc = 1`, enabled by
+`rock_kdb > 0`.
+
+- **Erosion law**: when the quasi-static driving stress τ_d = ρ(1 + sC) g_e h_t tanθ
+  exceeds the threshold τ_cd, bare rock is eroded at k_d (τ_d/τ_cd − 1)^m_d.
+  h_t = h + h_s is the mixture flow depth, θ the bed slope in the flow direction
+  (downslope only) and g_e the effective gravity of the momentum equation. In
+  steady uniform flow τ_d equals the basal shear of the resistance law, whichever
+  resistance law (`f_dbres`) is chosen.
+- **Cells that erode**: only wet cells with a dense mixture (C ≥ `db_cmin`) that
+  is moving (|V| ≥ `db_vstop`). Dilute tails, clear water and stopped masses do
+  not erode.
+- **Product and cover**: the eroded rock becomes a mobile layer of the same
+  thickness (`sd` increases, `z` unchanged); the erosion–deposition formula
+  (`f_dbed`) decides whether the flow entrains it or it stays as cover. The cover
+  uses the same exposure exp(−sd/H*) as flowing water and shares `rock_hstar` and
+  `fn_rock`.
+- **Not combined with the fluvial terms**: in debris-flow runs set `rock_kp` and
+  `rock_beta` to 0 (the run stops otherwise). Incision by floods belongs to the
+  flood runs, so that the calendar accounting is not mixed.
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| rock_kdb | 0 (= no debris-flow term) | Rate coefficient k_d (m/s): the lowering rate of bare rock at τ_d = 2τ_cd. Requires `f_debris = 1` |
+| rock_taucdb | none (required with rock_kdb > 0) | Threshold τ_cd (Pa) |
+| rock_mdb | 1.0 | Exponent m_d |
+
+`rock_kdb` and `rock_taucdb` are calibrated values without standard values in the
+literature. A bedrock lowering of mm to cm per debris flow has been reported
+(references in the supplement; checked against the abstracts). The threshold
+decides how strongly the erosion concentrates in steep reaches (in the comparison
+of docs/mountain_stream_plan.md §12.4, 1 kPa nearly confined it to reaches steeper
+than 0.2). Set `db_cmin` within (0, C*) (0 stops the run). The single-layer
+mixture does not resolve the bouldery front, so the erosion concentrated at the
+front in observations is calibrated into the coefficient of the whole event.
+
+**Alternating with long-term flood runs**: connect debris-flow event runs and
+flood runs (`morfac > 1` or the intermittency conversion) with
+`f_state_restore = 2` (a new time axis; dt may change). With `f_rockinc = 1` in
+both, the cumulative incision `Ri` continues. Disable uplift, weathering and creep
+in the event runs (the calendar is counted by the time of the flood runs; this is
+not enforced).
+
+**Outputs for this section**: the debris-flow part is added to the cumulative
+incision `Ri0001...`. At the end "rock erosion by debris flows: eroded ... m3
+(bulk, into the mobile layer sd)" (the bulk volume of eroded rock) and the maximum
+increment per update / H* are printed. Checked in
+[test/dbrock](../../../test/dbrock/en/README.md) (analytical self-cover solution,
+invariance to the update interval, the concentration and velocity gates,
+conservation in a closed box, input errors).
 
 ## Limestone dissolution (f_dissol)
 
@@ -1371,7 +1429,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 | Fs0001... / Fs9999 | f_out_fs = 1 (f_slide = 1 or 2) | slope safety factor and its run minimum (−1 = not evaluated) |
 | Hb0001... / Vb0001... | automatic (f_bedslide) | thickness (m) and speed (m/s, diagnostic) of the moving bed layer |
 | Fx0001... | automatic (f_fixation) | fixation degree a (0 to 1) |
-| Ri0001... | automatic (f_rockinc) | cumulative bedrock incision by flowing water (m; total plucked and abraded thickness). The bedrock surface is Z − Sd |
+| Ri0001... | automatic (f_rockinc) | cumulative bedrock incision (m; total of plucking and abrasion by flowing water and erosion by debris flows). The bedrock surface is Z − Sd |
 
 **Ledgers and log** (budget checks)
 
@@ -1446,6 +1504,7 @@ When the type of phenomenon is known, start from the following
 | Bed change of a gravel-bed river | f_fluvial | - | - | - | 0.02-0.1 | - | Bedload dominates |
 | Long-term landform evolution | f_creep + f_wthr + f_uplift | - | - | - | - | - | creep_d 0.001-0.05 m²/yr, p0 10-100 mm/kyr, uplift 0.1-5 mm/yr. Together with morfac |
 | Bedrock incision in mountain streams | f_fluvial + f_rockinc (+ f_wthr + f_uplift + f_creep) | - | - | - | 0.01-0.1 | - | H* from the grain size to the bed relief (a few cm to tens of cm). Calibrate k_p and τ_c (mind the bias of τ_b on steep slopes). Bare rock via a zero soil-thickness file. Soil supply from the slopes by creep with creep_hstar > 0 (calibrate H_c). docs/mountain_stream_plan.md |
+| Rock erosion by debris flows | f_debris + f_rockinc (rock_kdb) | - | - | - | - | 30-35 | Calibrate k_d and τ_cd (a lowering of mm to cm per event is a guide; τ_cd of the order of kPa concentrates the erosion in steep reaches). H* a few cm (a deposit about 5 cm thick shields the bed in observations). Alternate with flood runs via f_state_restore = 2. docs/mountain_stream_plan.md §12 |
 | Karst landforms (dissolution, dolines) | f_dissol (+ dissol_sink + the inlets of f_gwconduit, dissol_lat = −1, f_rockfall) | - | - | - | - | - | c_eq 50-300 mg/L (low for rain on bare rock, high under soil), rho_r 2500-2700. Limit to limestone with fn_dissol. Rock walls phi_rock 50-70°. Together with morfac |
 | Landslide tsunami (bed layer) | f_bedslide | 0.1-0.2 | 300-1000 | - | - | - | mu and xi of the inertia-free bed layer (bs_mu/bs_xi). Calibrated separately from the mixture values |
 
@@ -1475,4 +1534,7 @@ amount and timing of supply, the initial cover and the retreat of a step), and
 [test/hillsoil](../../../test/hillsoil/en/README.md) (soil production by
 weathering: analytical solutions with a uniform and a distributed (`fn_wthr`)
 rate, cells with multiplier 0 unchanged, and the steady hillslope of uplift,
-weathering and depth-dependent creep).
+weathering and depth-dependent creep), and
+[test/dbrock](../../../test/dbrock/en/README.md) (rock erosion by debris flows:
+analytical self-cover solution, invariance to the update interval, the
+concentration and velocity gates, conservation in a closed box, input errors).

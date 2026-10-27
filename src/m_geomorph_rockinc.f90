@@ -27,6 +27,17 @@
 !   侵食性倍率 f_r は fn_rock(方式 2 の配布。未指定なら確保しない)。台帳は剥離・研磨の
 !   かさ体積の行部分和(real64 → par_sum_rows = 決定的)。
 !   無効時は呼ばれない(配列なし。calc_fluvial の分岐の判定だけ)。
+!
+!   土石流の項(rock_kdb > 0。f_debris の構成。§88.18、plan §12): 準静的な駆動応力の超過形
+!     τ_d  = ρ_w (1 + sC) g_e h_t tanθ_f   (h_t = h + h_s、θ_f は流向の河床勾配(下りのみ)、
+!                                           g_e は運動方程式と同じ有効重力)
+!     E_d0 = f_r k_d max(τ_d/τ_cd − 1, 0)^{m_d}
+!   を、濃い混合体(C >= db_cmin)が流れている(|V| >= db_vstop)湿潤セルに掛ける。生成物は
+!   剥離と同じく 1:1 で可動層へ(z は不変)、被覆は同じ伝播子 rock_cover_inc で積分する。
+!   計算は calc_debris の 2 パスの中(パス 1 が E_d0 を作業配列 edb に、パス 2 が E-D の適用後の
+!   sd で積分)。ここは検査・確保・台帳と伝播子だけ。土石流の構成では流水の項(rock_kp・
+!   rock_beta)を使わない(暦の勘定を出水の計算と混ぜない。§88.18 の 6)ので calc_rockinc は
+!   呼ばれない。
 !======================================================================
 submodule(m_geomorph) m_geomorph_rockinc
   use m_parallel, only : par_info, par_stop, dcp, is_root, par_halo_cell, par_scatter_cell, &
@@ -53,16 +64,41 @@ module subroutine init_rockinc(gm, p, g, s, list)
   integer :: i, j
   real :: bad(1)
 
-  ! --- パラメータ検証(k_p・β・τ_c は校正値で既定を置かない。0 は「その項なし」。§88) ---
+  ! --- パラメータ検証(k_p・β・τ_c・k_d・τ_cd は校正値で既定を置かない。0 は「その項なし」。§88) ---
   if (list%rock_hstar <= 0.0) then
     call par_stop("list_geomorph: f_rockinc requires rock_hstar > 0 (cover length scale H*, m)")
   end if
-  if (list%rock_kp < 0.0 .or. list%rock_beta < 0.0) then
-    call par_stop("list_geomorph: rock_kp and rock_beta must be >= 0")
+  if (list%rock_kp < 0.0 .or. list%rock_beta < 0.0 .or. list%rock_kdb < 0.0) then
+    call par_stop("list_geomorph: rock_kp, rock_beta and rock_kdb must be >= 0")
   end if
-  if (list%rock_kp <= 0.0 .and. list%rock_beta <= 0.0) then
-    call par_stop("list_geomorph: f_rockinc requires rock_kp > 0 (plucking) and/or " &
-                  // "rock_beta > 0 (abrasion by bed load)")
+  if (gm%f_debris > 0) then
+    ! 土石流の構成は土石流の項だけ(流水の下刻は出水の計算が担う。§88.18 の 6)
+    if (list%rock_kp > 0.0 .or. list%rock_beta > 0.0) then
+      call par_stop("list_geomorph: with f_debris=1, f_rockinc uses only the debris-flow term; " &
+                    // "set rock_kp = rock_beta = 0 (fluvial incision belongs to the flood runs)")
+    end if
+    if (list%rock_kdb <= 0.0) then
+      call par_stop("list_geomorph: f_rockinc with f_debris=1 requires rock_kdb > 0 " &
+                    // "(rock erosion by debris flows)")
+    end if
+    if (list%rock_taucdb <= 0.0) then
+      call par_stop("list_geomorph: rock_kdb > 0 requires rock_taucdb > 0 (threshold of the " &
+                    // "driving stress, Pa)")
+    end if
+    if (list%rock_mdb <= 0.0) call par_stop("list_geomorph: rock_mdb must be > 0")
+    ! 濃い混合体の門(C >= db_cmin)。0 だと清水のセルも土石流の係数で削る
+    if (list%db_cmin <= 0.0 .or. list%db_cmin >= 1.0 / gm%poroi) then
+      call par_stop("list_geomorph: rock_kdb > 0 requires db_cmin in (0, C*) " &
+                    // "(only dense mixtures erode the rock with the debris-flow term)")
+    end if
+  else
+    if (list%rock_kdb > 0.0) then
+      call par_stop("list_geomorph: rock_kdb > 0 requires f_debris=1 (rock erosion by debris flows)")
+    end if
+    if (list%rock_kp <= 0.0 .and. list%rock_beta <= 0.0) then
+      call par_stop("list_geomorph: f_rockinc requires rock_kp > 0 (plucking) and/or " &
+                    // "rock_beta > 0 (abrasion by bed load)")
+    end if
   end if
   if (list%rock_kp > 0.0) then
     if (list%rock_tauc <= 0.0) then
@@ -76,9 +112,24 @@ module subroutine init_rockinc(gm, p, g, s, list)
   gm%rk%beta = list%rock_beta
   gm%rk%hstar = list%rock_hstar
   gm%rk%hsinv = 1.0 / list%rock_hstar
-  call par_info("geomorph: rock incision on (k_p = " // fmt_e(gm%rk%kp) // " m/s, tau_c = " &
-                // rtoa(gm%rk%tauc) // " Pa, m = " // rtoa(gm%rk%pm) // ", beta = " &
-                // fmt_e(gm%rk%beta) // " 1/m, H* = " // rtoa(gm%rk%hstar) // " m)")
+  gm%rk%fl = (gm%rk%kp > 0.0 .or. gm%rk%beta > 0.0)
+  if (gm%rk%fl) then
+    call par_info("geomorph: rock incision on (k_p = " // fmt_e(gm%rk%kp) // " m/s, tau_c = " &
+                  // rtoa(gm%rk%tauc) // " Pa, m = " // rtoa(gm%rk%pm) // ", beta = " &
+                  // fmt_e(gm%rk%beta) // " 1/m, H* = " // rtoa(gm%rk%hstar) // " m)")
+  end if
+  gm%rk%db = (list%rock_kdb > 0.0)
+  if (gm%rk%db) then
+    gm%rk%kdb = list%rock_kdb
+    gm%rk%taucdb = list%rock_taucdb
+    gm%rk%mdb = list%rock_mdb
+    call par_info("geomorph: rock erosion by debris flows on (k_d = " // fmt_e(gm%rk%kdb) &
+                  // " m/s, tau_cd = " // rtoa(gm%rk%taucdb) // " Pa, m_d = " // rtoa(gm%rk%mdb) &
+                  // ", H* = " // rtoa(gm%rk%hstar) // " m)")
+    ! 作業配列(calc_debris のパス 1 → パス 2)と台帳の行部分和
+    allocate(gm%rk%edb(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
+    allocate(gm%rk%vdrow(dcp%js:dcp%je), source = 0.0_real64)
+  end if
   if (gm%f_suspend > 0 .and. gm%f_bedfines <= 0) then
     call par_info("geomorph: note: without f_bedfines the plucked rock (coarse) can also be " &
                   // "entrained as suspended load; f_bedfines = 1 keeps it in the coarse class")
@@ -207,22 +258,34 @@ module subroutine dispose_rockinc(gm, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: vp, va
-  real :: dmax(2)
+  real(real64) :: vp, va, vd
+  real :: dmax(2), ddmax(1)
 
   call par_sum_rows(gm%rk%vprow, vp)
   call par_sum_rows(gm%rk%varow, va)
   dmax(1) = gm%rk%bmax
   dmax(2) = gm%rk%lmax
   call par_allreduce_max(dmax)
-  call par_info("geomorph: rock incision: plucked " // fmt_e(real(vp)) &
-                // " m3 (bulk, into the mobile layer sd), abraded " // fmt_e(real(va)) &
-                // " m3 (bulk, exported as fines)")
-  call par_info("geomorph: rock incision: max increment per update / H* = " // fmt_e(dmax(1)) &
-                // ", max thin-layer drainage rate x dts = " // fmt_e(dmax(2)))
-  if (dmax(2) > 0.5) then
-    call par_info("geomorph: note: thin-layer drainage rate x dts exceeds 0.5; reduce dt_geomorph " &
-                  // "or morfac if the cover dynamics must not depend on the update interval")
+  if (gm%rk%fl) then
+    call par_info("geomorph: rock incision: plucked " // fmt_e(real(vp)) &
+                  // " m3 (bulk, into the mobile layer sd), abraded " // fmt_e(real(va)) &
+                  // " m3 (bulk, exported as fines)")
+    call par_info("geomorph: rock incision: max increment per update / H* = " // fmt_e(dmax(1)) &
+                  // ", max thin-layer drainage rate x dts = " // fmt_e(dmax(2)))
+    if (dmax(2) > 0.5) then
+      call par_info("geomorph: note: thin-layer drainage rate x dts exceeds 0.5; reduce dt_geomorph " &
+                    // "or morfac if the cover dynamics must not depend on the update interval")
+    end if
+  end if
+  ! 土石流の項の台帳(判定は namelist 由来で全ランク同一 = collective 安全)
+  if (gm%rk%db) then
+    call par_sum_rows(gm%rk%vdrow, vd)
+    ddmax(1) = gm%rk%bdmax
+    call par_allreduce_max(ddmax)
+    call par_info("geomorph: rock erosion by debris flows: eroded " // fmt_e(real(vd)) &
+                  // " m3 (bulk, into the mobile layer sd)")
+    call par_info("geomorph: rock erosion by debris flows: max increment per update / H* = " &
+                  // fmt_e(ddmax(1)))
   end if
   if (p%f_state_save > 0) call save_rockinc(gm, p, g, s)
 end subroutine
@@ -245,6 +308,18 @@ module pure function rock_avail(h, hsinv) result(f)
   else
     f = 1.0 - exp(-x)
   end if
+end function
+
+
+!----------------------------------------------------------------------
+! 露出率を厳密に積分した 1 更新の岩盤の侵食厚(土石流の項。§88.18)
+!   B = H* ln(1 + (E dts/H*) e^{−h/H*})(edt = E dts。calc_rockinc の剥離の伝播子と同じ形。
+!   e^{H/H*} が時間に比例して増える自己被覆の厳密解で、更新間隔の分割によらない)
+!----------------------------------------------------------------------
+module pure function rock_cover_inc(edt, h, hstar, hsinv) result(b)
+  real, intent(in) :: edt, h, hstar, hsinv
+  real :: b
+  b = hstar * ln1p_safe(edt * hsinv * exp(-max(h, 0.0) * hsinv))
 end function
 
 

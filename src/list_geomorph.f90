@@ -271,8 +271,9 @@ module list_geomorph
     character(len=256) :: fn_uplift = ""  ! 隆起速度の倍率の分布ファイル(§88。未指定 = 全セル 1)。
                                      ! 隆起速度 = uplift0 × 倍率。出口のセルを 0 にすれば基準面が
                                      ! 固定され、負にすれば基準面の低下を与えられる
-    integer :: f_rockinc = 0         ! 流水による岩盤下刻(0:無効, 1:有効。§88。f_fluvial=1 が必須)。
-                                     ! 岩盤面 R = z − sd を剥離・研磨で下げる。被覆(可動層 sd)が
+    integer :: f_rockinc = 0         ! 岩盤下刻(0:無効, 1:有効。§88。f_fluvial=1 か f_debris=1 が必須)。
+                                     ! 岩盤面 R = z − sd を、流水の剥離・研磨(f_fluvial の構成)か
+                                     ! 土石流(f_debris の構成。rock_kdb)で下げる。被覆(可動層 sd)が
                                      ! 露出率 exp(−sd/H*) で下刻を抑え、掃流砂の流出に利用可能率
                                      ! 1 − exp(−sd/H*) を掛ける。剥離物は 1:1 で可動層へ(風化と同じ)、
                                      ! 研磨の細粒分は系外(台帳に記録)
@@ -283,7 +284,14 @@ module list_geomorph
     real :: rock_beta = 0.0          ! 研磨係数 β (1/m。校正値で既定なし)。0 = 研磨項なし(tools 効果なし)。
                                      ! 裸岩の研磨速度 E_a = β q_b (1 − e^{−sd/H*})(q_b: セルの掃流砂
                                      ! 容量 = 単位幅の固体流砂量。rock_kp と少なくとも一方は正)
-    real :: rock_hstar = 0.0         ! 被覆の長さ H* (m)(必須 > 0。岩盤面の起伏の高さ)
+    real :: rock_kdb = 0.0           ! 土石流による岩盤侵食の速度係数 k_d (m/s。校正値で既定なし)。
+                                     ! 0 = 土石流の項なし。f_debris=1 の構成でだけ使う(流水の項
+                                     ! rock_kp・rock_beta とは併用しない)。裸岩の低下速度
+                                     ! E_d = k_d (τ_d/τ_cd − 1)^m_d、τ_d = ρ(1 + sC) g_e h_t tanθ
+                                     ! (準静的な駆動応力。C >= db_cmin・|V| >= db_vstop のセルのみ。§88)
+    real :: rock_taucdb = 0.0        ! 土石流による岩盤侵食の閾値 τ_cd (Pa)。rock_kdb > 0 で必須
+    real :: rock_mdb = 1.0           ! 土石流による岩盤侵食のべき指数 m_d
+    real :: rock_hstar = 0.0         ! 被覆の長さ H* (m)(必須 > 0。岩盤面の起伏の高さ。流水・土石流で共有)
     character(len=256) :: fn_rock = ""  ! 岩盤の侵食性倍率の分布ファイル(>= 0。0 = 侵食しない。
                                      ! 未指定 = 全セル 1)
     integer :: f_dissol = 0          ! 石灰岩の溶食(化学的削剥。0:無効, 1:有効。§86)。
@@ -440,7 +448,7 @@ subroutine list_geomorph_read(p, list)
   real :: uplift0
   character(len=256) :: fn_uplift
   integer :: f_rockinc
-  real :: rock_kp, rock_tauc, rock_m, rock_beta, rock_hstar
+  real :: rock_kp, rock_tauc, rock_m, rock_beta, rock_hstar, rock_kdb, rock_taucdb, rock_mdb
   character(len=256) :: fn_rock
   integer :: f_dissol, dissol_src, dissol_sink
   real :: dissol_ceq, dissol_rho, dissol_fsink, dissol_fres, dissol_lat, dissol_fsurf, dissol_sdsurf
@@ -473,6 +481,7 @@ subroutine list_geomorph_read(p, list)
                            f_slide, slide_c, slide_phi, slide_gamma, &
                            f_wthr, wthr_p0, wthr_sdstar, fn_wthr, f_uplift, uplift0, fn_uplift, &
                            f_rockinc, rock_kp, rock_tauc, rock_m, rock_beta, rock_hstar, fn_rock, &
+                           rock_kdb, rock_taucdb, rock_mdb, &
                            f_dissol, dissol_ceq, dissol_rho, dissol_src, dissol_sink, &
                            dissol_fsink, dissol_fres, dissol_lat, dissol_fsurf, dissol_sdsurf, fn_dissol, &
                            dissol_dzmax, &
@@ -594,6 +603,9 @@ subroutine list_geomorph_read(p, list)
   rock_m = list%rock_m
   rock_beta = list%rock_beta
   rock_hstar = list%rock_hstar
+  rock_kdb = list%rock_kdb
+  rock_taucdb = list%rock_taucdb
+  rock_mdb = list%rock_mdb
   fn_rock = list%fn_rock
   f_dissol = list%f_dissol
   dissol_ceq = list%dissol_ceq
@@ -742,6 +754,9 @@ subroutine list_geomorph_read(p, list)
   list%rock_m = rock_m
   list%rock_beta = rock_beta
   list%rock_hstar = rock_hstar
+  list%rock_kdb = rock_kdb
+  list%rock_taucdb = rock_taucdb
+  list%rock_mdb = rock_mdb
   list%fn_rock = fn_rock
   list%f_dissol = f_dissol
   list%dissol_ceq = dissol_ceq

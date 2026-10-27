@@ -568,6 +568,40 @@ or `morfac` gives the same result, and it is unconditionally stable. The
 outflow from a thin layer is explicit, with the time scale
 $`H_*(1-\lambda)\Delta x / q_c`$.
 
+**Rock erosion by debris flows (rock_kdb).** In debris-flow event runs
+(`f_debris = 1`), the quasi-static driving stress of the flowing mixture erodes
+the rock:
+
+```math
+\tau_d = \rho_w (1 + sC)\,g_e\,h_t \tan\theta_f,\qquad
+E_{d0} = f_r\,k_d \max\!\left(\frac{\tau_d}{\tau_{cd}} - 1,\ 0\right)^{m_d},\qquad
+\frac{dR}{dt} = -E_{d0}\,e^{-H/H_*},\qquad \frac{dH}{dt} = E_{d0}\,e^{-H/H_*}
+```
+
+$`h_t = h + h_s`$ is the mixture flow depth, $`C`$ the volumetric concentration
+of the mixture, $`\theta_f`$ the bed slope in the flow direction (downslope only)
+and $`g_e`$ the effective gravity of the momentum equation ($`g\cos^2\theta_f`$;
+$`g`$ with `f_gravity_correction = 0`). In steady uniform flow $`\tau_d`$ equals
+the basal shear of the resistance law, whichever resistance law is chosen. Only
+cells with a dense mixture ($`C \ge c_{\min}`$ = `db_cmin`) that is moving
+($`|V| \ge v_{stop}`$ = `db_vstop`) erode, and the product enters the mobile layer
+1:1 like plucking ($`z`$ unchanged). Whether the flow entrains it or it stays as
+cover is decided by the erosion–deposition formula. The time integration uses the
+same propagator as plucking, with $`H`$ after the erosion–deposition step.
+
+That debris flows are the main agent of bedrock lowering in steep valleys is shown
+by the slope–area relation[^stock03] and erosion-pin measurements[^stock05]. The
+mechanism is thought to be particle impacts; there are a law based on inertial
+stresses[^stock06] and rotating-drum experiments[^hsu08]. The single-layer mixture
+does not resolve the bouldery front where the impacts concentrate, so the excess
+form of the quasi-static stress, which was robust in the single-event comparison
+(docs/mountain_stream_plan.md §12.4, in Japanese), was adopted. It belongs to the
+family of erosion laws in flow depth and slope[^mcguire23]; the form and the
+combination of coefficients are **our own**. In the same comparison, a threshold of
+1 kPa concentrated the erosion in the reaches steeper than about 0.2. The
+observation that a deposit about 5 cm thick shields the bed from impacts[^mccoy13]
+is a guide for $`H_*`$.
+
 ## 8. Parameters and the basis of their defaults
 
 The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
@@ -612,6 +646,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | rock_m | 1 | plucking exponent | **conventional value** linear (same as berode_m of bank erosion) |
 | rock_beta | 0 (no abrasion) | abrasion coefficient β (1/m) | **calibration value** no standard value. The largest incision rate by abrasion (cover fraction 1/2) is β q_c / 4 |
 | rock_hstar | none | cover length H* | **given** a measure of the relief of the bedrock surface and the grain size (a few cm to tens of cm). Shared by the exposure and the availability |
+| rock_kdb / rock_taucdb | 0 (no debris-flow term) / none | rate coefficient (m/s) / threshold (Pa) of rock erosion by debris flows | **calibrated** no standard values. k_d is the lowering rate of bare rock at τ_d = 2τ_cd. A lowering of mm to cm per debris flow is a guide[^stock05][^mccoy13] |
+| rock_mdb | 1 | exponent of the debris-flow term | **conventional** linear (same as rock_m) |
 | fn_rock | none (1 everywhere) | erodibility multiplier of the bedrock | **given** lithological contrast. 0 = not eroded |
 
 **Where to look when revising the defaults**
@@ -672,3 +708,9 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^sklar04]: Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
 [^turowski07]: Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion. *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697
 [^zhang15]: Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N. (2015): Macro-roughness model of bedrock–alluvial river morphodynamics. *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015 (checked against the abstract)
+[^stock03]: Stock, J. D. and Dietrich, W. E. (2003): Valley incision by debris flows: Evidence of a topographic signature. *Water Resour. Res.*, 39(4), 1089. doi:10.1029/2001WR001057 (checked against the abstract: the inverse power law between slope and area rarely extends to slopes steeper than 0.03 to 0.10)
+[^stock05]: Stock, J. D., Montgomery, D. R., Collins, B. D., Dietrich, W. E. and Sklar, L. S. (2005): Field measurements of incision rates following bedrock exposure: Implications for process controls on the long profiles of valleys cut by rivers and debris flows. *Geol. Soc. Am. Bull.*, 117(1–2), 174–194. doi:10.1130/B25560.1 (checked against the abstract: erosion pins in valleys of weak rock show up to cm/yr; in debris-flow valleys the episodic debris flows are the main agent)
+[^stock06]: Stock, J. D. and Dietrich, W. E. (2006): Erosion of steepland valleys by debris flows. *Geol. Soc. Am. Bull.*, 118(9/10), 1125–1148. (checked against the abstract and secondary accounts: an erosion law based on the inertial normal stress of particle impacts; the form of the equation not yet checked)
+[^hsu08]: Hsu, L., Dietrich, W. E. and Sklar, L. S. (2008): Experimental study of bedrock erosion by granular flows. *J. Geophys. Res.*, 113, F02001. doi:10.1029/2007JF000778 (checked against the abstract and secondary accounts)
+[^mccoy13]: McCoy, S. W., Tucker, G. E., Kean, J. W. and Coe, J. A. (2013): Field measurement of basal forces generated by erosive debris flows. *J. Geophys. Res. Earth Surf.*, 118, 589–602. doi:10.1002/jgrf.20041 (checked against the abstract: the bedrock floor was lowered by 36 to 64 mm over the observation period; a deposit about 5 cm thick shields the bed from impacts)
+[^mcguire23]: McGuire, L. A. et al. (2023): Steady-state forms of channel profiles shaped by debris flow and fluvial processes. *Earth Surf. Dynam.*, 11, 1117–1143. doi:10.5194/esurf-11-1117-2023 (checked against the abstract: a family of erosion laws in flow depth and slope; the list of co-authors not yet checked)

@@ -121,7 +121,9 @@ The exchange with the bed is an increment of the solid column
 $`\Delta h_s`$, applied as $`\Delta z = -\Delta h_s/C_*`$ to $`z`$ and $`s_d`$
 co-movingly. It is clamped by the erodible layer (erosion $`\le s_d`$) and
 by the suspended amount (deposition $`\le h_s`$); dry cells return
-everything to the bed.
+everything to the bed. This exchange does not erode the rock exposed after the
+mobile layer is stripped; rock erosion is handled by the debris-flow term of
+`f_rockinc` (`rock_kdb`; [landform change chapter](geomorph.md#rock-erosion-by-debris-flows-rock_kdb)).
 
 ![Equilibrium concentration and bedload formulas](../../figs/sediment_laws_en.png)
 

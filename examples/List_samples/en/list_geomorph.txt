@@ -398,8 +398,8 @@
                             !   0 at the outlet cells = fixed base level,
                             !   negative = falling base level
 
-  ! ---- bedrock incision by flowing water (mountain streams. Requires
-  !      f_fluvial=1. developer.md §88) ----
+  ! ---- bedrock incision (mountain streams. The fluvial terms require
+  !      f_fluvial=1, the debris-flow term f_debris=1. developer.md §88) ----
   !f_rockinc = 1            ! lowers the bedrock surface z − sd by plucking and
                             !   abrasion, and adds the plucked rock to the mobile layer sd
                             !   (z unchanged). The mobile layer suppresses the
@@ -416,11 +416,22 @@
                             !   β × bedload capacity × availability; the fines leave
                             !   the system. At least one of rock_kp and rock_beta > 0
   !rock_hstar = 0.05        ! cover length H* (m; required; a measure of the
-                            !   relief of the bedrock surface and the grain size)
+                            !   relief of the bedrock surface and the grain size;
+                            !   shared by flowing water and debris flows)
   !fn_rock = 'rock.txt'     ! distribution of the erodibility multiplier of the
                             !   bedrock (>= 0; 0 = not eroded). Unset = 1 everywhere.
                             !   To start from bare rock, give a soil-thickness file
                             !   of zeros (f_sdtype=1, fn_sd)
+  !rock_kdb = 1.0e-4        ! rate coefficient of rock erosion by debris flows (m/s;
+                            !   lowering rate of bare rock at τ_d = 2τ_cd; calibration
+                            !   value). Only in f_debris=1 runs, with rock_kp and
+                            !   rock_beta set to 0. τ_d = ρ(1 + sC) g_e h_t tanθ (the
+                            !   quasi-static driving stress). Only cells with a dense
+                            !   mixture (C >= db_cmin) that is moving (|V| >= db_vstop)
+                            !   erode
+  !rock_taucdb = 1000.0     ! threshold τ_cd of the debris-flow term (Pa; required
+                            !   when rock_kdb > 0; calibration value)
+  !rock_mdb = 1.0           ! exponent of the debris-flow term (default 1)
 
   ! ---- limestone dissolution (chemical denudation, karst. developer.md §86) ----
   !f_dissol = 1             ! limestone dissolution (lowers z in proportion to

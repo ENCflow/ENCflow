@@ -58,8 +58,8 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "9676ceef1f9b1fd77bb1e326fceb112d67a39cf2cbd560cbe0e64f83f72d75f4",
-      "target_sha256": "27fd91206f311a75166901a9b6636e6b7dd9254cecf38d781f76324dee064dce",
+      "source_sha256": "432e901e8ddb5c2b8c17ac8738ea646f5ffea3b84783fdc362ef18ad31048aaa",
+      "target_sha256": "3a7fa81e7e380a75c1307020ef399f92d933a74c55ed68d199783ac617255726",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -104,8 +104,8 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "dfa51e579e17ee5d99c09869c71798bc084e0c092a9082b634c47e57839acc15",
-      "target_sha256": "ff8df44ae09e4a29a3345962c0d5aef855e5f0041a70c46654bfab06aff3ed2e",
+      "source_sha256": "160ef32c92d2f2855ebdc5a8ee2edb7c09067144906dcd9e4401615a777a0725",
+      "target_sha256": "1342495e0f4bdda14693f224d95efba5a24dc579cd617bb0b0782db8cec0ea9f",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -266,8 +266,8 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "1bf3f7ac9d6787505e5253d9acbeafc63982933705e216ac427fbcecfd31c805",
-      "target_sha256": "150562c48656384725665a70845c9f798188c10f2e817b8ce22d7628aaa51642",
+      "source_sha256": "554bca18de257565a8a118f636275fe9f9f41ef727a3da16449bac56702bf10d",
+      "target_sha256": "b27848734af3d96e2811047ff710796d09314b1d1719b37a992922249ce5f7dd",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -338,11 +338,11 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "941411ab664741bbf55a593b5312a6b94c26506fb499303d6ff4992619f3fb7f",
-      "target_sha256": "08392da4c93997f50f25c784c903bd2dbfcbf02f1817f29383694feac3f199f8",
+      "source_sha256": "e8f874d763203fc0a823d7aa8f82e9674e44103231c0ee7a3c4e5b88f72b2dec",
+      "target_sha256": "427902ef4fb8d7b4a1f4cea23596b0c0db8169494822bae176866cdf1168705d",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "docs/users_guide/nest.md",
@@ -383,8 +383,8 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "1267fcaa13b2ef761e8ba093d1bade37377f003e3c6592828b53c068ec9194ac",
-      "target_sha256": "55fa2f450c420896e7157f249ad7c69e725d82d0cb954ba23db6d3ab4aff3ae4",
+      "source_sha256": "ec3434a9b523eee4a5718c3697642d7163db0967a982743a202a6fce36179158",
+      "target_sha256": "dc4e94d6642b30c43a9938164906b0453e8b97a1198e1a821cf205be9367ccd7",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -419,8 +419,8 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "a90a3da4aacc9b1963ff0349e64c786c13a038e55432a1128f9a0c2727bf4ce0",
-      "target_sha256": "a6a8eacec48bb7081eeda5de72c5f7d61c690643709f62e1f05c51dbd6f08110",
+      "source_sha256": "4d9d51a1c096508b81c79dc0b555b0ce2aa840a96b976e6ec55bba4d6fed6098",
+      "target_sha256": "f974a3e04372b3a5f846ae664158e91f5bbdb67b28ffd0062acf01cc0ca18eb3",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -608,8 +608,8 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "1a4011d502b31b63b9212b195d582b081a2991ac04434c6b81253f5e75f32bb3",
-      "target_sha256": "726aed0bd28a7f263a4af79d7c97e4e2815968dc7d3f1c304577d9bef8945f23",
+      "source_sha256": "7f67dd8b15d11281896e853784ce3b8c2f97651d73334af06a4bb105444856ff",
+      "target_sha256": "8a271b34e493882358277ae9f82236b3f55f22f46312ba90d66d16bc588df2a6",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -995,8 +995,8 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "14b8b259b2abf19bf4290309796cbf31460c5d5e67690fc5ce7a6f71a58c59a4",
-      "target_sha256": "208eec27c7c6317fb1084b53e03cf0d048e947b66a0eb51aa5c4ed54e838db0b",
+      "source_sha256": "2872547ea2b905dd0d8cdbf9f10c17a66f2df3e1ce069b01bb4d942ea10e7408",
+      "target_sha256": "03b39fb792bbe4173773c5767b4850e581c9126e2fa41837bb31f4ffc45db1e1",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -1342,6 +1342,15 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/dbrock/README.md",
+      "target": "test/dbrock/en/README.md",
+      "source_sha256": "faea0fbd4b1edc814d6794199cbfa4da31bb31e854ec6cec2e545b8dc620b3a1",
+      "target_sha256": "f0694abf73e76f16e588321d4b3f0cd33d3dd471016034d858c8158135f5ab1c",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "test/debris/README.md",
