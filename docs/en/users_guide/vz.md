@@ -389,9 +389,10 @@ The settings of the paper and the results of the reproduction for each are in
 
 **Conversion from van Genuchten parameters**: when only α and n of the van
 Genuchten model are at hand, σ and ψm of the Kosugi model can be obtained by the
-correspondence that makes the medians of the two models (ψ at S_e = 0.5) equal
-(equations (25) and (26) of Kosugi 1996[^kosugi1996]; fits to 50 soils showed that
-the inflection points also nearly agree). θs, θr and Ks are used as they are.
+correspondence that makes both the inflection points of the retention curves and
+the medians (ψ at S_e = 0.5) of the two models equal (equations (24) to (26) of
+Kosugi 1996[^kosugi1996]; based on fits to 50 soils in which the inflection points
+of the two models nearly agreed). θs, θr and Ks are used as they are.
 
 ```math
 m = 1 - \frac{1}{n},\quad
@@ -401,6 +402,45 @@ m = 1 - \frac{1}{n},\quad
 
 The unit of ψm is that of 1/α (cm if α is in 1/cm, so convert it to m). The curves
 of the two models are similar but not the same (Figures 3 to 8 of that paper).
+
+**Trial values by soil texture class**: as a guide for trying textures other than
+forest soils, the means of the US soil texture classes (12 classes) of Carsel and
+Parrish (1988)[^carsel1988] were converted to the Kosugi model with the equations
+above. Ks is Table 4 of that paper (cm/h) converted to mm/h. The rightmost column
+is the size of the difference caused by the conversion: the largest difference of
+S_e for ψ = −1 cm to −100 m, and the largest ratio of K where K_r ≥ 10⁻³.
+
+| Texture | vz_ks_mmh | vz_thetas | vz_thetar | vz_psim (m) | vz_sigma | Conversion difference (S_e / K) |
+|---|---:|---:|---:|---:|---:|---|
+| sand | 297 | 0.43 | 0.045 | −0.0897 | 0.661 | 0.05 / ×1.3 |
+| loamy sand | 145.9 | 0.41 | 0.057 | −0.119 | 0.802 | 0.06 / ×1.4 |
+| sandy loam | 44.2 | 0.41 | 0.065 | −0.253 | 1.02 | 0.08 / ×1.8 |
+| loam | 10.4 | 0.43 | 0.078 | −0.866 | 1.34 | 0.10 / ×2.7 |
+| sandy clay loam | 13.1 | 0.39 | 0.100 | −0.660 | 1.46 | 0.12 / ×3.3 |
+| silt loam | 4.5 | 0.45 | 0.067 | −2.53 | 1.58 | 0.13 / ×4.2 |
+| silt | 2.5 | 0.46 | 0.034 | −3.84 | 1.66 | 0.14 / ×5.1 |
+| clay loam | 2.6 | 0.41 | 0.095 | −4.72 | 1.81 | 0.15 / ×7.2 |
+| silty clay loam | 0.7 | 0.43 | 0.089 | −20.0 | 2.09 | 0.13 / ×15 |
+| sandy clay | 1.2 | 0.38 | 0.100 | −7.39 | 2.09 | 0.17 / ×15 |
+| silty clay | 0.2 | 0.36 | 0.070 | −4420 | 3.16 | 0.18 / ×400 |
+| clay | 2.0 | 0.38 | 0.068 | −2760 | 3.16 | 0.18 / ×400 |
+
+- The original values are not fits to measured retention curves. They are class
+  means of values estimated by a regression (Rawls and Brakensiek 1985) from the
+  sand and clay fractions and the bulk density in US soil survey reports (42
+  states) (agricultural soils; the clay class is limited to less than 60 % clay).
+- The coefficient of variation of Ks within a class is large, 52 to 453 % (Table 4
+  of that paper), and the mean is larger than a typical value (the median).
+- The conversion is better for coarser textures (K within a factor of 3 from sand
+  to loam) and worse for finer textures with N close to 1. The values for silty
+  clay and clay (N = 1.09) are not usable.
+- The first version of VZ stops as ponding when the soil surface cannot accept the
+  rain (roughly rain > Ks; see [Scope and restrictions on combinations](#scope-and-restrictions-on-combinations) above).
+  Fine textures with a small Ks can be computed only with weak rain (all 12
+  classes were confirmed to compute with rain = 0.5 Ks).
+- Forest soils often have a much larger Ks at the surface than these, and the three
+  sets of Tani (2023) above are more suitable for trying forested mountain
+  catchments.
 
 ## Verification and examples
 
@@ -438,5 +478,6 @@ of the two models are similar but not the same (Figures 3 to 8 of that paper).
 ## References
 
 [^tani2023]: Tani, M. (2023): Reevaluating the runoff mechanisms of small mountainous catchments by applying a new storm-runoff model based on the vertical unsaturated flow (in Japanese with English abstract). *Journal of Japan Society of Hydrology and Water Resources*, 36(1), 20–51. doi:10.3178/jjshwr.36.1741 (the VZ runoff model; the standard reference column is 10 m deep with 2.5 cm layers and free drainage at the bottom (II.2), and the Kosugi values are per study site (Table 2). Checked against the original paper on 2026-10-26)
-[^kosugi1996]: Kosugi, K. (1996): Lognormal distribution model for unsaturated soil hydraulic properties. *Water Resources Research*, 32(9), 2697–2703. doi:10.1029/96WR01776 (equations (7), (8), (13), (14) and (20); checked against the original paper on 2026-10-26)
+[^kosugi1996]: Kosugi, K. (1996): Lognormal distribution model for unsaturated soil hydraulic properties. *Water Resources Research*, 32(9), 2697–2703. doi:10.1029/96WR01776 (equations (7), (8), (12) to (14), (20) and (24) to (26); checked against the original paper on 2026-10-26)
+[^carsel1988]: Carsel, R. F. and Parrish, R. S. (1988): Developing joint probability distributions of soil water retention characteristics. *Water Resources Research*, 24(5), 755–769. doi:10.1029/WR024i005p00755 (means of the van Genuchten parameters and Ks by soil texture class: Tables 2 to 5; checked against the original paper on 2026-10-27)
 [^celia1990]: Celia, M. A., Bouloutas, E. T. and Zarba, R. L. (1990): A general mass-conservative numerical solution for the unsaturated flow equation. *Water Resources Research*, 26(7), 1483–1496. doi:10.1029/WR026i007p01483
