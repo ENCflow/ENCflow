@@ -21,7 +21,8 @@
 
 | ファイル | 内容 |
 |---|---|
-| `Check_fluvial.py <save>` | (1) 土砂体積保存 \|Σ(z − z₀)\| < 1e-9(反対称フラックスの帰結)、(2) 共動更新 max\|(sd − sd₀) − (z − z₀)\| < 1e-10、(3) 活性 max\|z − z₀\| > 1e-4 m |
+| `Check_fluvial.py <save> [nosd]` | (1) 土砂体積保存 \|Σ(z − z₀)\| < 1e-9(反対称フラックスの帰結)、(2) 共動更新 max\|(sd − sd₀) − (z − z₀)\| < 1e-10、(3) 活性 max\|z − z₀\| > 1e-4 m。`nosd` は (2) を省く |
+| `param_creep.txt` | 同じ箱に斜面クリープ(`f_creep = 1`、D = 0.01 m²/s)を重ねた構成(`save_creep/`)。帯界面のハロの検定用(下の所見) |
 | `Fig.py` | 下の図 `figs/fluvial.png` |
 
 ## 実行
@@ -58,6 +59,12 @@ python3 Fig.py    # figs/fluvial.png(引数 en で英語版を en/figs/ に)
   で、このケースでは発火しません(sd₀ = 10 m)。
 - MPI np = 1, 2, 4 の state.dat は逐次とバイト一致し、リスタート往復
   (sd が発展した状態の save → restore → save)もバイト一致します(§19)。
+- `param_creep.txt`(掃流砂 + クリープ)は (1)(3) だけを見ます(クリープは z だけを
+  動かすので (2) は対象外)。クリープは近傍の z を読むため、掃流砂が帯内の z を
+  更新したあとハロを交換しないと、MPI の帯界面のエッジが両ランクで食い違います。
+  2026-10-27 に np = 2 で Σ(z − z₀) = 2.5e-5 m·cell と逐次との不一致を検出し、
+  クリープの前の z のハロ交換で修正しました(developer.md §19.9)。修正後は
+  Σ(z − z₀) = −6.2e-18 で、np = 2, 4 が逐次とバイト一致します。
 - 河道マスク(rw)付きの通水断面の扱いは [tutorials/chichibu](../../tutorials/chichibu/)
   のサブグリッド河道、浮遊砂・ウォッシュロードは [test/suspend](../suspend/)、
   [test/wash](../wash/) を参照してください。

@@ -1128,6 +1128,15 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   ! 剥離深を相関長 ℓ_w で平滑化して z・sd から引く(中でハロ交換。判定は
   ! namelist 由来で全ランク同一 = collective 安全)
   if (gm%wlw%nsm > 0) call spread_wet(gm, g, s)
+  ! クリープは近傍の z を読む(帯界面のエッジは両ランクがハロから冗長計算する)。
+  ! 先行のプロセス(掃流砂・浮遊砂・斜面侵食・崩落など)が帯内の z を更新しただけで
+  ! ハロが古いままだと、帯界面のエッジが両ランクで食い違い、ランク数依存と土砂体積の
+  ! 誤差になる(2026-10-27 実検出: fluvial + creep の np = 2 で Σ(z − z0) = 2.5e-5)。
+  ! 先行して z を書くプロセスがあるときだけ交換する(判定は全ランク同一 = collective 安全)
+  if (gm%f_creep > 0 .and. (gm%f_fluvial > 0 .or. gm%f_suspend > 0 .or. gm%f_wash > 0 &
+      .or. gm%f_debris > 0 .or. gm%f_splash > 0 .or. gm%f_repose > 0 .or. gm%f_rockfall > 0)) then
+    call par_halo_cell(s%z)
+  end if
   if (gm%f_creep > 0) call calc_creep(gm, g, s, dts)
   if (gm%f_wthr > 0) call calc_wthr(gm, g, s, dts)
   if (gm%f_uplift > 0) call calc_uplift(gm, g, s, dts)

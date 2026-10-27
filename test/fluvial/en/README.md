@@ -25,7 +25,8 @@ equilibrium) is recorded as remaining work (§19).
 
 | File | Contents |
 |---|---|
-| `Check_fluvial.py <save>` | (1) sediment volume conservation \|Σ(z − z₀)\| < 1e-9 (a consequence of the antisymmetric fluxes), (2) co-update max\|(sd − sd₀) − (z − z₀)\| < 1e-10, (3) activity max\|z − z₀\| > 1e-4 m |
+| `Check_fluvial.py <save> [nosd]` | (1) sediment volume conservation \|Σ(z − z₀)\| < 1e-9 (a consequence of the antisymmetric fluxes), (2) co-update max\|(sd − sd₀) − (z − z₀)\| < 1e-10, (3) activity max\|z − z₀\| > 1e-4 m. `nosd` skips (2) |
+| `param_creep.txt` | The same box with hillslope creep added (`f_creep = 1`, D = 0.01 m²/s; `save_creep/`). A check of the halo at band interfaces (see Findings) |
 | `Fig.py` | The figure `en/figs/fluvial.png` below (`python3 Fig.py en`; `figs/fluvial.png` is the Japanese version) |
 
 ## Running
@@ -66,6 +67,14 @@ soil depth changes by exactly the amount the bed moves).
 - The state.dat of MPI np = 1, 2, 4 is byte-identical to the serial run,
   and a restart round trip (save → restore → save in a state where sd has
   evolved) is also byte-identical (§19).
+- `param_creep.txt` (bedload + creep) checks only (1) and (3) (creep moves
+  only z, so (2) does not apply). Creep reads the neighbouring z, so unless
+  the halo is exchanged after the bedload has updated z inside the band, the
+  edges at an MPI band interface differ between the two ranks. On
+  2026-10-27 this was detected with np = 2 as Σ(z − z₀) = 2.5e-5 m·cell and
+  a mismatch with the serial run, and fixed by exchanging the z halo before
+  creep (developer.md §19.9). After the fix Σ(z − z₀) = −6.2e-18 and
+  np = 2, 4 are byte-identical to the serial run.
 - For the handling of the conveying cross-section with a channel mask (rw),
   see the subgrid channel of
   [tutorials/chichibu](../../../tutorials/chichibu/en/README.md); for

@@ -1409,11 +1409,11 @@
     {
       "source": "test/fluvial/README.md",
       "target": "test/fluvial/en/README.md",
-      "source_sha256": "021edc18f6fc22bbabc8f7eed1b64171f41b0abf6862012f6733dc2948ef3ba1",
-      "target_sha256": "73eee8c21792d48e747b500916f486b99e8e44afaf88f2ae382fd0582940a017",
+      "source_sha256": "ed7626fafc459e6c05465959a854fe337dc189111d9d2263db8ddb512b6f28be",
+      "target_sha256": "a0351d7235cdd72015bf7e03a5685d21e2c15216bc3d506603485ca85bdd11a4",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "test/fluvial/figs/fluvial.png",
