@@ -6,6 +6,7 @@ Python 標準ライブラリのみ。使い方:
   python3 Check_vzzone.py dup     result result_dup      # 柱を共有 vs 複製
   python3 Check_vzzone.py avg     result_avg             # 雨の分布 + 柱内面積平均
   python3 Check_vzzone.py restart result result_restart  # 途中保存 → 再開 = 連続計算
+  python3 Check_vzzone.py bflow   result result_bflow    # 区画の基底流(param_bflow.txt)
 
 base の検定項目:
   (a) 孤立した受水セルの水深 = 雨 + 配分どおりの移送量
@@ -14,8 +15,16 @@ base の検定項目:
       (同じ受水セルに複数区画から渡る量が一度だけ加わる)
   (c) Log の S_total の変化 = 雨 − 系外流出/全面積
   (d) 区画の収支残差が非線形残差の予算内
+  (基底流の列 vbase があれば、(a)(b) の移送量は排水 + 基底流、(c) は地表セルへ渡る
+  区画の基底流を系への入力に加え、系外流出から系外流出区画の基底流を除く)
+
+bflow の検定項目(param.txt の結果と比べる):
+  (e) 累積の基底流 vbase = 区分線形の時系列(範囲外は端の値を保持)の厳密な積分 × 区画面積
+  (f) VZ 側の値(vin・vstore・vdrain・vcorr・residual)は基底流を加えても文字列で一致
+  (g) 出口の量 = 排水 + 基底流(区画 1・2 は vsurface、区画 3 は vexternal)
 """
 import csv
+from fractions import Fraction
 import math
 import os
 import sys
@@ -26,6 +35,9 @@ MB_RATE = 1.0e-11
 A = 10.0 * 10.0
 NVAL = 43                       # 領域内セル数(VZ 40 + 受水 3)
 RAIN_TABLE = [(0, 1), (60, 1), (61, 50), (180, 50), (181, 0), (9999, 0)]   # (min, mm/h)
+KIND = {1: 1, 2: 1, 3: 2}       # 出口 1: 地表セル / 2: 系外
+# param_bflow.txt の区画 1 の基底流(namelist)。区画 3 は data_vzzone/base3.txt から読む
+BASE1 = [(30.5, 0.0), (90.0, 2.0), (90.0, 4.0), (300.25, 1.0)]             # (min, mm/h)
 
 failed = []
 
@@ -129,17 +141,23 @@ def check_base(res):
     check(abs(vol - exp_) / exp_ < 1e-12, "(b) surface water volume %.10e m3 = rain on receiving cells + "
           "transfers %.10e m3 (rel %.1e)" % (vol, exp_, abs(vol - exp_) / exp_))
 
-    # (c) S_total の収支(全セルに雨、系外流出は区画 3 のみ)
+    # (c) S_total の収支(全セルに雨、系外流出は区画 3 のみ)。基底流は地表セルへ渡る
+    #     区画の分が系への入力、系外流出の区画の分は系外から系外へ(S_total に現れない)
     s0 = log[0][2]
     worst = 0.0
     rows = {}
+    ib = hz.index("vbase(m3)") if "vbase(m3)" in hz else None
     for r in zone:
         rows.setdefault(round(r[it]), {})[int(r[hz.index("zone")])] = r
     for t, v in log.items():
         if t == 0 or t not in rows:
             continue
         vext = sum(rows[t][z][ivext] for z in rows[t])
-        exp_ = s0 + rain_total(t) - vext / (NVAL * A)
+        vb_in = vb_ext = 0.0
+        if ib is not None:
+            vb_in = sum(rows[t][z][ib] for z in rows[t] if KIND[z] == 1)
+            vb_ext = sum(rows[t][z][ib] for z in rows[t] if KIND[z] == 2)
+        exp_ = s0 + rain_total(t) + (vb_in - (vext - vb_ext)) / (NVAL * A)
         worst = max(worst, abs(v[2] - exp_))
     check(worst < 1e-12 + MB_RATE * tend, "(c) Log S_total = S0 + rain - outflow/area (max abs err %.2e m)" % worst)
 
@@ -207,6 +225,74 @@ def check_avg(res):
           "Log S_total = S0 + mean rain - outflow/area (abs err %.2e m)" % abs(st - exp_))
 
 
+def base_integral(series, tsec):
+    """区分線形(範囲外は端の値を保持)の 0〜tsec の厳密な積分 (mm/h·s)。series は (min, mm/h)"""
+    pts = [(Fraction(t) * 60, Fraction(q)) for t, q in series]
+    t, total = Fraction(tsec), Fraction(0)
+    if t > 0 and pts[0][0] > 0:
+        total += (min(t, pts[0][0])) * pts[0][1]
+    for (t0, q0), (t1, q1) in zip(pts[:-1], pts[1:]):
+        a, b = max(Fraction(0), t0), min(t, t1)
+        if b <= a:
+            continue
+        fa = q0 + (q1 - q0) * (a - t0) / (t1 - t0)
+        fb = q0 + (q1 - q0) * (b - t0) / (t1 - t0)
+        total += (b - a) * (fa + fb) / 2
+    if t > pts[-1][0]:
+        total += (t - max(Fraction(0), pts[-1][0])) * pts[-1][1]
+    return total
+
+
+def check_bflow(res0, res):
+    """区画の基底流(param_bflow.txt)を param.txt の結果と比べる"""
+    print("== vzzone bflow: %s vs %s" % (res0, res))
+    base3 = []
+    with open(os.path.join("data_vzzone", "base3.txt")) as f:
+        for line in f:
+            if line.split():
+                t, q = line.split()[:2]
+                base3.append((Fraction(t), Fraction(q)))
+    series = {1: BASE1, 3: base3}
+    h0, z0 = zone_rows(res0)
+    hz, zone = zone_rows(res)
+    check("vbase(m3)" not in h0 and hz[:len(h0)] == h0 and hz[len(h0):] == ["vbase(m3)"],
+          "(e) vz_zone.csv has the vbase column only when a baseflow is given (appended last)")
+    it, iz, iarea, ib = hz.index("time(s)"), hz.index("zone"), hz.index("area(m2)"), hz.index("vbase(m3)")
+    ivd, ivint, ivext = hz.index("vdrain(m3)"), hz.index("vsurface(m3)"), hz.index("vexternal(m3)")
+    # (e) 累積の基底流の解析値
+    worst, nrow = 0.0, 0
+    for r in zone:
+        z = int(r[iz])
+        exp_ = 0.0
+        if z in series:
+            exp_ = float(base_integral(series[z], Fraction(r[it])) / Fraction(3600000)) * r[iarea]
+        err = abs(r[ib] - exp_) / max(abs(exp_), 1e-30) if exp_ != 0.0 else abs(r[ib])
+        worst = max(worst, err)
+        nrow += 1
+    check(worst < 1e-12, "(e) cumulative baseflow = exact integral x zone area (%d rows, worst rel %.1e)"
+          % (nrow, worst))
+    # (f) VZ 側の列は文字列で一致
+    with open(os.path.join(res0, "vz_zone.csv")) as f0, open(os.path.join(res, "vz_zone.csv")) as f1:
+        l0, l1 = f0.read().splitlines()[1:], f1.read().splitlines()[1:]
+    keep = [h0.index(k) for k in ("time(s)", "zone", "column", "area(m2)", "vin(m3)", "vstore(m3)",
+                                  "vdrain(m3)", "vcorr(m3)", "residual(m3)")]
+    same = len(l0) == len(l1) and all([a.split(",")[k] for k in keep] == [b.split(",")[k] for k in keep]
+                                      for a, b in zip(l0, l1))
+    check(same, "(f) the VZ side (vin, vstore, vdrain, vcorr, residual) identical to the run without baseflow")
+    for fn in ("vz_column.csv",):
+        with open(os.path.join(res0, fn)) as f0, open(os.path.join(res, fn)) as f1:
+            check(f0.read() == f1.read(), "(f) %s identical to the run without baseflow" % fn)
+    # (g) 出口の量 = 排水 + 基底流
+    worst = 0.0
+    for r in zone:
+        z = int(r[iz])
+        out = r[ivint] if KIND[z] == 1 else r[ivext]
+        other = r[ivext] if KIND[z] == 1 else r[ivint]
+        exp_ = r[ivd] + r[ib]
+        worst = max(worst, abs(out - exp_) / max(exp_, 1e-30), abs(other))
+    check(worst < 1e-13, "(g) outlet volume = drainage + baseflow (worst rel %.1e)" % worst)
+
+
 def check_restart(res1, res2):
     """途中保存 → 再開の結果が連続計算と一致する(再開後の記録)"""
     print("== vzzone restart: %s vs %s" % (res1, res2))
@@ -232,6 +318,8 @@ def main():
         check_avg(sys.argv[2])
     elif mode == "restart":
         check_restart(sys.argv[2], sys.argv[3])
+    elif mode == "bflow":
+        check_bflow(sys.argv[2], sys.argv[3])
     else:
         sys.exit("unknown mode " + mode)
     if failed:

@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 703 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 705 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -427,6 +427,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_timap | &list_tide | [潮位・海面](tide.md) |
 | fn_timaplist | &list_tide | [潮位・海面](tide.md) |
 | fn_vz | &list_sysparam | [鉛直不飽和浸透(VZ)流出](vz.md) |
+| fn_vz_base | &list_vz_zone | [鉛直不飽和浸透(VZ)流出](vz.md) |
 | fn_vz_zone | &list_vz | [鉛直不飽和浸透(VZ)流出](vz.md) |
 | fn_wave | &list_sysparam | [土砂・地形変化](geomorph.md)(波浪による沿岸漂砂) |
 | fn_width | &list_channel | [河道](channel.md) |
@@ -644,6 +645,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | uplift0 | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | v0 | &list_initial | [初期条件](initial.md) |
 | vv | &list_sysparam | [浅水流計算](swflow.md) |
+| vz_base | &list_vz_zone | [鉛直不飽和浸透(VZ)流出](vz.md) |
 | vz_depth | &list_vz_column | [鉛直不飽和浸透(VZ)流出](vz.md) |
 | vz_dt_init | &list_vz | [鉛直不飽和浸透(VZ)流出](vz.md) |
 | vz_dt_max | &list_vz | [鉛直不飽和浸透(VZ)流出](vz.md) |

@@ -65,8 +65,8 @@ def workflow(ax):
     box(ax, 0.00, y1, 0.11, h, T("論文の PDF\n(利用者が入手)", "PDF of the paper\n(obtained by the user)"),
         fc="#f2f1ee")
     box(ax, 0.14, y1, 0.13, h, "extract_tani2023.py")
-    box(ax, 0.30, y1, 0.19, h, T("data/ 降雨 precip_*.txt\n論文の値(同梱しない)",
-                                 "data/ rain precip_*.txt\npaper's values (not shipped)"), fc="#fbe9dd")
+    box(ax, 0.30, y1, 0.19, h, T("data/ 降雨・基底流(KI2)\n論文の値(同梱しない)",
+                                 "data/ rain, baseflow (KI2)\npaper's values (not shipped)"), fc="#fbe9dd")
     box(ax, 0.14, y2, 0.13, h, "make_case.py")
     box(ax, 0.30, y2, 0.19, h, T("data/grid_*/\n区画番号・土層厚", "data/grid_*/\nzones, soil depth"), fc="#fbe9dd")
     yc = (y1 + y2) / 2 + h / 2
@@ -190,7 +190,8 @@ def columns(ax):
 
 
 POST = [("TY1・TY2", "TY1, TY2", "q", "q"),
-        ("KI1・KI2", "KI1, KI2", "q / 2(残りは風化基岩への深部浸透)", "q / 2 (the rest is deep percolation)"),
+        ("KI1・KI2", "KI1, KI2", "q / 2(残りは風化基岩への深部浸透)。KI2 は\n+ 基底流(vbase の差分 ÷ 面積 ÷ 時間)も",
+         "q / 2 (the rest is deep percolation). For KI2\nalso + baseflow (difference of vbase ÷ area ÷ time)"),
         ("MREX", "MREX", "(q − 0.3 mm/h) / 2 ずつ上流堰・下流堰へ\n(入力の雨は 0.8 倍 = 蒸発散を差し引く)",
          "(q − 0.3 mm/h) / 2 to each weir\n(input rain × 0.8 = minus evapotranspiration)"),
         ("MR1", "MR1", "(q − 0.3 mm/h) / 2 × 860 m² → L/s(上流堰)", "(q − 0.3 mm/h) / 2 × 860 m² → L/s (upper weir)"),
@@ -205,14 +206,17 @@ def post(ax):
                        "q = difference of the zone's cumulative drainage vdrain\n   ÷ zone area ÷ time (mm/h) "
                        "(vz_zone.csv; = mean\n   drainage of the cells of the row)"),
             fontsize=8.2, va="top", linespacing=1.4)
-    y = 0.64
+    y = 0.70
     for ja_ev, en_ev, ja, en in POST:
         ax.text(0.0, y, T(ja_ev, en_ev), fontsize=8.4, weight="bold", va="top")
         ax.text(0.25, y, T(ja, en), fontsize=8.0, va="top", linespacing=1.35)
         y -= 0.115 if "\n" not in T(ja, en) else 0.16
-    ax.text(0, y - 0.02, T("論文の計算は HYDRUS-1D。TY・KI の論文の計算値には分離基底流が\n加えてあり、ENCflow 側には加えない(README の結果の節)",
+    ax.text(0, y - 0.02, T("論文の計算は HYDRUS-1D。TY・KI の論文の計算値には分離基底流が\n加えてある。ENCflow は KI2 だけ、観測の最初と最後を結ぶ直線を\n"
+                           "区画の基底流として与える(fn_vz_base。README の結果の節)",
                            "The paper computed with HYDRUS-1D. The separated baseflow is added\nto the values "
-                           "calculated in the paper for TY and KI, not to ENCflow\n(results section of the README)"),
+                           "calculated in the paper for TY and KI. ENCflow gives\nonly KI2 the straight line joining "
+                           "the first and last observations\nas the baseflow of the zone (fn_vz_base; results "
+                           "section of the README)"),
             fontsize=7.6, va="top", color=MUTED, linespacing=1.35)
 
 

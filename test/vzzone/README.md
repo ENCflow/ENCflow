@@ -3,7 +3,7 @@
 [English](en/README.md)
 
 鉛直不飽和浸透(VZ)流出([ユーザーガイドの章](../../docs/users_guide/vz.md)、
-developer.md §87)の区画・柱の共有・出口への受け渡し・雨の扱い・再開の検定です。
+developer.md §87)の区画・柱の共有・出口への受け渡し・雨の扱い・再開・基底流の検定です。
 `Check_vzzone.py` で解析的に決まる量を確かめ、`param.txt` の結果は reference の
 Log.txt とも比較します(ULP=0。CSV を比較に入れない理由は
 [test/vzcol](../vzcol/README.md) と同じ)。
@@ -31,6 +31,7 @@ test/vzcol と同じ(0〜60 分 1 mm/h、61〜180 分 50 mm/h、以後 0)を全�
 | 雨の分布 | `param_avg.txt` | 雨を分布(`prmap.txt`、mm/day × 時系列倍率)で与え、f_vz_rain = 1(柱内の面積平均) |
 | 厳密モードの停止 | `param_strictfail.txt` | 同じ雨で f_vz_rain = 0 → 柱内の雨量の不一致で停止するはず |
 | 保存と再開 | `param_save.txt` / `param_restart.txt` | 6 h で保存(同期時刻)し、再開して 12 h まで |
+| 基底流 | `param_bflow.txt`(区画 3 の系列は `data_vzzone/base3.txt`) | 区画 1 に namelist の基底流(30.5 分まで 0、90 分で 2 → 4 mm/h の段差、300.25 分に 1 mm/h、以後保持)、区画 3 にファイルの基底流(10 分まで 0.5、360 分に 1.5 mm/h、以後保持)。Run.sh が tt・dir_result・f_state_save・f_state_restore を sed で書き換えて保存 → 再開と、時刻が減る系列での停止も確かめる |
 
 ## 検定(Check_vzzone.py)
 
@@ -46,6 +47,12 @@ test/vzcol と同じ(0〜60 分 1 mm/h、61〜180 分 50 mm/h、以後 0)を全�
   区画 1 と 3 のセルの平均)、S_total の収支。同じ雨で厳密モードは停止。
 - **再開**: 6 h で保存 → 再開した結果(vz_zone.csv・vz_column.csv・Log)が
   連続計算の後半とビット一致。
+- **基底流**(`param.txt` の結果と比べる): 累積の基底流 vbase = 区分線形の時系列
+  (範囲外は端の値)の厳密な積分(Python の分数で計算)× 区画面積、VZ 側の値
+  (vin・vstore・vdrain・vcorr・residual と vz_column.csv)は基底流なしと文字列で一致、
+  出口の量(vsurface・vexternal)= 排水 + 基底流。受水セルの水深・地表水の総量・
+  S_total の収支も基本と同じ検定で確かめる(区画 1 の基底流は系への入力、区画 3 の
+  基底流は系外から系外へ)。保存 → 再開は連続計算とビット一致、時刻が減る系列は停止。
 
 ## 実行
 
@@ -64,3 +71,11 @@ S_total の収支は 2e-11 m、区画の残差は予算の 3e-4 倍。柱の共�
 連続計算と完全一致(逐次・MPI)。`-Og -fcheck=all` で逐次と np = 2・4 の全出力
 ファイル(プローブ含む)が一致、release で np = 1・2・4 が逐次 reference に
 ULP=0。reference は解析検定の合格を根拠にした暫定(目視確認待ち)。
+
+基底流(2026-10-27): 累積の基底流は解析積分と相対 2e-14、出口の量 = 排水 + 基底流は
+相対 2e-14、VZ 側の値と vz_column.csv は基底流なしと一致、S_total の収支は 2e-11 m。
+保存 → 再開は連続計算と完全一致、時刻が減る系列は「baseflow times of zone 1 must not
+decrease」で停止(MPI でも全ランク)。`-Og -fcheck=all` で実行時検査に掛からず、
+release で np = 1・2・4 が合格し、np = 1 と 4 の全出力ファイル(プローブ含む)が一致。
+基底流を与えない既存の構成は Log.txt・vz_zone.csv・vz_column.csv とも reference と
+バイト一致。

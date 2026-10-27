@@ -8,9 +8,9 @@ if [ $# -ge 1 ]; then
     python3 extract_tani2023.py "$1" data
 fi
 EVENTS="KIEX MREX MR1 TY1 TY2 KI1 KI2"
-for EV in $EVENTS; do
-    if [ ! -e data/precip_$EV.txt ]; then
-        echo "data/precip_$EV.txt がありません。論文の PDF を指定して ./Run.sh <PDF> を実行してください" >&2
+for f in $(for EV in $EVENTS; do echo data/precip_$EV.txt; done) data/base_KI2.txt; do
+    if [ ! -e $f ]; then
+        echo "$f がありません。論文の PDF を指定して ./Run.sh <PDF> を実行してください" >&2
         exit 1
     fi
 done
