@@ -14508,9 +14508,10 @@ test/rockinc(reference は持たない。解析解・保存則・バイト一致
   - DB6(-O2 の A/B。変更前の HEAD と result・save をバイト比較): f_debris・f_rockinc を使う既存の
     9 検定(avalanche・bedslide・curvature・debris・driftwood・rockinc・slide・splashslide・volcano)の
     1247 ファイルがすべて一致した(rk%fl で囲った calc_rockinc の呼び出しと、パス 2 の if ブロック化を
-    含む)。地形変化を使うほかの検定も、比較を終えた 9 検定(bankface・bedfines・berode・creep・
-    dissol・fluvial・kdpart・repose・rockfall)の 968 ファイルが一致した。CI の回帰ケース(wave・
-    dambreak・frost・pump・conduit・salt・vzcol・vzzone)も PASS。
+    含む)。地形変化を使う既存の 31 検定を通した A/B でも、3170 ファイルがすべて一致した(両側とも
+    全検定 PASS。nhbottom は入力の生成に examples/landslide_tsunami が要るので A/B の木では回せず、
+    回帰の構成は地形変化を使わない)。CI の回帰ケース(wave・dambreak・frost・pump・conduit・salt・
+    vzcol・vzzone)も PASS。
 
 ### 88.20 交互計算の残留土砂の規約(P2。§88.18 の 8)
 
