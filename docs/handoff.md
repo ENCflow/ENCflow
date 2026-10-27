@@ -1105,7 +1105,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 - **山地渓流の地形発達(岩盤下刻・被覆・斜面供給)**(docs/mountain_stream_plan.md。
   2026-10-27 合意。developer.md §88): 第 1 段の (1) 剥離・被覆・薄層の利用可能率・台帳
-  (f_rockinc。test/rockinc の T2〜T7・T9)を実装。残り: (2) 研磨(tools)項と T3 の山形、
+  (f_rockinc。test/rockinc の T2〜T7・T9)と (2) 研磨(tools)項・T3 の山形を実装。残り:
   (3) 分布隆起 fn_uplift と T8(下の 1n の既存項目)、(4) restore の「全域 sd ≤ 0 で停止」の
   緩和、(5) 例題 examples/bedrock_cover と文書の仕上げ(comparison.md を含む)、T10(格子の
   向き・解像度の記録)。第 2 段 = 深さ依存クリープ(creep_hstar)。

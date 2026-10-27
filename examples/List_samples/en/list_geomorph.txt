@@ -389,15 +389,20 @@
   ! ---- bedrock incision by flowing water (mountain streams. Requires
   !      f_fluvial=1. developer.md §88) ----
   !f_rockinc = 1            ! lowers the bedrock surface z − sd by plucking and
-                            !   adds the plucked rock to the mobile layer sd
+                            !   abrasion, and adds the plucked rock to the mobile layer sd
                             !   (z unchanged). The mobile layer suppresses the
                             !   incision by the exposure exp(−sd/H*), and the
                             !   bedload outflow is multiplied by the availability
                             !   1 − exp(−sd/H*) (also where the rock is not eroded)
-  !rock_kp = 1.0e-6         ! plucking rate coefficient (m/s; required; incision
-                            !   rate of bare rock at τ_b = 2τ_c; calibration value)
-  !rock_tauc = 10.0         ! plucking threshold τ_c (Pa; required; calibration value)
+  !rock_kp = 1.0e-6         ! plucking rate coefficient (m/s; incision rate of bare
+                            !   rock at τ_b = 2τ_c; calibration value). 0 = no plucking
+  !rock_tauc = 10.0         ! plucking threshold τ_c (Pa; required when rock_kp > 0;
+                            !   calibration value)
   !rock_m = 1.0             ! plucking exponent (default 1)
+  !rock_beta = 0.01         ! abrasion coefficient β (1/m; calibration value).
+                            !   0 = no abrasion (no tools effect). Abrasion rate =
+                            !   β × bedload capacity × availability; the fines leave
+                            !   the system. At least one of rock_kp and rock_beta > 0
   !rock_hstar = 0.05        ! cover length H* (m; required; a measure of the
                             !   relief of the bedrock surface and the grain size)
   !fn_rock = 'rock.txt'     ! distribution of the erodibility multiplier of the

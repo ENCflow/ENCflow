@@ -465,14 +465,19 @@ is a separate, not yet implemented stage (docs/karst_plan.md §5).
 
 ### Bedrock incision by flowing water (f_rockinc)
 
-**Plucking and cover.** The bedrock surface $`R = z - s_d`$ is lowered by
-plucking by the flow, and the mobile layer $`H = s_d`$ suppresses the
-incision through the exposure $`e^{-H/H_*}`$:
+**Plucking, abrasion and cover.** The bedrock surface $`R = z - s_d`$ is
+lowered by plucking by the flow and by abrasion by the transported gravel
+(the tools effect), and the mobile layer $`H = s_d`$ suppresses the incision
+through the exposure $`e^{-H/H_*}`$:
 
 ```math
 \tau_b = \frac{\rho_w g n^2 |V|^2}{h_e^{1/3}},\qquad
 E_{p0} = f_r\,k_p \max\!\left(\frac{\tau_b}{\tau_c} - 1,\ 0\right)^{m},\qquad
-\frac{dR}{dt} = -E_{p0}\,e^{-H/H_*},\qquad \frac{dH}{dt} = E_{p0}\,e^{-H/H_*}
+E_{a0} = f_r\,\beta\,q_c\,F_s(H)
+```
+
+```math
+\frac{dR}{dt} = -(E_{p0} + E_{a0})\,e^{-H/H_*},\qquad \frac{dH}{dt} = E_{p0}\,e^{-H/H_*}
 ```
 
 $`\tau_b`$ uses the same Manning closure as bedload
@@ -486,13 +491,22 @@ being checked). Expressing the cover as an exponential of the layer
 thickness is the same as in SPACE[^shobe17] and Landlab's
 GravelBedrockEroder. The plucked rock becomes a mobile layer of the same
 thickness ($`z`$ is unchanged), and bulking is absorbed into $`k_p`$ (the
-same 1:1 conversion as weathering; **our own simplification**).
+same 1:1 conversion as weathering; **our own simplification**). In the
+abrasion term, $`q_c`$ is the bedload capacity of the cell (solid transport
+rate per unit width), and $`q_c F_s`$ is the bedload leaving the cell, taken
+as the amount of gravel striking the bed (the same form as "abrasion = β ×
+transport rate × exposure" of GravelBedrockEroder). The abraded material
+leaves the system as fines ($`z`$ is lowered) and is not added to the cover.
 
 **Thin-layer transport.** The edge flux of bedload is multiplied by the
 availability $`F_s = 1 - e^{-H/H_*}`$ of the supplying cell. In a steady
 state with a uniform capacity $`q_c`$ and a constant transport rate
 $`q_s`$, $`F_s = q_s/q_c`$, and the exposure is $`1 - q_s/q_c`$, i.e. it
-agrees with the cover written as a supply ratio[^sklar04][^turowski07]. The
+agrees with the cover written as a supply ratio[^sklar04][^turowski07], and
+the incision rate by abrasion becomes the hump $`E = \beta q_s (1 - q_s/q_c)`$
+(largest at $`q_s/q_c = 1/2`$, and 0 with full cover at 1 and above; the same
+form as the linearization of the saltation–abrasion model of Sklar and
+Dietrich). The
 idea of setting the cover by the ratio of the alluvial thickness to the bed
 relief[^zhang15] is written as a closure that uses the same $`H_*`$ for the
 exposure and the availability; this combination and the dimensional form are
@@ -506,10 +520,13 @@ and the exposure is integrated exactly:
 
 ```math
 H^{n+1} = H^n + B_p,\qquad
-B_p = H_*\ln\!\left(1 + \frac{E_{p0}\,\Delta t_s}{H_*}\,e^{-H^n/H_*}\right)
+B_p = H_*\ln\!\left(1 + \frac{E_{p0}\,\Delta t_s}{H_*}\,e^{-H^n/H_*}\right),\qquad
+B_a = \frac{E_{a0}}{E_{p0}}\,B_p
 ```
 
-(the same form as the weathering propagator). Changing the update interval
+(the same form as the weathering propagator; $`F_s`$ of the abrasion is frozen
+at its value at the start of the update, and with $`E_{p0} = 0`$,
+$`B_a = E_{a0}\,\Delta t_s\,e^{-H^n/H_*}`$). Changing the update interval
 or `morfac` gives the same result, and it is unconditionally stable. The
 outflow from a thin layer is explicit, with the time scale
 $`H_*(1-\lambda)\Delta x / q_c`$.
@@ -551,8 +568,9 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | dissol_dzmax | 0 | cap on the dissolution per cell and update | **numerical setting** 0 = off. A safety valve of the fluv_dzmax type (the excess is discarded as saturation) |
 | dissol_fsink / dissol_fres | 1.0 / 0 | capacity ratio of the sink inflow / residue fraction | **empirical value** to be calibrated / **given** 0 = no residue |
 | dissol_lat | 0 | share p of lateral dissolution | **method** 0 = floor only, −1 = automatic from the wetted-area ratio (recommended). A fixed value follows the ratio of ponding depth to cell size |
-| rock_kp / rock_tauc | none / none | plucking rate coefficient (m/s) / threshold (Pa) (bedrock incision of §7) | **calibration value** no standard value. k_p is the incision rate of bare rock at τ_b = 2τ_c |
+| rock_kp / rock_tauc | 0 (no plucking) / none | plucking rate coefficient (m/s) / threshold (Pa) (bedrock incision of §7) | **calibration value** no standard value. k_p is the incision rate of bare rock at τ_b = 2τ_c |
 | rock_m | 1 | plucking exponent | **conventional value** linear (same as berode_m of bank erosion) |
+| rock_beta | 0 (no abrasion) | abrasion coefficient β (1/m) | **calibration value** no standard value. The largest incision rate by abrasion (cover fraction 1/2) is β q_c / 4 |
 | rock_hstar | none | cover length H* | **given** a measure of the relief of the bedrock surface and the grain size (a few cm to tens of cm). Shared by the exposure and the availability |
 | fn_rock | none (1 everywhere) | erodibility multiplier of the bedrock | **given** lithological contrast. 0 = not eroded |
 
@@ -584,7 +602,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/splash](../../../test/splash/en/README.md) | dry erosion on a slope with a break | all digits agree with the analytical form, export ledger agrees |
 | [test/splashslide](../../../test/splashslide/en/README.md) | cohesive / loose cliff | relief growth ×1.34 / ×0.77 |
 | [examples/badland](../../../examples/badland/) | valley formation on a plateau edge | valleys grow from the cliff edge with zero surface flow |
-| [test/rockinc](../../../test/rockinc/en/README.md) | bedrock incision by flowing water | analytic self-cover solution 9e-8, quasi-steady cover 4e-4, conservation in a closed box 6e-18 |
+| [test/rockinc](../../../test/rockinc/en/README.md) | bedrock incision by flowing water | analytic self-cover solution 9e-8, quasi-steady cover 4e-4, hump of abrasion 7e-4, conservation in a closed box (9 digits with the ledger) |
 
 ## References
 

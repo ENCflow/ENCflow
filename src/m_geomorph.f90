@@ -110,15 +110,17 @@ module m_geomorph
 
   ! 流水による岩盤下刻(f_rockinc。§88。docs/mountain_stream_plan.md 第 1 段)
   type t_rockinc
-    real :: kp = 0.0                 ! 剥離の速度係数 k_p (m/s)
+    real :: kp = 0.0                 ! 剥離の速度係数 k_p (m/s)(0 = 剥離項なし)
     real :: tauc = 0.0               ! 剥離の閾値 τ_c (Pa)
     real :: pm = 1.0                 ! 剥離のべき指数 m
+    real :: beta = 0.0               ! 研磨係数 β (1/m)(0 = 研磨項なし)
     real :: hstar = 0.0              ! 被覆の長さ H* (m)
     real :: hsinv = 0.0              ! 1 / H*(掃流砂の利用可能率 1 − exp(−sd/H*) でも使う)
     logical :: map = .false.         ! 侵食性倍率の分布 fn_rock の指定あり
     real, allocatable :: fr(:,:)     ! 侵食性倍率(>= 0。帯±ハロ。fn_rock 指定時のみ確保)
     real(real64), allocatable :: vprow(:)  ! 剥離した岩盤のかさ体積の行部分和 (m3。台帳)
-    real :: bmax = 0.0               ! 1 セル・1 更新の剥離厚 / H* の最大(診断。ランク局所)
+    real(real64), allocatable :: varow(:)  ! 研磨した岩盤(系外の細粒分)のかさ体積の行部分和 (m3)
+    real :: bmax = 0.0               ! 1 セル・1 更新の剥離・研磨厚 / H* の最大(診断。ランク局所)
     real :: lmax = 0.0               ! 薄層の排出率 × dts の最大(診断。ランク局所。目安 <= 0.5)
   end type
 
@@ -1172,8 +1174,8 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   ! 判定(表の確保)は全ランク同一 = 中のハロ交換は collective 安全
   if (gm%f_fluvial > 0 .and. allocated(b%qbin)) call apply_bedfeed(gm, g, s, b, dts)
   ! 流水による岩盤下刻(§88): 区間流入の給砂の後・掃流砂の前(上流から入った土砂の
-  ! 被覆を先に見て、生成物を同じ更新の掃流砂で運ぶ)。セル局所で sd を書き、近傍を
-  ! 読む calc_fluvial のために末尾で sd のハロを交換する(判定は全ランク同一)
+  ! 被覆を先に見て、生成物を同じ更新の掃流砂で運ぶ)。セル局所で sd(研磨があれば z も)を
+  ! 書き、近傍を読む calc_fluvial のために末尾でハロを交換する(判定は全ランク同一)
   if (gm%f_rockinc > 0) call calc_rockinc(gm, p, g, s, dts)
   if (gm%f_fluvial > 0) call calc_fluvial(gm, p, g, s, dts)
   ! 波浪による沿岸漂砂(§84.15): fluvial が帯内の z を更新した後に、更新後の地形で

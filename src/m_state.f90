@@ -181,7 +181,7 @@ module m_state
                                         !   出力 Fx。私有 save は geomorph_fixation.dat。§84.6)
     real, allocatable :: ht(:,:)        ! 崖錐の厚さ (m。f_rockfall。geomorph が確保・更新し
                                         !   出力 Ht。私有 save は geomorph_rockfall.dat。§48.7)
-    real, allocatable :: ri(:,:)        ! 流水による岩盤の累積下刻 (m。剥離の合計厚。f_rockinc。geomorph が
+    real, allocatable :: ri(:,:)        ! 流水による岩盤の累積下刻 (m。剥離 + 研磨。f_rockinc。geomorph が
                                         !   確保・更新し出力 Ri。私有 save は geomorph_rockinc.dat。§88)
     real, allocatable :: rnv(:,:)       ! 動的粗度 n_eff = n (1 + c_n a)(fix_cn > 0 のときだけ geomorph が
                                         !   確保・更新。流れの摩擦項が allocated なら g%rn の代わりに読む。

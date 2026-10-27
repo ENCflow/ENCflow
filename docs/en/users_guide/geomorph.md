@@ -26,7 +26,7 @@ laws, erosion/deposition laws, triggering, bed layer).
 | Debris flow / landslide | f_debris / f_slide | Water-sediment mixture; selectable exchange and resistance laws, slope stability test |
 | Moving bed layer | f_bedslide | Layer hb moves within the terrain and soil, displacing the water surface |
 | Bedrock weathering / uplift | f_wthr / f_uplift | Weathering increases sd; uplift / subsidence shifts z |
-| Bedrock incision by flowing water | f_rockinc | Plucking by the flow lowers the bedrock surface z − sd and adds the plucked rock to the mobile layer sd (z unchanged). The mobile layer shields the bed (cover), and the outflow of bedload is multiplied by an availability factor (requires f_fluvial) |
+| Bedrock incision by flowing water | f_rockinc | Plucking by the flow and abrasion by the transported gravel lower the bedrock surface z − sd. The plucked rock is added to the mobile layer sd (z unchanged) and the abraded fines leave the system. The mobile layer shields the bed (cover), and the outflow of bedload is multiplied by an availability factor (requires f_fluvial) |
 | Limestone dissolution | f_dissol | Lowers z in proportion to the recharge (no sediment is produced); a sink-inflow term for dolines |
 | Rockfall and talus | f_rockfall | Collapse of free faces (cliffs) that exceed a critical height, and the talus (thickness ht) of the fallen debris. The talus spreads at its repose angle and suppresses dry-slope erosion |
 
@@ -1162,8 +1162,16 @@ state variable is introduced.
   bare rock is eroded at the rate k_p (τ_b/τ_c − 1)^m. The plucked rock
   becomes a mobile layer of the same thickness (`sd` increases and `z` does
   not change; the same 1:1 conversion as weathering).
+- **Abrasion** (tools effect): the transported gravel strikes and wears the
+  bedrock. The abrasion rate of bare rock is β q_b (1 − exp(−sd/H*)) (q_b is the
+  bedload capacity of the cell, and the bracket is the availability = the amount
+  of gravel striking the bed). The worn material leaves the system as fines
+  (`z` is lowered) and is not added to the cover.
 - **Cover**: the thicker the mobile layer, the less the bedrock is eroded
-  (exposure exp(−sd/H*), where H* is `rock_hstar`).
+  (both plucking and abrasion are multiplied by the exposure exp(−sd/H*), where
+  H* is `rock_hstar`). In a steady state, the incision rate by abrasion is
+  hump-shaped in the transport rate (largest at transport rate / capacity = 0.5,
+  and 0 with full cover at 1 and above).
 - **Thin-layer transport**: the outflow of bedload is multiplied by the
   availability 1 − exp(−sd/H*). A thin gravel layer is not carried at the
   full capacity, and in a steady state the cover fraction equals
@@ -1176,14 +1184,16 @@ state variable is introduced.
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_rockinc | 0 | 1 enables it (`f_fluvial = 1` is required) |
-| rock_kp | none (required, > 0) | Plucking rate coefficient (m/s): the incision rate of bare rock at τ_b = 2τ_c |
-| rock_tauc | none (required, > 0) | Plucking threshold τ_c (Pa) |
+| rock_kp | 0 (= no plucking) | Plucking rate coefficient (m/s): the incision rate of bare rock at τ_b = 2τ_c |
+| rock_tauc | none (required when rock_kp > 0) | Plucking threshold τ_c (Pa) |
 | rock_m | 1.0 | Plucking exponent m |
+| rock_beta | 0 (= no abrasion) | Abrasion coefficient β (1/m) |
 | rock_hstar | none (required, > 0) | Cover length H* (m): a measure of the relief of the bedrock surface. Shared by the exposure and the availability |
 | fn_rock | "" | Distribution of the erodibility multiplier of the bedrock (≥ 0; 0 = not eroded = fixed bed, structures). Unset = 1 everywhere |
 
-`rock_kp` and `rock_tauc` are calibration values without a standard value
-in the literature, so they have no defaults. τ_b is obtained from the same
+At least one of `rock_kp` and `rock_beta` must be positive (the run stops if
+both are 0). `rock_kp`, `rock_tauc` and `rock_beta` are calibration values
+without a standard value in the literature, so they have no defaults. τ_b is obtained from the same
 Manning closure as bedload (the depth and velocity of the cell).
 
 To start from bare rock, give a soil-thickness file of zeros
@@ -1214,9 +1224,10 @@ the depth. For steep mountain streams, calibrate `rock_kp` and `rock_tauc`
 (and the transport rate) including this bias.
 
 **Outputs for this section**: cumulative incision `Ri0001...` (total plucked
-thickness, m; uplift and weathering are not included). The bedrock surface
-is Z − Sd. At the end, the volume of plucked bedrock (bulk) "rock incision:
-plucked ... m3" is printed, together with the maximum increment per update /
+and abraded thickness, m; uplift and weathering are not included). The bedrock
+surface is Z − Sd. At the end, the volume of plucked bedrock (bulk) and the
+volume of fines exported by abrasion "rock incision: plucked ... m3 ...,
+abraded ... m3" are printed, together with the maximum increment per update /
 H* and the maximum thin-layer drainage rate × dts. Restart uses
 `geomorph_rockinc.dat` (cumulative incision)
 ([Output and monitoring](#output-and-monitoring)).
@@ -1315,7 +1326,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 | Fs0001... / Fs9999 | f_out_fs = 1 (f_slide = 1 or 2) | slope safety factor and its run minimum (−1 = not evaluated) |
 | Hb0001... / Vb0001... | automatic (f_bedslide) | thickness (m) and speed (m/s, diagnostic) of the moving bed layer |
 | Fx0001... | automatic (f_fixation) | fixation degree a (0 to 1) |
-| Ri0001... | automatic (f_rockinc) | cumulative bedrock incision by flowing water (m; total plucked thickness). The bedrock surface is Z − Sd |
+| Ri0001... | automatic (f_rockinc) | cumulative bedrock incision by flowing water (m; total plucked and abraded thickness). The bedrock surface is Z − Sd |
 
 **Ledgers and log** (budget checks)
 
@@ -1403,6 +1414,6 @@ lake and wave generation),
 solutions for the infiltration, sink and rainfall sources and for the
 lateral-dissolution partition, and a restart round trip),
 [test/rockinc](../../../test/rockinc/en/README.md) (bedrock incision by flowing
-water: analytic self-cover solution, quasi-steady cover, conservation in a
-closed box, restart round trip from bare rock, and a record of τ_b in steep
-uniform flow).
+water: analytic self-cover solution, quasi-steady cover, the hump of abrasion,
+conservation in a closed box, restart round trip from bare rock, and a record
+of τ_b in steep uniform flow).

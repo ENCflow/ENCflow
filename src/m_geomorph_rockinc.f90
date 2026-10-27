@@ -1,27 +1,30 @@
 !======================================================================
 ! m_geomorph の submodule: 流水による岩盤下刻(f_rockinc)
 !   docs/mountain_stream_plan.md(第 1 段)、developer.md §88。
-!   岩盤面 R = z − sd を、流水の剥離(plucking)で下げる。可動層 H = sd が露出率
-!   P_r = exp(−H/H*) で下刻を抑え(被覆)、掃流砂の流出には利用可能率 F_s = 1 − P_r を
-!   掛ける(calc_fluvial):
+!   岩盤面 R = z − sd を、流水の剥離(plucking)と、運ばれる礫の研磨(abrasion。
+!   tools 効果)で下げる。可動層 H = sd が露出率 P_r = exp(−H/H*) で下刻を抑え
+!   (被覆)、掃流砂の流出には利用可能率 F_s = 1 − P_r を掛ける(calc_fluvial):
 !     τ_b  = ρ_w g n² |V|² / h_e^{1/3}  (既存の流砂と同じ Manning 閉じ。h_e = max(h, d_v))
 !     E_p0 = f_r k_p max(τ_b/τ_c − 1, 0)^m   剥離(超過せん断応力型 k_e (τ − τ_c)^m を
 !                                            k_p = k_e τ_c^m と置いた比形)
-!     dR/dt = −E_p0 P_r、  dH/dt = E_p0 P_r
+!     E_a0 = f_r β q_b F_s(H^n)              研磨(q_b: セルの掃流砂容量 = 単位幅の固体流砂量。
+!                                            q_b F_s がセルから出る掃流砂 = 床を叩く礫の量)
+!     dR/dt = −(E_p0 + E_a0) P_r、  dH/dt = E_p0 P_r(研磨の細粒分は被覆に加えない)
 !   換算は 1:1(剥離した岩の厚さ = 可動層の厚さ。風化 f_wthr・基岩の崩落 rf_bedrock と
 !   同じ規約で、岩盤の厚さを可動層のかさ厚換算で数える。独自の簡略化)。z は剥離では
-!   動かない(sd だけが増える)。
-!   時間積分: 水理(τ_b)を更新の頭で固定し、露出率を厳密に積分する(e^{H/H*} が時間に
-!   比例して増える):
+!   動かず(sd だけが増える)、研磨の分だけ下がる(細粒分は系外 = 台帳に記録)。
+!   時間積分: 水理(τ_b, q_b)と F_s(H^n) を更新の頭で固定し、露出率だけを厳密に積分する
+!   (e^{H/H*} が時間に比例して増える):
 !     B_p = H* ln(1 + (E_p0 dts/H*) e^{−H^n/H*})   (風化 calc_wthr の伝播子と同じ形)
+!     B_a = (E_a0/E_p0) B_p(E_p0 > 0)、 E_a0 dts e^{−H^n/H*}(E_p0 = 0)
 !   B は自己被覆で ln の速さでしか増えないので dzmax 型の安全弁は置かず、最大の B/H* を
-!   診断として報告する。薄層の排出率 L = q_b/(Δ (1 − λ) H*)(q_b: セルの掃流砂容量)と
-!   dts の積の最大も診断として報告する(目安 L·dts <= 0.5。plan §4.3)。
+!   診断として報告する。薄層の排出率 L = q_b/(Δ (1 − λ) H*)と dts の積の最大も診断として
+!   報告する(目安 L·dts <= 0.5。plan §4.3)。
 !   適用は湿潤(h > dd)・非海域の有効セル(河道マスク rw は見ない)。セル局所で近傍を
-!   読まない(冒頭のハロ交換は不要)。末尾で sd のハロを交換する(続く calc_fluvial が
-!   近傍の sd を読む。判定は namelist 由来で全ランク同一)。
+!   読まない(冒頭のハロ交換は不要)。末尾で sd(研磨があれば z も)のハロを交換する
+!   (続く calc_fluvial が近傍の sd・z を読む。判定は namelist 由来で全ランク同一)。
 !   状態: s%ri(累積下刻 = ΣB。出力 Ri。私有 save geomorph_rockinc.dat。契約 5・§83)。
-!   侵食性倍率 f_r は fn_rock(方式 2 の配布。未指定なら確保しない)。台帳は剥離の
+!   侵食性倍率 f_r は fn_rock(方式 2 の配布。未指定なら確保しない)。台帳は剥離・研磨の
 !   かさ体積の行部分和(real64 → par_sum_rows = 決定的)。
 !   無効時は呼ばれない(配列なし。calc_fluvial の分岐の判定だけ)。
 !======================================================================
@@ -50,25 +53,32 @@ module subroutine init_rockinc(gm, p, g, s, list)
   integer :: i, j
   real :: bad(1)
 
-  ! --- パラメータ検証(k_p・τ_c は校正値で既定を置かない。§88) ---
+  ! --- パラメータ検証(k_p・β・τ_c は校正値で既定を置かない。0 は「その項なし」。§88) ---
   if (list%rock_hstar <= 0.0) then
     call par_stop("list_geomorph: f_rockinc requires rock_hstar > 0 (cover length scale H*, m)")
   end if
-  if (list%rock_kp <= 0.0) then
-    call par_stop("list_geomorph: f_rockinc requires rock_kp > 0 (plucking rate coefficient, m/s)")
+  if (list%rock_kp < 0.0 .or. list%rock_beta < 0.0) then
+    call par_stop("list_geomorph: rock_kp and rock_beta must be >= 0")
   end if
-  if (list%rock_tauc <= 0.0) then
-    call par_stop("list_geomorph: f_rockinc requires rock_tauc > 0 (plucking threshold, Pa)")
+  if (list%rock_kp <= 0.0 .and. list%rock_beta <= 0.0) then
+    call par_stop("list_geomorph: f_rockinc requires rock_kp > 0 (plucking) and/or " &
+                  // "rock_beta > 0 (abrasion by bed load)")
   end if
-  if (list%rock_m <= 0.0) call par_stop("list_geomorph: rock_m must be > 0")
+  if (list%rock_kp > 0.0) then
+    if (list%rock_tauc <= 0.0) then
+      call par_stop("list_geomorph: rock_kp > 0 requires rock_tauc > 0 (plucking threshold, Pa)")
+    end if
+    if (list%rock_m <= 0.0) call par_stop("list_geomorph: rock_m must be > 0")
+  end if
   gm%rk%kp = list%rock_kp
   gm%rk%tauc = list%rock_tauc
   gm%rk%pm = list%rock_m
+  gm%rk%beta = list%rock_beta
   gm%rk%hstar = list%rock_hstar
   gm%rk%hsinv = 1.0 / list%rock_hstar
   call par_info("geomorph: rock incision on (k_p = " // fmt_e(gm%rk%kp) // " m/s, tau_c = " &
-                // rtoa(gm%rk%tauc) // " Pa, m = " // rtoa(gm%rk%pm) // ", H* = " &
-                // rtoa(gm%rk%hstar) // " m)")
+                // rtoa(gm%rk%tauc) // " Pa, m = " // rtoa(gm%rk%pm) // ", beta = " &
+                // fmt_e(gm%rk%beta) // " 1/m, H* = " // rtoa(gm%rk%hstar) // " m)")
   if (gm%f_suspend > 0 .and. gm%f_bedfines <= 0) then
     call par_info("geomorph: note: without f_bedfines the plucked rock (coarse) can also be " &
                   // "entrained as suspended load; f_bedfines = 1 keeps it in the coarse class")
@@ -96,6 +106,7 @@ module subroutine init_rockinc(gm, p, g, s, list)
 
   ! --- 台帳(行部分和)と累積下刻(出力 Ri・私有 save) ---
   allocate(gm%rk%vprow(dcp%js:dcp%je), source = 0.0_real64)
+  allocate(gm%rk%varow(dcp%js:dcp%je), source = 0.0_real64)
   if (.not. allocated(s%ri)) allocate(s%ri(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (p%f_state_restore > 0) call restore_rockinc(gm, p, g, s)
 end subroutine
@@ -109,20 +120,23 @@ module subroutine calc_rockinc(gm, p, g, s, dts)
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
   integer :: i, j
-  real :: hh, vv2, rn2, taub, taus, qc, h0, fr, ep0, x, bp
+  real :: hh, vv2, rn2, taub, taus, qc, h0, pr, fr, ep0, ea0, x, bp, ba
   real :: area, lcoef, bmax, lmax
-  real(real64) :: vp
+  real(real64) :: vp, va
+  logical :: abr
 
   area = 1.0 / gm%wrk%ainv
+  abr = (gm%rk%beta > 0.0)
   ! 薄層の排出率の目安 L ≈ q_b / (Δ (1 − λ) H*)(セルの容量から。plan §4.3 の時間尺度。
   ! L·dts の最大を診断として報告する)
   lcoef = gm%poroi * gm%rk%hsinv / min(g%dx, g%dy)
   bmax = 0.0
   lmax = 0.0
   !$omp parallel do schedule(static) reduction(max: bmax, lmax) &
-  !$omp   private(i, j, hh, vv2, rn2, taub, taus, qc, h0, fr, ep0, x, bp, vp)
+  !$omp   private(i, j, hh, vv2, rn2, taub, taus, qc, h0, pr, fr, ep0, ea0, x, bp, ba, vp, va)
   do j = dcp%js, dcp%je
     vp = 0.0_real64
+    va = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
@@ -134,33 +148,54 @@ module subroutine calc_rockinc(gm, p, g, s, dts)
       hh = max(s%h(i,j), p%dv)                   ! 極浅水深での τ の発散を防ぐ(流砂と同じ)
       vv2 = s%vv(i,j)**2
       rn2 = g%rn(i,j)**2
-      ! 薄層の排出率の診断(セルの掃流砂容量。流砂量式・有効掃流力の比は calc_fluvial と同じ)
+      h0 = max(s%sd(i,j), 0.0)
+      ! セルの掃流砂容量(単位幅の固体流砂量。流砂量式・有効掃流力の比は calc_fluvial と同じ)。
+      ! 研磨の駆動量と薄層の排出率の診断に使う
+      qc = 0.0
       taus = gm%flv%taufac * rn2 * vv2 / (gm%sgrav * gm%d50 * hh**(1.0/3.0))
       if (taus > gm%tausc) then
         qc = qbs_rock(gm%f_qbform, taus, gm%tausc) * gm%flv%qbcoef
         lmax = max(lmax, qc * lcoef * dts)
       end if
       ! 剥離(超過せん断応力の比形)
-      taub = rhow * p%gg * rn2 * vv2 / hh**(1.0/3.0)
-      if (taub <= gm%rk%tauc) cycle
-      ep0 = fr * gm%rk%kp * (taub / gm%rk%tauc - 1.0)**gm%rk%pm
-      ! 露出率の厳密積分(水理を固定した局所の常微分方程式の解)。1:1 で可動層へ(z 不変)
-      h0 = max(s%sd(i,j), 0.0)
-      x = ep0 * dts * gm%rk%hsinv * exp(-h0 * gm%rk%hsinv)
-      bp = gm%rk%hstar * ln1p_safe(x)
+      ep0 = 0.0
+      if (gm%rk%kp > 0.0) then
+        taub = rhow * p%gg * rn2 * vv2 / hh**(1.0/3.0)
+        if (taub > gm%rk%tauc) ep0 = fr * gm%rk%kp * (taub / gm%rk%tauc - 1.0)**gm%rk%pm
+      end if
+      ! 研磨(床を叩く礫の量 q_b F_s(H^n) に比例。更新の頭の H で固定)
+      ea0 = 0.0
+      if (abr .and. qc > 0.0) ea0 = fr * gm%rk%beta * qc * rock_avail(h0, gm%rk%hsinv)
+      if (ep0 <= 0.0 .and. ea0 <= 0.0) cycle
+      ! 露出率の厳密積分(水理を固定した局所の常微分方程式の解)
+      pr = exp(-h0 * gm%rk%hsinv)
+      if (ep0 > 0.0) then
+        x = ep0 * dts * gm%rk%hsinv * pr
+        bp = gm%rk%hstar * ln1p_safe(x)
+        ba = 0.0
+        if (ea0 > 0.0) ba = (ea0 / ep0) * bp
+      else
+        bp = 0.0
+        ba = ea0 * dts * pr
+      end if
+      ! 剥離は 1:1 で可動層へ(z 不変)、研磨は z を下げ細粒分は系外
       s%sd(i,j) = s%sd(i,j) + bp
-      s%ri(i,j) = s%ri(i,j) + bp
+      if (ba > 0.0) s%z(i,j) = s%z(i,j) - ba
+      s%ri(i,j) = s%ri(i,j) + (bp + ba)
       vp = vp + real(bp, real64)
-      bmax = max(bmax, bp * gm%rk%hsinv)
+      va = va + real(ba, real64)
+      bmax = max(bmax, (bp + ba) * gm%rk%hsinv)
     end do
     gm%rk%vprow(j) = gm%rk%vprow(j) + vp * real(area, real64)
+    gm%rk%varow(j) = gm%rk%varow(j) + va * real(area, real64)
   end do
   !$omp end parallel do
   gm%rk%bmax = max(gm%rk%bmax, bmax)
   gm%rk%lmax = max(gm%rk%lmax, lmax)
 
-  ! 続く calc_fluvial が近傍の sd(可動層クランプ・利用可能率)を読む
+  ! 続く calc_fluvial が近傍の sd(可動層クランプ・利用可能率)と z を読む
   call par_halo_cell(s%sd)
+  if (abr) call par_halo_cell(s%z)
 end subroutine
 
 
@@ -172,15 +207,17 @@ module subroutine dispose_rockinc(gm, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: vp
+  real(real64) :: vp, va
   real :: dmax(2)
 
   call par_sum_rows(gm%rk%vprow, vp)
+  call par_sum_rows(gm%rk%varow, va)
   dmax(1) = gm%rk%bmax
   dmax(2) = gm%rk%lmax
   call par_allreduce_max(dmax)
   call par_info("geomorph: rock incision: plucked " // fmt_e(real(vp)) &
-                // " m3 (bulk, into the mobile layer sd)")
+                // " m3 (bulk, into the mobile layer sd), abraded " // fmt_e(real(va)) &
+                // " m3 (bulk, exported as fines)")
   call par_info("geomorph: rock incision: max increment per update / H* = " // fmt_e(dmax(1)) &
                 // ", max thin-layer drainage rate x dts = " // fmt_e(dmax(2)))
   if (dmax(2) > 0.5) then
@@ -193,7 +230,7 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 被覆の利用可能率 f = 1 − exp(−h·hsinv)(h <= 0 で 0。小さい引数は級数で評価して
-! 桁落ちを避ける。calc_fluvial の供給側が使う)
+! 桁落ちを避ける。calc_fluvial の供給側と研磨項が使う)
 !----------------------------------------------------------------------
 module pure function rock_avail(h, hsinv) result(f)
   real, intent(in) :: h, hsinv
@@ -257,7 +294,7 @@ end function
 
 !----------------------------------------------------------------------
 ! 無次元掃流砂量(m_geomorph_fluvial の qbs_form・ループ 1 の式と同じ。
-! 1: 芦田・道上、2: MPM。薄層の排出率の診断に使う)
+! 1: 芦田・道上、2: MPM。研磨の駆動量と薄層の排出率の診断に使う)
 !----------------------------------------------------------------------
 pure function qbs_rock(form, taus, tsc) result(qbs)
   integer, intent(in) :: form

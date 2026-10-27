@@ -5,7 +5,10 @@
 #   Check_rockinc.py pluck    T3: 剥離物による被覆の準定常が、局所の水理から解いた漸化式
 #                                 q_j = q_{j-1} + a_j (1 − q_j/q_c)、F_s(H_j) = q_j/q_c に一致。
 #                             T7: morfac = 5・20 の構成(pluck_mf5・mf20)の累積下刻量が O(dts) で一致
-#   Check_rockinc.py box LOG  T4: 閉じた箱の保存(Σ(z − z0) = 0、Σ(sd − sd0) = Σ Ri = 台帳の剥離量)
+#   Check_rockinc.py hump     T3: 研磨だけの構成で、給砂比 r = q_in/q_c ごとの定常の下刻速度が
+#                                 β q_in (1 − q_in/q_c)(山形)、被覆率が q_in/q_c に一致。r >= 1 は全被覆
+#   Check_rockinc.py box LOG  T4: 閉じた箱の保存(Σ(z − z0) A = −研磨量、Σ(sd − sd0) A = 剥離量、
+#                                 Σ Ri A = 剥離量 + 研磨量。台帳と比べる)
 #   Check_rockinc.py steep    T9: 急勾配の等流で、セル値の Manning 閉じの τ_b と等流の釣り合いの比を
 #                                 記録する(合否なし。動的振り替えの影響の記録。README の所見)
 # 水理(h、|V|、v)は最終時刻の分布出力(bil = 単精度)、H = sd・z・Ri は save(倍精度)から読む。
@@ -26,9 +29,14 @@ TOL_COVER, TOL_SAME = 1.0e-5, 1.0e-9
 PL_KP, PL_TAUC, PL_M, PL_HS, PL_D50, PL_DTS = 3.0e-6, 10.0, 1.5, 0.01, 0.01, 1.0
 TOL_PLUCK = 5.0e-3
 TOL_MF_HALF, TOL_MF_DOUBLE = 2.0e-3, 4.0e-3   # T7: morfac = 5 / 20(dts の半分 / 倍。一次精度)
+# 構成 hump(T3 の山形)
+HU_BETA, HU_HS, HU_D50, HU_MORF, HU_QC = 0.005, 0.01, 0.01, 10.0, 1.810e-3
+HU_R = (0.2, 0.5, 0.8, 1.2)          # 給砂比(inflow_qb = r HU_QC。HU_QC は等流の容量の概算)
+HU_J1, HU_J2 = 21, 50                # 検定する内部のセル(入口の盛り上がり・出口の影響を避ける)
+TOL_HUMP, MAX_FULL = 5.0e-3, 0.05    # r < 1 の相対差 / r >= 1 の下刻速度の上限(山の頂点に対する比)
 # 構成 box(T4)
 BX_SD0, BX_Z0 = 0.005, 0.0
-TOL_SUMZ, TOL_LEDGER, MIN_VP, MIN_DZ = 1.0e-9, 1.0e-7, 1.0e-3, 1.0e-4
+TOL_LEDGER, MIN_VP, MIN_DZ = 1.0e-7, 1.0e-3, 1.0e-4
 
 
 def read_rec(f):
@@ -170,36 +178,81 @@ def check_pluck():
     return ok
 
 
+def check_hump():
+    """T3(研磨の山形): 剥離なし・研磨だけで、北端に一定の給砂 q_in = r q_c。内部のセルの定常で
+    F_s(H) = q_in/q_c(エッジ容量)、E = β q_c,cell F_s (1 − F_s) = β q_in (1 − q_in/q_c)。
+    E は最後の出力間隔(流れの 100 s = 地形の 1000 s)の Ri の増分から求める"""
+    ok = True
+    emax = 0.0
+    rows = []
+    for r in HU_R:
+        tag = "hump_r%02d" % round(r * 10)
+        hh = load_bil("result_" + tag, "H", 6, NX, NY)
+        vv = load_bil("result_" + tag, "V", 6, NX, NY)
+        vy = load_bil("result_" + tag, "v", 6, NX, NY)
+        r5 = load_bil("result_" + tag, "Ri", 5, NX, NY)
+        r6 = load_bil("result_" + tag, "Ri", 6, NX, NY)
+        _, _, sd = load_state("save_" + tag, NX, NY)
+        i, qin = I1 - 1, r * HU_QC
+        em, eth, werr, ferr = [], [], 0.0, 0.0
+        for j in range(HU_J1 - 1, HU_J2):
+            vve = (vv[j][i] + vv[j + 1][i]) / 2.0
+            hhe = (hh[j][i] + hh[j + 1][i]) / 2.0
+            dirp = (vy[j][i] + vy[j + 1][i]) / 2.0 / vve
+            f = qin / (qcap(vve, hhe, HU_D50) * dirp)
+            e_model = (r6[j][i] - r5[j][i]) / (100.0 * HU_MORF)
+            em.append(e_model)
+            if f < 1.0:
+                e_th = HU_BETA * qcap(vv[j][i], hh[j][i], HU_D50) * f * (1.0 - f)
+                eth.append(e_th)
+                werr = max(werr, abs(e_model / e_th - 1.0))
+                ferr = max(ferr, abs((1.0 - math.exp(-sd[j][i] / HU_HS)) / f - 1.0))
+        e_mean = sum(em) / len(em)
+        rows.append((r, e_mean, sum(eth) / len(eth) if eth else 0.0, werr, ferr, len(eth) == len(em)))
+        emax = max(emax, e_mean)
+    for r, e_mean, e_th, werr, ferr, under in rows:
+        if under:
+            ok = report("(T3) 研磨の山形 r = %.1f" % r, werr < TOL_HUMP and ferr < TOL_HUMP,
+                        "E = %.4e m/s(理論 %.4e)、max|E/E_th − 1| = %.2e、max|F_s/(q_in/q_c) − 1| = %.2e (tol %.0e)"
+                        % (e_mean, e_th, werr, ferr, TOL_HUMP)) and ok
+        else:
+            ok = report("(T3) 研磨の山形 r = %.1f(全被覆)" % r, e_mean < MAX_FULL * emax,
+                        "E = %.3e m/s = 山の頂点の %.3f 倍 (max %.2f)" % (e_mean, e_mean / emax, MAX_FULL)) and ok
+    return ok
+
+
 def ledger(logfile):
-    """dispose の台帳行(剥離のかさ体積)を読む(ファイル中の最後の行)"""
-    vp = None
-    pat = re.compile(r"rock incision: plucked\s+(\S+) m3")
+    """dispose の台帳行(剥離・研磨のかさ体積)を読む(ファイル中の最後の行)"""
+    vp = va = None
+    pat = re.compile(r"rock incision: plucked\s+(\S+) m3 .* abraded\s+(\S+) m3")
     for line in open(logfile, encoding="utf-8", errors="replace"):
         m = pat.search(line)
         if m:
-            vp = float(m.group(1))
+            vp, va = float(m.group(1)), float(m.group(2))
     if vp is None:
         sys.exit("FAIL: ledger line not found in %s" % logfile)
-    return vp
+    return vp, va
 
 
 def check_box(logfile):
-    """T4: 閉じた箱の保存(剥離は z を動かさず sd を増やす。掃流砂は反対称)"""
+    """T4: 閉じた箱の保存(剥離は z を動かさず sd を増やす。研磨は z を下げ系外へ。掃流砂は反対称)"""
     _, z, sd = load_state("save_box", BX_NX, BX_NY)
     ri = load_ri("save_box", BX_NX, BX_NY)
-    vp = ledger(logfile)
+    vp, va = ledger(logfile)
     area = 1.0 * 1.0
     sum_dz = sum(z[j][i] - BX_Z0 for j in range(BX_NY) for i in range(BX_NX)) * area
     sum_dsd = sum(sd[j][i] - BX_SD0 for j in range(BX_NY) for i in range(BX_NX)) * area
     sum_ri = sum(ri[j][i] for j in range(BX_NY) for i in range(BX_NX)) * area
     max_dz = max(abs(z[j][i] - BX_Z0) for j in range(BX_NY) for i in range(BX_NX))
-    ok = report("(T4-1) 全固体", abs(sum_dz) < TOL_SUMZ, "Σ(z − z0) A = %.3e m3 (tol %.0e)" % (sum_dz, TOL_SUMZ))
+    ok = report("(T4-1) 全固体", abs(sum_dz / va + 1.0) < TOL_LEDGER,
+                "Σ(z − z0) A = %.9e m3、台帳の研磨量 %.9e m3 (相対 tol %.0e)" % (sum_dz, va, TOL_LEDGER))
     ok = report("(T4-2) 可動層", abs(sum_dsd / vp - 1.0) < TOL_LEDGER,
                 "Σ(sd − sd0) A = %.9e m3、台帳の剥離量 %.9e m3 (相対 tol %.0e)" % (sum_dsd, vp, TOL_LEDGER)) and ok
-    ok = report("(T4-3) 累積下刻", abs(sum_ri / vp - 1.0) < TOL_LEDGER,
-                "Σ Ri A = %.9e m3 (相対 tol %.0e)" % (sum_ri, TOL_LEDGER)) and ok
-    ok = report("(T4-4) 活性", vp > MIN_VP and max_dz > MIN_DZ,
-                "剥離量 %.3e m3 (min %.0e)、max|z − z0| = %.3e m (min %.0e)" % (vp, MIN_VP, max_dz, MIN_DZ)) and ok
+    ok = report("(T4-3) 累積下刻", abs(sum_ri / (vp + va) - 1.0) < TOL_LEDGER,
+                "Σ Ri A = %.9e m3、剥離量 + 研磨量 %.9e m3 (相対 tol %.0e)" % (sum_ri, vp + va, TOL_LEDGER)) and ok
+    ok = report("(T4-4) 活性", vp > MIN_VP and va > MIN_VP and max_dz > MIN_DZ,
+                "剥離量 %.3e m3、研磨量 %.3e m3 (min %.0e)、max|z − z0| = %.3e m (min %.0e)"
+                % (vp, va, MIN_VP, max_dz, MIN_DZ)) and ok
     ri0 = max(ri[j][i] for j in range(BX_NY) for i in range(BX_NX) if fr_box(i + 1, j + 1) == 0.0)
     ri1 = max(ri[j][i] for j in range(BX_NY) for i in range(BX_NX) if fr_box(i + 1, j + 1) > 0.0)
     ok = report("(T4-5) 侵食性倍率 0 の行", ri0 == 0.0 and ri1 > 0.0,
@@ -247,10 +300,12 @@ if __name__ == "__main__":
         ok = check_cover()
     elif what == "pluck":
         ok = check_pluck()
+    elif what == "hump":
+        ok = check_hump()
     elif what == "box":
         ok = check_box(sys.argv[2])
     elif what == "steep":
         ok = check_steep()
     else:
-        sys.exit("usage: Check_rockinc.py cover|pluck|box LOG|steep")
+        sys.exit("usage: Check_rockinc.py cover|pluck|hump|box LOG|steep")
     sys.exit(0 if ok else 1)

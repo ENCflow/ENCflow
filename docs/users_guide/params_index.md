@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 709 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 710 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -577,6 +577,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | rf_uc | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | rn0 | &list_geoinfo | [地理情報](geoinfo.md) |
 | rn0_rw | &list_geoinfo | [地理情報](geoinfo.md) |
+| rock_beta | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | rock_hstar | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | rock_kp | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | rock_m | &list_geomorph | [土砂・地形変化](geomorph.md) |

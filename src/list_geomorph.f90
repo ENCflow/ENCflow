@@ -263,13 +263,17 @@ module list_geomorph
     integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
     real :: uplift0 = -9999.0        ! 隆起速度 (mm/yr)。未指定 = 既定 1.0(§62)
     integer :: f_rockinc = 0         ! 流水による岩盤下刻(0:無効, 1:有効。§88。f_fluvial=1 が必須)。
-                                     ! 岩盤面 R = z − sd を剥離で下げる。被覆(可動層 sd)が
+                                     ! 岩盤面 R = z − sd を剥離・研磨で下げる。被覆(可動層 sd)が
                                      ! 露出率 exp(−sd/H*) で下刻を抑え、掃流砂の流出に利用可能率
-                                     ! 1 − exp(−sd/H*) を掛ける。剥離物は 1:1 で可動層へ(風化と同じ)
-    real :: rock_kp = 0.0            ! 剥離の速度係数 k_p (m/s。必須 > 0。校正値で既定なし)。
+                                     ! 1 − exp(−sd/H*) を掛ける。剥離物は 1:1 で可動層へ(風化と同じ)、
+                                     ! 研磨の細粒分は系外(台帳に記録)
+    real :: rock_kp = 0.0            ! 剥離の速度係数 k_p (m/s。校正値で既定なし)。0 = 剥離項なし。
                                      ! 裸岩の下刻速度 E_p = k_p (τ_b/τ_c − 1)^m(τ_b = 2τ_c で k_p)
-    real :: rock_tauc = 0.0          ! 剥離の閾値 τ_c (Pa。必須 > 0)
+    real :: rock_tauc = 0.0          ! 剥離の閾値 τ_c (Pa)。rock_kp > 0 で必須
     real :: rock_m = 1.0             ! 剥離のべき指数 m
+    real :: rock_beta = 0.0          ! 研磨係数 β (1/m。校正値で既定なし)。0 = 研磨項なし(tools 効果なし)。
+                                     ! 裸岩の研磨速度 E_a = β q_b (1 − e^{−sd/H*})(q_b: セルの掃流砂
+                                     ! 容量 = 単位幅の固体流砂量。rock_kp と少なくとも一方は正)
     real :: rock_hstar = 0.0         ! 被覆の長さ H* (m)(必須 > 0。岩盤面の起伏の高さ)
     character(len=256) :: fn_rock = ""  ! 岩盤の侵食性倍率の分布ファイル(>= 0。0 = 侵食しない。
                                      ! 未指定 = 全セル 1)
@@ -425,7 +429,7 @@ subroutine list_geomorph_read(p, list)
   integer :: f_uplift
   real :: uplift0
   integer :: f_rockinc
-  real :: rock_kp, rock_tauc, rock_m, rock_hstar
+  real :: rock_kp, rock_tauc, rock_m, rock_beta, rock_hstar
   character(len=256) :: fn_rock
   integer :: f_dissol, dissol_src, dissol_sink
   real :: dissol_ceq, dissol_rho, dissol_fsink, dissol_fres, dissol_lat, dissol_fsurf, dissol_sdsurf
@@ -457,7 +461,7 @@ subroutine list_geomorph_read(p, list)
                            fn_dbinit, db_reltime, db_relsat, &
                            f_slide, slide_c, slide_phi, slide_gamma, &
                            f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0, &
-                           f_rockinc, rock_kp, rock_tauc, rock_m, rock_hstar, fn_rock, &
+                           f_rockinc, rock_kp, rock_tauc, rock_m, rock_beta, rock_hstar, fn_rock, &
                            f_dissol, dissol_ceq, dissol_rho, dissol_src, dissol_sink, &
                            dissol_fsink, dissol_fres, dissol_lat, dissol_fsurf, dissol_sdsurf, fn_dissol, &
                            dissol_dzmax, &
@@ -574,6 +578,7 @@ subroutine list_geomorph_read(p, list)
   rock_kp = list%rock_kp
   rock_tauc = list%rock_tauc
   rock_m = list%rock_m
+  rock_beta = list%rock_beta
   rock_hstar = list%rock_hstar
   fn_rock = list%fn_rock
   f_dissol = list%f_dissol
@@ -718,6 +723,7 @@ subroutine list_geomorph_read(p, list)
   list%rock_kp = rock_kp
   list%rock_tauc = rock_tauc
   list%rock_m = rock_m
+  list%rock_beta = rock_beta
   list%rock_hstar = rock_hstar
   list%fn_rock = fn_rock
   list%f_dissol = f_dissol
