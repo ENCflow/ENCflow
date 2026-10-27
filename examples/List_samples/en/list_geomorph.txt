@@ -386,6 +386,10 @@
   !wthr_p0 = 100.0          ! soil production rate on bare rock (mm/kyr).
                             !   Unspecified = default 50
   !wthr_sdstar = 0.5        ! decay depth of the production (m)
+  !fn_wthr = 'wthr.txt'     ! distribution of the multiplier of the soil production
+                            !   rate (rate = wthr_p0 × multiplier, at least 0.
+                            !   Unset = 1 everywhere). Cells with 0 do not weather
+                            !   (the bedrock of mountain streams, for example)
   !f_uplift = 1             ! uplift
   !uplift0 = 1.0            ! uplift rate (mm/yr). Unspecified = default 1.0
                             !   (negative = subsidence)

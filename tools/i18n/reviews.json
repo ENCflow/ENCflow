@@ -104,8 +104,8 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "aefc5dfe8e12d53c2a6d1c8dc2cac519c4c2abad957e8f657dffbcab49ad5a24",
-      "target_sha256": "c2d3e3042bb5ddbf26bef64555fe65dc65410c70bf224445a700d59ec076aaf3",
+      "source_sha256": "dfa51e579e17ee5d99c09869c71798bc084e0c092a9082b634c47e57839acc15",
+      "target_sha256": "ff8df44ae09e4a29a3345962c0d5aef855e5f0041a70c46654bfab06aff3ed2e",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -266,8 +266,8 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "78f321795b41699230acfc3f3e070b4c3f860871d7a3758587b90142a11ee313",
-      "target_sha256": "b6c22fba49021c9374f333844eb26f4abe1bdbe1aaf7f744e0f947c8d9fc3e21",
+      "source_sha256": "e2c05425581f012a92def0ea57316b4e74a2e36643e35488117ee38acfe0cf27",
+      "target_sha256": "2a5df6edd1091a130a2869c49b9c6a7155867082e94a63c4ee657dc78f85efa6",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -383,8 +383,8 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "8ec370dafe99bcbe8934a53479a3a7617610cd58863a9944a6c1af618bc9fa71",
-      "target_sha256": "f30a7a78dbce95a64d7a10ba3869e105454a9fea480e6af28c6513a468dd1c05",
+      "source_sha256": "1267fcaa13b2ef761e8ba093d1bade37377f003e3c6592828b53c068ec9194ac",
+      "target_sha256": "55fa2f450c420896e7157f249ad7c69e725d82d0cb954ba23db6d3ab4aff3ae4",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -419,8 +419,8 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "22ccacccad2cc21ed0a0eb06b7e5b21d486ada540fdb46146ac5b45a6164b59c",
-      "target_sha256": "59b5b3f9dc92dd4b1db11b9eac11175db59957e18d1c2485b4d0ed1af888b6da",
+      "source_sha256": "90df4ff5d17edc760055a7c3c8b902e5a9cf44babd9f6abe714f5477ed7a69b1",
+      "target_sha256": "6798a8b2a87dbb8985a67a6303e52350cf4f1c1722199cb8d195e67f501c3d8b",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -608,8 +608,8 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "ef47a523a18abf2d307df8799df3f28dde4b8bb320b3880e4a651fd90ebc6e2e",
-      "target_sha256": "672e520cab42e9b35e1340e57ed5a716afddc8e77230c5f0a01f2fef47364598",
+      "source_sha256": "1a4011d502b31b63b9212b195d582b081a2991ac04434c6b81253f5e75f32bb3",
+      "target_sha256": "726aed0bd28a7f263a4af79d7c97e4e2815968dc7d3f1c304577d9bef8945f23",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -986,8 +986,8 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "cdcd08a3be677d3cc5fe52a61c7e0fe155322054a365b71b5fdc1941e5fc9371",
-      "target_sha256": "c6df2031b14dda10ea5bedb3ffacebd838d345cf38b93d64442c87b1ea027ef7",
+      "source_sha256": "8107b304e4657a5e872da82041f1b2dbc2f4b572d51197c3ae489d9e7009924d",
+      "target_sha256": "b0e3e72ed26eeb512b64795932236d863fd43508ea698db55acdbd4bcda9390c",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -1567,6 +1567,15 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/hillsoil/README.md",
+      "target": "test/hillsoil/en/README.md",
+      "source_sha256": "03ed387f62dcd26270247dc6498e9597ed186579dd50760bc20945b781f3e324",
+      "target_sha256": "371300c5d7e9b2b57e0a2ce1484fbfe3ce42ba34b71fa5e65bcbca485d75d1ea",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "test/icevap/README.md",

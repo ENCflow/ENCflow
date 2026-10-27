@@ -263,6 +263,9 @@ module list_geomorph
     integer :: f_wthr = 0            ! 基岩風化=土層生成(0:無効, 1:有効。§32)
     real :: wthr_p0 = -9999.0        ! 裸岩での土層生成速度 (mm/kyr)。未指定 = 既定 50(§62)
     real :: wthr_sdstar = 0.5        ! 生成の減衰深 sd* (m)
+    character(len=256) :: fn_wthr = ""  ! 土層生成速度の倍率の分布ファイル(§88.13。未指定 = 全セル 1)。
+                                     ! 生成速度 = wthr_p0 × 倍率(>= 0)。岩質の違いを与え、0 のセルは
+                                     ! 風化しない(河道の岩盤や人工面など)
     integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
     real :: uplift0 = -9999.0        ! 隆起速度 (mm/yr)。未指定 = 既定 1.0(§62)
     character(len=256) :: fn_uplift = ""  ! 隆起速度の倍率の分布ファイル(§88。未指定 = 全セル 1)。
@@ -432,6 +435,7 @@ subroutine list_geomorph_read(p, list)
   real :: slide_gamma
   integer :: f_wthr
   real :: wthr_p0, wthr_sdstar
+  character(len=256) :: fn_wthr
   integer :: f_uplift
   real :: uplift0
   character(len=256) :: fn_uplift
@@ -467,7 +471,7 @@ subroutine list_geomorph_read(p, list)
                            db_mu, db_xi, db_tauy, f_dbcurv, &
                            fn_dbinit, db_reltime, db_relsat, &
                            f_slide, slide_c, slide_phi, slide_gamma, &
-                           f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0, fn_uplift, &
+                           f_wthr, wthr_p0, wthr_sdstar, fn_wthr, f_uplift, uplift0, fn_uplift, &
                            f_rockinc, rock_kp, rock_tauc, rock_m, rock_beta, rock_hstar, fn_rock, &
                            f_dissol, dissol_ceq, dissol_rho, dissol_src, dissol_sink, &
                            dissol_fsink, dissol_fres, dissol_lat, dissol_fsurf, dissol_sdsurf, fn_dissol, &
@@ -580,6 +584,7 @@ subroutine list_geomorph_read(p, list)
   f_wthr = list%f_wthr
   wthr_p0 = list%wthr_p0
   wthr_sdstar = list%wthr_sdstar
+  fn_wthr = list%fn_wthr
   f_uplift = list%f_uplift
   uplift0 = list%uplift0
   fn_uplift = list%fn_uplift
@@ -727,6 +732,7 @@ subroutine list_geomorph_read(p, list)
   list%f_wthr = f_wthr
   list%wthr_p0 = wthr_p0
   list%wthr_sdstar = wthr_sdstar
+  list%fn_wthr = fn_wthr
   list%f_uplift = f_uplift
   list%uplift0 = uplift0
   list%fn_uplift = fn_uplift

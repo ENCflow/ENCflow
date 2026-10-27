@@ -424,7 +424,12 @@ The update is the propagator of the exact solution of the ordinary
 differential equation, so it is unconditionally stable for any `morfac`.
 $`W_0`$ (`wthr_p0`, default 50 mm/kyr) is the middle of the bare-rock soil
 production rates 0.01 to 0.1 mm/yr and $`s_*`$ (`wthr_sdstar`, default
-0.5 m) a representative decay depth.
+0.5 m) a representative decay depth. With `fn_wthr`, the rate becomes
+$`W_0 f_w`$ with a cell-wise multiplier distribution (differences in
+lithology; cells with multiplier 0 do not weather. Use it where the bedrock
+surface should be lowered by fluvial incision rather than by weathering,
+such as the bedrock of mountain streams). The multiplier acts on the
+production rate only; the decay depth $`s_*`$ is common to the whole domain.
 
 **Uplift.** $`z \mathrel{+}= U\,\Delta t_s`$ ($`s_d`$ unchanged: the bedrock
 rises as a rigid body). $`U`$ (`uplift0`, default 1 mm/yr) is the lower end
@@ -594,6 +599,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | spl_ksat | 0 | saturation curvature $`\kappa_s`$ of the amplification | **given** 0 = no saturation; 0.05-0.2 1/m keeps benches at the foot of cliffs (examples/mesa) |
 | spl_strata | none | table of horizontal strata (bottom elevation, erodibility factor) | **given** hard/soft contrast of the stratigraphy; factor 0 = cap rock |
 | wthr_p0 / wthr_sdstar | 50 mm/kyr / 0.5 m | soil production rate / decay depth (§7) | **literature value** middle of the published range of the Heimsath function[^heimsath97] |
+| fn_wthr | none (1 everywhere) | distribution of the multiplier of the soil production rate | **given** differences in lithology, cells without weathering (0; the bedrock of mountain streams, for example) |
 | uplift0 | 1 mm/yr | uplift rate | **customary value** lower end of orogenic belts |
 | fn_uplift | none (1 everywhere) | distribution of the uplift multiplier | **given** fixed (0) or falling (negative) base level, fault blocks |
 | dissol_ceq / dissol_rho | 100 mg/L / 2500 kg/m³ | effective dissolution capacity / rock density (§7) | **literature value** representative CaCO₃ concentration of recharge in limestone areas[^white84] and the density of limestone. k_d = 4e-5 m/m, i.e. 40 mm/kyr for a recharge of 1 m/yr (published range 20-100)[^gabrovsek09] |
@@ -638,6 +644,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [examples/badland](../../../examples/badland/) | valley formation on a plateau edge | valleys grow from the cliff edge with zero surface flow |
 | [test/rockinc](../../../test/rockinc/en/README.md) | bedrock incision by flowing water | analytic self-cover solution 9e-8, quasi-steady cover 4e-4, hump of abrasion 7e-4, conservation in a closed box (9 digits with the ledger) |
 | [examples/bedrock_cover](../../../examples/bedrock_cover/en/README.md) | cover effect in bedrock channels | steady incision rates of the 3 models within 2.3 % of the theory, constant versus pulsed supply with the same total, initial cover, retreat of a step |
+| [test/hillsoil](../../../test/hillsoil/en/README.md) | soil production by weathering | 1.6e-15 to the analytical solutions with a uniform and a distributed (fn_wthr) rate, cells with multiplier 0 unchanged |
 
 ## References
 

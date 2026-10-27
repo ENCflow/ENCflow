@@ -414,6 +414,7 @@ module m_geomorph
     real :: wp0 = 0.0                ! 裸岩生成速度 (m/s。mm/kyr から換算)
     real :: wsdstar = 0.0            ! 生成の減衰深 sd* (m)
     real :: wsdinv = 0.0             ! 1 / sd*
+    real, allocatable :: wmap(:,:)   ! 土層生成速度の倍率(fn_wthr。帯±ハロ。指定時のみ確保。§88.13)
     integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
     real :: uprate = 0.0             ! 隆起速度 (m/s。mm/yr から換算)
     real, allocatable :: upmap(:,:)  ! 隆起速度の倍率(fn_uplift。帯±ハロ。指定時のみ確保。§88)
@@ -756,7 +757,7 @@ module m_geomorph
       real :: f
     end function
     ! 分布ファイル(全域の行列)を rank0 が読み帯±ハロへ配る(方式 2。値の検査は
-    ! 呼び出し側。実装は m_geomorph_rockinc。fn_rock・fn_uplift が使う)
+    ! 呼び出し側。実装は m_geomorph_rockinc。fn_rock・fn_uplift・fn_wthr が使う)
     module subroutine read_cellmap(p, g, fn, a)
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
@@ -800,6 +801,8 @@ subroutine m_geomorph_init(gm, p, g, s)
   type(t_state), intent(inout) :: s
   type(t_list_geomorph) :: list
   real :: wp0                          ! wthr_p0 の有効値(既定適用後。§62)
+  integer :: i, j
+  real :: bad(1)
 
   ! 設定ファイル未指定 = 地形変化なし(デフォルトの enabled = .false.)
   if (len_trim(p%fn_geomorph) == 0) then
@@ -962,6 +965,26 @@ subroutine m_geomorph_init(gm, p, g, s)
                .or. gm%crp%hcinv > 0.0)) then
       call setup_sd(p, g, s)                        ! 風化のみでも sd を確保・転記
     end if
+    ! 生成速度の分布(§88.13): 生成速度 = wthr_p0 × 倍率(岩質の違い。0 = 風化しない
+    ! 渓流の岩盤など)。rank0 が全域を読み帯±ハロへ配る(方式 2)。>= 0 を検査
+    ! (判定は全ランク集約 = collective)
+    if (len_trim(list%fn_wthr) > 0) then
+      allocate(gm%wmap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+      call read_cellmap(p, g, list%fn_wthr, gm%wmap)
+      bad(1) = 0.0
+      do j = dcp%js, dcp%je
+        do i = g%wx(1,j), g%wx(2,j)
+          if (g%x(i,j) <= 0) cycle
+          if (.not. (gm%wmap(i,j) >= 0.0)) bad(1) = 1.0      ! 負値と非数
+        end do
+      end do
+      call par_allreduce_max(bad)
+      if (bad(1) > 0.0) call par_stop("list_geomorph: fn_wthr must be >= 0: " // trim(list%fn_wthr))
+      call par_info("geomorph: distributed weathering on (rate = wthr_p0 x map from " &
+                    // trim(list%fn_wthr) // ")")
+    end if
+  else if (len_trim(list%fn_wthr) > 0) then
+    call par_stop("list_geomorph: fn_wthr requires f_wthr=1")
   end if
 
   ! --- 隆起(§32)---
@@ -1113,7 +1136,8 @@ end subroutine
 !   z は不変(体積膨張 bulking は無視)= 基岩面 z − sd が下がる。
 !   地下水容量 sd·sy0 と層2の底 z−sd−d2 は自動で追随する。
 !   wash 侵食の「sd=0 で岩盤露出・停止」と対になり、風化→土層化→侵食の
-!   収支が閉じる。海セルは対象外
+!   収支が閉じる。海セルは対象外。fn_wthr があれば W0 に倍率の分布を掛ける
+!   (§88.13。未指定なら従来の一様な式のまま = ビット一致)
 !----------------------------------------------------------------------
 subroutine calc_wthr(gm, g, s, dts)
   type(t_geomorph), intent(inout) :: gm
@@ -1123,6 +1147,21 @@ subroutine calc_wthr(gm, g, s, dts)
   integer :: i, j
   real :: w
 
+  if (allocated(gm%wmap)) then
+    ! 生成速度の分布(fn_wthr。§88.13): W0 × 倍率。倍率 0 のセルは不変(ln 1 = 0)
+    !$omp parallel do schedule(static) private(i, j, w)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        if (g%sw(i,j) > 0) cycle
+        w = gm%wsdstar * log(1.0 + (gm%wp0 * dts * gm%wsdinv) * gm%wmap(i,j) &
+                                   * exp(-s%sd(i,j) * gm%wsdinv))
+        s%sd(i,j) = s%sd(i,j) + w
+      end do
+    end do
+    !$omp end parallel do
+    return
+  end if
   !$omp parallel do schedule(static) private(i, j, w)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
@@ -1139,8 +1178,8 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 隆起(§32): z += U·dts(sd 不変 = 基岩ごと剛体上昇。負値=沈降)。
-!   海セルは対象外(海=侵食基準面。内陸の基準面制御は境界条件側で行う。
-!   分布隆起(断層ブロック)は将来 fn_uplift で。§32)
+!   海セルは対象外(海=侵食基準面。内陸の基準面制御は境界条件側で行う。§32)。
+!   fn_uplift があれば速度に倍率の分布を掛ける(断層ブロック・基準面の固定。§88)
 !----------------------------------------------------------------------
 subroutine calc_uplift(gm, g, s, dts)
   type(t_geomorph), intent(inout) :: gm
@@ -1516,6 +1555,8 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%wav%val)) deallocate(gm%wav%val)
   if (allocated(gm%flv%fdon)) deallocate(gm%flv%fdon)
   if (allocated(gm%flv%voutrow)) deallocate(gm%flv%voutrow)
+  if (allocated(gm%upmap)) deallocate(gm%upmap)
+  if (allocated(gm%wmap)) deallocate(gm%wmap)
   if (allocated(gm%flv%rsec)) deallocate(gm%flv%rsec)
   if (allocated(gm%fix%zref)) deallocate(gm%fix%zref)
   if (allocated(gm%dbr%fx)) deallocate(gm%dbr%fx)

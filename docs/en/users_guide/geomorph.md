@@ -1155,6 +1155,7 @@ so the soil base shifts by the same amount.
 |---|---|---|
 | wthr_p0 | 50 | Soil production rate on bare bedrock (mm/kyr). The middle of the literature range 0.01-0.1 mm/yr |
 | wthr_sdstar | 0.5 | Decay depth of production (m) (an exponential law: the thicker the soil, the slower the weathering) |
+| fn_wthr | "" | Distribution of the multiplier of the soil production rate (production rate = wthr_p0 × multiplier, at least 0). It gives differences in lithology; cells with 0 do not weather (for example the bedrock of a mountain stream). Unset = 1 everywhere (bit-identical to the former behaviour). Requires `f_wthr = 1` |
 | uplift0 | 1.0 | Uplift rate (mm/yr). Negative for subsidence. The lower end of representative orogenic values |
 | fn_uplift | "" | Distribution of the uplift multiplier (uplift rate = uplift0 × multiplier). 0 at the outlet cells fixes the base level, negative values lower it. Unset = 1 everywhere. Requires `f_uplift = 1` |
 
@@ -1458,4 +1459,7 @@ water: analytic self-cover solution, quasi-steady cover, the hump of abrasion,
 conservation in a closed box, restart round trip from bare rock, and a record
 of τ_b in steep uniform flow) and the example
 [examples/bedrock_cover](../../../examples/bedrock_cover/en/README.md) (the
-amount and timing of supply, the initial cover and the retreat of a step).
+amount and timing of supply, the initial cover and the retreat of a step), and
+[test/hillsoil](../../../test/hillsoil/en/README.md) (soil production by
+weathering: analytical solutions with a uniform and a distributed (`fn_wthr`)
+rate, cells with multiplier 0 unchanged).
