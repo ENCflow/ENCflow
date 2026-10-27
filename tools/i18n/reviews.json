@@ -500,8 +500,8 @@
     {
       "source": "docs/users_guide/vz.md",
       "target": "docs/en/users_guide/vz.md",
-      "source_sha256": "d3dc76a652ef8eed8f00526a88a6dda217b26111581ece2c8d0b51630157336e",
-      "target_sha256": "ce88894ffc5dc3f6583687ae74cd78c3c25fbb2dae77c9f405d164470f647b32",
+      "source_sha256": "3d165954fd920bf858c5409c22744bf7c248ce27f4a9c286ec221a0743f2c27a",
+      "target_sha256": "eb37bb533e891e429cbd9539cc125b83798d52661203fd9c189459080d4cbaa2",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"

@@ -128,7 +128,7 @@ retention and conductivity follow the Kosugi model[^kosugi1996]:
 
 ```math
 x = \frac{\ln|\psi| - \ln|\psi_m|}{\sigma},\quad
-Q(x) = \tfrac12\operatorname{erfc}\!\left(\frac{x}{\sqrt2}\right),\quad
+Q(x) = \tfrac12\mathrm{erfc}\!\left(\frac{x}{\sqrt2}\right),\quad
 \theta = \theta_r + (\theta_s - \theta_r)\,Q(x),\quad
 K = K_s\,Q(x)^{1/2}\,Q(x+\sigma)^2
 ```
