@@ -240,7 +240,7 @@ module m_geomorph
     integer :: nact = 0              ! 流束を持った砕波帯セルの数(累計。ランク局所)
   end type
 
-  ! 沿岸の波浪場による攪拌と輸送(f_wfsed。段 W4。§88)。波浪場が共有状態へ書き出す
+  ! 沿岸の波浪場による攪拌と輸送(f_wfsed。段 W4。§90)。波浪場が共有状態へ書き出す
   ! 軌道流速 u_rms(wvub)・軌道の振幅 A(wvae)・平均波向(wvex・wvey)を読む
   type t_wfsed
     real :: z0b = 0.0                ! 掃流砂の粒子粗度 z0 = d50/12 (m)(k_s = 2.5 d50、z0 = k_s/30)
@@ -416,8 +416,8 @@ module m_geomorph
     integer :: f_wave_long = 0       ! 波浪による沿岸漂砂(0:無効, 1:有効。fn_wave。§84.15)
     integer :: f_rockfall = 0        ! 崩落と崖錐(0:無効, 1:有効。§48.7)
     integer :: f_bedfines = 0        ! 河床の細粒分の帳簿(0:無効, 1:有効。§84.10)
-    integer :: f_wfsed = 0           ! 波浪場による攪拌と輸送(0:無効, 1:有効。段 W4。§88)
-    integer :: f_wfsed_turb = 0      ! 砕波の乱れによる攪拌(0:なし, 1:波平均の乱れ。§88)
+    integer :: f_wfsed = 0           ! 波浪場による攪拌と輸送(0:無効, 1:有効。段 W4。§90)
+    integer :: f_wfsed_turb = 0      ! 砕波の乱れによる攪拌(0:なし, 1:波平均の乱れ。§90)
     real :: bs_r = 0.0               ! 浮力比 r = ρw/ρs
     integer :: f_bsres = 1           ! 底層の抵抗則(1:Voellmy, 2:Bingham〔予約〕)
     real :: bs_mu = 0.0              ! Voellmy 摩擦係数 μ
@@ -745,7 +745,7 @@ end function
 
 
 !----------------------------------------------------------------------
-! 波・流れの最大の無次元底面せん断 τ*_max(Soulsby 1997 式 69・70。段 W4。§88)
+! 波・流れの最大の無次元底面せん断 τ*_max(Soulsby 1997 式 69・70。段 W4。§90)
 !   τ*_w = ½ f_w u_w²/(s g d)、f_w = min(1.39 (A/z0)^−0.52, 0.3)(粗面乱流の式 62a。
 !   上限 0.3 は小さな A での Swart 1974 の値)、
 !   τ*_m = τ*_c [1 + 1.2 (τ*_w/(τ*_c + τ*_w))^3.2](流れの向きの平均)、
@@ -986,7 +986,7 @@ subroutine m_geomorph_init(gm, p, g, s)
     end block
   end if
 
-  ! 沿岸の波浪場による攪拌と輸送(f_wfsed。段 W4・W5。§88): 波浪場の軌道流速・波向で掃流砂・
+  ! 沿岸の波浪場による攪拌と輸送(f_wfsed。段 W4・W5。§90): 波浪場の軌道流速・波向で掃流砂・
   ! 浮遊砂の τ* を Soulsby(1997)の波・流れの最大のせん断にし、Euler 平均流速 u^E と岸向きの
   ! 速度 u_a で運ぶ。
   ! init の順(geomorph → wavefield)により、共有状態の要求 s%wv_sed を立てて波浪場に
@@ -1031,7 +1031,7 @@ subroutine m_geomorph_init(gm, p, g, s)
     end if
     s%wv_asym = (s%wv_facsk > 0.0 .or. s%wv_facas > 0.0)
   end if
-  ! 砕波の乱れによる攪拌(f_wfsed_turb。§88): 波浪場が底面の乱れ k_b を求め、攪拌の軌道流速を
+  ! 砕波の乱れによる攪拌(f_wfsed_turb。§90): 波浪場が底面の乱れ k_b を求め、攪拌の軌道流速を
   ! √(u_rms² + 1.45 k_b) にする(van Thiel de Vries 2009 = XBeach の turb = wave_averaged)。
   ! 要求 s%wv_turb で波浪場に頼む(攪拌の手続きは変わらず s%wvub を読む)
   gm%f_wfsed_turb = list%f_wfsed_turb

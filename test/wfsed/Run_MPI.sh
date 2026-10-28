@@ -1,5 +1,5 @@
 #!/bin/bash
-# wfsed: MPI 実行 + 回帰テスト + 検定(沿岸の波浪場による土砂の攪拌と輸送 = 段 W4・W5。developer.md §88)
+# wfsed: MPI 実行 + 回帰テスト + 検定(沿岸の波浪場による土砂の攪拌と輸送 = 段 W4・W5。developer.md §90)
 #   ./Run_MPI.sh [ランク数] [-u]
 # 逐次 reference との比較は Log.txt・wavefield.csv・Z9998.txt・Hs9998.txt を ULP=0
 # (CLAUDE.md 検証規律。攪拌はセル・エッジの局所計算、波の書き出しと流れはハロ交換、側方

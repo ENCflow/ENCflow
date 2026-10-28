@@ -90,7 +90,7 @@ follows from all three of these purposes.
    and the transport velocity, (5) zero additional memory, CPU and communication when
    fn_wavefield is not specified, and bit-identical results with the existing
    references when disabled. The authoritative design is docs/wavefield_plan.md and
-   the record of the decision is §88.)
+   the record of the decision is §90.)
 6. **Do not over-complicate the model; refine it gradually to match the information
    available.** It must run, for a start, with a simple specification of parameters.
 7. **Unneeded processes are "not enabled" by not creating or specifying their

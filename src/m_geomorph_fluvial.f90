@@ -156,7 +156,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   integer :: nclip, nfix
   logical :: okc, okbank
 
-  ! 沿岸の波浪場による攪拌と輸送(f_wfsed = 1。§88)は写しの手続きで(本手続きの命令列を
+  ! 沿岸の波浪場による攪拌と輸送(f_wfsed = 1。§90)は写しの手続きで(本手続きの命令列を
   ! 変えない。calc_fluvial_wfsed の注)
   if (gm%f_wfsed > 0) then
     call calc_fluvial_wfsed(gm, p, g, s, dts)
@@ -413,7 +413,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   end do
   !$omp end parallel do
 
-  ! --- 側方 Neumann の辺(§88): 境界面に内側へ平行移動した内部のエッジの流束を写す ---
+  ! --- 側方 Neumann の辺(§90): 境界面に内側へ平行移動した内部のエッジの流束を写す ---
   if (bcs%have_open_bc) call neumann_bed_pass(gm, g)
 
   ! --- 容量給砂(§84.9): 流入面の供給 = 倍率 × 流入セルの内部エッジへの正味流出 ---
@@ -433,12 +433,12 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 掃流砂の 1 ステップ(沿岸の波浪場による攪拌と輸送 f_wfsed = 1。段 W4・W5。§88)
+! 掃流砂の 1 ステップ(沿岸の波浪場による攪拌と輸送 f_wfsed = 1。段 W4・W5。§90)
 !   calc_fluvial の写しで、ループ 1 の掃流力を波・流れの最大のせん断 τ*_max(Soulsby 1997)に、
 !   輸送の速度を u_s = u^E + u_a ê_θ にしたもの。ループ 1 の後の経路(側方 Neumann・容量給砂・
 !   側岸侵食・発散と共動更新)は calc_fluvial と同じ手続きを呼ぶ。写しにしたのは、分岐を
 !   calc_fluvial のループに入れると、波浪場を使わない計算の -Ofast の最終桁が変わったため
-!   (実行されない分岐でも FMA 縮約・インライン化が変わる。§88.4 の教訓。test/fluvial・sedfeed で
+!   (実行されない分岐でも FMA 縮約・インライン化が変わる。§90.4 の教訓。test/fluvial・sedfeed で
 !   実検出)。calc_fluvial のループ 1 を変えるときはこちらも同じく変えること
 !----------------------------------------------------------------------
 subroutine calc_fluvial_wfsed(gm, p, g, s, dts)
@@ -451,7 +451,7 @@ subroutine calc_fluvial_wfsed(gm, p, g, s, dts)
   real :: gq, ue, vve, hhe, rne, taus, qbs, qb, sdup, dze, winvd
   real :: dirp, ubar, vbar, dxv, dyv, re, gam
   real :: afx, tsce
-  real :: uec, vec, uen, ven, fadv, rs, tmax, cphi   ! 波浪場の攪拌と輸送(f_wfsed。§88)
+  real :: uec, vec, uen, ven, fadv, rs, tmax, cphi   ! 波浪場の攪拌と輸送(f_wfsed。§90)
   real :: usc, vsc, usn, vsn, vvc, tauc
   integer :: nclip, nfix
   logical :: okc, okbank, stk, asym
@@ -477,7 +477,7 @@ subroutine calc_fluvial_wfsed(gm, p, g, s, dts)
   call par_halo_cell(s%v)
   call par_halo_cell(s%vv)
 
-  ! --- 波浪場の攪拌と輸送の掃流砂の推定(出力 Qbx・Qby。自帯のセル。§88) ---
+  ! --- 波浪場の攪拌と輸送の掃流砂の推定(出力 Qbx・Qby。自帯のセル。§90) ---
   call wfsed_bed_diag(gm, p, g, s)
 
   ! --- 平衡二次流の横断流速比 r = N* h κ(自帯で評価 → ハロ交換。§84.3) ---
@@ -546,7 +546,7 @@ subroutine calc_fluvial_wfsed(gm, p, g, s, dts)
               ! 無次元掃流力(マニング閉じ。g は分子分母で相殺)。taufac は
               ! 有効掃流力の比(1 = 分離なし。1.0 の乗算は厳密に不変)
               taus = gm%flv%taufac * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
-              ! 攪拌(§88): 閾値と流砂量は波・流れ(u^E)の最大のせん断 τ*_max、輸送は u_s。
+              ! 攪拌(§90): 閾値と流砂量は波・流れ(u^E)の最大のせん断 τ*_max、輸送は u_s。
               ! 流砂量に √(τ*_s/τ*_max) を掛ける(τ*_max の流れが運ぶ掃流の量を u_s の速さで
               ! 運ぶ。τ*_s は上の taus = u_s の速さの Manning のせん断。波がなければ
               ! τ*_max = τ*_s = τ*_c で既存の式に一致)
@@ -771,7 +771,7 @@ subroutine calc_fluvial_wfsed(gm, p, g, s, dts)
   end do
   !$omp end parallel do
 
-  ! --- 側方 Neumann の辺(§88): 境界面に内側へ平行移動した内部のエッジの流束を写す ---
+  ! --- 側方 Neumann の辺(§90): 境界面に内側へ平行移動した内部のエッジの流束を写す ---
   if (bcs%have_open_bc) call neumann_bed_pass(gm, g)
 
   ! --- 容量給砂(§84.9): 流入面の供給 = 倍率 × 流入セルの内部エッジへの正味流出 ---
@@ -791,7 +791,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 側方 Neumann の辺の掃流砂(§88。外に同じ海岸が続く = 勾配 0): 境界面 (i,j)→(in,jn) に、
+! 側方 Neumann の辺の掃流砂(§90。外に同じ海岸が続く = 勾配 0): 境界面 (i,j)→(in,jn) に、
 ! 辺の法線方向に一つ内側へ平行移動した内部のエッジ (i+dI, j+dJ)→(im,jm) の流束を写す
 ! ((im,jm) は鏡像セル、(dI, dJ) = (im − in, jm − jn))。流れの境界面の通過幅(bc_neumann_fwd)
 ! と同じ平行移動。開境界の面の扱い(流出は容量、流入は 0 か給砂)では、岸沖の輸送が斜めの面
@@ -1114,7 +1114,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 波浪場の攪拌と輸送の掃流砂の推定(f_wfsed。出力 Qbx・Qby。§88)
+! 波浪場の攪拌と輸送の掃流砂の推定(f_wfsed。出力 Qbx・Qby。§90)
 !   セルの値で q_b = q*(τ*_max) √(τ*_s/τ*_max) √(sgd³)(calc_fluvial のエッジと同じ式。τ*_s は
 !   輸送の速度 u_s = u^E + u_a ê_θ の Manning のせん断)を u_s の向きに置く。河床勾配・二次流の補正、可動層・変動上限のクランプ、河岸面の
 !   規則は含まない(輸送の容量の目安。土砂の保存はエッジの流束が担う)

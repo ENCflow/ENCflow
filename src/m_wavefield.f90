@@ -1,8 +1,8 @@
 module m_wavefield
-  ! ====== 沿岸の波浪場(代表周波数・方向分割の位相平均作用量平衡。fn_wavefield。§88) ======
+  ! ====== 沿岸の波浪場(代表周波数・方向分割の位相平均作用量平衡。fn_wavefield。§90) ======
   ! 短周期波を位相平均の方向ビン(N_θ 個)のエネルギー密度 E_m [J/m2/rad] として、
   ! 浅水流と同じ格子・同じ時間発展の中で解く(設計の正本 docs/wavefield_plan.md、
-  ! 方針 5 の例外と決定の記録は developer.md §0-5・§88)。
+  ! 方針 5 の例外と決定の記録は developer.md §0-5・§90)。
   !
   ! 【基礎式】(段 W1: 固定床・流れの影響なし。σ = ω = 2π/T で一定)
   !   ∂E_m/∂t + ∇·(c_g ê_m E_m) + ∂(c_θ E_m)/∂θ = −(D_w + D_f) E_m/E
@@ -14,7 +14,7 @@ module m_wavefield
   !   c_θ = (σ/sinh 2kh)(sin θ ∂h/∂x − cos θ ∂h/∂y)(x 東・y 北。浅い側へ曲がる。
   !   SnapWave と同じく |c_θ| <= σ/4 に制限)。方向空間の移流は 1 次風上(陰的)に van Leer の
   !   制限つき反拡散流束を前の値から足す遅延補正(1 次風上だけでは方向空間の数値拡散で
-  !   屈折が遅れる。中心差分は単一方向の入射で負のエネルギーを生むので採らない。§88)。
+  !   屈折が遅れる。中心差分は単一方向の入射で負のエネルギーを生むので採らない。§90)。
   !   砕波 D_w: Baldock ら(1998)(既定)または Janssen & Battjes(2007)。規則波(検定用)
   !   は H <= γh の飽和。不規則波は XBeach・SnapWave と同じく H_rms <= γmax h の上限も
   !   かける。底面摩擦 D_f = c ρ f_w u_orb³(c = 0.28 不規則・0.21 規則。Guza &
@@ -61,7 +61,7 @@ module m_wavefield
   !   だけ(ハロは自前で交換)。保存・復元は私有ファイル wavefield_info.txt(全ランクが
   !   読む見出し)と wavefield.dat(ビンごとの RLE。m_restart。契約5)。
   !
-  ! 【初版の併用制限】STG・ネストは init で停止(§88.1 D11)。
+  ! 【初版の併用制限】STG・ネストは init で停止(§90.1 D11)。
   ! ==================================================================================
   use, intrinsic :: iso_fortran_env, only : real64, int8
   use m_sysparam, only : t_sysparam
@@ -149,7 +149,7 @@ module m_wavefield
     real :: res = 0.0                           ! 直近の残差
     integer :: nsub = 1                         ! 直近の非定常のサブステップ数
     integer :: un = 0                           ! 台帳 CSV の装置番号(rank0)
-    ! 波→流れ(段 W2。§88)
+    ! 波→流れ(段 W2。§90)
     integer :: flow = 0                         ! 0 作用なし / 1 外力 / 2 外力+GLM+波・流れの摩擦
     logical :: roller = .false.                 ! ローラーのエネルギー平衡
     real :: beta = 0.1                          ! ローラーの散逸係数 β
@@ -162,7 +162,7 @@ module m_wavefield
     integer, allocatable :: lar(:,:), lbr(:,:)  ! ローラーの 2 リンク分解の格子方向 (ish:ieh, jsh:jeh)
     real, allocatable :: qar(:,:), qbr(:,:)     ! 位相速度あたりの流出率 (1/m)
     integer :: nrit = 0                         ! 直近のローラーの反復回数
-    ! 流れの波への作用(段 W3。f_wf_current = 1。§88)。ビンごとの量は有効時のみ確保
+    ! 流れの波への作用(段 W3。f_wf_current = 1。§90)。ビンごとの量は有効時のみ確保
     logical :: current = .false.
     real, allocatable :: ux(:,:), uy(:,:)       ! 流れの流速 (m/s。x 東・y 北。ish:ieh, jsh:jeh)
     real, allocatable :: kb(:,:,:)              ! ビンごとの波数 k_m (ish:ieh, jsh:jeh, 1:nth)
@@ -288,9 +288,9 @@ subroutine m_wavefield_init(wf, p, g, s, multi)
     ! 岸向きの輸送速度 u_a(段 W5。geomorph の係数 wfsed_facsk・wfsed_facas のどちらかが正のとき)
     if (s%wv_asym) allocate(s%wvua(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   end if
-  ! 砕波による水平混合(list_enc の wf_break_visc > 0 の要求 s%wv_visc。§88): ν_w を共有状態へ書く
+  ! 砕波による水平混合(list_enc の wf_break_visc > 0 の要求 s%wv_visc。§90): ν_w を共有状態へ書く
   if (s%wv_visc) allocate(s%wvnub(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
-  ! 砕波の乱れによる攪拌(geomorph の f_wfsed_turb = 1 の要求 s%wv_turb。§88)
+  ! 砕波の乱れによる攪拌(geomorph の f_wfsed_turb = 1 の要求 s%wv_turb。§90)
   if (s%wv_turb) then
     allocate(s%wvub0(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(s%wvkb(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
@@ -309,7 +309,7 @@ subroutine m_wavefield_init(wf, p, g, s, multi)
     call solve_steady(wf, p, g, s)
     if (wf%roller) call roller_steady(wf, p, g, s)
   end if
-  ! 復元した診断量・外力があればそのまま使う(準定常の再開をビット一致にする。§88)
+  ! 復元した診断量・外力があればそのまま使う(準定常の再開をビット一致にする。§90)
   if (.not. have_diag) then
     if (wf%current) then
       call diagnose_cur(wf, p, g, s)
@@ -470,7 +470,7 @@ end subroutine
 !======================================================================
 
 !----------------------------------------------------------------------
-! 波・流れの底面摩擦の速さ √(|u − u^S|² + (1.16 u_rms)²)(セル。Ruessink ら 2001。§88)
+! 波・流れの底面摩擦の速さ √(|u − u^S|² + (1.16 u_rms)²)(セル。Ruessink ら 2001。§90)
 !   浅水流の辺は両セルの平均を摩擦の速さに使う。u・v は前ステップ確定の流速
 !   (Lagrangian 平均)、u^S には立ち上げの係数を掛ける。担当帯で計算してハロを
 !   交換する(この時点の s%u・s%v のハロ行は 1 ステップ前の値: 浅水流のステップ頭の
@@ -482,7 +482,7 @@ subroutine friction_speed(g, s)
   type(t_state), intent(inout) :: s
   integer :: i, j
   ! 砕波の乱れによる攪拌(f_wfsed_turb)では s%wvub が攪拌の速さなので、純粋な u_rms(s%wvub0)を
-  ! 読む写しの手続きで(本手続きの命令列を変えない。calc_fluvial_wfsed と同じ様式。§88)
+  ! 読む写しの手続きで(本手続きの命令列を変えない。calc_fluvial_wfsed と同じ様式。§90)
   if (allocated(s%wvub0)) then
     call friction_speed_turb(g, s)
     return
@@ -500,7 +500,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! friction_speed の写し(砕波の乱れによる攪拌 f_wfsed_turb = 1 のとき。u_rms は s%wvub0。§88)
+! friction_speed の写し(砕波の乱れによる攪拌 f_wfsed_turb = 1 のとき。u_rms は s%wvub0。§90)
 !----------------------------------------------------------------------
 subroutine friction_speed_turb(g, s)
   type(t_geoinfo), intent(in) :: g
@@ -857,7 +857,7 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 入射の辺に接する波浪セルが開始時に 1 つもなければ警告する(沖の波が入れない。
-! 典型は沖の辺が海域マスクの海セル(sw)の帯 = 解かない海。§88、wavefield_plan.md
+! 典型は沖の辺が海域マスクの海セル(sw)の帯 = 解かない海。§90、wavefield_plan.md
 ! §7.5)。数は全ランクで集約(collective)し、表示は rank0
 !----------------------------------------------------------------------
 subroutine check_incident_cells(wf, g)
@@ -1030,7 +1030,7 @@ subroutine update_props(wf, p, g, s)
       wf%cg(i,j) = 0.0
       if (wf%wst(i,j) == 0) cycle
       if (s%h(i,j) <= wf%hmin) cycle
-      if (s%gv(i,j) < 1.0) cycle                 ! 家屋空隙のセルは吸収(§88.1 D11)
+      if (s%gv(i,j) < 1.0) cycle                 ! 家屋空隙のセルは吸収(§90.1 D11)
       wf%wcell(i,j) = 1
       if (wf%om <= 0.0) cycle
       wf%kw(i,j) = disp_k(wf%om, s%h(i,j), p%gg)
@@ -1310,7 +1310,7 @@ end subroutine
 !----------------------------------------------------------------------
 ! 格子の外の仮想の送り手の辺の型(波とローラーの輸送が共有)。角(x・y とも外)は
 ! 入射 > 側方 Neumann > 吸収 の優先で決める(入射辺の角の外は沖の波の領域とみなす =
-! 直線海岸で岸沿いに一様な解を崩さない。§88.2)
+! 直線海岸で岸沿いに一様な解を崩さない。§90.2)
 !----------------------------------------------------------------------
 pure function vside_type(wf, g, id, jd) result(t)
   type(t_wavefield), intent(in) :: wf
@@ -1430,7 +1430,7 @@ subroutine cell_row(wf, p, g, s, j, href, resj)
       q = dt / wf%dth
       ! 制限つき 2 次の流束の反拡散部分(van Leer)を前の値から陽に右辺へ(遅延補正。
       ! 準定常の収束時は制限つき 2 次の流束の釣り合いを満たす。1 次風上だけでは
-      ! 方向空間の数値拡散で屈折が遅れる = §88 の検証記録)
+      ! 方向空間の数値拡散で屈折が遅れる = §90 の検証記録)
       do m = 1, wf%nth
         mp = modulo(m, wf%nth) + 1
         fc(m) = corr_flux(m, mp, 0.5 * (cth_(m) + cth_(mp)))
@@ -1675,7 +1675,7 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 砕波による水平混合の渦動粘性 ν_w = M h (D/ρ)^(1/3)(Battjes 1975。M は list_enc の
-! wf_break_visc。§88)。D はローラーがあればその散逸 D_r = 2 β g E_r / c(roller_iterate と
+! wf_break_visc。§90)。D はローラーがあればその散逸 D_r = 2 β g E_r / c(roller_iterate と
 ! 同じ式)、なければ砕波の散逸 D_b(診断量 wvdw)。XBeach の nuhfac(既定 1)と同じ形。
 ! 帯を書いてハロを交換する(拡散項は帯±2 行の ν を読む)。diagnose・diagnose_cur の後に呼ぶ
 !----------------------------------------------------------------------
@@ -1707,7 +1707,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 砕波の乱れによる攪拌(geomorph の f_wfsed_turb = 1。§88)。底面の乱れのエネルギー
+! 砕波の乱れによる攪拌(geomorph の f_wfsed_turb = 1。§90)。底面の乱れのエネルギー
 !   k_b = k_s / (exp(h/L_mix) − 1)(Roelvink & Stive 1989 の指数の減衰)を求め、攪拌の軌道流速を
 !   u_rms,2 = √(u_rms² + 1.45 k_b)(van Thiel de Vries 2009)にする。ローラーがあれば
 !   k_s = (D_r/ρ)^(2/3)(Battjes 1975)、L_mix = √(2 E_r T / (ρ c))(ローラーの厚さ。Svendsen 1984)
@@ -1762,7 +1762,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 波の歪度・非対称による岸向きの輸送速度 u_a = (f_Sk S_k − f_As A_s) u_rms(段 W5。§88)
+! 波の歪度・非対称による岸向きの輸送速度 u_a = (f_Sk S_k − f_As A_s) u_rms(段 W5。§90)
 !   van Thiel de Vries(2009)の式(XBeach)。S_k = B cos ψ、A_s = B sin ψ は Ruessink ら(2012)の
 !   Ursell 数 Ur = (3/8)√2 H_rms k/(kh)³ によるパラメータ化:
 !     B = p2/(1 + exp((p3 − log10 Ur)/p4))、ψ = −90° + 90° tanh(p5/Ur^p6)
@@ -2091,7 +2091,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 波→流れの受け渡し(段 W2。§88): 放射応力(波+ローラー)の発散から外力 F = −∇·S、
+! 波→流れの受け渡し(段 W2。§90): 放射応力(波+ローラー)の発散から外力 F = −∇·S、
 ! Stokes 輸送 u^S(wf_flow = 2)を帯で求め、共有状態に流速と同じ向き(y = ラスタの行
 ! = 南)で書いてハロまで交換する(collective)。
 !   S_xx = Σ E_m Δθ [n cos²θ_m + (n − 1/2)] + E_r cos²θ_r
@@ -2240,7 +2240,7 @@ contains
 end subroutine
 
 !======================================================================
-! 流れの波への作用(段 W3。f_wf_current = 1。§88)
+! 流れの波への作用(段 W3。f_wf_current = 1。§90)
 !   作用量の平衡 ∂N_m/∂t + ∇·[(c_g,m ê_m + U) N_m] + ∂(c_θ N_m)/∂θ = −D_m/σ_m
 !   (Bretherton & Garrett 1968、SWAN = Booij ら 1999 の形を周波数 1 個に縮約。§5.2)を解く。
 !   状態 ae はこの経路では作用量 N_m = E_m/σ_m(σ_m はセル・ビンごとの固有角周波数。
@@ -2248,7 +2248,7 @@ end subroutine
 !   中の断熱不変量なので、流れが変わっても状態はそのまま(エネルギー E_m = σ_m N_m が
 !   変わる)で、非定常の台帳(作用量 × ω)も閉じる。エネルギーが要る量(砕波・摩擦・上限・
 !   診断量・放射応力)は σ_m N_m から求める。流れなしの経路の命令列を変えないよう、流れ
-!   ありの手続きは別に置き、呼び出し元で振り分ける(段 W2 の -Ofast の教訓。§88.4)
+!   ありの手続きは別に置き、呼び出し元で振り分ける(段 W2 の -Ofast の教訓。§90.4)
 !======================================================================
 
 !----------------------------------------------------------------------
@@ -2273,7 +2273,7 @@ subroutine update_current(wf, p, g, s)
   real :: hx, hy, uxx, uxy, uyx, uyy, cfac, cl
   logical :: ok
 
-  ! 浅水流の流速のハロ(この時点のハロ行は 1 ステップ前の値。§88.4 の摩擦の速さの教訓)
+  ! 浅水流の流速のハロ(この時点のハロ行は 1 ステップ前の値。§90.4 の摩擦の速さの教訓)
   call par_halo_cell(s%u)
   call par_halo_cell(s%v)
   !$omp parallel do schedule(dynamic) private(i, j)
@@ -3286,7 +3286,7 @@ subroutine write_steady(wf, g, s)
   end do
   vb = 0.0_real64
   if (wf%current) then
-    ! 流れがあるときの台帳は作用量 × ω(作用量の保存で閉じる。§88)
+    ! 流れがあるときの台帳は作用量 × ω(作用量の保存で閉じる。§90)
     call par_sum_rows(wf%rblk, vb)
     st = storage_cur(wf, g)
   else
@@ -3354,7 +3354,7 @@ end subroutine
 !   wavefield.dat: ビンごとの状態(state。m_restart の RLE。collective)、続けて
 !     ローラー E_r(roller = 1)、診断量 4 面(ndiag = 1: 波高・平均波向・u_rms・砕波散逸)、
 !     外力 2 面(flow >= 1)、Stokes 輸送 2 面(flow = 2)。準定常は更新の間これらを
-!     保持するので、復元して使うと再開がビット一致する(§88)
+!     保持するので、復元して使うと再開がビット一致する(§90)
 !----------------------------------------------------------------------
 subroutine save_state(wf, p, g, s)
   type(t_wavefield), intent(in) :: wf
@@ -3558,7 +3558,7 @@ subroutine restore_state(wf, p, s, have_diag, have_force)
       call restart_read_cell(un, tmp)
     end if
   end if
-  ! 砕波による水平混合の ν_w(§88)。保存時に無ければ診断量ごと求め直す
+  ! 砕波による水平混合の ν_w(§90)。保存時に無ければ診断量ごと求め直す
   if (visc == 1) then
     if (allocated(s%wvnub)) then
       call restart_read_cell(un, s%wvnub)
@@ -3566,7 +3566,7 @@ subroutine restore_state(wf, p, s, have_diag, have_force)
       call restart_read_cell(un, tmp)
     end if
   end if
-  ! 砕波の乱れによる攪拌の u_rms・k_b(§88。保存時の s%wvub は攪拌の速さ)
+  ! 砕波の乱れによる攪拌の u_rms・k_b(§90。保存時の s%wvub は攪拌の速さ)
   if (turb == 1) then
     if (allocated(s%wvkb)) then
       call restart_read_cell(un, s%wvub0)

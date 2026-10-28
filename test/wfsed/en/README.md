@@ -5,7 +5,7 @@
 [日本語](../README.md)
 
 Verification of stage W4, in which the coastal wave field ([User's Guide
-chapter](../../../docs/en/users_guide/wavefield.md), developer.md §88) acts on bed load and
+chapter](../../../docs/en/users_guide/wavefield.md), developer.md §90) acts on bed load and
 suspended load (stirring by the wave–current bed shear stress, and transport with the Eulerian
 mean velocity u^E), and of stage W5 (the onshore transport velocity u_a of wave skewness and
 asymmetry). The results are compared with the shear stress, equilibrium concentration and
@@ -104,7 +104,7 @@ of the surf zone. The restart continuation is byte-identical to the straight run
 np = 1, 2 and 4 are ULP=0 against the serial reference (stirring, bed load and the closed basin
 byte-identical to np = 1; restart also under MPI).
 
-The stirring by the turbulence of wave breaking (added 2026-10-28; developer.md §88.14) has a
+The stirring by the turbulence of wave breaking (added 2026-10-28; developer.md §90.14) has a
 largest difference between the output Wkb and the assembled k_b of 9.2e-6 of the maximum and
 between the output Wu and the linear-theory u_rms of 1.1e-6 of the maximum (Wu contains no
 turbulence); the maximum k_b of 0.019 m²/s² is at the shoreline cell (i = 109, depth 0.30 m,

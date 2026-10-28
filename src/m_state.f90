@@ -130,7 +130,7 @@ module m_state
     logical :: vz_active = .false.  ! VZ の有効化(m_vzflow_init が設定)
     real, allocatable :: vzp(:,:)   ! 回収済み・未同期の雨 (m。セル面積基底 pre·dt の積算。
                                     ! 確保は m_vzflow_init(有効時のみ)、同期でゼロ戻し)
-    ! 沿岸の波浪場(fn_wavefield。§88)の診断量。確保と wv_active の設定は m_wavefield_init
+    ! 沿岸の波浪場(fn_wavefield。§90)の診断量。確保と wv_active の設定は m_wavefield_init
     ! (有効時のみ)。状態(ビン別のエネルギー)は t_wavefield の私有で、ここは書き出しと
     ! 他プロセスへの受け渡し用の導出量(帯 js..je を更新ごとに上書き)
     logical :: wv_active = .false.      ! 波浪場の有効化
@@ -152,7 +152,7 @@ module m_state
     real, allocatable :: wver(:,:)      ! ローラーのエネルギー E_r (J/m2。f_wf_roller = 1。診断・出力用)
     ! 波浪場の砕波による水平混合(swflow の wf_break_visc > 0 のときだけ)。wv_visc は
     ! m_swflow_enc_init が立てる要求(init の順は swflow → wavefield)、係数は wv_viscm。
-    ! m_wavefield が更新ごとに ν_w = M h (D/ρ)^(1/3) を帯±ハロへ書き、拡散項が ν に足す(§88)
+    ! m_wavefield が更新ごとに ν_w = M h (D/ρ)^(1/3) を帯±ハロへ書き、拡散項が ν に足す(§90)
     logical :: wv_visc = .false.        ! 砕波による水平混合の要求
     real :: wv_viscm = 0.0              ! 係数 M(Battjes 1975)
     real, allocatable :: wvnub(:,:)     ! 砕波による渦動粘性 ν_w (m2/s)
@@ -171,7 +171,7 @@ module m_state
     real, allocatable :: wvua(:,:)      ! u_a = (f_Sk S_k − f_As A_s) u_rms(平均波向の向きが正。m/s)
     ! 砕波の乱れによる攪拌(geomorph の f_wfsed_turb = 1 のときだけ。要求 wv_turb は m_geomorph_init が
     ! 立てる)。m_wavefield が更新ごとに底面の乱れ k_b を求め、wvub を攪拌の速さ √(u_rms² + 1.45 k_b)
-    ! にする。純粋な u_rms は wvub0 に退避し、波・流れの摩擦と出力 Wu が読む(§88)
+    ! にする。純粋な u_rms は wvub0 に退避し、波・流れの摩擦と出力 Wu が読む(§90)
     logical :: wv_turb = .false.        ! 砕波の乱れによる攪拌の要求
     real, allocatable :: wvub0(:,:)     ! 底面軌道流速 u_rms(乱れを含まない。m/s)
     real, allocatable :: wvkb(:,:)      ! 底面の乱れのエネルギー k_b (m2/s2)

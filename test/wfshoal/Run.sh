@@ -1,5 +1,5 @@
 #!/bin/bash
-# wfshoal: 逐次実行 + 回帰テスト + 解析検定(沿岸の波浪場 fn_wavefield。developer.md §88)
+# wfshoal: 逐次実行 + 回帰テスト + 解析検定(沿岸の波浪場 fn_wavefield。developer.md §90)
 #   ./Run.sh [-u]
 # param.txt(沖の波の時系列・斜め入射の不規則波)は reference 比較(Log.txt・
 # wavefield.csv・Wh0001.txt、ULP=0)と Check_wfshoal.py base。

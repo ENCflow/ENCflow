@@ -5,7 +5,7 @@
 [日本語](../README.md)
 
 Verification of stage W3, in which the coastal wave field ([User's Guide
-chapter](../../../docs/en/users_guide/wavefield.md), developer.md §88) is changed by the
+chapter](../../../docs/en/users_guide/wavefield.md), developer.md §90) is changed by the
 shallow-water flow (the dispersion relation with the Doppler shift, refraction and
 advection by the current, and blocking). The results are compared with the conservation
 of wave action flux, using a dispersion relation solved independently here, and the

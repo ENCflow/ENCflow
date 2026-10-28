@@ -189,7 +189,7 @@ with the mirror in place of the neighbours outside the grid, and the boundary fa
 mean of the diffusion of its own cell and the mirror cell ([diffusion term](diffusion.md)).
 These are the conditions under which the boundary rows have the same solution
 as the interior rows in a flow that is uniform alongshore; the type was added for
-wave-driven longshore currents ([coastal wave field](wavefield.md); developer.md §88).
+wave-driven longshore currents ([coastal wave field](wavefield.md); developer.md §90).
 Copying the velocity and flux of a boundary face directly from the face one cell inside
 is not used, because it diverges through a positive feedback between the water level of
 the boundary row and the boundary flux.

@@ -1,6 +1,6 @@
 !======================================================================
 ! delta — 波浪場の過程の漂砂(param_wave.txt の fn_wave を沿岸の波浪場に置き換える。
-!   docs/wavefield_plan.md の V12、developer.md §88)
+!   docs/wavefield_plan.md の V12、developer.md §90)
 !   param_wave と同じ河川・海盆・給砂・波(東南東から進行方向 150°、有義波高 0.6 m、
 !   周期 6 s)を、CERC 型の沿岸漂砂(fn_wave)でなく、波を解く沿岸の波浪場(fn_wavefield)と
 !   過程の漂砂(f_wfsed: 波の軌道流速による攪拌、波による流れ = 沿岸流・戻り流れの Euler 平均
@@ -10,7 +10,7 @@
 !   起こす。海岸に交わる南北の辺は、波を側方 Neumann(外にも同じ海岸が続く)、流れを
 !   param_wave と同じ壁にする(沿岸流は南の壁から立ち上がり、北の壁で沖へ折り返す)。流れの
 !   側方 Neumann は、沿岸流が流入する南の辺で、河口・デルタの近くや地形の変化で非一様に
-!   なった流れが正帰還で発散するので使わない(developer.md §88.16)。
+!   なった流れが正帰還で発散するので使わない(developer.md §90.16)。
 !   比較: 同じ給砂・同じ波の param_wave(CERC 経路)と、波のない param_baseqb。
 !   実行: ./encflow param_wfsed.txt。図化: python3 plot_results.py wfsed
 !======================================================================
@@ -97,7 +97,7 @@
 &list_bound_edge
   f_bc_e = 2                ! 東辺: 長波放射(基準水位は e0 = 0 から自動導出 = 海面固定)
   f_bc_n = 0                ! 北・南辺は壁(param_wave と同じ。流れの側方 Neumann は流入側が
-  f_bc_s = 0                !   不安定になる = developer.md §88.16。波は側方 Neumann)
+  f_bc_s = 0                !   不安定になる = developer.md §90.16。波は側方 Neumann)
   f_bc_w = 0                ! 西辺は壁(陸)
 /
 

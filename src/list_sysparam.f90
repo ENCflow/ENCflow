@@ -125,7 +125,7 @@ module list_sysparam
     character(len=maxpathlen) :: fn_driftwood = ""       ! 流木設定ファイル(§50)
     character(len=maxpathlen) :: fn_bldgdebris = ""      ! 家屋破壊・瓦礫設定ファイル(§63)
     character(len=maxpathlen) :: fn_vz = ""              ! 鉛直不飽和浸透(VZ)流出設定ファイル(§87)
-    character(len=maxpathlen) :: fn_wavefield = ""       ! 沿岸の波浪場設定ファイル(§88)
+    character(len=maxpathlen) :: fn_wavefield = ""       ! 沿岸の波浪場設定ファイル(§90)
     character(len=maxpathlen) :: fn_channel = ""         ! 河道条件設定ファイル
     character(len=maxpathlen) :: fn_enc = ""             ! ENC設定ファイル
     character(len=maxpathlen) :: fn_nest = ""            ! ネスト格子一覧(ルートのみ。空=ネストなし。docs/nesting_plan.md)

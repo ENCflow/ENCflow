@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wfshadow: 沿岸の波浪場(fn_wavefield。developer.md §88)の 2 次元の検定
+"""wfshadow: 沿岸の波浪場(fn_wavefield。developer.md §90)の 2 次元の検定
 
 Python 標準ライブラリのみ。使い方:
   python3 Check_wfshadow.py base    result           # 方向分散 20° の不規則波

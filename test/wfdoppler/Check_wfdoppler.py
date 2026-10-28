@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wfdoppler の検定(沿岸の波浪場の流れによる変化 = 段 W3。developer.md §88)(Python 標準ライブラリのみ)
+"""wfdoppler の検定(沿岸の波浪場の流れによる変化 = 段 W3。developer.md §90)(Python 標準ライブラリのみ)
 
   python3 Check_wfdoppler.py opp   result_opp     # 逆流の上の規則波: 作用量の流束の保存
   python3 Check_wfdoppler.py fol   result_fol     # 順流の上の規則波: 同上

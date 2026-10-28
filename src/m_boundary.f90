@@ -68,7 +68,7 @@ module m_boundary
   integer, parameter :: e_bc_outflow = 1   ! 自由流出(洪水向け: 通過流+段落ち)
   integer, parameter :: e_bc_radiation = 2 ! 長波放射(津波向け: 水位偏差を透過)
   integer, parameter :: e_bc_neumann = 3   ! 側方 Neumann(沿岸流向け: 境界の法線方向の水位・
-                                           !   地盤の勾配 0 で境界面の運動方程式を解く。§88)
+                                           !   地盤の勾配 0 で境界面の運動方程式を解く。§90)
   integer, parameter :: e_bc_inflow = 9    ! 流量規定面(区間流入。面単位の内部型。
                                            !   f_bc_* の値としては指定不可。利用者向けの
                                            !   型番号と衝突しない値に置く)

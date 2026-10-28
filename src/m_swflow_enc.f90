@@ -52,8 +52,8 @@ module m_swflow_enc
   public :: bcs, bc_open_face                  ! 開境界の面判定(m_geomorph の
                                                ! 開境界土砂フラックスが読む。読み取り専用)
   public :: bc_neumann_cell                    ! 側方 Neumann の面と鏡像セル(m_geomorph の
-                                               ! 掃流砂の境界面が読む。§88)
-  ! submodule(m_swflow_enc_bc の側方 Neumann の境界面。§88)からのホスト結合参照のため
+                                               ! 掃流砂の境界面が読む。§90)
+  ! submodule(m_swflow_enc_bc の側方 Neumann の境界面。§90)からのホスト結合参照のため
   ! 公開する。private のままだと gfortran が全呼び出しをインライン化してシンボルを
   ! 消し、submodule からリンクできない(m_boundary の interp_series と同じ事情)
   public :: calc_kth_flux
@@ -97,7 +97,7 @@ module m_swflow_enc
     integer :: f_diffusion_term               ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
     logical :: have_diff = .false.            ! 拡散項を計算する(f_diffusion_term > 0、nh_break_visc > 0
                                             !   または wf_break_visc > 0。init が設定)
-    real :: wf_break_visc = 0.0               ! 波浪場の砕波による水平混合の係数 M(§88)
+    real :: wf_break_visc = 0.0               ! 波浪場の砕波による水平混合の係数 M(§90)
     real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
     real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
     real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
@@ -158,7 +158,7 @@ module m_swflow_enc
                                             !   nvfortran は submodule のホスト結合を
                                             !   use 結合扱いし書き込みを拒否する。§13)
     integer :: f_bc_side(1:4) = e_bc_wall     ! 外縁4辺の境界条件型(W,E,N,S)
-    logical :: have_neumann = .false.         ! 側方 Neumann の辺があるか(bc_init が設定。§88)
+    logical :: have_neumann = .false.         ! 側方 Neumann の辺があるか(bc_init が設定。§90)
     logical :: adv_neumann_we = .false.       ! W・E の側方 Neumann の面が一つ内側の面の移流項を
                                             !   写すか(ランク界面の行の移流項の補完が要る。bc_init)
     integer, allocatable :: bt_cell(:,:)      ! 外縁面の型(セル別。(j,W/E)・(i,N/S)。
@@ -879,7 +879,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (nhp%nh_break_visc > 0.0 .and. (nhp%f_nonhydrostatic /= 1 .or. nhp%f_nh_breaking /= 1)) then
     call par_stop("list_enc: nh_break_visc > 0 requires f_nonhydrostatic=1 and f_nh_breaking=1")
   end if
-  ! 沿岸の波浪場の砕波による水平混合(§88): ν_w = M h (D/ρ)^(1/3)(Battjes 1975)を拡散項の ν に
+  ! 沿岸の波浪場の砕波による水平混合(§90): ν_w = M h (D/ρ)^(1/3)(Battjes 1975)を拡散項の ν に
   ! 足す。ν_w は波浪場が更新ごとに共有状態へ書く(init の順 swflow → wavefield により、要求
   ! s%wv_visc と係数 s%wv_viscm で頼む。波浪場が無効なら m_wavefield_init が停止する)
   opt%wf_break_visc = list%wf_break_visc
@@ -1129,14 +1129,14 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 移流項を計算する
   call adv_prepare(p, g, s, sx_mod)
   ! W・E の側方 Neumann の境界面は一つ内側の面の移流項を写す(put_neumann_face)。界面行の
-  ! 他ランク所有の面の値を補完しておく(N・S の写し元は自帯の中。§88)
+  ! 他ランク所有の面の値を補完しておく(N・S の写し元は自帯の中。§90)
   if (bcs%adv_neumann_we) call par_edge_merge(tx_mod%tae, esync_s, esync_n)
 
   ! 拡散項を計算する
   call diff_prepare(p, g, s)
-  ! 沿岸の波浪場の砕波による水平混合 ν_w を ν に足して拡散を求め直す(§88)
+  ! 沿岸の波浪場の砕波による水平混合 ν_w を ν に足して拡散を求め直す(§90)
   if (opt%wf_break_visc > 0.0) call diff_wave_visc(p, g, s)
-  ! 側方 Neumann の辺に接するセルの拡散(diff_prepare が計算しない格子の枠のセル。§88)
+  ! 側方 Neumann の辺に接するセルの拡散(diff_prepare が計算しない格子の枠のセル。§90)
   if (opt%have_diff .and. bcs%have_neumann) call diff_neumann(p, g, s)
 
   ! 曲率項の遠心加速度をセルごとに前計算する(f_dbcurv=1。§28.10)
@@ -1164,7 +1164,7 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 浮遊砂柱状量を移流する(連続式と同一のエッジ流量・係数による
   ! 風上輸送。時刻 n の s%h と s%hs が必要なため complete より前に置く)。
   ! 区間流入に濃度時系列があるときは境界流入濃度テーブルを渡す。波浪場が土砂に
-  ! 作用するなら Euler 平均流速(GLM の wf_flow = 2)と岸向きの速度 u_a で運ぶ(§88)
+  ! 作用するなら Euler 平均流速(GLM の wf_flow = 2)と岸向きの速度 u_a で運ぶ(§90)
   if (s%sed_active) then
     if (allocated(b%csin)) then
       call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1, cbin=b%csin, &
@@ -1932,7 +1932,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   real :: hte                     ! エッジの混合流動深(時刻 n。層流則用)
   real :: rme                     ! 1 + s・C(混合密度比 ρm/ρ)
   real :: vv0e                    ! 辺の速さ |V|(下限 p%vv 適用前。降伏停止判定用。§28.11)
-  ! 波→流れ(段 W2。s%wv_flow > 0 のときだけ使う。§88)
+  ! 波→流れ(段 W2。s%wv_flow > 0 のときだけ使う。§90)
   real :: wfe                     ! 辺の外力の成分 F_k/ρ (m2/s2。中心から近傍が正)
   real :: use_                    ! 辺の Stokes 輸送の成分 u^S_k (m/s。wv_flow = 2)
   real :: vvw, vue2w              ! 辺の波・流れの摩擦の速さ (m/s。wv_flow = 2。下限 p%vv)と、
@@ -1967,14 +1967,14 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   !   ルンゲクッタで流速の絶対値を更新する際に使用する
   vue2 = max(vve**2 - uve0**2, 0.0)
 
-  ! 波→流れ(段 W2。§88): 外力 F = −∇·S(セル中心)の両セル平均を辺の向きへ射影した
+  ! 波→流れ(段 W2。§90): 外力 F = −∇·S(セル中心)の両セル平均を辺の向きへ射影した
   ! F_k/ρ と、GLM の Stokes 輸送の辺の成分 u^S_k(どちらも立ち上げの係数 wv_ramp を
   ! 掛ける)。浅水流の流速は Lagrangian 平均 u^L と読み、摩擦はオイラー流速
   ! u^E = u^L − u^S に作用させる。摩擦の速さは √(|u^E|² + (1.16 u_rms)²)(Ruessink ら
   ! 2001 の波・流れの摩擦。XBeach と同じ)のセル値 s%wvsp(m_wavefield が毎ステップ
   ! 計算)の両セル平均。wv_flow = 0 では従来の文の並びを変えない(従来の文はそのまま
   ! 残し、有効時だけ上書き・補正する。分岐の中でも量の多い計算を置くと -Ofast の
-  ! 最終桁が既存の reference とずれた。§88)
+  ! 最終桁が既存の reference とずれた。§90)
   wfe = 0.0
   use_ = 0.0
   vvw = 0.0
@@ -2155,7 +2155,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     ! F_k/(ρh) の h は両セルの平均水深(流速の符号に依らない)。風上の上限
     ! (cap_he_upwind)を掛けた he を使うと、静止に近い釣り合い(セットアップ)で
     ! 流速の符号の揺らぎごとに外力が切り替わり、行ごとに違う平均の駆動が残って
-    ! 循環がゆっくり育つ(§88。W2 の検証で確認)
+    ! 循環がゆっくり育つ(§90。W2 の検証で確認)
     if (s%wv_flow > 0) then
       uve1 = (uve0 + (tae + tge + wfe / max((hc + hn) / 2, p%dv)) * dtl - tfe * use_ * dtl) &
              / (1 - tfe * dtl)
@@ -2608,10 +2608,10 @@ end subroutine
 !     - 書き: c1 の自帯 js..je(海・域外セルは書かない。コミットは所有者)
 !     - 源泉・消滅・乾燥時の処遇は所有モジュールの責務(ここは純移流)
 !     - 風上セルが領域外(開境界からの流入)の濃度は 0(清水流入)。ただし
-!       側方 Neumann の辺は鏡像セルの濃度(勾配 0。§88)、cbin があればその値
+!       側方 Neumann の辺は鏡像セルの濃度(勾配 0。§90)、cbin があればその値
 !     - 乾燥エッジ条件(h<dd 両セル)は continuous と同一。強い乾燥化では
 !       h1 同様に c1 も僅かに負になり得る(f_exflux_reduction=1 で緩和)
-!     - eul = 真(波浪場の浮遊砂。§88)は面流束から h (r u^S − u_a ê_θ) を引く。このときは
+!     - eul = 真(波浪場の浮遊砂。§90)は面流束から h (r u^S − u_a ê_θ) を引く。このときは
 !       一様濃度でもその発散の分だけ濃度が変わる(水と違う速度で動く)
 !----------------------------------------------------------------------
 subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
@@ -2626,7 +2626,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
                                                      !   底層スカラーの流速分担。§47)
   logical, intent(in), optional :: eul               ! 真なら Euler 平均流速 u^E = u^L − u^S と
                                                      !   岸向きの速度 u_a で運ぶ(波浪場の浮遊砂。
-                                                     !   省略時は偽。§88)
+                                                     !   省略時は偽。§90)
   integer :: i, j, k
   integer :: in, jn, ie, je
   integer :: iu, ju, id, jd, iuu, juu   ! 風上・風下・さらに風上のセル(MUSCL。§78)
@@ -2676,7 +2676,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
           ! 水の流束(GLM の質量輸送 h u^L)から h (r u^S − u_a ê_θ)(両セルの平均。境界面は
           ! 自セル)を引いた h (u^E + u_a ê_θ) で運ぶ。Stokes 輸送は谷より上に集中し、浮遊砂は
           ! 底近くに多いので浮遊砂は Euler 平均流速で動き(Reniers ら 2004、XBeach と同じ)、
-          ! 波の歪度・非対称の岸向きの速度 u_a が加わる(段 W5。§88)。
+          ! 波の歪度・非対称の岸向きの速度 u_a が加わる(段 W5。§90)。
           ! 水が通らない面(流量 0 = 壁・閉じた開口・堤防)は土砂も通さない(上の cycle)
           call sed_drift(i, j, qsx, qsy)
           if (g%x(in,jn) > 0) then
@@ -2727,7 +2727,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
               end if
             end if
           else
-            ! 側方 Neumann の辺(外に同じ海岸が続く。§88)は鏡像セルの濃度(勾配 0)。
+            ! 側方 Neumann の辺(外に同じ海岸が続く。§90)は鏡像セルの濃度(勾配 0)。
             ! 鏡像が計算対象外・海セルなら自セル
             call bc_neumann_cell(in, jn, nmn, im, jm)
             if (nmn) then
@@ -2756,7 +2756,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
         ! 近傍が領域内のときだけ風上・風下を決め、風下が海・乾燥なら 1 次
         ! (領域外のセルを添字にしないこと: -fcheck=all の np=2 で検出した
         ! 実バグ。sw・h は全域+帯の範囲しか確保されていない)
-        ! 側方 Neumann の辺(§88)の外のセルは鏡像セルで置き換える(幽霊セル = 勾配 0)。
+        ! 側方 Neumann の辺(§90)の外のセルは鏡像セルで置き換える(幽霊セル = 勾配 0)。
         ! 境界面も内部と同じ再構成になる(辺の行だけ 1 次風上だと、岸沿いに一様な海浜でも
         ! 辺の行の輸送が変わった = W4 の海浜の検定で実検出)。ステンシルの位置は幾何の
         ! (in,jn) で決め、値だけ鏡像から読む
@@ -2810,7 +2810,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
 
 contains
 
-  ! 浮遊砂が水の質量輸送 h u^L から差し引く輸送 h (r u^S − u_a ê_θ)(eul = 真。§88)
+  ! 浮遊砂が水の質量輸送 h u^L から差し引く輸送 h (r u^S − u_a ê_θ)(eul = 真。§90)
   pure subroutine sed_drift(ci, cj, qx, qy)
     integer, intent(in) :: ci, cj
     real, intent(out) :: qx, qy
@@ -2947,7 +2947,7 @@ subroutine build_fwd(p, g, s)
   !$omp end parallel do
 
   ! 側方 Neumann の辺の境界面(枠外へ出る面)は上の走査が書かない(1.0 のまま)。辺の
-  ! 法線方向に一つ内側の(平行移動した)内部の面の係数を写す(§88)
+  ! 法線方向に一つ内側の(平行移動した)内部の面の係数を写す(§90)
   if (bcs%have_neumann) call bc_neumann_fwd(jlo, jhi)
 end subroutine
 
@@ -3000,7 +3000,7 @@ function sblk(g, s, ic, jc, id, jd) result(res)
   jj = jd
   ! 枠外の側方セルは塞がり 1(壁)。側方 Neumann の辺の外は、境界面と同じく辺の法線方向に
   ! 枠内へ寄せた鏡像セルで判定する(壁とみなすと境界の行の軸の面だけに斜めの分の
-  ! 通過幅が上乗せされ、開いた斜めの境界面と二重になる。§88)
+  ! 通過幅が上乗せされ、開いた斜めの境界面と二重になる。§90)
   if (id < 1 .or. id > g%nx .or. jd < 1 .or. jd > g%ny) then
     if (.not. bcs%have_neumann) return
     call bc_neumann_cell(id, jd, ok, ii, jj)

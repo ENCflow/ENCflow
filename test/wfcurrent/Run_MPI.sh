@@ -1,5 +1,5 @@
 #!/bin/bash
-# wfcurrent: MPI 実行 + 回帰テスト + 検定(沿岸の波浪場の流れへの作用 = 段 W2。developer.md §88)
+# wfcurrent: MPI 実行 + 回帰テスト + 検定(沿岸の波浪場の流れへの作用 = 段 W2。developer.md §90)
 #   ./Run_MPI.sh [ランク数] [-u]
 # 逐次 reference との比較は Log.txt・wavefield.csv・E9998.txt・v9998.txt を ULP=0
 # (CLAUDE.md 検証規律。波→流れの外力は行ごとの局所計算とハロ交換、側方 Neumann の
@@ -8,7 +8,7 @@
 # 側方 Neumann がランク界面をまたぐ)は同じバイナリの np = 1 とバイト比較し、再開の往復
 # (rt1 → rt2)は同じ並列数の通し計算とバイト比較する。双方向の連成(param_cur。段 W3)も
 # 同じ並列数で回して検定し、np = 1 とバイト比較する。拡散項(param_diff。側方 Neumann の辺の
-# 行のセルと境界面の拡散 = §88.12)とその 90° 回した格子(param_rotdiff。W・E の辺の拡散が
+# 行のセルと境界面の拡散 = §90.12)とその 90° 回した格子(param_rotdiff。W・E の辺の拡散が
 # ランク界面をまたぐ)・砕波による水平混合(param_mix)も同じ。基本の行は 8 なので 2 行/ランクの
 # 制約から np <= 4
 sdir=$(dirname "$(readlink -f "$0")")

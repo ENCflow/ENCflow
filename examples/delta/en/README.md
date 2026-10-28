@@ -168,7 +168,7 @@ test/wave_shore (linear theory of a straight shoreline) and test/wave_river
 ![Capacity feed](../figs/wave_capfeed_evolution.png)
 
 **Coastal wave field (V12)** (figures `figs/wfsed_evolution.png`, `figs/wfsed_final.png`; the coastal
-wave field fn_wavefield and process-based sediment transport f_wfsed, developer.md §88 and
+wave field fn_wavefield and process-based sediment transport f_wfsed, developer.md §90 and
 docs/wavefield_plan.md, Japanese): the case wfsed gives the same river, feed and waves as wave, not
 through the CERC-type longshore transport (fn_wave) but through the coastal wave field, which resolves
 the waves, and process-based sediment transport. The offshore waves (H_m0 = 0.6 m, T = 6 s, direction of
@@ -179,7 +179,7 @@ The wave-driven flow (radiation stress with the roller, GLM and wave–current f
 drives a northward longshore current, and sand and mud are stirred by the orbital velocity and carried by
 the Eulerian mean velocity and the onshore velocity of wave skewness and asymmetry. The north and south
 sides are lateral Neumann for the waves and walls for the flow (as in wave; a lateral Neumann boundary
-of the flow becomes unstable at the side where the longshore current enters; developer.md §88.16,
+of the flow becomes unstable at the side where the longshore current enters; developer.md §90.16,
 Japanese).
 
 | Landform 1500 h | wfsed (coastal wave field) |
@@ -259,4 +259,4 @@ with grid-scale deviations below 0.1 mm); its cause has not been investigated (d
   (&list_enc); stirring by breaking turbulence `f_wfsed_turb` ([coastal wave
   field](../../../docs/en/users_guide/wavefield.md)). Avoid making the north and south sides lateral Neumann for
   the flow: the flow diverges when it becomes non-uniform near the side where the longshore current enters
-  (developer.md §88.16, Japanese).
+  (developer.md §90.16, Japanese).

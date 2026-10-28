@@ -289,7 +289,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
 contains
 
   ! 枠外の位置 (ci, cj) が側方 Neumann の辺だけの外なら、辺の法線方向に枠内へ寄せた
-  ! 鏡像セル(境界面の運動方程式と同じ。§88)の添字を返す。それ以外はそのまま
+  ! 鏡像セル(境界面の運動方程式と同じ。§90)の添字を返す。それ以外はそのまま
   ! (Neumann の辺がなければ常にそのまま = 従来の経路)
   pure subroutine mirror_cell(ci, cj, mi, mj)
     integer, intent(in) :: ci, cj
@@ -308,7 +308,7 @@ contains
 
   ! セル (ci, cj) を基準セルとする k 方向エッジの法線流速(確保範囲外は 0)。
   ! 両端のセルがともに側方 Neumann の辺の外のエッジは、基準セルを鏡像へ平行移動した
-  ! エッジ(枠内か境界面)を読む(枠外と枠内を結ぶエッジは境界面そのもの。§88)
+  ! エッジ(枠内か境界面)を読む(枠外と枠内を結ぶエッジは境界面そのもの。§90)
   pure function uvk(ci, cj, kk) result(u)
     integer, intent(in) :: ci, cj, kk
     real :: u
@@ -352,7 +352,7 @@ contains
     integer, intent(in) :: ci, cj
     logical :: ok
     integer :: mi, mj
-    call mirror_cell(ci, cj, mi, mj)      ! 側方 Neumann の辺の外は鏡像(§88)
+    call mirror_cell(ci, cj, mi, mj)      ! 側方 Neumann の辺の外は鏡像(§90)
     ok = .false.
     if (mi < 1 .or. mi > g%nx .or. mj < 1 .or. mj > dcp%ny_g) return
     ok = g%x(mi,mj) > 0 .and. g%sw(mi,mj) == 0
@@ -363,7 +363,7 @@ contains
     integer, intent(in) :: ci, cj
     logical :: ok
     integer :: mi, mj
-    call mirror_cell(ci, cj, mi, mj)      ! 側方 Neumann の辺の外は鏡像(§88)
+    call mirror_cell(ci, cj, mi, mj)      ! 側方 Neumann の辺の外は鏡像(§90)
     ok = .false.
     if (mi < 1 .or. mi > ubound(s%h, 1) .or. mj < dcp%jsh .or. mj > dcp%jeh) return
     if (g%x(mi,mj) <= 0) return

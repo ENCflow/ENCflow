@@ -1,5 +1,5 @@
 #!/bin/bash
-# wfdoppler: 逐次実行 + 回帰テスト + 検定(流れによる沿岸の波浪場の変化 = 段 W3。developer.md §88)
+# wfdoppler: 逐次実行 + 回帰テスト + 検定(流れによる沿岸の波浪場の変化 = 段 W3。developer.md §90)
 #   ./Run.sh [-u]
 # param.txt(逆流で阻止される不規則波)は reference 比較(Log.txt・wavefield.csv・Wh9998.txt・
 # u9998.txt、ULP=0)と Check_wfdoppler.py blk。param_opp・param_fol・param_fol72(作用量の

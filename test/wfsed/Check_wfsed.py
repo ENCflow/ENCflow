@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wfsed: 沿岸の波浪場による土砂の攪拌と輸送(段 W4。fn_geomorph の f_wfsed。developer.md §88)の検定
+"""wfsed: 沿岸の波浪場による土砂の攪拌と輸送(段 W4。fn_geomorph の f_wfsed。developer.md §90)の検定
 
 Python 標準ライブラリのみ。使い方:
   python3 Check_wfsed.py stir   result_stir save_stir   # 攪拌: 浮遊砂の平衡濃度と土砂の保存(流れなし)

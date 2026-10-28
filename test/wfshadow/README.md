@@ -2,7 +2,7 @@
 
 [English](en/README.md)
 
-沿岸の波浪場([ユーザーガイドの章](../../docs/users_guide/wavefield.md)、developer.md §88)の
+沿岸の波浪場([ユーザーガイドの章](../../docs/users_guide/wavefield.md)、developer.md §90)の
 2 次元の検定です。防波堤の陰、角だけで接する斜めの壁の遮断、格子の外の仮想の送り手
 (入射・側方 Neumann・吸収と角の優先)を、`Check_wfshadow.py` で独立に実装した離散解と
 比べます。`param.txt` の結果は reference の Log.txt・wavefield.csv・Wh0001.txt とも

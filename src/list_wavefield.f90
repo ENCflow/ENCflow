@@ -1,7 +1,7 @@
 module list_wavefield
   ! 沿岸の波浪場モデルの設定ファイル(fn_wavefield の namelist)の読み込み専任
   ! (層契約 §12)。生の値を t_list_wavefield に運ぶだけで、解釈・検証・既定値の
-  ! 適用・導出は m_wavefield の init が行う(developer.md §88、docs/wavefield_plan.md)。
+  ! 適用・導出は m_wavefield の init が行う(developer.md §90、docs/wavefield_plan.md)。
   !   &list_wavefield : 有効化・方向ビン・解法(非定常/準定常)・境界の型・沖の波
   !                     (固定値または時系列)・砕波と摩擦の係数・出力・流れへの作用
   !                     (段 W2: 外力・GLM・波・流れの摩擦・ローラー)
@@ -27,7 +27,7 @@ module list_wavefield
     integer :: wf_bc_side(1:4) = -9999           ! 辺(W, E, N, S)の型 0: 吸収 / 1: 入射 / 2: 側方 Neumann
     integer :: wf_wavetype = -9999               ! 1: 不規則波(H_m0) / 2: 規則波(H。飽和砕波。検定用)
     real :: wf_hm0 = -9999.0                     ! 沖の波高 (m。不規則波は H_m0、規則波は H)
-    real :: wf_trep = -9999.0                    ! 代表周期 (s。既定の解釈は T_m-1,0。§88.1 D7)
+    real :: wf_trep = -9999.0                    ! 代表周期 (s。既定の解釈は T_m-1,0。§90.1 D7)
     real :: wf_dir = -9999.0                     ! 進行方向 (deg。x 軸から反時計回り、北 = 90)
     real :: wf_spread = -9999.0                  ! 方向分散 σθ (deg。Kuik ら 1988 の定義)
     real :: wf_val(1:5, 1:wf_nvalmax) = -9999.0  ! 時系列: 時刻 (min)・波高・周期・方向・方向分散

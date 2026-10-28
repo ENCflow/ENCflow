@@ -78,7 +78,7 @@ module list_enc
                                               !   ν_b = nh_break_visc·B·h·√(gh)·|∇η| を運動量の拡散項に加える。plan §15)
     real :: wf_break_visc = 0.0               ! 沿岸の波浪場の砕波による水平混合の係数 M(0: なし。1.0 = XBeach の nuhfac の
                                               !   既定)。ν_w = M·h·(D/ρ)^(1/3)(Battjes 1975。D はローラーの散逸)を運動量の
-                                              !   拡散項に加える。fn_wavefield が必須(§88)
+                                              !   拡散項に加える。fn_wavefield が必須(§90)
     integer :: f_nh_slope = 0                 ! 底面勾配項 (0: 平坦床の線形 NH(Version 1), 1: 底面の運動学条件 w_b = u·∇z_b と
                                               !   圧力項 (φ/h)∇(h+2z_b) を含む(Version 2))
     integer :: f_nh_bottom = 0                ! 動く底面の加速度項 (0: なし, 1: 底面の鉛直加速度 z̈_b を NH の源項に加える。

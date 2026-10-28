@@ -38,7 +38,7 @@ the offshore waves as given).
 
 The history of the design, the comparison of alternatives and the decisions are in
 docs/wavefield_plan.md; the exception to policy 5 and the record of decisions,
-implementation and verification are in developer.md §0-5 and §88.
+implementation and verification are in developer.md §0-5 and §90.
 
 ## Enabling and configuration
 
@@ -65,7 +65,7 @@ is 90°, one travelling west is 180°. This is the same convention as `wave_dir`
 
 **The period is a single representative period.** `wf_trep` (and the period column of
 `wf_val`) is used as is for σ = 2π/T in the dispersion relation. For random waves the
-default interpretation is to give the energy period T_m−1,0 (developer.md §88.1 D7). If
+default interpretation is to give the energy period T_m−1,0 (developer.md §90.1 D7). If
 only the peak period T_p is known, T_m−1,0 ≈ T_p/1.1 is a guide for a single-peaked
 spectrum (EurOtop 2018[^eurotop]).
 
@@ -212,7 +212,7 @@ limiter[^vanleer74] is added from the previous values (deferred correction; at
 convergence of the quasi-steady mode the balance of the limited second-order fluxes is
 satisfied). First-order upwind alone delays refraction through numerical diffusion in
 directional space, and central differencing produces negative energy for a
-unidirectional incident wave, so it is not used (developer.md §88).
+unidirectional incident wave, so it is not used (developer.md §90).
 
 The refraction error decreases in proportion to the bin width. For waves entering a
 beach of slope 1/80 with parallel depth contours at 30°, the deviation of the mean
@@ -437,7 +437,7 @@ where the longshore current enters becomes non-uniform alongshore** (near a rive
 delta or a structure, with the change of waves by currents `f_wf_current = 1`, or with bed
 changes): the inflow keeps strengthening (the advection term of the boundary face copies the
 value of the face one cell inward, so only the bed friction restrains advection that
-accelerates the inflow; developer.md §88.16). Place the sides on a stretch where the flow,
+accelerates the inflow; developer.md §90.16). Place the sides on a stretch where the flow,
 the topography and the waves are uniform alongshore. When that is not possible (a delta or a
 river mouth inside the domain with the sides close to it), make the sides walls for the flow
 (`f_bc_*` = 0) and lateral Neumann for the waves (the longshore current then rises from the

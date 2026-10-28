@@ -151,7 +151,7 @@ $`\nabla u`$ の計算では残りの重みで正規化するのと対照的で�
 側方 Neumann([境界条件](boundary.md)の型 3)の辺に接するセルは、枠外の
 近傍を辺の法線方向に枠内へ寄せた鏡像セルとして和に入れ(外に同じ流れが
 続く = 勾配 0)、その辺の境界面にも自セルと鏡像セルの平均を加えます
-(developer.md §88.12)。
+(developer.md §90.12)。
 
 **運動方程式への組み込み。** セル中心で
 $`\mathbf{T}^d_0 = \bigl(\nabla\cdot(\nu\nabla u),\;\nabla\cdot(\nu\nabla v)\bigr)_0`$

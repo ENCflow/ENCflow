@@ -71,7 +71,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
   real, intent(in) :: dtw       ! 水柱側の実効時間刻み(morfac を含まない)
   integer :: i, j
   real :: hh, taus, ceq, cc, fx, dzb, cap, fxg, afx, tsce
-  real :: uec, vec, rs                 ! 波浪場の攪拌(f_wfsed。§88)
+  real :: uec, vec, rs                 ! 波浪場の攪拌(f_wfsed。§90)
   logical :: spread, wsed, stk
 
   spread = (gm%wlw%nsm > 0)
@@ -95,7 +95,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
         hh = max(s%h(i,j), p%dv)
         taus = g%rn(i,j)**2 * s%vv(i,j)**2 / (gm%sgrav * gm%sd50 * hh**(1.0/3.0))
         if (wsed) then
-          ! 攪拌(§88): 平衡濃度は波・流れの最大のせん断 τ*_max(Soulsby 1997)で決める。
+          ! 攪拌(§90): 平衡濃度は波・流れの最大のせん断 τ*_max(Soulsby 1997)で決める。
           ! 流れのせん断は u^E の速さで(輸送は advect_scalar が u^E と岸向きの速度 u_a で行う)
           uec = s%u(i,j)
           vec = s%v(i,j)
@@ -193,7 +193,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
   end do
   !$omp end parallel do
 
-  ! 波浪場の攪拌と輸送の浮遊砂の輸送量 hs·u_s(u_s = u^E + u_a ê_θ。出力 Qsx・Qsy。§88)
+  ! 波浪場の攪拌と輸送の浮遊砂の輸送量 hs·u_s(u_s = u^E + u_a ê_θ。出力 Qsx・Qsy。§90)
   if (wsed) then
     !$omp parallel do schedule(static) private(i, j, uec, vec)
     do j = dcp%js, dcp%je

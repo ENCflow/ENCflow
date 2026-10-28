@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wfcurrent: 沿岸の波浪場の流れへの作用(段 W2。fn_wavefield の wf_flow。developer.md §88)の検定
+"""wfcurrent: 沿岸の波浪場の流れへの作用(段 W2。fn_wavefield の wf_flow。developer.md §90)の検定
 
 Python 標準ライブラリのみ。使い方:
   python3 Check_wfcurrent.py setup  result_setup          # セットアップ(規則波・直角入射、wf_flow = 1)
@@ -404,7 +404,7 @@ def check_cur(d, dbase):
 def check_diff(d, dbase):
     """基本に拡散項 ∇·(ν∇u)(定数の渦動粘性 ν = 0.5 m²/s)を加える: 側方 Neumann の辺の行のセルと
     境界面の拡散を鏡像セルで求めるので岸沿いに一様なまま(辺の行の拡散が欠けると流入側の辺から
-    一様性が崩れて発散した。§88)。拡散は沿岸方向の運動量を岸沖へ配り直すだけなので積分の
+    一様性が崩れて発散した。§90)。拡散は沿岸方向の運動量を岸沖へ配り直すだけなので積分の
     釣り合いは基本と同じ許容で成り立ち(セルごとの閉じた形は成り立たない)、沿岸流の最大が
     下がり分布が広がる"""
     print("== diff (%s vs %s): the base case with constant eddy viscosity (f_diffusion_term = 1)" % (d, dbase))

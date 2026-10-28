@@ -2,7 +2,7 @@
 
 [English](en/README.md)
 
-沿岸の波浪場([ユーザーガイドの章](../../docs/users_guide/wavefield.md)、developer.md §88)の
+沿岸の波浪場([ユーザーガイドの章](../../docs/users_guide/wavefield.md)、developer.md §90)の
 1 次元の海浜断面での検定です。浅水変形・飽和砕波・屈折・不規則波の砕波・底面摩擦・
 非定常の伝播・台帳・再開を、理論解と、`Check_wfshoal.py` で独立に組み立てた離散の
 定常解で確かめます。`param.txt` の結果は reference の Log.txt・wavefield.csv・Wh0001.txt

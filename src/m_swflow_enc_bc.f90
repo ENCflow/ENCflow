@@ -516,7 +516,7 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
     ! ハロ行のセルは共有行スロットの冗長計算のため。put 側のスロット行
     ! フィルタが書き込み範囲を js-1..je に制限する)
     ! 側方 Neumann(型 3)の辺は put_neumann_faces が書く。従来の型の put_bc_faces の
-    ! 命令列を変えないよう、振り分けは辺ごとにここで行う(§88)
+    ! 命令列を変えないよう、振り分けは辺ごとにここで行う(§90)
     if (bcs%f_bc_side(e_side_w) == e_bc_neumann) then
       do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
         call put_neumann_faces(p, g, s, sx, 1, j, kfw)
@@ -873,7 +873,7 @@ end subroutine
 !----------------------------------------------------------------------
 ! 側方 Neumann の辺のセル (i,j) の境界面(kf の 3 面)を put_neumann_face で書く。
 ! 面の選別は put_bc_faces と同じ(無効・海セル、角の斜め面の両辺 open、スロット行の
-! 書き込み範囲)。従来の型の put_bc_faces とは呼び出し元(boundary_uvmn)で分ける(§88)
+! 書き込み範囲)。従来の型の put_bc_faces とは呼び出し元(boundary_uvmn)で分ける(§90)
 !----------------------------------------------------------------------
 subroutine put_neumann_faces(p, g, s, sx, i, j, kf)
   type(t_sysparam), intent(in) :: p
@@ -900,7 +900,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 側方 Neumann の境界面(型 3。put_neumann_faces から面ごとに呼ぶ。§88)
+! 側方 Neumann の境界面(型 3。put_neumann_faces から面ごとに呼ぶ。§90)
 !   枠外の相手セルを、辺の法線方向に枠内へ寄せたセル(鏡像。角の外は両方向に寄せる)と
 !   みなし、境界面の運動方程式を内部の面と同じ calc_kth_flux で解く。法線方向の水位・
 !   地盤の勾配が 0 になり、圧力勾配は鏡像セルとの差 = 境界に沿う成分だけが残る。岸沿いに
@@ -913,14 +913,14 @@ end subroutine
 !   内部の面のステンシルの枠外は移流の側が鏡像を読む = m_swflow_enc_adv の mirror_cell)。
 !   拡散項は、鏡像セルとの平均(diff_edge と同じ式。辺のセルの拡散は diff_neumann が鏡像で
 !   求める)を足す(外に同じ流れが続く。持たないと岸沿いに一様な沿岸流で辺の行だけ拡散が
-!   欠けて発散した。§88.12)。旧スキーム 1 の移流は枠の端のセルで 0 になる既存の規約のまま
+!   欠けて発散した。§90.12)。旧スキーム 1 の移流は枠の端のセルで 0 になる既存の規約のまま
 !   持たない。
 !   従来の型(put_bc_faces)とは別の手続きにして、振り分けも put_bc_faces の外
 !   (boundary_uvmn)で行い、従来の経路の命令列を変えない(put_bc_faces の面の
 !   ループの中で振り分けると、-Ofast で波を使わない既存の reference が最終桁で
-!   ずれた。§88)。
+!   ずれた。§90)。
 !   境界面の流速・流量そのものを一つ内側の面から写す方式は、境界の行の水位と境界の
-!   流量の正帰還で発散した(W2 の検証。§88)
+!   流量の正帰還で発散した(W2 の検証。§90)
 !----------------------------------------------------------------------
 subroutine put_neumann_face(p, g, s, sx, i, j, k, kf, in, jn, ie, je)
   type(t_sysparam), intent(in) :: p
@@ -958,7 +958,7 @@ subroutine put_neumann_face(p, g, s, sx, i, j, k, kf, in, jn, ie, je)
     if (opt%have_diff) then
       ! 拡散項: 自セルと鏡像セルの平均の法線投影(diff_edge と同じ式。diff_edge の呼び出しを
       ! ここに増やすと、内部の面の拡散(calc_kth_momentum)の命令列が -Ofast・LTO で変わり、
-      ! 側方 Neumann のない拡散項の計算(test/diffusion)が最終桁でずれた。§88.12)
+      ! 側方 Neumann のない拡散項の計算(test/diffusion)が最終桁でずれた。§90.12)
       tae0 = tae0 + (td_mod%td(1,i,j) + td_mod%td(1,im,jm)) / 2 * geo%n8x(k) &
                   + (td_mod%td(2,i,j) + td_mod%td(2,im,jm)) / 2 * geo%n8y(k)
     end if
@@ -1028,7 +1028,7 @@ end function
 ! 枠外の位置 (id,jd) が側方 Neumann の辺だけの外か(ok)。真なら (im,jm) に鏡像セル
 ! (辺の法線方向に枠内へ寄せたセル。角の外は両方向に寄せる)を返す。法線面の外は
 ! セル別の面型、角の外は両辺の型で引く(bc_open_face と同じ)。境界面の運動方程式
-! (put_neumann_face)と開口の動的振り替え(sblk)が同じ鏡像を使う(§88)
+! (put_neumann_face)と開口の動的振り替え(sblk)が同じ鏡像を使う(§90)
 !----------------------------------------------------------------------
 pure module subroutine bc_neumann_cell(id, jd, ok, im, jm)
   integer, intent(in) :: id, jd
@@ -1045,7 +1045,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 側方 Neumann の辺の境界面の動的振り替え係数 fwd(build_fwd の後に呼ぶ。§88)
+! 側方 Neumann の辺の境界面の動的振り替え係数 fwd(build_fwd の後に呼ぶ。§90)
 !   境界面(枠外へ出る面)の係数に、辺の法線方向に一つ内側へ平行移動した内部の面の
 !   係数を写す(岸沿いに一様な流れで境界の行の通過幅が内部の行と一致する)。
 !   エッジの格納(build_fwd と同じ): 成分4 (a,b)-(a+1,b)、成分2 (a,b)-(a,b+1)、

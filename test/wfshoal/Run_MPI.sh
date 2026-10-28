@@ -1,5 +1,5 @@
 #!/bin/bash
-# wfshoal: MPI 実行 + 回帰テスト + 解析検定(沿岸の波浪場 fn_wavefield。developer.md §88)
+# wfshoal: MPI 実行 + 回帰テスト + 解析検定(沿岸の波浪場 fn_wavefield。developer.md §90)
 #   ./Run_MPI.sh [ランク数] [-u]
 # 逐次 reference との比較は Log.txt・wavefield.csv・Wh0001.txt を ULP=0(CLAUDE.md
 # 検証規律。波浪場の更新は Jacobi 型、台帳は行部分和の決定的総和なので並列数に

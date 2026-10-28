@@ -5,7 +5,7 @@
 [日本語](../README.md)
 
 Two-dimensional verification of the coastal wave field
-([User's Guide chapter](../../../docs/en/users_guide/wavefield.md), developer.md §88).
+([User's Guide chapter](../../../docs/en/users_guide/wavefield.md), developer.md §90).
 The shadow of a breakwater, blocking by diagonal walls whose cells touch only at corners,
 and the virtual senders outside the grid (incident, lateral Neumann, absorbing and the
 corner priority) are compared with a discrete solution implemented independently in

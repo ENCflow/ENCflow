@@ -137,7 +137,7 @@ module list_geomorph
     real :: fines_frac0 = 0.0        ! 初期の細粒分割合(sf = fines_frac0 × sd。0 = 粗粒のみ、1 = 細粒のみ)
 
     integer :: f_wfsed = 0           ! 沿岸の波浪場(fn_wavefield)による掃流砂・浮遊砂の攪拌と
-                                     ! Euler 平均流速 u^E での輸送(0:無効, 1:有効。段 W4。§88)。
+                                     ! Euler 平均流速 u^E での輸送(0:無効, 1:有効。段 W4。§90)。
                                      ! 波・流れの底面せん断の合成は Soulsby(1997)。fn_wave の
                                      ! 沿岸漂砂(CERC)とは同時に使えない
     real :: wfsed_facsk = -9999.0    ! 波の歪度による岸向きの輸送速度の係数 f_Sk(段 W5。
@@ -146,7 +146,7 @@ module list_geomorph
     real :: wfsed_facas = -9999.0    ! 同 非対称の係数 f_As(−9999 = 既定 0.1。0 で無効)
     integer :: f_wfsed_turb = 0      ! 砕波の乱れによる攪拌(0:なし, 1:波平均の乱れ = XBeach の
                                      ! turb = wave_averaged。底面の乱れ k_b を u_rms² + 1.45 k_b で
-                                     ! 攪拌の軌道流速に足す。f_wfsed = 1 が必須。§88)
+                                     ! 攪拌の軌道流速に足す。f_wfsed = 1 が必須。§90)
 
     integer :: f_wash = 0            ! 斜面浸食(雨滴+面状。f_suspend が必須)(0:無効, 1:有効)
     real :: wash_kr = 0.0            ! 雨滴侵食係数(無次元。E_r = kr・降雨強度)

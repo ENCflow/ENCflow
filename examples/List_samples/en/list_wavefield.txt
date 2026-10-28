@@ -13,7 +13,7 @@
 !   spreading) enter from the outer sides, and shoaling, refraction,
 !   breaking, bottom friction and the shadows behind breakwaters and islands
 !   are computed by a phase-averaged energy balance with one representative
-!   period and directional bins (users_guide/wavefield.md, developer.md §88).
+!   period and directional bins (users_guide/wavefield.md, developer.md §90).
 !   With wf_flow = 1 or 2 it acts on the flow and produces setup and
 !   longshore currents (stage W2; the default 0 means no action). With
 !   f_wf_current = 1 the current changes the waves (Doppler shift,

@@ -2,7 +2,7 @@
 
 [English](en/README.md)
 
-沿岸の波浪場([ユーザーガイドの章](../../docs/users_guide/wavefield.md)、developer.md §88)が
+沿岸の波浪場([ユーザーガイドの章](../../docs/users_guide/wavefield.md)、developer.md §90)が
 浅水流の流れで変わる段 W3(ドップラー効果の分散関係、流れによる屈折と移流、阻止)の
 検定です。分散関係をここで独立に解いた作用量の流束の保存則と比べ、`param.txt` の結果は
 reference の Log.txt・wavefield.csv・Wh9998.txt・u9998.txt とも比較します(ULP=0)。

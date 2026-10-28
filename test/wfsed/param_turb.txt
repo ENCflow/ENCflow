@@ -1,5 +1,5 @@
 !======================================================================
-! wfsed: 砕波の乱れによる攪拌(f_wfsed_turb = 1。XBeach の turb = wave_averaged。§88)
+! wfsed: 砕波の乱れによる攪拌(f_wfsed_turb = 1。XBeach の turb = wave_averaged。§90)
 !   基本(param.txt: 海浜の沿岸漂砂)に、ローラーの散逸がつくる表面の乱れ k_s = (D_r/ρ)^(2/3)
 !   (Battjes 1975)を指数の減衰 k_b = k_s/(exp(h/L_mix) − 1)(L_mix = √(2E_r T/(ρc)) = ローラーの
 !   厚さ)で底面へ届け、攪拌の軌道流速を √(u_rms² + 1.45 k_b)(van Thiel de Vries 2009)にする。

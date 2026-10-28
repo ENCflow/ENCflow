@@ -1,5 +1,5 @@
 #!/bin/bash
-# wfsed: 逐次実行 + 回帰テスト + 検定(沿岸の波浪場による土砂の攪拌と輸送 = 段 W4・W5。developer.md §88)
+# wfsed: 逐次実行 + 回帰テスト + 検定(沿岸の波浪場による土砂の攪拌と輸送 = 段 W4・W5。developer.md §90)
 #   ./Run.sh [-u]
 # param.txt(海浜の沿岸漂砂。test/wfcurrent の基本 + 掃流砂・浮遊砂 + f_wfsed)は reference
 # 比較(Log.txt・wavefield.csv・Z9998.txt・Hs9998.txt、ULP=0)と Check_wfsed.py beach・asym。

@@ -5,7 +5,7 @@
 [日本語](../README.md)
 
 Verification of the coastal wave field ([User's Guide chapter](../../../docs/en/users_guide/wavefield.md),
-developer.md §88) on a one-dimensional beach profile. Shoaling, saturated breaking,
+developer.md §90) on a one-dimensional beach profile. Shoaling, saturated breaking,
 refraction, breaking of random waves, bottom friction, unsteady propagation, the ledger
 and restarts are checked against theoretical solutions and against discrete steady
 solutions built independently in `Check_wfshoal.py`. The results of `param.txt` are also

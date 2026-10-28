@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wfshoal: 沿岸の波浪場(fn_wavefield。developer.md §88)の海浜断面の検定
+"""wfshoal: 沿岸の波浪場(fn_wavefield。developer.md §90)の海浜断面の検定
 
 Python 標準ライブラリのみ。使い方:
   python3 Check_wfshoal.py base   result                 # 基本(沖の波の時系列・斜め入射の不規則波)

@@ -87,7 +87,7 @@ module m_main
     type(t_snow) :: sn
     type(t_swi) :: si
     type(t_vzflow) :: vz             ! 鉛直不飽和浸透(VZ)流出(fn_vz。§87)
-    type(t_wavefield) :: wf          ! 沿岸の波浪場(fn_wavefield。§88)
+    type(t_wavefield) :: wf          ! 沿岸の波浪場(fn_wavefield。§90)
     type(t_glacier) :: gl
     type(t_lavaflow) :: lv
     type(t_bedmotion) :: bm
@@ -338,7 +338,7 @@ subroutine init_instance(fn_param, align)
     call m_wavefield_init(wf, p, g, s, ninst > 1)  ! 沿岸の波浪場を初期化(fn_wavefield 指定時のみ
                                             ! 有効。swflow init より後 = 河道の幅・断面形の
                                             ! 有無が確定、静的な波浪セルの判定にゾーン2の
-                                            ! 全域マスク、地形時計に s%geo_morfac を使う。§88)
+                                            ! 全域マスク、地形時計に s%geo_morfac を使う。§90)
     call output_init(ou, p, g)              ! ファイル出力の準備(geoinfoより後に)
 
     ! 地理情報を各ランクに合わせて縮小
@@ -581,7 +581,7 @@ subroutine finalize_instance()
     call m_swi_dispose(si, p, g)            ! save は dispose で(契約5。§49)
     call m_vzflow_dispose(vz, p, s)         ! save は dispose で(契約5。区間の途中なら残りを
                                             ! 同期して s%h へ移してから。m_state の save より先。§87)
-    call m_wavefield_dispose(wf, p, g, s)   ! save は dispose で(契約5。§88)
+    call m_wavefield_dispose(wf, p, g, s)   ! save は dispose で(契約5。§90)
     call m_record_dispose(r)
     call m_state_dispose(s, p)
     call m_boundary_dispose(b)
@@ -1060,7 +1060,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   type(t_bedmotion), intent(inout) :: bm  ! 規定底面運動(スナップショットの読み進みを保持)
   type(t_swi), intent(inout) :: si     ! 土壌雨量指数(タンク貯留を保持。§49)
   type(t_vzflow), intent(inout) :: vz  ! VZ 流出(共有参照柱・区画・出口。§87)
-  type(t_wavefield), intent(inout) :: wf  ! 沿岸の波浪場(ビン別エネルギー・台帳。§88)
+  type(t_wavefield), intent(inout) :: wf  ! 沿岸の波浪場(ビン別エネルギー・台帳。§90)
   type(t_output), intent(inout) :: ou  ! 分布出力(集約バッファ・装置番号)
   logical, intent(in) :: extpre_active    ! BMI 外部降水供給モードか
   logical, intent(inout) :: extpre_fresh  ! 未適用の新しい場があるか(適用で消す)
@@ -1249,7 +1249,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   ! 沿岸の波浪場(fn_wavefield 未指定なら no-op。非定常は毎ステップ、準定常は
   ! dt_wave ごとに、前ステップ確定の水深を背景に更新する。tide の後 = 潮位を
   ! 反映した水深、swflow の前 = 段 W2 以降の外力・摩擦が同じステップの波浪場を
-  ! 使う位置。W1 は流れ・地形に作用しない。§88)
+  ! 使う位置。W1 は流れ・地形に作用しない。§90)
   call m_wavefield_calc(wf, p, g, s, it)
 
   ! 地表水を計算

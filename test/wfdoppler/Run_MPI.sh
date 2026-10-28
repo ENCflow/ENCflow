@@ -1,5 +1,5 @@
 #!/bin/bash
-# wfdoppler: MPI 実行 + 回帰テスト + 検定(流れによる沿岸の波浪場の変化 = 段 W3。developer.md §88)
+# wfdoppler: MPI 実行 + 回帰テスト + 検定(流れによる沿岸の波浪場の変化 = 段 W3。developer.md §90)
 #   ./Run_MPI.sh [ランク数] [-u]
 # 逐次 reference との比較は Log.txt・wavefield.csv・Wh9998.txt・u9998.txt を ULP=0
 # (CLAUDE.md 検証規律。ドップラーの分散関係・2 リンク分解・流れの勾配による屈折は

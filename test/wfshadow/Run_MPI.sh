@@ -1,5 +1,5 @@
 #!/bin/bash
-# wfshadow: MPI 実行 + 回帰テスト + 検定(沿岸の波浪場 fn_wavefield の 2 次元。developer.md §88)
+# wfshadow: MPI 実行 + 回帰テスト + 検定(沿岸の波浪場 fn_wavefield の 2 次元。developer.md §90)
 #   ./Run_MPI.sh [ランク数] [-u]
 # 逐次 reference との比較は Log.txt・wavefield.csv・Wh0001.txt を ULP=0(CLAUDE.md
 # 検証規律。防波堤の陰・菱形の壁・側方 Neumann の辺がランク境界をまたぐ)

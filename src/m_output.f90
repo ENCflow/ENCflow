@@ -188,7 +188,7 @@ subroutine output_state(o, p, g, s, k)
   if (allocated(g%sd) .and. allocated(s%sd)) call output_matrix(o, p, g, "Sd", s%sd, k)
   ! 表面蓄積プール (kg/ha = g/m2 × 10。プール有効時のみ。§30)
   if (s%wq_active .and. allocated(s%bp)) call output_matrix(o, p, g, "B", 10.0*s%bp, k)
-  ! 沿岸の波浪場(fn_wavefield 有効時のみ。§88): 波高 Wh(不規則波は H_m0、規則波は H)・
+  ! 沿岸の波浪場(fn_wavefield 有効時のみ。§90): 波高 Wh(不規則波は H_m0、規則波は H)・
   ! 平均波向 Wa(deg。進む向き、x 軸から反時計回り。無波セルは −9999)。f_wf_outdiag = 1
   ! のとき底面軌道流速 Wu(u_rms。m/s)・砕波散逸 Wb(W/m2)も。段 W2(wf_flow >= 1)は
   ! 外力 Wfx・Wfy(N/m2)、GLM(wf_flow = 2)は Stokes 輸送 Wsx・Wsy(m/s)、ローラーは
@@ -218,9 +218,9 @@ subroutine output_state(o, p, g, s, k)
       if (allocated(s%sqsy)) call output_matrix(o, p, g, "Qsy", s%sqsy, k)
       ! 波の歪度・非対称による岸向きの輸送速度 u_a(m/s。平均波向の向きが正。段 W5)
       if (allocated(s%wvua)) call output_matrix(o, p, g, "Wua", s%wvua, k)
-      ! 砕波による水平混合の渦動粘性 ν_w(m2/s。list_enc の wf_break_visc > 0。§88)
+      ! 砕波による水平混合の渦動粘性 ν_w(m2/s。list_enc の wf_break_visc > 0。§90)
       if (allocated(s%wvnub)) call output_matrix(o, p, g, "Wnu", s%wvnub, k)
-      ! 底面の乱れのエネルギー k_b(m2/s2。geomorph の f_wfsed_turb = 1。§88)
+      ! 底面の乱れのエネルギー k_b(m2/s2。geomorph の f_wfsed_turb = 1。§90)
       if (allocated(s%wvkb)) call output_matrix(o, p, g, "Wkb", s%wvkb, k)
     end if
   end if

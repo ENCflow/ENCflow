@@ -1,5 +1,5 @@
 #!/bin/bash
-# wfshadow: 逐次実行 + 回帰テスト + 検定(沿岸の波浪場 fn_wavefield の 2 次元。developer.md §88)
+# wfshadow: 逐次実行 + 回帰テスト + 検定(沿岸の波浪場 fn_wavefield の 2 次元。developer.md §90)
 #   ./Run.sh [-u]
 # param.txt(防波堤と菱形の囲い、方向分散 20° の不規則波)は reference 比較(Log.txt・
 # wavefield.csv・Wh0001.txt、ULP=0)と Check_wfshadow.py base(独立に実装した
