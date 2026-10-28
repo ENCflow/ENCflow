@@ -1,17 +1,21 @@
 #!/bin/bash
 # wfsed: MPI 実行 + 回帰テスト + 検定(沿岸の波浪場による土砂の攪拌と輸送 = 段 W4・W5。developer.md §90)
 #   ./Run_MPI.sh [ランク数] [-u]
-# 逐次 reference との比較は Log.txt・wavefield.csv・Z9998.txt・Hs9998.txt を ULP=0
+# 逐次 reference との比較は Log.txt・Z9998.txt・Hs9998.txt を ULP=1・RTOL=1e-6(reference を作ったマシンと CPU の違う
+# マシンの最終桁の差の許容と wavefield.csv を外す理由は Run.sh と developer.md §90.18。同じマシンでは
+# ULP=0 RTOL=0 FILES="Log.txt wavefield.csv Z9998.txt Hs9998.txt" ./Run_MPI.sh N でビット比較できる)。並列数によらないビット一致は、
+# 同じバイナリの np = 1 とのバイト比較(下)と、同じマシンでの ULP=0 の比較で確かめる
 # (CLAUDE.md 検証規律。攪拌はセル・エッジの局所計算、波の書き出しと流れはハロ交換、側方
 # Neumann の掃流砂の境界面は同じランクが計算した内側のエッジを写すので並列数によらず
 # ビット一致する)。攪拌・掃流砂・閉じた海盆・高波浪・低波浪・砕波の乱れの検定も同じ並列数で回し、
 # 攪拌・掃流砂・閉じた海盆・砕波の乱れは同じバイナリの np = 1 とバイト比較する。再開の往復(rt1 → rt2)は同じ並列数の
 # 通し計算とバイト比較する。行は 8 なので 2 行/ランクの制約から np <= 4
 sdir=$(dirname "$(readlink -f "$0")")
-export ULP=0
+export ULP=${ULP:-1}       # 印字の最終桁 1 つ分まで(CPU の違うマシンの最終桁の差。上の注・Run.sh)
+export RTOL=${RTOL:-1e-6}
 export MPIRUN_OPTS="--bind-to none"
 export SKIPCOLS=4
-export FILES=${FILES:-"Log.txt wavefield.csv Z9998.txt Hs9998.txt"}
+export FILES=${FILES:-"Log.txt Z9998.txt Hs9998.txt"}
 "$sdir/../Scripts/Run_case.sh" mpi "$@" || exit 1
 
 np=2

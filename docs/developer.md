@@ -15824,3 +15824,36 @@ mirror_cell と同じ読み方)。一様な海浜でも丸めの規模で結果�
   (上の遡上域の判断と同じ制約。README に明記)。泥は供給の 61 % が堆積し、22 % は終了時にも浮遊、
   17 % は東の開境界から出た。沖の静かな水域の流速に格子規模の振動が時間とともに育つことを見つけた
   (水位は滑らか。原因は未調査 = handoff)。
+
+### 90.18 CI のランナーでの波と流れの連成の検定の reference 比較(2026-10-28。マージ後の CI で判明)
+
+**現象**: 波浪場の作業を main へマージした直後の CI(ci.yml。逐次・MPI np = 2)が test/wfcurrent で
+落ちた(このブランチの検定は main への push と pull request でしか CI に乗らないので、ランナーで
+回ったのはこのときが初めて)。Log.txt の S が相対 6e-8、E9998.txt・v9998.txt が印字の最終桁 1 つ
+(1e-4)、wavefield.csv の収支の列(反復回数・残差・残差の小さな収支 imbalance)が reference と違う。
+逐次のジョブと MPI のジョブも互いに違う値になった。
+
+**原因**: reference を作ったこの作業環境(AVX-512 の Xeon、`-march=native` = cascadelake)と CPU の
+違うランナーでは、make.inc の `-Ofast -march=native -flto` が別のベクトル化のコードを作り、最終桁が
+ずれる(§10 の sewer_wq、§87.3 の vzcol・vzzone と同じ)。マージ後のソースを `-march=znver3`
+(GitHub の AMD EPYC のランナーの想定)でビルドすると、CI の逐次のジョブの値が全時刻で桁まで
+一致し、そのビルドでは 1 スレッド・4 スレッド・np = 2 が互いにビット一致する(= 並列化の不具合では
+ない。CI の 2 つのジョブは別の CPU のランナーに載った)。波浪場だけの検定(wfshoal・wfshadow)と
+流れの波への作用だけの wfdoppler は znver3 でもビット一致し、波の外力が流れに返る wfcurrent・wfsed
+だけが、外力の最終桁の差を流れが育てて印字に出す。
+
+**決定**(§10 の sewer_wq の 2026-10-02 の決定と同じ考え方): wfcurrent・wfsed の Run.sh・Run_MPI.sh の
+reference 比較を `ULP=${ULP:-1}`・`RTOL=${RTOL:-1e-6}` にし、既定の比較から wavefield.csv を外す
+(反復回数は文字列の列に入り、収支の残差は 0 の近くの値なので、相対でも量子でも許容できない)。
+- 許容の大きさ: 2 つの CPU のランナーと znver3 のビルドで、Log.txt の S は相対 6.1e-8 以下(16 倍の
+  余裕)、E9998・v9998・Z9998・Hs9998 は量子 1 つ以下。
+- 検出力は次で保つ: 同じバイナリの np = 1 とのバイト比較(Run_MPI.sh の回した格子・連成・拡散など)、
+  再開の継続のバイト比較、Check_*.py の解析検定、nightly の -Og -fcheck=all 層(ランナーの中で作り
+  直した reference に np = 2 を RTOL = 0 で照合)。同じマシンでは環境変数でビット比較に戻せる:
+  `ULP=0 RTOL=0 FILES="Log.txt wavefield.csv E9998.txt v9998.txt" ./Run.sh`(wfsed は
+  `FILES="Log.txt wavefield.csv Z9998.txt Hs9998.txt"`)。CLAUDE.md の検証の合否判定(等価変更は
+  ビット一致)はこの形で確かめる。reference を更新するときも、wavefield.csv を同じに保つため
+  この FILES を付けて同じマシンで `-u` する。
+- reference は変えていない(wavefield.csv も残す)。wfshoal・wfshadow・wfdoppler は ULP = 0 のまま。
+- 側方 Neumann の境界面の移流項の修正(§90.19)による wfcurrent・wfsed の変化も、この許容の中に入る
+  (S の相対 7.7e-8、量子 1 つ)。

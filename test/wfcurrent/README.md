@@ -6,8 +6,10 @@
 浅水流に作用する段 W2(放射応力の外力・ローラー・GLM の Stokes 輸送・波・流れの底面摩擦・
 側方 Neumann の流れの境界)の検定です。流れの波への作用(段 W3。`f_wf_current`)を加えた
 双方向の連成も確かめます(`param_cur.txt`)。理論解・閉じた形の釣り合い・保存則と比べ、
-`param.txt` の結果は reference の Log.txt・wavefield.csv・E9998.txt・v9998.txt とも
-比較します(ULP=0)。
+`param.txt` の結果は reference の Log.txt・E9998.txt・v9998.txt とも
+比較します(印字の最終桁 1 つ分か相対 1e-6 まで。reference を作ったマシンと CPU が違うと
+-march=native のベクトル化の差で最終桁がずれるため。developer.md §90.18。同じマシンでは
+`ULP=0 RTOL=0 FILES="Log.txt wavefield.csv E9998.txt v9998.txt" ./Run.sh` でビット比較できます)。
 
 ## 構成
 
@@ -80,7 +82,7 @@
 ```bash
 make
 ./Run.sh          # 逐次 + reference 比較 + 検定(1 スレッドで約 2 分)
-./Run_MPI.sh 4    # MPI(np <= 4)。reference と ULP=0、90° 回した格子・双方向の連成・拡散項(とその回した格子)・水平混合は np = 1 とバイト一致、再開も MPI で
+./Run_MPI.sh 4    # MPI(np <= 4)。reference と ULP=1・RTOL=1e-6、90° 回した格子・双方向の連成・拡散項(とその回した格子)・水平混合は np = 1 とバイト一致、再開も MPI で
 ```
 
 ## 検証記録(2026-10-27。gfortran 13.3 / Open MPI 4.1.6、Ubuntu 24.04)

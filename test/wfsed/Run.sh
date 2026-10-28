@@ -2,16 +2,22 @@
 # wfsed: 逐次実行 + 回帰テスト + 検定(沿岸の波浪場による土砂の攪拌と輸送 = 段 W4・W5。developer.md §90)
 #   ./Run.sh [-u]
 # param.txt(海浜の沿岸漂砂。test/wfcurrent の基本 + 掃流砂・浮遊砂 + f_wfsed)は reference
-# 比較(Log.txt・wavefield.csv・Z9998.txt・Hs9998.txt、ULP=0)と Check_wfsed.py beach・asym。
+# 比較(Log.txt・Z9998.txt・Hs9998.txt、ULP=1・RTOL=1e-6)と Check_wfsed.py beach・asym。
 # param_stir(攪拌と平衡濃度)・param_bed(一様な流れの掃流砂)・param_closed(閉じた海盆の
 # 土砂の保存)・param_storm と param_calm(高波浪の侵食と低波浪の回復)・param_turb(砕波の乱れに
 # よる攪拌)は Check_wfsed.py の検定のみ(reference 非依存)。param_rt1 → param_rt2 の
 # 再開の継続が通し計算(param.txt)と state.dat・swflow_enc.dat・wavefield.dat・最終分布で
 # バイト一致すること、param_bad1〜5(不正な設定)が停止することを確かめる
+# reference を作ったマシン(AVX-512 の Xeon)と CPU の違うマシン(CI のランナー)では、-march=native の
+# ベクトル化の差で最終桁がずれ、波と流れの双方向の連成で Log.txt の S が相対 1e-7 程度、出力が
+# 印字の最終桁 1 つ変わる(developer.md §90.18)。比較は ULP=1・RTOL=1e-6 にし、その差で変わる
+# wavefield.csv(収支の残差・反復回数の列)は外す。同じマシンでは環境変数で上書きしてビット比較できる:
+#   ULP=0 RTOL=0 FILES="Log.txt wavefield.csv Z9998.txt Hs9998.txt" ./Run.sh
 sdir=$(dirname "$(readlink -f "$0")")
-export ULP=0
+export ULP=${ULP:-1}       # 印字の最終桁 1 つ分まで(CPU の違うマシンの最終桁の差。上の注)
+export RTOL=${RTOL:-1e-6}
 export SKIPCOLS=4      # 検査対象外とする列番号(Log の Runge 列)
-export FILES=${FILES:-"Log.txt wavefield.csv Z9998.txt Hs9998.txt"}
+export FILES=${FILES:-"Log.txt Z9998.txt Hs9998.txt"}
 "$sdir/../Scripts/Run_case.sh" serial "$@" || exit 1
 
 for tag in stir bed closed storm calm turb; do
