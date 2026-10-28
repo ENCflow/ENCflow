@@ -20,7 +20,7 @@ links:
 install: all
 
 clean:
-	rm -rf result result_* save save_*
+	rm -rf result result_* save save_* long
 	rm -f encflow encflow_mpi a.out Screen.log Screen_*.log analysis*.txt
 	rm -f z.txt sd_*.txt
 
