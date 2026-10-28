@@ -115,19 +115,19 @@ to south).
 - So that the boundary rows have the same solution as the interior rows on a coast
   that is uniform alongshore, type 3 matches the interior faces in the wet/dry rule,
   the adaptive Runge–Kutta, the suppression of excessive outflow, the reassignment of
-  blocked openings, the advection term (the boundary face copies the value of the face one
-  cell inward, and the stencils of the interior faces read the mirror outside the grid) and the
+  blocked openings, the advection term (the control volume of the boundary face is also
+  computed with the same formula as an interior face, reading the mirror at positions outside
+  the grid) and the
   diffusion term (the diffusion of the side cells is also computed with the mirror outside
   the grid and is added to the boundary faces too) (developer.md §90). If the topography
   changes alongshore near a side, the outside is
   treated as continuing that topography, so keep the area of interest away from the
-  side. Because the advection term of the boundary face copies the value of the face one
-  cell inward, the inflow can keep strengthening and diverge when the flow near a side where
-  the flow enters becomes non-uniform along the side (near a river mouth, a delta or a
-  structure, with the change of waves by currents, or with bed changes; developer.md §90.16).
-  Place the sides on a stretch where the flow and the topography are uniform along the side;
-  when that is not possible, make them walls (type 0; "Lateral boundaries" in [coastal wave
-  field](wavefield.md)).
+  side. Because the advection term of the boundary face is computed with zero gradient
+  outside the grid, advection does not accelerate the flow entering through a side even when
+  the flow near a side where the flow enters is non-uniform along the side (near a river
+  mouth, a delta or a structure, with the change of waves by currents, or with bed changes).
+  Until 2026-10-28 the boundary face copied the value of the face one cell inward, and the
+  inflow could then keep strengthening and diverge (developer.md §90.16 and §90.19).
 - Edge boundaries take effect only on **edges where valid non-sea cells touch
   the grid frame**. They have no effect on catchment terrain surrounded
   by a rim of nodata (outside the mask) -- use prescribed water level

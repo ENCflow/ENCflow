@@ -43,8 +43,7 @@ module subroutine bc_init(p, g, b)
   bcs%f_bc_side = b%edge%btype
   bcs%have_open_bc = any(bcs%f_bc_side /= e_bc_wall) .or. (b%ninflow > 0)
   bcs%have_neumann = any(bcs%f_bc_side == e_bc_neumann)
-  bcs%adv_neumann_we = (bcs%f_bc_side(e_side_w) == e_bc_neumann .or. bcs%f_bc_side(e_side_e) == e_bc_neumann) &
-                       .and. opt%f_advection_term > 0 .and. opt%f_advection_scheme >= 2
+  bcs%adv_neumann = bcs%have_neumann .and. opt%f_advection_term > 0 .and. opt%f_advection_scheme >= 2
   if (any(bcs%f_bc_side == e_bc_radiation)) then
     ! 基準水位は m_boundary_set_etaref(m_state_init 直後)が確定済み
     if (.not. allocated(b%edge%eta_cell)) then
@@ -940,7 +939,7 @@ subroutine put_neumann_faces(p, g, s, sx, i, j, kf)
     ie = i + die(k)
     je = j + dje(k)
     if (je < dcp%js - 1 .or. je > dcp%je) cycle
-    call put_neumann_face(p, g, s, sx, i, j, k, kf, in, jn, ie, je)
+    call put_neumann_face(p, g, s, sx, i, j, k, in, jn, ie, je)
   end do
 end subroutine
 
@@ -954,9 +953,10 @@ end subroutine
 !   セルなら自セル(全方向の勾配 0)。内部の面(calc_kth_momentum)に合わせる規則:
 !   両側が乾いたときだけ閉じる、適応的ルンゲクッタの判定、過大な流出の抑制(流出は
 !   自セル、流入は鏡像セルが送り手。通過幅係数と動的振り替えの係数 = bc_neumann_fwd を
-!   掛ける)。移流の項は、運動量保存形(f_advection_scheme = 2, 3)なら辺の法線方向に
-!   一つ内側へ平行移動した内部の面の値を使う(境界面の検査体積は枠外にはみ出すため。
-!   内部の面のステンシルの枠外は移流の側が鏡像を読む = m_swflow_enc_adv の mirror_cell)。
+!   掛ける)。移流の項は、運動量保存形(f_advection_scheme = 2, 3)なら、この面の検査体積を
+!   枠外を鏡像で読んで求めた値(m_swflow_enc_adv の adv_neumann。§90.19。辺の法線方向に
+!   一つ内側の内部の面の値を写していた 2026-10-28 までは、流入側で正帰還の発散があった。
+!   §90.16。内部の面のステンシルの枠外も移流の側が鏡像を読む = mirror_cell)。
 !   拡散項は、鏡像セルとの平均(diff_edge と同じ式。辺のセルの拡散は diff_neumann が鏡像で
 !   求める)を足す(外に同じ流れが続く。持たないと岸沿いに一様な沿岸流で辺の行だけ拡散が
 !   欠けて発散した。§90.12)。旧スキーム 1 の移流は枠の端のセルで 0 になる既存の規約のまま
@@ -968,15 +968,13 @@ end subroutine
 !   境界面の流速・流量そのものを一つ内側の面から写す方式は、境界の行の水位と境界の
 !   流量の正帰還で発散した(W2 の検証。§90)
 !----------------------------------------------------------------------
-subroutine put_neumann_face(p, g, s, sx, i, j, k, kf, in, jn, ie, je)
+subroutine put_neumann_face(p, g, s, sx, i, j, k, in, jn, ie, je)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   type(t_enc_status), intent(inout) :: sx
   integer, intent(in) :: i, j, k, in, jn, ie, je
-  integer, intent(in) :: kf(1:3)
   integer :: im, jm                ! 鏡像セル
-  integer :: ii, jj                ! 移流項の写し元(辺の法線方向に一つ内側のセル)
   real :: h, hv, dh, cor, uve0, mne0, uve1, mne1, hee, maglim, tae0
 
   h = s%h(i,j)
@@ -991,12 +989,9 @@ subroutine put_neumann_face(p, g, s, sx, i, j, k, kf, in, jn, ie, je)
     mne1 = 0
   else
     tae0 = 0.0
-    if (opt%f_advection_term > 0 .and. opt%f_advection_scheme >= 2) then
-      ii = i - din(kf(1))
-      jj = j - djn(kf(1))
-      if (ii >= 1 .and. ii <= dcp%nx_g .and. jj >= 1 .and. jj <= dcp%ny_g) then
-        tae0 = sign_e(k) * tx_mod%tae(ke(k), ii + die(k), jj + dje(k))
-      end if
+    if (bcs%adv_neumann) then
+      ! 移流項はこの面の検査体積で adv_neumann が求めた値(§90.19)
+      tae0 = sign_e(k) * tx_mod%tae(ke(k), ie, je)
       if (chn%adv_drop_rw) then
         if (g%rw(i,j) > 0 .or. g%rw(im,jm) > 0) tae0 = 0.0
       end if

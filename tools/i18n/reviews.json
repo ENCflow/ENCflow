@@ -67,7 +67,7 @@
     {
       "source": "docs/developer.md",
       "target": "docs/en/developer.md",
-      "source_sha256": "43910fe33b604bd163df985d8e8bf4f15d0d93cc376ca8e473d0e2c09979b35f",
+      "source_sha256": "788e157f1afeb73d7e13aa28b2a36dc9707940b6faa4463135c09c76ee1ccb00",
       "target_sha256": "82d2abd2032be1a88429c6a9bd3befcaa793451da3396ab0168cee19316cd653",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
@@ -157,8 +157,8 @@
     {
       "source": "docs/users_guide/boundary.md",
       "target": "docs/en/users_guide/boundary.md",
-      "source_sha256": "e491b25c33adced96be2d75578af4f01520a54c4a1a862af4d0c23c985014a09",
-      "target_sha256": "5fe9960b23b0d82cebf04f3bcb2061061221d87db05df19a817bc56c7a9dfdf5",
+      "source_sha256": "d1fa55dc717cc489e2ecb5bad1fe7f157b6cf403e7098615e9736a28673f86ca",
+      "target_sha256": "3c3eae3865b112c2b32d51d3d24770b34e6430055474b08296641771ac77180a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-28"
@@ -301,8 +301,8 @@
     {
       "source": "docs/users_guide/hydraulics.md",
       "target": "docs/en/users_guide/hydraulics.md",
-      "source_sha256": "353283c80533f3e3743b6c8197c5a1bd6b72522e87b8a100f84a6c4a81c605b3",
-      "target_sha256": "0f7d64dc527cb4244b37a6998bec8a27c2ac82a2f7130491edd2106be74867da",
+      "source_sha256": "87d67c7c0d42cdfe35ef322ea682fa3fa97bc82328fdf6bede6afdd42679747d",
+      "target_sha256": "06136dfe3ed64c4a70f7f415c7893574adfb7fc3aa0af3a5c307b6a4ea3819ca",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-28"
@@ -508,8 +508,8 @@
     {
       "source": "docs/users_guide/wavefield.md",
       "target": "docs/en/users_guide/wavefield.md",
-      "source_sha256": "bd6dbb80959367ace77fdb7b6fc25ec7e42e94f8b198d7127e2ab606b9c1d29a",
-      "target_sha256": "3f62f3766e40022c1760d97ad1d317f8b9927ff315feb93c8713fa67ded3bec4",
+      "source_sha256": "5b0ce2886d107b490cc19b210c37b75324e7eb068ee63ddc9d9681b855da6225",
+      "target_sha256": "2d30e2a59b5b6396b7ac87a7709085941e096cf80e3f18c419b4a21efaf35609",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-28"
@@ -922,8 +922,8 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "a1e2d7e9926f1d0751fdcc483f62bddbd096deb76573f1a31a4572ac33200d9a",
-      "target_sha256": "3591071fa6a86b0e3ba986471d858ada03c7814af16d8771aa4f91b85e049bd2",
+      "source_sha256": "ee84bc5d335549e92f2720ca9d70d91cb6af2156690fb03a12b4c919f59d680d",
+      "target_sha256": "5f1f5961b217f2f2230fa51f71cdb28684cb1a035385857c9ab45312c7b99ff8",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-28"

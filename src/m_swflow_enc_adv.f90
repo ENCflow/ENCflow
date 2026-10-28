@@ -1,6 +1,7 @@
 submodule(m_swflow_enc) m_swflow_enc_adv
   use m_state, only : t_state
   use m_parallel, only : dcp   ! 親経由のホスト結合は nvfortran バグ回避のため直接 use
+  use m_boundary, only : e_bc_neumann, e_side_w, e_side_e, e_side_n, e_side_s   ! adv_neumann の辺の型
   implicit none
 
   ! 私有状態 t_enc_adv / tx_mod は親モジュールに置く(§13 の様式。文脈の付け替えの対象)
@@ -483,6 +484,372 @@ contains
   pure function face_value(up, dn, upup, upup_ok) result(f)
     real, intent(in) :: up, dn, upup
     logical, intent(in) :: upup_ok       ! upup のエッジの向こうのセルが有効か(偽なら 1 次)
+    real :: f
+    real :: d, r, psi
+    if (opt%f_advection_scheme == 2 .or. .not. upup_ok) then
+      f = up
+    else
+      d = dn - up
+      d = d + sign(1.E-10, d)
+      r = (up - upup) / d
+      psi = (r + abs(r)) / (1 + abs(r))
+      f = up + 0.5 * psi * (dn - up)
+    end if
+  end function
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 側方 Neumann の境界面の移流項(運動量保存形 f_advection_scheme = 2, 3。§90.19)
+!   adv_prepare の後に親が呼ぶ(bcs%adv_neumann が真 = 側方 Neumann の辺があり、移流項が
+!   運動量保存形のとき。それ以外は呼ばない = ゼロ追加)。
+!   境界面(格子の枠のセル c から枠外の相手 n へ出る面)の検査体積を、内部の面
+!   (adv_prepare_mc)と同じ式で、枠外の位置を鏡像セル(bc_neumann_cell。辺の法線方向に
+!   枠内へ寄せたセル)で読んで求め、境界面の格納位置 tae(ke8(k), c + de) に書く
+!   (put_neumann_face が読む)。法線方向の勾配が 0 なので、線 k 上の枠外のエッジ流速は
+!   境界面と同じ(法線の面)か同じ列の境界面(斜めの面)になり、外から入る流れを加速する項を
+!   持たない。斜めの面と側方面による岸沖の運動量の交換は内部の面と同じに残る(岸沿いに
+!   一様な場では、読む値がすべて一つ内側の面のものと同じになり、同じ値になる)。
+!   2026-10-28 までは辺の法線方向に一つ内側の内部の面の値を写していた。辺に向かって強まる
+!   流入では、内側の面の移流項(枠外寄りの速い流れが運ばれてくる向き)が境界面の流入を
+!   強め、それがまた内側の面の上流の値になる正帰還で発散した(examples/delta の V12 の
+!   当初の構成。§90.16)。
+!   - 面の選別は put_neumann_faces と同じ(有効・海でない枠のセル、bc_open_face の面、
+!     スロット行 js-1..je)。相手 n の鏡像 m は put_neumann_face と同じく枠内へ寄せたセル。
+!     m が無効・海セル、c か m が区間流入のセル、両側が乾燥、通過幅ゼロの方位の面は
+!     移流項 0(内部の面の除外条件と同じ)。角の外でもう一方の辺が側方 Neumann でない斜めの
+!     面(bc_neumann_cell が偽)も 0。
+!   - 線 k 上のエッジ、側方面を横切るエッジ、MUSCL と供給元の判定のセルは、枠外の位置を
+!     鏡像で読む(両端が枠外のエッジは基準セルを鏡像へ平行移動したエッジ。adv_prepare_mc の
+!     mirror_cell・uvk と同じ規則)。
+!   - 東西辺の共有行 js-1 / je の面は、隣接する両ランクが同じ入力から冗長に計算する(読む
+!     行は j−3..j+3。エッジ流速は交換幅 2 の jsh-1..jeh、流量 mn は js-2..je+1、セルは
+!     ハロ 2、g%x・g%sw は jsh-1..jeh+1 の中)。一つ内側の面を写していたときに要った tae の
+!     界面補完(par_edge_merge)は要らない。
+!   - 式と補助関数は adv_prepare_mc の写しを 8 方向に広げたもの(k = 5..8 は 9 − k の
+!     逆向きのエッジ: 符号 sgn8・成分 ke8。側方の近傍 kkp/kkm とオフセット dti/dtj は
+!     9 − k のものの ± を入れ替える)。adv_prepare_mc を変えずに別の手続きにする
+!     (-Ofast で側方 Neumann のない reference が最終桁でずれないように。§90)
+!----------------------------------------------------------------------
+module subroutine adv_neumann(p, g, s, sx)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(in) :: sx
+  call adv_neumann_mc(p, g, s, sx, tx_mod)
+end subroutine
+
+
+subroutine adv_neumann_mc(p, g, s, sx, tx)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(in) :: sx
+  type(t_enc_adv), intent(inout) :: tx
+  ! 各辺を横切る面の方位(boundary_uvmn と同じ。1 番目が法線、2・3 番目が斜め)
+  integer, parameter :: kfw(1:3) = [4, 1, 6]   ! 西辺(セル (1,j))
+  integer, parameter :: kfe(1:3) = [5, 3, 8]   ! 東辺(セル (nx,j))
+  integer, parameter :: kfn(1:3) = [2, 1, 3]   ! 北辺(セル (i,1))
+  integer, parameter :: kfs(1:3) = [7, 6, 8]   ! 南辺(セル (i,ny))
+  integer :: i, j
+
+  ! 辺の走査は boundary_uvmn と同じ(東西辺は自帯+共有行のセル js-1..je+1、南北辺は行の
+  ! 所有ランクのみ)。格納の列 0・nx が確保範囲(列窓 ± ハロ)の外なら、その辺に接する有効
+  ! セルがないので何もしない(bc_neumann_fwd と同じ)。角の斜め面は二つの辺の走査が同じ値を
+  ! 書く
+  if (bcs%f_bc_side(e_side_w) == e_bc_neumann .and. dcp%ish == 1) then
+    do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
+      call neumann_cell_faces(1, j, kfw)
+    end do
+  end if
+  if (bcs%f_bc_side(e_side_e) == e_bc_neumann .and. dcp%ieh == dcp%nx_g) then
+    do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
+      call neumann_cell_faces(dcp%nx_g, j, kfe)
+    end do
+  end if
+  if (bcs%f_bc_side(e_side_n) == e_bc_neumann .and. dcp%js <= 1 .and. 1 <= dcp%je) then
+    do i = g%wx(1,1), g%wx(2,1)
+      call neumann_cell_faces(i, 1, kfn)
+    end do
+  end if
+  if (bcs%f_bc_side(e_side_s) == e_bc_neumann .and. dcp%js <= dcp%ny_g .and. dcp%ny_g <= dcp%je) then
+    do i = g%wx(1,dcp%ny_g), g%wx(2,dcp%ny_g)
+      call neumann_cell_faces(i, dcp%ny_g, kfs)
+    end do
+  end if
+
+contains
+
+  ! 枠のセル (ci, cj) の境界面(kf の 3 面)のうち、put_neumann_faces が書く面の移流項
+  subroutine neumann_cell_faces(ci, cj, kf)
+    integer, intent(in) :: ci, cj
+    integer, intent(in) :: kf(1:3)
+    integer :: mf, k, in, jn, ie, je, im, jm, kp, km
+    real :: hc, hn, hb, lme
+    real :: ue, um, umm, up, upp
+    real :: qc, qn, qtp, qtm
+    real :: ubc, ubn, ubtp, ubtm
+    real :: ta
+    logical :: donor_rw, ok
+
+    if (g%x(ci,cj) <= 0) return
+    if (g%sw(ci,cj) > 0) return
+    do mf = 1, 3
+      k = kf(mf)
+      in = ci + din(k)
+      jn = cj + djn(k)
+      if (.not. bc_open_face(in, jn)) cycle
+      ie = ci + die(k)
+      je = cj + dje(k)
+      if (je < dcp%js - 1 .or. je > dcp%je) cycle
+      tx%tae(ke8(k),ie,je) = 0.0
+      ! 相手 n の鏡像(境界面の運動方程式 put_neumann_face と同じ枠内へ寄せたセル)。角の外で
+      ! もう一方の辺が側方 Neumann でない斜めの面(放射・自由流出などの辺との角)は、枠外を
+      ! 鏡像で読む検査体積が作れないので移流項 0(一つ内側の面を写していた 2026-10-28 までも、
+      ! 角の斜めの面の写し元は隣の辺の境界面で 0 だった)
+      call bc_neumann_cell(in, jn, ok, im, jm)
+      if (.not. ok) cycle
+      if (g%x(im,jm) <= 0) cycle
+      if (g%sw(im,jm) > 0) cycle
+      if (geo%skip8(k)) cycle
+      if (bc_inflow_cell(ci, cj) .or. bc_inflow_cell(im, jm)) cycle
+      hc = s%h(ci,cj)
+      hn = s%h(im,jm)
+      if (hc < p%dd .and. hn < p%dd) cycle
+      hb = (vol_depth(ci, cj) + vol_depth(im, jm)) / 2
+      donor_rw = .false.
+      if (opt%f_advection_donor == 1) donor_rw = g%rw(ci,cj) > 0 .and. g%rw(im,jm) > 0
+
+      ! 線 k 上のエッジ流速(k 方向。枠外は鏡像)
+      ue  = sgn8(k) * sx%uv(ke8(k),ie,je)
+      um  = uvk8(ci - din(k), cj - djn(k), k)
+      umm = uvk8(ci - 2 * din(k), cj - 2 * djn(k), k)
+      up  = uvk8(in, jn, k)
+      upp = uvk8(in + din(k), jn + djn(k), k)
+
+      ! 流向面(c, n)を通る単位幅流量(k 方向投影。n は鏡像のセル)
+      qc = s%m(ci,cj) * geo%n8x(k) + s%n(ci,cj) * geo%n8y(k)
+      qn = s%m(im,jm) * geo%n8x(k) + s%n(im,jm) * geo%n8y(k)
+
+      ! 流向面の風上化流速(adv_prepare_mc と同じ)
+      if (qc >= 0) then
+        if (donor_ok(ci - din(k), cj - djn(k), donor_rw)) then
+          ubc = face_value(um, ue, umm, far_ok(ci - 2 * din(k), cj - 2 * djn(k)))
+        else
+          ubc = ue
+        end if
+      else
+        ubc = face_value(ue, um, up, far_ok(in + din(k), jn + djn(k)))
+      end if
+      if (qn >= 0) then
+        ubn = face_value(ue, up, um, far_ok(ci - din(k), cj - djn(k)))
+      else
+        if (donor_ok(in + din(k), jn + djn(k), donor_rw)) then
+          ubn = face_value(up, ue, upp, far_ok(in + 2 * din(k), jn + 2 * djn(k)))
+        else
+          ubn = ue
+        end if
+      end if
+      ta = -(qn * (ubn - ue) - qc * (ubc - ue)) / geo%w8dr(k)
+
+      ! 側方面(±t)。k = 5..8 の +t 側は 9 − k の −t 側
+      if (k <= 4) then
+        kp = kkp(k)
+        km = kkm(k)
+      else
+        kp = kkm(9 - k)
+        km = kkp(9 - k)
+      end if
+      qtp = 0.5 * (mnk8(ci, cj, kp) + mnk8(in, jn, kp))
+      qtm = 0.5 * (mnk8(ci, cj, km) + mnk8(in, jn, km))
+      if (qtp >= 0) then
+        ubtp = ue
+      else
+        ubtp = lateral_u8(ci, cj, k, 1, ue, hb)
+      end if
+      if (qtm >= 0) then
+        ubtm = ue
+      else
+        ubtm = lateral_u8(ci, cj, k, -1, ue, hb)
+      end if
+      ta = ta - (qtp * (ubtp - ue) + qtm * (ubtm - ue)) / tx%w8lt(ke8(k))
+
+      lme = (s%lm(ci,cj) + s%lm(im,jm)) / 2
+      tx%tae(ke8(k),ie,je) = sgn8(k) * ta / max(hb, p%dd / 2) * lme
+    end do
+  end subroutine
+
+  ! 枠外の位置 (ci, cj) が側方 Neumann の辺だけの外なら鏡像セルの添字(adv_prepare_mc と同じ)
+  pure subroutine mirror_cell(ci, cj, mi, mj)
+    integer, intent(in) :: ci, cj
+    integer, intent(out) :: mi, mj
+    logical :: ok
+    mi = ci
+    mj = cj
+    if (ci >= 1 .and. ci <= g%nx .and. cj >= 1 .and. cj <= dcp%ny_g) return
+    call bc_neumann_cell(ci, cj, ok, mi, mj)
+    if (.not. ok) then
+      mi = ci
+      mj = cj
+    end if
+  end subroutine
+
+  ! セル (ci, cj) からその kk 近傍(kk = 1..8)へ向かうエッジの kk 方向の流速(確保範囲外は 0)。
+  ! 遠端が枠外のエッジは基準セルを鏡像へ平行移動したエッジを読む(基準セルが枠内なら境界面
+  ! そのもの。uvk と同じ規則)
+  pure function uvk8(ci, cj, kk) result(u)
+    integer, intent(in) :: ci, cj, kk
+    real :: u
+    integer :: ei, ej, mi, mj
+    mi = ci
+    mj = cj
+    ei = ci + din(kk)
+    ej = cj + djn(kk)
+    if (ei < 1 .or. ei > g%nx .or. ej < 1 .or. ej > dcp%ny_g) call mirror_cell(ci, cj, mi, mj)
+    ei = mi + die(kk)
+    ej = mj + dje(kk)
+    if (ei < lbound(sx%uv, 2) .or. ei > ubound(sx%uv, 2) .or. ej < dcp%jsh - 1 .or. ej > dcp%jeh) then
+      u = 0.0
+    else
+      u = sgn8(kk) * sx%uv(ke8(kk),ei,ej)
+    end if
+  end function
+
+  ! セル (ci, cj) からその kk 近傍へ向かう ENC エッジの単位幅流量(時刻 n の mn。流出が正。
+  ! 枠外の扱いは uvk8 と同じ。確保範囲外は 0)
+  pure function mnk8(ci, cj, kk) result(q)
+    integer, intent(in) :: ci, cj, kk
+    real :: q
+    integer :: ei, ej, mi, mj
+    mi = ci
+    mj = cj
+    ei = ci + din(kk)
+    ej = cj + djn(kk)
+    if (ei < 1 .or. ei > g%nx .or. ej < 1 .or. ej > dcp%ny_g) call mirror_cell(ci, cj, mi, mj)
+    ei = mi + die(kk)
+    ej = mj + dje(kk)
+    if (ei < lbound(sx%mn, 2) .or. ei > ubound(sx%mn, 2) .or. ej < dcp%jsh - 1 .or. ej > dcp%jeh) then
+      q = 0.0
+    else
+      q = sgn8(kk) * sx%mn(ke8(kk),ei,ej)
+    end if
+  end function
+
+  ! セルの単位面積あたり水量(水深換算。adv_prepare_mc と同じ)
+  pure function vol_depth(ci, cj) result(v)
+    integer, intent(in) :: ci, cj
+    real :: v
+    if (sct%have_sect) then
+      v = sect_v(s%h(ci,cj), sct%sdep(ci,cj))
+    else
+      v = s%h(ci,cj)
+    end if
+    if (chn%have_width) v = v * chn%wfrac(ci,cj)
+  end function
+
+  ! MUSCL の upup の向こうのセルが領域内で有効か(枠外は鏡像。adv_prepare_mc と同じ)
+  pure function far_ok(ci, cj) result(ok)
+    integer, intent(in) :: ci, cj
+    logical :: ok
+    integer :: mi, mj
+    call mirror_cell(ci, cj, mi, mj)
+    ok = .false.
+    if (mi < 1 .or. mi > g%nx .or. mj < 1 .or. mj > dcp%ny_g) return
+    ok = g%x(mi,mj) > 0 .and. g%sw(mi,mj) == 0
+  end function
+
+  ! セルが運動量の供給元になれるか(枠外は鏡像。adv_prepare_mc と同じ)
+  pure function cell_ok(ci, cj) result(ok)
+    integer, intent(in) :: ci, cj
+    logical :: ok
+    integer :: mi, mj
+    call mirror_cell(ci, cj, mi, mj)
+    ok = .false.
+    if (mi < lbound(s%h, 1) .or. mi > ubound(s%h, 1) .or. mj < dcp%jsh .or. mj > dcp%jeh) return
+    if (g%x(mi,mj) <= 0) return
+    if (g%sw(mi,mj) > 0) return
+    ok = s%h(mi,mj) >= p%dd
+  end function
+
+  ! セルの水深(枠外は鏡像。cell_ok が真のセルにだけ使う)
+  pure function hcell(ci, cj) result(h)
+    integer, intent(in) :: ci, cj
+    real :: h
+    integer :: mi, mj
+    call mirror_cell(ci, cj, mi, mj)
+    h = s%h(mi,mj)
+  end function
+
+  ! 流下方向の風上供給元になれるか(adv_prepare_mc と同じ。drw は引数で受ける)
+  pure function donor_ok(ci, cj, drw) result(ok)
+    integer, intent(in) :: ci, cj
+    logical, intent(in) :: drw
+    logical :: ok
+    integer :: mi, mj
+    ok = cell_ok(ci, cj)
+    if (ok .and. drw) then
+      call mirror_cell(ci, cj, mi, mj)
+      ok = g%rw(mi,mj) > 0
+    end if
+  end function
+
+  ! 側方面(sgn = ±1 の t 側)の流入流速(adv_prepare_mc の lateral_u を 8 方向に広げたもの)
+  pure function lateral_u8(ci, cj, kk, sgn, ue0, he) result(u)
+    integer, intent(in) :: ci, cj, kk, sgn
+    real, intent(in) :: ue0, he
+    real :: u, usum, u1, h1
+    integer :: n, oi, oj, ti, tj
+    if (kk <= 4) then
+      ti = sgn * dti(kk)
+      tj = sgn * dtj(kk)
+    else
+      ti = -sgn * dti(9 - kk)
+      tj = -sgn * dtj(9 - kk)
+    end if
+    if (kk == 2 .or. kk == 4 .or. kk == 5 .or. kk == 7) then
+      oi = ci + ti
+      oj = cj + tj
+      if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
+        u = uvk8(oi, oj, kk)
+      else
+        u = ue0
+      end if
+      return
+    end if
+    usum = 0.0
+    n = 0
+    u1 = ue0
+    h1 = 0.0
+    oi = ci + ti
+    oj = cj
+    if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
+      u1 = uvk8(oi, oj, kk)
+      h1 = 0.5 * (hcell(oi, oj) + hcell(oi + din(kk), oj + djn(kk)))
+      usum = usum + u1
+      n = n + 1
+    end if
+    oi = ci
+    oj = cj + tj
+    if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
+      u1 = uvk8(oi, oj, kk)
+      h1 = 0.5 * (hcell(oi, oj) + hcell(oi + din(kk), oj + djn(kk)))
+      usum = usum + u1
+      n = n + 1
+    end if
+    if (n == 2) then
+      u = usum / 2
+    else if (n == 1 .and. h1 >= 0.5 * he .and. h1 <= 2.0 * he) then
+      u = u1
+    else
+      u = ue0
+    end if
+  end function
+
+  ! 面値の再構成(adv_prepare_mc と同じ)
+  pure function face_value(up, dn, upup, upup_ok) result(f)
+    real, intent(in) :: up, dn, upup
+    logical, intent(in) :: upup_ok
     real :: f
     real :: d, r, psi
     if (opt%f_advection_scheme == 2 .or. .not. upup_ok) then

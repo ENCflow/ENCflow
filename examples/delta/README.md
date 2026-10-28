@@ -135,8 +135,8 @@ T = 6 s、進行方向 150°、方向分散 20°)を東の辺から入射させ�
 河口の噴流による波の阻止を流れによる波の変化(`f_wf_current = 1`)が与える(wave の規則 wave_vmax に
 当たる)。波による流れ(放射応力とローラー・GLM・波・流れの摩擦。`wf_flow = 2`)が北向きの沿岸流を
 起こし、砂と泥は軌道流速で攪拌されて、Euler 平均流速と波の歪度・非対称の岸向きの速度で運ばれる。
-南北の辺は、波が側方 Neumann、流れが壁(wave と同じ。流れの側方 Neumann は沿岸流の流入側の辺が
-不安定になる。developer.md §90.16)。
+南北の辺は、波が側方 Neumann、流れが壁(wave と同じ。この例を作った時点では、流れの側方 Neumann は
+沿岸流の流入側の辺が不安定になった。developer.md §90.16。§90.19 で修正したが、この例は再計算していない)。
 
 | 地形 1500 h | wfsed(波浪場) |
 |---|---|
@@ -196,5 +196,5 @@ wave(CERC)では河口砂州から風下(北)へ砂嘴が伸びて陸化が 31.6
   (河道軸の正面 ±22.5° は不可、45° は高角不安定の閾値。param_wave.txt のヘッダ)。
 - 波浪場のケース → 沖波 `wf_hm0`・`wf_trep`・`wf_dir`・`wf_spread`、岸向きの速度の係数 `wfsed_facsk`・
   `wfsed_facas`、砕波による水平混合 `wf_break_visc`(&list_enc)、砕波の乱れによる攪拌 `f_wfsed_turb`
-  ([沿岸の波浪場](../../docs/users_guide/wavefield.md))。流れの南北の辺を側方 Neumann にするのは、
-  沿岸流の流入側の辺の近くで流れが非一様になると発散するので避ける(developer.md §90.16)。
+  ([沿岸の波浪場](../../docs/users_guide/wavefield.md))。流れの南北の辺も側方 Neumann にできる(流入側の辺の
+  不安定は developer.md §90.19 で修正。param_wfsed.txt はその前に作ったので流れの辺は壁)。

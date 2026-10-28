@@ -181,10 +181,11 @@ inflow of a drawdown is allowed.
 taken as the mirror cell $`(\mathrm{clamp}(i_n), \mathrm{clamp}(j_n))`$ moved into the
 grid along the normal of the edge, and the momentum equation of the boundary face is
 solved with the same formula as an interior face (the normal gradients of water level
-and ground are zero; the gradient along the boundary remains). The advection term uses
-the value of the interior face obtained by moving the boundary face one cell inward,
-and positions where the advection stencils of interior faces leave the grid read the
-mirror. For the diffusion term, the diffusion of the cells touching the side is computed
+and ground are zero; the gradient along the boundary remains). The advection term of the
+boundary face is computed from its own control volume with the same formula as an interior
+face, and positions outside the grid (where the advection stencils of the boundary face or
+of interior faces leave the grid) read the mirror (developer.md §90.19). For the diffusion
+term, the diffusion of the cells touching the side is computed
 with the mirror in place of the neighbours outside the grid, and the boundary face adds the
 mean of the diffusion of its own cell and the mirror cell ([diffusion term](diffusion.md)).
 These are the conditions under which the boundary rows have the same solution

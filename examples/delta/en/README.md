@@ -178,9 +178,9 @@ gives the blocking of the waves by the river-mouth jet (the counterpart of the r
 The wave-driven flow (radiation stress with the roller, GLM and wave–current friction; `wf_flow = 2`)
 drives a northward longshore current, and sand and mud are stirred by the orbital velocity and carried by
 the Eulerian mean velocity and the onshore velocity of wave skewness and asymmetry. The north and south
-sides are lateral Neumann for the waves and walls for the flow (as in wave; a lateral Neumann boundary
-of the flow becomes unstable at the side where the longshore current enters; developer.md §90.16,
-Japanese).
+sides are lateral Neumann for the waves and walls for the flow (as in wave; when this example was made, a
+lateral Neumann boundary of the flow became unstable at the side where the longshore current enters;
+developer.md §90.16, Japanese. It was fixed in §90.19, but this example has not been rerun).
 
 | Landform 1500 h | wfsed (coastal wave field) |
 |---|---|
@@ -257,6 +257,6 @@ with grid-scale deviations below 0.1 mm); its cause has not been investigated (d
 - The coastal wave field case → offshore waves `wf_hm0`, `wf_trep`, `wf_dir`, `wf_spread`; the coefficients of
   the onshore velocity `wfsed_facsk`, `wfsed_facas`; horizontal mixing by wave breaking `wf_break_visc`
   (&list_enc); stirring by breaking turbulence `f_wfsed_turb` ([coastal wave
-  field](../../../docs/en/users_guide/wavefield.md)). Avoid making the north and south sides lateral Neumann for
-  the flow: the flow diverges when it becomes non-uniform near the side where the longshore current enters
-  (developer.md §90.16, Japanese).
+  field](../../../docs/en/users_guide/wavefield.md)). The north and south sides can also be lateral Neumann for
+  the flow (the instability at the inflow side was fixed in developer.md §90.19, Japanese; param_wfsed.txt was
+  made before that, so its flow sides are walls).
