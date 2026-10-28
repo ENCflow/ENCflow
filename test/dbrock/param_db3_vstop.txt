@@ -1,0 +1,79 @@
+!======================================================================
+! dbrock: 速度の門(構成 db3_vstop。DB3)。db1 と同じ定常の混合体(|V| ≈ 3.5 m/s)で、
+!   db_vstop = 10 m/s にする。土石流の項は流れているセル(|V| >= db_vstop)だけに働くので、
+!   どのセルも削れない(Ri = 0、sd 不変)。Check_dbrock.py db3 が検定する。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.05
+  t0 = 0
+  tt = 600
+  dt_disp = 100
+  dt_file = 600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result_db3_vstop'
+  dir_save = 'save_db3_vstop'
+  f_state_save = 1
+  f_check_cfl = 1
+  f_output_mode = 2         ! bil(単精度。図と目視用。検定は save の倍精度)
+  f_out_vv = 1
+  f_out_hs = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 3.0
+  ly = 60.0
+  nx = 3
+  ny = 60
+  f_ztype = 1
+  fn_z = 'z_db1.txt'        ! 幅 1 セルの水路(make_init.py。両側は 2 m 高い乾いた地盤)
+  f_rntype = 0
+  rn0 = 0.05
+  f_sdtype = 1
+  fn_sd = 'sd_db1.txt'      ! 初期の被覆(水路は 0・0.02・0.04・0.06 m の繰り返し)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 100.0       ! 最初の更新 t = 100 s は流れの定常化(約 60 s)の後
+  morfac = 1.0              ! f_debris は 1 必須
+  f_debris = 1
+  f_dbed = 0                ! 交換なし(生成物がその場に溜まる = 自己被覆だけ)
+  f_dbres = 0               ! Manning 抵抗(混合流動深)
+  f_dbstop = 0
+  db_vstop = 10.0           ! 流れの門 (m/s)(定常の |V| ≈ 3.5 m/s なので削れない)
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  f_rockinc = 1
+  rock_kdb = 1.0e-3         ! 土石流による岩盤侵食の速度係数 (m/s。τ_d = 2τ_cd での低下速度)
+  rock_taucdb = 300.0       ! 閾値 τ_cd (Pa)。定常の τ_d ≈ 660 Pa
+  rock_mdb = 1.5            ! べき指数 m_d
+  rock_hstar = 0.05         ! 被覆の長さ H* (m)
+  fn_rock = 'fr_db1.txt'    ! 侵食性倍率 0〜2(9 行周期でずれる)
+/
+
+&list_bound_edge
+  f_bc_s = 1                ! 南辺は自由流出
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 2, 1
+  inflow_val(1:2,1,1) = 0, 0.5
+  inflow_val(1:2,2,1) = 9999, 0.5
+  inflow_dist(1) = 0
+  inflow_cs(1:2,1,1) = 0, 0.5
+  inflow_cs(1:2,2,1) = 9999, 0.5
+/

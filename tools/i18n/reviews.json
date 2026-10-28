@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "afcada1b4051ef782e1675538210cdf0850087a0c289e8379af786d29a6cd403",
-      "target_sha256": "84ba8ace581abd152507328245e5178cabc121827758dffeed396cfbe76fccfe",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "3cdd56cd76b7fa1284b380687a8ea4650055514955d49a486cc3694d436e4b13",
+      "target_sha256": "0238c6066adae9c855cf1d00c8fa334a705fc7b0f6dbc3de32e490eeee62e8b3",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-26"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "docs/developer.md",
@@ -104,11 +104,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "2103304ac315311ab5fa804137144a61560c4a52674b44c711d32e668efd9ba4",
-      "target_sha256": "b84155533cd4bd0375016f18651f9207aa7b10933d2ce84dfc6ae729635f645e",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "7761b1d8f309f98cbdcedd1b8f1cb7fca89c72ff2652b84d60f045d77caca7f4",
+      "target_sha256": "91c298f558cc0c03ba2db2e409e774023e08281a716c917b01fea0168c5f3b72",
+      "reviewer": "Claude (Claude Code session; merge of two separately reviewed versions (main and the mountain-stream branch): checked that the merged Japanese and English files both carry the edits of both sides and the merged parameter count; rest unchanged since the previous records)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -266,11 +266,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "de322617d51c14c721f1dbfc9b42a577c328cc7c2dc01ea9a89754a3b080ceeb",
-      "target_sha256": "2a082c4a8d13b5a11ee7ebef812befb6365d5ac7004df7eb716877a64b533050",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "95fcad2842f79b018f6d859e640b9684e1ee13fb9a987c0c85a3da33b3856556",
+      "target_sha256": "5d916310d98226939e0c35079b41a98452793712c99565f2c5fd6e35e4c2e5a6",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -302,11 +302,11 @@
     {
       "source": "docs/users_guide/hydraulics.md",
       "target": "docs/en/users_guide/hydraulics.md",
-      "source_sha256": "861c693efb9a2ef9368c9548e6dfec8d096123d2f290aa13759668062f1bb23b",
-      "target_sha256": "5d9dff8ad27a590d26024865e7043472b91943ceffddbd3d31c61ff165bb047c",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "015811ca8fdcb63f416b815f49e27a787ad2bf4c33111cf0bc0177ed222abf73",
+      "target_sha256": "5c70880ea868787a45d5221afca4e15ae9016bbd2507cb8821891441cd361968",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "docs/users_guide/initial.md",
@@ -320,11 +320,11 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "e98fd76dc0edeb883d82e8fd1d03a7673c7ad9bfd2ded7e1630f5f54d4797eab",
-      "target_sha256": "3ac97f772b40182aa974580cf718c40b95bd217d176643cba5916362b76068cd",
+      "source_sha256": "be71b103b55daf1b70c9b4fa6c7a900819a61af19b3c6a1caecddc9274bb3973",
+      "target_sha256": "900f2a8248fb5828b93070af1f6924258cf47b5cd167f8e2c1184be2581cbe5e",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "docs/users_guide/lavaflow.md",
@@ -338,11 +338,11 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "941411ab664741bbf55a593b5312a6b94c26506fb499303d6ff4992619f3fb7f",
-      "target_sha256": "08392da4c93997f50f25c784c903bd2dbfcbf02f1817f29383694feac3f199f8",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "dbeed63ef01449330b730177ebbce310ba90a48298e2342526c39d4f0cd63afd",
+      "target_sha256": "80ba59fd56500c0653f57ba6a3f72d447166704b459b9a16160a240ab59886cd",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "docs/users_guide/nest.md",
@@ -383,11 +383,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "96787c247ea53b1adbec4024b24c34d73bdfcb3b87af2f34f8e021e735f72e68",
-      "target_sha256": "f6ae809404e9fd13ddc8ab06c3798624354937a46a9dac0fd4c1c3e2386de8ce",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "0fb00029aa4001a7cd4768c6dad927739b7801b88b425d29c406f95ee7105f64",
+      "target_sha256": "c484a160a94c733a762b98e6283b0b429c30e8b77c19bd6d62a208c897fafc9e",
+      "reviewer": "Claude (Claude Code session; merge of two separately reviewed versions (main and the mountain-stream branch): checked that the merged Japanese and English files both carry the edits of both sides and the merged parameter count; rest unchanged since the previous records)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -401,11 +401,11 @@
     {
       "source": "docs/users_guide/restart.md",
       "target": "docs/en/users_guide/restart.md",
-      "source_sha256": "0d0f584b95f9315ff64ed086c3150d0a57f4443906c022fe6e86be4acf12a8e9",
-      "target_sha256": "27bc7a68cacb03207e761735bbc575786416b76441748acf0b36b92a1574da46",
+      "source_sha256": "a3f8a45d3e3cb382c6e84fe8efa1c800ff8c99f7ce9eed4cf33f64eea4424293",
+      "target_sha256": "a6e218fe92436adcd9f2c85e3221745a8f2b008b25e8e6d3fad9cf5fdbb8f3d8",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-27"
     },
     {
       "source": "docs/users_guide/salt.md",
@@ -419,11 +419,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "687f491378720d0885a694f1eec4ef770bc8c6906ef6fd4bf397dea9bbdcd4ea",
-      "target_sha256": "53177b68be3e34e567c43f05f9bfb48af283b3a59a9ee142bab71d4ce7ca6f2c",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "27a20dcb0a0dbff686f42f36ae93509dae7f764cc5c576950bc571a977214039",
+      "target_sha256": "e49c20b1c311b3640c20a60d794c03adee1289e24727ad03f3372155ad6db90f",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "docs/users_guide/structure.md",
@@ -608,11 +608,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "f39068f530eceb3d3c394719a2a698b61b0bc0d7eff1e1e187b8be6ca53105d9",
-      "target_sha256": "01e9e481ad2ec5ea3dbe041ada49239570a73dc8b14e399c31b1e8e6af622789",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "1882c38b3225d95447ed77f46f709ee7f5e213fbb0238d6cf22b216be4d9dd7b",
+      "target_sha256": "3286da95fcc5edb4823c4645cd9ea02a67476b584e44eaa4749b7e784dc3900b",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -779,11 +779,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "16fdad8d128569858ddd648b310bdc70e1ccf7a537e9fa6981adc9a9ae063781",
-      "target_sha256": "849ee0f6265a8d1bd4c3b02bfdedcf47310af7bbd7bcee23af2abf254e5e2b00",
+      "source_sha256": "2d8430c4a3f45d06e36cfa3342c1ac4d37147835b505d3cfc4ccaf5d9391ad6d",
+      "target_sha256": "40b730ac798683752b0d1f89c613eb723d4026f416d919a3f39de036ce6302dc",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-26"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -820,6 +820,87 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "examples/bedrock_cover/README.md",
+      "target": "examples/bedrock_cover/en/README.md",
+      "source_sha256": "4a79cedcee3d498698112ff7cca9c8988af37da1a0acd5c8b1ddaa5e24f17c28",
+      "target_sha256": "ee69ad6ba3ed8bdeb928c0101db3410ef77f5bbb1746c1ddc15b7b756de70709",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/debris_bedrock/README.md",
+      "target": "examples/debris_bedrock/en/README.md",
+      "source_sha256": "180d22de107ce31eba6277117d40a778f9a70156e3e9f782c2605299d9934854",
+      "target_sha256": "5a30ce95fa00870935735083295e6b31392de8dbeb61f898e2e3d1d3aa699f07",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/cover.png",
+      "target": "examples/debris_bedrock/en/figs/cover.png",
+      "source_sha256": "877c7f63bc1d47be88c91d2aaf7460be76bec2a619d5c678447401004a510ff9",
+      "target_sha256": "7fb54b4407eb87f398ea3429ba7ffa29006ed0da95bd98653f91b4fe96f1e1e4",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/erosion.png",
+      "target": "examples/debris_bedrock/en/figs/erosion.png",
+      "source_sha256": "53e4c59a6e6bdbf5fc15ba2bde3bf5443a57cbf84ff4df2965294cea16512ba6",
+      "target_sha256": "c320f707debf15db22c10b96ab50217428f1624deb585b51de6349e7b22d2bdb",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/long_cover.png",
+      "target": "examples/debris_bedrock/en/figs/long_cover.png",
+      "source_sha256": "c42a110dea0e4c2e12eb4af5d6bd4750679b195d4510a86e29a02bdbb479726b",
+      "target_sha256": "a6887e04281ded1b01a05d0b2dcea3f950895307e2552b74a29ce2a54287a783",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/long_rate.png",
+      "target": "examples/debris_bedrock/en/figs/long_rate.png",
+      "source_sha256": "b69ed91d76eaa8d7db7a404e7cb3714cc56dca0c1484314e0eb045e700663591",
+      "target_sha256": "a14a35ff1c72b2d0bed7e45e557ffa9f44d6f3dc22e0ce6e4f9f25ed1f355a80",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/long_slope.png",
+      "target": "examples/debris_bedrock/en/figs/long_slope.png",
+      "source_sha256": "5c4862531a6a3a80a7c7b3f598810fe5ceb54aa6b7afcd1a37777b8df6b8fcb4",
+      "target_sha256": "a96cabee0035d7d9e91246ede4a5100d7882dfe102eecdb664396b977f22ad2b",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/long_uplift.png",
+      "target": "examples/debris_bedrock/en/figs/long_uplift.png",
+      "source_sha256": "a0ed078c0269a410406d1a88d5e39e6d07a1f96bfacc16ca17e2821152356959",
+      "target_sha256": "afb49d51cb3dbcab1fc222dc820eaf6625fadda9aed7184d4c556ec5d420e15a",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/threshold.png",
+      "target": "examples/debris_bedrock/en/figs/threshold.png",
+      "source_sha256": "4b0ab5ebc540864f2320933996ecaa59ef86604ed9fa0decc4f67e7a45a82b62",
+      "target_sha256": "5e7ffe8572d30097c8737da7f4a1f9b29f01c32ba180af01b31d374b527aaf9f",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "examples/delta/README.md",
@@ -883,6 +964,51 @@
       "reviewer": "Claude (assistant)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "examples/mountain_valley/README.md",
+      "target": "examples/mountain_valley/en/README.md",
+      "source_sha256": "564ab405a8f28b763ee1b9333f3fc2be722a5bc347a1f9e127eb1c4063752a6f",
+      "target_sha256": "4d49b94c8691bc1f9187b112f12e9316e4abe1206d5b767c35e474d0318bd47c",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/mountain_valley/figs/channel.png",
+      "target": "examples/mountain_valley/en/figs/channel.png",
+      "source_sha256": "e2dce766e1827ce22d5fa03475785000dcfa6474ac3c25e944202d791883e011",
+      "target_sha256": "062fe88274e92bff8278e3d84d07fe520a9ce107bfbf617a2ce3aa572c519dec",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/mountain_valley/figs/drop.png",
+      "target": "examples/mountain_valley/en/figs/drop.png",
+      "source_sha256": "cc12dc5905ec2e6d107542086eb23147293b8928e77e19689919b1b7cddf2796",
+      "target_sha256": "fa0a784646d1efecab09650796e5896ea225066254c0fb56839842b38576380e",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/mountain_valley/figs/pulse.png",
+      "target": "examples/mountain_valley/en/figs/pulse.png",
+      "source_sha256": "e4f1ae8f313a83beb1087208a7606a76156067b8c54f73e615a0b6bcae0446b3",
+      "target_sha256": "e25abe9125d9ee01bdf46aed2f468288e498cbd79e95c0e9f4e7b2c1acb12a7e",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/mountain_valley/figs/valley.png",
+      "target": "examples/mountain_valley/en/figs/valley.png",
+      "source_sha256": "6993b002a4f1f98b8650e911ce3c15f7a992aa8a35a6db167fadcba01ad7aedb",
+      "target_sha256": "48d9d11ed2c4427debcc71bb5f57aa9b5321ba76a895cf957fc8f375100ab3dd",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "examples/nest_reflect/README.md",
@@ -977,11 +1103,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "78dee630f2f555d9449c1c0f6663a68c27236e82f36feb6ede558ee73673c015",
-      "target_sha256": "17e49c57eae934ab5b058839a1436b63c7c182b2f8dcbded391092720d2e378a",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "7caa117c39e9a3aa6e2416a7ebdfabde0a51944ba35c2baed6a44147a99a28f9",
+      "target_sha256": "14540dbf0211cd548e93ec7f2e145a80fa7126f6828cf72e77e87f1b63f8ba94",
+      "reviewer": "Claude (Claude Code session; merge of two separately reviewed versions (main and the mountain-stream branch): checked that the merged Japanese and English files both carry the edits of both sides and the merged parameter count; rest unchanged since the previous records)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "test/avalanche/README.md",
@@ -1229,11 +1355,11 @@
     {
       "source": "test/creep/README.md",
       "target": "test/creep/en/README.md",
-      "source_sha256": "9547f04fcdbe38b8aa9e6a111f921506b5a39e652e7d9fec2ceb0076d82a77ee",
-      "target_sha256": "e955a671e699cc4e15d23c85cea93f66d27e2d21d21466032bbdff4a9420d0e8",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "3a6b2e3c628f16cf4dd5943761571393a3c8a7591f06e1771ce13bba7997efd1",
+      "target_sha256": "460949ea72ccbdd2761cbc16d65b1cc83738542ff83e7e7d6ecd01ca2e08f156",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "test/creep/figs/profile.png",
@@ -1326,13 +1452,22 @@
       "reviewed_on": "2026-10-24"
     },
     {
+      "source": "test/dbrock/README.md",
+      "target": "test/dbrock/en/README.md",
+      "source_sha256": "bd876f1a7ce5d175a97eae9d6bcbc2928b1dcc6e0ae7d5adf033ea1d685c23a3",
+      "target_sha256": "669cf63050940a71b27a29502c6f7abe548c9d1ef4149a7fe9a5bdcd979efa0c",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
       "source": "test/debris/README.md",
       "target": "test/debris/en/README.md",
-      "source_sha256": "9d05652424c9ec9aae45ab377104464310bafaa648ca5a11dec2c8d4ea3a5cd5",
-      "target_sha256": "60ae05a5df954cdb6c7646e1517bd4d28b2f773869fbf5d0a003fe9e35e69956",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "5fed65675e1f40a7ebba95cb91822cc46cc5144e7c26cecb54c4f9e1b085ee35",
+      "target_sha256": "7a8665b07631e852e8a835840873f2bdf61760e4f0b35ae0b6f7cd1fcea2e446",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "test/debris/figs/map.png",
@@ -1409,11 +1544,11 @@
     {
       "source": "test/fluvial/README.md",
       "target": "test/fluvial/en/README.md",
-      "source_sha256": "021edc18f6fc22bbabc8f7eed1b64171f41b0abf6862012f6733dc2948ef3ba1",
-      "target_sha256": "73eee8c21792d48e747b500916f486b99e8e44afaf88f2ae382fd0582940a017",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "3accede647d5205c4a17ca560664ff21a166fe23d9bbef94ab464e330eef502d",
+      "target_sha256": "6b2e534395d0903d431f9874989eeb5236d9c46ae8c03409dde7ace8361d111a",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "test/fluvial/figs/fluvial.png",
@@ -1558,6 +1693,15 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/hillsoil/README.md",
+      "target": "test/hillsoil/en/README.md",
+      "source_sha256": "94d12085a64b40371173b30b71c0943076c64898781bf3aaf65876abb727f574",
+      "target_sha256": "d5f63d1ecdd6098191f5ae8394131014c1c28f1a9f97ad046bb14401b02d7e6b",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "test/icevap/README.md",
@@ -1857,6 +2001,15 @@
       "reviewed_on": "2026-10-24"
     },
     {
+      "source": "test/rockinc/README.md",
+      "target": "test/rockinc/en/README.md",
+      "source_sha256": "ced1a269e9e85881aa6e7bda0b857fd6b578e072280c4702629b9572be4d5967",
+      "target_sha256": "64fd4f637de9e12c58c56884ba08bf78d1279965744e1e0ed54220b9bab75a11",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
       "source": "test/salt/README.md",
       "target": "test/salt/en/README.md",
       "source_sha256": "3b88bf7d1efcf386f3930817f9b9ff1d93ed93618aa4316d24bd60839d17ef1f",
@@ -1877,11 +2030,11 @@
     {
       "source": "test/sedfeed/README.md",
       "target": "test/sedfeed/en/README.md",
-      "source_sha256": "fdc5452361fd93e19a11b1518a6d6e6e28b12c183b1f71d86a55ddbe39df6bba",
-      "target_sha256": "bcbe673b15d4d012a873215eeb4c9846c864dc4694f72b8027af102e07ff7c6e",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "778eae07811055f92041dfa289851070e2bbf2b8e58bc6049850f6d4525f4d99",
+      "target_sha256": "feb6c52c191fadf56f8a43e71ca56b7ec2aaff22c01bb7020eee2b329e4b2eb8",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "test/sedinflow/README.md",
@@ -2111,11 +2264,11 @@
     {
       "source": "test/uniflow/README.md",
       "target": "test/uniflow/en/README.md",
-      "source_sha256": "3bc881123d013617804a934e7efc9d22333acea1565650529a2fb11ab62fa950",
-      "target_sha256": "d7e61720fec118b02768368ddc5f92b79d5ebe6f6ef1bcb16b1b507c3d1775a5",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "d35e2a30e263fa704f419a916783589cf88c393ea8f8367039ee596218479186",
+      "target_sha256": "06f4705e658a7017ff0218b384f331f34dc6e4a71f8a1eb6f1a8d4a48091ff89",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "test/volcano/README.md",

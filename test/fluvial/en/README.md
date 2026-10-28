@@ -25,7 +25,9 @@ equilibrium) is recorded as remaining work (§19).
 
 | File | Contents |
 |---|---|
-| `Check_fluvial.py <save>` | (1) sediment volume conservation \|Σ(z − z₀)\| < 1e-9 (a consequence of the antisymmetric fluxes), (2) co-update max\|(sd − sd₀) − (z − z₀)\| < 1e-10, (3) activity max\|z − z₀\| > 1e-4 m |
+| `Check_fluvial.py <save> [nosd]` | (1) sediment volume conservation \|Σ(z − z₀)\| < 1e-9 (a consequence of the antisymmetric fluxes), (2) co-update max\|(sd − sd₀) − (z − z₀)\| < 1e-10, (3) activity max\|z − z₀\| > 1e-4 m. `nosd` skips (2) |
+| `param_creep.txt` | The same box with hillslope creep added (`f_creep = 1`, D = 0.01 m²/s; `save_creep/`). A check of the halo at band interfaces (see Findings) |
+| `param_creep_hs.txt` | `param_creep.txt` with the creep made depth-dependent (`creep_hstar = 20 m`; the availability starts at 0.39 with the soil depth of 10 m; `save_creep_hs/`). A check of the sd halo (see Findings) |
 | `Fig.py` | The figure `en/figs/fluvial.png` below (`python3 Fig.py en`; `figs/fluvial.png` is the Japanese version) |
 
 ## Running
@@ -66,6 +68,23 @@ soil depth changes by exactly the amount the bed moves).
 - The state.dat of MPI np = 1, 2, 4 is byte-identical to the serial run,
   and a restart round trip (save → restore → save in a state where sd has
   evolved) is also byte-identical (§19).
+- `param_creep.txt` (bedload + creep) checks only (1) and (3) (creep moves
+  only z, so (2) does not apply). Creep reads the neighbouring z, so unless
+  the halo is exchanged after the bedload has updated z inside the band, the
+  edges at an MPI band interface differ between the two ranks. On
+  2026-10-27 this was detected with np = 2 as Σ(z − z₀) = 2.5e-5 m·cell and
+  a mismatch with the serial run, and fixed by exchanging the z halo before
+  creep (developer.md §19.9). After the fix Σ(z − z₀) = −6.2e-18 and
+  np = 2, 4 are byte-identical to the serial run.
+- `param_creep_hs.txt` (bedload + depth-dependent creep) checks all of
+  (1)–(3) (depth-dependent creep also updates z and sd together;
+  developer.md §89.8). Depth-dependent creep also reads the sd of the
+  supplying neighbour, so after the bedload the sd halo is exchanged together
+  with z. With a build that omits this exchange, np = 2 was confirmed not to
+  match the serial run (2026-10-27). H_c = 20 m is a test value chosen so that
+  the availability 1 − e^{−sd/H_c} is sensitive to changes of sd. The result
+  is Σ(z − z₀) = 3.5e-17 m·cell and co-update 1.4e-14 m, and np = 2, 4 are
+  byte-identical to the serial run.
 - For the handling of the conveying cross-section with a channel mask (rw),
   see the subgrid channel of
   [tutorials/chichibu](../../../tutorials/chichibu/en/README.md); for

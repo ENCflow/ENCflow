@@ -21,6 +21,7 @@
   fn_geomorph = '-'
   fn_record = '-'
   dir_result = 'result'
+  f_state_save = 1          ! 終了時の状態を save/ に保存(Check_hstar.py が厚い土層の極限の比較に読む)
   f_check_cfl = 0
 /
 

@@ -18,6 +18,7 @@
 | feed05 | 倍率 0.5 | 入口の低下が減る(比例はしない。入口に穴ができると正味流出が減り供給も減る) |
 | qb | inflow_qb = 0.0005 m³/s(東辺は壁) | 掃流砂流砂量の源泉。台帳 (1 − λ) Σ(z − z0) A = ∫Qb dt × morfac |
 | cseq | f_suspend = 1、inflow_cs_eq = 1 | 浮遊砂の平衡濃度給砂。流入濃度 = 流入セルの C_eq |
+| nofeed_creep | nofeed + f_creep = 1(creep_d = 1e-30 m²/s) | クリープとの併用の対照。1 回の更新のクリープの変化が z の ULP より小さいので、河床は nofeed とビット一致するはず(developer.md §19.10) |
 
 ## 検定項目(Check_sedfeed.py)
 
@@ -28,6 +29,15 @@
 4. inflow_qb の台帳が相対 1e-9 で閉じる(save_qb/state.dat の z)。
 5. 平衡濃度給砂: 流入列の hs/h が、流入セルの τ* から同じ式で評価した C_eq に
    ±1 % で一致。
+6. クリープとの併用(nofeed_creep): 河床が nofeed とビット一致
+   (クリープが開境界の掃流砂の流出を再集計しないこと。2026-10-27 の修正前は
+   東端のセルが 110 m 掘り下がった)。creep_d = 1e-12 程度にすると、クリープ自身の
+   寄与(1e-7 m 程度)が河床低下の非線形な発達で 0.16 m まで拡大するので、対照には
+   ULP 未満の値を使う。
+7. 開境界の掃流砂の台帳(developer.md §89.12): 給砂なし・容量給砂の 3 構成(nofeed・feed1・
+   feed05)で、終了時の「net bed load out through open boundaries (out - in)」(開境界を
+   通った正味の固体体積。容量給砂の流入を差し引く)と河床の変化 (1 − λ) Σ(z − z0) A の和が
+   相対 1e-8 で 0。構成ごとの画面出力は `Screen_<構成>.log` に残る。
 
 Run_MPI.sh は同じ検定を MPI で行い、save_*_serial とのビット一致を見る
 (厳密フラグで逐次・MPI を作って比較する。§28.3)。
@@ -36,6 +46,6 @@ Run_MPI.sh は同じ検定を MPI で行い、save_*_serial とのビット一�
 
 ```
 make
-./Run.sh            # 逐次(5 本で約 4 分)
+./Run.sh            # 逐次(6 本で約 5 分)
 ./Run_MPI.sh 2      # MPI
 ```

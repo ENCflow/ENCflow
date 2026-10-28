@@ -1,0 +1,90 @@
+!======================================================================
+! hillsoil: 隆起・風化・深さ依存クリープの定常斜面(構成 c2_w6。C2。
+!   docs/mountain_stream_plan.md §11.3、developer.md §89.15)
+!   中央の列(i = 6)が南へ勾配 0.01 で下る幅 1 セルの渓流、両側 5 セルずつの斜面(東西の端は
+!   分水界 = 壁)。斜面だけが隆起し(U = 2e-6 m/s)風化する(W0 = 6U。sd* = 0.5 m)。渓流は
+!   固定床(隆起・風化・岩盤下刻なし。c2_hill.txt の倍率 0)で、クリープで届いた土層を掃流砂で
+!   南の出口へ運ぶ運搬路 = 斜面の基準面。深さ依存クリープ(D = 2.3817e-5 m²/s、H_c = 0.3 m)。
+!   param_c2_w3.txt と生成速度だけが違う。定常の斜面は、土層厚 H_ss = sd* ln(W0/U) = 0.896 m、
+!   横断の曲率 ∇²z = −U/D_eff(D_eff = D (1 − e^{−H_ss/H_c}) = 2.26e-5 m²/s、U/D_eff = 0.0885 1/m。
+!   土層が厚いぶんクリープが効き、斜面の高さは 1.33 m)。Check_hillsoil.py c2 が中央の行で
+!   H_ss と曲率、定常性、土砂収支(隆起 = 貯留の増分 + 出口の流出)、渓流の岩盤面の不変を見る。
+!   初期は渓流の底より 0.5 m 高い平らな台地(土層厚 0.3 m)。地形の時間 5e6 s(斜面の
+!   最も遅いモードの緩和時間 4 L²/(π² D_eff) ≈ 6e5 s の約 8 倍)。値は検定用(時間の加速)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 12500
+  dt_disp = 1250
+  dt_file = 1250
+  dt_recrd = 12500
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result_c2_w6'
+  dir_save = 'save_c2_w6'
+  f_state_save = 1          ! 終了時の状態を保存(Check_hillsoil.py が z・sd を読む)
+  f_check_cfl = 1
+  f_output_mode = 2         ! bil(単精度。検定は最後の 2 回の Z で定常性を見る)
+  f_out_z = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'c2_h.txt'     ! 渓流は等流水深 0.3 m(make_init.py c2h)
+  v0 = 1.120351             ! 等流流速(make_init.py c2q。南向き)
+/
+
+&list_geoinfo
+  lx = 11.0
+  ly = 24.0
+  nx = 11
+  ny = 24
+  f_ztype = 1
+  fn_z = 'c2_z.txt'         ! 渓流の底と平らな台地(make_init.py c2z)
+  f_rntype = 0
+  rn0 = 0.04
+  f_sdtype = 1
+  fn_sd = 'c2_sd.txt'       ! 渓流 0、斜面 0.3 m(make_init.py c2sd)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0         ! 毎ステップ更新
+  morfac = 400.0            ! dts = 40 s(1000 にすると渓流の掃流砂の dzmax の制限が働き崩れる)
+  f_fluvial = 1             ! 渓流の掃流砂(斜面は乾いたまま)
+  f_qbform = 1
+  fluv_d50 = 0.01
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+  f_creep = 1
+  creep_d = 2.3817e-5       ! クリープ拡散係数 D (m2/s)
+  creep_hstar = 0.3         ! 深さ依存クリープの減衰厚 H_c (m)
+  f_wthr = 1
+  wthr_p0 = 3.786912e8      ! W0 = 1.2e-5 m/s = 6U (mm/kyr)
+  wthr_sdstar = 0.5
+  fn_wthr = 'c2_hill.txt'   ! 渓流のセルは風化しない(倍率 0)
+  f_uplift = 1
+  uplift0 = 63115.2         ! U = 2e-6 m/s (mm/yr)
+  fn_uplift = 'c2_hill.txt' ! 渓流のセルは隆起しない(倍率 0 = 斜面の基準面)
+/
+
+&list_bound_edge
+  f_bc_s = 1                ! 南辺は自由流出(渓流の出口)
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 6, 1
+  inflow_val(1:2,1,1) = 0, 0.336105
+  inflow_val(1:2,2,1) = 9999, 0.336105
+  inflow_dist(1) = 0
+/

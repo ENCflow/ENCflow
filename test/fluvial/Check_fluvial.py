@@ -5,7 +5,8 @@
 #     (2) 共動更新恒等: max|(sd - sd0) - (z - z0)| < TOL_SD
 #     (3) 活性確認:     max|z - z0| > MIN_ACT(空回りの検出)
 #   を検定する。z0, sd0 は param.txt の設定値と対で保守する。
-#   使い方: Check_fluvial.py <savedir>
+#   使い方: Check_fluvial.py <savedir> [nosd]
+#   nosd: (2) を省く(クリープ併用の param_creep.txt。クリープは z だけを動かす)
 import sys, struct
 
 Z0, SD0 = 0.0, 10.0
@@ -43,6 +44,7 @@ def read_rle_array(f, ntot):
 
 
 savedir = sys.argv[1]
+nosd = len(sys.argv) > 2 and sys.argv[2] == "nosd"
 with open(savedir + "/state.dat", "rb") as f:
     ntot = NX * NY
     h = read_rle_array(f, ntot)
@@ -56,12 +58,15 @@ max_dz = max(abs(zi - Z0) for zi in z)
 max_ident = max(abs((sdi - SD0) - (zi - Z0)) for sdi, zi in zip(sd, z))
 
 ok1 = abs(sum_dz) < TOL_SUM
-ok2 = max_ident < TOL_SD
+ok2 = max_ident < TOL_SD or nosd
 ok3 = max_dz > MIN_ACT
 print("(1) 体積保存   : sum(z - z0) = %.3e m*cell (tol %.0e) : %s"
       % (sum_dz, TOL_SUM, "PASS" if ok1 else "FAIL"))
-print("(2) 共動更新   : max|(sd-sd0)-(z-z0)| = %.3e m (tol %.0e) : %s"
-      % (max_ident, TOL_SD, "PASS" if ok2 else "FAIL"))
+if nosd:
+    print("(2) 共動更新   : (クリープ併用のため対象外)")
+else:
+    print("(2) 共動更新   : max|(sd-sd0)-(z-z0)| = %.3e m (tol %.0e) : %s"
+          % (max_ident, TOL_SD, "PASS" if ok2 else "FAIL"))
 print("(3) 活性確認   : max|z - z0| = %.3e m (min %.0e) : %s"
       % (max_dz, MIN_ACT, "PASS" if ok3 else "FAIL"))
 ok = ok1 and ok2 and ok3

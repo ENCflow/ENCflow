@@ -40,6 +40,15 @@ echo ""
 python3 "$sdir/Check_debris.py" save_tkwet wet || rc=1
 rm -rf save_tkwet_serial && cp -r save_tkwet save_tkwet_serial
 
+# 構成5: 構成1 + 掃流砂(f_fluvial。転置した斜面・薄い可動層。developer.md §28.13)
+python3 "$sdir/make_fluv.py" > z_fluv.txt || exit 1
+set -o pipefail
+./encflow param_fluv.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_debris.py" save_fluv fluv || rc=1
+rm -rf save_fluv_serial && cp -r save_fluv save_fluv_serial
+
 if [ $rc -eq 0 ]; then
     echo "=== debris verification PASS ==="
 else

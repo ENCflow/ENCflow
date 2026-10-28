@@ -10,11 +10,17 @@
 #         ∫Qb dt × morfac が TOL_LEDGER(save_qb/state.dat の z を読む)
 #     (5) 浮遊砂の平衡濃度給砂 inflow_cs_eq(cseq): 流入列の濃度 hs/h が流入セルの
 #         τ* から評価した C_eq に ±TOL_CEQ で一致
-import sys, os, struct
+#     (6) クリープとの併用(nofeed_creep。creep_d = 1e-30 で 1 回の更新の変化は z の ULP 未満):
+#         河床が nofeed とビット一致
+#         (クリープが開境界の掃流砂の流出を再集計しないこと。developer.md §19.10)
+#     (7) 開境界の掃流砂の台帳(developer.md §89.12): 給砂なし・容量給砂の構成(nofeed・feed1・
+#         feed05)で (1 − λ) Σ(z − z0) A + 正味の流出(Screen_<構成>.log の
+#         「net bed load out through open boundaries」)= 0 が相対 TOL_NET
+import sys, os, struct, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_init import NX, NY, DX, J1, J2, X1, X2, S, N
 
-DZ_NOFEED, DZ_FEED1, TOL_LEDGER, TOL_CEQ = 0.2, 0.03, 1.0e-9, 0.01
+DZ_NOFEED, DZ_FEED1, TOL_LEDGER, TOL_CEQ, TOL_NET = 0.2, 0.03, 1.0e-9, 0.01, 1.0e-8
 LAMBDA, MORFAC_QB, QB, TT_QB = 0.4, 10.0, 0.0005, 1200.0
 ESA, STAUSC, SGRAV, DSUSP = 1.0e-4, 0.05, 1.65, 0.0002
 
@@ -105,6 +111,27 @@ g5 = abs(ratio - 1.0) < TOL_CEQ
 print("(5) inflow_cs_eq: 流入列の hs/h = %.5f, C_eq(流入セルの τ*) = %.5f, 比 %.4f (1 ± %.2f) : %s"
       % (sum(cc) / len(cc), sum(ce) / len(ce), ratio, TOL_CEQ, "PASS" if g5 else "FAIL"))
 ok = ok and g5
+
+zc = load_state_z("nofeed_creep")
+zn = load_state_z("nofeed")
+dzc = max(abs(zc[j][i] - zn[j][i]) for j in range(NY) for i in range(NX))
+g6 = dzc == 0.0
+print("(6) クリープ併用(creep_d = 1e-30): nofeed との max|Δz| = %.2e m (ビット一致) : %s"
+      % (dzc, "PASS" if g6 else "FAIL"))
+ok = ok and g6
+
+worst, nets = 0.0, []
+for tag in ("nofeed", "feed1", "feed05"):
+    zt = load_state_z(tag)
+    vol = sum((zt[j - 1][i] - z0[j - 1][i]) for j in range(1, NY + 1) for i in range(NX)) * DX * DX * (1.0 - LAMBDA)
+    log = open("Screen_%s.log" % tag, encoding="utf-8", errors="replace").read()
+    net = sum(float(v) for v in re.findall(r"open boundaries \(out - in\)\s+(\S+) m3", log))
+    nets.append(net)
+    worst = max(worst, abs(vol + net) / max(abs(net), 1.0e-30))
+g7 = worst < TOL_NET and min(nets) > 0.0
+print("(7) 開境界の掃流砂の台帳: 正味の流出 %s m3、(1−λ)Σ(z−z0)A + 流出 の相対差 max %.1e (< %.0e) : %s"
+      % ("・".join("%.4f" % v for v in nets), worst, TOL_NET, "PASS" if g7 else "FAIL"))
+ok = ok and g7
 
 print("=== sedfeed checks %s ===" % ("PASS" if ok else "FAIL"))
 sys.exit(0 if ok else 1)

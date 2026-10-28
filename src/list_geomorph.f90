@@ -20,6 +20,9 @@ module list_geomorph
     ! 各プロセスは独立に有効化でき、calc は有効なものを順に適用する
     integer :: f_creep = 0           ! 斜面クリープ(線形拡散)(0:無効, 1:有効)
     real :: creep_d = 0.0            ! クリープ拡散係数 (m2/s)。0 = 既定 0.005 m2/yr(§62)
+    real :: creep_hstar = 0.0        ! 深さ依存クリープの土層の減衰厚 H_c (m。§89.8)。0 = 従来の z の
+                                     ! 線形拡散(sd は不変・裸岩も拡散)。> 0: 流量に供給側(高い側)
+                                     ! セルの 1 − exp(−sd/H_c) を掛け、z と sd を共動更新(土層だけが動く)
 
     integer :: f_fluvial = 0         ! 掃流砂 Exner(河床の浸食・堆積)(0:無効, 1:有効)
     integer :: f_qbform = 1          ! 流砂量式(1:芦田・道上, 2:MPM)
@@ -131,8 +134,9 @@ module list_geomorph
                                      ! f_suspend=1 で必須(体積濃度スケール)
 
     integer :: f_bedfines = 0        ! 河床の細粒分の帳簿(0:無効, 1:有効。f_suspend が必須。§84.10)
-                                     ! 浮遊砂の浸食を河床に在庫する細粒分 s%sf(出力 Sf)に限り、
-                                     ! 掃流砂の浸食で解放された細粒分はその場で懸濁する
+                                     ! 浮遊砂の浸食を河床に在庫する細粒分 s%sf(出力 Sf)に限る。
+                                     ! 掃流砂(側岸侵食・崩落を含む)が動かす河床の細粒分は掃流砂と
+                                     ! 一緒に運ばれる(等移動度。浮遊砂との交換は巻き上げ・沈降だけ)
     real :: fines_la = 0.0           ! 交換層厚 L_a (m)。利用可能率 f = min(1, sf/L_a)。f_bedfines=1 で必須
     real :: fines_frac0 = 0.0        ! 初期の細粒分割合(sf = fines_frac0 × sd。0 = 粗粒のみ、1 = 細粒のみ)
 
@@ -259,8 +263,37 @@ module list_geomorph
     integer :: f_wthr = 0            ! 基岩風化=土層生成(0:無効, 1:有効。§32)
     real :: wthr_p0 = -9999.0        ! 裸岩での土層生成速度 (mm/kyr)。未指定 = 既定 50(§62)
     real :: wthr_sdstar = 0.5        ! 生成の減衰深 sd* (m)
+    character(len=256) :: fn_wthr = ""  ! 土層生成速度の倍率の分布ファイル(§89.13。未指定 = 全セル 1)。
+                                     ! 生成速度 = wthr_p0 × 倍率(>= 0)。岩質の違いを与え、0 のセルは
+                                     ! 風化しない(河道の岩盤や人工面など)
     integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
     real :: uplift0 = -9999.0        ! 隆起速度 (mm/yr)。未指定 = 既定 1.0(§62)
+    character(len=256) :: fn_uplift = ""  ! 隆起速度の倍率の分布ファイル(§89。未指定 = 全セル 1)。
+                                     ! 隆起速度 = uplift0 × 倍率。出口のセルを 0 にすれば基準面が
+                                     ! 固定され、負にすれば基準面の低下を与えられる
+    integer :: f_rockinc = 0         ! 岩盤下刻(0:無効, 1:有効。§89。f_fluvial=1 か f_debris=1 が必須)。
+                                     ! 岩盤面 R = z − sd を、流水の剥離・研磨(f_fluvial の構成)か
+                                     ! 土石流(f_debris の構成。rock_kdb)で下げる。被覆(可動層 sd)が
+                                     ! 露出率 exp(−sd/H*) で下刻を抑え、掃流砂の流出に利用可能率
+                                     ! 1 − exp(−sd/H*) を掛ける。剥離物は 1:1 で可動層へ(風化と同じ)、
+                                     ! 研磨の細粒分は系外(台帳に記録)
+    real :: rock_kp = 0.0            ! 剥離の速度係数 k_p (m/s。校正値で既定なし)。0 = 剥離項なし。
+                                     ! 裸岩の下刻速度 E_p = k_p (τ_b/τ_c − 1)^m(τ_b = 2τ_c で k_p)
+    real :: rock_tauc = 0.0          ! 剥離の閾値 τ_c (Pa)。rock_kp > 0 で必須
+    real :: rock_m = 1.0             ! 剥離のべき指数 m
+    real :: rock_beta = 0.0          ! 研磨係数 β (1/m。校正値で既定なし)。0 = 研磨項なし(tools 効果なし)。
+                                     ! 裸岩の研磨速度 E_a = β q_b (1 − e^{−sd/H*})(q_b: セルの掃流砂
+                                     ! 容量 = 単位幅の固体流砂量。rock_kp と少なくとも一方は正)
+    real :: rock_kdb = 0.0           ! 土石流による岩盤侵食の速度係数 k_d (m/s。校正値で既定なし)。
+                                     ! 0 = 土石流の項なし。f_debris=1 の構成でだけ使う(流水の項
+                                     ! rock_kp・rock_beta とは併用しない)。裸岩の低下速度
+                                     ! E_d = k_d (τ_d/τ_cd − 1)^m_d、τ_d = ρ(1 + sC) g_e h_t tanθ
+                                     ! (準静的な駆動応力。C >= db_cmin・|V| >= db_vstop のセルのみ。§89)
+    real :: rock_taucdb = 0.0        ! 土石流による岩盤侵食の閾値 τ_cd (Pa)。rock_kdb > 0 で必須
+    real :: rock_mdb = 1.0           ! 土石流による岩盤侵食のべき指数 m_d
+    real :: rock_hstar = 0.0         ! 被覆の長さ H* (m)(必須 > 0。岩盤面の起伏の高さ。流水・土石流で共有)
+    character(len=256) :: fn_rock = ""  ! 岩盤の侵食性倍率の分布ファイル(>= 0。0 = 侵食しない。
+                                     ! 未指定 = 全セル 1)
     integer :: f_dissol = 0          ! 石灰岩の溶食(化学的削剥。0:無効, 1:有効。§86)。
                                      ! 涵養水量に比例して z を下げる(土砂は出ない)。
                                      ! 溶ける厚さ = (c_eq/ρ_r) × 水量 × 可溶率
@@ -344,7 +377,7 @@ subroutine list_geomorph_read(p, list)
   real :: dt_geomorph
   real :: morfac
   integer :: f_creep
-  real :: creep_d
+  real :: creep_d, creep_hstar
   integer :: f_fluvial
   integer :: f_qbform
   real :: fluv_d50
@@ -410,8 +443,13 @@ subroutine list_geomorph_read(p, list)
   real :: slide_gamma
   integer :: f_wthr
   real :: wthr_p0, wthr_sdstar
+  character(len=256) :: fn_wthr
   integer :: f_uplift
   real :: uplift0
+  character(len=256) :: fn_uplift
+  integer :: f_rockinc
+  real :: rock_kp, rock_tauc, rock_m, rock_beta, rock_hstar, rock_kdb, rock_taucdb, rock_mdb
+  character(len=256) :: fn_rock
   integer :: f_dissol, dissol_src, dissol_sink
   real :: dissol_ceq, dissol_rho, dissol_fsink, dissol_fres, dissol_lat, dissol_fsurf, dissol_sdsurf
   real :: dissol_dzmax
@@ -421,7 +459,7 @@ subroutine list_geomorph_read(p, list)
   real :: bs_reltime, bs_rho, bs_mu, bs_xi, bs_vstop, bs_eps_s, bs_diagratio, bs_cfl
   real :: bs_hplunge, bs_tstop
 
-  namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, &
+  namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, creep_hstar, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
                            fluv_porosity, fluv_sgrav, fluv_dzmax, fluv_diagratio, &
                            fluv_bcfeed, fluv_bcfeed_fac, fluv_taufac, fluv_slope, fluv_mus, fluv_muk, &
@@ -441,7 +479,9 @@ subroutine list_geomorph_read(p, list)
                            db_mu, db_xi, db_tauy, f_dbcurv, &
                            fn_dbinit, db_reltime, db_relsat, &
                            f_slide, slide_c, slide_phi, slide_gamma, &
-                           f_wthr, wthr_p0, wthr_sdstar, f_uplift, uplift0, &
+                           f_wthr, wthr_p0, wthr_sdstar, fn_wthr, f_uplift, uplift0, fn_uplift, &
+                           f_rockinc, rock_kp, rock_tauc, rock_m, rock_beta, rock_hstar, fn_rock, &
+                           rock_kdb, rock_taucdb, rock_mdb, &
                            f_dissol, dissol_ceq, dissol_rho, dissol_src, dissol_sink, &
                            dissol_fsink, dissol_fres, dissol_lat, dissol_fsurf, dissol_sdsurf, fn_dissol, &
                            dissol_dzmax, &
@@ -453,6 +493,7 @@ subroutine list_geomorph_read(p, list)
   morfac = list%morfac
   f_creep = list%f_creep
   creep_d = list%creep_d
+  creep_hstar = list%creep_hstar
   f_fluvial = list%f_fluvial
   f_qbform = list%f_qbform
   fluv_d50 = list%fluv_d50
@@ -552,8 +593,20 @@ subroutine list_geomorph_read(p, list)
   f_wthr = list%f_wthr
   wthr_p0 = list%wthr_p0
   wthr_sdstar = list%wthr_sdstar
+  fn_wthr = list%fn_wthr
   f_uplift = list%f_uplift
   uplift0 = list%uplift0
+  fn_uplift = list%fn_uplift
+  f_rockinc = list%f_rockinc
+  rock_kp = list%rock_kp
+  rock_tauc = list%rock_tauc
+  rock_m = list%rock_m
+  rock_beta = list%rock_beta
+  rock_hstar = list%rock_hstar
+  rock_kdb = list%rock_kdb
+  rock_taucdb = list%rock_taucdb
+  rock_mdb = list%rock_mdb
+  fn_rock = list%fn_rock
   f_dissol = list%f_dissol
   dissol_ceq = list%dissol_ceq
   dissol_rho = list%dissol_rho
@@ -594,6 +647,7 @@ subroutine list_geomorph_read(p, list)
   list%morfac = morfac
   list%f_creep = f_creep
   list%creep_d = creep_d
+  list%creep_hstar = creep_hstar
   list%f_fluvial = f_fluvial
   list%f_qbform = f_qbform
   list%fluv_d50 = fluv_d50
@@ -690,8 +744,20 @@ subroutine list_geomorph_read(p, list)
   list%f_wthr = f_wthr
   list%wthr_p0 = wthr_p0
   list%wthr_sdstar = wthr_sdstar
+  list%fn_wthr = fn_wthr
   list%f_uplift = f_uplift
   list%uplift0 = uplift0
+  list%fn_uplift = fn_uplift
+  list%f_rockinc = f_rockinc
+  list%rock_kp = rock_kp
+  list%rock_tauc = rock_tauc
+  list%rock_m = rock_m
+  list%rock_beta = rock_beta
+  list%rock_hstar = rock_hstar
+  list%rock_kdb = rock_kdb
+  list%rock_taucdb = rock_taucdb
+  list%rock_mdb = rock_mdb
+  list%fn_rock = fn_rock
   list%f_dissol = f_dissol
   list%dissol_ceq = dissol_ceq
   list%dissol_rho = dissol_rho
