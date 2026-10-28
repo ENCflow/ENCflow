@@ -404,7 +404,11 @@ as continuing beyond the boundary, and the longshore current passes through the 
 On a coast that is uniform alongshore the boundary rows have the same solution as the
 interior rows (in test/wfcurrent all rows agree to about 0.03% of the maximum velocity). If
 the topography changes alongshore near a side, the outside is treated as continuing that
-topography, so keep the area of interest away from the sides.
+topography, so keep the area of interest away from the sides. Sediment is treated the same
+way: suspended load (and other scalars such as water quality and salt water) flows in with the
+concentration of the mirror cell, and bed load takes the flux of the face one cell inward
+along the side normal (all zero gradient; a coast that is uniform alongshore stays uniform as
+the bed changes).
 
 ## Change of waves by currents (f_wf_current, stage W3)
 

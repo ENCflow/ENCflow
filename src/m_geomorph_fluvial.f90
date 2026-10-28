@@ -8,7 +8,7 @@
 !======================================================================
 submodule(m_geomorph) m_geomorph_fluvial
   use m_parallel, only : par_info, par_stop, dcp, par_halo_cell
-  use m_swflow_enc, only : chn, bcs, bc_open_face
+  use m_swflow_enc, only : chn, bcs, bc_open_face, bc_neumann_cell
   use m_util, only : rtoa
   implicit none
 
@@ -406,6 +406,9 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   end do
   !$omp end parallel do
 
+  ! --- 側方 Neumann の辺(§88): 境界面に内側へ平行移動した内部のエッジの流束を写す ---
+  if (bcs%have_open_bc) call neumann_bed_pass(gm, g)
+
   ! --- 容量給砂(§84.9): 流入面の供給 = 倍率 × 流入セルの内部エッジへの正味流出 ---
   if (bcs%have_open_bc .and. gm%f_bcfeed > 0) call feed_pass(gm, p, g, s, dts)
 
@@ -419,6 +422,46 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   gm%flv%nclip = gm%flv%nclip + nclip
   gm%fix%nfix = gm%fix%nfix + nfix
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 側方 Neumann の辺の掃流砂(§88。外に同じ海岸が続く = 勾配 0): 境界面 (i,j)→(in,jn) に、
+! 辺の法線方向に一つ内側へ平行移動した内部のエッジ (i+dI, j+dJ)→(im,jm) の流束を写す
+! ((im,jm) は鏡像セル、(dI, dJ) = (im − in, jm − jn))。流れの境界面の通過幅(bc_neumann_fwd)
+! と同じ平行移動。開境界の面の扱い(流出は容量、流入は 0 か給砂)では、岸沖の輸送が斜めの面
+! から域外へ抜け、流入の行の河床が固定されて、岸沿いに一様な海浜でも辺の行だけ地形が
+! 変わった(W4 の海浜の検定で実検出: 沿岸流の行の差が 1 時間で最大の 13%)。
+! 写す元のエッジはループ 1 が計算済み(北の辺は行 2 のセル、南の辺は行 ny のセルが所有し、
+! 行 je+1 の冗長計算が含む)。写す元が域外・無効セルにかかる面(角)は従来のまま。
+! 書き手は境界面に接するセルだけ(ループ 1 の開境界の面と同じ = 競合なし)
+!----------------------------------------------------------------------
+subroutine neumann_bed_pass(gm, g)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_geoinfo), intent(in) :: g
+  integer :: i, j, k, in, jn, im, jm, it, jt
+  logical :: nmn
+  !$omp parallel do schedule(static) private(i, j, k, in, jn, im, jm, it, jt, nmn)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      do k = 1, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        if (g%x(in,jn) > 0) cycle
+        call bc_neumann_cell(in, jn, nmn, im, jm)
+        if (.not. nmn) cycle
+        it = i + (im - in)
+        jt = j + (jm - jn)
+        if (it < 1 .or. it > dcp%nx_g .or. jt < 1 .or. jt > dcp%ny_g) cycle
+        if (g%x(it,jt) <= 0 .or. g%x(im,jm) <= 0) cycle
+        if (g%sw(it,jt) > 0 .or. g%sw(im,jm) > 0) cycle
+        gm%wrk%q(ke(k), i+die(k), j+dje(k)) = gm%wrk%q(ke(k), it+die(k), jt+dje(k))
+      end do
+    end do
+  end do
+  !$omp end parallel do
 end subroutine
 
 
@@ -442,12 +485,13 @@ subroutine feed_pass(gm, p, g, s, dts)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   real, intent(in) :: dts
-  integer :: i, j, k, in, jn, nin, m
+  integer :: i, j, k, in, jn, nin, m, im, jm
   integer :: kin(1:8)
   real :: dv, ue, feed, vcfeed
+  logical :: nmn
   vcfeed = 0.0
   !$omp parallel do schedule(static) reduction(+: vcfeed) &
-  !$omp   private(i, j, k, in, jn, nin, m, kin, dv, ue, feed)
+  !$omp   private(i, j, k, in, jn, nin, m, kin, dv, ue, feed, im, jm, nmn)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -461,6 +505,9 @@ subroutine feed_pass(gm, p, g, s, dts)
         dv = dv + sign_e(k) * gm%wrk%q(ke(k), i+die(k), j+dje(k))
         if (g%x(in,jn) > 0) cycle
         if (.not. bc_open_face(in, jn)) cycle
+        ! 側方 Neumann の面は neumann_bed_pass が内側の流束を写した(給砂しない)
+        call bc_neumann_cell(in, jn, nmn, im, jm)
+        if (nmn) cycle
         ue = s%u(i,j) * gm%flv%ex(k) + s%v(i,j) * gm%flv%ey(k)   ! 正 = 域外へ
         if (ue < 0.0) then
           nin = nin + 1

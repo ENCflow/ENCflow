@@ -51,6 +51,8 @@ module m_swflow_enc
   public :: m_swflow_enc_nh_export, m_swflow_enc_nh_import, m_swflow_enc_nh_active   ! ネスティングの帯の φ(§16)
   public :: bcs, bc_open_face                  ! 開境界の面判定(m_geomorph の
                                                ! 開境界土砂フラックスが読む。読み取り専用)
+  public :: bc_neumann_cell                    ! 側方 Neumann の面と鏡像セル(m_geomorph の
+                                               ! 掃流砂の境界面が読む。§88)
   ! submodule(m_swflow_enc_bc の側方 Neumann の境界面。§88)からのホスト結合参照のため
   ! 公開する。private のままだと gfortran が全呼び出しをインライン化してシンボルを
   ! 消し、submodule からリンクできない(m_boundary の interp_series と同じ事情)
@@ -2575,7 +2577,8 @@ end subroutine
 !       sx%mn1(par_edge_merge・boundary_uvmn 適用後 = continuous と同一)
 !     - 書き: c1 の自帯 js..je(海・域外セルは書かない。コミットは所有者)
 !     - 源泉・消滅・乾燥時の処遇は所有モジュールの責務(ここは純移流)
-!     - 風上セルが領域外(開境界からの流入)の濃度は 0(清水流入)
+!     - 風上セルが領域外(開境界からの流入)の濃度は 0(清水流入)。ただし
+!       側方 Neumann の辺は鏡像セルの濃度(勾配 0。§88)、cbin があればその値
 !     - 乾燥エッジ条件(h<dd 両セル)は continuous と同一。強い乾燥化では
 !       h1 同様に c1 も僅かに負になり得る(f_exflux_reduction=1 で緩和)
 !----------------------------------------------------------------------
@@ -2592,8 +2595,9 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
   integer :: i, j, k
   integer :: in, jn, ie, je
   integer :: iu, ju, id, jd, iuu, juu   ! 風上・風下・さらに風上のセル(MUSCL。§78)
+  integer :: im, jm, ing, jng           ! 側方 Neumann の辺の鏡像セル
   real :: mne, fw, winv, cdon, sh, cdn, cuu
-  logical :: has_cbin, muscl
+  logical :: has_cbin, muscl, nmn, okn, okuu
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
@@ -2603,7 +2607,8 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
   muscl = opt%f_scalar_scheme == 3
 
   !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, mne, fw, winv, cdon, &
-  !$omp                                      iu, ju, id, jd, iuu, juu, cdn, cuu)
+  !$omp                                      iu, ju, id, jd, iuu, juu, cdn, cuu, im, jm, nmn, &
+  !$omp                                      ing, jng, okn, okuu)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
@@ -2651,7 +2656,18 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
               end if
             end if
           else
-            if (has_cbin) cdon = cbin(i,j)
+            ! 側方 Neumann の辺(外に同じ海岸が続く。§88)は鏡像セルの濃度(勾配 0)。
+            ! 鏡像が計算対象外・海セルなら自セル
+            call bc_neumann_cell(in, jn, nmn, im, jm)
+            if (nmn) then
+              if (g%x(im,jm) <= 0 .or. g%sw(im,jm) > 0) then
+                im = i
+                jm = j
+              end if
+              if (s%h(im,jm) > 0.0) cdon = conc(im, jm)
+            else if (has_cbin) then
+              cdon = cbin(i,j)
+            end if
           end if
         end if
         if (cdon == 0.0) cycle
@@ -2669,20 +2685,44 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
         ! 近傍が領域内のときだけ風上・風下を決め、風下が海・乾燥なら 1 次
         ! (領域外のセルを添字にしないこと: -fcheck=all の np=2 で検出した
         ! 実バグ。sw・h は全域+帯の範囲しか確保されていない)
-        if (muscl .and. g%x(in,jn) > 0) then
-          if (mne > 0.0) then
-            iu = i;  ju = j;  id = in; jd = jn
-          else
-            iu = in; ju = jn; id = i;  jd = j
+        ! 側方 Neumann の辺(§88)の外のセルは鏡像セルで置き換える(幽霊セル = 勾配 0)。
+        ! 境界面も内部と同じ再構成になる(辺の行だけ 1 次風上だと、岸沿いに一様な海浜でも
+        ! 辺の行の輸送が変わった = W4 の海浜の検定で実検出)。ステンシルの位置は幾何の
+        ! (in,jn) で決め、値だけ鏡像から読む
+        if (muscl) then
+          okn = (g%x(in,jn) > 0)
+          ing = in
+          jng = jn
+          if (.not. okn) then
+            call bc_neumann_cell(in, jn, okn, ing, jng)
+            if (okn) okn = (g%x(ing,jng) > 0)
           end if
-          if (g%sw(id,jd) == 0 .and. s%h(id,jd) >= p%dd) then
-            iuu = 2 * iu - id
-            juu = 2 * ju - jd
-            if (iuu >= 1 .and. iuu <= g%nx .and. juu >= dcp%jsh .and. juu <= dcp%jeh) then
-              if (g%x(iuu,juu) > 0 .and. g%sw(iuu,juu) == 0 .and. s%h(iuu,juu) >= p%dd) then
-                cdn = conc(id, jd)
-                cuu = conc(iuu, juu)
-                cdon = muscl_face(cdon, cdn, cuu)
+          if (okn) then
+            if (mne > 0.0) then
+              iu = i;   ju = j;   id = ing; jd = jng
+              iuu = 2 * i - in
+              juu = 2 * j - jn
+            else
+              iu = ing; ju = jng; id = i;   jd = j
+              iuu = 2 * in - i
+              juu = 2 * jn - j
+            end if
+            if (g%sw(id,jd) == 0 .and. s%h(id,jd) >= p%dd) then
+              okuu = (iuu >= 1 .and. iuu <= g%nx .and. juu >= dcp%jsh .and. juu <= dcp%jeh)
+              if (iuu < 1 .or. iuu > g%nx .or. juu < 1 .or. juu > g%ny) then
+                call bc_neumann_cell(iuu, juu, nmn, im, jm)
+                if (nmn) then
+                  iuu = im
+                  juu = jm
+                  okuu = (juu >= dcp%jsh .and. juu <= dcp%jeh)
+                end if
+              end if
+              if (okuu) then
+                if (g%x(iuu,juu) > 0 .and. g%sw(iuu,juu) == 0 .and. s%h(iuu,juu) >= p%dd) then
+                  cdn = conc(id, jd)
+                  cuu = conc(iuu, juu)
+                  cdon = muscl_face(cdon, cdn, cuu)
+                end if
               end if
             end if
           end if

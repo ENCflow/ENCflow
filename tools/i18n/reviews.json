@@ -158,8 +158,8 @@
     {
       "source": "docs/users_guide/boundary.md",
       "target": "docs/en/users_guide/boundary.md",
-      "source_sha256": "3dcc38c667e1e487a305683d94ee4075e98d61bbcc7b621a4bcacdbc94f9ecd1",
-      "target_sha256": "f0f69458431dffa3b3290bcdb81455603e6de75d9bb6876484015bcba537166a",
+      "source_sha256": "898ca8edbc4a00e743b2ebc8696bfb3bf63b5c174c799fb95bd906534d460771",
+      "target_sha256": "472222307cf24941f8f2240e53084801f5eb2e8286db2133c3d0b8aa59550e80",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
@@ -509,8 +509,8 @@
     {
       "source": "docs/users_guide/wavefield.md",
       "target": "docs/en/users_guide/wavefield.md",
-      "source_sha256": "d54dcaa8ff4fa8a4417f3be4d88b50c43f5090d916051a558984a5aed82621c6",
-      "target_sha256": "d300272e7ec0940df19a4c186539766788a43ac29e7b4988455922174b3e9000",
+      "source_sha256": "93abd89f1d051c77fcd34fa237d58ffcb57a47bba26311525a48a4f8cac44d88",
+      "target_sha256": "550c972a440cc6e5ab06eeeccbb0d3fc2238f23b1098d932a2b7e480f88f5722",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-27"
