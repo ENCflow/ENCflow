@@ -3,15 +3,13 @@
 #   python3 plot_long.py      figs/long_*.png(日本語)と数表(標準出力)
 #   python3 plot_long.py en   en/figs/long_*.png(英語)
 # long/<構成>/track.csv(Run_chain.sh が各段の後に書く。台帳の表示とセルごとの z・Ri・sd)を読む。
-# 低下速度と定常勾配は水路の床(壁に接する両端の列を除く中央 3 列)の値で求める。壁の列は出水では
-# ほとんど削れず段のように残るので、全幅の平均は水路の低下を小さく見せる(数表に並べて出す)。
 import sys
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from make_long import (NX, NY, DX, SLOPES, TRS, D50S, TR_INF, NSKIP, U, UPLIFT_RUNS, TR_U, D50_U, MID, CH,
-                       CMIX, name_fixed, zrow)
+from make_long import (NX, NY, NYR, DY, SLOPES, TRS, D50S, TR_INF, NSKIP, U, UPLIFT_RUNS, TR_U, D50_U, MID, CMIX,
+                       name_fixed, zrow)
 
 EN = len(sys.argv) > 1 and sys.argv[1] == "en"
 matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
@@ -21,10 +19,11 @@ BLUE, ORANGE, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
 RAMP = ("#86b6ef", "#2a78d6", "#104281")          # T_r = 100・30・10 年(頻度が上がるほど濃い)
 SDB, TANPHI = 1.65, 0.70021                      # 土石流の平衡勾配(高橋・中川の平衡濃度 = 流入の濃度)
 S_EQ = SDB * CMIX * TANPHI / (1.0 + SDB * CMIX)
-MIDR = [j for j in range(NY) if MID[0] <= (j + 0.5) * DX < MID[1]]     # 中央区間の行
-CHL, WALL, MIDC = list(CH), [0, NX - 1], NX // 2
-LOW = (NY - 23, NY - 3)                          # 下流区間の勾配: 出口の行の中心から 44 m と 4 m の行
-SNAP = (1500.0, 3000.0, 4530.0)                  # 隆起ありの縦断を比べる時刻 (年)
+MIDR = [j for j in range(NY) if MID[0] <= (j + 0.5) * DY < MID[1]]     # 中央区間の行
+LOW = 60.0                                       # 下流区間の平均勾配: 基準面(水路の最後の行)から LOW m まで
+EDGE = (30.0, 30.0)                              # 谷頭と基準面の近くの除く幅 (m)。2 セル周期の段差が育つ
+YLIM = (-2.0, 4.2)                               # 図 1 の縦軸(粒径 0.4 m の緩い勾配の堆積は範囲外)
+SNAP = (1500, 3000, 4530)                        # 隆起ありの縦断を比べる時刻 (年)
 
 
 def T(ja, en):
@@ -47,21 +46,9 @@ def floods(rows):
     return [r for r in rows if r["stage"] in ("flood0", "flood")]
 
 
-def chan(a):
-    """中央区間の水路の床の平均"""
-    return a[MIDR][:, CHL].mean()
-
-
-def full(a):
-    """中央区間の全幅の平均"""
+def mid(a):
+    """中央区間の平均"""
     return a[MIDR].mean()
-
-
-def lateral(z):
-    """横断の形 (m): 壁の列の段の高さ(壁の列 − 水路の床)と、中央の列の溝の深さ(両隣 − 中央)"""
-    zz = z[MIDR]
-    return (zz[:, WALL].mean() - zz[:, CHL].mean(),
-            (0.5 * (zz[:, MIDC - 1] + zz[:, MIDC + 1]) - zz[:, MIDC]).mean())
 
 
 def rates(name, tr):
@@ -69,18 +56,16 @@ def rates(name, tr):
     rows = load(name)
     fl = floods(rows)
     keep = range(NSKIP, len(fl) - 1)                  # fl[k] → fl[k+1] がサイクル k+1
-    def rate(f, key, sign):
-        return 1000.0 * sum(sign * (f(fl[k + 1][key]) - f(fl[k][key])) for k in keep) / len(keep) / tr
+    per = [1000.0 * (mid(fl[k]["z"]) - mid(fl[k + 1]["z"])) / tr for k in range(len(fl) - 1)]
     deb = [r for r in rows if r["stage"] == "debris"]
     if deb:
-        b1 = chan(deb[0]["ri"]) - chan(fl[0]["ri"])   # 1 回目の土石流(出水の後の裸岩)
-        esup = 1000.0 * (chan(fl[0]["ri"]) + b1) / tr
-        bd = 100.0 * sum(chan(deb[k]["ri"]) - chan(fl[k]["ri"]) for k in keep) / len(keep)   # 1 回 (cm)
+        b1 = mid(deb[0]["ri"]) - mid(fl[0]["ri"])     # 1 回目の土石流(出水の後の裸岩)
+        esup = 1000.0 * (mid(fl[0]["ri"]) + b1) / tr
+        bd = 100.0 * sum(mid(deb[k]["ri"]) - mid(fl[k]["ri"]) for k in keep) / len(keep)   # 1 回 (cm)
     else:
-        esup, bd = 1000.0 * chan(fl[0]["ri"]) / tr, 0.0
-    return {"e": rate(chan, "z", -1.0), "efull": rate(full, "z", -1.0), "erock": rate(chan, "ri", 1.0),
-            "esup": esup, "bd": bd, "sd": 100.0 * sum(chan(fl[k + 1]["sd"]) for k in keep) / len(keep),
-            "lat": lateral(fl[-1]["z"]), "rows": rows}
+        esup, bd = 1000.0 * mid(fl[0]["ri"]) / tr, 0.0
+    return {"e": sum(per[k] for k in keep) / len(keep), "per": per, "esup": esup, "bd": bd,
+            "sd": 100.0 * sum(mid(fl[k + 1]["sd"]) for k in keep) / len(keep), "rows": rows}
 
 
 def ledger_check(rows):
@@ -107,33 +92,36 @@ def fmt(v):
     return "None" if v is None else "%.3f" % v
 
 
-def profile(z):
-    """水路の床の縦断(行ごとの中央 3 列の平均)"""
-    return z[:, CHL].mean(axis=1)
+def slopes(z):
+    """水路(落ち口を除く)の隣り合う行の勾配の 10 m(5 区間)の移動平均。位置は谷頭からの距離"""
+    p = z[:NYR].mean(axis=1)
+    sl = (p[:-1] - p[1:]) / DY
+    return np.arange(1, NYR) * DY, np.array([sl[max(0, j - 2):j + 3].mean() for j in range(NYR - 1)])
 
 
-def slopes(p):
-    """隣り合う行の勾配の 10 m(5 区間)の移動平均。位置は谷頭からの距離"""
-    sl = (p[:-1] - p[1:]) / DX
-    sm = np.array([sl[max(0, j - 2):j + 3].mean() for j in range(NY - 1)])
-    return np.arange(1, NY) * DX, sm
+def low_slope(z):
+    """基準面から LOW m 上流までの平均勾配(両端の標高の差。段差の育つ区間の中を読まない)"""
+    p = z[:NYR].mean(axis=1)
+    k = int(round(LOW / DY))
+    return float((p[NYR - 1 - k] - p[NYR - 1]) / LOW)
 
 
-def low_slope(p):
-    return (p[LOW[0]] - p[LOW[1]]) / ((LOW[1] - LOW[0]) * DX)
+def inner(x):
+    """谷頭と基準面の近く(EDGE)を除く位置"""
+    return (x >= EDGE[0]) & (x <= NYR * DY - EDGE[1])
 
 
 def model_1d(s0, es, times, dt=1.0):
-    """1 次元の予測: z_t = U − E(S)(E は固定勾配の交互計算の折れ線、範囲外は端の値)。出口の行は固定。
-    勾配は下流側の差分(変化は上流へ伝わる)"""
-    z = np.array([zrow(s0, j) for j in range(1, NY + 1)])
+    """1 次元の予測: z_t = U − E(S)(E は固定勾配の交互計算の折れ線、範囲外は端の値)。水路の最後の行
+    (基準面)は固定。勾配は下流側の差分(変化は上流へ伝わる)"""
+    z = np.array([zrow(s0, j) for j in range(1, NYR + 1)])
     out, t = {}, 0.0
     for tk in sorted(times):
         while t < tk - 1e-9:
-            s = (z[:-1] - z[1:]) / DX
+            s = (z[:-1] - z[1:]) / DY
             z[:-1] += dt * (U - np.interp(s, SLOPES, es)) / 1000.0
             t += dt
-        out[tk] = z.copy()
+        out[tk] = z.reshape(NYR, 1).copy()
     return out
 
 
@@ -155,14 +143,16 @@ def main():
     sstar = {}
     for d50 in D50S:
         for tr in TRS + [None]:
-            for key in ("e", "efull", "esup"):
+            for key in ("e", "esup"):
                 sstar[(d50, tr, key)] = crossing(SLOPES, [res[(d50, tr, s)][key] for s in SLOPES], U)
 
     # --- 図 1: 固定勾配の長期の低下速度 ---
     fig, axs = plt.subplots(1, 2, figsize=(7.6, 3.8), sharey=True)
     for ax, d50 in zip(axs, D50S):
         ax.axhline(U, color=MUTED, lw=0.8, ls=":")
-        ax.text(SLOPES[0], U + 0.05, T("隆起 1 mm/年", "uplift 1 mm/yr"), color=MUTED, fontsize=8, va="bottom")
+        ax.text(SLOPES[-1], U - 0.12, T("隆起 1 mm/年", "uplift 1 mm/yr"), color=MUTED, fontsize=8, va="top",
+                ha="right")
+        ax.set_ylim(*YLIM)
         ax.plot(SLOPES, [res[(d50, None, s)]["e"] for s in SLOPES], color=MUTED, lw=2, marker="o", ms=3,
                 label=T("出水だけ", "floods only"))
         for tr, col in zip(TRS, RAMP):
@@ -173,11 +163,17 @@ def main():
         ax.set_title(T("堆積物の粒径 %.1f m", "sediment size %.1f m") % d50, loc="left", fontsize=9, color=INK)
         ax.set_xlabel(T("勾配", "slope"))
         style(ax)
-    axs[0].set_ylabel(T("水路の床の長期の低下速度 (mm/年)", "long-term lowering of the channel floor (mm/yr)"))
-    axs[1].legend(loc="upper left", frameon=False, fontsize=7.5)
-    fig.text(0.99, 0.01, T("破線: 出水と土石流を別々に計算した足し合わせ", "dashed: sum of floods and debris flows computed separately"),
-             ha="right", va="bottom", fontsize=7, color=MUTED)
-    fig.tight_layout(rect=(0, 0.03, 1, 1))
+    axs[0].set_ylabel(T("長期の地表の低下速度 (mm/年)", "long-term surface lowering (mm/yr)"))
+    axs[0].legend(loc="upper left", frameon=False, fontsize=7.5)
+    off = sorted({(s, tr) for tr in TRS for s in SLOPES if res[(0.4, tr, s)]["e"] < YLIM[0]})
+    lo = min(res[(0.4, tr, s)]["e"] for s, tr in off)
+    hi = max(res[(0.4, tr, s)]["e"] for s, tr in off)
+    fig.text(0.01, 0.01, T("粒径 0.4 m の勾配 0.15(全頻度)と 0.20 の一部は堆積で %.0f〜%.1f mm/年(範囲外)",
+                           "size 0.4 m at slope 0.15 (all frequencies) and part of 0.20: deposition, %.0f to %.1f mm/yr "
+                           "(off scale)") % (lo, hi), ha="left", va="bottom", fontsize=7, color=MUTED)
+    fig.text(0.01, 0.045, T("破線: 出水と土石流を別々に計算した足し合わせ", "dashed: sum of floods and debris flows computed separately"),
+             ha="left", va="bottom", fontsize=7, color=MUTED)
+    fig.tight_layout(rect=(0, 0.08, 1, 1))
     fig.savefig(OUT + "long_rate.png", dpi=150)
     plt.close(fig)
 
@@ -210,12 +206,11 @@ def main():
     for s, col in zip((0.15, 0.20, 0.25), (ORANGE, BLUE, AQUA)):
         for tr, ls in zip(TRS, (":", "--", "-")):
             fl = floods(res[(0.4, tr, s)]["rows"])
-            ax.plot([r["cycle"] for r in fl], [100 * chan(r["sd"]) for r in fl], color=col, lw=1.6, ls=ls,
+            ax.plot([r["cycle"] for r in fl], [100 * mid(r["sd"]) for r in fl], color=col, lw=1.6, ls=ls,
                     label=T("勾配 %.2f・%d 年に 1 回", "slope %.2f, once in %d yr") % (s, tr))
     ax.set_xlabel(T("サイクル(出水の後)", "cycle (after the flood)"))
-    ax.set_ylabel(T("水路の床の可動層 (cm)", "mobile layer on the channel floor (cm)"))
-    ax.set_title(T("堆積物の粒径 0.4 m(中央区間)", "sediment size 0.4 m (middle reach)"), loc="left", fontsize=9,
-                 color=INK)
+    ax.set_ylabel(T("中央区間の可動層 (cm)", "mobile layer, middle reach (cm)"))
+    ax.set_title(T("堆積物の粒径 0.4 m", "sediment size 0.4 m"), loc="left", fontsize=9, color=INK)
     ax.legend(loc="upper left", frameon=False, fontsize=7, ncol=3)
     style(ax)
     fig.tight_layout()
@@ -225,45 +220,46 @@ def main():
     # --- 図 4: 隆起ありの確認と 1 次元の予測 ---
     es = [res[(D50_U, TR_U, s)]["e"] for s in SLOPES]
     sst = sstar[(D50_U, TR_U, "e")]
-    fig, axs = plt.subplots(1, 3, figsize=(10.4, 3.6), gridspec_kw={"width_ratios": (1.25, 1.0, 1.0)})
+    fig, axs = plt.subplots(1, 2, figsize=(8.4, 3.6), gridspec_kw={"width_ratios": (1.3, 1.0)})
     up = {}
     for (name, s0), col in zip(UPLIFT_RUNS, (ORANGE, BLUE)):
         fl = floods(load(name))
         tyr = [(k + 1) * TR_U for k in range(len(fl))]      # 出水 k の終わり(最初の出水も T_r 年分)
         pred = model_1d(s0, es, tyr)
         for tk, a in zip(SNAP, (0.35, 0.65, 1.0)):
-            k = tyr.index(tk)
-            x, sm = slopes(profile(fl[k]["z"]))
+            x, sm = slopes(fl[tyr.index(tk)]["z"])
             axs[0].plot(x, sm, color=col, lw=1.3, alpha=a)
             xp, smp = slopes(pred[tk])
             axs[0].plot(xp, smp, color=MUTED, lw=0.9, ls="--", alpha=a)
-        axs[1].plot(tyr, [low_slope(profile(r["z"])) for r in fl], color=col, lw=1.6,
+        def rms(tk):
+            x, sm = slopes(fl[tyr.index(tk)]["z"])
+            return float(np.sqrt(np.mean(((sm - slopes(pred[tk])[1])[inner(x)]) ** 2)))
+        axs[1].plot(tyr, [low_slope(r["z"]) for r in fl], color=col, lw=1.6,
                     label=T("初期勾配 %.2f", "initial slope %.2f") % s0)
         axs[1].plot(tyr, [low_slope(pred[t]) for t in tyr], color=MUTED, lw=1, ls="--")
-        lat = [lateral(r["z"]) for r in fl]
-        axs[2].plot(tyr, [v[0] for v in lat], color=col, lw=1.6)
-        axs[2].plot(tyr, [v[1] for v in lat], color=col, lw=1.0, ls=":")
         k1 = tyr.index(SNAP[0])
-        e0 = float(np.interp(s0, SLOPES, es))
-        up[name] = {"s0": s0, "low": low_slope(profile(fl[-1]["z"])), "lowp": low_slope(pred[tyr[-1]]), "t": tyr[-1],
-                    "drift": 1000.0 * (chan(fl[k1]["z"]) - chan(fl[0]["z"])) / (tyr[k1] - tyr[0]),
-                    "pdrift": U - e0, "lat": lat[-1], "lat1": lat[k1]}
+        up[name] = {"s0": s0, "t": tyr[-1], "low": [low_slope(fl[tyr.index(t)]["z"]) for t in SNAP],
+                    "lowp": [low_slope(pred[t]) for t in SNAP],
+                    "drift": 1000.0 * (mid(fl[k1]["z"]) - mid(fl[0]["z"])) / (tyr[k1] - tyr[0]),
+                    "pdrift": U - float(np.interp(s0, SLOPES, es)),
+                    "rms": [rms(t) for t in SNAP]}
+    for x0, x1 in ((0.0, EDGE[0]), (NYR * DY - EDGE[1], NYR * DY)):
+        axs[0].axvspan(x0, x1, color=GRID, alpha=0.6, lw=0)
+    axs[0].text(EDGE[0] / 2, 0.152, T("境界の\n影響", "edge\neffect"), ha="center", fontsize=7, color=MUTED)
+    axs[0].text(NYR * DY - EDGE[1] / 2, 0.152, T("境界の\n影響", "edge\neffect"), ha="center", fontsize=7, color=MUTED)
+    axs[0].set_ylim(0.145, 0.40)
     axs[0].axhline(sst, color=MUTED, lw=0.8, ls=":")
-    axs[0].text(5, sst + 0.002, T("固定勾配の定常勾配 %.3f", "steady slope from fixed slopes %.3f") % sst,
+    axs[0].text(EDGE[0] + 5, sst + 0.002, T("固定勾配の定常勾配 %.3f", "steady slope from fixed slopes %.3f") % sst,
                 color=MUTED, fontsize=7.5, va="bottom")
     axs[0].set_xlabel(T("谷頭からの距離 (m)", "distance from the head (m)"))
-    axs[0].set_ylabel(T("水路の床の勾配(10 m の移動平均)", "channel-floor slope (10 m running mean)"))
+    axs[0].set_ylabel(T("勾配(10 m の移動平均)", "slope (10 m running mean)"))
     axs[0].set_title(T("%d・%d・%d 年(濃いほど遅い)。破線: 1 次元の予測", "%d, %d, %d yr (darker = later); dashed: 1-D") %
                      SNAP, loc="left", fontsize=8.5, color=INK)
     axs[1].axhline(sst, color=MUTED, lw=0.8, ls=":")
     axs[1].set_xlabel(T("暦の時間 (年)", "calendar time (yr)"))
-    axs[1].set_ylabel(T("出口から 4〜44 m の勾配", "slope 4-44 m above the outlet"))
-    axs[1].legend(loc="center right", frameon=False, fontsize=7.5)
+    axs[1].set_ylabel(T("基準面から %d m までの平均勾配", "mean slope over %d m above the base level") % LOW)
+    axs[1].legend(loc="center left", frameon=False, fontsize=7.5)
     axs[1].set_title(T("破線: 1 次元の予測", "dashed: 1-D prediction"), loc="left", fontsize=8.5, color=INK)
-    axs[2].set_xlabel(T("暦の時間 (年)", "calendar time (yr)"))
-    axs[2].set_ylabel(T("横断の形 (m)", "cross-section shape (m)"))
-    axs[2].set_title(T("実線: 壁の列の段 / 点線: 中央の溝", "solid: wall-column bench / dotted: centre groove"),
-                     loc="left", fontsize=8.5, color=INK)
     for ax in axs:
         style(ax)
     fig.tight_layout()
@@ -272,31 +268,30 @@ def main():
 
     if EN:
         return
-    print("水路の床の長期の低下速度 E と全幅の平均 Ef (mm/年。サイクル %d 以降の平均)、足し合わせ Esup、"
-          "1 回の土石流の侵食 Bd (cm)、出水の後の可動層 sd (cm)、終了時の壁の列の段と中央の溝 (m)" % (NSKIP + 1))
+    print("長期の地表の低下速度 E (mm/年。サイクル %d 以降の平均) と、サイクルごとの最小〜最大、足し合わせ Esup、"
+          "1 回の土石流の侵食 Bd (cm)、出水の後の可動層 sd (cm)" % (NSKIP + 1))
     for d50 in D50S:
         for tr in [None] + TRS:
-            lab = "出水だけ" if tr is None else "T_r = %3d 年" % tr
-            print("  粒径 %.1f m  %s" % (d50, lab))
+            print("  粒径 %.1f m  %s" % (d50, "出水だけ" if tr is None else "T_r = %3d 年" % tr))
             for s in SLOPES:
                 r = res[(d50, tr, s)]
-                print("    S=%.2f: E %6.3f Ef %6.3f Esup %6.3f Bd %5.2f sd %6.1f 段 %6.2f 溝 %6.2f" % (
-                    s, r["e"], r["efull"], r["esup"], r["bd"], r["sd"], r["lat"][0], r["lat"][1]))
-    print("定常勾配 S*(E = U = %.1f mm/年。範囲外は None): 交互計算 / 足し合わせ / 全幅の平均で求めた交互計算" % U)
+                kp = r["per"][NSKIP:]
+                print("    S=%.2f: E %6.3f(%6.3f〜%6.3f) Esup %6.3f Bd %5.2f sd %6.1f" % (
+                    s, r["e"], min(kp), max(kp), r["esup"], r["bd"], r["sd"]))
+    print("定常勾配 S*(E = U = %.1f mm/年。範囲外は None): 交互計算 / 足し合わせ" % U)
     for d50 in D50S:
         print("  粒径 %.1f m: " % d50 + "  ".join(
-            "%s %s / %s / %s" % ("出水だけ" if tr is None else "T_r=%d" % tr, fmt(sstar[(d50, tr, "e")]),
-                                 fmt(sstar[(d50, tr, "esup")]), fmt(sstar[(d50, tr, "efull")]))
-            for tr in [None] + TRS))
+            "%s %s / %s" % ("出水だけ" if tr is None else "T_r=%d" % tr, fmt(sstar[(d50, tr, "e")]),
+                            fmt(sstar[(d50, tr, "esup")])) for tr in [None] + TRS))
     print("土石流の平衡勾配 %.3f" % S_EQ)
     print("台帳: 各段の ΣΔRi·A と表示の最大相対差 %.2e" % worst)
     print("隆起ありの確認(粒径 %.1f m、T_r = %d 年、固定勾配の定常勾配 %s)" % (D50_U, TR_U, fmt(sst)))
     for name, v in up.items():
-        print("  %s: 初期勾配 %.2f、%d 年後の出口から 4〜44 m の勾配 %.3f(1 次元の予測 %.3f)、"
-              "最初の %d 年の中央区間の床の変化 %+.3f mm/年(予測 U − E(S0) = %+.3f)、"
-              "壁の列の段 %.2f m・中央の溝 %.2f m(%d 年 %.2f m・%.2f m)" % (
-                  name, v["s0"], v["t"], v["low"], v["lowp"], SNAP[0] - TR_U, v["drift"], v["pdrift"],
-                  v["lat"][0], v["lat"][1], SNAP[0], v["lat1"][0], v["lat1"][1]))
+        print("  %s: 初期勾配 %.2f、基準面から %d m までの平均勾配 %s(1 次元の予測 %s)、谷頭から %d〜%d m の勾配の"
+              "縦断の予測との rms 差 %s、最初の %d 年の中央区間の変化 %+.3f mm/年(予測 U − E(S0) = %+.3f)" % (
+                  name, v["s0"], LOW, "・".join("%d 年 %.3f" % (t, x) for t, x in zip(SNAP, v["low"])),
+                  "・".join("%.3f" % x for x in v["lowp"]), EDGE[0], NYR * DY - EDGE[1],
+                  "・".join("%.4f" % x for x in v["rms"]), SNAP[0] - TR_U, v["drift"], v["pdrift"]))
 
 
 if __name__ == "__main__":

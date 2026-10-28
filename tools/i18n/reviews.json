@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "9d0672aacf31b730e2fd761dcf6505a169c84329eecf5de1d645958d6ec140d3",
-      "target_sha256": "513d76d37fdaff13102d8dcf9f71d8ecbe796dfdf9e8091e52d6008cbe20e13b",
+      "source_sha256": "ad059d08364e142ec1971f6ae866cb04acbb05f4eadc12ec0454bb3e934e7a23",
+      "target_sha256": "060c3654c2987de3b3fc49063f3ed59da6e6af68d315b9c5e6740958312fc8e6",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "docs/developer.md",
@@ -266,11 +266,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "bbc5f1b98ee8773225d75ba3635c93a5f89d0d79bae576db0a9071068008de69",
-      "target_sha256": "681e975e1623bb80d5fc0f92a9258d7563d435c0becce4dbfcbb6a48aeea8257",
+      "source_sha256": "db7c368ca0113ed06d9861b67a1679a30e8b0887a4c8f1a2d3a52deb2480e819",
+      "target_sha256": "3be9118c26ff7b3f73527f32be8860392e090fc39599049d5ca377701b220963",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -779,11 +779,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "e3154f9cb598c17bac10828d724ffb7f38324d8c4be10b3cb123cdd97f300fb8",
-      "target_sha256": "6355c290370309e406b57d164ff972ffd33cb8e99b1d3172f0151937737266d6",
+      "source_sha256": "2d8430c4a3f45d06e36cfa3342c1ac4d37147835b505d3cfc4ccaf5d9391ad6d",
+      "target_sha256": "40b730ac798683752b0d1f89c613eb723d4026f416d919a3f39de036ce6302dc",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -833,11 +833,11 @@
     {
       "source": "examples/debris_bedrock/README.md",
       "target": "examples/debris_bedrock/en/README.md",
-      "source_sha256": "9cf0dc4ffbf337f58148fe073f6408bc2d9df64cdde7511f2e03297effabdf58",
-      "target_sha256": "002aca247ce07ab6330cf7d5a3ee22185032b77117e1cade3de6885fea27c7eb",
+      "source_sha256": "25ee45ddadeb5dfde48728efdfc34c9a0f280c581bc5f7d8b656cb9d656bba3d",
+      "target_sha256": "dc568d87ff51c4887f1a2133f280831d26a0fad115c5db2f4729681298379a3e",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "examples/delta/README.md",

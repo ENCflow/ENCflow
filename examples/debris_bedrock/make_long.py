@@ -3,13 +3,19 @@
 #   python3 make_long.py                 long/<構成>/ に設定ファイルを書き、long/configs.txt に一覧を書く
 #   python3 make_long.py track SAVE 段 サイクル LOG   台帳の表示と save のセルごとの z・Ri・sd を 1 行で
 #                                                    出す(Run_chain.sh が各段の後に呼ぶ)
-# 一様勾配の水路(幅 10 m = 5 セル、Δx = 2 m、長さ 200 m)で、出水(T_r 年分)と土石流 1 回を
-# f_state_restore = 2 で交互につなぐ(docs/mountain_stream_plan.md §13。developer.md §88.22)。
+# 一様勾配の水路(幅 10 m を横断 1 セル(Δx = 10 m)、Δy = 2 m、長さ 200 m)で、出水(T_r 年分)と
+# 土石流 1 回を f_state_restore = 2 で交互につなぐ(docs/mountain_stream_plan.md §13。developer.md
+# §88.22)。前半の 5 セルの水路では、出水が壁の列を削らずに流れが中央へ集まり、低下速度が
+# サイクルごとに上がるので(plan §13.8)、横断の形が変わらない 1 セルにした。水路の下には勾配 0.6・
+# 長さ 20 m の落ち口を足す(自由流出の境界のセルは流れが深く遅く、堰になって土砂がたまるため)。
 # 定数は plot_long.py と対で保守する。土石流と岩盤侵食の係数は前半(make_init.py)と同じ。
 import os, sys, struct
-from make_init import DX, NX, CMIX, KD, TAUCD, MD, HSTAR, hydro
+from make_init import CMIX, KD, TAUCD, MD, HSTAR, hydro
 
-NY = 100                                   # 縦断のセル数(長さ 200 m)
+NX, W = 1, 10.0                            # 横断のセル数と水路の幅 = Δx (m)
+NYR, NC, DY = 100, 10, 2.0                 # 水路の行数(200 m)、その下の落ち口の行数(20 m)、Δy (m)
+NY = NYR + NC
+SC = 0.6                                   # 落ち口の勾配(出口のセルが土砂を捕まえても水路に届かない)
 SLOPES = [0.15, 0.20, 0.25, 0.30, 0.35, 0.40]
 TRS = [100, 30, 10]                        # 土石流の間隔 T_r (年)
 D50S = [0.1, 0.4]                          # 掃流砂(土石流の堆積物)の粒径 (m)
@@ -18,17 +24,16 @@ YEAR = 3.15576e7                           # 1 年 (s)
 IF = F / YEAR                              # 間欠係数 i_f
 MORFAC = 10.0                              # 出水の計算の morfac
 QF = 5.0                                   # 形成流量 (m3/s)
-KP, TAUC, MP = 3.1e-6, 300.0, 1.0          # 流水の剥離(出水だけの定常勾配が 0.355 になる k_p)
+KP, TAUC, MP = 4.6e-6, 300.0, 1.0          # 流水の剥離(出水だけの定常勾配が約 0.355 になる k_p)
 U = 1.0                                    # 隆起速度 (mm/年。暦の値)
 NCYC, NSKIP = 10, 2                        # 固定勾配の連鎖のサイクル数と、捨てる最初のサイクル数
 TR_INF, NCYC_INF = 100, 5                  # 出水だけ(T_r = ∞): 100 年分の出水を 5 回
 TDEB = 200.0                               # 土石流の計算時間 (s)
-DT_F, DT_FU = 0.1, 0.05                    # 出水の時間刻み (s)。隆起ありは淵が深くなるので小さく
-# 確認(隆起あり): 固定勾配の交互計算で見積もった定常勾配 0.21(T_r = 30 年・粒径 0.1 m)の ± 0.03
-UPLIFT_RUNS = [("U_d10_S024_T030", 0.24), ("U_d10_S018_T030", 0.18)]
+DT_F = 0.1                                 # 出水の時間刻み (s)
+# 確認(隆起あり): 足し合わせで予測した定常勾配 0.25(T_r = 30 年・粒径 0.1 m)の ± 0.03
+UPLIFT_RUNS = [("U_d10_S028_T030", 0.28), ("U_d10_S022_T030", 0.22)]
 NCYC_U, TR_U, D50_U = 150, 30, 0.1
 MID = (40.0, 160.0)                        # 中央区間 (m。谷頭から)
-CH = range(1, NX - 1)                      # 水路の床の列(0 始まり。壁に接する両端の列を除く)
 
 
 def name_fixed(d50, s, tr):
@@ -36,8 +41,10 @@ def name_fixed(d50, s, tr):
 
 
 def zrow(s, j):
-    """一様勾配のセル行 j(1 始まり、谷頭が 1)の標高。出口の行の中心が 10 m"""
-    return 10.0 + s * (NY - j) * DX
+    """セル行 j(1 始まり、谷頭が 1)の標高。水路(j ≤ NYR)は勾配 s、その下の落ち口は勾配 SC で、
+    最下流の行の中心が 10 m"""
+    zr = 10.0 + SC * NC * DY
+    return zr + s * (NYR - j) * DY if j <= NYR else zr - SC * (j - NYR) * DY
 
 
 def write_matrix(fn, f, fmt="%.6f"):
@@ -71,12 +78,12 @@ def common(z, dt, tt, restore):
             "&list_geoinfo\n  lx = %.1f\n  ly = %.1f\n  nx = %d\n  ny = %d\n  f_ztype = 1\n  fn_z = '../%s'\n"
             "  f_rntype = 0\n  rn0 = 0.05\n  f_sdtype = 1\n  fn_sd = '../sd0.txt'\n  sy0 = 0.2\n/\n"
             % (dt, tt, tt, tt, tt, "  f_state_restore = 2       ! 前の段の save を初期条件にする\n" if restore else "",
-               NX * DX, NY * DX, NX, NY, z))
+               W, NY * DY, NX, NY, z))
 
 
 def flood(z, d50, tr, restore, rockmap, upmap=None):
     """出水の計算 1 回 = T_r 年(地形の時間 T_r × F、流れの時間 T_r × F / morfac)"""
-    s = common(z, DT_FU if upmap else DT_F, tr * F / MORFAC, restore)
+    s = common(z, DT_F, tr * F / MORFAC, restore)
     s += ("&list_geomorph\n  dt_geomorph = 0.0\n  morfac = %.1f\n  f_fluvial = 1\n  fluv_d50 = %.2f\n"
           "  fluv_porosity = 0.4\n  f_rockinc = 1\n  rock_kp = %.3e\n  rock_tauc = %.1f\n  rock_m = %.1f\n"
           "  rock_hstar = %.2f\n  fn_rock = '../%s'\n" % (MORFAC, d50, KP, TAUC, MP, HSTAR, rockmap))
@@ -111,10 +118,11 @@ def make_config(name, z, d50, tr, with_debris, rockmap, upmap=None):
 def generate():
     os.makedirs("long", exist_ok=True)
     write_matrix("long/sd0.txt", lambda i, j: 0.0, "%.1f")
-    # 固定勾配の構成は出口の行も削る(全体が一様に下がる)。隆起の構成は出口の行を基準面に
+    # 固定勾配の構成は落ち口も削る(全体が下がる)。隆起の構成は水路の最後の行と落ち口を基準面に
+    # (削れず隆起もしない)
     write_matrix("long/rock_all.txt", lambda i, j: 1.0, "%.1f")
-    write_matrix("long/rock_base.txt", lambda i, j: 0.0 if j == NY else 1.0, "%.1f")
-    write_matrix("long/up_base.txt", lambda i, j: 0.0 if j == NY else 1.0, "%.1f")
+    write_matrix("long/rock_base.txt", lambda i, j: 0.0 if j >= NYR else 1.0, "%.1f")
+    write_matrix("long/up_base.txt", lambda i, j: 0.0 if j >= NYR else 1.0, "%.1f")
     for s in SLOPES + [s0 for _, s0 in UPLIFT_RUNS]:
         write_matrix("long/z_%03d.txt" % round(s * 100), lambda i, j, s=s: zrow(s, j))
     lines = []
@@ -189,7 +197,7 @@ def track(savedir, stage, cycle, logfile):
     with open(os.path.join(savedir, "geomorph_rockinc.dat"), "rb") as f:
         ri = read_rle_array(f, n)
     lg = ledger(logfile)
-    out = [cycle, stage, "%.9e" % (sum(ri) * DX * DX), "%.9e" % lg["plucked"], "%.9e" % lg["eroded"],
+    out = [cycle, stage, "%.9e" % (sum(ri) * W * DY), "%.9e" % lg["plucked"], "%.9e" % lg["eroded"],
            "%.9e" % lg["deposited"]]
     out += ["%.7e" % v for v in z + ri + sd]
     print(",".join(str(v) for v in out))

@@ -1,4 +1,4 @@
-# examples/debris_bedrock — Rock erosion by debris flows: how far one debris flow erodes the rock of a stream
+# examples/debris_bedrock — Rock erosion by debris flows: erosion by one debris flow, and the steady slope of a stream by frequency
 
 > English mirror of examples/debris_bedrock/README.md. The Japanese file is the master copy.
 
@@ -15,6 +15,11 @@ equations and sources in the
 The example recomputes the single-event comparison of docs/mountain_stream_plan.md §12 (§12.4,
 in Japanese) with the implemented law. The checks are in [test/dbrock](../../../test/dbrock/).
 The values are illustrative and are not calibrated for any particular stream.
+
+The second half ("Long term: steady slope of a stream with debris flows" below) inserts debris flows at
+a fixed interval into long-term flood runs and finds how the steady slope of a uniformly uplifting
+stream changes with the debris-flow frequency and the sediment size (docs/mountain_stream_plan.md §13,
+in Japanese).
 
 ## Settings
 
@@ -137,15 +142,132 @@ the ledgers, and 14 times as the mean over the stream between quasi-static stres
   even within the steep reach (from 5.2 cm at 5 m from the head to 6.6 cm at the end of the reach,
   115 m).
 
-## Linking to long-term runs
+## Long term: steady slope of a stream with debris flows (second half)
 
-One event erodes a few mm to a few cm, so changing the shape of a valley takes many debris flows
-and the flood runs between them. Debris-flow event runs and flood runs (`morfac > 1` or the
-conversion by an intermittency factor; [examples/mountain_valley](../../mountain_valley/en/README.md))
-are chained alternately with `f_state_restore = 2` (a new time axis; dt can change). With
-`f_rockinc = 1` in both, the cumulative incision `Ri` continues (procedure in the
+One event erodes a few mm to a few cm, so changing the shape of a valley takes many debris flows and
+the floods between them. The second half inserts debris flows at a fixed interval into long-term
+flood runs of a uniformly uplifting stream and finds the steady slope for each debris-flow frequency
+(docs/mountain_stream_plan.md §13 and developer.md §88.22, in Japanese). Debris-flow event runs and
+flood runs (`morfac > 1` and the conversion by an intermittency factor;
+[examples/mountain_valley](../../mountain_valley/en/README.md)) are chained alternately with
+`f_state_restore = 2` (a new time axis; dt can change). With `f_rockinc = 1` in both, the cumulative
+incision `Ri` continues (procedure in the
 [users guide](../../../docs/en/users_guide/geomorph.md#rock-erosion-by-debris-flows-rock_kdb)). The
-interval between debris flows (once in how many years) is chosen by the user.
+computational core is unchanged; `Run_chain.sh` repeats the flood and debris-flow runs. The interval
+between debris flows (once in how many years) is chosen by the user.
+
+### Settings of the second half
+
+| Item | Value |
+|---|---|
+| Channel | 200 m long, uniform slope, 10 m wide as one cell across (Δx = 10 m, Δy = 2 m). Slopes S = 0.15, 0.20, 0.25, 0.30, 0.35 and 0.40. A 20 m outfall with slope 0.6 is added below (reasons under "Why one cell across and an outfall" below). n = 0.05 |
+| Floods | Clear water at a constant formative discharge of 5 m³/s, taken to flow F = 300 s per year (intermittency factor i_f = 9.5e-6). morfac 10, dt = 0.1 s. Plucking by flowing water k_p = 4.6e-6 m/s, τ_c = 300 Pa, m = 1, H* = 0.05 m (no abrasion; k_p chosen so that the steady slope with floods only is about 0.355). No sediment supply at the head |
+| Sediment size | d50 of the bedload (debris-flow deposits and plucked rock) 0.1 m and 0.4 m (boulders) |
+| Debris flows | As T_b of the first half (hydrograph of the mixture at the head, Takahashi–Nakagawa, k_d = 1.8e-4 m/s, τ_cd = 1 kPa, m_d = 1). Each run lasts 200 s (dt = 0.02 s) and starts from the end state of the flood (water still flowing in the channel). Once in T_r = 100, 30 or 10 years, plus floods only |
+| Calendar | One flood run = T_r years (flow time T_r × F / morfac). The time of a debris flow is not counted. Uplift is not used in the events |
+| Method (main) | Erosion rate at a fixed slope: without uplift, run 10 cycles of "floods for T_r years → one debris flow" (floods only: 5 runs of 100 years) and take the surface lowering rate E of the middle reach (40–160 m from the head) from cycle 3 on. The steady slope S* interpolates E(S*) = U (uplift 1 mm/yr) |
+| Method (check) | With sediment size 0.1 m and once in 30 years, run the chain with uplift for 150 cycles (4530 years) from uniform slopes 0.28 and 0.22 (S* ± 0.03); the last row of the channel and the outfall form the base level (no erosion, no uplift). Compare with the 1-D prediction z_t = U − E(S) solved with the piecewise-linear E(S) |
+
+| File | Content |
+|---|---|
+| `make_long.py` | Writes the 50 configurations (`long/<configuration>/`) and their inputs. `track` writes the ledger lines and the per-cell z, Ri and sd of the save as one line |
+| `Run_chain.sh configuration cycles` | The chain of one configuration (first flood → debris flow → flood → …). Appends one line to `long/<configuration>/track.csv` after each stage |
+| `Run_long.sh [processes]` | Runs all configurations in parallel |
+| `plot_long.py` | Figures `figs/long_*.png` (`en` for `en/figs/`) and tables (lowering rates, sums, steady slopes, ledger, check with uplift) |
+
+```bash
+make                                          # links to the executables in ../../bin/
+python3 make_long.py                          # configurations under long/<configuration>/ (50)
+./Run_long.sh 4                               # about 8 minutes with 4 processes
+python3 plot_long.py | tee analysis_long.txt  # figures and tables (python3 plot_long.py en for English figures)
+```
+
+### Long-term lowering and the sum of separate runs
+
+![Long-term lowering at fixed slopes](figs/long_rate.png)
+
+- **Sediment size 0.1 m**: at every slope and frequency the lowering rate is the same in every cycle
+  (the difference between the smallest and largest of cycles 3–10 is at most 0.003 mm/yr). It agrees
+  within 1.2 % with the sum of floods and debris flows computed separately (dashed; from the first
+  flood and the erosion of the first debris flow). The next flood carries the debris-flow deposits away.
+- At slope 0.25 the debris flows make up 24 % of the lowering rate at once in 100 years, 52 % at once in
+  30 years and 78 % at once in 10 years.
+- **Sediment size 0.4 m (boulders)**: from slope 0.30 up the rates are nearly those of 0.1 m. At slope
+  0.25 and below they fall short of the sum (0.94 times at slope 0.25, once in 10 years). At slope 0.20
+  once in 30 or 10 years, and at slope 0.15, deposits remain and the surface rises ("Boulder deposits"
+  below).
+- In each stage the increment of cumulative incision ΣΔRi·A agrees with the end-of-run lines (plucking
+  and debris-flow erosion) within a relative 2.6e-8.
+
+### Steady slope and debris-flow frequency
+
+![Steady slope and debris-flow frequency](figs/long_slope.png)
+
+| Steady slope (uplift 1 mm/yr) | Floods only | Once in 100 yr | Once in 30 yr | Once in 10 yr |
+|---|---|---|---|---|
+| Chained runs, size 0.1 m | 0.354 | 0.311 | 0.251 | 0.175 |
+| Sum of separate runs, size 0.1 m | 0.356 | 0.311 | 0.252 | 0.175 |
+| Chained runs, size 0.4 m | 0.355 | 0.312 | 0.257 | 0.246 |
+
+- The more frequent the debris flows, the gentler the slope that balances the uplift. With size 0.1 m the
+  steady slopes of the chained runs and of the sum differ by at most 0.002.
+- 0.175 at once in 10 years is gentler than the debris-flow equilibrium slope 0.256 (the slope where the
+  Takahashi–Nakagawa equilibrium concentration equals the inflow concentration 0.35). The debris flows
+  deposit on every passage, but the floods carry deposits of 0.1 m away, so the rock keeps eroding.
+- **With size 0.4 m the steady slope stays near the debris-flow equilibrium slope (0.246 at once in 10
+  years).** On gentler slopes the floods cannot move the boulders left by the debris flows, the rock is
+  covered and stops eroding. More frequent debris flows do not lower the slope further.
+
+### Boulder deposits (size 0.4 m)
+
+![Mobile layer with size 0.4 m](figs/long_cover.png)
+
+- At slope 0.15 the debris-flow deposits keep growing by about 29 cm per cycle whatever the frequency
+  (the floods cannot move the boulders).
+- At slope 0.20, once in 30 years, the growth slows and reaches 36 cm after 10 cycles (approaching the
+  thickness where what the floods carry balances what the debris flows leave). Once in 10 years the
+  deposit grows to 86 cm and is still growing. Once in 100 years the floods carry it away (0.5 cm).
+- From slope 0.25 up no deposit remains (0.1 cm).
+
+### Check with uplift
+
+![Check with uplift and the 1-D prediction](figs/long_uplift.png)
+
+- The steep channel (0.28) becomes gentler and the gentle one (0.22) steeper; both head for the steady
+  slope 0.251 found at fixed slopes. The adjustment travels upstream from the base level.
+- The runs (solid) agree well with the 1-D prediction (dashed). After 4530 years the mean slope over the
+  60 m above the base level is 0.260 (predicted 0.261) and 0.237 (predicted 0.235). The rms difference
+  of the slope profile from the prediction, 30–170 m from the head, is 0.006 and 0.004.
+- The adjustment is slow: in 4530 years it reaches only about 40 m above the base level (front speed
+  dE/dS ≈ 9 mm/yr).
+- Where the adjustment has not arrived, the middle reach moves at U − E(S0): +0.20 mm/yr for 0.22
+  (predicted +0.20) and −0.28 mm/yr for 0.28 (predicted −0.25, because E(S) is interpolated linearly
+  between slopes 0.25 and 0.30; the debris-flow equilibrium slope 0.256 lies in between and E(S) bends
+  there).
+- In the grey zones (30 m from the head and 30 m above the base level), steps with a period of two cells
+  (the slope alternates between neighbouring intervals) grow over thousands of years. In a trial of the
+  0.28 configuration with floods only (no debris flows), they also grew to 16 m from the head in 4530
+  years. It is a grid-scale oscillation starting from the inflow and base-level boundaries; its cause has
+  not been investigated (developer.md §88.22).
+
+### Why one cell across and an outfall
+
+- **One cell across**: running the same chain in the 5-cell channel of the first half, the columns along
+  the walls were plucked 35 % less even in the first flood. Once the middle was lower, the flow gathered
+  there and the floods nearly stopped eroding the wall columns. At slope 0.20, once in 100 years, the
+  lowering rate of the middle three columns rose 1.45 times over 10 cycles, and in 150 cycles with uplift
+  the centre column became a slot 7–10 m deep. Rock erosion in ENCflow is vertical only, with no lateral
+  erosion, so nothing stops the positive feedback of gathering flow and the channel narrows to the grid
+  width (as in developer.md §88.4, item 3). For a question about the long profile we use a one-cell
+  channel whose cross-section cannot change. Floods in one cell have a depth close to the uniform-flow
+  value and pluck less than the middle column of 5 cells (shallow and fast because of the bias of §88.4,
+  item 1), so k_p was re-tuned to give a steady slope of about 0.355 with floods only.
+- **Outfall**: the cell at a free-outflow boundary has slightly deeper and slower flow (5 % at slope 0.30)
+  and is plucked 17 % less, so the last cell of the channel became a sill that trapped the sediment
+  carried by the floods, and the deposit grew upstream (with size 0.4 m even at slope 0.40). With an
+  outfall of slope 0.6 below the channel the sediment leaves without stopping. The outfall erodes in the
+  fixed-slope configurations; with uplift, the last row of the channel and the outfall are the base
+  level.
 
 ## Notes (scope of this example)
 
@@ -158,7 +280,13 @@ interval between debris flows (once in how many years) is chosen by the user.
 - The quasi-static driving stress does not depend on the velocity, so slow and thick flows also
   erode ("peak upstream of a slope break" above). The velocity gate is shared with `db_vstop` of
   the low-velocity settling.
-- The run covers one event only, without uplift, weathering or repeated debris flows.
+- The first half covers one event only. The second half adds uplift and repeated debris flows, but not
+  weathering, supply from hillslopes or sediment supply at the head. The debris flows have a fixed size
+  and the floods a constant discharge; the frequency distribution of magnitudes is not represented.
+- The channel of the second half is one cell across, so changes of channel width and cross-section are
+  not represented (with 5 cells the flow gathers to the grid width; "Why one cell across and an
+  outfall"). Near the head and the base level, steps with a period of two cells grow over thousands of
+  years of chained runs.
 
 ## Related documents
 
@@ -172,4 +300,4 @@ interval between debris flows (once in how many years) is chosen by the user.
   box, input errors)
 - Examples of bedrock incision by flowing water: [examples/bedrock_cover](../../bedrock_cover/en/README.md),
   [examples/mountain_valley](../../mountain_valley/en/README.md)
-- Design: docs/mountain_stream_plan.md §12 and docs/developer.md §88.18 onwards (in Japanese)
+- Design: docs/mountain_stream_plan.md §12 and §13, docs/developer.md §88.18–§88.22 (in Japanese)

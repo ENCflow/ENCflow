@@ -1331,7 +1331,11 @@ initialization deposits them on the bed in place (z and sd rise by h_s/(1 − λ
 h_s = 0; the solid ledger is unchanged; there are no fines, so they count as
 coarse). The deposited solid volume is printed as "the restored flow carried solids
 (hs) ... deposited ... m3 (solid)". Configurations without landform change (no
-`fn_geomorph`) behave as before, and h_s stays in the flow.
+`fn_geomorph`) behave as before, and h_s stays in the flow. A worked example of the
+alternating runs is the second half of
+[examples/debris_bedrock](../../../examples/debris_bedrock/en/README.md) (`Run_chain.sh`
+alternates floods and debris flows and writes values from the save after each stage;
+the steady slope by debris-flow frequency).
 
 **Outputs for this section**: the debris-flow part is added to the cumulative
 incision `Ri0001...`. At the end "rock erosion by debris flows: eroded ... m3

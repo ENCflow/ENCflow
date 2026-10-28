@@ -1049,7 +1049,9 @@ docs/mountain_stream_plan.md §12(developer.md §88.18)。
 初期化でその場の河床に堆積させます(z・sd を h_s/(1 − λ) 上げ、h_s = 0。固体の台帳は変わらない。
 細粒分は持たないので粗粒として扱う)。堆積させた固体の体積は「the restored flow carried solids
 (hs) … deposited … m3 (solid)」と表示されます。地形変化を使わない構成(`fn_geomorph` なし)では
-従来どおりで、h_s は流れに残ります。
+従来どおりで、h_s は流れに残ります。交互計算の見本は
+[examples/debris_bedrock](../../examples/debris_bedrock/) の後半です(`Run_chain.sh` が出水と土石流を
+交互に回し、各段の後に save から値を書き出す。土石流の頻度ごとの定常勾配)。
 
 **この節に関係する出力**: 累積下刻 `Ri0001…` に土石流の分も加わります。終了時に
 「rock erosion by debris flows: eroded … m3 (bulk, into the mobile layer sd)」(削った岩盤の
