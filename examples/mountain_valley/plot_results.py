@@ -368,8 +368,8 @@ def fig_pulse():
         a.grid(alpha=0.3)
         if model == "p":                               # 振れる系列の上に凡例の余白を空ける
             lo, hi = a.get_ylim()
-            a.set_ylim(lo, hi + 0.45 * (hi - lo))
-            a.legend(fontsize=8, loc="upper center", ncol=2)
+            a.set_ylim(lo, hi + 0.6 * (hi - lo))
+            a.legend(fontsize=8, loc="upper left")     # 1 列(英語の 2 列は軸の幅を超える)
         else:
             a.legend(fontsize=8, loc="center right")
     fig.tight_layout()
@@ -397,7 +397,7 @@ def tables():
         g = vgrid(case)
         xs, ss, hs = channel(case, vk(case, T_RUN))
         prof = c1_profile(g, lat)
-        j1 = g.ny // 5                          # 谷頭の加速域(流入セル直下)を避ける
+        j1 = 1                                  # 谷頭の行(流入セル)だけを除く(developer.md §88.25 の後は直下から一致)
         diffs = [abs(ss[j - 1] / prof[j][0] - 1.0) for j in range(j1, g.ny - 1)]
         vp, va, vout = ledgers(case)
         print("  %s: 勾配 %.4f〜%.4f(予測 %.4f〜%.4f)、max 相対差 %.2e(谷頭から %g m より下流)、"

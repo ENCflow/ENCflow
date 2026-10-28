@@ -70,6 +70,13 @@ the reach with E_p0 and q_c obtained from the computed uniform-flow hydraulics.
 
 ## Results
 
+Rerun on 2026-10-28 after the fix of the depth floor of the segment-inflow
+face (developer.md §88.25, in Japanese; the inflow of these channels has
+Fr 0.65, and the face velocity used to be held at 0.74 times); the numbers
+below did not change at the digits shown (the reach measured starts 30 m
+below the inflow end; the figures are from the earlier run and look the
+same).
+
 ### A Amount of supply: tools and cover
 
 ![Supply ratio, incision rate and cover thickness](figs/supply.png)

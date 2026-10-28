@@ -824,18 +824,81 @@
     {
       "source": "examples/bedrock_cover/README.md",
       "target": "examples/bedrock_cover/en/README.md",
-      "source_sha256": "2a6847f40354ac485e8820b787c5509301f0e7bd05a2e772c3dc87a743931439",
-      "target_sha256": "fbc33eede2ccb30892fe1524c62c9f0b5bb25fe4fb5530ecef1779e384baf3b9",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "f4db834aecf5c7ed39149bcc78b0ce43b30811d33e0254529a73ab7bbda9ffff",
+      "target_sha256": "995eae0659e0148743f009898c5c1ab413304b7ee469ec16743bd426f54c195c",
+      "reviewer": "Claude (Claude Code session; diff-level content and lexical review of the 2026-10-28 rerun edits against the Japanese master; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "examples/debris_bedrock/README.md",
       "target": "examples/debris_bedrock/en/README.md",
-      "source_sha256": "2d8d43e7bcb57c3a6b132ea8cbcf21e79eabcf1cd772f7b7fe7c7e7997747d71",
-      "target_sha256": "c623560476967f911f77775fd4cdf16bdee40892fd03131834fc45b4133316c0",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "4f27d99fa8a2f4092475201cf01a0cca18c8a4b70185ada5d9ffce8fba0eb871",
+      "target_sha256": "a240eea071a074c3ece435cbfd7ef35b67cc08802cad1a8e4d911f89d2ea071b",
+      "reviewer": "Claude (Claude Code session; diff-level content and lexical review of the 2026-10-28 rerun edits against the Japanese master; rest unchanged since the previous record)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/cover.png",
+      "target": "examples/debris_bedrock/en/figs/cover.png",
+      "source_sha256": "877c7f63bc1d47be88c91d2aaf7460be76bec2a619d5c678447401004a510ff9",
+      "target_sha256": "7fb54b4407eb87f398ea3429ba7ffa29006ed0da95bd98653f91b4fe96f1e1e4",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/erosion.png",
+      "target": "examples/debris_bedrock/en/figs/erosion.png",
+      "source_sha256": "53e4c59a6e6bdbf5fc15ba2bde3bf5443a57cbf84ff4df2965294cea16512ba6",
+      "target_sha256": "c320f707debf15db22c10b96ab50217428f1624deb585b51de6349e7b22d2bdb",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/long_cover.png",
+      "target": "examples/debris_bedrock/en/figs/long_cover.png",
+      "source_sha256": "c42a110dea0e4c2e12eb4af5d6bd4750679b195d4510a86e29a02bdbb479726b",
+      "target_sha256": "a6887e04281ded1b01a05d0b2dcea3f950895307e2552b74a29ce2a54287a783",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/long_rate.png",
+      "target": "examples/debris_bedrock/en/figs/long_rate.png",
+      "source_sha256": "b69ed91d76eaa8d7db7a404e7cb3714cc56dca0c1484314e0eb045e700663591",
+      "target_sha256": "a14a35ff1c72b2d0bed7e45e557ffa9f44d6f3dc22e0ce6e4f9f25ed1f355a80",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/long_slope.png",
+      "target": "examples/debris_bedrock/en/figs/long_slope.png",
+      "source_sha256": "5c4862531a6a3a80a7c7b3f598810fe5ceb54aa6b7afcd1a37777b8df6b8fcb4",
+      "target_sha256": "a96cabee0035d7d9e91246ede4a5100d7882dfe102eecdb664396b977f22ad2b",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/long_uplift.png",
+      "target": "examples/debris_bedrock/en/figs/long_uplift.png",
+      "source_sha256": "a0ed078c0269a410406d1a88d5e39e6d07a1f96bfacc16ca17e2821152356959",
+      "target_sha256": "afb49d51cb3dbcab1fc222dc820eaf6625fadda9aed7184d4c556ec5d420e15a",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/threshold.png",
+      "target": "examples/debris_bedrock/en/figs/threshold.png",
+      "source_sha256": "4b0ab5ebc540864f2320933996ecaa59ef86604ed9fa0decc4f67e7a45a82b62",
+      "target_sha256": "5e7ffe8572d30097c8737da7f4a1f9b29f01c32ba180af01b31d374b527aaf9f",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-10-28"
     },
@@ -905,11 +968,47 @@
     {
       "source": "examples/mountain_valley/README.md",
       "target": "examples/mountain_valley/en/README.md",
-      "source_sha256": "41e37901b896e7112b960ee940f272a778f1975efc5c3852c0ebaeb0b38c5e4b",
-      "target_sha256": "ce9feb67785b8f2bcdc2a580db3a5f88cfb2ca8e279b5e71dd8ed60d07086e1a",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "5ab9e67af7d0fd5018df5642ac5ffbedda86c4c30b0e0bd66eea80228efbfc71",
+      "target_sha256": "867281122e101a8a0a056395a8a94012a718b4b7d61874056bf37ad1cd201aab",
+      "reviewer": "Claude (Claude Code session; diff-level content and lexical review of the 2026-10-28 rerun edits against the Japanese master; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/mountain_valley/figs/channel.png",
+      "target": "examples/mountain_valley/en/figs/channel.png",
+      "source_sha256": "e2dce766e1827ce22d5fa03475785000dcfa6474ac3c25e944202d791883e011",
+      "target_sha256": "062fe88274e92bff8278e3d84d07fe520a9ce107bfbf617a2ce3aa572c519dec",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/mountain_valley/figs/drop.png",
+      "target": "examples/mountain_valley/en/figs/drop.png",
+      "source_sha256": "cc12dc5905ec2e6d107542086eb23147293b8928e77e19689919b1b7cddf2796",
+      "target_sha256": "fa0a784646d1efecab09650796e5896ea225066254c0fb56839842b38576380e",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/mountain_valley/figs/pulse.png",
+      "target": "examples/mountain_valley/en/figs/pulse.png",
+      "source_sha256": "e4f1ae8f313a83beb1087208a7606a76156067b8c54f73e615a0b6bcae0446b3",
+      "target_sha256": "e25abe9125d9ee01bdf46aed2f468288e498cbd79e95c0e9f4e7b2c1acb12a7e",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/mountain_valley/figs/valley.png",
+      "target": "examples/mountain_valley/en/figs/valley.png",
+      "source_sha256": "6993b002a4f1f98b8650e911ce3c15f7a992aa8a35a6db167fadcba01ad7aedb",
+      "target_sha256": "48d9d11ed2c4427debcc71bb5f57aa9b5321ba76a895cf957fc8f375100ab3dd",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "examples/nest_reflect/README.md",

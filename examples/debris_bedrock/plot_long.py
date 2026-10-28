@@ -21,7 +21,8 @@ SDB, TANPHI = 1.65, 0.70021                      # 土石流の平衡勾配(高�
 S_EQ = SDB * CMIX * TANPHI / (1.0 + SDB * CMIX)
 MIDR = [j for j in range(NY) if MID[0] <= (j + 0.5) * DY < MID[1]]     # 中央区間の行
 LOW = 60.0                                       # 下流区間の平均勾配: 基準面(水路の最後の行)から LOW m まで
-EDGE = (30.0, 30.0)                              # 谷頭と基準面の近くの除く幅 (m)。2 セル周期の段差が育つ
+EDGE = (0.0, 0.0)                                # 谷頭と基準面の近くの除く幅 (m)。0 = 水路全体(流向の勾配と流入面の
+                                                 # 床を直した後は 2 セル周期の段差が育たない。developer.md §88.23〜88.26)
 YLIM = (-2.0, 4.2)                               # 図 1 の縦軸(粒径 0.4 m の緩い勾配の堆積は範囲外)
 SNAP = (1500, 3000, 4530)                        # 隆起ありの縦断を比べる時刻 (年)
 
@@ -100,7 +101,7 @@ def slopes(z):
 
 
 def low_slope(z):
-    """基準面から LOW m 上流までの平均勾配(両端の標高の差。段差の育つ区間の中を読まない)"""
+    """基準面から LOW m 上流までの平均勾配(両端の標高の差)"""
     p = z[:NYR].mean(axis=1)
     k = int(round(LOW / DY))
     return float((p[NYR - 1 - k] - p[NYR - 1]) / LOW)
@@ -211,6 +212,7 @@ def main():
     ax.set_xlabel(T("サイクル(出水の後)", "cycle (after the flood)"))
     ax.set_ylabel(T("中央区間の可動層 (cm)", "mobile layer, middle reach (cm)"))
     ax.set_title(T("堆積物の粒径 0.4 m", "sediment size 0.4 m"), loc="left", fontsize=9, color=INK)
+    ax.set_ylim(top=1.3 * ax.get_ylim()[1])           # 凡例(3 行)を線の上に
     ax.legend(loc="upper left", frameon=False, fontsize=7, ncol=3)
     style(ax)
     fig.tight_layout()
@@ -243,10 +245,11 @@ def main():
                     "drift": 1000.0 * (mid(fl[k1]["z"]) - mid(fl[0]["z"])) / (tyr[k1] - tyr[0]),
                     "pdrift": U - float(np.interp(s0, SLOPES, es)),
                     "rms": [rms(t) for t in SNAP]}
-    for x0, x1 in ((0.0, EDGE[0]), (NYR * DY - EDGE[1], NYR * DY)):
-        axs[0].axvspan(x0, x1, color=GRID, alpha=0.6, lw=0)
-    axs[0].text(EDGE[0] / 2, 0.152, T("境界の\n影響", "edge\neffect"), ha="center", fontsize=7, color=MUTED)
-    axs[0].text(NYR * DY - EDGE[1] / 2, 0.152, T("境界の\n影響", "edge\neffect"), ha="center", fontsize=7, color=MUTED)
+    if max(EDGE) > 0.0:
+        for x0, x1 in ((0.0, EDGE[0]), (NYR * DY - EDGE[1], NYR * DY)):
+            axs[0].axvspan(x0, x1, color=GRID, alpha=0.6, lw=0)
+        axs[0].text(EDGE[0] / 2, 0.152, T("境界の\n影響", "edge\neffect"), ha="center", fontsize=7, color=MUTED)
+        axs[0].text(NYR * DY - EDGE[1] / 2, 0.152, T("境界の\n影響", "edge\neffect"), ha="center", fontsize=7, color=MUTED)
     axs[0].set_ylim(0.145, 0.40)
     axs[0].axhline(sst, color=MUTED, lw=0.8, ls=":")
     axs[0].text(EDGE[0] + 5, sst + 0.002, T("固定勾配の定常勾配 %.3f", "steady slope from fixed slopes %.3f") % sst,

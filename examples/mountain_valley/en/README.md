@@ -98,6 +98,9 @@ the lateral supply added).
 
 ## Results
 
+The values are from the rerun on 2026-10-28 after the fix of the depth floor of the
+segment-inflow face (developer.md §88.25, in Japanese).
+
 ### Hillslopes: steady soil and a parabolic form
 
 ![Cross-slope profile and soil depth of the hillslopes](figs/valley.png)
@@ -116,11 +119,11 @@ the lateral supply added).
 
 ![Slope and cover thickness of the stream](figs/channel.png)
 
-| Configuration | Stream slope (more than about 40 m below the head) | Prediction (C1) | Cover thickness | Share of abrasion |
+| Configuration | Stream slope (excluding the head row) | Prediction (C1) | Cover thickness | Share of abrasion |
 |---|---|---|---|---|
-| V_a no hillslope supply | 0.0289 to 0.0298 | 0.0291 to 0.0298 (within 0.7 %) | 0.6 to 2.3 cm | 4 % |
-| V_b with hillslope supply | 0.0307 to 0.0366 | 0.0311 to 0.0367 (within 1.1 %) | 5.0 to 16.1 cm | 24 % |
-| V_b2 the same with Δx = 2 m (stream 2 m wide) | 0.0179 to 0.0232 | 0.0180 to 0.0233 (within 0.6 %) | 8.4 to 24.0 cm | 34 % |
+| V_a no hillslope supply | 0.0289 to 0.0298 | 0.0289 to 0.0298 (within 0.01 %) | 0.1 to 2.3 cm | 4 % |
+| V_b with hillslope supply | 0.0292 to 0.0366 | 0.0293 to 0.0367 (within 0.4 %) | 1.0 to 16.1 cm | 24 % |
+| V_b2 the same with Δx = 2 m (stream 2 m wide) | 0.0161 to 0.0232 | 0.0162 to 0.0233 (within 0.7 %) | 0.9 to 24.0 cm | 34 % |
 
 - Without supply from the hillslopes, the sediment of the stream is only its
   own plucked rock, the cover is thin and the slope is nearly uniform (0.029).
@@ -130,17 +133,19 @@ the lateral supply added).
   bedrock is exposed (0.037 near the outlet; 1.23 times that without supply).
   At the same time the transported gravel acts as tools, and the share of
   abrasion rises from 4 % to 24 %.
-- Both agree within 1.1 % with the prediction of the C1 equation with the
-  steady supply of the hillslopes (below the valley head a step pattern
-  decaying downstream forms through the effect of the inflow cell, so the
-  comparison is made more than about 40 m below the head; developer.md §88.6).
+- Both agree within 0.4 % with the prediction of the C1 equation with the
+  steady supply of the hillslopes, from just below the valley head. Before the
+  fix of the depth floor of the segment-inflow face on 2026-10-28
+  (developer.md §88.25), a step pattern decaying downstream formed below the
+  head through the effect of the inflow cell, and the comparison was made more
+  than about 40 m below the head (§88.6).
 
 ### Resolution (Δx = 2 m)
 
 V_b2 is V_b with half the grid spacing, so the stream one cell wide is also
 2 m wide. The same discharge gathers in a narrower channel, raising the unit
 discharge and the transport capacity, so the stream slope is gentler than with
-Δx = 4 m (0.018 to 0.023), but it agrees within 0.6 % with the C1 prediction
+Δx = 4 m (0.016 to 0.023), but it agrees within 0.7 % with the C1 prediction
 for its own grid (share of abrasion 34 %, bedrock origin of the bedload at the
 outlet 3 %). The hillslopes agree with the C2 prediction within 0.06 % in
 height and the soil depth within 0.4 % of H_ss (divide height 2.62 m; the
@@ -209,8 +214,8 @@ in Japanese; no hillslopes, replaced by a supply at the head).
 
 | Model | Constant | Pulses, period 600 s | Pulses, period 12000 s (range) | Prediction |
 |---|---|---|---|---|
-| Plucking only | 0.01071 | 0.01065 | 0.01076 (0.01015 to 0.01136) | 0.01080 (constant and quasi-steady pulses alike) |
-| Abrasion only | 0.00716 | 0.00745 | 0.01000 (0.00945 to 0.01028) | constant 0.00716, quasi-steady pulses 0.01055 |
+| Plucking only | 0.01071 | 0.01065 | 0.01075 (0.01014 to 0.01135) | 0.01080 (constant and quasi-steady pulses alike) |
+| Abrasion only | 0.00716 | 0.00744 | 0.01000 (0.00945 to 0.01028) | constant 0.00716, quasi-steady pulses 0.01055 |
 
 - **Plucking only**: the timing of supply hardly changes the mean slope
   (within 1 %). The exposed fraction 1 − q/q_c is linear in the transport rate
@@ -235,7 +240,7 @@ in Japanese; no hillslopes, replaced by a supply at the head).
   of the timing of supply is larger where abrasion (tools) matters and appears
   when the pulse period is longer than the response time of the cover, also
   holds for the steady slope under uplift.
-- **Update interval**: with dts = 5 s (morfac 50), "thin-layer drainage rate x
+- **Update interval** (checked on 2026-10-27): with dts = 5 s (morfac 50), "thin-layer drainage rate x
   dts" reached 1.8 in the abrasion-only channels and the slope under the short
   pulses came out gentler than under constant supply (0.00689). The slopes for
   dts = 1 s and 0.5 s differ by 0.7 % or less.
@@ -252,8 +257,9 @@ in Japanese; no hillslopes, replaced by a supply at the head).
   (d50 = 3 cm): the soil made by weathering becomes the gravel of the stream
   as it is.
 - The stream one cell wide with Δx = 4 m agrees with uniform flow
-  (V/V_Manning is 1 ± 0.005 more than 42 m below the head and 1.000 more than
-  60 m below it), but in wide flows on steep slopes the bed shear stress comes
+  (V/V_Manning is 1 ± 0.001 from just below the head; before the fix of the
+  inflow floor it was 1 ± 0.005 more than 42 m below the head), but in wide
+  flows on steep slopes the bed shear stress comes
   out larger depending on the grid (developer.md §88.4).
 
 ## Related documents
