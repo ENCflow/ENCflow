@@ -18,8 +18,10 @@ ENCflow の排水強度 q は、区画の累積排水 vdrain の記録間隔ご�
              下流堰に 1/2 ずつ。論文 Ⅳ.1。降雨の 80 % 化は precip_MREX.txt で済み)
   MR1      : 上流堰の流出量 = (q − 0.3 mm/h) / 2 × 860 m²(L/s。論文 Ⅳ.1)
   KIEX     : 流出強度 = 50 cm の柱の底面の排水 q(論文 Ⅳ.1)
-論文の TY・KI の計算値には観測から分離した基底流が加えてある(論文 Ⅲ.1)が、
-ENCflow の値には加えていない。
+論文の TY・KI の計算値には観測から分離した基底流が加えてある(論文 Ⅲ.1)。ENCflow の
+値には加えず、モデルに基底流を与えた事例(KI2。param_ki2.txt の fn_vz_base)は、
+vz_zone.csv の vbase の差分(区画面積あたりの強度)を後処理後の排水に足した比較
+(+base)も示す。
 
 指標(区画ごと。論文の計算値が下端で切られた点は除く):
   log10 比   = log10(ENCflow / 論文の計算値) の中央値と、絶対値の 90 % 値・最大値を、
@@ -93,21 +95,21 @@ EVENTS = {
                 psi0=("const", -1.0), arrive=("level", -50.0)),
     "KI2": dict(zones={1: "KI"}, post=half, calc={"QcC": "KI"}, obs={"Qb": "KI"},
                 unit="mm/h", qmin=(0.1, 0.5), qpeak=1.0, win=3.0, axis=("log", 0.05, 10.0),
-                baseflow="Qb", psi0=("const", -1.0), arrive=("level", -50.0)),
+                psi0=("const", -1.0), arrive=("level", -50.0)),
 }
-# baseflow: 論文の計算値に加えられた分離基底流の近似として、観測の最初と最後の値を結ぶ
-# 直線を ENCflow に足した比較も示す(KI2 だけ。図の終わりで流出が基底流に近く、差
-# 論文 − ENCflow が時間にほぼ比例して増えるため。論文の分離線そのものではない)
 
 
-def read_rates(res, ev):
-    """vz_zone.csv → {区画名: [(t(h), 後処理後の値)]}(区間の中央の時刻)"""
+def read_rates(res, ev, column="vdrain(m3)", post=True):
+    """vz_zone.csv → {区画名: [(t(h), 後処理後の値)]}(区間の中央の時刻)。column の
+    列がなければ {}(vbase は基底流を与えたときだけ出る)。post = False は後処理なし"""
     cfg = EVENTS[ev]
     with open(os.path.join(res, "vz_zone.csv"), newline="") as f:
         rows = list(csv.reader(f))
     head = [h.strip() for h in rows[0]]
+    if column not in head:
+        return {}
     it, iz, ia, iv = (head.index("time(s)"), head.index("zone"), head.index("area(m2)"),
-                      head.index("vdrain(m3)"))
+                      head.index(column))
     cum = {}
     for r in rows[1:]:
         if r and int(r[iz]) in cfg["zones"]:
@@ -116,8 +118,8 @@ def read_rates(res, ev):
     for name, s in cum.items():
         out, t0, v0 = [], 0.0, 0.0
         for t, v, a in s:
-            q = (v - v0) / a / (t - t0) * 3.6e6           # 排水強度 (mm/h)
-            out.append(((t + t0) / 2.0 / 3600.0, cfg["post"](q)))
+            q = (v - v0) / a / (t - t0) * 3.6e6           # 区画面積あたりの強度 (mm/h)
+            out.append(((t + t0) / 2.0 / 3600.0, cfg["post"](q) if post else q))
             t0, v0 = t, v
         rates[name] = out
     return rates
@@ -140,13 +142,9 @@ def read_points(path):
     return pts
 
 
-def add_baseflow(rates, obs, oname):
-    """観測の最初と最後の値を結ぶ直線を足した系列を返す"""
-    (t0, b0, _), (t1, b1, _) = obs[oname][0], obs[oname][-1]
-    out = {}
-    for name, s in rates.items():
-        out[name] = [(t, q + b0 + (b1 - b0) * min(max((t - t0) / (t1 - t0), 0.0), 1.0)) for t, q in s]
-    return out, (t0, b0, t1, b1)
+def add_baseflow(rates, base):
+    """後処理後の排水に、モデルに与えた基底流(同じ記録区間の平均強度)を足した系列"""
+    return {name: [(t, q + b) for (t, q), (_, b) in zip(s, base[name])] for name, s in rates.items()}
 
 
 def metrics(cfg, cname, series, calc, table=None):
@@ -348,12 +346,14 @@ def compare(ev):
     table = []
     for cname, zname in cfg["calc"].items():
         show(cname, *metrics(cfg, cname, rates[zname], calc, table))
-    if "baseflow" in cfg:
-        rb, (t0, b0, t1, b1) = add_baseflow(rates, obs, cfg["baseflow"])
+    base = read_rates(res, ev, "vbase(m3)", post=False)
+    if base:
+        rb = add_baseflow(rates, base)
         for cname, zname in cfg["calc"].items():
             show(cname + "+base", *metrics(cfg, cname, rb[zname], calc))
-        print("   (+base: ENCflow + straight baseflow from the first to the last observation, "
-              "%.3g at %.1f h to %.3g at %.1f h)" % (b0, t0, b1, t1))
+        for zname, s in base.items():
+            print("   (+base: ENCflow + the baseflow given to the model (fn_vz_base), %s %.3g to %.3g mm/h)"
+                  % (zname, s[0][1], s[-1][1]))
     print("   observed (Fig.): maximum of the observations vs ENCflow at the same time")
     for oname, zname in cfg["obs"].items():
         if oname in obs:
@@ -365,11 +365,11 @@ def compare(ev):
         w.writerow(["catchment", "t(h)", "paper(%s)" % u, "encflow(%s)" % u])
         for name, t, q, m in table:
             w.writerow([name, "%.3f" % t, "%.5g" % q, "%.5g" % m])
-    plot(ev, res, rates, calc, obs)
+    plot(ev, res, rates, calc, obs, rb if base else None)
     compare_psi(ev, res)
 
 
-def plot(ev, res, rates, calc, obs):
+def plot(ev, res, rates, calc, obs, rb=None):
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -395,6 +395,9 @@ def plot(ev, res, rates, calc, obs):
         ax2.plot(t, q, color=col, lw=2.5, alpha=0.35, label="%s Tani (2023) calculated" % cname)
         ax2.plot([p[0] for p in rates[zname]], [p[1] for p in rates[zname]], color=col, lw=1.0,
                  label="%s ENCflow" % zname)
+        if rb:
+            ax2.plot([p[0] for p in rb[zname]], [p[1] for p in rb[zname]], color=col, lw=1.0, ls="--",
+                     label="%s ENCflow + baseflow" % zname)
     for j, (oname, zname) in enumerate(cfg["obs"].items()):
         if oname in obs:
             col = colors[j % 3] if ev.startswith("TY") else "0.3"

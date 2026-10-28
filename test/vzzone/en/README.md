@@ -4,8 +4,8 @@
 
 [日本語](../README.md)
 
-A check of the zones, column sharing, transfer to outlets, handling of rain and
-restart of the vertical unsaturated flow (VZ) runoff ([the chapter of the User's
+A check of the zones, column sharing, transfer to outlets, handling of rain,
+restart and baseflow of the vertical unsaturated flow (VZ) runoff ([the chapter of the User's
 Guide](../../../docs/en/users_guide/vz.md), developer.md §87). `Check_vzzone.py`
 confirms quantities known analytically, and the results of `param.txt` are also
 compared with the Log.txt of the reference (ULP=0; the CSV files are left out of
@@ -37,6 +37,7 @@ dt_vz = 60 s, 12 h.
 | rain distribution | `param_avg.txt` | rain given as a distribution (`prmap.txt`, mm/day × time-series multiplier) with f_vz_rain = 1 (area average within a column) |
 | stop of the strict mode | `param_strictfail.txt` | the same rain with f_vz_rain = 0 → should stop because the rainfall differs within a column |
 | save and restart | `param_save.txt` / `param_restart.txt` | save at 6 h (a synchronisation time) and restart up to 12 h |
+| baseflow | `param_bflow.txt` (the series of zone 3 in `data_vzzone/base3.txt`) | zone 1 has a baseflow from the namelist (0 up to 30.5 min, a step from 2 to 4 mm/h at 90 min, 1 mm/h at 300.25 min, held afterwards), zone 3 a baseflow from a file (0.5 up to 10 min, 1.5 mm/h at 360 min, held afterwards). Run.sh rewrites tt, dir_result, f_state_save and f_state_restore with sed to also check save → restart and the stop for a series whose time decreases |
 
 ## Checks (Check_vzzone.py)
 
@@ -58,6 +59,15 @@ dt_vz = 60 s, 12 h.
   3), and the S_total balance. With the same rain, the strict mode stops.
 - **Restart**: the results after saving at 6 h and restarting (vz_zone.csv,
   vz_column.csv, Log) are bit-identical to the second half of the continuous run.
+- **Baseflow** (compared with the results of `param.txt`): cumulative baseflow
+  vbase = exact integral (computed with Python fractions) of the piecewise-linear
+  series (end values held outside the range) × zone area; the VZ side (vin, vstore,
+  vdrain, vcorr, residual and vz_column.csv) agrees as text with the run without
+  baseflow; outlet volume (vsurface, vexternal) = drainage + baseflow. The depths of
+  the receiving cells, the total amount of surface water and the S_total balance
+  are checked with the same checks as the base run (the baseflow of zone 1 is an
+  input to the system, that of zone 3 goes from outside to outside). Save → restart
+  is bit-identical to the continuous run, and a series whose time decreases stops.
 
 ## Running
 
@@ -80,3 +90,13 @@ output files (including probes) agree between serial and np = 2 and 4; in
 release, np = 1, 2, 4 match the serial reference at ULP=0. The reference is
 provisional, based on passing the analytical checks (awaiting visual
 confirmation).
+
+Baseflow (2026-10-27): the cumulative baseflow agrees with the analytical integral
+to 2e-14 (relative), outlet volume = drainage + baseflow to 2e-14 (relative), the
+VZ side and vz_column.csv agree with the run without baseflow, and the S_total
+balance to 2e-11 m. Save → restart agrees exactly with the continuous run, and a
+series whose time decreases stops with "baseflow times of zone 1 must not
+decrease" (on all ranks under MPI). Under `-Og -fcheck=all` no runtime check
+fires; in release np = 1, 2, 4 pass, and all output files (including probes) of
+np = 1 and 4 agree. The existing configurations without baseflow agree byte for
+byte with the reference in Log.txt, vz_zone.csv and vz_column.csv.

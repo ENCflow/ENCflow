@@ -66,4 +66,38 @@ if [ -d save_tkwet_serial ]; then
         echo "警告: save_tkwet/state.dat が逐次ビルドと不一致(同上)" >&2
     fi
 fi
+
+# 構成5: 構成1 + 掃流砂(土石流 E-D の後のハロ交換の回帰検定。developer.md §28.13)。
+# 同じ MPI ビルドの np = 1 とのバイト一致を合否にする(ビルド内のランク数不変。
+# 逐次ビルドとの比較は他の構成と同じく警告)
+python3 "$sdir/make_fluv.py" > z_fluv.txt || exit 1
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_fluv.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_debris.py" save_fluv fluv || rc=1
+if [ "$NP" != 1 ]; then
+    tmp=$(mktemp)
+    sed "s/dir_save = 'save_fluv'/dir_save = 'save_fluv_np1'/" param_fluv.txt > "$tmp"
+    rm -rf save_fluv_np1
+    ENCFLOW_EXPECT_NP=1 mpirun -np 1 $MPIRUN_OPTS ./encflow_mpi "$tmp" > Screen_fluv_np1.log 2>&1
+    rc1=$?
+    rm -f "$tmp"
+    if [ $rc1 -ne 0 ]; then
+        echo "ERROR: np=1 run of param_fluv.txt failed (Screen_fluv_np1.log)" >&2
+        rc=1
+    elif cmp -s save_fluv/state.dat save_fluv_np1/state.dat; then
+        echo "=== 掃流砂の併用: state.dat は np=$NP と np=1 でビット一致 ==="
+    else
+        echo "MISMATCH: save_fluv/state.dat が np=$NP と np=1 で不一致(ランク数依存)" >&2
+        rc=1
+    fi
+fi
+if [ -d save_fluv_serial ]; then
+    if cmp -s save_fluv/state.dat save_fluv_serial/state.dat; then
+        echo "=== 掃流砂の併用: state.dat は逐次結果とビット一致 ==="
+    else
+        echo "警告: save_fluv/state.dat が逐次ビルドと不一致(同上)" >&2
+    fi
+fi
 exit $rc

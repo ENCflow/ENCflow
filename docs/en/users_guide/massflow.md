@@ -121,7 +121,9 @@ The exchange with the bed is an increment of the solid column
 $`\Delta h_s`$, applied as $`\Delta z = -\Delta h_s/C_*`$ to $`z`$ and $`s_d`$
 co-movingly. It is clamped by the erodible layer (erosion $`\le s_d`$) and
 by the suspended amount (deposition $`\le h_s`$); dry cells return
-everything to the bed.
+everything to the bed. This exchange does not erode the rock exposed after the
+mobile layer is stripped; rock erosion is handled by the debris-flow term of
+`f_rockinc` (`rock_kdb`; [landform change chapter](geomorph.md#rock-erosion-by-debris-flows-rock_kdb)).
 
 ![Equilibrium concentration and bedload formulas](../../figs/sediment_laws_en.png)
 
@@ -170,7 +172,9 @@ formula (eqs. (5)–(7) of Morpho2DH[^morpho2dh]) with no extra parameter:
 
 $`\theta`$ is the bed slope along the flow and $`\theta_e`$ the equilibrium
 slope of the concentration $`C`$ (its inverse is the stony-type
-$`C_\infty`$).
+$`C_\infty`$). In each cell $`\theta`$ is a one-sided difference to the
+downstream neighbour in the flow direction (a central difference cannot see a
+two-cell undulation; developer.md §89.24, in Japanese).
 
 **f_dbed = 3: Takahashi–Nakagawa (1991).** Single grain size, saturated
 bed: erosion $`\delta_e\,\dfrac{C_\infty - C}{C_* - C_\infty}\,\dfrac{q_T}{d_L}`$,

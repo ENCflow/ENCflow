@@ -18,9 +18,10 @@ module list_precip
     real :: prval(1:2,1:nprmax) = -9999            ! 降水量時系列 (無意味な値で初期化しておく)
     character(len=maxpathlen) :: fn_prmap = ""     ! 降雨分布ファイル名
     real :: dt_maplist = 60                        ! 降雨分布ファイル時間間隔 (min)
-    real :: dt_mapunit = 0                         ! 降雨分布ファイルの積算時間単位 (min) (0なら=dt_maplist)
-    character(len=80) :: dt_maplist_c = ""         ! 降雨分布ファイル時間間隔 (h, m, s)
-    character(len=80) :: dt_mapunit_c = ""         ! 降雨分布ファイルの積算時間単位 (h, m, s)
+    real :: dt_mapunit = 0                         ! 降雨分布ファイルの値の積算時間 (min)
+                                                   ! (0 なら prtype=2 は1日、prtype=3 は dt_maplist)
+    character(len=80) :: dt_maplist_c = ""         ! 降雨分布ファイル時間間隔 (d, h, m, s。単位なしは分)
+    character(len=80) :: dt_mapunit_c = ""         ! 降雨分布ファイルの値の積算時間 (d, h, m, s。単位なしは分)
     character(len=maxpathlen) :: fn_maplist = ""   ! 降雨分布ファイル名リスト名
     real :: runoff_rate = 1.0                      ! 流出率
   end type

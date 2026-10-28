@@ -67,6 +67,28 @@ $`z`$ だけを更新し $`s_d`$ は変えない(有限厚の土層を運ぶモ�
 検証: [test/creep](../../test/creep/README.md)(ガウス丘の解析解に
 最大誤差 7.8e-5 m、`morfac` = 2 の等価性 2.3e-4 m)。
 
+**深さ依存クリープ(`creep_hstar` > 0)**:
+
+```math
+\mathbf{q} = -D\left(1 - e^{-H/H_c}\right)\nabla z,
+\qquad
+\frac{\partial z}{\partial t} = \frac{\partial s_d}{\partial t} = -\nabla\cdot\mathbf{q}
+```
+
+土層だけが動く形で、$`H`$ は各エッジの供給側(高い側)のセルの土層厚 $`s_d`$、
+$`H_c`$ は輸送の減衰厚(`creep_hstar`)です。土層厚と勾配の両方に比例する輸送
+[^johnstone15]を、Landlab の DepthDependentDiffuser と同じ $`K H_* (1 - e^{-H/H_*})`$ の
+形で表したもので、$`D = K H_*`$ と読めば厚い土層の極限($`H \gg H_c`$)で上の線形拡散に
+一致します($`D`$ = `creep_d` の意味は変えない)。$`z`$ と $`s_d`$ を同じ量だけ動かすので
+岩盤面 $`z - s_d`$ は変わらず、裸岩($`s_d = 0`$)からは運びません。$`H`$ を供給側の
+セルで評価すること、流量を固体体積に換算して掃流砂と共有の供給量制限(1 回の更新で
+セルの土層厚を超えて出さない)に通すことは、本モデルの離散化の選択です。実効の
+拡散係数は $`D`$ 以下なので、安定条件は上と同じです。
+検証: [test/creep](../../test/creep/README.md) の深さ依存クリープの 4 構成(厚い土層で
+従来の線形拡散と 1.8e-15 m で一致、岩盤面 $`z - s_d`$ の不変 4e-14 m、土層の総量の
+保存、$`s_d \ge 0`$、裸岩で不変)。土層生成(§7)と組んだ定常斜面は、斜面の脚部に
+渓流を置く連成の実験で確かめる予定です(docs/mountain_stream_plan.md §5)。
+
 ## 3. 掃流砂(f_fluvial)
 
 **流砂量式。** エッジごとに両セル平均の $`\tau_*`$ から無次元流砂量
@@ -326,11 +348,16 @@ s_d^{\,n+1} = s_d + s_*\ln\!\left(1 + \frac{W_0\,\Delta t_s}{s_*}\,e^{-s_d/s_*}\
 右の更新式は常微分方程式の厳密解の伝播子なので、`morfac` が大きくても
 無条件に安定です。$`W_0`$(`wthr_p0`、既定 50 mm/kyr)は裸岩での
 土層生成速度 0.01〜0.1 mm/yr の中央、$`s_*`$(`wthr_sdstar`、既定 0.5 m)は
-減衰深の代表値です。
+減衰深の代表値です。`fn_wthr` を与えると、セルごとの倍率の分布を掛けた
+$`W_0 f_w`$ になります(岩質の違い。倍率 0 のセルは風化しません。渓流の岩盤のように、
+岩盤面を風化でなく流水の下刻で下げたい場所に使います)。倍率は生成速度だけに掛かり、
+減衰深 $`s_*`$ は全域で共通です。
 
 **隆起。** $`z \mathrel{+}= U\,\Delta t_s`$($`s_d`$ 不変 = 基岩ごと上昇)。
 $`U`$(`uplift0`、既定 1 mm/yr)は造山帯の代表値の下限で、負値は沈降です。
-海域マスクのセルは侵食基準面として対象外です。
+海域マスクのセルは侵食基準面として対象外です。`fn_uplift` を与えると、セルごとの
+倍率の分布を掛けた $`U f_u`$ になります(出口のセルを 0 にすれば基準面の固定、
+負にすれば基準面の低下。断層ブロックの差別隆起も表せます)。
 長期の地形発達は「代表水文の反復 × MORFAC × リスタート連鎖」で
 地形時間を稼ぐ CAESAR-Lisflood 型[^coulthard13]の実行様式を想定して
 います(developer.md §32)。
@@ -382,6 +409,87 @@ $`c_{\rm eq}`$(`dissol_ceq`、既定 100 mg/L CaCO₃ 換算)は**有効溶解�
 一定率)ので、流下に伴う飽和の減衰は表しません。洞窟(管路)の成長は
 別の段階として未実装です(docs/karst_plan.md §5)。
 
+### 流水による岩盤下刻(f_rockinc)
+
+**剥離・研磨と被覆。** 岩盤面 $`R = z - s_d`$ を流水の剥離と、運ばれる礫の
+研磨(tools 効果)で下げ、可動層 $`H = s_d`$ が露出率 $`e^{-H/H_*}`$ で下刻を
+抑えます:
+
+```math
+\tau_b = \frac{\rho_w g n^2 |V|^2}{h_e^{1/3}},\qquad
+E_{p0} = f_r\,k_p \max\!\left(\frac{\tau_b}{\tau_c} - 1,\ 0\right)^{m},\qquad
+E_{a0} = f_r\,\beta\,q_c\,F_s(H)
+```
+
+```math
+\frac{dR}{dt} = -(E_{p0} + E_{a0})\,e^{-H/H_*},\qquad \frac{dH}{dt} = E_{p0}\,e^{-H/H_*}
+```
+
+$`\tau_b`$ は掃流砂と同じ Manning 閉じ($`h_e = \max(h, d_v)`$)、$`f_r`$ は
+侵食性倍率(`fn_rock`)です。剥離項は、岩盤河道の侵食速度を底面せん断応力で
+表す型[^howard83]の超過せん断応力形 $`E = k_e(\tau_b - \tau_c)^m`$ を
+$`k_p = k_e \tau_c^m`$ と置いた比形で、$`k_p`$ は「$`\tau_b = 2\tau_c`$ での
+裸岩の下刻速度」(m/s)になります(閾値つきの形の典拠は照合中)。被覆を層厚の
+指数関数で表す形は SPACE[^shobe17] と Landlab の GravelBedrockEroder と同じです。
+剥離した岩の厚さは同じ厚さの可動層になり($`z`$ は不変)、膨張は $`k_p`$ に
+吸収します(風化と同じ 1:1 の換算。**独自の簡略化**)。研磨項の $`q_c`$ はセルの
+掃流砂容量(単位幅の固体流砂量)、$`q_c F_s`$ はそのセルから出る掃流砂で、これを
+床を叩く礫の量とみなします(GravelBedrockEroder の「研磨 = β × 流砂量 × 露出率」と
+同じ形)。研磨で削れた分は細粒分として系外へ出し($`z`$ が下がる)、被覆には
+加えません。
+
+**薄層の輸送。** 掃流砂のエッジ流量に、供給側セルの利用可能率
+$`F_s = 1 - e^{-H/H_*}`$ を掛けます。一様な容量 $`q_c`$ と一定の流砂量 $`q_s`$
+の定常では $`F_s = q_s/q_c`$ となり、露出率は $`1 - q_s/q_c`$、つまり供給比で
+書いた被覆[^sklar04][^turowski07]に一致し、研磨による下刻速度は
+$`E = \beta q_s (1 - q_s/q_c)`$ の山形になります($`q_s/q_c = 1/2`$ で最大、
+1 以上で全被覆の 0。Sklar & Dietrich の saltation–abrasion 模型の線形化と同じ形)。被覆を沖積層の厚さと河床の
+起伏の比で決める考え方[^zhang15]を、露出率と利用可能率に同じ $`H_*`$ を使う
+閉包で書いたもので、この組合せと有次元化は**独自**です
+(docs/mountain_stream_plan.md §4.3)。剥離物が下流で流砂に加わる定常は、
+セルごとに $`q_i = q_{i-1} + (1-\lambda)\Delta x\,E_{p0}(1 - q_i/q_c)`$ を
+解けば得られます(test/rockinc の T3)。
+
+**時間積分。** 水理を更新の頭で固定し、露出率を厳密に積分します:
+
+```math
+H^{n+1} = H^n + B_p,\qquad
+B_p = H_*\ln\!\left(1 + \frac{E_{p0}\,\Delta t_s}{H_*}\,e^{-H^n/H_*}\right),\qquad
+B_a = \frac{E_{a0}}{E_{p0}}\,B_p
+```
+
+(風化の伝播子と同じ形。研磨の $`F_s`$ は更新の頭の値で固定し、
+$`E_{p0} = 0`$ では $`B_a = E_{a0}\,\Delta t_s\,e^{-H^n/H_*}`$)。更新間隔・`morfac` を変えても同じ結果になり、
+無条件に安定です。薄い層の排出は陽的で、時間尺度は
+$`H_*(1-\lambda)\Delta x / q_c`$ です。
+
+**土石流による岩盤侵食(rock_kdb)。** 土石流のイベント計算(`f_debris = 1`)では、流れる
+混合体の準静的な駆動応力で岩盤を削ります:
+
+```math
+\tau_d = \rho_w (1 + sC)\,g_e\,h_t \tan\theta_f,\qquad
+E_{d0} = f_r\,k_d \max\!\left(\frac{\tau_d}{\tau_{cd}} - 1,\ 0\right)^{m_d},\qquad
+\frac{dR}{dt} = -E_{d0}\,e^{-H/H_*},\qquad \frac{dH}{dt} = E_{d0}\,e^{-H/H_*}
+```
+
+$`h_t = h + h_s`$ は混合流動深、$`C`$ は混合体積濃度、$`\theta_f`$ は流向の河床勾配(下りだけ。
+各セルで流向の下流側の近傍との片側差分。中央差分では 2 セル周期の凹凸が勾配に現れず、凸部で
+浅い流れが凸部を削り残して段差が育つ。developer.md §89.23・§89.24)、
+$`g_e`$ は運動方程式と同じ有効重力($`g\cos^2\theta_f`$。`f_gravity_correction = 0` なら $`g`$)です。
+$`\tau_d`$ は定常の等流で抵抗則の底面せん断に等しく、抵抗則の選び方によりません。働くのは
+濃い混合体($`C \ge c_{\min}`$ = `db_cmin`)が流れている($`|V| \ge v_{stop}`$ = `db_vstop`)
+セルだけで、生成物は剥離と同じく 1:1 で可動層に入ります($`z`$ は不変)。取り込むか被覆として
+残るかは侵食・堆積式が決めます。時間積分は剥離と同じ伝播子で、E-D を適用した後の $`H`$ を
+使います。
+
+土石流が急勾配の谷の岩盤を削る主な担い手であることは、勾配–面積関係[^stock03]と侵食ピンの
+観測[^stock05]から示されています。機構は粒子の衝突とされ、慣性応力に基づく則[^stock06]や
+回転ドラムの実験[^hsu08]があります。単層混合体は衝突が集中する巨礫の前縁を分けて表さないため、
+単一イベントの比較(docs/mountain_stream_plan.md §12.4)で頑健だった準静的応力の超過形を
+採りました。流動深と勾配の関数の侵食則[^mcguire23]と同じ種類で、形と係数の組合せは**独自**です。
+同じ比較では、閾値 1 kPa で侵食がほぼ勾配 0.2 以上の区間に集まりました。厚さ約 5 cm の堆積物が
+衝突から床を守るという観測[^mccoy13]は、$`H_*`$ の目安になります。
+
 ## 8. パラメータと既定値の根拠
 
 根拠欄の分類語の意味は[既定値の根拠の読み方](../users_guide.md#既定値の根拠の読み方)を参照してください。
@@ -390,6 +498,7 @@ $`c_{\rm eq}`$(`dissol_ceq`、既定 100 mg/L CaCO₃ 換算)は**有効溶解�
 |---|---:|---|---|
 | dt_geomorph / morfac | 0 / 1 | 地形更新間隔 (s) / 地形時間の加速(§1) | **方式** MORFAC 法[^roelvink06]。イベント計算は 1 |
 | creep_d | 0.005 m²/yr | クリープ拡散係数 $`D`$(§2) | **文献値** 文献域 0.001〜0.05 m²/yr の中央[^fernandes97] |
+| creep_hstar | 0(従来の線形拡散) | 深さ依存クリープの減衰厚 $`H_c`$ (m)(§2) | **校正値** 標準値がない。厚い土層では結果によらない |
 | f_qbform | 1 | 流砂量式(§3) | **方式** 1: 芦田・道上[^ashida72]、2: MPM[^mpm48] |
 | fluv_d50 | 0.01 m | 掃流砂の代表粒径 | **経験値** 砂床〜礫床の幾何平均付近 |
 | fluv_tausc / susp_tausc / wash_tausc | 0.05 | 限界無次元掃流力(§1) | **文献値** Shields 曲線の粗砂〜礫の代表値[^shields36] |
@@ -412,13 +521,22 @@ $`c_{\rm eq}`$(`dissol_ceq`、既定 100 mg/L CaCO₃ 換算)は**有効溶解�
 | spl_ksat | 0 | 増幅の飽和曲率 $`\kappa_s`$ | **与件** 0 = 飽和なし。崖の基部の段を残すには 0.05〜0.2 1/m(examples/mesa) |
 | spl_strata | なし | 水平層理の(下端標高, 侵食性倍率)表 | **与件** 層序の硬軟差。倍率 0 = キャップロック |
 | wthr_p0 / wthr_sdstar | 50 mm/kyr / 0.5 m | 土層生成速度 / 減衰深(§7) | **文献値** Heimsath 型の文献域の中央[^heimsath97] |
+| fn_wthr | なし(全域 1) | 土層生成速度の倍率の分布 | **与件** 岩質の違い、風化しないセル(0。渓流の岩盤など) |
 | uplift0 | 1 mm/yr | 隆起速度 | **慣用値** 造山帯の代表値の下限 |
+| fn_uplift | なし(全域 1) | 隆起速度の倍率の分布 | **与件** 基準面の固定(0)・低下(負)、断層ブロック |
 | dissol_ceq / dissol_rho | 100 mg/L / 2500 kg/m³ | 有効溶解能 / 岩の密度(§7) | **文献値** 石灰岩地域の涵養水の CaCO₃ 濃度の代表[^white84]と石灰岩の密度。k_d = 4e-5 m/m → 涵養 1 m/yr で 40 mm/kyr(文献域 20〜100)[^gabrovsek09] |
 | dissol_src / dissol_sink | 1 / 0 | 水量の源 / 吸込穴項 | **方式** 1: 浸透量、2: 地上降雨量、3: 浸透量 + 裸岩の流出水。吸込穴項は管路連続体層の枡流入 |
 | dissol_fsurf / dissol_sdsurf | 0.3 / 0.1 m | 表面流源の流出水の溶解能の比 / 裸岩とみなす土層厚 | **文献値** 裸岩の雨水 50〜80 mg/L と土層下の涵養水 100〜300 の比 / **数値設定** |
 | dissol_dzmax | 0 | 1 セル・1 更新の溶食量の上限 | **数値設定** 0 = 無効。fluv_dzmax と同型の安全弁(超過は飽和として捨てる) |
 | dissol_fsink / dissol_fres | 1.0 / 0 | 吸込穴流入水の溶解能の比 / 残渣率 | **経験値** 校正前提 / **与件** 0 = 残渣なし |
 | dissol_lat | 0 | 側方溶食の配分割合 p | **方式** 0 = 床のみ、−1 = 濡れ面の面積比で自動(推奨)。固定値は湛水深/格子幅の比から |
+| rock_kp / rock_tauc | 0(剥離なし)/ なし | 剥離の速度係数 (m/s) / 閾値 (Pa)(§7 の岩盤下刻) | **校正値** 標準値がない。k_p は τ_b = 2τ_c での裸岩の下刻速度 |
+| rock_m | 1 | 剥離のべき指数 | **慣用値** 線形(側岸侵食の berode_m と同じ) |
+| rock_beta | 0(研磨なし) | 研磨係数 β (1/m) | **校正値** 標準値がない。研磨による下刻速度の最大(被覆率 1/2)は β q_c / 4 |
+| rock_hstar | なし | 被覆の長さ H* | **与件** 岩盤面の起伏・礫径の目安(数 cm〜数十 cm)。露出率と利用可能率に共用 |
+| rock_kdb / rock_taucdb | 0(土石流の項なし)/ なし | 土石流による岩盤侵食の速度係数 (m/s) / 閾値 (Pa) | **校正値** 標準値がない。k_d は τ_d = 2τ_cd での裸岩の低下速度。1 回の土石流で mm〜cm の低下が目安[^stock05][^mccoy13] |
+| rock_mdb | 1 | 土石流の項のべき指数 | **慣用値** 線形(rock_m と同じ) |
+| fn_rock | なし(全域 1) | 岩盤の侵食性倍率 | **与件** 岩質の差。0 = 侵食しない |
 
 **既定値を見直すときの手がかり**
 
@@ -438,7 +556,7 @@ $`c_{\rm eq}`$(`dissol_ceq`、既定 100 mg/L CaCO₃ 換算)は**有効溶解�
 
 | ケース | 内容 | 要点 |
 |---|---|---|
-| [test/creep](../../test/creep/README.md) | ガウス丘の拡散 | 解析解に最大誤差 7.8e-5 m、morfac 等価性 |
+| [test/creep](../../test/creep/README.md) | ガウス丘の拡散 | 解析解に最大誤差 7.8e-5 m、morfac 等価性。深さ依存クリープの岩盤面の不変・土層の保存・裸岩で不変 |
 | [test/fluvial](../../test/fluvial/README.md) | 閉領域の段波と河床変動 | 固体総量・共動更新が機械精度 |
 | [test/suspend](../../test/suspend/README.md) | 2 つの平衡濃度式 | 固体総量 2.2e-15 |
 | [test/sedinflow](../../test/sedinflow/README.md) | 境界からの土砂供給 | 流入総量の台帳閉合 ~1e-16 |
@@ -446,6 +564,10 @@ $`c_{\rm eq}`$(`dissol_ceq`、既定 100 mg/L CaCO₃ 換算)は**有効溶解�
 | [test/splash](../../test/splash/README.md) | 遷緩点斜面の乾式侵食 | 解析形に全桁一致、排出台帳一致 |
 | [test/splashslide](../../test/splashslide/README.md) | 固結 / 未固結の崖 | 起伏の成長率 ×1.34 / ×0.77 |
 | [examples/badland](../../examples/badland/) | 台地と崖の谷形成 | 表面流ゼロのまま崖縁から谷が成長 |
+| [test/rockinc](../../test/rockinc/README.md) | 流水による岩盤下刻 | 自己被覆の解析解 9e-8、被覆の準定常 4e-4、研磨の山形 7e-4、閉じた箱の保存(台帳と 9 桁)、谷頭の給砂の下の定常勾配が準解析解と 1.5 % 以内・土砂収支 4e-10 |
+| [examples/bedrock_cover](../../examples/bedrock_cover/README.md) | 岩盤河道の被覆効果 | 3 モデルの定常の下刻速度が理論と 2.3 % 以内、同じ総量の一定給砂とパルス給砂、初期の被覆、段差の後退 |
+| [examples/mountain_valley](../../examples/mountain_valley/README.md) | V 字谷の斜面と渓流の連成 | 定常の斜面が斜面だけの予測と 0.14 %、渓流の勾配が渓流だけの式に斜面の供給を足した予測と 1.1 % 以内。基準面の低下への応答。同じ平均のパルス給砂で研磨だけの渓流は 1.40 倍急 |
+| [test/hillsoil](../../test/hillsoil/README.md) | 風化による土層生成と定常斜面 | 一様・分布(fn_wthr)の解析解に 1.6e-15、倍率 0 のセルの不変。隆起・風化・深さ依存クリープの定常斜面で土層厚が H_ss と 0.12 %、横断の曲率が −U/D_eff と 1.1 % |
 
 ## 参考文献
 
@@ -453,6 +575,7 @@ $`c_{\rm eq}`$(`dissol_ceq`、既定 100 mg/L CaCO₃ 換算)は**有効溶解�
 [^shields36]: Shields, A. (1936): Anwendung der Ähnlichkeitsmechanik und der Turbulenzforschung auf die Geschiebebewegung. Mitt. Preuss. Versuchsanst. Wasserbau Schiffbau, 26, Berlin.
 [^culling60]: Culling, W. E. H. (1960): Analytical theory of erosion. *J. Geol.*, 68, 336–344.(斜面の線形拡散モデル)
 [^fernandes97]: Fernandes, N. F. and Dietrich, W. E. (1997): Hillslope evolution by diffusive processes: The timescale for equilibrium adjustments. *Water Resour. Res.*, 33, 1307–1318.(拡散係数の文献域)
+[^johnstone15]: Johnstone, S. A. and Hilley, G. E. (2015): Lithologic control on the form of soil-mantled hillslopes. *Geology*, 43(1), 83–86. doi:10.1130/G36052.1(要旨で確認: 輸送が勾配と土層厚の両方に比例すると、岩質が土層に覆われた斜面の形に現れる。式の形と doi は Landlab の DepthDependentDiffuser の説明による)
 [^ashida72]: 芦田和男・道上正規 (1972): 移動床流れの抵抗と掃流砂量に関する基礎的研究. 土木学会論文報告集, 206, 59–69.
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.
 [^exner25]: Exner, F. M. (1925): Über die Wechselwirkung zwischen Wasser und Geschiebe in Flüssen. *Sitzungsber. Akad. Wiss. Wien, Math.-Naturwiss. Kl.*, 134, 165–204.
@@ -466,3 +589,14 @@ $`c_{\rm eq}`$(`dissol_ceq`、既定 100 mg/L CaCO₃ 換算)は**有効溶解�
 [^coulthard13]: Coulthard, T. J., Neal, J. C., Bates, P. D., Ramirez, J., de Almeida, G. A. M. and Hancock, G. R. (2013): Integrating the LISFLOOD-FP 2D hydrodynamic model with the CAESAR model: implications for modelling landscape evolution. *Earth Surf. Process. Landforms*, 38, 1897–1906.
 [^white84]: White, W. B. (1984): Rate processes: chemical kinetics and karst landform development. In: La Fleur, R. G. (ed.) *Groundwater as a Geomorphic Agent*, Allen & Unwin, 227–248.(最大削剥速度 D = (P − E) c_eq/ρ)
 [^gabrovsek09]: Gabrovšek, F. (2009): On concepts and methods for the estimation of dissolutional denudation rates in karst areas. *Geomorphology*, 106, 9–14.
+[^howard83]: Howard, A. D. and Kerby, G. (1983): Channel changes in badlands. *Geol. Soc. Am. Bull.*, 94, 739–752.(岩盤河道の侵食速度を出水時の底面せん断で表す。要旨で確認)
+[^shobe17]: Shobe, C. M., Tucker, G. E. and Barnhart, K. R. (2017): The SPACE 1.0 model. *Geosci. Model Dev.*, 10, 4577–4604. doi:10.5194/gmd-10-4577-2017(被覆の指数形は Landlab のソースで確認)
+[^sklar04]: Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
+[^turowski07]: Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion. *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697
+[^zhang15]: Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N. (2015): Macro-roughness model of bedrock–alluvial river morphodynamics. *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015(要旨で確認)
+[^stock03]: Stock, J. D. and Dietrich, W. E. (2003): Valley incision by debris flows: Evidence of a topographic signature. *Water Resour. Res.*, 39(4), 1089. doi:10.1029/2001WR001057(要旨で確認: 勾配–面積の逆べき則は勾配 0.03〜0.10 より急な所にほとんど延びない)
+[^stock05]: Stock, J. D., Montgomery, D. R., Collins, B. D., Dietrich, W. E. and Sklar, L. S. (2005): Field measurements of incision rates following bedrock exposure: Implications for process controls on the long profiles of valleys cut by rivers and debris flows. *Geol. Soc. Am. Bull.*, 117(1–2), 174–194. doi:10.1130/B25560.1(要旨で確認: 弱い岩の谷の侵食ピンで最大 cm/年。土石流の谷では間欠的な土石流が主な担い手)
+[^stock06]: Stock, J. D. and Dietrich, W. E. (2006): Erosion of steepland valleys by debris flows. *Geol. Soc. Am. Bull.*, 118(9/10), 1125–1148.(要旨と紹介で確認: 粒子衝突の慣性垂直応力に基づく侵食則。式の形は未照合)
+[^hsu08]: Hsu, L., Dietrich, W. E. and Sklar, L. S. (2008): Experimental study of bedrock erosion by granular flows. *J. Geophys. Res.*, 113, F02001. doi:10.1029/2007JF000778(要旨と紹介で確認)
+[^mccoy13]: McCoy, S. W., Tucker, G. E., Kean, J. W. and Coe, J. A. (2013): Field measurement of basal forces generated by erosive debris flows. *J. Geophys. Res. Earth Surf.*, 118, 589–602. doi:10.1002/jgrf.20041(要旨で確認: 岩盤の床が観測期間に 36〜64 mm 低下。厚さ約 5 cm の堆積物が衝突から床を守る)
+[^mcguire23]: McGuire, L. A. ほか (2023): Steady-state forms of channel profiles shaped by debris flow and fluvial processes. *Earth Surf. Dynam.*, 11, 1117–1143. doi:10.5194/esurf-11-1117-2023(要旨で確認: 流動深と勾配の関数の侵食則の族。共著者の一覧は未照合)

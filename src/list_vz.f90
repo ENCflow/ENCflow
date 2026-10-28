@@ -5,7 +5,7 @@ module list_vz
   !   &list_vz        : 共通設定(有効化・区画番号マップ・同期間隔・雨の扱い・
   !                     界面透水係数・数値制御・診断出力)
   !   &list_vz_column : 共有参照柱ごとの物性・格子・初期条件・下端(配列。柱番号で添字)
-  !   &list_vz_zone   : VZ 区画ごとの参照柱・出口(配列。区画番号で添字)
+  !   &list_vz_zone   : VZ 区画ごとの参照柱・出口・基底流(配列。区画番号で添字)
   ! 未指定の番兵は実数 −9999、整数 −9999。グループ不在は全番兵のまま(init が判定)。
   use m_sysparam, only : t_sysparam
   use m_parallel, only : par_info, par_stop
@@ -13,13 +13,14 @@ module list_vz
   private
   public :: t_list_vz
   public :: list_vz_read
-  public :: vz_ncolmax, vz_nzonemax, vz_noutmax, vz_ndepmax
+  public :: vz_ncolmax, vz_nzonemax, vz_noutmax, vz_ndepmax, vz_nbasemax
 
   integer, parameter :: maxpathlen = 256
   integer, parameter :: vz_ncolmax = 50     ! 共有参照柱の最大数
   integer, parameter :: vz_nzonemax = 50    ! VZ 区画の最大数
   integer, parameter :: vz_noutmax = 99     ! 1 区画あたりの出口セルの最大数
   integer, parameter :: vz_ndepmax = 20     ! 柱の診断出力の深さの最大数
+  integer, parameter :: vz_nbasemax = 100   ! 基底流の時系列の namelist の最大点数(長い系列はファイルで)
 
   type t_list_vz
     ! ---- &list_vz ----
@@ -56,6 +57,8 @@ module list_vz
     integer :: vz_out_kind(1:vz_nzonemax) = -9999 ! 出口 1: 地表セルへ移送 / 2: 系外流出
     integer :: vz_out_cell(1:2, 1:vz_noutmax, 1:vz_nzonemax) = -9999  ! 出口セル (i, j)
     real :: vz_out_w(1:vz_noutmax, 1:vz_nzonemax) = -9999.0          ! 出口の配分率
+    real :: vz_base(1:2, 1:vz_nbasemax, 1:vz_nzonemax) = -9999.0     ! 基底流の時系列 (時刻(分), mm/h)
+    character(len=maxpathlen) :: fn_vz_base(1:vz_nzonemax) = ""     ! 基底流の時系列ファイル(1 行「時刻(分) mm/h」)
   end type
 
 contains
@@ -87,13 +90,15 @@ subroutine list_vz_read(p, list)
   integer :: vz_zone_col(1:vz_nzonemax), vz_out_kind(1:vz_nzonemax)
   integer :: vz_out_cell(1:2, 1:vz_noutmax, 1:vz_nzonemax)
   real :: vz_out_w(1:vz_noutmax, 1:vz_nzonemax)
+  real :: vz_base(1:2, 1:vz_nbasemax, 1:vz_nzonemax)
+  character(len=maxpathlen) :: fn_vz_base(1:vz_nzonemax)
 
   namelist /list_vz/ f_vz, fn_vz_zone, dt_vz, f_vz_rain, f_vz_kface, &
                      vz_dt_init, vz_dt_min, vz_dt_max, vz_tol_theta, vz_tol_psi, vz_tol_q, &
                      vz_mb_rate, vz_maxit, vz_out_depth, f_vz_outprof
   namelist /list_vz_column/ vz_ks_mmh, vz_thetas, vz_thetar, vz_psim, vz_sigma, &
                             vz_depth, vz_dz, vz_q0_mmh, vz_psi0, vz_wt0, f_vz_bottom, vz_psibot
-  namelist /list_vz_zone/ vz_zone_col, vz_out_kind, vz_out_cell, vz_out_w
+  namelist /list_vz_zone/ vz_zone_col, vz_out_kind, vz_out_cell, vz_out_w, vz_base, fn_vz_base
 
   f_vz = list%f_vz
   fn_vz_zone = list%fn_vz_zone
@@ -126,6 +131,8 @@ subroutine list_vz_read(p, list)
   vz_out_kind = list%vz_out_kind
   vz_out_cell = list%vz_out_cell
   vz_out_w = list%vz_out_w
+  vz_base = list%vz_base
+  fn_vz_base = list%fn_vz_base
 
   call par_info("reading list_vz in " // trim(p%fn_vz))
   open(newunit=un, file=trim(p%fn_vz), status='old', action='read', iostat=ios)
@@ -171,6 +178,8 @@ subroutine list_vz_read(p, list)
   list%vz_out_kind = vz_out_kind
   list%vz_out_cell = vz_out_cell
   list%vz_out_w = vz_out_w
+  list%vz_base = vz_base
+  list%fn_vz_base = fn_vz_base
 
 end subroutine
 

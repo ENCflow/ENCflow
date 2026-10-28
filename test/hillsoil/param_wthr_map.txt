@@ -1,0 +1,59 @@
+!======================================================================
+! hillsoil: 風化の分布(構成 wthr_map。W1。developer.md §89.13)
+!   水のない平らな台地(8 × 12 セル、Δx = 1 m)で風化(土層生成)だけを効かせる。
+!   生成速度 W = W0 m(i, j)(W0 = wthr_p0 = 50 mm/kyr、倍率 m は wmap.txt の 0〜2)、
+!   dsd/dt = W exp(−sd/sd*)(sd* = 0.5 m)。初期の土層厚 sd0 は sdinit.txt(0〜0.3 m)。
+!   解析解 sd(T) = sd* ln(e^{sd0/sd*} + W T/sd*) は更新式(指数の厳密積分)と刻みによらず
+!   一致するので、Check_hillsoil.py wthr が全セルで丸めの水準(相対 1e-12)の一致、
+!   倍率 0 のセルの不変、z の不変を確かめる。
+!   時間: dt = 1 s を 100 ステップ、毎ステップの地形更新 × morfac 1e10(dts = 1e10 s)=
+!   地形の時間 1e12 s(約 3.2 万年)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 1.0
+  t0 = 0
+  tt = 100
+  dt_disp = 50
+  dt_file = 100
+  dt_recrd = 100
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_result = 'result_wthr_map'
+  dir_save = 'save_wthr_map'
+  f_state_save = 1          ! 終了時の状態を保存(Check_hillsoil.py が z・sd を読む)
+  f_check_cfl = 0
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 乾いた台地
+/
+
+&list_geoinfo
+  lx = 8.0
+  ly = 12.0
+  nx = 8
+  ny = 12
+  f_ztype = 0
+  z0 = 10.0
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 1
+  fn_sd = 'sdinit.txt'      ! 初期の土層厚(make_init.py sd0)
+/
+
+&list_geomorph
+  dt_geomorph = 0.0         ! 毎ステップ更新
+  morfac = 1.0e10           ! dts = 1e10 s(風化だけなので刻みの制約はない)
+  f_wthr = 1                ! 基岩風化 = 土層生成
+  wthr_p0 = 50.0            ! 裸岩での土層生成速度 (mm/kyr)
+  wthr_sdstar = 0.5         ! 生成の減衰深 sd* (m)
+  fn_wthr = 'wmap.txt'      ! 生成速度の倍率の分布(make_init.py wmap。0〜2)
+/

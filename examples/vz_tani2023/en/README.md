@@ -94,10 +94,14 @@ quantity.
 
 The calculated values of the paper for TY and KI include the baseflow separated from
 the observations (Section III.1 of the paper). The separation line cannot be
-recovered from the paper, so it is not added to the ENCflow values (an approximate
-comparison is added only for KI2; see the results). As extensions on the ENCflow
-side, cells with soil depth 0 and the hydrostatic initial condition `vz_wt0` were
-added (developer.md §87.2).
+recovered from the paper, so it is not added to the runoff rates (drainage) of
+ENCflow. Only for KI2, the straight line joining the first and last observations is
+given to the zone as an approximate baseflow (`extract_tani2023.py` writes
+`data/base_KI2.txt`, read by `fn_vz_base` of `param_ki2.txt`;
+[baseflow in the User's Guide](../../../docs/en/users_guide/vz.md#baseflow)), and the
+drainage + baseflow is also compared with the values calculated in the paper (see
+the results). As extensions on the ENCflow side, cells with soil depth 0 and the
+hydrostatic initial condition `vz_wt0` were added (developer.md §87.2).
 
 ## Running
 
@@ -115,7 +119,9 @@ the runoff rates calculated in the paper, by ENCflow and observed, and
 `fig_<event>_psi.png` shows the pressure heads (hydraulic heads). They contain
 numbers of the paper, so the figures are not kept in the repository either. The
 vertical profiles of the column are written every 30 minutes (every 10 minutes for
-KIEX), so the results of the 7 events take about 110 MB.
+KIEX), so the results of the 7 events take about 110 MB. A `data/` extracted before
+2026-10-27 lacks the baseflow of KI2, `base_KI2.txt`; run the extraction again with
+`./Run.sh <PDF of the paper>`.
 
 ## Results (2026-10-26; gfortran 13.3, default numerical settings)
 
@@ -140,7 +146,7 @@ calculated with the linear distribution (QcC for MREX, MR1 and KI).
 | TY2 MN | runoff rate | −0.003 / 0.089 | −0.003 / 0.029 | 6.31 / 6.46 mm/h (+2.3 %) | +0.07 h |
 | KI1 | runoff rate QcC | −0.021 / 0.114 | −0.016 / 0.093 | 14.6 / 14.5 mm/h (−0.4 %) | +0.15 h |
 | KI2 | runoff rate QcC | −0.149 / 0.400 | −0.144 / 0.420 | 4.21 / 3.91 mm/h (−7.2 %) | −0.05 h |
-| KI2 + straight baseflow | same | +0.002 / 0.105 | +0.001 / 0.080 | 4.21 / 4.31 mm/h (+2.4 %) | −0.05 h |
+| KI2 + baseflow (straight line given to the model) | same | +0.002 / 0.105 | +0.001 / 0.080 | 4.21 / 4.31 mm/h (+2.4 %) | −0.05 h |
 
 - **KIEX, MREX, MR1 and TY2** almost overlap the values calculated in the paper
   (at limit 2, 90 % of the points within 5 to 22 %, peaks within 2.3 %). This is an
@@ -158,10 +164,12 @@ calculated with the linear distribution (QcC for MREX, MR1 and KI).
   has the shape of the separated baseflow of the paper (a straight line joining the
   start and the end of the storm runoff; Section III.1 of the paper). Kiryu, on
   weathered granite, has a large baseflow, whose contribution is conspicuous in KI2
-  with its small runoff. As an approximation, adding to ENCflow "a straight line from
-  the first observed value (0.11 mm/h) to the last (0.63 mm/h)" gives a median of
-  +0.001 and p90 0.080 (this line is not the separation line of the paper itself but
-  an approximation for checking).
+  with its small runoff. As an approximation, giving the model "a straight line from
+  the first observed value (0.11 mm/h) to the last (0.63 mm/h)" as the baseflow of
+  the zone (`fn_vz_base`) gives a median of +0.001 and p90 0.080 for drainage +
+  baseflow (this line is not the separation line of the paper itself but an
+  approximation for checking). The baseflow is only added at the outlet; the
+  computation of the column and the drainage are the same as without it.
 - For **MR1**, the paper does not state when its computation started, and the figure
   starts in the middle of the event (16 November), so the computation starts at the
   left end of the figure with the initial condition ψ = −100 cm. ENCflow is slightly
@@ -283,7 +291,7 @@ figures do not tell whether the rain belongs to the hour before or after the ful
 hour. The computation was run with the bars as drawn and shifted by ±0.5 h and
 ±1.0 h, and the assignment minimising p90 for the values of the paper at limit 2 or
 more was taken (`RAIN_SHIFT_H` of `extract_tani2023.py`; for KI2 the comparison with
-the straight baseflow added).
+the straight baseflow given).
 
 | Event | −1.0 h | −0.5 h | bars as drawn | +0.5 h | +1.0 h |
 |---|---|---|---|---|---|

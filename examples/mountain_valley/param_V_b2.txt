@@ -1,0 +1,87 @@
+!======================================================================
+! examples/mountain_valley 構成 V_b2: V_b を Δx = 2 m で(解像度の確認。渓流の幅も 2 m)
+!   make_init.py が生成(定数は make_init.py・plot_results.py と対で保守)。暦の時間 0〜200000 年
+!   (出水の時間 = 暦の時間 × 300 s/年、流れの時間 = 出水の時間 / morfac)
+!======================================================================
+&list_sysparam
+  dt = 0.25
+  t0 = 0.0
+  tt = 750000.0
+  dt_disp = 37500.0
+  dt_file = 37500.0
+  dt_recrd = 37500.0
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result_V_b2'
+  dir_save = 'save_V_b2'
+  f_state_save = 1
+  f_check_cfl = 1
+  f_output_mode = 2         ! bil(単精度)
+  f_out_z = 1
+  f_out_vv = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'h_init_2m.txt'   ! 渓流は初期勾配の等流水深
+  v0 = 1.508544             ! 等流流速(南向き = j の増える向き)
+/
+
+&list_geoinfo
+  lx = 42.0
+  ly = 200.0
+  nx = 21
+  ny = 100
+  f_ztype = 1
+  fn_z = 'z_init_2m.txt'       ! 裸岩の V 字(谷底の勾配 0.04、斜面の勾配 0.25)
+  f_rntype = 0
+  rn0 = 0.04
+  f_sdtype = 1
+  fn_sd = 'sd_zero_2m.txt'     ! 裸岩から
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0         ! 毎ステップ更新
+  morfac = 80.0            ! dts = 20 s(出水の時間)
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.03
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+  f_rockinc = 1
+  rock_kp = 8.90e-08          ! 剥離の速度係数 (m/s。出水中の値)
+  rock_tauc = 10.0
+  rock_m = 1.5
+  rock_beta = 6.60e-04       ! 研磨係数 (1/m)
+  rock_hstar = 0.2          ! 被覆の長さ H* (m)
+  fn_rock = 'rock_base_2m.txt' ! 出口の行は侵食しない(基準面)
+  f_creep = 1
+  creep_d = 3.333333e-05       ! クリープ D (m2/s) = 0.01 m2/yr / 300 s(出水の時間/年)
+  creep_hstar = 0.3         ! 深さ依存クリープの減衰厚 H_c (m)
+  f_wthr = 1
+  wthr_p0 = 3.155760e+07       ! 裸岩の土層生成 (mm/kyr) = 0.3 mm/yr / i_f
+  wthr_sdstar = 0.5         ! 生成の減衰深 sd* (m)
+  fn_wthr = 'wthr_hill_2m.txt' ! 渓流と出口の行は風化しない
+  f_uplift = 1
+  uplift0 = 10519.2000       ! 隆起 (mm/yr) = 0.1 mm/yr / i_f
+  fn_uplift = 'up_base_2m.txt'
+/
+
+&list_bound_edge
+  f_bc_s = 1                ! 南辺は自由流出(出口)
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 11, 1
+  inflow_val(1:2,1,1) = 0, 0.5
+  inflow_val(1:2,2,1) = 1e9, 0.5
+  inflow_dist(1) = 0
+/
