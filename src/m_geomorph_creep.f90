@@ -3,7 +3,7 @@
 !   親モジュールの型・定数(din/djn 等)・共有作業領域(crp/wrk)・
 !   require_work にはホスト結合でアクセスする(単段参照。§13)。
 !   dcp 等の実行コンテキストは submodule 側で直接 use する(§13)
-!   creep_hstar > 0 では深さ依存クリープ(calc_creep_soil。§88.8)
+!   creep_hstar > 0 では深さ依存クリープ(calc_creep_soil。§89.8)
 !======================================================================
 submodule(m_geomorph) m_geomorph_creep
   use m_parallel, only : par_info, par_stop, dcp
@@ -52,7 +52,7 @@ module subroutine calc_creep(gm, g, s, dts)
   real :: gq, dv
   logical :: okc
 
-  ! 深さ依存クリープ(creep_hstar > 0。§88.8)は別経路(従来の線形拡散のループは不変)
+  ! 深さ依存クリープ(creep_hstar > 0。§89.8)は別経路(従来の線形拡散のループは不変)
   if (gm%crp%hcinv > 0.0) then
     call calc_creep_soil(gm, g, s, dts)
     return
@@ -115,7 +115,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 深さ依存クリープ(creep_hstar > 0。§88.8。docs/mountain_stream_plan.md §5.1)
+! 深さ依存クリープ(creep_hstar > 0。§89.8。docs/mountain_stream_plan.md §5.1)
 !   q = −D (1 − e^{−H_up/H_c}) ∇z(H_up は供給側 = 高い側のセルの土層厚 sd)。
 !   Landlab の DepthDependentDiffuser の q = K H* (1 − e^{−H/H*}) S(Johnstone & Hilley
 !   2015)と同じ形で、厚い土層の極限で従来の q = −D ∇z(D = creep_d = K H*)。土層だけが

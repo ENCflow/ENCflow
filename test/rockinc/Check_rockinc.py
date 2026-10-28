@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# rockinc 検定(流水による岩盤下刻 f_rockinc。developer.md §88、docs/mountain_stream_plan.md §4.9)
+# rockinc 検定(流水による岩盤下刻 f_rockinc。developer.md §89、docs/mountain_stream_plan.md §4.9)
 #   Check_rockinc.py cover    T2: 自己被覆の解析解 e^{H/H*} = 1 + E_p0 t/H*(構成 cover)と、
 #                                 更新間隔・加速係数を変えた構成(cover_dtg・cover_mf)の一致
 #   Check_rockinc.py pluck    T3: 剥離物による被覆の準定常が、局所の水理から解いた漸化式
@@ -320,7 +320,7 @@ def t11_profile(qin, beta):
 
 
 def net_out(logfile):
-    """開境界を通った掃流砂の正味の固体体積(dispose の台帳。developer.md §88.12)"""
+    """開境界を通った掃流砂の正味の固体体積(dispose の台帳。developer.md §89.12)"""
     v = None
     pat = re.compile(r"open boundaries \(out - in\)\s+(\S+) m3")
     for line in open(logfile, encoding="utf-8", errors="replace"):

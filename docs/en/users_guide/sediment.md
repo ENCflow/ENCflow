@@ -583,7 +583,7 @@ of the mixture, $`\theta_f`$ the bed slope in the flow direction (downslope only
 in each cell a one-sided difference to the downstream neighbour in the flow
 direction, because with a central difference a two-cell undulation does not show
 in the slope and the flow, shallower over the bumps, leaves them uneroded so that
-steps grow; developer.md §88.23 and §88.24, in Japanese)
+steps grow; developer.md §89.23 and §89.24, in Japanese)
 and $`g_e`$ the effective gravity of the momentum equation ($`g\cos^2\theta_f`$;
 $`g`$ with `f_gravity_correction = 0`). In steady uniform flow $`\tau_d`$ equals
 the basal shear of the resistance law, whichever resistance law is chosen. Only

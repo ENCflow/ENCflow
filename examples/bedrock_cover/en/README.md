@@ -71,7 +71,7 @@ the reach with E_p0 and q_c obtained from the computed uniform-flow hydraulics.
 ## Results
 
 Rerun on 2026-10-28 after the fix of the depth floor of the segment-inflow
-face (developer.md §88.25, in Japanese; the inflow of these channels has
+face (developer.md §89.25, in Japanese; the inflow of these channels has
 Fr 0.65, and the face velocity used to be held at 0.74 times); the numbers
 below did not change at the digits shown (the reach measured starts 30 m
 below the inflow end; the figures are from the earlier run and look the
@@ -159,7 +159,7 @@ same).
   the formation of a plunge pool. The scour hole and the retreat rate of D are
   qualitative guides.
 - On steep slopes the bed shear stress comes out larger depending on the grid
-  (developer.md §88.4; about 1 % at the slope 0.01 of this example).
+  (developer.md §89.4; about 1 % at the slope 0.01 of this example).
 - The discharge is a constant representative flood, and time is
   morphological time (accelerated by morfac = 10).
 
@@ -168,7 +168,7 @@ same).
 - [Users guide: bedrock incision by flowing water](../../../docs/en/users_guide/geomorph.md#bedrock-incision-by-flowing-water-f_rockinc),
   [supplement](../../../docs/en/users_guide/sediment.md) (equations and sources: Sklar & Dietrich 2004, Turowski et al. 2007 and others)
 - [test/rockinc](../../../test/rockinc/en/README.md) (checks against analytical solutions, conservation, restart and MPI)
-- docs/mountain_stream_plan.md (design study; the steady solution of §4.3 and the example plan of §4.9) and developer.md §88 (in Japanese)
+- docs/mountain_stream_plan.md (design study; the steady solution of §4.3 and the example plan of §4.9) and developer.md §89 (in Japanese)
 - Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by
   saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
 - Inoue, T. et al. (2016): Numerical simulation of effects of sediment supply on bedrock channel

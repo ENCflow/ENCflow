@@ -78,7 +78,7 @@ soil depth changes by exactly the amount the bed moves).
   np = 2, 4 are byte-identical to the serial run.
 - `param_creep_hs.txt` (bedload + depth-dependent creep) checks all of
   (1)–(3) (depth-dependent creep also updates z and sd together;
-  developer.md §88.8). Depth-dependent creep also reads the sd of the
+  developer.md §89.8). Depth-dependent creep also reads the sd of the
   supplying neighbour, so after the bedload the sd halo is exchanged together
   with z. With a build that omits this exchange, np = 2 was confirmed not to
   match the serial run (2026-10-27). H_c = 20 m is a test value chosen so that

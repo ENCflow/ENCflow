@@ -10,7 +10,7 @@ evolution module (`f_wthr = 1` in `&list_geomorph`;
 equations in
 [supplement §7](../../../docs/en/users_guide/sediment.md#7-bedrock-weathering-and-uplift-f_wthr--f_uplift))
 and for the distribution `fn_wthr` of the multiplier of its production rate
-(developer.md §88.13, in Japanese). The soil depth sd grows as
+(developer.md §89.13, in Japanese). The soil depth sd grows as
 dsd/dt = W exp(−sd/sd*) (W = W0 × multiplier) while z does not change (the
 bedrock surface z − sd is lowered). The update is the exact integral of the
 exponential, so it agrees with the analytical solution
@@ -19,7 +19,7 @@ exponential, so it agrees with the analytical solution
 
 to rounding whatever the step (W1). C2 is a steady hillslope where uplift,
 weathering and depth-dependent creep (`creep_hstar`) balance
-(docs/mountain_stream_plan.md §11.3 and developer.md §88.15, in Japanese).
+(docs/mountain_stream_plan.md §11.3 and developer.md §89.15, in Japanese).
 There is no reference; the case is judged by the analytical solutions,
 conservation, bit identity and the messages of the stops.
 
@@ -53,7 +53,7 @@ about 6e5 s). The values are compressed in time for the check.
 | W1 distributed | `param_wthr_map.txt` | Multiplier m = 0.25 ((i + 4j) mod 9) (0 to 2; `wmap.txt`. The pattern shifts with a period of 9 rows, so a row shift in the band distribution is detected), initial soil depth 0 to 0.3 m (`sdinit.txt`) | Relative 1e-12 to the analytical solution in every cell; the soil depth of cells with multiplier 0 and z of every cell unchanged |
 | Restart round trip | `param_wthr_map_rt1.txt` → `param_wthr_map_rt2.txt` | The distributed configuration saved at 50 s and continued to 100 s (the multiplier distribution is read again at the restart) | state.dat bit-identical to the straight run |
 | Input errors | `param_wthr_bad.txt` / `param_wthr_nof.txt` | A negative multiplier in one cell (i = 4, j = 11; `wmap_bad.txt`) / fn_wthr given without f_wthr | The initialization stops with "fn_wthr must be >= 0" / "fn_wthr requires f_wthr=1" |
-| C2 steady hillslope | `param_c2_w3.txt` / `param_c2_w6.txt` | W0 = 3U (H_ss = 0.549 m, U/D_eff = 0.100 1/m) / 6U (0.896 m, 0.0884 1/m) | Steadiness max\|dz/dt\| < 0.01 U between the last two outputs. On the hillslopes of the middle rows (j = 7 to 18) the soil depth within relative 1 % of H_ss and the cross-slope second difference (mirrored at the divide) within 5 % of −U/D_eff. The sediment budget Σ(z − z0)A = uplift − open-boundary outflow/(1 − λ) (the outflow is the ledger of developer.md §88.12) within 1e-8 of the uplifted volume. The bedrock surface z − sd of the stream unchanged (1e-9 m) |
+| C2 steady hillslope | `param_c2_w3.txt` / `param_c2_w6.txt` | W0 = 3U (H_ss = 0.549 m, U/D_eff = 0.100 1/m) / 6U (0.896 m, 0.0884 1/m) | Steadiness max\|dz/dt\| < 0.01 U between the last two outputs. On the hillslopes of the middle rows (j = 7 to 18) the soil depth within relative 1 % of H_ss and the cross-slope second difference (mirrored at the divide) within 5 % of −U/D_eff. The sediment budget Σ(z − z0)A = uplift − open-boundary outflow/(1 − λ) (the outflow is the ledger of developer.md §89.12) within 1e-8 of the uplifted volume. The bedrock surface z − sd of the stream unchanged (1e-9 m) |
 | C2 restart round trip | `param_c2s.txt`, `param_c2s_rt1.txt` → `param_c2s_rt2.txt` | c2_w3 cut at 1000 s as a straight run, and saved at 500 s and continued | state.dat bit-identical |
 
 | File | Contents |

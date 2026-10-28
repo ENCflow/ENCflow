@@ -2,7 +2,7 @@
 ! rockinc: 構成 cover のリスタート分割の前半(裸岩のまま 0 → 200 s。save_cover_rt へ保存)
 !   最初の地形更新(t = 300 s)の前に保存するので、save の土層厚は全域 0(裸岩)。
 !   rt2 がこれを復元して継続できること(f_rockinc の有効時は「全域で土層 0 の save」を
-!   受け入れる。developer.md §88.7)と、通し計算(param_cover.txt。save_cover)との
+!   受け入れる。developer.md §89.7)と、通し計算(param_cover.txt。save_cover)との
 !   バイト一致を検定する。
 !======================================================================
 &list_sysparam

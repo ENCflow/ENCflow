@@ -59,7 +59,7 @@ q(x) = q_c − (q_c − q_in) exp(−(1 − λ) E_p0 x / q_c) です(自己供�
 
 ## 結果
 
-2026-10-28 に区間流入の流入面の水深の床を直した後(developer.md §88.25。この水路の流入は
+2026-10-28 に区間流入の流入面の水深の床を直した後(developer.md §89.25。この水路の流入は
 Fr 0.65 で、以前は流入面の流速が 0.74 倍に抑えられていました)に回し直しました。下の数値は
 表示の桁で変わりません(測る区間は流入端から 30 m より下流。図は変更前の計算のもので、
 見分けがつきません)。
@@ -123,7 +123,7 @@ Fr 0.65 で、以前は流入面の流速が 0.74 倍に抑えられていまし
   (2016)の計算にある岩盤の溝と、溝に溜まる被覆のような 2 次元の現象はこの例題の範囲外です。
 - 段差の流れは浅水流(静水圧)の近似で、落下流や跳水の細部、滝壺の形成の過程は
   表しません。D の深掘れと後退速度は定性的な目安です。
-- 急勾配の流れでは底面せん断が格子に依存して大きめに出ます(developer.md §88.4。勾配
+- 急勾配の流れでは底面せん断が格子に依存して大きめに出ます(developer.md §89.4。勾配
   0.01 のこの例題では 1 % 程度)。
 - 流量は一定の代表出水で、時間は地形の時間(morfac = 10 で加速)です。
 
@@ -132,7 +132,7 @@ Fr 0.65 で、以前は流入面の流速が 0.74 倍に抑えられていまし
 - [ユーザーガイド: 流水による岩盤下刻](../../docs/users_guide/geomorph.md#流水による岩盤下刻f_rockinc)、
   [解説](../../docs/users_guide/sediment.md)(式・出典。Sklar & Dietrich 2004、Turowski ら 2007 ほか)
 - [test/rockinc](../../test/rockinc/README.md)(解析解・保存則・リスタート・MPI の検定)
-- docs/mountain_stream_plan.md(設計の検討。§4.3 の定常解、§4.9 の例題の構想)、developer.md §88
+- docs/mountain_stream_plan.md(設計の検討。§4.3 の定常解、§4.9 の例題の構想)、developer.md §89
 - Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by
   saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
 - Inoue, T. ほか (2016): Numerical simulation of effects of sediment supply on bedrock channel

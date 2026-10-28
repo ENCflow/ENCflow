@@ -5,7 +5,7 @@
 地形変化モジュールの基岩風化 = 土層生成(`&list_geomorph` の `f_wthr = 1`、
 [ユーザーガイドの地形変化の章](../../docs/users_guide/geomorph.md)、式は
 [解説 §7](../../docs/users_guide/sediment.md#7-基岩風化と隆起f_wthr--f_uplift))と、
-その生成速度の倍率の分布 `fn_wthr`(developer.md §88.13)の検証ケースです。
+その生成速度の倍率の分布 `fn_wthr`(developer.md §89.13)の検証ケースです。
 土層厚 sd は dsd/dt = W exp(−sd/sd*)(W = W0 × 倍率)で増え、z は変わりません
 (岩盤面 z − sd が下がる)。更新式は指数の厳密積分なので、解析解
 
@@ -13,7 +13,7 @@
 
 と刻みによらず丸めの水準で一致します(W1)。C2 は、隆起・風化・深さ依存クリープ
 (`creep_hstar`)が釣り合う定常斜面です(docs/mountain_stream_plan.md §11.3、developer.md
-§88.15)。reference は持たず、解析解・保存則・バイト一致・停止の表示で判定します。
+§89.15)。reference は持たず、解析解・保存則・バイト一致・停止の表示で判定します。
 
 W1 の台地は水のない平らな 8 × 12 セル(Δx = 1 m、z = 10 m)。W0 = 50 mm/kyr(既定値)、
 sd* = 0.5 m、dt = 1 s を 100 ステップ、毎ステップの地形更新 × morfac 1e10(dts = 1e10 s)で
@@ -37,7 +37,7 @@ sd* = 0.5 m)。渓流は隆起も風化もしない固定床(`fn_uplift`・`fn_w
 | W1 分布 | `param_wthr_map.txt` | 倍率 m = 0.25 ((i + 4j) mod 9)(0〜2。`wmap.txt`。並びが 9 行周期でずれるので、帯の配布の行ずれを検出できる)、初期の土層厚 0〜0.3 m(`sdinit.txt`) | 全セルで解析解と相対 1e-12、倍率 0 のセルの土層厚と全セルの z が不変 |
 | リスタート往復 | `param_wthr_map_rt1.txt` → `param_wthr_map_rt2.txt` | 分布の構成を 50 s で保存し 100 s まで継続(倍率の分布は再開時に読み直す) | 通し計算と state.dat がバイト一致 |
 | 入力の誤り | `param_wthr_bad.txt` / `param_wthr_nof.txt` | 1 セル(i = 4, j = 11)だけ負の倍率(`wmap_bad.txt`)/ f_wthr なしで fn_wthr を与える | 初期化で「fn_wthr must be >= 0」/「fn_wthr requires f_wthr=1」で停止 |
-| C2 定常斜面 | `param_c2_w3.txt` / `param_c2_w6.txt` | W0 = 3U(H_ss = 0.549 m、U/D_eff = 0.100 1/m)/ 6U(0.896 m、0.0884 1/m) | 最後の 2 回の出力で定常性 max\|dz/dt\| < 0.01 U。中央の行(j = 7〜18)の斜面で土層厚が H_ss と相対 1 %、横断の 2 階差分(分水界は鏡像)が −U/D_eff と 5 %。土砂収支 Σ(z − z0)A = 隆起 − 開境界の流出/(1 − λ)(流出は developer.md §88.12 の台帳)の差が隆起量の 1e-8 以内。渓流の岩盤面 z − sd が不変(1e-9 m) |
+| C2 定常斜面 | `param_c2_w3.txt` / `param_c2_w6.txt` | W0 = 3U(H_ss = 0.549 m、U/D_eff = 0.100 1/m)/ 6U(0.896 m、0.0884 1/m) | 最後の 2 回の出力で定常性 max\|dz/dt\| < 0.01 U。中央の行(j = 7〜18)の斜面で土層厚が H_ss と相対 1 %、横断の 2 階差分(分水界は鏡像)が −U/D_eff と 5 %。土砂収支 Σ(z − z0)A = 隆起 − 開境界の流出/(1 − λ)(流出は developer.md §89.12 の台帳)の差が隆起量の 1e-8 以内。渓流の岩盤面 z − sd が不変(1e-9 m) |
 | C2 のリスタート往復 | `param_c2s.txt`、`param_c2s_rt1.txt` → `param_c2s_rt2.txt` | c2_w3 を 1000 s で打ち切った通し計算と、500 s で保存して継続した計算 | state.dat がバイト一致 |
 
 | ファイル | 内容 |

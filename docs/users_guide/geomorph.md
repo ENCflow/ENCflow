@@ -933,7 +933,7 @@ bs_eps_s を大きく(0.02 → 0.05)するのが第一の対処です(仕組み�
 ## 流水による岩盤下刻(f_rockinc)
 
 式と出典: [解説](sediment.md#流水による岩盤下刻f_rockinc)。設計の正本は
-docs/mountain_stream_plan.md(developer.md §88)。
+docs/mountain_stream_plan.md(developer.md §89)。
 
 山地渓流の岩盤河道のように、薄い沖積層(可動層 `sd`)の下の岩盤を流れが削る
 過程です。岩盤面は `z − sd` で表し、新しい状態量は持ちません。
@@ -1011,7 +1011,7 @@ dts の最大が表示されます。リスタートは `geomorph_rockinc.dat`(�
 ### 土石流による岩盤侵食(rock_kdb)
 
 式と出典: [解説](sediment.md#流水による岩盤下刻f_rockinc)。設計の正本は
-docs/mountain_stream_plan.md §12(developer.md §88.18)。
+docs/mountain_stream_plan.md §12(developer.md §89.18)。
 
 土石流のイベント計算(`f_debris = 1`、`morfac = 1`)で、流れる混合体が岩盤を削る過程です。
 `f_rockinc = 1` の任意項で、`rock_kdb > 0` で有効になります。

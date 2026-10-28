@@ -137,7 +137,7 @@ module subroutine init_fluvial(gm, p, g, list)
   call require_work(gm, g)
   ! 供給量制限係数(帯±ハロ。1 = 制限なし。自帯以外は交換で埋まる)
   allocate(gm%flv%fdon(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 1.0)
-  ! 開境界から出た掃流砂の台帳の行部分和(§88.12。集計は開いた面があるときだけ)
+  ! 開境界から出た掃流砂の台帳の行部分和(§89.12。集計は開いた面があるときだけ)
   allocate(gm%flv%voutrow(dcp%js:dcp%je), source = 0.0_real64)
   ! 二次流の横断流速比(帯±ハロ。有効時のみ)
   if (gm%flv%f_sec) allocate(gm%flv%rsec(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
@@ -288,7 +288,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                       nfix = nfix + 1
                     end if
                   end if
-                  ! 岩盤下刻(§88)の薄層の利用可能率: 供給(風上)側セルの可動層 sd から
+                  ! 岩盤下刻(§89)の薄層の利用可能率: 供給(風上)側セルの可動層 sd から
                   ! 1 − exp(−sd/H*) を掛ける(露出率と同じ H*。厚い沖積層では 1 に近づく)。
                   ! 無効時は分岐に入らず演算は不変
                   if (gm%f_rockinc > 0 .and. gq /= 0.0) then
@@ -391,7 +391,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                     nfix = nfix + 1
                   end if
                 end if
-                ! 岩盤下刻(§88)の利用可能率: 域外への流出は自セルが供給側
+                ! 岩盤下刻(§89)の利用可能率: 域外への流出は自セルが供給側
                 if (gm%f_rockinc > 0 .and. gq > 0.0) gq = gq * rock_avail(s%sd(i,j), gm%rk%hsinv)
                 winvd = 1.0
                 if (chn%have_width) winvd = 1.0 / chn%wfrac(i,j)
@@ -712,7 +712,7 @@ module subroutine apply_edge_flux(gm, g, s, dts)
   if (have_sf) gm%fin%vfree = gm%fin%vfree + vfree
   gm%flv%vleak = gm%flv%vleak + vleak
 
-  ! --- 台帳: 開境界を通った掃流砂の正味の固体体積(流出 − 流入。§88.12。結果は変えない) ---
+  ! --- 台帳: 開境界を通った掃流砂の正味の固体体積(流出 − 流入。§89.12。結果は変えない) ---
   !   開いた面は領域の枠(bc_open_face)にしかないので、枠に接するセルだけを見る(枠の行は
   !   全列、ほかの行は i = 1 と nx_g)。ループ 2 と同じく、流出は供給量制限の後の q × fdon、
   !   流入(容量給砂。入口の持ち出しは負の給砂 = 流出)は q のまま。壁の面のスロットは書き手が

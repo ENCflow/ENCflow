@@ -4,7 +4,7 @@
 #   西端の区間流入 Q = q·W(q は Manning の等流水深 H0 に対応する単位幅流量)、
 #   東辺は自由流出。長さ 1000 m のうち下流端の低下背水(〜250 m)を避けた
 #   x = 400〜700 m で等流を測る。構成 w1_sc は同じ q を勾配 S_SC の幅 1 セルの水路に流す
-#   射流の区間流入(初期水深は Manning の等流水深 H_SC。developer.md §88.25)
+#   射流の区間流入(初期水深は Manning の等流水深 H_SC。developer.md §89.25)
 #   python3 make_init.py z W [sc] > zinit.txt / python3 make_init.py h W [sc] > hinit.txt
 import sys, math
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # test/hillsoil の入力生成(Check_hillsoil.py / param*.txt と定数を対で保守)
-# 構成 wthr(W1 風化の分布。developer.md §88.13): 水のない平らな台地(NX × NY、Δx = 1 m)。
+# 構成 wthr(W1 風化の分布。developer.md §89.13): 水のない平らな台地(NX × NY、Δx = 1 m)。
 #   生成速度の倍率 m(i, j) = 0.25 ((i + 4j) mod 9)(0〜2。0 のセルを含み、並びが 9 行周期で
 #   ずれるので、帯の配布の行ずれを検出できる)、初期の土層厚 sd0(i, j) = 0.1 ((2i + j) mod 4)。
 #   python3 make_init.py wmap > wmap.txt        倍率の分布

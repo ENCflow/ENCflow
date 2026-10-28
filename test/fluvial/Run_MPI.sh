@@ -40,7 +40,7 @@ if [ -d save_creep_serial ]; then
     fi
 fi
 
-# 深さ依存クリープ併用(供給側の近傍の sd も読む。developer.md §88.8)
+# 深さ依存クリープ併用(供給側の近傍の sd も読む。developer.md §89.8)
 set -o pipefail
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_creep_hs.txt | tee Screen_creep_hs.log || exit 1
 set +o pipefail

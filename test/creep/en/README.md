@@ -15,7 +15,7 @@ confirms that morfac = 2 × 25 s gives the same terrain as morfac = 1 × 50 s
 evolution module in developer.md §19). It is an environment-independent
 test whose pass/fail is judged by comparison with the analytical solution,
 not with a reference. On the same Gaussian hill it also checks depth-dependent
-creep, in which only the soil layer moves (`creep_hstar`, developer.md §88.8;
+creep, in which only the soil layer moves (`creep_hstar`, developer.md §89.8;
 [section below](#depth-dependent-creep-creep_hstar)).
 
 ## Configuration
@@ -135,4 +135,4 @@ build):
 ## Related documents
 
 - [docs/users_guide/geomorph.md](../../../docs/en/users_guide/geomorph.md) — `f_creep`, `creep_d`, `creep_hstar`, `morfac`, `dt_geomorph`
-- developer.md §19 (implementation of the landform evolution module: morfac, creep, stability condition, verification record) and §88.8 (depth-dependent creep) (in Japanese)
+- developer.md §19 (implementation of the landform evolution module: morfac, creep, stability condition, verification record) and §89.8 (depth-dependent creep) (in Japanese)

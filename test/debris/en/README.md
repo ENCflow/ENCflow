@@ -112,7 +112,7 @@ slope break, and a thin water film on the flat are seen.
   -O2 and the default -Ofast builds, and np = 2 with -fcheck=all also passes.
 - The values of configuration 2 are those after the flow-direction bed slope
   became a one-sided difference to the downstream neighbour (2026-10-28;
-  developer.md §88.24, in Japanese); before, the total solids were −4.6e-13 and
+  developer.md §89.24, in Japanese); before, the total solids were −4.6e-13 and
   the arrival on the flat max hs 0.09 cm.
 - This case is a check of **connectivity and conservation laws**. The
   quantitative validity of the constitutive laws is recorded in debris_plan.md

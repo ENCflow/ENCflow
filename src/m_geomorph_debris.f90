@@ -33,7 +33,7 @@
 !   最新)を読むため、本プロセスは m_geomorph_calc の先頭で適用される。
 !   morfac は 1 に限定(init で検証。イベント計算)。
 !
-!   土石流による岩盤侵食(f_rockinc の rock_kdb > 0。§88.18、plan §12): パス 1 で、濃い混合体
+!   土石流による岩盤侵食(f_rockinc の rock_kdb > 0。§89.18、plan §12): パス 1 で、濃い混合体
 !   (C >= db_cmin)が流れている(|V| >= db_vstop)湿潤セルの裸岩の低下速度
 !     E_d0 = f_r k_d max(τ_d/τ_cd − 1, 0)^{m_d}、τ_d = ρ_w (1 + sC) g_e h_t tanθ_f
 !   を gm%rk%edb に書く(θ_f は slope_flow の流向の河床勾配(下流側の片側差分)で下りのみ、g_e は運動方程式と同じ
@@ -361,7 +361,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   integer :: i, j
   real :: tanth, cinf, cc, hm, fx, dzb, cap, fxg, hseq, dhw
   real :: tanthc, sinthc, vcr, fac
-  real :: tanf, ge, taud, fr, bd, bdm, area   ! 土石流による岩盤侵食(§88.18)
+  real :: tanf, ge, taud, fr, bd, bdm, area   ! 土石流による岩盤侵食(§89.18)
   real(real64) :: vd
   logical :: rkd, gcorr
 
@@ -379,7 +379,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   !     ことで、勾配読みが帯内更新とハロの不整合を起こさない) ---
   if (gm%f_slide > 0) call slide_pass1(gm, p, g, s)
 
-  ! --- 土石流による岩盤侵食(§88.18)の有無と、駆動応力の有効重力(運動方程式と同じ) ---
+  ! --- 土石流による岩盤侵食(§89.18)の有無と、駆動応力の有効重力(運動方程式と同じ) ---
   rkd = gm%rk%db
   gcorr = .false.
   if (rkd .and. allocated(opt)) gcorr = (opt%f_gravity_correction > 0)
@@ -506,7 +506,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
           end if
         end if
         if (fx < 0.0) fx = max(fx, -max(s%hs(i,j), 0.0))    ! 堆積は浮遊量まで
-        ! 土石流による岩盤侵食の裸岩の低下速度(§88.18): 濃い混合体が流れているセルだけ。
+        ! 土石流による岩盤侵食の裸岩の低下速度(§89.18): 濃い混合体が流れているセルだけ。
         ! 時刻 n の近傍の z から流向の河床勾配を求める(f_dbed = 2 と同じ slope_flow)
         if (rkd) then
           if (cc >= gm%db_cmin .and. s%vv(i,j) > 0.0 .and. s%vv(i,j) >= gm%db_vstop) then
@@ -567,7 +567,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
           end if
         end if
       end if
-      ! 土石流による岩盤侵食(§88.18): E-D の適用後の自セルの sd で被覆を厳密に積分し、
+      ! 土石流による岩盤侵食(§89.18): E-D の適用後の自セルの sd で被覆を厳密に積分し、
       ! 生成物を 1:1 で可動層へ(z は不変。地下水の容量は増えるだけ)
       if (rkd) then
         if (gm%rk%edb(i,j) > 0.0) then
@@ -771,7 +771,7 @@ end function
 !   θx, θy は時刻 n の z の、流向の下流側の片側差分(drop_axis。下流側の
 !   近傍が領域外・海なら上流側、どちらもなければ勾配 0)。中央差分は
 !   2 セル周期の凹凸を見ず、凸部で浅い土石流の侵食が凸部を残して段差を
-!   育てた(developer.md §88.23・§88.24)。流向が上り勾配なら負を返す
+!   育てた(developer.md §89.23・§89.24)。流向が上り勾配なら負を返す
 !   (江頭・芦田式の堆積側)。|V| = 0 は呼び出し側で除外済み
 !----------------------------------------------------------------------
 pure function slope_flow(g, s, i, j) result(tanth)

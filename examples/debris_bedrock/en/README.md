@@ -66,7 +66,7 @@ python3 plot_results.py | tee analysis.txt    # figures and tables (python3 plot
 Rock erosion per event in each reach (cm; mean of the cells of the reach) and the bulk volume of
 eroded rock (the end-of-run line "rock erosion by debris flows: eroded"; for W, "rock incision:
 plucked"). The values are from the rerun on 2026-10-28 after the fixes of the flow-direction slope
-(developer.md §88.24, in Japanese) and of the depth floor of the segment-inflow face (§88.25); they
+(developer.md §89.24, in Japanese) and of the depth floor of the segment-inflow face (§89.25); they
 differ from those before the fixes by 2 % or less.
 
 | Configuration | Slope 0.35 | 0.20 | 0.10 | 0.04 | 0.01 | Ledger (m³) |
@@ -109,7 +109,7 @@ The clear-water flood with the same discharge (W) eroded 0.56 cm in the reach wi
 0.11 cm in the reach with slope 0.20 (29 % and 12 % of T_b; 24 % in the ledgers). The stress of W,
 however, is that of the fluvial plucking law, the Manning closure of the cell velocity
 τ_b = ρ g n² V²/h^{1/3}. This closure comes out larger than the balance in steep uniform flow
-(developer.md §88.4, item 1; in steady uniform flow with the same width, grid and discharge as the
+(developer.md §89.4, item 1; in steady uniform flow with the same width, grid and discharge as the
 reach with slope 0.35 of this stream, τ_b / ρ g h tanθ = 1.41 in the central column). Evaluated
 with the same quasi-static stress as the debris-flow term, the same flow erodes 0.20 cm and
 0.01 cm (7 % of T_b as the mean over the stream; post-processing of §12.4, computed before the
@@ -150,7 +150,7 @@ and 14 times as the mean over the stream between quasi-static stresses).
 One event erodes a few mm to a few cm, so changing the shape of a valley takes many debris flows and
 the floods between them. The second half inserts debris flows at a fixed interval into long-term
 flood runs of a uniformly uplifting stream and finds the steady slope for each debris-flow frequency
-(docs/mountain_stream_plan.md §13 and developer.md §88.22, in Japanese). Debris-flow event runs and
+(docs/mountain_stream_plan.md §13 and developer.md §89.22, in Japanese). Debris-flow event runs and
 flood runs (`morfac > 1` and the conversion by an intermittency factor;
 [examples/mountain_valley](../../mountain_valley/en/README.md)) are chained alternately with
 `f_state_restore = 2` (a new time axis; dt can change). With `f_rockinc = 1` in both, the cumulative
@@ -250,16 +250,16 @@ python3 plot_long.py | tee analysis_long.txt  # figures and tables (python3 plot
   there).
 - Before the fixes of 2026-10-28, steps with a period of two cells (the slope alternating between
   neighbouring intervals) grew over thousands of years near the head and the base level, and the
-  comparison left out 30 m at both ends (developer.md §88.23). There were two causes.
+  comparison left out 30 m at both ends (developer.md §89.23). There were two causes.
   - The flow-direction bed slope used for erosion by debris flows was a central difference
     (z_{j−1} − z_{j+1}) / 2Δy, which cannot see a two-cell undulation. The debris flow is shallower over
     the bumps, so the bumps eroded less and the undulation grew by about 3 % per debris flow. It is now
-    a one-sided difference to the downstream neighbour (§88.24).
+    a one-sided difference to the downstream neighbour (§89.24).
   - The seeds were at the boundaries. The floor of the edge depth at the inflow face of a segment inflow
     (the critical depth, to avoid blow-up when flowing onto a dry bed) exceeded the depth of the flow; in
     supercritical flow the velocity of the inflow cell was 21 % lower, floods did not pluck it, and it
     remained as a step. The floor is now no deeper than the incoming flow (the uniform-flow depth;
-    §88.25).
+    §89.25).
 
   After the fixes, no steps appear in 4530 years and the slope of the whole channel matches the 1-D
   prediction (the rms above). Plucking under supercritical flow is itself unstable to short undulations
@@ -274,9 +274,9 @@ python3 plot_long.py | tee analysis_long.txt  # figures and tables (python3 plot
   lowering rate of the middle three columns rose 1.45 times over 10 cycles, and in 150 cycles with uplift
   the centre column became a slot 7–10 m deep. Rock erosion in ENCflow is vertical only, with no lateral
   erosion, so nothing stops the positive feedback of gathering flow and the channel narrows to the grid
-  width (as in developer.md §88.4, item 3). For a question about the long profile we use a one-cell
+  width (as in developer.md §89.4, item 3). For a question about the long profile we use a one-cell
   channel whose cross-section cannot change. Floods in one cell have a depth close to the uniform-flow
-  value and pluck less than the middle column of 5 cells (shallow and fast because of the bias of §88.4,
+  value and pluck less than the middle column of 5 cells (shallow and fast because of the bias of §89.4,
   item 1), so k_p was re-tuned to give a steady slope of about 0.355 with floods only.
 - **Outfall**: the cell at a free-outflow boundary has slightly deeper and slower flow (5 % at slope 0.30)
   and is plucked 17 % less, so the last cell of the channel became a sill that trapped the sediment
@@ -302,7 +302,7 @@ python3 plot_long.py | tee analysis_long.txt  # figures and tables (python3 plot
 - The channel of the second half is one cell across, so changes of channel width and cross-section are
   not represented (with 5 cells the flow gathers to the grid width; "Why one cell across and an
   outfall"). Near the head and the base level, steps with a period of two cells grow over thousands of
-  years of chained runs ("Check with uplift" above; causes in developer.md §88.23).
+  years of chained runs ("Check with uplift" above; causes in developer.md §89.23).
 
 ## Related documents
 
@@ -316,4 +316,4 @@ python3 plot_long.py | tee analysis_long.txt  # figures and tables (python3 plot
   box, input errors)
 - Examples of bedrock incision by flowing water: [examples/bedrock_cover](../../bedrock_cover/en/README.md),
   [examples/mountain_valley](../../mountain_valley/en/README.md)
-- Design: docs/mountain_stream_plan.md §12 and §13, docs/developer.md §88.18–§88.22 (in Japanese)
+- Design: docs/mountain_stream_plan.md §12 and §13, docs/developer.md §89.18–§89.22 (in Japanese)

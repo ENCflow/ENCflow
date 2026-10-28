@@ -21,7 +21,7 @@ Supercritical segment inflow (configuration w1_sc): the same q flows into a
 channel one cell wide with slope 0.05 (reassignment 2; Manning uniform-flow
 depth 0.190 m, Fr = 1.8). If the depth floor of the inflow face exceeds the
 depth of the flow, the inflow cell flows slower than the uniform flow
-(developer.md §88.25, in Japanese).
+(developer.md §89.25, in Japanese).
 
 ## Checks (Check_uniflow.py)
 

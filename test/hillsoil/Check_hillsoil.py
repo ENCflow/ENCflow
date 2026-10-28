@@ -114,7 +114,7 @@ def load_bil(resdir, name, k, nx, ny):
 
 
 def net_out(logfile):
-    """開境界を通った掃流砂の正味の固体体積(dispose の台帳。developer.md §88.12)"""
+    """開境界を通った掃流砂の正味の固体体積(dispose の台帳。developer.md §89.12)"""
     v = None
     pat = re.compile(r"open boundaries \(out - in\)\s+(\S+) m3")
     for line in open(logfile, encoding="utf-8", errors="replace"):

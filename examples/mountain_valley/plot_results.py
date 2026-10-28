@@ -397,7 +397,7 @@ def tables():
         g = vgrid(case)
         xs, ss, hs = channel(case, vk(case, T_RUN))
         prof = c1_profile(g, lat)
-        j1 = 1                                  # 谷頭の行(流入セル)だけを除く(developer.md §88.25 の後は直下から一致)
+        j1 = 1                                  # 谷頭の行(流入セル)だけを除く(developer.md §89.25 の後は直下から一致)
         diffs = [abs(ss[j - 1] / prof[j][0] - 1.0) for j in range(j1, g.ny - 1)]
         vp, va, vout = ledgers(case)
         print("  %s: 勾配 %.4f〜%.4f(予測 %.4f〜%.4f)、max 相対差 %.2e(谷頭から %g m より下流)、"

@@ -1,5 +1,5 @@
 !======================================================================
-! hillsoil: 風化の分布(構成 wthr_map。W1。developer.md §88.13)
+! hillsoil: 風化の分布(構成 wthr_map。W1。developer.md §89.13)
 !   水のない平らな台地(8 × 12 セル、Δx = 1 m)で風化(土層生成)だけを効かせる。
 !   生成速度 W = W0 m(i, j)(W0 = wthr_p0 = 50 mm/kyr、倍率 m は wmap.txt の 0〜2)、
 !   dsd/dt = W exp(−sd/sd*)(sd* = 0.5 m)。初期の土層厚 sd0 は sdinit.txt(0〜0.3 m)。

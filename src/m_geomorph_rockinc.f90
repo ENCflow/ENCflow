@@ -1,6 +1,6 @@
 !======================================================================
 ! m_geomorph の submodule: 流水による岩盤下刻(f_rockinc)
-!   docs/mountain_stream_plan.md(第 1 段)、developer.md §88。
+!   docs/mountain_stream_plan.md(第 1 段)、developer.md §89。
 !   岩盤面 R = z − sd を、流水の剥離(plucking)と、運ばれる礫の研磨(abrasion。
 !   tools 効果)で下げる。可動層 H = sd が露出率 P_r = exp(−H/H*) で下刻を抑え
 !   (被覆)、掃流砂の流出には利用可能率 F_s = 1 − P_r を掛ける(calc_fluvial):
@@ -28,7 +28,7 @@
 !   かさ体積の行部分和(real64 → par_sum_rows = 決定的)。
 !   無効時は呼ばれない(配列なし。calc_fluvial の分岐の判定だけ)。
 !
-!   土石流の項(rock_kdb > 0。f_debris の構成。§88.18、plan §12): 準静的な駆動応力の超過形
+!   土石流の項(rock_kdb > 0。f_debris の構成。§89.18、plan §12): 準静的な駆動応力の超過形
 !     τ_d  = ρ_w (1 + sC) g_e h_t tanθ_f   (h_t = h + h_s、θ_f は流向の河床勾配(下りのみ)、
 !                                           g_e は運動方程式と同じ有効重力)
 !     E_d0 = f_r k_d max(τ_d/τ_cd − 1, 0)^{m_d}
@@ -36,7 +36,7 @@
 !   剥離と同じく 1:1 で可動層へ(z は不変)、被覆は同じ伝播子 rock_cover_inc で積分する。
 !   計算は calc_debris の 2 パスの中(パス 1 が E_d0 を作業配列 edb に、パス 2 が E-D の適用後の
 !   sd で積分)。ここは検査・確保・台帳と伝播子だけ。土石流の構成では流水の項(rock_kp・
-!   rock_beta)を使わない(暦の勘定を出水の計算と混ぜない。§88.18 の 6)ので calc_rockinc は
+!   rock_beta)を使わない(暦の勘定を出水の計算と混ぜない。§89.18 の 6)ので calc_rockinc は
 !   呼ばれない。
 !======================================================================
 submodule(m_geomorph) m_geomorph_rockinc
@@ -64,7 +64,7 @@ module subroutine init_rockinc(gm, p, g, s, list)
   integer :: i, j
   real :: bad(1)
 
-  ! --- パラメータ検証(k_p・β・τ_c・k_d・τ_cd は校正値で既定を置かない。0 は「その項なし」。§88) ---
+  ! --- パラメータ検証(k_p・β・τ_c・k_d・τ_cd は校正値で既定を置かない。0 は「その項なし」。§89) ---
   if (list%rock_hstar <= 0.0) then
     call par_stop("list_geomorph: f_rockinc requires rock_hstar > 0 (cover length scale H*, m)")
   end if
@@ -72,7 +72,7 @@ module subroutine init_rockinc(gm, p, g, s, list)
     call par_stop("list_geomorph: rock_kp, rock_beta and rock_kdb must be >= 0")
   end if
   if (gm%f_debris > 0) then
-    ! 土石流の構成は土石流の項だけ(流水の下刻は出水の計算が担う。§88.18 の 6)
+    ! 土石流の構成は土石流の項だけ(流水の下刻は出水の計算が担う。§89.18 の 6)
     if (list%rock_kp > 0.0 .or. list%rock_beta > 0.0) then
       call par_stop("list_geomorph: with f_debris=1, f_rockinc uses only the debris-flow term; " &
                     // "set rock_kp = rock_beta = 0 (fluvial incision belongs to the flood runs)")
@@ -312,7 +312,7 @@ end function
 
 
 !----------------------------------------------------------------------
-! 露出率を厳密に積分した 1 更新の岩盤の侵食厚(土石流の項。§88.18)
+! 露出率を厳密に積分した 1 更新の岩盤の侵食厚(土石流の項。§89.18)
 !   B = H* ln(1 + (E dts/H*) e^{−h/H*})(edt = E dts。calc_rockinc の剥離の伝播子と同じ形。
 !   e^{H/H*} が時間に比例して増える自己被覆の厳密解で、更新間隔の分割によらない)
 !----------------------------------------------------------------------

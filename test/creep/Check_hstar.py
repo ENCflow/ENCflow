@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# 深さ依存クリープ(creep_hstar。developer.md §88.8)の検定
+# 深さ依存クリープ(creep_hstar。developer.md §89.8)の検定
 #   save_hstar_<tag>/state.dat(倍精度)の z・sd を読み、初期地形(ガウス丘。param.txt・
 #   gaussian_hill・Check_analytic.py と対で保守)と比べる。土層だけが動くので、
 #     (a) 岩盤面 z − sd が初期の z0 − sd0 のまま(TOL_ROCK m)

@@ -20,7 +20,7 @@ module list_geomorph
     ! 各プロセスは独立に有効化でき、calc は有効なものを順に適用する
     integer :: f_creep = 0           ! 斜面クリープ(線形拡散)(0:無効, 1:有効)
     real :: creep_d = 0.0            ! クリープ拡散係数 (m2/s)。0 = 既定 0.005 m2/yr(§62)
-    real :: creep_hstar = 0.0        ! 深さ依存クリープの土層の減衰厚 H_c (m。§88.8)。0 = 従来の z の
+    real :: creep_hstar = 0.0        ! 深さ依存クリープの土層の減衰厚 H_c (m。§89.8)。0 = 従来の z の
                                      ! 線形拡散(sd は不変・裸岩も拡散)。> 0: 流量に供給側(高い側)
                                      ! セルの 1 − exp(−sd/H_c) を掛け、z と sd を共動更新(土層だけが動く)
 
@@ -263,15 +263,15 @@ module list_geomorph
     integer :: f_wthr = 0            ! 基岩風化=土層生成(0:無効, 1:有効。§32)
     real :: wthr_p0 = -9999.0        ! 裸岩での土層生成速度 (mm/kyr)。未指定 = 既定 50(§62)
     real :: wthr_sdstar = 0.5        ! 生成の減衰深 sd* (m)
-    character(len=256) :: fn_wthr = ""  ! 土層生成速度の倍率の分布ファイル(§88.13。未指定 = 全セル 1)。
+    character(len=256) :: fn_wthr = ""  ! 土層生成速度の倍率の分布ファイル(§89.13。未指定 = 全セル 1)。
                                      ! 生成速度 = wthr_p0 × 倍率(>= 0)。岩質の違いを与え、0 のセルは
                                      ! 風化しない(河道の岩盤や人工面など)
     integer :: f_uplift = 0          ! 隆起(0:無効, 1:有効。§32)
     real :: uplift0 = -9999.0        ! 隆起速度 (mm/yr)。未指定 = 既定 1.0(§62)
-    character(len=256) :: fn_uplift = ""  ! 隆起速度の倍率の分布ファイル(§88。未指定 = 全セル 1)。
+    character(len=256) :: fn_uplift = ""  ! 隆起速度の倍率の分布ファイル(§89。未指定 = 全セル 1)。
                                      ! 隆起速度 = uplift0 × 倍率。出口のセルを 0 にすれば基準面が
                                      ! 固定され、負にすれば基準面の低下を与えられる
-    integer :: f_rockinc = 0         ! 岩盤下刻(0:無効, 1:有効。§88。f_fluvial=1 か f_debris=1 が必須)。
+    integer :: f_rockinc = 0         ! 岩盤下刻(0:無効, 1:有効。§89。f_fluvial=1 か f_debris=1 が必須)。
                                      ! 岩盤面 R = z − sd を、流水の剥離・研磨(f_fluvial の構成)か
                                      ! 土石流(f_debris の構成。rock_kdb)で下げる。被覆(可動層 sd)が
                                      ! 露出率 exp(−sd/H*) で下刻を抑え、掃流砂の流出に利用可能率
@@ -288,7 +288,7 @@ module list_geomorph
                                      ! 0 = 土石流の項なし。f_debris=1 の構成でだけ使う(流水の項
                                      ! rock_kp・rock_beta とは併用しない)。裸岩の低下速度
                                      ! E_d = k_d (τ_d/τ_cd − 1)^m_d、τ_d = ρ(1 + sC) g_e h_t tanθ
-                                     ! (準静的な駆動応力。C >= db_cmin・|V| >= db_vstop のセルのみ。§88)
+                                     ! (準静的な駆動応力。C >= db_cmin・|V| >= db_vstop のセルのみ。§89)
     real :: rock_taucdb = 0.0        ! 土石流による岩盤侵食の閾値 τ_cd (Pa)。rock_kdb > 0 で必須
     real :: rock_mdb = 1.0           ! 土石流による岩盤侵食のべき指数 m_d
     real :: rock_hstar = 0.0         ! 被覆の長さ H* (m)(必須 > 0。岩盤面の起伏の高さ。流水・土石流で共有)

@@ -1,5 +1,5 @@
 !======================================================================
-! creep: 深さ依存クリープ(creep_hstar)の裸岩(developer.md §88.8)
+! creep: 深さ依存クリープ(creep_hstar)の裸岩(developer.md §89.8)
 !   param.txt と同じガウス丘で土層厚を全域 0(分布 sdzero.txt)にする。利用可能率が
 !   0 なので何も動かず、z は初期のまま(Check_hstar.py)。従来のクリープ(creep_hstar
 !   = 0)は土層によらず z を拡散させる(param.txt)。

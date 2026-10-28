@@ -10,7 +10,7 @@ incision `f_rockinc`
 ([chapter on landform change in the users guide](../../../docs/en/users_guide/geomorph.md#rock-erosion-by-debris-flows-rock_kdb),
 equations in the
 [supplement](../../../docs/en/users_guide/sediment.md#bedrock-incision-by-flowing-water-f_rockinc);
-docs/mountain_stream_plan.md §12 and developer.md §88.18, in Japanese). The lowering
+docs/mountain_stream_plan.md §12 and developer.md §89.18, in Japanese). The lowering
 rate of bare rock is the excess form of the quasi-static driving stress
 
   E_d0 = f_r k_d max(τ_d/τ_cd − 1, 0)^m_d,  τ_d = ρ(1 + sC) g_e h_t tanθ.
@@ -42,7 +42,7 @@ erodibility multiplier (0 to 2, shifting with a period of 9 rows) vary by row.
 | DB5 continuation | `param_db5_rt1.txt`, `param_db5_rt2.txt` | db2 saved at t = 10 s (rt1) and restarted (`f_state_restore = 1`) to 20 s (rt2) | state.dat and geomorph_rockinc.dat of save_db5_rt byte-identical to the straight run save_db2 |
 | DB5 alternating runs | `param_db5_f1.txt`, `param_db5_d.txt`, `param_db5_f2.txt` | In the channel of db1, a clear-water flood (`f_fluvial` + fluvial plucking) for 100 s → a debris flow (no exchange, debris-flow term) for 100 s → a flood for 50 s, chained with `f_state_restore = 2`. The save after the debris flow carries h_s in the flow | Σ ΔRi A of each stage within relative 1e-7 of the ledger of that stage, Ri never decreases. The message at the initialization of the third stage (deposited solids) within relative 1e-7 of the restored Σh_s A. h_s = 0 at the end of the third stage. The rock surface R = z − sd satisfies ΔR + ΔRi = 0 in each stage (within 1e-12 m; the deposit enters both z and sd) |
 | DB7 input errors | `param_db7_kp.txt` and 4 others | Fluvial plucking in a debris-flow run / no threshold / db_cmin = 0 / rock_kdb without f_debris / no process that erodes the rock | Each stops at the initialization with its message |
-| DB8 two-cell undulation | `param_db8.txt` | The channel and flow of db1 on bare rock with multiplier 1, with a two-cell undulation of ±5 mm in rows 11 to 50 (the flow-direction bed slope is a one-sided difference to the downstream neighbour; developer.md §88.24, in Japanese) | In each cell e^{H/H*} − 1 = E_d0 T/H* within 1e-9 (relative). Σ(−1)^j Ri / ΣRi > 0 (the bumps erode more and the undulation of the rock surface shrinks) |
+| DB8 two-cell undulation | `param_db8.txt` | The channel and flow of db1 on bare rock with multiplier 1, with a two-cell undulation of ±5 mm in rows 11 to 50 (the flow-direction bed slope is a one-sided difference to the downstream neighbour; developer.md §89.24, in Japanese) | In each cell e^{H/H*} − 1 = E_d0 T/H* within 1e-9 (relative). Σ(−1)^j Ri / ΣRi > 0 (the bumps erode more and the undulation of the rock surface shrinks) |
 
 | File | Contents |
 |---|---|
@@ -83,11 +83,11 @@ python3 make_init.py   # regenerate the inputs (bundled; only when changed)
   (τ_d = 634 to 689 Pa). Σ(−1)^j Ri / ΣRi = +0.037 (the bumps erode more). With
   the executable before the change (central difference), the values were 0.14
   and −0.0050, and both judgements failed.
-- The change of the flow-direction slope (2026-10-28; developer.md §88.24, in
+- The change of the flow-direction slope (2026-10-28; developer.md §89.24, in
   Japanese) changed the values of DB2 and DB5 (before: rock of DB2 0.74 m³ with
   largest Ri 6.0 mm; ledgers of DB5 debris flow 3.21 and flood 0.378 m³). The
   slope of DB1 is uniform, so only rounding differences remain. The following
-  change of the depth floor of the inflow face (same day; §88.25; the inflow of
+  change of the depth floor of the inflow face (same day; §89.25; the inflow of
   the channel with slope 0.2 is supercritical) changed the values of the channel
   configurations slightly (ledgers of DB5: flood 1.21 → 1.23, debris flow
   2.90 → 2.91, flood 0.392 → 0.397 m³; DB2 has no inflow and is unchanged).

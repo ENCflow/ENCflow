@@ -399,7 +399,7 @@
                             !   negative = falling base level
 
   ! ---- bedrock incision (mountain streams. The fluvial terms require
-  !      f_fluvial=1, the debris-flow term f_debris=1. developer.md §88) ----
+  !      f_fluvial=1, the debris-flow term f_debris=1. developer.md §89) ----
   !f_rockinc = 1            ! lowers the bedrock surface z − sd by plucking and
                             !   abrasion, and adds the plucked rock to the mobile layer sd
                             !   (z unchanged). The mobile layer suppresses the

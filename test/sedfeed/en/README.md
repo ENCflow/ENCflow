@@ -42,7 +42,7 @@ d50 = 3 mm, morfac = 10 (cseq: suspended sediment 0.2 mm, morfac = 1).
    110 m). With creep_d of about 1e-12, the contribution of creep itself
    (about 1e-7 m) is amplified to 0.16 m by the nonlinear development of the
    bed degradation, so the control uses a value below the ULP.
-7. Ledger of bed load at open boundaries (developer.md §88.12): in the three
+7. Ledger of bed load at open boundaries (developer.md §89.12): in the three
    configurations without feed or with capacity feed (nofeed, feed1, feed05),
    the end-of-run "net bed load out through open boundaries (out - in)" (the
    net solid volume through the open boundaries, with the inflow of the

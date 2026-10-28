@@ -1,5 +1,5 @@
 !======================================================================
-! hillsoil: 一様な風化(構成 wthr_none。W1 の対照。developer.md §88.13)
+! hillsoil: 一様な風化(構成 wthr_none。W1 の対照。developer.md §89.13)
 !   水のない平らな台地(8 × 12 セル、Δx = 1 m)で風化(土層生成)だけを効かせる。
 !   fn_wthr を与えず、生成速度は全セルで W = W0(wthr_p0 = 50 mm/kyr。従来の式)、
 !   dsd/dt = W exp(−sd/sd*)(sd* = 0.5 m)。初期の土層厚 sd0 は sdinit.txt(0〜0.3 m)。

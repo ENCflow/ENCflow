@@ -10,7 +10,7 @@
 と同じ地形を与えること(MORFAC 方式の等価性)を確かめます
 (developer.md §19 の地形変化モジュールの実装)。reference との比較ではなく
 解析解との比較で合否を判定する、環境非依存のテストです。同じガウス丘で、
-土層だけが動く深さ依存クリープ(`creep_hstar`、developer.md §88.8)も検定します
+土層だけが動く深さ依存クリープ(`creep_hstar`、developer.md §89.8)も検定します
 ([下の節](#深さ依存クリープcreep_hstar))。
 
 ## 構成
@@ -112,4 +112,4 @@ morfac = 2 の結果(×。水理時刻を 2 倍して地形時間で描画)も�
 
 - [docs/users_guide/geomorph.md](../../docs/users_guide/geomorph.md) — `f_creep`、`creep_d`、`creep_hstar`、`morfac`、`dt_geomorph`
 - developer.md §19(地形変化モジュールの実装: morfac・クリープ・安定条件・検証記録)、
-  §88.8(深さ依存クリープ)
+  §89.8(深さ依存クリープ)

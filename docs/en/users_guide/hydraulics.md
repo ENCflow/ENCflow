@@ -222,7 +222,7 @@ of the flow. With $`S \le 0`$ it is $`h_c`$. The floor $`h_c`$ alone exceeded
 the depth of the flow when the Froude number of the uniform inflow was above
 the passage ratio (0.41 for square cells); the inflow cell then flowed slower
 than the uniform flow, floods left it uneroded, and it seeded steps
-(developer.md §88.23 and §88.25, in Japanese; the form of this floor is our
+(developer.md §89.23 and §89.25, in Japanese; the form of this floor is our
 own simplification).
 
 ## 6. Parameters and the basis of their defaults

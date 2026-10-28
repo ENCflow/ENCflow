@@ -35,8 +35,8 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理。複数�
   │                  抵抗則/E-D 切替を含む。
   │                  bedslide は z・sd の内数として動く底層 hb = 地滑り津波の移動海底源。
   │                  dissol は石灰岩の溶食 = 土砂を出さない z 低下。rockinc は岩盤面 z − sd を
-  │                  下げ剥離物を sd へ(§88)。creep は既定で z の線形拡散、creep_hstar > 0 で
-  │                  土層だけが動く深さ依存クリープ(§88.8))
+  │                  下げ剥離物を sd へ(§89)。creep は既定で z の線形拡散、creep_hstar > 0 で
+  │                  土層だけが動く深さ依存クリープ(§89.8))
   │    m_driftwood   流木(材積のラスタ場3台帳: 立木 wst → 流動 s%hd → 堆積 s%wd。
   │                  発生・停止・再流動を担う。移流は swflow_enc の advect_scalar)
   │    m_bldgdebris  家屋破壊・瓦礫(家屋ストック wbs → 流動 s%hbd → 堆積 s%wbd。

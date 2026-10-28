@@ -24,7 +24,7 @@ set +o pipefail
 echo ""
 python3 "$sdir/Check_fluvial.py" save_creep nosd || rc=1
 rm -rf save_creep_serial && cp -r save_creep save_creep_serial
-# 深さ依存クリープ併用(供給側の近傍の sd も読む。developer.md §88.8)
+# 深さ依存クリープ併用(供給側の近傍の sd も読む。developer.md §89.8)
 set -o pipefail
 ./encflow param_creep_hs.txt | tee Screen_creep_hs.log || exit 1
 set +o pipefail

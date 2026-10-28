@@ -1175,7 +1175,7 @@ intervals, it is `(tt − t0) × morfac / (365.25 × 86400)` years. See
 ## Bedrock incision by flowing water (f_rockinc)
 
 Formulas and sources: [supplement](sediment.md#bedrock-incision-by-flowing-water-f_rockinc).
-The master design record is docs/mountain_stream_plan.md (developer.md §88).
+The master design record is docs/mountain_stream_plan.md (developer.md §89).
 
 This is the process by which the flow cuts the bedrock beneath a thin
 alluvial layer (the mobile layer `sd`), as in the bedrock channels of
@@ -1280,7 +1280,7 @@ second part compares constant supply and pulses with the same mean).
 ### Rock erosion by debris flows (rock_kdb)
 
 Equations and sources: [supplement](sediment.md#bedrock-incision-by-flowing-water-f_rockinc).
-The design master is docs/mountain_stream_plan.md §12 (developer.md §88.18,
+The design master is docs/mountain_stream_plan.md §12 (developer.md §89.18,
 in Japanese).
 
 In debris-flow event runs (`f_debris = 1`, `morfac = 1`), the flowing mixture

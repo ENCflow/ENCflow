@@ -13,7 +13,7 @@
 #     (6) クリープとの併用(nofeed_creep。creep_d = 1e-30 で 1 回の更新の変化は z の ULP 未満):
 #         河床が nofeed とビット一致
 #         (クリープが開境界の掃流砂の流出を再集計しないこと。developer.md §19.10)
-#     (7) 開境界の掃流砂の台帳(developer.md §88.12): 給砂なし・容量給砂の構成(nofeed・feed1・
+#     (7) 開境界の掃流砂の台帳(developer.md §89.12): 給砂なし・容量給砂の構成(nofeed・feed1・
 #         feed05)で (1 − λ) Σ(z − z0) A + 正味の流出(Screen_<構成>.log の
 #         「net bed load out through open boundaries」)= 0 が相対 TOL_NET
 import sys, os, struct, re

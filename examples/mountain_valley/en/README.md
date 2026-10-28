@@ -31,7 +31,7 @@ i_f = F / 1 year = 9.5e-6) of each calendar year. The coefficients of the
 continuous processes are given multiplied by 1/i_f (uplift `uplift0`, soil
 production `wthr_p0`, creep `creep_d`; these processes are linear in their
 coefficients, so this is the same as running only those processes on the
-calendar time; developer.md §88.11 item 2). Calendar time = flood time / F ×
+calendar time; developer.md §89.11 item 2). Calendar time = flood time / F ×
 1 year. The order within each flood (sediment collected at the foot of the
 hillslopes between floods is flushed at the start of a flood) is replaced by
 simultaneous progress.
@@ -44,7 +44,7 @@ simultaneous progress.
 | Initial terrain | A V of bare rock (soil depth 0). Valley-floor slope 0.04, hillslope gradient 0.25 |
 | Hydrology | A constant formative discharge Q = 0.5 m³/s at the stream cell of the valley head (north end; uniform-flow depth 0.11 m). The hillslopes stay dry (no rain). Free outflow at the south edge |
 | Base level | The outlet row (j = 50) is a base level without uplift, weathering or bedrock incision (multiplier 0 of `fn_uplift`, `fn_wthr` and `fn_rock`) |
-| Stream | d50 = 3 cm, porosity 0.4, cover length H* = 0.2 m. Plucking k_p = 8.9e-8 m/s, τ_c = 10 Pa, m = 1.5, abrasion β = 6.6e-4 1/m (values during floods). The stream cells do not weather (multiplier 0 of `fn_wthr`; developer.md §88.13) |
+| Stream | d50 = 3 cm, porosity 0.4, cover length H* = 0.2 m. Plucking k_p = 8.9e-8 m/s, τ_c = 10 Pa, m = 1.5, abrasion β = 6.6e-4 1/m (values during floods). The stream cells do not weather (multiplier 0 of `fn_wthr`; developer.md §89.13) |
 | Hillslopes (calendar values) | Uplift U = 0.1 mm/yr, soil production on bare rock W0 = 0.3 mm/yr (decay depth sd* = 0.5 m; Heimsath type), creep D = 0.01 m²/yr (decay depth H_c = 0.3 m) |
 | Input values | `uplift0` = 10519.2 mm/yr, `wthr_p0` = 3.15576e7 mm/kyr, `creep_d` = 3.3333e-5 m²/s (calendar value / i_f) |
 | Time | dt = 0.5 s, landform update every step × morfac 100 (dts = 50 s; "max thin-layer drainage rate x dts" at the end is 0.20). 200,000 calendar years (flow time 6e5 s), output every 10,000 years |
@@ -99,7 +99,7 @@ the lateral supply added).
 ## Results
 
 The values are from the rerun on 2026-10-28 after the fix of the depth floor of the
-segment-inflow face (developer.md §88.25, in Japanese).
+segment-inflow face (developer.md §89.25, in Japanese).
 
 ### Hillslopes: steady soil and a parabolic form
 
@@ -136,9 +136,9 @@ segment-inflow face (developer.md §88.25, in Japanese).
 - Both agree within 0.4 % with the prediction of the C1 equation with the
   steady supply of the hillslopes, from just below the valley head. Before the
   fix of the depth floor of the segment-inflow face on 2026-10-28
-  (developer.md §88.25), a step pattern decaying downstream formed below the
+  (developer.md §89.25), a step pattern decaying downstream formed below the
   head through the effect of the inflow cell, and the comparison was made more
-  than about 40 m below the head (§88.6).
+  than about 40 m below the head (§89.6).
 
 ### Resolution (Δx = 2 m)
 
@@ -260,7 +260,7 @@ in Japanese; no hillslopes, replaced by a supply at the head).
   (V/V_Manning is 1 ± 0.001 from just below the head; before the fix of the
   inflow floor it was 1 ± 0.005 more than 42 m below the head), but in wide
   flows on steep slopes the bed shear stress comes
-  out larger depending on the grid (developer.md §88.4).
+  out larger depending on the grid (developer.md §89.4).
 
 ## Related documents
 
@@ -275,4 +275,4 @@ in Japanese; no hillslopes, replaced by a supply at the head).
   [examples/bedrock_cover](../../bedrock_cover/en/README.md) (cover effect in
   bedrock channels)
 - docs/mountain_stream_plan.md §11 (plan of the coupled experiments) and
-  developer.md §88.11 to §88.17 (in Japanese)
+  developer.md §89.11 to §89.17 (in Japanese)

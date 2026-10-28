@@ -5,7 +5,7 @@
 # reference 比較ではなく解析解との定量比較で合否を判定する:
 #   1) morfac=1, tt=50s  → 解析解と比較
 #   2) morfac=2, tt=25s  → 同じ地形時間 τ=50s の解析解と比較(加速の妥当性)
-#   3) 深さ依存クリープ(creep_hstar。developer.md §88.8)の 4 構成: 厚い土層(解析解と
+#   3) 深さ依存クリープ(creep_hstar。developer.md §89.8)の 4 構成: 厚い土層(解析解と
 #      従来の線形拡散に一致)・薄い土層・供給量制限・裸岩(不変)
 # 判定は Check_analytic.py(最大絶対誤差 < 5e-3 m = 丘高の 0.5%)と Check_hstar.py
 # (岩盤面の不変・土層の保存・sd >= 0 ほか)。save_hstar_* は save_hstar_*_serial にも

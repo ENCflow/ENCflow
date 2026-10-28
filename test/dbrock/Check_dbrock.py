@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# dbrock 検定(土石流による岩盤侵食。f_rockinc の rock_kdb。developer.md §88.18、
+# dbrock 検定(土石流による岩盤侵食。f_rockinc の rock_kdb。developer.md §89.18、
 # docs/mountain_stream_plan.md §12.7)
 #   Check_dbrock.py db1        DB1: 自己被覆の解析解 e^{H/H*} = e^{H0/H*} + E_d0 t/H*(構成 db1)と、
 #                                   更新間隔を変えた構成 db1_dtg との一致。倍率 0 の行は不変
@@ -8,10 +8,10 @@
 #                                   増える、(sd − sd0) − (z − z0) = Ri。台帳と比べる)
 #   Check_dbrock.py db5        DB5: 出水 → 土石流 → 出水の連鎖(db5_f1・db5_d・db5_f2)で、累積下刻の
 #                                   増分が各段の台帳に一致し、3 段目の初期化で流れに残った h_s が
-#                                   堆積する(表示と復元した Σh_s A の一致、終了時の h_s = 0。§88.20)。
+#                                   堆積する(表示と復元した Σh_s A の一致、終了時の h_s = 0。§89.20)。
 #                                   岩盤面 z − sd は岩盤侵食の分だけ下がる(ΔR + ΔRi = 0)
 #   Check_dbrock.py db8        DB8: 2 セル周期の凹凸の上でも各セルで自己被覆の解析解が成り立ち
-#                                   (流向の河床勾配は下流側の片側差分)、凸部ほど削れる(§88.24)
+#                                   (流向の河床勾配は下流側の片側差分)、凸部ほど削れる(§89.24)
 # 水深・土砂柱状量・z・sd は save の state.dat(倍精度)、Ri は geomorph_rockinc.dat から読む。
 # 定数は param*.txt・make_init.py と対で保守する。
 import sys, os, math, struct, re
@@ -239,7 +239,7 @@ def check_db5():
 def check_db8():
     """DB8: 2 セル周期の凹凸(±EPS8)の上でも、各セルで e^{H/H*} − 1 = E_d0 T/H*(初期の被覆 0)。
     勾配は流向の下流側の片側差分なので、凸部(下流へ急)ほど削れ、岩盤面の凹凸は土石流で減る
-    (中央差分では凹凸が勾配に現れず、凸部で浅い流れの分だけ凸部が削れにくく凹凸が育った。§88.23)"""
+    (中央差分では凹凸が勾配に現れず、凸部で浅い流れの分だけ凸部が削れにくく凹凸が育った。§89.23)"""
     h, z, sd, hs = load_state("save_db8", NX, NY)
     ri = load_ri("save_db8", NX, NY)
     i = IC - 1
