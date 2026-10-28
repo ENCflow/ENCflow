@@ -184,7 +184,10 @@ solved with the same formula as an interior face (the normal gradients of water 
 and ground are zero; the gradient along the boundary remains). The advection term uses
 the value of the interior face obtained by moving the boundary face one cell inward,
 and positions where the advection stencils of interior faces leave the grid read the
-mirror. These are the conditions under which the boundary rows have the same solution
+mirror. For the diffusion term, the diffusion of the cells touching the side is computed
+with the mirror in place of the neighbours outside the grid, and the boundary face adds the
+mean of the diffusion of its own cell and the mirror cell ([diffusion term](diffusion.md)).
+These are the conditions under which the boundary rows have the same solution
 as the interior rows in a flow that is uniform alongshore; the type was added for
 wave-driven longshore currents ([coastal wave field](wavefield.md); developer.md §88).
 Copying the velocity and flux of a boundary face directly from the face one cell inside

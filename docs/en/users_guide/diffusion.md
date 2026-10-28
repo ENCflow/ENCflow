@@ -175,6 +175,13 @@ is normalised with the remaining weights). The cell-centre diffusion term
 is not computed in sea-mask cells (`sw > 0`). The zero-equation model
 (model 2) sets their $`\nu = 0`$; the constant model (model 1) retains its
 uniform viscosity field.
+Nor is the cell-centre diffusion term computed in the cells touching the
+grid frame (0). The cells touching a lateral Neumann side (type 3 of the
+[boundary conditions](boundary.md)), however, include the neighbours outside
+the grid as the mirror cells moved into the grid along the normal of the
+side (the same flow continues outside = zero gradient), and the boundary
+faces of that side also add the mean of their own cell and the mirror cell
+(developer.md §88.12).
 
 **Insertion into the momentum equation.** At the start of the step
 $`\mathbf{T}^d_0 = \bigl(\nabla\cdot(\nu\nabla u),\;\nabla\cdot(\nu\nabla v)\bigr)_0`$

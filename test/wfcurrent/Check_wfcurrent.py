@@ -8,6 +8,7 @@ Python 標準ライブラリのみ。使い方:
   python3 Check_wfcurrent.py roller result result_long    # 同じ構成でローラーあり(基本 param.txt)
   python3 Check_wfcurrent.py rot    result result_rot     # 基本を 90° 回した格子(W・E が側方 Neumann)
   python3 Check_wfcurrent.py cur    result_cur result     # 基本に流れの波への作用(段 W3)を加えた双方向の連成
+  python3 Check_wfcurrent.py diff   result_diff result    # 基本に拡散項(定数の渦動粘性)を加える
 
 格子は 120 × 8 セル(Δx = Δy = 10 m)。西(i = 1)が沖で入射、南北は側方 Neumann(波・流れとも)。
 分布は bil(単精度)の最終出力(9998)で読む。y の成分(v・Wfy・Wsy)は流れの出力と同じ
@@ -121,7 +122,6 @@ def alongshore_closed(a, rn, label, tol_rel):
     j = JC
     vmax = max(abs(a["v"][j][i]) for i in range(NX))
     dmax, imax = 0.0, 0
-    sf = st = 0.0
     for i in range(NX):
         h = depth(a, j, i)
         if h < HMIN or a["Wh"][j][i] <= 0.0:
@@ -135,18 +135,31 @@ def alongshore_closed(a, rn, label, tol_rel):
         dv = abs(a["v"][j][i] - vp)
         if dv > dmax:
             dmax, imax = dv, i + 1
-        ve = a["v"][j][i] - vs
-        st += G * rn * rn * math.sqrt(ue * ue + ve * ve + (1.16 * ur) ** 2) * ve / h ** (1.0 / 3.0)
-        sf += fy / RHO
     print("  %s: max |v| = %.4f m/s, cell balance max difference %.5f m/s at i = %d"
           % (label, vmax, dmax, imax))
     check(dmax <= tol_rel * vmax,
           "%s: v = v_S + v_E from the per-cell alongshore balance (max difference %.2f%% <= %.0f%% of max |v|)"
           % (label, 100.0 * dmax / vmax, 100.0 * tol_rel))
+    alongshore_integral(a, rn, label)
+    return vmax
+
+
+def alongshore_integral(a, rn, label):
+    """沿岸方向の運動量の積分の釣り合い Σ F_y/ρ = Σ τ_y/ρ(中央の行。摩擦は Euler 流速に作用)"""
+    j = JC
+    sf = st = 0.0
+    for i in range(NX):
+        h = depth(a, j, i)
+        if h < HMIN or a["Wh"][j][i] <= 0.0:
+            continue
+        us, vs, ur, fy = a["Wsx"][j][i], a["Wsy"][j][i], a["Wu"][j][i], a["Wfy"][j][i]
+        ue = a["u"][j][i] - us
+        ve = a["v"][j][i] - vs
+        st += G * rn * rn * math.sqrt(ue * ue + ve * ve + (1.16 * ur) ** 2) * ve / h ** (1.0 / 3.0)
+        sf += fy / RHO
     ratio = st / sf
     check(abs(ratio - 1.0) <= 0.02,
           "%s: integral alongshore momentum balance sum(tau_y)/sum(F_y) = %.4f (within 2%%)" % (label, ratio))
-    return vmax
 
 
 def check_setup(d):
@@ -282,6 +295,13 @@ def centroid(vals):
     return sum((i + 1) * w[i] for i in range(len(w))) / sum(w)
 
 
+def spread(vals):
+    """|vals| を重みとする岸沖の位置の標準偏差(セル数)"""
+    w = [abs(x) for x in vals]
+    c = centroid(vals)
+    return math.sqrt(sum(((i + 1) - c) ** 2 * w[i] for i in range(len(w))) / sum(w))
+
+
 def check_long(d):
     print("== long (%s): random waves H_m0 = 1 m at 20 deg on the 1/80 beach, no roller" % d)
     beach_current(d, "long")
@@ -378,6 +398,28 @@ def check_cur(d, dbase):
           % (abs(imb) / vin))
 
 
+def check_diff(d, dbase):
+    """基本に拡散項 ∇·(ν∇u)(定数の渦動粘性 ν = 0.5 m²/s)を加える: 側方 Neumann の辺の行のセルと
+    境界面の拡散を鏡像セルで求めるので岸沿いに一様なまま(辺の行の拡散が欠けると流入側の辺から
+    一様性が崩れて発散した。§88)。拡散は沿岸方向の運動量を岸沖へ配り直すだけなので積分の
+    釣り合いは基本と同じ許容で成り立ち(セルごとの閉じた形は成り立たない)、沿岸流の最大が
+    下がり分布が広がる"""
+    print("== diff (%s vs %s): the base case with constant eddy viscosity (f_diffusion_term = 1)" % (d, dbase))
+    a = read_fields(d, ["E", "u", "v", "Wh", "Wu", "Wfy", "Wsx", "Wsy"])
+    b = read_fields(dbase, ["E", "v"])
+    j = JC
+    vmax = max(abs(x) for x in a["v"][j])
+    vb = max(abs(x) for x in b["v"][j])
+    uniformity(a, ["E", "v"], {"E": 1.0e-4, "v": 0.01 * vmax}, "diff")
+    alongshore_integral(a, param_value("param_diff.txt", "rn0"), "diff")
+    red = 1.0 - vmax / vb
+    sa, sb = spread(a["v"][j]), spread(b["v"][j])
+    print("  diff: max |v| = %.4f m/s (base %.4f), spread %.2f cells (base %.2f)" % (vmax, vb, sa, sb))
+    check(0.01 <= red <= 0.2, "diff: mixing lowers the peak longshore current by %.1f%% (between 1%% and 20%%)"
+          % (100.0 * red))
+    check(sa >= 1.02 * sb, "diff: mixing widens the current profile (spread +%.1f%% >= 2%%)" % (100.0 * (sa / sb - 1.0)))
+
+
 def check_rot(d, drot):
     """基本(120 × 8)を時計回りに 90° 回した格子(8 × 120)の結果と比べる。
     セル (i, j) → (9 − j, i)、東向き u → 南向き v(行の増える向き)、y 成分(南が正)→ x 成分の
@@ -424,6 +466,8 @@ def main():
         check_rot(sys.argv[2], sys.argv[3])
     elif mode == "cur":
         check_cur(sys.argv[2], sys.argv[3])
+    elif mode == "diff":
+        check_diff(sys.argv[2], sys.argv[3])
     else:
         raise SystemExit("unknown mode: " + mode)
     if failed:

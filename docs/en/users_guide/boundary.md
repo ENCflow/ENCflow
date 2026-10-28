@@ -115,8 +115,10 @@ to south).
 - So that the boundary rows have the same solution as the interior rows on a coast
   that is uniform alongshore, type 3 matches the interior faces in the wet/dry rule,
   the adaptive Runge–Kutta, the suppression of excessive outflow, the reassignment of
-  blocked openings and the advection term (which reads the mirror outside the grid)
-  (developer.md §88). If the topography changes alongshore near a side, the outside is
+  blocked openings, the advection term (which reads the mirror outside the grid) and the
+  diffusion term (the diffusion of the side cells is also computed with the mirror outside
+  the grid and is added to the boundary faces too) (developer.md §88). If the topography
+  changes alongshore near a side, the outside is
   treated as continuing that topography, so keep the area of interest away from the
   side.
 - Edge boundaries take effect only on **edges where valid non-sea cells touch

@@ -596,6 +596,11 @@ module m_swflow_enc
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(in) :: s
     end subroutine
+    module subroutine diff_neumann(p, g, s)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+    end subroutine
     module function diff_edge(i, j, k, in, jn) result(td_e)
       integer, intent(in) :: i, j, k, in, jn
       real :: td_e
@@ -1111,6 +1116,8 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
 
   ! 拡散項を計算する
   call diff_prepare(p, g, s)
+  ! 側方 Neumann の辺に接するセルの拡散(diff_prepare が計算しない格子の枠のセル。§88)
+  if (opt%have_diff .and. bcs%have_neumann) call diff_neumann(p, g, s)
 
   ! 曲率項の遠心加速度をセルごとに前計算する(f_dbcurv=1。§28.10)
   if (dbr%db_curv > 0) call curv_prepare(g, s)

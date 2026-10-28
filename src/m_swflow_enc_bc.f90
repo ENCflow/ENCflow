@@ -911,7 +911,10 @@ end subroutine
 !   掛ける)。移流の項は、運動量保存形(f_advection_scheme = 2, 3)なら辺の法線方向に
 !   一つ内側へ平行移動した内部の面の値を使う(境界面の検査体積は枠外にはみ出すため。
 !   内部の面のステンシルの枠外は移流の側が鏡像を読む = m_swflow_enc_adv の mirror_cell)。
-!   旧スキーム 1 と拡散項は、枠の端のセルで 0 になる既存の規約のまま持たない。
+!   拡散項は、鏡像セルとの平均(diff_edge と同じ式。辺のセルの拡散は diff_neumann が鏡像で
+!   求める)を足す(外に同じ流れが続く。持たないと岸沿いに一様な沿岸流で辺の行だけ拡散が
+!   欠けて発散した。§88.12)。旧スキーム 1 の移流は枠の端のセルで 0 になる既存の規約のまま
+!   持たない。
 !   従来の型(put_bc_faces)とは別の手続きにして、振り分けも put_bc_faces の外
 !   (boundary_uvmn)で行い、従来の経路の命令列を変えない(put_bc_faces の面の
 !   ループの中で振り分けると、-Ofast で波を使わない既存の reference が最終桁で
@@ -951,6 +954,13 @@ subroutine put_neumann_face(p, g, s, sx, i, j, k, kf, in, jn, ie, je)
       if (chn%adv_drop_rw) then
         if (g%rw(i,j) > 0 .or. g%rw(im,jm) > 0) tae0 = 0.0
       end if
+    end if
+    if (opt%have_diff) then
+      ! 拡散項: 自セルと鏡像セルの平均の法線投影(diff_edge と同じ式。diff_edge の呼び出しを
+      ! ここに増やすと、内部の面の拡散(calc_kth_momentum)の命令列が -Ofast・LTO で変わり、
+      ! 側方 Neumann のない拡散項の計算(test/diffusion)が最終桁でずれた。§88.12)
+      tae0 = tae0 + (td_mod%td(1,i,j) + td_mod%td(1,im,jm)) / 2 * geo%n8x(k) &
+                  + (td_mod%td(2,i,j) + td_mod%td(2,im,jm)) / 2 * geo%n8y(k)
     end if
     uve0 = sign_e(k) * sx%uv(ke(k), ie, je)
     mne0 = sign_e(k) * sx%mn(ke(k), ie, je)

@@ -148,6 +148,61 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 側方 Neumann の辺に接するセルの拡散項(§88。diff_prepare の後に親が呼ぶ)
+!   diff_prepare の主ループは、窓の端を 1 行・1 列縮める定型(§11)のため格子の枠に接する
+!   セルを計算しない(0 のまま)。側方 Neumann の辺は「外に同じ地形・流れが続く」扱いなので、
+!   その辺に接するセルも、枠外の近傍を鏡像セル(bc_neumann_cell)に置き換えて get_diffusion と
+!   同じ式で求める(勾配 0)。0 のままだと岸沿いに一様な沿岸流でも辺の行だけ拡散が欠けて
+!   一様性が崩れ、流入側の辺から発散した(段 W2 の側方 Neumann と拡散項の併用。§88.12)。
+!   側方 Neumann の辺に接しない枠のセル(他の境界型の辺)は従来どおり 0。主ループとは
+!   扱うセルが重ならない。主ループと同じく帯±1 行を冗長に計算する(鏡像は帯±2 行の中)。
+!   diff_prepare の中で呼ぶと、側方 Neumann のない拡散項の計算(test/diffusion)が -Ofast で
+!   最終桁でずれたので、diff_prepare は変えずに別の手続きにする
+!----------------------------------------------------------------------
+module subroutine diff_neumann(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer :: i, j, k, in, jn, im, jm
+  logical :: ok, edge
+  real :: wnu, tdx, tdy
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, im, jm, ok, edge, wnu, tdx, tdy)
+  do j = max(dcp%js - 1, dcp%jw1), min(dcp%je + 1, dcp%jw2)
+    do i = g%wx(1,j), g%wx(2,j)
+      if (i > 1 .and. i < dcp%nx_g .and. j > 1 .and. j < dcp%ny_g) cycle   ! 格子の辺に接しない
+      td_mod%td(1:2,i,j) = 0
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      if (s%h(i,j) < p%dd) cycle
+      edge = .false.
+      tdx = 0
+      tdy = 0
+      do k = 1, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        im = in
+        jm = jn
+        if (in < 1 .or. in > dcp%nx_g .or. jn < 1 .or. jn > dcp%ny_g) then
+          call bc_neumann_cell(in, jn, ok, im, jm)
+          if (.not. ok) cycle
+          edge = .true.
+        end if
+        if (g%x(im,jm) <= 0) cycle
+        if (s%h(im,jm) < p%dd) cycle
+        wnu = td_mod%wd8(k) * (td_mod%nu(i,j) + td_mod%nu(im,jm)) / 2
+        tdx = tdx + wnu * (s%u(im,jm) - s%u(i,j))
+        tdy = tdy + wnu * (s%v(im,jm) - s%v(i,j))
+      end do
+      if (.not. edge) cycle
+      td_mod%td(1,i,j) = tdx
+      td_mod%td(2,i,j) = tdy
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! k番目の境界上の拡散項を計算(両側セル平均の法線投影。移流項と同型)
 !----------------------------------------------------------------------
 module function diff_edge(i, j, k, in, jn) result(td_e)

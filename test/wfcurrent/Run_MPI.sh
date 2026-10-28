@@ -7,8 +7,9 @@
 # (param_long の結果と比べる)も同じ並列数で回す。90° 回した格子(param_rot。W・E の
 # 側方 Neumann がランク界面をまたぐ)は同じバイナリの np = 1 とバイト比較し、再開の往復
 # (rt1 → rt2)は同じ並列数の通し計算とバイト比較する。双方向の連成(param_cur。段 W3)も
-# 同じ並列数で回して検定し、np = 1 とバイト比較する。基本の行は 8 なので 2 行/ランクの
-# 制約から np <= 4
+# 同じ並列数で回して検定し、np = 1 とバイト比較する。拡散項(param_diff。側方 Neumann の辺の
+# 行のセルと境界面の拡散 = §88.12)とその 90° 回した格子(param_rotdiff。W・E の辺の拡散が
+# ランク界面をまたぐ)も同じ。基本の行は 8 なので 2 行/ランクの制約から np <= 4
 sdir=$(dirname "$(readlink -f "$0")")
 export ULP=0
 export MPIRUN_OPTS="--bind-to none"
@@ -30,15 +31,19 @@ withdir() {   # withdir <param> <新しい dir_result> → 一時ファイル名
     echo "$tmp"
 }
 
-rm -rf result_long result_rot result_cur
+rm -rf result_long result_rot result_cur result_diff result_rotdiff
 run "$np" param_long.txt Screen_long.log
 run "$np" param_rot.txt Screen_rot.log
 run "$np" param_cur.txt Screen_cur.log
+run "$np" param_diff.txt Screen_diff.log
+run "$np" param_rotdiff.txt Screen_rotdiff.log
 python3 Check_wfcurrent.py roller result result_long || exit 1
 python3 Check_wfcurrent.py rot result result_rot || exit 1
 python3 Check_wfcurrent.py cur result_cur result || exit 1
+python3 Check_wfcurrent.py diff result_diff result || exit 1
+python3 Check_wfcurrent.py rot result_diff result_rotdiff || exit 1
 if [ "$np" != 1 ]; then
-    for tag in rot cur; do
+    for tag in rot cur diff rotdiff; do
         tmp=$(withdir param_$tag.txt result_${tag}_np1)
         rm -rf result_${tag}_np1
         run 1 "$tmp" Screen_${tag}_np1.log

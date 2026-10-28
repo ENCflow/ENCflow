@@ -28,6 +28,8 @@ x = 1100 m. The north and south sides are lateral Neumann for both waves and flo
 | Uniform depth | `param_flat.txt` | A flat bed 5 m deep with a wall in the east. Random waves H_m0 = 1.5 m at a direction of travel of 30°; the alongshore forcing comes only from the dissipation of bottom friction f_w = 0.05. `wf_flow = 2` without the roller. Roughness n = 0.05 (a spin-up time scale of about 10 minutes) |
 | Grid rotated by 90° | `param_rot.txt` | The base case on a grid rotated clockwise by 90° (8 × 120; north is offshore and the east and west sides are lateral Neumann) |
 | Two-way coupling | `param_cur.txt` | The base case with the action of the current on the waves (`f_wf_current = 1`; stage W3). The longshore current changes the waves (Doppler shift, refraction and transport by the current), and the waves drive the longshore current |
+| Diffusion term | `param_diff.txt` | The base case with the diffusion term of a constant eddy viscosity ν = 0.5 m²/s (`f_diffusion_term = 1`). The diffusion of the cells touching the lateral Neumann sides and of the boundary faces is computed with mirror cells (developer.md §88.12) |
+| Diffusion term on the rotated grid | `param_rotdiff.txt` | The diffusion-term case on a grid rotated clockwise by 90° (diffusion at the lateral Neumann sides W and E; under MPI the sides cross the rank interfaces) |
 | Restart | `param_rt1.txt` → `param_rt2.txt` | The base case saved at 90 s (during the ramp-up, between wave-field updates), restored and continued to 3600 s |
 | Invalid setting | `param_bad.txt` | `wf_flow = 3` (must stop) |
 
@@ -75,6 +77,15 @@ x = 1100 m. The north and south sides are lateral Neumann for both waves and flo
   in action × ω, so it is converted to energy with σ/ω weighted by the distribution of breaking).
   The action of the current changes the wave height by 1e-4 to 5% (the action is effective), and
   the wave ledger (action × ω) closes.
+- **Diffusion term** (diff): the rows including those at the lateral Neumann sides differ by
+  less than 1e-4 m in water level and 1% of the maximum velocity (without the diffusion of the
+  side cells the uniformity broke down from the inflow side and the run diverged), the integral
+  alongshore momentum balance Σ F_y = Σ τ_y holds within 2% (diffusion only redistributes
+  momentum across the shore; the per-cell closed form does not hold), and compared with the
+  base case the maximum of the longshore current drops by 1 to 20% and the spread of the profile
+  (the standard deviation of the cross-shore position weighted by |v|) grows by at least 2%.
+  The result on the grid rotated by 90° (param_rotdiff) agrees within the same tolerances as rot
+  (diffusion at the W and E sides).
 - **Restart** (Run.sh): state.dat, swflow_enc.dat, wavefield.dat and the final fields of the
   split run are byte-identical to the straight run (the ramp-up of the forcing, the forcing
   held between quasi-steady updates and the continuation of the roller state).
@@ -85,7 +96,7 @@ x = 1100 m. The north and south sides are lateral Neumann for both waves and flo
 ```bash
 make
 ./Run.sh          # serial + reference comparison + checks (about 2 minutes with one thread)
-./Run_MPI.sh 4    # MPI (np ≤ 4). ULP=0 against the reference; the rotated grid and the two-way coupling byte-identical to np = 1; restart also under MPI
+./Run_MPI.sh 4    # MPI (np ≤ 4). ULP=0 against the reference; the rotated grid, the two-way coupling and the diffusion term (and its rotated grid) byte-identical to np = 1; restart also under MPI
 ```
 
 ## Verification record (2026-10-27; gfortran 13.3 / Open MPI 4.1.6, Ubuntu 24.04)
@@ -112,3 +123,11 @@ residual of the wave ledger (action × ω) is 1.1e-7 of the inflow. The restart 
 is byte-identical to the straight run. With `-Og -fcheck=all` the serial run and np = 2 agree
 (no out-of-bounds access); with release builds np = 1, 2 and 4 are ULP=0 against the serial
 reference, and the rotated grid and the two-way coupling are byte-identical to np = 1.
+
+The diffusion term (added 2026-10-28; developer.md §88.12) has row differences of 1.4e-5 m in
+water level and 2.0e-5 m/s in velocity, an integral momentum ratio of 0.997, a peak longshore
+current lower by 3.7% (0.2287 → 0.2202 m/s) with a profile spread larger by 5.6%, and differences
+from the grid rotated by 90° of 1.0e-5 m in water level and 8.8e-5 m/s in velocity (with the
+version before the fix the same case diverged in 39 minutes). With release builds np = 1, 2 and 4
+are ULP=0 against the serial reference and the diffusion term (and its rotated grid) is
+byte-identical to np = 1; with `-Og -fcheck=all` the serial run and np = 2 agree.
