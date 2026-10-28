@@ -2695,6 +2695,13 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
           end if
           mne = mne - (qsx * geo%n8x(k) + qsy * geo%n8y(k))
           if (mne == 0.0) cycle
+          ! 土砂の流束の風上が移動限界未満のセルなら土砂を出さない(Stokes 輸送を引いた流束は、
+          ! 水の流出のないほぼ乾いたセルからも出うる。その濃度 c/h が桁あふれした)
+          if (mne > 0.0) then
+            if (s%h(i,j) < p%dd) cycle
+          else if (g%x(in,jn) > 0) then
+            if (s%h(in,jn) < p%dd) cycle
+          end if
         end if
         ! 風上(donor)セルの濃度。境界面からの流入は cbin(区間流入の
         ! 濃度時系列等)があればセル値、なければ清水 = 0
