@@ -7,11 +7,14 @@
 #         全行で 1 ± TOL_MAN(幅 1・5)
 #     (4) 振り替えなし(0)の既知の性質を記録: 幅 1 で h/h_n > 1.2、幅 5 で
 #         河岸行 / 内部行の流速比 < 0.9(値は表示。判定は上限の緩い確認のみ)
+#     (5) 射流の区間流入(構成 w1_sc。勾配 S_SC、developer.md §88.25): (1)(2) に加えて、
+#         流入セルの水深・流速が等流区間の平均と ±TOL_IN で一致(流入面の水深の床が
+#         流れの水深を超えない)
 import sys, os, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from make_init import NX, NY, DX, S, N, H0, Q_UNIT, X1, X2, rows
+from make_init import NX, NY, DX, S, N, H0, Q_UNIT, X1, X2, rows, S_SC, H_SC
 
-TOL_SLOPE, TOL_Q, TOL_MAN = 0.02, 1.0e-3, 0.005
+TOL_SLOPE, TOL_Q, TOL_MAN, TOL_IN = 0.02, 1.0e-3, 0.005, 0.01
 HN, VN = H0, Q_UNIT / H0
 
 
@@ -29,14 +32,14 @@ def section(W, tag):
     ws = [sum(h[j - 1][i] + z[j - 1][i] for j in range(j1, j2 + 1)) / W for i in range(i1, i2)]
     slope = (ws[0] - ws[-1]) / ((i2 - i1 - 1) * DX)
     qsum = sum(hr * vr for hr, vr in zip(hrow, vrow)) * DX
-    return hrow, vrow, slope, qsum
+    return hrow, vrow, slope, qsum, h[j1 - 1][0], v[j1 - 1][0]
 
 
 ok = True
 print("Manning: q = %.4f m2/s, h_n = %.3f m, V_n = %.3f m/s" % (Q_UNIT, HN, VN))
 for W in (1, 5):
     for tag in ("off", "on"):
-        hrow, vrow, slope, qsum = section(W, tag)
+        hrow, vrow, slope, qsum, _, _ = section(W, tag)
         g1 = abs(slope / S - 1.0) < TOL_SLOPE
         g2 = abs(qsum / (Q_UNIT * W) - 1.0) < TOL_Q
         print("(1) W=%d %-3s 水面勾配 %.5f (S = %.5f, ±%.0f%%) : %s" % (W, tag, slope, S, 100 * TOL_SLOPE, "PASS" if g1 else "FAIL"))
@@ -57,5 +60,16 @@ for W in (1, 5):
                 g4 = ratio < 0.9
                 print("(4) W=5 off 既知の性質: 河岸行/内部行の流速比 = %.3f (< 0.9), h/h_n = %.3f : %s" % (ratio, hm / HN, "PASS" if g4 else "FAIL"))
             ok = ok and g4
+# (5) 射流の区間流入(幅 1、振り替え 2)
+hrow, vrow, slope, qsum, h1, v1 = section(1, "sc")
+fr = vrow[0] / math.sqrt(9.8 * hrow[0])
+g1 = abs(slope / S_SC - 1.0) < TOL_SLOPE
+g2 = abs(qsum / Q_UNIT - 1.0) < TOL_Q
+g5 = abs(h1 / hrow[0] - 1.0) < TOL_IN and abs(v1 / vrow[0] - 1.0) < TOL_IN
+print("(1) W=1 sc  水面勾配 %.5f (S = %.5f, ±%.0f%%) : %s" % (slope, S_SC, 100 * TOL_SLOPE, "PASS" if g1 else "FAIL"))
+print("(2) W=1 sc  断面流量 Σ V h dy / Q = %.5f (±%.0e) : %s" % (qsum / Q_UNIT, TOL_Q, "PASS" if g2 else "FAIL"))
+print("(5) W=1 sc  射流の区間流入(Fr = %.2f、h/h_n = %.4f): 流入セルの h/h_u = %.4f、V/V_u = %.4f (±%.0f%%) : %s"
+      % (fr, hrow[0] / H_SC, h1 / hrow[0], v1 / vrow[0], 100 * TOL_IN, "PASS" if g5 else "FAIL"))
+ok = ok and g1 and g2 and g5
 print("=== uniflow checks %s ===" % ("PASS" if ok else "FAIL"))
 sys.exit(0 if ok else 1)

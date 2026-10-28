@@ -1,0 +1,55 @@
+!======================================================================
+! uniflow: 射流の区間流入(幅 1 セル・勾配 0.05。developer.md §88.25)
+!   w1_on と同じ q = 0.4695 m2/s を勾配 0.05 の水路に流す(Manning の等流水深 0.190 m、
+!   限界水深 0.282 m、Fr = 1.8)。流入セルの流速と水深が等流区間と一致することを確かめる
+!   (流入面の水深の床が限界水深だった実行ファイルでは、流入セルの流速が等流より遅い)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 1200
+  dt_disp = 400
+  dt_file = 400
+  dt_recrd = 400
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  dir_result = 'result_w1_sc'
+  f_state_save = 0
+  f_check_cfl = 1
+  f_out_z = 0
+  f_out_vv = 1
+/
+
+&list_enc
+  f_opening_dynamic = 2    ! 塞がれた開口の動的振り替え(0: なし、2: 全エッジ)
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'hinit_w1_sc.txt'
+/
+
+&list_geoinfo
+  lx = 1000.0
+  ly = 20.0
+  nx = 1000
+  ny = 20
+  f_ztype = 1
+  fn_z = 'zinit_w1_sc.txt'
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺は自由流出
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 10
+  inflow_val(1:2,1,1) = 0, 0.469545
+  inflow_val(1:2,2,1) = 9999, 0.469545
+  inflow_dist(1) = 0
+/

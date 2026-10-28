@@ -52,42 +52,47 @@ python3 make_init.py z > zinit.txt   # regenerate the inputs (bundled; only when
 ./Run_MPI.sh 4      # MPI (after Run.sh; byte comparison with save_*_serial)
 ```
 
-## Verification record (2026-10-27; gfortran 13.3 / Open MPI 4.1, the default -Ofast build)
+## Verification record (2026-10-27; rerun on 2026-10-28 after the change of the depth floor of the inflow face; gfortran 13.3 / Open MPI 4.1, the default -Ofast build)
 
-- T2: in 60 cells (H = 0.069 to 0.097 m) the maximum relative error from the
-  analytic solution is 9.2e-8 (rounding of the single-precision hydraulic
-  output). cover_dtg and cover_mf agree with cover to 3.9e-12 (the difference is
+- T2: in 60 cells (H = 0.0961 m, uniform) the maximum relative error from the
+  analytic solution is 1.9e-8 (rounding of the single-precision hydraulic
+  output). cover_dtg and cover_mf agree with cover to 2.0e-14 (the difference is
   the slow adjustment that the hydraulics continue in double precision; B/H*
   per update is 0.7 to 1.1, so an explicit scheme would differ by orders of
   magnitude).
 - T3: cover fraction at the outlet 0.147, maximum relative difference from the
-  recursion 3.7e-4. Comparing with the stored thickness instead of the thickness
+  recursion 4.0e-4. Comparing with the stored thickness instead of the thickness
   just after plucking is off by the plucking of one update (B_p/H* ≈ 1e-3).
 - T7: the cumulative incision of pluck_mf5 and mf20 agrees with pluck to
-  relative 6.8e-4 and 1.35e-3 (the difference is proportional to dts = first
+  relative 5.6e-4 and 1.10e-3 (the difference is proportional to dts = first
   order).
 - Hump of T3: at r = 0.2, 0.5 and 0.8 the incision rate agrees with the theory
-  to 6.0e-5, 4.5e-6 and 6.5e-4, and the cover fraction to 7.9e-5, 1.9e-4 and
-  2.3e-4. For r = 1.2 the bed is fully covered at 0.013 of the top of the hump
-  (the cover keeps thickening). The capacity of the edge leaving the inflow
-  cell (low velocity) is 0.72 of the interior on the uniform slope, so for
-  r > 0.7 a mound forms at the inlet and grows until the capacity rises (0.88
-  of the interior at r = 0.8).
+  to 4.5e-6, 9.7e-7 and 1.3e-4, and the cover fraction to 5.4e-6, 2.3e-5 and
+  4.6e-5. For r = 1.2 the bed is fully covered at 0.013 of the top of the hump
+  (the cover keeps thickening). The cover at r = 0.8 is 1.41 cm in the inflow
+  cell and uniform at 1.57 cm from the second cell.
 - T8: slope 0.00768 to 0.00861 (quasi-analytic 0.00785 to 0.00879), maximum
-  relative difference 2.1 % (halving the time step changes the slope by only
+  relative difference 2.2 % (halving the time step changes the slope by only
   1e-4; it appears to be the approximation of the gradually varied flow of the
   profile by uniform flow), difference of the steepening 0.16 %, steadiness
-  4.6e-3 U, local balance 2.6e-3. Just below the inflow cell a 2-cell step pattern
-  forms that decays by about −0.7 per cell (the check uses j ≥ 15).
+  4.4e-3 U, local balance 2.4e-3. The profile is smooth from the inflow cell
+  (second differences 0.2 mm or less).
 - T11: the slope (j = 15 to 58) is 0.00902 to 0.00990 for r = 0.2 (quasi-analytic
   0.00915 to 0.01003), 0.01088 to 0.01169 for r = 0.5 (0.01097 to 0.01179),
-  0.01260 to 0.01338 for r = 0.8 (0.01267 to 0.01345) and 0.00997 to 0.01055 for
+  0.01261 to 0.01338 for r = 0.8 (0.01267 to 0.01345) and 0.00998 to 0.01055 for
   r = 0.5 with abrasion (0.01005 to 0.01063). The maximum relative differences
-  are 1.5 %, 0.84 %, 0.56 % and 0.81 %. More supply steepens the slope through
+  are 1.5 %, 0.82 %, 0.53 % and 0.77 %. More supply steepens the slope through
   the cover (T8 with r = 0 has 0.00768 to 0.00861), and adding abrasion makes the
   supply act as tools, so the slope is gentler for the same supply. Steadiness
-  6e-5 U or less; the sediment budget closes within relative 4e-10 (the digits
+  3.2e-5 U or less; the sediment budget closes within relative 4e-10 (the digits
   printed in the ledgers).
+- Before the change of the depth floor of the inflow face (2026-10-28;
+  developer.md §88.25, in Japanese), the inflow cell flowed slowly (face
+  velocity 0.74 times at slope 0.01, Fr 0.65): the cover of T2 varied between
+  0.069 and 0.097 m, for r > 0.7 in the hump of T3 a mound formed at the inlet
+  (the capacity of the edge leaving the inflow cell was 0.72 of the interior),
+  and just below the inflow cell of T8 a 2-cell step pattern formed that decayed
+  by about −0.7 per cell (second differences +237, −176, +98 mm, …).
 - T4: Σ(z − z0) A = −0.236164 m³ (abraded volume), Σ(sd − sd0) A = 0.693794 m³
   (plucked volume) and Σ Ri A = their sum agree with the ledger within 2e-9;
   Ri = 0 in the rows with multiplier 0.
@@ -96,8 +101,9 @@ python3 make_init.py z > zinit.txt   # regenerate the inputs (bundled; only when
   everywhere (cover_rt1) is also byte-identical to the straight run, and the
   control without f_rockinc stops.
 - MPI: np = 2 with -fcheck=all (the same debug flags as nightly) was run first:
-  no bounds violation, and all configurations are byte-identical to the debug
-  serial run. np = 1, 2, 4 with -Ofast are also byte-identical to serial.
+  no bounds violation (on 2026-10-27 all configurations were also byte-identical
+  to the debug serial run). np = 1, 2, 4 with -Ofast are also byte-identical to
+  serial (also in the rerun of 2026-10-28, and with -O2).
 - T9 (record): τ_b / ρ g h tanθ in the middle of the channel is 1.014, 1.070,
   1.141 and 1.291 at slopes 0.01, 0.05, 0.1 and 0.2, and 1.006, 1.029, 1.060
   and 1.124 in the column at the wall; V / V_Manning(h) in the middle is 1.007

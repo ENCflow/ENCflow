@@ -200,6 +200,31 @@ oscillation and no memory, and restarts are exact. Faces of cells that
 touch a wall corner or nodata and lack the interior edge that would pass
 the inflow are closed automatically (developer.md §69.9).
 
+The velocity of an inflow face is the face discharge $`q_m`$ divided by the
+edge depth (the mass is set by $`q_m`$ alone; the velocity is used by the
+advection and by the reconstruction of the cell velocity). The edge depth
+is the depth of the inflow cell, with a floor at the depth of the incoming
+flow so that the velocity does not diverge when water enters a dry bed or
+a thin layer:
+
+```math
+h_e = \max\!\left(h,\ \min(h_c,\ h_n),\ d_v\right),\qquad
+h_c = \left(\frac{q_m^2}{g}\right)^{1/3},\qquad
+h_n = \left(\frac{q_c\, n}{\sqrt{S}}\right)^{3/5}
+```
+
+$`h_n`$ is the Manning uniform-flow depth on the bed slope $`S`$ from the
+inflow cell to its inner neighbour, and $`q_c`$ is the discharge per cell
+width ($`q_m`$ is per passage width of the face; for the normal face of a
+square cell $`q_c = 0.41\,q_m`$). On gentle slopes the floor is $`h_c`$, on
+steeper slopes the uniform-flow depth, so the floor never exceeds the depth
+of the flow. With $`S \le 0`$ it is $`h_c`$. The floor $`h_c`$ alone exceeded
+the depth of the flow when the Froude number of the uniform inflow was above
+the passage ratio (0.41 for square cells); the inflow cell then flowed slower
+than the uniform flow, floods left it uneroded, and it seeded steps
+(developer.md §88.23 and §88.25, in Japanese; the form of this floor is our
+own simplification).
+
 ## 6. Parameters and the basis of their defaults
 
 The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).

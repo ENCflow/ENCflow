@@ -302,11 +302,11 @@
     {
       "source": "docs/users_guide/hydraulics.md",
       "target": "docs/en/users_guide/hydraulics.md",
-      "source_sha256": "861c693efb9a2ef9368c9548e6dfec8d096123d2f290aa13759668062f1bb23b",
-      "target_sha256": "5d9dff8ad27a590d26024865e7043472b91943ceffddbd3d31c61ff165bb047c",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "02bb4accef996f66e5a735d7708816730e62373ebbc2f989a79120dfe26a2947",
+      "target_sha256": "1e8f72e5730316c32e43d11bc46e15789c4b10daf577b6df8fd3cb9ad25ef9e5",
+      "reviewer": "Claude (Claude Code session; diff-level content and lexical review of the 2026-10-28 inflow-floor edits against the Japanese master; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "docs/users_guide/initial.md",
@@ -1355,9 +1355,9 @@
     {
       "source": "test/dbrock/README.md",
       "target": "test/dbrock/en/README.md",
-      "source_sha256": "23304048de7b379bc17b20518cc342263e5b333b5422debde666ab315082242d",
-      "target_sha256": "db26857fdb19ecf92fd50a2db33871256b8aba7c92e90c47dd18936432dee726",
-      "reviewer": "Claude (Claude Code session; diff-level content and lexical review of the 2026-10-28 one-sided-slope edits against the Japanese master; rest unchanged since the previous full-text record)",
+      "source_sha256": "609069e7bda2f0c317403738a9af7c0cc91b7b169aef8d6e1a260f9cae7e5919",
+      "target_sha256": "b15018bcb919d269794f903db04401aa0b28d4f1237aa71b314acc3199268798",
+      "reviewer": "Claude (Claude Code session; diff-level content and lexical review of the 2026-10-28 inflow-floor edits against the Japanese master; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-10-28"
     },
@@ -1895,11 +1895,11 @@
     {
       "source": "test/rockinc/README.md",
       "target": "test/rockinc/en/README.md",
-      "source_sha256": "1546bf152d0c285f9b01c870c1838d9ca5f9a92a6eb3979663af3a0d85d59f10",
-      "target_sha256": "75ddf00a27f19229f29d2c0d201db1fbd71f5dba5f0dca15d8e22180951bf88a",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "ec02b4c671a3a31e7da3bb46a4b7665cfdc81b8c076e4dbc544c700dcbaa9a33",
+      "target_sha256": "1807ddd60b1f0287e8dd968bf1fa8d22326f03b2dbf06e59ba09c271374b98e2",
+      "reviewer": "Claude (Claude Code session; diff-level content and lexical review of the 2026-10-28 inflow-floor edits against the Japanese master; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "test/salt/README.md",
@@ -2156,11 +2156,11 @@
     {
       "source": "test/uniflow/README.md",
       "target": "test/uniflow/en/README.md",
-      "source_sha256": "3bc881123d013617804a934e7efc9d22333acea1565650529a2fb11ab62fa950",
-      "target_sha256": "d7e61720fec118b02768368ddc5f92b79d5ebe6f6ef1bcb16b1b507c3d1775a5",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "e95aaa4f3a98e8d36b0debd6596ffb114d6bd836f39ae69d50d87f1df8c70ba5",
+      "target_sha256": "3e1737d1726ddcd7761a7147f677df23691fafae6702a08b9d7584e322f6b7ed",
+      "reviewer": "Claude (Claude Code session; diff-level content and lexical review of the 2026-10-28 inflow-floor edits against the Japanese master; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "test/volcano/README.md",

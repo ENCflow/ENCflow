@@ -634,11 +634,16 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
       end if
       ! 受け口係数(直線区間の内部は 1.0 で従来と厳密に同じ)
       if (bcs%infl_cfac(m,ifl) /= 1.0) qwm = qwm * bcs%infl_cfac(m,ifl)
-      ! エッジ水深: 内側セルの水深に限界水深の床を敷く(乾床への流入で
-      ! uv1 = q/he が発散しないように。ネスティングが水深も渡す事情の
-      ! 簡易代替。boundary_plan.md)
+      ! エッジ水深: 内側セルの水深に、流入してくる流れの水深の床を敷く
+      ! (乾床・薄い層への流入で uv1 = q/he が発散しないように。ネスティングが
+      ! 水深も渡す事情の簡易代替。boundary_plan.md)。床は h_c(通過幅あたりの
+      ! q の限界水深)と、内側の近傍への河床勾配の Manning の等流水深 h_n の
+      ! 小さい方: 緩勾配(h_n >= h_c)では従来どおり h_c、それより急なら h_n
+      ! (流れの水深を超えない)。h_c だけの床は流入の等流のフルード数が通過幅の
+      ! 比(正方セルで 0.41)を超えると流れの水深を上回って流入セルの流速を抑え、
+      ! 出水で流入セルが削れ残る段差の種になった(developer.md §88.23・§88.25)
       hc = (qwm**2 / p%gg)**(1.0 / 3.0)
-      he = max(h, hc, p%dv)
+      he = max(h, min(hc, inflow_hn(g, s, i, j, k, qwm)), p%dv)
       ! σ 有効時は断面積(矩形換算水深)で流速に換算する(§68.28)
       if (sct%have_sect) he = max(sect_v(he, sct%sdep(i,j)), p%dv)
       uve1 = -qwm / he           ! 外向き正の負値=流入
@@ -663,6 +668,47 @@ function wgt_dist(h, dist) result(w)
   else
     w = h
   end if
+end function
+
+
+!----------------------------------------------------------------------
+! 区間流入の面の水深の床に使う Manning の等流水深 h_n = (q_c n / √S)^{3/5}
+! (developer.md §88.25)。q_c はセル幅あたりの流量 = 面の通過幅あたりの
+! 流量 q × 通過幅 l8(k) / セルの辺長(正方セルの法線面では q の 0.41 倍)。
+! S は流入セルから内側の近傍(面 k の反対側)への河床勾配(下り正。有効
+! 重力の勾配補正は入れないので、補正ありの等流水深をわずかに下回る)、
+! n は摩擦項と同じ粗度(動的粗度があればそれ)。内側の近傍が領域外・海、
+! S <= 0、n <= 0 なら huge を返す(床は従来の h_c のまま)。近傍マスクの
+! 読みは x 番兵ガードの内側で(§12)
+!----------------------------------------------------------------------
+function inflow_hn(g, s, i, j, k, q) result(hn)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, k
+  real, intent(in) :: q
+  real :: hn
+  integer :: ii, jj
+  real :: sl, rn, qc
+
+  hn = huge(1.0)
+  ii = i - din(k)
+  jj = j - djn(k)
+  if (g%x(ii,jj) <= 0) return
+  if (g%sw(ii,jj) > 0) return
+  sl = (s%z(i,j) - s%z(ii,jj)) / geo%w8dr(k)
+  if (allocated(s%rnv)) then
+    rn = s%rnv(i,j)
+  else
+    rn = g%rn(i,j)
+  end if
+  if (sl <= 0.0 .or. rn <= 0.0) return
+  ! 東西辺の法線面は辺長 dy、南北辺は dx
+  if (djn(k) == 0) then
+    qc = q * geo%l8(k) / g%dy
+  else
+    qc = q * geo%l8(k) / g%dx
+  end if
+  hn = (qc * rn / sqrt(sl))**0.6
 end function
 !----------------------------------------------------------------------
 ! セル (i,j) の、辺 sd を横切る面 kf(1:3) に辺境界の値を書く。

@@ -17,6 +17,12 @@ free outflow at the east edge. Measurements are taken at x = 400–700 m to
 avoid the drawdown backwater at the downstream end (about 250 m). Two
 settings of `f_opening_dynamic`: 0 (no reassignment) and 2 (all edges).
 
+Supercritical segment inflow (configuration w1_sc): the same q flows into a
+channel one cell wide with slope 0.05 (reassignment 2; Manning uniform-flow
+depth 0.190 m, Fr = 1.8). If the depth floor of the inflow face exceeds the
+depth of the flow, the inflow cell flows slower than the uniform flow
+(developer.md §88.25, in Japanese).
+
 ## Checks (Check_uniflow.py)
 
 1. Steady uniform flow: the water-surface slope agrees with the bed slope
@@ -30,11 +36,18 @@ settings of `f_opening_dynamic`: 0 (no reassignment) and 2 (all edges).
    of the bank rows is 0.80 of the interior rows (h/h_n = 1.04). This is
    because the diagonal links to dry cells carry no flux and their passage
    width is lost (the same motivation as §68.14).
+5. Supercritical segment inflow (w1_sc; checks 1 and 2 are also applied): the
+   depth and velocity of the inflow cell agree with the mean of the uniform
+   reach within ±1 %. After the change of 2026-10-28 (the depth floor of the
+   inflow face no deeper than the uniform-flow depth) both are 1.0000 times
+   (equal to the four digits printed); with the executable before the change,
+   the velocity was 0.71 times and the depth 0.96 times (the floor of the
+   inflow face was the critical depth).
 
 ## Usage
 
 ```
 make
-./Run.sh            # serial (4 runs, about 3 minutes)
+./Run.sh            # serial (5 runs, about 4 minutes)
 ./Run_MPI.sh 2      # MPI
 ```
