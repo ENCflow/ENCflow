@@ -109,8 +109,10 @@ need to understand all of it. Read only the lines you care about.
   (radiation stress, roller and GLM Stokes drift) can also be added to
   the shallow-water flow, and conversely river-mouth jets, tidal and
   longshore currents can change the waves (Doppler shift, refraction by
-  currents and blocking) in a two-way coupling (the coupling with
-  sediment transport and beach change is being added in stages).
+  currents and blocking) in a two-way coupling. Longshore sediment
+  transport and beach erosion and recovery, with sand stirred by the wave
+  field and carried by the wave-driven flow and wave asymmetry, are
+  computed in the same time evolution as the morphology.
 - **Tsunami generation from an earthquake, and dispersive waves**: the
   fault displacement is given as a time history of the ground, and the
   tsunami is followed from generation through propagation to run-up in

@@ -71,10 +71,17 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
   real, intent(in) :: dtw       ! 水柱側の実効時間刻み(morfac を含まない)
   integer :: i, j
   real :: hh, taus, ceq, cc, fx, dzb, cap, fxg, afx, tsce
-  logical :: spread
+  real :: uec, vec, rs                 ! 波浪場の攪拌(f_wfsed。§88)
+  logical :: spread, wsed, stk
 
   spread = (gm%wlw%nsm > 0)
-  !$omp parallel do schedule(static) private(i, j, hh, taus, ceq, cc, fx, dzb, cap, fxg, afx, tsce)
+  ! 波浪場の土砂への作用(段 W4・W5): τ* は Euler 平均流速 u^E の流れと波の最大のせん断
+  wsed = (gm%f_wfsed > 0)
+  stk = .false.
+  if (wsed) stk = allocated(s%wvus)
+  rs = s%wv_ramp
+  !$omp parallel do schedule(static) private(i, j, hh, taus, ceq, cc, fx, dzb, cap, fxg, afx, tsce, &
+  !$omp                                      uec, vec)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -87,6 +94,20 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
         ! 平衡濃度(浸食レート E = wf・ceq に相当する濃度換算)
         hh = max(s%h(i,j), p%dv)
         taus = g%rn(i,j)**2 * s%vv(i,j)**2 / (gm%sgrav * gm%sd50 * hh**(1.0/3.0))
+        if (wsed) then
+          ! 攪拌(§88): 平衡濃度は波・流れの最大のせん断 τ*_max(Soulsby 1997)で決める。
+          ! 流れのせん断は u^E の速さで(輸送は advect_scalar が u^E と岸向きの速度 u_a で行う)
+          uec = s%u(i,j)
+          vec = s%v(i,j)
+          if (stk) then
+            uec = uec - rs * s%wvus(i,j)
+            vec = vec - rs * s%wvvs(i,j)
+          end if
+          taus = g%rn(i,j)**2 * (uec * uec + vec * vec) / (gm%sgrav * gm%sd50 * hh**(1.0/3.0))
+          taus = max(taus, wfsed_taumax(taus, sqrt(2.0) * s%wvub(i,j), s%wvae(i,j), &
+                                        wfsed_cphi(uec, vec, s%wvex(i,j), s%wvey(i,j)), &
+                                        gm%wfs%z0s, gm%wfs%tws))
+        end if
         ceq = 0.0
         if (gm%f_esform == 1) then
           ! 超過掃流力線形(簡易式)
@@ -171,6 +192,32 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
     end do
   end do
   !$omp end parallel do
+
+  ! 波浪場の攪拌と輸送の浮遊砂の輸送量 hs·u_s(u_s = u^E + u_a ê_θ。出力 Qsx・Qsy。§88)
+  if (wsed) then
+    !$omp parallel do schedule(static) private(i, j, uec, vec)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        s%sqsx(i,j) = 0.0
+        s%sqsy(i,j) = 0.0
+        if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
+        if (s%h(i,j) <= p%dd .or. s%hs(i,j) <= 0.0) cycle
+        uec = s%u(i,j)
+        vec = s%v(i,j)
+        if (stk) then
+          uec = uec - rs * s%wvus(i,j)
+          vec = vec - rs * s%wvvs(i,j)
+        end if
+        if (allocated(s%wvua)) then
+          uec = uec + s%wvua(i,j) * s%wvex(i,j)
+          vec = vec + s%wvua(i,j) * s%wvey(i,j)
+        end if
+        s%sqsx(i,j) = s%hs(i,j) * uec
+        s%sqsy(i,j) = s%hs(i,j) * vec
+      end do
+    end do
+    !$omp end parallel do
+  end if
 
 end subroutine
 

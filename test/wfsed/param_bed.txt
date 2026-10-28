@@ -1,0 +1,96 @@
+!======================================================================
+! wfsed: 掃流砂 = 一様な流れに斜めの波(流れは波に作用されない。wf_flow = 0)
+!   水深 2 m の平坦な水路(600 m × 40 m)に西端の列の湧き出しから q = 1 m²/s の流れ
+!   (0.5 m/s)を流し、西から不規則波 H_m0 = 0.5 m、T = 6 s を進行方向 30° で入れる。
+!   掃流砂(細砂 0.2 mm、MPM)を波で攪拌する(f_wfsed = 1)。
+!   確認事項(Check_wfsed.py bed): セルの掃流砂の推定 Qbx・Qby が、モデルの流速・水深・
+!   軌道流速・波向から独立に組み立てた q_b = q*(τ*_max) √(τ*_c/τ*_max) √(sgd³)(τ*_max は
+!   Soulsby 1997 の式 69・70)と一致し、向きが流れの向き
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 1800
+  dt_disp = 600
+  dt_file = 1800
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_geomorph = '-'
+  fn_wavefield = '-'
+  dir_result = 'result_bed'
+  f_check_cfl = 1
+  f_output_mode = 3
+  f_out_z = 1
+  f_out_h = 1
+  f_out_u = 1
+  f_out_v = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 2
+  e0 = 0.0
+/
+
+&list_geoinfo
+  nx = 120
+  ny = 8
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 0
+  z0 = -2.0
+  f_rntype = 0
+  rn0 = 0.02
+  sd0 = 10.0
+/
+
+&list_bound_edge
+  f_bc_w = 0                ! 西は壁(流れは西端の列の湧き出しから東へ)
+  f_bc_e = 2                ! 東は長波放射(流出。基準水位 0)
+  f_bc_n = 3                ! 南北は側方 Neumann
+  f_bc_s = 3
+/
+
+&list_bound_source
+  src_cell(:,1,1) = 1, 1    ! 西端の列に q = 1 m2/s(幅 40 m で 40 m3/s。10 分で立ち上げ)
+  src_cell(:,2,1) = 1, 2
+  src_cell(:,3,1) = 1, 3
+  src_cell(:,4,1) = 1, 4
+  src_cell(:,5,1) = 1, 5
+  src_cell(:,6,1) = 1, 6
+  src_cell(:,7,1) = 1, 7
+  src_cell(:,8,1) = 1, 8
+  src_val(:,1,1) = 0, 0.0
+  src_val(:,2,1) = 10, 40.0
+  src_val(:,3,1) = 9999, 40.0
+/
+
+&list_geomorph
+  dt_geomorph = 5.0
+  f_fluvial = 1
+  f_qbform = 2              ! MPM
+  fluv_d50 = 0.0002
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_bcfeed = 1
+  f_wfsed = 1               ! 波浪場による攪拌と輸送
+  wfsed_facsk = 0.0         ! 岸向きの輸送速度 u_a なし(攪拌の式だけを確かめる)
+  wfsed_facas = 0.0
+/
+
+&list_wavefield
+  wf_bc_side = 1, 0, 2, 2   ! 西が入射、東は吸収、南北は側方 Neumann
+  wf_hm0 = 0.5
+  wf_trep = 6.0
+  wf_dir = 30.0
+  dt_wave = 60
+  wf_tol = 1.0e-7
+  wf_itmax = 2000            ! 斜めの波の側方 Neumann は準定常の収束が遅い
+  f_wf_outdiag = 1
+/

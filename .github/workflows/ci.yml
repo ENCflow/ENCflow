@@ -24,7 +24,7 @@ jobs:
       - name: Regression tests
         run: |
           set -e
-          for c in wave dambreak frost pump conduit salt vzcol vzzone wfshoal wfshadow wfcurrent; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone wfshoal wfshadow wfcurrent wfsed; do
             echo "===== test/$c ====="
             (cd "test/$c" && ./Run.sh)
           done
@@ -43,7 +43,7 @@ jobs:
         run: |
           set -e
           export OMP_NUM_THREADS=1
-          for c in wave dambreak frost pump conduit salt vzcol vzzone wfshoal wfshadow wfcurrent; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone wfshoal wfshadow wfcurrent wfsed; do
             echo "===== test/$c (np=2) ====="
             (cd "test/$c" && ./Run_MPI.sh 2)
           done

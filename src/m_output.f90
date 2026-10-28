@@ -192,7 +192,8 @@ subroutine output_state(o, p, g, s, k)
   ! 平均波向 Wa(deg。進む向き、x 軸から反時計回り。無波セルは −9999)。f_wf_outdiag = 1
   ! のとき底面軌道流速 Wu(u_rms。m/s)・砕波散逸 Wb(W/m2)も。段 W2(wf_flow >= 1)は
   ! 外力 Wfx・Wfy(N/m2)、GLM(wf_flow = 2)は Stokes 輸送 Wsx・Wsy(m/s)、ローラーは
-  ! そのエネルギー Wr(J/m2)も(向きは流速 u・v と同じ)
+  ! そのエネルギー Wr(J/m2)も(向きは流速 u・v と同じ)。fn_geomorph の f_wfsed = 1 なら
+  ! 漂砂 Qbx・Qby・Qsx・Qsy と岸向きの輸送速度 Wua も
   if (s%wv_active) then
     call output_matrix(o, p, g, "Wh", s%wvh, k)
     call output_matrix(o, p, g, "Wa", s%wvdir, k)
@@ -204,6 +205,14 @@ subroutine output_state(o, p, g, s, k)
       if (allocated(s%wvus)) call output_matrix(o, p, g, "Wsx", s%wvus, k)
       if (allocated(s%wvvs)) call output_matrix(o, p, g, "Wsy", s%wvvs, k)
       if (allocated(s%wver)) call output_matrix(o, p, g, "Wr", s%wver, k)
+      ! 波浪場が駆動する漂砂(fn_geomorph の f_wfsed = 1。段 W4): 掃流砂の推定 Qbx・Qby と
+      ! 浮遊砂の輸送量 Qsx・Qsy(m2/s。固体体積。向きは流速 u・v と同じ)
+      if (allocated(s%sqbx)) call output_matrix(o, p, g, "Qbx", s%sqbx, k)
+      if (allocated(s%sqby)) call output_matrix(o, p, g, "Qby", s%sqby, k)
+      if (allocated(s%sqsx)) call output_matrix(o, p, g, "Qsx", s%sqsx, k)
+      if (allocated(s%sqsy)) call output_matrix(o, p, g, "Qsy", s%sqsy, k)
+      ! 波の歪度・非対称による岸向きの輸送速度 u_a(m/s。平均波向の向きが正。段 W5)
+      if (allocated(s%wvua)) call output_matrix(o, p, g, "Wua", s%wvua, k)
     end if
   end if
   if (is_root) write(o%un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it

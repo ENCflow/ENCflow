@@ -12,14 +12,15 @@
 解きます。HISWA[^hiswa]・XBeach の定常モード[^xbeach]・SnapWave[^snapwave] と同じ
 階層の概算で、周波数の広がり・風による発達・波どうしの非線形相互作用は扱いません。
 
-**段階的に実装中です。** 現在は段 W3 までで、**固定床の波浪場**(段 W1)、
+**段階的に実装しました。** 現在は段 W5 までで、**波浪場**(段 W1)、
 **波による流れ(セットアップ・沿岸流。段 W2)**、**流れによる波の変化(ドップラー効果・
-流れによる屈折・阻止。段 W3)**を計算します。流れへの作用は `wf_flow`、流れの波への作用は
-`f_wf_current` で有効にします(どちらも既定 0 = 作用なし。`wf_flow = 0` なら
-`fn_wavefield` を書いても書かなくても浅水流の結果は同じです。
-[流れへの作用](#流れへの作用wf_flow段-w2)・[流れによる波の変化](#流れによる波の変化f_wf_current段-w3))。
-**地形には作用しません。** 沿岸漂砂・岸沖の侵食と堆積(段 W4・W5)は以降の段で追加します
-(docs/wavefield_plan.md §9)。
+流れによる屈折・阻止。段 W3)**、**土砂の攪拌と輸送(沿岸漂砂・浜の侵食と回復。段 W4・W5)**を
+計算します。流れへの作用は `wf_flow`、流れの波への作用は `f_wf_current`、土砂への作用は
+[土砂・地形変化](geomorph.md)の `f_wfsed` で有効にします(どれも既定 0 = 作用なし。
+`wf_flow = 0` かつ `f_wfsed = 0` なら `fn_wavefield` を書いても書かなくても浅水流と地形の
+結果は同じです。[流れへの作用](#流れへの作用wf_flow段-w2)・
+[流れによる波の変化](#流れによる波の変化f_wf_current段-w3)・[土砂への作用](#土砂への作用f_wfsed段-w4w5))。
+研究的な拡張(段 W6)は docs/wavefield_plan.md §9。
 
 [土砂・地形変化の章](geomorph.md)の「波浪による沿岸漂砂」(`fn_wave`。沖波を与件に
 汀線帯の沿岸漂砂を CERC 型の式で与える簡易モード)とは別の機能です。
@@ -109,6 +110,7 @@
 | 波の前線の到達(津波・洪水と同時に進める) | `wf_mode = 1`(非定常)、`f_wf_init = 0` | Wh の時間変化 |
 | 波によるセットアップ・沿岸流 | `wf_flow = 2`、海岸に交わる左右の辺を波・流れとも側方 Neumann(`wf_bc_side` = 2、`f_bc_*` = 3) | E(水位)・u・v(流速)・Wfx・Wfy(外力) |
 | 河口・潮流・離岸流の上の波(遡上の阻止・急峻化) | `f_wf_current = 1`(波と流れの双方向なら `wf_flow = 2` も) | Wh・Wa、台帳の blocked |
+| 沿岸漂砂・浜の侵食と回復(地形の変化) | `wf_flow = 2` と fn_geomorph の掃流砂・浮遊砂に `f_wfsed = 1` | Z(地盤高)・Qby・Qsy(沿岸漂砂。`f_wf_outdiag = 1`) |
 
 ## 計算のしくみ
 
@@ -347,7 +349,7 @@ Stokes 輸送を 0 から線形に増やします。立ち上げは時間軸の�
 場合は、辺の外もその地形が続く扱いになるので、見たい区域を辺から離してください。
 土砂も同じ扱いで、浮遊砂(と水質・塩水などのスカラー)は鏡像セルの濃度で流入し、
 掃流砂は辺の法線方向に一つ内側の面の流束を写します(どれも勾配 0。地形が変わっても
-岸沿いに一様な海岸は一様のまま)。
+岸沿いに一様な海岸は一様のまま。test/wfsed)。
 
 ## 流れによる波の変化(f_wf_current。段 W3)
 
@@ -421,6 +423,95 @@ c = σ̄/k̄)。
 準定常の反復の収束が遅くなります(test/wfdoppler の河口の噴流で約 2000 回、阻止される
 水路で約 7000 回)。収束しない旨の表示が出たら `wf_itmax` を上げてください。
 
+## 土砂への作用(f_wfsed。段 W4・W5)
+
+[土砂・地形変化](geomorph.md)の掃流砂(`f_fluvial`)・浮遊砂(`f_suspend`)に、`&list_geomorph`
+の `f_wfsed = 1` を加えると、波浪場が土砂を動かします。波の軌道運動が海底の砂を攪拌して
+(巻き上げと掃流の量を増やし)、波による流れ(沿岸流・戻り流れ)と波の歪度・非対称による
+岸向きの速度が砂を運びます。沿岸漂砂(汀線に沿う砂の移動)と、浜の侵食(高波浪の戻り流れで
+砂が沖へ)・回復(低波浪の非対称で砂が岸へ)を、地形変化と同じ時間発展で求めます。
+
+```
+&list_geomorph
+  f_fluvial = 1             ! 掃流砂(攪拌の粒径は fluv_d50)
+  f_suspend = 1             ! 浮遊砂(攪拌の粒径は susp_d50)
+  f_wfsed = 1               ! 波浪場による攪拌と輸送
+  !wfsed_facsk = 0.1        ! 歪度の係数 f_Sk(既定 0.1。0 で岸向きの速度の歪度の項なし)
+  !wfsed_facas = 0.1        ! 非対称の係数 f_As(既定 0.1)
+/
+```
+
+`fn_wavefield` が必要です。波による流れ(`wf_flow = 2`)と組むのが基本の使い方です(沿岸流と
+戻り流れが砂を運ぶ。`wf_flow = 0` では流れが波で起きないので、攪拌と岸向きの速度だけが
+効きます)。[fn_wave の沿岸漂砂](geomorph.md)(CERC 型)とは同時に使えません(同じ輸送を
+二重に数えないため、開始時に停止します)。土石流(`f_debris`)とも併用できません。
+
+### 攪拌(波・流れの底面せん断)
+
+波の底面の軌道流速の振幅 u_w = √2 u_rms(u_rms は出力 Wu)と軌道の振幅 A = u_w/σ̄
+(σ̄ は固有角周波数)から、波の底面せん断と、流れのせん断との合成を Soulsby(1997)[^soulsby97]
+の式で求めます。
+
+```math
+\tau_w = \tfrac12 \rho f_w u_w^2,\quad f_w = \min\left(1.39\,(A/z_0)^{-0.52},\ 0.3\right),\quad z_0 = d_{50}/12
+```
+
+```math
+\tau_m = \tau_c\left[1 + 1.2\left(\frac{\tau_w}{\tau_c + \tau_w}\right)^{3.2}\right],\quad
+\tau_{max} = \sqrt{(\tau_m + \tau_w|\cos\varphi|)^2 + (\tau_w\sin\varphi)^2}
+```
+
+τ_c は流れだけのせん断(既存の Manning の閉じ τ* = n² V²/(s d h^{1/3}) で、V は下の Euler 平均
+流速 u^E の速さ)、φ は流れと平均波向のなす角、τ_max は波の周期の中の最大のせん断です。
+掃流砂の流砂量式(`f_qbform`)と浮遊砂の平衡濃度式(`f_esform`)の無次元掃流力に τ*_max を
+使います(閾値の判定も)。z0 は粒子の粗さ(k_s = 2.5 d50 の z0 = k_s/30)、上限 0.3 は小さな A
+での Swart(1974)の値です。波がなければ τ*_max = τ*_c で、`f_wfsed = 0` と同じ式です。
+
+### 輸送(Euler 平均流速と岸向きの速度)
+
+砂を運ぶ速度は u_s = u^E + u_a ê_θ です(ê_θ は平均波向の単位ベクトル)。
+
+- **Euler 平均流速 u^E = u^L − u^S**: `wf_flow = 2` の浅水流の流速は Lagrangian 平均 u^L(水の
+  質量輸送)で、Stokes 輸送 u^S は波の谷より上に集中します。浮遊砂は底近くに多いので、
+  砂は Stokes 輸送を除いた Euler 平均流速で動きます(Reniers ら 2004[^reniers04]、XBeach と
+  同じ[^xbeach])。砕波帯では u^E が沖向きの戻り流れになり、砂を沖へ運びます。
+- **岸向きの速度 u_a**: 浅い所の波は山が尖り(歪度 S_k)前傾する(非対称 A_s)ので、岸向きの
+  軌道流速が強く、砂は正味で岸へ運ばれます。XBeach と同じく van Thiel de Vries(2009)[^vtdv09]の
+  u_a = (f_Sk S_k − f_As A_s) u_rms を使い、S_k・A_s は Ruessink ら(2012)[^ruessink12]の
+  Ursell 数 Ur = (3/8)√2 H_rms k/(kh)³ によるパラメータ化で求めます
+  (S_k = B cos ψ、A_s = B sin ψ、B = p₂/(1 + exp((p₃ − log₁₀ Ur)/p₄))、ψ = −90° + 90° tanh(p₅/Ur^{p₆})。
+  係数 p₂〜p₆ は XBeach の公開ソースの値)。f_Sk・f_As(`wfsed_facsk`・`wfsed_facas`)は校正の
+  係数で、既定 0.1 は XBeach の既定(facua)です。
+
+浮遊砂は浅水流の面流束から h(u^S − u_a ê_θ) を引いた流束で運び(水と違う速度で動く)、
+掃流砂は
+
+```math
+q_b = q^*(\tau^*_{max})\sqrt{\tau^*_s/\tau^*_{max}}\,\sqrt{s g d^3}
+```
+
+を u_s の向きに運びます(τ*_s は u_s の速さの Manning のせん断)。τ*_max の流れが運ぶ掃流の量を
+u_s の速さで運ぶ形で、波がなければ既存の式に一致し、流れがなく波だけなら u_a の向きに、
+波が流れより強ければ流砂量は u_s の速さに比例します(XBeach の「平衡濃度 × 輸送速度」と
+同じ考え方。この組み合わせは独自)。
+
+**浜の侵食と回復**は、沖向きの戻り流れ u^E と岸向きの u_a の釣り合いで決まります。高波浪では
+戻り流れが勝って砂が沖へ運ばれ(砂州ができる)、低波浪・長周期のうねりでは砕波帯より沖で u_a が
+勝って砂が岸へ戻ります(test/wfsed の storm・calm)。どちらが勝つかは f_Sk・f_As に敏感なので、
+地形の変化を合わせたい場合はこの 2 つで校正します。
+
+### 沿岸漂砂の出力と CERC との比較
+
+`f_wf_outdiag = 1` で、掃流砂の推定 Qbx・Qby と浮遊砂の輸送量 Qsx・Qsy(固体体積の単位幅
+輸送量 m²/s。向きは流速 u・v と同じ)、岸向きの速度 Wua(m/s)を出力します。海岸に沿う
+成分を岸沖方向に積分すると沿岸漂砂量になります。test/wfsed の直線海岸(H_m0 = 1 m、
+T = 8 s、20°)では CERC(Komar & Inman 1970[^ki70])の 1.6 倍程度で、桁が合います
+(CERC の係数も過程の漂砂の係数も校正の量です)。
+
+直線海岸の左右の辺を側方 Neumann(`f_bc_*` = 3)にすると、浮遊砂は鏡像セルの濃度で流入し
+(勾配 0)、掃流砂は辺の法線方向に一つ内側の面の流束を写します(外に同じ海岸が続く扱い。
+[側方の境界](#側方の境界f_bc--3))。
+
 ## 出力・確認
 
 **分布**(出力時刻ごと。[入出力の形式](io.md))
@@ -434,8 +525,11 @@ c = σ̄/k̄)。
 | Wfx・Wfy | 波の外力 F = −∇·S(セル中心。ローラーを含む)。`wf_flow` ≥ 1 かつ `f_wf_outdiag = 1` | N/m² |
 | Wsx・Wsy | Stokes 輸送の速さ u^S。`wf_flow = 2` かつ `f_wf_outdiag = 1` | m/s |
 | Wr | ローラーのエネルギー E_r。`f_wf_roller = 1` かつ `f_wf_outdiag = 1` | J/m² |
+| Qbx・Qby | 掃流砂の輸送量の推定(固体体積の単位幅。fn_geomorph の `f_wfsed = 1`・`f_fluvial = 1`)。`f_wf_outdiag = 1` | m²/s |
+| Qsx・Qsy | 浮遊砂の輸送量 hs·u_s(同、`f_suspend = 1`)。`f_wf_outdiag = 1` | m²/s |
+| Wua | 波の歪度・非対称による岸向きの輸送速度 u_a(平均波向の向きが正。`f_wfsed = 1`)。`f_wf_outdiag = 1` | m/s |
 
-**y の成分(Wfy・Wsy)は流速 v と同じ向き(行の増える向き = 南が正)です。** 波向の
+**y の成分(Wfy・Wsy・Qby・Qsy)は流速 v と同じ向き(行の増える向き = 南が正)です。** 波向の
 規約(北が正)とは逆なので注意してください。`wf_flow = 2` の流速 u・v は Lagrangian
 平均流速 u^L で、底面の流れ(オイラー流速)は u − Wsx、v − Wsy です。
 
@@ -464,7 +558,11 @@ c = σ̄/k̄)。
 
 - **位相平均・代表周期 1 個**です。回折・反射・周波数の広がり・風による発達・非線形の
   波の相互作用は扱いません。陰の縁のぼけは数値拡散で、回折ではありません。
-- **地形には作用しません**(漂砂は後の段)。
+- **土砂への作用(`f_wfsed`)**: 攪拌は底面の軌道流速だけで、砕波の乱れによる巻き上げは
+  入りません。浮遊砂の水平拡散はありません。遡上域(swash)の輸送は表しません(位相平均の
+  波は汀線の手前で止まります。砂丘の崩れは安息角崩落 `f_repose`)。代表粒径は掃流砂・
+  浮遊砂それぞれ 1 つです。浜の侵食と回復を分ける戻り流れと岸向きの速度の釣り合いは
+  係数 f_Sk・f_As に敏感です(校正の量)。
 - **阻止された波は作用量を除くだけ**で、阻止の点での反射(短い波への変換)は表しません。
   代表周期 1 個なので、阻止はすべてのエネルギーに同時に起こります(実際の波はスペクトルの
   短い成分から阻止されます)。阻止の手前の急峻化による砕波は表します。
@@ -515,6 +613,8 @@ c = σ̄/k̄)。
 | `wf_tramp` | 100 s | **数値設定**: XBeach の taper の既定[^xbeach](定常の波浪場を全域で一度に与える同じ状況の始動) |
 | `f_wf_current` | 0 | **方式**: 既定は流れの作用なし(段 W2 までと同じ結果)。式は Bretherton & Garrett(1968)[^bg68] の作用量の平衡で、流れによる屈折の式と使う流速(Lagrangian 平均)は XBeach の wci[^xbeach] と同じ。分散関係を方向ビンごとに直接解く点は独自(XBeach は Eikonal 式で波数を時間発展させる) |
 | 摩擦の速さの係数 | 1.16 | **文献値**: Ruessink ら(2001)[^ruessink01] の波・流れの摩擦(XBeach の定式)。設定項目ではない |
+| `f_wfsed`(&list_geomorph) | 0 | **方式**: 既定は土砂に作用しない。攪拌は Soulsby(1997)[^soulsby97] の波・流れのせん断の合成(f_w の上限 0.3 は Swart 1974[^swart74])、浮遊砂を Euler 平均流速で運ぶのは Reniers ら(2004)[^reniers04]・XBeach[^xbeach] と同じ。掃流砂の「τ*_max の量 × u_s の速さ」の組み合わせは独自(Soulsby 1997 の波・流れの掃流砂の式と同じ桁であることを test/wfsed の条件で確認) |
+| `wfsed_facsk`・`wfsed_facas`(&list_geomorph) | 0.1 | **校正量**: 既定は XBeach の facua[^xbeach]。式は van Thiel de Vries(2009)[^vtdv09]、S_k・A_s は Ruessink ら(2012)[^ruessink12] のパラメータ化(係数 p₂〜p₆ は XBeach の公開ソースの値で、原論文の表とは照合していない) |
 
 分散関係は Fenton & McKee(1990)[^fm90] の陽な近似を初期値に Newton 法 3 回で解きます。
 
@@ -537,6 +637,11 @@ c = σ̄/k̄)。
   上の作用量の流束の保存(独立に解いた分散関係)、逆流による阻止の位置と台帳、流れの作用の
   有無、非定常(流れの立ち上がりの間も作用量の台帳が閉じる)、河口の噴流が波の遡上を止める
   こと、再開の継続のバイト一致。
+- [test/wfsed](../../test/wfsed/README.md): 土砂への作用(段 W4・W5)。攪拌による浮遊砂の
+  平衡濃度と掃流砂の流砂量(独立に組み立てた Soulsby 1997 の式と一致)、海浜の沿岸漂砂の向き・
+  岸沖分布・岸沿いの一様性・CERC(Komar & Inman 1970)と同じ桁、岸向きの速度 u_a
+  (Ruessink ら 2012 の式と一致)、高波浪の侵食と低波浪の回復の向き、閉じた海盆の土砂の保存、
+  再開の継続のバイト一致。
 - いずれも MPI の np = 1・2・4 で逐次とビット一致します。
 
 ## 参考文献
@@ -549,16 +654,22 @@ c = σ̄/k̄)。
 [^fm90]: Fenton, J. D. & McKee, W. D. (1990) On calculating the lengths of water waves. Coastal Engineering 14, 499–513.
 [^gt85]: Guza, R. T. & Thornton, E. B. (1985) Velocity moments in nearshore. J. Waterway, Port, Coastal, Ocean Eng. 111(2), 235–256.
 [^hiswa]: Holthuijsen, L. H., Booij, N. & Herbers, T. H. C. (1989) A prediction model for stationary, short-crested waves in shallow water with ambient currents. Coastal Engineering 13, 23–54.
+[^ki70]: Komar, P. D. & Inman, D. L. (1970) Longshore sand transport on beaches. J. Geophys. Res. 75(30), 5914–5927.
 [^jb07]: Janssen, T. T. & Battjes, J. A. (2007) A note on wave energy dissipation over steep beaches. Coastal Engineering 54, 711–716. 砕波波高 H_b の形は Battjes, J. A. & Janssen, J. P. F. M. (1978) Energy loss and set-up due to breaking of random waves. Proc. 16th ICCE, 569–587 の Miche 型(XBeach の定式と同じ)。
 [^kuik88]: Kuik, A. J., van Vledder, G. Ph. & Holthuijsen, L. H. (1988) A method for the routine analysis of pitch-and-roll buoy wave data. J. Phys. Oceanogr. 18, 1020–1034.
 [^lhs64]: Longuet-Higgins, M. S. & Stewart, R. W. (1964) Radiation stresses in water waves; a physical discussion, with applications. Deep-Sea Research 11, 529–562. 沖の set-down は Longuet-Higgins, M. S. & Stewart, R. W. (1962) Radiation stress and mass transport in gravity waves, with application to 'surf beats'. J. Fluid Mech. 13, 481–504。
 [^nairn90]: Nairn, R. B., Roelvink, J. A. & Southgate, H. N. (1990) Transition zone width and implications for modelling surfzone hydrodynamics. Proc. 22nd ICCE, 68–81.
 [^rb97]: Reniers, A. J. H. M. & Battjes, J. A. (1997) A laboratory study of longshore currents over barred and non-barred beaches. Coastal Engineering 30, 1–22.
+[^reniers04]: Reniers, A. J. H. M., Roelvink, J. A. & Thornton, E. B. (2004) Morphodynamic modeling of an embayed beach under wave group forcing. J. Geophys. Res. 109, C01030.
 [^ruessink01]: Ruessink, B. G., Miles, J. R., Feddersen, F., Guza, R. T. & Elgar, S. (2001) Modeling the alongshore current on barred beaches. J. Geophys. Res. 106(C10), 22451–22463.
+[^ruessink12]: Ruessink, B. G., Ramaekers, G. & van Rijn, L. C. (2012) On the parameterization of the free-stream non-linear wave orbital motion in nearshore morphodynamic models. Coastal Engineering 65, 56–63.
 [^snapwave]: Roelvink, D., van Ormondt, M., Reyns, J. & van der Lugt, M. (2025) SnapWave: fast, implicit wave transformation from offshore to nearshore. Geosci. Model Dev. 18, 9469–9495. doi:10.5194/gmd-18-9469-2025(既定値は公開ソースによる)
+[^soulsby97]: Soulsby, R. L. (1997) Dynamics of Marine Sands: A Manual for Practical Applications. Thomas Telford, London. 波の摩擦係数(式 62a)、波・流れのせん断の合成(式 69・70)。
 [^svendsen84]: Svendsen, I. A. (1984) Wave heights and set-up in a surf zone. Coastal Engineering 8, 303–329.
 [^swan]: Booij, N., Ris, R. C. & Holthuijsen, L. H. (1999) A third-generation wave model for coastal regions: 1. Model description and validation. J. Geophys. Res. 104(C4), 7649–7666.
+[^swart74]: Swart, D. H. (1974) Offshore sediment transport and equilibrium beach profiles. Delft Hydraulics Laboratory, Publication No. 131.
 [^tarboton97]: Tarboton, D. G. (1997) A new method for the determination of flow directions and upslope areas in grid digital elevation models. Water Resour. Res. 33(2), 309–319.
 [^vanleer74]: van Leer, B. (1974) Towards the ultimate conservative difference scheme. II. Monotonicity and conservation combined in a second-order scheme. J. Comput. Phys. 14, 361–370.
+[^vtdv09]: van Thiel de Vries, J. S. M. (2009) Dune erosion during storm surges. PhD thesis, Delft University of Technology.
 [^walstra00]: Walstra, D. J. R., Roelvink, J. A. & Groeneweg, J. (2000) Calculation of wave-driven currents in a 3D mean flow model. Proc. 27th ICCE, 1050–1063.
 [^xbeach]: Roelvink, D., Reniers, A., van Dongeren, A., van Thiel de Vries, J., McCall, R. & Lescinski, J. (2009) Modelling storm impacts on beaches, dunes and barrier islands. Coastal Engineering 56, 1133–1152. 定式と既定値は XBeach マニュアル(xbeach.readthedocs.io)と公開ソース(params.F90)による。

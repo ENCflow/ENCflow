@@ -111,6 +111,13 @@
   !fines_la = 0.05          ! 交換層厚 L_a (m)。利用可能率 min(1, sf/L_a)(必須)
   !fines_frac0 = 0.0        ! 初期の細粒分割合(sf = 割合 × sd。0 = 粗粒のみ = 既定、1 = 全層細粒)
 
+  ! ---- 沿岸の波浪場による攪拌と輸送(fn_wavefield と f_fluvial か f_suspend が必須)----
+  ! 波の軌道流速が砂を攪拌し、波による流れ(Euler 平均流速)と岸向きの速度 u_a が運ぶ
+  ! (沿岸漂砂・浜の侵食と回復。users_guide/wavefield.md。fn_wave の沿岸漂砂とは排他)
+  !f_wfsed = 1
+  !wfsed_facsk = 0.1        ! 波の歪度による岸向きの輸送速度の係数 f_Sk(既定 0.1。0 で無効)
+  !wfsed_facas = 0.1        ! 同 非対称の係数 f_As(既定 0.1。0 で無効)
+
   ! ---- 斜面浸食(雨滴+面状。f_suspend が必須)----
   !f_wash = 1
   !wash_kr = 0.001          ! 雨滴侵食係数(無次元。E = kr×降雨強度)。kr・kf とも

@@ -14342,3 +14342,105 @@ n_m・c_m(E_m/c_m = k_m N_m = 波の運動量)。
 save の全ファイル。保存の時刻の行を除く)が変更前のバイナリとバイト一致。土砂の 11 ケースの
 np = 2(fluvial・suspend は np = 4 も)が逐次とバイト一致、suspend・fluvial・sedinflow・sedfeed の
 `-Og -fcheck=all` の逐次と np = 2 が一致(範囲外アクセスなし)、トップレベルの make が通る。
+
+### 88.10 段 W4・W5 の実装(2026-10-27。波→土砂)
+
+wavefield_plan.md §5.8 の素描(攪拌は Soulsby 1997 の合成、輸送は u^E、岸沖は u_a)を実装した。
+細部の判断(利用者の事前の指示「全て推奨で」に従い推奨案で進めた)は次のとおり。
+
+- **有効化は `&list_geomorph` の `f_wfsed`**(計画書の素描は &list_wavefield の f_wf_stir)。
+  理由: 土砂側の物性(粒径・限界掃流力・流砂量式)が list_geomorph にあり、fn_wave の沿岸漂砂
+  (CERC)との排他も geomorph の init で閉じる。init の順(geomorph → swflow → wavefield)では
+  geomorph が先に知るので、共有状態の要求 `s%wv_sed` を立て、m_wavefield_init が書き出しの
+  配列を確保して更新ごとにハロまで埋める(s%sed_active と同じ「状態を介した要求」。波浪場が
+  無効なら m_wavefield_init が停止)。W5 の係数 `wfsed_facsk`・`wfsed_facas` も list_geomorph
+  (XBeach でも漂砂の節の校正係数)。fn_wavefield なし・f_fluvial も f_suspend もない・
+  fn_wave の沿岸漂砂と同時・f_debris と同時は init で停止。
+- **波の書き出し**(s%wv_sed のときだけ確保): 平均波向の単位ベクトル wvex・wvey(流速 u・v と
+  同じ向き = y 南)、軌道の振幅 wvae = √2 u_rms/σ̄(W1 は ω、W3 は σ̄)、W5 の u_a(wvua)。
+  diagnose・diagnose_cur が帯に書き、sed_export_halo が u_rms とともにハロを交換する。
+  保存は wavefield.dat の末尾(wavefield_info の項目 sed・sedua。無い保存から復元したら
+  診断量ごと求め直す。形式は追加だけなので save_version は同日の 20261027 のまま)。
+- **攪拌**(wfsed_taumax。m_geomorph の公開関数): Soulsby(1997)の f_w = 1.39 (A/z0)^−0.52
+  (式 62a。z0 = d50/12、上限 0.3 は Swart 1974 の小さな A の値)、τ*_w = ½ f_w u_w²/(s g d)、
+  u_w = √2 u_rms(Soulsby の不規則波の代表振幅 = √2 σ_u。XBeach の u_rms は σ_u)、
+  τ*_m(式 69)、τ*_max(式 70。φ は u^E と平均波向の角、|cos φ|)。流れの τ*_c は既存の
+  Manning の閉じを u^E の速さで(掃流砂は f_τ を掛ける)。掃流砂・浮遊砂とも閾値と量に τ*_max
+  (Soulsby が τ_max を閾値と巻き上げに勧めることに合わせる)。波がなければ τ*_max = τ*_c で、
+  分岐に入らない経路(f_wfsed = 0)と同じ式。
+- **掃流砂の輸送**: q_b = q*(τ*_max) √(τ*_s/τ*_max) √(sgd³) を u_s = u^E + u_a ê_θ の向きに
+  (τ*_s は u_s の速さの Manning のせん断)。「τ*_max の流れが運ぶ掃流の量(濃度)を u_s の速さで
+  運ぶ」形で、波なしで既存の式、流れも u_a もなければ 0、波が卓越すると |u_s| に比例
+  (XBeach の C_eq × u と同じ考え方)。組み合わせは独自なので、Soulsby(1997)の波・流れの
+  掃流砂の式 Φ = max(12 θ_m^{1/2}(θ_m − θ_cr), 12(0.95 + 0.19 cos 2φ) θ_w^{1/2} θ_m) と比べた:
+  test/wfsed の掃流砂(水深 2.2 m・流れ 0.45 m/s・H_m0 0.5 m・T 6 s・φ = 30°)でモデルの
+  Φ = 0.92、Soulsby の式 0.98(流れだけの MPM は 0.41)。量の閾値・流砂量式・定着・河床勾配の
+  補正は既存の経路のまま。
+- **無効時の命令列(-Ofast の最終桁)**: 掃流砂の波の経路は calc_fluvial の写し
+  calc_fluvial_wfsed に置き、calc_fluvial は先頭で振り分けるだけにした(§88.4・§88.7 と同じ
+  理由)。最初の版はループ 1 の中に分岐を入れ、波浪場を使わない test/fluvial・sedfeed の
+  release の結果が最終桁でずれた(Log の Runge 列の再計算率と state.dat。厳密数学のビルド
+  (-O2 -ffp-contract=off、LTO・fast-math なし)では変更前とバイト一致 = 命令列の差)。if/else を
+  「従来の文を残して有効時だけ後から上書き」の形にしても戻らず、OpenMP のループ本体(別関数に
+  切り出される)を変更前と同じ文にすることで戻った。calc_fluvial のループ 1 を変えるときは
+  写しも同じく変える(写しの頭の注)。
+- **浮遊砂の輸送**: advect_scalar の任意引数 eul(hs のときだけ真)で、面流束から
+  h (r u^S − u_a ê_θ)(両セルの平均。側方 Neumann の面は鏡像との平均、他の境界面は自セル)を
+  引く。Stokes 輸送は谷より上に集中し浮遊砂は底近くに多いので Euler 平均流速で運ぶ(Reniers ら
+  2004、XBeach)。溶存物質(水質・塩水)は u^L のまま(鉛直に一様)。水の流量が 0 の面
+  (壁・閉じた開口・堤防)は差し引きも行わない(土砂だけが壁を抜けない)。
+- **W5 の u_a**: van Thiel de Vries(2009)の u_a = (f_Sk S_k − f_As A_s) u_rms、S_k・A_s は
+  Ruessink ら(2012)の Ursell 数 Ur = (3/8)√2 H_rms k/(kh)³ のパラメータ化。係数 p2〜p6 は
+  XBeach の公開ソース(morphevolution.F90 の RvR。注記に Ruessink ら 2012 の値と誤差)の値で、
+  原論文の表は照合できていない(取得できなかった。handoff)。既定 f_Sk = f_As = 0.1 は XBeach の
+  facua の既定。W4 と W5 を一つのコミットにしたのは、W5 の既定(0.1)が W4 の検定の
+  reference を変えるため(reference は人間だけが更新する)。
+- **出力**: f_wf_outdiag = 1 で Qbx・Qby(掃流砂のセルの推定。補正・クランプなしの容量の目安)・
+  Qsx・Qsy(hs u_s)・Wua。
+- **局所 CERC**(計画書 §5.8 の比較用の選択肢)は入れていない。V11 の比較は検定スクリプトが
+  モデルの砕波点の波から CERC(Komar & Inman 1970)を計算して行う。選択肢として入れるかは
+  過程の漂砂の長期計算の結果を見て決める(handoff)。
+- **既知の制約**: (1) 砕波の乱れによる攪拌(XBeach の turb)はない(軌道流速だけ)。
+  (2) 浮遊砂の水平拡散はない(移流と E-D だけ)。(3) 遡上域(swash)の輸送は表さない
+  (位相平均の波は汀線の手前で止まる)。砂丘の崩れは安息角崩落 f_repose。(4) 代表粒径は
+  掃流砂・浮遊砂それぞれ 1 つ。(5) 戻り流れと u_a の釣り合いは f_Sk・f_As に敏感(校正の量)。
+
+### 88.11 段 W4・W5 の検証(2026-10-27。gfortran 13.3 / Open MPI 4.1.6、Ubuntu 24.04)
+
+- **test/wfsed**(test/wfcurrent の基本の勾配 1/80 の海浜に掃流砂・浮遊砂と `f_wfsed = 1`。検定は
+  Soulsby 1997 のせん断・平衡濃度・流砂量、Ruessink ら 2012 の u_a、CERC を Python で独立に組み立てて
+  モデルの出力と比べる):
+  - 攪拌(流れなし・水深 5 m の平坦): 平衡濃度の緩和の式とモデルの濃度の最大の相対差 4.9e-7、
+    固体の総量の保存は浮遊砂の総量の 3.2e-12。
+  - 掃流砂(一様な流れ 0.45 m/s に 30° の波): 流砂量の最大の相対差 1.5e-7、向きの差 5.5e-15 rad、
+    波による増加 2.24 倍(Soulsby の波・流れの掃流砂の式との比較は §88.10)。
+  - 海浜の沿岸漂砂(H_m0 = 1 m・T = 8 s・20°、1 時間): 総量 4.47e-2 m³/s(掃流砂 1.6e-3・浮遊砂
+    4.31e-2)で CERC(Komar & Inman 1970。K = 0.77、波高が最大のセルを砕波点)の 1.62 倍。岸沖分布の
+    最大は砕波帯の中(i = 95。砕波の散逸の最大は i = 97)、砕波帯より沖は最大の 0.7%、行の総量の差
+    1.6e-5・地形の変化の行の差 2.2e-7 m(側方 Neumann の辺の土砂 = §88.9)、砕波帯の岸沖の輸送は
+    沖向き(和 −1.28e-3 m²/s)、最大の堆積(i = 92)が最大の侵食(i = 109)の沖側(戻り流れによる
+    砂州の形成)。
+  - 閉じた海盆: 掃流砂・浮遊砂の移流(Stokes 輸送と u_a を差し引く面流束)・E-D を合わせた固体の
+    総量の保存 4.6e-14。
+  - u_a: 872 セルで組み立てた式との最大の相対差 8.8e-7、最大 0.061 m/s(i = 96、水深 1.69 m)。
+  - 高波浪(H_m0 = 2 m)はセル 20〜110 で沖向き、低波浪(0.6 m・12 s)は砕波帯より沖のセル 46〜89 で
+    岸向き(wavefield_plan.md の V13。定性の検定)。
+  - 再開の継続(1530 s で保存)は通し計算とバイト一致、不正な設定 4 つは停止。逐次の検定一式は
+    1 スレッドで約 2 分。
+- **無効時のビット一致(V0)**: reference を持つ 35 ケースのうち 34 が W4a と同じくビット一致
+  (nhshelf は §88.5 の既知の事象で、Log.txt が W3・W4a の実行とバイト一致)。reference を持たない
+  土砂・スカラーの検定 25 ケースの出力(result・save の全ファイル。保存の時刻の行を除く)が W4a の
+  バイナリとバイト一致(最初の版の test/fluvial・sedfeed の最終桁のずれと対処は §88.10)。
+  **reference は更新していない**(wfsed は新設の reference)。
+- **MPI**: wfsed の np = 1・2・4 が逐次 reference に ULP=0(攪拌・掃流砂・閉じた海盆は np = 1 と
+  バイト一致、再開の継続も MPI で一致)。
+- **-fcheck**: `-Og -fcheck=all`(FPE の捕捉・snan の初期化)で wfsed の逐次と np = 2 が一致(範囲外
+  アクセスなし。検定もすべて通る)。
+- **utils**: トップレベルの make が通る。
+- **CI**: ci.yml の高速ケース(逐次・MPI np = 2)と nightly の REF_CASES に wfsed を追加(逐次の検定
+  一式が約 2 分)。
+- **検証の環境の注**: 検証の途中でコンテナが 2 回再起動し、間の一時期は別の CPU(-march=native の
+  展開先が Sapphire Rapids)だった。上の release の比較はすべて同じ型のホスト(Cascade Lake)で
+  ビルドしたバイナリどうしで行い(一部の実行は Sapphire Rapids の上。同じバイナリの出力は実行の
+  ホストによらず一致した)、主ツリーの最終のビルドも検証に使ったバイナリと機械語(.text・
+  .rodata・.data)が同一であることを確かめた。

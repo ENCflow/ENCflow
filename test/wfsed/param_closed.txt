@@ -1,0 +1,90 @@
+!======================================================================
+! wfsed: 閉じた海盆の土砂の保存(基本の海浜で流れの四辺を壁にする)
+!   波は西から入射(南北は側方 Neumann、東は吸収)、流れの辺はすべて壁なので沿岸流は北の
+!   壁で折り返して循環する。掃流砂・浮遊砂を波で攪拌し u^E で運ぶ(Stokes 輸送を引く
+!   面流束を含む)。30 分。
+!   確認事項(Check_wfsed.py closed): 固体の総量 Σ hs + (1 − λ) Σ (z − z0) が丸めの規模で
+!   保存(save_closed/state.dat の倍精度で)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 1800
+  dt_disp = 600
+  dt_file = 1800
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_geomorph = '-'
+  fn_wavefield = '-'
+  dir_result = 'result_closed'
+  f_check_cfl = 1
+  f_output_mode = 3
+  f_out_z = 1
+  f_out_h = 1
+  f_out_e = 1
+  f_out_u = 1
+  f_out_v = 1
+  f_out_hs = 1
+  f_state_save = 1
+  dir_save = 'save_closed'
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 2
+  e0 = 0.0
+/
+
+&list_geoinfo
+  nx = 120
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = 0.025
+  sd0 = 10.0
+/
+
+&list_bound_edge
+  f_bc_w = 0                ! 流れの四辺は壁(閉じた海盆)
+  f_bc_e = 0
+  f_bc_n = 0
+  f_bc_s = 0
+/
+
+&list_geomorph
+  dt_geomorph = 5.0
+  f_fluvial = 1
+  f_qbform = 2              ! MPM
+  fluv_d50 = 0.0002
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_bcfeed = 1           ! 側方の辺の掃流砂は容量給砂(勾配 0 相当)
+  f_suspend = 1
+  f_esform = 1
+  susp_d50 = 0.0002
+  susp_tausc = 0.05
+  susp_esa = 1.0e-4
+  susp_beta = 1.0
+  f_wfsed = 1               ! 波浪場による攪拌と輸送
+/
+
+&list_wavefield
+  wf_bc_side = 1, 0, 2, 2   ! 西が入射、東(陸)は吸収、南北は側方 Neumann
+  wf_hm0 = 1.0
+  wf_trep = 8.0
+  wf_dir = 20.0             ! 東から 20° 北へ進む(北向きの沿岸流)
+  dt_wave = 60
+  wf_tol = 1.0e-7
+  wf_flow = 2
+  f_wf_roller = 1
+  f_wf_outdiag = 1
+/

@@ -63,6 +63,8 @@ module m_geomorph
   ! gm_param は submodule の init が呼ぶ。private のままだと gfortran(LTO)が
   ! シンボルを局所化しリンク不能(§22 の実バグと同型。swflow の sect_* と同じ対処)
   public :: gm_param
+  ! wfsed_taumax・wfsed_cphi も submodule(fluvial・suspend)が呼ぶので public(gm_param と同じ理由)
+  public :: wfsed_taumax, wfsed_cphi
   public :: m_geomorph_init
   public :: m_geomorph_calc
   public :: m_geomorph_dispose
@@ -238,6 +240,15 @@ module m_geomorph
     integer :: nact = 0              ! 流束を持った砕波帯セルの数(累計。ランク局所)
   end type
 
+  ! 沿岸の波浪場による攪拌と輸送(f_wfsed。段 W4。§88)。波浪場が共有状態へ書き出す
+  ! 軌道流速 u_rms(wvub)・軌道の振幅 A(wvae)・平均波向(wvex・wvey)を読む
+  type t_wfsed
+    real :: z0b = 0.0                ! 掃流砂の粒子粗度 z0 = d50/12 (m)(k_s = 2.5 d50、z0 = k_s/30)
+    real :: z0s = 0.0                ! 浮遊砂の z0 (m)
+    real :: twb = 0.0                ! 1/(2 s g d50)(τ*_w = twb·f_w·u_w²。掃流砂)
+    real :: tws = 0.0                ! 同(浮遊砂)
+  end type
+
   type t_gmwork
     real :: ainv = 0.0               ! 1 / (dx*dy)
     real, allocatable :: q(:,:,:)    ! エッジ流量4成分 (m3/s)。プロセス間で
@@ -405,6 +416,7 @@ module m_geomorph
     integer :: f_wave_long = 0       ! 波浪による沿岸漂砂(0:無効, 1:有効。fn_wave。§84.15)
     integer :: f_rockfall = 0        ! 崩落と崖錐(0:無効, 1:有効。§48.7)
     integer :: f_bedfines = 0        ! 河床の細粒分の帳簿(0:無効, 1:有効。§84.10)
+    integer :: f_wfsed = 0           ! 波浪場による攪拌と輸送(0:無効, 1:有効。段 W4。§88)
     real :: bs_r = 0.0               ! 浮力比 r = ρw/ρs
     integer :: f_bsres = 1           ! 底層の抵抗則(1:Voellmy, 2:Bingham〔予約〕)
     real :: bs_mu = 0.0              ! Voellmy 摩擦係数 μ
@@ -433,6 +445,7 @@ module m_geomorph
     type(t_fines) :: fin             ! 河床の細粒分の帳簿
     type(t_dissol) :: dis            ! 石灰岩の溶食
     type(t_wave) :: wav              ! 波浪による沿岸漂砂
+    type(t_wfsed) :: wfs             ! 波浪場による攪拌と輸送
     type(t_gmwork) :: wrk            ! 共有スクラッチ(require_work が確保)
   end type
 
@@ -731,6 +744,44 @@ end function
 
 
 !----------------------------------------------------------------------
+! 波・流れの最大の無次元底面せん断 τ*_max(Soulsby 1997 式 69・70。段 W4。§88)
+!   τ*_w = ½ f_w u_w²/(s g d)、f_w = min(1.39 (A/z0)^−0.52, 0.3)(粗面乱流の式 62a。
+!   上限 0.3 は小さな A での Swart 1974 の値)、
+!   τ*_m = τ*_c [1 + 1.2 (τ*_w/(τ*_c + τ*_w))^3.2](流れの向きの平均)、
+!   τ*_max = √((τ*_m + τ*_w |cos φ|)² + (τ*_w sin φ)²)(波の周期内の最大)。
+!   波がなければ(u_w ≤ 0 か A ≤ 0)τ*_max = τ*_c(呼び出し側の値をそのまま返す)
+!----------------------------------------------------------------------
+pure function wfsed_taumax(tauc, uw, aw, cphi, z0, twc) result(tmax)
+  real, intent(in) :: tauc               ! 流れの τ*_c
+  real, intent(in) :: uw                 ! 底面の軌道流速の振幅 u_w = √2 u_rms (m/s)
+  real, intent(in) :: aw                 ! 軌道の振幅 A (m)
+  real, intent(in) :: cphi               ! |cos φ|(φ: 流れと平均波向のなす角)
+  real, intent(in) :: z0                 ! 粒子粗度 z0 (m)
+  real, intent(in) :: twc                ! 1/(2 s g d)
+  real :: tmax, fw, tw, tm
+  tmax = tauc
+  if (uw <= 0.0 .or. aw <= 0.0) return
+  fw = min(1.39 * (aw / z0)**(-0.52), 0.3)
+  tw = twc * fw * uw * uw
+  tm = tauc * (1.0 + 1.2 * (tw / (tauc + tw))**3.2)
+  tmax = sqrt((tm + tw * cphi)**2 + tw * tw * (1.0 - cphi * cphi))
+end function
+
+
+!----------------------------------------------------------------------
+! 流れ (ub, vb) と平均波向 (wx, wy) のなす角の |cos φ|(どちらかが 0 なら 0。段 W4)
+!----------------------------------------------------------------------
+pure function wfsed_cphi(ub, vb, wx, wy) result(c)
+  real, intent(in) :: ub, vb, wx, wy
+  real :: c, un, wn
+  c = 0.0
+  un = sqrt(ub * ub + vb * vb)
+  wn = sqrt(wx * wx + wy * wy)
+  if (un > 0.0 .and. wn > 0.0) c = min(abs(ub * wx + vb * wy) / (un * wn), 1.0)
+end function
+
+
+!----------------------------------------------------------------------
 ! 地形変化モジュールを初期化する
 !   fn_geomorph が未指定なら何もしない(enabled = .false. のまま)。
 !   g は m_geoinfo_require_sd(土層厚の遅延確保)のため inout。
@@ -932,6 +983,52 @@ subroutine m_geomorph_init(gm, p, g, s)
         call init_wave(gm, p, g, wlist)
       end if
     end block
+  end if
+
+  ! 沿岸の波浪場による攪拌と輸送(f_wfsed。段 W4・W5。§88): 波浪場の軌道流速・波向で掃流砂・
+  ! 浮遊砂の τ* を Soulsby(1997)の波・流れの最大のせん断にし、Euler 平均流速 u^E と岸向きの
+  ! 速度 u_a で運ぶ。
+  ! init の順(geomorph → wavefield)により、共有状態の要求 s%wv_sed を立てて波浪場に
+  ! 書き出しを頼む(波浪場が無効なら m_wavefield_init が停止する)
+  gm%f_wfsed = list%f_wfsed
+  if (gm%f_wfsed < 0 .or. gm%f_wfsed > 1) call par_stop("list_geomorph: f_wfsed must be 0 or 1")
+  if (gm%f_wfsed > 0) then
+    if (len_trim(p%fn_wavefield) == 0) then
+      call par_stop("list_geomorph: f_wfsed requires the coastal wave field (fn_wavefield)")
+    end if
+    if (gm%f_fluvial <= 0 .and. gm%f_suspend <= 0) then
+      call par_stop("list_geomorph: f_wfsed requires f_fluvial=1 or f_suspend=1")
+    end if
+    if (gm%f_wave_long > 0) then
+      call par_stop("list_geomorph: f_wfsed cannot be combined with the longshore transport of fn_wave " &
+                    // "(f_wave_longshore=1): the same transport would be counted twice")
+    end if
+    if (gm%f_debris > 0) call par_stop("list_geomorph: f_wfsed cannot be combined with f_debris")
+    ! 粒子粗度と τ*_w の係数、漂砂の推定(出力。有効な過程の分だけ)
+    if (gm%f_fluvial > 0) then
+      gm%wfs%z0b = gm%d50 / 12.0
+      gm%wfs%twb = 1.0 / (2.0 * gm%sgrav * p%gg * gm%d50)
+      allocate(s%sqbx(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(s%sqby(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    end if
+    if (gm%f_suspend > 0) then
+      gm%wfs%z0s = gm%sd50 / 12.0
+      gm%wfs%tws = 1.0 / (2.0 * gm%sgrav * p%gg * gm%sd50)
+      allocate(s%sqsx(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+      allocate(s%sqsy(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    end if
+    s%wv_sed = .true.
+    call par_info("geomorph: the wave field stirs the sediment (wave-current bed shear stress of Soulsby 1997)" &
+                  // " and the sediment moves with the Eulerian mean velocity u^E (f_wfsed = 1)")
+    ! 波の歪度・非対称による岸向きの輸送速度 u_a(段 W5。van Thiel de Vries 2009 の
+    ! u_a = (f_Sk S_k − f_As A_s) u_rms、S_k・A_s は Ruessink ら 2012。既定の係数 0.1 は XBeach の
+    ! facua)。土砂は u^E + u_a ê_θ で運ばれる(戻り流れの沖向きと岸向きの釣り合い)
+    s%wv_facsk = gm_param("wfsed_facsk", list%wfsed_facsk, 0.1, "", unset=-9999.0)
+    s%wv_facas = gm_param("wfsed_facas", list%wfsed_facas, 0.1, "", unset=-9999.0)
+    if (s%wv_facsk < 0.0 .or. s%wv_facas < 0.0) then
+      call par_stop("list_geomorph: wfsed_facsk and wfsed_facas must be >= 0")
+    end if
+    s%wv_asym = (s%wv_facsk > 0.0 .or. s%wv_facas > 0.0)
   end if
 
   ! 浮遊砂輸送の有効化を通知(swflow_enc がステップ内で s%hs を移流する。

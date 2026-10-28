@@ -18,16 +18,18 @@ split into **N_θ directional bins**. It is a rough estimate of the same level a
 the stationary mode of XBeach[^xbeach] and SnapWave[^snapwave]; frequency spreading,
 wind growth and nonlinear wave–wave interactions are not treated.
 
-**The feature is being implemented in stages.** It currently reaches stage W3: the
-**wave field on a fixed bed** (stage W1), the **wave-driven flow (setup and longshore
-currents; stage W2)** and the **change of waves by currents (Doppler shift, refraction by
-currents and blocking; stage W3)**. The action on the flow is enabled with `wf_flow`, and the
-action of the current on the waves with `f_wf_current` (both default 0 = no action; with
-`wf_flow = 0` the shallow water results are the same whether or not `fn_wavefield` is
+**The feature has been implemented in stages.** It currently reaches stage W5: the **wave
+field** (stage W1), the **wave-driven flow (setup and longshore currents; stage W2)**, the
+**change of waves by currents (Doppler shift, refraction by currents and blocking; stage W3)**
+and the **stirring and transport of sediment (longshore transport, beach erosion and recovery;
+stages W4 and W5)**. The action on the flow is enabled with `wf_flow`, the action of the
+current on the waves with `f_wf_current`, and the action on sediment with `f_wfsed` of
+[sediment and morphology](geomorph.md) (all default 0 = no action; with `wf_flow = 0` and
+`f_wfsed = 0` the shallow water and bed results are the same whether or not `fn_wavefield` is
 written; [action on the flow](#action-on-the-flow-wf_flow-stage-w2),
-[change of waves by currents](#change-of-waves-by-currents-f_wf_current-stage-w3)). **It does
-not act on the bed.** Longshore transport and cross-shore erosion and accretion (stages W4
-and W5) will be added in later stages (docs/wavefield_plan.md §9).
+[change of waves by currents](#change-of-waves-by-currents-f_wf_current-stage-w3),
+[action on sediment](#action-on-sediment-f_wfsed-stages-w4-and-w5)). Research extensions
+(stage W6) are in docs/wavefield_plan.md §9.
 
 It is a different feature from "longshore transport by waves" in the
 [sediment and morphology chapter](geomorph.md) (`fn_wave`, a simplified mode that
@@ -128,6 +130,7 @@ All that is needed is **an incident side** and **the offshore waves** (`wf_hm0`,
 | Arrival of a wave front (advanced together with a tsunami or flood) | `wf_mode = 1` (unsteady), `f_wf_init = 0` | Time change of Wh |
 | Wave setup and longshore currents | `wf_flow = 2`; the left and right sides that cross the coast lateral Neumann for both waves and flow (`wf_bc_side` = 2, `f_bc_*` = 3) | E (water level), u, v (velocity), Wfx, Wfy (force) |
 | Waves on river mouths, tidal currents and rip currents (blocking, steepening) | `f_wf_current = 1` (also `wf_flow = 2` for two-way coupling of waves and flow) | Wh, Wa, blocked in the ledger |
+| Longshore transport, beach erosion and recovery (bed change) | `wf_flow = 2` and `f_wfsed = 1` added to the bed load and suspended load of fn_geomorph | Z (bed level), Qby, Qsy (longshore transport; `f_wf_outdiag = 1`) |
 
 ## How it is computed
 
@@ -408,7 +411,7 @@ topography, so keep the area of interest away from the sides. Sediment is treate
 way: suspended load (and other scalars such as water quality and salt water) flows in with the
 concentration of the mirror cell, and bed load takes the flux of the face one cell inward
 along the side normal (all zero gradient; a coast that is uniform alongshore stays uniform as
-the bed changes).
+the bed changes; test/wfsed).
 
 ## Change of waves by currents (f_wf_current, stage W3)
 
@@ -492,6 +495,112 @@ the bins where the group velocity and the current cancel, and the quasi-steady i
 converges slowly (about 2000 iterations for the river-mouth jet of test/wfdoppler and about 7000
 for its blocked channel). If a message says that it did not converge, raise `wf_itmax`.
 
+## Action on sediment (f_wfsed, stages W4 and W5)
+
+Adding `f_wfsed = 1` of `&list_geomorph` to the bed load (`f_fluvial`) and suspended load
+(`f_suspend`) of [sediment and morphology](geomorph.md) lets the wave field move sediment. The
+orbital motion of the waves stirs the sand on the bed (increasing the pick-up and bed load), and
+the wave-driven flow (longshore current, undertow) and the onshore velocity of wave skewness and
+asymmetry carry it. Longshore transport (sand moving along the shoreline), beach erosion (sand
+carried offshore by the undertow of high waves) and recovery (sand carried onshore by the
+asymmetry of low waves) are computed in the same time evolution as the morphology.
+
+```
+&list_geomorph
+  f_fluvial = 1             ! bed load (stirred with the grain size fluv_d50)
+  f_suspend = 1             ! suspended load (stirred with the grain size susp_d50)
+  f_wfsed = 1               ! stirring and transport by the wave field
+  !wfsed_facsk = 0.1        ! skewness coefficient f_Sk (default 0.1; 0 removes the skewness term of the onshore velocity)
+  !wfsed_facas = 0.1        ! asymmetry coefficient f_As (default 0.1)
+/
+```
+
+`fn_wavefield` is required. The basic use is together with the wave-driven flow
+(`wf_flow = 2`; the longshore current and the undertow carry the sand. With `wf_flow = 0` the
+waves drive no flow, and only the stirring and the onshore velocity act). It cannot be used
+together with [the longshore transport of fn_wave](geomorph.md) (CERC type; the run stops at
+the start so that the same transport is not counted twice), nor with debris flow (`f_debris`).
+
+### Stirring (wave–current bed shear stress)
+
+From the amplitude of the orbital velocity at the bed u_w = √2 u_rms (u_rms is the output Wu)
+and the orbital amplitude A = u_w/σ̄ (σ̄ is the intrinsic angular frequency), the wave bed
+shear stress and its combination with the current shear stress are computed with the formulas
+of Soulsby (1997)[^soulsby97].
+
+```math
+\tau_w = \tfrac12 \rho f_w u_w^2,\quad f_w = \min\left(1.39\,(A/z_0)^{-0.52},\ 0.3\right),\quad z_0 = d_{50}/12
+```
+
+```math
+\tau_m = \tau_c\left[1 + 1.2\left(\frac{\tau_w}{\tau_c + \tau_w}\right)^{3.2}\right],\quad
+\tau_{max} = \sqrt{(\tau_m + \tau_w|\cos\varphi|)^2 + (\tau_w\sin\varphi)^2}
+```
+
+τ_c is the shear stress of the current alone (the existing Manning closure
+τ* = n² V²/(s d h^{1/3}), with V the speed of the Eulerian mean velocity u^E below), φ the angle
+between the current and the mean wave direction, and τ_max the maximum shear stress within the
+wave period. τ*_max is used as the dimensionless shear stress of the bed load formula
+(`f_qbform`) and of the equilibrium concentration of suspended load (`f_esform`), including the
+threshold. z0 is the grain roughness (z0 = k_s/30 with k_s = 2.5 d50), and the upper limit 0.3 is
+the value of Swart (1974)[^swart74] for small A. Without waves τ*_max = τ*_c, the same formula as
+with `f_wfsed = 0`.
+
+### Transport (Eulerian mean velocity and onshore velocity)
+
+The velocity that carries the sand is u_s = u^E + u_a ê_θ (ê_θ is the unit vector of the mean
+wave direction).
+
+- **Eulerian mean velocity u^E = u^L − u^S**: with `wf_flow = 2` the shallow water velocity is
+  the Lagrangian mean u^L (the mass transport of water), and the Stokes transport u^S is
+  concentrated above the wave troughs. Suspended sediment is concentrated near the bed, so the
+  sand moves with the Eulerian mean velocity without the Stokes transport (Reniers et al.
+  2004[^reniers04]; the same as XBeach[^xbeach]). In the surf zone u^E is the offshore undertow,
+  which carries sand offshore.
+- **Onshore velocity u_a**: in shallow water the crests of the waves become peaked (skewness
+  S_k) and the waves lean forward (asymmetry A_s), so the onshore orbital velocity is stronger
+  and the net sand transport is onshore. As in XBeach, u_a = (f_Sk S_k − f_As A_s) u_rms of van
+  Thiel de Vries (2009)[^vtdv09] is used, with S_k and A_s from the parameterization of
+  Ruessink et al. (2012)[^ruessink12] by the Ursell number Ur = (3/8)√2 H_rms k/(kh)³
+  (S_k = B cos ψ, A_s = B sin ψ, B = p₂/(1 + exp((p₃ − log₁₀ Ur)/p₄)), ψ = −90° + 90° tanh(p₅/Ur^{p₆});
+  the coefficients p₂ to p₆ are the values of the public XBeach source). f_Sk and f_As
+  (`wfsed_facsk`, `wfsed_facas`) are calibration coefficients; the default 0.1 is the default of
+  XBeach (facua).
+
+Suspended load is carried with the shallow water face fluxes minus h(u^S − u_a ê_θ) (it moves
+with a velocity different from the water), and bed load
+
+```math
+q_b = q^*(\tau^*_{max})\sqrt{\tau^*_s/\tau^*_{max}}\,\sqrt{s g d^3}
+```
+
+is carried in the direction of u_s (τ*_s is the Manning shear stress of the speed of u_s). It
+carries the bed load amount that a current with τ*_max would carry at the speed of u_s: without
+waves it agrees with the existing formula, with waves and no current it moves in the direction
+of u_a, and when the waves are stronger than the current the transport is proportional to the
+speed of u_s (the same idea as "equilibrium concentration × transport velocity" of XBeach; this
+combination is original).
+
+**Beach erosion and recovery** are decided by the balance between the offshore undertow u^E and
+the onshore u_a. With high waves the undertow wins and sand is carried offshore (a bar forms);
+with low waves and long-period swell u_a wins offshore of the surf zone and sand returns onshore
+(storm and calm of test/wfsed). Which one wins is sensitive to f_Sk and f_As, so these two are
+the calibration parameters when the morphological change is to be matched.
+
+### Output of longshore transport and comparison with CERC
+
+With `f_wf_outdiag = 1`, the estimate of bed load Qbx, Qby, the suspended transport Qsx, Qsy
+(transport of solid volume per unit width, m²/s; directions as the velocities u, v) and the
+onshore velocity Wua (m/s) are written. Integrating the alongshore component across the shore
+gives the longshore transport rate. On the straight coast of test/wfsed (H_m0 = 1 m, T = 8 s,
+20°) it is about 1.6 times CERC (Komar & Inman 1970[^ki70]) — the same order (both the CERC
+coefficient and the coefficients of the process-based transport are calibrated quantities).
+
+When the left and right sides of a straight coast are lateral Neumann (`f_bc_*` = 3), suspended
+load flows in with the concentration of the mirror cell (zero gradient) and bed load takes the
+flux of the face one cell inward along the side normal (the same coast is treated as
+continuing outside; [lateral boundaries](#lateral-boundaries-f_bc--3)).
+
 ## Output and checks
 
 **Distributions** (at each output time; [input/output formats](io.md))
@@ -505,8 +614,11 @@ for its blocked channel). If a message says that it did not converge, raise `wf_
 | Wfx, Wfy | Wave force F = −∇·S (cell centres; including the roller). `wf_flow` ≥ 1 and `f_wf_outdiag = 1` | N/m² |
 | Wsx, Wsy | Stokes transport velocity u^S. `wf_flow = 2` and `f_wf_outdiag = 1` | m/s |
 | Wr | Roller energy E_r. `f_wf_roller = 1` and `f_wf_outdiag = 1` | J/m² |
+| Qbx, Qby | Estimate of the bed load transport (solid volume per unit width; `f_wfsed = 1` and `f_fluvial = 1` of fn_geomorph). `f_wf_outdiag = 1` | m²/s |
+| Qsx, Qsy | Suspended transport hs·u_s (likewise, `f_suspend = 1`). `f_wf_outdiag = 1` | m²/s |
+| Wua | Onshore transport velocity u_a of wave skewness and asymmetry (positive along the mean wave direction; `f_wfsed = 1`). `f_wf_outdiag = 1` | m/s |
 
-**The y components (Wfy, Wsy) have the same sign convention as the velocity v (the
+**The y components (Wfy, Wsy, Qby, Qsy) have the same sign convention as the velocity v (the
 direction of increasing row index = south is positive).** Note that this is opposite to
 the convention of the wave direction (north positive). With `wf_flow = 2` the velocities
 u and v are the Lagrangian mean velocity u^L; the flow at the bed (the Eulerian velocity)
@@ -539,7 +651,14 @@ approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storag
 - **Phase-averaged with one representative period.** Diffraction, reflection,
   frequency spreading, wind growth and nonlinear wave–wave interactions are not treated.
   The smearing of shadow edges is numerical diffusion, not diffraction.
-- **It does not act on the bed** (sediment transport comes in later stages).
+- **Action on sediment (`f_wfsed`)**: the stirring is by the orbital velocity at the bed
+  only; pick-up by breaking-induced turbulence is not included. There is no horizontal
+  diffusion of suspended load. Transport in the swash zone is not represented (the
+  phase-averaged waves stop before the shoreline; dune slumping is the angle-of-repose
+  collapse `f_repose`). There is one representative grain size each for bed load and
+  suspended load. The balance between the undertow and the onshore velocity that decides
+  between beach erosion and recovery is sensitive to the coefficients f_Sk and f_As
+  (calibration quantities).
 - **Blocked waves are only removed as wave action**; reflection at the blocking point
   (conversion to short waves) is not represented. With one representative period, blocking
   happens to all the energy at once (real waves are blocked from the short components of the
@@ -596,6 +715,8 @@ approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storag
 | `f_wf_roller` | 1 | **Method**: the XBeach default[^xbeach] (roller = 1). Its effect of moving the maximum of the force shoreward agrees with observations (Reniers & Battjes 1997[^rb97]) |
 | `wf_beta` | 0.1 | **Literature value**: the XBeach default[^xbeach] (range 0.05–0.3); the 0.1 of Reniers & Battjes (1997)[^rb97] |
 | `wf_tramp` | 100 s | **Numerical**: the default of XBeach's taper[^xbeach] (the start-up in the same situation, where a steady wave field is applied to the whole domain at once) |
+| `f_wfsed` (&list_geomorph) | 0 | **Method**: by default there is no action on sediment. The stirring is the wave–current shear stress combination of Soulsby (1997)[^soulsby97] (the upper limit 0.3 of f_w from Swart 1974[^swart74]); carrying suspended load with the Eulerian mean velocity is the same as Reniers et al. (2004)[^reniers04] and XBeach[^xbeach]. The combination for bed load, "the amount of τ*_max times the speed of u_s", is original (checked to be of the same order as the wave–current bed load formula of Soulsby 1997 under the conditions of test/wfsed) |
+| `wfsed_facsk`, `wfsed_facas` (&list_geomorph) | 0.1 | **Calibration**: the default is facua of XBeach[^xbeach]. The formula is van Thiel de Vries (2009)[^vtdv09], with S_k and A_s from the parameterization of Ruessink et al. (2012)[^ruessink12] (the coefficients p₂ to p₆ are the values of the public XBeach source, not checked against the table of the original paper) |
 | `f_wf_current` | 0 | **Method**: by default the current does not act (the same results as up to stage W2). The formulation is the wave action balance of Bretherton & Garrett (1968)[^bg68]; the refraction by currents and the velocity used (Lagrangian mean) are the same as wci of XBeach[^xbeach]. Solving the dispersion relation directly for each directional bin is original (XBeach advances the wavenumber in time with the eikonal equations) |
 | Coefficient of the friction speed | 1.16 | **Literature value**: the wave–current friction of Ruessink et al. (2001)[^ruessink01] (the XBeach formulation). Not a setting |
 
@@ -631,6 +752,14 @@ approximation of Fenton & McKee (1990)[^fm90].
   and the ledger, with and without the current effect, the unsteady mode (the wave action ledger
   closes while the current spins up), a river-mouth jet that stops the waves from propagating up
   the river, and byte-identical continuation after a restart.
+- [test/wfsed](../../../test/wfsed/en/README.md): the action on sediment (stages W4 and W5).
+  The equilibrium concentration of suspended load and the bed load transport under stirring
+  (agreeing with the formulas of Soulsby 1997 assembled independently), the direction,
+  cross-shore distribution and alongshore uniformity of longshore transport on a beach and
+  its order of magnitude against CERC (Komar & Inman 1970), the onshore velocity u_a
+  (agreeing with the formula of Ruessink et al. 2012), the direction of erosion by high
+  waves and of recovery by low waves, conservation of sediment in a closed basin, and
+  byte-identical continuation after a restart.
 - All are bit-identical to the serial run with MPI np = 1, 2 and 4.
 
 ## References
@@ -643,16 +772,22 @@ approximation of Fenton & McKee (1990)[^fm90].
 [^fm90]: Fenton, J. D. & McKee, W. D. (1990) On calculating the lengths of water waves. Coastal Engineering 14, 499–513.
 [^gt85]: Guza, R. T. & Thornton, E. B. (1985) Velocity moments in nearshore. J. Waterway, Port, Coastal, Ocean Eng. 111(2), 235–256.
 [^hiswa]: Holthuijsen, L. H., Booij, N. & Herbers, T. H. C. (1989) A prediction model for stationary, short-crested waves in shallow water with ambient currents. Coastal Engineering 13, 23–54.
+[^ki70]: Komar, P. D. & Inman, D. L. (1970) Longshore sand transport on beaches. J. Geophys. Res. 75(30), 5914–5927.
 [^jb07]: Janssen, T. T. & Battjes, J. A. (2007) A note on wave energy dissipation over steep beaches. Coastal Engineering 54, 711–716. The form of the breaking wave height H_b is the Miche type of Battjes, J. A. & Janssen, J. P. F. M. (1978) Energy loss and set-up due to breaking of random waves. Proc. 16th ICCE, 569–587 (the same as the XBeach formulation).
 [^kuik88]: Kuik, A. J., van Vledder, G. Ph. & Holthuijsen, L. H. (1988) A method for the routine analysis of pitch-and-roll buoy wave data. J. Phys. Oceanogr. 18, 1020–1034.
 [^lhs64]: Longuet-Higgins, M. S. & Stewart, R. W. (1964) Radiation stresses in water waves; a physical discussion, with applications. Deep-Sea Research 11, 529–562. The set-down offshore is from Longuet-Higgins, M. S. & Stewart, R. W. (1962) Radiation stress and mass transport in gravity waves, with application to 'surf beats'. J. Fluid Mech. 13, 481–504.
 [^nairn90]: Nairn, R. B., Roelvink, J. A. & Southgate, H. N. (1990) Transition zone width and implications for modelling surfzone hydrodynamics. Proc. 22nd ICCE, 68–81.
 [^rb97]: Reniers, A. J. H. M. & Battjes, J. A. (1997) A laboratory study of longshore currents over barred and non-barred beaches. Coastal Engineering 30, 1–22.
+[^reniers04]: Reniers, A. J. H. M., Roelvink, J. A. & Thornton, E. B. (2004) Morphodynamic modeling of an embayed beach under wave group forcing. J. Geophys. Res. 109, C01030.
 [^ruessink01]: Ruessink, B. G., Miles, J. R., Feddersen, F., Guza, R. T. & Elgar, S. (2001) Modeling the alongshore current on barred beaches. J. Geophys. Res. 106(C10), 22451–22463.
+[^ruessink12]: Ruessink, B. G., Ramaekers, G. & van Rijn, L. C. (2012) On the parameterization of the free-stream non-linear wave orbital motion in nearshore morphodynamic models. Coastal Engineering 65, 56–63.
 [^snapwave]: Roelvink, D., van Ormondt, M., Reyns, J. & van der Lugt, M. (2025) SnapWave: fast, implicit wave transformation from offshore to nearshore. Geosci. Model Dev. 18, 9469–9495. doi:10.5194/gmd-18-9469-2025 (defaults from the public source code)
+[^soulsby97]: Soulsby, R. L. (1997) Dynamics of Marine Sands: A Manual for Practical Applications. Thomas Telford, London. Wave friction factor (eq. 62a), combination of wave and current shear stresses (eqs. 69 and 70).
 [^svendsen84]: Svendsen, I. A. (1984) Wave heights and set-up in a surf zone. Coastal Engineering 8, 303–329.
 [^swan]: Booij, N., Ris, R. C. & Holthuijsen, L. H. (1999) A third-generation wave model for coastal regions: 1. Model description and validation. J. Geophys. Res. 104(C4), 7649–7666.
+[^swart74]: Swart, D. H. (1974) Offshore sediment transport and equilibrium beach profiles. Delft Hydraulics Laboratory, Publication No. 131.
 [^tarboton97]: Tarboton, D. G. (1997) A new method for the determination of flow directions and upslope areas in grid digital elevation models. Water Resour. Res. 33(2), 309–319.
 [^vanleer74]: van Leer, B. (1974) Towards the ultimate conservative difference scheme. II. Monotonicity and conservation combined in a second-order scheme. J. Comput. Phys. 14, 361–370.
+[^vtdv09]: van Thiel de Vries, J. S. M. (2009) Dune erosion during storm surges. PhD thesis, Delft University of Technology.
 [^walstra00]: Walstra, D. J. R., Roelvink, J. A. & Groeneweg, J. (2000) Calculation of wave-driven currents in a 3D mean flow model. Proc. 27th ICCE, 1050–1063.
 [^xbeach]: Roelvink, D., Reniers, A., van Dongeren, A., van Thiel de Vries, J., McCall, R. & Lescinski, J. (2009) Modelling storm impacts on beaches, dunes and barrier islands. Coastal Engineering 56, 1133–1152. Formulations and defaults are from the XBeach manual (xbeach.readthedocs.io) and the public source code (params.F90).

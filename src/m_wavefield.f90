@@ -201,6 +201,7 @@ subroutine m_wavefield_init(wf, p, g, s, multi)
   call list_wavefield_read(p, list)
   select case (list%f_wavefield)
     case (0)
+      if (s%wv_sed) call par_stop("list_wavefield: f_wfsed of fn_geomorph requires f_wavefield=1")
       call par_info("list_wavefield: f_wavefield=0, the wave field is not enabled")
       if (p%f_state_restore > 0) call stop_if_orphan(p)
       return
@@ -274,6 +275,16 @@ subroutine m_wavefield_init(wf, p, g, s, multi)
     allocate(wf%rmax(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(wf%rblk(dcp%js:dcp%je), source = 0.0_real64)
     allocate(wf%rcblk(dcp%js:dcp%je), source = 0.0_real64)
+  end if
+
+  ! 波→土砂(段 W4): geomorph の f_wfsed = 1 の要求(s%wv_sed)があれば、攪拌と輸送に使う
+  ! 量を共有状態へ書き出す(平均波向の単位ベクトル・軌道の振幅。u_rms のハロも埋める)
+  if (s%wv_sed) then
+    allocate(s%wvex(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%wvey(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%wvae(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    ! 岸向きの輸送速度 u_a(段 W5。geomorph の係数 wfsed_facsk・wfsed_facas のどちらかが正のとき)
+    if (s%wv_asym) allocate(s%wvua(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   end if
 
   ! 開始時の波浪場: 復元、準定常解、または静穏
@@ -1615,6 +1626,42 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 土砂への書き出し(段 W4)のハロ交換。掃流砂のエッジは隣の行のセルの値も読む
+! (diagnose・diagnose_cur は帯だけを書く。u_rms は wf_flow = 2 の flow_coupling も交換する)
+!----------------------------------------------------------------------
+subroutine sed_export_halo(s)
+  type(t_state), intent(inout) :: s
+  call par_halo_cell(s%wvub)
+  call par_halo_cell(s%wvex)
+  call par_halo_cell(s%wvey)
+  call par_halo_cell(s%wvae)
+  if (allocated(s%wvua)) call par_halo_cell(s%wvua)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 波の歪度・非対称による岸向きの輸送速度 u_a = (f_Sk S_k − f_As A_s) u_rms(段 W5。§88)
+!   van Thiel de Vries(2009)の式(XBeach)。S_k = B cos ψ、A_s = B sin ψ は Ruessink ら(2012)の
+!   Ursell 数 Ur = (3/8)√2 H_rms k/(kh)³ によるパラメータ化:
+!     B = p2/(1 + exp((p3 − log10 Ur)/p4))、ψ = −90° + 90° tanh(p5/Ur^p6)
+!   係数 p2〜p6 は XBeach の公開ソース(morphevolution.F90 の RvR。Ruessink ら 2012 の値)。
+!   A_s は前傾した波で負(ψ → −90°)なので、どちらの項も岸(波の進む向き)へ向かう
+!----------------------------------------------------------------------
+pure function asym_velocity(hrms, k, h, urms, fsk, fas) result(ua)
+  real, intent(in) :: hrms, k, h, urms, fsk, fas
+  real :: ua, kh, ur, b, psi
+  real, parameter :: p2 = 0.7939, p3 = -0.6065, p4 = 0.3539, p5 = 0.6373, p6 = 0.5995
+  ua = 0.0
+  kh = k * h
+  if (urms <= 0.0 .or. kh <= 0.0) return
+  ur = max(0.375 * sqrt(2.0) * hrms * k / kh**3, 1.0e-12)
+  b = p2 / (1.0 + exp((p3 - log10(ur)) / p4))
+  psi = (-90.0 + 90.0 * tanh(p5 / ur**p6)) * pi / 180.0
+  ua = (fsk * b * cos(psi) - fas * b * sin(psi)) * urms
+end function
+
+
+!----------------------------------------------------------------------
 ! 共有状態の診断量(波高・平均波向・軌道流速 u_rms・砕波散逸)を帯に書く
 !   波高: 不規則波は H_m0 = √2 H_rms、規則波は H。u_rms = H_rms σ/(2√2 sinh kh)
 !   (XBeach の定義)。無波セルの平均波向は dir_missing
@@ -1625,10 +1672,12 @@ subroutine diagnose(wf, p, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j, m
-  real :: e, ex, ey, hrms, kh, rhog, hb, qb, fr, rr
+  real :: e, ex, ey, hrms, kh, rhog, hb, qb, fr, rr, en
+  logical :: sedx
 
   rhog = rho * p%gg
-  !$omp parallel do schedule(dynamic) private(i, j, m, e, ex, ey, hrms, kh, hb, qb, fr, rr)
+  sedx = allocated(s%wvex)
+  !$omp parallel do schedule(dynamic) private(i, j, m, e, ex, ey, hrms, kh, hb, qb, fr, rr, en)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       s%wvh(i,j) = 0.0
@@ -1636,6 +1685,12 @@ subroutine diagnose(wf, p, g, s)
       s%wvub(i,j) = 0.0
       s%wvdw(i,j) = 0.0
       if (allocated(s%wver)) s%wver(i,j) = 0.0
+      if (sedx) then
+        s%wvex(i,j) = 0.0
+        s%wvey(i,j) = 0.0
+        s%wvae(i,j) = 0.0
+        if (s%wv_asym) s%wvua(i,j) = 0.0
+      end if
       if (wf%wcell(i,j) == 0) cycle
       if (allocated(s%wver)) s%wver(i,j) = wf%er(i,j)
       e = 0.0
@@ -1657,6 +1712,17 @@ subroutine diagnose(wf, p, g, s)
       s%wvdir(i,j) = modulo(atan2(ey, ex) * 180.0 / pi, 360.0)
       kh = wf%kw(i,j) * s%h(i,j)
       if (kh > 0.0 .and. kh <= 20.0) s%wvub(i,j) = hrms * wf%om / (2.0 * sqrt(2.0) * sinh(kh))
+      if (sedx) then
+        ! 土砂への書き出し(段 W4): 平均波向の単位ベクトル(y 南)と軌道の振幅 √2 u_rms/ω
+        en = sqrt(ex * ex + ey * ey)
+        if (en > 0.0) then
+          s%wvex(i,j) = ex / en
+          s%wvey(i,j) = -ey / en
+        end if
+        s%wvae(i,j) = sqrt(2.0) * s%wvub(i,j) / wf%om
+        if (s%wv_asym) s%wvua(i,j) = asym_velocity(hrms, wf%kw(i,j), s%h(i,j), s%wvub(i,j), &
+                                                   s%wv_facsk, s%wv_facas)
+      end if
       if (wf%wtype == 1 .and. wf%kw(i,j) > 0.0) then
         hb = 0.88 / wf%kw(i,j) * tanh(wf%gam * kh / 0.88)
         fr = wf%om / (2.0 * pi)
@@ -1674,6 +1740,7 @@ subroutine diagnose(wf, p, g, s)
     end do
   end do
   !$omp end parallel do
+  if (sedx) call sed_export_halo(s)
 end subroutine
 
 
@@ -2706,10 +2773,12 @@ subroutine diagnose_cur(wf, p, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j, m
-  real :: e, ex, ey, hrms, kh, rhog, hb, qb, fr, rr, kbar, sbar, em
+  real :: e, ex, ey, hrms, kh, rhog, hb, qb, fr, rr, kbar, sbar, em, en
+  logical :: sedx
 
   rhog = rho * p%gg
-  !$omp parallel do schedule(dynamic) private(i, j, m, e, ex, ey, hrms, kh, hb, qb, fr, rr, kbar, sbar, em)
+  sedx = allocated(s%wvex)
+  !$omp parallel do schedule(dynamic) private(i, j, m, e, ex, ey, hrms, kh, hb, qb, fr, rr, kbar, sbar, em, en)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       s%wvh(i,j) = 0.0
@@ -2717,6 +2786,12 @@ subroutine diagnose_cur(wf, p, g, s)
       s%wvub(i,j) = 0.0
       s%wvdw(i,j) = 0.0
       if (allocated(s%wver)) s%wver(i,j) = 0.0
+      if (sedx) then
+        s%wvex(i,j) = 0.0
+        s%wvey(i,j) = 0.0
+        s%wvae(i,j) = 0.0
+        if (s%wv_asym) s%wvua(i,j) = 0.0
+      end if
       if (wf%wcell(i,j) == 0) cycle
       if (allocated(s%wver)) s%wver(i,j) = wf%er(i,j)
       e = 0.0
@@ -2746,6 +2821,17 @@ subroutine diagnose_cur(wf, p, g, s)
       s%wvdir(i,j) = modulo(atan2(ey, ex) * 180.0 / pi, 360.0)
       kh = kbar * s%h(i,j)
       if (kh > 0.0 .and. kh <= 20.0) s%wvub(i,j) = hrms * sbar / (2.0 * sqrt(2.0) * sinh(kh))
+      if (sedx) then
+        ! 土砂への書き出し(段 W4。diagnose と同じ。軌道の振幅は固有の σ̄ で)
+        en = sqrt(ex * ex + ey * ey)
+        if (en > 0.0) then
+          s%wvex(i,j) = ex / en
+          s%wvey(i,j) = -ey / en
+        end if
+        s%wvae(i,j) = sqrt(2.0) * s%wvub(i,j) / sbar
+        if (s%wv_asym) s%wvua(i,j) = asym_velocity(hrms, kbar, s%h(i,j), s%wvub(i,j), &
+                                                   s%wv_facsk, s%wv_facas)
+      end if
       if (wf%wtype == 1 .and. kbar > 0.0) then
         hb = 0.88 / kbar * tanh(wf%gam * kh / 0.88)
         fr = sbar / (2.0 * pi)
@@ -2763,6 +2849,7 @@ subroutine diagnose_cur(wf, p, g, s)
     end do
   end do
   !$omp end parallel do
+  if (sedx) call sed_export_halo(s)
 end subroutine
 
 
@@ -3148,9 +3235,9 @@ subroutine save_state(wf, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  integer :: un, m, version, nth, mode, flow, roller, ndiag, state
+  integer :: un, m, version, nth, mode, flow, roller, ndiag, state, sed, sedua
   real(real64) :: cum(nl), store0, cumblk
-  namelist /wavefield_info/ version, nth, mode, cum, store0, flow, roller, ndiag, cumblk, state
+  namelist /wavefield_info/ version, nth, mode, cum, store0, flow, roller, ndiag, cumblk, state, sed, sedua
 
   do m = 1, nl
     call par_sum_rows(wf%rcum(:, m), cum(m))
@@ -3170,6 +3257,8 @@ subroutine save_state(wf, p, g, s)
   roller = merge(1, 0, wf%roller)
   ndiag = 1
   state = merge(1, 0, wf%current)
+  sed = merge(1, 0, allocated(s%wvex))
+  sedua = merge(1, 0, allocated(s%wvua))
   if (is_root) then
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/wavefield_info.txt', status='replace')
@@ -3193,6 +3282,12 @@ subroutine save_state(wf, p, g, s)
     call restart_write_cell(un, s%wvus)
     call restart_write_cell(un, s%wvvs)
   end if
+  if (sed == 1) then
+    call restart_write_cell(un, s%wvex)
+    call restart_write_cell(un, s%wvey)
+    call restart_write_cell(un, s%wvae)
+  end if
+  if (sedua == 1) call restart_write_cell(un, s%wvua)
   if (is_root) close(un)
 end subroutine
 
@@ -3204,10 +3299,10 @@ subroutine restore_state(wf, p, s, have_diag, have_force)
   logical, intent(out) :: have_diag, have_force
   character(:), allocatable :: fname
   logical :: found
-  integer :: un, ios, m, version, nth, mode, flow, roller, ndiag, state, i, j
+  integer :: un, ios, m, version, nth, mode, flow, roller, ndiag, state, sed, sedua, i, j
   real(real64) :: cum(nl), store0, cumblk
   real, allocatable :: tmp(:,:)
-  namelist /wavefield_info/ version, nth, mode, cum, store0, flow, roller, ndiag, cumblk, state
+  namelist /wavefield_info/ version, nth, mode, cum, store0, flow, roller, ndiag, cumblk, state, sed, sedua
 
   fname = trim(p%dir_save)//'/wavefield_info.txt'
   inquire(file=fname, exist=found)
@@ -3224,6 +3319,8 @@ subroutine restore_state(wf, p, s, have_diag, have_force)
   ndiag = 0
   cumblk = 0.0_real64
   state = 0
+  sed = 0
+  sedua = 0
   open(newunit=un, file=fname, status='old', action='read', iostat=ios)
   if (ios /= 0) call par_stop("wavefield: cannot open "//fname)
   read(un, nml=wavefield_info, iostat=ios)
@@ -3305,8 +3402,32 @@ subroutine restore_state(wf, p, s, have_diag, have_force)
       call restart_read_cell(un, tmp)
     end if
   end if
+  ! 段 W4 の土砂への書き出し。保存時に無ければ診断量ごと init が求め直す
+  if (sed == 1) then
+    if (allocated(s%wvex)) then
+      call restart_read_cell(un, s%wvex)
+      call restart_read_cell(un, s%wvey)
+      call restart_read_cell(un, s%wvae)
+    else
+      call restart_read_cell(un, tmp)
+      call restart_read_cell(un, tmp)
+      call restart_read_cell(un, tmp)
+    end if
+  end if
+  if (sedua == 1) then
+    if (allocated(s%wvua)) then
+      call restart_read_cell(un, s%wvua)
+    else
+      call restart_read_cell(un, tmp)
+    end if
+  end if
   if (is_root) close(un)
   deallocate(tmp)
+  if (allocated(s%wvua) .and. sedua /= 1) sed = 0      ! u_a がなければ診断量ごと求め直す
+  if (allocated(s%wvex) .and. sed /= 1 .and. have_diag) then
+    call par_info("wavefield: the saved state has no export to sediment (f_wfsed); the diagnostics are recomputed")
+    have_diag = .false.
+  end if
   have_force = (wf%flow >= 1 .and. flow >= wf%flow)
   if (wf%flow >= 1 .and. .not. have_force) then
     call par_info("wavefield: the saved state has no wave force for wf_flow = "//itoa(wf%flow) &

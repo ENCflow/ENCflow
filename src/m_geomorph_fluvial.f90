@@ -156,6 +156,13 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   integer :: nclip, nfix
   logical :: okc, okbank
 
+  ! 沿岸の波浪場による攪拌と輸送(f_wfsed = 1。§88)は写しの手続きで(本手続きの命令列を
+  ! 変えない。calc_fluvial_wfsed の注)
+  if (gm%f_wfsed > 0) then
+    call calc_fluvial_wfsed(gm, p, g, s, dts)
+    return
+  end if
+
   nclip = 0
   nfix = 0
 
@@ -365,6 +372,364 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
                   qbs = 8.0 * (taus - gm%tausc)**1.5
                 end if
                 qb = qbs * gm%flv%qbcoef
+                gq = qb * (ue / vve) * gm%flv%wl(k)
+                ! 定着(§84.6): 域外への流出は自セルが供給側(流入の給砂は不変)
+                if (gm%f_fixation > 0 .and. gq > 0.0) then
+                  afx = s%fx(i,j)
+                  if (afx > 0.0) then
+                    tsce = gm%tausc * (1.0 + gm%fix%ctau * afx)
+                    if (taus <= tsce) then
+                      gq = 0.0
+                    else
+                      gq = gq * (qbs_form(gm%f_qbform, taus, tsce) / qbs)
+                    end if
+                    nfix = nfix + 1
+                  end if
+                end if
+                winvd = 1.0
+                if (chn%have_width) winvd = 1.0 / chn%wfrac(i,j)
+                dze = abs(gq) * dts * gm%wrk%ainv * winvd * gm%poroi
+                if (gq > 0.0) then
+                  ! 流出: 供給側 = 自セルの可動層クランプ
+                  if (dze > s%sd(i,j)) then
+                    gq = gq * (s%sd(i,j) / dze)
+                    dze = s%sd(i,j)
+                  end if
+                end if
+                ! 変動上限ガード(流出・流入とも)
+                if (dze > gm%dzmax) then
+                  gq = gq * (gm%dzmax / dze)
+                  nclip = nclip + 1
+                end if
+              end if
+            end if
+          end if
+          ! 格納は所有者正準の向き(sign_e を乗じて格納すると、ループ2の
+          ! sign_e(k) 倍の読み出しで gq = 域外向き正 が復元される)
+          gm%wrk%q(ke(k), i+die(k), j+dje(k)) = sign_e(k) * gq
+        end do
+      end if
+    end do
+  end do
+  !$omp end parallel do
+
+  ! --- 側方 Neumann の辺(§88): 境界面に内側へ平行移動した内部のエッジの流束を写す ---
+  if (bcs%have_open_bc) call neumann_bed_pass(gm, g)
+
+  ! --- 容量給砂(§84.9): 流入面の供給 = 倍率 × 流入セルの内部エッジへの正味流出 ---
+  if (bcs%have_open_bc .and. gm%f_bcfeed > 0) call feed_pass(gm, p, g, s, dts)
+
+  ! --- 側岸侵食(§84.4): 河岸面エッジに河岸→脚部の流砂を加算する ---
+  if (gm%f_berode > 0) call bank_edge_pass(gm, p, g, s, dts)
+
+  ! --- 供給量制限 → 発散 → z と sd の共動更新(共有の適用経路) ---
+  call apply_edge_flux(gm, g, s, dts)
+
+  ! ガード発動の累計(dispose で報告。nlim・vleak は apply_edge_flux が加算)
+  gm%flv%nclip = gm%flv%nclip + nclip
+  gm%fix%nfix = gm%fix%nfix + nfix
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 掃流砂の 1 ステップ(沿岸の波浪場による攪拌と輸送 f_wfsed = 1。段 W4・W5。§88)
+!   calc_fluvial の写しで、ループ 1 の掃流力を波・流れの最大のせん断 τ*_max(Soulsby 1997)に、
+!   輸送の速度を u_s = u^E + u_a ê_θ にしたもの。ループ 1 の後の経路(側方 Neumann・容量給砂・
+!   側岸侵食・発散と共動更新)は calc_fluvial と同じ手続きを呼ぶ。写しにしたのは、分岐を
+!   calc_fluvial のループに入れると、波浪場を使わない計算の -Ofast の最終桁が変わったため
+!   (実行されない分岐でも FMA 縮約・インライン化が変わる。§88.4 の教訓。test/fluvial・sedfeed で
+!   実検出)。calc_fluvial のループ 1 を変えるときはこちらも同じく変えること
+!----------------------------------------------------------------------
+subroutine calc_fluvial_wfsed(gm, p, g, s, dts)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: dts
+  integer :: i, j, k, in, jn, jt
+  real :: gq, ue, vve, hhe, rne, taus, qbs, qb, sdup, dze, winvd
+  real :: dirp, ubar, vbar, dxv, dyv, re, gam
+  real :: afx, tsce
+  real :: uec, vec, uen, ven, fadv, rs, tmax, cphi   ! 波浪場の攪拌と輸送(f_wfsed。§88)
+  real :: usc, vsc, usn, vsn, vvc, tauc
+  integer :: nclip, nfix
+  logical :: okc, okbank, stk, asym
+
+  nclip = 0
+  nfix = 0
+  ! 攪拌の流れは Euler 平均流速 u^E = u − r u^S(GLM のときだけ Stokes を引く。r は立ち上げの
+  ! 係数)、τ* は波・流れの最大のせん断(wfsed_taumax)。土砂を運ぶ速度は u^E に波の歪度・
+  ! 非対称の岸向きの速度 u_a ê_θ を加えた u_s
+  stk = allocated(s%wvus)
+  asym = allocated(s%wvua)
+  rs = s%wv_ramp
+
+  ! --- ステップ頭のハロ交換(m_gwflow_lateral と同じ「冒頭に置く」理由) ---
+  ! 界面エッジの冗長計算(ハロ行 je+1 の書き手)が読む u, v, vv, h は
+  ! swflow・gwflow が帯のみを更新するため、ステップ頭交換のままでは
+  ! 前ステップの値に古びている。ここで交換しないと隣接ランクと異なる
+  ! 入力から同一エッジを計算し、反対称性(=土砂体積保存)が壊れる
+  ! (np=2 の保存則検定で実検出したバグ)。z, sd のハロは本モジュール
+  ! calc 末尾の交換で維持されているため不要
+  call par_halo_cell(s%h)
+  call par_halo_cell(s%u)
+  call par_halo_cell(s%v)
+  call par_halo_cell(s%vv)
+
+  ! --- 波浪場の攪拌と輸送の掃流砂の推定(出力 Qbx・Qby。自帯のセル。§88) ---
+  call wfsed_bed_diag(gm, p, g, s)
+
+  ! --- 平衡二次流の横断流速比 r = N* h κ(自帯で評価 → ハロ交換。§84.3) ---
+  if (gm%flv%f_sec) then
+    call eval_secflow(gm, p, g, s)
+    call par_halo_cell(gm%flv%rsec)
+  end if
+
+  ! --- ループ1: エッジの掃流砂フラックス(各成分の書き手は一意) ---
+  jt = min(dcp%je + 1, dcp%jeh)
+  !$omp parallel do schedule(static) reduction(+: nclip, nfix) &
+  !$omp   private(i, j, k, in, jn, okc, okbank, gq, ue, vve, hhe, rne, taus, qbs, qb, &
+  !$omp           sdup, dze, winvd, dirp, ubar, vbar, dxv, dyv, re, gam, afx, tsce, &
+  !$omp           uec, vec, uen, ven, fadv, tmax, cphi, usc, vsc, usn, vsn, vvc, tauc)
+  do j = dcp%js, jt
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      okc = (g%sw(i,j) <= 0)
+      do k = 1, 4
+        in = i + din(k)
+        jn = j + djn(k)
+        ! 乾湿・流向は動的なので、条件を満たさない場合も必ず 0 を代入する
+        gq = 0.0
+        ! 堤防(仮想壁面)エッジ = 河道—非河道の境界では掃流砂を運ばない
+        ! (掃流砂は河道内に閉じる。越流時の土砂輸送は浮遊砂(移流が
+        ! 壁を含む実フラックス mn1 を使う)が担う。§17 の壁は水理側で
+        ! 動的(越流)だが、河床材料の掃流は堤防を越えないとする)
+        if (okc .and. g%x(in,jn) > 0) then
+          if (g%sw(in,jn) <= 0) then
+            ! 堤防エッジ判定は近傍が有効セルと確定してから行う
+            ! (rw の確保範囲は x と違い番兵なし。x 番兵ガードより先に
+            ! rw(in,jn) を読むと i=0/nx+1 で範囲外 — -fcheck np=2 で実検出)
+            okbank = .true.
+            if (g%bank_active) then
+              okbank = ((g%rw(i,j) > 0) .eqv. (g%rw(in,jn) > 0))
+            end if
+            ! エッジの水深(両セル平均)。攪拌の流れの速さ vvc は Euler 平均流速 u^E、
+            ! 輸送の速さ vve と向きは u_s = u^E + u_a ê_θ(両セルの平均)
+            hhe = (s%h(i,j) + s%h(in,jn)) / 2
+            uec = s%u(i,j)
+            vec = s%v(i,j)
+            uen = s%u(in,jn)
+            ven = s%v(in,jn)
+            if (stk) then
+              uec = uec - rs * s%wvus(i,j)
+              vec = vec - rs * s%wvvs(i,j)
+              uen = uen - rs * s%wvus(in,jn)
+              ven = ven - rs * s%wvvs(in,jn)
+            end if
+            vvc = (sqrt(uec * uec + vec * vec) + sqrt(uen * uen + ven * ven)) / 2
+            usc = uec
+            vsc = vec
+            usn = uen
+            vsn = ven
+            if (asym) then
+              usc = usc + s%wvua(i,j) * s%wvex(i,j)
+              vsc = vsc + s%wvua(i,j) * s%wvey(i,j)
+              usn = usn + s%wvua(in,jn) * s%wvex(in,jn)
+              vsn = vsn + s%wvua(in,jn) * s%wvey(in,jn)
+            end if
+            vve = (sqrt(usc * usc + vsc * vsc) + sqrt(usn * usn + vsn * vsn)) / 2
+            if (okbank .and. vve > 0.0 .and. hhe > p%dd) then
+              ue = (usc + usn) / 2 * gm%flv%ex(k) + (vsc + vsn) / 2 * gm%flv%ey(k)
+              hhe = max(hhe, p%dv)           ! 極浅水深での τ* 発散を防ぐ
+              rne = (g%rn(i,j) + g%rn(in,jn)) / 2
+              ! 無次元掃流力(マニング閉じ。g は分子分母で相殺)。taufac は
+              ! 有効掃流力の比(1 = 分離なし。1.0 の乗算は厳密に不変)
+              taus = gm%flv%taufac * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              ! 攪拌(§88): 閾値と流砂量は波・流れ(u^E)の最大のせん断 τ*_max、輸送は u_s。
+              ! 流砂量に √(τ*_s/τ*_max) を掛ける(τ*_max の流れが運ぶ掃流の量を u_s の速さで
+              ! 運ぶ。τ*_s は上の taus = u_s の速さの Manning のせん断。波がなければ
+              ! τ*_max = τ*_s = τ*_c で既存の式に一致)
+              tauc = gm%flv%taufac * rne**2 * vvc**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              cphi = wfsed_cphi((uec + uen) / 2, (vec + ven) / 2, (s%wvex(i,j) + s%wvex(in,jn)) / 2, &
+                                (s%wvey(i,j) + s%wvey(in,jn)) / 2)
+              tmax = wfsed_taumax(tauc, sqrt(2.0) * (s%wvub(i,j) + s%wvub(in,jn)) / 2, &
+                                  (s%wvae(i,j) + s%wvae(in,jn)) / 2, cphi, gm%wfs%z0b, gm%wfs%twb)
+              fadv = 0.0
+              if (tmax > 0.0) fadv = sqrt(taus / tmax)
+              taus = tmax
+              if (taus > gm%tausc) then
+                ! 流砂方向の射影 dirp = (q⃗_b/q_b)·ê_k。補正なしは水深平均流向
+                ! ue/vve(|dirp| <= 1)。補正ありは q⃗_b/q_b = t̂ + r n̂ − γ∇z
+                ! (§84.3。t̂ = (ū, v̄)/vve、n̂ = (−v̄, ū)/vve = 左法線、
+                ! r = 両セル平均の rsec、γ = √(τ*c/(μs μk τ*))、∇z は両セルの
+                ! 中央差分勾配の平均)。水の法線流速がゼロのエッジでも横断
+                ! 流砂が通るため、入口条件は補正後の dirp で判定する
+                if (gm%flv%f_dir) then
+                  ubar = (usc + usn) / 2
+                  vbar = (vsc + vsn) / 2
+                  dxv = ubar / vve
+                  dyv = vbar / vve
+                  if (gm%flv%f_sec) then
+                    re = (gm%flv%rsec(i,j) + gm%flv%rsec(in,jn)) / 2
+                    dxv = dxv - re * vbar / vve
+                    dyv = dyv + re * ubar / vve
+                  end if
+                  dirp = dxv * gm%flv%ex(k) + dyv * gm%flv%ey(k)
+                  if (gm%flv%f_slope) then
+                    ! 射影に効くのは ∇z のリンク方向成分だけなので、エッジをまたぐ
+                    ! 直接差分 (z_n − z_c)/d_k で評価する(§84.3 の改訂: 中央差分は
+                    ! 2 セル周期の市松モードを見ない = 減衰せず、長時間計算で河床に
+                    ! 市松が育った実検出。直接差分は市松を拡散で抑える)
+                    gam = gm%flv%gcoef * sqrt(gm%tausc / taus)
+                    dirp = dirp - gam * (s%z(in,jn) - s%z(i,j)) * gm%flv%rdist(k)
+                  end if
+                else
+                  dirp = ue / vve
+                end if
+                if (dirp /= 0.0) then
+                  ! 平衡流砂量(無次元)
+                  if (gm%f_qbform == 1) then       ! 芦田・道上
+                    qbs = 17.0 * taus**1.5 * (1.0 - gm%tausc / taus) &
+                                           * (1.0 - sqrt(gm%tausc / taus))
+                  else                             ! MPM
+                    qbs = 8.0 * (taus - gm%tausc)**1.5
+                  end if
+                  qb = qbs * gm%flv%qbcoef            ! 固体体積の単位幅流砂量 (m2/s)
+                  qb = qb * fadv                      ! 波浪場の攪拌の輸送(上の注)
+                  ! 方向射影 × 通過幅でエッジ流量に
+                  gq = qb * dirp * gm%flv%wl(k)
+                  ! 河岸面の遮断(§84.2): 掃流砂は河床面を転がる。
+                  !   (R1) 風上(供給)セルは湿潤でなければ供給しない(乾いた
+                  !        セルの τ* は両セル平均の見かけで、実体がない)
+                  !   (R2) 受け手の地盤が供給セルの水面以上なら運ばない(土砂は
+                  !        水面より上へ登れない = そのエッジは河岸面であり、
+                  !        河岸面の交換は側岸侵食 f_berode の担当)
+                  if (gq > 0.0) then
+                    if (s%h(i,j) <= p%dd .or. s%z(in,jn) >= s%z(i,j) + s%h(i,j)) gq = 0.0
+                  else
+                    if (s%h(in,jn) <= p%dd .or. s%z(i,j) >= s%z(in,jn) + s%h(in,jn)) gq = 0.0
+                  end if
+                  ! 定着(§84.6): 供給(風上)側セルの定着度 a で限界掃流力を
+                  ! τ*c (1 + c_τ a) に上げ、閾値判定と流砂量式の両方に効かせる
+                  ! (受け手側の a は見ない = 定着面への堆積は妨げない。a = 0 の
+                  ! セルは分岐に入らず厳密に不変)
+                  if (gm%f_fixation > 0 .and. gq /= 0.0) then
+                    if (gq > 0.0) then
+                      afx = s%fx(i,j)
+                    else
+                      afx = s%fx(in,jn)
+                    end if
+                    if (afx > 0.0) then
+                      tsce = gm%tausc * (1.0 + gm%fix%ctau * afx)
+                      if (taus <= tsce) then
+                        gq = 0.0
+                      else
+                        gq = gq * (qbs_form(gm%f_qbform, taus, tsce) / qbs)
+                      end if
+                      nfix = nfix + 1
+                    end if
+                  end if
+                  ! 通過幅係数(水と同じ開口・幅キャップ。無効時は乗算なし)。
+                  ! 動的振り替えの表 fwd(§68.14)も水と同じく乗じる: geomorph は
+                  ! swflow の後に走り、fwd はこのステップの頭で作られて連続式が
+                  ! 使った表のまま(次ステップ頭で作り直される)
+                  if (chn%have_frw) gq = gq * chn%frw(k, i+die(k), j+dje(k))
+                  if (chn%have_fwd) gq = gq * chn%fwd(k, i+die(k), j+dje(k))
+                  ! 可動層クランプ: 供給側(風上)セルの土層厚を超える
+                  ! 浸食をこのエッジ単独で起こさない(複数エッジの同時
+                  ! 流出による僅かな超過はループ2の床クリップが受ける)。
+                  ! 河道幅有効時は供給側の河道底面積あたりに換算(winvd)
+                  if (gq > 0.0) then
+                    sdup = s%sd(i,j)
+                  else
+                    sdup = s%sd(in,jn)
+                  end if
+                  winvd = 1.0
+                  if (chn%have_width) then
+                    if (gq > 0.0) then
+                      winvd = 1.0 / chn%wfrac(i,j)
+                    else
+                      winvd = 1.0 / chn%wfrac(in,jn)
+                    end if
+                  end if
+                  dze = abs(gq) * dts * gm%wrk%ainv * winvd * gm%poroi
+                  if (sdup <= 0.0) then
+                    gq = 0.0                       ! 岩盤露出(sd <= 0。丸めの負値も)= 供給なし
+                    dze = 0.0
+                  else if (dze > sdup) then
+                    gq = gq * (sdup / dze)
+                    dze = sdup
+                  end if
+                  ! 変動上限ガード(地形波の CFL 相当。morfac を上げた
+                  ! ときの暴走防止。クリップは流量段階=保存則は保たれる)
+                  if (dze > gm%dzmax) then
+                    gq = gq * (gm%dzmax / dze)
+                    nclip = nclip + 1
+                  end if
+                end if
+              end if
+            end if
+          end if
+        end if
+        gm%wrk%q(k, i+die(k), j+dje(k)) = gq
+      end do
+
+      ! --- 開境界面の掃流フラックス(境界土砂供給・流出の第1段) ---
+      ! 面に接する唯一の有効セルが全8方位を検査して書く(k>=5 の面
+      ! スロットの所有者は域外に居ないため、内側セルが代わりに書く。
+      ! 単一書き手は保たれる)。水理量は内側セルの一方側値、流向は
+      ! セル流速の面法線射影。ue > 0(流出)は常に容量輸送(河床低下波が
+      ! 域外へ抜ける)。ue < 0(流入)はここでは 0 を書き、f_bcfeed=1 の
+      ! 供給はループ 1 の後の feed_pass が「流入セルの正味流出 × 倍率」で
+      ! 書く(§84.9。2026-10-18 までの「流入セル自身の τ* による容量供給」は
+      ! 河床上昇 → 流速増 → 供給増の正帰還で発散した実検出)。境界面の
+      ! 通過幅補正 frw は未適用(§18 制約(5) の辺開口と同じ扱い)
+      if (bcs%have_open_bc .and. okc) then
+        do k = 1, 8
+          in = i + din(k)
+          jn = j + djn(k)
+          if (g%x(in,jn) > 0) cycle
+          if (.not. bc_open_face(in, jn)) cycle
+          ! 開面は毎ステップ必ず代入する(乾湿・流向は動的)
+          gq = 0.0
+          hhe = s%h(i,j)
+          uec = s%u(i,j)
+          vec = s%v(i,j)
+          if (stk) then
+            uec = uec - rs * s%wvus(i,j)
+            vec = vec - rs * s%wvvs(i,j)
+          end if
+          vvc = sqrt(uec * uec + vec * vec)
+          usc = uec
+          vsc = vec
+          if (asym) then
+            usc = usc + s%wvua(i,j) * s%wvex(i,j)
+            vsc = vsc + s%wvua(i,j) * s%wvey(i,j)
+          end if
+          vve = sqrt(usc * usc + vsc * vsc)
+          if (vve > 0.0 .and. hhe > p%dd) then
+            ue = usc * gm%flv%ex(k) + vsc * gm%flv%ey(k)   ! 正 = 域外へ
+            if (ue > 0.0) then
+              hhe = max(hhe, p%dv)
+              rne = g%rn(i,j)
+              taus = gm%flv%taufac * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              tauc = gm%flv%taufac * rne**2 * vvc**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              cphi = wfsed_cphi(uec, vec, s%wvex(i,j), s%wvey(i,j))
+              tmax = wfsed_taumax(tauc, sqrt(2.0) * s%wvub(i,j), s%wvae(i,j), cphi, &
+                                  gm%wfs%z0b, gm%wfs%twb)
+              fadv = 0.0
+              if (tmax > 0.0) fadv = sqrt(taus / tmax)
+              taus = tmax
+              if (taus > gm%tausc) then
+                if (gm%f_qbform == 1) then       ! 芦田・道上
+                  qbs = 17.0 * taus**1.5 * (1.0 - gm%tausc / taus) &
+                                         * (1.0 - sqrt(gm%tausc / taus))
+                else                             ! MPM
+                  qbs = 8.0 * (taus - gm%tausc)**1.5
+                end if
+                qb = qbs * gm%flv%qbcoef
+                qb = qb * fadv
                 gq = qb * (ue / vve) * gm%flv%wl(k)
                 ! 定着(§84.6): 域外への流出は自セルが供給側(流入の給砂は不変)
                 if (gm%f_fixation > 0 .and. gq > 0.0) then
@@ -745,6 +1110,59 @@ module subroutine apply_edge_flux(gm, g, s, dts)
   if (have_sf) gm%fin%vfree = gm%fin%vfree + vfree
   gm%flv%vleak = gm%flv%vleak + vleak
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 波浪場の攪拌と輸送の掃流砂の推定(f_wfsed。出力 Qbx・Qby。§88)
+!   セルの値で q_b = q*(τ*_max) √(τ*_s/τ*_max) √(sgd³)(calc_fluvial のエッジと同じ式。τ*_s は
+!   輸送の速度 u_s = u^E + u_a ê_θ の Manning のせん断)を u_s の向きに置く。河床勾配・二次流の補正、可動層・変動上限のクランプ、河岸面の
+!   規則は含まない(輸送の容量の目安。土砂の保存はエッジの流束が担う)
+!----------------------------------------------------------------------
+subroutine wfsed_bed_diag(gm, p, g, s)
+  type(t_geomorph), intent(in) :: gm
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real :: uec, vec, usc, vsc, vv, vs, hh, tauc, taus, tmax, qb
+  logical :: stk, asym
+  stk = allocated(s%wvus)
+  asym = allocated(s%wvua)
+  !$omp parallel do schedule(static) private(i, j, uec, vec, usc, vsc, vv, vs, hh, tauc, taus, tmax, qb)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      s%sqbx(i,j) = 0.0
+      s%sqby(i,j) = 0.0
+      if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
+      if (s%h(i,j) <= p%dd) cycle
+      uec = s%u(i,j)
+      vec = s%v(i,j)
+      if (stk) then
+        uec = uec - s%wv_ramp * s%wvus(i,j)
+        vec = vec - s%wv_ramp * s%wvvs(i,j)
+      end if
+      usc = uec
+      vsc = vec
+      if (asym) then
+        usc = usc + s%wvua(i,j) * s%wvex(i,j)
+        vsc = vsc + s%wvua(i,j) * s%wvey(i,j)
+      end if
+      vv = sqrt(uec * uec + vec * vec)
+      vs = sqrt(usc * usc + vsc * vsc)
+      if (vs <= 0.0) cycle
+      hh = max(s%h(i,j), p%dv)
+      tauc = gm%flv%taufac * g%rn(i,j)**2 * vv**2 / (gm%sgrav * gm%d50 * hh**(1.0/3.0))
+      taus = gm%flv%taufac * g%rn(i,j)**2 * vs**2 / (gm%sgrav * gm%d50 * hh**(1.0/3.0))
+      tmax = wfsed_taumax(tauc, sqrt(2.0) * s%wvub(i,j), s%wvae(i,j), &
+                          wfsed_cphi(uec, vec, s%wvex(i,j), s%wvey(i,j)), gm%wfs%z0b, gm%wfs%twb)
+      if (tmax <= gm%tausc) cycle
+      qb = qbs_form(gm%f_qbform, tmax, gm%tausc) * gm%flv%qbcoef * sqrt(taus / tmax)
+      s%sqbx(i,j) = qb * usc / vs
+      s%sqby(i,j) = qb * vsc / vs
+    end do
+  end do
+  !$omp end parallel do
 end subroutine
 
 

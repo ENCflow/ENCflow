@@ -1,0 +1,77 @@
+!======================================================================
+! wfsed: 攪拌 = 一様水深 5 m の海底に波だけを当てる(流れなし。wf_flow = 0)
+!   不規則波 H_m0 = 0.5 m、T = 8 s を直角に入射し、浮遊砂(細砂 0.2 mm)を波で攪拌する
+!   (f_wfsed = 1)。流れは静止のままなので、浮遊砂は運ばれず、各セルの濃度が平衡濃度
+!   C = C_eq(τ*_w)/β へ近づく。
+!   確認事項(Check_wfsed.py stir): 平衡の濃度 hs/h が、モデルの軌道流速 Wu から独立に
+!   組み立てた Soulsby(1997)の τ*_w の平衡濃度と一致、土砂の保存(河床の低下 × (1 − λ)
+!   と浮遊砂の和)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 1800
+  dt_disp = 600
+  dt_file = 1800
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_wavefield = '-'
+  dir_result = 'result_stir'
+  f_check_cfl = 1
+  f_output_mode = 3
+  f_out_z = 1
+  f_out_h = 1
+  f_out_u = 1
+  f_out_v = 1
+  f_out_hs = 1
+  f_state_save = 1
+  dir_save = 'save_stir'
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 2
+  e0 = 0.0
+/
+
+&list_geoinfo
+  nx = 120
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = -5.0
+  f_rntype = 0
+  rn0 = 0.025
+  sd0 = 10.0
+/
+
+&list_geomorph
+  dt_geomorph = 5.0
+  f_suspend = 1
+  f_esform = 1
+  susp_d50 = 0.0002
+  susp_tausc = 0.05
+  susp_esa = 1.0e-4
+  susp_beta = 1.0
+  fluv_porosity = 0.4
+  f_wfsed = 1               ! 波浪場による攪拌と輸送
+  wfsed_facsk = 0.0         ! 岸向きの輸送速度 u_a なし(攪拌の式だけを確かめる)
+  wfsed_facas = 0.0
+/
+
+&list_wavefield
+  wf_bc_side = 1, 0, 2, 2   ! 西が入射、東は吸収、南北は側方 Neumann
+  wf_hm0 = 0.5
+  wf_trep = 8.0
+  wf_dir = 0.0
+  dt_wave = 60
+  wf_tol = 1.0e-7
+  f_wf_outdiag = 1
+/

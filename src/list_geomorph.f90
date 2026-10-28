@@ -136,6 +136,15 @@ module list_geomorph
     real :: fines_la = 0.0           ! 交換層厚 L_a (m)。利用可能率 f = min(1, sf/L_a)。f_bedfines=1 で必須
     real :: fines_frac0 = 0.0        ! 初期の細粒分割合(sf = fines_frac0 × sd。0 = 粗粒のみ、1 = 細粒のみ)
 
+    integer :: f_wfsed = 0           ! 沿岸の波浪場(fn_wavefield)による掃流砂・浮遊砂の攪拌と
+                                     ! Euler 平均流速 u^E での輸送(0:無効, 1:有効。段 W4。§88)。
+                                     ! 波・流れの底面せん断の合成は Soulsby(1997)。fn_wave の
+                                     ! 沿岸漂砂(CERC)とは同時に使えない
+    real :: wfsed_facsk = -9999.0    ! 波の歪度による岸向きの輸送速度の係数 f_Sk(段 W5。
+                                     ! u_a = (f_Sk S_k − f_As A_s) u_rms。−9999 = 既定 0.1 =
+                                     ! XBeach の facua。0 で無効)
+    real :: wfsed_facas = -9999.0    ! 同 非対称の係数 f_As(−9999 = 既定 0.1。0 で無効)
+
     integer :: f_wash = 0            ! 斜面浸食(雨滴+面状。f_suspend が必須)(0:無効, 1:有効)
     real :: wash_kr = 0.0            ! 雨滴侵食係数(無次元。E_r = kr・降雨強度)
     real :: wash_kf = 0.0            ! 面状侵食係数 (m/s)(E_f = kf・(τ*/τ*c - 1))
@@ -373,6 +382,8 @@ subroutine list_geomorph_read(p, list)
   real :: susp_esa
   integer :: f_bedfines
   real :: fines_la, fines_frac0
+  integer :: f_wfsed
+  real :: wfsed_facsk, wfsed_facas
   integer :: f_wash
   real :: wash_kr
   real :: wash_kf
@@ -432,7 +443,8 @@ subroutine list_geomorph_read(p, list)
                            rf_bedrock, rf_bank, &
                            f_fixation, fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank, &
                            f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
-                           susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, &
+                           susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, f_wfsed, &
+                           wfsed_facsk, wfsed_facas, &
                            f_wash, wash_kr, wash_kf, wash_tausc, wet_lw, &
                            f_splash, spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, &
                            spl_lc, spl_zbase, spl_sgrad, spl_ksat, spl_strata, &
@@ -507,6 +519,9 @@ subroutine list_geomorph_read(p, list)
   f_bedfines = list%f_bedfines
   fines_la = list%fines_la
   fines_frac0 = list%fines_frac0
+  f_wfsed = list%f_wfsed
+  wfsed_facsk = list%wfsed_facsk
+  wfsed_facas = list%wfsed_facas
   f_wash = list%f_wash
   wash_kr = list%wash_kr
   wash_kf = list%wash_kf
@@ -648,6 +663,9 @@ subroutine list_geomorph_read(p, list)
   list%f_bedfines = f_bedfines
   list%fines_la = fines_la
   list%fines_frac0 = fines_frac0
+  list%f_wfsed = f_wfsed
+  list%wfsed_facsk = wfsed_facsk
+  list%wfsed_facas = wfsed_facas
   list%f_wash = f_wash
   list%wash_kr = wash_kr
   list%wash_kf = wash_kf

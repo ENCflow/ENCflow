@@ -17,8 +17,9 @@
 !   With wf_flow = 1 or 2 it acts on the flow and produces setup and
 !   longshore currents (stage W2; the default 0 means no action). With
 !   f_wf_current = 1 the current changes the waves (Doppler shift,
-!   refraction by currents and blocking; stage W3). It does not act on the
-!   bed.
+!   refraction by currents and blocking; stage W3). The action on sediment
+!   (stirring and transport, longshore transport, beach erosion and recovery;
+!   stages W4 and W5) is enabled with f_wfsed of &list_geomorph.
 !
 !   Required input:
 !     - incident sides (at least one 1 in wf_bc_side)

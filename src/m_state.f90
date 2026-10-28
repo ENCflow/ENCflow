@@ -150,6 +150,23 @@ module m_state
     real, allocatable :: wvus(:,:)      ! Stokes 輸送の流速 u^S (m/s。wf_flow = 2)
     real, allocatable :: wvvs(:,:)      ! 同 v^S (m/s)
     real, allocatable :: wver(:,:)      ! ローラーのエネルギー E_r (J/m2。f_wf_roller = 1。診断・出力用)
+    ! 波→土砂(段 W4。geomorph の f_wfsed = 1 のときだけ)。wv_sed は m_geomorph_init が
+    ! 立てる要求(init の順は geomorph → wavefield)。書き出しは m_wavefield_init が確保し、
+    ! 更新ごとにハロまで埋める(向きは流速 u・v と同じ = x 東・y 南)。漂砂の推定
+    ! (固体体積の単位幅輸送量)は m_geomorph が更新ごとに帯へ書く
+    logical :: wv_sed = .false.         ! 波浪場の土砂への作用(攪拌と、Euler 平均流速・岸向きの速度の輸送)
+    real, allocatable :: wvex(:,:)      ! 平均波向の単位ベクトルの x 成分(無波 0)
+    real, allocatable :: wvey(:,:)      ! 同 y 成分(南が正)
+    real, allocatable :: wvae(:,:)      ! 底面の軌道の振幅 A = √2 u_rms/σ̄ (m)
+    ! 岸向きの輸送速度(段 W5。geomorph が係数を渡し、m_wavefield が更新ごとに求める)
+    logical :: wv_asym = .false.        ! u_a を使うか(係数のどちらかが正)
+    real :: wv_facsk = 0.0              ! 歪度の係数 f_Sk
+    real :: wv_facas = 0.0              ! 非対称の係数 f_As
+    real, allocatable :: wvua(:,:)      ! u_a = (f_Sk S_k − f_As A_s) u_rms(平均波向の向きが正。m/s)
+    real, allocatable :: sqbx(:,:)      ! 掃流砂の輸送量の推定 x 成分 (m2/s。固体体積)
+    real, allocatable :: sqby(:,:)      ! 同 y 成分
+    real, allocatable :: sqsx(:,:)      ! 浮遊砂の輸送量 hs·u_s の x 成分(u_s = u^E + u_a ê_θ。m2/s。固体体積)
+    real, allocatable :: sqsy(:,:)      ! 同 y 成分
     real, allocatable :: cq(:,:)        ! 輸送物質柱状量 (g/m2。§30。濃度 = cq/vh は
                                         ! 導出量 cqc。移流は swflow_enc がステップ内で
                                         ! 行い(wq_active)、発生源・浸透同伴・減衰は

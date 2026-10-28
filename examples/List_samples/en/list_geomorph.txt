@@ -150,6 +150,14 @@
   !fines_frac0 = 0.0        ! initial fraction of fines (sf = fraction x sd.
                             !   0 = coarse only = default, 1 = all fines)
 
+  ! ---- Stirring and transport by the coastal wave field (requires fn_wavefield and f_fluvial or f_suspend) ----
+  ! The orbital velocity of the waves stirs the sand, and the wave-driven flow (Eulerian mean velocity)
+  ! and the onshore velocity u_a carry it (longshore transport, beach erosion and recovery;
+  ! users_guide/wavefield.md; exclusive with the longshore transport of fn_wave)
+  !f_wfsed = 1
+  !wfsed_facsk = 0.1        ! coefficient f_Sk of the onshore transport velocity of wave skewness (default 0.1; 0 disables)
+  !wfsed_facas = 0.1        ! coefficient f_As of asymmetry (default 0.1; 0 disables)
+
   ! ---- Hillslope erosion (rainsplash + sheetwash. Requires f_suspend) ----
   !f_wash = 1
   !wash_kr = 0.001          ! rainsplash erosion coefficient (dimensionless.

@@ -1022,8 +1022,9 @@ or a fan (the ensemble mean). Arcuate and cuspate deltas and the smoothing of
 the shoreline come from the **longshore transport** that waves drive in the
 surf zone (the shape is set by the ratio R = Q_r/Q_w of the river supply to
 the transport the waves can carry; design: [docs/wave_plan.md](../../wave_plan.md),
-Japanese; decision: developer.md §84.15). ENCflow does not solve the waves.
-Give the offshore wave (significant height H0, period T, direction of travel
+Japanese; decision: developer.md §84.15). This simple mode does not solve the
+waves (solving the waves for process-based transport is `f_wfsed` in the next
+section). Give the offshore wave (significant height H0, period T, direction of travel
 phi0) in `fn_wave` (&list_wave) and every landform update does the following.
 
 1. The breaking depth h_b/gamma (H_b = 0.39 g^{1/5} (T H0^2)^{2/5}, gamma = 0.78)
@@ -1118,6 +1119,31 @@ transport and the number of surf-zone cell-updates. Verification:
 [test/wave_shore](../../../test/wave_shore/en/README.md) (decay rate of a shoreline
 perturbation matches the linear theory of Ashton & Murray, growth for
 high-angle waves, bit-identical when disabled).
+
+## Stirring and transport by the coastal wave field (f_wfsed)
+
+With the [coastal wave field](wavefield.md) (`fn_wavefield`) enabled, `f_wfsed = 1`
+lets the wave field move bed load and suspended load. The orbital velocity of the
+waves stirs the sand (the dimensionless shear stress becomes the maximum
+wave–current shear stress of Soulsby 1997), and the sand is carried by the
+Eulerian mean velocity of the wave-driven flow (longshore current, undertow) and
+by the onshore velocity of wave skewness and asymmetry. Because the waves are
+solved, the shoreline orientation, exposure and river-mouth rule (the
+simplifications of fn_wave above) are not needed; refraction, breakwater shadows
+and blocking by river-mouth flow come from the wave field. For the formulas,
+coefficients, output and verification see
+[action on sediment](wavefield.md#action-on-sediment-f_wfsed-stages-w4-and-w5) in
+the coastal wave field chapter.
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| f_wfsed | 0 | 1: stirring and transport by the wave field (requires `fn_wavefield`, and `f_fluvial` or `f_suspend`) |
+| wfsed_facsk | 0.1 | Coefficient f_Sk of the onshore transport velocity of wave skewness (calibration; 0 removes the skewness term) |
+| wfsed_facas | 0.1 | Coefficient f_As of asymmetry (calibration; 0 removes the asymmetry term) |
+
+It cannot be used together with the longshore transport of fn_wave
+(`f_wave_longshore = 1`; the run stops at the start so that the same transport is
+not counted twice), nor with debris flow (`f_debris`).
 
 ## Long-term landform evolution (f_wthr / f_uplift)
 

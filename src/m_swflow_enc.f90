@@ -1136,12 +1136,15 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
 
   ! 浮遊砂柱状量を移流する(連続式と同一のエッジ流量・係数による
   ! 風上輸送。時刻 n の s%h と s%hs が必要なため complete より前に置く)。
-  ! 区間流入に濃度時系列があるときは境界流入濃度テーブルを渡す
+  ! 区間流入に濃度時系列があるときは境界流入濃度テーブルを渡す。波浪場が土砂に
+  ! 作用するなら Euler 平均流速(GLM の wf_flow = 2)と岸向きの速度 u_a で運ぶ(§88)
   if (s%sed_active) then
     if (allocated(b%csin)) then
-      call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1, cbin=b%csin)
+      call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1, cbin=b%csin, &
+                         eul=(s%wv_sed .and. (allocated(s%wvus) .or. allocated(s%wvua))))
     else
-      call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1)
+      call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1, &
+                         eul=(s%wv_sed .and. (allocated(s%wvus) .or. allocated(s%wvua))))
     end if
   end if
 
@@ -2581,8 +2584,10 @@ end subroutine
 !       側方 Neumann の辺は鏡像セルの濃度(勾配 0。§88)、cbin があればその値
 !     - 乾燥エッジ条件(h<dd 両セル)は continuous と同一。強い乾燥化では
 !       h1 同様に c1 も僅かに負になり得る(f_exflux_reduction=1 で緩和)
+!     - eul = 真(波浪場の浮遊砂。§88)は面流束から h (r u^S − u_a ê_θ) を引く。このときは
+!       一様濃度でもその発散の分だけ濃度が変わる(水と違う速度で動く)
 !----------------------------------------------------------------------
-subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
+subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
@@ -2592,12 +2597,15 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
   real, intent(in), optional :: cbin(dcp%ish:, dcp%jsh:)   ! 境界流入濃度(セル別)
   real, intent(in), optional :: share                ! 移流分担率(省略時 1.0。
                                                      !   底層スカラーの流速分担。§47)
+  logical, intent(in), optional :: eul               ! 真なら Euler 平均流速 u^E = u^L − u^S と
+                                                     !   岸向きの速度 u_a で運ぶ(波浪場の浮遊砂。
+                                                     !   省略時は偽。§88)
   integer :: i, j, k
   integer :: in, jn, ie, je
   integer :: iu, ju, id, jd, iuu, juu   ! 風上・風下・さらに風上のセル(MUSCL。§78)
   integer :: im, jm, ing, jng           ! 側方 Neumann の辺の鏡像セル
-  real :: mne, fw, winv, cdon, sh, cdn, cuu
-  logical :: has_cbin, muscl, nmn, okn, okuu
+  real :: mne, fw, winv, cdon, sh, cdn, cuu, rs, qsx, qsy, qdx, qdy
+  logical :: has_cbin, muscl, nmn, use_eul, okn, okuu, stk, asym
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
@@ -2605,10 +2613,15 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
   sh = 1.0
   if (present(share)) sh = share
   muscl = opt%f_scalar_scheme == 3
+  use_eul = .false.
+  if (present(eul)) use_eul = eul
+  rs = s%wv_ramp
+  stk = allocated(s%wvus)
+  asym = allocated(s%wvua)
 
   !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, mne, fw, winv, cdon, &
-  !$omp                                      iu, ju, id, jd, iuu, juu, cdn, cuu, im, jm, nmn, &
-  !$omp                                      ing, jng, okn, okuu)
+  !$omp                                      iu, ju, id, jd, iuu, juu, cdn, cuu, im, jm, nmn, qsx, qsy, &
+  !$omp                                      ing, jng, okn, okuu, qdx, qdy)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
@@ -2632,6 +2645,30 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
         je = j + dje(k)
         mne = sign_e(k) * sx%mn1(ke(k),ie,je)
         if (mne == 0.0) cycle
+        if (use_eul) then
+          ! 水の流束(GLM の質量輸送 h u^L)から h (r u^S − u_a ê_θ)(両セルの平均。境界面は
+          ! 自セル)を引いた h (u^E + u_a ê_θ) で運ぶ。Stokes 輸送は谷より上に集中し、浮遊砂は
+          ! 底近くに多いので浮遊砂は Euler 平均流速で動き(Reniers ら 2004、XBeach と同じ)、
+          ! 波の歪度・非対称の岸向きの速度 u_a が加わる(段 W5。§88)。
+          ! 水が通らない面(流量 0 = 壁・閉じた開口・堤防)は土砂も通さない(上の cycle)
+          call sed_drift(i, j, qsx, qsy)
+          if (g%x(in,jn) > 0) then
+            call sed_drift(in, jn, qdx, qdy)
+            qsx = (qsx + qdx) / 2
+            qsy = (qsy + qdy) / 2
+          else
+            ! 側方 Neumann の面は内側へ平行移動した内部の面と同じく、自セルと鏡像セルの平均
+            ! (斜めの面では鏡像が岸沖に隣のセル。自セルだけだと辺の行の岸沖の輸送が変わる)
+            call bc_neumann_cell(in, jn, nmn, im, jm)
+            if (nmn .and. g%x(im,jm) > 0 .and. g%sw(im,jm) <= 0) then
+              call sed_drift(im, jm, qdx, qdy)
+              qsx = (qsx + qdx) / 2
+              qsy = (qsy + qdy) / 2
+            end if
+          end if
+          mne = mne - (qsx * geo%n8x(k) + qsy * geo%n8y(k))
+          if (mne == 0.0) cycle
+        end if
         ! 風上(donor)セルの濃度。境界面からの流入は cbin(区間流入の
         ! 濃度時系列等)があればセル値、なければ清水 = 0
         ! 濃度は水の体積あたり = 柱状量 / 矩形換算水深 vh(σ 非適用セルは
@@ -2738,6 +2775,24 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share)
   !$omp end parallel do
 
 contains
+
+  ! 浮遊砂が水の質量輸送 h u^L から差し引く輸送 h (r u^S − u_a ê_θ)(eul = 真。§88)
+  pure subroutine sed_drift(ci, cj, qx, qy)
+    integer, intent(in) :: ci, cj
+    real, intent(out) :: qx, qy
+    qx = 0.0
+    qy = 0.0
+    if (stk) then
+      qx = rs * s%wvus(ci,cj)
+      qy = rs * s%wvvs(ci,cj)
+    end if
+    if (asym) then
+      qx = qx - s%wvua(ci,cj) * s%wvex(ci,cj)
+      qy = qy - s%wvua(ci,cj) * s%wvey(ci,cj)
+    end if
+    qx = s%h(ci,cj) * qx
+    qy = s%h(ci,cj) * qy
+  end subroutine
 
   ! セルの体積濃度 c/vh(σ 非適用セルは vh = h。供給元と同じ定義)
   pure function conc(ci, cj) result(cv)
