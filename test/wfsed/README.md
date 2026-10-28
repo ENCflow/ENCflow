@@ -18,8 +18,9 @@ Log.txt・wavefield.csv・Z9998.txt・Hs9998.txt とも比較します(ULP=0)。
 | 掃流砂 | `param_bed.txt` | 水深 2 m の平坦な水路(600 m × 40 m)に湧き出しの流れ 0.45 m/s と不規則波 H_m0 = 0.5 m・T = 6 s・進行方向 30°(`wf_flow = 0`)。掃流砂だけ、u_a なし。30 分 |
 | 閉じた海盆 | `param_closed.txt` | 基本の流れの四辺を壁にする(沿岸流は北の壁で折り返して循環)。30 分 |
 | 高波浪・低波浪 | `param_storm.txt` / `param_calm.txt` | 基本の海浜に直角入射の H_m0 = 2 m・T = 8 s(侵食)と H_m0 = 0.6 m・T = 12 s(回復)。30 分 |
+| 砕波の乱れ | `param_turb.txt` | 基本に砕波の乱れによる攪拌(`f_wfsed_turb = 1`。XBeach の turb = wave_averaged の形)を加える |
 | 再開 | `param_rt1.txt` → `param_rt2.txt` | 基本を 1530 s(波浪場の更新と地形の更新の間)で保存し、復元して 3600 s まで |
-| 不正な設定 | `param_bad1.txt`〜`param_bad4.txt` | `fn_wavefield` なし、fn_wave の沿岸漂砂と同時、`f_wfsed = 2`、`f_wavefield = 0`(どれも停止すること) |
+| 不正な設定 | `param_bad1.txt`〜`param_bad5.txt` | `fn_wavefield` なし、fn_wave の沿岸漂砂と同時、`f_wfsed = 2`、`f_wavefield = 0`、`f_wfsed = 0` で `f_wfsed_turb = 1`(どれも停止すること) |
 
 ## 検定(Check_wfsed.py)
 
@@ -46,16 +47,21 @@ Log.txt・wavefield.csv・Z9998.txt・Hs9998.txt とも比較します(ULP=0)。
 - **高波浪の侵食と低波浪の回復**(shore): 高波浪では砕波帯と浅水変形の区間の岸沖の輸送が
   すべて沖向き(戻り流れが u_a に勝つ)、低波浪では砕波帯より沖の輸送のあるセルがすべて
   岸向き(u_a が戻り流れに勝つ)。定性の検定(wavefield_plan.md の V13)。
+- **砕波の乱れによる攪拌**(turb。基本と比べる): 出力の底面の乱れ Wkb が、出力のローラーの
+  エネルギー E_r・水深・周期から組み立てた k_b = k_s/(exp(h/L_mix) − 1)(k_s = (D_r/ρ)^{2/3}、
+  D_r = 2βgE_r/c、L_mix = √(2E_r T/(ρc)))と最大の 1e-4 以内で一致し、出力 Wu は乱れを含まない
+  u_rms(線形理論の H_rms σ/(2√2 sinh kh))のまま。k_b の最大は砕波の散逸の最大より岸側、
+  沿岸漂砂は基本より増え(比 1〜1.5)、行の総量の差は 1e-4 未満。
 - **再開**(Run.sh): 分割した計算の state.dat・swflow_enc.dat・wavefield.dat(土砂への書き出しを
   含む)と最終分布(Z・Hs・Qby・Qsy)が通し計算とバイト一致。
-- **不正な設定**(Run.sh): 4 つの構成が理由を表示して停止する。
+- **不正な設定**(Run.sh): 5 つの構成が理由を表示して停止する。
 
 ## 実行
 
 ```bash
 make
 ./Run.sh          # 逐次 + reference 比較 + 検定(1 スレッドで約 2 分)
-./Run_MPI.sh 4    # MPI(np <= 4)。reference と ULP=0、攪拌・掃流砂・閉じた海盆は np = 1 とバイト一致、再開も MPI で
+./Run_MPI.sh 4    # MPI(np <= 4)。reference と ULP=0、攪拌・掃流砂・閉じた海盆・砕波の乱れは np = 1 とバイト一致、再開も MPI で
 ```
 
 ## 検証記録(2026-10-27。gfortran 13.3 / Open MPI 4.1.6、Ubuntu 24.04)
@@ -71,3 +77,10 @@ make
 岸向き。再開の継続は通し計算とバイト一致。`-Og -fcheck=all` で逐次と np = 2 が一致(範囲外
 アクセスなし)、release で np = 1・2・4 が逐次 reference に ULP=0(攪拌・掃流砂・閉じた海盆は
 np = 1 とバイト一致、再開も MPI で)。
+
+砕波の乱れによる攪拌(2026-10-28 追記。developer.md §88.14)は出力 Wkb と組み立てた k_b の差が
+最大の 9.2e-6、出力 Wu と線形理論の u_rms の差が最大の 1.1e-6(乱れを含まない)、k_b の最大
+0.019 m²/s² は汀線のセル(i = 109、水深 0.30 m。攪拌の速さ 1.10 倍)で砕波の散逸の最大(i = 98)より
+岸側、沿岸漂砂は基本の 1.019 倍、行の総量の差 1.6e-5。release で np = 1・2・4 が逐次 reference に
+ULP=0 で砕波の乱れは np = 1 とバイト一致、`-Og -fcheck=all` で逐次と np = 2 が一致、1530 s で
+保存した再開の継続は通し計算とバイト一致。

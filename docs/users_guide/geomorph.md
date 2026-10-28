@@ -901,6 +901,7 @@ bs_eps_s を大きく(0.02 → 0.05)するのが第一の対処です(仕組み�
 | f_wfsed | 0 | 1: 波浪場による攪拌と輸送(`fn_wavefield` と、`f_fluvial` か `f_suspend` が必須) |
 | wfsed_facsk | 0.1 | 波の歪度による岸向きの輸送速度の係数 f_Sk(校正量。0 で歪度の項なし) |
 | wfsed_facas | 0.1 | 非対称の係数 f_As(校正量。0 で非対称の項なし) |
+| f_wfsed_turb | 0 | 1: 砕波の乱れによる攪拌(底面の乱れ k_b を √(u_rms² + 1.45 k_b) で攪拌の軌道流速に足す。XBeach の turb = wave_averaged の形。`f_wfsed = 1` が必須) |
 
 fn_wave の沿岸漂砂(`f_wave_longshore = 1`)とは同時に使えません(同じ輸送を二重に
 数えないため、開始時に停止します)。土石流(`f_debris`)とも併用できません。

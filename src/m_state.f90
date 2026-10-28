@@ -150,6 +150,12 @@ module m_state
     real, allocatable :: wvus(:,:)      ! Stokes 輸送の流速 u^S (m/s。wf_flow = 2)
     real, allocatable :: wvvs(:,:)      ! 同 v^S (m/s)
     real, allocatable :: wver(:,:)      ! ローラーのエネルギー E_r (J/m2。f_wf_roller = 1。診断・出力用)
+    ! 波浪場の砕波による水平混合(swflow の wf_break_visc > 0 のときだけ)。wv_visc は
+    ! m_swflow_enc_init が立てる要求(init の順は swflow → wavefield)、係数は wv_viscm。
+    ! m_wavefield が更新ごとに ν_w = M h (D/ρ)^(1/3) を帯±ハロへ書き、拡散項が ν に足す(§88)
+    logical :: wv_visc = .false.        ! 砕波による水平混合の要求
+    real :: wv_viscm = 0.0              ! 係数 M(Battjes 1975)
+    real, allocatable :: wvnub(:,:)     ! 砕波による渦動粘性 ν_w (m2/s)
     ! 波→土砂(段 W4。geomorph の f_wfsed = 1 のときだけ)。wv_sed は m_geomorph_init が
     ! 立てる要求(init の順は geomorph → wavefield)。書き出しは m_wavefield_init が確保し、
     ! 更新ごとにハロまで埋める(向きは流速 u・v と同じ = x 東・y 南)。漂砂の推定
@@ -163,6 +169,12 @@ module m_state
     real :: wv_facsk = 0.0              ! 歪度の係数 f_Sk
     real :: wv_facas = 0.0              ! 非対称の係数 f_As
     real, allocatable :: wvua(:,:)      ! u_a = (f_Sk S_k − f_As A_s) u_rms(平均波向の向きが正。m/s)
+    ! 砕波の乱れによる攪拌(geomorph の f_wfsed_turb = 1 のときだけ。要求 wv_turb は m_geomorph_init が
+    ! 立てる)。m_wavefield が更新ごとに底面の乱れ k_b を求め、wvub を攪拌の速さ √(u_rms² + 1.45 k_b)
+    ! にする。純粋な u_rms は wvub0 に退避し、波・流れの摩擦と出力 Wu が読む(§88)
+    logical :: wv_turb = .false.        ! 砕波の乱れによる攪拌の要求
+    real, allocatable :: wvub0(:,:)     ! 底面軌道流速 u_rms(乱れを含まない。m/s)
+    real, allocatable :: wvkb(:,:)      ! 底面の乱れのエネルギー k_b (m2/s2)
     real, allocatable :: sqbx(:,:)      ! 掃流砂の輸送量の推定 x 成分 (m2/s。固体体積)
     real, allocatable :: sqby(:,:)      ! 同 y 成分
     real, allocatable :: sqsx(:,:)      ! 浮遊砂の輸送量 hs·u_s の x 成分(u_s = u^E + u_a ê_θ。m2/s。固体体積)
@@ -939,6 +951,9 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%wvus)) deallocate(s%wvus)
   if (allocated(s%wvvs)) deallocate(s%wvvs)
   if (allocated(s%wver)) deallocate(s%wver)
+  if (allocated(s%wvnub)) deallocate(s%wvnub)
+  if (allocated(s%wvub0)) deallocate(s%wvub0)
+  if (allocated(s%wvkb)) deallocate(s%wvkb)
   if (allocated(s%wvex)) deallocate(s%wvex)
   if (allocated(s%wvey)) deallocate(s%wvey)
   if (allocated(s%wvae)) deallocate(s%wvae)

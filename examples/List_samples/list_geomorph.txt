@@ -117,6 +117,9 @@
   !f_wfsed = 1
   !wfsed_facsk = 0.1        ! 波の歪度による岸向きの輸送速度の係数 f_Sk(既定 0.1。0 で無効)
   !wfsed_facas = 0.1        ! 同 非対称の係数 f_As(既定 0.1。0 で無効)
+  !f_wfsed_turb = 0         ! 砕波の乱れによる攪拌(0: なし = 既定, 1: 底面の乱れ k_b を
+                            !   √(u_rms² + 1.45 k_b) で攪拌の軌道流速に足す。XBeach の turb =
+                            !   wave_averaged の形。f_wfsed = 1 が必須)
 
   ! ---- 斜面浸食(雨滴+面状。f_suspend が必須)----
   !f_wash = 1

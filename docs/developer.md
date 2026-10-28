@@ -14492,3 +14492,82 @@ test/diffusion の出力(全 40 ファイル)が修正前とバイト一致。wf
 格子を含む)が通る。release の MPI で np = 1・2・4 が逐次 reference に ULP=0、diff・rotdiff は
 np = 1 とバイト一致。`-Og -fcheck=all` で wfcurrent の逐次と np = 2 が一致(範囲外アクセスなし。
 検定もすべて通る)。**reference は更新していない**。
+
+### 88.13 砕波による水平混合 wf_break_visc(2026-10-28。handoff の残り 4)
+
+段 W2 までは砕波による横方向の混合がなく、沿岸流の岸沖分布は ENC の斜めの面の移流による
+数値的な横混合だけでならされていた。XBeach の nuhfac と同じ形の渦動粘性を、既存の拡散項
+(§20)の経路で加える。
+
+- **式**: ν_w = M h (D/ρ)^{1/3}(Battjes 1975)。D はローラーがあればその散逸
+  D_r = 2βgE_r/c(roller_iterate と同じ式・同じ c)、なければ砕波の散逸 D_w(診断量 wvdw)。
+  M = `wf_break_visc`(&list_enc。既定 0 = 無効)。M = 1 は XBeach の nuhfac の既定(公開ソースの
+  params.F90)。原論文は取得できず照合していない(書誌は文書に、式の形は XBeach の実装による
+  と明記)。XBeach と背景の粘性との組み合わせ方は照合していないので、本モデルは既存の砕波の
+  渦粘性 nh_break_visc と同じく**和**(ν = ν_model + ν_b + ν_w)とした。
+- **経路**: diff_prepare の ν に足す。f_diffusion_term = 0 でも wf_break_visc > 0 なら
+  have_diff。定数・なしのモデルの ν は毎ステップ基底値から作り直してから足す(nh_break_visc の
+  塊と同じ。両方あれば nh の塊が作り直した上に足す)。範囲は帯±2 行(td の近傍が読む)、
+  安定上界 nu_max でクランプし初回だけ警告(§4 と共通)。
+- **所有**: ν_w は m_wavefield が更新ごとに共有状態 s%wvnub へ帯を書いてハロを交換する
+  (visc_export。diagnose・diagnose_cur の後)。init の順(swflow → wavefield)により swflow が
+  要求 s%wv_visc と係数 s%wv_viscm を立てる。無効時は配列を確保しない(ゼロコスト)。
+  fn_wavefield がなければ swflow の init、f_wavefield = 0 なら wavefield の init が停止する。
+- **保存・復元**: wavefield_info に visc を足し(旧ファイルは 0 で読む後方互換の拡張。
+  save_version は据え置き)、wavefield.dat の後ろに ν_w を書く。保存の有無が違えば診断量ごと
+  求め直す。出力は Wnu(f_wf_outdiag = 1)。
+- 側方 Neumann の辺の拡散は §88.12 の修正が前提(修正前の版ではこの構成も発散した)。
+
+**確認**: test/wfcurrent に `param_mix.txt`(基本 + wf_break_visc = 1)と Check_wfcurrent.py の mix
+を足した。出力 Wnu と、出力の E_r・水深・代表周期の位相速度から組み立てた ν_w の差は最大の
+2.4e-7、最大 0.54 m²/s は砕波帯の中(i = 94。砕波の散逸が最大の 75%)。岸沿いの一様性(行の差:
+水位 1.1e-5 m・流速 2.2e-5 m/s・Wnu 1.6e-6 m²/s)、運動量の積分の比 Σ τ_y/Σ F_y = 1.004、
+沿岸流の最大が 3.3% 下がり(0.2287 → 0.2212 m/s)、分布の広がりが 3.8% 増える。
+
+**検証**(2026-10-28。gfortran 13.3 / Open MPI 4.1.6、release の逐次は 1 スレッド):
+reference を持つ 36 ケースのうち 35 が逐次でビット一致(nhshelf は §88.5 の既知の事象で、Log.txt が
+§88.12 の版の実行とバイト一致)。拡散項を使う reference のない test/diffusion の出力(全 40 ファイル)が
+W4・W5 の版(= §88.12 の版)とバイト一致(diff_prepare と内部の面の拡散の命令列が変わらない)。
+wfcurrent の検定一式(mix を含む)が通り、release の MPI で np = 1・2・4 が逐次 reference に ULP=0、
+mix は np = 2・4 が np = 1 とバイト一致。90 s(立ち上げの途中、波浪場の更新の間)で保存した再開の
+継続が通し計算とバイト一致。`-Og -fcheck=all` で wfcurrent の逐次と np = 2 が一致(範囲外アクセス
+なし)。トップレベルの make が通る。**reference は更新していない**。
+
+### 88.14 砕波の乱れによる攪拌 f_wfsed_turb(2026-10-28。handoff の残り 1 (d) の一部)
+
+段 W4 の攪拌は底面の軌道流速だけで、砕波の乱れが底面まで届く汀線側の巻き上げがなかった。
+XBeach の `turb` = wave_averaged(Ruessink の波形での XBeach の既定)と同じ形で加える。
+
+- **式**: 表面の乱れ k_s = (D_r/ρ)^{2/3}(Battjes 1975。D_r = 2βgE_r/c はローラーの散逸)、
+  混合長 L_mix = √(2E_r T/(ρc))(ローラーの厚さ。Svendsen 1984。T は代表周期 2π/ω)、底面の
+  乱れ k_b = k_s/(exp(h/L_mix) − 1)(指数の減衰。Roelvink & Stive 1989)、攪拌の速さ
+  u_rms,2 = √(u_rms² + 1.45 k_b)(van Thiel de Vries 2009)。ローラーなしは k_s = (D_w/ρ)^{2/3}、
+  L_mix = H_rms(Roelvink & Stive 1989 の形)。h/L_mix > 50 は k_b = 0。
+- **独自の簡略化**: XBeach は u_rms,2 を平衡濃度式(van Rijn 型)の速度に使う。本モデルは
+  Soulsby の波のせん断の速度振幅 u_w = √2 u_rms,2 に入れる(軌道の振幅 A・岸向きの速度 u_a・
+  波・流れの底面摩擦は乱れを含まない u_rms のまま)。
+- **実装**: 攪拌の手続き(m_geomorph_fluvial・suspend が s%wvub を読む 4 か所)を変えないため、
+  波浪場が更新ごとに s%wvub を攪拌の速さにし、純粋な u_rms を s%wvub0 に退避する(turb_export。
+  diagnose・diagnose_cur の後。u_a と A は diagnose が純粋な u_rms で求めたまま)。波・流れの
+  摩擦は friction_speed の冒頭で写しの friction_speed_turb(s%wvub0 を読む)へ振り分ける
+  (本体の命令列は変えない。calc_fluvial_wfsed と同じ様式。§88.10)。出力 Wu は s%wvub0、
+  Wkb は k_b(f_wf_outdiag = 1)。
+- **有効化**: &list_geomorph の `f_wfsed_turb`(0/1。既定 0。f_wfsed = 1 が必須)。init の順
+  (geomorph → wavefield)により要求 s%wv_turb を立てる。無効時は配列を確保しない。
+- **保存・復元**: wavefield_info に turb を足し(後方互換の拡張)、wavefield.dat の後ろに
+  u_rms と k_b を書く(保存の s%wvub は攪拌の速さ)。有無が違えば診断量ごと求め直す。
+
+**確認**: test/wfsed に `param_turb.txt`(基本 + f_wfsed_turb = 1)・`param_bad5.txt`(f_wfsed = 0 で
+f_wfsed_turb = 1。停止)と Check_wfsed.py の turb を足した。出力 Wkb と、出力の E_r・水深・周期から
+組み立てた k_b の差は最大の 9.2e-6、出力 Wu と線形理論の u_rms の差は 1.1e-6(乱れを含まない)。
+k_b の最大 0.019 m²/s² は汀線のセル(i = 109、水深 0.30 m。攪拌の速さ 1.10 倍)で、砕波の散逸の
+最大(i = 98。その付近の攪拌の速さは 1.01 倍)より岸側。沿岸漂砂は基本の 1.019 倍(掃流砂 1.035・浮遊砂
+1.019)、行の総量の差は 1.6e-5。緩い海浜ではローラーが水深に比べて薄いので効きは汀線の
+近くに限られる。
+
+**検証**(2026-10-28。gfortran 13.3 / Open MPI 4.1.6、release の逐次は 1 スレッド):
+§88.13 と同じビルドで、wfsed の検定一式(turb・bad5 を含む)が通り、release の MPI で
+np = 1・2・4 が逐次 reference に ULP=0、turb は np = 2・4 が np = 1 とバイト一致。1530 s(波浪場の
+更新と地形の更新の間)で保存した再開の継続が通し計算とバイト一致。reference のない土砂・スカラーの
+検定 25 ケースの出力が W4・W5 のバイナリとバイト一致(保存の時刻の行を除く)。`-Og -fcheck=all` で
+wfsed の逐次と np = 2 が一致。**reference は更新していない**。

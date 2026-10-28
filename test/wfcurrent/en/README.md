@@ -30,6 +30,7 @@ x = 1100 m. The north and south sides are lateral Neumann for both waves and flo
 | Two-way coupling | `param_cur.txt` | The base case with the action of the current on the waves (`f_wf_current = 1`; stage W3). The longshore current changes the waves (Doppler shift, refraction and transport by the current), and the waves drive the longshore current |
 | Diffusion term | `param_diff.txt` | The base case with the diffusion term of a constant eddy viscosity ν = 0.5 m²/s (`f_diffusion_term = 1`). The diffusion of the cells touching the lateral Neumann sides and of the boundary faces is computed with mirror cells (developer.md §88.12) |
 | Diffusion term on the rotated grid | `param_rotdiff.txt` | The diffusion-term case on a grid rotated clockwise by 90° (diffusion at the lateral Neumann sides W and E; under MPI the sides cross the rank interfaces) |
+| Horizontal mixing by wave breaking | `param_mix.txt` | The base case with the horizontal mixing by wave breaking (`wf_break_visc = 1` of `&list_enc`). The eddy viscosity ν_w = M h (D_r/ρ)^{1/3} (Battjes 1975; the same form as nuhfac of XBeach) is added to ν of the diffusion term |
 | Restart | `param_rt1.txt` → `param_rt2.txt` | The base case saved at 90 s (during the ramp-up, between wave-field updates), restored and continued to 3600 s |
 | Invalid setting | `param_bad.txt` | `wf_flow = 3` (must stop) |
 
@@ -86,6 +87,13 @@ x = 1100 m. The north and south sides are lateral Neumann for both waves and flo
   (the standard deviation of the cross-shore position weighted by |v|) grows by at least 2%.
   The result on the grid rotated by 90° (param_rotdiff) agrees within the same tolerances as rot
   (diffusion at the W and E sides).
+- **Horizontal mixing by wave breaking** (mix): the output eddy viscosity Wnu agrees within 1e-4 of
+  its maximum with ν_w = M h (D_r/ρ)^{1/3} assembled from the output roller energy E_r and the depth
+  (D_r = 2βgE_r/c, c the phase speed of the representative period), and its maximum lies in the
+  surf zone (a cell where the breaking dissipation is at least 50% of its maximum). As in the check
+  of the diffusion term (diff), the rows are uniform alongshore (Wnu too), the integral momentum
+  balance holds within 2%, and the maximum of the longshore current drops by 1 to 30% while the
+  spread of the profile grows by at least 2%.
 - **Restart** (Run.sh): state.dat, swflow_enc.dat, wavefield.dat and the final fields of the
   split run are byte-identical to the straight run (the ramp-up of the forcing, the forcing
   held between quasi-steady updates and the continuation of the roller state).
@@ -96,7 +104,7 @@ x = 1100 m. The north and south sides are lateral Neumann for both waves and flo
 ```bash
 make
 ./Run.sh          # serial + reference comparison + checks (about 2 minutes with one thread)
-./Run_MPI.sh 4    # MPI (np ≤ 4). ULP=0 against the reference; the rotated grid, the two-way coupling and the diffusion term (and its rotated grid) byte-identical to np = 1; restart also under MPI
+./Run_MPI.sh 4    # MPI (np ≤ 4). ULP=0 against the reference; the rotated grid, the two-way coupling, the diffusion term (and its rotated grid) and the horizontal mixing byte-identical to np = 1; restart also under MPI
 ```
 
 ## Verification record (2026-10-27; gfortran 13.3 / Open MPI 4.1.6, Ubuntu 24.04)
@@ -131,3 +139,12 @@ from the grid rotated by 90° of 1.0e-5 m in water level and 8.8e-5 m/s in veloc
 version before the fix the same case diverged in 39 minutes). With release builds np = 1, 2 and 4
 are ULP=0 against the serial reference and the diffusion term (and its rotated grid) is
 byte-identical to np = 1; with `-Og -fcheck=all` the serial run and np = 2 agree.
+
+The horizontal mixing by wave breaking (added 2026-10-28; developer.md §88.13) has a largest
+difference between the output Wnu and the assembled ν_w of 2.4e-7 of the maximum, a maximum of
+0.54 m²/s inside the surf zone (i = 94, where the breaking dissipation is 75% of its maximum), row
+differences of 1.1e-5 m in water level, 2.2e-5 m/s in velocity and 1.6e-6 m²/s in Wnu, an integral
+momentum ratio of 1.004, and a peak longshore current lower by 3.3% (0.2287 → 0.2212 m/s) with a
+profile spread larger by 3.8%. With release builds np = 1, 2 and 4 are ULP=0 against the serial
+reference and the mixing is byte-identical to np = 1; with `-Og -fcheck=all` the serial run and
+np = 2 agree; the restart continuation saved at 90 s is byte-identical to the straight run.

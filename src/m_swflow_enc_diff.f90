@@ -22,6 +22,9 @@ submodule(m_swflow_enc) m_swflow_enc_diff
   !   砕波域の渦粘性(nh_break_visc > 0。plan §15): 親の nh_nub(前ステップの
   !   nh_project が書いて halo 交換済み)を ν に加える。f_diffusion_term = 0
   !   でも nh_break_visc > 0 なら拡散項を計算する(have_diff)。
+  !   沿岸の波浪場の砕波による水平混合(wf_break_visc > 0。§88): 波浪場が更新ごとに
+  !   書く ν_w = M h (D/ρ)^(1/3)(s%wvnub。帯±ハロ)を diff_wave_visc が ν に加えて
+  !   拡散を求め直す(diff_prepare の後に親が呼ぶ)。
   ! 私有状態 t_enc_diff / td_mod は親モジュールに置く(§13 の様式。文脈の付け替えの対象)
 
 contains
@@ -194,6 +197,77 @@ module subroutine diff_neumann(p, g, s)
         tdy = tdy + wnu * (s%v(im,jm) - s%v(i,j))
       end do
       if (.not. edge) cycle
+      td_mod%td(1,i,j) = tdx
+      td_mod%td(2,i,j) = tdy
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 沿岸の波浪場の砕波による水平混合(wf_break_visc > 0。§88。diff_prepare の後に親が呼ぶ)
+!   波浪場が更新ごとに書く ν_w = M h (D/ρ)^(1/3)(s%wvnub。帯±ハロ)を ν に足し、
+!   diff_prepare の主ループと同じ範囲・同じ式でセルの拡散を求め直す。定数・なしのモデルの ν は
+!   毎ステップ基底値から作り直してから足す(nh_break_visc の塊が作り直したときはその上に足す)。
+!   範囲は td の近傍 ±1 が読むハロ 2 まで。diff_prepare を変えず、式も get_diffusion を呼ばずに
+!   書く(拡散の手続きの命令列や展開の判断が変わると、波を使わない拡散項の計算が -Ofast で
+!   最終桁でずれる。§88.12)
+!----------------------------------------------------------------------
+module subroutine diff_wave_visc(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer :: i, j, k, in, jn
+  logical :: rebase, wclamp
+  real :: wnu, tdx, tdy
+  character(len=256) :: msg
+
+  rebase = (nhp%nh_break_visc <= 0.0)
+  wclamp = .false.
+  !$omp parallel do schedule(dynamic) private(i, j) reduction(.or.:wclamp)
+  do j = max(dcp%jw1, dcp%js - 2), min(dcp%jw2, dcp%je + 2)
+    do i = g%wx(1,j), g%wx(2,j)
+      if (rebase) then
+        if (opt%f_diffusion_term == 1) td_mod%nu(i,j) = opt%p_diffusion_nu
+        if (opt%f_diffusion_term == 0) td_mod%nu(i,j) = 0
+      end if
+      if (s%wvnub(i,j) <= 0.0) cycle
+      td_mod%nu(i,j) = td_mod%nu(i,j) + s%wvnub(i,j)
+      if (td_mod%nu(i,j) > td_mod%nu_max) then
+        td_mod%nu(i,j) = td_mod%nu_max
+        wclamp = .true.
+      end if
+    end do
+  end do
+  !$omp end parallel do
+  if (wclamp .and. .not. td_mod%clamp_warned) then
+    write(msg, '(a,g0.4,a)') &
+      "swflow: diffusion eddy viscosity clamped to the stability limit ", td_mod%nu_max, &
+      " (m2/s), further occurrences are not reported"
+    call par_info(trim(msg))
+    td_mod%clamp_warned = .true.
+  end if
+
+  ! セルの拡散を求め直す(diff_prepare の主ループと同じ範囲・同じ式)
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, wnu, tdx, tdy)
+  do j = max(dcp%js - 1, dcp%jw1 + 1), min(dcp%je + 1, dcp%jw2 - 1)
+    do i = g%wx(1,j)+1, g%wx(2,j)-1
+      td_mod%td(1:2,i,j) = 0
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      if (s%h(i,j) < p%dd) cycle
+      tdx = 0
+      tdy = 0
+      do k = 1, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        if (g%x(in,jn) <= 0) cycle
+        if (s%h(in,jn) < p%dd) cycle
+        wnu = td_mod%wd8(k) * (td_mod%nu(i,j) + td_mod%nu(in,jn)) / 2
+        tdx = tdx + wnu * (s%u(in,jn) - s%u(i,j))
+        tdy = tdy + wnu * (s%v(in,jn) - s%v(i,j))
+      end do
       td_mod%td(1,i,j) = tdx
       td_mod%td(2,i,j) = tdy
     end do

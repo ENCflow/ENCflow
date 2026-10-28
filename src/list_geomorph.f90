@@ -144,6 +144,9 @@ module list_geomorph
                                      ! u_a = (f_Sk S_k − f_As A_s) u_rms。−9999 = 既定 0.1 =
                                      ! XBeach の facua。0 で無効)
     real :: wfsed_facas = -9999.0    ! 同 非対称の係数 f_As(−9999 = 既定 0.1。0 で無効)
+    integer :: f_wfsed_turb = 0      ! 砕波の乱れによる攪拌(0:なし, 1:波平均の乱れ = XBeach の
+                                     ! turb = wave_averaged。底面の乱れ k_b を u_rms² + 1.45 k_b で
+                                     ! 攪拌の軌道流速に足す。f_wfsed = 1 が必須。§88)
 
     integer :: f_wash = 0            ! 斜面浸食(雨滴+面状。f_suspend が必須)(0:無効, 1:有効)
     real :: wash_kr = 0.0            ! 雨滴侵食係数(無次元。E_r = kr・降雨強度)
@@ -384,6 +387,7 @@ subroutine list_geomorph_read(p, list)
   real :: fines_la, fines_frac0
   integer :: f_wfsed
   real :: wfsed_facsk, wfsed_facas
+  integer :: f_wfsed_turb
   integer :: f_wash
   real :: wash_kr
   real :: wash_kf
@@ -444,7 +448,7 @@ subroutine list_geomorph_read(p, list)
                            f_fixation, fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank, &
                            f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, f_wfsed, &
-                           wfsed_facsk, wfsed_facas, &
+                           wfsed_facsk, wfsed_facas, f_wfsed_turb, &
                            f_wash, wash_kr, wash_kf, wash_tausc, wet_lw, &
                            f_splash, spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, &
                            spl_lc, spl_zbase, spl_sgrad, spl_ksat, spl_strata, &
@@ -522,6 +526,7 @@ subroutine list_geomorph_read(p, list)
   f_wfsed = list%f_wfsed
   wfsed_facsk = list%wfsed_facsk
   wfsed_facas = list%wfsed_facas
+  f_wfsed_turb = list%f_wfsed_turb
   f_wash = list%f_wash
   wash_kr = list%wash_kr
   wash_kf = list%wash_kf
@@ -666,6 +671,7 @@ subroutine list_geomorph_read(p, list)
   list%f_wfsed = f_wfsed
   list%wfsed_facsk = wfsed_facsk
   list%wfsed_facas = wfsed_facas
+  list%f_wfsed_turb = f_wfsed_turb
   list%f_wash = f_wash
   list%wash_kr = wash_kr
   list%wash_kf = wash_kf

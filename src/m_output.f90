@@ -198,7 +198,12 @@ subroutine output_state(o, p, g, s, k)
     call output_matrix(o, p, g, "Wh", s%wvh, k)
     call output_matrix(o, p, g, "Wa", s%wvdir, k)
     if (s%wv_outdiag) then
-      call output_matrix(o, p, g, "Wu", s%wvub, k)
+      ! 砕波の乱れによる攪拌(f_wfsed_turb)では wvub が攪拌の速さなので、純粋な u_rms(wvub0)を出す
+      if (allocated(s%wvub0)) then
+        call output_matrix(o, p, g, "Wu", s%wvub0, k)
+      else
+        call output_matrix(o, p, g, "Wu", s%wvub, k)
+      end if
       call output_matrix(o, p, g, "Wb", s%wvdw, k)
       if (allocated(s%wvfx)) call output_matrix(o, p, g, "Wfx", s%wvfx, k)
       if (allocated(s%wvfy)) call output_matrix(o, p, g, "Wfy", s%wvfy, k)
@@ -213,6 +218,10 @@ subroutine output_state(o, p, g, s, k)
       if (allocated(s%sqsy)) call output_matrix(o, p, g, "Qsy", s%sqsy, k)
       ! 波の歪度・非対称による岸向きの輸送速度 u_a(m/s。平均波向の向きが正。段 W5)
       if (allocated(s%wvua)) call output_matrix(o, p, g, "Wua", s%wvua, k)
+      ! 砕波による水平混合の渦動粘性 ν_w(m2/s。list_enc の wf_break_visc > 0。§88)
+      if (allocated(s%wvnub)) call output_matrix(o, p, g, "Wnu", s%wvnub, k)
+      ! 底面の乱れのエネルギー k_b(m2/s2。geomorph の f_wfsed_turb = 1。§88)
+      if (allocated(s%wvkb)) call output_matrix(o, p, g, "Wkb", s%wvkb, k)
     end if
   end if
   if (is_root) write(o%un_fnolist, '(i5,a,a,a,f15.3,a,i10)') k, ",", s%ctime, ",", s%t, ",", s%it

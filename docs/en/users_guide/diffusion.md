@@ -239,6 +239,14 @@ local and stateless) to the $`\nu`$ of this diffusion term
 Even with `f_diffusion_term = 0` the diffusion term is computed when
 `nh_break_visc > 0`. The clamp and warning are those of §4.
 
+The horizontal mixing by wave breaking of the [coastal wave field](wavefield.md),
+`wf_break_visc` (&list_enc), takes the same path. The eddy viscosity
+$`\nu_w = M\,h\,(D/\rho)^{1/3}`$ computed by the wave field at every update
+(Battjes 1975[^battjes75]; $`M`$ = `wf_break_visc`, $`D`$ is the roller
+dissipation) is added to $`\nu`$ ($`\nu = \nu_{\rm model} + \nu_b + \nu_w`$),
+and the diffusion term is computed when `wf_break_visc > 0` even with
+`f_diffusion_term = 0` (`fn_wavefield` is required).
+
 ## 6. Where to use it, and cautions
 
 | Purpose | Setting | Notes |
@@ -247,6 +255,7 @@ Even with `f_diffusion_term = 0` the diffusion term is computed when
 | circulation in bays and reservoirs | `f_diffusion_term = 2` + `p_diffusion_nu` (a small $`\nu_0`$) | keeps $`\nu`$ from vanishing in quiescent regions |
 | match a constant viscosity of another model for comparison | `f_diffusion_term = 1` + `p_diffusion_nu` | a grid-dependent calibration quantity; check the bound of §4 |
 | run-up of breaking waves | `nh_break_visc` (§5) | non-hydrostatic chapter |
+| smooth the cross-shore distribution of wave-driven longshore currents | `wf_break_visc = 1` (§5) | [coastal wave field](wavefield.md) chapter; $`M`$ = 1 is the default of nuhfac of XBeach |
 
 - Mass is conserved bitwise with or without the diffusion term (it acts on
   the momentum equation only). The symmetry of symmetric problems is also
@@ -291,6 +300,12 @@ Even with `f_diffusion_term = 0` the diffusion term is computed when
 - [test/nhbreak](../../../test/nhbreak/en/README.md) -- shows the breaking eddy
   viscosity `nh_break_visc` lowering the run-up through this diffusion term
   (§5).
+- diff and mix of [test/wfcurrent](../../../test/wfcurrent/en/README.md) --
+  add a constant viscosity (diff) and the horizontal mixing by wave breaking
+  `wf_break_visc` (mix; §5) to the longshore current on a beach, and check the
+  alongshore uniformity including the lateral Neumann sides, the integral
+  momentum balance, the smoothing of the current and the agreement of
+  $`\nu_w`$ with the formula.
 - `param_ls_bd.txt` of [test/nhbottom](../../../test/nhbottom/en/README.md) --
   a trial adding a constant viscosity $`\nu`$ = 0.3 m²/s to a submarine
   landslide tsunami (confirms that the self-excited oscillation at the foot
@@ -304,3 +319,4 @@ Even with `f_diffusion_term = 0` the diffusion term is computed when
 [^fischer79]: Fischer, H. B., List, E. J., Koh, R. C. Y., Imberger, J. and Brooks, N. H. (1979): *Mixing in Inland and Coastal Waters*. Academic Press. (measured range of transverse mixing coefficients)
 [^rodi93]: Rodi, W. (1993): *Turbulence Models and Their Application in Hydraulics*, 3rd ed. IAHR Monograph, Balkema. (zero-equation and $`k`$–$`\varepsilon`$ models in depth-averaged computations)
 [^kennedy00]: Kennedy, A. B., Chen, Q., Kirby, J. T. and Dalrymple, R. A. (2000): Boussinesq modeling of wave transformation, breaking, and runup. I: 1D. *J. Waterw. Port Coast. Ocean Eng.*, 126, 39–47. (breaking eddy viscosity; §5)
+[^battjes75]: Battjes, J. A. (1975): Modeling of turbulence in the surf zone. *Proc. Symposium on Modeling Techniques*, ASCE, San Francisco, 1050–1061. (eddy viscosity of wave breaking; §5; the form of the formula follows the nuhfac implementation of XBeach; the original paper has not been checked)

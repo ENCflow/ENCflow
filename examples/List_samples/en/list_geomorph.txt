@@ -157,6 +157,10 @@
   !f_wfsed = 1
   !wfsed_facsk = 0.1        ! coefficient f_Sk of the onshore transport velocity of wave skewness (default 0.1; 0 disables)
   !wfsed_facas = 0.1        ! coefficient f_As of asymmetry (default 0.1; 0 disables)
+  !f_wfsed_turb = 0         ! stirring by the turbulence of wave breaking (0: none = default, 1: adds the
+                            !   near-bed turbulence k_b to the stirring orbital velocity as
+                            !   sqrt(u_rms^2 + 1.45 k_b); the form of turb = wave_averaged of XBeach;
+                            !   requires f_wfsed = 1)
 
   ! ---- Hillslope erosion (rainsplash + sheetwash. Requires f_suspend) ----
   !f_wash = 1

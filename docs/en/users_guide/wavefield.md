@@ -387,6 +387,25 @@ friction speed includes the wave orbital velocity,
 (Ruessink et al. 2001[^ruessink01]; n_m is the Manning roughness), so that in the surf
 zone the orbital velocity strongly increases the friction.
 
+### Horizontal mixing by wave breaking (wf_break_visc of list_enc)
+
+Breaking turbulence also mixes momentum laterally and smooths the cross-shore distribution of
+the longshore current. A positive `wf_break_visc` in the `&list_enc` of the shallow water flow
+(default 0 = none) adds the eddy viscosity computed by the wave field at every update,
+
+```math
+\nu_w = M\,h\left(\frac{D}{\rho}\right)^{1/3}
+```
+
+(Battjes 1975[^battjes75]; M = `wf_break_visc`, D is the roller dissipation D_r with the
+roller and the breaking dissipation D_w without it, ρ = 1025 kg/m³), to ν of the
+[diffusion term](diffusion.md) (ν = ν_model + ν_w; the diffusion term is computed even with
+`f_diffusion_term = 0`). The formula has the same form as nuhfac of XBeach, whose default is
+M = 1[^xbeach]. ν_w peaks in the surf zone (0.54 m²/s on the beach of test/wfcurrent), lowers
+the peak of the longshore current and spreads its distribution across the shore (the peak
+drops by 3.3% on the same beach). In the quasi-steady mode ν_w is held between updates of the
+wave field. The distribution can be checked with the output `Wnu` (`f_wf_outdiag = 1`).
+
 ### Start-up (ramp of the force)
 
 The quasi-steady wave field is at full strength over the whole domain at the start, so
@@ -512,6 +531,7 @@ asymmetry of low waves) are computed in the same time evolution as the morpholog
   f_wfsed = 1               ! stirring and transport by the wave field
   !wfsed_facsk = 0.1        ! skewness coefficient f_Sk (default 0.1; 0 removes the skewness term of the onshore velocity)
   !wfsed_facas = 0.1        ! asymmetry coefficient f_As (default 0.1)
+  !f_wfsed_turb = 1         ! stirring by the turbulence of wave breaking (default 0 = none)
 /
 ```
 
@@ -545,6 +565,27 @@ wave period. τ*_max is used as the dimensionless shear stress of the bed load f
 threshold. z0 is the grain roughness (z0 = k_s/30 with k_s = 2.5 d50), and the upper limit 0.3 is
 the value of Swart (1974)[^swart74] for small A. Without waves τ*_max = τ*_c, the same formula as
 with `f_wfsed = 0`.
+
+**Stirring by the turbulence of wave breaking (`f_wfsed_turb = 1`; default 0 = none).** Near the
+shoreline, where breaking turbulence reaches the bed, turbulence picks up sand besides the orbital
+motion. The surface turbulence k_s = (D_r/ρ)^{2/3} produced by the roller dissipation D_r
+(Battjes 1975[^battjes75]) decays exponentially towards the bed over the roller thickness
+L_mix = √(2E_r T/(ρc)) (Svendsen 1984[^svendsen84]; T is the representative period;
+Roelvink & Stive 1989[^rs89]),
+
+```math
+k_b = \frac{k_s}{\exp(h/L_{mix}) - 1},\qquad u_{rms,2} = \sqrt{u_{rms}^2 + 1.45\,k_b}
+```
+
+and u_w above becomes √2 u_rms,2 (van Thiel de Vries 2009[^vtdv09]; the same form as `turb` =
+wave_averaged of XBeach[^xbeach]). Without the roller (`f_wf_roller = 0`), k_s = (D_w/ρ)^{2/3} and
+L_mix = H_rms. The orbital amplitude A, the onshore velocity u_a and the wave–current bed friction
+keep u_rms without turbulence (as in XBeach); only adding it to u_w is **our own simplification**
+(XBeach adds it to the velocity of the equilibrium concentration formula). The turbulence acts near
+the shoreline, where the roller is thick compared with the depth (on the beach of test/wfsed the
+stirring speed is 1.10 times larger in the shoreline cell and 1.01 times at the peak of breaking
+dissipation, and the longshore transport increases by 1.9%); the near-bed turbulence k_b can be
+checked with the output `Wkb` (`f_wf_outdiag = 1`).
 
 ### Transport (Eulerian mean velocity and onshore velocity)
 
@@ -617,6 +658,8 @@ continuing outside; [lateral boundaries](#lateral-boundaries-f_bc--3)).
 | Qbx, Qby | Estimate of the bed load transport (solid volume per unit width; `f_wfsed = 1` and `f_fluvial = 1` of fn_geomorph). `f_wf_outdiag = 1` | m²/s |
 | Qsx, Qsy | Suspended transport hs·u_s (likewise, `f_suspend = 1`). `f_wf_outdiag = 1` | m²/s |
 | Wua | Onshore transport velocity u_a of wave skewness and asymmetry (positive along the mean wave direction; `f_wfsed = 1`). `f_wf_outdiag = 1` | m/s |
+| Wnu | Eddy viscosity ν_w of the horizontal mixing by wave breaking (`wf_break_visc` > 0 of &list_enc). `f_wf_outdiag = 1` | m²/s |
+| Wkb | Near-bed turbulence energy k_b (`f_wfsed_turb = 1` of fn_geomorph). `f_wf_outdiag = 1`. Wu is then u_rms without turbulence | m²/s² |
 
 **The y components (Wfy, Wsy, Qby, Qsy) have the same sign convention as the velocity v (the
 direction of increasing row index = south is positive).** Note that this is opposite to
@@ -651,9 +694,9 @@ approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storag
 - **Phase-averaged with one representative period.** Diffraction, reflection,
   frequency spreading, wind growth and nonlinear wave–wave interactions are not treated.
   The smearing of shadow edges is numerical diffusion, not diffraction.
-- **Action on sediment (`f_wfsed`)**: the stirring is by the orbital velocity at the bed
-  only; pick-up by breaking-induced turbulence is not included. There is no horizontal
-  diffusion of suspended load. Transport in the swash zone is not represented (the
+- **Action on sediment (`f_wfsed`)**: by default the stirring is by the orbital velocity at
+  the bed only (pick-up by breaking-induced turbulence can be added with `f_wfsed_turb = 1`).
+  There is no horizontal diffusion of suspended load. Transport in the swash zone is not represented (the
   phase-averaged waves stop before the shoreline; dune slumping is the angle-of-repose
   collapse `f_repose`). There is one representative grain size each for bed load and
   suspended load. The balance between the undertow and the onshore velocity that decides
@@ -669,12 +712,12 @@ approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storag
   waves spread by a few % into the neighbouring bins through refraction by the current
   (numerical diffusion of the first-order upwind scheme in direction space; it decreases with
   the square of the bin width).
-- **Lateral mixing by breaking waves (eddy viscosity) is not included.** The distribution
-  of the longshore current is smoothed by the numerical lateral mixing of the advection
-  through the ENC diagonal faces (a current of a few % of the maximum appears at the outer
-  edge where breaking begins). The horizontal diffusion of the shallow water flow
-  (`f_diffusion_term` in [the diffusion term](diffusion.md)) can be combined, but it is not
-  a formulation of wave-induced mixing (of the Battjes 1975 type).
+- **Lateral mixing by breaking waves (eddy viscosity) is not included by default.** By
+  default the distribution of the longshore current is smoothed by the numerical lateral
+  mixing of the advection through the ENC diagonal faces (a current of a few % of the maximum
+  appears at the outer edge where breaking begins). Wave-induced mixing can be added with
+  `wf_break_visc` (&list_enc; of the Battjes 1975 type; "Horizontal mixing by wave breaking"
+  above). The strength M of the mixing is a calibration quantity.
 - **Unidirectional waves with zero spreading (including regular waves) refract more slowly
   than Snell's law** (with N_θ = 40 and 20° incidence the direction at the breaker point is
   about 1.5° too large). The alongshore radiation stress S_xy is sensitive to the direction,
@@ -702,6 +745,7 @@ approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storag
 | `wf_alpha` | 1.0 | **Literature value**: default of the XBeach stationary mode[^xbeach] |
 | `wf_gammax` | 0.6 | **Literature value**: default of the XBeach stationary mode[^xbeach] (limit of H_rms relative to depth). SnapWave[^snapwave] has a limit of the same form and value |
 | `wf_fw` | 0 | **Calibration**: the default 0 (no friction) is the XBeach default[^xbeach]. On reefs and similar beds it can be more than an order of magnitude larger than the friction coefficient of the flow (XBeach manual) |
+| `wf_break_visc` (&list_enc) | 0 | **Calibration**: the default 0 (no mixing). M = 1 is the default of nuhfac of XBeach[^xbeach]. The formula is from Battjes 1975[^battjes75] |
 | Friction coefficient c | 0.28, 0.21 | **Literature value**: velocity moments of Guza & Thornton (1985)[^gt85] (the XBeach formulation). Not a setting |
 | `wf_break` | 1 | **Method**: Baldock et al. (1998), the same as the default of the XBeach stationary mode. On steep beaches Janssen & Battjes (2007) corrects the overestimated dissipation |
 | `wf_mode` | 2 | **Method**: the default is set for use with morphology (conditions change more slowly than the wave travel time) |
@@ -716,6 +760,7 @@ approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storag
 | `wf_beta` | 0.1 | **Literature value**: the XBeach default[^xbeach] (range 0.05–0.3); the 0.1 of Reniers & Battjes (1997)[^rb97] |
 | `wf_tramp` | 100 s | **Numerical**: the default of XBeach's taper[^xbeach] (the start-up in the same situation, where a steady wave field is applied to the whole domain at once) |
 | `f_wfsed` (&list_geomorph) | 0 | **Method**: by default there is no action on sediment. The stirring is the wave–current shear stress combination of Soulsby (1997)[^soulsby97] (the upper limit 0.3 of f_w from Swart 1974[^swart74]); carrying suspended load with the Eulerian mean velocity is the same as Reniers et al. (2004)[^reniers04] and XBeach[^xbeach]. The combination for bed load, "the amount of τ*_max times the speed of u_s", is original (checked to be of the same order as the wave–current bed load formula of Soulsby 1997 under the conditions of test/wfsed) |
+| `f_wfsed_turb` (&list_geomorph) | 0 | **Compatibility**: the default 0 (no turbulence = the same as stages W4 and W5). 1 is the form of `turb` = wave_averaged of XBeach (the XBeach default with the Ruessink waveform[^xbeach]). The coefficient 1.45 is from van Thiel de Vries (2009)[^vtdv09] |
 | `wfsed_facsk`, `wfsed_facas` (&list_geomorph) | 0.1 | **Calibration**: the default is facua of XBeach[^xbeach]. The formula is van Thiel de Vries (2009)[^vtdv09], with S_k and A_s from the parameterization of Ruessink et al. (2012)[^ruessink12] (the coefficients p₂ to p₆ are the values of the public XBeach source, not checked against the table of the original paper) |
 | `f_wf_current` | 0 | **Method**: by default the current does not act (the same results as up to stage W2). The formulation is the wave action balance of Bretherton & Garrett (1968)[^bg68]; the refraction by currents and the velocity used (Lagrangian mean) are the same as wci of XBeach[^xbeach]. Solving the dispersion relation directly for each directional bin is original (XBeach advances the wavenumber in time with the eikonal equations) |
 | Coefficient of the friction speed | 1.16 | **Literature value**: the wave–current friction of Ruessink et al. (2001)[^ruessink01] (the XBeach formulation). Not a setting |
@@ -744,8 +789,10 @@ approximation of Fenton & McKee (1990)[^fm90].
   integral momentum balance of the longshore current on a beach, the budget of the roller
   and its shoreward shift, alongshore uniformity at lateral Neumann sides, agreement with
   a grid rotated by 90°, and byte-identical continuation after a restart. The balances and
-  budgets of the two-way coupling with the action of the current on the waves (stage W3) are
-  checked too.
+  budgets of the two-way coupling with the action of the current on the waves (stage W3), the
+  horizontal mixing by wave breaking (agreement of ν_w with the formula, alongshore uniformity
+  and the integral momentum balance) and the diffusion at lateral Neumann sides are checked
+  too.
 - [test/wfdoppler](../../../test/wfdoppler/en/README.md): the change of waves by currents (stage
   W3). Conservation of the wave action flux on opposing and following currents (with an
   independently solved dispersion relation), the position of blocking by an opposing current
@@ -758,14 +805,16 @@ approximation of Fenton & McKee (1990)[^fm90].
   cross-shore distribution and alongshore uniformity of longshore transport on a beach and
   its order of magnitude against CERC (Komar & Inman 1970), the onshore velocity u_a
   (agreeing with the formula of Ruessink et al. 2012), the direction of erosion by high
-  waves and of recovery by low waves, conservation of sediment in a closed basin, and
-  byte-identical continuation after a restart.
+  waves and of recovery by low waves, conservation of sediment in a closed basin, the
+  stirring by breaking turbulence (agreement of k_b with the formula and the increase of
+  longshore transport), and byte-identical continuation after a restart.
 - All are bit-identical to the serial run with MPI np = 1, 2 and 4.
 
 ## References
 
 [^am78]: Andrews, D. G. & McIntyre, M. E. (1978) An exact theory of nonlinear waves on a Lagrangian-mean flow. J. Fluid Mech. 89, 609–646.
 [^baldock98]: Baldock, T. E., Holmes, P., Bunker, S. & Van Weert, P. (1998) Cross-shore hydrodynamics within an unsaturated surf zone. Coastal Engineering 34, 173–196.
+[^battjes75]: Battjes, J. A. (1975) Modeling of turbulence in the surf zone. Proc. Symposium on Modeling Techniques, ASCE, San Francisco, 1050–1061. (Eddy viscosity of wave breaking ν = M h (D/ρ)^{1/3}; the form of the formula follows the nuhfac implementation of XBeach; the original paper has not been checked)
 [^bg68]: Bretherton, F. P. & Garrett, C. J. R. (1968) Wavetrains in inhomogeneous moving media. Proc. R. Soc. Lond. A 302, 529–554.
 [^bowen68]: Bowen, A. J., Inman, D. L. & Simmons, V. P. (1968) Wave 'set-down' and set-up. J. Geophys. Res. 73(8), 2569–2577.
 [^eurotop]: EurOtop (2018) Manual on wave overtopping of sea defences and related structures, 2nd ed. Van der Meer, J. W., Allsop, N. W. H., Bruce, T., De Rouck, J., Kortenhaus, A., Pullen, T., Schüttrumpf, H., Troch, P. & Zanuttigh, B. www.overtopping-manual.com
@@ -779,6 +828,7 @@ approximation of Fenton & McKee (1990)[^fm90].
 [^nairn90]: Nairn, R. B., Roelvink, J. A. & Southgate, H. N. (1990) Transition zone width and implications for modelling surfzone hydrodynamics. Proc. 22nd ICCE, 68–81.
 [^rb97]: Reniers, A. J. H. M. & Battjes, J. A. (1997) A laboratory study of longshore currents over barred and non-barred beaches. Coastal Engineering 30, 1–22.
 [^reniers04]: Reniers, A. J. H. M., Roelvink, J. A. & Thornton, E. B. (2004) Morphodynamic modeling of an embayed beach under wave group forcing. J. Geophys. Res. 109, C01030.
+[^rs89]: Roelvink, J. A. & Stive, M. J. F. (1989) Bar-generating cross-shore flow mechanisms on a beach. J. Geophys. Res. 94(C4), 4785–4800. (Exponential decay of breaking turbulence towards the bed; the form of the formula follows the turb implementation of XBeach)
 [^ruessink01]: Ruessink, B. G., Miles, J. R., Feddersen, F., Guza, R. T. & Elgar, S. (2001) Modeling the alongshore current on barred beaches. J. Geophys. Res. 106(C10), 22451–22463.
 [^ruessink12]: Ruessink, B. G., Ramaekers, G. & van Rijn, L. C. (2012) On the parameterization of the free-stream non-linear wave orbital motion in nearshore morphodynamic models. Coastal Engineering 65, 56–63.
 [^snapwave]: Roelvink, D., van Ormondt, M., Reyns, J. & van der Lugt, M. (2025) SnapWave: fast, implicit wave transformation from offshore to nearshore. Geosci. Model Dev. 18, 9469–9495. doi:10.5194/gmd-18-9469-2025 (defaults from the public source code)

@@ -203,6 +203,12 @@ $`\nu_{\max}`$ が $`10^2`$〜$`10^4`$ m²/s と大きく、実用的な $`\nu`$
 `f_diffusion_term = 0` でも `nh_break_visc > 0` なら拡散項が計算されます。
 クランプと警告は §4 と共通です。
 
+[沿岸の波浪場](wavefield.md)の砕波による水平混合 `wf_break_visc`(&list_enc)も
+同じ経路です。波浪場が更新ごとに求める $`\nu_w = M\,h\,(D/\rho)^{1/3}`$
+(Battjes 1975[^battjes75]。$`M`$ = `wf_break_visc`、$`D`$ はローラーの散逸)を
+$`\nu`$ に加え($`\nu = \nu_{\rm model} + \nu_b + \nu_w`$)、`f_diffusion_term = 0`
+でも `wf_break_visc > 0` なら拡散項が計算されます(`fn_wavefield` が必須)。
+
 ## 6. 使いどころと注意
 
 | 目的 | 設定 | 補足 |
@@ -211,6 +217,7 @@ $`\nu_{\max}`$ が $`10^2`$〜$`10^4`$ m²/s と大きく、実用的な $`\nu`$
 | 湾内・貯水池の循環流 | `f_diffusion_term = 2` + `p_diffusion_nu`(小さな $`\nu_0`$) | 静穏域で $`\nu`$ が消えないようにする |
 | 既往モデルとの比較で定数粘性を合わせる | `f_diffusion_term = 1` + `p_diffusion_nu` | 格子幅に依存する校正量。§4 の上界を確認 |
 | 砕波性の波の遡上 | `nh_break_visc`(§5) | 非静水圧補正の章 |
+| 波による沿岸流の岸沖分布をならす | `wf_break_visc = 1`(§5) | [沿岸の波浪場](wavefield.md)の章。$`M`$ = 1 は XBeach の nuhfac の既定 |
 
 - 質量は拡散項の有無によらずビット単位で保存されます(運動方程式にしか
   作用しない)。対称な問題の対称性も保たれます。
@@ -244,6 +251,10 @@ $`\nu_{\max}`$ が $`10^2`$〜$`10^4`$ m²/s と大きく、実用的な $`\nu`$
   した形)。
 - [test/nhbreak](../../test/nhbreak/README.md) — 砕波域の渦粘性
   `nh_break_visc` がこの拡散項を通して遡上高を下げる検定(§5)。
+- [test/wfcurrent](../../test/wfcurrent/README.md) の diff・mix — 海浜の
+  沿岸流に定数粘性(diff)と砕波による水平混合 `wf_break_visc`(mix。§5)を
+  加え、側方 Neumann の辺を含む岸沿いの一様性・運動量の積分の釣り合い・
+  沿岸流のならしと、$`\nu_w`$ の式との一致を確かめる検定。
 - [test/nhbottom](../../test/nhbottom/README.md) の `param_ls_bd.txt` —
   海底地滑り津波に定数粘性 $`\nu`$ = 0.3 m²/s を加えた試行(斜面下端の
   自励振動が運動量拡散では減衰しないことの確認)。
@@ -256,3 +267,4 @@ $`\nu_{\max}`$ が $`10^2`$〜$`10^4`$ m²/s と大きく、実用的な $`\nu`$
 [^fischer79]: Fischer, H. B., List, E. J., Koh, R. C. Y., Imberger, J. and Brooks, N. H. (1979): *Mixing in Inland and Coastal Waters*. Academic Press.(横断混合係数の実測レンジ)
 [^rodi93]: Rodi, W. (1993): *Turbulence Models and Their Application in Hydraulics*, 3rd ed. IAHR Monograph, Balkema.(水深平均モデルのゼロ方程式・$`k`$–$`\varepsilon`$ の位置づけ)
 [^kennedy00]: Kennedy, A. B., Chen, Q., Kirby, J. T. and Dalrymple, R. A. (2000): Boussinesq modeling of wave transformation, breaking, and runup. I: 1D. *J. Waterw. Port Coast. Ocean Eng.*, 126, 39–47.(砕波域の渦粘性。§5)
+[^battjes75]: Battjes, J. A. (1975): Modeling of turbulence in the surf zone. *Proc. Symposium on Modeling Techniques*, ASCE, San Francisco, 1050–1061.(砕波の渦動粘性。§5。式の形は XBeach の nuhfac の実装による。原論文は未照合)

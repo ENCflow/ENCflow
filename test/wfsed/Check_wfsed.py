@@ -8,6 +8,7 @@ Python 標準ライブラリのみ。使い方:
   python3 Check_wfsed.py closed save_closed             # 閉じた海盆の土砂の保存
   python3 Check_wfsed.py asym   result                  # 岸向きの輸送速度 u_a(段 W5)
   python3 Check_wfsed.py shore  result_storm result_calm # 高波浪の侵食と低波浪の回復(段 W5)
+  python3 Check_wfsed.py turb   result_turb result      # 砕波の乱れによる攪拌(f_wfsed_turb)
 
 分布は bil(単精度)の最終出力(9998)、保存則は save の state.dat(倍精度)で読む。y の成分
 (v・Qby・Qsy)は流れの出力と同じ規約(行の増える向き = 南が正)で、北向きは負。
@@ -25,6 +26,10 @@ Python 標準ライブラリのみ。使い方:
     (param_bed は u_a = 0 なので、モデルの √(τ*_s/τ*_max) の τ*_s = τ*_c)
   - CERC(Komar & Inman 1970): I_l = K (E c_g)_b sin α_b cos α_b(K = 0.77、E は H_rms)、
     固体体積の沿岸漂砂量 Q = I_l/(s ρ g)。砕波点はモデルの波高の最大のセル
+  - 砕波の乱れ(turb。XBeach の turb = wave_averaged): k_s = (D_r/ρ)^{2/3}(Battjes 1975)、
+    D_r = 2βgE_r/c(β = 0.1、c = σ/k)、L_mix = √(2E_r T/(ρc))(Svendsen 1984)、
+    k_b = k_s/(exp(h/L_mix) − 1)(Roelvink & Stive 1989)。出力の E_r(Wr)と水深から。
+    u_rms = H_rms σ/(2√2 sinh kh)(H_rms = Wh/√2)
 """
 import math
 import re
@@ -340,6 +345,67 @@ def check_closed(savedir):
     check(rel < 1e-10, "closed: sediment conserved (sum hs + (1-lambda) sum dz = %.2e, %.1e of sum hs)" % (tot, rel))
 
 
+def check_turb(d, dbase, period=8.0, beta=0.1):
+    """基本に砕波の乱れによる攪拌(f_wfsed_turb = 1)を加える: 出力の底面の乱れ Wkb が
+    k_b = k_s/(exp(h/L_mix) − 1)(k_s = (D_r/ρ)^{2/3}、L_mix = √(2E_r T/(ρc)))に一致し、
+    出力 Wu は乱れを含まない u_rms のまま(攪拌の速さ √(u_rms² + 1.45 k_b) は内部だけ)。
+    ローラーの厚さが水深に比べて大きい汀線側で乱れが底面に届き、攪拌が強まって沿岸漂砂が増える"""
+    print("== turb (%s vs %s): stirring by the turbulence of wave breaking (f_wfsed_turb = 1)" % (d, dbase))
+    h = read_bil(d, "H")
+    wh = read_bil(d, "Wh")
+    wr = read_bil(d, "Wr")
+    wkb = read_bil(d, "Wkb")
+    wu = read_bil(d, "Wu")
+    wb = read_bil(d, "Wb")
+    j = JC
+    om = 2.0 * math.pi / period
+    dk = du = kbmax = umax = 0.0
+    ikb = 0
+    for i in range(NX):
+        hh = h[j][i]
+        if wh[j][i] <= 0.0 or hh < 0.1:
+            continue
+        k = wavenumber(om, hh)
+        c = om / k
+        kb = 0.0
+        if wr[j][i] > 0.0:
+            ks = (2.0 * beta * G * wr[j][i] / c / RHO) ** (2.0 / 3.0)
+            x = hh / math.sqrt(2.0 * wr[j][i] * period / (RHO * c))
+            if x <= 50.0:
+                kb = ks / (math.exp(x) - 1.0)
+        if kb > kbmax:
+            kbmax, ikb = kb, i
+        dk = max(dk, abs(wkb[j][i] - kb))
+        kh = k * hh
+        ur = wh[j][i] / math.sqrt(2.0) * om / (2.0 * math.sqrt(2.0) * math.sinh(kh)) if kh <= 20.0 else 0.0
+        umax = max(umax, ur)
+        du = max(du, abs(wu[j][i] - ur))
+    ib = max(range(NX), key=lambda i: wb[j][i])
+    gain = math.sqrt(wu[j][ikb] ** 2 + 1.45 * wkb[j][ikb]) / wu[j][ikb]
+    print("  turb: max k_b = %.4e m2/s2 at i = %d (h = %.2f m, stirring speed x%.3f), max D_b at i = %d"
+          % (kbmax, ikb + 1, h[j][ikb], gain, ib + 1))
+    check(dk <= 1e-4 * kbmax, "turb: Wkb = k_s/(exp(h/L_mix) - 1) (max difference %.1e of max k_b <= 1e-4)"
+          % (dk / kbmax))
+    check(du <= 1e-4 * umax, "turb: the output Wu stays the orbital velocity u_rms without turbulence "
+          "(max difference %.1e of max u_rms <= 1e-4)" % (du / umax))
+    check(ikb > ib, "turb: the near-bed turbulence peaks shoreward of the peak breaking (i = %d > %d)"
+          % (ikb + 1, ib + 1))
+    rows = []
+    for jj in range(NY):
+        qb = read_bil(d, "Qby")[jj]
+        qs = read_bil(d, "Qsy")[jj]
+        rows.append(sum(qb[i] + qs[i] for i in range(NX)) * 10.0)
+    qb0 = read_bil(dbase, "Qby")[j]
+    qs0 = read_bil(dbase, "Qsy")[j]
+    q0 = sum(qb0[i] + qs0[i] for i in range(NX)) * 10.0
+    ratio = rows[j] / q0
+    print("  turb: longshore transport %.4e m3/s (base %.4e, ratio %.3f)" % (rows[j], q0, ratio))
+    check(1.0 < ratio <= 1.5, "turb: the turbulence increases the longshore transport (ratio %.3f in (1, 1.5])"
+          % ratio)
+    spread = (max(rows) - min(rows)) / abs(rows[j])
+    check(spread < 1e-4, "turb: alongshore uniformity of the transport (row totals differ by %.1e < 1e-4)" % spread)
+
+
 def main():
     if len(sys.argv) < 3:
         print(__doc__)
@@ -357,6 +423,8 @@ def main():
         check_asym(sys.argv[2])
     elif mode == "shore":
         check_shore(sys.argv[2], sys.argv[3])
+    elif mode == "turb":
+        check_turb(sys.argv[2], sys.argv[3])
     else:
         print(__doc__)
         sys.exit(2)

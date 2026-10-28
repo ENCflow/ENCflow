@@ -202,6 +202,8 @@ subroutine m_wavefield_init(wf, p, g, s, multi)
   select case (list%f_wavefield)
     case (0)
       if (s%wv_sed) call par_stop("list_wavefield: f_wfsed of fn_geomorph requires f_wavefield=1")
+      if (s%wv_visc) call par_stop("list_wavefield: wf_break_visc of list_enc requires f_wavefield=1")
+      if (s%wv_turb) call par_stop("list_wavefield: f_wfsed_turb of fn_geomorph requires f_wavefield=1")
       call par_info("list_wavefield: f_wavefield=0, the wave field is not enabled")
       if (p%f_state_restore > 0) call stop_if_orphan(p)
       return
@@ -285,6 +287,13 @@ subroutine m_wavefield_init(wf, p, g, s, multi)
     allocate(s%wvae(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     ! 岸向きの輸送速度 u_a(段 W5。geomorph の係数 wfsed_facsk・wfsed_facas のどちらかが正のとき)
     if (s%wv_asym) allocate(s%wvua(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  end if
+  ! 砕波による水平混合(list_enc の wf_break_visc > 0 の要求 s%wv_visc。§88): ν_w を共有状態へ書く
+  if (s%wv_visc) allocate(s%wvnub(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  ! 砕波の乱れによる攪拌(geomorph の f_wfsed_turb = 1 の要求 s%wv_turb。§88)
+  if (s%wv_turb) then
+    allocate(s%wvub0(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%wvkb(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   end if
 
   ! 開始時の波浪場: 復元、準定常解、または静穏
@@ -472,11 +481,36 @@ subroutine friction_speed(g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j
+  ! 砕波の乱れによる攪拌(f_wfsed_turb)では s%wvub が攪拌の速さなので、純粋な u_rms(s%wvub0)を
+  ! 読む写しの手続きで(本手続きの命令列を変えない。calc_fluvial_wfsed と同じ様式。§88)
+  if (allocated(s%wvub0)) then
+    call friction_speed_turb(g, s)
+    return
+  end if
   !$omp parallel do schedule(dynamic) private(i, j)
   do j = dcp%js, dcp%je
     do i = max(dcp%ish, 1), min(dcp%ieh, g%nx)
       s%wvsp(i,j) = sqrt((s%u(i,j) - s%wv_ramp * s%wvus(i,j))**2 + (s%v(i,j) - s%wv_ramp * s%wvvs(i,j))**2 &
                          + (1.16 * s%wvub(i,j))**2)
+    end do
+  end do
+  !$omp end parallel do
+  call par_halo_cell(s%wvsp)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! friction_speed の写し(砕波の乱れによる攪拌 f_wfsed_turb = 1 のとき。u_rms は s%wvub0。§88)
+!----------------------------------------------------------------------
+subroutine friction_speed_turb(g, s)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  !$omp parallel do schedule(dynamic) private(i, j)
+  do j = dcp%js, dcp%je
+    do i = max(dcp%ish, 1), min(dcp%ieh, g%nx)
+      s%wvsp(i,j) = sqrt((s%u(i,j) - s%wv_ramp * s%wvus(i,j))**2 + (s%v(i,j) - s%wv_ramp * s%wvvs(i,j))**2 &
+                         + (1.16 * s%wvub0(i,j))**2)
     end do
   end do
   !$omp end parallel do
@@ -1640,6 +1674,94 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 砕波による水平混合の渦動粘性 ν_w = M h (D/ρ)^(1/3)(Battjes 1975。M は list_enc の
+! wf_break_visc。§88)。D はローラーがあればその散逸 D_r = 2 β g E_r / c(roller_iterate と
+! 同じ式)、なければ砕波の散逸 D_b(診断量 wvdw)。XBeach の nuhfac(既定 1)と同じ形。
+! 帯を書いてハロを交換する(拡散項は帯±2 行の ν を読む)。diagnose・diagnose_cur の後に呼ぶ
+!----------------------------------------------------------------------
+subroutine visc_export(wf, p, g, s)
+  type(t_wavefield), intent(in) :: wf
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real :: d
+  !$omp parallel do schedule(static) private(i, j, d)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      s%wvnub(i,j) = 0.0
+      if (wf%wcell(i,j) == 0) cycle
+      if (s%h(i,j) <= 0.0) cycle
+      d = s%wvdw(i,j)
+      if (wf%roller) then
+        d = 0.0
+        if (wf%cph(i,j) > 0.0) d = 2.0 * wf%beta * p%gg * wf%er(i,j) / wf%cph(i,j)
+      end if
+      if (d <= 0.0) cycle
+      s%wvnub(i,j) = s%wv_viscm * s%h(i,j) * (d / rho)**(1.0/3.0)
+    end do
+  end do
+  !$omp end parallel do
+  call par_halo_cell(s%wvnub)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 砕波の乱れによる攪拌(geomorph の f_wfsed_turb = 1。§88)。底面の乱れのエネルギー
+!   k_b = k_s / (exp(h/L_mix) − 1)(Roelvink & Stive 1989 の指数の減衰)を求め、攪拌の軌道流速を
+!   u_rms,2 = √(u_rms² + 1.45 k_b)(van Thiel de Vries 2009)にする。ローラーがあれば
+!   k_s = (D_r/ρ)^(2/3)(Battjes 1975)、L_mix = √(2 E_r T / (ρ c))(ローラーの厚さ。Svendsen 1984)
+!   = XBeach の turb = wave_averaged、なければ k_s = (D_w/ρ)^(2/3)、L_mix = H_rms(Roelvink &
+!   Stive 1989)。T は代表周期 2π/ω。攪拌の手続き(掃流砂・浮遊砂の τ*)は従来どおり s%wvub を
+!   読むので、s%wvub を u_rms,2 にし、純粋な u_rms は s%wvub0 に退避する(波・流れの摩擦は
+!   friction_speed_turb が、出力 Wu は m_output が s%wvub0 を読む。軌道の振幅 A(s%wvae)と
+!   u_a は diagnose が純粋な u_rms で求めたまま)。diagnose・diagnose_cur の後に呼ぶ
+!----------------------------------------------------------------------
+subroutine turb_export(wf, p, g, s)
+  type(t_wavefield), intent(in) :: wf
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real :: d, ks, lmix, x, tr
+  tr = 2.0 * pi / wf%om
+  !$omp parallel do schedule(static) private(i, j, d, ks, lmix, x)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      s%wvub0(i,j) = s%wvub(i,j)
+      s%wvkb(i,j) = 0.0
+      if (wf%wcell(i,j) == 0) cycle
+      if (s%h(i,j) <= 0.0) cycle
+      ks = 0.0
+      lmix = 0.0
+      if (wf%roller) then
+        if (wf%cph(i,j) > 0.0 .and. wf%er(i,j) > 0.0) then
+          d = 2.0 * wf%beta * p%gg * wf%er(i,j) / wf%cph(i,j)
+          ks = (d / rho)**(2.0/3.0)
+          lmix = sqrt(2.0 * wf%er(i,j) * tr / (rho * wf%cph(i,j)))
+        end if
+      else
+        if (s%wvdw(i,j) > 0.0) then
+          ks = (s%wvdw(i,j) / rho)**(2.0/3.0)
+          lmix = s%wvh(i,j)
+          if (wf%wtype == 1) lmix = s%wvh(i,j) / sqrt(2.0)
+        end if
+      end if
+      if (ks <= 0.0 .or. lmix <= 0.0) cycle
+      x = s%h(i,j) / lmix
+      if (x > 50.0) cycle                     ! k_b < 2e-22 k_s(底面に届かない)
+      s%wvkb(i,j) = ks / (exp(x) - 1.0)
+      s%wvub(i,j) = sqrt(s%wvub(i,j)**2 + 1.45 * s%wvkb(i,j))
+    end do
+  end do
+  !$omp end parallel do
+  call par_halo_cell(s%wvub)
+  call par_halo_cell(s%wvub0)
+  call par_halo_cell(s%wvkb)
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 波の歪度・非対称による岸向きの輸送速度 u_a = (f_Sk S_k − f_As A_s) u_rms(段 W5。§88)
 !   van Thiel de Vries(2009)の式(XBeach)。S_k = B cos ψ、A_s = B sin ψ は Ruessink ら(2012)の
 !   Ursell 数 Ur = (3/8)√2 H_rms k/(kh)³ によるパラメータ化:
@@ -1741,6 +1863,8 @@ subroutine diagnose(wf, p, g, s)
   end do
   !$omp end parallel do
   if (sedx) call sed_export_halo(s)
+  if (allocated(s%wvnub)) call visc_export(wf, p, g, s)
+  if (allocated(s%wvkb)) call turb_export(wf, p, g, s)
 end subroutine
 
 
@@ -2850,6 +2974,8 @@ subroutine diagnose_cur(wf, p, g, s)
   end do
   !$omp end parallel do
   if (sedx) call sed_export_halo(s)
+  if (allocated(s%wvnub)) call visc_export(wf, p, g, s)
+  if (allocated(s%wvkb)) call turb_export(wf, p, g, s)
 end subroutine
 
 
@@ -3235,9 +3361,10 @@ subroutine save_state(wf, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  integer :: un, m, version, nth, mode, flow, roller, ndiag, state, sed, sedua
+  integer :: un, m, version, nth, mode, flow, roller, ndiag, state, sed, sedua, visc, turb
   real(real64) :: cum(nl), store0, cumblk
-  namelist /wavefield_info/ version, nth, mode, cum, store0, flow, roller, ndiag, cumblk, state, sed, sedua
+  namelist /wavefield_info/ version, nth, mode, cum, store0, flow, roller, ndiag, cumblk, state, sed, sedua, &
+                            visc, turb
 
   do m = 1, nl
     call par_sum_rows(wf%rcum(:, m), cum(m))
@@ -3259,6 +3386,8 @@ subroutine save_state(wf, p, g, s)
   state = merge(1, 0, wf%current)
   sed = merge(1, 0, allocated(s%wvex))
   sedua = merge(1, 0, allocated(s%wvua))
+  visc = merge(1, 0, allocated(s%wvnub))
+  turb = merge(1, 0, allocated(s%wvkb))
   if (is_root) then
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/wavefield_info.txt', status='replace')
@@ -3288,6 +3417,11 @@ subroutine save_state(wf, p, g, s)
     call restart_write_cell(un, s%wvae)
   end if
   if (sedua == 1) call restart_write_cell(un, s%wvua)
+  if (visc == 1) call restart_write_cell(un, s%wvnub)
+  if (turb == 1) then
+    call restart_write_cell(un, s%wvub0)
+    call restart_write_cell(un, s%wvkb)
+  end if
   if (is_root) close(un)
 end subroutine
 
@@ -3299,10 +3433,11 @@ subroutine restore_state(wf, p, s, have_diag, have_force)
   logical, intent(out) :: have_diag, have_force
   character(:), allocatable :: fname
   logical :: found
-  integer :: un, ios, m, version, nth, mode, flow, roller, ndiag, state, sed, sedua, i, j
+  integer :: un, ios, m, version, nth, mode, flow, roller, ndiag, state, sed, sedua, visc, turb, i, j
   real(real64) :: cum(nl), store0, cumblk
   real, allocatable :: tmp(:,:)
-  namelist /wavefield_info/ version, nth, mode, cum, store0, flow, roller, ndiag, cumblk, state, sed, sedua
+  namelist /wavefield_info/ version, nth, mode, cum, store0, flow, roller, ndiag, cumblk, state, sed, sedua, &
+                            visc, turb
 
   fname = trim(p%dir_save)//'/wavefield_info.txt'
   inquire(file=fname, exist=found)
@@ -3321,6 +3456,8 @@ subroutine restore_state(wf, p, s, have_diag, have_force)
   state = 0
   sed = 0
   sedua = 0
+  visc = 0
+  turb = 0
   open(newunit=un, file=fname, status='old', action='read', iostat=ios)
   if (ios /= 0) call par_stop("wavefield: cannot open "//fname)
   read(un, nml=wavefield_info, iostat=ios)
@@ -3421,8 +3558,41 @@ subroutine restore_state(wf, p, s, have_diag, have_force)
       call restart_read_cell(un, tmp)
     end if
   end if
+  ! 砕波による水平混合の ν_w(§88)。保存時に無ければ診断量ごと求め直す
+  if (visc == 1) then
+    if (allocated(s%wvnub)) then
+      call restart_read_cell(un, s%wvnub)
+    else
+      call restart_read_cell(un, tmp)
+    end if
+  end if
+  ! 砕波の乱れによる攪拌の u_rms・k_b(§88。保存時の s%wvub は攪拌の速さ)
+  if (turb == 1) then
+    if (allocated(s%wvkb)) then
+      call restart_read_cell(un, s%wvub0)
+      call restart_read_cell(un, s%wvkb)
+    else
+      call restart_read_cell(un, tmp)
+      call restart_read_cell(un, tmp)
+    end if
+  end if
   if (is_root) close(un)
   deallocate(tmp)
+  if (turb == 1 .and. .not. allocated(s%wvkb) .and. have_diag) then
+    call par_info("wavefield: the saved state has the stirring speed with the turbulence of wave breaking" &
+                  // " (f_wfsed_turb); the diagnostics are recomputed")
+    have_diag = .false.
+  end if
+  if (allocated(s%wvkb) .and. turb /= 1 .and. have_diag) then
+    call par_info("wavefield: the saved state has no turbulence of wave breaking (f_wfsed_turb);" &
+                  // " the diagnostics are recomputed")
+    have_diag = .false.
+  end if
+  if (allocated(s%wvnub) .and. visc /= 1 .and. have_diag) then
+    call par_info("wavefield: the saved state has no eddy viscosity of wave breaking (wf_break_visc);" &
+                  // " the diagnostics are recomputed")
+    have_diag = .false.
+  end if
   if (allocated(s%wvua) .and. sedua /= 1) sed = 0      ! u_a がなければ診断量ごと求め直す
   if (allocated(s%wvex) .and. sed /= 1 .and. have_diag) then
     call par_info("wavefield: the saved state has no export to sediment (f_wfsed); the diagnostics are recomputed")
@@ -3435,6 +3605,11 @@ subroutine restore_state(wf, p, s, have_diag, have_force)
   end if
   ! 流れが読む量はハロまで(帯は復元済み)
   if (wf%roller) call par_halo_cell(wf%er)
+  if (allocated(s%wvnub)) call par_halo_cell(s%wvnub)
+  if (allocated(s%wvkb)) then
+    call par_halo_cell(s%wvub0)
+    call par_halo_cell(s%wvkb)
+  end if
   if (have_force) then
     call par_halo_cell(s%wvfx)
     call par_halo_cell(s%wvfy)

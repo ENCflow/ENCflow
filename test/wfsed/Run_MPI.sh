@@ -4,8 +4,8 @@
 # 逐次 reference との比較は Log.txt・wavefield.csv・Z9998.txt・Hs9998.txt を ULP=0
 # (CLAUDE.md 検証規律。攪拌はセル・エッジの局所計算、波の書き出しと流れはハロ交換、側方
 # Neumann の掃流砂の境界面は同じランクが計算した内側のエッジを写すので並列数によらず
-# ビット一致する)。攪拌・掃流砂・閉じた海盆・高波浪・低波浪の検定も同じ並列数で回し、攪拌・
-# 掃流砂・閉じた海盆は同じバイナリの np = 1 とバイト比較する。再開の往復(rt1 → rt2)は同じ並列数の
+# ビット一致する)。攪拌・掃流砂・閉じた海盆・高波浪・低波浪・砕波の乱れの検定も同じ並列数で回し、
+# 攪拌・掃流砂・閉じた海盆・砕波の乱れは同じバイナリの np = 1 とバイト比較する。再開の往復(rt1 → rt2)は同じ並列数の
 # 通し計算とバイト比較する。行は 8 なので 2 行/ランクの制約から np <= 4
 sdir=$(dirname "$(readlink -f "$0")")
 export ULP=0
@@ -28,7 +28,7 @@ withdir() {   # withdir <param> <新しい dir_result> <新しい dir_save> → 
     echo "$tmp"
 }
 
-for tag in stir bed closed storm calm; do
+for tag in stir bed closed storm calm turb; do
     rm -rf result_$tag save_$tag
     run "$np" param_$tag.txt Screen_$tag.log
 done
@@ -38,8 +38,9 @@ python3 Check_wfsed.py beach result || exit 1
 python3 Check_wfsed.py closed save_closed || exit 1
 python3 Check_wfsed.py asym result || exit 1
 python3 Check_wfsed.py shore result_storm result_calm || exit 1
+python3 Check_wfsed.py turb result_turb result || exit 1
 if [ "$np" != 1 ]; then
-    for tag in stir bed closed; do
+    for tag in stir bed closed turb; do
         tmp=$(withdir param_$tag.txt result_${tag}_np1 save_${tag}_np1)
         rm -rf result_${tag}_np1 save_${tag}_np1
         run 1 "$tmp" Screen_${tag}_np1.log

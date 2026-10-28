@@ -417,6 +417,7 @@ module m_geomorph
     integer :: f_rockfall = 0        ! 崩落と崖錐(0:無効, 1:有効。§48.7)
     integer :: f_bedfines = 0        ! 河床の細粒分の帳簿(0:無効, 1:有効。§84.10)
     integer :: f_wfsed = 0           ! 波浪場による攪拌と輸送(0:無効, 1:有効。段 W4。§88)
+    integer :: f_wfsed_turb = 0      ! 砕波の乱れによる攪拌(0:なし, 1:波平均の乱れ。§88)
     real :: bs_r = 0.0               ! 浮力比 r = ρw/ρs
     integer :: f_bsres = 1           ! 底層の抵抗則(1:Voellmy, 2:Bingham〔予約〕)
     real :: bs_mu = 0.0              ! Voellmy 摩擦係数 μ
@@ -1029,6 +1030,16 @@ subroutine m_geomorph_init(gm, p, g, s)
       call par_stop("list_geomorph: wfsed_facsk and wfsed_facas must be >= 0")
     end if
     s%wv_asym = (s%wv_facsk > 0.0 .or. s%wv_facas > 0.0)
+  end if
+  ! 砕波の乱れによる攪拌(f_wfsed_turb。§88): 波浪場が底面の乱れ k_b を求め、攪拌の軌道流速を
+  ! √(u_rms² + 1.45 k_b) にする(van Thiel de Vries 2009 = XBeach の turb = wave_averaged)。
+  ! 要求 s%wv_turb で波浪場に頼む(攪拌の手続きは変わらず s%wvub を読む)
+  gm%f_wfsed_turb = list%f_wfsed_turb
+  if (gm%f_wfsed_turb < 0 .or. gm%f_wfsed_turb > 1) call par_stop("list_geomorph: f_wfsed_turb must be 0 or 1")
+  if (gm%f_wfsed_turb > 0) then
+    if (gm%f_wfsed <= 0) call par_stop("list_geomorph: f_wfsed_turb requires f_wfsed=1")
+    s%wv_turb = .true.
+    call par_info("geomorph: the turbulence of wave breaking adds to the stirring (f_wfsed_turb = 1)")
   end if
 
   ! 浮遊砂輸送の有効化を通知(swflow_enc がステップ内で s%hs を移流する。

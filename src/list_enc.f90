@@ -76,6 +76,9 @@ module list_enc
                                               !   セル数(0: 2H/Δx から自動)。規定流束と射影の干渉を避ける
     real :: nh_break_visc = 0.0               ! 砕波域の渦粘性係数 δ_b²(0: なし。1.44 = Kennedy et al. 2000 相当。
                                               !   ν_b = nh_break_visc·B·h·√(gh)·|∇η| を運動量の拡散項に加える。plan §15)
+    real :: wf_break_visc = 0.0               ! 沿岸の波浪場の砕波による水平混合の係数 M(0: なし。1.0 = XBeach の nuhfac の
+                                              !   既定)。ν_w = M·h·(D/ρ)^(1/3)(Battjes 1975。D はローラーの散逸)を運動量の
+                                              !   拡散項に加える。fn_wavefield が必須(§88)
     integer :: f_nh_slope = 0                 ! 底面勾配項 (0: 平坦床の線形 NH(Version 1), 1: 底面の運動学条件 w_b = u·∇z_b と
                                               !   圧力項 (φ/h)∇(h+2z_b) を含む(Version 2))
     integer :: f_nh_bottom = 0                ! 動く底面の加速度項 (0: なし, 1: 底面の鉛直加速度 z̈_b を NH の源項に加える。
@@ -131,6 +134,7 @@ subroutine list_enc_read(p, list)
   real :: nh_break_slope                ! 水面勾配判定の閾値
   integer :: nh_break_margin            ! 砕波セルの縁の幅(セル数)
   real :: nh_break_visc                 ! 砕波域の渦粘性係数 δ_b²
+  real :: wf_break_visc                 ! 波浪場の砕波による水平混合の係数 M
   integer :: nh_bc_margin               ! 強制境界から静水圧のままにするセル数
   integer :: f_nh_slope                 ! NH の底面勾配項 (0/1)
   integer :: f_nh_bottom                ! NH の動く底面の加速度項 (0/1)
@@ -148,7 +152,7 @@ subroutine list_enc_read(p, list)
                       f_nh_adaptive, nh_detector, nh_chi_on, nh_margin, nh_amin, nh_arel, &
                       f_nh_breaking, nh_break_alpha, nh_break_beta, nh_break_type, nh_break_fr, &
                       nh_break_slope, nh_break_margin, nh_break_visc, nh_bc_margin, f_nh_slope, &
-                      f_nh_bottom
+                      f_nh_bottom, wf_break_visc
 
   f_gravity_correction = list%f_gravity_correction 
   f_exflux_reduction = list%f_exflux_reduction 
@@ -187,6 +191,7 @@ subroutine list_enc_read(p, list)
   nh_break_slope = list%nh_break_slope
   nh_break_margin = list%nh_break_margin
   nh_break_visc = list%nh_break_visc
+  wf_break_visc = list%wf_break_visc
   nh_bc_margin = list%nh_bc_margin
   f_nh_slope = list%f_nh_slope
   f_nh_bottom = list%f_nh_bottom
@@ -235,6 +240,7 @@ subroutine list_enc_read(p, list)
   list%nh_break_slope = nh_break_slope
   list%nh_break_margin = nh_break_margin
   list%nh_break_visc = nh_break_visc
+  list%wf_break_visc = wf_break_visc
   list%nh_bc_margin = nh_bc_margin
   list%f_nh_slope = f_nh_slope
   list%f_nh_bottom = f_nh_bottom

@@ -95,8 +95,9 @@ module m_swflow_enc
                                             !   流さず、流せないエッジの流速も 0 にする)
     integer :: f_bank_mode                    ! 堤防の水理モード(下の e_bank_*)
     integer :: f_diffusion_term               ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
-    logical :: have_diff = .false.            ! 拡散項を計算する(f_diffusion_term > 0 または
-                                            !   nh_break_visc > 0。init が設定)
+    logical :: have_diff = .false.            ! 拡散項を計算する(f_diffusion_term > 0、nh_break_visc > 0
+                                            !   または wf_break_visc > 0。init が設定)
+    real :: wf_break_visc = 0.0               ! 波浪場の砕波による水平混合の係数 M(§88)
     real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
     real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
     real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
@@ -596,6 +597,11 @@ module m_swflow_enc
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(in) :: s
     end subroutine
+    module subroutine diff_wave_visc(p, g, s)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+    end subroutine
     module subroutine diff_neumann(p, g, s)
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
@@ -873,7 +879,19 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (nhp%nh_break_visc > 0.0 .and. (nhp%f_nonhydrostatic /= 1 .or. nhp%f_nh_breaking /= 1)) then
     call par_stop("list_enc: nh_break_visc > 0 requires f_nonhydrostatic=1 and f_nh_breaking=1")
   end if
-  opt%have_diff = (opt%f_diffusion_term > 0 .or. nhp%nh_break_visc > 0.0)
+  ! 沿岸の波浪場の砕波による水平混合(§88): ν_w = M h (D/ρ)^(1/3)(Battjes 1975)を拡散項の ν に
+  ! 足す。ν_w は波浪場が更新ごとに共有状態へ書く(init の順 swflow → wavefield により、要求
+  ! s%wv_visc と係数 s%wv_viscm で頼む。波浪場が無効なら m_wavefield_init が停止する)
+  opt%wf_break_visc = list%wf_break_visc
+  if (opt%wf_break_visc < 0.0) call par_stop("list_enc: wf_break_visc must be >= 0")
+  if (opt%wf_break_visc > 0.0) then
+    if (len_trim(p%fn_wavefield) == 0) then
+      call par_stop("list_enc: wf_break_visc > 0 requires the coastal wave field (fn_wavefield)")
+    end if
+    s%wv_visc = .true.
+    s%wv_viscm = opt%wf_break_visc
+  end if
+  opt%have_diff = (opt%f_diffusion_term > 0 .or. nhp%nh_break_visc > 0.0 .or. opt%wf_break_visc > 0.0)
 
   ! 河道条件ファイルから堤防の水理モードを読む(未指定ならデフォルト値)
   if (len_trim(p%fn_channel) > 0) call list_channel_read(p, chlist)
@@ -1116,6 +1134,8 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
 
   ! 拡散項を計算する
   call diff_prepare(p, g, s)
+  ! 沿岸の波浪場の砕波による水平混合 ν_w を ν に足して拡散を求め直す(§88)
+  if (opt%wf_break_visc > 0.0) call diff_wave_visc(p, g, s)
   ! 側方 Neumann の辺に接するセルの拡散(diff_prepare が計算しない格子の枠のセル。§88)
   if (opt%have_diff .and. bcs%have_neumann) call diff_neumann(p, g, s)
 

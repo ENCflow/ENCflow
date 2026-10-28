@@ -1140,6 +1140,7 @@ the coastal wave field chapter.
 | f_wfsed | 0 | 1: stirring and transport by the wave field (requires `fn_wavefield`, and `f_fluvial` or `f_suspend`) |
 | wfsed_facsk | 0.1 | Coefficient f_Sk of the onshore transport velocity of wave skewness (calibration; 0 removes the skewness term) |
 | wfsed_facas | 0.1 | Coefficient f_As of asymmetry (calibration; 0 removes the asymmetry term) |
+| f_wfsed_turb | 0 | 1: stirring by the turbulence of wave breaking (adds the near-bed turbulence k_b to the stirring orbital velocity as √(u_rms² + 1.45 k_b); the form of turb = wave_averaged of XBeach; requires `f_wfsed = 1`) |
 
 It cannot be used together with the longshore transport of fn_wave
 (`f_wave_longshore = 1`; the run stops at the start so that the same transport is

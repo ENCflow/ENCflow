@@ -168,6 +168,7 @@ the coefficient follows from the flow and the roughness).
 | f_diffusion_term | 0 | diffusion term. 0: none (default), 2: zero-equation model ν = ν0 + α·u*·h (recommended), 1: constant viscosity ([diffusion](diffusion.md) §2) |
 | p_diffusion_nu | -- | ν0 (m²/s). For model 1 a positive value must be given explicitly (unset is an error stop); for model 2 an optional background viscosity (§2) |
 | p_diffusion_alpha | 0.41/6 | coefficient α of the zero-equation model (default is the Elder type; calibrate within 0.15–0.6 for stronger transverse mixing) (§2) |
+| wf_break_visc | 0 | coefficient M of the horizontal mixing by wave breaking of the coastal wave field (0: none; 1 = the default of nuhfac of XBeach). Adds ν_w = M h (D/ρ)^(1/3) (Battjes 1975; D is the roller dissipation) to ν of the diffusion term. Requires fn_wavefield ([diffusion term](diffusion.md) §5, [coastal wave field](wavefield.md)) |
 
 **Others**
 

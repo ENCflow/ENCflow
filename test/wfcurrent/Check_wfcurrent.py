@@ -9,6 +9,7 @@ Python 標準ライブラリのみ。使い方:
   python3 Check_wfcurrent.py rot    result result_rot     # 基本を 90° 回した格子(W・E が側方 Neumann)
   python3 Check_wfcurrent.py cur    result_cur result     # 基本に流れの波への作用(段 W3)を加えた双方向の連成
   python3 Check_wfcurrent.py diff   result_diff result    # 基本に拡散項(定数の渦動粘性)を加える
+  python3 Check_wfcurrent.py mix    result_mix result     # 基本に砕波による水平混合(wf_break_visc)を加える
 
 格子は 120 × 8 セル(Δx = Δy = 10 m)。西(i = 1)が沖で入射、南北は側方 Neumann(波・流れとも)。
 分布は bil(単精度)の最終出力(9998)で読む。y の成分(v・Wfy・Wsy)は流れの出力と同じ
@@ -34,6 +35,8 @@ Python 標準ライブラリのみ。使い方:
     D_r = 2 β g E_r / c(Reniers & Battjes 1997。β = 0.1 は XBeach の既定)。流れの波への
     作用(cur)では c は平均波向の向きの流速成分 U_θ でのドップラーの分散関係
     (ω − k U_θ)² = g k tanh(kh) の固有の位相速度 σ/k(モデルはビンのエネルギー重みの平均)
+  - 砕波による水平混合(mix): ν_w = M h (D_r/ρ)^{1/3}(Battjes 1975。D_r = 2 β g E_r / c、
+    M = wf_break_visc。XBeach の nuhfac と同じ形)を、出力の E_r(Wr)と水深から組み立てる
 """
 import csv
 import math
@@ -420,6 +423,50 @@ def check_diff(d, dbase):
     check(sa >= 1.02 * sb, "diff: mixing widens the current profile (spread +%.1f%% >= 2%%)" % (100.0 * (sa / sb - 1.0)))
 
 
+def check_mix(d, dbase):
+    """基本に砕波による水平混合(list_enc の wf_break_visc = 1)を加える: 出力の渦動粘性 Wnu が
+    ν_w = M h (D_r/ρ)^{1/3}(Battjes 1975。D_r = 2βgE_r/c はローラーの散逸、c = σ/k は代表周期の
+    位相速度)に一致し、最大は砕波帯の中。拡散項に足されるので、側方 Neumann の
+    辺を含めて岸沿いに一様なまま運動量の積分の釣り合いが成り立ち、沿岸流の最大が下がり分布が
+    広がる(diff と同じ検定)"""
+    print("== mix (%s vs %s): the base case with the horizontal mixing by wave breaking (wf_break_visc)"
+          % (d, dbase))
+    a = read_fields(d, ["E", "u", "v", "Wh", "Wu", "Wb", "Wfy", "Wsx", "Wsy", "Wr", "Wnu"])
+    b = read_fields(dbase, ["E", "v"])
+    mfac = param_value("param_mix.txt", "wf_break_visc")
+    j = JC
+    sig = 2.0 * math.pi / 8.0
+    worst = numax = 0.0
+    inu = 0
+    for i in range(NX):
+        h = depth(a, j, i)
+        if a["Wh"][j][i] <= 0.0 or h < HMIN:
+            continue
+        c = sig / wavenumber(sig, h)
+        dr = 2.0 * BETA * G * a["Wr"][j][i] / c
+        nu = mfac * h * (dr / RHO) ** (1.0 / 3.0)
+        if nu > numax:
+            numax, inu = nu, i + 1
+        worst = max(worst, abs(a["Wnu"][j][i] - nu))
+    print("  mix: max nu_w = %.4f m2/s at i = %d (M = %.2f)" % (numax, inu, mfac))
+    check(worst <= 1.0e-4 * numax,
+          "mix: Wnu = M h (D_r/rho)^(1/3) with D_r = 2 beta g E_r / c (max difference %.1e of max nu_w <= 1e-4)"
+          % (worst / numax))
+    dbmax = max(a["Wb"][j])
+    check(a["Wb"][j][inu - 1] >= 0.5 * dbmax, "mix: the mixing peaks in the surf zone (i = %d, D_b = %.0f%% of its maximum)"
+          % (inu, 100.0 * a["Wb"][j][inu - 1] / dbmax))
+    vmax = max(abs(x) for x in a["v"][j])
+    vb = max(abs(x) for x in b["v"][j])
+    uniformity(a, ["E", "v", "Wnu"], {"E": 1.0e-4, "v": 0.01 * vmax, "Wnu": 1.0e-3 * numax}, "mix")
+    alongshore_integral(a, param_value("param_mix.txt", "rn0"), "mix")
+    red = 1.0 - vmax / vb
+    sa, sb = spread(a["v"][j]), spread(b["v"][j])
+    print("  mix: max |v| = %.4f m/s (base %.4f), spread %.2f cells (base %.2f)" % (vmax, vb, sa, sb))
+    check(0.01 <= red <= 0.3, "mix: mixing lowers the peak longshore current by %.1f%% (between 1%% and 30%%)"
+          % (100.0 * red))
+    check(sa >= 1.02 * sb, "mix: mixing widens the current profile (spread +%.1f%% >= 2%%)" % (100.0 * (sa / sb - 1.0)))
+
+
 def check_rot(d, drot):
     """基本(120 × 8)を時計回りに 90° 回した格子(8 × 120)の結果と比べる。
     セル (i, j) → (9 − j, i)、東向き u → 南向き v(行の増える向き)、y 成分(南が正)→ x 成分の
@@ -468,6 +515,8 @@ def main():
         check_cur(sys.argv[2], sys.argv[3])
     elif mode == "diff":
         check_diff(sys.argv[2], sys.argv[3])
+    elif mode == "mix":
+        check_mix(sys.argv[2], sys.argv[3])
     else:
         raise SystemExit("unknown mode: " + mode)
     if failed:

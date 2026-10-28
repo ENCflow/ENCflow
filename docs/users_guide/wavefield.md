@@ -330,6 +330,22 @@ XBeach と同じ形です。ローラーは砕波の運動量をいったん蓄�
 (Ruessink ら 2001[^ruessink01]。n_m はマニングの粗度)で、砕波帯では軌道流速が摩擦を
 大きく強めます。
 
+### 砕波による水平混合(list_enc の wf_break_visc)
+
+砕波の乱れは運動量を横方向にも混ぜ、沿岸流の岸沖分布をならします。浅水流の `&list_enc` の
+`wf_break_visc`(既定 0 = なし)を正にすると、波浪場が更新ごとに求める渦動粘性
+
+```math
+\nu_w = M\,h\left(\frac{D}{\rho}\right)^{1/3}
+```
+
+(Battjes 1975[^battjes75]。M = `wf_break_visc`、D はローラーがあればその散逸 D_r、なければ
+砕波の散逸 D_w、ρ = 1025 kg/m³)を[拡散項](diffusion.md)の ν に足します(ν = ν_model + ν_w。
+`f_diffusion_term = 0` でも拡散項が計算されます)。式は XBeach の nuhfac と同じ形で、M = 1 が
+XBeach の既定です[^xbeach]。ν_w は砕波帯の中で最大になり(test/wfcurrent の海浜で 0.54 m²/s)、
+沿岸流の最大を下げて分布を岸沖へ広げます(同じ海浜で最大が 3.3% 下がる)。準定常では
+波浪場の更新の間 ν_w を保ちます。分布は出力 `Wnu`(`f_wf_outdiag = 1`)で確かめられます。
+
 ### 始動(外力の立ち上げ)
 
 準定常の波浪場は開始時に全域で満値になるので、急に加わる外力が汀線付近の振動
@@ -438,6 +454,7 @@ c = σ̄/k̄)。
   f_wfsed = 1               ! 波浪場による攪拌と輸送
   !wfsed_facsk = 0.1        ! 歪度の係数 f_Sk(既定 0.1。0 で岸向きの速度の歪度の項なし)
   !wfsed_facas = 0.1        ! 非対称の係数 f_As(既定 0.1)
+  !f_wfsed_turb = 1         ! 砕波の乱れによる攪拌(既定 0 = なし)
 /
 ```
 
@@ -466,6 +483,23 @@ c = σ̄/k̄)。
 掃流砂の流砂量式(`f_qbform`)と浮遊砂の平衡濃度式(`f_esform`)の無次元掃流力に τ*_max を
 使います(閾値の判定も)。z0 は粒子の粗さ(k_s = 2.5 d50 の z0 = k_s/30)、上限 0.3 は小さな A
 での Swart(1974)の値です。波がなければ τ*_max = τ*_c で、`f_wfsed = 0` と同じ式です。
+
+**砕波の乱れによる攪拌(`f_wfsed_turb = 1`。既定 0 = なし)。** 砕波の乱れが底面まで届く
+汀線側では、軌道運動のほかに乱れも砂を巻き上げます。ローラーの散逸 D_r がつくる表面の乱れ
+k_s = (D_r/ρ)^{2/3}(Battjes 1975[^battjes75])を、ローラーの厚さ L_mix = √(2E_r T/(ρc))
+(Svendsen 1984[^svendsen84]。T は代表周期)の指数で底面へ減衰させ(Roelvink & Stive 1989[^rs89])、
+
+```math
+k_b = \frac{k_s}{\exp(h/L_{mix}) - 1},\qquad u_{rms,2} = \sqrt{u_{rms}^2 + 1.45\,k_b}
+```
+
+上の u_w を √2 u_rms,2 にします(van Thiel de Vries 2009[^vtdv09]。XBeach の `turb` =
+wave_averaged と同じ形[^xbeach])。ローラーなし(`f_wf_roller = 0`)では k_s = (D_w/ρ)^{2/3}、
+L_mix = H_rms です。軌道の振幅 A と岸向きの速度 u_a、波・流れの底面摩擦は乱れを含まない u_rms の
+ままで(XBeach と同じ)、u_w への上乗せだけが**独自の簡略化**です(XBeach は平衡濃度式の
+速度に足す)。乱れはローラーの厚さが水深に比べて大きい汀線の近くで効き(test/wfsed の海浜で
+攪拌の速さが汀線のセルで 1.10 倍、砕波の散逸の最大のセルで 1.01 倍、沿岸漂砂は 1.9% 増)、
+底面の乱れ k_b は出力 `Wkb`(`f_wf_outdiag = 1`)で確かめられます。
 
 ### 輸送(Euler 平均流速と岸向きの速度)
 
@@ -528,6 +562,8 @@ T = 8 s、20°)では CERC(Komar & Inman 1970[^ki70])の 1.6 倍程度で、桁�
 | Qbx・Qby | 掃流砂の輸送量の推定(固体体積の単位幅。fn_geomorph の `f_wfsed = 1`・`f_fluvial = 1`)。`f_wf_outdiag = 1` | m²/s |
 | Qsx・Qsy | 浮遊砂の輸送量 hs·u_s(同、`f_suspend = 1`)。`f_wf_outdiag = 1` | m²/s |
 | Wua | 波の歪度・非対称による岸向きの輸送速度 u_a(平均波向の向きが正。`f_wfsed = 1`)。`f_wf_outdiag = 1` | m/s |
+| Wnu | 砕波による水平混合の渦動粘性 ν_w(&list_enc の `wf_break_visc` > 0)。`f_wf_outdiag = 1` | m²/s |
+| Wkb | 底面の乱れのエネルギー k_b(fn_geomorph の `f_wfsed_turb = 1`)。`f_wf_outdiag = 1`。このとき Wu は乱れを含まない u_rms | m²/s² |
 
 **y の成分(Wfy・Wsy・Qby・Qsy)は流速 v と同じ向き(行の増える向き = 南が正)です。** 波向の
 規約(北が正)とは逆なので注意してください。`wf_flow = 2` の流速 u・v は Lagrangian
@@ -558,8 +594,8 @@ T = 8 s、20°)では CERC(Komar & Inman 1970[^ki70])の 1.6 倍程度で、桁�
 
 - **位相平均・代表周期 1 個**です。回折・反射・周波数の広がり・風による発達・非線形の
   波の相互作用は扱いません。陰の縁のぼけは数値拡散で、回折ではありません。
-- **土砂への作用(`f_wfsed`)**: 攪拌は底面の軌道流速だけで、砕波の乱れによる巻き上げは
-  入りません。浮遊砂の水平拡散はありません。遡上域(swash)の輸送は表しません(位相平均の
+- **土砂への作用(`f_wfsed`)**: 攪拌は既定では底面の軌道流速だけです(砕波の乱れによる巻き上げは
+  `f_wfsed_turb = 1` で加えられます)。浮遊砂の水平拡散はありません。遡上域(swash)の輸送は表しません(位相平均の
   波は汀線の手前で止まります。砂丘の崩れは安息角崩落 `f_repose`)。代表粒径は掃流砂・
   浮遊砂それぞれ 1 つです。浜の侵食と回復を分ける戻り流れと岸向きの速度の釣り合いは
   係数 f_Sk・f_As に敏感です(校正の量)。
@@ -570,10 +606,10 @@ T = 8 s、20°)では CERC(Komar & Inman 1970[^ki70])の 1.6 倍程度で、桁�
   入れません)。
 - **流れの急な変化**(湧き出しの近く・噴流の縁)では、単一方向の波が流れによる屈折で隣の
   ビンへ数 % 広がります(方向空間の 1 次風上の数値拡散。ビン幅の 2 乗で小さくなります)。
-- **砕波による横方向の混合(渦粘性)は入りません。** 沿岸流の分布は、ENC の斜めの面の
-  移流による数値的な横混合でならされます(砕波の始まりの外縁に最大の数 % の流れが出ます)。
-  浅水流の水平拡散([拡散項](diffusion.md) の `f_diffusion_term`)を併用することは
-  できますが、波による混合の定式(Battjes 1975 型)ではありません。
+- **砕波による横方向の混合(渦粘性)は既定では入りません。** 既定では沿岸流の分布は、ENC の
+  斜めの面の移流による数値的な横混合でならされます(砕波の始まりの外縁に最大の数 % の流れが
+  出ます)。波による混合は `wf_break_visc`(&list_enc。Battjes 1975 型。上の「砕波による
+  水平混合」)で加えられます。混合の強さ M は校正の量です。
 - **方向分散 0 の単一方向の波(規則波を含む)は、屈折が Snell の法則より遅れます**
   (N_θ = 40、入射 20° で砕波点の向きが約 1.5° 大きい)。沿岸方向の放射応力 S_xy は
   向きに敏感なので、砕波帯より沖に偽の沿岸方向の外力が出ます(砕波帯の外力の約 5%。
@@ -598,6 +634,7 @@ T = 8 s、20°)では CERC(Komar & Inman 1970[^ki70])の 1.6 倍程度で、桁�
 | `wf_alpha` | 1.0 | **文献値**: XBeach 定常モードの既定[^xbeach] |
 | `wf_gammax` | 0.6 | **文献値**: XBeach 定常モードの既定[^xbeach](H_rms の水深に対する上限)。SnapWave[^snapwave] も同じ形・同じ値の上限を持つ |
 | `wf_fw` | 0 | **校正量**: 既定 0(摩擦なし)は XBeach の既定[^xbeach]。岩礁などでは流れの摩擦係数より 1 桁以上大きいことがある(XBeach マニュアル) |
+| `wf_break_visc`(&list_enc) | 0 | **校正量**: 既定 0(混合なし)。M = 1 は XBeach の nuhfac の既定[^xbeach]。式は Battjes 1975[^battjes75] |
 | 摩擦の係数 c | 0.28・0.21 | **文献値**: Guza & Thornton(1985)[^gt85] の速度モーメント(XBeach の定式)。設定項目ではない |
 | `wf_break` | 1 | **方式**: XBeach 定常モードの既定と同じ Baldock ら(1998)。急な海浜では Janssen & Battjes(2007)が散逸の過大を補正する |
 | `wf_mode` | 2 | **方式**: 地形変化と組む用途(条件の変化が波の伝播時間より遅い)を既定にした |
@@ -614,6 +651,7 @@ T = 8 s、20°)では CERC(Komar & Inman 1970[^ki70])の 1.6 倍程度で、桁�
 | `f_wf_current` | 0 | **方式**: 既定は流れの作用なし(段 W2 までと同じ結果)。式は Bretherton & Garrett(1968)[^bg68] の作用量の平衡で、流れによる屈折の式と使う流速(Lagrangian 平均)は XBeach の wci[^xbeach] と同じ。分散関係を方向ビンごとに直接解く点は独自(XBeach は Eikonal 式で波数を時間発展させる) |
 | 摩擦の速さの係数 | 1.16 | **文献値**: Ruessink ら(2001)[^ruessink01] の波・流れの摩擦(XBeach の定式)。設定項目ではない |
 | `f_wfsed`(&list_geomorph) | 0 | **方式**: 既定は土砂に作用しない。攪拌は Soulsby(1997)[^soulsby97] の波・流れのせん断の合成(f_w の上限 0.3 は Swart 1974[^swart74])、浮遊砂を Euler 平均流速で運ぶのは Reniers ら(2004)[^reniers04]・XBeach[^xbeach] と同じ。掃流砂の「τ*_max の量 × u_s の速さ」の組み合わせは独自(Soulsby 1997 の波・流れの掃流砂の式と同じ桁であることを test/wfsed の条件で確認) |
+| `f_wfsed_turb`(&list_geomorph) | 0 | **互換**: 既定 0(乱れなし = 段 W4・W5 と同じ)。1 は XBeach の `turb` = wave_averaged(Ruessink の波形での XBeach の既定[^xbeach])の形。係数 1.45 は van Thiel de Vries(2009)[^vtdv09] |
 | `wfsed_facsk`・`wfsed_facas`(&list_geomorph) | 0.1 | **校正量**: 既定は XBeach の facua[^xbeach]。式は van Thiel de Vries(2009)[^vtdv09]、S_k・A_s は Ruessink ら(2012)[^ruessink12] のパラメータ化(係数 p₂〜p₆ は XBeach の公開ソースの値で、原論文の表とは照合していない) |
 
 分散関係は Fenton & McKee(1990)[^fm90] の陽な近似を初期値に Newton 法 3 回で解きます。
@@ -632,7 +670,9 @@ T = 8 s、20°)では CERC(Komar & Inman 1970[^ki70])の 1.6 倍程度で、桁�
   (Bowen ら)、一様水深の沿岸流と戻り流れの摩擦の閉じた形との一致、海浜の沿岸流の
   運動量の積分の釣り合い・ローラーの収支と岸側へのずれ、側方 Neumann の辺の岸沿いの
   一様性、90° 回した格子との一致、再開の継続のバイト一致。
-  流れの波への作用(段 W3)を加えた双方向の連成の釣り合いと収支も確かめます。
+  流れの波への作用(段 W3)を加えた双方向の連成の釣り合いと収支、砕波による水平混合
+  (ν_w の式との一致・岸沿いの一様性・運動量の積分の釣り合い)と側方 Neumann の辺の拡散も
+  確かめます。
 - [test/wfdoppler](../../test/wfdoppler/README.md): 流れによる波の変化(段 W3)。逆流・順流の
   上の作用量の流束の保存(独立に解いた分散関係)、逆流による阻止の位置と台帳、流れの作用の
   有無、非定常(流れの立ち上がりの間も作用量の台帳が閉じる)、河口の噴流が波の遡上を止める
@@ -641,13 +681,14 @@ T = 8 s、20°)では CERC(Komar & Inman 1970[^ki70])の 1.6 倍程度で、桁�
   平衡濃度と掃流砂の流砂量(独立に組み立てた Soulsby 1997 の式と一致)、海浜の沿岸漂砂の向き・
   岸沖分布・岸沿いの一様性・CERC(Komar & Inman 1970)と同じ桁、岸向きの速度 u_a
   (Ruessink ら 2012 の式と一致)、高波浪の侵食と低波浪の回復の向き、閉じた海盆の土砂の保存、
-  再開の継続のバイト一致。
+  砕波の乱れによる攪拌(k_b の式との一致・沿岸漂砂の増加)、再開の継続のバイト一致。
 - いずれも MPI の np = 1・2・4 で逐次とビット一致します。
 
 ## 参考文献
 
 [^am78]: Andrews, D. G. & McIntyre, M. E. (1978) An exact theory of nonlinear waves on a Lagrangian-mean flow. J. Fluid Mech. 89, 609–646.
 [^baldock98]: Baldock, T. E., Holmes, P., Bunker, S. & Van Weert, P. (1998) Cross-shore hydrodynamics within an unsaturated surf zone. Coastal Engineering 34, 173–196.
+[^battjes75]: Battjes, J. A. (1975) Modeling of turbulence in the surf zone. Proc. Symposium on Modeling Techniques, ASCE, San Francisco, 1050–1061.(砕波の渦動粘性 ν = M h (D/ρ)^{1/3}。式の形は XBeach の nuhfac の実装による。原論文は未照合)
 [^bg68]: Bretherton, F. P. & Garrett, C. J. R. (1968) Wavetrains in inhomogeneous moving media. Proc. R. Soc. Lond. A 302, 529–554.
 [^bowen68]: Bowen, A. J., Inman, D. L. & Simmons, V. P. (1968) Wave 'set-down' and set-up. J. Geophys. Res. 73(8), 2569–2577.
 [^eurotop]: EurOtop (2018) Manual on wave overtopping of sea defences and related structures, 2nd ed. Van der Meer, J. W., Allsop, N. W. H., Bruce, T., De Rouck, J., Kortenhaus, A., Pullen, T., Schüttrumpf, H., Troch, P. & Zanuttigh, B. www.overtopping-manual.com
@@ -661,6 +702,7 @@ T = 8 s、20°)では CERC(Komar & Inman 1970[^ki70])の 1.6 倍程度で、桁�
 [^nairn90]: Nairn, R. B., Roelvink, J. A. & Southgate, H. N. (1990) Transition zone width and implications for modelling surfzone hydrodynamics. Proc. 22nd ICCE, 68–81.
 [^rb97]: Reniers, A. J. H. M. & Battjes, J. A. (1997) A laboratory study of longshore currents over barred and non-barred beaches. Coastal Engineering 30, 1–22.
 [^reniers04]: Reniers, A. J. H. M., Roelvink, J. A. & Thornton, E. B. (2004) Morphodynamic modeling of an embayed beach under wave group forcing. J. Geophys. Res. 109, C01030.
+[^rs89]: Roelvink, J. A. & Stive, M. J. F. (1989) Bar-generating cross-shore flow mechanisms on a beach. J. Geophys. Res. 94(C4), 4785–4800.(砕波の乱れの底面への指数の減衰。式の形は XBeach の turb の実装による)
 [^ruessink01]: Ruessink, B. G., Miles, J. R., Feddersen, F., Guza, R. T. & Elgar, S. (2001) Modeling the alongshore current on barred beaches. J. Geophys. Res. 106(C10), 22451–22463.
 [^ruessink12]: Ruessink, B. G., Ramaekers, G. & van Rijn, L. C. (2012) On the parameterization of the free-stream non-linear wave orbital motion in nearshore morphodynamic models. Coastal Engineering 65, 56–63.
 [^snapwave]: Roelvink, D., van Ormondt, M., Reyns, J. & van der Lugt, M. (2025) SnapWave: fast, implicit wave transformation from offshore to nearshore. Geosci. Model Dev. 18, 9469–9495. doi:10.5194/gmd-18-9469-2025(既定値は公開ソースによる)

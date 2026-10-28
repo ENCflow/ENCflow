@@ -22,8 +22,9 @@ are also compared with the reference Log.txt, wavefield.csv, Z9998.txt and Hs999
 | Bed load | `param_bed.txt` | A flat channel 2 m deep (600 m × 40 m) with a current of 0.45 m/s from sources and random waves H_m0 = 0.5 m, T = 6 s, direction 30° (`wf_flow = 0`). Bed load only, without u_a. 30 minutes |
 | Closed basin | `param_closed.txt` | The base case with walls on all four sides for the flow (the longshore current turns at the north wall and circulates). 30 minutes |
 | High and low waves | `param_storm.txt` / `param_calm.txt` | Normally incident H_m0 = 2 m, T = 8 s (erosion) and H_m0 = 0.6 m, T = 12 s (recovery) on the base beach. 30 minutes |
+| Breaking turbulence | `param_turb.txt` | The base case with the stirring by the turbulence of wave breaking (`f_wfsed_turb = 1`; the form of turb = wave_averaged of XBeach) |
 | Restart | `param_rt1.txt` → `param_rt2.txt` | The base case saved at 1530 s (between the wave-field updates and the bed updates), restored and continued to 3600 s |
-| Invalid settings | `param_bad1.txt` to `param_bad4.txt` | No `fn_wavefield`, together with the longshore transport of fn_wave, `f_wfsed = 2`, `f_wavefield = 0` (each must stop) |
+| Invalid settings | `param_bad1.txt` to `param_bad5.txt` | No `fn_wavefield`, together with the longshore transport of fn_wave, `f_wfsed = 2`, `f_wavefield = 0`, `f_wfsed_turb = 1` with `f_wfsed = 0` (each must stop) |
 
 ## Checks (Check_wfsed.py)
 
@@ -63,17 +64,24 @@ are also compared with the reference Log.txt, wavefield.csv, Z9998.txt and Hs999
   transport is offshore everywhere in the surf and shoaling zones (the undertow beats u_a); with
   low waves it is onshore in every cell with transport offshore of the surf zone (u_a beats the
   undertow). A qualitative check (V13 of wavefield_plan.md).
+- **Stirring by the turbulence of wave breaking** (turb; compared with the base case): the output
+  near-bed turbulence Wkb agrees within 1e-4 of its maximum with k_b = k_s/(exp(h/L_mix) − 1)
+  (k_s = (D_r/ρ)^{2/3}, D_r = 2βgE_r/c, L_mix = √(2E_r T/(ρc))) assembled from the output roller
+  energy E_r, the depth and the period, and the output Wu stays u_rms without turbulence (the linear
+  theory H_rms σ/(2√2 sinh kh)). The maximum of k_b lies shoreward of the maximum of breaking
+  dissipation, the longshore transport exceeds that of the base case (ratio 1 to 1.5), and the row
+  totals differ by less than 1e-4.
 - **Restart** (Run.sh): state.dat, swflow_enc.dat, wavefield.dat (including the export to
   sediment) and the final fields (Z, Hs, Qby, Qsy) of the split run are byte-identical to the
   straight run.
-- **Invalid settings** (Run.sh): the four configurations stop with the reason.
+- **Invalid settings** (Run.sh): the five configurations stop with the reason.
 
 ## Running
 
 ```bash
 make
 ./Run.sh          # serial + reference comparison + checks (about 2 minutes with one thread)
-./Run_MPI.sh 4    # MPI (np ≤ 4). ULP=0 against the reference; stirring, bed load and the closed basin byte-identical to np = 1; restart also under MPI
+./Run_MPI.sh 4    # MPI (np ≤ 4). ULP=0 against the reference; stirring, bed load, the closed basin and the breaking turbulence byte-identical to np = 1; restart also under MPI
 ```
 
 ## Verification record (2026-10-27; gfortran 13.3 / Open MPI 4.1.6, Ubuntu 24.04)
@@ -95,3 +103,13 @@ of the surf zone. The restart continuation is byte-identical to the straight run
 `-Og -fcheck=all` the serial run and np = 2 agree (no out-of-bounds access); with release builds
 np = 1, 2 and 4 are ULP=0 against the serial reference (stirring, bed load and the closed basin
 byte-identical to np = 1; restart also under MPI).
+
+The stirring by the turbulence of wave breaking (added 2026-10-28; developer.md §88.14) has a
+largest difference between the output Wkb and the assembled k_b of 9.2e-6 of the maximum and
+between the output Wu and the linear-theory u_rms of 1.1e-6 of the maximum (Wu contains no
+turbulence); the maximum k_b of 0.019 m²/s² is at the shoreline cell (i = 109, depth 0.30 m,
+stirring speed ×1.10), shoreward of the peak breaking dissipation (i = 98); the longshore transport
+is 1.019 times the base case and the row totals differ by 1.6e-5. With release builds np = 1, 2 and
+4 are ULP=0 against the serial reference and the turbulence case is byte-identical to np = 1; with
+`-Og -fcheck=all` the serial run and np = 2 agree; the restart continuation saved at 1530 s is
+byte-identical to the straight run.
