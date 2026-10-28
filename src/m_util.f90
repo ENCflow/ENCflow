@@ -57,9 +57,10 @@ function param_default(prefix, name, val, def, unit, unset) result(eff)
 end function
 !=======================================================================
 !=======================================================================
-function str2sec(str, message) result(t)
+function str2sec(str, message, default_unit) result(t)
   character(len=*), intent(in) :: str        ! NNN.N[d day h hour m min s sec]
   character(len=*), intent(in) :: message    ! error message
+  real, intent(in), optional :: default_unit ! 単位を省いた数値の単位 (s)。省略時は秒(1)
   real :: t                                  ! second
   character(:), allocatable :: s
   integer :: l, ll, ierr
@@ -107,6 +108,7 @@ function str2sec(str, message) result(t)
     end if
   else
     ll = l
+    if (present(default_unit)) c = default_unit
   end if
 
   if (ierr > 0) then

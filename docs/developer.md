@@ -13676,10 +13676,10 @@ docs/vz_plan.md(添付の設計文書 2 点はリポジトリ外。plan が ENCf
   ビルドの後に逐次へ戻すと MPI 版のオブジェクトが残りうる。切替時は
   src/libencflow.a を消してから make する(トップレベルの make で utils の
   リンクを確かめる)。
-- **既存の不具合(未修正。handoff に記録)**: m_precip で dt_mapunit_c が
+- **既存の不具合(2026-10-27 に修正。§88)**: m_precip で dt_mapunit_c が
   既定分岐で上書きされて効かない、dt_mapunit(文書は分)が秒として
   使われる、dt_maplist_c が idt_maplist の計算より後に適用される。vzzone は
-  既定(prtype = 2 の mm/day)だけを使って回避した。
+  既定(prtype = 2 の mm/day)だけを使って回避した(修正後もビット一致)。
 
 ### 87.5 谷(2023)の再現例題 examples/vz_tani2023(2026-10-26。P4 の一部)
 
@@ -13908,3 +13908,94 @@ Kosugi (1996) の式 (24)〜(26)(σ² = (1 − m) ln[(2^{1/m} − 1)/m]、
   中央の値なので、後処理の評価(区間中央の値)と一致する。PDF がない環境で作業したため、
   base_KI2.txt は既存の data/obs_KI2.csv から抽出スクリプトと同じ関数(write_baseflow)で
   作って確かめた。
+
+## 88. 降雨分布の時間の単位(dt_mapunit・dt_maplist)の仕様と修正(2026-10-27)
+
+handoff 00i(2026-10-26 発見)の修正。利用者の決定(2026-10-27): 降雨分布ラスタ ×
+倍率時系列(prtype = 2)のラスタの値の積算時間 dt_mapunit は、**単位のない数値は分、
+指定なしは 24 時間の積算雨量(mm/day)とみなす**。
+
+### 88.1 仕様
+
+- t_precip の dt_maplist・dt_mapunit は秒で持つ(従来の注釈は分だった)。namelist の
+  数値 dt_prupdate・dt_maplist・dt_mapunit は分(文書どおり)。
+- 文字列 dt_maplist_c・dt_mapunit_c は str2sec の書式(d・h・m・s。time.md)で、
+  **単位を省いた数値は分**(str2sec の任意引数 default_unit = 60。数値と同じ単位)。
+  数値と文字列の両方があれば文字列が優先(time.md の `_c` の規約)。&list_sysparam の
+  `_c` の単位なしは秒のまま(数値パラメータが秒なので、どちらも「数値と同じ単位」)。
+- 未指定(dt_mapunit = 0 かつ dt_mapunit_c が空): prtype = 2 は 1 日(86400 s)、
+  prtype = 3 はファイルの間隔 dt_maplist(従来の文書どおり)。prtype = 3 を 1 日に
+  しないのは、解析雨量・レーダー雨量のファイルはファイルの間隔の積算(1 時間間隔なら
+  mm/h)が普通で、1 日にすると雨が 24 分の 1 になるため。
+- 値の検査: 解決後の dt_mapunit ≤ 0 と dt_maplist ≤ 0 は停止(従来は dt_mapunit の
+  負値が黙って既定に落ち、dt_maplist = 0 は 0 除算で FPE)。prtype = 1 では
+  dt_maplist・dt_mapunit を読まない(検査もしない)。
+- 採用値は必ず 1 行表示する(`precip: dt_mapunit = 1440.00000 min (default)`、
+  prtype = 3 は `precip: dt_maplist = 30.00000 min (180 steps)` も)。単位の取り違えを
+  画面で確かめられるようにする(§62 の「黙って使わない」の準用)。
+- prtype = 3 のフレームの切替は従来どおりステップの終わりの時刻で判定する(ステップ
+  it は時刻 it·dt を含むフレーム = it / idt_maplist + 1 を使う。prtype = 1・2 の
+  系列の参照時刻 s%t と同じ規約)。最初のフレームだけ 1 ステップ短い。
+
+### 88.2 修正した不具合
+
+1. dt_mapunit(文書は分)を秒として使っていた(`pr%dt_mapunit = list%dt_mapunit`)。
+   dt_mapunit = 60 で雨が 60 倍。
+2. dt_mapunit_c を与えても、続く `if (list%dt_mapunit > 0.0) ... else` の既定分岐で
+   上書きされて効かなかった。
+3. dt_maplist_c が idt_maplist の計算より後に適用されてフレームの間隔に効かず、
+   さらに秒の値に `* 60` を掛けて prtype = 3 の既定 dt_mapunit にしていた(積算時間が
+   60 倍 = 雨が 60 分の 1)。
+
+### 88.3 互換性と検証
+
+- dt_mapunit・dt_mapunit_c・dt_maplist_c を使わない構成は従来とビット一致する
+  (既定の演算は同じ: prtype = 2 は 24 × 3600、prtype = 3 は list%dt_maplist × 60、
+  idt_maplist = nint(list%dt_maplist × 60 / dt))。既存のテスト・例題で prtype = 2・3 を
+  使うのは test/vzzone の param_avg・param_strictfail(既定の mm/day)だけ。
+  これらを使っていた構成は結果が変わる(dt_mapunit は 60 分の 1 に、dt_mapunit_c・
+  dt_maplist_c は指定どおりに)。dt_mapunit に負値を書いた構成は停止する。
+- str2sec の任意引数の追加は等価変更として別コミットにした(CI の 8 ケースと
+  chichibu が reference とビット一致)。
+- 検定 test/prmap(Check_prmap.py。CI の逐次・MPI np = 2 に登録): 平坦な閉領域で
+  水深 = 雨の積算(相対 1e-9)、同じ時間の別表現(数値の分・単位付き・単位なしの
+  文字列・`_c` の優先)の Log のビット一致、採用値の表示。修正前のコードでは 21 項目が
+  不合格(dt_mapunit = 60 で 2160 mm、dt_mapunit_c = "1h" が無視されて 1.5 mm 等)、
+  修正後は全項目が合格。指定のない構成の Log は修正前とビット一致。
+- 修正後: 逐次の CI 8 ケースと chichibu が reference と一致、MPI np = 2 の CI 8 ケースが
+  逐次 reference と一致、test/prmap は np = 1・2・4 の Log が逐次とバイト一致。
+  トップレベルの make(utils のリンク)が通る(str2sec の引数の追加。§10)。
+- **reference 付きの全 31 ケース(2026-10-27、§88.4 まで入れた最終版の release 逐次)**:
+  30 ケースが reference と一致(CI の 8 ケースと nightly の REF_CASES 16 ケースを含む)。
+  nhshelf だけ 4 スレッドで表示の最終桁が 2 量子ずれて不合格になったが、既知の NH
+  ソルバの OpenMP 総和の実行間非決定(§71・§81)で、本変更とは無関係: 1 スレッドで
+  修正前(745055a)と修正後のバイナリの Log.txt がビット一致する(1 スレッドでも
+  reference とは 1 要素が 2 量子ずれる = reference の作成環境との差)。更新が必要な
+  reference はなく、どれも更新していない(規律 1。nhshelf は §81 と同じ扱い)。
+
+### 88.4 prtype = 3 のフレームの切替が dt_prupdate で間引かれる不具合(2026-10-27 発見・修正)
+
+- m_main は makepre を `mod(it, idt_prupdate) == 0` のステップでしか呼ばないが、
+  prtype = 3 のフレームの切替は makepre の中で `mod(it, idt_maplist) == 0` を見る。
+  idt_maplist が idt_prupdate の倍数でないと、両者の公倍数のステップでしか切り替わら
+  なかった(文書は「prtype = 3 では dt_prupdate は指定しても無効」)。dt_prupdate を
+  書かなくても既定の 1 分と dt の組で起きる: dt = 7 s で idt_prupdate = 9、
+  dt_maplist = 60 分で idt_maplist = 514 となり、毎時のはずの切替が約 9 時間ごとに
+  なる(dt = 8・9 s、0.7・0.9 s なども同様。0.5・1・2・5・10 s 等の割り切れる dt では
+  起きない)。修正前の確認: dt = 10 s・dt_maplist = 30 分・dt_prupdate = 7 分で
+  1.5 h の間、dt = 7 s・既定の dt_prupdate・dt_maplist = 60 分で 3 h の間、2 枚目
+  以降のフレームが読まれなかった(修正後はどちらも境界のステップで切り替わる)。
+- 修正: prtype = 3 では idt_prupdate = 1(makepre を毎ステップ呼び、切替は
+  idt_maplist の境界だけで判定)。境界以外のステップの makepre は判定だけで戻り、
+  updated = .false. なので遮断・標高補正の再適用はない。idt_prupdate が idt_maplist を
+  割り切っていた構成は従来とビット一致する(切替と更新のステップが同じ。test/prmap の
+  p3_def・p3_c30・p3_unit で修正の前後の Log が一致)。
+- 検定: test/prmap に p3_prupdate(dt_prupdate = 7 分。p3_def と Log がビット一致)と、
+  フレームの途中(45 分)で保存 → 再開する p3_save・p3_restart(再開後の Log が連続計算と
+  ビット一致。restore 直後の初回 makepre が現在のフレームを読み直す §7 の経路で、
+  prtype = 3 の再開はこれまでテストがなかった)を追加。修正前のコードでは p3_prupdate の
+  S(1:00 で 12.0 mm、正しくは 17.97 mm)と Log の一致、再開の 3 項目が不合格。
+  修正後は逐次・MPI np = 1・2・4 とも全項目が合格し、Log は逐次とバイト一致
+  (-Og -fcheck=all の逐次と np = 2 も範囲外アクセスなしで一致)。CI の 8 ケースは
+  逐次・np = 2 とも reference と一致(prtype = 3 の分岐の中だけの変更)。prtype = 3 を
+  使う既存のテスト・例題はない。

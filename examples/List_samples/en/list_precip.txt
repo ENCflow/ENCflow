@@ -66,9 +66,18 @@
   !  1 minute if omitted
   dt_prupdate = 1
 
-  ! Precipitation distribution file (mm/day)
+  ! Precipitation distribution file (mm/day; the accumulation time can be
+  ! changed with dt_mapunit)
   !  Relative path from the data directory specified in the system parameters
   fn_prmap = "precip/ProFloodPrecip_200y_TM_all_station_30m.bil"
+
+  ! Accumulation time of the values in the precipitation distribution file (min)
+  !  Specifies over how many minutes the values are accumulated rainfall (mm)
+  !  If omitted (or 0), one day (1440 minutes) = mm/day is assumed
+  !  It can also be given as a string with a unit, dt_mapunit_c = "1h"
+  !  (a number without a unit is in minutes; if both are written,
+  !  dt_mapunit_c takes precedence)
+  !dt_mapunit = 1440
 
   ! Factors applied to the distribution file (time (min), factor (0.0-1.0))
   !  Any number of entries may be given
@@ -96,12 +105,16 @@
   !  During this interval the rainfall of the file is held constant
   !  The distribution update interval dt_prupdate has no effect even if
   !  specified
+  !  It can also be given as a string with a unit, dt_maplist_c = "1h"
+  !  (a number without a unit is in minutes)
   dt_maplist = 60
 
   ! List of the precipitation distribution files
   !  Relative path from the data directory of the system parameters
-  !  The unit of the precipitation distribution files is rainfall
-  !  intensity (mm/h)
+  !  The values of the precipitation distribution files are rainfall (mm)
+  !  accumulated over the file interval (dt_maplist)
+  !  (with a 60-minute interval this equals rainfall intensity (mm/h); the
+  !  accumulation time can be changed with dt_mapunit)
   fn_maplist = "AnPrecip/An01.Prec_20191011.txt"
   !------------------------------------------
   ! Example of the contents of the list
@@ -113,6 +126,12 @@
   !AnPrecip/An01.Prec_20191011_03.bil
   !AnPrecip/An01.Prec_20191011_04.bil
   !------------------------------------------
+
+  ! Accumulation time of the values in the precipitation distribution files (min)
+  !  If omitted (or 0), the file interval dt_maplist is assumed
+  !  It can also be given as a string with a unit, dt_mapunit_c = "1h"
+  !  (a number without a unit is in minutes)
+  !dt_mapunit = 60
 
 /
 

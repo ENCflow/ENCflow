@@ -4,7 +4,7 @@ module m_precip
   use m_state, only : t_state
   use m_geoinfo, only : t_geoinfo
   use m_meteo, only : t_meteo, meteo_prec_factor
-  use m_util, only : str2sec, itoa
+  use m_util, only : str2sec, itoa, rtoa
   use m_fileio, only : fileio_un_open, fileio_un_read_matrix, fileio_read_window
   use list_precip, only : t_list_precip, list_precip_read
   use m_parallel, only : par_info, par_stop, dcp
@@ -20,12 +20,12 @@ module m_precip
     ! 降雨タイプ(0:降雨なし, 1:一様時系列, 2:分布×割合時系列, 3:分布時系列ファイル)
     integer :: prtype = 0
     real :: dt_prupdate = 0.0           ! 降雨分布更新時間間隔 (min)
-    integer :: idt_prupdate = 0         ! 降雨分布更新時間ステップ数
+    integer :: idt_prupdate = 0         ! 降雨分布更新時間ステップ数(prtype=3 は 1)
     integer :: npr = 0                  ! 時系列データの個数
     real, allocatable :: prval(:,:)     ! 降雨時系列 (時刻(s), 降水強度(mm/h)または倍率)
-    real, allocatable :: prmap(:,:)     ! 降雨分布 (mm/day)
-    real :: dt_maplist = 0.0            ! 降雨分布ファイル時間間隔 (min)
-    real :: dt_mapunit = 0.0            ! 降雨分布ファイルの積算時間単位 (min)
+    real, allocatable :: prmap(:,:)     ! 降雨分布 (mm/dt_mapunit。既定は mm/day)
+    real :: dt_maplist = 0.0            ! 降雨分布ファイル時間間隔 (s)
+    real :: dt_mapunit = 0.0            ! 降雨分布ファイルの値の積算時間 (s)
     integer :: idt_maplist = 0          ! 降雨分布ファイル更新時間ステップ数
     integer, allocatable :: un_maplist(:)  ! 降雨分布ファイル装置番号
     real :: runoff_rate = 0.0           ! 流出率
@@ -74,24 +74,25 @@ subroutine m_precip_init(pr, p, g)
   pr%prtype = prtype
   pr%dt_prupdate = list%dt_prupdate
   pr%idt_prupdate = max(nint(pr%dt_prupdate * 60 / p%dt), 1)
-  pr%dt_maplist = list%dt_maplist
-  pr%idt_maplist = max(nint(pr%dt_maplist * 60 / p%dt), 1)
   pr%runoff_rate = max(list%runoff_rate, 0.0)
 
-  if (len(trim(list%dt_maplist_c)) > 0) pr%dt_maplist = &
-                str2sec(list%dt_maplist_c, "list_precip: dt_maplist_c is not a valid duration")
-  if (len(trim(list%dt_mapunit_c)) > 0) pr%dt_mapunit = &
-                str2sec(list%dt_mapunit_c, "list_precip: dt_mapunit_c is not a valid duration")
-
-  if (list%dt_mapunit > 0.0) then
-    pr%dt_mapunit = list%dt_mapunit
-  else
-    if (prtype == 2) then
-      pr%dt_mapunit = 24 * 3600          ! 分布×倍率の場合はデフォルトは(mm/day)
-    else
-      pr%dt_mapunit = pr%dt_maplist * 60 ! 解析雨量の場合はデフォルトはファイルの間隔 (min->sec)
-    end if
+  ! 分布ファイルの時間(内部は秒。developer.md §88)。数値の dt_maplist・
+  ! dt_mapunit は分。文字列の *_c は単位付き(単位を省いた数値は分)で、
+  ! 両方あれば *_c が優先(time.md の規約)
+  if (prtype == 3) then
+    pr%dt_maplist = list%dt_maplist * 60
+    if (len_trim(list%dt_maplist_c) > 0) pr%dt_maplist = str2sec(list%dt_maplist_c, &
+                  "list_precip: dt_maplist_c is not a valid duration", default_unit=60.0)
+    if (pr%dt_maplist <= 0.0) call par_stop("list_precip: dt_maplist must be a positive interval")
+    pr%idt_maplist = max(nint(pr%dt_maplist / p%dt), 1)
+    call par_info("precip: dt_maplist = "//rtoa(pr%dt_maplist / 60)//" min ("// &
+                  itoa(pr%idt_maplist)//" steps)")
+    ! dt_prupdate は使わない(文書どおり)。makepre を毎ステップ呼び、フレームの
+    ! 切替は idt_maplist の境界で判定する(idt_prupdate ごとに呼ぶと、両者の
+    ! 公倍数のステップでしか切り替わらない。developer.md §88.4)
+    pr%idt_prupdate = 1
   end if
+  if (prtype == 2 .or. prtype == 3) call set_mapunit
 
   pr%initialized = .true.
 
@@ -180,6 +181,34 @@ subroutine set_maplist
     pr%un_maplist(i) = fileio_un_open(fname_map, p%f_input_mode)
   end do
   close(un)
+end subroutine
+
+!----------------------------------------------------------------------
+! 分布ファイルの値が何秒間の積算雨量 (mm) かを決める。未指定(dt_mapunit = 0
+! かつ dt_mapunit_c が空)なら prtype=2 は1日(mm/day)、prtype=3 はファイルの
+! 間隔 dt_maplist。採用値は必ず表示する(単位の取り違えを画面で確かめる)
+subroutine set_mapunit
+  logical :: isdef
+  isdef = .false.
+  if (len_trim(list%dt_mapunit_c) > 0) then
+    pr%dt_mapunit = str2sec(list%dt_mapunit_c, &
+                  "list_precip: dt_mapunit_c is not a valid duration", default_unit=60.0)
+  else if (list%dt_mapunit /= 0.0) then
+    pr%dt_mapunit = list%dt_mapunit * 60     ! 分を秒に換算
+  else
+    isdef = .true.
+    if (prtype == 2) then
+      pr%dt_mapunit = 24 * 3600              ! 分布×倍率: 1日の積算 (mm/day)
+    else
+      pr%dt_mapunit = pr%dt_maplist          ! 分布時系列: ファイルの間隔の積算
+    end if
+  end if
+  if (pr%dt_mapunit <= 0.0) call par_stop("list_precip: dt_mapunit must be a positive duration")
+  if (isdef) then
+    call par_info("precip: dt_mapunit = "//rtoa(pr%dt_mapunit / 60)//" min (default)")
+  else
+    call par_info("precip: dt_mapunit = "//rtoa(pr%dt_mapunit / 60)//" min")
+  end if
 end subroutine
 
 end subroutine m_precip_init
