@@ -172,7 +172,9 @@ formula (eqs. (5)–(7) of Morpho2DH[^morpho2dh]) with no extra parameter:
 
 $`\theta`$ is the bed slope along the flow and $`\theta_e`$ the equilibrium
 slope of the concentration $`C`$ (its inverse is the stony-type
-$`C_\infty`$).
+$`C_\infty`$). In each cell $`\theta`$ is a one-sided difference to the
+downstream neighbour in the flow direction (a central difference cannot see a
+two-cell undulation; developer.md §88.24, in Japanese).
 
 **f_dbed = 3: Takahashi–Nakagawa (1991).** Single grain size, saturated
 bed: erosion $`\delta_e\,\dfrac{C_\infty - C}{C_* - C_\infty}\,\dfrac{q_T}{d_L}`$,

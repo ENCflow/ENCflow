@@ -9,6 +9,8 @@
 #   土石流の項を効かせる。初期の被覆 sd0 と侵食性倍率 f_r は行ごとに変える。
 # 構成 db2(DB2 保存): 四周壁の箱。y < YB2 が勾配 S2、下流は平坦。北の帯(行 J1R〜J2R)の
 #   土層を瞬時流動化し、薄い被覆の上を流下させる(E-D あり)。
+# 構成 db8(DB8 2 セル周期の凹凸): db1 と同じ水路・流れで、裸岩・倍率 1、水路の行 J1〜J2 に
+#   ±EPS8 の 2 セル周期の凹凸を与える(developer.md §88.23・§88.24)。
 import math
 
 # --- db1・db3 の水路 ---
@@ -32,6 +34,14 @@ def sd1(i, j):
 def fr1(i, j):
     """侵食性倍率 0〜2(並びが 9 行周期でずれるので、帯の配布の行ずれを検出できる)"""
     return 0.25 * ((i + 4 * j) % 9)
+
+
+# --- db8 の凹凸 ---
+EPS8 = 0.005                            # 2 セル周期の凹凸の振幅 (m)。凸部は (−1)^j > 0 の行
+
+
+def z8(i, j):
+    return z1(i, j) + (EPS8 * (-1) ** j if (i == IC and J1 <= j <= J2) else 0.0)
 
 
 # --- db2 の箱 ---
@@ -62,6 +72,8 @@ def write(fn, f, nx, ny, fmt="%.6f"):
 
 if __name__ == "__main__":
     write("z_db1.txt", z1, NX, NY)
+    write("z_db8.txt", z8, NX, NY)
+    write("sd_db8.txt", lambda i, j: 0.0, NX, NY, "%.2f")
     write("sd_db1.txt", sd1, NX, NY, "%.2f")
     write("fr_db1.txt", fr1, NX, NY, "%.2f")
     write("z_db2.txt", z2, NX2, NY2)

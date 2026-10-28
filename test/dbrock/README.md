@@ -35,11 +35,12 @@ reference は持たず、解析解・保存則・バイト一致・停止の表�
 | DB5 継続 | `param_db5_rt1.txt`・`param_db5_rt2.txt` | db2 を t = 10 s で保存し(rt1)、再開(`f_state_restore = 1`)して 20 s まで進める(rt2) | save_db5_rt の state.dat・geomorph_rockinc.dat が通し計算 save_db2 とバイト一致 |
 | DB5 交互計算 | `param_db5_f1.txt`・`param_db5_d.txt`・`param_db5_f2.txt` | db1 の水路で、清水の出水(`f_fluvial` + 流水の剥離)100 s → 土石流(交換なし・土石流の項)100 s → 出水 50 s を `f_state_restore = 2` でつなぐ。土石流の後の save は流れに h_s を持つ | 段ごとの Σ ΔRi A が各段の台帳と相対 1e-7、Ri は減らない。3 段目の初期化の表示(堆積させた固体)が復元した Σh_s A と相対 1e-7。3 段目の終了時に h_s = 0。岩盤面 R = z − sd は段ごとに ΔR + ΔRi = 0(1e-12 m 以内。堆積は z と sd の両方に入る) |
 | DB7 入力の誤り | `param_db7_kp.txt` ほか 4 つ | 土石流の構成に流水の剥離 / 閾値なし / db_cmin = 0 / f_debris なしで rock_kdb / 岩盤を削る過程なし | 初期化でそれぞれの表示で停止 |
+| DB8 2 セル周期の凹凸 | `param_db8.txt` | db1 と同じ水路・流れで、裸岩・倍率 1 とし、行 11〜50 に ±5 mm の 2 セル周期の凹凸を与える(流向の河床勾配は下流側の片側差分。developer.md §88.24) | 各セルで e^{H/H*} − 1 = E_d0 T/H* と相対 1e-9。Σ(−1)^j Ri / ΣRi > 0(凸部ほど削れ、岩盤面の凹凸が減る) |
 
 | ファイル | 内容 |
 |---|---|
-| `make_init.py` | db1・db3 の水路の地形・初期の被覆・侵食性倍率と、db2 の箱の地形・土層厚・崩壊深の生成(定数は `param*.txt`・`Check_dbrock.py` と対で保守) |
-| `Check_dbrock.py db1 / db3 / db2 LOG / db5` | 上の判定(h・h_s・z・sd は save の state.dat、Ri は geomorph_rockinc.dat から倍精度で読む。DB2・DB5 の台帳は Screen ログの表示) |
+| `make_init.py` | db1・db3 の水路の地形・初期の被覆・侵食性倍率、db8 の凹凸のある地形と、db2 の箱の地形・土層厚・崩壊深の生成(定数は `param*.txt`・`Check_dbrock.py` と対で保守) |
+| `Check_dbrock.py db1 / db3 / db2 LOG / db5 / db8` | 上の判定(h・h_s・z・sd は save の state.dat、Ri は geomorph_rockinc.dat から倍精度で読む。DB2・DB5 の台帳は Screen ログの表示) |
 | `Run.sh` / `Run_MPI.sh N` | 全構成の実行と検定。交互計算の各段の後の save は `save_db5_<段>` に写す。MPI は逐次の save(`save_*_serial`)と state.dat・geomorph_rockinc.dat をバイト比較する |
 
 ## 実行
@@ -51,18 +52,23 @@ python3 make_init.py   # 入力の再生成(同梱。変更したときだけ)
 ./Run_MPI.sh 4      # MPI(Run.sh の後に。save_*_serial とバイト比較)
 ```
 
-## 検証記録(2026-10-27。gfortran 13.3 / Open MPI 4.1、既定の -Ofast ビルド)
+## 検証記録(2026-10-27。2026-10-28 に流向の勾配の変更の後に再実行。gfortran 13.3 / Open MPI 4.1、既定の -Ofast ビルド)
 
-- DB1: 解析解との max 相対差 1.4e-15(許容 1e-9)。τ_d = 660.1〜660.2 Pa、C = 1/3。更新間隔を
-  2 倍にした構成との sd の max 相対差 2.3e-16。倍率 0 の 5 行は Ri = 0。水路の z の変化 3.6e-15 m。
+- DB1: 解析解との max 相対差 1.6e-15(許容 1e-9)。τ_d = 660.1〜660.2 Pa、C = 1/3。更新間隔を
+  2 倍にした構成との sd の max 相対差 3.8e-16。倍率 0 の 5 行は Ri = 0。水路の z の変化 3.6e-15 m。
 - DB3: 濃度・速度の門の外では Ri と sd の変化がともに 0。
-- DB2: 全固体 5.1e-14 m³。可動層の固体と (1 − λ) × 台帳の相対差 4.9e-10(台帳の表示は 9 桁)。
-  (sd − sd0) − (z − z0) − Ri の最大 1.9e-14 m。土石流が削った岩盤 0.74 m³(最大 Ri 6.0 mm)。
+- DB2: 全固体 5.1e-14 m³。可動層の固体と (1 − λ) × 台帳の相対差 4.4e-10(台帳の表示は 9 桁)。
+  (sd − sd0) − (z − z0) − Ri の最大 1.9e-14 m。土石流が削った岩盤 0.76 m³(最大 Ri 8.6 mm)。
 - DB5: 10 s の save からの継続は、通し計算と state.dat・geomorph_rockinc.dat がバイト一致。
-  交互計算は、段ごとの Σ ΔRi A と台帳の相対差の最大 2.2e-9(台帳 出水 1.21・土石流 3.21・出水 0.378 m³)。
+  交互計算は、段ごとの Σ ΔRi A と台帳の相対差の最大 2.2e-9(台帳 出水 1.21・土石流 2.90・出水 0.392 m³)。
   3 段目の初期化で 4.55 m³ の固体を堆積させ、復元した Σh_s A との相対差 4.4e-10。終了時の h_s は 0。
-  段ごとの max|ΔR + ΔRi| は 8.9e-14 m。
+  段ごとの max|ΔR + ΔRi| は 5.7e-14 m。
 - DB7: 5 構成とも初期化で停止。
+- DB8: 解析解との max 相対差 1.4e-15(τ_d = 634〜689 Pa)。Σ(−1)^j Ri / ΣRi = +0.037(凸部ほど
+  削れる)。変更前の中央差分の実行ファイルでは 0.14 と −0.0050 で、どちらも不合格。
+- 流向の勾配の変更(2026-10-28。developer.md §88.24)で DB2 と DB5 の値が変わった(変更前は DB2 の
+  岩盤 0.74 m³・最大 Ri 6.0 mm、DB5 の台帳の土石流 3.21・出水 0.378 m³)。DB1 は一様な勾配なので
+  丸めの差だけ。
 - MPI(DB4): -fcheck=all の np = 2 で実行時エラーなし。-O2 のビルドで逐次と np = 1, 2, 4 の
   state.dat・geomorph_rockinc.dat がバイト一致。既定の -Ofast でも Run_MPI.sh 2・4 が全構成
-  (DB5 の連鎖を含む)で逐次とバイト一致。
+  (DB5 の連鎖と DB8 を含む)で逐次とバイト一致。

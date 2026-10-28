@@ -338,11 +338,11 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "e8f874d763203fc0a823d7aa8f82e9674e44103231c0ee7a3c4e5b88f72b2dec",
-      "target_sha256": "427902ef4fb8d7b4a1f4cea23596b0c0db8169494822bae176866cdf1168705d",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "3909a736b248232acc375e44e00d813cf1568f0a4604ebbd9ee508dd64fc0500",
+      "target_sha256": "b0dd8406af4fc1ebd08f8890512ff2c12ae90c82d5780dd8c9f7c3226c8cdc39",
+      "reviewer": "Claude (Claude Code session; diff-level content and lexical review of the 2026-10-28 one-sided-slope edits against the Japanese master; rest unchanged since the previous full-text record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "docs/users_guide/nest.md",
@@ -419,11 +419,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "4d9d51a1c096508b81c79dc0b555b0ce2aa840a96b976e6ec55bba4d6fed6098",
-      "target_sha256": "f974a3e04372b3a5f846ae664158e91f5bbdb67b28ffd0062acf01cc0ca18eb3",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "61b5cccceb24f3b3bff63899ff36b0e367697d5f47c4763dc2c7355ec113f14a",
+      "target_sha256": "3f82ef5110247bb14f2ba2e45e72501bab968a9e4865964dfde142b8df376659",
+      "reviewer": "Claude (Claude Code session; diff-level content and lexical review of the 2026-10-28 one-sided-slope edits against the Japanese master; rest unchanged since the previous full-text record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "docs/users_guide/structure.md",
@@ -1355,20 +1355,20 @@
     {
       "source": "test/dbrock/README.md",
       "target": "test/dbrock/en/README.md",
-      "source_sha256": "6f803061c23edf84e226be8da2bdc6f1cef13ccfd963d5c25223901b774fcbde",
-      "target_sha256": "12c9c5b89652be2da71ce28e91b03e153eefbb5bef1d75b35e7b8d5717c8f304",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "23304048de7b379bc17b20518cc342263e5b333b5422debde666ab315082242d",
+      "target_sha256": "db26857fdb19ecf92fd50a2db33871256b8aba7c92e90c47dd18936432dee726",
+      "reviewer": "Claude (Claude Code session; diff-level content and lexical review of the 2026-10-28 one-sided-slope edits against the Japanese master; rest unchanged since the previous full-text record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "test/debris/README.md",
       "target": "test/debris/en/README.md",
-      "source_sha256": "6c6c30cfbea684a149d92111753c35ff2fd1c7e2f749656308e74bec4a49c111",
-      "target_sha256": "87c5fcd29be312e2bbc6978bcac325fe8a68d0fa191b00be6d69236af14f5306",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "a6b949d296dd606ee3599125b5f80fd084c7047212e921898ce0141a70efb85f",
+      "target_sha256": "dff28979a824ad2898023b589c58114c884497b1d9808a43cafb8c91b4ca64a9",
+      "reviewer": "Claude (Claude Code session; diff-level content and lexical review of the 2026-10-28 one-sided-slope edits against the Japanese master; rest unchanged since the previous full-text record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "test/debris/figs/map.png",

@@ -2,14 +2,14 @@
 # dbrock: 土石流による岩盤侵食(f_rockinc の rock_kdb)の検定(逐次実行)
 #   ./Run.sh
 # 構成 db1・db1_dtg(DB1 自己被覆の解析解と更新間隔の不変)、db3_cmin・db3_vstop(DB3 濃度と
-# 速度の門)、db2(DB2 閉じた箱の保存と台帳)、db5_*(DB5 リスタートと交互計算の連鎖)を
-# Check_dbrock.py とバイト比較で検定し、db7_*(DB7 入力の誤り)が初期化で停止することを
-# 確かめる。reference は持たない(解析解・保存則・バイト一致で判定)。実行後の save_*/ は
-# save_*_serial/ にも複製する(Run_MPI.sh のバイト比較用)
+# 速度の門)、db2(DB2 閉じた箱の保存と台帳)、db5_*(DB5 リスタートと交互計算の連鎖)、db8(DB8
+# 2 セル周期の凹凸)を Check_dbrock.py とバイト比較で検定し、db7_*(DB7 入力の誤り)が初期化で
+# 停止することを確かめる。reference は持たない(解析解・保存則・バイト一致で判定)。
+# 実行後の save_*/ は save_*_serial/ にも複製する(Run_MPI.sh のバイト比較用)
 sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh serial || exit 1
 
-cfgs="db1 db1_dtg db3_cmin db3_vstop db2"
+cfgs="db1 db1_dtg db3_cmin db3_vstop db2 db8"
 saves="$cfgs db5_rt db5_f1 db5_d db5_f2"
 set -o pipefail
 for c in $cfgs; do
@@ -32,6 +32,7 @@ python3 "$sdir/Check_dbrock.py" db1 || rc=1
 python3 "$sdir/Check_dbrock.py" db3 || rc=1
 python3 "$sdir/Check_dbrock.py" db2 Screen_db2.log || rc=1
 python3 "$sdir/Check_dbrock.py" db5 || rc=1
+python3 "$sdir/Check_dbrock.py" db8 || rc=1
 # DB5: 土石流の途中の save からの継続は通し計算とバイト一致
 for f in state.dat geomorph_rockinc.dat; do
     if cmp -s save_db5_rt/$f save_db2/$f; then

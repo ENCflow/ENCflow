@@ -36,7 +36,7 @@
 !   土石流による岩盤侵食(f_rockinc の rock_kdb > 0。§88.18、plan §12): パス 1 で、濃い混合体
 !   (C >= db_cmin)が流れている(|V| >= db_vstop)湿潤セルの裸岩の低下速度
 !     E_d0 = f_r k_d max(τ_d/τ_cd − 1, 0)^{m_d}、τ_d = ρ_w (1 + sC) g_e h_t tanθ_f
-!   を gm%rk%edb に書く(θ_f は slope_flow の流向の河床勾配で下りのみ、g_e は運動方程式と同じ
+!   を gm%rk%edb に書く(θ_f は slope_flow の流向の河床勾配(下流側の片側差分)で下りのみ、g_e は運動方程式と同じ
 !   有効重力 g cos²θ_f(f_gravity_correction = 1)か g)。パス 2 は E-D を適用した後の自セルの
 !   sd で被覆を厳密に積分し(rock_cover_inc)、生成物を 1:1 で sd に足す(z は不変)。
 !======================================================================
@@ -768,8 +768,10 @@ end function
 
 !----------------------------------------------------------------------
 ! 流向の河床勾配 tanθ(Morpho2DH 式(6): sinθ = (u sinθx + v sinθy)/|V|)
-!   θx, θy は時刻 n の z の中央差分(片側フォールバック。近傍が領域外・
-!   海なら自セル値で代用 = 勾配 0 側に倒す)。流向が上り勾配なら負を返す
+!   θx, θy は時刻 n の z の、流向の下流側の片側差分(drop_axis。下流側の
+!   近傍が領域外・海なら上流側、どちらもなければ勾配 0)。中央差分は
+!   2 セル周期の凹凸を見ず、凸部で浅い土石流の侵食が凸部を残して段差を
+!   育てた(developer.md §88.23・§88.24)。流向が上り勾配なら負を返す
 !   (江頭・芦田式の堆積側)。|V| = 0 は呼び出し側で除外済み
 !----------------------------------------------------------------------
 pure function slope_flow(g, s, i, j) result(tanth)
@@ -777,43 +779,48 @@ pure function slope_flow(g, s, i, j) result(tanth)
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   real :: tanth
-  real :: zl, zr, dl, sinthx, sinthy, sinth
+  real :: sinthx, sinthy, sinth
   real, parameter :: smax = 0.999
 
-  ! x 方向の河床勾配角 θx(下り正)。近傍マスク(sw)の読みは x 番兵
-  ! ガードの内側で(.and. は短絡評価が保証されない — §12 の帯確保規則の系。
-  ! -fcheck np=2 で実検出)
-  zl = s%z(i,j); zr = s%z(i,j); dl = 0.0
-  if (g%x(i-1,j) > 0) then
-    if (g%sw(i-1,j) <= 0) then
-      zl = s%z(i-1,j); dl = dl + g%dx
-    end if
-  end if
-  if (g%x(i+1,j) > 0) then
-    if (g%sw(i+1,j) <= 0) then
-      zr = s%z(i+1,j); dl = dl + g%dx
-    end if
-  end if
-  sinthx = 0.0
-  if (dl > 0.0) sinthx = sin(atan((zl - zr) / dl))
-  ! y 方向の河床勾配角 θy(下り正)
-  zl = s%z(i,j); zr = s%z(i,j); dl = 0.0
-  if (g%x(i,j-1) > 0) then
-    if (g%sw(i,j-1) <= 0) then
-      zl = s%z(i,j-1); dl = dl + g%dy
-    end if
-  end if
-  if (g%x(i,j+1) > 0) then
-    if (g%sw(i,j+1) <= 0) then
-      zr = s%z(i,j+1); dl = dl + g%dy
-    end if
-  end if
-  sinthy = 0.0
-  if (dl > 0.0) sinthy = sin(atan((zl - zr) / dl))
+  ! x 方向(u >= 0 なら東が下流)と y 方向(v >= 0 なら j+1 が下流)の河床勾配角(下り正)
+  sinthx = sin(atan(drop_axis(g, s, i, j, 1, 0, g%dx, s%u(i,j) >= 0.0)))
+  sinthy = sin(atan(drop_axis(g, s, i, j, 0, 1, g%dy, s%v(i,j) >= 0.0)))
 
   sinth = (s%u(i,j) * sinthx + s%v(i,j) * sinthy) / s%vv(i,j)
   sinth = max(-smax, min(smax, sinth))
   tanth = sinth / sqrt(1.0 - sinth**2)
+end function
+
+
+!----------------------------------------------------------------------
+! slope_flow の 1 軸分: +軸の向きの下り勾配(z の差 / 間隔 dl)。fwd なら +側の
+! 近傍(下流)で、なければ −側の近傍で求める(片側差分)。どちらの近傍も
+! 領域外・海なら 0。近傍マスク(sw)の読みは x 番兵ガードの内側で
+! (.and. は短絡評価が保証されない — §12 の帯確保規則の系。-fcheck np=2 で実検出)
+!----------------------------------------------------------------------
+pure function drop_axis(g, s, i, j, di, dj, dl, fwd) result(sl)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, di, dj
+  real, intent(in) :: dl
+  logical, intent(in) :: fwd
+  real :: sl
+  logical :: okp, okm
+
+  okp = .false.
+  if (g%x(i+di,j+dj) > 0) then
+    if (g%sw(i+di,j+dj) <= 0) okp = .true.
+  end if
+  okm = .false.
+  if (g%x(i-di,j-dj) > 0) then
+    if (g%sw(i-di,j-dj) <= 0) okm = .true.
+  end if
+  sl = 0.0
+  if (okp .and. (fwd .or. .not. okm)) then
+    sl = (s%z(i,j) - s%z(i+di,j+dj)) / dl
+  else if (okm) then
+    sl = (s%z(i-di,j-dj) - s%z(i,j)) / dl
+  end if
 end function
 
 

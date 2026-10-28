@@ -95,7 +95,7 @@ slope break, and a thin water film on the flat are seen.
 | Configuration | Total solids Σhs + (1 − λ)Σdz | Co-moving update | Activity (min dz / arrival) | Water ledger |
 |---|---|---|---|---|
 | 1 | −4.3e-14 | 4e-14 | −0.33 cm / deposition below the slope break +0.55 cm | — |
-| 2 Egashira | −4.6e-13 | 4e-14 | −0.33 cm / max hs 0.09 cm | — |
+| 2 Egashira | −5.0e-13 | 3e-14 | −0.33 cm / max hs 0.05 cm | — |
 | 3 Takahashi–Nakagawa | 3.0e-13 | 1.9e-13 | −0.50 cm / max hs 0.15 cm | — |
 | 4 + pore-water entrainment | 2.5e-13 | 7e-14 | −3.0 cm / max hs 2.6 cm | 1.5e-13 |
 | 5 + bed load | −4.4e-13 | 4e-14 | −0.20 cm / deposition below the slope break +0.15 cm | — |
@@ -110,6 +110,10 @@ slope break, and a thin water film on the flat are seen.
   the state.dat of np = 2, 3 and 4 differed from np = 1 (developer.md §28.13).
   After the fix, np = 1, 2 and 4 are byte-identical to the serial run with the
   -O2 and the default -Ofast builds, and np = 2 with -fcheck=all also passes.
+- The values of configuration 2 are those after the flow-direction bed slope
+  became a one-sided difference to the downstream neighbour (2026-10-28;
+  developer.md §88.24, in Japanese); before, the total solids were −4.6e-13 and
+  the arrival on the flat max hs 0.09 cm.
 - This case is a check of **connectivity and conservation laws**. The
   quantitative validity of the constitutive laws is recorded in debris_plan.md
   as remaining work on literature comparison (coefficients for the immature

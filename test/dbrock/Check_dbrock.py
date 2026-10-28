@@ -10,11 +10,13 @@
 #                                   増分が各段の台帳に一致し、3 段目の初期化で流れに残った h_s が
 #                                   堆積する(表示と復元した Σh_s A の一致、終了時の h_s = 0。§88.20)。
 #                                   岩盤面 z − sd は岩盤侵食の分だけ下がる(ΔR + ΔRi = 0)
+#   Check_dbrock.py db8        DB8: 2 セル周期の凹凸の上でも各セルで自己被覆の解析解が成り立ち
+#                                   (流向の河床勾配は下流側の片側差分)、凸部ほど削れる(§88.24)
 # 水深・土砂柱状量・z・sd は save の state.dat(倍精度)、Ri は geomorph_rockinc.dat から読む。
 # 定数は param*.txt・make_init.py と対で保守する。
 import sys, os, math, struct, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from make_init import NX, NY, DX, IC, J1, J2, sd1, fr1, NX2, NY2, DX2, z2, sd2
+from make_init import NX, NY, DX, IC, J1, J2, sd1, fr1, NX2, NY2, DX2, z2, sd2, EPS8
 
 RHO, G = 1000.0, 9.8                 # m_geomorph_debris の rk_rhow、既定の重力加速度
 LAM, SGRAV = 0.4, 1.65               # fluv_porosity・fluv_sgrav
@@ -80,11 +82,12 @@ def report(label, ok, detail):
     return ok
 
 
-def ed0(h, hs, zu, zd, fr):
-    """裸岩の低下速度 E_d0(m_geomorph_debris のパス 1 と同じ式。流向 = 南向きの河床勾配)"""
+def ed0(h, hs, zc, zd, fr):
+    """裸岩の低下速度 E_d0(m_geomorph_debris のパス 1 と同じ式。流向 = 南向きの河床勾配を、
+    自セル zc と下流(南)の近傍 zd の片側差分で求める。slope_flow と同じ)"""
     ht = h + max(hs, 0.0)
     c = max(hs, 0.0) / ht
-    tan = (zu - zd) / (2.0 * DX)
+    tan = (zc - zd) / DX
     ge = G / (1.0 + tan ** 2)
     taud = RHO * (1.0 + SGRAV * c) * ge * ht * tan
     return fr * KD * (taud / TAUCD - 1.0) ** MD if taud > TAUCD else 0.0, taud, c
@@ -100,7 +103,7 @@ def check_db1():
     taus, cs, nzero, rizero = [], [], 0, 0.0
     for j in range(J1 - 1, J2):
         fr = fr1(IC, j + 1)
-        e, taud, c = ed0(h[j][i], hs[j][i], z[j - 1][i], z[j + 1][i], fr)
+        e, taud, c = ed0(h[j][i], hs[j][i], z[j][i], z[j + 1][i], fr)
         taus.append(taud)
         cs.append(c)
         h0 = sd1(IC, j + 1)
@@ -233,6 +236,32 @@ def check_db5():
     return ok
 
 
+def check_db8():
+    """DB8: 2 セル周期の凹凸(±EPS8)の上でも、各セルで e^{H/H*} − 1 = E_d0 T/H*(初期の被覆 0)。
+    勾配は流向の下流側の片側差分なので、凸部(下流へ急)ほど削れ、岩盤面の凹凸は土石流で減る
+    (中央差分では凹凸が勾配に現れず、凸部で浅い流れの分だけ凸部が削れにくく凹凸が育った。§88.23)"""
+    h, z, sd, hs = load_state("save_db8", NX, NY)
+    ri = load_ri("save_db8", NX, NY)
+    i = IC - 1
+    emax, num, den = 0.0, 0.0, 0.0
+    taus = []
+    for j in range(J1 - 1, J2):
+        e, taud, c = ed0(h[j][i], hs[j][i], z[j][i], z[j + 1][i], 1.0)
+        taus.append(taud)
+        lhs = math.exp(sd[j][i] / HS) - 1.0
+        emax = max(emax, abs(lhs / (e * T1 / HS) - 1.0))
+        sgn = (-1) ** (j + 1)                         # 凹凸の符号(行 j + 1 は 1 始まり)
+        num += sgn * ri[j][i]
+        den += ri[j][i]
+    delta = num / den
+    ok = report("(DB8-1) 解析解", emax < TOL_DB1,
+                "凹凸 ±%.3f m の行 %d〜%d の max|(e^{H/H*} − 1) / (E_d0 T/H*) − 1| = %.2e (tol %.0e。"
+                "勾配は下流側の片側差分)。τ_d = %.1f〜%.1f Pa" % (EPS8, J1, J2, emax, TOL_DB1, min(taus), max(taus)))
+    ok = report("(DB8-2) 凸部ほど削れる", delta > 0.0,
+                "Σ(−1)^j Ri / ΣRi = %+.4f(正 = 凸部の行ほど削れ、岩盤面の凹凸が減る)" % delta) and ok
+    return ok
+
+
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else ""
     if mode == "db1":
@@ -243,7 +272,9 @@ if __name__ == "__main__":
         ok = check_db2(sys.argv[2])
     elif mode == "db5":
         ok = check_db5()
+    elif mode == "db8":
+        ok = check_db8()
     else:
-        sys.exit("usage: Check_dbrock.py db1 | db3 | db2 LOG | db5")
+        sys.exit("usage: Check_dbrock.py db1 | db3 | db2 LOG | db5 | db8")
     print("== dbrock %s: %s ==" % (mode, "PASS" if ok else "FAIL"))
     sys.exit(0 if ok else 1)

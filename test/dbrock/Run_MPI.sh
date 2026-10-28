@@ -10,7 +10,7 @@ sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh mpi || exit 1
 export ENCFLOW_EXPECT_NP="$NP"
 
-cfgs="db1 db1_dtg db3_cmin db3_vstop db2"
+cfgs="db1 db1_dtg db3_cmin db3_vstop db2 db8"
 saves="$cfgs db5_rt db5_f1 db5_d db5_f2"
 set -o pipefail
 for c in $cfgs db5_rt1 db5_rt2; do
@@ -28,6 +28,7 @@ python3 "$sdir/Check_dbrock.py" db1 || rc=1
 python3 "$sdir/Check_dbrock.py" db3 || rc=1
 python3 "$sdir/Check_dbrock.py" db2 Screen_db2.log || rc=1
 python3 "$sdir/Check_dbrock.py" db5 || rc=1
+python3 "$sdir/Check_dbrock.py" db8 || rc=1
 for f in state.dat geomorph_rockinc.dat; do
     if cmp -s save_db5_rt/$f save_db2/$f; then
         echo "=== save_db5_rt/$f (restart) is bit-identical to save_db2/$f ==="
