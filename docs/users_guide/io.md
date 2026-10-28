@@ -292,6 +292,7 @@ Z = 潮位 − hsea0)で、海の水深・海底地形ではありません([潮
 | 地下貯留・地下水位 | 指定 | Hg(f_out_hg。Hg2 / Hgc / Hgs / Cg も) | Hg は柱状換算水深 (m)。飽和帯厚 = Hg / sy0、地下水位 ≈ 地盤高 − 土層厚 + Hg / sy0(側方流動・Green-Ampt 構成。[地下水](gwflow.md)の図を参照) |
 | 土層厚 | 自動 | Sd | sd を使うモデル有効時のみ |
 | 定着度 | 自動 | Fx | 0〜1。f_fixation 有効時のみ([土砂・地形変化](geomorph.md)) |
+| 岩盤の累積下刻 | 自動 | Ri | 流水の剥離と研磨の合計厚 (m)。f_rockinc 有効時のみ。岩盤面は Z − Sd([土砂・地形変化](geomorph.md)) |
 | 積雪水量 | 自動 | Sw | mm 水柱([積雪・融雪](forcing.md)) |
 | 土壌雨量指数 | 自動 | Swi / Swi9999 / Swit9999 | mm([土壌雨量指数](swi.md)) |
 | 土砂の柱状量・濃度・流動深 | 指定 or 計算 | Hs(f_out_hs)、D9999 / Dt9999(f_out_dmax 系) | 体積濃度 = Hs / (H + Hs)。瞬時の流動深 = H + Hs、期間最大は D9999 |

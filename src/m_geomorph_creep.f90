@@ -3,6 +3,7 @@
 !   親モジュールの型・定数(din/djn 等)・共有作業領域(crp/wrk)・
 !   require_work にはホスト結合でアクセスする(単段参照。§13)。
 !   dcp 等の実行コンテキストは submodule 側で直接 use する(§13)
+!   creep_hstar > 0 では深さ依存クリープ(calc_creep_soil。§89.8)
 !======================================================================
 submodule(m_geomorph) m_geomorph_creep
   use m_parallel, only : par_info, par_stop, dcp
@@ -51,6 +52,12 @@ module subroutine calc_creep(gm, g, s, dts)
   real :: gq, dv
   logical :: okc
 
+  ! 深さ依存クリープ(creep_hstar > 0。§89.8)は別経路(従来の線形拡散のループは不変)
+  if (gm%crp%hcinv > 0.0) then
+    call calc_creep_soil(gm, g, s, dts)
+    return
+  end if
+
   ! --- ループ1: エッジ流量(各成分の書き手は一意なので競合しない) ---
   !   帯界面のエッジ成分 k=1..3(行 je)はハロ行 je+1 の書き手が担う
   !   (冗長計算。全域端では行が存在せず対象外)
@@ -72,6 +79,15 @@ module subroutine calc_creep(gm, g, s, dts)
           end if
         end if
         gm%wrk%q(k, i+die(k), j+dje(k)) = gq
+      end do
+      ! 域外(x <= 0)の近傍に向く面スロット(k >= 5 は域外セルの所有成分)を 0 で上書きする
+      ! (クリープは領域の外へ運ばない = 四周は壁)。共有スクラッチには先行の掃流砂が開境界の
+      ! 流出を書いており、上書きしないとループ 2 がそれを再び集計して境界セルを掘り下げて
+      ! いた(2026-10-27 実検出。§19.10。apply_edge_flux の書き手の契約と同じ)
+      do k = 5, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        if (g%x(in,jn) <= 0) gm%wrk%q(ke(k), i+die(k), j+dje(k)) = 0.0
       end do
     end do
   end do
@@ -96,6 +112,66 @@ module subroutine calc_creep(gm, g, s, dts)
 
 end subroutine
 
+
+
+!----------------------------------------------------------------------
+! 深さ依存クリープ(creep_hstar > 0。§89.8。docs/mountain_stream_plan.md §5.1)
+!   q = −D (1 − e^{−H_up/H_c}) ∇z(H_up は供給側 = 高い側のセルの土層厚 sd)。
+!   Landlab の DepthDependentDiffuser の q = K H* (1 − e^{−H/H*}) S(Johnstone & Hilley
+!   2015)と同じ形で、厚い土層の極限で従来の q = −D ∇z(D = creep_d = K H*)。土層だけが
+!   動く(裸岩は動かない)ので、流量をかさ体積から固体体積に換算して共有の
+!   apply_edge_flux に渡す(供給量制限・z と sd の共動更新・細粒分の帳簿・地下水容量の
+!   整合を共有)。実効の拡散係数は D 以下なので init_creep の安定条件はそのまま成り立つ。
+!   近傍の z・sd を読む(ハロは m_geomorph_calc の前回の末尾の交換で、先行のプロセスが
+!   あればクリープの直前の交換で最新)
+!----------------------------------------------------------------------
+subroutine calc_creep_soil(gm, g, s, dts)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: dts
+  integer :: i, j, k, in, jn, jt
+  real :: gq
+  logical :: okc
+
+  ! --- エッジ流量(固体体積。各成分の書き手は一意。帯界面のエッジは行 je+1 の書き手が担う) ---
+  jt = min(dcp%je + 1, dcp%jeh)
+  !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, gq)
+  do j = dcp%js, jt
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      okc = (g%sw(i,j) <= 0)
+      do k = 1, 4
+        in = i + din(k)
+        jn = j + djn(k)
+        gq = 0.0
+        if (gm%crp%cw(k) > 0.0 .and. okc .and. g%x(in,jn) > 0) then
+          if (g%sw(in,jn) <= 0) then
+            ! かさ体積の流量(書き手 c から k 近傍 n に向かい正)に、供給側の土層の
+            ! 利用可能率を掛けて固体体積に換算(apply_edge_flux が poroi を掛け戻す)
+            gq = gm%creep_d * (s%z(i,j) - s%z(in,jn)) * gm%crp%cw(k)
+            if (gq > 0.0) then
+              gq = gq * rock_avail(s%sd(i,j), gm%crp%hcinv) / gm%poroi
+            else
+              gq = gq * rock_avail(s%sd(in,jn), gm%crp%hcinv) / gm%poroi
+            end if
+          end if
+        end if
+        gm%wrk%q(k, i+die(k), j+dje(k)) = gq
+      end do
+      ! 域外の近傍に向く面スロットは 0(apply_edge_flux の書き手の契約。§19.10)
+      do k = 5, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        if (g%x(in,jn) <= 0) gm%wrk%q(ke(k), i+die(k), j+dje(k)) = 0.0
+      end do
+    end do
+  end do
+  !$omp end parallel do
+
+  ! --- 供給量制限 → 発散 → z と sd の共動更新(掃流砂と共有の適用経路) ---
+  call apply_edge_flux(gm, g, s, dts)
+end subroutine
 
 
 !----------------------------------------------------------------------

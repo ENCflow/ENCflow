@@ -84,6 +84,35 @@ morphological time, to be read together with `morfac`. Verification:
 [test/creep](../../../test/creep/en/README.md) (Gaussian hill, maximum error
 7.8e-5 m against the analytical solution, `morfac` = 2 equivalence 2.3e-4 m).
 
+**Depth-dependent creep (`creep_hstar` > 0)**:
+
+```math
+\mathbf{q} = -D\left(1 - e^{-H/H_c}\right)\nabla z,
+\qquad
+\frac{\partial z}{\partial t} = \frac{\partial s_d}{\partial t} = -\nabla\cdot\mathbf{q}
+```
+
+Only the soil layer moves. $`H`$ is the soil depth $`s_d`$ of the supplying
+(higher) cell of each edge and $`H_c`$ is the transport decay depth
+(`creep_hstar`). It expresses transport proportional to both slope and soil
+depth[^johnstone15] in the same form $`K H_* (1 - e^{-H/H_*})`$ as Landlab's
+DepthDependentDiffuser; reading $`D = K H_*`$, it reduces to the linear
+diffusion above in the limit of a thick soil ($`H \gg H_c`$) (the meaning of
+$`D`$ = `creep_d` is unchanged). Because $`z`$ and $`s_d`$ move by the same
+amount, the bedrock surface $`z - s_d`$ does not change, and nothing is
+carried out of bare rock ($`s_d = 0`$). Evaluating $`H`$ in the supplying cell
+and passing the flux, converted to solid volume, through the supply limiter
+shared with bedload (a cell never gives more than its soil depth in one
+update) are discretisation choices of this model. The effective diffusivity
+does not exceed $`D`$, so the stability condition is the same as above.
+Verification: the four depth-dependent creep configurations of
+[test/creep](../../../test/creep/en/README.md) (agreement with the
+conventional linear diffusion to 1.8e-15 m under a thick soil, the bedrock
+surface $`z - s_d`$ unchanged to 4e-14 m, conservation of the total soil,
+$`s_d \ge 0`$, no change on bare rock). The steady hillslope combined with
+soil production (§7) is to be checked in a coupled experiment with a stream at
+the foot of the slope (docs/mountain_stream_plan.md §5, in Japanese).
+
 ## 3. Bedload (f_fluvial)
 
 **Transport formula.** On each edge the dimensionless transport rate
@@ -395,12 +424,20 @@ The update is the propagator of the exact solution of the ordinary
 differential equation, so it is unconditionally stable for any `morfac`.
 $`W_0`$ (`wthr_p0`, default 50 mm/kyr) is the middle of the bare-rock soil
 production rates 0.01 to 0.1 mm/yr and $`s_*`$ (`wthr_sdstar`, default
-0.5 m) a representative decay depth.
+0.5 m) a representative decay depth. With `fn_wthr`, the rate becomes
+$`W_0 f_w`$ with a cell-wise multiplier distribution (differences in
+lithology; cells with multiplier 0 do not weather. Use it where the bedrock
+surface should be lowered by fluvial incision rather than by weathering,
+such as the bedrock of mountain streams). The multiplier acts on the
+production rate only; the decay depth $`s_*`$ is common to the whole domain.
 
 **Uplift.** $`z \mathrel{+}= U\,\Delta t_s`$ ($`s_d`$ unchanged: the bedrock
 rises as a rigid body). $`U`$ (`uplift0`, default 1 mm/yr) is the lower end
 of the representative values of orogenic belts; negative values are
-subsidence. Sea-mask cells are the base level and are excluded.
+subsidence. Sea-mask cells are the base level and are excluded. With
+`fn_uplift`, the rate becomes $`U f_u`$ with a cell-wise multiplier
+distribution (0 at the outlet cells fixes the base level, negative values
+lower it; differential uplift of fault blocks can also be given).
 Long-term landscape evolution is meant to be run as "representative
 hydrology repeated × MORFAC × restart chains", the CAESAR-Lisflood style
 [^coulthard13] (developer.md §32).
@@ -463,6 +500,112 @@ published range of karst denudation rates of 20 to 100 mm/kyr
 saturation along the flow path is not represented. Conduit (cave) growth
 is a separate, not yet implemented stage (docs/karst_plan.md §5).
 
+### Bedrock incision by flowing water (f_rockinc)
+
+**Plucking, abrasion and cover.** The bedrock surface $`R = z - s_d`$ is
+lowered by plucking by the flow and by abrasion by the transported gravel
+(the tools effect), and the mobile layer $`H = s_d`$ suppresses the incision
+through the exposure $`e^{-H/H_*}`$:
+
+```math
+\tau_b = \frac{\rho_w g n^2 |V|^2}{h_e^{1/3}},\qquad
+E_{p0} = f_r\,k_p \max\!\left(\frac{\tau_b}{\tau_c} - 1,\ 0\right)^{m},\qquad
+E_{a0} = f_r\,\beta\,q_c\,F_s(H)
+```
+
+```math
+\frac{dR}{dt} = -(E_{p0} + E_{a0})\,e^{-H/H_*},\qquad \frac{dH}{dt} = E_{p0}\,e^{-H/H_*}
+```
+
+$`\tau_b`$ uses the same Manning closure as bedload
+($`h_e = \max(h, d_v)`$), and $`f_r`$ is the erodibility multiplier
+(`fn_rock`). The plucking term writes the excess-shear-stress form
+$`E = k_e(\tau_b - \tau_c)^m`$ of the type that expresses the erosion rate of
+bedrock channels by the bed shear stress[^howard83] in ratio form with
+$`k_p = k_e \tau_c^m`$, so $`k_p`$ is "the incision rate of bare rock at
+$`\tau_b = 2\tau_c`$" (m/s) (the source of the thresholded form is still
+being checked). Expressing the cover as an exponential of the layer
+thickness is the same as in SPACE[^shobe17] and Landlab's
+GravelBedrockEroder. The plucked rock becomes a mobile layer of the same
+thickness ($`z`$ is unchanged), and bulking is absorbed into $`k_p`$ (the
+same 1:1 conversion as weathering; **our own simplification**). In the
+abrasion term, $`q_c`$ is the bedload capacity of the cell (solid transport
+rate per unit width), and $`q_c F_s`$ is the bedload leaving the cell, taken
+as the amount of gravel striking the bed (the same form as "abrasion = β ×
+transport rate × exposure" of GravelBedrockEroder). The abraded material
+leaves the system as fines ($`z`$ is lowered) and is not added to the cover.
+
+**Thin-layer transport.** The edge flux of bedload is multiplied by the
+availability $`F_s = 1 - e^{-H/H_*}`$ of the supplying cell. In a steady
+state with a uniform capacity $`q_c`$ and a constant transport rate
+$`q_s`$, $`F_s = q_s/q_c`$, and the exposure is $`1 - q_s/q_c`$, i.e. it
+agrees with the cover written as a supply ratio[^sklar04][^turowski07], and
+the incision rate by abrasion becomes the hump $`E = \beta q_s (1 - q_s/q_c)`$
+(largest at $`q_s/q_c = 1/2`$, and 0 with full cover at 1 and above; the same
+form as the linearization of the saltation–abrasion model of Sklar and
+Dietrich). The
+idea of setting the cover by the ratio of the alluvial thickness to the bed
+relief[^zhang15] is written as a closure that uses the same $`H_*`$ for the
+exposure and the availability; this combination and the dimensional form are
+**our own** (docs/mountain_stream_plan.md §4.3). The steady state in which
+the plucked rock joins the transport downstream follows from solving
+$`q_i = q_{i-1} + (1-\lambda)\Delta x\,E_{p0}(1 - q_i/q_c)`$ cell by cell
+(T3 of test/rockinc).
+
+**Time integration.** The hydraulics are frozen at the start of an update
+and the exposure is integrated exactly:
+
+```math
+H^{n+1} = H^n + B_p,\qquad
+B_p = H_*\ln\!\left(1 + \frac{E_{p0}\,\Delta t_s}{H_*}\,e^{-H^n/H_*}\right),\qquad
+B_a = \frac{E_{a0}}{E_{p0}}\,B_p
+```
+
+(the same form as the weathering propagator; $`F_s`$ of the abrasion is frozen
+at its value at the start of the update, and with $`E_{p0} = 0`$,
+$`B_a = E_{a0}\,\Delta t_s\,e^{-H^n/H_*}`$). Changing the update interval
+or `morfac` gives the same result, and it is unconditionally stable. The
+outflow from a thin layer is explicit, with the time scale
+$`H_*(1-\lambda)\Delta x / q_c`$.
+
+**Rock erosion by debris flows (rock_kdb).** In debris-flow event runs
+(`f_debris = 1`), the quasi-static driving stress of the flowing mixture erodes
+the rock:
+
+```math
+\tau_d = \rho_w (1 + sC)\,g_e\,h_t \tan\theta_f,\qquad
+E_{d0} = f_r\,k_d \max\!\left(\frac{\tau_d}{\tau_{cd}} - 1,\ 0\right)^{m_d},\qquad
+\frac{dR}{dt} = -E_{d0}\,e^{-H/H_*},\qquad \frac{dH}{dt} = E_{d0}\,e^{-H/H_*}
+```
+
+$`h_t = h + h_s`$ is the mixture flow depth, $`C`$ the volumetric concentration
+of the mixture, $`\theta_f`$ the bed slope in the flow direction (downslope only;
+in each cell a one-sided difference to the downstream neighbour in the flow
+direction, because with a central difference a two-cell undulation does not show
+in the slope and the flow, shallower over the bumps, leaves them uneroded so that
+steps grow; developer.md §89.23 and §89.24, in Japanese)
+and $`g_e`$ the effective gravity of the momentum equation ($`g\cos^2\theta_f`$;
+$`g`$ with `f_gravity_correction = 0`). In steady uniform flow $`\tau_d`$ equals
+the basal shear of the resistance law, whichever resistance law is chosen. Only
+cells with a dense mixture ($`C \ge c_{\min}`$ = `db_cmin`) that is moving
+($`|V| \ge v_{stop}`$ = `db_vstop`) erode, and the product enters the mobile layer
+1:1 like plucking ($`z`$ unchanged). Whether the flow entrains it or it stays as
+cover is decided by the erosion–deposition formula. The time integration uses the
+same propagator as plucking, with $`H`$ after the erosion–deposition step.
+
+That debris flows are the main agent of bedrock lowering in steep valleys is shown
+by the slope–area relation[^stock03] and erosion-pin measurements[^stock05]. The
+mechanism is thought to be particle impacts; there are a law based on inertial
+stresses[^stock06] and rotating-drum experiments[^hsu08]. The single-layer mixture
+does not resolve the bouldery front where the impacts concentrate, so the excess
+form of the quasi-static stress, which was robust in the single-event comparison
+(docs/mountain_stream_plan.md §12.4, in Japanese), was adopted. It belongs to the
+family of erosion laws in flow depth and slope[^mcguire23]; the form and the
+combination of coefficients are **our own**. In the same comparison, a threshold of
+1 kPa concentrated the erosion in the reaches steeper than about 0.2. The
+observation that a deposit about 5 cm thick shields the bed from impacts[^mccoy13]
+is a guide for $`H_*`$.
+
 ## 8. Parameters and the basis of their defaults
 
 The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
@@ -471,6 +614,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 |---|---:|---|---|
 | dt_geomorph / morfac | 0 / 1 | update interval (s) / acceleration of morphological time (§1) | **method** MORFAC method[^roelvink06]; 1 for event runs |
 | creep_d | 0.005 m²/yr | creep diffusivity $`D`$ (§2) | **literature value** middle of the published range 0.001–0.05 m²/yr[^fernandes97] |
+| creep_hstar | 0 (conventional linear diffusion) | decay depth $`H_c`$ of depth-dependent creep (m) (§2) | **calibration value** no standard value. Does not affect the result under a thick soil |
 | f_qbform | 1 | bedload formula (§3) | **method** 1: Ashida–Michiue[^ashida72], 2: MPM[^mpm48] |
 | fluv_d50 | 0.01 m | representative grain size of bedload | **empirical** near the geometric mean of sand and gravel beds |
 | fluv_tausc / susp_tausc / wash_tausc | 0.05 | critical dimensionless shear stress (§1) | **literature value** representative value of the Shields curve for coarse sand to gravel[^shields36] |
@@ -493,13 +637,22 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | spl_ksat | 0 | saturation curvature $`\kappa_s`$ of the amplification | **given** 0 = no saturation; 0.05-0.2 1/m keeps benches at the foot of cliffs (examples/mesa) |
 | spl_strata | none | table of horizontal strata (bottom elevation, erodibility factor) | **given** hard/soft contrast of the stratigraphy; factor 0 = cap rock |
 | wthr_p0 / wthr_sdstar | 50 mm/kyr / 0.5 m | soil production rate / decay depth (§7) | **literature value** middle of the published range of the Heimsath function[^heimsath97] |
+| fn_wthr | none (1 everywhere) | distribution of the multiplier of the soil production rate | **given** differences in lithology, cells without weathering (0; the bedrock of mountain streams, for example) |
 | uplift0 | 1 mm/yr | uplift rate | **customary value** lower end of orogenic belts |
+| fn_uplift | none (1 everywhere) | distribution of the uplift multiplier | **given** fixed (0) or falling (negative) base level, fault blocks |
 | dissol_ceq / dissol_rho | 100 mg/L / 2500 kg/m³ | effective dissolution capacity / rock density (§7) | **literature value** representative CaCO₃ concentration of recharge in limestone areas[^white84] and the density of limestone. k_d = 4e-5 m/m, i.e. 40 mm/kyr for a recharge of 1 m/yr (published range 20-100)[^gabrovsek09] |
 | dissol_src / dissol_sink | 1 / 0 | water source / sink term | **method** 1: infiltration, 2: rainfall on the ground, 3: infiltration + runoff on bare rock. The sink term is the inlet inflow of the conduit continuum layer |
 | dissol_fsurf / dissol_sdsurf | 0.3 / 0.1 m | capacity ratio of the runoff in the surface source / soil thickness counted as bare rock | **literature value** ratio of rain on bare rock (50-80 mg/L) to recharge under soil (100-300) / **numerical setting** |
 | dissol_dzmax | 0 | cap on the dissolution per cell and update | **numerical setting** 0 = off. A safety valve of the fluv_dzmax type (the excess is discarded as saturation) |
 | dissol_fsink / dissol_fres | 1.0 / 0 | capacity ratio of the sink inflow / residue fraction | **empirical value** to be calibrated / **given** 0 = no residue |
 | dissol_lat | 0 | share p of lateral dissolution | **method** 0 = floor only, −1 = automatic from the wetted-area ratio (recommended). A fixed value follows the ratio of ponding depth to cell size |
+| rock_kp / rock_tauc | 0 (no plucking) / none | plucking rate coefficient (m/s) / threshold (Pa) (bedrock incision of §7) | **calibration value** no standard value. k_p is the incision rate of bare rock at τ_b = 2τ_c |
+| rock_m | 1 | plucking exponent | **conventional value** linear (same as berode_m of bank erosion) |
+| rock_beta | 0 (no abrasion) | abrasion coefficient β (1/m) | **calibration value** no standard value. The largest incision rate by abrasion (cover fraction 1/2) is β q_c / 4 |
+| rock_hstar | none | cover length H* | **given** a measure of the relief of the bedrock surface and the grain size (a few cm to tens of cm). Shared by the exposure and the availability |
+| rock_kdb / rock_taucdb | 0 (no debris-flow term) / none | rate coefficient (m/s) / threshold (Pa) of rock erosion by debris flows | **calibrated** no standard values. k_d is the lowering rate of bare rock at τ_d = 2τ_cd. A lowering of mm to cm per debris flow is a guide[^stock05][^mccoy13] |
+| rock_mdb | 1 | exponent of the debris-flow term | **conventional** linear (same as rock_m) |
+| fn_rock | none (1 everywhere) | erodibility multiplier of the bedrock | **given** lithological contrast. 0 = not eroded |
 
 **Where to look when revising the defaults**
 
@@ -521,7 +674,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Case | Content | Point |
 |---|---|---|
-| [test/creep](../../../test/creep/en/README.md) | diffusion of a Gaussian hill | maximum error 7.8e-5 m, morfac equivalence |
+| [test/creep](../../../test/creep/en/README.md) | diffusion of a Gaussian hill | maximum error 7.8e-5 m, morfac equivalence. Depth-dependent creep: bedrock surface unchanged, soil conserved, no change on bare rock |
 | [test/fluvial](../../../test/fluvial/en/README.md) | dam break and bed change in a closed domain | total solid and co-moving update to machine precision |
 | [test/suspend](../../../test/suspend/en/README.md) | two equilibrium formulas | total solid 2.2e-15 |
 | [test/sedinflow](../../../test/sedinflow/en/README.md) | sediment supplied through the boundary | ledger closure ~1e-16 |
@@ -529,6 +682,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/splash](../../../test/splash/en/README.md) | dry erosion on a slope with a break | all digits agree with the analytical form, export ledger agrees |
 | [test/splashslide](../../../test/splashslide/en/README.md) | cohesive / loose cliff | relief growth ×1.34 / ×0.77 |
 | [examples/badland](../../../examples/badland/) | valley formation on a plateau edge | valleys grow from the cliff edge with zero surface flow |
+| [test/rockinc](../../../test/rockinc/en/README.md) | bedrock incision by flowing water | analytic self-cover solution 9e-8, quasi-steady cover 4e-4, hump of abrasion 7e-4, conservation in a closed box (9 digits with the ledger), the steady slope under a supply at the head within 1.5 % of the quasi-analytic solution with the sediment budget to 4e-10 |
+| [examples/bedrock_cover](../../../examples/bedrock_cover/en/README.md) | cover effect in bedrock channels | steady incision rates of the 3 models within 2.3 % of the theory, constant versus pulsed supply with the same total, initial cover, retreat of a step |
+| [examples/mountain_valley](../../../examples/mountain_valley/en/README.md) | coupled hillslopes and stream of a V-shaped valley | steady hillslopes within 0.14 % of the prediction for the hillslopes alone, stream slope within 1.1 % of the stream-only equation with the hillslope supply added; response to a base-level fall; with pulses of the same mean supply an abrasion-only stream is 1.40 times as steep |
+| [test/hillsoil](../../../test/hillsoil/en/README.md) | soil production by weathering and steady hillslopes | 1.6e-15 to the analytical solutions with a uniform and a distributed (fn_wthr) rate, cells with multiplier 0 unchanged. On the steady hillslope of uplift, weathering and depth-dependent creep, the soil depth within 0.12 % of H_ss and the cross-slope curvature within 1.1 % of −U/D_eff |
 
 ## References
 
@@ -536,6 +693,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^shields36]: Shields, A. (1936): Anwendung der Ähnlichkeitsmechanik und der Turbulenzforschung auf die Geschiebebewegung. Mitt. Preuss. Versuchsanst. Wasserbau Schiffbau, 26, Berlin.
 [^culling60]: Culling, W. E. H. (1960): Analytical theory of erosion. *J. Geol.*, 68, 336–344. (linear diffusion of hillslopes)
 [^fernandes97]: Fernandes, N. F. and Dietrich, W. E. (1997): Hillslope evolution by diffusive processes: The timescale for equilibrium adjustments. *Water Resour. Res.*, 33, 1307–1318. (range of diffusivities)
+[^johnstone15]: Johnstone, S. A. and Hilley, G. E. (2015): Lithologic control on the form of soil-mantled hillslopes. *Geology*, 43(1), 83–86. doi:10.1130/G36052.1 (checked against the abstract: when transport scales with both slope and soil depth, rock type shows up in the form of soil-mantled hillslopes. The form of the equation and the doi follow the description of Landlab's DepthDependentDiffuser)
 [^ashida72]: Ashida, K. and Michiue, M. (1972): Study on hydraulic resistance and bed-load transport rate in alluvial streams. *Proc. JSCE*, 206, 59–69 (in Japanese).
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.
 [^exner25]: Exner, F. M. (1925): Über die Wechselwirkung zwischen Wasser und Geschiebe in Flüssen. *Sitzungsber. Akad. Wiss. Wien, Math.-Naturwiss. Kl.*, 134, 165–204.
@@ -549,3 +707,14 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^coulthard13]: Coulthard, T. J., Neal, J. C., Bates, P. D., Ramirez, J., de Almeida, G. A. M. and Hancock, G. R. (2013): Integrating the LISFLOOD-FP 2D hydrodynamic model with the CAESAR model: implications for modelling landscape evolution. *Earth Surf. Process. Landforms*, 38, 1897–1906.
 [^white84]: White, W. B. (1984): Rate processes: chemical kinetics and karst landform development. In: La Fleur, R. G. (ed.) *Groundwater as a Geomorphic Agent*, Allen & Unwin, 227–248. (maximum denudation rate D = (P − E) c_eq/ρ)
 [^gabrovsek09]: Gabrovšek, F. (2009): On concepts and methods for the estimation of dissolutional denudation rates in karst areas. *Geomorphology*, 106, 9–14.
+[^howard83]: Howard, A. D. and Kerby, G. (1983): Channel changes in badlands. *Geol. Soc. Am. Bull.*, 94, 739–752. (Erosion rate of bedrock channels expressed by the bed shear stress during floods; checked against the abstract)
+[^shobe17]: Shobe, C. M., Tucker, G. E. and Barnhart, K. R. (2017): The SPACE 1.0 model. *Geosci. Model Dev.*, 10, 4577–4604. doi:10.5194/gmd-10-4577-2017 (the exponential cover form checked in the Landlab source)
+[^sklar04]: Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
+[^turowski07]: Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion. *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697
+[^zhang15]: Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N. (2015): Macro-roughness model of bedrock–alluvial river morphodynamics. *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015 (checked against the abstract)
+[^stock03]: Stock, J. D. and Dietrich, W. E. (2003): Valley incision by debris flows: Evidence of a topographic signature. *Water Resour. Res.*, 39(4), 1089. doi:10.1029/2001WR001057 (checked against the abstract: the inverse power law between slope and area rarely extends to slopes steeper than 0.03 to 0.10)
+[^stock05]: Stock, J. D., Montgomery, D. R., Collins, B. D., Dietrich, W. E. and Sklar, L. S. (2005): Field measurements of incision rates following bedrock exposure: Implications for process controls on the long profiles of valleys cut by rivers and debris flows. *Geol. Soc. Am. Bull.*, 117(1–2), 174–194. doi:10.1130/B25560.1 (checked against the abstract: erosion pins in valleys of weak rock show up to cm/yr; in debris-flow valleys the episodic debris flows are the main agent)
+[^stock06]: Stock, J. D. and Dietrich, W. E. (2006): Erosion of steepland valleys by debris flows. *Geol. Soc. Am. Bull.*, 118(9/10), 1125–1148. (checked against the abstract and secondary accounts: an erosion law based on the inertial normal stress of particle impacts; the form of the equation not yet checked)
+[^hsu08]: Hsu, L., Dietrich, W. E. and Sklar, L. S. (2008): Experimental study of bedrock erosion by granular flows. *J. Geophys. Res.*, 113, F02001. doi:10.1029/2007JF000778 (checked against the abstract and secondary accounts)
+[^mccoy13]: McCoy, S. W., Tucker, G. E., Kean, J. W. and Coe, J. A. (2013): Field measurement of basal forces generated by erosive debris flows. *J. Geophys. Res. Earth Surf.*, 118, 589–602. doi:10.1002/jgrf.20041 (checked against the abstract: the bedrock floor was lowered by 36 to 64 mm over the observation period; a deposit about 5 cm thick shields the bed from impacts)
+[^mcguire23]: McGuire, L. A. et al. (2023): Steady-state forms of channel profiles shaped by debris flow and fluvial processes. *Earth Surf. Dynam.*, 11, 1117–1143. doi:10.5194/esurf-11-1117-2023 (checked against the abstract: a family of erosion laws in flow depth and slope; the list of co-authors not yet checked)

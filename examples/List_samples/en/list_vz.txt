@@ -130,4 +130,15 @@
   ! distribution ratios of the outlets (sum 1. May be omitted for one cell.
   ! All required for several cells)
   !vz_out_w(1:2,1) = 0.6, 0.4
+
+  ! baseflow (optional. Time series in mm/h per zone area. Pairs of (time (min),
+  ! mm/h) are linearly interpolated, and the end values are held outside the
+  ! range. Integrated over each synchronisation interval and passed to the same
+  ! outlet as the drainage. An external supply not included in the VZ storage
+  ! of the columns and zones. Up to 100 points per zone in the namelist)
+  !vz_base(:,1,1) = 0, 0.1
+  !vz_base(:,2,1) = 1440, 0.5
+  ! long series from a file (relative to dir_data. One line "time (min) mm/h".
+  ! Takes precedence over the namelist)
+  !fn_vz_base(1) = 'base_zone1.txt'
 /

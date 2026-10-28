@@ -12,6 +12,11 @@ module m_vzflow
   !   出口   : 区画の排水を地表セルへ移す(vz_out_kind = 1。配分率つき)か
   !            系外へ出す(= 2)。側方の遅れは解かない(瞬間的な直接排水。
   !            側方系の応答を省略した近似 — 水粒子の瞬間移動の主張ではない)。
+  !   基底流 : 区画ごとに与えた時系列(vz_base / fn_vz_base。mm/h、区画面積基底)を
+  !            同期区間ごとに厳密に積分し、排水と同じ出口へ渡す(谷 2023 が観測から
+  !            分離した基底流を VZ の計算値に加えた扱い。分離は利用者の前処理)。
+  !            柱・区画の貯留には入らない外部供給(vz_zone.csv の vbase。出口の
+  !            vsurface・vexternal は排水 + 基底流)。
   !
   ! 【保存的な読み出し】(vz_plan.md §4.4)
   !   セル i の土層厚 d_i が界面 ζ_j と ζ_{j+1} の間にあれば α = (d − ζ_j)/Δζ。
@@ -59,9 +64,10 @@ module m_vzflow
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo, m_geoinfo_require_sd
   use m_state, only : t_state
-  use m_boundary, only : t_boundary
+  use m_boundary, only : t_boundary, read_val_file2
   use m_swflow_enc, only : chn
-  use list_vz, only : t_list_vz, list_vz_read, vz_ncolmax, vz_nzonemax, vz_noutmax, vz_ndepmax
+  use list_vz, only : t_list_vz, list_vz_read, vz_ncolmax, vz_nzonemax, vz_noutmax, vz_ndepmax, &
+                      vz_nbasemax
   use m_vzflow_column, only : t_vzcol, t_vzctl, t_vzgeo, vzcol_init, vzcol_advance, vzcol_props, &
                               vzcol_dispose, vzcol_steady_psi, vz_ok, vz_fail_time, vz_fail_ponding
   use m_fileio, only : fileio_read_matrix
@@ -78,7 +84,7 @@ module m_vzflow
   public :: m_vzflow_outprof
   public :: m_vzflow_dispose
 
-  integer, parameter :: save_version = 20261026   ! vzflow.dat の形式の版(形式変更日。§7)
+  integer, parameter :: save_version = 20261027   ! vzflow.dat の形式の版(形式変更日。§7)
 
   !-------------------------------------------
   ! VZ 区画
@@ -94,11 +100,14 @@ module m_vzflow
     integer :: nout = 0                        ! 出口セル数(kind = 1)
     integer, allocatable :: oidx(:)            ! 出口セルの通し番号(t_vzflow の ocell の添字)
     real(real64), allocatable :: ow(:)         ! 配分率(和 = 1 に正規化済み)
+    integer :: nbase = 0                       ! 基底流の時系列の点数(0 = 基底流なし)
+    real(real64), allocatable :: bt(:), bq(:)  ! 基底流の時系列(時刻 s、強度 m/s。区画面積基底)
     ! 診断(累積 m3。全ランク同値)
     real(real64) :: vin = 0.0_real64           ! 上端入力 A_g·F_0
     real(real64) :: vdrain = 0.0_real64        ! 底面排水 Σ W F
-    real(real64) :: vint = 0.0_real64          ! 地表セルへの移送
-    real(real64) :: vext = 0.0_real64          ! 系外流出
+    real(real64) :: vint = 0.0_real64          ! 地表セルへの移送(排水 + 基底流)
+    real(real64) :: vext = 0.0_real64          ! 系外流出(排水 + 基底流)
+    real(real64) :: vbase = 0.0_real64         ! 基底流(外部供給。貯留・収支残差には入らない)
     real(real64) :: vcorr = 0.0_real64         ! 負の排水(丸め規模)を 0 に切った補正量
     real(real64) :: vstore0 = 0.0_real64       ! 計算開始時の貯留 (m3)
     real(real64) :: vstore = 0.0_real64        ! 現在の貯留 Σ M θ (m3)
@@ -112,6 +121,7 @@ module m_vzflow
   type t_vzflow
     logical :: enabled = .false.
     integer :: ncol = 0, nzone = 0
+    logical :: have_base = .false.             ! 基底流を与えた区画があるか(vz_zone.csv の vbase 列)
     type(t_vzctl) :: ctl                       ! 数値制御(全柱共通)
     type(t_vzcol), allocatable :: cols(:)      ! 共有参照柱
     type(t_vzzone), allocatable :: zones(:)    ! VZ 区画
@@ -267,8 +277,10 @@ subroutine m_vzflow_record(vz, s)
     associate (zz => vz%zones(z))
       ! 区画の収支残差 = 貯留変化 − (入力 − 排水) − 補正(非線形残差の集積と丸め)
       res = zz%vstore - zz%vstore0 - zz%vin + zz%vdrain - zz%vcorr
-      write(vz%un_zone, '(f0.2,",",i0,",",i0,8(",",es23.15))') s%t, z, zz%col, zz%area, &
+      write(vz%un_zone, '(f0.2,",",i0,",",i0,8(",",es23.15))', advance='no') s%t, z, zz%col, zz%area, &
             zz%vin, zz%vstore, zz%vdrain, zz%vint, zz%vext, zz%vcorr, res
+      if (vz%have_base) write(vz%un_zone, '(",",es23.15)', advance='no') zz%vbase
+      write(vz%un_zone, '(a)') ""
     end associate
   end do
   flush(vz%un_zone)
@@ -673,7 +685,8 @@ subroutine setup_zones(vz, p, g, b, list)
   vz%nzone = nzn
   allocate(vz%zones(1:nzn))
   do z = nzn + 1, vz_nzonemax
-    if (list%vz_out_kind(z) > -9998 .or. list%vz_zone_col(z) > -9998) then
+    if (list%vz_out_kind(z) > -9998 .or. list%vz_zone_col(z) > -9998 .or. &
+        list%vz_base(1,1,z) > -9998.0 .or. len_trim(list%fn_vz_base(z)) > 0) then
       call par_stop("list_vz_zone: zone "//itoa(z)//" is set but absent from fn_vz_zone")
     end if
   end do
@@ -772,8 +785,9 @@ subroutine setup_zones(vz, p, g, b, list)
     vz%colncell(vz%zones(z)%col) = vz%colncell(vz%zones(z)%col) + vz%zones(z)%ncell
   end do
 
-  ! --- 出口 ---
+  ! --- 出口と基底流 ---
   call setup_outlets(vz, g, b, list, zmap)
+  call setup_baseflow(vz, p, list)
 
   ! --- 帯の区画番号(時間ループ用) ---
   allocate(vz%zid(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0)
@@ -929,6 +943,81 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 基底流の時系列(区画ごと。ファイル指定が namelist より優先 = 境界の時系列と
+! 同じ規約)。時刻は分 → 秒、強度は mm/h → m/s。時刻は減らないこと
+! (同じ時刻の 2 点で段差を表せる)、強度は 0 以上
+!----------------------------------------------------------------------
+subroutine setup_baseflow(vz, p, list)
+  type(t_vzflow), intent(inout) :: vz
+  type(t_sysparam), intent(in) :: p
+  type(t_list_vz), intent(in) :: list
+  integer :: z, k, n
+  real, allocatable :: val(:,:)
+  character(len=16) :: tag
+
+  do z = 1, vz%nzone
+    write(tag, '("(",i0,")")') z
+    if (len_trim(list%fn_vz_base(z)) > 0) then
+      call par_info(" reading "//trim(p%dir_data)//"/"//trim(list%fn_vz_base(z)))
+      call read_val_file2(trim(p%dir_data)//"/"//trim(list%fn_vz_base(z)), n, val)
+      if (n == 0) call par_stop("list_vz_zone: fn_vz_base"//trim(tag)//" has no data")
+    else
+      n = 0
+      do k = 1, vz_nbasemax
+        if (list%vz_base(1,k,z) <= -9998.0) exit    ! 番兵で終端
+        n = k
+      end do
+      if (n == 0) cycle
+      allocate(val(1:2, 1:n))
+      val(1,1:n) = list%vz_base(1,1:n,z) * 60     ! 分を秒に(ファイルの読み込みと同じ演算)
+      val(2,1:n) = list%vz_base(2,1:n,z)
+    end if
+    associate (zz => vz%zones(z))
+      zz%nbase = n
+      allocate(zz%bt(1:n), zz%bq(1:n))
+      do k = 1, n
+        if (.not. (val(2,k) >= 0.0)) then
+          call par_stop("list_vz_zone: the baseflow of zone "//itoa(z)//" must be >= 0 (mm/h)")
+        end if
+        if (k > 1) then
+          if (val(1,k) < val(1,k-1)) then
+            call par_stop("list_vz_zone: the baseflow times of zone "//itoa(z)//" must not decrease")
+          end if
+        end if
+        zz%bt(k) = real(val(1,k), real64)
+        zz%bq(k) = real(val(2,k), real64) / 3.6e6_real64
+      end do
+    end associate
+    deallocate(val)
+    vz%have_base = .true.
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 基底流の区分線形の時系列(範囲外は端の値を保持)の [ta, tb] の積分 (m)
+!----------------------------------------------------------------------
+pure real(real64) function base_integral(zz, ta, tb) result(v)
+  type(t_vzzone), intent(in) :: zz
+  real(real64), intent(in) :: ta, tb
+  integer :: k, n
+  real(real64) :: a, b, fa, fb
+  n = zz%nbase
+  v = 0.0_real64
+  if (ta < zz%bt(1)) v = v + (min(tb, zz%bt(1)) - ta) * zz%bq(1)
+  do k = 1, n - 1
+    a = max(ta, zz%bt(k))
+    b = min(tb, zz%bt(k+1))
+    if (b <= a) cycle                  ! 区間外(同じ時刻の 2 点の段差も含む)
+    fa = zz%bq(k) + (zz%bq(k+1) - zz%bq(k)) * (a - zz%bt(k)) / (zz%bt(k+1) - zz%bt(k))
+    fb = zz%bq(k) + (zz%bq(k+1) - zz%bq(k)) * (b - zz%bt(k)) / (zz%bt(k+1) - zz%bt(k))
+    v = v + (b - a) * 0.5_real64 * (fa + fb)
+  end do
+  if (tb > zz%bt(n)) v = v + (tb - max(ta, zz%bt(n))) * zz%bq(n)
+end function
+
+
+!----------------------------------------------------------------------
 ! 毎ステップ: VZ セルに入った雨を s%h から回収し、柱の入力として記録する
 !   回収量は boundary_h の加算と同じ式 pre·dt/gv(VZ セルは河道セルでない
 !   ので wfrac は掛からない)。上流から流れ込んだ水は回収しない。
@@ -1022,7 +1111,7 @@ subroutine sync_interval(vz, p, s)
   integer :: nk, c, k, z, q, j, jf, isn, kk
   real, allocatable :: buf(:)
   integer, allocatable :: gchg(:)
-  real(real64) :: tot, dv, h, thr
+  real(real64) :: tot, dv, dvb, h, thr, ta, tb
   real(real64), allocatable :: rows(:)
   character(len=512) :: msg
 
@@ -1114,7 +1203,11 @@ subroutine sync_interval(vz, p, s)
     vz%fcum(:,c) = vz%fcum(:,c) + vz%fsum(:,c)
   end do
 
-  ! --- 区画へ集約(上向きの有意な排水は適用外) ---
+  ! --- 区画へ集約(上向きの有意な排水は適用外)。基底流は区間 [ta, tb] の積分を
+  !     排水に加えて出口へ渡す(区間端は s%t と同じ t0 + dt·it の式で、隣の区間と
+  !     継ぎ目が一致する) ---
+  tb = real(p%t0, real64) + real(p%dt, real64) * real(s%it, real64)
+  ta = real(p%t0, real64) + real(p%dt, real64) * real(s%it - nk, real64)
   vz%ovol(:) = 0.0_real64
   do z = 1, vz%nzone
     associate (zz => vz%zones(z), geo => vz%cols(vz%zones(z)%col)%geo)
@@ -1138,12 +1231,17 @@ subroutine sync_interval(vz, p, s)
       end if
       zz%vdrain = zz%vdrain + dv
       zz%dvlast = dv
+      dvb = 0.0_real64
+      if (zz%nbase > 0) then
+        dvb = zz%area * base_integral(zz, ta, tb)
+        zz%vbase = zz%vbase + dvb
+      end if
       if (zz%kind == 2) then
-        zz%vext = zz%vext + dv
+        zz%vext = zz%vext + (dv + dvb)
       else
-        zz%vint = zz%vint + dv
+        zz%vint = zz%vint + (dv + dvb)
         do k = 1, zz%nout
-          vz%ovol(zz%oidx(k)) = vz%ovol(zz%oidx(k)) + zz%ow(k) * dv
+          vz%ovol(zz%oidx(k)) = vz%ovol(zz%oidx(k)) + zz%ow(k) * (dv + dvb)
         end do
       end if
       zz%vstore = zone_storage(vz, z)
@@ -1269,6 +1367,13 @@ subroutine report_zones(vz)
           call par_info(trim(line))
         end do
       end if
+      if (zz%nbase > 0) then
+        write(line, '(a,i0,a,2(f0.1,a,g0.6,a))') "    baseflow: ", zz%nbase, " point(s), from (", &
+              zz%bt(1) / 60.0_real64, " min, ", zz%bq(1) * 3.6e6_real64, " mm/h) to (", &
+              zz%bt(zz%nbase) / 60.0_real64, " min, ", zz%bq(zz%nbase) * 3.6e6_real64, &
+              " mm/h), added at the outlet"
+        call par_info(trim(line))
+      end if
     end associate
   end do
 end subroutine
@@ -1284,8 +1389,10 @@ subroutine open_csv(vz, p)
   character(len=32) :: buf
   if (.not. is_root) return
   open(newunit=vz%un_zone, file=trim(p%dir_result)//"/vz_zone.csv", status='replace')
-  write(vz%un_zone, '(a)') "time(s),zone,column,area(m2),vin(m3),vstore(m3),vdrain(m3)," // &
-                           "vsurface(m3),vexternal(m3),vcorr(m3),residual(m3)"
+  write(vz%un_zone, '(a)', advance='no') "time(s),zone,column,area(m2),vin(m3),vstore(m3),vdrain(m3)," // &
+                                         "vsurface(m3),vexternal(m3),vcorr(m3),residual(m3)"
+  if (vz%have_base) write(vz%un_zone, '(a)', advance='no') ",vbase(m3)"
+  write(vz%un_zone, '(a)') ""
   open(newunit=vz%un_col, file=trim(p%dir_result)//"/vz_column.csv", status='replace')
   write(vz%un_col, '(a)', advance='no') "time(s),column,rate(m/s),F0(m),Fbottom(m)"
   do k = 1, vz%ndep
@@ -1333,7 +1440,7 @@ subroutine save_state(vz, p)
   end do
   do z = 1, vz%nzone
     write(un) vz%zones(z)%vin, vz%zones(z)%vdrain, vz%zones(z)%vint, vz%zones(z)%vext, &
-              vz%zones(z)%vcorr, vz%zones(z)%vstore0, vz%zones(z)%dvlast
+              vz%zones(z)%vcorr, vz%zones(z)%vstore0, vz%zones(z)%dvlast, vz%zones(z)%vbase
   end do
   if (vz%nocell > 0) then
     write(un) vz%ocell(:, 1:vz%nocell)
@@ -1365,7 +1472,12 @@ subroutine restore_state(vz, p)
   open(newunit=un, file=fname, form='unformatted', status='old', action='read', iostat=ios)
   if (ios /= 0) call par_stop("vz: cannot open "//fname)
   read(un) ver, nc, nzn, noc
-  if (ver /= save_version .or. nc /= vz%ncol .or. nzn /= vz%nzone .or. noc /= vz%nocell) then
+  if (ver /= save_version) then
+    close(un)
+    call par_stop("vz: state file format version "//itoa(ver)//" does not match the version this " &
+                  //"executable reads ("//itoa(save_version)//"): "//fname)
+  end if
+  if (nc /= vz%ncol .or. nzn /= vz%nzone .or. noc /= vz%nocell) then
     mismatch = .true.
   else
     do c = 1, nc
@@ -1393,7 +1505,7 @@ subroutine restore_state(vz, p)
   end do
   do z = 1, nzn
     read(un) vz%zones(z)%vin, vz%zones(z)%vdrain, vz%zones(z)%vint, vz%zones(z)%vext, &
-             vz%zones(z)%vcorr, vz%zones(z)%vstore0, vz%zones(z)%dvlast
+             vz%zones(z)%vcorr, vz%zones(z)%vstore0, vz%zones(z)%dvlast, vz%zones(z)%vbase
   end do
   if (noc > 0) then
     allocate(oc(1:2, 1:noc), tmp(1:noc))

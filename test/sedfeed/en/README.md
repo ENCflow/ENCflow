@@ -23,6 +23,7 @@ d50 = 3 mm, morfac = 10 (cseq: suspended sediment 0.2 mm, morfac = 1).
 | feed05 | factor 0.5 | The lowering at the inlet is reduced (not proportionally: once a hole forms at the inlet, the net outflow decreases and so does the supply) |
 | qb | inflow_qb = 0.0005 m³/s (the east edge is a wall) | Source of the bed-load transport rate. Ledger (1 − λ) Σ(z − z0) A = ∫Qb dt × morfac |
 | cseq | f_suspend = 1, inflow_cs_eq = 1 | Equilibrium-concentration feed of suspended sediment. Inflow concentration = C_eq of the inflow cell |
+| nofeed_creep | nofeed + f_creep = 1 (creep_d = 1e-30 m²/s) | Control for the combination with creep. The change made by creep in one update is smaller than the ULP of z, so the bed should be bit-identical to nofeed (developer.md §19.10) |
 
 ## Checks (Check_sedfeed.py)
 
@@ -35,6 +36,19 @@ d50 = 3 mm, morfac = 10 (cseq: suspended sediment 0.2 mm, morfac = 1).
 5. Equilibrium-concentration feed: hs/h in the inflow column agrees within
    ±1 % with the C_eq evaluated by the same formula from τ* of the inflow
    cells.
+6. Combination with creep (nofeed_creep): the bed is bit-identical to nofeed
+   (creep must not count the open-boundary outflow of bed load a second time;
+   before the fix of 2026-10-27 the cells at the east end were scoured by
+   110 m). With creep_d of about 1e-12, the contribution of creep itself
+   (about 1e-7 m) is amplified to 0.16 m by the nonlinear development of the
+   bed degradation, so the control uses a value below the ULP.
+7. Ledger of bed load at open boundaries (developer.md §89.12): in the three
+   configurations without feed or with capacity feed (nofeed, feed1, feed05),
+   the end-of-run "net bed load out through open boundaries (out - in)" (the
+   net solid volume through the open boundaries, with the inflow of the
+   capacity feed subtracted) plus the bed change (1 − λ) Σ(z − z0) A is 0 to a
+   relative 1e-8. The screen output of each configuration is kept in
+   `Screen_<configuration>.log`.
 
 Run_MPI.sh performs the same checks under MPI and checks bit identity with
 save_*_serial (serial and MPI are built with the strict flags and compared;
@@ -44,6 +58,6 @@ save_*_serial (serial and MPI are built with the strict flags and compared;
 
 ```
 make
-./Run.sh            # serial (5 runs, about 4 minutes)
+./Run.sh            # serial (6 runs, about 5 minutes)
 ./Run_MPI.sh 2      # MPI
 ```

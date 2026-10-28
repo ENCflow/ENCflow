@@ -115,7 +115,7 @@ the runoff (`vz_zone.csv`).
 
 | Pattern | Configuration | What to look at |
 |---|---|---|
-| Reproducing the original model (runoff of a small mountain catchment) | whole catchment as one zone, one column, `vz_out_kind = 2`, `dt_vz = 60` | time difference of vdrain in `vz_zone.csv` = runoff. Handle observed baseflow on the side of the comparison plot (do not add it to the model) |
+| Reproducing the original model (runoff of a small mountain catchment) | whole catchment as one zone, one column, `vz_out_kind = 2`, `dt_vz = 60` | time difference of vdrain in `vz_zone.csv` = runoff. To add a baseflow separated from observations as in the original paper, give the zone a baseflow ([Baseflow](#baseflow) below; time difference of vexternal = runoff + baseflow) |
 | VZ for mountains, shallow water flow for channels | split zones by tributary valley and place the outlets at the channel cells at the valley outlets (`vz_out_kind = 1`) | channel discharge (measurement transects). The shallow water flow solves the propagation delay in the channels |
 | Effect of the distribution of soil depth | several zones share the same column (same number in `vz_zone_col`) | differences in response between zones = differences in the distribution of soil depth |
 | Rain with a spatial distribution | `f_vz_rain = 1` (area average within a column) | the input of a zone is the mean rainfall within the column ([Handling of rain](#handling-of-rain) below) |
@@ -222,6 +222,47 @@ the drainage directly to the end of a large catchment also omits the delay in th
 channels, so in large computations place the outlets of the mountain zones at the
 channel cells at the valley outlets and leave the rest to the shallow water flow.
 
+### Baseflow
+
+Tani (2023) separated the baseflow from the observed hydrograph by a straight line
+(joining the start and the end of the runoff; the method of Kadoya (1979) cited in
+the paper) and added the separated baseflow rate to the runoff rate calculated by
+the VZ model before comparing with the observations[^tani2023]. The VZ columns
+represent the component responding to rain, not the baseflow from deeper
+groundwater. To treat it in the same way, give each zone a baseflow time series
+(optional).
+
+```
+&list_vz_zone
+  vz_out_kind(1) = 2
+  vz_base(:,1,1) = 0, 0.1           ! (time (min), baseflow (mm/h))
+  vz_base(:,2,1) = 1440, 0.5
+  !fn_vz_base(1) = 'base1.txt'      ! long series from a file (one line "time (min) mm/h")
+/
+```
+
+- The rate is in **mm/h per zone area** (the same unit as the runoff rate). Pairs of
+  time (min) and value are linearly interpolated, and the end values are held outside
+  the range (the same convention as the time series of the boundary conditions). Two
+  points at the same time make a step. A series whose time decreases and negative
+  values stop the run. The namelist takes up to 100 points per zone; give a long
+  series with `fn_vz_base(z)` (relative to `dir_data`). A file takes precedence over
+  the namelist values.
+- At every synchronisation interval (`dt_vz`), the integral of the piecewise-linear
+  series over the interval × zone area is added to the drainage and passed to the
+  outlet. With `vz_out_kind = 1` it is added to the depth of the outlet cells by the
+  same ratios as the drainage; with `= 2` it is added to the outflow from the system.
+- The baseflow is a quantity given from outside and is not included in the VZ
+  storage or the balance residual of the columns and zones. The baseflow of
+  `vz_out_kind = 1` increases S_total as an input to the system; the baseflow of
+  `= 2` goes from outside the system to outside the system and does not appear in
+  S_total.
+- The separation of the baseflow (which line to draw) is the user's preprocessing.
+  ENCflow only adds the given series at the outlet and makes no judgement on the
+  separation method. Solving the baseflow from groundwater storage belongs to the
+  groundwater model ([Groundwater](gwflow.md)), which cannot be combined with VZ in
+  the first version ([Scope and restrictions on combinations](#scope-and-restrictions-on-combinations)).
+
 ### Synchronisation and time step
 
 Every `dt_vz` the columns are advanced with the rain of each step of the interval
@@ -242,26 +283,31 @@ step, at a cost of three or more backward Euler steps per column per step.
   recovered and waiting for the next synchronisation). Watching the conservation
   of S_total checks the water balance including VZ. S_total decreases by the
   outflow from the system (`vz_out_kind = 2`). The VZ storage is a different
-  quantity from the groundwater `hg` and is not in the Hg distribution output.
+  quantity from the groundwater `hg` and is not in the Hg distribution output. The
+  baseflow of a zone increases S_total only by the part passed to surface cells
+  (`vz_out_kind = 1`) (the baseflow of a zone flowing out of the system goes from
+  outside to outside and does not appear in S_total).
 
 **Time series** (`result/`, at `dt_recrd` intervals)
 
 | File | Contents |
 |---|---|
-| vz_zone.csv | cumulative water volumes per zone (m³): vin (top input of the column × zone area), vstore (current VZ storage), vdrain (drainage of the zone), vsurface (transfer to surface cells), vexternal (outflow from the system), vcorr (correction setting rounding-size negative drainage to 0), residual (balance residual = vstore − vstore₀ − vin + vdrain − vcorr) |
+| vz_zone.csv | cumulative water volumes per zone (m³): vin (top input of the column × zone area), vstore (current VZ storage), vdrain (drainage of the zone), vsurface (transfer to surface cells), vexternal (outflow from the system), vcorr (correction setting rounding-size negative drainage to 0), residual (balance residual = vstore − vstore₀ − vin + vdrain − vcorr). When a zone has a baseflow, vbase (baseflow) is added as the last column, and vsurface and vexternal are drainage + baseflow |
 | vz_column.csv | per column: latest top flux (m/s), cumulative top input F0 and bottom flux (m), cumulative drainage D and storage S at each depth of `vz_out_depth` (m), diagnostics of the internal steps (accepted, rejected, iterations, latest step) |
 | vzprof_<column>_<number>.csv | with `f_vz_outprof = 1`, the vertical profile of each column at the distribution output times (`dt_file`) (ψ, θ, K at layer centres and the cumulative flux at the bottom of each layer) |
 
 The runoff of a zone [m³/s] is the time difference of vdrain divided by the
-recording interval. The residual is the accumulation of the residuals of the
+recording interval (the outlet volume including the baseflow is the time
+difference of vsurface or vexternal). The residual is the accumulation of the residuals of the
 nonlinear iteration; check that it is well below `vz_mb_rate` × elapsed time ×
 area.
 
 **Screen**: at initialisation a zone table is shown (number of cells, area,
-minimum/mean/maximum soil depth, outlets and ratios of each zone).
+minimum/mean/maximum soil depth, outlets and ratios, and the number of points and
+the first and last values of the baseflow of each zone).
 
 **Restart**: the column states (ψ), the internal step, the cumulative diagnostics
-and the carry-over of the outlets are saved to and restored from `vzflow.dat`.
+(including the baseflow) and the carry-over of the outlets are saved to and restored from `vzflow.dat`.
 When saved at a synchronisation time (a step that is a multiple of `dt_vz`), the
 computation after the restart is bit-identical to the continuous run. When a run
 ending in the middle of an interval is saved, the rest is synchronised before
@@ -350,6 +396,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | vz_out_kind(z) | none | outlet 1: surface cells / 2: out of the system | **given** required |
 | vz_out_cell(1:2, k, z) | none | outlet cells (i, j) (up to 99) | **given** required for vz_out_kind = 1 |
 | vz_out_w(k, z) | 1 (one cell) | distribution ratios of the outlets (sum 1) | **given** required for several cells |
+| vz_base(1:2, k, z) | none (no baseflow) | baseflow time series (time (min), mm/h; per zone area; up to 100 points) | **given** e.g., values separated from observations (user's preprocessing) |
+| fn_vz_base(z) | none | baseflow time series file (one line "time (min) mm/h"; takes precedence over vz_base) | **given** |
 
 **Hints for revisiting the defaults**
 
@@ -468,7 +516,11 @@ S_e for ψ = −1 cm to −100 m, and the largest ratio of K where K_r ≥ 10⁻
   system. `Check_vzzone.py` tests receiving-cell depth = transfer by the ratios +
   rain, the total amount of surface water, the S_total balance, bit-identical
   responses whether a column is shared or duplicated, a rain distribution with
-  area averaging, the stop of the strict mode, and agreement of save → restart.
+  area averaging, the stop of the strict mode, agreement of save → restart, and the
+  baseflow of zones (the cumulative baseflow agrees with the exact integral of the
+  piecewise-linear series × area, the VZ side is bit-identical to the run without
+  baseflow, outlet volume = drainage + baseflow, the balances of the receiving cells
+  and S_total, save → restart, and the stop for a series whose time decreases).
 - [examples/vz_tani2023](../../../examples/vz_tani2023/en/README.md): an example
   that recomputes with the same settings all seven computations of Tani (2023)
   (HYDRUS-1D) and compares them with the calculated runoff rates of the paper
@@ -478,9 +530,11 @@ S_e for ψ = −1 cm to −100 m, and the largest ratio of K where K_r ≥ 10⁻
   90 % of the points in the range of large runoff are within 5 to 22 % of the values
   calculated in the paper, and the peaks differ by at most 2.3 %. Pressure heads are
   also compared: for TY2, KI1 and KI2 the arrival times of the wetting front agree
-  within ±0.8 h at all depths from 0.1 to 3 m (+1.5 h at 2 and 3 m of KI2). The
-  numbers of the paper are extracted from the figures of the PDF obtained by the user
-  (not shipped).
+  within ±0.8 h at all depths from 0.1 to 3 m (+1.5 h at 2 and 3 m of KI2). For KI2
+  the straight line joining the first and last observations is given to the model as
+  the baseflow and compared with the values calculated in the paper (with the
+  separated baseflow added). The numbers of the paper are extracted from the figures
+  of the PDF obtained by the user (not shipped).
 - The results are bit-identical regardless of the number of MPI processes (every
   rank computes the columns identically, and only the owning rank adds to an
   outlet).

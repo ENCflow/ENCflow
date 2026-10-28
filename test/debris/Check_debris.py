@@ -16,6 +16,9 @@
 #     (4) 水台帳: |Σh − 降雨総量 + λ・s_b・Σdz| < TOL_SUM
 #   を検定する(間隙水連行の反対称交換の帰結。閉領域・クランプ不発火が
 #   前提。降雨総量・s_b は param_tkwet.txt と対で保守する)。
+#   fluv モード(構成5 = param_fluv.txt。土石流 E-D + 掃流砂): 地形を転置した
+#   斜面(20 × 60、y < 40 m で tanθ = 0.4。make_fluv.py と対)、sd0 = 2 mm に
+#   替えて (1)〜(3) を検定する((3) は斜面 y < 40 m の侵食と下流の平坦部の堆積)。
 import sys, struct
 
 SD0, PORO = 5.0, 0.4
@@ -61,8 +64,23 @@ def z0_of(idx):
     return ST * (XB - x) if x < XB else 0.0
 
 
+def upslope(idx):
+    """斜面部(遷緩点より上流)のセルか"""
+    return (idx % NX + 1) < 30
+
+
 savedir = sys.argv[1]
 mode = sys.argv[2] if len(sys.argv) > 2 else "tk"
+if mode == "fluv":
+    # 構成5: 転置した斜面(make_fluv.py の NX・NY・ST・YB と対)と薄い可動層
+    NX, NY, SD0, YB = 20, 60, 0.002, 40.0
+
+    def z0_of(idx):
+        y = (idx // NX + 1 - 0.5) * DX
+        return ST * (YB - y) if y < YB else 0.0
+
+    def upslope(idx):
+        return (idx // NX + 1 - 0.5) * DX < YB
 with open(savedir + "/state.dat", "rb") as f:
     ntot = NX * NY
     h = read_rle_array(f, ntot)
@@ -75,9 +93,9 @@ with open(savedir + "/state.dat", "rb") as f:
 dz = [zi - z0_of(idx) for idx, zi in enumerate(z)]
 solids = sum(hs) + (1.0 - PORO) * sum(dz)
 max_ident = max(abs((sdi - SD0) - d) for sdi, d in zip(sd, dz))
-ero = min(dz[idx] for idx in range(ntot) if (idx % NX + 1) < 30)
-dep = max(dz[idx] for idx in range(ntot) if (idx % NX + 1) >= 30)
-arr = max(hs[idx] for idx in range(ntot) if (idx % NX + 1) >= 30)
+ero = min(dz[idx] for idx in range(ntot) if upslope(idx))
+dep = max(dz[idx] for idx in range(ntot) if not upslope(idx))
+arr = max(hs[idx] for idx in range(ntot) if not upslope(idx))
 
 ok1 = abs(solids) < TOL_SUM
 ok2 = max_ident < TOL_SD

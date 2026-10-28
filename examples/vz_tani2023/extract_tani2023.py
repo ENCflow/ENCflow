@@ -23,6 +23,8 @@ KI1 = 図−16、KI2 = 図−17。事例ごとに次を書き出す:
                   ずらしと、MREX の蒸発散の差し引き(RAIN_FACTOR)を適用)
   psi_<EV>.csv    圧力水頭・水理水頭の曲線(論文の計算値と、TY1・MREX は観測値)。
                   深さごとの (時刻, 値)。図の枠の上下端で切られた点は clipped = 1
+  base_<EV>.txt   ENCflow に与える基底流の時系列(fn_vz_base。1 行「時刻(分) mm/h」。
+                  BASEFLOW の事例 = KI2 だけ)
   meta_<EV>.json  時刻の基準と表−1 との照合結果
 
 時刻は図の時間軸の左端からの時間 (h)。日付の軸は日界の目盛り(0 時)から較正し、
@@ -178,6 +180,14 @@ RAIN_SHIFT_H = {"KIEX": 0.0, "MREX": 0.0, "MR1": -0.5, "TY1": +0.5, "TY2": -0.5,
 # 降雨に掛ける係数(論文 Ⅳ.1: MREX は降雨強度の 20 % を蒸発散として差し引いた強度を
 # 地表面の境界条件とした)
 RAIN_FACTOR = {"MREX": 0.8}
+
+# ENCflow に与える基底流(事例 → 観測の記号の名前)。論文は観測から分離した基底流
+# (流出の立ち上がりと終わりを直線で結ぶ。論文 Ⅲ.1、角屋 1979)を計算値に加えたが、
+# 分離線は図から復元できない。近似として、観測の最初と最後の記号を結ぶ直線
+# (範囲外は端の値)を base_<EV>.txt に書き、param_<ev>.txt の fn_vz_base でモデルに
+# 与える。KI2 だけ(図の終わりで流出が基底流に近く、差 論文 − ENCflow が時間にほぼ
+# 比例して増える。README の結果の節)
+BASEFLOW = {"KI2": "Qb"}
 
 # 圧力水頭・水理水頭の図の読み取り仕様。曲線は深さごとに線種(実線・破線・点線・
 # 一点鎖線・二点鎖線)で描き分けられ、同じ線幅の曲線どうしも PDF の描画順(深さの
@@ -595,6 +605,8 @@ def extract(pdf, ev, spec, outdir):
             k += 1
             f.write("  prval(1:2,%d) = %.2f, %.4f\n" % (k, b - 0.01, r))
         f.write("/\n")
+    if ev in BASEFLOW:
+        write_baseflow(outdir, ev, obs, BASEFLOW[ev])
     meta = dict(event=ev, figure=spec["figure"], pdf_page=spec["page"], t0=t0_label, t_end_h=t_end,
                 rain_total_mm=total, rain_max_mmh=rmax, checks=spec["checks"], n_rain_bars=len(rain),
                 n_prval=k, rain_shift_h=shift, rain_factor=factor, runoff_unit=qs["unit"],
@@ -602,6 +614,15 @@ def extract(pdf, ev, spec, outdir):
     with open(os.path.join(outdir, "meta_%s.json" % ev), "w") as f:
         json.dump(meta, f, indent=1, ensure_ascii=False)
     print("  time 0 = %s, end = %.1f h, prval points = %d (max 999)" % (t0_label, t_end, k))
+
+
+def write_baseflow(outdir, ev, obs, name):
+    """観測 name の最初と最後の記号を結ぶ直線を base_<EV>.txt に書く(時刻は分、mm/h)"""
+    pts = sorted((t, q) for n, t, q, _ in obs if n == name)
+    (t0, b0), (t1, b1) = pts[0], pts[-1]
+    with open(os.path.join(outdir, "base_%s.txt" % ev), "w") as f:
+        f.write("%.4f %.6g\n%.4f %.6g\n" % (t0 * 60.0, b0, t1 * 60.0, b1))
+    print("  baseflow: %.3g mm/h at %.2f h to %.3g mm/h at %.2f h (base_%s.txt)" % (b0, t0, b1, t1, ev))
 
 
 def main():

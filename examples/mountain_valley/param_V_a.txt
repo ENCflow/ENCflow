@@ -1,0 +1,81 @@
+!======================================================================
+! examples/mountain_valley 構成 V_a: 斜面の風化・クリープなし(渓流は自分の剥離物だけを運ぶ)
+!   make_init.py が生成(定数は make_init.py・plot_results.py と対で保守)。暦の時間 0〜200000 年
+!   (出水の時間 = 暦の時間 × 300 s/年、流れの時間 = 出水の時間 / morfac)
+!======================================================================
+&list_sysparam
+  dt = 0.5
+  t0 = 0.0
+  tt = 600000.0
+  dt_disp = 30000.0
+  dt_file = 30000.0
+  dt_recrd = 30000.0
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result_V_a'
+  dir_save = 'save_V_a'
+  f_state_save = 1
+  f_check_cfl = 1
+  f_output_mode = 2         ! bil(単精度)
+  f_out_z = 1
+  f_out_vv = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'h_init.txt'   ! 渓流は初期勾配の等流水深
+  v0 = 1.143263             ! 等流流速(南向き = j の増える向き)
+/
+
+&list_geoinfo
+  lx = 44.0
+  ly = 200.0
+  nx = 11
+  ny = 50
+  f_ztype = 1
+  fn_z = 'z_init.txt'       ! 裸岩の V 字(谷底の勾配 0.04、斜面の勾配 0.25)
+  f_rntype = 0
+  rn0 = 0.04
+  f_sdtype = 1
+  fn_sd = 'sd_zero.txt'     ! 裸岩から
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0         ! 毎ステップ更新
+  morfac = 100.0            ! dts = 50 s(出水の時間)
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.03
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+  f_rockinc = 1
+  rock_kp = 8.90e-08          ! 剥離の速度係数 (m/s。出水中の値)
+  rock_tauc = 10.0
+  rock_m = 1.5
+  rock_beta = 6.60e-04       ! 研磨係数 (1/m)
+  rock_hstar = 0.2          ! 被覆の長さ H* (m)
+  fn_rock = 'rock_base.txt' ! 出口の行は侵食しない(基準面)
+  ! 斜面の風化・クリープなし(構成 V_a)
+  f_uplift = 1
+  uplift0 = 10519.2000       ! 隆起 (mm/yr) = 0.1 mm/yr / i_f
+  fn_uplift = 'up_base.txt'
+/
+
+&list_bound_edge
+  f_bc_s = 1                ! 南辺は自由流出(出口)
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 6, 1
+  inflow_val(1:2,1,1) = 0, 0.5
+  inflow_val(1:2,2,1) = 1e9, 0.5
+  inflow_dist(1) = 0
+/

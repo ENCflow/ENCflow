@@ -3,6 +3,10 @@
 !
 !   設定は KI1 と同じ(論文 Ⅳ.3)。初期条件 ψ = −100 cm は Katsura et al. (2014) の
 !   観測による。降雨は図−17 から extract_tani2023.py が生成。
+!   基底流: 論文は観測から分離した基底流を計算値に加えた(Ⅲ.1)。分離線は図から復元
+!   できないので、観測の最初と最後を結ぶ直線(extract_tani2023.py が base_KI2.txt に
+!   生成)を区画の基底流として与える(vz_zone.csv の vbase。出口の vexternal は
+!   排水 + 基底流)。排水の 1/2 を流出とする配分は比較時(compare_tani2023.py)。
 !======================================================================
 &list_sysparam
   f_gridsystem = 0          ! 格子システム(0:ENC)
@@ -66,4 +70,5 @@
 
 &list_vz_zone
   vz_zone_col(1) = 1, vz_out_kind(1) = 2    ! 排水は系外へ(流出への配分 1/2 は比較時)
+  fn_vz_base(1) = '../base_KI2.txt'         ! 基底流 (時刻(分) mm/h。dir_data 起点。extract_tani2023.py が生成)
 /

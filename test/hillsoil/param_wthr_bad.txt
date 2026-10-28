@@ -1,0 +1,54 @@
+!======================================================================
+! hillsoil: 負の倍率の停止(構成 wthr_bad。W1)
+!   param_wthr_map.txt の倍率の分布を、1 セル(i = 4, j = 11)だけ負にした wmap_bad.txt に
+!   替える。初期化で「fn_wthr must be >= 0」で停止すること(MPI では負のセルを持つ
+!   ランクだけが検出し、全ランク集約の判定で全ランクが同じ停止に入る)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 1.0
+  t0 = 0
+  tt = 100
+  dt_disp = 50
+  dt_file = 100
+  dt_recrd = 100
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_result = 'result_wthr_bad'
+  dir_save = 'save_wthr_bad'
+  f_state_save = 1          ! 終了時の状態を保存(Check_hillsoil.py が z・sd を読む)
+  f_check_cfl = 0
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 乾いた台地
+/
+
+&list_geoinfo
+  lx = 8.0
+  ly = 12.0
+  nx = 8
+  ny = 12
+  f_ztype = 0
+  z0 = 10.0
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 1
+  fn_sd = 'sdinit.txt'      ! 初期の土層厚(make_init.py sd0)
+/
+
+&list_geomorph
+  dt_geomorph = 0.0         ! 毎ステップ更新
+  morfac = 1.0e10           ! dts = 1e10 s(風化だけなので刻みの制約はない)
+  f_wthr = 1                ! 基岩風化 = 土層生成
+  wthr_p0 = 50.0            ! 裸岩での土層生成速度 (mm/kyr)
+  wthr_sdstar = 0.5         ! 生成の減衰深 sd* (m)
+  fn_wthr = 'wmap_bad.txt'  ! 1 セルだけ負(make_init.py wbad)= 初期化で停止すること
+/
