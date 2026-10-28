@@ -833,8 +833,8 @@
     {
       "source": "examples/debris_bedrock/README.md",
       "target": "examples/debris_bedrock/en/README.md",
-      "source_sha256": "25ee45ddadeb5dfde48728efdfc34c9a0f280c581bc5f7d8b656cb9d656bba3d",
-      "target_sha256": "dc568d87ff51c4887f1a2133f280831d26a0fad115c5db2f4729681298379a3e",
+      "source_sha256": "2d8d43e7bcb57c3a6b132ea8cbcf21e79eabcf1cd772f7b7fe7c7e7997747d71",
+      "target_sha256": "c623560476967f911f77775fd4cdf16bdee40892fd03131834fc45b4133316c0",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-28"

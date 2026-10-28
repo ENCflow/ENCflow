@@ -245,10 +245,20 @@ python3 plot_long.py | tee analysis_long.txt  # figures and tables (python3 plot
   between slopes 0.25 and 0.30; the debris-flow equilibrium slope 0.256 lies in between and E(S) bends
   there).
 - In the grey zones (30 m from the head and 30 m above the base level), steps with a period of two cells
-  (the slope alternates between neighbouring intervals) grow over thousands of years. In a trial of the
-  0.28 configuration with floods only (no debris flows), they also grew to 16 m from the head in 4530
-  years. It is a grid-scale oscillation starting from the inflow and base-level boundaries; its cause has
-  not been investigated (developer.md §88.22).
+  (the slope alternates between neighbouring intervals) grow over thousands of years. They are steps at
+  the grid scale with two causes (developer.md §88.23).
+  - The flow-direction bed slope used for erosion by debris flows is a central difference
+    (z_{j−1} − z_{j+1}) / 2Δy, which cannot see a two-cell undulation. The debris flow is shallower over
+    the bumps, so the bumps erode less and a two-cell undulation grows by about 3 % per debris flow.
+  - The seeds are at the boundaries. The edge depth at the inflow face of a segment inflow has a floor at
+    the critical depth (to avoid blow-up when flowing onto a dry bed); in supercritical flow the velocity
+    of the inflow cell is 21 % lower and floods do not pluck it, so the inflow cell remains as a step.
+    Near the base level, the junction with the non-eroding row and the adjustment front act as seeds.
+
+  With a scratch executable that removes both (the code in the repository is unchanged), no steps appeared in 4530 years and
+  the slope of the whole channel matched the 1-D prediction. Plucking under supercritical flow is itself
+  unstable to short undulations in the equations (the flow is deeper and slower over bumps), but in the
+  chained runs of this example it grows slowly and is not the cause of the steps.
 
 ### Why one cell across and an outfall
 
@@ -286,7 +296,7 @@ python3 plot_long.py | tee analysis_long.txt  # figures and tables (python3 plot
 - The channel of the second half is one cell across, so changes of channel width and cross-section are
   not represented (with 5 cells the flow gathers to the grid width; "Why one cell across and an
   outfall"). Near the head and the base level, steps with a period of two cells grow over thousands of
-  years of chained runs.
+  years of chained runs ("Check with uplift" above; causes in developer.md §88.23).
 
 ## Related documents
 
