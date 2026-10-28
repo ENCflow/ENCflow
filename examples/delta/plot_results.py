@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # examples/delta の図化: 堆積厚(Z − Z0000)の時間発展、最終地形・水深・流速・泥割合、
-#   デルタ体積と前進距離の時系列。使い方: python3 plot_results.py <case>(base|baseqb|sand|mud|varq|fix|wave)
+#   デルタ体積と前進距離の時系列。使い方: python3 plot_results.py <case>(base|baseqb|sand|mud|varq|fix|wave|wfsed)
 #   result_<case>/ を読み、fig_<case>_evolution.png・fig_<case>_final.png・fig_<case>_timeseries.png と
 #   timeseries_<case>.csv を書く。python3 plot_results.py <case> en で英語ラベル版の PNG を en/figs/ に書く
 #   (basename は同じ。timeseries_<case>.csv はケース直下のまま)。
@@ -45,8 +45,8 @@ def pget(key, default):
 DX = pget("lx", 1000.0) / pget("nx", 200.0)
 MORFAC = pget("morfac", 100.0)
 DT_FILE = pget("dt_file", 3600.0)
-LCH = {"base": 150.0, "baseqb": 150.0, "wave": 150.0}.get(case, 200.0)
-ZSEA = {"base": -2.0, "baseqb": -2.0, "wave": -2.0}.get(case, -1.5)
+LCH = {"base": 150.0, "baseqb": 150.0, "wave": 150.0, "wfsed": 150.0}.get(case, 200.0)
+ZSEA = {"base": -2.0, "baseqb": -2.0, "wave": -2.0, "wfsed": -2.0}.get(case, -1.5)
 
 frames = []
 fn = os.path.join(d, "FILENUMBER.csv")

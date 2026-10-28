@@ -49,6 +49,7 @@ procedure is in "River-mouth deltas" of
 | fix | param_fix.txt | same | same | same + fixation (c_τ 3, T_fix 100 h, submerged decay T_dec 50 h, bank coefficient 0.5) + bank-erosion law | 4000 h | 1.5 h |
 | baseqb | param_baseqb.txt | same as base | same | constant. Sand as a fixed feed of 0.00715 m³/s (the actual mean of base); the channel within the land is non-erodible | 1500 h | 1 h |
 | wave | param_wave.txt | same | same | baseqb + offshore waves H₀ 0.6 m, T 6 s, direction of travel 150°; shoreline-orientation smoothing length wave_lsm 10 m; river-mouth rule wave_vmax 0.5 m/s | 1500 h | 1 h |
+| wfsed | param_wfsed.txt | same | same | baseqb + coastal wave field (offshore waves H_m0 0.6 m, T 6 s, direction of travel 150°, directional spreading 20°, action of the current on the waves) and process-based sediment transport (f_wfsed). The north and south sides are walls for the flow and lateral Neumann for the waves | 1500 h | about 5 h (2 threads, run alongside other jobs; for reference) |
 
 ## Running
 
@@ -166,6 +167,52 @@ test/wave_shore (linear theory of a straight shoreline) and test/wave_river
 ![Incidence angle 45°](../figs/wave_a45_evolution.png)
 ![Capacity feed](../figs/wave_capfeed_evolution.png)
 
+**Coastal wave field (V12)** (figures `figs/wfsed_evolution.png`, `figs/wfsed_final.png`; the coastal
+wave field fn_wavefield and process-based sediment transport f_wfsed, developer.md §88 and
+docs/wavefield_plan.md, Japanese): the case wfsed gives the same river, feed and waves as wave, not
+through the CERC-type longshore transport (fn_wave) but through the coastal wave field, which resolves
+the waves, and process-based sediment transport. The offshore waves (H_m0 = 0.6 m, T = 6 s, direction of
+travel 150°, directional spreading 20°) enter from the east side; the wave field gives refraction,
+breaking and the shadow of the delta itself, and the change of waves by currents (`f_wf_current = 1`)
+gives the blocking of the waves by the river-mouth jet (the counterpart of the rule wave_vmax of wave).
+The wave-driven flow (radiation stress with the roller, GLM and wave–current friction; `wf_flow = 2`)
+drives a northward longshore current, and sand and mud are stirred by the orbital velocity and carried by
+the Eulerian mean velocity and the onshore velocity of wave skewness and asymmetry. The north and south
+sides are lateral Neumann for the waves and walls for the flow (as in wave; a lateral Neumann boundary
+of the flow becomes unstable at the side where the longshore current enters; developer.md §88.16,
+Japanese).
+
+| Landform 1500 h | wfsed (coastal wave field) |
+|---|---|
+| Deposit (bulk) | 147×10³ m³ (sand 64×10³ m³ = nearly all of the feed; mud 83×10³ m³ = 61 % of the supply) |
+| Emerged land (h < 0.05 m) | 4.1×10³ m² |
+| Shallows (h < 0.5 m) | 20.6×10³ m² |
+| Maximum land advance from the river mouth | 142 m |
+| Fraction of the deposit north of the channel axis | 0.55 (sand 0.52) |
+
+(Totals of `python3 plot_results.py wfsed`, with the sand/mud and north/south split computed from the final
+Z, Sf and H. The emerged land and the shallows are the areas of cells seaward of the river mouth.)
+
+Whereas in wave (CERC) a spit extended downdrift (north) from the mouth bar and the emerged land
+reached 31.6×10³ m², with the process-based transport of the wave field the sand spreads in front of the
+mouth as a shallow arcuate platform about 450 m alongshore and 180 m seaward, and the emerged land stays
+at 4.1×10³ m² (the crests of the bars on both sides of the mouth). The shallows keep spreading with time
+(from 5.5×10³ m² at 900 h of landform time to 20.6×10³ m² at 1500 h), and the skew to the north
+(downdrift) is small. The phase-averaged waves stop short of the shoreline and there is no swash-zone
+transport (the process that builds up beaches and berms), so the sand stays in the shallows and hardly
+becomes land (see "Scope and restrictions on combinations" in [coastal wave
+field](../../../docs/en/users_guide/wavefield.md)). The waves keep the mud from settling: it spreads over the
+whole basin as a thin layer (7 cm on average for x > 500 m), 22 % of the supply is still suspended in the
+water at the end, and the remaining 17 % left through the open east side (in base 97 % of the supply is
+deposited). Whether the shallow platform becomes land depends on swash-zone processes, so read any
+discussion of the shoreline shape together with wave (CERC). The diagonal stripes offshore in the final
+velocity panel are a grid-scale oscillation of the velocity that grows with time (a grid-scale deviation
+of 0.01 m/s at 3.3 h of hydraulic time and a maximum |V| of 0.15 m/s at 15 h; the water level is smooth,
+with grid-scale deviations below 0.1 mm); its cause has not been investigated (docs/handoff.md, Japanese).
+
+![Evolution with the coastal wave field](figs/wfsed_evolution.png)
+![Final landform with the coastal wave field](figs/wfsed_final.png)
+
 ## Findings and notes
 
 - **Symmetry breaking**: there is no random number and the computation is
@@ -189,7 +236,9 @@ test/wave_shore (linear theory of a straight shoreline) and test/wave_river
 - **Domain**: so that asymmetrically growing realizations do not reach the
   walls, 1500 m seaward of the mouth and at least ±1300 m sideways (mud is
   wide for that reason).
-- Tidal currents, the buoyancy of the freshwater plume and the consolidation of mud are not included. Waves act only through the longshore transport (refinement of stirring and sheltering has not been started).
+- Tidal currents, the buoyancy of the freshwater plume and the consolidation of mud are not included. The
+  waves of fn_wave (wave) act only through the longshore transport; stirring, sheltering and wave-driven
+  flow with resolved waves are in the coastal wave field case (wfsed).
 - With executables before 2026-10-21, the avalanching and bank-erosion
   volumes in the warning at the end of the run included the "virtual flux"
   of the walls of the non-erodible land (the terrain is correct;
@@ -205,3 +254,9 @@ test/wave_shore (linear theory of a straight shoreline) and test/wave_river
 - Secondary flow on/off → `f_secflow = 1`, `sec_nstar = 7` (the values of examples/meander).
 - River-to-wave ratio R → `inflow_qb` (fixed feed) and `wave_h0`, `wave_t`. Shoreline-orientation smoothing length → `wave_lsm` (2Δx to 1/4 of the surf-zone width). Incidence angle → `wave_dir`
   (within ±22.5° of head-on to the channel axis is not allowed; 45° is the threshold of the high-angle instability. See the header of param_wave.txt).
+- The coastal wave field case → offshore waves `wf_hm0`, `wf_trep`, `wf_dir`, `wf_spread`; the coefficients of
+  the onshore velocity `wfsed_facsk`, `wfsed_facas`; horizontal mixing by wave breaking `wf_break_visc`
+  (&list_enc); stirring by breaking turbulence `f_wfsed_turb` ([coastal wave
+  field](../../../docs/en/users_guide/wavefield.md)). Avoid making the north and south sides lateral Neumann for
+  the flow: the flow diverges when it becomes non-uniform near the side where the longshore current enters
+  (developer.md §88.16, Japanese).

@@ -432,6 +432,18 @@ concentration of the mirror cell, and bed load takes the flux of the face one ce
 along the side normal (all zero gradient; a coast that is uniform alongshore stays uniform as
 the bed changes; test/wfsed).
 
+However, the lateral Neumann boundary of the flow **can diverge when the flow near the side
+where the longshore current enters becomes non-uniform alongshore** (near a river mouth, a
+delta or a structure, with the change of waves by currents `f_wf_current = 1`, or with bed
+changes): the inflow keeps strengthening (the advection term of the boundary face copies the
+value of the face one cell inward, so only the bed friction restrains advection that
+accelerates the inflow; developer.md §88.16). Place the sides on a stretch where the flow,
+the topography and the waves are uniform alongshore. When that is not possible (a delta or a
+river mouth inside the domain with the sides close to it), make the sides walls for the flow
+(`f_bc_*` = 0) and lateral Neumann for the waves (the longshore current then rises from the
+wall on the inflow side and turns offshore at the wall on the other side; param_wfsed.txt of
+examples/delta).
+
 ## Change of waves by currents (f_wf_current, stage W3)
 
 With `f_wf_current = 1`, the shallow water flow (river flow, tidal currents, rip currents,
@@ -698,7 +710,9 @@ approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storag
   the bed only (pick-up by breaking-induced turbulence can be added with `f_wfsed_turb = 1`).
   There is no horizontal diffusion of suspended load. Transport in the swash zone is not represented (the
   phase-averaged waves stop before the shoreline; dune slumping is the angle-of-repose
-  collapse `f_repose`). There is one representative grain size each for bed load and
+  collapse `f_repose`). Sand therefore stays in the shallows and hardly becomes land; in the
+  delta example the emerged land is smaller than with the CERC type (fn_wave) (wfsed of
+  examples/delta). There is one representative grain size each for bed load and
   suspended load. The balance between the undertow and the onshore velocity that decides
   between beach erosion and recovery is sensitive to the coefficients f_Sk and f_As
   (calibration quantities).
@@ -726,7 +740,9 @@ approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storag
   directional spreading or increase the number of bins.
 - **A lateral Neumann side** treats the same coast as continuing outside. If the topography
   changes alongshore near a side, or a structure touches a side, keep the area of interest
-  well away from the sides.
+  well away from the sides. The lateral Neumann boundary of the flow can diverge when the
+  flow near the side where the longshore current enters becomes non-uniform alongshore
+  ([lateral boundaries](#lateral-boundaries-f_bc--3)).
 - **Sea-mask cells (sw) are outside the wave domain.** Represent the offshore by ordinary
   cells with sea-bed topography and place the incident boundary on the outer sides.
 - **It cannot be combined with the STG grid or with nesting** (the run stops at the start).

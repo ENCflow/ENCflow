@@ -158,8 +158,8 @@
     {
       "source": "docs/users_guide/boundary.md",
       "target": "docs/en/users_guide/boundary.md",
-      "source_sha256": "b8db5d34d660c2f96899f9cca72e45869715c7db31993adfc3860723195675ab",
-      "target_sha256": "afeb15c0f2550a1a7bb660cac66a2ad49d3874aefbbad27a7ead5d071827459e",
+      "source_sha256": "3d7ecf7561e77c54a52830a4ce6264410fa1a7c111c4a0585852b21581c897e6",
+      "target_sha256": "05c047ea2ab6145690d93be905832649462d1229d94c76792a15160ec2539d6f",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-28"
@@ -509,8 +509,8 @@
     {
       "source": "docs/users_guide/wavefield.md",
       "target": "docs/en/users_guide/wavefield.md",
-      "source_sha256": "850985511d25fcf54c973fe400038c663fee20886ef1caa55fb53401ce5adeb7",
-      "target_sha256": "fff45b294b440eb37254f7279cf099d609423d627ce0702936b3fa36095a36fb",
+      "source_sha256": "0975a28cd09d24dc8bbe7e8fcf2be6bdfa7c6b6c43db88792a37e91277011836",
+      "target_sha256": "6c5c346be56fe2631b95405ebff1665ffa94bc127841cc80e64b38a46a5fe6f8",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-28"
@@ -842,11 +842,11 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "7606d3be97c776a57084fe5be7516f1e29efb9e5eaefc06c70814e37d4cc6b42",
-      "target_sha256": "281cf8b71f1b5a0ec66330a68a6d8d90be048a4a8e890a8fa0c128d8abcb7e77",
+      "source_sha256": "3f9acf96aca3caf2526f3eae97a22fd3ed2655cdb07d84286e2fefcca4c09613",
+      "target_sha256": "c92600687be312955730d1c34a1115f8f6c1380033ad9ade717d543ace3b7cda",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-28"
     },
     {
       "source": "examples/karst/README.md",
