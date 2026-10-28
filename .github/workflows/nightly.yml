@@ -4,7 +4,8 @@
 #     full-serial : release 逐次で reference 全 19 ケース(chichibu 含む)
 #                   +トップレベル make(utils の追随漏れ検出。developer.md §10)
 #     full-mpi    : release MPI np=1,2,4 で逐次 reference と照合
-#                   (sewer_wq は Run スクリプト側で RTOL=1e-5。developer.md §10)
+#                   (sewer_wq は Run スクリプト側で RTOL=1e-5。developer.md §10。
+#                    wfcurrent・wfsed は ULP=1・RTOL=1e-6。developer.md §90.18)
 #     debug-fcheck: -Og -fcheck=all ビルドで全ケースを実行し、
 #                   debug 逐次 reference と MPI np=2 のビット一致を検査
 #                   (確保範囲・FPE の実行時検査。developer.md §10)

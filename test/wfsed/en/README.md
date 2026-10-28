@@ -11,7 +11,10 @@ mean velocity u^E), and of stage W5 (the onshore transport velocity u_a of wave 
 asymmetry). The results are compared with the shear stress, equilibrium concentration and
 transport of Soulsby (1997) and the u_a of Ruessink et al. (2012) assembled independently from
 the model output, with the conservation of sediment and with the CERC longshore transport, and the results of `param.txt`
-are also compared with the reference Log.txt, wavefield.csv, Z9998.txt and Hs9998.txt (ULP=0).
+are also compared with the reference Log.txt, Z9998.txt and Hs9998.txt (within one unit of the last
+printed digit or a relative 1e-6: on a machine with a different CPU from the one that made the reference,
+the vectorization of -march=native changes the last digits; developer.md §90.18, Japanese. On the same
+machine, `ULP=0 RTOL=0 FILES="Log.txt wavefield.csv Z9998.txt Hs9998.txt" ./Run.sh` compares bit for bit).
 
 ## Configuration
 
@@ -81,7 +84,7 @@ are also compared with the reference Log.txt, wavefield.csv, Z9998.txt and Hs999
 ```bash
 make
 ./Run.sh          # serial + reference comparison + checks (about 2 minutes with one thread)
-./Run_MPI.sh 4    # MPI (np ≤ 4). ULP=0 against the reference; stirring, bed load, the closed basin and the breaking turbulence byte-identical to np = 1; restart also under MPI
+./Run_MPI.sh 4    # MPI (np ≤ 4). ULP=1 and RTOL=1e-6 against the reference; stirring, bed load, the closed basin and the breaking turbulence byte-identical to np = 1; restart also under MPI
 ```
 
 ## Verification record (2026-10-27; gfortran 13.3 / Open MPI 4.1.6, Ubuntu 24.04)

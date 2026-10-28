@@ -11,7 +11,10 @@ bed friction and the lateral Neumann flow boundary). The two-way coupling with t
 action of the current on the waves (stage W3, `f_wf_current`) is checked too (`param_cur.txt`).
 The results are compared with theoretical solutions, closed-form balances and conservation
 laws, and the results of `param.txt` are also compared with the reference Log.txt,
-wavefield.csv, E9998.txt and v9998.txt (ULP=0).
+E9998.txt and v9998.txt (within one unit of the last printed digit or a relative 1e-6: on a
+machine with a different CPU from the one that made the reference, the vectorization of
+-march=native changes the last digits; developer.md §90.18, Japanese. On the same machine,
+`ULP=0 RTOL=0 FILES="Log.txt wavefield.csv E9998.txt v9998.txt" ./Run.sh` compares bit for bit).
 
 ## Configuration
 
@@ -104,7 +107,7 @@ x = 1100 m. The north and south sides are lateral Neumann for both waves and flo
 ```bash
 make
 ./Run.sh          # serial + reference comparison + checks (about 2 minutes with one thread)
-./Run_MPI.sh 4    # MPI (np ≤ 4). ULP=0 against the reference; the rotated grid, the two-way coupling, the diffusion term (and its rotated grid) and the horizontal mixing byte-identical to np = 1; restart also under MPI
+./Run_MPI.sh 4    # MPI (np ≤ 4). ULP=1 and RTOL=1e-6 against the reference; the rotated grid, the two-way coupling, the diffusion term (and its rotated grid) and the horizontal mixing byte-identical to np = 1; restart also under MPI
 ```
 
 ## Verification record (2026-10-27; gfortran 13.3 / Open MPI 4.1.6, Ubuntu 24.04)

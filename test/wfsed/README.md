@@ -7,7 +7,10 @@
 輸送)と段 W5(波の歪度・非対称による岸向きの輸送速度 u_a)の検定です。モデルの出力から
 独立に組み立てた Soulsby(1997)のせん断・平衡濃度・流砂量、Ruessink ら(2012)の u_a、
 土砂の保存則、CERC の沿岸漂砂量と比べ、`param.txt` の結果は reference の
-Log.txt・wavefield.csv・Z9998.txt・Hs9998.txt とも比較します(ULP=0)。
+Log.txt・Z9998.txt・Hs9998.txt とも比較します(印字の最終桁 1 つ分か相対 1e-6 まで。
+reference を作ったマシンと CPU が違うと -march=native のベクトル化の差で最終桁がずれるため。
+developer.md §90.18。同じマシンでは
+`ULP=0 RTOL=0 FILES="Log.txt wavefield.csv Z9998.txt Hs9998.txt" ./Run.sh` でビット比較できます)。
 
 ## 構成
 
@@ -61,7 +64,7 @@ Log.txt・wavefield.csv・Z9998.txt・Hs9998.txt とも比較します(ULP=0)。
 ```bash
 make
 ./Run.sh          # 逐次 + reference 比較 + 検定(1 スレッドで約 2 分)
-./Run_MPI.sh 4    # MPI(np <= 4)。reference と ULP=0、攪拌・掃流砂・閉じた海盆・砕波の乱れは np = 1 とバイト一致、再開も MPI で
+./Run_MPI.sh 4    # MPI(np <= 4)。reference と ULP=1・RTOL=1e-6、攪拌・掃流砂・閉じた海盆・砕波の乱れは np = 1 とバイト一致、再開も MPI で
 ```
 
 ## 検証記録(2026-10-27。gfortran 13.3 / Open MPI 4.1.6、Ubuntu 24.04)
