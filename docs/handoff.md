@@ -1234,10 +1234,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
     - 谷底の幅・側岸の後退(まず基岩の崩落 rf_bedrock、足りなければ岩壁向けの側岸侵食。plan §6.6)、
       斜面の面状流と崩壊の連成。
     - 急勾配礫床の抵抗と有効掃流力(第 1 段の結果の最大の不確かさ。現行の手段は fluv_taufac だけ。
-      plan §6.3。Rickenmann & Recking (2011) の照合で候補の形が決まった: 流砂量式の τ* を
-      (n0/n)^e で縮める分離(n0 = D84^{1/6}/20.4、e = 1.5)と、流れの抵抗を相対水深で変える
-      Ferguson の VPE。どちらも方針の議論が先。users guide の解説 sediment.md §3 に今後の課題として
-      記載済み)、被覆に応じた粗度(滑らかな岩盤の正帰還。plan §6.4)、粒径(方針の議論が先。
+      plan §6.3。Rickenmann & Recking (2011)・Nitsche ら (2011) の照合で候補の形が決まった: 流砂量式の
+      τ* に相対水深 h/D84 だけで決まる係数 (f0/f_tot)^{e/2}(e = 1.5。Nitsche らで最良の方法)を掛ける
+      分離と、流れの抵抗を相対水深で変える Ferguson の VPE。どちらも方針の議論が先。users guide の
+      解説 sediment.md §3 に今後の課題として記載済み)、被覆に応じた粗度(滑らかな岩盤の正帰還。plan §6.4)、粒径(方針の議論が先。
       plan §6.2)、時間尺度(出水の間に進む背景の過程。plan §6.5)。
   - **確認の残り**:
     - 区間流入の流入面の床の修正(§89.25)の例題への影響: delta は 2 構成を計算時間の 73 % まで
@@ -1253,11 +1253,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   - **出典の照合待ち**(書誌と式の形を本文で確かめる。plan §9・§12.9、developer.md §89):
     閾値つきの超過せん断応力型の典拠(Howard 1994 など)、Sklar & Dietrich (2004) の研磨の線形化の
     式の形、間欠係数(Paola ら 1992・Parker の e-book)と Sklar & Dietrich (2006) の書誌、
-    Nitsche ら (2011)(Rickenmann & Recking (2011) は 2026-10-29 に本文で照合済み。plan §6.3)、
     Inoue ら (2014) の被覆・粗度モデル、Johnstone & Hilley (2015) の本文(深さ依存クリープ)、
     Stock & Dietrich (2006)・Hsu ら (2008) の式の形、Berger ら (2011) の論文番号、Frank ら (2015) の
     題名・著者、Inoue ら (2016)・McGuire ら (2023) の共著者、Parker & Izumi (2000) の原文
-    (ネットワークの制限で未確認)。
+    (ネットワークの制限で未確認)。Rickenmann & Recking (2011)・Nitsche ら (2011) は 2026-10-29 に
+    利用者が提供した本文で照合済み(plan §6.3)。
     (2026-10-29 検索で書誌を確認。本文は未読 = 式の形の照合は残る): Howard (1994) WRR 30(7),
     2261–2285, doi:10.1029/94WR00757。Sklar & Dietrich (2006) Geomorphology 82(1–2), 58–83,
     doi:10.1016/j.geomorph.2005.08.019(題名の steady-state の有無は記録により異なる)。
@@ -1265,7 +1265,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
     Parker の e-book は 1D Sediment Transport Morphodynamics with Applications to Rivers and Turbidity
     Currents の第 3 章(満水流量の特性)で洪水の間欠係数 I_f を定義。Rickenmann & Recking (2011)
     WRR 47, W07538, doi:10.1029/2010WR009793(論文番号も本文で確認)。Nitsche ら (2011) は副題 to account for macro-roughness in
-    steep mountain streams まで、WRR 47, doi:10.1029/2011WR010645。Berger ら (2011) JGR 116(F1),
+    steep mountain streams まで、WRR 47, W08513, doi:10.1029/2011WR010645(本文で照合済み)。Berger ら (2011) JGR 116(F1),
     doi:10.1029/2010JF001722(論文番号は未確認のまま)。Frank ら (2015) の題名は副題 examples from
     the Swiss Alps まで(NHESS 15, 2569–2583。オープンアクセス)。Inoue ら (2016) の共著者は
     Iwasaki・Parker・Shimizu・Izumi・Stark・Funaki。McGuire ら (2023) の共著者は McCoy・Marc・

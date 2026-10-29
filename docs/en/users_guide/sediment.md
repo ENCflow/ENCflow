@@ -299,37 +299,55 @@ $`\tau_{*e}^{3/2}`$ (the two threshold factors keep the total $`\tau_*`$).
 **Future work (planned): flow resistance partitioning on steep gravel beds
 (macroroughness).** In gravel and boulder streams whose depth is less than
 7–10 times the grain size D84, form drag and spill drag of boulders and steps
-take most of the total resistance, and passing the total-resistance
-$`\tau_*`$ to the transport formula overestimates the transport greatly. From 2890 field measurements, Rickenmann &
-Recking[^rickenmann11] summarize that reducing the slope by the ratio of the
-grain-based "base level" resistance $`1/n_0 = 20.4/D_{84}^{1/6}`$ to the total
-resistance, $`S_0/S = (n_0/n_{\rm tot})^{e}`$ ($`e`$ = 1.33–2; 1.5 in
-Meyer-Peter & Müller[^mpm48], 1.2–1.5 back-calculated from flood bed load),
-greatly reduces the overestimation in steep streams. We plan to add, without
+take most of the total resistance. Conventional transport formulas that use
+the total-resistance $`\tau_*`$ are known to overestimate the transport in steep
+streams by orders of magnitude (up to two to three)[^nitsche11]. From 2890
+field measurements, Rickenmann & Recking[^rickenmann11] proposed a
+partitioning that reduces the slope by the ratio of the small-scale-roughness
+base level resistance $`\sqrt{8/f_0} = 6.5\,(h/D_{84})^{1/6}`$ to the total
+resistance that grows as the relative depth decreases (Ferguson's
+equation[^ferguson07]
+$`\sqrt{8/f_{\rm tot}} = a_1 a_2 (h/D_{84})/\sqrt{a_1^2 + a_2^2 (h/D_{84})^{5/3}}`$,
+$`a_1 = 6.5`$, $`a_2 = 2.5`$): $`S_{\rm red}/S = (f_0/f_{\rm tot})^{e/2}`$. Nitsche et
+al.[^nitsche11] compared five partitioning approaches in 13 Swiss streams
+(slopes 2–19 %) and report that this one ($`e`$ = 1.5) performed best: the
+transport, overestimated by up to two orders of magnitude without correction,
+came to 1.0 times the measurement in the median over all streams (88 % of
+the events within a factor of 3), and they recommend it as a practical method
+when no detailed roughness information is available. We plan to add, without
 changing the default, an option that multiplies the $`\tau_*`$ passed to the
-transport formula by $`\min(1, (n_0/n)^{e})`$ ($`e`$ = 1.5).
+transport formula by this factor.
 
-- **Form**: $`n`$ is the cell's Manning coefficient (the total resistance of
-  the flow) and $`n_0`$ is set from $`D_{84}`$ ($`2.2\,D_{50}`$ when $`D_{84}`$ is not
-  given; the median ratio the paper used to fill missing data). With
-  $`e = 2`$ it is exactly "the Manning shear evaluated with $`n_0`$". Where the
-  depth is large compared with D84 and $`n \approx n_0`$, the effect is small.
-- **Size of the effect**: with the settings of the mountain-stream examples
-  (n = 0.04–0.05, D50 = 10–100 mm), $`n_0/n`$ = 0.65–0.78 and $`\tau_*`$ becomes
-  0.52–0.69 times; the transport drops further the closer it is to the
-  threshold.
+- **Form**: the factor $`(f_0/f_{\rm tot})^{e/2}`$ ($`e`$ = 1.5) depends only on the
+  relative depth $`h/D_{84}`$ and can be computed from the depth at each edge
+  (it does not depend on the user's Manning n). For $`h/D_{84}`$ = 0.5, 1, 2, 5,
+  10 and 20 it is 0.10, 0.22, 0.43, 0.75, 0.90 and 0.97. The threshold
+  $`\tau_{*c}`$ keeps the grain value. Without $`D_{84}`$, $`2.2\,D_{50}`$ is used (the
+  median ratio Rickenmann & Recking used to fill missing data). A form that
+  reduces by the ratio of the base level resistance to the Manning n,
+  $`(n_0/n)^{e}`$ ($`1/n_0 = 20.4/D_{84}^{1/6}`$), also exists, but with a constant n
+  it does not change with the relative depth and the result follows the
+  choice of n, so it is not adopted.
+- **Size of the effect**: in the bedrock_cover example (depth 0.3 m,
+  D84 ≈ 22 mm, h/D84 ≈ 14) the factor is 0.94 and little changes. In shallow
+  flows over boulder beds (h/D84 = 1–3) it is 0.2–0.6, and the transport drops
+  further the closer it is to the threshold. Nitsche et al. note that the
+  ratio by which reducing the slope lowers the transport is nearly the same
+  for different transport formulas (they depend on the excess shear stress),
+  so it can be applied to both the Ashida–Michiue and the MPM formula.
 - **Relation to the effective shear stress above**: both separate the part of
   the shear stress that moves sediment, for different regimes
   ($`\tau_{*e}`$ for dunes on sand beds where the log law holds, this one for
   shallow gravel and boulder beds). They and `fluv_taufac` will be mutually
-  exclusive. The paper cautions that applied to high-concentration flows
-  without boulders (sheet flow) it makes the transport implausibly small.
+  exclusive. Rickenmann & Recking caution that applied to high-concentration
+  flows without boulders (sheet flow) it makes the transport implausibly
+  small[^rickenmann11].
 - **Related item on the flow side**: a constant grain-based Manning n
   overestimates the velocity greatly on shallow gravel and boulder beds
-  (3–4.5 times in the median when shallower than D84[^rickenmann11]). Making Ferguson's
-  equation[^ferguson07], whose resistance follows the relative depth, a
-  resistance-law option is also a candidate; it affects the whole flow, so it
-  needs more discussion than the sediment-side separation.
+  (3–4.5 times in the median when shallower than D84[^rickenmann11]). Making
+  Ferguson's equation[^ferguson07], whose resistance follows the relative
+  depth, a resistance-law option is also a candidate; it affects the whole
+  flow, so it needs more discussion than the sediment-side separation.
 - **Timing**: it will be added after the results of the mountain-stream
   examples are reviewed (docs/mountain_stream_plan.md §6.3).
 
@@ -780,6 +798,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.
 [^rickenmann11]: Rickenmann, D. and Recking, A. (2011): Evaluation of flow resistance in gravel-bed rivers through a large field data set. *Water Resour. Res.*, 47, W07538. doi:10.1029/2010WR009793 (base level resistance eq. (23); resistance partitioning and bed load eq. (32))
 [^ferguson07]: Ferguson, R. (2007): Flow resistance equations for gravel- and boulder-bed streams. *Water Resour. Res.*, 43, W05427. doi:10.1029/2006WR005422 (from the reference list and eq. (10a) of Rickenmann & Recking 2011; the paper itself not read)
+[^nitsche11]: Nitsche, M., Rickenmann, D., Turowski, J. M., Badoux, A. and Kirchner, J. W. (2011): Evaluation of bedload transport predictions using flow resistance equations to account for macro-roughness in steep mountain streams. *Water Resour. Res.*, 47, W08513. doi:10.1029/2011WR010645 (comparison of five partitioning approaches; the Rickenmann & Recking approach is eqs. (15)–(18), the slope reduction eq. (26), e = 1.5)
 [^exner25]: Exner, F. M. (1925): Über die Wechselwirkung zwischen Wasser und Geschiebe in Flüssen. *Sitzungsber. Akad. Wiss. Wien, Math.-Naturwiss. Kl.*, 134, 165–204.
 [^itakura80]: Itakura, T. and Kishi, T. (1980): Open channel flow with suspended sediments. *J. Hydraul. Div. ASCE*, 106(HY8), 1325–1343. (implemented in the form of eqs. (3)–(5) of chapter 4 of the iRIC textbook "Practical river hydraulics")
 [^rubey33]: Rubey, W. W. (1933): Settling velocities of gravel, sand, and silt particles. *Am. J. Sci.*, 25, 325–338.

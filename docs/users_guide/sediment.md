@@ -239,25 +239,38 @@ $`\tau_{*e}^{3/2}`$ に置き換える(閾値の 2 つの因子は全 $`\tau_*`$
 
 **今後の課題(実装予定): 急勾配礫床の抵抗分割(マクロ粗度)。** 水深が粒径 D84 の
 7〜10 倍より浅い礫・巨礫床の渓流では、巨礫や段の形状抵抗・落水の抵抗が全抵抗の
-大半を占め、全抵抗の $`\tau_*`$ をそのまま流砂量式に入れると流砂量を大きく
-過大に見積もります。Rickenmann & Recking[^rickenmann11] は野外の 2890 測定で、
-粒径から決まる「基準の抵抗」$`1/n_0 = 20.4/D_{84}^{1/6}`$ と全抵抗の比で勾配を
-縮める $`S_0/S = (n_0/n_{\rm tot})^{e}`$($`e`$ = 1.33〜2。Meyer-Peter & Müller[^mpm48]は
-1.5、出水の流砂量からの逆算で 1.2〜1.5)が、急勾配の渓流の流砂量の過大を大きく
-改善すると整理しています。流砂量式に渡す $`\tau_*`$ に $`\min(1, (n_0/n)^{e})`$
-($`e`$ = 1.5)を掛ける選択肢を、既定を変えずに足す予定です。
+大半を占めます。全抵抗の $`\tau_*`$ をそのまま使う従来の流砂量式は、急勾配の渓流で
+流砂量を桁違いに(最大で 2〜3 桁)過大に見積もることが知られています[^nitsche11]。
+Rickenmann & Recking[^rickenmann11] は野外の 2890 測定から、小規模粗度の基準の
+抵抗 $`\sqrt{8/f_0} = 6.5\,(h/D_{84})^{1/6}`$ と、相対水深が小さいほど増える全抵抗
+(Ferguson の式[^ferguson07]
+$`\sqrt{8/f_{\rm tot}} = a_1 a_2 (h/D_{84})/\sqrt{a_1^2 + a_2^2 (h/D_{84})^{5/3}}`$、
+$`a_1 = 6.5`$、$`a_2 = 2.5`$)の比で勾配を縮める分割
+$`S_{\rm red}/S = (f_0/f_{\rm tot})^{e/2}`$ を示しました。Nitsche ら[^nitsche11] は
+スイスの渓流 13 本(勾配 2〜19 %)で 5 つの抵抗分割の方法を比べ、この方法
+($`e`$ = 1.5)が、補正なしでは最大 2 桁過大だった流砂量を全渓流の中央値で実測の
+1.0 倍(88 % の事象が 3 倍以内)にして最もよく、詳しい粗度の情報がないときの
+実用的な方法だと報告しています。流砂量式に渡す $`\tau_*`$ にこの係数を掛ける
+選択肢を、既定を変えずに足す予定です。
 
-- **形**: $`n`$ はセルの Manning 係数(流れの全抵抗)、$`n_0`$ は $`D_{84}`$ から
-  決めます($`D_{84}`$ がなければ $`2.2\,D_{50}`$。論文がデータの補完に使った
-  中央値の比)。$`e = 2`$ なら「$`n_0`$ で評価した Manning のせん断」そのものです。
-  水深が D84 に比べて十分深く $`n \approx n_0`$ の所では効果は小さくなります。
-- **効果の大きさ**: 山地渓流の例題の設定(n = 0.04〜0.05、D50 = 10〜100 mm)では
-  $`n_0/n`$ = 0.65〜0.78 で、$`\tau_*`$ は 0.52〜0.69 倍です。流砂量は閾値に近い
-  ほどさらに減ります。
+- **形**: 係数 $`(f_0/f_{\rm tot})^{e/2}`$($`e`$ = 1.5)は相対水深 $`h/D_{84}`$ だけで
+  決まり、エッジごとの水深から計算できます(利用者の Manning n には依りません)。
+  $`h/D_{84}`$ = 0.5・1・2・5・10・20 で 0.10・0.22・0.43・0.75・0.90・0.97 です。
+  閾値 $`\tau_{*c}`$ は粒子の値のままです。$`D_{84}`$ がなければ $`2.2\,D_{50}`$
+  (Rickenmann & Recking がデータの補完に使った中央値の比)。基準の抵抗と
+  Manning n の比で縮める形 $`(n_0/n)^{e}`$($`1/n_0 = 20.4/D_{84}^{1/6}`$)もありますが、
+  n が一定の流れでは相対水深による変化が出ず、結果が n の選び方に引きずられるので
+  採りません。
+- **効果の大きさ**: 例題 bedrock_cover(水深 0.3 m、D84 ≈ 22 mm、h/D84 ≈ 14)では
+  0.94 倍でほとんど変わりません。巨礫床の浅い流れ(h/D84 = 1〜3)では 0.2〜0.6 倍に
+  なり、流砂量は閾値に近いほどさらに減ります。勾配を縮める効果の比は流砂量式に
+  よらずほぼ同じ(超過掃流力で決まるため)と Nitsche らは述べているので、芦田・道上式・
+  MPM 式のどちらにも掛けられます。
 - **上の有効掃流力との関係**: どちらも「流砂を動かす分」の掃流力を取り出す分離で、
   対象の領域が違います($`\tau_{*e}`$ は対数則が成り立つ砂床の砂堆、こちらは
   浅い礫・巨礫床)。両者と `fluv_taufac` は排他にします。巨礫のない高濃度の流れ
-  (シートフロー)に当てると流砂量を不当に小さくする、という但し書きがあります。
+  (シートフロー)に当てると流砂量を不当に小さくする、という但し書きがあります
+  [^rickenmann11]。
 - **流れの側の関連課題**: 粒径相当の一定の Manning n は、浅い礫・巨礫床で流速を
   大きく過大に予測します(D84 より浅いと中央値で 3〜4.5 倍[^rickenmann11])。相対水深に応じて
   抵抗を変える Ferguson の式[^ferguson07]を抵抗則の選択肢にすることも候補です。
@@ -641,6 +654,7 @@ $`\tau_d`$ は定常の等流で抵抗則の底面せん断に等しく、抵抗
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.
 [^rickenmann11]: Rickenmann, D. and Recking, A. (2011): Evaluation of flow resistance in gravel-bed rivers through a large field data set. *Water Resour. Res.*, 47, W07538. doi:10.1029/2010WR009793(基準の抵抗 式 (23)、抵抗分割と流砂量 式 (32))
 [^ferguson07]: Ferguson, R. (2007): Flow resistance equations for gravel- and boulder-bed streams. *Water Resour. Res.*, 43, W05427. doi:10.1029/2006WR005422(Rickenmann & Recking 2011 の文献表と式 (10a) による。本文は未読)
+[^nitsche11]: Nitsche, M., Rickenmann, D., Turowski, J. M., Badoux, A. and Kirchner, J. W. (2011): Evaluation of bedload transport predictions using flow resistance equations to account for macro-roughness in steep mountain streams. *Water Resour. Res.*, 47, W08513. doi:10.1029/2011WR010645(5 つの抵抗分割の比較。Rickenmann & Recking の方法は式 (15)〜(18)、勾配の縮小は式 (26)、e = 1.5)
 [^exner25]: Exner, F. M. (1925): Über die Wechselwirkung zwischen Wasser und Geschiebe in Flüssen. *Sitzungsber. Akad. Wiss. Wien, Math.-Naturwiss. Kl.*, 134, 165–204.
 [^itakura80]: Itakura, T. and Kishi, T. (1980): Open channel flow with suspended sediments. *J. Hydraul. Div. ASCE*, 106(HY8), 1325–1343.(実装の形は iRIC「実践河川水理学」第 4 章の式(3)–(5)による)
 [^rubey33]: Rubey, W. W. (1933): Settling velocities of gravel, sand, and silt particles. *Am. J. Sci.*, 25, 325–338.

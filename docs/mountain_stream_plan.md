@@ -433,16 +433,31 @@ splash_plan.md §8 の Phase 3(容量式の堆積)と §2.6(飛散長 L_h の保
   渓流の流砂量の過大を大きく改善すると整理している(Rickenmann ら 2006、Chiari ら 2010、
   Chiari & Rickenmann 2011 ほか)。但し書き: 高濃度で巨礫のない水路実験(Smart & Jäggi
   1983 など)に当てると、流砂量を不当に小さくする。
+- **Nitsche ら (2011) の照合(2026-10-29。利用者が提供した本文)**: スイスの渓流 13 本
+  (勾配 2〜19 %、流域 0.5〜170 km²。6 本は長期の流砂量、7 本は 2000・2005 年の出水の
+  堆積量)で、Rickenmann (2001) の流砂量式に 5 つの抵抗分割(Pagliara & Chiavaccini 2006、
+  Whittaker ら 1988、Egashira & Ashida 1991、Yager 2006、Rickenmann & Recking 2011)を
+  組み合わせ、勾配を S_red = S (n0/n_tot)^e = S (f0/f_tot)^{e/2}(e = 1.5 固定。式 (26))で
+  縮めて比べた。補正なしは流砂量を最大 2 桁過大(序論では従来式の過大を最大 3 桁と引く)。
+  Rickenmann & Recking の方法(f0 は式 (15) の 6.5 (r_h/D84)^{1/6}、f_tot は Ferguson の
+  VPE。(f0/f_tot)^{1/2} = v_tot/v0 は r_h/D84 だけの関数。式 (15)〜(18))が全渓流の中央値
+  V_pred/V_meas = 1.0、88 % の事象が 3 倍以内で最良で、詳しい粗度の情報がないときの
+  実用的な方法として推奨。Yager (2006) は巨礫の多い渓流でよい(93 % が 3 倍以内)が、
+  巨礫の諸元の現地測定が要る。Egashira & Ashida は補正が強すぎて過小。勾配を縮める効果の
+  比は流砂量式によらずほぼ同じ(超過掃流力で決まる。§5.1)。
 - **ENCflow での候補(必要になったら。方針の議論が先)**:
-  (a) 掃流砂: 流砂量式に渡す τ* を τ*·min(1, (n0/n)^e)(e = 1.5)にする分離。n は
-  セルの Manning 係数(全抵抗)、n0 は D84 から(D84 がなければ 2.2·D50。論文がデータの
-  補完に使った中央値の比)。e = 2 なら「n0 で評価した Manning のせん断」そのもの。
-  d/D84 が大きく n ≈ n0 の所では効果が小さい。芦田・道上の有効掃流力 τ*e
+  (a) 掃流砂: Nitsche らの最良の方法と同じ相対水深の形を第一候補にする。流砂量式に渡す
+  τ* に (f0/f_tot)^{e/2}(e = 1.5)を掛け、(f0/f_tot)^{1/2} = VPE(h/D84)/(6.5 (h/D84)^{1/6})
+  をエッジの水深から求める(利用者の n に依らない。閾値 τ*c は粒子の値のまま)。
+  h/D84 = 0.5・1・2・5・10・20 で係数 0.10・0.22・0.43・0.75・0.90・0.97。D84 がなければ
+  2.2·D50(Rickenmann & Recking がデータの補完に使った中央値の比)。n の比 (n0/n)^e の
+  形(n0 = D84^{1/6}/20.4)は、n が一定の流れでは相対水深による変化が出ず、結果が n の
+  選び方に引きずられるので採らない(例: bedrock_cover は h/D84 ≈ 14 で相対水深の形なら
+  0.94 倍だが、n = 0.04 のため n の比の形では 0.52 倍になる)。芦田・道上の有効掃流力 τ*e
   (sediment.md §3 の今後の課題。対数則の適用範囲の砂床の砂堆)と同じ「流砂を動かす分」の
   分離で、対象の領域が違う(こちらは d/D84 < 7〜10 の礫・巨礫床)。τ*e・fluv_taufac とは
-  排他にする。例題の設定(D84 ≈ 2.2·D50)では n0/n = 0.65(bedrock_cover、n 0.04・
-  D50 10 mm)〜0.78(mountain_valley V、D50 30 mm)、0.76(debris_bedrock W、n 0.05・
-  D50 100 mm)で、τ* は 0.52〜0.69 倍(e = 1.5)。流砂量は閾値に近いほどさらに減る。
+  排他にする。巨礫床の浅い流れ(h/D84 = 1〜3)では τ* が 0.2〜0.6 倍、流砂量は閾値に
+  近いほどさらに減る。
   (b) 流れ: 一定の Manning n は d/D84 が小さい浅い流れの抵抗の増加を表せない(粒径相当の
   n では流速を過大に予測する)。VPE で n を相対水深に応じて変える抵抗則の選択肢。流れ
   全体に効く変更なので、(a) より議論が重い。
@@ -592,9 +607,11 @@ users_guide/sediment.md・massflow.md・geomorph.md、handoff.md 1n・1n2。
 - Rickenmann, D. and Recking, A. (2011): Evaluation of flow resistance in gravel-bed rivers
   through a large field data set. *Water Resour. Res.*, 47, W07538. doi:10.1029/2010WR009793
   (2026-10-29 に利用者が提供した本文で確認。要点は §6.3)。
-- 照合待ちの候補(書誌は検索で確認、本文は未読): Nitsche ら (2011)(急勾配の渓流の流砂量への
-  抵抗式の適用。WRR 47, doi:10.1029/2011WR010645)。Stock & Dietrich (2006)(土石流による
-  谷の侵食)は §12.9 で要旨の水準で確認した。
+- Nitsche, M., Rickenmann, D., Turowski, J. M., Badoux, A. and Kirchner, J. W. (2011):
+  Evaluation of bedload transport predictions using flow resistance equations to account for
+  macro-roughness in steep mountain streams. *Water Resour. Res.*, 47, W08513.
+  doi:10.1029/2011WR010645(2026-10-29 に利用者が提供した本文で確認。要点は §6.3)。
+- Stock & Dietrich (2006)(土石流による谷の侵食)は §12.9 で要旨の水準で確認した。
 
 **本書の導出**: §4.3 の定常での被覆率と下刻速度、§4.4 の厳密伝播子の加法性と研磨の
 積分(固定した水理での局所の常微分方程式の解。結合系の厳密解ではない)。
