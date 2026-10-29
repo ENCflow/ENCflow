@@ -36,6 +36,16 @@
   ! Requires f_gwlateral=1 in &list_gwflow (shares K_sh and sy0)
   f_salt_gw = 1
 
+  ! Fresh/salt split of the surface-subsurface exchange (infiltration and
+  ! saturation-excess seepage). Infiltration takes the bottom salt water
+  ! touching the bed or ground first; seepage releases the upper fresh water
+  ! of the aquifer first (1). 2 mixes the seepage in the salt fraction before
+  ! seepage (lower-bound sensitivity case). Requires f_salt_surf=1 and
+  ! f_salt_gw=1; default 1 when both are enabled (0 = no split: infiltrating
+  ! and seeping water treated as fresh; for comparison with salinization via
+  ! the river turned off)
+  !f_salt_exch = 1
+
   ! Fresh / salt densities (kg/m3); they set eps = (rho_s-rho_f)/rho_f
   salt_rhof = 1000.0
   salt_rhos = 1025.0

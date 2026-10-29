@@ -179,7 +179,7 @@ vzflow_calc                   VZ セルに入った雨(pre·dt/gv)を s%h から
                                 共有参照柱を進めて区画の排水を出口セルの s%h へ(e 回復まで)。
                                 地下水と同じ「swflow の後に s%h から取る」結合。無効なら no-op。§87
 gwflow_calc                   地下浸透・地下水(s%h から s%hg/s%hgc へ。冒頭で凍土係数の更新、末尾で井戸揚水シンク)
-saltwater_calc                淡塩2層(地表重力流・地下塩水 zone・海側境界)
+saltwater_calc                淡塩2層(地表—地下の交換の淡塩配分・地表重力流・地下塩水 zone・海側境界)
 wq_calc                       水質(発生源・浸透/湧出/ため池の同伴・Kd 分配・沈降・
                               ダム完全混合プール。移流本体は swflow_calc・地下横輸送は
                               gwflow_calc 内)

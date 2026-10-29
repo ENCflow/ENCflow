@@ -394,6 +394,15 @@ subroutine gwflow_lateral_calc(glt, lay1, p, g, s, it, dts)
   call par_halo_cell(s%hg)
   call par_halo_cell(s%h)
 
+  ! 淡塩2層(f_salt_gw=1)の塩水 zone は、この側方流と同じ状態で水頭を評価する
+  ! (合計と塩水の食い違いが整合クランプで塩水を消すのを防ぐ。§47.7)。
+  ! ハロ交換の後に写すので帯界面の冗長計算もそのまま読める
+  if (allocated(s%hgsnap)) then
+    s%hgsnap(:,:) = s%hg(:,:)
+    s%hsnap(:,:) = s%h(:,:)
+    s%gw_lat_done = .true.
+  end if
+
   if (allocated(s%cg)) then
     ! 水質の同伴輸送(§30 W3)。帯界面エッジの冗長計算が風上 cg を
     ! ハロから読むため、cg も毎回交換する
@@ -565,6 +574,8 @@ subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
         if (lay%to_surface) then
           s%h(i,j) = s%h(i,j) + fx
           s%e(i,j) = s%z(i,j) + s%h(i,j)
+          ! 淡塩2層の配分用の記録(m_saltwater が読んでゼロ戻し。§47.5)
+          if (allocated(s%fxslo)) s%fxslo(i,j) = s%fxslo(i,j) + fx
         else
           s%hg(i,j) = s%hg(i,j) + fx
           ! 層1の容量超過は地表へ(層1と同じ規則)
@@ -574,6 +585,7 @@ subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
             s%hg(i,j) = capc
             s%h(i,j) = s%h(i,j) + fx
             s%e(i,j) = s%z(i,j) + s%h(i,j)
+            if (allocated(s%fxslo)) s%fxslo(i,j) = s%fxslo(i,j) + fx
           end if
         end if
       end if
