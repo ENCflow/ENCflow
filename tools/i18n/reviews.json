@@ -446,11 +446,11 @@
     {
       "source": "docs/users_guide/swi.md",
       "target": "docs/en/users_guide/swi.md",
-      "source_sha256": "f2e37ee9623fde0829ba7127f8d25e97bb43049e053b0f02c58f98479e7f54a8",
-      "target_sha256": "c9bc5348f0ab0e37f4db15de93215150567d5d741d5ccdbbff945fa7bf87598e",
+      "source_sha256": "65f3ef07e68dd1769c1eddfd7354222f896f32e0cbe6a35380694a483741196f",
+      "target_sha256": "44e77ac2d8ea671261ec8859b9ced8a97e5478adf21a2f677444cb388e007081",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "docs/users_guide/tide.md",
