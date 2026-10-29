@@ -74,7 +74,7 @@ runs entirely in the browser. Windows users new to Unix: see
 [Using ENCflow on Windows](docs/en/windows.md).
 
 The first example is nothing more than a mound of water collapsing and
-spreading over a still surface. The input is a single text file a few
+spreading over a still surface. The input is [a single text file](tutorials/wave/en/param_step1.txt) a few
 dozen lines long. From there, the ENCflow way is to grow the model one
 line at a time: add rainfall, switch to real terrain, thread a river
 channel, add groundwater ([Tutorial](docs/en/tutorial.md)).
