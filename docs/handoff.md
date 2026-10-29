@@ -560,7 +560,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      3 つの機械比較を回す**こと。このうち「日英の見出し数・表の行数」と
      「List_samples 日英のパラメータ集合」は 2026-10-23 に tools/i18n/check.py
      (構成の WARN、コメント除去後の完全一致の ERROR)として常設した。namelist と
-     索引の突合は未スクリプト化(下記「国際化」)
+     索引の突合も 2026-10-24 に tools/params_index/check.py として常設した(下記「国際化」(d))
 
 1. **gwflow 導入コミットの検証(直近の宿題)**
    - fn_gwflow 未指定で全ケース既存 reference とビット一致(逐次・np=1,2,4)
@@ -671,7 +671,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 1f. **再開時刻の継続化(2026-08-08 実装。仕様は developer.md §7)の残検証**
    - gfortran 逐次で確認済み: フレッシュラン全8ケース reference と一致、
      wave t=4 分割の往復ビット一致(Log・E/H 出力)、tt<=t1 の par_stop
-   - 残: MPI(np=2)での往復ビット一致、ifx での同確認
+   - MPI の往復ビット一致は恒常化済み: test/prmap・wfcurrent・wfsed・wfdoppler・wfshoal・wfswash・
+     icevap・gwdefault・vzzone・bedfines・fixation・dbrock・hillsoil・rockinc の Run_MPI.sh が、保存 →
+     再開の継続を同じ並列数の通し計算とバイト比較する(2026-10-29 に確認)
+   - 残: ifx での同確認
    - 既知の制限(save 対象外のため再開で連続しない。要否は今後判断):
      最大値統計 hmax 系・qcum(意図的仕様。§7)、m_intercept の内部状態
      (貯留型遮断の途中状態)、prtype=3 で再開時に読み直すフレームの
@@ -683,7 +686,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      潮位有効時のリスタート往復ビット一致(更新位相の途中 t=121 で分割し
      Log・E/H 出力が中断なしランと一致)
    - test/tide の reference は目視承認済み(2026-08-24)= 確定
-   - 残: titype=3/4(分布系)の疎通、ifx・PREC=single、実地形ケースでの
+   - titype=4(分布ファイルのリスト)は 2026-10-29 に test/tide 構成 3 で検定した(構成 1 の系列と
+     同じ潮位を与えて S が一致、時間間隔の 3 つの書き方がバイト一致、np = 2・4 と -fcheck=all でも一致。
+     developer.md §88.5)
+   - 残: titype=3(分布 1 枚 × 倍率)の疎通、ifx・PREC=single、実地形ケースでの
      hsea0 感度(浸水方向の流量が hsea0 に依存する度合いの定量化)
    - 関連する将来課題: 海への段落ち(f_rivermouth_drop)の境界条件への
      移管、集水域外縁排水の「海」代用をやめて領域内 x=0 境界の排水条件を
@@ -710,7 +716,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 2. (消し込み 2026-10-01)developer.md の gwflow/geomorph の項は §16・§19・
    §62・§64 と CLAUDE.md「新しい物理モジュールの追加様式」に記載済み
-3. developer.md の日付プレースホルダ(2026-xx)の実日付化(残があれば)
+3. (消し込み 2026-10-29)developer.md の日付プレースホルダ(2026-xx)11 箇所は git の履歴の実装
+   コミットの日付に置き換えた(並列化 2026-07-15〜07-30。計測の 2 件は記録した日)
 4. **降雨遮断モジュール(m_intercept)の残検証**
    (無効時ビット一致と wave 疎通((1-α) 倍・np=1,2,4 ULP=0)は確認済み
     2026-08-04)
@@ -935,13 +942,16 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   (10.5281/zenodo.23635011)を CITATION.cff の identifiers に記載、HRL 論文を
   preferred-citation から references へ移動、users_guide/nonhydrostatic.md・parallel.md
   (日英)の再現性記述を Release ノート・§71 側(複数スレッドで非決定)に統一、
-  連絡先と所属機関の公開承認済みを確認。残(人間): 次回 Nightly(bmi_vars 追加後)の
-  緑の確認、GitHub の「Cite this repository」表示の確認、CSDMS への提出そのもの。
+  連絡先と所属機関の公開承認済みを確認。bmi_vars 追加後の Nightly は #44〜#46(2026-10-25〜27)が
+  全ジョブ緑で、bmi ジョブの bmi_vars も合格(2026-10-29 に確認。#47 の失敗は wfcurrent の reference の
+  CPU 差で、bmi ジョブは合格。§90.18 で対処済み)。残(人間): GitHub の「Cite this repository」表示の
+  確認、CSDMS への提出そのもの。
 
 - **リリース v3.0.0(2026-10-25 公開済み)**: Release「ENCflow v3.0.0」(タグ
   v3.0.0 = 1aaf1752 = CITATION 3.0.0 / 2026-10-25。Release UI で Target=main
   のタグ作成、軽量)。Nightly #43(9d677abb)全ジョブ緑を確認後に公開。
-  残: Zenodo DOI の付与確認のみ。以下は当時の準備記録。
+  Zenodo の版 DOI は付与済み(10.5281/zenodo.23635011。CITATION.cff の identifiers)。以下は当時の
+  準備記録。
   v2.1.0(1a846e0)以降 722 コミット
   (マージ以外 600)。**MAJOR の根拠(§34.4、v2.0.0 の前例と同じ「既定の昇格
   による既存入力の結果変化」)**: f_opening_dynamic 1→2(§68.38。reference
@@ -973,8 +983,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 - **GitHub Organization「ENCflow」作成・移管・URL 確定済み(2026-08-13)**。
   残: owner の複数化(両研究室の代表を追加)。(Zenodo DOI は
   2026-08-21 付与済み。下記「ライセンス: 完了」)
-- **README.en.md の作成**(公開の節目。機械翻訳+レビュー、
-  冒頭に「English mirror of README.md」刻印)。
+- (済)ルート README の英語版: README.md が英語ミラー、README.ja.md が正本(2026-09-13 に
+  接尾辞を .ja に統一。docs/multilingual.md)。
 - **実行時メッセージの英語化収斂**(触ったファイルから順に。
   Log 比較対象の文字列に触れる場合は reference への影響に注意)。
 - **CI 二層化(2026-09-15 実施)**: nightly.yml を追加(フル回帰 13 ケース
@@ -1010,9 +1020,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   list_sysparam・list_gwflow・list_wq・list_geomorph の例、list_bedmotion の英語版
   未作成)は同日に解消し、6 件とも英語版全文を正本と突き合わせて record 済み
   (method=assistant。人間の確認ではない)。
-  (b) 表の行数が日英で違う未確認ミラー(内容の追随漏れの疑い。`audit` の WARN):
-  comparison.md、users_guide の geomorph・params_index・structure・usecases。
-  `--git-dates` で正本の方が新しい組も同様に順次確認する。
+  (b) 表の行数が日英で違う未確認ミラー(comparison.md、users_guide の geomorph・params_index・
+  structure・usecases)は、下の (c) の 2026-10-24 の全文の突き合わせで解消した(audit の構成の WARN は
+  0。2026-10-29 に確認)。
   (c) examples の README 19 件は 2026-10-23 に §34.2 を改定して対象化し、英訳・全文の
   内容確認・record 済み(method=assistant)。test/ の README 71 件(wave・wave_river を
   除く全ケース + chichibu の data_chichibu*/README 3 件 + nhwave/Dispersion_result.md)も
