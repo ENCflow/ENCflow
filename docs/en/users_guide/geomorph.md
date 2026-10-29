@@ -259,7 +259,7 @@ same retreat again through `berode_kb`. Verification:
 blocks once pool scour makes the bank face higher than a critical height, and
 the fallen blocks cover the toe and stop bank erosion until the flow has
 carried them away (Asahi et al. 2013; Parker et al. 2011). This is represented
-by the **bank mode** `rf_bank = 1` of [cliff collapse and talus](#cliff-collapse-and-talus-f_rockfall)
+by the **bank mode** `rf_bank = 1` of [rockfall and talus](#rockfall-and-talus-f_rockfall)
 `f_rockfall` together with `berode_hcover` (developer.md §84.17): the part of a
 bank face (a step above the water surface of the receiving cell; submerged steps,
 i.e. pool walls, are excluded) that exceeds the critical height `rf_hc` collapses

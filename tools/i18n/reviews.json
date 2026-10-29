@@ -267,7 +267,7 @@
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
       "source_sha256": "cc5fce05d4b86ea98472e0306e2b40afdb89971bf9ce59445182279ea78c6834",
-      "target_sha256": "89ef0be45a6fbb04eb3bfe8efe6f2a14037e0f45c73c274204eddb067fbdc5ac",
+      "target_sha256": "031937ebbd9cc44792edec1e8714d5ade3f2733851cb191e8a132f8af79d61b9",
       "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
