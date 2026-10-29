@@ -986,11 +986,11 @@
     {
       "source": "examples/mountain_valley/README.md",
       "target": "examples/mountain_valley/en/README.md",
-      "source_sha256": "564ab405a8f28b763ee1b9333f3fc2be722a5bc347a1f9e127eb1c4063752a6f",
-      "target_sha256": "4d49b94c8691bc1f9187b112f12e9316e4abe1206d5b767c35e474d0318bd47c",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "6d89461e54ccd189f5aa6bebf5fb504f04eb2f6752ea5d8ed09ad62477df69c3",
+      "target_sha256": "b36c96861f15025ec3825f88247fde1b7a7d30c38d82680576a50090e5acd022",
+      "reviewer": "Claude (Claude Code session; compared the two table rows changed for f_opening_dynamic = 3 in the source and the translation; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/mountain_valley/figs/channel.png",

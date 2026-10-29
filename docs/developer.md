@@ -15221,6 +15221,9 @@ tk・tkwet、examples/debris_bedrock の高橋・中川の構成と長期の連�
 - **examples/bedrock_cover**: 7 構成の出力 1569 ファイルのうち、違うのは save の swflow_enc.dat
   (振り替え表 fwd。流れの通らない河道と乾いた岸の間の斜めの面の値)だけ。両岸が +2 m の 1 セル幅の
   水路では、塞がりの数え方が 2 と同じになる。数表・図は不変。
+- **examples/mountain_valley**: 6 構成(V_a・V_b・V_b2・V_c・P_a・P_p)とも、出力のうち違うのは
+  param の写しと save の swflow_enc.dat だけ(V_b2 は 2 ランクの MPI で比べた)。両側が斜面の 1 セル幅の
+  渓流と、両岸が高い 1 セル幅の水路(C4)なので bedrock_cover と同じ。数表・図は不変。
 - **examples/debris_bedrock の前半**(1 回の土石流。横断 5 セル): 3 で急な区間の流れが深く遅くなり、
   勾配 0.35 の区間の侵食は T_b 1.94 → 2.27 cm(1.17 倍)、C_b 1.08 → 2.36 cm(2.19 倍)、W 0.56 →
   0.32 cm(0.57 倍)。流動面の勾配の変更による差は 1 % 以内(3 のまま中央差分と比べた)。
