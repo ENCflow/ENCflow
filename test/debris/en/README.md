@@ -28,7 +28,7 @@ domain = the ledger closes).
 |---|---|---|---|---|---|
 | 1 | `param.txt` | 1: relaxation to the Takahashi-type equilibrium concentration C∞(θ) (δe = 0.0007, δd = 0.05) | 1: Coulomb + Manning combined (φ = 35°) | 30 s | default |
 | 2 | `param_eg.txt` | 2: Egashira and Ashida (1992) | 2: Egashira constitutive law (d50 = 0.05 m, restitution coefficient 0.85) | 30 s | eg |
-| 3 | `param_tk.txt` | 3: Takahashi and Nakagawa (1991) eqs. (12)(27) | 3: stony type, eqs. (22)–(25) | 60 s | eg |
+| 3 | `param_tk.txt` | 3: Takahashi and Nakagawa (1991) eqs. (12)(27) | 3: stony type, eqs. (22)–(25) | 120 s | eg |
 | 4 | `param_tkwet.txt` | 3 + pore-water entrainment `f_dbwet = 1` (bed saturation s_b) | 3 | 60 s | wet |
 | 5 | `param_fluv.txt` | 1 + bed load `f_fluvial = 1` (Ashida–Michiue, d50 = 2 mm) | 1 | 30 s | fluv |
 
@@ -62,7 +62,7 @@ entrained pore water).
 
 ```bash
 make
-./Run.sh          # run the 5 configurations in turn, each followed by Check. PASS when all pass (a few seconds)
+./Run.sh          # run the 5 configurations in turn, each followed by Check. PASS when all pass (about 20 seconds)
 ./Run_MPI.sh 4    # MPI. state.dat is byte-identical to the serial run (with the -O2 strict-math build); configuration 5 is also compared with np = 1
 python3 Fig.py en # en/figs/profile.png, en/figs/map.png
 ```
@@ -72,17 +72,19 @@ python3 Fig.py en # en/figs/profile.png, en/figs/map.png
 ![Longitudinal profiles of the 4 configurations](figs/profile.png)
 
 Top: terrain. Middle: terrain change dz (average over all rows, cm). In every
-configuration the whole slope is thinly eroded (0.3–0.5 cm in configurations
-1–3, 2.5 cm in configuration 4), erosion intensifies just before the slope
-break, and in configuration 1 deposition (+0.5 cm) appears directly below the
-slope break. Bottom: sediment in motion hs (cm). It is carried at a constant
-concentration on the slope and drops sharply on the flat beyond the slope break
+configuration the whole slope is thinly eroded (0.3 cm in configurations 1 and
+2, 1.3 cm in configuration 3 over 120 s, 2.5 cm in configuration 4), erosion
+intensifies just before the slope break, deposition (+0.5 cm) appears directly
+below the slope break in configuration 1, and deposition (+5.4 cm) appears in
+the first cell of the flat below the slope break in configuration 3. Bottom:
+sediment in motion hs (cm). It is carried at a constant concentration on the
+slope and drops sharply on the flat beyond the slope break
 (in a dilute sheet flow θ_e ≈ 0, so deposition on the flat is slow, and in a
 short check the arrival of hs is taken as the evidence of activity). The
 pore-water entrainment of configuration 4 adds the pore water of the eroded bed
-to the flow, so the surface water increases (Σh 4.0 → 9.2 m·cell), and a
-positive feedback in which the velocity and erosion increase further is seen
-(erosion −0.50 → −3.0 cm).
+to the flow, so the surface water increases (Σh 4.0 → 9.2 m·cell compared with
+configuration 3 at the same 60 s), and a positive feedback in which the velocity
+and erosion increase further is seen (erosion −0.51 → −3.6 cm).
 
 ![Distributions of configuration 1](figs/map.png)
 
@@ -96,8 +98,8 @@ slope break, and a thin water film on the flat are seen.
 |---|---|---|---|---|
 | 1 | −4.3e-14 | 4e-14 | −0.33 cm / deposition below the slope break +0.55 cm | — |
 | 2 Egashira | −5.0e-13 | 3e-14 | −0.33 cm / max hs 0.05 cm | — |
-| 3 Takahashi–Nakagawa | 3.0e-13 | 1.9e-13 | −0.50 cm / max hs 0.15 cm | — |
-| 4 + pore-water entrainment | 2.5e-13 | 7e-14 | −3.0 cm / max hs 2.6 cm | 1.5e-13 |
+| 3 Takahashi–Nakagawa (120 s) | −1.0e-13 | 1.2e-13 | −1.5 cm / max hs 1.1 cm | — |
+| 4 + pore-water entrainment | 2.9e-13 | 7e-14 | −3.6 cm / max hs 2.6 cm | 1.8e-13 |
 | 5 + bed load | −4.4e-13 | 4e-14 | −0.20 cm / deposition below the slope break +0.15 cm | — |
 
 - The total solids and the co-moving update hold at machine precision in all
@@ -114,6 +116,15 @@ slope break, and a thin water film on the flat are seen.
   became a one-sided difference to the downstream neighbour (2026-10-28;
   developer.md §89.24, in Japanese); before, the total solids were −4.6e-13 and
   the arrival on the flat max hs 0.09 cm.
+- The values of configurations 3 and 4 are those after the slope of the flow
+  surface became a one-sided difference to the downstream neighbour
+  (2026-10-29; developer.md §89.28, in Japanese). With the one-sided difference
+  the cell just before the slope break sees the gentle slope to the flat cell
+  below it, the low-velocity stopping condition acts there, and the sediment
+  is held back between 30 and 100 s, so it does not reach the flat by 60 s;
+  the duration of configuration 3 was therefore extended from 60 s to 120 s
+  (before: −0.50 cm / max hs 0.15 cm at 60 s; configuration 4 was −3.0 cm /
+  max hs 2.6 cm).
 - This case is a check of **connectivity and conservation laws**. The
   quantitative validity of the constitutive laws is recorded in debris_plan.md
   as remaining work on literature comparison (coefficients for the immature
