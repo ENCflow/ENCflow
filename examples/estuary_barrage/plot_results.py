@@ -4,7 +4,7 @@
   figs/setup.png    地形(平面)と河道中心の縦断(堰・帯水層底・潮位の幅)
   figs/plan.png     20 日後の平面: 帯水層に占める塩水の割合と河道の底層塩水(4 ケース)
   figs/profile.png  20 日後の河道中心の縦断(河床の塩水交換あり、堰なし・あり)
-  figs/series.png   帯水層の塩水量と塩水くさびの先端位置の時間変化
+  figs/series.png   帯水層の塩水量(混合比の感度ケースを含む 6 ケース)と塩水くさびの先端位置の時間変化
 引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。
 """
 import glob
@@ -35,6 +35,14 @@ CASES = [("nobarrage_off", T("堰なし", "No barrage"), T("河床の塩水交�
          ("nobarrage", T("堰なし", "No barrage"), T("河床の塩水交換あり", "with bed salt exchange")),
          ("barrage_off", T("堰あり", "Barrage"), T("河床の塩水交換なし", "no bed salt exchange")),
          ("barrage", T("堰あり", "Barrage"), T("河床の塩水交換あり", "with bed salt exchange"))]
+# 下限側の感度ケース(f_salt_exch=2: 湧出を混合比で配分)
+MIXCASES = [("nobarrage_mix", T("堰なし", "No barrage"), T("湧出を混合比で(下限側)", "seepage by mixing ratio (lower bound)")),
+            ("barrage_mix", T("堰あり", "Barrage"), T("湧出を混合比で(下限側)", "seepage by mixing ratio (lower bound)"))]
+
+
+def base(case):
+    """ケース名から地形の名前(nobarrage / barrage)を返す。"""
+    return case.replace("_off", "").replace("_mix", "")
 X_MOUTH = I_COAST * DX / 1000.0
 XK = (np.arange(NX) + 0.5) * DX / 1000.0
 EXT = [0, NX * DX / 1000, NY * DX / 1000, 0]
@@ -101,7 +109,7 @@ def plan(k):
     fig, axs = plt.subplots(2, 2, figsize=(13, 5.6), constrained_layout=True)
     order = [CASES[0], CASES[1], CASES[2], CASES[3]]
     for ax, (case, lb, lx) in zip(axs.flat, order):
-        name = case.replace("_off", "")
+        name = base(case)
         _, sd = geo(name)
         hgs = load(case, "Hgs", k)
         hss = load(case, "Hss", k)
@@ -163,15 +171,17 @@ def profile(k):
 
 def series():
     fig, axs = plt.subplots(1, 2, figsize=(13, 4.2), constrained_layout=True)
-    sty = {"_off": "--", "": "-"}
     col = {"nobarrage": "#c0392b", "barrage": "#2c7fb8"}
-    for case, lb, lx in CASES:
-        name = case.replace("_off", "")
+    for case, lb, lx in CASES + MIXCASES:
+        if not frames(case, "Hgs"):
+            continue
+        name = base(case)
+        sty = "--" if case.endswith("_off") else (":" if case.endswith("_mix") else "-")
         fs = frames(case, "Hgs")
         t = np.arange(len(fs)) * DT_FILE_H / 24
         v = [(np.loadtxt(f)[:, :I_COAST] * DX * DX).sum() / 1e3 for f in fs]
-        axs[0].plot(t, v, sty["_off" if case.endswith("_off") else ""], color=col[name], label=f"{lb} / {lx}")
-        if not case.endswith("_off"):
+        axs[0].plot(t, v, sty, color=col[name], label=f"{lb} / {lx}")
+        if case in ("nobarrage", "barrage"):
             tips = [tip_km(np.loadtxt(f)) for f in frames(case, "Hss")]
             axs[1].plot(t, tips, "-", color=col[name], marker=".", ms=3, label=lb)
     for ax in axs:
@@ -179,7 +189,7 @@ def series():
         ax.grid(alpha=0.3)
         ax.set_xlabel(T("経過日数", "days"))
     axs[0].set_ylabel(T("陸側帯水層の塩水量 (千 m³)", "salt in landward aquifer (10³ m³)"))
-    axs[0].legend(fontsize=8, loc="upper left", bbox_to_anchor=(0.12, 0.99))
+    axs[0].legend(fontsize=8, loc="center right", bbox_to_anchor=(0.99, 0.48))
     axs[0].text(1.0, axs[0].get_ylim()[1] * 0.5, T("出水+強雨", "flood + rain"), fontsize=8, ha="center",
                 rotation=90)
     axs[1].axhline(X_MOUTH - (I_WEIR - 1) * DX / 1000, color="k", ls=":", lw=1)
@@ -192,20 +202,25 @@ def series():
 
 
 def table(k):
-    print(T("ケース, 陸側帯水層の塩水量(千 m³), 堰位置より上流の河床下帯水層の塩水割合, 岸から 80 m 以内の塩水割合(同区間), くさび先端(最終 2 日の範囲 km)",
-            "case, salt in landward aquifer (10^3 m3), salt fraction below bed upstream of barrage site, salt fraction within 80 m of banks (same reach), wedge tip range in last 2 days (km)"))
-    for case, lb, lx in CASES:
-        name = case.replace("_off", "")
+    print(T("ケース, 陸側帯水層の塩水量(千 m³), 河床下の塩水の前線(割合 0.5)の河口からの距離 km, 堰位置より上流の河床下帯水層の塩水割合, 岸から 80 m 以内の塩水割合(同区間), くさび先端(最終 2 日の範囲 km), 河道の底層塩水量(最終 2 日の平均、千 m³)",
+            "case, salt in landward aquifer (10^3 m3), distance of salt front below bed (fraction 0.5) from mouth km, salt fraction below bed upstream of barrage site, salt fraction within 80 m of banks (same reach), wedge tip range in last 2 days (km), bottom salt in river (mean over last 2 days, 10^3 m3)"))
+    for case, lb, lx in CASES + MIXCASES:
+        if not frames(case, "Hgs"):
+            continue
+        name = base(case)
         _, sd = geo(name)
         hgs = load(case, "Hgs", k)
         fr = hgs / (sd * SY)
         up = slice(0, I_WEIR - 1)
         bed = fr[JC - 1:JC + 2, up].mean()
         bank = np.r_[fr[JC - 3:JC - 1, up].ravel(), fr[JC + 2:JC + 4, up].ravel()].mean()
+        idx = np.nonzero(fr[JC, :I_COAST] > 0.5)[0]
+        front = X_MOUTH - idx.min() * DX / 1000.0 if len(idx) else 0.0
         fs = frames(case, "Hss")[-8:]
         tips = [tip_km(np.loadtxt(f)) for f in fs]
-        print(f"{case}, {(hgs[:, :I_COAST] * DX * DX).sum() / 1e3:.0f}, {bed:.3f}, {bank:.3f}, "
-              f"{min(tips):.2f}-{max(tips):.2f}")
+        surf = np.mean([(np.loadtxt(f)[:, :I_COAST] * DX * DX).sum() / 1e3 for f in fs])
+        print(f"{case}, {(hgs[:, :I_COAST] * DX * DX).sum() / 1e3:.0f}, {front:.2f}, {bed:.3f}, {bank:.3f}, "
+              f"{min(tips):.2f}-{max(tips):.2f}, {surf:.0f}")
 
 
 if __name__ == "__main__":

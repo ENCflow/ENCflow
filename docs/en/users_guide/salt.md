@@ -89,7 +89,7 @@ the lateral K and specific yield are shared).
 |---|---|---|
 | f_salt_surf | 1 | 1: surface salt layer (advection + bottom gravity current) |
 | f_salt_gw | 1 | 1: subsurface (soil layer) salt zone. **Requires f_gwlateral=1** |
-| f_salt_exch | 1 if both are enabled | 1: split the surface–subsurface exchange (infiltration, saturation-excess seepage) into fresh and salt water. Requires f_salt_surf=1 and f_salt_gw=1. 0 disables the split (infiltration and seepage implicitly fresh = behaviour before 2026-10-29) |
+| f_salt_exch | 1 if both are enabled | 1: split the surface–subsurface exchange (infiltration, saturation-excess seepage) into fresh and salt water (seepage takes fresh water first). 2: the same, but seepage is mixed in the salt fraction before seepage (lower-bound sensitivity case). 1 and 2 require f_salt_surf=1 and f_salt_gw=1. 0 disables the split (infiltration and seepage implicitly fresh = behaviour before 2026-10-29) |
 | salt_rhof / salt_rhos | 1000 / 1025 | Fresh / salt densities (kg/m3); they set eps |
 | salt_alpha | 1.0 | Barotropic advection share of the salt layer, alpha (the bottom layer carries less of the flow; 1 = concentration-proportional) |
 | salt_ni | 0.025 | Interfacial Manning roughness of the bottom gravity current |
@@ -160,23 +160,22 @@ Setting 0 treats the exchange as implicitly fresh (the behaviour before
 through the consistency clamp, and seeping salt water disappears too), which
 allows a comparison with the river pathway of salinization "switched off".
 
-Notes for reading the results (numerical properties):
+Notes for reading the results:
 
-- **Salinization right below the river bed is on the high side**: combined
-  with the immediate overturn, the exchange becomes one-directional — salt
-  water enters from the bed at high tide and the upper fresh water of the
-  aquifer leaves at low tide (in reality part of the infiltrated salt water
-  returns before it sinks). The aquifer under a bed covered by the wedge can
-  become entirely salt within days to tens of days.
-- **Salt water decreases at seepage faces**: at the boundary between a cell
-  with surface water (saturated) and a neighbouring unsaturated cell, the
-  head of layer 1 switches by the surface water depth, so in the scheme that
-  solves the total and the salt zone in turn there are steps where the
-  salt-zone flux is evaluated in the opposite direction and the consistency
-  clamp removes salt water (reducing dt hardly reduces it; in model
-  experiment C2 of [test/salt](../../../test/salt/en/README.md) about 16 % of the
-  salt-water volume over a 2-hour run). To that extent the magnitude of
-  salinization leans to the low side.
+- **Salinization right below the river bed is on the high side
+  (f_salt_exch=1)**: combined with the immediate overturn, the exchange becomes
+  one-directional — salt water enters from the bed at high tide and the upper
+  fresh water of the aquifer leaves at low tide (in reality part of the
+  infiltrated salt water returns before it sinks). The aquifer under a bed
+  covered by the wedge can become entirely salt within days to tens of days.
+- **Lower-bound sensitivity case (f_salt_exch=2)**: seeping water is released
+  mixed in the aquifer's salt fraction Hgs/Hg before seepage (the limit in which
+  infiltrated salt water mixes and returns before it sinks; infiltration is split
+  as in 1). Computing both 1 and 2 shows the magnitude of salinization via the
+  river as a range ([examples/estuary_barrage](../../../examples/estuary_barrage/en/README.md)).
+- The exchange split conserves the salt-water volume (relative 1e-13 in the
+  closed-domain checks, schematic experiments C1–C4 of
+  [test/salt](../../../test/salt/en/README.md)).
 - Evapotranspiration, percolation into layer 2 (f_gwlayer2) and exchange with
   the conduit layer are outside the scope and remain implicitly fresh.
 
@@ -234,17 +233,28 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   cells, in the same form (capacity × passage width × saturated salt
   thickness) (since 2026-10-29; before that the salt zone was not capped).
 - The gravity current of the surface salt layer (salt water spreading along
-  the bottom) does not recognise the virtual walls of [channel](channel.md)
-  levees (fn_bank / bank0) or seawalls (fn_seawall) (the shallow-water
-  advection respects the walls, so salt carried by overtopping at high tide and
-  the like is correct). If there is salt water on both sides of a virtual wall
-  separating a river from the protected land, the salt water alone spreads
-  across the wall. For calculations where an estuary barrage, sluice or levee
-  stops salt water, give the wall as terrain (a step in ground elevation)
+  the bottom) lets only the salt water above the **sill** of each cell boundary
+  cross. The sill is the higher of the two ground elevations, or the crest of a
+  [channel](channel.md) levee (fn_bank / bank0) or seawall (fn_seawall) virtual
+  wall if there is one (since 2026-10-29; before that the gravity current
+  ignored the virtual walls, and with salt water on both sides of a wall the salt
+  water alone crossed it). The shallow-water advection (salt carried by
+  overtopping and tidal flow) respects the walls as before. The time-dependent
+  lowering of the crest by a breach (&list_channel_breach) is not followed by
+  the gravity current (salt carried by the water through the breach still passes
+  by advection; only the part creeping along the bottom is stopped). Give the
+  crest of an estuary barrage or sluice across the river as terrain (a step in
+  ground elevation), not as a virtual wall
   ([examples/estuary_barrage](../../../examples/estuary_barrage/en/README.md)).
-- At rapidly advancing intrusion fronts, a small partition error
-  between the total and the salt (proportional to dt) can arise from
-  time splitting; reducing dt reduces it (see developer.md sec. 47.2).
+- The flux of the subsurface salt zone is evaluated on the state just before
+  the lateral flow of layer 1, and when flowing in the same direction as the
+  total, the composition of the water leaving a cell is aligned with the salt
+  fraction of the upwind cell (since 2026-10-29; before that there was a
+  dt-proportional partition error at intrusion fronts, and salt water was
+  removed by the consistency clamp at seepage faces; developer.md sec. 47.7).
+  When the groundwater update interval dt_gwflow is longer than dt, the
+  subsurface salt processing runs at the same interval with the same
+  effective time step.
 
 ## Parameters and the basis of their defaults
 
@@ -253,7 +263,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
 | f_salt_surf / f_salt_gw | 1 / 1 | enable the surface and subsurface salt layers | **method** both by default; combinations by use are in "Recommended values by pattern" |
-| f_salt_exch | 1 if both are enabled | fresh/salt split of the surface–subsurface exchange | **method** in the sharp-interface picture the bottom salt water touches the river bed and the upper aquifer is fresh (own simplification; developer.md sec. 47.5). With both layers enabled the physically consistent side is the default; 0 is for comparison |
+| f_salt_exch | 1 if both are enabled | fresh/salt split of the surface–subsurface exchange | **method** in the sharp-interface picture the bottom salt water touches the river bed and the upper aquifer is fresh (own simplification; developer.md sec. 47.5). With both layers enabled the physically consistent side is the default; 2 is the lower-bound sensitivity case (sec. 47.9), 0 is for comparison |
 | salt_rhof / salt_rhos | 1000 / 1025 kg/m³ | fresh and sea water densities (density difference $`\varepsilon`$ = 2.5 %) | **customary value** standard seawater (salinity 35); Ghyben–Herzberg 1/ε ≈ 40[^bear79] |
 | salt_alpha | 1.0 | barotropic advection share of the salt layer | **empirical** 1 = proportional to the layer thickness; calibrate within 0.5–1 for the bottom layer carrying less of the flow |
 | salt_ni | 0.025 | interfacial Manning roughness of the gravity current | **empirical** placeholder of the order of a bed roughness; calibrate on observed salt-wedge positions |
@@ -277,7 +287,9 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 ## Tests and examples
 
 - [test/salt](../../../test/salt/en/README.md): the pool-partition experiment (approach to a stable stratification) and seawater intrusion with analytic checks,
-  and the fresh/salt split of the surface–subsurface exchange (model experiment C1: analytical end state of infiltration; C2: seepage from an entirely salt aquifer).
+  the fresh/salt split of the surface–subsurface exchange (model experiment C1: analytical end state of infiltration; C2, C3: seepage from an entirely salt
+  aquifer and synchronisation with dt_gwflow; C4: seepage from a partly salt aquifer with f_salt_exch=1 and 2), and the gravity current and virtual walls
+  (D1: levee, D2: seawall).
 - [examples/estuary_barrage](../../../examples/estuary_barrage/en/README.md): how the presence of an estuary barrage affects the salt wedge travelling up a river and
   the intrusion of salt water into the surrounding aquifer (four cases: with/without barrage × with/without the exchange split).
 - Worked example of the format: [examples/List_samples/en/list_salt.txt](../../../examples/List_samples/en/list_salt.txt).

@@ -1,11 +1,11 @@
 # ENCflow/examples/estuary_barrage/Makefile
 #   make          ../../bin/ の実行ファイルへのリンクと入力(data/。gen_data.py)を作る
-#   make run      4 ケースを順に計算する(1 ケース 15 分前後。4 スレッド)
+#   make run      6 ケースを順に計算する(1 ケース 15 分前後。4 スレッド)
 #   make clean
 TOPDIR	= ../..
 BINDIR	= $(TOPDIR)/bin
 SRCDIR	= $(TOPDIR)/src
-CASES	= nobarrage barrage nobarrage_off barrage_off
+CASES	= nobarrage barrage nobarrage_off barrage_off nobarrage_mix barrage_mix
 
 all: links inputs
 

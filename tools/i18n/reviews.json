@@ -410,9 +410,9 @@
     {
       "source": "docs/users_guide/salt.md",
       "target": "docs/en/users_guide/salt.md",
-      "source_sha256": "5eb08593a8ef81f97040285fde8a1fd0ac2c9eedb68664dd054de0561bd88a57",
-      "target_sha256": "f67e65e6c7cae746c6963d8fa9caa093965c5d95f3356bcf0ce009a25c322b76",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
+      "source_sha256": "bb4d20e3e5021fd4bfada4e1f5e7a2677d516e03a7411ad3690ce29214bbf8c8",
+      "target_sha256": "005dd9584c59a981d91e0ddbffc3b77a8171b5b48a30af40cfeb7e77d9ba06eb",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror; figures from the same results with label changes only, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "1bea2201d754a636924d27fa72becf1fa0dd1586c236444def4af18093df40b7",
-      "target_sha256": "748ef0ca0f4504b0f637a367f667ae0830f0aa205663bc11705979fe54dc8815",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
+      "source_sha256": "34fb308c1f5734a2372860481ff70644801f14990d39a7dbae554082aa7221f9",
+      "target_sha256": "8c35a8723e0b928e1f037da23cb809fd4156c7a2a397c770414623d384b97f97",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror; figures from the same results with label changes only, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
@@ -707,9 +707,9 @@
     {
       "source": "examples/List_samples/list_salt.txt",
       "target": "examples/List_samples/en/list_salt.txt",
-      "source_sha256": "3c3a182b78365162875afe81967cb7360fa1704b2c20fa986113a45f5e98be5d",
-      "target_sha256": "548d8564bff718cc5edefd22040db14d8079c59a8f15f2c7e6dcc8b1b646da42",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
+      "source_sha256": "0cb49d50d33d31a2229f8133dee52d2d40c0d210cc9f9d1a8c89b2e670874341",
+      "target_sha256": "97afa5ba36f102e8076e09d111c6836e0ea63956a404c5ed41a207a34e1c3d88",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror; figures from the same results with label changes only, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
@@ -959,36 +959,36 @@
     {
       "source": "examples/estuary_barrage/README.md",
       "target": "examples/estuary_barrage/en/README.md",
-      "source_sha256": "46714ba701f9785252281fc3ddc70b21482f636e36642b5db5a58713643005b3",
-      "target_sha256": "23ffa7d34fbe3dd515641f31319e0eb6f776f2b7b938fe3fc18271a9808164ef",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
+      "source_sha256": "294f50f9fa3c46d1341b7047248fa8e7ed9f94ed60f3e338563227ff8b38e9d1",
+      "target_sha256": "95936bf0e55bc1d336e41c0691b75dd1b4b3b53282cfc01d99fb682cccd40d2e",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror; figures from the same results with label changes only, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/estuary_barrage/figs/plan.png",
       "target": "examples/estuary_barrage/en/figs/plan.png",
-      "source_sha256": "e0a809cb8c2634a71025b005ffac2793e8c52cfe2cb690a9280f7086563cdaa9",
-      "target_sha256": "3ac2986cea526986e75153bd0423b34dd0db2890157e1250ee58b579d0a868ae",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror, figures drawn from the same results with label changes only, 2026-10-29)",
+      "source_sha256": "1f905f64ebcba998b03d7ff9aa553ee28ca815a675bb5583b846c942cecffe36",
+      "target_sha256": "8ae978ed7c6ac0b25fb142957e032d5f8645a389e52234be79c0373bb5069cd6",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror; figures from the same results with label changes only, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/estuary_barrage/figs/profile.png",
       "target": "examples/estuary_barrage/en/figs/profile.png",
-      "source_sha256": "46d8760512c62456c7678ab03414aa4abccde6a4eb9b009df789705d7e58e8cf",
-      "target_sha256": "cdacf368dd581f44afc5f1914dec6d17829a7e0a6d6802423dff1dd5bf5bce8f",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror, figures drawn from the same results with label changes only, 2026-10-29)",
+      "source_sha256": "32fe09fbaac20d0ea82dc15298baa8bb8964d102c28cb59db74d6858305bd639",
+      "target_sha256": "7f85539ef1b2eb536d239c7d4c2fe706201ba7a5e32cc13941c5c38102958221",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror; figures from the same results with label changes only, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/estuary_barrage/figs/series.png",
       "target": "examples/estuary_barrage/en/figs/series.png",
-      "source_sha256": "3da5304536fa1a03b1bf7eb742dc080505b2c2096a0648c149c6dbdf6bfbe436",
-      "target_sha256": "a0f3eb12d24b7a57f0c2c25f5c13f2074d5b3b7b2ed61260bc283689f42c3118",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror, figures drawn from the same results with label changes only, 2026-10-29)",
+      "source_sha256": "eac73e2ec9342a1483ba7eb6c3163fe7d3fe483e0266914ec8b93d4d49085fa2",
+      "target_sha256": "e48caaa6d878eb81a912d8cbfd36565289c7677ea1b7581f8fb090e021e3e022",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror; figures from the same results with label changes only, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
@@ -997,7 +997,7 @@
       "target": "examples/estuary_barrage/en/figs/setup.png",
       "source_sha256": "09b0c60a2ee1db8bc0e3b4d90d0ab553148d9f505e9f0c968abc86b0dbd46efc",
       "target_sha256": "618e8dad58f6e8a40d90bffb10a4c3507a5ceb1142bad39a6863527bbdeb2092",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror, figures drawn from the same results with label changes only, 2026-10-29)",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror; figures from the same results with label changes only, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
