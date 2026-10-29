@@ -2102,20 +2102,20 @@
     {
       "source": "test/salt/README.md",
       "target": "test/salt/en/README.md",
-      "source_sha256": "02996269ed947193ef47695bb622b5a120fdc4b2bdb24e37cac805fbfcde537c",
-      "target_sha256": "439ab00c56361aaba950e4533041a2fd0e3dd6751849963ee057ce109942edee",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
+      "source_sha256": "72cd10ac92b59beaa60fc7a35e29ac09576daec977f8a2fe64fbf8c96c6dc547",
+      "target_sha256": "86e683f0f8240db8e62eb255fef3d056f055d65ee29123cb1eff407e261d8d14",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror; figures from the same results with label changes only, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/salt/figs/salt.png",
       "target": "test/salt/en/figs/salt.png",
-      "source_sha256": "ea47a5a444202a34f9c9c85fa45791a6768d1f04a05ff3fe355ff7e24b309138",
-      "target_sha256": "5986d4194934aa1b30416b8ca8ed72de89bdde207beb388ed32c380b693807cf",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "aa3b2918453b58c4e9b5904cd2b1398ff023d5bbc3a2d4e75d86518e53b627c1",
+      "target_sha256": "924063cae5493f52630f835f830758a0c12973fcda3a5b43690b7d9c414c820d",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror; figures from the same results with label changes only, 2026-10-29)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/sedfeed/README.md",

@@ -29,11 +29,18 @@ module m_saltwater
   !      浸透量(s%fxsli)は河床に接する底層(塩水)から先に地下へ入れる。
   !      合計(h・hg)は gwflow が移し済みなので内数の付け替えだけ。
   !      逆向き(飽和湧出 s%fxslo)は (3) の連続式の後で配分する(下記)
-  !  (1) 整合クランプ(乾燥・蒸発等による hss > h の解消)
+  !  (1) 整合クランプ(乾燥・蒸発等による hss > h の解消)。hgs ≤ hg は
+  !      ここでは課さない(側方流が先に動かした合計に対応する塩水を、直後の
+  !      (3) が運ぶ前に消さないため。(3) の連続式の後のクランプが担う。§47.7)
   !  (2) 地表の底層重力流(f_salt_surf=1): 適応サブサイクリング
   !      (m_glacier の SIA と同じ「D_max の allreduce → 分割数」方式。
   !       全ランク同一 = collective 安全・決定的)
-  !  (3) 地下の塩水 zone 側方流(f_salt_gw=1): 上記 (a)(b)。
+  !  (3) 地下の塩水 zone 側方流(f_salt_gw=1): 上記 (a)(b)。水頭 η と飽和の
+  !      判定は層1の側方流の直前の写し(s%hgsnap・s%hsnap)で評価する = 合計と
+  !      塩水 zone が同じ状態の流束になる(§47.7。別々の状態だと飽和の判定で
+  !      水頭が地表水深ぶん切り替わる湧出面などで塩水が整合クランプに消えた)。
+  !      (3)(4) と湧出の配分は側方流が走ったステップだけ同じ実効刻み
+  !      (s%gw_dts。dt_gwflow)で実行する。
   !      容量超過(hg > sd·sy)は層1の規則どおり地表へ湧出。f_salt_exch=1
   !      なら、このステップの湧出(側方流の記録 s%fxslo+ここでの湧出)は
   !      帯水層の上部 = 淡水から先に出し、淡水で足りない分の塩水を地表の
@@ -239,6 +246,11 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   ! 全域が使える(帯行 jsh:jeh は全域の有効行)
   allocate(s%hss(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hgs(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  ! 層1の側方流の直前の hg・h の写し(gwflow_lateral_calc が写す。§47.7)
+  if (sl%sw%gw) then
+    allocate(s%hgsnap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%hsnap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  end if
   ! 地表—層1 の交換量の記録場(gwflow が書き (0) が読んでゼロ戻し。§47.5)
   if (sl%sw%exch) then
     allocate(s%fxsli(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
@@ -273,7 +285,8 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
 
   ! --- 地下塩水 zone の安定条件(静的検査。§47) ---
   ! 塩水 zone 流束の水頭感度は (1+ε)/sy(∇η と ε∇ζ の和)、厚さ上界は
-  ! max(sd)。層1側方の検査と同型で dt(毎ステップ実行)を検査する
+  ! max(sd)。層1側方の検査と同型で、地下水の実効刻み s%gw_dts(側方流と
+  ! 同じステップに同じ刻みで実行する。§47.7)を検査する
   if (sl%sw%gw) then
     sdmax(1) = 0.0
     do j = dcp%js, dcp%je
@@ -292,9 +305,9 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
       dt_lim = 0.5 * sl%sw%sy * g%dx * g%dy &
                / (sl%sw%ksh * (1.0 + sl%sw%epsr) * sdmax(1) * sum_ldr)
       write(msg,'(a,es10.3,a,es10.3,a)') "saltwater_gw: dt limit = ", dt_lim, &
-                                         " s (dt = ", p%dt, " s)"
+                                         " s (dts = ", s%gw_dts, " s)"
       call par_info(trim(msg))
-      if (p%dt > dt_lim) then
+      if (s%gw_dts > dt_lim) then
         call par_stop("saltwater_gw: dt exceeds the explicit stability limit " &
                       // "(reduce dt or K_sh)")
       end if
@@ -377,7 +390,6 @@ subroutine m_saltwater_calc(sl, p, g, s, it)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%hss(i,j) > s%h(i,j)) s%hss(i,j) = max(s%h(i,j), 0.0)
-      if (s%hgs(i,j) > s%hg(i,j)) s%hgs(i,j) = max(s%hg(i,j), 0.0)
     end do
   end do
   !$omp end parallel do
@@ -394,10 +406,12 @@ subroutine m_saltwater_calc(sl, p, g, s, it)
   !     サブサイクルごとに内部で交換する)
   if (sl%sw%surf) call surf_gravity_current(sl, g, s, p%dt)
 
-  ! (3) 地下の塩水 zone 側方流+(4) 海側境界
-  if (sl%sw%gw) then
-    call gw_salt_zone(sl, g, s, p%dt)
-    call gw_sea_exchange(sl, g, s, p%dt)
+  ! (3) 地下の塩水 zone 側方流+(4) 海側境界。側方流が走ったステップだけ、
+  !     その実効刻みで(dt_gwflow > dt でも合計と同期する。§47.7)
+  if (sl%sw%gw .and. s%gw_lat_done) then
+    call gw_salt_zone(sl, g, s, s%gw_dts)
+    call gw_sea_exchange(sl, g, s, s%gw_dts)
+    s%gw_lat_done = .false.
   end if
 
   ! (5) 海域セルの hss 維持(次ステップの移流フックの風上濃度用。
@@ -576,7 +590,8 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 地下の塩水 zone 側方流(完全加算方式。ヘッダ (a)(b))
-!   η は lateral_core の層1定義と同一(z − sd + hg/sy。飽和セルは + h)。
+!   η は lateral_core の層1定義と同一(z − sd + hg/sy。飽和セルは + h)で、
+!   hg・h は側方流の直前の写し(s%hgsnap・s%hsnap)を使う(§47.7)。
 !   ζ = z − sd + hgs/sy。qs = K·b_s·ΔΦs·rdr·wl(Φs = η + εζ)、
 !   qb = K·b_s·ε·Δζ·rdr·wl(合計 hg への追加分)。制限は両者に同率適用
 !----------------------------------------------------------------------
@@ -602,8 +617,9 @@ subroutine gw_salt_zone(sl, g, s, dts)
       if (g%x(i,j) <= 0) cycle
       bc = s%hgs(i,j) * sl%sw%syinv
       zetac = s%z(i,j) - s%sd(i,j) + bc
-      etac = s%z(i,j) - s%sd(i,j) + s%hg(i,j) * sl%sw%syinv
-      if (s%hg(i,j) >= s%sd(i,j) * sl%sw%sy) etac = etac + s%h(i,j)
+      ! 水頭は層1の側方流と同じ状態(直前の写し)で評価する(§47.7)
+      etac = s%z(i,j) - s%sd(i,j) + s%hgsnap(i,j) * sl%sw%syinv
+      if (s%hgsnap(i,j) >= s%sd(i,j) * sl%sw%sy) etac = etac + s%hsnap(i,j)
       psc = etac + sl%sw%epsr * zetac
       do k = 1, 4
         in = i + din(k)
@@ -618,8 +634,8 @@ subroutine gw_salt_zone(sl, g, s, dts)
             bn = s%hgs(in,jn) * sl%sw%syinv
             if (bc > sl%sw%eps .or. bn > sl%sw%eps) then
               zetan = s%z(in,jn) - s%sd(in,jn) + bn
-              etan = s%z(in,jn) - s%sd(in,jn) + s%hg(in,jn) * sl%sw%syinv
-              if (s%hg(in,jn) >= s%sd(in,jn) * sl%sw%sy) etan = etan + s%h(in,jn)
+              etan = s%z(in,jn) - s%sd(in,jn) + s%hgsnap(in,jn) * sl%sw%syinv
+              if (s%hgsnap(in,jn) >= s%sd(in,jn) * sl%sw%sy) etan = etan + s%hsnap(in,jn)
               psn = etan + sl%sw%epsr * zetan
               if (psc /= psn) then
                 ! 上流側(Φs の高い側)の塩水飽和帯厚

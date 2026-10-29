@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""模式実験 C1・C2(f_salt_exch)の検定。事前に ./Run_exch.sh(または両 param の実行)が必要。
+"""模式実験 C1〜C3(f_salt_exch)の検定。事前に ./Run_exch.sh(または各 param の実行)が必要。
 
 終状態は倍精度の保存ファイル(save_exch_*/state.dat と saltwater.dat)から読む。
   C1(浸透 = 底層の塩水から先): 解析終状態 H = 0.7、Hss = 0.1、Hg = Hgs = 0.3(全セル)。
       判定は相対 1e-12(浮動小数点の加算の丸めのみ)。塩水体積 Hss + Hgs = 0.4 の保存も見る。
   C2(湧出 = 淡水から先、淡水がなければ塩水): 帯水層は全層が塩水なので、窪地に
-      湧き出た地表水は塩水を含む(Hss/H >= 0.1 を合格とする定性判定。f_salt_exch=0 なら 0)。
-      塩水体積の収支は表示のみ(湧出面で層1の水頭が地表水深ぶん切り替わる場所では
-      加算方式の逐次分割で塩水が減る。developer.md §47.5 の既知の数値特性)。
+      湧き出た地表水はほぼ全量が塩水(Hss/H >= 0.99。f_salt_exch=0 なら 0)、閉領域の
+      塩水体積 Σ(Hss + Hgs) は相対 1e-3 以内で保存(塩水 zone を側方流の直前の状態で
+      評価する。developer.md §47.7。それ以前は湧出面で 16 % 減った)。
+  C3: C2 を地下水の更新間隔 dt_gwflow = 2 s(4 ステップ)で。判定は C2 と同じ
+      (地下の塩水の処理が側方流と同じ刻みで同期していること)。
 """
 import struct
 import sys
@@ -66,22 +68,25 @@ good = err < 1e-12
 ok &= good
 print(f"C1 salt volume Hss+Hgs = {max(tot):.15f} (initial 0.4)  rel.err {err:.1e}  {'PASS' if good else 'FAIL'}")
 
-# --- C2: 湧出の淡塩配分(定性判定+収支の表示) ---
-s = load("save_exch_out")
+# --- C2・C3: 湧出の淡塩配分(窪地の水の塩水割合と塩水体積の保存) ---
 with open("data_salt/hgs0_slope.txt") as f:
     hgs0 = [float(x) for x in f.read().split()]
-pond = [i for i, z in enumerate(s["z"]) if z < -0.25]      # 窪地(z = −0.5)
-hp = sum(s["h"][i] for i in pond)
-sp = sum(s["hss"][i] for i in pond)
-frac = sp / hp
-good = frac >= 0.1
-ok &= good
-print(f"C2 pond: H {hp / len(pond):.4f} m, Hss {sp / len(pond):.4f} m, "
-      f"Hss/H = {frac:.3f} (>= 0.1; 0 without f_salt_exch)  {'PASS' if good else 'FAIL'}")
-v0 = sum(hgs0)
-v1 = sum(s["hss"]) + sum(s["hgs"])
-print(f"C2 salt volume: initial {v0:.6f}, final {v1:.6f} (ratio {v1 / v0:.4f}; "
-      f"loss at the seepage face is a known property, developer.md §47.5)")
+for tag, savedir in (("C2", "save_exch_out"), ("C3", "save_exch_dtg")):
+    s = load(savedir)
+    pond = [i for i, z in enumerate(s["z"]) if z < -0.25]      # 窪地(z = −0.5)
+    hp = sum(s["h"][i] for i in pond)
+    sp = sum(s["hss"][i] for i in pond)
+    frac = sp / hp
+    good = frac >= 0.99
+    ok &= good
+    print(f"{tag} pond: H {hp / len(pond):.4f} m, Hss {sp / len(pond):.4f} m, "
+          f"Hss/H = {frac:.4f} (>= 0.99; 0 without f_salt_exch)  {'PASS' if good else 'FAIL'}")
+    v0 = sum(hgs0)
+    v1 = sum(s["hss"]) + sum(s["hgs"])
+    good = abs(v1 / v0 - 1.0) < 1e-3
+    ok &= good
+    print(f"{tag} salt volume: initial {v0:.6f}, final {v1:.6f} (ratio {v1 / v0:.6f}; "
+          f"|ratio - 1| < 1e-3)  {'PASS' if good else 'FAIL'}")
 
 print("=== Check_exch PASS ===" if ok else "=== Check_exch FAIL ===")
 sys.exit(0 if ok else 1)
