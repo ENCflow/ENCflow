@@ -261,6 +261,41 @@ sand and gravel. Verification: [test/fluvial](../../../test/fluvial/en/README.md
 [test/sedinflow](../../../test/sedinflow/en/README.md) (closure of the
 sediment supplied through the boundary).
 
+**Future work (planned): the effective shear stress $`\tau_{*e}`$.** As
+noted above, the current Ashida–Michiue formula also uses the total shear
+stress $`\tau_*`$ in the leading term, so it overestimates the transport
+when Manning's n includes form drag of bedforms, bars or vegetation. We plan
+to add, without changing the default, an option that obtains $`u_{*e}`$ from
+eq. (11) of the original and replaces only the leading $`\tau_*^{3/2}`$ with
+$`\tau_{*e}^{3/2}`$ (the two threshold factors keep the total $`\tau_*`$).
+
+- **Effect**: the formula then matches the original and Nays2DH and is used
+  the way the coefficient 17 was fitted. Since $`\tau_{*e}`$ depends only on
+  the velocity and the depth, the current behaviour that a cell with a higher
+  n from a roughness distribution (land use, for example) has a larger
+  $`\tau_*`$ (more transport) at the same velocity disappears (the `fix_cn` of
+  fixation evaluates the transport $`\tau_*`$ with the original n, so it is
+  not affected in the first place). The form-drag part follows the velocity,
+  depth and $`\tau_*`$ in each cell and at each time, a separation closer to
+  the original than `fluv_taufac` with its fixed ratio (which also shrinks
+  the threshold factors). No new parameter is needed.
+- **Size of the effect** (trial calculation for uniform flow): on a sand bed
+  with n about twice the grain roughness (the settings of the meander and
+  delta examples) the transport becomes 0.1–0.25 times the current value,
+  on a gravel bed 0.4–0.65 times. The existing examples were tuned for the
+  speed of morphological change without $`\tau_{*e}`$, so it will not be the
+  default (bit-identical to the current results when disabled).
+- **To be prepared in the implementation**: a cap $`\tau_{*e} \le \tau_*`$
+  (on a flat sand bed the value of eq. (11) exceeds $`\tau_*`$); protection
+  outside the range of the log law (shallow flows and mountain streams with a
+  ratio of hydraulic radius to equivalent roughness of a few or less; below
+  0.09 the denominator of eq. (11) becomes zero); exclusion with
+  `fluv_taufac`; and a check case for eq. (11). It applies only to the
+  Ashida–Michiue formula (MPM has a different correction, the ripple
+  factor).
+- **Timing**: it will be added when comparisons with Nays2DH, sand-bed rivers
+  with dunes or vegetated floodplains are taken up (developer.md §19.8).
+
 ## 4. Suspended sediment (f_suspend)
 
 **Transport.** The concentration $`C = h_s/h`$ is the solid volume per

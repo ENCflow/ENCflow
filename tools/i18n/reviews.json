@@ -419,8 +419,8 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "4e26f77fd5399359c20142c04f35866ac95c9dc295c51ff74c4ccea60eb31cc2",
-      "target_sha256": "55aab76b79e1599887e92755482db055b7e0ef637fb29df06da22d44c7801e33",
+      "source_sha256": "f9cb0f5dfe26e3c6fe320353e692f8f3ee3162f885f52df5ee05f5d3d9499330",
+      "target_sha256": "f5139222912678ef5382666d415224fce0e1ace763083cae958e4f8f8f6e6908",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
