@@ -509,8 +509,8 @@
     {
       "source": "docs/users_guide/wavefield.md",
       "target": "docs/en/users_guide/wavefield.md",
-      "source_sha256": "4905c55650ad86c12aceeeb2ce09ace2f261380f3b63d1366b1a02b292ae9575",
-      "target_sha256": "0850c1256ae8ba272b6f6ba0ffd5aec7e2c44a958054191fc687c3b7520447c1",
+      "source_sha256": "ffbd452a2c37aa838fb5f34e22f587930bf85b5dff554e8364e550d78a3f838c",
+      "target_sha256": "960b9898d1c0c8a4eeaecb0adf10e6a3b7dacb54c6d37e7db51791d8be119e6e",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
@@ -923,8 +923,8 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "2a0fd290c09987dc5a1c577b6c01197c93c26489a260c5f86cf6aff2ce9efa66",
-      "target_sha256": "64ad1e9ca9a5b04b8edb03b6bd858c7ac1910c69f3e3ffd14036215d8d276136",
+      "source_sha256": "9d9c1d58d90bf9330dea63f88ddfc2baaebd5bb4a265444e508c3277fac5ad58",
+      "target_sha256": "c6117e1dfc9b4e3305c353a6772c2be1a03892c46a7c8cefed0e0ce86d4f8679",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
