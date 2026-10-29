@@ -930,11 +930,15 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 ## 既知の壊れている例題
 
 - **examples/meander の param_feed が水理 1:10:47 に Courant 数 1 超過で止まる(2026-10-29 発見。
-  developer.md §68.40 の「既知の問題」)**: 区間流入の外縁セルに接するエッジの移流項を 0 にした
-  §68.40(bf03768)から起きる(直前の 186bae4 では正常。切り分け済み)。流入区間のすぐ南の
-  外縁セルが掘れて、境界の列に沿う 2.6〜6.0 m/s の流れができる。README の結果は §68.40 の前の
-  計算。容量給砂で上流端まで動くほかの構成(meander の fixfeed・fixsuspfeed・fixsuspfines、
-  delta の fluv_bcfeed = 1 の構成)も確認中。直し方は議論から。
+  developer.md §68.40 の「既知の問題」。直し方は合意待ち)**: §68.40(bf03768)で移流項を 0 にした
+  エッジのうち、流入区間の端から区間の外へ出る 4 本で、流速が水面勾配と摩擦の釣り合いに向かって
+  エネルギーが作られ、横の外縁セルの掘れと境界の列に沿う噴流(6.0 m/s)の正帰還になる。この 4 本
+  だけ移流項を戻す試作 P2 は完走し、§68.40 の振動(再構成)も抑えたまま(案 A。推奨)。ただし
+  §68.40 の規則そのもの(流入区間の内側のエッジの移流項 0)が流入の横への広がりを強め、P2 でも
+  地形 200 h の河幅が §68.40 なしの 41 m(README は 40 m)に対し 68 m になる(初期の摂動を入れた
+  計算でも、地形 100 h で同じ差)。その根の直しは別の設計の議題。README の結果は §68.40 の前の計算。
+  容量給砂で上流端まで動くほかの構成(meander の fixfeed・fixsuspfeed・fixsuspfines、delta の fluv_bcfeed = 1 の
+  5 構成)が今のコードで止まるかは未確認。
 - **examples/benchmark/h-plane の hp10x**: 実行中に FPE で停止する
   (-ffpe-trap 検知。f_rntype=2 廃止の等価変換(2026-08-15)以前からの
   既存問題。hp10 は正常)。原因未調査。
@@ -1222,10 +1226,13 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   - **確認の残り**:
     - 区間流入の流入面の床の修正(§89.25)の例題への影響: 新旧の床が食い違ったら止まる計測用の
       実行ファイルで、全期間の確認を 2026-10-29 に始めた。meander_cutoff の param・param_slump と
-      meander の param・param_cohesive は食い違いなし。**meander の param_fixfeed(流量変動 +
-      容量給砂)は食い違う**(0:40 過ぎの増水期に流入セルで。回し直しが要る)。meander の param_feed は
-      床の食い違いのないまま 1:10:47 に止まった(§68.40 由来。「既知の壊れている例題」)。残り
-      (meander の 7・meander_cutoff の 4・delta の 8 構成)は実行中。
+      meander の param・param_cohesive・param_fixrec・param_varq は食い違いなし。**meander の
+      param_fixfeed・param_fixsuspfeed・param_fixsuspfines(容量給砂)は食い違う**(増水期に、流入
+      セルの内側が掘れて勾配が急になったとき。README の「給砂を入れた流量変動+定着の構成」の表と
+      図 feed.png が変わる)。meander の param_feed は床の食い違いのないまま 1:10:47 に止まった
+      (§68.40 由来。「既知の壊れている例題」)。残り(meander の 3・meander_cutoff の 4・delta の
+      8 構成)は実行中。§68.40 の案 A を入れると、流入区間の横が濡れる構成(meander・
+      meander_cutoff・delta)はどのみち回し直しになる。
     - 射流の上の剥離の連続の不安定(Fr > 1 で全波長が不安定、4〜8 セルが最速。§89.23。記録のみ):
       急勾配の長い計算で周期的な段が出たら、この性質による段かを確かめる。
     - examples/debris_bedrock の清水の出水 W の準静的な応力の後処理(plan §12.4)は、対策 1・2 の
