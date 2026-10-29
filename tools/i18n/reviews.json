@@ -58,8 +58,8 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "475929a2a63436b6edb1f5a0458b5af58f41b164d8430bda8e86bf3617c3ea5d",
-      "target_sha256": "a880b4f6b3c5536c67533dad6b8c7b6cf41caed296c55b5bb0b7ccbbdf08fc1c",
+      "source_sha256": "2e3dbca71c1a07b73ba06d1c293883f22d4704585bb687de41275733ba783c05",
+      "target_sha256": "9e78483b64603be3484e76182a01831b21a36537ef43c0cdf0ed481128569a0c",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"

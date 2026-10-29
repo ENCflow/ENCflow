@@ -297,22 +297,24 @@ user's guide chapters, not in this table.
   to vector machines and supercomputers contrasts with TUFLOW's demo
   limits and the commercial GUI-first products.
 - **Ease of adoption (self-teachability)**: as user-facing
-  groundwork, it ships a
-  26-chapter user's guide plus a full parameter index (583 entries),
+  groundwork, it ships a user's guide that explains every feature
+  chapter by chapter plus a full parameter index,
   annotated namelist samples for every feature
-  (examples/List_samples), and 2 hands-on tutorials (minimal example
+  (examples/List_samples), and hands-on tutorials (minimal example
   wave, real terrain chichibu; from the pitfalls of real data --
   depression removal and discharge oscillations from flat reaches --
   up to 3D visualization with ParaView, all turned into teaching
-  material). Pre/post-processing utilities are also bundled (utils/:
-  depression removal rmdepress_river, catchment delineation
-  calc_catchmentarea, land-use-to-mask lu2mask, VTK conversion
-  out2vtk, and more). In the comparison of adoption cost it also
-  ranks high among the open players.
+  material; plus bmi, driving ENCflow from Python through BMI, for
+  coupling with other programs). Pre/post-processing utilities are
+  also bundled (utils/: depression removal rmdepress_river, catchment
+  delineation calc_catchmentarea, land-use-to-mask lu2mask, VTK
+  conversion out2vtk, and more). In the comparison of adoption cost
+  it also ranks high among the open players.
   User-facing documentation now has a full Japanese-English mirror
-  (docs/en/ and the tutorials' en/); the remaining English gap is
-  only in the developer documentation (developer.md etc. are
-  Japanese-only).
+  (docs/en/, the en/ of tutorials, test and examples, and more); the
+  remaining English gap is only in the developer documentation
+  (developer.md etc. are Japanese-only, except for an English partial
+  mirror of the basic policy in Sec. 0).
 - **AI-agent orientation**: on top of the fully
   text-based input and output (no GUI dependency), ENCflow ships a
   documentation system that lets "phenomenon -> features -> parameters"
