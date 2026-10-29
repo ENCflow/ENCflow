@@ -2102,8 +2102,8 @@
     {
       "source": "test/salt/README.md",
       "target": "test/salt/en/README.md",
-      "source_sha256": "d545824df8cfdb3b9b6626484118a4ee9cb80fc3f495392f2162acccd9ba7368",
-      "target_sha256": "b2b2839daeb99b0773efd96e31d90a5e3146d4464d1d00ad98140888a0b1438f",
+      "source_sha256": "d5e44439e2e682bb91b6a9b04c1b055bd1e0de24a97c28d513c76dfd15a1085a",
+      "target_sha256": "03e136bb45df66e6f55811ba1435fa45acf4e7652a1b9abcf1f8c67de1f06749",
       "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"

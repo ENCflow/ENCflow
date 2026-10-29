@@ -95,6 +95,7 @@ module m_saltwater
     logical :: surf = .false.        ! 地表塩水層の有効化
     logical :: gw = .false.          ! 地下塩水 zone の有効化
     logical :: exch = .false.        ! 地表—層1 の交換の淡塩配分(§47.5)
+    logical :: exch_mix = .false.    ! 湧出を混合比 hgs/hg で配分(f_salt_exch=2。§47.9)
     real :: rni = 0.0                ! 界面 Manning n の逆数 1/n_i(地表)
     real :: eps = 1.0e-3             ! 乾燥判定の正則化量 (m 柱状)
     real :: eps_h = 1.0e-2           ! sqrt 則の線形化幅 (m 水頭差)
@@ -168,7 +169,8 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   salt_eps_h = 1.0e-2
   salt_diagratio = 2.0 / (2.0 + sqrt(2.0))   ! m_swflow_enc の p_diagratio と同値
   salt_nsubmax = 200
-  f_salt_exch = -1          ! 負 = 未指定(地表・地下の両方が有効なら 1、それ以外は 0)
+  f_salt_exch = -1          ! 負 = 未指定(地表・地下の両方が有効なら 1、それ以外は 0)。
+                            ! 2 = 湧出を混合比で配分する下限側の感度ケース(§47.9)
 
   call par_info("reading list_salt in " // trim(p%fn_salt))
   open(newunit=un, file=trim(p%fn_salt), status='old', action='read', iostat=ios)
@@ -205,11 +207,11 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
     call par_stop("list_salt: salt_diagratio must be in [0,1]")
   end if
   if (salt_nsubmax < 1) call par_stop("list_salt: salt_nsubmax must be >= 1")
-  if (f_salt_exch < -1 .or. f_salt_exch > 1) then
-    call par_stop("list_salt: f_salt_exch must be 0 or 1")
+  if (f_salt_exch < -1 .or. f_salt_exch > 2) then
+    call par_stop("list_salt: f_salt_exch must be 0, 1 or 2")
   end if
-  if (f_salt_exch == 1 .and. (f_salt_surf == 0 .or. f_salt_gw == 0)) then
-    call par_stop("list_salt: f_salt_exch=1 requires f_salt_surf=1 and f_salt_gw=1")
+  if (f_salt_exch >= 1 .and. (f_salt_surf == 0 .or. f_salt_gw == 0)) then
+    call par_stop("list_salt: f_salt_exch=1,2 requires f_salt_surf=1 and f_salt_gw=1")
   end if
 
   sl%sw%surf = (f_salt_surf == 1)
@@ -223,8 +225,9 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   if (f_salt_exch < 0) then
     sl%sw%exch = sl%sw%surf .and. sl%sw%gw
   else
-    sl%sw%exch = (f_salt_exch == 1)
+    sl%sw%exch = (f_salt_exch >= 1)
   end if
+  sl%sw%exch_mix = (f_salt_exch == 2)
 
   ! --- 層1側方流の前提(f_salt_gw=1)と係数の取得 ---
   if (sl%sw%gw) then
@@ -326,7 +329,11 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   sl%sw%initialized = .true.
   sl%enabled = .true.
   sl%initialized = .true.
-  if (sl%sw%exch) call par_info("saltwater: surface-aquifer salt partition enabled (f_salt_exch=1)")
+  if (sl%sw%exch_mix) then
+    call par_info("saltwater: surface-aquifer salt partition enabled (f_salt_exch=2: seepage by mixing ratio)")
+  else if (sl%sw%exch) then
+    call par_info("saltwater: surface-aquifer salt partition enabled (f_salt_exch=1)")
+  end if
   call par_info("saltwater two-fluid (fresh/salt) layers enabled")
 end subroutine
 
@@ -761,9 +768,19 @@ subroutine gw_salt_zone(sl, g, s, dts)
       ! 湧出の淡塩配分(f_salt_exch=1。ヘッダ (3)・§47.5): このステップの湧出
       ! (側方流が記録した分+上の分)を上限に、淡水で足りなかった分 =
       ! hg を超えた hgs を地表の底層へ移す(上限は層2への浸透・蒸発による
-      ! 減少と区別するため)。無効時は合計のみ動き、超過は下のクランプが消す
+      ! 減少と区別するため)。f_salt_exch=2 は湧出量に湧出前の塩水の割合
+      ! hgs/(hg + 湧出量) を掛けた分を移す(混合して湧く = 下限側の感度ケース。
+      ! §47.9)。無効時は合計のみ動き、超過は下のクランプが消す
       if (sl%sw%exch) then
-        fs = min(s%fxslo(i,j) + fx, max(s%hgs(i,j) - s%hg(i,j), 0.0))
+        if (sl%sw%exch_mix) then
+          fx = s%fxslo(i,j) + fx
+          fs = 0.0
+          if (fx > 0.0 .and. s%hgs(i,j) > 0.0) then
+            fs = fx * min(s%hgs(i,j) / (s%hg(i,j) + fx), 1.0)
+          end if
+        else
+          fs = min(s%fxslo(i,j) + fx, max(s%hgs(i,j) - s%hg(i,j), 0.0))
+        end if
         if (fs > 0.0) then
           s%hgs(i,j) = s%hgs(i,j) - fs
           s%hss(i,j) = s%hss(i,j) + fs

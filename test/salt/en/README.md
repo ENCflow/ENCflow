@@ -7,7 +7,7 @@
 Checks of the salt-water module, which treats fresh water and salt water as
 two layers of different density (`fn_salt`; [the salt-water chapter of the
 users guide](../../../docs/en/users_guide/salt.md), developer.md §47). It
-consists of seven schematic experiments.
+consists of nine schematic experiments.
 
 1. **Schematic experiment A** (`param.txt`, with a reference): a "lock
    exchange" in which the 10 leftmost columns of a closed pool of uniform
@@ -40,7 +40,15 @@ consists of seven schematic experiments.
    the groundwater update interval `dt_gwflow = 2 s` (once every 4 steps). It
    checks that the subsurface salt processing is synchronised with the lateral
    flow at the same steps and with the same time step (§47.7).
-6. **Schematic experiments D1 and D2** (`param_wall_bank.txt`,
+6. **Schematic experiments C4a and C4b** (`param_exch_mix1.txt`,
+   `param_exch_mix2.txt`, `Run_exch.sh`): the slope and hollow of C2, with
+   only the lower 40 % of the aquifer salt (the upper part is filled by fresh
+   surface water infiltrating). The fresh/salt split of the water seeping into
+   the hollow is compared between f_salt_exch = 1 (upper fresh water first) and
+   2 (mixed in the salt fraction before seepage; the lower-bound sensitivity
+   case, §47.9). Both conserve the salt-water volume (relative 1e-9), and the
+   salt fraction of the water in the hollow is larger with 2.
+7. **Schematic experiments D1 and D2** (`param_wall_bank.txt`,
    `param_wall_sea.txt`, `Run_wall.sh`): the bottom gravity current of the
    surface salt layer and virtual walls. The water on the western land
    (z = 0) is entirely salt (interface +1.2 m), the eastern river / sea side
@@ -69,20 +77,20 @@ consists of seven schematic experiments.
 
 | File | Contents |
 |---|---|
-| `Run.sh` / `Run_MPI.sh N` | Regression test of A (Log.txt, ULP = 0). `Run.sh` then also runs `Run_exch.sh` (C1–C3) and `Run_wall.sh` (D1, D2) |
+| `Run.sh` / `Run_MPI.sh N` | Regression test of A (Log.txt, ULP = 0). `Run.sh` then also runs `Run_exch.sh` (C1–C4) and `Run_wall.sh` (D1, D2) |
 | `Run_sea.sh` | Run of B (result_sea/) |
 | `Run_wall.sh` / `Check_wall.py` | Run and check of D1 and D2 (reads the double-precision saved states save_wall_*/) |
-| `Run_exch.sh` / `Check_exch.py` | Run and check of C1–C3 (reads the double-precision saved states save_exch_*/) |
+| `Run_exch.sh` / `Check_exch.py` | Run and check of C1–C4 (reads the double-precision saved states save_exch_*/) |
 | `Fig.py` | The figure `en/figs/salt.png` below (`python3 Fig.py en`; `figs/salt.png` is the Japanese version) |
 
 ## Running
 
 ```bash
 make
-./Run.sh          # A: compare with the reference (then the C1–C3, D1 and D2 checks)
+./Run.sh          # A: compare with the reference (then the C1–C4, D1 and D2 checks)
 ./Run_MPI.sh 4
 ./Run_sea.sh      # B (a few seconds)
-./Run_exch.sh     # C1–C3 with the Check_exch.py check (a few seconds)
+./Run_exch.sh     # C1–C4 with the Check_exch.py check (a few seconds)
 ./Run_wall.sh     # D1 and D2 with the Check_wall.py check (a few seconds)
 python3 Fig.py en # en/figs/salt.png
 ```
@@ -115,6 +123,7 @@ with the sea it is 0.5000 m in every cell, agreeing with the analytical value
 | C2: Hss/H of the surface water in the hollow | 0.999 (0 with f_salt_exch=0) | Check_exch PASS (≥ 0.99) |
 | C2: salt-water volume | 0.02 % decrease in 2 hours | Check_exch PASS (\|ratio − 1\| < 1e-3) |
 | C3: the same (dt_gwflow = 2 s) | Hss/H 0.998, salt-water volume 0.03 % decrease | Check_exch PASS |
+| C4a, C4b: salt-water volume, Hss/H of the water in the hollow | both conserved to relative 7e-14; Hss/H 0.051 (fresh first) < 0.075 (mixing ratio) | Check_exch PASS |
 | D1, D2: Hss on land / river or sea side, H | 1.2 / 0 to all digits, H unchanged (before the fix: land 0.001–0.028, river 1.18) | Check_wall PASS |
 
 - The dry-cell test and the excess-outflow reduction of the salt zone are
@@ -131,9 +140,13 @@ with the sea it is 0.5000 m in every cell, agreeing with the analytical value
   saturated cell with surface water and an unsaturated cell, where the head
   switches by the surface water depth), 16 % in 2 hours (reducing dt hardly
   helped). After the fix Hgs in B equals Hg = 0.5000 in every cell, and the
-  decrease in C2 is 0.02 %.
+  decrease in C2 is 0.02 %. In addition, the interface thickness of the salt
+  zone is aligned with the interface saturated thickness of the total times the
+  salt fraction of the upwind cell (when flowing in the same direction as the
+  total), which removes the inconsistency of fresh water leaving an entirely
+  salt cell (C4a: 9.5 % → 7e-14).
 - The Logs of MPI np = 1, 2, 4 are byte-identical, and the restart round
-  trip (saltwater.dat) also agrees (§47.3). C1–C3, D1 and D2 at np = 1, 2, 4
+  trip (saltwater.dat) also agrees (§47.3). C1–C4, D1 and D2 at np = 1, 2, 4
   are also byte-identical to the serial run down to Log.txt and the saved
   states (§47.5, §47.7, §47.8). Pumping-induced seawater
   intrusion is recorded in the derivative experiment of developer.md §16.3.

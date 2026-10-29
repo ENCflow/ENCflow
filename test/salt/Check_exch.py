@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""模式実験 C1〜C3(f_salt_exch)の検定。事前に ./Run_exch.sh(または各 param の実行)が必要。
+"""模式実験 C1〜C4(f_salt_exch)の検定。事前に ./Run_exch.sh(または各 param の実行)が必要。
 
 終状態は倍精度の保存ファイル(save_exch_*/state.dat と saltwater.dat)から読む。
   C1(浸透 = 底層の塩水から先): 解析終状態 H = 0.7、Hss = 0.1、Hg = Hgs = 0.3(全セル)。
@@ -10,6 +10,9 @@
       評価する。developer.md §47.7。それ以前は湧出面で 16 % 減った)。
   C3: C2 を地下水の更新間隔 dt_gwflow = 2 s(4 ステップ)で。判定は C2 と同じ
       (地下の塩水の処理が側方流と同じ刻みで同期していること)。
+  C4a・C4b: 下部 4 割が塩水の帯水層から窪地へ湧出(a = f_salt_exch=1 = 淡水から先、
+      b = 2 = 湧出前の塩水の割合で)。どちらも塩水体積を相対 1e-9 で保存し、窪地の水の
+      塩水割合は b のほうが大きい(developer.md §47.9)。
 """
 import struct
 import sys
@@ -88,6 +91,24 @@ def main():
         ok &= good
         print(f"{tag} salt volume: initial {v0:.6f}, final {v1:.6f} (ratio {v1 / v0:.6f}; "
               f"|ratio - 1| < 1e-3)  {'PASS' if good else 'FAIL'}")
+
+    # --- C4a・C4b: 一部が塩水の帯水層からの湧出(配分の規則の違いと保存) ---
+    with open("data_salt/hgs0_slope_half.txt") as f:
+        v0 = sum(float(x) for x in f.read().split())
+    frac = {}
+    for tag, savedir in (("C4a", "save_exch_mix1"), ("C4b", "save_exch_mix2")):
+        s = load(savedir)
+        pond = [i for i, z in enumerate(s["z"]) if z < -0.25]
+        frac[tag] = sum(s["hss"][i] for i in pond) / sum(s["h"][i] for i in pond)
+        v1 = sum(s["hss"]) + sum(s["hgs"])
+        good = abs(v1 / v0 - 1.0) < 1e-9
+        ok &= good
+        print(f"{tag} salt volume: initial {v0:.9f}, final {v1:.9f} (|ratio - 1| = "
+              f"{abs(v1 / v0 - 1.0):.1e} < 1e-9)  pond Hss/H = {frac[tag]:.4f}  {'PASS' if good else 'FAIL'}")
+    good = frac["C4b"] > frac["C4a"]
+    ok &= good
+    print(f"C4 pond Hss/H: C4b (mixing) {frac['C4b']:.4f} > C4a (fresh first) {frac['C4a']:.4f}  "
+          f"{'PASS' if good else 'FAIL'}")
 
     print("=== Check_exch PASS ===" if ok else "=== Check_exch FAIL ===")
     sys.exit(0 if ok else 1)
