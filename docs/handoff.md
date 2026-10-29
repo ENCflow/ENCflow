@@ -98,10 +98,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      どちらが正しいかを結果で確かめて片方を直す(翻訳作業では触っていない)。
 
 00h. **鉛直不飽和浸透(VZ)流出モデル fn_vz(2026-10-26。docs/vz_plan.md、§87)の残り**
-   - **reference の確定待ち**: test/vzcol・test/vzzone の reference は解析検定
-     (Check_vzcol.py・Check_vzzone.py)の合格を根拠に暫定で置いた。人間が結果を
-     目視確認してから確定する(規律 1)。CI(ci.yml の逐次・MPI np = 2、nightly の
-     REF_CASES)には登録済み。
+   - **reference の確定**: test/vzcol・test/vzzone の暫定 reference は 2026-10-29 に
+     利用者の指示で確定 = 済(developer.md §87.3)。
    - **試算用の既定(2026-10-27)**: 小杉パラメータは 5 つとも未指定なら谷(2023)の
      竜ノ口山の組、初期条件は q0 = 0.1 mm/h を既定にした(採用値を表示、一部だけの
      指定は停止。developer.md §87.7)。土性クラス別の試算値(Carsel and Parrish 1988 を

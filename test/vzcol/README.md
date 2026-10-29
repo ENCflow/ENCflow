@@ -79,5 +79,12 @@ make
 `-Og -fcheck=all` で逐次と np = 2・4 の全出力ファイルが一致、release で
 np = 1・2・4 が逐次 reference に ULP=0(作成ホストで CSV を含む)。Zen3 向け
 (`-march=znver3`)のビルドでは Log.txt が reference とビット一致し、CSV は
-最終桁(相対 1e-15)だけ異なる。reference は解析検定の合格を根拠にした
-暫定(目視確認待ち)。
+最終桁(相対 1e-15)だけ異なる。
+
+reference の確定(2026-10-29。利用者の指示): 暫定で置いていた reference を確定した。
+更新は `ULP=0 RTOL=0 FILES="Log.txt vz_zone.csv vz_column.csv" ./Run.sh -u`(逐次
+release)。Log.txt と param.txt は従来の reference とビット一致で、CSV だけが最終桁
+(相対 1e-15 以下。収支残差の列は丸め雑音の 1e-12 m³ 規模)で変わった。作業ホストの
+CPU が作成時と違い、既定の `-march=native` の差によるもの(作成時のコミットを同じ
+ホストでビルドしても同じ CSV になることを確認。コードの変更ではない)。新しい
+reference に対して MPI np = 2・4 が CSV を含めて一致。
