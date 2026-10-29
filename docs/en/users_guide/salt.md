@@ -89,7 +89,7 @@ the lateral K and specific yield are shared).
 |---|---|---|
 | f_salt_surf | 1 | 1: surface salt layer (advection + bottom gravity current) |
 | f_salt_gw | 1 | 1: subsurface (soil layer) salt zone. **Requires f_gwlateral=1** |
-| f_salt_exch | 1 if both are enabled | 1: split the surface–subsurface exchange (infiltration, saturation-excess seepage) into fresh and salt water (seepage takes fresh water first). 2: the same, but seepage is mixed in the salt fraction before seepage (lower-bound sensitivity case). 1 and 2 require f_salt_surf=1 and f_salt_gw=1. 0 disables the split (infiltration and seepage implicitly fresh = behaviour before 2026-10-29) |
+| f_salt_exch | 1 if both are enabled | 1: split the surface–subsurface exchange (infiltration, saturation-excess seepage) into fresh and salt water (seepage takes fresh water first). 2: the same, but seepage is mixed in the salt fraction before seepage (lower-bound sensitivity case). 1 and 2 require f_salt_surf=1 and f_salt_gw=1. 0 disables the split (water infiltrating and seeping out treated as fresh; for comparison with salinization via the river turned off) |
 | salt_rhof / salt_rhos | 1000 / 1025 | Fresh / salt densities (kg/m3); they set eps |
 | salt_alpha | 1.0 | Barotropic advection share of the salt layer, alpha (the bottom layer carries less of the flow; 1 = concentration-proportional) |
 | salt_ni | 0.025 | Interfacial Manning roughness of the bottom gravity current |
@@ -155,10 +155,10 @@ This represents the path by which a salt wedge in a tidal river enters the
 aquifer through the bed and spreads into the banks, and the salt-damage path
 by which run-up seawater infiltrates farmland. It is enabled by default
 (f_salt_exch=1) when both the surface and subsurface salt layers are used.
-Setting 0 treats the exchange as implicitly fresh (the behaviour before
-2026-10-29: the infiltrated share of salt water disappears at the surface
-through the consistency clamp, and seeping salt water disappears too), which
-allows a comparison with the river pathway of salinization "switched off".
+Setting 0 treats water infiltrating and seeping out as fresh (the infiltrated
+share of salt water disappears at the surface through the consistency clamp,
+and seeping salt water disappears too), which allows a comparison with the
+river pathway of salinization "switched off".
 
 Notes for reading the results:
 
@@ -231,15 +231,15 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 - The cap of the [river-bed exchange capacity](gwflow.md) (f_gwbed) also
   applies to the salt-zone flux at the boundary between river and non-river
   cells, in the same form (capacity × passage width × saturated salt
-  thickness) (since 2026-10-29; before that the salt zone was not capped).
+  thickness).
 - The gravity current of the surface salt layer (salt water spreading along
   the bottom) lets only the salt water above the **sill** of each cell boundary
   cross. The sill is the higher of the two ground elevations, or the crest of a
   [channel](channel.md) levee (fn_bank / bank0) or seawall (fn_seawall) virtual
-  wall if there is one (since 2026-10-29; before that the gravity current
-  ignored the virtual walls, and with salt water on both sides of a wall the salt
-  water alone crossed it). The shallow-water advection (salt carried by
-  overtopping and tidal flow) respects the walls as before. The time-dependent
+  wall if there is one (even with salt and fresh water on the two sides of a
+  wall, salt water does not cross while the interface is below the crest). The
+  shallow-water advection (salt carried by overtopping and tidal flow) also
+  respects the walls. The time-dependent
   lowering of the crest by a breach (&list_channel_breach) is not followed by
   the gravity current (salt carried by the water through the breach still passes
   by advection; only the part creeping along the bottom is stopped). Give the
@@ -249,9 +249,9 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 - The flux of the subsurface salt zone is evaluated on the state just before
   the lateral flow of layer 1, and when flowing in the same direction as the
   total, the composition of the water leaving a cell is aligned with the salt
-  fraction of the upwind cell (since 2026-10-29; before that there was a
-  dt-proportional partition error at intrusion fronts, and salt water was
-  removed by the consistency clamp at seepage faces; developer.md sec. 47.7).
+  fraction of the upwind cell (the fluxes of the total and of the salt do not
+  disagree, so the salt-water volume is kept at intrusion fronts and seepage
+  faces too; developer.md sec. 47.7).
   When the groundwater update interval dt_gwflow is longer than dt, the
   subsurface salt processing runs at the same interval with the same
   effective time step.
