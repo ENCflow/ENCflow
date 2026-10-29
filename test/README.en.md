@@ -40,7 +40,7 @@ analytical-solution or conservation check by Check_*.py.
 | [hillslope/](hillslope/en/README.md) | Comparison of advection schemes for hillslope flow: analytical solution and grid convergence | Shallow water, rainfall | analytic (scripts) |
 | [bendloss/](bendloss/en/README.md) | Isolating the artificial loss at a 90° bend of a one-cell-wide channel | Channels, advection schemes | analytic |
 | [diffusion/](diffusion/en/README.md) | Gaussian-jet benchmark of the momentum diffusion term (analytical solution, grid convergence) | Shallow water f_diffusion_term | analytic |
-| [inflowadv/](inflowadv/en/README.md) | The rule for the advection term on the edges touching a segment inflow: no oscillation of the inflow row in a channel-only domain, and no energy created by a spill at the end of the inflow section | Shallow water, segment inflow, advection schemes | analytic |
+| [inflowadv/](inflowadv/en/README.md) | The rules for the advection term and the velocity cap on the edges touching a segment inflow: no oscillation of the inflow row in a channel-only domain, no energy created by a spill at the end of the inflow section or right below the inflow, and no throttling of a supercritical inflow | Shallow water, segment inflow, advection schemes | analytic |
 | **Non-hydrostatic correction** | | | |
 | [nhwave/](nhwave/en/README.md) | Standing waves in a closed tank: measuring the numerical dispersion of the hydrostatic ENC scheme | Shallow water | ref |
 | [nhwave_nh/](nhwave_nh/en/README.md) | The same tank with the one-layer non-hydrostatic correction | Non-hydrostatic | ref |

@@ -185,7 +185,9 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 許される流速を超えた(エネルギーを作った)。容量給砂で河床が固定された
         ! 流入セルの横の外縁セルが掘れると、掘れと境界に沿う噴流の正帰還になり
         ! examples/meander の param_feed が 1:10:47 に Courant 数 1 を超えた
-        ! (§68.40 の改定。2026-10-29)。
+        ! (§68.40 の改定。2026-10-29)。移流項のない内側エッジでも、緩勾配の
+        ! 河道では流入直下に射流のジェット(エネルギー水頭を作る)が立つため、
+        ! その流速は calc_kth_momentum がエネルギー上限で抑える(§68.40 の改定 2)。
         ! 区間流入のない計算は have_inflow が偽で判定ごと通らない
         if (bcs%have_inflow) then
           if (bc_inflow_inward(i, j, in, jn)) cycle

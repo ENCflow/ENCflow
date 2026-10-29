@@ -706,6 +706,14 @@ module m_swflow_enc
       integer, intent(in) :: i, j, in, jn
       logical :: r
     end function
+    module function bc_inflow_supply_speed(p, g, s, sx, i, j) result(v)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+      type(t_enc_status), intent(in) :: sx
+      integer, intent(in) :: i, j
+      real :: v
+    end function
     module subroutine bc_dispose()
     end subroutine
   end interface
@@ -1767,6 +1775,11 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
     end if
   end if
 
+  ! 区間流入の内側へ向かうエッジの流速のエネルギー上限(§68.40 の改定 2)
+  if (bcs%have_inflow) then
+    if (bc_inflow_inward(i, j, in, jn)) call inflow_energy_cap
+  end if
+
   ! 発散チェック
   if (abs(uve1) > 250.) then
     have_error = .true.
@@ -1840,6 +1853,61 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   sx%mn1(k,ie,je) = mne1
 
 contains
+  !--------------------------------------------------------------------
+  ! 区間流入の内側へ向かうエッジの流速のエネルギー上限(§68.40 の改定 2。
+  ! 2026-10-29)
+  !   移流項を持たない内側エッジ(adv_prepare_mc)の流速は水面勾配と摩擦の
+  !   釣り合いに向かい、上流側セルのエネルギー水頭から許される速さを超える
+  !   (緩勾配の河道で流入直下に射流のジェットが立ってエネルギー水頭を作る。
+  !   流入セルの横の外縁セルが掘れると噴流になって発散する)。Bernoulli の
+  !   上限 |u_e| <= √(2g·max(E_up − η_dn, 0))、E_up = η_up + V_up²/2g で頭打ち
+  !   し、流量も同じ比で縮める(§68.16 の乾いたセルへのエッジ水深の頭打ちと
+  !   同じ考え方。損失を入れない上限で、独自の簡略化)。η は圧力項と同じ
+  !   水面(土石流では z + h + hs)、V_up は上流側セルの前ステップの速さ
+  !   (upstream_speed)。上流側は流速の符号で決める
+  !--------------------------------------------------------------------
+  subroutine inflow_energy_cap
+    real :: hsc, hsn, eu, ed, umax, r
+    hsc = 0.0
+    hsn = 0.0
+    if (s%debris_active) then
+      hsc = max(s%hs(i,j), 0.0)
+      hsn = max(s%hs(in,jn), 0.0)
+    end if
+    if (uve1 >= 0.0) then
+      eu = s%z(i,j) + s%h(i,j) + hsc + upstream_speed(i, j)**2 / (2 * p%gg)
+      ed = s%z(in,jn) + s%h(in,jn) + hsn
+    else
+      eu = s%z(in,jn) + s%h(in,jn) + hsn + upstream_speed(in, jn)**2 / (2 * p%gg)
+      ed = s%z(i,j) + s%h(i,j) + hsc
+    end if
+    umax = sqrt(2 * p%gg * max(eu - ed, 0.0))
+    if (abs(uve1) > umax) then
+      r = umax / abs(uve1)
+      uve1 = uve1 * r
+      mne1 = mne1 * r
+    end if
+  end subroutine
+
+  !--------------------------------------------------------------------
+  ! エネルギー上限の基準に使う上流側セル (iu, ju) の速さ(前ステップ)。
+  !   セルの速さ vv が基本。流入セルでは、等流が射流になる急勾配の流入セルの
+  !   供給流速(bc_inflow_supply_speed。緩勾配のセルは 0)との大きい方を使う:
+  !   急勾配の射流流入はエネルギーが上流で決まり、上限で絞られるとセルの
+  !   速さも下がるため、セルの速さだけでは流入セルが深く出る(45° 斜面の
+  !   土石流で流入セルの流動深 +18 %)。緩勾配で供給流速を数えると、流入
+  !   セルが浅くなるほど上限が緩んで流入直下のジェットが自己維持する。
+  !   急勾配かは流れの状態でなく流量・勾配・粗度で決める(流入セルの今の
+  !   フルード数で決めると、射流のジェットの状態から始めたときにジェットが
+  !   残る。§68.40)
+  !--------------------------------------------------------------------
+  function upstream_speed(iu, ju) result(v)
+    integer, intent(in) :: iu, ju
+    real :: v
+    v = s%vv(iu,ju)
+    if (bc_inflow_cell(iu, ju)) v = max(v, bc_inflow_supply_speed(p, g, s, sx, iu, ju))
+  end function
+
   !--------------------------------------------------------------------
   ! 河口から海への段落ち強制
   subroutine rivermouth_drop

@@ -379,11 +379,30 @@ on outflow $`u_e`$ (no contribution).
   outer cell beside the section feeding a jet;
   [test/inflowadv](../../../test/inflowadv/en/README.md)). With a uniform
   inflow through a straight face the velocity on the edges along the face
-  is zero, so uniform-flow and flood-wave results hardly change. The
-  inflow, however, has no momentum on the first edge into the section and
-  spreads sideways more easily (in the mobile-bed meander example the
-  channel widens in the upstream reach); keep the reach of interest away
-  from the inflow section.
+  is zero, so uniform-flow and flood-wave results hardly change.
+- **The velocity on the edges into the section is capped by the energy
+  head.** On these edges, which have no advection term, the velocity may
+  not exceed the speed allowed by the energy head of the upstream cell,
+  $`\sqrt{2g\max(E_\mathrm{up} - \eta_\mathrm{dn}, 0)}`$ with
+  $`E_\mathrm{up} = \eta + V^2/2g`$ ($`V`$ is the speed of the upstream
+  cell and $`\eta`$ the water level, $`z + h + h_s`$ for debris flows), and
+  the discharge is scaled by the same ratio (a Bernoulli bound without
+  losses; developer.md §68.40, second revision, in Japanese). Without it a
+  supercritical jet forms right below the inflow in a channel of mild slope
+  and creates energy head (in a 3-column channel between walls, 1.0 to 1.3 m
+  deep at 13 m/s, where uniform flow is 4.7 m at 3.0 m/s). For an inflow
+  cell on a steep slope, where the uniform flow of the face discharge is
+  supercritical (the Manning normal depth is below the critical depth), the
+  supply speed (the face discharge per cell width and depth) also counts as
+  the upstream speed, so a supercritical inflow is hardly throttled. Inflow
+  cells without a supply (cells closed because they touch nodata or a wall
+  corner) are capped by the cell speed alone, so near a steep inflow the
+  depth can come out about 10 % larger. The cap is active almost all the
+  time near the inflow, so results near the inflow of any run with a
+  segment inflow depend on this rule. The inflow still has no
+  momentum on the first edge into the section and tends to spread sideways;
+  keep the reach of interest away from the inflow section
+  ([test/inflowadv](../../../test/inflowadv/en/README.md)).
 - **The far donor of MUSCL.** If the cell beyond the $`u_\mathrm{upup}`$ edge
   is outside the domain or invalid, that face degrades to first-order
   upwind (reading 0 would give $`r \gg 1 \to \psi = 2`$, anti-diffusion, and
