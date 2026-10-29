@@ -641,9 +641,12 @@ state with a uniform capacity $`q_c`$ and a constant transport rate
 $`q_s`$, $`F_s = q_s/q_c`$, and the exposure is $`1 - q_s/q_c`$, i.e. it
 agrees with the cover written as a supply ratio[^sklar04][^turowski07], and
 the incision rate by abrasion becomes the hump $`E = \beta q_s (1 - q_s/q_c)`$
-(largest at $`q_s/q_c = 1/2`$, and 0 with full cover at 1 and above; the same
-form as the linearization of the saltation–abrasion model of Sklar and
-Dietrich). The
+(largest at $`q_s/q_c = 1/2`$, and 0 with full cover at 1 and above). This is
+the saltation–abrasion model of Sklar and Dietrich[^sklar06] (tools $`Q_s`$ ×
+a cover linear in the supply ratio, $`1 - Q_s/Q_c`$) without the factor
+from the saltation trajectories, $`(\tau_*/\tau_{*c} - 1)^{-1/2}`$ (impact rate
+and energy), and its suspension-threshold factor, which in their classification is the parabolic "tools and cover"
+type (Whipple & Tucker 2002 with $`n = 1`$). The
 idea of setting the cover by the ratio of the alluvial thickness to the bed
 relief[^zhang15] is written as a closure that uses the same $`H_*`$ for the
 exposure and the availability; this combination and the dimensional form are
@@ -813,6 +816,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^howard83]: Howard, A. D. and Kerby, G. (1983): Channel changes in badlands. *Geol. Soc. Am. Bull.*, 94, 739–752. (Erosion rate of bedrock channels expressed by the bed shear stress during floods; checked against the abstract)
 [^shobe17]: Shobe, C. M., Tucker, G. E. and Barnhart, K. R. (2017): The SPACE 1.0 model. *Geosci. Model Dev.*, 10, 4577–4604. doi:10.5194/gmd-10-4577-2017 (the exponential cover form checked in the Landlab source)
 [^sklar04]: Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
+[^sklar06]: Sklar, L. S. and Dietrich, W. E. (2006): The role of sediment in controlling steady-state bedrock channel slope: Implications of the saltation–abrasion incision model. *Geomorphology*, 82, 58–83. doi:10.1016/j.geomorph.2005.08.019 (saltation–abrasion model eq. (1), model classification eq. (20) and Table 2, components of steady-state slope eqs. (32)–(34), intermittency eqs. (13)–(19))
 [^turowski07]: Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion. *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697
 [^zhang15]: Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N. (2015): Macro-roughness model of bedrock–alluvial river morphodynamics. *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015 (checked against the abstract)
 [^stock03]: Stock, J. D. and Dietrich, W. E. (2003): Valley incision by debris flows: Evidence of a topographic signature. *Water Resour. Res.*, 39(4), 1089. doi:10.1029/2001WR001057 (checked against the abstract: the inverse power law between slope and area rarely extends to slopes steeper than 0.03 to 0.10)

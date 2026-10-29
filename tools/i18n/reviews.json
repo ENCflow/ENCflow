@@ -419,8 +419,8 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "4c3e75599bf135d66b8bf090e03ca4b70a9309f0cc3fdbb682198a8ed3ad971d",
-      "target_sha256": "946ef1b31b27a6c36a1d4c35d52ddae147925b94e2cdea3e107b23f14adfeae2",
+      "source_sha256": "1d11a0a1e010fe7c1e52feed631e42bae1c2c2a079d2134be707dfb7cb2ec6d4",
+      "target_sha256": "de85d70158b7d3c230ea11a3f7d84d7c2d7127f7290641262173a655551c5425",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
@@ -1220,11 +1220,11 @@
     {
       "source": "examples/mountain_valley/README.md",
       "target": "examples/mountain_valley/en/README.md",
-      "source_sha256": "564ab405a8f28b763ee1b9333f3fc2be722a5bc347a1f9e127eb1c4063752a6f",
-      "target_sha256": "4d49b94c8691bc1f9187b112f12e9316e4abe1206d5b767c35e474d0318bd47c",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "58e5cec9bcdaa081a4dda5f92d7f12948e4aa310f5bb47fbbf8ccdf454062a87",
+      "target_sha256": "f1a5933a1d4bfbc40b02268adc79427f956227249f92cd4363e5ecf9cb9a10e6",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/mountain_valley/figs/channel.png",

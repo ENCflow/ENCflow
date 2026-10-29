@@ -196,6 +196,11 @@ D§2(状態と更新契約、供給量制限、接続位置、ハロの前提)�
   意味になる。f_berode の K_b (τ*/τ*c,b − 1)^m と同じ形。
   研磨項は、Sklar & Dietrich(2004)の線形化 E ∝ q_s(1 − q_s/q_c) を層厚の閉包で
   書いたもの(GravelBedrockEroder の「研磨 = β × 流砂量 × 露出率」と同じ形)。
+  (2026-10-29 Sklar & Dietrich 2006 の本文で確認: 同論文の式 (1) の saltation–abrasion 模型
+  E_i ∝ Q_s (τ*/τ*c − 1)^{−1/2} (1 − Q_s/Q_c)(1 − (u*/w_f)²)^{3/2} は、道具 Q_s と供給比に線形な
+  被覆(1 − Q_s/Q_c)の積。ENCflow の形は跳躍の軌跡から来る因子 (τ*/τ*c − 1)^{−1/2}(衝突の頻度と
+  強さ)と浮遊の因子を除いたもので、同論文の分類では道具・被覆の放物線型(式 (31)、Whipple & Tucker 2002 の n = 1)に
+  当たる。閾値は q_c が流砂量式の移動限界を持つので入る。)
   2 項の組合せと、ENCflow の水理量での有次元化は**独自**。
 - パラメータ(名称は仮。§8 の判断 3・4・7):
 
@@ -580,8 +585,12 @@ users_guide/sediment.md・massflow.md・geomorph.md、handoff.md 1n・1n2。
   引き継ぐ。本書では Landlab のソースで被覆の形を確認)。
 - Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into
   bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301.
-  doi:10.1029/2003WR002496(D の記録を引き継ぐ。研磨の線形化 q_s(1 − q_s/q_c) の式の
-  形は照合待ち)。
+  doi:10.1029/2003WR002496(D の記録を引き継ぐ。研磨の式の形は 2006 の論文の式 (1) で
+  確認。2004 の本文は未読)。
+- Sklar, L. S. and Dietrich, W. E. (2006): The role of sediment in controlling steady-state
+  bedrock channel slope: Implications of the saltation–abrasion incision model.
+  *Geomorphology*, 82, 58–83. doi:10.1016/j.geomorph.2005.08.019(2026-10-29 に利用者が
+  提供した本文で確認。要点は §4.2・§11.2・§11.3)。
 - Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion.
   *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697(D の記録を引き継ぐ)。
 - Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N.
@@ -757,8 +766,11 @@ users_guide/sediment.md・massflow.md・geomorph.md、handoff.md 1n・1n2。
 (L_h は斜面の長さ)、渓流の被覆の応答は出水中の地形の時間で数十秒〜数分である。
 
 - **代表出水だけを計算する**: 谷頭からの一定の形成流量 Q_f だけを流し、morfac = M で加速する。
-  出水は暦の 1 年のうち割合 i_f(間欠係数。Paola ら 1992・Parker の e-book の考え方。書誌は
-  照合待ち)だけ流れるとみなす。暦の時間 = 計算した出水の時間 × M / i_f。
+  出水は暦の 1 年のうち割合 i_f(間欠係数)だけ流れるとみなす。Sklar & Dietrich (2006) の
+  間欠係数 F_t(代表の出水が流れる時間の割合。粗い土砂はすべて出水中に運ばれる。式 (13)・
+  (16))と同じ考え。同論文は低流量にも年流出を分け(高流量の割合 F_w。式 (14)〜(19))、
+  流量の記録から F_t を選ぶ(参照地点で F_t = 0.0437 = 年 16 日、F_w = 0.41)。Paola ら
+  1992・Parker の e-book は未照合。暦の時間 = 計算した出水の時間 × M / i_f。
 - **連続に働く過程は係数を 1/i_f 倍して与える**: 隆起(uplift0)・風化(wthr_p0)・クリープ
   (creep_d)は率の係数に線形な自律系なので、係数の 1/i_f 倍は、その過程だけを暦の時間で
   進めることと同じになる(developer.md §19 の「プロセス別の実効加速の逃げ道」をこの 3 つに
@@ -801,8 +813,9 @@ dts = 50 s(暦の 20 万年が逐次 6〜7 分)、Δx = 2 m で dts = 20 s(4 ラ
   谷頭から一定の給砂 q_in を与える。定常の勾配は各セルで
   E_p0(S)(1 − q/q_c(S)) + β q (1 − q/q_c(S)) = U を解いた準解析解(T8 の拡張。q は谷頭の
   給砂と上流のセルの剥離物の和で、研磨の細粒分は系外へ出る)。q_in = 0 が (a)。q_in を
-  振って、斜面供給が渓流の定常勾配を変える度合い(Sklar & Dietrich 2006 の問い。書誌は
-  照合待ち)を見る。数分の計算。
+  振って、斜面供給が渓流の定常勾配を変える度合い(Sklar & Dietrich 2006 の §4 の問い。同論文
+  では定常勾配 = 移動限界の勾配 S_D + 給砂を運ぶ増分 ΔS_Qs + 下刻の増分 ΔS_E(式 (32)〜(34))
+  で、粒径が最も効き、給砂が次、下刻そのものは硬い岩や速い隆起でだけ効く)を見る。数分の計算。
 - **C2 斜面だけ**: 新しい test/hillslope(仮称)。中央の 1 列を、隆起しない固定床
   (fn_uplift = 0、岩盤下刻なし、風化なし)の渓流にして、両側の斜面(東西の端は分水界 = 壁)
   からクリープで来た土層を流し去る(クリープは領域の端を壁として扱うので、吸い込みは渓流で
@@ -908,7 +921,8 @@ np = 1, 2, 4 とリスタート往復を確かめ、文書(日英)・developer.m
 - 谷底は 1 セル幅の水路になり、谷底の幅(氾濫原)や側岸の後退は表さない。側岸侵食
   (f_berode)・安息角(f_repose)は、斜面の放物線形の検定を汚さないよう入れない(後で)。
 - dts の上限は概算(p が閾値の近くで大きくなる)。
-- 間欠係数・Sklar & Dietrich (2006) の書誌は記憶からで、採用の前に照合する。
+- (2026-10-29)Sklar & Dietrich (2006) は本文で照合済み(間欠係数 F_t も同論文にある)。
+  Paola ら (1992)・Parker の e-book は未照合のまま。
 
 ---
 

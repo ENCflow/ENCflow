@@ -517,7 +517,10 @@ $`F_s = 1 - e^{-H/H_*}`$ を掛けます。一様な容量 $`q_c`$ と一定の�
 の定常では $`F_s = q_s/q_c`$ となり、露出率は $`1 - q_s/q_c`$、つまり供給比で
 書いた被覆[^sklar04][^turowski07]に一致し、研磨による下刻速度は
 $`E = \beta q_s (1 - q_s/q_c)`$ の山形になります($`q_s/q_c = 1/2`$ で最大、
-1 以上で全被覆の 0。Sklar & Dietrich の saltation–abrasion 模型の線形化と同じ形)。被覆を沖積層の厚さと河床の
+1 以上で全被覆の 0)。これは Sklar & Dietrich の saltation–abrasion 模型[^sklar06]
+(道具 $`Q_s`$ × 供給比に線形な被覆 $`1 - Q_s/Q_c`$)から、跳躍の軌跡から来る因子
+$`(\tau_*/\tau_{*c} - 1)^{-1/2}`$(衝突の頻度と強さ)と浮遊の閾値の因子を除いた形で、同論文の分類の
+「道具と被覆」の放物線型(Whipple & Tucker 2002 の $`n = 1`$)に当たります。被覆を沖積層の厚さと河床の
 起伏の比で決める考え方[^zhang15]を、露出率と利用可能率に同じ $`H_*`$ を使う
 閉包で書いたもので、この組合せと有次元化は**独自**です
 (docs/mountain_stream_plan.md §4.3)。剥離物が下流で流砂に加わる定常は、
@@ -669,6 +672,7 @@ $`\tau_d`$ は定常の等流で抵抗則の底面せん断に等しく、抵抗
 [^howard83]: Howard, A. D. and Kerby, G. (1983): Channel changes in badlands. *Geol. Soc. Am. Bull.*, 94, 739–752.(岩盤河道の侵食速度を出水時の底面せん断で表す。要旨で確認)
 [^shobe17]: Shobe, C. M., Tucker, G. E. and Barnhart, K. R. (2017): The SPACE 1.0 model. *Geosci. Model Dev.*, 10, 4577–4604. doi:10.5194/gmd-10-4577-2017(被覆の指数形は Landlab のソースで確認)
 [^sklar04]: Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
+[^sklar06]: Sklar, L. S. and Dietrich, W. E. (2006): The role of sediment in controlling steady-state bedrock channel slope: Implications of the saltation–abrasion incision model. *Geomorphology*, 82, 58–83. doi:10.1016/j.geomorph.2005.08.019(saltation–abrasion 模型 式 (1)、模型の分類 式 (20)・表 2、定常勾配の成分 式 (32)〜(34)、間欠係数 式 (13)〜(19))
 [^turowski07]: Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion. *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697
 [^zhang15]: Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N. (2015): Macro-roughness model of bedrock–alluvial river morphodynamics. *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015(要旨で確認)
 [^stock03]: Stock, J. D. and Dietrich, W. E. (2003): Valley incision by debris flows: Evidence of a topographic signature. *Water Resour. Res.*, 39(4), 1089. doi:10.1029/2001WR001057(要旨で確認: 勾配–面積の逆べき則は勾配 0.03〜0.10 より急な所にほとんど延びない)
