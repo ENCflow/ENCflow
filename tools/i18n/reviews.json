@@ -338,8 +338,8 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "2eb4b540a1a565a610bbe96ff0c77e9250a142f312e11e391b107008aef10635",
-      "target_sha256": "e8fb614e0f855b0ab92063bac0a08389b15d0eec50c5a1d4eb5b784c78eb2e14",
+      "source_sha256": "d6c4c152499deb8cd3ecbeb9aefa8f96bb32a9b9daff9e634c07fb904993edb5",
+      "target_sha256": "7cabf22e2a5dbbe65da9c9caed64f3a22ec269d81a1ea0969e597761ed97af8a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"

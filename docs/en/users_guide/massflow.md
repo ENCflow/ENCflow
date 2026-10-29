@@ -216,6 +216,36 @@ continuity equation of Takahashi–Nakagawa[^tn91] and is the first-order
 effect that gives a net bulking in erosion-dominated channels. It is
 exclusive with the groundwater computation.
 
+**Future work (planned): Hungr's entrainment law.** We plan to add, without
+changing the default, Hungr's empirical entrainment law[^hungr95]
+$`E = E_r\,h_t\,|\mathbf{V}|`$, mentioned in the f_dbed = 4 paragraph above, as an
+f_dbed option.
+
+- **Effect**: the form then matches models used in European and North American
+  practice such as DAN3D, so earlier calibrated values (for example
+  $`E_r \approx 0.001`$ /m for Cancia 2015[^qiao23]) can be used as they are. The
+  entrainment rate $`E_r`$ can be estimated from the volumes entering and leaving
+  the entrainment zone and its length as $`E_r = \ln(V_f/V_0)/L`$, so it can be
+  calibrated with pre- and post-event surveys or deposit volumes. Thicker flows
+  erode deeper, and the flow volume grows exponentially with the distance
+  travelled (with f_dbed = 4 the erosion depth does not depend on the flow depth,
+  so the volume growth is set by the area the flow covers). The one added
+  parameter is $`E_r`$ (1/m); it is not shared with the dimensionless
+  $`\delta_e`$ because the units differ.
+- **To be prepared in the implementation**: as with f_dbed = 4, entrainment only
+  with deposition left to `f_dbstop`, the entrainable layer given by the soil
+  thickness $`s_d`$ (the entrainment zone given by the distribution of $`s_d`$),
+  and entrainment only by dense cells with $`C \ge c_{\min}`$. The flow depth is
+  the mixture depth $`h_t = h + h_s`$. In Hungr's definition the entrained
+  material joins the flow with its pore water (as bulk volume), so to match that
+  volume growth it is combined with pore-water entrainment (`f_dbwet = 1`,
+  saturation 1). The check case is that the volume of a flow moving at a
+  constant speed down a uniform slope grows as $`V_0\,e^{E_r x}`$ with the distance
+  travelled $`x`$ (together with the closure of the solid ledger).
+- **Timing**: it will be added when comparisons with European practice models or
+  real debris flows with large entrainment (Cancia 2015 and others; obtaining the
+  topographic data is a prerequisite) are taken up (developer.md §28.8).
+
 ## 4. Triggering
 
 **Instantaneous fluidisation (fn_dbinit).** Given a distribution of the
