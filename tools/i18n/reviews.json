@@ -842,11 +842,11 @@
     {
       "source": "examples/bedrock_cover/README.md",
       "target": "examples/bedrock_cover/en/README.md",
-      "source_sha256": "4a79cedcee3d498698112ff7cca9c8988af37da1a0acd5c8b1ddaa5e24f17c28",
-      "target_sha256": "ee69ad6ba3ed8bdeb928c0101db3410ef77f5bbb1746c1ddc15b7b756de70709",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "4474bba81c4481113dc0148997655151981cc31264abd2299cc3e2e6d36aa01d",
+      "target_sha256": "e19ca8350e0b292526b5353bdbbd61f3faf035a3d62c16ccea205cd1897622c4",
+      "reviewer": "Claude (Claude Code session; compared the passage changed for f_opening_dynamic = 3 in the source and the translation line by line; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/debris_bedrock/README.md",
