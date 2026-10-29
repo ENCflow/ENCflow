@@ -25,12 +25,21 @@ module m_saltwater
   !   で動く((d) は交換流なので h には触れない)。
   !
   ! 【毎ステップの処理(run_main で gwflow の後・wq の前)】
+  !  (0) 地表→層1 の浸透の淡塩配分(f_salt_exch=1。§47.5): gwflow が記録した
+  !      浸透量(s%fxsli)は河床に接する底層(塩水)から先に地下へ入れる。
+  !      合計(h・hg)は gwflow が移し済みなので内数の付け替えだけ。
+  !      逆向き(飽和湧出 s%fxslo)は (3) の連続式の後で配分する(下記)
   !  (1) 整合クランプ(乾燥・蒸発等による hss > h の解消)
   !  (2) 地表の底層重力流(f_salt_surf=1): 適応サブサイクリング
   !      (m_glacier の SIA と同じ「D_max の allreduce → 分割数」方式。
   !       全ランク同一 = collective 安全・決定的)
   !  (3) 地下の塩水 zone 側方流(f_salt_gw=1): 上記 (a)(b)。
-  !      容量超過(hg > sd·sy)は層1の規則どおり地表へ湧出
+  !      容量超過(hg > sd·sy)は層1の規則どおり地表へ湧出。f_salt_exch=1
+  !      なら、このステップの湧出(側方流の記録 s%fxslo+ここでの湧出)は
+  !      帯水層の上部 = 淡水から先に出し、淡水で足りない分の塩水を地表の
+  !      底層へ移す。塩水 zone の流束が届いた後に配分するのは、側方流が
+  !      合計を先に溢れさせ、その分の塩水が (3) で後から届く逐次分割の
+  !      ため(先に配分すると届いた塩水が整合クランプで消える。§47.5)
   !  (4) 地下の海側境界: 海域セル(sw>0)を「全塩水・水位 = 潮位」の
   !      規定水頭とし、塩水は双方向(hg と hgs を同時更新)、淡水は
   !      流出のみ(海に淡水はない)。等化量で制限し振動を防ぐ
@@ -40,8 +49,12 @@ module m_saltwater
   ! 【前提・制約】
   !  - f_salt_gw=1 は層1側方流(f_gwlateral=1)の有効化が前提
   !    (K_sh・sy を共有し、バロトロピック応答を lateral が担うため)
-  !  - 蒸発散・浸透の淡塩配分は未実装(現状は暗黙に淡水扱い。
-  !    swi_plan.md の段 4)。整合は (1) のクランプが保証する
+  !  - 浸透・飽和湧出の淡塩配分は f_salt_exch=1(地表・地下の両方が有効なら
+  !    既定)のときだけ (0)・(3) が担う。無効時と、蒸発散・層2への浸透・管路層との
+  !    交換は暗黙に淡水扱い(swi_plan.md の段 4 の残り)。整合は (1) の
+  !    クランプが保証する
+  !  - この配分と即時入替規則の組では「満潮で塩水が入り干潮で淡水が出る」片方向の
+  !    交換になり、河床直下の塩水化は上限側の評価になる(§47.5)
   !  - 混合・連行なし(界面は鋭利のまま)。内部波の慣性なし
   !
   ! 【初期値】salt_hss0(既存 h のうち塩水と見なす厚。min(h, 値))/
@@ -72,6 +85,7 @@ module m_saltwater
     real :: epsr = 0.0               ! ε = (ρs − ρf)/ρf
     logical :: surf = .false.        ! 地表塩水層の有効化
     logical :: gw = .false.          ! 地下塩水 zone の有効化
+    logical :: exch = .false.        ! 地表—層1 の交換の淡塩配分(§47.5)
     real :: rni = 0.0                ! 界面 Manning n の逆数 1/n_i(地表)
     real :: eps = 1.0e-3             ! 乾燥判定の正則化量 (m 柱状)
     real :: eps_h = 1.0e-2           ! sqrt 則の線形化幅 (m 水頭差)
@@ -121,13 +135,13 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   logical :: lat_active
   real :: sdmax(1), sum_ldr, dt_lim
   character(len=256) :: msg
-  integer :: f_salt_surf, f_salt_gw, salt_nsubmax
+  integer :: f_salt_surf, f_salt_gw, salt_nsubmax, f_salt_exch
   real :: salt_rhof, salt_rhos, salt_alpha, salt_ni
   real :: salt_hss0, salt_hgs0, salt_eps, salt_eps_h, salt_diagratio
   character(len=1024) :: fn_salt_hss0, fn_salt_hgs0
   namelist /list_salt/ f_salt_surf, f_salt_gw, salt_rhof, salt_rhos, &
     salt_alpha, salt_ni, salt_hss0, fn_salt_hss0, salt_hgs0, fn_salt_hgs0, &
-    salt_eps, salt_eps_h, salt_diagratio, salt_nsubmax
+    salt_eps, salt_eps_h, salt_diagratio, salt_nsubmax, f_salt_exch
 
   if (len_trim(p%fn_salt) == 0) return
 
@@ -145,6 +159,7 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   salt_eps_h = 1.0e-2
   salt_diagratio = 2.0 / (2.0 + sqrt(2.0))   ! m_swflow_enc の p_diagratio と同値
   salt_nsubmax = 200
+  f_salt_exch = -1          ! 負 = 未指定(地表・地下の両方が有効なら 1、それ以外は 0)
 
   call par_info("reading list_salt in " // trim(p%fn_salt))
   open(newunit=un, file=trim(p%fn_salt), status='old', action='read', iostat=ios)
@@ -181,6 +196,12 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
     call par_stop("list_salt: salt_diagratio must be in [0,1]")
   end if
   if (salt_nsubmax < 1) call par_stop("list_salt: salt_nsubmax must be >= 1")
+  if (f_salt_exch < -1 .or. f_salt_exch > 1) then
+    call par_stop("list_salt: f_salt_exch must be 0 or 1")
+  end if
+  if (f_salt_exch == 1 .and. (f_salt_surf == 0 .or. f_salt_gw == 0)) then
+    call par_stop("list_salt: f_salt_exch=1 requires f_salt_surf=1 and f_salt_gw=1")
+  end if
 
   sl%sw%surf = (f_salt_surf == 1)
   sl%sw%gw = (f_salt_gw == 1)
@@ -190,6 +211,11 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   sl%sw%eps = salt_eps
   sl%sw%eps_h = salt_eps_h
   sl%sw%nsubmax = salt_nsubmax
+  if (f_salt_exch < 0) then
+    sl%sw%exch = sl%sw%surf .and. sl%sw%gw
+  else
+    sl%sw%exch = (f_salt_exch == 1)
+  end if
 
   ! --- 層1側方流の前提(f_salt_gw=1)と係数の取得 ---
   if (sl%sw%gw) then
@@ -213,6 +239,11 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   ! 全域が使える(帯行 jsh:jeh は全域の有効行)
   allocate(s%hss(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(s%hgs(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  ! 地表—層1 の交換量の記録場(gwflow が書き (0) が読んでゼロ戻し。§47.5)
+  if (sl%sw%exch) then
+    allocate(s%fxsli(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(s%fxslo(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  end if
   if (len_trim(fn_salt_hss0) > 0) then
     call read_map_scatter(p, g, fn_salt_hss0, s%hss, "salt_hss0")
   else if (salt_hss0 > 0.0) then
@@ -280,6 +311,7 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   sl%sw%initialized = .true.
   sl%enabled = .true.
   sl%initialized = .true.
+  if (sl%sw%exch) call par_info("saltwater: surface-aquifer salt partition enabled (f_salt_exch=1)")
   call par_info("saltwater two-fluid (fresh/salt) layers enabled")
 end subroutine
 
@@ -334,6 +366,9 @@ subroutine m_saltwater_calc(sl, p, g, s, it)
 
   if (.not. sl%enabled) return
   if (it < 0) continue  ! 引数未使用の警告を抑制
+
+  ! (0) 地表→層1 の浸透の淡塩配分(セル局所。ハロ不要)
+  if (sl%sw%exch) call infiltration_partition(g, s)
 
   ! (1) 整合クランプ(乾燥・蒸発等が h を hss より下げた場合の解消)
   !$omp parallel do schedule(static) private(i, j)
@@ -508,6 +543,38 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 地表→層1 の浸透の淡塩配分(ヘッダ (0)。§47.5)
+!   浸透(s%fxsli。h 基底): 鋭利界面では河床に接するのは底層の塩水なので、
+!   塩水から先に地下へ入れる(地下側は実効平面積率 af/gv で体積整合 =
+!   鉛直モデルの hg 加算と同じ換算)。地下では即時入替規則で最下部に置く。
+!   合計(h・hg)は gwflow が移し済みで、ここは内数の付け替えだけ
+!----------------------------------------------------------------------
+subroutine infiltration_partition(g, s)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real :: fs
+
+  !$omp parallel do schedule(static) private(i, j, fs)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      if (s%fxsli(i,j) > 0.0) then
+        fs = min(s%fxsli(i,j), s%hss(i,j))
+        if (fs > 0.0) then
+          s%hss(i,j) = s%hss(i,j) - fs
+          s%hgs(i,j) = s%hgs(i,j) + fs * (s%af(i,j) / s%gv(i,j))
+        end if
+        s%fxsli(i,j) = 0.0
+      end if
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 地下の塩水 zone 側方流(完全加算方式。ヘッダ (a)(b))
 !   η は lateral_core の層1定義と同一(z − sd + hg/sy。飽和セルは + h)。
 !   ζ = z − sd + hgs/sy。qs = K·b_s·ΔΦs·rdr·wl(Φs = η + εζ)、
@@ -520,7 +587,7 @@ subroutine gw_salt_zone(sl, g, s, dts)
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt
   real :: bc, bn, etac, etan, zetac, zetan, psc, psn, bup, bse
-  real :: gqs, gqb, dh_up, r, dhs, dhb, capc, fx
+  real :: gqs, gqb, dh_up, r, dhs, dhb, capc, fx, fs
 
   jt = min(dcp%je + 1, dcp%jeh)
   !$omp parallel do schedule(static) &
@@ -582,7 +649,7 @@ subroutine gw_salt_zone(sl, g, s, dts)
   !$omp end parallel do
 
   ! --- ループ2: 発散+容量超過の湧出(層1の規則)+整合クランプ ---
-  !$omp parallel do schedule(static) private(i, j, k, dhs, dhb, capc, fx)
+  !$omp parallel do schedule(static) private(i, j, k, dhs, dhb, capc, fx, fs)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -595,15 +662,26 @@ subroutine gw_salt_zone(sl, g, s, dts)
       end do
       s%hgs(i,j) = s%hgs(i,j) - dhs * dts * sl%sw%ainv
       s%hg(i,j) = s%hg(i,j) - dhb * dts * sl%sw%ainv
-      ! 容量超過は地表へ湧出(層1の既存規則と同じ。湧出は下層 = 塩水を
-      ! 先に持ち上げる…は追わず、湧出分だけ塩水を同伴させる近似:
-      ! 溢れるのは水面直下の水 = 淡水優先が実態に近いので合計のみ動かす)
+      ! 容量超過は地表へ湧出(層1の既存規則と同じ)
       capc = s%sd(i,j) * sl%sw%sy
+      fx = 0.0
       if (s%hg(i,j) > capc) then
         fx = s%hg(i,j) - capc
         s%hg(i,j) = capc
         s%h(i,j) = s%h(i,j) + fx
         s%e(i,j) = s%z(i,j) + s%h(i,j)
+      end if
+      ! 湧出の淡塩配分(f_salt_exch=1。ヘッダ (3)・§47.5): このステップの湧出
+      ! (側方流が記録した分+上の分)を上限に、淡水で足りなかった分 =
+      ! hg を超えた hgs を地表の底層へ移す(上限は層2への浸透・蒸発による
+      ! 減少と区別するため)。無効時は合計のみ動き、超過は下のクランプが消す
+      if (sl%sw%exch) then
+        fs = min(s%fxslo(i,j) + fx, max(s%hgs(i,j) - s%hg(i,j), 0.0))
+        if (fs > 0.0) then
+          s%hgs(i,j) = s%hgs(i,j) - fs
+          s%hss(i,j) = s%hss(i,j) + fs
+        end if
+        s%fxslo(i,j) = 0.0
       end if
       if (s%hgs(i,j) < 0.0) s%hgs(i,j) = 0.0
       if (s%hgs(i,j) > s%hg(i,j)) s%hgs(i,j) = s%hg(i,j)

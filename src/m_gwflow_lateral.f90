@@ -565,6 +565,8 @@ subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
         if (lay%to_surface) then
           s%h(i,j) = s%h(i,j) + fx
           s%e(i,j) = s%z(i,j) + s%h(i,j)
+          ! 淡塩2層の配分用の記録(m_saltwater が読んでゼロ戻し。§47.5)
+          if (allocated(s%fxslo)) s%fxslo(i,j) = s%fxslo(i,j) + fx
         else
           s%hg(i,j) = s%hg(i,j) + fx
           ! 層1の容量超過は地表へ(層1と同じ規則)
@@ -574,6 +576,7 @@ subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
             s%hg(i,j) = capc
             s%h(i,j) = s%h(i,j) + fx
             s%e(i,j) = s%z(i,j) + s%h(i,j)
+            if (allocated(s%fxslo)) s%fxslo(i,j) = s%fxslo(i,j) + fx
           end if
         end if
       end if

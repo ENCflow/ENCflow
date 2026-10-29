@@ -312,6 +312,12 @@ module m_state
                                         ! 書き、m_wq が読んで地表 cq へ還元しゼロ戻し。
                                         ! fxg と同型の契約。確保は m_wq_init
                                         ! (f_wq_infil=1 のみ)。§30 W3)
+    real, allocatable :: fxsli(:,:)     ! 地表→層1 の浸透量の記録 (m。h 基底。淡塩2層の
+                                        ! 配分用。gwflow の鉛直モデルが書き、m_saltwater が
+                                        ! 読んでゼロ戻し。fxg と同型の契約。確保は
+                                        ! m_saltwater_init(f_salt_exch=1 のみ)。§47.5)
+    real, allocatable :: fxslo(:,:)     ! 層1→地表 の飽和湧出量の記録 (m。同上の契約。
+                                        ! m_gwflow_lateral が書く。§47.5)
     real, allocatable :: frofac(:,:)    ! 凍土の浸透低減係数 [fro_fmin,1](m_gwflow_frost
                                         ! が書き、鉛直浸透モデルが浸透能に乗じる。
                                         ! 確保は gwflow_frost_init(f_gwfrost=1 のみ)。§16.4)
@@ -997,6 +1003,8 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%wdmax)) deallocate(s%wdmax)
   if (allocated(s%fxg)) deallocate(s%fxg)
   if (allocated(s%fxs)) deallocate(s%fxs)
+  if (allocated(s%fxsli)) deallocate(s%fxsli)
+  if (allocated(s%fxslo)) deallocate(s%fxslo)
   if (allocated(s%crs)) deallocate(s%crs)
   if (allocated(s%fxr)) deallocate(s%fxr)
   if (allocated(s%fxci)) deallocate(s%fxci)
