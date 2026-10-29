@@ -28,7 +28,9 @@ current on the waves with `f_wf_current`, and the action on sediment with `f_wfs
 `f_wfsed = 0` the shallow water and bed results are the same whether or not `fn_wavefield` is
 written; [action on the flow](#action-on-the-flow-wf_flow-stage-w2),
 [change of waves by currents](#change-of-waves-by-currents-f_wf_current-stage-w3),
-[action on sediment](#action-on-sediment-f_wfsed-stages-w4-and-w5)). Research extensions
+[action on sediment](#action-on-sediment-f_wfsed-stages-w4-and-w5)). Transport in the swash
+zone, outside the wave field that stops before the shoreline, can be added with empirical
+formulas ([swash-zone transport](#swash-zone-transport-f_wfswash)). Research extensions
 (stage W6) are in docs/wavefield_plan.md §9.
 
 It is a different feature from "longshore transport by waves" in the
@@ -673,6 +675,124 @@ load flows in with the concentration of the mirror cell (zero gradient) and bed 
 flux of the face one cell inward along the side normal (the same coast is treated as
 continuing outside; [lateral boundaries](#lateral-boundaries-f_bc--3)).
 
+### Swash-zone transport (f_wfswash)
+
+The phase-averaged wave field stops before the shoreline (wave cells have a depth of at least
+`wf_hmin`) and has no swash flow, so the transport above (Eulerian mean velocity and onshore
+velocity) has no process that piles up the sand of the shallows above the shoreline (to the
+height the swash reaches). Adding `f_wfswash = 1` of `&list_geomorph` gives empirical formulas
+for the net transport integrated over one swash cycle on the shoreline faces (between a wet cell
+and a dry cell on higher ground). If the foreshore is milder than the equilibrium slope the sand
+piles up to the height the swash reaches (a berm); if steeper, the foreshore is cut back.
+
+```
+&list_geomorph
+  f_fluvial = 1
+  f_wfsed = 1
+  f_wfswash = 1             ! swash-zone transport
+  wfswash_tanbe = 0.1       ! equilibrium foreshore slope tanβ_e (required)
+  !wfswash_kc = 1.6e-3      ! cross-shore transport coefficient K_c (default 1.6e-3)
+  !wfswash_kl = 1.6e-3      ! longshore transport coefficient K_l (default = K_c; 0 = no longshore transport)
+  !wfswash_phim = 30.0      ! friction angle of a moving grain φ_m (deg) (default 30)
+/
+```
+
+`f_wfsed = 1` and bed load `f_fluvial = 1` are required (the fluxes ride the same face-flux
+mechanism as bed load). The rise of the water level at the shoreline (setup) is assumed to be
+resolved by the flow, so combine it with the wave-driven flow `wf_flow = 2` (or 1) (with
+`wf_flow = 0` the runup limit is lower by the setup, and a warning is printed at the start). It
+cannot be combined with bedrock incision (`f_rockinc`).
+
+**Cross-shore (Larson, Kubota & Erikson 2004[^larson04], Eq. (8)).** On a frictionless ballistic
+swash (initial swash velocity u_s, runup height R = u_s²/2g), a bed load transport proportional
+to the cube of the velocity with an up/down asymmetry on the slope (Madsen's formula) is
+integrated over one swash cycle to give the net transport (positive offshore; bulk volume per
+unit width):
+
+```math
+q_c = K_c\, 2\sqrt{2g}\, R^{3/2}\left(1 - \frac{z}{R}\right)^2 \frac{\tan\phi_m}{\tan^2\phi_m - \tan^2\beta}\,(\tan\beta - \tan\beta_e)
+```
+
+z is the height above the still water level, tanβ the foreshore slope, tanβ_e the equilibrium
+slope and φ_m the friction angle of a moving grain. The transport is onshore if the foreshore is
+milder than equilibrium, offshore if steeper, and zero at the equilibrium slope. The default
+K_c = 1.6×10⁻³ is the mean of the values Larson et al. calibrated on four field experiments at
+Hasaki Beach (fine sand, 0.18 mm) (a representative value for fine sand; 1.0–2.3×10⁻³ in the
+individual runs). The formula assumes a mild foreshore and a swash period similar to the
+incident wave period (Iribarren number ξ0 ≳ 1).
+
+**Longshore (Larson & Wamsley 2007[^lw07], Eq. (4)).** The swash of obliquely incident waves has
+an initial longshore velocity v_s = u_s tanθ (θ = angle between the shoreline normal and the
+wave direction), and
+
+```math
+q_l = K_l \frac{\tan\phi_m}{\tan^2\phi_m - \tan^2\beta}\,\frac{u_o^2 v_o}{g}\,\frac{t_o}{T},\qquad
+u_o = u_s\sqrt{1 - z/R},\quad \frac{t_o}{T} = \sqrt{1 - z/R},\quad v_o = v_s
+```
+
+integrated over the swash width R/tanβ is carried along the shoreline. The default K_l equals K_c
+(the assumption of Larson & Wamsley, shown to agree with the longshore transport in the swash
+of movable-bed experiments in the large basin LSTF (Wang et al. 2002)). There is no longshore
+transport if the mean wave direction is 80° or more from the shoreline normal.
+
+**Runup height R (swash part of Eq. (19) of Stockdon et al. 2006[^stockdon06]).** Of the 2%
+exceedance runup R2 = 1.1 (⟨η⟩ + S/2), S = √(H0 L0 (0.563 β² + 0.004)), the setup ⟨η⟩ is
+resolved by the flow and included in the water level of the shoreline cell, so the swash part
+R = 1.1 S/2 is measured from that level. H0 is the incident wave height at the offshore boundary
+(not back-computed to deep water), L0 = gT²/2π (T is the representative period `wf_trep` or the period column of `wf_val`)
+and β the foreshore slope of the shoreline cell. On shorelines that waves hardly reach, such as the lee
+of a delta or inside a channel, H0 is multiplied by the largest ratio, over the wave cells within
+±2 cells of the shoreline cell, of the wave height to the saturated height min(H_inc, γ_s h)
+(γ_s = √2 `wf_gammax` for random waves, `wf_gamma` for regular waves; exposure E, capped at 1;
+**original**). On an open beach the wave height at the shoreline is saturated by the depth and
+E = 1. Without wave cells nearby there is no swash. Larson et al. calibrated K_c with R from the
+formulas of Mayer & Kriebel (1994) and Hunt (1959) (significant wave height); combining it with
+the swash of Stockdon et al. is an **original combination** (the meaning of the K_c value can
+shift by the difference in the definition of R).
+
+**Mapping to the grid (original).**
+
+- A shoreline cell is a wet cell with a dry cell on higher ground among its four neighbours
+  (east, west, north, south). The cross-shore flux is given on each of those four-neighbour faces
+  as the projection of the offshore-directed vector q_c on the face direction times the side
+  length of the cell, with the mean G of the gradients (central differences) of the two cells of
+  the face as the foreshore slope (tanβ = |G|). The boundary between the wet and dry regions is a
+  staircase of four-neighbour faces, so on a planar beach the transport per unit length is q_c
+  whatever the shoreline orientation (checked for a 45° shoreline by diag of test/wfswash; with
+  the diagonal faces as well, a 45° shoreline on a coarse grid would get 1/√2).
+- z is the height of the ground of the dry cell above the water level of the shoreline cell; for
+  z ≥ R there is no flux = deposits do not exceed the runup limit η + R. As an exception to the
+  rules of bed load (sediment does not climb above the water surface; a dry cell gives no
+  sediment), sand deposits on and is cut from the dry cell. The deposit of one face in one bed
+  update is reduced to the margin up to the runup limit and to `fluv_dzmax` (at the flux stage,
+  so conservation holds).
+- The longshore flux is placed in a band one cell wide along the shoreline cells, and the width
+  of the band is set from the shoreline orientation so that the total through the band equals the
+  total longshore swash transport. Because the swash zone straddles the shoreline, faces to dry
+  cells at heights the swash reaches are also passed. A shoreline cell without a dry neighbour
+  (among its four neighbours) at a height the swash reaches (in front of a cliff or seawall higher
+  than the runup) has no swash zone, so no longshore flux is placed there either.
+- The width factors of water paths (width of sub-grid channels, reassignment of blocked
+  openings) are not applied (the swash fluxes are set by the shoreline length and the band width,
+  not by the face widths).
+
+**Notes on use.**
+
+- The foreshore slope is a central difference over two cells, so it is averaged more on coarser
+  grids. On a coarse grid where the swash zone (width R/tanβ) is narrower than one cell, the sand
+  piles up on the one dry cell next to the shoreline (a berm), and the dry cells beyond do not
+  change.
+- The equilibrium slope tanβ_e is given by the user (it depends on the grain size and the waves,
+  steeper for coarser sand; basically give it from observations of the foreshore slope at the
+  site).
+- The bed updates change the water level at the shoreline, so small long waves leave the
+  shoreline. If the Courant number in the deep water offshore is close to 1, they can grow at the
+  offshore boundary and stop the run (in test/wfswash it happened at 0.88 and was stable at
+  0.44). Leave a margin in the time step `dt`.
+- The amounts moved are printed at the end (solid volume moved onto the dry foreshore, volume
+  moved off it, and the sum of the absolute volumes the longshore flux passed through faces; per
+  rank).
+
 ## Output and checks
 
 **Distributions** (at each output time; [input/output formats](io.md))
@@ -727,12 +847,12 @@ approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storag
   The smearing of shadow edges is numerical diffusion, not diffraction.
 - **Action on sediment (`f_wfsed`)**: by default the stirring is by the orbital velocity at
   the bed only (pick-up by breaking-induced turbulence can be added with `f_wfsed_turb = 1`).
-  There is no horizontal diffusion of suspended load. Transport in the swash zone is not represented (the
-  phase-averaged waves stop before the shoreline; dune slumping is the angle-of-repose
-  collapse `f_repose`). Sand therefore stays in the shallows and hardly becomes land; in the
-  delta example the emerged land is smaller than with the CERC type (fn_wave) (wfsed of
-  examples/delta). There is one representative grain size each for bed load and
-  suspended load. The balance between the undertow and the onshore velocity that decides
+  There is no horizontal diffusion of suspended load. The phase-averaged waves stop before
+  the shoreline, so transport in the swash zone is added with empirical formulas
+  (`f_wfswash = 1`; "swash-zone transport" above). By default (0) there is no process that piles
+  up the sand of the shallows above the shoreline, so sand stays in the shallows and hardly
+  becomes land. Dune slumping is the angle-of-repose collapse `f_repose`. There is one
+  representative grain size each for bed load and suspended load. The balance between the undertow and the onshore velocity that decides
   between beach erosion and recovery is sensitive to the coefficients f_Sk and f_As
   (calibration quantities).
 - **Blocked waves are only removed as wave action**; reflection at the blocking point
@@ -794,6 +914,11 @@ approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storag
 | `wf_tramp` | 100 s | **Numerical**: the default of XBeach's taper[^xbeach] (the start-up in the same situation, where a steady wave field is applied to the whole domain at once) |
 | `f_wfsed` (&list_geomorph) | 0 | **Method**: by default there is no action on sediment. The stirring is the wave–current shear stress combination of Soulsby (1997)[^soulsby97] (the upper limit 0.3 of f_w from Swart 1974[^swart74]); carrying suspended load with the Eulerian mean velocity is the same as Reniers et al. (2004)[^reniers04] and XBeach[^xbeach]. The combination for bed load, "the amount of τ*_max times the speed of u_s", is original (checked to be of the same order as the wave–current bed load formula of Soulsby 1997 under the conditions of test/wfsed) |
 | `f_wfsed_turb` (&list_geomorph) | 0 | **Compatibility**: the default 0 (no turbulence = the same as stages W4 and W5). 1 is the form of `turb` = wave_averaged of XBeach (the XBeach default with the Ruessink waveform[^xbeach]). The coefficient 1.45 is from van Thiel de Vries (2009)[^vtdv09] |
+| `f_wfswash` (&list_geomorph) | 0 | **Method**: by default no swash-zone transport. The cross-shore part is Eq. (8) of Larson et al. (2004)[^larson04], the longshore part Eq. (4) of Larson & Wamsley (2007)[^lw07], and the runup height the swash part of Eq. (19) of Stockdon et al. (2006)[^stockdon06]. The exposure, the mapping to the grid (four-neighbour faces, longshore band) and the combination using the swash of Stockdon et al. for R are original |
+| `wfswash_kc` (&list_geomorph) | 1.6×10⁻³ | **Calibration**: the mean of the calibrations of Larson et al. (2004) on four runs at Hasaki Beach (fine sand, 0.18 mm) (1.0–2.3×10⁻³ in the individual runs; 3×10⁻³ from the regression on the transport at the seaward end of the swash zone). It depends on the grain size and on the interaction between waves in the swash |
+| `wfswash_kl` (&list_geomorph) | = K_c | **Calibration**: the assumption K_l ≈ K_c of Larson & Wamsley (2007) (10⁻³ agrees in the LSTF experiments) |
+| `wfswash_tanbe` (&list_geomorph) | (required) | **Physical quantity**: the equilibrium foreshore slope (given by the user; the "give the physical quantities used in the computation directly" of policy §0). 0.035–0.057 for the fine sand of Hasaki (Table 1 of Larson et al. 2004) |
+| `wfswash_phim` (&list_geomorph) | 30° | **Literature value**: the friction angle of a moving grain of Larson et al. (2004) |
 | `wfsed_facsk`, `wfsed_facas` (&list_geomorph) | 0.1 | **Calibration**: the default is facua of XBeach[^xbeach]. The formula is van Thiel de Vries (2009)[^vtdv09], with S_k and A_s from the parameterization of Ruessink et al. (2012)[^ruessink12] (the coefficients p₂ to p₆ are the values of the public XBeach source, not checked against the table of the original paper) |
 | `f_wf_current` | 0 | **Method**: by default the current does not act (the same results as up to stage W2). The formulation is the wave action balance of Bretherton & Garrett (1968)[^bg68]; the refraction by currents and the velocity used (Lagrangian mean) are the same as wci of XBeach[^xbeach]. Solving the dispersion relation directly for each directional bin is original (XBeach advances the wavenumber in time with the eikonal equations) |
 | Coefficient of the friction speed | 1.16 | **Literature value**: the wave–current friction of Ruessink et al. (2001)[^ruessink01] (the XBeach formulation). Not a setting |
@@ -841,6 +966,14 @@ approximation of Fenton & McKee (1990)[^fm90].
   waves and of recovery by low waves, conservation of sediment in a closed basin, the
   stirring by breaking turbulence (agreement of k_b with the formula and the increase of
   longshore transport), and byte-identical continuation after a restart.
+- [test/wfswash](../../../test/wfswash/en/README.md): swash-zone transport. The amount of one
+  bed update agrees with the formula of Larson et al. (2004) in double precision, a 45°
+  shoreline gets the same amount per unit length as an axis-aligned one, no change at the
+  equilibrium slope, the build-up of a mild foreshore (a berm) and the cut-back of a steep one
+  approach the equilibrium slope without passing it, deposits do not exceed the runup limit,
+  the total longshore transport under oblique waves agrees with the formula of Larson &
+  Wamsley (2007), nothing moves in front of a cliff higher than the runup, conservation of
+  sediment in a coupled closed basin, byte-identical restart continuation.
 - All are bit-identical to the serial run with MPI np = 1, 2 and 4.
 
 ## References
@@ -857,6 +990,8 @@ approximation of Fenton & McKee (1990)[^fm90].
 [^ki70]: Komar, P. D. & Inman, D. L. (1970) Longshore sand transport on beaches. J. Geophys. Res. 75(30), 5914–5927.
 [^jb07]: Janssen, T. T. & Battjes, J. A. (2007) A note on wave energy dissipation over steep beaches. Coastal Engineering 54, 711–716. The form of the breaking wave height H_b is the Miche type of Battjes, J. A. & Janssen, J. P. F. M. (1978) Energy loss and set-up due to breaking of random waves. Proc. 16th ICCE, 569–587 (the same as the XBeach formulation).
 [^kuik88]: Kuik, A. J., van Vledder, G. Ph. & Holthuijsen, L. H. (1988) A method for the routine analysis of pitch-and-roll buoy wave data. J. Phys. Oceanogr. 18, 1020–1034.
+[^larson04]: Larson, M., Kubota, S. & Erikson, L. (2004) Swash-zone sediment transport and foreshore evolution: field experiments and mathematical modeling. Marine Geology 212, 61–79. doi:10.1016/j.margeo.2004.08.004 (Eqs. (5) and (8); the calibration of K_c in Sections 6 and 8)
+[^lw07]: Larson, M. & Wamsley, T. V. (2007) A formula for longshore sediment transport in the swash. Proc. Coastal Sediments '07, ASCE. (Eqs. (3), (4), (6) and (7))
 [^lhs64]: Longuet-Higgins, M. S. & Stewart, R. W. (1964) Radiation stresses in water waves; a physical discussion, with applications. Deep-Sea Research 11, 529–562. The set-down offshore is from Longuet-Higgins, M. S. & Stewart, R. W. (1962) Radiation stress and mass transport in gravity waves, with application to 'surf beats'. J. Fluid Mech. 13, 481–504.
 [^nairn90]: Nairn, R. B., Roelvink, J. A. & Southgate, H. N. (1990) Transition zone width and implications for modelling surfzone hydrodynamics. Proc. 22nd ICCE, 68–81.
 [^rb97]: Reniers, A. J. H. M. & Battjes, J. A. (1997) A laboratory study of longshore currents over barred and non-barred beaches. Coastal Engineering 30, 1–22.
@@ -864,6 +999,7 @@ approximation of Fenton & McKee (1990)[^fm90].
 [^rs89]: Roelvink, J. A. & Stive, M. J. F. (1989) Bar-generating cross-shore flow mechanisms on a beach. J. Geophys. Res. 94(C4), 4785–4800. (Exponential decay of breaking turbulence towards the bed; the form of the formula follows the turb implementation of XBeach)
 [^ruessink01]: Ruessink, B. G., Miles, J. R., Feddersen, F., Guza, R. T. & Elgar, S. (2001) Modeling the alongshore current on barred beaches. J. Geophys. Res. 106(C10), 22451–22463.
 [^ruessink12]: Ruessink, B. G., Ramaekers, G. & van Rijn, L. C. (2012) On the parameterization of the free-stream non-linear wave orbital motion in nearshore morphodynamic models. Coastal Engineering 65, 56–63.
+[^stockdon06]: Stockdon, H. F., Holman, R. A., Howd, P. A. & Sallenger, A. H. Jr. (2006) Empirical parameterization of setup, swash, and runup. Coastal Engineering 53, 573–588. doi:10.1016/j.coastaleng.2005.12.005 (Eqs. (9)–(12) and (19))
 [^snapwave]: Roelvink, D., van Ormondt, M., Reyns, J. & van der Lugt, M. (2025) SnapWave: fast, implicit wave transformation from offshore to nearshore. Geosci. Model Dev. 18, 9469–9495. doi:10.5194/gmd-18-9469-2025 (defaults from the public source code)
 [^soulsby97]: Soulsby, R. L. (1997) Dynamics of Marine Sands: A Manual for Practical Applications. Thomas Telford, London. Wave friction factor (eq. 62a), combination of wave and current shear stresses (eqs. 69 and 70).
 [^svendsen84]: Svendsen, I. A. (1984) Wave heights and set-up in a surf zone. Coastal Engineering 8, 303–329.

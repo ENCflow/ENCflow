@@ -1164,10 +1164,23 @@ the coastal wave field chapter.
 | wfsed_facsk | 0.1 | Coefficient f_Sk of the onshore transport velocity of wave skewness (calibration; 0 removes the skewness term) |
 | wfsed_facas | 0.1 | Coefficient f_As of asymmetry (calibration; 0 removes the asymmetry term) |
 | f_wfsed_turb | 0 | 1: stirring by the turbulence of wave breaking (adds the near-bed turbulence k_b to the stirring orbital velocity as √(u_rms² + 1.45 k_b); the form of turb = wave_averaged of XBeach; requires `f_wfsed = 1`) |
+| f_wfswash | 0 | 1: swash-zone transport (net cross-shore and longshore transport on the shoreline faces; Larson et al. 2004, Larson & Wamsley 2007, runup from Stockdon et al. 2006; requires `f_wfsed = 1` and `f_fluvial = 1`) |
+| wfswash_tanbe | (required) | equilibrium foreshore slope tanβ_e (0 < tanβ_e < tan φ_m) |
+| wfswash_kc | 1.6e-3 | cross-shore transport coefficient K_c (calibration; the representative value for fine sand of Larson et al. 2004) |
+| wfswash_kl | = K_c | longshore transport coefficient K_l (calibration; 0 = no longshore transport) |
+| wfswash_phim | 30 | friction angle of a moving grain φ_m (deg) |
 
 It cannot be used together with the longshore transport of fn_wave
 (`f_wave_longshore = 1`; the run stops at the start so that the same transport is
 not counted twice), nor with debris flow (`f_debris`).
+
+The phase-averaged wave field stops before the shoreline, so the swash-zone transport
+that piles up the sand of the shallows above the shoreline (to the height the swash
+reaches) is added with empirical formulas by `f_wfswash = 1` (it acts on the shoreline
+faces only; it piles up if the foreshore is milder than the equilibrium slope and cuts
+back if steeper). The formulas, coefficients and the mapping to the grid are in
+[swash-zone transport](wavefield.md#swash-zone-transport-f_wfswash) of the coastal wave
+field chapter. It cannot be combined with bedrock incision (`f_rockinc`).
 
 ## Long-term landform evolution (f_wthr / f_uplift)
 

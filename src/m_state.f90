@@ -175,6 +175,13 @@ module m_state
     logical :: wv_turb = .false.        ! 砕波の乱れによる攪拌の要求
     real, allocatable :: wvub0(:,:)     ! 底面軌道流速 u_rms(乱れを含まない。m/s)
     real, allocatable :: wvkb(:,:)      ! 底面の乱れのエネルギー k_b (m2/s2)
+    ! 遡上域の輸送(geomorph の f_wfswash = 1 のときだけ。要求 wv_swash は m_geomorph_init が立てる)。
+    ! m_wavefield が入射波の波高・周期を毎ステップその時刻の与件から求め(準定常の更新の間も
+    ! 時刻の関数 = 再開でも通し計算と同じ値)、波高 wvh のハロも更新ごとに埋める(§90.21)
+    logical :: wv_swash = .false.       ! 遡上域の輸送の要求
+    real :: wv_hinc = 0.0               ! 入射波高 (m。境界の与件。不規則波は H_m0、規則波は H)
+    real :: wv_tinc = 0.0               ! 入射波の周期 (s。境界の与件の代表周期)
+    real :: wv_hsat = 0.0               ! 飽和した波高と水深の比(不規則波 √2 γmax、規則波 γ。wvh と同じ波高の定義)
     real, allocatable :: sqbx(:,:)      ! 掃流砂の輸送量の推定 x 成分 (m2/s。固体体積)
     real, allocatable :: sqby(:,:)      ! 同 y 成分
     real, allocatable :: sqsx(:,:)      ! 浮遊砂の輸送量 hs·u_s の x 成分(u_s = u^E + u_a ê_θ。m2/s。固体体積)

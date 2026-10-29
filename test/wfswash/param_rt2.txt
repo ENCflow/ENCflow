@@ -1,0 +1,90 @@
+!======================================================================
+! wfswash: 再開の往復の後半(save_rt を復元し 930 → 1800 s)
+!   通し計算(param_flow.txt。save_flow)と state.dat・swflow_enc.dat・wavefield.dat・
+!   最終分布がバイト一致すること(Run.sh)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.25                 ! Courant 数に余裕を持たせる(0.5 s では地形の更新が汀線で作る小さな長波が
+                            !   沖の境界で育って止まった。README)
+  t0 = 0
+  tt = 1800
+  dt_disp = 300
+  dt_file = 1800
+  dt_recrd = 300
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_geomorph = '-'
+  fn_wavefield = '-'
+  dir_result = 'result_rt2'
+  f_check_cfl = 1
+  f_output_mode = 3
+  f_out_z = 1
+  f_out_h = 1
+  f_out_e = 1
+  f_out_u = 1
+  f_out_v = 1
+  f_out_hs = 1
+  f_state_save = 1
+  f_state_restore = 1
+  dir_save = 'save_rt'
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 2
+  e0 = 0.0
+/
+
+&list_geoinfo
+  nx = 60
+  ny = 8
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 1
+  fn_z = 'z_mild.txt'
+  f_rntype = 0
+  rn0 = 0.025
+  sd0 = 10.0
+/
+
+&list_bound_edge
+  f_bc_w = 0                ! 流れの四辺は壁(閉じた海盆 = 土砂の保存を確かめる)
+  f_bc_e = 0
+  f_bc_n = 0
+  f_bc_s = 0
+/
+
+&list_geomorph
+  dt_geomorph = 5.0
+  morfac = 5.0
+  f_fluvial = 1
+  f_qbform = 2              ! MPM
+  fluv_d50 = 0.0002
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  f_suspend = 1
+  f_esform = 1
+  susp_d50 = 0.0002
+  susp_tausc = 0.05
+  susp_esa = 1.0e-4
+  susp_beta = 1.0
+  f_wfsed = 1               ! 波浪場による攪拌と輸送(遡上域の輸送の前提)
+  f_wfswash = 1             ! 遡上域の輸送
+  wfswash_tanbe = 0.1       ! 前浜の平衡勾配
+/
+
+&list_wavefield
+  wf_bc_side = 1, 0, 2, 2   ! 入射(1)・吸収(0)・側方 Neumann(2)の順に W, E, N, S
+  wf_val(1:5,1) = 0,  0.8, 8.0, 20.0, 20.0   ! 時系列(分・H_m0・周期・向き・方向分散):
+  wf_val(1:5,2) = 30, 1.2, 8.0, 20.0, 20.0   !   波高が 0.8 → 1.2 m に増える(入射波の毎ステップの受け渡し)
+  dt_wave = 60
+  wf_tol = 1.0e-7
+  wf_flow = 2               ! 波→流れ(外力・GLM・波と流れの摩擦)
+  f_wf_roller = 1
+  f_wf_outdiag = 1
+/

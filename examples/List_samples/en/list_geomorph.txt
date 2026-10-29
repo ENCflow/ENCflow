@@ -166,6 +166,14 @@
                             !   near-bed turbulence k_b to the stirring orbital velocity as
                             !   sqrt(u_rms^2 + 1.45 k_b); the form of turb = wave_averaged of XBeach;
                             !   requires f_wfsed = 1)
+  !f_wfswash = 1            ! swash-zone transport (net cross-shore and longshore transport on the
+                            !   shoreline faces; Larson et al. 2004, Larson & Wamsley 2007, runup
+                            !   from Stockdon et al. 2006; requires f_wfsed = 1 and f_fluvial = 1)
+  !wfswash_tanbe = 0.1      ! equilibrium foreshore slope tanβ_e (required with f_wfswash = 1;
+                            !   0 < tanβ_e < tan φ_m)
+  !wfswash_kc = 1.6e-3      ! cross-shore transport coefficient K_c (default 1.6e-3 = representative of fine sand)
+  !wfswash_kl = 1.6e-3      ! longshore transport coefficient K_l (default = K_c; 0 = no longshore transport)
+  !wfswash_phim = 30.0      ! friction angle of a moving grain φ_m (deg) (default 30)
 
   ! ---- Hillslope erosion (rainsplash + sheetwash. Requires f_suspend) ----
   !f_wash = 1

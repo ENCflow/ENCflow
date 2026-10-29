@@ -20,7 +20,8 @@
 `wf_flow = 0` かつ `f_wfsed = 0` なら `fn_wavefield` を書いても書かなくても浅水流と地形の
 結果は同じです。[流れへの作用](#流れへの作用wf_flow段-w2)・
 [流れによる波の変化](#流れによる波の変化f_wf_current段-w3)・[土砂への作用](#土砂への作用f_wfsed段-w4w5))。
-研究的な拡張(段 W6)は docs/wavefield_plan.md §9。
+汀線の手前で止まる波浪場の外にある遡上域(swash)の輸送は、経験式で加えられます
+([遡上域の輸送](#遡上域の輸送f_wfswash))。研究的な拡張(段 W6)は docs/wavefield_plan.md §9。
 
 [土砂・地形変化の章](geomorph.md)の「波浪による沿岸漂砂」(`fn_wave`。沖波を与件に
 汀線帯の沿岸漂砂を CERC 型の式で与える簡易モード)とは別の機能です。
@@ -569,6 +570,100 @@ T = 8 s、20°)では CERC(Komar & Inman 1970[^ki70])の 1.6 倍程度で、桁�
 (勾配 0)、掃流砂は辺の法線方向に一つ内側の面の流束を写します(外に同じ海岸が続く扱い。
 [側方の境界](#側方の境界f_bc--3))。
 
+### 遡上域の輸送(f_wfswash)
+
+位相平均の波浪場は汀線の手前で止まり(波浪セルは水深 `wf_hmin` 以上)、遡上の流れを持たないので、
+上の輸送(Euler 平均流速と岸向きの速度)には、浅瀬の砂を汀線より上(遡上の届く高さ)へ積み上げる
+過程がありません。`&list_geomorph` の `f_wfswash = 1` を加えると、汀線の面(湿ったセルと、地盤の
+高い乾いたセルの間)に、遡上の 1 周期で積分した正味の輸送の経験式を与えます。前浜が平衡勾配より
+緩ければ砂を遡上の届く高さまで積み上げ(バーム)、急なら前浜を削ります。
+
+```
+&list_geomorph
+  f_fluvial = 1
+  f_wfsed = 1
+  f_wfswash = 1             ! 遡上域の輸送
+  wfswash_tanbe = 0.1       ! 前浜の平衡勾配 tanβ_e(必須)
+  !wfswash_kc = 1.6e-3      ! 岸沖の輸送係数 K_c(既定 1.6e-3)
+  !wfswash_kl = 1.6e-3      ! 沿岸の輸送係数 K_l(既定 = K_c。0 で沿岸の輸送なし)
+  !wfswash_phim = 30.0      ! 動く粒子の摩擦角 φ_m (度)(既定 30)
+/
+```
+
+`f_wfsed = 1` と掃流砂 `f_fluvial = 1` が必要です(流束は掃流砂と同じ面の流束の仕組みに乗せます)。
+汀線の水位の上昇(setup)は流れが解く前提なので、波による流れ `wf_flow = 2`(か 1)と組みます
+(`wf_flow = 0` では遡上の上限が setup の分だけ低くなり、開始時に警告します)。岩盤下刻
+(`f_rockinc`)とは併用できません。
+
+**岸沖(Larson, Kubota & Erikson 2004[^larson04] 式 (8))。** 摩擦のない弾道の遡上(遡上の
+初速 u_s、遡上高 R = u_s²/2g)の上で、流速の 3 乗に比例し斜面で上げ下げが非対称になる掃流の
+輸送(Madsen の式)を遡上の 1 周期で積分した正味の輸送(正 = 沖向き。かさ体積の単位幅):
+
+```math
+q_c = K_c\, 2\sqrt{2g}\, R^{3/2}\left(1 - \frac{z}{R}\right)^2 \frac{\tan\phi_m}{\tan^2\phi_m - \tan^2\beta}\,(\tan\beta - \tan\beta_e)
+```
+
+z は静水面からの高さ、tanβ は前浜の勾配、tanβ_e は平衡勾配、φ_m は動く粒子の摩擦角です。前浜が
+平衡より緩いと岸向き、急だと沖向き、平衡勾配で 0 です。K_c の既定 1.6×10⁻³ は、Larson らが
+波崎海岸(細砂 0.18 mm)の現地実験の 4 例で較正した値の平均です(細砂の代表値。各例は
+1.0〜2.3×10⁻³)。式は緩い前浜と、遡上の周期が入射波の周期と同程度(Iribarren 数 ξ0 ≳ 1)を
+前提とします。
+
+**沿岸(Larson & Wamsley 2007[^lw07] 式 (4))。** 斜めに入る波の遡上は沿岸方向の初速
+v_s = u_s tanθ(θ = 汀線の法線と波向のなす角)を持ち、
+
+```math
+q_l = K_l \frac{\tan\phi_m}{\tan^2\phi_m - \tan^2\beta}\,\frac{u_o^2 v_o}{g}\,\frac{t_o}{T},\qquad
+u_o = u_s\sqrt{1 - z/R},\quad \frac{t_o}{T} = \sqrt{1 - z/R},\quad v_o = v_s
+```
+
+を遡上域の幅 R/tanβ で積分した量を汀線に沿って運びます。K_l の既定は K_c と同じ値です
+(Larson & Wamsley の仮定。移動床の大型平面水槽 LSTF の実験(Wang ら 2002)の遡上域の沿岸漂砂と
+合うことが示されています)。平均波向が汀線の法線から 80° 以上なら沿岸の輸送はありません。
+
+**遡上高 R(Stockdon ら 2006[^stockdon06] 式 (19) の振れ幅の部分)。** 2 % 超過の遡上
+R2 = 1.1 (⟨η⟩ + S/2)、S = √(H0 L0 (0.563 β² + 0.004)) のうち、setup ⟨η⟩ は流れが解いて汀線の
+セルの水位に入っているので、振れ幅の R = 1.1 S/2 をその水位から測ります。H0 は沖の境界の入射波高
+(深海へ逆算しない)、L0 = gT²/2π(T は代表周期 `wf_trep` か `wf_val` の周期の列)、β は汀線のセルの前浜の勾配です。
+デルタの陰や河道の内部のように波が届きにくい汀線では、汀線の ±2 セルの波浪セルの波高と、飽和
+した波高 min(H_inc, γ_s h)(γ_s = 不規則波 √2 `wf_gammax`、規則波 `wf_gamma`)の比の最大
+(露出度 E。1 で頭打ち)を H0 に掛けます(**独自**)。開けた海浜の汀線では波高が水深で飽和して
+E = 1 です。近くに波浪セルがなければ遡上はありません。Larson らは R を Mayer & Kriebel(1994)・
+Hunt(1959)の式(有義波高)で求めて K_c を較正しており、Stockdon らの振れ幅と組むのは
+**独自の組み合わせ**です(R の定義の違いの分、K_c の値の意味はずれ得ます)。
+
+**格子への当てはめ(独自)。**
+
+- 汀線のセル = 4 近傍(東西南北)に地盤の高い乾いたセルを持つ湿ったセル。岸沖の流束は、その
+  4 近傍の面ごとに、面の両側のセルの勾配(中央差分)の平均 G を前浜の勾配とし(tanβ = |G|)、
+  q_c の沖向きのベクトルの面の向きへの射影 × セルの辺の長さで与えます。湿った領域と乾いた領域の
+  境は 4 近傍の面の階段なので、平面の海浜なら汀線の向きによらず単位長さあたり q_c になります
+  (test/wfswash の diag で 45° の汀線を確認。斜めの面も使うと、粗い格子で 45° の汀線が 1/√2 に
+  なります)。
+- z は乾いたセルの地盤の汀線のセルの水位からの高さで、z ≥ R なら流束はありません = 堆積は遡上の
+  上限 η + R を越えません。掃流砂の規則(土砂は水面より上へ登らない・乾いたセルは土砂を出さない)
+  の例外として、乾いたセルへ積もり、乾いたセルから削ります。1 回の地形更新の 1 面の堆積は遡上の
+  上限までの余裕と `fluv_dzmax` で縮めます(流量の段階なので保存則は保ちます)。
+- 沿岸の流束は汀線のセルの 1 セル幅の帯に置き、帯を通る総量が遡上域の沿岸の輸送の総量になるよう
+  帯の幅を汀線の向きから決めます。遡上域が汀線を挟むので、遡上の届く高さの乾いたセルとの面も
+  通します。遡上の届く高さの乾いたセルが隣(4 近傍)にない汀線のセル(遡上の届かない崖・護岸の前)
+  には遡上域がないので、沿岸の流束も置きません。
+- 水の流路の幅の係数(サブグリッド河道の幅・塞がれた開口の振り替え)は掛けません(遡上域の流束は
+  面の幅ではなく汀線の長さと帯の幅で決めているため)。
+
+**使い方の注意。**
+
+- 前浜の勾配は 2 セルにわたる中央差分なので、格子が粗いほど平均化されます。遡上域(幅 R/tanβ)が
+  1 セルより狭い粗い格子では、汀線の隣の乾いたセル 1 つに砂が積み上がり(バーム)、その先の乾いた
+  セルは変わりません。
+- 平衡勾配 tanβ_e は利用者が与える量です(粒径と波で決まり、粒径が大きいほど急。現地の前浜の
+  勾配の観測から与えるのが基本です)。
+- 地形の更新が汀線の水位を変えるので、汀線から小さな長波が出ます。沖の深い所の Courant 数が 1 に
+  近いと、それが沖の境界で育って計算が止まることがあります(test/wfswash では 0.88 で発生、0.44
+  で安定)。時間刻み `dt` に余裕を持たせてください。
+- 運んだ量は終了時に表示します(乾いた前浜へ運んだ固体体積・前浜から運び出した体積・沿岸の流束が
+  面を通した体積の絶対値の和。ランクごと)。
+
 ## 出力・確認
 
 **分布**(出力時刻ごと。[入出力の形式](io.md))
@@ -618,11 +713,10 @@ T = 8 s、20°)では CERC(Komar & Inman 1970[^ki70])の 1.6 倍程度で、桁�
 - **位相平均・代表周期 1 個**です。回折・反射・周波数の広がり・風による発達・非線形の
   波の相互作用は扱いません。陰の縁のぼけは数値拡散で、回折ではありません。
 - **土砂への作用(`f_wfsed`)**: 攪拌は既定では底面の軌道流速だけです(砕波の乱れによる巻き上げは
-  `f_wfsed_turb = 1` で加えられます)。浮遊砂の水平拡散はありません。遡上域(swash)の輸送は表しません(位相平均の
-  波は汀線の手前で止まります。砂丘の崩れは安息角崩落 `f_repose`)。そのため砂は浅瀬にとどまって
-  陸になりにくく、デルタの例では陸化が CERC 型(fn_wave)より小さくなります(examples/delta の
-  wfsed)。代表粒径は掃流砂・
-  浮遊砂それぞれ 1 つです。浜の侵食と回復を分ける戻り流れと岸向きの速度の釣り合いは
+  `f_wfsed_turb = 1` で加えられます)。浮遊砂の水平拡散はありません。位相平均の波は汀線の手前で止まるので、
+  遡上域(swash)の輸送は経験式(`f_wfswash = 1`。上の「遡上域の輸送」)で加えます。既定(0)では
+  浅瀬の砂を汀線より上へ積み上げる過程がなく、砂は浅瀬にとどまって陸になりにくくなります。
+  砂丘の崩れは安息角崩落 `f_repose` です。代表粒径は掃流砂・浮遊砂それぞれ 1 つです。浜の侵食と回復を分ける戻り流れと岸向きの速度の釣り合いは
   係数 f_Sk・f_As に敏感です(校正の量)。
 - **阻止された波は作用量を除くだけ**で、阻止の点での反射(短い波への変換)は表しません。
   代表周期 1 個なので、阻止はすべてのエネルギーに同時に起こります(実際の波はスペクトルの
@@ -678,6 +772,11 @@ T = 8 s、20°)では CERC(Komar & Inman 1970[^ki70])の 1.6 倍程度で、桁�
 | 摩擦の速さの係数 | 1.16 | **文献値**: Ruessink ら(2001)[^ruessink01] の波・流れの摩擦(XBeach の定式)。設定項目ではない |
 | `f_wfsed`(&list_geomorph) | 0 | **方式**: 既定は土砂に作用しない。攪拌は Soulsby(1997)[^soulsby97] の波・流れのせん断の合成(f_w の上限 0.3 は Swart 1974[^swart74])、浮遊砂を Euler 平均流速で運ぶのは Reniers ら(2004)[^reniers04]・XBeach[^xbeach] と同じ。掃流砂の「τ*_max の量 × u_s の速さ」の組み合わせは独自(Soulsby 1997 の波・流れの掃流砂の式と同じ桁であることを test/wfsed の条件で確認) |
 | `f_wfsed_turb`(&list_geomorph) | 0 | **互換**: 既定 0(乱れなし = 段 W4・W5 と同じ)。1 は XBeach の `turb` = wave_averaged(Ruessink の波形での XBeach の既定[^xbeach])の形。係数 1.45 は van Thiel de Vries(2009)[^vtdv09] |
+| `f_wfswash`(&list_geomorph) | 0 | **方式**: 既定は遡上域の輸送なし。岸沖は Larson ら(2004)[^larson04] 式 (8)、沿岸は Larson & Wamsley(2007)[^lw07] 式 (4)、遡上高は Stockdon ら(2006)[^stockdon06] 式 (19) の振れ幅の部分。露出度、格子への当てはめ(4 近傍の面・沿岸の帯)、R に Stockdon らの振れ幅を使う組み合わせは独自 |
+| `wfswash_kc`(&list_geomorph) | 1.6×10⁻³ | **校正量**: Larson ら(2004)の波崎海岸(細砂 0.18 mm)の 4 例の較正の平均(各例 1.0〜2.3×10⁻³。遡上域の海側端の輸送量との回帰では 3×10⁻³)。粒径と遡上の波どうしの干渉に依存する |
+| `wfswash_kl`(&list_geomorph) | = K_c | **校正量**: Larson & Wamsley(2007)の仮定 K_l ≈ K_c(LSTF の実験で 10⁻³ が合う) |
+| `wfswash_tanbe`(&list_geomorph) | (必須) | **物理量**: 前浜の平衡勾配(利用者が与える。方針 §0 の「計算で使う物理量は直接与える」)。波崎の細砂では 0.035〜0.057(Larson ら 2004 の表 1) |
+| `wfswash_phim`(&list_geomorph) | 30° | **文献値**: Larson ら(2004)の動く粒子の摩擦角 |
 | `wfsed_facsk`・`wfsed_facas`(&list_geomorph) | 0.1 | **校正量**: 既定は XBeach の facua[^xbeach]。式は van Thiel de Vries(2009)[^vtdv09]、S_k・A_s は Ruessink ら(2012)[^ruessink12] のパラメータ化(係数 p₂〜p₆ は XBeach の公開ソースの値で、原論文の表とは照合していない) |
 
 分散関係は Fenton & McKee(1990)[^fm90] の陽な近似を初期値に Newton 法 3 回で解きます。
@@ -708,6 +807,11 @@ T = 8 s、20°)では CERC(Komar & Inman 1970[^ki70])の 1.6 倍程度で、桁�
   岸沖分布・岸沿いの一様性・CERC(Komar & Inman 1970)と同じ桁、岸向きの速度 u_a
   (Ruessink ら 2012 の式と一致)、高波浪の侵食と低波浪の回復の向き、閉じた海盆の土砂の保存、
   砕波の乱れによる攪拌(k_b の式との一致・沿岸漂砂の増加)、再開の継続のバイト一致。
+- [test/wfswash](../../test/wfswash/README.md): 遡上域の輸送。1 回の地形更新の量が Larson ら
+  (2004)の式と倍精度で一致、45° の汀線で単位長さあたりの量が軸に沿う汀線と同じ、平衡勾配で
+  不変、緩い前浜の積み上げ(バーム)と急な前浜の後退が平衡勾配へ向かって越えない、堆積が遡上の
+  上限を越えない、斜め入射の沿岸の総量が Larson & Wamsley(2007)の式と一致、遡上の届かない崖の
+  前では動かない、閉じた海盆の連成での土砂の保存、再開の継続のバイト一致。
 - いずれも MPI の np = 1・2・4 で逐次とビット一致します。
 
 ## 参考文献
@@ -724,6 +828,8 @@ T = 8 s、20°)では CERC(Komar & Inman 1970[^ki70])の 1.6 倍程度で、桁�
 [^ki70]: Komar, P. D. & Inman, D. L. (1970) Longshore sand transport on beaches. J. Geophys. Res. 75(30), 5914–5927.
 [^jb07]: Janssen, T. T. & Battjes, J. A. (2007) A note on wave energy dissipation over steep beaches. Coastal Engineering 54, 711–716. 砕波波高 H_b の形は Battjes, J. A. & Janssen, J. P. F. M. (1978) Energy loss and set-up due to breaking of random waves. Proc. 16th ICCE, 569–587 の Miche 型(XBeach の定式と同じ)。
 [^kuik88]: Kuik, A. J., van Vledder, G. Ph. & Holthuijsen, L. H. (1988) A method for the routine analysis of pitch-and-roll buoy wave data. J. Phys. Oceanogr. 18, 1020–1034.
+[^larson04]: Larson, M., Kubota, S. & Erikson, L. (2004) Swash-zone sediment transport and foreshore evolution: field experiments and mathematical modeling. Marine Geology 212, 61–79. doi:10.1016/j.margeo.2004.08.004(式 (5)・(8)。K_c の較正は 6 章・8 章)
+[^lw07]: Larson, M. & Wamsley, T. V. (2007) A formula for longshore sediment transport in the swash. Proc. Coastal Sediments '07, ASCE.(式 (3)・(4)・(6)・(7))
 [^lhs64]: Longuet-Higgins, M. S. & Stewart, R. W. (1964) Radiation stresses in water waves; a physical discussion, with applications. Deep-Sea Research 11, 529–562. 沖の set-down は Longuet-Higgins, M. S. & Stewart, R. W. (1962) Radiation stress and mass transport in gravity waves, with application to 'surf beats'. J. Fluid Mech. 13, 481–504。
 [^nairn90]: Nairn, R. B., Roelvink, J. A. & Southgate, H. N. (1990) Transition zone width and implications for modelling surfzone hydrodynamics. Proc. 22nd ICCE, 68–81.
 [^rb97]: Reniers, A. J. H. M. & Battjes, J. A. (1997) A laboratory study of longshore currents over barred and non-barred beaches. Coastal Engineering 30, 1–22.
@@ -731,6 +837,7 @@ T = 8 s、20°)では CERC(Komar & Inman 1970[^ki70])の 1.6 倍程度で、桁�
 [^rs89]: Roelvink, J. A. & Stive, M. J. F. (1989) Bar-generating cross-shore flow mechanisms on a beach. J. Geophys. Res. 94(C4), 4785–4800.(砕波の乱れの底面への指数の減衰。式の形は XBeach の turb の実装による)
 [^ruessink01]: Ruessink, B. G., Miles, J. R., Feddersen, F., Guza, R. T. & Elgar, S. (2001) Modeling the alongshore current on barred beaches. J. Geophys. Res. 106(C10), 22451–22463.
 [^ruessink12]: Ruessink, B. G., Ramaekers, G. & van Rijn, L. C. (2012) On the parameterization of the free-stream non-linear wave orbital motion in nearshore morphodynamic models. Coastal Engineering 65, 56–63.
+[^stockdon06]: Stockdon, H. F., Holman, R. A., Howd, P. A. & Sallenger, A. H. Jr. (2006) Empirical parameterization of setup, swash, and runup. Coastal Engineering 53, 573–588. doi:10.1016/j.coastaleng.2005.12.005(式 (9)〜(12)・(19))
 [^snapwave]: Roelvink, D., van Ormondt, M., Reyns, J. & van der Lugt, M. (2025) SnapWave: fast, implicit wave transformation from offshore to nearshore. Geosci. Model Dev. 18, 9469–9495. doi:10.5194/gmd-18-9469-2025(既定値は公開ソースによる)
 [^soulsby97]: Soulsby, R. L. (1997) Dynamics of Marine Sands: A Manual for Practical Applications. Thomas Telford, London. 波の摩擦係数(式 62a)、波・流れのせん断の合成(式 69・70)。
 [^svendsen84]: Svendsen, I. A. (1984) Wave heights and set-up in a surf zone. Coastal Engineering 8, 303–329.

@@ -918,9 +918,19 @@ bs_eps_s を大きく(0.02 → 0.05)するのが第一の対処です(仕組み�
 | wfsed_facsk | 0.1 | 波の歪度による岸向きの輸送速度の係数 f_Sk(校正量。0 で歪度の項なし) |
 | wfsed_facas | 0.1 | 非対称の係数 f_As(校正量。0 で非対称の項なし) |
 | f_wfsed_turb | 0 | 1: 砕波の乱れによる攪拌(底面の乱れ k_b を √(u_rms² + 1.45 k_b) で攪拌の軌道流速に足す。XBeach の turb = wave_averaged の形。`f_wfsed = 1` が必須) |
+| f_wfswash | 0 | 1: 遡上域(swash)の輸送(汀線の面の岸沖・沿岸の正味の輸送。Larson ら 2004・Larson & Wamsley 2007、遡上高は Stockdon ら 2006。`f_wfsed = 1`・`f_fluvial = 1` が必須) |
+| wfswash_tanbe | (必須) | 前浜の平衡勾配 tanβ_e(0 < tanβ_e < tan φ_m) |
+| wfswash_kc | 1.6e-3 | 岸沖の輸送係数 K_c(校正量。Larson ら 2004 の細砂の代表値) |
+| wfswash_kl | = K_c | 沿岸の輸送係数 K_l(校正量。0 で沿岸の輸送なし) |
+| wfswash_phim | 30 | 動く粒子の摩擦角 φ_m (度) |
 
 fn_wave の沿岸漂砂(`f_wave_longshore = 1`)とは同時に使えません(同じ輸送を二重に
 数えないため、開始時に停止します)。土石流(`f_debris`)とも併用できません。
+
+位相平均の波浪場は汀線の手前で止まるので、浅瀬の砂を汀線より上(遡上の届く高さ)へ積み上げる
+遡上域の輸送は `f_wfswash = 1` で経験式を加えます(汀線の面だけに働く。前浜が平衡勾配より緩ければ
+積み上げ、急なら削る)。式・係数・格子への当てはめは沿岸の波浪場の章の
+[遡上域の輸送](wavefield.md#遡上域の輸送f_wfswash)。岩盤下刻(`f_rockinc`)とは併用できません。
 
 ## 長期地形発達(f_wthr / f_uplift)
 

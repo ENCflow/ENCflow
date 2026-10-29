@@ -279,6 +279,23 @@ module m_geomorph
     real :: tws = 0.0                ! 同(浮遊砂)
   end type
 
+  ! 遡上域の輸送(f_wfswash。§90.21)。汀線の面(湿ったセルと地盤の高い乾いたセルの間)に
+  ! 位相平均の外の経験式で岸沖・沿岸の正味の輸送を与える。波浪場の波高・波向と入射波を読む
+  type t_wfswash
+    real :: kc = 0.0                 ! 岸沖の輸送係数 K_c(Larson ら 2004)
+    real :: kl = 0.0                 ! 沿岸の輸送係数 K_l(Larson & Wamsley 2007。0 = 沿岸なし)
+    real :: tbe = 0.0                ! 前浜の平衡勾配 tanβ_e
+    real :: tphi = 0.0               ! tan φ_m(動く粒子の摩擦角)
+    real, allocatable :: r(:,:)      ! 汀線セルの遡上高 R (m)(ish:ieh, jsh:jeh。0 = 遡上なし)
+    real, allocatable :: qx(:,:)     ! 汀線セルの沿岸の流束の x 成分 (m2/s。固体。同形)
+    real, allocatable :: qy(:,:)     ! 同 y 成分(南が正)
+    integer :: nact = 0              ! 遡上のある汀線セルの更新数(累計。ランク局所)
+    integer :: nclip = 0             ! 遡上の上限・変動上限で縮めた面の数(累計。ランク局所)
+    real :: von = 0.0                ! 岸沖の流束が乾いたセルへ運んだ固体体積 (m3。累計。ランク局所)
+    real :: voff = 0.0               ! 同 乾いたセルから運び出した固体体積 (m3)
+    real :: vlong = 0.0              ! 沿岸の流束が面を通した固体体積の絶対値の和 (m3)
+  end type
+
   type t_gmwork
     real :: ainv = 0.0               ! 1 / (dx*dy)
     real, allocatable :: q(:,:,:)    ! エッジ流量4成分 (m3/s)。プロセス間で
@@ -451,6 +468,7 @@ module m_geomorph
     integer :: f_bedfines = 0        ! 河床の細粒分の帳簿(0:無効, 1:有効。§84.10)
     integer :: f_wfsed = 0           ! 波浪場による攪拌と輸送(0:無効, 1:有効。段 W4。§90)
     integer :: f_wfsed_turb = 0      ! 砕波の乱れによる攪拌(0:なし, 1:波平均の乱れ。§90)
+    integer :: f_wfswash = 0         ! 遡上域の輸送(0:なし, 1:あり。§90.21)
     real :: bs_r = 0.0               ! 浮力比 r = ρw/ρs
     integer :: f_bsres = 1           ! 底層の抵抗則(1:Voellmy, 2:Bingham〔予約〕)
     real :: bs_mu = 0.0              ! Voellmy 摩擦係数 μ
@@ -481,6 +499,7 @@ module m_geomorph
     type(t_rockinc) :: rk            ! 流水による岩盤下刻
     type(t_wave) :: wav              ! 波浪による沿岸漂砂
     type(t_wfsed) :: wfs             ! 波浪場による攪拌と輸送
+    type(t_wfswash) :: sws           ! 遡上域の輸送
     type(t_gmwork) :: wrk            ! 共有スクラッチ(require_work が確保)
   end type
 
@@ -672,6 +691,22 @@ module m_geomorph
       real, intent(in) :: dts
     end subroutine
     module subroutine dispose_wave(gm)
+      type(t_geomorph), intent(inout) :: gm
+    end subroutine
+    ! 遡上域の輸送(m_geomorph_swash。§90.21)
+    module subroutine init_wfswash(gm, s, list)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_state), intent(inout) :: s
+      type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine calc_wfswash(gm, p, g, s, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
+    module subroutine dispose_wfswash(gm)
       type(t_geomorph), intent(inout) :: gm
     end subroutine
     ! 崩落と崖錐(m_geomorph_rockfall。§48.7)
@@ -1191,6 +1226,12 @@ subroutine m_geomorph_init(gm, p, g, s)
     s%wv_turb = .true.
     call par_info("geomorph: the turbulence of wave breaking adds to the stirring (f_wfsed_turb = 1)")
   end if
+  ! 遡上域の輸送(f_wfswash。§90.21): 汀線の面に岸沖(Larson ら 2004)・沿岸(Larson & Wamsley 2007)の
+  ! 正味の輸送を与える。要求 s%wv_swash で波浪場に入射波と波高のハロを頼む(init の順は
+  ! geomorph → wavefield)
+  gm%f_wfswash = list%f_wfswash
+  if (gm%f_wfswash < 0 .or. gm%f_wfswash > 1) call par_stop("list_geomorph: f_wfswash must be 0 or 1")
+  if (gm%f_wfswash > 0) call init_wfswash(gm, s, list)
 
   ! 浮遊砂輸送の有効化を通知(swflow_enc がステップ内で s%hs を移流する。
   ! 初期化順序: 本 init は m_swflow_init より前)。土石流(f_debris)も
@@ -1456,6 +1497,16 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
     call par_halo_cell(s%h)
     call calc_wave_longshore(gm, p, g, s, dts)
   end if
+  ! 遡上域の輸送(§90.21): fluvial(f_wfsed の掃流砂を含む)が帯内の z を更新した後に、更新後の
+  ! 地形で汀線の面を見る。近傍参照のため z・sd のハロを先に最新化し、露出度の窓(±2 行)と
+  ! 乾いたセルの近傍が h を読むので h のハロも最新化する(沿岸漂砂と同じ理由。判定は全ランク同一 =
+  ! collective 安全)
+  if (gm%f_wfswash > 0) then
+    call par_halo_cell(s%z)
+    call par_halo_cell(s%sd)
+    call par_halo_cell(s%h)
+    call calc_wfswash(gm, p, g, s, dts)
+  end if
   ! 安息角崩落(§84.4): fluvial(・側岸侵食)が帯内の z を更新した後に、
   ! 更新後の地形で勾配を見る。近傍参照のため z・sd のハロを先に最新化する
   ! (splash と同じ理由。判定は全ランク同一 = collective 安全)
@@ -1656,6 +1707,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   ! 岩盤下刻の累積下刻の私有 save と台帳報告(契約5。§89)
   if (gm%f_rockinc > 0) call dispose_rockinc(gm, p, g, s)
   if (gm%f_wave_long > 0) call dispose_wave(gm)
+  if (gm%f_wfswash > 0) call dispose_wfswash(gm)
   if (gm%flv%nclip > 0) then
     call par_warn("geomorph: fluvial dzmax clip fired on " &
                   // itoa(gm%flv%nclip) // " edges" &
@@ -1730,6 +1782,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%wav%hs)) deallocate(gm%wav%hs, gm%wav%qx, gm%wav%qy, gm%wav%ex, gm%wav%ex2)
   if (allocated(gm%wav%hs2)) deallocate(gm%wav%hs2, gm%wav%hm, gm%wav%hm2)
   if (allocated(gm%wav%val)) deallocate(gm%wav%val)
+  if (allocated(gm%sws%r)) deallocate(gm%sws%r, gm%sws%qx, gm%sws%qy)
   if (allocated(gm%flv%fdon)) deallocate(gm%flv%fdon)
   if (allocated(gm%flv%voutrow)) deallocate(gm%flv%voutrow)
   if (allocated(gm%upmap)) deallocate(gm%upmap)

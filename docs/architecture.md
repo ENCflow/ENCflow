@@ -32,7 +32,8 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理。複数�
   │                  bedslide / bank(側岸侵食) / fines(河床細粒分の帳簿) / fixation(植生定着)/
   │                  rockfall(崩落と崖錐)/ wave(波浪による沿岸漂砂。fn_wave)/ wthr・uplift /
   │                  dissol / rockinc(流水による岩盤下刻)/ wfsed(沿岸の波浪場による掃流砂・
-  │                  浮遊砂の攪拌と、Euler 平均流速・岸向きの速度での輸送。f_wfsed。§90)。
+  │                  浮遊砂の攪拌と、Euler 平均流速・岸向きの速度での輸送。f_wfsed。§90)/
+  │                  wfswash(遡上域の輸送 = 汀線の面の経験式。f_wfswash。§90.21)。
   │                  debris は土石流・地滑り・火山流動の抵抗則/E-D 切替を含む。
   │                  bedslide は z・sd の内数として動く底層 hb = 地滑り津波の移動海底源。
   │                  dissol は石灰岩の溶食 = 土砂を出さない z 低下。rockinc は岩盤面 z − sd を
@@ -62,6 +63,8 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理。複数�
   │                  掃流砂・浮遊砂がそれを読む(段 W4・W5)。swflow の wf_break_visc > 0
   │                  (要求 s%wv_visc)なら砕波による渦動粘性 ν_w を書き拡散項が足す、geomorph の
   │                  f_wfsed_turb = 1(要求 s%wv_turb)なら攪拌の速さに砕波の乱れを含める。
+  │                  geomorph の f_wfswash = 1(要求 s%wv_swash)なら入射波の波高・周期を毎ステップ
+  │                  その時刻の与件から渡し(時刻の関数 = 保存なし)、波高 wvh のハロも埋める。
   │                  fn_wavefield。§90)
   │    m_wq          水質    m_meteo 気象強制場・暦
   │    m_saltwater   淡塩2層(鋭利界面。地表塩水層+地下塩水 zone+海側境界)
@@ -117,7 +120,8 @@ par_init → sysparam → geoinfo(マスク全域読込 → 窓確定 → 実数
                ゾーン2の全域マスク、地形時計に s%geo_morfac。STG・ネストは停止。
                wf_break_visc の要求 s%wv_visc と係数を読み ν_w の配列を確保する。
                ← geomorph より後: f_wfsed の要求 s%wv_sed と u_a の係数、f_wfsed_turb の
-               要求 s%wv_turb を読み、土砂への書き出しの配列を確保する。§90)
+               要求 s%wv_turb、f_wfswash の要求 s%wv_swash を読み、土砂への書き出しの配列を
+               確保する。§90)
   (ネスト時は子格子ごとに同じ列を繰り返し、nest_setup_child が親子の幾何・時間軸・
    再開の整合を検査する。§72)
   → output_init → geoinfo_band_shrink(マスク類・z を帯に縮小。g%gv/g%lm の帯は
@@ -164,7 +168,8 @@ wavefield_calc                沿岸の波浪場(非定常は毎ステップ、�
                                 更新ごとに前ステップ確定の u・v(ハロ交換)でビンごとの分散関係・
                                 輸送の分解・屈折速度を求め直す。wf_break_visc > 0 なら更新ごとに
                                 砕波による渦動粘性 s%wvnub(帯±ハロ)、f_wfsed_turb = 1 なら攪拌の
-                                速さ s%wvub と u_rms・k_b(wvub0・wvkb)も。swflow_calc より前。
+                                速さ s%wvub と u_rms・k_b(wvub0・wvkb)も。f_wfswash = 1 なら毎ステップ
+                                入射波の s%wv_hinc・wv_tinc。swflow_calc より前。
                                 無効なら no-op。§90)
 swflow_calc                   ★浅水流本体(移流・拡散 → 運動方程式 → 境界強制 →
                                 [nh_project: 1 層 NH 射影で全加速度を補正。NH ON のみ] →

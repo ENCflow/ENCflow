@@ -151,6 +151,15 @@ module list_geomorph
     integer :: f_wfsed_turb = 0      ! 砕波の乱れによる攪拌(0:なし, 1:波平均の乱れ = XBeach の
                                      ! turb = wave_averaged。底面の乱れ k_b を u_rms² + 1.45 k_b で
                                      ! 攪拌の軌道流速に足す。f_wfsed = 1 が必須。§90)
+    integer :: f_wfswash = 0         ! 遡上域(swash)の輸送(0:なし, 1:あり。汀線の面の岸沖・沿岸の
+                                     ! 正味の輸送 = Larson ら 2004・Larson & Wamsley 2007、遡上高 =
+                                     ! Stockdon ら 2006。f_wfsed = 1・f_fluvial = 1 が必須。§90.21)
+    real :: wfswash_kc = -9999.0     ! 岸沖の輸送係数 K_c(−9999 = 既定 1.6e-3 = Larson ら 2004 の
+                                     ! 細砂の代表値)
+    real :: wfswash_kl = -9999.0     ! 沿岸の輸送係数 K_l(−9999 = K_c と同じ = Larson & Wamsley 2007。
+                                     ! 0 で沿岸の輸送なし)
+    real :: wfswash_tanbe = -9999.0  ! 前浜の平衡勾配 tanβ_e(f_wfswash = 1 で必須。0 < tanβ_e < tanφ_m)
+    real :: wfswash_phim = -9999.0   ! 動く粒子の摩擦角 φ_m (度)(−9999 = 既定 30 = Larson ら 2004)
 
     integer :: f_wash = 0            ! 斜面浸食(雨滴+面状。f_suspend が必須)(0:無効, 1:有効)
     real :: wash_kr = 0.0            ! 雨滴侵食係数(無次元。E_r = kr・降雨強度)
@@ -421,6 +430,8 @@ subroutine list_geomorph_read(p, list)
   integer :: f_wfsed
   real :: wfsed_facsk, wfsed_facas
   integer :: f_wfsed_turb
+  integer :: f_wfswash
+  real :: wfswash_kc, wfswash_kl, wfswash_tanbe, wfswash_phim
   integer :: f_wash
   real :: wash_kr
   real :: wash_kf
@@ -487,6 +498,7 @@ subroutine list_geomorph_read(p, list)
                            f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, f_wfsed, &
                            wfsed_facsk, wfsed_facas, f_wfsed_turb, &
+                           f_wfswash, wfswash_kc, wfswash_kl, wfswash_tanbe, wfswash_phim, &
                            f_wash, wash_kr, wash_kf, wash_tausc, wet_lw, &
                            f_splash, spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, &
                            spl_lc, spl_zbase, spl_sgrad, spl_ksat, spl_strata, &
@@ -568,6 +580,11 @@ subroutine list_geomorph_read(p, list)
   wfsed_facsk = list%wfsed_facsk
   wfsed_facas = list%wfsed_facas
   f_wfsed_turb = list%f_wfsed_turb
+  f_wfswash = list%f_wfswash
+  wfswash_kc = list%wfswash_kc
+  wfswash_kl = list%wfswash_kl
+  wfswash_tanbe = list%wfswash_tanbe
+  wfswash_phim = list%wfswash_phim
   f_wash = list%f_wash
   wash_kr = list%wash_kr
   wash_kf = list%wash_kf
@@ -726,6 +743,11 @@ subroutine list_geomorph_read(p, list)
   list%wfsed_facsk = wfsed_facsk
   list%wfsed_facas = wfsed_facas
   list%f_wfsed_turb = f_wfsed_turb
+  list%f_wfswash = f_wfswash
+  list%wfswash_kc = wfswash_kc
+  list%wfswash_kl = wfswash_kl
+  list%wfswash_tanbe = wfswash_tanbe
+  list%wfswash_phim = wfswash_phim
   list%f_wash = f_wash
   list%wash_kr = wash_kr
   list%wash_kf = wash_kf
